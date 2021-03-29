@@ -17,21 +17,21 @@ static MUI_ENTRY trTRSetupInitPageEntries[] =
     {
         0,
         20,
-        "Please wait while the ReactOS Setup initializes itself",
+        "ReactOS Kurulumu kendini ba\237lat\215rken l\201tfen bekleyin",
         TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER,
         TEXT_ID_STATIC
     },
     {
         0,
         21,
-        "and discovers your devices...",
+        "ve cihazlar\215n\215z\215 ke\237federken...",
         TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER,
         TEXT_ID_STATIC
     },
     {
         0,
         0,
-        "Please wait...",
+        "L\201tfen bekleyin...",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
         TEXT_ID_STATIC
     },
@@ -107,7 +107,7 @@ static MUI_ENTRY trTRWelcomePageEntries[] =
     {
         6,
         8,
-        "ReactOS Kur'a ho\237 geldiniz.",
+        "ReactOS Kurulum Sihirbaz\215na ho\237 geldiniz.",
         TEXT_STYLE_HIGHLIGHT,
         TEXT_ID_STATIC
     },
@@ -730,7 +730,7 @@ static MUI_ENTRY trTRFlushPageEntries[] =
     {
         10,
         6,
-        "Dizge, \237imdi diskinize saklanm\215\237 t\201m veriyi do\247ruluyor.",
+        "Sistem, \237imdi diskinize saklanm\215\237 t\201m veriyi do\247ruluyor.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1057,112 +1057,112 @@ static MUI_ENTRY trTRChangeSystemPartition[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        " ReactOS " KERNEL_VERSION_STR " Kur ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
     {
         6,
         8,
-        "The current system partition of your computer",
+        "Bilgisayar\215n\215z\215n sistem diskindeki mevcut sistem",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         6,
         12,
-        "on the system disk",
+        "b\224l\201m\201, ReactOS taraf\215ndan desteklenmeyen",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         6,
         16,
-        "uses a format not supported by ReactOS.",
+        "bir format kullan\215yor..",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         6,
         18,
-        "In order to successfully install ReactOS, the Setup program must change",
+        "ReactOS'u ba\237ar\215yla kurmak i\207in, Kurulum program\215 mevcut",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         6,
         19,
-        "the current system partition to a new one.",
+        "sistem b\224l\201m\201n\201 yenisiyle de\247i\215tirmelidir.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         6,
         21,
-        "The new candidate system partition is:",
+        "Yeni aday sistem b\224l\201m\201:",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         8,
         25,
-        "\x07  To accept this choice, press ENTER.",
+        "\x07  Bu se\207imi kabul etmek i\207in ENTER'a bas\215n.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         8,
         27,
-        "\x07  To manually change the system partition, press ESC to go back to",
+        "\x07  Sistem b\224l\201m\201n\201 elle de\247i\237tirmek i\207in ESC'ye basarak geri d\224n\201n.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         8,
         28,
-        "   the partition selection list, then select or create a new system",
+        "   ard\215ndan sistem diskinde yeni bir sistem b\224l\201m\201 se\207in",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         8,
         29,
-        "   partition on the system disk.",
+        "   veya olu\237turun.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         6,
         32,
-        "In case there are other operating systems that depend on the original",
+        "Orijinal sistem b\224l\201m\201ne ba\247l\215 olan ba\237ka i\237letim sistemleri olmas\215",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         6,
         33,
-        "system partition, you may need to either reconfigure them for the new",
+        "durumunda, bunlar\215 yeni sistem b\224l\201m\201 i\207in yeniden yap\215land\215rman\215z",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         6,
         34,
-        "system partition, or you may need to change the system partition back",
+        "gerekebilir veya ReactOS kurulumunu tamamlad\215ktan sonra sistem ",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         6,
         35,
-        "to the original one after finishing the installation of ReactOS.",
+        "b\224l\201m\201n\201 orijinal b\224l\201m\201e geri d\224nd\201rmeniz gerekebilir.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         0,
         0,
-        "ENTER = Continue   ESC = Cancel",
+        "ENTER = S\201rd\201r  ESC = \230ptal",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
         TEXT_ID_STATIC
     },
@@ -1825,18 +1825,18 @@ MUI_ERROR trTRErrorEntries[] =
     },
     {
         // ERROR_NO_BUILD_PATH
-        "Failed to build the installation paths for the ReactOS installation directory!\n"
-        "ENTER = Reboot computer"
+        "ReactOS kurulum dizini i\207in kurulum yollar\215 olu\237turulamad\215!!\n"
+        "ENTER = Bilgisayar\215 Yeniden Ba\237lat"
     },
     {
         // ERROR_SOURCE_PATH
-        "You cannot delete the partition containing the installation source!\n"
-        "ENTER = Reboot computer"
+        "Kurulum kayna\247\215n\215 i\207eren b\224l\201m\201 silemezsiniz!\n"
+        "ENTER = Bilgisayar\215 Yeniden Ba\237lat"
     },
     {
         // ERROR_SOURCE_DIR
-        "You cannot install ReactOS within the installation source directory!\n"
-        "ENTER = Reboot computer"
+        "ReactOS'u kurulum kaynak dizini i\207ine kuramazs\215n\215z!\n"
+        "ENTER = Bilgisayar\215 Yeniden Ba\237lat"
     },
     {
         // ERROR_NO_HDD
@@ -2231,11 +2231,11 @@ MUI_STRING trTRStrings[] =
     {STRING_REBOOTCOMPUTER,
     "ENTER = Bilgisayar\215 Yeniden Ba\237lat"},
     {STRING_DELETING,
-     "   Deleting file: %S"},
+     "   Dosya siliniyor: %S"},
     {STRING_MOVING,
-     "   Moving file: %S to: %S"},
+     "   Dosya ta\237\215n\215yor: %S \237uraya: %S"},
     {STRING_RENAMING,
-     "   Renaming file: %S to: %S"},
+     "   Dosya yeniden adland\215r\215l\215yor: %S \237uraya: %S"},
     {STRING_COPYING,
     "   Dosya kopyalan\215yor: %S"},
     {STRING_SETUPCOPYINGFILES,

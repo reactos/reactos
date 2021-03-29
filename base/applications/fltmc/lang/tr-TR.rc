@@ -7,27 +7,27 @@ BEGIN
     IDS_USAGE "\nGeçerli komutlar:\n\
                load        Bir süzgeç sürücüsünü yükler\n\
                unload      Bir süzgeç sürücüsünü kaldırır\n\
-               filters     Dizgede şimdilik kayıtlı süzgeçleri dizelgeler\n\n\
-               volumes     Lists all volumes\n\n"
+               filters     Sistemde şu anda kayıtlı olan süzgeçleri listeler\n\n\
+               volumes     Bütün disk alanlarını listeler\n\n"
 
     IDS_USAGE_LOAD      "Bir süzgeç sürücüsünü yükler\n"
     IDS_USAGE_UNLOAD    "Bir süzgeç sürücüsünü kaldırır\n"
-    IDS_USAGE_FILTERS   "Kayıtlı tüm süzgeçleri dizelgeler\n"
-    IDS_USAGE_VOLUMES   "Lists all volumes\n"
+    IDS_USAGE_FILTERS   "Kayıtlı tüm süzgeçleri listeler\n"
+    IDS_USAGE_VOLUMES   "Bütün alanları listeler\n"
 END
 
 STRINGTABLE
 BEGIN
     IDS_DISPLAY_FILTERS1    "Süzgeç Adı                      Örnek Sayısı     Yükseklik    Kare\n"
     IDS_DISPLAY_FILTERS2    "Süzgeç Adı                      Örnek Sayısı       Kare\n"
-    IDS_DISPLAY_VOLUMES     "Dos Name                        Volume Name                              FileSystem   Status\n"
+    IDS_DISPLAY_VOLUMES     "Dos Adı                         Bölüm Adı                              Dosya Sistemi   Durum\n"
 END
 
 STRINGTABLE
 BEGIN
     IDS_ERROR_PRIV      "Sürücü yüklemesi ayrıcalığı ayarlama başarısız (0x%X)\n"
-    IDS_ERROR_FILTERS   "Süzgeçleri dizelgeleme başarısız (0x%X)\n"
+    IDS_ERROR_FILTERS   "Süzgeçleri listeleme başarısız (0x%X)\n"
     IDS_ERROR_LOAD      "Süzgeçleri yükleme başarısız (0x%X)\n"
     IDS_ERROR_UNLOAD    "Süzgeçleri kaldırma başarısız (0x%X)\n"
-    IDS_ERROR_VOLUMES   "Failed to list the volumes (0x%X)\n"
+    IDS_ERROR_VOLUMES   "Bölümler listelenemedi (0x%X)\n"
 END

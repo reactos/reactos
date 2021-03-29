@@ -5,15 +5,15 @@ LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 STRINGTABLE
 BEGIN
     IDS_BCAST "Yayın"
-    IDS_P2P "Eşler Arası"
+    IDS_P2P "Eşler Arası (P2P)"
     IDS_MIXED "Karışık"
-    IDS_HYBRID "Melez"
+    IDS_HYBRID "Hibrit"
     IDS_UNKNOWN "Bilinmeyen"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_OTHER "Başka Tür Bağdaştırıcı"
+    IDS_OTHER "Diğer Bağdaştırıcı"
     IDS_ETH "Ethernet Bağdaştırıcısı"
     IDS_TOKEN "Simgeli Halka Bağdaştırıcısı"
     IDS_FDDI "FDDI Bağdaştırıcısı"
@@ -34,24 +34,24 @@ BEGIN
 \n \
     nereye\n \
         bağdaştırıcı     Bağlantı adı\n \
-                       (* ve ? umûmî arama damgalarına izin verilmiştir, örneklere bakınız)\n \
+                       (* ve ? özel karakterlerine  bakınız)\n \
 \n \
         Seçenekler:\n \
-           /?           Bu yardım iletisini görüntüle.\n \
-           /all         Tüm yapılandırma bilgisini görüntüle.\n \
-           /release     Belirtilen bağdaştırıcı için IP adresini bırak.\n \
-           /renew       Belirtilen bağdaştırıcı için IP adresini yenile.\n \
+           /?           Bu yardım iletisini görüntüler.\n \
+           /all         Tüm yapılandırma bilgisini görüntüler.\n \
+           /release     Belirtilen bağdaştırıcı için IP adresini bırakır.\n \
+           /renew       Belirtilen bağdaştırıcı için IP adresini yeniler.\n \
            /flushdns    DNS Çözücü ön belleğini siler.\n \
-           /registerdns Tüm DHCP kirâlarını yeniler ve DNS adlarını yeniden kaydettirir.\n \
+           /registerdns Tüm DHCP kiralarını yeniler ve DNS adlarını yeniden kaydettirir.\n \
            /displaydns  DNS Çözücü ön belleğinin içeriğini görüntüle.\n \
            /showclassid Bağdaştırıcı için izin verilen tüm DHCP sınıf kimliklerini görüntüler.\n \
            /setclassid  DHCP sınıf kimliğini değiştirir.\n \
 \n \
-    Ön tanımlı, TCP/IP için tüm kayıtlı bağdaştırıcılar için yalnızca\n \
-    IP adresini, alt ağ maskesini ve ön tanımlı geçidi görüntülemektir.\n \
+    Varsayılan, TCP/IP için tüm kayıtlı bağdaştırıcılar için yalnızca\n \
+    IP adresini, alt ağ maskesini ve varsayılan geçidi görüntülemektir.\n \
 \n \
     release ve renew için, bir bağdaştırıcı adı belirtilmemişse TCP/IP için tüm kayıtlı\n \
-    bağdaştırıcılar için IP adres kirâları bırakılacak veyâ yenilenecektir.\n \
+    bağdaştırıcılar için yapılmış IP adres tahsisi bırakılacak veya yenilenecektir.\n \
 \n \
     setclassid için, bir sınıf kimliği belirtilmemişse sınıf kimliği silinmiş olacaktır.\n \
 \n \
@@ -62,6 +62,6 @@ BEGIN
         > ipconfig /renew EL*        ... EL ile başlayan adı olan tüm\n \
                                          bağlantıları yeniler.\n \
         > ipconfig /release *Bağ*    ... Eşleşen tüm bağlantıları bırakır.\n \
-                                         Ör: ""Yerli Alan Bağlantısı 1"" veyâ\n \
-                                             ""Yerli Alan Bağlantısı 2""\n"
+                                         Ör: ""Yerel Ağ Bağlantısı 1"" veya\n \
+                                             ""Yerel Ağ Bağlantısı 2""\n"
 END

@@ -128,7 +128,7 @@ BEGIN
 END
 
 MAIN_DIALOG_STANDARD_KB DIALOGEX DISCARDABLE 0, 0, 362, 115
-CAPTION "On screen keyboard"
+CAPTION "Ekran Klavyesi"
 FONT 8, "MS Shell Dlg"
 MENU IDR_OSK_MENU
 STYLE WS_SYSMENU | WS_MINIMIZEBOX
@@ -248,59 +248,59 @@ END
 
 IDR_OSK_MENU MENU DISCARDABLE
 BEGIN
-    POPUP "File"
+    POPUP "Dosya"
     BEGIN
-        MENUITEM "&Exit", IDM_EXIT
+        MENUITEM "&Çıkış", IDM_EXIT
     END
 
-    POPUP "Keyboard"
+    POPUP "Klavye"
     BEGIN
-        MENUITEM "Enhanced Keyboard", IDM_ENHANCED_KB, CHECKED
-        MENUITEM "Standard Keyboard", IDM_STANDARD_KB
+        MENUITEM "Geliştirilmiş Klavye", IDM_ENHANCED_KB, CHECKED
+        MENUITEM "Standart Klavye", IDM_STANDARD_KB
         MENUITEM SEPARATOR
-        MENUITEM "Regular Layout", IDM_REG_LAYOUT, CHECKED, GRAYED
-        MENUITEM "Block Layout", IDM_BLOCK_LAYOUT, GRAYED
+        MENUITEM "Düzenli Yerleşim", IDM_REG_LAYOUT, CHECKED, GRAYED
+        MENUITEM "Blok Yerleşimi", IDM_BLOCK_LAYOUT, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "101 keys", IDM_101_KEYS, CHECKED, GRAYED
-        MENUITEM "102 keys", IDM_102_KEYS, GRAYED
-        MENUITEM "106 keys", IDM_106_KEYS, GRAYED
+        MENUITEM "101 tuş", IDM_101_KEYS, CHECKED, GRAYED
+        MENUITEM "102 tuş", IDM_102_KEYS, GRAYED
+        MENUITEM "106 tuş", IDM_106_KEYS, GRAYED
     END
 
-    POPUP "Settings"
+    POPUP "Ayarlar"
     BEGIN
-        MENUITEM "Always on Top", IDM_ON_TOP, CHECKED
+        MENUITEM "Her Zaman Üstte", IDM_ON_TOP, CHECKED
         MENUITEM SEPARATOR
-        MENUITEM "&Use Click Sound", IDM_CLICK_SOUND
+        MENUITEM "&Tıklama Sesi Kullan", IDM_CLICK_SOUND
         MENUITEM SEPARATOR
-        MENUITEM "&Typing Mode...", IDM_TYPE_MODE, GRAYED
+        MENUITEM "&Yazma modu...", IDM_TYPE_MODE, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "&Font...", IDM_FONT, GRAYED
     END
 
-    POPUP "Help"
+    POPUP "Yardım"
     BEGIN
-        MENUITEM "&Help Topics", IDM_HELP_TOPICS, GRAYED
+        MENUITEM "&Yardım Konuları", IDM_HELP_TOPICS, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "&About On-Screen Keyboard...", IDM_ABOUT
+        MENUITEM "&Ekran Klavyesi Hakkında...", IDM_ABOUT
     END
 END
 
 IDD_WARNINGDIALOG_OSK DIALOGEX 0, 0, 250, 97
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION
-CAPTION "On-Screen Keyboard"
+CAPTION "Ekran Klavyesi"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
-    DEFPUSHBUTTON "OK", IDOK, 193, 76, 50, 14
+    DEFPUSHBUTTON "Tamam", IDOK, 193, 76, 50, 14
     ICON IDI_OSK, IDC_STATIC, 7, 17, 20, 20
-    LTEXT "On-Screen Keyboard provides a minimum level of functionality for mobility-impaired users. Mobility-impaired users will need a utility program with higher functionality for daily use.", IDC_STATIC, 36, 7, 207, 33
-    CONTROL "Do not show this message again", IDC_SHOWWARNINGCHECK, "Button",
+    LTEXT "Ekran Klavyesi, hareket güçlüğü çeken kullanıcılar için minimum düzeyde işlevsellik sağlar. Hareket güçlüğü çeken kullanıcılar, günlük kullanım için daha yüksek işlevselliğe sahip bir yardımcı programa ihtiyaç duyacaktır.", IDC_STATIC, 36, 7, 207, 33
+    CONTROL "Bu mesajı yeniden gösterme", IDC_SHOWWARNINGCHECK, "Button",
             BS_AUTOCHECKBOX | WS_TABSTOP, 43, 80, 137, 10
 END
 
 STRINGTABLE
 BEGIN
-    STRING_OSK "On-Screen Keyboard"
-    STRING_AUTHORS "Copyright Denis Robert"
+    STRING_OSK "Ekran Klavyesi"
+    STRING_AUTHORS "Telif Hakkı: Denis Robert"
 END
 
 /* EOF */

@@ -4,25 +4,25 @@ LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-    IDS_APPTITLE "ReactOS Resim ve Belgegeçer Görüntüleyicisi"
+    IDS_APPTITLE "ReactOS Resim ve Faks Görüntüleyicisi"
     IDS_SETASDESKBG "Masaüstü Arka Planı Olarak Ayarla"
-    IDS_NOPREVIEW "No preview available."
+    IDS_NOPREVIEW "Ön İzleme Mevcut Değil"
     IDS_PREVIEW "Ön İzleme"
     /* Tooltips */
     IDS_TOOLTIP_NEXT_PIC "Sonraki Resim"
     IDS_TOOLTIP_PREV_PIC "Önceki Resim"
-    IDS_TOOLTIP_BEST_FIT "Best fit to window (Ctrl+B)"
-    IDS_TOOLTIP_REAL_SIZE "Actual size (Ctrl+A)"
-    IDS_TOOLTIP_SLIDE_SHOW "Start slideshow (F11)"
+    IDS_TOOLTIP_BEST_FIT "Pencereye en iyi uyum (Ctrl+B)"
+    IDS_TOOLTIP_REAL_SIZE "Gerçek boyut (Ctrl+A)"
+    IDS_TOOLTIP_SLIDE_SHOW "Slayt Gösterisine Başla (F11)"
     IDS_TOOLTIP_ZOOM_IN "Yakınlaştır (+)"
     IDS_TOOLTIP_ZOOM_OUT "Uzaklaştır (-)"
-    IDS_TOOLTIP_ROT_CLOCKW "Saat Yönünde Döndür (Denetim+K)"
-    IDS_TOOLTIP_ROT_COUNCW "Saat Yönünün Tersi Yönünde Döndür (Denetim+L)"
-    IDS_TOOLTIP_DELETE "Delete (DEL)"
-    IDS_TOOLTIP_PRINT "Yazdır (Denetim+P)"
-    IDS_TOOLTIP_SAVEAS "Ayrı Sakla... (Denetim+S)"
-    IDS_TOOLTIP_MODIFY "Modify (Ctrl+E)"
-    IDS_TOOLTIP_HELP_TOC "Help topics (F1)"
+    IDS_TOOLTIP_ROT_CLOCKW "Saat Yönünde Döndür (Ctrl+K)"
+    IDS_TOOLTIP_ROT_COUNCW "Saat Yönünün Tersi Yönünde Döndür (Ctrl+L)"
+    IDS_TOOLTIP_DELETE "Sil (DEL)"
+    IDS_TOOLTIP_PRINT "Yazdır (Ctrl+P)"
+    IDS_TOOLTIP_SAVEAS "Farklı Sakla... (Ctrl+S)"
+    IDS_TOOLTIP_MODIFY "Değiştir (Ctrl+E)"
+    IDS_TOOLTIP_HELP_TOC "Yardım konuları (F1)"
 END
 
 STRINGTABLE

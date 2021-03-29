@@ -4,7 +4,7 @@ LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
 IDR_BROWSE_MAIN_MENU MENU
 {
-    POPUP "&Kütük"
+    POPUP "&Dosya"
     {
         POPUP "&Yeni"
         {
@@ -18,14 +18,14 @@ IDR_BROWSE_MAIN_MENU MENU
         MENUITEM "Yaz&dır...",                  ID_BROWSE_PRINT
         MENUITEM "Yazd&ırma Ön İzlemesi",       ID_BROWSE_PRINT_PREVIEW
         MENUITEM SEPARATOR
-        MENUITEM "&Husûsiyetler",               ID_BROWSE_PROPERTIES
+        MENUITEM "&Özellikler",               ID_BROWSE_PROPERTIES
         MENUITEM "&Kapat",                      ID_BROWSE_QUIT
     }
     POPUP "&Görünüm"
     {
         POPUP "&Araç Çubukları"
         {
-            MENUITEM "&Ölçünlü Çubuk",          ID_BROWSE_BAR_STD
+            MENUITEM "&Standart Çubuk",          ID_BROWSE_BAR_STD
             MENUITEM "&Adres Çubuğu",           ID_BROWSE_BAR_ADDR
         }
     }

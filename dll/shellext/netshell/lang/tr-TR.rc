@@ -80,20 +80,20 @@ END
 
 IDD_NETWORKSETTINGSPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS Kur"
+CAPTION "ReactOS'u Kur"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_NET_SETUP, IDC_STATIC, 21, 10, 20, 20
-    LTEXT "Tipik ya da husûsî ayarlar kullanıp kullanmayacağınızı seçiniz:", IDC_STATIC, 53, 7, 240, 20
+    LTEXT "Tipik ya da özelliştirilmiş ayarlar kullanıp kullanmayacağınızı seçiniz:", IDC_STATIC, 53, 7, 240, 20
     AUTORADIOBUTTON "Tipik Ayarlar", IDC_NETWORK_TYPICAL, 53, 27, 253, 20, WS_TABSTOP | WS_GROUP
-    AUTORADIOBUTTON "Özel Ayarlar", IDC_NETWORK_CUSTOM, 53, 72, 253, 20, WS_TABSTOP
-    LTEXT "ReactOS Ağları için, Kütük ve Yazdırma Paylaşımı'yla İstemci'yi kullanan ağ bağlantılarını ve kendiliğinden adreslemeli TCP/IP aktarım kuralı oluşturur.", IDC_STATIC, 65, 45, 240, 30
+    AUTORADIOBUTTON "Özelleştirilmiş Ayarlar", IDC_NETWORK_CUSTOM, 53, 72, 253, 20, WS_TABSTOP
+    LTEXT "ReactOS Ağları için, Dosya ve Yazdırma Paylaşımı'yla İstemci'yi kullanan ağ bağlantılarını ve kendiliğinden adreslemeli TCP/IP aktarım kuralı oluşturur.", IDC_STATIC, 65, 45, 240, 30
     LTEXT "Ağ bileşenlerini elle yapılandırmanıza olanak sağlar.", IDC_STATIC, 65, 90, 243, 20
 END
 
 IDD_NETWORKCOMPONENTPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS Kur"
+CAPTION "ReactOS'u Kur"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Aygıt için:", IDC_STATIC, 33, 2, 100, 20
@@ -103,7 +103,7 @@ BEGIN
     PUSHBUTTON "&Kur...", IDC_NETWORK_INSTALL, 122, 75, 50, 14, WS_DISABLED | WS_TABSTOP
     PUSHBUTTON "K&aldır", IDC_NETWORK_UNINSTALL, 177, 75, 50, 14, WS_DISABLED | WS_TABSTOP
     PUSHBUTTON "&Özellikler", IDC_NETWORK_PROPERTIES, 232, 75, 50, 14, WS_DISABLED | WS_TABSTOP
-    GROUPBOX "Tanım", IDC_STATIC, 33, 90, 250, 50, BS_GROUPBOX
+    GROUPBOX "Açıklama", IDC_STATIC, 33, 90, 250, 50, BS_GROUPBOX
 END
 
 IDD_NETWORKDOMAINPAGE DIALOGEX 0, 0, 317, 143
@@ -122,13 +122,13 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_PHYSICAL_ADDRESS "Fizîkî Adres"
+    IDS_PHYSICAL_ADDRESS "Fiziki Adres"
     IDS_IP_ADDRESS "IP Adresi"
     IDS_SUBNET_MASK "Alt Ağ Maskesi"
     IDS_DEF_GATEWAY "Ön Tanımlı Geçit"
     IDS_DHCP_SERVER "DHCP Sunucusu"
-    IDS_LEASE_OBTAINED "Elde Edilen Kirâ"
-    IDS_LEASE_EXPIRES "Kirâ Bitişi"
+    IDS_LEASE_OBTAINED "IP Adresi Ne Kadar Kullanılacak"
+    IDS_LEASE_EXPIRES "IP Adresi Kullanım Bitişi"
     IDS_DNS_SERVERS "DNS Sunucuları"
     IDS_WINS_SERVERS "WINS Sunucuları"
     IDS_PROPERTY "Özellik"
@@ -173,6 +173,6 @@ BEGIN
     IDS_NETWORKCOMPONENTSUBTITLE "Bilgisayarınızda hangi ağ bileşenlerinin kullanacağını belirtir. Yeni bileşenler eklemek için Kur'a tıklayınız."
     IDS_NETWORKDOMAINTITLE "Çalışma Takımı ya da Bilgisayar Etki Alanı"
     IDS_NETWORKDOMAINSUBTITLE "Bir etki alanı, bir ağ yöneticisi eliyle tanımlanmış bir takım bilgisayardır. Bir çalışma takımı, aynı çalışma takımı adını paylaşan bir takım bilgisayardır."
-    IDS_REACTOS_SETUP "ReactOS Kur"
-    IDS_WZD_DOMAIN_NAME "Kur, etki alanınızın ya da\nçalışma takımınızın adını\ngirene dek sürdüremez."
+    IDS_REACTOS_SETUP "ReactOS'u Kur"
+    IDS_WZD_DOMAIN_NAME "Kurulum Yöneticisi, etki alanınızın ya da\nçalışma takımınızın adını\ngirene dek sürdüremez."
 END

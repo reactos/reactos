@@ -26,32 +26,32 @@ MAIN_MENU MENU
 BEGIN
     POPUP "&Dosya"
     BEGIN
-        MENUITEM "&Yeni\tDenetim+N", CMD_NEW
-        MENUITEM "&New Window\tCtrl+Shift+N", CMD_NEW_WINDOW
-        MENUITEM "&Aç...\tDenetim+O", CMD_OPEN
-        MENUITEM "&Kaydet\tDenetim+S", CMD_SAVE
+        MENUITEM "&Yeni\tCtrl+N", CMD_NEW
+        MENUITEM "&Yeni Pencere\tCtrl+Shift+N", CMD_NEW_WINDOW
+        MENUITEM "&Aç...\tCtrl+O", CMD_OPEN
+        MENUITEM "&Kaydet\tCtrl+S", CMD_SAVE
         MENUITEM "&Farklı Kaydet...", CMD_SAVE_AS
         MENUITEM SEPARATOR
         MENUITEM "&Sayfa Yapısı...", CMD_PAGE_SETUP
-        MENUITEM "Ya&zdır...\tDenetim+P", CMD_PRINT
+        MENUITEM "Ya&zdır...\tCtrl+P", CMD_PRINT
         MENUITEM SEPARATOR
         MENUITEM "Ç&ıkış", CMD_EXIT
     END
     POPUP "Dü&zen"
     BEGIN
-        MENUITEM "&Geri Al\tDenetim+Z", CMD_UNDO
+        MENUITEM "&Geri Al\tCtrl+Z", CMD_UNDO
         MENUITEM SEPARATOR
-        MENUITEM "&Kes\tDenetim+X", CMD_CUT
-        MENUITEM "K&opyala\tDenetim+C", CMD_COPY
-        MENUITEM "Y&apıştır\tDenetim+V", CMD_PASTE
+        MENUITEM "&Kes\tCtrl+X", CMD_CUT
+        MENUITEM "K&opyala\tCtrl+C", CMD_COPY
+        MENUITEM "Y&apıştır\tCtrl+V", CMD_PASTE
         MENUITEM "&Sil\tSil", CMD_DELETE
         MENUITEM SEPARATOR
-        MENUITEM "&Bul...\tDenetim+F", CMD_SEARCH
+        MENUITEM "&Bul...\tCtrl+F", CMD_SEARCH
         MENUITEM "Son&rakini Bul\tF3", CMD_SEARCH_NEXT
-        MENUITEM "&Değiştir...\tDenetim+H", CMD_REPLACE
-        MENUITEM "G&it...\tDenetim+G", CMD_GOTO
+        MENUITEM "&Değiştir...\tCtrl+H", CMD_REPLACE
+        MENUITEM "G&it...\tCtrl+G", CMD_GOTO
         MENUITEM SEPARATOR
-        MENUITEM "&Tümünü Seç\tDenetim+A", CMD_SELECT_ALL
+        MENUITEM "&Tümünü Seç\tCtrl+A", CMD_SELECT_ALL
         MENUITEM "Saat/Tari&h\tF5", CMD_TIME_DATE
     END
     POPUP "&Biçim"
@@ -81,7 +81,7 @@ BEGIN
     CONTROL "", rct1, "Static", SS_WHITERECT, 260, 42, 80, 80
     CONTROL "", rct2, "Static", SS_GRAYRECT, 340, 46, 4, 80
     CONTROL "", rct3, "Static", SS_GRAYRECT, 264, 122, 80, 4
-    GROUPBOX "Kâğıt", grp2, 8, 6, 224, 56, BS_GROUPBOX
+    GROUPBOX "Kağıt", grp2, 8, 6, 224, 56, BS_GROUPBOX
     LTEXT "Boy&ut:", stc2, 16, 22, 36, 8
     COMBOBOX cmb2, 64, 20, 160, 160, CBS_SIMPLE | CBS_DROPDOWN | CBS_SORT | WS_GROUP | WS_TABSTOP | WS_VSCROLL
     LTEXT "Kay&nak:", stc3, 16, 42, 36, 8

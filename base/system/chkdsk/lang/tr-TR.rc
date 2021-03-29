@@ -5,8 +5,8 @@ LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 STRINGTABLE
 BEGIN
     IDS_USAGE "\n\
-Usage: %s [drive:] [-F] [-V] [-R] [-C]\n\n\
-[drive:]    Specifies the drive to check.\n\
+Kullanım: %s [sürücü:] [-F] [-V] [-R] [-C]\n\n\
+[sürücü:]   Kontrol edilecek sürücüyü belirtir.\n\
 -F          Disk üzerindeki hataları onarır.\n\
 -V          Disk üzerindeki bütün dosyaların tam yollarını görüntüler.\n\
 -R          Bozuk sektörlerin yerlerini saptar ve okunabilir bilgiyi kurtarır.\n\
@@ -16,9 +16,9 @@ Usage: %s [drive:] [-F] [-V] [-R] [-C]\n\n\
     IDS_PERCENT_COMPL "Yüzde %d tamamlandı.\r"
     IDS_FILE_SYSTEM "Dosya sistemin türü %s'tır.\n"
     IDS_ABOUT "\n\
-Chkdskx v1.0.1 by Mark Russinovich\n\
+Chkdskx v1.0.1 Mark Russinovich tarafından yazılmıştır\n\
 Systems Internals - http://www.sysinternals.com\n\
-ReactOS'a uyarlaması 1999 Emanuele Aliberti tarafından\n\n"
+ReactOS'a uyarlaması 1999 Emanuele Aliberti tarafından yapıldı\n\n"
 END
 
 STRINGTABLE

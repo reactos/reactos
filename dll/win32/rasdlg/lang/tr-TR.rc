@@ -16,7 +16,7 @@ BEGIN
     PUSHBUTTON "&Düzenle...", 1016, 81, 187, 70, 14
     PUSHBUTTON "&Sil", 1014, 154, 187, 70, 14
     AUTOCHECKBOX "E&ğer Numara Olamıyorsa Bir Sonraki Numarayı Dene", 1011, 8, 210, 243, 10, BS_TOP | BS_MULTILINE
-    AUTOCHECKBOX "&Başarılı Numarayı Dizelgenin En Üstüne Taşı", 1010, 8, 228, 243, 10, BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX "&Başarılı Numarayı Listenin En Üstüne Taşı", 1010, 8, 228, 243, 10, BS_TOP | BS_MULTILINE
     DEFPUSHBUTTON "Tamam", 1, 122, 245, 60, 14
     PUSHBUTTON "İptal", 2, 188, 245, 60, 14
 END
@@ -29,7 +29,7 @@ BEGIN
     LTEXT "", 1029, 5, 5, 241, 35, NOT WS_GROUP
     LTEXT "&Bağlantılar:", -1, 5, 46, 238, 10
     CONTROL "List1", 1677, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000440D, 5, 57, 240, 57
-    AUTOCHECKBOX "B&ir Dahaki Kez Oturum Açana Dek Bana Bir Daha Sorma", 1022, 8, 125, 235, 10
+    AUTOCHECKBOX "B&ir Dahaki Sefer Oturum Açana Dek Bana Bir Daha Sorma", 1022, 8, 125, 235, 10
     PUSHBUTTON "&Ayarlar", 1026, 7, 149, 60, 14
     DEFPUSHBUTTON "Ba&ğlan...", 1024, 117, 149, 60, 14
     PUSHBUTTON "İptal", 1025, 183, 149, 60, 14
@@ -37,16 +37,16 @@ END
 
 104 DIALOGEX 6, 18, 269, 263
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
-CAPTION "Geçek Donatılma Yanlışlıkları"
+CAPTION "Satır Gruplama Hataları"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON 32516, 1031, 7, 7, 20, 20
-    LTEXT "Bir ya da daha çok ek geçek bağlanmadı.", 1033, 37, 8, 216, 20
+    LTEXT "Bir ya da daha çok ek hatta bağlanmadı.", 1033, 37, 8, 216, 20
     CONTROL "", 1032, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x00008401, 37, 83, 224, 136
-    AUTOCHECKBOX "&İleride, Olmayan Geçekleri Deneme", 1030, 38, 226, 222, 10
+    AUTOCHECKBOX "&Gelecekte Başarısız Hatları Denemeyin", 1030, 38, 226, 222, 10
     DEFPUSHBUTTON "&Kabul Et", 1, 135, 242, 60, 14
     PUSHBUTTON "&Ertele", 2, 201, 242, 60, 14
-    LTEXT "Eğer yalnızca bir tek geçek bağlıysa sunucu çok geçekli aramaları kabul etmeye yapılandırılmamış olabilir. Böyle bir durumda gereksiz bağlantı yüklerinden kaçınmak için ""İleride, Olmayan Geçekleri Deneme""yi imleyiniz.", -1, 37, 36, 224, 44
+    LTEXT "Eğer yalnızca bir tek hat bağlıysa sunucu çok hatlı aramaları kabul etmeye yapılandırılmamış olabilir. Böyle bir durumda gereksiz bağlantı yüklerinden kaçınmak için ""İleride, Olmayan Hatları Deneme""ye tıklayınız.", -1, 37, 36, 224, 44
 END
 
 105 DIALOGEX 0, 0, 261, 253
@@ -57,26 +57,26 @@ BEGIN
     GROUPBOX "Oturum Açma Güvenliği", 1547, 7, 33, 246, 191
     LTEXT "&Veri Çözme:", 1546, 7, 5, 247, 10
     COMBOBOX 1495, 7, 17, 247, 76, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
-    AUTORADIOBUTTON "&Genişletilebilir Kimlik Doğrulama İletşim Kâidesi'ni (EAP'yi) Kullan", 1544, 17, 47, 226, 8, WS_GROUP
+    AUTORADIOBUTTON "&Genişletilebilir Kimlik Doğrulama İletişim Protokolü'nü (EAP'yi) Kullan", 1544, 17, 47, 226, 8, WS_GROUP
     LTEXT "EAP Türü", -1, 18, 64, 35, 8, NOT WS_VISIBLE | NOT WS_GROUP
     COMBOBOX 1034, 53, 62, 191, 42, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | NOT WS_TABSTOP
-    PUSHBUTTON "&Husûsiyetler", 1035, 184, 77, 60, 14
-    AUTORADIOBUTTON "&Bu İletişim Kâidelerine İzin Ver", 1545, 17, 92, 224, 10
-    AUTOCHECKBOX "&Çözülmemiş Şifre (PAP)", 1491, 28, 105, 215, 10, BS_TOP | BS_MULTILINE | WS_GROUP
-    AUTOCHECKBOX "&Shiva Şifre Kimlik Doğrulama İletşim Kâidesi (SPAP)", 1496, 28, 119, 214, 10, BS_TOP | BS_MULTILINE
-    AUTOCHECKBOX "&Challenge Handshake Kimlik Doğrulama İletşim Kâidesi (CHAP)", 1494, 28, 133, 215, 10, BS_TOP | BS_MULTILINE
+    PUSHBUTTON "&Özellikler", 1035, 184, 77, 60, 14
+    AUTORADIOBUTTON "&Bu İletişim Protokollerine İzin Ver", 1545, 17, 92, 224, 10
+    AUTOCHECKBOX "&Çözülmemiş Şifre Protokolü(PAP)", 1491, 28, 105, 215, 10, BS_TOP | BS_MULTILINE | WS_GROUP
+    AUTOCHECKBOX "&Shiva Şifre Kimlik Doğrulama İletişim Protokolü (SPAP)", 1496, 28, 119, 214, 10, BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX "&Challenge Handshake Kimlik Doğrulama İletişim Protokolü (CHAP)", 1494, 28, 133, 215, 10, BS_TOP | BS_MULTILINE
     AUTOCHECKBOX "&MS CHAP (MS-CHAP)", 1493, 28, 148, 212, 10, BS_TOP | BS_MULTILINE
     AUTOCHECKBOX "&Windows 95 Sunucuları İçin Eski MS-CHAP Sürümüne İzin Ver", 200, 46, 162, 198, 10, BS_TOP | BS_MULTILINE
     AUTOCHECKBOX "M&icrosoft CHAP Sürüm 2 (MS-CHAP Sürüm 2)", 1492, 28, 176, 200, 10, BS_TOP | BS_MULTILINE
     CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN | WS_GROUP, 28, 189, 208, 1
-    AUTOCHECKBOX "MS-CH&AP Tabanlı İletişim Kâideleri İçin ReactOS Oturum Açma Adımı ve Şifremi Kendiliğinden Kullan (Eğer Varsa Etki Alanını da)", 1549, 28, 195, 213, 24, BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX "MS-CH&AP Tabanlı İletişim Protokolleri İçin ReactOS Oturum Açma Adımı ve Şifremi Kendiliğinden Kullan (Eğer Varsa Etki Alanını da, yoksa dışında)", 1549, 28, 195, 213, 24, BS_TOP | BS_MULTILINE
     DEFPUSHBUTTON "Tamam", 1, 127, 232, 60, 14
     PUSHBUTTON "İptal", 2, 192, 232, 60, 14
 END
 
 106 DIALOGEX 6, 18, 255, 109
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
-CAPTION "Bağlama Bitirildi"
+CAPTION "Bağlantı Yapıldı"
 FONT 8, "MS Shell Dlg"
 BEGIN
     DEFPUSHBUTTON "Tamam", 1, 97, 91, 60, 14
@@ -97,7 +97,7 @@ BEGIN
     EDITTEXT 1051, 77, 30, 163, 14, ES_AUTOHSCROLL
     LTEXT "&Ülke ya da Bölge Kodu:", 1056, 18, 48, 221, 8, NOT WS_GROUP
     COMBOBOX 1054, 17, 61, 224, 93, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | NOT WS_TABSTOP
-    AUTOCHECKBOX "&Çevirme Kâidelerini Kullan", 1048, 20, 81, 219, 10, BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX "&Çevirme Protokollerini Kullan", 1048, 20, 81, 219, 10, BS_TOP | BS_MULTILINE
     GROUPBOX "Aç&ıklama", 1052, 7, 102, 243, 36
     EDITTEXT 1050, 17, 115, 224, 14, ES_AUTOHSCROLL
     DEFPUSHBUTTON "Tamam", 1, 127, 147, 60, 14
@@ -136,11 +136,11 @@ END
 
 110 DIALOGEX 12, 16, 230, 105
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
-CAPTION "Geri Arama"
+CAPTION "Geri Ara"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Sunucuda ""Arayana Göre Ayarla"" geri arama ayrıcalığınız var. Tamam'a tıklayınız ve sunucu aşağıdaki numaradan sizi geri arayacaktır. Geri aramayı atlamak için İptal'e tıklayınız.", 1066, 5, 5, 221, 39, SS_NOPREFIX
-    LTEXT "&Çevirgenizin telefon numarasını giriniz:", 1067, 5, 46, 222, 8, NOT WS_GROUP
+    LTEXT "&Modeminizin telefon numarasını giriniz:", 1067, 5, 46, 222, 8, NOT WS_GROUP
     EDITTEXT 1065, 5, 57, 221, 14, ES_AUTOHSCROLL
     DEFPUSHBUTTON "Tamam", 1, 100, 85, 60, 14, WS_GROUP
     PUSHBUTTON "İptal", 2, 164, 85, 60, 14
@@ -148,7 +148,7 @@ END
 
 111 DIALOGEX 6, 19, 265, 135
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
-CAPTION "%1'e Bağlanma Yanlışlığı"
+CAPTION "%1'e Bağlanma Hatası"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON 32515, 1068, 7, 7, 20, 20, WS_GROUP
@@ -165,8 +165,8 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "ReactOS, ne denli bilgi gönderiliyor ve alınıyor olduğuna bağlı olarak aygıtları kendiliğinden çevirebilir ve erteleyebilir.", 1085, 9, 7, 253, 30
     GROUPBOX "Kendiliğinden Çevirme", -1, 6, 38, 249, 71
-    LTEXT "Bu bağlantı aşağıdaki şartların ikisiyle karşılaştığında başka bir geçek çevir:", 1083, 16, 51, 237, 16, NOT WS_GROUP
-    LTEXT "&En Az Etknlik:", -1, 16, 73, 100, 8
+    LTEXT "Bu bağlantı aşağıdaki şartların ikisiyle karşılaştığında başka bir hat çevir:", 1083, 16, 51, 237, 16, NOT WS_GROUP
+    LTEXT "&En Az Etkinlik:", -1, 16, 73, 100, 8
     COMBOBOX 1079, 117, 70, 60, 100, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
     LTEXT "E&n Az Süre:", 1084, 16, 92, 99, 8, NOT WS_GROUP
     COMBOBOX 1080, 117, 89, 90, 162, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
@@ -196,7 +196,7 @@ CAPTION "Çevirmeli Ağ"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON 563, 1098, 7, 6, 20, 20, WS_GROUP
-    LTEXT "Kendiliğinden çevirme girişimi başarısız. Bu konumdan kendiliğinden çevirmeyi edilginleştirmek ister misiniz?", 1099, 40, 6, 181, 34, NOT WS_GROUP
+    LTEXT "Kendiliğinden çevirme girişimi başarısız. Bu konumdan kendiliğinden çevirmeyi devre dışı bırakmayı ister misiniz?", 1099, 40, 6, 181, 34, NOT WS_GROUP
     PUSHBUTTON "&Evet", 1, 60, 42, 50, 14
     DEFPUSHBUTTON "&Hayır", 2, 115, 42, 50, 14
 END
@@ -211,11 +211,11 @@ BEGIN
     COMBOBOX 1416, 88, 56, 165, 112, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | NOT WS_TABSTOP
     LTEXT "&Şuradan Çevriliyor:", 1415, 9, 77, 71, 8
     COMBOBOX 1414, 88, 75, 89, 112, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | NOT WS_TABSTOP
-    PUSHBUTTON "Çe&virme Kâideleri", 1108, 181, 75, 72, 14
+    PUSHBUTTON "Çe&virme Protokolleri", 1108, 181, 75, 72, 14
     CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN | WS_GROUP, 8, 96, 245, 1
     DEFPUSHBUTTON "&Çevir", 1590, 8, 103, 61, 14
     PUSHBUTTON "İptal", 1591, 70, 103, 60, 14
-    PUSHBUTTON "&Husûsiyetler", 1107, 132, 103, 60, 14
+    PUSHBUTTON "&Özellikler", 1107, 132, 103, 60, 14
     PUSHBUTTON "&Yardım", 1592, 194, 103, 60, 14
 END
 
@@ -236,7 +236,7 @@ BEGIN
     CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN | WS_GROUP, 8, 149, 248, 1
     DEFPUSHBUTTON "&Çevir", 1590, 8, 156, 60, 14, WS_GROUP
     PUSHBUTTON "İptal", 1591, 71, 156, 60, 14
-    PUSHBUTTON "&Husûsiyetler", 1107, 133, 156, 60, 14
+    PUSHBUTTON "&Özellikler", 1107, 133, 156, 60, 14
     PUSHBUTTON "&Yardım", 1592, 195, 156, 60, 14
 END
 
@@ -259,7 +259,7 @@ BEGIN
     CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN | WS_GROUP, 9, 167, 247, 1
     DEFPUSHBUTTON "&Çevir", 1590, 8, 173, 60, 14, WS_GROUP
     PUSHBUTTON "İptal", 1591, 71, 173, 60, 14
-    PUSHBUTTON "&Husûsiyetler", 1107, 133, 173, 60, 14
+    PUSHBUTTON "&Özellikler", 1107, 133, 173, 60, 14
     PUSHBUTTON "&Yardım", 1592, 195, 173, 60, 14
 END
 
@@ -285,7 +285,7 @@ BEGIN
     CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN | WS_GROUP, 10, 192, 247, 1
     DEFPUSHBUTTON "&Çevir", 1590, 10, 199, 60, 14, WS_GROUP
     PUSHBUTTON "İptal", 1591, 72, 199, 60, 14
-    PUSHBUTTON "&Husûsiyetler", 1107, 134, 199, 60, 14
+    PUSHBUTTON "&Özellikler", 1107, 134, 199, 60, 14
     PUSHBUTTON "&Yardım", 1592, 196, 199, 60, 14
 END
 
@@ -309,7 +309,7 @@ BEGIN
     CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN | WS_GROUP, 10, 173, 247, 1
     DEFPUSHBUTTON "&Çevir", 1590, 10, 180, 60, 14, WS_GROUP
     PUSHBUTTON "İptal", 1591, 72, 180, 60, 14
-    PUSHBUTTON "&Husûsiyetler", 1107, 134, 180, 60, 14
+    PUSHBUTTON "&Özellikler", 1107, 134, 180, 60, 14
     PUSHBUTTON "&Yardım", 1592, 197, 180, 60, 14
 END
 
@@ -318,11 +318,11 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
 CAPTION "ISDN Yapılandırılması"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "&Geçek Türü:", 1155, 9, 9, 65, 8
+    LTEXT "&Hat Türü:", 1155, 9, 9, 65, 8
     COMBOBOX 1153, 76, 7, 148, 42, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP
-    AUTOCHECKBOX "G&eçek Türüyle Anlaş", 1150, 23, 26, 199, 10, BS_TOP | BS_MULTILINE | WS_GROUP
+    AUTOCHECKBOX "Hat Türüyle Anlaş", 1150, 23, 26, 199, 10, BS_TOP | BS_MULTILINE | WS_GROUP
     GROUPBOX "    ", 1152, 8, 48, 214, 51, WS_GROUP
-    AUTOCHECKBOX "E&ski Uygun İletişim Kâidesini Kullan", 1149, 17, 48, 102, 10, BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX "E&ski Uygun İletişim Protokolü Kullan", 1149, 17, 48, 102, 10, BS_TOP | BS_MULTILINE
     LTEXT "&Kullanılacak Kanallar:", 1154, 16, 65, 100, 8, NOT WS_GROUP
     EDITTEXT 1151, 119, 61, 94, 14, ES_AUTOHSCROLL
     AUTOCHECKBOX "&Donanım Sıkıştırmasını Etkinleştir", 1148, 16, 82, 198, 10, BS_TOP | BS_MULTILINE
@@ -335,9 +335,9 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
 CAPTION "ISDN'yi Yapılandır"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "&Geçek Türü:", 1155, 9, 11, 55, 8
+    LTEXT "&Hat Türü:", 1155, 9, 11, 55, 8
     COMBOBOX 1153, 67, 7, 148, 43, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP
-    AUTOCHECKBOX "G&eçek Türüyle Anlaş", 1150, 21, 28, 194, 10, BS_TOP | BS_MULTILINE | WS_GROUP
+    AUTOCHECKBOX "H&at Türüyle Anlaş", 1150, 21, 28, 194, 10, BS_TOP | BS_MULTILINE | WS_GROUP
     PUSHBUTTON "Tamam", 1, 90, 49, 60, 14, WS_GROUP
     PUSHBUTTON "İptal", 2, 154, 49, 60, 14
 END
@@ -366,22 +366,22 @@ END
 
 125 DIALOGEX 12, 16, 261, 190
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
-CAPTION "Çevirge Yapılandırılması"
+CAPTION "Modem Yapılandırılması"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON 15102, 1238, 7, 7, 20, 20
-    LTEXT "Çevirge", -1, 25, 27, 24, 8, NOT WS_VISIBLE | NOT WS_GROUP
+    LTEXT "Modem", -1, 25, 27, 24, 8, NOT WS_VISIBLE | NOT WS_GROUP
     EDITTEXT 1235, 40, 7, 214, 16, ES_AUTOHSCROLL | ES_READONLY | NOT WS_BORDER
     LTEXT "E&n Çok Hız (bps):", 1243, 7, 36, 110, 8
     COMBOBOX 1239, 119, 34, 136, 186, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | NOT WS_TABSTOP
-    LTEXT "&Çevirge İletişim Kâidesi", 1244, 7, 52, 111, 8
+    LTEXT "&Modem İletişim Protokolü", 1244, 7, 52, 111, 8
     COMBOBOX 1245, 119, 50, 136, 186, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | NOT WS_TABSTOP
-    GROUPBOX "Donanım Husûsiyetleri", 1237, 6, 70, 248, 61, WS_GROUP
+    GROUPBOX "Donanım Özellikleri", 1237, 6, 70, 248, 61, WS_GROUP
     AUTOCHECKBOX "&Donanım Akış Denetimini Etkinleştir", 1232, 19, 82, 217, 10, BS_TOP | BS_MULTILINE
-    AUTOCHECKBOX "Ç&evirge Yanlışlık Denetimini Etkinleştir", 1231, 19, 98, 217, 10, BS_TOP | BS_MULTILINE
-    AUTOCHECKBOX "Çe&virge Sıkıştırmasını Etkinleştir", 1229, 19, 115, 217, 10, BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX "M&odem Hata Denetimini Etkinleştir", 1231, 19, 98, 217, 10, BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX "Mo&dem Sıkıştırmasını Etkinleştir", 1229, 19, 115, 217, 10, BS_TOP | BS_MULTILINE
     AUTOCHECKBOX "&Uçbirim Penceresini Göster", 1234, 8, 136, 246, 10, BS_TOP | BS_MULTILINE
-    AUTOCHECKBOX "Çev&irge Hoparlörünü Etkinleştir", 1230, 8, 151, 247, 10, BS_TOP | BS_MULTILINE | WS_GROUP
+    AUTOCHECKBOX "Mod&em Hoparlörünü Etkinleştir", 1230, 8, 151, 247, 10, BS_TOP | BS_MULTILINE | WS_GROUP
     DEFPUSHBUTTON "Tamam", 1, 129, 171, 60, 14, WS_GROUP
     PUSHBUTTON "İptal", 2, 194, 171, 60, 14
 END
@@ -401,12 +401,12 @@ END
 
 127 DIALOGEX 16, 20, 260, 135
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
-CAPTION "NetWare veyâ Uyumlu Bağlantılar"
+CAPTION "NetWare veya Uyumlu Bağlantılar"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON 32515, 1278, 7, 7, 21, 20, WS_GROUP
     LTEXT "Bir NetWare uyumlu ağ için bağlantılarınız var. PPP IPX bağlantısı kurulduğunda bu bağlantılar kapatılacaktır.", 1279, 42, 7, 215, 37
-    LTEXT "Çevirmeden önce veri yitiminden kaçınmak için ya bu bağlantıları kullanan tüm kütükleri siliniz ya da bu girdinin Ağ İletişim Kâidesi ayarlarında IPX'in imini kaldırınız.", 1280, 42, 46, 215, 38, NOT WS_GROUP
+    LTEXT "Çevirmeden önce veri yitiminden kaçınmak için ya bu bağlantıları kullanan tüm dosyaları siliniz ya da bu girdinin Ağ İletişim Protokol ayarlarında IPX'in simgesini kaldırınız.", 1280, 42, 46, 215, 38, NOT WS_GROUP
     AUTOCHECKBOX "&Gelecekte Bu İletiyi Gösterme", 1277, 42, 86, 215, 10, BS_TOP | BS_MULTILINE | WS_GROUP
     DEFPUSHBUTTON "Tamam", 1, 65, 112, 60, 14, WS_GROUP
     PUSHBUTTON "İptal", 2, 134, 112, 60, 14
@@ -417,7 +417,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
 CAPTION "Elle Çevir"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Almacı kaldırınız ve çeviriniz (ya da çevirmek için işletmene sorunuz). Çevirme bitirildikten sonra Tamam'a tıklayınız. Almacı, sessiz olana dek dinleyniz, sonra erteleyiniz.", 1281, 8, 8, 219, 32
+    LTEXT "Ahizeyi kaldırınız ve arayınız (ya da çevirmek için işletmenize sorunuz). Çevirme bitirildikten sonra Tamam'a tıklayınız. Ahizeyi, arama bitene dek dinleyiniz, Telefonu kapatınız.", 1281, 8, 8, 219, 32
     LTEXT "Telefon Numarası:", 1282, 8, 46, 91, 8
     LTEXT "", 1283, 103, 46, 126, 8, NOT WS_GROUP
     DEFPUSHBUTTON "Tamam", 1, 104, 70, 60, 14, WS_GROUP
@@ -426,12 +426,12 @@ END
 
 129 DIALOGEX 6, 20, 260, 85
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Ağ İletişim Kâidesi Bağlantı Sonucu"
+CAPTION "Ağ İletişim Protokolünün Bağlantı Sonucu"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON 32516, 1328, 7, 7, 21, 20, WS_GROUP
     LTEXT "", 1329, 38, 7, 216, 24, NOT WS_GROUP
-    AUTOCHECKBOX "O&lmayan İletişim Kâidelerini Bir Dahaki Kezde İsteme", 1327, 40, 44, 215, 10, BS_TOP | BS_MULTILINE | WS_GROUP
+    AUTOCHECKBOX "O&lmayan İletişim Protokollerini Bir Dahaki Sefer İsteme", 1327, 40, 44, 215, 10, BS_TOP | BS_MULTILINE | WS_GROUP
     PUSHBUTTON "&Kabul Et", 1, 129, 64, 60, 14
     PUSHBUTTON "&Ertele", 2, 193, 64, 60, 14
 END
@@ -446,7 +446,7 @@ BEGIN
     COMBOBOX 1406, 9, 46, 215, 125, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | NOT WS_TABSTOP
     LTEXT "&X.121 Adresi:", 1407, 9, 66, 213, 8, NOT WS_GROUP
     EDITTEXT 1402, 8, 77, 215, 14, ES_AUTOHSCROLL
-    GROUPBOX "Seçimlik", 1405, 8, 95, 215, 79
+    GROUPBOX "İsteğe bağlı", 1405, 8, 95, 215, 79
     LTEXT "&Kullanıcı Verisi:", 1411, 19, 109, 182, 8, NOT WS_GROUP
     EDITTEXT 1404, 19, 120, 193, 14, ES_AUTOHSCROLL
     LTEXT "&Olanaklar:", 1409, 19, 138, 182, 8, NOT WS_GROUP
@@ -464,7 +464,7 @@ BEGIN
     LTEXT "&Şu Konuma Göre Kendiliğinden Çevirmeyi Etkinleştir:", 1006, 8, 42, 213, 8
     CONTROL "", 1004, "SYSLISTVIEW32", WS_BORDER | WS_GROUP | WS_TABSTOP | 0x0000C401, 7, 53, 216, 109
     AUTOCHECKBOX "&Kendiliğinden Çevirmeden Önce Tüm Zamanlarda Bana Sor", 1496, 8, 170, 218, 9, BS_TOP | BS_MULTILINE
-    AUTOCHECKBOX "&Ben Oturum Açtığım Sürede Kendiliğinden Çevirmeyi Edilginleştir", 1550, 8, 185, 217, 9, BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX "&Ben Oturum Açtığım Sürede Kendiliğinden Çevirmeyi Devre Dışı Bırak", 1550, 8, 185, 217, 9, BS_TOP | BS_MULTILINE
 END
 
 147 DIALOGEX 6, 18, 230, 215
@@ -472,12 +472,12 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_VISIBLE | WS_CAPTION
 CAPTION "Çevirme"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Bu yeğlemeler; Denetim, Seçenek ve Silme oturum açmada ""Çevirmeli Ağ'ı kullanan oturum açmaya"" uygulanır. Sizin bir yönetici olarak bu sayfaya erişiminiz var.", 1007, 7, 4, 221, 40, NOT WS_GROUP
+    LTEXT "Bu tercihler, Ctrl-Alt-Del ile oturum açma ekranında çıkan 'Çevirmeli Ağ Kullanarak Oturum Açma' seçeneği üzerinden geçerlidir. Sizin bir yönetici olarak bu sayfaya erişiminiz vardır.", 1007, 7, 4, 221, 40, NOT WS_GROUP
     LTEXT "&Yeniden Çevirme Girişimlerinin Sayısı:", 1005, 7, 55, 154, 8
     EDITTEXT 1001, 164, 52, 60, 14, ES_AUTOHSCROLL
-    LTEXT "Y&eniden Çevirme Girişimleri Arasındaki Sâniyeler:", 1009, 7, 73, 156, 8, NOT WS_GROUP
+    LTEXT "Y&eniden Çevirme Girişimleri Arasındaki Saniyeler:", 1009, 7, 73, 156, 8, NOT WS_GROUP
     EDITTEXT 1003, 164, 70, 60, 14, ES_AUTOHSCROLL
-    LTEXT "E&rtelemeden Önce Boşta Kalma Sâniyeleri:", 1008, 7, 91, 154, 8, NOT WS_GROUP
+    LTEXT "E&rtelemeden Önce Boşta Kalma Saniyeleri:", 1008, 7, 91, 154, 8, NOT WS_GROUP
     EDITTEXT 1002, 164, 88, 60, 14, ES_AUTOHSCROLL
 END
 
@@ -486,10 +486,10 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_VISIBLE | WS_CAPTION
 CAPTION "Geri Arama"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Bir sunucuya çevirdiğinizde o, telefonunuzun yükünü azaltmaya sizi yeniden aramak için sağlayabilir. Geri arama isteseniz de istemeseniz de belirtiniz. (Geri arama farazî ve şahsî ağ (VPN) bağlantıları için desteklenmiyor.)", 1043, 8, 4, 219, 43
+    LTEXT "Bir sunucuyu aradığınızda, telefon ücretlerinizi düşürmek için sizi geri aramayı önerebilir. Geri aramayı isteyip istemediğinizi belirtin. (Geri arama sanal gizli ağ (VPN) bağlantıları için desteklenmiyor.)", 1043, 8, 4, 219, 43
     AUTORADIOBUTTON "&Geri Arama Yok", 1041, 7, 48, 219, 10, BS_TOP | BS_MULTILINE | WS_GROUP
-    AUTORADIOBUTTON "S&unucu Sunduğunda Çevirme Esnâsında Bana Sor", 1040, 7, 61, 219, 10, BS_TOP | BS_MULTILINE
-    AUTORADIOBUTTON "&Beni Tüm Zamanalarda Aşağıdaki Numaralardan Geri Ara:", 1042, 7, 74, 219, 10, BS_TOP | BS_MULTILINE
+    AUTORADIOBUTTON "S&unucu Sunduğunda Çevirme Esnasında Bana Sor", 1040, 7, 61, 219, 10, BS_TOP | BS_MULTILINE
+    AUTORADIOBUTTON "&Beni Tüm Zamanlarda Aşağıdaki Numaralardan Geri Ara:", 1042, 7, 74, 219, 10, BS_TOP | BS_MULTILINE
     CONTROL "", 1037, "SYSLISTVIEW32", WS_BORDER | WS_GROUP | WS_TABSTOP | 0x00008401, 16, 88, 204, 94
     PUSHBUTTON "&Düzenle...", 1039, 96, 190, 60, 14
     PUSHBUTTON "&Sil", 1038, 159, 190, 60, 14
@@ -499,7 +499,7 @@ END
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Bu arayüz için bağlandığında kullanılacak uzak yönlendiriciler içeriye arama kimlik bilgilerini ayarlamaya gerksiniminiz var. Bu yönlendiricide buraya girdiğiniz bilgiyle bir kullanıcı hesâbı oluşturulacaktır.", 1094, 8, 5, 307, 35
+    LTEXT "Bu arayüz için bağlandığında kullanılacak uzak yönlendiriciler içeriye arama kimlik bilgilerini ayarlamaya gereksiniminiz var. Bu yönlendiricide buraya girdiğiniz bilgiyle bir kullanıcı hesabı oluşturulacaktır.", 1094, 8, 5, 307, 35
     LTEXT "&Kullanıcı Adı:", 1078, 8, 47, 124, 8, NOT WS_GROUP
     EDITTEXT 1074, 135, 45, 175, 12, ES_AUTOHSCROLL | WS_DISABLED
     LTEXT "&Şifre:", 1077, 8, 68, 124, 8, NOT WS_GROUP
@@ -529,13 +529,13 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Bu bağlantı için istediğiniz bir ad yazınız:", -1, 8, 4, 190, 8
     EDITTEXT 1114, 8, 17, 190, 12, ES_AUTOHSCROLL
-    LTEXT "Onu Ağ Bağlantıları dizini içine saklamak için Bitir'e tıklayınız.", -1, 8, 38, 193, 8
-    LTEXT "Bu bağlantıyı daha sonra düzenlemek için onu seçiniz, Kütük seçkesine tıklayınız, sonra Husûsiyetler'e tıklayınız.", -1, 8, 58, 193, 16
+    LTEXT "Bunu Ağ Bağlantıları dizini içine saklamak için Bitir'e tıklayınız.", -1, 8, 38, 193, 8
+    LTEXT "Bu bağlantıyı daha sonra düzenlemek için onu seçiniz, Dosya menüsüne tıklayınız, sonra Özellikler'e tıklayınız.", -1, 8, 58, 193, 16
 END
 
 155 DIALOGEX 0, 0, 231, 215
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
-CAPTION "Umûmî"
+CAPTION "Genel"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "&Bağlanırken Kullan:", 1124, 7, 5, 219, 8
@@ -549,11 +549,11 @@ BEGIN
     COMBOBOX 1122, 17, 112, 52, 110, CBS_DROPDOWN | WS_VSCROLL | NOT WS_TABSTOP
     LTEXT "T&elefon Numarası:", 1135, 71, 102, 139, 8
     EDITTEXT 1123, 73, 112, 79, 14, ES_AUTOHSCROLL
-    PUSHBUTTON "Ba&şkaları", 1129, 154, 112, 60, 14
+    PUSHBUTTON "Al&ternatifler", 1129, 154, 112, 60, 14
     LTEXT "&Ülke ya da Bölge Kodu:", 1134, 17, 132, 197, 8
     COMBOBOX 1126, 17, 143, 193, 130, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | NOT WS_TABSTOP
-    AUTOCHECKBOX "&Çevirme Kâidelerini Kullan", 1121, 17, 163, 132, 14, BS_TOP | BS_MULTILINE
-    PUSHBUTTON "Çe&virme Kâideleri", 1136, 151, 161, 60, 14
+    AUTOCHECKBOX "&Çevirme Protokollerini Kullan", 1121, 17, 163, 132, 14, BS_TOP | BS_MULTILINE
+    PUSHBUTTON "Çe&virme Protokolleri", 1136, 151, 161, 60, 14
     AUTOCHECKBOX "Ba&ğlandığında Bildirim Alanında Simge Göster", 1120, 10, 192, 214, 19, BS_TOP | BS_MULTILINE
 END
 
@@ -568,11 +568,11 @@ BEGIN
     COMBOBOX 1122, 17, 83, 48, 119, CBS_DROPDOWN | WS_VSCROLL | NOT WS_TABSTOP
     LTEXT "T&elefon Numarası:", 1135, 71, 72, 146, 8
     EDITTEXT 1123, 71, 83, 81, 14, ES_AUTOHSCROLL
-    PUSHBUTTON "Ba&şkaları", 1129, 155, 83, 63, 14
+    PUSHBUTTON "Al&ternatifler", 1129, 155, 83, 63, 14
     LTEXT "&Ülke ya da Bölge Kodu:", 1134, 17, 103, 193, 8
     COMBOBOX 1126, 17, 114, 201, 130, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | NOT WS_TABSTOP
-    AUTOCHECKBOX "&Çevirme Kâidelerini Kullan", 1121, 19, 134, 136, 12, BS_TOP | BS_MULTILINE
-    PUSHBUTTON "Çe&virme Kâideleri", 1136, 157, 132, 60, 14
+    AUTOCHECKBOX "&Çevirme Protokollerini Kullan", 1121, 19, 134, 136, 12, BS_TOP | BS_MULTILINE
+    PUSHBUTTON "Çe&virme Protokolleri", 1136, 157, 132, 60, 14
     AUTOCHECKBOX "Ba&ğlandığında Bildirim Alanında Simge Göster", 1120, 12, 164, 209, 18, BS_TOP | BS_MULTILINE
     LTEXT "&Bağlanırken Kullan:", 1124, 8, 5, 217, 8
     CONTROL "", 1127, "SYSLISTVIEW32", WS_DISABLED | WS_BORDER | 0x0000EC0D, 7, 18, 217, 15
@@ -584,11 +584,11 @@ CAPTION "Görünüm"
 FONT 8, "MS Shell Dlg"
 BEGIN
     AUTOCHECKBOX "&Çevirmeden Önce Telefon Numaralarını Önceden Göster", 1142, 8, 10, 224, 10, WS_GROUP
-    AUTOCHECKBOX "Ç&evirmeden Önce Koum Ayârını Göster", 1139, 8, 27, 224, 10
-    AUTOCHECKBOX "&Oturum Açma Esnâsında Konum Düzenlemelerine İzin Ver", 1140, 21, 43, 212, 10
+    AUTOCHECKBOX "Ç&evirmeden Önce Konum Ayarını Göster", 1139, 8, 27, 224, 10
+    AUTOCHECKBOX "&Oturum Açma Esnasında Konum Düzenlemelerine İzin Ver", 1140, 21, 43, 212, 10
     AUTOCHECKBOX "Çe&virirken Bağlantı İlerlemesini Göster", 1143, 8, 59, 224, 10
     AUTOCHECKBOX "&Aramada Kapat", 1137, 8, 76, 224, 10
-    AUTOCHECKBOX "O&turum Açma Esnâsında Telefon Defteri Düzenlemelerine İzin Ver", 1141, 8, 94, 224, 10
+    AUTOCHECKBOX "O&turum Açma Esnasında Telefon Defteri Düzenlemelerine İzin Ver", 1141, 8, 94, 224, 10
     AUTOCHECKBOX "&Yeni Telefon Defteri Girişlerini Oluşturmak İçin Yardımcı Kullan", 1144, 22, 111, 210, 10
 END
 
@@ -598,7 +598,7 @@ CAPTION "Görünüm"
 FONT 8, "MS Shell Dlg"
 BEGIN
     AUTOCHECKBOX "&Çevirmeden Önce Telefon Numaralarını Önceden Göster", 1142, 8, 10, 223, 10, WS_GROUP
-    AUTOCHECKBOX "Ç&evirmeden Önce Koum Ayârını Göster", 1139, 8, 27, 206, 10
+    AUTOCHECKBOX "Ç&evirmeden Önce Konum Ayarını Göster", 1139, 8, 27, 206, 10
     AUTOCHECKBOX "Çev&irmeden Önce Çevirmeli Ağ İzleyicisi'ni Başlat", 1138, 8, 44, 226, 10
     AUTOCHECKBOX "Çe&virirken Bağlantı İlerlemesini Göster", 1143, 8, 61, 224, 10
     AUTOCHECKBOX "&Aramada Kapat", 1137, 8, 79, 220, 10
@@ -613,7 +613,7 @@ BEGIN
     LTEXT "Bu çevirme arayüzü isteği için bir ad seçiniz. Bağlanan yönlendiriciden ya da bağlanan ağdan sonra arayüzleri adlandırmak bilinen bir uygulamadır.", 1158, 7, 5, 309, 29
     LTEXT "&Arayüz Adı:", 1159, 17, 41, 285, 8, NOT WS_GROUP
     EDITTEXT 1157, 17, 53, 284, 12, ES_AUTOHSCROLL
-    AUTOCHECKBOX "&Çevirme Arayüzleri İsteği Üzerine Tüm Şeyleri Biliyorum ve Husûsiyetleri Doğrudan Düzenlemeyi Yeğliyorum", 1156, 24, 100, 258, 31, BS_TOP | BS_MULTILINE | NOT WS_VISIBLE | WS_DISABLED
+    AUTOCHECKBOX "&Çevirme Arayüzleri İsteği Üzerine Tüm Detayları Biliyorum ve Özellikleri Doğrudan Düzenlemeyi Yeğliyorum", 1156, 24, 100, 258, 31, BS_TOP | BS_MULTILINE | NOT WS_VISIBLE | WS_DISABLED
 END
 
 162 DIALOGEX 0, 0, 230, 215
@@ -623,12 +623,12 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Güvenlik Seçenekleri", 1580, 8, 3, 215, 139
     AUTORADIOBUTTON "&Tipik (Önerilen Ayarlar)", 1540, 14, 16, 201, 9, BS_NOTIFY | WS_GROUP
-    AUTORADIOBUTTON "&Gelişmiş (Husûsî Ayarlar)", 1541, 14, 102, 198, 8, BS_NOTIFY
+    AUTORADIOBUTTON "&Gelişmiş (Ayarları Özelleştir)", 1541, 14, 102, 198, 8, BS_NOTIFY
     LTEXT "&Kimliğimi Aşağıdaki Gibi Onayla:", 1537, 26, 29, 187, 8, NOT WS_GROUP
     COMBOBOX 1178, 26, 40, 184, 78, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | NOT WS_TABSTOP
     AUTOCHECKBOX "&ReactOS Oturum Açma Adımı ve Şifremi Kendiliğinden Kullan (Eğer Varsa Etki Alanını Da)", 1174, 26, 58, 184, 20, BS_TOP | BS_MULTILINE
     AUTOCHECKBOX "&Veri Sıkıştırmasını Gerektir (Eğer Yoksa Bağlantıyı Kes)", 1169, 26, 82, 183, 10, BS_TOP | BS_MULTILINE
-    LTEXT "Bu ayarları kullanmak güvenlik iletişim kâidelerinin bir bilgisini gerektirir.", 1539, 15, 114, 134, 20
+    LTEXT "Bu ayarları kullanmak güvenlik iletişim protokollerinin bir bilgisini gerektirir.", 1539, 15, 114, 134, 20
     PUSHBUTTON "&Ayarlar...", 1180, 151, 115, 60, 14
     GROUPBOX "Etkileşimli Oturum Açma ve Betikleme", 1177, 8, 146, 215, 62, WS_GROUP
     AUTOCHECKBOX "&Uçbirim Penceresini Göster", 1173, 14, 159, 198, 11, BS_TOP | BS_MULTILINE
@@ -659,7 +659,7 @@ BEGIN
     CONTROL "", 1251, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000C40D, 7, 75, 216, 53
     PUSHBUTTON "&Kur...", 1252, 7, 133, 67, 14
     PUSHBUTTON "Ka&ldır", 1254, 80, 133, 67, 14
-    PUSHBUTTON "&Husûsiyetler", 1253, 153, 133, 67, 14
+    PUSHBUTTON "&Özellikler", 1253, 153, 133, 67, 14
     GROUPBOX "Tanım", 1585, 9, 158, 213, 43
     LTEXT "", 1250, 18, 167, 195, 25
 END
@@ -668,7 +668,7 @@ END
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Uzak ağdaki bir DNS sunucusunun veyâ bir WINS sunucusunun IP adresini giriniz ya da uzak yönlendiricinin onları sağlaması için bekleyecekseniz veyâ bilmiyorsanız 0.0.0.0 olarak bırakınız.", 1275, 7, 2, 311, 25
+    LTEXT "Uzak ağdaki bir DNS sunucusunun veya bir WINS sunucusunun IP adresini giriniz ya da uzak yönlendiricinin onları sağlaması için bekleyecekseniz veya bilmiyorsanız 0.0.0.0 olarak bırakınız.", 1275, 7, 2, 311, 25
     LTEXT "&DNS Sunucusu:", 1274, 7, 29, 160, 8, NOT WS_GROUP
     CONTROL "", 1272, "RASIPADDRESS", WS_TABSTOP, 21, 41, 85, 12
     LTEXT "&WINS Sunucusu:", 1276, 7, 65, 166, 8, NOT WS_GROUP
@@ -692,12 +692,12 @@ BEGIN
     COMBOBOX 1292, 141, 101, 70, 123, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
     LTEXT "&Ertelemeden Önce Boşta Kalma Süresi:", 1299, 16, 120, 123, 8
     COMBOBOX 1291, 141, 116, 70, 108, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
-    AUTOCHECKBOX "&Geçek Kesilmişse Yeniden Çevir", 1286, 16, 136, 199, 10, BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX "&Hat Kesilmişse Yeniden Çevir", 1286, 16, 136, 199, 10, BS_TOP | BS_MULTILINE
     GROUPBOX "Çoklu Aygıtlar", 1288, 7, 156, 213, 32
     COMBOBOX 1551, 16, 169, 128, 45, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
     PUSHBUTTON "Ya&pılandır...", 1293, 150, 168, 60, 14
     PUSHBUTTON "&X.25", 1295, 7, 194, 50, 14
-    PUSHBUTTON "&Farazî ""Tünel"" Bağlantısı", 1294, 62, 194, 120, 14, NOT WS_VISIBLE | WS_DISABLED
+    PUSHBUTTON "&Sanal ""Tünel"" Bağlantısı", 1294, 62, 194, 120, 14, NOT WS_VISIBLE | WS_DISABLED
 END
 
 168 DIALOGEX 0, 0, 317, 143
@@ -708,7 +708,7 @@ BEGIN
     LTEXT "Aşağıda telefon numarasını yazınız.", -1, 7, 4, 306, 14
     LTEXT "&Telefon Numarası:", 1308, 7, 19, 130, 8
     EDITTEXT 1304, 7, 30, 304, 14, ES_AUTOHSCROLL
-    LTEXT """1"" veyâ alan kodunu eklemeye gereksinim duyabilirsiniz. Ek numaralara gereksinim duymadığınızdan emin değilseniz telefonunuzdaki telefon numarasını çeviriniz. Eğer bir çevirge sesi duyarsanız çevrilen numara doğrudur.", -1, 20, 50, 291, 53
+    LTEXT """1"" veya alan kodunu eklemeye gereksinim duyabilirsiniz. Ek numaralara gereksinim duymadığınızdan emin değilseniz telefonunuzdaki telefon numarasını çeviriniz. Eğer bir çevirge sesi duyarsanız çevrilen numara doğrudur.", -1, 20, 50, 291, 53
 END
 
 169 DIALOGEX 6, 18, 235, 135
@@ -740,7 +740,7 @@ END
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Uzak ağdaki bu yönlendiricinin IP adresini giriniz ya da adresi sağlaması için uzak yönlendiriciyi bekleyecekseniz 0.0.0.0 olarak bırakınız. Umûmiyetle uzak ağın ya da yönlendiricinin işletmeni ne kullanılacağını size söyleyecektir.", 1331, 5, 4, 308, 35
+    LTEXT "Uzak ağdaki bu yönlendiricinin IP adresini giriniz ya da adresi sağlaması için uzak yönlendiriciyi bekleyecekseniz 0.0.0.0 olarak bırakınız. Özellikle uzak ağın ya da yönlendiricinin işletmeni ne kullanılacağını size söyleyecektir.", 1331, 5, 4, 308, 35
     LTEXT "&IP Adresim:", 1332, 4, 51, 100, 8, NOT WS_GROUP
     CONTROL "", 1330, "RASIPADDRESS", WS_TABSTOP, 21, 62, 104, 12
     LTEXT "Önemli: Kurulu bir ağ bağdaştırıcınız varsa ağ bağdaştırıcınıza karşın aynı adresi seçmemelisiniz.", 1333, 5, 94, 306, 36, NOT WS_GROUP
@@ -766,15 +766,15 @@ BEGIN
     GROUPBOX "Çevirme İlkesi", 1344, 9, 4, 213, 53, WS_GROUP
     LTEXT "&Çevirme Girişimleri Sayısı:", 1349, 16, 22, 140, 8, NOT WS_GROUP
     EDITTEXT 1340, 158, 19, 56, 14, ES_AUTOHSCROLL
-    LTEXT "Çe&virme Girişimleri Arasındaki Sâniyeler:", 1351, 16, 38, 140, 8, NOT WS_GROUP
+    LTEXT "Çe&virme Girişimleri Arasındaki Saniyeler:", 1351, 16, 38, 140, 8, NOT WS_GROUP
     EDITTEXT 1342, 158, 36, 56, 14, ES_AUTOHSCROLL
     GROUPBOX "Bağantı Türü", 1343, 9, 63, 213, 56, WS_GROUP
-    LTEXT "&Ertelemeden Önce Boşta Kalma Sâniyeleri:", 1350, 28, 88, 124, 8, NOT WS_GROUP
+    LTEXT "&Ertelemeden Önce Boşta Kalma Saniyeleri:", 1350, 28, 88, 124, 8, NOT WS_GROUP
     AUTORADIOBUTTON "&İsteğe Bağlı Arama Bağlantısı", 1347, 16, 78, 135, 10, WS_GROUP
     AUTORADIOBUTTON "&Kalıcı Bağlantı", 1348, 16, 103, 199, 10, NOT WS_TABSTOP, WS_EX_TRANSPARENT
     EDITTEXT 1341, 159, 85, 56, 14, ES_AUTOHSCROLL
     PUSHBUTTON "&Geri Arama...", 1345, 150, 125, 70, 14, WS_GROUP
-    PUSHBUTTON "Ç&oklu Geçekler...", 1346, 74, 125, 70, 14
+    PUSHBUTTON "Ç&oklu Hatlar...", 1346, 74, 125, 70, 14
 END
 
 174 DIALOGEX 0, 0, 215, 226
@@ -782,7 +782,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
 CAPTION "Yönlendirici"
 FONT 8, "MS Shell Dlg"
 BEGIN
- CTEXT "NYI...need spec from KCrocker", -1, 57, 86, 106, 28
+ CTEXT "NYI... KCrocker'dan gelen özelliklere ihtiyaç duyar", -1, 57, 86, 106, 28
 END
 
 175 DIALOGEX 6, 18, 317, 143
@@ -791,7 +791,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "İsteğe Bağlı Çevirme Arayüzü Yardımcısının Bitirilmesi.", 1352, 122, 5, 192, 32
     LTEXT "Yönlendiricide bu arayüzü oluşturmak ve etkinleştirmek için Bitir'e tıklayınız.", 1354, 122, 41, 192, 26, NOT WS_GROUP
-    LTEXT "Yönlendirme ve Uzaktan Erişim Yöneticisi'nde bu arayüzü düzenlemek için Yönlendirme Arayüzlerinde onu seçiniz ve Husûsiyetler'e tıklayınız.", 1355, 122, 68, 190, 39, NOT WS_GROUP
+    LTEXT "Yönlendirme ve Uzaktan Erişim Yöneticisi'nde bu arayüzü düzenlemek için Yönlendirme Arayüzlerinde onu seçiniz ve Özellikler'e tıklayınız.", 1355, 122, 68, 190, 39, NOT WS_GROUP
 END
 
 179 DIALOGEX 6, 18, 317, 143
@@ -800,7 +800,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "&Bu arayüzün kullanacağı çevirgeyi ya da bağdaştırıcıyı seçiniz.", 1356, 7, 4, 306, 11
     CONTROL "", 1355, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000C415, 6, 15, 305, 80
-    LTEXT "Bu dizelge yönlendirme için ayarlanmış aygıtları gösterir.", 1357, 15, 98, 288, 37, NOT WS_GROUP
+    LTEXT "Bu liste yönlendirme için ayarlanmış aygıtları gösterir.", 1357, 15, 98, 288, 37, NOT WS_GROUP
 END
 
 180 DIALOGEX 6, 18, 317, 143
@@ -827,7 +827,7 @@ BEGIN
     AUTOCHECKBOX "&İki Yönlü Kimlik Doğrulamasını Kullan", 1362, 17, 95, 194, 10, BS_TOP | BS_MULTILINE
     PUSHBUTTON "&Şifreyi Saklama", 1369, 59, 117, 80, 14, WS_GROUP
     PUSHBUTTON "G&elişmiş...", 1368, 142, 117, 80, 14, NOT WS_VISIBLE | WS_DISABLED
-    AUTOCHECKBOX "&Çevirmeden Önce Kütük ve Yazdırma Paylaşımını Algıla", 1365, 7, 198, 218, 10, BS_TOP | BS_MULTILINE | NOT WS_VISIBLE | WS_DISABLED
+    AUTOCHECKBOX "&Çevirmeden Önce Dosya ve Yazdırma Paylaşımını Algıla", 1365, 7, 198, 218, 10, BS_TOP | BS_MULTILINE | NOT WS_VISIBLE | WS_DISABLED
 END
 
 182 DIALOGEX 6, 18, 248, 148
@@ -844,7 +844,7 @@ BEGIN
     AUTOCHECKBOX "Ş&imdiki Kulanıcı Adını ve Şifreyi Kullan", 1366, 31, 91, 165, 10
     PUSHBUTTON "&Şifreyi Saklama", 1369, 6, 114, 100, 14, WS_GROUP
     PUSHBUTTON "G&elişmiş...", 1368, 109, 114, 60, 14, NOT WS_VISIBLE | WS_DISABLED
-    AUTOCHECKBOX "&Çevirmeden Önce Kütük ve Yazdırma Paylaşımını Algıla", 1365, 14, 134, 193, 10, NOT WS_VISIBLE | WS_DISABLED
+    AUTOCHECKBOX "&Çevirmeden Önce Dosya ve Yazdırma Paylaşımını Algıla", 1365, 14, 134, 193, 10, NOT WS_VISIBLE | WS_DISABLED
 END
 
 183 DIALOGEX 6, 18, 317, 144
@@ -854,9 +854,9 @@ BEGIN
     LTEXT "Uygulanacakların Tümünü Denetle:", 1388, 7, 4, 296, 9
     AUTOCHECKBOX "&Bu Arayüzdeki IP Paketleri Yolu", 1386, 20, 19, 285, 11, BS_LEFT | BS_TOP | BS_MULTILINE
     AUTOCHECKBOX "B&u Arayüzdeki IPX Paketleri Yolu", 1387, 20, 35, 287, 11, BS_LEFT | BS_TOP | BS_MULTILINE
-    AUTOCHECKBOX "B&ir Kullanıcı Hesâbı Ekle, Böylece Bir Uzak Yönlendirici İçeriye Arayabilir", 1382, 20, 52, 287, 11, BS_LEFT | BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX "B&ir Kullanıcı Hesabı Ekle, Böylece Bir Uzak Yönlendirici İçeriye Arama yapabilir", 1382, 20, 52, 287, 11, BS_LEFT | BS_TOP | BS_MULTILINE
     AUTOCHECKBOX "B&ağlanmak İçin Tek Yolsa Bir Düz Metin Şifresi Gönder", 1385, 20, 70, 287, 11, BS_LEFT | BS_TOP | BS_MULTILINE
-    AUTOCHECKBOX "U&zak Yönlendiriciyle Bağlantıyı Bitirmek İçin Betik Kütüğü Kullan", 1384, 20, 87, 289, 22, BS_LEFT | BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX "U&zak Yönlendiriciyle Bağlantıyı Bitirmek İçin Betik Dosyasını Kullan", 1384, 20, 87, 289, 22, BS_LEFT | BS_TOP | BS_MULTILINE
 END
 
 184 DIALOGEX 0, 0, 317, 143
@@ -870,7 +870,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Yeni Bağlantı Yardımcısı"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Yalnızca sizin kullanımınıza oluşturulan bir bağlantı kullanıcı hesâbınıza kaydedilir ve siz oturumda olmadıkça kullanılamaz.", -1, 7, 4, 306, 23
+    LTEXT "Yalnızca sizin kullanımınıza oluşturulan bir bağlantı kullanıcı hesabınıza kaydedilir ve siz oturumda olmadıkça kullanılamaz.", -1, 7, 4, 306, 23
     LTEXT "Bu Bağlantıyı Şu İçin Oluştur:", -1, 14, 27, 288, 12
     AUTORADIOBUTTON "&Rastgele Birinin Kullanımı", 1400, 26, 40, 265, 10, BS_TOP | BS_MULTILINE | NOT WS_TABSTOP
     AUTORADIOBUTTON "&Yalnızca Benim Kullanımım", 1401, 26, 55, 265, 10, BS_TOP | BS_MULTILINE | NOT WS_TABSTOP
@@ -908,7 +908,7 @@ BEGIN
     DEFPUSHBUTTON "Tamam", 1, 87, 146, 60, 14, WS_GROUP
     PUSHBUTTON "İptal", 2, 151, 146, 60, 14
     CONTROL "", 1398, "STATIC", SS_ETCHEDHORZ | WS_GROUP, 7, 140, 205, 1
-    LTEXT "Bir etki alanı girebilirsiniz ya da etki alanı alanını boş bırakabilirsiniz.\n(Etki alanı adları Umûmî Ağ'a bağlantılar için gerekli değildir.)", -1, 8, 38, 209, 26
+    LTEXT "Bir etki alanı girebilirsiniz ya da etki alanı alanını boş bırakabilirsiniz.\n(Etki alanı adları Genel Ağ'a bağlantılar için gerekli değildir.)", -1, 8, 38, 209, 26
 END
 
 502 DIALOGEX 20, 60, 215, 73
@@ -958,7 +958,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
 CAPTION "Yönlendirici Geri Araması"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Bir yönlendiriciye çevirdiğinizde telefon yüklemelerinizi azaltmak veyâ güvenliği arttırmak için sizi geri aramayı sunabilir. Geri arama isteyip istemediğinizi belirtiniz.", 1043, 7, 5, 253, 24
+    LTEXT "Bir yönlendiriciye çevirdiğinizde telefon yüklemelerinizi azaltmak veya güvenliği arttırmak için sizi geri aramayı sunabilir. Geri arama isteyip istemediğinizi belirtiniz.", 1043, 7, 5, 253, 24
     AUTORADIOBUTTON "&Geri Arama Yok", 1501, 9, 36, 252, 10, BS_TOP | BS_MULTILINE | WS_GROUP
     AUTORADIOBUTTON "&Beni Tüm Zamanlarda Aşağıdaki Numaralardan Geri Ara:", 1502, 9, 48, 252, 10, BS_TOP | BS_MULTILINE, WS_EX_TRANSPARENT
     CONTROL "", 1503, "SYSLISTVIEW32", WS_BORDER | WS_GROUP | WS_TABSTOP | 0x00008401, 15, 63, 240, 143
@@ -1002,7 +1002,7 @@ BEGIN
     CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN | WS_GROUP, 9, 82, 247, 1
     DEFPUSHBUTTON "&Çevir", 1590, 8, 89, 60, 14
     PUSHBUTTON "İptal", 1591, 71, 89, 60, 14
-    PUSHBUTTON "&Husûsiyetler", 1107, 133, 89, 60, 14
+    PUSHBUTTON "&Özellikler", 1107, 133, 89, 60, 14
     PUSHBUTTON "&Yardım", 1592, 195, 89, 60, 14
 END
 
@@ -1020,7 +1020,7 @@ BEGIN
     CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN | WS_GROUP, 7, 107, 251, 1
     DEFPUSHBUTTON "Ç&evir", 1590, 8, 113, 60, 14
     PUSHBUTTON "İptal", 1591, 71, 113, 60, 14
-    PUSHBUTTON "&Husûsiyetler", 1107, 134, 113, 60, 14
+    PUSHBUTTON "&Özellikler", 1107, 134, 113, 60, 14
     PUSHBUTTON "&Yardım", 1592, 197, 113, 60, 14
 END
 
@@ -1037,11 +1037,11 @@ BEGIN
     COMBOBOX 1416, 103, 92, 154, 112, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | NOT WS_TABSTOP
     LTEXT "&Şuradan Çevir:", 1415, 10, 114, 46, 8
     COMBOBOX 1414, 103, 110, 87, 112, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | NOT WS_TABSTOP
-    PUSHBUTTON "Ç&evirme Kâideleri", 1108, 193, 110, 64, 14
+    PUSHBUTTON "Ç&evirme Kaideleri", 1108, 193, 110, 64, 14
     CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN | WS_GROUP, 7, 130, 250, 1
     DEFPUSHBUTTON "Çe&vir", 1590, 6, 136, 60, 14
     PUSHBUTTON "İptal", 1591, 69, 136, 60, 14
-    PUSHBUTTON "&Husûsiyetler", 1107, 132, 136, 60, 14
+    PUSHBUTTON "&Özellikler", 1107, 132, 136, 60, 14
     PUSHBUTTON "&Yardım", 1592, 196, 136, 60, 14
 END
 
@@ -1050,9 +1050,9 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Yeni Bağlantı Yardımcısı"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Umûmî Ağ Bağlantısı Paylaşımı, bu bağlantıdan dış kaynaklara erişmek için yerli ağınızdaki başka bilgisayarlara izin verir.", -1, 10, 5, 300, 22
-    AUTOCHECKBOX "&Bu Bağlantı İçin Umûmî Ağ Bağlantısı Paylaşımı'nı Etkinleştir", 1512, 21, 31, 272, 10
-    LTEXT "Yerli ağınızdaki bir bilgisayar dış kaynaklara erişmek için girişimde bulunduğunda bu bağlantıyı kendiliğinden çevirmek için aşağıdaki kutucuğu imleyiniz.", 1514, 10, 56, 294, 22
+    LTEXT "Genel Ağ Bağlantısı Paylaşımı, bu bağlantıdan dış kaynaklara erişmek için yerel ağınızdaki başka bilgisayarlara izin verir.", -1, 10, 5, 300, 22
+    AUTOCHECKBOX "&Bu Bağlantı İçin Genel Ağ Bağlantısı Paylaşımı'nı Etkinleştir", 1512, 21, 31, 272, 10
+    LTEXT "Yerel ağınızdaki bir bilgisayar dış kaynaklara erişmek için girişimde bulunduğunda bu bağlantıyı kendiliğinden çevirmek için aşağıdaki kutucuğu işaretleyiniz.", 1514, 10, 56, 294, 22
     AUTOCHECKBOX "&İstek Üzerine Çevirmeyi Etkinleştir", 1513, 21, 86, 260, 10
 END
 
@@ -1061,8 +1061,8 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Yeni Bağlantı Yardımcısı"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Paylaşılan erişim, bu çevirmeli bağlantıdan dış kaynaklara erişmek için yerli ağınızdaki başka bilgisayarlara izin verir. Paylaşılan erişimi bir bağlantı ve bir yeri ağ için bir kezde etkinleştirebilirsiniz.", -1, 10, 5, 300, 25
-    LTEXT "&Bu bağlantıdan kaynaklara erişecek yerli ağı seçiniz:", -1, 21, 35, 285, 8
+    LTEXT "Paylaşılan erişim, bu çevirmeli bağlantıdan dış kaynaklara erişmek için yerel ağınızdaki başka bilgisayarlara izin verir. Paylaşılan erişimi bir bağlantı ve bir yeri ağ için bir seferde etkinleştirebilirsiniz.", -1, 10, 5, 300, 25
+    LTEXT "&Bu bağlantıdan kaynaklara erişecek yerel ağı seçiniz:", -1, 21, 35, 285, 8
     COMBOBOX 1522, 21, 48, 231, 56, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | NOT WS_TABSTOP
 END
 
@@ -1090,7 +1090,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
 FONT 8, "MS Shell Dlg"
 BEGIN
     AUTORADIOBUTTON "&Bir Modem, Bir ISDN Bağdaştırıcısı ya da Başka Bir Fizîkî Aygıt Kullanarak Bağlan", 1531, 21, 17, 290, 15, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP | NOT WS_TABSTOP
-    AUTORADIOBUTTON "&Farazî Şahsî Ağ (VPN) Kullanarak Bağlan", 1532, 21, 38, 291, 15, BS_LEFT | BS_TOP | BS_MULTILINE | NOT WS_TABSTOP
+    AUTORADIOBUTTON "&Sanal Gizli Ağ (VPN) Kullanarak Bağlan", 1532, 21, 38, 291, 15, BS_LEFT | BS_TOP | BS_MULTILINE | NOT WS_TABSTOP
     AUTORADIOBUTTON "&PPP Boyunca Ethernet (PPPoE) Kullanarak Bağlan", 1688, 21, 58, 290, 12, NOT WS_TABSTOP
 END
 
@@ -1116,7 +1116,7 @@ BEGIN
     CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN | WS_GROUP, 10, 99, 248, 1
     DEFPUSHBUTTON "&Çevir:", 1590, 9, 106, 61, 14
     PUSHBUTTON "İptal", 1591, 72, 106, 60, 14
-    PUSHBUTTON "&Husûsiyetler", 1107, 135, 106, 60, 14
+    PUSHBUTTON "&Özellikler", 1107, 135, 106, 60, 14
     PUSHBUTTON "&Yardım", 1592, 198, 106, 60, 14
 END
 
@@ -1136,7 +1136,7 @@ BEGIN
     CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN | WS_GROUP, 10, 132, 248, 1
     DEFPUSHBUTTON "Çe&vir", 1590, 8, 139, 60, 14
     PUSHBUTTON "İptal", 1591, 71, 139, 60, 14
-    PUSHBUTTON "&Husûsiyetler", 1107, 134, 139, 60, 14
+    PUSHBUTTON "&Özellikler", 1107, 134, 139, 60, 14
     PUSHBUTTON "&Yardım", 1592, 198, 139, 60, 14
 END
 
@@ -1155,17 +1155,17 @@ BEGIN
     COMBOBOX 1416, 104, 114, 154, 112, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | NOT WS_TABSTOP
     LTEXT "&Şuradan Çevir:", 1415, 10, 137, 91, 8
     COMBOBOX 1414, 104, 134, 87, 112, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | NOT WS_TABSTOP
-    PUSHBUTTON "Çev&irme Kâideleri", 1108, 194, 134, 65, 14
+    PUSHBUTTON "Mod&em Protokolleri", 1108, 194, 134, 65, 14
     CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN | WS_GROUP, 10, 154, 248, 1
     DEFPUSHBUTTON "Çe&vir", 1590, 8, 162, 60, 14
     PUSHBUTTON "İptal", 1591, 71, 162, 60, 14
-    PUSHBUTTON "&Husûsiyetler", 1107, 134, 162, 60, 14
+    PUSHBUTTON "&Özellikler", 1107, 134, 162, 60, 14
     PUSHBUTTON "&Yardım", 1592, 198, 162, 60, 14
 END
 
 554 DIALOGEX 0, 0, 230, 215
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
-CAPTION "Umûmî"
+CAPTION "Genel"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "&Şunu Kullanarak Bağlan:", 1124, 7, 4, 193, 8
@@ -1183,7 +1183,7 @@ END
 
 555 DIALOGEX 0, 0, 230, 215
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
-CAPTION "Umûmî"
+CAPTION "Genel"
 FONT 8, "MS Shell Dlg"
 BEGIN
     PUSHBUTTON "&Yapılandır...", 1130, 160, 38, 60, 14
@@ -1197,16 +1197,16 @@ END
 
 556 DIALOGEX 0, 0, 220, 165
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "İzlence Ayarları"
+CAPTION "Program Ayarları"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "&Ağınızda Çalışan İzlencenin Tanımı:", -1, 7, 5, 203, 8
+    LTEXT "&Ağınızda Çalışan Programının Tanımı:", -1, 7, 5, 203, 8
     EDITTEXT 1565, 7, 17, 206, 14, ES_AUTOHSCROLL
-    LTEXT "&Umûmî Ağ Sunucusu Giriş Numarası:", -1, 7, 35, 202, 8
+    LTEXT "&Genel Ağ Sunucusu Giriş Numarası:", -1, 7, 35, 202, 8
     EDITTEXT 1566, 7, 47, 113, 14, ES_AUTOHSCROLL | ES_NUMBER
     AUTORADIOBUTTON "&TCP", 1548, 128, 49, 30, 10, NOT WS_TABSTOP
     AUTORADIOBUTTON "U&DP", 1567, 166, 49, 31, 10, NOT WS_TABSTOP
-    LTEXT "&Giriş ya da Giriş Aralığı Üzerinde Umûmî Ağ Sunucu Yanıtları İçin Dinle:\n(Örnek: 1024-1209, 1300-1310, 1450)", -1, 7, 70, 207, 22
+    LTEXT "&Giriş ya da Giriş Aralığı Üzerinde Genel Ağ Sunucu Yanıtları İçin Dinle:\n(Örnek: 1024-1209, 1300-1310, 1450)", -1, 7, 70, 207, 22
     LTEXT "T&CP:", -1, 7, 100, 28, 8
     EDITTEXT 1569, 50, 97, 162, 14, ES_AUTOHSCROLL
     LTEXT "UD&P:", -1, 7, 121, 30, 8
@@ -1237,7 +1237,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
 CAPTION "İzlenceler"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Bilgisayarınızdaki Umûmî Ağ bağlantısı, ağınız boyunca düzgün çalışmaya aşağıdaki izlencelere izin vermek için husûsileştirilmiştir:", -1, 7, 7, 218, 28
+    LTEXT "Bilgisayarınızdaki Genel Ağ bağlantısı, ağınız boyunca düzgün çalışmaya aşağıdaki izlencelere izin vermek için özelleştirilmiştir:", -1, 7, 7, 218, 28
     CONTROL "List1", 1558, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000441D, 7, 37, 215, 155, WS_EX_CLIENTEDGE
     PUSHBUTTON "&Ekle...", 1538, 7, 197, 67, 14
     PUSHBUTTON "&Düzenle...", 1559, 80, 197, 67, 14
@@ -1249,7 +1249,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
 CAPTION "Hizmetler"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "&Umûmî Ağ kullanıcılarının erişebildiği ağınızda çalışan hizmetleri seçiniz.", -1, 7, 5, 216, 22
+    LTEXT "&Genel Ağ kullanıcılarının erişebildiği ağınızda çalışan hizmetleri seçiniz.", -1, 7, 5, 216, 22
     LTEXT "Hizmetler:", -1, 7, 27, 143, 8
     CONTROL "List1", 1560, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000441D, 7, 37, 215, 155, WS_EX_CLIENTEDGE
     PUSHBUTTON "&Ekle...", 1561, 7, 197, 67, 14
@@ -1281,7 +1281,7 @@ END
 
 568 DIALOGEX 0, 0, 230, 215
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
-CAPTION "Umûmî"
+CAPTION "Genel"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "&Hizmet Adı:", 1686, 7, 5, 217, 10
@@ -1296,12 +1296,12 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Güvenlik Seçenekleri", 1580, 8, 4, 213, 151
     AUTORADIOBUTTON "&Tipik (Önerilen Ayarlar)", 1540, 14, 16, 197, 9, BS_NOTIFY | WS_GROUP
-    AUTORADIOBUTTON "&Gelişmiş (Husûsî Ayarlar)", 1541, 14, 100, 197, 8, BS_NOTIFY
+    AUTORADIOBUTTON "&Gelişmiş (Özel Ayarlar)", 1541, 14, 100, 197, 8, BS_NOTIFY
     LTEXT "&Kimliğimi Aşağıdaki Gibi Onayla:", 1537, 26, 29, 183, 8, NOT WS_GROUP
     COMBOBOX 1178, 26, 40, 184, 78, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | NOT WS_TABSTOP
     AUTOCHECKBOX "&ReactOS Oturum Açma Adımı ve Şifremi Kendiliğinden Kullan (Eğer Varsa Etki Alanını Da)", 1174, 26, 59, 182, 20, BS_TOP | BS_MULTILINE
     AUTOCHECKBOX "&Veri Sıkıştırmasını Gerektir (Eğer Yoksa Bağlantıyı Kes)", 1169, 26, 83, 182, 10, BS_TOP | BS_MULTILINE
-    LTEXT "Bu ayarları kullanmak güvenlik iletişim kâidelerinin bir bilgisini gerektirir.", 1539, 26, 111, 136, 20
+    LTEXT "Bu ayarları kullanmak güvenlik iletişim protokollerinin bir bilgisini gerektirir.", 1539, 26, 111, 136, 20
     PUSHBUTTON "&Ayarlar...", 1180, 151, 134, 60, 14
     PUSHBUTTON "&IPSec Ayarları...", 1598, 126, 163, 85, 14
 END
@@ -1330,11 +1330,11 @@ BEGIN
     GROUPBOX "Kaydetme Seçenekleri", -1, 6, 8, 216, 47
     AUTOCHECKBOX "&Gelen Başarısız Bağlantı Girişimlerini Kaydet", 1642, 14, 22, 201, 10
     AUTOCHECKBOX "G&iden Başarılı Bağlantıları Kaydet", 1641, 14, 37, 200, 10
-    GROUPBOX "Kayıt Kütüğü Seçenekleri", -1, 7, 64, 215, 91
+    GROUPBOX "Kayıt Dosyası Seçenekleri", -1, 7, 64, 215, 91
     LTEXT "&Ad:", -1, 14, 78, 199, 8
     EDITTEXT 1674, 14, 90, 199, 14, ES_READONLY
     PUSHBUTTON "G&öz At...", 1639, 153, 108, 60, 14
-    LTEXT "&Boyut Hududu:", -1, 14, 133, 67, 8
+    LTEXT "&Boyut Sınırı:", -1, 14, 133, 67, 8
     EDITTEXT 1640, 86, 130, 50, 14, ES_AUTOHSCROLL | ES_NUMBER
     LTEXT "KB", -1, 140, 133, 20, 8
     PUSHBUTTON "Ö&n Tanımlıları Geri Getir", 1643, 135, 197, 85, 14
@@ -1345,7 +1345,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
 CAPTION "ICMP"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "&Umûmî Ağ Denetim İleti İletişim Kâidesi (ICMP) yanlışlık ve durum bilgisi paylaşmak için bir ağdaki bilgisayarlara izin verir. Şuna yanıt vereceği bu bilgisayarın Umûmî Ağ'dan bilgi için istekleri seçiniz:", -1, 7, 5, 215, 37
+    LTEXT "&Genel Ağ Denetim İleti İletişim Protokolü (ICMP) hata ve durum bilgisi paylaşmak için bir ağdaki bilgisayarlara izin verir. Şuna yanıt vereceği bu bilgisayarın Genel Ağ'dan bilgi için istekleri seçiniz:", -1, 7, 5, 215, 37
     CONTROL "IList1", 1644, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000440D, 7, 45, 215, 100, WS_EX_CLIENTEDGE
     GROUPBOX "Tanım", -1, 7, 153, 215, 55
     LTEXT "", 1645, 14, 171, 199, 32
@@ -1375,8 +1375,8 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CHILD | WS_CAPTION
 FONT 8, "MS Shell Dlg"
 BEGIN
     AUTORADIOBUTTON "&Kendiliğinden Seçim", 1534, 21, 20, 288, 11, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP | NOT WS_TABSTOP
-    AUTORADIOBUTTON "&Noktadan Noktaya Tünel İletişim Kâidesi (PPTP)", 1532, 21, 39, 290, 11, BS_LEFT | BS_TOP | BS_MULTILINE | NOT WS_TABSTOP
-    AUTORADIOBUTTON "K&atman 2 Tünel İletişim Kâidesi (L2TP)", 1533, 21, 56, 286, 11, BS_LEFT | BS_TOP | BS_MULTILINE | NOT WS_TABSTOP
+    AUTORADIOBUTTON "&Noktadan Noktaya Tünel İletişim Protokolü (PPTP)", 1532, 21, 39, 290, 11, BS_LEFT | BS_TOP | BS_MULTILINE | NOT WS_TABSTOP
+    AUTORADIOBUTTON "K&atman 2 Tünel İletişim Protokolü (L2TP)", 1533, 21, 56, 286, 11, BS_LEFT | BS_TOP | BS_MULTILINE | NOT WS_TABSTOP
 END
 
 1420 DIALOGEX 0, 0, 265, 108
@@ -1390,7 +1390,7 @@ BEGIN
     CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN | WS_GROUP, 10, 80, 248, 1
     DEFPUSHBUTTON "Ç&evir", 1590, 9, 87, 60, 14
     PUSHBUTTON "İptal", 1591, 72, 87, 60, 14
-    PUSHBUTTON "&Husûsiyetler", 1107, 135, 87, 60, 14
+    PUSHBUTTON "&Özellikler", 1107, 135, 87, 60, 14
     PUSHBUTTON "&Yardım", 1592, 198, 87, 60, 14
 END
 
@@ -1413,11 +1413,11 @@ BEGIN
     COMBOBOX 1416, 104, 157, 154, 112, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | NOT WS_TABSTOP
     LTEXT "Ş&uradan Çevir:", 1415, 14, 178, 88, 8
     COMBOBOX 1414, 104, 175, 87, 112, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | NOT WS_TABSTOP
-    PUSHBUTTON "Ç&evirme Kâideleri", 1108, 193, 175, 65, 14
+    PUSHBUTTON "Ç&evirme Protokolleri", 1108, 193, 175, 65, 14
     CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN | WS_GROUP, 10, 196, 248, 1
     DEFPUSHBUTTON "Çe&vir", 1590, 9, 202, 60, 14, WS_GROUP
     PUSHBUTTON "İptal", 1591, 72, 202, 60, 14
-    PUSHBUTTON "&Husûsiyetler", 1107, 135, 202, 60, 14
+    PUSHBUTTON "&Özellikler", 1107, 135, 202, 60, 14
     PUSHBUTTON "Ya&rdım", 1592, 198, 202, 60, 14
 END
 
@@ -1442,23 +1442,23 @@ BEGIN
     COMBOBOX 1416, 104, 178, 154, 112, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | NOT WS_TABSTOP
     LTEXT "Ş&uradan Çevir:", 1415, 14, 198, 87, 8
     COMBOBOX 1414, 104, 195, 87, 112, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | NOT WS_TABSTOP
-    PUSHBUTTON "Çe&virme Kâideleri", 1108, 193, 195, 65, 14
+    PUSHBUTTON "Çe&virme Protokolleri", 1108, 193, 195, 65, 14
     CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN | WS_GROUP, 10, 215, 248, 1
     DEFPUSHBUTTON "Çev&ir", 1590, 8, 221, 60, 14, WS_GROUP
     PUSHBUTTON "Cancel", 1591, 71, 221, 60, 14
-    PUSHBUTTON "&Husûsiyetler", 1107, 134, 221, 60, 14
+    PUSHBUTTON "&Özellikler", 1107, 134, 221, 60, 14
     PUSHBUTTON "Ya&rdım", 1592, 198, 221, 60, 14
 END
 
 1425 DIALOGEX 0, 0, 230, 215
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
-CAPTION "Umûmî"
+CAPTION "Genel"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "&Varışın anabilgisayar adı ya da IP adresi (reactos.org ya da 145.52.0.1 gibi.):", 1430, 7, 5, 217, 18
     EDITTEXT 1427, 7, 25, 215, 14, ES_AUTOHSCROLL
     GROUPBOX "İlk Bağlantı", 1431, 9, 48, 213, 78
-    LTEXT "Bu farazî bağlantıyı kurmak için denemeden önce ReactOS, Umûmî Ağ gibi umûmî ağa ilk kez bağlayabilir.", 1432, 17, 63, 199, 24
+    LTEXT "Bu sanal bağlantıyı kurmak için denemeden önce ReactOS, Genel Ağ gibi ağlara ilk kez bağlayabilir.", 1432, 17, 63, 199, 24
     AUTOCHECKBOX "&İlk Kez Başka Bir Bağlantı Çevir:", 1428, 19, 89, 183, 10
     COMBOBOX 1429, 29, 103, 182, 87, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | NOT WS_TABSTOP
     AUTOCHECKBOX "&Bağlandığında Bildirim Alanında Simge Göster", 1120, 10, 192, 213, 13
@@ -1487,7 +1487,7 @@ END
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Bağlanıyor olduğunuz bilgisayarın anabilgisayar adını ya da Umûmî Ağ İletişim Kâidesi adresini yazınız.", -1, 10, 6, 275, 16
+    LTEXT "Bağlanıyor olduğunuz bilgisayarın anabilgisayar adını ya da Genel Ağ İletişim Protokolü adresini yazınız.", -1, 10, 6, 275, 16
     LTEXT "&Anabilgisayar adı ya da IP adresi (Örnek: reactos.org ya da 145.52.0.1):", -1, 21, 28, 277, 11
     EDITTEXT 1433, 21, 42, 275, 14, ES_AUTOHSCROLL
 END
@@ -1497,7 +1497,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Yeni Bağlantı Yardımcısı"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "ReactOS, farazî bağlantıyı kurmadan önce Umûmî Ağ'a ya da başka umûmî ağa ilk bağlantıyı kendiliğinden çevirebilir.", -1, 10, 6, 275, 24
+    LTEXT "ReactOS, sanal bağlantıyı kurmadan önce Genel Ağ'a ya da başka bir ağa ilk bağlantıyı kendiliğinden çevirebilir.", -1, 10, 6, 275, 24
     AUTORADIOBUTTON "&İlk Bağlantıyı Çevirme", 1509, 32, 31, 271, 10, BS_TOP | BS_MULTILINE | NOT WS_TABSTOP
     AUTORADIOBUTTON "&Bu İlk Bağlantıyı Kendiliğinden Çevir:", 1510, 32, 45, 269, 10, BS_TOP | BS_MULTILINE | NOT WS_TABSTOP
     COMBOBOX 1435, 43, 62, 253, 87, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | NOT WS_TABSTOP
@@ -1505,7 +1505,7 @@ END
 
 1436 DIALOGEX 0, 0, 230, 215
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
-CAPTION "Umûmî"
+CAPTION "Genel"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "&Bir aygıt seçiniz:", 1597, 8, 5, 213, 8
@@ -1524,7 +1524,7 @@ BEGIN
     DEFPUSHBUTTON "B&ağlan...", 1449, 7, 50, 60, 14
     PUSHBUTTON "İptal", 1455, 70, 50, 60, 14
     PUSHBUTTON "&Yeni...", 1459, 134, 50, 60, 14
-    PUSHBUTTON "&Husûsiyetler", 1460, 198, 50, 60, 14
+    PUSHBUTTON "&Özellikler", 1460, 198, 50, 60, 14
 END
 
 1466 DIALOGEX 6, 18, 265, 262
@@ -1585,12 +1585,12 @@ CAPTION "Yeni Bağlantı Yardımcısı"
 FONT 8, "MS Shell Dlg"
 BEGIN
     AUTORADIOBUTTON "&Şahsî Ağı Çevir", 1488, 24, 9, 116, 10, NOT WS_TABSTOP
-    AUTORADIOBUTTON "&Umûmî Ağ'dan Şahsî Bir Ağa Bağlan", 1489, 24, 34, 206, 10, NOT WS_TABSTOP
+    AUTORADIOBUTTON "&Genel Ağ'dan Şahsî Bir Ağa Bağlan", 1489, 24, 34, 206, 10, NOT WS_TABSTOP
     AUTORADIOBUTTON "&Başka Bir Bilgisayara Doğrudan Bağlan", 1490, 24, 59, 157, 10, NOT WS_TABSTOP
     AUTORADIOBUTTON "&Geniş Bant Yoluyla Ağa Bağlan", 1491, 24, 83, 273, 10, NOT WS_TABSTOP
     LTEXT "Telefon Geçeğimi (Çevirge ya da ISDN) Kullanarak Bağlan", -1, 45, 21, 156, 8
-    LTEXT "Umûmî Ağ'dan Bir Farazî Şahsî Ağ (VPN) Bağlantısı ya da Bir Tünel Oluştur", -1, 45, 46, 266, 8
-    LTEXT "Dizilik, Koşut ya da Kızıl Ötesi Girişimi Kullanarak Bağlan", -1, 45, 71, 266, 8
+    LTEXT "Genel Ağ'dan Bir Sanal Şahsî Ağ (VPN) Bağlantısı ya da Bir Tünel Oluştur", -1, 45, 46, 266, 8
+    LTEXT "Serial, Paralel ya da Kızıl Ötesi Girişimi Kullanarak Bağlan", -1, 45, 71, 266, 8
     LTEXT "Geniş Bant Bağlantımdan Bağlan", -1, 45, 95, 266, 8
 END
 
@@ -1610,7 +1610,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Yeni Bağlantı Yardımcısı"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Bir ISP hesap adı ve şifresi yazınız, sonra bu bilgiyi yazınız ve onu güvenli bir yerde saklayınız. (Var olan bir hesap adını veyâ şifreyi unuttuysanız ISP'nizle iletişime geçiniz.)", 1689, 10, 4, 308, 25
+    LTEXT "Bir ISP hesap adı ve şifresi yazınız, sonra bu bilgiyi yazınız ve onu güvenli bir yerde saklayınız. (Var olan bir hesap adını veya şifreyi unuttuysanız ISP'nizle iletişime geçiniz.)", 1689, 10, 4, 308, 25
     LTEXT "&Kullanıcı Adı:", 1636, 23, 35, 89, 15
     EDITTEXT 1614, 115, 34, 190, 15, ES_AUTOHSCROLL
     LTEXT "&Şifre:", 1637, 23, 55, 90, 13
@@ -1624,11 +1624,11 @@ END
 
 1660 DIALOGEX 0, 0, 258, 78
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Umûmî Ağ Bağlantısı Güvenlik Duvarı"
+CAPTION "Genel Ağ Bağlantısı Güvenlik Duvarı"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON 32515, -1, 7, 7, 20, 20
-    LTEXT "Umûmî Ağ Bağlantısı Güvenlik Duvarı'nı kapatmak bilgisayarınızı Umûmî Ağ üzerinden yetkisiz erişimle karşı karşıya getirebilir. Onu kapatmayı istediğinizden emin misiniz?", -1, 44, 5, 212, 24
+    LTEXT "Genel Ağ Bağlantısı Güvenlik Duvarı'nı kapatmak bilgisayarınızı Genel Ağ üzerinden yetkisiz erişimle karşı karşıya getirebilir. Onu kapatmayı istediğinizden emin misiniz?", -1, 44, 5, 212, 24
     AUTOCHECKBOX "&Bu İletiyi Bir Daha Gösterme", 1662, 42, 40, 210, 10
     DEFPUSHBUTTON "&Evet", 6, 74, 60, 50, 14
     PUSHBUTTON "&Hayır", 7, 128, 60, 50, 14
@@ -1636,7 +1636,7 @@ END
 
 7000 DIALOGEX 0, 0, 215, 103
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Umûmî"
+CAPTION "Genel"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "&Kullanıcı Adı:", -1, 7, 8, 90, 12, SS_CENTERIMAGE
@@ -1664,7 +1664,7 @@ END
 
 7010 DIALOGEX 0, 0, 230, 215
 STYLE DS_SHELLFONT | DS_CONTEXTHELP | WS_CHILD | WS_CAPTION
-CAPTION "Umûmî"
+CAPTION "Genel"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Gelen Bağlantılar", -1, 7, 4, 214, 110, WS_GROUP
@@ -1672,9 +1672,9 @@ BEGIN
     LTEXT "&Aygıtlar:", -1, 17, 29, 29, 8
     CONTROL "", 7011, "SYSLISTVIEW32", WS_BORDER | WS_GROUP | WS_TABSTOP | 0x00004405, 17, 41, 193, 47, WS_EX_CLIENTEDGE
     AUTOCHECKBOX "&Çoklu Bağlantıyı Etkinleştir", 7012, 17, 96, 121, 10, BS_TOP | BS_MULTILINE | WS_GROUP
-    PUSHBUTTON "&Husûsiyetler", 7013, 145, 94, 65, 14, WS_GROUP
-    GROUPBOX "Farazî Şahsî Ağ", -1, 6, 122, 214, 49, WS_GROUP
-    AUTOCHECKBOX "&Umûmî Ağ'dan ya da Başka Ağlardan Bilgisayarıma Tünellemeyle Şahsî Bağlantılar Yapmak İçin Başkalarına İzin Ver", 7014, 17, 137, 195, 27, BS_TOP | BS_MULTILINE | WS_GROUP
+    PUSHBUTTON "&Özellikler", 7013, 145, 94, 65, 14, WS_GROUP
+    GROUPBOX "Sanal Şahsî Ağ", -1, 6, 122, 214, 49, WS_GROUP
+    AUTOCHECKBOX "&Genel Ağ'dan ya da Başka Ağlardan Bilgisayarıma Tünellemeyle Şahsî Bağlantılar Yapmak İçin Başkalarına İzin Ver", 7014, 17, 137, 195, 27, BS_TOP | BS_MULTILINE | WS_GROUP
     AUTOCHECKBOX "&Bağlandığında Bildirim Alanında Simge Göster", 7015, 12, 184, 209, 10, BS_TOP | BS_MULTILINE | WS_GROUP
 END
 
@@ -1684,7 +1684,7 @@ CAPTION "Gelen TCP/IP Husûsiyetleri"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Ağ Erişimi", -1, 6, 5, 252, 32
-    AUTOCHECKBOX "&Yerli Alan Ağ'ıma Erişmek İçin Arayıcılara İzin Ver", 7017, 20, 20, 228, 9, BS_LEFT | BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX "&Yerel Alan Ağ'ıma Erişmek İçin Arayıcılara İzin Ver", 7017, 20, 20, 228, 9, BS_LEFT | BS_TOP | BS_MULTILINE
     GROUPBOX "TCP/IP Adres Ataması", -1, 6, 42, 250, 122
     AUTORADIOBUTTON "&TCP/IP Adreslerini DHCP Kullanarak Kendiliğinden Ata", 7019, 20, 54, 231, 10, BS_TOP | BS_MULTILINE | WS_GROUP
     AUTORADIOBUTTON "T&CP/IP Adreslerini Belirle", 7020, 20, 71, 231, 10, BS_TOP | BS_MULTILINE
@@ -1701,11 +1701,11 @@ END
 
 7025 DIALOGEX 0, 0, 250, 157
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Gelen IPX Husûsiyetleri"
+CAPTION "Gelen IPX Özellikleri"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Ağ Erişimi", -1, 8, 6, 234, 32
-    AUTOCHECKBOX "&Yerli Alan Ağıma Erişmek İçin Arayıcılara İzin Ver", 7032, 18, 19, 194, 12, BS_LEFT | BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX "&Yerel Alan Ağıma Erişmek İçin Arayıcılara İzin Ver", 7032, 18, 19, 194, 12, BS_LEFT | BS_TOP | BS_MULTILINE
     GROUPBOX "Ağ Numarası Ataması", -1, 8, 43, 234, 87
     AUTOCHECKBOX "&Tüm Bilgisayarlara Aynı Ağ Numarası Ata", 7028, 17, 56, 203, 10, BS_TOP | BS_MULTILINE | WS_GROUP
     AUTORADIOBUTTON "&Ağ Numaralarını Kendiliğinden Ata", 7026, 28, 68, 191, 10, BS_TOP | BS_MULTILINE | WS_GROUP
@@ -1718,10 +1718,10 @@ END
 
 7033 DIALOGEX 0, 0, 220, 50
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Gelen İletişim Kâidesi Husûsiyetleri"
+CAPTION "Gelen İletişim Protokolü Özellikleri"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    AUTOCHECKBOX "&Yerli Alan Ağıma Erişmek İçin Arayıcılara İzin Ver", 7034, 7, 7, 208, 18, BS_LEFT | BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX "&Yerel Alan Ağıma Erişmek İçin Arayıcılara İzin Ver", 7034, 7, 7, 208, 18, BS_LEFT | BS_TOP | BS_MULTILINE
     DEFPUSHBUTTON "Tamam", 1, 86, 30, 60, 14
     PUSHBUTTON "İptal", 2, 151, 30, 60, 14
 END
@@ -1735,9 +1735,9 @@ BEGIN
     CONTROL "", 7036, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000440D, 7, 17, 215, 89, WS_EX_CLIENTEDGE
     PUSHBUTTON "&Kur...", 7037, 9, 110, 67, 14, WS_GROUP
     PUSHBUTTON "Ka&ldır", 7038, 80, 110, 67, 14, WS_GROUP
-    PUSHBUTTON "&Husûsiyetler", 7039, 153, 110, 67, 14, WS_GROUP
+    PUSHBUTTON "&Özellikler", 7039, 153, 110, 67, 14, WS_GROUP
     GROUPBOX "Tanım", -1, 7, 138, 213, 69
-    LTEXT "<İletişim Kâidesi Tanımı>", 7040, 17, 150, 193, 48
+    LTEXT "<İletişim Protokolü Tanımı>", 7040, 17, 150, 193, 48
 END
 
 7042 DIALOGEX 0, 0, 230, 215
@@ -1749,22 +1749,22 @@ BEGIN
     CONTROL "", 7043, "SYSLISTVIEW32", WS_BORDER | WS_GROUP | WS_TABSTOP | 0x0000440D, 7, 19, 214, 83, WS_EX_CLIENTEDGE
     PUSHBUTTON "&Yeni...", 7044, 7, 107, 67, 14, WS_GROUP
     PUSHBUTTON "&Sil", 7045, 80, 107, 67, 14, WS_GROUP
-    PUSHBUTTON "&Husûsiyetler", 7046, 153, 107, 67, 14, WS_GROUP
+    PUSHBUTTON "&Özellikler", 7046, 153, 107, 67, 14, WS_GROUP
     AUTOCHECKBOX "&Onların Şifrelerini ve Verilerini Korumak İçin Tüm Kullanıcıları Gerektir", 7048, 8, 151, 217, 12, BS_TOP | BS_MULTILINE
     AUTOCHECKBOX "B&ir Şifre Sağlanmadan Bağlanmak İçin Avuçiçi Bilgisayarlar Gibi Doğrudan Bağlanan Aygıtlara İzin Ver", 7049, 8, 169, 217, 23, BS_TOP | BS_MULTILINE
-    LTEXT "Edilgin bir kullanıcı hesâbı gibi diğer etkenlerin bir kullanıcının bağlanma yeteneğini etkileyebileceğini göz önünde bulundurunuz.", -1, 9, 126, 212, 23
+    LTEXT "Edilgin bir kullanıcı hesabı gibi diğer etkenlerin bir kullanıcının bağlanma yeteneğini etkileyebileceğini göz önünde bulundurunuz.", -1, 9, 126, 212, 23
 END
 
 7049 DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Bu bilgisayara bir bağlantıya izin verilmesi gereken tüm kullanıcıların bitişiğindeki kutucukları imleyiniz. Edilgin bir kullanıcı hesâbı gibi diğer etkenlerin bir kullanıcının bağlanma yeteneğini etkileyebileceğini göz önünde bulundurunuz.", -1, 10, 1, 275, 27
+    LTEXT "Bu bilgisayara bir bağlantıya izin verilmesi gereken tüm kullanıcıların bitişiğindeki kutucukları işaretleyiniz. Devre dışı bir kullanıcı hesabı gibi diğer etkenlerin bir kullanıcının bağlanma yeteneğini etkileyebileceğini göz önünde bulundurunuz.", -1, 10, 1, 275, 27
     LTEXT "&Bağlanmaya İzin Verilen Kullanıcılar:", -1, 10, 28, 275, 8
     CONTROL "", 7043, "SYSLISTVIEW32", WS_BORDER | WS_GROUP | WS_TABSTOP | 0x0000440D, 10, 42, 275, 73
     PUSHBUTTON "&Ekle...", 7044, 10, 122, 65, 14, WS_GROUP
     PUSHBUTTON "&Sil", 7045, 79, 122, 65, 14, WS_GROUP
-    PUSHBUTTON "&Husûsiyetler", 7046, 147, 122, 65, 14, WS_GROUP
+    PUSHBUTTON "&Özellikler", 7046, 147, 122, 65, 14, WS_GROUP
 END
 
 7050 DIALOGEX 0, 0, 317, 143
@@ -1781,13 +1781,13 @@ END
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Gelen bağlantılar için etkinleştirilmesi gereken tüm ağ yazılımı türlerinin bitişiğindeki kutucukları imleyiniz.", -1, 10, 1, 288, 20
+    LTEXT "Gelen bağlantılar için etkinleştirilmesi gereken tüm ağ yazılımı türlerinin bitişiğindeki kutucukları işaretleyiniz.", -1, 10, 1, 288, 20
     LTEXT "&Ağ Yazılımı:", -1, 10, 24, 274, 8
     CONTROL "", 7036, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000440D, 10, 34, 286, 33
     PUSHBUTTON "&Kur...", 7037, 108, 71, 60, 14, WS_GROUP
     PUSHBUTTON "Ka&ldır", 7038, 172, 71, 60, 14, WS_GROUP
-    PUSHBUTTON "&Husûsiyetler", 7039, 236, 71, 60, 14, WS_GROUP
-    LTEXT "<İletişim Kâidesi Tanımı>", 7040, 21, 105, 273, 38
+    PUSHBUTTON "&Özellikler", 7039, 236, 71, 60, 14, WS_GROUP
+    LTEXT "<İletişim Protokolü Tanımı>", 7040, 21, 105, 273, 38
     LTEXT "Tanım:", -1, 21, 95, 275, 8
 END
 
@@ -1795,11 +1795,11 @@ END
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Umûmî Ağ'dan bilgisayarınıza farazî şahsî bağlantılar ancak bilgisayarınızın Umûmî Ağ'da bilinen bir adı veyâ IP adresi varsa olasıdır.", -1, 10, 4, 290, 20
-    AUTORADIOBUTTON "&Farazî Şahsî Bağlantılara İzin Ver", 7053, 29, 63, 265, 10, BS_TOP | BS_MULTILINE | WS_GROUP
-    AUTORADIOBUTTON "F&arazî Şahsî Bağlantılara İzin Verme", 7054, 29, 78, 265, 10, BS_TOP | BS_MULTILINE | NOT WS_TABSTOP
-    LTEXT "Bu bilgisayara şahsî farazî bağlantılara izin vermek istiyor musunuz?", -1, 17, 49, 275, 8
-    LTEXT "VPN bağlantılarına izin verirseniz ReactOS, VPN paketlerini göndermeye ve almaya bilgisayarınıza izin vermek için Umûmî Ağ Bağlantı Güvenlik Duvarı'nı değiştirecektir.", -1, 10, 25, 293, 25
+    LTEXT "Genel Ağ'dan bilgisayarınıza sanal özel bağlantılar ancak bilgisayarınızın Genel Ağ'da bilinen bir adı veya IP adresi varsa olasıdır.", -1, 10, 4, 290, 20
+    AUTORADIOBUTTON "&Sanal Özel Bağlantılara İzin Ver", 7053, 29, 63, 265, 10, BS_TOP | BS_MULTILINE | WS_GROUP
+    AUTORADIOBUTTON "S&anal Özel Bağlantılara İzin Verme", 7054, 29, 78, 265, 10, BS_TOP | BS_MULTILINE | NOT WS_TABSTOP
+    LTEXT "Bu bilgisayara sanal özel bağlantılara izin vermek istiyor musunuz?", -1, 17, 49, 275, 8
+    LTEXT "VPN bağlantılarına izin verirseniz ReactOS, VPN paketlerini göndermeye ve almaya bilgisayarınıza izin vermek için Genel Ağ Bağlantı Güvenlik Duvarı'nı değiştirecektir.", -1, 10, 25, 293, 25
 END
 
 7055 DIALOGEX 0, 0, 317, 143
@@ -1809,7 +1809,7 @@ BEGIN
     LTEXT "&Bu Bağlantı İçin Aygıt:", -1, 23, 24, 275, 8
     COMBOBOX 7056, 22, 36, 275, 125, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
     LTEXT "Seçtiğinizden başka aygıtlar etkilenmeyecektir ve başka amaçlar için kullanılabilir.", -1, 10, 4, 275, 17
-    PUSHBUTTON "&Husûsiyetler", 7061, 232, 53, 65, 14, WS_GROUP
+    PUSHBUTTON "&Özellikler", 7061, 232, 53, 65, 14, WS_GROUP
 END
 
 7379 DIALOGEX 0, 0, 317, 143
@@ -1836,35 +1836,35 @@ BEGIN
     191 "Tüm Aygıtları Çevir\0"
     192 "Yalnızca Gerekli Olan Aygıtları Çevir\0"
     193 "Uzak ağ etki alanına erişimi olan bir kullanıcı adı ve şifre giriniz.\0"
-    194 "Ağ Adresi Çevirimi (NAT) bir yönlendirme iletişim kâidesi olarak şimdilik yüklü\nve Umûmî Ağ Bağlantı Paylaşımı'nı etkinleştirmeden önce kaldırılmalıdır.\nAğ Adresi Çevirimi'ni silmek için Yönlendirme ve Uzaktan Erişim Yöneticisi ek bileşenini açınız\nve sol bölmede yönlendiricinin girdisini genişletiniz.\nIP yönlendirme iletişim kâidelerinin dizelgesinden Ağ Adresi Çevirimi yönlendirme\niletişim kâidesini siliniz.\0"
+    194 "Ağ Adresi Çevirimi (NAT) bir yönlendirme iletişim protokolü olarak şimdilik yüklü\nve Genel Ağ Bağlantı Paylaşımı'nı etkinleştirmeden önce kaldırılmalıdır.\nAğ Adresi Çevirimi'ni silmek için Yönlendirme ve Uzaktan Erişim Yöneticisi ek bileşenini açınız\nve sol bölmede yönlendiricinin girdisini genişletiniz.\nIP yönlendirme iletişim protokolonünün tablolarından Ağ Adresi Çevirimi yönlendirme\niletişim protokolünü siliniz.\0"
     195 "Alan kodu yalnızca 0'dan 9'a dek rakamları içermelidir.\0"
-    196 "Girdi adı en az bir boşluk olmayan damga içermeli ve bir noktayla başlamamalıdır. Ayrı bir ad seçiniz.\0"
+    196 "Girdi adı en az bir boşluk olmayan damga içermeli ve bir noktayla başlamamalıdır. Farklı bir ad seçiniz.\0"
     197 "Bu alan için %1 değerinden %2 değerine dek bir değer seçiniz.\0"
-    198 "Husûsî kimlik doğrulaması yapılandırma DLL'si yüklenemedi. Husûsî kimlik doğrulaması paketinin düzgün yüklendiğinden emin olunuz.\0"
-    199 "Seçili bağlantı çoklu iletişim kâideli yönlendirici eliyle kurulmuştur.\nLütfen bağlantıyı ertelemek için ""Yönlendirme ve RAS Yöneticisi"" aracını kullanınız.\0"
+    198 "Genel kimlik doğrulaması yapılandırma DLL'si yüklenemedi. Genel kimlik doğrulaması paketinin düzgün yüklendiğinden emin olunuz.\0"
+    199 "Seçili bağlantı çoklu iletişim protokolü yönlendirici eliyle kurulmuştur.\nLütfen bağlantıyı ertelemek için ""Yönlendirme ve RAS Yöneticisi"" aracını kullanınız.\0"
     200 "Yorum\0"
-    201 "Husûsî kimlik doğrulaması paketi yapılandırması başarısız oldu.\0"
-    202 "Yönlendirme ve Uzaktan Erişim için TCP/IP kurulu değil ya da edilginleştirilmiş. Denetim Masası'nda Ağ'ı başlatınız, Hizmetler sayfasına gidiniz, ""Yönlendirme ve Uzaktan Erişim Hizmeti"" Husûsiyetleri'ini seçiniz ve Ağ düğmesine basınız.\0"
-    203 "Yönlendirme ve Uzaktan Erişim için IPX kurulu değil ya da edilginleştirilmiş. IPX'i ""Bağlantılar"" dizininde bir bağlantının husûsiyetlerini görüntülemeyle kurabilir ve etkinleştirebilirsiniz.\0"
-    204 "Dizelgeden seçili aygıt ya da aygıtlar silinsin mi?\0"
+    201 "Genel kimlik doğrulaması paketi yapılandırması başarısız oldu.\0"
+    202 "Yönlendirme ve Uzaktan Erişim için TCP/IP kurulu değil ya da devre dışı bırakılmış. Denetim Masası'nda Ağ'ı başlatınız, Hizmetler sayfasına gidiniz, ""Yönlendirme ve Uzaktan Erişim Hizmeti"" Özellikleri'ini seçiniz ve Ağ düğmesine basınız.\0"
+    203 "Yönlendirme ve Uzaktan Erişim için IPX kurulu değil ya da edilginleştirilmiş. IPX'i ""Bağlantılar"" dizininde bir bağlantının özelliklerini görüntülemeyle kurabilir ve etkinleştirebilirsiniz.\0"
+    204 "Sistemden seçili aygıt ya da aygıtlar silinsin mi?\0"
     205 "%1 telefon defterinden silinsin mi?\0"
     206 "%1'den bağlantı kesilsin mi?\0"
-    207 "%1 adlı bir kütük önceden var. Üzerine yazılsın mı?\0"
-    208 "Betikte yazım yanlışları bulundu. Yanlışlık kaydını görüntülemek ister misiniz?\0"
+    207 "%1 adlı bir dosya önceden var. Üzerine yazılsın mı?\0"
+    208 "Betikte yazım yanlışları bulundu. Hata kaydını görüntülemek ister misiniz?\0"
     209 """%1"" şimdi bağlı.\0"
-    210 "Bağlantınızın durumunu denetlemek veyâ bağlantınızı ertelemek için görev çubuğunda Çevirmeli Ağ İzleyicisi'ne sağ tıklayınız.\0"
+    210 "Bağlantınızın durumunu denetlemek veya bağlantınızı ertelemek için görev çubuğunda Çevirmeli Ağ İzleyicisi'ne sağ tıklayınız.\0"
     212 "Başarıyla bağlandı.\0"
-    213 "Husûsiyetler'e basmakla husûsî seçili kimlik doğrulaması yöntemi başlatılmalıdır.\0"
-    214 "lnk\0"
-    215 "Çevirme Kısayolu Kütükleri (*.rnk)\0"
+    213 "Özellikler'e basmakla genel seçili kimlik doğrulaması yöntemi başlatılmalıdır.\0"
+    214 "link\0"
+    215 "Çevirme Kısayolu Dosyaları (*.rnk)\0"
     216 "*.rnk\0"
     217 "Çevirme Kısayolu Oluştur\0"
     218 "%1'e bağlanma başarısız oldu. Yeniden bağlanma beklemede...\0"
     219 "Çerçeveleme bilgisi alınamıyor.\0"
     220 "Giriş bilgisi alınamıyor.\0"
     221 "Yansıtma bilgileri alınamıyor.\0"
-    222 "Bağlantı dizelgesi yüklenemiyor.\0"
-    223 "İstmci:\0"
+    222 "Bağlantı tablosu yüklenemiyor.\0"
+    223 "İstemci:\0"
     224 "Ayrıntılar\0"
     225 "Aygıt:\0"
     226 "Ağ:\0"
@@ -1876,11 +1876,11 @@ BEGIN
     232 "COM1\0"
     233 "Uzak Yönlendirici\0"
     234 "Çevirge ya da aygıt\0"
-    235 "Lütfen uzak yönlendirici üzerindeki bu arayüzün hesâbı için bir kullanıcı adı giriniz.\0"
-    236 "%1 adlı bir girdi önceden var. Ayrı bir ad seçiniz.\0"
+    235 "Lütfen uzak yönlendirici üzerindeki bu arayüzün hesabı için bir kullanıcı adı giriniz.\0"
+    236 "%1 adlı bir girdi önceden var. Farklı bir ad seçiniz.\0"
     237 "Şifrenizi şifreleme olmadan göndermeye izin vermeyi isteyebilirsiniz.\0"
     238 "Şifre Şifreleme\0"
-    239 "Bu yardımcı bağlantınızı oluşturmaya anık.\0"
+    239 "Bu yardımcı bağlantınızı oluşturmaya hazır.\0"
     240 "Bitti\0"
     241 "&Telefon Numarası:\0"
     242 "Beni Şuradan Geri Ara\0"
@@ -1888,31 +1888,31 @@ BEGIN
     244 "Bu bağlantı şimdilik etkin olduğundan onu bir dahaki çevirmenize dek birtakım ayarlar etkili olmayacaktır.\0"
     245 "Tüm kullanıcılar için bir bağlantı yok. Çevirmeden önce oturum açmalısınız.\0"
     246 "Telefon defteri boş.\n\nBir girdi eklemek için Tamam'a basınız.\0"
-    247 "Alma veyâ verme kısıtlamalarından dolayı veri şifrelemesi ReactOS'un bu sürümünde yok.\0"
-    248 "Lütfen bir sonraki görüntülükte bir X.25 adresi giriniz.\0"
-    249 "Yanlışlık %1: %2\0"
-    250 "%1\n\nYanlışlık %2: %3\0"
-    251 "%1\n\nYanlışlık %2: %3\nTanılayıcı: %4\0"
-    252 "%1\n\nYanlışlık %2: %3\nBaşarısızlık Kodu: %4\0"
-    253 "%1\n\nYanlışlık %2: %3\n\nDaha çok bilgi için İ1'e basınız.\0"
-    254 "%1\n\nYanlışlık %2: %3\nAd: %4\0"
+    247 "Alma veya verme kısıtlamalarından dolayı veri şifrelemesi ReactOS'un bu sürümünde yok.\0"
+    248 "Lütfen bir sonraki ekranda bir X.25 adresi giriniz.\0"
+    249 "Hata %1: %2\0"
+    250 "%1\n\nHata %2: %3\0"
+    251 "%1\n\nHata %2: %3\nTanılayıcı: %4\0"
+    252 "%1\n\nHata %2: %3\nBaşarısızlık Kodu: %4\0"
+    253 "%1\n\nHata %2: %3\n\nDaha çok bilgi için F1'e basınız.\0"
+    254 "%1\n\nHata %2: %3\nAd: %4\0"
     255 "%1\n\n%4\0"
-    256 "%1\n\nYanlışlık %2: %3\nYanıt: %4\0"
+    256 "%1\n\nHata %2: %3\nYanıt: %4\0"
     257 "Başarısızlık Kodu: 0x%1\n\0"
     258 "Ad: %1\n\0"
-    259 "%1 CP yanlışlık bildirdi %2: %3\n\0"
+    259 "%1 CP Hata bildirdi %2: %3\n\0"
     260 "%1 CP başarıyla bağlandı.\n\0"
-    261 "Hangi çevirme iletişim kâidesinin kullanılacağını seçebilirsiniz.\0"
-    262 "Çevirme İletişim Kâidesi Seç\0"
+    261 "Hangi çevirme iletişim kuralınin kullanılacağını seçebilirsiniz.\0"
+    262 "Çevirme İletişim Protokolü Seç\0"
     263 """%1""'i saklamak için Bitir'e basınız.\0"
     264 "netcfg.hlp\0"
-    265 "&Bağlantıda başarılı numarayı dizelgenin en üstüne taşı\0"
+    265 "&Bağlantıda başarılı numarayı tablonun en üstüne taşı\0"
     266 "&Yeni telefon numarası:\0"
     267 "&Telefon numaraları:\0"
     268 "Telefon Numaraları\0"
     269 "Değişmez bir IP adresi girebilirsiniz.\0"
     270 "IP Adresi\0"
-    271 "İletişim kâideleri (TCP/IP), Uzaktan Erişim için kurulmadı ya da edilgin bırakıldı. Denetim Masası'nda Ağ'ı başlatınız, Hizmetler sayfasına gidiniz, ""Uzaktan Erişim Hizmeti"" Husûsiyetleri'ni seçiniz ve Ağ düğmesine basınız.\0"
+    271 "İletişim Protokolleri (TCP/IP), Uzaktan Erişim için kurulmadı ya da devre dışı bırakıldı. Denetim Masası'nda Ağ'ı başlatınız, Hizmetler sayfasına gidiniz, ""Uzaktan Erişim Hizmeti"" Özellikleri'ni seçiniz ve Ağ düğmesine basınız.\0"
     272 "TCP/IP\0"
     273 "IPSec, ön tanımlı ilke\0"
     274 "IPX/SPX ya da uyumlu\0"
@@ -1932,8 +1932,8 @@ BEGIN
     288 "Bu, bağlantıyı yapmak için kullanılacak aygıttır.\0"
     289 "Bir Aygıt Seç\0"
     290 "Siz bir PPP sunucusu aramadıkça Çoklu Geçekler paketlenemez.\0"
-    291 "Çevirge\0"
-    292 "Çevirge kurulmamış.\0"
+    291 "Modem\0"
+    292 "Modem kurulmamış.\0"
     293 "MS Noktadan Noktaya Şifreleme, 128 bitlik RSA/RC4\0"
     294 "MS Noktadan Noktaya Şifreleme, 40 bitlik RSA/RC4\0"
     295 "Çoklu Geçekler\0"
@@ -1945,7 +1945,7 @@ BEGIN
     301 "PPP çoklu bağlantılı\0"
     302 "SLIP\0"
     303 "NetBEUI\0"
-    304 "Bir şahsî telefon defteri, dizge telefon defterinin içerikleriyle oluşturuldu ve başlatıldı.\0"
+    304 "Bir şahsî telefon defteri, sistem telefon defterinin içerikleriyle oluşturuldu ve başlatıldı.\0"
     305 "Başka telefon defteri seçilmemiş.\0"
     306 "Bu aygıt devingen olarak yapılandırılamıyor.\0"
     307 "Bu girdi bağlı olduğundan dolayı silinemiyor.\0"
@@ -1953,15 +1953,15 @@ BEGIN
     309 """Bir IP Adresi Belirle"" seçili olduğunda sıfırdan ayrı bir IP adresi sağlanmalıdır.\0"
     310 "Bir X.25 çevirmeli ağ ya da X.25 aygıtı seçili olduğunda bir X.25 adresi gereklidir.\0"
     311 "(Yok.)\0"
-    312 """%1"" önceden dizelgede.\0"
+    312 """%1"" önceden tabloda bulunmakta.\0"
     313 "Şifremi ve verimi koru.\0"
-    314 "%1 iletişim kâidesi kurulu olmadığından ya da Uzaktan Erişim için edilgin olduğundan dolayı seçilemiyor. Değiştirmek için Denetim Masası'nda Ağ'ı başlatınız, Hizmetler sayfasını seçiniz, Uzaktan Erişim Husûsiyetleri'ni seçip ağ düğmesine basınız.\0"
+    314 "%1 iletişim protokolü kurulu olmadığından ya da Uzaktan Erişim için devre dışı olduğundan dolayı seçilemiyor. Değiştirmek için Denetim Masası'nda Ağ'ı başlatınız, Hizmetler sayfasını seçiniz, Uzaktan Erişim Özellikleri'ni seçip ağ düğmesine basınız.\0"
     315 "Şifre saklanamıyor.\0"
     316 "Veri görüntülenemiyor.\0"
     317 "Kendiliğinden çevirme bilgisi alınamıyor.\0"
     318 "İletişim kutusu yüklenemiyor.\0"
-    319 "Payaşılan erişim edilginleştirilemiyor.\0"
-    320 "Husûsiyet sayfası yüklenemiyor.\0"
+    319 "Paylaşılan erişim devre dışı bırakılamıyor.\0"
+    320 "Özellik sayfası yüklenemiyor.\0"
     321 "Telefon defteri yüklenemiyor.\0"
     322 "RAS Yöneticisi giriş bilgisi yüklenemiyor.\0"
     323 "Değer defterinden kullanıcı yeğlemeleri okunamıyor.\0"
@@ -1971,22 +1971,22 @@ BEGIN
     327 "TAPI bilgisi yüklenemiyor.\0"
     328 "X.25 bilgisi yüklenemiyor.\0"
     329 "Yeni telefon defteri oluşturulamıyor.\0"
-    330 "Payaşılan erişim etkinleştirilemiyor.\0"
+    330 "Paylaşılan erişim etkinleştirilemiyor.\0"
     331 "Telefon defteri girdisine bağlanılamıyor.\0"
     332 "Gönderme ya da alma arabelleği alınanmıyor.\0"
     333 "Bir giriş için durum bilgisi alınamıyor.\0"
-    334 "İletişim kâidesi bilgisi alınamıyor.\0"
+    334 "İletişim  protokolü bilgisi alınamıyor.\0"
     335 "Aygıttan arabellek alınamıyor.\0"
     336 "Aygıta arabellek gönderilemiyor.\0"
     337 "Veri alınamıyor.\0"
     338 "TAPI bilgisi saklanamıyor.\0"
     339 "Veri saklanamıyor.\0"
     340 "Betik durdu.\0"
-    341 "Betik bir yanlışlıktan dolayı durdu. Yanlışlık kaydını görüntülemek ister misiniz?\0"
+    341 "Betik bir hatadan dolayı durdu. Hata kaydını görüntülemek ister misiniz?\0"
     342 "Kendiliğinden çevirme bilgisi ayarlanamıyor.\0"
     343 "Saklanmış şifre silinemiyor.\0"
     344 "Telefon defteri yazılamıyor.\0"
-    345 "Yeğlemeler değer defterine yazılamıyor.\0"
+    345 "Özellikler değer defterine yazılamıyor.\0"
     346 "Kısayol kütüğü yazılamıyor.\0"
     347 "Tamam\0"
     348 "ISP'nizin telefon numarası ne?\0"
@@ -1994,7 +1994,7 @@ BEGIN
     350 "Şifre ve Şifreyi Doğrula alanları birbiriyle uyuşmuyor.\0"
     351 "Yeni Şifre ve Yeni Şifreyi Doğrula alanları birbiriyle uyuşmuyor.\0"
     352 "pbk\0"
-    353 "Telefon Defteri Kütükleri (*.pbk)\0"
+    353 "Telefon Defteri Dosyaları (*.pbk)\0"
     354 "*.pbk\0"
     355 "Telefon Defterini Aç\0"
     356 "Telefon Defterini Kopyala\0"
@@ -2003,24 +2003,24 @@ BEGIN
     359 "Telefon numarası\0"
     360 "Telefon numaraları\0"
     361 "Ağ Bağlantıları\0"
-    362 "En azından bir ağ iletişim kâidesi seçmelisiniz.\0"
-    363 "PPP sunucularınızı arayabilmenizden önce Ağ Denetim Masası öğesiyle bir ağ iletişim kâidesi kurmalısınız.\0"
+    362 "En azından bir ağ iletişim protokolü seçmelisiniz.\0"
+    363 "PPP sunucularınızı arayabilmenizden önce Ağ Denetim Masası öğesiyle bir ağ iletişim protokolü kurmalısınız.\0"
     364 "&Yeni ön ek:\0"
     365 "&Ön ekler:\0"
     366 "Telefon Numarası Ön Ekleri\0"
-    367 "Bir ya da daha çok istenilen ağ iletişim kâidesi başarılı olarak bağlanmadı.\n\n\0"
+    367 "Bir ya da daha çok istenilen ağ iletişim protokolü başarılı olarak bağlanmadı.\n\n\0"
     368 "Bağlantıyı olduğu gibi kullanmak için Onayla'ya, bağlantıyı kesmek için Ertele'ye basınız.\0"
-    369 "%1, %2 arayüzünde bir isteğe bağlı çevirme bağlantısı başlattığında kullanılacak noktadan noktaya iletişim kâidesi ayarları:\0"
+    369 "%1, %2 arayüzünde bir isteğe bağlı çevirme bağlantısı başlattığında kullanılacak noktadan noktaya iletişim protokolü ayarları:\0"
     370 "[Saklanan şifreyi değiştirmek için buraya tıklayınız.]\0"
-    405 "Daha eski RAS sunucularını aramak için NetBEUI iletişim kâidesi gereklidir.\0"
-    406 "Daha eski RAS sunucularını arayabilmenizden önce NetBEUI iletişim kâidesini kurmalısınız. NetBEUI, Denetim Masası Ağ öğesiyle kurulabilir.\0"
+    405 "Daha eski RAS sunucularını aramak için NetBEUI iletişim protokolü gereklidir.\0"
+    406 "Daha eski RAS sunucularını arayabilmenizden önce NetBEUI iletişim protokolünü kurmalısınız. NetBEUI, Denetim Masası Ağ öğesiyle kurulabilir.\0"
     407 "&Yeniden Çevir\0"
-    408 "Bir ya da daha çok aktarımı edilginleştirmeyi seçtiniz. Böyle yapma, edilgin aktrımların bu isteğe bağlı arayüzden kaldırılması için yönlendirme yöneticilerini ve yönlendirme iletişim kâidelerini gerektirir.\nSürdürmek istiyorsanız Evet'e, aktarımları yeniden etkinleştirmek istiyorsanız Hayır'a basınız.\0"
-    409 "Umûmî Ağ Bağlantı Paylaşımı\0"
-    410 "İsteğe bağlı arama arayüzü içeriye arama hesâbı.\0"
+    408 "Bir ya da daha çok aktarımı devre dışı bırakmayı seçtiniz. Böyle yapmak, devre dışı aktarımların bu isteğe bağlı olarak arayüzden kaldırılması için yönlendirme yöneticilerini ve yönlendirme iletişim protokollerini gerektirir.\nSürdürmek istiyorsanız Evet'e, aktarımları yeniden etkinleştirmek istiyorsanız Hayır'a basınız.\0"
+    409 "Genel Ağ Bağlantı Paylaşımı\0"
+    410 "İsteğe bağlı arama arayüzü içeriye arama hesabı.\0"
     411 "Uzak yönlendiriciye bağlanırken kullanılacak ""%1"" arayüzü dışarıya arama kimlik bilgilerini ayarlamaya şimdi gereksiniminiz var. Bu kimlik bilgileri uzak yönlendiricide yapılandırılmış içeriye arama kimlik bilgileriyle uyuşmalıdır. Bir Windows NT4 ya da\nWindows 2000 yönlendiricisine bağlanırken kullanıcı adı aynı zamanda uzak yönlendiricinin arayüz adıyla uyuşmalıdır.\0"
     412 "mpradmin.hlp\0"
-    413 "&Bağlantıda başarılı numarayı ya da adresi dizelgenin en üstüne taşı\0"
+    413 "&Bağlantıda başarılı numarayı ya da adresi listenin en üstüne taşı\0"
     414 "&Yeni telefon numarası ya da adres:\0"
     415 "&Telefon numaraları ya da adresler:\0"
     416 "Numaralar ve Adresler\0"
@@ -2039,7 +2039,7 @@ BEGIN
     429 "Kimlik doğrulaması yapıldı.\0"
     430 "%1'den bağlanıyor...\0"
     431 "Çevriliyor...\0"
-    432 "Çevirgeler bağlanıyor...\0"
+    432 "Modemler bağlanıyor...\0"
     433 "Kablo boyunca bağlanılıyor...\0"
     434 "%1 çevriliyor...\0"
     435 "%1'e X.25 boyunca bağlanılıyor...\0"
@@ -2048,7 +2048,7 @@ BEGIN
     438 "Bağlandı.\0"
     439 "Aygıt bağlandı.\0"
     440 "Bağlantısı kesildi.\0"
-    441 "Çevirge bağlandı.\0"
+    441 "Modem bağlandı.\0"
     442 "Kablo bağlandı.\0"
     443 "Giriş açılıyor...\0"
     444 "X.25 bağlandı.\0"
@@ -2056,69 +2056,69 @@ BEGIN
     446 "Sonradan bağlanmak bitti.\0"
     447 "Önceden bağlanmak bitti.\0"
     448 "Geri arama için hazırlanıyor...\0"
-    449 "Ağ iletişim kâidesi bağlantıları denetleniyor...\0"
+    449 "Ağ iletişim protokolü bağlantıları denetleniyor...\0"
     450 "Kullanıcı adı ve şifre doğrulanıyor...\0"
-    451 "Bağlandı, ek geçekler paketleniyor\0"
+    451 "Bağlandı, ek hatlar paketleniyor\0"
     452 "Bilinmeyen durum.\0"
     453 "Geri arama için bekleniyor...\0"
-    454 "Çevirge sıfırlanması için bekleniyor...\0"
+    454 "Modem sıfırlanması için bekleniyor...\0"
     455 "Telefon numarası değişikliği kalıcı yapılsın mı?\0"
     456 "scp\0"
     457 "*.scp\0"
-    458 "Çevirme Betik Kütükleri (*.scp)\0"
+    458 "Çevirme Betik Dosyaları (*.scp)\0"
     459 "Çevirme Betiklerine Göz At\0"
-    460 "En azından bir çevirgeyi ya da bir bağdaştırıcıyı denetlemelisiniz.\0"
+    460 "En azından bir modemi ya da bir bağdaştırıcıyı denetlemelisiniz.\0"
     461 "Telefon numarası\0"
-    462 "TCP/IP iletişim kâidesi SLIP sunucularını aramak için gereklidir.\0"
-    463 "SLIP sunucularını arayabilmenizden önce TCP/IP iletişim kâidesini kuramlısınız. TCP/IP Denetim Masası Ağ öğesiyle yüklenebilir.\0"
+    462 "TCP/IP iletişim kuralı SLIP sunucularını aramak için gereklidir.\0"
+    463 "SLIP sunucularını arayabilmenizden önce TCP/IP iletişim protokolünü kurmalısınız. TCP/IP Denetim Masası Ağ öğesiyle yüklenebilir.\0"
     464 "Durum\0"
     465 "&Yeni Ön Ek:\0"
     466 "&Ön Ekler:\0"
     467 "Telefon Numarası Ön Ekleri\0"
-    468 "Gerekliyse husûsî ayarları seçmeye gidebilirsiniz.\0"
-    469 "Husûsî Ayarlar\0"
-    470 "Elle Çevirge Komut Uçbirimi\0"
+    468 "Gerekliyse özel ayarları seçmeye gidebilirsiniz.\0"
+    469 "Özel Ayarlar\0"
+    470 "Elle Modem Komut Uçbirimi\0"
     471 "Uçbirimi Çevirmeden Sonra\0"
     472 "Uçbirimi Çevirmeden Önce\0"
     473 "SLIP Oturum Açma Uçbirimi\0"
     474 "10 dakîka\0"
-    475 "10 sâniye\0"
+    475 "10 saniye\0"
     476 "1 saat\0"
     477 "1 dakîka\0"
     478 "24 saat\0"
     479 "2 saat\0"
     480 "2 dakîka\0"
     481 "30 dakîka\0"
-    482 "30 sâniye\0"
-    483 "3 sâniye\0"
+    482 "30 saniye\0"
+    483 "3 saniye\0"
     484 "4 saat\0"
     485 "4 dakîka\0"
     486 "5 dakîka\0"
-    487 "5 sâniye\0"
+    487 "5 saniye\0"
     488 "8 saat\0"
     489 "hiçbir zaman\0"
     490 "Yeni bağlantıyı bir kullanıcı için ya da yalnızca kendiniz için kullanılabilir yapabilirsiniz.\0"
     491 "Bağlantı Kullanılabilirliği\0"
-    492 "Girdi için çoklu geçek ayarlarını çıkar?\0"
+    492 "Girdi için çoklu modem ayarlarını çıkar?\0"
     493 "Var olmayan aygıt\0"
-    494 "Oturum Açma Yeğlemeleri\0"
-    495 "Çevirme Yeğlemeleri\0"
+    494 "Oturum Açma Talepleri\0"
+    495 "Modem Talepleri\0"
     496 "X.25\0"
     497 "X.25 PAD\0"
     498 "Bu çevirmeli bağlantıdan başka bilgisayarların kaynaklara erişmesine izin verebilirsiniz.\0"
     499 "VPN Sunucusu Seçimi\0"
     500 "İstek üzerine çevirme etkinleştirilemiyor.\0"
     501 "VPN sunucusunun adı ya da adresi ne?\0"
-    502 "İsteğe bağlı çevirme edilginleştirilemiyor.\0"
-    503 "Umûmî Ağ\0"
-    504 "ReactOS umûmî ağın ilk kez bağlandığına emin olabilir.\0"
+    502 "İsteğe bağlı çevirme devre dışı bırakılamıyor.\0"
+    503 "Genel Ağ\0"
+    504 "ReactOS genel ağın ilk kez bağlandığına emin olabilir.\0"
     505 "VPN1\0"
-    506 "Umûmî Ağ Bağlantısı Paylaşımı\0"
-    507 "Bu çevirmeli bağlantıdan bir yerli ağın kaynaklara erişmesine izin verebilirsiniz.\0"
+    506 "Genel Ağ Bağlantısı Paylaşımı\0"
+    507 "Bu çevirmeli bağlantıdan bir yerel ağın kaynaklara erişmesine izin verebilirsiniz.\0"
     508 "Anabilgisayar ya da Konuk?\0"
-    509 "Umûmî Ağ Bağlantısı Paylaşımı ""%1"" bağlantısı için şimdilik etkin.\n\nOnun yerine ""%2"" bağlantısı için şimdi etkin olacaktır.\0"
+    509 "Genel Ağ Bağlantısı Paylaşımı ""%1"" bağlantısı için şimdilik etkin.\n\nOnun yerine ""%2"" bağlantısı için şimdi etkin olacaktır.\0"
     510 "İki bilgisayarı bağlamak için, bilgisayarınız bir anabilgisayar ya da bir konuk olarak tanımlanmalıdır.\0"
-    511 "Umûmî Ağ Bağlantısı Paylaşımı etkin olduğunda LAN bağdaştırıcınız 192.168.0.1 IP adresini kullanmaya ayarlanacaktır. Bilgisayarınız ağınızda başka bilgisayarlarla bağlanabilirliğini yitirebilir. Bu başka bilgisayarların değişmez IP adresleri varsa kendiliğinden IP adreslerini sağlamak için onları ayarlamalısınız. Umûmî Ağ Bağlantısı Paylaşımı'nı etkinleştirmek istediğinizden emin misiniz?\0"
+    511 "Genel Ağ Bağlantısı Paylaşımı etkin olduğunda LAN bağdaştırıcınız 192.168.0.1 IP adresini kullanmaya ayarlanacaktır. Bilgisayarınız ağınızda başka bilgisayarlarla bağlanabilirliğini yitirebilir. Bu başka bilgisayarların değişmez IP adresleri varsa kendiliğinden IP adreslerini sağlamak için onları ayarlamalısınız. Genel Ağ Bağlantısı Paylaşımı'nı etkinleştirmek istediğinizden emin misiniz?\0"
     512 "Bir Aygıt Seç\0"
     513 "Bu, bağlantıyı yapmak için kullanılacak aygıttır.\0"
     514 "&Bağlan\0"
@@ -2127,7 +2127,7 @@ BEGIN
     517 "MPPE-40 veri şifrelemesini kullan\0"
     518 "MPPE-128 veri şifrelemesini kullan\0"
     519 "Şimdiki şifreleme seçimi MS-CHAP ya da EAP kimlik doğrulamasını gerektirir.\0"
-    520 "Husûsî Kimlik Doğrulaması İletisi\0"
+    520 "Özel Kimlik Doğrulaması İletisi\0"
     521 "%1'e bağlanılıyor...\0"
     522 "Bağlantı Adı\0"
     523 "Kendiliğinden\0"
@@ -2136,20 +2136,20 @@ BEGIN
     526 "Bağlantının türünü seçiniz.\0"
     527 "Bağlantının Türü\0"
     528 "hh.exe netcfg.chm::/trouble_all.htm\0"
-    529 "Farazî Şahsî Bağlantı\0"
+    529 "Sanal Özel Bağlantı (VPN)\0"
     530 "Açık metin içerme gerekli kimlik doğrulamasının bir türünü kullanınız. Veri şifrelemeyiniz\0"
     531 "Şifrelerin şifrelenmesini gerektiren kimlik doğrulamasının bir türünü kullanınız. Veri şifrelemeyiniz.\0"
     532 "Lütfen girdi için bir ad yazınız.\0"
     533 "Şifreleri ve veriyi şifreleyiniz.\0"
     534 "Lütfen 1 ile 65535 arasında bir giriş numarası yazınız.\0"
-    535 "Ayarlar düğmesiyle husûsî kimlik doğrulaması ve veri şifrelemesi belirtiniz.\0"
+    535 "Ayarlar düğmesiyle özel kimlik doğrulaması ve veri şifrelemesi belirtiniz.\0"
     536 "Şifrelenmiş şifreler gerektiren kimlik doğrulamasının bir türünü kullanınız. Veri şifrelemeyiniz.\0"
     537 "Şifreleri ve veriyi şifreleyiniz.\0"
-    538 "Ayarlar düğmesiyle husûsî kimlik doğrulaması ve veri şifrelemesi belirtiniz.\0"
+    538 "Ayarlar düğmesiyle özel kimlik doğrulaması ve veri şifrelemesi belirtiniz.\0"
     539 "Giriş numarası başka bir girdi eliyle önceden kullanılmış.\nLütfen bir eşsiz giriş numarası giriniz.\0"
     540 "Gelen yanıtlar için bir ya da daha çok giriş giriniz.\0"
     541 "Lütfen silinecek girdiyi seçiniz.\0"
-    542 "1 sâniye\0"
+    542 "1 saniye\0"
     543 "Lütfen değiştirilecek girdiyi seçiniz.\0"
     549 "Bağlanıyor olduğunuz başka bilgisayarın adı ne?\0"
     576 "20 dakîka\0"
@@ -2158,11 +2158,11 @@ BEGIN
     582 "Aşağıdaki kutuda bu bağlantı için bir ad yazınız.\0"
     583 "Aşağıdaki kutuda başka bilgisayarın adını yazınız.\0"
     584 "Aşağıdaki kutuda ISP'nizin adını yazınız.\0"
-    585 "Umûmî Ağ bağlantınızı sağlayan hizmetin adı ne?\0"
-    586 "Lütfen şahsî ağda sunucu bilgisayarın IP adresini yazınız.\0"
+    585 "Genel Ağ bağlantınızı sağlayan hizmetin adı ne?\0"
+    586 "Lütfen özel ağda sunucu bilgisayarın IP adresini yazınız.\0"
     587 "Gelişmiş Ayarlar\0"
-    588 "Girdi adı bir noktayla başlıyor veyâ birtakım geçersiz damgalar içeriyor.\nAyrı bir ad seçiniz.\0"
-    589 "Husûsiyetler\0"
+    588 "Girdi adı bir noktayla başlıyor veya birtakım geçersiz karakterler içeriyor.\nFarklı bir ad seçiniz.\0"
+    589 "Özellikler\0"
     1512 "İletişim Girişi\0"
     1523 " kanal\0"
     1526 "Akıllı Kartlar\0"
@@ -2189,33 +2189,33 @@ BEGIN
     1549 "Uzak yönlendiriciye bağlanma için bir betik kütüğü ayarlayabilirsiniz.\0"
     1550 "İçeriye Arama Kimlik Bilgileri\0"
     1551 "Bu sunucuya içeri aradığında uzak yönlendiricinin kullanacağı kullanıcı adını ve şifreyi yapılandırınız.\0"
-    1552 "Dışaryıa Arama Kimlik Bilgileri\0"
+    1552 "Dışarıya Arama Kimlik Bilgileri\0"
     1553 "Uzak yönlendiriciye bağlanırken kullanılacak kullanıcı adını ve şifreyi yapılandırınız.\0"
     1554 "Arayüz Adı\0"
     1555 "Bilinecek bu yeni arayüz eliyle adı seçiniz.\0"
     1556 "Kullanılabilir aygıt yok\0"
-    1557 "%1 adlı bir kullanıcı hesâbı yerli bilgisayar üzerinde önceden var. Bu kullanıcı hesâbını kullanmak için isteğe bağlı çevirme arayüzü yapılandırılmalı mı?\0"
-    1558 "SLIP sunucusu bağlantıları için burada bir güvenlik iletişim kâidesi ayârı yok.\0"
+    1557 "%1 adlı bir kullanıcı hesabı bilgisayar üzerinde önceden var. Bu kullanıcı hesabını kullanmak için isteğe bağlı çevirme arayüzü yapılandırılsın mı?\0"
+    1558 "SLIP sunucusu bağlantıları için burada bir güvenlik iletişim kuralı ayarı yok.\0"
     1559 "Güvensiz Şifreye İzin Ver\0"
     1560 "Güvenli Şifre Gerektir\0"
     1561 "Akıllı Kart Kullan\0"
-    1562 "En azından bir şifre kimlik doğrulaması iletişim kâidesi seçmelisiniz.\0"
+    1562 "En azından bir şifre kimlik doğrulaması iletişim protokolü seçmelisiniz.\0"
     1563 "İzin verilmiş şifreleme yok (Şifreleme gerektirirse sunucu bağlantıyı kesecek.)\0"
     1564 "Seçimlik şifreleme (Şifreleme yoksa bile bağlan.)\0"
     1565 "Şifreleme gerektir (Sunucu geri çevirirse bağlantıyı kes.)\0"
     1566 "En çok güçlü şifreleme (Sunucu geri çevirirse bağlantıyı kes.)\0"
     1567 " (Şifreleme etkin.)\0"
-    1568 "Umûmî Ağ Hesap Bilgisi\0"
-    1569 "Umûmî Ağ hesâbınıza girmek için bir hesap adına ve bir şifreye gereksinim duyacaksınız.\0"
+    1568 "Genel Ağ Hesap Bilgisi\0"
+    1569 "Genel Ağ hesabınıza girmek için bir hesap adına ve bir şifreye gereksinim duyacaksınız.\0"
     1570 "Seçili EAP paketi şifreleme anahtarları sağlamaz. Anahtarları sağlayan bir EAP paketi seçiniz ya da şifrelememeyi seçiniz.\0"
     1571 "Şimdiki şifreleme seçimi EAP ya da MS-CHAP oturum açma güvenlik yönetmlerinin birtakım sürümlerini gerektirir.\0"
-    1572 "İletişim Kâideleri ve Güvenlik\0"
+    1572 "İletişim Protokolleri ve Güvenlik\0"
     1573 "Bu bağlantı için aktarımları ve güvenlik seçeneklerini seçiniz.\0"
-    1574 "Seçtiğiniz iletişim kâideleri PAP, SPAP veyâ CHAP içerir. Bunların birisi aşılmışsa veri şifreleme olmayacaktır. Bu ayarları korumak ister misiniz?\0"
+    1574 "Seçtiğiniz iletişim protokolleri PAP, SPAP veya CHAP içerir. Bunların birisi aşılmışsa veri şifreleme olmayacaktır. Bu ayarları korumak ister misiniz?\0"
     1575 """%1""e bağlanmak için ilk önce ""%2""ye bağlanmalısınız. Şimdi ""%2""ye bağlanmak ister misiniz?\0"
-    1576 "Koşut kablodan bağlanılıyor...\0"
+    1576 "Paralel kablodan bağlanılıyor...\0"
     1577 "Kızılötesinden bağlanılıyor...\0"
-    1578 "Koşut giriş bağlandı.\0"
+    1578 "Paralel kablodan bağlandı.\0"
     1579 "Kızılötesi bağlandı.\0"
     1580 "Bu bağlantı kurulu yazılım eliyle desteklenmeyen bir veri şifreleme gücü kullanmak için yapılandırılmıştı. Bu bağlantının güvenlik husûsiyetleri var olan şifreleme güçleri için sıfırlandı.\0"
     1581 "&VPN Türü:\0"
@@ -2223,111 +2223,111 @@ BEGIN
     1583 "Bu kullanıcı ve şifre kendi kullanımınız için saklanacaktır. Burada bu bağlantının tüm başka kullanıcıları için saklanmış bir kullanıcı adı ve şifre önceden var.Tüm başka kullanıcılar için saklanmış kullanıcı adını ve şifreyi silmek ister misiniz?\0"
     1584 "Örneğin, iş yerinizin adını ya da bağlanacağınız bir sunucunun adını yazabilirdiniz.\0"
     1585 "Hesap Bilgisi\0"
-    1586 "Bir yapılandırma değişikliğinin yapılabilmesinden önce dizge ilk önce yeniden başlatılmalı olduğundan dolayı bu husûsiyet sayfası üzerindeki denetimler edilgin.\0"
-    1587 "Bir ya da daha çok başka Ağ husûsiyet sayfasının önceden açık olduğundan dolayı bu husûsiyet sayfası üzerindeki denetimler edilgin. Bu denetimleri kullanmak için tüm bu husûsiyet sayfalarını kapatınız ve sonra bunu yeniden açınız.\0"
-    1588 "Sizde onlara erişmek için uygun ayrıcalıklar olmadığından dolayı bu husûsiyet sayfasındaki birtakım denetimler edilgin.\0"
+    1586 "Bir yapılandırma değişikliğinin yapılabilmesinden önce sistem ilk önce yeniden başlatılmalı olduğundan dolayı bu özellik sayfası üzerindeki denetimler edilgin.\0"
+    1587 "Bir ya da daha çok başka Ağ özellikleri sayfasının önceden açık olduğundan dolayı bu özelliği sayfası üzerindeki denetimler devre dışı. Bu denetimleri kullanmak için tüm bu özellik sayfalarını kapatınız ve sonra bunu yeniden açınız.\0"
+    1588 "Sizde onlara erişmek için uygun ayrıcalıklar olmadığından dolayı bu özellikler sayfasındaki birtakım denetimler devre dışı.\0"
     1589 "Aşağıdaki ileti hizmet sağlayıcınızdan alınmıştır:\r\n\r\n%1\0"
     1590 "%1'e Yeniden Bağlan\0"
     1591 "Hizmet Adı\0"
     1592 "Geniş bant bağlantınızı sağlayan hizmetin adı ne?\0"
-    1593 "Hesâbınıza girmek için bşr hesap adına ve bir şifreye gereksinim duyacaksınız.\0"
+    1593 "Hesabınıza girmek için bşr hesap adına ve bir şifreye gereksinim duyacaksınız.\0"
     1594 "PPPOE1-0\0"
-    1595 "Ethernet'ten Noktadan Noktaya İletişim Kâidesi (PPPoE)\0"
+    1595 "Ethernet'ten Noktadan Noktaya İletişim Protokolü (PPPoE)\0"
     1596 "Yapmak için geniş bant bağlantının türü:\0"
     1611 "Geniş Bant Bağlantı\0"
     1612 "Bir önceden paylaşılmış anahtar kullanmayı seçtiniz ancak birini girmediniz.\nLütfen bir önceden paylaşılmış anahtar giriniz.\0"
     1613 "Kimlik Bilgileri İşlenemez\0"
-    1634 "Windows Yönetim Araçları (WMI) hizmeti edilgin olduğundan dolayı ReactOS bu bağlantının ya da ev ağının husûsiyetlerini görüntüleyemiyor.\n\nBu bağlantının ya da ev ağınızın husûsiyetlerini yapılandırmak için ilk önce WMI hizmetini etkinleştirmelisiniz. Bunu yapmak için Yönetim Araçları denetim masasında Hizmetlere'e çift tıklayınız, Windows Yönetim Araçları'na sağ tıklayınız ve sonra Başlat'a tıklayınız.\0"
-    1635 "ReactOS, bu bağlantının husûsiyetlerini görüntüleyemiyor. Windows Yönetim Araçları (WMI) bilgisi bozulmuş olabilir. Bunu düzeltmek için, ReactOS'u, geri yükleme noktası olarak adlandırılan daha erken bir zamâna geri yüklemek için Dizge Geri Yükleme'yi kullanınız. Dizge Geri Yükleme Donatılar'da Dizge Araçları dizininde bulunur.\0"
-    1646 "Gelen Yankı İsteğine İzin Ver\0"
-    1647 "Gelen Zaman Damgası İsteğine İzin Ver\0"
+    1634 "Windows Yönetim Araçları (WMI) hizmeti devre dışı olduğundan dolayı ReactOS bu bağlantının ya da ev ağının özelliklerini görüntüleyemiyor.\n\nBu bağlantının ya da ev ağınızın husûsiyetlerini yapılandırmak için ilk önce WMI hizmetini etkinleştirmelisiniz. Bunu yapmak için Yönetim Araçları denetim masasında Hizmetlere'e çift tıklayınız, Windows Yönetim Araçları'na sağ tıklayınız ve sonra Başlat'a tıklayınız.\0"
+    1635 "ReactOS, bu bağlantının özelliklerini görüntüleyemiyor. Windows Yönetim Araçları (WMI) bilgisi bozulmuş olabilir. Bunu düzeltmek için, ReactOS'u, geri yükleme noktası olarak adlandırılan daha erken bir zamana geri yüklemek için Sistem Geri Yükleme'yi kullanınız. Sistem Geri Yükleme Donatılar'da Sistem Araçları dizininde bulunur.\0"
+    1646 "Gelen ECHO İsteğine İzin Ver\0"
+    1647 "Gelen Zaman İşareti İsteğine İzin Ver\0"
     1648 "Gelen Maske İsteğine İzin Ver\0"
     1649 "Gelen Yönlendirici İsteğine İzin Ver\0"
     1650 "Giden Erişilemeyen Varışa İzin Ver\0"
     1651 "Giden Kaynak Daraltmasına İzin Ver\0"
     1652 "Giden Değişken Sorununa İzin Ver\0"
-    1653 "Giden Aşılmış Zamâna İzin Ver\0"
+    1653 "Giden Aşılmış Zamana İzin Ver\0"
     1654 "Yeniden Yönlendirmeye İzin Ver\0"
     1655 "log\0"
     1656 "*.log\0"
-    1657 "Güvenlik Duvarı Kayıt Kütükleri (*.log)\0"
+    1657 "Güvenlik Duvarı Kayıt Dosyaları (*.log)\0"
     1658 "Göz At\0"
-    1663 "Bir şahsî ağ bağlantısı seçiniz.\0"
-    1664 "Umûmî Ağ Bağlantı Paylaşımı'nı etkinleştirmek için bir bağlantı şahsî ağ için seçilmiş olmalıdır. Lütfen var olan bağlantılar dizelgesinden bir bağlantı seçiniz.\0"
-    1665 "Bu bilgisayara gönderilmiş iletiler göndericiye geri gönderilecektir. Bu umûmiyetle sorun giderme için kullanılır, örneğin, bir makineye ping atmak için.\0"
-    1666 "Bu bilgisayara gönderilemiş veri, verinin alınmış olduğu zamânı gösteren bir doğrulama iletisiyle doğrulanabilir.\0"
-    1667 "Bu bilgisayar, bağlı olduğu umûmî ağ üzerine daha çok bilgi için dinleyecek ve isteklere yanıt verecektir.\0"
+    1663 "Bir özel ağ bağlantısı seçiniz.\0"
+    1664 "Genel Ağ Bağlantı Paylaşımı'nı etkinleştirmek için bir bağlantı özel ağ için seçilmiş olmalıdır. Lütfen var olan bağlantılar listesinden bir bağlantı seçiniz.\0"
+    1665 "Bu bilgisayara gönderilmiş iletiler göndericiye geri gönderilecektir. Bu özellikle sorun giderme için kullanılır, örneğin, bir makineye ping atmak için.\0"
+    1666 "Bu bilgisayara gönderilmiş veri, verinin alınmış olduğu zamanı gösteren bir doğrulama iletisiyle doğrulanabilir.\0"
+    1667 "Bu bilgisayar, bağlı olduğu genel ağ üzerine daha çok bilgi için dinleyecek ve isteklere yanıt verecektir.\0"
     1668 "Bu bilgisayar, tanıdığı yönlendirmeler üzerine bilgi için isteklere yanıt verecektir.\0"
-    1669 "Bir yanlışlıktan dolayı bu bilgisayara ulaşmada başarısız olan Umûmî Ağ'dan göderilen veri, gözden çıkarılacak ve başarısızlığı anlatan bir ""ulaşılamayan varış"" iletisiyle doğrulanacaktır.\0"
+    1669 "Bir hatadan dolayı bu bilgisayara ulaşmada başarısız olan Genel Ağ'dan göderilen veri, gözden çıkarılacak ve başarısızlığı anlatan bir ""ulaşılamayan varış"" iletisiyle doğrulanacaktır.\0"
     1670 "Bu bilgisayarın gelen veriyi işleme yeteneği bir iletimin hızına yetişemediğinde veri bırakılacak ve gönderici yavaşlatmak için sorulacaktır.\0"
-    1671 "Bu bilgisayar, bir sorunlu başlıktan dolayı alınmış veriyi gözden çıkardığında bir ""kötü başlık"" yanlışlık iletisiyle göndericiye yanıt verecektir.\0"
+    1671 "Bu bilgisayar, bir sorunlu başlıktan dolayı alınmış veriyi gözden çıkardığında bir ""kötü başlık"" hata iletisiyle göndericiye yanıt verecektir.\0"
     1672 "Tüm iletim izin verilenden daha çok çok zaman gerektirdiğinden dolayı bu bilgisayar, bir bitmemiş veri iletimini gözden çıkardığında bir ""süre bitti"" iletisiyle göndericiye yanıt verecektir.\0"
     1673 "Ön tanımlı yol değişirse bu bilgisayardan gönderilen veri yeniden yönlendirilecektir.\0"
-    1675 "Kayıt kütüğü büyüklüğü için girilen değer geçersiz. 1 ile 32767000 arasında bir değer giriniz.\0"
-    1685 "Kullanıcı hesâbınızın bu bağlantıyı kullanmak için izni yok. Umûmîyetle bu Konuk olarak oturum açtığınızdan dolayı olur.\0"
+    1675 "Kayıt dosyası büyüklüğü için girilen değer geçersiz. 1 ile 32767000 arasında bir değer giriniz.\0"
+    1685 "Kullanıcı hesabınızın bu bağlantıyı kullanmak için izni yok. Özellikle bu Konuk olarak oturum açtığınızdan dolayı olur.\0"
     1686 "Bir hesap adı ve şifre yazınız. (Var olan bir hesap adını ya da şifreyi unuttuysanız ağ yöneticinizle iletişime geçiniz.)\0"
     1687 "&Bilgisayar Adı\0"
     1688 "&ISP Adı\0"
     1689 "&Ortaklık Adı\0"
     1690 "Bu bağlantıyı yapmak için kullanacağınız telefon numarası ne?\n\0"
-    7301 "Gelen TCP/IP Husûsiyetleri\0"
+    7301 "Gelen TCP/IP Özellikleri\0"
     7302 "Bu alan için %1'den %2'ye dek bir değer seçmelisiniz.\0"
-    7306 "Gelen Bağlantılar Yanlışlığı\0"
-    7307 "Gelen Bağlantılar Umûmî Yanlışlığı\0"
+    7306 "Gelen Bağlantılar Hatası\0"
+    7307 "Genel Gelen Bağlantılar Hatası\0"
     7308 "Gelen Bağlantılar\0"
-    7309 "Gelen Bağlantılar Ağ Yanlışlığı\0"
-    7310 "Gelen Bağlantılar Çoklu Bağlantı Durumu Yanlışlığı\0"
-    7311 "Gelen Bağlantılar Yanlışlığı\0"
-    7312 "Gelen Bağlantılar Başlatma Yanlışlığı\0"
-    7313 "Gelen Bağlantılar TCP/IP Husûsiyetler Yanlışlığı\0"
-    7314 "Gelen Bağlantılar IPX Husûsiyetler Yanlışlığı\0"
-    7315 "Gelen Bağlantılar Yanlışlığı\0"
-    7316 "Umûmî\0"
+    7309 "Gelen Bağlantılar Ağ Hatası\0"
+    7310 "Gelen Bağlantılar Çoklu Bağlantı Durumu Hatası\0"
+    7311 "Gelen Bağlantılar Hatası\0"
+    7312 "Gelen Bağlantılar Başlatma Hatası\0"
+    7313 "Gelen Bağlantılar TCP/IP Özellikler Hatası\0"
+    7314 "Gelen Bağlantılar IPX Özellikler Hatası\0"
+    7315 "Gelen Bağlantılar Hatası\0"
+    7316 "Genel\0"
     7317 "Aygıt\0"
     7318 "Türlü Veritabanı\0"
     7319 "Kullanıcı Veritabanı\0"
-    7320 "İletişim Kâidesi Veritabanı\0"
+    7320 "İletişim Protokolü Veritabanı\0"
     7321 "Yeni kullanıcı için bir oturum açma adı girmeli ya da İptal'e basmalısınız.\0"
     7322 "Girdiğiniz şifre çok kısaydı.\0"
     7323 "Girişen şifreler aynı değil. Lütfen onları yeniden giriniz.\0"
-    7324 "Bir iç yanlışlık oluştu.\0"
-    7325 "Dizelge Görünümü\0"
-    7326 "Yerli kullanıcı veritabanı için yaptığınız değişikllikleri işlemeye çalışırken bir yanlışlık oluştu.\0"
-    7327 "Yerli dizge veritabanına bir kullanıcı eklemek için yetersiz ayrıcalıklarınız var.\0"
-    7328 "Oluşturmaya çalıştığınız kullanıcı önceden yerli kullanıcı veritabanında var.\0"
-    7329 "Girdiğiniz şifre geri çevrilmiş olduğundan dolayı kullanıcı yerli kullanıcı veritabanına eklenmedi.\0"
-    7330 "Bir iç yanlışlıktan dolayı dizge kullanıcı veritabanını yeniden yüklemek yapılamaz.\0"
-    7331 "Bir iç yanlışlık oluştu: Yerli kullanıcı veritabanı işleyicisi bozuk.\0"
-    7332 "Kullanıcı sekmesini görüntülemek için gerekli kaynakları yüklemek yapılamaz.\0"
-    7333 "Yerli kullanıcı veritabanına yaptığınız değişiklikleri geri almaya çalışılırken bir iç yanlışlık oluştu.\0"
+    7324 "Bir iç hata oluştu.\0"
+    7325 "Tablo Görünümü\0"
+    7326 "Yerel kullanıcı veritabanı için yaptığınız değişikllikleri işlemeye çalışırken bir hata oluştu.\0"
+    7327 "Yerel sistem veritabanına bir kullanıcı eklemek için yetersiz ayrıcalıklarınız var.\0"
+    7328 "Oluşturmaya çalıştığınız kullanıcı halihazırda yerel kullanıcı veritabanında var.\0"
+    7329 "Girdiğiniz şifre geri çevrilmiş olduğundan dolayı kullanıcı yerel kullanıcı veritabanına eklenmedi.\0"
+    7330 "Bir iç hatadan dolayı sistem kullanıcı veritabanını yeniden yükleme işlemi yapılamaz.\0"
+    7331 "Bir iç hata oluştu: Yerel kullanıcı veritabanı işleyicisi bozuk.\0"
+    7332 "Kullanıcı sekmesini görüntülemek için gerekli kaynakları yükleme işlemi yapılamaz.\0"
+    7333 "Yerel kullanıcı veritabanına yaptığınız değişiklikleri geri almaya çalışılırken bir iç hata oluştu.\0"
     7334 "Aygıt veritabanı işleyicisi bozuk.\0"
-    7335 "Umûmî sekmesini görüntülemek için gerekli kaynakları yüklemek yapılamaz.\0"
-    7336 "Yaptığınız aygıt ya da VPN ile ilgili değişikliklerinin birtakımlarını işlemeye çalışırken bir yalışlık oluştu.\0"
-    7337 "Bir iç yanlışlık oluştu.\0"
-    7338 "Bir iç yanlışlık oluştu: Ağ bileşeni veritabanı işleyicisi bozuk.\0"
-    7339 "Bir iç yanlışlık oluştu.\0"
-    7340 "Ağ bileşenlerine yaptığınız değişiklikleri işlemeye çalışırken bir yanlışlık oluştu.\0"
-    7341 "Bir iç yanlışlık oluştu.\0"
-    7342 "Dizgeye, TCP/IP iletişim kâidesine yaptığınız değişiklikleri işlemek yapılamaz.\0"
-    7343 "Dizgeye, IPX iletişim kâidesine yaptığınız değişiklikleri saklamak yapılamaz.\0"
-    7344 "TCP/IP husûsiyetlerini görüntülemek yapılamaz.\0"
-    7345 "IPX husûsiyetlerini görüntülemek yapılamaz.\0"
-    7346 "Dizgeden TCP/IP husûsiyetlerini yüklemek yapılamaz.\0"
-    7347 "Dizgeden IPX husûsiyetlerini yüklemek yapılamaz.\0"
-    7348 "Gelen Bağlantılar, başlamayı yapamadığı Yönlendirme ve Uzaktan Erişim hizmetine bağlıdır. Daha çok bilgi için dizge olay kaydını gözden geçiriniz.\0"
-    7349 "Şimdi başka yerde değiştiriliyor olduğundan dolayı bu zamanda ağ bileşenlerinin düzenlenmesine izin vermek yapılamaz.\0"
-    7350 "Girdiğiniz ad veyâ şifre bir dizge ilkesini çiğnediği için (Çok büyüktü, çok küçüktü, çok kötü biçimliydi.) girdiğiniz yeni kullanıcı yerli kullanıcı veritabanına eklenmedi.\0"
-    7351 "Dizge istenen kullanıcıyı silmeyi yapamaz.\0"
-    7352 "Kullanımda olduğundan dolayı seçili ağ bileşenini silmek yapılamaz.\0"
+    7335 "Genel sekmesini görüntülemek için gerekli kaynakları yüklemesi yapılamaz.\0"
+    7336 "Yaptığınız aygıt ya da VPN ile ilgili değişikliklerinin birtakımlarını işlemeye çalışırken bir hata oluştu.\0"
+    7337 "Bir iç hata oluştu.\0"
+    7338 "Bir iç hata oluştu: Ağ bileşeni veritabanı işleyicisi bozuk.\0"
+    7339 "Bir iç hata oluştu.\0"
+    7340 "Ağ bileşenlerine yaptığınız değişiklikleri işlemeye çalışırken bir hata oluştu.\0"
+    7341 "Bir iç hata oluştu.\0"
+    7342 "Sisteme, TCP/IP iletişim protokolüne yaptığınız değişiklikleri işlenemez.\0"
+    7343 "Sisteme, IPX iletişim protokolüne yaptığınız değişiklikleri saklamanamaz.\0"
+    7344 "TCP/IP özellikleri görüntülenemez.\0"
+    7345 "IPX özellikleri görüntülenemez.\0"
+    7346 "Sistemden TCP/IP özellikleri yüklenemez.\0"
+    7347 "Sistemden IPX özellikleri yüklenemez.\0"
+    7348 "Gelen Bağlantılar, Yönlendirme ve Uzaktan Erişim hizmetine bağlıdır, ancak bağlı olduğu hizmet başlatılamadığı için Gelen Bağlantılar başlatılamadı. Daha çok bilgi için sistem olay kaydını gözden geçiriniz.\0"
+    7349 "Şimdi başka yerde değiştiriliyor olduğundan dolayı bu zamanda ağ bileşenlerinin düzenlenmesine izin verilemez.\0"
+    7350 "Girdiğiniz ad veya şifre bir sistem ilkesini çiğnediği için (çok uzun, çok kısaydı veya  kötü biçimliydi.) girdiğiniz yeni kullanıcı yerel kullanıcı veritabanına eklenmedi.\0"
+    7351 "Sistem istenen kullanıcıyı silemedi.\0"
+    7352 "Kullanımda olduğundan dolayı seçili ağ bileşenini silemedi.\0"
     7353 "Gelen Bağlantılar Uyarısı\0"
-    7354 "Sildiğiniz bir kullanıcı İptal'e basılsa bile dizgeden sürekli olarak silinecektir. %s kullanıcısını sürekli olarak silmek istediğinizden emin misiniz?\0"
-    7355 "Bir dizge yönetim konsoluna geçmek üzeresiniz. Bu Gelen Bağlantılar husûsiyet sayfası kapatılacak ve yaptığınız bir değişiklik dizgeye işlenecektir. Sürdürmeyi onaylıyor musunuz?\0"
-    7356 "Ağ Maske'nizin değeri değiştirildi. Bir maskedeki bir sıfır biti yalnızca başka sıfır bitleriyle izlenebilir. Örneğin, onlu noktalı gösterimle ifâde edilen bir Ağ Maskesi değeri, 255.255.0.0 geçerlidir ama 255.0.255.0 değildir.\n\0"
+    7354 "Sildiğiniz bir kullanıcı İptal'e basılsa bile sistemden sürekli olarak silinecektir. %s kullanıcısını sürekli olarak silmek istediğinizden emin misiniz?\0"
+    7355 "Bir sistem yönetim konsoluna geçmek üzeresiniz. Bu Gelen Bağlantılar özellik sayfasını kapatacak ve yaptığınız bir değişiklik sisteme işlenecektir. Sürdürmek ister miziniz?\0"
+    7356 "Ağ Maske'nizin değeri değiştirildi. Bir maskedeki bir sıfır biti yalnızca başka sıfır bitleriyle izlenebilir. Örneğin, onlu noktalı gösterimle ifade edilen bir Ağ Maskesi değeri, 255.255.0.0 geçerlidir ama 255.0.255.0 değildir.\n\0"
     7357 "Kullanıcı İzinleri\0"
     7358 "Bu bilgisayara bağlanabilen kullanıcıları belirtebilirsiniz.\0"
     7359 "Gelen Bağlantılar İçin Aygıtlar\0"
     7360 "Gelen bağlantıları kabul etmek için bilgisayarınızın kullandığı aygıtları seçebilrsiniz.\0"
-    7361 "Gelen Farazî Şahsî Ağ (VPN) Bağlantısı\0"
+    7361 "Gelen Sanal Özel Ağ (VPN) Bağlantısı\0"
     7362 "Bir başka bilgisayar size bir VPN bağlantısından bağlanabilir.\0"
     7363 "Ağ Yazılımı\0"
     7364 "Ağ yazılımı, başka bilgisayar türlerinden bağlantıları kabul etmek için bu bilgisayara izin verir.\0"
@@ -2343,24 +2343,24 @@ BEGIN
     7377 "Bu bağlantıyı yapmak için kullanmak istediğiniz aygıt ne?\0"
     7378 "Şimdi kurulu doğrudan bağlantıları kabul edebilecek aygıt yok.\0"
     7379 "Yeni Gelen Bağlantı Uyarısı\0"
-    7380 "Bu Windows 2000 sunucusu bir etki alanına ilişkin olduğundan ya da bir etki alanını denetlediğinden dolayı gelen bağlantıları almaya bu makineyi yapılandırmak için Yönlendirme ve Uzaktan Erişim dizge konsolunu kullanmalısınız. Değişiklikler iptal edilsin ve bu konsola geçilsin mi?\n\0"
+    7380 "Bu Windows 2000 sunucusu bir etki alanına ilişkin olduğundan ya da bir etki alanını denetlediğinden dolayı gelen bağlantıları almaya bu makineyi yapılandırmak için Yönlendirme ve Uzaktan Erişim sistem konsolunu kullanmalısınız. Değişiklikler iptal edilsin ve bu konsola geçilsin mi?\n\0"
     7381 "&Ağ Numarasını Kendiliğinden Ata\0"
     7382 "&Ağ Numaralarını Kendiliğinden Ata\0"
     7383 "Gelen Bağlantılar, 00000000 ya da FFFFFFFF IPX ağ numaralarını veremez. Lütfen atanmış ağ numaralarını ya da kendiliğinden ağ numarası ataması kullanımını değiştiriniz.\0"
     7384 "şuraya\0"
     7385 "İletişim Girişi (%s)\0"
-    7386 "Ağ Bağlantıları, Yerli Kullanıcı Yöneticisi veyâ Uzaktan Erişim İlkesi konsollarını kullanarak ayarlanmış gelen bağlantılar için birtakım husûsileştirilmiş seçenekleri görüntülemez. Gelen bağlantılar üzerine eksiksiz ve doğru bilgi için bu konsolları kullanmaya gereksinim duyacaksınız.\0"
+    7386 "Ağ Bağlantıları, Yerel Kullanıcı Yöneticisi veya Uzaktan Erişim İlkesi konsollarını kullanarak ayarlanmış gelen bağlantılar için birtakım özelleştirilmiş seçenekleri görüntülemez. Gelen bağlantılar üzerine eksiksiz ve doğru bilgi için bu konsolları kullanmaya gereksinim duyacaksınız.\0"
     7387 "Seçtiğiniz kullanıcı geri arama kipi, size geçerli bir geri arama numarası girmeyi gerektirir.\0"
-    7388 "ReactOS işlemi bitirmek için yeniden başlamalıdır. Şimdi yeniden başlatmaya tamam mı?\0"
+    7388 "ReactOS işlemi bitirmek için yeniden başlamalıdır. Şimdi yeniden başlatalım mı?\0"
     7389 "Şimdi seçtiğiniz aygıtın var olan yaplandırma seçenekleri yok.\0"
     7390 "Geçersiz Aralık\0"
-    7391 "Gelen Bağlantılar için edilgin ""%1""i istediniz. Bunu edilginleştirmek için ""Sunucu"" hizmetini durdurmalısınız. Bir kez durdu mu bu  bilgisayardaki tüm paylşılan dizinler ve yazıcılar bir başka bilgisayar için artık var olmayacaktır. ""Sunucu"" hizmetini durdurmak için size izin verecek bir dizge konsolu getirmek ister misiniz?\r\n\nBigisayar Yönetimi altında Dizge Araçları'na tıklayınız ve sonra Hizmetler'e tıklayınız. Sağ bölmede Sunucu'ya sağ tıklayınız ve durdurmayı tıklayınız.\0"
-    7392 "Bu dizilik giriş bir başka bilgisayara bir doğrudan bağlantıda kullanım için etkin değil. O, bu yardımcıyı bitirdiğinizden sonra etkinleştirilecektir. Sonra bu bağlantı için simgeye sağ tıklamayla ve Husûsiyetler'i seçmekle sonra giriş hızını ve diğer husûsiyetleri yapılandırabilirsiniz.\n\0"
+    7391 "Gelen Bağlantılar için devre dışı ""%1""i istediniz. Bunu devre dışı bırakmak için ""Sunucu"" hizmetini durdurmalısınız. Bir kez durdu mu bu  bilgisayardaki tüm paylşılan dizinler ve yazıcılar bir başka bilgisayar için artık var olmayacaktır. ""Sunucu"" hizmetini durdurmak için size izin verecek bir sistem konsolu getirmek ister misiniz?\r\n\nBigisayar Yönetimi altında Sistem Araçları'na tıklayınız ve sonra Hizmetler'e tıklayınız. Sağ bölmede Sunucu'ya sağ tıklayınız ve durdurmayı tıklayınız.\0"
+    7392 "Bu dizilik giriş bir başka bilgisayara bir doğrudan bağlantıda kullanım için etkin değil. O, bu yardımcıyı bitirdiğinizden sonra etkinleştirilecektir. Sonra bu bağlantı için simgeye sağ tıklamayla ve Husûsiyetler'i seçmekle sonra giriş hızını ve diğer özellikleri yapılandırabilirsiniz.\n\0"
     7393 "Gelen Bağlantılar\0"
     7394 "Girdiğiniz IP adresi havuzu geçersiz.\0"
     7395 "Sağlanan maske geçersiz.\0"
     7396 "TCP/IP havuzu için girilen başlama adresi geçersiz. O, 1.0.0.0 ile 224.0.0.0 arasında olmalı ve 127.x.x.x biçiminde olmamalıdır.\0"
-    7397 "Adres maskeden daha husûsî olduğundan dolayı girilen TCP/IP havuzu geçersiz.\0"
+    7397 "Adres maskeden daha özel olduğundan dolayı girilen TCP/IP havuzu geçersiz.\0"
     7398 "Başlama adresi sonlanma adresinden küçük olmalıdır.\0"
     7399 "Yönlendirme ve Uzaktan Erişim Hizmeti durma işleminde. Durana dek Gelen Bağlantılar seçeneği kullanılamaz. Lütfen biraz bekleyiniz ve yeniden deneyiniz.\0"
     7400 "%s (%s)\0"

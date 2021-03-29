@@ -8,9 +8,9 @@ CAPTION "Donanım Ekleme Sihirbazı"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Donanım Ekleme Sihirbazı'na Hoşgeldiniz", IDC_FINISHTITLE, 114, 8, 203, 24
-    LTEXT "Bu sihirbaz, size şöyle yardım eder:", -1, 114, 40, 182, 8
-    LTEXT "1. Bilgisayarınıza eklediğiniz donanımı desteklemek için yazılım kurmak.", -1, 121, 56, 184, 16
-    LTEXT "2. Donanımınızla olan sorunlarınızı çözmek.", -1, 121, 78, 185, 16
+    LTEXT "Bu sihirbaz, size donanım eklemek için şu yolları sunar:", -1, 114, 40, 182, 8
+    LTEXT "1. Bilgisayarınıza eklediğiniz donanımı desteklemek için aygıt yazılım kurmak.", -1, 121, 56, 184, 16
+    LTEXT "2. Aygıt yazılımızının sorunlarınızı çözmek.", -1, 121, 78, 185, 16
     ICON IDI_WARNINGICON, IDC_WARNINGICON, 124, 109, 20, 20
     LTEXT "Eğer donanımınız bir kurulum CD'siyle geldiyse bu sihirbazı kapatmak için ""İptal""e tıklamanız ve bu donanımı kurmak için üreticinin CD'sini kullanmanız önerilir.", 503, 150, 106, 155, 50
     LTEXT "Devam etmek için İleri'ye tıklayınız.", -1, 114, 166, 193, 8
@@ -94,7 +94,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Donanım Ekleme Sihirbazı"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Donanım Ekleme Sihirbazı'nı Bitirme", IDC_FINISHTITLE, 114, 8, 203, 24
+    LTEXT "Donanım Ekleme Sihirbazı'nı Bitirin", IDC_FINISHTITLE, 114, 8, 203, 24
     LTEXT "Donanım Ekleme Sihirbazı'nı başarıyla bitirdiniz.", -1, 114, 32, 193, 19
     LTEXT "", IDC_STATUSTEXT, 114, 70, 193, 92
     LTEXT "Bu sihirbazı kapatmak için ""Bitir""e tıklayınız.", -1, 114, 166, 132, 8
@@ -105,7 +105,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Donanım Ekleme Sihirbazı"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Donanım Ekleme Sihirbazı'nı Bitirme", IDC_FINISHTITLE, 114, 8, 203, 24
+    LTEXT "Donanım Ekleme Sihirbazı'nı Bitirin", IDC_FINISHTITLE, 114, 8, 203, 24
     LTEXT "Sihirbaz, bilgisayarınıza bağlanan aşağıdaki donanımı buldu:", -1, 114, 32, 193, 19
     LTEXT "Bu sihirbazı kapatmak için ""Bitir""e tıklayınız.", -1, 114, 166, 132, 8
     CONTROL "", IDC_FOUNDHARDWARELIST, "SysListView32", WS_BORDER | WS_GROUP | WS_TABSTOP | LVS_REPORT | LVS_NOSORTHEADER | LVS_SINGLESEL | LVS_SHAREIMAGELISTS, 114, 56, 193, 78
@@ -116,7 +116,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Donanım Ekleme Sihirbazı"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Donanım Ekleme Sihirbazı'nı Tamamlama", IDC_FINISHTITLE, 114, 8, 195, 28
+    LTEXT "Donanım Ekleme Sihirbazı'nı Tamamlayın", IDC_FINISHTITLE, 114, 8, 195, 28
     LTEXT "Seçtiğiniz donanımın şimdiki durumu buradadır:", -1, 114, 40, 193, 19
     EDITTEXT IDC_HWSTATUSEDIT, 114, 60, 193, 70, ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY | WS_VSCROLL | NOT WS_TABSTOP
     LTEXT "Sizde olan herhangi bir sorunu çözmenize yardımcı olabilen bir sorun çözücü başlatmak için ""Bitir""e tıklayınız.", -1, 114, 136, 193, 1
@@ -142,7 +142,7 @@ BEGIN
     IDS_SEARCHTITLE "Sihirbaz ararken lütfen bekleyiniz..."
     IDS_SEARCHTEXT "Bu sihirbaz, bilgisayarınıza yeni bağlanan ancak daha kurulmayan donanımı arıyor."
     IDS_ISCONNECTED "Donanım bağlı mı?"
-    IDS_PROBELISTTITLE "Aşağıdaki donanım bilgisayarınıza önceden kurulmuş."
+    IDS_PROBELISTTITLE "Aşağıdaki aygıt yazılımı bilgisayarınıza önceden kurulmuş."
     IDS_ADDNEWDEVICE "Yeni Bir Donanım Aygıtı Ekle"
     IDS_SELECTWAYTITLE "Bu sihirbaz başka donanımları kurmanıza yardımcı olabilir."
     IDS_HDTYPESTITLE "Aşağıdaki listeden kuruyor olduğunuz donanımın türünü seçiniz."

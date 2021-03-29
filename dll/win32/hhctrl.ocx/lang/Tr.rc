@@ -75,7 +75,7 @@ MENU_WEBBROWSER MENU
         MENUITEM "&Yazdır...", IDTB_PRINT
         MENUITEM "Y&enile", IDTB_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM "&Husûsiyetler", MIID_PROPERTIES
+        MENUITEM "&Özellikler", MIID_PROPERTIES
     }
     POPUP ""
     {

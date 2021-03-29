@@ -36,7 +36,7 @@ IDR_BROWSE_CONTEXT_MENU MENU
         MENUITEM "&Geri",                         IDM_GOBACKWARD
         MENUITEM "İ&leri",                        IDM_GOFORWARD
         MENUITEM SEPARATOR
-        MENUITEM "&Arka Planı Ayrı Sakla...",     IDM_SAVEBACKGROUND
+        MENUITEM "&Arka Planı Ayrı Kaydet...",     IDM_SAVEBACKGROUND
         MENUITEM "A&rka Plan Olarak Ayarla",      IDM_SETWALLPAPER
         MENUITEM "Ar&ka Planı Çoğalt",            IDM_COPYBACKGROUND
         MENUITEM "&Masaüstü Ögesi Olarak Ayarla", IDM_SETDESKTOPITEM
@@ -53,19 +53,19 @@ IDR_BROWSE_CONTEXT_MENU MENU
         MENUITEM "Ya&zdır",                       IDM_PRINT
         MENUITEM "Yen&ile",                       _IDM_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM "&Husûsîyetler",                 IDM_PROPERTIES
+        MENUITEM "&Özellikler",                 IDM_PROPERTIES
     }
 
     POPUP "" /* Image */
     {
         MENUITEM "&Bağlantıyı Aç",                   IDM_FOLLOWLINKC
         MENUITEM "B&ağlantıyı Yeni Pencerede Aç",    IDM_FOLLOWLINKN
-        MENUITEM "&Hedefi Ayrı Sakla...",            IDM_SAVETARGET
+        MENUITEM "&Hedefi Ayrı Kaydet...",            IDM_SAVETARGET
         MENUITEM "He&defi Yazdır",                   IDM_PRINTTARGET
         MENUITEM SEPARATOR
         MENUITEM "&Resmi Göster",                    IDM_SHOWPICTURE
         MENUITEM "R&esmi Ayrı Sakla...",             IDM_SAVEPICTURE
-        MENUITEM "Resmi &Mektupla...",               IDM_MP_EMAILPICTURE
+        MENUITEM "Resmi &E-postala...",               IDM_MP_EMAILPICTURE
         MENUITEM "Re&smi Yazdır...",                 IDM_MP_PRINTPICTURE
         MENUITEM "Res&imlerim'e &Git",               IDM_MP_MYPICS
         MENUITEM "Arka Plan &Olarak Ayarla",         IDM_SETWALLPAPER
@@ -73,12 +73,12 @@ IDR_BROWSE_CONTEXT_MENU MENU
         MENUITEM SEPARATOR
         MENUITEM "&Kes",                             IDM_CUT
         MENUITEM "&Çoğalt",                          IDM_COPY
-        MENUITEM "K&ısayol Çoğalt",                  IDM_COPYSHORTCUT
+        MENUITEM "K&ısayolu Çoğalt",                 IDM_COPYSHORTCUT
         MENUITEM "&Yapıştır",                        IDM_PASTE
         MENUITEM SEPARATOR
         MENUITEM "Yer İm&leri'ne Ekle...",           IDM_ADDFAVORITES
         MENUITEM SEPARATOR
-        MENUITEM "H&usûsîyetler",                    IDM_PROPERTIES
+        MENUITEM "Ö&zellikler",                    IDM_PROPERTIES
     }
 
     POPUP "" /* Control */
@@ -97,14 +97,14 @@ IDR_BROWSE_CONTEXT_MENU MENU
     {
         POPUP "&Seç"
         {
-            MENUITEM "&Göze",              IDM_CELLSELECT
-            MENUITEM "&Yataç",             IDM_ROWSELECT
-            MENUITEM "&Dikeç",             IDM_COLUMNSELECT
-            MENUITEM "D&izelge",           IDM_TABLESELECT
+            MENUITEM "&Hücre",           IDM_CELLSELECT
+            MENUITEM "&Satır Seç",       IDM_ROWSELECT
+            MENUITEM "&Sutun Seç",       IDM_COLUMNSELECT
+            MENUITEM "T&ablo",           IDM_TABLESELECT
         }
         MENUITEM SEPARATOR
-        MENUITEM "&Göze Husûsiyetleri",    IDM_CELLPROPERTIES
-        MENUITEM "&Dizelge Husûsiyetleri", IDM_TABLEPROPERTIES
+        MENUITEM "&Hücre Özellikleri",    IDM_CELLPROPERTIES
+        MENUITEM "&Tablo Özellikleri",    IDM_TABLEPROPERTIES
     }
 
     POPUP "" /* 1DSite Select */
@@ -131,7 +131,7 @@ IDR_BROWSE_CONTEXT_MENU MENU
         MENUITEM SEPARATOR
         MENUITEM "Ye&r İmleri'ne Ekle...",      IDM_ADDFAVORITES
         MENUITEM SEPARATOR
-        MENUITEM "H&usûsîyetler",               IDM_PROPERTIES
+        MENUITEM "Ö&zellikler",               IDM_PROPERTIES
     }
 
     POPUP "" /* Context Unknown */
@@ -147,7 +147,7 @@ IDR_BROWSE_CONTEXT_MENU MENU
         MENUITEM "He&defi Yazdır",                   IDM_PRINTTARGET
         MENUITEM SEPARATOR
         MENUITEM "&Resmi Göster",                    IDM_SHOWPICTURE
-        MENUITEM "&Vidyoyu Ayrı Sakla...",           IDM_SAVEPICTURE
+        MENUITEM "&Videoyu Ayrı Sakla...",           IDM_SAVEPICTURE
         MENUITEM "Arka &Plan Olarak Ayarla",         IDM_SETWALLPAPER
         MENUITEM "&Masaüstü Öğesi Olarak Ayarla...", IDM_SETDESKTOPITEM
         MENUITEM SEPARATOR
@@ -160,18 +160,18 @@ IDR_BROWSE_CONTEXT_MENU MENU
         MENUITEM SEPARATOR
         MENUITEM "Y&ürüt",                           IDM_DYNSRCPLAY
         MENUITEM "D&urdur",                          IDM_DYNSRCSTOP
-        MENUITEM "Hu&sûsîyetler",                    IDM_PROPERTIES
+        MENUITEM "Öz&ellikler",                      IDM_PROPERTIES
     }
 
     POPUP "" /* ART Image */
     {
         MENUITEM "&Bağlantıyı Aç",                   IDM_FOLLOWLINKC
         MENUITEM "B&ağlantıyı Yeni Pencerede Aç",    IDM_FOLLOWLINKN
-        MENUITEM "He&defi Ayrı Sakla...",            IDM_SAVETARGET
+        MENUITEM "He&defi Farklı Kaydet...",         IDM_SAVETARGET
         MENUITEM "Hede&fi Yazdır",                   IDM_PRINTTARGET
         MENUITEM SEPARATOR
         MENUITEM "&Resmi Göster",                    IDM_SHOWPICTURE
-        MENUITEM "Re&smi Ayrı Sakla...",             IDM_SAVEPICTURE
+        MENUITEM "Re&smi Farklı Kaydet...",          IDM_SAVEPICTURE
         MENUITEM "Arka &Plan Olarak Ayarla",         IDM_SETWALLPAPER
         MENUITEM "&Masaüstü Öğesi Olarak Ayarla...", IDM_SETDESKTOPITEM
         MENUITEM SEPARATOR
@@ -186,7 +186,7 @@ IDR_BROWSE_CONTEXT_MENU MENU
         MENUITEM "D&urdur",                          IDM_IMGARTSTOP
         MENUITEM "&Geri Sar",                        IDM_IMGARTREWIND
         MENUITEM SEPARATOR
-        MENUITEM "&Husûsîyetler",                    IDM_PROPERTIES
+        MENUITEM "&Özellikler",                      IDM_PROPERTIES
     }
 
     POPUP "" /* Debug */
@@ -194,14 +194,14 @@ IDR_BROWSE_CONTEXT_MENU MENU
         MENUITEM "İzleme Etiketleri",           IDM_TRACETAGS
         MENUITEM "Kaynak Başarısızlıkları",     IDM_RESOURCEFAILURES
         MENUITEM "İzleme Bilgisi Dökümünü Al",  IDM_DUMPTRACKINGINFO
-        MENUITEM "Yanlışlık Ayıklama Sonu",     IDM_DEBUGBREAK
-        MENUITEM "Yanlışlık Ayıklama Görünümü", IDM_DEBUGVIEW
+        MENUITEM "Hata Ayıklama Sonu",          IDM_DEBUGBREAK
+        MENUITEM "Hata Ayıklama Görünümü",      IDM_DEBUGVIEW
         MENUITEM "Ağaç Dökümünü Al",            IDM_DUMPTREE
-        MENUITEM "Yataç Dökümünü Al",           IDM_DUMPLINES
+        MENUITEM "Satır Dökümünü Al",           IDM_DUMPLINES
         MENUITEM "DisplayTree Dökümünü Al",     IDM_DUMPDISPLAYTREE
         MENUITEM "FormatCaches Dökümünü Al",    IDM_DUMPFORMATCACHES
         MENUITEM "LayoutRects Dökümünü Al",     IDM_DUMPLAYOUTRECTS
-        MENUITEM "Bellek Göstergeci",           IDM_MEMORYMONITOR
+        MENUITEM "Bellek Göstergesi",           IDM_MEMORYMONITOR
         MENUITEM "Başarım Ölçücüleri",          IDM_PERFORMANCEMETERS
         MENUITEM "HTML'yi Sakla",               IDM_SAVEHTML
         MENUITEM SEPARATOR
@@ -227,8 +227,8 @@ IDR_BROWSE_CONTEXT_MENU MENU
     {
         MENUITEM "Buraya Kaydır", IDM_SCROLL_HERE
         MENUITEM SEPARATOR
-        MENUITEM "Sol Kıyı",     IDM_SCROLL_LEFTEDGE
-        MENUITEM "Sağ Kıyı",     IDM_SCROLL_RIGHTEDGE
+        MENUITEM "Sol Köşe",      IDM_SCROLL_LEFTEDGE
+        MENUITEM "Sağ Köşe",      IDM_SCROLL_RIGHTEDGE
         MENUITEM SEPARATOR
         MENUITEM "Soldaki Sayfa", IDM_SCROLL_PAGELEFT
         MENUITEM "Sağdaki Sayfa", IDM_SCROLL_PAGERIGHT

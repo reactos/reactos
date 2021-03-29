@@ -10,15 +10,15 @@ LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
 IDM_EVENTVWR MENU
 BEGIN
-    POPUP "&Kayıt"
+    POPUP "&Günlük"
     BEGIN
         MENUITEM "&Aç...", IDM_OPEN_EVENTLOG
-        MENUITEM "&Olay Kaydını Ayrı Sakla...", IDM_SAVE_EVENTLOG
+        MENUITEM "&Olay Günlüğünü Farklı Kaydet...", IDM_SAVE_EVENTLOG
         MENUITEM "Ka&pat", IDM_CLOSE_EVENTLOG
         MENUITEM SEPARATOR
         MENUITEM "&Tüm Olayları Sil", IDM_CLEAR_EVENTS
-        MENUITEM "&Yeniden Alandır\tF2", IDM_RENAME_EVENTLOG
-        MENUITEM "&Kayıt Ayarları...", IDM_EVENTLOG_SETTINGS
+        MENUITEM "&Yeniden Adlandır\tF2", IDM_RENAME_EVENTLOG
+        MENUITEM "&Günlük Ayarları...", IDM_EVENTLOG_SETTINGS
         MENUITEM SEPARATOR
         MENUITEM "&Çıkış", IDM_EXIT
     END
@@ -33,16 +33,16 @@ BEGIN
     END
     POPUP "&Seçenekler"
     BEGIN
-        MENUITEM "Event details &view", IDM_EVENT_DETAILS_VIEW
-        MENUITEM "&Grid lines", IDM_LIST_GRID_LINES
+        MENUITEM "Etkinlik ayrıntıları &görünümü", IDM_EVENT_DETAILS_VIEW
+        MENUITEM "&Izgara çizgileri", IDM_LIST_GRID_LINES
         MENUITEM SEPARATOR
-        MENUITEM "&Save settings on exit", IDM_SAVE_SETTINGS
+        MENUITEM "&Çıkışta ayarları kaydedin", IDM_SAVE_SETTINGS
     END
     POPUP "&Yardım"
     BEGIN
         MENUITEM "&Yardım", IDM_HELP
         MENUITEM SEPARATOR
-        MENUITEM "&Üzerine", IDM_ABOUT
+        MENUITEM "&Hakkında", IDM_ABOUT
     END
 END
 
@@ -50,12 +50,12 @@ IDM_EVENTWR_CTX MENU
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "&Open Event Log...", IDM_OPEN_EVENTLOG
-        MENUITEM "&Save Event Log as...", IDM_SAVE_EVENTLOG
+        MENUITEM "&Olay Günlüğünü Aç...", IDM_OPEN_EVENTLOG
+        MENUITEM "&Olay Günlüğünü farklı kaydet...", IDM_SAVE_EVENTLOG
         MENUITEM SEPARATOR
-        MENUITEM "&Clear all Events", IDM_CLEAR_EVENTS
-        MENUITEM "&Rename\tF2", IDM_RENAME_EVENTLOG
-        MENUITEM "Log Se&ttings...", IDM_EVENTLOG_SETTINGS
+        MENUITEM "&Tüm Etkinlikleri Temizle", IDM_CLEAR_EVENTS
+        MENUITEM "&Yeniden adlandır\tF2", IDM_RENAME_EVENTLOG
+        MENUITEM "Günlük Ay&arları...", IDM_EVENTLOG_SETTINGS
     END
 END
 
@@ -70,7 +70,7 @@ END
 IDD_EVENTDETAILS_DLG DIALOGEX 0, 0, 266, 240
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_THICKFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 EXSTYLE WS_EX_CONTEXTHELP
-CAPTION "Olay Ayrıntıları"
+CAPTION "Olay Günlüğü Ayrıntıları"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "EvtDetailsCtrl", IDC_STATIC, 0, 0, 266, 215
@@ -82,13 +82,13 @@ IDD_EVENTDETAILS_CTRL DIALOGEX 0, 0, 266, 215
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Târih:", IDC_STATIC, 8, 5, 31, 8
+    LTEXT "Tarih:", IDC_STATIC, 8, 5, 31, 8
     EDITTEXT IDC_EVENTDATESTATIC, 46, 5, 47, 8, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     LTEXT "Kaynak:", IDC_STATIC, 103, 5, 36, 8
     EDITTEXT IDC_EVENTSOURCESTATIC, 140, 5, 82, 8, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     LTEXT "Saat:", IDC_STATIC, 8, 15, 31, 8
     EDITTEXT IDC_EVENTTIMESTATIC, 46, 15, 47, 8, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "Ulam:", IDC_STATIC, 103, 15, 36, 8
+    LTEXT "Kategori:", IDC_STATIC, 103, 15, 36, 8
     EDITTEXT IDC_EVENTCATEGORYSTATIC, 140, 15, 82, 8, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     LTEXT "Tür:", IDC_STATIC, 8, 25, 31, 8
     EDITTEXT IDC_EVENTTYPESTATIC, 46, 25, 47, 8, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
@@ -107,21 +107,21 @@ BEGIN
     CONTROL "", IDC_EVENTTEXTEDIT, RICHEDIT_CLASS, ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY | WS_VSCROLL | WS_BORDER, 8, 76, 250, 60
 
     LTEXT "Veri:", IDC_DETAILS_STATIC, 8, 140, 20, 8
-    CONTROL "&Çoklu", IDC_BYTESRADIO, "Button", BS_AUTORADIOBUTTON, 39, 140, 34, 8
+    CONTROL "&Baytlar", IDC_BYTESRADIO, "Button", BS_AUTORADIOBUTTON, 39, 140, 34, 8
     CONTROL "Sö&zcük", IDC_WORDRADIO, "Button", BS_AUTORADIOBUTTON, 77, 140, 34, 8
     EDITTEXT IDC_EVENTDATAEDIT, 8, 150, 250, 60, ES_MULTILINE | ES_AUTOHSCROLL | ES_AUTOVSCROLL | ES_READONLY | WS_VSCROLL | WS_BORDER
 END
 
 IDD_LOGPROPERTIES_GENERAL DIALOGEX 0, 0, 252, 234
 STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
-CAPTION "Umûmî"
+CAPTION "Genel"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "G&örünen Ad:", IDC_STATIC, 7, 9, 60, 8
     EDITTEXT IDC_DISPLAYNAME, 67, 7, 178, 12, ES_LEFT | ES_AUTOHSCROLL | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP
     LTEXT "&Kayıt Adı:", IDC_STATIC, 7, 25, 60, 8
     EDITTEXT IDC_LOGNAME, 67, 23, 178, 12, ES_LEFT | ES_AUTOHSCROLL | ES_READONLY | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP
-    LTEXT "K&ayıt Kütüğü:", IDC_STATIC, 7, 41, 60, 8
+    LTEXT "K&ayıt Dosyası:", IDC_STATIC, 7, 41, 60, 8
     EDITTEXT IDC_LOGFILE, 67, 39, 178, 12, ES_LEFT | ES_AUTOHSCROLL | ES_READONLY | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP
     LTEXT "Boyut:", IDC_STATIC, 7, 57, 60, 8
     EDITTEXT IDC_SIZE_LABEL, 67, 57, 178, 12, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
@@ -131,13 +131,13 @@ BEGIN
     EDITTEXT IDC_MODIFIED_LABEL, 67, 81, 178, 12, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     LTEXT "Erişildi:", IDC_STATIC, 7, 93, 60, 8
     EDITTEXT IDC_ACCESSED_LABEL, 67, 93, 178, 12, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    GROUPBOX "Kayıt Boyutu", IDC_STATIC, 7, 106, 238, 99
-    LTEXT "&En Çok Kayıt Boyutu:", IDC_STATIC, 17, 122, 58, 8
+    GROUPBOX "Günlük Boyutu", IDC_STATIC, 7, 106, 238, 99
+    LTEXT "&En Büyük Günlük Boyutu:", IDC_STATIC, 17, 122, 58, 8
     EDITTEXT IDC_EDIT_MAXLOGSIZE, 80, 119, 40, 14, ES_LEFT | ES_NUMBER | WS_GROUP
     CONTROL "", IDC_UPDOWN_MAXLOGSIZE, UPDOWN_CLASS, UDS_SETBUDDYINT | UDS_NOTHOUSANDS | UDS_ALIGNRIGHT |
             UDS_AUTOBUDDY | UDS_ARROWKEYS | WS_GROUP, 120, 119, 10, 14
     LTEXT "KB", IDC_STATIC, 130, 122, 20, 8
-    LTEXT "En çok kayıt boyutuna erişildiği zaman:", IDC_STATIC, 17, 140, 219, 8
+    LTEXT "En büyük günlük boyutuna erişildiği zaman:", IDC_STATIC, 17, 140, 219, 8
     CONTROL "&gerekli olduğunda olayların üzerine yaz.", IDC_OVERWRITE_AS_NEEDED, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 17, 155, 219, 10
     CONTROL "&şundan daha eski olayların üzerine yaz.", IDC_OVERWRITE_OLDER_THAN, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 17, 168, 102, 10
     EDITTEXT IDC_EDIT_EVENTS_AGE, 122, 165, 35, 14, ES_LEFT | ES_NUMBER | WS_GROUP
@@ -145,7 +145,7 @@ BEGIN
             UDS_AUTOBUDDY | UDS_ARROWKEYS | WS_GROUP, 157, 165, 10, 14
     LTEXT "gün", IDC_STATIC, 162, 168, 20, 8
     CONTROL "&Olayların Üzerine Yazma\n(Elle Kayıtları Sil)", IDC_NO_OVERWRITE, "Button", BS_AUTORADIOBUTTON | BS_MULTILINE | WS_GROUP | WS_TABSTOP, 17, 180, 143, 20
-    PUSHBUTTON "Ö&n Tanımlıları Geri Getir", IDC_RESTOREDEFAULTS, 166, 183, 70, 14
+    PUSHBUTTON "V&arsayılanları Geri Getir", IDC_RESTOREDEFAULTS, 166, 183, 70, 14
     AUTOCHECKBOX "&Düşük Hızlı Bir Bağlantı Kullan", IDC_LOW_SPEED_CONNECTION, 7, 217, 167, 10
     PUSHBUTTON "Ka&yıtları Sil", ID_CLEARLOG, 195, 213, 50, 14
 END
@@ -153,46 +153,46 @@ END
 STRINGTABLE
 BEGIN
     IDS_COPYRIGHT "Telif Hakkı: 2007 - Marc Piulachs (marc.piulachs@codexchange.net)"
-    IDS_APP_TITLE "Olay Görüntüleyicisi"
+    IDS_APP_TITLE "Olay Günlüğü Görüntüleyicisi"
     IDS_APP_TITLE_EX "%s - %s Oturum Aç \\\\"
-    IDS_STATUS_MSG "%s -> %lu olay var (dizelgelenmiş: %lu)"
-    IDS_LOADING_WAIT "Olay kayıtları yükleniyor. Lütfen bekleyiniz..."
+    IDS_STATUS_MSG "%s -> %lu olay var (listelenmiş: %lu)"
+    IDS_LOADING_WAIT "Olay günlükleri yükleniyor. Lütfen bekleyiniz..."
     IDS_NO_ITEMS "Bu görünümde görüntülenecek bir öğe bile yok." // "No events in this log."
-    IDS_EVENTLOG_SYSTEM "Dizge Kayıtları"
-    IDS_EVENTLOG_APP "Uygulama Kayıtları"
-    IDS_EVENTLOG_USER "Kullanıcı Kayıtları"
+    IDS_EVENTLOG_SYSTEM "Sistem Günlükleri"
+    IDS_EVENTLOG_APP "Uygulama Günlükleri"
+    IDS_EVENTLOG_USER "Kullanıcı Günlükleri"
     IDS_SAVE_FILTER "Olay Kaydı (*.evt)\0*.evt\0"
-    IDS_CLEAREVENTS_MSG "Silmeden önce bu olay kaydını saklamak ister misiniz?"
-    IDS_RESTOREDEFAULTS "Do you want to restore all settings for this log to their default values?"
-    IDS_EVENTSTRINGIDNOTFOUND "( %s ) kaynağındaki ( %lu ) olay kimliği için açıklama bulunamıyor. Yerli bilgisayarda, uzak bilgisayardan iletileri görüntülemesi için gerekli Değer Defteri bilgisi veyâ ileti DLL kütükleri olmayabilir.\n\nAşağıdaki bilgi olayın parçasıdır:\n\n"
+    IDS_CLEAREVENTS_MSG "Silmeden önce bu olay kaydını kaydetmek ister misiniz?"
+    IDS_RESTOREDEFAULTS "Bu günlük için tüm ayarları varsayılan değerlerine geri yüklemek istiyor musunuz?"
+    IDS_EVENTSTRINGIDNOTFOUND "( %s ) kaynağındaki ( %lu ) olay kimliği için açıklama bulunamıyor. Yerel bilgisayarda, uzak bilgisayardan iletileri görüntülemesi için gerekli Kayıt Defteri bilgisi veya ileti DLL dosyaları olmayabilir.\n\nAşağıdaki bilgi olayın parçasıdır:\n\n"
 END
 
 STRINGTABLE
 BEGIN
 /* Please note that explicit TAB characters '\t' are used to fix the alignment of the message in the MessageBox */
-    IDS_USAGE "ReactOS Event Viewer\n\
+    IDS_USAGE "ReactOS Olay Göstericisi\n\
 \n\
-EventVwr [computer name] [/L:<event log file>] [/?]\n\
+EventVwr [bilgisayar adı] [/l:<etkinlik günlüğü dosyası>] [/?]\n\
 \n\
-""computer name"" : Specifies the remote computer where to connect\n\
-\tto retrieve the events to display. If no name is specified, the\n\
-\tlocal computer is used.\n\
+""bilgisayar adı"" : Görüntülenecek olayların alınacağı uzak \n\
+\tbilgisayarı belirtir. İsim belirtilmezse yerel bilgisayar\n\
+\tkullanıır.\n\
 \n\
-/L:<event log file> : Specifies which event log file to open.\n\
-\tOnly files in the .evt format (NT ≤ 5.2) are supported.\n\
+/L:<etkinlik günlüğü dosyası> : Hangi olay günlüğü dosyasının açılacağını belirtir.\n\
+\tYalnızca .evt biçimindeki dosyalar (NT ≤ 5.2) desteklenmektedir.\n\
 \n\
-/? : Displays this help message.\n\
+/? : Bu yardım mesajını gösterir.\n\
 "
-    IDS_EVENTLOGFILE "Event Log File"
+    IDS_EVENTLOGFILE "Etkinlik - Günlük Dosyası"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_EVENTLOG_ERROR_TYPE "Yanlışlık"
+    IDS_EVENTLOG_ERROR_TYPE "Hata"
     IDS_EVENTLOG_WARNING_TYPE "Uyarı"
     IDS_EVENTLOG_INFORMATION_TYPE "Bilgi"
-    IDS_EVENTLOG_AUDIT_SUCCESS "Başarılılık Denetimi"
-    IDS_EVENTLOG_AUDIT_FAILURE "Başarısızlık Denetimi"
+    IDS_EVENTLOG_AUDIT_SUCCESS "Denetim Başarılı"
+    IDS_EVENTLOG_AUDIT_FAILURE "Denetim Başarısız"
     IDS_EVENTLOG_SUCCESS "Başarı"
     IDS_EVENTLOG_UNKNOWN_TYPE "Bilinmeyen Olay"
 END
@@ -206,10 +206,10 @@ END
 STRINGTABLE
 BEGIN
     IDS_COLUMNTYPE "Tür"
-    IDS_COLUMNDATE "Târih"
+    IDS_COLUMNDATE "Tarih"
     IDS_COLUMNTIME "Saat"
     IDS_COLUMNSOURCE "Kaynak"
-    IDS_COLUMNCATEGORY "Ulam"
+    IDS_COLUMNCATEGORY "Kategori"
     IDS_COLUMNEVENT "Olay"
     IDS_COLUMNUSER "Kullanıcı"
     IDS_COLUMNCOMPUTER "Bilgisayar"
@@ -217,14 +217,14 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_COPY "Olay Türü:      %s\r\n\
-Olay Kaynağı:   %s\r\n\
-Olay Ulamı:     %s\r\n\
-Olay Kimliği:   %s\r\n\
-Târih:          %s\r\n\
-Saat:           %s\r\n\
-Kullanıcı:      %s\r\n\
-Bilgisayar:     %s\r\n\
+    IDS_COPY "Olay Türü:           %s\r\n\
+Olay Kaynağı:        %s\r\n\
+Olay Kategorisi:     %s\r\n\
+Olay Kimliği:        %s\r\n\
+Tarih:               %s\r\n\
+Saat:                %s\r\n\
+Kullanıcı:           %s\r\n\
+Bilgisayar:          %s\r\n\
 Tanım:\r\n%s"
 END
 

@@ -4,28 +4,28 @@ LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
 IDD_WELCOMEPAGE DIALOGEX 0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS Kur"
+CAPTION "ReactOS'u Kur"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "ReactOS Kurulum Sihirbazı'na Hoşgeldiniz.", IDC_WELCOMETITLE, 115, 8, 195, 24
-    LTEXT "Bu sihirbaz ReactOS'u bilgisayarınıza kurar. Sihirbaz, ReactOS'u düzgünce kurmak için siz ve bilgisayarınız hakkında bazı bilgiler toplamaya gerek duyuyor.", IDC_STATIC, 115, 40, 195, 100
-    LTEXT "Kur'la devam etmek için İleri'ye tıklayınız.", IDC_STATIC, 115, 169, 195, 17
+    LTEXT "Bu sihirbaz ReactOS'u bilgisayarınıza kurar. ReactOS Kurulum Sihirbaz'ı, ReactOS'u düzgünce kurmak için siz ve bilgisayarınız hakkında bazı bilgiler toplamaya gerek duymaktadır.", IDC_STATIC, 115, 40, 195, 100
+    LTEXT "Kuruluma devam etmek için İleri'ye tıklayınız.", IDC_STATIC, 115, 169, 195, 17
 END
 
 IDD_ACKPAGE DIALOGEX 0, 0, 317, 145
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS Kur"
+CAPTION "ReactOS'u Kur"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT "ReactOS geliştiricileri, (parçaları) ReactOS'u oluşturmak için kullanılmış aşağıdaki Açık Kaynak projelerine teşekkür etmek istiyorlar:", IDC_STATIC, 15, 7, 286, 19
+    LTEXT "ReactOS geliştiricileri, ReactOS'u (ve parçalarını) oluşturmak için kullanılmış aşağıdaki Açık Kaynak projelerine teşekkür etmek istiyorlar:", IDC_STATIC, 15, 7, 286, 19
     LISTBOX IDC_PROJECTS, 15, 30, 286, 75, LBS_NOSEL | LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | WS_VSCROLL
-    LTEXT "ReactOS, GPL altında lisanslanmıştır, bu yüzden onu (onun parçalarını) yeniden kullanmak veya yeniden dağıtmak isterseniz GPL'ye uymalısınız.", IDC_STATIC, 15, 110, 220, 25
+    LTEXT "ReactOS, GPL altında lisanslanmıştır, bu yüzden onu (ve onun parçalarını) yeniden kullanmak veya yeniden dağıtmak isterseniz GPL'ye uymalısınız.", IDC_STATIC, 15, 110, 220, 25
     PUSHBUTTON "&GPL'yi Görüntüle...", IDC_VIEWGPL, 236, 110, 65, 19
-    LTEXT "Kur'la devam etmek için İleri'ye tıklayınız.", IDC_STATIC, 15, 136, 195, 17
+    LTEXT "Kuruluma devam etmek için İleri'ye tıklayınız.", IDC_STATIC, 15, 136, 195, 17
 END
 
 IDD_PRODUCT DIALOGEX 0, 0, 317, 143
-CAPTION "ReactOS Kur"
+CAPTION "ReactOS'u Kur"
 STYLE DS_MODALFRAME | DS_SHELLFONT | WS_POPUPWINDOW | WS_CAPTION | WS_VISIBLE
 FONT 8, "MS Shell Dlg"
 BEGIN
@@ -40,7 +40,7 @@ END
 
 IDD_OWNERPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS Kur"
+CAPTION "ReactOS'u Kur"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON2, IDC_STATIC, 21, 7, 20, 20
@@ -53,7 +53,7 @@ END
 
 IDD_COMPUTERPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS Kur"
+CAPTION "ReactOS'u Kur"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON1, IDC_STATIC, 21, 7, 20, 20
@@ -61,7 +61,7 @@ BEGIN
     LTEXT "&Bilgisayar Adı:", IDC_STATIC, 54, 38, 75, 8
     EDITTEXT IDC_COMPUTERNAME, 165, 35, 148, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL | ES_UPPERCASE
     ICON IDI_ICON5, IDC_STATIC, 21, 57, 20, 20
-    LTEXT "Kur, bilgisayarınızda Yönetici adlı bir kullanıcı hesabı oluşturacaktır. Bilgisayarınıza tam erişime gerek duyarsanız bu hesabı kullanabilirsiniz.", IDC_STATIC, 54, 57, 250, 25
+    LTEXT "Kurulum yöneticisi, bilgisayarınızda Yönetici adlı bir kullanıcı hesabı oluşturacaktır. Bilgisayarınıza tam erişime gerek duyarsanız bu hesabı kullanabilirsiniz.", IDC_STATIC, 54, 57, 250, 25
     LTEXT "127 ya da daha az karakterlik bir Yönetici parolası yazınız.", IDC_STATIC, 54, 87, 250, 8
     LTEXT "&Yönetici Parolası:", IDC_STATIC, 54, 104, 105, 8
     EDITTEXT IDC_ADMINPASSWORD1, 165, 101, 148, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
@@ -71,7 +71,7 @@ END
 
 IDD_LOCALEPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS Kur"
+CAPTION "ReactOS'u Kur"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON4, IDC_STATIC, 21, 7, 20, 20
@@ -87,7 +87,7 @@ END
 
 IDD_DATETIMEPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS Kur"
+CAPTION "ReactOS'u Kur"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON3, IDC_STATIC, 21, 10, 20, 20
@@ -96,12 +96,12 @@ BEGIN
     CONTROL "", IDC_TIMEPICKER, "SysDateTimePick32", DTS_TIMEFORMAT | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 200, 17, 54, 14
     LTEXT "Saat Dilimi:", IDC_STATIC, 53, 42, 253, 8
     COMBOBOX IDC_TIMEZONELIST, 53, 52, 201, 93, CBS_DROPDOWNLIST | CBS_NOINTEGRALHEIGHT | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
-    AUTOCHECKBOX "&Gün ışığı tasarruf değişiklikleri için saati kendiliğinden ayarla.", IDC_AUTODAYLIGHT, 53, 124, 201, 10
+    AUTOCHECKBOX "&Gündönümü değişiklikleri için saati kendiliğinden ayarla.", IDC_AUTODAYLIGHT, 53, 124, 201, 10
 END
 
 IDD_THEMEPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS Setup"
+CAPTION "ReactOS'u Setup"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "", IDC_THEMEPICKER, "SysListView32", LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_ALIGNLEFT | WS_TABSTOP, 18, 8, 288, 130
@@ -109,7 +109,7 @@ END
 
 IDD_PROCESSPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS Kur"
+CAPTION "ReactOS'u Kur"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "", IDC_ACTIVITY, 53, 7, 253, 20
@@ -119,13 +119,13 @@ END
 
 IDD_FINISHPAGE DIALOGEX 0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS Kur'un Tamamlanması"
+CAPTION "ReactOS Kurulumunun Tamamlanması"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "ReactOS Kurulum Sihirbazı'nın Tamamlanması", IDC_FINISHTITLE, 115, 8, 195, 24
-    LTEXT "ReactOS Kur'u başarıyla tamamladınız.\n\nBitir'e tıkladığınızda bilgisayarınız yeniden başlatılacaktır.", IDC_STATIC, 115, 40, 195, 100
+    LTEXT "ReactOS Kurulum Sihirbazı, Kurulumu Tamamladı", IDC_FINISHTITLE, 115, 8, 195, 24
+    LTEXT "ReactOS Kurulumu başarı ile tamamlandı.\n\nBitir'e tıkladığınızda bilgisayarınız yeniden başlatılacaktır.", IDC_STATIC, 115, 40, 195, 100
     CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 115, 138, 188, 12
-    LTEXT "Eğer bir sürücüde bir CD varsa, onu çıkarınız. Sonra bilgisayarınızı yeniden başlatmak için Bitir'e tıklayınız.", IDC_STATIC, 115, 169, 195, 17
+    LTEXT "Eğer bir sürücüde bir CD/USB varsa, onu çıkarınız. Sonra bilgisayarınızı yeniden başlatmak için Bitir'e tıklayınız.", IDC_STATIC, 115, 169, 195, 17
 END
 
 IDD_GPL DIALOGEX 0, 0, 333, 230
@@ -159,7 +159,7 @@ BEGIN
     RTEXT "&Tekerlek algılaması:", -1, 27, 55, 90, 8
     COMBOBOX IDC_PS2MOUSEWHEEL, 124, 53, 95, 46, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
     RTEXT "&Girdi tampon uzunluğu:", -1, 27, 75, 90, 8
-    LTEXT "paket", -1, 169, 75, 26, 8
+    LTEXT "paketler", -1, 169, 75, 26, 8
     EDITTEXT IDC_PS2MOUSEINPUTLEN, 124, 72, 40, 14, ES_LEFT | ES_AUTOHSCROLL | ES_READONLY | ES_NUMBER | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_BORDER
     CONTROL "", IDC_PS2MOUSEINPUTUPDN, "msctls_updown32", UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS | WS_CHILD | WS_VISIBLE, 168, 70, 10, 14
     AUTOCHECKBOX "&Hızlı Başlatma", IDC_PS2MOUSEFASTINIT, 124, 97, 90, 10
@@ -170,12 +170,12 @@ STRINGTABLE
 BEGIN
     IDS_ACKTITLE "Teşekkürler"
     IDS_ACKSUBTITLE "ReactOS'u ayakta tutanlar ve lisans bilgisi:"
-    IDS_OWNERTITLE "Yazılım'ınızı Kişiselleştirin"
-    IDS_OWNERSUBTITLE "Kur, ReactOS'u kişiselleştirmek için kendiniz üzerine bu bilgiyi kullanır."
+    IDS_OWNERTITLE "Yazılımınızı Kişiselleştirin"
+    IDS_OWNERSUBTITLE "Kurulum Sihirbazı, ReactOS'u kişiselleştirmek için kendiniz üzerine bu bilgiyi kullanır."
     IDS_COMPUTERTITLE "Bilgisayar Adı ve Yönetici Parolası"
     IDS_COMPUTERSUBTITLE "Bilgisayarınız için bir ad ve bir Yönetici Parolası sağlamalısınız."
     IDS_LOCALETITLE "Yerel Ayarlar"
-    IDS_LOCALESUBTITLE "Ayrı bölgeler ve diller için ReactOS'u özelleştirebilirsiniz."
+    IDS_LOCALESUBTITLE "Farklı bölgeler ve diller için ReactOS'u özelleştirebilirsiniz."
     IDS_DATETIMETITLE "Tarih ve Saat"
     IDS_DATETIMESUBTITLE "Bilgisayarınız için doğru zamanı ayarlayınız."
     IDS_PROCESSTITLE "Bileşenler Kaydediliyor"
@@ -186,7 +186,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_REACTOS_SETUP "ReactOS Kur"
+    IDS_REACTOS_SETUP "ReactOS'u Kur"
     IDS_UNKNOWN_ERROR "Bilinmeyen hata"
     IDS_REGISTERING_COMPONENTS "Bileşenler kaydediliyor..."
     IDS_LOADLIBRARY_FAILED "LoadLibrary başarısız oldu: "
@@ -202,18 +202,18 @@ BEGIN
      *   Also check the IDD_COMPUTERPAGE dialog.
      */
     IDS_ADMINISTRATOR_NAME "Yönetici"
-    IDS_MACHINE_OWNER_NAME "Sahip"
+    IDS_MACHINE_OWNER_NAME "Makine Sahibi"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_WZD_NAME "Kur, adınızı girene kadar devam edemez."
-    IDS_WZD_SETCOMPUTERNAME "Kur, bilgisayar adını ayarlamada başarısız oldu."
-    IDS_WZD_COMPUTERNAME "Kur, bilgisayarınızın adını girene kadar devam edemez."
+    IDS_WZD_NAME "Kurulum Sihirbazı, adınızı girene kadar devam edemez."
+    IDS_WZD_SETCOMPUTERNAME "Kurulum Sihirbazı, bilgisayar adını ayarlamada başarısız oldu."
+    IDS_WZD_COMPUTERNAME "Kurulum Sihirbazı, bilgisayarınızın adını girene kadar devam edemez."
     IDS_WZD_PASSWORDEMPTY "Bir parola girmelisiniz!"
     IDS_WZD_PASSWORDMATCH "Girdiğiniz parolalar uyuşmuyor. Lütfen istenen parolayı yeniden giriniz."
     IDS_WZD_PASSWORDCHAR "Girdiğiniz parola geçersiz karakterler içeriyor. Lütfen geçersiz karakter içermeyen bir şifre giriniz."
-    IDS_WZD_LOCALTIME "Kur, yerel saati ayarlayamadı."
+    IDS_WZD_LOCALTIME "Kurulum Sihirbazı, yerel saati ayarlayamadı."
 END
 
 STRINGTABLE
@@ -230,7 +230,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_DETECTIONDISABLED "Algılama pasif"
+    IDS_DETECTIONDISABLED "Algılama devre dışı"
     IDS_LOOKFORWHEEL "Tekerlek için bakınız"
     IDS_ASSUMEPRESENT "Tekerleği var say"
 END
@@ -249,7 +249,7 @@ BEGIN
     IDS_PRODUCTSUBTITLE "Sisteminizin davranışını etkileyen bir ürün seçeneği seçebilirsiniz."
     IDS_PRODUCTSERVERNAME "ReactOS Sunucu"
     IDS_PRODUCTWORKSTATIONNAME "ReactOS İş İstasyonu"
-    IDS_PRODUCTSERVERINFO "Sistem bir sunucu olarak tanınacaktır. ""Resimlerim"", ""Videolarım"" and ""Müziklerim"" özel klasörleri ""Belgelerim""den bağımsızdır."
-    IDS_PRODUCTWORKSTATIONINFO "Sistem bir iş istasyonu olarak tanınacaktır. ""Resimlerim"", ""Videolarım"" and ""Müziklerim"" özel klasörleri ""Belgelerim""in içindedir."
+    IDS_PRODUCTSERVERINFO "Sistem bir sunucu olarak tanınacaktır. ""Resimlerim"", ""Videolarım"" ve ""Müziklerim"" özel dizinleri, ""Belgelerim""den bağımsızdır."
+    IDS_PRODUCTWORKSTATIONINFO "Sistem bir iş istasyonu olarak tanınacaktır. ""Resimlerim"", ""Videolarım"" ve ""Müziklerim"" özel dizinleri ""Belgelerim""in içindedir."
     IDS_DEFAULT "(Ön Tanımlı)"
 END

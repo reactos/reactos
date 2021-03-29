@@ -165,7 +165,7 @@ CAPTION "Çalıştır"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", IDC_RUNDLG_ICON, 7, 11, 18, 20, WS_VISIBLE
-    LTEXT "Bir programın, klasörün, belgenin ya da İnternet kaynağının adını yazınız, ReactOS onu sizin için açacaktır.", 12289, 36, 11, 185, 18
+    LTEXT "Bir programın, dizinin, belgenin ya da İnternet kaynağının adını yazınız, ReactOS onu sizin için açacaktır.", 12289, 36, 11, 185, 18
     LTEXT "&Aç:", 12305, 7, 39, 24, 10
     CONTROL "", IDC_RUNDLG_EDITPATH, "COMBOBOX", WS_TABSTOP | WS_GROUP | WS_VSCROLL | WS_VISIBLE | CBS_AUTOHSCROLL | CBS_DROPDOWN, 36, 37, 184, 100
     DEFPUSHBUTTON "Tamam", IDOK, 62, 70, 50, 14, WS_TABSTOP
@@ -223,7 +223,7 @@ BEGIN
     ICON "", 14000, 16, 7, 32, 32, WS_VISIBLE
     EDITTEXT 14001, 58, 9, 170, 14, ES_LEFT
     LTEXT "Dosya Türü:", 14004, 8, 40, 55, 10
-    CONTROL "Klasör", 14005, "edit", ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL, 58, 40, 170, 10
+    CONTROL "Dizin", 14005, "edit", ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL, 58, 40, 170, 10
     LTEXT "", -1, 8, 31, 221, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
     LTEXT "Konum:", 14008, 8, 56, 55, 10
     EDITTEXT 14009, 58, 56, 170, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | ES_AUTOHSCROLL | NOT WS_TABSTOP
@@ -414,12 +414,12 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     GROUPBOX "Görevler", -1, 7, 10, 249, 45
     CONTROL "", IDC_FOLDER_OPTIONS_TASKICON, "Static", SS_ICON | WS_CHILD | WS_VISIBLE, 14, 25, 21, 20
-    AUTORADIOBUTTON "&Klasörlerde ortak görevleri göster", IDC_FOLDER_OPTIONS_COMMONTASKS, 40, 25, 120, 10, WS_TABSTOP | WS_GROUP | WS_GROUP
-    AUTORADIOBUTTON "React&OS klasik klasörleri kullan", IDC_FOLDER_OPTIONS_CLASSICFOLDERS, 40, 37, 120, 10
-    GROUPBOX "Klasörlere Göz At", -1, 7, 60, 249, 45, WS_TABSTOP
+    AUTORADIOBUTTON "&Dizinlerde ortak görevleri göster", IDC_FOLDER_OPTIONS_COMMONTASKS, 40, 25, 120, 10, WS_TABSTOP | WS_GROUP | WS_GROUP
+    AUTORADIOBUTTON "React&OS klasik dizinleri kullan", IDC_FOLDER_OPTIONS_CLASSICFOLDERS, 40, 37, 120, 10
+    GROUPBOX "Dizinlere Göz At", -1, 7, 60, 249, 45, WS_TABSTOP
     CONTROL "", IDC_FOLDER_OPTIONS_FOLDERICON, "Static", SS_ICON | WS_CHILD | WS_VISIBLE, 14, 70, 21, 20
-    AUTORADIOBUTTON "&Tüm klasörleri aynı pencerede aç", IDC_FOLDER_OPTIONS_SAMEWINDOW, 40, 70, 140, 10, WS_TABSTOP | WS_GROUP | WS_GROUP
-    AUTORADIOBUTTON "Tü&m klasörleri kendi penceresinde aç", IDC_FOLDER_OPTIONS_OWNWINDOW, 40, 82, 140, 10
+    AUTORADIOBUTTON "&Tüm dizinleri aynı pencerede aç", IDC_FOLDER_OPTIONS_SAMEWINDOW, 40, 70, 140, 10, WS_TABSTOP | WS_GROUP | WS_GROUP
+    AUTORADIOBUTTON "Tü&m dizinleri kendi penceresinde aç", IDC_FOLDER_OPTIONS_OWNWINDOW, 40, 82, 140, 10
     GROUPBOX "Aşağıdaki Gibi Ögelere Tıkla", -1, 7, 110, 249, 60
     CONTROL "", IDC_FOLDER_OPTIONS_CLICKICON, "Static", SS_ICON | WS_CHILD | WS_VISIBLE, 14, 120, 21, 20
     AUTORADIOBUTTON "&Bir öge açmak için tek tıkla (seçmek için üzerine git)", IDC_FOLDER_OPTIONS_SINGLECLICK, 40, 120, 170, 10, WS_TABSTOP | WS_GROUP
@@ -434,9 +434,9 @@ STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
 CAPTION "Görünüm"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    GROUPBOX "Klasör Görünümleri", -1, 7, 10, 249, 60
+    GROUPBOX "Dizin Görünümleri", -1, 7, 10, 249, 60
     ICON IDI_SHELL_PROGRAMS_FOLDER2, IDC_STATIC, 20, 20, 21, 20
-    LTEXT "Bu klasör için kullandığınız görünümü (ayrıntılar ya da döşemeler gibi)\n tüm dizinlere uygulayabilirsiniz.", -1, 60, 20, 180, 20
+    LTEXT "Bu dizin için kullandığınız görünümü (ayrıntılar ya da döşemeler gibi)\n tüm dizinlere uygulayabilirsiniz.", -1, 60, 20, 180, 20
     PUSHBUTTON "&Tüm Dizinlere Uygula", IDC_VIEW_APPLY_TO_ALL, 60, 50, 80, 14, WS_TABSTOP
     PUSHBUTTON "Tü&m Dizinleri Sıfırla", IDC_VIEW_RESET_ALL, 150, 50, 80, 14, WS_TABSTOP
     LTEXT "Gelişmiş ayarlar:", -1, 7, 80, 100, 10
@@ -472,9 +472,9 @@ BEGIN
     PUSHBUTTON "&Hayır", IDNO, 150, 122, 60, 14
     PUSHBUTTON "İptal", IDCANCEL, 215, 122, 60, 14
     ICON 146, -1, 11, 10, 21, 20, SS_REALSIZECONTROL
-    LTEXT "Bu klasör önceden ""%2"" adlı bir dosya içeriyor.", 12291, 44, 10, 231, 22, SS_NOPREFIX
-    LTEXT "Bu klasör önceden ""%2"" adlı bir salt okunur dosya içeriyor.", 12292, 41, 10, 222, 22, SS_NOPREFIX
-    LTEXT "Bu klasör önceden ""%2"" adlı bir sistem dosyası içeriyor.", 12293, 41, 10, 222, 22, SS_NOPREFIX
+    LTEXT "Bu dizin önceden ""%2"" adlı bir dosya içeriyor.", 12291, 44, 10, 231, 22, SS_NOPREFIX
+    LTEXT "Bu dizin önceden ""%2"" adlı bir salt okunur dosya içeriyor.", 12292, 41, 10, 222, 22, SS_NOPREFIX
+    LTEXT "Bu dizin önceden ""%2"" adlı bir sistem dosyası içeriyor.", 12293, 41, 10, 222, 22, SS_NOPREFIX
     LTEXT "Var olan dosyayı", -1, 44, 35, 228, 10, SS_NOPREFIX
     LTEXT "(bilinmeyen zaman ve boyut)", 12302, 79, 51, 198, 20, SS_NOPREFIX
     ICON "", 12300, 50, 49, 21, 20, SS_REALSIZECONTROL
@@ -500,7 +500,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL IDB_DLG_BG, IDC_STATIC, "STATIC", SS_BITMAP | SS_REALSIZECONTROL, 0, 0, 208, 122
     CONTROL IDB_REACTOS_FLAG, IDC_STATIC, "STATIC", SS_BITMAP, 176, 1, 32, 26
-    PUSHBUTTON "&Switch User", IDC_SWITCH_USER_BUTTON, 55, 46, 22, 20, BS_OWNERDRAW | WS_DISABLED | WS_GROUP
+    PUSHBUTTON "&Kullanıcı Değiştir", IDC_SWITCH_USER_BUTTON, 55, 46, 22, 20, BS_OWNERDRAW | WS_DISABLED | WS_GROUP
     PUSHBUTTON "&Oturumu Kapat", IDC_LOG_OFF_BUTTON, 132, 46, 22, 20, BS_OWNERDRAW
     PUSHBUTTON "İptal", IDCANCEL, 162, 103, 40, 12, WS_GROUP | BS_FLAT
     LTEXT "ReactOS Oturumunu Kapat", IDC_LOG_OFF_TEXT_STATIC, 4, 7, 160, 19
@@ -708,34 +708,34 @@ CAPTION "Özelleştir"
 STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Ne klasör türü istersiniz?", IDC_STATIC, 5, 5, 230, 65, WS_TABSTOP
-    LTEXT "&Bu klasörü bir şablon olarak kullan:", IDC_STATIC, 15, 20, 210, 12
+    GROUPBOX "Ne dizin türü istersiniz?", IDC_STATIC, 5, 5, 230, 65, WS_TABSTOP
+    LTEXT "&Bu dizini bir şablon olarak kullan:", IDC_STATIC, 15, 20, 210, 12
     COMBOBOX IDC_FOLDERCUST_COMBOBOX, 15, 35, 210, 300, CBS_HASSTRINGS | CBS_AUTOHSCROLL | CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    AUTOCHECKBOX "Bu şablonu tüm &alt klasörlere de uygula", IDC_FOLDERCUST_CHECKBOX, 15, 50, 210, 15
-    GROUPBOX "Klasör resimleri", IDC_STATIC, 5, 75, 230, 90, WS_TABSTOP
-    LTEXT "Küçük Resimler görünümü için, içerikleri hatırlamanız için bu klasör üzerine bir resim yerleştirebilirsiniz.", IDC_STATIC, 15, 87, 115, 33
+    AUTOCHECKBOX "Bu şablonu tüm &alt dizinlere de uygula", IDC_FOLDERCUST_CHECKBOX, 15, 50, 210, 15
+    GROUPBOX "Dizin resimleri", IDC_STATIC, 5, 75, 230, 90, WS_TABSTOP
+    LTEXT "Küçük Resimler görünümü için, içerikleri hatırlamanız için bu dizin üzerine bir resim yerleştirebilirsiniz.", IDC_STATIC, 15, 87, 115, 33
     PUSHBUTTON "&Resim Seç...", IDC_FOLDERCUST_CHOOSE_PIC, 15, 125, 115, 15
     PUSHBUTTON "Ö&n Tanımlıyı Geri Getir", IDC_FOLDERCUST_RESTORE_DEFAULTS, 15, 144, 115, 15
     LTEXT "Ön İzleme:", IDC_STATIC, 139, 85, 81, 11
     CONTROL "", IDC_FOLDERCUST_PREVIEW_BITMAP, "STATIC", SS_BITMAP | WS_GROUP, 150, 100, 60, 60
-    GROUPBOX "Klasör Simgeleri", IDC_STATIC, 5, 170, 230, 65, WS_TABSTOP
-    LTEXT "Küçük Resimler görünümü dışında tüm görünümler için standart ""klasör"" simgesini başka bir simgeyle değiştirebilirsiniz.", IDC_STATIC, 15, 180, 210, 25
+    GROUPBOX "Dizin Simgeleri", IDC_STATIC, 5, 170, 230, 65, WS_TABSTOP
+    LTEXT "Küçük Resimler görünümü dışında tüm görünümler için standart ""dizin"" simgesini başka bir simgeyle değiştirebilirsiniz.", IDC_STATIC, 15, 180, 210, 25
     ICON 0, IDC_FOLDERCUST_ICON, 175, 209, 32, 30
     PUSHBUTTON "&Simge Değiştir...", IDC_FOLDERCUST_CHANGE_ICON, 15, 210, 75, 15
 END
 
 IDD_LINK_PROBLEM DIALOGEX 0, 0, 250, 140
-CAPTION "Problem with Shortcut"
+CAPTION "Kısayol Hatası"
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON 0, IDC_LINK_PROBLEM_ICON, 5, 5, 0, 0
-    LTEXT "The item '%s' that this shortcut refers to has been changed or moved, so this shortcut will no longer work properly.", IDC_LINK_PROBLEM_LABEL1, 35, 5, 210, 35
-    LTEXT "Nearest match based on name, type, size, and date:", IDC_LINK_PROBLEM_LABEL2, 35, 45, 210, 35
-    LTEXT "Do you want to fix this shortcut to point to this target or do you just want to delete it?", -1, 35, 85, 210, 30
-    DEFPUSHBUTTON "&Fix it", IDOK, 55, 120, 60, 15, WS_DISABLED
-    PUSHBUTTON "&Delete it", IDYES, 120, 120, 60, 15
-    PUSHBUTTON "Cancel", IDCANCEL, 185, 120, 60, 15
+    LTEXT "Bu kısayolun başvurduğu '%s' öğesi değiştirildi veya taşındı, bu nedenle bu kısayol artık düzgün çalışmayacak.", IDC_LINK_PROBLEM_LABEL1, 35, 5, 210, 35
+    LTEXT "Ada, türe, boyuta ve tarihe göre en yakın eşleşme: ", IDC_LINK_PROBLEM_LABEL2, 35, 45, 210, 35
+    LTEXT "Bu kısayolu bu hedefi gösterecek şekilde düzeltmek mi yoksa sadece silmek mi istiyorsunuz?", -1, 35, 85, 210, 30
+    DEFPUSHBUTTON "&Düzelt", IDOK, 55, 120, 60, 15, WS_DISABLED
+    PUSHBUTTON "&Sil", IDYES, 120, 120, 60, 15
+    PUSHBUTTON "İptal", IDCANCEL, 185, 120, 60, 15
 END
 
 STRINGTABLE
@@ -772,7 +772,7 @@ BEGIN
 
     /* special folders descriptions */
     IDS_ADMINISTRATIVETOOLS_DESCRIPTION "Bilgisayarınız için yönetim ayarlarını yapılandır."
-    IDS_FOLDER_OPTIONS_DESCRIPTION "Dosyaların ve klasörlerin görünümünü özelleştir ve dosya ilişkilendirmelerini değiştir."
+    IDS_FOLDER_OPTIONS_DESCRIPTION "Dosyaların ve dizinlerin görünümünü özelleştir ve dosya ilişkilendirmelerini değiştir."
     IDS_FONTS_DESCRIPTION "Bilgisayarınızdaki yazı tiplerini ekle, değiştir ve yönet."
     IDS_PRINTERS_DESCRIPTION "Kurulu yazıcıları ve faks yazıcılarını gösterir ve bunların yenilerini eklemenize yardımcı olur."
 
@@ -800,17 +800,17 @@ BEGIN
     IDS_OPENFILELOCATION "&Dosya konumunu aç"
     IDS_SENDTO_MENU "&Gönder"
 
-    IDS_MOVEERRORTITLE "Error Moving File or Folder"
-    IDS_COPYERRORTITLE "Error Copying File or Folder"
-    IDS_MOVEERRORSAMEFOLDER "Cannot move '%s': The destination folder is the same as the source folder."
-    IDS_MOVEERRORSAME "Cannot move '%s': The source and destination file names are the same."
-    IDS_COPYERRORSAME "Cannot copy '%s': The source and destination file names are the same."
-    IDS_MOVEERRORSUBFOLDER "Cannot move '%s': The destination folder is a subfolder of the source folder."
-    IDS_COPYERRORSUBFOLDER "Cannot copy '%s': The destination folder is a subfolder of the source folder."
+    IDS_MOVEERRORTITLE "Dosya veya Dizin Taşıma Hatası"
+    IDS_COPYERRORTITLE "Dosya veya Dizin Kopyalama Hatası"
+    IDS_MOVEERRORSAMEFOLDER "'%s' taşınamıyor: Hedef dizin, kaynak dizin ile aynı."
+    IDS_MOVEERRORSAME "'%s' taşınamıyor: Kaynak ve hedef dosya adları aynı"
+    IDS_COPYERRORSAME "'%s' kopyalanamıyor: Kaynak ve hedef dosya adları aynı."
+    IDS_MOVEERRORSUBFOLDER "'%s' taşınamıyor: Hedef dizin, kaynak dizinin bir alt dizinidür."
+    IDS_COPYERRORSUBFOLDER "'%s' kopyalanamıyor: Hedef dizin, kaynak dizinin bir alt dizinidür."
 
     IDS_CREATEFOLDER_DENIED """%1"" dizini oluşturulamıyor."
     IDS_CREATEFOLDER_CAPTION "Dizin Oluşturulamıyor"
-    IDS_DELETEITEM_CAPTION "Kütük Silmeyi Onayla"
+    IDS_DELETEITEM_CAPTION "Dosya Silmeyi Onayla"
     IDS_DELETEFOLDER_CAPTION "Dizin Silmeyi Onayla"
     IDS_DELETEITEM_TEXT """%1"" ögesini silmek istediğinizden emin misiniz?"
     IDS_DELETEMULTIPLE_TEXT "Bu %1 ögeyi silmek istediğinizden emin misiniz?"
@@ -819,9 +819,9 @@ BEGIN
     IDS_TRASHFOLDER_TEXT """%1"" ögesini ve onun tüm içeriğini Geri Dönüşüm Kutusu'na göndermek istediğinizden emin misiniz?"
     IDS_TRASHMULTIPLE_TEXT "Bu %1 ögeyi Geri Dönüşüm Kutusu'na göndermek istediğinizden emin misiniz?"
     IDS_CANTTRASH_TEXT """%1"" ögesi Geri Dönüşüm Kutusu'na gönderilemiyor. Karşılık olarak onu silmek ister misiniz?"
-    IDS_OVERWRITEFILE_TEXT "Bu dizin önceden ""%1"" adlı bir kütük içeriyor.\n\nOnu yenisiyle değiştirmek ister misiniz?"
-    IDS_OVERWRITEFILE_CAPTION "Kütük Üzerine Yazmayı Onayla"
-    IDS_OVERWRITEFOLDER_TEXT "Bu dizin önceden ""%1"" adlı bir dizin içeriyor.\n\nVarış dizininde kütükler seçili dizindeki kütüklere göre aynı adlara iyeyse onlar yenileriyle değiştirilecektir. Dizini taşımayı veyâ kopyalamayı şimdi bile istiyor musunuz?"
+    IDS_OVERWRITEFILE_TEXT "Bu dizin önceden ""%1"" adlı bir dosya içeriyor.\n\nOnu yenisiyle değiştirmek ister misiniz?"
+    IDS_OVERWRITEFILE_CAPTION "Dosya Üzerine Yazmayı Onayla"
+    IDS_OVERWRITEFOLDER_TEXT "Bu dizin önceden ""%1"" adlı bir dizin içeriyor.\n\nVarış dizininde dosyalar seçili dizindeki dosyalara göre aynı adlara bulunuyorsa onlar yenileriyle değiştirilecektir. Dizini taşımayı veya kopyalamayı istiyor musunuz?"
 
     IDS_FILEOOP_COPYING "Çoğaltılıyor..."
     IDS_FILEOOP_MOVING "Taşınıyor..."
@@ -831,25 +831,25 @@ BEGIN
     IDS_FILEOOP_PREFLIGHT "Ön Denetim"
 
     /* message box strings */
-    IDS_RESTART_TITLE "Yeniden Başlat"
-    IDS_RESTART_PROMPT "Dizgeyi yeniden başlatmak ister misiniz?"
+    IDS_RESTART_TITLE "Bilgisayarı Yeniden Başlat"
+    IDS_RESTART_PROMPT "Bilgisayarı yeniden başlatmak ister misiniz?"
     IDS_SHUTDOWN_TITLE "Bilgisayarı Kapat"
     IDS_SHUTDOWN_PROMPT "Bilgisayarı kapatmak ister misiniz?"
 
     /* Format Dialog Strings */
-    IDS_FORMAT_TITLE "Format Local Disk"
-    IDS_FORMAT_WARNING "WARNING: Formatting will erase ALL data on this disk.\nTo format the disk, click OK. To quit, click CANCEL."
-    IDS_FORMAT_COMPLETE "Format Complete."
+    IDS_FORMAT_TITLE "Yerel Diski Formatla"
+    IDS_FORMAT_WARNING "UYARI: Biçimlendirme bu diskteki TÜM verileri silecektir. \nDiski biçimlendirmek için Tamam'ı tıklayın. Çıkmak için İPTAL'i tıklayın."
+    IDS_FORMAT_COMPLETE "Format Tamamlandı"
 
     /* Warning format system drive dialog strings */
-    IDS_NO_FORMAT_TITLE "Cannot format this volume"
-    IDS_NO_FORMAT "This volume cannot be formatted! It contains important system files in order for ReactOS to run."
-
+    IDS_NO_FORMAT_TITLE "Bu birim biçimlendirilemiyor"
+    IDS_NO_FORMAT "Bu birim biçimlendirilemez! ReactOS'un çalışması için önemli sistem dosyalarını içerir."
+    
     /* Run File dialog */
-    IDS_RUNDLG_ERROR "Kütük Çalıştır iletişim kutusu görüntülenemiyor (iç yanlışlık)."
-    IDS_RUNDLG_BROWSE_ERROR "Göz At iletişim kutusu görüntülenemiyor (iç yanlışlık)."
+    IDS_RUNDLG_ERROR "Dosya Çalıştır iletişim kutusu görüntülenemiyor (iç hata)."
+    IDS_RUNDLG_BROWSE_ERROR "Göz At iletişim kutusu görüntülenemiyor (iç hata)."
     IDS_RUNDLG_BROWSE_CAPTION "Göz At"
-    IDS_RUNDLG_BROWSE_FILTER "Çalıştırılabilir Kütükler (*.exe)\0*.exe\0Tüm Kütükler (*.*)\0*.*\0"
+    IDS_RUNDLG_BROWSE_FILTER "Çalıştırılabilir Dosyalar (*.exe)\0*.exe\0Tüm Dosyalar (*.*)\0*.*\0"
 
     /* Shell folder path default values. See also: dll/win32/userenv/lang */
     IDS_PROGRAMS "Başlat Menüsü\\Programlar"
@@ -883,7 +883,7 @@ BEGIN
 
     IDS_NEWFOLDER "Yeni Dizin"
 
-    IDS_DRIVE_FIXED "Yerli Disk"
+    IDS_DRIVE_FIXED "Yerel Disk"
     IDS_DRIVE_CDROM "CD-ROM"
     IDS_DRIVE_NETWORK "Ağ Diski"
     IDS_DRIVE_FLOPPY "3,5 Yumuşak"
@@ -892,9 +892,9 @@ BEGIN
 
     /* Open With */
     IDS_OPEN_WITH "Birlikte Aç"
-    IDS_OPEN_WITH_CHOOSE "İzlence Seç..."
-    IDS_OPEN_WITH_RECOMMENDED "Önerilen İzlenceler:"
-    IDS_OPEN_WITH_OTHER "Başka İzlenceler:"
+    IDS_OPEN_WITH_CHOOSE "Program Seç..."
+    IDS_OPEN_WITH_RECOMMENDED "Önerilen Programlar:"
+    IDS_OPEN_WITH_OTHER "Başka Programlar:"
 
     IDS_SHELL_ABOUT_AUTHORS "&Yazarlar"
     IDS_SHELL_ABOUT_BACK "< &Geri"
@@ -906,15 +906,15 @@ BEGIN
     IDS_RECYCLEBIN_DISKSPACE "Kullanılabilir Alan"
     IDS_EMPTY_BITBUCKET "&Geri Dönüşüm Kutusu'nu Boşalt"
     IDS_PICK_ICON_TITLE "Simge Seç"
-    IDS_PICK_ICON_FILTER "Simge Kütükleri (*.ico, *.icl, *.exe, *.dll)\0*.ico;*.icl;*.exe;*.dll\0Tüm Kütükler (*.*)\0*.*\0"
-    IDS_OPEN_WITH_FILTER "Çalıştırılabilir Kütükler (*.exe)\0*.exe\0Tüm Kütükler (*.*)\0*.*\0"
+    IDS_PICK_ICON_FILTER "Simge Dosyaları (*.ico, *.icl, *.exe, *.dll)\0*.ico;*.icl;*.exe;*.dll\0Tüm Dosyalar (*.*)\0*.*\0"
+    IDS_OPEN_WITH_FILTER "Çalıştırılabilir Dosyalar (*.exe)\0*.exe\0Tüm Dosyalar (*.*)\0*.*\0"
 
-    IDS_CANTLOCKVOLUME "Unable to lock volume (Error Code: %lu)."
-    IDS_CANTDISMOUNTVOLUME "Unable to dismount volume (Error Code: %lu)."
-    IDS_CANTEJECTMEDIA "Unable to eject media (Error Code: %lu)."
-    IDS_CANTSHOWPROPERTIES "Unable to show properties (Error Code: %lu)."
-    IDS_CANTDISCONNECT "Unable to disconnect (Error Code: %lu)."
-    IDS_NONE "(None)"
+    IDS_CANTLOCKVOLUME "Disk birimi kilitlenemiyor (Hata Kodu: %lu)."
+    IDS_CANTDISMOUNTVOLUME "Birim çıkarılamıyor (Hata Kodu: %lu)."
+    IDS_CANTEJECTMEDIA "Birim ayrılamıyor (Hata Kodu: %lu)."
+    IDS_CANTSHOWPROPERTIES "Özellikler gösterilemedi (Hata Kodu: %lu)."
+    IDS_CANTDISCONNECT "Bağlanamadı (Hata Kodu: %lu)."
+    IDS_NONE "(Hiçbir Şey)"
 
     /* Friendly File Type Names */
     IDS_DIRECTORY "Dizin"
@@ -922,28 +922,28 @@ BEGIN
     IDS_CMD_FILE "ReactOS Komut Betiği"
     IDS_COM_FILE "DOS Uygulaması"
     IDS_CPL_FILE "Denetim Masası Ögesi"
-    IDS_CUR_FILE "İmleç"
-    IDS_DB__FILE "Database File"
+    IDS_CUR_FILE "İşaretçi"
+    IDS_DB__FILE "Veritabanı Dosyası"
     IDS_DLL_FILE "Uygulama Uzantısı"
     IDS_DRV_FILE "Aygıt Sürücüsü"
-    IDS_EFI_FILE "Extensible Firmware Interface Executable"
+    IDS_EFI_FILE "Genişletilebilir Donanım Sürücüsü Arabirimi Yürütümü"
     IDS_EXE_FILE "Uygulama"
-    IDS_NLS_FILE "National Language Support File"
+    IDS_NLS_FILE "Yerel Dil Desteği Dosyası"
     IDS_OCX_FILE "ActiveX Control"
     IDS_TLB_FILE "Type Library"
     IDS_FON_FILE "YazıTipi"
-    IDS_TTF_FILE "TrueType Yazı Tipi Kütüğü"
-    IDS_OTF_FILE "OpenType Yazı Tipi Kütüğü"
-    IDS_HLP_FILE "Yardım Kütüğü"
+    IDS_TTF_FILE "TrueType Yazı Tipi Dosyası"
+    IDS_OTF_FILE "OpenType Yazı Tipi Dosyası"
+    IDS_HLP_FILE "Yardım Dosyası"
     IDS_ICO_FILE "Simge"
     IDS_INI_FILE "Yapılandırma Ayarları"
     IDS_LNK_FILE "Kısayol"
-    IDS_NT__FILE "NT DOS32 Configuration File"
-    IDS_PIF_FILE "NT VDM İzlence Bilgi Kütüğü"
-    IDS_SCR_FILE "Görüntülük Koruyucu"
-    IDS_SYS_FILE "Dizge Kütüğü"
-    IDS_VXD_FILE "Farazî Aygıt Sürücüsü"
-    IDS_ANY_FILE "%s Kütüğü"
+    IDS_NT__FILE "NT DOS32 Konfigürasyon Dosyası"
+    IDS_PIF_FILE "NT VDM İzlence Bilgi Dosyası"
+    IDS_SCR_FILE "Ekran Koruyucu"
+    IDS_SYS_FILE "Sisten Dosyası"
+    IDS_VXD_FILE "Sanal Aygıt Sürücüsü"
+    IDS_ANY_FILE "%s Dosyası"
 
     IDS_OPEN_VERB "Aç"
     IDS_EXPLORE_VERB "Araştır"
@@ -951,9 +951,9 @@ BEGIN
     IDS_EDIT_VERB "Düzenle"
     IDS_FIND_VERB "Bul"
     IDS_PRINT_VERB "Yazdır"
-    IDS_CMD_VERB "Command Prompt here"
+    IDS_CMD_VERB "Burada komut istemi aç"
 
-    IDS_FILE_FOLDER "%u Kütük, %u Dizin"
+    IDS_FILE_FOLDER "%u Dosya, %u Dizin"
     IDS_PRINTERS "Yazıcılar"
     IDS_FONTS "Yazı Tipleri"
     IDS_INSTALLNEWFONT "Yeni Yazı Tipi Yükle..."
@@ -961,16 +961,16 @@ BEGIN
     IDS_DEFAULT_CLUSTER_SIZE "Ön tanımlı ayırma boyutu"
     IDS_COPY_OF "Kopyası: "
 
-    IDS_SHLEXEC_NOASSOC "Kütüğün bu türünü açmak için yapılandırılmış ReactOS izlencesi yok."
+    IDS_SHLEXEC_NOASSOC "Bu dosya türünü açmak için yapılandırılmış ReactOS programı yok."
 
     IDS_FILE_DETAILS """%s"" Uzantısı İçin Ayrıntılar"
-    IDS_FILE_DETAILSADV """%s"" uzantılı kütükler ""%s"" türünündür. Tüm ""%s"" kütüklerini etkileyen ayarları değiştirmek için Gelişmiş'e tıklayınız."
-    IDS_FILE_TYPES "Kütük Türleri"
+    IDS_FILE_DETAILSADV """%s"" uzantılı dosyalar ""%s"" türünündür. Tüm ""%s"" dosyalarını etkileyen ayarları değiştirmek için Gelişmiş'e tıklayınız."
+    IDS_FILE_TYPES "Dosya Türleri"
     IDS_COLUMN_EXTENSION "Uzantılar"
 
     /* As in 'INI File' or 'WAV File', fallback string for no-name extensions
        used in the _File type_ tab of the _Folder Options_ dialog */
-    IDS_FILE_EXT_TYPE "%s Kütük"
+    IDS_FILE_EXT_TYPE "%s Dosya"
 
     IDS_BYTES_FORMAT "çoklu"
     IDS_UNKNOWN_APP "Bilinmeyen Uygulama"
@@ -980,57 +980,57 @@ BEGIN
     IDS_OBJECTS "%d Nesne"
     IDS_OBJECTS_SELECTED "%d Nesne Seçili"
 
-    IDS_ADVANCED_FOLDER "Kütükler ve Dizinler"
+    IDS_ADVANCED_FOLDER "Dosyalar ve Dizinler"
     IDS_ADVANCED_NET_CRAWLER "Ağ dizinlerini ve yazıcıları kendiliğinden ara"
-    IDS_ADVANCED_FOLDER_SIZE_TIP "Dizin bilgi kutularında kütük boyutu bilgisini göster"
-    IDS_ADVANCED_FRIENDLY_TREE "Gezgin'in Dizinler dizelgesinde bayağı dizin görünümünü göster"
-    IDS_ADVANCED_WEB_VIEW_BARRICADE "Dizge dizinlerinin içeriğini göster"
+    IDS_ADVANCED_FOLDER_SIZE_TIP "Dizin bilgi kutularında dosya boyutu bilgisini göster"
+    IDS_ADVANCED_FRIENDLY_TREE "Gezgin'in Dizinler listesinde bayağı dizin görünümünü göster"
+    IDS_ADVANCED_WEB_VIEW_BARRICADE "Sistem dizinlerinin içeriğini göster"
     IDS_ADVANCED_SHOW_FULL_PATH_ADDRESS "Konum çubuğunda tüm yolu göster"
     IDS_ADVANCED_SHOW_FULL_PATH "Başlık çubuğunda tüm yolu göster"
     IDS_ADVANCED_DISABLE_THUMB_CACHE "Küçük resimleri saklama"
-    IDS_ADVANCED_HIDDEN "Gizli kütükler ve dizinler"
-    IDS_ADVANCED_DONT_SHOW_HIDDEN "Gizli kütükler ve dizinleri gösterme"
-    IDS_ADVANCED_SHOW_HIDDEN "Gizli kütükler ve dizinleri göster"
-    IDS_ADVANCED_HIDE_FILE_EXT "Bilinen kütük türleri için eklentileri gizle"
-    IDS_ADVANCED_SUPER_HIDDEN "Korunan işletim dizgesi kütüklerini gizle (önerilir)"
-    IDS_ADVANCED_DESKTOP_PROCESS "Kütük penceresini ayrı bir işlemde başlat"
+    IDS_ADVANCED_HIDDEN "Gizli dosyalar ve dizinler"
+    IDS_ADVANCED_DONT_SHOW_HIDDEN "Gizli dosyalar ve dizinleri gösterme"
+    IDS_ADVANCED_SHOW_HIDDEN "Gizli dosyalar ve dizinleri göster"
+    IDS_ADVANCED_HIDE_FILE_EXT "Bilinen dosya türleri için eklentileri gizle"
+    IDS_ADVANCED_SUPER_HIDDEN "Korunan işletim sistemi dosyalarını gizle (önerilir)"
+    IDS_ADVANCED_DESKTOP_PROCESS "Dosya penceresini ayrı bir işlemde başlat"
     IDS_ADVANCED_CLASSIC_VIEW_STATE "Tüm dizinlerin görünüm ayarlarını anımsa"
     IDS_ADVANCED_PERSIST_BROWSERS "Oturum açmada daha önceki dizin pencerelerini geri getir"
     IDS_ADVANCED_CONTROL_PANEL_IN_MY_COMPUTER "Bilgisayarım'da Denetim Masası'nı göster"
-    IDS_ADVANCED_SHOW_COMP_COLOR "Şifrelenmiş veyâ sıkıştırılmış NTFS kütüklerini renkli göster"
+    IDS_ADVANCED_SHOW_COMP_COLOR "Şifrelenmiş veya sıkıştırılmış NTFS dosyalerini renkli göster"
     IDS_ADVANCED_SHOW_INFO_TIP "Dizin ve masaüstü ögeleri için açılan tanım göster"
 
-    IDS_NEWEXT_ADVANCED_LEFT "<< Ad&vanced"
-    IDS_NEWEXT_ADVANCED_RIGHT "Ad&vanced >>"
-    IDS_NEWEXT_NEW "<New>"
-    IDS_NEWEXT_SPECIFY_EXT "You must specify an extension."
-    IDS_NEWEXT_ALREADY_ASSOC "Extension %s is already associated with File Type %s. Do you want to un-associate %s with %s and create a new File Type for it?"
-    IDS_NEWEXT_EXT_IN_USE "Extension is in use"
+    IDS_NEWEXT_ADVANCED_LEFT "<< Ge&lişmiş"
+    IDS_NEWEXT_ADVANCED_RIGHT "Ge&lişmiş >>"
+    IDS_NEWEXT_NEW "<Yeni>"
+    IDS_NEWEXT_SPECIFY_EXT "Bir uzantı belirtmelisiniz"
+    IDS_NEWEXT_ALREADY_ASSOC "%s uzantısı zaten %s Dosya Türü ile ilişkilendirilmiş. %s ile %s arasındaki ilişkiyi kesmek ve bunun için yeni bir Dosya Türü oluşturmak istiyor musunuz?"
+    IDS_NEWEXT_EXT_IN_USE "Uzantı kullanılıyor"
 
-    IDS_REMOVE_EXT "If you remove a registered file name extension, you will not be able to open files with this extension by double-clicking their icons.\n\nAre you sure you want to remove this extension?"
-    IDS_SPECIFY_ACTION "You must specify an action."
-    IDS_INVALID_PROGRAM "The specified program could not be found. Make sure the file name and path are correct."
-    IDS_REMOVE_ACTION "Are you sure you want to remove this action?"
-    IDS_ACTION_EXISTS "The action '%s' is already registered for this file type. Please enter a different name and try again."
-    IDS_EXE_FILTER "Programs\0*.exe\0All Files\0*.*\0"
-    IDS_EDITING_ACTION "Editing action for type: "
-    IDS_NO_ICONS "The file '%s' contains no icons.\n\nChoose an icon from the list or specify a different file."
-    IDS_FILE_NOT_FOUND "The file '%s' was not found."
-    IDS_LINK_INVALID "The item '%s' that this shortcut refers to has been changed or moved, so this shortcut will no longer work properly."
-    IDS_COPYTOMENU "Copy to &folder..."
-    IDS_COPYTOTITLE "Select the place where you want to copy '%s'. Then click the Copy button."
-    IDS_COPYITEMS "Copy Items"
-    IDS_COPYBUTTON "Copy"
-    IDS_MOVETOMENU "Mo&ve to folder..."
-    IDS_MOVETOTITLE "Select the place where you want to move '%s' to. Then click the Move button."
-    IDS_MOVEITEMS "Move Items"
-    IDS_MOVEBUTTON "Move"
+    IDS_REMOVE_EXT "Kayıtlı bir dosya adı uzantısını kaldırırsanız, bu uzantıya sahip dosyaları simgelerine çift tıklayarak açamazsınız.\n\nBu uzantıyı silmek ister misiniz?"
+    IDS_SPECIFY_ACTION "Bir eylem belirtmelisiniz."
+    IDS_INVALID_PROGRAM "Belirtilen program bulunamadı. Dosya adı ve yolunun doğru olduğundan emin olun."
+    IDS_REMOVE_ACTION "Bu eylemi kaldırmak istediğinizden emin misiniz?"
+    IDS_ACTION_EXISTS "'%s' eylemi bu dosya türü için zaten kayıtlı. Lütfen farklı bir ad girin ve tekrar deneyin."
+    IDS_EXE_FILTER "Programlar\0*.exe\0Tüm Dosyalar\0*.*\0"
+    IDS_EDITING_ACTION "Tür için eylemi düzenleme: "
+    IDS_NO_ICONS "'%s' dosyası simge içermiyor. \n\nListeden bir simge seçin veya farklı bir dosya belirtin."
+    IDS_FILE_NOT_FOUND "'%s' dosyası bulunamadı."
+    IDS_LINK_INVALID "Bu kısayolun başvurduğu '%s' öğesi değiştirildi veya taşındı, bu nedenle bu kısayol artık düzgün çalışmayacak."
+    IDS_COPYTOMENU "Dizine &kopyala..."
+    IDS_COPYTOTITLE "'%s'i' kopyalamak istediğiniz yeri seçin. Ardından Kopyala düğmesine tıklayın."
+    IDS_COPYITEMS "Öğeleri Kopyala"
+    IDS_COPYBUTTON "Kopyala"
+    IDS_MOVETOMENU "Di&zini kopyala..."
+    IDS_MOVETOTITLE "'%s'i taşımak istediğiniz yeri seçin. Ardından Taşı düğmesine tıklayın."
+    IDS_MOVEITEMS "Öğeleri Taşı"
+    IDS_MOVEBUTTON "Taşı"
 
-    IDS_SYSTEMFOLDER "System Folder"
+    IDS_SYSTEMFOLDER "Sistem Dizini"
 
     /* For IDD_LOG_OFF_FANCY */
-    IDS_LOG_OFF_DESC "Closes your programs and ends your ReactOS session."
-    IDS_SWITCH_USER_DESC "Lets another user log on while your programs and files remain open.\r\n\r\n(You can also switch users by pressing the Windows logo key + L.)"
+    IDS_LOG_OFF_DESC "Programlarınızı kapatır ve ReactOS oturumunuzu sonlandırır."
+    IDS_SWITCH_USER_DESC "Programlarınız ve dosyalarınız açıkken başka bir kullanıcının oturum açmasına izin verir. \r\n\r\n (Windows logo tuşu + L'ye basarak da kullanıcılar arasında geçiş yapabilirsiniz.)"
     IDS_LOG_OFF_TITLE "Oturumu Kapat"
-    IDS_SWITCH_USER_TITLE "Switch User"
+    IDS_SWITCH_USER_TITLE "Kullanıcı Değiştir"
 END

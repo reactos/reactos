@@ -15,13 +15,13 @@ BEGIN
     EDITTEXT IDC_COMPUTERNAME, 98, 68, 144, 12, ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT "Çalışma Takımı:", IDC_WORKGROUPDOMAIN, 7, 84, 64, 9
     EDITTEXT IDC_WORKGROUPDOMAIN_NAME, 98, 84, 144, 12, ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT "Bir etki alanına katılmak ve bir yerli kullanıcı oluşturmak için, Ağ Tanılama Yardımcısı'nı kullanmak için ""Ağ Kimliği""ne tıklayınız.", IDC_STATIC, 7, 113, 172, 24
+    LTEXT "Bir etki alanına katılmak ve bir yerel kullanıcı oluşturmak için, Ağ Tanılama Yardımcısı'nı kullanmak için ""Ağ Kimliği""ne tıklayınız.", IDC_STATIC, 7, 113, 172, 24
     PUSHBUTTON "&Ağ Kimliği...", IDC_NETWORK_ID, 190, 114, 58, 15
-    LTEXT "Bu bilgisayarı yeniden adlandırmak veyâ bir etki alanına katılmak için ""Değiştir""e tıklayınız.", IDC_STATIC, 7, 149, 170, 17
+    LTEXT "Bu bilgisayarı yeniden adlandırmak veya bir etki alanına katılmak için ""Değiştir""e tıklayınız.", IDC_STATIC, 7, 149, 170, 17
     PUSHBUTTON "&Değştir...", IDC_NETWORK_PROPERTY, 190, 149, 58, 15
     LTEXT "", IDC_MESSAGETEXT, 7, 179, 242, 46
     ICON IDI_WARNINGICO, IDC_RESTARTICON, 7, 194, 20, 20, SS_ICON | SS_REALSIZEIMAGE
-    LTEXT "Changes will take effect after you restart this computer.", IDC_RESTARTTEXT, 25, 195, 209, 8
+    LTEXT "Bu bilgisayarı yeniden başlattıktan sonra değişiklikler geçerli olacaktır.", IDC_RESTARTTEXT, 25, 195, 209, 8
 END
 
 IDD_PROPPAGECOMPNAMECHENGE DIALOGEX 0, 0, 232, 222
@@ -34,8 +34,8 @@ BEGIN
     EDITTEXT 1002, 7, 53, 218, 14, ES_AUTOHSCROLL | ES_OEMCONVERT
     LTEXT "Tüm Bilgisayar Adı:", 1016, 7, 72, 218, 10
     EDITTEXT 1001, 7, 82, 219, 14, ES_AUTOHSCROLL | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
-    PUSHBUTTON "&Daha Çok...", 1003, 150, 102, 75, 14
-    GROUPBOX "Üyesi", 1018, 7, 119, 219, 73
+    PUSHBUTTON "&Fazlası...", 1003, 150, 102, 75, 14
+    GROUPBOX "Üyelik", 1018, 7, 119, 219, 73
     AUTORADIOBUTTON "&Etki Alanı:", 1008, 17, 132, 192, 10, WS_GROUP
     AUTORADIOBUTTON "&Çalışma Takımı:", 1004, 17, 161, 191, 10
     EDITTEXT 116, 28, 144, 181, 14, ES_AUTOHSCROLL | WS_GROUP
@@ -68,22 +68,22 @@ BEGIN
     4 "Bilgisayar Adı Değişiklikleri"
     5 "Çalışma Takımı:"
     6 "Etki Alanı:"
-    7 "The domain name ""%1"" does not conform to Internet Domain Name Service specifications, although it is a legal ReactOS name. You must use ReactOS DNS server for non-standard names."
-    8 "The domain name ""%1"" is not properly formatted. Periods (.) are used to separate domains. Each domain is limited to 63 characters. Example: domain-1.reactos.org."
-    10 "The new computer name ""%1"" is too long. The name may not be longer than 63 characters."
-    11 "The new computer name entered is not properly formatted. Standard names may contain letters (a-z, A-Z), numbers (0-9), and hyphens (-), but no spaces or periods (.). The name may not consist entirely of digits."
+    7 """%1"" etki alanı adı, yasal bir ReactOS adı olmasına rağmen İnternet Etki Alanı Adı Hizmeti belirtimlerine uymuyor. Standart olmayan adlar için ReactOS DNS sunucusunu kullanmalısınız. "
+    8 """%1"" etki alanı adı düzgün biçimlendirilmemiş. Alan adlarını ayırmak için noktalar (.) Kullanılır. Her alan 63 karakterle sınırlıdır. Örnek: alan-1.reactos.org."
+    10 "Yeni bilgisayar adı ""%1"" çok uzun. İsim 63 karakterden uzun olamaz."
+    11 "Girilen yeni bilgisayar adı doğru biçimlendirilmemiş. Standart adlar harf (a-z, A-Z), sayı (0-9) ve kısa çizgi (-) içerebilir, ancak boşluk veya nokta (.) İçeremez. Adları tamamen rakamlardan oluşturulamaz. "
     22 "%1 çalışma takımına hoş geldiniz."
     23 "%1 etki alanına hoş geldiniz."
     24 "Değişikliklerin etkili olması için bu bilgisayarı yeniden başlatmalısınız."
     25 "Bu bilgisayarın adını ve üyeliğini değiştirebilirsiniz. Değişiklikler, ağ kaynaklarına erişimi etkileyebilir."
     1021 "Önemli: Bu bilgisayarın kimliğini yalnızca yöneticiler değiştirebilir."
     1022 "Önemli: Bilgisayarın kimliği şundan dolayı değiştirilemedi:"
-    1029 "The new computer name ""%1"" is a number. The name may not be a number."
-    1030 """%1"" yeni bilgisayar adı izin verilmeyen damgalar içeriyor. İzin verilmeyen damgalar; `, ~, !, @, #, $, %%, ^, &, *, (, ), =, +, [, ], {, }, \\, |, ;, :, ', "", ,, <, >, /, ve ?'ni kapsar."
-    1031 "The first domain of the domain name ""%1"" is a number. The first domain may not be a number."
-    1032 "The domain name ""%1"" contains characters which are not allowed. Standard DNS names may contain letters (a-z, A-Z), numbers (0-9), and hyphens, but no spaces. Periods (.) are used to separate domains. Example: domain-1.reactos.org."
+    1029 "Yeni bilgisayar adı ""%1"" bir sayı. İsim bir numara olamaz."
+    1030 """%1"" yeni bilgisayar adı izin verilmeyen işaretler içeriyor. İzin verilmeyen işaretler; `, ~, !, @, #, $, %%, ^, &, *, (, ), =, +, [, ], {, }, \\, |, ;, :, ', "", ,, <, >, /, ve ?'ni kapsar."
+    1031 "Etki alanı adının ilk etki alanı ""%1"" bir sayıdır. İlk etki alanı bir sayı olmayabilir."
+    1032 """%1"" etki alanı adı, izin verilmeyen karakterler içeriyor. Standart DNS adları harf (a-z, A-Z), sayı (0-9) ve kısa çizgi içerebilir ancak boşluk içeremez. Alan adlarını ayırmak için noktalar (.) Kullanılır. Örnek: alan-1.reactos.org."
     3210 "&Ayrıntılar >>"
-    3220 "<< &Ayrıntılar"
+    3220 "<< A&yrıntılar"
     4000 "Bilgi"
-    4001 "Yeni bir bilgisayar adı oluşturamaz!"
+    4001 "Yeni bir bilgisayar adı oluşturulamaz!"
 END

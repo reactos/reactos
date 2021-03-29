@@ -6,13 +6,13 @@ IDM_MENU MENU
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "&Kopyasını Yap...", 0
+        MENUITEM "&Kopyasını Oluştur...", 0
         MENUITEM "K&aldır", 1
         MENUITEM "Ka&ydı Göster", 2
         MENUITEM SEPARATOR
-        MENUITEM "&Husûsiyetler", 3
-        MENUITEM "H&usûsiyetleri Çoğalt", 4
-        MENUITEM "Hu&sûsiyetleri Uygula", 5
+        MENUITEM "&Özellikler", 3
+        MENUITEM "Ö&zellikleri Çoğalt", 4
+        MENUITEM "Öz&ellikleri Uygula", 5
     END
 END
 
@@ -27,16 +27,16 @@ BEGIN
     LTEXT "&Kredi Kartı Sesi İçin Bekle:", 1007, 16, 55, 109, 8, NOT WS_VISIBLE
     EDITTEXT 1008, 133, 52, 26, 12, ES_RIGHT | NOT WS_VISIBLE | WS_GROUP
     CONTROL "", 1009, "MSCTLS_UPDOWN32", NOT WS_VISIBLE | WS_BORDER | WS_GROUP | 0x00000036, 159, 52, 12, 12
-    LTEXT "sâniye", 1010, 173, 54, 40, 8, NOT WS_VISIBLE
+    LTEXT "saniye", 1010, 173, 54, 40, 8, NOT WS_VISIBLE
     GROUPBOX "&Ülke ya da Bölge Seç", 1012, 6, 80, 225, 75
     COMBOBOX 1013, 18, 99, 203, 50, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | NOT WS_TABSTOP
     PUSHBUTTON "&Gelişmiş Giriş Ayarları...", 1100, 107, 170, 125, 14
-    DEFPUSHBUTTON "&Ön Tanımlı Yeğlemeleri Değiştir...", 3, 107, 188, 125, 14
+    DEFPUSHBUTTON "&Ön Tanımlı Ayarları Değiştir...", 3, 107, 188, 125, 14
 END
 
 IDD_GENERAL DIALOGEX 0, 0, 238, 210
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
-CAPTION "Umûmî"
+CAPTION "Genel"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Giriş:", 1018, 9, 8, 32, 10
@@ -104,11 +104,11 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "", 1042, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000084D, 19, 18, 200, 58
     CONTROL "", 1041, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000084D, 19, 84, 200, 58
-    PUSHBUTTON "&Çevirge Sorgula", 1096, 138, 149, 75, 14
+    PUSHBUTTON "&Modem Sorgula", 1096, 138, 149, 75, 14
     AUTOCHECKBOX "&Bir Kayda Sakla", 1020, 18, 187, 98, 10
     PUSHBUTTON "&Kaydı Göster", 1094, 138, 184, 75, 14, WS_DISABLED
-    GROUPBOX "Çevirge Bilgisi", 1047, 10, 6, 217, 164
-    GROUPBOX "Saklama", -1, 10, 173, 217, 32
+    GROUPBOX "Modem Bilgisi", 1047, 10, 6, 217, 164
+    GROUPBOX "Günlük Saklama", -1, 10, 173, 217, 32
 END
 
 IDD_PLEASE_WAIT DIALOGEX 0, 0, 195, 72
@@ -117,13 +117,13 @@ CAPTION "Lütfen Bekleyiniz..."
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON 5100, -1, 9, 7, 20, 20
-    LTEXT "Çevirgeyle iletişim kuruluyor. Birkaç sâniye sürebilir.", -1, 42, 7, 146, 28
+    LTEXT "Modemle iletişim kuruluyor. Birkaç saniye sürebilir.", -1, 42, 7, 146, 28
     DEFPUSHBUTTON "İptal", 2, 72, 52, 50, 14
 END
 
 IDD_GENERAL_2 DIALOGEX 0, 0, 238, 210
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
-CAPTION "Umûmî"
+CAPTION "Genel"
 FONT 8, "MS Shell Dlg"
 BEGIN
     AUTOCHECKBOX "&İşletmen Yardımlı (Elle) Çevirme", 1002, 19, 22, 150, 10
@@ -133,16 +133,16 @@ BEGIN
     EDITTEXT 1040, 168, 54, 25, 13, ES_AUTOHSCROLL | ES_NUMBER
     RTEXT "&Giriş Hızı:", 1034, 16, 102, 93, 8
     COMBOBOX 1036, 114, 100, 84, 69, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
-    RTEXT "&Veri İletişim Kâidesi:", 1032, 16, 122, 93, 8
+    RTEXT "&Veri İletişim Protokolü:", 1032, 16, 122, 93, 8
     COMBOBOX 1037, 114, 119, 84, 69, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
     RTEXT "&Sıkıştırma:", 1035, 16, 139, 93, 8
     COMBOBOX 1099, 114, 137, 84, 69, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
     RTEXT "&Akış Denetimi:", 1027, 16, 157, 93, 8
     COMBOBOX 1031, 114, 155, 84, 61, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
-    GROUPBOX "Arama Yeğlemeleri", 1060, 11, 7, 217, 66
-    LTEXT "dakîka", 1044, 195, 38, 22, 8
-    LTEXT "sâniye", 1041, 194, 56, 22, 8
-    GROUPBOX "Veri Bağlantısı Yeğlemeleri", -1, 11, 82, 217, 94
+    GROUPBOX "Arama Özellikleri", 1060, 11, 7, 217, 66
+    LTEXT "dakika", 1044, 195, 38, 22, 8
+    LTEXT "saniye", 1041, 194, 56, 22, 8
+    GROUPBOX "Veri Bağlantısı Özellikleri", -1, 11, 82, 217, 94
 END
 
 IDD_ADVANCED_2 DIALOGEX 17, 12, 238, 210
@@ -156,7 +156,7 @@ BEGIN
     COMBOBOX 1025, 114, 77, 106, 61, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
     RTEXT "E&şlik:", 1026, 18, 97, 93, 8
     COMBOBOX 1028, 114, 95, 106, 60, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
-    RTEXT "&Dur Bitleri:", 1029, 18, 115, 93, 8
+    RTEXT "&Durdurma Bitleri:", 1029, 18, 115, 93, 8
     COMBOBOX 1030, 114, 113, 106, 45, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
     RTEXT "&Kipleme:", 1045, 18, 133, 93, 8
     COMBOBOX 1038, 114, 131, 106, 69, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
@@ -187,7 +187,7 @@ CAPTION "Lütfen Bekleyiniz"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON 5100, -1, 9, 7, 20, 20
-    LTEXT "Çevirgeye ülke ya da bölge bilgisi gönderiliyor.", -1, 42, 7, 146, 28
+    LTEXT "Modeme ülke ya da bölge bilgisi gönderiliyor.", -1, 42, 7, 146, 28
 END
 
 IDD_WARNING DIALOGEX 0, 0, 360, 105
@@ -197,23 +197,23 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     AUTOCHECKBOX "Bu İletiyi Bir Daha Gösterme", 1109, 17, 73, 118, 10
     DEFPUSHBUTTON "Tamam", 1, 302, 84, 50, 14
-    LTEXT "Birtakım çevirgeler, bu uzunluktaki başlatma dizgilerini uygun yönetmez.", -1, 50, 27, 304, 8
-    LTEXT "Bu kısıtlama üzerine bilgi, çevirgenizin üreticisinden alınabilir.", -1, 50, 41, 304, 8
+    LTEXT "Birtakım modemler, bu uzunluktaki başlatma tablolarını uygun yönetmez.", -1, 50, 27, 304, 8
+    LTEXT "Bu kısıtlama üzerine bilgi, sistem üreticisinden alınabilir.", -1, 50, 41, 304, 8
     ICON 5100, -1, 15, 14, 20, 20
-    LTEXT "57 damga uzunluğundan daha büyük bir çevirge başlatma dizgisi girdiniz.", -1, 50, 14, 304, 8
+    LTEXT "57 karakter uzunluğundan daha büyük bir modem başlatma dizgisi girdiniz.", -1, 50, 14, 304, 8
 END
 
 IDD_MODEMS DIALOGEX 0, 0, 252, 218
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
-CAPTION "Çevirgeler"
+CAPTION "Modemler"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON 5100, 1057, 6, 7, 20, 20
-    LTEXT "&Aşağıdaki çevirgeler kurulmuş:", -1, 44, 12, 203, 9
+    LTEXT "&Aşağıdaki modemler kurulmuş:", -1, 44, 12, 203, 9
     CONTROL "", 113, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x00000849, 7, 32, 238, 158, WS_EX_CLIENTEDGE
     PUSHBUTTON "&Ekle...", 110, 56, 198, 60, 14
     PUSHBUTTON "&Kaldır", 112, 121, 198, 60, 14
-    PUSHBUTTON "&Husûsiyetler", 109, 185, 198, 60, 14
+    PUSHBUTTON "&Özellikler", 109, 185, 198, 60, 14
 END
 
 IDD_PLEASE_WAIT_3 DIALOGEX 0, 0, 195, 72
@@ -224,17 +224,17 @@ BEGIN
     DEFPUSHBUTTON "&Dur", 2, 74, 53, 50, 14
     ICON 5100, -1, 9, 7, 20, 20
     LTEXT "Kaldırılıyor", -1, 40, 8, 151, 8
-    LTEXT "Çevirge", 1005, 40, 16, 151, 25
+    LTEXT "Modem", 1005, 40, 16, 151, 25
 END
 
 STRINGTABLE
 BEGIN
     180 "RS-232 Dizilik Giriş"
-    181 "Dış Çevirge"
-    182 "İç Çevirge"
-    183 "PCMCIA Çevirge"
-    184 "Koşut Çevirge"
-    185 "Koşut Giriş"
+    181 "Dış Modem"
+    182 "İç Modem"
+    183 "PCMCIA Modem"
+    184 "Paralel Modem"
+    185 "Paralel Port"
     200 "110"
     201 "1200"
     202 "2400"
@@ -256,7 +256,7 @@ BEGIN
     250 "Çift"
     251 "Tek"
     252 "Yok"
-    253 "İm"
+    253 "İşaret"
     254 "Boşluk"
     255 "1"
     256 "1.5"
@@ -267,30 +267,30 @@ BEGIN
     263 "Açık"
     264 "Düşük"
     265 "V.23 (Minitel)"
-    266 "Ölçünlü"
-    267 "Ölçünsüz (Bell, HST)"
+    266 "Standart"
+    267 "Standart değil (Bell, HST)"
     270 "&Kayda Ekle"
     300 "Belirtilmemiş"
     301 "Veri"
-    302 "Belgegeçer"
+    302 "Faks"
     303 "Ses"
     304 "Yok"
-    320 "Ülke ya da bölge ayârı şimdikileştirilmiş."
-    340 "Çevirge"
-    341 "Çevirge Ayarları"
-    342 "Çevirge Adresi"
-    400 "Ülke ya da bölge ayârı şimdikileştirilmemiş."
-    401 "Birtakım çevirgeler, 57 damgadan uzun kullanıcı başlatma komutlarını kabul etmez.\n\nBu kısıtlama üzerine bilgi, çevirgenizin üreticisinden alınabilir."
+    320 "Ülke ya da bölge ayarı güncelleştirilmiş."
+    340 "Modem"
+    341 "Modem Ayarları"
+    342 "Modem Adresi"
+    400 "Ülke ya da bölge ayarı güncelleştirilmemiş."
+    401 "Birtakım modemler, 57 karakterden uzun kullanıcı başlatma komutlarını kabul etmez.\n\nBu kısıtlama üzerine bilgi, modeminizin üreticisinden alınabilir."
     402 "Uyarı"
-    460 "Umûmî iletişim kutusunu görüntülemek için yeterli bellek yok.\nBirtakım kütükleri veyâ birtakım izlenceleri kapatınız, sonra yeniden deneyiniz."
-    461 "Çevirge Ayarları iletişim kutusunu görüntülemek için yeterli bellek yok.\nBirtakım kütükleri veyâ birtakım izlenceleri kapatınız, sonra yeniden deneyiniz."
+    460 "Genel iletişim kutusunu görüntülemek için yeterli bellek yok.\nBirtakım dosyaları veya birtakım programları kapatınız, sonra yeniden deneyiniz."
+    461 "Modem Ayarları iletişim kutusunu görüntülemek için yeterli bellek yok.\nBirtakım dosyaları veya birtakım programları kapatınız, sonra yeniden deneyiniz."
     463 "Her bir arama adresi, ""Kendiliğinden""e ya da eşsiz bir çalma türüne ayarlanmalıdır.\n\nKopya çalma türünü ayrı birisiyle değiştiriniz."
-    465 "Ölçünlü EC"
+    465 "Standart EC"
     466 "Zorunlu EC"
-    467 "Gözelik"
-    468 "Edilgin"
+    467 "Mobil veri"
+    468 "Devre Dışı"
     469 "Etkin"
-    470 "Edilgin"
+    470 "Devre Dışı"
     480 "AUTO  (1 Yol)"
     481 "AUTO  (2 Yol)"
     482 "PPP   (56 Kbit/sn)"
@@ -357,20 +357,20 @@ BEGIN
     2007 "Yok"
     2008 "Çalışır değil"
     2009 "Yeniden başlatma istiyor"
-    2010 "#Çevirgenizin kurulumunu bitirmek için bilgisayarınızı yeniden başlatmalısınız.\n\nŞimdi bilgisayarınızı yeniden başlatmak istiyor musunuz?"
-    2011 "Çevirge doğru kurulmamış"
+    2010 "#Modeminizin kurulumunu bitirmek için bilgisayarınızı yeniden başlatmalısınız.\n\nŞimdi bilgisayarınızı yeniden başlatmak istiyor musunuz?"
+    2011 "Modem doğru kurulmamış"
     2012 "Bilinmeyen giriş"
-    3000 "Çevirge Kur"
-    3018 "Çevirgeler"
-    3019 "Yeni bir çevirge kurar ve çevirge seçeneklerini değiştirir."
-    3053 "Çevirgenin anık olmamasından dolayı çevirge seçenekleri görüntülenemiyor.\n\nDizgeyi yeniden başlatınız ve yeniden deneyiniz."
-    3054 "Çevirgeler İçin Seçenekler"
-    3060 "Dizgenizden seçili çevirgeyi ya da çevirgeleri kaldırmayı istemenizden emin misiniz?"
+    3000 "Modem Kur"
+    3018 "Modemler"
+    3019 "Yeni bir modem kurar ve modem seçeneklerini değiştirir."
+    3053 "Modemin erişilir olmamasından dolayı modem seçenekleri görüntülenemiyor.\n\nSistemi yeniden başlatınız ve yeniden deneyiniz."
+    3054 "Modemler İçin Seçenekler"
+    3060 "Sistemi seçili modemi ya da modemleri kaldırmayı istemenizden emin misiniz?"
     3061 "ReactOS, ""%1"" çevirgesini ""%2""den kaldıramadı."
-    3062 "Çevirge"
-    3069 "Çevirge denetim masasını açmak için yeterli bellek yok.\n\nBirtakım izlenceleri kapayınız ve yeniden deneyiniz."
-    3073 "Bir çevirge kurmak için bir dizge yöneticisi olmanız gerekir."
-    3074 "Kurulmuş çevirge yok. Bir çevirge kurmak için bir dizge yöneticisi olmanız gerekir."
+    3062 "Modem"
+    3069 "Modem denetim masasını açmak için yeterli bellek yok.\n\nBirtakım programları kapayınız ve yeniden deneyiniz."
+    3073 "Bir modem kurmak için bir sistem yöneticisi olmanız gerekir."
+    3074 "Kurulmuş modem yok. Bir çevirge kurmak için bir sistem yöneticisi olmanız gerekir."
     3076 "Yeni ayarların etki etmesinden önce bilgisayarınızı kapatmalı ve yeniden başlatmalısınız.\n\nŞimdi bilgisayarınızı yeniden başlatmak istiyor musunuz?"
     3077 "Ağ Ayarlarını Değiştir"
     3200 "300 Baud"
@@ -383,22 +383,22 @@ BEGIN
     3207 "Yanıt yok"
     3212 "Komut"
     3213 "Yanıt"
-    3214 "Çevirgenin bağlı olduğu giriş açılamadı. Bu, bir donanım çakışması sonucu olabilir. Tüm aygıtların çalışır olduğunu doğrulamak için aygıt yöneticisine bakınız."
-    3215 "Çevirgenin kullanıyor olduğu giriş şimdilik başka bir uygulama eliyle açık. Şimdilik girişi kullanıyor olabilen bir uygulamadan çıkınız."
+    3214 "Modemin bağlı olduğu giriş açılamadı. Bu, bir donanım çakışması sonucu olabilir. Tüm aygıtların çalışır olduğunu doğrulamak için aygıt yöneticisine bakınız."
+    3215 "Modemin kullanıyor olduğu giriş şimdilik başka bir uygulama eliyle açık. Şimdilik girişi kullanıyor olabilen bir uygulamadan çıkınız."
     3218 "OpenComm"
     3221 "115000 Baud"
     3222 "Şimdikileştiriliyor"
-    3223 "Yanlışlık"
+    3223 "Hatalı"
     3233 "Başarılı"
-    3236 "Çevirge yanıt veremedi. Onun doğru bağlandığından ve açık olduğundan emin olunuz. O, bir iç çevirgeyse ya da bağlıysa giriş için kesmenin doğru ayarlandığını doğrulayınız."
+    3236 "Modem yanıt veremedi. Onun doğru bağlandığından ve açık olduğundan emin olunuz. O, bir iç modemse ya da bağlıysa giriş için kesmenin doğru ayarlandığını doğrulayınız."
     3237 "KOMUT DESTEKLENMİYOR"
     3238 "Alan"
     3239 "Değer"
-    3240 " Ön Tanımlı Yeğlemeler"
-    3241 " Bağlantı Yeğlemeleri"
+    3240 " Ön Tanımlı Özellikler"
+    3241 " Bağlantı Özellikleri"
     6144 "Japonya"
     6145 "Arnavutluk"
-    6146 "Cezâyir"
+    6146 "Cezayir"
     6147 "Amerikan Samoası"
     6148 "Almanya (Ülke ya da bölge kodu 04)"
     6149 "Anguilla"
@@ -442,12 +442,12 @@ BEGIN
     6187 "Kosta Rika"
     6188 "Küba"
     6189 "Kıbrıs"
-    6190 "Çek Cumhûriyeti"
+    6190 "Çek Cumhuriyeti"
     6191 "Kamboçya"
     6192 "Kuzey Kore"
     6193 "Danimarka"
     6194 "Cibuti"
-    6195 "Dominik Cumhûriyeti"
+    6195 "Dominik Cumhuriyeti"
     6196 "Dominika"
     6197 "Ekvador"
     6198 "Mısır"
@@ -465,7 +465,7 @@ BEGIN
     6210 "Almanya (Ülke ya da bölge kodu 66)"
     6211 "Angola"
     6212 "Gana"
-    6213 "Cebelitârık"
+    6213 "Cebelitarık"
     6214 "Yunanistan"
     6215 "Grenada"
     6216 "Guam"
@@ -481,10 +481,10 @@ BEGIN
     6226 "İzlanda"
     6227 "Hindistan"
     6228 "Endonezya"
-    6229 "Îran"
-    6230 "Îrak"
+    6229 "İran"
+    6230 "İrak"
     6231 "İrlanda"
-    6232 "İsrâil"
+    6232 "İsrail"
     6233 "İtalya"
     6234 "Fildişi Kıyısı"
     6235 "Jamaika"
@@ -528,7 +528,7 @@ BEGIN
     6273 "Nijerya"
     6274 "Norveç"
     6275 "Umman"
-    6276 "Pâkistan"
+    6276 "Pakistan"
     6277 "Panama"
     6278 "Papua Yeni Gine"
     6279 "Paraguay"
@@ -590,7 +590,7 @@ BEGIN
     6335 "Yemen"
     6336 "Yemen"
     6337 "Ülke ya da bölge kodu 193"
-    6338 "El Erklik Kongo Cumhûriyeti"
+    6338 "El Erklik Kongo Cumhuriyeti"
     6339 "Zambiya"
     6340 "Zimbabve"
     6501 "Moldova"
@@ -602,7 +602,7 @@ BEGIN
     6507 "Türkmenistan"
     6508 "Özbekistan"
     6509 "Kazakistan"
-    6510 "Tâcikistan"
+    6510 "Tacikistan"
     6511 "Kırgızistan"
     6512 "Letonya"
     6513 "Rusya"

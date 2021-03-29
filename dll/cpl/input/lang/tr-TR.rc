@@ -7,7 +7,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Ayarlar"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Listede gösterilen her bir giriş dili için istediğiniz hizmetleri seçiniz.\nBu listeyi değiştirmek için Ekle veya Sil düğmelerini kullanınız.", -1, 9, 6, 238, 25
+    LTEXT "Listede gösterilen her bir giriş dili için istediğiniz hizmetleri seçiniz.\nBu listeyi değiştirmek için Ekle veya Sil tuşlarını kullanınız.", -1, 9, 6, 238, 25
     CONTROL "TEXT", IDC_KEYLAYOUT_LIST, "SYSLISTVIEW32", WS_BORDER | WS_VSCROLL | WS_TABSTOP | LVS_SINGLESEL | LVS_NOSORTHEADER | LVS_SHOWSELALWAYS | LVS_REPORT, 8, 36, 237, 101
     PUSHBUTTON "Ö&n Tanımlı Yap", IDC_SET_DEFAULT, 101, 159, 144, 14
     PUSHBUTTON "&Ekle...", IDC_ADD_BUTTON, 27, 142, 70, 14

@@ -4,14 +4,14 @@ LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-    IDS_USAGE "FIND: Bir dizgi içeren bir kütüğün tüm yataçlarını yazdırır.\n\n\
-FIND [/V] [/C] [/N] [/I] [/OFF[LINE]] ""dizgi"" [kütük...]\n\
-  /V         Dizgi içermeyen yataçları yazdır.\n\
-  /C         Dizgi içeren yataç sayısını say.\n\
-  /N         1'den başlayan, görüntülenen yataç sayısı.\n\
-  /I         Büyük-küçük harfliği yok say.\n\
-  /OFF[LINE] Do not skip files that have the offline attribute set."
+    IDS_USAGE "FIND: Bir karakter dizi içeren bir dosyanın tüm satırlarını yazdırır.\n\n\
+FIND [/V] [/C] [/N] [/I] [/OFF[LINE]] ""dizi"" [dosya...]\n\
+  /V         Dize içermeyen satırları yazdır.\n\
+  /C         Dize içeren satır sayısını say.\n\
+  /N         1'den başlayan, görüntülenen satır sayısı.\n\
+  /I         Büyük-küçük harf düzenini yok say.\n\
+  /OFF[LINE] Çevrimdışı öznitelik kümesine sahip dosyaları atlamayın."
     IDS_NO_SUCH_FILE "FIND: %s: Böyle dosya yok\n"
-    IDS_CANNOT_OPEN "FIND: %s: Kütük açılamıyor\n"
-    IDS_INVALID_SWITCH "FIND: Invalid switch\n"
+    IDS_CANNOT_OPEN "FIND: %s: Dosya açılamıyor\n"
+    IDS_INVALID_SWITCH "FIND: Geçersiz anahtar\n"
 END

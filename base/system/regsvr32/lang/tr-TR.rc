@@ -7,13 +7,13 @@ BEGIN
     IDS_UsageMessage "%s\n\nKullanım: regsvr32 [/u] [/s] [/c] [/n] [/i[:komut yatacı]] DLL adı\n\
 /u -    Sunucu kaydını sil\n\
 /s -    Sessiz; ileti kutusu görüntüleme\n\
-/c -    Konsol çıkışı\n\
+/c -    Konsol çıktısı\n\
 /i -    Seçimlik bir [komut yatacı] geçirerek DllInstall'ı çağır; DLL kaldırmaya çağıran /u ile kullanıldığında\n\
 /n -    DllRegisterServer'i çağırma; bu seçenek /i ile kullanılmış olmalı"
     IDS_NoDllSpecified "DLL adı belirtilmemiş."
-    IDS_InvalidFlag "Tanınmayan im: %s"
-    IDS_SwitchN_NoI "Tanınmayan im: /n /i seçeneğiyle kullanılmış olmalı."
-    IDS_DllNotLoaded "LoadLibrary('%s') başarısız oldu.\nGetLastError 0x%08x döndürür."
+    IDS_InvalidFlag "Tanınmayan simge: %s"
+    IDS_SwitchN_NoI "Tanınmayan simge: /n /i seçeneğiyle kullanılmış olmalı."
+    IDS_DllNotLoaded "LoadLibrary('%s') başarısız oldu.\nGetLastError 0x%08x döndürdü."
     IDS_MissingEntry "%s yüklendi ama %s giriş noktası bulunamadı.\n\n\
 %s verilmemiş ya da bozuk bir %s sürümü bellekte olabilir. Onu belirlemek ve silmek için PView kullanarak göz önünde bulundurunuz."
     IDS_FailureMessage "%s (%s içinde) başarısız oldu.\nDönüş kodu şuydu: 0x%08x"

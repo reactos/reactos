@@ -14,25 +14,25 @@ BEGIN
     IDS_DEVCODE " (Kod %1!u!)"
     IDS_DEVCODE2 " (Kod %2!u!)"
     IDS_ENABLEDEVICE "Bu Aygıtı Kullan (Etkinleştir)"
-    IDS_DISABLEDEVICE "Bu Aygıtı Kullanma (Edilginleştir)"
+    IDS_DISABLEDEVICE "Bu Aygıtı Kullanma (Devre Dışı bırakır)"
     IDS_UNKNOWNDEVICE "Bilinmeyen Aygıt"
     IDS_NODRIVERLOADED "Bu aygıt için kurulmuş sürücü yok."
     IDS_DEVONPARENT "%1 üzerinde."
     IDS_TROUBLESHOOTDEV "&Sorun Giderme..."
     IDS_ENABLEDEV "&Aygıtı Etkinleştir"
     IDS_REINSTALLDRV "&Sürücüyü Yeniden Kur"
-    IDS_PROPERTIES "&Husûsiyetler"
-    IDS_UPDATEDRV "&Sürücüyü Şimdikileştir..."
+    IDS_PROPERTIES "&Özellikler"
+    IDS_UPDATEDRV "&Sürücüyü Güncelleştir..."
     IDS_REBOOT "&Bilgisayarı Yeniden Başlat..."
     IDS_NOTAVAILABLE "Yok"
-    IDS_NOTDIGITALLYSIGNED "Sayılık olarak imzâlanmamış."
-    IDS_NODRIVERS "Bu aygıt için gerekli olan veyâ yüklenmiş sürücü kütükleri yok."
+    IDS_NOTDIGITALLYSIGNED "Dijitak olarak imzalanmamış."
+    IDS_NODRIVERS "Bu aygıt için gerekli olan veya yüklenmiş sürücü dosyaları yok."
     IDS_RESOURCE_COLUMN "Kaynak Türü"
     IDS_SETTING_COLUMN "Ayar"
-    IDS_RESOURCE_MEMORY_RANGE "Bellek Erimi"
+    IDS_RESOURCE_MEMORY_RANGE "Bellek Aralığı"
     IDS_RESOURCE_INTERRUPT "IRQ"
     IDS_RESOURCE_DMA "DMA"
-    IDS_RESOURCE_PORT "G/Ç Erimi"
+    IDS_RESOURCE_PORT "G/Ç Aralığı"
 END
 
 /* error messages, source: http://www.z123.org/techsupport/medm.htm */
@@ -42,13 +42,13 @@ BEGIN
     IDS_DEV_NOT_CONFIGURED "Bu aygıt doğru yapılandırılmamış."
     IDS_DEV_DEVLOADER_FAILED "Bilgisayar, iki %1 veriyolu türü bildirdiğinden dolayı ReactOS bu aygıt için sürücüyü yükleyemedi."
     IDS_DEV_DEVLOADER_FAILED2 "Bu aygıt için %1 aygıt yükleyicisi/yükleyicileri aygıt sürücüsünü yükleyemedi."
-    IDS_DEV_OUT_OF_MEMORY "Bu aygıt için sürücü kötü olabilir veyâ dizgeniz, bellekte veyâ başka kaynaklarda yavaş çalışıyor olabilir."
-    IDS_DEV_ENTRY_IS_WRONG_TYPE "Sürücülerinin kötü olabilmesinden veyâ değer defterinizin bozuk olabilmesinden dolayı bu aygıt düzgün çalışmıyor."
+    IDS_DEV_OUT_OF_MEMORY "Bu aygıt için sürücü kötü olabilir veya sisteminiz, bellekte veya başka kaynaklarda yavaş çalışıyor olabilir."
+    IDS_DEV_ENTRY_IS_WRONG_TYPE "Sürücülerinin kötü olabilmesinden veya değer defterinizin bozuk olabilmesinden dolayı bu aygıt düzgün çalışmıyor."
     IDS_DEV_LACKED_ARBITRATOR "Bu aygıt için sürücü, ReactOS'un ne biçimde yöneteceğini bilmediği bir kaynağı istedi."
     IDS_DEV_BOOT_CONFIG_CONFLICT "Başka bir aygıt, bu aygıtın gereksinim duyduğu kaynakları kullanıyor."
     IDS_DEV_FAILED_FILTER "Bu aygıtın sürücüleri yeniden kurulmaya gereksinim duyuyor."
-    IDS_DEV_DEVLOADER_NOT_FOUND "ReactOS, bu aygıt için sürücüleri yükleyen %1 kütüğünü yükleyememesinden dolayı bu aygıt düzgün çalışmıyor."
-    IDS_DEV_DEVLOADER_NOT_FOUND2 "Bu aygıt için sürücüleri yükleyen %1 kütüğünün bozuk olmasından dolayı bu aygıt düzgün çalışmıyor."
+    IDS_DEV_DEVLOADER_NOT_FOUND "ReactOS, bu aygıt için sürücüleri yükleyen %1 dosyasını yükleyememesinden dolayı bu aygıt düzgün çalışmıyor."
+    IDS_DEV_DEVLOADER_NOT_FOUND2 "Bu aygıt için sürücüleri yükleyen %1 dosyasının bozuk olmasından dolayı bu aygıt düzgün çalışmıyor."
     IDS_DEV_DEVLOADER_NOT_FOUND3 "Aygıt başarısızlığı: Bu aygıt için yü değiştirmeyi deneyiniz. Eğer çalışmıyorsa donanımınızın belgelerine bakınız."
     IDS_DEV_INVALID_DATA "Bilgisayarınızdaki BIOS'un bu aygıt için kaynakları yanlış bildirdiğinden dolayı bu aygıt düzgün çalışmıyor."
     IDS_DEV_INVALID_DATA2 "Aygıttaki BIOS'un bu aygıt için kaynakları yanlış bildirdiğinden dolayı bu aygıt düzgün çalışmıyor."
@@ -59,12 +59,12 @@ BEGIN
     IDS_DEV_NEED_RESTART "Bu aygıt, bilgisayarınızı yeniden başlatana dek düzgün çalışamaz."
     IDS_DEV_REENUMERATION "Bu aygıt, bir kaynak çakışmasına neden oluyor."
     IDS_DEV_PARTIAL_LOG_CONF "ReactOS, bu aygıtın kullandığı tüm kaynakları tanılayamadı."
-    IDS_DEV_UNKNOWN_RESOURCE "%1 sürücü bilgi kütüğü, bu alt aygıtın, üst aygıtın iye olmadığı veyâ tanımadığı bir kaynağı kullanması için bildiriyor."
+    IDS_DEV_UNKNOWN_RESOURCE "%1 sürücü bilgi dosyası, bu alt aygıtın, üst aygıtın sahip olmadığı veya tanımadığı bir kaynağı kullanması için bildiriyor."
     IDS_DEV_REINSTALL "Bu aygıt için sürücüler yeniden başlatılmaya gereksinim duyuyor."
     IDS_DEV_REGISTRY "Değer defteriniz bozuk olabilir."
     IDS_DEV_WILL_BE_REMOVED "ReactOS bu aygıtı kaldırıyor."
     IDS_DEV_DISABLED "Bu aygıt başlamamış."
-    IDS_DEV_DISABLED2 "Bu aygıt edilgin."
+    IDS_DEV_DISABLED2 "Bu aygıt devre dışı."
     IDS_DEV_DEVLOADER_NOT_READY "Bu aygıt için yükleyiciler gerekli sürücüleri yükleyemiyor."
     IDS_DEV_DEVLOADER_NOT_READY2 "" /* unused */
     IDS_DEV_DEVLOADER_NOT_READY3 "" /* unused */
@@ -74,26 +74,26 @@ BEGIN
     IDS_DEV_NO_VALID_LOG_CONF "ReactOS, bu aygıt için kaynakları belirleyemez."
     IDS_DEV_FAILED_INSTALL "Bu aygıt için sürücüler kurulu değil."
     IDS_DEV_HARDWARE_DISABLED "Bu aygıt için BIOS bu aygıta kaynak vermediğinden dolayı bu aygıt edilgin."
-    IDS_DEV_CANT_SHARE_IRQ "Bu aygıt, başka bir aygıt eliyle kullanımda olan ve paylaşılamayan bir Kesme İsteği (IRQ) kaynağı kullanıyor.\nÇakışan ayârı değiştirmeli ya da çakışmaya neden olan gerçek kip sürücüyü kaldırmalısınız."
+    IDS_DEV_CANT_SHARE_IRQ "Bu aygıt, başka bir aygıt eliyle kullanımda olan ve paylaşılamayan bir Kesme İsteği (IRQ) kaynağı kullanıyor.\nÇakışan ayarı değiştirmeli ya da çakışmaya neden olan sürücüyü kaldırmalısınız."
     IDS_DEV_FAILED_ADD "%1 şeyinin düzgün çalışmamasından dolayı bu aygıt düzgün çalışmıyor."
-    IDS_DEV_DISABLED_SERVICE "ReactOS, kurulum kütüklerinin üzerinde bulunduğu, sürücüye ya da ağ konumuna erişememesinden dolayı bu aygıt için sürücüleri kuramıyor."
+    IDS_DEV_DISABLED_SERVICE "ReactOS, kurulum dosyalarının üzerinde bulunduğu, sürücüye ya da ağ konumuna erişememesinden dolayı bu aygıt için sürücüleri kuramıyor."
     IDS_DEV_TRANSLATION_FAILED "Bu aygıt sürücüsüne yanıt vermiyor."
     IDS_DEV_NO_SOFTCONFIG "ReactOS, bu aygıt için ayarları belirleyemiyor. Bu aygıtla gelen belgelere bakınız ve yapılandırmayı yapmak için ""Kaynaklar"" sekmesini kullanınız."
-    IDS_DEV_BIOS_TABLE "Bilgisayarınızın dizge bellenimi, bu aygıtı, düzgün olarak, yapılandırmak ve kullanmak için yeterli bilgi içermiyor.\nBu aygıtı kullanmak için, bir bellenim veyâ BIOS güncellemesi elde etmek için bilgisayarınızın üreticisiyle iletişime geçiniz."
-    IDS_DEV_IRQ_TRANSLATION_FAILED "Bu aygıt, bir PCI kesmesi istiyor ancak bir ISA kesmesi için yapılandırılmıştır (ya da tersi).\nBu aygıt için kesmeyi yeniden yapılandırmak için lütfen bilgisayarın dizge kurulum izlencesini kullanınız."
+    IDS_DEV_BIOS_TABLE "Bilgisayarınızın aygıt yazılımı, bu aygıtı, düzgün olarak, yapılandırmak ve kullanmak için yeterli bilgi içermiyor.\nBu aygıtı kullanmak için, bir bellenim veya BIOS güncellemesi elde etmek için bilgisayarınızın üreticisiyle iletişime geçiniz."
+    IDS_DEV_IRQ_TRANSLATION_FAILED "Bu aygıt, bir PCI kesmesi istiyor ancak bir ISA kesmesi için yapılandırılmıştır (ya da tersi).\nBu aygıt için kesmeyi yeniden yapılandırmak için lütfen bilgisayarın sistem kurulum izlencesini kullanınız."
     IDS_DEV_FAILED_DRIVER_ENTRY "ReactOS, bu donanım için aygıt sürücüsünü başlatamıyor."
     IDS_DEV_DRIVER_FAILED_PRIOR_UNLOAD "ReactOS, bellekte şimdi bile aygıt sürücüsünün bir önceki kopyası olduğundan dolayı bu donanım için aygıt sürücüsünü yükleyemiyor."
     IDS_DEV_DRIVER_FAILED_LOAD "ReactOS, bu donanım için aygıt sürücüsünü yükleyemiyor. Sürücü bozulmuş ya da eksik olabilir."
     IDS_DEV_DRIVER_SERVICE_KEY_INVALID "ReactOS, bu donanımın, değer defterindeki hizmet dizini bilgisinin eksik ya da yanlış saklandığından dolayı bu donanıma erişemiyor."
     IDS_DEV_LEGACY_SERVICE_NO_DEVICES "ReactOS, bu donanım için aygıt sürücüsünü başarıyla yükledi ancak donanım aygıtını bulamıyor."
-    IDS_DEV_DUPLICATE_DEVICE "ReactOS, dizgede bir kopya aygıtın önceden çalışıyor olmasından dolayı bu donanım için aygıt sürücüsünü yükleyemiyor."
+    IDS_DEV_DUPLICATE_DEVICE "ReactOS, sistemde bir kopya aygıtın önceden çalışıyor olmasından dolayı bu donanım için aygıt sürücüsünü yükleyemiyor."
     IDS_DEV_FAILED_POST_START "ReactOS, bu aygıtı, sorunlar bildirdiğinden dolayı durdurdu."
     IDS_DEV_HALTED "Bir uygulama ya da bir hizmet bu donanım aygıtını kapattı."
     IDS_DEV_PHANTOM "Şimdi bu donanım aygıtı bilgisayara bağlı değil."
-    IDS_DEV_SYSTEM_SHUTDOWN "ReactOS, işletim dizgesinin kapatma işleminde olmasından dolayı bu donanım aygıtı için erişim elde edemiyor."
+    IDS_DEV_SYSTEM_SHUTDOWN "ReactOS, işletim sisteminin kapatma işleminde olmasından dolayı bu donanım aygıtı için erişim elde edemiyor."
     IDS_DEV_HELD_FOR_EJECT "ReactOS, bu donanım aygıtının, güvenli kaldırılmaya anıklandığından ancak bilgisayardan kaldırılmadığından dolayı bu donanım aygıtını kullanamıyor."
     IDS_DEV_DRIVER_BLOCKED "Bu aygıt için yazılım, ReactOS'la sorunları olduğu biliniyor olmasından dolayı başlatılmaktan engellendi. Yeni bir donanım için donanımın satıcısıyla iletişime geçiniz."
-    IDS_DEV_REGISTRY_TOO_LARGE "ReactOS, dizge yığınının, çok büyük olmasından, Değer Defteri Büyüklük Hudûdu'nu aşmasından dolayı yeni donanım aygıtlarını başlatamıyor."
+    IDS_DEV_REGISTRY_TOO_LARGE "ReactOS, sistem yığınının, çok büyük olmasından, Değer Defteri Büyüklük Sınırı'nın aşmasından dolayı yeni donanım aygıtlarını başlatamıyor."
     IDS_DEV_SETPROPERTIES_FAILED "ReactOS, bu aygıtın ayarlarını değiştiremedi."
 END
 
@@ -132,17 +132,17 @@ BEGIN
     LTEXT "&Aygıtlar:", IDC_DEVICES, 7, 6, 196, 10
     CONTROL "", IDC_LV_DEVICES, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS |
             LVS_SHAREIMAGELISTS | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 7, 16, 196, 50
-    GROUPBOX "Aygıt Husûsiyetleri", IDC_PROPERTIESGROUP, 7, 76, 196, 105
+    GROUPBOX "Aygıt Özellikleri", IDC_PROPERTIESGROUP, 7, 76, 196, 105
     LTEXT "", IDC_MANUFACTURER, 14, 88, 183, 10, SS_ENDELLIPSIS
     LTEXT "", IDC_LOCATION, 14, 100, 183, 10, SS_ENDELLIPSIS
     LTEXT "", IDC_STATUS, 14, 112, 183, 30
     PUSHBUTTON "&Sorun Giderme...", IDC_TROUBLESHOOT, 80, 140, 60, 14, BS_PUSHBUTTON | WS_CHILD | WS_DISABLED | WS_TABSTOP
-    PUSHBUTTON "&Husûsiyetler", IDC_PROPERTIES, 146, 140, 50, 14
+    PUSHBUTTON "&Özellikler", IDC_PROPERTIES, 146, 140, 50, 14
 END
 
 IDD_DEVICEGENERAL DIALOGEX 0, 0, 252, 218
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Umûmî"
+CAPTION "Genel"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", IDC_DEVICON, 7, 7, 20, 20
@@ -169,40 +169,40 @@ BEGIN
     LTEXT "", IDC_DEVNAME, 37, 9, 174, 16, SS_NOPREFIX
     LTEXT "Sürücü Sağlayıcısı:", -1, 37, 39, 60, 8, SS_NOPREFIX
     EDITTEXT IDC_DRVPROVIDER, 100, 39, 146, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
-    LTEXT "Sürücü Târihi:", -1, 37, 53, 60, 8, SS_NOPREFIX
+    LTEXT "Sürücü Tarihi:", -1, 37, 53, 60, 8, SS_NOPREFIX
     EDITTEXT IDC_DRVDATE, 100, 53, 145, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
     LTEXT "Sürücü Sürümü:", -1, 37, 67, 60, 8, SS_NOPREFIX
     EDITTEXT IDC_DRVVERSION, 100, 67, 145, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
-    LTEXT "Sayılık İmzâlayıcısı:", -1, 37, 81, 60, 8, SS_NOPREFIX
+    LTEXT "Dijital İmzalayıcısı:", -1, 37, 81, 60, 8, SS_NOPREFIX
     EDITTEXT IDC_DIGITALSIGNER, 100, 81, 145, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
     PUSHBUTTON "&Sürücü Ayrıntıları...", IDC_DRIVERDETAILS, 7, 106, 75, 15
-    LTEXT "Sürücü kütükleri üzerine ayrıntıları görmek için.", -1, 91, 110, 154, 17, SS_NOPREFIX
-    PUSHBUTTON "S&ürücüyü Şimdikileştir...", IDC_UPDATEDRIVER, 7, 134, 75, 15
-    LTEXT "Aygıt sürücüsünü şimdikileştir.", -1, 91, 138, 154, 17, SS_NOPREFIX
-    PUSHBUTTON "&Roll Back Driver", IDC_ROLLBACKDRIVER, 7, 162, 75, 15
-    LTEXT "If the device fails after updating the driver, roll back to the previously installed driver.", -1, 91, 162, 154, 25, SS_NOPREFIX
-    PUSHBUTTON "&Uninstall", IDC_UNINSTALLDRIVER, 7, 190, 75, 15
-    LTEXT "To uninstall the driver (Advanced).", -1, 91, 194, 154, 17, SS_NOPREFIX
+    LTEXT "Sürücü dosyalarının ayrıntıları görmek için.", -1, 91, 110, 154, 17, SS_NOPREFIX
+    PUSHBUTTON "S&ürücüyü güncelleştir...", IDC_UPDATEDRIVER, 7, 134, 75, 15
+    LTEXT "Aygıt sürücüsünü güncelleştir.", -1, 91, 138, 154, 17, SS_NOPREFIX
+    PUSHBUTTON "&Sürücüyü geri al", IDC_ROLLBACKDRIVER, 7, 162, 75, 15
+    LTEXT "Aygıt, sürücüyü güncelledikten sonra başarısız olursa, önceden yüklenmiş sürücüye geri dönün.", -1, 91, 162, 154, 25, SS_NOPREFIX
+    PUSHBUTTON "&Kaldır", IDC_UNINSTALLDRIVER, 7, 190, 75, 15
+    LTEXT "Sürücüyü Kaldırmak İçin (Gelişmiş Ayarlar).", -1, 91, 194, 154, 17, SS_NOPREFIX
 END
 
 IDD_DRIVERDETAILS DIALOGEX 0, 0, 224, 230
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_DLGFRAME
-CAPTION "Sürücü Kütüğü Ayrıntıları"
+CAPTION "Sürücü Dosyası Ayrıntıları"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", IDC_DEVICON, 7, 7, 20, 20
     LTEXT "", IDC_DEVNAME, 37, 9, 174, 16, SS_NOPREFIX
-    LTEXT "&Sürücü Kütükleri:", -1, 7, 36, 204, 8
+    LTEXT "&Sürücü Dosyaları:", -1, 7, 36, 204, 8
     CONTROL "", IDC_DRIVERFILES, "SysListView32", LVS_REPORT | LVS_NOCOLUMNHEADER |
             LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SHAREIMAGELISTS | LVS_SORTASCENDING |
             LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 7, 46, 209, 80
     LTEXT "Sağlayıcısı:", -1, 14, 134, 50, 8
     EDITTEXT IDC_FILEPROVIDER, 66, 134, 155, 8, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
-    LTEXT "Kütük Sürümü:", -1, 14, 150, 50, 8
+    LTEXT "Dosya Sürümü:", -1, 14, 150, 50, 8
     EDITTEXT IDC_FILEVERSION, 66, 150, 155, 8, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
     LTEXT "Telif Hakkı:", -1, 14, 166, 50, 8
     EDITTEXT IDC_FILECOPYRIGHT, 66, 166, 155, 8, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
-    LTEXT "Sayılık İmzâlayıcısı:", -1, 14, 182, 50, 8
+    LTEXT "Dijital İmzalayıcısı:", -1, 14, 182, 50, 8
     EDITTEXT IDC_DIGITALSIGNER, 66, 182, 155, 8, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
     DEFPUSHBUTTON "Tamam", IDOK, 167, 208, 50, 14
 END
@@ -228,7 +228,7 @@ BEGIN
     ICON "", IDC_DEVICON, 7, 7, 20, 20
     LTEXT "", IDC_DEVNAME, 37, 9, 174, 16, SS_NOPREFIX
     LTEXT "Kaynak Ayarları:", -1, 7, 36, 204, 8
-    CONTROL "", IDC_DRIVERRESOURCES, "SysListView32", LVS_REPORT | 
+    CONTROL "", IDC_DRIVERRESOURCES, "SysListView32", LVS_REPORT |
             LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SHAREIMAGELISTS | LVS_SORTASCENDING |
             LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 7, 46, 238, 80
 END
@@ -244,14 +244,14 @@ END
 
 IDD_UNINSTALLDRIVER DIALOGEX 0, 0, 224, 121
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_DLGFRAME
-CAPTION "Confirm Device Removal"
+CAPTION "Sürücü Kaldırmayı Onayla"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", IDC_DEVICON, 7, 7, 20, 20
     LTEXT "", IDC_DEVNAME, 40, 9, 174, 16, SS_NOPREFIX
-    LTEXT "Warning: You are about to uninstall this device from your system.", -1, 7, 37, 204, 50
-    DEFPUSHBUTTON "OK", IDOK, 110, 100, 50, 14
-    PUSHBUTTON "Cancel", IDCANCEL, 166, 100, 50, 14
+    LTEXT "Uyarı: Bu cihazı sisteminizden kaldırmak üzeresiniz.", -1, 7, 37, 204, 50
+    DEFPUSHBUTTON "TAMAM", IDOK, 110, 100, 50, 14
+    PUSHBUTTON "İptal", IDCANCEL, 166, 100, 50, 14
 END
 
 
@@ -261,7 +261,7 @@ END
 
 IDM_MAINMENU MENU
 BEGIN
-    POPUP "&Kütük"
+    POPUP "&Dosya"
     BEGIN
         MENUITEM "&Çıkış",                      IDM_EXIT
     END
@@ -289,29 +289,29 @@ END
 STRINGTABLE DISCARDABLE
 BEGIN
   IDS_APPNAME               "ReactOS Aygıt Yöneticisi"
-  IDS_APP_AUTHORS           "Copyright 2015 Ged Murphy"
-  IDS_CONFIRM_DISABLE       "Bu aygıtı edilginleştirmek işleyiş durmasına neden olacaktır.\r\nOnu edilginleştirmeyi gerçekten istiyor musunuz?"
-  IDS_CONFIRM_UNINSTALL     "Uyarı: Bu aygıtı dizgenizden kaldırmak üzeresiniz.\r\nSürdürmek istiyor musunuz?"
+  IDS_APP_AUTHORS           "Telif Hakkı: 2015 Ged Murphy"
+  IDS_CONFIRM_DISABLE       "Bu aygıtı devre dışı bırakmak işleyiş durmasına neden olacaktır.\r\nOnu devre dışı bırakmayı gerçekten istiyor musunuz?"
+  IDS_CONFIRM_UNINSTALL     "Uyarı: Bu aygıtı sisteminizden kaldırmak üzeresiniz.\r\nSürdürmek istiyor musunuz?"
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-  IDS_MENU_UPDATE           "Sürücü Yazılımını Şimdikileştir..."
+  IDS_MENU_UPDATE           "Sürücü Yazılımını Güncelleştir..."
   IDS_MENU_ENABLE           "Etkinleştir"
-  IDS_MENU_DISABLE          "Edilginleştir"
+  IDS_MENU_DISABLE          "Devre Dışı Bırak"
   IDS_MENU_UNINSTALL        "Kaldır"
   IDS_MENU_SCAN             "Donanım Değişiklikleri İçin Tara"
   IDS_MENU_ADD              "Donanım Ekle"
-  IDS_MENU_PROPERTIES       "Husûsiyetler"
+  IDS_MENU_PROPERTIES       "Özellikler"
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-  IDS_TOOLTIP_PROPERTIES    "Husûsiyetler"
+  IDS_TOOLTIP_PROPERTIES    "Özellikler"
   IDS_TOOLTIP_SCAN          "Donanım Değişiklikleri İçin Tara"
   IDS_TOOLTIP_ENABLE        "Etkinleştir"
-  IDS_TOOLTIP_DISABLE       "Edilginleştir"
-  IDS_TOOLTIP_UPDATE        "Sürücü Yazılımını Şimdikileştir"
+  IDS_TOOLTIP_DISABLE       "Devre Dışı Bırak"
+  IDS_TOOLTIP_UPDATE        "Sürücü Yazılımını Güncelleştir"
   IDS_TOOLTIP_UNINSTALL     "Kaldır"
 END
 
@@ -319,15 +319,15 @@ END
 STRINGTABLE DISCARDABLE
 BEGIN
   IDS_HINT_BLANK        " "
-  IDS_HINT_PROPERTIES   " Şimdiki seçilen için husûsiyet penceresini aç."
+  IDS_HINT_PROPERTIES   " Şimdiki seçilen için özellik penceresini aç."
   IDS_HINT_SCAN         " Değiştirilmiş ya da yeni tak ve çalıştır aygıtları için tara."
   IDS_HINT_ENABLE       " Seçili aygıtı etkinleştirir."
-  IDS_HINT_DISABLE      " Seçili aygıtı edilginleştirir."
+  IDS_HINT_DISABLE      " Seçili aygıtı devre dışı bırakır."
   IDS_HINT_UPDATE       " Seçili aygıt için Sürücü Yazılımını Şimdikileştir yardımcısını başlatır."
   IDS_HINT_UNINSTALL    " Seçili aygıt için sürücüyü kaldırır."
-  IDS_HINT_ADD          " Bilgisayara eski (Tak ve Çalıştır olmayan) bir aygıt ekler." 
-  IDS_HINT_ABOUT        " ReactOS Aygıt Yöneticisi üzerine."
-  IDS_HINT_EXIT         " İzlenceden çıkar."
+  IDS_HINT_ADD          " Bilgisayara eski (Tak ve Çalıştır olmayan) bir aygıt ekler."
+  IDS_HINT_ABOUT        " ReactOS Aygıt Yöneticisi hakkında"
+  IDS_HINT_EXIT         " Programdan çıkar."
 
   IDS_HINT_DEV_BY_TYPE  " Aygıtları donanım türüne göre görüntüler."
   IDS_HINT_DEV_BY_CONN  " Aygıtları bağlantıya göre görüntüler."
@@ -335,10 +335,10 @@ BEGIN
   IDS_HINT_RES_BY_CONN  " Kaynakları bağlantı türüne göre görüntüler."
   IDS_HINT_SHOW_HIDDEN  " Eski aygıtları ve artık kurulu olmayan aygıtları görüntüler."
 
-  IDS_HINT_SYS_RESTORE  " Bu pencereyi düzgülük boyutlarına döndürür."
-  IDS_HINT_SYS_MOVE     " Bu pencereyi devindirir."
+  IDS_HINT_SYS_RESTORE  " Bu pencereyi öntanımlı boyutlarına döndürür."
+  IDS_HINT_SYS_MOVE     " Bu pencereyi yeniden boyutlandırır."
   IDS_HINT_SYS_SIZE     " Bu pencereyi yeniden boyutlandırır."
   IDS_HINT_SYS_MINIMIZE " Bu pencereyi bir simgeye küçültür."
-  IDS_HINT_SYS_MAXIMIZE " Bu pencereyi, bu görüntülüğü kaplatana dek genişletir."
+  IDS_HINT_SYS_MAXIMIZE " Bu pencereyi tam ekran yapar."
   IDS_HINT_SYS_CLOSE    " Bu pencereyi kapatır."
 END
