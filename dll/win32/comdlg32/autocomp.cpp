@@ -38,6 +38,7 @@ DoInitAutoCompleteWithCWD2(FileOpenDlgInfos *pInfo, HWND hwndEdit)
     {
         TRACE("CoCreateInstance(CLSID_AutoComplete): 0x%08lX\n", hr);
         pACList->Release();
+        pInfo->pvACList = NULL;
         return hr;
     }
 
