@@ -79,6 +79,8 @@
 #include "wine/heap.h"
 #ifdef __REACTOS__
 #include "wine/unicode.h"
+EXTERN_C HRESULT DoInitAutoCompleteWithCWD(FileOpenDlgInfos *pInfo, HWND hwndEdit);
+EXTERN_C HRESULT DoReleaseAutoCompleteWithCWD(FileOpenDlgInfos *pInfo);
 #endif
 
 WINE_DEFAULT_DEBUG_CHANNEL(commdlg);
@@ -2030,6 +2032,9 @@ static LRESULT FILEDLG95_InitControls(HWND hwnd)
 
   /* Initialize the filter combo box */
   FILEDLG95_FILETYPE_Init(hwnd);
+#ifdef __REACTOS__
+  DoInitAutoCompleteWithCWD(fodInfos, fodInfos->DlgInfos.hwndFileName);
+#endif
 
   return 0;
 }
