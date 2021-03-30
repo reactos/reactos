@@ -666,6 +666,13 @@ extern PETHREAD MiExpansionLockOwner;
 
 FORCEINLINE
 BOOLEAN
+MI_IS_PROCESS_WORKING_SET(PMMSUPPORT WorkingSet)
+{
+    return (WorkingSet != &MmSystemCacheWs) && !WorkingSet->Flags.SessionSpace;
+}
+
+FORCEINLINE
+BOOLEAN
 MiIsMemoryTypeFree(TYPE_OF_MEMORY MemoryType)
 {
     return ((MemoryType == LoaderFree) ||
