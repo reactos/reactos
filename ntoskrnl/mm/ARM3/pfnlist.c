@@ -1274,6 +1274,9 @@ MiDecrementShareCount(IN PMMPFN Pfn1,
             DPRINT("Marking PTE: %p as transition (%p - %lx)\n", PointerPte, Pfn1, MiGetPfnEntryIndex(Pfn1));
         }
 
+        /* This is not a part of any working set anymore, if it ever was. */
+        Pfn1->u1.WsIndex = 0;
+
         /* Put the page in transition */
         Pfn1->u3.e1.PageLocation = TransitionPage;
 
