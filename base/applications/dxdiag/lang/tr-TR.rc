@@ -1,7 +1,4 @@
-/* TRANSLATORS:
-2012 Arda Tanrıkulu (ardatan) (ardatanrikulu [at] gmail [dot] com),
-2013, 2014 Erdem Ersoy (eersoy93) (erdemersoy [at] erdemersoy [dot] net),
-2021 Süleyman Poyraz (zaryob [dot] dev [at] gmail [dot] com)
+/* TRANSLATORS: 2012 Arda Tanrıkulu (ardatan) (ardatanrikulu [at] gmail [dot] com), 2013, 2014 Erdem Ersoy (eersoy93) (erdemersoy [at] erdemersoy [dot] net), 2021 Süleyman Poyraz (zaryob [dot] dev [at] gmail [dot] com)
 */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
@@ -24,7 +21,7 @@ STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Bu araç, sisteminizde yüklü ReactX bileşenleri ve sürücüleri hakkında ayrıntılı bilgi verir.", IDC_STATIC, 5, 0, 443, 17
-    LTEXT "ReactX ile bir sorun yaşıyorsanız ve bunun ne olduğunu biliyorsanız, yukarıdaki uygun sekmeye tıklayın. Değilse, her sayfayı sırayla ziyaret etmek için aşağıdaki "Sonraki Sayfa" düğmesine tıklayabilirsiniz.", IDC_STATIC, 5, 15, 443, 25
+    LTEXT "ReactX ile bir sorun yaşıyorsanız ve bunun ne olduğunu biliyorsanız, yukarıdaki uygun sekmeye tıklayın. Değilse, her sayfayı sırayla ziyaret etmek için aşağıdaki ""Sonraki Sayfa"" düğmesine tıklayabilirsiniz.", IDC_STATIC, 5, 15, 443, 25
     GROUPBOX "Sistem Bilgisi", IDC_STATIC, 5, 35, 452, 150, SS_RIGHT
     LTEXT "Geçerli Zaman:", IDC_STATIC, 70, 50, 80, 10, SS_RIGHT
     LTEXT "Bilgisayar Adı:", IDC_STATIC, 70, 60, 80, 10, SS_RIGHT
@@ -149,7 +146,7 @@ BEGIN
     GROUPBOX "ReactX Özellikleri", IDC_STATIC, 5, 97, 452, 70
     LTEXT "Ön Tanımlı Giriş Hılandırması:", IDC_STATIC, 15, 120, 95, 17
     LTEXT "", IDC_STATIC_DEFAULT_PORT_ACCELERATION, 115, 120, 50, 10
-    PUSHBUTTON "Pasif", IDC_BUTTON_DISABLEDMUSIC, 75, 135, 80, 14, WS_DISABLED
+    PUSHBUTTON "Devre Dışı", IDC_BUTTON_DISABLEDMUSIC, 75, 135, 80, 14, WS_DISABLED
     LTEXT "Bu Giriş Kullanılarak Sına:", IDC_STATIC, 180, 105, 100, 10
     LISTBOX IDC_DMUSIC_TEST_LIST, 180, 115, 180, 45, LBS_NOINTEGRALHEIGHT | LBS_EXTENDEDSEL | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON "ReactMusic'i Sına", IDC_BUTTON_TESTDMUSIC, 370, 145, 80, 14, WS_DISABLED

@@ -1,5 +1,5 @@
-/* TRANSLATORS: 
-2012 Arda Tanrıkulu (ardatan) (ardatanrikulu [at] gmail [dot] com), 
+/* TRANSLATORS:
+2012 Arda Tanrıkulu (ardatan) (ardatanrikulu [at] gmail [dot] com),
 2013-2016 Erdem Ersoy (eersoy93) (erdemersoy [at] erdemersoy [dot] net),
 2018 Ercan Ersoy (ercanersoy) (ercanersoy [at] ercanersoy [dot] net),
 2021 Süleyman Poyraz (zaryob [dot] dev [at] gmail [dot] com)
@@ -34,7 +34,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "ReactOS'u Kur"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT       "ReactOS Kurulum Yöneticisi aşağıda listelenen ReactOS kurulumlarının birini yükseltebilir ya da eğer ReactOS kurulumu zarar görmüşse kurulum programı onu onarmaya çalışabilir.", IDC_STATIC, 6, 6, 300, 18
+    LTEXT       "ReactOS Kurulum Yöneticisi aşağıda listelenen ReactOS kurulumlarının birini yükseltebilir ya da eğer ReactOS kurulumu zarar görmüşse kurulum yöneticisi onu onarmaya çalışabilir.", IDC_STATIC, 6, 6, 300, 18
     CONTROL     "", IDC_NTOSLIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_ALIGNLEFT | WS_BORDER | WS_TABSTOP, 6, 30, 303, 90
     PUSHBUTTON  "&Yükseltme yapma", IDC_SKIPUPGRADE, 230, 128, 80, 14
     LTEXT       "Seçilen işletim sistemi kurulumu için İleri'ye ya da yükseltme yapmadan bir yeni kuruluma devam etmek için 'Yükseltme yapma''ya tıklayınız.", IDC_STATIC, 7, 124, 222, 16

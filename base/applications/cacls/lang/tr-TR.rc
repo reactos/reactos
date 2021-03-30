@@ -1,4 +1,4 @@
-/* TRANSLATOR: 
+/* TRANSLATOR:
 2015 Erdem Ersoy (eersoy93) (erdemersoy [at] erdemersoy [dot] net),
 2021 Süleyman Poyraz (zaryob [dot] dev [at] gmail [dot] com)
 */
@@ -31,7 +31,7 @@ CACLS kütük adı [/T] [/E] [/C] [/G kullanıcı:izin [...]] [/R kullanıcı [.
                                                    F  Tüm denetim\n\
    /D kullanıcı       Belirtilen kullanıcı erişimini verme.\n\
 Özel semboller, bir komutta birden fazla dosya belirtmek için kullanılabilir. \n\
-Bir komutta birden fazla kullanıcı belirtebilirsiniz.
+Bir komutta birden fazla kullanıcı belirtebilirsiniz.\n\
 Kısaltmalar:\n\
    CI - Kapsayıcı Devralma.\n\
         ACE dizinlerle devralınacak.\n\
