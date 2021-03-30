@@ -899,6 +899,9 @@ MiResolvePageFileFault(_In_ BOOLEAN StoreInstruction,
     ASSERT(CurrentProcess > HYDRA_PROCESS);
     ASSERT(*OldIrql != MM_NOIRQL);
 
+    MI_SET_USAGE(MI_USAGE_PAGE_FILE);
+    MI_SET_PROCESS(CurrentProcess);
+
     /* We must hold the PFN lock */
     MI_ASSERT_PFN_LOCK_HELD();
 
@@ -1209,6 +1212,9 @@ MiResolveProtoPteFault(IN BOOLEAN StoreInstruction,
         TempPte = *PointerProtoPte;
         ASSERT(TempPte.u.Hard.Valid == 1);
         ProtoPageFrameIndex = PFN_FROM_PTE(&TempPte);
+
+        MI_SET_USAGE(MI_USAGE_COW);
+        MI_SET_PROCESS(Process);
 
         /* Get a new page for the private copy */
         if (Process > HYDRA_PROCESS)
@@ -2209,6 +2215,9 @@ UserFault:
                 LockIrql = MiAcquirePfnLock();
 
                 ASSERT(MmAvailablePages > 0);
+
+                MI_SET_USAGE(MI_USAGE_COW);
+                MI_SET_PROCESS(CurrentProcess);
 
                 /* Allocate a new page and copy it */
                 PageFrameIndex = MiRemoveAnyPage(MI_GET_NEXT_PROCESS_COLOR(CurrentProcess));

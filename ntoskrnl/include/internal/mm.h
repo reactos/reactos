@@ -245,9 +245,45 @@ MM_RMAP_ENTRY, *PMM_RMAP_ENTRY;
 extern ULONG MI_PFN_CURRENT_USAGE;
 extern CHAR MI_PFN_CURRENT_PROCESS_NAME[16];
 #define MI_SET_USAGE(x)     MI_PFN_CURRENT_USAGE = x
-#define MI_SET_PROCESS2(x)  memcpy(MI_PFN_CURRENT_PROCESS_NAME, x, 16)
+#define MI_SET_PROCESS2(x)  memcpy(MI_PFN_CURRENT_PROCESS_NAME, x, min(sizeof(x), sizeof(MI_PFN_CURRENT_PROCESS_NAME)))
+FORCEINLINE
+void
+MI_SET_PROCESS(PEPROCESS Process)
+{
+    if (!Process)
+        MI_SET_PROCESS2("Kernel");
+    else if (Process == (PEPROCESS)1)
+        MI_SET_PROCESS2("Hydra");
+    else
+        MI_SET_PROCESS2(Process->ImageFileName);
+}
+
+FORCEINLINE
+void
+MI_SET_PROCESS_USTR(PUNICODE_STRING ustr)
+{
+    PWSTR pos, strEnd;
+    int i;
+
+    if (!ustr->Buffer || ustr->Length == 0)
+    {
+        MI_PFN_CURRENT_PROCESS_NAME[0] = 0;
+        return;
+    }
+
+    pos = strEnd = &ustr->Buffer[ustr->Length / sizeof(WCHAR)];
+    while ((*pos != L'\\') && (pos >  ustr->Buffer))
+        pos--;
+
+    if (*pos == L'\\')
+        pos++;
+
+    for (i = 0; i < sizeof(MI_PFN_CURRENT_PROCESS_NAME) && pos <= strEnd; i++, pos++)
+        MI_PFN_CURRENT_PROCESS_NAME[i] = (CHAR)*pos;
+}
 #else
 #define MI_SET_USAGE(x)
+#define MI_SET_PROCESS(x)
 #define MI_SET_PROCESS2(x)
 #endif
 
@@ -275,6 +311,9 @@ typedef enum _MI_PFN_USAGES
     MI_USAGE_PFN_DATABASE,
     MI_USAGE_BOOT_DRIVER,
     MI_USAGE_INIT_MEMORY,
+    MI_USAGE_PAGE_FILE,
+    MI_USAGE_COW,
+    MI_USAGE_WSLE,
     MI_USAGE_FREE_PAGE
 } MI_PFN_USAGES;
 
@@ -355,6 +394,7 @@ typedef struct _MMPFN
 #if MI_TRACE_PFNS
     MI_PFN_USAGES PfnUsage;
     CHAR ProcessName[16];
+#define MI_SET_PFN_PROCESS_NAME(pfn, x) memcpy(pfn->ProcessName, x, min(sizeof(x), sizeof(pfn->ProcessName)))
 #endif
 
     // HACK until WS lists are supported
