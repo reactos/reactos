@@ -1,4 +1,4 @@
-/* TRANSLATORS: 
+/* TRANSLATORS:
 2012 Arda Tanrıkulu (ardatan) (ardatanrikulu [at] gmail [dot] com),
 2013, 2014 Erdem Ersoy (eersoy93) (erdemersoy [at] erdemersoy [dot] net),
 2021 Süleyman Poyraz (zaryob [dot] dev [at] gmail [dot] com)
@@ -14,7 +14,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "Tab1", IDC_TAB_CONTROL, "SysTabControl32", WS_TABSTOP, 2, 2, 474, 250
     PUSHBUTTON "&Yardım", IDC_BUTTON_HELP, 2, 260, 50, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
-    DEFPUSHBUTTON "&Sonraki Sayfa", IDC_BUTTON_NEXT, 257, 260, 50, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+    DEFPUSHBUTTON "S&onraki Sayfa", IDC_BUTTON_NEXT, 257, 260, 50, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
     PUSHBUTTON "&Tüm Bilgileri Sakla...", IDC_BUTTON_SAVE_INFO, 311, 260, 110, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
     PUSHBUTTON "&Çıkış", IDC_BUTTON_EXIT, 425, 260, 50, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
 END

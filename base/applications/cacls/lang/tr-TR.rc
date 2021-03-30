@@ -7,7 +7,7 @@ LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-    IDS_HELP "Dosyaların erişim kontrol listelerini (ACL'ler) görüntüler veya değiştirir\n\n\
+    IDS_HELP "Dosyaların erişim kontrol listelerini (ACL'ler) görüntüler veya değiştirir.\n\n\
 CACLS kütük adı [/T] [/E] [/C] [/G kullanıcı:izin [...]] [/R kullanıcı [...]]\n\
                [/P kullanıcı:izin [...]] [/D kullanıcı [...]]\n\
    kütük adı          ACL'leri görüntüler.\n\
