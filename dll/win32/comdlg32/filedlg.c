@@ -1560,6 +1560,7 @@ INT_PTR CALLBACK FileOpenDlgProc95(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
               s_hFileDialogHook = NULL;
           }
           LeaveCriticalSection(&COMDLG32_OpenFileLock);
+          DoReleaseAutoCompleteWithCWD(fodInfos);
 #endif
           return FALSE;
       }
