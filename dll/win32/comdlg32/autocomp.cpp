@@ -21,7 +21,6 @@ DoInitAutoCompleteWithCWD2(FileOpenDlgInfos *pInfo, HWND hwndEdit)
         TRACE("CoCreateInstance(CLSID_ACListISF): 0x%08lX\n", hr);
         return hr;
     }
-    pACList->AddRef();
     pInfo->pvACList = static_cast<LPVOID>(pACList);
 
     IAutoComplete2 *pAC = NULL;
