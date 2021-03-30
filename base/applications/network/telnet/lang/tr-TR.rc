@@ -4,7 +4,7 @@ LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-    MSG_COPYRIGHT "Telnet Win32 sürüm 2.1b2, Telif Hakkı: 2000 Paul Brannan <pbranna@clemson.edu>\nve takım. Bu izlence KESİNLİKLE GÜVENCESİZ gelir, ayrıntılar için\nlicense.txt'yi okuyunuz."
+    MSG_COPYRIGHT "Telnet Win32 sürüm 2.1b2, Telif Hakkı: 2000 Paul Brannan <pbranna@clemson.edu>\nve takım. Bu program herhangi bir KULLANIM GÜVENCESİ VERMEZ, ayrıntılar için\nlicense.txt'yi okuyunuz."
     MSG_COPYRIGHT_1 "Bu özgür yazılımdır ve onu kesin şartlar altında yeniden dağıtmaya buyurunuz.\n\n"
     MSG_USAGE "Kullanım: TELNET [değişkenler][anabilgisayar [giriş]]\n\n  değişkenler\n    -d:kütükadı.ext  kütükadı.ext'e tüm gelen veriyi dök.\n  anabilgisayar     Bağlanılacak uzak anabilgisayarın adı ya da IP adresi.\n"
     MSG_USAGE_1 "  giriş             Açılacak hizmet girişi. (Ön Tanımlı: Telnet girişi 23.)\n\n"
