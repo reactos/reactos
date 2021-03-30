@@ -22,10 +22,9 @@ DoInitAutoCompleteWithCWD2(FileOpenDlgInfos *pInfo, HWND hwndEdit)
         return hr;
     }
     pACList->AddRef();
-    pInfo->pvACList = static_cast<void *>(pACList);
+    pInfo->pvACList = static_cast<LPVOID>(pACList);
 
     IAutoComplete2 *pAC = NULL;
-    pInfo->pvDropDown = NULL;
     hr = CoCreateInstance(CLSID_AutoComplete, NULL, CLSCTX_INPROC_SERVER,
                           IID_IAutoComplete2, reinterpret_cast<LPVOID *>(&pAC));
     if (SUCCEEDED(hr))
@@ -69,16 +68,16 @@ EXTERN_C HRESULT
 DoUpdateAutoCompleteWithCWD(const FileOpenDlgInfos *info, LPCITEMIDLIST pidl)
 {
     FileOpenDlgInfos *pInfo = const_cast<FileOpenDlgInfos*>(info);
-    if (!pInfo || !pInfo->pvCWD)
+    if (!pInfo)
         return E_POINTER;
 
-    ICurrentWorkingDirectory* pCWD;
-    pCWD = reinterpret_cast<ICurrentWorkingDirectory*>(pInfo->pvCWD);
+    ICurrentWorkingDirectory* pCWD =
+        reinterpret_cast<ICurrentWorkingDirectory*>(pInfo->pvCWD);
 
-    IAutoCompleteDropDown* pDropDown;
-    pDropDown = reinterpret_cast<IAutoCompleteDropDown*>(pInfo->pvDropDown);
+    IAutoCompleteDropDown* pDropDown =
+        reinterpret_cast<IAutoCompleteDropDown*>(pInfo->pvDropDown);
 
-    IACList2 *pACList = static_cast<IACList2*>(pInfo->pvACList);
+    IACList2* pACList = static_cast<IACList2*>(pInfo->pvACList);
 
     WCHAR szPath[MAX_PATH];
     if (!pidl || !SHGetPathFromIDListW(pidl, szPath))
@@ -102,13 +101,13 @@ DoReleaseAutoCompleteWithCWD(FileOpenDlgInfos *pInfo)
     if (!pInfo)
         return E_POINTER;
 
-    ICurrentWorkingDirectory* pCWD;
-    pCWD = reinterpret_cast<ICurrentWorkingDirectory*>(pInfo->pvCWD);
+    ICurrentWorkingDirectory* pCWD =
+        reinterpret_cast<ICurrentWorkingDirectory*>(pInfo->pvCWD);
     if (pCWD)
         pCWD->Release();
 
-    IAutoCompleteDropDown* pDropDown;
-    pDropDown = reinterpret_cast<IAutoCompleteDropDown*>(pInfo->pvDropDown);
+    IAutoCompleteDropDown* pDropDown =
+        reinterpret_cast<IAutoCompleteDropDown*>(pInfo->pvDropDown);
     if (pDropDown)
         pDropDown->Release();
 
@@ -116,9 +115,6 @@ DoReleaseAutoCompleteWithCWD(FileOpenDlgInfos *pInfo)
     if (pACList)
         pACList->Release();
 
-    pInfo->pvCWD = NULL;
-    pInfo->pvDropDown = NULL;
-    pInfo->pvACList = NULL;
-
+    pInfo->pvCWD = pInfo->pvDropDown = pInfo->pvACList = NULL;
     return S_OK;
 }
