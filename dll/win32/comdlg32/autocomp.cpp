@@ -8,10 +8,23 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(commdlg);
 
-static HRESULT
-DoInitAutoCompleteWithCWD2(FileOpenDlgInfos *pInfo, HWND hwndEdit)
+EXTERN_C HRESULT
+DoInitAutoCompleteWithCWD(FileOpenDlgInfos *pInfo, HWND hwndEdit)
 {
     pInfo->pvCWD = pInfo->pvDropDown = pInfo->pvACList = NULL;
+
+    WCHAR szClass[32];
+    GetClassNameW(hwndEdit, szClass, _countof(szClass));
+    if (lstrcmpiW(szClass, WC_COMBOBOXW) == 0)
+    {
+        COMBOBOXINFO info = { sizeof(info) };
+        GetComboBoxInfo(hwndEdit, &info);
+        hwndEdit = info.hwndItem;
+    }
+    else if (lstrcmpiW(szClass, WC_COMBOBOXEXW) == 0)
+    {
+        hwndEdit = (HWND)SendMessageW(hwndEdit, CBEM_GETEDITCONTROL, 0, 0);
+    }
 
     IACList2 *pACList = NULL;
     HRESULT hr = CoCreateInstance(CLSID_ACListISF, NULL, CLSCTX_INPROC_SERVER,
@@ -44,24 +57,6 @@ DoInitAutoCompleteWithCWD2(FileOpenDlgInfos *pInfo, HWND hwndEdit)
     pACList->QueryInterface(IID_ICurrentWorkingDirectory, &pInfo->pvCWD);
 
     return hr;
-}
-
-EXTERN_C HRESULT
-DoInitAutoCompleteWithCWD(FileOpenDlgInfos *pInfo, HWND hwndEdit)
-{
-    WCHAR szClass[32];
-    GetClassNameW(hwndEdit, szClass, _countof(szClass));
-    if (lstrcmpiW(szClass, WC_COMBOBOXW) == 0)
-    {
-        COMBOBOXINFO info = { sizeof(info) };
-        GetComboBoxInfo(hwndEdit, &info);
-        hwndEdit = info.hwndItem;
-    }
-    else if (lstrcmpiW(szClass, WC_COMBOBOXEXW) == 0)
-    {
-        hwndEdit = (HWND)SendMessageW(hwndEdit, CBEM_GETEDITCONTROL, 0, 0);
-    }
-    return DoInitAutoCompleteWithCWD2(pInfo, hwndEdit);
 }
 
 EXTERN_C HRESULT
