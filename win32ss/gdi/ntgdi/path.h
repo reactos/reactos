@@ -74,7 +74,7 @@ typedef struct _EPATHOBJ
 #define PATH_IsPathOpen(dclevel) ( ((dclevel).hPath) && ((dclevel).flPath & DCPATH_ACTIVE) )
 
 BOOL FASTCALL PATH_Arc (PDC dc, INT x1, INT y1, INT x2, INT y2, INT xStart, INT yStart, INT xEnd, INT yEnd, INT direction, INT lines);
-BOOL FASTCALL PATH_Ellipse (PDC dc, INT x1, INT y1, INT x2, INT y2);
+BOOL PATH_Ellipse (PDC dc, INT x1, INT y1, INT x2, INT y2);
 VOID FASTCALL PATH_EmptyPath (PPATH pPath);
 BOOL FASTCALL PATH_LineTo (PDC dc, INT x, INT y);
 BOOL FASTCALL PATH_PolyBezier (PDC dc, const POINT *pts, DWORD cbPoints);
@@ -84,7 +84,7 @@ BOOL FASTCALL PATH_PolylineTo (PDC dc, const POINT *pts, DWORD cbPoints);
 BOOL FASTCALL PATH_PolyPolygon ( PDC dc, const POINT* pts, const INT* counts, UINT polygons);
 BOOL FASTCALL PATH_PolyPolyline( PDC dc, const POINT* pts, const DWORD* counts, DWORD polylines);
 BOOL FASTCALL PATH_Rectangle (PDC dc, INT x1, INT y1, INT x2, INT y2);
-BOOL FASTCALL PATH_RoundRect(DC *dc, INT x1, INT y1, INT x2, INT y2, INT ell_width, INT ell_height);
+BOOL PATH_RoundRect(DC *dc, INT x1, INT y1, INT x2, INT y2, INT ell_width, INT ell_height);
 BOOL FASTCALL PATH_PathToRegion (PPATH pPath, INT nPolyFillMode, PREGION Rgn);
 BOOL FASTCALL PATH_ExtTextOut(PDC dc,INT x,INT y,UINT flags,const RECTL *lprc,LPCWSTR str,UINT count,const INT *dx);
 
@@ -96,7 +96,6 @@ PPATH FASTCALL PATH_FlattenPath (PPATH pPath);
 
 BOOL FASTCALL PATH_ReserveEntries (PPATH pPath, INT numEntries);
 BOOL FASTCALL PATH_StrokePath(DC *dc, PPATH pPath);
-BOOL PATH_CheckCorners(DC *dc, POINT corners[], INT x1, INT y1, INT x2, INT y2);
 
 VOID FASTCALL IntGdiCloseFigure(PPATH pPath);
 BOOL FASTCALL PATH_Delete(HPATH hPath);
