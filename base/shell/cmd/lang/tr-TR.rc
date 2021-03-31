@@ -1,4 +1,4 @@
-/* TRANSLATOR: 
+/* TRANSLATOR:
 2015 Erdem Ersoy (eersoy93) (erdemersoy [at] erdemersoy [dot] net),
 2021 Süleyman Poyraz (zaryob [dot] dev [at] gmail [dot] com)
 */
@@ -109,7 +109,7 @@ Kontrolü standart konsola geri döndürmek için, yardımcı cihazda CTTY CON y
 DATE [/T][tarih]\n\n\
   /T    sadece tarihi gösterir\n\n\
 Geçerli tarih ayarını ve yeni bir istemi görüntülemek için parametresiz olarak DATE yazın. \n\
-Aynı tarihi korumak için ENTER'a basın.
+Aynı tarihi korumak için ENTER'a basın..\n"
     STRING_DEL_HELP1 "Bir veya daha fazla dosya siler.\n\n\
 DEL [/N /P /T /Q /S /W /Y /Z /A[[:]öznitellikler]] hedef ...\n\
 DELETE [/N /P /T /Q /S /W /Y /Z /A[[:]öznitellikler]] hedef ...\n\
@@ -166,7 +166,7 @@ DELAY [/m]n\n\n\
   /W              Geniş liste formatını kullanır.\n\
   /X              Bu, 8dot3 olmayan dosya adları için oluşturulan kısa adları görüntüler.\n\
                   Biçim, uzun addan önce eklenen kısa adla /N biçimidir. Kısa ad yoksa, yerine\n\
-                  boşluklar görüntülenir.
+                  boşluklar görüntülenir.\n\
   /4              Dört basamaklı biçimde yılları görüntüler\n\n\
 Anahtarlar, DIRCMD ortam değişkeninde önceden ayarlanabilir. Herhangi\n\
 bir anahtarın önüne - (tire) koyarak ön ayarlı anahtarları geçersiz kılın - örneğin, /-W.\n"
@@ -243,7 +243,7 @@ ERRORLEVEL değer  Son çalıştırılan program belirtilen sayıya eşit veya b
 command           Koşul karşılanırsa yürütülecek komutu belirtir.\n\
 dizi1==dizi2      Belirtilen metin dizeleri eşleşirse doğru bir koşul belirtir\n\
 EXIST dosya_adi   Belirtilen dosya adı mevcutsa doğru bir koşul belirtir.\n\
-DEFINED variable  Belirtilen değişken tanımlanmışsa doğru bir koşul belirtir\n\"
+DEFINED variable  Belirtilen değişken tanımlanmışsa doğru bir koşul belirtir\n"
     STRING_LOCALE_HELP1 "Şimdiki zaman: "
     STRING_MKDIR_HELP "Bir dizin oluşturur.\n\n\
 MKDIR [sürücü:]yol\nMD [sürücü:]yol"
@@ -425,11 +425,8 @@ VER [/C][/R][/W]\n\n\
   /C  Telif listesini yazdırır.\n\
   /R  Yeniden dağıtım bilgilerini görüntüler.\n\
   /W  Lisans sözleşmesi metnini yazdırır."
-
-      IDS_LICENSE "ÖNEMLİ: Aşağıdaki metin, özgün metnin resmî olmayan çevirisidir. Çeviri metniyle özgün metin arasında farklar olabilir. Özgün metin, çeviri metninin altındadır.\r\n\r\n***\r\n\r\nBu program özgür yazılımdır; bunu, Özgür Yazılım Vakfı'nın yayımladığı GNU Genel Kamu Lisansı'nın, 2. sürümünün ya da daha sonraki bir sürümünün (seçiminize bağlı olarak.) şartları altında yeniden dağıtabilir veya değiştirebilirsiniz.\r\n\r\n\r\n\r\nBu izlenceyle birlikte GNU Genel Kamu Lisansı'nın bir kopyasını almış olmalısınız, eğer yoksa Özgür Yazılım Vakfı AŞ'ye (51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 ABD) yazınız.\r\n\r\n***\r\n\r\nThis program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later version.\r\n\r\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.\r\n\r\nYou should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."
-
-    STRING_VERSION_HELP2 "KESİNLİKLE HİÇBİR GARANTİ verilemez; ayrıntılar için şunu yazın: \n 
-`ver /w`. Bu bir özgür yazılımdır ve belirli koşullar altında yeniden dağıtabilirsiniz; \n
+    STRING_VERSION_HELP2 "KESİNLİKLE HİÇBİR GARANTİ verilemez; ayrıntılar için şunu yazın: \n\
+`ver /w`. Bu bir özgür yazılımdır ve belirli koşullar altında yeniden dağıtabilirsiniz; \n\
 ayrıntılar için `ver /r` yazın. Telif sahiplerinin listesi için `ver /c` yazın."
     STRING_VERSION_HELP3 "\n Bu program, kullanışlı olabileceği beklentisiyle dağıtılmıştır; \n\
 ancak, bu izlence HİÇBİR GÜVENCE VEREMEZ, SATILABİLİRLİĞİN ve BELİRLİ BİR AMACA UYGUNLUĞUN \n\

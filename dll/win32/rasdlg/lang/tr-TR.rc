@@ -378,7 +378,7 @@ BEGIN
     COMBOBOX 1245, 119, 50, 136, 186, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | NOT WS_TABSTOP
     GROUPBOX "Donanım Özellikleri", 1237, 6, 70, 248, 61, WS_GROUP
     AUTOCHECKBOX "&Donanım Akış Denetimini Etkinleştir", 1232, 19, 82, 217, 10, BS_TOP | BS_MULTILINE
-    AUTOCHECKBOX "M&odem Yanlışlık Denetimini Etkinleştir", 1231, 19, 98, 217, 10, BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX "M&odem Hata Denetimini Etkinleştir", 1231, 19, 98, 217, 10, BS_TOP | BS_MULTILINE
     AUTOCHECKBOX "Mo&dem Sıkıştırmasını Etkinleştir", 1229, 19, 115, 217, 10, BS_TOP | BS_MULTILINE
     AUTOCHECKBOX "&Uçbirim Penceresini Göster", 1234, 8, 136, 246, 10, BS_TOP | BS_MULTILINE
     AUTOCHECKBOX "Mod&em Hoparlörünü Etkinleştir", 1230, 8, 151, 247, 10, BS_TOP | BS_MULTILINE | WS_GROUP
@@ -1050,7 +1050,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Yeni Bağlantı Yardımcısı"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Genel Ağ Bağlantısı Paylaşımı, bu bağlantıdan dış kaynaklara erişmek için lokal ağınızdaki başka bilgisayarlara izin verir.", -1, 10, 5, 300, 22
+    LTEXT "Genel Ağ Bağlantısı Paylaşımı, bu bağlantıdan dış kaynaklara erişmek için yerel ağınızdaki başka bilgisayarlara izin verir.", -1, 10, 5, 300, 22
     AUTOCHECKBOX "&Bu Bağlantı İçin Genel Ağ Bağlantısı Paylaşımı'nı Etkinleştir", 1512, 21, 31, 272, 10
     LTEXT "Yerli ağınızdaki bir bilgisayar dış kaynaklara erişmek için girişimde bulunduğunda bu bağlantıyı kendiliğinden çevirmek için aşağıdaki kutucuğu işaretleyiniz.", 1514, 10, 56, 294, 22
     AUTOCHECKBOX "&İstek Üzerine Çevirmeyi Etkinleştir", 1513, 21, 86, 260, 10
@@ -1061,8 +1061,8 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Yeni Bağlantı Yardımcısı"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Paylaşılan erişim, bu çevirmeli bağlantıdan dış kaynaklara erişmek için lokal ağınızdaki başka bilgisayarlara izin verir. Paylaşılan erişimi bir bağlantı ve bir yeri ağ için bir seferde etkinleştirebilirsiniz.", -1, 10, 5, 300, 25
-    LTEXT "&Bu bağlantıdan kaynaklara erişecek lokal ağı seçiniz:", -1, 21, 35, 285, 8
+    LTEXT "Paylaşılan erişim, bu çevirmeli bağlantıdan dış kaynaklara erişmek için yerel ağınızdaki başka bilgisayarlara izin verir. Paylaşılan erişimi bir bağlantı ve bir yeri ağ için bir seferde etkinleştirebilirsiniz.", -1, 10, 5, 300, 25
+    LTEXT "&Bu bağlantıdan kaynaklara erişecek yerel ağı seçiniz:", -1, 21, 35, 285, 8
     COMBOBOX 1522, 21, 48, 231, 56, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | NOT WS_TABSTOP
 END
 
@@ -1345,7 +1345,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
 CAPTION "ICMP"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "&Genel Ağ Denetim İleti İletişim Protokolü (ICMP) yanlışlık ve durum bilgisi paylaşmak için bir ağdaki bilgisayarlara izin verir. Şuna yanıt vereceği bu bilgisayarın Genel Ağ'dan bilgi için istekleri seçiniz:", -1, 7, 5, 215, 37
+    LTEXT "&Genel Ağ Denetim İleti İletişim Protokolü (ICMP) hata ve durum bilgisi paylaşmak için bir ağdaki bilgisayarlara izin verir. Şuna yanıt vereceği bu bilgisayarın Genel Ağ'dan bilgi için istekleri seçiniz:", -1, 7, 5, 215, 37
     CONTROL "IList1", 1644, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000440D, 7, 45, 215, 100, WS_EX_CLIENTEDGE
     GROUPBOX "Tanım", -1, 7, 153, 215, 55
     LTEXT "", 1645, 14, 171, 199, 32
@@ -1684,7 +1684,7 @@ CAPTION "Gelen TCP/IP Husûsiyetleri"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Ağ Erişimi", -1, 6, 5, 252, 32
-    AUTOCHECKBOX "&Lokal Alan Ağ'ıma Erişmek İçin Arayıcılara İzin Ver", 7017, 20, 20, 228, 9, BS_LEFT | BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX "&Yerel Alan Ağ'ıma Erişmek İçin Arayıcılara İzin Ver", 7017, 20, 20, 228, 9, BS_LEFT | BS_TOP | BS_MULTILINE
     GROUPBOX "TCP/IP Adres Ataması", -1, 6, 42, 250, 122
     AUTORADIOBUTTON "&TCP/IP Adreslerini DHCP Kullanarak Kendiliğinden Ata", 7019, 20, 54, 231, 10, BS_TOP | BS_MULTILINE | WS_GROUP
     AUTORADIOBUTTON "T&CP/IP Adreslerini Belirle", 7020, 20, 71, 231, 10, BS_TOP | BS_MULTILINE
@@ -1721,7 +1721,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_CAPTIO
 CAPTION "Gelen İletişim Protokolü Özellikleri"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    AUTOCHECKBOX "&Lokal Alan Ağıma Erişmek İçin Arayıcılara İzin Ver", 7034, 7, 7, 208, 18, BS_LEFT | BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX "&Yerel Alan Ağıma Erişmek İçin Arayıcılara İzin Ver", 7034, 7, 7, 208, 18, BS_LEFT | BS_TOP | BS_MULTILINE
     DEFPUSHBUTTON "Tamam", 1, 86, 30, 60, 14
     PUSHBUTTON "İptal", 2, 151, 30, 60, 14
 END
@@ -1795,10 +1795,10 @@ END
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Genel Ağ'dan bilgisayarınıza sanal şahsi bağlantılar ancak bilgisayarınızın Genel Ağ'da bilinen bir adı veya IP adresi varsa olasıdır.", -1, 10, 4, 290, 20
-    AUTORADIOBUTTON "&Sanal Şahsi Bağlantılara İzin Ver", 7053, 29, 63, 265, 10, BS_TOP | BS_MULTILINE | WS_GROUP
-    AUTORADIOBUTTON "S&anal Şahsi Bağlantılara İzin Verme", 7054, 29, 78, 265, 10, BS_TOP | BS_MULTILINE | NOT WS_TABSTOP
-    LTEXT "Bu bilgisayara sanal şahsi bağlantılara izin vermek istiyor musunuz?", -1, 17, 49, 275, 8
+    LTEXT "Genel Ağ'dan bilgisayarınıza sanal özel bağlantılar ancak bilgisayarınızın Genel Ağ'da bilinen bir adı veya IP adresi varsa olasıdır.", -1, 10, 4, 290, 20
+    AUTORADIOBUTTON "&Sanal Özel Bağlantılara İzin Ver", 7053, 29, 63, 265, 10, BS_TOP | BS_MULTILINE | WS_GROUP
+    AUTORADIOBUTTON "S&anal Özel Bağlantılara İzin Verme", 7054, 29, 78, 265, 10, BS_TOP | BS_MULTILINE | NOT WS_TABSTOP
+    LTEXT "Bu bilgisayara sanal özel bağlantılara izin vermek istiyor musunuz?", -1, 17, 49, 275, 8
     LTEXT "VPN bağlantılarına izin verirseniz ReactOS, VPN paketlerini göndermeye ve almaya bilgisayarınıza izin vermek için Genel Ağ Bağlantı Güvenlik Duvarı'nı değiştirecektir.", -1, 10, 25, 293, 25
 END
 
@@ -1850,7 +1850,7 @@ BEGIN
     205 "%1 telefon defterinden silinsin mi?\0"
     206 "%1'den bağlantı kesilsin mi?\0"
     207 "%1 adlı bir dosya önceden var. Üzerine yazılsın mı?\0"
-    208 "Betikte yazım yanlışları bulundu. Yanlışlık kaydını görüntülemek ister misiniz?\0"
+    208 "Betikte yazım yanlışları bulundu. Hata kaydını görüntülemek ister misiniz?\0"
     209 """%1"" şimdi bağlı.\0"
     210 "Bağlantınızın durumunu denetlemek veya bağlantınızı ertelemek için görev çubuğunda Çevirmeli Ağ İzleyicisi'ne sağ tıklayınız.\0"
     212 "Başarıyla bağlandı.\0"
@@ -1890,17 +1890,17 @@ BEGIN
     246 "Telefon defteri boş.\n\nBir girdi eklemek için Tamam'a basınız.\0"
     247 "Alma veya verme kısıtlamalarından dolayı veri şifrelemesi ReactOS'un bu sürümünde yok.\0"
     248 "Lütfen bir sonraki görüntülükte bir X.25 adresi giriniz.\0"
-    249 "Yanlışlık %1: %2\0"
-    250 "%1\n\nYanlışlık %2: %3\0"
-    251 "%1\n\nYanlışlık %2: %3\nTanılayıcı: %4\0"
-    252 "%1\n\nYanlışlık %2: %3\nBaşarısızlık Kodu: %4\0"
-    253 "%1\n\nYanlışlık %2: %3\n\nDaha çok bilgi için F1'e basınız.\0"
-    254 "%1\n\nYanlışlık %2: %3\nAd: %4\0"
+    249 "Hata %1: %2\0"
+    250 "%1\n\nHata %2: %3\0"
+    251 "%1\n\nHata %2: %3\nTanılayıcı: %4\0"
+    252 "%1\n\nHata %2: %3\nBaşarısızlık Kodu: %4\0"
+    253 "%1\n\nHata %2: %3\n\nDaha çok bilgi için F1'e basınız.\0"
+    254 "%1\n\nHata %2: %3\nAd: %4\0"
     255 "%1\n\n%4\0"
-    256 "%1\n\nYanlışlık %2: %3\nYanıt: %4\0"
+    256 "%1\n\nHata %2: %3\nYanıt: %4\0"
     257 "Başarısızlık Kodu: 0x%1\n\0"
     258 "Ad: %1\n\0"
-    259 "%1 CP yanlışlık bildirdi %2: %3\n\0"
+    259 "%1 CP Hata bildirdi %2: %3\n\0"
     260 "%1 CP başarıyla bağlandı.\n\0"
     261 "Hangi çevirme iletişim kâidesinin kullanılacağını seçebilirsiniz.\0"
     262 "Çevirme İletişim Protokolü Seç\0"
@@ -1982,7 +1982,7 @@ BEGIN
     338 "TAPI bilgisi saklanamıyor.\0"
     339 "Veri saklanamıyor.\0"
     340 "Betik durdu.\0"
-    341 "Betik bir yanlışlıktan dolayı durdu. Yanlışlık kaydını görüntülemek ister misiniz?\0"
+    341 "Betik bir hatadan dolayı durdu. Hata kaydını görüntülemek ister misiniz?\0"
     342 "Kendiliğinden çevirme bilgisi ayarlanamıyor.\0"
     343 "Saklanmış şifre silinemiyor.\0"
     344 "Telefon defteri yazılamıyor.\0"
@@ -2114,7 +2114,7 @@ BEGIN
     504 "ReactOS genel ağın ilk kez bağlandığına emin olabilir.\0"
     505 "VPN1\0"
     506 "Genel Ağ Bağlantısı Paylaşımı\0"
-    507 "Bu çevirmeli bağlantıdan bir lokal ağın kaynaklara erişmesine izin verebilirsiniz.\0"
+    507 "Bu çevirmeli bağlantıdan bir yerel ağın kaynaklara erişmesine izin verebilirsiniz.\0"
     508 "Anabilgisayar ya da Konuk?\0"
     509 "Genel Ağ Bağlantısı Paylaşımı ""%1"" bağlantısı için şimdilik etkin.\n\nOnun yerine ""%2"" bağlantısı için şimdi etkin olacaktır.\0"
     510 "İki bilgisayarı bağlamak için, bilgisayarınız bir anabilgisayar ya da bir konuk olarak tanımlanmalıdır.\0"
@@ -2136,7 +2136,7 @@ BEGIN
     526 "Bağlantının türünü seçiniz.\0"
     527 "Bağlantının Türü\0"
     528 "hh.exe netcfg.chm::/trouble_all.htm\0"
-    529 "Sanal Şahsi Bağlantı (VPN)\0"
+    529 "Sanal Özel Bağlantı (VPN)\0"
     530 "Açık metin içerme gerekli kimlik doğrulamasının bir türünü kullanınız. Veri şifrelemeyiniz\0"
     531 "Şifrelerin şifrelenmesini gerektiren kimlik doğrulamasının bir türünü kullanınız. Veri şifrelemeyiniz.\0"
     532 "Lütfen girdi için bir ad yazınız.\0"
@@ -2258,9 +2258,9 @@ BEGIN
     1666 "Bu bilgisayara gönderilmiş veri, verinin alınmış olduğu zamânı gösteren bir doğrulama iletisiyle doğrulanabilir.\0"
     1667 "Bu bilgisayar, bağlı olduğu genel ağ üzerine daha çok bilgi için dinleyecek ve isteklere yanıt verecektir.\0"
     1668 "Bu bilgisayar, tanıdığı yönlendirmeler üzerine bilgi için isteklere yanıt verecektir.\0"
-    1669 "Bir yanlışlıktan dolayı bu bilgisayara ulaşmada başarısız olan Genel Ağ'dan göderilen veri, gözden çıkarılacak ve başarısızlığı anlatan bir ""ulaşılamayan varış"" iletisiyle doğrulanacaktır.\0"
+    1669 "Bir hatadan dolayı bu bilgisayara ulaşmada başarısız olan Genel Ağ'dan göderilen veri, gözden çıkarılacak ve başarısızlığı anlatan bir ""ulaşılamayan varış"" iletisiyle doğrulanacaktır.\0"
     1670 "Bu bilgisayarın gelen veriyi işleme yeteneği bir iletimin hızına yetişemediğinde veri bırakılacak ve gönderici yavaşlatmak için sorulacaktır.\0"
-    1671 "Bu bilgisayar, bir sorunlu başlıktan dolayı alınmış veriyi gözden çıkardığında bir ""kötü başlık"" yanlışlık iletisiyle göndericiye yanıt verecektir.\0"
+    1671 "Bu bilgisayar, bir sorunlu başlıktan dolayı alınmış veriyi gözden çıkardığında bir ""kötü başlık"" hata iletisiyle göndericiye yanıt verecektir.\0"
     1672 "Tüm iletim izin verilenden daha çok çok zaman gerektirdiğinden dolayı bu bilgisayar, bir bitmemiş veri iletimini gözden çıkardığında bir ""süre bitti"" iletisiyle göndericiye yanıt verecektir.\0"
     1673 "Ön tanımlı yol değişirse bu bilgisayardan gönderilen veri yeniden yönlendirilecektir.\0"
     1675 "Kayıt dosyası büyüklüğü için girilen değer geçersiz. 1 ile 32767000 arasında bir değer giriniz.\0"
@@ -2290,23 +2290,23 @@ BEGIN
     7321 "Yeni kullanıcı için bir oturum açma adı girmeli ya da İptal'e basmalısınız.\0"
     7322 "Girdiğiniz şifre çok kısaydı.\0"
     7323 "Girişen şifreler aynı değil. Lütfen onları yeniden giriniz.\0"
-    7324 "Bir iç yanlışlık oluştu.\0"
+    7324 "Bir iç hata oluştu.\0"
     7325 "Tablo Görünümü\0"
-    7326 "Yerli kullanıcı veritabanı için yaptığınız değişikllikleri işlemeye çalışırken bir yanlışlık oluştu.\0"
+    7326 "Yerli kullanıcı veritabanı için yaptığınız değişikllikleri işlemeye çalışırken bir hata oluştu.\0"
     7327 "Yerli dizge veritabanına bir kullanıcı eklemek için yetersiz ayrıcalıklarınız var.\0"
-    7328 "Oluşturmaya çalıştığınız kullanıcı önceden yerli kullanıcı veritabanında var.\0"
-    7329 "Girdiğiniz şifre geri çevrilmiş olduğundan dolayı kullanıcı local kullanıcı veritabanına eklenmedi.\0"
+    7328 "Oluşturmaya çalıştığınız kullanıcı halihazırda yerel kullanıcı veritabanında var.\0"
+    7329 "Girdiğiniz şifre geri çevrilmiş olduğundan dolayı kullanıcı yerel kullanıcı veritabanına eklenmedi.\0"
     7330 "Bir iç hatadan dolayı sistem kullanıcı veritabanını yeniden yükleme işlemi yapılamaz.\0"
-    7331 "Bir iç hata oluştu: Lokal kullanıcı veritabanı işleyicisi bozuk.\0"
+    7331 "Bir iç hata oluştu: Yerel kullanıcı veritabanı işleyicisi bozuk.\0"
     7332 "Kullanıcı sekmesini görüntülemek için gerekli kaynakları yükleme işlemi yapılamaz.\0"
-    7333 "Lokal kullanıcı veritabanına yaptığınız değişiklikleri geri almaya çalışılırken bir iç hata oluştu.\0"
+    7333 "Yerel kullanıcı veritabanına yaptığınız değişiklikleri geri almaya çalışılırken bir iç hata oluştu.\0"
     7334 "Aygıt veritabanı işleyicisi bozuk.\0"
     7335 "Genel sekmesini görüntülemek için gerekli kaynakları yüklemesi yapılamaz.\0"
-    7336 "Yaptığınız aygıt ya da VPN ile ilgili değişikliklerinin birtakımlarını işlemeye çalışırken bir yanlışlık oluştu.\0"
+    7336 "Yaptığınız aygıt ya da VPN ile ilgili değişikliklerinin birtakımlarını işlemeye çalışırken bir hata oluştu.\0"
     7337 "Bir iç hata oluştu.\0"
     7338 "Bir iç hata oluştu: Ağ bileşeni veritabanı işleyicisi bozuk.\0"
     7339 "Bir iç hata oluştu.\0"
-    7340 "Ağ bileşenlerine yaptığınız değişiklikleri işlemeye çalışırken bir yanlışlık oluştu.\0"
+    7340 "Ağ bileşenlerine yaptığınız değişiklikleri işlemeye çalışırken bir hata oluştu.\0"
     7341 "Bir iç hata oluştu.\0"
     7342 "Sisteme, TCP/IP iletişim protokolüne yaptığınız değişiklikleri işlenemez.\0"
     7343 "Sisteme, IPX iletişim protokolüne yaptığınız değişiklikleri saklamanamaz.\0"
@@ -2316,7 +2316,7 @@ BEGIN
     7347 "Sistemden IPX özellikleri yüklenemez.\0"
     7348 "Gelen Bağlantılar, Yönlendirme ve Uzaktan Erişim hizmetine bağlıdır, ancak bağlı olduğu hizmet başlatılamadığı için Gelen Bağlantılar başlatılamadı. Daha çok bilgi için sistem olay kaydını gözden geçiriniz.\0"
     7349 "Şimdi başka yerde değiştiriliyor olduğundan dolayı bu zamanda ağ bileşenlerinin düzenlenmesine izin verilemez.\0"
-    7350 "Girdiğiniz ad veya şifre bir sistem ilkesini çiğnediği için (çok uzun, çok kısaydı veya  kötü biçimliydi.) girdiğiniz yeni kullanıcı lokal kullanıcı veritabanına eklenmedi.\0"
+    7350 "Girdiğiniz ad veya şifre bir sistem ilkesini çiğnediği için (çok uzun, çok kısaydı veya  kötü biçimliydi.) girdiğiniz yeni kullanıcı yerel kullanıcı veritabanına eklenmedi.\0"
     7351 "Sistem istenen kullanıcıyı silemedi.\0"
     7352 "Kullanımda olduğundan dolayı seçili ağ bileşenini silemedi.\0"
     7353 "Gelen Bağlantılar Uyarısı\0"
@@ -2327,7 +2327,7 @@ BEGIN
     7358 "Bu bilgisayara bağlanabilen kullanıcıları belirtebilirsiniz.\0"
     7359 "Gelen Bağlantılar İçin Aygıtlar\0"
     7360 "Gelen bağlantıları kabul etmek için bilgisayarınızın kullandığı aygıtları seçebilrsiniz.\0"
-    7361 "Gelen Sanal Şahsi Ağ (VPN) Bağlantısı\0"
+    7361 "Gelen Sanal Özel Ağ (VPN) Bağlantısı\0"
     7362 "Bir başka bilgisayar size bir VPN bağlantısından bağlanabilir.\0"
     7363 "Ağ Yazılımı\0"
     7364 "Ağ yazılımı, başka bilgisayar türlerinden bağlantıları kabul etmek için bu bilgisayara izin verir.\0"
@@ -2349,7 +2349,7 @@ BEGIN
     7383 "Gelen Bağlantılar, 00000000 ya da FFFFFFFF IPX ağ numaralarını veremez. Lütfen atanmış ağ numaralarını ya da kendiliğinden ağ numarası ataması kullanımını değiştiriniz.\0"
     7384 "şuraya\0"
     7385 "İletişim Girişi (%s)\0"
-    7386 "Ağ Bağlantıları, Lokal Kullanıcı Yöneticisi veya Uzaktan Erişim İlkesi konsollarını kullanarak ayarlanmış gelen bağlantılar için birtakım özelleştirilmiş seçenekleri görüntülemez. Gelen bağlantılar üzerine eksiksiz ve doğru bilgi için bu konsolları kullanmaya gereksinim duyacaksınız.\0"
+    7386 "Ağ Bağlantıları, Yerel Kullanıcı Yöneticisi veya Uzaktan Erişim İlkesi konsollarını kullanarak ayarlanmış gelen bağlantılar için birtakım özelleştirilmiş seçenekleri görüntülemez. Gelen bağlantılar üzerine eksiksiz ve doğru bilgi için bu konsolları kullanmaya gereksinim duyacaksınız.\0"
     7387 "Seçtiğiniz kullanıcı geri arama kipi, size geçerli bir geri arama numarası girmeyi gerektirir.\0"
     7388 "ReactOS işlemi bitirmek için yeniden başlamalıdır. Şimdi yeniden başlatalım mı?\0"
     7389 "Şimdi seçtiğiniz aygıtın var olan yaplandırma seçenekleri yok.\0"

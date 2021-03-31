@@ -49,7 +49,7 @@ BEGIN
     GROUPBOX "Sunum", IDC_STATIC, 7, 87, 139, 57
     CONTROL "&Fare İmlecini İzle", IDC_FOLLOWMOUSECHECK, "Button",
             BS_AUTOCHECKBOX | WS_TABSTOP, 18, 42, 114, 10
-    CONTROL "&Kılavye Odağını İzle", IDC_FOLLOWKEYBOARDCHECK, "Button",
+    CONTROL "&Klavye Odağını İzle", IDC_FOLLOWKEYBOARDCHECK, "Button",
             BS_AUTOCHECKBOX | WS_TABSTOP, 18, 54, 114, 10
     CONTROL "&Metin Düzenlemesini İzle", IDC_FOLLOWTEXTEDITINGCHECK, "Button",
             BS_AUTOCHECKBOX | WS_TABSTOP, 18, 66, 114, 10

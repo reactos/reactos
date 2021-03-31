@@ -79,9 +79,9 @@ BEGIN
     LTEXT "", IDC_LOCALETEXT, 53, 29, 250, 16
     LTEXT "Sistem veya kullanıcı yerel ayarlarını değiştirmek için Özelleştir'e tıklayınız.", IDC_STATIC, 53, 60, 196, 8
     PUSHBUTTON "Ö&zelleştir...", IDC_CUSTOMLOCALE, 250, 57, 50, 14
-    LTEXT "Kılavye düzeni, yazdığınızda gözüken karakterleri denetler.", IDC_STATIC, 53, 86, 253, 8
+    LTEXT "Klavye düzeni, yazdığınızda gözüken karakterleri denetler.", IDC_STATIC, 53, 86, 253, 8
     LTEXT "", IDC_LAYOUTTEXT, 53, 100, 250, 16
-    LTEXT "Kılavye düzenini değiştirmek için Özelleştir'e tıklayınız.", IDC_STATIC, 53, 126, 184, 8
+    LTEXT "Klavye düzenini değiştirmek için Özelleştir'e tıklayınız.", IDC_STATIC, 53, 126, 184, 8
     PUSHBUTTON "Öz&elleştir...", IDC_CUSTOMLAYOUT, 250, 122, 50, 14
 END
 

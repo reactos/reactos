@@ -47,7 +47,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Değişik Özellikler", -1, 7, 7, 245, 52
     AUTORADIOBUTTON "&Oyun Çubuğu", IDC_JOYSTICK_RADIO, 17, 23, 55, 10
-    AUTORADIOBUTTON "&Uçuş Dümeni veyâ Uçuş Çubuğu", IDC_FLIGHT_YOKE_RADIO, 147, 23, 89, 10
+    AUTORADIOBUTTON "&Uçuş Dümeni veya Uçuş Çubuğu", IDC_FLIGHT_YOKE_RADIO, 147, 23, 89, 10
     AUTORADIOBUTTON "Oyun &Kolu", IDC_GAME_PAD_RADIO, 17, 40, 65, 10
     AUTORADIOBUTTON "&Yarış Arabası Denetleyicisi", IDC_RACE_CAR_RADIO, 147, 40, 93, 10
     GROUPBOX "Eksenler", -1, 7, 67, 116, 44, WS_GROUP

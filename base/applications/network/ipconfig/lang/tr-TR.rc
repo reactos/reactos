@@ -5,9 +5,9 @@ LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 STRINGTABLE
 BEGIN
     IDS_BCAST "Yayın"
-    IDS_P2P "Eşler Arası"
+    IDS_P2P "Eşler Arası (P2P)"
     IDS_MIXED "Karışık"
-    IDS_HYBRID "Melez"
+    IDS_HYBRID "Hibrit"
     IDS_UNKNOWN "Bilinmeyen"
 END
 
@@ -34,7 +34,7 @@ BEGIN
 \n \
     nereye\n \
         bağdaştırıcı     Bağlantı adı\n \
-                       (* ve ? umûmî arama damgalarına izin verilmiştir, örneklere bakınız)\n \
+                       (* ve ? özel karakterlerineözel karakterlerine  bakınız)\n \
 \n \
         Seçenekler:\n \
            /?           Bu yardım iletisini görüntüle.\n \
@@ -51,7 +51,7 @@ BEGIN
     IP adresini, alt ağ maskesini ve ön tanımlı geçidi görüntülemektir.\n \
 \n \
     release ve renew için, bir bağdaştırıcı adı belirtilmemişse TCP/IP için tüm kayıtlı\n \
-    bağdaştırıcılar için IP adres kirâları bırakılacak veyâ yenilenecektir.\n \
+    bağdaştırıcılar için yapılmış IP adres tahsisi bırakılacak veya yenilenecektir.\n \
 \n \
     setclassid için, bir sınıf kimliği belirtilmemişse sınıf kimliği silinmiş olacaktır.\n \
 \n \
@@ -62,6 +62,6 @@ BEGIN
         > ipconfig /renew EL*        ... EL ile başlayan adı olan tüm\n \
                                          bağlantıları yeniler.\n \
         > ipconfig /release *Bağ*    ... Eşleşen tüm bağlantıları bırakır.\n \
-                                         Ör: ""Yerli Alan Bağlantısı 1"" veyâ\n \
-                                             ""Yerli Alan Bağlantısı 2""\n"
+                                         Ör: ""Yerel Ağ Bağlantısı 1"" veyâ\n \
+                                             ""Yerel Ağ Bağlantısı 2""\n"
 END
