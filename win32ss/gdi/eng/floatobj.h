@@ -89,6 +89,7 @@ FLOATOBJ_Equal1(FLOATOBJ *pf)
 
 extern const FLOATOBJ gef0;
 extern const FLOATOBJ gef1;
+extern const FLOATOBJ gef2;
 extern const FLOATOBJ gef16;
 
 #define FLOATOBJ_0 {0x00000000, 0x00000000}
@@ -114,6 +115,7 @@ extern const FLOATOBJ gef16;
 
 static const FLOATOBJ gef0 = 0.;
 static const FLOATOBJ gef1 = 1.;
+static const FLOATOBJ gef2 = 2.;
 static const FLOATOBJ gef16 = 16.;
 
 #define FLOATOBJ_Set0(fo) *(fo) = 0;

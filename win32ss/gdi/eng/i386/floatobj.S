@@ -9,7 +9,6 @@
 #include <asm.inc>
 
 .code
-
 /*******************************************************************************
  * IEEE 754-1985 single precision floating point
  *
@@ -91,6 +90,11 @@ _gef0:
 PUBLIC _gef1
 _gef1:
     .long HEX(40000000), HEX(00000002)
+
+/* extern const FLOATOBJ gef2; */
+PUBLIC _gef2
+_gef2:
+    .long HEX(40000000), HEX(00000003)
 
 /* extern const FLOATOBJ gef16; */
 PUBLIC _gef16
