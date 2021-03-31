@@ -69,6 +69,7 @@ DIB_1BPP_BitBltSrcCopy_From1BPP (
     LONG Width = RECTL_lGetWidth(DestRect);
     BOOLEAN XorBit = !!XLATEOBJ_iXlate(pxlo, 0);
     BOOLEAN Overlap = FALSE;
+    BYTE *DstStart, *DstEnd, *SrcStart, *SrcEnd;
 
     /* Make sure this is as expected */
     ASSERT(DestRect->left >= 0);
@@ -78,33 +79,29 @@ DIB_1BPP_BitBltSrcCopy_From1BPP (
 
     /*
      * Check if we need to allocate a buffer for our operation.
-     * NB: if we're not mirroring, we're doing a memmove-like operation, so this is always fine.
      */
-    if (bTopToBottom || bLeftToRight)
+    DstStart = (BYTE*)DestSurf->pvScan0 + DestRect->top * DestSurf->lDelta + DestRect->left / 8;
+    DstEnd = (BYTE*)DestSurf->pvScan0 + (DestRect->bottom - 1) * DestSurf->lDelta + (DestRect->right) / 8;
+    SrcStart = (BYTE*)SourceSurf->pvScan0 + SourcePoint->y * SourceSurf->lDelta + SourcePoint->x / 8;
+    SrcEnd = (BYTE*)SourceSurf->pvScan0 + (SourcePoint->y + Height - 1) * SourceSurf->lDelta + (SourcePoint->x + Width) / 8;
+
+    /* Beware of bitmaps with negative pitch! */
+    if (DstStart > DstEnd)
     {
-        BYTE* DstStart = (BYTE*)DestSurf->pvScan0 + DestRect->top * DestSurf->lDelta + DestRect->left / 8;
-        BYTE* DstEnd = (BYTE*)DestSurf->pvScan0 + (DestRect->bottom - 1) * DestSurf->lDelta + (DestRect->right) / 8;
-        BYTE* SrcStart = (BYTE*)SourceSurf->pvScan0 + SourcePoint->y * SourceSurf->lDelta + SourcePoint->x / 8;
-        BYTE* SrcEnd = (BYTE*)SourceSurf->pvScan0 + (SourcePoint->y + Height - 1) * SourceSurf->lDelta + (SourcePoint->x + Width) / 8;
-
-        /* Beware of bitmaps with negative pitch! */
-        if (DstStart > DstEnd)
-        {
-            BYTE* tmp = DstStart;
-            DstStart = DstEnd;
-            DstEnd = tmp;
-        }
-
-        if (SrcStart > SrcEnd)
-        {
-            BYTE* tmp = SrcStart;
-            SrcStart = SrcEnd;
-            SrcEnd = tmp;
-        }
-
-        /* We allocate a new buffer when the two buffers overlap */
-        Overlap = ((SrcStart >= DstStart) && (SrcStart < DstEnd)) || ((SrcEnd >= DstStart) && (SrcEnd < DstEnd));
+        BYTE* tmp = DstStart;
+        DstStart = DstEnd;
+        DstEnd = tmp;
     }
+
+    if (SrcStart > SrcEnd)
+    {
+        BYTE* tmp = SrcStart;
+        SrcStart = SrcEnd;
+        SrcEnd = tmp;
+    }
+
+    /* We allocate a new buffer when the two buffers overlap */
+    Overlap = ((SrcStart >= DstStart) && (SrcStart < DstEnd)) || ((SrcEnd >= DstStart) && (SrcEnd < DstEnd));
 
     if (!Overlap)
     {
