@@ -78,7 +78,7 @@ DIB_1BPP_BitBltSrcCopy_From1BPP (
     {
         LONG yDst = DestRect->top + Height;
         LONG ySrc = bTopToBottom ?
-            SourcePoint->y + RECTL_lGetHeight(DestRect) - Height
+            SourcePoint->y + RECTL_lGetHeight(DestRect) - Height - 1
             : SourcePoint->y + Height;
         LONG Width = RECTL_lGetWidth(DestRect);
 
@@ -86,7 +86,7 @@ DIB_1BPP_BitBltSrcCopy_From1BPP (
         {
             LONG xDst = DestRect->left + Width;
             LONG xSrc = bLeftToRight ?
-                SourcePoint->x + RECTL_lGetWidth(DestRect) - Width
+                SourcePoint->x + RECTL_lGetWidth(DestRect) - Width - 1
                 : SourcePoint->x + Width;
             ULONG PixelPut = DIB_1BPP_GetPixel(SourceSurf, xSrc, ySrc);
             if (XorBit)
