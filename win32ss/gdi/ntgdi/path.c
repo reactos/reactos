@@ -396,8 +396,8 @@ PATH_ScaleNormalizedPoint(
  * Normalizes a point with respect to the box whose corners are passed in
  * corners. The normalized coordinates are stored in *pX and *pY.
  */
+static
 VOID
-FASTCALL
 PATH_NormalizePoint(
     POINTL corners[],
     const POINTL *pPoint,
@@ -428,47 +428,32 @@ PATH_NormalizePoint(
  *
  * Helper function for PATH_RoundRect() and PATH_Rectangle()
  */
+static
 BOOL
-PATH_CheckCorners(
+PATH_CheckRect(
     DC *dc,
-    POINT corners[],
+    RECTL* rect,
     INT x1,
     INT y1,
     INT x2,
     INT y2)
 {
-    INT temp;
     PDC_ATTR pdcattr = dc->pdcattr;
 
     /* Convert points to device coordinates */
-    corners[0].x = x1;
-    corners[0].y = y1;
-    corners[1].x = x2;
-    corners[1].y = y2;
-    IntLPtoDP(dc, corners, 2);
+    RECTL_vSetRect(rect, x1, y1, x2, y2);
+    IntLPtoDP(dc, (PPOINT)rect, 2);
 
     /* Make sure first corner is top left and second corner is bottom right */
-    if (corners[0].x > corners[1].x)
-    {
-        temp = corners[0].x;
-        corners[0].x = corners[1].x;
-        corners[1].x = temp;
-    }
-
-    if (corners[0].y > corners[1].y)
-    {
-        temp = corners[0].y;
-        corners[0].y = corners[1].y;
-        corners[1].y = temp;
-    }
+    RECTL_vMakeWellOrdered(rect);
 
     /* In GM_COMPATIBLE, don't include bottom and right edges */
     if (pdcattr->iGraphicsMode == GM_COMPATIBLE)
     {
-        if (corners[0].x == corners[1].x) return FALSE;
-        if (corners[0].y == corners[1].y) return FALSE;
-        corners[1].x--;
-        corners[1].y--;
+        if (rect->left == rect->right) return FALSE;
+        if (rect->top == rect->bottom) return FALSE;
+        rect->right--;
+        rect->bottom--;
     }
     return TRUE;
 }
@@ -647,26 +632,25 @@ PATH_Rectangle(
     INT y2)
 {
     PPATH pPath;
-    POINT corners[2], points[4];
+    RECTL rect;
+    POINTL points[4];
     BYTE *type;
 
     pPath = PATH_LockPath(dc->dclevel.hPath);
     if (!pPath) return FALSE;
 
-    if (!PATH_CheckCorners(dc, corners, x1, y1, x2, y2))
+    if (!PATH_CheckRect(dc, &rect, x1, y1, x2, y2))
     {
         PATH_UnlockPath(pPath);
         return TRUE;
     }
 
-    points[0].x = corners[1].x;
-    points[0].y = corners[0].y;
-    points[1]   = corners[0];
-    points[2].x = corners[0].x;
-    points[2].y = corners[1].y;
-    points[3]   = corners[1];
+    points[0].x = rect.right; points[0].y = rect.top;
+    points[1].x = rect.left; points[1].y = rect.top;
+    points[2].x = rect.left; points[2].y = rect.bottom;
+    points[3].x = rect.right; points[3].y = rect.bottom;
 
-    if (dc->dclevel.flPath & DCPATH_CLOCKWISE) reverse_points( points, 4 );
+    if (dc->dclevel.flPath & DCPATH_CLOCKWISE) reverse_points(points, 4 );
 
     if (!(type = add_points( pPath, points, 4, PT_LINETO )))
     {
@@ -688,7 +672,6 @@ PATH_Rectangle(
  *
  */
 BOOL
-FASTCALL
 PATH_RoundRect(
     DC *dc,
     INT x1,
@@ -698,72 +681,85 @@ PATH_RoundRect(
     INT ell_width,
     INT ell_height)
 {
-    const double factor = 0.55428475; /* 4 / 3 * (sqrt(2) - 1) */
     PPATH pPath;
-    POINT corners[2], ellipse[2], points[16];
+    RECTL rect, ellipse;
+    POINT points[16];
     BYTE *type;
-    double width, height;
+    INT xOffset, yOffset;
 
     if (!ell_width || !ell_height) return PATH_Rectangle( dc, x1, y1, x2, y2 );
 
     pPath = PATH_LockPath(dc->dclevel.hPath);
     if (!pPath) return FALSE;
 
-    if (!PATH_CheckCorners(dc, corners, x1, y1, x2, y2))
+    if (!PATH_CheckRect(dc, &rect, x1, y1, x2, y2))
     {
         PATH_UnlockPath(pPath);
         return TRUE;
     }
 
-    ellipse[0].x = ellipse[0].y = 0;
-    ellipse[1].x = ell_width;
-    ellipse[1].y = ell_height;
-    IntLPtoDP( dc, &ellipse, 2 );
-    ell_width  = min( abs( ellipse[1].x - ellipse[0].x ), corners[1].x - corners[0].x );
-    ell_height = min( abs( ellipse[1].y - ellipse[0].y ), corners[1].y - corners[0].y );
-    width  = ell_width / 2.0;
-    height = ell_height / 2.0;
+    RECTL_vSetRect(&ellipse, 0, 0, ell_width, ell_height);
+    IntLPtoDP( dc, (PPOINT)&ellipse, 2 );
+    RECTL_vMakeWellOrdered(&ellipse);
+    ell_width = min(RECTL_lGetWidth(&ellipse), RECTL_lGetWidth(&rect));
+    ell_height = min(RECTL_lGetHeight(&ellipse), RECTL_lGetHeight(&rect));
+
+    /*
+     * See here to understand what's happening
+     * https://stackoverflow.com/questions/1734745/how-to-create-circle-with-b%C3%A9zier-curves
+     */
+    xOffset = EngMulDiv(ell_width, 44771525, 200000000); /* w * (1 - 0.5522847) / 2 */
+    yOffset = EngMulDiv(ell_height, 44771525, 200000000); /* h * (1 - 0.5522847) / 2 */
+    TRACE("xOffset %d, yOffset %d, Rect WxH: %dx%d.\n",
+        xOffset, yOffset, RECTL_lGetWidth(&rect), RECTL_lGetHeight(&rect));
+
+    /*
+     * Get half width & height.
+     * Do not use integer division, we need the rounding made by EngMulDiv.
+     */
+    ell_width = EngMulDiv(ell_width, 1, 2);
+    ell_height = EngMulDiv(ell_height, 1, 2);
 
     /* starting point */
-    points[0].x  = corners[1].x;
-    points[0].y  = corners[0].y + GDI_ROUND( height );
+    points[0].x  = rect.right;
+    points[0].y  = rect.top + ell_height;
     /* first curve */
-    points[1].x  = corners[1].x;
-    points[1].y  = corners[0].y + GDI_ROUND( height * (1 - factor) );
-    points[2].x  = corners[1].x - GDI_ROUND( width * (1 - factor) );
-    points[2].y  = corners[0].y;
-    points[3].x  = corners[1].x - GDI_ROUND( width );
-    points[3].y  = corners[0].y;
+    points[1].x = rect.right;
+    points[1].y = rect.top + yOffset;
+    points[2].x = rect.right - xOffset;
+    points[2].y = rect.top;
+    points[3].x  = rect.right - ell_width;
+    points[3].y  = rect.top;
     /* horizontal line */
-    points[4].x  = corners[0].x + GDI_ROUND( width );
-    points[4].y  = corners[0].y;
+    points[4].x  = rect.left + ell_width;
+    points[4].y  = rect.top;
     /* second curve */
-    points[5].x  = corners[0].x + GDI_ROUND( width * (1 - factor) );
-    points[5].y  = corners[0].y;
-    points[6].x  = corners[0].x;
-    points[6].y  = corners[0].y + GDI_ROUND( height * (1 - factor) );
-    points[7].x  = corners[0].x;
-    points[7].y  = corners[0].y + GDI_ROUND( height );
+    points[5].x  = rect.left + xOffset;
+    points[5].y  = rect.top;
+    points[6].x  = rect.left;
+    points[6].y  = rect.top + yOffset;
+    points[7].x  = rect.left;
+    points[7].y  = rect.top + ell_height;
     /* vertical line */
-    points[8].x  = corners[0].x;
-    points[8].y  = corners[1].y - GDI_ROUND( height );
+    points[8].x  = rect.left;
+    points[8].y  = rect.bottom - ell_height;
     /* third curve */
-    points[9].x  = corners[0].x;
-    points[9].y  = corners[1].y - GDI_ROUND( height * (1 - factor) );
-    points[10].x = corners[0].x + GDI_ROUND( width * (1 - factor) );
-    points[10].y = corners[1].y;
-    points[11].x = corners[0].x + GDI_ROUND( width );
-    points[11].y = corners[1].y;
+    points[9].x  = rect.left;
+    points[9].y  = rect.bottom - yOffset;
+    points[10].x = rect.left + xOffset;
+    points[10].y = rect.bottom;
+    points[11].x = rect.left + ell_width;
+    points[11].y = rect.bottom;
     /* horizontal line */
-    points[12].x = corners[1].x - GDI_ROUND( width );
-    points[12].y = corners[1].y;
+    points[12].x = rect.right - ell_width;
+    points[12].y = rect.bottom;
     /* fourth curve */
-    points[13].x = corners[1].x - GDI_ROUND( width * (1 - factor) );
-    points[13].y = corners[1].y;
-    points[14].x = corners[1].x;
-    points[14].y = corners[1].y - GDI_ROUND( height * (1 - factor) );
-    points[15].x = corners[1].x;
-    points[15].y = corners[1].y - GDI_ROUND( height );
+    points[13].x = rect.right - xOffset;
+    points[13].y = rect.bottom;
+    points[14].x = rect.right;
+    points[14].y = rect.bottom - yOffset;
+    points[15].x = rect.right;
+    points[15].y = rect.bottom - ell_height;
 
     if (dc->dclevel.flPath & DCPATH_CLOCKWISE) reverse_points( points, 16 );
     if (!(type = add_points( pPath, points, 16, PT_BEZIERTO )))
@@ -783,7 +779,6 @@ PATH_RoundRect(
  *
  */
 BOOL
-FASTCALL
 PATH_Ellipse(
     PDC dc,
     INT x1,
@@ -791,55 +786,81 @@ PATH_Ellipse(
     INT x2,
     INT y2)
 {
-    const double factor = 0.55428475; /* 4 / 3 * (sqrt(2) - 1) */
     PPATH pPath;
-    POINT corners[2], points[13];
+    POINT points[13];
+    RECTL rect;
     BYTE *type;
-    double width, height;
+    LONG xRadius, yRadius, xOffset, yOffset;
+    POINT left, top, right, bottom;
 
-    pPath = PATH_LockPath(dc->dclevel.hPath);
-    if (!pPath) return FALSE;
+    TRACE("PATH_Ellipse: %p -> (%d, %d) - (%d, %d)\n",
+            dc, x1, y1, x2, y2);
 
-    if (!PATH_CheckCorners(dc, corners, x1, y1, x2, y2))
+    if (!PATH_CheckRect(dc, &rect, x1, y1, x2, y2))
     {
-        PATH_UnlockPath(pPath);
         return TRUE;
     }
 
-    width  = (corners[1].x - corners[0].x) / 2.0;
-    height = (corners[1].y - corners[0].y) / 2.0;
+    xRadius = RECTL_lGetWidth(&rect) / 2;
+    yRadius = RECTL_lGetHeight(&rect) / 2;
 
-    /* starting point */
-    points[0].x = corners[1].x;
-    points[0].y = corners[0].y + GDI_ROUND( height );
-    /* first curve */
-    points[1].x = corners[1].x;
-    points[1].y = corners[0].y + GDI_ROUND( height * (1 - factor) );
-    points[2].x = corners[1].x - GDI_ROUND( width * (1 - factor) );
-    points[2].y = corners[0].y;
-    points[3].x = corners[0].x + GDI_ROUND( width );
-    points[3].y = corners[0].y;
-    /* second curve */
-    points[4].x = corners[0].x + GDI_ROUND( width * (1 - factor) );
-    points[4].y = corners[0].y;
-    points[5].x = corners[0].x;
-    points[5].y = corners[0].y + GDI_ROUND( height * (1 - factor) );
-    points[6].x = corners[0].x;
-    points[6].y = corners[0].y + GDI_ROUND( height );
-    /* third curve */
-    points[7].x = corners[0].x;
-    points[7].y = corners[1].y - GDI_ROUND( height * (1 - factor) );
-    points[8].x = corners[0].x + GDI_ROUND( width * (1 - factor) );
-    points[8].y = corners[1].y;
-    points[9].x = corners[0].x + GDI_ROUND( width );
-    points[9].y = corners[1].y;
-    /* fourth curve */
-    points[10].x = corners[1].x - GDI_ROUND( width * (1 - factor) );
-    points[10].y = corners[1].y;
-    points[11].x = corners[1].x;
-    points[11].y = corners[1].y - GDI_ROUND( height * (1 - factor) );
-    points[12].x = corners[1].x;
-    points[12].y = corners[1].y - GDI_ROUND( height );
+    /* Get the four points which box our ellipse */
+    left.x = rect.left; left.y = rect.top + yRadius;
+    top.x = rect.left + xRadius; top.y = rect.top;
+    right.x = rect.right; right.y = rect.bottom - yRadius;
+    bottom.x = rect.right - xRadius; bottom.y = rect.bottom;
+
+    /*
+     * See here to understand what's happening
+     * https://stackoverflow.com/questions/1734745/how-to-create-circle-with-b%C3%A9zier-curves
+     */
+    xOffset = EngMulDiv(RECTL_lGetWidth(&rect), 55428475, 200000000); /* w * 0.55428475 / 2 */
+    yOffset = EngMulDiv(RECTL_lGetHeight(&rect), 55428475, 200000000); /* h * 0.55428475 / 2 */
+    TRACE("xOffset %d, yOffset %d, Rect WxH: %dx%d.\n",
+        xOffset, yOffset, RECTL_lGetWidth(&rect), RECTL_lGetHeight(&rect));
+
+    pPath = PATH_LockPath(dc->dclevel.hPath);
+    if (!pPath)
+        return FALSE;
+
+    /* Starting point: Right */
+    points[0] = right;
+
+    /* first curve - going up, left */
+    points[1] = right;
+    points[1].y -= yOffset;
+    points[2] = top;
+    points[2].x += xOffset;
+
+    /* top */
+    points[3] = top;
+
+    /* second curve - going left, down*/
+    points[4] = top;
+    points[4].x -= xOffset;
+    points[5] = left;
+    points[5].y -= yOffset;
+
+    /* Left */
+    points[6] = left;
+
+    /* Third curve - going down, right */
+    points[7] = left;
+    points[7].y += yOffset;
+    points[8] = bottom;
+    points[8].x -= xOffset;
+
+    /* bottom */
+    points[9] = bottom;
+
+    /* Fourth curve - Going right, up */
+    points[10] = bottom;
+    points[10].x += xOffset;
+    points[11] = right;
+    points[11].y += yOffset;
+
+    /* Back to starting point */
+    points[12] = right;
 
     if (dc->dclevel.flPath & DCPATH_CLOCKWISE) reverse_points( points, 13 );
     if (!(type = add_points( pPath, points, 13, PT_BEZIERTO )))
