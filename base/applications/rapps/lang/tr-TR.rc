@@ -12,8 +12,8 @@ BEGIN
     END
     POPUP "Y&azılım"
     BEGIN
-        MENUITEM "&Kur\tCtrl+Giriş", ID_INSTALL
-        MENUITEM "K&aldır\tCtrl+Sil", ID_UNINSTALL
+        MENUITEM "&Kur\tCtrl+Enter", ID_INSTALL
+        MENUITEM "K&aldır\tCtrl+Del", ID_UNINSTALL
         MENUITEM "&Değiştir", ID_MODIFY
         MENUITEM SEPARATOR
         MENUITEM "&Girişi Kayıt Defteri'nden Kaldır", ID_REGREMOVE
@@ -42,8 +42,8 @@ IDR_APPLICATIONMENU MENU
 BEGIN
     POPUP "popup"
     BEGIN
-        MENUITEM "&Kur\tCtrl+Giriş", ID_INSTALL
-        MENUITEM "K&aldır\tCtrl+Sil", ID_UNINSTALL
+        MENUITEM "&Kur\tCtrl+Enter", ID_INSTALL
+        MENUITEM "K&aldır\tCtrl+Del", ID_UNINSTALL
         MENUITEM "&Değiştir", ID_MODIFY
         MENUITEM SEPARATOR
         MENUITEM "&Girişi Kayıt Defteri'nden Kaldır", ID_REGREMOVE
@@ -68,9 +68,9 @@ BEGIN
     EDITTEXT IDC_DOWNLOAD_DIR_EDIT, 15, 86, 166, 12, WS_CHILD | WS_VISIBLE | WS_GROUP | ES_AUTOHSCROLL
     PUSHBUTTON "&Seç", IDC_CHOOSE, 187, 85, 50, 14
     AUTOCHECKBOX "&Kurulumdan Sonra Programın Kurulum Dosyasını Sil", IDC_DEL_AFTER_INSTALL, 16, 100, 218, 12
-    GROUPBOX "Software source", -1, 4, 118, 240, 46
-    CONTROL "Use default", IDC_SOURCE_DEFAULT, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 15, 132, 74, 10
-    CONTROL "Specified source", IDC_USE_SOURCE, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 15, 147, 74, 10
+    GROUPBOX "Yazılım kaynağı", -1, 4, 118, 240, 46
+    CONTROL "Öntanımlıyı kullan", IDC_SOURCE_DEFAULT, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 15, 132, 74, 10
+    CONTROL "Belirtilmiş kaynak", IDC_USE_SOURCE, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 15, 147, 74, 10
     EDITTEXT IDC_SOURCE_URL, 97, 147, 140, 12, ES_AUTOHSCROLL | WS_DISABLED
     GROUPBOX "Vekil Sunucu", -1, 4, 166, 240, 76
     CONTROL "Sistem Vekil Sunucu Ayarları", IDC_PROXY_DEFAULT, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 15, 180, 210, 10
@@ -175,13 +175,13 @@ BEGIN
     IDS_CAT_SCIENCE "Bilim"
     IDS_CAT_TOOLS "Araçlar"
     IDS_CAT_VIDEO "Video"
-    IDS_CAT_THEMES "Themes"
+    IDS_CAT_THEMES "Temalar"
 END
 
 STRINGTABLE
 BEGIN
     IDS_APPTITLE "ReactOS Uygulama Yöneticisi"
-    IDS_APP_AUTHORS "Copyright 2009 Dmitry Chapyshev"
+    IDS_APP_AUTHORS "Telif Hakkı: 2009 Dmitry Chapyshev"
     IDS_SEARCH_TEXT "Ara"
     IDS_INSTALL "Kur"
     IDS_UNINSTALL "Kaldır"
@@ -196,7 +196,7 @@ BEGIN
     IDS_APPLICATIONS "Uygulamalar"
     IDS_CHOOSE_FOLDER_TEXT "İndirilenlerin saklanacağı bir dizin seçiniz:"
     IDS_CHOOSE_FOLDER_ERROR "Belirttiğiniz dizin yok. Belirttiğiniz dizin oluşturulsun mu?"
-    IDS_URL_INVALID "The URL you have specified is invalid or not supported. Please correct it!"
+    IDS_URL_INVALID "Belirttiğiniz URL geçersiz veya desteklenmiyor. Lütfen düzeltin!"
     IDS_APP_REG_REMOVE "Kurulan programın girişini değer defterinden silmek istediğinizden emin misiniz?"
     IDS_INFORMATION "Bilgi"
     IDS_UNABLE_TO_DOWNLOAD "Paket indirilemez! Adres bulunamadı!"
@@ -212,10 +212,10 @@ BEGIN
     IDS_INSTALL_SELECTED "Seçileni Kur"
     IDS_SELECTEDFORINST "Kurulum için seçildi"
     IDS_MISMATCH_CERT_INFO "Kullanılan sertifika bilimmiyor:\nAçıklama: %s\nSertifikayı Veren: %s\nYine de sürdürmek istiyor musunuz?"
-    IDS_UNABLE_PATH "Incorrect path format."
-    IDS_APP_DISPLAY_DETAILS "details"
-    IDS_APP_DISPLAY_LIST "list"
-    IDS_APP_DISPLAY_TILE "tile"
+    IDS_UNABLE_PATH "Yanlış path formatı."
+    IDS_APP_DISPLAY_DETAILS "detaylar"
+    IDS_APP_DISPLAY_LIST "liste"
+    IDS_APP_DISPLAY_TILE "karo"
 END
 
 STRINGTABLE
@@ -251,17 +251,17 @@ STRINGTABLE
 BEGIN
     IDS_DL_DIALOG_DB_DISP "Uygulamalar Veri Tabanı"
     IDS_DL_DIALOG_DB_DOWNLOAD_DISP "Veri Tabanı güncelleniyor…"
-    IDS_DL_DIALOG_DB_UNOFFICIAL_DOWNLOAD_DISP "Updating Database… (Unofficial source)"
+    IDS_DL_DIALOG_DB_UNOFFICIAL_DOWNLOAD_DISP "Veri Tabanı güncelleniyor… (Gayriresmi kaynak)"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_CMD_USAGE "Usage: "
-    IDS_CMD_NEED_PACKAGE_NAME "Error: option %1 expects one or more package name.\n"
-    IDS_CMD_NEED_FILE_NAME "Error: option %1 expects a file name.\n"
-    IDS_CMD_NEED_PARAMS "Error: option %1 expects one or more parameters.\n"
-    IDS_CMD_INVALID_OPTION "Error: Unknown or invalid command line option specified.\n"
-    IDS_CMD_FIND_RESULT_FOR "Find result for %1:\n"
-    IDS_CMD_PACKAGE_NOT_FOUND "Failed to find package %1.\n"
-    IDS_CMD_PACKAGE_INFO "Information about package %1:\n"
+    IDS_CMD_USAGE "Kullanım: "
+    IDS_CMD_NEED_PACKAGE_NAME "Hata: %1 seçeneği bir veya daha fazla paket adı içermeli.\n"
+    IDS_CMD_NEED_FILE_NAME "Hata: %1 seçeneği bir dosya adı içermeli.\n"
+    IDS_CMD_NEED_PARAMS "Hata: %1 seçeneği bir veya daha fazla parametre içermeli.\n"
+    IDS_CMD_INVALID_OPTION "Hata: Bilinmeyen veya geçersiz komut satırı seçeneği belirtildi.\n"
+    IDS_CMD_FIND_RESULT_FOR "%1 için sonuç bulundu:\n"
+    IDS_CMD_PACKAGE_NOT_FOUND "%1 paketi bulunmadı.\n"
+    IDS_CMD_PACKAGE_INFO "%1 paketi hakkındaki bilgi:\n"
 END

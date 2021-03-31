@@ -4,7 +4,7 @@ LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-    STRING_HELP "Kullanım: %s sürücü: [-FS:kütük dizgesi] [-V:etiket] [-Q] [-A:boyut] [-C]\n\n\
+    STRING_HELP "Kullanım: %s sürücü: [-FS:dosya sistemi] [-V:etiket] [-Q] [-A:boyut] [-C]\n\n\
   [sürücü:]         Biçimlendirilecek sürücüyü belirtir.\n\
   -FS:kütük sistemi (%s) dosya sisteminin türünü belirtir.\n\
   -V:etiket         Birim etiketini belirtir.\n\

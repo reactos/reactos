@@ -33,10 +33,10 @@ BEGIN
     END
     POPUP "&Seçenekler"
     BEGIN
-        MENUITEM "Event details &view", IDM_EVENT_DETAILS_VIEW
-        MENUITEM "&Grid lines", IDM_LIST_GRID_LINES
+        MENUITEM "Etkinlik ayrıntıları &görünümü", IDM_EVENT_DETAILS_VIEW
+        MENUITEM "&Izgara çizgileri", IDM_LIST_GRID_LINES
         MENUITEM SEPARATOR
-        MENUITEM "&Save settings on exit", IDM_SAVE_SETTINGS
+        MENUITEM "&Çıkışta ayarları kaydedin", IDM_SAVE_SETTINGS
     END
     POPUP "&Yardım"
     BEGIN
@@ -101,14 +101,14 @@ END
 
 IDD_LOGPROPERTIES_GENERAL DIALOGEX 0, 0, 252, 234
 STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
-CAPTION "Umûmî"
+CAPTION "Genel"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "G&örünen Ad:", IDC_STATIC, 7, 9, 60, 8
     EDITTEXT IDC_DISPLAYNAME, 67, 7, 178, 12, ES_LEFT | ES_AUTOHSCROLL | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP
     LTEXT "&Kayıt Adı:", IDC_STATIC, 7, 25, 60, 8
     EDITTEXT IDC_LOGNAME, 67, 23, 178, 12, ES_LEFT | ES_AUTOHSCROLL | ES_READONLY | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP
-    LTEXT "K&ayıt Kütüğü:", IDC_STATIC, 7, 41, 60, 8
+    LTEXT "K&ayıt Dosyası:", IDC_STATIC, 7, 41, 60, 8
     EDITTEXT IDC_LOGFILE, 67, 39, 178, 12, ES_LEFT | ES_AUTOHSCROLL | ES_READONLY | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP
     LTEXT "Boyut:", IDC_STATIC, 7, 57, 60, 8
     EDITTEXT IDC_SIZE_LABEL, 67, 57, 178, 12, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
@@ -142,35 +142,35 @@ BEGIN
     IDS_COPYRIGHT "Telif Hakkı: 2007 - Marc Piulachs (marc.piulachs@codexchange.net)"
     IDS_APP_TITLE "Olay Görüntüleyicisi"
     IDS_APP_TITLE_EX "%s - %s Oturum Aç \\\\"
-    IDS_STATUS_MSG "%s -> %lu olay var (dizelgelenmiş: %lu)"
+    IDS_STATUS_MSG "%s -> %lu olay var (tablolanmış: %lu)"
     IDS_LOADING_WAIT "Olay kayıtları yükleniyor. Lütfen bekleyiniz..."
     IDS_NO_ITEMS "Bu görünümde görüntülenecek bir öğe bile yok." // "No events in this log."
-    IDS_EVENTLOG_SYSTEM "Dizge Kayıtları"
+    IDS_EVENTLOG_SYSTEM "Sistem Kayıtları"
     IDS_EVENTLOG_APP "Uygulama Kayıtları"
     IDS_EVENTLOG_USER "Kullanıcı Kayıtları"
     IDS_SAVE_FILTER "Olay Kaydı (*.evt)\0*.evt\0"
     IDS_CLEAREVENTS_MSG "Silmeden önce bu olay kaydını saklamak ister misiniz?"
-    IDS_RESTOREDEFAULTS "Do you want to restore all settings for this log to their default values?"
-    IDS_EVENTSTRINGIDNOTFOUND "( %s ) kaynağındaki ( %lu ) olay kimliği için açıklama bulunamıyor. Yerli bilgisayarda, uzak bilgisayardan iletileri görüntülemesi için gerekli Değer Defteri bilgisi veyâ ileti DLL kütükleri olmayabilir.\n\nAşağıdaki bilgi olayın parçasıdır:\n\n"
+    IDS_RESTOREDEFAULTS "Bu günlük için tüm ayarları varsayılan değerlerine geri yüklemek istiyor musunuz?"
+    IDS_EVENTSTRINGIDNOTFOUND "( %s ) kaynağındaki ( %lu ) olay kimliği için açıklama bulunamıyor. Yerel bilgisayarda, uzak bilgisayardan iletileri görüntülemesi için gerekli Değer Defteri bilgisi veya ileti DLL dosyaları olmayabilir.\n\nAşağıdaki bilgi olayın parçasıdır:\n\n"
 END
 
 STRINGTABLE
 BEGIN
 /* Please note that explicit TAB characters '\t' are used to fix the alignment of the message in the MessageBox */
-    IDS_USAGE "ReactOS Event Viewer\n\
+    IDS_USAGE "ReactOS Etkinlik Göstericisi\n\
 \n\
-EventVwr [computer name] [/l:<event log file>] [/?]\n\
+EventVwr [bilgisayar adı] [/l:<etkinlik günlüğü dosyası>] [/?]\n\
 \n\
-""computer name"" : Specifies the remote computer where to connect\n\
-\tto retrieve the events to display. If no name is specified, the\n\
-\tlocal computer is used.\n\
+""bilgisayar adı"" : Görüntülenecek olayların alınacağı uzak \n\
+\tbilgisayarı belirtir. İsim belirtilmezse yerel bilgisayar\n\
+\tkullanıır.\n\
 \n\
-/l:<event log file> : Specifies which event log file to open.\n\
-\tOnly files in the .evt format (NT ≤ 5.2) are supported.\n\
+/l:<etkinlik günlüğü dosyası> : Hangi olay günlüğü dosyasının açılacağını belirtir.\n\
+\tYalnızca .evt biçimindeki dosyalar (NT ≤ 5.2) desteklenmektedir.\n\
 \n\
-/? : Displays this help message.\n\
+/? : Bu yardım mesajını gösterir.\n\
 "
-    IDS_EVENTLOGFILE "Event Log File"
+    IDS_EVENTLOGFILE "Etkinlik Günlüğü Dosyası"
 END
 
 STRINGTABLE
@@ -193,10 +193,10 @@ END
 STRINGTABLE
 BEGIN
     IDS_COLUMNTYPE "Tür"
-    IDS_COLUMNDATE "Târih"
+    IDS_COLUMNDATE "Tarih"
     IDS_COLUMNTIME "Saat"
     IDS_COLUMNSOURCE "Kaynak"
-    IDS_COLUMNCATEGORY "Ulam"
+    IDS_COLUMNCATEGORY "Kategori"
     IDS_COLUMNEVENT "Olay"
     IDS_COLUMNUSER "Kullanıcı"
     IDS_COLUMNCOMPUTER "Bilgisayar"
@@ -204,14 +204,14 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_COPY "Olay Türü:      %s\r\n\
-Olay Kaynağı:   %s\r\n\
-Olay Ulamı:     %s\r\n\
-Olay Kimliği:   %s\r\n\
-Târih:          %s\r\n\
-Saat:           %s\r\n\
-Kullanıcı:      %s\r\n\
-Bilgisayar:     %s\r\n\
+    IDS_COPY "Olay Türü:           %s\r\n\
+Olay Kaynağı:        %s\r\n\
+Olay Kategorisi:     %s\r\n\
+Olay Kimliği:        %s\r\n\
+Tarih:               %s\r\n\
+Saat:                %s\r\n\
+Kullanıcı:           %s\r\n\
+Bilgisayar:          %s\r\n\
 Tanım:\r\n%s"
 END
 

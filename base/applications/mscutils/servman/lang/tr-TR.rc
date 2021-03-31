@@ -4,9 +4,9 @@ LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
 IDR_MAINMENU MENU
 BEGIN
-    POPUP "&Kütük"
+    POPUP "&Dosya"
     BEGIN
-        MENUITEM "&Ver...", ID_EXPORT
+        MENUITEM "&Dışa Aktar...", ID_EXPORT
         MENUITEM SEPARATOR
         MENUITEM "&Çıkış", ID_EXIT
     END
@@ -26,16 +26,16 @@ BEGIN
         MENUITEM "&Oluştur...", ID_CREATE, GRAYED
         MENUITEM "S&il...", ID_DELETE, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "&Husûsiyetler...", ID_PROP, GRAYED
+        MENUITEM "&Özellikler...", ID_PROP, GRAYED
     END
     POPUP "&Görünüm"
     BEGIN
         MENUITEM "&Büyük Simgeler", ID_VIEW_LARGE
         MENUITEM "&Küçük Simgeler", ID_VIEW_SMALL
-        MENUITEM "&Dizelge", ID_VIEW_LIST
+        MENUITEM "&Tablo", ID_VIEW_LIST
         MENUITEM "&Ayrıntılar", ID_VIEW_DETAILS
         MENUITEM SEPARATOR
-        MENUITEM "&Husûsileştir...", ID_VIEW_CUST, GRAYED
+        MENUITEM "&Özelleştir...", ID_VIEW_CUST, GRAYED
     END
     POPUP "&Yardım"
     BEGIN
@@ -59,7 +59,7 @@ BEGIN
         MENUITEM "De&ğiştir...", ID_EDIT, GRAYED
         MENUITEM "S&il...", ID_DELETE, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "&Husûsiyetler...", ID_PROP, GRAYED
+        MENUITEM "&Özellikler...", ID_PROP, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "Y&ardım...", ID_HELP
     END
@@ -71,7 +71,7 @@ BEGIN
 END
 
 IDD_DLG_GENERAL DIALOGEX 6, 6, 253, 232
-CAPTION "Umûmî"
+CAPTION "Genel"
 FONT 8, "MS Shell Dlg", 0, 0
 STYLE DS_SHELLFONT | WS_BORDER | WS_VISIBLE | WS_DLGFRAME | WS_SYSMENU | WS_GROUP | WS_TABSTOP
 BEGIN
@@ -103,7 +103,7 @@ FONT 8, "MS Shell Dlg", 0, 0
 STYLE DS_SHELLFONT | WS_BORDER | WS_VISIBLE | WS_DLGFRAME | WS_SYSMENU | WS_GROUP | WS_TABSTOP
 BEGIN
     LTEXT "Olarak Oturum Aç:", IDC_STATIC, 7, 7, 238, 8
-    AUTORADIOBUTTON "&Yerli Dizge Hesâbı", IDC_LOGON_SYSTEMACCOUNT, 7, 22, 238, 10, BS_TOP | BS_MULTILINE | WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "&Yerel Sistem Hesabı", IDC_LOGON_SYSTEMACCOUNT, 7, 22, 238, 10, BS_TOP | BS_MULTILINE | WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP
     AUTORADIOBUTTON "&Bu Hesap:", IDC_LOGON_THISACCOUNT, 7, 52, 60, 10, BS_TOP | BS_MULTILINE | WS_CHILD | WS_VISIBLE
     AUTOCHECKBOX "&Hizmetin Masaüstüyle Etkileşimine İzin Ver", IDC_LOGON_INTERACTIVE, 18, 34, 227, 10, WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_TOP | BS_MULTILINE
     EDITTEXT IDC_LOGON_ACCOUNTNAME, 72, 50, 103, 14, ES_LEFT | ES_AUTOHSCROLL | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_GROUP | WS_TABSTOP
@@ -115,7 +115,7 @@ BEGIN
     LTEXT "Aşağıda dizelgelenen donanım profilleri için bu hizmeti etkinleştirebilir ya da edilginleştirebilirsiniz:", IDC_STATIC, 7, 114, 210, 8, WS_CHILD | WS_VISIBLE | WS_GROUP
     CONTROL "", IDC_LOGON_HWPROFILE, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOSORTHEADER | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_GROUP | WS_TABSTOP, 7, 124, 238, 65
     PUSHBUTTON "&Etkinleştir", IDC_LOGON_HWENABLE, 116, 197, 60, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_DISABLED
-    PUSHBUTTON "E&dilginleştir", IDC_LOGON_HWDISABLE, 185, 197, 60, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_DISABLED
+    PUSHBUTTON "D&evre Dışı Bırak", IDC_LOGON_HWDISABLE, 185, 197, 60, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_DISABLED
 END
 
 IDD_RECOVERY DIALOGEX 6, 6, 253, 232
@@ -136,13 +136,13 @@ BEGIN
     LTEXT "Ş&undan sonra hizmeti yeniden başlat:", IDC_RESTART_TEXT1, 7, 92, 92, 8
     EDITTEXT IDC_RESTART_TIME, 104, 90, 40, 13, WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP | ES_LEFT | ES_AUTOHSCROLL | ES_NUMBER
     LTEXT "dakîka", IDC_RESTART_TEXT2, 150, 92, 95, 8
-    GROUPBOX "İzlence Çalıştır", IDC_RUN_GROUPBOX, 7, 108, 238, 80
-    LTEXT "İ&zlence:", IDC_RUN_TEXT1, 14, 121, 168, 8
+    GROUPBOX "Program Çalıştır", IDC_RUN_GROUPBOX, 7, 108, 238, 80
+    LTEXT "P&rogram:", IDC_RUN_TEXT1, 14, 121, 168, 8
     EDITTEXT IDC_PROGRAM, 14, 131, 165, 14
     PUSHBUTTON "&Göz At...", IDC_BROWSE_PROGRAM, 180, 131, 58, 14
-    LTEXT "K&omut yatacı parametreleri:", IDC_RUN_TEXT2, 14, 155, 108, 8
+    LTEXT "K&omut satırı parametreleri:", IDC_RUN_TEXT2, 14, 155, 108, 8
     EDITTEXT IDC_PARAMETERS, 128, 152, 110, 14
-    AUTOCHECKBOX "Ko&mut Yatacının Sonuna Başarısızlık Sayısını Ekle (/fail=%1%)", IDC_ADD_FAILCOUNT, 14, 171, 219, 10, WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX "Ko&mut Satırının Sonuna Başarısızlık Sayısını Ekle (/fail=%1%)", IDC_ADD_FAILCOUNT, 14, 171, 219, 10, WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_TOP | BS_MULTILINE
     PUSHBUTTON "&Bilgisayar Seçeneklerini Yeniden Başlat...", IDC_RESTART_OPTIONS, 116, 197, 129, 14
 END
 
@@ -245,7 +245,7 @@ BEGIN
     IDS_SERVICES_STOPPED "Durdu"
     IDS_SERVICES_AUTO "Kendiliğinden"
     IDS_SERVICES_MAN "Elle"
-    IDS_SERVICES_DIS "Edilgin"
+    IDS_SERVICES_DIS "Devre Dışı"
 END
 
 STRINGTABLE
@@ -257,7 +257,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_TOOLTIP_PROP "Husûsiyetler"
+    IDS_TOOLTIP_PROP "Özellikler"
     IDS_TOOLTIP_REFRESH "Yenile"
     IDS_TOOLTIP_EXPORT "Verme Dizelgesi"
     IDS_TOOLTIP_CREATE "Yeni bir hizmet oluşturur."
@@ -289,24 +289,24 @@ END
 STRINGTABLE
 BEGIN
     IDS_HINT_BLANK " "
-    IDS_HINT_EXPORT " Şimdiki dizelgeyi bir kütüğe verir."
-    IDS_HINT_EXIT " İzlenceden çıkar."
+    IDS_HINT_EXPORT " Şimdiki tabloyu bir dosyaya verir."
+    IDS_HINT_EXIT " Programdan çıkar."
     IDS_HINT_CONNECT " Ayrı bir bilgisayarı yönetir."
     IDS_HINT_START " Seçili hizmeti başlatır."
     IDS_HINT_STOP " Seçili hizmeti durdurur."
     IDS_HINT_PAUSE " Seçili hizmeti duraklatır."
     IDS_HINT_RESUME " Seçili hizmeti sürdürür."
     IDS_HINT_RESTART " Seçili hizmeti durdurup başlatır."
-    IDS_HINT_REFRESH " Hizmet dizelgesini yeniler."
-    IDS_HINT_EDIT " Seçili hizmetin husûsiyetlerini düzenler."
+    IDS_HINT_REFRESH " Hizmet tablosunu yeniler."
+    IDS_HINT_EDIT " Seçili hizmetin özelliklerini düzenler."
     IDS_HINT_CREATE " Yeni bir hizmet oluşturur."
     IDS_HINT_DELETE " Seçili hizmeti siler."
-    IDS_HINT_PROP " Şimdiki seçilen için husûsiyet penceresini açar."
+    IDS_HINT_PROP " Şimdiki seçilen için özellik penceresini açar."
     IDS_HINT_LARGE " Ögeleri büyük simgelerle görüntüler."
     IDS_HINT_SMALL " Ögeleri küçük simgelerle görüntüler."
     IDS_HINT_LIST " Ögeleri bir dizelge olarak görüntüler."
     IDS_HINT_DETAILS " Bir pencere içinde her bir öge üzerine bilgi görüntüler."
-    IDS_HINT_CUST " Görünümü husûsileştirir."
+    IDS_HINT_CUST " Görünümü özelleştirir."
     IDS_HINT_HELP " Yardım penceresini görüntüler."
     IDS_HINT_ABOUT " Hizmet Yöneticisi üzerine."
     IDS_HINT_SYS_RESTORE " Bu pencereyi düzgülük boyutlarına döndürür."
@@ -321,14 +321,14 @@ END
 STRINGTABLE
 BEGIN
     IDS_APPNAME "Hizmet Yöneticisi"
-    IDS_APPAUTHORS "Copyright (C) 2005-2007 by Ged Murphy (gedmurphy@reactos.org)"
+    IDS_APPAUTHORS "Telif hakkı: 2005-2007, Ged Murphy (gedmurphy@reactos.org)"
 END
 
 STRINGTABLE
 BEGIN
     IDS_NO_ACTION "Bir İşlem Yapma"
     IDS_RESTART_SERVICE "Hizmeti Yeniden Başlat"
-    IDS_RUN_PROGRAM "Bir İzlence Çalıştır"
+    IDS_RUN_PROGRAM "Bir Program Çalıştır"
     IDS_RESTART_COMPUTER "Bilgisayarı Yeniden Başlat"
 END
 

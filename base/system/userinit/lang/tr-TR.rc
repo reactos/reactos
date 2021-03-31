@@ -38,7 +38,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_SHELL_FAIL "Userinit, kabuğu başlatmada başarısız oldu!"
-    IDS_INSTALLER_FAIL "Userinit, Kur'u başlatmada başarısız oldu!"
+    IDS_INSTALLER_FAIL "Userinit, Kurulumu başlatmada başarısız oldu!"
     IDS_CANCEL_CONFIRM "ReactOS LiveCD'den çıkmak istediğinizden emin misiniz?\nBunu yapmayı seçerseniz, bilgisayarınız yeniden başlatılabilir."
 END
 
