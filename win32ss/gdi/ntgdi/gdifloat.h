@@ -5,83 +5,48 @@
 #pragma warning(disable:28110) // disable "Drivers must protect floating point hardware state" warning
 #endif
 
-typedef struct tagFLOAT_POINT
-{
-   FLOAT x, y;
-} FLOAT_POINT;
-
-/* Rounds a floating point number to integer. The world-to-viewport
- * transformation process is done in floating point internally. This function
- * is then used to round these coordinates to integer values.
- */
 static __inline INT GDI_ROUND(FLOAT val)
 {
-   return (int)floor(val + 0.5);
+    return (int)floor(val + 0.5);
 }
 
 
-/* FIXME: Do not use the fpu in kernel on x86, use FLOATOBJ_Xxx api instead
- * Performs a world-to-viewport transformation on the specified point (which
- * is in floating point format).
+/*
+ * Performs a world-to-viewport transformation on the specified point,
+ * which is in integer format.
  */
-static __inline void INTERNAL_LPTODP_FLOAT(DC *dc, FLOAT_POINT *point)
+static
+inline
+VOID
+INTERNAL_LPTODP(DC *dc, LPPOINT point, UINT Count)
 {
-    FLOAT x, y;
-    XFORM xformWorld2Vport;
+    MATRIX* WorldToDevice = &dc->pdcattr->mxWorldToDevice;
 
-    MatrixS2XForm(&xformWorld2Vport, &dc->pdcattr->mxWorldToDevice);
+    while (Count--)
+    {
+        FLOATOBJ x, y;
+        FLOATOBJ tmp;
 
-    /* Perform the transformation */
-    x = point->x;
-    y = point->y;
-    point->x = x * xformWorld2Vport.eM11 +
-               y * xformWorld2Vport.eM21 +
-	          xformWorld2Vport.eDx;
+        /* x = x * mxWorldToDevice.efM11 + y * mxWorldToDevice.efM21 + mxWorldToDevice.efDx; */
+        FLOATOBJ_SetLong(&x, point[Count].x);
+        FLOATOBJ_Mul(&x, &WorldToDevice->efM11);
+        tmp = WorldToDevice->efM21;
+        FLOATOBJ_MulLong(&tmp, point[Count].y);
+        FLOATOBJ_Add(&x, &tmp);
+        FLOATOBJ_Add(&x, &WorldToDevice->efDx);
 
-    point->y = x * xformWorld2Vport.eM12 +
-               y * xformWorld2Vport.eM22 +
-	          xformWorld2Vport.eDy;
+        /* y = x * mxWorldToDevice.efM12 + y * mxWorldToDevice.efM22 + mxWorldToDevice.efDy; */
+        FLOATOBJ_SetLong(&y, point[Count].y);
+        FLOATOBJ_Mul(&y, &WorldToDevice->efM22);
+        tmp = WorldToDevice->efM12;
+        FLOATOBJ_MulLong(&tmp, point[Count].x);
+        FLOATOBJ_Add(&y, &tmp);
+        FLOATOBJ_Add(&y, &WorldToDevice->efDy);
+
+        point[Count].x = FLOATOBJ_GetLong(&x);
+        point[Count].y = FLOATOBJ_GetLong(&y);
+    }
 }
-
-/* Performs a viewport-to-world transformation on the specified point (which
- * is in integer format). Returns TRUE if successful, else FALSE.
- */
-#if 0
-static __inline BOOL INTERNAL_DPTOLP(DC *dc, LPPOINT point)
-{
-    FLOAT_POINT floatPoint;
-
-    /* Perform operation with floating point */
-    floatPoint.x=(FLOAT)point->x;
-    floatPoint.y=(FLOAT)point->y;
-    if (!INTERNAL_DPTOLP_FLOAT(dc, &floatPoint))
-        return FALSE;
-
-    /* Round to integers */
-    point->x = GDI_ROUND(floatPoint.x);
-    point->y = GDI_ROUND(floatPoint.y);
-
-    return TRUE;
-}
-
-/* Performs a world-to-viewport transformation on the specified point (which
- * is in integer format).
- */
-static __inline void INTERNAL_LPTODP(DC *dc, LPPOINT point)
-{
-    FLOAT_POINT floatPoint;
-
-    /* Perform operation with floating point */
-    floatPoint.x=(FLOAT)point->x;
-    floatPoint.y=(FLOAT)point->y;
-    INTERNAL_LPTODP_FLOAT(dc, &floatPoint);
-
-    /* Round to integers */
-    point->x = GDI_ROUND(floatPoint.x);
-    point->y = GDI_ROUND(floatPoint.y);
-}
-
-#endif
 
 #define MulDiv( x, y, z ) EngMulDiv( x, y, z )
 

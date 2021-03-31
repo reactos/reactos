@@ -90,14 +90,11 @@ BOOL FASTCALL PATH_ExtTextOut(PDC dc,INT x,INT y,UINT flags,const RECTL *lprc,LP
 
 BOOL FASTCALL PATH_AddEntry (PPATH pPath, const POINT *pPoint, BYTE flags);
 BOOL FASTCALL PATH_AddFlatBezier (PPATH pPath, POINT *pt, BOOL closed);
-BOOL FASTCALL PATH_DoArcPart (PPATH pPath, FLOAT_POINT corners[], double angleStart, double angleEnd, BYTE startEntryType);
 BOOL FASTCALL PATH_FillPath( PDC dc, PPATH pPath );
 BOOL FASTCALL PATH_FillPathEx(PDC dc, PPATH pPath, PBRUSH pbrFill);
 PPATH FASTCALL PATH_FlattenPath (PPATH pPath);
-VOID FASTCALL PATH_NormalizePoint (FLOAT_POINT corners[], const FLOAT_POINT *pPoint, double *pX, double *pY);
 
 BOOL FASTCALL PATH_ReserveEntries (PPATH pPath, INT numEntries);
-VOID FASTCALL PATH_ScaleNormalizedPoint (FLOAT_POINT corners[], double x, double y, POINT *pPoint);
 BOOL FASTCALL PATH_StrokePath(DC *dc, PPATH pPath);
 BOOL PATH_CheckCorners(DC *dc, POINT corners[], INT x1, INT y1, INT x2, INT y2);
 
