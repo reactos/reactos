@@ -16,19 +16,19 @@ END
 
 IDC_REGEDIT MENU
 BEGIN
-    POPUP "&Kütük"
+    POPUP "&Dosya"
     BEGIN
         MENUITEM "&Çıkış", ID_REGISTRY_EXIT
     END
     POPUP "&Yardım"
     BEGIN
-        MENUITEM "&Üzerine", ID_HELP_ABOUT
+        MENUITEM "&Hakkında", ID_HELP_ABOUT
     END
 END
 
 IDR_REGEDIT_MENU MENU
 BEGIN
-    POPUP "&Kütük"
+    POPUP "&Dosya"
     BEGIN
         MENUITEM "&Al...", ID_REGISTRY_IMPORTREGISTRYFILE
         MENUITEM "&Ver...", ID_REGISTRY_EXPORTREGISTRYFILE
@@ -105,11 +105,11 @@ BEGIN
         BEGIN
             MENUITEM "&Dizin", ID_EDIT_NEW_KEY
             MENUITEM SEPARATOR
-            MENUITEM "D&izgi Değeri", ID_EDIT_NEW_STRINGVALUE
+            MENUITEM "D&izi Değeri", ID_EDIT_NEW_STRINGVALUE
             MENUITEM "İ&kili Değer", ID_EDIT_NEW_BINARYVALUE
             MENUITEM "&32 Bitlik Değer", ID_EDIT_NEW_DWORDVALUE
-            MENUITEM "&Çok Dizeli Dizgi Değeri", ID_EDIT_NEW_MULTISTRINGVALUE
-            MENUITEM "&Genişletilebilir Dizgi Değeri", ID_EDIT_NEW_EXPANDABLESTRINGVALUE
+            MENUITEM "&Çok Dizeli Dizi Değeri", ID_EDIT_NEW_MULTISTRINGVALUE
+            MENUITEM "&Genişletilebilir Dizi Değeri", ID_EDIT_NEW_EXPANDABLESTRINGVALUE
         END
     END
     POPUP ""
@@ -119,7 +119,7 @@ BEGIN
         BEGIN
             MENUITEM "&Dizin", ID_EDIT_NEW_KEY
             MENUITEM SEPARATOR
-            MENUITEM "D&izgi Değeri", ID_EDIT_NEW_STRINGVALUE
+            MENUITEM "D&izi Değeri", ID_EDIT_NEW_STRINGVALUE
             MENUITEM "İ&kili Değer", ID_EDIT_NEW_BINARYVALUE
             MENUITEM "&32 Bitlik Değer", ID_EDIT_NEW_DWORDVALUE
             MENUITEM "&Çok Dizeli Dizgi Değeri", ID_EDIT_NEW_MULTISTRINGVALUE
@@ -158,7 +158,7 @@ END
 
 IDD_EDIT_STRING DIALOGEX 32, 24, 252, 84
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Dizgi Değerini Düzenle"
+CAPTION "Dizi Değerini Düzenle"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "&Değer Adı:", IDC_STATIC, 6, 6, 134, 8
@@ -171,7 +171,7 @@ END
 
 IDD_EDIT_MULTI_STRING DIALOGEX 32, 24, 252, 174
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Çok Dizeli Dizgi Değerini Düzenle"
+CAPTION "Çok Dizeli Dizi Değerini Düzenle"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "&Değer Adı:", IDC_STATIC, 6, 6, 134, 8
@@ -214,7 +214,7 @@ END
 
 IDD_EDIT_RESOURCE_LIST DIALOGEX 32, 24, 170, 120
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Kaynak Dizelgesi"
+CAPTION "Kaynak Listesi"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "", IDC_RESOURCE_LIST, "SysListView32", LVS_REPORT | LVS_NOSORTHEADER |
@@ -240,14 +240,14 @@ BEGIN
     LTEXT "Giriş:", IDC_STATIC, 10, 134, 38, 8
     CONTROL "", IDC_PORT_LIST, "SysListView32", LVS_REPORT | LVS_NOSORTHEADER |
             LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 10, 144, 261, 31
-    LTEXT "Husûsî Aygıt Verisi:", IDC_STATIC, 10, 177, 80, 8
+    LTEXT "Özel Aygıt Verisi:", IDC_STATIC, 10, 177, 80, 8
     CONTROL "", IDC_DEVICE_LIST, "SysListView32", LVS_REPORT | LVS_NOSORTHEADER |
             LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 10, 188, 261, 31
     GROUPBOX "Kullanım", IDC_STATIC, 10, 219, 125, 39
     LTEXT "Belirsiz:", IDC_UNDETERMINED, 18, 230, 46, 8, WS_DISABLED
     LTEXT "Paylaşılan:", IDC_SHARED, 18, 240, 48, 8, WS_DISABLED
-    LTEXT "Husûsî Aygıt", IDC_DEVICE_EXCLUSIVE, 72, 230, 58, 8, WS_DISABLED
-    LTEXT "Husûsî Sürücü", IDC_DRIVER_EXCLUSIVE, 72, 240, 54, 8, WS_DISABLED
+    LTEXT "Özel Aygıt", IDC_DEVICE_EXCLUSIVE, 72, 230, 58, 8, WS_DISABLED
+    LTEXT "Özel Sürücü", IDC_DRIVER_EXCLUSIVE, 72, 240, 54, 8, WS_DISABLED
     RTEXT "Arayüz Türü:", IDC_STATIC, 144, 220, 58, 8
     LTEXT "", IDC_INTERFACETYPE, 205, 220, 66, 8
     RTEXT "Veriyolu Numarası:", IDC_STATIC, 151, 230, 51, 8
@@ -279,7 +279,7 @@ END
 STRINGTABLE
 BEGIN
     ID_REGISTRY_MENU "Bütün Değer Defteri ile çalışma komutlarını içerir."
-    ID_EDIT_MENU "Dizinleri veyâ değerleri düzenleme komutlarını içerir."
+    ID_EDIT_MENU "Dizinleri veya değerleri düzenleme komutlarını içerir."
     ID_VIEW_MENU "Değer Defteri penceresinin husûsileştirme komutlarını içerir."
     ID_FAVOURITES_MENU "Sık kullanılan dizinleri kullanma komutlarını içerir."
     ID_HELP_MENU "Değer Defteri Düzenleyicisi ile ilgili bilgiyi ya da yardımı görüntüleme komutlarını içerir."
@@ -290,18 +290,18 @@ STRINGTABLE
 BEGIN
     ID_EDIT_MODIFY "Değerin verisini değiştirir."
     ID_EDIT_NEW_KEY "Yeni bir dizin ekler."
-    ID_EDIT_NEW_STRINGVALUE "Yeni bir dizgi değeri ekler."
+    ID_EDIT_NEW_STRINGVALUE "Yeni bir dizi değeri ekler."
     ID_EDIT_NEW_BINARYVALUE "Yeni bir ikili değer ekler."
     ID_EDIT_NEW_DWORDVALUE "Yeni bir 32 bitlik değer ekler."
-    ID_REGISTRY_IMPORTREGISTRYFILE "Bir metin kütüğünü Değer Defteri'ne alır."
-    ID_REGISTRY_EXPORTREGISTRYFILE "Değer Defteri'nin tümünü ya da bir bölümünü bir metin kütüğüne verir."
-    ID_REGISTRY_LOADHIVE "Değer Defteri'ne bir yığın kütüğü yükler."
+    ID_REGISTRY_IMPORTREGISTRYFILE "Bir metin dosyasını Değer Defteri'ne alır."
+    ID_REGISTRY_EXPORTREGISTRYFILE "Değer Defteri'nin tümünü ya da bir bölümünü bir metin dosyasına verir."
+    ID_REGISTRY_LOADHIVE "Değer Defteri'ne bir yığın dosyasını yükler."
     ID_REGISTRY_UNLOADHIVE "Değer Defteri'nden bir yığın kaldırır."
     ID_REGISTRY_CONNECTNETWORKREGISTRY "Uzaktaki bir bilgisyarın Değer Defteri'sine bağlanır."
     ID_REGISTRY_DISCONNECTNETWORKREGISTRY "Uzaktaki bir bilgisayarın Değer Defteri'sine olan bağlantıyı keser."
     ID_REGISTRY_PRINT "Değer Defteri'nin tümünü ya da bir bölümünü yazdırır."
 /*  ID_HELP_HELPTOPICS "Değer Defteri Düzenleyicisi Yardımı'nı açar."  */
-    ID_HELP_ABOUT "İzlenceyle ilgili bilgi, sürüm numarası ve telif hakkı görüntüler."
+    ID_HELP_ABOUT "Programla ilgili bilgi, sürüm numarası ve telif hakkı görüntüler."
 END
 
 STRINGTABLE
@@ -310,7 +310,7 @@ BEGIN
     ID_FAVOURITES_ADDTOFAVOURITES "Dizinleri yer imleri dizelgesine ekler."
     ID_FAVOURITES_REMOVEFAVOURITE "Dizinleri yer imleri dizelgesinden kaldırır."
     ID_VIEW_STATUSBAR "Durum çubuğunu gösterir ya da gizler."
-    ID_VIEW_SPLIT "İki levhâ arasındaki ayırıcının konumunu değiştirir."
+    ID_VIEW_SPLIT "İki levha arasındaki ayırıcının konumunu değiştirir."
     ID_VIEW_REFRESH "Pencereyi yeniler."
     ID_EDIT_DELETE "Seçileni siler."
     ID_EDIT_RENAME "Seçilenin adını değiştirir."
@@ -327,7 +327,7 @@ BEGIN
     IDS_BAD_VALUE "Değer sorgulanamıyor: %s"
     IDS_UNSUPPORTED_TYPE "Şu türdeki dizinler değiştirilemiyor: %ld"
     IDS_TOO_BIG_VALUE "Değer çok büyük: %ld"
-    IDS_MULTI_SZ_EMPTY_STRING "REG_MULTI_SZ veri türü boş dizgi içeremez.\nBoş dizgiler dizelgeden silinmiştir."
+    IDS_MULTI_SZ_EMPTY_STRING "REG_MULTI_SZ veri türü boş dizgi içeremez.\nBoş diziler tablolardan silinmiştir."
     IDS_QUERY_DELETE_KEY_ONE "Bu dizini silmek istediğinizden emin misiniz?"
     IDS_QUERY_DELETE_KEY_MORE "Bu dizinleri silmek istediğinizden emin misiniz?"
     IDS_QUERY_DELETE_KEY_CONFIRM "Dizin Silme Doğrulaması"
@@ -351,8 +351,8 @@ BEGIN
     IDS_VALUE_NOT_SET "(Değer belirtilmemiştir.)"
     IDS_UNKNOWN_TYPE "Bilinmeyen tür: (0x%lx)"
     IDS_MY_COMPUTER "Bilgisayar"
-    IDS_IMPORT_REG_FILE "Değer Kütüğünden Al"
-    IDS_EXPORT_REG_FILE "Değer Kütüğüne Ver"
+    IDS_IMPORT_REG_FILE "Değer Dosyasından Al"
+    IDS_EXPORT_REG_FILE "Değer Dosyasına Ver"
     IDS_LOAD_HIVE "Yığın Yükle"
     IDS_UNLOAD_HIVE "Yığını Kaldır"
     IDS_INVALID_DWORD "(Geçersiz 32 bitlik değer)"
@@ -360,14 +360,14 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_FLT_REGFILE "Değer Kütüğü"
-    IDS_FLT_REGFILES "Değer Kütükleri (*.reg)"
+    IDS_FLT_REGFILE "Değer Dosyası"
+    IDS_FLT_REGFILES "Değer Dosyaları (*.reg)"
     IDS_FLT_REGFILES_FLT "*.reg"
-    IDS_FLT_HIVFILES "Yığın Kütükleri (*.*)"
+    IDS_FLT_HIVFILES "Yığın Dosyaları (*.*)"
     IDS_FLT_HIVFILES_FLT "*.*"
-    IDS_FLT_REGEDIT4 "Windows 9x ve Windows NT 4.0 Türündeki Değer Kütükleri (REGEDIT4) (*.reg)"
+    IDS_FLT_REGEDIT4 "Windows 9x ve Windows NT 4.0 Türündeki Değer Dosyaları (REGEDIT4) (*.reg)"
     IDS_FLT_REGEDIT4_FLT "*.reg"
-    IDS_FLT_ALLFILES "Tüm Kütükler (*.*)"
+    IDS_FLT_ALLFILES "Tüm Dosyalar (*.*)"
     IDS_FLT_ALLFILES_FLT "*.*"
 END
 
@@ -383,7 +383,7 @@ BEGIN
     IDS_ACCESS_CREATELINK "Bağlantı Oluşturma"
     IDS_ACCESS_DELETE "Silme"
     IDS_ACCESS_WRITEDAC "DAC Yazma"
-    IDS_ACCESS_WRITEOWNER "İyeyi Yazma"
+    IDS_ACCESS_WRITEOWNER "Sahibi Yazma"
     IDS_ACCESS_READCONTROL "Okuma Denetimi"
 END
 
@@ -406,8 +406,8 @@ STRINGTABLE
 BEGIN
     IDS_IMPORT_PROMPT "Bilgi ekleme, yanlışlıkla değerleri değiştirebilir ya da silebilir ve bileşenlerin doğru çalışmasını engelleyebilir.\nEğer ""%s"" içindeki bilginin kaynağına güvenmiyorsanız onu Değer Defteri'ne eklemeyiniz.\n\nSürdürmek istediğinizden emin misiniz?"
     IDS_IMPORT_OK """%s"" içinde bulunan dizinler ve değerler Değer Defteri'ne başarıyla eklendi."
-    IDS_IMPORT_ERROR """%s"" alınamıyor: Kütüğü açmada yanlışlık. Bir disk yanlışlığı, bir kütük dizgesi yanlışlığı ya da kütüğün olmaması olabilir."
-    IDS_EXPORT_ERROR """%s"" verilemiyor: Kütüğü oluşturmada ya da kütüğe yazmada yanlışlık. Bir disk yanlışlığı ya da bir kütük dizgesi yanlışlığı olabilir."
+    IDS_IMPORT_ERROR """%s"" alınamıyor: Dosyayı açmada yanlışlık. Bir disk yanlışlığı, bir dosya tablosu yanlışlığı ya da tablonun olmaması olabilir."
+    IDS_EXPORT_ERROR """%s"" verilemiyor: Dosyayı oluşturmada ya da dosyaya yazmada yanlışlık. Bir disk yanlışlığı ya da bir dosya tablosu yanlışlığı olabilir."
 END
 
 STRINGTABLE
@@ -420,10 +420,10 @@ BEGIN
     IDS_INTERRUPT_LEVEL "Düzey"
     IDS_INTERRUPT_AFFINITY "Benzerlik"
     IDS_INTERRUPT_TYPE "Tür"
-    IDS_MEMORY_ADDRESS "Fizikî Erişki"
+    IDS_MEMORY_ADDRESS "Fiziki Erişim"
     IDS_MEMORY_LENGTH "Uzunluk"
     IDS_MEMORY_ACCESS "Erişim"
-    IDS_PORT_ADDRESS "Fizikî Erişki"
+    IDS_PORT_ADDRESS "Fiziki Erişim"
     IDS_PORT_LENGTH "Uzunluk"
     IDS_PORT_ACCESS "Erişim"
     IDS_SPECIFIC_RESERVED1 "Ayrılmış 1"
@@ -435,7 +435,7 @@ STRINGTABLE
 BEGIN
     IDS_PORT_PORT_IO "Giriş"
     IDS_PORT_MEMORY_IO "Bellek"
-    IDS_INTERRUPT_EDGE_SENSITIVE "Kıyı Duyarlı"
+    IDS_INTERRUPT_EDGE_SENSITIVE "Köşe Duyarlı"
     IDS_INTERRUPT_LEVEL_SENSITIVE "Düzey Duyarlı"
     IDS_MEMORY_READ_ONLY "Yalnızca Okunur"
     IDS_MEMORY_WRITE_ONLY "Yalnızca Yazılır"
@@ -522,15 +522,15 @@ BEGIN
     GROUPBOX "Bak", IDC_STATIC, 7, 25, 63, 51
     LTEXT "Bakılacaklar", IDC_STATIC, 7, 8, 37, 10
     EDITTEXT IDC_FINDWHAT, 47, 7, 142, 13, ES_AUTOHSCROLL
-    CONTROL "D&iznler", IDC_LOOKAT_KEYS, "Button", BS_AUTOCHECKBOX |
+    CONTROL "D&izinler", IDC_LOOKAT_KEYS, "Button", BS_AUTOCHECKBOX |
             WS_TABSTOP, 14, 36, 35, 8
     CONTROL "D&eğer Adları", IDC_LOOKAT_VALUES, "Button", BS_AUTOCHECKBOX |
             WS_TABSTOP, 14, 48, 36, 8
     CONTROL "&Değer Verileri", IDC_LOOKAT_DATA, "Button", BS_AUTOCHECKBOX |
             WS_TABSTOP, 14, 60, 42, 8
-    CONTROL "&Yalnızca Tüm Dizgiyi Karşılaştır", IDC_MATCHSTRING, "Button", BS_AUTOCHECKBOX |
+    CONTROL "&Yalnızca Tüm Diziyi Karşılaştır", IDC_MATCHSTRING, "Button", BS_AUTOCHECKBOX |
             WS_TABSTOP, 83, 32, 94, 13
-    CONTROL "&Büyük-Küçük Harfliği Karşılaştır", IDC_MATCHCASE, "Button", BS_AUTOCHECKBOX |
+    CONTROL "&Büyük-Küçük Harflere Göre Karşılaştır", IDC_MATCHCASE, "Button", BS_AUTOCHECKBOX |
             WS_TABSTOP, 83, 48, 90, 12
 END
 

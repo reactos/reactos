@@ -4,14 +4,14 @@ LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-    IDS_USAGE "Görüntülükte veriyi sayfa sayfa görüntüler.\n\n\
-  MORE < [Sürücü:][Yol]Kütük adı\n\
+    IDS_USAGE "Ekranda veriyi sayfa sayfa görüntüler.\n\n\
+  MORE < [Sürücü:][Yol]Dosya adı\n\
   Komut | MORE\n\
-  MORE [Sürücü:][Yol]Kütük adı\n\n\
-  [Sürücü:][Yol]Kütük adı    İçeriği görüntülenecek bir kütük.\n\
+  MORE [Sürücü:][Yol]Dosya adı\n\n\
+  [Sürücü:][Yol]Dosya adı    İçeriği görüntülenecek bir dosya.\n\
   Komut\t\t     Çıkışı görüntülenecek bir komut.\n\n\
-  İstemde ""-- Sürdür --"" ile bir sonraki sayfayı göstermek için rastgele bir düğmeye basabilirsiniz.\n"
+  İstemde ""-- Sürdür --"" ile bir sonraki sayfayı göstermek için rastgele bir tuşa basabilirsiniz.\n"
     IDS_CONTINUE "-- Sürdür --"
     IDS_CONTINUE_PROGRESS "-- Sürdür (%%%d) --"
-    IDS_FILE_ACCESS "%s kütüğüne erişilemiyor.\n"
+    IDS_FILE_ACCESS "%s dosyasına erişilemiyor.\n"
 END

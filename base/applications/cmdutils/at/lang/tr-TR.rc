@@ -5,7 +5,7 @@ LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 STRINGTABLE
 BEGIN
     IDS_USAGE "AT komutu, belirlenen bir zamanda bilgisayarda çalıştırmak için komutları\n\
-ve izlenceleri zamanlar. AT komutunu çalıştırmak için Zamanlayıcı hizmeti\n\
+ve programları zamanlar. AT komutunu çalıştırmak için Zamanlayıcı hizmeti\n\
 çalıştırılmalıdır.\n\n\
 AT [\\\\bilgisayar adı] [ [kimlik] [/DELETE] | /DELETE [/YES]]\n\
 AT [\\\\bilgisayar adı] saat [/INTERACTIVE]\n\
@@ -14,8 +14,8 @@ AT [\\\\bilgisayar adı] saat [/INTERACTIVE]\n\
                    komutlar yerli bilgisayarda zamanlanır.\n\
 kimlik             Zamanlanan bir komuta atanan bir kimlik numarasıdır.\n\
 /DELETE            Zamanlanan bir komutu iptâl eder. Kimlik yazılmadığında\n\
-                   bilgisayardaki tüm zamanlanan komutlar iptâl edilir.\n\
-/YES               Sonraki onaylamalar istenilmediğinde tüm işleri iptâl etme\n\
+                   bilgisayardaki tüm zamanlanan komutlar iptal edilir.\n\
+/YES               Sonraki onaylamalar istenilmediğinde tüm işleri iptal etme\n\
                    komutuyla birlikte kullanılır.\n\
 saat               Komutun çalıştırılma saatini belirtir.\n\
 /INTERACTIVE       İşe, çalıştırılacağı saatte oturum açmış kullanıcının\n\
@@ -23,9 +23,9 @@ saat               Komutun çalıştırılma saatini belirtir.\n\
 /EVERY:târih[,...] Haftanın ya da ayın belirtilen tüm günlerinde komutu çalıştırır.\n\
                    month. Târih yazılmadığında ayın şimdiki gününü varsayar.\n\
 /NEXT:târih[,...]  Günün bir sonraki oluşunda (örneğin bir sonraki perşembede)\n\
-                   belirtilen komutu çalıştırır. Târih yazılmadığında ayın\n\
+                   belirtilen komutu çalıştırır. Tarih yazılmadığında ayın\n\
                    şimdiki gününü varsayar.\n\
-""komut""            Çalıştırılacak komut ya da toplu iş kütüğü.\n"
+""komut""            Çalıştırılacak komut ya da toplu iş dosyası.\n"
 
     IDS_DELETE_ALL "Bu işlem tüm zamanlanan işleri silecek.\n"
     IDS_NEW_JOB "%lu iş kimliğiyle yeni bir iş eklendi.\n"
