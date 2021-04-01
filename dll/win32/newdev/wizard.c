@@ -628,7 +628,7 @@ CHSourceDlgProc(
                     LPITEMIDLIST pidl;
 
                     bi.hwndOwner = hwndDlg;
-                    bi.ulFlags = BIF_RETURNONLYFSDIRS;
+                    bi.ulFlags = BIF_USENEWUI | BIF_RETURNONLYFSDIRS;
                     pidl = SHBrowseForFolder(&bi);
                     if (pidl)
                     {
