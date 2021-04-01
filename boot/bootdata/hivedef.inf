@@ -82,6 +82,7 @@ HKCU,"Control Panel\Desktop","PowerOffTimeOut",2,"0"
 HKCU,"Control Panel\Desktop","MenuShowDelay",2,"400"
 HKCU,"Control Panel\Desktop","WheelScrollLines",2,"3"
 HKCU,"Control Panel\Desktop","WheelScrollChars",2,"3"
+HKCU,"Control Panel\Desktop","WindowArrangementActive",2,"1"
 
 HKCU,"Control Panel\Desktop\WindowMetrics","AppliedDPI",0x00010003,0x00000060
 HKCU,"Control Panel\Desktop\WindowMetrics","ScrollWidth",2,"16"
