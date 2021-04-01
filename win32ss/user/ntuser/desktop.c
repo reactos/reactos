@@ -37,6 +37,7 @@ HDC ScreenDeviceContext = NULL;
 PTHREADINFO gptiDesktopThread = NULL;
 HCURSOR gDesktopCursor = NULL;
 PKEVENT gpDesktopThreadStartedEvent = NULL;
+BOOL g_AllowSnappingWindows = TRUE; // Default ReactOS behaviour is to snap windows
 
 /* OBJECT CALLBACKS **********************************************************/
 
@@ -259,6 +260,16 @@ InitDesktopImpl(VOID)
     KeInitializeEvent(gpDesktopThreadStartedEvent,
                       SynchronizationEvent,
                       FALSE);
+
+    /* Check if user has disabled window snapping */
+    DWORD EntryValue = 0;
+    if (RegReadUserSetting(L"Control Panel\\Desktop",
+                           L"WindowArrangementActive",
+                           REG_SZ, &EntryValue, sizeof(EntryValue)))
+    {
+        EntryValue = atoi((PCHAR)&EntryValue);
+        g_AllowSnappingWindows = EntryValue != 0;
+    }
 
     return STATUS_SUCCESS;
 }

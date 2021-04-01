@@ -87,6 +87,7 @@ extern HDC ScreenDeviceContext;
 extern PTHREADINFO gptiForeground;
 extern PTHREADINFO gptiDesktopThread;
 extern PKEVENT gpDesktopThreadStartedEvent;
+extern BOOL g_AllowSnappingWindows;
 
 typedef struct _SHELL_HOOK_WINDOW
 {
