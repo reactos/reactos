@@ -1153,7 +1153,7 @@ GetEnumeratorInstanceList(
             break;
 
         dwUsedLength += dwPathLength - 1;
-        dwRemainingLength += dwPathLength - 1;
+        dwRemainingLength -= dwPathLength - 1;
         pPtr += dwPathLength - 1;
     }
 
@@ -1203,7 +1203,7 @@ GetAllInstanceList(
             break;
 
         dwUsedLength += dwPathLength - 1;
-        dwRemainingLength += dwPathLength - 1;
+        dwRemainingLength -= dwPathLength - 1;
         pPtr += dwPathLength - 1;
     }
 
