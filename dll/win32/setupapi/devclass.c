@@ -142,7 +142,7 @@ SETUP_CreateDevicesList(
     {
         cr = CM_Get_Device_ID_List_ExW(Enumerator,
                                        Buffer,
-                                       BufferLength,
+                                       BufferLength / sizeof(WCHAR),
                                        Enumerator ? CM_GETIDLIST_FILTER_ENUMERATOR : CM_GETIDLIST_FILTER_NONE,
                                        list->hMachine);
         if (cr == CR_BUFFER_SMALL)
