@@ -23,6 +23,7 @@
 #include <wincon.h>
 #include <cfgmgr32.h>
 #include <shlobj.h>
+#include <shlwapi.h>
 
 HANDLE hThread;
 
@@ -573,8 +574,9 @@ CHSourceDlgProc(
     {
         case WM_INITDIALOG:
         {
-            HWND hwndControl;
+            HWND hwndControl, hwndCombo, hwndEdit;
             DWORD dwStyle;
+            COMBOBOXINFO info = { sizeof(info) };
 
             /* Get pointer to the global setup data */
             DevInstData = (PDEVINSTDATA)((LPPROPSHEETPAGE)lParam)->lParam;
@@ -589,7 +591,12 @@ CHSourceDlgProc(
             dwStyle = GetWindowLongPtr(hwndControl, GWL_STYLE);
             SetWindowLongPtr(hwndControl, GWL_STYLE, dwStyle & ~WS_SYSMENU);
 
-            PopulateCustomPathCombo(GetDlgItem(hwndDlg, IDC_COMBO_PATH));
+            hwndCombo = GetDlgItem(hwndDlg, IDC_COMBO_PATH);
+            PopulateCustomPathCombo(hwndCombo);
+
+            GetComboBoxInfo(hwndCombo, &info);
+            hwndEdit = info.hwndItem;
+            SHAutoComplete(hwndEdit, SHACF_FILESYS_DIRS);
 
             SendDlgItemMessage(
                 hwndDlg,
@@ -1303,6 +1310,7 @@ DisplayWizard(
     PROPSHEETHEADER psh = {0};
     HPROPSHEETPAGE ahpsp[IDD_MAXIMUMPAGE + 1];
     PROPSHEETPAGE psp = {0};
+    HRESULT hr = CoInitialize(NULL); /* for SHAutoComplete */
 
     /* zero based index */
     startPage -= IDD_FIRSTPAGE;
@@ -1382,5 +1390,7 @@ DisplayWizard(
 
     DeleteObject(DevInstData->hTitleFont);
 
+    if (SUCCEEDED(hr))
+        CoUninitialize();
     return TRUE;
 }
