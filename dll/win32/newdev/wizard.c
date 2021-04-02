@@ -574,7 +574,7 @@ CHSourceDlgProc(
     {
         case WM_INITDIALOG:
         {
-            HWND hwndControl, hwndCombo, hwndEdit;
+            HWND hwndControl, hwndCombo;
             DWORD dwStyle;
             COMBOBOXINFO info = { sizeof(info) };
 
@@ -595,8 +595,7 @@ CHSourceDlgProc(
             PopulateCustomPathCombo(hwndCombo);
 
             GetComboBoxInfo(hwndCombo, &info);
-            hwndEdit = info.hwndItem;
-            SHAutoComplete(hwndEdit, SHACF_FILESYS_DIRS);
+            SHAutoComplete(info.hwndItem, SHACF_FILESYS_DIRS);
 
             SendDlgItemMessage(
                 hwndDlg,
