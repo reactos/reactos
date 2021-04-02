@@ -88,7 +88,7 @@ static void SETUPDI_GuidToString(const GUID *guid, LPWSTR guidStr)
         guid->Data4[4], guid->Data4[5], guid->Data4[6], guid->Data4[7]);
 }
 
-static DWORD
+DWORD
 GetErrorCodeFromCrCode(const IN CONFIGRET cr)
 {
   switch (cr)
