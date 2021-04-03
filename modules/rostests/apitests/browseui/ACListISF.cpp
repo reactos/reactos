@@ -325,17 +325,9 @@ test_ACListISF_CURRENTDIR()
     ok_wstr(psz, L"tes2");
     CoTaskMemFree(psz);
 
-    hr = EnumStr->Next(1, &psz, &cGot);
-    ok_hr(hr, S_FALSE);
-    CoTaskMemFree(psz);
-
     StringCbCopyW(szPath, sizeof(szPath), szDir);
     StringCbCatW(szPath, sizeof(szPath), L"\\BROWSEUI-2");
     ok_hr(hr = CurrentWorkingDir->SetDirectory(szPath), S_OK);
-
-    hr = EnumStr->Next(1, &psz, &cGot);
-    ok_hr(hr, S_FALSE);
-    CoTaskMemFree(psz);
 
     EnumStr->Reset();
 
@@ -347,10 +339,6 @@ test_ACListISF_CURRENTDIR()
     hr = EnumStr->Next(1, &psz, &cGot);
     ok_hr(hr, S_OK);
     ok_wstr(psz, L"tes2");
-    CoTaskMemFree(psz);
-
-    hr = EnumStr->Next(1, &psz, &cGot);
-    ok_hr(hr, S_FALSE);
     CoTaskMemFree(psz);
 
     StringCbCopyW(szPath, sizeof(szPath), szDir);
@@ -376,6 +364,112 @@ test_ACListISF_CURRENTDIR()
     StringCbCopyW(szPath, sizeof(szPath), szDir);
     StringCbCatW(szPath, sizeof(szPath), L"\\BROWSEUI-2");
     RemoveDirectoryW(szPath);
+}
+
+static void
+test_ACListISF_CURRENTDIR2()
+{
+    CComPtr<IEnumString> EnumStr;
+    HRESULT hr = CoCreateInstance(CLSID_ACListISF, NULL, CLSCTX_ALL, IID_PPV_ARG(IEnumString, &EnumStr));
+    ok_hr(hr, S_OK);
+    if (!SUCCEEDED(hr))
+        return;
+
+    CComPtr<IACList2> ACList;
+    ok_hr(hr = EnumStr->QueryInterface(IID_IACList2, (void**)&ACList), S_OK);
+    if (!SUCCEEDED(hr))
+        return;
+
+    CComPtr<ICurrentWorkingDirectory> CurrentWorkingDir;
+    ok_hr(hr = EnumStr->QueryInterface(IID_ICurrentWorkingDirectory, (void**)&CurrentWorkingDir), S_OK);
+    if (!SUCCEEDED(hr))
+        return;
+
+    ok_hr(hr = ACList->SetOptions(ACLO_CURRENTDIR), S_OK);
+    test_at_end(EnumStr);
+
+    CreateDirectoryW(L"C:\\BROWSEUI-1", NULL);
+    CreateDirectoryW(L"C:\\BROWSEUI-1\\TEST1", NULL);
+    CreateDirectoryW(L"C:\\BROWSEUI-1\\TEST2", NULL);
+    CreateDirectoryW(L"C:\\BROWSEUI-1\\TEST1\\TEST3", NULL);
+    CreateDirectoryW(L"C:\\BROWSEUI-2", NULL);
+    CreateDirectoryW(L"C:\\BROWSEUI-2\\TEST1", NULL);
+    CreateDirectoryW(L"C:\\BROWSEUI-2\\TEST2", NULL);
+    CreateDirectoryW(L"C:\\BROWSEUI-2\\TEST1\\TEST3", NULL);
+
+    ok_hr(hr = CurrentWorkingDir->SetDirectory(L"C:\\BROWSEUI-1\\TEST1"), S_OK);
+    test_at_end(EnumStr);
+
+    ok_hr(hr = ACList->Expand(L"C:\\BROWSEUI-2\\TEST1\\"), S_OK);
+
+    LPWSTR psz;
+    ULONG cGot;
+
+    hr = EnumStr->Next(1, &psz, &cGot);
+    ok_hr(hr, S_OK);
+    ok_wstr(psz, L"C:\\BROWSEUI-2\\TEST1\\TEST3");
+    CoTaskMemFree(psz);
+
+    hr = EnumStr->Next(1, &psz, &cGot);
+    ok_hr(hr, S_OK);
+    ok_wstr(psz, L"TEST3");
+    CoTaskMemFree(psz);
+
+    test_at_end(EnumStr);
+
+    ok_hr(hr = ACList->Expand(L"C:\\BROWSEUI-1\\TEST1\\"), S_OK);
+
+    hr = EnumStr->Next(1, &psz, &cGot);
+    ok_hr(hr, S_OK);
+    ok_wstr(psz, L"C:\\BROWSEUI-1\\TEST1\\TEST3");
+    CoTaskMemFree(psz);
+
+    hr = EnumStr->Next(1, &psz, &cGot);
+    ok_hr(hr, S_OK);
+    ok_wstr(psz, L"TEST3");
+    CoTaskMemFree(psz);
+
+    test_at_end(EnumStr);
+
+    ok_hr(hr = CurrentWorkingDir->SetDirectory(L"C:\\BROWSEUI-2\\TEST1"), S_OK);
+    test_at_end(EnumStr);
+
+    ok_hr(hr = ACList->Expand(L"..\\TEST1\\"), S_OK);
+
+    hr = EnumStr->Next(1, &psz, &cGot);
+    ok_hr(hr, S_OK);
+    ok_wstr(psz, L"..\\TEST1\\TEST3");
+    CoTaskMemFree(psz);
+
+    hr = EnumStr->Next(1, &psz, &cGot);
+    ok_hr(hr, S_OK);
+    ok_wstr(psz, L"TEST3");
+    CoTaskMemFree(psz);
+
+    test_at_end(EnumStr);
+
+    ok_hr(hr = ACList->Expand(L"\\BROWSEUI-2\\TEST1\\"), S_OK);
+
+    hr = EnumStr->Next(1, &psz, &cGot);
+    ok_hr(hr, S_OK);
+    ok_wstr(psz, L"\\BROWSEUI-2\\TEST1\\TEST3");
+    CoTaskMemFree(psz);
+
+    hr = EnumStr->Next(1, &psz, &cGot);
+    ok_hr(hr, S_OK);
+    ok_wstr(psz, L"TEST3");
+    CoTaskMemFree(psz);
+
+    test_at_end(EnumStr);
+
+    RemoveDirectoryW(L"C:\\BROWSEUI-1\\TEST1\\TEST3");
+    RemoveDirectoryW(L"C:\\BROWSEUI-1\\TEST1");
+    RemoveDirectoryW(L"C:\\BROWSEUI-1\\TEST2");
+    RemoveDirectoryW(L"C:\\BROWSEUI-1");
+    RemoveDirectoryW(L"C:\\BROWSEUI-2\\TEST1\\TEST3");
+    RemoveDirectoryW(L"C:\\BROWSEUI-2\\TEST1");
+    RemoveDirectoryW(L"C:\\BROWSEUI-2\\TEST2");
+    RemoveDirectoryW(L"C:\\BROWSEUI-2");
 }
 
 static void
@@ -582,6 +676,7 @@ START_TEST(ACListISF)
 
     test_ACListISF_NONE();
     test_ACListISF_CURRENTDIR();
+    test_ACListISF_CURRENTDIR2();
     test_ACListISF_MYCOMPUTER();
     test_ACListISF_DESKTOP();
     test_ACListISF_FAVORITES();
