@@ -466,7 +466,7 @@ test_ACListISF_CURRENTDIR2()
     RemoveDirectoryW(L"C:\\BROWSEUI-1\\TEST1");
     RemoveDirectoryW(L"C:\\BROWSEUI-1\\TEST2");
     RemoveDirectoryW(L"C:\\BROWSEUI-1");
-    RemoveDirectoryW(L"C:\\BROWSEUI-2\\TEST1\\TEST3");
+    RemoveDirectoryW(L"C:\\BROWSEUI-2\\TEST1\\TEST4");
     RemoveDirectoryW(L"C:\\BROWSEUI-2\\TEST1");
     RemoveDirectoryW(L"C:\\BROWSEUI-2\\TEST2");
     RemoveDirectoryW(L"C:\\BROWSEUI-2");
