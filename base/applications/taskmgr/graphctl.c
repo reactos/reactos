@@ -68,18 +68,18 @@ static void GraphCtrl_Init(TGraphCtrl* this)
     /*   m_dUpperLimit =  10.0; */
     this->m_dLowerLimit = 0.0;
     this->m_dUpperLimit = 100.0;
-    this->m_dRange      =  this->m_dUpperLimit - this->m_dLowerLimit;   /*  protected member variable */
+    this->m_dRange      =  this->m_dUpperLimit - this->m_dLowerLimit;  /*  protected member variable */
 
     /*  m_nShiftPixels determines how much the plot shifts (in terms of pixels)  */
     /*  with the addition of a new data point */
     this->m_nShiftPixels     = 4;
-    this->m_nHalfShiftPixels = this->m_nShiftPixels/2;                     /*  protected */
+    this->m_nHalfShiftPixels = this->m_nShiftPixels / 2;  /*  protected */
     this->m_nPlotShiftPixels = this->m_nShiftPixels + this->m_nHalfShiftPixels;  /*  protected */
 
     /*  background, grid and data colors */
     /*  these are public variables and can be set directly */
     this->m_crBackColor = RGB(  0,   0,   0);  /*  see also SetBackgroundColor */
-    this->m_crGridColor = RGB(  0, 128, 64);  /*  see also SetGridColor */
+    this->m_crGridColor = RGB(  0, 128,  64);  /*  see also SetGridColor */
     this->m_crPlotColor[0] = RGB(255, 255, 255);  /*  see also SetPlotColor */
     this->m_crPlotColor[1] = RGB(100, 255, 255);  /*  see also SetPlotColor */
     this->m_crPlotColor[2] = RGB(255, 100, 255);  /*  see also SetPlotColor */
@@ -245,9 +245,9 @@ void GraphCtrl_InvalidateCtrl(TGraphCtrl* this, BOOL bResize)
     /*  draw the plot rectangle */
     oldPen = (HPEN)SelectObject(this->m_dcGrid, solidPen);
     MoveToEx(this->m_dcGrid, this->m_rectPlot.left, this->m_rectPlot.top, NULL);
-    LineTo(this->m_dcGrid, this->m_rectPlot.right+1, this->m_rectPlot.top);
-    LineTo(this->m_dcGrid, this->m_rectPlot.right+1, this->m_rectPlot.bottom+1);
-    LineTo(this->m_dcGrid, this->m_rectPlot.left, this->m_rectPlot.bottom+1);
+    LineTo(this->m_dcGrid, this->m_rectPlot.right + 1, this->m_rectPlot.top);
+    LineTo(this->m_dcGrid, this->m_rectPlot.right + 1, this->m_rectPlot.bottom + 1);
+    LineTo(this->m_dcGrid, this->m_rectPlot.left, this->m_rectPlot.bottom + 1);
     /*   LineTo(m_dcGrid, m_rectPlot.left, m_rectPlot.top); */
 
     /*  draw the horizontal axis */
@@ -428,9 +428,9 @@ void GraphCtrl_DrawPoint(TGraphCtrl* this)
          *  grab the right side of the plot (excluding m_nShiftPixels on the left)
          *  move this grabbed bitmap to the left by m_nShiftPixels
          */
-        BitBlt(this->m_dcPlot, this->m_rectPlot.left, this->m_rectPlot.top+1,
+        BitBlt(this->m_dcPlot, this->m_rectPlot.left, this->m_rectPlot.top + 1,
                this->m_nPlotWidth, this->m_nPlotHeight, this->m_dcPlot,
-               this->m_rectPlot.left+this->m_nShiftPixels, this->m_rectPlot.top+1,
+               this->m_rectPlot.left+this->m_nShiftPixels, this->m_rectPlot.top + 1,
                SRCCOPY);
 
         /*  establish a rectangle over the right side of plot */
@@ -470,19 +470,19 @@ void GraphCtrl_DrawPoint(TGraphCtrl* this)
             if ((prevY <= this->m_rectPlot.top) || (currY <= this->m_rectPlot.top))
             {
                 RECT rc;
-                rc.bottom = this->m_rectPlot.top+1;
+                rc.bottom = this->m_rectPlot.top + 1;
                 rc.left = prevX;
-                rc.right = currX+1;
+                rc.right = currX + 1;
                 rc.top = this->m_rectClient.top;
                 FillRect(this->m_dcPlot, &rc, this->m_brushBack);
             }
             if ((prevY >= this->m_rectPlot.bottom) || (currY >= this->m_rectPlot.bottom))
             {
                 RECT rc;
-                rc.bottom = this->m_rectClient.bottom+1;
+                rc.bottom = this->m_rectClient.bottom + 1;
                 rc.left = prevX;
-                rc.right = currX+1;
-                rc.top = this->m_rectPlot.bottom+1;
+                rc.right = currX + 1;
+                rc.top = this->m_rectPlot.bottom + 1;
                 /* RECT rc(prevX, m_rectPlot.bottom+1, currX+1, m_rectClient.bottom+1); */
                 FillRect(this->m_dcPlot, &rc, this->m_brushBack);
             }
@@ -512,8 +512,8 @@ void GraphCtrl_Resize(TGraphCtrl* this)
 #else
     this->m_rectPlot.left   = 0;
     this->m_rectPlot.top    = -1;
-    this->m_rectPlot.right  = this->m_rectClient.right-0;
-    this->m_rectPlot.bottom = this->m_rectClient.bottom-0;
+    this->m_rectPlot.right  = this->m_rectClient.right;
+    this->m_rectPlot.bottom = this->m_rectClient.bottom;
 #endif
 
     /*  set some member variables to avoid multiple function calls */
