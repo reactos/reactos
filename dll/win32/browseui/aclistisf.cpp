@@ -328,28 +328,21 @@ STDMETHODIMP CACListISF::Expand(LPCOLESTR pszExpand)
 {
     TRACE("(%p, %ls)\n", this, pszExpand);
 
+    m_szExpand = pszExpand;
+    m_iNextLocation = LT_DIRECTORY;
+
     // get full path
-    WCHAR szFullPath[MAX_PATH];
-    if (PathIsRelativeW(pszExpand))
+    WCHAR szFullPath[MAX_PATH], szCurDir[MAX_PATH], szPath[MAX_PATH];
+    if (PathIsRelativeW(pszExpand) &&
+        SHGetPathFromIDListW(m_pidlCurDir, szCurDir) &&
+        PathCombineW(szPath, szCurDir, pszExpand))
     {
-        WCHAR szCurDir[MAX_PATH], szPath[MAX_PATH];
-        if (SHGetPathFromIDListW(m_pidlCurDir, szCurDir) &&
-            PathCombineW(szPath, szCurDir, pszExpand))
-        {
-            GetFullPathNameW(szPath, _countof(szFullPath), szFullPath, NULL);
-        }
-        else
-        {
-            GetFullPathNameW(pszExpand, _countof(szFullPath), szFullPath, NULL);
-        }
+        GetFullPathNameW(szPath, _countof(szFullPath), szFullPath, NULL);
     }
     else
     {
         GetFullPathNameW(pszExpand, _countof(szFullPath), szFullPath, NULL);
     }
-
-    m_szExpand = pszExpand;
-    m_iNextLocation = LT_DIRECTORY;
 
     CComHeapPtr<ITEMIDLIST> pidl;
     HRESULT hr = SHParseDisplayName(szFullPath, NULL, &pidl, NULL, NULL);
