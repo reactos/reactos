@@ -2,7 +2,7 @@
  *  Shell AutoComplete list
  *
  *  Copyright 2015  Thomas Faber
- *  Copyright 2020  Katayama Hirofumi MZ
+ *  Copyright 2020-2021 Katayama Hirofumi MZ
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -329,10 +329,20 @@ STDMETHODIMP CACListISF::Expand(LPCOLESTR pszExpand)
     TRACE("(%p, %ls)\n", this, pszExpand);
 
     m_szExpand = pszExpand;
-
     m_iNextLocation = LT_DIRECTORY;
+
+    // get full path
+    WCHAR szPath1[MAX_PATH], szPath2[MAX_PATH];
+    if (PathIsRelativeW(pszExpand) &&
+        SHGetPathFromIDListW(m_pidlCurDir, szPath1) &&
+        PathCombineW(szPath2, szPath1, pszExpand))
+    {
+        pszExpand = szPath2;
+    }
+    GetFullPathNameW(pszExpand, _countof(szPath1), szPath1, NULL);
+
     CComHeapPtr<ITEMIDLIST> pidl;
-    HRESULT hr = SHParseDisplayName(m_szExpand, NULL, &pidl, NULL, NULL);
+    HRESULT hr = SHParseDisplayName(szPath1, NULL, &pidl, NULL, NULL);
     if (SUCCEEDED(hr))
     {
         hr = SetLocation(pidl.Detach());
