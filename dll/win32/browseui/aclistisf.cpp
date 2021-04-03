@@ -330,11 +330,11 @@ STDMETHODIMP CACListISF::Expand(LPCOLESTR pszExpand)
 
     // get full path
     WCHAR szFullPath[MAX_PATH];
-    if (pszExpand[0] == L'\\')
+    if (pszExpand[0] == L'\\' || !PathIsRelativeW(pszExpand))
     {
         GetFullPathNameW(pszExpand, _countof(szFullPath), szFullPath, NULL);
     }
-    else if (PathIsRelativeW(pszExpand))
+    else
     {
         WCHAR szCurDir[MAX_PATH], szPath[MAX_PATH];
         if (!SHGetPathFromIDListW(m_pidlCurDir, szCurDir) ||
@@ -343,10 +343,6 @@ STDMETHODIMP CACListISF::Expand(LPCOLESTR pszExpand)
             StringCbCopyW(szPath, sizeof(szPath), pszExpand);
         }
         GetFullPathNameW(szPath, _countof(szFullPath), szFullPath, NULL);
-    }
-    else
-    {
-        GetFullPathNameW(pszExpand, _countof(szFullPath), szFullPath, NULL);
     }
 
     m_szExpand = pszExpand;
