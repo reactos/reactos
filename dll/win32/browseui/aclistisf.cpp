@@ -332,17 +332,17 @@ STDMETHODIMP CACListISF::Expand(LPCOLESTR pszExpand)
     m_iNextLocation = LT_DIRECTORY;
 
     // get full path
-    WCHAR szFullPath[MAX_PATH], szCurDir[MAX_PATH], szPath[MAX_PATH];
+    WCHAR szPath1[MAX_PATH], szPath2[MAX_PATH];
     if (PathIsRelativeW(pszExpand) &&
-        SHGetPathFromIDListW(m_pidlCurDir, szCurDir) &&
-        PathCombineW(szPath, szCurDir, pszExpand))
+        SHGetPathFromIDListW(m_pidlCurDir, szPath1) &&
+        PathCombineW(szPath2, szPath1, pszExpand))
     {
-        pszExpand = szPath;
+        pszExpand = szPath2;
     }
-    GetFullPathNameW(pszExpand, _countof(szFullPath), szFullPath, NULL);
+    GetFullPathNameW(pszExpand, _countof(szPath1), szPath1, NULL);
 
     CComHeapPtr<ITEMIDLIST> pidl;
-    HRESULT hr = SHParseDisplayName(szFullPath, NULL, &pidl, NULL, NULL);
+    HRESULT hr = SHParseDisplayName(szPath1, NULL, &pidl, NULL, NULL);
     if (SUCCEEDED(hr))
     {
         hr = SetLocation(pidl.Detach());
