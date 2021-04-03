@@ -4,7 +4,7 @@ STRINGTABLE
 BEGIN
     IDS_USAGE "\n\
 Uso: %s [unidade:] [-F] [-V] [-R] [-C]\n\n\
-[unidade:]    Especifica a unidade a verificar.\n\
+[unidade:]  Especifica a unidade a verificar.\n\
 -F          Corrige os erros no disco.\n\
 -V          Mostra o caminho completo de cada ficheiro no disco.\n\
 -R          Localiza sectores danificados e recupera informações legíveis.\n\
