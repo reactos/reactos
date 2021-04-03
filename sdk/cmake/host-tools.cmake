@@ -45,6 +45,8 @@ function(setup_host_tools)
             -DARCH:STRING=${ARCH}
             -DCMAKE_INSTALL_PREFIX=${REACTOS_BINARY_DIR}/host-tools
             -DTOOLS_FOLDER=${REACTOS_BINARY_DIR}/host-tools/bin
+            -DROS_SAVED_M4=${ROS_SAVED_M4}
+            -DROS_SAVED_BISON_PKGDATADIR=${ROS_SAVED_BISON_PKGDATADIR}
             -DTARGET_COMPILER_ID=${CMAKE_C_COMPILER_ID}
             ${CMAKE_HOST_TOOLS_EXTRA_ARGS}
         BUILD_ALWAYS TRUE
