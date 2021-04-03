@@ -346,7 +346,7 @@ STDMETHODIMP CACListISF::Expand(LPCOLESTR pszExpand)
     }
     else
     {
-        StringCbCopyW(szFullPath, sizeof(szFullPath), pszExpand);
+        GetFullPathNameW(pszExpand, _countof(szFullPath), szFullPath, NULL);
     }
 
     m_szExpand = pszExpand;
