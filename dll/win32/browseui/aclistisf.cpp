@@ -333,12 +333,15 @@ STDMETHODIMP CACListISF::Expand(LPCOLESTR pszExpand)
     if (PathIsRelativeW(pszExpand))
     {
         WCHAR szCurDir[MAX_PATH], szPath[MAX_PATH];
-        if (!SHGetPathFromIDListW(m_pidlCurDir, szCurDir) ||
-            !PathCombineW(szPath, szCurDir, pszExpand))
+        if (SHGetPathFromIDListW(m_pidlCurDir, szCurDir) &&
+            PathCombineW(szPath, szCurDir, pszExpand))
         {
-            StringCbCopyW(szPath, sizeof(szPath), pszExpand);
+            GetFullPathNameW(szPath, _countof(szFullPath), szFullPath, NULL);
         }
-        GetFullPathNameW(szPath, _countof(szFullPath), szFullPath, NULL);
+        else
+        {
+            GetFullPathNameW(pszExpand, _countof(szFullPath), szFullPath, NULL);
+        }
     }
     else
     {
