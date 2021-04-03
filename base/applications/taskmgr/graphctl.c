@@ -352,7 +352,6 @@ void GraphCtrl_InvalidateCtrl(TGraphCtrl* this, BOOL bResize)
             DeleteObject(this->m_bitmapPlot);
             this->m_bitmapPlot = CreateCompatibleBitmap(dc, this->m_nClientWidth, this->m_nClientHeight);
             SelectObject(this->m_dcPlot, this->m_bitmapPlot);
-            printf("try redraw\n");
             GraphCtrl_DrawPoint(this);
         }
     }
@@ -462,7 +461,8 @@ void GraphCtrl_ShiftGrid(TGraphCtrl* this)
 
         SelectObject(this->m_dcGrid, oldPen);
     }
-
+    
+    DeleteObject(solidPen);
 }
 
 void GraphCtrl_DrawPoint(TGraphCtrl* this)
