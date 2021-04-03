@@ -330,7 +330,7 @@ STDMETHODIMP CACListISF::Expand(LPCOLESTR pszExpand)
 
     // get full path
     WCHAR szFullPath[MAX_PATH];
-    if (pszExpand[0] == L'\\' || !PathIsRelativeW(pszExpand))
+    if (!PathIsRelativeW(pszExpand))
     {
         GetFullPathNameW(pszExpand, _countof(szFullPath), szFullPath, NULL);
     }
