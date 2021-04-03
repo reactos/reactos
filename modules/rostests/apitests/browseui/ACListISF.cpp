@@ -195,17 +195,26 @@ test_ACListISF_CURRENTDIR()
     HRESULT hr = CoCreateInstance(CLSID_ACListISF, NULL, CLSCTX_ALL, IID_PPV_ARG(IEnumString, &EnumStr));
     ok_hr(hr, S_OK);
     if (!SUCCEEDED(hr))
+    {
+        skip("CoCreateInstance failed\n");
         return;
+    }
 
     CComPtr<IACList2> ACList;
     ok_hr(hr = EnumStr->QueryInterface(IID_IACList2, (void**)&ACList), S_OK);
     if (!SUCCEEDED(hr))
+    {
+        skip("QueryInterface failed\n");
         return;
+    }
 
     CComPtr<ICurrentWorkingDirectory> CurrentWorkingDir;
     ok_hr(hr = EnumStr->QueryInterface(IID_ICurrentWorkingDirectory, (void**)&CurrentWorkingDir), S_OK);
     if (!SUCCEEDED(hr))
+    {
+        skip("QueryInterface failed\n");
         return;
+    }
 
     ok_hr(hr = ACList->SetOptions(ACLO_CURRENTDIR), S_OK);
     test_at_end(EnumStr);
@@ -373,17 +382,26 @@ test_ACListISF_CURRENTDIR2()
     HRESULT hr = CoCreateInstance(CLSID_ACListISF, NULL, CLSCTX_ALL, IID_PPV_ARG(IEnumString, &EnumStr));
     ok_hr(hr, S_OK);
     if (!SUCCEEDED(hr))
+    {
+        skip("CoCreateInstance failed\n");
         return;
+    }
 
     CComPtr<IACList2> ACList;
     ok_hr(hr = EnumStr->QueryInterface(IID_IACList2, (void**)&ACList), S_OK);
     if (!SUCCEEDED(hr))
+    {
+        skip("QueryInterface failed\n");
         return;
+    }
 
     CComPtr<ICurrentWorkingDirectory> CurrentWorkingDir;
     ok_hr(hr = EnumStr->QueryInterface(IID_ICurrentWorkingDirectory, (void**)&CurrentWorkingDir), S_OK);
     if (!SUCCEEDED(hr))
+    {
+        skip("QueryInterface failed\n");
         return;
+    }
 
     ok_hr(hr = ACList->SetOptions(ACLO_CURRENTDIR), S_OK);
     test_at_end(EnumStr);
