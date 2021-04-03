@@ -337,12 +337,9 @@ STDMETHODIMP CACListISF::Expand(LPCOLESTR pszExpand)
         SHGetPathFromIDListW(m_pidlCurDir, szCurDir) &&
         PathCombineW(szPath, szCurDir, pszExpand))
     {
-        GetFullPathNameW(szPath, _countof(szFullPath), szFullPath, NULL);
+        pszExpand = szPath;
     }
-    else
-    {
-        GetFullPathNameW(pszExpand, _countof(szFullPath), szFullPath, NULL);
-    }
+    GetFullPathNameW(pszExpand, _countof(szFullPath), szFullPath, NULL);
 
     CComHeapPtr<ITEMIDLIST> pidl;
     HRESULT hr = SHParseDisplayName(szFullPath, NULL, &pidl, NULL, NULL);
