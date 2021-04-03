@@ -41,9 +41,6 @@ static DWORD g_WinVersion;
            #expression, (int)(expected), _value); \
     } while (0)
 
-
-
-
 static void test_at_end_imp(CComPtr<IEnumString>& EnumStr)
 {
     CComHeapPtr<OLECHAR> Result;
@@ -128,10 +125,8 @@ test_ExpectFolders_imp(CComPtr<IEnumString>& EnumStr, LPITEMIDLIST pidlTarget, c
         hr = EnumStr->Next(1, &Result, &Fetched);
         winetest_ok_hr(hr, S_OK);
 
-
         if (hr != S_OK)
             break;
-
 
         StringCchPrintfW(Buffer, _ARRAYSIZE(Buffer), L"%s%s", (options & IgnoreRoot) ? L"" : Root, (WCHAR*)DisplayName);
 
@@ -159,12 +154,18 @@ test_ACListISF_NONE()
     HRESULT hr = CoCreateInstance(CLSID_ACListISF, NULL, CLSCTX_ALL, IID_PPV_ARG(IEnumString, &EnumStr));
     ok_hr(hr, S_OK);
     if (!SUCCEEDED(hr))
+    {
+        skip("CoCreateInstance failed\n");
         return;
+    }
 
     CComPtr<IACList2> ACList;
     ok_hr(hr = EnumStr->QueryInterface(IID_IACList2, (void**)&ACList), S_OK);
     if (!SUCCEEDED(hr))
+    {
+        skip("QueryInterface failed\n");
         return;
+    }
 
     ok_hr(hr = ACList->SetOptions(ACLO_NONE), S_OK);
     test_at_end(EnumStr);
@@ -177,7 +178,10 @@ test_ACListISF_NONE()
     CComHeapPtr<ITEMIDLIST> pidlDiskRoot;
     ok_hr(hr = SHParseDisplayName(Buffer, NULL, &pidlDiskRoot, NULL, NULL), S_OK);
     if (!SUCCEEDED(hr))
+    {
+        skip("SHParseDisplayName failed\n");
         return;
+    }
 
     ok_hr(hr = ACList->Expand(Buffer), S_OK);
     test_ExpectFolders(EnumStr, pidlDiskRoot, Buffer, CheckLast | IgnoreHidden);
@@ -497,7 +501,10 @@ test_ACListISF_MYCOMPUTER()
     HRESULT hr = CoCreateInstance(CLSID_ACListISF, NULL, CLSCTX_ALL, IID_PPV_ARG(IACList2, &ACList));
     ok_hr(hr, S_OK);
     if (!SUCCEEDED(hr))
+    {
+        skip("CoCreateInstance failed\n");
         return;
+    }
 
     // Check the default
     DWORD CurrentOption = 0xdeadbeef;
@@ -509,18 +516,26 @@ test_ACListISF_MYCOMPUTER()
     CComPtr<IEnumString> EnumStr;
     ok_hr(hr = ACList->QueryInterface(IID_IEnumString, (void**)&EnumStr), S_OK);
     if (!SUCCEEDED(hr))
+    {
+        skip("QueryInterface failed\n");
         return;
+    }
 
     CComPtr<IPersistFolder> PersistFolder;
     ok_hr(hr = EnumStr->QueryInterface(IID_IPersistFolder, (void**)&PersistFolder), S_OK);
     if (!SUCCEEDED(hr))
+    {
+        skip("QueryInterface failed\n");
         return;
+    }
 
     CComHeapPtr<ITEMIDLIST> pidlMyComputer;
     ok_hr(hr = SHGetSpecialFolderLocation(NULL, CSIDL_DRIVES, &pidlMyComputer), S_OK);
     if (!SUCCEEDED(hr))
+    {
+        skip("SHGetSpecialFolderLocation failed\n");
         return;
-
+    }
 
     hr = EnumStr->Reset();
     if (g_WinVersion < WINVER_VISTA)
@@ -567,12 +582,18 @@ test_ACListISF_DESKTOP()
     HRESULT hr = CoCreateInstance(CLSID_ACListISF, NULL, CLSCTX_ALL, IID_PPV_ARG(IEnumString, &EnumStr));
     ok_hr(hr, S_OK);
     if (!SUCCEEDED(hr))
+    {
+        skip("CoCreateInstance failed\n");
         return;
+    }
 
     CComPtr<IACList2> ACList;
     ok_hr(hr = EnumStr->QueryInterface(IID_IACList2, (void**)&ACList), S_OK);
     if (!SUCCEEDED(hr))
+    {
+        skip("QueryInterface failed\n");
         return;
+    }
 
     ok_hr(hr = ACList->SetOptions(ACLO_DESKTOP), S_OK);
     test_ExpectFolders(EnumStr, NULL, NULL, IgnoreRoot | CheckLast | IgnoreHidden);
@@ -585,17 +606,26 @@ test_ACListISF_FAVORITES()
     HRESULT hr = CoCreateInstance(CLSID_ACListISF, NULL, CLSCTX_ALL, IID_PPV_ARG(IEnumString, &EnumStr));
     ok_hr(hr, S_OK);
     if (!SUCCEEDED(hr))
+    {
+        skip("CoCreateInstance failed\n");
         return;
+    }
 
     CComPtr<IACList2> ACList;
     ok_hr(hr = EnumStr->QueryInterface(IID_IACList2, (void**)&ACList), S_OK);
     if (!SUCCEEDED(hr))
+    {
+        skip("QueryInterface failed\n");
         return;
+    }
 
     CComHeapPtr<ITEMIDLIST> pidlFavorites;
     ok_hr(hr = SHGetSpecialFolderLocation(NULL, CSIDL_FAVORITES, &pidlFavorites), S_OK);
     if (!SUCCEEDED(hr))
+    {
+        skip("SHGetSpecialFolderLocation failed\n");
         return;
+    }
 
     ok_hr(hr = ACList->SetOptions(ACLO_FAVORITES), S_OK);
     test_ExpectFolders(EnumStr, pidlFavorites, NULL, IgnoreRoot | CheckLast | IgnoreHidden);
@@ -608,12 +638,18 @@ test_ACListISF_FILESYSONLY()
     HRESULT hr = CoCreateInstance(CLSID_ACListISF, NULL, CLSCTX_ALL, IID_PPV_ARG(IEnumString, &EnumStr));
     ok_hr(hr, S_OK);
     if (!SUCCEEDED(hr))
+    {
+        skip("CoCreateInstance failed\n");
         return;
+    }
 
     CComPtr<IACList2> ACList;
     ok_hr(hr = EnumStr->QueryInterface(IID_IACList2, (void**)&ACList), S_OK);
     if (!SUCCEEDED(hr))
+    {
+        skip("QueryInterface failed\n");
         return;
+    }
 
     WCHAR Buffer[MAX_PATH];
     GetSystemWindowsDirectoryW(Buffer, _ARRAYSIZE(Buffer));
@@ -622,7 +658,10 @@ test_ACListISF_FILESYSONLY()
     CComHeapPtr<ITEMIDLIST> pidlDiskRoot;
     ok_hr(hr = SHParseDisplayName(Buffer, NULL, &pidlDiskRoot, NULL, NULL), S_OK);
     if (!SUCCEEDED(hr))
+    {
+        skip("SHParseDisplayName failed\n");
         return;
+    }
 
     ok_hr(hr = ACList->SetOptions(ACLO_FILESYSONLY), S_OK);
     test_at_end(EnumStr);
@@ -638,12 +677,18 @@ test_ACListISF_FILESYSDIRS()
     HRESULT hr = CoCreateInstance(CLSID_ACListISF, NULL, CLSCTX_ALL, IID_PPV_ARG(IEnumString, &EnumStr));
     ok_hr(hr, S_OK);
     if (!SUCCEEDED(hr))
+    {
+        skip("CoCreateInstance failed\n");
         return;
+    }
 
     CComPtr<IACList2> ACList;
     ok_hr(hr = EnumStr->QueryInterface(IID_IACList2, (void**)&ACList), S_OK);
     if (!SUCCEEDED(hr))
+    {
+        skip("QueryInterface failed\n");
         return;
+    }
 
     WCHAR Buffer[MAX_PATH];
     GetSystemWindowsDirectoryW(Buffer, _ARRAYSIZE(Buffer));
@@ -690,7 +735,10 @@ START_TEST(ACListISF)
     CCoInit init;
     ok_hr(init.hres, S_OK);
     if (!SUCCEEDED(init.hres))
+    {
+        skip("CoInitialize failed\n");
         return;
+    }
 
     test_ACListISF_NONE();
     test_ACListISF_CURRENTDIR();
