@@ -8,8 +8,8 @@ Uso: %s [unidade:] [-F] [-V] [-R] [-C]\n\n\
 -F          Corrige os erros no disco.\n\
 -V          Mostra o caminho completo de cada ficheiro no disco.\n\
 -R          Localiza sectores danificados e recupera informações legíveis.\n\
--C          Verifica a unidade sómente se existirem alterações desde a \n\
-            ultima verificação .\n\
+-C          Verifica a unidade sómente se existirem alterações desde a\n\
+            ultima verificação.\n\
 \n"
 
     IDS_PERCENT_COMPL "%d percento completo.\r"
