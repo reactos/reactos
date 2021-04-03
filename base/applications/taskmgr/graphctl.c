@@ -1,23 +1,9 @@
 /*
- *  ReactOS Task Manager
- *
- *  graphctl.c
- *
- *  Copyright (C) 2002  Robert Dickenson <robd@reactos.org>
- *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License along
- *  with this program; if not, write to the Free Software Foundation, Inc.,
- *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ * PROJECT:     ReactOS Task Manager
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Graph plotting controls
+ * COPYRIGHT:   Copyright 2002 Robert Dickenson <robd@reactos.org>
+ *              Copyright 2021 Wu Haotian <rigoligo03@gmail.com>
  */
 
 #include "precomp.h"
@@ -75,6 +61,14 @@ static void GraphCtrl_Init(TGraphCtrl* this)
     this->m_nShiftPixels     = 4;
     this->m_nHalfShiftPixels = this->m_nShiftPixels / 2;  /*  protected */
     this->m_nPlotShiftPixels = this->m_nShiftPixels + this->m_nHalfShiftPixels;  /*  protected */
+
+    /*  Set how big the grid boxes are  */
+    this->m_nGridXPixels = 12;
+    this->m_nGridYPixels = 12;
+
+    /*  Task manager should scroll grid with the graph. This variable contains the  */
+    /*  amount of pixels the grid paint origin should shift to left  */
+    this->m_nGridOffsetPixels = 0;
 
     /*  background, grid and data colors */
     /*  these are public variables and can be set directly */
@@ -251,17 +245,19 @@ void GraphCtrl_InvalidateCtrl(TGraphCtrl* this, BOOL bResize)
     /*   LineTo(m_dcGrid, m_rectPlot.left, m_rectPlot.top); */
 
     /*  draw the horizontal axis */
-    for (i = this->m_rectPlot.top; i < this->m_rectPlot.bottom; i += 12)
+    for (i = this->m_rectPlot.top; i <= this->m_rectPlot.bottom; i += this->m_nGridYPixels)
     {
-        MoveToEx(this->m_dcGrid, this->m_rectPlot.left, this->m_rectPlot.top + i, NULL);
-        LineTo(this->m_dcGrid, this->m_rectPlot.right, this->m_rectPlot.top + i);
+        MoveToEx(this->m_dcGrid, this->m_rectPlot.left, i, NULL);
+        LineTo(this->m_dcGrid, this->m_rectPlot.right, i);
     }
 
     /*  draw the vertical axis */
-    for (i = this->m_rectPlot.left; i < this->m_rectPlot.right; i += 12)
+    /*  In order to keep grid position uniform when resizing, vertical axis should be  */
+    /*  drawn from right to left  */
+    for (i = this->m_rectPlot.right - this->m_nGridOffsetPixels; i >= this->m_rectPlot.left; i -= this->m_nGridXPixels)
     {
-        MoveToEx(this->m_dcGrid, this->m_rectPlot.left + i, this->m_rectPlot.bottom, NULL);
-        LineTo(this->m_dcGrid, this->m_rectPlot.left + i, this->m_rectPlot.top);
+        MoveToEx(this->m_dcGrid, i, this->m_rectPlot.bottom, NULL);
+        LineTo(this->m_dcGrid, i, this->m_rectPlot.top);
     }
 
     SelectObject(this->m_dcGrid, oldPen);
@@ -342,6 +338,7 @@ void GraphCtrl_InvalidateCtrl(TGraphCtrl* this, BOOL bResize)
             DeleteObject(this->m_bitmapPlot);
             this->m_bitmapPlot = CreateCompatibleBitmap(dc, this->m_nClientWidth, this->m_nClientHeight);
             SelectObject(this->m_dcPlot, this->m_bitmapPlot);
+            GraphCtrl_DrawPoint(this);
         }
     }
 
@@ -366,6 +363,7 @@ double GraphCtrl_AppendPoint(TGraphCtrl* this,
     this->m_dCurrentPosition[1] = dNewPoint1;
     this->m_dCurrentPosition[2] = dNewPoint2;
     this->m_dCurrentPosition[3] = dNewPoint3;
+    GraphCtrl_ShiftGrid(this);
     GraphCtrl_DrawPoint(this);
     /* Invalidate(); */
     return dPrevious;
@@ -405,6 +403,51 @@ void GraphCtrl_Paint(TGraphCtrl* this, HWND hWnd, HDC dc)
     SelectObject(memDC, oldBitmap);
     DeleteObject(memBitmap);
     DeleteDC(memDC);
+}
+
+void GraphCtrl_ShiftGrid(TGraphCtrl* this)
+{
+    RECT rectCleanUp;
+    HPEN oldPen, solidPen;
+    int i;
+
+    if (this->m_dcGrid == NULL)
+        return;
+
+    solidPen = CreatePen(PS_SOLID, 0, this->m_crGridColor);
+
+    /* Scroll the grid left: BitBlt it to itself */
+    BitBlt(this->m_dcGrid, this->m_rectPlot.left, this->m_rectPlot.top + 1,
+           this->m_nPlotWidth, this->m_nPlotHeight,
+           this->m_dcGrid, this->m_rectPlot.left + this->m_nShiftPixels, this->m_rectPlot.top + 1,
+           SRCCOPY);
+
+    /* Set shift pixels */
+    this->m_nGridOffsetPixels = (this->m_nGridOffsetPixels + this->m_nShiftPixels) % this->m_nGridXPixels;
+
+    /* Construct a rect in which needs update */
+    rectCleanUp = this->m_rectPlot;
+    rectCleanUp.left = rectCleanUp.right - this->m_nShiftPixels;
+
+    /* Fill the cleanup area with the background */
+    FillRect(this->m_dcGrid, &rectCleanUp, this->m_brushBack);
+
+    /* Draw the plot rectangle */
+    oldPen = (HPEN)SelectObject(this->m_dcGrid, solidPen);
+
+    /* Redraw horizontal axis */
+    for (i = rectCleanUp.top; i < rectCleanUp.bottom; i += this->m_nGridYPixels)
+    {
+        MoveToEx(this->m_dcGrid, rectCleanUp.left, i, NULL);
+        LineTo(this->m_dcGrid, rectCleanUp.right, i);
+    }
+
+    /* Redraw scrolled vertical axis */
+    MoveToEx(this->m_dcGrid, rectCleanUp.right - this->m_nGridOffsetPixels, rectCleanUp.top, NULL);
+    LineTo(this->m_dcGrid, rectCleanUp.right - this->m_nGridOffsetPixels, rectCleanUp.bottom);
+
+    SelectObject(this->m_dcGrid, oldPen);
+    DeleteObject(solidPen);
 }
 
 void GraphCtrl_DrawPoint(TGraphCtrl* this)

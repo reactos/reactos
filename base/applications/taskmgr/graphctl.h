@@ -60,10 +60,13 @@ typedef struct
 /* those were protected fields */
   int m_nHalfShiftPixels;
   int m_nPlotShiftPixels;
+  int m_nGridOffsetPixels;
   int m_nClientHeight;
   int m_nClientWidth;
   int m_nPlotHeight;
   int m_nPlotWidth;
+  int m_nGridXPixels;
+  int m_nGridYPixels;
 
   double m_dLowerLimit;        /* lower bounds */
   double m_dUpperLimit;        /* upper bounds */
@@ -92,6 +95,7 @@ void    GraphCtrl_Create(TGraphCtrl* this, HWND hWnd, HWND hParentWnd,
 UINT nID);
 void    GraphCtrl_Dispose(TGraphCtrl* this);
 void    GraphCtrl_DrawPoint(TGraphCtrl* this);
+void    GraphCtrl_ShiftGrid(TGraphCtrl* this);
 void    GraphCtrl_InvalidateCtrl(TGraphCtrl* this, BOOL bResize);
 void    GraphCtrl_Paint(TGraphCtrl* this, HWND hWnd, HDC dc);
 void    GraphCtrl_Reset(TGraphCtrl* this);
