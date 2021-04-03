@@ -8,6 +8,7 @@ spec2def(browseui.dll browseui.spec ADD_IMPORTLIB)
 list(APPEND SOURCE
     ACLCustomMRU.cpp
     ACLCustomMRU.h
+    aclhistory.cpp
     aclistisf.cpp
     aclmulti.cpp
     addressband.cpp
