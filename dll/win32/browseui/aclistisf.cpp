@@ -2,7 +2,7 @@
  *  Shell AutoComplete list
  *
  *  Copyright 2015  Thomas Faber
- *  Copyright 2020  Katayama Hirofumi MZ
+ *  Copyright 2020-2021 Katayama Hirofumi MZ
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
