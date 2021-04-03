@@ -4534,6 +4534,15 @@ RtlIpv6StringToAddressExW(
 // Time Functions
 //
 NTSYSAPI
+BOOLEAN
+NTAPI
+RtlCutoverTimeToSystemTime(
+    _In_ PTIME_FIELDS CutoverTimeFields,
+    _Out_ PLARGE_INTEGER SystemTime,
+    _In_ PLARGE_INTEGER CurrentTime,
+    _In_ BOOLEAN ThisYearsCutoverOnly);
+
+NTSYSAPI
 NTSTATUS
 NTAPI
 RtlQueryTimeZoneInformation(
