@@ -34,7 +34,7 @@ BEGIN
 \n \
     nereye\n \
         bağdaştırıcı     Bağlantı adı\n \
-                       (* ve ? özel karakterlerineözel karakterlerine  bakınız)\n \
+                       (* ve ? özel karakterlerine  bakınız)\n \
 \n \
         Seçenekler:\n \
            /?           Bu yardım iletisini görüntüle.\n \
@@ -42,13 +42,13 @@ BEGIN
            /release     Belirtilen bağdaştırıcı için IP adresini bırak.\n \
            /renew       Belirtilen bağdaştırıcı için IP adresini yenile.\n \
            /flushdns    DNS Çözücü ön belleğini siler.\n \
-           /registerdns Tüm DHCP kirâlarını yeniler ve DNS adlarını yeniden kaydettirir.\n \
+           /registerdns Tüm DHCP kiralarını yeniler ve DNS adlarını yeniden kaydettirir.\n \
            /displaydns  DNS Çözücü ön belleğinin içeriğini görüntüle.\n \
            /showclassid Bağdaştırıcı için izin verilen tüm DHCP sınıf kimliklerini görüntüler.\n \
            /setclassid  DHCP sınıf kimliğini değiştirir.\n \
 \n \
-    Ön tanımlı, TCP/IP için tüm kayıtlı bağdaştırıcılar için yalnızca\n \
-    IP adresini, alt ağ maskesini ve ön tanımlı geçidi görüntülemektir.\n \
+    Varsayılan, TCP/IP için tüm kayıtlı bağdaştırıcılar için yalnızca\n \
+    IP adresini, alt ağ maskesini ve varsayılan geçidi görüntülemektir.\n \
 \n \
     release ve renew için, bir bağdaştırıcı adı belirtilmemişse TCP/IP için tüm kayıtlı\n \
     bağdaştırıcılar için yapılmış IP adres tahsisi bırakılacak veya yenilenecektir.\n \
@@ -62,6 +62,6 @@ BEGIN
         > ipconfig /renew EL*        ... EL ile başlayan adı olan tüm\n \
                                          bağlantıları yeniler.\n \
         > ipconfig /release *Bağ*    ... Eşleşen tüm bağlantıları bırakır.\n \
-                                         Ör: ""Yerel Ağ Bağlantısı 1"" veyâ\n \
+                                         Ör: ""Yerel Ağ Bağlantısı 1"" veya\n \
                                              ""Yerel Ağ Bağlantısı 2""\n"
 END

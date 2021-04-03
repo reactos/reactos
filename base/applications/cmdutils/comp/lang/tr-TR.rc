@@ -4,11 +4,11 @@ LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-    IDS_HELP "İki dosyanın ya da iki dosya öbeğinin içeriklerini karşılaştırır.\n\n\
+    IDS_HELP "İki dosyanın ya da iki dosya yığınının içeriklerini karşılaştırır.\n\n\
 COMP [/L] [/A] [veri1] [veri2]\n\n\
   veri1      Karşılaştırılacak birinci dosyanın adını ve konumunu belirtir.\n\
   veri2      Karşılaştırılacak ikinci dosyanın adını ve konumunu belirtir.\n\
-  /A         ASCII karakterlerindeki ayrımları görüntüle. (Ön tanımlı: On altılık.)\n\
+  /A         ASCII karakterlerindeki ayrımları görüntüle. (Varsayılan: On altılık.)\n\
   /L         Ayrımlar için satır numaraları görüntüle.\n"
     IDS_INVALIDSWITCH "Geçersiz seçenek - /%c\n"
     IDS_BADSYNTAX "Geçersiz komut satırı söz dizimi.\n"

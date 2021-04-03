@@ -8,22 +8,22 @@ LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 STRINGTABLE
 BEGIN
     IDS_HELP "Dosyaların erişim kontrol listelerini (ACL'ler) görüntüler veya değiştirir.\n\n\
-CACLS kütük adı [/T] [/E] [/C] [/G kullanıcı:izin [...]] [/R kullanıcı [...]]\n\
+CACLS dosya adı [/T] [/E] [/C] [/G kullanıcı:izin [...]] [/R kullanıcı [...]]\n\
                [/P kullanıcı:izin [...]] [/D kullanıcı [...]]\n\
-   kütük adı          ACL'leri görüntüler.\n\
+   dosya adı          ACL'leri görüntüler.\n\
    /T                 Şimdiki dizin ve alt dizinlerin içinde\n\
                       belirtilen dosyaların ACL'lerini değiştirir.\n\
    /E                 ACL'yi yenisiyle değiştirmek yerine onu düzenler.\n\
-   /C                 Erişim reddedildi hatalarında devam edin.\n\
-   /G kullanıcı:izin  Belirtilen kullanıcı erişim yetkilerini ver.\n\
+   /C                 Erişim engellendi hatalarına rağmen devam eder.\n\
+   /G kullanıcı:izin  Belirtilen kullanıcı erişim yetkilerini verir.\n\
                       Yetkilerin biri şu olabilir: R  Okuma\n\
                                                    W  Yazma\n\
                                                    C  Değiştirme (yazma)\n\
                                                    F  Tüm denetim\n\
-   /R kullanıcı       Belirtilen kullanıcının erişim yetkilerini geri al\n\
+   /R kullanıcı       Belirtilen kullanıcının erişim yetkilerini geri alır.\n\
                      (yalnızca /E ile geçerli).\n\
    /P kullanıcı:izin  Belirtilen kullanıcının erişim yetkilerini yenileriyle\n\
-                      değiştir.\n\
+                      değiştirir.\n\
                       Yetkilerin biri şu olabilir: N  Yok\n\
                                                    R  Okuma\n\
                                                    W  Yazma\n\
@@ -36,9 +36,9 @@ Kısaltmalar:\n\
    CI - Kapsayıcı Devralma.\n\
         ACE dizinlerle devralınacak.\n\
    OI - Nesnel Devralma.\n\
-        ACE kütüklerle devralınacak.\n\
+        ACE dosyalarla devralınacak.\n\
    IO - Yalnızca Devral.\n\
-        ACE'yi şimdiki kütüğe ya da dizine uygulama.\n"
+        ACE'yi şimdiki dosyaya ya da dizine uygulama.\n"
     IDS_ABBR_CI "(CI)"
     IDS_ABBR_OI "(OI)"
     IDS_ABBR_IO "(IO)"

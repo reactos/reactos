@@ -26,13 +26,13 @@ Değişkenler:\n\
     /L  kayıt adı         Oluşturulacak olayın kayıt adını belirtir.\n\
                           Geçerli adlar şunlardır:\n\
                           Application, System, Security\n\
-                          (İkincisi yalnızca DİZGE hesâbına ayrılmıştır.)\n\
+                          (İkincisi yalnızca DİZGE hesabına ayrılmıştır.)\n\
 \n\
     /SO kaynak            Olay için kullanılacak kaynak adını belirtir.\n\
-                          (Belirtilmezse ön tanımlı kaynak adı\n\
+                          (Belirtilmezse varsayılan kaynak adı\n\
                           'eventcreate' olacaktır.)\n\
                           Geçerli bir kaynak, rastgele bir dizgi olabilir ve olayı\n\
-                          oluşturan uygulamayı veyâ bileşeni belirtmelidir.\n\
+                          oluşturan uygulamayı veya bileşeni belirtmelidir.\n\
 \n\
     /T  tür               Oluşturulacak olayın türünü belirtir.\n\
                           Geçerli türler: SUCCESS, ERROR, WARNING,\n\

@@ -9,6 +9,6 @@ TREE [sürücü:][yol] [/F] [/A]\n\n\
 \t/F   Tüm dizinlerde dosyaların adlarını görüntüle.\n\
 \t/A   Genişletilmiş karakter tablosu yerine ASCII kullan.\n"
     IDS_NO_SUBDIRECTORIES "Bir alt dizin yok"
-    IDS_FOLDER_PATH "Dizin YOL tablosu\n"
-    IDS_VOL_SERIAL "Birim dizilik numarası %x:%x\n"
+    IDS_FOLDER_PATH "Dizin YOL Tablosu\n"
+    IDS_VOL_SERIAL "Birimin seri numarası %x:%x\n"
 END

@@ -58,7 +58,7 @@ BEGIN
         BEGIN
             MENUITEM "&Seçim Bilgisi",              ID_EDIT_SELECTIONINFO
             MENUITEM "&Karakter Biçimi",            ID_EDIT_CHARFORMAT
-            MENUITEM "&Ön Tanımlı Karakter Biçimi", ID_EDIT_DEFCHARFORMAT
+            MENUITEM "&Varsayılan Karakter Biçimi", ID_EDIT_DEFCHARFORMAT
             MENUITEM "&Paragraf Biçimi",            ID_EDIT_PARAFORMAT
             MENUITEM "&Metni Al",                   ID_EDIT_GETTEXT
         END
@@ -115,7 +115,7 @@ BEGIN
         MENUITEM "Vişne Çürüğü", ID_COLOR_MAROON
         MENUITEM "Yeşil",        ID_COLOR_GREEN
         MENUITEM "Zeytinyağı",   ID_COLOR_OLIVE
-        MENUITEM "Deniz Mâvisi", ID_COLOR_NAVY
+        MENUITEM "Deniz Mavisi", ID_COLOR_NAVY
         MENUITEM "Mor",          ID_COLOR_PURPLE
         MENUITEM "Camgöbeği",    ID_COLOR_TEAL
         MENUITEM "Gri",          ID_COLOR_GRAY

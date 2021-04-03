@@ -4,7 +4,7 @@ LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
 IDD_ABOUTBOX DIALOGEX 0, 0, 229, 98
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Sistem Yapılandırma Programı Üzerine"
+CAPTION "Sistem Yapılandırma Programı Hakkında"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON            IDI_APPICON, IDC_STATIC, 14, 14, 20, 20
@@ -30,7 +30,7 @@ BEGIN
     CONTROL         "&WIN.INI Dosyasını İşle", IDC_CBX_WIN_INI, "Button", BS_AUTO3STATE | WS_TABSTOP, 35, 98, 316, 10
     CONTROL         "Sistem Hizmetlerini Yükle", IDC_CBX_LOAD_SYSTEM_SERVICES, "Button", BS_AUTO3STATE | WS_TABSTOP, 35, 110, 316, 10
     CONTROL         "&Başlangıç Ögelerini Yükle", IDC_CBX_LOAD_STARTUP_ITEMS, "Button", BS_AUTO3STATE | WS_TABSTOP, 35, 122, 316, 10
-    CONTROL         "&Özgün Ön Yükleme Yapılandırmasını Kullan", IDC_CBX_USE_ORIGINAL_BOOTCFG, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 35, 134, 316, 10
+    CONTROL         "&Varsayılan Ön Yükleme Yapılandırmasını Kullan", IDC_CBX_USE_ORIGINAL_BOOTCFG, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 35, 134, 316, 10
     PUSHBUTTON      "S&istem Geri Yükleme'yi Başlat", IDC_BTN_SYSTEM_RESTORE_START, 146, 156, 124, 14
     PUSHBUTTON      "&Dosyayı Genişlet...", IDC_BTN_FILE_EXTRACTION, 275, 156, 85, 14
     GROUPBOX        "Başlangıç Seçimi", IDC_STATIC, 5, 5, 356, 145
@@ -52,7 +52,7 @@ BEGIN
     PUSHBUTTON      "Ye&ni", IDC_BTN_SYSTEM_NEW, 295, 118, 66, 14
     PUSHBUTTON      "De&ğiştir", IDC_BTN_SYSTEM_EDIT, 295, 137, 66, 14
     PUSHBUTTON      "&Tümünü Etkinleştir", IDC_BTN_SYSTEM_ENABLE_ALL, 153, 156, 66, 14
-    PUSHBUTTON      "T&ümünü Pasifleştir", IDC_BTN_SYSTEM_DISABLE_ALL, 224, 156, 66, 14
+    PUSHBUTTON      "T&ümünü Devre Dışı Bırak", IDC_BTN_SYSTEM_DISABLE_ALL, 224, 156, 66, 14
     PUSHBUTTON      "&Sil", IDC_BTN_SYSTEM_DELETE, 295, 156, 66, 14
 END
 
@@ -63,7 +63,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LISTBOX         IDC_LIST_BOX, 5, 5, 356, 61, LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_HSCROLL | WS_TABSTOP
     PUSHBUTTON      "&Tüm Ön Yükleme Yollarını Denetle", IDC_BTN_CHECK_BOOT_PATH, 5, 68, 72, 14
-    PUSHBUTTON      "&Ön Tanımlı Yap", IDC_BTN_SET_DEFAULT_BOOT, 82, 68, 66, 14
+    PUSHBUTTON      "&Varsayılan Yap", IDC_BTN_SET_DEFAULT_BOOT, 82, 68, 66, 14
     PUSHBUTTON      "&Yukarı Taşı", IDC_BTN_MOVE_UP_BOOT_OPTION, 153, 68, 66, 14
     PUSHBUTTON      "&Aşağı Taşı", IDC_BTN_MOVE_DOWN_BOOT_OPTION, 224, 68, 66, 14
     GROUPBOX        "Ön Yükleme Seçenekleri", IDC_STATIC, 5, 84, 285, 86
@@ -77,11 +77,11 @@ BEGIN
     CHECKBOX        "G&UI Ön Yüklemesi Yok\n(/NOGUIBOOT)", IDC_CBX_NO_GUI_BOOT, 158, 91, 127, 17, BS_MULTILINE
     CHECKBOX        "Ö&n Yükleme Kaydı (/BOOTLOG)", IDC_CBX_BOOT_LOG, 158, 110, 127, 12
     CHECKBOX        "Taban &Video (/BASEVIDEO)", IDC_CBX_BASE_VIDEO, 158, 124, 127, 12
-    CHECKBOX        "&OS Ön Yükleme Bilgisi (/SOS)", IDC_CBX_SOS, 158, 138, 127, 12
+    CHECKBOX        "&OS (İşletim Sistemi) Ön Yükleme Bilgisi (/SOS)", IDC_CBX_SOS, 158, 138, 127, 12
     PUSHBUTTON      "Ge&lişmiş Seçenekler...", IDC_BTN_ADVANCED_OPTIONS, 207, 151, 78, 14
-    LTEXT           "&Süre Aşımı:", IDC_STATIC, 296, 91, 32, 10
+    LTEXT           "&Zaman Aşımı:", IDC_STATIC, 296, 91, 32, 10
     EDITTEXT        IDC_TXT_BOOT_TIMEOUT, 295, 102, 33, 12, ES_RIGHT | ES_NUMBER
-    LTEXT           "sâniye", IDC_STATIC, 330, 104, 31, 10
+    LTEXT           "saniye", IDC_STATIC, 330, 104, 31, 10
     CONTROL         "T&üm Ön Yükleme Ayarlarını Kalıcı Yap", 292,
                     "Button", BS_AUTOCHECKBOX | BS_TOP | BS_MULTILINE | WS_TABSTOP, 295, 121, 66, 49
     PUSHBUTTON      "S&il", IDC_BTN_DELETE, 295, 68, 66, 14
@@ -94,7 +94,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL         "List1", IDC_SERVICES_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SORTASCENDING | WS_BORDER | WS_TABSTOP, 5, 5, 356, 129
     PUSHBUTTON      "&Tümünü Etkinleştir", IDC_BTN_SERVICES_ACTIVATE, 224, 156, 66, 14
-    PUSHBUTTON      "T&ümünü Pasifleştir", IDC_BTN_SERVICES_DEACTIVATE, 295, 156, 66, 14
+    PUSHBUTTON      "T&ümünü Devre Dışı Bırak", IDC_BTN_SERVICES_DEACTIVATE, 295, 156, 66, 14
     CONTROL         "Tü&m %s Hizmetlerini Gizle", IDC_CBX_SERVICES_MASK_PROPRIETARY_SVCS,
                     "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 5, 158, 203, 12
     LTEXT           "Birtakım korumalı %s hizmetlerin devre dışı bırakılamaz olduğunu lütfen göz önünde bulundurunuz.", IDC_STATIC_SERVICES_WARNING, 5, 138, 220, 17
@@ -107,7 +107,7 @@ BEGIN
     CONTROL "List3", IDC_STARTUP_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL |
             LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 2, 1, 360, 148
     PUSHBUTTON "&Tümünü Etkinleştir", IDC_BTN_STARTUP_ACTIVATE, 223, 155, 66, 14
-    PUSHBUTTON "T&ümünü Pasifleştir", IDC_BTN_STARTUP_DEACTIVATE, 295, 155, 66, 14
+    PUSHBUTTON "T&ümünü Devre Dışı Bırak", IDC_BTN_STARTUP_DEACTIVATE, 295, 155, 66, 14
 END
 
 IDD_TOOLS_PAGE DIALOGEX 0, 0, 366, 175

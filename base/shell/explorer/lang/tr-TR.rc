@@ -74,14 +74,14 @@ BEGIN
     AUTOCHECKBOX "&Görev Çubuğunu Kilitle", IDC_TASKBARPROP_LOCK, 13, 45, 200, 10
     AUTOCHECKBOX "G&örev Çubuğunu Kendiliğinden Gizle", IDC_TASKBARPROP_HIDE, 13, 58, 200, 10
     AUTOCHECKBOX "Gö&rev Çubuğunu Pencerelerin Üstünde Tut", IDC_TASKBARPROP_ONTOP, 13, 71, 200, 10
-    AUTOCHECKBOX "&Benzer Görev Çubuğu Düğmelerini Öbekleştir", IDC_TASKBARPROP_GROUP, 13, 84, 200, 10
+    AUTOCHECKBOX "&Benzer Görev Çubuğu Düğmelerini Gruplandır", IDC_TASKBARPROP_GROUP, 13, 84, 200, 10
     AUTOCHECKBOX "&Hızlı Başlat'ı Göster", IDC_TASKBARPROP_SHOWQL, 13, 97, 200, 10
     GROUPBOX "Simgeler", IDC_STATIC, 6, 114, 240, 98
     CONTROL "", IDC_TASKBARPROP_NOTIFICATIONBITMAP, "Static", SS_BITMAP | SS_SUNKEN | SS_CENTERIMAGE, 12, 126, 229, 24
     AUTOCHECKBOX "&Saat", IDC_TASKBARPROP_CLOCK, 13, 153, 80, 10
     AUTOCHECKBOX "S&aniyeleri Göster", IDC_TASKBARPROP_SECONDS, 120, 153, 80, 10, WS_DISABLED
     LTEXT "Son zamanlarda tıklamadığınız simgeleri gizleyerek bildirim alanını düzenli tutabilirsiniz.", IDC_STATIC, 13, 169, 223, 16
-    AUTOCHECKBOX "&Pasif Simgeleri Gizle", IDC_TASKBARPROP_HIDEICONS, 13, 191, 125, 10
+    AUTOCHECKBOX "&Devre Dışı Simgeleri Gizle", IDC_TASKBARPROP_HIDEICONS, 13, 191, 125, 10
     PUSHBUTTON "Ö&zelleştir...", IDC_TASKBARPROP_ICONCUST, 188, 191, 50, 14
 END
 
@@ -105,11 +105,11 @@ EXSTYLE WS_EX_CONTEXTHELP
 CAPTION "Bildirimleri Özelleştir"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT            "ReactOS, etkin ve acil bildirimler için simgeleri görüntüler ve devre dışı olanları gizler. Aşağıdaki dizelgede ögeler için bu davranışı değiştirebilirsiniz.", IDC_STATIC, 6, 6, 220, 30
+    LTEXT            "ReactOS, etkin ve acil bildirimler için simgeleri görüntüler ve devre dışı olanları gizler. Aşağıdaki listede ögeler için bu davranışı değiştirebilirsiniz.", IDC_STATIC, 6, 6, 220, 30
     LTEXT            "Bir öge seçiniz, sonra onun bildirim davranışını seçiniz:", IDC_STATIC, 6, 40, 220, 10
     CONTROL          "", IDC_NOTIFICATION_LIST, "SysListView32", WS_CLIPSIBLINGS | WS_BORDER | 0x00008005, 6, 50, 220, 128
     COMBOBOX         IDC_NOTIFICATION_BEHAVIOUR, 103, 178, 78, 200, CBS_DROPDOWNLIST | NOT WS_VISIBLE | WS_CLIPSIBLINGS
-    PUSHBUTTON       "&Ön Tanımlıları Geri Getir", IDC_TASKBARPROP_NOTIREST, 164, 188, 62, 14
+    PUSHBUTTON       "&Varsayılanları Geri Getir", IDC_TASKBARPROP_NOTIREST, 164, 188, 62, 14
     DEFPUSHBUTTON    "Tamam", IDOK, 122, 220, 50, 14
     PUSHBUTTON       "İptal", IDCANCEL, 176, 220, 50, 14
 END
@@ -159,14 +159,14 @@ BEGIN
     LTEXT            "&Başlat Menüsü Ayarları:", IDC_STATIC, 7, 53, 238, 8
     CONTROL          "B&aşlat Menüsü Ayarları", IDC_ITEMS, "SysTreeView32", WS_BORDER | 0x00000001, 7, 63, 238, 67, WS_EX_CLIENTEDGE
     GROUPBOX         "Son Belgeler", IDC_STATIC, 7, 133, 238, 56
-    LTEXT            "En son açtığınız belgelere hızlı erişim sağlamak için bu seçeneği seçiniz. Bu dizelgeyi silmek belgeleri silmez.", IDC_STATIC, 14, 144, 224, 21
-    AUTOCHECKBOX     "&En Son Açılan Belgelerimi Dizelgele", IDC_RECENTLY, 14, 168, 147, 10
-    PUSHBUTTON       "&Dizelgeyi Sil", IDC_CLEAR, 182, 168, 55, 14
+    LTEXT            "En son açtığınız belgelere hızlı erişim sağlamak için bu seçeneği seçiniz. Bu listeyi silmek belgeleri silmez.", IDC_STATIC, 14, 144, 224, 21
+    AUTOCHECKBOX     "&En Son Açılan Belgelerimi Listele", IDC_RECENTLY, 14, 168, 147, 10
+    PUSHBUTTON       "&Listeyi Sil", IDC_CLEAR, 182, 168, 55, 14
 END
 
 IDD_MODERNSTART_GENERAL DIALOGEX 0, 0, 251, 198
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_DLGFRAME
-CAPTION "Umûmî"
+CAPTION "Genel"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX         "Programlar İçin Bir Simge Büyüklüğü Seç", IDC_STATIC, 7, 7, 238, 37
@@ -175,11 +175,11 @@ BEGIN
     AUTORADIOBUTTON  "&Büyük Simgeler", IDC_CHOOSELARGE, 43, 25, 53, 10
     AUTORADIOBUTTON  "&Küçük Simgeler", IDC_CHOOSESMALL, 177, 25, 51, 10, NOT WS_TABSTOP
     GROUPBOX         "Programlar", IDC_STATIC, 7, 49, 238, 70
-    LTEXT            "Başlat menüsü en sık kullandığınız programlar için kısayollar içerir. Kısayolların dizelgesini silme programları silmez.", IDC_STATIC, 14, 63, 224, 20
+    LTEXT            "Başlat menüsü en sık kullandığınız programlar için kısayollar içerir. Kısayolların listesini silme programları silmez.", IDC_STATIC, 14, 63, 224, 20
     LTEXT            "B&aşlat Menüsünde Bulunan Programların Sayısı:", IDC_STATIC, 14, 86, 112, 8
     EDITTEXT         IDC_NUMBEROFPROGRAMS, 133, 84, 27, 12, ES_LEFT | ES_RIGHT | ES_NUMBER
     CONTROL          "", IDC_NUMBERUPDOWN, "msctls_updown32", WS_BORDER | 0x000000B6, 160, 84, 11, 12
-    PUSHBUTTON       "&Dizelgeyi Sil", IDC_CLEARLIST, 182, 98, 57, 14
+    PUSHBUTTON       "&Listeyi Sil", IDC_CLEARLIST, 182, 98, 57, 14
     GROUPBOX         "Başlat Menüsünü Göster", IDC_STATIC, 7, 126, 238, 63
     AUTOCHECKBOX     "&Ortak Ağ:", IDC_SHOWINTERNET, 14, 140, 42, 10
     COMBOBOX         IDC_INTERNETDEFAULTAPP, 98, 138, 140, 200, CBS_DROPDOWNLIST | WS_VSCROLL
@@ -193,7 +193,7 @@ BEGIN
     IDS_PROPERTIES "&Özellikler"
     IDS_OPEN_ALL_USERS "&Tüm Kullanıcılar'da Aç"
     IDS_EXPLORE_ALL_USERS "T&üm Kullanıcılar'da Araştır"
-    IDS_STARTUP_ERROR "Dizge, değer defterinin, bozuk ya da olmadığından dolayı gezgini başlatamadı."
+    IDS_STARTUP_ERROR "Sistem, kayıt defterinin, bozuk ya da kaybolmuş olmasından dolayı gezgini başlatamadı."
 END
 
 STRINGTABLE

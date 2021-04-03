@@ -51,7 +51,7 @@ MAIN_MENU MENU
   END
  }
  POPUP "&Yardım" {
-   MENUITEM "&Yardım Üzerine", MNID_HELP_HELPON
+   MENUITEM "&Yardım Hakkında", MNID_HELP_HELPON
    MENUITEM "&Wine Yardım Hakkında...", MNID_HELP_ABOUT
  }
 }

@@ -36,8 +36,8 @@ BEGIN
         MENUITEM "&Yığın Yükle...", ID_REGISTRY_LOADHIVE, GRAYED
         MENUITEM "Y&ığını kaldır...", ID_REGISTRY_UNLOADHIVE, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "A&ğdaki Değer Defteri'ne Bağlan...", ID_REGISTRY_CONNECTNETWORKREGISTRY
-        MENUITEM "Ağ&daki Değer Defteri'ne Bağlantıyı Kes...", ID_REGISTRY_DISCONNECTNETWORKREGISTRY, GRAYED
+        MENUITEM "A&ğdaki Kayıt Defteri'ne Bağlan...", ID_REGISTRY_CONNECTNETWORKREGISTRY
+        MENUITEM "Ağ&daki Kayıt Defteri'ne Bağlantıyı Kes...", ID_REGISTRY_DISCONNECTNETWORKREGISTRY, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "Ya&zdır...\tDenetim+P", ID_REGISTRY_PRINT, GRAYED
         MENUITEM SEPARATOR
@@ -85,7 +85,7 @@ BEGIN
     BEGIN
         MENUITEM "&Yardım Konuları\tF1", ID_HELP_HELPTOPICS
         MENUITEM SEPARATOR
-        MENUITEM "&Değer Defteri Düzenleyicisi Üzerine", ID_HELP_ABOUT
+        MENUITEM "&Kayıt Defteri Düzenleyicisi Hakkında", ID_HELP_ABOUT
     END
 END
 
@@ -271,18 +271,18 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_APP_TITLE "Değer Defteri Düzenleyicisi"
+    IDS_APP_TITLE "Kayıt Defteri Düzenleyicisi"
     IDC_REGEDIT "REGEDIT"
     IDC_REGEDIT_FRAME "REGEDIT_FRAME"
 END
 
 STRINGTABLE
 BEGIN
-    ID_REGISTRY_MENU "Bütün Değer Defteri ile çalışma komutlarını içerir."
+    ID_REGISTRY_MENU "Bütün Kayıt Defteri ile çalışma komutlarını içerir."
     ID_EDIT_MENU "Dizinleri veya değerleri düzenleme komutlarını içerir."
-    ID_VIEW_MENU "Değer Defteri penceresinin husûsileştirme komutlarını içerir."
+    ID_VIEW_MENU "Kayıt Defteri penceresinin husûsileştirme komutlarını içerir."
     ID_FAVOURITES_MENU "Sık kullanılan dizinleri kullanma komutlarını içerir."
-    ID_HELP_MENU "Değer Defteri Düzenleyicisi ile ilgili bilgiyi ya da yardımı görüntüleme komutlarını içerir."
+    ID_HELP_MENU "Kayıt Defteri Düzenleyicisi ile ilgili bilgiyi ya da yardımı görüntüleme komutlarını içerir."
     ID_EDIT_NEW_MENU "Yeni bir dizin ya da yeni bir değer oluşturma komutlarını içerir."
 END
 
@@ -293,29 +293,29 @@ BEGIN
     ID_EDIT_NEW_STRINGVALUE "Yeni bir dizi değeri ekler."
     ID_EDIT_NEW_BINARYVALUE "Yeni bir ikili değer ekler."
     ID_EDIT_NEW_DWORDVALUE "Yeni bir 32 bitlik değer ekler."
-    ID_REGISTRY_IMPORTREGISTRYFILE "Bir metin dosyasını Değer Defteri'ne alır."
-    ID_REGISTRY_EXPORTREGISTRYFILE "Değer Defteri'nin tümünü ya da bir bölümünü bir metin dosyasına verir."
-    ID_REGISTRY_LOADHIVE "Değer Defteri'ne bir yığın dosyasını yükler."
-    ID_REGISTRY_UNLOADHIVE "Değer Defteri'nden bir yığın kaldırır."
-    ID_REGISTRY_CONNECTNETWORKREGISTRY "Uzaktaki bir bilgisyarın Değer Defteri'sine bağlanır."
-    ID_REGISTRY_DISCONNECTNETWORKREGISTRY "Uzaktaki bir bilgisayarın Değer Defteri'sine olan bağlantıyı keser."
-    ID_REGISTRY_PRINT "Değer Defteri'nin tümünü ya da bir bölümünü yazdırır."
-/*  ID_HELP_HELPTOPICS "Değer Defteri Düzenleyicisi Yardımı'nı açar."  */
+    ID_REGISTRY_IMPORTREGISTRYFILE "Bir metin dosyasını Kayıt Defteri'ne alır."
+    ID_REGISTRY_EXPORTREGISTRYFILE "Kayıt Defteri'nin tümünü ya da bir bölümünü bir metin dosyasına verir."
+    ID_REGISTRY_LOADHIVE "Kayıt Defteri'ne bir yığın dosyasını yükler."
+    ID_REGISTRY_UNLOADHIVE "Kayıt Defteri'nden bir yığın kaldırır."
+    ID_REGISTRY_CONNECTNETWORKREGISTRY "Uzaktaki bir bilgisayarın Kayıt Defteri'sine bağlanır."
+    ID_REGISTRY_DISCONNECTNETWORKREGISTRY "Uzaktaki bir bilgisayarın Kayıt Defteri'sine olan bağlantıyı keser."
+    ID_REGISTRY_PRINT "Kayıt Defteri'nin tümünü ya da bir bölümünü yazdırır."
+/*  ID_HELP_HELPTOPICS "Kayıt Defteri Düzenleyicisi Yardımı'nı açar."  */
     ID_HELP_ABOUT "Programla ilgili bilgi, sürüm numarası ve telif hakkı görüntüler."
 END
 
 STRINGTABLE
 BEGIN
-    ID_REGISTRY_EXIT "Değer Defteri Düzenleyicisi'nden çıkar."
-    ID_FAVOURITES_ADDTOFAVOURITES "Dizinleri yer imleri dizelgesine ekler."
-    ID_FAVOURITES_REMOVEFAVOURITE "Dizinleri yer imleri dizelgesinden kaldırır."
+    ID_REGISTRY_EXIT "Kayıt Defteri Düzenleyicisi'nden çıkar."
+    ID_FAVOURITES_ADDTOFAVOURITES "Dizinleri yer imleri listesine ekler."
+    ID_FAVOURITES_REMOVEFAVOURITE "Dizinleri yer imleri listesinden kaldırır."
     ID_VIEW_STATUSBAR "Durum çubuğunu gösterir ya da gizler."
     ID_VIEW_SPLIT "İki levha arasındaki ayırıcının konumunu değiştirir."
     ID_VIEW_REFRESH "Pencereyi yeniler."
     ID_EDIT_DELETE "Seçileni siler."
     ID_EDIT_RENAME "Seçilenin adını değiştirir."
     ID_EDIT_COPYKEYNAME "Seçilen dizinin adını panoya çoğaltır."
-    ID_EDIT_FIND "Bir dizgiyi dizinlerin adlarında, değer adlarında veyâ değer verilerinde arar."
+    ID_EDIT_FIND "Bir dizgiyi dizinlerin adlarında, değer adlarında veya değer verilerinde arar."
     ID_EDIT_FINDNEXT "Önceki aramada belirtilmiş metni sonraki aramada arar."
 END
 
@@ -327,7 +327,7 @@ BEGIN
     IDS_BAD_VALUE "Değer sorgulanamıyor: %s"
     IDS_UNSUPPORTED_TYPE "Şu türdeki dizinler değiştirilemiyor: %ld"
     IDS_TOO_BIG_VALUE "Değer çok büyük: %ld"
-    IDS_MULTI_SZ_EMPTY_STRING "REG_MULTI_SZ veri türü boş dizgi içeremez.\nBoş diziler tablolardan silinmiştir."
+    IDS_MULTI_SZ_EMPTY_STRING "REG_MULTI_SZ veri türü boş dizgi içeremez.\nBoş diziler listelerden silinmiştir."
     IDS_QUERY_DELETE_KEY_ONE "Bu dizini silmek istediğinizden emin misiniz?"
     IDS_QUERY_DELETE_KEY_MORE "Bu dizinleri silmek istediğinizden emin misiniz?"
     IDS_QUERY_DELETE_KEY_CONFIRM "Dizin Silme Doğrulaması"
@@ -339,7 +339,7 @@ BEGIN
     IDS_ERR_RENVAL_CAPTION "Değer Adı Değiştirilmesi Yanlışlığı"
     IDS_ERR_RENVAL_TOEMPTY "Adı değiştirilemiyor: %s. Belirtilen değer adı boş. Başka bir ad yazıp yeniden deneyiniz."
     IDS_QUERY_IMPORT_HIVE_CAPTION "Dizin Yenileme Doğrulaması"
-    IDS_QUERY_IMPORT_HIVE_MSG "Bir dizin seçili dizinle yenilenecektir.\nBu dizinin tüm alt dizinleri ve değerleri silinecektir.\nİşlemi sürdürmek istiyor musunuz?"
+    IDS_QUERY_IMPORT_HIVE_MSG "Bir dizin seçili dizinle yenilenecektir.\nBu dizinin tüm alt dizinleri ve değerleri silinecektir.\nDevam etmek istiyor musunuz?"
     IDS_NEW_KEY "%d. Yeni Dizin"
     IDS_NEW_VALUE "%d. Yeni Değer"
 END
@@ -347,7 +347,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_BINARY_EMPTY "(Sıfır uzunluktaki ikili değer)"
-    IDS_DEFAULT_VALUE_NAME "(Ön tanımlı)"
+    IDS_DEFAULT_VALUE_NAME "(Varsayılan)"
     IDS_VALUE_NOT_SET "(Değer belirtilmemiştir.)"
     IDS_UNKNOWN_TYPE "Bilinmeyen tür: (0x%lx)"
     IDS_MY_COMPUTER "Bilgisayar"
@@ -399,13 +399,13 @@ BEGIN
     IDS_EXPAND "&Genişlet"
     IDS_COLLAPSE "&Daralt"
     IDS_GOTO_SUGGESTED_KEY "G&it: %s"
-    IDS_FINISHEDFIND "Değer Defteri boyunca arama bitti."
+    IDS_FINISHEDFIND "Kayıt Defteri içerisinde arama bitti."
 END
 
 STRINGTABLE
 BEGIN
-    IDS_IMPORT_PROMPT "Bilgi ekleme, yanlışlıkla değerleri değiştirebilir ya da silebilir ve bileşenlerin doğru çalışmasını engelleyebilir.\nEğer ""%s"" içindeki bilginin kaynağına güvenmiyorsanız onu Değer Defteri'ne eklemeyiniz.\n\nSürdürmek istediğinizden emin misiniz?"
-    IDS_IMPORT_OK """%s"" içinde bulunan dizinler ve değerler Değer Defteri'ne başarıyla eklendi."
+    IDS_IMPORT_PROMPT "Bilgi ekleme, yanlışlıkla değerleri değiştirebilir ya da silebilir ve bileşenlerin doğru çalışmasını engelleyebilir.\nEğer ""%s"" içindeki bilginin kaynağına güvenmiyorsanız onu Kayıt Defteri'ne eklemeyiniz.\n\nDevam etmek istediğinizden emin misiniz?"
+    IDS_IMPORT_OK """%s"" içinde bulunan dizinler ve değerler Kayıt Defteri'ne başarıyla eklendi."
     IDS_IMPORT_ERROR """%s"" alınamıyor: Dosyayı açmada yanlışlık. Bir disk yanlışlığı, bir dosya tablosu yanlışlığı ya da tablonun olmaması olabilir."
     IDS_EXPORT_ERROR """%s"" verilemiyor: Dosyayı oluşturmada ya da dosyaya yazmada yanlışlık. Bir disk yanlışlığı ya da bir dosya tablosu yanlışlığı olabilir."
 END
@@ -541,14 +541,14 @@ FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     ICON IDI_REGEDIT, IDC_STATIC, 7, 7, 20, 20
     DEFPUSHBUTTON "İptal", IDCANCEL, 93, 29, 45, 14
-    LTEXT "Değer Defteri Aranıyor...", IDC_STATIC, 33, 12, 83, 8
+    LTEXT "Kayıt Defteri Aranıyor...", IDC_STATIC, 33, 12, 83, 8
 END
 
 /* String Table */
 /*
  *STRINGTABLE
  *BEGIN
- *    ID_HELP_HELPTOPICS "Değer Defteri Düzenleyicisi Yardımı'nı açar."
+ *    ID_HELP_HELPTOPICS "Kayıt Defteri Düzenleyicisi Yardımı'nı açar."
  *    ID_HELP_ABOUT "İzlenceyle ilgili bilgi, sürüm numarası ve telif hakkı görüntüler."
  *END
  */

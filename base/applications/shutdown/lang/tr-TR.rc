@@ -46,14 +46,14 @@ Usage: shutdown [/?] [/i | /l | /s | /r | /g | /a | /p | /h | /e] [/f]\n\
     /g      Tüm kayıtlı uygulamaları ve bilgisayarı yeniden başlat.\n\
     /a      Gecikmiş bir kapatmayı iptal et. Yalnızca gecikme süresi esnasında\n\
             kullanılabilir.\n\
-    /p      Bir süre aşımı veya uyarı olmadan yerli bilgisayarı kapat. /d veyâ\n\
+    /p      Bir zaman aşımı veya uyarı olmadan yerel bilgisayarı kapat. /d veya\n\
             /f ile kullanılabilir.\n\
     /h      Yerel bilgisayarı hazırda beklet. /f ile kullanılabilir.\n\
     /e      Beklenmeyen bilgisayarı kapatma için nedeni belgele.\n\
     /m \\\\bilgisayar  Varış bilgisayarını (UNC/IP adresi) belirt.\n\
-    /t xxx  Bilgisayarı kapatmadan önce xxx saniye denli süre aşımı zamanını ayarla.\n\
+    /t xxx  Bilgisayarı kapatmadan önce xxx saniye denli zaman aşımı zamanını ayarla.\n\
             Geçerli aralık 0'dan başlar, 315360000'a (10 yıl) dektir,\n\
-            30 ön tanımlı değer olarak.\n\
+            30 varsayılan değer olarak.\n\
     /c ""açıklama""  Kapatma ya da yeniden başlatma için nedeni açıkla.\n\
             en çok 512 damgaya izin verilmiştir.\n\
     /f      Kullanıcıları uyarmadan çalışan uygulamaları kapatmaya zorla. Başka\n\
@@ -61,13 +61,13 @@ Usage: shutdown [/?] [/i | /l | /s | /r | /g | /a | /p | /h | /e] [/f]\n\
     /d [p|u:]xx:yy  Kapatma ya da yeniden başlatma için neden kodu ver.\n\
             p kapatmanın ya da yeniden başlatmanın planlanmış olduğunu belirtir.\n\
             u nedenin kullanıcı eliyle tanımlanmış olduğunu belirtir.\n\
-            p veyâ u belirtilmezse bilgisayarı kapatma ya da yeniden başlatma\n\
+            p veya u belirtilmezse bilgisayarı kapatma ya da yeniden başlatma\n\
             planlanmış değildir.\n\
             xx büyük neden kodudur (256'dan küçük artı tamsayı).\n\
             yy küçük neden kodudur (65536'dan küçük artı tamsayı).\n"
 
     IDS_ERROR_SHUTDOWN_REBOOT "HATA: Kapatma ve yeniden başlatma aynı zamanda olamaz.\n"
-    IDS_ERROR_TIMEOUT "HATA: %u süre aşımı değeri sınırların (0-315360000) dışında.\n"
+    IDS_ERROR_TIMEOUT "HATA: %u zaman aşımı değeri sınırların (0-315360000) dışında.\n"
     IDS_ERROR_ABORT "HATA: Sistemin kapatılması durdurulamaz.\n"
     IDS_ERROR_LOGOFF "HATA: Kullanıcı oturumundan çıkılamaz.\n"
     IDS_ERROR_SHUTDOWN "HATA: Sistem kapatılamaz.\n"

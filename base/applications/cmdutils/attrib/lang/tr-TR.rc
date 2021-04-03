@@ -6,7 +6,7 @@ STRINGTABLE
 BEGIN
     STRING_FILE_NOT_FOUND "Dosya bulunamadı - '%s'\n"
     STRING_ATTRIB_HELP "Dosya öz niteliklerini görüntüler ya da değiştirir.\n\n\
-ATTRIB [+R | -R] [+A | -A] [+S | -S] [+H | -H] kütük ...\n\
+ATTRIB [+R | -R] [+A | -A] [+S | -S] [+H | -H] dosya ...\n\
        [/S [/D]]\n\n\
   +   Bir öz nitelik ayarlar\n\
   -   Bir öz nitelik siler\n\

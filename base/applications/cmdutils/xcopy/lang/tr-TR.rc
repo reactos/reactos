@@ -36,24 +36,24 @@ Nereye:\n\
 \tdizin varsay.\n\
 [/S]  Dizinleri ve alt dizinleri çoğalt.\n\
 [/E]  Tüm boş olanları kapsayarak dizinleri ve alt dizinleri çoğalt.\n\
-[/Q]  Çoğaltma esnasında adları tablolamaz, bu sessiz çıktıdır.\n\
+[/Q]  Çoğaltma esnasında adları listelemez, bu sessiz çıktıdır.\n\
 [/F]  Çoğaltma esnasında eksiksiz kaynak ve varış adlarını göster.\n\
 [/L]  Çoğaltılacak adları göstererek işlem taklidini et.\n\
 [/W]  Çoğaltma işlemine başlamadan önce sorar.\n\
 [/T]  Boş dizin yapısını oluşturur ama dosyaları çoğaltmaz.\n\
-[/Y]  Dosyaların üzerine yazarken sorma.\n\
+[/Y]  Dosyaların üzerine yazarken sormaz.\n\
 [/-Y] Dosyaların üzerine yazarken sormayı etkinleştir.\n\
 [/P]  Çoğlatmadan önce tüm kaynak dosyalar için sorar.\n\
 [/N]  Kısa adlar kullanarak çoğalt.\n\
 [/U]  Yalnızca varışta önceden olan dosyaları çoğalt.\n\
-[/R]  Tüm yalnızca okunur kütüklerin üzerlerine yaz.\n\
-[/H]  Çoğaltmada gizli ve dizge kütüklerini kapsa.\n\
-[/C]  Çoğaltma esnâsında bir yanlışlık oluşsa bile sürdür.\n\
+[/R]  Tüm yalnızca okunur dosyaların üzerlerine yaz.\n\
+[/H]  Çoğaltmada gizli veya korunan sistem dosyalarınını kapsa.\n\
+[/C]  Çoğaltma esnasında bir yanlışlık oluşsa bile sürdür.\n\
 [/A]  Yalnızca belgelik öz niteliği ayarlı dosyaları çoğalt.\n\
 [/M]  Yalnızca belgelik öz niteliği ayarlı dosyaları çoğalt,\n\
 \tbelgelik öz niteliğini siler.\n\
 [/K]  Bu öznitelikler olmadan kopyalanan dosya öznitelikleri korunmaz.\n\
 [/D | /D:m-d-y] Yeni dosyaları veya onların verilen tarihten sonra değiştirilmişlerini çoğalt.\n\
-\t\tBir târih verilmemişse yalnızca varış kaynaktan eskiyse çoğalt.\n\n"
+\t\tBir tarih verilmemişse yalnızca varış kaynaktan eskiyse çoğalt.\n\n"
 
 }

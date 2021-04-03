@@ -7,7 +7,7 @@ LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-    STRING_ASSOC_HELP "Dosya uzantısı ilişkilerini değiştirin.\n\n\
+    STRING_ASSOC_HELP "Dosya uzantısı ilişkilerini değiştirir.\n\n\
 assoc [.ext[=[DosyaTuru]]]\n\
 \n\
 assoc (bütün ilişkiler yazdırın)\n\
@@ -25,9 +25,9 @@ Yeni bir takma adı ayarlamak veya mevcut bir takma adı değiştirmek için:\n\
 ALIAS listesinden bir takma adı kaldırmak için:\n\
   ALIAS da="
     STRING_BEEP_HELP "Hoparlörden ""biip"" sesi çıkart.\n\nBEEP\n"
-    STRING_CALL_HELP "Bir toplu iş programından bir diğerini çağırır.\n\n\
+    STRING_CALL_HELP "Bir toplu iş dosyasından bir diğerini çağırır.\n\n\
 CALL [sürücü:][yol]program-adı [program-parametreleri]\n\n\
-  program-parametreleri  Toplu iş programının gerektirdiği komut satırı \n\
+  program-parametreleri  Toplu iş dosyasının gerektirdiği komut satırı \n\
                          değişkenlerini belirtir.\n"
     STRING_CD_HELP "Çalışma dizini değiştirir veya adını gösterir.\n\n\
 CHDIR [/D][sürücü:][yol]\n\
@@ -221,7 +221,7 @@ FOR /F [""ayarlar""] IN (küme) DO komut [parametreler]\n\n\
 Değiştirilebilir parametreler,% 'den sonra ve adın önüne bir ~ ve isteğe bağlı bir\n\
 niteleyici eklenerek değiştirilebilir (örneğin,% ~ X). Desteklenen niteleyiciler şunlardır:\n\
 f,d,p,n,x,s,a,t,z.\n\n\
-FOR komutunu bir toplu iş programında kullanmak için,%değişken yerine %%değişkenini belirtin.\n"
+FOR komutunu bir toplu iş dosyasında kullanmak için,%değişken yerine %%değişkenini belirtin.\n"
     STRING_FREE_HELP1 "\n%s sürücüsündeki birim %-11s\n\
  Seri numarası: %s\n\
   %16s bayt toplam disk alanı\n\
@@ -429,7 +429,7 @@ VER [/C][/R][/W]\n\n\
 `ver /w`. Bu bir özgür yazılımdır ve belirli koşullar altında yeniden dağıtabilirsiniz; \n\
 ayrıntılar için `ver /r` yazın. Telif sahiplerinin listesi için `ver /c` yazın."
     STRING_VERSION_HELP3 "\n Bu program, kullanışlı olabileceği beklentisiyle dağıtılmıştır; \n\
-ancak, bu izlence HİÇBİR GÜVENCE VEREMEZ, SATILABİLİRLİĞİN ve BELİRLİ BİR AMACA UYGUNLUĞUN \n\
+ancak, bu program HİÇBİR GÜVENCE VEREMEZ, SATILABİLİRLİĞİN ve BELİRLİ BİR AMACA UYGUNLUĞUN \n\
 güvencesi de verilemez. Daha çok bilgi için GNU Genel Kamu Lisansı'na bakınız."
     STRING_VERSION_HELP4 "\n Bu program ücretsiz bir yazılımdır; Özgür Yazılım Vakfı tarafından\n\
 yayınlanan GNU Genel Kamu Lisansı'nın 2. sürümü ya da (sizin tercihinize göre) sonraki herhangi \n\

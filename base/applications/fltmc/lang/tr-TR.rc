@@ -7,8 +7,8 @@ BEGIN
     IDS_USAGE "\nGeçerli komutlar:\n\
                load        Bir süzgeç sürücüsünü yükler\n\
                unload      Bir süzgeç sürücüsünü kaldırır\n\
-               filters     Dizgede şimdilik kayıtlı süzgeçleri listeler\n\n\
-               volumes     Bütüm alanları listeler\n\n"
+               filters     Sistemde şu anda kayıtlı olan süzgeçleri listeler\n\n\
+               volumes     Bütün alanları listeler\n\n"
 
     IDS_USAGE_LOAD      "Bir süzgeç sürücüsünü yükler\n"
     IDS_USAGE_UNLOAD    "Bir süzgeç sürücüsünü kaldırır\n"
@@ -26,7 +26,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_ERROR_PRIV      "Sürücü yüklemesi ayrıcalığı ayarlama başarısız (0x%X)\n"
-    IDS_ERROR_FILTERS   "Süzgeçleri dizelgeleme başarısız (0x%X)\n"
+    IDS_ERROR_FILTERS   "Süzgeçleri listeleme başarısız (0x%X)\n"
     IDS_ERROR_LOAD      "Süzgeçleri yükleme başarısız (0x%X)\n"
     IDS_ERROR_UNLOAD    "Süzgeçleri kaldırma başarısız (0x%X)\n"
     IDS_ERROR_VOLUMES   "Hacimler listelenemedi (0x%X)\n"

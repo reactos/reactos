@@ -10,11 +10,11 @@ STRINGTABLE
 BEGIN
     IDS_USAGE "\n\
 Kullanım: ping [-t] [-a] [-n sayı] [-l boyut] [-f] [-i TTL] [-v TOS]\n\
-            [-w süre aşımı] [-4] [-6] varış anabilgisayarı\n\
+            [-w zaman aşımı] [-4] [-6] varış anabilgisayarı\n\
 \n\
 Seçenekler:\n\
     -t             Belirtilen anabilgisayar durana kadar ping at.\n\
-                   Sayım dökümünü görmek ve sürdürmek için Ctrl-X'e basınız.\n\
+                   Sayım dökümünü görmek ve devam etmek için Ctrl-X'e basınız.\n\
                    Durdurmak için Ctrl-C'ye basınız.\n\
     -a             Anabilgisayar adları için adresleri çözümle.\n\
     -n sayı        Gönderilecek yankı istekleri sayısı.\n\
@@ -24,7 +24,7 @@ Seçenekler:\n\
     -v TOS         Hizmet türü (Yalnızca IPv4 için. Bu ayar, kullanımdan\n\
                    kaldırılmıştır ve IP üst bilgisinde hizmet türü alanı\n\
                    üzerinde bir etkisi yoktur.\n\
-    -w süre aşımı  Tüm yanıtlar için milisaniye cinsinden süre aşımı.\n\
+    -w zaman aşımı  Tüm yanıtlar için milisaniye cinsinden zaman aşımı.\n\
     -4             IPv4 kullanmaya zorlar.\n\
     -6             IPv6 kullanmaya zorlar.\n\
 \n"
@@ -51,7 +51,7 @@ Seçenekler:\n\
     IDS_REPLY_STATUS "Yankı yanıtı geri döndü %lu.\n"
     IDS_DEST_HOST_UNREACHABLE "Varış anabilgisayarı erişilemez.\n"
     IDS_DEST_NET_UNREACHABLE "Varış ağı erişilemez.\n"
-    IDS_REQUEST_TIMED_OUT "İstek süre aşımına uğradı.\n"
+    IDS_REQUEST_TIMED_OUT "İstek zaman aşımına uğradı.\n"
     IDS_TTL_EXPIRED "Geçişte yaşama süresi bitti.\n"
     IDS_TRANSMIT_FAILED "PING: Geçiş başarısız oldu. (Yanlışlık %u)\n"
 

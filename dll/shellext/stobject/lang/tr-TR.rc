@@ -23,7 +23,7 @@ BEGIN
     IDS_PWR_PERCENT_REMAINING "%%%u kaldı."
     IDS_PWR_CHARGING          "%%%u (Yükleniyor)"
     IDS_PWR_UNKNOWN_REMAINING "Bilinmeyen kalan."
-    IDS_PWR_AC "Dalgalı akımda AC."
+    IDS_PWR_AC "Dalgalı akımda(AC)."
     IDS_PWR_HOURS_REMAINING "%1!u!.%2!02u! saat (%%%3!u!) kalan"
     IDS_PWR_MINUTES_REMAINING "%1!u! dakîka (%%%2!u!) kalan"
 

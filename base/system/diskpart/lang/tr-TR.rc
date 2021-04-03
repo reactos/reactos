@@ -7,9 +7,9 @@ STRINGTABLE
 BEGIN
     IDS_APP_HEADER "ReactOS DiskPart"
     IDS_APP_USAGE "\nDisk Bölümlendirme Yorumlayıcısı.\n\n\
-Kullanım: DISKPART [/S kütük adı] [/T süre aşımı] [/?]\n\n\
-/S kütük adı\tVerilen betiği çalıştırır.\n\
-/T süre aşımı\tDiskPart kullanım örtüşmesini önlemeye saniye olarak süre aşımı.\n\
+Kullanım: DISKPART [/S dosya adı] [/T zaman aşımı] [/?]\n\n\
+/S dosya adı\tVerilen betiği çalıştırır.\n\
+/T zaman aşımı\tDiskPart kullanım örtüşmesini önlemeye saniye olarak zaman aşımı.\n\
 /?\t\tBu yardım iletisini görüntüler.\n\n"
     IDS_APP_LICENSE "GNU GPL sürüm 2 altında lisanslanmıştır.\n"
     IDS_APP_CURR_COMPUTER "Bilgisayar üzerinde: %s\n\n"
@@ -45,7 +45,7 @@ BEGIN
     IDS_LIST_PARTITION_HEAD "\n      Bölüm              Tür        Boyut    Ofset\n"
     IDS_LIST_PARTITION_LINE "  -------------  ----------------  -------  -------\n"
     IDS_LIST_PARTITION_FORMAT "%c Bölüm %2lu       %-16s  %4I64u %-2s  %4I64u %-2s\n"
-    IDS_LIST_PARTITION_NO_DISK "\nBölümleri dizelgelemek için bir disk yok.\nLütfen bir disk seçiniz ve yeniden deneyiniz.\n\n"
+    IDS_LIST_PARTITION_NO_DISK "\nBölümleri listelemek için bir disk yok.\nLütfen bir disk seçiniz ve yeniden deneyiniz.\n\n"
     IDS_LIST_VOLUME_HEAD "Birim ###\tHarf\tEtiket\n"
 END
 
@@ -98,14 +98,14 @@ BEGIN
     IDS_HELP_CMD_DESC_ATTACH "ATTACH\t\t- Bir sanal disk alanı iliştirir.\n"
     IDS_HELP_CMD_DESC_ATTRIBUTES "ATTRIBUTES\t- Birim ya da disk öz nitelikleriyle oyna.\n"
     IDS_HELP_CMD_DESC_AUTOMOUNT "AUTOMOUNT\t- Başlıca birimlerin kendiliğinden bağlamasını etkinleştir ve devre dışı bırak.\n"
-    IDS_HELP_CMD_DESC_BREAK "BREAK\t\t- Bir yansıma öbeği ayır.\n"
+    IDS_HELP_CMD_DESC_BREAK "BREAK\t\t- Bir yansıma yığını ayır.\n"
     IDS_HELP_CMD_DESC_CLEAN "CLEAN\t\t- Diskin yapılandırma bilgisini ya da tüm bilgisini sil.\n"
     IDS_HELP_CMD_DESC_COMPACT "COMPACT\t\t- Dosyanın fiziki boyutunu düşürmeye çalışır.\n"
     IDS_HELP_CMD_DESC_CONVERT "CONVERT\t\t- Ayrı disk biçimleri arasında dönüştür.\n"
     IDS_HELP_CMD_DESC_CREATE "CREATE\t\t- Bir birim, bölüm ya da sanal disk oluştur.\n"
     IDS_HELP_CMD_DESC_DELETE "DELETE\t\t- Bir nesne sil.\n"
     IDS_HELP_CMD_DESC_DETACH "DETACH\t\t- Bir sanal disk alanı ayırır.\n"
-    IDS_HELP_CMD_DESC_DETAIL "DETAIL\t\t- Bir nesne üzerine ayrıntılar sağla.\n"
+    IDS_HELP_CMD_DESC_DETAIL "DETAIL\t\t- Bir nesne hakkında ayrıntılar sağla.\n"
     IDS_HELP_CMD_DESC_EXIT "EXIT\t\t- DiskPart'tan çık.\n"
     IDS_HELP_CMD_DESC_EXPAND "EXPAND\t\t- Bir sanal disk üzerinde en çok kullanılabilir boyutu genişletir.\n"
     IDS_HELP_CMD_DESC_EXTEND "EXTEND\t\t- Bir birim genişlet.\n"
@@ -113,7 +113,7 @@ BEGIN
     IDS_HELP_CMD_DESC_FORMAT "FORMAT\t\t- Birimi ya da bölümü biçimlendir.\n"
     IDS_HELP_CMD_DESC_GPT "GPT\t\t- Seçili GPT bölümüne öznitelikleri ata.\n"
     IDS_HELP_CMD_DESC_HELP "HELP\t\t- Komutların bir tablosunu görüntüle.\n"
-    IDS_HELP_CMD_DESC_IMPORT "IMPORT\t\t- Bir disk öbeği al.\n"
+    IDS_HELP_CMD_DESC_IMPORT "IMPORT\t\t- Bir disk yığını al.\n"
     IDS_HELP_CMD_DESC_INACTIVE "INACTIVE\t- Seçili bölümü devre dışı olarak işaretle.\n"
     IDS_HELP_CMD_DESC_LIST "LIST\t\t- Nesnelerin bir tablosunu görüntüle.\n"
     IDS_HELP_CMD_DESC_MERGE "MERGE\t\t- Bir alt diski üstleriyle birleştirir.\n"
@@ -125,7 +125,7 @@ BEGIN
     IDS_HELP_CMD_DESC_REPAIR "REPAIR\t\t- Başarısız olan bir üyeyle bir RAID-5 birimi onar.\n"
     IDS_HELP_CMD_DESC_RESCAN "RESCAN\t\t- Diskler ve birimler için bilgisayar aramasını yeniden tara.\n"
     IDS_HELP_CMD_DESC_RETAIN "RETAIN\t\t- Bir basit birim altında bir tutulan bölüm yerleştir.\n"
-    IDS_HELP_CMD_DESC_SAN "SAN\t\t- Şimdilik ön yüklenen işletim dizgesi için SAN ilkesini görüntüle ya da ayarla.\n"
+    IDS_HELP_CMD_DESC_SAN "SAN\t\t- Şimdilik ön yüklenen işletim sistemi için SAN ilkesini görüntüle ya da ayarla.\n"
     IDS_HELP_CMD_DESC_SELECT "SELECT\t\t- Odağı bir nesneye kaydır.\n"
     IDS_HELP_CMD_DESC_SETID "SETID\t\t- Bölüm türünü değiştir.\n"
     IDS_HELP_CMD_DESC_SHRINK "SHRINK\t\t- Seçili birimin boyutunu düşür.\n"

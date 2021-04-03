@@ -79,7 +79,7 @@ BEGIN
     EDITTEXT IDC_PROXY_SERVER, 90, 210, 147, 12, ES_AUTOHSCROLL | WS_DISABLED
     LTEXT "Şunun İçin Vekil Sunucu Yok", -1, 27, 225, 64, 10
     EDITTEXT IDC_NO_PROXY_FOR, 90, 225, 147, 12, ES_AUTOHSCROLL | WS_DISABLED
-    PUSHBUTTON "Ön Tanımlılar", IDC_DEFAULT_SETTINGS, 8, 245, 60, 14
+    PUSHBUTTON "Varsayılanlar", IDC_DEFAULT_SETTINGS, 8, 245, 60, 14
     DEFPUSHBUTTON "Tamam", IDOK, 116, 245, 60, 14
     PUSHBUTTON "İptal", IDCANCEL, 181, 245, 60, 14
 END
@@ -197,7 +197,7 @@ BEGIN
     IDS_CHOOSE_FOLDER_TEXT "İndirilenlerin saklanacağı bir dizin seçiniz:"
     IDS_CHOOSE_FOLDER_ERROR "Belirttiğiniz dizin yok. Belirttiğiniz dizin oluşturulsun mu?"
     IDS_URL_INVALID "Belirttiğiniz URL geçersiz veya desteklenmiyor. Lütfen düzeltin!"
-    IDS_APP_REG_REMOVE "Kurulan programın girişini değer defterinden silmek istediğinizden emin misiniz?"
+    IDS_APP_REG_REMOVE "Kurulan programın girişini kayıt defterinden silmek istediğinizden emin misiniz?"
     IDS_INFORMATION "Bilgi"
     IDS_UNABLE_TO_DOWNLOAD "Paket indirilemez! Adres bulunamadı!"
     IDS_UNABLE_TO_DOWNLOAD2 "Paket indirilemez! İnternet bağlantınızı yoklayınız!"
@@ -211,7 +211,7 @@ BEGIN
     IDS_SELECT_ALL "Tümünü Seç/Seçileni Kaldır"
     IDS_INSTALL_SELECTED "Seçileni Kur"
     IDS_SELECTEDFORINST "Kurulum için seçildi"
-    IDS_MISMATCH_CERT_INFO "Kullanılan sertifika bilimmiyor:\nAçıklama: %s\nSertifikayı Veren: %s\nYine de sürdürmek istiyor musunuz?"
+    IDS_MISMATCH_CERT_INFO "Kullanılan sertifika bilimmiyor:\nAçıklama: %s\nSertifikayı Veren: %s\nYine de devam etmek istiyor musunuz?"
     IDS_UNABLE_PATH "Yanlış path formatı."
     IDS_APP_DISPLAY_DETAILS "detaylar"
     IDS_APP_DISPLAY_LIST "liste"

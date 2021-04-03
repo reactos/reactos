@@ -16,7 +16,7 @@ BEGIN
     PUSHBUTTON "&Düzenle...", 1016, 81, 187, 70, 14
     PUSHBUTTON "&Sil", 1014, 154, 187, 70, 14
     AUTOCHECKBOX "E&ğer Numara Olamıyorsa Bir Sonraki Numarayı Dene", 1011, 8, 210, 243, 10, BS_TOP | BS_MULTILINE
-    AUTOCHECKBOX "&Başarılı Numarayı Tablonun En Üstüne Taşı", 1010, 8, 228, 243, 10, BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX "&Başarılı Numarayı Listenin En Üstüne Taşı", 1010, 8, 228, 243, 10, BS_TOP | BS_MULTILINE
     DEFPUSHBUTTON "Tamam", 1, 122, 245, 60, 14
     PUSHBUTTON "İptal", 2, 188, 245, 60, 14
 END
@@ -41,9 +41,9 @@ CAPTION "Satır Gruplama Hataları"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON 32516, 1031, 7, 7, 20, 20
-    LTEXT "Bir ya da daha çok ek satıra bağlanmadı.", 1033, 37, 8, 216, 20
+    LTEXT "Bir ya da daha çok ek hatta bağlanmadı.", 1033, 37, 8, 216, 20
     CONTROL "", 1032, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x00008401, 37, 83, 224, 136
-    AUTOCHECKBOX "&Gelecekte başarısız hatları denemeyin", 1030, 38, 226, 222, 10
+    AUTOCHECKBOX "&Gelecekte Başarısız Hatları Denemeyin", 1030, 38, 226, 222, 10
     DEFPUSHBUTTON "&Kabul Et", 1, 135, 242, 60, 14
     PUSHBUTTON "&Ertele", 2, 201, 242, 60, 14
     LTEXT "Eğer yalnızca bir tek hat bağlıysa sunucu çok hatlı aramaları kabul etmeye yapılandırılmamış olabilir. Böyle bir durumda gereksiz bağlantı yüklerinden kaçınmak için ""İleride, Olmayan Hatları Deneme""ye tıklayınız.", -1, 37, 36, 224, 44

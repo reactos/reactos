@@ -831,8 +831,8 @@ BEGIN
     IDS_FILEOOP_PREFLIGHT "Ön Denetim"
 
     /* message box strings */
-    IDS_RESTART_TITLE "Yeniden Başlat"
-    IDS_RESTART_PROMPT "Programı yeniden başlatmak ister misiniz?"
+    IDS_RESTART_TITLE "Bilgisayarı Yeniden Başlat"
+    IDS_RESTART_PROMPT "Bilgisayarı yeniden başlatmak ister misiniz?"
     IDS_SHUTDOWN_TITLE "Bilgisayarı Kapat"
     IDS_SHUTDOWN_PROMPT "Bilgisayarı kapatmak ister misiniz?"
 
@@ -922,7 +922,7 @@ BEGIN
     IDS_DB__FILE "Veritabanı Dosyası"
     IDS_DLL_FILE "Uygulama Uzantısı"
     IDS_DRV_FILE "Aygıt Sürücüsü"
-    IDS_EFI_FILE "Genişletilebilir Bellenim Arabirimi Yürütümü"
+    IDS_EFI_FILE "Genişletilebilir Donanım Sürücüsü Arabirimi Yürütümü"
     IDS_EXE_FILE "Uygulama"
     IDS_NLS_FILE "Yerel Dil Desteği Dosyası"
     IDS_OCX_FILE "ActiveX Control"

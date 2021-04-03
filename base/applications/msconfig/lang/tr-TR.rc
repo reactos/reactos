@@ -83,7 +83,7 @@ BEGIN
     LISTBOX IDC_LIST_BOX, 10, 10, 340, 50, WS_CHILD | WS_VISIBLE | WS_TABSTOP |
             LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_HSCROLL
     PUSHBUTTON "&Tüm Ön Yükleme Yollarını Denetle", IDC_BTN_CHECK_BOOT_PATH, 10, 65, 70, 12
-    PUSHBUTTON "&Ön Tanımlı Olarak Ayarla", IDC_BTN_SET_DEFAULT_BOOT, 100, 65, 70, 12
+    PUSHBUTTON "&Varsayılan Olarak Ayarla", IDC_BTN_SET_DEFAULT_BOOT, 100, 65, 70, 12
     PUSHBUTTON "&Yukarı Taşı", IDC_BTN_MOVE_UP_BOOT_OPTION, 190, 65, 70, 12
     PUSHBUTTON "&Aşağı Taşı", IDC_BTN_MOVE_DOWN_BOOT_OPTION, 280, 65, 70, 12
     GROUPBOX "Ön Yükleme Seçenekleri", -1, 10, 80, 250, 90, 0, WS_EX_TRANSPARENT
@@ -93,7 +93,7 @@ BEGIN
     CHECKBOX "/BAS&EVIDEO", IDC_CBX_BASE_VIDEO, 15, 135, 55, 10
     CHECKBOX "/S&OS", IDC_CBX_SOS, 15, 150, 50, 10
     PUSHBUTTON "&Gelişmiş Seçenekler...", IDC_BTN_ADVANCED_OPTIONS, 100, 150, 70, 12
-    LTEXT "&Süre Aşımı:", -1, 280, 91, 30, 10
+    LTEXT "&Zaman Aşımı:", -1, 280, 91, 30, 10
     EDITTEXT IDC_TXT_BOOT_TIMEOUT, 310, 90, 25, 12, ES_LEFT
     LTEXT "s", -1, 340, 91, 15, 10
 END
@@ -152,8 +152,8 @@ BEGIN
     IDS_TOOLS_INFO_NAME "Sürüm"
     IDS_TOOLS_INFO_DESCR "Sürüm bilgisini görüntüler."
     IDS_TOOLS_INFO_CMD "winver.exe"
-    IDS_TOOLS_REGEDIT_NAME "Değer Defteri Düzenleyicisi"
-    IDS_TOOLS_REGEDIT_DESCR "Değer Defteri Düzenleyicisi'ni açar."
+    IDS_TOOLS_REGEDIT_NAME "Kayıt Defteri Düzenleyicisi"
+    IDS_TOOLS_REGEDIT_DESCR "Kayıt Defteri Düzenleyicisi'ni açar."
     IDS_TOOLS_REGEDIT_CMD "regedit.exe"
     IDS_TOOLS_SYSDM_NAME "Sistem özellikleri"
     IDS_TOOLS_SYSDM_DESCR "Bu bilgisayarla ilgili bilgi verir."

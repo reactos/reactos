@@ -25,7 +25,7 @@ BEGIN
        you can test your translation of these attributes by using 'whoami /groups' */
 
     IDS_ATTR_GROUP_MANDATORY "Zorunlu takım, "
-    IDS_ATTR_GROUP_ENABLED_BY_DEFAULT "Ön tanımlı olarak etkin, "
+    IDS_ATTR_GROUP_ENABLED_BY_DEFAULT "Varsayılan olarak etkin, "
     IDS_ATTR_GROUP_ENABLED "Etkin takım, "
     IDS_ATTR_GROUP_OWNER "Takım sahibi, "
     IDS_UNKNOWN_DESCRIPTION "???"
@@ -44,7 +44,7 @@ BEGIN
   Bir değiştirgen sağlanmamışsa şimdiki etki alanını ve kullanıcı adını görüntüler.\n\
 \n\
   ""/fo"" seçeneği için kullanılabilir çıkış biçimleri ""csv"", ""list"" ve ""table""dır.\n\
-  Başlıkları gizlemek için ""/nh"" kullanınız. Ön tanımlı olarak veri bir çizelge içinde görüntülenmiştir.\n\
+  Başlıkları gizlemek için ""/nh"" kullanınız. Varsayılan olarak veri bir çizelge içinde görüntülenmiştir.\n\
 \n\
 KULLANIM:\n\
   whoami [/upn | /fqdn | /logonid]\n\

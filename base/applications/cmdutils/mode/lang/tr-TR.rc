@@ -36,7 +36,7 @@ BEGIN
     IDS_COM_STATUS_PARITY           "    Eşlik:           %s\n"
     IDS_COM_STATUS_DATA_BITS        "    Veri Baytları:   %d\n"
     IDS_COM_STATUS_STOP_BITS        "    Durma Baytları:  %s\n"
-    IDS_COM_STATUS_TIMEOUT          "    Süre aşımı:      %s\n"
+    IDS_COM_STATUS_TIMEOUT          "    Zaman aşımı:      %s\n"
     IDS_COM_STATUS_XON_XOFF         "    XON/XOFF:        %s\n"
     IDS_COM_STATUS_CTS_HANDSHAKING  "    CTS uyuşması:    %s\n"
     IDS_COM_STATUS_DSR_HANDSHAKING  "    DSR uyuşması:    %s\n"

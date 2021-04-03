@@ -279,7 +279,7 @@ CAPTION "Konum Bilgisi"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL 302, 302, "STATIC", SS_BITMAP, 10, 10, 88, 155
-    LTEXT "Bir telefon ya da hat bağlantısı yapabilmenizden önce ReactOS'un şimdiki konumunuz üzerine aşağıdaki bilgilere gereksinimi vardır.", 2000, 107, 15, 188, 25
+    LTEXT "Bir telefon ya da modem bağlantısı yapabilmenizden önce ReactOS'un şimdiki konumunuz üzerine aşağıdaki bilgilere gereksinimi vardır.", 2000, 107, 15, 188, 25
     LTEXT "&Şimdi içinde bulunduğunuz ülke ya da bölge nedir?", -1, 107, 43, 189, 10
     COMBOBOX 1006, 107, 55, 180, 200, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL
     LTEXT "Ş&imdi içinde bulunduğunuz alan kodu ya da kent kodu nedir?", -1, 107, 74, 189, 10
@@ -300,7 +300,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL 302, 302, "STATIC", SS_BITMAP, 0, 0, 88, 155
-    LTEXT "Bir telefon ya da hat bağlantısı yapabilmenizden önce ReactOS'un şimdiki konumunuz üzerine aşağıdaki bilgilere gereksinimi vardır.", 2000, 95, 2, 188, 25
+    LTEXT "Bir telefon ya da modem bağlantısı yapabilmenizden önce ReactOS'un şimdiki konumunuz üzerine aşağıdaki bilgilere gereksinimi vardır.", 2000, 95, 2, 188, 25
     LTEXT "&Şimdi içinde bulunduğunuz ülke ya da bölge nedir?", -1, 95, 30, 188, 10
     COMBOBOX 1006, 95, 41, 177, 68, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL
     LTEXT "Ş&imdi içinde bulunduğunuz alan kodu ya da kent kodu nedir?", -1, 95, 61, 188, 10
@@ -326,8 +326,8 @@ END
 
 STRINGTABLE
 BEGIN
-    1 "Telefon ve Çevirge Seçenekleri"
-    2 "Hattınızı kullanmak için çevirme protokollerini ve özellikleri yapılandır."
+    1 "Telefon ve Modem Seçenekleri"
+    2 "Modeminizi kullanmak için çevirme protokollerini ve özellikleri yapılandır."
     3 "Konum"
     4 "Yeni bir konum oluşturmak için Yeni'ye tıklayınız."
     5 "Yeni Konum"
@@ -419,7 +419,7 @@ BEGIN
     91 "Bu sayfa, ağınızda dizin bilgisine erişmeye çalışıyor.\nSürdürmek için ona izin vermek istiyor musunuz?"
     92 "Bu sayfa, ağ toplantı bilgisine erişmeye veyâ bunu değiştirmeye çalışıyor.\nSürdürmek için ona izin vermek istiyor musunuz?"
     93 "Bu sayfa, değer defteri bilgisine erişmeye veyâ bunu değiştirmeye çalışıyor.\nSürdürmek için ona izin vermek istiyor musunuz?"
-    1064 "Telefon ve Çevirge denetim masası açılamıyor. Bir telefon hizmetini başlatma sorununuz olabilir."
+    1064 "Telefon ve Modem denetim masası açılamıyor. Bir telefon hizmetini başlatma sorununuz olabilir."
     1065 "Sağlayıcı Sil"
     15800 "23"
     15801 "0,""Yok (Doğrudan Çevir) ("","""","""","""","""","""","""","""","""",1)"
