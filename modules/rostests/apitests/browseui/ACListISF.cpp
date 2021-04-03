@@ -395,7 +395,7 @@ test_ACListISF_CURRENTDIR2()
     CreateDirectoryW(L"C:\\BROWSEUI-2", NULL);
     CreateDirectoryW(L"C:\\BROWSEUI-2\\TEST1", NULL);
     CreateDirectoryW(L"C:\\BROWSEUI-2\\TEST2", NULL);
-    CreateDirectoryW(L"C:\\BROWSEUI-2\\TEST1\\TEST3", NULL);
+    CreateDirectoryW(L"C:\\BROWSEUI-2\\TEST1\\TEST4", NULL);
 
     ok_hr(hr = CurrentWorkingDir->SetDirectory(L"C:\\BROWSEUI-1\\TEST1"), S_OK);
     test_at_end(EnumStr);
@@ -407,7 +407,7 @@ test_ACListISF_CURRENTDIR2()
 
     hr = EnumStr->Next(1, &psz, &cGot);
     ok_hr(hr, S_OK);
-    ok_wstr(psz, L"C:\\BROWSEUI-2\\TEST1\\TEST3");
+    ok_wstr(psz, L"C:\\BROWSEUI-2\\TEST1\\TEST4");
     CoTaskMemFree(psz);
 
     hr = EnumStr->Next(1, &psz, &cGot);
@@ -438,12 +438,12 @@ test_ACListISF_CURRENTDIR2()
 
     hr = EnumStr->Next(1, &psz, &cGot);
     ok_hr(hr, S_OK);
-    ok_wstr(psz, L"..\\TEST1\\TEST3");
+    ok_wstr(psz, L"..\\TEST1\\TEST4");
     CoTaskMemFree(psz);
 
     hr = EnumStr->Next(1, &psz, &cGot);
     ok_hr(hr, S_OK);
-    ok_wstr(psz, L"TEST3");
+    ok_wstr(psz, L"TEST4");
     CoTaskMemFree(psz);
 
     test_at_end(EnumStr);
@@ -452,12 +452,12 @@ test_ACListISF_CURRENTDIR2()
 
     hr = EnumStr->Next(1, &psz, &cGot);
     ok_hr(hr, S_OK);
-    ok_wstr(psz, L"\\BROWSEUI-2\\TEST1\\TEST3");
+    ok_wstr(psz, L"\\BROWSEUI-2\\TEST1\\TEST4");
     CoTaskMemFree(psz);
 
     hr = EnumStr->Next(1, &psz, &cGot);
     ok_hr(hr, S_OK);
-    ok_wstr(psz, L"TEST3");
+    ok_wstr(psz, L"TEST4");
     CoTaskMemFree(psz);
 
     test_at_end(EnumStr);
