@@ -952,6 +952,8 @@ DisplayDevicePropertyText(IN PDEVADVPROP_INFO dap,
             {
                 case SPDRP_CAPABILITIES:
                     index = 0;
+                    swprintf(dap->szTemp, L"%08lx", dwValue);
+                    SetListViewText(hwndListView, index++, dap->szTemp);
                     if (dwValue & CM_DEVCAP_LOCKSUPPORTED)
                         SetListViewText(hwndListView, index++, L"CM_DEVCAP_LOCKSUPPORTED");
                     if (dwValue & CM_DEVCAP_EJECTSUPPORTED)
@@ -976,6 +978,8 @@ DisplayDevicePropertyText(IN PDEVADVPROP_INFO dap,
 
                 case SPDRP_CONFIGFLAGS:
                     index = 0;
+                    swprintf(dap->szTemp, L"%08lx", dwValue);
+                    SetListViewText(hwndListView, index++, dap->szTemp);
                     if (dwValue & CONFIGFLAG_DISABLED)
                         SetListViewText(hwndListView, index++, L"CONFIGFLAG_DISABLED");
                     if (dwValue & CONFIGFLAG_REMOVED)
@@ -1035,6 +1039,8 @@ DisplayDevNodeFlags(IN PDEVADVPROP_INFO dap,
                              dap->hMachine);
 
     index = 0;
+    swprintf(dap->szTemp, L"%08lx", dwStatus);
+    SetListViewText(hwndListView, index++, dap->szTemp);
     if (dwStatus & DN_ROOT_ENUMERATED)
         SetListViewText(hwndListView, index++, L"DN_ROOT_ENUMERATED");
     if (dwStatus & DN_DRIVER_LOADED)
@@ -1101,9 +1107,6 @@ DisplayDevNodeFlags(IN PDEVADVPROP_INFO dap,
         SetListViewText(hwndListView, index++, L"DN_NO_SHOW_IN_DM");
     if (dwStatus & DN_BOOT_LOG_PROB)
         SetListViewText(hwndListView, index++, L"DN_BOOT_LOG_PROB");
-
-//    swprintf(dap->szTemp, L"0x%08x", dwStatus);
-//    SetListViewText(hwndListView, 0, dap->szTemp);
 }
 
 
@@ -1152,6 +1155,9 @@ DisplayCsFlags(IN PDEVADVPROP_INFO dap,
                             dap->hMachine);
 
     index = 0;
+    swprintf(dap->szTemp, L"%08lx", dwValue);
+    SetListViewText(hwndListView, index++, dap->szTemp);
+
     if (dwValue & CSCONFIGFLAG_DISABLED)
         SetListViewText(hwndListView, index++, L"CSCONFIGFLAG_DISABLED");
 
