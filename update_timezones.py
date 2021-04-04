@@ -6,6 +6,7 @@
 # directory?
 # TODO: refactor and simplify if possible. Self-review the code.
 # TODO: perform substitutions? It may shrink the code.
+# TODO: output the information read from the database?
 # Add argument to dump tz data to fs? And to load tz data dump from fs? It would be good for
 # debugging and manual changing of archive if something goes wrong or information in db is wrong.
 # Complete syntax at the top of the file? Some comments and decisions that script makes when
@@ -82,9 +83,9 @@ import io
 import struct
 import shutil
 import os
+import sys
 from os import path
 from datetime import datetime
-from datetime import timezone as datetime_timezone
 
 
 class Reader:
@@ -319,6 +320,24 @@ class Offset:
 		self.minutes = minutes
 		self.seconds = seconds
 		self.is_negative = False
+
+	def __add__(self, other):
+		return Offset.from_seconds(self.to_seconds() + other.to_seconds())
+
+	def to_seconds(self):
+		return self.hours * 3600 + self.minutes * 60 + self.seconds
+
+	@classmethod
+	def from_seconds(cls, seconds):
+		assert isinstance(seconds, int)
+		is_negative = False
+		if seconds < 0:
+			is_negative = True
+			seconds *= -1
+		hours = seconds // 3600
+		minutes = (seconds % 3600) // 60
+		seconds = seconds % 60
+		return cls(hours, minutes, seconds)
 
 	BEGINNINGS = Common.NUMBER_BEGINNINGS
 	# TODO: looks like "hours" is still not used.
@@ -717,17 +736,112 @@ class Record:
 
 
 class Zone:
-	def __init__(self, name, record):
+	def __init__(self, name, records):
 		assert isinstance(name, str) and name
-		assert isinstance(record, Record)
+		assert (
+			isinstance(records, list) and
+			records and
+			[isinstance(record, Record) for record in records].count(True) == len(records)
+		)
 
 		self.name = name
-		self.records = [record]
+		self.records = records
+
+	def copy(self):
+		return Zone(self.name, self.records)
 
 	def add_record(self, record):
 		assert isinstance(record, Record)
 
 		self.records.append(record)
+
+	def group_record_rules_by_year(self):
+		year_to_rules = {}
+		for record in self.records:
+			
+
+	ENTRY_PATH_FORMAT = "HKLM,\"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Time Zones\\%s\""
+	DISPLAY_SUBENTRY_FORMAT = ",\"Display\",0x00000000,%%%s_DESC%%; \"%s\"\n"
+	DAYLIGHT_SUBENTRY_FORMAT = ",\"Dlt\",0x00000000,%%%s_DAYLIGHT%%; \"%s\"\n"
+	STANDARD_SUBENTRY_FORMAT = ",\"Std\",0x00000000,%%%s_STANDARD%%; \"%s\"\n"
+	INDEX_SUBENTRY_FORMAT = ",\"Index\",0x00010001,%d\n"
+	TZI_SUBENTRY_FORMAT = ",\"TZI\",0x00000001,\\\n%s\n"
+	def convert(self, index, current_utc_time, dynamic_dst_is_allowed):
+		entry_path = self.ENTRY_PATH_FORMAT % self.entry_name
+		placeholder_name = self.placeholder_name
+		display_subentry = entry_path + self.DISPLAY_SUBENTRY_FORMAT % (
+			placeholder_name,
+			self.display_name
+		)
+		daylight_subentry = entry_path + self.DAYLIGHT_SUBENTRY_FORMAT % (
+			placeholder_name,
+			self.daylight_name
+		)
+		index_subentry = entry_path + self.INDEX_SUBENTRY_FORMAT % index
+		self.group_record_rules_by_year()
+		tzi_subentry = (
+			entry_path +
+			self.TZI_SUBENTRY_FORMAT % self.get_tzi(current_utc_time, dynamic_dst_is_allowed)
+		)
+		dynamic_dst_subentries = ''
+		if dynamic_dst_is_allowed:
+			self.group_rules_by_year()
+			dynamic_dst_subentries = self.dynamic_dst_subentries
+		return ''.join(
+			display_subentry,
+			daylight_subentry,
+			index_subentry,
+			tzi_subentry,
+			dynamic_dst_subentries
+		)
+
+	@property
+	def entry_name(self):
+		assert '"' not in self.name
+		return self.name # .replace('/', '_')
+
+	@property
+	def placeholder_name(self):
+		assert '"' not in self.name
+		return self.name.replace('/', '_').upper()
+
+	@property
+	def display_name(self):
+		return self.name
+
+	@property
+	def daylight_name(self):
+		return "123"
+
+	MAX_BYTES_A_LINE = 16
+	@property
+	def get_tzi(self, current_utc_time, dynamic_dst_is_allowed):
+		if not dynamic_dst_is_allowed:
+			max_year_records = 
+		current_record = self.record[-1]
+		assert current_record.until is None
+		if current_record.rules is None or isinstance(current_record.rules, Offset):
+			std_offset = current_record.offset
+			if current_record.rules is not None:
+				std_offset += current_record.rules
+			if std_offset.seconds != 0:
+				# "Timezone \"%s\" cannot be represented in windows' format:" # TODO: figure out if I should
+				# 	put an apostrophe here.
+				raise ConvertationException(self.name, "standard time offset has seconds in it")
+			return RegistryTimezoneInformation(
+				-std_offset.to_minutes(),
+				0,
+				0,
+				SystemTime.ZERO,
+				SystemTime.ZERO
+			)
+		else:
+			assert isinstance(current_record.rules, list) and current_record.rules
+			current_year = datetime.utcnow().year
+			working_rules = (rule for rule in current_record.rules if rule.year_to == Rule.MAX_YEAR)
+			#working_max_year_rules = (rule for rule in max_year_rules if rule.year_from >= 
+		# SystemTime(year, month, day_of_week, day, hour, minute, second, milliseconds)
+		return RegistryTimezoneInformation(bias, standard_bias, daylight_bias, standard_date, daylight_date)
 
 	NAME_BEGINNINGS = character_range_to_set('A', 'Z')
 	NAME_CHARACTERS = (
@@ -755,12 +869,12 @@ class Zone:
 		name = cls.read_name(reader)
 		Common.read_separator(reader)
 		record = Record.from_stream(reader)
-		return cls(name, record)
+		return cls(name, [record])
 
 
 class Region:
-	# TODO: we have similar situation with "record". Maybe use the construction of comment and newline
-	# 	from there?
+	# TODO: we have a similar situation with "record". Maybe use the construction of comment and
+	# 	newline from there?
 	# Link = "Link" separator zone_name separator zone_name {' ' | '\t'} (comment | '\n')
 	@staticmethod
 	def read_link(reader):
@@ -841,8 +955,9 @@ class Region:
 					"stream \"%s\", link #%d from \"%s\" to \"%s\": redefinition of the destination zone."
 					% (stream_name, link_index, src, dst)
 				)
-			zone_by_name[dst] = zone_by_name[src]
-
+			dst_zone = zone_by_name[src].copy()
+			dst_zone.name = dst
+			zone_by_name[dst] = dst_zone
 
 	# Region = Line {Line}
 	@classmethod
@@ -857,7 +972,7 @@ class Region:
 		reader.check_eof()
 		cls.resolve_rule_references(rules_by_name, zone_by_name, reader.stream_name)
 		cls.resolve_zone_references(links, zone_by_name, reader.stream_name)
-		return zone_by_name
+		return zone_by_name.values()
 
 
 # SYSTEMTIME structure.
@@ -882,7 +997,7 @@ class SystemTime:
 		self.second = second
 		self.milliseconds = milliseconds
 
-	def dump_bytes_le(self):
+	def to_bytes_le(self):
 		return struct.pack(
 			"<HHHHHHHH",
 			self.year,
@@ -912,7 +1027,7 @@ class RegistryTimezoneInformation:
 		self.standard_date = standard_date
 		self.daylight_date = daylight_date
 
-	def dump_bytes_le(self):
+	def to_bytes_le(self):
 		return (
 			struct.pack("<iii", self.bias, self.standard_bias, self.daylight_bias) +
 			self.standard_bias.dump_bytes_le() +
@@ -967,14 +1082,22 @@ def extract_timezones():
 	print("extract_timezones: done.")
 	return timezones
 
-def update_timezones():
+def convert_timezones(timezones, current_utc_time, dynamic_dst_is_allowed):
+	output = ["[Version]\nSignature = \"$Windows NT$\"\n\n[AddReg]\n"]
+	used_placeholders = set()
+	used_entry_names = set()
+	for index, timezone in enumerate(timezones):
+		output.append(timezone.convert(index, current_utc_time, dynamic_dst_is_allowed))
+	return '\n'.join(output)
+
+def update_timezones(current_utc_time, tzdata_version):
 	print("update_timezones: started.")
-	archive = download_archive()
+	archive = download_archive(tzdata_version)
 	extract_files(archive)
 	timezones = extract_timezones()
-	inf_output = convert_timezones(timezones)
+	inf_output = convert_timezones(timezones, current_utc_time)
 	print("update_timezones: writing inf output.")
-	with open(CONVERTED_TIMEZONES_FILE, 'w') as stream:
+	with open(CONVERTED_TIMEZONES_FILE, 'w', newline="\r\n") as stream:
 		stream.write(inf_output)
 	print("update_timezones: done.")
 
