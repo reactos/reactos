@@ -57,6 +57,7 @@ STDMETHODIMP CACLHistory::Next(ULONG celt, LPOLESTR *rgelt, ULONG *pceltFetched)
     if (m_iItem >= m_array.GetSize())
         return S_FALSE;
     SHStrDupW(m_array[m_iItem], rgelt);
+    ++m_iItem;
     if (!*rgelt)
         return E_OUTOFMEMORY;
     *pceltFetched = 1;
