@@ -40,6 +40,7 @@ START_TEST(IACLHistory)
 
     CComPtr<IEnumString> pEnum;
     hr = pHistory->QueryInterface(IID_PPV_ARG(IEnumString, &pEnum));
+    ok_long(hr, S_OK);
 
     hr = pEnum->Reset();
     ok_long(hr, S_OK);
