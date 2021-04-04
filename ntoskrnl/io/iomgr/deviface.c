@@ -6,7 +6,8 @@
  *
  * PROGRAMMERS:     Filip Navara (xnavara@volny.cz)
  *                  Matthew Brace (ismarc@austin.rr.com)
- *                  Hervé Poussineau (hpoussin@reactos.org)
+ *                  HervÃ© Poussineau (hpoussin@reactos.org)
+ *                  Oleg Dubinskiy (oleg.dubinskij30@gmail.com)
  */
 
 /* INCLUDES ******************************************************************/
@@ -27,6 +28,262 @@ PDEVICE_OBJECT
 IopGetDeviceObjectFromDeviceInstance(PUNICODE_STRING DeviceInstance);
 
 static PWCHAR BaseKeyString = L"\\Registry\\Machine\\System\\CurrentControlSet\\Control\\DeviceClasses\\";
+
+/**
+ * @brief IopBuildSymbolicLink
+ * 
+ * Creates a new symbolic link from the specified prefix, device string,
+ * class GUID and reference string (if any).
+ * 
+ * @param[in] PrefixString
+ * Prefix of symbolic link. '\??\' for Kernel mode or '\\?\' for User mode.
+ * 
+ * @param[in] DeviceString
+ * Device string, placed after prefix and before GUID, looks like ACPI#PNP0501#1#.
+ * 
+ * @param[in] GuidString
+ * Device interface class GUID represented by a string. Placed in curly brackets {},
+ * after device string, should always be 38 characters long. Looks like
+ * {01234567-89ab-cdef-0123-456789abcdef}.
+ * 
+ * @param[in,opt] ReferenceString
+ * Optional reference string, if any. Placed after GUID, at the end of symbolic link.
+ * Usually contains human-readable subdevice name or class GUID.
+ * 
+ * @param[out] SymbolicLinkName
+ * Pointer to unicode string which receives created symbolic link.
+ * 
+ * @return
+ * STATUS_SUCCESS in case of success, error NTSTATUS code otherwise.
+ *
+ */
+static
+NTSTATUS
+IopBuildSymbolicLink(
+    _In_ PCUNICODE_STRING PrefixString,
+    _In_ PCUNICODE_STRING DeviceString,
+    _In_ PCUNICODE_STRING GuidString,
+    _In_opt_ PCUNICODE_STRING ReferenceString,
+    _Out_ PUNICODE_STRING SymbolicLinkName)
+{
+    UNICODE_STRING PathSep = RTL_CONSTANT_STRING(L"\\");
+    UNICODE_STRING SymbolicLink;
+    NTSTATUS Status;
+
+    /* Use a backslash if reference string is not specified */
+    if (!ReferenceString)
+        ReferenceString = &PathSep;
+
+    /* Build up new symbolic link */
+    SymbolicLink.Length = 0;
+    SymbolicLink.MaximumLength =
+        PrefixString->Length + DeviceString->Length
+        + sizeof(L"#") + GuidString->Length
+        + ReferenceString->Length
+        + sizeof(UNICODE_NULL);
+    SymbolicLink.Buffer = ExAllocatePoolWithTag(PagedPool, SymbolicLink.MaximumLength, TAG_IO);
+    if (!SymbolicLink.Buffer)
+    {
+        DPRINT1("ExAllocatePoolWithTag() failed\n");
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    Status = RtlUnicodeStringPrintf(&SymbolicLink,
+                                    L"%wZ%wZ#%wZ%wZ",
+                                    PrefixString,
+                                    DeviceString,
+                                    GuidString,
+                                    ReferenceString);
+    NT_ASSERT(NT_SUCCESS(Status));
+
+    DPRINT("New symbolic link is '%wZ'\n", &SymbolicLink);
+
+    *SymbolicLinkName = SymbolicLink;
+    return STATUS_SUCCESS;
+}
+
+/**
+ * @brief IopSeparateSymbolicLink
+ * 
+ * Parses specified symbolic link onto the 4 parts: prefix, device string,
+ * class GUID and reference string.
+ * 
+ * @param[in] SymbolicLinkName
+ * Pointer to a symbolic link string to parse.
+ * 
+ * @param[out,opt] PrefixString
+ * Receives prefix of symbolic link. Can be '\??\' for Kernel mode or '\\?\' for User mode.
+ * 
+ * @param[out,opt] MungedString
+ * Receives Device string with '##?#' prefix at the start. Looks like ##?#ACPI#PNP0501#1#.
+ * 
+ * @param[out,opt] GuidString
+ * Receives device interface class GUID string represented by device interface.
+ * Looks like {01234567-89ab-cdef-0123-456789abcdef}.
+ * 
+ * @param[out,opt] ReferenceString
+ * Receives reference string, if any. Usually contains a human-readable
+ * subdevice name or class GUID.
+ * 
+ * @param[out,opt] ReferenceStringPresent
+ * Pointer to variable that indicates whether the reference string exists in symbolic link.
+ * TRUE if it does, FALSE otherwise.
+ * 
+ * @param[out,opt] InterfaceClassGuid
+ * Receives the interface class GUID to which specified symbolic link belongs to.
+ * 
+ * @return
+ * STATUS_SUCCESS in case of success, error NTSTATUS code otherwise.
+ *
+ */
+static
+NTSTATUS
+IopSeparateSymbolicLink(
+    _In_ PCUNICODE_STRING SymbolicLinkName,
+    _Out_opt_ PUNICODE_STRING PrefixString,
+    _Out_opt_ PUNICODE_STRING MungedString,
+    _Out_opt_ PUNICODE_STRING GuidString,
+    _Out_opt_ PUNICODE_STRING ReferenceString,
+    _Out_opt_ PBOOLEAN ReferenceStringPresent,
+    _Out_opt_ LPGUID InterfaceClassGuid)
+{
+    UNICODE_STRING KernelModePrefix = RTL_CONSTANT_STRING(L"\\??\\");
+    UNICODE_STRING UserModePrefix = RTL_CONSTANT_STRING(L"\\\\?\\");
+    UNICODE_STRING MungedPrefix = RTL_CONSTANT_STRING(L"##?#");
+    UNICODE_STRING MungedStringReal, GuidStringReal, ReferenceStringReal;
+    UNICODE_STRING DeviceString;
+    UNICODE_STRING LinkNameNoPrefix;
+    USHORT i, ReferenceStringOffset;
+    NTSTATUS Status = STATUS_SUCCESS;
+
+    DPRINT("Symbolic link is '%wZ'\n", SymbolicLinkName);
+
+    /* Symbolic link name looks like \??\ACPI#PNP0501#1#{GUID}\ReferenceString */
+    /* Make sure it starts with the expected prefix */
+    if (!RtlPrefixUnicodeString(&KernelModePrefix, SymbolicLinkName, FALSE) &&
+        !RtlPrefixUnicodeString(&UserModePrefix, SymbolicLinkName, FALSE))
+    {
+        DPRINT1("Invalid link name '%wZ'\n", SymbolicLinkName);
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    /* Sanity checks */
+    ASSERT(KernelModePrefix.Length == UserModePrefix.Length);
+    ASSERT(SymbolicLinkName->Length >= KernelModePrefix.Length);
+
+    /* Make a version without the prefix for further processing */
+    LinkNameNoPrefix.Buffer = SymbolicLinkName->Buffer + KernelModePrefix.Length / sizeof(WCHAR);
+    LinkNameNoPrefix.Length = SymbolicLinkName->Length - KernelModePrefix.Length;
+    LinkNameNoPrefix.MaximumLength = LinkNameNoPrefix.Length;
+
+    DPRINT("Symbolic link without prefix is '%wZ'\n", &LinkNameNoPrefix);
+
+    /* Find the reference string, if any */
+    for (i = 0; i < LinkNameNoPrefix.Length / sizeof(WCHAR); i++)
+    {
+        if (LinkNameNoPrefix.Buffer[i] == L'\\')
+        {
+            break;
+        }
+    }
+    ReferenceStringOffset = i * sizeof(WCHAR);
+
+    /* The GUID is before the reference string or at the end */
+    ASSERT(LinkNameNoPrefix.Length >= ReferenceStringOffset);
+    if (ReferenceStringOffset < GUID_STRING_BYTES + sizeof(WCHAR))
+    {
+        DPRINT1("Invalid link name '%wZ'\n", SymbolicLinkName);
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    /* Get reference string (starts after {GUID} and \) from link without prefix */
+    ReferenceStringReal.Buffer = LinkNameNoPrefix.Buffer + ReferenceStringOffset / sizeof(WCHAR);
+    ReferenceStringReal.Length = LinkNameNoPrefix.Length - ReferenceStringOffset;
+    ReferenceStringReal.MaximumLength = ReferenceStringReal.Length;
+
+    /* Get GUID string (device class GUID in {} brackets) */
+    GuidStringReal.Buffer = LinkNameNoPrefix.Buffer + (ReferenceStringOffset - GUID_STRING_BYTES) / sizeof(WCHAR);
+    GuidStringReal.Length = GUID_STRING_BYTES;
+    GuidStringReal.MaximumLength = GuidStringReal.Length;
+
+    /* Create a temporary device string (looks like ACPI#PNP0501#1#) */
+    DeviceString.Buffer = LinkNameNoPrefix.Buffer;
+    DeviceString.Length = LinkNameNoPrefix.Length - ReferenceStringReal.Length;
+    DeviceString.MaximumLength = DeviceString.Length;
+
+    DPRINT("Device string is '%wZ'\n", &DeviceString);
+
+    if (MungedString)
+    {
+        /* Allocate a munged path string */
+        MungedStringReal.Length = 0;
+        MungedStringReal.MaximumLength = MungedPrefix.Length + DeviceString.Length + sizeof(UNICODE_NULL);
+        MungedStringReal.Buffer = ExAllocatePoolWithTag(PagedPool, MungedStringReal.MaximumLength, TAG_IO);
+        if (!MungedStringReal.Buffer)
+        {
+            DPRINT1("ExAllocatePoolWithTag() failed\n");
+            return STATUS_INSUFFICIENT_RESOURCES;
+        }
+
+        /* Fill it by munged prefix and our previously created device string */
+        Status = RtlAppendUnicodeStringToString(&MungedStringReal, &MungedPrefix);
+        NT_ASSERT(NT_SUCCESS(Status));
+
+        Status = RtlAppendUnicodeStringToString(&MungedStringReal, &DeviceString);
+        NT_ASSERT(NT_SUCCESS(Status));
+
+        DPRINT("Munged string is '%wZ'\n", &MungedStringReal);
+    }
+
+    DPRINT("GUID string is '%wZ'\n", &GuidStringReal);
+    DPRINT("Reference string is '%wZ'\n", &ReferenceStringReal);
+
+    /* Store received parts if the parameters are not null */
+    if (PrefixString)
+    {
+        if (RtlPrefixUnicodeString(&KernelModePrefix, SymbolicLinkName, FALSE))
+        {
+            PrefixString->Buffer = SymbolicLinkName->Buffer;
+            PrefixString->Length = KernelModePrefix.Length;
+            PrefixString->MaximumLength = PrefixString->Length;
+        }
+        else if (RtlPrefixUnicodeString(&UserModePrefix, SymbolicLinkName, FALSE))
+        {
+            PrefixString->Buffer = SymbolicLinkName->Buffer;
+            PrefixString->Length = UserModePrefix.Length;
+            PrefixString->MaximumLength = PrefixString->Length;
+        }
+
+        DPRINT("Prefix string is '%wZ'\n", PrefixString);
+    }
+
+    if (MungedString)
+        *MungedString = MungedStringReal;
+
+    if (GuidString)
+        *GuidString = GuidStringReal;
+
+    if (ReferenceString)
+        *ReferenceString = ReferenceStringReal;
+
+    if (ReferenceStringPresent)
+        *ReferenceStringPresent = ReferenceStringReal.Length > sizeof(WCHAR);
+
+    if (InterfaceClassGuid)
+    {
+        /* Convert GUID string into a GUID and store it also */
+        Status = RtlGUIDFromString(&GuidStringReal, InterfaceClassGuid);
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("RtlGUIDFromString() failed with status 0x%08lx\n", Status);
+            RtlFreeUnicodeString(&MungedStringReal);
+            RtlInitEmptyUnicodeString(MungedString, NULL, 0);
+        }
+    }
+
+    /* We're done */
+    return Status;
+}
 
 static
 NTSTATUS
@@ -276,38 +533,6 @@ IoOpenDeviceInterfaceRegistryKey(IN PUNICODE_STRING SymbolicLinkName,
 }
 
 /*++
- * @name IoGetDeviceInterfaceAlias
- * @unimplemented
- *
- * Returns the alias device interface of the specified device interface
- * instance, if the alias exists.
- * Documented in WDK.
- *
- * @param SymbolicLinkName
- *        Pointer to a string which identifies the device interface instance
- *
- * @param AliasInterfaceClassGuid
- *        See WDK
- *
- * @param AliasSymbolicLinkName
- *        See WDK
- *
- * @return Three different NTSTATUS values in case of errors, and STATUS_SUCCESS
- *         otherwise (see WDK for details)
- *
- * @remarks Must be called at IRQL = PASSIVE_LEVEL in the context of a system thread
- *
- *--*/
-NTSTATUS
-NTAPI
-IoGetDeviceInterfaceAlias(IN PUNICODE_STRING SymbolicLinkName,
-                          IN CONST GUID *AliasInterfaceClassGuid,
-                          OUT PUNICODE_STRING AliasSymbolicLinkName)
-{
-    return STATUS_NOT_IMPLEMENTED;
-}
-
-/*++
  * @name IopOpenInterfaceKey
  *
  * Returns the alias device interface of the specified device interface
@@ -409,6 +634,181 @@ cleanup:
     }
     RtlFreeUnicodeString(&GuidString);
     RtlFreeUnicodeString(&KeyName);
+    return Status;
+}
+
+/**
+ * @brief IoGetDeviceInterfaceAlias
+ *
+ * Returns the alias device interface of the specified device interface
+ * instance, if the alias exists.
+ *
+ * @param[in] SymbolicLinkName
+ * Pointer to a symbolic link string which identifies the device interface instance.
+ *
+ * @param[in] AliasInterfaceClassGuid
+ * Pointer to a device interface class GUID.
+ *
+ * @param[out] AliasSymbolicLinkName
+ * Pointer to unicode string which receives the alias symbolic link upon success.
+ * Must be freed with RtlFreeUnicodeString after using.
+ *
+ * @return NTSTATUS values in case of errors, STATUS_SUCCESS otherwise.
+ *
+ * @remarks Must be called at IRQL = PASSIVE_LEVEL in the context of a system thread
+ *
+ */
+NTSTATUS
+NTAPI
+IoGetDeviceInterfaceAlias(
+    _In_ PUNICODE_STRING SymbolicLinkName,
+    _In_ CONST GUID *AliasInterfaceClassGuid,
+    _Out_ PUNICODE_STRING AliasSymbolicLinkName)
+{
+    UNICODE_STRING AliasSymbolicLink = {0, 0, NULL};
+    UNICODE_STRING PrefixString;
+    UNICODE_STRING AliasGuidString;
+    UNICODE_STRING DeviceString, ReferenceString;
+    PKEY_VALUE_FULL_INFORMATION kvInfo;
+    HANDLE DeviceKey, AliasInstanceKey;
+    PVOID Buffer;
+    USHORT i;
+    NTSTATUS Status;
+
+    RtlInitEmptyUnicodeString(&PrefixString, NULL, 0);
+    RtlInitEmptyUnicodeString(&DeviceString, NULL, 0);
+    RtlInitEmptyUnicodeString(&ReferenceString, NULL, 0);
+    RtlInitEmptyUnicodeString(&AliasGuidString, NULL, 0);
+
+    DPRINT("IoGetDeviceInterfaceAlias() : symbolic link '%wZ'\n", SymbolicLinkName);
+
+    /* Sanity check */
+    if (SymbolicLinkName == NULL || AliasInterfaceClassGuid == NULL)
+    {
+        DPRINT1("IoGetDeviceInterfaceAlias() : invalid symbolic link or alias class GUID\n");
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    /* Convert alias GUID to a string */
+    Status = RtlStringFromGUID(AliasInterfaceClassGuid, &AliasGuidString);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("RtlStringFromGUID() failed with status 0x%08lx\n", Status);
+        goto Quit;
+    }
+
+    DPRINT("Alias GUID is '%wZ'\n", &AliasGuidString);
+
+    /* Get the device instance string of existing symbolic link */
+    Status = OpenRegistryHandlesFromSymbolicLink(SymbolicLinkName,
+                                                 KEY_QUERY_VALUE,
+                                                 NULL,
+                                                 &DeviceKey,
+                                                 NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed to open device instance key for '%wZ' with status 0x%08lx\n", SymbolicLinkName, Status);
+        goto Quit;
+    }
+
+    Status = IopGetRegistryValue(DeviceKey, L"DeviceInstance", &kvInfo);
+    ZwClose(DeviceKey);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed get device instance value with status 0x%08lx\n", Status);
+        goto Quit;
+    }
+
+    if (kvInfo->Type != REG_SZ || kvInfo->DataLength == 0)
+    {
+        DPRINT1("Wrong or empty instance value\n");
+        Status = STATUS_INVALID_PARAMETER;
+        goto Quit;
+    }
+
+    /* Convert received data to unicode string */
+    Buffer = (PVOID)((ULONG_PTR)kvInfo + kvInfo->DataOffset);
+    PnpRegSzToString(Buffer, kvInfo->DataLength, &DeviceString.Length);
+    DeviceString.MaximumLength = (USHORT)kvInfo->DataLength;
+    DeviceString.Buffer = Buffer;
+
+    /* Separate symbolic link into 4 parts:
+     * 1) prefix string (\??\ for kernel mode or \\?\ for user mode),
+     * 2) munged path string (like ##?#ACPI#PNP0501#1#{GUID}),
+     * 3) GUID string (the current GUID),
+     * 4) reference string (goes after GUID, starts with '\').
+     * 
+     * We need only prefix and reference strings.
+     */
+    Status = IopSeparateSymbolicLink(SymbolicLinkName,
+                                     &PrefixString,
+                                     NULL,
+                                     NULL,
+                                     &ReferenceString,
+                                     NULL,
+                                     NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed to separate '%wZ' with status 0x%08lx\n", SymbolicLinkName, Status);
+        goto Quit;
+    }
+
+    /* NOTE: Windows does some comparison of the string prefix here via RtlCompareMemory(),
+     * but in our case, this prefix is also passed to IopBuildSymolicLink() as well,
+     * so we don't need to compare anything here.
+     */
+
+    /* Replace all '\' separators with '#' in device string */
+    for (i = 0; i < DeviceString.Length; i++)
+    {
+        if (DeviceString.Buffer[i] == L'\\')
+        {
+            DeviceString.Buffer[i] = L'#';
+        }
+    }
+
+    DPRINT("Device string is '%wZ'\n", &DeviceString);
+
+    /* Build up new symbolic link with alias GUID */
+    Status = IopBuildSymbolicLink(&PrefixString,
+                                  &DeviceString,
+                                  &AliasGuidString,
+                                  &ReferenceString,
+                                  &AliasSymbolicLink);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed to build alias symbolic link with status 0x%08lx\n", Status);
+        goto Quit;
+    }
+
+    /* Make sure that alias symbolic link key exists in registry */
+    Status = OpenRegistryHandlesFromSymbolicLink(&AliasSymbolicLink,
+                                                 KEY_READ,
+                                                 NULL,
+                                                 NULL,
+                                                 &AliasInstanceKey);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed to open alias symbolic link key with status 0x%08lx\n", Status);
+        goto Quit;
+    }
+    ZwClose(AliasInstanceKey);
+
+    /* We're done */
+    DPRINT("IoGetDeviceInterfaceAlias() : alias symbolic link '%wZ'\n", &AliasSymbolicLink);
+    *AliasSymbolicLinkName = AliasSymbolicLink;
+    Status = STATUS_SUCCESS;
+
+Quit:
+    if (!NT_SUCCESS(Status))
+    {
+        if (AliasSymbolicLink.Buffer)
+            RtlFreeUnicodeString(&AliasSymbolicLink);
+    }
+
+    if (AliasGuidString.Buffer)
+        RtlFreeUnicodeString(&AliasGuidString);
+
     return Status;
 }
 
