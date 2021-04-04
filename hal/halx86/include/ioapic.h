@@ -94,8 +94,8 @@ IoApicRead(_In_ PIO_APIC_REGISTERS IoApicRegs,
 {
     ULONG Result;
 
-    *(volatile PUCHAR)((ULONG_PTR)IoApicRegs + IOAPIC_IOREGSEL) = RegisterIdx;
-    Result = *(volatile PULONG)((ULONG_PTR)IoApicRegs + IOAPIC_IOWIN); 
+    WRITE_REGISTER_UCHAR(((PUCHAR)IoApicRegs + IOAPIC_IOREGSEL), RegisterIdx);
+    Result = READ_REGISTER_ULONG((PULONG)((ULONG_PTR)IoApicRegs + IOAPIC_IOWIN));
 
     //DbgPrint("IoApicRead: RegisterIdx %X, Result %X\n", RegisterIdx, Result);
     return Result;
@@ -109,8 +109,8 @@ IoApicWrite(_In_ PIO_APIC_REGISTERS IoApicRegs,
 {
     //DbgPrint("IoApicWrite: RegisterIdx %X, Value %X\n", RegisterIdx, Value);
 
-    *(volatile PUCHAR)((ULONG_PTR)IoApicRegs + IOAPIC_IOREGSEL) = RegisterIdx;
-    *(volatile PULONG)((ULONG_PTR)IoApicRegs + IOAPIC_IOWIN) = Value;
+    WRITE_REGISTER_UCHAR(((PUCHAR)IoApicRegs + IOAPIC_IOREGSEL), RegisterIdx);
+    WRITE_REGISTER_ULONG((PULONG)((ULONG_PTR)IoApicRegs + IOAPIC_IOWIN), Value);
 }
 #endif
 

@@ -17,6 +17,8 @@
 #include <debug.h>
 
 #include "apic.h"
+#include <ioaccess.h>
+
 void __cdecl HackEoi(void);
 
 #ifndef _M_AMD64
