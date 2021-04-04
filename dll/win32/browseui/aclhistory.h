@@ -36,10 +36,4 @@ public:
         COM_INTERFACE_ENTRY_IID(IID_IEnumString, IEnumString)
         COM_INTERFACE_ENTRY_IID(IID_IACList, IACList)
     END_COM_MAP()
-
-protected:
-    INT m_iItem;
-    CSimpleArray<CStringW> m_array;
-
-    HRESULT ReLoad();
 };

@@ -7,57 +7,26 @@
 
 #include "precomp.h"
 
-CACLHistory::CACLHistory() : m_iItem(0)
+CACLHistory::CACLHistory()
 {
-    ReLoad();
+    TRACE("CACLHistory::CACLHistory(%p)\n", this);
 }
 
 CACLHistory::~CACLHistory()
 {
-}
-
-HRESULT CACLHistory::ReLoad()
-{
-    HKEY hKey;
-    LONG error;
-    WCHAR szName[32], szValue[512];
-    DWORD dwType, cbValue;
-
-    m_array.RemoveAll();
-
-    error = RegOpenKeyExW(HKEY_CURRENT_USER,
-                          L"SOFTWARE\\Microsoft\\Internet Explorer\\TypedURLs",
-                          0, KEY_READ, &hKey);
-    if (error)
-        return S_OK;
-
-    for (INT iURL = 0; iURL < 64; ++iURL)
-    {
-        StringCbPrintfW(szName, sizeof(szName), L"url%u", (iURL + 1));
-        szValue[0] = 0;
-        cbValue = sizeof(szValue);
-        error = RegQueryValueExW(hKey, szName, NULL, &dwType, (LPBYTE)szValue, &cbValue);
-        if (error || szValue[0] == 0 || dwType != REG_SZ)
-            break;
-        m_array.Add(szValue);
-    }
-
-    RegCloseKey(hKey);
-    return S_OK;
+    TRACE("CACLHistory::~CACLHistory(%p)\n", this);
 }
 
 STDMETHODIMP CACLHistory::Next(ULONG celt, LPOLESTR *rgelt, ULONG *pceltFetched)
 {
+    FIXME("CACLHistory::Next(%p, %lu, %p, %p): stub\n", this, celt, rgelt, pceltFetched);
     if (pceltFetched)
         *pceltFetched = 0;
     if (rgelt)
         *rgelt = NULL;
     if (celt != 1)
         return E_NOTIMPL;
-    if (m_iItem >= m_array.GetSize())
-        return S_FALSE;
-    SHStrDupW(m_array[m_iItem], rgelt);
-    ++m_iItem;
+    *rgelt = NULL; // FIXME
     if (!*rgelt)
         return E_OUTOFMEMORY;
     *pceltFetched = 1;
@@ -66,7 +35,7 @@ STDMETHODIMP CACLHistory::Next(ULONG celt, LPOLESTR *rgelt, ULONG *pceltFetched)
 
 STDMETHODIMP CACLHistory::Reset()
 {
-    m_iItem = 0;
+    FIXME("CACLHistory::Reset(%p): stub\n", this);
     return S_OK;
 }
 
@@ -77,6 +46,7 @@ STDMETHODIMP CACLHistory::Skip(ULONG celt)
 
 STDMETHODIMP CACLHistory::Clone(IEnumString **ppenum)
 {
+    FIXME("CACLHistory::Clone(%p, %p): stub\n", this, ppenum);
     if (ppenum)
         *ppenum = NULL;
     return E_NOTIMPL;
