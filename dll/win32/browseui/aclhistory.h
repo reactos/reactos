@@ -11,7 +11,6 @@ class CACLHistory
     : public CComCoClass<CACLHistory, &CLSID_ACLHistory>
     , public CComObjectRootEx<CComMultiThreadModelNoCS>
     , public IEnumString
-    , public IACList
 {
 public:
     CACLHistory();
@@ -23,9 +22,6 @@ public:
     STDMETHODIMP Reset() override;
     STDMETHODIMP Clone(IEnumString **ppenum) override;
 
-    // *** IACList methods ***
-    STDMETHODIMP Expand(LPCOLESTR pszExpand) override;
-
 public:
     DECLARE_REGISTRY_RESOURCEID(IDR_ACLHISTORY)
     DECLARE_NOT_AGGREGATABLE(CACLHistory)
@@ -34,6 +30,5 @@ public:
 
     BEGIN_COM_MAP(CACLHistory)
         COM_INTERFACE_ENTRY_IID(IID_IEnumString, IEnumString)
-        COM_INTERFACE_ENTRY_IID(IID_IACList, IACList)
     END_COM_MAP()
 };

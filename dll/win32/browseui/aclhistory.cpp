@@ -51,8 +51,3 @@ STDMETHODIMP CACLHistory::Clone(IEnumString **ppenum)
         *ppenum = NULL;
     return E_NOTIMPL;
 }
-
-STDMETHODIMP CACLHistory::Expand(LPCWSTR pszExpand)
-{
-    return E_NOTIMPL;
-}
