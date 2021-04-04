@@ -423,45 +423,45 @@ void GraphCtrl_ShiftGrid(TGraphCtrl* this)
 {
     RECT rectCleanUp;
     HPEN oldPen;
-    HPEN solidPen = CreatePen(PS_SOLID, 0, this->m_crGridColor);
     int i;
 
-    if (this->m_dcGrid != NULL)
-    {
-        /*  BitBlt it to itself to scroll */
-        BitBlt(this->m_dcGrid, this->m_rectPlot.left, this->m_rectPlot.top+1,
-               this->m_nPlotWidth, this->m_nPlotHeight, this->m_dcGrid,
-               this->m_rectPlot.left+this->m_nShiftPixels, this->m_rectPlot.top+1,
-               SRCCOPY);
+    if (this->m_dcGrid == NULL)
+        return;
 
-        /*  Set shift pixels  */
-        this->m_nGridOffsetPixels = (this->m_nGridOffsetPixels + this->m_nShiftPixels) % this->m_nGridXPixels;
+    HPEN solidPen = CreatePen(PS_SOLID, 0, this->m_crGridColor);
 
-        /*  Construct a rect in which needs update  */
-        rectCleanUp = this->m_rectPlot;
-        rectCleanUp.left  = rectCleanUp.right - this->m_nShiftPixels;
+    /*  BitBlt it to itself to scroll */
+    BitBlt(this->m_dcGrid, this->m_rectPlot.left, this->m_rectPlot.top+1,
+           this->m_nPlotWidth, this->m_nPlotHeight, this->m_dcGrid,
+           this->m_rectPlot.left+this->m_nShiftPixels, this->m_rectPlot.top+1,
+           SRCCOPY);
 
-        /*  fill the cleanup area with the background */
-        FillRect(this->m_dcGrid, &rectCleanUp, this->m_brushBack);
+    /*  Set shift pixels  */
+    this->m_nGridOffsetPixels = (this->m_nGridOffsetPixels + this->m_nShiftPixels) % this->m_nGridXPixels;
+
+    /*  Construct a rect in which needs update  */
+    rectCleanUp = this->m_rectPlot;
+    rectCleanUp.left  = rectCleanUp.right - this->m_nShiftPixels;
+
+    /*  fill the cleanup area with the background */
+    FillRect(this->m_dcGrid, &rectCleanUp, this->m_brushBack);
         
-        /*  draw the plot rectangle */
-        oldPen = (HPEN)SelectObject(this->m_dcGrid, solidPen);
+    /*  draw the plot rectangle */
+    oldPen = (HPEN)SelectObject(this->m_dcGrid, solidPen);
 
-        /*  Redraw horizontal axis  */
-        MoveToEx(this->m_dcGrid, rectCleanUp.top, rectCleanUp.left, NULL);
-        for (i = rectCleanUp.top; i < rectCleanUp.bottom; i += this->m_nGridYPixels)
-        {
-            MoveToEx(this->m_dcGrid, rectCleanUp.left, rectCleanUp.top + i, NULL);
-            LineTo(this->m_dcGrid, rectCleanUp.right, rectCleanUp.top + i);
-        }
-
-        /*  Redraw scrolled vertical axis  */
-        MoveToEx(this->m_dcGrid, rectCleanUp.right - this->m_nGridOffsetPixels, rectCleanUp.top, NULL);
-        LineTo(this->m_dcGrid, rectCleanUp.right - this->m_nGridOffsetPixels, rectCleanUp.bottom);
-
-        SelectObject(this->m_dcGrid, oldPen);
+    /*  Redraw horizontal axis  */
+    MoveToEx(this->m_dcGrid, rectCleanUp.top, rectCleanUp.left, NULL);
+    for (i = rectCleanUp.top; i < rectCleanUp.bottom; i += this->m_nGridYPixels)
+    {
+        MoveToEx(this->m_dcGrid, rectCleanUp.left, rectCleanUp.top + i, NULL);
+        LineTo(this->m_dcGrid, rectCleanUp.right, rectCleanUp.top + i);
     }
-    
+
+    /*  Redraw scrolled vertical axis  */
+    MoveToEx(this->m_dcGrid, rectCleanUp.right - this->m_nGridOffsetPixels, rectCleanUp.top, NULL);
+    LineTo(this->m_dcGrid, rectCleanUp.right - this->m_nGridOffsetPixels, rectCleanUp.bottom);
+
+    SelectObject(this->m_dcGrid, oldPen);
     DeleteObject(solidPen);
 }
 
