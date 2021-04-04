@@ -169,7 +169,7 @@ HalEndSystemInterrupt(
     _In_ PHAL_INTERRUPT_CONTEXT IntContext
 );
 #else
-/* NT actually uses the stack to place the pointer to the TrapFrame (really the third parameter),
+/* NT 5.2 actually uses the stack to place the pointer to the TrapFrame (really the third parameter),
    but ... HalEndSystemInterrupt() is defined with only two parameters ...
 */
 NTHALAPI
