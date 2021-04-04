@@ -934,12 +934,14 @@ EXTRACTED_FILES_DIR = path.join(path.dirname(__file__), "timezones_tmp")
 CONVERTED_TIMEZONES_FILE = path.join(path.dirname(__file__), "boot", "bootdata", "timezones.inf")
 
 
-def download_archive():
+def download_archive(tzdata_version):
 	print("download_archive: started.")
-	response = request.urlopen(
-		"https://www.iana.org/time-zones/repository/tzdata-latest.tar.gz",
-		context=ssl.create_default_context()
-	)
+	url = None
+	if tzdata_version is None:
+		url = "https://www.iana.org/time-zones/repository/tzdata-latest.tar.gz"
+	else:
+		url = "https://data.iana.org/time-zones/releases/tzdata%s.tar.gz" % tzdata_version
+	response = request.urlopen(url, context=ssl.create_default_context())
 	content = response.read()
 	archive = tarfile.open(fileobj=io.BytesIO(content), mode="r:gz")
 	print("download_archive: done.")
@@ -976,6 +978,90 @@ def update_timezones():
 		stream.write(inf_output)
 	print("update_timezones: done.")
 
+HELP_MSG = ''.join(
+	"Format: ./update_timezones.py [--current_year year] [--tzdata_version tzdata] ",
+	"[--no-dynamic-dst]\n",
+	"The tool generates timezones information for registry. The behavior depends on whether dynamic ",
+	"DST is allowed.\n",
+	'\n',
+	"Transition object is a transition from standard time to daylight saving time and back. It",
+	"consists of standard time offset, daylight time transition date, daylight time offset, ",
+	"standard time transition date. Standard time offset is offset from UT. Daylight time if offset ",
+	"from standard time.\n",
+	"Offset is hours, minutes and seconds to shift clocks for.\n",
+	"Rule for a timezone is a \"Rule\" object, offset or None. <------ ?\n",
+	'\n'
+	"------ Behaviour if dynamic DST is allowed (NT ...)------\n",
+	'\n',
+	"------ Behaviour if dynamic DST is not allowed (NT ...) ------\n",
+	"Timezone entry must contain either the transition object for every year from the current year ",
+	"on (in the time of the timezone) or one transition object for the entire time."
+)
+def print_help():
+	print("")
+	print("")
+	print("------ If dynamic DST is allowed ------")
+	
+	print(''.join(
+		"At first, rules for a timezone are stripped according to the \"UNTIL\" column. Then the ",
+		"convertation starts."
+	))
+	print(''.join(
+		"Timezone entry should contain general rules (that have \"max\" year in IANA timezone ",
+		"database). If dynamic DST is not allowed, those rules must cover all the time from current ",
+		"moment on (because only one transition object can be stored). If there are no such rules, ",
+		"timezone entry will tell the system that time saving is not needed. If these rules can be ",
+		"converted only if dynamic DST is allowed and dynamic DST is disabled, the timezone will be",
+		"skipped and the user will be notified. If these rules can be converted only if dynamic DST ",
+		"is allowed and dynamic DST is enabled, there will be no time saving in the timezone entry, ",
+		"but dynamic DST entries for the next 250 years."
+	))
+	print(''.join(
+		"If dynamic dst is allowed, then timezone entry will have \"Dynamic DST\" subentry. For every ",
+		"year between the minimum year mentioned and the maximum year mentioned (not including ",
+		"\"max\" year rules as they are processed by the step above) the tool will convert rules for ",
+		"that year into transition objects. If it fails to convert a year, the years before the ",
+		"failed year will be ignored."
+	))
+
+def parse_args(args):
+	item_to_argument_types = {
+		"--no-dynamic-dst": (,),
+		"--current_year": (int,),
+		"--tzdata_version": (str,)
+	}
+	result = {}
+	args = reversed(args)
+	while args:
+		item = args.pop()
+		if item not in item_to_argument_types:
+			raise WrongUsageException("unsupported argument or repeated usage.")
+		item_argument_types = item_to_argument_types[item]
+		del item_to_argument_types[item]
+		item_arguments = []
+		for argument_type in item_argument_types:
+			item_argument.append(argument_type(args.pop()))
+		result[item] = item_arguments
+	return result
+
+def get_parameter(parameters, parameter, index, default_value):
+	if parameter in parameters:
+		return parameters[parameter][index]
+	else:
+		return default_value
+
 
 if __name__ == "__main__":
-	update_timezones()
+	parameters = None
+	try:
+		parameters = parse_args(sys.argv)
+	except WrongUsageException as exc:
+		print_help()
+		print(exc)
+		exit(1)
+	tzdata_version = get_parameter(parameters, "--tzdata_version", 0, None)
+	# current_year = get_parameter(parameters, "--current_utc_time", 0, timezone.utcnow().year)
+	current_utc_time = timezone.utcnow() # Do we need the ability to specify current time?
+	dynamic_dst_is_allowed = False # "--no-dynamic-dst" not in parameters
+	# Latest is used by default.
+	update_timezones(tzdata_version, current_utc_time, dynamic_dst_is_allowed)
