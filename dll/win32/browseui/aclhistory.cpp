@@ -26,11 +26,8 @@ STDMETHODIMP CACLHistory::Next(ULONG celt, LPOLESTR *rgelt, ULONG *pceltFetched)
         *rgelt = NULL;
     if (celt != 1)
         return E_NOTIMPL;
-    // FIXME: *rgelt
-    if (!*rgelt)
-        return E_OUTOFMEMORY;
-    *pceltFetched = 1;
-    return S_OK;
+    // FIXME: *rgelt, *pceltFetched, return value
+    return E_FAIL;
 }
 
 STDMETHODIMP CACLHistory::Reset()
@@ -41,6 +38,7 @@ STDMETHODIMP CACLHistory::Reset()
 
 STDMETHODIMP CACLHistory::Skip(ULONG celt)
 {
+    TRACE("CACLHistory::Clone(%p, %lu)\n", this, celt);
     return E_NOTIMPL;
 }
 
