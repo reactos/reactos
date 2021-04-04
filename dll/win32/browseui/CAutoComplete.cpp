@@ -883,7 +883,6 @@ BOOL CAutoComplete::OnEditKeyDown(WPARAM wParam, LPARAM lParam)
     UINT vk = (UINT)wParam; // virtual key
     switch (vk)
     {
-        case VK_HOME: case VK_END:
         case VK_UP: case VK_DOWN:
         case VK_PRIOR: case VK_NEXT:
             // is suggestion available?
@@ -1017,9 +1016,6 @@ BOOL CAutoComplete::OnListUpDown(UINT vk)
     INT cItems = m_hwndList.GetItemCount(); // the number of items
     switch (vk)
     {
-        case VK_HOME: case VK_END:
-            m_hwndList.SendMessageW(WM_KEYDOWN, vk, 0);
-            break;
         case VK_UP:
             if (iItem == -1)
                 iItem = cItems - 1;

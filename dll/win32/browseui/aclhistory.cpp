@@ -27,7 +27,7 @@ STDMETHODIMP CACLHistory::Next(ULONG celt, LPOLESTR *rgelt, ULONG *pceltFetched)
     if (celt != 1)
         return E_NOTIMPL;
     // FIXME: *rgelt, *pceltFetched, return value
-    return E_FAIL;
+    return S_FALSE;
 }
 
 STDMETHODIMP CACLHistory::Reset()
