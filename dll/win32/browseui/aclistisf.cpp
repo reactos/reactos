@@ -260,8 +260,21 @@ STDMETHODIMP CACListISF::Next(ULONG celt, LPOLESTR *rgelt, ULONG *pceltFetched)
                 }
             }
 
-            if ((m_dwOptions & ACLO_FILESYSDIRS) && !PathIsDirectoryW(pszPathName))
-                continue;
+            if (m_dwOptions & ACLO_FILESYSDIRS)
+            {
+                if (wcschr(pszPathName, L'%') != NULL)
+                {
+                    WCHAR szPath[MAX_PATH];
+                    ExpandEnvironmentStringsW(pszPathName, szPath, _countof(szPath));
+                    if (!PathIsDirectoryW(szPath))
+                        continue;
+                }
+                else
+                {
+                    if (!PathIsDirectoryW(pszPathName))
+                        continue;
+                }
+            }
 
             hr = S_OK;
             break;
