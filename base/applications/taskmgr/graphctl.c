@@ -422,18 +422,18 @@ void GraphCtrl_Paint(TGraphCtrl* this, HWND hWnd, HDC dc)
 void GraphCtrl_ShiftGrid(TGraphCtrl* this)
 {
     RECT rectCleanUp;
-    HPEN oldPen;
+    HPEN oldPen, solidPen;
     int i;
 
     if (this->m_dcGrid == NULL)
         return;
 
-    HPEN solidPen = CreatePen(PS_SOLID, 0, this->m_crGridColor);
+    solidPen = CreatePen(PS_SOLID, 0, this->m_crGridColor);
 
     /*  BitBlt it to itself to scroll */
-    BitBlt(this->m_dcGrid, this->m_rectPlot.left, this->m_rectPlot.top+1,
+    BitBlt(this->m_dcGrid, this->m_rectPlot.left, this->m_rectPlot.top + 1,
            this->m_nPlotWidth, this->m_nPlotHeight, this->m_dcGrid,
-           this->m_rectPlot.left+this->m_nShiftPixels, this->m_rectPlot.top+1,
+           this->m_rectPlot.left + this->m_nShiftPixels, this->m_rectPlot.top + 1,
            SRCCOPY);
 
     /*  Set shift pixels  */
