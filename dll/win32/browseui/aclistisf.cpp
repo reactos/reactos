@@ -331,6 +331,14 @@ STDMETHODIMP CACListISF::Expand(LPCOLESTR pszExpand)
     m_szExpand = pszExpand;
     m_iNextLocation = LT_DIRECTORY;
 
+    // expand environment variables (%WINDIR% etc.)
+    WCHAR szExpanded[MAX_PATH];
+    if (wcschr(pszExpand, L'%') != NULL &&
+        ExpandEnvironmentStringsW(pszExpand, szExpanded, _countof(szExpanded)))
+    {
+        pszExpand = szExpanded;
+    }
+
     // get full path
     WCHAR szPath1[MAX_PATH], szPath2[MAX_PATH];
     if (PathIsRelativeW(pszExpand) &&
@@ -427,3 +435,4 @@ STDMETHODIMP CACListISF::SetDirectory(LPCWSTR pwzPath)
     m_pidlCurDir.Attach(pidl);
     return S_OK;
 }
+
