@@ -1101,13 +1101,13 @@ PiSetDevNodeText(
         return;
     }
 
-    // Step 1: write DeviceDesc key if not exists
+    // Step 1: Write the DeviceDesc value if does not exist
 
     UNICODE_STRING valDeviceDesc = RTL_CONSTANT_STRING(L"DeviceDesc");
     ULONG len;
 
     status = ZwQueryValueKey(InstanceKey, &valDeviceDesc, KeyValueBasicInformation, NULL, 0, &len);
-    if (!NT_SUCCESS(status))
+    if (status == STATUS_OBJECT_NAME_NOT_FOUND)
     {
         PWSTR deviceDesc = NULL;
         status = PiIrpQueryDeviceText(DeviceNode, localeId, DeviceTextDescription, &deviceDesc);
