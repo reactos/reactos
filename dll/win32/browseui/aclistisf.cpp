@@ -336,20 +336,17 @@ STDMETHODIMP CACListISF::Expand(LPCOLESTR pszExpand)
         szExpanded[2] = L'\\';
         szExpanded[3] = 0;
     }
-    else
+    else if (PathIsRelativeW(pszExpand) &&
+             SHGetPathFromIDListW(m_pidlCurDir, szPath1) &&
+             PathCombineW(szPath2, szPath1, pszExpand))
     {
-        if (PathIsRelativeW(pszExpand) &&
-            SHGetPathFromIDListW(m_pidlCurDir, szPath1) &&
-            PathCombineW(szPath2, szPath1, pszExpand))
-        {
-            pszExpand = szPath2;
-        }
-        GetFullPathNameW(pszExpand, _countof(szPath1), szPath1, NULL);
+        pszExpand = szPath2;
     }
+    GetFullPathNameW(pszExpand, _countof(szPath1), szPath1, NULL);
 
     CComHeapPtr<ITEMIDLIST> pidl;
     m_szExpanded = szPath1;
-    HRESULT hr = SHParseDisplayName(szPath1, NULL, &pidl, NULL, NULL);
+    HRESULT hr = SHParseDisplayName(m_szExpanded, NULL, &pidl, NULL, NULL);
     if (SUCCEEDED(hr))
     {
         hr = SetLocation(pidl.Detach());
