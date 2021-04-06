@@ -1697,8 +1697,7 @@ MmNotPresentFaultSectionView(PMMSUPPORT AddressSpace,
      * Check if this page needs to be mapped COW
      */
     if ((Segment->WriteCopy) &&
-            (Region->Protect == PAGE_READWRITE ||
-             Region->Protect == PAGE_EXECUTE_READWRITE))
+        (Region->Protect == PAGE_READWRITE || Region->Protect == PAGE_EXECUTE_READWRITE))
     {
         Attributes = Region->Protect == PAGE_READWRITE ? PAGE_READONLY : PAGE_EXECUTE_READ;
     }
@@ -1883,30 +1882,68 @@ MmAccessFaultSectionView(PMMSUPPORT AddressSpace,
     PMM_SECTION_SEGMENT Segment;
     PFN_NUMBER OldPage;
     PFN_NUMBER NewPage;
-    NTSTATUS Status;
     PVOID PAddress;
     LARGE_INTEGER Offset;
     PMM_REGION Region;
     ULONG_PTR Entry;
     PEPROCESS Process = MmGetAddressSpaceOwner(AddressSpace);
+    BOOLEAN Cow = FALSE;
+    ULONG NewProtect;
 
     DPRINT("MmAccessFaultSectionView(%p, %p, %p)\n", AddressSpace, MemoryArea, Address);
 
+    /* Get the region for this address */
+    Region = MmFindRegion((PVOID)MA_GetStartingAddress(MemoryArea),
+                        &MemoryArea->SectionData.RegionListHead,
+                        Address, NULL);
+    ASSERT(Region != NULL);
+    if (!(Region->Protect & PAGE_IS_WRITABLE))
+        return STATUS_ACCESS_VIOLATION;
+
     /* Make sure we have a page mapping for this address.  */
-    Status = MmNotPresentFaultSectionView(AddressSpace, MemoryArea, Address, Locked);
-    if (!NT_SUCCESS(Status))
+    if (!MmIsPagePresent(Process, Address))
     {
-        /* This is invalid access ! */
-        return Status;
+        NTSTATUS Status = MmNotPresentFaultSectionView(AddressSpace, MemoryArea, Address, Locked);
+        if (!NT_SUCCESS(Status))
+        {
+            /* This is invalid access ! */
+            return Status;
+        }
     }
 
     /*
      * Check if the page has already been set readwrite
      */
-    if (MmGetPageProtect(Process, Address) & PAGE_READWRITE)
+    if (MmGetPageProtect(Process, Address) & (PAGE_READWRITE | PAGE_EXECUTE_READWRITE))
     {
         DPRINT("Address 0x%p\n", Address);
         return STATUS_SUCCESS;
+    }
+
+    /* Check if we are doing Copy-On-Write */
+    Segment = MemoryArea->SectionData.Segment;
+    Cow = Segment->WriteCopy || (Region->Protect & PAGE_IS_WRITECOPY);
+
+    if (!Cow)
+    {
+        /* Simply update page protection and we're done */
+        MmSetPageProtect(Process, Address, Region->Protect);
+        return STATUS_SUCCESS;
+    }
+
+    /* Calculate the new protection & check if we should update the region */
+    NewProtect = Region->Protect;
+    if (NewProtect & PAGE_IS_WRITECOPY)
+    {
+        NewProtect &= ~PAGE_IS_WRITECOPY;
+        if (Region->Protect & PAGE_IS_EXECUTABLE)
+            NewProtect |= PAGE_EXECUTE_READWRITE;
+        else
+            NewProtect |= PAGE_READWRITE;
+        MmAlterRegion(AddressSpace, (PVOID)MA_GetStartingAddress(MemoryArea),
+                &MemoryArea->SectionData.RegionListHead,
+                Address, PAGE_SIZE, Region->Type, NewProtect,
+                MmAlterViewAttributes);
     }
 
     /*
@@ -1915,23 +1952,6 @@ MmAccessFaultSectionView(PMMSUPPORT AddressSpace,
     PAddress = MM_ROUND_DOWN(Address, PAGE_SIZE);
     Offset.QuadPart = (ULONG_PTR)PAddress - MA_GetStartingAddress(MemoryArea)
                       + MemoryArea->SectionData.ViewOffset;
-
-    Segment = MemoryArea->SectionData.Segment;
-    Region = MmFindRegion((PVOID)MA_GetStartingAddress(MemoryArea),
-                          &MemoryArea->SectionData.RegionListHead,
-                          Address, NULL);
-    ASSERT(Region != NULL);
-
-    /*
-     * Check if we are doing COW
-     */
-    if (!((Segment->WriteCopy) &&
-            (Region->Protect == PAGE_READWRITE ||
-             Region->Protect == PAGE_EXECUTE_READWRITE)))
-    {
-        DPRINT("Address 0x%p\n", Address);
-        return STATUS_ACCESS_VIOLATION;
-    }
 
     /* Get the page mapping this section offset. */
     MmLockSectionSegment(Segment);
@@ -1947,15 +1967,14 @@ MmAccessFaultSectionView(PMMSUPPORT AddressSpace,
     {
         MmUnlockSectionSegment(Segment);
         /* This is a private page. We must only change the page protection. */
-        MmSetPageProtect(Process, PAddress, Region->Protect);
+        MmSetPageProtect(Process, PAddress, NewProtect);
         return STATUS_SUCCESS;
     }
 
     /*
      * Allocate a page
      */
-    Status = MmRequestPageMemoryConsumer(MC_USER, TRUE, &NewPage);
-    if (!NT_SUCCESS(Status))
+    if (!NT_SUCCESS(MmRequestPageMemoryConsumer(MC_USER, TRUE, &NewPage)))
     {
         KeBugCheck(MEMORY_MANAGEMENT);
     }
@@ -1978,15 +1997,10 @@ MmAccessFaultSectionView(PMMSUPPORT AddressSpace,
     /*
      * Set the PTE to point to the new page
      */
-    Status = MmCreateVirtualMapping(Process,
-                                    PAddress,
-                                    Region->Protect,
-                                    NewPage);
-    if (!NT_SUCCESS(Status))
+    if (!NT_SUCCESS(MmCreateVirtualMapping(Process, PAddress, NewProtect, NewPage)))
     {
         DPRINT1("MmCreateVirtualMapping failed, unable to create virtual mapping, not out of memory\n");
         KeBugCheck(MEMORY_MANAGEMENT);
-        return Status;
     }
 
     if (Process)
