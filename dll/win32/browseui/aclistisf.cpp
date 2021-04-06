@@ -319,8 +319,8 @@ STDMETHODIMP CACListISF::Expand(LPCOLESTR pszExpand)
     m_szRawPath = pszExpand;
     m_iNextLocation = LT_DIRECTORY;
 
-    // skip left blank
-    while (*pszExpand == L' ' || *pszExpand == L'\t')
+    // skip left space
+    while (*pszExpand == L' ')
         ++pszExpand;
 
     // expand environment variables (%WINDIR% etc.)
