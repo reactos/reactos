@@ -324,28 +324,31 @@ STDMETHODIMP CACListISF::Expand(LPCOLESTR pszExpand)
         ++pszExpand;
 
     // expand environment variables (%WINDIR% etc.)
-    WCHAR szExpanded[MAX_PATH];
+    WCHAR szExpanded[MAX_PATH], szPath1[MAX_PATH], szPath2[MAX_PATH];
     ExpandEnvironmentStringsW(pszExpand, szExpanded, _countof(szExpanded));
     pszExpand = szExpanded;
 
     // get full path
-    WCHAR szPath1[MAX_PATH], szPath2[MAX_PATH];
     if (szExpanded[0] && szExpanded[1] == L':' && szExpanded[2] == 0)
     {
         // 'C:' --> 'C:\'
         szExpanded[2] = L'\\';
         szExpanded[3] = 0;
     }
-    else if (PathIsRelativeW(pszExpand) &&
-             SHGetPathFromIDListW(m_pidlCurDir, szPath1) &&
-             PathCombineW(szPath2, szPath1, pszExpand))
+    else
     {
-        pszExpand = szPath2;
+        if (PathIsRelativeW(pszExpand) &&
+            SHGetPathFromIDListW(m_pidlCurDir, szPath1) &&
+            PathCombineW(szPath2, szPath1, pszExpand))
+        {
+            pszExpand = szPath2;
+        }
+        GetFullPathNameW(pszExpand, _countof(szPath1), szPath1, NULL);
+        pszExpand = szPath1;
     }
-    GetFullPathNameW(pszExpand, _countof(szPath1), szPath1, NULL);
 
     CComHeapPtr<ITEMIDLIST> pidl;
-    m_szExpanded = szPath1;
+    m_szExpanded = pszExpand;
     HRESULT hr = SHParseDisplayName(m_szExpanded, NULL, &pidl, NULL, NULL);
     if (SUCCEEDED(hr))
     {
