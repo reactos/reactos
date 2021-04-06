@@ -684,71 +684,11 @@ KiDispatchException2Args(IN NTSTATUS Code,
 //
 // Performs a system call
 //
-
-    /*
-     * This sequence does a RtlCopyMemory(Stack - StackBytes, Arguments, StackBytes)
-     * and then calls the function associated with the system call.
-     *
-     * It's done in assembly for two reasons: we need to muck with the stack,
-     * and the call itself restores the stack back for us. The only way to do
-     * this in C is to do manual C handlers for every possible number of args on
-     * the stack, and then have the handler issue a call by pointer. This is
-     * wasteful since it'll basically push the values twice and require another
-     * level of call indirection.
-     *
-     * The ARM kernel currently does this, but it should probably be changed
-     * later to function like this as well.
-     *
-     */
-#ifdef __GNUC__
-FORCEINLINE
 NTSTATUS
-KiSystemCallTrampoline(IN PVOID Handler,
-                       IN PVOID Arguments,
-                       IN ULONG StackBytes)
-{
-    NTSTATUS Result;
-
-    __asm__ __volatile__
-    (
-        "subl %1, %%esp\n\t"
-        "movl %%esp, %%edi\n\t"
-        "movl %2, %%esi\n\t"
-        "shrl $2, %1\n\t"
-        "rep movsd\n\t"
-        "call *%3\n\t"
-        "movl %%eax, %0"
-        : "=r"(Result)
-        : "c"(StackBytes),
-          "d"(Arguments),
-          "r"(Handler)
-        : "%esp", "%esi", "%edi"
-    );
-    return Result;
-}
-#elif defined(_MSC_VER)
-FORCEINLINE
-NTSTATUS
-KiSystemCallTrampoline(IN PVOID Handler,
-                       IN PVOID Arguments,
-                       IN ULONG StackBytes)
-{
-    __asm
-    {
-        mov ecx, StackBytes
-        mov esi, Arguments
-        mov eax, Handler
-        sub esp, ecx
-        mov edi, esp
-        shr ecx, 2
-        rep movsd
-        call eax
-    }
-    /* Return with result in EAX */
-}
-#else
-#error Unknown Compiler
-#endif
+NTAPI
+KiSystemCallTrampoline(_In_ PVOID Handler,
+                       _In_ PVOID Arguments,
+                       _In_ ULONG StackBytes);
 
 
 //
