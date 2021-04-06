@@ -246,9 +246,9 @@ STDMETHODIMP CACListISF::Next(ULONG celt, LPOLESTR *rgelt, ULONG *pceltFetched)
             if (!pszRawPath || !pszExpanded)
                 continue;
 
-            if ((m_dwOptions & ACLO_FILESYSONLY) && !PathFileExistsW(pszExpanded))
-                continue;
             if ((m_dwOptions & ACLO_FILESYSDIRS) && !PathIsDirectoryW(pszExpanded))
+                continue;
+            else if ((m_dwOptions & ACLO_FILESYSONLY) && !PathFileExistsW(pszExpanded))
                 continue;
 
             hr = S_OK;
@@ -336,13 +336,16 @@ STDMETHODIMP CACListISF::Expand(LPCOLESTR pszExpand)
         szExpanded[2] = L'\\';
         szExpanded[3] = 0;
     }
-    else if (PathIsRelativeW(pszExpand) &&
-             SHGetPathFromIDListW(m_pidlCurDir, szPath1) &&
-             PathCombineW(szPath2, szPath1, pszExpand))
+    else
     {
-        pszExpand = szPath2;
+        if (PathIsRelativeW(pszExpand) &&
+            SHGetPathFromIDListW(m_pidlCurDir, szPath1) &&
+            PathCombineW(szPath2, szPath1, pszExpand))
+        {
+            pszExpand = szPath2;
+        }
+        GetFullPathNameW(pszExpand, _countof(szPath1), szPath1, NULL);
     }
-    GetFullPathNameW(pszExpand, _countof(szPath1), szPath1, NULL);
 
     CComHeapPtr<ITEMIDLIST> pidl;
     m_szExpanded = szPath1;
