@@ -43,7 +43,8 @@ private:
     DWORD m_dwOptions;
     LOCATION_TYPE m_iNextLocation;
     BOOL m_fShowHidden;
-    CStringW m_szExpand;
+    CStringW m_szRawPath;
+    CStringW m_szExpanded;
     CComHeapPtr<ITEMIDLIST> m_pidlLocation;
     CComHeapPtr<ITEMIDLIST> m_pidlCurDir;
     CComPtr<IEnumIDList> m_pEnumIDList;
@@ -57,7 +58,8 @@ public:
     HRESULT NextLocation();
     HRESULT SetLocation(LPITEMIDLIST pidl);
     HRESULT GetDisplayName(LPCITEMIDLIST pidlChild, CComHeapPtr<WCHAR>& pszChild);
-    HRESULT GetPathName(LPCITEMIDLIST pidlChild, CComHeapPtr<WCHAR>& pszPath);
+    HRESULT GetPaths(LPCITEMIDLIST pidlChild, CComHeapPtr<WCHAR>& pszRaw,
+                     CComHeapPtr<WCHAR>& pszExpanded);
 
     // *** IEnumString methods ***
     STDMETHODIMP Next(ULONG celt, LPOLESTR *rgelt, ULONG *pceltFetched) override;
