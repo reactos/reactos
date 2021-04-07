@@ -150,7 +150,7 @@ public:
 
     CStringW GetEditText();
     VOID SetEditText(LPCWSTR pszText);
-    CStringW GetStemText();
+    CStringW GetStemText(const CStringW& strText);
     VOID SetEditSel(INT ich0, INT ich1);
 
     VOID ShowDropDown();

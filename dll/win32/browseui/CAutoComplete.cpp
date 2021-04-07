@@ -721,9 +721,8 @@ VOID CAutoComplete::SetEditText(LPCWSTR pszText)
     m_bInSetText = FALSE;
 }
 
-CStringW CAutoComplete::GetStemText()
+CStringW CAutoComplete::GetStemText(const CStringW& strText)
 {
-    CStringW strText = GetEditText();
     INT ich = strText.ReverseFind(L'\\');
     if (ich == -1)
         return L""; // no stem
@@ -1490,7 +1489,7 @@ INT CAutoComplete::UpdateInnerList(const CStringW& strText)
     m_strText = strText;
 
     // do expand the items if the stem is changed
-    CStringW strStemText = GetStemText();
+    CStringW strStemText = GetStemText(strText);
     if (m_strStemText.CompareNoCase(strStemText) != 0)
     {
         m_strStemText = strStemText;
