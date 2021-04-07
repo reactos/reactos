@@ -213,7 +213,7 @@ protected:
     VOID RepositionDropDown();
     INT ReLoadInnerList();
     INT UpdateInnerList(const CStringW& strText);
-    INT UpdateOuterList();
+    INT UpdateOuterList(const CStringW& strText);
     VOID UpdateCompletion(BOOL bAppendOK);
     // message map
     BEGIN_MSG_MAP(CAutoComplete)

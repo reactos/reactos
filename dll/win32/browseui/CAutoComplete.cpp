@@ -1524,10 +1524,8 @@ INT CAutoComplete::UpdateInnerList(const CStringW& strText)
     return m_innerList.GetSize();
 }
 
-INT CAutoComplete::UpdateOuterList()
+INT CAutoComplete::UpdateOuterList(const CStringW& strText)
 {
-    CStringW strText = GetEditText(); // get the text
-
     // update the outer list from the inner list
     m_outerList.RemoveAll();
     for (INT iItem = 0; iItem < m_innerList.GetSize(); ++iItem)
@@ -1549,9 +1547,8 @@ INT CAutoComplete::UpdateOuterList()
         }
     }
 
-    // sort the list
+    // sort and unique
     DoSort(m_outerList);
-    // unique
     DoUniqueAndTrim(m_outerList);
 
     // set the item count of the virtual listview
@@ -1588,7 +1585,7 @@ VOID CAutoComplete::UpdateCompletion(BOOL bAppendOK)
         SelectItem(-1); // select none
         m_bInSelectItem = FALSE;
 
-        if (UpdateOuterList())
+        if (UpdateOuterList(strText))
             RepositionDropDown();
         else
             HideDropDown();
