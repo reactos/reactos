@@ -291,7 +291,7 @@ LRESULT CAutoComplete::EditWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
             return OnEditChar(wParam, lParam);
         case WM_CUT: case WM_PASTE: case WM_CLEAR:
             ret = ::DefSubclassProc(hwnd, uMsg, wParam, lParam); // do default
-            OnEditUpdate(TRUE);
+            UpdateCompletion(TRUE);
             return ret;
         case WM_GETDLGCODE:
             ret = ::DefSubclassProc(hwnd, uMsg, wParam, lParam); // do default
@@ -950,7 +950,7 @@ BOOL CAutoComplete::OnEditKeyDown(WPARAM wParam, LPARAM lParam)
             if (!CanAutoSuggest())
                 return FALSE; // do default
             ::DefSubclassProc(m_hwndEdit, WM_KEYDOWN, VK_DELETE, 0); // do default
-            OnEditUpdate(FALSE);
+            UpdateCompletion(FALSE);
             return TRUE; // eat
         }
         case VK_BACK:
@@ -973,19 +973,8 @@ LRESULT CAutoComplete::OnEditChar(WPARAM wParam, LPARAM lParam)
         return 0; // eat
     LRESULT ret = ::DefSubclassProc(m_hwndEdit, WM_CHAR, wParam, lParam); // do default
     if (CanAutoSuggest() || CanAutoAppend())
-        OnEditUpdate(wParam != VK_BACK);
+        UpdateCompletion(wParam != VK_BACK);
     return ret;
-}
-
-VOID CAutoComplete::OnEditUpdate(BOOL bAppendOK)
-{
-    CStringW strText = GetEditText();
-    if (m_strText.CompareNoCase(strText) == 0)
-    {
-        // no change
-        return;
-    }
-    UpdateCompletion(bAppendOK);
 }
 
 VOID CAutoComplete::OnListSelChange()
@@ -1508,7 +1497,8 @@ INT CAutoComplete::UpdateInnerList()
     if (m_strStemText.CompareNoCase(strStemText) != 0)
     {
         m_strStemText = strStemText;
-        bExpand = bReset = TRUE;
+        bReset = TRUE;
+        bExpand = !m_strStemText.IsEmpty();
     }
 
     // reset if necessary
@@ -1579,6 +1569,13 @@ INT CAutoComplete::UpdateOuterList()
 VOID CAutoComplete::UpdateCompletion(BOOL bAppendOK)
 {
     TRACE("CAutoComplete::UpdateCompletion(%p, %d)\n", this, bAppendOK);
+
+    CStringW strText = GetEditText();
+    if (m_strText.CompareNoCase(strText) == 0)
+    {
+        // no change
+        return;
+    }
 
     // update inner list
     UINT cItems = UpdateInnerList();
