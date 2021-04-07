@@ -32,7 +32,7 @@
 #define CX_LIST 30160 // width of m_hwndList (very wide but alright)
 #define CY_LIST 288 // maximum height of drop-down window
 #define CY_ITEM 18 // default height of listview item
-#define COMPLETION_TIMEOUT 250 // in milliseconds
+#define COMPLETION_TIMEOUT 300 // in milliseconds
 #define MAX_ITEM_COUNT 1000 // the maximum number of items
 #define WATCH_TIMER_ID 0xFEEDBEEF // timer ID to watch m_rcEdit
 #define WATCH_INTERVAL 300 // in milliseconds
@@ -640,6 +640,7 @@ CAutoComplete::CAutoComplete()
     , m_bDowner(TRUE), m_dwOptions(ACO_AUTOAPPEND | ACO_AUTOSUGGEST)
     , m_bEnabled(TRUE), m_hwndCombo(NULL), m_hFont(NULL), m_bResized(FALSE)
     , m_hwndEdit(NULL), m_fnOldEditProc(NULL), m_fnOldWordBreakProc(NULL)
+    , m_bPartialList(FALSE), m_dwTick(0)
 {
 }
 
@@ -1443,6 +1444,31 @@ VOID CAutoComplete::RepositionDropDown()
     ShowWindow(SW_SHOWNOACTIVATE);
 }
 
+VOID CAutoComplete::ScrapeOffList(const CStringW& strText, CSimpleArray<CStringW>& array)
+{
+    for (INT iItem = array.GetSize() - 1; iItem >= 0; --iItem)
+    {
+        const CStringW& strTarget = array[iItem];
+
+        CStringW strBody;
+        BOOL bRemove = TRUE;
+        if (DropPrefix(strTarget, strBody))
+        {
+            if (::StrCmpNIW(strBody, strText, strText.GetLength()) == 0)
+            {
+                bRemove = FALSE;
+            }
+        }
+        if (::StrCmpNIW(strTarget, strText, strText.GetLength()) == 0)
+        {
+            bRemove = FALSE;
+        }
+
+        if (bRemove)
+            array.RemoveAt(iItem);
+    }
+}
+
 INT CAutoComplete::ReLoadInnerList(const CStringW& strText)
 {
     m_innerList.RemoveAll(); // clear contents
@@ -1450,25 +1476,65 @@ INT CAutoComplete::ReLoadInnerList(const CStringW& strText)
     if (!m_pEnum)
         return 0;
 
-    DWORD dwTick = ::GetTickCount(); // used for timeout
-
     // reload the items
-    LPWSTR pszItem;
-    ULONG cGot;
     HRESULT hr;
-    for (ULONG cTotal = 0; cTotal < MAX_ITEM_COUNT; ++cTotal)
+    m_bPartialList = FALSE;
+    for (;;)
     {
         // get next item
+        LPWSTR pszItem;
+        ULONG cGot;
         hr = m_pEnum->Next(1, &pszItem, &cGot);
         //TRACE("m_pEnum->Next(%p): 0x%08lx\n", reinterpret_cast<IUnknown *>(m_pEnum), hr);
         if (hr != S_OK)
             break;
 
-        m_innerList.Add(pszItem); // append item to m_innerList
+        CStringW strTarget = pszItem;
         ::CoTaskMemFree(pszItem); // free
 
+        if (m_bPartialList) // if items are too many
+        {
+            // do filter the items
+            BOOL bAdd = FALSE;
+            CStringW strBody;
+            if (DropPrefix(strTarget, strBody))
+            {
+                if (::StrCmpNIW(strBody, strText, strText.GetLength()) == 0)
+                {
+                    bAdd = TRUE;
+                }
+            }
+            else if (::StrCmpNIW(strTarget, strText, strText.GetLength()) == 0)
+            {
+                bAdd = TRUE;
+            }
+
+            if (bAdd)
+            {
+                m_innerList.Add(strTarget);
+
+                if (m_innerList.GetSize() >= MAX_ITEM_COUNT)
+                    break;
+            }
+        }
+        else
+        {
+            m_innerList.Add(strTarget); // append item to m_innerList
+
+            // if items are too many
+            if (m_innerList.GetSize() >= MAX_ITEM_COUNT)
+            {
+                // filter the items now
+                m_bPartialList = TRUE;
+                ScrapeOffList(strText, m_innerList);
+
+                if (m_innerList.GetSize() >= MAX_ITEM_COUNT)
+                    break;
+            }
+        }
+
         // check the timeout
-        if (::GetTickCount() - dwTick >= COMPLETION_TIMEOUT)
+        if (::GetTickCount() - m_dwTick >= COMPLETION_TIMEOUT)
             break; // too late
     }
 
@@ -1495,6 +1561,12 @@ INT CAutoComplete::UpdateInnerList(const CStringW& strText)
         m_strStemText = strStemText;
         bReset = TRUE;
         bExpand = !m_strStemText.IsEmpty();
+    }
+
+    // if the previous enumeration is too large
+    if (m_bPartialList)
+    {
+        bReset = bExpand = TRUE; // retry enumeratation
     }
 
     // reset if necessary
@@ -1525,24 +1597,41 @@ INT CAutoComplete::UpdateInnerList(const CStringW& strText)
 
 INT CAutoComplete::UpdateOuterList(const CStringW& strText)
 {
-    // update the outer list from the inner list
-    m_outerList.RemoveAll();
-    for (INT iItem = 0; iItem < m_innerList.GetSize(); ++iItem)
+    if (m_bPartialList)
     {
-        // is the beginning matched?
-        const CStringW& strTarget = m_innerList[iItem];
-        CStringW strBody;
-        if (DropPrefix(strTarget, strBody))
+        // it is already filtered
+        m_outerList = m_innerList;
+    }
+    else
+    {
+        // update the outer list from the inner list
+        m_outerList.RemoveAll();
+        for (INT iItem = 0; iItem < m_innerList.GetSize(); ++iItem)
         {
-            if (::StrCmpNIW(strBody, strText, strText.GetLength()) == 0)
+            // is the beginning matched?
+            const CStringW& strTarget = m_innerList[iItem];
+
+            // filter the items
+            BOOL bAdd = FALSE;
+            CStringW strBody;
+            if (DropPrefix(strTarget, strBody))
             {
-                m_outerList.Add(strTarget);
-                continue;
+                if (::StrCmpNIW(strBody, strText, strText.GetLength()) == 0)
+                {
+                    bAdd = TRUE;
+                }
             }
-        }
-        if (::StrCmpNIW(strTarget, strText, strText.GetLength()) == 0)
-        {
-            m_outerList.Add(strTarget);
+            else if (::StrCmpNIW(strTarget, strText, strText.GetLength()) == 0)
+            {
+                bAdd = TRUE;
+            }
+
+            if (bAdd)
+                m_outerList.Add(strTarget);
+
+            // check the timeout
+            if (::GetTickCount() - m_dwTick >= COMPLETION_TIMEOUT)
+                break; // too late
         }
     }
 
@@ -1562,6 +1651,8 @@ INT CAutoComplete::UpdateOuterList(const CStringW& strText)
 VOID CAutoComplete::UpdateCompletion(BOOL bAppendOK)
 {
     TRACE("CAutoComplete::UpdateCompletion(%p, %d)\n", this, bAppendOK);
+
+    m_dwTick = GetTickCount(); // to check the timeout
 
     CStringW strText = GetEditText();
     if (m_strText.CompareNoCase(strText) == 0)

@@ -194,6 +194,8 @@ protected:
     HWND m_hwndEdit; // the textbox
     WNDPROC m_fnOldEditProc; // old textbox procedure
     EDITWORDBREAKPROCW m_fnOldWordBreakProc;
+    BOOL m_bPartialList; // is the list partial?
+    DWORD m_dwTick; // to check timeout
     // The following variables are non-POD:
     CStringW m_strText; // internal text (used in selecting item and reverting text)
     CStringW m_strStemText; // dirname + '\\'
@@ -215,6 +217,7 @@ protected:
     INT UpdateInnerList(const CStringW& strText);
     INT UpdateOuterList(const CStringW& strText);
     VOID UpdateCompletion(BOOL bAppendOK);
+    VOID ScrapeOffList(const CStringW& strText, CSimpleArray<CStringW>& array);
     // message map
     BEGIN_MSG_MAP(CAutoComplete)
         MESSAGE_HANDLER(WM_CREATE, OnCreate)
