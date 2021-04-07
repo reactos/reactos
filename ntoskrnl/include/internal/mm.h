@@ -1011,17 +1011,26 @@ MmZeroPageThread(
 );
 
 /* hypermap.c *****************************************************************/
+_Acquires_lock_(Process->HyperSpaceLock)
+_When_(OldIrql == 0, _IRQL_requires_(DISPATCH_LEVEL))
+_When_(OldIrql != 0, _IRQL_requires_(PASSIVE_LEVEL))
+_When_(OldIrql != 0, _At_(*OldIrql, IRQL_saves_))
+_When_(OldIrql != 0, _IRQL_raises_(DISPATCH_LEVEL))
 PVOID
 NTAPI
-MiMapPageInHyperSpace(IN PEPROCESS Process,
-                      IN PFN_NUMBER Page,
-                      IN PKIRQL OldIrql);
+MiMapPageInHyperSpace(_In_ PEPROCESS Process,
+                      _In_ PFN_NUMBER Page,
+                      _Out_opt_ PKIRQL OldIrql);
 
+_Requires_lock_held_(Process->HyperSpaceLock)
+_Releases_lock_(Process->HyperSpaceLock)
+_IRQL_requires_(DISPATCH_LEVEL)
+_When_(OldIrql != MM_NOIRQL, _At_(OldIrql, _IRQL_restores_))
 VOID
 NTAPI
-MiUnmapPageInHyperSpace(IN PEPROCESS Process,
-                        IN PVOID Address,
-                        IN KIRQL OldIrql);
+MiUnmapPageInHyperSpace(_In_ PEPROCESS Process,
+                        _In_ PVOID Address,
+                        _In_ KIRQL OldIrql);
 
 PVOID
 NTAPI
