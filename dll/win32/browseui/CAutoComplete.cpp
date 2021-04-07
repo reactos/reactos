@@ -1443,7 +1443,7 @@ VOID CAutoComplete::RepositionDropDown()
     ShowWindow(SW_SHOWNOACTIVATE);
 }
 
-INT CAutoComplete::ReLoadInnerList()
+INT CAutoComplete::ReLoadInnerList(const CStringW& strText)
 {
     m_innerList.RemoveAll(); // clear contents
 
@@ -1517,7 +1517,7 @@ INT CAutoComplete::UpdateInnerList(const CStringW& strText)
     if (bExpand || m_innerList.GetSize() == 0)
     {
         // reload the inner list
-        ReLoadInnerList();
+        ReLoadInnerList(strText);
     }
 
     return m_innerList.GetSize();
