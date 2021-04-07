@@ -1,0 +1,46 @@
+name: Analyze
+on:
+  schedule:
+  - cron: '0 0 * * SUN' # Every sunday at 00:00 UTC
+  push:
+    paths:
+    - '.github/workflows/analyze.yml' # When someone modifies this file
+  pull_request:
+    paths:
+    - '.github/workflows/analyze.yml'
+
+jobs:
+  analyze-msvc-i386:
+    name: MSVC (i386)
+    runs-on: windows-latest
+    steps:
+    - name: Install Flex and Bison
+      run: |
+        curl -O https://svn.reactos.org/storage/vperevertkin/flexbison.7z
+        7z x flexbison.7z -O${{github.workspace}}\bin
+        echo "${{github.workspace}}\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+        echo "BISON_PKGDATADIR=${{github.workspace}}\bin\share\bison" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+        echo "M4=${{github.workspace}}\bin\m4.exe" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+    - name: Add CL to PATH
+      uses: ilammy/msvc-dev-cmd@v1
+      with:
+        arch: amd64_x86
+    - uses: actions/checkout@v2
+      with:
+        path: src
+    - name: Configure
+      run: cmake -S src -B build -G "Visual Studio 16 2019" -A Win32 -DCMAKE_TOOLCHAIN_FILE:FILEPATH=toolchain-msvc.cmake -DARCH:STRING=i386 -DENABLE_ROSTESTS=1 -DENABLE_ROSAPPS=1
+    - name: Analyze
+      run: cmake --build build --target ntoskrnl -- '/p:RunCodeAnalysis=true' '/p:CodeAnalysisRuleSet=NativeRecommendedRules.ruleset' '-fl' '-flp:logfile=${{github.workspace}}\analyze.log'
+    - name: Parse log
+      run: |
+        $log_content = Select-String -Pattern '^\s+(.*)\((\d+)\): warning (C\d+): (.*)$' -Path ${{github.workspace}}\analyze.log
+        $warning_table = foreach ($m in $log_content.Matches) { New-Object PSObject -Property @{File=$m.Groups[1].Value;Line=$m.Groups[2].Value;Warning=$m.Groups[3].Value;Message=$m.Groups[4].Value}}
+        $warning_table | Export-Csv -Path ${{github.workspace}}\analyze.csv -NoTypeInformation
+    - name: Upload analysis log
+      uses: actions/upload-artifact@v2
+      with:
+        name: analyze-msvc-i386-log
+        path: |
+          ${{github.workspace}}\analyze.log
+          ${{github.workspace}}\analyze.csv
