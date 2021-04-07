@@ -486,7 +486,9 @@ EnableUserModePnpManager(VOID)
 {
     SC_HANDLE hSCManager = NULL;
     SC_HANDLE hService = NULL;
+    SERVICE_STATUS_PROCESS ServiceStatus;
     BOOL bRet = FALSE;
+    DWORD BytesNeeded, WaitTime;
 
     hSCManager = OpenSCManagerW(NULL, NULL, SC_MANAGER_ENUMERATE_SERVICE);
     if (hSCManager == NULL)
@@ -498,7 +500,7 @@ EnableUserModePnpManager(VOID)
 
     hService = OpenServiceW(hSCManager,
                             L"PlugPlay",
-                            SERVICE_CHANGE_CONFIG | SERVICE_START);
+                            SERVICE_CHANGE_CONFIG | SERVICE_START | SERVICE_QUERY_STATUS);
     if (hService == NULL)
     {
         DPRINT1("Unable to open PlugPlay service\n");
@@ -521,6 +523,35 @@ EnableUserModePnpManager(VOID)
     if (!bRet && (GetLastError() != ERROR_SERVICE_ALREADY_RUNNING))
     {
         DPRINT1("Unable to start service\n");
+        goto cleanup;
+    }
+
+    while (TRUE)
+    {
+        bRet = QueryServiceStatusEx(hService,
+                                    SC_STATUS_PROCESS_INFO,
+                                    (LPBYTE)&ServiceStatus,
+                                    sizeof(ServiceStatus),
+                                    &BytesNeeded);
+        if (!bRet)
+        {
+            DPRINT1("QueryServiceStatusEx() failed for PlugPlay service (error 0x%x)\n", GetLastError());
+            goto cleanup;
+        }
+
+        if (ServiceStatus.dwCurrentState != SERVICE_START_PENDING)
+            break;
+
+        WaitTime = ServiceStatus.dwWaitHint / 10;
+        if (WaitTime < 1000) WaitTime = 1000;
+        else if (WaitTime > 10000) WaitTime = 10000;
+        Sleep(WaitTime);
+    };
+
+    if (ServiceStatus.dwCurrentState != SERVICE_RUNNING)
+    {
+        bRet = FALSE;
+        DPRINT1("Failed to start PlugPlay service\n");
         goto cleanup;
     }
 
