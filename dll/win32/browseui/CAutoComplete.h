@@ -212,7 +212,7 @@ protected:
     CStringW GetQuickEdit(LPCWSTR pszText);
     VOID RepositionDropDown();
     INT ReLoadInnerList();
-    INT UpdateInnerList();
+    INT UpdateInnerList(const CStringW& strText);
     INT UpdateOuterList();
     VOID UpdateCompletion(BOOL bAppendOK);
     // message map

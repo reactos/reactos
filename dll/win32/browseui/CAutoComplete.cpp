@@ -1477,11 +1477,8 @@ INT CAutoComplete::ReLoadInnerList()
 }
 
 // update inner list and m_strText and m_strStemText
-INT CAutoComplete::UpdateInnerList()
+INT CAutoComplete::UpdateInnerList(const CStringW& strText)
 {
-    // get text
-    CStringW strText = GetEditText();
-
     BOOL bReset = FALSE, bExpand = FALSE; // flags
 
     // if previous text was empty
@@ -1578,7 +1575,7 @@ VOID CAutoComplete::UpdateCompletion(BOOL bAppendOK)
     }
 
     // update inner list
-    UINT cItems = UpdateInnerList();
+    UINT cItems = UpdateInnerList(strText);
     if (cItems == 0) // no items
     {
         HideDropDown();
