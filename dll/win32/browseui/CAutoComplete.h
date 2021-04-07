@@ -163,7 +163,6 @@ public:
     LRESULT EditWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
     LRESULT OnEditChar(WPARAM wParam, LPARAM lParam);
     BOOL OnEditKeyDown(WPARAM wParam, LPARAM lParam);
-    VOID OnEditUpdate(BOOL bAppendOK);
     VOID OnListSelChange();
     BOOL OnListUpDown(UINT vk);
 
