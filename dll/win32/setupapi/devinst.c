@@ -5609,7 +5609,11 @@ SetupDiInstallDevice(
         NULL,
         NULL);
     if (!Result)
-        goto cleanup;
+    {
+        if (GetLastError() != ERROR_SECTION_NOT_FOUND)
+            goto cleanup;
+        SetLastError(ERROR_SUCCESS);
+    }
     if (GetLastError() == ERROR_SUCCESS_REBOOT_REQUIRED)
         RebootRequired = TRUE;
 
