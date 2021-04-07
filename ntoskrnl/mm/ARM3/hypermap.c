@@ -23,23 +23,15 @@ MMPTE HyperTemplatePte;
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
-_Acquires_lock_(Process->HyperSpaceLock)
-_When_(OldIrql == 0, _IRQL_requires_(DISPATCH_LEVEL))
-_When_(OldIrql != 0, _IRQL_requires_(PASSIVE_LEVEL))
-_When_(OldIrql != 0, _At_(*OldIrql, _IRQL_saves_))
-_When_(OldIrql != 0, _IRQL_raises_(DISPATCH_LEVEL))
 PVOID
 NTAPI
-MiMapPageInHyperSpace(_In_ PEPROCESS Process,
-                      _In_ PFN_NUMBER Page,
-                      _Out_opt_ PKIRQL OldIrql)
+MiMapPageInHyperSpace(IN PEPROCESS Process,
+                      IN PFN_NUMBER Page,
+                      IN PKIRQL OldIrql)
 {
     MMPTE TempPte;
     PMMPTE PointerPte;
     PFN_NUMBER Offset;
-
-    ASSERT(((OldIrql != NULL) && (KeGetCurrentIrql() == PASSIVE_LEVEL))
-        || ((OldIrql == NULL) && (KeGetCurrentIrql() == DISPATCH_LEVEL)));
 
     //
     // Never accept page 0 or non-physical pages
@@ -62,10 +54,7 @@ MiMapPageInHyperSpace(_In_ PEPROCESS Process,
     // Acquire the hyperlock
     //
     ASSERT(Process == PsGetCurrentProcess());
-    if (OldIrql != NULL)
-        KeAcquireSpinLock(&Process->HyperSpaceLock, OldIrql);
-    else
-        KeAcquireSpinLockAtDpcLevel(&Process->HyperSpaceLock);
+    KeAcquireSpinLock(&Process->HyperSpaceLock, OldIrql);
 
     //
     // Now get the first free PTE
@@ -97,15 +86,11 @@ MiMapPageInHyperSpace(_In_ PEPROCESS Process,
     return MiPteToAddress(PointerPte);
 }
 
-_Requires_lock_held_(Process->HyperSpaceLock)
-_Releases_lock_(Process->HyperSpaceLock)
-_IRQL_requires_(DISPATCH_LEVEL)
-_When_(OldIrql != MM_NOIRQL, _At_(OldIrql, _IRQL_restores_))
 VOID
 NTAPI
-MiUnmapPageInHyperSpace(_In_ PEPROCESS Process,
-                        _In_ PVOID Address,
-                        _In_ KIRQL OldIrql)
+MiUnmapPageInHyperSpace(IN PEPROCESS Process,
+                        IN PVOID Address,
+                        IN KIRQL OldIrql)
 {
     ASSERT(Process == PsGetCurrentProcess());
 
@@ -118,10 +103,7 @@ MiUnmapPageInHyperSpace(_In_ PEPROCESS Process,
     // Release the hyperlock
     //
     ASSERT(KeGetCurrentIrql() == DISPATCH_LEVEL);
-    if (OldIrql == MM_NOIRQL)
-        KeReleaseSpinLockFromDpcLevel(&Process->HyperSpaceLock);
-    else
-        KeReleaseSpinLock(&Process->HyperSpaceLock, OldIrql);
+    KeReleaseSpinLock(&Process->HyperSpaceLock, OldIrql);
 }
 
 PVOID
