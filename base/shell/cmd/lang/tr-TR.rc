@@ -11,9 +11,9 @@ BEGIN
 assoc [.ext[=[DosyaTuru]]]\n\
 \n\
 assoc (bütün ilişkiler yazdırın)\n\
-assoc .ext (belirli ilişkilendirmeyi yazdır)\n\
-assoc .ext= (belirli bir ilişkiyi kaldır)\n\
-assoc .ext=DosyaTuru (yeni bir ilişki ekle)\n"
+assoc .uzantı (belirli ilişkilendirmeyi yazdır)\n\
+assoc .uzantı= (belirli bir ilişkiyi kaldır)\n\
+assoc .uzantı=DosyaTuru (yeni bir ilişki ekle)\n"
     STRING_ALIAS_HELP "Takma adları (ALIAS) ayarlar, kaldırır veya gösterir.\n\n\
 ALIAS [alias=[komut]]\n\n\
   alias    Takma ad.\n\
@@ -29,21 +29,21 @@ ALIAS listesinden bir takma adı kaldırmak için:\n\
 CALL [sürücü:][yol]program-adı [program-parametreleri]\n\n\
   program-parametreleri  Toplu iş dosyasının gerektirdiği komut satırı \n\
                          değişkenlerini belirtir.\n"
-    STRING_CD_HELP "Çalışma dizini değiştirir veya adını gösterir.\n\n\
+    STRING_CD_HELP "Çalışma dizinini değiştirir veya adını gösterir.\n\n\
 CHDIR [/D][sürücü:][yol]\n\
 CHDIR[..|.]\n\
 CD [/D][sürücü:][yol]\n\
 CD[..|.]\n\n\
   ..   bir üst dizin\n\
   .    çalışma dizini\n\
-  /D   Mevcut sürücüyü ve çalışma dizini değiştirecektir.\n\n\
-CD [sürücü] yazın: belirtilen sürücüdeki geçerli dizine geçmek için.\n\
-Geçerli sürücüyü ve dizini görüntülemek için bir değişken olmadan CD yazın.\n"
+  /D   Mevcut sürücüyü ve çalışma dizinini değiştirecektir.\n\n\
+CD [sürücü] yazın: belirtilen sürücüdeki bir dizine geçmek için.\n\
+Şimdiki sürücüyü ve dizini görüntülemek için bir değişken olmadan CD yazın.\n"
     STRING_CHOICE_HELP "Kullanıcının bir dizi seçenekten birini seçmesini bekler.\n\n\
 CHOICE  [/C[:]seçenekler][/N][/S][/T[:]c,nn][metin]\n\n\
   /C[:]seçenekler  İzin verilen anahtarları belirtir. Varsayılan YN'dir.\n\
-  /N               Seçenekler ve ?'i bilgi istemi dizesinin sonunda gösterme.\n\
-  /S               Seçim tuşlarını büyük/küçük harfe duyarlı olarak değerlendirin.\n\
+  /N               Seçenekler ve ?'i bilgi istemi dizesinin sonunda göstermez.\n\
+  /S               Seçim tuşlarını büyük/küçük harfe duyarlı olarak değerlendirir.\n\
   /T[:]c,nn        nn saniye bekledikten sonra varsayılan seçimi c olarak belirler.\n\
   metin            Seçim için gösterilecek metin dizesi.\n\n\
 ERRORLEVEL, seçimlerdeki temel kullanıcı basışlarının denkleştirmesi için ayarlanır.\n"
@@ -55,21 +55,21 @@ ERRORLEVEL, seçimlerdeki temel kullanıcı basışlarının denkleştirmesi iç
     STRING_CMD_HELP5 "  [Bash dosya adı tamamlamaları]"
     STRING_CMD_HELP6 "  [dizin yığını]"
     STRING_CMD_HELP7 "  [yönlendirmeler ve boru hatları]"
-    STRING_CMD_HELP8 "Yeni bir ReactOS komut satırı yorumlayıcısı başlatır.\n\n\
+    STRING_CMD_HELP8 "Yeni bir ReactOS komut istemi penceresi başlatır.\n\n\
 CMD [/[C|K] komut][/P][/Q][/T:bf]\n\n\
   /C komut    Verilen 'komut'u çalıştırır ve bitirir.\n\
-  /K komut    Verilen 'komut'u çalıştırır ve komutu yeniler.\n\
+  /K komut    Verilen 'komut'u çalıştırır ve kalır.\n\
   /P          CMD kalıcı hale gelir ve autoexec.bat'ı çalıştırır\n\
               (CMD sonlandırılamaz).\n\
   /T:bf       Arka plan/ön plan rengini ayarlar (bkz. COLOR komutu).\n"
-    STRING_COLOR_HELP1 "Sets the default foreground and background colors.\n\n\
+    STRING_COLOR_HELP1 "Arka plan varsayılan ön plan ve arka plan rengini belirler.\n\n\
 COLOR [attr [/-F]]\n\n\
   attr        Komut satırı çıktısının renk öz niteliğini belirtir.\n\
   /-F         Komut satırının boş alanını renk özelliği ile doldurmaz.\n\n\
 Renkleri belirtlemek için üç yol vardır:\n\
 1) renk belirtecindeki [parlaklık] değerleri (belirteçteki ilk üç harftir)\n\
 2) renklerin ondalıklı ifadeleri (decimal on decimal) \n\
-3) renk değerlerinin iki onaltılık rakam\n\n\
+3) renk değerlerinin onaltılık rakam formu\n\n\
 Renkler şunlardır:\n\
 ondalık  onaltılık  renk       ondalık  onaltılık  renk\n\
 0        0          Siyah      8         8         Gri(Parlak Siyah)\n\
@@ -90,15 +90,15 @@ COPY [/V][/Y|/-Y][/A|/B] kaynak [/A|/B]\n\
   hedef        Yeni dosya(lar) için dizini ve/veya dosya adını belirtir.\n\
   /V           Yeni dosyaların doğru yazıldığını doğrular.\n\
   /Y           Kaynakta var olan bir dosyayı, hedefin üzerine yazılmasını istemeyi\n\
-               onaylamak için sormayı önler.\n\
+               onaylamak için sormaz.\n\
   /-Y          Kaynakta var olan bir dosyayı, hedefin üzerine yazılmasını istemeyi\n\
                onaylamak için sorar.\n\
-/Y anahtarı, COPYCMD komutunun ortam değişkeninde mevcut olabilir.\n\
+/Y anahtarı, COPYCMD komutunun çevresel değişkeninde mevcut olabilir.\n\
 ...\n"
     STRING_CTTY_HELP "Standart Girdi/Çıktı (G/Ç) terminal cihazını bir yardımcı cihaz olarak değiştirir.\n\n\
-CTTY cihaz\n\n\
+CTTY [cihaz]\n\n\
   cihaz     Yeni standart G/Ç cihazı olarak kullanmak istediğiniz terminal cihazı.\n\
-            Bu cihaz, geçerli bir karakter cihazı başvurusuna sahip olmalıdır:\n\
+            Bu cihaz, geçerli bir karakter cihazı olmalıdır: \n\
             AUX, COMx (x=1..N), CON, LPTx (x=1..N), PRN, NUL.\n\
             CON genellikle varsayılan standart G/Ç cihazıdır..\n\n\
 Kontrolü standart konsola geri döndürmek için, yardımcı cihazda CTTY CON yazın."
@@ -108,7 +108,7 @@ Kontrolü standart konsola geri döndürmek için, yardımcı cihazda CTTY CON y
     STRING_DATE_HELP4 "Tarihi görüntüler veya ayarlar.\n\n\
 DATE [/T][tarih]\n\n\
   /T    sadece tarihi gösterir\n\n\
-Geçerli tarih ayarını ve yeni bir istemi görüntülemek için parametresiz olarak DATE yazın. \n\
+Şimdiki tarih ayarını ve yeni bir istemi görüntülemek için parametresiz olarak DATE yazın. \n\
 Aynı tarihi korumak için ENTER'a basın..\n"
     STRING_DEL_HELP1 "Bir veya daha fazla dosya siler.\n\n\
 DEL [/N /P /T /Q /S /W /Y /Z /A[[:]öznitellikler]] hedef ...\n\
@@ -116,18 +116,18 @@ DELETE [/N /P /T /Q /S /W /Y /Z /A[[:]öznitellikler]] hedef ...\n\
 ERASE [/N /P /T /Q /S /W /Y /Z /A[[:]öznitellikler]] hedef ...\n\n\
       hedef  Silinecek dosya(lar) veya dizin(ler)i belirtir.\n\n\
   /N    Hiçbir şey yapmaz.\n\
-  /P    Komut istemi. Her dosyayı silmeden önce sor.\n\
-  /T    Toplam miktar. Toplam silinen dosya sayısını ve boş disk alanını görüntüleyin.\n\
-  /Q    Sessizce çalış.\n\
-  /W    Temizle. Silmeden önce dosyanın üzerine rastgele sayılar yazın.\n\
-  /Y    Onayla. Hiçbir şey sormadan  *.* tümünü silin.\n\
-  /F    Gizli, salt okunur ve sistem dosyalarını silmeye zorlar.\n\
-  /S    Dosyayı tüm alt dizinden sil.\n\
-  /A    Özniteliklere göre silinecek dosyaları seçin.\n\
+  /P    Her dosyayı silmeden önce sorar.\n\
+  /T    Toplam silinen dosya sayısını ve boş disk alanını görüntüler.\n\
+  /Q    Sessizce çalışır.\n\
+  /W    Temizle. Silmeden önce dosyanın üzerine rastgele sayılar yazar, dosyayı kökten temizlers.\n\
+  /Y    Onayla. Hiçbir şey sormadan her şeyi tamamiyle siler.\n\
+  /F    Gizli dosyaları, salt okunur dosyaları ve sistem dosyalarını silmeye zorlar.\n\
+  /S    Dosyayı tüm alt dizinlerden siler.\n\
+  /A    Özniteliklere göre silinecek dosyaları seçer.\n\
         öznitellikler\n\
         R     Salt okunur dosyalar\n\
         S     Sistem dosyaları\n\
-        A     Arşivlenebilir dosyalar\n\
+        A     Arşiv dosyaları\n\
         H     Gizli dosyalar\n\
         -     değil anlamına gelen ön ek\n"
     STRING_DEL_HELP2 "Dizindeki tüm dosyalar silinecek!\nEmin misiniz (E/H)?"
@@ -145,52 +145,52 @@ DELAY [/m]n\n\n\
   öznitellikler   D  Dizinler                   R  Salt okunur dosyalar\n\
                   H  Gizli dosyalar             A  Arşivlemeye hazır dosyalar\n\
                   S  Sistem dosyaları           -  değil anlamına gelen ön ek\n\
-  /B              Çıplak format kullanır (başlık bilgisi veya özet yok).\n\
-  /C              Binlik ayırıcıyı dosya boyutlarında görüntüleyin. Bu varsayılandır.\n\
+  /B              Basit format kullanır (başlık bilgisi veya özet yok).\n\
+  /C              Binlik ayırıcıyı dosya boyutlarında görüntüler. Bu varsayılandır.\n\
                   Ayırıcının görüntülenmesini devre dışı bırakmak için / -C'yi kullanın. \n\
-  /D              Geniş liste formatı ile aynıdır, ancak dosyalar sütunlara göre sıralanır.\n\
+  /D              Geniş liste biçimi ile aynıdır, ancak dosyalar sütunlara göre sıralanır.\n\
   /L              Küçük harf kullanır.\n\
   /N              Dosya adlarının en sağda olduğu yeni uzun liste biçimi.\n\
-  /O              Dosyalara göre sıralı olarak listeleyin.\n\
-  sortorder       N  İsme göre (alfabetik)       S  Boyuta göre (küçükten büyüğe)\n\
+  /O              Dosyalara göre sıralı olarak listeler.\n\
+  sıralama düzeni N  İsme göre (alfabetik)       S  Boyuta göre (küçükten büyüğe)\n\
                   E  Uzantıya göre (alfabetik)   D  Zamanına göre (en eskiden yeniye)\n\
                   G  Başta dizinleri listele     -  değil anlamına gelen ön ek\n\
   /P              Birden fazla ekranı dolduracak bilgileri sayfalar.\n\
-  /Q              Dosyanın sahibini görüntüleyin.\n\
+  /Q              Dosyanın sahibini görüntüler.\n\
   /R              Dosyaların alternatif veri akışlarını görüntüler.\n\
   /S              Dosyaları belirtilen dizinde ve tüm alt dizinlerde görüntüler.\n\
   /T              Sıralama için hangi zaman alanının görüntülendiğini veya kullanıldığını kontrol eder.\n\
   timefield       C  Oluşturma\n\
                   A  Son Erişim\n\
                   W  Son Veri Yazımı\n\
-  /W              Geniş liste formatını kullanır.\n\
-  /X              Bu, 8dot3 olmayan dosya adları için oluşturulan kısa adları görüntüler.\n\
+  /W              Geniş liste biçimini kullanır.\n\
+  /X              Bu, 8.3 olmayan dosya adları için oluşturulan kısa adları görüntüler.\n\
                   Biçim, uzun addan önce eklenen kısa adla /N biçimidir. Kısa ad yoksa, yerine\n\
                   boşluklar görüntülenir.\n\
   /4              Dört basamaklı biçimde yılları görüntüler\n\n\
-Anahtarlar, DIRCMD ortam değişkeninde önceden ayarlanabilir. Herhangi\n\
+Anahtarlar, DIRCMD çevresel değişkeninde önceden ayarlanabilir. Herhangi\n\
 bir anahtarın önüne - (tire) koyarak ön ayarlı anahtarları geçersiz kılın - örneğin, /-W.\n"
     STRING_DIR_HELP2 " %c sürücüsündeki birim %s\n"
     STRING_DIR_HELP3 " %c sürücüsündeki birimin etiketi yok.\n"
-    STRING_DIR_HELP4 " Berimin Seri Numarası: %04X-%04X\n"
+    STRING_DIR_HELP4 " Birimin Seri Numarası: %04X-%04X\n"
     STRING_DIR_HELP5 "\n     Toplam Listelenen Dosya Miktarı:\n%16i dosya(lar)% 14s bayt değerinde\n"
     STRING_DIR_HELP6 "%16i Dizin(ler)% 15s bayt boşaltıldı\n"
     STRING_DIR_HELP7 "\n %s'nın dizini\n\n"
     STRING_DIR_HELP8 "%16i dosya(lar)% 14s bayt\n"
-    STRING_DIRSTACK_HELP1 "Geçerli dizini POPD komutu tarafından kullanılmak üzere depolar, \n\
+    STRING_DIRSTACK_HELP1 "Şimdiki dizini POPD komutu tarafından kullanılmak üzere depolar, \n\
 ardından belirtilen dizine değiştirir.\n\n\
 PUSHD [yol | ..]\n\n\
-  yol        Geçerli dizini, yapacak dizin olarak işaretler\n"
+  yol        Şimdiki dizini, yapacak dizin olarak işaretler\n"
     STRING_DIRSTACK_HELP2 "PUSHD komutu tarafından saklanan dizinde yapılan değişiklikler.\n\nPOPD"
     STRING_DIRSTACK_HELP3 "Dizin yığınının içeriğini yazdırır.\n\nDIRS"
     STRING_DIRSTACK_HELP4 "Dizin yığını boş"
-    STRING_ECHO_HELP1 "Sonda satır başı ve satır beslemesi olmayan bir mesaj görüntüleyin.\n\n\
-  ECHOS mesajarı"
+    STRING_ECHO_HELP1 "Sonda satır başı ve satır beslemesi olmayan bir mesaj görüntüler.\n\n\
+  ECHOS mesaj"
     STRING_ECHO_HELP2 "Standart hata çıktısına bir mesaj görüntüler.\n\n\
-  ECHOERR mesajı\n\
+  ECHOERR mesaj\n\
   ECHOERR.           boş bir satırı gösterir "
     STRING_ECHO_HELP3 "ECHO dönüşü ve satır beslemesini takip etmeden standart hata çıktısına mesaj yazdırır.\n\n\
-  ECHOSERR mesajı"
+  ECHOSERR mesaj"
     STRING_ECHO_HELP4 "Bir mesaj görüntüler veya komut yankılamasını açar veya kapatır. \n\n\
   ECHO [ON | OFF]\n\
   ECHO [mesaj]\n\
@@ -209,7 +209,7 @@ FOR /R [[sürücü:]yol] IN (küme) DO komut [parametreler]\n\
 FOR /F [""ayarlar""] IN (küme) DO komut [parametreler]\n\n\
   /L    Baştan sona kadar adım adım artan bir sayı dizisi oluşturur.\n\
   /D    Kümeyi dosyalar yerine dizinlere başvuracak şekilde değiştirir.\n\
-  /R    Belirtilen yolda (veya belirtilmemişse geçerli çalışma dizininde)\n\
+  /R    Belirtilen yolda (veya belirtilmemişse şimdiki çalışma dizininde)\n\
         ve bu dizinin altınaki her dizinde yer alan veya kümede bulunan \n\
         dosyalar için verilen komutu yürütür.\n\
   /F    Kümeyi, kümedeki dosyaların içeriğine başvuracak şekilde değiştirir.\n\n\
@@ -217,7 +217,7 @@ FOR /F [""ayarlar""] IN (küme) DO komut [parametreler]\n\n\
   (küme)        Bir veya daha fazla dosya kümesini belirtir. Özel karakterler/kodlar kullanılabilir.\n\
   komut         Her dosya için yürütülecek komutu belirtir..\n\
   parametreler  Belirtilen komut için parametreleri veya anahtarları belirtir.\n\
-  ayarlar       Desteklenen ayarlar şunlardır: eol, skip, delims, tokens, and usebackq.\n\n\
+  ayarlar       Desteklenen ayarlar şunlardır: eol, skip, delims, tokens, ve usebackq.\n\n\
 Değiştirilebilir parametreler,% 'den sonra ve adın önüne bir ~ ve isteğe bağlı bir\n\
 niteleyici eklenerek değiştirilebilir (örneğin,% ~ X). Desteklenen niteleyiciler şunlardır:\n\
 f,d,p,n,x,s,a,t,z.\n\n\
@@ -228,9 +228,9 @@ FOR komutunu bir toplu iş dosyasında kullanmak için,%değişken yerine %%değ
   %16s bayt kullanılan alan\n\
   %16s bayt boş alan\n"
     STRING_FREE_HELP2 "Sürücü bilgilerini görüntüler. \n\nFREE [sürücü: ...]\n"
-    STRING_GOTO_HELP1 "CMD'yi bir toplu komut dosyasındaki etiketli bir satıra yönlendirir.\n\n\
+    STRING_GOTO_HELP1 "CMD'yi bir toplu iş dosyasındaki etiketli bir satıra yönlendirir.\n\n\
 GOTO etiket\n\n\
-  etiket  Bir toplu komut dosyasında etiket olarak kullanılan bir metin dizesini belirtir.\n\n\
+  etiket  Bir toplu iş dosyasında etiket olarak kullanılan bir metin dizesini belirtir.\n\n\
 İki nokta üst üste ile başlayarak tek başına bir satıra bir etiket yazarsınız.\n"
     STRING_IF_HELP1 "Toplu programlarda koşullu işlem gerçekleştirir.\n\n\
   IF [NOT] ERRORLEVEL değer komut\n\
@@ -263,14 +263,14 @@ MKLINK [/D | /H | /J] link_adi hedef\n\n\
   %13s bayt kullanılabilir sanal bellek.\n"
     STRING_MISC_HELP1 "Devam etmek için bir tuşa basın..."
     STRING_MOVE_HELP1 "Üzerine yaz %s (Evet/Hayır/Hepsi)? "
-    STRING_MOVE_HELP2 "Dosyaları taşır ve dosyaları ve dizinleri yeniden adlandırır.\n\n\
+    STRING_MOVE_HELP2 "Dosyaları taşır veya dosyaları ve dizinleri yeniden adlandırır.\n\n\
 Bir veya daha fazla dosyayı taşımak için:\n\
 MOVE [/N][/Y|/-Y][sürücü:][yol]dosya_adi[1,2,...] hedef\n\n\
 Bir dizini yeniden adlandırmak için:\n\
 MOVE [/N][/Y|/-Y][sürücü:][yol]dizin_adi1 dizin_adi2\n\n\
   [sürücü:][yol]dosya1     Taşımak istediğiniz dosya veya dosyaların\n\
                            konumunu ve adını belirtir.\n\
-  /N                       Hiçbir şey değil. Her şeyi yapın ama dosyaları veya dizinleri taşıyın.\n\n\
+  /N                       Hiçbir şey değil. Her şeyi yapar ama dosyaları veya dizinleri taşımaz.\n\n\
 Mevcut sınırlamalar:\n\
   - Bir dosyayı veya dizini bir sürücüden diğerine taşıyamazsınız.\n"
     STRING_MSGBOX_HELP "bir mesaj kutusu görüntüler ve kullanıcı yanıtını döndürür\n\n\
@@ -285,13 +285,13 @@ YES  :  10    |  NO      :  11\n\
 OK   :  10    |  CANCEL  :  12\n"
     STRING_PATH_HELP1 "Çalıştırılabilir dosyalar için bir arama yolu görüntüler veya ayarlar.\n\n\
 PATH [[sürücü:]yol[;...]]\nPATH ;\n\n\
-Tüm arama yolu ayarlarını temizlemek için PATH ; yazın ve komut kabuğunu \n\
-yalnızca geçerli dizinde arama yapmaya yönlendirin.\n\
-Geçerli yolu görüntülemek için parametresiz olarak PATH yazın.\n"
+Tüm arama yolu ayarlarını temizlemek için PATH ; yazın ve komut istemini \n\
+yalnızca şimdiki dizinde arama yapmaya yönlendirin.\n\
+Şimdiki yolu görüntülemek için parametresiz olarak PATH yazın.\n"
     STRING_PAUSE_HELP1 "Bir toplu iş dosyasının yürütülmesini durdurur ve aşağıdaki mesajı gösterir:\n\
 'Devam etmek için herhangi bir tuşa basın ...' veya kullanıcı tanımlı bir mesaj.\n\n\
 PAUSE [mesaj]"
-    STRING_PROMPT_HELP1 "Komut istemini değiştirir.\n\n\
+    STRING_PROMPT_HELP1 "Komut istemininde görüntülenen karakterleri değiştirir.\n\n\
 PROMPT [metin]\n\n\
   metin    Yeni bir komut istemi belirtir.\n\n\
 Bilgi istemi normal karakterlerden ve aşağıdaki özel kodlardan oluşabilir:\n\n\
@@ -330,11 +330,11 @@ REN [/E /N /P /Q /S /T] eski_isim ... yeni_isim\n\n\
         (Henüz çalışır halde değil!)\n\
   /Q    Sessizce çalıştır.\n\
   /S    Alt dizinleri yeniden adlandır.\n\
-  /T    Yeniden adlandırılan dosyaların sayısını gösterin\n\n\
+  /T    Yeniden adlandırılan dosyaların sayısını gösterir\n\n\
 Hedefiniz için yeni bir sürücü veya yol belirtemeyeceğinizi unutmayın. \n\
 Bu amaç için MOVE komutunu kullanın.\n"
     STRING_REN_HELP2 "    %lu dosya yeniden adlandırıldı\n"
-    STRING_REN_HELP3 "    %lu dosyalar yeniden adlandırıldı\n"
+    STRING_REN_HELP3 "    %lu dosya yeniden adlandırıldı\n"
     STRING_REPLACE_HELP1 "Replaces files.\n\n\
 REPLACE [sürücü1:][yol1]filename [sürücü2:][yol2] [/A] [/P] [/R] [/W]\n\
 REPLACE [sürücü1:][yol1]filename [sürücü2:][yol2] [/P] [/R] [/S] [/W] [/U]\n\n\
@@ -346,15 +346,13 @@ REPLACE [sürücü1:][yol1]filename [sürücü2:][yol2] [/P] [/R] [/S] [/W] [/U]
                             önce onay ister.\n\
   /R                        Salt okunur dosyaları da normal dosyalar gibi değiştirir\n\
   /S                        Hedef dizinin tüm alt dizinlerindeki dosyaları değiştirir. \n\
-                            /A anahtarıyla kullanılamaz.\n\
-                            destination directory. Cannot use with the /A\n\
-                            switch.\n\
+                            /A anahtarıyla kullanılamaz.\n\                      
   /W                        Başlamadan önce bir disk yerleştirmenizi bekler.\n\
   /U                        Yalnızca kaynak dosyalardan daha eski dosyaları \n\
                             değiştirir (günceller). /A anahtarıyla kullanılamaz.\n"
     STRING_REPLACE_HELP2 "Kaynak konum gerekli\n"
     STRING_REPLACE_HELP3 "Herhangi bir dosya değiştirilmedi\n"
-    STRING_REPLACE_HELP4 "%lu dosya(lar) değiştirildi\n"
+    STRING_REPLACE_HELP4 "%lu dosya değiştirildi\n"
     STRING_REPLACE_HELP5 "Değiştiriliyor: %s\n"
     STRING_REPLACE_HELP6 "Değiştir: %s\n"
     STRING_REPLACE_HELP7 "Herhangi bir dosya eklenemedi\n"
@@ -368,18 +366,17 @@ SHIFT [DOWN]"
 SCREEN satır sutun [metin]\n\n\
   satır         imleci bir satır hareket ettir\n\
   sutun         imleci bir sutun hareket ettir"
-    STRING_SET_HELP "Ortam değişkenlerini görüntüler, ayarlar veya kaldırır.\n\n\
+    STRING_SET_HELP "Çevresel değişkenlerini görüntüler, ayarlar veya kaldırır.\n\n\
 SET [değişken[=][karakter dizisi]]\n\n\
-  değişken            Ortam değişkeni adını belirtir.\n\
+  değişken            Çevresel değişkeni adını belirtir.\n\
   karakter dizisi     Değişkene atanacak bir dizi karakter belirtir.\n\n\
-Mevcut ortam değişkenlerini görüntülemek için parametresiz SET yazın.\n"
+Mevcut çevresel değişkenlerini görüntülemek için parametresiz SET yazın.\n"
     STRING_START_HELP1 "Bir komut başlatır.\n\n\
 START [""başlık""] [/D yol] [/I] [/B] [/MIN] [/MAX] [/WAIT]\n\
       [komut/program] [parametreler]\n\n\
   ""başlık""   Pencere başlığı.\n\
   yol          Başlangıç dizinini belirtir.\n\
-  I            Mevcut ortam yerine cmd.exe'ye verilen orijinal\n\
-               Mevcut ortam yerine cmd.exe'ye verilen orijinal ortamı kullanır\n\
+  I            Mevcut ortam yerine cmd.exe'ye verilen orijinal ortamı kullanır\n\
   B            Herhangi bir pencere oluşturmadan komutu veya programı başlatır.\n\
   MIN          Küçültülmüş bir pencereyle başlar.\n\
   MAX          Büyütülmüş bir pencereyle başlar.\n\
@@ -392,15 +389,15 @@ başlık       Komut istemi penceresinin başlığını belirtir.\n"
     STRING_TIME_HELP1 "Sistem saatini görüntüler veya ayarlar.\n\n\
 TIME [/T][zaman]\n\n\
   /T    sadece zamanı göster\n\n\
-Geçerli saat ayarını ve yeni bir istemi görüntülemek için parametresiz TIME yazın.\n\
+Şimdiki saat ayarını ve yeni bir istemi görüntülemek için parametresiz TIME yazın.\n\
 Aynı zamanı korumak için ENTER'a basın.\n"
-    STRING_TIME_HELP2 "Yeni bir zaman gir: "
+    STRING_TIME_HELP2 "Yeni bir zaman giriniz: "
     STRING_TIMER_HELP1 "%d (s) saniye geçti\n"
     STRING_TIMER_HELP2 "%02d%c%02d%c%02d%c%02d geçti\n"
     STRING_TIMER_HELP3 "10 kronometrenin kullanımına izin verin.\n\n\
 TIMER  [ON|OFF] [/S] [/n] [/Fn]\n\n\
-  ON          kronometreyi ON olarak ayarla\n\
-  OFF         kronometreyi OFF olarak ayarla\n\
+  ON          kronometreyi ON olarak ayarlar\n\
+  OFF         kronometreyi OFF olarak ayarlar\n\
   /S          Ayrık zaman. Kronometre ayrık zamanını\n\
               değerini değiştirmeden döndür.\n\
   /n          Kronometre numarasını belirtin.\n\
@@ -435,7 +432,7 @@ güvencesi de verilemez. Daha çok bilgi için GNU Genel Kamu Lisansı'na bakın
 yayınlanan GNU Genel Kamu Lisansı'nın 2. sürümü ya da (sizin tercihinize göre) sonraki herhangi \n\
 bir sürüm altında olmak kaydı ile, lisansın size sağladığı koşullar altında yeniden dağıtabilir ve\n\
 / veya değiştirebilirsiniz; \n"
-    STRING_VERSION_HELP5 "\nHata raporlarını <ros-dev@reactos.org> e-posta adresine bildirin.\n\
+    STRING_VERSION_HELP5 "\nHata raporlarını <jira.reactos.org> e-posta adresine bildirin.\n\
 Güncellemeleri takip etmek için: http://www.reactos.org"
     STRING_VERSION_HELP6 "\nFreeDOS sürümü şu kişi tarafından yazılmıştır:\n"
     STRING_VERSION_HELP7 "\nReactOS sürümü şu kişi tarafından yazılmıştır:\n"
@@ -443,29 +440,29 @@ Güncellemeleri takip etmek için: http://www.reactos.org"
     STRING_VOL_HELP2 " %c sürücüsündeki birim etiketlenemedi.\n"
     STRING_VOL_HELP3 " Birimin seri numarası: %04X-%04X\n"
     STRING_VOL_HELP4 "Varsa, disk birimi etiketini ve seri numarasını görüntüler.\n\nVOL [sürücü:]"
-    STRING_WINDOW_HELP1 "terminal penceresi açısını değiştir\n\n\
-WINDOW [/POS[=]left,top,width,height]\n\
+    STRING_WINDOW_HELP1 "konsol penceresi açısını değiştirir\n\n\
+WINDOW [/POS[=]sol,üst,genişlik,yükseklik]\n\
               [MIN|MAX|RESTORE] ['başlık']\n\n\
-/POS          pencere konumu ve boyutlarını belirt\n\
-MIN           pencereyi küçült\n\
-MAX           pencereyi büyüt\n\
-RESTORE       pencereyi eski haline dönüştür"
-    STRING_WINDOW_HELP2 "terminal penceresi açısını değiştir\n\n\
+/POS          pencere konumu ve boyutlarını belirtir\n\
+MIN           pencereyi küçültür\n\
+MAX           pencereyi büyütğr\n\
+RESTORE       pencereyi eski haline dönüştürür"
+    STRING_WINDOW_HELP2 "konsol penceresi açısını değiştirir\n\n\
 ACTIVATE 'pencere' [/POS[=]left,top,width,height]\n\
               [MIN|MAX|RESTORE] ['başlık']\n\n\
 pencere       eylemi gerçekleştiren pencere karosu\n\
 /POS          pencere konumu ve boyutlarını belirt\n\
-MIN           pencereyi küçült\n\
-MAX           pencereyi büyüt\n\
-RESTORE       pencereyi eski haline dönüştür\n\
+MIN           pencereyi küçültür\n\
+MAX           pencereyi büyütür\n\
+RESTORE       pencereyi eski haline dönüştürür\n\
 başlık        pencere için yeni başlık\n"
     STRING_CHOICE_OPTION "EH"
-    STRING_COPY_OPTION "EHH"
+    STRING_COPY_OPTION "EHT"
     STRING_ALIAS_ERROR "Takma ad genişletmeden sonra komut satırı çok uzun!\n"
     STRING_ASSOC_ERROR "Uzantı için dosya ilişkilendirmesi bulunamadı. Uzantı: %s\n"
     STRING_BATCH_ERROR "Toplu iş dosyası açılırken hata\n"
-    STRING_CHOICE_ERROR "Geçersiz seçenek. Beklenen seçenek formatı: /C[:]seçenekler\n"
-    STRING_CHOICE_ERROR_TXT "Geçersiz seçenek. Beklenen seçenek formatı: /T[:]c,nn\n"
+    STRING_CHOICE_ERROR "Geçersiz seçenek. Beklenen seçenek biçimi: /C[:]seçenekler\n"
+    STRING_CHOICE_ERROR_TXT "Geçersiz seçenek. Beklenen seçenek biçimi: /T[:]c,nn\n"
     STRING_CHOICE_ERROR_OPTION "Geçersiz Seçenek: %s\n"
     STRING_CMD_ERROR1 "Girdi %s dosyasından yeniden yönlendirilemiyor \n"
     STRING_CMD_ERROR2 "Borulama verileri için geçici dosya oluşturulamadı\n"
@@ -501,7 +498,7 @@ başlık        pencere için yeni başlık\n"
     STRING_TIME_ERROR1 "Yanlış tarih."
     STRING_TYPE_ERROR1 "Yanlış ayar '/%s'\n"
     STRING_WINDOW_ERROR1 "Pencere bulunamadı"
-    STRING_ERROR_PARAMETERF_ERROR "Parametre formatı hatalı - %c\n"
+    STRING_ERROR_PARAMETERF_ERROR "Parametre biçimi hatalı - %c\n"
     STRING_ERROR_INVALID_SWITCH "Geçersiz anahtar - /%c\n"
     STRING_ERROR_TOO_MANY_PARAMETERS "Çok fazla parametre girildi - %s\n"
     STRING_ERROR_PATH_NOT_FOUND "Yol bulunamadı\n"
@@ -514,7 +511,7 @@ başlık        pencere için yeni başlık\n"
     STRING_ERROR_CANNOTPIPE "Hata! Borulayamıyorum (Piping invalid)! Geçici dosya açılamıyor!\n"
     STRING_ERROR_D_PAUSEMSG "Devam etmek için herhangi bir tuşa basın . . . "
     STRING_ERROR_DRIVER_NOT_READY "Sürücü hazır değil"
-    STRING_SET_ENV_ERROR "Ortam değişkeni '%s', tanımlanmadı.\n"
+    STRING_SET_ENV_ERROR "Çevresel değişkeni '%s', tanımlanmadı.\n"
     STRING_REPLACE_ERROR1 "Geçersiz anahtar - %s\n"
     STRING_REPLACE_ERROR2 "Tol bulunamadı - %s\n"
     STRING_REPLACE_ERROR3 "Dosya adı, dizin adı veya birim etiketi sözdizimi yanlış.\n"

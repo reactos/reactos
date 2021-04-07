@@ -10,12 +10,12 @@ LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
 STRINGTABLE
 BEGIN
-    IDS_USAGE "FINDSTR: Tipărește toate randurile unui fișier ce conțin un șir.\n\n\
+    IDS_USAGE "FINDSTR: Tipărește toate rândurile unui fișier ce conțin un șir.\n\n\
   FINDSTR [ /C ] [ /I ] [ /N ] [ /V ] ""șir"" [ fișier... ]\n\
     /C  Numără liniile ce conțin șirul.\n\
     /I  Ignoră diferențele între majuscule și minuscule.\n\
-    /N  Numără randurile afișate, începand cu 1.\n\
-    /V  Tipărește randurile ce nu conțin șirul."
+    /N  Numără rândurile afișate, începând cu 1.\n\
+    /V  Tipărește rândurile ce nu conțin șirul."
     IDS_NO_SUCH_FILE "FINDSTR: Fișierul «%s» nu există!\n"
     IDS_CANNOT_OPEN "FINDSTR: Fișierul «%s» nu poate fi deschis!\n"
 END

@@ -268,7 +268,7 @@ BEGIN
 
     POPUP "Ayarlar"
     BEGIN
-        MENUITEM "Her Zaman ÜStte", IDM_ON_TOP, CHECKED
+        MENUITEM "Her Zaman Üstte", IDM_ON_TOP, CHECKED
         MENUITEM SEPARATOR
         MENUITEM "&Tıklama Sesi Kullan", IDM_CLICK_SOUND
         MENUITEM SEPARATOR

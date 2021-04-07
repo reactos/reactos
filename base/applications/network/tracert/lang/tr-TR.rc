@@ -6,9 +6,9 @@ BEGIN
     IDS_USAGE "\r\n\
 Kullanım: tracert [-d] [-h maksimum_zıplama] [-j host-list] [-w süre] hedef_adı \r\n\r\n\
 Seçenekler:\r\n\
-    -d                     Adresleri, anabilgisayar adına çevirme.\r\n\
+    -d                     Adresleri, anabilgisayar adına çevirmez.\r\n\
     -h maksimum_zıplama    Hedef ararken kullanılacak maksimum atlama sayısı.\r\n\
-    -j host-list           Ana bilgisayar listesi 'host-list' boyunca kaynak yolu gevşet.\r\n\
+    -j host-list           Ana bilgisayar listesi 'host-list' boyunca kaynak yolu gevşetir.\r\n\
     -w süre                Her geri dönüşün ardından belirtilen \r\n\
                            'süre' kara milisaniye cinsinden bekler.\r\n\
     -4                     IPv4 kullanmaya zorlar.\r\n\
@@ -31,8 +31,8 @@ Seçenekler:\r\n\
     IDS_HOP_IP_INFO     "%1"
     IDS_LINEBREAK       "\r\n"
     IDS_REQ_TIMED_OUT   "İstek zaman aşımına uğradı.\r\n"
-    IDS_HOP_RESPONSE    "  raportlar: "
-    IDS_DEST_HOST_UNREACHABLE "Hedef cihaza erişilemedi\r\n"
-    IDS_DEST_NET_UNREACHABLE  "Hedef ağa erişilemez.\r\n"
+    IDS_HOP_RESPONSE    "  raporlar: "
+    IDS_DEST_HOST_UNREACHABLE "Hedef cihaza erişilemiyor.\r\n"
+    IDS_DEST_NET_UNREACHABLE  "Hedef ağa erişilemiyor.\r\n"
 
 END
