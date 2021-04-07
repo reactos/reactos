@@ -1497,7 +1497,8 @@ INT CAutoComplete::UpdateInnerList()
     if (m_strStemText.CompareNoCase(strStemText) != 0)
     {
         m_strStemText = strStemText;
-        bExpand = bReset = TRUE;
+        bReset = TRUE;
+        bExpand = !m_strStemText.IsEmpty();
     }
 
     // reset if necessary
