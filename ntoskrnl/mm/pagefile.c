@@ -135,9 +135,7 @@ MiWriteSwapEntry(_In_ ULONG PageFileLow,
     ASSERT(FileObject != NULL);
     ASSERT(PageFileHigh != 0);
     ASSERT(PageFileHigh != MI_PTE_LOOKUP_NEEDED);
-
-    /* Normalize offset */
-    PageFileHigh--;
+    ASSERT(RtlTestBit(MmPagingFile[PageFileLow]->Bitmap, PageFileHigh));
 
     /* Get the Device Object */
     PDEVICE_OBJECT DeviceObject = IoGetRelatedDeviceObject(FileObject);
@@ -202,7 +200,7 @@ MmWriteToSwapPage(SWAPENTRY SwapEntry, PFN_NUMBER Page)
     }
 
     i = FILE_FROM_ENTRY(SwapEntry);
-    offset = OFFSET_FROM_ENTRY(SwapEntry) - 1;
+    offset = OFFSET_FROM_ENTRY(SwapEntry);
 
     if (MmPagingFile[i]->FileObject == NULL ||
             MmPagingFile[i]->FileObject->DeviceObject == NULL)
@@ -264,10 +262,8 @@ MiReadPageFile(
 
     ASSERT(PageFileIndex < MAX_PAGING_FILES);
 
-    /* Normalize offset */
-    PageFileOffset--;
-
     PagingFile = MmPagingFile[PageFileIndex];
+    ASSERT(RtlTestBit(PagingFile->Bitmap, PageFileOffset));
 
     if (PagingFile->FileObject == NULL || PagingFile->FileObject->DeviceObject == NULL)
     {
@@ -334,7 +330,7 @@ MiFreeSwapEntry(
         KeBugCheck(MEMORY_MANAGEMENT);
     }
 
-    RtlClearBit(PagingFile->Bitmap, PageFileHigh - 1);
+    RtlClearBit(PagingFile->Bitmap, PageFileHigh);
 
     PagingFile->FreeSpace++;
     PagingFile->CurrentUsage--;
@@ -378,9 +374,11 @@ MiAllocSwapEntry(
             }
             MiUsedSwapPages++;
             MiFreeSwapPages--;
+            MmPagingFile[i]->FreeSpace--;
+            MmPagingFile[i]->CurrentUsage--;
 
             *PageFileLow = i;
-            *PageFileHigh = Offset + 1;
+            *PageFileHigh = Offset;
             return STATUS_SUCCESS;
         }
     }
@@ -842,6 +840,7 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
                         (PULONG)(PagingFile->Bitmap + 1),
                         (ULONG)(PagingFile->MaximumSize));
     RtlClearAllBits(PagingFile->Bitmap);
+    RtlSetBit(PagingFile->Bitmap, 0);
 
     OldIrql = MiAcquirePfnLock();
     ASSERT(MmPagingFile[MmNumberOfPagingFiles] == NULL);
