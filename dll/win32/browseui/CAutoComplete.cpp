@@ -1446,14 +1446,12 @@ VOID CAutoComplete::RepositionDropDown()
 
 inline BOOL
 CAutoComplete::DoesMatch(const CStringW& strTarget, const CStringW& strText) const
-{
+
     CStringW strBody;
     if (DropPrefix(strTarget, strBody))
     {
         if (::StrCmpNIW(strBody, strText, strText.GetLength()) == 0)
-        {
             return TRUE;
-        }
     }
     else if (::StrCmpNIW(strTarget, strText, strText.GetLength()) == 0)
     {
