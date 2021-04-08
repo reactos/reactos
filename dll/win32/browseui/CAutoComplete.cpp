@@ -668,39 +668,39 @@ CAutoComplete::~CAutoComplete()
     m_pACList.Release();
 }
 
-BOOL CAutoComplete::CanAutoSuggest()
+BOOL CAutoComplete::CanAutoSuggest() const
 {
     return !!(m_dwOptions & ACO_AUTOSUGGEST) && m_bEnabled;
 }
 
-BOOL CAutoComplete::CanAutoAppend()
+BOOL CAutoComplete::CanAutoAppend() const
 {
     return !!(m_dwOptions & ACO_AUTOAPPEND) && m_bEnabled;
 }
 
-BOOL CAutoComplete::UseTab()
+BOOL CAutoComplete::UseTab() const
 {
     return !!(m_dwOptions & ACO_USETAB) && m_bEnabled;
 }
 
-BOOL CAutoComplete::IsComboBoxDropped()
+BOOL CAutoComplete::IsComboBoxDropped() const
 {
     if (!::IsWindow(m_hwndCombo))
         return FALSE;
     return (BOOL)::SendMessageW(m_hwndCombo, CB_GETDROPPEDSTATE, 0, 0);
 }
 
-BOOL CAutoComplete::FilterPrefixes()
+BOOL CAutoComplete::FilterPrefixes() const
 {
     return !!(m_dwOptions & ACO_FILTERPREFIXES) && m_bEnabled;
 }
 
-INT CAutoComplete::GetItemCount()
+INT CAutoComplete::GetItemCount() const
 {
     return m_outerList.GetSize();
 }
 
-CStringW CAutoComplete::GetItemText(INT iItem)
+CStringW CAutoComplete::GetItemText(INT iItem) const
 {
     if (iItem < 0 || m_outerList.GetSize() <= iItem)
         return L"";

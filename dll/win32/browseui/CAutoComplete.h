@@ -140,13 +140,13 @@ public:
     HWND CreateDropDown();
     virtual ~CAutoComplete();
 
-    BOOL CanAutoSuggest();
-    BOOL CanAutoAppend();
-    BOOL UseTab();
-    BOOL IsComboBoxDropped();
-    BOOL FilterPrefixes();
-    INT GetItemCount();
-    CStringW GetItemText(INT iItem);
+    BOOL CanAutoSuggest() const;
+    BOOL CanAutoAppend() const;
+    BOOL UseTab() const;
+    BOOL IsComboBoxDropped() const;
+    BOOL FilterPrefixes() const;
+    INT GetItemCount() const;
+    CStringW GetItemText(INT iItem) const;
 
     CStringW GetEditText();
     VOID SetEditText(LPCWSTR pszText);
