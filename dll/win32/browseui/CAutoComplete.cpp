@@ -1607,9 +1607,12 @@ INT CAutoComplete::UpdateOuterList(const CStringW& strText)
         }
     }
 
-    // sort and unique
-    DoSort(m_outerList);
-    DoUniqueAndTrim(m_outerList);
+    if (::GetTickCount() - m_dwTick < COMPLETION_TIMEOUT)
+    {
+        // sort and unique
+        DoSort(m_outerList);
+        DoUniqueAndTrim(m_outerList);
+    }
 
     // set the item count of the virtual listview
     INT cItems = m_outerList.GetSize();
