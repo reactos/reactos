@@ -32,7 +32,7 @@
 #define CX_LIST 30160 // width of m_hwndList (very wide but alright)
 #define CY_LIST 288 // maximum height of drop-down window
 #define CY_ITEM 18 // default height of listview item
-#define COMPLETION_TIMEOUT 250 // in milliseconds
+#define COMPLETION_TIMEOUT 300 // in milliseconds
 #define MAX_ITEM_COUNT 1000 // the maximum number of items
 #define WATCH_TIMER_ID 0xFEEDBEEF // timer ID to watch m_rcEdit
 #define WATCH_INTERVAL 300 // in milliseconds
@@ -640,6 +640,7 @@ CAutoComplete::CAutoComplete()
     , m_bDowner(TRUE), m_dwOptions(ACO_AUTOAPPEND | ACO_AUTOSUGGEST)
     , m_bEnabled(TRUE), m_hwndCombo(NULL), m_hFont(NULL), m_bResized(FALSE)
     , m_hwndEdit(NULL), m_fnOldEditProc(NULL), m_fnOldWordBreakProc(NULL)
+    , m_bPartialList(FALSE), m_dwTick(0)
 {
 }
 
@@ -667,46 +668,46 @@ CAutoComplete::~CAutoComplete()
     m_pACList.Release();
 }
 
-BOOL CAutoComplete::CanAutoSuggest()
+inline BOOL CAutoComplete::CanAutoSuggest() const
 {
     return !!(m_dwOptions & ACO_AUTOSUGGEST) && m_bEnabled;
 }
 
-BOOL CAutoComplete::CanAutoAppend()
+inline BOOL CAutoComplete::CanAutoAppend() const
 {
     return !!(m_dwOptions & ACO_AUTOAPPEND) && m_bEnabled;
 }
 
-BOOL CAutoComplete::UseTab()
+inline BOOL CAutoComplete::UseTab() const
 {
     return !!(m_dwOptions & ACO_USETAB) && m_bEnabled;
 }
 
-BOOL CAutoComplete::IsComboBoxDropped()
+inline BOOL CAutoComplete::IsComboBoxDropped() const
 {
     if (!::IsWindow(m_hwndCombo))
         return FALSE;
     return (BOOL)::SendMessageW(m_hwndCombo, CB_GETDROPPEDSTATE, 0, 0);
 }
 
-BOOL CAutoComplete::FilterPrefixes()
+inline BOOL CAutoComplete::FilterPrefixes() const
 {
     return !!(m_dwOptions & ACO_FILTERPREFIXES) && m_bEnabled;
 }
 
-INT CAutoComplete::GetItemCount()
+inline INT CAutoComplete::GetItemCount() const
 {
     return m_outerList.GetSize();
 }
 
-CStringW CAutoComplete::GetItemText(INT iItem)
+CStringW CAutoComplete::GetItemText(INT iItem) const
 {
     if (iItem < 0 || m_outerList.GetSize() <= iItem)
         return L"";
     return m_outerList[iItem];
 }
 
-CStringW CAutoComplete::GetEditText()
+inline CStringW CAutoComplete::GetEditText() const
 {
     WCHAR szText[L_MAX_URL_LENGTH];
     if (::GetWindowTextW(m_hwndEdit, szText, _countof(szText)))
@@ -721,9 +722,8 @@ VOID CAutoComplete::SetEditText(LPCWSTR pszText)
     m_bInSetText = FALSE;
 }
 
-CStringW CAutoComplete::GetStemText()
+inline CStringW CAutoComplete::GetStemText(const CStringW& strText) const
 {
-    CStringW strText = GetEditText();
     INT ich = strText.ReverseFind(L'\\');
     if (ich == -1)
         return L""; // no stem
@@ -1284,7 +1284,7 @@ VOID CAutoComplete::UpdateDropDownState()
 }
 
 // calculate the positions of the controls
-VOID CAutoComplete::CalcRects(BOOL bDowner, RECT& rcList, RECT& rcScrollBar, RECT& rcSizeBox)
+VOID CAutoComplete::CalcRects(BOOL bDowner, RECT& rcList, RECT& rcScrollBar, RECT& rcSizeBox) const
 {
     // get the client rectangle
     RECT rcClient;
@@ -1354,7 +1354,7 @@ VOID CAutoComplete::LoadQuickComplete(LPCWSTR pwszRegKeyPath, LPCWSTR pwszQuickC
     }
 }
 
-CStringW CAutoComplete::GetQuickEdit(LPCWSTR pszText)
+CStringW CAutoComplete::GetQuickEdit(LPCWSTR pszText) const
 {
     if (pszText[0] == 0 || m_strQuickComplete.IsEmpty())
         return pszText;
@@ -1444,20 +1444,45 @@ VOID CAutoComplete::RepositionDropDown()
     ShowWindow(SW_SHOWNOACTIVATE);
 }
 
-INT CAutoComplete::ReLoadInnerList()
+inline BOOL
+CAutoComplete::DoesMatch(const CStringW& strTarget, const CStringW& strText) const
+{
+    CStringW strBody;
+    if (DropPrefix(strTarget, strBody))
+    {
+        if (::StrCmpNIW(strBody, strText, strText.GetLength()) == 0)
+            return TRUE;
+    }
+    else if (::StrCmpNIW(strTarget, strText, strText.GetLength()) == 0)
+    {
+        return TRUE;
+    }
+    return FALSE;
+}
+
+VOID CAutoComplete::ScrapeOffList(const CStringW& strText, CSimpleArray<CStringW>& array)
+{
+    for (INT iItem = array.GetSize() - 1; iItem >= 0; --iItem)
+    {
+        if (!DoesMatch(array[iItem], strText))
+            array.RemoveAt(iItem);
+    }
+}
+
+VOID CAutoComplete::ReLoadInnerList(const CStringW& strText)
 {
     m_innerList.RemoveAll(); // clear contents
+    m_bPartialList = FALSE;
 
-    if (!m_pEnum)
-        return 0;
-
-    DWORD dwTick = ::GetTickCount(); // used for timeout
+    if (!m_pEnum || strText.IsEmpty())
+        return;
 
     // reload the items
     LPWSTR pszItem;
     ULONG cGot;
+    CStringW strTarget;
     HRESULT hr;
-    for (ULONG cTotal = 0; cTotal < MAX_ITEM_COUNT; ++cTotal)
+    for (;;)
     {
         // get next item
         hr = m_pEnum->Next(1, &pszItem, &cGot);
@@ -1465,23 +1490,45 @@ INT CAutoComplete::ReLoadInnerList()
         if (hr != S_OK)
             break;
 
-        m_innerList.Add(pszItem); // append item to m_innerList
+        strTarget = pszItem;
         ::CoTaskMemFree(pszItem); // free
 
+        if (m_bPartialList) // if items are too many
+        {
+            // do filter the items
+            if (DoesMatch(strTarget, strText))
+            {
+                m_innerList.Add(strTarget);
+
+                if (m_innerList.GetSize() >= MAX_ITEM_COUNT)
+                    break;
+            }
+        }
+        else
+        {
+            m_innerList.Add(strTarget); // append item to m_innerList
+
+            // if items are too many
+            if (m_innerList.GetSize() >= MAX_ITEM_COUNT)
+            {
+                // filter the items now
+                m_bPartialList = TRUE;
+                ScrapeOffList(strText, m_innerList);
+
+                if (m_innerList.GetSize() >= MAX_ITEM_COUNT)
+                    break;
+            }
+        }
+
         // check the timeout
-        if (::GetTickCount() - dwTick >= COMPLETION_TIMEOUT)
+        if (::GetTickCount() - m_dwTick >= COMPLETION_TIMEOUT)
             break; // too late
     }
-
-    return m_innerList.GetSize(); // the number of items
 }
 
 // update inner list and m_strText and m_strStemText
-INT CAutoComplete::UpdateInnerList()
+VOID CAutoComplete::UpdateInnerList(const CStringW& strText)
 {
-    // get text
-    CStringW strText = GetEditText();
-
     BOOL bReset = FALSE, bExpand = FALSE; // flags
 
     // if previous text was empty
@@ -1493,13 +1540,17 @@ INT CAutoComplete::UpdateInnerList()
     m_strText = strText;
 
     // do expand the items if the stem is changed
-    CStringW strStemText = GetStemText();
+    CStringW strStemText = GetStemText(strText);
     if (m_strStemText.CompareNoCase(strStemText) != 0)
     {
         m_strStemText = strStemText;
         bReset = TRUE;
         bExpand = !m_strStemText.IsEmpty();
     }
+
+    // if the previous enumeration is too large
+    if (m_bPartialList)
+        bReset = bExpand = TRUE; // retry enumeratation
 
     // reset if necessary
     if (bReset && m_pEnum)
@@ -1521,54 +1572,56 @@ INT CAutoComplete::UpdateInnerList()
     if (bExpand || m_innerList.GetSize() == 0)
     {
         // reload the inner list
-        ReLoadInnerList();
+        ReLoadInnerList(strText);
     }
-
-    return m_innerList.GetSize();
 }
 
-INT CAutoComplete::UpdateOuterList()
+VOID CAutoComplete::UpdateOuterList(const CStringW& strText)
 {
-    CStringW strText = GetEditText(); // get the text
-
-    // update the outer list from the inner list
-    m_outerList.RemoveAll();
-    for (INT iItem = 0; iItem < m_innerList.GetSize(); ++iItem)
+    if (strText.IsEmpty())
     {
-        // is the beginning matched?
-        const CStringW& strTarget = m_innerList[iItem];
-        CStringW strBody;
-        if (DropPrefix(strTarget, strBody))
+        m_outerList.RemoveAll();
+        return;
+    }
+
+    if (m_bPartialList)
+    {
+        // it is already filtered
+        m_outerList = m_innerList;
+    }
+    else
+    {
+        // do filtering
+        m_outerList.RemoveAll();
+        for (INT iItem = 0; iItem < m_innerList.GetSize(); ++iItem)
         {
-            if (::StrCmpNIW(strBody, strText, strText.GetLength()) == 0)
-            {
+            const CStringW& strTarget = m_innerList[iItem];
+
+            if (DoesMatch(strTarget, strText))
                 m_outerList.Add(strTarget);
-                continue;
-            }
-        }
-        if (::StrCmpNIW(strTarget, strText, strText.GetLength()) == 0)
-        {
-            m_outerList.Add(strTarget);
+
+            // check the timeout
+            if (::GetTickCount() - m_dwTick >= COMPLETION_TIMEOUT)
+                break; // too late
         }
     }
 
-    // sort the list
-    DoSort(m_outerList);
-    // unique
-    DoUniqueAndTrim(m_outerList);
+    if (::GetTickCount() - m_dwTick < COMPLETION_TIMEOUT)
+    {
+        // sort and unique
+        DoSort(m_outerList);
+        DoUniqueAndTrim(m_outerList);
+    }
 
     // set the item count of the virtual listview
-    INT cItems = m_outerList.GetSize();
-    if (strText.IsEmpty())
-        cItems = 0;
-    m_hwndList.SendMessageW(LVM_SETITEMCOUNT, cItems, 0);
-
-    return cItems; // the number of items
+    m_hwndList.SendMessageW(LVM_SETITEMCOUNT, m_outerList.GetSize(), 0);
 }
 
 VOID CAutoComplete::UpdateCompletion(BOOL bAppendOK)
 {
     TRACE("CAutoComplete::UpdateCompletion(%p, %d)\n", this, bAppendOK);
+
+    m_dwTick = GetTickCount(); // to check the timeout
 
     CStringW strText = GetEditText();
     if (m_strText.CompareNoCase(strText) == 0)
@@ -1578,8 +1631,8 @@ VOID CAutoComplete::UpdateCompletion(BOOL bAppendOK)
     }
 
     // update inner list
-    UINT cItems = UpdateInnerList();
-    if (cItems == 0) // no items
+    UpdateInnerList(strText);
+    if (m_innerList.GetSize() <= 0) // no items
     {
         HideDropDown();
         return;
@@ -1591,7 +1644,8 @@ VOID CAutoComplete::UpdateCompletion(BOOL bAppendOK)
         SelectItem(-1); // select none
         m_bInSelectItem = FALSE;
 
-        if (UpdateOuterList())
+        UpdateOuterList(strText);
+        if (m_outerList.GetSize() > 0)
             RepositionDropDown();
         else
             HideDropDown();

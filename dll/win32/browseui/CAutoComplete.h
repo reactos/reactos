@@ -140,17 +140,17 @@ public:
     HWND CreateDropDown();
     virtual ~CAutoComplete();
 
-    BOOL CanAutoSuggest();
-    BOOL CanAutoAppend();
-    BOOL UseTab();
-    BOOL IsComboBoxDropped();
-    BOOL FilterPrefixes();
-    INT GetItemCount();
-    CStringW GetItemText(INT iItem);
+    BOOL CanAutoSuggest() const;
+    BOOL CanAutoAppend() const;
+    BOOL UseTab() const;
+    BOOL IsComboBoxDropped() const;
+    BOOL FilterPrefixes() const;
+    INT GetItemCount() const;
+    CStringW GetItemText(INT iItem) const;
 
-    CStringW GetEditText();
+    CStringW GetEditText() const;
     VOID SetEditText(LPCWSTR pszText);
-    CStringW GetStemText();
+    CStringW GetStemText(const CStringW& strText) const;
     VOID SetEditSel(INT ich0, INT ich1);
 
     VOID ShowDropDown();
@@ -194,6 +194,8 @@ protected:
     HWND m_hwndEdit; // the textbox
     WNDPROC m_fnOldEditProc; // old textbox procedure
     EDITWORDBREAKPROCW m_fnOldWordBreakProc;
+    BOOL m_bPartialList; // is the list partial?
+    DWORD m_dwTick; // to check timeout
     // The following variables are non-POD:
     CStringW m_strText; // internal text (used in selecting item and reverting text)
     CStringW m_strStemText; // dirname + '\\'
@@ -207,14 +209,16 @@ protected:
     CSimpleArray<CStringW> m_outerList; // owner data for virtual listview
     // protected methods
     VOID UpdateDropDownState();
-    VOID CalcRects(BOOL bDowner, RECT& rcListView, RECT& rcScrollBar, RECT& rcSizeBox);
+    VOID CalcRects(BOOL bDowner, RECT& rcListView, RECT& rcScrollBar, RECT& rcSizeBox) const;
     VOID LoadQuickComplete(LPCWSTR pwszRegKeyPath, LPCWSTR pwszQuickComplete);
-    CStringW GetQuickEdit(LPCWSTR pszText);
+    CStringW GetQuickEdit(LPCWSTR pszText) const;
     VOID RepositionDropDown();
-    INT ReLoadInnerList();
-    INT UpdateInnerList();
-    INT UpdateOuterList();
+    VOID ReLoadInnerList(const CStringW& strText);
+    VOID UpdateInnerList(const CStringW& strText);
+    VOID UpdateOuterList(const CStringW& strText);
     VOID UpdateCompletion(BOOL bAppendOK);
+    VOID ScrapeOffList(const CStringW& strText, CSimpleArray<CStringW>& array);
+    BOOL DoesMatch(const CStringW& strTarget, const CStringW& strText) const;
     // message map
     BEGIN_MSG_MAP(CAutoComplete)
         MESSAGE_HANDLER(WM_CREATE, OnCreate)
