@@ -1580,6 +1580,12 @@ INT CAutoComplete::UpdateInnerList(const CStringW& strText)
 
 INT CAutoComplete::UpdateOuterList(const CStringW& strText)
 {
+    if (strText.IsEmpty())
+    {
+        m_outerList.RemoveAll();
+        return 0;
+    }
+
     if (m_bPartialList)
     {
         // it is already filtered
@@ -1611,10 +1617,7 @@ INT CAutoComplete::UpdateOuterList(const CStringW& strText)
 
     // set the item count of the virtual listview
     INT cItems = m_outerList.GetSize();
-    if (strText.IsEmpty())
-        cItems = 0;
     m_hwndList.SendMessageW(LVM_SETITEMCOUNT, cItems, 0);
-
     return cItems; // the number of items
 }
 
