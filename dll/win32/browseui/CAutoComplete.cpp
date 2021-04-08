@@ -1470,19 +1470,19 @@ VOID CAutoComplete::ScrapeOffList(const CStringW& strText, CSimpleArray<CStringW
     }
 }
 
-INT CAutoComplete::ReLoadInnerList(const CStringW& strText)
+VOID CAutoComplete::ReLoadInnerList(const CStringW& strText)
 {
     m_innerList.RemoveAll(); // clear contents
+    m_bPartialList = FALSE;
 
-    if (!m_pEnum)
-        return 0;
+    if (!m_pEnum || strText.IsEmpty())
+        return;
 
     // reload the items
     LPWSTR pszItem;
     ULONG cGot;
     CStringW strTarget;
     HRESULT hr;
-    m_bPartialList = FALSE;
     for (;;)
     {
         // get next item
@@ -1525,8 +1525,6 @@ INT CAutoComplete::ReLoadInnerList(const CStringW& strText)
         if (::GetTickCount() - m_dwTick >= COMPLETION_TIMEOUT)
             break; // too late
     }
-
-    return m_innerList.GetSize(); // the number of items
 }
 
 // update inner list and m_strText and m_strStemText

@@ -213,7 +213,7 @@ protected:
     VOID LoadQuickComplete(LPCWSTR pwszRegKeyPath, LPCWSTR pwszQuickComplete);
     CStringW GetQuickEdit(LPCWSTR pszText) const;
     VOID RepositionDropDown();
-    INT ReLoadInnerList(const CStringW& strText);
+    VOID ReLoadInnerList(const CStringW& strText);
     INT UpdateInnerList(const CStringW& strText);
     INT UpdateOuterList(const CStringW& strText);
     VOID UpdateCompletion(BOOL bAppendOK);
