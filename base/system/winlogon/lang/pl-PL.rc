@@ -52,6 +52,7 @@ BEGIN
     IDS_RUNNINGLOGONSCRIPTS "Trwa uruchamianie skryptów logowania..."
     IDS_LOADINGYOURPERSONALSETTINGS "Trwa ładowanie ustawień osobistych..."
     IDS_CLOSINGNETWORKCONNECTIONS "Trwa zamykanie połączeń sieciowych..."
+    IDS_REACTOSISRESTARTING "Restarting..."
     IDS_REACTOSISSHUTTINGDOWN "Trwa zamykanie systemu ReactOS..."
     IDS_PREPARETOSTANDBY "Trwa przygotowywanie do przejścia w stan wstrzymania..."
     IDS_PREPARETOHIBERNATE "Trwa przygotowywanie do hibernacji..."

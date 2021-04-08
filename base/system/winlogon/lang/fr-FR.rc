@@ -46,6 +46,7 @@ BEGIN
     IDS_RUNNINGLOGONSCRIPTS "Exécution des scripts d'ouverture de session..."
     IDS_LOADINGYOURPERSONALSETTINGS "Chargement de vos paramètres personnels..."
     IDS_CLOSINGNETWORKCONNECTIONS "Fermeture des connections réseau..."
+    IDS_REACTOSISRESTARTING "Restarting..."
     IDS_REACTOSISSHUTTINGDOWN "Fermeture de ReactOS..."
     IDS_PREPARETOSTANDBY "Préparation de la Mise en Veille..."
     IDS_PREPARETOHIBERNATE "Préparation de l'hibernation..."

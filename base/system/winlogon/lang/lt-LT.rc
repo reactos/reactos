@@ -46,6 +46,7 @@ BEGIN
     IDS_RUNNINGLOGONSCRIPTS "Vykdomi prisijungimo scenarijai..."
     IDS_LOADINGYOURPERSONALSETTINGS "Įkeliamos asmeninės nuostatos..."
     IDS_CLOSINGNETWORKCONNECTIONS "Uždaromi tinklo susijungimai..."
+    IDS_REACTOSISRESTARTING "Restarting..."
     IDS_REACTOSISSHUTTINGDOWN "ReactOS stabdoma..."
     IDS_PREPARETOSTANDBY "Ruošiamasi pristabdyti..."
     IDS_PREPARETOHIBERNATE "Ruošiamasi išjungti įrašant..."

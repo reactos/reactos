@@ -49,6 +49,7 @@ BEGIN
     IDS_RUNNINGLOGONSCRIPTS "Spúšťajú sa prihlasovacie skripty..."
     IDS_LOADINGYOURPERSONALSETTINGS "Načítavajú sa Vaše osobné nastavenia..."
     IDS_CLOSINGNETWORKCONNECTIONS "Ukončujú sa sieťové pripojenia..."
+    IDS_REACTOSISRESTARTING "Restarting..."
     IDS_REACTOSISSHUTTINGDOWN "Systém ReactOS sa vypína..."
     IDS_PREPARETOSTANDBY "Systém sa pripravuje na prechod do úsporného režimu..."
     IDS_PREPARETOHIBERNATE "Systém sa pripravuje na prechod do režimu dlhodobého spánku..."

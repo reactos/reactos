@@ -46,6 +46,7 @@ BEGIN
     IDS_RUNNINGLOGONSCRIPTS "Bejelentkezési szkriptek futtatása..."
     IDS_LOADINGYOURPERSONALSETTINGS "Személyes beállítások betöltése..."
     IDS_CLOSINGNETWORKCONNECTIONS "Hálózati kapcsolatok lezárása..."
+    IDS_REACTOSISRESTARTING "Restarting..."
     IDS_REACTOSISSHUTTINGDOWN "A ReactOS leáll..."
     IDS_PREPARETOSTANDBY "Készenléti üzemmód elõkészítése..."
     IDS_PREPARETOHIBERNATE "Hibernálás elõkészítése..."

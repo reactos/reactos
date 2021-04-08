@@ -44,6 +44,7 @@ BEGIN
     IDS_RUNNINGLOGONSCRIPTS "Изпълняване на писанията за изход..."
     IDS_LOADINGYOURPERSONALSETTINGS "Зареждане на личните ви настройки..."
     IDS_CLOSINGNETWORKCONNECTIONS "Затваряне на мрежовите свързвания..."
+    IDS_REACTOSISRESTARTING "Restarting..."
     IDS_REACTOSISSHUTTINGDOWN "ReactOS се изключва..."
     IDS_PREPARETOSTANDBY "Приготвяне за изчакване..."
     IDS_PREPARETOHIBERNATE "Приготвяне за сън..."

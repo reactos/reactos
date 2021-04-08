@@ -46,6 +46,7 @@ BEGIN
     IDS_RUNNINGLOGONSCRIPTS "A executar scripts de logon..."
     IDS_LOADINGYOURPERSONALSETTINGS "A carregar configurações pessoais..."
     IDS_CLOSINGNETWORKCONNECTIONS "A terminar as ligações de rede..."
+    IDS_REACTOSISRESTARTING "Restarting..."
     IDS_REACTOSISSHUTTINGDOWN "A desligar o ReactOS "
     IDS_PREPARETOSTANDBY "Preparando para entrar em Modo de Espera..."
     IDS_PREPARETOHIBERNATE "Preparando para Hibernar..."

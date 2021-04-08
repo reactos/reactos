@@ -48,6 +48,7 @@ BEGIN
     IDS_RUNNINGLOGONSCRIPTS "Nis skriptet e hyrjes..."
     IDS_LOADINGYOURPERSONALSETTINGS "Ngarkon konfigurimet personale..."
     IDS_CLOSINGNETWORKCONNECTIONS "Mbyll lidhjet e networkut..."
+    IDS_REACTOSISRESTARTING "Restarting..."
     IDS_REACTOSISSHUTTINGDOWN "ReactOS po fiket..."
     IDS_PREPARETOSTANDBY "Pergatitja e gadishmerise..."
     IDS_PREPARETOHIBERNATE "Pergatitet per letargji..."

@@ -46,6 +46,7 @@ BEGIN
     IDS_RUNNINGLOGONSCRIPTS "Kör inloggningsskript..."
     IDS_LOADINGYOURPERSONALSETTINGS "Laddar dina personliga inställningar..."
     IDS_CLOSINGNETWORKCONNECTIONS "Stänger nätverksanslutningar..."
+    IDS_REACTOSISRESTARTING "Restarting..."
     IDS_REACTOSISSHUTTINGDOWN "ReactOS håller på att stängas av..."
     IDS_PREPARETOSTANDBY "Förbereder för vänteläge..."
     IDS_PREPARETOHIBERNATE "Förbereder för viloläge..."

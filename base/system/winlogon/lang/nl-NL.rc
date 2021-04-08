@@ -44,6 +44,7 @@ BEGIN
     IDS_RUNNINGLOGONSCRIPTS "Inlog scripts uitvoeren..."
     IDS_LOADINGYOURPERSONALSETTINGS "Uw persoonlijke instelling laden..."
     IDS_CLOSINGNETWORKCONNECTIONS "Netwerkverbindingen sluiten..."
+    IDS_REACTOSISRESTARTING "Restarting..."
     IDS_REACTOSISSHUTTINGDOWN "ReactOS is aan het afsluiten..."
     IDS_PREPARETOSTANDBY "Standby wordt voorbereid..."
     IDS_PREPARETOHIBERNATE "Slaapstand wordt voorbereid..."

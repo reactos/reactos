@@ -46,6 +46,7 @@ BEGIN
     IDS_RUNNINGLOGONSCRIPTS "Menjalankan naskah logon..."
     IDS_LOADINGYOURPERSONALSETTINGS "Mengambil setelan personal anda..."
     IDS_CLOSINGNETWORKCONNECTIONS "Menutup koneksi jaringan..."
+    IDS_REACTOSISRESTARTING "Restarting..."
     IDS_REACTOSISSHUTTINGDOWN "ReactOS sedang dinonaktifkan..."
     IDS_PREPARETOSTANDBY "Menyiapkan untuk Standby..."
     IDS_PREPARETOHIBERNATE "Menyiapkan untuk Tidur..."

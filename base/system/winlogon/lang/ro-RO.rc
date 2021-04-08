@@ -53,6 +53,7 @@ BEGIN
     IDS_RUNNINGLOGONSCRIPTS "Operații de autentificare în curs de efectuare…"
     IDS_LOADINGYOURPERSONALSETTINGS "Configurații personale în curs de reconstituire…"
     IDS_CLOSINGNETWORKCONNECTIONS "Conexiuni în rețea în curs de închidere…"
+    IDS_REACTOSISRESTARTING "Restarting..."
     IDS_REACTOSISSHUTTINGDOWN "Sistem de operare în curs de oprire…"
     IDS_PREPARETOSTANDBY "Stare de veghe în curs de pregătire…"
     IDS_PREPARETOHIBERNATE "Stare de hibernare în curs de pregătire…"
