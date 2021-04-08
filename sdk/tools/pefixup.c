@@ -142,9 +142,15 @@ static int driver_fixup(enum fixup_mode mode, unsigned char *buffer, PIMAGE_NT_H
         if (Section->Characteristics & IMAGE_SCN_CNT_CODE)
             Section->Characteristics &= ~IMAGE_SCN_CNT_INITIALIZED_DATA;
 
-        /* For some reason, .rsrc is made writable by windres */
         if (strncmp((char*)Section->Name, ".rsrc", 5) == 0)
         {
+            /* .rsrc is discardable for driver images, WDM drivers and Kernel-Mode DLLs */
+            if (mode == MODE_KERNELDRIVER || mode == MODE_WDMDRIVER || mode == MODE_KERNELDLL)
+            {
+                Section->Characteristics |= IMAGE_SCN_MEM_DISCARDABLE;
+            }
+
+            /* For some reason, .rsrc is made writable by windres */
             Section->Characteristics &= ~IMAGE_SCN_MEM_WRITE;
             continue;
         }
@@ -356,10 +362,10 @@ print_usage(void)
     printf("Usage: %s <options> <filename>\n\n", g_ApplicationName);
     printf("<options> can be one of the following options:\n"
            "  --loadconfig          Fix the LOAD_CONFIG directory entry;\n"
-           "  --kernelmodedriver    Fix code and data sections for driver images;\n"
-           "  --wdmdriver           Fix code and data sections for WDM drivers;\n"
-           "  --kerneldll           Fix code and data sections for Kernel-Mode DLLs;\n"
-           "  --kernel              Fix code and data sections for kernels;\n"
+           "  --kernelmodedriver    Fix code, data and resource sections for driver images;\n"
+           "  --wdmdriver           Fix code, data and resource sections for WDM drivers;\n"
+           "  --kerneldll           Fix code, data and resource sections for Kernel-Mode DLLs;\n"
+           "  --kernel              Fix code, data and resource sections for kernels;\n"
            "\n"
            "and/or a combination of the following ones:\n"
            "  --section:name[=newname][,[[!]{CDEIKOMPRSUW}][A{1248PTSX}]]\n"

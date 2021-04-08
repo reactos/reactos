@@ -307,7 +307,7 @@ function(set_module_type_toolchain MODULE TYPE)
         # Fixup section characteristics
         #  - Remove flags that LD overzealously puts (alignment flag, Initialized flags for code sections)
         #  - INIT section is made discardable
-        #  - .rsrc is made read-only
+        #  - .rsrc is made read-only and discardable
         #  - PAGE & .edata sections are made pageable.
         add_custom_command(TARGET ${MODULE} POST_BUILD
             COMMAND native-pefixup --${TYPE} $<TARGET_FILE:${MODULE}>)
