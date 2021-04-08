@@ -117,9 +117,6 @@ $define(USHORT=USHORT)
 $define(UCHAR=UCHAR)
 $include(ntbasedef.h)
 
-typedef _Return_type_success_(return >= 0) LONG NTSTATUS;
-typedef NTSTATUS *PNTSTATUS;
-
 #ifndef __SECSTATUS_DEFINED__
 typedef long SECURITY_STATUS;
 #define __SECSTATUS_DEFINED__
