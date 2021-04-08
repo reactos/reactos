@@ -516,7 +516,7 @@ extern "C" {
   _strupr_s_l(
     _Inout_updates_z_(_Size) char *_Str,
     _In_ size_t _Size,
-    _locale_t _Locale);
+    _In_opt_ _locale_t _Locale);
 
   _Check_return_wat_
   _CRTIMP
