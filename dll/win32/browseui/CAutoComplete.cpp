@@ -1446,7 +1446,7 @@ VOID CAutoComplete::RepositionDropDown()
 
 inline BOOL
 CAutoComplete::DoesMatch(const CStringW& strTarget, const CStringW& strText) const
-
+{
     CStringW strBody;
     if (DropPrefix(strTarget, strBody))
     {
@@ -1550,9 +1550,7 @@ INT CAutoComplete::UpdateInnerList(const CStringW& strText)
 
     // if the previous enumeration is too large
     if (m_bPartialList)
-    {
         bReset = bExpand = TRUE; // retry enumeratation
-    }
 
     // reset if necessary
     if (bReset && m_pEnum)
