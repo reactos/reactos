@@ -218,6 +218,7 @@ protected:
     INT UpdateOuterList(const CStringW& strText);
     VOID UpdateCompletion(BOOL bAppendOK);
     VOID ScrapeOffList(const CStringW& strText, CSimpleArray<CStringW>& array);
+    BOOL DoesMatch(const CStringW& strTarget, const CStringW& strText) const;
     // message map
     BEGIN_MSG_MAP(CAutoComplete)
         MESSAGE_HANDLER(WM_CREATE, OnCreate)

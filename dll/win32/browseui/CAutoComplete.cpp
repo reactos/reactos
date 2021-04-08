@@ -1444,27 +1444,28 @@ VOID CAutoComplete::RepositionDropDown()
     ShowWindow(SW_SHOWNOACTIVATE);
 }
 
+BOOL CAutoComplete::DoesMatch(const CStringW& strTarget, const CStringW& strText) const
+{
+    CStringW strBody;
+    if (DropPrefix(strTarget, strBody))
+    {
+        if (::StrCmpNIW(strBody, strText, strText.GetLength()) == 0)
+        {
+            return TRUE;
+        }
+    }
+    if (::StrCmpNIW(strTarget, strText, strText.GetLength()) == 0)
+    {
+        return TRUE;
+    }
+    return FALSE;
+}
+
 VOID CAutoComplete::ScrapeOffList(const CStringW& strText, CSimpleArray<CStringW>& array)
 {
     for (INT iItem = array.GetSize() - 1; iItem >= 0; --iItem)
     {
-        const CStringW& strTarget = array[iItem];
-
-        CStringW strBody;
-        BOOL bRemove = TRUE;
-        if (DropPrefix(strTarget, strBody))
-        {
-            if (::StrCmpNIW(strBody, strText, strText.GetLength()) == 0)
-            {
-                bRemove = FALSE;
-            }
-        }
-        if (::StrCmpNIW(strTarget, strText, strText.GetLength()) == 0)
-        {
-            bRemove = FALSE;
-        }
-
-        if (bRemove)
+        if (!DoesMatch(array[iItem], strText))
             array.RemoveAt(iItem);
     }
 }
@@ -1495,21 +1496,7 @@ INT CAutoComplete::ReLoadInnerList(const CStringW& strText)
         if (m_bPartialList) // if items are too many
         {
             // do filter the items
-            BOOL bAdd = FALSE;
-            CStringW strBody;
-            if (DropPrefix(strTarget, strBody))
-            {
-                if (::StrCmpNIW(strBody, strText, strText.GetLength()) == 0)
-                {
-                    bAdd = TRUE;
-                }
-            }
-            else if (::StrCmpNIW(strTarget, strText, strText.GetLength()) == 0)
-            {
-                bAdd = TRUE;
-            }
-
-            if (bAdd)
+            if (DoesMatch(strTarget, strText))
             {
                 m_innerList.Add(strTarget);
 
@@ -1604,29 +1591,13 @@ INT CAutoComplete::UpdateOuterList(const CStringW& strText)
     }
     else
     {
-        // update the outer list from the inner list
+        // do filtering
         m_outerList.RemoveAll();
         for (INT iItem = 0; iItem < m_innerList.GetSize(); ++iItem)
         {
-            // is the beginning matched?
             const CStringW& strTarget = m_innerList[iItem];
 
-            // filter the items
-            BOOL bAdd = FALSE;
-            CStringW strBody;
-            if (DropPrefix(strTarget, strBody))
-            {
-                if (::StrCmpNIW(strBody, strText, strText.GetLength()) == 0)
-                {
-                    bAdd = TRUE;
-                }
-            }
-            else if (::StrCmpNIW(strTarget, strText, strText.GetLength()) == 0)
-            {
-                bAdd = TRUE;
-            }
-
-            if (bAdd)
+            if (DoesMatch(strTarget, strText))
                 m_outerList.Add(strTarget);
 
             // check the timeout
