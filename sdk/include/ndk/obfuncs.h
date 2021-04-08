@@ -329,6 +329,7 @@ NtSetInformationObject(
     _In_ ULONG Length
 );
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 __kernel_entry
 NTSYSCALLAPI
 NTSTATUS

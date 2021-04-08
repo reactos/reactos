@@ -102,6 +102,7 @@ PsGetThreadTeb(
     _In_ PETHREAD Thread
 );
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
 NTKERNELAPI
 HANDLE
 NTAPI
@@ -239,6 +240,7 @@ PsGetProcessExitProcessCalled(
 //
 // Quota Functions
 //
+_IRQL_requires_max_(APC_LEVEL)
 NTKERNELAPI
 VOID
 NTAPI
@@ -264,6 +266,8 @@ PsChargeProcessPagedPoolQuota(
     _In_ SIZE_T    Amount
 );
 
+_Must_inspect_result_
+_IRQL_requires_max_(APC_LEVEL)
 NTKERNELAPI
 NTSTATUS
 NTAPI
@@ -273,6 +277,7 @@ PsChargeProcessPoolQuota(
     _In_ SIZE_T    Amount
 );
 
+_IRQL_requires_max_(APC_LEVEL)
 NTKERNELAPI
 VOID
 NTAPI
@@ -480,6 +485,8 @@ NtOpenThread(
     _In_ PCLIENT_ID ClientId
 );
 
+_Must_inspect_result_
+__kernel_entry
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
@@ -490,6 +497,8 @@ NtOpenThreadToken(
     _Out_ PHANDLE TokenHandle
 );
 
+_Must_inspect_result_
+__kernel_entry
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
@@ -737,6 +746,7 @@ ZwOpenThreadToken(
     _Out_ PHANDLE TokenHandle
 );
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSYSAPI
 NTSTATUS
 NTAPI
