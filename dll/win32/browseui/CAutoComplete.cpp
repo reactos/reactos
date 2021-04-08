@@ -1354,7 +1354,7 @@ VOID CAutoComplete::LoadQuickComplete(LPCWSTR pwszRegKeyPath, LPCWSTR pwszQuickC
     }
 }
 
-CStringW CAutoComplete::GetQuickEdit(LPCWSTR pszText)
+CStringW CAutoComplete::GetQuickEdit(LPCWSTR pszText) const
 {
     if (pszText[0] == 0 || m_strQuickComplete.IsEmpty())
         return pszText;

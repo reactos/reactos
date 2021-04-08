@@ -211,7 +211,7 @@ protected:
     VOID UpdateDropDownState();
     VOID CalcRects(BOOL bDowner, RECT& rcListView, RECT& rcScrollBar, RECT& rcSizeBox);
     VOID LoadQuickComplete(LPCWSTR pwszRegKeyPath, LPCWSTR pwszQuickComplete);
-    CStringW GetQuickEdit(LPCWSTR pszText);
+    CStringW GetQuickEdit(LPCWSTR pszText) const;
     VOID RepositionDropDown();
     INT ReLoadInnerList(const CStringW& strText);
     INT UpdateInnerList(const CStringW& strText);
