@@ -722,7 +722,7 @@ VOID CAutoComplete::SetEditText(LPCWSTR pszText)
     m_bInSetText = FALSE;
 }
 
-CStringW CAutoComplete::GetStemText(const CStringW& strText)
+CStringW CAutoComplete::GetStemText(const CStringW& strText) const
 {
     INT ich = strText.ReverseFind(L'\\');
     if (ich == -1)
