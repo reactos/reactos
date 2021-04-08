@@ -1478,19 +1478,20 @@ INT CAutoComplete::ReLoadInnerList(const CStringW& strText)
         return 0;
 
     // reload the items
+    LPWSTR pszItem;
+    ULONG cGot;
+    CStringW strTarget;
     HRESULT hr;
     m_bPartialList = FALSE;
     for (;;)
     {
         // get next item
-        LPWSTR pszItem;
-        ULONG cGot;
         hr = m_pEnum->Next(1, &pszItem, &cGot);
         //TRACE("m_pEnum->Next(%p): 0x%08lx\n", reinterpret_cast<IUnknown *>(m_pEnum), hr);
         if (hr != S_OK)
             break;
 
-        CStringW strTarget = pszItem;
+        strTarget = pszItem;
         ::CoTaskMemFree(pszItem); // free
 
         if (m_bPartialList) // if items are too many
