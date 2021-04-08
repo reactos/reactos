@@ -1284,7 +1284,7 @@ VOID CAutoComplete::UpdateDropDownState()
 }
 
 // calculate the positions of the controls
-VOID CAutoComplete::CalcRects(BOOL bDowner, RECT& rcList, RECT& rcScrollBar, RECT& rcSizeBox)
+VOID CAutoComplete::CalcRects(BOOL bDowner, RECT& rcList, RECT& rcScrollBar, RECT& rcSizeBox) const
 {
     // get the client rectangle
     RECT rcClient;

@@ -209,7 +209,7 @@ protected:
     CSimpleArray<CStringW> m_outerList; // owner data for virtual listview
     // protected methods
     VOID UpdateDropDownState();
-    VOID CalcRects(BOOL bDowner, RECT& rcListView, RECT& rcScrollBar, RECT& rcSizeBox);
+    VOID CalcRects(BOOL bDowner, RECT& rcListView, RECT& rcScrollBar, RECT& rcSizeBox) const;
     VOID LoadQuickComplete(LPCWSTR pwszRegKeyPath, LPCWSTR pwszQuickComplete);
     CStringW GetQuickEdit(LPCWSTR pszText) const;
     VOID RepositionDropDown();
