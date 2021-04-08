@@ -169,6 +169,8 @@ ObDereferenceObjectDeferDelete(
 //
 // Native Calls
 //
+_IRQL_requires_max_(PASSIVE_LEVEL)
+__kernel_entry
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
@@ -327,6 +329,7 @@ NtSetInformationObject(
     _In_ ULONG Length
 );
 
+__kernel_entry
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
@@ -376,6 +379,7 @@ NtWaitForSingleObject(
     _In_opt_ PLARGE_INTEGER Timeout
 );
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSYSAPI
 NTSTATUS
 NTAPI
@@ -392,6 +396,7 @@ ZwCloseObjectAuditAlarm(
     _In_ BOOLEAN GenerateOnClose
 );
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSYSAPI
 NTSTATUS
 NTAPI
@@ -441,6 +446,7 @@ ZwMakePermanentObject(
     _In_ HANDLE Object
 );
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSYSAPI
 NTSTATUS
 NTAPI
@@ -448,6 +454,7 @@ ZwMakeTemporaryObject(
     _In_ HANDLE Handle
 );
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSYSAPI
 NTSTATUS
 NTAPI
@@ -466,6 +473,7 @@ ZwOpenJobObject(
     _In_ POBJECT_ATTRIBUTES ObjectAttributes
 );
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSYSAPI
 NTSTATUS
 NTAPI

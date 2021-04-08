@@ -411,6 +411,7 @@ ZwMapViewOfSection(
     _In_ ULONG Win32Protect
 );
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSYSAPI
 NTSTATUS
 NTAPI

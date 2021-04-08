@@ -724,6 +724,7 @@ ZwDeleteAtom(
     _In_ RTL_ATOM Atom
 );
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSYSAPI
 NTSTATUS
 NTAPI
@@ -740,6 +741,7 @@ ZwFindAtom(
     _Out_opt_ PRTL_ATOM Atom
 );
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
@@ -951,6 +953,7 @@ ZwSetDefaultHardErrorPort(
     _In_ HANDLE PortHandle
 );
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSYSAPI
 NTSTATUS
 NTAPI

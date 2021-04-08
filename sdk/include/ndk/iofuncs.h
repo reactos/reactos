@@ -247,6 +247,7 @@ NtLoadDriver(
     _In_ PUNICODE_STRING DriverServiceName
 );
 
+__kernel_entry
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
@@ -292,6 +293,7 @@ NtNotifyChangeDirectoryFile(
     _In_ BOOLEAN WatchTree
 );
 
+__kernel_entry
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
@@ -535,14 +537,15 @@ NtSetIoCompletion(
     _In_ ULONG CompletionInformation
 );
 
+__kernel_entry
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtSetQuotaInformationFile(
-    HANDLE FileHandle,
-    PIO_STATUS_BLOCK IoStatusBlock,
-    PVOID Buffer,
-    ULONG BufferLength
+    _In_ HANDLE FileHandle,
+    _Out_ PIO_STATUS_BLOCK IoStatusBlock,
+    _In_reads_bytes_(BufferLength) PVOID Buffer,
+    _In_ ULONG BufferLength
 );
 
 __kernel_entry
@@ -703,6 +706,7 @@ ZwDeleteBootEntry(
     _In_ PUNICODE_STRING EntryValue
 );
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSYSAPI
 NTSTATUS
 NTAPI
@@ -798,6 +802,7 @@ ZwNotifyChangeDirectoryFile(
     _In_ BOOLEAN WatchTree
 );
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSYSAPI
 NTSTATUS
 NTAPI
@@ -862,6 +867,7 @@ ZwQueryEaFile(
 );
 #endif
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSYSAPI
 NTSTATUS
 NTAPI
@@ -1019,6 +1025,7 @@ ZwSetVolumeInformationFile(
     _In_ FS_INFORMATION_CLASS FsInformationClass
 );
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSYSAPI
 NTSTATUS
 NTAPI
