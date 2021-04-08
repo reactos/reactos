@@ -1454,7 +1454,7 @@ BOOL CAutoComplete::DoesMatch(const CStringW& strTarget, const CStringW& strText
             return TRUE;
         }
     }
-    if (::StrCmpNIW(strTarget, strText, strText.GetLength()) == 0)
+    else if (::StrCmpNIW(strTarget, strText, strText.GetLength()) == 0)
     {
         return TRUE;
     }
