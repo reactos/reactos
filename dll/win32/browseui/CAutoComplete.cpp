@@ -1527,7 +1527,7 @@ VOID CAutoComplete::ReLoadInnerList(const CStringW& strText)
 }
 
 // update inner list and m_strText and m_strStemText
-INT CAutoComplete::UpdateInnerList(const CStringW& strText)
+VOID CAutoComplete::UpdateInnerList(const CStringW& strText)
 {
     BOOL bReset = FALSE, bExpand = FALSE; // flags
 
@@ -1574,16 +1574,14 @@ INT CAutoComplete::UpdateInnerList(const CStringW& strText)
         // reload the inner list
         ReLoadInnerList(strText);
     }
-
-    return m_innerList.GetSize();
 }
 
-INT CAutoComplete::UpdateOuterList(const CStringW& strText)
+VOID CAutoComplete::UpdateOuterList(const CStringW& strText)
 {
     if (strText.IsEmpty())
     {
         m_outerList.RemoveAll();
-        return 0;
+        return;
     }
 
     if (m_bPartialList)
@@ -1616,9 +1614,7 @@ INT CAutoComplete::UpdateOuterList(const CStringW& strText)
     }
 
     // set the item count of the virtual listview
-    INT cItems = m_outerList.GetSize();
-    m_hwndList.SendMessageW(LVM_SETITEMCOUNT, cItems, 0);
-    return cItems; // the number of items
+    m_hwndList.SendMessageW(LVM_SETITEMCOUNT, m_outerList.GetSize(), 0);
 }
 
 VOID CAutoComplete::UpdateCompletion(BOOL bAppendOK)
@@ -1635,8 +1631,8 @@ VOID CAutoComplete::UpdateCompletion(BOOL bAppendOK)
     }
 
     // update inner list
-    UINT cItems = UpdateInnerList(strText);
-    if (cItems == 0) // no items
+    UpdateInnerList(strText);
+    if (m_innerList.GetSize() <= 0) // no items
     {
         HideDropDown();
         return;
@@ -1648,7 +1644,8 @@ VOID CAutoComplete::UpdateCompletion(BOOL bAppendOK)
         SelectItem(-1); // select none
         m_bInSelectItem = FALSE;
 
-        if (UpdateOuterList(strText))
+        UpdateOuterList(strText);
+        if (m_outerList.GetSize() > 0)
             RepositionDropDown();
         else
             HideDropDown();

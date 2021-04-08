@@ -214,8 +214,8 @@ protected:
     CStringW GetQuickEdit(LPCWSTR pszText) const;
     VOID RepositionDropDown();
     VOID ReLoadInnerList(const CStringW& strText);
-    INT UpdateInnerList(const CStringW& strText);
-    INT UpdateOuterList(const CStringW& strText);
+    VOID UpdateInnerList(const CStringW& strText);
+    VOID UpdateOuterList(const CStringW& strText);
     VOID UpdateCompletion(BOOL bAppendOK);
     VOID ScrapeOffList(const CStringW& strText, CSimpleArray<CStringW>& array);
     BOOL DoesMatch(const CStringW& strTarget, const CStringW& strText) const;
