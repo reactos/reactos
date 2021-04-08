@@ -668,34 +668,34 @@ CAutoComplete::~CAutoComplete()
     m_pACList.Release();
 }
 
-BOOL CAutoComplete::CanAutoSuggest() const
+inline BOOL CAutoComplete::CanAutoSuggest() const
 {
     return !!(m_dwOptions & ACO_AUTOSUGGEST) && m_bEnabled;
 }
 
-BOOL CAutoComplete::CanAutoAppend() const
+inline BOOL CAutoComplete::CanAutoAppend() const
 {
     return !!(m_dwOptions & ACO_AUTOAPPEND) && m_bEnabled;
 }
 
-BOOL CAutoComplete::UseTab() const
+inline BOOL CAutoComplete::UseTab() const
 {
     return !!(m_dwOptions & ACO_USETAB) && m_bEnabled;
 }
 
-BOOL CAutoComplete::IsComboBoxDropped() const
+inline BOOL CAutoComplete::IsComboBoxDropped() const
 {
     if (!::IsWindow(m_hwndCombo))
         return FALSE;
     return (BOOL)::SendMessageW(m_hwndCombo, CB_GETDROPPEDSTATE, 0, 0);
 }
 
-BOOL CAutoComplete::FilterPrefixes() const
+inline BOOL CAutoComplete::FilterPrefixes() const
 {
     return !!(m_dwOptions & ACO_FILTERPREFIXES) && m_bEnabled;
 }
 
-INT CAutoComplete::GetItemCount() const
+inline INT CAutoComplete::GetItemCount() const
 {
     return m_outerList.GetSize();
 }
@@ -707,7 +707,7 @@ CStringW CAutoComplete::GetItemText(INT iItem) const
     return m_outerList[iItem];
 }
 
-CStringW CAutoComplete::GetEditText() const
+inline CStringW CAutoComplete::GetEditText() const
 {
     WCHAR szText[L_MAX_URL_LENGTH];
     if (::GetWindowTextW(m_hwndEdit, szText, _countof(szText)))
@@ -722,7 +722,7 @@ VOID CAutoComplete::SetEditText(LPCWSTR pszText)
     m_bInSetText = FALSE;
 }
 
-CStringW CAutoComplete::GetStemText(const CStringW& strText) const
+inline CStringW CAutoComplete::GetStemText(const CStringW& strText) const
 {
     INT ich = strText.ReverseFind(L'\\');
     if (ich == -1)
