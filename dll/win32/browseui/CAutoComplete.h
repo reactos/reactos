@@ -148,7 +148,7 @@ public:
     INT GetItemCount() const;
     CStringW GetItemText(INT iItem) const;
 
-    CStringW GetEditText();
+    CStringW GetEditText() const;
     VOID SetEditText(LPCWSTR pszText);
     CStringW GetStemText(const CStringW& strText) const;
     VOID SetEditSel(INT ich0, INT ich1);

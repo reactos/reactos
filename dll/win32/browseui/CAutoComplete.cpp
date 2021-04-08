@@ -707,7 +707,7 @@ CStringW CAutoComplete::GetItemText(INT iItem) const
     return m_outerList[iItem];
 }
 
-CStringW CAutoComplete::GetEditText()
+CStringW CAutoComplete::GetEditText() const
 {
     WCHAR szText[L_MAX_URL_LENGTH];
     if (::GetWindowTextW(m_hwndEdit, szText, _countof(szText)))
