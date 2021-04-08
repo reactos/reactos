@@ -1444,7 +1444,8 @@ VOID CAutoComplete::RepositionDropDown()
     ShowWindow(SW_SHOWNOACTIVATE);
 }
 
-BOOL CAutoComplete::DoesMatch(const CStringW& strTarget, const CStringW& strText) const
+inline BOOL
+CAutoComplete::DoesMatch(const CStringW& strTarget, const CStringW& strText) const
 {
     CStringW strBody;
     if (DropPrefix(strTarget, strBody))
