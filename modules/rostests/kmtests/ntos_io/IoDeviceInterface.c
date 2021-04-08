@@ -1,11 +1,13 @@
 /*
- * PROJECT:         ReactOS kernel-mode tests
- * LICENSE:         LGPLv2+ - See COPYING.LIB in the top level directory
- * PURPOSE:         Kernel-Mode Test Suite Device Interface functions test
- * PROGRAMMER:      Filip Navara <xnavara@volny.cz>
+ * PROJECT:     ReactOS kernel-mode tests
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * PURPOSE:     Test for Device Interface functions
+ * COPYRIGHT:   Copyright 2011 Filip Navara <xnavara@volny.cz>
+ *              Copyright 2021 Mark Jansen <mark.jansen@reactos.org>
+ *              Copyright 2021-2022 Oleg Dubinskiy <oleg.dubinskij2013@yandex.ua>
  */
 
-/* TODO: what's with the prototypes at the top, what's with the if-ed out part? Doesn't process most results */
+/* TODO: Add IoRegisterDeviceInterface testcase */
 
 #include <kmt_test.h>
 #include <poclass.h>
@@ -13,113 +15,217 @@
 #define NDEBUG
 #include <debug.h>
 
-#if 0
-NTSTATUS
-(NTAPI *IoGetDeviceInterfaces_Func)(
-   IN CONST GUID *InterfaceClassGuid,
-   IN PDEVICE_OBJECT PhysicalDeviceObject OPTIONAL,
-   IN ULONG Flags,
-   OUT PWSTR *SymbolicLinkList);
+/* Predefined GUIDs are required for IoGetDeviceInterfaceAlias and IoOpenDeviceInterfaceRegistryKey.
+ * Only they can provide the aliases and the needed subkeys, unlike manually declared test GUIDs.
+ * Since IoRegisterDeviceInterface testcase is missing, it is not possible to register the new device interface
+ * and get an alias/key handle of it using this test. */
+/* Invlaid GUID */
+#define STATIC_GUID_NULL \
+    0x00000000L, 0x0000, 0x0000, {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}
+/* From https://docs.microsoft.com/en-us/windows-hardware/drivers/stream/ksproperty-topology-categories */
+#define STATIC_KSCATEGORY_BRIDGE \
+    0x085AFF00L, 0x62CE, 0x11CF, {0xA5, 0xD6, 0x28, 0xDB, 0x04, 0xC1, 0x00, 0x00}
+#define STATIC_KSCATEGORY_CAPTURE \
+    0x65E8773DL, 0x8F56, 0x11D0, {0xA3, 0xB9, 0x00, 0xA0, 0xC9, 0x22, 0x31, 0x96}
+#define STATIC_KSCATEGORY_COMMUNICATIONSTRANSFORM \
+    0xCF1DDA2CL, 0x9743, 0x11D0, {0xA3, 0xEE, 0x00, 0xA0, 0xC9, 0x22, 0x31, 0x96}
+#define STATIC_KSCATEGORY_DATACOMPRESSOR \
+    0x1E84C900L, 0x7E70, 0x11D0, {0xA5, 0xD6, 0x28, 0xDB, 0x04, 0xC1, 0x00, 0x00}
+#define STATIC_KSCATEGORY_DATADECOMPRESSOR \
+    0x2721AE20L, 0x7E70, 0x11D0, {0xA5, 0xD6, 0x28, 0xDB, 0x04, 0xC1, 0x00, 0x00}
+#define STATIC_KSCATEGORY_DATATRANSFORM \
+    0x2EB07EA0L, 0x7E70, 0x11D0, {0xA5, 0xD6, 0x28, 0xDB, 0x04, 0xC1, 0x00, 0x00}
+#define STATIC_KSCATEGORY_FILESYSTEM \
+    0x760FED5EL, 0x9357, 0x11D0, {0xA3, 0xCC, 0x00, 0xA0, 0xC9, 0x22, 0x31, 0x96}
+#define STATIC_KSCATEGORY_INTERFACETRANSFORM \
+    0xCF1DDA2DL, 0x9743, 0x11D0, {0xA3, 0xEE, 0x00, 0xA0, 0xC9, 0x22, 0x31, 0x96}
+#define STATIC_KSCATEGORY_MEDIUMTRANSFORM \
+    0xCF1DDA2EL, 0x9743, 0x11D0, {0xA3, 0xEE, 0x00, 0xA0, 0xC9, 0x22, 0x31, 0x96}
+#define STATIC_KSCATEGORY_MIXER \
+    0xAD809C00L, 0x7B88, 0x11D0, {0xA5, 0xD6, 0x28, 0xDB, 0x04, 0xC1, 0x00, 0x00}
+#define STATIC_KSCATEGORY_RENDER \
+    0x65E8773EL, 0x8F56, 0x11D0, {0xA3, 0xB9, 0x00, 0xA0, 0xC9, 0x22, 0x31, 0x96}
+#define STATIC_KSCATEGORY_SPLITTER \
+    0x0A4252A0L, 0x7E70, 0x11D0, {0xA5, 0xD6, 0x28, 0xDB, 0x04, 0xC1, 0x00, 0x00}
 
-NTSTATUS NTAPI
-ReactOS_IoGetDeviceInterfaces(
-   IN CONST GUID *InterfaceClassGuid,
-   IN PDEVICE_OBJECT PhysicalDeviceObject OPTIONAL,
-   IN ULONG Flags,
-   OUT PWSTR *SymbolicLinkList);
-#endif /* 0 */
+static const GUID GUID_NULL = { STATIC_GUID_NULL };
+static const GUID KSCATEGORY_BRIDGE = { STATIC_KSCATEGORY_BRIDGE };
+static const GUID KSCATEGORY_CAPTURE = { STATIC_KSCATEGORY_CAPTURE };
+static const GUID KSCATEGORY_COMMUNICATIONSTRANSFORM = { STATIC_KSCATEGORY_COMMUNICATIONSTRANSFORM };
+static const GUID KSCATEGORY_DATACOMPRESSOR = { STATIC_KSCATEGORY_DATACOMPRESSOR };
+static const GUID KSCATEGORY_DATADECOMPRESSOR = { STATIC_KSCATEGORY_DATADECOMPRESSOR };
+static const GUID KSCATEGORY_DATATRANSFORM = { STATIC_KSCATEGORY_DATATRANSFORM };
+static const GUID KSCATEGORY_FILESYSTEM = { STATIC_KSCATEGORY_FILESYSTEM };
+static const GUID KSCATEGORY_INTERFACETRANSFORM = { STATIC_KSCATEGORY_INTERFACETRANSFORM };
+static const GUID KSCATEGORY_MEDIUMTRANSFORM = { STATIC_KSCATEGORY_MEDIUMTRANSFORM };
+static const GUID KSCATEGORY_MIXER = { STATIC_KSCATEGORY_MIXER };
+static const GUID KSCATEGORY_RENDER = { STATIC_KSCATEGORY_RENDER };
+static const GUID KSCATEGORY_SPLITTER = { STATIC_KSCATEGORY_SPLITTER };
 
-static VOID DeviceInterfaceTest_Func()
+static const GUID* Types[] =
 {
-   NTSTATUS Status;
-   PWSTR SymbolicLinkList;
-   PWSTR SymbolicLinkListPtr;
-   GUID Guid = {0x378de44c, 0x56ef, 0x11d1, {0xbc, 0x8c, 0x00, 0xa0, 0xc9, 0x14, 0x05, 0xdd}};
+    &GUID_NULL,
+    &KSCATEGORY_BRIDGE,
+    &KSCATEGORY_CAPTURE,
+    &KSCATEGORY_COMMUNICATIONSTRANSFORM,
+    &KSCATEGORY_DATACOMPRESSOR,
+    &KSCATEGORY_DATADECOMPRESSOR,
+    &KSCATEGORY_DATATRANSFORM,
+    &KSCATEGORY_FILESYSTEM,
+    &KSCATEGORY_INTERFACETRANSFORM,
+    &KSCATEGORY_MEDIUMTRANSFORM,
+    &KSCATEGORY_MIXER,
+    &KSCATEGORY_RENDER,
+    &KSCATEGORY_SPLITTER,
+};
 
-   Status = IoGetDeviceInterfaces(
-      &Guid,
-      NULL,
-      0,
-      &SymbolicLinkList);
+static
+VOID
+Test_IoOpenDeviceInterfaceRegistryKey(PCWSTR SymbolicLink)
+{
+    UNICODE_STRING KeyName, SymbolicLinkName;
+    size_t n;
 
-   ok(NT_SUCCESS(Status),
-         "IoGetDeviceInterfaces failed with status 0x%X\n",
-         (unsigned int)Status);
-   if (!NT_SUCCESS(Status))
-   {
-      return;
-   }
+    RtlInitUnicodeString(&SymbolicLinkName, SymbolicLink);
+    RtlInitUnicodeString(&KeyName, L"ReactOS_kmtest");
 
-   DPRINT("IoGetDeviceInterfaces results:\n");
-   for (SymbolicLinkListPtr = SymbolicLinkList;
-        SymbolicLinkListPtr[0] != 0 && SymbolicLinkListPtr[1] != 0;
-        SymbolicLinkListPtr += wcslen(SymbolicLinkListPtr) + 1)
-   {
-      DPRINT1("Symbolic Link: %S\n", SymbolicLinkListPtr);
-   }
+    for (n = 0; n < RTL_NUMBER_OF(Types); ++n)
+    {
+        HANDLE DeviceInterfaceKey, DeviceInterfaceSubKey;
+        OBJECT_ATTRIBUTES ObjectAttributes;
 
-#if 0
-   DPRINT("[PnP Test] Trying to get aliases\n");
+        /* It's okay to call this from a user process's thread */
+        NTSTATUS Status = IoOpenDeviceInterfaceRegistryKey(&SymbolicLinkName, KEY_CREATE_SUB_KEY, &DeviceInterfaceKey);
 
-   for (SymbolicLinkListPtr = SymbolicLinkList;
-        SymbolicLinkListPtr[0] != 0 && SymbolicLinkListPtr[1] != 0;
-        SymbolicLinkListPtr += wcslen(SymbolicLinkListPtr) + 1)
-   {
-      UNICODE_STRING SymbolicLink;
-      UNICODE_STRING AliasSymbolicLink;
+        ok(NT_SUCCESS(Status), "IoOpenDeviceInterfaceRegistryKey(): fail: %d 0x%x\n", n, Status);
+        if (!NT_SUCCESS(Status))
+        {
+            continue;
+        }
+        else
+        {
+            trace("IoOpenDeviceInterfaceRegistryKey(): success: %d %p\n", n, DeviceInterfaceKey);
+	    }
 
-      SymbolicLink.Buffer = SymbolicLinkListPtr;
-      SymbolicLink.Length = SymbolicLink.MaximumLength = wcslen(SymbolicLinkListPtr);
-      RtlInitUnicodeString(&AliasSymbolicLink, NULL);
-      IoGetDeviceInterfaceAlias(
-         &SymbolicLink,
-         &AliasGuid,
-         &AliasSymbolicLink);
-      if (AliasSymbolicLink.Buffer != NULL)
-      {
-         DPRINT("[PnP Test] Original: %S\n", SymbolicLinkListPtr);
-         DPRINT("[PnP Test] Alias: %S\n", AliasSymbolicLink.Buffer);
-      }
-   }
-#endif
+        /* Try to create the non-volatile subkey to check whether the parent key is volatile */
+        InitializeObjectAttributes(&ObjectAttributes,
+                                   &KeyName,
+                                   OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
+                                   DeviceInterfaceKey,
+                                   NULL);
+        Status = ZwCreateKey(&DeviceInterfaceSubKey,
+                             KEY_WRITE,
+                             &ObjectAttributes,
+                             0,
+                             NULL,
+                             REG_OPTION_NON_VOLATILE,
+                             NULL);
 
-   ExFreePool(SymbolicLinkList);
+        ok(NT_SUCCESS(Status), "ZwCreateKey(): failed to create a subkey: %d 0x%x\n", n, Status);
+        if (!NT_SUCCESS(Status))
+        {
+            continue;
+        }
+        else
+        {
+            trace("ZwCreateKey(): successfully created subkey: %d %p\n", n, DeviceInterfaceSubKey);
+
+            ZwDeleteKey(DeviceInterfaceSubKey);
+            ZwClose(DeviceInterfaceSubKey);
+
+            ZwClose(DeviceInterfaceKey);
+	    }
+    }
 }
 
 static
 VOID
-Test_IoRegisterDeviceInterface(VOID)
+Test_IoGetDeviceInterfaceAlias(PCWSTR SymbolicLink)
 {
-    GUID Guid = {0x378de44c, 0x56ef, 0x11d1, {0xbc, 0x8c, 0x00, 0xa0, 0xc9, 0x14, 0x05, 0xdd}};
-    DEVICE_OBJECT DeviceObject;
-    EXTENDED_DEVOBJ_EXTENSION DeviceObjectExtension;
-    DEVICE_NODE DeviceNode;
     UNICODE_STRING SymbolicLinkName;
+    size_t n;
+
+    RtlInitUnicodeString(&SymbolicLinkName, SymbolicLink);
+
+    for (n = 0; n < RTL_NUMBER_OF(Types); ++n)
+    {
+        UNICODE_STRING AliasSymbolicLinkName;
+        NTSTATUS Status = IoGetDeviceInterfaceAlias(&SymbolicLinkName, Types[n], &AliasSymbolicLinkName);
+
+        ok(NT_SUCCESS(Status), "IoGetDeviceInterfaceAlias(): fail: %d 0x%x\n", n, Status);
+        if (!NT_SUCCESS(Status))
+        {
+            continue;
+        }
+        else
+        {
+            trace("IoGetDeviceInterfaceAlias(): success: %d %wZ\n", n, &AliasSymbolicLinkName);
+
+            /* Test IoOpenDeviceInterfaceRegistryKey with alias symbolic link too */
+            Test_IoOpenDeviceInterfaceRegistryKey(AliasSymbolicLinkName.Buffer);
+
+            RtlFreeUnicodeString(&AliasSymbolicLinkName);
+	    }
+    }
+}
+
+static
+VOID
+Test_IoSetDeviceInterfaceState(PCWSTR SymbolicLink)
+{
+    UNICODE_STRING SymbolicLinkName;
+    size_t n;
+
+    RtlInitUnicodeString(&SymbolicLinkName, SymbolicLink);
+
+    for (n = 0; n < RTL_NUMBER_OF(Types); ++n)
+    {
+        NTSTATUS Status = IoSetDeviceInterfaceState(&SymbolicLinkName, TRUE);
+
+        ok(NT_SUCCESS(Status), "IoSetDeviceInterfaceState(): failed to enable interface: %d 0x%x\n", n, Status);
+        if (!NT_SUCCESS(Status))
+        {
+            continue;
+        }
+        else
+        {
+            trace("IoSetDeviceInterfaceState(): successfully enabled interface: %d %wZ\n", n, &SymbolicLinkName);
+	    }
+    }
+}
+
+static
+VOID
+Test_IoGetDeviceInterfaces(const GUID* Guid)
+{
     NTSTATUS Status;
+    PWSTR SymbolicLinkList, SymbolicLinkListPtr;
+    UNICODE_STRING GuidString;
 
-    RtlInitUnicodeString(&SymbolicLinkName, L"");
+    RtlStringFromGUID(Guid, &GuidString);
 
-    // Prepare our surrogate of a Device Object
-    DeviceObject.DeviceObjectExtension = (PDEVOBJ_EXTENSION)&DeviceObjectExtension;
+    Status = IoGetDeviceInterfaces(Guid, NULL, DEVICE_INTERFACE_INCLUDE_NONACTIVE, &SymbolicLinkList);
 
-    // 1. DeviceNode = NULL
-    DeviceObjectExtension.DeviceNode = NULL;
-    Status = IoRegisterDeviceInterface(&DeviceObject, &Guid, NULL,
-        &SymbolicLinkName);
+    ok(NT_SUCCESS(Status), "IoGetDeviceInterfaces failed with status 0x%X for '%wZ'\n", Status, &GuidString);
+    if (skip(NT_SUCCESS(Status), "No device interface list\n"))
+    {
+        return;
+    }
 
-    ok(Status == STATUS_INVALID_DEVICE_REQUEST,
-        "IoRegisterDeviceInterface returned 0x%08lX\n", Status);
+    trace("IoGetDeviceInterfaces '%wZ' results:\n", &GuidString);
+    RtlFreeUnicodeString(&GuidString);
 
-    // 2. DeviceNode->InstancePath is of a null length
-    DeviceObjectExtension.DeviceNode = &DeviceNode;
-    DeviceNode.InstancePath.Length = 0;
-    Status = IoRegisterDeviceInterface(&DeviceObject, &Guid, NULL,
-        &SymbolicLinkName);
+    for (SymbolicLinkListPtr = SymbolicLinkList;
+        SymbolicLinkListPtr[0] != 0;
+        SymbolicLinkListPtr += wcslen(SymbolicLinkListPtr) + 1)
+    {
+        trace("Symbolic Link: %S\n", SymbolicLinkListPtr);
+        Test_IoGetDeviceInterfaceAlias(SymbolicLinkListPtr);
+        Test_IoOpenDeviceInterfaceRegistryKey(SymbolicLinkListPtr);
+        Test_IoSetDeviceInterfaceState(SymbolicLinkListPtr);
+    }
 
-    ok(Status == STATUS_INVALID_DEVICE_REQUEST,
-        "IoRegisterDeviceInterface returned 0x%08lX\n", Status);
-
-    DeviceInterfaceTest_Func();
+    ExFreePool(SymbolicLinkList);
 }
 
 static UCHAR NotificationContext;
@@ -181,112 +287,15 @@ Test_IoRegisterPlugPlayNotification(VOID)
     }
 }
 
-static
-VOID
-Test_IoSetDeviceInterface(VOID)
-{
-    NTSTATUS Status;
-    UNICODE_STRING SymbolicLinkName;
-    PWCHAR Buffer;
-    ULONG BufferSize;
-
-    /* Invalid prefix or GUID */
-    KmtStartSeh()
-        Status = IoSetDeviceInterfaceState(NULL, TRUE);
-    KmtEndSeh(STATUS_SUCCESS)
-    ok_eq_hex(Status, STATUS_INVALID_PARAMETER);
-
-    RtlInitEmptyUnicodeString(&SymbolicLinkName, NULL, 0);
-    KmtStartSeh()
-        Status = IoSetDeviceInterfaceState(&SymbolicLinkName, TRUE);
-    KmtEndSeh(STATUS_SUCCESS)
-    ok_eq_hex(Status, STATUS_INVALID_PARAMETER);
-
-    RtlInitUnicodeString(&SymbolicLinkName, L"\\??");
-    KmtStartSeh()
-        Status = IoSetDeviceInterfaceState(&SymbolicLinkName, TRUE);
-    KmtEndSeh(STATUS_SUCCESS)
-    ok_eq_hex(Status, STATUS_INVALID_PARAMETER);
-
-    RtlInitUnicodeString(&SymbolicLinkName, L"\\??\\");
-    KmtStartSeh()
-        Status = IoSetDeviceInterfaceState(&SymbolicLinkName, TRUE);
-    KmtEndSeh(STATUS_SUCCESS)
-    ok_eq_hex(Status, STATUS_INVALID_PARAMETER);
-
-    RtlInitUnicodeString(&SymbolicLinkName, L"\\??\\\\");
-    KmtStartSeh()
-        Status = IoSetDeviceInterfaceState(&SymbolicLinkName, TRUE);
-    KmtEndSeh(STATUS_SUCCESS)
-    ok_eq_hex(Status, STATUS_INVALID_PARAMETER);
-
-    RtlInitUnicodeString(&SymbolicLinkName, L"\\??\\{aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa}");
-    KmtStartSeh()
-        Status = IoSetDeviceInterfaceState(&SymbolicLinkName, TRUE);
-    KmtEndSeh(STATUS_SUCCESS)
-    ok_eq_hex(Status, STATUS_INVALID_PARAMETER);
-
-    /* Valid prefix & GUID, invalid device node */
-    RtlInitUnicodeString(&SymbolicLinkName, L"\\??\\X{aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa}");
-    KmtStartSeh()
-        Status = IoSetDeviceInterfaceState(&SymbolicLinkName, TRUE);
-    KmtEndSeh(STATUS_SUCCESS)
-    ok_eq_hex(Status, STATUS_OBJECT_NAME_NOT_FOUND);
-
-    RtlInitUnicodeString(&SymbolicLinkName, L"\\\\?\\X{aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa}");
-    KmtStartSeh()
-        Status = IoSetDeviceInterfaceState(&SymbolicLinkName, TRUE);
-    KmtEndSeh(STATUS_SUCCESS)
-    ok_eq_hex(Status, STATUS_OBJECT_NAME_NOT_FOUND);
-
-    RtlInitUnicodeString(&SymbolicLinkName, L"\\??\\X{aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa}\\");
-    KmtStartSeh()
-        Status = IoSetDeviceInterfaceState(&SymbolicLinkName, TRUE);
-    KmtEndSeh(STATUS_SUCCESS)
-    ok_eq_hex(Status, STATUS_OBJECT_NAME_NOT_FOUND);
-
-    RtlInitUnicodeString(&SymbolicLinkName, L"\\??\\#{aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa}");
-    KmtStartSeh()
-        Status = IoSetDeviceInterfaceState(&SymbolicLinkName, TRUE);
-    KmtEndSeh(STATUS_SUCCESS)
-    ok_eq_hex(Status, STATUS_OBJECT_NAME_NOT_FOUND);
-
-    /* Must not read past the buffer */
-    RtlInitUnicodeString(&SymbolicLinkName, L"\\??\\#{aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa}");
-    BufferSize = SymbolicLinkName.Length;
-    Buffer = KmtAllocateGuarded(BufferSize);
-    if (!skip(Buffer != NULL, "Failed to allocate %lu bytes\n", BufferSize))
-    {
-        RtlCopyMemory(Buffer, SymbolicLinkName.Buffer, BufferSize);
-        SymbolicLinkName.Buffer = Buffer;
-        SymbolicLinkName.MaximumLength = BufferSize;
-        KmtStartSeh()
-            Status = IoSetDeviceInterfaceState(&SymbolicLinkName, TRUE);
-        KmtEndSeh(STATUS_SUCCESS)
-        ok_eq_hex(Status, STATUS_OBJECT_NAME_NOT_FOUND);
-        KmtFreeGuarded(Buffer);
-    }
-
-    RtlInitUnicodeString(&SymbolicLinkName, L"\\??\\#aaaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa}");
-    BufferSize = SymbolicLinkName.Length;
-    Buffer = KmtAllocateGuarded(BufferSize);
-    if (!skip(Buffer != NULL, "Failed to allocate %lu bytes\n", BufferSize))
-    {
-        RtlCopyMemory(Buffer, SymbolicLinkName.Buffer, BufferSize);
-        SymbolicLinkName.Buffer = Buffer;
-        SymbolicLinkName.MaximumLength = BufferSize;
-        KmtStartSeh()
-            Status = IoSetDeviceInterfaceState(&SymbolicLinkName, TRUE);
-        KmtEndSeh(STATUS_SUCCESS)
-        ok_eq_hex(Status, STATUS_INVALID_PARAMETER);
-        KmtFreeGuarded(Buffer);
-    }
-}
-
 START_TEST(IoDeviceInterface)
 {
-    // FIXME: This test crashes in Windows
-    (void)Test_IoRegisterDeviceInterface;
+    size_t n;
+    for (n = 0; n < RTL_NUMBER_OF(Types); ++n)
+    {
+        Test_IoGetDeviceInterfaces(Types[n]);
+    }
+    Test_IoGetDeviceInterfaceAlias(NULL);
+    Test_IoOpenDeviceInterfaceRegistryKey(NULL);
+    Test_IoSetDeviceInterfaceState(NULL);
     Test_IoRegisterPlugPlayNotification();
-    Test_IoSetDeviceInterface();
 }
