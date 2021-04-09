@@ -120,7 +120,7 @@ __INTRIN_INLINE void _mm_sfence(void)
 }
 #endif
 
-#ifdef __x86_64__
+#if defined(__x86_64__) && !HAS_BUILTIN(__faststorefence)
 __INTRIN_INLINE void __faststorefence(void)
 {
 	long local;
@@ -197,7 +197,7 @@ __INTRIN_INLINE void * _InterlockedExchangePointer(void * volatile * Target, voi
 }
 #endif
 
-#if defined(__x86_64__)
+#if defined(__x86_64__) && !HAS_BUILTIN(_InterlockedExchange64)
 __INTRIN_INLINE long long _InterlockedExchange64(volatile long long * Target, long long Value)
 {
 	/* NOTE: __sync_lock_test_and_set would be an acquire barrier, so we force a full barrier */
@@ -227,7 +227,7 @@ __INTRIN_INLINE long __cdecl _InterlockedExchangeAdd(volatile long * Addend, lon
 }
 #endif
 
-#if defined(__x86_64__)
+#if defined(__x86_64__) && !HAS_BUILTIN(_InterlockedExchangeAdd64)
 __INTRIN_INLINE long long _InterlockedExchangeAdd64(volatile long long * Addend, long long Value)
 {
 	return __sync_fetch_and_add(Addend, Value);
@@ -255,7 +255,7 @@ __INTRIN_INLINE long _InterlockedAnd(volatile long * value, long mask)
 }
 #endif
 
-#if defined(__x86_64__)
+#if defined(__x86_64__) && !HAS_BUILTIN(_InterlockedAnd64)
 __INTRIN_INLINE long long _InterlockedAnd64(volatile long long * value, long long mask)
 {
 	return __sync_fetch_and_and(value, mask);
@@ -283,7 +283,7 @@ __INTRIN_INLINE long _InterlockedOr(volatile long * value, long mask)
 }
 #endif
 
-#if defined(__x86_64__)
+#if defined(__x86_64__) && !HAS_BUILTIN(_InterlockedOr64)
 __INTRIN_INLINE long long _InterlockedOr64(volatile long long * value, long long mask)
 {
 	return __sync_fetch_and_or(value, mask);
@@ -311,7 +311,7 @@ __INTRIN_INLINE long _InterlockedXor(volatile long * value, long mask)
 }
 #endif
 
-#if defined(__x86_64__)
+#if defined(__x86_64__) && !HAS_BUILTIN(_InterlockedXor64)
 __INTRIN_INLINE long long _InterlockedXor64(volatile long long * value, long long mask)
 {
 	return __sync_fetch_and_xor(value, mask);
@@ -347,15 +347,19 @@ __INTRIN_INLINE short _InterlockedIncrement16(volatile short * lpAddend)
 #endif
 
 #if defined(__x86_64__)
+#if !HAS_BUILTIN(_InterlockedIncrement64)
 __INTRIN_INLINE long long _InterlockedDecrement64(volatile long long * lpAddend)
 {
 	return __sync_sub_and_fetch(lpAddend, 1);
 }
+#endif
 
+#if !HAS_BUILTIN(_InterlockedIncrement64)
 __INTRIN_INLINE long long _InterlockedIncrement64(volatile long long * lpAddend)
 {
 	return __sync_add_and_fetch(lpAddend, 1);
 }
+#endif
 #endif
 
 #else /* (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__) > 40100 */
@@ -672,6 +676,7 @@ __INTRIN_INLINE long long _InterlockedIncrement64(volatile long long * lpAddend)
 
 #endif /* (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__) > 40100 */
 
+#if !HAS_BUILTIN(_InterlockedCompareExchange64)
 #if (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__) > 40100 && defined(__x86_64__)
 
 __INTRIN_INLINE long long _InterlockedCompareExchange64(volatile long long * Destination, long long Exchange, long long Comperand)
@@ -680,8 +685,6 @@ __INTRIN_INLINE long long _InterlockedCompareExchange64(volatile long long * Des
 }
 
 #else /* (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__) > 40100 && defined(__x86_64__) */
-
-#if !HAS_BUILTIN(_InterlockedCompareExchange64)
 __INTRIN_INLINE long long _InterlockedCompareExchange64(volatile long long * Destination, long long Exchange, long long Comperand)
 {
 	long long retval = Comperand;
@@ -698,9 +701,8 @@ __INTRIN_INLINE long long _InterlockedCompareExchange64(volatile long long * Des
 
 	return retval;
 }
-#endif
-
 #endif /* (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__) > 40100 && defined(__x86_64__) */
+#endif /* !HAS_BUILTIN(_InterlockedCompareExchange64) */
 
 #ifdef __i386__
 __INTRIN_INLINE long _InterlockedAddLargeStatistic(volatile long long * Addend, long Value)
@@ -729,13 +731,14 @@ __INTRIN_INLINE unsigned char _interlockedbittestandreset(volatile long * a, lon
 }
 #endif
 
-#if defined(__x86_64__)
+#if defined(__x86_64__) && !HAS_BUILTIN(_interlockedbittestandreset64)
 __INTRIN_INLINE unsigned char _interlockedbittestandreset64(volatile long long * a, long long b)
 {
 	unsigned char retval;
 	__asm__("lock; btrq %[b], %[a]; setb %b[retval]" : [retval] "=r" (retval), [a] "+m" (*a) : [b] "Ir" (b) : "memory");
 	return retval;
 }
+
 #endif
 
 #if !HAS_BUILTIN(_interlockedbittestandset)
@@ -747,7 +750,7 @@ __INTRIN_INLINE unsigned char _interlockedbittestandset(volatile long * a, long 
 }
 #endif
 
-#if defined(__x86_64__)
+#if defined(__x86_64__) && !HAS_BUILTIN(_interlockedbittestandset64)
 __INTRIN_INLINE unsigned char _interlockedbittestandset64(volatile long long * a, long long b)
 {
 	unsigned char retval;
@@ -869,33 +872,41 @@ __INTRIN_INLINE void __writegsqword(unsigned long Offset, unsigned long long Dat
 	__asm__ __volatile__("movq %q[Data], %%gs:%a[Offset]" : : [Offset] "ir" (Offset), [Data] "ir" (Data) : "memory");
 }
 
+#if !HAS_BUILTIN(__readgsbyte)
 __INTRIN_INLINE unsigned char __readgsbyte(unsigned long Offset)
 {
 	unsigned char value;
 	__asm__ __volatile__("movb %%gs:%a[Offset], %b[value]" : [value] "=r" (value) : [Offset] "ir" (Offset));
 	return value;
 }
+#endif
 
+#if !HAS_BUILTIN(__readgsword)
 __INTRIN_INLINE unsigned short __readgsword(unsigned long Offset)
 {
 	unsigned short value;
 	__asm__ __volatile__("movw %%gs:%a[Offset], %w[value]" : [value] "=r" (value) : [Offset] "ir" (Offset));
 	return value;
 }
+#endif
 
+#if !HAS_BUILTIN(__readgsdword)
 __INTRIN_INLINE unsigned long __readgsdword(unsigned long Offset)
 {
 	unsigned long value;
 	__asm__ __volatile__("movl %%gs:%a[Offset], %k[value]" : [value] "=r" (value) : [Offset] "ir" (Offset));
 	return value;
 }
+#endif
 
+#if !HAS_BUILTIN(__readgsqword)
 __INTRIN_INLINE unsigned long long __readgsqword(unsigned long Offset)
 {
 	unsigned long long value;
 	__asm__ __volatile__("movq %%gs:%a[Offset], %q[value]" : [value] "=r" (value) : [Offset] "ir" (Offset));
 	return value;
 }
+#endif
 
 __INTRIN_INLINE void __incgsbyte(unsigned long Offset)
 {
@@ -1060,6 +1071,7 @@ __INTRIN_INLINE unsigned char _bittest(const long * a, long b)
 #endif
 
 #ifdef __x86_64__
+#if !HAS_BUILTIN(_BitScanForward64)
 __INTRIN_INLINE unsigned char _BitScanForward64(unsigned long * Index, unsigned long long Mask)
 {
 	unsigned long long Index64;
@@ -1067,7 +1079,9 @@ __INTRIN_INLINE unsigned char _BitScanForward64(unsigned long * Index, unsigned 
 	*Index = Index64;
 	return Mask ? 1 : 0;
 }
+#endif
 
+#if !HAS_BUILTIN(_BitScanReverse64)
 __INTRIN_INLINE unsigned char _BitScanReverse64(unsigned long * Index, unsigned long long Mask)
 {
 	unsigned long long Index64;
@@ -1075,7 +1089,9 @@ __INTRIN_INLINE unsigned char _BitScanReverse64(unsigned long * Index, unsigned 
 	*Index = Index64;
 	return Mask ? 1 : 0;
 }
+#endif
 
+#if !HAS_BUILTIN(_bittest64)
 __INTRIN_INLINE unsigned char _bittest64(const long long * a, long long b)
 {
 	unsigned char retval;
@@ -1087,6 +1103,7 @@ __INTRIN_INLINE unsigned char _bittest64(const long long * a, long long b)
 
 	return retval;
 }
+#endif
 #endif
 
 #if !HAS_BUILTIN(_bittestandcomplement)
@@ -1132,7 +1149,7 @@ __INTRIN_INLINE unsigned char _bittestandset(long * a, long b)
 #endif
 
 #ifdef __x86_64__
-
+#if !HAS_BUILTIN(_bittestandset64)
 __INTRIN_INLINE unsigned char _bittestandset64(long long * a, long long b)
 {
 	unsigned char retval;
@@ -1144,7 +1161,9 @@ __INTRIN_INLINE unsigned char _bittestandset64(long long * a, long long b)
 
 	return retval;
 }
+#endif
 
+#if !HAS_BUILTIN(_bittestandreset64)
 __INTRIN_INLINE unsigned char _bittestandreset64(long long * a, long long b)
 {
 	unsigned char retval;
@@ -1156,7 +1175,9 @@ __INTRIN_INLINE unsigned char _bittestandreset64(long long * a, long long b)
 
 	return retval;
 }
+#endif
 
+#if !HAS_BUILTIN(_bittestandcomplement64)
 __INTRIN_INLINE unsigned char _bittestandcomplement64(long long * a, long long b)
 {
 	unsigned char retval;
@@ -1168,7 +1189,7 @@ __INTRIN_INLINE unsigned char _bittestandcomplement64(long long * a, long long b
 
 	return retval;
 }
-
+#endif
 #endif /* __x86_64__ */
 
 #if !HAS_BUILTIN(_rotl8)
@@ -1198,6 +1219,7 @@ __INTRIN_INLINE unsigned int __cdecl _rotl(unsigned int value, int shift)
 }
 #endif
 
+#if !HAS_BUILTIN(_rotl64)
 #ifdef __x86_64__
 __INTRIN_INLINE unsigned long long _rotl64(unsigned long long value, int shift)
 {
@@ -1206,14 +1228,13 @@ __INTRIN_INLINE unsigned long long _rotl64(unsigned long long value, int shift)
 	return retval;
 }
 #else /* __x86_64__ */
-#if !HAS_BUILTIN(_rotl64)
 __INTRIN_INLINE unsigned long long __cdecl _rotl64(unsigned long long value, int shift)
 {
     /* FIXME: this is probably not optimal */
     return (value << shift) | (value >> (64 - shift));
 }
-#endif /* !HAS_BUILTIN(_rotl64) */
 #endif /* __x86_64__ */
+#endif /* !HAS_BUILTIN(_rotl64) */
 
 #if !HAS_BUILTIN(_rotr)
 __INTRIN_INLINE unsigned int __cdecl _rotr(unsigned int value, int shift)
@@ -1242,6 +1263,7 @@ __INTRIN_INLINE unsigned short __cdecl _rotr16(unsigned short value, unsigned ch
 }
 #endif
 
+#if !HAS_BUILTIN(_rotr64)
 #ifdef __x86_64__
 __INTRIN_INLINE unsigned long long _rotr64(unsigned long long value, int shift)
 {
@@ -1250,14 +1272,13 @@ __INTRIN_INLINE unsigned long long _rotr64(unsigned long long value, int shift)
 	return retval;
 }
 #else /* __x86_64__ */
-#if !HAS_BUILTIN(_rotr64)
 __INTRIN_INLINE unsigned long long __cdecl _rotr64(unsigned long long value, int shift)
 {
     /* FIXME: this is probably not optimal */
     return (value >> shift) | (value << (64 - shift));
 }
-#endif /* !HAS_BUILTIN(_rotr64) */
 #endif /* __x86_64__ */
+#endif /* !HAS_BUILTIN(_rotr64) */
 
 #if !HAS_BUILTIN(_lrotl)
 __INTRIN_INLINE unsigned long __cdecl _lrotl(unsigned long value, int shift)
@@ -1394,15 +1415,19 @@ __INTRIN_INLINE unsigned short __popcnt16(unsigned short value)
 #endif
 
 #ifdef __x86_64__
+#if !HAS_BUILTIN(__lzcnt64)
 __INTRIN_INLINE unsigned long long __lzcnt64(unsigned long long value)
 {
 	return __builtin_clzll(value);
 }
+#endif
 
+#if !HAS_BUILTIN(__popcnt64)
 __INTRIN_INLINE unsigned long long __popcnt64(unsigned long long value)
 {
 	return __builtin_popcountll(value);
 }
+#endif
 #endif
 
 /*** 64-bit math ***/
@@ -1431,21 +1456,23 @@ __INTRIN_INLINE long long __cdecl _abs64(long long value)
 }
 
 #ifdef __x86_64__
-
+#if !HAS_BUILTIN(__mulh)
 __INTRIN_INLINE long long __mulh(long long a, long long b)
 {
 	long long retval;
 	__asm__("imulq %[b]" : "=d" (retval) : [a] "a" (a), [b] "rm" (b));
 	return retval;
 }
+#endif
 
+#if !HAS_BUILTIN(__umulh)
 __INTRIN_INLINE unsigned long long __umulh(unsigned long long a, unsigned long long b)
 {
 	unsigned long long retval;
 	__asm__("mulq %[b]" : "=d" (retval) : [a] "a" (a), [b] "rm" (b));
 	return retval;
 }
-
+#endif
 #endif
 
 /*** Port I/O ***/
