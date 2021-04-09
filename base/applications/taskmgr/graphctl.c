@@ -80,7 +80,7 @@ static void GraphCtrl_Init(TGraphCtrl* this)
     this->m_nGridXPixels = 12;
     this->m_nGridYPixels = 12;
 
-    /*  Windows task manager scrolls grid with the graph. This variable contains the  */
+    /*  Task manager should scroll grid with the graph. This variable contains the  */
     /*  amount of pixels the grid paint origin should shift to left  */
     this->m_nGridOffsetPixels = 0;
 
@@ -270,8 +270,8 @@ void GraphCtrl_InvalidateCtrl(TGraphCtrl* this, BOOL bResize)
     /*  drawn from right to left  */
     for (i = this->m_rectPlot.right - this->m_nGridOffsetPixels; i > this->m_rectPlot.left; i -= this->m_nGridXPixels)
     {
-        MoveToEx(this->m_dcGrid, this->m_rectPlot.left + i, this->m_rectPlot.bottom, NULL);
-        LineTo(this->m_dcGrid, this->m_rectPlot.left + i, this->m_rectPlot.top);
+        MoveToEx(this->m_dcGrid, i, this->m_rectPlot.bottom, NULL);
+        LineTo(this->m_dcGrid, i, this->m_rectPlot.top);
     }
 
     SelectObject(this->m_dcGrid, oldPen);
@@ -430,34 +430,33 @@ void GraphCtrl_ShiftGrid(TGraphCtrl* this)
 
     solidPen = CreatePen(PS_SOLID, 0, this->m_crGridColor);
 
-    /*  BitBlt it to itself to scroll */
-    BitBlt(this->m_dcGrid, this->m_rectPlot.left, this->m_rectPlot.top + 1,
-           this->m_nPlotWidth, this->m_nPlotHeight, this->m_dcGrid,
-           this->m_rectPlot.left + this->m_nShiftPixels, this->m_rectPlot.top + 1,
+    /*  Scroll the grid left: BitBlt it to itself */
+    BitBlt(this->m_dcGrid, this->m_rectPlot.left, this->m_rectPlot.top+1,
+           this->m_nPlotWidth, this->m_nPlotHeight,
+           this->m_dcGrid, this->m_rectPlot.left + this->m_nShiftPixels, this->m_rectPlot.top+1,
            SRCCOPY);
 
-    /*  Set shift pixels  */
+    /* Set shift pixels */
     this->m_nGridOffsetPixels = (this->m_nGridOffsetPixels + this->m_nShiftPixels) % this->m_nGridXPixels;
 
-    /*  Construct a rect in which needs update  */
+    /* Construct a rect in which needs update */
     rectCleanUp = this->m_rectPlot;
-    rectCleanUp.left  = rectCleanUp.right - this->m_nShiftPixels;
+    rectCleanUp.left = rectCleanUp.right - this->m_nShiftPixels;
 
-    /*  fill the cleanup area with the background */
+    /* fill the cleanup area with the background */
     FillRect(this->m_dcGrid, &rectCleanUp, this->m_brushBack);
-        
-    /*  draw the plot rectangle */
+
+    /* draw the plot rectangle */
     oldPen = (HPEN)SelectObject(this->m_dcGrid, solidPen);
 
-    /*  Redraw horizontal axis  */
-    MoveToEx(this->m_dcGrid, rectCleanUp.top, rectCleanUp.left, NULL);
+    /* Redraw horizontal axis */
     for (i = rectCleanUp.top; i < rectCleanUp.bottom; i += this->m_nGridYPixels)
     {
-        MoveToEx(this->m_dcGrid, rectCleanUp.left, rectCleanUp.top + i, NULL);
-        LineTo(this->m_dcGrid, rectCleanUp.right, rectCleanUp.top + i);
+        MoveToEx(this->m_dcGrid, rectCleanUp.left, i, NULL);
+        LineTo(this->m_dcGrid, rectCleanUp.right, i);
     }
 
-    /*  Redraw scrolled vertical axis  */
+    /* Redraw scrolled vertical axis */
     MoveToEx(this->m_dcGrid, rectCleanUp.right - this->m_nGridOffsetPixels, rectCleanUp.top, NULL);
     LineTo(this->m_dcGrid, rectCleanUp.right - this->m_nGridOffsetPixels, rectCleanUp.bottom);
 
