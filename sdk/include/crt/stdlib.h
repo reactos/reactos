@@ -1193,7 +1193,7 @@ extern "C" {
   _putenv(
     _In_z_ const char *_EnvString);
 
-#if !defined(__GNUC__) && !defined(__clang__)
+#if !defined(__clang__)
 
   _Check_return_
   unsigned int
@@ -1229,7 +1229,7 @@ extern "C" {
     _In_ int _Shift);
 #endif
 
-#endif /* !defined(__GNUC__) && !defined(__clang__) */
+#endif /* !defined(__clang__) */
 
   _CRTIMP
   void

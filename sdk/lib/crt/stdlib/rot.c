@@ -31,6 +31,11 @@ unsigned long _lrotr(unsigned long value, int shift) __asm__("_lrotr");
 unsigned int _rotl( unsigned int value, int shift ) __asm__("_rotl");
 unsigned long _lrotl( unsigned long value, int shift ) __asm__("_lrotl");
 #  endif
+#else
+unsigned int _rotr( unsigned int value, int shift );
+unsigned long _lrotr(unsigned long value, int shift);
+unsigned int _rotl( unsigned int value, int shift );
+unsigned long _lrotl( unsigned long value, int shift );
 #endif
 /*
  * @implemented
