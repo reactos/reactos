@@ -12,7 +12,7 @@ elseif(ARCH STREQUAL "arm")
         arm/seh_prolog.s)
 endif()
 
-if(MSVC OR (CMAKE_C_COMPILER_ID STREQUAL "GNU" AND ARCH STREQUAL "amd64"))
+if(MSVC OR ARCH STREQUAL "amd64")
 
     list(APPEND SOURCE dummy.c)
     add_asm_files(pseh_asm ${ASM_SOURCE})
