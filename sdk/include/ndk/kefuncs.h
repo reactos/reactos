@@ -245,7 +245,6 @@ KeSignalCallDpcSynchronize(
 // ARC Configuration Functions. Only enabled if you have ARC Support
 //
 #ifdef _ARC_
-CODE_SEG("INIT")
 PCONFIGURATION_COMPONENT_DATA
 NTAPI
 KeFindConfigurationNextEntry(
@@ -256,7 +255,6 @@ KeFindConfigurationNextEntry(
     _In_ PCONFIGURATION_COMPONENT_DATA *NextLink
 );
 
-CODE_SEG("INIT")
 PCONFIGURATION_COMPONENT_DATA
 NTAPI
 KeFindConfigurationEntry(

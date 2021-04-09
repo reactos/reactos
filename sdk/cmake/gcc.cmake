@@ -47,16 +47,23 @@ add_compile_options("$<$<NOT:$<COMPILE_LANGUAGE:CXX>>:-nostdinc>")
 
 add_compile_options(-mstackrealign)
 
-if(NOT CMAKE_C_COMPILER_ID STREQUAL "Clang")
+if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
     add_compile_options(-fno-aggressive-loop-optimizations)
     if (DBG)
         add_compile_options("$<$<COMPILE_LANGUAGE:C>:-Wold-style-declaration>")
     endif()
-else()
+elseif(CMAKE_C_COMPILER_ID STREQUAL "Clang")
     add_compile_options("$<$<COMPILE_LANGUAGE:C>:-Wno-microsoft>")
     add_compile_options(-Wno-pragma-pack)
     add_compile_options(-fno-associative-math)
     add_compile_options(-fcommon)
+
+    if(CMAKE_C_COMPILER_VERSION VERSION_GREATER_EQUAL 12.0)
+        # disable "libcall optimization"
+        # see https://mudongliang.github.io/2020/12/02/undefined-reference-to-stpcpy.html
+        add_compile_options(-fno-builtin-stpcpy)
+    endif()
+
     set(CMAKE_LINK_DEF_FILE_FLAG "")
     set(CMAKE_STATIC_LIBRARY_SUFFIX ".a")
     set(CMAKE_LINK_LIBRARY_SUFFIX "")
