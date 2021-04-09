@@ -32,7 +32,7 @@ add_executable(msi_winetest
 
 target_compile_definitions(msi_winetest PRIVATE __WINESRC__ USE_WINE_TODOS)
 
-if (NOT MSVC)
+if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
     target_compile_options(msi_winetest PRIVATE -Wno-format-overflow)
 endif()
 

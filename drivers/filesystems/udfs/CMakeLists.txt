@@ -50,8 +50,10 @@ if(MSVC)
         target_compile_options(udfs PRIVATE -Wno-tautological-unsigned-zero-compare -Wno-self-assign)
         target_compile_options(udfs PRIVATE -Wno-sometimes-uninitialized -Wno-parentheses-equality)
     endif()
-else()
-    target_compile_options(udfs PRIVATE "-Wno-unused-but-set-variable")
+endif()
+
+if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
+    target_compile_options(udfs PRIVATE -Wno-unused-but-set-variable)
 endif()
 
 set_module_type(udfs kernelmodedriver)

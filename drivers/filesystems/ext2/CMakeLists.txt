@@ -103,9 +103,10 @@ else()
     target_compile_options(ext2fs PRIVATE
         -Wno-pointer-sign -Wno-unused-function
         -Wno-unused-variable -Wno-missing-braces)
-    if (NOT CLANG)
-        target_compile_options(ext2fs PRIVATE -Wno-unused-but-set-variable)
-    endif()
+endif()
+
+if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
+    target_compile_options(ext2fs PRIVATE -Wno-unused-but-set-variable)
 endif()
 
 if(CLANG)

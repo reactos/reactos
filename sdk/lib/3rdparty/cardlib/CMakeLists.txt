@@ -18,8 +18,8 @@ add_library(cardlib STATIC ${SOURCE})
 target_link_libraries(cardlib PRIVATE cpprt)
 target_include_directories(cardlib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
-if(NOT MSVC)
-    target_compile_options(cardlib PRIVATE "-Wno-unused-but-set-variable")
+if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
+    target_compile_options(cardlib PRIVATE -Wno-unused-but-set-variable)
 endif()
 
 add_dependencies(cardlib psdk)
