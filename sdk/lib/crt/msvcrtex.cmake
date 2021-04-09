@@ -43,6 +43,12 @@ else()
     list(APPEND MSVCRTEX_SOURCE
         startup/pseudo-reloc.c
         startup/pseudo-reloc-list.c)
+    if (CLANG)
+        # CLang performs some optimisations requiring those funtions
+        list(APPEND MSVCRTEX_SOURCE
+            math/exp2.c
+            math/exp2f.c)
+    endif()
 endif()
 
 if(ARCH STREQUAL "i386")
@@ -51,10 +57,8 @@ if(ARCH STREQUAL "i386")
         except/i386/chkstk_ms.s
         math/i386/alldiv_asm.s)
     if (GCC AND CLANG)
-        # CLang performs some optimisations requiring those funtions
         list(APPEND MSVCRTEX_ASM_SOURCE
             math/i386/ceilf.S
-            math/i386/exp2_asm.s
             math/i386/floorf.S)
         list(APPEND MSVCRTEX_SOURCE
             math/i386/sqrtf.c)
