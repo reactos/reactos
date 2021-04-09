@@ -44,3 +44,22 @@ set(_PREFAST_ FALSE CACHE BOOL
     cmake_dependent_option(RUNTIME_CHECKS "Whether to enable runtime checks on MSVC" ON
                            "CMAKE_BUILD_TYPE STREQUAL Debug" OFF)
 endif()
+
+if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
+    set(GCC TRUE CACHE BOOL "The compiler is GCC")
+    set(CLANG FALSE CACHE BOOL "The compiler is LLVM Clang")
+elseif(CMAKE_C_COMPILER_ID STREQUAL "Clang")
+    # We can use LLVM Clang mimicking CL or GCC. Account for this
+    if (MSVC)
+        set(GCC FALSE CACHE BOOL "The compiler is GCC")
+    else()
+        set(GCC TRUE CACHE BOOL "The compiler is GCC")
+    endif()
+    set(CLANG TRUE CACHE BOOL "The compiler is LLVM Clang")
+elseif(MSVC) # aka CMAKE_C_COMPILER_ID STEQUAL "MSVC"
+    set(GCC FALSE CACHE BOOL "The compiler is GCC")
+    set(CLANG FALSE CACHE BOOL "The compiler is LLVM Clang")
+    # MSVC variable is already set by cmake
+else()
+    message("WARNING: the compiler has not been recognized")
+endif()
