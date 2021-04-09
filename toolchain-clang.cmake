@@ -55,11 +55,8 @@ set(CMAKE_ASM_CREATE_STATIC_LIBRARY ${CMAKE_C_CREATE_STATIC_LIBRARY})
 set(CMAKE_C_STANDARD_LIBRARIES "-lgcc" CACHE STRING "Standard C Libraries")
 set(CMAKE_CXX_STANDARD_LIBRARIES "-lgcc" CACHE STRING "Standard C++ Libraries")
 
-if (DEFINED CMAKE_SYSROOT)
-    set(LD_EXECUTABLE ${CMAKE_SYSROOT}/bin/${GCC_TOOLCHAIN_PREFIX}ld)
-else()
-    set(LD_EXECUTABLE ${GCC_TOOLCHAIN_PREFIX}ld)
-endif()
+find_program (LD_EXECUTABLE ${GCC_TOOLCHAIN_PREFIX}ld)
+message(STATUS "Using linker ${LD_EXECUTABLE}")
 
 set(CMAKE_SHARED_LINKER_FLAGS_INIT "-nostdlib -Wl,--enable-auto-image-base,--disable-auto-import -fuse-ld=${LD_EXECUTABLE}")
 set(CMAKE_MODULE_LINKER_FLAGS_INIT "-nostdlib -Wl,--enable-auto-image-base,--disable-auto-import -fuse-ld=${LD_EXECUTABLE}")
