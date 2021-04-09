@@ -188,7 +188,7 @@ WRITE_GDC_CSRFORM(PUCHAR Port, PCSRFORMPARAM CursorParameters)
     WRITE_PORT_UCHAR(Port, (((_Bool)CursorParameters->Show) << 7) |
                      (CursorParameters->LinesPerRow - 1));
     WRITE_PORT_UCHAR(Port, ((CursorParameters->BlinkRate & 0x03) << 6) |
-                     (((_Bool)CursorParameters->Blink) << 5) | CursorParameters->StartScanLine);
+                     (((_Bool)!CursorParameters->Blink) << 5) | CursorParameters->StartScanLine);
     WRITE_PORT_UCHAR(Port, (CursorParameters->EndScanLine << 3) | ((CursorParameters->BlinkRate & 0x1C) >> 2));
 }
 
