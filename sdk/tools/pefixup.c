@@ -57,7 +57,7 @@ static void error(const char* message, ...)
     fprintf(stderr, "%s ERROR: '%s': ", g_ApplicationName, g_Target);
 
     va_start(args, message);
-    fprintf(stderr, message, args);
+    vfprintf(stderr, message, args);
     va_end(args);
 }
 
