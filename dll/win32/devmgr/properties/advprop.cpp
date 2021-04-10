@@ -2224,9 +2224,9 @@ GetParentNode:
         DeviceInfoData = &dap->DeviceInfoData;
     }
 
-    dap->HasDriverPage = FALSE;
-    dap->HasResourcePage = FALSE;
-    dap->HasPowerPage = FALSE;
+    dap->HasDriverPage = TRUE;
+    dap->HasResourcePage = TRUE;
+    dap->HasPowerPage = TRUE;
     if (IsDriverInstalled(DeviceInfoData->DevInst,
                           dap->hMachine,
                           &bDrvInstalled) &&
