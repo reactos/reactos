@@ -2246,11 +2246,12 @@ GetParentNode:
             {
                 /* zero the flags */
                 InstallParams.Flags = 0;
+                InstallParams.FlagsEx = 0;
             }
 
             dap->HasDriverPage = !(InstallParams.Flags & DI_DRIVERPAGE_ADDED);
             dap->HasResourcePage = !(InstallParams.Flags & DI_RESOURCEPAGE_ADDED);
-            dap->HasPowerPage = !(InstallParams.Flags & DI_FLAGSEX_POWERPAGE_ADDED);
+            dap->HasPowerPage = !(InstallParams.FlagsEx & DI_FLAGSEX_POWERPAGE_ADDED);
         }
     }
 
