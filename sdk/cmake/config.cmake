@@ -71,7 +71,7 @@ elseif(CMAKE_C_COMPILER_ID STREQUAL "Clang")
         set(GCC TRUE CACHE BOOL "The compiler is GCC")
     endif()
     set(CLANG TRUE CACHE BOOL "The compiler is LLVM Clang")
-elseif(MSVC) # aka CMAKE_C_COMPILER_ID STEQUAL "MSVC"
+elseif(MSVC) # aka CMAKE_C_COMPILER_ID STREQUAL "MSVC"
     set(GCC FALSE CACHE BOOL "The compiler is GCC")
     set(CLANG FALSE CACHE BOOL "The compiler is LLVM Clang")
     # MSVC variable is already set by cmake
