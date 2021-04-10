@@ -283,10 +283,11 @@ int main(int argc, char **argv)
 
             if (!result)
             {
-                /* Success. Fix checksum and write to file */
-                fix_checksum(buffer, len, nt_header);
+                /* Success. Recalculate the checksum only if this is not a reproducible build file */
+                if (nt_header->OptionalHeader.CheckSum != 0)
+                    fix_checksum(buffer, len, nt_header);
 
-                /* We could 'optimize by only writing the changed parts, but keep it simple for now */
+                /* We could optimize by only writing the changed parts, but keep it simple for now */
                 fseek(file, 0, SEEK_SET);
                 fwrite(buffer, 1, len, file);
             }
