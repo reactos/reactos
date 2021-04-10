@@ -347,7 +347,7 @@ __INTRIN_INLINE short _InterlockedIncrement16(volatile short * lpAddend)
 #endif
 
 #if defined(__x86_64__)
-#if !HAS_BUILTIN(_InterlockedIncrement64)
+#if !HAS_BUILTIN(_InterlockedDecrement64)
 __INTRIN_INLINE long long _InterlockedDecrement64(volatile long long * lpAddend)
 {
 	return __sync_sub_and_fetch(lpAddend, 1);
