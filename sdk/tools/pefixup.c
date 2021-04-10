@@ -61,10 +61,10 @@ static void error(const char* message, ...)
     va_end(args);
 }
 
-static void fix_checksum(unsigned char *buffer, long len, PIMAGE_NT_HEADERS nt_header)
+static void fix_checksum(unsigned char *buffer, size_t len, PIMAGE_NT_HEADERS nt_header)
 {
     unsigned int checksum = 0;
-    long n;
+    size_t n;
 
     nt_header->OptionalHeader.CheckSum = 0;
 
@@ -74,7 +74,7 @@ static void fix_checksum(unsigned char *buffer, long len, PIMAGE_NT_HEADERS nt_h
         checksum = (checksum + (checksum >> 16)) & 0xffff;
     }
 
-    checksum += len;
+    checksum += (unsigned int)len;
     nt_header->OptionalHeader.CheckSum = checksum;
 }
 
@@ -82,58 +82,55 @@ static int add_loadconfig(unsigned char *buffer, PIMAGE_NT_HEADERS nt_header)
 {
     PIMAGE_DATA_DIRECTORY export_dir;
     PIMAGE_EXPORT_DIRECTORY export_directory;
+    PDWORD name_ptr, function_ptr;
+    PWORD ordinal_ptr;
+    DWORD n;
 
     export_dir = &nt_header->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_EXPORT];
-    if (export_dir->Size != 0)
-    {
-        export_directory = rva_to_ptr(buffer, nt_header, export_dir->VirtualAddress);
-        if (export_directory != NULL)
-        {
-            DWORD *name_ptr, *function_ptr, n;
-            WORD *ordinal_ptr;
-
-            name_ptr = rva_to_ptr(buffer, nt_header, export_directory->AddressOfNames);
-            ordinal_ptr = rva_to_ptr(buffer, nt_header, export_directory->AddressOfNameOrdinals);
-            function_ptr = rva_to_ptr(buffer, nt_header, export_directory->AddressOfFunctions);
-
-            for (n = 0; n < export_directory->NumberOfNames; n++)
-            {
-                const char* name = rva_to_ptr(buffer, nt_header, name_ptr[n]);
-                if (!strcmp(name, "_load_config_used"))
-                {
-                    PIMAGE_DATA_DIRECTORY load_config_dir;
-                    DWORD load_config_rva = function_ptr[ordinal_ptr[n]];
-                    DWORD* load_config_ptr = rva_to_ptr(buffer, nt_header, load_config_rva);
-
-                    /* Update the DataDirectory pointer / size
-                       The first entry of the LOAD_CONFIG struct is the size, use that as DataDirectory.Size */
-                    load_config_dir = &nt_header->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_LOAD_CONFIG];
-                    load_config_dir->VirtualAddress = load_config_rva;
-                    load_config_dir->Size = *load_config_ptr;
-
-                    return 0;
-                }
-            }
-
-            error("Export '_load_config_used' not found\n");
-        }
-        else
-        {
-            error("Invalid rva for export directory\n");
-        }
-    }
-    else
+    if (export_dir->Size == 0)
     {
         error("No export directory\n");
+        return 1;
     }
 
+    export_directory = rva_to_ptr(buffer, nt_header, export_dir->VirtualAddress);
+    if (export_directory == NULL)
+    {
+        error("Invalid rva for export directory\n");
+        return 1;
+    }
+
+    name_ptr = rva_to_ptr(buffer, nt_header, export_directory->AddressOfNames);
+    ordinal_ptr = rva_to_ptr(buffer, nt_header, export_directory->AddressOfNameOrdinals);
+    function_ptr = rva_to_ptr(buffer, nt_header, export_directory->AddressOfFunctions);
+
+    for (n = 0; n < export_directory->NumberOfNames; n++)
+    {
+        const char* name = rva_to_ptr(buffer, nt_header, name_ptr[n]);
+        if (!strcmp(name, "_load_config_used"))
+        {
+            PIMAGE_DATA_DIRECTORY load_config_dir;
+            DWORD load_config_rva = function_ptr[ordinal_ptr[n]];
+            PDWORD load_config_ptr = rva_to_ptr(buffer, nt_header, load_config_rva);
+
+            /* Update the DataDirectory pointer / size
+               The first entry of the LOAD_CONFIG struct is the size, use that as DataDirectory.Size */
+            load_config_dir = &nt_header->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_LOAD_CONFIG];
+            load_config_dir->VirtualAddress = load_config_rva;
+            load_config_dir->Size = *load_config_ptr;
+
+            return 0;
+        }
+    }
+
+    error("Export '_load_config_used' not found\n");
     return 1;
 }
 
 static int driver_fixup(int mode, unsigned char *buffer, PIMAGE_NT_HEADERS nt_header)
 {
     /* GNU LD just doesn't know what a driver is, and has notably no idea of paged vs non-paged sections */
-    for (unsigned i = 0; i < nt_header->FileHeader.NumberOfSections; i++)
+    for (unsigned int i = 0; i < nt_header->FileHeader.NumberOfSections; i++)
     {
         PIMAGE_SECTION_HEADER Section = IMAGE_FIRST_SECTION(nt_header) + i;
 
@@ -192,12 +189,13 @@ print_usage(void)
 
 int main(int argc, char **argv)
 {
-    FILE* file;
-    long len;
-    unsigned char *buffer;
-    PIMAGE_DOS_HEADER dos_header;
     int result = 1;
     enum fixup_mode mode;
+    FILE* file;
+    size_t len;
+    unsigned char *buffer;
+    PIMAGE_DOS_HEADER dos_header;
+    PIMAGE_NT_HEADERS nt_header;
 
     g_ApplicationName = argv[0];
 
@@ -258,7 +256,7 @@ int main(int argc, char **argv)
     if (buffer == NULL)
     {
         fclose(file);
-        error("Not enough memory available: (Needed %u bytes).\n", len + 1);
+        error("Not enough memory available: (Needed %lu bytes).\n", len + 1);
         return 1;
     }
 
@@ -268,40 +266,36 @@ int main(int argc, char **argv)
 
     /* Check the headers and save pointers to them. */
     dos_header = (PIMAGE_DOS_HEADER)buffer;
-    if (dos_header->e_magic == IMAGE_DOS_SIGNATURE)
-    {
-        PIMAGE_NT_HEADERS nt_header;
-
-        nt_header = (PIMAGE_NT_HEADERS)(buffer + dos_header->e_lfanew);
-
-        if (nt_header->Signature == IMAGE_NT_SIGNATURE)
-        {
-            if (mode == MODE_LOADCONFIG)
-                result = add_loadconfig(buffer, nt_header);
-            else
-                result = driver_fixup(mode, buffer, nt_header);
-
-            if (!result)
-            {
-                /* Success. Recalculate the checksum only if this is not a reproducible build file */
-                if (nt_header->OptionalHeader.CheckSum != 0)
-                    fix_checksum(buffer, len, nt_header);
-
-                /* We could optimize by only writing the changed parts, but keep it simple for now */
-                fseek(file, 0, SEEK_SET);
-                fwrite(buffer, 1, len, file);
-            }
-        }
-        else
-        {
-            error("Invalid PE signature: %x\n", nt_header->Signature);
-        }
-    }
-    else
+    if (dos_header->e_magic != IMAGE_DOS_SIGNATURE)
     {
         error("Invalid DOS signature: %x\n", dos_header->e_magic);
+        goto Quit;
     }
 
+    nt_header = (PIMAGE_NT_HEADERS)(buffer + dos_header->e_lfanew);
+    if (nt_header->Signature != IMAGE_NT_SIGNATURE)
+    {
+        error("Invalid PE signature: %x\n", nt_header->Signature);
+        goto Quit;
+    }
+
+    if (mode == MODE_LOADCONFIG)
+        result = add_loadconfig(buffer, nt_header);
+    else
+        result = driver_fixup(mode, buffer, nt_header);
+
+    if (!result)
+    {
+        /* Success. Recalculate the checksum only if this is not a reproducible build file */
+        if (nt_header->OptionalHeader.CheckSum != 0)
+            fix_checksum(buffer, len, nt_header);
+
+        /* We could optimize by only writing the changed parts, but keep it simple for now */
+        fseek(file, 0, SEEK_SET);
+        fwrite(buffer, 1, len, file);
+    }
+
+Quit:
     free(buffer);
     fclose(file);
 
