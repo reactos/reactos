@@ -8,6 +8,6 @@ exp2f(
     _In_ float x)
 {
     /* This below avoids clang to optimize our pow call to exp2 */
-    static const TWO = 2.0f;
+    static const float TWO = 2.0f;
     return powf(TWO, x);
 }
