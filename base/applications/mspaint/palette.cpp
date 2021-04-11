@@ -77,9 +77,9 @@ LRESULT CPaletteWindow::OnPaint(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& b
 
 LRESULT CPaletteWindow::BKPaint()
 {
-	bk=true;
-	InvalidateRect(NULL, FALSE);
-	Invalidate(TRUE);
+    bk = true;
+    InvalidateRect(NULL, FALSE);
+    Invalidate(TRUE);
     return 0;
 }
 
