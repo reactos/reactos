@@ -15,7 +15,7 @@
 
 LRESULT CPaletteWindow::OnPaint(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
-	RECT rc = { 0, 0, 31, 32 };
+    RECT rc = { 0, 0, 31, 32 };
     HDC hDC = GetDC();
     HPEN oldPen;
     HBRUSH oldBrush;
