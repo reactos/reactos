@@ -176,7 +176,7 @@ LRESULT CAttributesDialog::OnRadioButton4(WORD wNotifyCode, WORD wID, HWND hWndC
 
 LRESULT CAttributesDialog::OnRadioButton5(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
 {
-	paletteWindow.ColorsPaint();
+    paletteWindow.ColorsPaint();
     return 0;
 }
 
