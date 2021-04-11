@@ -98,7 +98,6 @@ LRESULT CPaletteWindow::OnLButtonDown(UINT nMsg, WPARAM wParam, LPARAM lParam, B
     if (GET_X_LPARAM(lParam) >= 31 && GET_X_LPARAM(lParam) < 45 && bk)
         paletteModel.SetFgColor(paletteModel.GetColor((GET_X_LPARAM(lParam) - 31) / 16 + (GET_Y_LPARAM(lParam) / 16) * 14));
     return 0;
-
 }
 
 LRESULT CPaletteWindow::OnRButtonDown(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
