@@ -179,37 +179,34 @@ SETUP_CreateDevicesList(
         }
 
         /* Retrieve GUID of this device */
-        if (Class)
+        ClassGuidBufferSize = sizeof(ClassGuidBuffer);
+        cr = CM_Get_DevNode_Registry_Property_ExW(dnDevInst,
+                                                  CM_DRP_CLASSGUID,
+                                                  NULL,
+                                                  ClassGuidBuffer,
+                                                  &ClassGuidBufferSize,
+                                                  0,
+                                                  list->hMachine);
+        if (cr == CR_SUCCESS)
         {
-            ClassGuidBufferSize = sizeof(ClassGuidBuffer);
-            cr = CM_Get_DevNode_Registry_Property_ExW(dnDevInst,
-                                                      CM_DRP_CLASSGUID,
-                                                      NULL,
-                                                      ClassGuidBuffer,
-                                                      &ClassGuidBufferSize,
-                                                      0,
-                                                      list->hMachine);
-            if (cr == CR_SUCCESS)
+            ClassGuidBuffer[MAX_GUID_STRING_LEN - 2] = '\0'; /* Replace the } by a NULL character */
+            if (UuidFromStringW(&ClassGuidBuffer[1], &ClassGuid) != RPC_S_OK)
             {
-                ClassGuidBuffer[MAX_GUID_STRING_LEN - 2] = '\0'; /* Replace the } by a NULL character */
-                if (UuidFromStringW(&ClassGuidBuffer[1], &ClassGuid) != RPC_S_OK)
-                {
-                    /* Bad GUID, skip the entry */
-                    ERR("Invalid ClassGUID '%S' for device %S\n", ClassGuidBuffer, InstancePath);
-                    continue;
-                }
-            }
-            else
-            {
-                TRACE("Using default class GUID_NULL for device %S\n", InstancePath);
-                memcpy(&ClassGuid, &GUID_NULL, sizeof(GUID));
-            }
-
-            if (!IsEqualIID(&ClassGuid, Class))
-            {
-                TRACE("Skipping %S due to wrong class GUID\n", InstancePath);
+                /* Bad GUID, skip the entry */
+                ERR("Invalid ClassGUID '%S' for device %S\n", ClassGuidBuffer, InstancePath);
                 continue;
             }
+        }
+        else
+        {
+            TRACE("Using default class GUID_NULL for device %S\n", InstancePath);
+            memcpy(&ClassGuid, &GUID_NULL, sizeof(GUID));
+        }
+
+        if (Class && !IsEqualIID(&ClassGuid, Class))
+        {
+            TRACE("Skipping %S due to wrong class GUID\n", InstancePath);
+            continue;
         }
 
         /* Good! Create a device info element */
