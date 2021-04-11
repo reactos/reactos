@@ -78,7 +78,7 @@ BEGIN
         MENUITEM "Roter/speile...\tCtrl+R", IDM_IMAGEROTATEMIRROR
         MENUITEM "Stretch/Skew...\tCtrl+W", IDM_IMAGESTRETCHSKEW
         MENUITEM "Beskjær", IDM_IMAGECROP
-		MENUITEM "&Grayscale colors", IDM_IMAGEGRAYSCALE
+        MENUITEM "&Grayscale colors", IDM_IMAGEGRAYSCALE
         MENUITEM "Invertere farger\tCtrl+I", IDM_IMAGEINVERTCOLORS
         MENUITEM "Attributter...\tCtrl+E", IDM_IMAGEATTRIBUTES
         MENUITEM "Fjern bilde\tCtrl+Shft+N", IDM_IMAGEDELETEIMAGE
