@@ -142,6 +142,6 @@ LRESULT CPaletteWindow::OnPaletteModelColorChanged(UINT nMsg, WPARAM wParam, LPA
 
 LRESULT CPaletteWindow::OnPaletteModelPaletteChanged(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
-	InvalidateRect(NULL, FALSE);
+    InvalidateRect(NULL, FALSE);
     return 0;
 }
