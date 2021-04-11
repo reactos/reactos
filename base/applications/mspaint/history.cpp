@@ -211,7 +211,8 @@ void ImageModel::InvertColors()
 
 void ImageModel::GSColors()
 {
-    long x, y, pixel_color;
+    int x, y;
+    COLORREF pixel_color;
 
     CopyPrevious();
 
