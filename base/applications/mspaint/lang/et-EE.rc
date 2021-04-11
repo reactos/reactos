@@ -78,7 +78,7 @@ BEGIN
         MENUITEM "Pööra/&Peegelda...\tCtrl+R", IDM_IMAGEROTATEMIRROR
         MENUITEM "&Venita/Kalluta...\tCtrl+W", IDM_IMAGESTRETCHSKEW
         MENUITEM "&Kärbi", IDM_IMAGECROP
-		MENUITEM "&Grayscale colors", IDM_IMAGEGRAYSCALE
+        MENUITEM "&Grayscale colors", IDM_IMAGEGRAYSCALE
         MENUITEM "&Pööra värvid\tCtrl+I", IDM_IMAGEINVERTCOLORS
         MENUITEM "&Atribuudid...\tCtrl+E", IDM_IMAGEATTRIBUTES
         MENUITEM "Kustuta pilt\tCtrl+Shft+N", IDM_IMAGEDELETEIMAGE
