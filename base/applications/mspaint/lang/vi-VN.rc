@@ -78,7 +78,7 @@ BEGIN
         MENUITEM "Xoay/&Lật hình ảnh...\tCtrl+R", IDM_IMAGEROTATEMIRROR
         MENUITEM "&Kéo dãn/Nghiêng...\tCtrl+W", IDM_IMAGESTRETCHSKEW
         MENUITEM "&Cắt hình ảnh", IDM_IMAGECROP
-		MENUITEM "&Grayscale colors", IDM_IMAGEGRAYSCALE
+        MENUITEM "&Grayscale colors", IDM_IMAGEGRAYSCALE
         MENUITEM "&Nghịch đảo màu sắc (âm bản)\tCtrl+I", IDM_IMAGEINVERTCOLORS
         MENUITEM "&Thuộc tính...\tCtrl+E", IDM_IMAGEATTRIBUTES
         MENUITEM "Xóa hình ảnh\tCtrl+Shft+N", IDM_IMAGEDELETEIMAGE
