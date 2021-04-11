@@ -78,7 +78,7 @@ BEGIN
         MENUITEM "&Döndür ya da Evir...\tCtrl+R", IDM_IMAGEROTATEMIRROR
         MENUITEM "&Yeniden Boyutlandır veya Eğ...\tCtrl+W", IDM_IMAGESTRETCHSKEW
         MENUITEM "&Kırp", IDM_IMAGECROP
-		MENUITEM "&Grayscale colors", IDM_IMAGEGRAYSCALE
+        MENUITEM "&Grayscale colors", IDM_IMAGEGRAYSCALE
         MENUITEM "&Renkleri Tersine Çevir\tCtrl+I", IDM_IMAGEINVERTCOLORS
         MENUITEM "&Öz Nitelikler...\tCtrl+E", IDM_IMAGEATTRIBUTES
         MENUITEM "R&esmi Sil\tCtrl+Shift+N", IDM_IMAGEDELETEIMAGE
