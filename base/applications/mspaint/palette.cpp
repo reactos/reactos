@@ -19,7 +19,7 @@ LRESULT CPaletteWindow::OnPaint(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& b
     HDC hDC = GetDC();
     HPEN oldPen;
     HBRUSH oldBrush;
-    int i,a,b;
+    int i, a, b;
 
     DefWindowProc(WM_PAINT, wParam, lParam);
 
