@@ -26,6 +26,7 @@ static const char* g_Target;
 
 enum fixup_mode
 {
+    MODE_NONE = 0,
     MODE_LOADCONFIG,
     MODE_KERNELDRIVER,
     MODE_WDMDRIVER,
@@ -127,7 +128,7 @@ static int add_loadconfig(unsigned char *buffer, PIMAGE_NT_HEADERS nt_header)
     return 1;
 }
 
-static int driver_fixup(int mode, unsigned char *buffer, PIMAGE_NT_HEADERS nt_header)
+static int driver_fixup(enum fixup_mode mode, unsigned char *buffer, PIMAGE_NT_HEADERS nt_header)
 {
     /* GNU LD just doesn't know what a driver is, and has notably no idea of paged vs non-paged sections */
     for (unsigned int i = 0; i < nt_header->FileHeader.NumberOfSections; i++)
@@ -174,23 +175,203 @@ static int driver_fixup(int mode, unsigned char *buffer, PIMAGE_NT_HEADERS nt_he
     return 0;
 }
 
+/* NOTE: This function tokenizes its parameter in place.
+ * Its format is: name[=newname][,[[!]{CDEIKOMPRSUW}][A{1248PTSX}]] */
+static int change_section_attribs(char* section_attribs, unsigned char* buffer, PIMAGE_NT_HEADERS nt_header)
+{
+    char *sectionName, *newSectionName;
+    char *attribsSpec, *alignSpec;
+    char *ptr;
+    DWORD dwAttribs[2]; /* Attributes to [0]: set; [1]: filter */
+    unsigned int i;
+    PIMAGE_SECTION_HEADER SectionTable, Section;
+
+    if (!section_attribs || !*section_attribs)
+    {
+        error("Section attributes specification is empty.\n");
+        return 1;
+    }
+
+    sectionName = section_attribs;
+
+    /* Find the optional new section name and attributes specifications */
+    newSectionName = strchr(section_attribs, '=');
+    attribsSpec = strchr(section_attribs, ',');
+    if (newSectionName && attribsSpec)
+    {
+        /* The attributes specification must be after the new name */
+        if (!(newSectionName < attribsSpec))
+        {
+            error("Invalid section attributes specification.\n");
+            return 1;
+        }
+    }
+    if (newSectionName)
+        *newSectionName++ = 0;
+    if (attribsSpec)
+        *attribsSpec++ = 0;
+
+    /* An original section name must be specified */
+    if (!*sectionName)
+    {
+        error("Invalid section attributes specification.\n");
+        return 1;
+    }
+    /* If a new section name begins, it must be not empty */
+    if (newSectionName && !*newSectionName)
+    {
+        error("Invalid section attributes specification.\n");
+        return 1;
+    }
+
+    /* The alignment specification is inside the attributes specification */
+    alignSpec = NULL;
+    if (attribsSpec)
+    {
+        /* Check for the first occurrence of the 'A' separator, case-insensitive */
+        for (ptr = attribsSpec; *ptr; ++ptr)
+        {
+            if (toupper(*ptr) == 'A')
+            {
+                alignSpec = ptr;
+                break;
+            }
+        }
+    }
+    if (alignSpec)
+        *alignSpec++ = 0;
+
+    /* But it's not supported at the moment! */
+    if (alignSpec && *alignSpec)
+    {
+        fprintf(stdout, "%s WARNING: '%s': %s", g_ApplicationName, g_Target,
+                "Section alignment specification not currently supported! Ignoring.\n");
+    }
+
+    /* Parse the attributes specification */
+    dwAttribs[0] = dwAttribs[1] = 0;
+    if (attribsSpec && *attribsSpec)
+    {
+        for (i = 0, ptr = attribsSpec; *ptr; ++ptr)
+        {
+            if (*ptr == '!')
+            {
+                /* The next attribute needs to be removed.
+                 * Any successive '!' gets collapsed. */
+                i = 1;
+                continue;
+            }
+
+            switch (toupper(*ptr))
+            {
+            case 'C':
+                dwAttribs[i%2] |= IMAGE_SCN_CNT_CODE;
+                break;
+            case 'D':
+                dwAttribs[i%2] |= IMAGE_SCN_MEM_DISCARDABLE;
+                break;
+            case 'E':
+                dwAttribs[i%2] |= IMAGE_SCN_MEM_EXECUTE;
+                break;
+            case 'I':
+                dwAttribs[i%2] |= IMAGE_SCN_CNT_INITIALIZED_DATA;
+                break;
+            case 'K': /* Remove the not-cached attribute */
+                dwAttribs[(i+1)%2] |= IMAGE_SCN_MEM_NOT_CACHED;
+                break;
+            case 'M':
+                dwAttribs[i%2] |= IMAGE_SCN_LNK_REMOVE;
+                break;
+            case 'O':
+                dwAttribs[i%2] |= IMAGE_SCN_LNK_INFO;
+                break;
+            case 'P': /* Remove the not-paged attribute */
+                dwAttribs[(i+1)%2] |= IMAGE_SCN_MEM_NOT_PAGED;
+                break;
+            case 'R':
+                dwAttribs[i%2] |= IMAGE_SCN_MEM_READ;
+                break;
+            case 'S':
+                dwAttribs[i%2] |= IMAGE_SCN_MEM_SHARED;
+                break;
+            case 'U':
+                dwAttribs[i%2] |= IMAGE_SCN_CNT_UNINITIALIZED_DATA;
+                break;
+            case 'W':
+                dwAttribs[i%2] |= IMAGE_SCN_MEM_WRITE;
+                break;
+
+            default:
+                error("Invalid section attributes specification.\n");
+                return 1;
+            }
+
+            /* Got an attribute; reset the state */
+            i = 0;
+        }
+        /* If the state was not reset, the attributes specification is invalid */
+        if (i != 0)
+        {
+            error("Invalid section attributes specification.\n");
+            return 1;
+        }
+    }
+
+    /* Find all sections with the given name, rename them and change their attributes */
+    Section = NULL;
+    SectionTable = IMAGE_FIRST_SECTION(nt_header);
+    for (i = 0; i < nt_header->FileHeader.NumberOfSections; ++i)
+    {
+        if (strncmp((char*)SectionTable[i].Name, sectionName, ARRAY_SIZE(SectionTable[i].Name)) != 0)
+            continue;
+
+        Section = &SectionTable[i];
+
+        if (newSectionName && *newSectionName)
+        {
+            memset(Section->Name, 0, sizeof(Section->Name));
+            strncpy((char*)Section->Name, newSectionName, ARRAY_SIZE(Section->Name));
+        }
+
+        /* First filter attributes out, then add the new ones.
+         * The new attributes override any removed ones. */
+        Section->Characteristics &= ~dwAttribs[1];
+        Section->Characteristics |=  dwAttribs[0];
+    }
+
+    /* If no section was found, return an error */
+    if (!Section)
+    {
+        error("Section '%s' does not exist.\n", sectionName);
+        return 1;
+    }
+
+    return 0;
+}
+
 static
 void
 print_usage(void)
 {
-    printf("Usage: %s <mode> <filename>\n", g_ApplicationName);
-    printf("Where <mode> is on of the following:\n");
-    printf("  --loadconfig          Fix the LOAD_CONFIG directory entry\n");
-    printf("  --kernelmodedriver    Fix code and data sections for driver images\n");
-    printf("  --wdmdriver           Fix code and data sections for WDM drivers\n");
-    printf("  --kerneldll           Fix code and data sections for Kernel-Mode DLLs\n");
-    printf("  --kernel              Fix code and data sections for kernels\n");
+    printf("Usage: %s <options> <filename>\n\n", g_ApplicationName);
+    printf("<options> can be one of the following options:\n"
+           "  --loadconfig          Fix the LOAD_CONFIG directory entry;\n"
+           "  --kernelmodedriver    Fix code and data sections for driver images;\n"
+           "  --wdmdriver           Fix code and data sections for WDM drivers;\n"
+           "  --kerneldll           Fix code and data sections for Kernel-Mode DLLs;\n"
+           "  --kernel              Fix code and data sections for kernels;\n"
+           "\n"
+           "and/or a combination of the following ones:\n"
+           "  --section:name[=newname][,[[!]{CDEIKOMPRSUW}][A{1248PTSX}]]\n"
+           "                        Overrides the attributes of a section, optionally\n"
+           "                        changing its name and its alignment.\n");
 }
 
 int main(int argc, char **argv)
 {
     int result = 1;
-    enum fixup_mode mode;
+    enum fixup_mode mode = MODE_NONE;
+    int i;
     FILE* file;
     size_t len;
     unsigned char *buffer;
@@ -199,41 +380,71 @@ int main(int argc, char **argv)
 
     g_ApplicationName = argv[0];
 
-    if (argc != 3)
+    /* Check for options */
+    for (i = 1; i < argc; ++i)
+    {
+        if (!(argv[i][0] == '-' && argv[i][1] == '-'))
+        {
+            /* We are out of options (they come first before
+             * anything else, and cannot come after). */
+            break;
+        }
+
+        if (strcmp(&argv[i][2], "loadconfig") == 0)
+        {
+            if (mode != MODE_NONE)
+                goto mode_error;
+            mode = MODE_LOADCONFIG;
+        }
+        else if (strcmp(&argv[i][2], "kernelmodedriver") == 0)
+        {
+            if (mode != MODE_NONE)
+                goto mode_error;
+            mode = MODE_KERNELDRIVER;
+        }
+        else if (strcmp(&argv[i][2], "wdmdriver") == 0)
+        {
+            if (mode != MODE_NONE)
+                goto mode_error;
+            mode = MODE_WDMDRIVER;
+        }
+        else if (strcmp(&argv[i][2], "kerneldll") == 0)
+        {
+            if (mode != MODE_NONE)
+                goto mode_error;
+            mode = MODE_KERNELDLL;
+        }
+        else if (strcmp(&argv[i][2], "kernel") == 0)
+        {
+            if (mode != MODE_NONE)
+                goto mode_error;
+            mode = MODE_KERNEL;
+        }
+        else if (strncmp(&argv[i][2], "section:", 8) == 0)
+        {
+            /* Section attributes override, will be handled later */
+        }
+        else
+        {
+            fprintf(stderr, "%s ERROR: Unknown option: '%s'.\n", g_ApplicationName, argv[i]);
+            goto failure;
+    mode_error:
+            fprintf(stderr, "%s ERROR: Specific mode already set.\n", g_ApplicationName);
+    failure:
+            print_usage();
+            return 1;
+        }
+    }
+    /* Stop now if we don't have any option or file */
+    if ((i <= 1) || (i >= argc))
     {
         print_usage();
         return 1;
     }
 
-    if (strcmp(argv[1], "--loadconfig") == 0)
-    {
-        mode = MODE_LOADCONFIG;
-    }
-    else if (strcmp(argv[1], "--kernelmodedriver") == 0)
-    {
-        mode = MODE_KERNELDRIVER;
-    }
-    else if (strcmp(argv[1], "--wdmdriver") == 0)
-    {
-        mode = MODE_WDMDRIVER;
-    }
-    else if (strcmp(argv[1], "--kerneldll") == 0)
-    {
-        mode = MODE_KERNELDLL;
-    }
-    else if (strcmp(argv[1], "--kernel") == 0)
-    {
-        mode = MODE_KERNEL;
-    }
-    else
-    {
-        print_usage();
-        return 1;
-    }
+    g_Target = argv[i];
 
-    g_Target = argv[2];
-
-    /* Read the whole file to memory. */
+    /* Read the whole file to memory */
     file = fopen(g_Target, "r+b");
     if (!file)
     {
@@ -251,12 +462,12 @@ int main(int argc, char **argv)
     }
 
     /* Add one byte extra for the case where the input file size is odd.
-       We rely on this in our crc calculation */
+       We rely on this in our checksum calculation. */
     buffer = calloc(len + 1, 1);
     if (buffer == NULL)
     {
         fclose(file);
-        error("Not enough memory available: (Needed %lu bytes).\n", len + 1);
+        error("Not enough memory available (Needed %lu bytes).\n", len + 1);
         return 1;
     }
 
@@ -264,7 +475,7 @@ int main(int argc, char **argv)
     fseek(file, 0, SEEK_SET);
     fread(buffer, 1, len, file);
 
-    /* Check the headers and save pointers to them. */
+    /* Check the headers and save pointers to them */
     dos_header = (PIMAGE_DOS_HEADER)buffer;
     if (dos_header->e_magic != IMAGE_DOS_SIGNATURE)
     {
@@ -279,10 +490,28 @@ int main(int argc, char **argv)
         goto Quit;
     }
 
-    if (mode == MODE_LOADCONFIG)
-        result = add_loadconfig(buffer, nt_header);
-    else
-        result = driver_fixup(mode, buffer, nt_header);
+    result = 0;
+
+    /* Apply mode fixups */
+    if (mode != MODE_NONE)
+    {
+        if (mode == MODE_LOADCONFIG)
+            result = add_loadconfig(buffer, nt_header);
+        else
+            result = driver_fixup(mode, buffer, nt_header);
+    }
+
+    /* Apply any section attributes override */
+    for (i = 1; (i < argc) && (result == 0); ++i)
+    {
+        /* Ignore anything but the section specifications */
+        if (!(argv[i][0] == '-' && argv[i][1] == '-'))
+            break;
+        if (strncmp(&argv[i][2], "section:", 8) != 0)
+            continue;
+
+        result = change_section_attribs(&argv[i][10], buffer, nt_header);
+    }
 
     if (!result)
     {
