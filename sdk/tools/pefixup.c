@@ -142,24 +142,24 @@ static int driver_fixup(int mode, unsigned char *buffer, PIMAGE_NT_HEADERS nt_he
             Section->Characteristics &= ~IMAGE_SCN_CNT_INITIALIZED_DATA;
 
         /* For some reason, .rsrc is made writable by windres */
-        if (strncasecmp((char*)Section->Name, ".rsrc", 5) == 0)
+        if (strncmp((char*)Section->Name, ".rsrc", 5) == 0)
         {
             Section->Characteristics &= ~IMAGE_SCN_MEM_WRITE;
             continue;
         }
 
         /* Known sections which can be discarded */
-        if (strncasecmp((char*)Section->Name, "INIT", 4) == 0)
+        if (strncmp((char*)Section->Name, "INIT", 4) == 0)
         {
             Section->Characteristics |= IMAGE_SCN_MEM_DISCARDABLE;
             continue;
         }
 
         /* Known sections which can be paged */
-        if ((strncasecmp((char*)Section->Name, "PAGE", 4) == 0)
-            || (strncasecmp((char*)Section->Name, ".rsrc", 5) == 0)
-            || (strncasecmp((char*)Section->Name, ".edata", 6) == 0)
-            || (strncasecmp((char*)Section->Name, ".reloc", 6) == 0))
+        if ((strncmp((char*)Section->Name, "PAGE", 4) == 0)
+            || (strncmp((char*)Section->Name, ".rsrc", 5) == 0)
+            || (strncmp((char*)Section->Name, ".edata", 6) == 0)
+            || (strncmp((char*)Section->Name, ".reloc", 6) == 0))
         {
             continue;
         }
