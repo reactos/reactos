@@ -584,6 +584,11 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
             }
             break;
         }
+        case IDM_IMAGEGRAYSCALE:
+        {
+            imageModel.GSColors();
+            break;
+        }
         case IDM_IMAGESTRETCHSKEW:
         {
             if (stretchSkewDialog.DoModal(mainWindow.m_hWnd))

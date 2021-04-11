@@ -70,6 +70,7 @@ BEGIN
         MENUITEM "Retourner/Faire pivoter...\tCtrl+R", IDM_IMAGEROTATEMIRROR
         MENUITEM "Agrandir/Pencher...\tCtrl+W", IDM_IMAGESTRETCHSKEW
         MENUITEM "Rogner", IDM_IMAGECROP
+		MENUITEM "&Grayscale colors", IDM_IMAGEGRAYSCALE
         MENUITEM "Inverser les couleurs\tCtrl+I", IDM_IMAGEINVERTCOLORS
         MENUITEM "Attributs...\tCtrl+E", IDM_IMAGEATTRIBUTES
         MENUITEM "Effacer l'image\tCtrl+Shft+N", IDM_IMAGEDELETEIMAGE

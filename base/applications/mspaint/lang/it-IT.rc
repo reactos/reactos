@@ -78,6 +78,7 @@ BEGIN
         MENUITEM "Capovolgi/ruota...\tCtrl+R", IDM_IMAGEROTATEMIRROR
         MENUITEM "Stretch/Skew...\tCtrl+W", IDM_IMAGESTRETCHSKEW
         MENUITEM "Ritaglia", IDM_IMAGECROP
+    	MENUITEM "&Scala di grigi", IDM_IMAGEGRAYSCALE
         MENUITEM "Inverti colori\tCtrl+I", IDM_IMAGEINVERTCOLORS
         MENUITEM "Attributi...\tCtrl+E", IDM_IMAGEATTRIBUTES
         MENUITEM "Cancella immagine\tCtrl+Maiusc+N", IDM_IMAGEDELETEIMAGE

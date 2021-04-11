@@ -78,6 +78,7 @@ BEGIN
         MENUITEM "Spiegelen/draaien...\tCtrl+R", IDM_IMAGEROTATEMIRROR
         MENUITEM "Stretch/Skew...\tCtrl+W", IDM_IMAGESTRETCHSKEW
         MENUITEM "Bijsnijden", IDM_IMAGECROP
+		MENUITEM "&Grayscale colors", IDM_IMAGEGRAYSCALE
         MENUITEM "Negatief\tCtrl+I", IDM_IMAGEINVERTCOLORS
         MENUITEM "Kenmerken...\tCtrl+E", IDM_IMAGEATTRIBUTES
         MENUITEM "Afbeelding wissen", IDM_IMAGEDELETEIMAGE

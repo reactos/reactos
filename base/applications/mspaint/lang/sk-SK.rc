@@ -79,6 +79,7 @@ BEGIN
         MENUITEM "Prevrátiť alebo otočiť...\tCtrl+R", IDM_IMAGEROTATEMIRROR
         MENUITEM "Stretch/Skew...\tCtrl+W", IDM_IMAGESTRETCHSKEW
         MENUITEM "Orezať", IDM_IMAGECROP
+		MENUITEM "&Grayscale colors", IDM_IMAGEGRAYSCALE
         MENUITEM "Invertovať farby\tCtrl+I", IDM_IMAGEINVERTCOLORS
         MENUITEM "Atribúty...\tCtrl+E", IDM_IMAGEATTRIBUTES
         MENUITEM "Vymazať obrázok\tCtrl+Shft+N", IDM_IMAGEDELETEIMAGE

@@ -79,6 +79,7 @@ BEGIN
         MENUITEM "&Przerzuć/Obróć...\tCtrl+R", IDM_IMAGEROTATEMIRROR
         MENUITEM "Roz&ciągnij/Pochyl...\tCtrl+W", IDM_IMAGESTRETCHSKEW
         MENUITEM "Kadrowanie", IDM_IMAGECROP
+		MENUITEM "&Grayscale colors", IDM_IMAGEGRAYSCALE
         MENUITEM "&Odwróć kolory\tCtrl+I", IDM_IMAGEINVERTCOLORS
         MENUITEM "&Atrybuty...\tCtrl+E", IDM_IMAGEATTRIBUTES
         MENUITEM "&Wyczyść obraz\tCtrl+Shft+N", IDM_IMAGEDELETEIMAGE

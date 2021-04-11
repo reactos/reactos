@@ -78,6 +78,7 @@ BEGIN
         MENUITEM "Rotate/&Mirror...\tCtrl+R", IDM_IMAGEROTATEMIRROR
         MENUITEM "&Stretch/Skew...\tCtrl+W", IDM_IMAGESTRETCHSKEW
         MENUITEM "&Crop", IDM_IMAGECROP
+        MENUITEM "&Grayscale colors", IDM_IMAGEGRAYSCALE
         MENUITEM "&Invert colors\tCtrl+I", IDM_IMAGEINVERTCOLORS
         MENUITEM "&Attributes...\tCtrl+E", IDM_IMAGEATTRIBUTES
         MENUITEM "Delete image\tCtrl+Shft+N", IDM_IMAGEDELETEIMAGE

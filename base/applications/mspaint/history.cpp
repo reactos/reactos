@@ -209,6 +209,40 @@ void ImageModel::InvertColors()
     NotifyImageChanged();
 }
 
+void ImageModel::GSColors()
+{
+    CopyPrevious();
+    long x,y;
+    long pixel_color;
+    for(x=0;x<GetWidth();x++)
+    {
+    	for(y=0;y<GetHeight();y++)
+    	{
+            pixel_color = GetPixel(hDrawingDC, x, y);
+            pixel_color = (pixel_color & 0xFF) * 0x10101;
+            SetPixel(hDrawingDC, x, y, pixel_color);
+    	}
+    }
+	NotifyImageChanged();
+}
+
+void ImageModel::BKColors()
+{
+    CopyPrevious();
+    long x,y;
+	long pixel_color;
+    for(x=0;x<GetWidth();x++)
+    {
+    	for(y=0;y<GetHeight();y++)
+    	{
+            pixel_color = GetPixel(hDrawingDC, x, y);
+            if((pixel_color & 0xFFFFFF ) != 0xFFFFFF) pixel_color=0x00;
+            SetPixel(hDrawingDC, x, y, pixel_color);
+    	}
+    }
+	NotifyImageChanged();
+}
+
 void ImageModel::Clear(COLORREF color)
 {
     Rectangle(hDrawingDC, 0 - 1, 0 - 1, GetWidth() + 1, GetHeight() + 1);

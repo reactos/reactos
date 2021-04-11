@@ -45,6 +45,8 @@ public:
         COMMAND_ID_HANDLER(IDD_ATTRIBUTESRB1, OnRadioButton1)
         COMMAND_ID_HANDLER(IDD_ATTRIBUTESRB2, OnRadioButton2)
         COMMAND_ID_HANDLER(IDD_ATTRIBUTESRB3, OnRadioButton3)
+		COMMAND_ID_HANDLER(IDD_ATTRIBUTESRB4, OnRadioButton4)
+		COMMAND_ID_HANDLER(IDD_ATTRIBUTESRB5, OnRadioButton5)
         COMMAND_ID_HANDLER(IDD_ATTRIBUTESEDIT1, OnEdit1)
         COMMAND_ID_HANDLER(IDD_ATTRIBUTESEDIT2, OnEdit2)
     END_MSG_MAP()
@@ -57,6 +59,8 @@ public:
     LRESULT OnRadioButton1(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
     LRESULT OnRadioButton2(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
     LRESULT OnRadioButton3(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
+    LRESULT OnRadioButton4(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
+    LRESULT OnRadioButton5(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
     LRESULT OnEdit1(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
     LRESULT OnEdit2(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
 

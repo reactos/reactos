@@ -11,6 +11,8 @@
 class CPaletteWindow : public CWindowImpl<CPaletteWindow>
 {
 public:
+	bool bk=false;
+
     DECLARE_WND_CLASS_EX(_T("Palette"), CS_DBLCLKS, COLOR_BTNFACE)
 
     BEGIN_MSG_MAP(CPaletteWindow)
@@ -24,6 +26,8 @@ public:
     END_MSG_MAP()
 
     LRESULT OnPaint(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+    LRESULT BKPaint();
+    LRESULT ColorsPaint();
     LRESULT OnLButtonDown(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnRButtonDown(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnLButtonDblClk(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);

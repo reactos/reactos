@@ -80,7 +80,10 @@ LRESULT CAttributesDialog::OnInitDialog(UINT nMsg, WPARAM wParam, LPARAM lParam,
     newHeight = imageModel.GetHeight();
 
     CheckDlgButton(IDD_ATTRIBUTESRB3, BST_CHECKED);
-    CheckDlgButton(IDD_ATTRIBUTESRB5, BST_CHECKED);
+    if(paletteWindow.bk==false)
+    	CheckDlgButton(IDD_ATTRIBUTESRB5, BST_CHECKED);
+    else
+    	CheckDlgButton(IDD_ATTRIBUTESRB4, BST_CHECKED);
     SetDlgItemInt(IDD_ATTRIBUTESEDIT1, newWidth, FALSE);
     SetDlgItemInt(IDD_ATTRIBUTESEDIT2, newHeight, FALSE);
 
@@ -126,7 +129,10 @@ LRESULT CAttributesDialog::OnDefault(WORD wNotifyCode, WORD wID, HWND hWndCtl, B
     newWidth = imageModel.GetWidth();
     newHeight = imageModel.GetHeight();
     CheckDlgButton(IDD_ATTRIBUTESRB3, BST_CHECKED);
-    CheckDlgButton(IDD_ATTRIBUTESRB5, BST_CHECKED);
+    if(paletteWindow.bk==false)
+    	CheckDlgButton(IDD_ATTRIBUTESRB5, BST_CHECKED);
+    else
+    	CheckDlgButton(IDD_ATTRIBUTESRB4, BST_CHECKED);
     SetDlgItemInt(IDD_ATTRIBUTESEDIT1, newWidth, FALSE);
     SetDlgItemInt(IDD_ATTRIBUTESEDIT2, newHeight, FALSE);
     return 0;
@@ -156,6 +162,21 @@ LRESULT CAttributesDialog::OnRadioButton3(WORD wNotifyCode, WORD wID, HWND hWndC
 {
     SetDlgItemInt(IDD_ATTRIBUTESEDIT1, newWidth, FALSE);
     SetDlgItemInt(IDD_ATTRIBUTESEDIT2, newHeight, FALSE);
+    return 0;
+}
+
+LRESULT CAttributesDialog::OnRadioButton4(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
+{
+    imageModel.BKColors();
+    paletteWindow.BKPaint();
+    paletteModel.SetFgColor(0x00000000);
+	paletteModel.SetBgColor(0x00ffffff);
+    return 0;
+}
+
+LRESULT CAttributesDialog::OnRadioButton5(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
+{
+	paletteWindow.ColorsPaint();
     return 0;
 }
 

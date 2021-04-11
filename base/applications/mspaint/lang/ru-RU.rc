@@ -70,6 +70,7 @@ BEGIN
         MENUITEM "&Отразить/повернуть...\tCtrl+R", IDM_IMAGEROTATEMIRROR
         MENUITEM "Растянуть/Наклонить...\tCtrl+W", IDM_IMAGESTRETCHSKEW
         MENUITEM "Обре&зать", IDM_IMAGECROP
+		MENUITEM "&Grayscale colors", IDM_IMAGEGRAYSCALE
         MENUITEM "О&братить цвета\tCtrl+I", IDM_IMAGEINVERTCOLORS
         MENUITEM "&Атрибуты...\tCtrl+E", IDM_IMAGEATTRIBUTES
         MENUITEM "О&чистить\tCtrl+Shft+N", IDM_IMAGEDELETEIMAGE

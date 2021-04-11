@@ -37,6 +37,8 @@ public:
     int GetWidth();
     int GetHeight();
     void InvertColors();
+    void BKColors();
+    void GSColors();
     void Clear(COLORREF color = 0x00ffffff);
     HDC GetDC();
     void FlipHorizontally();
