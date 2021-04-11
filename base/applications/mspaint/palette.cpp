@@ -42,33 +42,35 @@ LRESULT CPaletteWindow::OnPaint(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& b
     Rectangle(hDC, rc.left + 2, rc.top + 2, rc.right - 1, rc.bottom - 1);
     DeleteObject(SelectObject(hDC, oldBrush));
     DeleteObject(SelectObject(hDC, oldPen));
-    if(!bk){
-    	for(i = 0; i < 28; i++)
-    	{
-    		SetRect(&rc, 31 + (i % 14) * 16,
-    				0 + (i / 14) * 16, 16 + 31 + (i % 14) * 16, 16 + 0 + (i / 14) * 16);
-    		DrawEdge(hDC, &rc, EDGE_RAISED, BF_TOPLEFT);
-    		DrawEdge(hDC, &rc, BDR_SUNKENOUTER, BF_RECT);
-    		oldPen = (HPEN) SelectObject(hDC, CreatePen(PS_NULL, 0, 0));
-    		oldBrush = (HBRUSH) SelectObject(hDC, CreateSolidBrush(paletteModel.GetColor(i)));
-    		Rectangle(hDC, rc.left + 2, rc.top + 2, rc.right - 1, rc.bottom - 1);
-        	DeleteObject(SelectObject(hDC, oldBrush));
-        	DeleteObject(SelectObject(hDC, oldPen));
-    	}
+    if (!bk)
+    {
+        for (i = 0; i < 28; i++)
+        {
+            SetRect(&rc, 31 + (i % 14) * 16,
+                    0 + (i / 14) * 16, 16 + 31 + (i % 14) * 16, 16 + 0 + (i / 14) * 16);
+            DrawEdge(hDC, &rc, EDGE_RAISED, BF_TOPLEFT);
+            DrawEdge(hDC, &rc, BDR_SUNKENOUTER, BF_RECT);
+            oldPen = (HPEN)SelectObject(hDC, CreatePen(PS_NULL, 0, 0));
+            oldBrush = (HBRUSH)SelectObject(hDC, CreateSolidBrush(paletteModel.GetColor(i)));
+            Rectangle(hDC, rc.left + 2, rc.top + 2, rc.right - 1, rc.bottom - 1);
+            DeleteObject(SelectObject(hDC, oldBrush));
+            DeleteObject(SelectObject(hDC, oldPen));
+        }
     }
-    else{
-    	for(i = 0; i < 2; i++)
-    	    {
-    	    	SetRect(&rc, 31 + (i*14 % 14) * 16,
-    	    			0 + (i*14 / 14) * 16, 16 + 31 + (i*14 % 14) * 16, 16 + 0 + (i*14 / 14) * 16);
-    	    	DrawEdge(hDC, &rc, EDGE_RAISED, BF_TOPLEFT);
-    	    	DrawEdge(hDC, &rc, BDR_SUNKENOUTER, BF_RECT);
-    	    	oldPen = (HPEN) SelectObject(hDC, CreatePen(PS_NULL, 0, 0));
-    	    	oldBrush = (HBRUSH) SelectObject(hDC, CreateSolidBrush(paletteModel.GetColor(i*14)));
-    	    	Rectangle(hDC, rc.left + 2, rc.top + 2, rc.right - 1, rc.bottom - 1);
-    	        DeleteObject(SelectObject(hDC, oldBrush));
-    	        DeleteObject(SelectObject(hDC, oldPen));
-    	    	}
+    else
+    {
+        for (i = 0; i < 2; i++)
+        {
+            SetRect(&rc, 31 + (i*14 % 14) * 16,
+                    0 + (i*14 / 14) * 16, 16 + 31 + (i*14 % 14) * 16, 16 + 0 + (i*14 / 14) * 16);
+            DrawEdge(hDC, &rc, EDGE_RAISED, BF_TOPLEFT);
+            DrawEdge(hDC, &rc, BDR_SUNKENOUTER, BF_RECT);
+            oldPen = (HPEN)SelectObject(hDC, CreatePen(PS_NULL, 0, 0));
+            oldBrush = (HBRUSH)SelectObject(hDC, CreateSolidBrush(paletteModel.GetColor(i * 14)));
+            Rectangle(hDC, rc.left + 2, rc.top + 2, rc.right - 1, rc.bottom - 1);
+            DeleteObject(SelectObject(hDC, oldBrush));
+            DeleteObject(SelectObject(hDC, oldPen));
+        }
     }
     ReleaseDC(hDC);
 
