@@ -42,7 +42,7 @@ BEGIN
     PUSHBUTTON "Szinkronizálás", IDC_UPDATEBUTTON, 187, 22, 55, 14
     LTEXT "", IDC_SUCSYNC, 16, 54, 214, 23
     LTEXT "", IDC_NEXTSYNC, 12, 96, 137, 12
-    LTEXT "A szinkronizálás csak akkor történhet meg, ha az internetre fel van csatlakozva a számítógép.", -1, 12, 114, 225, 25
+    LTEXT "A szinkronizálás csak akkor történhet meg, ha a számítógép fel van csatlakozva az internetre.", -1, 12, 114, 225, 25
 END
 
 STRINGTABLE
