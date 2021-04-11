@@ -78,7 +78,7 @@ BEGIN
         MENUITEM "Inverter/&girar...\tCtrl+R", IDM_IMAGEROTATEMIRROR
         MENUITEM "&Alongar/inclinar...\tCtrl+W", IDM_IMAGESTRETCHSKEW
         MENUITEM "Cortar", IDM_IMAGECROP
-		MENUITEM "&Grayscale colors", IDM_IMAGEGRAYSCALE
+        MENUITEM "&Grayscale colors", IDM_IMAGEGRAYSCALE
         MENUITEM "&Inverter cores\tCtrl+I", IDM_IMAGEINVERTCOLORS
         MENUITEM "A&tributos...\tCtrl+E", IDM_IMAGEATTRIBUTES
         MENUITEM "&Limpar imagem\tCtrl+Shft+N", IDM_IMAGEDELETEIMAGE
