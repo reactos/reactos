@@ -170,7 +170,7 @@ LRESULT CAttributesDialog::OnRadioButton4(WORD wNotifyCode, WORD wID, HWND hWndC
     imageModel.BKColors();
     paletteWindow.BKPaint();
     paletteModel.SetFgColor(0x00000000);
-	paletteModel.SetBgColor(0x00ffffff);
+    paletteModel.SetBgColor(0x00ffffff);
     return 0;
 }
 
