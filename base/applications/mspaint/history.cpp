@@ -211,36 +211,39 @@ void ImageModel::InvertColors()
 
 void ImageModel::GSColors()
 {
+    long x, y, pixel_color;
+
     CopyPrevious();
-    long x,y;
-    long pixel_color;
-    for(x=0;x<GetWidth();x++)
+
+    for (x = 0; x < GetWidth(); x++)
     {
-    	for(y=0;y<GetHeight();y++)
-    	{
+        for (y = 0; y < GetHeight(); y++)
+        {
             pixel_color = GetPixel(hDrawingDC, x, y);
             pixel_color = (pixel_color & 0xFF) * 0x10101;
             SetPixel(hDrawingDC, x, y, pixel_color);
-    	}
+        }
     }
-	NotifyImageChanged();
+    NotifyImageChanged();
 }
 
 void ImageModel::BKColors()
 {
+    long x, y, pixel_color;
+
     CopyPrevious();
-    long x,y;
-	long pixel_color;
-    for(x=0;x<GetWidth();x++)
+
+    for (x = 0; x < GetWidth(); x++)
     {
-    	for(y=0;y<GetHeight();y++)
-    	{
+        for(y = 0; y < GetHeight(); y++)
+        {
             pixel_color = GetPixel(hDrawingDC, x, y);
-            if((pixel_color & 0xFFFFFF ) != 0xFFFFFF) pixel_color=0x00;
+            if ((pixel_color & 0xFFFFFF) != 0xFFFFFF)
+                pixel_color=0x00;
             SetPixel(hDrawingDC, x, y, pixel_color);
-    	}
+        }
     }
-	NotifyImageChanged();
+    NotifyImageChanged();
 }
 
 void ImageModel::Clear(COLORREF color)
