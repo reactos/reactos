@@ -30,3 +30,6 @@ IDR_MYDOCS REGISTRY "res/mydocs.rgs"
 #ifdef LANGUAGE_RU_RU
     #include "lang/ru-RU.rc"
 #endif
+#ifdef LANGUAGE_ZH_TW
+    #include "lang/zh-TW.rc"
+#endif

@@ -60,5 +60,5 @@ BEGIN
     IDS_MAPPEDIMAGE "已映射的映像"
     IDS_NOMOUNTED   "沒有映像被掛接。最後一個是 - %s"
     IDS_NONE        "無"
-    IDS_FILTER      "所有被支持的映像 (*.udf; *.cdfs; *.jo; *.iso; *.rock)\0*.udf;*.cdfs;*.jo;*.iso;*.rock\0"
+    IDS_FILTER      "所有支援的映像檔案 (*.udf; *.cdfs; *.jo; *.iso; *.rock)\0*.udf;*.cdfs;*.jo;*.iso;*.rock\0"
 END

@@ -1,4 +1,5 @@
-/* Traditional Chinese translation by Henry Tang Ih 2016 (henrytang2@hotmail.com) */
+/* Traditional Chinese translation by Henry Tang Ih 2016 (henrytang2@hotmail.com) 
+ * Translation improved by Chan Chilung 2021 (eason066@gmail.com) */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
 
@@ -6,31 +7,31 @@ IDM_EVENTVWR MENU
 BEGIN
     POPUP "日誌(&L)"
     BEGIN
-        MENUITEM "Open...(&O)", IDM_OPEN_EVENTLOG
+        MENUITEM "開啟...(&O)", IDM_OPEN_EVENTLOG
         MENUITEM "Save Event Log as...(&E)", IDM_SAVE_EVENTLOG
-        MENUITEM "Close(&C)", IDM_CLOSE_EVENTLOG
+        MENUITEM "關閉(&C)", IDM_CLOSE_EVENTLOG
         MENUITEM SEPARATOR
         MENUITEM "清除所有事件(&L)", IDM_CLEAR_EVENTS
-        MENUITEM "Rename(&R)\tF2", IDM_RENAME_EVENTLOG
+        MENUITEM "重新命名(&R)\tF2", IDM_RENAME_EVENTLOG
         MENUITEM "Log Settings...(&T)", IDM_EVENTLOG_SETTINGS
         MENUITEM SEPARATOR
-        MENUITEM "退出(&X)", IDM_EXIT
+        MENUITEM "結束(&X)", IDM_EXIT
     END
     POPUP "查看(&V)"
     BEGIN
-        MENUITEM "Newest first (&N)", IDM_LIST_NEWEST
-        MENUITEM "Oldest first (&O)", IDM_LIST_OLDEST
+        MENUITEM "後進先出(&N)", IDM_LIST_NEWEST
+        MENUITEM "先進先出 (&O)", IDM_LIST_OLDEST
         MENUITEM SEPARATOR
-        MENUITEM "Details... (&D)\tEnter", IDM_EVENT_DETAILS
+        MENUITEM "詳情... (&D)\tEnter", IDM_EVENT_DETAILS
         MENUITEM SEPARATOR
-        MENUITEM "刷新(&R)\tF5", IDM_REFRESH
+        MENUITEM "重新整理(&R)\tF5", IDM_REFRESH
     END
     POPUP "選項(&O)"
     BEGIN
         MENUITEM "Event details &view", IDM_EVENT_DETAILS_VIEW
         MENUITEM "&Grid lines", IDM_LIST_GRID_LINES
         MENUITEM SEPARATOR
-        MENUITEM "&Save settings on exit", IDM_SAVE_SETTINGS
+        MENUITEM "結束時儲存設定(&S)", IDM_SAVE_SETTINGS
     END
     POPUP "説明(&H)"
     BEGIN
@@ -95,16 +96,16 @@ END
 
 IDD_LOGPROPERTIES_GENERAL DIALOGEX 0, 0, 252, 234
 STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
-CAPTION "General"
+CAPTION "一般"
 FONT 9, "新細明體"
 BEGIN
-    LTEXT "&Display name:", IDC_STATIC, 7, 9, 60, 8
+    LTEXT "顯示名稱(&D):", IDC_STATIC, 7, 9, 60, 8
     EDITTEXT IDC_DISPLAYNAME, 67, 7, 178, 12, ES_LEFT | ES_AUTOHSCROLL | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP
     LTEXT "&Log name:", IDC_STATIC, 7, 25, 60, 8
     EDITTEXT IDC_LOGNAME, 67, 23, 178, 12, ES_LEFT | ES_AUTOHSCROLL | ES_READONLY | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP
     LTEXT "Log &file:", IDC_STATIC, 7, 41, 60, 8
     EDITTEXT IDC_LOGFILE, 67, 39, 178, 12, ES_LEFT | ES_AUTOHSCROLL | ES_READONLY | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP
-    LTEXT "Size:", IDC_STATIC, 7, 57, 60, 8
+    LTEXT "大小:", IDC_STATIC, 7, 57, 60, 8
     EDITTEXT IDC_SIZE_LABEL, 67, 57, 178, 12, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     LTEXT "Created:", IDC_STATIC, 7, 69, 60, 8
     EDITTEXT IDC_CREATED_LABEL, 67, 69, 178, 12, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL

@@ -1,0 +1,8 @@
+// Chinese Traditional (zh-TW) resources by Chan Chilung <eason066@gmail.com> 2021
+
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
+
+STRINGTABLE
+{
+    IDS_NOSRCFILEFOUND "無法找到檔案或資料夾 '%ls'。"
+}
