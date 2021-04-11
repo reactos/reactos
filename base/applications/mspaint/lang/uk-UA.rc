@@ -78,7 +78,7 @@ BEGIN
         MENUITEM "Відобразити/повернути...\tCtrl+R", IDM_IMAGEROTATEMIRROR
         MENUITEM "Stretch/Skew...\tCtrl+W", IDM_IMAGESTRETCHSKEW
         MENUITEM "Обітнути", IDM_IMAGECROP
-		MENUITEM "&Grayscale colors", IDM_IMAGEGRAYSCALE
+        MENUITEM "&Grayscale colors", IDM_IMAGEGRAYSCALE
         MENUITEM "Обернути кольори\tCtrl+I", IDM_IMAGEINVERTCOLORS
         MENUITEM "Атрибути...\tCtrl+E", IDM_IMAGEATTRIBUTES
         MENUITEM "Видалити малюнок\tCtrl+Shft+N", IDM_IMAGEDELETEIMAGE
