@@ -123,7 +123,7 @@ LRESULT CPaletteWindow::OnLButtonDblClk(UINT nMsg, WPARAM wParam, LPARAM lParam,
 
 LRESULT CPaletteWindow::OnRButtonDblClk(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
-    if (GET_X_LPARAM(lParam) && !bk)
+    if (GET_X_LPARAM(lParam) >= 31 && !bk)
         if (ChooseColor(&choosecolor))
         {
             paletteModel.SetColor((GET_X_LPARAM(lParam) - 31) / 16 + (GET_Y_LPARAM(lParam) / 16) * 14,
