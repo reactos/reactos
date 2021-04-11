@@ -230,7 +230,8 @@ void ImageModel::GSColors()
 
 void ImageModel::BKColors()
 {
-    long x, y, pixel_color;
+    int x, y;
+    COLORREF pixel_color;
 
     CopyPrevious();
 
