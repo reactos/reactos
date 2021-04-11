@@ -11,7 +11,7 @@
 class CPaletteWindow : public CWindowImpl<CPaletteWindow>
 {
 public:
-	bool bk=false;
+    bool bk = false;
 
     DECLARE_WND_CLASS_EX(_T("Palette"), CS_DBLCLKS, COLOR_BTNFACE)
 
