@@ -779,7 +779,7 @@ OFFSET(ThSpecialApcDisable, KTHREAD, SpecialApcDisable),
 //OFFSET(ThVfpState, KTHREAD, VfpState),
 #endif
 OFFSET(ThNextProcessor, KTHREAD, NextProcessor),
-OFFSET(ThProcess, KTHREAD, Process),
+//OFFSET(ThProcess, KTHREAD, Process),
 OFFSET(ThPreviousMode, KTHREAD, PreviousMode),
 OFFSET(ThPriorityDecrement, KTHREAD, PriorityDecrement), // obsolete
 OFFSET(ThAdjustReason, KTHREAD, AdjustReason),
