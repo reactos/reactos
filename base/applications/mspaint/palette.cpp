@@ -85,9 +85,9 @@ LRESULT CPaletteWindow::BKPaint()
 
 LRESULT CPaletteWindow::ColorsPaint()
 {
-	bk=false;
-	InvalidateRect(NULL, FALSE);
-	Invalidate(TRUE);
+    bk = false;
+    InvalidateRect(NULL, FALSE);
+    Invalidate(TRUE);
     return 0;
 }
 
