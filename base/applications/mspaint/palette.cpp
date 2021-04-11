@@ -77,17 +77,9 @@ LRESULT CPaletteWindow::OnPaint(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& b
     return 0;
 }
 
-LRESULT CPaletteWindow::BKPaint()
+LRESULT CPaletteWindow::PaintMode(bool bColor)
 {
-    bk = true;
-    InvalidateRect(NULL, FALSE);
-    Invalidate(TRUE);
-    return 0;
-}
-
-LRESULT CPaletteWindow::ColorsPaint()
-{
-    bk = false;
+    bk = !bColor;
     InvalidateRect(NULL, FALSE);
     Invalidate(TRUE);
     return 0;
