@@ -237,7 +237,7 @@ void ImageModel::BKColors()
 
     for (x = 0; x < GetWidth(); x++)
     {
-        for(y = 0; y < GetHeight(); y++)
+        for (y = 0; y < GetHeight(); y++)
         {
             pixel_color = GetPixel(hDrawingDC, x, y);
             if ((pixel_color & 0x00FFFFFF) != 0x00FFFFFF)
