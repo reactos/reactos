@@ -78,7 +78,7 @@ BEGIN
         MENUITEM "Rrotullu/&Pamjen...\tCtrl+R", IDM_IMAGEROTATEMIRROR
         MENUITEM "&&Streq/Skew...\tCtrl+W", IDM_IMAGESTRETCHSKEW
         MENUITEM "&Copto", IDM_IMAGECROP
-		MENUITEM "&Grayscale colors", IDM_IMAGEGRAYSCALE
+        MENUITEM "&Grayscale colors", IDM_IMAGEGRAYSCALE
         MENUITEM "&Inverto ngjyrat\tCtrl+I", IDM_IMAGEINVERTCOLORS
         MENUITEM "&Atributet...\tCtrl+E", IDM_IMAGEATTRIBUTES
         MENUITEM "Fshi foton\tCtrl+Shft+N", IDM_IMAGEDELETEIMAGE
