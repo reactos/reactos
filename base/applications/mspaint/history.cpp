@@ -241,7 +241,7 @@ void ImageModel::BKColors()
         {
             pixel_color = GetPixel(hDrawingDC, x, y);
             if ((pixel_color & 0x00FFFFFF) != 0x00FFFFFF)
-                pixel_color=0x00;
+                pixel_color = 0x00;
             SetPixel(hDrawingDC, x, y, pixel_color);
         }
     }
