@@ -78,7 +78,7 @@ BEGIN
         MENUITEM "回転と反転(&M)\tCtrl+R", IDM_IMAGEROTATEMIRROR
         MENUITEM "Stretch/Skew(&S)\tCtrl+W", IDM_IMAGESTRETCHSKEW
         MENUITEM "切り取り(&C)", IDM_IMAGECROP
-		MENUITEM "&Grayscale colors", IDM_IMAGEGRAYSCALE
+        MENUITEM "&Grayscale colors", IDM_IMAGEGRAYSCALE
         MENUITEM "色の反転(&I)\tCtrl+I", IDM_IMAGEINVERTCOLORS
         MENUITEM "画像の属性(&A)\tCtrl+E", IDM_IMAGEATTRIBUTES
         MENUITEM "画像の削除\tCtrl+Shft+N", IDM_IMAGEDELETEIMAGE
