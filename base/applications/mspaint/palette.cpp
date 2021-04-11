@@ -41,6 +41,7 @@ LRESULT CPaletteWindow::OnPaint(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& b
     Rectangle(hDC, rc.left + 2, rc.top + 2, rc.right - 1, rc.bottom - 1);
     DeleteObject(SelectObject(hDC, oldBrush));
     DeleteObject(SelectObject(hDC, oldPen));
+
     if (!bk)
     {
         for (i = 0; i < 28; i++)
