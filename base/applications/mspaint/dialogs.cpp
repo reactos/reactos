@@ -168,7 +168,7 @@ LRESULT CAttributesDialog::OnRadioButton3(WORD wNotifyCode, WORD wID, HWND hWndC
 LRESULT CAttributesDialog::OnRadioButton4(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
 {
     imageModel.BKColors();
-    paletteWindow.BKPaint();
+    paletteWindow.PaintMode(false);
     paletteModel.SetFgColor(0x00000000);
     paletteModel.SetBgColor(0x00ffffff);
     return 0;
@@ -176,7 +176,7 @@ LRESULT CAttributesDialog::OnRadioButton4(WORD wNotifyCode, WORD wID, HWND hWndC
 
 LRESULT CAttributesDialog::OnRadioButton5(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
 {
-    paletteWindow.ColorsPaint();
+    paletteWindow.PaintMode(true);
     return 0;
 }
 
