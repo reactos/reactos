@@ -725,13 +725,12 @@ BOOL WINAPI SetupDiBuildClassInfoListExW(
         LPCWSTR MachineName,
         PVOID Reserved)
 {
-    WCHAR szKeyName[40];
-    HKEY hClassesKey = INVALID_HANDLE_VALUE;
+    GUID CurrentClassGuid;
     HKEY hClassKey;
-    DWORD dwLength;
     DWORD dwIndex;
-    LONG lError;
     DWORD dwGuidListIndex = 0;
+    HMACHINE hMachine = NULL;
+    CONFIGRET cr;
 
     TRACE("%s(0x%lx %p %lu %p %s %p)\n", __FUNCTION__, Flags, ClassGuidList,
         ClassGuidListSize, RequiredSize, debugstr_w(MachineName), Reserved);
@@ -747,39 +746,36 @@ BOOL WINAPI SetupDiBuildClassInfoListExW(
         return FALSE;
     }
 
-    hClassesKey = SetupDiOpenClassRegKeyExW(NULL,
-                                            KEY_ENUMERATE_SUB_KEYS,
-                                            DIOCR_INSTALLER,
-                                            MachineName,
-                                            Reserved);
-    if (hClassesKey == INVALID_HANDLE_VALUE)
+    if (MachineName)
     {
-        return FALSE;
+        cr = CM_Connect_MachineW(MachineName, &hMachine);
+        if (cr != CR_SUCCESS)
+        {
+            SetLastError(GetErrorCodeFromCrCode(cr));
+            return FALSE;
+        }
     }
 
     for (dwIndex = 0; ; dwIndex++)
     {
-        dwLength = 40;
-        lError = RegEnumKeyExW(hClassesKey,
-                               dwIndex,
-                               szKeyName,
-                               &dwLength,
-                               NULL,
-                               NULL,
-                               NULL,
-                               NULL);
-        TRACE("RegEnumKeyExW() returns %d\n", lError);
-        if (lError == ERROR_SUCCESS || lError == ERROR_MORE_DATA)
+        cr = CM_Enumerate_Classes_Ex(dwIndex,
+                                     &CurrentClassGuid,
+                                     0,
+                                     hMachine);
+        if (cr == CR_SUCCESS)
         {
-            TRACE("Key name: %s\n", debugstr_w(szKeyName));
-
-            if (RegOpenKeyExW(hClassesKey,
-                              szKeyName,
-                              0,
-                              KEY_QUERY_VALUE,
-                              &hClassKey))
+            TRACE("Guid: %s\n", debugstr_guid(&CurrentClassGuid));
+            if (CM_Open_Class_Key_ExW(&CurrentClassGuid,
+                                       NULL,
+                                       KEY_QUERY_VALUE,
+                                       RegDisposition_OpenExisting,
+                                       &hClassKey,
+                                       CM_OPEN_CLASS_KEY_INSTALLER,
+                                       hMachine) != CR_SUCCESS)
             {
-                RegCloseKey(hClassesKey);
+                SetLastError(GetErrorCodeFromCrCode(cr));
+                if (hMachine)
+                    CM_Disconnect_Machine(hMachine);
                 return FALSE;
             }
 
@@ -823,27 +819,20 @@ BOOL WINAPI SetupDiBuildClassInfoListExW(
 
             RegCloseKey(hClassKey);
 
-            TRACE("Guid: %s\n", debugstr_w(szKeyName));
             if (dwGuidListIndex < ClassGuidListSize)
             {
-                if (szKeyName[0] == '{' && szKeyName[37] == '}')
-                {
-                    szKeyName[37] = 0;
-                }
-                TRACE("Guid: %p\n", &szKeyName[1]);
-
-                UuidFromStringW(&szKeyName[1],
-                                &ClassGuidList[dwGuidListIndex]);
+                ClassGuidList[dwGuidListIndex] = CurrentClassGuid;
             }
 
             dwGuidListIndex++;
         }
 
-        if (lError != ERROR_SUCCESS)
+        if (cr != ERROR_SUCCESS)
             break;
     }
 
-    RegCloseKey(hClassesKey);
+    if (hMachine)
+        CM_Disconnect_Machine(hMachine);
 
     if (RequiredSize != NULL)
         *RequiredSize = dwGuidListIndex;
