@@ -129,10 +129,10 @@ LRESULT CAttributesDialog::OnDefault(WORD wNotifyCode, WORD wID, HWND hWndCtl, B
     newWidth = imageModel.GetWidth();
     newHeight = imageModel.GetHeight();
     CheckDlgButton(IDD_ATTRIBUTESRB3, BST_CHECKED);
-    if(paletteWindow.bk==false)
-    	CheckDlgButton(IDD_ATTRIBUTESRB5, BST_CHECKED);
+    if (!paletteWindow.bk)
+        CheckDlgButton(IDD_ATTRIBUTESRB5, BST_CHECKED);
     else
-    	CheckDlgButton(IDD_ATTRIBUTESRB4, BST_CHECKED);
+        CheckDlgButton(IDD_ATTRIBUTESRB4, BST_CHECKED);
     SetDlgItemInt(IDD_ATTRIBUTESEDIT1, newWidth, FALSE);
     SetDlgItemInt(IDD_ATTRIBUTESEDIT2, newHeight, FALSE);
     return 0;
