@@ -35,7 +35,8 @@ I_ScPnPGetServiceName(IN SERVICE_STATUS_HANDLE hServiceStatus,
 
 
 /* Registry key and value names */
-static const WCHAR Backslash[] = {'\\', 0};
+static const WCHAR BackslashOpenBrace[] = {'\\', '{', 0};
+static const WCHAR CloseBrace[] = {'}', 0};
 static const WCHAR Class[]  = {'C','l','a','s','s',0};
 
 static const WCHAR ControlClass[] = {'S','y','s','t','e','m','\\',
@@ -6343,8 +6344,9 @@ CM_Open_Class_Key_ExW(
             return CR_INVALID_DATA;
         }
 
-        lstrcatW(szKeyName, Backslash);
+        lstrcatW(szKeyName, BackslashOpenBrace);
         lstrcatW(szKeyName, lpGuidString);
+        lstrcatW(szKeyName, CloseBrace);
     }
 
     if (Disposition == RegDisposition_OpenAlways)
