@@ -229,6 +229,7 @@ list(APPEND SOURCE
     ${REACTOS_SOURCE_DIR}/ntoskrnl/mm/ARM3/syspte.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/mm/ARM3/vadnode.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/mm/ARM3/virtual.c
+    ${REACTOS_SOURCE_DIR}/ntoskrnl/mm/ARM3/wslist.cpp
     ${REACTOS_SOURCE_DIR}/ntoskrnl/mm/ARM3/zeropage.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/mm/balance.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/mm/freelist.c
