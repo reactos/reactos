@@ -2265,6 +2265,104 @@ SeTokenIsWriteRestricted(IN PACCESS_TOKEN Token)
     return (((PTOKEN)Token)->TokenFlags & SE_BACKUP_PRIVILEGES_CHECKED) != 0;
 }
 
+/**
+ * @brief
+ * Ensures that client impersonation can occur by checking if the token
+ * we're going to assign as the impersonation token can be actually impersonated
+ * in the first place. The routine is used primarily by PsImpersonateClient.
+ *
+ * @param[in] ProcessToken
+ * Token from a process.
+ *
+ * @param[in] TokenToImpersonate
+ * Token that we are going to impersonate.
+ *
+ * @param[in] ImpersonationLevel
+ * Security impersonation level grade.
+ *
+ * @return
+ * Returns TRUE if the conditions checked are met for token impersonation,
+ * FALSE otherwise.
+ */
+BOOLEAN
+NTAPI
+SeTokenCanImpersonate(
+    _In_ PTOKEN ProcessToken,
+    _In_ PTOKEN TokenToImpersonate,
+    _In_ SECURITY_IMPERSONATION_LEVEL ImpersonationLevel)
+{
+    BOOLEAN CanImpersonate;
+    PAGED_CODE();
+
+    /*
+     * SecurityAnonymous and SecurityIdentification levels do not
+     * allow impersonation. If we get such levels from the call
+     * then something's seriously wrong.
+     */
+    ASSERT(ImpersonationLevel != SecurityAnonymous ||
+           ImpersonationLevel != SecurityIdentification);
+
+    /* Time to lock our tokens */
+    SepAcquireTokenLockShared(ProcessToken);
+    SepAcquireTokenLockShared(TokenToImpersonate);
+
+    /* What kind of authentication ID does the token have? */
+    if (RtlEqualLuid(&TokenToImpersonate->AuthenticationId,
+                     &SeAnonymousAuthenticationId))
+    {
+        /*
+         * OK, it looks like the token has an anonymous
+         * authentication. Is that token created by the system?
+         */
+        if (TokenToImpersonate->TokenSource.SourceName != SeSystemTokenSource.SourceName &&
+            !RtlEqualLuid(&TokenToImpersonate->TokenSource.SourceIdentifier, &SeSystemTokenSource.SourceIdentifier))
+        {
+            /* It isn't, we can't impersonate regular tokens */
+            DPRINT("SeTokenCanImpersonate(): Token has an anonymous authentication ID, can't impersonate!\n");
+            CanImpersonate = FALSE;
+            goto Quit;
+        }
+    }
+
+    /* Are the SID values from both tokens equal? */
+    if (!RtlEqualSid(ProcessToken->UserAndGroups->Sid,
+                     TokenToImpersonate->UserAndGroups->Sid))
+    {
+        /* They aren't, bail out */
+        DPRINT("SeTokenCanImpersonate(): Tokens SIDs are not equal!\n");
+        CanImpersonate = FALSE;
+        goto Quit;
+    }
+
+    /*
+     * Make sure the tokens aren't diverged in terms of
+     * restrictions, that is, one token is restricted
+     * but the other one isn't.
+     */
+    if (SeTokenIsRestricted(ProcessToken) !=
+        SeTokenIsRestricted(TokenToImpersonate))
+    {
+        /*
+         * One token is restricted so we cannot
+         * continue further at this point, bail out.
+         */
+        DPRINT("SeTokenCanImpersonate(): One token is restricted, can't continue!\n");
+        CanImpersonate = FALSE;
+        goto Quit;
+    }
+
+    /* If we've reached that far then we can impersonate! */
+    DPRINT("SeTokenCanImpersonate(): We can impersonate.\n");
+    CanImpersonate = TRUE;
+
+Quit:
+    /* We're done, unlock the tokens now */
+    SepReleaseTokenLock(ProcessToken);
+    SepReleaseTokenLock(TokenToImpersonate);
+
+    return CanImpersonate;
+}
+
 /* SYSTEM CALLS ***************************************************************/
 
 /*

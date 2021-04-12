@@ -248,6 +248,13 @@ SepSidInTokenEx(
     IN BOOLEAN Restricted
 );
 
+BOOLEAN
+NTAPI
+SeTokenCanImpersonate(
+    _In_ PTOKEN ProcessToken,
+    _In_ PTOKEN TokenToImpersonate,
+    _In_ SECURITY_IMPERSONATION_LEVEL ImpersonationLevel);
+
 /* Functions */
 BOOLEAN
 NTAPI
