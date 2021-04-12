@@ -26,27 +26,27 @@
 @ stub _LCbuild
 @ stub _LCmulcc
 @ stub _LCmulcr
-@ stub __libm_sse2_acos
-@ stub __libm_sse2_acosf
-@ stub __libm_sse2_asin
-@ stub __libm_sse2_asinf
-@ stub __libm_sse2_atan
-@ stub __libm_sse2_atan2
-@ stub __libm_sse2_atanf
-@ stub __libm_sse2_cos
-@ stub __libm_sse2_cosf
-@ stub __libm_sse2_exp
-@ stub __libm_sse2_expf
-@ stub __libm_sse2_log
-@ stub __libm_sse2_log10
-@ stub __libm_sse2_log10f
-@ stub __libm_sse2_logf
-@ stub __libm_sse2_pow
-@ stub __libm_sse2_powf
-@ stub __libm_sse2_sin
-@ stub __libm_sse2_sinf
-@ stub __libm_sse2_tan
-@ stub __libm_sse2_tanf
+@ stdcall -version=0x600+ -arch=i386 __libm_sse2_acos() msvcrt.__libm_sse2_acos
+@ stdcall -version=0x600+ -arch=i386 __libm_sse2_acosf() msvcrt.__libm_sse2_acosf
+@ stdcall -version=0x600+ -arch=i386 __libm_sse2_asin() msvcrt.__libm_sse2_asin
+@ stdcall -version=0x600+ -arch=i386 __libm_sse2_asinf() msvcrt.__libm_sse2_asinf
+@ stdcall -version=0x600+ -arch=i386 __libm_sse2_atan() msvcrt.__libm_sse2_atan
+@ stdcall -version=0x600+ -arch=i386 __libm_sse2_atan2() msvcrt.__libm_sse2_atan2
+@ stdcall -version=0x600+ -arch=i386 __libm_sse2_atanf() msvcrt.__libm_sse2_atanf
+@ stdcall -version=0x600+ -arch=i386 __libm_sse2_cos() msvcrt.__libm_sse2_cos
+@ stdcall -version=0x600+ -arch=i386 __libm_sse2_cosf() msvcrt.__libm_sse2_cosf
+@ stdcall -version=0x600+ -arch=i386 __libm_sse2_exp() msvcrt.__libm_sse2_exp
+@ stdcall -version=0x600+ -arch=i386 __libm_sse2_expf() msvcrt.__libm_sse2_expf
+@ stdcall -version=0x600+ -arch=i386 __libm_sse2_log() msvcrt.__libm_sse2_log
+@ stdcall -version=0x600+ -arch=i386 __libm_sse2_log10() msvcrt.__libm_sse2_log10
+@ stdcall -version=0x600+ -arch=i386 __libm_sse2_log10f() msvcrt.__libm_sse2_log10f
+@ stdcall -version=0x600+ -arch=i386 __libm_sse2_logf() msvcrt.__libm_sse2_logf
+@ stdcall -version=0x600+ -arch=i386 __libm_sse2_pow() msvcrt.__libm_sse2_pow
+@ stdcall -version=0x600+ -arch=i386 __libm_sse2_powf() msvcrt.__libm_sse2_powf
+@ stdcall -version=0x600+ -arch=i386 __libm_sse2_sin() msvcrt.__libm_sse2_sin
+@ stdcall -version=0x600+ -arch=i386 __libm_sse2_sinf() msvcrt.__libm_sse2_sinf
+@ stdcall -version=0x600+ -arch=i386 __libm_sse2_tan() msvcrt.__libm_sse2_tan
+@ stdcall -version=0x600+ -arch=i386 __libm_sse2_tanf() msvcrt.__libm_sse2_tanf
 @ stdcall __setusermatherr() msvcrt.__setusermatherr
 @ stdcall _cabs() msvcrt._cabs
 @ stdcall _chgsign() msvcrt._chgsign
@@ -80,15 +80,15 @@
 @ stub _fdtest
 @ stub _fdunscale
 @ stdcall _finite() msvcrt._finite
-@ stub _finitef
+@ stdcall -arch=x86_64 _finitef() msvcrt._finitef
 @ stdcall _fpclass() msvcrt._fpclass
-@ stub _fpclassf
+@ stdcall -arch=x86_64 _fpclassf() msvcrt._fpclassf
 @ stdcall -arch=i386 _ftol() msvcrt._ftol
 @ stub _get_FMA3_enable
 @ stdcall _hypot() msvcrt._hypot
 @ stdcall -arch=x86_64,arm _hypotf() msvcrt._hypotf
 @ stdcall _isnan() msvcrt._isnan
-@ stub _isnanf
+@ stdcall -arch=x86_64 _isnanf() msvcrt._isnanf
 @ stdcall _j0() msvcrt._j0
 @ stdcall _j1() msvcrt._j1
 @ stdcall _jn() msvcrt._jn
@@ -117,11 +117,11 @@
 @ stdcall _logb() msvcrt._logb
 @ stub _logbf
 @ stdcall _nextafter() msvcrt._nextafter
-@ stub _nextafterf
+@ stdcall -arch=x86_64 _nextafterf() msvcrt._nextafterf
 @ stdcall _scalb() msvcrt._scalb
-@ stub _scalbf
+@ stdcall -arch=x86_64 _scalbf() msvcrt._scalbf
 @ stub _set_FMA3_enable
-@ stub _set_SSE2_enable
+@ stdcall -arch=i386 _set_SSE2_enable() msvcrt._set_SSE2_enable
 @ stdcall _y0() msvcrt._y0
 @ stdcall _y1() msvcrt._y1
 @ stdcall _yn() msvcrt._yn

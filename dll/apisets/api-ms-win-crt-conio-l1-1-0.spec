@@ -10,18 +10,18 @@
 @ stub __conio_common_vcwprintf_s
 @ stub __conio_common_vcwscanf
 @ stdcall _cgets() msvcrt._cgets
-@ stub _cgets_s
-@ stub _cgetws
-@ stub _cgetws_s
+@ stdcall -version=0x600+ _cgets_s() msvcrt._cgets_s
+@ stdcall _cgetws() msvcrt._cgetws
+@ stdcall -version=0x600+ _cgetws_s() msvcrt._cgetws_s
 @ stdcall _cputs() msvcrt._cputs
-@ stub _cputws
+@ stdcall _cputws() msvcrt._cputws
 @ stdcall _getch() msvcrt._getch
 @ stub _getch_nolock
 @ stdcall _getche() msvcrt._getche
 @ stub _getche_nolock
-@ stub _getwch
+@ stdcall _getwch() msvcrt._getwch
 @ stub _getwch_nolock
-@ stub _getwche
+@ stdcall _getwche() msvcrt._getwche
 @ stub _getwche_nolock
 @ stdcall _putch() msvcrt._putch
 @ stub _putch_nolock

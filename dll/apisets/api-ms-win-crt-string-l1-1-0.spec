@@ -6,99 +6,99 @@
 @ stdcall __iscsymf() msvcrt.__iscsymf
 @ stub __iswcsym
 @ stub __iswcsymf
-@ stub __strncnt
-@ stub __wcsncnt
-@ stub _isalnum_l
-@ stub _isalpha_l
+@ stdcall -version=0x600+ __strncnt() msvcrt.__strncnt
+@ stdcall -version=0x600+ __wcsncnt() msvcrt.__wcsncnt
+@ stdcall -version=0x600+ _isalnum_l() msvcrt._isalnum_l
+@ stdcall -version=0x600+ _isalpha_l() msvcrt._isalpha_l
 @ stub _isblank_l
-@ stub _iscntrl_l
+@ stdcall -version=0x600+ _iscntrl_l() msvcrt._iscntrl_l
 @ stdcall _isctype() msvcrt._isctype
-@ stub _isctype_l
-@ stub _isdigit_l
-@ stub _isgraph_l
-@ stub _isleadbyte_l
-@ stub _islower_l
-@ stub _isprint_l
+@ stdcall -version=0x600+ _isctype_l() msvcrt._isctype_l
+@ stdcall -version=0x600+ _isdigit_l() msvcrt._isdigit_l
+@ stdcall -version=0x600+ _isgraph_l() msvcrt._isgraph_l
+@ stdcall -version=0x600+ _isleadbyte_l() msvcrt._isleadbyte_l
+@ stdcall -version=0x600+ _islower_l() msvcrt._islower_l
+@ stdcall -version=0x600+ _isprint_l() msvcrt._isprint_l
 @ stub _ispunct_l
-@ stub _isspace_l
-@ stub _isupper_l
-@ stub _iswalnum_l
-@ stub _iswalpha_l
+@ stdcall -version=0x600+ _isspace_l() msvcrt._isspace_l
+@ stdcall -version=0x600+ _isupper_l() msvcrt._isupper_l
+@ stdcall -version=0x600+ _iswalnum_l() msvcrt._iswalnum_l
+@ stdcall -version=0x600+ _iswalpha_l() msvcrt._iswalpha_l
 @ stub _iswblank_l
-@ stub _iswcntrl_l
+@ stdcall -version=0x600+ _iswcntrl_l() msvcrt._iswcntrl_l
 @ stub _iswcsym_l
 @ stub _iswcsymf_l
-@ stub _iswctype_l
-@ stub _iswdigit_l
-@ stub _iswgraph_l
-@ stub _iswlower_l
-@ stub _iswprint_l
-@ stub _iswpunct_l
-@ stub _iswspace_l
-@ stub _iswupper_l
-@ stub _iswxdigit_l
-@ stub _isxdigit_l
+@ stdcall -version=0x600+ _iswctype_l() msvcrt._iswctype_l
+@ stdcall -version=0x600+ _iswdigit_l() msvcrt._iswdigit_l
+@ stdcall -version=0x600+ _iswgraph_l() msvcrt._iswgraph_l
+@ stdcall -version=0x600+ _iswlower_l() msvcrt._iswlower_l
+@ stdcall -version=0x600+ _iswprint_l() msvcrt._iswprint_l
+@ stdcall -version=0x600+ _iswpunct_l() msvcrt._iswpunct_l
+@ stdcall -version=0x600+ _iswspace_l() msvcrt._iswspace_l
+@ stdcall -version=0x600+ _iswupper_l() msvcrt._iswupper_l
+@ stdcall -version=0x600+ _iswxdigit_l() msvcrt._iswxdigit_l
+@ stdcall -version=0x600+ _isxdigit_l() msvcrt._isxdigit_l
 @ stdcall _memccpy() msvcrt._memccpy
 @ stdcall _memicmp() msvcrt._memicmp
-@ stub _memicmp_l
-@ stub _strcoll_l
+@ stdcall -version=0x600+ _memicmp_l() msvcrt._memicmp_l
+@ stdcall -version=0x600+ _strcoll_l() msvcrt._strcoll_l
 @ stdcall _strdup() msvcrt._strdup
 @ stdcall _stricmp() msvcrt._stricmp
-@ stub _stricmp_l
+@ stdcall -version=0x600+ _stricmp_l() msvcrt._stricmp_l
 @ stdcall _stricoll() msvcrt._stricoll
-@ stub _stricoll_l
+@ stdcall -version=0x600+ _stricoll_l() msvcrt._stricoll_l
 @ stdcall _strlwr() msvcrt._strlwr
-@ stub _strlwr_l
-@ stub _strlwr_s
-@ stub _strlwr_s_l
+@ stdcall -version=0x600+ _strlwr_l() msvcrt._strlwr_l
+@ stdcall -version=0x600+ _strlwr_s() msvcrt._strlwr_s
+@ stdcall -version=0x600+ _strlwr_s_l() msvcrt._strlwr_s_l
 @ stdcall _strncoll() msvcrt._strncoll
-@ stub _strncoll_l
+@ stdcall -version=0x600+ _strncoll_l() msvcrt._strncoll_l
 @ stdcall _strnicmp() msvcrt._strnicmp
-@ stub _strnicmp_l
+@ stdcall -version=0x600+ _strnicmp_l() msvcrt._strnicmp_l
 @ stdcall _strnicoll() msvcrt._strnicoll
-@ stub _strnicoll_l
+@ stdcall -version=0x600+ _strnicoll_l() msvcrt._strnicoll_l
 @ stdcall _strnset() msvcrt._strnset
-@ stub _strnset_s
+@ stdcall -version=0x600+ _strnset_s() msvcrt._strnset_s
 @ stdcall _strrev() msvcrt._strrev
 @ stdcall _strset() msvcrt._strset
-@ stub _strset_s
+@ stdcall -version=0x600+ _strset_s() msvcrt._strset_s
 @ stdcall _strupr() msvcrt._strupr
-@ stub _strupr_l
-@ stub _strupr_s
-@ stub _strupr_s_l
-@ stub _strxfrm_l
+@ stdcall -version=0x600+ _strupr_l() msvcrt._strupr_l
+@ stdcall -version=0x600+ _strupr_s() msvcrt._strupr_s
+@ stdcall -version=0x600+ _strupr_s_l() msvcrt._strupr_s_l
+@ stdcall -version=0x600+ _strxfrm_l() msvcrt._strxfrm_l
 @ stdcall _tolower() msvcrt._tolower
-@ stub _tolower_l
+@ stdcall -version=0x600+ _tolower_l() msvcrt._tolower_l
 @ stdcall _toupper() msvcrt._toupper
-@ stub _toupper_l
-@ stub _towlower_l
-@ stub _towupper_l
-@ stub _wcscoll_l
+@ stdcall -version=0x600+ _toupper_l() msvcrt._toupper_l
+@ stdcall -version=0x600+ _towlower_l() msvcrt._towlower_l
+@ stdcall -version=0x600+ _towupper_l() msvcrt._towupper_l
+@ stdcall -version=0x600+ _wcscoll_l() msvcrt._wcscoll_l
 @ stdcall _wcsdup() msvcrt._wcsdup
 @ stdcall _wcsicmp() msvcrt._wcsicmp
-@ stub _wcsicmp_l
+@ stdcall -version=0x600+ _wcsicmp_l() msvcrt._wcsicmp_l
 @ stdcall _wcsicoll() msvcrt._wcsicoll
-@ stub _wcsicoll_l
+@ stdcall -version=0x600+ _wcsicoll_l() msvcrt._wcsicoll_l
 @ stdcall _wcslwr() msvcrt._wcslwr
-@ stub _wcslwr_l
-@ stub _wcslwr_s
-@ stub _wcslwr_s_l
+@ stdcall -version=0x600+ _wcslwr_l() msvcrt._wcslwr_l
+@ stdcall -version=0x600+ _wcslwr_s() msvcrt._wcslwr_s
+@ stdcall -version=0x600+ _wcslwr_s_l() msvcrt._wcslwr_s_l
 @ stdcall _wcsncoll() msvcrt._wcsncoll
-@ stub _wcsncoll_l
+@ stdcall -version=0x600+ _wcsncoll_l() msvcrt._wcsncoll_l
 @ stdcall _wcsnicmp() msvcrt._wcsnicmp
-@ stub _wcsnicmp_l
+@ stdcall -version=0x600+ _wcsnicmp_l() msvcrt._wcsnicmp_l
 @ stdcall _wcsnicoll() msvcrt._wcsnicoll
-@ stub _wcsnicoll_l
+@ stdcall -version=0x600+ _wcsnicoll_l() msvcrt._wcsnicoll_l
 @ stdcall _wcsnset() msvcrt._wcsnset
-@ stub _wcsnset_s
+@ stdcall -version=0x600+ _wcsnset_s() msvcrt._wcsnset_s
 @ stdcall _wcsrev() msvcrt._wcsrev
 @ stdcall _wcsset() msvcrt._wcsset
-@ stub _wcsset_s
+@ stdcall -version=0x600+ _wcsset_s() msvcrt._wcsset_s
 @ stdcall _wcsupr() msvcrt._wcsupr
-@ stub _wcsupr_l
-@ stub _wcsupr_s
-@ stub _wcsupr_s_l
-@ stub _wcsxfrm_l
+@ stdcall -version=0x600+ _wcsupr_l() msvcrt._wcsupr_l
+@ stdcall -version=0x600+ _wcsupr_s() msvcrt._wcsupr_s
+@ stdcall -version=0x600+ _wcsupr_s_l() msvcrt._wcsupr_s_l
+@ stdcall -version=0x600+ _wcsxfrm_l() msvcrt._wcsxfrm_l
 @ stub _wctype
 @ stdcall is_wctype() msvcrt.is_wctype
 @ stdcall isalnum() msvcrt.isalnum
@@ -129,28 +129,28 @@
 @ stdcall iswxdigit() msvcrt.iswxdigit
 @ stdcall isxdigit() msvcrt.isxdigit
 @ stdcall mblen() msvcrt.mblen
-@ stub mbrlen
-@ stub memcpy_s
-@ stub memmove_s
+@ stdcall -version=0x600+ mbrlen() msvcrt.mbrlen
+@ stdcall -version=0x600+ memcpy_s() msvcrt.memcpy_s
+@ stdcall -version=0x600+ memmove_s() msvcrt.memmove_s
 @ stdcall memset() msvcrt.memset
 @ stdcall strcat() msvcrt.strcat
-@ stub strcat_s
+@ stdcall -version=0x600+ strcat_s() msvcrt.strcat_s
 @ stdcall strcmp() msvcrt.strcmp
 @ stdcall strcoll() msvcrt.strcoll
 @ stdcall strcpy() msvcrt.strcpy
-@ stub strcpy_s
+@ stdcall -version=0x600+ strcpy_s() msvcrt.strcpy_s
 @ stdcall strcspn() msvcrt.strcspn
 @ stdcall strlen() msvcrt.strlen
 @ stdcall strncat() msvcrt.strncat
-@ stub strncat_s
+@ stdcall -version=0x600+ strncat_s() msvcrt.strncat_s
 @ stdcall strncmp() msvcrt.strncmp
 @ stdcall strncpy() msvcrt.strncpy
-@ stub strncpy_s
-@ stub strnlen
+@ stdcall -version=0x600+ strncpy_s() msvcrt.strncpy_s
+@ stdcall -version=0x600+ strnlen() msvcrt.strnlen
 @ stdcall strpbrk() msvcrt.strpbrk
 @ stdcall strspn() msvcrt.strspn
 @ stdcall strtok() msvcrt.strtok
-@ stub strtok_s
+@ stdcall -version=0x600+ strtok_s() msvcrt.strtok_s
 @ stdcall strxfrm() msvcrt.strxfrm
 @ stdcall tolower() msvcrt.tolower
 @ stdcall toupper() msvcrt.toupper
@@ -158,23 +158,23 @@
 @ stdcall towlower() msvcrt.towlower
 @ stdcall towupper() msvcrt.towupper
 @ stdcall wcscat() msvcrt.wcscat
-@ stub wcscat_s
+@ stdcall -version=0x600+ wcscat_s() msvcrt.wcscat_s
 @ stdcall wcscmp() msvcrt.wcscmp
 @ stdcall wcscoll() msvcrt.wcscoll
 @ stdcall wcscpy() msvcrt.wcscpy
-@ stub wcscpy_s
+@ stdcall -version=0x600+ wcscpy_s() msvcrt.wcscpy_s
 @ stdcall wcscspn() msvcrt.wcscspn
 @ stdcall wcslen() msvcrt.wcslen
 @ stdcall wcsncat() msvcrt.wcsncat
-@ stub wcsncat_s
+@ stdcall -version=0x600+ wcsncat_s() msvcrt.wcsncat_s
 @ stdcall wcsncmp() msvcrt.wcsncmp
 @ stdcall wcsncpy() msvcrt.wcsncpy
-@ stub wcsncpy_s
-@ stub wcsnlen
+@ stdcall -version=0x600+ wcsncpy_s() msvcrt.wcsncpy_s
+@ stdcall -version=0x600+ wcsnlen() msvcrt.wcsnlen
 @ stdcall wcspbrk() msvcrt.wcspbrk
 @ stdcall wcsspn() msvcrt.wcsspn
 @ stdcall wcstok() msvcrt.wcstok
-@ stub wcstok_s
+@ stdcall -version=0x600+ wcstok_s() msvcrt.wcstok_s
 @ stdcall wcsxfrm() msvcrt.wcsxfrm
 @ stub wctype
 @ stub wmemcpy_s

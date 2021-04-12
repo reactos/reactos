@@ -4,6 +4,7 @@
 @ stdcall PowerGetActiveScheme() powrprof.PowerGetActiveScheme
 @ stub PowerReadACValue
 @ stdcall PowerReadDCValue() powrprof.PowerReadDCValue
+@ stub PowerReadFriendlyName
 @ stub PowerSetActiveScheme
 @ stub PowerSettingRegisterNotification
 @ stub PowerSettingUnregisterNotification

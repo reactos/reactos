@@ -8,8 +8,8 @@
 @ stdcall _cexit() msvcrt._cexit
 @ stdcall _exit() msvcrt._exit
 @ stdcall _initterm() msvcrt._initterm
-@ stub _initterm_e
-@ stub _invalid_parameter
+@ stdcall -version=0x600+ _initterm_e() msvcrt._initterm_e
+@ stdcall -version=0x600+ _invalid_parameter() msvcrt._invalid_parameter
 @ stdcall _onexit() msvcrt._onexit
 @ stdcall _purecall() msvcrt._purecall
 @ stdcall _time64() msvcrt._time64

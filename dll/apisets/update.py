@@ -17,7 +17,7 @@ SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__))
 NL_CHAR = '\n'
 
 IGNORE_OPTIONS = ('-norelay', '-ret16', '-ret64', '-register', '-private',
-                  '-noname', '-ordinal', '-i386', '-arch=', '-stub', '-version=')
+                  '-noname', '-ordinal', '-i386', '-arch=', '-stub', '-version=', '-fastcall')
 
 # Figure these out later
 FUNCTION_BLACKLIST = [
@@ -65,6 +65,7 @@ class Arch(object):
         'any': Any,
         'win32': i386,
         'win64': x86_64,
+        'amd64' : x86_64,
     }
 
     TO_STR = {
@@ -78,7 +79,10 @@ class Arch(object):
         self._val = initial
 
     def add(self, text):
-        self._val |= sum([Arch.FROM_STR[arch] for arch in text.split(',')])
+        if text[0] == '!':
+            self._val = self.Any & ~sum([Arch.FROM_STR[arch] for arch in text[1:].split(',')])
+        else:
+            self._val |= sum([Arch.FROM_STR[arch] for arch in text.split(',')])
         assert self._val != 0
 
     def has(self, val):
@@ -191,8 +195,6 @@ class SpecEntry(object):
             self._forwarder[0] = ALIAS_DLL[self._forwarder[0]]
 
     def resolve_forwarders(self, module_lookup, try_modules):
-        if self._forwarder:
-            assert self._forwarder[1] == self.name, '{}:{}'.format(self._forwarder[1], self.name)
         if self.noname and self.name == '@':
             return 0    # cannot search for this function
         self._forwarder = []

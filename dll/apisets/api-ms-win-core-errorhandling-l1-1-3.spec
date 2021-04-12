@@ -7,13 +7,13 @@
 @ stdcall FatalAppExitW() kernel32.FatalAppExitW
 @ stdcall -version=0x600+ GetErrorMode() kernel32.GetErrorMode
 @ stdcall GetLastError() kernel32.GetLastError
-@ stub GetThreadErrorMode
+@ stdcall -version=0x600+ GetThreadErrorMode() kernel32.GetThreadErrorMode
 @ stdcall RaiseException() kernel32.RaiseException
 @ stub RaiseFailFastException
 @ stdcall RemoveVectoredContinueHandler() kernel32.RemoveVectoredContinueHandler
 @ stdcall RemoveVectoredExceptionHandler() kernel32.RemoveVectoredExceptionHandler
 @ stdcall SetErrorMode() kernel32.SetErrorMode
 @ stdcall SetLastError() kernel32.SetLastError
-@ stub SetThreadErrorMode
+@ stdcall -version=0x600+ SetThreadErrorMode() kernel32.SetThreadErrorMode
 @ stdcall SetUnhandledExceptionFilter() kernel32.SetUnhandledExceptionFilter
 @ stdcall UnhandledExceptionFilter() kernel32.UnhandledExceptionFilter

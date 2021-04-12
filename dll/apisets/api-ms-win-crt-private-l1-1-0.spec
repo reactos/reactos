@@ -18,16 +18,17 @@
 @ stub __BuildCatchObject
 @ stub __BuildCatchObjectHelper
 @ stdcall -arch=x86_64,arm __C_specific_handler() msvcrt.__C_specific_handler
+@ stub __C_specific_handler_noexcept
 @ stdcall -arch=i386 __CxxDetectRethrow() msvcrt.__CxxDetectRethrow
-@ stub __CxxExceptionFilter
+@ stdcall -arch=i386 __CxxExceptionFilter() msvcrt.__CxxExceptionFilter
 @ stdcall -arch=i386,x86_64 __CxxFrameHandler() msvcrt.__CxxFrameHandler
-@ stdcall -arch=i386 __CxxFrameHandler2() msvcrt.__CxxFrameHandler2
-@ stdcall -arch=arm __CxxFrameHandler3() msvcrt.__CxxFrameHandler3
+@ stdcall -version=0x600+ -arch=i386,x86_64 __CxxFrameHandler2() msvcrt.__CxxFrameHandler2
+@ stdcall -version=0x600+ -arch=i386,x86_64,arm __CxxFrameHandler3() msvcrt.__CxxFrameHandler3
 @ stdcall -arch=i386 __CxxLongjmpUnwind() msvcrt.__CxxLongjmpUnwind
 @ stdcall -arch=i386 __CxxQueryExceptionSize() msvcrt.__CxxQueryExceptionSize
-@ stub __CxxRegisterExceptionObject
-@ stub __CxxUnregisterExceptionObject
-@ cdecl __DestructExceptionObject() msvcrt.__DestructExceptionObject
+@ stdcall -arch=i386 __CxxRegisterExceptionObject() msvcrt.__CxxRegisterExceptionObject
+@ stdcall -arch=i386 __CxxUnregisterExceptionObject() msvcrt.__CxxUnregisterExceptionObject
+@ stdcall __DestructExceptionObject() msvcrt.__DestructExceptionObject
 @ stub __FrameUnwindFilter
 @ stub __GetPlatformExceptionInfo
 @ stub __NLG_Dispatch2
@@ -47,6 +48,7 @@
 @ stub __report_gsfailure
 @ stub __std_exception_copy
 @ stub __std_exception_destroy
+@ stub __std_terminate
 @ stub __std_type_info_compare
 @ stub __std_type_info_destroy_list
 @ stub __std_type_info_hash
@@ -54,17 +56,18 @@
 @ stdcall __unDName() msvcrt.__unDName
 @ stdcall __unDNameEx() msvcrt.__unDNameEx
 @ stdcall -arch=i386,x86_64,arm __uncaught_exception() msvcrt.__uncaught_exception
+@ stub __uncaught_exceptions
 @ stdcall -arch=i386 _chkesp() msvcrt._chkesp
 @ stdcall -arch=i386 _except_handler2() msvcrt._except_handler2
 @ stdcall -arch=i386 _except_handler3() msvcrt._except_handler3
-@ stdcall -version=0x600+ _except_handler4_common()  msvcrt._except_handler4_common
+@ stdcall -version=0x600+ -arch=i386 _except_handler4_common() msvcrt._except_handler4_common
 @ stub _get_purecall_handler
 @ stub _get_unexpected
 @ stdcall -arch=i386 _global_unwind2() msvcrt._global_unwind2
 @ stub _is_exception_typeof
-@ stdcall -arch=x86_64 _local_unwind() kernel32._local_unwind
+@ stdcall -arch=x86_64 _local_unwind() msvcrt._local_unwind
 @ stdcall -arch=i386 _local_unwind2() msvcrt._local_unwind2
-@ stdcall -version=0x600+ _local_unwind4() msvcrt._local_unwind4
+@ stdcall -version=0x600+ -arch=i386 _local_unwind4() msvcrt._local_unwind4
 @ stdcall -arch=i386 _longjmpex() msvcrt._longjmpex
 @ stub _o__CIacos
 @ stub _o__CIasin
@@ -90,6 +93,10 @@
 @ stub _o__W_Getmonths
 @ stub _o__W_Gettnames
 @ stub _o__Wcsftime
+@ stub _o____lc_codepage_func
+@ stub _o____lc_collate_cp_func
+@ stub _o____lc_locale_name_func
+@ stub _o____mb_cur_max_func
 @ stub _o___acrt_iob_func
 @ stub _o___conio_common_vcprintf
 @ stub _o___conio_common_vcprintf_p
@@ -138,6 +145,10 @@
 @ stub _o___p__wpgmptr
 @ stub _o___pctype_func
 @ stub _o___pwctype_func
+@ stub _o___std_exception_copy
+@ stub _o___std_exception_destroy
+@ stub _o___std_type_info_destroy_list
+@ stub _o___std_type_info_name
 @ stub _o___stdio_common_vfprintf
 @ stub _o___stdio_common_vfprintf_p
 @ stub _o___stdio_common_vfprintf_s
@@ -187,6 +198,7 @@
 @ stub _o__cabs
 @ stub _o__callnewh
 @ stub _o__calloc_base
+@ stub _o__cexit
 @ stub _o__cgets
 @ stub _o__cgets_s
 @ stub _o__cgetws
@@ -198,11 +210,15 @@
 @ stub _o__chsize_s
 @ stub _o__close
 @ stub _o__commit
+@ stub _o__configthreadlocale
+@ stub _o__configure_narrow_argv
 @ stub _o__configure_wide_argv
+@ stub _o__controlfp_s
 @ stub _o__cputs
 @ stub _o__cputws
 @ stub _o__creat
 @ stub _o__create_locale
+@ stub _o__crt_atexit
 @ stub _o__ctime32_s
 @ stub _o__ctime64_s
 @ stub _o__cwait
@@ -229,11 +245,12 @@
 @ stub _o__eof
 @ stub _o__errno
 @ stub _o__except1
-@ stub -version=0xA00+ _o__execute_onexit_table
+@ stub _o__execute_onexit_table
 @ stub _o__execv
 @ stub _o__execve
 @ stub _o__execvp
 @ stub _o__execvpe
+@ stub _o__exit
 @ stub _o__expand
 @ stub _o__fclose_nolock
 @ stub _o__fcloseall
@@ -304,6 +321,8 @@
 @ stub _o__get_errno
 @ stub _o__get_fmode
 @ stub _o__get_heap_handle
+@ stub _o__get_initial_narrow_environment
+@ stub _o__get_initial_wide_environment
 @ stub _o__get_invalid_parameter_handler
 @ stub _o__get_narrow_winmain_command_line
 @ stub _o__get_osfhandle
@@ -348,7 +367,9 @@
 @ stub _o__i64toa_s
 @ stub _o__i64tow
 @ stub _o__i64tow_s
-@ stub -version=0xA00+ _o__initialize_onexit_table
+@ stub _o__initialize_narrow_environment
+@ stub _o__initialize_onexit_table
+@ stub _o__initialize_wide_environment
 @ stub _o__invalid_parameter_noinfo
 @ stub _o__invalid_parameter_noinfo_noreturn
 @ stub _o__isatty
@@ -620,6 +641,7 @@
 @ stub _o__pclose
 @ stub _o__pipe
 @ stub _o__popen
+@ stub _o__purecall
 @ stub _o__putc_nolock
 @ stub _o__putch
 @ stub _o__putch_nolock
@@ -633,7 +655,7 @@
 @ stub _o__read
 @ stub _o__realloc_base
 @ stub _o__recalloc
-@ stub -version=0xA00+ _o__register_onexit_function
+@ stub _o__register_onexit_function
 @ stub _o__resetstkoflw
 @ stub _o__rmdir
 @ stub _o__rmtmp
@@ -641,11 +663,13 @@
 @ stub _o__scalbf
 @ stub _o__searchenv
 @ stub _o__searchenv_s
-@ cdecl -version=0xA00+ _o__seh_filter_dll() msvcrt.__CppXcptFilter
-@ cdecl -version=0xA00+ _o__seh_filter_exe() msvcrt._XcptFilter
+@ stub _o__seh_filter_dll
+@ stub _o__seh_filter_exe
 @ stub _o__set_abort_behavior
+@ stub _o__set_app_type
 @ stub _o__set_doserrno
 @ stub _o__set_errno
+@ stub _o__set_fmode
 @ stub _o__set_invalid_parameter_handler
 @ stub _o__set_new_handler
 @ stub _o__set_new_mode
@@ -915,6 +939,7 @@
 @ stub _o_erfcl
 @ stub _o_erff
 @ stub _o_erfl
+@ stub _o_exit
 @ stub _o_exp
 @ stub _o_exp2
 @ stub _o_exp2f
@@ -1031,7 +1056,7 @@
 @ stub _o_mbstowcs
 @ stub _o_mbstowcs_s
 @ stub _o_mbtowc
-@ stub _o_memset
+@ stub _o_memcpy_s
 @ stub _o_modf
 @ stub _o_modff
 @ stub _o_nan
@@ -1066,6 +1091,7 @@
 @ stub _o_remquo
 @ stub _o_remquof
 @ stub _o_remquol
+@ stub _o_rename
 @ stub _o_rewind
 @ stub _o_rint
 @ stub _o_rintf
@@ -1081,6 +1107,7 @@
 @ stub _o_scalbnl
 @ stub _o_set_terminate
 @ stub _o_setbuf
+@ stub _o_setlocale
 @ stub _o_setvbuf
 @ stub _o_sin
 @ stub _o_sinf
@@ -1152,7 +1179,7 @@
 @ stub _o_wmemmove_s
 @ stdcall _purecall() msvcrt._purecall
 @ stdcall -arch=i386 _seh_longjmp_unwind() msvcrt._seh_longjmp_unwind
-@ stub _seh_longjmp_unwind4
+@ stdcall -version=0x600+ -arch=i386 _seh_longjmp_unwind4() msvcrt._seh_longjmp_unwind4
 @ stub _set_purecall_handler
 @ stub _set_se_translator
 @ stdcall -arch=i386 _setjmp3() msvcrt._setjmp3
