@@ -831,6 +831,21 @@ typedef struct _MMWSLENTRY
     ULONG_PTR VirtualPageNumber: MM_PAGE_FRAME_NUMBER_SIZE;
 } MMWSLENTRY, *PMMWSLENTRY;
 
+typedef struct _MMWSLE_FREE_ENTRY
+{
+    ULONG MustBeZero:1;
+#ifdef _WIN64
+    ULONG PreviousFree: 31;
+    LONG NextFree;
+#define MMWSLE_PREVIOUS_FREE_MASK 0x7FFFFFFF
+#else
+    ULONG PreviousFree: 11;
+#define MMWSLE_PREVIOUS_FREE_MASK 0x7FF
+#define MMWSLE_PREVIOUS_FREE_JUMP 0x800
+    LONG NextFree: 20;
+#endif
+} MMWSLE_FREE_ENTRY, *PMMWSLE_FREE_ENTRY;
+
 typedef struct _MMWSLE
 {
     union
@@ -838,6 +853,7 @@ typedef struct _MMWSLE
         PVOID VirtualAddress;
         ULONG_PTR Long;
         MMWSLENTRY e1;
+        MMWSLE_FREE_ENTRY Free;
     } u1;
 } MMWSLE, *PMMWSLE;
 

@@ -896,40 +896,6 @@ MiInsertSharedUserPageVad(VOID)
 }
 #endif
 
-VOID
-NTAPI
-MiInitializeWorkingSetList(IN PEPROCESS CurrentProcess)
-{
-    PMMPFN Pfn1;
-    PMMPTE sysPte;
-    MMPTE tempPte;
-
-    /* Setup some bogus list data */
-    MmWorkingSetList->LastEntry = CurrentProcess->Vm.MinimumWorkingSetSize;
-    MmWorkingSetList->HashTable = NULL;
-    MmWorkingSetList->HashTableSize = 0;
-    MmWorkingSetList->NumberOfImageWaiters = 0;
-    MmWorkingSetList->Wsle = (PVOID)(ULONG_PTR)0xDEADBABEDEADBABEULL;
-    MmWorkingSetList->VadBitMapHint = 1;
-    MmWorkingSetList->HashTableStart = (PVOID)(ULONG_PTR)0xBADAB00BBADAB00BULL;
-    MmWorkingSetList->HighestPermittedHashAddress = (PVOID)(ULONG_PTR)0xCAFEBABECAFEBABEULL;
-    MmWorkingSetList->FirstFree = 1;
-    MmWorkingSetList->FirstDynamic = 2;
-    MmWorkingSetList->NextSlot = 3;
-    MmWorkingSetList->LastInitializedWsle = 4;
-
-    /* The rule is that the owner process is always in the FLINK of the PDE's PFN entry */
-    Pfn1 = MiGetPfnEntry(CurrentProcess->Pcb.DirectoryTableBase[0] >> PAGE_SHIFT);
-    ASSERT(Pfn1->u4.PteFrame == MiGetPfnEntryIndex(Pfn1));
-    Pfn1->u1.Event = (PKEVENT)CurrentProcess;
-
-    /* Map the process working set in kernel space */
-    sysPte = MiReserveSystemPtes(1, SystemPteSpace);
-    MI_MAKE_HARDWARE_PTE_KERNEL(&tempPte, sysPte, MM_READWRITE, CurrentProcess->WorkingSetPage);
-    MI_WRITE_VALID_PTE(sysPte, tempPte);
-    CurrentProcess->Vm.VmWorkingSetList = MiPteToAddress(sysPte);
-}
-
 NTSTATUS
 NTAPI
 MmInitializeProcessAddressSpace(IN PEPROCESS Process,
@@ -944,6 +910,7 @@ MmInitializeProcessAddressSpace(IN PEPROCESS Process,
     PMMPTE PointerPte;
     KIRQL OldIrql;
     PMMPDE PointerPde;
+    PMMPFN Pfn;
     PFN_NUMBER PageFrameNumber;
     UNICODE_STRING FileName;
     PWCHAR Source;
@@ -980,6 +947,8 @@ MmInitializeProcessAddressSpace(IN PEPROCESS Process,
     /* On x64 the PFNs for the initial process are already set up */
     if (Process != &KiInitialProcess) {
 #endif
+    /* Lock our working set */
+    MiLockProcessWorkingSet(Process, PsGetCurrentThread());
 
     /* Lock PFN database */
     OldIrql = MiAcquirePfnLock();
@@ -997,7 +966,7 @@ MmInitializeProcessAddressSpace(IN PEPROCESS Process,
     MiInitializePfn(PageFrameNumber, PointerPte, TRUE);
 
     /* Do the same for hyperspace */
-    PointerPde = MiAddressToPde((PVOID)HYPER_SPACE);
+    PointerPde = MiAddressToPde(HYPER_SPACE);
     PageFrameNumber = PFN_FROM_PTE(PointerPde);
     MiInitializePfn(PageFrameNumber, (PMMPTE)PointerPde, TRUE);
 #if (_MI_PAGING_LEVELS == 2)
@@ -1019,18 +988,30 @@ MmInitializeProcessAddressSpace(IN PEPROCESS Process,
     ASSERT(Process->Pcb.DirectoryTableBase[1] == PageFrameNumber * PAGE_SIZE);
 #endif
 
-    /* Setup the PFN for the PTE for the working set */
-    PointerPte = MiAddressToPte(MI_WORKING_SET_LIST);
-    MI_MAKE_HARDWARE_PTE(&TempPte, PointerPte, MM_READWRITE, 0);
-    ASSERT(PointerPte->u.Long != 0);
+    /* Do the same for the Working set list */
+    PointerPte = MiAddressToPte(MmWorkingSetList);
     PageFrameNumber = PFN_FROM_PTE(PointerPte);
-    MI_WRITE_INVALID_PTE(PointerPte, DemandZeroPte);
     MiInitializePfn(PageFrameNumber, PointerPte, TRUE);
-    TempPte.u.Hard.PageFrameNumber = PageFrameNumber;
-    MI_WRITE_VALID_PTE(PointerPte, TempPte);
+
+    /* This should be in hyper space, but not in the mapping range */
+    Process->Vm.VmWorkingSetList = MmWorkingSetList;
+    ASSERT(((ULONG_PTR)MmWorkingSetList >= MI_MAPPING_RANGE_END) && ((ULONG_PTR)MmWorkingSetList <= HYPER_SPACE_END));
 
     /* Now initialize the working set list */
-    MiInitializeWorkingSetList(Process);
+    MiInitializeWorkingSetList(&Process->Vm);
+
+    /* Map the process working set in kernel space */
+    /* FIXME: there should be no need */
+    PointerPte = MiReserveSystemPtes(1, SystemPteSpace);
+    MI_MAKE_HARDWARE_PTE_KERNEL(&TempPte, PointerPte, MM_READWRITE, Process->WorkingSetPage);
+    MI_WRITE_VALID_PTE(PointerPte, TempPte);
+    Process->Vm.VmWorkingSetList = MiPteToAddress(PointerPte);
+
+    /* The rule is that the owner process is always in the FLINK of the PDE's PFN entry */
+    Pfn = MiGetPfnEntry(Process->Pcb.DirectoryTableBase[0] >> PAGE_SHIFT);
+    ASSERT(Pfn->u4.PteFrame == MiGetPfnEntryIndex(Pfn));
+    ASSERT(Pfn->u1.WsIndex == 0);
+    Pfn->u1.Event = (PKEVENT)Process;
 
     /* Sanity check */
     ASSERT(Process->PhysicalVadRoot == NULL);
@@ -1038,6 +1019,8 @@ MmInitializeProcessAddressSpace(IN PEPROCESS Process,
     /* Release PFN lock */
     MiReleasePfnLock(OldIrql);
 
+    /* Release the process working set */
+    MiUnlockProcessWorkingSet(Process, PsGetCurrentThread());
 #ifdef _M_AMD64
    } /* On x64 the PFNs for the initial process are already set up */
 #endif
@@ -1357,6 +1340,11 @@ MmDeleteProcessAddressSpace2(IN PEPROCESS Process)
     PFN_NUMBER PageFrameIndex;
 
     //ASSERT(Process->CommitCharge == 0);
+
+    /* Remove us from the list */
+    OldIrql = MiAcquireExpansionLock();
+    RemoveEntryList(&Process->Vm.WorkingSetExpansionLinks);
+    MiReleaseExpansionLock(OldIrql);
 
     /* Acquire the PFN lock */
     OldIrql = MiAcquirePfnLock();
