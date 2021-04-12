@@ -1,6 +1,6 @@
 SECTIONS
 {
-  .text __image_base__ + __section_alignment__ :
+  .text __image_base__ + __section_alignment__ : ALIGN(__file_alignment__)
   {
     *(.text)
     *(SORT(.text*))
