@@ -38,6 +38,10 @@
 #define _CRT_STRINGIZE(_Value) __CRT_STRINGIZE(_Value)
 #endif
 
+#ifndef _CRT_DEFER_MACRO
+#define _CRT_DEFER_MACRO(M,...) M(__VA_ARGS__)
+#endif
+
 #ifndef _CRT_WIDE
 #define __CRT_WIDE(_String) L ## _String
 #define _CRT_WIDE(_String) __CRT_WIDE(_String)
@@ -439,5 +443,26 @@ typedef struct localeinfo_struct {
 #endif
 
 #pragma pack(pop)
+
+/* GCC-style diagnostics */
+#ifndef PRAGMA_DIAGNOSTIC_IGNORED
+# ifdef __clang__
+#  define PRAGMA_DIAGNOSTIC_PUSH() _Pragma("clang diagnostic push")
+#  define PRAGMA_DIAGNOSTIC_IGNORED(__x) \
+    _Pragma(_CRT_STRINGIZE(clang diagnostic ignored _CRT_DEFER_MACRO(_CRT_STRINGIZE,__x)))
+#  define PRAGMA_DIAGNOSTIC_POP() _Pragma("clang diagnostic pop")
+# elif defined (__GNUC__)
+#  define PRAGMA_DIAGNOSTIC_PUSH() _Pragma("GCC diagnostic push")
+#  define PRAGMA_DIAGNOSTIC_IGNORED(__x) \
+    _Pragma("GCC diagnostic ignored \"-Wpragmas\"") /* This allows us to use it for unkonwn warnings */ \
+    _Pragma(_CRT_STRINGIZE(GCC diagnostic ignored _CRT_DEFER_MACRO(_CRT_STRINGIZE,__x))) \
+    _Pragma("GCC diagnostic error \"-Wpragmas\"") /* This makes sure that we don't have side effects because we disabled it for our own use. This will be popped anyway. */
+#  define PRAGMA_DIAGNOSTIC_POP() _Pragma("GCC diagnostic pop")
+# else
+#  define PRAGMA_DIAGNOSTIC_PUSH()
+#  define PRAGMA_DIAGNOSTIC_IGNORED(__x)
+#  define PRAGMA_DIAGNOSTIC_POP()
+# endif
+#endif
 
 #endif /* !_INC_CRTDEFS */
