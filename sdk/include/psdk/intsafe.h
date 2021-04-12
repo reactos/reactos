@@ -259,7 +259,7 @@ INTSAFE_NAME(_Name)( \
     _In_ _TypeFrom Input, \
     _Out_ _Deref_out_range_(==, Input) _TypeTo *pOutput) \
 { \
-    if (Input <= _TypeTo ## _MAX) \
+    if ((sizeof(_TypeFrom) < sizeof(_TypeTo)) || (Input <= _TypeTo ## _MAX)) \
     { \
         *pOutput = (_TypeTo)Input; \
         return INTSAFE_SUCCESS; \
