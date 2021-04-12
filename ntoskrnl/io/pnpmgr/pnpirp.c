@@ -200,7 +200,7 @@ PiIrpQueryDeviceRelations(
 NTSTATUS
 PiIrpQueryDeviceText(
     _In_ PDEVICE_NODE DeviceNode,
-    _In_ LCID POINTER_ALIGNMENT LocaleId,
+    _In_ LCID LocaleId,
     _In_ DEVICE_TEXT_TYPE Type,
     _Out_ PWSTR *DeviceText)
 {
@@ -236,7 +236,7 @@ PiIrpQueryPnPDeviceState(
     PAGED_CODE();
 
     ASSERT(DeviceNode);
-    ASSERT(DeviceNode->State == DeviceNodeStartPostWork || 
+    ASSERT(DeviceNode->State == DeviceNodeStartPostWork ||
            DeviceNode->State == DeviceNodeStarted);
 
     ULONG_PTR longState;
