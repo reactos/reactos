@@ -1298,6 +1298,46 @@ __INTRIN_INLINE unsigned long __cdecl _lrotr(unsigned long value, int shift)
 }
 #endif
 
+#ifdef __x86_64__
+__INTRIN_INLINE unsigned long long __ll_lshift(unsigned long long Mask, int Bit)
+{
+    unsigned long long retval;
+    unsigned char shift = Bit & 0x3F;
+
+    __asm__
+    (
+        "shlq %[shift], %[Mask]" : "=r"(retval) : [Mask] "0"(Mask), [shift] "c"(shift)
+    );
+
+    return retval;
+}
+
+__INTRIN_INLINE long long __ll_rshift(long long Mask, int Bit)
+{
+    long long retval;
+    unsigned char shift = Bit & 0x3F;
+
+    __asm__
+    (
+        "sarq %[shift], %[Mask]" : "=r"(retval) : [Mask] "0"(Mask), [shift] "c"(shift)
+    );
+
+    return retval;
+}
+
+__INTRIN_INLINE unsigned long long __ull_rshift(unsigned long long Mask, int Bit)
+{
+    long long retval;
+    unsigned char shift = Bit & 0x3F;
+
+    __asm__
+    (
+        "shrq %[shift], %[Mask]" : "=r"(retval) : [Mask] "0"(Mask), [shift] "c"(shift)
+    );
+
+    return retval;
+}
+#else
 /*
 	NOTE: in __ll_lshift, __ll_rshift and __ull_rshift we use the "A"
 	constraint (edx:eax) for the Mask argument, because it's the only way GCC
@@ -1346,6 +1386,7 @@ __INTRIN_INLINE unsigned long long __ull_rshift(unsigned long long Mask, int Bit
 
 	return retval;
 }
+#endif
 
 __INTRIN_INLINE unsigned short __cdecl _byteswap_ushort(unsigned short value)
 {
