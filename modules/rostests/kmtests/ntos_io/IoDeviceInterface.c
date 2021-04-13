@@ -2,7 +2,8 @@
  * PROJECT:     ReactOS kernel-mode tests
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  * PURPOSE:     Test for Device Interface functions
- * COPYRIGHT:   Copyright 2021 Mark Jansen <mark.jansen@reactos.org>
+ * COPYRIGHT:   Copyright 2011 Filip Navara <xnavara@volny.cz>
+ *              Copyright 2021 Mark Jansen <mark.jansen@reactos.org>
  *              Copyright 2021 Oleg Dubinskiy <oleg.dubinskij2013@yandex.ua>
  */
 
@@ -212,10 +213,70 @@ Test_IoGetDeviceInterfaces(const GUID* guid)
     ExFreePool(SymbolicLinkList);
 }
 
+static UCHAR NotificationContext;
+
+static DRIVER_NOTIFICATION_CALLBACK_ROUTINE NotificationCallback;
+static
+NTSTATUS
+NTAPI
+NotificationCallback(
+    _In_ PVOID NotificationStructure,
+    _Inout_opt_ PVOID Context)
+{
+    PDEVICE_INTERFACE_CHANGE_NOTIFICATION Notification = NotificationStructure;
+    NTSTATUS Status;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    HANDLE Handle;
+
+    ok_irql(PASSIVE_LEVEL);
+    ok_eq_pointer(Context, &NotificationContext);
+    ok_eq_uint(Notification->Version, 1);
+    ok_eq_uint(Notification->Size, sizeof(*Notification));
+
+    /* symbolic link must exist */
+    trace("Interface change: %wZ\n", Notification->SymbolicLinkName);
+    InitializeObjectAttributes(&ObjectAttributes,
+                               Notification->SymbolicLinkName,
+                               OBJ_KERNEL_HANDLE,
+                               NULL,
+                               NULL);
+    Status = ZwOpenSymbolicLinkObject(&Handle, GENERIC_READ, &ObjectAttributes);
+    ok_eq_hex(Status, STATUS_SUCCESS);
+    if (!skip(NT_SUCCESS(Status), "No symbolic link\n"))
+    {
+        Status = ObCloseHandle(Handle, KernelMode);
+        ok_eq_hex(Status, STATUS_SUCCESS);
+    }
+    return STATUS_SUCCESS;
+}
+
+static
+VOID
+Test_IoRegisterPlugPlayNotification(VOID)
+{
+    NTSTATUS Status;
+    PVOID NotificationEntry;
+
+    Status = IoRegisterPlugPlayNotification(EventCategoryDeviceInterfaceChange,
+                                            PNPNOTIFY_DEVICE_INTERFACE_INCLUDE_EXISTING_INTERFACES,
+                                            (PVOID)&GUID_DEVICE_SYS_BUTTON,
+                                            KmtDriverObject,
+                                            NotificationCallback,
+                                            &NotificationContext,
+                                            &NotificationEntry);
+    ok_eq_hex(Status, STATUS_SUCCESS);
+    if (!skip(NT_SUCCESS(Status), "PlugPlayNotification not registered\n"))
+    {
+        Status = IoUnregisterPlugPlayNotification(NotificationEntry);
+        ok_eq_hex(Status, STATUS_SUCCESS);
+    }
+}
+
 START_TEST(IoDeviceInterface)
 {
     for (size_t n = 0; n < RTL_NUMBER_OF(Types); ++n)
     {
         Test_IoGetDeviceInterfaces(Types[n]);
     }
+    Test_IoRegisterPlugPlayNotification();
 }
