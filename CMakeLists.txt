@@ -49,13 +49,7 @@ endif()
 include(sdk/include/reactos/version.cmake)
 
 # Compile options
-if(ARCH STREQUAL "i386")
-    include(sdk/cmake/config.cmake)
-elseif(ARCH STREQUAL "amd64")
-    include(sdk/cmake/config-amd64.cmake)
-elseif(ARCH STREQUAL "arm")
-    include(sdk/cmake/config-arm.cmake)
-endif()
+include(sdk/cmake/config.cmake)
 
 # Compiler flags handling
 include(sdk/cmake/compilerflags.cmake)

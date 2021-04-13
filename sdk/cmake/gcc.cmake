@@ -90,11 +90,7 @@ if(NOT CMAKE_BUILD_TYPE STREQUAL "Release")
 endif()
 
 # Tuning
-if(ARCH STREQUAL "i386")
-    add_compile_options(-march=${OARCH} -mtune=${TUNE})
-else()
-    add_compile_options(-march=${OARCH})
-endif()
+add_compile_options(-march=${OARCH} -mtune=${TUNE})
 
 # Warnings, errors
 if((NOT CMAKE_BUILD_TYPE STREQUAL "Release") AND (NOT CMAKE_C_COMPILER_ID STREQUAL Clang))
