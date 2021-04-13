@@ -190,7 +190,7 @@ Test_IoGetDeviceInterfaces(const GUID* guid)
 
     Status = IoGetDeviceInterfaces(guid, NULL, DEVICE_INTERFACE_INCLUDE_NONACTIVE, &SymbolicLinkList);
 
-    ok(NT_SUCCESS(Status), "IoGetDeviceInterfaces failed with status 0x%X for '%wZ'\n", (unsigned int)Status, &GuidString);
+    ok(NT_SUCCESS(Status), "IoGetDeviceInterfaces failed with status 0x%X for '%wZ'\n", Status, &GuidString);
     if (!NT_SUCCESS(Status))
     {
         return;
