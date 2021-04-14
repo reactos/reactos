@@ -301,12 +301,6 @@ handle_gdb_query(void)
         return gdb_send_debug_io(&String, FALSE);
     }
 
-    if (strncmp(gdb_input, "qOffsets", 8) == 0)
-    {
-        /* We load ntoskrnl at 0x80800000 while compiling it at 0x00800000 base address */
-        return send_gdb_packet("TextSeg=80000000");
-    }
-
     if (strcmp(gdb_input, "qTStatus") == 0)
     {
         /* No tracepoint support */
@@ -323,7 +317,7 @@ handle_gdb_query(void)
     {
         static LIST_ENTRY* CurrentEntry = NULL;
         char str_helper[256];
-        char name_helper[64];        
+        char name_helper[64];
         ULONG_PTR Offset = hex_to_address(&gdb_input[22]);
         ULONG_PTR ToSend = hex_to_address(strstr(&gdb_input[22], ",") + 1);
         ULONG Sent = 0;
@@ -381,7 +375,7 @@ handle_gdb_query(void)
 
             /* GDB doesn't load the file if you don't prefix it with a drive letter... */
             mem_length = _snprintf(str_helper, 256, "<library name=\"C:\\%s\"><segment address=\"0x%p\"/></library>", &name_helper, DllBase);
-            
+
             /* DLL name must be too long. */
             if (mem_length < 0)
             {
@@ -639,7 +633,7 @@ handle_gdb_write_mem(
         /* Nothing to do */
         return LOOP_IF_SUCCESS(send_gdb_packet("OK"));
     }
-    
+
     State->u.WriteMemory.TransferCount = BufferLength;
     MessageData->Length = BufferLength;
     MessageData->Buffer = (CHAR*)OutBuffer;
@@ -794,7 +788,7 @@ RestoreBreakPointSendHandler(
         KDDBGPRINT("Wrong API number (%lu) after DbgKdRestoreBreakPointApi request.\n", State->ApiNumber);
     }
 
-    /* We ignore failure here. If DbgKdRestoreBreakPointApi fails, 
+    /* We ignore failure here. If DbgKdRestoreBreakPointApi fails,
      * this means that the breakpoint was already invalid for KD. So clean it up on our side. */
     for (i = 0; i < (sizeof(BreakPointHandles) / sizeof(BreakPointHandles[0])); i++)
     {
@@ -879,7 +873,7 @@ handle_gdb_c(
     Status = send_gdb_packet("OK");
     if (Status != KdPacketReceived)
         return Status;
-        
+
 
     if (CurrentStateChange.NewState == DbgKdExceptionStateChange)
     {
@@ -967,7 +961,7 @@ handle_gdb_v(
 
         if (strncmp(gdb_input, "vCont;s", 7) == 0)
         {
-            
+
             return handle_gdb_s(State, MessageData, MessageLength, KdContext);
         }
     }

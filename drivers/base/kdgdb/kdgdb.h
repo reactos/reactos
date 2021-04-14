@@ -19,7 +19,7 @@
 
 #include <pstypes.h>
 
-// #define KDDEBUG /* uncomment to enable debugging this dll */
+#define KDDEBUG /* uncomment to enable debugging this dll */
 
 /* To undefine once https://sourceware.org/bugzilla/show_bug.cgi?id=17397 is resolved */
 #define MONOPROCESS 1
@@ -128,6 +128,17 @@ extern KDSTATUS gdb_send_registers(void);
     ((Context)->Eip)
 #  define KdpSetContextPc(Context, ProgramCounter) \
     ((Context)->Eip = (ProgramCounter))
+#  define KD_BREAKPOINT_TYPE        UCHAR
+#  define KD_BREAKPOINT_SIZE        sizeof(UCHAR)
+#  define KD_BREAKPOINT_VALUE       0xCC
+/* Single step mode */
+#  define KdpSetSingleStep(Context) \
+    ((Context)->EFlags |= EFLAGS_TF)
+#elif defined(_M_AMD64)
+#  define KdpGetContextPc(Context) \
+    ((Context)->Rip)
+#  define KdpSetContextPc(Context, ProgramCounter) \
+    ((Context)->Rip = (ProgramCounter))
 #  define KD_BREAKPOINT_TYPE        UCHAR
 #  define KD_BREAKPOINT_SIZE        sizeof(UCHAR)
 #  define KD_BREAKPOINT_VALUE       0xCC
