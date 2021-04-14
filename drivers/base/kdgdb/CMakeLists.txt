@@ -10,9 +10,11 @@ list(APPEND SOURCE
     utils.c
     kdgdb.h)
 
-# TODO: AMD64, ARM...
+# TODO: ARM...
 if(ARCH STREQUAL "i386")
     list(APPEND SOURCE i386_sup.c)
+elseif(ARCH STREQUAL "amd64")
+    list(APPEND SOURCE amd64_sup.c)
 endif()
 
 add_library(kdcom MODULE
