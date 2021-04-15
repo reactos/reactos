@@ -1,10 +1,4 @@
 
-# Default to Debug for the build type
-if(NOT DEFINED CMAKE_BUILD_TYPE)
-    set(CMAKE_BUILD_TYPE "Debug" CACHE STRING
-        "Choose the type of build, options are: None(CMAKE_CXX_FLAGS or CMAKE_C_FLAGS used) Debug Release RelWithDebInfo MinSizeRel.")
-endif()
-
 # pass variables necessary for the toolchain (needed for try_compile)
 set(CMAKE_TRY_COMPILE_PLATFORM_VARIABLES ARCH USE_CLANG_CL)
 

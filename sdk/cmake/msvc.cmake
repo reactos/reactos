@@ -1,9 +1,5 @@
 
-#if(${CMAKE_BUILD_TYPE} STREQUAL "Debug")
-if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-    # no optimization
-    add_compile_options(/Ob0 /Od)
-elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
+if(CMAKE_BUILD_TYPE STREQUAL "Release")
     add_compile_options(/Ox /Ob2 /Ot /Oy /GT)
 elseif(OPTIMIZE STREQUAL "1")
     add_compile_options(/O1)
@@ -12,7 +8,7 @@ elseif(OPTIMIZE STREQUAL "2")
 elseif(OPTIMIZE STREQUAL "3")
     add_compile_options(/Ot /Ox /GS-)
 elseif(OPTIMIZE STREQUAL "4")
-    add_compile_options(/Os /Ox /GS-)
+    add_compile_options(/Ob0 /Od)
 elseif(OPTIMIZE STREQUAL "5")
     add_compile_options(/Gy /Ob2 /Os /Ox /GS-)
 endif()
@@ -116,8 +112,8 @@ add_compile_options(/wd4018)
 add_compile_options(/we4013 /we4020 /we4022 /we4028 /we4047 /we4098 /we4101 /we4113 /we4129 /we4133 /we4163 /we4229 /we4311 /we4312 /we4313 /we4477 /we4603 /we4700 /we4715 /we4716)
 
 # - C4189: local variable initialized but not referenced
-# Not in Release mode
-if(NOT CMAKE_BUILD_TYPE STREQUAL "Release")
+# Not in Release mode, msbuild generator doesn't like CMAKE_BUILD_TYPE
+if(MSVC_IDE OR CMAKE_BUILD_TYPE STREQUAL "Debug")
     add_compile_options(/we4189)
 endif()
 
@@ -130,13 +126,10 @@ if(USE_CLANG_CL)
 endif()
 
 # Debugging
-if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-    if(NOT (_PREFAST_ OR _VS_ANALYZE_))
-        add_compile_options(/Zi)
-    endif()
-elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
-    add_definitions("/D NDEBUG")
+if(NOT (_PREFAST_ OR _VS_ANALYZE_))
+    add_compile_options($<$<CONFIG:Debug>:/Zi>)
 endif()
+add_compile_definitions($<$<CONFIG:Release>:NDEBUG>)
 
 # Hotpatchable images
 if(ARCH STREQUAL "i386")
