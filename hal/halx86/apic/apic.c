@@ -1238,7 +1238,7 @@ HalBeginSystemInterrupt(_In_ KIRQL NewIrql,
     pPrcbVector = (PUCHAR)KeGetCurrentPrcb()->HalReserved;
 
     Idx = pPrcbVector[0];
-    pPrcbVector[Idx + 1] = SystemVector;
+    pPrcbVector[Idx + 1] = (UCHAR)SystemVector;
     pPrcbVector[0] = Idx + 1;
 
     _enable();
@@ -1248,8 +1248,7 @@ HalBeginSystemInterrupt(_In_ KIRQL NewIrql,
 static
 VOID
 NTAPI
-HalpEndSystemInterrupt(_In_ PHAL_INTERRUPT_CONTEXT IntContext,
-                       _In_ KIRQL OldIrql)
+HalpEndSystemInterrupt(_In_ PHAL_INTERRUPT_CONTEXT IntContext)
 {
     KIRQL Irql = HalpVectorToIRQL[IntContext->Vector >> 4];
 
@@ -1258,11 +1257,13 @@ HalpEndSystemInterrupt(_In_ PHAL_INTERRUPT_CONTEXT IntContext,
         HalpLowerIrqlHardwareInterrupts(Irql);
     }
 
-    if (ApicRead(APIC_PPR) != (IntContext->Vector & 0xF0))
+#if DBG
+    if ((ApicRead(APIC_PPR) & 0xF0) != (IntContext->Vector & 0xF0))
     {
         DPRINT1("HalpEndSystemInterrupt: SystemVector %X, APIC_PPR %X\n", IntContext->Vector, ApicRead(APIC_PPR));
         DbgBreakPoint();
     }
+#endif
 
     ApicWrite(APIC_EOI, 0);
 
@@ -1291,7 +1292,7 @@ HalEndSystemInterrupt(_In_ KIRQL OldIrql,
                       _In_ PHAL_INTERRUPT_CONTEXT IntContext)
 {
     //DPRINT1("HalEndSystemInterrupt: OldIrql %X, IntContext %X\n", OldIrql,  IntContext);
-    HalpEndSystemInterrupt(IntContext, OldIrql);
+    HalpEndSystemInterrupt(IntContext);
 }
 #else
 /* NT use non-standard parameters calling */
@@ -1315,7 +1316,7 @@ HalEndSystemInterrupt(_In_ KIRQL OldIrql,
     IntContext.Vector = Vector;
     IntContext.TrapFrame = 0;//TrapFrame; ? FIXME!
 
-    HalpEndSystemInterrupt(&IntContext, OldIrql);
+    HalpEndSystemInterrupt(&IntContext);
 }
 #endif
 
