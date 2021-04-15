@@ -6,10 +6,10 @@ STRINGTABLE
 BEGIN
     IDS_USAGE "FINDSTR: Bir karakter dizisi içeren bir dosyanın tüm satırlarını yazdırır.\n\n\
   FIND [ /C ] [ /I ] [ /N ] [ /V ] ""karakter dizisi"" [ dosya... ]\n\
-    /C  Diziyi içeren satır sayısını say\n\
-    /I  Büyük-küçük uyumunu yok say\n\
+    /C  Diziyi içeren satır sayısını sayar\n\
+    /I  Büyük-küçük uyumunu yok sayar\n\
     /N  1'den başlayan, görüntülenen satır sayısı\n\
-    /V  Diziyi içermeye satırları yazdır"
-    IDS_NO_SUCH_FILE "FINDSTR: %s: Böyle dosya yok\n"
+    /V  Diziyi içermeyen satırları yazdırır"
+    IDS_NO_SUCH_FILE "FINDSTR: %s: Böyle bir dosya yok\n"
     IDS_CANNOT_OPEN "FINDSTR: %s: Dosya açılamıyor\n"
 END

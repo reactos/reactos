@@ -11,7 +11,7 @@ BEGIN
   [Sürücü:][Yol]Dosya adı    İçeriği görüntülenecek bir dosya.\n\
   Komut\t\t     Çıkışı görüntülenecek bir komut.\n\n\
   İstemde ""-- Sürdür --"" ile bir sonraki sayfayı göstermek için rastgele bir tuşa basabilirsiniz.\n"
-    IDS_CONTINUE "-- Sürdür --"
-    IDS_CONTINUE_PROGRESS "-- Sürdür (%%%d) --"
+    IDS_CONTINUE "-- Devam Et --"
+    IDS_CONTINUE_PROGRESS "-- Devam Et (%%%d) --"
     IDS_FILE_ACCESS "%s dosyasına erişilemiyor.\n"
 END

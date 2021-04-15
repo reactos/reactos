@@ -8,14 +8,14 @@ IDM_CABINET_CONTEXTMENU MENUEX
 BEGIN
     POPUP "", 264,MFT_STRING,MFS_ENABLED
     BEGIN
-        MENUITEM "&Standart Düğmeler", IDM_TOOLBARS_STANDARDBUTTONS, MFT_STRING, MFS_ENABLED
+        MENUITEM "&Standart Butonlar", IDM_TOOLBARS_STANDARDBUTTONS, MFT_STRING, MFS_ENABLED
         MENUITEM "&Adres Çubuğu", IDM_TOOLBARS_ADDRESSBAR, MFT_STRING, MFS_ENABLED
         MENUITEM "&Bağlantılar", IDM_TOOLBARS_LINKSBAR, MFT_STRING, MFS_ENABLED
         MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "A&raç Çubuklarını Kilitle", IDM_TOOLBARS_LOCKTOOLBARS, MFT_STRING, MFS_ENABLED
         MENUITEM "&Özelleştir...", IDM_TOOLBARS_CUSTOMIZE, MFT_STRING, MFS_ENABLED
         MENUITEM "&Metin Etiketleri", IDM_TOOLBARS_TEXTLABELS, MFT_STRING, MFS_ENABLED
-        MENUITEM "&Git Düğmesi", IDM_TOOLBARS_GOBUTTON, MFT_STRING, MFS_ENABLED
+        MENUITEM "&Git Butonu", IDM_TOOLBARS_GOBUTTON, MFT_STRING, MFS_ENABLED
     END
 END
 
@@ -37,23 +37,23 @@ BEGIN
             MENUITEM "", -1, MFT_SEPARATOR
         END
         MENUITEM "&Durum Çubuğu", IDM_VIEW_STATUSBAR
-        POPUP "&Gezgin çubuğu", IDM_VIEW_EXPLORERBAR
+        POPUP "&Gezinme çubuğu", IDM_VIEW_EXPLORERBAR
         BEGIN
-            MENUITEM "&Ara\tDenetim+E", IDM_EXPLORERBAR_SEARCH
-            MENUITEM "&Yer İmleri\tDenetim+I", IDM_EXPLORERBAR_FAVORITES
+            MENUITEM "&Ara\tCtrl+E", IDM_EXPLORERBAR_SEARCH
+            MENUITEM "&Yer İmleri\tCtrl+I", IDM_EXPLORERBAR_FAVORITES
             MENUITEM "&Ortam", IDM_EXPLORERBAR_MEDIA
-            MENUITEM "&Geçmiş\tDenetim+H", IDM_EXPLORERBAR_HISTORY
+            MENUITEM "&Geçmiş\tCtrl+H", IDM_EXPLORERBAR_HISTORY
             MENUITEM "&Dizinler", IDM_EXPLORERBAR_FOLDERS
             MENUITEM "", IDM_EXPLORERBAR_SEPARATOR
         END
         MENUITEM "", FCIDM_MENU_VIEW_SEP_OPTIONS, MFT_SEPARATOR
         POPUP "G&it", FCIDM_MENU_EXPLORE
         BEGIN
-            MENUITEM "&Geri\tSeçenek+Sol Ok", IDM_GOTO_BACK
-            MENUITEM "&İleri\tSeçenek+Sağ Ok", IDM_GOTO_FORWARD
-            MENUITEM "&Bir Düzey Yukarı", IDM_GOTO_UPONELEVEL
+            MENUITEM "&Geri\tAlt+Sol Ok", IDM_GOTO_BACK
+            MENUITEM "&İleri\tAlt+Sağ Ok", IDM_GOTO_FORWARD
+            MENUITEM "&Bir Dizin Yukarı", IDM_GOTO_UPONELEVEL
             MENUITEM "", -1, MFT_SEPARATOR
-            MENUITEM "Gi&riş Sayfası\tSeçenek+Ev", IDM_GOTO_HOMEPAGE
+            MENUITEM "Gi&riş Sayfası\tAlt+Home", IDM_GOTO_HOMEPAGE
         END
         MENUITEM "&Yenile", IDM_VIEW_REFRESH
     END
@@ -101,11 +101,11 @@ BEGIN
     BEGIN
         POPUP "&Görünüm", IDM_VIEW_MENU
         BEGIN
-            MENUITEM "&Büyük İkonlar", IDM_LARGE_ICONS
-            MENUITEM "&Küçük İkonlar", IDM_SMALL_ICONS
+            MENUITEM "&Büyük Simgeler", IDM_LARGE_ICONS
+            MENUITEM "&Küçük Simgeler", IDM_SMALL_ICONS
         END
         MENUITEM "&Dizini Aç", IDM_OPEN_FOLDER
-        MENUITEM "&Metini Göster", IDM_SHOW_TEXT
+        MENUITEM "&Metni Göster", IDM_SHOW_TEXT
     END
 END
 
@@ -146,10 +146,10 @@ BEGIN
     LTEXT "Dosyadaki bir &kelime veya kelime öbeği:", -1, 10, 50, 500, 10
     EDITTEXT IDC_SEARCH_QUERY, 10, 60, 100, 12, ES_AUTOHSCROLL | WS_BORDER | WS_TABSTOP
 
-    LTEXT "&İçine bak:", -1, 10, 75, 500, 10
+    LTEXT "&Şurada ara:", -1, 10, 75, 500, 10
     CONTROL "", IDC_SEARCH_COMBOBOX, WC_COMBOBOXEXW, WS_CHILD | WS_VISIBLE | WS_CLIPCHILDREN | WS_TABSTOP | CCS_NODIVIDER | CCS_NOMOVEY | CBS_OWNERDRAWFIXED, 10, 85, 200, 200
 
-    DEFPUSHBUTTON "Gir&iş", IDC_SEARCH_BUTTON, 80, 110, 40, 15, WS_GROUP | WS_TABSTOP | WS_VISIBLE
+    DEFPUSHBUTTON "Ara&", IDC_SEARCH_BUTTON, 80, 110, 40, 15, WS_GROUP | WS_TABSTOP | WS_VISIBLE
     PUSHBUTTON "&Durdur", IDC_SEARCH_STOP_BUTTON, 80, 110, 40, 15, WS_GROUP | WS_TABSTOP
 
     AUTOCHECKBOX "Gizli dosya ve dizinleri göster",
@@ -214,7 +214,7 @@ END
 STRINGTABLE
 BEGIN
     9025 "Pencereyi kapatır."
-    9026 "Bir düzey yukarı gider."
+    9026 "Bir dizin yukarı gider."
 END
 
 STRINGTABLE
@@ -247,7 +247,7 @@ STRINGTABLE
 BEGIN
     9505 "Araç çubuklarını gösterir veya gizler."
     9506 "Durum çubuğunu gösterir veya gizler."
-    9508 "Standart Düğmeler araç çubuğunu görüntüler."
+    9508 "Standart Butonlar araç çubuğunu görüntüler."
     9509 "Adres çubuğunu görüntüler."
     9510 "Hızlı Bağlantılar çubuğunu görüntüler."
     9516 "Araç çubuklarının boyutlarını ve konumlarını kilitler."
@@ -312,12 +312,12 @@ STRINGTABLE
 BEGIN
     IDS_BACK "Geri (%s Adresine)"
     IDS_FORWARD "İleri (%s Adresine)"
-    IDS_FOLDER_OPTIONS "Dizin Ayarları"
+    IDS_FOLDER_OPTIONS "Dizin Seçenekleri"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_STANDARD_TOOLBAR, "|Geri|İleri|Yukarı|Ara|Dizinler|Taşı|Çoğalt|Sil|Geri Al|Görünümler|Dur|Yenile|Giriş|Sürücü Oluştur|Bağlantıyı Kes|Yer İmleri|Geçmiş|Tam Ekran|Özellikler|Kes|Çoğalt|Yapıştır|Dizin Seçenekleri||"
+    IDS_STANDARD_TOOLBAR, "|Geri|İleri|Yukarı|Ara|Dizinler|Taşı|Çoğalt|Sil|Geri Al|Görünümler|Dur|Yenile|Giriş|Sürücü Oluştur|Bağlantıyı Kes|Yer İmleri|Geçmiş|Tam Ekran|Özellikler|Kes|Kopyala|Yapıştır|Dizin Seçenekleri||"
 END
 
 STRINGTABLE
@@ -331,16 +331,16 @@ STRINGTABLE
 BEGIN
     IDS_SEARCH_RESULTS "Arama sonuçları"
     IDS_SEARCHINVALID "'%1' geçerli bir dizin değildir."
-    IDS_SEARCH_FOLDER "Aranıyor %s"
+    IDS_SEARCH_FOLDER "%s aranıyor."
     IDS_SEARCH_FILES_FOUND "%u dosya bulundu"
-    IDS_SEARCH_OPEN_FOLDER "Mevcut &Dizin Açılıyor"
+    IDS_SEARCH_OPEN_FOLDER "Bulunan &Dizini Açılıyor"
     IDS_COL_NAME "İsim"
-    IDS_COL_LOCATION "Dizininde"
+    IDS_COL_LOCATION "Şurada"
     IDS_COL_RELEVANCE "Uygunluk"
 END
 
 STRINGTABLE
 BEGIN
     IDS_PARSE_ADDR_ERR_TITLE "ReactOS Gezgini"
-    IDS_PARSE_ADDR_ERR_TEXT "ReactOS Gezgini '%1' bulamadı. Girdiğiniz değeri kontrol edin ve yeniden arayın"
+    IDS_PARSE_ADDR_ERR_TEXT "ReactOS Gezgini '%1' ögesini bulamadı. Girdiğiniz değeri kontrol edin ve yeniden arayın"
 END

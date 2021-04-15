@@ -13,7 +13,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_OTHER "Başka Tür Bağdaştırıcı"
+    IDS_OTHER "Diğer Bağdaştırıcı"
     IDS_ETH "Ethernet Bağdaştırıcısı"
     IDS_TOKEN "Simgeli Halka Bağdaştırıcısı"
     IDS_FDDI "FDDI Bağdaştırıcısı"
@@ -37,10 +37,10 @@ BEGIN
                        (* ve ? özel karakterlerine  bakınız)\n \
 \n \
         Seçenekler:\n \
-           /?           Bu yardım iletisini görüntüle.\n \
-           /all         Tüm yapılandırma bilgisini görüntüle.\n \
-           /release     Belirtilen bağdaştırıcı için IP adresini bırak.\n \
-           /renew       Belirtilen bağdaştırıcı için IP adresini yenile.\n \
+           /?           Bu yardım iletisini görüntüler.\n \
+           /all         Tüm yapılandırma bilgisini görüntüler.\n \
+           /release     Belirtilen bağdaştırıcı için IP adresini bırakır.\n \
+           /renew       Belirtilen bağdaştırıcı için IP adresini yeniler.\n \
            /flushdns    DNS Çözücü ön belleğini siler.\n \
            /registerdns Tüm DHCP kiralarını yeniler ve DNS adlarını yeniden kaydettirir.\n \
            /displaydns  DNS Çözücü ön belleğinin içeriğini görüntüle.\n \

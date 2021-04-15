@@ -236,7 +236,7 @@ BEGIN
     IDS_DDTEST_DESCRIPTION "Bu, ReactDraw arayüz sınamasını başlatacak. Devam etmek ister misiniz?"
     IDS_DDPRIMARY_DESCRIPTION "Bu sınama, ReactDraw'ı ana yüzeye çizmek için kullanacak. Beyaz ve siyah dikdörtgenler çizilecektir. Devam etmek ister misiniz?"
     IDS_DDPRIMARY_RESULT "Beyaz ve siyah dikdörtgenler gördünüz mü?"
-    IDS_DDOFFSCREEN_DESCRIPTION "Bu sınama, ReactDraw'ı görüntülük dışı arabelleğe çizmek için kullanacak. Dönen, beyaz renkli bir dikdörtgen çizilecektir. Devam etmek ister misiniz?"
+    IDS_DDOFFSCREEN_DESCRIPTION "Bu sınama, ReactDraw'ı ekran dışı arabelleğe çizmek için kullanacak. Dönen, beyaz renkli bir dikdörtgen çizilecektir. Devam etmek ister misiniz?"
     IDS_DDOFFSCREEN_RESULT "Dönen bir beyaz dikdörtgen gördünüz mü?"
     IDS_DDFULLSCREEN_DESCRIPTION "Bu sınama, ReactDraw'ı tüm ekrana görüntü çizmek için kullanacak. Dönen, beyaz renkli bir dikdörtgen göreceksiniz. Devam etmek ister misiniz?"
     IDS_DDFULLSCREEN_RESULT "Tüm ekrana çizildirilmiş, dönem bir beyaz dikdörtgen gördünüz mü?"
