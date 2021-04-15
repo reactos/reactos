@@ -1,11 +1,10 @@
 
-if(NOT ARCH)
-    set(ARCH i386)
-endif()
-
 if(DEFINED ENV{_ROSBE_ROSSCRIPTDIR})
     set(CMAKE_SYSROOT $ENV{_ROSBE_ROSSCRIPTDIR}/$ENV{ROS_ARCH})
 endif()
+
+# pass variables necessary for the toolchain (needed for try_compile)
+set(CMAKE_TRY_COMPILE_PLATFORM_VARIABLES ARCH CLANG_VERSION)
 
 # The name of the target operating system
 set(CMAKE_SYSTEM_NAME Windows)
@@ -17,7 +16,7 @@ elseif (ARCH STREQUAL "amd64")
 elseif(ARCH STREQUAL "arm")
     set(CMAKE_SYSTEM_PROCESSOR arm)
 else()
-    message(ERROR "Unsupported ARCH: ${ARCH}")
+    message(FATAL_ERROR "Unsupported ARCH: ${ARCH}")
 endif()
 
 if (DEFINED CLANG_VERSION)

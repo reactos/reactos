@@ -28,8 +28,9 @@ set(CMAKE_C_STANDARD 99)
 set(CMAKE_CXX_STANDARD 11)
 #set_property(GLOBAL PROPERTY RULE_MESSAGES OFF)
 
+# check that the ARCH (target architecture) variable is defined
 if(NOT ARCH)
-    set(ARCH i386)
+    message(FATAL_ERROR "Target architecture (ARCH) is not defined. Please, choose one of: i386, amd64, arm")
 endif()
 # Now the ARCH variable will be in lowercase.
 # It is needed because STREQUAL comparison
@@ -37,6 +38,9 @@ endif()
 # See http://cmake.3232098.n2.nabble.com/Case-insensitive-string-compare-td7580269.html
 # for more information.
 string(TOLOWER ${ARCH} ARCH)
+
+# set possible values for cmake GUI
+set_property(CACHE ARCH PROPERTY STRINGS "i386" "amd64" "arm")
 
 # Alternative WinNT-compatible architecture string
 if(ARCH STREQUAL "i386")
