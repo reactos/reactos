@@ -1685,17 +1685,37 @@ SeFilterToken(IN PACCESS_TOKEN ExistingToken,
     return STATUS_NOT_IMPLEMENTED;
 }
 
-/*
- * @implemented
+/**
+ * @brief
+ * Queries information details about the given token to the call. The difference
+ * between NtQueryInformationToken and this routine is that the system call has
+ * user mode buffer data probing and additional protection checks whereas this
+ * routine doesn't have any of these. The routine is used exclusively in kernel
+ * mode.
  *
- * NOTE: SeQueryInformationToken is just NtQueryInformationToken without all
- * the bells and whistles needed for user-mode buffer access protection.
+ * @param[in] AccessToken
+ * An access token to be given.
+ *
+ * @param[in] TokenInformationClass
+ * Token information class.
+ *
+ * @param[out] TokenInformation
+ * Buffer with retrieved information. Such information is arbitrary, depending
+ * on the requested information class.
+ *
+ * @return
+ * Returns STATUS_SUCCESS if the operation to query the desired information
+ * has completed successfully. STATUS_INSUFFICIENT_RESOURCES is returned if
+ * pool memory allocation has failed to satisfy an operation. Otherwise
+ * STATUS_INVALID_INFO_CLASS is returned indicating that the information
+ * class provided is not supported by the routine.
  */
 NTSTATUS
 NTAPI
-SeQueryInformationToken(IN PACCESS_TOKEN AccessToken,
-                        IN TOKEN_INFORMATION_CLASS TokenInformationClass,
-                        OUT PVOID *TokenInformation)
+SeQueryInformationToken(
+    _In_ PACCESS_TOKEN AccessToken,
+    _In_ TOKEN_INFORMATION_CLASS TokenInformationClass,
+    _Outptr_result_buffer_(_Inexpressible_(token-dependent)) PVOID *TokenInformation)
 {
     NTSTATUS Status;
     PTOKEN Token = (PTOKEN)AccessToken;
@@ -1708,13 +1728,8 @@ SeQueryInformationToken(IN PACCESS_TOKEN AccessToken,
 
     PAGED_CODE();
 
-    if (TokenInformationClass >= MaxTokenInfoClass)
-    {
-        DPRINT1("SeQueryInformationToken(%d) invalid information class\n", TokenInformationClass);
-        return STATUS_INVALID_INFO_CLASS;
-    }
-
-    // TODO: Lock the token
+    /* Lock the token */
+    SepAcquireTokenLockShared(Token);
 
     switch (TokenInformationClass)
     {
@@ -2014,86 +2029,6 @@ SeQueryInformationToken(IN PACCESS_TOKEN AccessToken,
             break;
         }
 
-/*
- * The following 4 cases are only implemented in NtQueryInformationToken
- */
-#if 0
-
-        case TokenOrigin:
-        {
-            PTOKEN_ORIGIN to;
-
-            DPRINT("SeQueryInformationToken(TokenOrigin)\n");
-            RequiredLength = sizeof(TOKEN_ORIGIN);
-
-            /* Allocate the output buffer */
-            to = ExAllocatePoolWithTag(PagedPool, RequiredLength, TAG_SE);
-            if (to == NULL)
-            {
-                Status = STATUS_INSUFFICIENT_RESOURCES;
-                break;
-            }
-
-            RtlCopyLuid(&to->OriginatingLogonSession,
-                        &Token->AuthenticationId);
-
-            /* Return the structure */
-            *TokenInformation = to;
-            Status = STATUS_SUCCESS;
-            break;
-        }
-
-        case TokenGroupsAndPrivileges:
-            DPRINT1("SeQueryInformationToken(TokenGroupsAndPrivileges) not implemented\n");
-            Status = STATUS_NOT_IMPLEMENTED;
-            break;
-
-        case TokenRestrictedSids:
-        {
-            PTOKEN_GROUPS tg = (PTOKEN_GROUPS)TokenInformation;
-            ULONG SidLen;
-            PSID Sid;
-
-            DPRINT("SeQueryInformationToken(TokenRestrictedSids)\n");
-            RequiredLength = sizeof(tg->GroupCount) +
-            RtlLengthSidAndAttributes(Token->RestrictedSidCount, Token->RestrictedSids);
-
-            SidLen = RequiredLength - sizeof(tg->GroupCount) -
-                (Token->RestrictedSidCount * sizeof(SID_AND_ATTRIBUTES));
-
-            /* Allocate the output buffer */
-            tg = ExAllocatePoolWithTag(PagedPool, RequiredLength, TAG_SE);
-            if (tg == NULL)
-            {
-                Status = STATUS_INSUFFICIENT_RESOURCES;
-                break;
-            }
-
-            Sid = (PSID)((ULONG_PTR)tg + sizeof(tg->GroupCount) +
-                         (Token->RestrictedSidCount * sizeof(SID_AND_ATTRIBUTES)));
-
-            tg->GroupCount = Token->RestrictedSidCount;
-            Status = RtlCopySidAndAttributesArray(Token->RestrictedSidCount,
-                                                  Token->RestrictedSids,
-                                                  SidLen,
-                                                  &tg->Groups[0],
-                                                  Sid,
-                                                  &Unused.PSid,
-                                                  &Unused.Ulong);
-
-            /* Return the structure */
-            *TokenInformation = tg;
-            Status = STATUS_SUCCESS;
-            break;
-        }
-
-        case TokenSandBoxInert:
-            DPRINT1("SeQueryInformationToken(TokenSandboxInert) not implemented\n");
-            Status = STATUS_NOT_IMPLEMENTED;
-            break;
-
-#endif
-
         case TokenSessionId:
         {
             DPRINT("SeQueryInformationToken(TokenSessionId)\n");
@@ -2106,6 +2041,9 @@ SeQueryInformationToken(IN PACCESS_TOKEN AccessToken,
             Status = STATUS_INVALID_INFO_CLASS;
             break;
     }
+
+    /* Release the lock of the token */
+    SepReleaseTokenLock(Token);
 
     return Status;
 }
