@@ -126,7 +126,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_INFO_VERSION "\Verzió: "
+    IDS_INFO_VERSION "\nVerzió: "
     IDS_INFO_DESCRIPTION "\nLeírás: "
     IDS_INFO_PUBLISHER "\nKiadó: "
     IDS_INFO_HELPLINK "\nSúgó hivatkozás: "
