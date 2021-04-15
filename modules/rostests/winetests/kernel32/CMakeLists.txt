@@ -50,7 +50,7 @@ if(MSVC)
     remove_target_compile_option(kernel32_winetest "/we4477")
 endif()
 
-if(USE_CLANG_CL OR (NOT MSVC))
+if(NOT MSVC OR CMAKE_C_COMPILER_ID STREQUAL "Clang")
     target_compile_options(kernel32_winetest PRIVATE "-Wno-format")
 endif()
 

@@ -18,7 +18,7 @@ endif()
 
 add_asm_files(ntoskrnl_asm ${NTOSKRNL_ASM_SOURCE})
 
-if (GCC AND CLANG)
+if (NOT MSVC AND CMAKE_C_COMPILER_ID STREQUAL "Clang")
     # Clang optimises strcmp calls to memcmp.
     target_sources(libntoskrnl PRIVATE $<TARGET_OBJECTS:memcmp>)
 endif()
@@ -36,7 +36,7 @@ set_module_type(ntoskrnl kernel)
 
 source_group(TREE ${REACTOS_SOURCE_DIR}/ntoskrnl PREFIX "Source Files" FILES ${NTOSKRNL_SOURCE})
 
-if(GDB AND NOT CLANG)
+if(GDB AND CMAKE_C_COMPILER_ID STREQUAL "GNU")
     # Completely disable optimizations when debugging the kernel
     # Not for CLang, which fails as following in _SEH2_EXCEPT macro:
     # error: inline assembly requires more registers than available

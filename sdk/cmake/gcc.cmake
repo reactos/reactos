@@ -256,7 +256,7 @@ set(CMAKE_CXX_COMPILE_OBJECT "<CMAKE_CXX_COMPILER> <DEFINES> <INCLUDES> <FLAGS> 
 set(CMAKE_ASM_COMPILE_OBJECT "<CMAKE_ASM_COMPILER> ${_compress_debug_sections_flag} -x assembler-with-cpp -o <OBJECT> -I${REACTOS_SOURCE_DIR}/sdk/include/asm -I${REACTOS_BINARY_DIR}/sdk/include/asm <INCLUDES> <FLAGS> <DEFINES> -D__ASM__ -c <SOURCE>")
 
 set(CMAKE_RC_COMPILE_OBJECT "<CMAKE_RC_COMPILER> -O coff <INCLUDES> <FLAGS> -DRC_INVOKED -D__WIN32__=1 -D__FLAT__=1 ${I18N_DEFS} <DEFINES> <SOURCE> <OBJECT>")
-if (CLANG)
+if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
     set(GCC_EXECUTABLE ${CMAKE_C_COMPILER_TARGET}-gcc)
 else()
     set(GCC_EXECUTABLE ${CMAKE_C_COMPILER})
@@ -479,12 +479,12 @@ add_compile_options("$<$<COMPILE_LANGUAGE:CXX>:$<IF:$<BOOL:$<TARGET_PROPERTY:WIT
 add_compile_options("$<$<COMPILE_LANGUAGE:CXX>:$<IF:$<BOOL:$<TARGET_PROPERTY:WITH_CXX_EXCEPTIONS>>,-fexceptions,-fno-exceptions>>")
 
 # G++ shipped with ROSBE uses sjlj exceptions. Tell Clang it is so
-if (CLANG)
+if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
     add_compile_options("$<$<AND:$<COMPILE_LANGUAGE:CXX>,$<BOOL:$<TARGET_PROPERTY:WITH_CXX_EXCEPTIONS>>>:-fsjlj-exceptions>")
 endif()
 
 # Find default G++ libraries
-if (CLANG)
+if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
     set(GXX_EXECUTABLE ${CMAKE_CXX_COMPILER_TARGET}-g++)
 else()
     set(GXX_EXECUTABLE ${CMAKE_CXX_COMPILER})

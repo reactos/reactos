@@ -210,7 +210,7 @@ target_include_directories(wdf01000
 
 target_link_libraries(wdf01000 aux_klib ntoskrnl_vista ${PSEH_LIB})
 
-if(GCC)
+if(CMAKE_C_COMPILER_ID STREQUAL "GNU" OR CMAKE_C_COMPILER_ID STREQUAL "Clang")
     target_compile_options(wdf01000
         PRIVATE -Wno-write-strings -Wno-unknown-pragmas -Wno-switch
         PRIVATE $<$<COMPILE_LANGUAGE:CXX>:-Wno-reorder -Wno-invalid-offsetof -Wno-delete-non-virtual-dtor>)

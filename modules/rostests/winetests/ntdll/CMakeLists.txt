@@ -36,7 +36,7 @@ add_executable(ntdll_winetest
     ${SOURCE}
     ${PCH_SKIP_SOURCE})
 
-if(USE_CLANG_CL OR (NOT MSVC))
+if(NOT MSVC OR CMAKE_C_COMPILER_ID STREQUAL "Clang")
     target_compile_options(ntdll_winetest PRIVATE "-Wno-format")
 endif()
 
