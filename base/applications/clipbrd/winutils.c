@@ -234,7 +234,7 @@ void SetDIBitsToDeviceFromClipboard(UINT uFormat, PAINTSTRUCT ps, SCROLLSTATE st
             dwPalSize *= sizeof(WORD);
 
         if (/*(lpInfoHeader->biSize == sizeof(BITMAPINFOHEADER)) &&*/
-            (lpInfoHeader->biCompression == BI_BITFIELDS))
+            lpInfoHeader->biCompression == BI_BITFIELDS)
         {
             dwPalSize += 3 * sizeof(DWORD);
         }
