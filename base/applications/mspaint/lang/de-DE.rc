@@ -78,7 +78,7 @@ BEGIN
         MENUITEM "Drehen/Spiegeln...\tStrg+D", IDM_IMAGEROTATEMIRROR
         MENUITEM "Strecken/Zerren...\tStrg+K", IDM_IMAGESTRETCHSKEW
         MENUITEM "Zuschneiden", IDM_IMAGECROP
-        MENUITEM "&Grayscale colors", IDM_IMAGEGRAYSCALE
+        MENUITEM "&Grayscale effect", IDM_IMAGEGRAYSCALE
         MENUITEM "Farben umkehren\tStrg+U", IDM_IMAGEINVERTCOLORS
         MENUITEM "Attribute...\tStrg+E", IDM_IMAGEATTRIBUTES
         MENUITEM "Bild löschen\tStrg+Umschalt+N", IDM_IMAGEDELETEIMAGE

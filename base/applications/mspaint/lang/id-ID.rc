@@ -78,7 +78,7 @@ BEGIN
         MENUITEM "Putar/&Cermin...\tCtrl+R", IDM_IMAGEROTATEMIRROR
         MENUITEM "&Perluas/Condongkan...\tCtrl+W", IDM_IMAGESTRETCHSKEW
         MENUITEM "Poto&ng", IDM_IMAGECROP
-        MENUITEM "&Grayscale colors", IDM_IMAGEGRAYSCALE
+        MENUITEM "&Grayscale effect", IDM_IMAGEGRAYSCALE
         MENUITEM "&Balikkan warna\tCtrl+I", IDM_IMAGEINVERTCOLORS
         MENUITEM "&Atribut...\tCtrl+E", IDM_IMAGEATTRIBUTES
         MENUITEM "&Hapus Gambar\tCtrl+Shft+N", IDM_IMAGEDELETEIMAGE

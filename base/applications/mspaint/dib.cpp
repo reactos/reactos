@@ -16,14 +16,32 @@ HBITMAP
 CreateDIBWithProperties(int width, int height)
 {
     BITMAPINFO bmi;
+
+    HBITMAP result;
+
     ZeroMemory(&bmi, sizeof(BITMAPINFO));
     bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
     bmi.bmiHeader.biWidth = width;
     bmi.bmiHeader.biHeight = height;
     bmi.bmiHeader.biPlanes = 1;
-    bmi.bmiHeader.biBitCount = 24;
     bmi.bmiHeader.biCompression = BI_RGB;
-    return CreateDIBSection(NULL, &bmi, DIB_RGB_COLORS, NULL, NULL, 0);
+
+    if(paletteWindow.bk){
+        bmi.bmiHeader.biBitCount = 1;
+        bmi.bmiHeader.biClrUsed = 1;
+        bmi.bmiColors[0].rgbGreen=255;
+        bmi.bmiColors[0].rgbRed=255;
+        bmi.bmiColors[0].rgbBlue=255;
+    }
+    else{
+        bmi.bmiHeader.biBitCount = 24;
+        bmi.bmiHeader.biClrUsed = 0;
+    }
+
+    result = CreateDIBSection(NULL, &bmi, DIB_RGB_COLORS, NULL, NULL, 0);
+
+
+    return result;
 }
 
 HBITMAP
@@ -39,7 +57,7 @@ CreateColorDIB(int width, int height, COLORREF rgb)
         HGDIOBJ hbmOld = SelectObject(hdc, ret);
         RECT rc;
         SetRect(&rc, 0, 0, width, height);
-        HBRUSH hbr = CreateSolidBrush(rgb);
+        HBRUSH hbr = CreateSolidBrush(0x00EEEEEE);
         FillRect(hdc, &rc, hbr);
         DeleteObject(hbr);
         SelectObject(hdc, hbmOld);

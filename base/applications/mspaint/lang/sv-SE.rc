@@ -70,7 +70,7 @@ BEGIN
         MENUITEM "Rotera/Spegelvänd...\tCtrl+R", IDM_IMAGEROTATEMIRROR
         MENUITEM "Stretch/Skew...\tCtrl+W", IDM_IMAGESTRETCHSKEW
         MENUITEM "Beskära", IDM_IMAGECROP
-        MENUITEM "&Grayscale colors", IDM_IMAGEGRAYSCALE
+        MENUITEM "&Grayscale effect", IDM_IMAGEGRAYSCALE
         MENUITEM "Invertera färger\tCtrl+I", IDM_IMAGEINVERTCOLORS
         MENUITEM "Attribut...\tCtrl+E", IDM_IMAGEATTRIBUTES
         MENUITEM "Radera bild\tCtrl+Shft+N", IDM_IMAGEDELETEIMAGE

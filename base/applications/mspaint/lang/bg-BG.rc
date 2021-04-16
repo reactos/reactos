@@ -78,7 +78,7 @@ BEGIN
         MENUITEM "Завъртане/Огледало\tCtrl+R", IDM_IMAGEROTATEMIRROR
         MENUITEM "Stretch/Skew\tCtrl+W", IDM_IMAGESTRETCHSKEW
         MENUITEM "Изрязване", IDM_IMAGECROP
-        MENUITEM "&Grayscale colors", IDM_IMAGEGRAYSCALE
+        MENUITEM "&Grayscale effect", IDM_IMAGEGRAYSCALE
         MENUITEM "Обръщане на цветовете\tCtrl+I", IDM_IMAGEINVERTCOLORS
         MENUITEM "Принадлежности\tCtrl+E", IDM_IMAGEATTRIBUTES
         MENUITEM "Изтриване на изображението\tCtrl+Shft+N", IDM_IMAGEDELETEIMAGE

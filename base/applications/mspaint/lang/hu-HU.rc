@@ -70,7 +70,7 @@ BEGIN
         MENUITEM "Forgatás/Tükrözés...\tCtrl+R", IDM_IMAGEROTATEMIRROR
         MENUITEM "Stretch/Skew...\tCtrl+W", IDM_IMAGESTRETCHSKEW
         MENUITEM "Vágás", IDM_IMAGECROP
-        MENUITEM "&Grayscale colors", IDM_IMAGEGRAYSCALE
+        MENUITEM "&Grayscale effect", IDM_IMAGEGRAYSCALE
         MENUITEM "Színek megfordítása\tCtrl+I", IDM_IMAGEINVERTCOLORS
         MENUITEM "Attribútumok...\tCtrl+E", IDM_IMAGEATTRIBUTES
         MENUITEM "Kép törlése\tCtrl+Shft+N", IDM_IMAGEDELETEIMAGE

@@ -79,7 +79,7 @@ BEGIN
         MENUITEM "&Rotire/Oglindire…\tCtrl+R", IDM_IMAGEROTATEMIRROR
         MENUITEM "Întin&dere/Înclinare…\tCtrl+W", IDM_IMAGESTRETCHSKEW
         MENUITEM "Recoltea&ză", IDM_IMAGECROP
-        MENUITEM "&Grayscale colors", IDM_IMAGEGRAYSCALE
+        MENUITEM "&Grayscale effect", IDM_IMAGEGRAYSCALE
         MENUITEM "In&versează culorile\tCtrl+I", IDM_IMAGEINVERTCOLORS
         MENUITEM "&Atribute…\tCtrl+E", IDM_IMAGEATTRIBUTES
         MENUITEM "Șt&erge imaginea", IDM_IMAGEDELETEIMAGE

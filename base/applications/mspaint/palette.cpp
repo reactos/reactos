@@ -61,8 +61,8 @@ LRESULT CPaletteWindow::OnPaint(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& b
     {
         for (i = 0; i < 2; i++)
         {
-            SetRect(&rc, 31 + (i*14 % 14) * 16,
-                    0 + (i*14 / 14) * 16, 16 + 31 + (i*14 % 14) * 16, 16 + 0 + (i*14 / 14) * 16);
+            SetRect(&rc, 31,
+                    0 + (i*14 / 14) * 16, 16 + 31, 16 + 0 + (i*14 / 14) * 16);
             DrawEdge(hDC, &rc, EDGE_RAISED, BF_TOPLEFT);
             DrawEdge(hDC, &rc, BDR_SUNKENOUTER, BF_RECT);
             oldPen = (HPEN)SelectObject(hDC, CreatePen(PS_NULL, 0, 0));
@@ -89,7 +89,7 @@ LRESULT CPaletteWindow::OnLButtonDown(UINT nMsg, WPARAM wParam, LPARAM lParam, B
 {
     if (GET_X_LPARAM(lParam) >= 31 && !bk)
         paletteModel.SetFgColor(paletteModel.GetColor((GET_X_LPARAM(lParam) - 31) / 16 + (GET_Y_LPARAM(lParam) / 16) * 14));
-    if (GET_X_LPARAM(lParam) >= 31 && GET_X_LPARAM(lParam) < 45 && bk)
+    if (GET_X_LPARAM(lParam) >= 31 && GET_X_LPARAM(lParam) < 47 && bk)
         paletteModel.SetFgColor(paletteModel.GetColor((GET_X_LPARAM(lParam) - 31) / 16 + (GET_Y_LPARAM(lParam) / 16) * 14));
     return 0;
 }
@@ -98,7 +98,7 @@ LRESULT CPaletteWindow::OnRButtonDown(UINT nMsg, WPARAM wParam, LPARAM lParam, B
 {
     if (GET_X_LPARAM(lParam) >= 31 && !bk)
         paletteModel.SetBgColor(paletteModel.GetColor((GET_X_LPARAM(lParam) - 31) / 16 + (GET_Y_LPARAM(lParam) / 16) * 14));
-    if (GET_X_LPARAM(lParam) >= 31 && GET_X_LPARAM(lParam) < 45 && bk)
+    if (GET_X_LPARAM(lParam) >= 31 && GET_X_LPARAM(lParam) < 47 && bk)
         paletteModel.SetBgColor(paletteModel.GetColor((GET_X_LPARAM(lParam) - 31) / 16 + (GET_Y_LPARAM(lParam) / 16) * 14));
     return 0;
 }
