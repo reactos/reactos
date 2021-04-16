@@ -161,12 +161,12 @@ void ImageModel::Crop(int nWidth, int nHeight, int nOffsetX, int nOffsetY)
 
 void ImageModel::SaveImage(LPTSTR lpFileName)
 {
-
+    /*
     SelectObject(hDrawingDC, hBms[currInd]);
     DeleteObject(hBms[(currInd + 1) % HISTORYSIZE]);
     hBms[(currInd + 1) % HISTORYSIZE] = CreateDIBWithProperties(GetWidth(), GetHeight());
     currInd = currInd % HISTORYSIZE;
-
+    */
     SaveDIBToFile(hBms[currInd], lpFileName, hDrawingDC);
 }
 
