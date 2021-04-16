@@ -57,7 +57,7 @@ CreateColorDIB(int width, int height, COLORREF rgb)
         HGDIOBJ hbmOld = SelectObject(hdc, ret);
         RECT rc;
         SetRect(&rc, 0, 0, width, height);
-        HBRUSH hbr = CreateSolidBrush(0x00EEEEEE);
+        HBRUSH hbr = CreateSolidBrush(rgb);
         FillRect(hdc, &rc, hbr);
         DeleteObject(hbr);
         SelectObject(hdc, hbmOld);
