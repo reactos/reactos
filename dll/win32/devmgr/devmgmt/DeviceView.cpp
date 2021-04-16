@@ -351,23 +351,11 @@ CDeviceView::GetNextClass(
     if (cr != CR_SUCCESS)
         return false;
 
-    // Check if this is the unknown class
-    if (IsEqualGUID(*ClassGuid, GUID_DEVCLASS_UNKNOWN))
-    {
-        // Get device info for all devices
-        *hDevInfo = SetupDiGetClassDevsW(NULL,
-                                         NULL,
-                                         NULL,
-                                         DIGCF_ALLCLASSES);
-    }
-    else
-    {
-        // We only want the devices for this class
-        *hDevInfo = SetupDiGetClassDevsW(ClassGuid,
-                                         NULL,
-                                         NULL,
-                                         DIGCF_PRESENT);
-    }
+    // We only want the devices for this class
+    *hDevInfo = SetupDiGetClassDevsW(ClassGuid,
+                                     NULL,
+                                     NULL,
+                                     DIGCF_PRESENT);
 
     return (hDevInfo != INVALID_HANDLE_VALUE);
 }
@@ -449,7 +437,6 @@ CDeviceView::ListDevicesByType()
         bClassSuccess = GetNextClass(ClassIndex, &ClassGuid, &hDevInfo);
         if (bClassSuccess)
         {
-            bool bClassUnknown = false;
             bool AddedParent = false;
             INT DeviceIndex = 0;
             bool MoreItems = false;
@@ -461,10 +448,6 @@ CDeviceView::ListDevicesByType()
                 ClassIndex++;
                 continue;
             }
-
-            // Set a flag is this is the (special case) unknown class
-            if (IsEqualGUID(ClassGuid, GUID_DEVCLASS_UNKNOWN))
-                bClassUnknown = true;
 
             // Check if this is a hidden class
             if (IsEqualGUID(ClassGuid, GUID_DEVCLASS_LEGACYDRIVER) ||
@@ -493,18 +476,6 @@ CDeviceView::ListDevicesByType()
                 if (bSuccess)
                 {
                     MoreItems = true;
-
-                    // The unknown class handle contains all devices on the system,
-                    // and we're just looking for the ones with a null GUID
-                    if (bClassUnknown)
-                    {
-                        if (IsEqualGUID(DeviceInfoData.ClassGuid, GUID_NULL) == FALSE)
-                        {
-                            // This is a known device, we aren't interested in it
-                            DeviceIndex++;
-                            continue;
-                        }
-                    }
 
                     // Get the cached device node
                     DeviceNode = GetDeviceNode(DeviceInfoData.DevInst);
