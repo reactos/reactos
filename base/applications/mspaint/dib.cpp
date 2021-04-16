@@ -27,7 +27,9 @@ CreateDIBWithProperties(int width, int height)
     if(paletteWindow.bk){
         bmi.bmiHeader.biBitCount = 1;
         bmi.bmiHeader.biClrUsed = 1;
-        
+        bmi.bmiColors[0].rgbGreen=255;
+        bmi.bmiColors[0].rgbRed=255;
+        bmi.bmiColors[0].rgbBlue=255;
     }
     else{
         bmi.bmiHeader.biBitCount = 24;
