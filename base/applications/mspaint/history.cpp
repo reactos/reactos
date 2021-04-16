@@ -215,6 +215,7 @@ void ImageModel::InvertColors()
     NotifyImageChanged();
 }
 
+/* This function only converts image to Grayscale without modify color depth */ 
 void ImageModel::GSColors()
 {
     int x, y;
@@ -234,6 +235,7 @@ void ImageModel::GSColors()
     NotifyImageChanged();
 }
 
+/* This function only converts image to Black/White without modify color depth */ 
 void ImageModel::BKColors()
 {
     int x, y;
