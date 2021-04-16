@@ -17,8 +17,6 @@ CreateDIBWithProperties(int width, int height)
 {
     BITMAPINFO bmi;
 
-    HBITMAP result;
-
     ZeroMemory(&bmi, sizeof(BITMAPINFO));
     bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
     bmi.bmiHeader.biWidth = width;
@@ -36,10 +34,7 @@ CreateDIBWithProperties(int width, int height)
         bmi.bmiHeader.biClrUsed = 0;
     }
 
-    result = CreateDIBSection(NULL, &bmi, DIB_RGB_COLORS, NULL, NULL, 0);
-
-
-    return result;
+    return CreateDIBSection(NULL, &bmi, DIB_RGB_COLORS, NULL, NULL, 0);
 }
 
 HBITMAP
