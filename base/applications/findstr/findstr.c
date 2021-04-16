@@ -129,7 +129,7 @@ usage (void)
 
 	LoadString( GetModuleHandle(NULL), IDS_USAGE, (LPTSTR)lpUsage, 4096);
 	CharToOem(lpUsage, lpUsage);
-	printf( lpUsage );
+	puts(lpUsage);
 }
 
 
