@@ -43,85 +43,103 @@ IsWindowsVersionOrGreater(WORD wMajorVersion, WORD wMinorVersion, WORD wServiceP
 }
 
 VERSIONHELPERAPI
-IsWindowsXPOrGreater()
+IsWindowsXPOrGreater(void)
 {
     return IsWindowsVersionOrGreater(5, 1, 0);
 }
 
 VERSIONHELPERAPI
-IsWindowsXPSP1OrGreater()
+IsWindowsXPSP1OrGreater(void)
 {
     return IsWindowsVersionOrGreater(5, 1, 1);
 }
 
 VERSIONHELPERAPI
-IsWindowsXPSP2OrGreater()
+IsWindowsXPSP2OrGreater(void)
 {
     return IsWindowsVersionOrGreater(5, 1, 2);
 }
 
 VERSIONHELPERAPI
-IsWindowsXPSP3OrGreater()
+IsWindowsXPSP3OrGreater(void)
 {
     return IsWindowsVersionOrGreater(5, 1, 3);
 }
 
 VERSIONHELPERAPI
-IsWindowsVistaOrGreater()
+IsWindowsServer2003OrGreater(void)
+{
+    return IsWindowsVersionOrGreater(5, 2, 0);
+}
+
+VERSIONHELPERAPI
+IsWindowsServer2003SP1OrGreater(void)
+{
+    return IsWindowsVersionOrGreater(5, 2, 1);
+}
+
+VERSIONHELPERAPI
+IsWindowsServer2003SP2OrGreater(void)
+{
+    return IsWindowsVersionOrGreater(5, 2, 2);
+}
+
+VERSIONHELPERAPI
+IsWindowsVistaOrGreater(void)
 {
     return IsWindowsVersionOrGreater(6, 0, 0);
 }
 
 VERSIONHELPERAPI
-IsWindowsVistaSP1OrGreater()
+IsWindowsVistaSP1OrGreater(void)
 {
     return IsWindowsVersionOrGreater(6, 0, 1);
 }
 
 VERSIONHELPERAPI
-IsWindowsVistaSP2OrGreater()
+IsWindowsVistaSP2OrGreater(void)
 {
     return IsWindowsVersionOrGreater(6, 0, 2);
 }
 
 VERSIONHELPERAPI
-IsWindows7OrGreater()
+IsWindows7OrGreater(void)
 {
     return IsWindowsVersionOrGreater(6, 1, 0);
 }
 
 VERSIONHELPERAPI
-IsWindows7SP1OrGreater()
+IsWindows7SP1OrGreater(void)
 {
     return IsWindowsVersionOrGreater(6, 1, 1);
 }
 
 VERSIONHELPERAPI
-IsWindows8OrGreater()
+IsWindows8OrGreater(void)
 {
     return IsWindowsVersionOrGreater(6, 2, 0);
 }
 
 VERSIONHELPERAPI
-IsWindows8Point1OrGreater()
+IsWindows8Point1OrGreater(void)
 {
     return IsWindowsVersionOrGreater(6, 3, 0);
 }
 
 VERSIONHELPERAPI
-IsWindowsThresholdOrGreater()
+IsWindowsThresholdOrGreater(void)
 {
     return IsWindowsVersionOrGreater(10, 0, 0);
 }
 
 VERSIONHELPERAPI
-IsWindows10OrGreater()
+IsWindows10OrGreater(void)
 {
     return IsWindowsVersionOrGreater(10, 0, 0);
 }
 
 VERSIONHELPERAPI
-IsWindowsServer()
+IsWindowsServer(void)
 {
     OSVERSIONINFOEXW osvi = { sizeof(osvi), 0, 0, 0, 0, {0}, 0, 0, 0, VER_NT_WORKSTATION };
     DWORDLONG const dwlConditionMask = VerSetConditionMask(0, VER_PRODUCT_TYPE, VER_EQUAL);
@@ -129,7 +147,7 @@ IsWindowsServer()
 }
 
 VERSIONHELPERAPI
-IsActiveSessionCountLimited()
+IsActiveSessionCountLimited(void)
 {
     OSVERSIONINFOEXW osvi = { sizeof(osvi), 0, 0, 0, 0, {0}, 0, 0, 0, 0, 0 };
     DWORDLONG dwlConditionMask = VerSetConditionMask(0, VER_SUITENAME, VER_AND);
@@ -146,7 +164,7 @@ IsActiveSessionCountLimited()
 
 #ifdef __REACTOS__
 VERSIONHELPERAPI
-IsReactOS()
+IsReactOS(void)
 {
     // FIXME: Find a better method!
     WCHAR szWinDir[MAX_PATH];

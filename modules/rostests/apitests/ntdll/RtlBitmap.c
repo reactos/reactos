@@ -2,7 +2,7 @@
 #include "precomp.h"
 #include <versionhelpers.h>
 
-static BOOL IsBroken = FALSE;
+static BOOL IsBroken = FALSE, IsBrokenS2003 = FALSE;
 
 void
 Test_RtlFindMostSignificantBit(void)
@@ -335,17 +335,17 @@ Test_RtlNumberOfClearBits(void)
 
     RtlInitializeBitMap(&BitMapHeader, Buffer, 31);
     ok_int(RtlNumberOfClearBits(&BitMapHeader), 12);
-    ok_hex(Buffer[0], IsBroken ? 0x7f00fff0 : 0xff00fff0);
+    ok_hex(Buffer[0], IsBrokenS2003 ? 0x7f00fff0 : 0xff00fff0);
     ok_hex(Buffer[1], 0x3F303F30);
 
     RtlInitializeBitMap(&BitMapHeader, Buffer, 4);
     ok_int(RtlNumberOfClearBits(&BitMapHeader), 4);
-    ok_hex(Buffer[0], IsBroken ? 0x7f00ff00 : 0xff00fff0);
+    ok_hex(Buffer[0], IsBrokenS2003 ? 0x7f00ff00 : 0xff00fff0);
     ok_hex(Buffer[1], 0x3F303F30);
 
     RtlInitializeBitMap(&BitMapHeader, Buffer, 0);
     ok_int(RtlNumberOfClearBits(&BitMapHeader), 0);
-    ok_hex(Buffer[0], IsBroken ? 0x7f00ff00 : 0xff00fff0);
+    ok_hex(Buffer[0], IsBrokenS2003 ? 0x7f00ff00 : 0xff00fff0);
     ok_hex(Buffer[1], 0x3F303F30);
 
     FreeGuarded(Buffer);
@@ -580,30 +580,43 @@ Test_RtlFindNextForwardRunClear(void)
 void
 Test_RtlFindFirstRunClear(void)
 {
+  todo_if(TRUE)
+    ok(FALSE, "%s() is UNIMPLEMENTED\n", __FUNCTION__);
 }
 
 void
 Test_RtlFindLastBackwardRunClear(void)
 {
+  todo_if(TRUE)
+    ok(FALSE, "%s() is UNIMPLEMENTED\n", __FUNCTION__);
 }
 
 void
 Test_RtlFindClearRuns(void)
 {
+  todo_if(TRUE)
+    ok(FALSE, "%s() is UNIMPLEMENTED\n", __FUNCTION__);
 }
 
 void
 Test_RtlFindLongestRunClear(void)
 {
+  todo_if(TRUE)
+    ok(FALSE, "%s() is UNIMPLEMENTED\n", __FUNCTION__);
 }
 
-
-START_TEST(RtlBitmap)
+START_TEST(RtlBitmapApi)
 {
-    /* Windows 2003 has broken bitmap code that modifies the buffer */
-    if (!IsWindows7OrGreater() && !IsReactOS())
+    /* Windows Server 2003 has broken bitmap code that modifies the buffer.
+       Windows XP has additional failures. Too bad */
+    if (!IsWindowsVistaOrGreater() && !IsReactOS())
     {
         IsBroken = TRUE;
+
+        if (IsWindowsServer2003OrGreater())
+        {
+            IsBrokenS2003 = TRUE;
+        }
     }
 
     Test_RtlFindMostSignificantBit();
@@ -627,4 +640,3 @@ START_TEST(RtlBitmap)
     Test_RtlFindClearRuns();
     Test_RtlFindLongestRunClear();
 }
-
