@@ -45,7 +45,7 @@ BEGIN
     IDS_LOADINGYOURPERSONALSETTINGS "Nahrávání osobního nastavení..."
     IDS_CLOSINGNETWORKCONNECTIONS "Ukončení síťových připojení..."
     IDS_REACTOSISRESTARTING "Restarting..."
-    IDS_REACTOSISSHUTTINGDOWN "ReactOS se vypíná..."
+    IDS_REACTOSISSHUTTINGDOWN "Shutting down..."
     IDS_PREPARETOSTANDBY "Příprava k přechodu do úsporného režimu..."
     IDS_PREPARETOHIBERNATE "Příprava k přechodu do režimu hibernace..."
     IDS_SAVEYOURSETTINGS "Ukládání osobního nastavení..."

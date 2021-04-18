@@ -47,7 +47,7 @@ BEGIN
     IDS_LOADINGYOURPERSONALSETTINGS "Memuatkan seting peribadi anda..."
     IDS_CLOSINGNETWORKCONNECTIONS "Tutup sambungan rangkaian..."
     IDS_REACTOSISRESTARTING "Restarting..."
-    IDS_REACTOSISSHUTTINGDOWN "ReactOS sedang memadam komputer anda..."
+    IDS_REACTOSISSHUTTINGDOWN "Shutting down..."
     IDS_PREPARETOSTANDBY "Bersedia untuk tunggu sedia..."
     IDS_PREPARETOHIBERNATE "Bersedia untuk berhibernasi..."
     IDS_SAVEYOURSETTINGS "Menyimpan seting anda..."

@@ -47,7 +47,7 @@ BEGIN
     IDS_LOADINGYOURPERSONALSETTINGS "Cargando su configuración personal..."
     IDS_CLOSINGNETWORKCONNECTIONS "Cerrando las conexiones de red..."
     IDS_REACTOSISRESTARTING "Restarting..."
-    IDS_REACTOSISSHUTTINGDOWN "ReactOS se está apagando..."
+    IDS_REACTOSISSHUTTINGDOWN "Shutting down..."
     IDS_PREPARETOSTANDBY "Preparando para entrar en estado de espera (Standby)..."
     IDS_PREPARETOHIBERNATE "Preparando para hibernar..."
     IDS_SAVEYOURSETTINGS "Guardando su configuración personal..."

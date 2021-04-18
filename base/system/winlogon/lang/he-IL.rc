@@ -47,7 +47,7 @@ BEGIN
     IDS_LOADINGYOURPERSONALSETTINGS "טוען את הגדרותיך האישיות..."
     IDS_CLOSINGNETWORKCONNECTIONS "סוגר חיבורי רשת..."
     IDS_REACTOSISRESTARTING "Restarting..."
-    IDS_REACTOSISSHUTTINGDOWN "ReactOS מתכבה..."
+    IDS_REACTOSISSHUTTINGDOWN "Shutting down..."
     IDS_PREPARETOSTANDBY "מתכונן להמתנה..."
     IDS_PREPARETOHIBERNATE "מתכונן לשינה..."
     IDS_SAVEYOURSETTINGS "שומר את הגדרותיך..."

@@ -45,7 +45,7 @@ BEGIN
     IDS_LOADINGYOURPERSONALSETTINGS "Γίνεται φόρτωση των ρυθμίσεών σας..."
     IDS_CLOSINGNETWORKCONNECTIONS "Closing network connections..."
     IDS_REACTOSISRESTARTING "Restarting..."
-    IDS_REACTOSISSHUTTINGDOWN "Το ReactOS τερματίζει..."
+    IDS_REACTOSISSHUTTINGDOWN "Shutting down..."
     IDS_PREPARETOSTANDBY "Γίνεται προετοιμασία για αναμονή..."
     IDS_PREPARETOHIBERNATE "Preparing to Hibernate..."
     IDS_SAVEYOURSETTINGS "Γίνεται αποθήκευση των ρυθμίσεών σας..."

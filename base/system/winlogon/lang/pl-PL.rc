@@ -53,7 +53,7 @@ BEGIN
     IDS_LOADINGYOURPERSONALSETTINGS "Trwa ładowanie ustawień osobistych..."
     IDS_CLOSINGNETWORKCONNECTIONS "Trwa zamykanie połączeń sieciowych..."
     IDS_REACTOSISRESTARTING "Restarting..."
-    IDS_REACTOSISSHUTTINGDOWN "Trwa zamykanie systemu ReactOS..."
+    IDS_REACTOSISSHUTTINGDOWN "Shutting down..."
     IDS_PREPARETOSTANDBY "Trwa przygotowywanie do przejścia w stan wstrzymania..."
     IDS_PREPARETOHIBERNATE "Trwa przygotowywanie do hibernacji..."
     IDS_SAVEYOURSETTINGS "Trwa zapisywanie ustawień..."
