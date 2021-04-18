@@ -416,7 +416,8 @@ unsigned long TConsole::WriteStringFast(const char* pszString, unsigned long cbS
 		if(ini.get_vt100_mode() && cbString + (unsigned)CON_CUR_X == (unsigned)CON_COLS) {
 
 			cbString--;
-			if((long)cbString >= 0) WriteConsole(hConsole, pszString, cbString, &Result, 0);
+            assert(cbString <= std::numeric_limits<DWORD>::max());
+            WriteConsole(hConsole, pszString, static_cast<DWORD>(cbString), &Result, 0);
 
 			COORD dwBufferCoord;
 			dwBufferCoord.X = 0;

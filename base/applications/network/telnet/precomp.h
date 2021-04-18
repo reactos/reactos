@@ -2,6 +2,7 @@
 #define _TELNET_PCH_
 
 #include <stdarg.h>
+#include <cassert>
 
 #define WIN32_NO_STATUS
 
