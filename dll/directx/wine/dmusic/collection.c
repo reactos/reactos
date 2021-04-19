@@ -49,10 +49,12 @@ static inline IDirectMusicCollectionImpl *impl_from_IDirectMusicCollection(IDire
     return CONTAINING_RECORD(iface, IDirectMusicCollectionImpl, IDirectMusicCollection_iface);
 }
 
+#ifndef __REACTOS__
 static inline struct dmobject *impl_from_IDirectMusicObject(IDirectMusicObject *iface)
 {
     return CONTAINING_RECORD(iface, struct dmobject, IDirectMusicObject_iface);
 }
+#endif
 
 static inline IDirectMusicCollectionImpl *impl_from_IPersistStream(IPersistStream *iface)
 {
