@@ -1277,7 +1277,7 @@ HEXEDIT_WM_CHAR(PHEXEDIT_DATA hed, WCHAR wch)
     }
     if (!hed->EditingField)
     {
-        if (0x20 <= ch && ch <= 0xFF)
+        if (ch >= 0x20)
         {
             if (hed->SelStart != hed->SelEnd)
             {
