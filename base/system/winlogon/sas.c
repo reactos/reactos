@@ -435,7 +435,7 @@ AllowWinstaAccess(PWLSESSION Session)
     DWORD dwIndex;
     DWORD dwLength = 0;
     PTOKEN_GROUPS ptg = NULL;
-    PSID psid;
+    PSID psid = NULL;
     TOKEN_STATISTICS Stats;
     DWORD cbStats;
     DWORD ret;
@@ -477,6 +477,7 @@ AllowWinstaAccess(PWLSESSION Session)
             break;
         }
     }
+    ASSERT(psid != NULL);
 
     dwLength = GetLengthSid(psid);
 
