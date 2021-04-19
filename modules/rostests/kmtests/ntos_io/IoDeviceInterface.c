@@ -92,38 +92,36 @@ Test_IoOpenDeviceInterfaceRegistryKey(PWSTR SymbolicLink)
 
         if (NT_SUCCESS(Status))
         {
-            DPRINT1("IoOpenDeviceInterfaceRegistryKey(): success: %d %p\n", n, DeviceInterfaceKey);
+            trace("IoOpenDeviceInterfaceRegistryKey(): success: %d %p\n", n, DeviceInterfaceKey);
         }
         else
         {
-            DPRINT1("IoOpenDeviceInterfaceRegistryKey(): fail: %d 0x%x\n", n, Status);
+            trace("IoOpenDeviceInterfaceRegistryKey(): fail: %d 0x%x\n", n, Status);
         }
 
-        InitializeObjectAttributes(
-            &ObjectAttributes,
-            &KeyName,
-            OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
-            DeviceInterfaceKey,
-            NULL);
-        Status = ZwCreateKey(
-            &DeviceInterfaceSubKey,
-            KEY_WRITE,
-            &ObjectAttributes,
-            0,
-            NULL,
-            REG_OPTION_NON_VOLATILE,
-            NULL);
+        InitializeObjectAttributes(&ObjectAttributes,
+                                   &KeyName,
+                                   OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
+                                   DeviceInterfaceKey,
+                                   NULL);
+        Status = ZwCreateKey(&DeviceInterfaceSubKey,
+                             KEY_WRITE,
+                             &ObjectAttributes,
+                             0,
+                             NULL,
+                             REG_OPTION_NON_VOLATILE,
+                             NULL);
 
         if (NT_SUCCESS(Status))
         {
-            DPRINT1("ZwCreateKey(): successfully created subkey: %d %p\n", n, DeviceInterfaceSubKey);
+            trace("ZwCreateKey(): successfully created subkey: %d %p\n", n, DeviceInterfaceSubKey);
 
             ZwDeleteKey(DeviceInterfaceSubKey);
             ZwClose(DeviceInterfaceSubKey);
         }
         else
         {
-            DPRINT1("ZwCreateKey(): failed to create a subkey: %d 0x%x\n", n, Status);
+            trace("ZwCreateKey(): failed to create a subkey: %d 0x%x\n", n, Status);
         }
 
         ZwClose(DeviceInterfaceKey);
@@ -145,13 +143,13 @@ Test_IoGetDeviceInterfaceAlias(PWSTR SymbolicLink)
 
         if (NT_SUCCESS(Status))
         {
-            DPRINT1("IoGetDeviceInterfaceAlias(): success: %d %wZ\n", n, &AliasSymbolicLinkName);
+            trace("IoGetDeviceInterfaceAlias(): success: %d %wZ\n", n, &AliasSymbolicLinkName);
 
             RtlFreeUnicodeString(&AliasSymbolicLinkName);
         }
         else
         {
-            DPRINT1("IoGetDeviceInterfaceAlias(): fail: %d 0x%x\n", n, Status);
+            trace("IoGetDeviceInterfaceAlias(): fail: %d 0x%x\n", n, Status);
         }
     }
 }
@@ -170,11 +168,11 @@ Test_IoSetDeviceInterfaceState(PWSTR SymbolicLink)
 
         if (NT_SUCCESS(Status))
         {
-            DPRINT1("IoSetDeviceInterfaceState(): successfully enabled interface: %d %wZ\n", n, &SymbolicLinkName);
+            trace("IoSetDeviceInterfaceState(): successfully enabled interface: %d %wZ\n", n, &SymbolicLinkName);
         }
         else
         {
-            DPRINT1("IoSetDeviceInterfaceState(): failed to enable interface: %d 0x%x\n", n, Status);
+            trace("IoSetDeviceInterfaceState(): failed to enable interface: %d 0x%x\n", n, Status);
         }
     }
 }
@@ -197,14 +195,14 @@ Test_IoGetDeviceInterfaces(const GUID* guid)
         return;
     }
 
-    DPRINT1("IoGetDeviceInterfaces '%wZ' results:\n", &GuidString);
+    trace("IoGetDeviceInterfaces '%wZ' results:\n", &GuidString);
     RtlFreeUnicodeString(&GuidString);
 
     for (SymbolicLinkListPtr = SymbolicLinkList;
         SymbolicLinkListPtr[0] != 0 && SymbolicLinkListPtr[1] != 0;
         SymbolicLinkListPtr += wcslen(SymbolicLinkListPtr) + 1)
     {
-        DPRINT1("Symbolic Link: %S\n", SymbolicLinkListPtr);
+        trace("Symbolic Link: %S\n", SymbolicLinkListPtr);
         Test_IoGetDeviceInterfaceAlias(SymbolicLinkListPtr);
         Test_IoOpenDeviceInterfaceRegistryKey(SymbolicLinkListPtr);
         Test_IoSetDeviceInterfaceState(SymbolicLinkListPtr);
