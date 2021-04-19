@@ -61,6 +61,7 @@ typedef struct _SHUTDOWN_DLG_CONTEXT
     BOOL bReasonUI;
     BOOL bFriendlyUI;
     BOOL bIsButtonHot[NUMBER_OF_BUTTONS];
+    BOOL bIsDialogModal;
     WNDPROC OldButtonProc;
 } SHUTDOWN_DLG_CONTEXT, *PSHUTDOWN_DLG_CONTEXT;
 
@@ -1058,8 +1059,16 @@ ShutdownDialogProc(
                 if (!pContext->bCloseDlg)
                 {
                     pContext->bCloseDlg = TRUE;
-                    DestroyWindow(hDlg);
-                    PostQuitMessage(0);
+
+                    if (pContext->bIsDialogModal)
+                    {
+                        EndDialog(hDlg, 0);
+                    }
+                    else
+                    {
+                        DestroyWindow(hDlg);
+                        PostQuitMessage(0);
+                    }
                 }
             }
             return FALSE;
@@ -1079,8 +1088,16 @@ ShutdownDialogProc(
 
         case WM_CLOSE:
             pContext->bCloseDlg = TRUE;
-            DestroyWindow(hDlg);
-            PostQuitMessage(IDCANCEL);
+
+            if (pContext->bIsDialogModal)
+            {
+                EndDialog(hDlg, IDCANCEL);
+            }
+            else
+            {
+                DestroyWindow(hDlg);
+                PostQuitMessage(IDCANCEL);
+            }
             break;
 
         case WM_COMMAND:
@@ -1105,8 +1122,16 @@ ShutdownDialogProc(
                 case IDCANCEL:
                 case IDHELP:
                     pContext->bCloseDlg = TRUE;
-                    DestroyWindow(hDlg);
-                    PostQuitMessage(LOWORD(wParam));
+
+                    if (pContext->bIsDialogModal)
+                    {
+                        EndDialog(hDlg, LOWORD(wParam));
+                    }
+                    else
+                    {
+                        DestroyWindow(hDlg);
+                        PostQuitMessage(LOWORD(wParam));
+                    }
                     break;
 
                 case IDC_SHUTDOWN_ACTION:
@@ -1189,6 +1214,7 @@ ShutdownDialog(
 
     if (pgContext->hWlx && pgContext->pWlxFuncs && !Context.bFriendlyUI)
     {
+        Context.bIsDialogModal = TRUE;
         ret = pgContext->pWlxFuncs->WlxDialogBoxParam(pgContext->hWlx,
                                                       pgContext->hDllInstance,
                                                       MAKEINTRESOURCEW(Context.bReasonUI ? IDD_SHUTDOWN_REASON : IDD_SHUTDOWN),
@@ -1210,6 +1236,7 @@ ShutdownDialog(
             }
         }
 
+        Context.bIsDialogModal = FALSE;
         hDlg = CreateDialogParamW(pgContext->hDllInstance,
                                   MAKEINTRESOURCEW(Context.bReasonUI ? IDD_SHUTDOWN_REASON : ShutdownDialogId),
                                   hwndDlg,
