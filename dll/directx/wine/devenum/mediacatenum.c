@@ -128,7 +128,11 @@ static HRESULT WINAPI DEVENUM_IPropertyBag_Read(
     HRESULT res = S_OK;
     LONG reswin32 = ERROR_SUCCESS;
     WCHAR name[80];
+#ifdef __REACTOS__
+    HKEY hkey = INVALID_HANDLE_VALUE;
+#else
     HKEY hkey;
+#endif
 
     TRACE("(%p)->(%s, %p, %p)\n", This, debugstr_w(pszPropName), pVar, pErrorLog);
 
