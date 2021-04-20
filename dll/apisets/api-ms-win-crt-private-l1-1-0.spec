@@ -245,7 +245,7 @@
 @ stub _o__eof
 @ stub _o__errno
 @ stub _o__except1
-@ stub _o__execute_onexit_table
+@ stub -version=0xA00+ _o__execute_onexit_table
 @ stub _o__execv
 @ stub _o__execve
 @ stub _o__execvp
@@ -368,7 +368,7 @@
 @ stub _o__i64tow
 @ stub _o__i64tow_s
 @ stub _o__initialize_narrow_environment
-@ stub _o__initialize_onexit_table
+@ stub -version=0xA00+ _o__initialize_onexit_table
 @ stub _o__initialize_wide_environment
 @ stub _o__invalid_parameter_noinfo
 @ stub _o__invalid_parameter_noinfo_noreturn
@@ -655,7 +655,7 @@
 @ stub _o__read
 @ stub _o__realloc_base
 @ stub _o__recalloc
-@ stub _o__register_onexit_function
+@ stub -version=0xA00+ _o__register_onexit_function
 @ stub _o__resetstkoflw
 @ stub _o__rmdir
 @ stub _o__rmtmp
@@ -663,8 +663,8 @@
 @ stub _o__scalbf
 @ stub _o__searchenv
 @ stub _o__searchenv_s
-@ stub _o__seh_filter_dll
-@ stub _o__seh_filter_exe
+@ cdecl -version=0xA00+ _o__seh_filter_dll() msvcrt.__CppXcptFilter
+@ cdecl -version=0xA00+ _o__seh_filter_exe() msvcrt._XcptFilter
 @ stub _o__set_abort_behavior
 @ stub _o__set_app_type
 @ stub _o__set_doserrno
@@ -1056,6 +1056,7 @@
 @ stub _o_mbstowcs
 @ stub _o_mbstowcs_s
 @ stub _o_mbtowc
+@ stub _o_memset
 @ stub _o_memcpy_s
 @ stub _o_modf
 @ stub _o_modff

@@ -52,7 +52,7 @@
 @ stub _get_thread_local_invalid_parameter_handler
 @ stub _get_wide_winmain_command_line
 @ stdcall -version=0x600+ _get_wpgmptr() msvcrt._get_wpgmptr
-@ stdcall -version=0x502 -arch=i386,x86_64 _getdllprocaddr() msvcrt._getdllprocaddr
+@ stdcall -arch=i386,x86_64 _getdllprocaddr() msvcrt._getdllprocaddr
 @ stdcall _getpid() msvcrt._getpid
 @ stub _initialize_narrow_environment
 @ stub _initialize_onexit_table
