@@ -104,7 +104,10 @@ SetFailedInstall(
                                           (PBYTE)pszUnknownGuid,
                                           (wcslen(pszUnknownGuid) + 1) * sizeof(WCHAR));
 
-        /* FIXME: Set device problem code 28 (CM_PROB_FAILED_INSTALL) */
+        /* Set device problem code CM_PROB_FAILED_INSTALL */
+        CM_Set_DevNode_Problem(DevInfoData->DevInst,
+                               CM_PROB_FAILED_INSTALL,
+                               CM_SET_DEVNODE_PROBLEM_OVERRIDE);
     }
 
     return TRUE;
