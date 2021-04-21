@@ -52,7 +52,7 @@ CsrCallServerFromServer(IN PCSR_API_MESSAGE ReceiveMsg,
                         IN OUT PCSR_API_MESSAGE ReplyMsg)
 {
     ULONG ServerId;
-    PCSR_SERVER_DLL ServerDll;
+    PCSR_SERVER_DLL ServerDll = NULL;
     ULONG ApiId;
     CSR_REPLY_CODE ReplyCode = CsrReplyImmediately;
 
