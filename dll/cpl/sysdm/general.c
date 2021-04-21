@@ -148,19 +148,21 @@ LRESULT CALLBACK RosImageProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam
             {
                 if (timerid == 0)
                 {
-                    HDC hCreditsDC, hLogoDC;
-                    HDC hDC = GetDC(NULL);
+                    HDC hDC;
+                    HDC hCreditsDC = NULL, hLogoDC = NULL;
                     HFONT hFont = NULL;
                     NONCLIENTMETRICS ncm;
                     RECT rcCredits;
                     TCHAR szCredits[2048];
                     INT iDevsHeight;
 
+                    hDC = GetDC(NULL);
                     if (hDC == NULL)
                         goto Cleanup;
 
                     top = 0;
                     offset = 0;
+
                     hCreditsDC = CreateCompatibleDC(hDC);
                     hLogoDC = CreateCompatibleDC(hCreditsDC);
 
@@ -183,7 +185,6 @@ LRESULT CALLBACK RosImageProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam
                     iDevsHeight = rcCredits.bottom - rcCredits.top;
 
                     hCreditsBitmap = CreateBitmap(pImgInfo->cxSource, (2 * pImgInfo->cySource) + iDevsHeight + 1, pImgInfo->iPlanes, pImgInfo->iBits, NULL);
-
                     if (!hCreditsBitmap)
                         goto Cleanup;
 
