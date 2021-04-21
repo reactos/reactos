@@ -27,12 +27,15 @@ InitLogo(PIMGINFO pImgInfo, HWND hwndDlg)
     BITMAP logoBitmap;
     BITMAP maskBitmap;
     BITMAPINFO bmpi;
-    HDC hDC = GetDC(hwndDlg);
-    HDC hDCLogo = CreateCompatibleDC(NULL);
-    HDC hDCMask = CreateCompatibleDC(NULL);
-    HBITMAP hMask, hLogo, hAlphaLogo = NULL;
+    HDC hDC, hDCLogo, hDCMask;
+    HBITMAP hMask = NULL, hLogo = NULL;
+    HBITMAP hAlphaLogo = NULL;
     COLORREF *pBits;
     INT line, column;
+
+    hDC = GetDC(hwndDlg);
+    hDCLogo = CreateCompatibleDC(NULL);
+    hDCMask = CreateCompatibleDC(NULL);
 
     if (hDC == NULL || hDCLogo == NULL || hDCMask == NULL)
         goto Cleanup;
