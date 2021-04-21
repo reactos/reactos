@@ -102,7 +102,7 @@ ExpInterlockedPopEntrySList:
     mov rax, [rcx]
 
     /* Check for 16 byte SList support */
-    cmp byte ptr [RtlpUse16ByteSLists], 0
+    cmp byte ptr [rip+RtlpUse16ByteSLists], 0
     jne RtlInterlockedPopEntrySList16
 
     /* Use the 8 byte header */
@@ -233,7 +233,7 @@ ExpInterlockedPushEntrySList:
 ExpInterlockedPushEntrySListChecked:
 
     /* Make sure RtlpUse16ByteSLists is initialized */
-    cmp byte ptr [RtlpUse16ByteSLists], HEX(FF)
+    cmp byte ptr [rip+RtlpUse16ByteSLists], HEX(FF)
     jne ExpInterlockedPushEntrySListChecked2
     /* Not initialized, raise an assertion */
     int HEX(2C)
@@ -247,7 +247,7 @@ ExpInterlockedPushEntrySListChecked2:
     mov r9, [rcx + 8]
 
     /* Check for 16 byte SList support */
-    cmp byte ptr [RtlpUse16ByteSLists], 0
+    cmp byte ptr [rip+RtlpUse16ByteSLists], 0
     jne RtlInterlockedPushEntrySList16
 
     /* Use the 8 byte header */
@@ -368,7 +368,7 @@ ExpInterlockedFlushSList:
     mov rax, [rcx]
 
     /* Check for 16 byte SList support */
-    cmp byte ptr [RtlpUse16ByteSLists], 0
+    cmp byte ptr [rip+RtlpUse16ByteSLists], 0
     jne RtlInterlockedFlushSList16
 
     /* Use the 8 byte header */
