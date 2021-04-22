@@ -320,7 +320,11 @@ static unsigned int taskdialog_add_buttons(struct taskdialog_template_desc *desc
     /* Try to balance lines so they are about the same size */
     for (i = 1; i < line_count - 1; i++)
     {
+#ifdef __REACTOS__
+        int diff_now = line_widths[i] - line_widths[i - 1];
+#else
         int diff_now = abs(line_widths[i] - line_widths[i - 1]);
+#endif
         unsigned int j, last_button = 0;
         int diff_changed;
 
@@ -329,7 +333,11 @@ static unsigned int taskdialog_add_buttons(struct taskdialog_template_desc *desc
                 last_button = j;
 
         /* Difference in length of both lines if we wrapped the last button from the last line into this one */
+#ifdef __REACTOS__
+        diff_changed = 2 * buttons[last_button].width + line_widths[i] - line_widths[i - 1];
+#else
         diff_changed = abs(2 * buttons[last_button].width + line_widths[i] - line_widths[i - 1]);
+#endif
 
         if (diff_changed < diff_now)
         {
