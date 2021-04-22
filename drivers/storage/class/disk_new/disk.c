@@ -714,7 +714,7 @@ Return Value:
         mediaTypes->MediaInfoCount = 1;
 
         mediaInfo->DeviceSpecific.DiskInfo.Cylinders.QuadPart   = fdoExtension->DiskGeometry.Cylinders.QuadPart;
-        mediaInfo->DeviceSpecific.DiskInfo.MediaType            = FixedMedia;
+        mediaInfo->DeviceSpecific.DiskInfo.MediaType            = (STORAGE_MEDIA_TYPE) FixedMedia;
         mediaInfo->DeviceSpecific.DiskInfo.TracksPerCylinder    = fdoExtension->DiskGeometry.TracksPerCylinder;
         mediaInfo->DeviceSpecific.DiskInfo.SectorsPerTrack      = fdoExtension->DiskGeometry.SectorsPerTrack;
         mediaInfo->DeviceSpecific.DiskInfo.BytesPerSector       = fdoExtension->DiskGeometry.BytesPerSector;
@@ -906,7 +906,7 @@ SkipTable:
             mediaTypes->MediaInfoCount = 1;
 
             mediaInfo->DeviceSpecific.RemovableDiskInfo.Cylinders.QuadPart   = fdoExtension->DiskGeometry.Cylinders.QuadPart;
-            mediaInfo->DeviceSpecific.RemovableDiskInfo.MediaType            = RemovableMedia;
+            mediaInfo->DeviceSpecific.RemovableDiskInfo.MediaType            = (STORAGE_MEDIA_TYPE) RemovableMedia;
             mediaInfo->DeviceSpecific.RemovableDiskInfo.TracksPerCylinder    = fdoExtension->DiskGeometry.TracksPerCylinder;
             mediaInfo->DeviceSpecific.RemovableDiskInfo.SectorsPerTrack      = fdoExtension->DiskGeometry.SectorsPerTrack;
             mediaInfo->DeviceSpecific.RemovableDiskInfo.BytesPerSector       = fdoExtension->DiskGeometry.BytesPerSector;
