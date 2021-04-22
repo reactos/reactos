@@ -40,12 +40,13 @@ add_subdirectory(widl)
 add_subdirectory(wpp)
 add_subdirectory(xml2sdb)
 
+if ((ARCH STREQUAL "amd64") AND (TARGET_COMPILER_ID STREQUAL "GNU"))
+    add_subdirectory(gcc_plugin_seh)
+endif()
+
 if(NOT MSVC)
     add_subdirectory(log2lines)
     add_subdirectory(rsym)
-if (ARCH STREQUAL "amd64")
-    add_subdirectory(gcc_plugin_seh)
-endif()
 
     add_host_tool(pefixup pefixup.c)
 if (ARCH STREQUAL "amd64")

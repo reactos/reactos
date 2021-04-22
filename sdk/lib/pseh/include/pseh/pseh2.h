@@ -37,6 +37,10 @@
 #define _SEH2_LEAVE __leave
 #define _SEH2_VOLATILE
 
+#elif defined(__GNUC__) && !defined(__clang__) && defined(_M_AMD64)
+
+#include "pseh2_64.h"
+
 #elif defined(_USE_DUMMY_PSEH) || defined (__arm__) || defined(_M_AMD64)
 
 extern int _SEH2_Volatile0;
