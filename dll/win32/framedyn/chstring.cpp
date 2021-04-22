@@ -43,7 +43,7 @@ CHeap_Exception HeapException(CHeap_Exception::E_ALLOCATION_ERROR);
 // Our own delete operator
 // It is here basically because MS guys don't known about set_new_handler()
 // See operator new
-void operator delete(void* ptr)
+void operator delete(void* ptr) noexcept
 {
     // In Windows 2k3, they check for ptr being null.
     // ISO, POSIX and even MSDN explains that it is allowed
