@@ -837,7 +837,7 @@ no_user_apc_pending:
 
     /* return to user mode */
     .byte HEX(48) // REX prefix to return to long mode
-    sysret
+    sysretq
 
 .ENDP
 
@@ -1071,7 +1071,7 @@ KiInitializeSegments:
  */
 PUBLIC KiSwitchKernelStackHelper
 KiSwitchKernelStackHelper:
-    
+
     /* Pop return address from the current stack */
     pop rax
 
