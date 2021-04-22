@@ -260,19 +260,22 @@ ENDM
 /* To avoid reverse syntax we provide a new macro .PROC, replacing PROC... */
 .macro .PROC name
     .func \name
-#ifdef _X86_
-    /* x86 GAS expects a label with _ prefix */
-    _\name:
-#endif
     \name:
+#ifdef _X86_
     .cfi_startproc
-    .equ cfa_current_offset, -8
+#else
+    .seh_proc \name
+#endif
 .endm
 #define FUNC .PROC
 
 /* ... and .ENDP, replacing ENDP */
 .macro .ENDP
+#ifdef _X86_
     .cfi_endproc
+#else
+    .seh_endproc
+#endif
     .endfunc
 .endm
 #define ENDFUNC .ENDP
@@ -339,45 +342,36 @@ ENDM
 .endm
 
 /* Macros for x64 stack unwind OPs */
-
 .macro .allocstack size
-    .cfi_adjust_cfa_offset \size
-    .set cfa_current_offset, cfa_current_offset - \size
+    .seh_stackalloc \size
 .endm
 
-code = 1
-.macro .pushframe param=0
-    .if (\param)
-        .cfi_adjust_cfa_offset 0x30
-        .set cfa_current_offset, cfa_current_offset - 0x30
-    .else
-        .cfi_adjust_cfa_offset 0x28
-        .set cfa_current_offset, cfa_current_offset - 0x28
-    .endif
+.macro .pushframe param
+    /*
+     * FIXME. .seh_pushframe doesn't accept code argument.
+     * Patch sent.
+     */
+    .seh_pushframe \param
 .endm
 
 .macro .pushreg reg
-    .cfi_adjust_cfa_offset 8
-    .equ cfa_current_offset, cfa_current_offset - 8
-    .cfi_offset \reg, cfa_current_offset
+    .seh_pushreg \reg
 .endm
 
 .macro .savereg reg, offset
-    // checkme!!!
-    .cfi_offset \reg, \offset
+    .seh_savereg \reg, \offset
 .endm
 
 .macro .savexmm128 reg, offset
-    // checkme!!!
-    .cfi_offset \reg, \offset
+    .seh_savexmm \reg, \offset
 .endm
 
 .macro .setframe reg, offset
-    .cfi_def_cfa reg, \offset
-    .equ cfa_current_offset, \offset
+    .seh_setframe \reg, \offset
 .endm
 
 .macro .endprolog
+    .seh_endprologue
 .endm
 
 .macro absolute address
