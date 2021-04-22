@@ -6,102 +6,102 @@ jobs:
     name: GCC (i386)
     runs-on: ubuntu-latest
     steps:
-      - name: Install RosBE
-        run: |
-          wget https://svn.reactos.org/storage/vperevertkin/rosbe-ci.tar.zst
-          mkdir ${{github.workspace}}/rosbe
-          tar -I zstd -xvf rosbe-ci.tar.zst --directory ${{github.workspace}}/rosbe
-      - name: Install other packages
-        run: sudo apt install ccache
-      - uses: actions/checkout@v2
-        with:
-          path: src
-      - name: Set up cache for ccache
-        uses: actions/cache@v2
-        with:
-          path: ccache
-          key: ccache-gcc-i386-${{github.sha}}
-          restore-keys: |
-            ccache-gcc-i386-
-      - name: Set ccache settings
-        run: |
-          echo "CCACHE_BASEDIR=${{github.workspace}}" >> $GITHUB_ENV
-          echo "CCACHE_DIR=${{github.workspace}}/ccache" >> $GITHUB_ENV
-          echo "CCACHE_MAXSIZE=1G" >> $GITHUB_ENV
-          echo "CCACHE_SLOPPINESS=time_macros" >> $GITHUB_ENV
-      - name: Configure
-        run: |
-          mkdir build
-          echo 'cd ${{github.workspace}}/build && ${{github.workspace}}/src/configure.sh -DENABLE_CCACHE=1 -DENABLE_ROSTESTS=1 -DENABLE_ROSAPPS=1' > commands
-          ${{github.workspace}}/rosbe/RosBE.sh < commands
-      - name: Build
-        run: |
-          echo 'cd ${{github.workspace}}/build && cmake --build .' > commands
-          ${{github.workspace}}/rosbe/RosBE.sh < commands
-      - name: Generate ISOs
-        run: |
-          echo 'cd ${{github.workspace}}/build && cmake --build . --target bootcd && cmake --build . --target livecd' > commands
-          ${{github.workspace}}/rosbe/RosBE.sh < 'commands'
-      - name: Print ccache statistics
-        run: ccache -s
-      - name: Upload bootcd
-        uses: actions/upload-artifact@v2
-        with:
-          name: reactos-gcc-i386-${{github.sha}}
-          path: build/bootcd.iso
-      - name: Upload livecd
-        uses: actions/upload-artifact@v2
-        with:
-          name: reactos-gcc-i386-${{github.sha}}
-          path: build/livecd.iso
+    - name: Install RosBE
+      run: |
+        wget https://svn.reactos.org/storage/vperevertkin/rosbe-ci.tar.zst
+        mkdir ${{github.workspace}}/rosbe
+        tar -I zstd -xvf rosbe-ci.tar.zst --directory ${{github.workspace}}/rosbe
+    - name: Install other packages
+      run: sudo apt install ccache
+    - uses: actions/checkout@v2
+      with:
+        path: src
+    - name: Set up cache for ccache
+      uses: actions/cache@v2
+      with:
+        path: ccache
+        key: ccache-gcc-i386-${{github.sha}}
+        restore-keys: |
+          ccache-gcc-i386-
+    - name: Set ccache settings
+      run: |
+        echo "CCACHE_BASEDIR=${{github.workspace}}" >> $GITHUB_ENV
+        echo "CCACHE_DIR=${{github.workspace}}/ccache" >> $GITHUB_ENV
+        echo "CCACHE_MAXSIZE=1G" >> $GITHUB_ENV
+        echo "CCACHE_SLOPPINESS=time_macros" >> $GITHUB_ENV
+    - name: Configure
+      run: |
+        mkdir build
+        echo 'cd ${{github.workspace}}/build && ${{github.workspace}}/src/configure.sh -DENABLE_CCACHE=1 -DENABLE_ROSTESTS=1 -DENABLE_ROSAPPS=1' > commands
+        ${{github.workspace}}/rosbe/RosBE.sh < commands
+    - name: Build
+      run: |
+        echo 'cd ${{github.workspace}}/build && cmake --build .' > commands
+        ${{github.workspace}}/rosbe/RosBE.sh < commands
+    - name: Generate ISOs
+      run: |
+        echo 'cd ${{github.workspace}}/build && cmake --build . --target bootcd && cmake --build . --target livecd' > commands
+        ${{github.workspace}}/rosbe/RosBE.sh < 'commands'
+    - name: Print ccache statistics
+      run: ccache -s
+    - name: Upload bootcd
+      uses: actions/upload-artifact@v2
+      with:
+        name: reactos-gcc-i386-${{github.sha}}
+        path: build/bootcd.iso
+    - name: Upload livecd
+      uses: actions/upload-artifact@v2
+      with:
+        name: reactos-gcc-i386-${{github.sha}}
+        path: build/livecd.iso
 
   build-clang-i386:
     name: Clang (i386)
     runs-on: ubuntu-latest
     steps:
-      - name: Install RosBE
-        run: |
-          wget https://svn.reactos.org/storage/vperevertkin/rosbe-ci.tar.zst
-          mkdir ${{github.workspace}}/rosbe
-          tar -I zstd -xvf rosbe-ci.tar.zst --directory ${{github.workspace}}/rosbe
-      - name: Set LLVM version
-        run: |
-          echo "LLVM_VERSION=11" >> $GITHUB_ENV
-      - name: Install LLVM
-        run: |
-          wget https://apt.llvm.org/llvm.sh
-          chmod +x llvm.sh
-          sudo ./llvm.sh $LLVM_VERSION
-      - name: Install other packages
-        run: |
-          sudo apt install ccache
-      - uses: actions/checkout@v2
-        with:
-          path: src
-      - name: Set up cache for ccache
-        uses: actions/cache@v2
-        with:
-          path: ccache
-          key: ccache-clang-i386-${{github.sha}}
-          restore-keys: |
-            ccache-clang-i386-
-      - name: Set ccache settings
-        run: |
-          echo "CCACHE_BASEDIR=${{github.workspace}}" >> $GITHUB_ENV
-          echo "CCACHE_DIR=${{github.workspace}}/ccache" >> $GITHUB_ENV
-          echo "CCACHE_MAXSIZE=1G" >> $GITHUB_ENV
-          echo "CCACHE_SLOPPINESS=time_macros" >> $GITHUB_ENV
-      - name: Configure
-        run: |
-          mkdir build
-          echo 'cd ${{github.workspace}}/build && cmake ${{github.workspace}}/src -G Ninja -DCMAKE_TOOLCHAIN_FILE:FILEPATH=toolchain-clang.cmake -DARCH:STRING=i386 -DENABLE_CCACHE=1 -DENABLE_ROSTESTS=1 -DENABLE_ROSAPPS=1 -DCLANG_VERSION=${{env.LLVM_VERSION}}' > commands
-          ${{github.workspace}}/rosbe/RosBE.sh < commands
-      - name: Build
-        run: |
-          echo 'cd ${{github.workspace}}/build && cmake --build .' > commands
-          ${{github.workspace}}/rosbe/RosBE.sh < commands
-      - name: Print ccache statistics
-        run: ccache -s
+    - name: Install RosBE
+      run: |
+        wget https://svn.reactos.org/storage/vperevertkin/rosbe-ci.tar.zst
+        mkdir ${{github.workspace}}/rosbe
+        tar -I zstd -xvf rosbe-ci.tar.zst --directory ${{github.workspace}}/rosbe
+    - name: Set LLVM version
+      run: |
+        echo "LLVM_VERSION=12" >> $GITHUB_ENV
+    - name: Install LLVM
+      run: |
+        wget https://apt.llvm.org/llvm.sh
+        chmod +x llvm.sh
+        sudo ./llvm.sh $LLVM_VERSION
+    - name: Install other packages
+      run: |
+        sudo apt install ccache
+    - uses: actions/checkout@v2
+      with:
+        path: src
+    - name: Set up cache for ccache
+      uses: actions/cache@v2
+      with:
+        path: ccache
+        key: ccache-clang-i386-${{github.sha}}
+        restore-keys: |
+          ccache-clang-i386-
+    - name: Set ccache settings
+      run: |
+        echo "CCACHE_BASEDIR=${{github.workspace}}" >> $GITHUB_ENV
+        echo "CCACHE_DIR=${{github.workspace}}/ccache" >> $GITHUB_ENV
+        echo "CCACHE_MAXSIZE=1G" >> $GITHUB_ENV
+        echo "CCACHE_SLOPPINESS=time_macros" >> $GITHUB_ENV
+    - name: Configure
+      run: |
+        mkdir build
+        echo 'cd ${{github.workspace}}/build && cmake ${{github.workspace}}/src -G Ninja -DCMAKE_TOOLCHAIN_FILE:FILEPATH=toolchain-clang.cmake -DARCH:STRING=i386 -DENABLE_CCACHE=1 -DENABLE_ROSTESTS=1 -DENABLE_ROSAPPS=1 -DCLANG_VERSION=${{env.LLVM_VERSION}}' > commands
+        ${{github.workspace}}/rosbe/RosBE.sh < commands
+    - name: Build
+      run: |
+        echo 'cd ${{github.workspace}}/build && cmake --build .' > commands
+        ${{github.workspace}}/rosbe/RosBE.sh < commands
+    - name: Print ccache statistics
+      run: ccache -s
 
   build-clang-cl-i386:
     name: Clang-CL (i386)
