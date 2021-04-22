@@ -35,6 +35,7 @@ function(setup_host_tools)
             -DCMAKE_INSTALL_PREFIX=${REACTOS_BINARY_DIR}/host-tools
             -DTOOLS_FOLDER=${REACTOS_BINARY_DIR}/host-tools/bin
             -DGCC_PLUGIN_DIR=${GCC_PLUGIN_DIR}
+            -DTARGET_COMPILER_ID=${CMAKE_C_COMPILER_ID}
         BUILD_ALWAYS TRUE
         INSTALL_COMMAND ${CMAKE_COMMAND} -E true
         BUILD_BYPRODUCTS ${HOST_TOOLS_OUTPUT}

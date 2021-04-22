@@ -5,7 +5,7 @@
 #endif /* _INC_WINDOWS */
 #endif
 
-#ifndef RC_INVOKED
+#if defined(__USE_PSEH2__) && !defined(RC_INVOKED)
 #include  <pseh/pseh2.h>
 #endif
 
@@ -122,7 +122,7 @@ typedef int RPC_STATUS;
     #include <excpt.h>
     #include <winerror.h>
 
-    #ifndef __GNUC__
+    #ifndef __USE_PSEH2__
         #define RpcTryExcept __try {
         #define RpcExcept(expr) } __except (expr) {
         #define RpcEndExcept }
