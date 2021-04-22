@@ -168,7 +168,7 @@ IKsProcessingObject_fnProcessingObjectWork(
     {
 
         /* check if the and-gate has been enabled again */
-        if (&This->Gate.Count != 0)
+        if (This->Gate.Count != 0)
         {
             /* gate is open */
             DPRINT1("processing object gate open\n");
