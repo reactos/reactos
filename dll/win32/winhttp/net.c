@@ -214,6 +214,7 @@ struct netconn *netconn_create( struct hostdata *host, const struct sockaddr_sto
         break;
     default:
         assert(0);
+        UNREACHABLE;
     }
 
     if (timeout > 0) set_blocking( conn, FALSE );
