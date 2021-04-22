@@ -308,7 +308,7 @@ static HRESULT WINAPI Context_GetSelection (ITfContext *iface,
             return TF_E_NOLOCK;
         else if (SUCCEEDED(hr))
         {
-            pSelection[totalFetched].style.ase = acps.style.ase;
+            pSelection[totalFetched].style.ase = (TfActiveSelEnd) acps.style.ase;
             pSelection[totalFetched].style.fInterimChar = acps.style.fInterimChar;
             Range_Constructor(iface, This->pITextStoreACP, cookie->lockType, acps.acpStart, acps.acpEnd, &pSelection[totalFetched].range);
             totalFetched ++;

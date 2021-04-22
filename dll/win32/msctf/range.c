@@ -359,7 +359,7 @@ HRESULT TF_SELECTION_to_TS_SELECTION_ACP(const TF_SELECTION *tf, TS_SELECTION_AC
 
     tsAcp->acpStart = This->anchorStart;
     tsAcp->acpEnd = This->anchorEnd;
-    tsAcp->style.ase = tf->style.ase;
+    tsAcp->style.ase = (TsActiveSelEnd) tf->style.ase;
     tsAcp->style.fInterimChar = tf->style.fInterimChar;
     return S_OK;
 }
