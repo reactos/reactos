@@ -21,6 +21,8 @@
 
 #include "setupapi_private.h"
 
+#include <pseh/pseh2.h>
+
 /* Unicode constants */
 static const WCHAR BackSlash[] = {'\\',0};
 static const WCHAR DateFormat[]  = {'%','u','-','%','u','-','%','u',0};

@@ -21,6 +21,8 @@
 
 #include "wine/test.h"
 
+#include <pseh/pseh2.h>
+
 #include "apphelp_apitest.h"
 
 typedef void* HSDB;

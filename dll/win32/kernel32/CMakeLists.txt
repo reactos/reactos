@@ -10,7 +10,7 @@ add_library(kernel32_shared
     client/shared_utils.c
     client/file/fileutils.c
 )
-
+target_link_libraries(kernel32_shared PRIVATE pseh)
 add_dependencies(kernel32_shared psdk)
 
 list(APPEND SOURCE

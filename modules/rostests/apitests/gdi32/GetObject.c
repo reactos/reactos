@@ -7,6 +7,8 @@
 
 #include "precomp.h"
 
+#include <pseh/pseh2.h>
+
 #define INVALID_POINTER ((PVOID)(ULONG_PTR)0xdeadbeefdeadbeefULL)
 
 void

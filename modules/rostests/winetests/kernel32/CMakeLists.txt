@@ -55,6 +55,7 @@ if(USE_CLANG_CL OR (NOT MSVC))
 endif()
 
 set_module_type(kernel32_winetest win32cui)
+target_link_libraries(kernel32_winetest pseh)
 add_importlibs(kernel32_winetest user32 advapi32 msvcrt kernel32 ntdll)
 add_pch(kernel32_winetest precomp.h "${PCH_SKIP_SOURCE}")
 add_rostests_file(TARGET kernel32_winetest)

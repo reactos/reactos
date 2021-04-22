@@ -603,7 +603,7 @@ if(USE_CLANG_CL)
 endif()
 
 add_library(crt ${CRT_SOURCE} ${CRT_WINE_SOURCE} ${crt_asm})
-target_link_libraries(crt chkstk)
+target_link_libraries(crt chkstk ${PSEH_LIB})
 target_compile_definitions(crt
  PRIVATE    __MINGW_IMPORT=extern
     USE_MSVCRT_PREFIX
