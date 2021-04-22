@@ -7,6 +7,8 @@
 
 #include "precomp.h"
 
+#include <pseh/pseh2.h>
+
 typedef struct _TEST_RESOURCES
 {
     IMAGE_RESOURCE_DIRECTORY TypeDirectory;

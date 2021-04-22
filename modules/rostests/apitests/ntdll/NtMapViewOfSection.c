@@ -8,6 +8,8 @@
 
 #include "precomp.h"
 
+#include <pseh/pseh2.h>
+
 void
 Test_PageFileSection(void)
 {

@@ -25,6 +25,8 @@
 #include <pnp_c.h>
 #include <winsvc.h>
 
+#include <pseh/pseh2.h>
+
 #include "rpc_private.h"
 
 DWORD

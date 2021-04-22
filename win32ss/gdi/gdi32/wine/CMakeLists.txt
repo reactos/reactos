@@ -23,4 +23,5 @@ list(APPEND SOURCE
     rosglue.c)
 
 add_library(winegdi ${SOURCE})
+target_link_libraries(winegdi PRIVATE pseh)
 add_dependencies(winegdi psdk)
