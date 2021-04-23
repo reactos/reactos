@@ -57,7 +57,7 @@ InitManipulateFromStateChange(
 }
 
 /* Callbacks to simulate a KdReceive <-> KdSend loop without GDB being aware of it */
-typedef VOID (*KDP_SEND_HANDLER)(
+typedef BOOLEAN (*KDP_SEND_HANDLER)(
     _In_ ULONG PacketType,
     _In_ PSTRING MessageHeader,
     _In_ PSTRING MessageData
