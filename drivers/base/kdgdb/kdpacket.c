@@ -9,7 +9,7 @@
 
 /* LOCALS *********************************************************************/
 static
-VOID
+BOOLEAN
 FirstSendHandler(
     _In_ ULONG PacketType,
     _In_ PSTRING MessageHeader,
@@ -33,7 +33,7 @@ PETHREAD TheIdleThread;
 /* PRIVATE FUNCTIONS **********************************************************/
 
 static
-VOID
+BOOLEAN
 GetContextSendHandler(
     _In_ ULONG PacketType,
     _In_ PSTRING MessageHeader,
@@ -47,14 +47,14 @@ GetContextSendHandler(
             || (State->ApiNumber != DbgKdGetContextApi)
             || (MessageData->Length < sizeof(*Context)))
     {
-        /* Should we bugcheck ? */
         KDDBGPRINT("ERROR: Received wrong packet from KD.\n");
-        while (1);
+        return FALSE;
     }
 
     /* Just copy it */
     RtlCopyMemory(&CurrentContext, Context, sizeof(*Context));
     KdpSendPacketHandler = NULL;
+    return TRUE;
 }
 
 static
@@ -80,7 +80,7 @@ GetContextManipulateHandler(
 }
 
 static
-VOID
+BOOLEAN
 SetContextSendHandler(
     _In_ ULONG PacketType,
     _In_ PSTRING MessageHeader,
@@ -96,10 +96,11 @@ SetContextSendHandler(
     {
         /* Should we bugcheck ? */
         KDDBGPRINT("BAD BAD BAD not manipulating state for sending context.\n");
-        while (1);
+        return FALSE;
     }
 
     KdpSendPacketHandler = NULL;
+    return TRUE;
 }
 
 KDSTATUS
@@ -236,7 +237,7 @@ ContinueManipulateStateHandler(
 }
 
 static
-VOID
+BOOLEAN
 GetVersionSendHandler(
     _In_ ULONG PacketType,
     _In_ PSTRING MessageHeader,
@@ -250,9 +251,8 @@ GetVersionSendHandler(
             || (State->ApiNumber != DbgKdGetVersionApi)
             || !NT_SUCCESS(State->ReturnStatus))
     {
-        /* FIXME: should detach from KD and go along without debugging */
         KDDBGPRINT("Wrong packet received after asking for data.\n");
-        while(1);
+        return FALSE;
     }
 
     /* Copy the relevant data */
@@ -265,6 +265,7 @@ GetVersionSendHandler(
     /* Now we can get the context for the current state */
     KdpSendPacketHandler = NULL;
     KdpManipulateStateHandler = GetContextManipulateHandler;
+    return TRUE;
 }
 
 static
@@ -288,7 +289,7 @@ GetVersionManipulateStateHandler(
 }
 
 static
-VOID
+BOOLEAN
 FirstSendHandler(
     _In_ ULONG PacketType,
     _In_ PSTRING MessageHeader,
@@ -297,18 +298,10 @@ FirstSendHandler(
     DBGKD_ANY_WAIT_STATE_CHANGE* StateChange = (DBGKD_ANY_WAIT_STATE_CHANGE*)MessageHeader->Buffer;
     PETHREAD Thread;
 
-    if (PacketType == PACKET_TYPE_KD_DEBUG_IO)
-    {
-        /* This is not the packet we are waiting for */
-        send_kd_debug_io((DBGKD_DEBUG_IO*)MessageHeader->Buffer, MessageData);
-        return;
-    }
-
     if (PacketType != PACKET_TYPE_KD_STATE_CHANGE64)
     {
         KDDBGPRINT("First KD packet is not a state change!\n");
-        /* FIXME: What should we send back to KD ? */
-        while(1);
+        return FALSE;
     }
 
     KDDBGPRINT("KDGDB: START!\n");
@@ -332,6 +325,7 @@ FirstSendHandler(
     /* The next receive call will be asking for the version data */
     KdpSendPacketHandler = NULL;
     KdpManipulateStateHandler = GetVersionManipulateStateHandler;
+    return TRUE;
 }
 
 /* PUBLIC FUNCTIONS ***********************************************************/
@@ -426,9 +420,9 @@ KdSendPacket(
     }
 
     /* Maybe we are in a send <-> receive loop that GDB doesn't need to know about */
-    if (KdpSendPacketHandler)
+    if (KdpSendPacketHandler
+        && KdpSendPacketHandler(PacketType, MessageHeader, MessageData))
     {
-        KdpSendPacketHandler(PacketType, MessageHeader, MessageData);
         return;
     }
 

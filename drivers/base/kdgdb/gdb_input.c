@@ -430,7 +430,7 @@ handle_gdb_registers(
 #endif
 
 static
-void
+BOOLEAN
 ReadMemorySendHandler(
     _In_ ULONG PacketType,
     _In_ PSTRING MessageHeader,
@@ -442,12 +442,13 @@ ReadMemorySendHandler(
     {
         // KdAssert
         KDDBGPRINT("Wrong packet type (%lu) received after DbgKdReadVirtualMemoryApi request.\n", PacketType);
-        while (1);
+        return FALSE;
     }
 
     if (State->ApiNumber != DbgKdReadVirtualMemoryApi)
     {
         KDDBGPRINT("Wrong API number (%lu) after DbgKdReadVirtualMemoryApi request.\n", State->ApiNumber);
+        return FALSE;
     }
 
     /* Check status. Allow to send partial data. */
@@ -469,6 +470,8 @@ ReadMemorySendHandler(
         if (ProcessListHead->Flink)
             __writecr3(PsGetCurrentProcess()->Pcb.DirectoryTableBase[0]);
     }
+
+    return TRUE;
 }
 
 static
@@ -531,7 +534,7 @@ handle_gdb_read_mem(
 }
 
 static
-void
+BOOLEAN
 WriteMemorySendHandler(
     _In_ ULONG PacketType,
     _In_ PSTRING MessageHeader,
@@ -543,12 +546,13 @@ WriteMemorySendHandler(
     {
         // KdAssert
         KDDBGPRINT("Wrong packet type (%lu) received after DbgKdWriteVirtualMemoryApi request.\n", PacketType);
-        while (1);
+        return FALSE;
     }
 
     if (State->ApiNumber != DbgKdWriteVirtualMemoryApi)
     {
         KDDBGPRINT("Wrong API number (%lu) after DbgKdWriteVirtualMemoryApi request.\n", State->ApiNumber);
+        return FALSE;
     }
 
     /* Check status */
@@ -570,6 +574,7 @@ WriteMemorySendHandler(
         if (ProcessListHead->Flink)
             __writecr3(PsGetCurrentProcess()->Pcb.DirectoryTableBase[0]);
     }
+    return TRUE;
 }
 
 static
@@ -669,7 +674,7 @@ handle_gdb_write_mem(
 }
 
 static
-void
+BOOLEAN
 WriteBreakPointSendHandler(
     _In_ ULONG PacketType,
     _In_ PSTRING MessageHeader,
@@ -681,12 +686,13 @@ WriteBreakPointSendHandler(
     {
         // KdAssert
         KDDBGPRINT("Wrong packet type (%lu) received after DbgKdWriteBreakPointApi request.\n", PacketType);
-        while (1);
+        return FALSE;
     }
 
     if (State->ApiNumber != DbgKdWriteBreakPointApi)
     {
         KDDBGPRINT("Wrong API number (%lu) after DbgKdWriteBreakPointApi request.\n", State->ApiNumber);
+        return FALSE;
     }
 
     /* Check status */
@@ -712,6 +718,7 @@ WriteBreakPointSendHandler(
     }
     KdpSendPacketHandler = NULL;
     KdpManipulateStateHandler = NULL;
+    return TRUE;
 }
 
 static
@@ -767,7 +774,7 @@ handle_gdb_insert_breakpoint(
 }
 
 static
-void
+BOOLEAN
 RestoreBreakPointSendHandler(
     _In_ ULONG PacketType,
     _In_ PSTRING MessageHeader,
@@ -780,12 +787,13 @@ RestoreBreakPointSendHandler(
     {
         // KdAssert
         KDDBGPRINT("Wrong packet type (%lu) received after DbgKdRestoreBreakPointApi request.\n", PacketType);
-        while (1);
+        return FALSE;
     }
 
     if (State->ApiNumber != DbgKdRestoreBreakPointApi)
     {
         KDDBGPRINT("Wrong API number (%lu) after DbgKdRestoreBreakPointApi request.\n", State->ApiNumber);
+        return FALSE;
     }
 
     /* We ignore failure here. If DbgKdRestoreBreakPointApi fails,
@@ -804,6 +812,7 @@ RestoreBreakPointSendHandler(
 
     KdpSendPacketHandler = NULL;
     KdpManipulateStateHandler = NULL;
+    return TRUE;
 }
 
 static
