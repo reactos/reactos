@@ -1135,6 +1135,47 @@ INT_PTR CALLBACK AboutAuthorsDlgProc( HWND hWnd, UINT msg, WPARAM wParam, LPARAM
 /*************************************************************************
  * AboutDlgProc            (internal)
  */
+#ifdef __REACTOS__
+// Check if the version is Workstation by reading the CSDVersion string
+// This will be used to choose the correspondent ReactOS Bitmap banner
+// on the About dialog
+static BOOL IsVersionWorkstation(VOID)
+{
+    DWORD dwType = 0, dwValue = 0, dwSize = 0;
+    HKEY hKey = NULL;
+    LONG lRet = 0;
+
+    lRet = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                         L"SYSTEM\\CurrentControlSet\\Control\\Windows",
+                         0,
+                         KEY_QUERY_VALUE,
+                         &hKey);
+    if (lRet != ERROR_SUCCESS)
+        return FALSE;
+
+    // Check product version number
+    dwValue = 0;
+    dwSize = sizeof(dwValue);
+    lRet = RegQueryValueExW(hKey,
+                            L"CSDVersion",
+                            NULL,
+                            &dwType,
+                            (LPBYTE)&dwValue,
+                            &dwSize);
+    RegCloseKey(hKey);
+
+    if (lRet != ERROR_SUCCESS || dwType != REG_DWORD || dwValue != 0x300)
+    {
+        // Allow only on Workstation
+        return FALSE;
+    }
+
+    if (lRet != ERROR_SUCCESS || dwType != REG_DWORD)
+        return FALSE;
+
+    return (dwValue != 0);
+}
+#endif
 static INT_PTR CALLBACK AboutDlgProc( HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam )
 {
     static DWORD   cxLogoBmp;
@@ -1159,6 +1200,18 @@ static INT_PTR CALLBACK AboutDlgProc( HWND hWnd, UINT msg, WPARAM wParam, LPARAM
 
                 // Preload the ROS bitmap
                 hLogoBmp = (HBITMAP)LoadImage(shell32_hInstance, MAKEINTRESOURCE(IDB_REACTOS), IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR);
+#ifdef __REACTOS__
+                if(IsVersionWorkstation() == TRUE)
+                {
+                   // Load Workstation Bitmap
+                   hLogoBmp = (HBITMAP)LoadImage(shell32_hInstance, MAKEINTRESOURCE(IDB_REACTOS_WORKSTATION), IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR);
+                }
+                else
+                {
+                   // Load Server Bitmap
+                   hLogoBmp = (HBITMAP)LoadImage(shell32_hInstance, MAKEINTRESOURCE(IDB_REACTOS_SERVER), IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR);
+                }
+#endif
                 hLineBmp = (HBITMAP)LoadImage(shell32_hInstance, MAKEINTRESOURCE(IDB_LINEBAR), IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR);
 
                 if(hLogoBmp && hLineBmp)
