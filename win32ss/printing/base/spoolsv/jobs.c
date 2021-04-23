@@ -9,6 +9,7 @@
 #include <marshalling/jobs.h>
 
 DWORD
+__stdcall
 _RpcAddJob(WINSPOOL_PRINTER_HANDLE hPrinter, DWORD Level, BYTE* pAddJob, DWORD cbBuf, DWORD* pcbNeeded)
 {
     DWORD dwErrorCode;
@@ -40,6 +41,7 @@ _RpcAddJob(WINSPOOL_PRINTER_HANDLE hPrinter, DWORD Level, BYTE* pAddJob, DWORD c
 }
 
 DWORD
+__stdcall
 _RpcEnumJobs(WINSPOOL_PRINTER_HANDLE hPrinter, DWORD FirstJob, DWORD NoJobs, DWORD Level, BYTE* pJob, DWORD cbBuf, DWORD* pcbNeeded, DWORD* pcReturned)
 {
     DWORD dwErrorCode;
@@ -75,6 +77,7 @@ _RpcEnumJobs(WINSPOOL_PRINTER_HANDLE hPrinter, DWORD FirstJob, DWORD NoJobs, DWO
 }
 
 DWORD
+__stdcall
 _RpcGetJob(WINSPOOL_PRINTER_HANDLE hPrinter, DWORD JobId, DWORD Level, BYTE* pJob, DWORD cbBuf, DWORD* pcbNeeded)
 {
     DWORD dwErrorCode;
@@ -107,6 +110,7 @@ _RpcGetJob(WINSPOOL_PRINTER_HANDLE hPrinter, DWORD JobId, DWORD Level, BYTE* pJo
 }
 
 DWORD
+__stdcall
 _RpcScheduleJob(WINSPOOL_PRINTER_HANDLE hPrinter, DWORD JobId)
 {
     DWORD dwErrorCode;
@@ -126,6 +130,7 @@ _RpcScheduleJob(WINSPOOL_PRINTER_HANDLE hPrinter, DWORD JobId)
 }
 
 DWORD
+__stdcall
 _RpcSetJob(WINSPOOL_PRINTER_HANDLE hPrinter, DWORD JobId, WINSPOOL_JOB_CONTAINER* pJobContainer, DWORD Command)
 {
     DWORD dwErrorCode;

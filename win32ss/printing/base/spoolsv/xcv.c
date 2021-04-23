@@ -8,6 +8,7 @@
 #include "precomp.h"
 
 DWORD
+__stdcall
 _RpcXcvData(WINSPOOL_PRINTER_HANDLE hXcv, const WCHAR* pszDataName, BYTE* pInputData, DWORD cbInputData, BYTE* pOutputData, DWORD cbOutputData, DWORD* pcbOutputNeeded, DWORD* pdwStatus)
 {
     DWORD dwErrorCode;

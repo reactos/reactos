@@ -9,6 +9,7 @@
 #include <marshalling/printprocessors.h>
 
 DWORD
+__stdcall
 _RpcAddPrintProcessor(WINSPOOL_HANDLE pName, WCHAR* pEnvironment, WCHAR* pPathName, WCHAR* pPrintProcessorName)
 {
     DWORD dwErrorCode;
@@ -28,6 +29,7 @@ _RpcAddPrintProcessor(WINSPOOL_HANDLE pName, WCHAR* pEnvironment, WCHAR* pPathNa
 }
 
 DWORD
+__stdcall
 _RpcDeletePrintProcessor(WINSPOOL_HANDLE pName, WCHAR* pEnvironment, WCHAR* pPrintProcessorName)
 {
     DWORD dwErrorCode;
@@ -47,6 +49,7 @@ _RpcDeletePrintProcessor(WINSPOOL_HANDLE pName, WCHAR* pEnvironment, WCHAR* pPri
 }
 
 DWORD
+__stdcall
 _RpcEnumPrintProcessorDatatypes(WINSPOOL_HANDLE pName, WCHAR* pPrintProcessorName, DWORD Level, BYTE* pDatatypes, DWORD cbBuf, DWORD* pcbNeeded, DWORD* pcReturned)
 {
     DWORD dwErrorCode;
@@ -78,6 +81,7 @@ _RpcEnumPrintProcessorDatatypes(WINSPOOL_HANDLE pName, WCHAR* pPrintProcessorNam
 }
 
 DWORD
+__stdcall
 _RpcEnumPrintProcessors(WINSPOOL_HANDLE pName, WCHAR* pEnvironment, DWORD Level, BYTE* pPrintProcessorInfo, DWORD cbBuf, DWORD* pcbNeeded, DWORD* pcReturned)
 {
     DWORD dwErrorCode;
@@ -109,6 +113,7 @@ _RpcEnumPrintProcessors(WINSPOOL_HANDLE pName, WCHAR* pEnvironment, DWORD Level,
 }
 
 DWORD
+__stdcall
 _RpcGetPrintProcessorDirectory(WINSPOOL_HANDLE pName, WCHAR* pEnvironment, DWORD Level, BYTE* pPrintProcessorDirectory, DWORD cbBuf, DWORD* pcbNeeded)
 {
     DWORD dwErrorCode;

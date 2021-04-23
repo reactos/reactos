@@ -8,6 +8,7 @@
 #include "precomp.h"
 
 DWORD
+__stdcall
 _RpcGetSpoolFileInfo( WINSPOOL_PRINTER_HANDLE hPrinter, WINSPOOL_HANDLE hProcessHandle, DWORD Level, WINSPOOL_FILE_INFO_1* pFileInfo, DWORD dwSize, DWORD* dwNeeded )
 {
     DWORD dwErrorCode;
@@ -27,6 +28,7 @@ _RpcGetSpoolFileInfo( WINSPOOL_PRINTER_HANDLE hPrinter, WINSPOOL_HANDLE hProcess
 }
 
 DWORD
+__stdcall
 _RpcCommitSpoolData( WINSPOOL_PRINTER_HANDLE hPrinter, WINSPOOL_HANDLE hProcessHandle, DWORD cbCommit, DWORD Level, WINSPOOL_FILE_INFO_1* pFileInfo, DWORD dwSize, DWORD* dwNeeded )
 {
     DWORD dwErrorCode;
@@ -46,6 +48,7 @@ _RpcCommitSpoolData( WINSPOOL_PRINTER_HANDLE hPrinter, WINSPOOL_HANDLE hProcessH
 }
 
 DWORD
+__stdcall
 _RpcGetSpoolFileInfo2( WINSPOOL_PRINTER_HANDLE hPrinter, DWORD dwProcessId, DWORD Level, WINSPOOL_FILE_INFO_CONTAINER* pFileInfoContainer )
 {
     DWORD dwErrorCode, dwNeeded = 0;
@@ -74,6 +77,7 @@ _RpcGetSpoolFileInfo2( WINSPOOL_PRINTER_HANDLE hPrinter, DWORD dwProcessId, DWOR
 }
 
 DWORD
+__stdcall
 _RpcCommitSpoolData2( WINSPOOL_PRINTER_HANDLE hPrinter, DWORD dwProcessId, DWORD cbCommit, DWORD Level, WINSPOOL_FILE_INFO_CONTAINER* pFileInfoContainer )
 {
     DWORD dwErrorCode, dwNeeded = 0;
@@ -101,6 +105,7 @@ _RpcCommitSpoolData2( WINSPOOL_PRINTER_HANDLE hPrinter, DWORD dwProcessId, DWORD
 }
 
 DWORD
+__stdcall
 _RpcCloseSpoolFileHandle( WINSPOOL_PRINTER_HANDLE hPrinter )
 {
     DWORD dwErrorCode;

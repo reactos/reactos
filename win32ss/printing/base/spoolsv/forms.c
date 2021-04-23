@@ -9,6 +9,7 @@
 #include <marshalling/forms.h>
 
 DWORD
+__stdcall
 _RpcAddForm(WINSPOOL_PRINTER_HANDLE hPrinter, WINSPOOL_FORM_CONTAINER* pFormInfoContainer)
 {
     DWORD dwErrorCode;
@@ -28,6 +29,7 @@ _RpcAddForm(WINSPOOL_PRINTER_HANDLE hPrinter, WINSPOOL_FORM_CONTAINER* pFormInfo
 }
 
 DWORD
+__stdcall
 _RpcDeleteForm(WINSPOOL_PRINTER_HANDLE hPrinter, WCHAR* pFormName)
 {
     DWORD dwErrorCode;
@@ -47,6 +49,7 @@ _RpcDeleteForm(WINSPOOL_PRINTER_HANDLE hPrinter, WCHAR* pFormName)
 }
 
 DWORD
+__stdcall
 _RpcEnumForms(WINSPOOL_PRINTER_HANDLE hPrinter, DWORD Level, BYTE* pForm, DWORD cbBuf, DWORD* pcbNeeded, DWORD* pcReturned)
 {
     DWORD dwErrorCode;
@@ -79,6 +82,7 @@ _RpcEnumForms(WINSPOOL_PRINTER_HANDLE hPrinter, DWORD Level, BYTE* pForm, DWORD 
 }
 
 DWORD
+__stdcall
 _RpcGetForm(WINSPOOL_PRINTER_HANDLE hPrinter, WCHAR* pFormName, DWORD Level, BYTE* pForm, DWORD cbBuf, DWORD* pcbNeeded)
 {
     DWORD dwErrorCode;
@@ -111,6 +115,7 @@ _RpcGetForm(WINSPOOL_PRINTER_HANDLE hPrinter, WCHAR* pFormName, DWORD Level, BYT
 }
 
 DWORD
+__stdcall
 _RpcSetForm(WINSPOOL_PRINTER_HANDLE hPrinter, WCHAR* pFormName, WINSPOOL_FORM_CONTAINER* pFormInfoContainer)
 {
     DWORD dwErrorCode;

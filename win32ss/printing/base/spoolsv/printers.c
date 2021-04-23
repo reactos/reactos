@@ -9,6 +9,7 @@
 #include <marshalling/printers.h>
 
 DWORD
+__stdcall
 _RpcAbortPrinter(WINSPOOL_PRINTER_HANDLE hPrinter)
 {
     DWORD dwErrorCode;
@@ -28,6 +29,7 @@ _RpcAbortPrinter(WINSPOOL_PRINTER_HANDLE hPrinter)
 }
 
 DWORD
+__stdcall
 _RpcAddPrinter(WINSPOOL_HANDLE pName, WINSPOOL_PRINTER_CONTAINER* pPrinterContainer, WINSPOOL_DEVMODE_CONTAINER* pDevModeContainer, WINSPOOL_SECURITY_CONTAINER* pSecurityContainer, WINSPOOL_PRINTER_HANDLE* pHandle)
 {
     UNIMPLEMENTED;
@@ -35,6 +37,7 @@ _RpcAddPrinter(WINSPOOL_HANDLE pName, WINSPOOL_PRINTER_CONTAINER* pPrinterContai
 }
 
 DWORD
+__stdcall
 _RpcAddPrinterEx(WINSPOOL_HANDLE pName, WINSPOOL_PRINTER_CONTAINER* pPrinterContainer, WINSPOOL_DEVMODE_CONTAINER* pDevModeContainer, WINSPOOL_SECURITY_CONTAINER* pSecurityContainer, WINSPOOL_SPLCLIENT_CONTAINER* pClientInfo, WINSPOOL_PRINTER_HANDLE* pHandle)
 {
     UNIMPLEMENTED;
@@ -42,6 +45,7 @@ _RpcAddPrinterEx(WINSPOOL_HANDLE pName, WINSPOOL_PRINTER_CONTAINER* pPrinterCont
 }
 
 DWORD
+__stdcall
 _RpcClosePrinter(WINSPOOL_PRINTER_HANDLE* phPrinter)
 {
     DWORD dwErrorCode;
@@ -63,6 +67,7 @@ _RpcClosePrinter(WINSPOOL_PRINTER_HANDLE* phPrinter)
 }
 
 DWORD
+__stdcall
 _RpcDeletePrinter(WINSPOOL_PRINTER_HANDLE hPrinter)
 {
     DWORD dwErrorCode;
@@ -82,6 +87,7 @@ _RpcDeletePrinter(WINSPOOL_PRINTER_HANDLE hPrinter)
 }
 
 DWORD
+__stdcall
 _RpcEndDocPrinter(WINSPOOL_PRINTER_HANDLE hPrinter)
 {
     DWORD dwErrorCode;
@@ -101,6 +107,7 @@ _RpcEndDocPrinter(WINSPOOL_PRINTER_HANDLE hPrinter)
 }
 
 DWORD
+__stdcall
 _RpcEndPagePrinter(WINSPOOL_PRINTER_HANDLE hPrinter)
 {
     DWORD dwErrorCode;
@@ -120,6 +127,7 @@ _RpcEndPagePrinter(WINSPOOL_PRINTER_HANDLE hPrinter)
 }
 
 DWORD
+__stdcall
 _RpcEnumPrinters(DWORD Flags, WINSPOOL_HANDLE Name, DWORD Level, BYTE* pPrinterEnum, DWORD cbBuf, DWORD* pcbNeeded, DWORD* pcReturned)
 {
     DWORD dwErrorCode;
@@ -152,6 +160,7 @@ _RpcEnumPrinters(DWORD Flags, WINSPOOL_HANDLE Name, DWORD Level, BYTE* pPrinterE
 }
 
 DWORD
+__stdcall
 _RpcFlushPrinter(WINSPOOL_PRINTER_HANDLE hPrinter, BYTE* pBuf, DWORD cbBuf, DWORD* pcWritten, DWORD cSleep)
 {
     UNIMPLEMENTED;
@@ -159,6 +168,7 @@ _RpcFlushPrinter(WINSPOOL_PRINTER_HANDLE hPrinter, BYTE* pBuf, DWORD cbBuf, DWOR
 }
 
 DWORD
+__stdcall
 _RpcGetPrinter(WINSPOOL_PRINTER_HANDLE hPrinter, DWORD Level, BYTE* pPrinter, DWORD cbBuf, DWORD* pcbNeeded)
 {
     DWORD dwErrorCode;
@@ -191,6 +201,7 @@ _RpcGetPrinter(WINSPOOL_PRINTER_HANDLE hPrinter, DWORD Level, BYTE* pPrinter, DW
 }
 
 DWORD
+__stdcall
 _RpcOpenPrinter(WINSPOOL_HANDLE pPrinterName, WINSPOOL_PRINTER_HANDLE* phPrinter, WCHAR* pDatatype, WINSPOOL_DEVMODE_CONTAINER* pDevModeContainer, DWORD AccessRequired)
 {
     DWORD dwErrorCode;
@@ -215,6 +226,7 @@ _RpcOpenPrinter(WINSPOOL_HANDLE pPrinterName, WINSPOOL_PRINTER_HANDLE* phPrinter
 }
 
 DWORD
+__stdcall
 _RpcOpenPrinterEx(WINSPOOL_HANDLE pPrinterName, WINSPOOL_PRINTER_HANDLE* pHandle, WCHAR* pDatatype, WINSPOOL_DEVMODE_CONTAINER* pDevModeContainer, DWORD AccessRequired, WINSPOOL_SPLCLIENT_CONTAINER* pClientInfo)
 {
     UNIMPLEMENTED;
@@ -222,6 +234,7 @@ _RpcOpenPrinterEx(WINSPOOL_HANDLE pPrinterName, WINSPOOL_PRINTER_HANDLE* pHandle
 }
 
 DWORD
+__stdcall
 _RpcReadPrinter(WINSPOOL_PRINTER_HANDLE hPrinter, BYTE* pBuf, DWORD cbBuf, DWORD* pcNoBytesRead)
 {
     DWORD dwErrorCode;
@@ -241,6 +254,7 @@ _RpcReadPrinter(WINSPOOL_PRINTER_HANDLE hPrinter, BYTE* pBuf, DWORD cbBuf, DWORD
 }
 
 DWORD
+__stdcall
 _RpcResetPrinter(WINSPOOL_PRINTER_HANDLE hPrinter, WCHAR* pDatatype, WINSPOOL_DEVMODE_CONTAINER* pDevModeContainer)
 {
     UNIMPLEMENTED;
@@ -248,6 +262,7 @@ _RpcResetPrinter(WINSPOOL_PRINTER_HANDLE hPrinter, WCHAR* pDatatype, WINSPOOL_DE
 }
 
 DWORD
+__stdcall
 _RpcResetPrinterEx(WINSPOOL_PRINTER_HANDLE hPrinter, WCHAR* pDatatype, WINSPOOL_DEVMODE_CONTAINER* pDevModeContainer, DWORD dwFlags)
 {
     DWORD dwErrorCode;
@@ -290,6 +305,7 @@ _RpcResetPrinterEx(WINSPOOL_PRINTER_HANDLE hPrinter, WCHAR* pDatatype, WINSPOOL_
 }
 
 DWORD
+__stdcall
 _RpcSeekPrinter( WINSPOOL_PRINTER_HANDLE hPrinter, LARGE_INTEGER liDistanceToMove, PLARGE_INTEGER pliNewPointer, DWORD dwMoveMethod, BOOL bWrite )
 {
     DWORD dwErrorCode;
@@ -309,6 +325,7 @@ _RpcSeekPrinter( WINSPOOL_PRINTER_HANDLE hPrinter, LARGE_INTEGER liDistanceToMov
 }
 
 DWORD
+__stdcall
 _RpcSetPrinter(WINSPOOL_PRINTER_HANDLE hPrinter, WINSPOOL_PRINTER_CONTAINER* pPrinterContainer, WINSPOOL_DEVMODE_CONTAINER* pDevModeContainer, WINSPOOL_SECURITY_CONTAINER* pSecurityContainer, DWORD Command)
 {
     UNIMPLEMENTED;
@@ -316,6 +333,7 @@ _RpcSetPrinter(WINSPOOL_PRINTER_HANDLE hPrinter, WINSPOOL_PRINTER_CONTAINER* pPr
 }
 
 DWORD
+__stdcall
 _RpcStartDocPrinter(WINSPOOL_PRINTER_HANDLE hPrinter, WINSPOOL_DOC_INFO_CONTAINER* pDocInfoContainer, DWORD* pJobId)
 {
     DWORD dwErrorCode;
@@ -335,6 +353,7 @@ _RpcStartDocPrinter(WINSPOOL_PRINTER_HANDLE hPrinter, WINSPOOL_DOC_INFO_CONTAINE
 }
 
 DWORD
+__stdcall
 _RpcStartPagePrinter(WINSPOOL_PRINTER_HANDLE hPrinter)
 {
     DWORD dwErrorCode;
@@ -354,6 +373,7 @@ _RpcStartPagePrinter(WINSPOOL_PRINTER_HANDLE hPrinter)
 }
 
 DWORD
+__stdcall
 _RpcWritePrinter(WINSPOOL_PRINTER_HANDLE hPrinter, BYTE* pBuf, DWORD cbBuf, DWORD* pcWritten)
 {
     DWORD dwErrorCode;
