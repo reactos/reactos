@@ -26,6 +26,10 @@
 #define _INC_WINDOWS
 #define COBJMACROS
 
+#ifdef __REACTOS__
+#define IS_PRODUCT_VERSION_WORKSTATION  0x300
+#endif
+
 #include <windef.h>
 #include <winbase.h>
 #include <shellapi.h>
@@ -1154,7 +1158,6 @@ static BOOL IsVersionWorkstation(VOID)
         return FALSE;
 
     // Check product version number
-    dwValue = 0;
     dwSize = sizeof(dwValue);
     lRet = RegQueryValueExW(hKey,
                             L"CSDVersion",
@@ -1164,14 +1167,11 @@ static BOOL IsVersionWorkstation(VOID)
                             &dwSize);
     RegCloseKey(hKey);
 
-    if (lRet != ERROR_SUCCESS || dwType != REG_DWORD || dwValue != 0x300)
+    if (lRet != ERROR_SUCCESS || dwType != REG_DWORD || dwValue != IS_PRODUCT_VERSION_WORKSTATION)
     {
         // Allow only on Workstation
         return FALSE;
     }
-
-    if (lRet != ERROR_SUCCESS || dwType != REG_DWORD)
-        return FALSE;
 
     return (dwValue != 0);
 }
@@ -1199,9 +1199,9 @@ static INT_PTR CALLBACK AboutDlgProc( HWND hWnd, UINT msg, WPARAM wParam, LPARAM
                 WCHAR szAuthorsText[20];
 
                 // Preload the ROS bitmap
-                hLogoBmp = (HBITMAP)LoadImage(shell32_hInstance, MAKEINTRESOURCE(IDB_REACTOS), IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR);
+                //hLogoBmp = (HBITMAP)LoadImage(shell32_hInstance, MAKEINTRESOURCE(IDB_REACTOS), IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR);
 #ifdef __REACTOS__
-                if(IsVersionWorkstation() == TRUE)
+                if (IsVersionWorkstation())
                 {
                    // Load Workstation Bitmap
                    hLogoBmp = (HBITMAP)LoadImage(shell32_hInstance, MAKEINTRESOURCE(IDB_REACTOS_WORKSTATION), IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR);
