@@ -1,11 +1,10 @@
 /*
  * PROJECT:     ReactOS FC Command
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
- * PURPOSE:     Compare two files
+ * PURPOSE:     Comparing files
  * COPYRIGHT:   Copyright 2021 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
 #include <stdlib.h>
-#include <stdio.h>
 #include <string.h>
 #include <windef.h>
 #include <winbase.h>
@@ -13,9 +12,8 @@
 #include <conutils.h>
 #include "resource.h"
 
-// FCRET: return code of FC.
-// See: https://stackoverflow.com/questions/33125766/compare-files-with-a-cmd
-typedef enum FCRET
+// See also: https://stackoverflow.com/questions/33125766/compare-files-with-a-cmd
+typedef enum FCRET // return code of the FC command.
 {
     FCRET_INVALID = -1,
     FCRET_IDENTICAL = 0,
@@ -129,13 +127,6 @@ ReadFileDx(HANDLE hFile, LPVOID lpBuffer,
     BOOL ret;
     LPBYTE pb = (LPBYTE)lpBuffer;
 
-    if (cb <= LARGE_FILE_SIZE)
-    {
-        ret = ReadFile(hFile, lpBuffer, (DWORD)cb, &cbDidRead, NULL);
-        *lpNumberOfBytesRead = cbDidRead;
-        return ret;
-    }
-
     for (ib = 0; ib < cb; ib += cbDidRead)
     {
         cbForRead = (DWORD)min(cb - ib, LARGE_FILE_SIZE);
@@ -198,8 +189,8 @@ static FCRET BinaryFileCompare(const FILECOMPARE *pFC)
         cbCommon = min(cb1, cb2);
         if (cbCommon > 0)
         {
-            pb1 = malloc((size_t)cbCommon);
-            pb2 = malloc((size_t)cbCommon);
+            pb1 = malloc(cbCommon);
+            pb2 = malloc(cbCommon);
             if (pb1 == NULL || pb2 == NULL)
             {
                 free(pb1);
@@ -363,9 +354,7 @@ static BOOL IsBinaryExt(LPCWSTR filename)
     };
     size_t iext;
     LPCWSTR pch, dotext;
-    LPCWSTR pch1 = wcsrchr(filename, L'\\');
-    LPCWSTR pch2 = wcsrchr(filename, L'/');
-
+    LPCWSTR pch1 = wcsrchr(filename, L'\\'), pch2 = wcsrchr(filename, L'/');
     if (!pch1 && !pch2)
         pch = filename;
     else if (!pch1 && pch2)
@@ -389,10 +378,8 @@ static BOOL IsBinaryExt(LPCWSTR filename)
     return FALSE;
 }
 
-static BOOL HasWildcard(LPCWSTR filename)
-{
-    return (wcschr(filename, L'*') != NULL) || (wcschr(filename, L'?') != NULL);
-}
+#define HasWildcard(filename) \
+    ((wcschr(filename, L'*') != NULL) || (wcschr(filename, L'?') != NULL))
 
 static FCRET FileCompare(const FILECOMPARE *pFC, LPCWSTR file1, LPCWSTR file2)
 {
@@ -405,27 +392,25 @@ static FCRET FileCompare(const FILECOMPARE *pFC, LPCWSTR file1, LPCWSTR file2)
 
 static FCRET WildcardFileCompare(const FILECOMPARE *pFC)
 {
-    LPCWSTR file1 = pFC->file1, file2 = pFC->file2;
-
     if (pFC->dwFlags & FLAG_HELP)
     {
         ConResPuts(StdOut, IDS_USAGE);
         return FCRET_INVALID;
     }
 
-    if (!file1 || !file2)
+    if (!pFC->file1 || !pFC->file2)
     {
         ConResPuts(StdErr, IDS_NEEDS_FILES);
         return FCRET_INVALID;
     }
 
-    if (HasWildcard(file1) || HasWildcard(file2))
+    if (HasWildcard(pFC->file1) || HasWildcard(pFC->file2))
     {
         // TODO:
         ConResPuts(StdErr, IDS_CANT_USE_WILDCARD);
     }
 
-    return FileCompare(pFC, file1, file2);
+    return FileCompare(pFC, pFC->file1, pFC->file2);
 }
 
 int wmain(int argc, WCHAR **argv)
@@ -498,6 +483,5 @@ int wmain(int argc, WCHAR **argv)
                 return InvalidSwitch();
         }
     }
-
     return WildcardFileCompare(&fc);
 }
