@@ -72,12 +72,6 @@ static FCRET CannotRead(LPCWSTR file)
     return FCRET_INVALID;
 }
 
-static FCRET TooLarge(LPCWSTR file)
-{
-    ConResPrintf(StdErr, IDS_TOO_LARGE, file);
-    return FCRET_INVALID;
-}
-
 static FCRET InvalidSwitch(VOID)
 {
     ConResPuts(StdErr, IDS_INVALID_SWITCH);
