@@ -13,7 +13,7 @@
 #include "resource.h"
 
 // See also: https://stackoverflow.com/questions/33125766/compare-files-with-a-cmd
-typedef enum FCRET // return code of the FC command.
+typedef enum FCRET // return code of FC command
 {
     FCRET_INVALID = -1, FCRET_IDENTICAL, FCRET_DIFFERENT, FCRET_CANT_FIND
 } FCRET;
@@ -94,8 +94,7 @@ static VOID CannotOpen(LPCWSTR file, DWORD dwError)
 
 static HANDLE DoOpenFileForInput(LPCWSTR file)
 {
-    HANDLE hFile = CreateFileW(file, GENERIC_READ, FILE_SHARE_READ, NULL,
-                               OPEN_EXISTING, 0, NULL);
+    HANDLE hFile = CreateFileW(file, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
     if (hFile == INVALID_HANDLE_VALUE)
         CannotOpen(file, GetLastError());
     return hFile;
@@ -179,7 +178,7 @@ static FCRET BinaryFileCompare(const FILECOMPARE *pFC)
         {
             pb1 = malloc(cbCommon);
             pb2 = malloc(cbCommon);
-            if (pb1 == NULL || pb2 == NULL)
+            if (!pb1 || !pb2)
             {
                 free(pb1);
                 free(pb2);
@@ -352,8 +351,7 @@ static BOOL IsBinaryExt(LPCWSTR filename)
         L".exe", L".com", L".sys", L".obj", L".lib", L".bin"
     };
     size_t iext;
-    LPCWSTR pch, dotext;
-    LPCWSTR pch1 = wcsrchr(filename, L'\\'), pch2 = wcsrchr(filename, L'/');
+    LPCWSTR pch, dotext, pch1 = wcsrchr(filename, L'\\'), pch2 = wcsrchr(filename, L'/');
     if (!pch1 && !pch2)
         pch = filename;
     else if (!pch1 && pch2)
@@ -457,8 +455,7 @@ int wmain(int argc, WCHAR **argv)
                 fc.dwFlags |= FLAG_N;
                 break;
             case L'O': case L'o':
-                if (lstrcmpiW(argv[i], L"/OFF") == 0 ||
-                    lstrcmpiW(argv[i], L"/OFFLINE") == 0)
+                if (lstrcmpiW(argv[i], L"/OFF") == 0 || lstrcmpiW(argv[i], L"/OFFLINE") == 0)
                 {
                     fc.dwFlags |= FLAG_OFFLINE;
                 }

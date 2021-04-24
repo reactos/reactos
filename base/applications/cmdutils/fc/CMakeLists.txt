@@ -1,4 +1,3 @@
-
 include_directories(${REACTOS_SOURCE_DIR}/sdk/lib/conutils)
 
 add_executable(fc fc.c fc.rc)
