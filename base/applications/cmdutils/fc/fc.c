@@ -225,11 +225,14 @@ UnicodeTextCompare(const FILECOMPARE *pFC, HANDLE hMapping1, LARGE_INTEGER cb1,
             ret = OutOfMemory();
             break;
         }
-        if (CompareStringW(0, dwCmpFlags, psz1, (INT)cch1.LowPart, psz2,
-                                                (INT)cch2.LowPart) == CSTR_EQUAL)
+        if (cch1.QuadPart < MAXLONG && cch2.QuadPart < MAXLONG)
         {
-            ret = NoDifference();
-            break;
+            if (CompareStringW(0, dwCmpFlags, psz1, (INT)cch1.LowPart, psz2,
+                                                    (INT)cch2.LowPart) == CSTR_EQUAL)
+            {
+                ret = NoDifference();
+                break;
+            }
         }
         // TODO: compare each lines
         // TODO: large file support
@@ -259,11 +262,14 @@ AnsiTextCompare(const FILECOMPARE *pFC, HANDLE hMapping1, LARGE_INTEGER cb1,
             ret = OutOfMemory();
             break;
         }
-        if (CompareStringA(0, dwCmpFlags, psz1, (INT)cb1.LowPart,
-                                          psz2, (INT)cb2.LowPart) == CSTR_EQUAL)
+        if (cb1.QuadPart < MAXLONG && cb2.QuadPart < MAXLONG)
         {
-            ret = NoDifference();
-            break;
+            if (CompareStringA(0, dwCmpFlags, psz1, (INT)cb1.LowPart,
+                                              psz2, (INT)cb2.LowPart) == CSTR_EQUAL)
+            {
+                ret = NoDifference();
+                break;
+            }
         }
         // TODO: compare each lines
         // TODO: large file support
