@@ -138,7 +138,7 @@ static FCRET BinaryFileCompare(const FILECOMPARE *pFC)
 
     do
     {
-        if (lstrcmpiW(pFC->file1, pFC->file2) == 0)
+        if (_wcsicmp(pFC->file1, pFC->file2) == 0)
         {
             ret = NoDifference();
             break;
@@ -313,7 +313,7 @@ static FCRET TextFileCompare(const FILECOMPARE *pFC)
 
     do
     {
-        if (lstrcmpiW(pFC->file1, pFC->file2) == 0)
+        if (_wcsicmp(pFC->file1, pFC->file2) == 0)
         {
             ret = NoDifference();
             break;
@@ -385,7 +385,7 @@ static BOOL IsBinaryExt(LPCWSTR filename)
     {
         for (iext = 0; iext < _countof(s_dotexts); ++iext)
         {
-            if (lstrcmpiW(dotext, s_dotexts[iext]) == 0)
+            if (_wcsicmp(dotext, s_dotexts[iext]) == 0)
                 return TRUE;
         }
     }
@@ -458,7 +458,7 @@ int wmain(int argc, WCHAR **argv)
                 fc.dwFlags |= FLAG_C;
                 break;
             case L'L':
-                if (lstrcmpiW(argv[i], L"/L") == 0)
+                if (_wcsicmp(argv[i], L"/L") == 0)
                 {
                     fc.dwFlags |= FLAG_L;
                 }
@@ -472,7 +472,7 @@ int wmain(int argc, WCHAR **argv)
                 fc.dwFlags |= FLAG_N;
                 break;
             case L'O':
-                if (lstrcmpiW(argv[i], L"/OFF") == 0 || lstrcmpiW(argv[i], L"/OFFLINE") == 0)
+                if (_wcsicmp(argv[i], L"/OFF") == 0 || _wcsicmp(argv[i], L"/OFFLINE") == 0)
                 {
                     fc.dwFlags |= FLAG_OFFLINE;
                 }
