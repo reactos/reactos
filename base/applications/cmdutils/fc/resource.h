@@ -9,3 +9,4 @@
 #define IDS_NEEDS_FILES         1008
 #define IDS_CANT_USE_WILDCARD   1009
 #define IDS_DIFFERENT           1010
+#define IDS_TOO_LARGE           1011

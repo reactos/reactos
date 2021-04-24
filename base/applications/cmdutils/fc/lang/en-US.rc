@@ -36,4 +36,5 @@ FC /B [drive1:][path1]filename1 [drive2:][path2]filename2\n\
     IDS_NEEDS_FILES "FC: Insufficient number of file specifications\n"
     IDS_CANT_USE_WILDCARD "Wildcards ('*' and '?') are not supported yet\n"
     IDS_DIFFERENT "FC: File '%ls' and '%ls' are different\n"
+    IDS_TOO_LARGE "FC: File '%ls' too large\n"
 END

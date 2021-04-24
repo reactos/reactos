@@ -46,6 +46,8 @@ typedef struct FILECOMPARE
     INT n, nnnn;
 } FILECOMPARE;
 
+#define LARGE_FILE_SIZE 0x7FFFFFFF
+
 static VOID ShowUsage(VOID)
 {
     ConResPuts(StdOut, IDS_USAGE);
@@ -83,6 +85,12 @@ static FCRET OutOfMemory(VOID)
 static FCRET CannotRead(LPCWSTR file)
 {
     ConResPrintf(StdErr, IDS_CANNOT_READ, file);
+    return FCRET_INVALID;
+}
+
+static FCRET TooLarge(LPCWSTR file)
+{
+    ConResPrintf(StdErr, IDS_TOO_LARGE, file);
     return FCRET_INVALID;
 }
 
@@ -131,7 +139,6 @@ ReadFileDx(HANDLE hFile, LPVOID lpBuffer,
            DWORDLONG nNumberOfBytesToRead,
            DWORDLONG *lpNumberOfBytesRead)
 {
-#define LARGE_FILE_SIZE 0x7FFFFFFF
     DWORD cbDidRead, cbForRead;
     DWORDLONG ib, cb = nNumberOfBytesToRead;
     BOOL ret;
@@ -157,7 +164,6 @@ ReadFileDx(HANDLE hFile, LPVOID lpBuffer,
 
     *lpNumberOfBytesRead = ib;
     return ret;
-#undef LARGE_FILE_SIZE
 }
 
 static FCRET BinaryFileCompare(const FILECOMPARE *pFC)
@@ -196,6 +202,19 @@ static FCRET BinaryFileCompare(const FILECOMPARE *pFC)
             ret = CannotRead(pFC->file2);
             break;
         }
+
+#ifndef _WIN64
+        if  (cb1 > LARGE_FILE_SIZE)
+        {
+            ret = TooLarge(pFC->file1);
+            break;
+        }
+        if  (cb2 > LARGE_FILE_SIZE)
+        {
+            ret = TooLarge(pFC->file2);
+            break;
+        }
+#endif
 
         cbCommon = min(cb1, cb2);
         if (cbCommon > 0)
@@ -317,6 +336,19 @@ static FCRET TextFileCompare(const FILECOMPARE *pFC)
             ret = CannotRead(pFC->file2);
             break;
         }
+
+#ifndef _WIN64
+        if  (cb1 > LARGE_FILE_SIZE)
+        {
+            ret = TooLarge(pFC->file1);
+            break;
+        }
+        if  (cb2 > LARGE_FILE_SIZE)
+        {
+            ret = TooLarge(pFC->file2);
+            break;
+        }
+#endif
 
         if (cb1 == 0 && cb2 == 0)
         {
