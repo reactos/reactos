@@ -199,10 +199,10 @@ static FCRET BinaryFileCompare(const FILECOMPARE *pFC)
             ret = LongerThan(pFC->file2, pFC->file1);
         else if (cb1 > cb2)
             ret = LongerThan(pFC->file1, pFC->file2);
-        else if (!fDifferent)
-            ret = NoDifference();
-        else
+        else if (fDifferent)
             ret = Different(pFC->file1, pFC->file2);
+        else
+            ret = NoDifference();
     } while (0);
 
     CloseHandle(hFile1);
