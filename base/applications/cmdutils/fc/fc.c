@@ -115,28 +115,27 @@ static BOOL GetFileSizeDx(HANDLE hFile, size_t *pcbFile)
 }
 
 static BOOL
-ReadFileDx(HANDLE hFile, LPVOID lpBuffer,
-           size_t cbWannaRead, size_t *pcbDidRead)
+ReadFileDx(HANDLE hFile, LPVOID lpBuffer, size_t cb, size_t *pcbDidRead)
 {
 #ifdef _WIN64
-    BOOL ret;
-    DWORD cbDidRead, cbForRead;
-    DWORDLONG ib, cb = cbWannaRead;
+    BOOL ret = TRUE;
+    DWORD dwDidRead, dwForRead;
+    size_t ib;
     LPBYTE pb = (LPBYTE)lpBuffer;
-    for (ib = 0; ib < cb; ib += cbDidRead)
+    for (ib = 0; ib < cb; ib += dwDidRead)
     {
-        cbForRead = (DWORD)min(cb - ib, LARGE_FILE_SIZE);
-        ret = ReadFile(hFile, &pb[ib], cbForRead, &cbDidRead, NULL);
+        dwForRead = (DWORD)min(cb - ib, LARGE_FILE_SIZE);
+        ret = ReadFile(hFile, &pb[ib], dwForRead, &dwDidRead, NULL);
         if (!ret)
         {
-            ib += cbDidRead;
+            ib += dwDidRead;
             break;
         }
     }
     *pcbDidRead = ib;
     return ret;
 #else
-    return ReadFile(hFile, lpBuffer, (DWORD)cbWannaRead, (LPDWORD)pcbDidRead, NULL);
+    return ReadFile(hFile, lpBuffer, cb, (LPDWORD)pcbDidRead, NULL);
 #endif
 }
 
