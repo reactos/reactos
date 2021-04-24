@@ -150,7 +150,7 @@ extern "C" {
 #if defined(__GNUC__) || defined(__clang__)
 #define CCSIZEOF_STRUCT(structname,member) (__builtin_offsetof(structname,member) + sizeof(((structname*)0)->member))
 #else
-#define CCSIZEOF_STRUCT(structname,member) ((size_t)&(((structname*)0)->member) + sizeof(((structname*)0)->member))
+#define CCSIZEOF_STRUCT(structname,member) (((int)((LPBYTE)(&((structname*)0)->member) - ((LPBYTE)((structname*)0))))+sizeof(((structname*)0)->member))
 #endif
 #endif
 
