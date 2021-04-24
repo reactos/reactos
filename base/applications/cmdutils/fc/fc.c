@@ -230,10 +230,7 @@ UnicodeTextCompare(const FILECOMPARE *pFC, HANDLE hMapping1, size_t cb1,
     DWORD dwCmpFlags = (fIgnoreCase ? NORM_IGNORECASE : 0);
     LPWSTR psz1, psz2;
     size_t ib = 0, cch1 = cb1 / sizeof(WCHAR), cch2 = cb2 / sizeof(WCHAR);
-    if (cb1 >= MAXLONG)
-        return TooLarge(pFC->file1);
-    if (cb2 >= MAXLONG)
-        return TooLarge(pFC->file2);
+
     do
     {
         psz1 = MapViewOfFile(hMapping1, FILE_MAP_READ, HILONG(ib), LOLONG(ib), (DWORD)cb1);
@@ -267,10 +264,7 @@ AnsiTextCompare(const FILECOMPARE *pFC, HANDLE hMapping1, size_t cb1,
     DWORD dwCmpFlags = (fIgnoreCase ? NORM_IGNORECASE : 0);
     LPSTR psz1, psz2;
     size_t ib = 0, cch1 = cb1, cch2 = cb2;
-    if (cb1 >= MAXLONG)
-        return TooLarge(pFC->file1);
-    if (cb2 >= MAXLONG)
-        return TooLarge(pFC->file2);
+
     do
     {
         psz1 = MapViewOfFile(hMapping1, FILE_MAP_READ, HILONG(ib), LOLONG(ib), (DWORD)cb1);
@@ -334,18 +328,6 @@ static FCRET TextFileCompare(const FILECOMPARE *pFC)
             ret = NoDifference();
             break;
         }
-#ifndef _WIN64
-        if (cb1 > MAXLONG)
-        {
-            ret = TooLarge(pFC->file1);
-            break;
-        }
-        if (cb2 > MAXLONG)
-        {
-            ret = TooLarge(pFC->file2);
-            break;
-        }
-#endif
         hMapping1 = CreateFileMappingW(hFile1, NULL, PAGE_READONLY,
                                        HILONG(cb1), LOLONG(cb1), NULL);
         if (hMapping1 == NULL)
