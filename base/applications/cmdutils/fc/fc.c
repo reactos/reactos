@@ -209,14 +209,32 @@ static FCRET BinaryFileCompare(const FILECOMPARE *pFC)
                 ret = CannotRead(pFC->file2);
                 break;
             }
-            for (ib = 0; ib < cbCommon; ++ib)
+#ifdef _WIN64
+            if (cbCommon >= LARGE_FILE_SIZE)
             {
-                if (pb1[ib] != pb2[ib])
+                for (ib = 0; ib < cbCommon; ++ib)
                 {
-                    ConPrintf(StdOut, L"%08lX: %02X %02X\n", ib, pb1[ib], pb2[ib]);
-                    fDifferent = TRUE;
+                    if (pb1[ib] != pb2[ib])
+                    {
+                        ConPrintf(StdOut, L"%08lX%08lX: %02X %02X\n",
+                                  (DWORD)(ib >> 32), (DWORD)ib, pb1[ib], pb2[ib]);
+                        fDifferent = TRUE;
+                    }
                 }
             }
+            else
+#else
+            {
+                for (ib = 0; ib < cbCommon; ++ib)
+                {
+                    if (pb1[ib] != pb2[ib])
+                    {
+                        ConPrintf(StdOut, L"%08lX: %02X %02X\n", (DWORD)ib, pb1[ib], pb2[ib]);
+                        fDifferent = TRUE;
+                    }
+                }
+            }
+#endif
         }
 
         if (cb1 < cb2)
