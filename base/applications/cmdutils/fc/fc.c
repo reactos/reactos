@@ -173,7 +173,7 @@ static FCRET BinaryFileCompare(const FILECOMPARE *pFC)
             ret = FCRET_IDENTICAL;
             for (ib = 0; ib < cbCommon; ib += cbView)
             {
-                cbView = min(ib - cbCommon, MAX_VIEW_SIZE);
+                cbView = (DWORD)min(cbCommon - ib, MAX_VIEW_SIZE);
                 pb1 = MapViewOfFile(hMapping1, FILE_MAP_READ, HILONG(ib), LOLONG(ib), cbView);
                 pb2 = MapViewOfFile(hMapping2, FILE_MAP_READ, HILONG(ib), LOLONG(ib), cbView);
                 if (!pb1 || !pb2)
