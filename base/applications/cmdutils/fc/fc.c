@@ -227,8 +227,8 @@ UnicodeTextCompare(const FILECOMPARE *pFC, HANDLE hMapping1, LARGE_INTEGER cb1,
         }
         if (cch1.QuadPart < MAXLONG && cch2.QuadPart < MAXLONG)
         {
-            if (CompareStringW(0, dwCmpFlags, psz1, (INT)cch1.LowPart, psz2,
-                                                    (INT)cch2.LowPart) == CSTR_EQUAL)
+            if (CompareStringW(0, dwCmpFlags, psz1, cch1.LowPart,
+                                              psz2, cch2.LowPart) == CSTR_EQUAL)
             {
                 ret = NoDifference();
                 break;
@@ -264,8 +264,8 @@ AnsiTextCompare(const FILECOMPARE *pFC, HANDLE hMapping1, LARGE_INTEGER cb1,
         }
         if (cb1.QuadPart < MAXLONG && cb2.QuadPart < MAXLONG)
         {
-            if (CompareStringA(0, dwCmpFlags, psz1, (INT)cb1.LowPart,
-                                              psz2, (INT)cb2.LowPart) == CSTR_EQUAL)
+            if (CompareStringA(0, dwCmpFlags, psz1, cb1.LowPart,
+                                              psz2, cb2.LowPart) == CSTR_EQUAL)
             {
                 ret = NoDifference();
                 break;
