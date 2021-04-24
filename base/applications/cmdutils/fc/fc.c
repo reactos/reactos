@@ -15,10 +15,7 @@
 // See also: https://stackoverflow.com/questions/33125766/compare-files-with-a-cmd
 typedef enum FCRET // return code of the FC command.
 {
-    FCRET_INVALID = -1,
-    FCRET_IDENTICAL = 0,
-    FCRET_DIFFERENT = 1,
-    FCRET_CANT_FIND = 2
+    FCRET_INVALID = -1, FCRET_IDENTICAL, FCRET_DIFFERENT, FCRET_CANT_FIND
 } FCRET;
 
 #define LARGE_FILE_SIZE MAXLONG
@@ -119,14 +116,13 @@ static BOOL GetFileSizeDx(HANDLE hFile, size_t *pcbFile)
 
 static BOOL
 ReadFileDx(HANDLE hFile, LPVOID lpBuffer,
-           size_t nNumberOfBytesToRead, size_t *lpNumberOfBytesRead)
+           size_t cbWannaRead, size_t *pcbDidRead)
 {
 #ifdef _WIN64
-    DWORD cbDidRead, cbForRead;
-    DWORDLONG ib, cb = nNumberOfBytesToRead;
     BOOL ret;
+    DWORD cbDidRead, cbForRead;
+    DWORDLONG ib, cb = cbWannaRead;
     LPBYTE pb = (LPBYTE)lpBuffer;
-
     for (ib = 0; ib < cb; ib += cbDidRead)
     {
         cbForRead = (DWORD)min(cb - ib, LARGE_FILE_SIZE);
@@ -137,11 +133,10 @@ ReadFileDx(HANDLE hFile, LPVOID lpBuffer,
             break;
         }
     }
-    *lpNumberOfBytesRead = ib;
+    *pcbDidRead = ib;
     return ret;
 #else
-    return ReadFile(hFile, lpBuffer, (DWORD)nNumberOfBytesToRead,
-                    (LPDWORD)lpNumberOfBytesRead, NULL);
+    return ReadFile(hFile, lpBuffer, (DWORD)cbWannaRead, (LPDWORD)pcbDidRead, NULL);
 #endif
 }
 
@@ -180,12 +175,6 @@ static FCRET BinaryFileCompare(const FILECOMPARE *pFC)
             ret = CannotRead(pFC->file2);
             break;
         }
-        if (cb1 == 0 && cb2 == 0)
-        {
-            ret = NoDifference();
-            break;
-        }
-
         cbCommon = min(cb1, cb2);
         if (cbCommon > 0)
         {
@@ -209,32 +198,25 @@ static FCRET BinaryFileCompare(const FILECOMPARE *pFC)
                 ret = CannotRead(pFC->file2);
                 break;
             }
+
+            for (ib = 0; ib < cbCommon; ++ib)
+            {
+                if (pb1[ib] == pb2[ib])
+                    continue;
 #ifdef _WIN64
-            if (cbCommon >= LARGE_FILE_SIZE)
-            {
-                for (ib = 0; ib < cbCommon; ++ib)
+                if (cbCommon >= LARGE_FILE_SIZE)
                 {
-                    if (pb1[ib] != pb2[ib])
-                    {
-                        ConPrintf(StdOut, L"%08lX%08lX: %02X %02X\n",
-                                  (DWORD)(ib >> 32), (DWORD)ib, pb1[ib], pb2[ib]);
-                        fDifferent = TRUE;
-                    }
+                    ConPrintf(StdOut, L"%08lX%08lX: %02X %02X\n",
+                              (DWORD)(ib >> 32), (DWORD)ib, pb1[ib], pb2[ib]);
                 }
-            }
-            else
+                else
 #else
-            {
-                for (ib = 0; ib < cbCommon; ++ib)
                 {
-                    if (pb1[ib] != pb2[ib])
-                    {
-                        ConPrintf(StdOut, L"%08lX: %02X %02X\n", (DWORD)ib, pb1[ib], pb2[ib]);
-                        fDifferent = TRUE;
-                    }
+                    ConPrintf(StdOut, L"%08lX: %02X %02X\n", (DWORD)ib, pb1[ib], pb2[ib]);
                 }
-            }
 #endif
+                fDifferent = TRUE;
+            }
         }
 
         if (cb1 < cb2)
