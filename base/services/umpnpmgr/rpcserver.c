@@ -3207,8 +3207,47 @@ PNP_SetDeviceProblem(
     DWORD ulProblem,
     DWORD ulFlags)
 {
-    UNIMPLEMENTED;
-    return CR_CALL_NOT_IMPLEMENTED;
+    ULONG ulOldStatus, ulOldProblem;
+    CONFIGRET ret = CR_SUCCESS;
+
+    UNREFERENCED_PARAMETER(hBinding);
+
+    DPRINT1("PNP_SetDeviceProblem(%p %S %lu 0x%08lx)\n",
+           hBinding, pDeviceID, ulProblem, ulFlags);
+
+    if (ulFlags & ~CM_SET_DEVNODE_PROBLEM_BITS)
+        return CR_INVALID_FLAG;
+
+    if (!IsValidDeviceInstanceID(pDeviceID))
+        return CR_INVALID_DEVINST;
+
+    ret = GetDeviceStatus(pDeviceID,
+                          &ulOldStatus,
+                          &ulOldProblem);
+    if (ret != CR_SUCCESS)
+        return ret;
+
+    if (((ulFlags & CM_SET_DEVNODE_PROBLEM_OVERRIDE) == 0) &&
+        (ulOldProblem != 0) &&
+        (ulOldProblem != ulProblem))
+    {
+        return CR_FAILURE;
+    }
+
+    if (ulProblem == 0)
+    {
+        ret = ClearDeviceStatus(pDeviceID,
+                                DN_HAS_PROBLEM,
+                                ulOldProblem);
+    }
+    else
+    {
+        ret = SetDeviceStatus(pDeviceID,
+                              DN_HAS_PROBLEM,
+                              ulProblem);
+    }
+
+    return ret;
 }
 
 
