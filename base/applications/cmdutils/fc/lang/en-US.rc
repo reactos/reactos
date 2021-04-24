@@ -31,10 +31,10 @@ FC /B [drive1:][path1]filename1 [drive2:][path2]filename2\n\
     IDS_COMPARING "Comparing files '%ls' and '%ls'\n"
     IDS_OUT_OF_MEMORY "FC: Out of memory\n"
     IDS_CANNOT_READ "FC: Cannot read file '%ls'\n"
-    IDS_INVALID_SWITCH "FC: Invalid Switch\n"
+    IDS_INVALID_SWITCH "FC: Invalid switch\n"
     IDS_CANNOT_OPEN "FC: Cannot open file '%ls' - %ls\n"
     IDS_NEEDS_FILES "FC: Insufficient number of file specifications\n"
-    IDS_CANT_USE_WILDCARD "Wildcards ('*' and '?') are not supported yet\n"
+    IDS_CANT_USE_WILDCARD "Wildcard ('*' and '?') are not supported yet\n"
     IDS_DIFFERENT "FC: File '%ls' and '%ls' are different\n"
     IDS_TOO_LARGE "FC: File '%ls' too large\n"
 END

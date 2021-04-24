@@ -29,7 +29,7 @@ typedef enum FCRET // return code of the FC command.
 #define FLAG_L (1 << 3)
 #define FLAG_LBn (1 << 4)
 #define FLAG_N (1 << 5)
-#define FLAG_OFF (1 << 6)
+#define FLAG_OFFLINE (1 << 6)
 #define FLAG_T (1 << 7)
 #define FLAG_U (1 << 8)
 #define FLAG_W (1 << 9)
@@ -379,15 +379,14 @@ static BOOL IsBinaryExt(LPCWSTR filename)
 }
 
 #define HasWildcard(filename) \
-    ((wcschr(filename, L'*') != NULL) || (wcschr(filename, L'?') != NULL))
+    ((wcschr((filename), L'*') != NULL) || (wcschr((filename), L'?') != NULL))
 
 static FCRET FileCompare(const FILECOMPARE *pFC, LPCWSTR file1, LPCWSTR file2)
 {
     ConResPrintf(StdOut, IDS_COMPARING, file1, file2);
-    if (IsBinaryExt(file1) || IsBinaryExt(file2) || (pFC->dwFlags & FLAG_B))
+    if ((pFC->dwFlags & FLAG_B) || IsBinaryExt(file1) || IsBinaryExt(file2))
         return BinaryFileCompare(pFC);
-    else
-        return TextFileCompare(pFC);
+    return TextFileCompare(pFC);
 }
 
 static FCRET WildcardFileCompare(const FILECOMPARE *pFC)
@@ -462,7 +461,7 @@ int wmain(int argc, WCHAR **argv)
                 if (lstrcmpiW(argv[i], L"/OFF") == 0 ||
                     lstrcmpiW(argv[i], L"/OFFLINE") == 0)
                 {
-                    fc.dwFlags |= FLAG_OFF;
+                    fc.dwFlags |= FLAG_OFFLINE;
                 }
                 break;
             case L'T': case L't':
