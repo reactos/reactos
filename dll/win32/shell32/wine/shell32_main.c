@@ -26,9 +26,7 @@
 #define _INC_WINDOWS
 #define COBJMACROS
 
-#ifdef __REACTOS__
 #define IS_PRODUCT_VERSION_WORKSTATION  0x300
-#endif
 
 #include <windef.h>
 #include <winbase.h>
@@ -1139,7 +1137,7 @@ INT_PTR CALLBACK AboutAuthorsDlgProc( HWND hWnd, UINT msg, WPARAM wParam, LPARAM
 /*************************************************************************
  * AboutDlgProc            (internal)
  */
-#ifdef __REACTOS__
+
 // Check if the version is Workstation by reading the CSDVersion string
 // This will be used to choose the correspondent ReactOS Bitmap banner
 // on the About dialog
@@ -1175,7 +1173,7 @@ static BOOL IsVersionWorkstation(VOID)
 
     return (dwValue != 0);
 }
-#endif
+
 static INT_PTR CALLBACK AboutDlgProc( HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam )
 {
     static DWORD   cxLogoBmp;
@@ -1199,8 +1197,6 @@ static INT_PTR CALLBACK AboutDlgProc( HWND hWnd, UINT msg, WPARAM wParam, LPARAM
                 WCHAR szAuthorsText[20];
 
                 // Preload the ROS bitmap
-                //hLogoBmp = (HBITMAP)LoadImage(shell32_hInstance, MAKEINTRESOURCE(IDB_REACTOS), IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR);
-#ifdef __REACTOS__
                 if (IsVersionWorkstation())
                 {
                    // Load Workstation Bitmap
@@ -1211,7 +1207,6 @@ static INT_PTR CALLBACK AboutDlgProc( HWND hWnd, UINT msg, WPARAM wParam, LPARAM
                    // Load Server Bitmap
                    hLogoBmp = (HBITMAP)LoadImage(shell32_hInstance, MAKEINTRESOURCE(IDB_REACTOS_SERVER), IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR);
                 }
-#endif
                 hLineBmp = (HBITMAP)LoadImage(shell32_hInstance, MAKEINTRESOURCE(IDB_LINEBAR), IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR);
 
                 if(hLogoBmp && hLineBmp)
