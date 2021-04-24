@@ -1,0 +1,12 @@
+#define IDS_USAGE               1000
+#define IDS_NO_DIFFERENCE       1001
+#define IDS_LONGER_THAN         1002
+#define IDS_COMPARING           1003
+#define IDS_TOO_LARGE           1004
+#define IDS_OUT_OF_MEMORY       1005
+#define IDS_CANNOT_READ         1006
+#define IDS_INVALID_SWITCH      1007
+#define IDS_CANNOT_OPEN         1008
+#define IDS_NEEDS_FILES         1009
+#define IDS_CANT_USE_WILDCARD   1010
+#define IDS_DIFFERENT           1011
