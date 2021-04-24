@@ -388,9 +388,9 @@ typedef __WCHAR_TYPE__ wchar_t;
 #  endif
 # else
 #  ifdef _WIN64
-#   define offsetof(TYPE,MEMBER) ((size_t)(ptrdiff_t)&(((TYPE *)0)->MEMBER))
+#   define offsetof(TYPE,MEMBER) ((size_t)(ptrdiff_t)&(((TYPE*)0)->MEMBER))
 #  else
-#   define offsetof(TYPE,MEMBER) ((size_t)&(((TYPE *)0)->MEMBER))
+#   define offsetof(TYPE,MEMBER) ((size_t)&(((TYPE*)0)->MEMBER))
 #  endif
 # endif
 #endif
