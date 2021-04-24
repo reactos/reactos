@@ -46,7 +46,7 @@ typedef struct FILECOMPARE
     INT n, nnnn;
 } FILECOMPARE;
 
-#define LARGE_FILE_SIZE 0x7FFFFFFF
+#define LARGE_FILE_SIZE MAXLONG
 
 static VOID ShowUsage(VOID)
 {
@@ -204,12 +204,12 @@ static FCRET BinaryFileCompare(const FILECOMPARE *pFC)
         }
 
 #ifndef _WIN64
-        if  (cb1 > LARGE_FILE_SIZE)
+        if  (cb1 >= LARGE_FILE_SIZE)
         {
             ret = TooLarge(pFC->file1);
             break;
         }
-        if  (cb2 > LARGE_FILE_SIZE)
+        if  (cb2 >= LARGE_FILE_SIZE)
         {
             ret = TooLarge(pFC->file2);
             break;
@@ -271,12 +271,21 @@ static FCRET BinaryFileCompare(const FILECOMPARE *pFC)
 }
 
 static FCRET
-UnicodeTextCompare(const FILECOMPARE *pFC, LPWSTR psz1, DWORD cch1, LPWSTR psz2, DWORD cch2)
+UnicodeTextCompare(const FILECOMPARE *pFC, LPWSTR psz1, DWORDLONG cch1, LPWSTR psz2, DWORDLONG cch2)
 {
     BOOL fIgnoreCase = !!(pFC->dwFlags & FLAG_C);
     DWORD dwCmpFlags = (fIgnoreCase ? NORM_IGNORECASE : 0);
 
-    if (CompareStringW(0, dwCmpFlags, psz1, cch1, psz2, cch2) == CSTR_EQUAL)
+    if (cch1 >= LARGE_FILE_SIZE)
+    {
+        return TooLarge(pFC->file1);
+    }
+    if (cch2 >= LARGE_FILE_SIZE)
+    {
+        return TooLarge(pFC->file2);
+    }
+
+    if (CompareStringW(0, dwCmpFlags, psz1, (INT)cch1, psz2, (INT)cch2) == CSTR_EQUAL)
     {
         return NoDifference();
     }
@@ -286,12 +295,21 @@ UnicodeTextCompare(const FILECOMPARE *pFC, LPWSTR psz1, DWORD cch1, LPWSTR psz2,
 }
 
 static FCRET
-AnsiTextCompare(const FILECOMPARE *pFC, LPSTR psz1, DWORD cch1, LPSTR psz2, DWORD cch2)
+AnsiTextCompare(const FILECOMPARE *pFC, LPSTR psz1, DWORDLONG cch1, LPSTR psz2, DWORDLONG cch2)
 {
     BOOL fIgnoreCase = !!(pFC->dwFlags & FLAG_C);
     DWORD dwCmpFlags = (fIgnoreCase ? NORM_IGNORECASE : 0);
 
-    if (CompareStringA(0, dwCmpFlags, psz1, cch1, psz2, cch2) == CSTR_EQUAL)
+    if (cch1 >= LARGE_FILE_SIZE)
+    {
+        return TooLarge(pFC->file1);
+    }
+    if (cch2 >= LARGE_FILE_SIZE)
+    {
+        return TooLarge(pFC->file2);
+    }
+
+    if (CompareStringA(0, dwCmpFlags, psz1, (INT)cch1, psz2, (INT)cch2) == CSTR_EQUAL)
     {
         return NoDifference();
     }
@@ -338,12 +356,12 @@ static FCRET TextFileCompare(const FILECOMPARE *pFC)
         }
 
 #ifndef _WIN64
-        if  (cb1 > LARGE_FILE_SIZE)
+        if  (cb1 >= LARGE_FILE_SIZE)
         {
             ret = TooLarge(pFC->file1);
             break;
         }
-        if  (cb2 > LARGE_FILE_SIZE)
+        if  (cb2 >= LARGE_FILE_SIZE)
         {
             ret = TooLarge(pFC->file2);
             break;
