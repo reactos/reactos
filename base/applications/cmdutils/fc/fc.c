@@ -108,6 +108,10 @@ static BOOL GetFileSizeDx(HANDLE hFile, size_t *pcbFile)
     LARGE_INTEGER li;
     if (!GetFileSizeEx(hFile, &li))
         return FALSE;
+#ifndef _WIN64
+    if (li.QuadPart >= LARGE_FILE_SIZE)
+        return FALSE;
+#endif
     *pcbFile = (size_t)li.QuadPart;
     return TRUE;
 }
