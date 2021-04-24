@@ -891,25 +891,28 @@ LPWSTR WINAPI PathRemoveBackslashW( LPWSTR lpszPath )
  * RETURNS
  *  Nothing.
  */
-VOID WINAPI PathRemoveBlanksA(LPSTR lpszPath)
+void WINAPI PathRemoveBlanksA(LPSTR pszPath)
 {
-  TRACE("(%s)\n", debugstr_a(lpszPath));
+    LPSTR start, first;
 
-  if(lpszPath && *lpszPath)
-  {
-    LPSTR start = lpszPath;
+    TRACE("(%s)\n", debugstr_a(pszPath));
 
-    while (*lpszPath == ' ')
-      lpszPath = CharNextA(lpszPath);
+    if (!pszPath || !*pszPath)
+        return;
 
-    while(*lpszPath)
-      *start++ = *lpszPath++;
+    start = first = pszPath;
 
-    if (start != lpszPath)
-      while (start[-1] == ' ')
-        start--;
+    while (*pszPath == ' ')
+        pszPath = CharNextA(pszPath);
+
+    while (*pszPath)
+        *start++ = *pszPath++;
+
+    if (start != first)
+        while (start[-1] == ' ')
+            start--;
+
     *start = '\0';
-  }
 }
 
 /*************************************************************************
@@ -917,25 +920,28 @@ VOID WINAPI PathRemoveBlanksA(LPSTR lpszPath)
  *
  * See PathRemoveBlanksA.
  */
-VOID WINAPI PathRemoveBlanksW(LPWSTR lpszPath)
+void WINAPI PathRemoveBlanksW(LPWSTR pszPath)
 {
-  TRACE("(%s)\n", debugstr_w(lpszPath));
+    LPWSTR start, first;
 
-  if(lpszPath && *lpszPath)
-  {
-    LPWSTR start = lpszPath;
+    TRACE("(%s)\n", debugstr_w(pszPath));
 
-    while (*lpszPath == ' ')
-      lpszPath++;
+    if (!pszPath || !*pszPath)
+        return;
 
-    while(*lpszPath)
-      *start++ = *lpszPath++;
+    start = first = pszPath;
 
-    if (start != lpszPath)
-      while (start[-1] == ' ')
-        start--;
+    while (*pszPath == ' ')
+        pszPath++;
+
+    while (*pszPath)
+        *start++ = *pszPath++;
+
+    if (start != first)
+        while (start[-1] == ' ')
+            start--;
+
     *start = '\0';
-  }
 }
 
 /*************************************************************************

@@ -1712,6 +1712,50 @@ static void test_PathUndecorate(void)
     PathUndecorateW(NULL);
 }
 
+static void test_PathRemoveBlanks(void)
+{
+    struct remove_blanks_test {
+        const char* input;
+        const char* expected;
+    };
+    struct remove_blanks_test tests[] = {
+        {"", ""},
+        {" ", ""},
+        {"test", "test"},
+        {" test", "test"},
+        {"  test", "test"},
+        {"test ", "test"},
+        {"test  ", "test"},
+        {" test  ", "test"},
+        {"  test ", "test"}};
+    char pathA[MAX_PATH];
+    WCHAR pathW[MAX_PATH];
+    int i, ret;
+    const UINT CP_ASCII = 20127;
+
+    PathRemoveBlanksW(NULL);
+    PathRemoveBlanksA(NULL);
+
+    for (i=0; i < ARRAY_SIZE(tests); i++)
+    {
+        strcpy(pathA, tests[i].input);
+        PathRemoveBlanksA(pathA);
+        ok(strcmp(pathA, tests[i].expected) == 0, "input string '%s', expected '%s', got '%s'\n",
+            tests[i].input, tests[i].expected, pathA);
+
+        ret = MultiByteToWideChar(CP_ASCII, MB_ERR_INVALID_CHARS, tests[i].input, -1, pathW, MAX_PATH);
+        ok(ret != 0, "MultiByteToWideChar failed for '%s'\n", tests[i].input);
+
+        PathRemoveBlanksW(pathW);
+
+        ret = WideCharToMultiByte(CP_ASCII, 0, pathW, -1, pathA, MAX_PATH, NULL, NULL);
+        ok(ret != 0, "WideCharToMultiByte failed for %s from test string '%s'\n", wine_dbgstr_w(pathW), tests[i].input);
+
+        ok(strcmp(pathA, tests[i].expected) == 0, "input string '%s', expected '%s', got '%s'\n",
+            tests[i].input, tests[i].expected, pathA);
+    }
+}
+
 START_TEST(path)
 {
     HMODULE hShlwapi = GetModuleHandleA("shlwapi.dll");
@@ -1759,4 +1803,5 @@ START_TEST(path)
     test_PathIsRelativeW();
     test_PathStripPathA();
     test_PathUndecorate();
+    test_PathRemoveBlanks();
 }
