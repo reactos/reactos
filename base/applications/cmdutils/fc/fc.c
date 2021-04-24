@@ -350,6 +350,8 @@ static FCRET TextFileCompare(const FILECOMPARE *pFC)
 
 static BOOL IsBinaryExt(LPCWSTR filename)
 {
+    // Don't change this array. This is by design.
+    // See also: https://docs.microsoft.com/en-us/windows-server/administration/windows-commands/fc
     static const LPCWSTR s_dotexts[] =
     {
         L".exe", L".com", L".sys", L".obj", L".lib", L".bin"
