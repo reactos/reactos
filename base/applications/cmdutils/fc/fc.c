@@ -19,8 +19,19 @@ typedef enum FCRET // return code of FC command
 } FCRET;
 
 #define MAX_VIEW_SIZE (64 * 1024 * 1024) // 64 MB
-#define LOLONG(dwl) (DWORD)(dwl)
-#define HILONG(dwl) (DWORD)(((DWORDLONG)dwl) >> 32)
+
+static __inline DWORD LOLONG(DWORDLONG dwl)
+{
+    ULARGE_INTEGER uli;
+    uli.QuadPart = dwl;
+    return uli.LowPart;
+}
+static __inline DWORD HILONG(DWORDLONG dwl)
+{
+    ULARGE_INTEGER uli;
+    uli.QuadPart = dwl;
+    return uli.HighPart;
+}
 
 #define FLAG_A (1 << 0)
 #define FLAG_B (1 << 1)
@@ -256,7 +267,7 @@ AnsiTextCompare(const FILECOMPARE *pFC, HANDLE hMapping1, size_t cb1,
     BOOL fIgnoreCase = !!(pFC->dwFlags & FLAG_C);
     DWORD dwCmpFlags = (fIgnoreCase ? NORM_IGNORECASE : 0);
     LPSTR psz1, psz2;
-    size_t ib = 0, cch1 = cb1, cch2 = cb2;
+    size_t ib = 0;
 
     do
     {
@@ -267,7 +278,7 @@ AnsiTextCompare(const FILECOMPARE *pFC, HANDLE hMapping1, size_t cb1,
             ret = OutOfMemory();
             break;
         }
-        if (CompareStringA(0, dwCmpFlags, psz1, (INT)cch1, psz2, (INT)cch2) == CSTR_EQUAL)
+        if (CompareStringA(0, dwCmpFlags, psz1, (INT)cb1, psz2, (INT)cb2) == CSTR_EQUAL)
         {
             ret = NoDifference();
             break;
