@@ -219,7 +219,7 @@ UnicodeTextCompare(const FILECOMPARE *pFC, HANDLE hMapping1, LARGE_INTEGER cb1,
     do
     {
         psz1 = MapViewOfFile(hMapping1, FILE_MAP_READ, 0, 0, cb1.LowPart);
-        psz2 = MapViewOfFile(hMapping2, FILE_MAP_READ, 0, 0, cb1.LowPart);
+        psz2 = MapViewOfFile(hMapping2, FILE_MAP_READ, 0, 0, cb2.LowPart);
         if (!psz1 || !psz2)
         {
             ret = OutOfMemory();
