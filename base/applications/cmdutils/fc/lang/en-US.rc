@@ -12,7 +12,7 @@ FC /B [drive1:][path1]filename1 [drive2:][path2]filename2\n\
   /A         Displays only first and last lines for each set of differences.\n\
   /B         Performs a binary comparison.\n\
   /C         Disregards the case of letters.\n\
-  /L         Compares files as ASCII text (default).\n\
+  /L         Compares files as ASCII text.\n\
   /LBn       Sets the maximum consecutive mismatches to the specified\n\
              number of lines (default: 100).\n\
   /N         Displays the line numbers on an ASCII comparison.\n\

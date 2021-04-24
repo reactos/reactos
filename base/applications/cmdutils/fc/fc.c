@@ -348,12 +348,13 @@ static FCRET TextFileCompare(const FILECOMPARE *pFC)
     return ret;
 }
 
-static BOOL IsBinaryFile(LPCWSTR filename)
+static BOOL IsBinaryExt(LPCWSTR filename)
 {
     static const LPCWSTR s_dotexts[] =
     {
         L".exe", L".com", L".sys", L".obj", L".lib", L".bin"
     };
+    DWORD dwType;
     size_t iext;
     LPCWSTR pch, dotext, pch1 = wcsrchr(filename, L'\\'), pch2 = wcsrchr(filename, L'/');
     if (!pch1 && !pch2)
@@ -376,6 +377,7 @@ static BOOL IsBinaryFile(LPCWSTR filename)
                 return TRUE;
         }
     }
+
     return FALSE;
 }
 
@@ -385,8 +387,13 @@ static BOOL IsBinaryFile(LPCWSTR filename)
 static FCRET FileCompare(const FILECOMPARE *pFC, LPCWSTR file1, LPCWSTR file2)
 {
     ConResPrintf(StdOut, IDS_COMPARING, file1, file2);
-    if ((pFC->dwFlags & FLAG_B) || IsBinaryFile(file1) || IsBinaryFile(file2))
+
+    if (!(pFC->dwFlags & FLAG_L) &&
+        ((pFC->dwFlags & FLAG_B) || IsBinaryExt(file1) || IsBinaryExt(file2)))
+    {
         return BinaryFileCompare(pFC);
+    }
+
     return TextFileCompare(pFC);
 }
 
@@ -415,7 +422,7 @@ static FCRET WildcardFileCompare(const FILECOMPARE *pFC)
 
 int wmain(int argc, WCHAR **argv)
 {
-    FILECOMPARE fc = { .dwFlags = FLAG_L, .n = 100, .nnnn = 2 };
+    FILECOMPARE fc = { .dwFlags = 0, .n = 100, .nnnn = 2 };
     INT i;
 
     /* Initialize the Console Standard Streams */
