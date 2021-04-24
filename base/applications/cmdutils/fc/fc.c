@@ -356,7 +356,6 @@ static BOOL IsBinaryExt(LPCWSTR filename)
     {
         L".exe", L".com", L".sys", L".obj", L".lib", L".bin"
     };
-    DWORD dwType;
     size_t iext;
     LPCWSTR pch, dotext, pch1 = wcsrchr(filename, L'\\'), pch2 = wcsrchr(filename, L'/');
     if (!pch1 && !pch2)
