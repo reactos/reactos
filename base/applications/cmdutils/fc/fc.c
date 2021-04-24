@@ -74,12 +74,6 @@ static VOID Comparing(LPCWSTR file1, LPCWSTR file2)
     ConResPrintf(StdOut, IDS_COMPARING, file1, file2);
 }
 
-static FCRET TooLarge(LPCWSTR file)
-{
-    ConResPrintf(StdErr, IDS_TOO_LARGE, file);
-    return FCRET_INVALID;
-}
-
 static FCRET OutOfMemory(VOID)
 {
     ConResPuts(StdErr, IDS_OUT_OF_MEMORY);
@@ -121,11 +115,56 @@ static HANDLE DoOpenFileForInput(LPCWSTR file)
     return hFile;
 }
 
+static BOOL GetFileSizeDx(HANDLE hFile, DWORDLONG *pcbFile)
+{
+    LARGE_INTEGER li;
+    if (GetFileSizeEx(hFile, &li))
+    {
+        *pcbFile = li.QuadPart;
+        return TRUE;
+    }
+    return FALSE;
+}
+
+static BOOL
+ReadFileDx(HANDLE hFile, LPVOID lpBuffer,
+           DWORDLONG nNumberOfBytesToRead,
+           DWORDLONG *lpNumberOfBytesRead)
+{
+#define LARGE_FILE_SIZE 0x7FFFFFFF
+    DWORD cbDidRead, cbForRead;
+    DWORDLONG ib, cb = nNumberOfBytesToRead;
+    BOOL ret;
+    LPBYTE pb = (LPBYTE)lpBuffer;
+
+    if (cb <= LARGE_FILE_SIZE)
+    {
+        ret = ReadFile(hFile, lpBuffer, (DWORD)cb, &cbDidRead, NULL);
+        *lpNumberOfBytesRead = cbDidRead;
+        return ret;
+    }
+
+    for (ib = 0; ib < cb; ib += cbDidRead)
+    {
+        cbForRead = (DWORD)min(cb - ib, LARGE_FILE_SIZE);
+        ret = ReadFile(hFile, &pb[ib], cbForRead, &cbDidRead, NULL);
+        if (!ret)
+        {
+            ib += cbDidRead;
+            break;
+        }
+    }
+
+    *lpNumberOfBytesRead = ib;
+    return ret;
+#undef LARGE_FILE_SIZE
+}
+
 static FCRET BinaryFileCompare(const FILECOMPARE *pFC)
 {
     FCRET ret = FCRET_INVALID;
     HANDLE hFile1, hFile2;
-    DWORD ib, cb1, cb2, cbCommon, cbRead1, cbRead2;
+    DWORDLONG ib, cb1, cb2, cbCommon, cbRead1, cbRead2;
     LPBYTE pb1 = NULL, pb2 = NULL;
     BOOL fDifferent = FALSE;
 
@@ -147,16 +186,14 @@ static FCRET BinaryFileCompare(const FILECOMPARE *pFC)
             break;
         }
 
-        cb1 = GetFileSize(hFile1, NULL);
-        if (cb1 == INVALID_FILE_SIZE)
+        if (!GetFileSizeDx(hFile1, &cb1))
         {
-            ret = TooLarge(pFC->file1);
+            ret = CannotRead(pFC->file1);
             break;
         }
-        cb2 = GetFileSize(hFile2, NULL);
-        if (cb2 == INVALID_FILE_SIZE)
+        if (!GetFileSizeDx(hFile2, &cb2))
         {
-            ret = TooLarge(pFC->file2);
+            ret = CannotRead(pFC->file2);
             break;
         }
 
@@ -174,12 +211,12 @@ static FCRET BinaryFileCompare(const FILECOMPARE *pFC)
                 break;
             }
 
-            if (!ReadFile(hFile1, pb1, cbCommon, &cbRead1, NULL) || cbRead1 != cbCommon)
+            if (!ReadFileDx(hFile1, pb1, cbCommon, &cbRead1) || cbRead1 != cbCommon)
             {
                 ret = CannotRead(pFC->file1);
                 break;
             }
-            if (!ReadFile(hFile2, pb2, cbCommon, &cbRead2, NULL) || cbRead2 != cbCommon)
+            if (!ReadFileDx(hFile2, pb2, cbCommon, &cbRead2) || cbRead2 != cbCommon)
             {
                 ret = CannotRead(pFC->file2);
                 break;
@@ -249,7 +286,7 @@ static FCRET TextFileCompare(const FILECOMPARE *pFC)
     FCRET ret = FCRET_IDENTICAL;
     HANDLE hFile1, hFile2;
     LPBYTE pb1 = NULL, pb2 = NULL;
-    DWORD cb1, cb2, cbRead;
+    DWORDLONG cb1, cb2, cbRead;
     BOOL fUnicode = !!(pFC->dwFlags & FLAG_U);
 
     hFile1 = DoOpenFileForInput(pFC->file1);
@@ -270,16 +307,14 @@ static FCRET TextFileCompare(const FILECOMPARE *pFC)
             break;
         }
 
-        cb1 = GetFileSize(hFile1, NULL);
-        if (cb1 == INVALID_FILE_SIZE)
+        if (!GetFileSizeDx(hFile1, &cb1))
         {
-            ret = TooLarge(pFC->file1);
+            ret = CannotRead(pFC->file1);
             break;
         }
-        cb2 = GetFileSize(hFile2, NULL);
-        if (cb2 == INVALID_FILE_SIZE)
+        if (!GetFileSizeDx(hFile2, &cb2))
         {
-            ret = TooLarge(pFC->file2);
+            ret = CannotRead(pFC->file2);
             break;
         }
 
@@ -297,12 +332,12 @@ static FCRET TextFileCompare(const FILECOMPARE *pFC)
             break;
         }
 
-        if (!ReadFile(hFile1, pb1, cb1, &cbRead, NULL) || cb1 != cbRead)
+        if (!ReadFileDx(hFile1, pb1, cb1, &cbRead) || cb1 != cbRead)
         {
             ret = CannotRead(pFC->file1);
             break;
         }
-        if (!ReadFile(hFile2, pb2, cb2, &cbRead, NULL) || cb2 != cbRead)
+        if (!ReadFileDx(hFile2, pb2, cb2, &cbRead) || cb2 != cbRead)
         {
             ret = CannotRead(pFC->file2);
             break;
