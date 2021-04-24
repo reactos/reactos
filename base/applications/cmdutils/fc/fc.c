@@ -19,7 +19,11 @@ typedef enum FCRET // return code of FC command
     FCRET_INVALID = -1, FCRET_IDENTICAL, FCRET_DIFFERENT, FCRET_CANT_FIND
 } FCRET;
 
-#define MAX_VIEW_SIZE (64 * 1024 * 1024) // 64 MB
+#ifdef _WIN64
+    #define MAX_VIEW_SIZE (256 * 1024 * 1024) // 256 MB
+#else
+    #define MAX_VIEW_SIZE (64 * 1024 * 1024) // 64 MB
+#endif
 
 #define FLAG_A (1 << 0)
 #define FLAG_B (1 << 1)
