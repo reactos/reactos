@@ -16,7 +16,7 @@
 #include "resource.h"
 
 // FCRET: return code of FC.
-// SEE: https://stackoverflow.com/questions/33125766/compare-files-with-a-cmd
+// See: https://stackoverflow.com/questions/33125766/compare-files-with-a-cmd
 typedef enum FCRET
 {
     FCRET_INVALID = -1,
@@ -48,11 +48,6 @@ typedef struct FILECOMPARE
 
 #define LARGE_FILE_SIZE MAXLONG
 
-static VOID ShowUsage(VOID)
-{
-    ConResPuts(StdOut, IDS_USAGE);
-}
-
 static FCRET NoDifference(VOID)
 {
     ConResPuts(StdOut, IDS_NO_DIFFERENCE);
@@ -69,11 +64,6 @@ static FCRET LongerThan(LPCWSTR file1, LPCWSTR file2)
 {
     ConResPrintf(StdOut, IDS_LONGER_THAN, file1, file2);
     return FCRET_DIFFERENT;
-}
-
-static VOID Comparing(LPCWSTR file1, LPCWSTR file2)
-{
-    ConResPrintf(StdOut, IDS_COMPARING, file1, file2);
 }
 
 static FCRET OutOfMemory(VOID)
@@ -112,14 +102,10 @@ static VOID CannotOpen(LPCWSTR file, DWORD dwError)
 
 static HANDLE DoOpenFileForInput(LPCWSTR file)
 {
-    DWORD dwError;
     HANDLE hFile = CreateFileW(file, GENERIC_READ, FILE_SHARE_READ, NULL,
                                OPEN_EXISTING, 0, NULL);
-    if (hFile != INVALID_HANDLE_VALUE)
-        return hFile;
-
-    dwError = GetLastError();
-    CannotOpen(file, dwError);
+    if (hFile == INVALID_HANDLE_VALUE)
+        CannotOpen(file, GetLastError());
     return hFile;
 }
 
@@ -191,7 +177,6 @@ static FCRET BinaryFileCompare(const FILECOMPARE *pFC)
             ret = NoDifference();
             break;
         }
-
         if (!GetFileSizeDx(hFile1, &cb1))
         {
             ret = CannotRead(pFC->file1);
@@ -229,7 +214,6 @@ static FCRET BinaryFileCompare(const FILECOMPARE *pFC)
                 ret = OutOfMemory();
                 break;
             }
-
             if (!ReadFileDx(hFile1, pb1, cbCommon, &cbRead1) || cbRead1 != cbCommon)
             {
                 ret = CannotRead(pFC->file1);
@@ -277,18 +261,12 @@ UnicodeTextCompare(const FILECOMPARE *pFC, LPWSTR psz1, DWORDLONG cch1, LPWSTR p
     DWORD dwCmpFlags = (fIgnoreCase ? NORM_IGNORECASE : 0);
 
     if (cch1 >= LARGE_FILE_SIZE)
-    {
         return TooLarge(pFC->file1);
-    }
     if (cch2 >= LARGE_FILE_SIZE)
-    {
         return TooLarge(pFC->file2);
-    }
 
     if (CompareStringW(0, dwCmpFlags, psz1, (INT)cch1, psz2, (INT)cch2) == CSTR_EQUAL)
-    {
         return NoDifference();
-    }
 
     // TODO: compare each lines
     return Different(pFC->file1, pFC->file2);
@@ -301,18 +279,12 @@ AnsiTextCompare(const FILECOMPARE *pFC, LPSTR psz1, DWORDLONG cch1, LPSTR psz2, 
     DWORD dwCmpFlags = (fIgnoreCase ? NORM_IGNORECASE : 0);
 
     if (cch1 >= LARGE_FILE_SIZE)
-    {
         return TooLarge(pFC->file1);
-    }
     if (cch2 >= LARGE_FILE_SIZE)
-    {
         return TooLarge(pFC->file2);
-    }
 
     if (CompareStringA(0, dwCmpFlags, psz1, (INT)cch1, psz2, (INT)cch2) == CSTR_EQUAL)
-    {
         return NoDifference();
-    }
 
     // TODO: compare each lines
     return Different(pFC->file1, pFC->file2);
@@ -343,7 +315,6 @@ static FCRET TextFileCompare(const FILECOMPARE *pFC)
             ret = NoDifference();
             break;
         }
-
         if (!GetFileSizeDx(hFile1, &cb1))
         {
             ret = CannotRead(pFC->file1);
@@ -352,6 +323,11 @@ static FCRET TextFileCompare(const FILECOMPARE *pFC)
         if (!GetFileSizeDx(hFile2, &cb2))
         {
             ret = CannotRead(pFC->file2);
+            break;
+        }
+        if (cb1 == 0 && cb2 == 0)
+        {
+            ret = NoDifference();
             break;
         }
 
@@ -368,12 +344,6 @@ static FCRET TextFileCompare(const FILECOMPARE *pFC)
         }
 #endif
 
-        if (cb1 == 0 && cb2 == 0)
-        {
-            ret = NoDifference();
-            break;
-        }
-
         pb1 = malloc(fUnicode ? (cb1 + 3) : (cb1 + 1));
         pb2 = malloc(fUnicode ? (cb2 + 3) : (cb2 + 1));
         if (pb1 == NULL || pb2 == NULL)
@@ -381,7 +351,6 @@ static FCRET TextFileCompare(const FILECOMPARE *pFC)
             ret = OutOfMemory();
             break;
         }
-
         if (!ReadFileDx(hFile1, pb1, cb1, &cbRead) || cb1 != cbRead)
         {
             ret = CannotRead(pFC->file1);
@@ -458,7 +427,7 @@ static BOOL HasWildcard(LPCWSTR filename)
 
 static FCRET FileCompare(const FILECOMPARE *pFC, LPCWSTR file1, LPCWSTR file2)
 {
-    Comparing(file1, file2);
+    ConResPrintf(StdOut, IDS_COMPARING, file1, file2);
     if (IsBinaryExt(file1) || IsBinaryExt(file2) || (pFC->dwFlags & FLAG_B))
         return BinaryFileCompare(pFC);
     else
@@ -471,7 +440,7 @@ static FCRET WildcardFileCompare(const FILECOMPARE *pFC)
 
     if (pFC->dwFlags & FLAG_HELP)
     {
-        ShowUsage();
+        ConResPuts(StdOut, IDS_USAGE);
         return FCRET_INVALID;
     }
 
