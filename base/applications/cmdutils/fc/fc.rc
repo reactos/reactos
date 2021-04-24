@@ -6,8 +6,7 @@
 #define REACTOS_STR_ORIGINAL_FILENAME   "fc.exe"
 #include <reactos/version.rc>
 
-/* UTF-8 */
-#pragma code_page(65001)
+#pragma code_page(65001) /* UTF-8 */
 #ifdef LANGUAGE_EN_US
     #include "lang/en-US.rc"
 #endif
