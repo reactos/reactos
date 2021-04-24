@@ -788,7 +788,13 @@ $endif(_WINNT_)
 #endif /* _M_AMD64 */
 
 /* C_ASSERT Definition */
-#define C_ASSERT(expr) typedef char (*c_assert[(expr) ? 1 : -1])(void)
+#ifndef C_ASSERT
+# ifdef _MSC_VER
+#  define C_ASSERT(e) typedef char __C_ASSERT__[(e)?1:-1]
+# else
+#  define C_ASSERT(e) extern void __C_ASSERT__(int [(e)?1:-1])
+# endif
+#endif
 
 /* Eliminate Microsoft C/C++ compiler warning 4715 */
 #if defined(_MSC_VER)
