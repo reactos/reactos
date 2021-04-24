@@ -2,8 +2,7 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 
 STRINGTABLE
 BEGIN
-    IDS_USAGE \
-"Compares two files or sets of files and displays the differences between\n\
+    IDS_USAGE "Compares two files or sets of files and displays the differences between\n\
 them\n\
 \n\
 FC [/A] [/C] [/L] [/LBn] [/N] [/OFF[LINE]] [/T] [/U] [/W] [/nnnn]\n\
