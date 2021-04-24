@@ -117,7 +117,7 @@ static FCRET BinaryFileCompare(const FILECOMPARE *pFC)
     HANDLE hFile1, hFile2, hMapping1 = NULL, hMapping2 = NULL;
     LPBYTE pb1 = NULL, pb2 = NULL;
     size_t ib, ibView, cb1, cb2, cbCommon;
-    DWORD cbView = MAX_VIEW_SIZE;
+    DWORD cbView;
     BOOL fDifferent = FALSE;
 
     hFile1 = DoOpenFileForInput(pFC->file1);
@@ -166,7 +166,7 @@ static FCRET BinaryFileCompare(const FILECOMPARE *pFC)
             }
 
             ret = FCRET_IDENTICAL;
-            for (ib = 0; ib < cbCommon; ib += cbView)
+            for (ib = 0; ib < cbCommon; )
             {
                 cbView = (DWORD)min(cbCommon - ib, MAX_VIEW_SIZE);
                 pb1 = MapViewOfFile(hMapping1, FILE_MAP_READ, HILONG(ib), LOLONG(ib), cbView);
@@ -176,7 +176,7 @@ static FCRET BinaryFileCompare(const FILECOMPARE *pFC)
                     ret = OutOfMemory();
                     break;
                 }
-                for (ibView = 0; ibView < cbView; ++ibView)
+                for (ibView = 0; ibView < cbView; ++ib, ++ibView)
                 {
                     if (pb1[ibView] == pb2[ibView])
                         continue;
@@ -184,14 +184,13 @@ static FCRET BinaryFileCompare(const FILECOMPARE *pFC)
                     fDifferent = TRUE;
                     if (cbCommon > MAXDWORD)
                     {
-                        ConPrintf(StdOut, L"%08lX%08lX: %02X %02X\n",
-                                  HILONG(ib + ibView), LOLONG(ib + ibView),
+                        ConPrintf(StdOut, L"%08lX%08lX: %02X %02X\n", HILONG(ib), LOLONG(ib),
                                   pb1[ibView], pb2[ibView]);
                     }
                     else
                     {
-                        ConPrintf(StdOut, L"%08lX: %02X %02X\n",
-                                  (DWORD)(ib + ibView), pb1[ibView], pb2[ibView]);
+                        ConPrintf(StdOut, L"%08lX: %02X %02X\n", (DWORD)ib,
+                                  pb1[ibView], pb2[ibView]);
                     }
                 }
                 UnmapViewOfFile(pb1);
