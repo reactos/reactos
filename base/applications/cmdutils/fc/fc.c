@@ -348,7 +348,7 @@ static FCRET TextFileCompare(const FILECOMPARE *pFC)
     return ret;
 }
 
-static BOOL IsBinaryExt(LPCWSTR filename)
+static BOOL IsBinaryFile(LPCWSTR filename)
 {
     static const LPCWSTR s_dotexts[] =
     {
@@ -385,7 +385,7 @@ static BOOL IsBinaryExt(LPCWSTR filename)
 static FCRET FileCompare(const FILECOMPARE *pFC, LPCWSTR file1, LPCWSTR file2)
 {
     ConResPrintf(StdOut, IDS_COMPARING, file1, file2);
-    if ((pFC->dwFlags & FLAG_B) || IsBinaryExt(file1) || IsBinaryExt(file2))
+    if ((pFC->dwFlags & FLAG_B) || IsBinaryFile(file1) || IsBinaryFile(file2))
         return BinaryFileCompare(pFC);
     return TextFileCompare(pFC);
 }
