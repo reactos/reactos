@@ -21,19 +21,6 @@ typedef enum FCRET // return code of FC command
 
 #define MAX_VIEW_SIZE (64 * 1024 * 1024) // 64 MB
 
-static __inline DWORD LOLONG(DWORDLONG dwl)
-{
-    ULARGE_INTEGER uli;
-    uli.QuadPart = dwl;
-    return uli.LowPart;
-}
-static __inline DWORD HILONG(DWORDLONG dwl)
-{
-    ULARGE_INTEGER uli;
-    uli.QuadPart = dwl;
-    return uli.HighPart;
-}
-
 #define FLAG_A (1 << 0)
 #define FLAG_B (1 << 1)
 #define FLAG_C (1 << 2)
@@ -108,22 +95,13 @@ static HANDLE DoOpenFileForInput(LPCWSTR file)
     return hFile;
 }
 
-static BOOL GetFileSizeDx(HANDLE hFile, size_t *pcbFile, BOOL bLargeOK)
-{
-    LARGE_INTEGER li;
-    if (!GetFileSizeEx(hFile, &li) || (!bLargeOK && li.QuadPart >= MAXLONG))
-        return FALSE;
-    *pcbFile = (size_t)li.QuadPart;
-    return TRUE;
-}
-
 static FCRET BinaryFileCompare(const FILECOMPARE *pFC)
 {
     FCRET ret;
     HANDLE hFile1, hFile2, hMapping1 = NULL, hMapping2 = NULL;
     LPBYTE pb1 = NULL, pb2 = NULL;
-    size_t ib, ibView, cb1, cb2, cbCommon;
-    DWORD cbView;
+    LARGE_INTEGER ib, cb1, cb2, cbCommon;
+    DWORD cbView, ibView;
     BOOL fDifferent = FALSE;
 
     hFile1 = DoOpenFileForInput(pFC->file1);
@@ -143,28 +121,28 @@ static FCRET BinaryFileCompare(const FILECOMPARE *pFC)
             ret = NoDifference();
             break;
         }
-        if (!GetFileSizeDx(hFile1, &cb1, TRUE))
+        if (!GetFileSizeEx(hFile1, &cb1))
         {
             ret = CannotRead(pFC->file1);
             break;
         }
-        if (!GetFileSizeDx(hFile2, &cb2, TRUE))
+        if (!GetFileSizeEx(hFile2, &cb2))
         {
             ret = CannotRead(pFC->file2);
             break;
         }
-        cbCommon = min(cb1, cb2);
-        if (cbCommon > 0)
+        cbCommon.QuadPart = min(cb1.QuadPart, cb2.QuadPart);
+        if (cbCommon.QuadPart > 0)
         {
             hMapping1 = CreateFileMappingW(hFile1, NULL, PAGE_READONLY,
-                                           HILONG(cb1), LOLONG(cb1), NULL);
+                                           cb1.HighPart, cb1.LowPart, NULL);
             if (hMapping1 == NULL)
             {
                 ret = CannotRead(pFC->file1);
                 break;
             }
             hMapping2 = CreateFileMappingW(hFile2, NULL, PAGE_READONLY,
-                                           HILONG(cb2), LOLONG(cb2), NULL);
+                                           cb2.HighPart, cb2.LowPart, NULL);
             if (hMapping2 == NULL)
             {
                 ret = CannotRead(pFC->file2);
@@ -172,30 +150,30 @@ static FCRET BinaryFileCompare(const FILECOMPARE *pFC)
             }
 
             ret = FCRET_IDENTICAL;
-            for (ib = 0; ib < cbCommon; )
+            for (ib.QuadPart = 0; ib.QuadPart < cbCommon.QuadPart; )
             {
-                cbView = (DWORD)min(cbCommon - ib, MAX_VIEW_SIZE);
-                pb1 = MapViewOfFile(hMapping1, FILE_MAP_READ, HILONG(ib), LOLONG(ib), cbView);
-                pb2 = MapViewOfFile(hMapping2, FILE_MAP_READ, HILONG(ib), LOLONG(ib), cbView);
+                cbView = (DWORD)min(cbCommon.QuadPart - ib.QuadPart, MAX_VIEW_SIZE);
+                pb1 = MapViewOfFile(hMapping1, FILE_MAP_READ, ib.HighPart, ib.LowPart, cbView);
+                pb2 = MapViewOfFile(hMapping2, FILE_MAP_READ, ib.HighPart, ib.LowPart, cbView);
                 if (!pb1 || !pb2)
                 {
                     ret = OutOfMemory();
                     break;
                 }
-                for (ibView = 0; ibView < cbView; ++ib, ++ibView)
+                for (ibView = 0; ibView < cbView; ++ib.QuadPart, ++ibView)
                 {
                     if (pb1[ibView] == pb2[ibView])
                         continue;
 
                     fDifferent = TRUE;
-                    if (cbCommon > MAXDWORD)
+                    if (cbCommon.QuadPart > MAXDWORD)
                     {
-                        ConPrintf(StdOut, L"%08lX%08lX: %02X %02X\n", HILONG(ib), LOLONG(ib),
+                        ConPrintf(StdOut, L"%08lX%08lX: %02X %02X\n", ib.HighPart, ib.LowPart,
                                   pb1[ibView], pb2[ibView]);
                     }
                     else
                     {
-                        ConPrintf(StdOut, L"%08lX: %02X %02X\n", (DWORD)ib,
+                        ConPrintf(StdOut, L"%08lX: %02X %02X\n", ib.LowPart,
                                   pb1[ibView], pb2[ibView]);
                     }
                 }
@@ -207,9 +185,9 @@ static FCRET BinaryFileCompare(const FILECOMPARE *pFC)
                 break;
         }
 
-        if (cb1 < cb2)
+        if (cb1.QuadPart < cb2.QuadPart)
             ret = LongerThan(pFC->file2, pFC->file1);
-        else if (cb1 > cb2)
+        else if (cb1.QuadPart > cb2.QuadPart)
             ret = LongerThan(pFC->file1, pFC->file2);
         else if (fDifferent)
             ret = Different(pFC->file1, pFC->file2);
@@ -227,25 +205,28 @@ static FCRET BinaryFileCompare(const FILECOMPARE *pFC)
 }
 
 static FCRET
-UnicodeTextCompare(const FILECOMPARE *pFC, HANDLE hMapping1, size_t cb1,
-                                           HANDLE hMapping2, size_t cb2)
+UnicodeTextCompare(const FILECOMPARE *pFC, HANDLE hMapping1, LARGE_INTEGER cb1,
+                                           HANDLE hMapping2, LARGE_INTEGER cb2)
 {
     FCRET ret;
     BOOL fIgnoreCase = !!(pFC->dwFlags & FLAG_C);
     DWORD dwCmpFlags = (fIgnoreCase ? NORM_IGNORECASE : 0);
     LPWSTR psz1, psz2;
-    size_t ib = 0, cch1 = cb1 / sizeof(WCHAR), cch2 = cb2 / sizeof(WCHAR);
+    LARGE_INTEGER cch1, cch2;
+    cch1.QuadPart = cb1.QuadPart / sizeof(WCHAR);
+    cch2.QuadPart = cb2.QuadPart / sizeof(WCHAR);
 
     do
     {
-        psz1 = MapViewOfFile(hMapping1, FILE_MAP_READ, HILONG(ib), LOLONG(ib), (DWORD)cb1);
-        psz2 = MapViewOfFile(hMapping2, FILE_MAP_READ, HILONG(ib), LOLONG(ib), (DWORD)cb2);
+        psz1 = MapViewOfFile(hMapping1, FILE_MAP_READ, 0, 0, cb1.LowPart);
+        psz2 = MapViewOfFile(hMapping2, FILE_MAP_READ, 0, 0, cb1.LowPart);
         if (!psz1 || !psz2)
         {
             ret = OutOfMemory();
             break;
         }
-        if (CompareStringW(0, dwCmpFlags, psz1, (INT)cch1, psz2, (INT)cch2) == CSTR_EQUAL)
+        if (CompareStringW(0, dwCmpFlags, psz1, (INT)cch1.LowPart, psz2,
+                                                (INT)cch2.LowPart) == CSTR_EQUAL)
         {
             ret = NoDifference();
             break;
@@ -261,25 +242,25 @@ UnicodeTextCompare(const FILECOMPARE *pFC, HANDLE hMapping1, size_t cb1,
 }
 
 static FCRET
-AnsiTextCompare(const FILECOMPARE *pFC, HANDLE hMapping1, size_t cb1,
-                                        HANDLE hMapping2, size_t cb2)
+AnsiTextCompare(const FILECOMPARE *pFC, HANDLE hMapping1, LARGE_INTEGER cb1,
+                                        HANDLE hMapping2, LARGE_INTEGER cb2)
 {
     FCRET ret;
     BOOL fIgnoreCase = !!(pFC->dwFlags & FLAG_C);
     DWORD dwCmpFlags = (fIgnoreCase ? NORM_IGNORECASE : 0);
     LPSTR psz1, psz2;
-    size_t ib = 0;
 
     do
     {
-        psz1 = MapViewOfFile(hMapping1, FILE_MAP_READ, HILONG(ib), LOLONG(ib), (DWORD)cb1);
-        psz2 = MapViewOfFile(hMapping2, FILE_MAP_READ, HILONG(ib), LOLONG(ib), (DWORD)cb2);
+        psz1 = MapViewOfFile(hMapping1, FILE_MAP_READ, 0, 0, cb1.LowPart);
+        psz2 = MapViewOfFile(hMapping2, FILE_MAP_READ, 0, 0, cb2.LowPart);
         if (!psz1 || !psz2)
         {
             ret = OutOfMemory();
             break;
         }
-        if (CompareStringA(0, dwCmpFlags, psz1, (INT)cb1, psz2, (INT)cb2) == CSTR_EQUAL)
+        if (CompareStringA(0, dwCmpFlags, psz1, (INT)cb1.LowPart,
+                                          psz2, (INT)cb2.LowPart) == CSTR_EQUAL)
         {
             ret = NoDifference();
             break;
@@ -298,7 +279,7 @@ static FCRET TextFileCompare(const FILECOMPARE *pFC)
 {
     FCRET ret;
     HANDLE hFile1, hFile2, hMapping1 = NULL, hMapping2 = NULL;
-    size_t cb1, cb2;
+    LARGE_INTEGER cb1, cb2;
     BOOL fUnicode = !!(pFC->dwFlags & FLAG_U);
 
     hFile1 = DoOpenFileForInput(pFC->file1);
@@ -318,30 +299,30 @@ static FCRET TextFileCompare(const FILECOMPARE *pFC)
             ret = NoDifference();
             break;
         }
-        if (!GetFileSizeDx(hFile1, &cb1, FALSE))
+        if (!GetFileSizeEx(hFile1, &cb1))
         {
             ret = CannotRead(pFC->file1);
             break;
         }
-        if (!GetFileSizeDx(hFile2, &cb2, FALSE))
+        if (!GetFileSizeEx(hFile2, &cb2))
         {
             ret = CannotRead(pFC->file2);
             break;
         }
-        if (cb1 == 0 && cb2 == 0)
+        if (cb1.QuadPart == 0 && cb2.QuadPart == 0)
         {
             ret = NoDifference();
             break;
         }
         hMapping1 = CreateFileMappingW(hFile1, NULL, PAGE_READONLY,
-                                       HILONG(cb1), LOLONG(cb1), NULL);
+                                       cb1.HighPart, cb1.LowPart, NULL);
         if (hMapping1 == NULL)
         {
             ret = CannotRead(pFC->file1);
             break;
         }
         hMapping2 = CreateFileMappingW(hFile2, NULL, PAGE_READONLY,
-                                       HILONG(cb2), LOLONG(cb2), NULL);
+                                       cb2.HighPart, cb2.LowPart, NULL);
         if (hMapping2 == NULL)
         {
             ret = CannotRead(pFC->file2);
@@ -462,7 +443,7 @@ int wmain(int argc, WCHAR **argv)
                 {
                     fc.dwFlags |= FLAG_L;
                 }
-                else if (argv[i][2] == L'B' || argv[i][2] == L'b')
+                else if (towupper(argv[i][2]) == L'B')
                 {
                     fc.dwFlags |= FLAG_LBn;
                     fc.n = wcstoul(&argv[i][3], NULL, 10);
