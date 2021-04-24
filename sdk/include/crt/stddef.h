@@ -377,7 +377,7 @@ typedef __WCHAR_TYPE__ wchar_t;
 #ifndef offsetof
 
 /* Offset of member MEMBER in a struct of type TYPE. */
-#if defined(__GNUC__)
+#if defined(__GNUC__) || defined(__clang__)
 #define offsetof(TYPE, MEMBER) __builtin_offsetof (TYPE, MEMBER)
 #else
 #define offsetof(TYPE, MEMBER) ((size_t)&(((TYPE *)0)->MEMBER))
