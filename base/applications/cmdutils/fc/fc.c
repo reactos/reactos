@@ -201,6 +201,7 @@ static FCRET BinaryFileCompare(const FILECOMPARE *pFC)
                 }
                 UnmapViewOfFile(pb1);
                 UnmapViewOfFile(pb2);
+                pb1 = pb2 = NULL;
             }
             if (ret != FCRET_IDENTICAL)
                 break;
