@@ -202,7 +202,7 @@ static FCRET BinaryFileCompare(const FILECOMPARE *pFC)
                 if (pb1[ib] == pb2[ib])
                     continue;
 #ifdef _WIN64
-                if (cbCommon >= LARGE_FILE_SIZE)
+                if (cbCommon > MAXULONG)
                 {
                     ConPrintf(StdOut, L"%08lX%08lX: %02X %02X\n",
                               (DWORD)(ib >> 32), (DWORD)ib, pb1[ib], pb2[ib]);
