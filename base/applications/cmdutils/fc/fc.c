@@ -6,6 +6,7 @@
  */
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 #include <windef.h>
 #include <winbase.h>
 #include <winnls.h>
@@ -445,18 +446,18 @@ int wmain(int argc, WCHAR **argv)
                 return InvalidSwitch();
             continue;
         }
-        switch (argv[i][1])
+        switch (towupper(argv[i][1]))
         {
-            case L'A': case L'a':
+            case L'A':
                 fc.dwFlags |= FLAG_A;
                 break;
-            case L'B': case L'b':
+            case L'B':
                 fc.dwFlags |= FLAG_B;
                 break;
-            case L'C': case L'c':
+            case L'C':
                 fc.dwFlags |= FLAG_C;
                 break;
-            case L'L': case L'l':
+            case L'L':
                 if (lstrcmpiW(argv[i], L"/L") == 0)
                 {
                     fc.dwFlags |= FLAG_L;
@@ -467,19 +468,19 @@ int wmain(int argc, WCHAR **argv)
                     fc.n = wcstoul(&argv[i][3], NULL, 10);
                 }
                 break;
-            case L'N': case L'n':
+            case L'N':
                 fc.dwFlags |= FLAG_N;
                 break;
-            case L'O': case L'o':
+            case L'O':
                 if (lstrcmpiW(argv[i], L"/OFF") == 0 || lstrcmpiW(argv[i], L"/OFFLINE") == 0)
                 {
                     fc.dwFlags |= FLAG_OFFLINE;
                 }
                 break;
-            case L'T': case L't':
+            case L'T':
                 fc.dwFlags |= FLAG_T;
                 break;
-            case L'W': case L'w':
+            case L'W':
                 fc.dwFlags |= FLAG_W;
                 break;
             case L'0': case L'1': case L'2': case L'3': case L'4':
