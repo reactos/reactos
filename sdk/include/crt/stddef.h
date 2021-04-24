@@ -382,7 +382,7 @@ typedef __WCHAR_TYPE__ wchar_t;
 #else
 # ifdef __cplusplus
 #  ifdef _WIN64
-#   define offsetof(TYPE,MEMBER) ((::size_t)((ptrdiff_t)&reinterpret_cast<const volatile char&>((((TYPE*)0)->m))))
+#   define offsetof(TYPE,MEMBER) ((::size_t)(ptrdiff_t)&reinterpret_cast<const volatile char&>((((TYPE*)0)->m)))
 #  else
 #   define offsetof(TYPE,MEMBER) ((::size_t)&reinterpret_cast<const volatile char&>((((TYPE*)0)->m)))
 #  endif
