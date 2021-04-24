@@ -366,7 +366,7 @@ static BOOL IsBinaryExt(LPCWSTR filename)
     return FALSE;
 }
 
-static BOOL HasWildCard(LPCWSTR filename)
+static BOOL HasWildcard(LPCWSTR filename)
 {
     return (wcschr(filename, L'*') != NULL) || (wcschr(filename, L'?') != NULL);
 }
@@ -380,7 +380,7 @@ static FCRET FileCompare(const FILECOMPARE *pFC, LPCWSTR file1, LPCWSTR file2)
         return TextFileCompare(pFC);
 }
 
-static FCRET WildFileCompare(const FILECOMPARE *pFC)
+static FCRET WildcardFileCompare(const FILECOMPARE *pFC)
 {
     LPCWSTR file1 = pFC->file1, file2 = pFC->file2;
 
@@ -396,8 +396,9 @@ static FCRET WildFileCompare(const FILECOMPARE *pFC)
         return FCRET_INVALID;
     }
 
-    if (HasWildCard(file1) || HasWildCard(file2))
+    if (HasWildcard(file1) || HasWildcard(file2))
     {
+        // TODO:
         ConResPuts(StdErr, IDS_CANT_USE_WILDCARD);
     }
 
@@ -480,5 +481,5 @@ int wmain(int argc, WCHAR **argv)
         }
     }
 
-    return WildFileCompare(&fc);
+    return WildcardFileCompare(&fc);
 }
