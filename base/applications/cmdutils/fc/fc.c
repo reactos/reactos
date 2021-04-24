@@ -106,19 +106,24 @@ static HANDLE DoOpenFileForInput(LPCWSTR file)
     return hFile;
 }
 
-static BOOL GetFileSizeDx(HANDLE hFile, DWORDLONG *pcbFile)
+static BOOL GetFileSizeDx(HANDLE hFile, size_t *pcbFile)
 {
     LARGE_INTEGER li;
     if (!GetFileSizeEx(hFile, &li))
         return FALSE;
-    *pcbFile = li.QuadPart;
+#ifndef _WIN64
+    if (li.QuadPart >= LARGE_FILE_SIZE)
+        return FALSE;
+#endif
+    *pcbFile = (size_t)li.QuadPart;
     return TRUE;
 }
 
 static BOOL
 ReadFileDx(HANDLE hFile, LPVOID lpBuffer,
-           DWORDLONG nNumberOfBytesToRead, DWORDLONG *lpNumberOfBytesRead)
+           size_t nNumberOfBytesToRead, size_t *lpNumberOfBytesRead)
 {
+#ifdef _WIN64
     DWORD cbDidRead, cbForRead;
     DWORDLONG ib, cb = nNumberOfBytesToRead;
     BOOL ret;
@@ -143,13 +148,17 @@ ReadFileDx(HANDLE hFile, LPVOID lpBuffer,
     }
     *lpNumberOfBytesRead = ib;
     return ret;
+#else
+    return ReadFile(hFile, lpBuffer, (DWORD)nNumberOfBytesToRead,
+                    (LPDWORD)lpNumberOfBytesRead, NULL);
+#endif
 }
 
 static FCRET BinaryFileCompare(const FILECOMPARE *pFC)
 {
     FCRET ret;
     HANDLE hFile1, hFile2;
-    DWORDLONG ib, cb1, cb2, cbCommon, cbRead1, cbRead2;
+    size_t ib, cb1, cb2, cbCommon, cbRead1, cbRead2;
     LPBYTE pb1 = NULL, pb2 = NULL;
     BOOL fDifferent = FALSE;
 
@@ -185,24 +194,12 @@ static FCRET BinaryFileCompare(const FILECOMPARE *pFC)
             ret = NoDifference();
             break;
         }
-#ifndef _WIN64
-        if  (cb1 >= LARGE_FILE_SIZE)
-        {
-            ret = TooLarge(pFC->file1);
-            break;
-        }
-        if  (cb2 >= LARGE_FILE_SIZE)
-        {
-            ret = TooLarge(pFC->file2);
-            break;
-        }
-#endif
 
         cbCommon = min(cb1, cb2);
         if (cbCommon > 0)
         {
-            pb1 = calloc(sizeof(BYTE), cbCommon);
-            pb2 = calloc(sizeof(BYTE), cbCommon);
+            pb1 = malloc((size_t)cbCommon);
+            pb2 = malloc((size_t)cbCommon);
             if (pb1 == NULL || pb2 == NULL)
             {
                 free(pb1);
@@ -249,7 +246,7 @@ static FCRET BinaryFileCompare(const FILECOMPARE *pFC)
 }
 
 static FCRET
-UnicodeTextCompare(const FILECOMPARE *pFC, LPWSTR psz1, DWORDLONG cch1, LPWSTR psz2, DWORDLONG cch2)
+UnicodeTextCompare(const FILECOMPARE *pFC, LPWSTR psz1, size_t cch1, LPWSTR psz2, size_t cch2)
 {
     BOOL fIgnoreCase = !!(pFC->dwFlags & FLAG_C);
     DWORD dwCmpFlags = (fIgnoreCase ? NORM_IGNORECASE : 0);
@@ -264,7 +261,7 @@ UnicodeTextCompare(const FILECOMPARE *pFC, LPWSTR psz1, DWORDLONG cch1, LPWSTR p
 }
 
 static FCRET
-AnsiTextCompare(const FILECOMPARE *pFC, LPSTR psz1, DWORDLONG cch1, LPSTR psz2, DWORDLONG cch2)
+AnsiTextCompare(const FILECOMPARE *pFC, LPSTR psz1, size_t cch1, LPSTR psz2, size_t cch2)
 {
     BOOL fIgnoreCase = !!(pFC->dwFlags & FLAG_C);
     DWORD dwCmpFlags = (fIgnoreCase ? NORM_IGNORECASE : 0);
@@ -283,7 +280,7 @@ static FCRET TextFileCompare(const FILECOMPARE *pFC)
     FCRET ret;
     HANDLE hFile1, hFile2;
     LPBYTE pb1 = NULL, pb2 = NULL;
-    DWORDLONG cb1, cb2, cbRead;
+    size_t cb1, cb2, cbRead;
     BOOL fUnicode = !!(pFC->dwFlags & FLAG_U);
 
     hFile1 = DoOpenFileForInput(pFC->file1);
@@ -318,18 +315,7 @@ static FCRET TextFileCompare(const FILECOMPARE *pFC)
             ret = NoDifference();
             break;
         }
-#ifndef _WIN64
-        if  (cb1 >= LARGE_FILE_SIZE)
-        {
-            ret = TooLarge(pFC->file1);
-            break;
-        }
-        if  (cb2 >= LARGE_FILE_SIZE)
-        {
-            ret = TooLarge(pFC->file2);
-            break;
-        }
-#endif
+
         pb1 = malloc(fUnicode ? (cb1 + 3) : (cb1 + 1));
         pb2 = malloc(fUnicode ? (cb2 + 3) : (cb2 + 1));
         if (pb1 == NULL || pb2 == NULL)
