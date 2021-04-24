@@ -3196,7 +3196,7 @@ PNP_GetDeviceStatus(
     UNREFERENCED_PARAMETER(hBinding);
     UNREFERENCED_PARAMETER(ulFlags);
 
-    DPRINT("PNP_GetDeviceStatus(%p %S %p %p)\n",
+    DPRINT("PNP_GetDeviceStatus(%p %S %p %p 0x%08lx)\n",
            hBinding, pDeviceID, pulStatus, pulProblem, ulFlags);
 
     if (!IsValidDeviceInstanceID(pDeviceID))
