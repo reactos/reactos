@@ -147,7 +147,7 @@ extern "C" {
 #define NM_THEMECHANGED (NM_FIRST-22)
 
 #ifndef CCSIZEOF_STRUCT
-#if defined(__GNUC__) || defined(__clang__)
+#if defined(__clang__) /* See CORE-17547 */
 #define CCSIZEOF_STRUCT(structname,member) (__builtin_offsetof(structname,member) + sizeof(((structname*)0)->member))
 #else
 #define CCSIZEOF_STRUCT(structname,member) (((int)((LPBYTE)(&((structname*)0)->member) - ((LPBYTE)((structname*)0))))+sizeof(((structname*)0)->member))
