@@ -31,7 +31,7 @@ FC /B [drive1:][path1]filename1 [drive2:][path2]filename2\n\
     IDS_COMPARING "Comparing files '%ls' and '%ls'\n"
     IDS_TOO_LARGE "FC: File '%ls' is too large\n"
     IDS_OUT_OF_MEMORY "FC: Out of memory\n"
-    IDS_CANNOT_READ "FC: cannot read file '%ls'\n"
+    IDS_CANNOT_READ "FC: Cannot read file '%ls'\n"
     IDS_INVALID_SWITCH "FC: Invalid Switch\n"
     IDS_CANNOT_OPEN "FC: Cannot open file '%ls' - %ls\n"
     IDS_NEEDS_FILES "FC: Insufficient number of file specifications\n"
