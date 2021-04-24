@@ -51,19 +51,19 @@ static VOID ShowUsage(VOID)
     ConResPuts(StdOut, IDS_USAGE);
 }
 
-static INT NoDifference(VOID)
+static FCRET NoDifference(VOID)
 {
     ConResPuts(StdOut, IDS_NO_DIFFERENCE);
     return FCRET_IDENTICAL;
 }
 
-static INT Different(LPCWSTR file1, LPCWSTR file2)
+static FCRET Different(LPCWSTR file1, LPCWSTR file2)
 {
     ConResPrintf(StdOut, IDS_DIFFERENT, file1, file2);
     return FCRET_DIFFERENT;
 }
 
-static INT LongerThan(LPCWSTR file1, LPCWSTR file2)
+static FCRET LongerThan(LPCWSTR file1, LPCWSTR file2)
 {
     ConResPrintf(StdOut, IDS_LONGER_THAN, file1, file2);
     return FCRET_DIFFERENT;
@@ -74,25 +74,25 @@ static VOID Comparing(LPCWSTR file1, LPCWSTR file2)
     ConResPrintf(StdOut, IDS_COMPARING, file1, file2);
 }
 
-static INT TooLarge(LPCWSTR file)
+static FCRET TooLarge(LPCWSTR file)
 {
     ConResPrintf(StdErr, IDS_TOO_LARGE, file);
     return FCRET_INVALID;
 }
 
-static INT OutOfMemory(VOID)
+static FCRET OutOfMemory(VOID)
 {
     ConResPuts(StdErr, IDS_OUT_OF_MEMORY);
     return FCRET_INVALID;
 }
 
-static INT CannotRead(LPCWSTR file)
+static FCRET CannotRead(LPCWSTR file)
 {
     ConResPrintf(StdErr, IDS_CANNOT_READ, file);
     return FCRET_INVALID;
 }
 
-static INT InvalidSwitch(VOID)
+static FCRET InvalidSwitch(VOID)
 {
     ConResPuts(StdErr, IDS_INVALID_SWITCH);
     return FCRET_INVALID;
