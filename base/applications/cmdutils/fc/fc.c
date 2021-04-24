@@ -208,11 +208,10 @@ static FCRET BinaryFileCompare(const FILECOMPARE *pFC)
                               (DWORD)(ib >> 32), (DWORD)ib, pb1[ib], pb2[ib]);
                 }
                 else
-#else
+#endif
                 {
                     ConPrintf(StdOut, L"%08lX: %02X %02X\n", (DWORD)ib, pb1[ib], pb2[ib]);
                 }
-#endif
                 fDifferent = TRUE;
             }
         }
