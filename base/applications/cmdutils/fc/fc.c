@@ -165,7 +165,7 @@ static FCRET BinaryFileCompare(FILECOMPARE *pFC)
                     fDifferent = TRUE;
                     if (cbCommon.QuadPart > MAXDWORD)
                     {
-                        ConPrintf(StdOut, L"%08lX%08lX: %02X %02X\n", ib.HighPart, ib.LowPart,
+                        ConPrintf(StdOut, L"%016I64X: %02X %02X\n", ib.QuadPart,
                                   pb1[ibView], pb2[ibView]);
                     }
                     else
