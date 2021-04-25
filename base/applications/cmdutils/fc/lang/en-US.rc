@@ -28,7 +28,7 @@ FC /B [drive1:][path1]filename1 [drive2:][path2]filename2\n\
              Specifies the second file or set of files to compare.\n"
     IDS_NO_DIFFERENCE "FC: no differences encountered\n"
     IDS_LONGER_THAN "FC: %ls longer than %ls\n"
-    IDS_COMPARING "Comparisng files %ls and %ls\n"
+    IDS_COMPARING "Comparing files %ls and %ls\n"
     IDS_OUT_OF_MEMORY "FC: Out of memory\n"
     IDS_CANNOT_READ "FC: cannot read from %ls\n"
     IDS_INVALID_SWITCH "FC: Invalid Switch\n"
