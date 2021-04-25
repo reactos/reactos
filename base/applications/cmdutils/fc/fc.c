@@ -16,7 +16,7 @@
 
 // See also: https://stackoverflow.com/questions/33125766/compare-files-with-a-cmd
 typedef enum FCRET { // return code of FC command
-    FCRET_INVALID = -1, FCRET_IDENTICAL, FCRET_DIFFERENT, FCRET_CANT_FIND
+    FCRET_INVALID = -1, FCRET_IDENTICAL = 0, FCRET_DIFFERENT = 1, FCRET_CANT_FIND = 2
 } FCRET;
 
 #ifdef _WIN64
@@ -41,7 +41,7 @@ typedef enum FCRET { // return code of FC command
 typedef struct FILECOMPARE {
     DWORD dwFlags; // FLAG_...
     INT n, nnnn;
-    LPWSTR file1, file2;
+    LPCWSTR file1, file2;
 } FILECOMPARE;
 
 static FCRET NoDifference(VOID)
@@ -68,7 +68,7 @@ static FCRET OutOfMemory(VOID)
     return FCRET_INVALID;
 }
 
-static FCRET CannotRead(LPWSTR file)
+static FCRET CannotRead(LPCWSTR file)
 {
     ConResPrintf(StdErr, IDS_CANNOT_READ, file);
     return FCRET_INVALID;
@@ -80,7 +80,7 @@ static FCRET InvalidSwitch(VOID)
     return FCRET_INVALID;
 }
 
-static HANDLE DoOpenFileForInput(LPWSTR file)
+static HANDLE DoOpenFileForInput(LPCWSTR file)
 {
     HANDLE hFile = CreateFileW(file, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
     if (hFile == INVALID_HANDLE_VALUE)
@@ -206,7 +206,7 @@ UnicodeTextCompare(FILECOMPARE *pFC, HANDLE hMapping1, const LARGE_INTEGER *pcb1
     FCRET ret;
     BOOL fIgnoreCase = !!(pFC->dwFlags & FLAG_C);
     DWORD dwCmpFlags = (fIgnoreCase ? NORM_IGNORECASE : 0);
-    LPWSTR psz1, psz2;
+    LPCWSTR psz1, psz2;
     LARGE_INTEGER cch1 = { .QuadPart = pcb1->QuadPart / sizeof(WCHAR) };
     LARGE_INTEGER cch2 = { .QuadPart = pcb1->QuadPart / sizeof(WCHAR) };
 
@@ -381,8 +381,7 @@ static FCRET FileCompare(FILECOMPARE *pFC)
     ConResPrintf(StdOut, IDS_COMPARING, pFC->file1, pFC->file2);
 
     if (!(pFC->dwFlags & FLAG_L) &&
-        ((pFC->dwFlags & FLAG_B) ||
-          IsBinaryExt(pFC->file1) || IsBinaryExt(pFC->file2)))
+        ((pFC->dwFlags & FLAG_B) || IsBinaryExt(pFC->file1) || IsBinaryExt(pFC->file2)))
     {
         return BinaryFileCompare(pFC);
     }
