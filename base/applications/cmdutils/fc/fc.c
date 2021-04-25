@@ -9,6 +9,7 @@
 #include <ctype.h>
 #include <windef.h>
 #include <winbase.h>
+#include <winuser.h>
 #include <winnls.h>
 #include <conutils.h>
 #include "resource.h"
@@ -42,7 +43,7 @@ typedef struct FILECOMPARE
 {
     DWORD dwFlags; // FLAG_...
     INT n, nnnn;
-    LPCWSTR file1, file2;
+    LPWSTR file1, file2;
 } FILECOMPARE;
 
 static FCRET NoDifference(VOID)
@@ -69,8 +70,9 @@ static FCRET OutOfMemory(VOID)
     return FCRET_INVALID;
 }
 
-static FCRET CannotRead(LPCWSTR file)
+static FCRET CannotRead(LPWSTR file)
 {
+    CharUpperW(file);
     ConResPrintf(StdErr, IDS_CANNOT_READ, file);
     return FCRET_INVALID;
 }
@@ -81,17 +83,18 @@ static FCRET InvalidSwitch(VOID)
     return FCRET_INVALID;
 }
 
-static VOID CannotOpen(LPCWSTR file, DWORD dwError)
+static VOID CannotOpen(LPWSTR file, DWORD dwError)
 {
     LPVOID lpMsgBuf;
     DWORD dwFlags = FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM |
                     FORMAT_MESSAGE_IGNORE_INSERTS;
+    CharUpperW(file);
     FormatMessageW(dwFlags, NULL, dwError, 0, (LPWSTR)&lpMsgBuf, 0, NULL);
     ConResPrintf(StdErr, IDS_CANNOT_OPEN, file, (LPWSTR)lpMsgBuf);
     LocalFree(lpMsgBuf);
 }
 
-static HANDLE DoOpenFileForInput(LPCWSTR file)
+static HANDLE DoOpenFileForInput(LPWSTR file)
 {
     HANDLE hFile = CreateFileW(file, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
     if (hFile == INVALID_HANDLE_VALUE)
@@ -99,7 +102,7 @@ static HANDLE DoOpenFileForInput(LPCWSTR file)
     return hFile;
 }
 
-static FCRET BinaryFileCompare(const FILECOMPARE *pFC)
+static FCRET BinaryFileCompare(FILECOMPARE *pFC)
 {
     FCRET ret;
     HANDLE hFile1, hFile2, hMapping1 = NULL, hMapping2 = NULL;
@@ -209,8 +212,8 @@ static FCRET BinaryFileCompare(const FILECOMPARE *pFC)
 }
 
 static FCRET
-UnicodeTextCompare(const FILECOMPARE *pFC, HANDLE hMapping1, LARGE_INTEGER cb1,
-                                           HANDLE hMapping2, LARGE_INTEGER cb2)
+UnicodeTextCompare(FILECOMPARE *pFC, HANDLE hMapping1, LARGE_INTEGER cb1,
+                                     HANDLE hMapping2, LARGE_INTEGER cb2)
 {
     FCRET ret;
     BOOL fIgnoreCase = !!(pFC->dwFlags & FLAG_C);
@@ -249,8 +252,8 @@ UnicodeTextCompare(const FILECOMPARE *pFC, HANDLE hMapping1, LARGE_INTEGER cb1,
 }
 
 static FCRET
-AnsiTextCompare(const FILECOMPARE *pFC, HANDLE hMapping1, LARGE_INTEGER cb1,
-                                        HANDLE hMapping2, LARGE_INTEGER cb2)
+AnsiTextCompare(FILECOMPARE *pFC, HANDLE hMapping1, LARGE_INTEGER cb1,
+                                  HANDLE hMapping2, LARGE_INTEGER cb2)
 {
     FCRET ret;
     BOOL fIgnoreCase = !!(pFC->dwFlags & FLAG_C);
@@ -285,7 +288,7 @@ AnsiTextCompare(const FILECOMPARE *pFC, HANDLE hMapping1, LARGE_INTEGER cb1,
     return ret;
 }
 
-static FCRET TextFileCompare(const FILECOMPARE *pFC)
+static FCRET TextFileCompare(FILECOMPARE *pFC)
 {
     FCRET ret;
     HANDLE hFile1, hFile2, hMapping1 = NULL, hMapping2 = NULL;
@@ -389,12 +392,15 @@ static BOOL IsBinaryExt(LPCWSTR filename)
 #define HasWildcard(filename) \
     ((wcschr((filename), L'*') != NULL) || (wcschr((filename), L'?') != NULL))
 
-static FCRET FileCompare(const FILECOMPARE *pFC, LPCWSTR file1, LPCWSTR file2)
+static FCRET FileCompare(FILECOMPARE *pFC)
 {
-    ConResPrintf(StdOut, IDS_COMPARING, file1, file2);
+    CharLowerW(pFC->file1);
+    CharUpperW(pFC->file2);
+    ConResPrintf(StdOut, IDS_COMPARING, pFC->file1, pFC->file2);
 
     if (!(pFC->dwFlags & FLAG_L) &&
-        ((pFC->dwFlags & FLAG_B) || IsBinaryExt(file1) || IsBinaryExt(file2)))
+        ((pFC->dwFlags & FLAG_B) ||
+          IsBinaryExt(pFC->file1) || IsBinaryExt(pFC->file2)))
     {
         return BinaryFileCompare(pFC);
     }
@@ -402,7 +408,7 @@ static FCRET FileCompare(const FILECOMPARE *pFC, LPCWSTR file1, LPCWSTR file2)
     return TextFileCompare(pFC);
 }
 
-static FCRET WildcardFileCompare(const FILECOMPARE *pFC)
+static FCRET WildcardFileCompare(FILECOMPARE *pFC)
 {
     if (pFC->dwFlags & FLAG_HELP)
     {
@@ -422,7 +428,7 @@ static FCRET WildcardFileCompare(const FILECOMPARE *pFC)
         ConResPuts(StdErr, IDS_CANT_USE_WILDCARD);
     }
 
-    return FileCompare(pFC, pFC->file1, pFC->file2);
+    return FileCompare(pFC);
 }
 
 int wmain(int argc, WCHAR **argv)
