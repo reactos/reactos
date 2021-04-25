@@ -70,7 +70,6 @@ static FCRET OutOfMemory(VOID)
 
 static FCRET CannotRead(LPWSTR file)
 {
-    CharUpperW(file);
     ConResPrintf(StdErr, IDS_CANNOT_READ, file);
     return FCRET_INVALID;
 }
@@ -86,7 +85,6 @@ static HANDLE DoOpenFileForInput(LPWSTR file)
     HANDLE hFile = CreateFileW(file, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
     if (hFile == INVALID_HANDLE_VALUE)
     {
-        CharUpperW(file);
         ConResPrintf(StdErr, IDS_CANNOT_OPEN, file);
     }
     return hFile;
@@ -380,8 +378,6 @@ static BOOL IsBinaryExt(LPCWSTR filename)
 
 static FCRET FileCompare(FILECOMPARE *pFC)
 {
-    CharLowerW(pFC->file1);
-    CharUpperW(pFC->file2);
     ConResPrintf(StdOut, IDS_COMPARING, pFC->file1, pFC->file2);
 
     if (!(pFC->dwFlags & FLAG_L) &&
