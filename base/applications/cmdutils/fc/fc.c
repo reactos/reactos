@@ -81,22 +81,14 @@ static FCRET InvalidSwitch(VOID)
     return FCRET_INVALID;
 }
 
-static VOID CannotOpen(LPWSTR file, DWORD dwError)
-{
-    LPVOID lpMsgBuf;
-    DWORD dwFlags = FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM |
-                    FORMAT_MESSAGE_IGNORE_INSERTS;
-    CharUpperW(file);
-    FormatMessageW(dwFlags, NULL, dwError, 0, (LPWSTR)&lpMsgBuf, 0, NULL);
-    ConResPrintf(StdErr, IDS_CANNOT_OPEN, file, (LPWSTR)lpMsgBuf);
-    LocalFree(lpMsgBuf);
-}
-
 static HANDLE DoOpenFileForInput(LPWSTR file)
 {
     HANDLE hFile = CreateFileW(file, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
     if (hFile == INVALID_HANDLE_VALUE)
-        CannotOpen(file, GetLastError());
+    {
+        CharUpperW(file);
+        ConResPrintf(StdErr, IDS_CANNOT_OPEN, file);
+    }
     return hFile;
 }
 
