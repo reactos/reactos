@@ -26,8 +26,6 @@
 #define _INC_WINDOWS
 #define COBJMACROS
 
-#define IS_PRODUCT_VERSION_WORKSTATION  0x300
-
 #include <windef.h>
 #include <winbase.h>
 #include <shellapi.h>
@@ -47,6 +45,7 @@
 #include <reactos/version.h>
 #include <reactos/buildno.h>
 
+#include <versionhelpers.h>
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
 const char * const SHELL_Authors[] = { "Copyright 1993-"COPYRIGHT_YEAR" WINE team", "Copyright 1998-"COPYRIGHT_YEAR" ReactOS Team", 0 };
@@ -1137,43 +1136,6 @@ INT_PTR CALLBACK AboutAuthorsDlgProc( HWND hWnd, UINT msg, WPARAM wParam, LPARAM
 /*************************************************************************
  * AboutDlgProc            (internal)
  */
-
-// Check if the version is Workstation by reading the CSDVersion string
-// This will be used to choose the correspondent ReactOS Bitmap banner
-// on the About dialog
-static BOOL IsVersionWorkstation(VOID)
-{
-    DWORD dwType = 0, dwValue = 0, dwSize = 0;
-    HKEY hKey = NULL;
-    LONG lRet = 0;
-
-    lRet = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
-                         L"SYSTEM\\CurrentControlSet\\Control\\Windows",
-                         0,
-                         KEY_QUERY_VALUE,
-                         &hKey);
-    if (lRet != ERROR_SUCCESS)
-        return FALSE;
-
-    // Check product version number
-    dwSize = sizeof(dwValue);
-    lRet = RegQueryValueExW(hKey,
-                            L"CSDVersion",
-                            NULL,
-                            &dwType,
-                            (LPBYTE)&dwValue,
-                            &dwSize);
-    RegCloseKey(hKey);
-
-    if (lRet != ERROR_SUCCESS || dwType != REG_DWORD || dwValue != IS_PRODUCT_VERSION_WORKSTATION)
-    {
-        // Allow only on Workstation
-        return FALSE;
-    }
-
-    return (dwValue != 0);
-}
-
 static INT_PTR CALLBACK AboutDlgProc( HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam )
 {
     static DWORD   cxLogoBmp;
@@ -1197,15 +1159,15 @@ static INT_PTR CALLBACK AboutDlgProc( HWND hWnd, UINT msg, WPARAM wParam, LPARAM
                 WCHAR szAuthorsText[20];
 
                 // Preload the ROS bitmap
-                if (IsVersionWorkstation())
-                {
-                   // Load Workstation Bitmap
-                   hLogoBmp = (HBITMAP)LoadImage(shell32_hInstance, MAKEINTRESOURCE(IDB_REACTOS_WORKSTATION), IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR);
-                }
-                else
+                if (IsWindowsServer())
                 {
                    // Load Server Bitmap
                    hLogoBmp = (HBITMAP)LoadImage(shell32_hInstance, MAKEINTRESOURCE(IDB_REACTOS_SERVER), IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR);
+                }
+                else
+                {
+                   // Load Workstation Bitmap
+                   hLogoBmp = (HBITMAP)LoadImage(shell32_hInstance, MAKEINTRESOURCE(IDB_REACTOS_WORKSTATION), IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR);
                 }
                 hLineBmp = (HBITMAP)LoadImage(shell32_hInstance, MAKEINTRESOURCE(IDB_LINEBAR), IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR);
 
