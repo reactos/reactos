@@ -455,10 +455,8 @@ int wmain(int argc, WCHAR **argv)
                     {
                         fc.dwFlags |= FLAG_LBn;
                         fc.n = wcstoul(&argv[i][3], &endptr, 10);
-                        if (endptr == NULL || endptr == &argv[i][3] || *endptr != 0)
-                        {
+                        if (endptr == NULL || *endptr != 0)
                             return InvalidSwitch();
-                        }
                     }
                     else
                     {
@@ -484,10 +482,8 @@ int wmain(int argc, WCHAR **argv)
             case L'0': case L'1': case L'2': case L'3': case L'4':
             case L'5': case L'6': case L'7': case L'8': case L'9':
                 fc.nnnn = wcstoul(&argv[i][1], &endptr, 10);
-                if (endptr == NULL || endptr == &argv[i][1] || *endptr != 0)
-                {
+                if (endptr == NULL || *endptr != 0)
                     return InvalidSwitch();
-                }
                 fc.dwFlags |= FLAG_nnnn;
                 break;
             case L'?':
