@@ -348,12 +348,9 @@ static BOOL IsBinaryExt(LPCWSTR filename)
 {
     // Don't change this array. This is by design.
     // See also: https://docs.microsoft.com/en-us/windows-server/administration/windows-commands/fc
-    static const LPCWSTR s_dotexts[] =
-    {
-        L".exe", L".com", L".sys", L".obj", L".lib", L".bin"
-    };
+    static const LPCWSTR s_exts[] = { L"EXE", L"COM", L"SYS", L"OBJ", L"LIB", L"BIN" };
     size_t iext;
-    LPCWSTR pch, dotext, pch1 = wcsrchr(filename, L'\\'), pch2 = wcsrchr(filename, L'/');
+    LPCWSTR pch, ext, pch1 = wcsrchr(filename, L'\\'), pch2 = wcsrchr(filename, L'/');
     if (!pch1 && !pch2)
         pch = filename;
     else if (!pch1 && pch2)
@@ -365,12 +362,13 @@ static BOOL IsBinaryExt(LPCWSTR filename)
     else
         pch = pch1;
 
-    dotext = wcsrchr(pch, L'.');
-    if (dotext)
+    ext = wcsrchr(pch, L'.');
+    if (ext)
     {
-        for (iext = 0; iext < _countof(s_dotexts); ++iext)
+        ++ext;
+        for (iext = 0; iext < _countof(s_exts); ++iext)
         {
-            if (_wcsicmp(dotext, s_dotexts[iext]) == 0)
+            if (_wcsicmp(ext, s_exts[iext]) == 0)
                 return TRUE;
         }
     }
