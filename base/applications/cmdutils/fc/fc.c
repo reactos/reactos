@@ -212,21 +212,20 @@ static FCRET BinaryFileCompare(FILECOMPARE *pFC)
 }
 
 static FCRET
-UnicodeTextCompare(FILECOMPARE *pFC, HANDLE hMapping1, LARGE_INTEGER cb1,
-                                     HANDLE hMapping2, LARGE_INTEGER cb2)
+UnicodeTextCompare(FILECOMPARE *pFC, HANDLE hMapping1, const LARGE_INTEGER *pcb1,
+                                     HANDLE hMapping2, const LARGE_INTEGER *pcb2)
 {
     FCRET ret;
     BOOL fIgnoreCase = !!(pFC->dwFlags & FLAG_C);
     DWORD dwCmpFlags = (fIgnoreCase ? NORM_IGNORECASE : 0);
     LPWSTR psz1, psz2;
-    LARGE_INTEGER cch1, cch2;
-    cch1.QuadPart = cb1.QuadPart / sizeof(WCHAR);
-    cch2.QuadPart = cb2.QuadPart / sizeof(WCHAR);
+    LARGE_INTEGER cch1 = { .QuadPart = pcb1->QuadPart / sizeof(WCHAR) };
+    LARGE_INTEGER cch2 = { .QuadPart = pcb1->QuadPart / sizeof(WCHAR) };
 
     do
     {
-        psz1 = MapViewOfFile(hMapping1, FILE_MAP_READ, 0, 0, cb1.LowPart);
-        psz2 = MapViewOfFile(hMapping2, FILE_MAP_READ, 0, 0, cb2.LowPart);
+        psz1 = MapViewOfFile(hMapping1, FILE_MAP_READ, 0, 0, pcb1->LowPart);
+        psz2 = MapViewOfFile(hMapping2, FILE_MAP_READ, 0, 0, pcb2->LowPart);
         if (!psz1 || !psz2)
         {
             ret = OutOfMemory();
@@ -252,8 +251,8 @@ UnicodeTextCompare(FILECOMPARE *pFC, HANDLE hMapping1, LARGE_INTEGER cb1,
 }
 
 static FCRET
-AnsiTextCompare(FILECOMPARE *pFC, HANDLE hMapping1, LARGE_INTEGER cb1,
-                                  HANDLE hMapping2, LARGE_INTEGER cb2)
+AnsiTextCompare(FILECOMPARE *pFC, HANDLE hMapping1, const LARGE_INTEGER *pcb1,
+                                  HANDLE hMapping2, const LARGE_INTEGER *pcb2)
 {
     FCRET ret;
     BOOL fIgnoreCase = !!(pFC->dwFlags & FLAG_C);
@@ -262,17 +261,17 @@ AnsiTextCompare(FILECOMPARE *pFC, HANDLE hMapping1, LARGE_INTEGER cb1,
 
     do
     {
-        psz1 = MapViewOfFile(hMapping1, FILE_MAP_READ, 0, 0, cb1.LowPart);
-        psz2 = MapViewOfFile(hMapping2, FILE_MAP_READ, 0, 0, cb2.LowPart);
+        psz1 = MapViewOfFile(hMapping1, FILE_MAP_READ, 0, 0, pcb1->LowPart);
+        psz2 = MapViewOfFile(hMapping2, FILE_MAP_READ, 0, 0, pcb2->LowPart);
         if (!psz1 || !psz2)
         {
             ret = OutOfMemory();
             break;
         }
-        if (cb1.QuadPart < MAXLONG && cb2.QuadPart < MAXLONG)
+        if (pcb1->QuadPart < MAXLONG && pcb2->QuadPart < MAXLONG)
         {
-            if (CompareStringA(0, dwCmpFlags, psz1, cb1.LowPart,
-                                              psz2, cb2.LowPart) == CSTR_EQUAL)
+            if (CompareStringA(0, dwCmpFlags, psz1, pcb1->LowPart,
+                                              psz2, pcb2->LowPart) == CSTR_EQUAL)
             {
                 ret = NoDifference();
                 break;
@@ -343,9 +342,9 @@ static FCRET TextFileCompare(FILECOMPARE *pFC)
         }
 
         if (fUnicode)
-            ret = UnicodeTextCompare(pFC, hMapping1, cb1, hMapping2, cb2);
+            ret = UnicodeTextCompare(pFC, hMapping1, &cb1, hMapping2, &cb2);
         else
-            ret = AnsiTextCompare(pFC, hMapping1, cb1, hMapping2, cb2);
+            ret = AnsiTextCompare(pFC, hMapping1, &cb1, hMapping2, &cb2);
     } while (0);
 
     CloseHandle(hMapping1);
