@@ -15,8 +15,7 @@
 #include "resource.h"
 
 // See also: https://stackoverflow.com/questions/33125766/compare-files-with-a-cmd
-typedef enum FCRET // return code of FC command
-{
+typedef enum FCRET { // return code of FC command
     FCRET_INVALID = -1, FCRET_IDENTICAL, FCRET_DIFFERENT, FCRET_CANT_FIND
 } FCRET;
 
@@ -39,8 +38,7 @@ typedef enum FCRET // return code of FC command
 #define FLAG_nnnn (1 << 10)
 #define FLAG_HELP (1 << 11)
 
-typedef struct FILECOMPARE
-{
+typedef struct FILECOMPARE {
     DWORD dwFlags; // FLAG_...
     INT n, nnnn;
     LPWSTR file1, file2;
@@ -384,7 +382,6 @@ static BOOL IsBinaryExt(LPCWSTR filename)
                 return TRUE;
         }
     }
-
     return FALSE;
 }
 
@@ -403,7 +400,6 @@ static FCRET FileCompare(FILECOMPARE *pFC)
     {
         return BinaryFileCompare(pFC);
     }
-
     return TextFileCompare(pFC);
 }
 
