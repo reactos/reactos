@@ -2368,7 +2368,7 @@ IntCreateDesktop(
     Status = ObReferenceObjectByHandle(hDesk,
                                        0,
                                        ExDesktopObjectType,
-                                       KernelMode,
+                                       AccessMode,
                                        (PVOID*)&pdesk,
                                        NULL);
     if (!NT_SUCCESS(Status))
