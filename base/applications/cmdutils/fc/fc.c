@@ -415,6 +415,7 @@ static FCRET WildcardFileCompare(FILECOMPARE *pFC)
 int wmain(int argc, WCHAR **argv)
 {
     FILECOMPARE fc = { .dwFlags = 0, .n = 100, .nnnn = 2 };
+    wchar_t *endptr;
     INT i;
 
     /* Initialize the Console Standard Streams */
@@ -450,8 +451,19 @@ int wmain(int argc, WCHAR **argv)
                 }
                 else if (towupper(argv[i][2]) == L'B')
                 {
-                    fc.dwFlags |= FLAG_LBn;
-                    fc.n = wcstoul(&argv[i][3], NULL, 10);
+                    if (iswdigit(argv[i][3]))
+                    {
+                        fc.dwFlags |= FLAG_LBn;
+                        fc.n = wcstoul(&argv[i][3], &endptr, 10);
+                        if (endptr == NULL || endptr == &argv[i][3] || *endptr != 0)
+                        {
+                            return InvalidSwitch();
+                        }
+                    }
+                    else
+                    {
+                        return InvalidSwitch();
+                    }
                 }
                 break;
             case L'N':
@@ -471,7 +483,11 @@ int wmain(int argc, WCHAR **argv)
                 break;
             case L'0': case L'1': case L'2': case L'3': case L'4':
             case L'5': case L'6': case L'7': case L'8': case L'9':
-                fc.nnnn = wcstoul(&argv[i][1], NULL, 10);
+                fc.nnnn = wcstoul(&argv[i][1], &endptr, 10);
+                if (endptr == NULL || endptr == &argv[i][1] || *endptr != 0)
+                {
+                    return InvalidSwitch();
+                }
                 fc.dwFlags |= FLAG_nnnn;
                 break;
             case L'?':
