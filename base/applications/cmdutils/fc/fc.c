@@ -16,7 +16,10 @@
 
 // See also: https://stackoverflow.com/questions/33125766/compare-files-with-a-cmd
 typedef enum FCRET { // return code of FC command
-    FCRET_INVALID = -1, FCRET_IDENTICAL = 0, FCRET_DIFFERENT = 1, FCRET_CANT_FIND = 2
+    FCRET_INVALID = -1,
+    FCRET_IDENTICAL = 0,
+    FCRET_DIFFERENT = 1,
+    FCRET_CANT_FIND = 2
 } FCRET;
 
 #ifdef _WIN64
@@ -38,7 +41,8 @@ typedef enum FCRET { // return code of FC command
 #define FLAG_nnnn (1 << 10)
 #define FLAG_HELP (1 << 11)
 
-typedef struct FILECOMPARE {
+typedef struct FILECOMPARE
+{
     DWORD dwFlags; // FLAG_...
     INT n, nnnn;
     LPCWSTR file1, file2;
@@ -414,7 +418,7 @@ static FCRET WildcardFileCompare(FILECOMPARE *pFC)
 int wmain(int argc, WCHAR **argv)
 {
     FILECOMPARE fc = { .dwFlags = 0, .n = 100, .nnnn = 2 };
-    wchar_t *endptr;
+    PWCHAR endptr;
     INT i;
 
     /* Initialize the Console Standard Streams */
