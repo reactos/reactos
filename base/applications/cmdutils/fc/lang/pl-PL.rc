@@ -13,7 +13,7 @@ FC [/A] [/C] [/L] [/LBn] [/N] [/OFF[LINE]] [/T] [/U] [/W] [/nnnn]\n\
    [dysk1:][ścieżka1]plik1 [dysk2:][ścieżka2]plik2\n\
 FC /B [dysk1:][ścieżka1]plik1 [dysk2:][ścieżka2]plik2\n\
 \n\
-  /A         Wyświetla tylko pierwsze i ostatni wiersz każdego zestawu różnic.\n\
+  /A         Wyświetla tylko pierwszy i ostatni wiersz każdego zestawu różnic.\n\
   /B         Wykonuje porównanie binarne.\n\
   /C         Nie rozróżnia wielkich i małych liter.\n\
   /L         Porównuje pliki jako tekst ASCII.\n\
