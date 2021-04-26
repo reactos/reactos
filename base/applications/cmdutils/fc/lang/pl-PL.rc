@@ -23,7 +23,7 @@ FC /B [dysk1:][ścieżka1]plik1 [dysk2:][ścieżka2]plik2\n\
   /OFF[LINE] Nie pomija plików z ustawionym atrybutem przesunięcia.\n\
   /T         Nie zamienia tabulatorów na spacje (domyślnie: zamienia).\n\
   /U         Porównuje pliki jako pliki tekstowe UNICODE.\n\
-  /W         Kompresuje do porównania białe miejsca (tabulatory i spacje).\n\
+  /W         Kompresuje do porównania białe znaki (tabulatory i spacje).\n\
   /nnnn      Określa liczbę kolejnych wierszy, które muszą być zgodne\n\
              po wystąpieniu niezgodności (domyślnie: 2).\n\
   [dysk1:][ścieżka1]plik1\n\
