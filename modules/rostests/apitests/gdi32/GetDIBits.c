@@ -19,8 +19,22 @@ Test_GetDIBits_xBpp(
     ULONG cjSizeImage, cColors;
     HDC hdc;
 
-    hdc = GetDC(0);
+    hdc = GetDC(NULL);
+    ok(hdc != NULL, "GetDC failed\n");
+    if (hdc == NULL)
+    {
+        skip("No hdc\n");
+        return;
+    }
+
     hbmp = CreateBitmap(3, 3, 1, cBitsPixel, NULL);
+    ok(hbmp != NULL, "CreateBitmap failed\n");
+    if (hbmp == NULL)
+    {
+        skip("No hbmp\n");
+        ok(ReleaseDC(NULL, hdc) == 1, "ReleaseDC failed\n");
+        return;
+    }
 
     /* Fill in the size field */
     ZeroMemory(pbmi, sizeof(ajBuffer));
@@ -66,7 +80,6 @@ Test_GetDIBits_xBpp(
     ok_int(pbmi->bmiHeader.biClrUsed, cColors);
     ok_int(pbmi->bmiHeader.biClrImportant, cColors);
 
-
 #if 0
     /* Get info including the color table */
     ZeroMemory(pbmi, sizeof(ajBuffer));
@@ -90,11 +103,11 @@ Test_GetDIBits_xBpp(
     ok_int(GetDIBits(hdc, hbmp, 0, 4, pvBits, pbmi, DIB_RGB_COLORS), 3);
 #endif
 
-    DeleteObject(hbmp);
-    ReleaseDC(NULL, hdc);
+    ok(DeleteObject(hbmp), "DeleteObject failed\n");
+    ok(ReleaseDC(NULL, hdc) == 1, "ReleaseDC failed\n");
 }
 
-void Test_GetDIBits()
+void Test_GetDIBits(void)
 {
     HDC hdcScreen, hdcMem;
     HBITMAP hbmp;
@@ -109,15 +122,31 @@ void Test_GetDIBits()
 
     bisize = sizeof(BITMAPV5HEADER) + 256 * sizeof(DWORD);
     pbi = malloc(bisize);
+    ok(pbi != NULL, "malloc failed\n");
+    if (pbi == NULL)
+    {
+        skip("No pbi\n");
+        return;
+    }
+
     pbch = (PVOID)pbi;
     pbV5Header = (PVOID)pbi;
 
     hdcScreen = GetDC(NULL);
-    ok(hdcScreen != 0, "GetDC failed, skipping tests\n");
-    if (hdcScreen == NULL) return;
+    ok(hdcScreen != NULL, "GetDC failed\n");
+    if (hdcScreen == NULL)
+    {
+        skip("No hdcScreen\n");
+        free(pbi);
+        return;
+    }
 
     hbmp = CreateCompatibleBitmap(hdcScreen, 16, 16);
     ok(hbmp != NULL, "CreateCompatibleBitmap failed\n");
+    if (hbmp == NULL)
+    {
+        goto noBmp1;
+    }
 
     /* misc */
     SetLastError(ERROR_SUCCESS);
@@ -135,8 +164,6 @@ void Test_GetDIBits()
     SetLastError(ERROR_SUCCESS);
     ok(GetDIBits((HDC)2345, hbmp, 0, 15, NULL, pbi, 0) == 0, "\n");
     ok_err(ERROR_INVALID_PARAMETER);
-
-
 
     /* null hdc */
     SetLastError(ERROR_SUCCESS);
@@ -239,11 +266,18 @@ void Test_GetDIBits()
     pbi->bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
     ok_int(GetDIBits(hdcScreen, hbmp, 234, 43, NULL, pbi, DIB_RGB_COLORS), 1);
 
-    DeleteObject(hbmp);
+    ok(DeleteObject(hbmp), "DeleteObject failed\n");
 
+noBmp1:
     /* Test a mono bitmap */
     hbmp = CreateBitmap(13, 7, 1, 1, ajBits);
-    ok(hbmp != 0, "failed to create bitmap\n");
+    ok(hbmp != NULL, "CreateBitmap failed\n");
+    if (hbmp == NULL)
+    {
+        skip("No hbmp\n");
+        goto noBmp2;
+    }
+
     ZeroMemory(pbi, bisize);
     pbi->bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
     ok_int(GetDIBits(hdcScreen, hbmp, 0, 0, NULL, pbi, DIB_RGB_COLORS), 1);
@@ -390,7 +424,15 @@ void Test_GetDIBits()
     pbi->bmiHeader.biClrUsed = 0;
     pbi->bmiHeader.biClrImportant = 0;
     cjSizeImage = ((pbi->bmiHeader.biWidth * pbi->bmiHeader.biBitCount + 31) / 32) * 4 * pbi->bmiHeader.biHeight;
+
     pvBits = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, 512);
+    ok(pvBits != NULL, "HeapAlloc failed\n");
+    if (pvBits == NULL)
+    {
+        skip("No pvBits\n");
+        goto noBits1;
+    }
+
     ok_int(GetDIBits(hdcScreen, hbmp, 0, 4, pvBits, pbi, DIB_RGB_COLORS), 4);
     ok_int(pbi->bmiHeader.biSize, sizeof(BITMAPINFOHEADER));
     ok_int(pbi->bmiHeader.biWidth, 4);
@@ -431,12 +473,21 @@ void Test_GetDIBits()
     pbi->bmiHeader.biBitCount = 5;
     ok_int(GetDIBits(hdcScreen, hbmp, 0, 4, pvBits, pbi, DIB_RGB_COLORS), 0);
 
-    DeleteObject(hbmp);
     HeapFree(GetProcessHeap(), 0, pvBits);
 
+noBits1:
+    ok(DeleteObject(hbmp), "DeleteObject failed\n");
+
+noBmp2:
     /* Test a 4 bpp bitmap */
     hbmp = CreateBitmap(3, 5, 1, 4, NULL);
-    ok(hbmp != 0, "failed to create bitmap\n");
+    ok(hbmp != NULL, "CreateBitmap failed\n");
+    if (hbmp == NULL)
+    {
+        skip("No hbmp\n");
+        goto noBmp3;
+    }
+
     ZeroMemory(pbi, bisize);
     pbi->bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
     ok_int(GetDIBits(hdcScreen, hbmp, 0, 0, NULL, pbi, DIB_RGB_COLORS), 1);
@@ -452,18 +503,36 @@ void Test_GetDIBits()
     /* Calculate bitmap size and allocate a buffer */
     cjSizeImage = ((pbi->bmiHeader.biWidth * pbi->bmiHeader.biBitCount + 31) / 32) * 4 * pbi->bmiHeader.biHeight;
     ok_int(cjSizeImage, 20);
-    pvBits = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, cjSizeImage);
 
     /* Test using a compatible DC */
-    hdcMem = CreateCompatibleDC(0);
-    ok(hdcMem != 0, "CreateCompatibleDC failed, skipping tests\n");
-    if (hdcMem == NULL) return;
-    ok_int(GetDIBits(hdcMem, hbmp, 0, 4, pvBits, pbi, DIB_RGB_COLORS), 0);
-    ok_int(GetDIBits(hdcMem, ghbmpDIB4, 0, 4, pvBits, pbi, DIB_RGB_COLORS), 4);
+    pvBits = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, cjSizeImage);
+    ok(pvBits != NULL, "HeapAlloc failed\n");
+    if (pvBits == NULL)
+    {
+        skip("No pvBits\n");
+        goto noBits2;
+    }
+
+    hdcMem = CreateCompatibleDC(NULL);
+    ok(hdcMem != NULL, "CreateCompatibleDC failed\n");
+    if (hdcMem == NULL)
+    {
+        skip("No hdcMem\n");
+    }
+    else
+    {
+        ok_int(GetDIBits(hdcMem, hbmp, 0, 4, pvBits, pbi, DIB_RGB_COLORS), 0);
+        ok_int(GetDIBits(hdcMem, ghbmpDIB4, 0, 4, pvBits, pbi, DIB_RGB_COLORS), 4);
+
+        ok(DeleteDC(hdcMem), "DeleteDC failed\n");
+    }
 
     HeapFree(GetProcessHeap(), 0, pvBits);
-    DeleteDC(hdcMem);
-    ReleaseDC(NULL, hdcScreen);
+
+noBits2:
+noBmp3:
+    ok(ReleaseDC(NULL, hdcScreen) == 1, "ReleaseDC failed\n");
+    free(pbi);
 }
 
 void Test_GetDIBits_BI_BITFIELDS()
