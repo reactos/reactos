@@ -1326,11 +1326,17 @@ MmCleanProcessAddressSpace(IN PEPROCESS Process)
 
 VOID
 NTAPI
-MmDeleteProcessAddressSpace2(IN PEPROCESS Process)
+MmDeleteProcessAddressSpace(IN PEPROCESS Process)
 {
     PMMPFN Pfn1, Pfn2;
     KIRQL OldIrql;
     PFN_NUMBER PageFrameIndex;
+
+#ifndef _M_AMD64
+    OldIrql = MiAcquireExpansionLock();
+    RemoveEntryList(&Process->MmProcessLinks);
+    MiReleaseExpansionLock(OldIrql);
+#endif
 
     //ASSERT(Process->CommitCharge == 0);
 
