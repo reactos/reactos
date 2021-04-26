@@ -25,7 +25,7 @@ FC /B [dysk1:][ścieżka1]plik1 [dysk2:][ścieżka2]plik2\n\
   /U         Porównuje pliki jako pliki tekstowe UNICODE.\n\
   /W         Kompresuje do porównania białe miejsca (tabulatory i spacje).\n\
   /nnnn      Określa liczbę kolejnych wierszy, które muszą być zgodne\n\
-             po wystąpieniu niezgodności (domyślny: 2).\n\
+             po wystąpieniu niezgodności (domyślnie: 2).\n\
   [dysk1:][ścieżka1]plik1\n\
              Określa pierwszy plik lub zestaw plików do porównania.\n\
   [dysk2:][ścieżka2]plik2\n\
