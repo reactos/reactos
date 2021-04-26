@@ -3,6 +3,7 @@
  *
  * Copyright 1999 Bertho Stultiens
  * Copyright 1999 Klaas van Gend
+ * Copyright 2020-2021 Mas Ahmad Muhammad
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -24,13 +25,13 @@ LANGUAGE LANG_INDONESIAN, SUBLANG_DEFAULT
 STRINGTABLE
 {
     IDS_FILENOTFOUND        "Berkas tidak ditemukan"
-    IDS_VERIFYFILE          "Please verify that the correct file name was given"
+    IDS_VERIFYFILE          "Harap verifikasi bahwa nama file yang diberikan benar"
     IDS_CREATEFILE          "Berkas tidak tersedia.\n\
 Ingin buat berkas?"
     IDS_OVERWRITEFILE       "Berkas telah ada.\n\
 Ingin mengganti berkas?"
     IDS_INVALID_FILENAME_TITLE "Karakter pada jalur tidak valid"
-    IDS_INVALID_FILENAME    "A filename cannot contain any of the following characters:\n\
+    IDS_INVALID_FILENAME    "Nama file tidak boleh berisi salah satu karakter berikut:\n\
                           / : < > |"
     IDS_PATHNOTEXISTING     "Jalur tidak tersedia"
     IDS_FILENOTEXISTING     "Berkas tidak tersedia"
@@ -60,7 +61,7 @@ Mohon masukkan ulang tepi ini."
     PD32_TOO_LARGE_COPIES                 "Jumlah salinan yang besar tidak didukung pencetak tersebut.\n\
 Mohon masukkan nilai antara 1 dan %d."
     PD32_PRINT_ERROR                      "Terjadi kesalahan pencetak."
-    PD32_NO_DEFAULT_PRINTER               "No default printer defined."
+    PD32_NO_DEFAULT_PRINTER               "Tidak ada printer default yang ditentukan."
     PD32_CANT_FIND_PRINTER                "Tidak bisa menemukan pencetak."
     PD32_OUT_OF_MEMORY                    "Kehabisan memori."
     PD32_GENERIC_ERROR                    "Terjadi kesalahan."
@@ -138,7 +139,7 @@ STRINGTABLE
     IDS_SAVE_AS     "Simpan Sebagai"
     IDS_OPEN_FILE   "Buka Berkas"
     IDS_SELECT_FOLDER "Pilih Folder"
-    IDS_FONT_SIZE_INPUT "Ukuran fon has to be a number."
+    IDS_FONT_SIZE_INPUT "Ukuran fon harus berupa angka."
 }
 
 /*
@@ -147,7 +148,7 @@ STRINGTABLE
 
 OPEN_FILE DIALOG 36, 24, 275, 134
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Open"
+CAPTION "Buka"
 FONT 8, "MS Shell Dlg"
 {
  LTEXT "&Nama berkas:", stc3, 6, 6, 76, 9
@@ -230,7 +231,7 @@ FONT 8, "MS Shell Dlg"
  RADIOBUTTON "&Bentang", rad4, 50, 110, 50, 12
  ICON "LANDSCAP", stc10, 10, 95, 32, 32
  ICON "PORTRAIT", stc11, 10, 95, 32, 32
- GROUPBOX "Paper", grp3, 116, 82, 178, 50, BS_GROUPBOX
+ GROUPBOX "Kertas", grp3, 116, 82, 178, 50, BS_GROUPBOX
  LTEXT "&Ukuran", stc2, 126, 95, 35, 9
  LTEXT "&Sumber", stc3, 126, 110, 35, 9
  COMBOBOX cmb2, 155, 95, 92, 68, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP
@@ -300,7 +301,7 @@ FONT 8, "MS Shell Dlg"
  PUSHBUTTON "Ba&ntuan", pshHelp,100,166, 44, 14
  PUSHBUTTON "Ta&mbahkan ke Warna Pilihan",    IDC_COLOR_ADD /*1024*/, 152, 167, 144, 14, WS_GROUP | WS_TABSTOP
  PUSHBUTTON "&Tentukan Warna Pilihan >>", IDC_COLOR_DEFINE /*1025*/,   4, 149, 142, 14, WS_GROUP | WS_TABSTOP
- PUSHBUTTON "Color |  Sol&id", IDC_COLOR_RES, 300,200,4,14   /* just a dummy */
+ PUSHBUTTON "Warna |  Sol&id", IDC_COLOR_RES, 300,200,4,14   /* just a dummy */
 }
 
 
@@ -500,7 +501,7 @@ FONT 8, "MS Shell Dlg"
 
 NEWFILEOPENV3ORD DIALOG 0, 0, 440, 300
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_VISIBLE | WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_CLIPCHILDREN | WS_THICKFRAME
-CAPTION "Open"
+CAPTION "Buka"
 FONT 8, "MS Shell Dlg"
 {
     LTEXT "Nama berkas:", IDC_FILENAMESTATIC, 160, 240, 60, 9, SS_RIGHT | WS_CLIPSIBLINGS
