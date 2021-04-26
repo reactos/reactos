@@ -1,5 +1,6 @@
 /*
  * Copyright 2009 Andrew Hill
+ * Copyright 2020-2021 Mas Ahmad Muhammad
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -122,7 +123,7 @@ BEGIN
         END
         MENUITEM "&Buka Folder", IDM_OPEN_FOLDER
         MENUITEM "&Tampilkan Teks", IDM_SHOW_TEXT
-    END    
+    END
 END
 
 /* Dialogs */
@@ -345,7 +346,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_SEARCH_RESULTS "Search Results"
+    IDS_SEARCH_RESULTS "Hasil Pencarian"
     IDS_SEARCHINVALID "'%1' bukan folder yang sah."
     IDS_SEARCH_FOLDER "Mencari %s"
     IDS_SEARCH_FILES_FOUND "%u berkas ditemukan"
@@ -357,6 +358,6 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_PARSE_ADDR_ERR_TITLE "ReactOS Explorer"
-    IDS_PARSE_ADDR_ERR_TEXT "ReactOS Explorer cannot find '%1'. Check the spelling and try again."
+    IDS_PARSE_ADDR_ERR_TITLE "Penjelajah ReactOS"
+    IDS_PARSE_ADDR_ERR_TEXT "Penjelajah ReactOS tidak menemukan '%1'. Cek pengejaannya dan coba lagi."
 END

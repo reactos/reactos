@@ -28,6 +28,9 @@
 #ifdef LANGUAGE_HU_HU
     #include "lang/msi_Hu.rc"
 #endif
+#ifdef LANGUAGE_ID_ID
+    #include "lang/msi_Id.rc"
+#endif
 #ifdef LANGUAGE_IT_IT
     #include "lang/msi_It.rc"
 #endif
