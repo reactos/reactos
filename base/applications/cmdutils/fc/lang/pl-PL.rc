@@ -38,7 +38,7 @@ FC /B [dysk1:][ścieżka1]plik1 [dysk2:][ścieżka2]plik2\n\
     IDS_INVALID_SWITCH "FC: nieprawidłowy przełącznik\n"
     IDS_CANNOT_OPEN "FC: nie można otworzyć %ls - nie ma takiego pliku lub folderu\n"
     IDS_NEEDS_FILES "FC: nie określono wystarczającej liczby plików\n"
-    IDS_CANT_USE_WILDCARD "Wildcard ('*' and '?') are not supported yet\n"
+    IDS_CANT_USE_WILDCARD "Symbole wieloznaczne ('*' i '?') nie są jeszcze obsługiwane\n"
     IDS_DIFFERENT "FC: pliki %ls i %ls różnią się\n"
     IDS_TOO_LARGE "FC: plik %ls jest za duży\n"
     IDS_RESYNCH_FAILED "Ponowna synchronizacja nie powiódła się. Pliki za bardzo się różnią."
