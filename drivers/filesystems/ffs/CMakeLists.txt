@@ -30,16 +30,17 @@ list(APPEND SOURCE
 
 add_library(ffs MODULE ${SOURCE} src/ffsdrv.rc)
 
-if(USE_CLANG_CL OR (NOT MSVC))
+if(NOT MSVC OR CMAKE_C_COMPILER_ID STREQUAL "Clang")
     target_compile_options(ffs PRIVATE -Wno-pointer-sign -Wno-unused-function)
     target_compile_options(ffs PRIVATE -Wno-unused-variable -Wno-missing-braces)
-    if(USE_CLANG_CL)
-        target_compile_options(ffs PRIVATE -Wno-empty-body)
-    endif()
 endif()
 
 if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
     target_compile_options(ffs PRIVATE -Wno-unused-but-set-variable)
+endif()
+
+if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
+    target_compile_options(ffs PRIVATE -Wno-empty-body)
 endif()
 
 add_definitions(-D__KERNEL__)

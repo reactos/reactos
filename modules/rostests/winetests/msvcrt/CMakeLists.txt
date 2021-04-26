@@ -27,11 +27,12 @@ target_compile_definitions(msvcrt_winetest PRIVATE
     _CRT_NONSTDC_NO_DEPRECATE
     __msvcrt_ulong=ULONG)
 
-if ((NOT MSVC) OR USE_CLANG_CL)
-    if (NOT USE_CLANG_CL)
-        target_compile_options(msvcrt_winetest PRIVATE -Wno-stringop-truncation)
-    endif()
+if(NOT MSVC OR CMAKE_C_COMPILER_ID STREQUAL "Clang")
     target_compile_options(msvcrt_winetest PRIVATE -Wno-format)
+endif()
+
+if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
+    target_compile_options(msvcrt_winetest PRIVATE -Wno-stringop-truncation)
 endif()
 
 set_module_type(msvcrt_winetest win32cui)

@@ -20,15 +20,12 @@ list(APPEND SOURCE
 add_library(cdrom MODULE ${SOURCE} cdrom.rc)
 set_module_type(cdrom kernelmodedriver)
 
-if(GCC OR CLANG)
+if(CMAKE_C_COMPILER_ID STREQUAL "GNU" OR CMAKE_C_COMPILER_ID STREQUAL "Clang")
     target_compile_options(cdrom PRIVATE -Wno-format -Wno-unused-variable -Wno-pointer-sign)
-endif()
-
-if(GCC)
     target_compile_options(cdrom PRIVATE -Wno-unknown-pragmas -Wno-incompatible-pointer-types -Wno-switch)
 endif()
 
-if(CLANG)
+if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
     target_compile_options(cdrom PRIVATE -Wno-enum-conversion -Wno-tautological-constant-compare)
 endif()
 

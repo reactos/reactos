@@ -88,30 +88,30 @@ list(APPEND SOURCE
 
 add_library(ext2fs MODULE ${SOURCE} ext2fs.rc)
 
-if(USE_CLANG_CL)
+if(MSVC AND CMAKE_C_COMPILER_ID STREQUAL "Clang")
     set_property(SOURCE src/create.c src/fileinfo.c src/memory.c src/read.c APPEND_STRING PROPERTY COMPILE_FLAGS " /fallback")
 endif()
 
-if(MSVC)
-    # Disable warnings: "unreferenced local variable", "initialized, but not used variable", "benign include"
-    if (NOT CLANG)
-        remove_target_compile_option(ext2fs "/we4101")
-        remove_target_compile_option(ext2fs "/we4189")
-        target_compile_options(ext2fs PRIVATE /wd4189 /wd4142 /wd4101)
-    endif()
-else()
+if(NOT MSVC OR CMAKE_C_COMPILER_ID STREQUAL "Clang")
     target_compile_options(ext2fs PRIVATE
         -Wno-pointer-sign -Wno-unused-function
         -Wno-unused-variable -Wno-missing-braces)
+endif()
+
+if(CMAKE_C_COMPILER_ID STREQUAL "MSVC")
+    # Disable warnings: "unreferenced local variable", "initialized, but not used variable", "benign include"
+    remove_target_compile_option(ext2fs "/we4101")
+    remove_target_compile_option(ext2fs "/we4189")
+    target_compile_options(ext2fs PRIVATE /wd4189 /wd4142 /wd4101)
 endif()
 
 if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
     target_compile_options(ext2fs PRIVATE -Wno-unused-but-set-variable)
 endif()
 
-if(CLANG)
+if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
     target_compile_options(ext2fs PRIVATE
-        -Wno-unused-value -Wno-parentheses-equality
+        -Wno-parentheses-equality
         -Wno-incompatible-pointer-types-discards-qualifiers
         "-Wno-#pragma-messages;-Wno-cast-calling-convention")
 endif()

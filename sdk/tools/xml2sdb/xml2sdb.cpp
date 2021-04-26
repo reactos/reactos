@@ -16,18 +16,14 @@ using tinyxml2::XMLText;
 static const GUID GUID_NULL = { 0 };
 static const char szCompilerVersion[] = "1.7.0.1";
 
-#if !defined(C_ASSERT)
-#define C_ASSERT(expr) extern char (*c_assert(void)) [(expr) ? 1 : -1]
-#endif
 
-
-C_ASSERT(sizeof(GUID) == 16);
-C_ASSERT(sizeof(ULONG) == 4);
-C_ASSERT(sizeof(LARGE_INTEGER) == 8);
-C_ASSERT(sizeof(WCHAR) == 2);
-C_ASSERT(sizeof(wchar_t) == 2);
-C_ASSERT(sizeof(TAG) == 2);
-C_ASSERT(sizeof(TAGID) == 4);
+static_assert(sizeof(GUID) == 16, "GUID has wrong size");
+static_assert(sizeof(ULONG) == 4, "ULONG has wrong size");
+static_assert(sizeof(LARGE_INTEGER) == 8, "LARGE_INTEGER has wrong size");
+static_assert(sizeof(WCHAR) == 2, "WCHAR has wrong size");
+static_assert(sizeof(wchar_t) == 2, "wchar_t has wrong size");
+static_assert(sizeof(TAG) == 2, "TAG has wrong size");
+static_assert(sizeof(TAGID) == 4, "TAGID has wrong size");
 
 
 extern "C"

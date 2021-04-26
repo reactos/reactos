@@ -43,7 +43,7 @@ else()
     list(APPEND MSVCRTEX_SOURCE
         startup/pseudo-reloc.c
         startup/pseudo-reloc-list.c)
-    if (CLANG)
+    if (CMAKE_C_COMPILER_ID STREQUAL "Clang")
         # CLang performs some optimisations requiring those funtions
         list(APPEND MSVCRTEX_SOURCE
             math/exp2.c
@@ -56,7 +56,7 @@ if(ARCH STREQUAL "i386")
         except/i386/chkstk_asm.s
         except/i386/chkstk_ms.s
         math/i386/alldiv_asm.s)
-    if (GCC AND CLANG)
+    if (NOT MSVC AND CMAKE_C_COMPILER_ID STREQUAL "Clang")
         list(APPEND MSVCRTEX_ASM_SOURCE
             math/i386/ceilf.S
             math/i386/floorf.S)
@@ -110,7 +110,7 @@ if(MSVC AND (ARCH STREQUAL "i386"))
 endif()
 
 
-if(GCC OR CLANG)
+if(CMAKE_C_COMPILER_ID STREQUAL "GNU" OR CMAKE_C_COMPILER_ID STREQUAL "Clang")
     target_compile_options(msvcrtex PRIVATE $<$<COMPILE_LANGUAGE:C>:-Wno-main>)
     if(LTCG)
         target_compile_options(msvcrtex PRIVATE -fno-lto)

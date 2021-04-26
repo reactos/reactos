@@ -32,10 +32,6 @@
 #define PATH_MAX MAX_PATH
 #endif
 
-#if !defined(C_ASSERT)
-#define C_ASSERT(expr) extern char (*c_assert(void)) [(expr) ? 1 : -1]
-#endif
-
 #if defined(_WIN32)
 #define DIR_SEPARATOR_CHAR '\\'
 #define DIR_SEPARATOR_STRING "\\"
@@ -173,7 +169,7 @@ typedef struct _CFFOLDER
  */
 } CFFOLDER, *PCFFOLDER;
 
-C_ASSERT(sizeof(CFFOLDER) == 8);
+static_assert(sizeof(CFFOLDER) == 8, "CFFOLDER has wrong size");
 
 
 typedef struct _CFFILE
@@ -187,7 +183,7 @@ typedef struct _CFFILE
     /* After this is the NULL terminated filename */
 } CFFILE, *PCFFILE;
 
-C_ASSERT(sizeof(CFFILE) == 16);
+static_assert(sizeof(CFFILE) == 16, "CFFILE has wrong size");
 
 typedef struct _CFDATA
 {
@@ -199,7 +195,7 @@ typedef struct _CFDATA
  */
 } CFDATA, *PCFDATA;
 
-C_ASSERT(sizeof(CFDATA) == 8);
+static_assert(sizeof(CFDATA) == 8, "CFDATA has wrong size");
 
 /* Application structures */
 
