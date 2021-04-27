@@ -607,6 +607,7 @@ PCI\VEN_8086&DEV_7190.DeviceDesc = "Punte Intel 82443BX/ZX/DX Pentium(R) II CPU 
 PCI\VEN_8086&DEV_7192.DeviceDesc = "Punte Intel 82443BX/ZX/DX Pentium(R) II CPU to PCI"
 
 [Strings.0419]
+ReactOS = "Команда ReactOS"
 SystemClassName = "Системные устройства"
 
 GenericMfg = "(Стандартные системные устройства)"
@@ -626,13 +627,16 @@ GenericMfg = "(Стандартные системные устройства)"
 *PNP0C0D.DeviceDesc = "Крышка ACPI"
 *PNP0C0E.DeviceDesc = "Кнопка спящего режима ACPI"
 *PNP0C0F.DeviceDesc = "Контроллер прервываний PCI"
-*PNP0C15.DeviceDesc = "Docking Station"
+*PNP0C15.DeviceDesc = "Док-станция"
 ACPI\FixedButton.DeviceDesc = "Кнопка фиксированной возможности ACPI"
+ISAPNP\ReadDataPort.DeviceDesc = "Порт чтения данных ISAPNP"
 PCI\CC_0500.DeviceDesc = "Стандартный контроллер PCI RAM"
 PCI\CC_0600.DeviceDesc = "Стандартный процессор на мосте PCI"
 PCI\CC_0601.DeviceDesc = "Стандартный PCI на ISA мосте"
 PCI\CC_0604.DeviceDesc = "Стандартный PCI на PCI мосте"
 *ThermalZone.DeviceDesc = "Термальная зона ACPI"
+PCI\CC_0C05.DeviceDesc = "Контроллер SMBus"
+SWENUM.DeviceDesc  = "Перечислитель программных устройств Plug & Play"
 
 *INT0800.DeviceDesc = "Устройство Intel 82802 Firmware Hub"
 PCI\VEN_8086&DEV_1237.DeviceDesc = "Intel 440FX - 82441FX PMC [Natoma]"
