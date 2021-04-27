@@ -979,7 +979,7 @@ KiSaveProcessorControlState(OUT PKPROCESSOR_STATE ProcessorState)
     Ke386GetGlobalDescriptorTable(&ProcessorState->SpecialRegisters.Gdtr.Limit);
     __sidt(&ProcessorState->SpecialRegisters.Idtr.Limit);
     ProcessorState->SpecialRegisters.Tr = Ke386GetTr();
-    ProcessorState->SpecialRegisters.Ldtr = Ke386GetLocalDescriptorTable();
+    Ke386GetLocalDescriptorTable(&ProcessorState->SpecialRegisters.Ldtr);
 }
 
 CODE_SEG("INIT")
