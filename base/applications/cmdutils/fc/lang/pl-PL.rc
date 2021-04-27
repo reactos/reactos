@@ -1,6 +1,9 @@
 /*
-Translation by Piotr Hetnarowicz <piotrhwz@gmail.com> (April, 2021)
-*/
+ * PROJECT:     ReactOS FC Command
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Polish language translation
+ * TRANSLATORS: Copyright 2021 Piotr Hetnarowicz <piotrhwz@gmail.com>
+ */
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 
