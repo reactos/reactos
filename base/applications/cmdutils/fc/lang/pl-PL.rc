@@ -1,41 +1,48 @@
+/*
+ * PROJECT:     ReactOS FC Command
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Polish language translation
+ * TRANSLATORS: Copyright 2021 Piotr Hetnarowicz <piotrhwz@gmail.com>
+ */
+
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-    IDS_USAGE "Compares two files or sets of files and displays the differences between\n\
-them\n\
+    IDS_USAGE "Porównuje dwa pliki lub zestawy plików i wyświetla różnice między\n\
+nimi\n\
 \n\
 FC [/A] [/C] [/L] [/LBn] [/N] [/OFF[LINE]] [/T] [/U] [/W] [/nnnn]\n\
-   [drive1:][path1]filename1 [drive2:][path2]filename2\n\
-FC /B [drive1:][path1]filename1 [drive2:][path2]filename2\n\
+   [dysk1:][ścieżka1]plik1 [dysk2:][ścieżka2]plik2\n\
+FC /B [dysk1:][ścieżka1]plik1 [dysk2:][ścieżka2]plik2\n\
 \n\
-  /A         Displays only first and last lines for each set of differences.\n\
-  /B         Performs a binary comparison.\n\
-  /C         Disregards the case of letters.\n\
-  /L         Compares files as ASCII text.\n\
-  /LBn       Sets the maximum consecutive mismatches to the specified\n\
-             number of lines (default: 100).\n\
-  /N         Displays the line numbers on an ASCII comparison.\n\
-  /OFF[LINE] Doesn't skip files with offline attribute set.\n\
-  /T         Doesn't expand tabs to spaces (default: expand).\n\
-  /U         Compare files as UNICODE text files.\n\
-  /W         Compresses white space (tabs and spaces) for comparison.\n\
-  /nnnn      Specifies the number of consecutive lines that must match\n\
-             after a mismatch (default: 2).\n\
-  [drive1:][path1]filename1\n\
-             Specifies the first file or set of files to compare.\n\
-  [drive2:][path2]filename2\n\
-             Specifies the second file or set of files to compare.\n"
-    IDS_NO_DIFFERENCE "FC: no differences encountered\n"
-    IDS_LONGER_THAN "FC: %ls longer than %ls\n"
-    IDS_COMPARING "Comparing files %ls and %ls\n"
-    IDS_OUT_OF_MEMORY "FC: Out of memory\n"
-    IDS_CANNOT_READ "FC: cannot read from %ls\n"
-    IDS_INVALID_SWITCH "FC: Invalid Switch\n"
-    IDS_CANNOT_OPEN "FC: cannot open %ls - No such file or folder\n"
-    IDS_NEEDS_FILES "FC: Insufficient number of file specifications\n"
-    IDS_CANT_USE_WILDCARD "Wildcard ('*' and '?') are not supported yet\n"
-    IDS_DIFFERENT "FC: File %ls and %ls are different\n"
-    IDS_TOO_LARGE "FC: File %ls too large\n"
-    IDS_RESYNCH_FAILED "Resynch failed. Files are too different."
+  /A         Wyświetla tylko pierwszy i ostatni wiersz każdego zestawu różnic.\n\
+  /B         Wykonuje porównanie binarne.\n\
+  /C         Nie rozróżnia wielkich i małych liter.\n\
+  /L         Porównuje pliki jako tekst ASCII.\n\
+  /LBn       Ustala maksymalną liczbę kolejnych wystąpień niezgodności\n\
+             na określoną liczbę wierszy (domyślnie: 100).\n\
+  /N         Przy porównaniu ASCII wyświetla numery wierszy.\n\
+  /OFF[LINE] Nie pomija plików z ustawionym atrybutem przesunięcia.\n\
+  /T         Nie zamienia tabulatorów na spacje (domyślnie: zamienia).\n\
+  /U         Porównuje pliki jako pliki tekstowe UNICODE.\n\
+  /W         Kompresuje do porównania białe znaki (tabulatory i spacje).\n\
+  /nnnn      Określa liczbę kolejnych wierszy, które muszą być zgodne\n\
+             po wystąpieniu niezgodności (domyślnie: 2).\n\
+  [dysk1:][ścieżka1]plik1\n\
+             Określa pierwszy plik lub zestaw plików do porównania.\n\
+  [dysk2:][ścieżka2]plik2\n\
+             Określa drugi plik lub zestaw plików do porównania.\n"
+    IDS_NO_DIFFERENCE "FC: nie stwierdzono różnic\n"
+    IDS_LONGER_THAN "FC: %ls jest dłuższy niż %ls\n"
+    IDS_COMPARING "Porównywanie plików %ls i %ls\n"
+    IDS_OUT_OF_MEMORY "FC: Za mało pamięci\n"
+    IDS_CANNOT_READ "FC: nie można otworzyć %ls\n"
+    IDS_INVALID_SWITCH "FC: nieprawidłowy przełącznik\n"
+    IDS_CANNOT_OPEN "FC: nie można otworzyć %ls - nie ma takiego pliku lub folderu\n"
+    IDS_NEEDS_FILES "FC: nie określono wystarczającej liczby plików\n"
+    IDS_CANT_USE_WILDCARD "Symbole wieloznaczne ('*' i '?') nie są jeszcze obsługiwane\n"
+    IDS_DIFFERENT "FC: pliki %ls i %ls różnią się\n"
+    IDS_TOO_LARGE "FC: plik %ls jest za duży\n"
+    IDS_RESYNCH_FAILED "Ponowna synchronizacja nie powiodła się. Pliki za bardzo się różnią."
 END
