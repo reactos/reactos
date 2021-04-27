@@ -2,16 +2,29 @@
 
 #if defined(__GNUC__)
 
-#define Ke386SetGlobalDescriptorTable(X) \
-    __asm__("lgdt %0\n\t" \
-    : /* no outputs */ \
-    : "m" (*X));
+FORCEINLINE
+VOID
+__lgdt(_Out_ PVOID Descriptor)
+{
+    PVOID* desc = Descriptor;
+    __asm__ __volatile__(
+        "lgdt %0"
+            : "=m" (*desc)
+            : /* no input */
+            : "memory");
+}
 
-#define Ke386GetGlobalDescriptorTable(X) \
-    __asm__("sgdt %0\n\t" \
-    : "=m" (*X) \
-    : /* no input */ \
-    : "memory");
+FORCEINLINE
+VOID
+__sgdt(_Out_ PVOID Descriptor)
+{
+    PVOID* desc = Descriptor;
+    __asm__ __volatile__(
+        "sgdt %0"
+            : "=m" (*desc)
+            : /* no input */
+            : "memory");
+}
 
 FORCEINLINE
 VOID
@@ -51,15 +64,14 @@ Ke386SaveFpuState(IN PFX_SAVE_AREA SaveArea)
 }
 
 FORCEINLINE
-USHORT
-Ke386GetLocalDescriptorTable(VOID)
+VOID
+__sldt(PVOID Descriptor)
 {
-    USHORT Ldt;
-    __asm__("sldt %0\n\t"
-    : "=m" (Ldt)
-    : /* no input */
-    : "memory");
-    return Ldt;
+    __asm__ __volatile__(
+        "sldt %0"
+            : "=m" (*((short*)Descriptor))
+            : /* no input */
+            : "memory");
 }
 
 #define Ke386SetLocalDescriptorTable(X) \
@@ -155,8 +167,6 @@ __fnsave(OUT PFLOATING_SAVE_AREA SaveArea)
     __asm wait;
 }
 
-#define Ke386GetGlobalDescriptorTable __sgdt
-
 FORCEINLINE
 VOID
 __lgdt(IN PVOID Descriptor)
@@ -167,13 +177,17 @@ __lgdt(IN PVOID Descriptor)
         lgdt [eax]
     }
 }
-#define Ke386SetGlobalDescriptorTable __lgdt
 
 FORCEINLINE
-USHORT
-Ke386GetLocalDescriptorTable(VOID)
+VOID
+__sldt(PVOID Descriptor)
 {
-    __asm sldt ax;
+    __asm
+    {
+        sldt ax
+        mov ecx, Descriptor
+        mov [ecx], ax
+    }
 }
 
 FORCEINLINE
@@ -304,5 +318,9 @@ Ke386SaveFpuState(IN PVOID SaveArea)
 #else
 #error Unknown compiler for inline assembler
 #endif
+
+#define Ke386GetGlobalDescriptorTable __sgdt
+#define Ke386SetGlobalDescriptorTable __lgdt
+#define Ke386GetLocalDescriptorTable __sldt
 
 /* EOF */

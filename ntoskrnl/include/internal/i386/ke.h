@@ -18,25 +18,80 @@
 #define KD_BREAKPOINT_VALUE       0xCC
 
 //
-// Macros for getting and setting special purpose registers in portable code
+// One-liners for getting and setting special purpose registers in portable code
 //
-#define KeGetContextPc(Context) \
-    ((Context)->Eip)
+FORCEINLINE
+ULONG_PTR
+KeGetContextPc(PCONTEXT Context)
+{
+    return Context->Eip;
+}
 
-#define KeSetContextPc(Context, ProgramCounter) \
-    ((Context)->Eip = (ProgramCounter))
+FORCEINLINE
+VOID
+KeSetContextPc(PCONTEXT Context, ULONG_PTR ProgramCounter)
+{
+    Context->Eip = ProgramCounter;
+}
 
-#define KeGetTrapFramePc(TrapFrame) \
-    ((TrapFrame)->Eip)
+FORCEINLINE
+ULONG_PTR
+KeGetContextReturnRegister(PCONTEXT Context)
+{
+    return Context->Eax;
+}
 
-#define KiGetLinkedTrapFrame(x) \
-    (PKTRAP_FRAME)((x)->Edx)
+FORCEINLINE
+VOID
+KeSetContextReturnRegister(PCONTEXT Context, ULONG_PTR ReturnValue)
+{
+    Context->Eax = ReturnValue;
+}
 
-#define KeGetContextReturnRegister(Context) \
-    ((Context)->Eax)
+FORCEINLINE
+ULONG_PTR
+KeGetContextFrameRegister(PCONTEXT Context)
+{
+    return Context->Ebp;
+}
 
-#define KeSetContextReturnRegister(Context, ReturnValue) \
-    ((Context)->Eax = (ReturnValue))
+FORCEINLINE
+VOID
+KeSetContextFrameRegister(PCONTEXT Context, ULONG_PTR Frame)
+{
+    Context->Ebp = Frame;
+}
+
+FORCEINLINE
+ULONG_PTR
+KeGetTrapFramePc(PKTRAP_FRAME TrapFrame)
+{
+    return TrapFrame->Eip;
+}
+
+FORCEINLINE
+PKTRAP_FRAME
+KiGetLinkedTrapFrame(PKTRAP_FRAME TrapFrame)
+{
+    return (PKTRAP_FRAME)TrapFrame->Edx;
+}
+
+
+FORCEINLINE
+ULONG_PTR
+KeGetTrapFrameStackRegister(PKTRAP_FRAME TrapFrame)
+{
+    if (TrapFrame->PreviousPreviousMode == KernelMode)
+        return TrapFrame->TempEsp;
+    return TrapFrame->HardwareEsp;
+}
+
+FORCEINLINE
+ULONG_PTR
+KeGetTrapFrameFrameRegister(PKTRAP_FRAME TrapFrame)
+{
+    return TrapFrame->Ebp;
+}
 
 //
 // Macro to get trap and exception frame from a thread stack

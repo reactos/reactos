@@ -611,7 +611,7 @@ KdSendPacket(
             if (KdbgExceptionRecord.ExceptionCode == STATUS_ASSERTION_FAILURE)
             {
                 /* Bump EIP to the instruction following the int 2C */
-                KdbgContext.Eip += 2;
+                KeSetContextPc(&KdbgContext, KeGetContextPc(&KdbgContext) + 2);
             }
 
             Result = KdbEnterDebuggerException(&KdbgExceptionRecord,
