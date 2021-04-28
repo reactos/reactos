@@ -27,182 +27,372 @@ typedef struct TEST_ENTRY
 #define FILES " " FILE1 " " FILE2
 #define COMPARING "Comparing files fc-test1.txt and FC-TEST2.TXT\n"
 #define NO_DIFFERENCES "FC: no differences encountered\n"
+#define RESYNC_FAILED "Resync Failed.  Files are too different.\n"
 
 static const TEST_ENTRY s_entries[] =
 {
     /* binary comparison */
-    { __LINE__, 0, "fc /B" FILES, "", "", -1, -1,
-      COMPARING NO_DIFFERENCES },
-    { __LINE__, 1, "fc /B" FILES, "A", "B", -1, -1,
-      COMPARING "00000000: 41 42\n" },
-    { __LINE__, 1, "fc /B" FILES, "B", "A", -1, -1,
-      COMPARING "00000000: 42 41\n" },
-    { __LINE__, 0, "fc /B" FILES, "AB", "AB", -1, -1,
-      COMPARING NO_DIFFERENCES },
-    { __LINE__, 1, "fc /B" FILES, "AB", "BA", -1, -1,
-      COMPARING "00000000: 41 42\n00000001: 42 41\n" },
-    { __LINE__, 0, "fc /B" FILES, "ABC", "ABC", -1, -1,
-      COMPARING NO_DIFFERENCES },
-    { __LINE__, 1, "fc /B" FILES, "ABC", "ABCD", -1, -1,
-      COMPARING "FC: FC-TEST2.TXT longer than fc-test1.txt\n\n" },
-    { __LINE__, 1, "fc /B" FILES, "ABC", "ABDD", -1, -1,
-      COMPARING "00000002: 43 44\nFC: FC-TEST2.TXT longer than fc-test1.txt\n" },
-    { __LINE__, 1, "fc /B /C" FILES, "ABC", "abc", -1, -1,
-      COMPARING "00000000: 41 61\n00000001: 42 62\n00000002: 43 63\n" },
+    {
+        __LINE__, 0, "fc /B" FILES, "", "", -1, -1, COMPARING NO_DIFFERENCES
+    },
+    {
+        __LINE__, 1, "fc /B" FILES, "A", "B", -1, -1, COMPARING
+        "00000000: 41 42\n"
+    },
+    {
+        __LINE__, 1, "fc /B" FILES, "B", "A", -1, -1, COMPARING
+        "00000000: 42 41\n"
+    },
+    {
+        __LINE__, 0, "fc /B" FILES, "AB", "AB", -1, -1, COMPARING NO_DIFFERENCES
+    },
+    {
+        __LINE__, 1, "fc /B" FILES, "AB", "BA", -1, -1, COMPARING
+        "00000000: 41 42\n00000001: 42 41\n"
+    },
+    {
+        __LINE__, 0, "fc /B" FILES, "ABC", "ABC", -1, -1, COMPARING NO_DIFFERENCES
+    },
+    {
+        __LINE__, 1, "fc /B" FILES, "ABC", "ABCD", -1, -1, COMPARING
+        "FC: FC-TEST2.TXT longer than fc-test1.txt\n\n"
+    },
+    {
+        __LINE__, 1, "fc /B" FILES, "ABC", "ABDD", -1, -1, COMPARING
+        "00000002: 43 44\nFC: FC-TEST2.TXT longer than fc-test1.txt\n"
+    },
+    {
+        __LINE__, 1, "fc /B /C" FILES, "ABC", "abc", -1, -1, COMPARING
+        "00000000: 41 61\n00000001: 42 62\n00000002: 43 63\n"
+    },
     /* text comparison */
-    { __LINE__, 0, "fc" FILES, "", "", -1, -1,
-      COMPARING NO_DIFFERENCES },
-    { __LINE__, 1, "fc" FILES, "A", "B", -1, -1,
-      COMPARING "***** fc-test1.txt\nA\n***** FC-TEST2.TXT\nB\n*****\n" },
-    { __LINE__, 1, "fc" FILES, "B", "A", -1, -1,
-      COMPARING "***** fc-test1.txt\nB\n***** FC-TEST2.TXT\nA\n*****\n" },
-    { __LINE__, 0, "fc" FILES, "AB", "AB", -1, -1,
-      COMPARING NO_DIFFERENCES },
-    { __LINE__, 1, "fc" FILES, "AB", "BA", -1, -1,
-      COMPARING "***** fc-test1.txt\nAB\n***** FC-TEST2.TXT\nBA\n*****\n" },
-    { __LINE__, 0, "fc" FILES, "ABC", "ABC", -1, -1,
-      COMPARING NO_DIFFERENCES },
-    { __LINE__, 0, "fc /C" FILES, "ABC", "abc", -1, -1,
-      COMPARING NO_DIFFERENCES },
-    { __LINE__, 1, "fc" FILES, "A\nB\nC\nD\nE\n", "A\nB\nB\nD\nE\n", -1, -1,
-      COMPARING "***** fc-test1.txt\nB\nC\nD\n***** FC-TEST2.TXT\nB\nB\nD\n*****\n" },
+    {
+        __LINE__, 0, "fc" FILES, "", "", -1, -1, COMPARING NO_DIFFERENCES
+    },
+    {
+        __LINE__, 1, "fc" FILES, "A", "B", -1, -1, COMPARING
+        "***** fc-test1.txt\nA\n"
+        "***** FC-TEST2.TXT\nB\n"
+        "*****\n\n"
+    },
+    {
+        __LINE__, 1, "fc" FILES, "B", "A", -1, -1, COMPARING
+        "***** fc-test1.txt\nB\n"
+        "***** FC-TEST2.TXT\nA\n"
+        "*****\n\n"
+    },
+    {
+        __LINE__, 0, "fc" FILES, "AB", "AB", -1, -1, COMPARING NO_DIFFERENCES
+    },
+    {
+        __LINE__, 1, "fc" FILES, "AB", "BA", -1, -1, COMPARING
+        "***** fc-test1.txt\nAB\n"
+        "***** FC-TEST2.TXT\nBA\n"
+        "*****\n\n"
+    },
+    {
+        __LINE__, 0, "fc" FILES, "ABC", "ABC", -1, -1, COMPARING NO_DIFFERENCES
+    },
+    {
+        __LINE__, 0, "fc /C" FILES, "ABC", "abc", -1, -1, COMPARING NO_DIFFERENCES
+    },
+    {
+        __LINE__, 1, "fc" FILES, "A\nB\nC\nD\nE\n", "A\nB\nB\nD\nE\n", -1, -1, COMPARING
+        "***** fc-test1.txt\nB\nC\nD\n"
+        "***** FC-TEST2.TXT\nB\nB\nD\n"
+        "*****\n\n"
+    },
     /* Test /A */
-    { __LINE__, 1, "fc /A" FILES, "A\nB\nC\nD\nE\n", "B\nB\nC\nD\nE\n", -1, -1,
-      COMPARING "***** fc-test1.txt\nA\nB\n***** FC-TEST2.TXT\nB\nB\n*****\n" },
-    { __LINE__, 1, "fc /A" FILES, "A\nB\nC\nD\nE\n", "C\nC\nC\nD\nE\n", -1, -1,
-      COMPARING "***** fc-test1.txt\nA\nB\nC\n***** FC-TEST2.TXT\nC\nC\nC\n*****\n" },
-    { __LINE__, 1, "fc /A" FILES, "A\nB\nC\nD\nE\n", "A\nC\nC\nD\nE\n", -1, -1,
-      COMPARING "***** fc-test1.txt\nA\nB\nC\n***** FC-TEST2.TXT\nA\nC\nC\n*****\n" },
-    { __LINE__, 1, "fc /A" FILES, "A\nB\nC\nD\nE\n", "A\nC\nC\nC\nE\n", -1, -1,
-      COMPARING "***** fc-test1.txt\nA\n...\nE\n***** FC-TEST2.TXT\nA\n...\nE\n*****\n" },
-    { __LINE__, 1, "fc /A" FILES, "A\nB\nC\nD\nE\n", "A\nB\nC\nD\nF\n", -1, -1,
-      COMPARING "***** fc-test1.txt\nD\nE\n***** FC-TEST2.TXT\nD\nF\n*****\n" },
-    { __LINE__, 1, "fc /A" FILES, "A\nB\nC\nD\nE\n", "A\nB\nC\nF\nF\n", -1, -1,
-      COMPARING "***** fc-test1.txt\nC\nD\nE\n***** FC-TEST2.TXT\nC\nF\nF\n*****\n" },
-    { __LINE__, 1, "fc /A" FILES, "A\nB\nC\nD\nE\n", "A\nB\nF\nF\nF\n", -1, -1,
-      COMPARING "***** fc-test1.txt\nB\n...\nE\n***** FC-TEST2.TXT\nB\n...\nF\n*****\n" },
-    { __LINE__, 1, "fc /A" FILES, "A\nC\nE\nF\nE\n", "A\nB\nC\nD\nE\n", -1, -1,
-      COMPARING
-      "***** fc-test1.txt\nA\nC\nE\n"
-      "***** FC-TEST2.TXT\nA\n...\nE\n"
-      "*****\n\n"
-      "***** fc-test1.txt\nF\nE\n***** FC-TEST2.TXT\n*****\n"
+    {
+        __LINE__, 1, "fc /A" FILES, "A\nB\nC\nD\nE\n", "B\nB\nC\nD\nE\n", -1, -1, COMPARING
+        "***** fc-test1.txt\nA\nB\n"
+        "***** FC-TEST2.TXT\nB\nB\n"
+        "*****\n\n"
+    },
+    {
+        __LINE__, 1, "fc /A" FILES, "A\nB\nC\nD\nE\n", "C\nC\nC\nD\nE\n", -1, -1, COMPARING
+        "***** fc-test1.txt\nA\nB\nC\n"
+        "***** FC-TEST2.TXT\nC\nC\nC\n"
+        "*****\n\n"
+    },
+    {
+        __LINE__, 1, "fc /A" FILES, "A\nB\nC\nD\nE\n", "A\nC\nC\nD\nE\n", -1, -1, COMPARING
+        "***** fc-test1.txt\nA\nB\nC\n"
+        "***** FC-TEST2.TXT\nA\nC\nC\n"
+        "*****\n\n"
+    },
+    {
+        __LINE__, 1, "fc /A" FILES, "A\nB\nC\nD\nE\n", "A\nC\nC\nC\nE\n", -1, -1, COMPARING
+        "***** fc-test1.txt\nA\n...\nE\n"
+        "***** FC-TEST2.TXT\nA\n...\nE\n"
+        "*****\n\n"
+    },
+    {
+        __LINE__, 1, "fc /A" FILES, "A\nB\nC\nD\nE\n", "A\nB\nC\nD\nF\n", -1, -1, COMPARING
+        "***** fc-test1.txt\nD\nE\n"
+        "***** FC-TEST2.TXT\nD\nF\n"
+        "*****\n\n"
+    },
+    {
+        __LINE__, 1, "fc /A" FILES, "A\nB\nC\nD\nE\n", "A\nB\nC\nF\nF\n", -1, -1, COMPARING
+        "***** fc-test1.txt\nC\nD\nE\n"
+        "***** FC-TEST2.TXT\nC\nF\nF\n"
+        "*****\n\n"
+    },
+    {
+        __LINE__, 1, "fc /A" FILES, "A\nB\nC\nD\nE\n", "A\nB\nF\nF\nF\n", -1, -1, COMPARING
+        "***** fc-test1.txt\nB\n...\nE\n"
+        "***** FC-TEST2.TXT\nB\n...\nF\n"
+        "*****\n\n"
+    },
+    {
+        __LINE__, 1, "fc /A" FILES, "A\nC\nE\nF\nE\n", "A\nB\nC\nD\nE\n", -1, -1, COMPARING
+        "***** fc-test1.txt\nA\nC\nE\n"
+        "***** FC-TEST2.TXT\nA\n...\nE\n"
+        "*****\n\n"
+        "***** fc-test1.txt\nF\nE\n"
+        "***** FC-TEST2.TXT\n"
+        "*****\n\n"
     },
     /* Test /N /A */
-    { __LINE__, 1, "fc /N /A" FILES, "A\nB\nC\nD\nE\n", "A\nB\nB\nD\nE\n", -1, -1,
-      COMPARING
-      "***** fc-test1.txt\n    2:  B\n    3:  C\n    4:  D\n"
-      "***** FC-TEST2.TXT\n    2:  B\n    3:  B\n    4:  D\n"
-      "*****\n"
+    {
+        __LINE__, 1, "fc /N /A" FILES, "A\nB\nC\nD\nE\n", "A\nB\nB\nD\nE\n", -1, -1, COMPARING
+        "***** fc-test1.txt\n    2:  B\n    3:  C\n    4:  D\n"
+        "***** FC-TEST2.TXT\n    2:  B\n    3:  B\n    4:  D\n"
+        "*****\n\n"
     },
-    { __LINE__, 1, "fc /N /A" FILES, "A\nC\nC\nD\nE\n", "A\nB\nC\nD\nE\n", -1, -1,
-      COMPARING
-      "***** fc-test1.txt\n    1:  A\n    2:  C\n    3:  C\n"
-      "***** FC-TEST2.TXT\n    1:  A\n    2:  B\n    3:  C\n"
-      "*****\n"
+    {
+        __LINE__, 1, "fc /N /A" FILES, "A\nC\nC\nD\nE\n", "A\nB\nC\nD\nE\n", -1, -1, COMPARING
+        "***** fc-test1.txt\n    1:  A\n    2:  C\n    3:  C\n"
+        "***** FC-TEST2.TXT\n    1:  A\n    2:  B\n    3:  C\n"
+        "*****\n\n"
     },
-    { __LINE__, 1, "fc /N /A" FILES, "A\nC\nC\nC\nE\n", "A\nB\nC\nD\nE\n", -1, -1,
-      COMPARING
-      "***** fc-test1.txt\n    1:  A\n...\n    5:  E\n"
-      "***** FC-TEST2.TXT\n    1:  A\n...\n    5:  E\n"
-      "*****\n" },
-    { __LINE__, 1, "fc /N /A" FILES, "A\nC\nE\nF\nC\n", "A\nB\nC\nD\nE\n", -1, -1,
-      COMPARING
-      "***** fc-test1.txt\n    1:  A\n...\n    5:  C\n"
-      "***** FC-TEST2.TXT\n    1:  A\n    2:  B\n    3:  C\n"
-      "*****\n\n"
-      "***** fc-test1.txt\n"
-      "***** FC-TEST2.TXT\n    4:  D\n    5:  E\n"
-      "*****\n"
+    {
+        __LINE__, 1, "fc /N /A" FILES, "A\nC\nC\nC\nE\n", "A\nB\nC\nD\nE\n", -1, -1, COMPARING
+        "***** fc-test1.txt\n    1:  A\n...\n    5:  E\n"
+        "***** FC-TEST2.TXT\n    1:  A\n...\n    5:  E\n"
+        "*****\n\n"
     },
-    { __LINE__, 1, "fc /N /A" FILES, "A\nC\nE\nF\nE\n", "A\nB\nC\nD\nE\n", -1, -1,
-      COMPARING
-      "***** fc-test1.txt\n    1:  A\n    2:  C\n    3:  E\n"
-      "***** FC-TEST2.TXT\n    1:  A\n...\n    5:  E\n"
-      "*****\n\n"
-      "***** fc-test1.txt\n    4:  F\n    5:  E\n"
-      "***** FC-TEST2.TXT\n"
-      "*****\n"
+    {
+        __LINE__, 1, "fc /N /A" FILES, "A\nC\nE\nF\nC\n", "A\nB\nC\nD\nE\n", -1, -1, COMPARING
+        "***** fc-test1.txt\n    1:  A\n...\n    5:  C\n"
+        "***** FC-TEST2.TXT\n    1:  A\n    2:  B\n    3:  C\n"
+        "*****\n\n"
+        "***** fc-test1.txt\n"
+        "***** FC-TEST2.TXT\n    4:  D\n    5:  E\n"
+        "*****\n\n"
+    },
+    {
+        __LINE__, 1, "fc /N /A" FILES, "A\nC\nE\nF\nE\n", "A\nB\nC\nD\nE\n", -1, -1, COMPARING
+        "***** fc-test1.txt\n    1:  A\n    2:  C\n    3:  E\n"
+        "***** FC-TEST2.TXT\n    1:  A\n...\n    5:  E\n"
+        "*****\n\n"
+        "***** fc-test1.txt\n    4:  F\n    5:  E\n"
+        "***** FC-TEST2.TXT\n"
+        "*****\n\n"
     },
     /* Test tab expansion */
-    { __LINE__, 0, "fc" FILES, "A\n\tB\nC", "A\n        B\nC", -1, -1,
-      COMPARING NO_DIFFERENCES },
-    { __LINE__, 0, "fc" FILES, "A\n    \tB\nC", "A\n        B\nC", -1, -1,
-      COMPARING NO_DIFFERENCES },
-    /* Test /T */
-    { __LINE__, 1, "fc /T" FILES, "A\n\tB\nC", "A\n        B\nC", -1, -1,
-      COMPARING "" },
-    { __LINE__, 1, "fc /T" FILES, "A\n    \tB\nC", "A\n        B\nC", -1, -1,
-      COMPARING "***** fc-test1.txt\nA\n    \tB\nC\n***** FC-TEST2.TXT\nA\n        B\nC\n*****\n" },
-    /* Test /W */
-    { __LINE__, 0, "fc /W" FILES, "A\n    \tB\nC", "A\n        B\nC", -1, -1,
-      COMPARING NO_DIFFERENCES },
-    { __LINE__, 0, "fc /W" FILES, "\tA \nB\n", "A\nB\n", -1, -1,
-      COMPARING NO_DIFFERENCES },
-    { __LINE__, 1, "fc /W" FILES, "        A \nB\n", "AB\nB\n", -1, -1,
-      COMPARING "***** fc-test1.txt\n        A \nB\n***** FC-TEST2.TXT\nAB\nB\n*****\n" },
-    /* TEST /W /T */
-    { __LINE__, 0, "fc /W /T" FILES, "A\n    \tB\nC", "A\n        B\nC", -1, -1,
-      COMPARING NO_DIFFERENCES },
-    { __LINE__, 0, "fc /W /T" FILES, "A\n    \tB\nC", "A\n        B\nC", -1, -1,
-      COMPARING NO_DIFFERENCES },
-    { __LINE__, 1, "fc /W" FILES, "\tA \nB\n", "AB\nB\n", -1, -1,
-      COMPARING "***** fc-test1.txt\n        A \nB\n***** FC-TEST2.TXT\nAB\nB\n*****\n" },
-    /* Test /N */
-    { __LINE__, 1, "fc /N" FILES, "A\nB\nC\nD\nE\n", "A\nB\nC\nE\nE\n", -1, -1,
-      COMPARING
-      "***** fc-test1.txt\n    3:  C\n    4:  D\n    5:  E\n"
-      "***** FC-TEST2.TXT\n    3:  C\n    4:  E\n"
-      "*****\n"
-      "\n"
-      "***** fc-test1.txt\n"
-      "***** FC-TEST2.TXT\n"
-      "    5:  E\n"
-      "*****\n"
+    {
+        __LINE__, 0, "fc" FILES, "A\n\tB\nC", "A\n        B\nC", -1, -1, COMPARING NO_DIFFERENCES
     },
-    /* Test /N /LB3 */
-    { __LINE__, 1, "fc /N /LB3" FILES, "A\nB\nC\nD\nE\n", "A\nB\nC\nE\nE\n", -1, -1,
-      COMPARING
-      "***** fc-test1.txt\n    4:  D\n    5:  E\n"
-      "***** FC-TEST2.TXT\n    4:  E\n    5:  E\n"
-      "*****\n"
+    {
+        __LINE__, 0, "fc" FILES, "A\n    \tB\nC", "A\n        B\nC", -1, -1, COMPARING
+        NO_DIFFERENCES
+    },
+    /* Test /T */
+    {
+        __LINE__, 1, "fc /T" FILES, "A\n\tB\nC", "A\n        B\nC", -1, -1, COMPARING
+        "***** fc-test1.txt\nA\n\tB\nC\n"
+        "***** FC-TEST2.TXT\nA\n        B\nC\n"
+        "*****\n\n"
+    },
+    {
+        __LINE__, 1, "fc /T" FILES, "A\n    \tB\nC", "A\n        B\nC", -1, -1, COMPARING
+        "***** fc-test1.txt\nA\n    \tB\nC\n"
+        "***** FC-TEST2.TXT\nA\n        B\nC\n"
+        "*****\n\n"
+    },
+    /* Test /W */
+    {
+        __LINE__, 0, "fc /W" FILES, "A\n    \tB\nC", "A\n        B\nC", -1, -1, COMPARING
+        NO_DIFFERENCES
+    },
+    {
+        __LINE__, 0, "fc /W" FILES, "\tA \nB\n", "A\nB\n", -1, -1, COMPARING NO_DIFFERENCES
+    },
+    {
+        __LINE__, 1, "fc /W" FILES, "        A \nB\n", "AB\nB\n", -1, -1, COMPARING
+        "***** fc-test1.txt\n        A \nB\n"
+        "***** FC-TEST2.TXT\nAB\nB\n"
+        "*****\n\n"
+    },
+    /* TEST /W /T */
+    {
+        __LINE__, 0, "fc /W /T" FILES, "A\n    \tB\nC", "A\n        B\nC", -1, -1, COMPARING
+        NO_DIFFERENCES
+    },
+    {
+        __LINE__, 0, "fc /W /T" FILES, "A\n    \tB\nC", "A\n        B\nC", -1, -1, COMPARING
+        NO_DIFFERENCES
+    },
+    {
+        __LINE__, 1, "fc /W" FILES, "\tA \nB\n", "AB\nB\n", -1, -1, COMPARING
+        "***** fc-test1.txt\n        A \nB\n"
+        "***** FC-TEST2.TXT\nAB\nB\n"
+        "*****\n\n"
+    },
+    /* Test /N */
+    {
+        __LINE__, 1, "fc /N" FILES, "A\nB\nC\nD\nE\n", "A\nB\nC\nE\nE\n", -1, -1, COMPARING
+        "***** fc-test1.txt\n    3:  C\n    4:  D\n    5:  E\n"
+        "***** FC-TEST2.TXT\n    3:  C\n    4:  E\n"
+        "*****\n\n"
+        "***** fc-test1.txt\n"
+        "***** FC-TEST2.TXT\n"
+        "    5:  E\n"
+        "*****\n\n"
     },
     /* Test NUL */
-    { __LINE__, 1, "fc" FILES, "ABC\000DE", "ABC\000\000\000", 6, 6,
-      COMPARING
-      "***** fc-test1.txt\nABC\nDE\n"
-      "***** FC-TEST2.TXT\nABC\n\n\n"
-      "*****\n"
+    {
+        __LINE__, 1, "fc" FILES, "ABC\000DE", "ABC\000\000\000", 6, 6, COMPARING
+        "***** fc-test1.txt\nABC\nDE\n"
+        "***** FC-TEST2.TXT\nABC\n\n\n"
+        "*****\n\n"
     },
-    { __LINE__, 1, "fc" FILES, "ABC\000DE", "ABC\n\000\000", 6, 6,
-      COMPARING
-      "***** fc-test1.txt\nABC\nDE\n"
-      "***** FC-TEST2.TXT\nABC\n\n\n"
-      "*****\n"
+    {
+        __LINE__, 1, "fc" FILES, "ABC\000DE", "ABC\n\000\000", 6, 6, COMPARING
+        "***** fc-test1.txt\nABC\nDE\n"
+        "***** FC-TEST2.TXT\nABC\n\n\n"
+        "*****\n\n"
     },
-    { __LINE__, 0, "fc" FILES, "ABC\000DE", "ABC\nDE", 6, 6,
-      COMPARING NO_DIFFERENCES
+    {
+        __LINE__, 0, "fc" FILES, "ABC\000DE", "ABC\nDE", 6, 6, COMPARING NO_DIFFERENCES
     },
     /* Test CR ('\r') */
-    { __LINE__, 0, "fc" FILES, "ABC\nABC", "ABC\r\nABC", -1, -1,
-      COMPARING NO_DIFFERENCES
+    {
+        __LINE__, 0, "fc" FILES, "ABC\nABC", "ABC\r\nABC", -1, -1, COMPARING NO_DIFFERENCES
     },
-    { __LINE__, 1, "fc" FILES, "ABC\nABC", "ABC\r\r\nABC", -1, -1,
-      COMPARING
-      "***** fc-test1.txt\nABC\nABC\n"
-      "***** FC-TEST2.TXT\nABC\nABC\n"
-      "*****\n"
+    {
+        __LINE__, 1, "fc" FILES, "ABC\nABC", "ABC\r\r\nABC", -1, -1, COMPARING
+        "***** fc-test1.txt\nABC\nABC\n"
+        "***** FC-TEST2.TXT\nABC\nABC\n"
+        "*****\n\n"
     },
     /* Test '\n' at EOF */
-    { __LINE__, 0, "fc" FILES, "ABC", "ABC\n", -1, -1,
-      COMPARING NO_DIFFERENCES
+    {
+        __LINE__, 0, "fc" FILES, "ABC", "ABC\n", -1, -1, COMPARING NO_DIFFERENCES
     },
     /* Test /U */
-    { __LINE__, 0, "fc /U" FILES, "A\000B\000", "A\000B\000", 4, 4,
-      COMPARING NO_DIFFERENCES /* L"AB" */
+    {
+        /* L"AB" */
+        __LINE__, 0, "fc /U" FILES, "A\000B\000", "A\000B\000", 4, 4, COMPARING
+        NO_DIFFERENCES
     },
-    { __LINE__, 1, "fc /U" FILES, "A\000B\000", "A\000C\000", 4, 4,
-      COMPARING "***** fc-test1.txt\nAB\n***** FC-TEST2.TXT\nAC\n*****\n"
+    {
+        __LINE__, 1, "fc /U" FILES, "A\000B\000", "A\000C\000", 4, 4, COMPARING
+        "***** fc-test1.txt\nAB\n"
+        "***** FC-TEST2.TXT\nAC\n"
+        "*****\n\n"
+    },
+    /* Test /LB2 */
+    {
+        __LINE__, 1, "fc /LB2" FILES, "A\nB\nC\nD\nE\n", "B\nB\nC\nD\nE\n", -1, -1, COMPARING
+        "***** fc-test1.txt\nA\nB\n"
+        "***** FC-TEST2.TXT\nB\nB\n"
+        "*****\n\n"
+    },
+    {
+        __LINE__, 1, "fc /LB2" FILES, "A\nB\nC\nD\nE\n", "C\nC\nC\nD\nE\n", -1, -1, COMPARING
+        RESYNC_FAILED
+        "***** fc-test1.txt\nA\nB\n"
+        "***** FC-TEST2.TXT\nC\nC\n"
+        "*****\n\n"
+    },
+    {
+        __LINE__, 1, "fc /LB2" FILES, "A\nB\nC\nD\nE\n", "D\nD\nD\nD\nE\n", -1, -1, COMPARING
+        RESYNC_FAILED
+        "***** fc-test1.txt\nA\nB\n"
+        "***** FC-TEST2.TXT\nD\nD\n"
+        "*****\n\n"
+    },
+    {
+        __LINE__, 1, "fc /LB2" FILES, "A\nB\nC\nD\nE\n", "A\nC\nC\nD\nE\n", -1, -1, COMPARING
+        RESYNC_FAILED
+        "***** fc-test1.txt\nA\nB\n"
+        "***** FC-TEST2.TXT\nA\nC\n"
+        "*****\n\n"
+    },
+    /* Test /LB3 */
+    {
+        __LINE__, 1, "fc /LB3" FILES, "A\nB\nC\nD\nE\n", "C\nC\nC\nD\nE\n", -1, -1, COMPARING
+        "***** fc-test1.txt\nA\nB\nC\n"
+        "***** FC-TEST2.TXT\nC\nC\n"
+        "*****\n\n"
+        "***** fc-test1.txt\nC\nD\n"
+        "***** FC-TEST2.TXT\nC\nC\nD\n"
+        "*****\n\n"
+    },
+    {
+        __LINE__, 1, "fc /LB3" FILES, "A\nB\nC\nD\nE\n", "D\nD\nD\nD\nE\n", -1, -1, COMPARING
+        RESYNC_FAILED
+        "***** fc-test1.txt\nA\nB\nC\n"
+        "***** FC-TEST2.TXT\nD\nD\nD\n"
+        "*****\n\n"
+    },
+    /* Test /N /LB2 */
+    {
+        __LINE__, 1, "fc /N /LB2" FILES, "A\nB\nC\nD\nE\n", "A\nB\nC\nE\nE\n", -1, -1, COMPARING
+        RESYNC_FAILED
+        "***** fc-test1.txt\n    3:  C\n    4:  D\n"
+        "***** FC-TEST2.TXT\n    3:  C\n    4:  E\n"
+        "*****\n\n"
+    },
+    /* Test /1 */
+    {
+        __LINE__, 1, "fc /1" FILES, "A\nB\nC\nD\nE\n", "A\nB\nC\nE\nE\n", -1, -1, COMPARING
+        "***** fc-test1.txt\nC\nD\nE\n"
+        "***** FC-TEST2.TXT\nC\nE\n"
+        "*****\n\n"
+    },
+    {
+        __LINE__, 1, "fc /1" FILES, "A\nB\nC\nD\nE\n", "A\nB\nX\nX\nE\n", -1, -1, COMPARING
+        "***** fc-test1.txt\nB\nC\nD\nE\n"
+        "***** FC-TEST2.TXT\nB\nX\nX\nE\n"
+        "*****\n\n"
+    },
+    {
+        __LINE__, 1, "fc /1" FILES, "A\nB\nC\nD\nE\nF\n\n", "A\nB\nX\nD\nX\nF\n", -1, -1, COMPARING
+        "***** fc-test1.txt\nB\nC\nD\n"
+        "***** FC-TEST2.TXT\nB\nX\nD\n"
+        "*****\n\n"
+        "***** fc-test1.txt\nD\nE\nF\n"
+        "***** FC-TEST2.TXT\nD\nX\nF\n"
+        "*****\n\n"
+        "***** fc-test1.txt\n\n"
+        "***** FC-TEST2.TXT\n"
+        "*****\n\n"
+    },
+    /* Test /3 */
+    {
+        __LINE__, 1, "fc /3" FILES, "A\nB\nC\nD\nE\n", "A\nB\nC\nE\nE\n", -1, -1, COMPARING
+        "***** fc-test1.txt\nC\nD\nE\n"
+        "***** FC-TEST2.TXT\nC\nE\n"
+        "*****\n\n"
+    },
+    {
+        __LINE__, 1, "fc /3" FILES, "A\nB\nC\nD\nE\n", "A\nB\nX\nX\nE\n", -1, -1, COMPARING
+        "***** fc-test1.txt\nB\nC\nD\nE\n"
+        "***** FC-TEST2.TXT\nB\nX\nX\nE\n"
+        "*****\n\n"
+    },
+    {
+        __LINE__, 1, "fc /3" FILES, "A\nB\nC\nD\nE\nF\n\n", "A\nB\nX\nD\nX\nF\n", -1, -1, COMPARING
+        "***** fc-test1.txt\nB\nC\nD\nE\nF\n"
+        "***** FC-TEST2.TXT\nB\nX\nD\nX\nF\n"
+        "*****\n\n"
+        "***** fc-test1.txt\n\n"
+        "***** FC-TEST2.TXT\n"
+        "*****\n\n"
     },
 };
 
