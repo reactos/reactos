@@ -480,8 +480,8 @@ add_compile_options("$<$<COMPILE_LANGUAGE:CXX>:$<IF:$<BOOL:$<TARGET_PROPERTY:WIT
 # We disable exceptions, unless said so
 add_compile_options("$<$<COMPILE_LANGUAGE:CXX>:$<IF:$<BOOL:$<TARGET_PROPERTY:WITH_CXX_EXCEPTIONS>>,-fexceptions,-fno-exceptions>>")
 
-# G++ shipped with ROSBE uses sjlj exceptions. Tell Clang it is so
-if (CLANG)
+# G++ shipped with ROSBE uses sjlj exceptions on i386. Tell Clang it is so
+if (CLANG AND (ARCH STREQUAL "i386"))
     add_compile_options("$<$<AND:$<COMPILE_LANGUAGE:CXX>,$<BOOL:$<TARGET_PROPERTY:WITH_CXX_EXCEPTIONS>>>:-fsjlj-exceptions>")
 endif()
 
