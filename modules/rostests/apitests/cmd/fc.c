@@ -364,7 +364,7 @@ static void DoTestEntry(const TEST_ENTRY* pEntry)
     DeleteFileA(FILE2);
 }
 
-#define ENGLISH_CP 437
+#define ENGLISH_CP 437 /* English codepage */
 
 START_TEST(fc)
 {
