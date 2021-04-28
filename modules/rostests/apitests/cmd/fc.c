@@ -154,6 +154,12 @@ static const TEST_ENTRY s_entries[] =
       "***** FC-TEST2.TXT\nABC\n\n\n"
       "*****\n"
     },
+    { __LINE__, 1, "fc" FILES, "ABC\000DE", "ABC\n\000\000", 6, 6,
+      COMPARING
+      "***** fc-test1.txt\nABC\nDE\n"
+      "***** FC-TEST2.TXT\nABC\n\n\n"
+      "*****\n"
+    },
 };
 
 BOOL DoDuplicateHandle(HANDLE hFile, PHANDLE phFile, BOOL bInherit)
