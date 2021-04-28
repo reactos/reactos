@@ -42,6 +42,10 @@ static const TEST_ENTRY s_entries[] =
       COMPARING "00000000: 41 42\n00000001: 42 41\n" },
     { __LINE__, 0, "fc /B" FILES, "ABC", "ABC", -1, -1,
       COMPARING "FC: no differences encountered\n" },
+    { __LINE__, 1, "fc /B" FILES, "ABC", "ABCD", -1, -1,
+      COMPARING "FC: FC-TEST2.TXT longer than fc-test1.txt\n\n" },
+    { __LINE__, 1, "fc /B" FILES, "ABC", "ABDD", -1, -1,
+      COMPARING "00000002: 43 44\nFC: FC-TEST2.TXT longer than fc-test1.txt\n" },
     { __LINE__, 1, "fc /B /C" FILES, "ABC", "abc", -1, -1,
       COMPARING "00000000: 41 61\n00000001: 42 62\n00000002: 43 63\n" },
     /* text comparison */
@@ -276,7 +280,7 @@ static void DoTestEntry(const TEST_ENTRY* pEntry)
     FILE *fp;
     STARTUPINFOA si = { sizeof(si) };
     PROCESS_INFORMATION pi;
-    INT file1_size, file2_size, i;
+    INT file1_size, file2_size;
     HANDLE hOutputRead;
     DWORD cbAvail, cbRead;
     CHAR szOutput[1024];
@@ -311,15 +315,8 @@ static void DoTestEntry(const TEST_ENTRY* pEntry)
                          0, NULL, NULL, &si, &pi);
     ok(ret, "Line %d: CreateProcessA failed\n", pEntry->lineno);
 
-#define RETRY_COUNT 64
-#define SLEEP_TIME 100
-    for (i = 0; i < RETRY_COUNT; ++i)
-    {
-        GetExitCodeProcess(pi.hProcess, &dwExitCode);
-        if (dwExitCode != STILL_ACTIVE)
-            break;
-        Sleep(SLEEP_TIME);
-    }
+#define TIMEOUT (10 * 1000)
+    WaitForSingleObject(pi.hProcess, TIMEOUT);
 
     ZeroMemory(szOutput, sizeof(szOutput));
     if (PeekNamedPipe(hOutputRead, NULL, 0, NULL, &cbAvail, NULL))
