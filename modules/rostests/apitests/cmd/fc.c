@@ -60,6 +60,7 @@ static const TEST_ENTRY s_entries[] =
     { __LINE__, 0, "fc /C" FILES, "ABC", "abc", -1, -1,
       COMPARING "FC: no differences encountered\n" },
     { __LINE__, 1, "fc" FILES, "A\nB\nC\nD\nE\n", "A\nB\nB\nD\nE\n", -1, -1,
+    /* Test /A */
       COMPARING "***** fc-test1.txt\nB\nC\nD\n***** FC-TEST2.TXT\nB\nB\nD\n*****\n" },
     { __LINE__, 1, "fc /A" FILES, "A\nB\nC\nD\nE\n", "A\nB\nB\nD\nE\n", -1, -1,
       COMPARING "***** fc-test1.txt\nB\nC\nD\n***** FC-TEST2.TXT\nB\nB\nD\n*****\n" },
@@ -76,6 +77,7 @@ static const TEST_ENTRY s_entries[] =
       "*****\n\n"
       "***** fc-test1.txt\nF\nE\n***** FC-TEST2.TXT\n*****\n"
     },
+    /* Test /N /A */
     { __LINE__, 1, "fc /N /A" FILES, "A\nB\nC\nD\nE\n", "A\nB\nB\nD\nE\n", -1, -1,
       COMPARING
       "***** fc-test1.txt\n    2:  B\n    3:  C\n    4:  D\n"
@@ -111,18 +113,22 @@ static const TEST_ENTRY s_entries[] =
       "***** FC-TEST2.TXT\n"
       "*****\n"
     },
+    /* Test tab expansion */
     { __LINE__, 0, "fc" FILES, "A\n\tB\nC\nD\nE\n", "A\n        B\nC\nD\nE\n", -1, -1,
       COMPARING "FC: no differences encountered\n" },
     { __LINE__, 0, "fc" FILES, "A\n    \tB\nC\nD\nE\n", "A\n        B\nC\nD\nE\n", -1, -1,
       COMPARING "FC: no differences encountered\n" },
+    /* Test /T */
     { __LINE__, 1, "fc /T" FILES, "A\n\tB\nC\nD\nE\n", "A\n        B\nC\nD\nE\n", -1, -1,
       COMPARING "" },
     { __LINE__, 1, "fc /T" FILES, "A\n    \tB\nC\nD\nE\n", "A\n        B\nC\nD\nE\n", -1, -1,
       COMPARING "***** fc-test1.txt\nA\n    \tB\nC\n***** FC-TEST2.TXT\nA\n        B\nC\n*****\n" },
+    /* Test /W */
     { __LINE__, 0, "fc /W" FILES, "A\n    \tB\nC\nD\nE\n", "A\n        B\nC\nD\nE\n", -1, -1,
       COMPARING "FC: no differences encountered\n" },
-    { __LINE__, 0, "fc /T /W" FILES, "A\n    \tB\nC\nD\nE\n", "A\n        B\nC\nD\nE\n", -1, -1,
+    { __LINE__, 0, "fc /W /T" FILES, "A\n    \tB\nC\nD\nE\n", "A\n        B\nC\nD\nE\n", -1, -1,
       COMPARING "FC: no differences encountered\n" },
+    /* Test /N */
     { __LINE__, 1, "fc /N" FILES, "A\nB\nC\nD\nE\n", "A\nB\nC\nE\nE\n", -1, -1,
       COMPARING
       "***** fc-test1.txt\n    3:  C\n    4:  D\n    5:  E\n"
@@ -134,10 +140,18 @@ static const TEST_ENTRY s_entries[] =
       "    5:  E\n"
       "*****\n"
     },
-    { __LINE__, 1, "fc /LB3 /N" FILES, "A\nB\nC\nD\nE\n", "A\nB\nC\nE\nE\n", -1, -1,
+    /* Test /N /LB3 */
+    { __LINE__, 1, "fc /N /LB3" FILES, "A\nB\nC\nD\nE\n", "A\nB\nC\nE\nE\n", -1, -1,
       COMPARING
       "***** fc-test1.txt\n    4:  D\n    5:  E\n"
       "***** FC-TEST2.TXT\n    4:  E\n    5:  E\n"
+      "*****\n"
+    },
+    /* Test NUL */
+    { __LINE__, 1, "fc" FILES, "ABC\000DE", "ABC\000\000\000", 6, 6,
+      COMPARING
+      "***** fc-test1.txt\nABC\nDE\n"
+      "***** FC-TEST2.TXT\nABC\n\n\n"
       "*****\n"
     },
 };
@@ -150,7 +164,8 @@ BOOL DoDuplicateHandle(HANDLE hFile, PHANDLE phFile, BOOL bInherit)
 }
 
 static BOOL
-PrepareForRedirect(STARTUPINFOA *psi, PHANDLE phInputWrite, PHANDLE phOutputRead, PHANDLE phErrorRead)
+PrepareForRedirect(STARTUPINFOA *psi, PHANDLE phInputWrite, PHANDLE phOutputRead,
+                   PHANDLE phErrorRead)
 {
     SECURITY_ATTRIBUTES sa;
     HANDLE hInputRead = NULL, hInputWriteTmp = NULL;
@@ -310,7 +325,7 @@ static void DoTestEntry(const TEST_ENTRY* pEntry)
     GetExitCodeProcess(pi.hProcess, &dwExitCode);
     ok(dwExitCode == pEntry->ret, "Line %d: dwExitCode was 0x%lx\n", pEntry->lineno, dwExitCode);
 
-    if (StrCmpNIA(pEntry->output, szOutput, lstrlenA(pEntry->output)) != 0)
+    if (StrCmpNIA(pEntry->output, szOutput, strlen(pEntry->output)) != 0)
     {
         ok(FALSE, "Line %d: Output was wrong\n", pEntry->lineno);
         printf("---FROM HERE\n");
