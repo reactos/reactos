@@ -2,106 +2,79 @@ name: Build
 on: [push, pull_request]
 
 jobs:
-  build-gcc-i386:
-    name: GCC (i386)
+  build-linux:
+    strategy:
+      matrix:
+        compiler: [gcc, clang]
+        arch: [i386, amd64]
+      fail-fast: false
     runs-on: ubuntu-latest
     steps:
-    - name: Install RosBE
+    - name: Get Runner arch
+      id: get_native_arch
       run: |
-        wget https://svn.reactos.org/storage/vperevertkin/rosbe-ci.tar.zst
-        mkdir ${{github.workspace}}/rosbe
-        tar -I zstd -xvf rosbe-ci.tar.zst --directory ${{github.workspace}}/rosbe
-    - name: Install other packages
+        gcc -march=native -Q --help=target | grep "\-march= " | awk '{print $NF}'
+        echo ::set-output name=march::$(gcc -march=native -Q --help=target | grep "\-march= " | awk '{print $NF}')
+    - name: Get RosBE
+      uses: actions/cache@v2
+      with:
+        path: RosBE-CI
+        key: RosBE-CI-${{runner.os}}-${{steps.get_native_arch.outputs.march}}
+    - name: Compile RosBE
+      run: |
+        wget https://gist.githubusercontent.com/zefklop/b2d6a0b470c70183e93d5285a03f5899/raw/build_rosbe_ci.sh
+        chmod +x build_rosbe_ci.sh
+        ./build_rosbe_ci.sh ${{github.workspace}}/RosBE-CI
+    - name: Install ccache
       run: sudo apt install ccache
-    - uses: actions/checkout@v2
+    - name: Install LLVM
+      if: ${{ matrix.compiler == 'clang' }}
+      run: |
+        echo "LLVM_VERSION=12" >> $GITHUB_ENV
+        wget https://apt.llvm.org/llvm.sh
+        chmod +x llvm.sh
+        sudo ./llvm.sh $LLVM_VERSION
+    - name: Source checkout
+      uses: actions/checkout@v2
       with:
         path: src
     - name: Set up cache for ccache
       uses: actions/cache@v2
       with:
         path: ccache
-        key: ccache-gcc-i386-${{github.sha}}
+        key: ccache-${{matrix.compiler}}-${{matrix.arch}}-${{github.sha}}
         restore-keys: |
-          ccache-gcc-i386-
+          ccache-${{matrix.compiler}}-${{matrix.arch}}-
     - name: Set ccache settings
       run: |
         echo "CCACHE_BASEDIR=${{github.workspace}}" >> $GITHUB_ENV
         echo "CCACHE_DIR=${{github.workspace}}/ccache" >> $GITHUB_ENV
         echo "CCACHE_MAXSIZE=1G" >> $GITHUB_ENV
         echo "CCACHE_SLOPPINESS=time_macros" >> $GITHUB_ENV
+        echo "CCACHE_COMPILERCHECK=string:${{hashfiles('./build_rosbe_ci.sh', './RosBE-CI/git-commit')}}" >> $GITHUB_ENV
+    - name: Create Build directory
+      run: mkdir build
     - name: Configure
-      run: |
-        mkdir build
-        echo 'cd ${{github.workspace}}/build && ${{github.workspace}}/src/configure.sh -DENABLE_CCACHE=1 -DENABLE_ROSTESTS=1 -DENABLE_ROSAPPS=1' > commands
-        ${{github.workspace}}/rosbe/RosBE.sh < commands
+      working-directory: ${{github.workspace}}/build
+      run: echo 'cmake ${{github.workspace}}/src -G Ninja -DCMAKE_TOOLCHAIN_FILE:FILEPATH=toolchain-${{matrix.compiler}}.cmake -DARCH:STRING=${{matrix.arch}} -DENABLE_CCACHE=1 -DENABLE_ROSTESTS=1 -DENABLE_ROSAPPS=1 -DCLANG_VERSION=${{env.LLVM_VERSION}}' | ${{github.workspace}}/RosBE-CI/RosBE.sh . 0 ${{matrix.arch}}
     - name: Build
-      run: |
-        echo 'cd ${{github.workspace}}/build && cmake --build .' > commands
-        ${{github.workspace}}/rosbe/RosBE.sh < commands
+      working-directory: ${{github.workspace}}/build
+      run: echo 'cmake --build .' | ${{github.workspace}}/RosBE-CI/RosBE.sh . 0 ${{matrix.arch}}
     - name: Generate ISOs
-      run: |
-        echo 'cd ${{github.workspace}}/build && cmake --build . --target bootcd && cmake --build . --target livecd' > commands
-        ${{github.workspace}}/rosbe/RosBE.sh < 'commands'
+      working-directory: ${{github.workspace}}/build
+      run: echo 'cmake --build . --target bootcd --target livecd' | ${{github.workspace}}/RosBE-CI/RosBE.sh . 0 ${{matrix.arch}}
     - name: Print ccache statistics
       run: ccache -s
     - name: Upload bootcd
       uses: actions/upload-artifact@v2
       with:
-        name: reactos-gcc-i386-${{github.sha}}
+        name: reactos-${{matrix.compiler}}-${{matrix.arch}}-${{github.sha}}
         path: build/bootcd.iso
     - name: Upload livecd
       uses: actions/upload-artifact@v2
       with:
-        name: reactos-gcc-i386-${{github.sha}}
+        name: reactos-${{matrix.compiler}}-${{matrix.arch}}-${{github.sha}}
         path: build/livecd.iso
-
-  build-clang-i386:
-    name: Clang (i386)
-    runs-on: ubuntu-latest
-    steps:
-    - name: Install RosBE
-      run: |
-        wget https://svn.reactos.org/storage/vperevertkin/rosbe-ci.tar.zst
-        mkdir ${{github.workspace}}/rosbe
-        tar -I zstd -xvf rosbe-ci.tar.zst --directory ${{github.workspace}}/rosbe
-    - name: Set LLVM version
-      run: |
-        echo "LLVM_VERSION=12" >> $GITHUB_ENV
-    - name: Install LLVM
-      run: |
-        wget https://apt.llvm.org/llvm.sh
-        chmod +x llvm.sh
-        sudo ./llvm.sh $LLVM_VERSION
-    - name: Install other packages
-      run: |
-        sudo apt install ccache
-    - uses: actions/checkout@v2
-      with:
-        path: src
-    - name: Set up cache for ccache
-      uses: actions/cache@v2
-      with:
-        path: ccache
-        key: ccache-clang-i386-${{github.sha}}
-        restore-keys: |
-          ccache-clang-i386-
-    - name: Set ccache settings
-      run: |
-        echo "CCACHE_BASEDIR=${{github.workspace}}" >> $GITHUB_ENV
-        echo "CCACHE_DIR=${{github.workspace}}/ccache" >> $GITHUB_ENV
-        echo "CCACHE_MAXSIZE=1G" >> $GITHUB_ENV
-        echo "CCACHE_SLOPPINESS=time_macros" >> $GITHUB_ENV
-    - name: Configure
-      run: |
-        mkdir build
-        echo 'cd ${{github.workspace}}/build && cmake ${{github.workspace}}/src -G Ninja -DCMAKE_TOOLCHAIN_FILE:FILEPATH=toolchain-clang.cmake -DARCH:STRING=i386 -DENABLE_CCACHE=1 -DENABLE_ROSTESTS=1 -DENABLE_ROSAPPS=1 -DCLANG_VERSION=${{env.LLVM_VERSION}}' > commands
-        ${{github.workspace}}/rosbe/RosBE.sh < commands
-    - name: Build
-      run: |
-        echo 'cd ${{github.workspace}}/build && cmake --build .' > commands
-        ${{github.workspace}}/rosbe/RosBE.sh < commands
-    - name: Print ccache statistics
-      run: ccache -s
 
   build-clang-cl-i386:
     name: Clang-CL (i386)
