@@ -173,6 +173,27 @@ static const TEST_ENTRY s_entries[] =
     { __LINE__, 0, "fc" FILES, "ABC\000DE", "ABC\nDE", 6, 6,
       COMPARING "FC: no differences encountered\n"
     },
+    /* Test CR ('\r') */
+    { __LINE__, 0, "fc" FILES, "ABC\nABC", "ABC\r\nABC", -1, -1,
+      COMPARING "FC: no differences encountered\n"
+    },
+    { __LINE__, 1, "fc" FILES, "ABC\nABC", "ABC\r\r\nABC", -1, -1,
+      COMPARING
+      "***** fc-test1.txt\nABC\nABC\n"
+      "***** FC-TEST2.TXT\nABC\nABC\n"
+      "*****\n"
+    },
+    /* Test '\n' at EOF */
+    { __LINE__, 0, "fc" FILES, "ABC", "ABC\n", -1, -1,
+      COMPARING "FC: no differences encountered\n"
+    },
+    /* Test /U */
+    { __LINE__, 0, "fc /U" FILES, "A\000B\000", "A\000B\000", 4, 4,
+      COMPARING "FC: no differences encountered\n" /* L"AB" */
+    },
+    { __LINE__, 1, "fc /U" FILES, "A\000B\000", "A\000C\000", 4, 4,
+      COMPARING "***** fc-test1.txt\nAB\n***** FC-TEST2.TXT\nAC\n*****\n"
+    },
 };
 
 BOOL DoDuplicateHandle(HANDLE hFile, PHANDLE phFile, BOOL bInherit)
