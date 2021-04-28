@@ -26,7 +26,7 @@ typedef struct TEST_ENTRY
 #define FILE2 "fc-test2.txt"
 #define FILES " " FILE1 " " FILE2
 #define COMPARING "Comparing files fc-test1.txt and FC-TEST2.TXT\n"
-#define NO_DIFFERENCES "FC: no differences encountered\n"
+#define NO_DIFF "FC: no differences encountered\n"
 #define RESYNC_FAILED "Resync Failed.  Files are too different.\n"
 
 static const TEST_ENTRY s_entries[] =
@@ -34,7 +34,7 @@ static const TEST_ENTRY s_entries[] =
     /* binary comparison */
     {
         __LINE__, 0, "fc /B" FILES, "", "", -1, -1, COMPARING
-        NO_DIFFERENCES
+        NO_DIFF
     },
     {
         __LINE__, 1, "fc /B" FILES, "A", "B", -1, -1, COMPARING
@@ -46,7 +46,7 @@ static const TEST_ENTRY s_entries[] =
     },
     {
         __LINE__, 0, "fc /B" FILES, "AB", "AB", -1, -1, COMPARING
-        NO_DIFFERENCES
+        NO_DIFF
     },
     {
         __LINE__, 1, "fc /B" FILES, "AB", "BA", -1, -1, COMPARING
@@ -55,7 +55,7 @@ static const TEST_ENTRY s_entries[] =
     },
     {
         __LINE__, 0, "fc /B" FILES, "ABC", "ABC", -1, -1, COMPARING
-        NO_DIFFERENCES
+        NO_DIFF
     },
     {
         __LINE__, 1, "fc /B" FILES, "ABC", "ABCD", -1, -1, COMPARING
@@ -75,7 +75,7 @@ static const TEST_ENTRY s_entries[] =
     /* text comparison */
     {
         __LINE__, 0, "fc" FILES, "", "", -1, -1, COMPARING
-        NO_DIFFERENCES
+        NO_DIFF
     },
     {
         __LINE__, 1, "fc" FILES, "A", "B", -1, -1, COMPARING
@@ -91,7 +91,7 @@ static const TEST_ENTRY s_entries[] =
     },
     {
         __LINE__, 0, "fc" FILES, "AB", "AB", -1, -1, COMPARING
-        NO_DIFFERENCES
+        NO_DIFF
     },
     {
         __LINE__, 1, "fc" FILES, "AB", "BA", -1, -1, COMPARING
@@ -101,11 +101,11 @@ static const TEST_ENTRY s_entries[] =
     },
     {
         __LINE__, 0, "fc" FILES, "ABC", "ABC", -1, -1, COMPARING
-        NO_DIFFERENCES
+        NO_DIFF
     },
     {
         __LINE__, 0, "fc /C" FILES, "ABC", "abc", -1, -1, COMPARING
-        NO_DIFFERENCES
+        NO_DIFF
     },
     {
         __LINE__, 1, "fc" FILES, "A\nB\nC\nD\nE\n", "A\nB\nB\nD\nE\n", -1, -1, COMPARING
@@ -205,11 +205,11 @@ static const TEST_ENTRY s_entries[] =
     /* Test tab expansion */
     {
         __LINE__, 0, "fc" FILES, "A\n\tB\nC", "A\n        B\nC", -1, -1, COMPARING
-        NO_DIFFERENCES
+        NO_DIFF
     },
     {
         __LINE__, 0, "fc" FILES, "A\n    \tB\nC", "A\n        B\nC", -1, -1, COMPARING
-        NO_DIFFERENCES
+        NO_DIFF
     },
     /* Test /T */
     {
@@ -227,11 +227,11 @@ static const TEST_ENTRY s_entries[] =
     /* Test /W */
     {
         __LINE__, 0, "fc /W" FILES, "A\n    \tB\nC", "A\n        B\nC", -1, -1, COMPARING
-        NO_DIFFERENCES
+        NO_DIFF
     },
     {
         __LINE__, 0, "fc /W" FILES, "\tA \nB\n", "A\nB\n", -1, -1, COMPARING
-        NO_DIFFERENCES
+        NO_DIFF
     },
     {
         __LINE__, 1, "fc /W" FILES, "        A \nB\n", "AB\nB\n", -1, -1, COMPARING
@@ -242,11 +242,11 @@ static const TEST_ENTRY s_entries[] =
     /* TEST /W /T */
     {
         __LINE__, 0, "fc /W /T" FILES, "A\n    \tB\nC", "A\n        B\nC", -1, -1, COMPARING
-        NO_DIFFERENCES
+        NO_DIFF
     },
     {
         __LINE__, 0, "fc /W /T" FILES, "A\n    \tB\nC", "A\n        B\nC", -1, -1, COMPARING
-        NO_DIFFERENCES
+        NO_DIFF
     },
     {
         __LINE__, 1, "fc /W" FILES, "\tA \nB\n", "AB\nB\n", -1, -1, COMPARING
@@ -279,12 +279,12 @@ static const TEST_ENTRY s_entries[] =
     },
     {
         __LINE__, 0, "fc" FILES, "ABC\000DE", "ABC\nDE", 6, 6, COMPARING
-        NO_DIFFERENCES
+        NO_DIFF
     },
     /* Test CR ('\r') */
     {
         __LINE__, 0, "fc" FILES, "ABC\nABC", "ABC\r\nABC", -1, -1, COMPARING
-        NO_DIFFERENCES
+        NO_DIFF
     },
     {
         __LINE__, 1, "fc" FILES, "ABC\nABC", "ABC\r\r\nABC", -1, -1, COMPARING
@@ -295,13 +295,13 @@ static const TEST_ENTRY s_entries[] =
     /* Test '\n' at EOF */
     {
         __LINE__, 0, "fc" FILES, "ABC", "ABC\n", -1, -1, COMPARING
-        NO_DIFFERENCES
+        NO_DIFF
     },
     /* Test /U */
     {
         /* L"AB" */
         __LINE__, 0, "fc /U" FILES, "A\000B\000", "A\000B\000", 4, 4, COMPARING
-        NO_DIFFERENCES
+        NO_DIFF
     },
     {
         __LINE__, 1, "fc /U" FILES, "A\000B\000", "A\000C\000", 4, 4, COMPARING
