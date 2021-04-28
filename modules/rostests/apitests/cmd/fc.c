@@ -6,6 +6,7 @@
  */
 
 #include "precomp.h"
+#include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <shlwapi.h>
@@ -14,7 +15,7 @@ typedef struct TEST_ENTRY
 {
     INT lineno;
     INT ret;
-    CHAR cmdline[128];
+    LPCSTR cmdline;
     LPCSTR file1_data;
     LPCSTR file2_data;
     INT file1_size; // -1 for zero-terminated
@@ -519,6 +520,7 @@ static void DoTestEntry(const TEST_ENTRY* pEntry)
     CHAR szOutput[1024];
     BOOL ret;
     DWORD dwExitCode;
+    LPSTR psz;
 
     file1_size = pEntry->file1_size;
     file2_size = pEntry->file2_size;
@@ -544,8 +546,10 @@ static void DoTestEntry(const TEST_ENTRY* pEntry)
 
     PrepareForRedirect(&si, NULL, &hOutputRead, &hOutputRead);
 
-    ret = CreateProcessA(NULL, (LPSTR)pEntry->cmdline, NULL, NULL, TRUE,
-                         0, NULL, NULL, &si, &pi);
+    psz = _strdup(pEntry->cmdline);
+    ret = CreateProcessA(NULL, psz, NULL, NULL, TRUE, 0, NULL, NULL, &si, &pi);
+    free(psz);
+
     ok(ret, "Line %d: CreateProcessA failed\n", pEntry->lineno);
 
 #define TIMEOUT (10 * 1000)
