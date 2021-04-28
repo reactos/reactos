@@ -14,7 +14,7 @@ typedef struct TEST_ENTRY
 {
     INT lineno;
     INT ret;
-    LPCSTR cmdline;
+    CHAR cmdline[128];
     LPCSTR file1_data;
     LPCSTR file2_data;
     INT file1_size; // -1 for zero-terminated
