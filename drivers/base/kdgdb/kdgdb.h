@@ -19,7 +19,7 @@
 
 #include <pstypes.h>
 
-#define KDDEBUG /* uncomment to enable debugging this dll */
+// #define KDDEBUG /* uncomment to enable debugging this dll */
 
 /* To undefine once https://sourceware.org/bugzilla/show_bug.cgi?id=17397 is resolved */
 #define MONOPROCESS 1
