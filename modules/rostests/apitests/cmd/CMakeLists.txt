@@ -1,7 +1,7 @@
 
 list(APPEND SOURCE
     cmd.c
-	fc.c
+    fc.c
     testlist.c)
 
 add_executable(cmd_apitest ${SOURCE})
