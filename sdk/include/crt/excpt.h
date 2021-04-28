@@ -70,7 +70,7 @@ typedef enum _EXCEPTION_DISPOSITION
 
 #endif
 
-#ifdef _MSC_VER
+#if defined(_MSC_VER) || (defined(__clang__) && defined(__SEH__))
 #define GetExceptionCode _exception_code
 #define exception_code _exception_code
 #define GetExceptionInformation (struct _EXCEPTION_POINTERS *)_exception_info
