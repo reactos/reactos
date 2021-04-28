@@ -172,14 +172,6 @@ add_definitions(-D_inline=__inline)
 # Fix build with GLIBCXX + our c++ headers
 add_definitions(-D_GLIBCXX_HAVE_BROKEN_VSWPRINTF)
 
-# Disable SSE globally on amd64 builds.
-# We can't disable it for kernel mode modules only,
-# as we don't call set_module_type on static libraries
-# Instead we disable this options for user-mode modules
-if(ARCH STREQUAL "amd64")
-    add_compile_options(-mno-sse)
-endif()
-
 # Alternative arch name
 if(ARCH STREQUAL "amd64")
     set(ARCH2 x86_64)
@@ -322,9 +314,6 @@ function(set_module_type_toolchain MODULE TYPE)
 
         # Believe it or not, cmake doesn't do that
         set_property(TARGET ${MODULE} APPEND PROPERTY LINK_DEPENDS $<TARGET_PROPERTY:native-pefixup,IMPORTED_LOCATION>)
-    else()
-        # We can safely use SSE for user-mode parts
-        remove_target_compile_option(${MODULE} -mno-sse)
     endif()
 endfunction()
 
