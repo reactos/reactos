@@ -215,7 +215,11 @@ Enable this if the module uses typeid or dynamic_cast. You will probably need to
             add_definitions(-DSARCH_PC98)
         endif()
     elseif(ARCH STREQUAL "amd64")
-        add_definitions(-D_M_AMD64 -D_AMD64_ -D__x86_64__ -D_WIN64)
+        # clang-cl defines this one for itself
+        if (NOT (MSVC AND CMAKE_C_COMPILER_ID STREQUAL "Clang"))
+            add_compile_definitions(_M_AMD64)
+        endif()
+        add_definitions(-D_AMD64_ -D__x86_64__ -D_WIN64)
     elseif(ARCH STREQUAL "arm")
         # _M_ARM is already defined by toolchain
         add_definitions(-D_ARM_ -D__arm__ -DWIN32)
