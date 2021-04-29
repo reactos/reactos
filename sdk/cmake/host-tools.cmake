@@ -11,6 +11,7 @@ function(setup_host_tools)
             COMMAND ${CMAKE_C_COMPILER} --print-file-name=plugin
             OUTPUT_VARIABLE GCC_PLUGIN_DIR)
         string(STRIP ${GCC_PLUGIN_DIR} GCC_PLUGIN_DIR)
+        list(APPEND CMAKE_HOST_TOOLS_EXTRA_ARGS -DGCC_PLUGIN_DIR=${GCC_PLUGIN_DIR})
         list(APPEND HOST_MODULES gcc_plugin_seh)
     endif()
     list(TRANSFORM HOST_TOOLS PREPEND "${REACTOS_BINARY_DIR}/host-tools/bin/" OUTPUT_VARIABLE HOST_TOOLS_OUTPUT)
@@ -25,6 +26,13 @@ function(setup_host_tools)
         set(HOST_MODULE_SUFFIX ".so")
     endif()
 
+    # CMake might choose clang if it finds it in the PATH. Always prefer cl for host tools
+    if (MSVC)
+        list(APPEND CMAKE_HOST_TOOLS_EXTRA_ARGS
+            -DCMAKE_C_COMPILER=cl
+            -DCMAKE_CXX_COMPILER=cl)
+    endif()
+
     ExternalProject_Add(host-tools
         SOURCE_DIR ${REACTOS_SOURCE_DIR}
         PREFIX ${REACTOS_BINARY_DIR}/host-tools
@@ -34,8 +42,8 @@ function(setup_host_tools)
             -DARCH:STRING=${ARCH}
             -DCMAKE_INSTALL_PREFIX=${REACTOS_BINARY_DIR}/host-tools
             -DTOOLS_FOLDER=${REACTOS_BINARY_DIR}/host-tools/bin
-            -DGCC_PLUGIN_DIR=${GCC_PLUGIN_DIR}
             -DTARGET_COMPILER_ID=${CMAKE_C_COMPILER_ID}
+            ${CMAKE_HOST_TOOLS_EXTRA_ARGS}
         BUILD_ALWAYS TRUE
         INSTALL_COMMAND ${CMAKE_COMMAND} -E true
         BUILD_BYPRODUCTS ${HOST_TOOLS_OUTPUT}
