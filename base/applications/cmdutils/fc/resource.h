@@ -10,4 +10,4 @@
 #define IDS_CANT_USE_WILDCARD   1009
 #define IDS_DIFFERENT           1010
 #define IDS_TOO_LARGE           1011
-#define IDS_RESYNCH_FAILED      1012
+#define IDS_RESYNC_FAILED       1012
