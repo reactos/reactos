@@ -43,7 +43,7 @@ FCRET InvalidSwitch(VOID)
     return FCRET_INVALID;
 }
 
-FCRET ResynchFailed(VOID)
+FCRET ResyncFailed(VOID)
 {
     ConResPuts(StdOut, IDS_RESYNC_FAILED);
     return FCRET_DIFFERENT;

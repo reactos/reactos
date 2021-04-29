@@ -86,7 +86,7 @@ FCRET LongerThan(LPCWSTR file1, LPCWSTR file2);
 FCRET OutOfMemory(VOID);
 FCRET CannotRead(LPCWSTR file);
 FCRET InvalidSwitch(VOID);
-FCRET ResynchFailed(VOID);
+FCRET ResyncFailed(VOID);
 HANDLE DoOpenFileForInput(LPCWSTR file);
 VOID ShowCaption(LPCWSTR file);
 

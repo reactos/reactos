@@ -381,7 +381,7 @@ SkipIdentical(FILECOMPARE *pFC, struct list **pptr1, struct list **pptr2)
 }
 
 static FCRET
-Resynch(FILECOMPARE *pFC, struct list *head1, struct list *head2, INT *pi1, INT *pi2)
+Resync(FILECOMPARE *pFC, struct list *head1, struct list *head2, INT *pi1, INT *pi2)
 {
     FCRET ret;
     INT i1, i2, m, p, k;
@@ -506,21 +506,21 @@ FCRET TextCompare(FILECOMPARE *pFC, HANDLE *phMapping1, const LARGE_INTEGER *pcb
             head2 = next;
         }
 
-        // try to resynch
-        ret = Resynch(pFC, head1, head2, &i1, &i2);
+        // try to resync
+        ret = Resync(pFC, head1, head2, &i1, &i2);
         if (ret == FCRET_INVALID)
             goto hell;
         if (ret == FCRET_DIFFERENT)
         {
-            // resynch failed
-            ret = ResynchFailed();
+            // resync failed
+            ret = ResyncFailed();
             goto hell;
         }
         // now, show the difference (with clean-up)
         fDifferent = TRUE;
         ShowDiffAndClean(pFC, head1, head2, i1, i2);
 
-        // now resynch'ed
+        // now resync'ed
     } while (ret1 != FCRET_NO_MORE_DATA && ret2 != FCRET_NO_MORE_DATA);
 
 quit:
