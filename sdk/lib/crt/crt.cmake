@@ -483,6 +483,10 @@ elseif(ARCH STREQUAL "amd64")
     if(MSVC)
         list(APPEND CRT_ASM_SOURCE
             except/amd64/cpp.s)
+        if (CMAKE_C_COMPILER_ID STREQUAL "Clang")
+            list(APPEND CRT_ASM_SOURCE
+                stdlib/clang-alias.s)
+        endif()
     endif()
 elseif(ARCH STREQUAL "arm")
     list(APPEND CRT_SOURCE
