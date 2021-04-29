@@ -663,15 +663,19 @@ __INTRIN_INLINE short _InterlockedIncrement16(volatile short * lpAddend)
 #endif
 
 #if defined(__x86_64__)
+#if !HAS_BUILTIN(_InterlockedDecrement64)
 __INTRIN_INLINE long long _InterlockedDecrement64(volatile long long * lpAddend)
 {
 	return _InterlockedExchangeAdd64(lpAddend, -1) - 1;
 }
+#endif
 
+#if !HAS_BUILTIN(_InterlockedIncrement64)
 __INTRIN_INLINE long long _InterlockedIncrement64(volatile long long * lpAddend)
 {
 	return _InterlockedExchangeAdd64(lpAddend, 1) + 1;
 }
+#endif
 #endif
 
 #endif /* (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__) > 40100 */
