@@ -49,22 +49,32 @@ FCRET ResyncFailed(VOID)
     return FCRET_DIFFERENT;
 }
 
-VOID ShowCaption(LPCWSTR file)
+VOID PrintCaption(LPCWSTR file)
 {
     ConPrintf(StdOut, L"***** %ls\n", file);
+}
+
+VOID PrintEndOfDiff(VOID)
+{
+    ConPuts(StdOut, L"*****\n\n");
+}
+
+VOID PrintDots(VOID)
+{
+    ConPuts(StdOut, L"...\n");
 }
 
 VOID PrintLine2W(const FILECOMPARE *pFC, DWORD lineno, LPCWSTR psz)
 {
     if (pFC->dwFlags & FLAG_N)
-        ConPrintf(StdOut, L"%5d%ls\n", lineno, psz);
+        ConPrintf(StdOut, L"%5d:  %ls\n", lineno, psz);
     else
         ConPrintf(StdOut, L"%ls\n", psz);
 }
 VOID PrintLine2A(const FILECOMPARE *pFC, DWORD lineno, LPCSTR psz)
 {
     if (pFC->dwFlags & FLAG_N)
-        ConPrintf(StdOut, L"%5d%hs\n", lineno, psz);
+        ConPrintf(StdOut, L"%5d:  %hs\n", lineno, psz);
     else
         ConPrintf(StdOut, L"%hs\n", psz);
 }
@@ -76,11 +86,6 @@ VOID PrintLineW(const FILECOMPARE *pFC, const NODE_W *node)
 VOID PrintLineA(const FILECOMPARE *pFC, const NODE_A *node)
 {
     PrintLine2A(pFC, node->lineno, node->pszLine);
-}
-
-VOID PrintDots(VOID)
-{
-    ConPrintf(StdOut, L"...\n");
 }
 
 HANDLE DoOpenFileForInput(LPCWSTR file)

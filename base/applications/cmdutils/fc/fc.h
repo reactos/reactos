@@ -31,13 +31,11 @@ typedef struct NODE_W
     struct list entry;
     LPWSTR pszLine;
     DWORD lineno;
-    DWORD cch;
 } NODE_W;
 typedef struct NODE_A
 {
     struct list entry;
     LPSTR pszLine;
-    DWORD cch;
     DWORD lineno;
 } NODE_A;
 
@@ -79,7 +77,9 @@ VOID PrintLineW(const FILECOMPARE *pFC, const NODE_W *node);
 VOID PrintLineA(const FILECOMPARE *pFC, const NODE_A *node);
 VOID PrintLine2W(const FILECOMPARE *pFC, DWORD lineno, LPCWSTR psz);
 VOID PrintLine2A(const FILECOMPARE *pFC, DWORD lineno, LPCSTR psz);
+VOID PrintEndOfDiff(VOID);
 VOID PrintDots(VOID);
+VOID PrintCaption(LPCWSTR file);
 FCRET NoDifference(VOID);
 FCRET Different(LPCWSTR file1, LPCWSTR file2);
 FCRET LongerThan(LPCWSTR file1, LPCWSTR file2);
@@ -88,7 +88,6 @@ FCRET CannotRead(LPCWSTR file);
 FCRET InvalidSwitch(VOID);
 FCRET ResyncFailed(VOID);
 HANDLE DoOpenFileForInput(LPCWSTR file);
-VOID ShowCaption(LPCWSTR file);
 
 #ifdef _WIN64
     #define MAX_VIEW_SIZE (256 * 1024 * 1024) // 256 MB

@@ -29,7 +29,7 @@ static BOOL FindNextLine(LPCTSTR pch, DWORD ich, DWORD cch, LPDWORD pich)
 {
     while (ich < cch)
     {
-        if (pch[ich] == TEXT('\n'))
+        if (pch[ich] == TEXT('\n') || pch[ich] == TEXT('\0'))
         {
             *pich = ich;
             return TRUE;
@@ -50,7 +50,7 @@ static LPTSTR AllocLine(LPCTSTR pch, DWORD cch)
     return pszNew;
 }
 
-static NODE *AllocNode(LPTSTR psz, DWORD cch, DWORD lineno)
+static NODE *AllocNode(LPTSTR psz, DWORD lineno)
 {
     NODE *node;
     if (!psz)
@@ -62,7 +62,6 @@ static NODE *AllocNode(LPTSTR psz, DWORD cch, DWORD lineno)
         return NULL;
     }
     node->pszLine = psz;
-    node->cch = cch;
     node->lineno = lineno;
     return node;
 }
@@ -95,7 +94,7 @@ static __inline LPCTSTR SkipSpace(LPCTSTR pch)
     return pch;
 }
 
-static __inline LPCTSTR LastNonSpace(LPCTSTR pch)
+static __inline LPCTSTR FindLastNonSpace(LPCTSTR pch)
 {
     LPCTSTR pchLast = NULL;
     while (*pch)
@@ -107,26 +106,14 @@ static __inline LPCTSTR LastNonSpace(LPCTSTR pch)
     return pchLast;
 }
 
-static LPTSTR CompressSpace(LPCTSTR line)
+static VOID DeleteDuplicateSpaces(LPTSTR psz)
 {
-    LPTSTR pszNew, pch1, pch2;
-    LPCTSTR pchLast;
-
-    line = SkipSpace(line);
-    pchLast = LastNonSpace(line);
-    if (pchLast == NULL)
-        return AllocLine(TEXT(""), 0);
-
-    pszNew = AllocLine(line, (DWORD)(pchLast - line) + 1);
-    if (!pszNew)
-        return NULL;
-
-    for (pch1 = pch2 = pszNew; *pch1; ++pch1)
+    LPTSTR pch1, pch2;
+    for (pch1 = pch2 = psz; *pch1; ++pch1)
     {
         *pch2++ = *pch1;
         if (IS_SPACE(*pch1))
         {
-            // skip duplicated spaces
             do
             {
                 ++pch1;
@@ -135,6 +122,23 @@ static LPTSTR CompressSpace(LPCTSTR line)
         }
     }
     *pch2 = 0;
+}
+
+static LPTSTR CompressSpace(LPCTSTR line)
+{
+    LPTSTR pszNew;
+    LPCTSTR pchLast;
+
+    line = SkipSpace(line);
+    pchLast = FindLastNonSpace(line);
+    if (pchLast == NULL)
+        return AllocLine(TEXT(""), 0);
+
+    pszNew = AllocLine(line, (DWORD)(pchLast - line) + 1);
+    if (!pszNew)
+        return NULL;
+
+    DeleteDuplicateSpaces(pszNew);
     return pszNew;
 }
 
@@ -190,7 +194,6 @@ static BOOL ExpandNode(const FILECOMPARE *pFC, NODE *node)
             return FALSE;
         free(node->pszLine);
         node->pszLine = tmp;
-        node->cch = lstrlen(tmp);
     }
     return TRUE;
 }
@@ -199,7 +202,6 @@ static FCRET CompareNode(const FILECOMPARE *pFC, const NODE *node1, const NODE *
 {
     DWORD dwCmpFlags = ((pFC->dwFlags & FLAG_C) ? NORM_IGNORECASE : 0);
     LPTSTR line1 = node1->pszLine, line2 = node2->pszLine;
-    DWORD cch1 = node1->cch, cch2 = node2->cch;
     INT ret;
     if (pFC->dwFlags & FLAG_W) // compress space
     {
@@ -219,7 +221,7 @@ static FCRET CompareNode(const FILECOMPARE *pFC, const NODE *node1, const NODE *
     }
     else
     {
-        ret = CompareString(LOCALE_USER_DEFAULT, dwCmpFlags, line1, cch1, line2, cch2);
+        ret = CompareString(LOCALE_USER_DEFAULT, dwCmpFlags, line1, -1, line2, -1);
         ret = (ret == CSTR_EQUAL) ? FCRET_IDENTICAL : FCRET_DIFFERENT;
     }
     return ret;
@@ -230,7 +232,7 @@ ParseLines(const FILECOMPARE *pFC, HANDLE *phMapping,
            LARGE_INTEGER *pib, const LARGE_INTEGER *pcb, struct list *list)
 {
     DWORD lineno = 1, ich, cch, ichNext, cbView, cchNode;
-    LPTSTR psz;
+    LPTSTR psz, pszLine;
     BOOL fLast, bCR;
     NODE *node;
 
@@ -259,7 +261,9 @@ ParseLines(const FILECOMPARE *pFC, HANDLE *phMapping,
     {
         bCR = (ichNext > 0) && (psz[ichNext - 1] == TEXT('\r'));
         cchNode = ichNext - ich - bCR;
-        node = AllocNode(AllocLine(&psz[ich], cchNode), cchNode, lineno++);
+        pszLine = AllocLine(&psz[ich], cchNode);
+        node = AllocNode(pszLine, lineno);
+        ++lineno;
         if (!node || !ExpandNode(pFC, node))
         {
             DeleteNode(node);
@@ -267,7 +271,8 @@ ParseLines(const FILECOMPARE *pFC, HANDLE *phMapping,
             return OutOfMemory();
         }
         list_add_tail(list, &node->entry);
-        ich = ichNext + 1;
+        ich = ichNext + !fLast;
+        fLast = (pib->QuadPart + cbView >= pcb->QuadPart);
     }
 
     UnmapViewOfFile(psz);
@@ -290,7 +295,7 @@ static VOID ShowDiffAndClean(FILECOMPARE *pFC, struct list *ptr1, struct list *p
 
     for (INT i = 0; i < 2; ++i)
     {
-        ShowCaption(pFC->file[i]);
+        PrintCaption(pFC->file[i]);
         if (!ptr[i])
             continue;
 
@@ -326,6 +331,8 @@ static VOID ShowDiffAndClean(FILECOMPARE *pFC, struct list *ptr1, struct list *p
             PrintLine(pFC, node);
         }
     }
+
+    PrintEndOfDiff();
 }
 
 static FCRET
@@ -334,15 +341,11 @@ Finalize(FILECOMPARE *pFC, struct list *ptr1, struct list *ptr2, BOOL fDifferent
     if (!ptr1 && !ptr2)
     {
         if (fDifferent)
-        {
-            ShowCaption(L"");
             return Different(pFC->file[0], pFC->file[1]);
-        }
         return NoDifference();
     }
 
     ShowDiffAndClean(pFC, ptr1, ptr2, pFC->n, pFC->n);
-    ShowCaption(L"");
     return FCRET_DIFFERENT;
 }
 
@@ -481,7 +484,7 @@ FCRET TextCompare(FILECOMPARE *pFC, HANDLE *phMapping1, const LARGE_INTEGER *pcb
         if (!ptr1 || !ptr2)
             goto quit;
 
-        // skip identical (synch'ed)
+        // skip identical (sync'ed)
         ret = SkipIdentical(pFC, &ptr1, &ptr2);
         if (ret == FCRET_INVALID)
             goto hell;
@@ -516,6 +519,7 @@ FCRET TextCompare(FILECOMPARE *pFC, HANDLE *phMapping1, const LARGE_INTEGER *pcb
             ret = ResyncFailed();
             goto hell;
         }
+
         // now, show the difference (with clean-up)
         fDifferent = TRUE;
         ShowDiffAndClean(pFC, head1, head2, i1, i2);
