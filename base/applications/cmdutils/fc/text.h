@@ -5,19 +5,21 @@
  * COPYRIGHT:   Copyright 2021 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
 #include "fc.h"
+#include <stdio.h>
+#include <wine/debug.h>
 
-#define IS_SPACEW(ch) ((ch) == TEXT(' ') || (ch) == TEXT('\t'))
+WINE_DEFAULT_DEBUG_CHANNEL(fc);
+
+#define IS_SPACE(ch) ((ch) == TEXT(' ') || (ch) == TEXT('\t'))
 
 #ifdef UNICODE
     #define NODE NODE_W
     #define PrintLine PrintLineW
-    #define PrintLine2 PrintLine2W
     #define TextCompare TextCompareW
     #define last_match last_matchW
 #else
     #define NODE NODE_A
     #define PrintLine PrintLineA
-    #define PrintLine2 PrintLine2A
     #define TextCompare TextCompareA
     #define last_match last_matchA
 #endif
@@ -167,7 +169,19 @@ static LPTSTR ExpandTab(LPCTSTR line)
     return pszNew;
 }
 
-static BOOL ExpandNode(const FILECOMPARE *pFC, NODE *node)
+static DWORD GetHashValue(LPCTSTR psz)
+{
+    DWORD ret = 0xDEADFACE;
+    while (*psz)
+    {
+        ret += *psz;
+        ret <<= 2;
+        ++psz;
+    }
+    return ret;
+}
+
+static BOOL ConvertNode(const FILECOMPARE *pFC, NODE *node)
 {
     if (!(pFC->dwFlags & FLAG_T))
     {
@@ -177,35 +191,37 @@ static BOOL ExpandNode(const FILECOMPARE *pFC, NODE *node)
         free(node->pszLine);
         node->pszLine = tmp;
     }
+    node->hash = GetHashValue(node->pszLine);
     return TRUE;
 }
 
 static FCRET CompareNode(const FILECOMPARE *pFC, const NODE *node1, const NODE *node2)
 {
     DWORD dwCmpFlags = ((pFC->dwFlags & FLAG_C) ? NORM_IGNORECASE : 0);
-    LPTSTR line1 = node1->pszLine, line2 = node2->pszLine;
+    LPTSTR psz1, psz2, line1 = node1->pszLine, line2 = node2->pszLine;
     INT ret;
-    if (pFC->dwFlags & FLAG_W) // compress space
+
+    if (!(pFC->dwFlags & FLAG_W))
     {
-        LPTSTR psz1 = CompressSpace(line1);
-        LPTSTR psz2 = CompressSpace(line2);
-        if (psz1 && psz2)
-        {
-            ret = CompareString(LOCALE_USER_DEFAULT, dwCmpFlags, psz1, -1, psz2, -1);
-            ret = ((ret == CSTR_EQUAL) ? FCRET_IDENTICAL : FCRET_DIFFERENT);
-        }
-        else
-        {
-            ret = OutOfMemory();
-        }
-        free(psz1);
-        free(psz2);
+        if (node1->hash != node2->hash)
+            return FCRET_DIFFERENT;
+        ret = CompareString(LOCALE_USER_DEFAULT, dwCmpFlags, line1, -1, line2, -1);
+        return (ret == CSTR_EQUAL) ? FCRET_IDENTICAL : FCRET_DIFFERENT;
+    }
+
+    psz1 = CompressSpace(line1);
+    psz2 = CompressSpace(line2);
+    if (psz1 && psz2)
+    {
+        ret = CompareString(LOCALE_USER_DEFAULT, dwCmpFlags, psz1, -1, psz2, -1);
+        ret = ((ret == CSTR_EQUAL) ? FCRET_IDENTICAL : FCRET_DIFFERENT);
     }
     else
     {
-        ret = CompareString(LOCALE_USER_DEFAULT, dwCmpFlags, line1, -1, line2, -1);
-        ret = (ret == CSTR_EQUAL) ? FCRET_IDENTICAL : FCRET_DIFFERENT;
+        ret = OutOfMemory();
     }
+    free(psz1);
+    free(psz2);
     return ret;
 }
 
@@ -253,15 +269,17 @@ ParseLines(const FILECOMPARE *pFC, HANDLE *phMapping,
     ich = 0;
     cch = cbView / sizeof(TCHAR);
     fLast = (pib->QuadPart + cbView >= pcb->QuadPart);
-    while (FindNextLine(psz, ich, cch, &ichNext) ||
-           (ichNext == cch && (fLast || ich == 0)))
+    while (ich < cch &&
+           (FindNextLine(psz, ich, cch, &ichNext) ||
+            (ichNext == cch && (fLast || ich == 0))))
     {
         bCR = (ichNext > 0) && (psz[ichNext - 1] == TEXT('\r'));
         cchNode = ichNext - ich - bCR;
+        ERR("ich:%ld, cch:%ld, ichNext:%ld, cchNode:%ld\n", ich, cch, ichNext, cchNode);
         pszLine = AllocLine(&psz[ich], cchNode);
         node = AllocNode(pszLine, lineno);
         ++lineno;
-        if (!node || !ExpandNode(pFC, node))
+        if (!node || !ConvertNode(pFC, node))
         {
             DeleteNode(node);
             UnmapViewOfFile(psz);
@@ -272,7 +290,6 @@ ParseLines(const FILECOMPARE *pFC, HANDLE *phMapping,
     }
 
     UnmapViewOfFile(psz);
-    psz = NULL;
 
     pib->QuadPart += ichNext * sizeof(WCHAR);
 
@@ -299,7 +316,7 @@ static VOID ShowDiffAndClean(FILECOMPARE *pFC, struct list *ptr1, struct list *p
 
         if (pFC->last_match[i])
         {
-            PrintLine2(pFC, pFC->last_lineno[i], pFC->last_match[i]);
+            PrintLine(pFC, pFC->last_lineno[i], pFC->last_match[i]);
             fFirst = FALSE;
         }
 
@@ -308,7 +325,7 @@ static VOID ShowDiffAndClean(FILECOMPARE *pFC, struct list *ptr1, struct list *p
             node = LIST_ENTRY(ptr[i], NODE, entry);
             if (!fAbbrev || fFirst)
             {
-                PrintLine(pFC, node);
+                PrintLine(pFC, node->lineno, node->pszLine);
                 fFirst = FALSE;
             }
             next = list_next(&pFC->list[i], ptr[i]);
@@ -324,7 +341,7 @@ static VOID ShowDiffAndClean(FILECOMPARE *pFC, struct list *ptr1, struct list *p
         {
             node = LIST_ENTRY(ptr[i], NODE, entry);
             PrintDots();
-            PrintLine(pFC, node);
+            PrintLine(pFC, node->lineno, node->pszLine);
         }
     }
 
@@ -403,15 +420,14 @@ Resync(FILECOMPARE *pFC, struct list *head1, struct list *head2, INT *pi1, INT *
             // skip ptr1 (m - p) times if possible. i1 in [0, m - p)
             for (i1 = 0; ptr1 && i1 < m - p; ++i1)
                 ptr1 = list_next(list1, ptr1);
-            if (!ptr1)
-                continue; // beyond the list
             // skip ptr2 p times if possible. i2 in [0, p)
             for (i2 = 0; ptr2 && i2 < p; ++i2)
                 ptr2 = list_next(list2, ptr2);
-            if (!ptr2)
-                continue; // beyond the list
 
             // compare
+            if (!ptr1 != !ptr2)
+                continue;
+
             node1 = LIST_ENTRY(ptr1, NODE, entry);
             node2 = LIST_ENTRY(ptr2, NODE, entry);
             ret = CompareNode(pFC, node1, node2);

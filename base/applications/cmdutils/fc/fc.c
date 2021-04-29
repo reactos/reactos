@@ -64,28 +64,19 @@ VOID PrintDots(VOID)
     ConPuts(StdOut, L"...\n");
 }
 
-VOID PrintLine2W(const FILECOMPARE *pFC, DWORD lineno, LPCWSTR psz)
+VOID PrintLineW(const FILECOMPARE *pFC, DWORD lineno, LPCWSTR psz)
 {
     if (pFC->dwFlags & FLAG_N)
         ConPrintf(StdOut, L"%5d:  %ls\n", lineno, psz);
     else
         ConPrintf(StdOut, L"%ls\n", psz);
 }
-VOID PrintLine2A(const FILECOMPARE *pFC, DWORD lineno, LPCSTR psz)
+VOID PrintLineA(const FILECOMPARE *pFC, DWORD lineno, LPCSTR psz)
 {
     if (pFC->dwFlags & FLAG_N)
         ConPrintf(StdOut, L"%5d:  %hs\n", lineno, psz);
     else
         ConPrintf(StdOut, L"%hs\n", psz);
-}
-
-VOID PrintLineW(const FILECOMPARE *pFC, const NODE_W *node)
-{
-    PrintLine2W(pFC, node->lineno, node->pszLine);
-}
-VOID PrintLineA(const FILECOMPARE *pFC, const NODE_A *node)
-{
-    PrintLine2A(pFC, node->lineno, node->pszLine);
 }
 
 HANDLE DoOpenFileForInput(LPCWSTR file)
@@ -330,6 +321,8 @@ static FCRET FileCompare(FILECOMPARE *pFC)
 
 static FCRET WildcardFileCompare(FILECOMPARE *pFC)
 {
+    FCRET ret;
+
     if (pFC->dwFlags & FLAG_HELP)
     {
         ConResPuts(StdOut, IDS_USAGE);
@@ -348,7 +341,9 @@ static FCRET WildcardFileCompare(FILECOMPARE *pFC)
         ConResPuts(StdErr, IDS_CANT_USE_WILDCARD);
     }
 
-    return FileCompare(pFC);
+    ret = FileCompare(pFC);
+    ConPuts(StdOut, L"\n");
+    return ret;
 }
 
 int wmain(int argc, WCHAR **argv)

@@ -5,7 +5,6 @@
  * COPYRIGHT:   Copyright 2021 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
 #pragma once
-
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
@@ -31,12 +30,14 @@ typedef struct NODE_W
     struct list entry;
     LPWSTR pszLine;
     DWORD lineno;
+    DWORD hash;
 } NODE_W;
 typedef struct NODE_A
 {
     struct list entry;
     LPSTR pszLine;
     DWORD lineno;
+    DWORD hash;
 } NODE_A;
 
 #define FLAG_A (1 << 0) // abbreviation
@@ -71,15 +72,12 @@ FCRET TextCompareW(FILECOMPARE *pFC,
 FCRET TextCompareA(FILECOMPARE *pFC,
                    HANDLE *phMapping1, const LARGE_INTEGER *pcb1,
                    HANDLE *phMapping2, const LARGE_INTEGER *pcb2);
-
 // fc.c
-VOID PrintLineW(const FILECOMPARE *pFC, const NODE_W *node);
-VOID PrintLineA(const FILECOMPARE *pFC, const NODE_A *node);
-VOID PrintLine2W(const FILECOMPARE *pFC, DWORD lineno, LPCWSTR psz);
-VOID PrintLine2A(const FILECOMPARE *pFC, DWORD lineno, LPCSTR psz);
+VOID PrintLineW(const FILECOMPARE *pFC, DWORD lineno, LPCWSTR psz);
+VOID PrintLineA(const FILECOMPARE *pFC, DWORD lineno, LPCSTR psz);
+VOID PrintCaption(LPCWSTR file);
 VOID PrintEndOfDiff(VOID);
 VOID PrintDots(VOID);
-VOID PrintCaption(LPCWSTR file);
 FCRET NoDifference(VOID);
 FCRET Different(LPCWSTR file1, LPCWSTR file2);
 FCRET LongerThan(LPCWSTR file1, LPCWSTR file2);
