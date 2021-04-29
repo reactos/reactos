@@ -6,39 +6,21 @@
  */
 #include "fc.h"
 
-#define IS_SPACEW(ch) ((ch) == L' ' || (ch) == L'\t')
-#define IS_SPACEA(ch) ((ch) == ' ' || (ch) == '\t')
+#define IS_SPACEW(ch) ((ch) == TEXT(' ') || (ch) == TEXT('\t'))
 
 #ifdef UNICODE
     #define NODE NODE_W
-    #define IS_SPACE IS_SPACEW
     #define PrintLine PrintLineW
     #define PrintLine2 PrintLine2W
     #define TextCompare TextCompareW
     #define last_match last_matchW
 #else
     #define NODE NODE_A
-    #define IS_SPACE IS_SPACEA
     #define PrintLine PrintLineA
     #define PrintLine2 PrintLine2A
     #define TextCompare TextCompareA
     #define last_match last_matchA
 #endif
-
-static BOOL FindNextLine(LPCTSTR pch, DWORD ich, DWORD cch, LPDWORD pich)
-{
-    while (ich < cch)
-    {
-        if (pch[ich] == TEXT('\n') || pch[ich] == TEXT('\0'))
-        {
-            *pich = ich;
-            return TRUE;
-        }
-        ++ich;
-    }
-    *pich = cch;
-    return FALSE;
-}
 
 static LPTSTR AllocLine(LPCTSTR pch, DWORD cch)
 {
@@ -227,6 +209,21 @@ static FCRET CompareNode(const FILECOMPARE *pFC, const NODE *node1, const NODE *
     return ret;
 }
 
+static BOOL FindNextLine(LPCTSTR pch, DWORD ich, DWORD cch, LPDWORD pich)
+{
+    while (ich < cch)
+    {
+        if (pch[ich] == TEXT('\n') || pch[ich] == TEXT('\0'))
+        {
+            *pich = ich;
+            return TRUE;
+        }
+        ++ich;
+    }
+    *pich = cch;
+    return FALSE;
+}
+
 static FCRET
 ParseLines(const FILECOMPARE *pFC, HANDLE *phMapping,
            LARGE_INTEGER *pib, const LARGE_INTEGER *pcb, struct list *list)
@@ -271,8 +268,7 @@ ParseLines(const FILECOMPARE *pFC, HANDLE *phMapping,
             return OutOfMemory();
         }
         list_add_tail(list, &node->entry);
-        ich = ichNext + !fLast;
-        fLast = (pib->QuadPart + cbView >= pcb->QuadPart);
+        ich = ichNext + 1;
     }
 
     UnmapViewOfFile(psz);
