@@ -8,10 +8,14 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
-#include <windef.h>
-#include <winbase.h>
-#include <winuser.h>
-#include <winnls.h>
+#ifdef __REACTOS__
+    #include <windef.h>
+    #include <winbase.h>
+    #include <winuser.h>
+    #include <winnls.h>
+#else
+    #include <windows.h>
+#endif
 #include <wine/list.h>
 #include "resource.h"
 
@@ -29,6 +33,7 @@ typedef struct NODE_W
 {
     struct list entry;
     LPWSTR pszLine;
+    LPWSTR pszComp; // compressed
     DWORD lineno;
     DWORD hash;
 } NODE_W;
@@ -36,6 +41,7 @@ typedef struct NODE_A
 {
     struct list entry;
     LPSTR pszLine;
+    LPSTR pszComp; // compressed
     DWORD lineno;
     DWORD hash;
 } NODE_A;
@@ -59,19 +65,16 @@ typedef struct FILECOMPARE
     INT n; // # of line buffers
     INT nnnn; // retry count before resynch
     LPCWSTR file[2];
-    DWORD last_lineno[2];
-    LPWSTR last_matchW[2];
-    LPSTR last_matchA[2];
     struct list list[2];
 } FILECOMPARE;
 
 // text.h
 FCRET TextCompareW(FILECOMPARE *pFC,
-                   HANDLE *phMapping1, const LARGE_INTEGER *pcb1,
-                   HANDLE *phMapping2, const LARGE_INTEGER *pcb2);
+                   HANDLE *phMapping0, const LARGE_INTEGER *pcb0,
+                   HANDLE *phMapping1, const LARGE_INTEGER *pcb1);
 FCRET TextCompareA(FILECOMPARE *pFC,
-                   HANDLE *phMapping1, const LARGE_INTEGER *pcb1,
-                   HANDLE *phMapping2, const LARGE_INTEGER *pcb2);
+                   HANDLE *phMapping0, const LARGE_INTEGER *pcb0,
+                   HANDLE *phMapping1, const LARGE_INTEGER *pcb1);
 // fc.c
 VOID PrintLineW(const FILECOMPARE *pFC, DWORD lineno, LPCWSTR psz);
 VOID PrintLineA(const FILECOMPARE *pFC, DWORD lineno, LPCSTR psz);
@@ -79,8 +82,8 @@ VOID PrintCaption(LPCWSTR file);
 VOID PrintEndOfDiff(VOID);
 VOID PrintDots(VOID);
 FCRET NoDifference(VOID);
-FCRET Different(LPCWSTR file1, LPCWSTR file2);
-FCRET LongerThan(LPCWSTR file1, LPCWSTR file2);
+FCRET Different(LPCWSTR file0, LPCWSTR file1);
+FCRET LongerThan(LPCWSTR file0, LPCWSTR file1);
 FCRET OutOfMemory(VOID);
 FCRET CannotRead(LPCWSTR file);
 FCRET InvalidSwitch(VOID);
