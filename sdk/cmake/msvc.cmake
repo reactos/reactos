@@ -67,7 +67,9 @@ add_compile_options(/Zc:threadSafeInit-)
 # HACK: Disable use of __CxxFrameHandler4 on VS 16.3+ (x64 only)
 # See https://developercommunity.visualstudio.com/content/problem/746534/visual-c-163-runtime-uses-an-unsupported-api-for-u.html
 if(ARCH STREQUAL "amd64" AND MSVC_VERSION GREATER 1922)
-    add_compile_options(/d2FH4-)
+    if (NOT CMAKE_C_COMPILER_ID STREQUAL "Clang")
+        add_compile_options(/d2FH4-)
+    endif()
     add_link_options(/d2:-FH4-)
 endif()
 
