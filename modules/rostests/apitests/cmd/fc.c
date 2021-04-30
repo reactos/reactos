@@ -250,8 +250,8 @@ static const TEST_ENTRY s_entries[] =
         NO_DIFF
     },
     {
-        __LINE__, 1, "fc /W" FILES, "\tA \nB\n", "AB\nB\n", -1, -1, COMPARING
-        "***** fc-test1.txt\n        A \nB\n"
+        __LINE__, 1, "fc /W /T" FILES, "\tA \nB\n", "AB\nB\n", -1, -1, COMPARING
+        "***** fc-test1.txt\n\tA \nB\n"
         "***** FC-TEST2.TXT\nAB\nB\n"
         "*****\n\n"
     },
