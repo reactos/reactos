@@ -563,7 +563,7 @@ EHCI_ReopenEndpoint(IN PVOID ehciExtension,
     PEHCI_ENDPOINT EhciEndpoint;
     ULONG TransferType;
     PEHCI_HCD_QH QH;
-    MPSTATUS MPStatus;
+    MPSTATUS MPStatus = MP_STATUS_SUCCESS;
 
     EhciEndpoint = ehciEndpoint;
 
