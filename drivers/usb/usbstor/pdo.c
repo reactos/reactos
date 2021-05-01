@@ -196,7 +196,7 @@ USBSTOR_PdoHandleQueryDeviceId(
 
     // lets create device string
     Offset = sprintf(&Buffer[Offset], "USBSTOR\\");
-    Offset += sprintf(&Buffer[Offset], DeviceType);
+    Offset += sprintf(&Buffer[Offset], "%s", DeviceType);
     Offset += sprintf(&Buffer[Offset], "&Ven_");
     Offset += CopyField(InquiryData->VendorId, &Buffer[Offset], 8);
     Offset += sprintf(&Buffer[Offset], "&Prod_");
@@ -292,7 +292,7 @@ USBSTOR_PdoHandleQueryHardwareId(
     RtlZeroMemory(Id1, sizeof(Id1));
     Offset = 0;
     Offset = sprintf(&Id1[Offset], "USBSTOR\\");
-    Offset += sprintf(&Id1[Offset], DeviceType);
+    Offset += sprintf(&Id1[Offset], "%s", DeviceType);
     Offset += CopyField(InquiryData->VendorId, &Id1[Offset], 8);
     Offset += CopyField(InquiryData->ProductId, &Id1[Offset], 16);
     Offset += CopyField(InquiryData->ProductRevisionLevel, &Id1[Offset], 4);
@@ -304,7 +304,7 @@ USBSTOR_PdoHandleQueryHardwareId(
     RtlZeroMemory(Id2, sizeof(Id2));
     Offset = 0;
     Offset = sprintf(&Id2[Offset], "USBSTOR\\");
-    Offset += sprintf(&Id2[Offset], DeviceType);
+    Offset += sprintf(&Id2[Offset], "%s", DeviceType);
     Offset += CopyField(InquiryData->VendorId, &Id2[Offset], 8);
     Offset += CopyField(InquiryData->ProductId, &Id2[Offset], 16);
     Id2Length = strlen(Id2) + 1;
@@ -315,7 +315,7 @@ USBSTOR_PdoHandleQueryHardwareId(
     RtlZeroMemory(Id3, sizeof(Id3));
     Offset = 0;
     Offset = sprintf(&Id3[Offset], "USBSTOR\\");
-    Offset += sprintf(&Id3[Offset], DeviceType);
+    Offset += sprintf(&Id3[Offset], "%s", DeviceType);
     Offset += CopyField(InquiryData->VendorId, &Id3[Offset], 8);
     Id3Length = strlen(Id3) + 1;
     DPRINT("USBSTOR_PdoHandleQueryHardwareId HardwareId3 %s\n", Id3);
@@ -325,7 +325,7 @@ USBSTOR_PdoHandleQueryHardwareId(
     RtlZeroMemory(Id4, sizeof(Id4));
     Offset = 0;
     Offset = sprintf(&Id4[Offset], "USBSTOR\\");
-    Offset += sprintf(&Id4[Offset], DeviceType);
+    Offset += sprintf(&Id4[Offset], "%s", DeviceType);
     Offset += CopyField(InquiryData->VendorId, &Id4[Offset], 8);
     Offset += CopyField(InquiryData->ProductId, &Id4[Offset], 16);
     Offset += CopyField(InquiryData->ProductRevisionLevel, &Id4[Offset], 1);
@@ -336,7 +336,7 @@ USBSTOR_PdoHandleQueryHardwareId(
     // SCSIType_VendorId(8)_ProductId(16)_Revision(1)
     RtlZeroMemory(Id5, sizeof(Id5));
     Offset = 0;
-    Offset = sprintf(&Id5[Offset], DeviceType);
+    Offset = sprintf(&Id5[Offset], "%s", DeviceType);
     Offset += CopyField(InquiryData->VendorId, &Id5[Offset], 8);
     Offset += CopyField(InquiryData->ProductId, &Id5[Offset], 16);
     Offset += CopyField(InquiryData->ProductRevisionLevel, &Id5[Offset], 1);
@@ -348,7 +348,7 @@ USBSTOR_PdoHandleQueryHardwareId(
     RtlZeroMemory(Id6, sizeof(Id6));
     Offset = 0;
     Offset = sprintf(&Id6[Offset], "USBSTOR\\");
-    Offset += sprintf(&Id6[Offset], GenericType);
+    Offset += sprintf(&Id6[Offset], "%s", GenericType);
     Id6Length = strlen(Id6) + 1;
     DPRINT("USBSTOR_PdoHandleQueryHardwareId HardwareId6 %s\n", Id6);
 
@@ -356,7 +356,7 @@ USBSTOR_PdoHandleQueryHardwareId(
     // SCSIType
     RtlZeroMemory(Id7, sizeof(Id7));
     Offset = 0;
-    Offset = sprintf(&Id7[Offset], GenericType);
+    Offset = sprintf(&Id7[Offset], "%s", GenericType);
     Id7Length = strlen(Id7) + 1;
     DPRINT("USBSTOR_PdoHandleQueryHardwareId HardwareId7 %s\n", Id7);
 
