@@ -85,8 +85,11 @@ private:
             uImageId = IDB_TASKBARPROP_NOLOCK_NOGROUP_QL;
         else if (!bLock && bGroup  && bShowQL)
             uImageId = IDB_TASKBARPROP_NOLOCK_GROUP_QL;
-        else 
+        else
+        {
             ASSERT(FALSE);
+            UNREACHABLE;
+        }
 
         SetBitmap(hwndTaskbarBitmap, &m_hbmpTaskbar, uImageId);
 
