@@ -308,38 +308,44 @@ VOID UnlockBuffers( PAFD_WSABUF Buf, UINT Count, BOOL Address ) {
 /* Produce a kernel-land handle array with handles replaced by object
  * pointers.  This will allow the system to do proper alerting */
 PAFD_HANDLE LockHandles( PAFD_HANDLE HandleArray, UINT HandleCount ) {
+    PAFD_HANDLE FileObjects;
     UINT i;
-    NTSTATUS Status = STATUS_SUCCESS;
+    NTSTATUS Status;
 
-    PAFD_HANDLE FileObjects = ExAllocatePoolWithTag(NonPagedPool,
-                                                    HandleCount * sizeof(AFD_HANDLE),
-                                                    TAG_AFD_POLL_HANDLE);
-
-    for( i = 0; FileObjects && i < HandleCount; i++ ) {
-        FileObjects[i].Status = 0;
-        FileObjects[i].Events = HandleArray[i].Events;
-        FileObjects[i].Handle = 0;
-        if( !HandleArray[i].Handle ) continue;
-        if( NT_SUCCESS(Status) ) {
-                Status = ObReferenceObjectByHandle
-                    ( (PVOID)HandleArray[i].Handle,
-                      FILE_ALL_ACCESS,
-                      NULL,
-                       KernelMode,
-                       (PVOID*)&FileObjects[i].Handle,
-                       NULL );
-        }
-
-        if( !NT_SUCCESS(Status) )
-        {
-            AFD_DbgPrint(MIN_TRACE,("Failed to reference handles (0x%x)\n", Status));
-            FileObjects[i].Handle = 0;
-        }
+    FileObjects = ExAllocatePoolZero(NonPagedPool,
+                                     HandleCount * sizeof(AFD_HANDLE),
+                                     TAG_AFD_POLL_HANDLE);
+    if (FileObjects == NULL)
+    {
+        AFD_DbgPrint(MIN_TRACE, ("ExAllocatePoolZero() failed!\n"));
+        return NULL;
     }
 
-    if( !NT_SUCCESS(Status) ) {
-        UnlockHandles( FileObjects, HandleCount );
-        return NULL;
+    for (i = 0; i < HandleCount; i++)
+    {
+        if ((HANDLE)HandleArray[i].Handle == NULL)
+        {
+            continue;
+        }
+
+        // Get the object pointer, as UserMode.
+        Status = ObReferenceObjectByHandle((HANDLE)HandleArray[i].Handle,
+                                           0, // Cannot use FILE_ALL_ACCESS.
+                                           NULL,
+                                           UserMode,
+                                           (PVOID *)&FileObjects[i].Handle,
+                                           NULL);
+        if (!NT_SUCCESS(Status))
+        {
+            AFD_DbgPrint(MIN_TRACE,
+                         ("ObReferenceObjectByHandle(%p) failed: 0x%08lx\n",
+                          (HANDLE)HandleArray[i].Handle, Status));
+
+            UnlockHandles(FileObjects, i);
+            return NULL;
+        }
+
+        FileObjects[i].Events = HandleArray[i].Events;
     }
 
     return FileObjects;
@@ -354,7 +360,6 @@ VOID UnlockHandles( PAFD_HANDLE HandleArray, UINT HandleCount ) {
     }
 
     ExFreePoolWithTag(HandleArray, TAG_AFD_POLL_HANDLE);
-    HandleArray = NULL;
 }
 
 BOOLEAN SocketAcquireStateLock( PAFD_FCB FCB ) {
