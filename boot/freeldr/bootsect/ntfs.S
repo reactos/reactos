@@ -119,7 +119,7 @@ LoadExtraBootCode:
     // First we have to load our extra boot code at
     // next sector into memory at [0000:7e00h]
     mov  eax, HEX(1)
-    add  eax, dword ptr [HiddenSectors]         // Add the number of hidden sectors
+    xor  edx, edx
     mov  cx, 4
     xor  bx, bx
     mov  es, bx                                 // Read sector to [0000:7e00h]
@@ -129,10 +129,13 @@ LoadExtraBootCode:
 
 
 // Reads logical sectors into [ES:BX]
-// EAX has logical sector number to read
+// EDX:EAX has logical sector number to read
 // CX has number of sectors to read
 ReadSectors:
     push es
+    add  eax, dword ptr [HiddenSectors]   // Add offset from the disk beginning
+    test edx, edx
+    jnz  ReadSectorsLBA
     cmp  eax, dword ptr ds:[BiosCHSDriveSize]   // Check if they are reading a sector outside CHS range
     jae  ReadSectorsLBA                         // Yes - go to the LBA routine
                                                 // If at all possible we want to use LBA routines because
@@ -162,8 +165,7 @@ ReadSectorsLBA:
 
 ReadSectorsSetupDiskAddressPacket:
     mov word ptr ds:[LBASectorsRead],cx
-    push 0
-    push 0
+    push edx
     push eax                                // Put 64-bit logical block address on stack
     push es                                 // Put transfer segment on stack
     push bx                                 // Put transfer offset on stack
@@ -183,6 +185,7 @@ ReadSectorsSetupDiskAddressPacket:
     push bx
     mov  ebx, dword ptr ds:[LBASectorsRead]
     add  eax, ebx                           // Increment sector to read
+    adc  edx, 0
     shl  ebx, 5
     mov  dx, es
     add  dx, bx                             // Setup read buffer for next sector
@@ -342,6 +345,7 @@ StartSearch:
     mov   ax, HEX(2000)
     mov   es, ax
     xor   bx, bx
+    xor   edx, edx
     mov   eax, 5
     call  ReadInode
 
@@ -354,6 +358,7 @@ StartSearch:
     pop   eax
     call  ReadInode
 
+DebugEnd:
     xor   ax, ax
     mov   ebx, HEX(30)
     call  FindAttributeHdr
@@ -494,7 +499,10 @@ ExploreIndexRoot:
 
         RootIndexFound:
         mov   eax, dword ptr es:[si]           // We found root entry, return with its MFT number
-        mov   edx, dword ptr es:[si + 4]       // Return high part into edx
+        mov   dx, word ptr es:[si + 4]         // Return high part into edx.
+                                               // We take only the first word, the high word contains the
+                                               // sequence number
+        movzx edx, dx
         jmp   ExitIndexTree
     
         NodeCheckLastNode:
@@ -531,6 +539,33 @@ ExploreIndexRoot:
     pop   bp
     ret
 
+// 64-bit multiplication
+// EDX:EAX operand
+// ECX operator
+Multiply64:
+    push bp
+    mov  bp, sp
+    sub  sp, 12
+    // Save the high part of the multiplication
+    mov  dword ptr [bp-4], edx
+
+    // Multiply the low part and save the result
+    mul  ecx
+    mov  dword ptr[bp-8], eax
+    mov  dword ptr[bp-12], edx
+
+    // Multiply the high part and add the carry
+    mov  eax, dword ptr [bp - 4]
+    mul  ecx
+    add  eax, dword ptr [bp- 12]
+
+    // Format correctly the number
+    mov  edx, eax
+    mov  eax, dword ptr [bp - 8]
+    mov  sp, bp
+    pop  bp
+    ret
+
 // Compare case-insensitive strings
 // [ES:SI] - the source file name
 // [DS:DI] - the destination file name
@@ -565,39 +600,37 @@ CompareStrInsensitive:
 
 // Reads a NTFS cluster
 // INPUT:
-//  - AX     : cluster number to read
+//  - EDX:EAX     : cluster number to read
 // OUTPUT:
 //  - ES:BX  : address to read
 ReadCluster:
-    push  edx
     push  ecx
     mov   cl, byte ptr [SectsPerCluster]   // Convert sectors to clusters
     movzx ecx, cx
-    mul   ecx
-    add   eax, dword ptr [HiddenSectors]   // Add offset from the disk beginning
+    call  Multiply64
     call  ReadSectors
     pop   ecx
-    pop   edx
     ret
 
 // Reads a MFT entry
 // INPUT:
-//  - AX      : MFT inode
+//  - EDX:EAX      : MFT inode
 // OUTPUT:
 //  - ES:[BX] : address to read
 ReadInode:
-    push  edx
     push  ecx
     push  si
     push  di
 
+    push  edx
     mov   cx, word ptr [SectsPerMFT]       // Get the correct number of sectors for the FILE entry
-    mul   cx
+    movzx ecx, cx
+    mul   ecx
     movzx eax, ax
     add   eax, dword ptr [MFTStartSector]  // Add it to the start of the MFT
-    add   eax, dword ptr [HiddenSectors]   // Add disk offset
     mov   cx, word ptr [SectsPerMFT]
     movzx ecx, cx
+    pop   edx
     call  ReadSectors
     
     cmp   dword ptr es:[bx], FILE_MAGIC // Ensure we get a valid FILE record
@@ -608,7 +641,6 @@ ReadInode:
     pop   di
     pop   si
     pop   ecx
-    pop   edx
     ret
 
 #define UpdateSequenceOffset 4
@@ -661,13 +693,13 @@ ReadNonResidentAttribute:
     push  bp
     mov   bp, sp
     sub   sp, HEX(10)
-    push  dx
+    push  edx
     push  si
     mov   dword ptr [bp - currentLCN], 0          // Store the current LCN
     mov   word ptr [bp - offsetWrite], bx
     mov   dword ptr [bp - startReadLCN], ecx
     mov   si, ax
-    xor   dx, dx
+    xor   edx, edx
     RunLoop:
         mov   al, byte ptr es:[si]
         test  al, al
@@ -695,7 +727,7 @@ ReadNonResidentAttribute:
     xor  ax, ax
     RunSearchEnd:
     pop  si
-    pop  dx
+    pop  edx
     mov  sp, bp
     pop  bp
     ret
