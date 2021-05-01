@@ -11,8 +11,6 @@
 #include <asm.inc>
 #include <freeldr/include/arch/pc/x86common.h>
 
-#define BP_REL(x) [bp+x-offset start]
-
 .code16
 
 //ORG HEX(7c00)
@@ -329,12 +327,19 @@ StartSearch:
     mov   word ptr [SectsPerMFT], cx
     jmp   SearchNext
     NegativeOffset:
+    // ClustersPerMftRecord is negative, so we need to perform 1 << (-ClustersPerMftRecord)
+    // to get the number of bytes needed for a MFT entry
     not   al
+    inc   al
     mov   cl, al
-    sub   cl, 8
     xor   ax, ax
     inc   ax
     shl   ax, cl
+
+    // But here want to store sectors, so we need to divide by BytesPerSector
+    xor   dx, dx
+    mov   cx, word ptr [BytesPerSector]
+    div   cx
     mov   word ptr [SectsPerMFT], ax
 
     SearchNext:
@@ -454,7 +459,7 @@ ExploreIndexRoot:
     mov   word ptr [bp - indexRootData], si
     mov   ax, word ptr [bp - fileRecord]
 
-    test  byte ptr es:[si + 12], 1
+    test  byte ptr es:[si + HEX(0c)], 1
     jz    ExploreNext                          // Skip index allocation lookup if we don't have children
     
     mov   ebx, ATTRIBUTE_INDEX_ALLOCATION
@@ -476,7 +481,7 @@ ExploreIndexRoot:
     // Main search loop. We browse the B-Tree which contains directory entries
     // SI contains the current index entry.
     NodeCheck:
-        test  word ptr es:[si + 12], 2
+        test  word ptr es:[si + HEX(0C)], 2
         jnz   NodeCheckLastNode
 
         mov   cl, byte ptr es:[si + HEX(50)]
@@ -487,7 +492,7 @@ ExploreIndexRoot:
         lea   si, [si - HEX(52)]
         test  ax, ax
         jz    RootIndexFound
-        test  word ptr es:[si + 12], 1
+        test  word ptr es:[si + HEX(0C)], 1
         jz    ContinueSearch
 
         test  ax, HEX(f000)
@@ -506,7 +511,7 @@ ExploreIndexRoot:
         jmp   ExitIndexTree
     
         NodeCheckLastNode:
-        test  word ptr es:[si + 12], 1
+        test  word ptr es:[si + HEX(0C)], 1
         jz    PrintFreeldrError
 
         LookupChildNode:
@@ -547,17 +552,17 @@ Multiply64:
     mov  bp, sp
     sub  sp, 12
     // Save the high part of the multiplication
-    mov  dword ptr [bp-4], edx
+    mov  dword ptr [bp - 4], edx
 
     // Multiply the low part and save the result
     mul  ecx
-    mov  dword ptr[bp-8], eax
-    mov  dword ptr[bp-12], edx
+    mov  dword ptr[bp - 8], eax
+    mov  dword ptr[bp - 12], edx
 
     // Multiply the high part and add the carry
     mov  eax, dword ptr [bp - 4]
     mul  ecx
-    add  eax, dword ptr [bp- 12]
+    add  eax, dword ptr [bp - 12]
 
     // Format correctly the number
     mov  edx, eax
@@ -605,7 +610,7 @@ CompareStrInsensitive:
 //  - ES:BX  : address to read
 ReadCluster:
     push  ecx
-    mov   cl, byte ptr [SectsPerCluster]   // Convert sectors to clusters
+    mov   cl, byte ptr [SectsPerCluster]   // Convert clusters to sectors
     movzx ecx, cx
     call  Multiply64
     call  ReadSectors
