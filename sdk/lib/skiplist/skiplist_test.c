@@ -31,7 +31,7 @@ DumpSkiplist(PSKIPLIST Skiplist)
             for (j = 1; j < pNode->Distance[i]; j++)
                 printf("---");
 
-            printf("%02Iu", (DWORD_PTR)pNode->Next[i]->Element);
+            printf("%02lu", (DWORD_PTR)pNode->Next[i]->Element);
 
             pNode = pNode->Next[i];
         }
@@ -86,7 +86,7 @@ main()
 
     // Output the third element (with zero-based index 2).
     pNode = LookupNodeByIndexSkiplist(&Skiplist, 2);
-    printf("Element = %Iu for index 2\n", (DWORD_PTR)pNode->Element);
+    printf("Element = %lu for index 2\n", (DWORD_PTR)pNode->Element);
 
     // Check if an element with number 44 is in the list and output its index.
     Element = LookupElementSkiplist(&Skiplist, UlongToPtr(44), &ElementIndex);
