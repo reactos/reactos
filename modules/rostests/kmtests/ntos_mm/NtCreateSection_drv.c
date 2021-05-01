@@ -39,6 +39,9 @@ FastIoRead(
     _Out_ PIO_STATUS_BLOCK IoStatus,
     _In_ PDEVICE_OBJECT DeviceObject)
 {
+    // Report whether this FastIO function is actually called or not.
+    ok(FALSE, "%s() unexpectedly called\n", __FUNCTION__);
+
     IoStatus->Status = STATUS_NOT_SUPPORTED;
     return FALSE;
 }
@@ -56,6 +59,9 @@ FastIoWrite(
     _Out_ PIO_STATUS_BLOCK IoStatus,
     _In_ PDEVICE_OBJECT DeviceObject)
 {
+    // Report whether this FastIO function is actually called or not.
+    ok(FALSE, "%s() unexpectedly called\n", __FUNCTION__);
+
     IoStatus->Status = STATUS_NOT_SUPPORTED;
     return FALSE;
 }
@@ -70,6 +76,9 @@ FastIoQueryStandardInfo(
     _Out_ PIO_STATUS_BLOCK IoStatus,
     _In_ PDEVICE_OBJECT DeviceObject)
 {
+    // Report whether this FastIO function is actually called or not.
+    ok(TRUE, "\n");
+
     IoStatus->Status = STATUS_NOT_SUPPORTED;
     return FALSE;
 }
@@ -99,11 +108,11 @@ TestEntry(
     KmtRegisterIrpHandler(IRP_MJ_QUERY_INFORMATION, NULL, TestIrpHandler);
     KmtRegisterIrpHandler(IRP_MJ_SET_INFORMATION, NULL, TestIrpHandler);
 
+    TestFastIoDispatch.SizeOfFastIoDispatch = sizeof(TestFastIoDispatch);
     TestFastIoDispatch.FastIoRead = FastIoRead;
     TestFastIoDispatch.FastIoWrite = FastIoWrite;
     TestFastIoDispatch.FastIoQueryStandardInfo = FastIoQueryStandardInfo;
     DriverObject->FastIoDispatch = &TestFastIoDispatch;
-
 
     return Status;
 }

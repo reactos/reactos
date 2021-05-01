@@ -41,6 +41,9 @@ FastIoRead(
     _Out_ PIO_STATUS_BLOCK IoStatus,
     _In_ PDEVICE_OBJECT DeviceObject)
 {
+    // Report whether this FastIO function is actually called or not.
+    ok(TRUE, "\n");
+
     IoStatus->Status = STATUS_NOT_SUPPORTED;
     return FALSE;
 }
@@ -67,9 +70,9 @@ TestEntry(
     KmtRegisterIrpHandler(IRP_MJ_CREATE, NULL, TestIrpHandler);
     KmtRegisterIrpHandler(IRP_MJ_READ, NULL, TestIrpHandler);
 
+    TestFastIoDispatch.SizeOfFastIoDispatch = sizeof(TestFastIoDispatch);
     TestFastIoDispatch.FastIoRead = FastIoRead;
     DriverObject->FastIoDispatch = &TestFastIoDispatch;
-
 
     return Status;
 }
