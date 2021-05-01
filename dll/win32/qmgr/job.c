@@ -928,7 +928,12 @@ static HRESULT WINAPI BackgroundCopyJob_RemoveCredentials(
 
     EnterCriticalSection(&job->cs);
 
+#ifdef __REACTOS__
+    new_cred->Target = (BG_AUTH_TARGET)0;
+    new_cred->Scheme = (BG_AUTH_SCHEME)0;
+#else
     new_cred->Target = new_cred->Scheme = 0;
+#endif
     HeapFree(GetProcessHeap(), 0, new_cred->Credentials.Basic.UserName);
     new_cred->Credentials.Basic.UserName = NULL;
     HeapFree(GetProcessHeap(), 0, new_cred->Credentials.Basic.Password);
