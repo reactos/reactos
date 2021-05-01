@@ -321,6 +321,10 @@ GetFormA(HANDLE hPrinter, PSTR pFormName, DWORD Level, PBYTE pForm, DWORD cbBuf,
                 }
         }
     }
+    else
+    {
+        dwErrorCode = GetLastError();
+    }
 Cleanup:
     if (FormNameW) HeapFree(GetProcessHeap(), 0, FormNameW);
     return (dwErrorCode == ERROR_SUCCESS);
