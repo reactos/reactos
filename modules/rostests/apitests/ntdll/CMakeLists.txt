@@ -2,6 +2,7 @@
 add_subdirectory(load_notifications)
 
 include_directories($<TARGET_FILE_DIR:load_notifications>)
+include_directories(${REACTOS_SOURCE_DIR}/ntoskrnl/include)
 spec2def(ntdll_apitest.exe ntdll_apitest.spec)
 
 list(APPEND SOURCE
@@ -43,6 +44,7 @@ list(APPEND SOURCE
     NtSetVolumeInformationFile.c
     NtUnloadDriver.c
     NtWriteFile.c
+    probelib.c
     RtlAllocateHeap.c
     RtlBitmap.c
     RtlComputePrivatizedDllName_U.c
