@@ -2033,6 +2033,7 @@ NtSetInformationThread(IN HANDLE ThreadHandle,
     PVOID *ExpansionSlots;
     PETHREAD ProcThread;
     ULONG Alignment;
+    BOOLEAN HasPrivilege;
     PAGED_CODE();
 
     /* Check if we were called from user mode */
@@ -2108,6 +2109,20 @@ NtSetInformationThread(IN HANDLE ThreadHandle,
                 /* Fail */
                 Status = STATUS_INVALID_PARAMETER;
                 break;
+            }
+
+            /* Check for the required privilege */
+            if (Priority >= LOW_REALTIME_PRIORITY)
+            {
+                HasPrivilege = SeCheckPrivilegedObject(SeIncreaseBasePriorityPrivilege,
+                                                       ThreadHandle,
+                                                       THREAD_SET_INFORMATION,
+                                                       PreviousMode);
+                if (!HasPrivilege)
+                {
+                    DPRINT1("Privilege to change priority to %lx lacking\n", Priority);
+                    return STATUS_PRIVILEGE_NOT_HELD;
+                }
             }
 
             /* Reference the thread */
