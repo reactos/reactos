@@ -369,25 +369,25 @@ ShowDiff(FILECOMPARE *pFC, INT i, struct list *begin, struct list *end)
     }
 }
 
-static FCRET
+static INT 
 SkipIdentical(FILECOMPARE *pFC, struct list **pptr0, struct list **pptr1)
 {
     struct list *ptr0 = *pptr0, *ptr1 = *pptr1;
     FCRET ret;
+    INT count = 0;
     while (ptr0 && ptr1)
     {
         NODE *node0 = LIST_ENTRY(ptr0, NODE, entry);
         NODE *node1 = LIST_ENTRY(ptr1, NODE, entry);
-        ret = CompareNode(pFC, node0, node1);
-        if (ret != FCRET_IDENTICAL)
+        if (CompareNode(pFC, node0, node1) != FCRET_IDENTICAL)
             break;
-
         ptr0 = list_next(&pFC->list[0], ptr0);
         ptr1 = list_next(&pFC->list[1], ptr1);
+        ++count;
     }
     *pptr0 = ptr0;
     *pptr1 = ptr1;
-    return ret;
+    return count;
 }
 
 static FCRET
@@ -413,8 +413,6 @@ Resync(FILECOMPARE *pFC, struct list **pptr0, struct list **pptr1)
             node0 = LIST_ENTRY(ptr0, NODE, entry);
             node1 = LIST_ENTRY(ptr1, NODE, entry);
             ret = CompareNode(pFC, node0, node1);
-            if (ret == FCRET_INVALID)
-                return ret;
             if (ret == FCRET_IDENTICAL)
             {
                 penalty = i0 + 2 * i1 + 3 * abs(i1 - i0);
@@ -531,10 +529,8 @@ FCRET TextCompare(FILECOMPARE *pFC, HANDLE *phMapping0, const LARGE_INTEGER *pcb
                 goto quit;
 
             // skip identical (sync'ed)
-            ret = SkipIdentical(pFC, &ptr0, &ptr1);
-            if (ret == FCRET_INVALID)
-                goto cleanup;
-            if (ret == FCRET_DIFFERENT)
+            SkipIdentical(pFC, &ptr0, &ptr1);
+            if (ptr0 || ptr1)
                 fDifferent = TRUE;
             if (!ptr0 || !ptr1)
                 goto quit;
