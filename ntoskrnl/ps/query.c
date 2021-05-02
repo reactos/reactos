@@ -2032,18 +2032,47 @@ NtSetInformationThread(IN HANDLE ThreadHandle,
     ULONG_PTR TlsIndex = 0;
     PVOID *ExpansionSlots;
     PETHREAD ProcThread;
+    ULONG Alignment;
     PAGED_CODE();
 
-    /* Verify Information Class validity */
-#if 0
-    Status = DefaultSetInfoBufferCheck(ThreadInformationClass,
-                                       PsThreadInfoClass,
-                                       RTL_NUMBER_OF(PsThreadInfoClass),
-                                       ThreadInformation,
-                                       ThreadInformationLength,
-                                       PreviousMode);
-    if (!NT_SUCCESS(Status)) return Status;
-#endif
+    /* Check if we were called from user mode */
+    if (PreviousMode != KernelMode)
+    {
+        /* Enter SEH */
+        _SEH2_TRY
+        {
+            switch (ThreadInformationClass)
+            {
+                case ThreadPriority:
+                    Alignment = sizeof(KPRIORITY);
+                    break;
+
+                case ThreadAffinityMask:
+                case ThreadQuerySetWin32StartAddress:
+                    Alignment = sizeof(ULONG_PTR);
+                    break;
+
+                case ThreadEnableAlignmentFaultFixup:
+                    Alignment = sizeof(BOOLEAN);
+                    break;
+
+                default:
+                    Alignment = sizeof(ULONG);
+                    break;
+            }
+
+            /* Probe the buffer */
+            ProbeForRead(ThreadInformation,
+                         ThreadInformationLength,
+                         Alignment);
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            /* Return the exception code */
+            _SEH2_YIELD(return _SEH2_GetExceptionCode());
+        }
+        _SEH2_END;
+    }
 
     /* Check what kind of information class this is */
     switch (ThreadInformationClass)
