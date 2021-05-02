@@ -6,6 +6,7 @@
  */
 
 #include "precomp.h"
+#include <internal/ps_i.h>
 
 static
 void
@@ -265,10 +266,43 @@ Test_ProcessWx86InformationClass(void)
     ok_hex(Status, STATUS_PRIVILEGE_NOT_HELD);
 }
 
+static
+void
+Test_ProcSetAlignmentProbe(void)
+{
+    ULONG InfoClass;
+
+    /* Iterate over the process info classes and begin the tests */
+    for (InfoClass = 0; InfoClass < _countof(PsProcessInfoClass); InfoClass++)
+    {
+        /* The buffer is misaligned */
+        QuerySetProcessValidator(SET,
+                                 InfoClass,
+                                 (PVOID)(ULONG_PTR)1,
+                                 PsProcessInfoClass[InfoClass].RequiredSizeSET,
+                                 STATUS_DATATYPE_MISALIGNMENT);
+
+        /* We set an invalid buffer address */
+        QuerySetProcessValidator(SET,
+                                 InfoClass,
+                                 (PVOID)(ULONG_PTR)PsProcessInfoClass[InfoClass].AlignmentSET,
+                                 PsProcessInfoClass[InfoClass].RequiredSizeSET,
+                                 STATUS_ACCESS_VIOLATION);
+
+        /* The information length is wrong */
+        QuerySetProcessValidator(SET,
+                                 InfoClass,
+                                 (PVOID)(ULONG_PTR)PsProcessInfoClass[InfoClass].AlignmentSET,
+                                 PsProcessInfoClass[InfoClass].RequiredSizeSET - 1,
+                                 STATUS_INFO_LENGTH_MISMATCH);
+    }
+}
+
 START_TEST(NtSetInformationProcess)
 {
     Test_ProcForegroundBackgroundClass();
     Test_ProcBasePriorityClass();
     Test_ProcRaisePriorityClass();
     Test_ProcessWx86InformationClass();
+    Test_ProcSetAlignmentProbe();
 }

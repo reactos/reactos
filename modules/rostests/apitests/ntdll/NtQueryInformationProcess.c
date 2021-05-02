@@ -3,9 +3,11 @@
  * LICENSE:         LGPLv2.1+ - See COPYING.LIB in the top level directory
  * PURPOSE:         Tests for the NtQueryInformationProcess API
  * PROGRAMMER:      Thomas Faber <thomas.faber@reactos.org>
+ *                  George Bișoc <george.bisoc@reactos.org>
  */
 
 #include "precomp.h"
+#include <internal/ps_i.h>
 
 static LARGE_INTEGER TestStartTime;
 
@@ -322,6 +324,38 @@ Test_ProcessWx86Information(void)
     trace("VdmPower = %lu\n", VdmPower);
 }
 
+static
+void
+Test_ProcQueryAlignmentProbe(void)
+{
+    ULONG InfoClass;
+
+    /* Iterate over the process info classes and begin the tests */
+    for (InfoClass = 0; InfoClass < _countof(PsProcessInfoClass); InfoClass++)
+    {
+        /* The buffer is misaligned */
+        QuerySetProcessValidator(QUERY,
+                                 InfoClass,
+                                 (PVOID)(ULONG_PTR)1,
+                                 PsProcessInfoClass[InfoClass].RequiredSizeQUERY,
+                                 STATUS_DATATYPE_MISALIGNMENT);
+
+        /* We query an invalid buffer address */
+        QuerySetProcessValidator(QUERY,
+                                 InfoClass,
+                                 (PVOID)(ULONG_PTR)PsProcessInfoClass[InfoClass].AlignmentQUERY,
+                                 PsProcessInfoClass[InfoClass].RequiredSizeQUERY,
+                                 STATUS_ACCESS_VIOLATION);
+
+        /* The information length is wrong */
+        QuerySetProcessValidator(QUERY,
+                                 InfoClass,
+                                 (PVOID)(ULONG_PTR)PsProcessInfoClass[InfoClass].AlignmentQUERY,
+                                 PsProcessInfoClass[InfoClass].RequiredSizeQUERY - 1,
+                                 STATUS_INFO_LENGTH_MISMATCH);
+    }
+}
+
 START_TEST(NtQueryInformationProcess)
 {
     NTSTATUS Status;
@@ -335,4 +369,5 @@ START_TEST(NtQueryInformationProcess)
     Test_ProcessTimes();
     Test_ProcessPriorityClassAlignment();
     Test_ProcessWx86Information();
+    Test_ProcQueryAlignmentProbe();
 }
