@@ -56,7 +56,15 @@ interface Irot
 	typedef handle_t IrotHandle;
 	typedef [context_handle] void *IrotContextHandle;
 
+#ifdef __REACTOS__
+#define RPC_ENTRY __stdcall
+#endif
+
+#ifdef __REACTOS__
+	HRESULT RPC_ENTRY IrotRegister(
+#else
 	HRESULT IrotRegister(
+#endif
 		[in]  IrotHandle h,
 		[in]  const MonikerComparisonData *moniker_data,
 		[in]  const InterfaceData *object,
@@ -66,34 +74,58 @@ interface Irot
 		[out] IrotCookie *cookie,
 		[out] IrotContextHandle *ctxt_handle);
 
+#ifdef __REACTOS__
+	HRESULT RPC_ENTRY IrotRevoke(
+#else
 	HRESULT IrotRevoke(
+#endif
 		[in]  IrotHandle h,
 		[in]  IrotCookie cookie,
 		[in, out] IrotContextHandle *ctxt_handle,
 		[out] PInterfaceData *object,
 		[out] PInterfaceData *moniker);
 
+#ifdef __REACTOS__
+	HRESULT RPC_ENTRY IrotIsRunning(
+#else
 	HRESULT IrotIsRunning(
+#endif
 		[in]  IrotHandle h,
 		[in]  const MonikerComparisonData *moniker_data);
 
+#ifdef __REACTOS__
+	HRESULT RPC_ENTRY IrotGetObject(
+#else
 	HRESULT IrotGetObject(
+#endif
 		[in]  IrotHandle h,
 		[in]  const MonikerComparisonData *moniker_data,
 		[out] PInterfaceData *obj,
 		[out] IrotCookie *cookie);
 
+#ifdef __REACTOS__
+	HRESULT RPC_ENTRY IrotNoteChangeTime(
+#else
 	HRESULT IrotNoteChangeTime(
+#endif
 		[in]  IrotHandle h,
 		[in]  IrotCookie cookie,
 		[in]  const FILETIME *time);
 
+#ifdef __REACTOS__
+	HRESULT RPC_ENTRY IrotGetTimeOfLastChange(
+#else
 	HRESULT IrotGetTimeOfLastChange(
+#endif
 		[in]  IrotHandle h,
 		[in]  const MonikerComparisonData *moniker_data,
 		[out] FILETIME *time);
 
+#ifdef __REACTOS__
+	HRESULT RPC_ENTRY IrotEnumRunning(
+#else
 	HRESULT IrotEnumRunning(
+#endif
 		[in]  IrotHandle h,
 		[out] PInterfaceList *list);
 }
