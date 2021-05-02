@@ -327,20 +327,45 @@ ParseLines(const FILECOMPARE *pFC, HANDLE *phMapping,
 }
 
 static VOID
-ShowDiff(FILECOMPARE *pFC, INT i, struct list *first, struct list *last)
+ShowDiff(FILECOMPARE *pFC, INT i, struct list *begin, struct list *end)
 {
     NODE* node;
     struct list *list = &pFC->list[i];
+    struct list *first = NULL, *last = NULL;
     PrintCaption(pFC->file[i]);
-    if (first && list_prev(list, first))
-        first = list_prev(list, first);
-    while (first != last)
+    if (begin && list_prev(list, begin))
+        begin = list_prev(list, begin);
+    while (begin != end)
     {
-        node = LIST_ENTRY(first, NODE, entry);
+        node = LIST_ENTRY(begin, NODE, entry);
         if (IsEOFNode(node))
             break;
+        if (!first)
+            first = begin;
+        last = begin;
+        if (!(pFC->dwFlags & FLAG_A))
+            PrintLine(pFC, node->lineno, node->pszLine);
+        begin = list_next(list, begin);
+    }
+    if ((pFC->dwFlags & FLAG_A) && first)
+    {
+        node = LIST_ENTRY(first, NODE, entry);
         PrintLine(pFC, node->lineno, node->pszLine);
         first = list_next(list, first);
+        if (first != last)
+        {
+            if (list_next(list, first) == last)
+            {
+                node = LIST_ENTRY(first, NODE, entry);
+                PrintLine(pFC, node->lineno, node->pszLine);
+            }
+            else
+            {
+                PrintDots();
+            }
+        }
+        node = LIST_ENTRY(last, NODE, entry);
+        PrintLine(pFC, node->lineno, node->pszLine);
     }
 }
 
