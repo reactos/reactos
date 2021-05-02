@@ -10,6 +10,7 @@
     #include <conutils.h>
 #else
     #include <stdio.h>
+    #define ConInitStdStreams() /* empty */
     #define StdOut stdout
     #define StdErr stderr
     void ConPuts(FILE *fp, LPCWSTR psz)
@@ -26,7 +27,7 @@
     void ConResPuts(FILE *fp, UINT nID)
     {
         WCHAR sz[MAX_PATH];
-        LoadStringW(NULL, nID, sz, MAX_PATH);
+        LoadStringW(NULL, nID, sz, _countof(sz));
         fputws(sz, fp);
     }
     void ConResPrintf(FILE *fp, UINT nID, ...)
@@ -34,7 +35,7 @@
         va_list va;
         WCHAR sz[MAX_PATH];
         va_start(va, nID);
-        LoadStringW(NULL, nID, sz, MAX_PATH);
+        LoadStringW(NULL, nID, sz, _countof(sz));
         vfwprintf(fp, sz, va);
         va_end(va);
     }
@@ -377,10 +378,9 @@ int wmain(int argc, WCHAR **argv)
     PWCHAR endptr;
     INT i;
 
-#ifdef __REACTOS__
     /* Initialize the Console Standard Streams */
     ConInitStdStreams();
-#endif
+
     for (i = 1; i < argc; ++i)
     {
         if (argv[i][0] != L'/')
