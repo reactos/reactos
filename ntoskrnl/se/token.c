@@ -636,7 +636,8 @@ SeExchangePrimaryToken(
     /* Mark new token in use */
     NewToken->TokenInUse = TRUE;
 
-    // TODO: Set a correct SessionId for NewToken
+    /* Set the session ID for the new token */
+    NewToken->SessionId = MmGetSessionId(Process);
 
     /* Unlock the new token */
     SepReleaseTokenLock(NewToken);
