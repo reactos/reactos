@@ -43,8 +43,15 @@
 
 #elif defined(_USE_DUMMY_PSEH) || defined (__arm__) || defined(_M_AMD64)
 
+#ifdef __cplusplus
+extern"C"
+{
+#endif
 extern int _SEH2_Volatile0;
 extern int _SEH2_VolatileExceptionCode;
+#ifdef __cplusplus
+} // extern "C"
+#endif
 
 #define _SEH2_TRY                                   \
 _Pragma("GCC diagnostic push")                      \
