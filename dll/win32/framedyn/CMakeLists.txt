@@ -14,7 +14,7 @@ set_module_type(framedyn win32dll UNICODE)
 add_importlibs(framedyn oleaut32 msvcrt kernel32 ntdll)
 add_cd_file(TARGET framedyn DESTINATION reactos/system32/wbem FOR all)
 
-if(NOT MSVC)
+if((NOT MSVC) AND (ARCH STREQUAL "i386"))
     add_asm_files(framedynex_asm alias_gcc.s)
     add_library(framedynex ${framedynex_asm})
     set_target_properties(framedynex PROPERTIES LINKER_LANGUAGE ASM)
