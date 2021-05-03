@@ -118,7 +118,6 @@ jobs:
       with:
         path: src
     - name: Configure
-      working-directory: ${{github.workspace}}\build
       run: cmake -S src -B build -G Ninja -DCMAKE_TOOLCHAIN_FILE:FILEPATH=toolchain-msvc.cmake -DARCH:STRING=${{matrix.arch}} -DENABLE_ROSTESTS=1 -DENABLE_ROSAPPS=1 -DUSE_CLANG_CL:BOOL=${{matrix.compiler == 'clang-cl'}}
     - name: Build
       working-directory: ${{github.workspace}}\build
