@@ -19,7 +19,7 @@ static const INFORMATION_CLASS_INFO PsProcessInfoClass[] =
     (
         PROCESS_BASIC_INFORMATION,
         ULONG,
-        ICIF_QUERY | ICIF_QUERY_SIZE_VARIABLE
+        ICIF_QUERY
     ),
 
     /* ProcessQuotaLimits */
@@ -27,7 +27,7 @@ static const INFORMATION_CLASS_INFO PsProcessInfoClass[] =
     (
         QUOTA_LIMITS,
         ULONG,
-        ICIF_QUERY | ICIF_SET | ICIF_SIZE_VARIABLE
+        ICIF_QUERY | ICIF_SET
     ),
 
     /* ProcessIoCounters */
@@ -35,7 +35,7 @@ static const INFORMATION_CLASS_INFO PsProcessInfoClass[] =
     (
         IO_COUNTERS,
         ULONG,
-        ICIF_QUERY | ICIF_QUERY_SIZE_VARIABLE
+        ICIF_QUERY
     ),
 
     /* ProcessVmCounters */
@@ -51,7 +51,7 @@ static const INFORMATION_CLASS_INFO PsProcessInfoClass[] =
     (
         KERNEL_USER_TIMES,
         ULONG,
-        ICIF_QUERY | ICIF_QUERY_SIZE_VARIABLE
+        ICIF_QUERY
     ),
 
     /* ProcessBasePriority */
@@ -59,7 +59,7 @@ static const INFORMATION_CLASS_INFO PsProcessInfoClass[] =
     (
         KPRIORITY,
         ULONG,
-        ICIF_SET | ICIF_SET_SIZE_VARIABLE
+        ICIF_SET
     ),
 
     /* ProcessRaisePriority */
@@ -67,7 +67,7 @@ static const INFORMATION_CLASS_INFO PsProcessInfoClass[] =
     (
         ULONG,
         ULONG,
-        ICIF_SET | ICIF_SET_SIZE_VARIABLE
+        ICIF_SET
     ),
 
     /* ProcessDebugPort */
@@ -75,7 +75,7 @@ static const INFORMATION_CLASS_INFO PsProcessInfoClass[] =
     (
         HANDLE,
         ULONG,
-        ICIF_QUERY | ICIF_QUERY_SIZE_VARIABLE
+        ICIF_QUERY
     ),
 
     /* ProcessExceptionPort */
@@ -83,7 +83,7 @@ static const INFORMATION_CLASS_INFO PsProcessInfoClass[] =
     (
         HANDLE,
         ULONG,
-        ICIF_SET | ICIF_SET_SIZE_VARIABLE
+        ICIF_SET
     ),
 
     /* ProcessAccessToken */
@@ -91,7 +91,7 @@ static const INFORMATION_CLASS_INFO PsProcessInfoClass[] =
     (
         PROCESS_ACCESS_TOKEN,
         ULONG,
-        ICIF_SET | ICIF_SET_SIZE_VARIABLE
+        ICIF_SET
     ),
 
     /* ProcessLdtInformation */
@@ -99,7 +99,7 @@ static const INFORMATION_CLASS_INFO PsProcessInfoClass[] =
     (
         PROCESS_LDT_INFORMATION,
         ULONG,
-        ICIF_QUERY | ICIF_SET | ICIF_SIZE_VARIABLE
+        ICIF_QUERY | ICIF_SET
     ),
 
     /* ProcessLdtSize */
@@ -107,7 +107,7 @@ static const INFORMATION_CLASS_INFO PsProcessInfoClass[] =
     (
         PROCESS_LDT_SIZE,
         ULONG,
-        ICIF_SET | ICIF_SET_SIZE_VARIABLE
+        ICIF_SET
     ),
 
     /* ProcessDefaultHardErrorMode */
@@ -115,7 +115,7 @@ static const INFORMATION_CLASS_INFO PsProcessInfoClass[] =
     (
         ULONG,
         ULONG,
-        ICIF_QUERY | ICIF_SET | ICIF_SIZE_VARIABLE
+        ICIF_QUERY | ICIF_SET
     ),
 
     /* ProcessIoPortHandlers */
@@ -123,7 +123,7 @@ static const INFORMATION_CLASS_INFO PsProcessInfoClass[] =
     (
         UCHAR,
         ULONG,
-        ICIF_SET | ICIF_SET_SIZE_VARIABLE
+        ICIF_SET
     ),
 
     /* ProcessPooledUsageAndLimits */
@@ -131,7 +131,7 @@ static const INFORMATION_CLASS_INFO PsProcessInfoClass[] =
     (
         POOLED_USAGE_AND_LIMITS,
         ULONG,
-        ICIF_QUERY | ICIF_QUERY_SIZE_VARIABLE
+        ICIF_QUERY
     ),
 
     /* ProcessWorkingSetWatch */
@@ -139,7 +139,7 @@ static const INFORMATION_CLASS_INFO PsProcessInfoClass[] =
     (
         PROCESS_WS_WATCH_INFORMATION,
         ULONG,
-        ICIF_QUERY | ICIF_SET | ICIF_SIZE_VARIABLE
+        ICIF_QUERY | ICIF_SET | ICIF_SET_SIZE_VARIABLE
     ),
 
     /* ProcessUserModeIOPL */
@@ -147,17 +147,17 @@ static const INFORMATION_CLASS_INFO PsProcessInfoClass[] =
     (
         UCHAR,
         ULONG,
-        ICIF_SET | ICIF_SET_SIZE_VARIABLE
+        ICIF_SET
     ),
 
     /* ProcessEnableAlignmentFaultFixup */
     IQS
     (
-        CHAR,
+        BOOLEAN,
         CHAR,
         BOOLEAN,
-        UCHAR,
-        ICIF_SET | ICIF_SET_SIZE_VARIABLE
+        CHAR,
+        ICIF_SET
     ),
 
     /* ProcessPriorityClass */
@@ -167,7 +167,7 @@ static const INFORMATION_CLASS_INFO PsProcessInfoClass[] =
         ULONG,
         PROCESS_PRIORITY_CLASS,
         CHAR,
-        ICIF_QUERY | ICIF_SET | ICIF_SIZE_VARIABLE
+        ICIF_QUERY | ICIF_SET
     ),
 
     /* ProcessWx86Information */
@@ -175,7 +175,7 @@ static const INFORMATION_CLASS_INFO PsProcessInfoClass[] =
     (
         ULONG,
         ULONG,
-        ICIF_QUERY | ICIF_SET | ICIF_SIZE_VARIABLE
+        ICIF_QUERY | ICIF_SET
     ),
 
     /* ProcessHandleCount */
@@ -183,7 +183,7 @@ static const INFORMATION_CLASS_INFO PsProcessInfoClass[] =
     (
         ULONG,
         ULONG,
-        ICIF_QUERY | ICIF_QUERY_SIZE_VARIABLE
+        ICIF_QUERY
     ),
 
     /* ProcessAffinityMask */
@@ -191,7 +191,7 @@ static const INFORMATION_CLASS_INFO PsProcessInfoClass[] =
     (
         KAFFINITY,
         ULONG,
-        ICIF_SET | ICIF_SET_SIZE_VARIABLE
+        ICIF_SET
     ),
 
     /* ProcessPriorityBoost */
@@ -199,7 +199,7 @@ static const INFORMATION_CLASS_INFO PsProcessInfoClass[] =
     (
         ULONG,
         ULONG,
-        ICIF_QUERY | ICIF_SET | ICIF_SIZE_VARIABLE
+        ICIF_QUERY | ICIF_SET
     ),
 
     /* ProcessDeviceMap */
@@ -209,7 +209,7 @@ static const INFORMATION_CLASS_INFO PsProcessInfoClass[] =
         ULONG,
         RTL_FIELD_TYPE(PROCESS_DEVICEMAP_INFORMATION, Set),
         ULONG,
-        ICIF_QUERY | ICIF_SET | ICIF_SIZE_VARIABLE
+        ICIF_QUERY | ICIF_SET
     ),
 
     /* ProcessSessionInformation */
@@ -217,7 +217,7 @@ static const INFORMATION_CLASS_INFO PsProcessInfoClass[] =
     (
         PROCESS_SESSION_INFORMATION,
         ULONG,
-        ICIF_QUERY | ICIF_SET | ICIF_SIZE_VARIABLE
+        ICIF_QUERY | ICIF_SET
     ),
 
     /* ProcessForegroundInformation */
@@ -226,8 +226,8 @@ static const INFORMATION_CLASS_INFO PsProcessInfoClass[] =
         CHAR,
         CHAR,
         BOOLEAN,
-        UCHAR,
-        ICIF_SET | ICIF_SET_SIZE_VARIABLE
+        CHAR,
+        ICIF_SET
     ),
 
     /* ProcessWow64Information */
@@ -235,7 +235,7 @@ static const INFORMATION_CLASS_INFO PsProcessInfoClass[] =
     (
         ULONG,
         ULONG,
-        ICIF_QUERY | ICIF_QUERY_SIZE_VARIABLE
+        ICIF_QUERY
     ),
 
     /* ProcessImageFileName */
@@ -251,7 +251,7 @@ static const INFORMATION_CLASS_INFO PsProcessInfoClass[] =
     (
         ULONG,
         ULONG,
-        ICIF_QUERY | ICIF_QUERY_SIZE_VARIABLE
+        ICIF_QUERY
     ),
 
     /* ProcessBreakOnTermination */
@@ -259,7 +259,7 @@ static const INFORMATION_CLASS_INFO PsProcessInfoClass[] =
     (
         ULONG,
         ULONG,
-        ICIF_QUERY | ICIF_SET | ICIF_SIZE_VARIABLE
+        ICIF_QUERY | ICIF_SET
     ),
 
     /* ProcessDebugObjectHandle */
@@ -267,7 +267,7 @@ static const INFORMATION_CLASS_INFO PsProcessInfoClass[] =
     (
         HANDLE,
         ULONG,
-        ICIF_QUERY | ICIF_QUERY_SIZE_VARIABLE
+        ICIF_QUERY
     ),
 
     /* ProcessDebugFlags */
@@ -275,17 +275,17 @@ static const INFORMATION_CLASS_INFO PsProcessInfoClass[] =
     (
         ULONG,
         ULONG,
-        ICIF_QUERY | ICIF_SET | ICIF_SIZE_VARIABLE
+        ICIF_QUERY | ICIF_SET
     ),
 
     /* ProcessHandleTracing */
     IQS
     (
         PROCESS_HANDLE_TRACING_QUERY,
-        CHAR,
         ULONG,
         ULONG,
-        ICIF_QUERY | ICIF_SET | ICIF_SIZE_VARIABLE
+        ULONG,
+        ICIF_QUERY | ICIF_SET
     ),
 
     /* ProcessIoPriority */
@@ -301,7 +301,7 @@ static const INFORMATION_CLASS_INFO PsProcessInfoClass[] =
     (
         ULONG,
         ULONG,
-        ICIF_QUERY | ICIF_SET | ICIF_SIZE_VARIABLE
+        ICIF_QUERY | ICIF_SET
     ),
 
     /* ProcessTlsInformation */
@@ -317,7 +317,7 @@ static const INFORMATION_CLASS_INFO PsProcessInfoClass[] =
     (
         ULONG,
         ULONG,
-        ICIF_QUERY | ICIF_QUERY_SIZE_VARIABLE
+        ICIF_QUERY
     ),
 
     /* ProcessImageInformation */
@@ -325,7 +325,7 @@ static const INFORMATION_CLASS_INFO PsProcessInfoClass[] =
     (
         SECTION_IMAGE_INFORMATION,
         ULONG,
-        ICIF_QUERY | ICIF_QUERY_SIZE_VARIABLE
+        ICIF_QUERY
     ),
 
     /* ProcessCycleTime */
@@ -411,7 +411,7 @@ static const INFORMATION_CLASS_INFO PsThreadInfoClass[] =
     (
         THREAD_BASIC_INFORMATION,
         ULONG,
-        ICIF_QUERY | ICIF_QUERY_SIZE_VARIABLE
+        ICIF_QUERY
     ),
 
     /* ThreadTimes */
@@ -419,7 +419,7 @@ static const INFORMATION_CLASS_INFO PsThreadInfoClass[] =
     (
         KERNEL_USER_TIMES,
         ULONG,
-        ICIF_QUERY | ICIF_QUERY_SIZE_VARIABLE
+        ICIF_QUERY
     ),
 
     /* ThreadPriority */
@@ -427,7 +427,7 @@ static const INFORMATION_CLASS_INFO PsThreadInfoClass[] =
     (
         KPRIORITY,
         ULONG,
-        ICIF_SET | ICIF_SET_SIZE_VARIABLE
+        ICIF_SET
     ),
 
     /* ThreadBasePriority */
@@ -435,7 +435,7 @@ static const INFORMATION_CLASS_INFO PsThreadInfoClass[] =
     (
         LONG,
         ULONG,
-        ICIF_SET | ICIF_SET_SIZE_VARIABLE
+        ICIF_SET
     ),
 
     /* ThreadAffinityMask */
@@ -443,7 +443,7 @@ static const INFORMATION_CLASS_INFO PsThreadInfoClass[] =
     (
         KAFFINITY,
         ULONG,
-        ICIF_SET | ICIF_SET_SIZE_VARIABLE
+        ICIF_SET
     ),
 
     /* ThreadImpersonationToken */
@@ -451,7 +451,7 @@ static const INFORMATION_CLASS_INFO PsThreadInfoClass[] =
     (
         HANDLE,
         ULONG,
-        ICIF_SET | ICIF_SET_SIZE_VARIABLE
+        ICIF_SET
     ),
 
     /* ThreadDescriptorTableEntry is only implemented in x86 as well as the descriptor entry */
@@ -461,7 +461,7 @@ static const INFORMATION_CLASS_INFO PsThreadInfoClass[] =
         (
             DESCRIPTOR_TABLE_ENTRY,
             ULONG,
-            ICIF_QUERY | ICIF_QUERY_SIZE_VARIABLE
+            ICIF_QUERY
         ),
     #else
         IQS_NONE,
@@ -474,7 +474,7 @@ static const INFORMATION_CLASS_INFO PsThreadInfoClass[] =
         CHAR,
         BOOLEAN,
         UCHAR,
-        ICIF_SET | ICIF_SET_SIZE_VARIABLE
+        ICIF_SET
     ),
 
     /* ThreadEventPair_Reusable */
@@ -492,7 +492,7 @@ static const INFORMATION_CLASS_INFO PsThreadInfoClass[] =
         ULONG,
         ULONG_PTR,
         ULONG,
-        ICIF_QUERY | ICIF_SET | ICIF_SIZE_VARIABLE
+        ICIF_QUERY | ICIF_SET
     ),
 
     /* ThreadZeroTlsCell */
@@ -500,7 +500,7 @@ static const INFORMATION_CLASS_INFO PsThreadInfoClass[] =
     (
         ULONG_PTR,
         ULONG,
-        ICIF_SET | ICIF_SIZE_VARIABLE
+        ICIF_SET
     ),
 
     /* ThreadPerformanceCount */
@@ -508,7 +508,7 @@ static const INFORMATION_CLASS_INFO PsThreadInfoClass[] =
     (
         LARGE_INTEGER,
         ULONG,
-        ICIF_QUERY | ICIF_QUERY_SIZE_VARIABLE
+        ICIF_QUERY
     ),
 
     /* ThreadAmILastThread */
@@ -516,7 +516,7 @@ static const INFORMATION_CLASS_INFO PsThreadInfoClass[] =
     (
         ULONG,
         ULONG,
-        ICIF_QUERY | ICIF_QUERY_SIZE_VARIABLE
+        ICIF_QUERY
     ),
 
     /* ThreadIdealProcessor */
@@ -524,7 +524,7 @@ static const INFORMATION_CLASS_INFO PsThreadInfoClass[] =
     (
         ULONG_PTR,
         ULONG,
-        ICIF_SET | ICIF_SIZE_VARIABLE
+        ICIF_SET
     ),
 
     /* ThreadPriorityBoost */
@@ -534,7 +534,7 @@ static const INFORMATION_CLASS_INFO PsThreadInfoClass[] =
         ULONG,
         ULONG_PTR,
         ULONG,
-        ICIF_QUERY | ICIF_SET | ICIF_SIZE_VARIABLE
+        ICIF_QUERY | ICIF_SET
     ),
 
     /* ThreadSetTlsArrayAddress */
@@ -550,7 +550,7 @@ static const INFORMATION_CLASS_INFO PsThreadInfoClass[] =
     (
         ULONG,
         ULONG,
-        ICIF_QUERY | ICIF_QUERY_SIZE_VARIABLE
+        ICIF_QUERY
     ),
 
     /* ThreadHideFromDebugger */
@@ -566,7 +566,7 @@ static const INFORMATION_CLASS_INFO PsThreadInfoClass[] =
     (
         ULONG,
         ULONG,
-        ICIF_QUERY | ICIF_SET | ICIF_SIZE_VARIABLE
+        ICIF_QUERY | ICIF_SET
     ),
 
     /* ThreadSwitchLegacyState */
@@ -574,7 +574,7 @@ static const INFORMATION_CLASS_INFO PsThreadInfoClass[] =
     (
         ULONG,
         ULONG,
-        ICIF_SET | ICIF_SET_SIZE_VARIABLE
+        ICIF_SET
     ),
 
     /* ThreadIsTerminated */
@@ -582,7 +582,7 @@ static const INFORMATION_CLASS_INFO PsThreadInfoClass[] =
     (
         ULONG,
         ULONG,
-        ICIF_QUERY | ICIF_QUERY_SIZE_VARIABLE
+        ICIF_QUERY
     ),
 
     /* ThreadLastSystemCall */

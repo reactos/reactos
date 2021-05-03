@@ -399,7 +399,8 @@ NtQueryIoCompletion(IN  HANDLE IoCompletionHandle,
                                          IoCompletionInformationLength,
                                          ResultLength,
                                          NULL,
-                                         PreviousMode);
+                                         PreviousMode,
+                                         TRUE);
     if (!NT_SUCCESS(Status)) return Status;
 
     /* Get the Object */

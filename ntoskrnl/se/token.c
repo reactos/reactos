@@ -2400,7 +2400,8 @@ NtQueryInformationToken(
                                          TokenInformationLength,
                                          ReturnLength,
                                          NULL,
-                                         PreviousMode);
+                                         PreviousMode,
+                                         TRUE);
     if (!NT_SUCCESS(Status))
     {
         DPRINT("NtQueryInformationToken() failed, Status: 0x%x\n", Status);
