@@ -38,7 +38,7 @@
 #define IMCR_PIC_DIRECT    0x00
 #define IMCR_PIC_VIA_APIC  0x01
 
-#define ZERO_VECTOR 0x00 //IRQL 00
+#define ZERO_VECTOR          0x00 // IRQL 00
 #define APC_VECTOR           0x3D // IRQL 01
 #define DISPATCH_VECTOR      0x41 // IRQL 02
 #define APIC_GENERIC_VECTOR  0xC1 // IRQL 27
@@ -256,7 +256,6 @@ enum
     IOAPIC_REDTBL = 0x10
 };
 
-#include <pshpack1.h>
 typedef union _IOAPIC_REDIRECTION_REGISTER
 {
     UINT64 LongLong;
