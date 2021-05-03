@@ -23,7 +23,7 @@
 #ifndef KJK_PSEH2_H_
 #define KJK_PSEH2_H_
 
-#if defined(_USE_NATIVE_SEH) || defined(_MSC_VER)
+#if defined(_USE_NATIVE_SEH) || (defined(_MSC_VER) && !(defined(__clang__) && defined(_M_AMD64)))
 
 #include <excpt.h>
 #define _SEH2_TRY __try
