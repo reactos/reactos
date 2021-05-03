@@ -2,6 +2,27 @@
 #pragma once
 
 #ifdef _M_AMD64
+  #define LOCAL_APIC_BASE  0xFFFFFFFFFFFE0000ULL // checkme!
+#else
+  #define LOCAL_APIC_BASE  0xFFFE0000
+#endif
+
+/* The IMCR is supported by two read/writable or write-only I/O ports,
+   22h and 23h, which receive address and data respectively.
+   To access the IMCR, write a value of 70h to I/O port 22h, which selects the IMCR.
+   Then write the data to I/O port 23h. The power-on default value is zero,
+   which connects the NMI and 8259 INTR lines directly to the BSP.
+   Writing a value of 01h forces the NMI and 8259 INTR signals to pass through the APIC.
+*/
+#define IMCR_ADDRESS_PORT  (PUCHAR)0x0022
+#define IMCR_DATA_PORT     (PUCHAR)0x0023
+#define IMCR_SELECT        0x70
+#define IMCR_PIC_DIRECT    0x00
+#define IMCR_PIC_VIA_APIC  0x01
+
+#define MAX_IOAPICS      64
+
+#ifdef _M_AMD64
 #define IOAPIC_BASE 0xFFFFFFFFFFFE1000ULL // checkme
 #define ZERO_VECTOR          0x00 // IRQL 00
 #define APC_VECTOR           0x3D // IRQL 01
@@ -32,12 +53,20 @@
 #define APIC_ERROR_VECTOR    0xE3
 #define POWERFAIL_VECTOR     0xEF // IRQL 30
 #define APIC_PROFILE_VECTOR  0xFD // IRQL 31
+#define APIC_PERF_VECTOR     0xFE
 #define APIC_NMI_VECTOR      0xFF
 #define IrqlToTpr(Irql) (HalpIRQLtoTPR[Irql])
 #define IrqlToSoftVector(Irql) IrqlToTpr(Irql)
 #define TprToIrql(Tpr)  (HalVectorToIRQL[Tpr >> 4])
+
+#define MAX_CPUS         32
+#define MAX_INT_VECTORS  256
+#define MAX_INTI         (32 * MAX_IOAPICS)
+
+#define APIC_MAX_CPU_PER_CLUSTER  4
 #endif
 
+#define MSR_RDTSC     0x00000010
 #define MSR_APIC_BASE 0x0000001B
 #define IOAPIC_PHYS_BASE 0xFEC00000
 #define APIC_CLOCK_INDEX 8
@@ -258,7 +287,84 @@ typedef union _IOAPIC_REDIRECTION_REGISTER
         ULONGLONG Reserved:39;
         ULONGLONG Destination:8;
     };
-} IOAPIC_REDIRECTION_REGISTER;
+} IOAPIC_REDIRECTION_REGISTER, *PIOAPIC_REDIRECTION_REGISTER;
+
+typedef struct _HALP_PCR_HAL_RESERVED
+{
+    UCHAR ProcessorNumber;
+    UCHAR Reserved1;
+    BOOLEAN ApcRequested;
+    BOOLEAN DpcRequested;
+    ULONG ApicHz;
+    ULONG Reserved2;
+    ULONG ProfileCount;
+    ULONGLONG TscHz;
+    ULONG Reserved3;
+    ULONG Reserved4;
+    ULONG Reserved[8];
+
+} HALP_PCR_HAL_RESERVED, *PHALP_PCR_HAL_RESERVED;
+
+#define LOCAL_APIC_VERSION_MAX 0x1F
+
+typedef struct _HALP_MP_INFO_TABLE
+{
+    ULONG LocalApicversion;
+    ULONG ProcessorCount;
+    ULONG ActiveProcessorCount;
+    ULONG Reserved1;
+    ULONG IoApicCount;
+    ULONG Reserved2;
+    ULONG Reserved3;
+    BOOLEAN ImcrPresent;              // When the IMCR presence bit is set, the IMCR is present and PIC Mode is implemented; otherwise, Virtual Wire Mode is implemented.
+    UCHAR Pad[3];
+    ULONG LocalApicPA;                // The 32-bit physical address at which each processor can access its local interrupt controller
+    ULONG IoApicVA[MAX_IOAPICS];
+    ULONG IoApicPA[MAX_IOAPICS];
+    ULONG IoApicIrqBase[MAX_IOAPICS]; // Global system interrupt base 
+
+} HALP_MP_INFO_TABLE, *PHALP_MP_INFO_TABLE;
+
+typedef struct _IO_APIC_REGISTERS
+{
+    volatile ULONG IoRegisterSelect;
+    volatile ULONG Reserved[3];
+    volatile ULONG IoWindow;
+
+} IO_APIC_REGISTERS, *PIO_APIC_REGISTERS;
+
+/* Type of APIC input signals */
+#define INTI_INFO_TYPE_INT     0 // vectored interrupt; vector is supplied by APIC redirection table
+#define INTI_INFO_TYPE_NMI     1 // nonmaskable interrupt
+#define INTI_INFO_TYPE_SMI     2 // system management interrupt
+#define INTI_INFO_TYPE_ExtINT  3 // vectored interrupt; vector is supplied by external PIC
+
+/* Polarity of APIC input signals */
+#define INTI_INFO_POLARITY_CONFORMS     0
+#define INTI_INFO_POLARITY_ACTIVE_HIGH  1
+#define INTI_INFO_POLARITY_RESERVED     2
+#define INTI_INFO_POLARITY_ACTIVE_LOW   3
+
+/* Trigger mode of APIC input signals */
+#define INTI_INFO_TRIGGER_EDGE   0
+#define INTI_INFO_TRIGGER_LEVEL  1
+//? #define INTI_INFO_TRIGGER_       2
+//? #define INTI_INFO_TRIGGER_       3
+
+typedef union _APIC_INTI_INFO
+{
+    struct
+    {
+        UCHAR Enabled      :1;
+        UCHAR Type         :3;
+        UCHAR TriggerMode  :2;
+        UCHAR Polarity     :2;
+        UCHAR Destinations;
+        USHORT Entry;
+    };
+    ULONG AsULONG;
+
+} APIC_INTI_INFO, *PAPIC_INTI_INFO;
 
 FORCEINLINE
 ULONG
@@ -283,4 +389,52 @@ NTAPI
 HalInitializeProfiling(VOID);
 
 VOID __cdecl ApicSpuriousService(VOID);
+VOID __cdecl PicSpuriousService37(VOID);
 
+#ifdef _M_IX86
+BOOLEAN
+NTAPI 
+DetectMP(
+    _In_ PLOADER_PARAMETER_BLOCK LoaderBlock
+);
+
+VOID
+HalpInitPhase0a(
+    _In_ PLOADER_PARAMETER_BLOCK LoaderBlock
+);
+
+BOOLEAN
+NTAPI 
+HalpGetApicInterruptDesc(
+    _In_ ULONG DeviceIrq,
+    _In_ USHORT * OutIntI
+);
+
+VOID
+NTAPI
+HalpInitializeApicAddressing(
+    VOID
+);
+
+VOID
+NTAPI
+HalpMarkProcessorStarted(
+    _In_ UCHAR Id,
+    _In_ ULONG PrcNumber
+);
+
+ULONG
+FASTCALL
+HalpAcquireHighLevelLock(
+    _In_ volatile PKSPIN_LOCK SpinLock
+);
+
+VOID
+FASTCALL
+HalpReleaseHighLevelLock(
+    _In_ volatile PKSPIN_LOCK SpinLock,
+    _In_ ULONG EFlags
+);
+#endif
+
+/* EOF */

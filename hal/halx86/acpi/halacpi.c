@@ -19,6 +19,7 @@ FAST_MUTEX HalpAcpiTableCacheLock;
 
 BOOLEAN HalpProcessedACPIPhase0;
 BOOLEAN HalpPhysicalMemoryMayAppearAbove4GB;
+BOOLEAN LessThan16Mb = TRUE;
 
 FADT HalpFixedAcpiDescTable;
 PDEBUG_PORT_TABLE HalpDebugPortTable;
@@ -35,14 +36,133 @@ PACPI_BIOS_MULTI_NODE HalpAcpiMultiNode;
 
 LIST_ENTRY HalpAcpiTableMatchList;
 
+PVOID HalpWakeVector = NULL;
 ULONG HalpInvalidAcpiTable;
+ULONG HalpShutdownContext = 0;
 
-ULONG HalpPicVectorRedirect[] = {0, 1, 2, 3, 4, 5, 6, 7, 9, 10, 11, 12, 13, 14, 15};
+ULONG HalpPicVectorRedirect[HAL_PIC_VECTORS] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
+ULONG HalpPicVectorFlags[HAL_PIC_VECTORS] = {0};
 
 /* This determines the HAL type */
 BOOLEAN HalDisableFirmwareMapper = TRUE;
 PWCHAR HalHardwareIdString = L"acpipic_up";
 PWCHAR HalName = L"ACPI Compatible Eisa/Isa HAL";
+
+#ifdef _M_IX86
+extern BOOLEAN HalpBrokenAcpiTimer;
+
+ULONG HalpWAETDeviceFlags;
+PPM_DISPATCH_TABLE PmAcpiDispatchTable;
+
+/* DISPATCH TABLE FUNCTIONS ***************************************************/
+
+ACPI_PM_DISPATCH_TABLE HalAcpiDispatchTable =
+{
+    'HAL ',
+    2,
+    HaliAcpiTimerInit,
+    NULL,
+    HaliAcpiMachineStateInit,
+    HaliAcpiQueryFlags,
+    HalpAcpiPicStateIntact,
+    HalRestorePicState,
+    HaliPciInterfaceReadConfig,
+    HaliPciInterfaceWriteConfig,
+    HaliSetVectorState,
+    HalSystemVector,
+    HaliSetMaxLegacyPciBusNumber,
+    HaliIsVectorValid
+};
+
+VOID
+NTAPI
+HaliAcpiMachineStateInit(_In_ ULONG Unknown1,
+                         _In_ PVOID State,
+                         _Out_ ULONG * OutInterruptModel)
+{
+    //UNIMPLEMENTED;
+    DPRINT1("HaliAcpiMachineStateInit: .. \n");
+    ASSERT(FALSE);
+}
+
+NTSTATUS
+NTAPI
+HaliAcpiQueryFlags(_In_ ULONG Unknown1,
+                   _In_ ULONG Unknown2,
+                   _In_ ULONG Unknown3)
+{
+    //UNIMPLEMENTED;
+    DPRINT1("HaliAcpiQueryFlags: .. \n");
+    ASSERT(FALSE);
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS
+NTAPI
+HalpAcpiPicStateIntact(_In_ ULONG Unknown1,
+                       _In_ ULONG Unknown2,
+                       _In_ ULONG Unknown3)
+{
+    //UNIMPLEMENTED;
+    DPRINT1("HalpAcpiPicStateIntact: .. \n");
+    ASSERT(FALSE);
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS
+NTAPI
+HalRestorePicState(_In_ ULONG Unknown1,
+                   _In_ ULONG Unknown2,
+                   _In_ ULONG Unknown3)
+{
+    //UNIMPLEMENTED;
+    DPRINT1("HalRestorePicState: .. \n");
+    ASSERT(FALSE);
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+UCHAR
+NTAPI
+HaliSetVectorState(_In_ ULONG GlobalIrq,
+                   _In_ UCHAR State)
+{
+    //UNIMPLEMENTED;
+    DPRINT1("HaliSetVectorState: GlobalIrq %X, State %X\n", GlobalIrq, State);
+    ASSERT(FALSE);
+    return 0;
+}
+
+NTSTATUS
+NTAPI
+HalSystemVector(_In_ ULONG Unknown1,
+                _In_ ULONG Unknown2,
+                _In_ ULONG Unknown3)
+{
+    //UNIMPLEMENTED;
+    DPRINT1("HalSystemVector: .. \n");
+    ASSERT(FALSE);
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+VOID
+NTAPI
+HaliSetMaxLegacyPciBusNumber(_In_ ULONG MaxLegacyPciBusNumber)
+{
+    //UNIMPLEMENTED;
+    DPRINT1("HaliSetMaxLegacyPciBusNumber: MaxLegacyPciBusNumber %X\n", MaxLegacyPciBusNumber);
+    ASSERT(FALSE);
+}
+
+BOOLEAN
+NTAPI
+HaliIsVectorValid(_In_ ULONG DeviceIrq)
+{
+    //UNIMPLEMENTED;
+    DPRINT1("HaliIsVectorValid: DeviceIrq %X\n", DeviceIrq);
+    ASSERT(FALSE);
+    return FALSE;
+}
+#endif
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
@@ -766,26 +886,6 @@ HalpAcpiTableCacheInit(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     return Status;
 }
 
-VOID
-NTAPI
-HaliAcpiTimerInit(IN ULONG TimerPort,
-                  IN ULONG TimerValExt)
-{
-    PAGED_CODE();
-
-    /* Is this in the init phase? */
-    if (!TimerPort)
-    {
-        /* Get the data from the FADT */
-        TimerPort = HalpFixedAcpiDescTable.pm_tmr_blk_io_port;
-        TimerValExt = HalpFixedAcpiDescTable.flags & ACPI_TMR_VAL_EXT;
-        DPRINT1("ACPI Timer at: %Xh (EXT: %d)\n", TimerPort, TimerValExt);
-    }
-
-    /* FIXME: Now proceed to the timer initialization */
-    //HalaAcpiTimerInit(TimerPort, TimerValExt);
-}
-
 CODE_SEG("INIT")
 NTSTATUS
 NTAPI
@@ -795,13 +895,23 @@ HalpSetupAcpiPhase0(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     PFADT Fadt;
     ULONG TableLength;
     PHYSICAL_ADDRESS PhysicalAddress;
+#ifdef _M_IX86
+    PACPI_TABLE_WAET EmulatedDevicesTable = NULL;
+
+    /* Fill out HalDispatchTable */
+    HalGetInterruptTranslator = HalAcpiGetInterruptTranslator;
+#endif
 
     /* Only do this once */
     if (HalpProcessedACPIPhase0) return STATUS_SUCCESS;
 
     /* Setup the ACPI table cache */
     Status = HalpAcpiTableCacheInit(LoaderBlock);
-    if (!NT_SUCCESS(Status)) return Status;
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("HalpSetupAcpiPhase0: Status %X\n", Status);
+        return Status;
+    }
 
     /* Grab the FADT */
     Fadt = HalAcpiGetTable(LoaderBlock, FADT_SIGNATURE);
@@ -819,11 +929,19 @@ HalpSetupAcpiPhase0(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     /* Copy it in the HAL static buffer */
     RtlCopyMemory(&HalpFixedAcpiDescTable, Fadt, TableLength);
 
+#ifdef _M_IX86
+    HalpAcpiApplyFadtSettings(&HalpFixedAcpiDescTable);
+#endif
+
     /* Anything special this HAL needs to do? */
     HalpAcpiDetectMachineSpecificActions(LoaderBlock, &HalpFixedAcpiDescTable);
 
     /* Get the debug table for KD */
     HalpDebugPortTable = HalAcpiGetTable(LoaderBlock, DBGP_SIGNATURE);
+    if (HalpDebugPortTable)
+    {
+        DPRINT1("HalpDebugPortTable %X\n", HalpDebugPortTable);
+    }
 
     /* Initialize NUMA through the SRAT */
     HalpNumaInitializeStaticConfiguration(LoaderBlock);
@@ -835,15 +953,29 @@ HalpSetupAcpiPhase0(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
         DPRINT1("Your machine has a SRAT, but NUMA/HotPlug are not supported!\n");
     }
 
+#ifdef _M_IX86
+    EmulatedDevicesTable = HalAcpiGetTable(LoaderBlock, 'TEAW');
+    if (EmulatedDevicesTable)
+    {
+        HalpWAETDeviceFlags = EmulatedDevicesTable->Flags;
+        DPRINT1("HalpWAETDeviceFlags %X\n", HalpWAETDeviceFlags);
+    }
+#endif
+
     /* Can there be memory higher than 4GB? */
     if (HalpMaxHotPlugMemoryAddress.HighPart >= 1)
     {
         /* We'll need this for DMA later */
         HalpPhysicalMemoryMayAppearAbove4GB = TRUE;
+        DPRINT1("HalpPhysicalMemoryMayAppearAbove4GB - TRUE\n");
     }
 
     /* Setup the ACPI timer */
+#ifdef _M_AMD64
     HaliAcpiTimerInit(0, 0);
+#else
+    HaliAcpiTimerInit(NULL, FALSE);
+#endif
 
     /* Do we have a low stub address yet? */
     if (!HalpLowStubPhysicalAddress.QuadPart)
@@ -1111,5 +1243,118 @@ HalReportResourceUsage(VOID)
     /* Setup PCI debugging and Hibernation */
     HalpRegisterPciDebuggingDeviceInfo();
 }
+
+#ifdef _M_IX86
+VOID
+NTAPI
+HalpPowerStateCallback(_In_opt_ PVOID CallbackContext,
+                       _In_opt_ PVOID Argument1,
+                       _In_opt_ PVOID Argument2)
+{
+    DPRINT1("HalpPowerStateCallback: FIXME! CallbackContext %p, Argument1 %p, Argument2 %p\n", CallbackContext, Argument1, Argument2);
+}
+
+NTSTATUS
+NTAPI
+HaliInitPowerManagement(_In_ PPM_DISPATCH_TABLE PmDriverDispatchTable,
+                        _Out_ PPM_DISPATCH_TABLE * PmHalDispatchTable)
+{
+    UNICODE_STRING CallbackName = RTL_CONSTANT_STRING(L"\\Callback\\PowerState");
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    PCALLBACK_OBJECT CallbackObject;
+    PHYSICAL_ADDRESS PhysicalAddress;
+    PFACS Facs;
+
+    PAGED_CODE();
+
+    //FIXME
+    //HalpPiix4Detect(TRUE);
+    //HalpPutAcpiHacksInRegistry();
+
+    PmAcpiDispatchTable = PmDriverDispatchTable; // interface with acpi.sys
+
+    if (HalpBrokenAcpiTimer)
+    {
+        HalAcpiDispatchTable.HalAcpiTimerInterrupt = HalAcpiBrokenPiix4TimerCarry;
+    }
+    else
+    {
+        HalAcpiDispatchTable.HalAcpiTimerInterrupt = HalAcpiTimerCarry;
+    }
+
+    *PmHalDispatchTable = (PPM_DISPATCH_TABLE)&HalAcpiDispatchTable; // HAL export interface
+
+    //FIXME
+    //HalSetWakeEnable = HaliSetWakeEnable;
+    //HalSetWakeAlarm = HaliSetWakeAlarm;
+
+    /* Create a power callback */    
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &CallbackName,
+                               (OBJ_CASE_INSENSITIVE | OBJ_PERMANENT),
+                               NULL,
+                               NULL);
+
+    ExCreateCallback(&CallbackObject, &ObjectAttributes, FALSE, TRUE);
+    ExRegisterCallback(CallbackObject, HalpPowerStateCallback, NULL);
+
+    if (!HalpFixedAcpiDescTable.facs)
+    {
+        return STATUS_SUCCESS;
+    }
+
+    PhysicalAddress.QuadPart = HalpFixedAcpiDescTable.facs;
+    Facs = MmMapIoSpace(PhysicalAddress, sizeof(*Facs), MmNonCached);
+
+    if (Facs && (Facs->Signature == 'SCAF'))
+    {
+        HalpWakeVector = &Facs->pFirmwareWakingVector;
+    }
+
+    return STATUS_SUCCESS;
+}
+
+VOID
+NTAPI
+HalAcpiHaltSystem(VOID)
+{
+    DPRINT("HalAcpiHaltSystem()\n");
+
+    while (TRUE)
+    {
+        HalpCheckPowerButton();
+        YieldProcessor();
+    }
+}
+
+#define HAL_PIC_MAX_LEVELS  0x1B
+
+ULONG
+NTAPI
+HalpGetRootInterruptVector(_In_ ULONG Level,
+                           _In_ ULONG Vector,
+                           _Out_ KIRQL * OutIrql,
+                           _Out_ KAFFINITY * OutAffinity)
+{
+    DPRINT("HalpGetRootInterruptVector: Level %X, Vector %X\n", Level, Vector);
+
+    if ((Level < 0) || (Level > HAL_PIC_MAX_LEVELS))
+    {
+        DPRINT("HalpGetRootInterruptVector: return 0\n");
+        return 0;
+    }
+
+    *OutIrql = (HAL_PIC_MAX_LEVELS - Level);
+    *OutAffinity = HalpDefaultInterruptAffinity;
+
+    DPRINT("HalpGetRootInterruptVector: *OutIrql %X, *OutAffinity %X\n", *OutIrql, *OutAffinity);
+    DPRINT("HalpGetRootInterruptVector: InterruptVector %X\n", (PRIMARY_VECTOR_BASE + Level));
+
+    ASSERT(HalpDefaultInterruptAffinity);
+
+    return (PRIMARY_VECTOR_BASE + Level);
+}
+
+#endif
 
 /* EOF */

@@ -617,6 +617,15 @@ HalpGetSystemInterruptVector(
     OUT PKAFFINITY Affinity
 );
 
+ULONG
+NTAPI
+HalpGetRootInterruptVector(
+    _In_ ULONG BusInterruptLevel,
+    _In_ ULONG BusInterruptVector,
+    _Out_ PKIRQL Irql,
+    _Out_ PKAFFINITY Affinity
+);
+
 extern ULONG HalpBusType;
 extern BOOLEAN HalpPCIConfigInitialized;
 extern BUS_HANDLER HalpFakePciBusHandler;

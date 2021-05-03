@@ -26,7 +26,7 @@ HalpIoWait(VOID)
 
 VOID
 NTAPI
-HalpInitializeLegacyPICs(VOID)
+HalpInitializeLegacyPICs(_In_ BOOLEAN InterruptMode)
 {
     I8259_ICW1 Icw1;
     I8259_ICW2 Icw2;

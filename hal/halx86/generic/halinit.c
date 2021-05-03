@@ -14,30 +14,9 @@
 
 /* GLOBALS *******************************************************************/
 
-BOOLEAN HalpPciLockSettings;
+UCHAR HalpInitLevel = 0xFF;
 
 /* PRIVATE FUNCTIONS *********************************************************/
-
-CODE_SEG("INIT")
-VOID
-NTAPI
-HalpGetParameters(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
-{
-    PCHAR CommandLine;
-
-    /* Make sure we have a loader block and command line */
-    if ((LoaderBlock) && (LoaderBlock->LoadOptions))
-    {
-        /* Read the command line */
-        CommandLine = LoaderBlock->LoadOptions;
-
-        /* Check if PCI is locked */
-        if (strstr(CommandLine, "PCILOCK")) HalpPciLockSettings = TRUE;
-
-        /* Check for initial breakpoint */
-        if (strstr(CommandLine, "BREAK")) DbgBreakPoint();
-    }
-}
 
 /* FUNCTIONS *****************************************************************/
 
@@ -47,19 +26,14 @@ HalInitializeProcessor(
     IN ULONG ProcessorNumber,
     IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
-    /* Hal specific initialization for this cpu */
-    HalpInitProcessor(ProcessorNumber, LoaderBlock);
-
     /* Set default stall count */
     KeGetPcr()->StallScaleFactor = INITIAL_STALL_COUNT;
 
-    /* Update the interrupt affinity and processor mask */
+    /* Update the processor mask */
     InterlockedBitTestAndSet((PLONG)&HalpActiveProcessors, ProcessorNumber);
-    InterlockedBitTestAndSet((PLONG)&HalpDefaultInterruptAffinity,
-                             ProcessorNumber);
 
-    /* Register routines for KDCOM */
-    HalpRegisterKdSupportFunctions();
+    /* Hal specific initialization for this cpu */
+    HalpInitProcessor(ProcessorNumber, LoaderBlock);
 }
 
 /*
@@ -76,11 +50,16 @@ HalInitSystem(IN ULONG BootPhase,
     /* Check the boot phase */
     if (BootPhase == 0)
     {
+        HalpInitLevel = 0;
+
         /* Phase 0... save bus type */
         HalpBusType = LoaderBlock->u.I386.MachineType & 0xFF;
 
         /* Get command-line parameters */
-        HalpGetParameters(LoaderBlock);
+        if (LoaderBlock && LoaderBlock->LoadOptions)
+        {
+            HalpGetParameters(LoaderBlock->LoadOptions);
+        }
 
         /* Check for PRCB version mismatch */
         if (Prcb->MajorVersion != PRCB_MAJOR_VERSION)
@@ -96,44 +75,18 @@ HalInitSystem(IN ULONG BootPhase,
             KeBugCheckEx(MISMATCHED_HAL, 2, Prcb->BuildType, HalpBuildType, 0);
         }
 
-        /* Initialize ACPI */
-        HalpSetupAcpiPhase0(LoaderBlock);
-
-        /* Initialize the PICs */
-        HalpInitializePICs(TRUE);
-
-        /* Initialize CMOS lock */
-        KeInitializeSpinLock(&HalpSystemHardwareLock);
-
-        /* Initialize CMOS */
-        HalpInitializeCmos();
-
-        /* Fill out the dispatch tables */
-        HalQuerySystemInformation = HaliQuerySystemInformation;
-        HalSetSystemInformation = HaliSetSystemInformation;
-        HalInitPnpDriver = HaliInitPnpDriver;
-        HalGetDmaAdapter = HalpGetDmaAdapter;
-
-        HalGetInterruptTranslator = NULL;  // FIXME: TODO
-        HalResetDisplay = HalpBiosDisplayReset;
-        HalHaltSystem = HaliHaltSystem;
-
         /* Setup I/O space */
         HalpDefaultIoSpace.Next = HalpAddressUsageList;
         HalpAddressUsageList = &HalpDefaultIoSpace;
 
-        /* Setup busy waiting */
-        HalpCalibrateStallExecution();
-
-        /* Initialize the clock */
-        HalpInitializeClock();
-
-        /*
-         * We could be rebooting with a pending profile interrupt,
-         * so clear it here before interrupts are enabled
-         */
-        HalStopProfileInterrupt(ProfileTime);
-
+#if defined(_M_IX86) && !defined(SARCH_PC98) && !defined(SARCH_XBOX)
+        if (HalpBusType == MACHINE_TYPE_EISA)
+        {
+            DPRINT1("HalpBusType - MACHINE_TYPE_EISA\n");
+            HalpEisaIoSpace.Next = &HalpDefaultIoSpace;
+            HalpAddressUsageList = &HalpEisaIoSpace;
+        }
+#endif
         /* Do some HAL-specific initialization */
         HalpInitPhase0(LoaderBlock);
 
@@ -143,6 +96,8 @@ HalInitSystem(IN ULONG BootPhase,
     }
     else if (BootPhase == 1)
     {
+        HalpInitLevel = 1;
+
         /* Initialize bus handlers */
         HalpInitBusHandlers();
 
@@ -157,3 +112,23 @@ HalInitSystem(IN ULONG BootPhase,
     /* All done, return */
     return TRUE;
 }
+
+NTSTATUS
+NTAPI
+HalpAllocateMapRegisters(_In_ PADAPTER_OBJECT AdapterObject,
+                         _In_ ULONG Unknown,
+                         _In_ ULONG Unknown2,
+                         PMAP_REGISTER_ENTRY Registers)
+{
+    DPRINT1("HalpAllocateMapRegisters: FIXME. AdapterObject %X\n", AdapterObject);
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+VOID
+NTAPI
+HaliLocateHiberRanges(_In_ PVOID MemoryMap)
+{
+    DPRINT1("HaliLocateHiberRanges: FIXME. MemoryMap %X\n", MemoryMap);
+}
+
+/* EOF */

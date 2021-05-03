@@ -18,7 +18,7 @@
 @ stdcall HalDisableSystemInterrupt(long long)
 @ stdcall HalDisplayString(str)
 @ stdcall HalEnableSystemInterrupt(long long long)
-@ stdcall -arch=i386,arm HalEndSystemInterrupt(long long)
+@ stdcall -arch=i386,arm HalEndSystemInterrupt(long long) #NT use nonstandard parameters calling
 @ stdcall HalFlushCommonBuffer(long long long long long)
 @ stdcall HalFreeCommonBuffer(ptr long long long ptr long)
 @ stdcall HalGetAdapter(ptr ptr)

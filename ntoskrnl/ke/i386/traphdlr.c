@@ -1864,13 +1864,28 @@ KiCheckForSListAddress(IN PKTRAP_FRAME TrapFrame)
     UNIMPLEMENTED;
 }
 
-/*
- * @implemented
- */
+/* Nonstandard parameters calling */
+DECLSPEC_NORETURN
+//__declspec(naked) ??
 VOID
-NTAPI
+__cdecl
 Kei386EoiHelper(VOID)
 {
+
+#if defined(_M_IX86)
+    ULONG_PTR Stack;
+
+    /* Get current stack pointer */
+  #if defined __GNUC__
+    __asm__("mov %%ebp, %0" : "=r" (Stack) : );
+  #elif defined(_MSC_VER)
+    __asm mov Stack, ebp
+  #endif
+
+    /* Jmp to RoS KiEoiHelper */
+    KiEoiHelper((PKTRAP_FRAME)(Stack+4));
+#endif
+
     /* We should never see this call happening */
     KeBugCheck(MISMATCHED_HAL);
 }

@@ -28,6 +28,7 @@ list(APPEND HAL_PC98_SOURCE
     pc98/irql.c
     generic/timer.c
     pic/halinit.c
+    pic/legacy.c
     pic/pic.c
     pic/processor.c)
 

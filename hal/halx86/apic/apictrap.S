@@ -42,16 +42,29 @@ HackEoiReturn:
 #else
 #include <ks386.inc>
 #include <internal/i386/asmmacro.S>
+
+MACRO(HAL_GENERATE_INT_ENTRY, Vector)
+    int &Vector
+    ret
+    nop
+ENDM
+
 .code
 
 TRAP_ENTRY HalpClockInterrupt, KI_PUSH_FAKE_ERROR_CODE
+TRAP_ENTRY HalpClockInterruptStub, KI_PUSH_FAKE_ERROR_CODE
 TRAP_ENTRY HalpProfileInterrupt, KI_PUSH_FAKE_ERROR_CODE
+TRAP_ENTRY HalpLocalApicErrorService, KI_PUSH_FAKE_ERROR_CODE
 TRAP_ENTRY HalpTrap0D, 0
-TRAP_ENTRY HalpApcInterrupt, KI_PUSH_FAKE_ERROR_CODE
-TRAP_ENTRY HalpDispatchInterrupt, KI_PUSH_FAKE_ERROR_CODE
+//TRAP_ENTRY HalpApcInterrupt, KI_PUSH_FAKE_ERROR_CODE
+//TRAP_ENTRY HalpDispatchInterrupt, KI_PUSH_FAKE_ERROR_CODE
 
 PUBLIC _ApicSpuriousService
 _ApicSpuriousService:
+    iret
+
+PUBLIC _PicSpuriousService37
+_PicSpuriousService37:
     iret
 
 // VBox APIC needs an iret more or less directly following the EOI
@@ -65,10 +78,20 @@ _HackEoi:
 OnlyOnePersonKnowsHowToHackAroundVBoxBugsAndThatIsNotYou:
     ret
 
+PUBLIC _HwInterruptTable
+_HwInterruptTable:
+HAL_GENERATE_INT_ENTRY 0
+HAL_GENERATE_INT_ENTRY 1
+HAL_GENERATE_INT_ENTRY 2
+.long HEX(90C303CD) // HACK hardcode due compilator - {int 3, ret, nop}
+i = HEX(4)
+REPEAT 251
+    HAL_GENERATE_INT_ENTRY %i
+    i = i + 1
+ENDR
+.long HEX(CCCCCCCC) // int [255] -> {int 3} (Debugger Trap)
+.long HEX(CCCCCCCC) // for HotPatching next function
+
 #endif
-
-
-
-
 
 END

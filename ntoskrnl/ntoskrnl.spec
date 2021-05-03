@@ -712,16 +712,19 @@
 @ fastcall KeTryToAcquireSpinLockAtDpcLevel(ptr)
 @ stdcall KeUnstackDetachProcess(ptr)
 @ stdcall KeUpdateRunTime(ptr long)
-@ fastcall KeUpdateSystemTime(ptr long long)
+;@ fastcall KeUpdateSystemTime(ptr long long)
+;@ stdcall -arch=i386 KeUpdateSystemTime() #NT-specific, nonstandard parameters calling
+@ fastcall RosKeUpdateSystemTime(ptr long long long) #ReactOS-specific
 @ stdcall KeUserModeCallback(long ptr long ptr ptr)
 @ stdcall KeWaitForMultipleObjects(long ptr long long long long ptr ptr)
 @ stdcall KeWaitForMutexObject(ptr long long long ptr) KeWaitForSingleObject
 @ stdcall KeWaitForSingleObject(ptr long long long ptr)
 @ fastcall -arch=i386,arm KefAcquireSpinLockAtDpcLevel(ptr)
 @ fastcall -arch=i386,arm KefReleaseSpinLockFromDpcLevel(ptr)
-@ stdcall -arch=i386 Kei386EoiHelper()
-@ cdecl -arch=x86_64 -private KfRaiseIrql(long) KxRaiseIrql
+;@ stdcall -arch=i386 Kei386EoiHelper()
+@ cdecl -arch=i386 Kei386EoiHelper() #NT-specific, nonstandard parameters calling
 @ fastcall -arch=i386 KiEoiHelper(ptr) #ReactOS-Specific
+@ cdecl -arch=x86_64 -private KfRaiseIrql(long) KxRaiseIrql
 @ fastcall -arch=i386,arm KiAcquireSpinLock(ptr)
 @ extern KiBugCheckData
 @ stdcall KiCheckForKernelApcDelivery()

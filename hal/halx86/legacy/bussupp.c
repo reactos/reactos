@@ -1149,8 +1149,8 @@ HalpRegisterKdSupportFunctions(VOID)
 #endif
 #endif
 
-    /* Register ACPI stub */
-    KdCheckPowerButton = HalpCheckPowerButton;
+    /* Register Legacy stub */
+    KdCheckPowerButton = KeFlushWriteBuffer;
 }
 
 NTSTATUS

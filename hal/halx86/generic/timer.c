@@ -119,7 +119,9 @@ HalpInitializeClock(VOID)
 #ifndef _MINIHAL_
 VOID
 FASTCALL
-HalpClockInterruptHandler(IN PKTRAP_FRAME TrapFrame)
+HaliClockInterrupt(_In_ PKTRAP_FRAME TrapFrame,
+                   _In_ BOOLEAN IsAcpi,
+                   _In_ BOOLEAN IsBrokenTimer)
 {
     ULONG LastIncrement;
     KIRQL Irql;
@@ -128,35 +130,53 @@ HalpClockInterruptHandler(IN PKTRAP_FRAME TrapFrame)
     KiEnterInterruptTrap(TrapFrame);
 
     /* Start the interrupt */
-    if (HalBeginSystemInterrupt(CLOCK2_LEVEL, PRIMARY_VECTOR_BASE + PIC_TIMER_IRQ, &Irql))
+    if (!HalBeginSystemInterrupt(CLOCK2_LEVEL, (PRIMARY_VECTOR_BASE + PIC_TIMER_IRQ), &Irql))
     {
-        /* Update the performance counter */
-        HalpPerfCounter.QuadPart += HalpCurrentRollOver;
-        HalpPerfCounterCutoff = KiEnableTimerWatchdog;
-
-        /* Save increment */
-        LastIncrement = HalpCurrentTimeIncrement;
-
-        /* Check if someone changed the time rate */
-        if (HalpClockSetMSRate)
-        {
-            /* Update the global values */
-            HalpCurrentTimeIncrement = HalpRolloverTable[HalpNextMSRate - 1].Increment;
-            HalpCurrentRollOver = HalpRolloverTable[HalpNextMSRate - 1].RollOver;
-
-            /* Set new timer rollover */
-            HalpSetTimerRollOver((USHORT)HalpCurrentRollOver);
-
-            /* We're done */
-            HalpClockSetMSRate = FALSE;
-        }
-
-        /* Update the system time -- the kernel will exit this trap  */
-        KeUpdateSystemTime(TrapFrame, LastIncrement, Irql);
+        /* Spurious, just end the interrupt */
+      #ifdef __REACTOS__
+        KiEoiHelper(TrapFrame);
+      #else
+        #error FIXME call Kei386EoiHelper()
+      #endif
     }
 
-    /* Spurious, just end the interrupt */
-    KiEoiHelper(TrapFrame);
+    if (IsAcpi && IsBrokenTimer)
+    {
+        DPRINT1("HaliClockInterrupt: FIXME. DbgBreakPoint()\n");
+        DbgBreakPoint();
+        //HalpBrokenPiix4TimerTick();
+    }
+
+    /* Update the performance counter */
+    HalpPerfCounter.QuadPart += HalpCurrentRollOver;
+    HalpPerfCounterCutoff = KiEnableTimerWatchdog;
+
+    /* Save increment */
+    LastIncrement = HalpCurrentTimeIncrement;
+
+    /* Check if someone changed the time rate */
+    if (HalpClockSetMSRate)
+    {
+        /* Update the global values */
+        HalpCurrentTimeIncrement = HalpRolloverTable[HalpNextMSRate - 1].Increment;
+        HalpCurrentRollOver = HalpRolloverTable[HalpNextMSRate - 1].RollOver;
+
+        /* Set new timer rollover */
+        HalpSetTimerRollOver((USHORT)HalpCurrentRollOver);
+
+        /* We're done */
+        HalpClockSetMSRate = FALSE;
+    }
+
+    /* Update the system time -- the kernel will exit this trap  */
+  #ifdef __REACTOS__
+    RosKeUpdateSystemTime(TrapFrame, LastIncrement, 0xFF, Irql);
+  #else
+    #error FIXME call KeUpdateSystemTime()
+  #endif
+
+    DPRINT1("HaliClockInterrupt: DbgBreakPoint()\n");
+    DbgBreakPoint();
 }
 
 VOID
@@ -192,14 +212,13 @@ HalpProfileInterruptHandler(IN PKTRAP_FRAME TrapFrame)
 
         /* Finish the interrupt */
         _disable();
-        HalEndSystemInterrupt(Irql, TrapFrame);
+        HalEndSystemInterrupt(Irql, (PVOID)TrapFrame);
     }
 
     /* Spurious, just end the interrupt */
     KiEoiHelper(TrapFrame);
 }
 #endif /* !_MINIHAL_ */
-
 #endif /* _M_IX86 */
 
 /* PUBLIC FUNCTIONS ***********************************************************/
@@ -207,33 +226,9 @@ HalpProfileInterruptHandler(IN PKTRAP_FRAME TrapFrame)
 /*
  * @implemented
  */
-VOID
-NTAPI
-HalCalibratePerformanceCounter(IN volatile PLONG Count,
-                               IN ULONGLONG NewCount)
-{
-    ULONG_PTR Flags;
-
-    /* Disable interrupts */
-    Flags = __readeflags();
-    _disable();
-
-    /* Do a decrement for this CPU */
-    _InterlockedDecrement(Count);
-
-    /* Wait for other CPUs */
-    while (*Count);
-
-    /* Restore interrupts if they were previously enabled */
-    __writeeflags(Flags);
-}
-
-/*
- * @implemented
- */
 ULONG
 NTAPI
-HalSetTimeIncrement(IN ULONG Increment)
+HaliTimerSetTimeIncrement(_In_ ULONG Increment)
 {
     /* Round increment to ms */
     Increment /= 10000;
@@ -252,14 +247,14 @@ HalSetTimeIncrement(IN ULONG Increment)
 
 LARGE_INTEGER
 NTAPI
-KeQueryPerformanceCounter(PLARGE_INTEGER PerformanceFrequency)
+HalpTimerQueryPerfCount(_Out_opt_ LARGE_INTEGER * OutPerformanceFrequency)
 {
     LARGE_INTEGER CurrentPerfCounter;
     ULONG CounterValue, ClockDelta;
     KIRQL OldIrql;
 
     /* If caller wants performance frequency, return hardcoded value */
-    if (PerformanceFrequency) PerformanceFrequency->QuadPart = PIT_FREQUENCY;
+    if (OutPerformanceFrequency) OutPerformanceFrequency->QuadPart = PIT_FREQUENCY;
 
     /* Check if we were called too early */
     if (HalpCurrentRollOver == 0) return HalpPerfCounter;

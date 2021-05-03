@@ -143,16 +143,6 @@ HalpOpenRegistryKey(IN PHANDLE KeyHandle,
 
 VOID
 NTAPI
-HalpCheckPowerButton(VOID)
-{
-    //
-    // Nothing to do on non-ACPI
-    //
-    return;
-}
-
-VOID
-NTAPI
 HalpFlushTLB(VOID)
 {
     ULONG_PTR Flags, Cr4;

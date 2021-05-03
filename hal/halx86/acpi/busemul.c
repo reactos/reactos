@@ -14,7 +14,25 @@
 
 /* GLOBALS ********************************************************************/
 
+extern ULONG HalpShutdownContext;
+extern ULONG HalpPicVectorRedirect[HAL_PIC_VECTORS];
+
 /* PRIVATE FUNCTIONS **********************************************************/
+
+VOID
+NTAPI
+HalpCheckPowerButton(VOID)
+{
+    if ((!KiBugCheckData[0] && !InbvCheckDisplayOwnership()) ||
+       !HalpShutdownContext)
+    {
+        return;
+    }
+
+    DPRINT1("HalpCheckPowerButton: FIXME (HalpFixedAcpiDescTable)\n");
+
+    return;
+}
 
 CODE_SEG("INIT")
 VOID
@@ -85,6 +103,7 @@ HalpTranslateBusAddress(IN INTERFACE_TYPE InterfaceType,
     return TRUE;
 }
 
+#ifdef _M_AMD64
 ULONG
 NTAPI
 HalpGetSystemInterruptVector_Acpi(IN ULONG BusNumber,
@@ -98,6 +117,7 @@ HalpGetSystemInterruptVector_Acpi(IN ULONG BusNumber,
     *Affinity = 0xFFFFFFFF;
     return Vector;
 }
+#endif
 
 BOOLEAN
 NTAPI
@@ -120,6 +140,22 @@ HalpFindBusAddressTranslation(IN PHYSICAL_ADDRESS BusAddress,
     *Context = 1;
     return TRUE;
 }
+
+#ifdef _M_IX86
+NTSTATUS
+NTAPI
+HalAcpiGetInterruptTranslator(_In_ INTERFACE_TYPE ParentInterfaceType,
+                              _In_ ULONG ParentBusNumber,
+                              _In_ INTERFACE_TYPE BridgeInterfaceType,
+                              _In_ USHORT Size,
+                              _In_ USHORT Version,
+                              _Out_ PTRANSLATOR_INTERFACE Translator,
+                              _Out_ PULONG BridgeBusNumber)
+{
+    ASSERT(FALSE);
+    return 0;
+}
+#endif
 
 /* PUBLIC FUNCTIONS **********************************************************/
 
@@ -241,6 +277,7 @@ HalGetBusDataByOffset(IN BUS_DATA_TYPE BusDataType,
     return 0;
 }
 
+#ifdef _M_AMD64
 /*
  * @implemented
  */
@@ -260,6 +297,53 @@ HalGetInterruptVector(IN INTERFACE_TYPE InterfaceType,
                                              Irql,
                                              Affinity);
 }
+#else
+ULONG
+NTAPI
+HalGetInterruptVector(_In_ INTERFACE_TYPE InterfaceType,
+                      _In_ ULONG BusNumber,
+                      _In_ ULONG BusInterruptLevel,
+                      _In_ ULONG BusInterruptVector,
+                      _Out_ PKIRQL OutIrql,
+                      _Out_ PKAFFINITY OutAffinity)
+{
+    BUS_HANDLER BusHandler;
+    ULONG SystemVector;
+    ULONG Vector;
+    ULONG Level;
+
+    if (InterfaceType == Isa)
+    {
+        if (BusInterruptVector >= HAL_PIC_VECTORS)
+        {
+            DPRINT1("HalGetInterruptVector: BusInterruptVector %X\n", BusInterruptVector);
+            DbgBreakPoint(); //ASSERT(BusInterruptVector < 16);
+        }
+
+        Vector = HalpPicVectorRedirect[BusInterruptVector];
+        Level = HalpPicVectorRedirect[BusInterruptLevel];
+    }
+    else
+    {
+        Vector = BusInterruptVector;
+        Level = BusInterruptLevel;
+    }
+
+    RtlCopyMemory(&BusHandler, &HalpFakePciBusHandler, sizeof(BusHandler));
+
+    BusHandler.BusNumber = BusNumber;
+    BusHandler.InterfaceType = InterfaceType;
+    BusHandler.ParentHandler = &BusHandler;
+
+    SystemVector = HalpGetSystemInterruptVector(&BusHandler,
+                                                &BusHandler,
+                                                Level,
+                                                Vector,
+                                                OutIrql,
+                                                OutAffinity);
+    return SystemVector;
+}
+#endif
 
 /*
  * @implemented

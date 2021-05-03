@@ -59,6 +59,8 @@ VOID
 #define INT_BCD(int)            \
     (UCHAR)(((int / 10) << 4) + (int % 10))
 
+#define HAL_PIC_VECTORS  16
+
 typedef
 BOOLEAN
 (NTAPI *PHAL_DISMISS_INTERRUPT)(
@@ -206,7 +208,12 @@ HalpEnableInterruptHandler(IN UCHAR Flags,
                            IN KINTERRUPT_MODE Mode);
 
 /* pic.c */
-VOID NTAPI HalpInitializePICs(IN BOOLEAN EnableInterrupts);
+VOID
+NTAPI
+HalpInitializePICs(
+    _In_ BOOLEAN EnableInterrupts
+);
+
 VOID __cdecl HalpApcInterrupt(VOID);
 VOID __cdecl HalpDispatchInterrupt(VOID);
 PHAL_SW_INTERRUPT_HANDLER __cdecl HalpDispatchInterrupt2(VOID);
@@ -219,7 +226,9 @@ extern BOOLEAN HalpProfilingStopped;
 /* timer.c */
 VOID NTAPI HalpInitializeClock(VOID);
 VOID __cdecl HalpClockInterrupt(VOID);
+VOID __cdecl HalpClockInterruptStub(VOID);
 VOID __cdecl HalpProfileInterrupt(VOID);
+VOID __cdecl HalpLocalApicErrorService(VOID);
 
 typedef struct _HALP_ROLLOVER
 {
@@ -313,6 +322,21 @@ NTAPI
 HalpUnmapVirtualAddress(
     IN PVOID VirtualAddress,
     IN PFN_COUNT NumberPages
+);
+
+PVOID
+NTAPI
+HalpMapPhysicalMemoryWriteThrough64(
+    _In_ PHYSICAL_ADDRESS PhysicalAddress,
+    _In_ PFN_COUNT PageCount
+);
+
+PVOID
+NTAPI
+HalpRemapVirtualAddress64(
+    _In_ PVOID VirtualAddress,
+    _In_ PHYSICAL_ADDRESS PhysicalAddress,
+    _In_ BOOLEAN IsWriteThrough
 );
 
 /* sysinfo.c */
@@ -416,7 +440,7 @@ HalpReleaseCmosSpinLock(
 VOID
 NTAPI
 HalpInitializeLegacyPICs(
-    VOID
+    _In_ BOOLEAN InterruptMode
 );
 
 NTSTATUS
@@ -480,10 +504,11 @@ HalpQueryAcpiResourceRequirements(
 
 VOID
 FASTCALL
-KeUpdateSystemTime(
-    IN PKTRAP_FRAME TrapFrame,
-    IN ULONG Increment,
-    IN KIRQL OldIrql
+RosKeUpdateSystemTime(
+    _In_ PKTRAP_FRAME TrapFrame,
+    _In_ ULONG Increment,
+    _In_ UCHAR Vector,
+    _In_ KIRQL Irql
 );
 
 VOID
@@ -512,6 +537,33 @@ NTAPI
 HalpInitProcessor(
     IN ULONG ProcessorNumber,
     IN PLOADER_PARAMETER_BLOCK LoaderBlock
+);
+
+VOID
+NTAPI
+HalpGetParameters(
+    IN PCHAR CommandLine
+);
+
+NTSTATUS
+NTAPI
+HalpAllocateMapRegisters(
+    _In_ PADAPTER_OBJECT AdapterObject,
+    _In_ ULONG Unknown,
+    _In_ ULONG Unknown2,
+    PMAP_REGISTER_ENTRY Registers
+);
+
+VOID
+NTAPI
+HaliLocateHiberRanges(
+    _In_ PVOID MemoryMap
+);
+
+VOID
+NTAPI
+HalpBuildIpiDestinationMap(
+    _In_ ULONG ProcessorNumber
 );
 
 #if defined(SARCH_PC98)
@@ -560,9 +612,77 @@ HalInitializeBios(
 #endif // !CONFIG_SMP
 #endif // _M_AMD64
 
+#ifdef _M_IX86
+FORCEINLINE
+VOID
+WRMSR(_In_ ULONG Register,
+      _In_ ULONGLONG Value)
+{
+    __writemsr(Register, Value);
+}
+
+typedef
+ULONGLONG
+(__cdecl * PHALP_QUERY_TIMER)(
+    VOID
+);
+
+ULONGLONG
+__cdecl
+HalpQueryPerformanceCounter(
+    VOID
+);
+
+typedef
+VOID
+(NTAPI * PHALP_STALL_EXEC_PROC)(
+    _In_ ULONG MicroSeconds
+);
+
+typedef
+VOID
+(NTAPI * PHALP_CALIBRATE_PERF_COUNT)(
+    _In_ volatile PLONG Count,
+    _In_ ULONGLONG NewCount
+);
+
+typedef
+LARGE_INTEGER
+(NTAPI * PHALP_QUERY_PERF_COUNT)(
+    _Out_opt_ LARGE_INTEGER * OutPerformanceFrequency
+);
+
+LARGE_INTEGER
+NTAPI
+HalpTimerQueryPerfCount(
+    _Out_opt_ LARGE_INTEGER * OutPerformanceFrequency
+);
+
+typedef ULONG (NTAPI * PHALP_SET_TIME_INCREMENT)(
+    _In_ ULONG Increment
+);
+
+ULONG
+NTAPI
+HaliTimerSetTimeIncrement(
+    _In_ ULONG Increment
+);
+
+#ifndef _MINIHAL_
+VOID
+FASTCALL
+HaliClockInterrupt(
+    _In_ PKTRAP_FRAME TrapFrame,
+    _In_ BOOLEAN IsAcpi,
+    _In_ BOOLEAN IsBrokenTimer
+);
+#endif
+#endif
+
 extern BOOLEAN HalpNMIInProgress;
 
 extern ADDRESS_USAGE HalpDefaultIoSpace;
+extern ADDRESS_USAGE HalpEisaIoSpace;
 
 extern KSPIN_LOCK HalpSystemHardwareLock;
 
