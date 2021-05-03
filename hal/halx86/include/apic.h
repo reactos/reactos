@@ -149,7 +149,7 @@ enum
 #include <pshpack1.h>
 typedef union _APIC_BASE_ADRESS_REGISTER
 {
-    UINT64 Long;
+    UINT64 LongLong;
     struct
     {
         UINT64 Reserved1:8;
