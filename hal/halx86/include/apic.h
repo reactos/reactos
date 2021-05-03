@@ -239,7 +239,6 @@ typedef union _LVT_REGISTER
         UINT32 Reserved2MBZ:13;
     };
 } LVT_REGISTER;
-#include <poppack.h>
 
 /* IOAPIC offsets */
 enum
