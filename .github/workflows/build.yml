@@ -52,11 +52,8 @@ jobs:
         echo "CCACHE_MAXSIZE=1G" >> $GITHUB_ENV
         echo "CCACHE_SLOPPINESS=time_macros" >> $GITHUB_ENV
         echo "CCACHE_COMPILERCHECK=string:${{hashfiles('./build_rosbe_ci.sh', './RosBE-CI/git-commit')}}" >> $GITHUB_ENV
-    - name: Create Build directory
-      run: mkdir build
     - name: Configure
-      working-directory: ${{github.workspace}}/build
-      run: echo 'cmake ${{github.workspace}}/src -G Ninja -DCMAKE_TOOLCHAIN_FILE:FILEPATH=toolchain-${{matrix.compiler}}.cmake -DARCH:STRING=${{matrix.arch}} -DENABLE_CCACHE=1 -DENABLE_ROSTESTS=1 -DENABLE_ROSAPPS=1 -DCLANG_VERSION=${{env.LLVM_VERSION}}' | ${{github.workspace}}/RosBE-CI/RosBE.sh . 0 ${{matrix.arch}}
+      run: echo 'cmake -S src -B build -G Ninja -DCMAKE_TOOLCHAIN_FILE:FILEPATH=toolchain-${{matrix.compiler}}.cmake -DARCH:STRING=${{matrix.arch}} -DENABLE_CCACHE=1 -DENABLE_ROSTESTS=1 -DENABLE_ROSAPPS=1 -DCLANG_VERSION=${{env.LLVM_VERSION}}' | ${{github.workspace}}/RosBE-CI/RosBE.sh . 0 ${{matrix.arch}}
     - name: Build
       working-directory: ${{github.workspace}}/build
       run: echo 'cmake --build .' | ${{github.workspace}}/RosBE-CI/RosBE.sh . 0 ${{matrix.arch}}
@@ -120,11 +117,9 @@ jobs:
       uses: actions/checkout@v2
       with:
         path: src
-    - name: Create Build directory
-      run: mkdir build
     - name: Configure
       working-directory: ${{github.workspace}}\build
-      run: cmake -G Ninja -DCMAKE_TOOLCHAIN_FILE:FILEPATH=toolchain-msvc.cmake -DARCH:STRING=${{matrix.arch}} -DENABLE_ROSTESTS=1 -DENABLE_ROSAPPS=1 -DUSE_CLANG_CL:BOOL=${{matrix.compiler == 'clang-cl'}} ${{github.workspace}}\src
+      run: cmake -S src -B build -G Ninja -DCMAKE_TOOLCHAIN_FILE:FILEPATH=toolchain-msvc.cmake -DARCH:STRING=${{matrix.arch}} -DENABLE_ROSTESTS=1 -DENABLE_ROSAPPS=1 -DUSE_CLANG_CL:BOOL=${{matrix.compiler == 'clang-cl'}}
     - name: Build
       working-directory: ${{github.workspace}}\build
       run: cmake --build .
