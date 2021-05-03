@@ -200,8 +200,6 @@ VOID NTAPI DC_vRestoreDC(IN PDC pdc, INT iSaveLevel);
 VOID NTAPI DC_vFreeDcAttr(PDC pdc);
 VOID NTAPI DC_vInitDc(PDC pdc, DCTYPE dctype, PPDEVOBJ ppdev);
 
-VOID FASTCALL IntGdiReferencePdev(PPDEVOBJ pPDev);
-VOID FASTCALL IntGdiUnreferencePdev(PPDEVOBJ pPDev, DWORD CleanUpType);
 HDC FASTCALL IntGdiCreateDisplayDC(HDEV hDev, ULONG DcType, BOOL EmptyDC);
 BOOL FASTCALL IntGdiCleanDC(HDC hDC);
 VOID FASTCALL IntvGetDeviceCaps(PPDEVOBJ, PDEVCAPS);
