@@ -189,18 +189,19 @@ static DWORD GetHash(LPCTSTR psz, BOOL bIgnoreCase)
     return (ret & HASH_MASK);
 }
 
-static NODE *AllocEOFNode(VOID)
+static NODE *AllocEOFNode(DWORD lineno)
 {
     NODE *node = AllocNode(AllocLine(NULL, 0), 0);
     if (node == NULL)
         return NULL;
-    node->hash = HASH_EOF;
     node->pszComp = AllocLine(NULL, 0);
     if (node->pszComp == NULL)
     {
         DeleteNode(node);
         return NULL;
     }
+    node->lineno = lineno;
+    node->hash = HASH_EOF;
     return node;
 }
 
@@ -298,8 +299,7 @@ ParseLines(const FILECOMPARE *pFC, HANDLE *phMapping,
         cchNode = ichNext - ich - bCR;
         TRACE("ich:%ld, cch:%ld, ichNext:%ld, cchNode:%ld\n", ich, cch, ichNext, cchNode);
         pszLine = AllocLine(&psz[ich], cchNode);
-        node = AllocNode(pszLine, lineno);
-        ++lineno;
+        node = AllocNode(pszLine, lineno++);
         if (!node || !ConvertNode(pFC, node))
         {
             DeleteNode(node);
@@ -318,7 +318,7 @@ ParseLines(const FILECOMPARE *pFC, HANDLE *phMapping,
         return FCRET_IDENTICAL;
 
     // append EOF node
-    node = AllocEOFNode();
+    node = AllocEOFNode(lineno);
     if (!node)
         return OutOfMemory();
     list_add_tail(list, &node->entry);
@@ -333,7 +333,7 @@ ShowDiff(FILECOMPARE *pFC, INT i, struct list *begin, struct list *end)
     struct list *list = &pFC->list[i];
     struct list *first = NULL, *last = NULL;
     PrintCaption(pFC->file[i]);
-    if (begin && list_prev(list, begin))
+    if (begin && end && list_prev(list, begin))
         begin = list_prev(list, begin);
     while (begin != end)
     {
@@ -369,12 +369,10 @@ ShowDiff(FILECOMPARE *pFC, INT i, struct list *begin, struct list *end)
     }
 }
 
-static INT 
+static VOID
 SkipIdentical(FILECOMPARE *pFC, struct list **pptr0, struct list **pptr1)
 {
     struct list *ptr0 = *pptr0, *ptr1 = *pptr1;
-    FCRET ret;
-    INT count = 0;
     while (ptr0 && ptr1)
     {
         NODE *node0 = LIST_ENTRY(ptr0, NODE, entry);
@@ -383,7 +381,32 @@ SkipIdentical(FILECOMPARE *pFC, struct list **pptr0, struct list **pptr1)
             break;
         ptr0 = list_next(&pFC->list[0], ptr0);
         ptr1 = list_next(&pFC->list[1], ptr1);
+    }
+    *pptr0 = ptr0;
+    *pptr1 = ptr1;
+}
+
+static DWORD
+SkipIdenticalN(FILECOMPARE *pFC, struct list **pptr0, struct list **pptr1,
+               DWORD nnnn, DWORD lineno0, DWORD lineno1)
+{
+    struct list *ptr0 = *pptr0, *ptr1 = *pptr1;
+    DWORD count = 0;
+    while (ptr0 && ptr1)
+    {
+        NODE *node0 = LIST_ENTRY(ptr0, NODE, entry);
+        NODE *node1 = LIST_ENTRY(ptr1, NODE, entry);
+        if (node0->lineno >= lineno0)
+            break;
+        if (node1->lineno >= lineno1)
+            break;
+        if (CompareNode(pFC, node0, node1) != FCRET_IDENTICAL)
+            break;
+        ptr0 = list_next(&pFC->list[0], ptr0);
+        ptr1 = list_next(&pFC->list[1], ptr1);
         ++count;
+        if (count >= nnnn)
+            break;
     }
     *pptr0 = ptr0;
     *pptr1 = ptr1;
@@ -391,76 +414,116 @@ SkipIdentical(FILECOMPARE *pFC, struct list **pptr0, struct list **pptr1)
 }
 
 static FCRET
+ScanDiff(FILECOMPARE *pFC, struct list **pptr0, struct list **pptr1,
+         DWORD lineno0, DWORD lineno1)
+{
+    struct list *ptr0 = *pptr0, *ptr1 = *pptr1, *tmp0, *tmp1;
+    NODE *node0, *node1;
+    INT count;
+    while (ptr0 && ptr1)
+    {
+        node0 = LIST_ENTRY(ptr0, NODE, entry);
+        node1 = LIST_ENTRY(ptr1, NODE, entry);
+        if (node0->lineno >= lineno0)
+            return FCRET_DIFFERENT;
+        if (node1->lineno >= lineno1)
+            return FCRET_DIFFERENT;
+        tmp0 = ptr0;
+        tmp1 = ptr1;
+        count = SkipIdenticalN(pFC, &tmp0, &tmp1, pFC->nnnn, lineno0, lineno1);
+        if (count >= pFC->nnnn)
+            break;
+        if (count > 0)
+        {
+            ptr0 = tmp0;
+            ptr1 = tmp1;
+        }
+        else
+        {
+            ptr0 = list_next(&pFC->list[0], ptr0);
+            ptr1 = list_next(&pFC->list[1], ptr1);
+        }
+    }
+    *pptr0 = ptr0;
+    *pptr1 = ptr1;
+    return FCRET_IDENTICAL;
+}
+
+static FCRET
 Resync(FILECOMPARE *pFC, struct list **pptr0, struct list **pptr1)
 {
     FCRET ret;
-    INT i0, i1;
     struct list *ptr0, *ptr1, *save0 = NULL, *save1 = NULL;
     NODE *node0, *node1;
     struct list *list0 = &pFC->list[0], *list1 = &pFC->list[1];
-    INT penalty, min_penalty = MAXLONG;
+    DWORD lineno0, lineno1;
+    INT penalty, i0, i1, min_penalty = MAXLONG;
+
+    node0 = LIST_ENTRY(*pptr0, NODE, entry);
+    node1 = LIST_ENTRY(*pptr1, NODE, entry);
+    lineno0 = node0->lineno + pFC->n;
+    lineno1 = node1->lineno + pFC->n;
 
     // ``If the files that you are comparing have more than pFC->n consecutive
     //   differing lines, FC cancels the comparison,,
     // ``If the number of matching lines in the files is less than pFC->nnnn,
     //   FC displays the matching lines as differences,,
-    ptr0 = *pptr0;
-    for (i0 = 0; i0 < pFC->n; ++i0)
+    for (ptr1 = list_next(list1, *pptr1), i1 = 0; ptr1; ptr1 = list_next(list1, ptr1), ++i1)
     {
-        ptr1 = *pptr1;
-        for (i1 = 0; i1 < pFC->n; ++i1)
+        node1 = LIST_ENTRY(ptr1, NODE, entry);
+        if (node1->lineno >= lineno1)
+            break;
+        for (ptr0 = list_next(list0, *pptr0), i0 = 0; ptr0; ptr0 = list_next(list0, ptr0), ++i0)
         {
             node0 = LIST_ENTRY(ptr0, NODE, entry);
-            node1 = LIST_ENTRY(ptr1, NODE, entry);
-            ret = CompareNode(pFC, node0, node1);
-            if (ret == FCRET_IDENTICAL)
+            if (node0->lineno >= lineno0)
+                break;
+            if (CompareNode(pFC, node0, node1) == FCRET_IDENTICAL)
             {
-                penalty = i0 + 2 * i1 + 3 * abs(i1 - i0);
-                if (penalty < min_penalty)
+                penalty = min(i0, i1) + abs(i1 - i0);
+                if (min_penalty > penalty)
                 {
                     min_penalty = penalty;
                     save0 = ptr0;
                     save1 = ptr1;
                 }
             }
-
-            ptr1 = list_next(list1, ptr1);
-            if (!ptr1)
-                break;
         }
-        ptr0 = list_next(list0, ptr0);
-        if (!ptr0)
-            break;
     }
 
     if (save0 && save1)
     {
         *pptr0 = save0;
         *pptr1 = save1;
-        return FCRET_IDENTICAL;
+        ret = ScanDiff(pFC, &save0, &save1, lineno0, lineno1);
+        if (save0 && save1)
+        {
+            *pptr0 = save0;
+            *pptr1 = save1;
+        }
+        return ret;
     }
 
-    ptr0 = *pptr0;
-    for (i0 = 0; i0 < pFC->n; ++i0)
+    for (ptr0 = *pptr0; ptr0; ptr0 = list_next(list0, ptr0))
     {
-        ptr0 = list_next(list0, ptr0);
+        node0 = LIST_ENTRY(ptr0, NODE, entry);
+        if (node0->lineno == lineno0)
+            break;
+    }
+    for (ptr1 = *pptr1; ptr1; ptr1 = list_next(list1, ptr1))
+    {
+        node1 = LIST_ENTRY(ptr1, NODE, entry);
+        if (node1->lineno == lineno1)
+            break;
     }
     *pptr0 = ptr0;
-
-    ptr1 = *pptr1;
-    for (i1 = 0; i1 < pFC->n; ++i1)
-    {
-        ptr1 = list_next(list1, ptr1);
-    }
     *pptr1 = ptr1;
-
     return FCRET_DIFFERENT;
 }
 
 static FCRET 
 Finalize(FILECOMPARE* pFC, struct list *ptr0, struct list* ptr1, BOOL fDifferent)
 {
-    NODE* node0, * node1;
     if (!ptr0 || !ptr1)
     {
         if (fDifferent)
@@ -469,29 +532,10 @@ Finalize(FILECOMPARE* pFC, struct list *ptr0, struct list* ptr1, BOOL fDifferent
     }
     else
     {
-        node0 = LIST_ENTRY(ptr0, NODE, entry);
-        node1 = LIST_ENTRY(ptr1, NODE, entry);
-        if (!IsEOFNode(node0) || !IsEOFNode(node1))
-        {
-            ShowDiff(pFC, 0, ptr0, NULL);
-            ShowDiff(pFC, 1, ptr1, NULL);
-            PrintEndOfDiff();
-        }
+        ShowDiff(pFC, 0, ptr0, NULL);
+        ShowDiff(pFC, 1, ptr1, NULL);
+        PrintEndOfDiff();
         return FCRET_DIFFERENT;
-    }
-}
-
-static VOID DeleteNodes(struct list* list, struct list* first, struct list* last)
-{
-    struct list* next;
-    NODE* node;
-    while (first != last)
-    {
-        next = list_next(list, first);
-        node = LIST_ENTRY(first, NODE, entry);
-        list_remove(first);
-        DeleteNode(node);
-        first = next;
     }
 }
 
@@ -500,6 +544,7 @@ FCRET TextCompare(FILECOMPARE *pFC, HANDLE *phMapping0, const LARGE_INTEGER *pcb
 {
     FCRET ret, ret0, ret1;
     struct list *ptr0, *ptr1, *save0, *save1, *next0, *next1;
+    NODE* node0, * node1;
     BOOL fDifferent = FALSE;
     LARGE_INTEGER ib0 = { .QuadPart = 0 }, ib1 = { .QuadPart = 0 };
     struct list *list0 = &pFC->list[0], *list1 = &pFC->list[1];
@@ -521,10 +566,10 @@ FCRET TextCompare(FILECOMPARE *pFC, HANDLE *phMapping0, const LARGE_INTEGER *pcb
             goto cleanup;
         }
 
+        ptr0 = list_head(list0);
+        ptr1 = list_head(list1);
         for (;;)
         {
-            ptr0 = list_head(list0);
-            ptr1 = list_head(list1);
             if (!ptr0 || !ptr1)
                 goto quit;
 
@@ -532,7 +577,9 @@ FCRET TextCompare(FILECOMPARE *pFC, HANDLE *phMapping0, const LARGE_INTEGER *pcb
             SkipIdentical(pFC, &ptr0, &ptr1);
             if (ptr0 || ptr1)
                 fDifferent = TRUE;
-            if (!ptr0 || !ptr1)
+            node0 = LIST_ENTRY(ptr0, NODE, entry);
+            node1 = LIST_ENTRY(ptr1, NODE, entry);
+            if (IsEOFNode(node0) || IsEOFNode(node1))
                 goto quit;
 
             // try to resync
@@ -553,16 +600,12 @@ FCRET TextCompare(FILECOMPARE *pFC, HANDLE *phMapping0, const LARGE_INTEGER *pcb
 
             // now, show the difference (with clean-up)
             fDifferent = TRUE;
-            next0 = list_next(list0, ptr0);
-            next1 = list_next(list1, ptr1);
-            ptr0 = (next0 ? next0 : ptr0);
-            ptr1 = (next1 ? next1 : ptr1);
-            ShowDiff(pFC, 0, save0, ptr0);
-            ShowDiff(pFC, 1, save1, ptr1);
+            next0 = ptr0 ? list_next(list0, ptr0) : ptr0;
+            next1 = ptr1 ? list_next(list1, ptr1) : ptr1;
+            ShowDiff(pFC, 0, save0, (next0 ? next0 : ptr0));
+            ShowDiff(pFC, 1, save1, (next1 ? next1 : ptr1));
             PrintEndOfDiff();
 
-            DeleteNodes(list0, list_head(list0), ptr0);
-            DeleteNodes(list1, list_head(list1), ptr1);
             // now resync'ed
         }
     } while (ret0 != FCRET_NO_MORE_DATA || ret1 != FCRET_NO_MORE_DATA);
