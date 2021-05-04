@@ -370,6 +370,8 @@ static FCRET WildcardFileCompareOneSide(FILECOMPARE *pFC, BOOL bWildRight)
     fc.file[!bWildRight] = szPath;
     do
     {
+        if (wcscmp(find.cFileName, L".") == 0 || wcscmp(find.cFileName, L"..") == 0)
+            continue;
         PathRemoveFileSpecW(szPath);
         PathAppendW(szPath, find.cFileName);
         switch (FileCompare(&fc))
@@ -418,6 +420,10 @@ static FCRET WildcardFileCompareBoth(FILECOMPARE *pFC)
     fc.file[1] = szPath1;
     do
     {
+        if (wcscmp(find0.cFileName, L".") == 0 || wcscmp(find1.cFileName, L".") == 0)
+            continue;
+        if (wcscmp(find0.cFileName, L"..") == 0 || wcscmp(find1.cFileName, L"..") == 0)
+            continue;
         PathRemoveFileSpecW(szPath0);
         PathRemoveFileSpecW(szPath1);
         PathAppendW(szPath0, find0.cFileName);
