@@ -352,7 +352,7 @@ static FCRET FileCompare(FILECOMPARE *pFC)
     return TextFileCompare(pFC);
 }
 
-static FCRET WildcardFileCompareOneSide(FILECOMPARE *pFC, BOOL bRight)
+static FCRET WildcardFileCompareOneSide(FILECOMPARE *pFC, BOOL bWildRight)
 {
     FCRET ret = FCRET_IDENTICAL;
     WIN32_FIND_DATAW find;
@@ -360,17 +360,17 @@ static FCRET WildcardFileCompareOneSide(FILECOMPARE *pFC, BOOL bRight)
     WCHAR szPath[MAX_PATH];
     FILECOMPARE fc;
 
-    hFind = FindFirstFileW(pFC->file[bRight], &find);
+    hFind = FindFirstFileW(pFC->file[bWildRight], &find);
     if (hFind == INVALID_HANDLE_VALUE)
     {
-        ConResPrintf(StdErr, IDS_CANNOT_OPEN, pFC->file[bRight]);
+        ConResPrintf(StdErr, IDS_CANNOT_OPEN, pFC->file[bWildRight]);
         return FCRET_INVALID;
     }
-    StringCbCopyW(szPath, sizeof(szPath), pFC->file[bRight]);
+    StringCbCopyW(szPath, sizeof(szPath), pFC->file[bWildRight]);
 
     fc = *pFC;
-    fc.file[bRight] = pFC->file[bRight];
-    fc.file[!bRight] = szPath;
+    fc.file[bWildRight] = pFC->file[bWildRight];
+    fc.file[!bWildRight] = szPath;
     do
     {
         PathRemoveFileSpecW(szPath);
