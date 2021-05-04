@@ -12,14 +12,14 @@
 /* INCLUDES *******************************************************************/
 
 #include <hal.h>
+#include <apic.h>
 #define NDEBUG
 #include <debug.h>
 
-#include "apic.h"
 void __cdecl HackEoi(void);
 
 #ifndef _M_AMD64
-#define APIC_LAZY_IRQL
+//#define APIC_LAZY_IRQL //FIXME: Disabled due to bug.
 #endif
 
 /* GLOBALS ********************************************************************/
@@ -263,10 +263,10 @@ ApicInitializeLocalApic(ULONG Cpu)
     LVT_REGISTER LvtEntry;
 
     /* Enable the APIC if it wasn't yet */
-    BaseRegister.Long = __readmsr(MSR_APIC_BASE);
+    BaseRegister.LongLong = __readmsr(MSR_APIC_BASE);
     BaseRegister.Enable = 1;
     BaseRegister.BootStrapCPUCore = (Cpu == 0);
-    __writemsr(MSR_APIC_BASE, BaseRegister.Long);
+    __writemsr(MSR_APIC_BASE, BaseRegister.LongLong);
 
     /* Set spurious vector and SoftwareEnable to 1 */
     SpIntRegister.Long = ApicRead(APIC_SIVR);

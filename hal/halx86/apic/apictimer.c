@@ -9,10 +9,9 @@
 /* INCLUDES ******************************************************************/
 
 #include <hal.h>
+#include <apic.h>
 #define NDEBUG
 #include <debug.h>
-
-#include "apic.h"
 
 extern LARGE_INTEGER HalpCpuClockFrequency;
 
