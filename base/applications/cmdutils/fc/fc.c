@@ -420,12 +420,14 @@ static FCRET WildcardFileCompareBoth(FILECOMPARE *pFC)
     fc.file[1] = szPath1;
     do
     {
-        while (wcscmp(find0.cFileName, L".") == 0 || wcscmp(find0.cFileName, L"..") == 0)
+#define IS_DOTS(pch) \
+    ((*(pch) == L'.') && (((pch)[1] == 0) || (((pch)[1] == L'.') && ((pch)[2] == 0))))
+        while (IS_DOTS(find0.cFileName))
         {
             if (!FindNextFileW(hFind0, &find0))
                 goto quit;
         }
-        while (wcscmp(find1.cFileName, L".") == 0 || wcscmp(find1.cFileName, L"..") == 0)
+        while (IS_DOTS(find1.cFileName))
         {
             if (!FindNextFileW(hFind1, &find1))
                 goto quit;
