@@ -592,13 +592,14 @@ FCRET TextCompare(FILECOMPARE *pFC, HANDLE *phMapping0, const LARGE_INTEGER *pcb
             {
                 // resync failed
                 ret = ResyncFailed();
+                // show the difference
                 ShowDiff(pFC, 0, save0, ptr0);
                 ShowDiff(pFC, 1, save1, ptr1);
                 PrintEndOfDiff();
                 goto cleanup;
             }
 
-            // now, show the difference (with clean-up)
+            // show the difference
             fDifferent = TRUE;
             next0 = ptr0 ? list_next(list0, ptr0) : ptr0;
             next1 = ptr1 ? list_next(list1, ptr1) : ptr1;
