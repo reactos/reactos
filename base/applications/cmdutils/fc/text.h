@@ -5,16 +5,6 @@
  * COPYRIGHT:   Copyright 2021 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
 #include "fc.h"
-#include <stdio.h>
-
-#ifdef __REACTOS__
-    #include <wine/debug.h>
-    WINE_DEFAULT_DEBUG_CHANNEL(fc);
-#else
-    #define ERR /*empty*/
-    #define WARN /*empty*/
-    #define TRACE /*empty*/
-#endif
 
 #define IS_SPACE(ch) ((ch) == TEXT(' ') || (ch) == TEXT('\t'))
 
@@ -297,7 +287,6 @@ ParseLines(const FILECOMPARE *pFC, HANDLE *phMapping,
     {
         bCR = (ichNext > 0) && (psz[ichNext - 1] == TEXT('\r'));
         cchNode = ichNext - ich - bCR;
-        TRACE("ich:%ld, cch:%ld, ichNext:%ld, cchNode:%ld\n", ich, cch, ichNext, cchNode);
         pszLine = AllocLine(&psz[ich], cchNode);
         node = AllocNode(pszLine, lineno++);
         if (!node || !ConvertNode(pFC, node))
