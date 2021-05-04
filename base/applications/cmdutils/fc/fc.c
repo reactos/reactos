@@ -349,6 +349,10 @@ static FCRET FileCompare(FILECOMPARE *pFC)
     return TextFileCompare(pFC);
 }
 
+/* Is it L"." or L".."? */
+#define IS_DOTS(pch) \
+    ((*(pch) == L'.') && (((pch)[1] == 0) || (((pch)[1] == L'.') && ((pch)[2] == 0))))
+
 static FCRET WildcardFileCompareOneSide(FILECOMPARE *pFC, BOOL bWildRight)
 {
     FCRET ret = FCRET_IDENTICAL;
@@ -370,7 +374,7 @@ static FCRET WildcardFileCompareOneSide(FILECOMPARE *pFC, BOOL bWildRight)
     fc.file[!bWildRight] = szPath;
     do
     {
-        if (wcscmp(find.cFileName, L".") == 0 || wcscmp(find.cFileName, L"..") == 0)
+        if (IS_DOTS(find.cFileName))
             continue;
         PathRemoveFileSpecW(szPath);
         PathAppendW(szPath, find.cFileName);
@@ -420,8 +424,6 @@ static FCRET WildcardFileCompareBoth(FILECOMPARE *pFC)
     fc.file[1] = szPath1;
     do
     {
-#define IS_DOTS(pch) \
-    ((*(pch) == L'.') && (((pch)[1] == 0) || (((pch)[1] == L'.') && ((pch)[2] == 0))))
         while (IS_DOTS(find0.cFileName))
         {
             if (!FindNextFileW(hFind0, &find0))
