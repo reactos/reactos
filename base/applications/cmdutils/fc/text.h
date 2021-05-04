@@ -524,10 +524,10 @@ Resync(FILECOMPARE *pFC, struct list **pptr0, struct list **pptr1)
 static FCRET 
 Finalize(FILECOMPARE* pFC, struct list *ptr0, struct list* ptr1, BOOL fDifferent)
 {
-    if (!ptr0 || !ptr1)
+    if (!ptr0 && !ptr1)
     {
         if (fDifferent)
-            return FCRET_DIFFERENT;
+           return Different(pFC->file[0], pFC->file[1]);
         return NoDifference();
     }
     else
