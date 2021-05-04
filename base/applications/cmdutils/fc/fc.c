@@ -402,12 +402,12 @@ static FCRET WildcardFileCompareBoth(FILECOMPARE *pFC)
     FILECOMPARE fc;
 
     hFind0 = FindFirstFileW(pFC->file[0], &find0);
-    hFind1 = FindFirstFileW(pFC->file[1], &find1);
     if (hFind0 == INVALID_HANDLE_VALUE)
     {
         ConResPrintf(StdErr, IDS_CANNOT_OPEN, pFC->file[0]);
         return FCRET_INVALID;
     }
+    hFind1 = FindFirstFileW(pFC->file[1], &find1);
     if (hFind1 == INVALID_HANDLE_VALUE)
     {
         CloseHandle(hFind0);
@@ -465,17 +465,11 @@ static FCRET WildcardFileCompare(FILECOMPARE *pFC)
     fWild0 = HasWildcard(pFC->file[0]);
     fWild1 = HasWildcard(pFC->file[1]);
     if (fWild0 && fWild1)
-    {
         return WildcardFileCompareBoth(pFC);
-    }
     else if (fWild0)
-    {
         return WildcardFileCompareOneSide(pFC, FALSE);
-    }
     else if (fWild1)
-    {
         return WildcardFileCompareOneSide(pFC, TRUE);
-    }
 
     ret = FileCompare(pFC);
     ConPuts(StdOut, L"\n");
