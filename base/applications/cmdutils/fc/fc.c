@@ -370,8 +370,8 @@ static FCRET WildcardFileCompareOneSide(FILECOMPARE *pFC, BOOL bWildRight)
     StringCbCopyW(szPath, sizeof(szPath), pFC->file[bWildRight]);
 
     fc = *pFC;
-    fc.file[bWildRight] = pFC->file[bWildRight];
-    fc.file[!bWildRight] = szPath;
+    fc.file[!bWildRight] = pFC->file[!bWildRight];
+    fc.file[bWildRight] = szPath;
     do
     {
         if (IS_DOTS(find.cFileName))
