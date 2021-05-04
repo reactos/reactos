@@ -420,10 +420,16 @@ static FCRET WildcardFileCompareBoth(FILECOMPARE *pFC)
     fc.file[1] = szPath1;
     do
     {
-        if (wcscmp(find0.cFileName, L".") == 0 || wcscmp(find1.cFileName, L".") == 0)
-            continue;
-        if (wcscmp(find0.cFileName, L"..") == 0 || wcscmp(find1.cFileName, L"..") == 0)
-            continue;
+        while (wcscmp(find0.cFileName, L".") == 0 || wcscmp(find0.cFileName, L"..") == 0)
+        {
+            if (!FindNextFileW(hFind0, &find0))
+                goto quit;
+        }
+        while (wcscmp(find1.cFileName, L".") == 0 || wcscmp(find1.cFileName, L"..") == 0)
+        {
+            if (!FindNextFileW(hFind1, &find1))
+                goto quit;
+        }
         PathRemoveFileSpecW(szPath0);
         PathRemoveFileSpecW(szPath1);
         PathAppendW(szPath0, find0.cFileName);
@@ -441,7 +447,7 @@ static FCRET WildcardFileCompareBoth(FILECOMPARE *pFC)
                 break;
         }
     } while (FindNextFileW(hFind0, &find0) && FindNextFileW(hFind1, &find1));
-
+quit:
     CloseHandle(hFind0);
     CloseHandle(hFind1);
     return ret;
