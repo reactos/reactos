@@ -10,19 +10,22 @@ jobs:
       fail-fast: false
     runs-on: ubuntu-latest
     steps:
-    - name: Get Runner arch
-      id: get_native_arch
+    - name: Get RosBE build specifics
+      id: get_rosbe_spec
       run: |
         gcc -march=native -Q --help=target | grep "\-march= " | awk '{print $NF}'
-        echo ::set-output name=march::$(gcc -march=native -Q --help=target | grep "\-march= " | awk '{print $NF}')
+        echo ::set-output name=march-sha::$(gcc -march=native -Q --help=target | sha1sum | awk '{print $1}')
+        echo ::set-output name=git-sha::$(git ls-remote https://github.com/zefklop/RosBE.git | grep unix_amd64 | awk '{print $1}')
+        wget https://gist.githubusercontent.com/zefklop/b2d6a0b470c70183e93d5285a03f5899/raw/build_rosbe_ci.sh
     - name: Get RosBE
+      id: get_rosbe
       uses: actions/cache@v2
       with:
         path: RosBE-CI
-        key: RosBE-CI-${{runner.os}}-${{steps.get_native_arch.outputs.march}}
+        key: RosBE-CI-${{runner.os}}-${{steps.get_rosbe_spec.outputs.march-sha}}-${{steps.get_rosbe_spec.outputs.git-sha}}-${{hashfiles('./build_rosbe_ci.sh')}}
     - name: Compile RosBE
+      if: steps.get_rosbe.outputs.cache-hit != 'true'
       run: |
-        wget https://gist.githubusercontent.com/zefklop/b2d6a0b470c70183e93d5285a03f5899/raw/build_rosbe_ci.sh
         chmod +x build_rosbe_ci.sh
         ./build_rosbe_ci.sh ${{github.workspace}}/RosBE-CI
     - name: Install ccache
@@ -51,7 +54,9 @@ jobs:
         echo "CCACHE_DIR=${{github.workspace}}/ccache" >> $GITHUB_ENV
         echo "CCACHE_MAXSIZE=1G" >> $GITHUB_ENV
         echo "CCACHE_SLOPPINESS=time_macros" >> $GITHUB_ENV
-        echo "CCACHE_COMPILERCHECK=string:${{hashfiles('./build_rosbe_ci.sh', './RosBE-CI/git-commit')}}" >> $GITHUB_ENV
+    - name: Ease ccache compiler check (GCC)
+      if: matrix.compiler == 'gcc'
+      run: echo "CCACHE_COMPILERCHECK=string:${{steps.get_rosbe_spec.outputs.git-sha}}-${{hashfiles('./build_rosbe_ci.sh')}}" >> $GITHUB_ENV
     - name: Configure
       run: echo 'cmake -S ${{github.workspace}}/src -B ${{github.workspace}}/build -G Ninja -DCMAKE_TOOLCHAIN_FILE:FILEPATH=toolchain-${{matrix.compiler}}.cmake -DARCH:STRING=${{matrix.arch}} -DENABLE_CCACHE=1 -DENABLE_ROSTESTS=1 -DENABLE_ROSAPPS=1 -DCLANG_VERSION=${{env.LLVM_VERSION}}' | ${{github.workspace}}/RosBE-CI/RosBE.sh . 0 ${{matrix.arch}}
     - name: Build
@@ -63,12 +68,12 @@ jobs:
     - name: Upload bootcd
       uses: actions/upload-artifact@v2
       with:
-        name: reactos-${{matrix.compiler}}-${{matrix.arch}}-${{github.sha}}
+        name: reactos-bootcd-${{matrix.compiler}}-${{matrix.arch}}-${{github.sha}}
         path: build/bootcd.iso
     - name: Upload livecd
       uses: actions/upload-artifact@v2
       with:
-        name: reactos-${{matrix.compiler}}-${{matrix.arch}}-${{github.sha}}
+        name: reactos-livecd-${{matrix.compiler}}-${{matrix.arch}}-${{github.sha}}
         path: build/livecd.iso
 
   build-msvc:
@@ -118,22 +123,18 @@ jobs:
     - name: Configure
       run: cmake -S src -B build -G Ninja -DCMAKE_TOOLCHAIN_FILE:FILEPATH=toolchain-msvc.cmake -DARCH:STRING=${{matrix.arch}} -DENABLE_ROSTESTS=1 -DENABLE_ROSAPPS=1 -DUSE_CLANG_CL:BOOL=${{matrix.compiler == 'clang-cl'}}
     - name: Build
-      working-directory: ${{github.workspace}}\build
-      run: cmake --build .
+      run: cmake --build ${{github.workspace}}\build
     - name: Generate ISOs
-      working-directory: ${{github.workspace}}\build
-      run: |
-        cmake --build . --target bootcd
-        cmake --build . --target livecd
+      run:  cmake --build ${{github.workspace}}\build --target bootcd --target livecd
     - name: Upload bootcd
       uses: actions/upload-artifact@v2
       with:
-        name: reactos-${{matrix.compiler}}-${{matrix.arch}}-${{github.sha}}
+        name: reactos-bootcd-${{matrix.compiler}}-${{matrix.arch}}-${{github.sha}}
         path: build/bootcd.iso
     - name: Upload livecd
       uses: actions/upload-artifact@v2
       with:
-        name: reactos-${{matrix.compiler}}-${{matrix.arch}}-${{github.sha}}
+        name: reactos-livecd-${{matrix.compiler}}-${{matrix.arch}}-${{github.sha}}
         path: build/livecd.iso
 
   build-msbuild-i386:
