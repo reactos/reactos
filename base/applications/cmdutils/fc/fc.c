@@ -337,9 +337,6 @@ static BOOL IsBinaryExt(LPCWSTR filename)
     return FALSE;
 }
 
-#define HasWildcard(filename) \
-    ((wcschr((filename), L'*') != NULL) || (wcschr((filename), L'?') != NULL))
-
 static FCRET FileCompare(FILECOMPARE *pFC)
 {
     ConResPrintf(StdOut, IDS_COMPARING, pFC->file[0], pFC->file[1]);
@@ -383,7 +380,6 @@ static FCRET WildcardFileCompareOneSide(FILECOMPARE *pFC, BOOL bWildRight)
                 if (ret != FCRET_INVALID)
                     ret = FCRET_DIFFERENT;
                 break;
-            case FCRET_INVALID:
             default:
                 ret = FCRET_INVALID;
                 break;
@@ -416,15 +412,16 @@ static FCRET WildcardFileCompareBoth(FILECOMPARE *pFC)
     }
     StringCbCopyW(szPath0, sizeof(szPath0), pFC->file[0]);
     StringCbCopyW(szPath1, sizeof(szPath1), pFC->file[1]);
+
     fc = *pFC;
+    fc.file[0] = szPath0;
+    fc.file[1] = szPath1;
     do
     {
         PathRemoveFileSpecW(szPath0);
         PathRemoveFileSpecW(szPath1);
         PathAppendW(szPath0, find0.cFileName);
         PathAppendW(szPath1, find1.cFileName);
-        fc.file[0] = szPath0;
-        fc.file[1] = szPath1;
         switch (FileCompare(&fc))
         {
             case FCRET_IDENTICAL:
@@ -433,7 +430,6 @@ static FCRET WildcardFileCompareBoth(FILECOMPARE *pFC)
                 if (ret != FCRET_INVALID)
                     ret = FCRET_DIFFERENT;
                 break;
-            case FCRET_INVALID:
             default:
                 ret = FCRET_INVALID;
                 break;
@@ -461,6 +457,9 @@ static FCRET WildcardFileCompare(FILECOMPARE *pFC)
         ConResPuts(StdErr, IDS_NEEDS_FILES);
         return FCRET_INVALID;
     }
+
+#define HasWildcard(filename) \
+    ((wcschr((filename), L'*') != NULL) || (wcschr((filename), L'?') != NULL))
 
     fWild0 = HasWildcard(pFC->file[0]);
     fWild1 = HasWildcard(pFC->file[1]);

@@ -527,7 +527,7 @@ Finalize(FILECOMPARE* pFC, struct list *ptr0, struct list* ptr1, BOOL fDifferent
     if (!ptr0 && !ptr1)
     {
         if (fDifferent)
-           return Different(pFC->file[0], pFC->file[1]);
+            return Different(pFC->file[0], pFC->file[1]);
         return NoDifference();
     }
     else
