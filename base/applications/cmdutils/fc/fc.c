@@ -339,14 +339,21 @@ static BOOL IsBinaryExt(LPCWSTR filename)
 
 static FCRET FileCompare(FILECOMPARE *pFC)
 {
+    FCRET ret;
     ConResPrintf(StdOut, IDS_COMPARING, pFC->file[0], pFC->file[1]);
 
     if (!(pFC->dwFlags & FLAG_L) &&
         ((pFC->dwFlags & FLAG_B) || IsBinaryExt(pFC->file[0]) || IsBinaryExt(pFC->file[1])))
     {
-        return BinaryFileCompare(pFC);
+        ret = BinaryFileCompare(pFC);
     }
-    return TextFileCompare(pFC);
+    else
+    {
+        ret = TextFileCompare(pFC);
+    }
+
+    ConPuts(StdOut, L"\n");
+    return ret;
 }
 
 /* Is it L"." or L".."? */
@@ -495,7 +502,6 @@ quit:
 
 static FCRET WildcardFileCompare(FILECOMPARE *pFC)
 {
-    FCRET ret;
     BOOL fWild0, fWild1;
 
     if (pFC->dwFlags & FLAG_HELP)
@@ -519,9 +525,7 @@ static FCRET WildcardFileCompare(FILECOMPARE *pFC)
     else if (fWild1)
         return WildcardFileCompareOneSide(pFC, TRUE);
 
-    ret = FileCompare(pFC);
-    ConPuts(StdOut, L"\n");
-    return ret;
+    return FileCompare(pFC);
 }
 
 int wmain(int argc, WCHAR **argv)
