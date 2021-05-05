@@ -352,6 +352,10 @@ static FCRET FileCompare(FILECOMPARE *pFC)
 /* Is it L"." or L".."? */
 #define IS_DOTS(pch) \
     ((*(pch) == L'.') && (((pch)[1] == 0) || (((pch)[1] == L'.') && ((pch)[2] == 0))))
+#define HasWildcard(filename) \
+    ((wcschr((filename), L'*') != NULL) || (wcschr((filename), L'?') != NULL))
+#define IsExtOnly(filename) \
+    ((filename)[0] == L'*' && (filename)[1] == L'.' && !HasWildcard(&(filename)[2]))
 
 static FCRET WildcardFileCompareOneSide(FILECOMPARE *pFC, BOOL bWildRight)
 {
@@ -401,6 +405,8 @@ static FCRET WildcardFileCompareBoth(FILECOMPARE *pFC)
     WIN32_FIND_DATAW find0, find1;
     HANDLE hFind0, hFind1;
     WCHAR szPath0[MAX_PATH], szPath1[MAX_PATH];
+    BOOL f0, f1;
+    LPWSTR pch0, pch1;
     FILECOMPARE fc;
 
     hFind0 = FindFirstFileW(pFC->file[0], &find0);
@@ -426,12 +432,14 @@ static FCRET WildcardFileCompareBoth(FILECOMPARE *pFC)
     {
         while (IS_DOTS(find0.cFileName))
         {
-            if (!FindNextFileW(hFind0, &find0))
+            f0 = FindNextFileW(hFind0, &find0);
+            if (!f0)
                 goto quit;
         }
         while (IS_DOTS(find1.cFileName))
         {
-            if (!FindNextFileW(hFind1, &find1))
+            f1 = FindNextFileW(hFind1, &find1);
+            if (!f1)
                 goto quit;
         }
         PathRemoveFileSpecW(szPath0);
@@ -450,8 +458,35 @@ static FCRET WildcardFileCompareBoth(FILECOMPARE *pFC)
                 ret = FCRET_INVALID;
                 break;
         }
-    } while (FindNextFileW(hFind0, &find0) && FindNextFileW(hFind1, &find1));
+        f0 = FindNextFileW(hFind0, &find0);
+        f1 = FindNextFileW(hFind1, &find1);
+    } while (f0 && f1);
 quit:
+    if (f0 != f1 && IsExtOnly(pFC->file[0]) && IsExtOnly(pFC->file[1]))
+    {
+        if (f0)
+        {
+            pch0 = PathFindExtensionW(find0.cFileName);
+            if (pch0)
+            {
+                *pch0 = 0;
+                pch1 = PathFindExtensionW(pFC->file[1]);
+                PathAddExtensionW(find0.cFileName, pch1);
+                ConResPrintf(StdErr, IDS_CANNOT_OPEN, find0.cFileName);
+            }
+        }
+        else if (f1)
+        {
+            pch1 = PathFindExtensionW(find1.cFileName);
+            if (pch1)
+            {
+                *pch1 = 0;
+                pch0 = PathFindExtensionW(pFC->file[0]);
+                PathAddExtensionW(find1.cFileName, pch0);
+                ConResPrintf(StdErr, IDS_CANNOT_OPEN, find1.cFileName);
+            }
+        }
+    }
     CloseHandle(hFind0);
     CloseHandle(hFind1);
     return ret;
@@ -473,9 +508,6 @@ static FCRET WildcardFileCompare(FILECOMPARE *pFC)
         ConResPuts(StdErr, IDS_NEEDS_FILES);
         return FCRET_INVALID;
     }
-
-#define HasWildcard(filename) \
-    ((wcschr((filename), L'*') != NULL) || (wcschr((filename), L'?') != NULL))
 
     fWild0 = HasWildcard(pFC->file[0]);
     fWild1 = HasWildcard(pFC->file[1]);
