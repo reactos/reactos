@@ -368,7 +368,7 @@ static inline BOOL IsTitleWild(LPCWSTR filename)
     return (pch && *pch == L'*' && pch[1] == L'.' && !HasWildcard(&pch[2]));
 }
 
-static FCRET WildcardFileCompareOneSide(FILECOMPARE *pFC, BOOL bWildRight)
+static FCRET WildcardFileCompareOneSide(const FILECOMPARE *pFC, BOOL bWildRight)
 {
     FCRET ret = FCRET_IDENTICAL;
     WIN32_FIND_DATAW find;
@@ -414,7 +414,7 @@ static FCRET WildcardFileCompareOneSide(FILECOMPARE *pFC, BOOL bWildRight)
     return ret;
 }
 
-static FCRET WildcardFileCompareWildTitle(FILECOMPARE *pFC)
+static FCRET WildcardFileCompareWildTitle(const FILECOMPARE *pFC)
 {
     FCRET ret = FCRET_IDENTICAL;
     WIN32_FIND_DATAW find;
@@ -469,7 +469,7 @@ static FCRET WildcardFileCompareWildTitle(FILECOMPARE *pFC)
     return ret;
 }
 
-static FCRET WildcardFileCompareBoth(FILECOMPARE *pFC)
+static FCRET WildcardFileCompareBoth(const FILECOMPARE *pFC)
 {
     FCRET ret = FCRET_IDENTICAL;
     WIN32_FIND_DATAW find0, find1;
