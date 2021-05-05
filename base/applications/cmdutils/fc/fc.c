@@ -475,7 +475,6 @@ static FCRET WildcardFileCompareBoth(FILECOMPARE *pFC)
     WIN32_FIND_DATAW find0, find1;
     HANDLE hFind0, hFind1;
     WCHAR szPath0[MAX_PATH], szPath1[MAX_PATH];
-    BOOL f0, f1;
     FILECOMPARE fc;
 
     hFind0 = FindFirstFileW(pFC->file[0], &find0);
@@ -501,14 +500,12 @@ static FCRET WildcardFileCompareBoth(FILECOMPARE *pFC)
     {
         while (IS_DOTS(find0.cFileName))
         {
-            f0 = FindNextFileW(hFind0, &find0);
-            if (!f0)
+            if (!FindNextFileW(hFind0, &find0))
                 goto quit;
         }
         while (IS_DOTS(find1.cFileName))
         {
-            f1 = FindNextFileW(hFind1, &find1);
-            if (!f1)
+            if (!FindNextFileW(hFind1, &find1))
                 goto quit;
         }
 
@@ -530,9 +527,7 @@ static FCRET WildcardFileCompareBoth(FILECOMPARE *pFC)
                 ret = FCRET_INVALID;
                 break;
         }
-        f0 = FindNextFileW(hFind0, &find0);
-        f1 = FindNextFileW(hFind1, &find1);
-    } while (f0 && f1);
+    } while (FindNextFileW(hFind0, &find0) && FindNextFileW(hFind1, &find1));
 quit:
     CloseHandle(hFind0);
     CloseHandle(hFind1);
