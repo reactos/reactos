@@ -391,8 +391,11 @@ static FCRET WildcardFileCompareOneSide(FILECOMPARE *pFC, BOOL bWildRight)
     {
         if (IS_DOTS(find.cFileName))
             continue;
+
+        // replace file title
         PathRemoveFileSpecW(szPath);
         PathAppendW(szPath, find.cFileName);
+
         switch (FileCompare(&fc))
         {
             case FCRET_IDENTICAL:
@@ -407,6 +410,62 @@ static FCRET WildcardFileCompareOneSide(FILECOMPARE *pFC, BOOL bWildRight)
         }
     } while (FindNextFileW(hFind, &find));
 
+    FindClose(hFind);
+    return ret;
+}
+
+static FCRET WildcardFileCompareWildTitle(FILECOMPARE *pFC)
+{
+    FCRET ret = FCRET_IDENTICAL;
+    WIN32_FIND_DATAW find;
+    HANDLE hFind;
+    WCHAR szPath0[MAX_PATH], szPath1[MAX_PATH];
+    FILECOMPARE fc;
+    LPWSTR pch;
+
+    hFind = FindFirstFileW(pFC->file[0], &find);
+    if (hFind == INVALID_HANDLE_VALUE)
+    {
+        ConResPrintf(StdErr, IDS_CANNOT_OPEN, pFC->file[0]);
+        return FCRET_CANT_FIND;
+    }
+    StringCbCopyW(szPath0, sizeof(szPath0), pFC->file[0]);
+    StringCbCopyW(szPath1, sizeof(szPath1), pFC->file[0]);
+    pch = PathFindExtensionW(pFC->file[1]);
+
+    fc = *pFC;
+    fc.file[0] = szPath0;
+    fc.file[1] = szPath1;
+    do
+    {
+        if (IS_DOTS(find.cFileName))
+            continue;
+
+        // replace file title
+        PathRemoveFileSpecW(szPath0);
+        PathRemoveFileSpecW(szPath1);
+        PathAppendW(szPath0, find.cFileName);
+        PathAppendW(szPath1, find.cFileName);
+
+        // replace dot extension
+        PathRemoveExtensionW(szPath1);
+        PathAddExtensionW(szPath1, pch);
+
+        switch (FileCompare(&fc))
+        {
+            case FCRET_IDENTICAL:
+                break;
+            case FCRET_DIFFERENT:
+                if (ret != FCRET_INVALID)
+                    ret = FCRET_DIFFERENT;
+                break;
+            default:
+                ret = FCRET_INVALID;
+                break;
+        }
+    } while (FindNextFileW(hFind, &find));
+
+    FindClose(hFind);
     return ret;
 }
 
@@ -417,7 +476,6 @@ static FCRET WildcardFileCompareBoth(FILECOMPARE *pFC)
     HANDLE hFind0, hFind1;
     WCHAR szPath0[MAX_PATH], szPath1[MAX_PATH];
     BOOL f0, f1;
-    LPWSTR pch;
     FILECOMPARE fc;
 
     hFind0 = FindFirstFileW(pFC->file[0], &find0);
@@ -453,10 +511,13 @@ static FCRET WildcardFileCompareBoth(FILECOMPARE *pFC)
             if (!f1)
                 goto quit;
         }
+
+        // replace file title
         PathRemoveFileSpecW(szPath0);
         PathRemoveFileSpecW(szPath1);
         PathAppendW(szPath0, find0.cFileName);
         PathAppendW(szPath1, find1.cFileName);
+
         switch (FileCompare(&fc))
         {
             case FCRET_IDENTICAL:
@@ -473,40 +534,6 @@ static FCRET WildcardFileCompareBoth(FILECOMPARE *pFC)
         f1 = FindNextFileW(hFind1, &find1);
     } while (f0 && f1);
 quit:
-    if (f0 != f1 && IsTitleWild(pFC->file[0]) && IsTitleWild(pFC->file[1]))
-    {
-        if (f0)
-        {
-            do
-            {
-                pch = PathFindExtensionW(find0.cFileName);
-                if (pch)
-                {
-                    *pch = 0;
-                    pch = PathFindExtensionW(pFC->file[1]);
-                    PathAddExtensionW(find0.cFileName, pch);
-                    ConResPrintf(StdErr, IDS_CANNOT_OPEN, find0.cFileName);
-                }
-                f0 = FindNextFileW(hFind0, &find0);
-            } while (f0);
-        }
-        else if (f1)
-        {
-            do
-            {
-                pch = PathFindExtensionW(find1.cFileName);
-                if (pch)
-                {
-                    *pch = 0;
-                    pch = PathFindExtensionW(pFC->file[0]);
-                    PathAddExtensionW(find1.cFileName, pch);
-                    ConResPrintf(StdErr, IDS_CANNOT_OPEN, find1.cFileName);
-                }
-                f1 = FindNextFileW(hFind1, &find1);
-            } while (f1);
-        }
-        ret = FCRET_CANT_FIND;
-    }
     CloseHandle(hFind0);
     CloseHandle(hFind1);
     return ret;
@@ -531,12 +558,20 @@ static FCRET WildcardFileCompare(FILECOMPARE *pFC)
     fWild0 = HasWildcard(pFC->file[0]);
     fWild1 = HasWildcard(pFC->file[1]);
     if (fWild0 && fWild1)
-        return WildcardFileCompareBoth(pFC);
+    {
+        if (IsTitleWild(pFC->file[0]) && IsTitleWild(pFC->file[1]))
+            return WildcardFileCompareWildTitle(pFC);
+        else
+            return WildcardFileCompareBoth(pFC);
+    }
     else if (fWild0)
+    {
         return WildcardFileCompareOneSide(pFC, FALSE);
+    }
     else if (fWild1)
+    {
         return WildcardFileCompareOneSide(pFC, TRUE);
-
+    }
     return FileCompare(pFC);
 }
 
