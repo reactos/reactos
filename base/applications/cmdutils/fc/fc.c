@@ -380,6 +380,7 @@ static FCRET FileCompareOneSideWild(const FILECOMPARE *pFC, BOOL bWildRight)
     if (hFind == INVALID_HANDLE_VALUE)
     {
         ConResPrintf(StdErr, IDS_CANNOT_OPEN, pFC->file[bWildRight]);
+        ConPuts(StdOut, L"\n");
         return FCRET_CANT_FIND;
     }
     StringCbCopyW(szPath, sizeof(szPath), pFC->file[bWildRight]);
@@ -427,6 +428,7 @@ static FCRET FileCompareWildTitle(const FILECOMPARE *pFC)
     if (hFind == INVALID_HANDLE_VALUE)
     {
         ConResPrintf(StdErr, IDS_CANNOT_OPEN, pFC->file[0]);
+        ConPuts(StdOut, L"\n");
         return FCRET_CANT_FIND;
     }
     StringCbCopyW(szPath0, sizeof(szPath0), pFC->file[0]);
@@ -481,6 +483,7 @@ static FCRET FileCompareBothWild(const FILECOMPARE *pFC)
     if (hFind0 == INVALID_HANDLE_VALUE)
     {
         ConResPrintf(StdErr, IDS_CANNOT_OPEN, pFC->file[0]);
+        ConPuts(StdOut, L"\n");
         return FCRET_CANT_FIND;
     }
     hFind1 = FindFirstFileW(pFC->file[1], &find1);
@@ -488,6 +491,7 @@ static FCRET FileCompareBothWild(const FILECOMPARE *pFC)
     {
         CloseHandle(hFind0);
         ConResPrintf(StdErr, IDS_CANNOT_OPEN, pFC->file[1]);
+        ConPuts(StdOut, L"\n");
         return FCRET_CANT_FIND;
     }
     StringCbCopyW(szPath0, sizeof(szPath0), pFC->file[0]);
