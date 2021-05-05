@@ -528,6 +528,7 @@ Finalize(FILECOMPARE* pFC, struct list *ptr0, struct list* ptr1, BOOL fDifferent
     }
 }
 
+// FIXME: "cmd_apitest fc" has some failures.
 FCRET TextCompare(FILECOMPARE *pFC, HANDLE *phMapping0, const LARGE_INTEGER *pcb0,
                                     HANDLE *phMapping1, const LARGE_INTEGER *pcb1)
 {
