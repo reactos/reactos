@@ -369,7 +369,7 @@ static FCRET WildcardFileCompareOneSide(FILECOMPARE *pFC, BOOL bWildRight)
     if (hFind == INVALID_HANDLE_VALUE)
     {
         ConResPrintf(StdErr, IDS_CANNOT_OPEN, pFC->file[bWildRight]);
-        return FCRET_INVALID;
+        return FCRET_CANT_FIND;
     }
     StringCbCopyW(szPath, sizeof(szPath), pFC->file[bWildRight]);
 
@@ -413,14 +413,14 @@ static FCRET WildcardFileCompareBoth(FILECOMPARE *pFC)
     if (hFind0 == INVALID_HANDLE_VALUE)
     {
         ConResPrintf(StdErr, IDS_CANNOT_OPEN, pFC->file[0]);
-        return FCRET_INVALID;
+        return FCRET_CANT_FIND;
     }
     hFind1 = FindFirstFileW(pFC->file[1], &find1);
     if (hFind1 == INVALID_HANDLE_VALUE)
     {
         CloseHandle(hFind0);
         ConResPrintf(StdErr, IDS_CANNOT_OPEN, pFC->file[1]);
-        return FCRET_INVALID;
+        return FCRET_CANT_FIND;
     }
     StringCbCopyW(szPath0, sizeof(szPath0), pFC->file[0]);
     StringCbCopyW(szPath1, sizeof(szPath1), pFC->file[1]);
@@ -486,6 +486,7 @@ quit:
                 ConResPrintf(StdErr, IDS_CANNOT_OPEN, find1.cFileName);
             }
         }
+        ret = FCRET_CANT_FIND;
     }
     CloseHandle(hFind0);
     CloseHandle(hFind1);
