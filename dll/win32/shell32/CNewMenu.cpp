@@ -407,7 +407,7 @@ CNewMenu::SHELLNEW_ITEM *CNewMenu::FindItemFromIdOffset(UINT IdOffset)
 HRESULT CNewMenu::SelectNewItem(LONG wEventId, UINT uFlags, LPWSTR pszName, BOOL bRename)
 {
     CComPtr<IShellFolder> lpDesktopSF;
-	CComPtr<IShellFolder> lpCurrentSF;
+    CComPtr<IShellFolder> lpCurrentSF;
     CComPtr<IShellView> lpSV;
     HRESULT hr = E_FAIL;
     LPITEMIDLIST pidlFullNewItem = NULL;
