@@ -361,8 +361,12 @@ static FCRET FileCompare(FILECOMPARE *pFC)
     ((*(pch) == L'.') && (((pch)[1] == 0) || (((pch)[1] == L'.') && ((pch)[2] == 0))))
 #define HasWildcard(filename) \
     ((wcschr((filename), L'*') != NULL) || (wcschr((filename), L'?') != NULL))
-#define IsExtOnly(filename) \
-    ((filename)[0] == L'*' && (filename)[1] == L'.' && !HasWildcard(&(filename)[2]))
+
+static inline BOOL IsTitleWild(LPCWSTR filename)
+{
+    LPCWSTR pch = PathFindFileNameW(filename);
+    return (pch && *pch == L'*' && pch[1] == L'.' && !HasWildcard(&pch[2]));
+}
 
 static FCRET WildcardFileCompareOneSide(FILECOMPARE *pFC, BOOL bWildRight)
 {
@@ -469,29 +473,37 @@ static FCRET WildcardFileCompareBoth(FILECOMPARE *pFC)
         f1 = FindNextFileW(hFind1, &find1);
     } while (f0 && f1);
 quit:
-    if (f0 != f1 && IsExtOnly(pFC->file[0]) && IsExtOnly(pFC->file[1]))
+    if (f0 != f1 && IsTitleWild(pFC->file[0]) && IsTitleWild(pFC->file[1]))
     {
         if (f0)
         {
-            pch = PathFindExtensionW(find0.cFileName);
-            if (pch)
+            do
             {
-                *pch = 0;
-                pch = PathFindExtensionW(pFC->file[1]);
-                PathAddExtensionW(find0.cFileName, pch);
-                ConResPrintf(StdErr, IDS_CANNOT_OPEN, find0.cFileName);
-            }
+                pch = PathFindExtensionW(find0.cFileName);
+                if (pch)
+                {
+                    *pch = 0;
+                    pch = PathFindExtensionW(pFC->file[1]);
+                    PathAddExtensionW(find0.cFileName, pch);
+                    ConResPrintf(StdErr, IDS_CANNOT_OPEN, find0.cFileName);
+                }
+                f0 = FindNextFileW(hFind0, &find0);
+            } while (f0);
         }
         else if (f1)
         {
-            pch = PathFindExtensionW(find1.cFileName);
-            if (pch)
+            do
             {
-                *pch = 0;
-                pch = PathFindExtensionW(pFC->file[0]);
-                PathAddExtensionW(find1.cFileName, pch);
-                ConResPrintf(StdErr, IDS_CANNOT_OPEN, find1.cFileName);
-            }
+                pch = PathFindExtensionW(find1.cFileName);
+                if (pch)
+                {
+                    *pch = 0;
+                    pch = PathFindExtensionW(pFC->file[0]);
+                    PathAddExtensionW(find1.cFileName, pch);
+                    ConResPrintf(StdErr, IDS_CANNOT_OPEN, find1.cFileName);
+                }
+                f1 = FindNextFileW(hFind1, &find1);
+            } while (f1);
         }
         ret = FCRET_CANT_FIND;
     }
