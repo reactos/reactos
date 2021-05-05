@@ -406,38 +406,51 @@ CNewMenu::SHELLNEW_ITEM *CNewMenu::FindItemFromIdOffset(UINT IdOffset)
 
 HRESULT CNewMenu::SelectNewItem(LONG wEventId, UINT uFlags, LPWSTR pszName, BOOL bRename)
 {
-    CComPtr<IShellBrowser> lpSB;
+    CComPtr<IShellFolder> lpDesktopSF;
+	CComPtr<IShellFolder> lpCurrentSF;
     CComPtr<IShellView> lpSV;
     HRESULT hr = E_FAIL;
-    LPITEMIDLIST pidl;
-    PITEMID_CHILD pidlNewItem;
+    LPITEMIDLIST pidlFullNewItem = NULL;
+    PIDLIST_ABSOLUTE pidlNewItem = NULL;
     DWORD dwSelectFlags;
+    LPCWSTR pszFileName;
 
     dwSelectFlags = SVSI_DESELECTOTHERS | SVSI_ENSUREVISIBLE | SVSI_FOCUSED | SVSI_SELECT;
     if (bRename)
         dwSelectFlags |= SVSI_EDIT;
 
-    /* Notify the view object about the new item */
-    SHChangeNotify(wEventId, uFlags, (LPCVOID) pszName, NULL);
-
     if (!m_pSite)
         return S_OK;
 
-    /* Get a pointer to the shell view */
+    /* Attempt to get the pidl of the new item */
+    hr = SHGetDesktopFolder(&lpDesktopSF);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+	
+    hr = lpDesktopSF->BindToObject(m_pidlFolder, NULL, IID_IShellFolder, (PVOID*)&lpCurrentSF);
+	
+    if (lpCurrentSF) {
+        pszFileName = PathFindFileNameW(pszName);
+
+        /* Find pidl of the new item from parent folder */
+        lpCurrentSF->ParseDisplayName(NULL, NULL, (LPWSTR)pszFileName, NULL, &pidlNewItem, NULL);
+        if (pidlNewItem) {
+            pidlFullNewItem = ILCombine(m_pidlFolder, pidlNewItem);
+			
+            /* Notify the view object about the new item */
+            SHChangeNotify(wEventId, uFlags, (LPCVOID)pidlFullNewItem, NULL);
+            SHFree(pidlFullNewItem);
+        }
+    }
+	
+	/* Get a pointer to the shell view */
     hr = IUnknown_QueryService(m_pSite, SID_IFolderView, IID_PPV_ARG(IShellView, &lpSV));
     if (FAILED_UNEXPECTEDLY(hr))
         return S_OK;
-
-    /* Attempt to get the pidl of the new item */
-    hr = SHILCreateFromPathW(pszName, &pidl, NULL);
-    if (FAILED_UNEXPECTEDLY(hr))
-        return hr;
-
-    pidlNewItem = ILFindLastID(pidl);
-
+	
     hr = lpSV->SelectItem(pidlNewItem, dwSelectFlags);
 
-    SHFree(pidl);
+    SHFree(pidlNewItem);
 
     return hr;
 }
@@ -467,7 +480,7 @@ HRESULT CNewMenu::CreateNewFolder(LPCMINVOKECOMMANDINFO lpici)
         return E_FAIL;
 
     /* Show and select the new item in the def view */
-    SelectNewItem(SHCNE_MKDIR, SHCNF_PATHW, wszName, TRUE);
+    SelectNewItem(SHCNE_MKDIR, SHCNF_IDLIST | SHCNF_FLUSH, wszName, TRUE);
 
     return S_OK;
 }
@@ -561,7 +574,7 @@ HRESULT CNewMenu::NewItemByNonCommand(SHELLNEW_ITEM *pItem, LPWSTR wszName,
     if (bSuccess)
     {
         TRACE("Notifying fs %s\n", debugstr_w(wszName));
-        SelectNewItem(SHCNE_CREATE, SHCNF_PATHW, wszName, pItem != m_pLinkItem);
+        SelectNewItem(SHCNE_CREATE, SHCNF_IDLIST | SHCNF_FLUSH, wszName, pItem != m_pLinkItem);
     }
     else
     {
