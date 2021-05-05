@@ -430,7 +430,7 @@ static FCRET WildcardFileCompareWildTitle(const FILECOMPARE *pFC)
         return FCRET_CANT_FIND;
     }
     StringCbCopyW(szPath0, sizeof(szPath0), pFC->file[0]);
-    StringCbCopyW(szPath1, sizeof(szPath1), pFC->file[0]);
+    StringCbCopyW(szPath1, sizeof(szPath1), pFC->file[1]);
     pch = PathFindExtensionW(pFC->file[1]);
 
     fc = *pFC;
