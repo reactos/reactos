@@ -40,6 +40,8 @@
         va_end(va);
     }
 #endif
+#include <strsafe.h>
+#include <shlwapi.h>
 
 FCRET NoDifference(VOID)
 {
@@ -271,21 +273,26 @@ static FCRET TextFileCompare(FILECOMPARE *pFC)
             ret = NoDifference();
             break;
         }
-        hMapping0 = CreateFileMappingW(hFile0, NULL, PAGE_READONLY,
-                                       cb0.HighPart, cb0.LowPart, NULL);
-        if (hMapping0 == NULL)
+        if (cb0.QuadPart > 0)
         {
-            ret = CannotRead(pFC->file[0]);
-            break;
+            hMapping0 = CreateFileMappingW(hFile0, NULL, PAGE_READONLY,
+                                           cb0.HighPart, cb0.LowPart, NULL);
+            if (hMapping0 == NULL)
+            {
+                ret = CannotRead(pFC->file[0]);
+                break;
+            }
         }
-        hMapping1 = CreateFileMappingW(hFile1, NULL, PAGE_READONLY,
-                                       cb1.HighPart, cb1.LowPart, NULL);
-        if (hMapping1 == NULL)
+        if (cb1.QuadPart > 0)
         {
-            ret = CannotRead(pFC->file[1]);
-            break;
+            hMapping1 = CreateFileMappingW(hFile1, NULL, PAGE_READONLY,
+                                           cb1.HighPart, cb1.LowPart, NULL);
+            if (hMapping1 == NULL)
+            {
+                ret = CannotRead(pFC->file[1]);
+                break;
+            }
         }
-
         if (fUnicode)
             ret = TextCompareW(pFC, &hMapping0, &cb0, &hMapping1, &cb1);
         else
@@ -330,24 +337,210 @@ static BOOL IsBinaryExt(LPCWSTR filename)
     return FALSE;
 }
 
-#define HasWildcard(filename) \
-    ((wcschr((filename), L'*') != NULL) || (wcschr((filename), L'?') != NULL))
-
 static FCRET FileCompare(FILECOMPARE *pFC)
 {
+    FCRET ret;
     ConResPrintf(StdOut, IDS_COMPARING, pFC->file[0], pFC->file[1]);
 
     if (!(pFC->dwFlags & FLAG_L) &&
         ((pFC->dwFlags & FLAG_B) || IsBinaryExt(pFC->file[0]) || IsBinaryExt(pFC->file[1])))
     {
-        return BinaryFileCompare(pFC);
+        ret = BinaryFileCompare(pFC);
     }
-    return TextFileCompare(pFC);
+    else
+    {
+        ret = TextFileCompare(pFC);
+    }
+
+    ConPuts(StdOut, L"\n");
+    return ret;
+}
+
+/* Is it L"." or L".."? */
+#define IS_DOTS(pch) \
+    ((*(pch) == L'.') && (((pch)[1] == 0) || (((pch)[1] == L'.') && ((pch)[2] == 0))))
+#define HasWildcard(filename) \
+    ((wcschr((filename), L'*') != NULL) || (wcschr((filename), L'?') != NULL))
+
+static inline BOOL IsTitleWild(LPCWSTR filename)
+{
+    LPCWSTR pch = PathFindFileNameW(filename);
+    return (pch && *pch == L'*' && pch[1] == L'.' && !HasWildcard(&pch[2]));
+}
+
+static FCRET FileCompareOneSideWild(const FILECOMPARE *pFC, BOOL bWildRight)
+{
+    FCRET ret = FCRET_IDENTICAL;
+    WIN32_FIND_DATAW find;
+    HANDLE hFind;
+    WCHAR szPath[MAX_PATH];
+    FILECOMPARE fc;
+
+    hFind = FindFirstFileW(pFC->file[bWildRight], &find);
+    if (hFind == INVALID_HANDLE_VALUE)
+    {
+        ConResPrintf(StdErr, IDS_CANNOT_OPEN, pFC->file[bWildRight]);
+        ConPuts(StdOut, L"\n");
+        return FCRET_CANT_FIND;
+    }
+    StringCbCopyW(szPath, sizeof(szPath), pFC->file[bWildRight]);
+
+    fc = *pFC;
+    fc.file[!bWildRight] = pFC->file[!bWildRight];
+    fc.file[bWildRight] = szPath;
+    do
+    {
+        if (IS_DOTS(find.cFileName))
+            continue;
+
+        // replace file title
+        PathRemoveFileSpecW(szPath);
+        PathAppendW(szPath, find.cFileName);
+
+        switch (FileCompare(&fc))
+        {
+            case FCRET_IDENTICAL:
+                break;
+            case FCRET_DIFFERENT:
+                if (ret != FCRET_INVALID)
+                    ret = FCRET_DIFFERENT;
+                break;
+            default:
+                ret = FCRET_INVALID;
+                break;
+        }
+    } while (FindNextFileW(hFind, &find));
+
+    FindClose(hFind);
+    return ret;
+}
+
+static FCRET FileCompareWildTitle(const FILECOMPARE *pFC)
+{
+    FCRET ret = FCRET_IDENTICAL;
+    WIN32_FIND_DATAW find;
+    HANDLE hFind;
+    WCHAR szPath0[MAX_PATH], szPath1[MAX_PATH];
+    FILECOMPARE fc;
+    LPWSTR pch;
+
+    hFind = FindFirstFileW(pFC->file[0], &find);
+    if (hFind == INVALID_HANDLE_VALUE)
+    {
+        ConResPrintf(StdErr, IDS_CANNOT_OPEN, pFC->file[0]);
+        ConPuts(StdOut, L"\n");
+        return FCRET_CANT_FIND;
+    }
+    StringCbCopyW(szPath0, sizeof(szPath0), pFC->file[0]);
+    StringCbCopyW(szPath1, sizeof(szPath1), pFC->file[1]);
+    pch = PathFindExtensionW(pFC->file[1]);
+
+    fc = *pFC;
+    fc.file[0] = szPath0;
+    fc.file[1] = szPath1;
+    do
+    {
+        if (IS_DOTS(find.cFileName))
+            continue;
+
+        // replace file title
+        PathRemoveFileSpecW(szPath0);
+        PathRemoveFileSpecW(szPath1);
+        PathAppendW(szPath0, find.cFileName);
+        PathAppendW(szPath1, find.cFileName);
+
+        // replace dot extension
+        PathRemoveExtensionW(szPath1);
+        PathAddExtensionW(szPath1, pch);
+
+        switch (FileCompare(&fc))
+        {
+            case FCRET_IDENTICAL:
+                break;
+            case FCRET_DIFFERENT:
+                if (ret != FCRET_INVALID)
+                    ret = FCRET_DIFFERENT;
+                break;
+            default:
+                ret = FCRET_INVALID;
+                break;
+        }
+    } while (FindNextFileW(hFind, &find));
+
+    FindClose(hFind);
+    return ret;
+}
+
+static FCRET FileCompareBothWild(const FILECOMPARE *pFC)
+{
+    FCRET ret = FCRET_IDENTICAL;
+    WIN32_FIND_DATAW find0, find1;
+    HANDLE hFind0, hFind1;
+    WCHAR szPath0[MAX_PATH], szPath1[MAX_PATH];
+    FILECOMPARE fc;
+
+    hFind0 = FindFirstFileW(pFC->file[0], &find0);
+    if (hFind0 == INVALID_HANDLE_VALUE)
+    {
+        ConResPrintf(StdErr, IDS_CANNOT_OPEN, pFC->file[0]);
+        ConPuts(StdOut, L"\n");
+        return FCRET_CANT_FIND;
+    }
+    hFind1 = FindFirstFileW(pFC->file[1], &find1);
+    if (hFind1 == INVALID_HANDLE_VALUE)
+    {
+        CloseHandle(hFind0);
+        ConResPrintf(StdErr, IDS_CANNOT_OPEN, pFC->file[1]);
+        ConPuts(StdOut, L"\n");
+        return FCRET_CANT_FIND;
+    }
+    StringCbCopyW(szPath0, sizeof(szPath0), pFC->file[0]);
+    StringCbCopyW(szPath1, sizeof(szPath1), pFC->file[1]);
+
+    fc = *pFC;
+    fc.file[0] = szPath0;
+    fc.file[1] = szPath1;
+    do
+    {
+        while (IS_DOTS(find0.cFileName))
+        {
+            if (!FindNextFileW(hFind0, &find0))
+                goto quit;
+        }
+        while (IS_DOTS(find1.cFileName))
+        {
+            if (!FindNextFileW(hFind1, &find1))
+                goto quit;
+        }
+
+        // replace file title
+        PathRemoveFileSpecW(szPath0);
+        PathRemoveFileSpecW(szPath1);
+        PathAppendW(szPath0, find0.cFileName);
+        PathAppendW(szPath1, find1.cFileName);
+
+        switch (FileCompare(&fc))
+        {
+            case FCRET_IDENTICAL:
+                break;
+            case FCRET_DIFFERENT:
+                if (ret != FCRET_INVALID)
+                    ret = FCRET_DIFFERENT;
+                break;
+            default:
+                ret = FCRET_INVALID;
+                break;
+        }
+    } while (FindNextFileW(hFind0, &find0) && FindNextFileW(hFind1, &find1));
+quit:
+    CloseHandle(hFind0);
+    CloseHandle(hFind1);
+    return ret;
 }
 
 static FCRET WildcardFileCompare(FILECOMPARE *pFC)
 {
-    FCRET ret;
+    BOOL fWild0, fWild1;
 
     if (pFC->dwFlags & FLAG_HELP)
     {
@@ -361,15 +554,24 @@ static FCRET WildcardFileCompare(FILECOMPARE *pFC)
         return FCRET_INVALID;
     }
 
-    if (HasWildcard(pFC->file[0]) || HasWildcard(pFC->file[1]))
+    fWild0 = HasWildcard(pFC->file[0]);
+    fWild1 = HasWildcard(pFC->file[1]);
+    if (fWild0 && fWild1)
     {
-        // TODO: wildcard
-        ConResPuts(StdErr, IDS_CANT_USE_WILDCARD);
+        if (IsTitleWild(pFC->file[0]) && IsTitleWild(pFC->file[1]))
+            return FileCompareWildTitle(pFC);
+        else
+            return FileCompareBothWild(pFC);
     }
-
-    ret = FileCompare(pFC);
-    ConPuts(StdOut, L"\n");
-    return ret;
+    else if (fWild0)
+    {
+        return FileCompareOneSideWild(pFC, FALSE);
+    }
+    else if (fWild1)
+    {
+        return FileCompareOneSideWild(pFC, TRUE);
+    }
+    return FileCompare(pFC);
 }
 
 int wmain(int argc, WCHAR **argv)
