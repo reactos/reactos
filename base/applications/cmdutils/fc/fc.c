@@ -406,7 +406,7 @@ static FCRET WildcardFileCompareBoth(FILECOMPARE *pFC)
     HANDLE hFind0, hFind1;
     WCHAR szPath0[MAX_PATH], szPath1[MAX_PATH];
     BOOL f0, f1;
-    LPWSTR pch0, pch1;
+    LPWSTR pch;
     FILECOMPARE fc;
 
     hFind0 = FindFirstFileW(pFC->file[0], &find0);
@@ -466,23 +466,23 @@ quit:
     {
         if (f0)
         {
-            pch0 = PathFindExtensionW(find0.cFileName);
-            if (pch0)
+            pch = PathFindExtensionW(find0.cFileName);
+            if (pch)
             {
-                *pch0 = 0;
-                pch1 = PathFindExtensionW(pFC->file[1]);
-                PathAddExtensionW(find0.cFileName, pch1);
+                *pch = 0;
+                pch = PathFindExtensionW(pFC->file[1]);
+                PathAddExtensionW(find0.cFileName, pch);
                 ConResPrintf(StdErr, IDS_CANNOT_OPEN, find0.cFileName);
             }
         }
         else if (f1)
         {
-            pch1 = PathFindExtensionW(find1.cFileName);
-            if (pch1)
+            pch = PathFindExtensionW(find1.cFileName);
+            if (pch)
             {
-                *pch1 = 0;
-                pch0 = PathFindExtensionW(pFC->file[0]);
-                PathAddExtensionW(find1.cFileName, pch0);
+                *pch = 0;
+                pch = PathFindExtensionW(pFC->file[0]);
+                PathAddExtensionW(find1.cFileName, pch);
                 ConResPrintf(StdErr, IDS_CANNOT_OPEN, find1.cFileName);
             }
         }
