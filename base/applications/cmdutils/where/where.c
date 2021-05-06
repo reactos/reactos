@@ -23,14 +23,14 @@
 #endif
 #include "strlist.h"
 
-#define FLAG_HELP (1 << 0)
+#define FLAG_HELP (1 << 0) // "/?"
 #define FLAG_R (1 << 1) // recursive directory
 #define FLAG_Q (1 << 2) // quiet
 #define FLAG_F (1 << 3) // double quote
 #define FLAG_T (1 << 4) // detailed info
 
 static DWORD s_dwFlags = 0;
-static LPWSTR s_SearchDir = NULL;
+static LPWSTR s_RecursiveDir = NULL;
 static strlist_t s_targets = strlist_default;
 static strlist_t s_founds = strlist_default;
 static strlist_t s_pathext = strlist_default;
@@ -41,7 +41,7 @@ static strlist_t s_pathext = strlist_default;
 
 #define DEFAULT_PATHEXT L".com;.exe;.bat;.cmd"
 
-typedef enum WRET // return code
+typedef enum WRET // return code of WHERE command
 {
     WRET_SUCCESS = 0,
     WRET_NOT_FOUND = 1,
@@ -135,17 +135,13 @@ static WRET
 WhereSearch(LPCWSTR filename, strlist_t *dirlist, FN_SHOW_PATH callback)
 {
     INT iDir;
-    WRET ret;
-    LPWSTR dir;
-
     for (iDir = 0; iDir < dirlist->count; ++iDir)
     {
-        dir = strlist_get_at(dirlist, iDir);
-        ret = WhereSearchFiles(filename, dir, callback);
+        LPWSTR dir = strlist_get_at(dirlist, iDir);
+        WRET ret = WhereSearchFiles(filename, dir, callback);
         if (ret == WRET_ERROR)
             return ret;
     }
-
     return WRET_SUCCESS;
 }
 
@@ -194,7 +190,7 @@ static BOOL WhereParseCommandLine(INT argc, WCHAR** argv)
                         if (iArg + 1 < argc)
                         {
                             ++iArg;
-                            s_SearchDir = argv[iArg];
+                            s_RecursiveDir = argv[iArg];
                             s_dwFlags |= FLAG_R;
                             continue;
                         }
@@ -232,7 +228,7 @@ static BOOL CALLBACK WherePrintPath(LPCWSTR FoundPath)
     INT iPath;
 
     iPath = strlist_find_i(&s_founds, FoundPath);
-    if (iPath != -1)
+    if (iPath >= 0)
         return TRUE; // already exists
     if (!strlist_add(&s_founds, str_clone(FoundPath)))
         return FALSE; // failure
@@ -294,7 +290,7 @@ static BOOL WhereGetPathExt(strlist_t *plist)
         return FALSE;
     }
 
-    // for all exts
+    // for all extensions
     for (ext = wcstok(pszPathExt, L";"); ext; ext = wcstok(NULL, L";"))
     {
         // add to plist
@@ -331,6 +327,7 @@ static WRET WhereFind(LPCWSTR SearchFor, LPWSTR SearchData, BOOL IsVar)
         pszValue = NULL;
     }
 
+    // add the current directory
     GetCurrentDirectoryW(_countof(szPath), szPath);
     if (!strlist_add(&dirlist, str_clone(szPath)))
     {
@@ -352,15 +349,16 @@ static WRET WhereFind(LPCWSTR SearchFor, LPWSTR SearchData, BOOL IsVar)
         if (*dir != '\\' && dir[1] != L':')
             continue; // relative path
 
-        if (!strlist_add(&dirlist, str_clone(dir)))
+        if (!strlist_add(&dirlist, str_clone(dir))) // add directory of PATH
         {
             ret = WRET_ERROR;
             goto quit;
         }
     }
 
-    for (iExt = 0; iExt < s_pathext.count; ++iExt) // with extension
+    for (iExt = 0; iExt < s_pathext.count; ++iExt) // for all PATHEXTs
     {
+        // build path and search now
         StringCbCopyW(szPath, sizeof(szPath), SearchFor);
         StringCbCatW(szPath, sizeof(szPath), strlist_get_at(&s_pathext, iExt));
         ret = WhereSearch(szPath, &dirlist, WherePrintPath);
@@ -402,7 +400,7 @@ static BOOL WhereIsDirOK(LPCWSTR name)
 static WRET WhereDoTarget(LPWSTR SearchFor)
 {
     LPWSTR pch = wcsrchr(SearchFor, L':');
-    if (pch)
+    if (pch) // found ':'
     {
         *pch++ = 0; // this function is destructive against SearchFor
         if (SearchFor[0] == L'$') // $env:pattern
@@ -421,7 +419,7 @@ static WRET WhereDoTarget(LPWSTR SearchFor)
                 ConResPuts(StdErr, IDS_PATHPAT_WITH_R);
                 return WRET_ERROR;
             }
-            if (wcschr(pch, L'\\'))
+            if (wcschr(pch, L'\\') != NULL) // found '\\'?
             {
                 ConResPuts(StdErr, IDS_BAD_PATHPAT);
                 return WRET_ERROR;
@@ -429,19 +427,21 @@ static WRET WhereDoTarget(LPWSTR SearchFor)
             return WhereFind(pch, SearchFor, FALSE);
         }
     }
-    else if (s_SearchDir)
+    else if (s_RecursiveDir) // recursive
     {
         INT iExt;
         WRET ret;
         WCHAR szPath[MAX_PATH], filename[MAX_PATH];
 
-        if (!WhereIsDirOK(s_SearchDir))
+        if (!WhereIsDirOK(s_RecursiveDir))
             return WRET_ERROR;
 
-        GetFullPathNameW(s_SearchDir, _countof(szPath), szPath, NULL); // get full path
+        GetFullPathNameW(s_RecursiveDir, _countof(szPath), szPath, NULL); // get full path
 
-        for (iExt = 0; iExt < s_pathext.count; ++iExt) // with extension
+        // FIXME: Too slow
+        for (iExt = 0; iExt < s_pathext.count; ++iExt) // for all extensions
         {
+            // append extension and search now
             LPWSTR ext = strlist_get_at(&s_pathext, iExt);
             StringCbCopyW(filename, sizeof(filename), SearchFor);
             StringCbCatW(filename, sizeof(filename), ext);
@@ -451,7 +451,7 @@ static WRET WhereDoTarget(LPWSTR SearchFor)
         }
         return WRET_SUCCESS;
     }
-    else
+    else // otherwise
     {
         return WhereFind(SearchFor, L"PATH", TRUE);
     }
@@ -461,7 +461,7 @@ INT __cdecl wmain(INT argc, WCHAR **argv)
 {
     typedef BOOL (WINAPI *FN_DISABLE_WOW)(PVOID *);
     HANDLE hKernel32 = GetModuleHandleA("kernel32");
-    FN_DISABLE_WOW DisableWow =
+    FN_DISABLE_WOW DisableWOW =
         (FN_DISABLE_WOW)GetProcAddress(hKernel32, "Wow64DisableWow64FsRedirection");
     DWORD iTarget;
     WRET ret;
@@ -477,10 +477,10 @@ INT __cdecl wmain(INT argc, WCHAR **argv)
         goto quit;
     }
 
-    if (DisableWow)
+    if (DisableWOW)
     {
         PVOID dummy;
-        DisableWow(&dummy);
+        DisableWOW(&dummy);
     }
 
     if (!WhereGetPathExt(&s_pathext)) // get PATHEXT info
