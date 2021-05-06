@@ -61,23 +61,27 @@ WhereSearchInner(LPCWSTR filename, LPWSTR dirs, FN_SHOW_PATH callback, BOOL fRec
     WIN32_FIND_DATAW find;
     strlist_t list = strlist_default;
     DWORD attrs = GetFileAttributesW(filename);
+    WRET ret;
 
     if (attrs != INVALID_FILE_ATTRIBUTES && !(attrs & FILE_ATTRIBUTE_DIRECTORY)) // just match
     {
-        fFound = TRUE;
-        GetFullPathNameW(filename, _countof(szFull), szFull, NULL); // full path
-
-        if (!(*callback)(szFull))
+        if (!fRecursive)
         {
-            WhereError(IDS_OUTOFMEMORY);
-            return WRET_ERROR;
+            fFound = TRUE;
+            GetFullPathNameW(filename, _countof(szFull), szFull, NULL); // full path
+
+            if (!(*callback)(szFull))
+            {
+                WhereError(IDS_OUTOFMEMORY);
+                return WRET_ERROR;
+            }
         }
     }
 
     // this function is destructive against dirs
     for (dir = wcstok(dirs, L";"); dir; dir = wcstok(NULL, L";"))
     {
-        if (!strlist_add(&list, dir))
+        if (!strlist_add(&list, str_clone(dir)))
         {
             WhereError(IDS_OUTOFMEMORY);
             strlist_destroy(&list);
@@ -133,6 +137,9 @@ WhereSearchInner(LPCWSTR filename, LPWSTR dirs, FN_SHOW_PATH callback, BOOL fRec
             {
                 do
                 {
+                    if (!(find.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
+                        continue;
+
                     if (_wcsicmp(find.cFileName, L".") == 0 ||
                         _wcsicmp(find.cFileName, L"..") == 0)
                     {
@@ -144,18 +151,15 @@ WhereSearchInner(LPCWSTR filename, LPWSTR dirs, FN_SHOW_PATH callback, BOOL fRec
                     cch = _countof(szFull) - (INT)(title - szFull);
                     StringCchCopyW(title, cch, find.cFileName);
 
-                    if (find.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+                    ret = WhereSearchInner(filename, szFull, callback, fRecursive);
+                    if (ret == WRET_ERROR)
                     {
-                        WRET ret = WhereSearchInner(filename, szFull, callback, TRUE);
-                        if (ret == WRET_ERROR)
-                        {
-                            strlist_destroy(&list);
-                            WhereError(IDS_OUTOFMEMORY);
-                            return WRET_ERROR;
-                        }
-                        if (ret == WRET_SUCCESS)
-                            fFound = TRUE;
+                        strlist_destroy(&list);
+                        WhereError(IDS_OUTOFMEMORY);
+                        return WRET_ERROR;
                     }
+                    if (ret == WRET_SUCCESS)
+                        fFound = TRUE;
                 } while (FindNextFile(hFind, &find));
                 FindClose(hFind);
             }
