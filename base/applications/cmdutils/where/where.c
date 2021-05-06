@@ -287,6 +287,13 @@ static BOOL WhereGetPathExt(strlist_t *plist)
 
     CharLowerW(pszPathExt); // make it lowercase
 
+    if (!strlist_add(plist, str_clone(L""))) // empty extension
+    {
+        strlist_destroy(plist);
+        free(pszPathExt);
+        return FALSE;
+    }
+
     // for all exts
     for (ext = wcstok(pszPathExt, L";"); ext; ext = wcstok(NULL, L";"))
     {
@@ -352,13 +359,7 @@ static WRET WhereFind(LPCWSTR SearchFor, LPWSTR SearchData, BOOL IsVar)
         }
     }
 
-    // without extension
-    ret = WhereSearch(SearchFor, &dirlist, WherePrintPath);
-    if (ret == WRET_ERROR)
-        goto quit;
-
-    // with extension
-    for (iExt = 0; iExt < s_pathext.count; ++iExt)
+    for (iExt = 0; iExt < s_pathext.count; ++iExt) // with extension
     {
         StringCbCopyW(szPath, sizeof(szPath), SearchFor);
         StringCbCatW(szPath, sizeof(szPath), strlist_get_at(&s_pathext, iExt));
@@ -409,11 +410,6 @@ static WRET WhereDoTarget(LPWSTR SearchFor)
         WRET ret;
         WCHAR szPath[MAX_PATH], filename[MAX_PATH];
         GetFullPathNameW(s_SearchDir, _countof(szPath), szPath, NULL); // get full path
-
-        // without extension
-        ret = WhereSearchRecursive(SearchFor, szPath, WherePrintPath);
-        if (ret == WRET_ERROR)
-            return ret;
 
         for (iExt = 0; iExt < s_pathext.count; ++iExt) // with extension
         {
