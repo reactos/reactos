@@ -39,10 +39,8 @@ Examples:\n\
   WHERE ""c:\\reactos;c:\\reactos\\system32:*.dll""\n\
   WHERE /F /T *.dll\n"
     IDS_INVALID_ARG "ERROR: Invalid argument or option - '%ls'.\n"
-    IDS_TOO_MANY_ARGS "ERROR: Too many arguments.\n"
     IDS_NOT_FOUND "INFO: Could not find files for the given pattern(s).\n"
     IDS_FILE_INFO "%10I64u %12ls  %12ls  %ls\n"
-    IDS_NOT_SUPPORTED_YET "ERROR: '%ls' is not supported yet.\n"
     IDS_BAD_SYNTAX "ERROR: Invalid syntax. Value expected for '%ls'.\n"
     IDS_TYPE_HELP "Type ""WHERE /?"" for usage help.\n"
     IDS_ENVPAT_WITH_R "ERROR: ""$env:pattern"" cannot be used with /R.\n"
