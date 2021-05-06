@@ -284,7 +284,7 @@ static BOOL WhereGetPathExt(strlist_t *plist)
 
     CharLowerW(pszPathExt); // make it lowercase
 
-    if (!strlist_add(plist, str_clone(L""))) // empty extension
+    if (!strlist_add(plist, str_clone(L""))) // add empty extension for normal search
     {
         strlist_destroy(plist);
         free(pszPathExt);
@@ -357,9 +357,9 @@ static WRET WhereFind(LPCWSTR SearchFor, LPWSTR SearchData, BOOL IsVar)
         }
     }
 
-    for (iExt = 0; iExt < s_pathext.count; ++iExt) // for all PATHEXTs
+    for (iExt = 0; iExt < s_pathext.count; ++iExt) // for all extensions
     {
-        // build path and search now
+        // append extension and search now
         StringCbCopyW(szPath, sizeof(szPath), SearchFor);
         StringCbCatW(szPath, sizeof(szPath), strlist_get_at(&s_pathext, iExt));
         ret = WhereSearch(szPath, &dirlist, WherePrintPath);
