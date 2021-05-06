@@ -358,8 +358,7 @@ static WRET WhereDoTarget(LPWSTR SearchFor)
     }
     else
     {
-        static WCHAR szPath[] = L"PATH";
-        return WhereFind(SearchFor, szPath, TRUE);
+        return WhereFind(SearchFor, L"PATH", TRUE);
     }
 }
 
