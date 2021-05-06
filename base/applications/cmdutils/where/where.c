@@ -409,6 +409,27 @@ static WRET WhereDoTarget(LPWSTR SearchFor)
         INT iExt;
         WRET ret;
         WCHAR szPath[MAX_PATH], filename[MAX_PATH];
+        DWORD attrs = GetFileAttributesW(s_SearchDir);
+
+        if (wcschr(s_SearchDir, L';') == NULL)
+        {
+            if (attrs == INVALID_FILE_ATTRIBUTES)
+            {
+                WhereError(IDS_CANT_FOUND);
+                return WRET_ERROR;
+            }
+            if (!(attrs & FILE_ATTRIBUTE_DIRECTORY))
+            {
+                WhereError(IDS_BAD_DIR);
+                return WRET_ERROR;
+            }
+        }
+        else
+        {
+            WhereError(IDS_BAD_NAME);
+            return WRET_ERROR;
+        }
+
         GetFullPathNameW(s_SearchDir, _countof(szPath), szPath, NULL); // get full path
 
         for (iExt = 0; iExt < s_pathext.count; ++iExt) // with extension

@@ -48,4 +48,7 @@ Examples:\n\
     IDS_BAD_PATHPAT "ERROR: Invalid pattern is specified in ""path:pattern"".\n"
     IDS_OUTOFMEMORY "ERROR: Out of memory.\n"
     IDS_BAD_ENVVAR "ERROR: Environment variable ""%ls"" is not found.\n"
+    IDS_CANT_FOUND "ERROR: The system cannot find the file specified.\n"
+    IDS_BAD_DIR "ERROR: Invalid directory specified.\n"
+    IDS_BAD_NAME "ERROR: The filename, directory name, or volume label syntax is incorrect.\n"
 END
