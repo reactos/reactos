@@ -60,10 +60,7 @@ static inline void strlist_destroy(strlist_t *plist)
 {
     int i;
     for (i = 0; i < plist->count; ++i)
-    {
         free(plist->ppsz[i]);
-        plist->ppsz[i] = NULL;
-    }
     plist->count = 0;
     free(plist->ppsz);
     plist->ppsz = NULL;
