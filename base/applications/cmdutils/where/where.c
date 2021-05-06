@@ -9,6 +9,7 @@
     #include <windef.h>
     #include <winbase.h>
     #include <winuser.h>
+    #include <winnls.h>
 #else
     #include <windows.h>
 #endif
@@ -242,10 +243,8 @@ static BOOL CALLBACK WherePrintPath(LPCWSTR FoundPath)
             FindClose(hFind);
         FileTimeToLocalFileTime(&find.ftLastWriteTime, &ftLocal);
         FileTimeToSystemTime(&ftLocal, &st);
-        StringCbPrintfW(szDate, sizeof(szDate), L"%04u/%02u/%02u",
-                        st.wYear, st.wMonth, st.wDay);
-        StringCbPrintfW(szTime, sizeof(szTime), L"%02u:%02u:%02u",
-                        st.wHour, st.wMinute, st.wSecond);
+        GetDateFormatW(LOCALE_USER_DEFAULT, DATE_SHORTDATE, &st, NULL, szDate, _countof(szDate));
+        GetTimeFormatW(LOCALE_USER_DEFAULT, 0, &st, NULL, szTime, _countof(szTime));
         FileSize.LowPart = find.nFileSizeLow;
         FileSize.HighPart = find.nFileSizeHigh;
         if (s_dwFlags & FLAG_F) // double quote
