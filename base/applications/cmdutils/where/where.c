@@ -51,138 +51,113 @@ static inline VOID WhereError(UINT nID)
 typedef BOOL (CALLBACK *FN_SHOW_PATH)(LPCWSTR FoundPath);
 
 static WRET
-WhereSearchInner(LPCWSTR filename, LPWSTR dirs, FN_SHOW_PATH callback, BOOL fRecursive)
+WhereSearchFiles(LPCWSTR filename, LPCWSTR dir, FN_SHOW_PATH callback)
 {
-    BOOL fFound = FALSE;
-    WCHAR szPath[MAX_PATH], szFull[MAX_PATH];
-    LPWSTR dir, title, pch;
-    INT iDir, cch;
+    WCHAR szPath[MAX_PATH];
+    LPWSTR pch;
+    INT cch;
     HANDLE hFind;
     WIN32_FIND_DATAW find;
-    strlist_t list = strlist_default;
-    DWORD attrs = GetFileAttributesW(filename);
-    WRET ret;
+    WRET ret = WRET_SUCCESS;
 
-    if (attrs != INVALID_FILE_ATTRIBUTES && !(attrs & FILE_ATTRIBUTE_DIRECTORY)) // just match
+    StringCchPrintfW(szPath, _countof(szPath), L"%ls\\%ls", dir, filename); // build path
+    pch = wcsrchr(szPath, L'\\') + 1; // file title
+    cch = _countof(szPath) - (pch - szPath); // remainder
+
+    // enumerate file items
+    hFind = FindFirstFileW(szPath, &find);
+    if (hFind != INVALID_HANDLE_VALUE)
     {
-        if (!fRecursive)
+        do
         {
-            fFound = TRUE;
-            GetFullPathNameW(filename, _countof(szFull), szFull, NULL); // full path
+            if (find.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+                continue; // it was directory
 
-            if (!(*callback)(szFull))
+            // build full path
+            StringCchCopyW(pch, cch, find.cFileName);
+
+            if (!(*callback)(szPath))
             {
                 WhereError(IDS_OUTOFMEMORY);
-                return WRET_ERROR;
+                ret = WRET_ERROR;
+                break;
             }
-        }
+        } while (FindNextFile(hFind, &find));
+        FindClose(hFind);
     }
 
-    // this function is destructive against dirs
-    for (dir = wcstok(dirs, L";"); dir; dir = wcstok(NULL, L";"))
-    {
-        if (!strlist_add(&list, str_clone(dir)))
-        {
-            WhereError(IDS_OUTOFMEMORY);
-            strlist_destroy(&list);
-            return WRET_ERROR;
-        }
-    }
-
-    for (iDir = 0; iDir < list.count; ++iDir)
-    {
-        dir = strlist_get_at(&list, iDir);
-        // build path
-        if (*dir == L'"')
-        {
-            ++dir;
-            pch = wcschr(dir, L'"');
-            if (*pch)
-                *pch = 0;
-        }
-        StringCchPrintfW(szPath, _countof(szPath), L"%ls\\%ls", dir, filename);
-
-        // enumerate file items
-        hFind = FindFirstFileW(szPath, &find);
-        if (hFind != INVALID_HANDLE_VALUE)
-        {
-            do
-            {
-                if (find.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
-                    continue;
-
-                // build full path
-                GetFullPathNameW(szPath, _countof(szFull), szFull, &title);
-                cch = _countof(szFull) - (INT)(title - szFull);
-                StringCchCopyW(title, cch, find.cFileName);
-
-                fFound = TRUE;
-
-                if (!(*callback)(szFull))
-                {
-                    strlist_destroy(&list);
-                    WhereError(IDS_OUTOFMEMORY);
-                    return WRET_ERROR;
-                }
-            } while (FindNextFile(hFind, &find));
-            FindClose(hFind);
-        }
-
-        if (fRecursive)
-        {
-            StringCchPrintfW(szPath, _countof(szPath), L"%ls\\*", dir);
-
-            // enumerate directory items
-            hFind = FindFirstFileW(szPath, &find);
-            if (hFind != INVALID_HANDLE_VALUE)
-            {
-                do
-                {
-                    if (!(find.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
-                        continue;
-
-                    if (_wcsicmp(find.cFileName, L".") == 0 ||
-                        _wcsicmp(find.cFileName, L"..") == 0)
-                    {
-                        continue;
-                    }
-
-                    // build full path
-                    GetFullPathNameW(szPath, _countof(szFull), szFull, &title);
-                    cch = _countof(szFull) - (INT)(title - szFull);
-                    StringCchCopyW(title, cch, find.cFileName);
-
-                    ret = WhereSearchInner(filename, szFull, callback, fRecursive);
-                    if (ret == WRET_ERROR)
-                    {
-                        strlist_destroy(&list);
-                        WhereError(IDS_OUTOFMEMORY);
-                        return WRET_ERROR;
-                    }
-                    if (ret == WRET_SUCCESS)
-                        fFound = TRUE;
-                } while (FindNextFile(hFind, &find));
-                FindClose(hFind);
-            }
-        }
-    }
-
-    strlist_destroy(&list);
-    return (fFound ? WRET_SUCCESS : WRET_NOT_FOUND);
+    return ret;
 }
 
-static WRET WhereSearch(LPCWSTR filename, LPCWSTR pszDirs, FN_SHOW_PATH callback, BOOL fRecursive)
+static WRET
+WhereSearchRecursive(LPCWSTR filename, LPCWSTR dir, FN_SHOW_PATH callback)
 {
+    WCHAR szPath[MAX_PATH];
+    LPWSTR pch;
+    INT cch;
+    HANDLE hFind;
+    WIN32_FIND_DATAW find;
     WRET ret;
-    LPWSTR pszClone = str_clone(pszDirs); // WhereSearchInner is destructive. It needs a clone.
-    if (!pszClone)
+
+    ret = WhereSearchFiles(filename, dir, callback);
+    if (ret == WRET_ERROR)
+        return ret;
+
+    StringCbPrintfW(szPath, sizeof(szPath), L"%ls\\*", dir); // build path with wildcard
+    pch = wcsrchr(szPath, L'\\') + 1; // file title
+    cch = _countof(szPath) - (pch - szPath); // remainder
+
+    hFind = FindFirstFileW(szPath, &find);
+    if (hFind != INVALID_HANDLE_VALUE)
     {
-        WhereError(IDS_OUTOFMEMORY);
-        return WRET_ERROR;
+        do
+        {
+            if (!(find.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
+                continue; // not directory
+
+            if (wcscmp(find.cFileName, L".") == 0 || wcscmp(find.cFileName, L"..") == 0)
+                continue; // "." or ".."
+
+            StringCchCopyW(pch, cch, find.cFileName);
+            ret = WhereSearchRecursive(filename, szPath, callback);
+            if (ret == WRET_ERROR)
+                break;
+        } while (FindNextFileW(hFind, &find));
+        FindClose(hFind);
     }
-    ret = WhereSearchInner(filename, pszClone, callback, fRecursive);
-    free(pszClone);
+
     return ret;
+}
+
+static WRET
+WhereSearch(LPCWSTR filename, strlist_t *dirlist, FN_SHOW_PATH callback, BOOL fRecursive)
+{
+    INT iDir;
+    WRET ret;
+    LPWSTR dir;
+
+    if (fRecursive)
+    {
+        for (iDir = 0; iDir < dirlist->count; ++iDir)
+        {
+            dir = strlist_get_at(dirlist, iDir);
+            ret = WhereSearchRecursive(filename, dir, callback);
+            if (ret == WRET_ERROR)
+                return ret;
+        }
+    }
+    else
+    {
+        for (iDir = 0; iDir < dirlist->count; ++iDir)
+        {
+            dir = strlist_get_at(dirlist, iDir);
+            ret = WhereSearchFiles(filename, dir, callback);
+            if (ret == WRET_ERROR)
+                return ret;
+        }
+    }
+
+    return WRET_SUCCESS;
 }
 
 static WRET WhereGetEnvVar(LPCWSTR name, LPWSTR *ppszData)
@@ -340,42 +315,74 @@ static BOOL WhereGetPathExt(strlist_t *plist)
 #undef DEFAULT_PATHEXT
 }
 
-static WRET WhereFind(LPCWSTR SearchFor, LPCWSTR SearchData, BOOL IsVar, BOOL fRecursive)
+static WRET WhereFind(LPCWSTR SearchFor, LPWSTR SearchData, BOOL IsVar, BOOL fRecursive)
 {
-    WCHAR filename[MAX_PATH];
+    WCHAR szPath[MAX_PATH];
     INT iExt;
     WRET ret = WRET_SUCCESS;
-    LPWSTR pszValue = NULL;
-    LPCWSTR pszDirs;
+    LPWSTR pszValue = NULL, dir, dirs, pch;
+    strlist_t dirlist = strlist_default;
 
     if (IsVar) // is SearchData an env var?
     {
         ret = WhereGetEnvVar(SearchData, &pszValue);
         if (ret == WRET_ERROR || pszValue == NULL)
             goto quit;
-        pszDirs = pszValue;
+        dirs = pszValue;
     }
     else // paths?
     {
-        pszDirs = SearchData;
+        dirs = SearchData;
+    }
+
+    if (!fRecursive)
+    {
+        GetCurrentDirectoryW(_countof(szPath), szPath);
+        if (!strlist_add(&dirlist, str_clone(szPath)))
+        {
+            ret = WRET_ERROR;
+            goto quit;
+        }
+    }
+
+    for (dir = wcstok(dirs, L";"); dir; dir = wcstok(NULL, L";"))
+    {
+        // make path
+        if (*dir == L'"')
+        {
+            ++dir;
+            pch = wcschr(dir, L'"');
+            if (*pch)
+                *pch = 0;
+        }
+
+        if (*dir != '\\' && dir[1] != L':')
+            continue; // relative path
+
+        if (!strlist_add(&dirlist, str_clone(dir)))
+        {
+            ret = WRET_ERROR;
+            goto quit;
+        }
     }
 
     // without extension
-    ret = WhereSearch(SearchFor, pszDirs, WherePrintPath, fRecursive);
+    ret = WhereSearch(SearchFor, &dirlist, WherePrintPath, fRecursive);
     if (ret == WRET_ERROR)
         goto quit;
 
     // with extension
     for (iExt = 0; iExt < s_pathext.count; ++iExt)
     {
-        StringCbCopyW(filename, sizeof(filename), SearchFor);
-        StringCbCatW(filename, sizeof(filename), strlist_get_at(&s_pathext, iExt));
-        ret = WhereSearch(filename, pszDirs, WherePrintPath, fRecursive);
+        StringCbCopyW(szPath, sizeof(szPath), SearchFor);
+        StringCbCatW(szPath, sizeof(szPath), strlist_get_at(&s_pathext, iExt));
+        ret = WhereSearch(szPath, &dirlist, WherePrintPath, fRecursive);
         if (ret == WRET_ERROR)
             goto quit;
     }
 
 quit:
+    strlist_destroy(&dirlist);
     free(pszValue);
     return ret;
 }
