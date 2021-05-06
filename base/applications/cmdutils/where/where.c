@@ -113,10 +113,10 @@ static WRET WhereSearchInner(LPCWSTR filename, LPWSTR dirs, FN_SHOW_PATH callbac
     return (fFound ? WRET_SUCCESS : WRET_NOT_FOUND);
 }
 
-static WRET WhereSearch(LPCWSTR filename, LPWSTR pszData, FN_SHOW_PATH callback)
+static WRET WhereSearch(LPCWSTR filename, LPCWSTR pszDirs, FN_SHOW_PATH callback)
 {
     WRET ret;
-    LPWSTR pszClone = str_clone(pszData); // WhereSearchInner is destructive. It needs a clone.
+    LPWSTR pszClone = str_clone(pszDirs); // WhereSearchInner is destructive. It needs a clone.
     if (!pszClone)
     {
         WhereError(IDS_OUTOFMEMORY);
@@ -251,7 +251,7 @@ static BOOL WhereGetPathExt(strlist_t *plist)
     LPWSTR pszPathExt, ext;
     DWORD cchPathExt = GetEnvironmentVariableW(L"PATHEXT", NULL, 0);
 
-    // allocate for path exts
+    // allocate for PATHEXT info
     if (cchPathExt)
         pszPathExt = malloc(cchPathExt * sizeof(WCHAR));
     else
@@ -261,11 +261,11 @@ static BOOL WhereGetPathExt(strlist_t *plist)
         return FALSE; // out of memory
 
     if (cchPathExt)
-        GetEnvironmentVariableW(L"PATHEXT", pszPathExt, cchPathExt); // get env var
+        GetEnvironmentVariableW(L"PATHEXT", pszPathExt, cchPathExt); // get PATHEXT data
 
     CharLowerW(pszPathExt); // make it lowercase
 
-    // for all path exts
+    // for all exts
     for (ext = wcstok(pszPathExt, L";"); ext; ext = wcstok(NULL, L";"))
     {
         // add to plist
@@ -282,27 +282,28 @@ static BOOL WhereGetPathExt(strlist_t *plist)
 #undef DEFAULT_PATHEXT
 }
 
-static WRET WhereFind(LPCWSTR SearchFor, LPWSTR SearchData, BOOL IsVar)
+static WRET WhereFind(LPCWSTR SearchFor, LPCWSTR SearchData, BOOL IsVar)
 {
     WCHAR filename[MAX_PATH];
     INT iExt;
     WRET ret = WRET_SUCCESS;
-    LPWSTR pszValue = NULL, pszData;
+    LPWSTR pszValue = NULL;
+    LPCWSTR pszDirs;
 
-    if (IsVar) // is it an env var?
+    if (IsVar) // is SearchData an env var?
     {
         ret = WhereGetEnvVar(SearchData, &pszValue);
         if (ret == WRET_ERROR || pszValue == NULL)
             goto quit;
-        pszData = pszValue;
+        pszDirs = pszValue;
     }
     else // paths?
     {
-        pszData = SearchData;
+        pszDirs = SearchData;
     }
 
     // without extension
-    ret = WhereSearch(SearchFor, pszData, WherePrintPath);
+    ret = WhereSearch(SearchFor, pszDirs, WherePrintPath);
     if (ret == WRET_ERROR)
         goto quit;
 
@@ -311,7 +312,7 @@ static WRET WhereFind(LPCWSTR SearchFor, LPWSTR SearchData, BOOL IsVar)
     {
         StringCbCopyW(filename, sizeof(filename), SearchFor);
         StringCbCatW(filename, sizeof(filename), strlist_get_at(&s_pathext, iExt));
-        ret = WhereSearch(filename, pszData, WherePrintPath);
+        ret = WhereSearch(filename, pszDirs, WherePrintPath);
         if (ret == WRET_ERROR)
             goto quit;
     }
@@ -417,7 +418,6 @@ INT __cdecl wmain(INT argc, WCHAR **argv)
     {
         WhereError(IDS_NOT_FOUND);
         ret = WRET_NOT_FOUND;
-        goto quit;
     }
 
 quit: // cleanup
