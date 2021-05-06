@@ -54,9 +54,9 @@ static inline VOID WhereError(UINT nID)
         ConResPuts(StdErr, nID);
 }
 
-typedef BOOL (CALLBACK *FN_SHOW_PATH)(LPCWSTR FoundPath);
+typedef BOOL (CALLBACK *FN_PRINT_PATH)(LPCWSTR FoundPath);
 
-static WRET WhereSearchFiles(LPCWSTR filename, LPCWSTR dir, FN_SHOW_PATH callback)
+static WRET WhereSearchFiles(LPCWSTR filename, LPCWSTR dir, FN_PRINT_PATH callback)
 {
     WCHAR szPath[MAX_PATH];
     LPWSTR pch;
@@ -93,7 +93,7 @@ static WRET WhereSearchFiles(LPCWSTR filename, LPCWSTR dir, FN_SHOW_PATH callbac
     return ret;
 }
 
-static WRET WhereSearchRecursive(LPCWSTR filename, LPCWSTR dir, FN_SHOW_PATH callback)
+static WRET WhereSearchRecursive(LPCWSTR filename, LPCWSTR dir, FN_PRINT_PATH callback)
 {
     WCHAR szPath[MAX_PATH];
     LPWSTR pch;
@@ -132,7 +132,7 @@ static WRET WhereSearchRecursive(LPCWSTR filename, LPCWSTR dir, FN_SHOW_PATH cal
 }
 
 static WRET
-WhereSearch(LPCWSTR filename, strlist_t *dirlist, FN_SHOW_PATH callback)
+WhereSearch(LPCWSTR filename, strlist_t *dirlist, FN_PRINT_PATH callback)
 {
     INT iDir;
     for (iDir = 0; iDir < dirlist->count; ++iDir)
