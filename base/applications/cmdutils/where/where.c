@@ -15,18 +15,18 @@
 #endif
 #include <stdlib.h>
 #include <string.h>
-#include <strsafe.h>
+#include <strsafe.h> // StringC...
 #include "resource.h"
 #ifdef __REACTOS__
-    #include <conutils.h>
+    #include <conutils.h> // StdOut/StdErr, Con...
 #else
     #include "../donutils.h"
 #endif
-#include "strlist.h"
+#include "strlist.h" // strlist_t
 
 #define FLAG_HELP (1 << 0) // "/?"
 #define FLAG_R (1 << 1) // recursive directory
-#define FLAG_Q (1 << 2) // quiet
+#define FLAG_Q (1 << 2) // quiet mode
 #define FLAG_F (1 << 3) // double quote
 #define FLAG_T (1 << 4) // detailed info
 
@@ -51,13 +51,13 @@ typedef enum WRET // return code of WHERE command
 
 static inline VOID WhereError(UINT nID)
 {
-    if (!(s_dwFlags & FLAG_Q))
+    if (!(s_dwFlags & FLAG_Q)) // not quiet mode?
         ConResPuts(StdErr, nID);
 }
 
-typedef BOOL (CALLBACK *FN_PRINT_PATH)(LPCWSTR FoundPath);
+typedef BOOL (CALLBACK *WHERE_PRINT_PATH)(LPCWSTR FoundPath);
 
-static WRET WhereSearchFiles(LPCWSTR filename, LPCWSTR dir, FN_PRINT_PATH callback)
+static WRET WhereSearchFiles(LPCWSTR filename, LPCWSTR dir, WHERE_PRINT_PATH callback)
 {
     WCHAR szPath[MAX_PATH];
     LPWSTR pch;
@@ -70,8 +70,7 @@ static WRET WhereSearchFiles(LPCWSTR filename, LPCWSTR dir, FN_PRINT_PATH callba
     pch = wcsrchr(szPath, L'\\') + 1; // file title
     cch = _countof(szPath) - (pch - szPath); // remainder
 
-    // enumerate file items
-    hFind = FindFirstFileW(szPath, &find);
+    hFind = FindFirstFileW(szPath, &find); // enumerate file items
     if (hFind != INVALID_HANDLE_VALUE)
     {
         do
@@ -94,14 +93,14 @@ static WRET WhereSearchFiles(LPCWSTR filename, LPCWSTR dir, FN_PRINT_PATH callba
     return ret;
 }
 
-static WRET WhereSearchRecursive(LPCWSTR filename, LPCWSTR dir, FN_PRINT_PATH callback)
+static WRET WhereSearchRecursive(LPCWSTR filename, LPCWSTR dir, WHERE_PRINT_PATH callback)
 {
     WCHAR szPath[MAX_PATH];
     LPWSTR pch;
     INT cch;
     HANDLE hFind;
     WIN32_FIND_DATAW find;
-    WRET ret = WhereSearchFiles(filename, dir, callback);
+    WRET ret = WhereSearchFiles(filename, dir, callback); // search files in the directory
     if (ret == WRET_ERROR)
         return ret;
 
@@ -109,7 +108,7 @@ static WRET WhereSearchRecursive(LPCWSTR filename, LPCWSTR dir, FN_PRINT_PATH ca
     pch = wcsrchr(szPath, L'\\') + 1; // file title
     cch = _countof(szPath) - (pch - szPath); // remainder
 
-    hFind = FindFirstFileW(szPath, &find);
+    hFind = FindFirstFileW(szPath, &find); // enumerate directory items
     if (hFind != INVALID_HANDLE_VALUE)
     {
         do
@@ -118,11 +117,11 @@ static WRET WhereSearchRecursive(LPCWSTR filename, LPCWSTR dir, FN_PRINT_PATH ca
                 continue; // not directory
 
             if (IS_DOTS(find.cFileName))
-                continue; // "." or ".."
+                continue; // ignore "." or ".."
 
             StringCchCopyW(pch, cch, find.cFileName); // build full path
 
-            ret = WhereSearchRecursive(filename, szPath, callback);
+            ret = WhereSearchRecursive(filename, szPath, callback); // recurse
             if (ret == WRET_ERROR)
                 break;
         } while (FindNextFileW(hFind, &find));
@@ -133,13 +132,13 @@ static WRET WhereSearchRecursive(LPCWSTR filename, LPCWSTR dir, FN_PRINT_PATH ca
 }
 
 static WRET
-WhereSearch(LPCWSTR filename, strlist_t *dirlist, FN_PRINT_PATH callback)
+WhereSearch(LPCWSTR filename, strlist_t *dirlist, WHERE_PRINT_PATH callback)
 {
     INT iDir;
-    for (iDir = 0; iDir < dirlist->count; ++iDir)
+    for (iDir = 0; iDir < dirlist->count; ++iDir) // for each directory
     {
         LPWSTR dir = strlist_get_at(dirlist, iDir);
-        WRET ret = WhereSearchFiles(filename, dir, callback);
+        WRET ret = WhereSearchFiles(filename, dir, callback); // search
         if (ret == WRET_ERROR)
             return ret;
     }
@@ -149,16 +148,15 @@ WhereSearch(LPCWSTR filename, strlist_t *dirlist, FN_PRINT_PATH callback)
 // get environment variable
 static WRET WhereGetEnvVar(LPCWSTR name, LPWSTR *ppszData)
 {
-    DWORD cchData = GetEnvironmentVariableW(name, NULL, 0);
+    DWORD cchData = GetEnvironmentVariableW(name, NULL, 0); // is there the variable?
     *ppszData = NULL;
-
-    if (cchData == 0) // not found
+    if (cchData == 0) // variable not found
     {
         ConResPrintf(StdErr, IDS_BAD_ENVVAR, name);
         return WRET_NOT_FOUND;
     }
 
-    // allocate and get the value of env var
+    // allocate and get the variable's value
     *ppszData = malloc(cchData * sizeof(WCHAR));
     if (!*ppszData || !GetEnvironmentVariableW(name, *ppszData, cchData))
     {
@@ -173,12 +171,12 @@ static WRET WhereGetEnvVar(LPCWSTR name, LPWSTR *ppszData)
 static BOOL WhereParseCommandLine(INT argc, WCHAR** argv)
 {
     INT iArg;
-    for (iArg = 1; iArg < argc; ++iArg)
+    for (iArg = 1; iArg < argc; ++iArg) // for each parameter
     {
         LPWSTR arg = argv[iArg];
-        if (arg[0] == L'/' || arg[0] == L'-')
+        if (arg[0] == L'/' || arg[0] == L'-') // flag?
         {
-            if (arg[2] == 0)
+            if (arg[2] == 0) // shortly terminated?
             {
                 switch (towupper(arg[1]))
                 {
@@ -197,25 +195,25 @@ static BOOL WhereParseCommandLine(INT argc, WCHAR** argv)
                         }
                         ConResPrintf(StdErr, IDS_BAD_SYNTAX, L"/R");
                         WhereError(IDS_TYPE_HELP);
-                        return FALSE;
+                        return FALSE; // failure
                     }
                 }
             }
-            ConResPrintf(StdErr, IDS_INVALID_ARG, argv[iArg]);
+            ConResPrintf(StdErr, IDS_INVALID_ARG, argv[iArg]); // invalid argument
             WhereError(IDS_TYPE_HELP);
-            return FALSE;
+            return FALSE; // failure
         }
-        else
+        else // target?
         {
-            if (!strlist_add(&s_targets, str_clone(argv[iArg])))
+            if (!strlist_add(&s_targets, str_clone(argv[iArg]))) // append target
             {
                 WhereError(IDS_OUTOFMEMORY);
-                return FALSE;
+                return FALSE; // failure
             }
         }
     }
 
-    return TRUE;
+    return TRUE; // success
 }
 
 static BOOL CALLBACK WherePrintPath(LPCWSTR FoundPath)
@@ -228,12 +226,12 @@ static BOOL CALLBACK WherePrintPath(LPCWSTR FoundPath)
     SYSTEMTIME st;
     INT iPath;
 
-    iPath = strlist_find_i(&s_founds, FoundPath);
+    iPath = strlist_find_i(&s_founds, FoundPath); // find string in s_founds
     if (iPath >= 0)
         return TRUE; // already exists
     if (!strlist_add(&s_founds, str_clone(FoundPath)))
         return FALSE; // failure
-    if (s_dwFlags & FLAG_Q) // quiet
+    if (s_dwFlags & FLAG_Q) // quiet mode?
         return TRUE; // success
 
     if (s_dwFlags & FLAG_T) // detailed info
@@ -253,7 +251,7 @@ static BOOL CALLBACK WherePrintPath(LPCWSTR FoundPath)
             StringCbCopyW(szPath, sizeof(szPath), FoundPath);
         ConResPrintf(StdOut, IDS_FILE_INFO, FileSize.QuadPart, szDate, szTime, szPath);
     }
-    else // path only
+    else // print path only
     {
         if (s_dwFlags & FLAG_F) // double quote
             ConPrintf(StdOut, L"\"%ls\"\n", FoundPath);
@@ -264,7 +262,7 @@ static BOOL CALLBACK WherePrintPath(LPCWSTR FoundPath)
     return TRUE; // success
 }
 
-static BOOL WhereGetPathExt(strlist_t *plist)
+static BOOL WhereGetPathExt(strlist_t *ext_list)
 {
     BOOL ret = TRUE;
     LPWSTR pszPathExt, ext;
@@ -284,9 +282,9 @@ static BOOL WhereGetPathExt(strlist_t *plist)
 
     CharLowerW(pszPathExt); // make it lowercase
 
-    if (!strlist_add(plist, str_clone(L""))) // add empty extension for normal search
+    if (!strlist_add(ext_list, str_clone(L""))) // add empty extension for normal search
     {
-        strlist_destroy(plist);
+        strlist_destroy(ext_list);
         free(pszPathExt);
         return FALSE;
     }
@@ -294,10 +292,9 @@ static BOOL WhereGetPathExt(strlist_t *plist)
     // for all extensions
     for (ext = wcstok(pszPathExt, L";"); ext; ext = wcstok(NULL, L";"))
     {
-        // add to plist
-        if (!strlist_add(plist, str_clone(ext)))
+        if (!strlist_add(ext_list, str_clone(ext))) // add extension to ext_list
         {
-            strlist_destroy(plist);
+            strlist_destroy(ext_list);
             ret = FALSE;
             break;
         }
@@ -336,15 +333,15 @@ static WRET WhereFind(LPCWSTR SearchFor, LPWSTR SearchData, BOOL IsVar)
         goto quit;
     }
 
+    // this function is destructive against SearchData
     for (dir = wcstok(dirs, L";"); dir; dir = wcstok(NULL, L";"))
     {
-        // make path
-        if (*dir == L'"')
+        if (*dir == L'"') // began from '"'
         {
             ++dir;
-            pch = wcschr(dir, L'"');
+            pch = wcschr(dir, L'"'); // find '"'
             if (*pch)
-                *pch = 0;
+                *pch = 0; // cut off
         }
 
         if (*dir != '\\' && dir[1] != L':')
@@ -376,7 +373,7 @@ quit:
 static BOOL WhereIsDirOK(LPCWSTR name)
 {
     DWORD attrs;
-    if (wcschr(name, L';') == NULL)
+    if (wcschr(name, L';') == NULL) // not found ';'?
     {
         attrs = GetFileAttributesW(name);
         if (attrs == INVALID_FILE_ATTRIBUTES) // file not found
@@ -406,7 +403,7 @@ static WRET WhereDoTarget(LPWSTR SearchFor)
         *pch++ = 0; // this function is destructive against SearchFor
         if (SearchFor[0] == L'$') // $env:pattern
         {
-            if (s_dwFlags & FLAG_R)
+            if (s_dwFlags & FLAG_R) // recursive?
             {
                 ConResPuts(StdErr, IDS_ENVPAT_WITH_R);
                 return WRET_ERROR;
@@ -415,7 +412,7 @@ static WRET WhereDoTarget(LPWSTR SearchFor)
         }
         else // path:pattern
         {
-            if (s_dwFlags & FLAG_R)
+            if (s_dwFlags & FLAG_R) // recursive?
             {
                 ConResPuts(StdErr, IDS_PATHPAT_WITH_R);
                 return WRET_ERROR;
@@ -465,7 +462,8 @@ INT __cdecl wmain(INT argc, WCHAR **argv)
     FN_DISABLE_WOW DisableWOW =
         (FN_DISABLE_WOW)GetProcAddress(hKernel32, "Wow64DisableWow64FsRedirection");
     DWORD iTarget;
-    WRET ret;
+    WRET ret = WRET_ERROR;
+    PVOID dummy;
 
     ConInitStdStreams(); // Initialize the Console Standard Streams
 
@@ -479,10 +477,7 @@ INT __cdecl wmain(INT argc, WCHAR **argv)
     }
 
     if (DisableWOW)
-    {
-        PVOID dummy;
         DisableWOW(&dummy);
-    }
 
     if (!WhereGetPathExt(&s_pathext)) // get PATHEXT info
     {
