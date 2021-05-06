@@ -1819,13 +1819,31 @@ VOID CApplicationView::OnCommand(WPARAM wParam, LPARAM lParam)
             switch (NotifyCode)
             {
             case CBN_SELCHANGE:
+                static int nLastCusMode = 0;
                 int CurrSelection = m_ComboBox->SendMessageW(CB_GETCURSEL);
 
                 int ViewModeList[] = { LV_VIEW_DETAILS, LV_VIEW_LIST, LV_VIEW_TILE };
                 ATLASSERT(CurrSelection < (int)_countof(ViewModeList));
                 if (!m_ListView->SetViewMode(ViewModeList[CurrSelection]))
                 {
-                    MessageBoxW(L"View mode invalid or unimplemented");
+                    PWSTR lpMsgBuf;
+                    FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER |
+                                   FORMAT_MESSAGE_FROM_SYSTEM |
+                                   FORMAT_MESSAGE_IGNORE_INSERTS,
+                                   NULL,
+                                   ERROR_INVALID_FUNCTION,
+                                   MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+                                   (LPWSTR)&lpMsgBuf,
+                                   0,
+                                   NULL);
+                    MessageBoxW(lpMsgBuf, NULL, MB_OK | MB_ICONERROR);
+                    LocalFree(lpMsgBuf);
+                    if (CurrSelection != nLastCusMode)
+                        m_ComboBox->SendMessageW(CB_SETCURSEL, nLastCusMode);
+                }
+                else
+                {
+                    nLastCusMode = CurrSelection;
                 }
                 break;
             }
