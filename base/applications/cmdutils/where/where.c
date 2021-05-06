@@ -235,11 +235,6 @@ static BOOL CALLBACK WherePrintPath(LPCWSTR FoundPath)
     if (s_dwFlags & FLAG_Q) // quiet
         return TRUE; // success
 
-    if (s_dwFlags & FLAG_F) // double quote
-        StringCbPrintfW(szPath, sizeof(szPath), L"\"%s\"", FoundPath);
-    else
-        StringCbCopyW(szPath, sizeof(szPath), FoundPath);
-
     if (s_dwFlags & FLAG_T) // detailed info
     {
         hFind = FindFirstFileW(FoundPath, &find);
@@ -253,11 +248,18 @@ static BOOL CALLBACK WherePrintPath(LPCWSTR FoundPath)
                         st.wHour, st.wMinute, st.wSecond);
         FileSize.LowPart = find.nFileSizeLow;
         FileSize.HighPart = find.nFileSizeHigh;
+        if (s_dwFlags & FLAG_F) // double quote
+            StringCbPrintfW(szPath, sizeof(szPath), L"\"%s\"", FoundPath);
+        else
+            StringCbCopyW(szPath, sizeof(szPath), FoundPath);
         ConResPrintf(StdOut, IDS_FILE_INFO, FileSize.QuadPart, szDate, szTime, szPath);
     }
     else // path only
     {
-        ConPrintf(StdOut, L"%ls\n", szPath);
+        if (s_dwFlags & FLAG_F) // double quote
+            ConPrintf(StdOut, L"\"%ls\"\n", FoundPath);
+        else
+            ConPrintf(StdOut, L"%ls\n", FoundPath);
     }
 
     return TRUE; // success
