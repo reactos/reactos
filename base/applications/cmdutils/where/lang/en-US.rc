@@ -2,7 +2,7 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 
 STRINGTABLE
 BEGIN
-    IDS_USAGE "WHERE [/R dir] [/Q] [/F] [/T] pattern...\n\
+    IDS_USAGE "WHERE [/F] [/Q] [/R dir] [/T] pattern...\n\
 \n\
 Description:\n\
   Displays the location of files that match the search pattern.\n\
@@ -12,7 +12,7 @@ Description:\n\
 Parameter List:\n\
   /F       Displays the matched filename in double quotes.\n\
   /Q       Quite mode.\n\
-  /R       Recursively searches and displays the files that match the\n\
+  /R dir   Recursively searches and displays the files that match the\n\
            given pattern starting from the specified directory.\n\
   /T       Displays the file size, last modified date and time for all\n\
            matched files.\n\
