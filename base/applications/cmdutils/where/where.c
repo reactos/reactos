@@ -132,31 +132,18 @@ static WRET WhereSearchRecursive(LPCWSTR filename, LPCWSTR dir, FN_SHOW_PATH cal
 }
 
 static WRET
-WhereSearch(LPCWSTR filename, strlist_t *dirlist, FN_SHOW_PATH callback, BOOL fRecursive)
+WhereSearch(LPCWSTR filename, strlist_t *dirlist, FN_SHOW_PATH callback)
 {
     INT iDir;
     WRET ret;
     LPWSTR dir;
 
-    if (fRecursive)
+    for (iDir = 0; iDir < dirlist->count; ++iDir)
     {
-        for (iDir = 0; iDir < dirlist->count; ++iDir)
-        {
-            dir = strlist_get_at(dirlist, iDir);
-            ret = WhereSearchRecursive(filename, dir, callback);
-            if (ret == WRET_ERROR)
-                return ret;
-        }
-    }
-    else
-    {
-        for (iDir = 0; iDir < dirlist->count; ++iDir)
-        {
-            dir = strlist_get_at(dirlist, iDir);
-            ret = WhereSearchFiles(filename, dir, callback);
-            if (ret == WRET_ERROR)
-                return ret;
-        }
+        dir = strlist_get_at(dirlist, iDir);
+        ret = WhereSearchFiles(filename, dir, callback);
+        if (ret == WRET_ERROR)
+            return ret;
     }
 
     return WRET_SUCCESS;
@@ -316,7 +303,7 @@ static BOOL WhereGetPathExt(strlist_t *plist)
     return ret;
 }
 
-static WRET WhereFind(LPCWSTR SearchFor, LPWSTR SearchData, BOOL IsVar, BOOL fRecursive)
+static WRET WhereFind(LPCWSTR SearchFor, LPWSTR SearchData, BOOL IsVar)
 {
     WRET ret = WRET_SUCCESS;
     WCHAR szPath[MAX_PATH];
@@ -337,14 +324,11 @@ static WRET WhereFind(LPCWSTR SearchFor, LPWSTR SearchData, BOOL IsVar, BOOL fRe
         pszValue = NULL;
     }
 
-    if (!fRecursive)
+    GetCurrentDirectoryW(_countof(szPath), szPath);
+    if (!strlist_add(&dirlist, str_clone(szPath)))
     {
-        GetCurrentDirectoryW(_countof(szPath), szPath);
-        if (!strlist_add(&dirlist, str_clone(szPath)))
-        {
-            ret = WRET_ERROR;
-            goto quit;
-        }
+        ret = WRET_ERROR;
+        goto quit;
     }
 
     for (dir = wcstok(dirs, L";"); dir; dir = wcstok(NULL, L";"))
@@ -369,7 +353,7 @@ static WRET WhereFind(LPCWSTR SearchFor, LPWSTR SearchData, BOOL IsVar, BOOL fRe
     }
 
     // without extension
-    ret = WhereSearch(SearchFor, &dirlist, WherePrintPath, fRecursive);
+    ret = WhereSearch(SearchFor, &dirlist, WherePrintPath);
     if (ret == WRET_ERROR)
         goto quit;
 
@@ -378,7 +362,7 @@ static WRET WhereFind(LPCWSTR SearchFor, LPWSTR SearchData, BOOL IsVar, BOOL fRe
     {
         StringCbCopyW(szPath, sizeof(szPath), SearchFor);
         StringCbCatW(szPath, sizeof(szPath), strlist_get_at(&s_pathext, iExt));
-        ret = WhereSearch(szPath, &dirlist, WherePrintPath, fRecursive);
+        ret = WhereSearch(szPath, &dirlist, WherePrintPath);
         if (ret == WRET_ERROR)
             goto quit;
     }
@@ -402,7 +386,7 @@ static WRET WhereDoTarget(LPWSTR SearchFor)
                 ConResPuts(StdErr, IDS_ENVPAT_WITH_R);
                 return WRET_ERROR;
             }
-            return WhereFind(pch, SearchFor + 1, TRUE, FALSE);
+            return WhereFind(pch, SearchFor + 1, TRUE);
         }
         else // path:pattern
         {
@@ -416,16 +400,35 @@ static WRET WhereDoTarget(LPWSTR SearchFor)
                 ConResPuts(StdErr, IDS_BAD_PATHPAT);
                 return WRET_ERROR;
             }
-            return WhereFind(pch, SearchFor, FALSE, FALSE);
+            return WhereFind(pch, SearchFor, FALSE);
         }
     }
     else if (s_SearchDir)
     {
-        return WhereFind(SearchFor, s_SearchDir, FALSE, TRUE);
+        INT iExt;
+        WRET ret;
+        WCHAR szPath[MAX_PATH], filename[MAX_PATH];
+        GetFullPathNameW(s_SearchDir, _countof(szPath), szPath, NULL); // get full path
+
+        // without extension
+        ret = WhereSearchRecursive(SearchFor, szPath, WherePrintPath);
+        if (ret == WRET_ERROR)
+            return ret;
+
+        for (iExt = 0; iExt < s_pathext.count; ++iExt) // with extension
+        {
+            LPWSTR ext = strlist_get_at(&s_pathext, iExt);
+            StringCbCopyW(filename, sizeof(filename), SearchFor);
+            StringCbCatW(filename, sizeof(filename), ext);
+            ret = WhereSearchRecursive(filename, szPath, WherePrintPath);
+            if (ret == WRET_ERROR)
+                return ret;
+        }
+        return WRET_SUCCESS;
     }
     else
     {
-        return WhereFind(SearchFor, L"PATH", TRUE, FALSE);
+        return WhereFind(SearchFor, L"PATH", TRUE);
     }
 }
 
