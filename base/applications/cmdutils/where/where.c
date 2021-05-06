@@ -35,6 +35,12 @@ static strlist_t s_targets = strlist_default;
 static strlist_t s_founds = strlist_default;
 static strlist_t s_pathext = strlist_default;
 
+// is it either "." or ".."?
+#define IS_DOTS(pch) \
+    (*(pch) == L'.' && ((pch)[1] == 0 || ((pch)[1] == L'.' && (pch)[2] == 0)))
+
+#define DEFAULT_PATHEXT L".com;.exe;.bat;.cmd"
+
 typedef enum WRET // return code
 {
     WRET_SUCCESS = 0,
@@ -50,8 +56,7 @@ static inline VOID WhereError(UINT nID)
 
 typedef BOOL (CALLBACK *FN_SHOW_PATH)(LPCWSTR FoundPath);
 
-static WRET
-WhereSearchFiles(LPCWSTR filename, LPCWSTR dir, FN_SHOW_PATH callback)
+static WRET WhereSearchFiles(LPCWSTR filename, LPCWSTR dir, FN_SHOW_PATH callback)
 {
     WCHAR szPath[MAX_PATH];
     LPWSTR pch;
@@ -73,8 +78,7 @@ WhereSearchFiles(LPCWSTR filename, LPCWSTR dir, FN_SHOW_PATH callback)
             if (find.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
                 continue; // it was directory
 
-            // build full path
-            StringCchCopyW(pch, cch, find.cFileName);
+            StringCchCopyW(pch, cch, find.cFileName); // build full path
 
             if (!(*callback)(szPath))
             {
@@ -89,17 +93,14 @@ WhereSearchFiles(LPCWSTR filename, LPCWSTR dir, FN_SHOW_PATH callback)
     return ret;
 }
 
-static WRET
-WhereSearchRecursive(LPCWSTR filename, LPCWSTR dir, FN_SHOW_PATH callback)
+static WRET WhereSearchRecursive(LPCWSTR filename, LPCWSTR dir, FN_SHOW_PATH callback)
 {
     WCHAR szPath[MAX_PATH];
     LPWSTR pch;
     INT cch;
     HANDLE hFind;
     WIN32_FIND_DATAW find;
-    WRET ret;
-
-    ret = WhereSearchFiles(filename, dir, callback);
+    WRET ret = WhereSearchFiles(filename, dir, callback);
     if (ret == WRET_ERROR)
         return ret;
 
@@ -115,10 +116,11 @@ WhereSearchRecursive(LPCWSTR filename, LPCWSTR dir, FN_SHOW_PATH callback)
             if (!(find.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
                 continue; // not directory
 
-            if (wcscmp(find.cFileName, L".") == 0 || wcscmp(find.cFileName, L"..") == 0)
+            if (IS_DOTS(find.cFileName))
                 continue; // "." or ".."
 
-            StringCchCopyW(pch, cch, find.cFileName);
+            StringCchCopyW(pch, cch, find.cFileName); // build full path
+
             ret = WhereSearchRecursive(filename, szPath, callback);
             if (ret == WRET_ERROR)
                 break;
@@ -160,18 +162,19 @@ WhereSearch(LPCWSTR filename, strlist_t *dirlist, FN_SHOW_PATH callback, BOOL fR
     return WRET_SUCCESS;
 }
 
+// get environment variable
 static WRET WhereGetEnvVar(LPCWSTR name, LPWSTR *ppszData)
 {
     DWORD cchData = GetEnvironmentVariableW(name, NULL, 0);
     *ppszData = NULL;
 
-    if (cchData == 0) // env var is not found
+    if (cchData == 0) // not found
     {
         ConResPrintf(StdErr, IDS_BAD_ENVVAR, name);
         return WRET_NOT_FOUND;
     }
 
-    // get data of env var
+    // allocate and get the value of env var
     *ppszData = malloc(cchData * sizeof(WCHAR));
     if (!*ppszData || !GetEnvironmentVariableW(name, *ppszData, cchData))
     {
@@ -246,9 +249,8 @@ static BOOL CALLBACK WherePrintPath(LPCWSTR FoundPath)
         return TRUE; // already exists
     if (!strlist_add(&s_founds, str_clone(FoundPath)))
         return FALSE; // failure
-
     if (s_dwFlags & FLAG_Q) // quiet
-        return TRUE;
+        return TRUE; // success
 
     if (s_dwFlags & FLAG_F) // double quote
         StringCbPrintfW(szPath, sizeof(szPath), L"\"%s\"", FoundPath);
@@ -274,12 +276,12 @@ static BOOL CALLBACK WherePrintPath(LPCWSTR FoundPath)
     {
         ConPrintf(StdOut, L"%ls\n", szPath);
     }
-    return TRUE;
+
+    return TRUE; // success
 }
 
 static BOOL WhereGetPathExt(strlist_t *plist)
 {
-#define DEFAULT_PATHEXT L".com;.exe;.bat;.cmd"
     BOOL ret = TRUE;
     LPWSTR pszPathExt, ext;
     DWORD cchPathExt = GetEnvironmentVariableW(L"PATHEXT", NULL, 0);
@@ -312,15 +314,14 @@ static BOOL WhereGetPathExt(strlist_t *plist)
 
     free(pszPathExt);
     return ret;
-#undef DEFAULT_PATHEXT
 }
 
 static WRET WhereFind(LPCWSTR SearchFor, LPWSTR SearchData, BOOL IsVar, BOOL fRecursive)
 {
+    WRET ret = WRET_SUCCESS;
     WCHAR szPath[MAX_PATH];
     INT iExt;
-    WRET ret = WRET_SUCCESS;
-    LPWSTR pszValue = NULL, dir, dirs, pch;
+    LPWSTR pszValue, dir, dirs, pch;
     strlist_t dirlist = strlist_default;
 
     if (IsVar) // is SearchData an env var?
@@ -333,6 +334,7 @@ static WRET WhereFind(LPCWSTR SearchFor, LPWSTR SearchData, BOOL IsVar, BOOL fRe
     else // paths?
     {
         dirs = SearchData;
+        pszValue = NULL;
     }
 
     if (!fRecursive)
@@ -436,16 +438,8 @@ INT __cdecl wmain(INT argc, WCHAR **argv)
     DWORD iTarget;
     WRET ret;
 
-    // Initialize the Console Standard Streams
-    ConInitStdStreams();
+    ConInitStdStreams(); // Initialize the Console Standard Streams
 
-#if 0 // no need to initialize here
-    s_dwFlags = 0;
-    s_SearchDir = NULL;
-    strlist_init(&s_targets);
-    strlist_init(&s_founds);
-    strlist_init(&s_pathext);
-#endif
     if (!WhereParseCommandLine(argc, argv))
         goto quit;
 
