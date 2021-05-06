@@ -11,7 +11,7 @@ Description:\n\
 \n\
 Parameter List:\n\
   /F       Displays the matched filename in double quotes.\n\
-  /Q       Quite mode.\n\
+  /Q       Quiet mode.\n\
   /R dir   Recursively searches and displays the files that match the\n\
            given pattern starting from the specified directory.\n\
   /T       Displays the file size, last modified date and time for all\n\
