@@ -409,22 +409,23 @@ static WRET WhereDoTarget(LPWSTR SearchFor)
         INT iExt;
         WRET ret;
         WCHAR szPath[MAX_PATH], filename[MAX_PATH];
-        DWORD attrs = GetFileAttributesW(s_SearchDir);
+        DWORD attrs;
 
         if (wcschr(s_SearchDir, L';') == NULL)
         {
-            if (attrs == INVALID_FILE_ATTRIBUTES)
+            attrs = GetFileAttributesW(s_SearchDir);
+            if (attrs == INVALID_FILE_ATTRIBUTES) // not found
             {
                 WhereError(IDS_CANT_FOUND);
                 return WRET_ERROR;
             }
-            if (!(attrs & FILE_ATTRIBUTE_DIRECTORY))
+            if (!(attrs & FILE_ATTRIBUTE_DIRECTORY)) // not directory
             {
                 WhereError(IDS_BAD_DIR);
                 return WRET_ERROR;
             }
         }
-        else
+        else // found ';'
         {
             WhereError(IDS_BAD_NAME);
             return WRET_ERROR;
