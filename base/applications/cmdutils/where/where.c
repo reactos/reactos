@@ -120,6 +120,7 @@ WhereSearchInner(LPCWSTR filename, LPWSTR dirs, FN_SHOW_PATH callback, BOOL fRec
 
                 if (!(*callback)(szFull))
                 {
+                    strlist_destroy(&list);
                     WhereError(IDS_OUTOFMEMORY);
                     return WRET_ERROR;
                 }
