@@ -50,14 +50,16 @@ static inline VOID WhereError(UINT nID)
 
 typedef BOOL (CALLBACK *FN_SHOW_PATH)(LPCWSTR FoundPath);
 
-static WRET WhereSearchInner(LPCWSTR filename, LPWSTR dirs, FN_SHOW_PATH callback)
+static WRET
+WhereSearchInner(LPCWSTR filename, LPWSTR dirs, FN_SHOW_PATH callback, BOOL fRecursive)
 {
     BOOL fFound = FALSE;
     WCHAR szPath[MAX_PATH], szFull[MAX_PATH];
     LPWSTR dir, title, pch;
-    INT cch;
+    INT iDir, cch;
     HANDLE hFind;
     WIN32_FIND_DATAW find;
+    strlist_t list = strlist_default;
     DWORD attrs = GetFileAttributesW(filename);
 
     if (attrs != INVALID_FILE_ATTRIBUTES && !(attrs & FILE_ATTRIBUTE_DIRECTORY)) // just match
@@ -75,6 +77,17 @@ static WRET WhereSearchInner(LPCWSTR filename, LPWSTR dirs, FN_SHOW_PATH callbac
     // this function is destructive against dirs
     for (dir = wcstok(dirs, L";"); dir; dir = wcstok(NULL, L";"))
     {
+        if (!strlist_add(&list, dir))
+        {
+            WhereError(IDS_OUTOFMEMORY);
+            strlist_destroy(&list);
+            return WRET_ERROR;
+        }
+    }
+
+    for (iDir = 0; iDir < list.count; ++iDir)
+    {
+        dir = strlist_get_at(&list, iDir);
         // build path
         if (*dir == L'"')
         {
@@ -93,12 +106,13 @@ static WRET WhereSearchInner(LPCWSTR filename, LPWSTR dirs, FN_SHOW_PATH callbac
             {
                 if (find.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
                     continue;
-                fFound = TRUE;
 
                 // build full path
                 GetFullPathNameW(szPath, _countof(szFull), szFull, &title);
                 cch = _countof(szFull) - (INT)(title - szFull);
                 StringCchCopyW(title, cch, find.cFileName);
+
+                fFound = TRUE;
 
                 if (!(*callback)(szFull))
                 {
@@ -108,12 +122,51 @@ static WRET WhereSearchInner(LPCWSTR filename, LPWSTR dirs, FN_SHOW_PATH callbac
             } while (FindNextFile(hFind, &find));
             FindClose(hFind);
         }
+
+        if (fRecursive)
+        {
+            StringCchPrintfW(szPath, _countof(szPath), L"%ls\\*", dir);
+
+            // enumerate directory items
+            hFind = FindFirstFileW(szPath, &find);
+            if (hFind != INVALID_HANDLE_VALUE)
+            {
+                do
+                {
+                    if (_wcsicmp(find.cFileName, L".") == 0 ||
+                        _wcsicmp(find.cFileName, L"..") == 0)
+                    {
+                        continue;
+                    }
+
+                    // build full path
+                    GetFullPathNameW(szPath, _countof(szFull), szFull, &title);
+                    cch = _countof(szFull) - (INT)(title - szFull);
+                    StringCchCopyW(title, cch, find.cFileName);
+
+                    if (find.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+                    {
+                        WRET ret = WhereSearchInner(filename, szFull, callback, TRUE);
+                        if (ret == WRET_ERROR)
+                        {
+                            strlist_destroy(&list);
+                            WhereError(IDS_OUTOFMEMORY);
+                            return WRET_ERROR;
+                        }
+                        if (ret == WRET_SUCCESS)
+                            fFound = TRUE;
+                    }
+                } while (FindNextFile(hFind, &find));
+                FindClose(hFind);
+            }
+        }
     }
 
+    strlist_destroy(&list);
     return (fFound ? WRET_SUCCESS : WRET_NOT_FOUND);
 }
 
-static WRET WhereSearch(LPCWSTR filename, LPCWSTR pszDirs, FN_SHOW_PATH callback)
+static WRET WhereSearch(LPCWSTR filename, LPCWSTR pszDirs, FN_SHOW_PATH callback, BOOL fRecursive)
 {
     WRET ret;
     LPWSTR pszClone = str_clone(pszDirs); // WhereSearchInner is destructive. It needs a clone.
@@ -122,7 +175,7 @@ static WRET WhereSearch(LPCWSTR filename, LPCWSTR pszDirs, FN_SHOW_PATH callback
         WhereError(IDS_OUTOFMEMORY);
         return WRET_ERROR;
     }
-    ret = WhereSearchInner(filename, pszClone, callback);
+    ret = WhereSearchInner(filename, pszClone, callback, fRecursive);
     free(pszClone);
     return ret;
 }
@@ -282,7 +335,7 @@ static BOOL WhereGetPathExt(strlist_t *plist)
 #undef DEFAULT_PATHEXT
 }
 
-static WRET WhereFind(LPCWSTR SearchFor, LPCWSTR SearchData, BOOL IsVar)
+static WRET WhereFind(LPCWSTR SearchFor, LPCWSTR SearchData, BOOL IsVar, BOOL fRecursive)
 {
     WCHAR filename[MAX_PATH];
     INT iExt;
@@ -303,7 +356,7 @@ static WRET WhereFind(LPCWSTR SearchFor, LPCWSTR SearchData, BOOL IsVar)
     }
 
     // without extension
-    ret = WhereSearch(SearchFor, pszDirs, WherePrintPath);
+    ret = WhereSearch(SearchFor, pszDirs, WherePrintPath, fRecursive);
     if (ret == WRET_ERROR)
         goto quit;
 
@@ -312,7 +365,7 @@ static WRET WhereFind(LPCWSTR SearchFor, LPCWSTR SearchData, BOOL IsVar)
     {
         StringCbCopyW(filename, sizeof(filename), SearchFor);
         StringCbCatW(filename, sizeof(filename), strlist_get_at(&s_pathext, iExt));
-        ret = WhereSearch(filename, pszDirs, WherePrintPath);
+        ret = WhereSearch(filename, pszDirs, WherePrintPath, fRecursive);
         if (ret == WRET_ERROR)
             goto quit;
     }
@@ -335,7 +388,7 @@ static WRET WhereDoTarget(LPWSTR SearchFor)
                 ConResPuts(StdErr, IDS_ENVPAT_WITH_R);
                 return WRET_ERROR;
             }
-            return WhereFind(pch, SearchFor + 1, TRUE);
+            return WhereFind(pch, SearchFor + 1, TRUE, FALSE);
         }
         else // path:pattern
         {
@@ -349,16 +402,16 @@ static WRET WhereDoTarget(LPWSTR SearchFor)
                 ConResPuts(StdErr, IDS_BAD_PATHPAT);
                 return WRET_ERROR;
             }
-            return WhereFind(pch, SearchFor, FALSE);
+            return WhereFind(pch, SearchFor, FALSE, FALSE);
         }
     }
     else if (s_SearchDir)
     {
-        return WhereFind(SearchFor, s_SearchDir, FALSE);
+        return WhereFind(SearchFor, s_SearchDir, FALSE, TRUE);
     }
     else
     {
-        return WhereFind(SearchFor, L"PATH", TRUE);
+        return WhereFind(SearchFor, L"PATH", TRUE, FALSE);
     }
 }
 
