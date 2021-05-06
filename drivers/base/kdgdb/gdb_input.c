@@ -259,6 +259,30 @@ handle_gdb_query(void)
         return send_gdb_packet("l");
     }
 
+    if (strncmp(gdb_input, "qGetTIBAddr:", 12) == 0)
+    {
+        ULONG_PTR Pid, Tid;
+        PETHREAD Thread;
+
+#if MONOPROCESS
+        Pid = 0;
+        Tid = hex_to_tid(&gdb_input[12]);
+
+        KDDBGPRINT(" %p.\n", Tid);
+
+        Thread = find_thread(Pid, Tid);
+#else
+        Pid = hex_to_pid(&gdb_input[13]);
+        Tid = hex_to_tid(strstr(&gdb_input[13], ".") + 1);
+
+        /* We cannot use PsLookupProcessThreadByCid as we could be running at any IRQL.
+         * So loop. */
+        KDDBGPRINT(" p%p.%p.\n", Pid, Tid);
+        Thread = find_thread(Pid, Tid);
+#endif
+        return send_gdb_memory(&Thread->Tcb.Teb, sizeof(Thread->Tcb.Teb));
+    }
+
     if (strncmp(gdb_input, "qThreadExtraInfo,", 17) == 0)
     {
         ULONG_PTR Pid, Tid;
