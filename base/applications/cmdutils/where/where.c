@@ -374,6 +374,31 @@ quit:
     return ret;
 }
 
+static BOOL WhereIsDirOK(LPCWSTR name)
+{
+    DWORD attrs;
+    if (wcschr(name, L';') == NULL)
+    {
+        attrs = GetFileAttributesW(name);
+        if (attrs == INVALID_FILE_ATTRIBUTES) // file not found
+        {
+            WhereError(IDS_CANT_FOUND);
+            return FALSE;
+        }
+        if (!(attrs & FILE_ATTRIBUTE_DIRECTORY)) // not directory
+        {
+            WhereError(IDS_BAD_DIR);
+            return FALSE;
+        }
+    }
+    else // found ';'
+    {
+        WhereError(IDS_BAD_NAME);
+        return FALSE;
+    }
+    return TRUE;
+}
+
 static WRET WhereDoTarget(LPWSTR SearchFor)
 {
     LPWSTR pch = wcsrchr(SearchFor, L':');
@@ -409,27 +434,9 @@ static WRET WhereDoTarget(LPWSTR SearchFor)
         INT iExt;
         WRET ret;
         WCHAR szPath[MAX_PATH], filename[MAX_PATH];
-        DWORD attrs;
 
-        if (wcschr(s_SearchDir, L';') == NULL)
-        {
-            attrs = GetFileAttributesW(s_SearchDir);
-            if (attrs == INVALID_FILE_ATTRIBUTES) // not found
-            {
-                WhereError(IDS_CANT_FOUND);
-                return WRET_ERROR;
-            }
-            if (!(attrs & FILE_ATTRIBUTE_DIRECTORY)) // not directory
-            {
-                WhereError(IDS_BAD_DIR);
-                return WRET_ERROR;
-            }
-        }
-        else // found ';'
-        {
-            WhereError(IDS_BAD_NAME);
+        if (!WhereIsDirOK(s_SearchDir))
             return WRET_ERROR;
-        }
 
         GetFullPathNameW(s_SearchDir, _countof(szPath), szPath, NULL); // get full path
 
