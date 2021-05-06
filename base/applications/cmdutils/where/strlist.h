@@ -36,8 +36,6 @@ static inline void strlist_init(strlist_t *plist)
 
 static inline LPWSTR strlist_get_at(strlist_t *plist, int i)
 {
-    if (i < 0 || plist->count <= i)
-        return NULL;
     return plist->ppsz[i];
 }
 
