@@ -160,7 +160,6 @@ static BOOL WhereSearchRecursive(LPCWSTR filename, LPCWSTR dir)
     INT cch;
     HANDLE hFind;
     WIN32_FIND_DATAW find;
-    INT iExt;
     BOOL ret = WhereSearchFiles(filename, dir); // search files in the directory
     if (!ret)
         return ret;
