@@ -65,14 +65,17 @@ static BOOL WhereSearchFiles(LPCWSTR filename, LPCWSTR dir, WHERE_PRINT_PATH cal
     WIN32_FIND_DATAW find;
     BOOL ret = TRUE;
 
-    StringCchPrintfW(szPath, _countof(szPath), L"%ls\\%ls", dir, filename); // build path
-    pch = wcsrchr(szPath, L'\\') + 1; // file title
-    cch = _countof(szPath) - (pch - szPath); // remainder
+    // build path
+    StringCchCopyW(szPath, _countof(szPath), dir);
+    StringCchCatW(szPath, _countof(szPath), L"\\");
+    StringCchCatW(szPath, _countof(szPath), filename);
 
     // enumerate file items
     hFind = FindFirstFileExW(szPath, FindExInfoStandard, &find, FindExSearchNameMatch, NULL, 0);
     if (hFind != INVALID_HANDLE_VALUE)
     {
+        pch = wcsrchr(szPath, L'\\') + 1; // file title
+        cch = _countof(szPath) - (pch - szPath); // remainder
         do
         {
             if (find.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
@@ -104,14 +107,16 @@ static BOOL WhereSearchRecursive(LPCWSTR filename, LPCWSTR dir, WHERE_PRINT_PATH
     if (!ret)
         return ret;
 
-    StringCbPrintfW(szPath, sizeof(szPath), L"%ls\\*", dir); // build path with wildcard
-    pch = wcsrchr(szPath, L'\\') + 1; // file title
-    cch = _countof(szPath) - (pch - szPath); // remainder
+    // build path with wildcard
+    StringCchCopyW(szPath, _countof(szPath), dir);
+    StringCchCatW(szPath, _countof(szPath), L"\\*");
 
     // enumerate directory items
     hFind = FindFirstFileExW(szPath, FindExInfoStandard, &find, FindExSearchNameMatch, NULL, 0);
     if (hFind != INVALID_HANDLE_VALUE)
     {
+        pch = wcsrchr(szPath, L'\\') + 1; // file title
+        cch = _countof(szPath) - (pch - szPath); // remainder
         do
         {
             if (!(find.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
