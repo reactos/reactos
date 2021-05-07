@@ -8,9 +8,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <strsafe.h>
-#include "resource.h"
 #include <conutils.h>
 #include "strlist.h" // strlist_...
+#include "resource.h"
 
 #define FLAG_HELP (1 << 0) // "/?"
 #define FLAG_R (1 << 1) // recursive directory
