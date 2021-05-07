@@ -139,7 +139,6 @@ static BOOL WhereSearchFiles(LPCWSTR pattern, LPCWSTR dir)
 {
     WCHAR szPath[MAX_PATH];
     INT iExt;
-    BOOL ret = TRUE;
 
     for (iExt = 0; iExt < s_pathext.count; ++iExt)
     {
@@ -147,14 +146,12 @@ static BOOL WhereSearchFiles(LPCWSTR pattern, LPCWSTR dir)
         StringCchCopyW(szPath, _countof(szPath), dir);
         StringCchCatW(szPath, _countof(szPath), L"\\");
         StringCchCatW(szPath, _countof(szPath), pattern);
-        StringCchCatW(szPath, _countof(szPath), strlist_get_at(&s_pathext, iExt));
+        StringCchCatW(szPath, _countof(szPath), strlist_get_at(&s_pathext, iExt)); // extension
 
-        ret = WhereSearchGeneric(pattern, szPath, FALSE, WherePrintPath);
-        if (!ret)
-            break;
+        if (!WhereSearchGeneric(pattern, szPath, FALSE, WherePrintPath))
+            return FALSE;
     }
-
-    return ret;
+    return TRUE;
 }
 
 static BOOL WhereSearchRecursive(LPCWSTR pattern, LPCWSTR dir);
@@ -169,16 +166,14 @@ WhereSearchRecursiveCallback(LPCWSTR pattern, LPCWSTR path, WIN32_FIND_DATAW *fi
 static BOOL WhereSearchRecursive(LPCWSTR pattern, LPCWSTR dir)
 {
     WCHAR szPath[MAX_PATH];
-    BOOL ret = WhereSearchFiles(pattern, dir);
-    if (!ret)
-        return ret;
+    if (!WhereSearchFiles(pattern, dir))
+        return FALSE;
 
     // build path with wildcard
     StringCchCopyW(szPath, _countof(szPath), dir);
     StringCchCatW(szPath, _countof(szPath), L"\\*");
 
-    ret = WhereSearchGeneric(pattern, szPath, TRUE, WhereSearchRecursiveCallback);
-    return ret;
+    return WhereSearchGeneric(pattern, szPath, TRUE, WhereSearchRecursiveCallback);
 }
 
 static BOOL WhereSearch(LPCWSTR pattern, strlist_t *dirlist)
@@ -186,32 +181,30 @@ static BOOL WhereSearch(LPCWSTR pattern, strlist_t *dirlist)
     INT iDir;
     for (iDir = 0; iDir < dirlist->count; ++iDir)
     {
-        LPWSTR dir = strlist_get_at(dirlist, iDir);
-        BOOL ret = WhereSearchFiles(pattern, dir);
-        if (!ret)
-            return ret;
+        if (!WhereSearchFiles(pattern, strlist_get_at(dirlist, iDir)))
+            return FALSE;
     }
     return TRUE;
 }
 
 // get environment variable
-static WRET WhereGetVariable(LPCWSTR name, LPWSTR *ppszData)
+static WRET WhereGetVariable(LPCWSTR name, LPWSTR *value)
 {
-    DWORD cchData = GetEnvironmentVariableW(name, NULL, 0);
-    *ppszData = NULL;
-    if (cchData == 0) // variable not found
+    DWORD cch = GetEnvironmentVariableW(name, NULL, 0);
+    *value = NULL;
+    if (cch == 0) // variable not found
     {
-        if (!(s_dwFlags & FLAG_Q))
+        if (!(s_dwFlags & FLAG_Q)) // not quiet mode?
             ConResPrintf(StdErr, IDS_BAD_ENVVAR, name);
         return WRET_NOT_FOUND;
     }
 
-    *ppszData = malloc(cchData * sizeof(WCHAR));
-    if (!*ppszData || !GetEnvironmentVariableW(name, *ppszData, cchData))
+    *value = malloc(cch * sizeof(WCHAR));
+    if (!*value || !GetEnvironmentVariableW(name, *value, cch))
     {
         WhereError(IDS_OUTOFMEMORY);
-        free(*ppszData);
-        *ppszData = NULL;
+        free(*value);
+        *value = NULL;
         return WRET_ERROR;
     }
     return WRET_SUCCESS;
@@ -410,7 +403,12 @@ quit:
 static BOOL WhereIsRecursiveDirOK(LPCWSTR name)
 {
     DWORD attrs;
-    if (wcschr(name, L';') == NULL)
+    if (wcschr(name, L';') != NULL)
+    {
+        WhereError(IDS_BAD_NAME);
+        return FALSE;
+    }
+    else
     {
         attrs = GetFileAttributesW(name);
         if (attrs == INVALID_FILE_ATTRIBUTES) // file not found
@@ -423,11 +421,6 @@ static BOOL WhereIsRecursiveDirOK(LPCWSTR name)
             WhereError(IDS_BAD_DIR);
             return FALSE;
         }
-    }
-    else
-    {
-        WhereError(IDS_BAD_NAME);
-        return FALSE;
     }
     return TRUE;
 }
