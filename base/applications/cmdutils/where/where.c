@@ -331,6 +331,7 @@ static BOOL WhereGetPathExt(strlist_t *ext_list)
 static BOOL WhereFind(LPCWSTR SearchFor, LPWSTR SearchData, BOOL IsVar)
 {
     BOOL ret = TRUE;
+    size_t cch;
     WCHAR szPath[MAX_PATH];
     LPWSTR pszValue, dir, dirs, pch;
     strlist_t dirlist = strlist_default;
@@ -370,6 +371,10 @@ static BOOL WhereFind(LPCWSTR SearchFor, LPWSTR SearchData, BOOL IsVar)
 
         if (*dir != '\\' && dir[1] != L':')
             continue; // relative path
+
+        cch = wcslen(dir);
+        if (cch > 0 && dir[cch - 1] == L'\\')
+            dir[cch - 1] = 0; // remove trailing backslash
 
         if (!strlist_add(&dirlist, str_clone(dir))) // add directory of PATH
         {
