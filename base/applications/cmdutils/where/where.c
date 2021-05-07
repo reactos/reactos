@@ -22,7 +22,7 @@
 #else
     #include "../donutils.h"
 #endif
-#include "strlist.h" // strlist_t
+#include "strlist.h" // strlist_...
 
 #define FLAG_HELP (1 << 0) // "/?"
 #define FLAG_R (1 << 1) // recursive directory
@@ -57,14 +57,14 @@ static inline VOID WhereError(UINT nID)
 
 typedef BOOL (CALLBACK *WHERE_PRINT_PATH)(LPCWSTR FoundPath);
 
-static WRET WhereSearchFiles(LPCWSTR filename, LPCWSTR dir, WHERE_PRINT_PATH callback)
+static BOOL WhereSearchFiles(LPCWSTR filename, LPCWSTR dir, WHERE_PRINT_PATH callback)
 {
     WCHAR szPath[MAX_PATH];
     LPWSTR pch;
     INT cch;
     HANDLE hFind;
     WIN32_FIND_DATAW find;
-    WRET ret = WRET_SUCCESS;
+    BOOL ret = TRUE;
 
     StringCchPrintfW(szPath, _countof(szPath), L"%ls\\%ls", dir, filename); // build path
     pch = wcsrchr(szPath, L'\\') + 1; // file title
@@ -80,10 +80,10 @@ static WRET WhereSearchFiles(LPCWSTR filename, LPCWSTR dir, WHERE_PRINT_PATH cal
 
             StringCchCopyW(pch, cch, find.cFileName); // build full path
 
-            if (!(*callback)(szPath))
+            if (!callback(szPath)) // call the callback function
             {
                 WhereError(IDS_OUTOFMEMORY);
-                ret = WRET_ERROR;
+                ret = FALSE;
                 break;
             }
         } while (FindNextFile(hFind, &find));
@@ -93,15 +93,15 @@ static WRET WhereSearchFiles(LPCWSTR filename, LPCWSTR dir, WHERE_PRINT_PATH cal
     return ret;
 }
 
-static WRET WhereSearchRecursive(LPCWSTR filename, LPCWSTR dir, WHERE_PRINT_PATH callback)
+static BOOL WhereSearchRecursive(LPCWSTR filename, LPCWSTR dir, WHERE_PRINT_PATH callback)
 {
     WCHAR szPath[MAX_PATH];
     LPWSTR pch;
     INT cch;
     HANDLE hFind;
     WIN32_FIND_DATAW find;
-    WRET ret = WhereSearchFiles(filename, dir, callback); // search files in the directory
-    if (ret == WRET_ERROR)
+    BOOL ret = WhereSearchFiles(filename, dir, callback); // search files in the directory
+    if (!ret)
         return ret;
 
     StringCbPrintfW(szPath, sizeof(szPath), L"%ls\\*", dir); // build path with wildcard
@@ -122,7 +122,7 @@ static WRET WhereSearchRecursive(LPCWSTR filename, LPCWSTR dir, WHERE_PRINT_PATH
             StringCchCopyW(pch, cch, find.cFileName); // build full path
 
             ret = WhereSearchRecursive(filename, szPath, callback); // recurse
-            if (ret == WRET_ERROR)
+            if (!ret)
                 break;
         } while (FindNextFileW(hFind, &find));
         FindClose(hFind);
@@ -131,22 +131,21 @@ static WRET WhereSearchRecursive(LPCWSTR filename, LPCWSTR dir, WHERE_PRINT_PATH
     return ret;
 }
 
-static WRET
-WhereSearch(LPCWSTR filename, strlist_t *dirlist, WHERE_PRINT_PATH callback)
+static BOOL WhereSearch(LPCWSTR filename, strlist_t *dirlist, WHERE_PRINT_PATH callback)
 {
     INT iDir;
     for (iDir = 0; iDir < dirlist->count; ++iDir) // for each directory
     {
         LPWSTR dir = strlist_get_at(dirlist, iDir);
-        WRET ret = WhereSearchFiles(filename, dir, callback); // search
-        if (ret == WRET_ERROR)
+        BOOL ret = WhereSearchFiles(filename, dir, callback); // search
+        if (!ret)
             return ret;
     }
-    return WRET_SUCCESS;
+    return TRUE;
 }
 
 // get environment variable
-static WRET WhereGetEnvVar(LPCWSTR name, LPWSTR *ppszData)
+static WRET WhereGetVariable(LPCWSTR name, LPWSTR *ppszData)
 {
     DWORD cchData = GetEnvironmentVariableW(name, NULL, 0); // is there the variable?
     *ppszData = NULL;
@@ -229,22 +228,26 @@ static BOOL CALLBACK WherePrintPath(LPCWSTR FoundPath)
     iPath = strlist_find_i(&s_founds, FoundPath); // find string in s_founds
     if (iPath >= 0)
         return TRUE; // already exists
-    if (!strlist_add(&s_founds, str_clone(FoundPath)))
+    if (!strlist_add(&s_founds, str_clone(FoundPath))) // append found path
         return FALSE; // failure
     if (s_dwFlags & FLAG_Q) // quiet mode?
         return TRUE; // success
 
-    if (s_dwFlags & FLAG_T) // detailed info
+    if (s_dwFlags & FLAG_T) // print detailed info
     {
-        hFind = FindFirstFileW(FoundPath, &find);
+        hFind = FindFirstFileW(FoundPath, &find); // get info
         if (hFind != INVALID_HANDLE_VALUE)
             FindClose(hFind);
+        // convert date/time
         FileTimeToLocalFileTime(&find.ftLastWriteTime, &ftLocal);
         FileTimeToSystemTime(&ftLocal, &st);
+        // get date/time strings
         GetDateFormatW(LOCALE_USER_DEFAULT, DATE_SHORTDATE, &st, NULL, szDate, _countof(szDate));
         GetTimeFormatW(LOCALE_USER_DEFAULT, 0, &st, NULL, szTime, _countof(szTime));
+        // set size
         FileSize.LowPart = find.nFileSizeLow;
         FileSize.HighPart = find.nFileSizeHigh;
+        // print
         if (s_dwFlags & FLAG_F) // double quote
             StringCbPrintfW(szPath, sizeof(szPath), L"\"%s\"", FoundPath);
         else
@@ -304,22 +307,23 @@ static BOOL WhereGetPathExt(strlist_t *ext_list)
     return ret;
 }
 
-static WRET WhereFind(LPCWSTR SearchFor, LPWSTR SearchData, BOOL IsVar)
+static BOOL WhereFind(LPCWSTR SearchFor, LPWSTR SearchData, BOOL IsVar)
 {
-    WRET ret = WRET_SUCCESS;
+    BOOL ret = TRUE;
     WCHAR szPath[MAX_PATH];
     INT iExt;
     LPWSTR pszValue, dir, dirs, pch;
     strlist_t dirlist = strlist_default;
 
-    if (IsVar) // is SearchData an env var?
+    if (IsVar) // is SearchData a variable?
     {
-        ret = WhereGetEnvVar(SearchData, &pszValue);
-        if (ret == WRET_ERROR || pszValue == NULL)
+        if (WhereGetVariable(SearchData, &pszValue) == WRET_ERROR)
+            ret = FALSE;
+        if (pszValue == NULL)
             goto quit;
         dirs = pszValue;
     }
-    else // paths?
+    else // directories
     {
         dirs = SearchData;
         pszValue = NULL;
@@ -329,7 +333,7 @@ static WRET WhereFind(LPCWSTR SearchFor, LPWSTR SearchData, BOOL IsVar)
     GetCurrentDirectoryW(_countof(szPath), szPath);
     if (!strlist_add(&dirlist, str_clone(szPath)))
     {
-        ret = WRET_ERROR;
+        ret = FALSE;
         goto quit;
     }
 
@@ -349,7 +353,7 @@ static WRET WhereFind(LPCWSTR SearchFor, LPWSTR SearchData, BOOL IsVar)
 
         if (!strlist_add(&dirlist, str_clone(dir))) // add directory of PATH
         {
-            ret = WRET_ERROR;
+            ret = FALSE;
             goto quit;
         }
     }
@@ -360,7 +364,7 @@ static WRET WhereFind(LPCWSTR SearchFor, LPWSTR SearchData, BOOL IsVar)
         StringCbCopyW(szPath, sizeof(szPath), SearchFor);
         StringCbCatW(szPath, sizeof(szPath), strlist_get_at(&s_pathext, iExt));
         ret = WhereSearch(szPath, &dirlist, WherePrintPath);
-        if (ret == WRET_ERROR)
+        if (!ret)
             goto quit;
     }
 
@@ -370,7 +374,7 @@ quit:
     return ret;
 }
 
-static BOOL WhereIsDirOK(LPCWSTR name)
+static BOOL WhereIsRecursiveDirOK(LPCWSTR name)
 {
     DWORD attrs;
     if (wcschr(name, L';') == NULL) // not found ';'?
@@ -395,7 +399,7 @@ static BOOL WhereIsDirOK(LPCWSTR name)
     return TRUE;
 }
 
-static WRET WhereDoTarget(LPWSTR SearchFor)
+static BOOL WhereDoTarget(LPWSTR SearchFor)
 {
     LPWSTR pch = wcsrchr(SearchFor, L':');
     if (pch) // found ':'
@@ -431,7 +435,7 @@ static WRET WhereDoTarget(LPWSTR SearchFor)
         WRET ret;
         WCHAR szPath[MAX_PATH], filename[MAX_PATH];
 
-        if (!WhereIsDirOK(s_RecursiveDir))
+        if (!WhereIsRecursiveDirOK(s_RecursiveDir))
             return WRET_ERROR;
 
         GetFullPathNameW(s_RecursiveDir, _countof(szPath), szPath, NULL); // get full path
@@ -444,10 +448,10 @@ static WRET WhereDoTarget(LPWSTR SearchFor)
             StringCbCopyW(filename, sizeof(filename), SearchFor);
             StringCbCatW(filename, sizeof(filename), ext);
             ret = WhereSearchRecursive(filename, szPath, WherePrintPath);
-            if (ret == WRET_ERROR)
-                return ret;
+            if (!ret)
+                return FALSE;
         }
-        return WRET_SUCCESS;
+        return TRUE;
     }
     else // otherwise
     {
@@ -489,14 +493,14 @@ INT __cdecl wmain(INT argc, WCHAR **argv)
     ret = WRET_SUCCESS;
     for (iTarget = 0; iTarget < s_targets.count; ++iTarget)
     {
-        if (WhereDoTarget(strlist_get_at(&s_targets, iTarget)) == WRET_ERROR)
+        if (!WhereDoTarget(strlist_get_at(&s_targets, iTarget)))
         {
             ret = WRET_ERROR;
             goto quit;
         }
     }
 
-    if (!s_founds.count && ret != WRET_ERROR) // not found
+    if (!s_founds.count) // not found
     {
         WhereError(IDS_NOT_FOUND);
         ret = WRET_NOT_FOUND;
