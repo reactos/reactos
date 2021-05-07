@@ -262,7 +262,7 @@ static BOOL WhereParseCommandLine(INT argc, WCHAR** argv)
                             s_dwFlags |= FLAG_R;
                             continue;
                         }
-                        ConResPrintf(StdErr, IDS_BAD_SYNTAX, L"/R");
+                        ConResPrintf(StdErr, IDS_WANT_VALUE, L"/R");
                         WhereError(IDS_TYPE_HELP);
                         return FALSE; // failure
                     }
