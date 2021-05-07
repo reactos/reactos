@@ -6,7 +6,7 @@
  */
 #pragma once
 
-static inline LPWSTR str_clone(LPCWSTR psz)
+static LPWSTR str_clone(LPCWSTR psz)
 {
     size_t cch, cb;
     LPWSTR pszNew;
@@ -39,7 +39,7 @@ static inline LPWSTR strlist_get_at(strlist_t *plist, int i)
     return plist->ppsz[i];
 }
 
-static inline int strlist_add(strlist_t *plist, LPWSTR psz)
+static int strlist_add(strlist_t *plist, LPWSTR psz)
 {
     LPWSTR *ppsz;
     if (!psz)
@@ -56,7 +56,7 @@ static inline int strlist_add(strlist_t *plist, LPWSTR psz)
     return 1;
 }
 
-static inline void strlist_destroy(strlist_t *plist)
+static void strlist_destroy(strlist_t *plist)
 {
     int i;
     for (i = 0; i < plist->count; ++i)
@@ -64,17 +64,6 @@ static inline void strlist_destroy(strlist_t *plist)
     plist->count = 0;
     free(plist->ppsz);
     plist->ppsz = NULL;
-}
-
-static inline int strlist_find(strlist_t *plist, LPCWSTR psz)
-{
-    int i;
-    for (i = 0; i < plist->count; ++i)
-    {
-        if (wcscmp(plist->ppsz[i], psz) == 0)
-            return i;
-    }
-    return -1;
 }
 
 static inline int strlist_find_i(strlist_t *plist, LPCWSTR psz)
