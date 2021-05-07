@@ -12,8 +12,8 @@ Description:\n\
 Options:\n\
   /F       Displays the matched paths in double quotes.\n\
   /Q       Quiet mode. Doesn't show paths and messages.\n\
-  /R dir   Starts from the specified directory and recursively searches\n\
-           and displays files that match the specified pattern(s).\n\
+  /R dir   Starts searching from the specified directory and recursively\n\
+           performs the search.\n\
   /T       Shows the file size and last modified date of all matched\n\
            files.\n\
   pattern  Specifies the pattern to search files. Wildcards * and ? can\n\
@@ -29,9 +29,10 @@ NOTE: This tool returns an error level of 0 if the search was successful,\n\
       1 if the file was not found, and 2 if there was an error.\n\
 Example:\n\
   WHERE myfile*.exe\n\
-  WHERE $WINDIR:notepad myfile???\n\
   WHERE /F /T mspaint\n\
-  WHERE /R C:\\ReactOS notepad\n"
+  WHERE $WINDIR:notepad myfile???\n\
+  WHERE C:\\ReactOS;C:\\ReactOS\\system32:exp*.exe\n\
+  WHERE /R ""C:\\Program Files"" *.dll\n"
     IDS_BAD_ARG "ERROR: Invalid argument - '%ls'.\n"
     IDS_NOT_FOUND "INFO: Could not find files for the given pattern(s).\n"
     IDS_FILE_INFO "%10I64u   %ls%14ls  %ls\n"
