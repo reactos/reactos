@@ -19,7 +19,7 @@
 #define FLAG_T (1 << 4) // detailed info
 
 static DWORD s_dwFlags = 0;
-static LPWSTR s_RecursiveDir = NULL;
+static LPWSTR s_pszRecursiveDir = NULL;
 static strlist_t s_patterns = strlist_default;
 static strlist_t s_results = strlist_default;
 static strlist_t s_pathext = strlist_default;
@@ -276,7 +276,7 @@ static BOOL WhereParseCommandLine(INT argc, WCHAR** argv)
                         if (iArg + 1 < argc)
                         {
                             ++iArg;
-                            s_RecursiveDir = argv[iArg];
+                            s_pszRecursiveDir = argv[iArg];
                             s_dwFlags |= FLAG_R;
                             continue;
                         }
@@ -462,14 +462,14 @@ static BOOL WhereDoPattern(LPWSTR SearchFor)
             return WhereFind(pch, SearchFor, FALSE);
         }
     }
-    else if (s_RecursiveDir) // recursive
+    else if (s_pszRecursiveDir) // recursive
     {
         WCHAR szPath[MAX_PATH];
 
-        if (!WhereIsRecursiveDirOK(s_RecursiveDir))
+        if (!WhereIsRecursiveDirOK(s_pszRecursiveDir))
             return FALSE;
 
-        GetFullPathNameW(s_RecursiveDir, _countof(szPath), szPath, NULL);
+        GetFullPathNameW(s_pszRecursiveDir, _countof(szPath), szPath, NULL);
 
         return WhereSearchRecursive(SearchFor, szPath);
     }

@@ -17,7 +17,7 @@ Options:\n\
   /T       Shows the file size and last modified date of all matched\n\
            files.\n\
   pattern  Specifies the pattern to search files. Wildcards * and ? can\n\
-           be used. ""$env:pattern"" and ""path:pattern"" formats can also
+           be used. ""$env:pattern"" and ""path:pattern"" formats can also\n\
            be used, where ""env"" is an environment variable and\n\
            the search is done in the paths of the ""env"" environment\n\
            variable. Do not use these formats with /R. The search is also\n\
@@ -31,7 +31,7 @@ Example:\n\
   WHERE myfile*.exe\n\
   WHERE $WINDIR:notepad myfile???\n\
   WHERE /F /T mspaint\n\
-  WHERE /R C:\ReactOS notepad\n"
+  WHERE /R C:\\ReactOS notepad\n"
     IDS_BAD_ARG "ERROR: Invalid argument - '%ls'.\n"
     IDS_NOT_FOUND "INFO: Could not find files for the given pattern(s).\n"
     IDS_FILE_INFO "%10I64u   %ls%14ls  %ls\n"
