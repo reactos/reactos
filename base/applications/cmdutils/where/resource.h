@@ -12,4 +12,4 @@
 #define IDS_CANT_FOUND 113
 #define IDS_BAD_DIR 114
 #define IDS_BAD_NAME 115
-#define IDS_MANY_OPTIONS 116
+#define IDS_TOO_MANY 116
