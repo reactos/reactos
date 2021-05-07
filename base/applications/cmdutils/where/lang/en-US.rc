@@ -5,9 +5,9 @@ BEGIN
     IDS_USAGE "WHERE [options] pattern...\n\
 \n\
 Description:\n\
-  Shows the location of the file specified by the pattern(s).\n\
-  By default, this tool searches with using the pattern(s) and the paths\n\
-  of the PATH environment variable.\n\
+    Shows the location of the file(s) specified by the pattern(s).\n\
+    By default, this tool searches with using the pattern(s) and the paths\n\
+    of the PATH environment variable.\n\
 \n\
 Options:\n\
   /F       Displays the matched paths in double quotes.\n\
@@ -27,12 +27,13 @@ Options:\n\
 \n\
 NOTE: This tool returns an error level of 0 if the search was successful,\n\
       1 if the file was not found, and 2 if there was an error.\n\
+\n\
 Example:\n\
-  WHERE myfile*.exe\n\
-  WHERE /F /T mspaint\n\
-  WHERE $WINDIR:notepad myfile???\n\
-  WHERE C:\\ReactOS;C:\\ReactOS\\system32:exp*.exe\n\
-  WHERE /R ""C:\\Program Files"" *.dll\n"
+    WHERE myfile*.exe\n\
+    WHERE /F /T mspaint\n\
+    WHERE $WINDIR:notepad myfile???\n\
+    WHERE C:\\ReactOS;C:\\ReactOS\\system32:exp*.exe\n\
+    WHERE /R ""C:\\Program Files"" *.dll\n"
     IDS_BAD_ARG "ERROR: Invalid argument - '%ls'.\n"
     IDS_NOT_FOUND "INFO: Could not find files for the given pattern(s).\n"
     IDS_FILE_INFO "%10I64u   %ls%14ls  %ls\n"
