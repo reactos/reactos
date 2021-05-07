@@ -80,6 +80,8 @@ WhereSearchGeneric(LPCWSTR pattern, LPWSTR pszPath, BOOL bDir, WHERE_SEARCH_FN c
     } while (FindNextFile(hFind, &find));
     FindClose(hFind);
 
+    //--pch;
+    //*pch = 0;
     return ret;
 }
 
@@ -131,14 +133,17 @@ static BOOL CALLBACK WherePrintPath(LPCWSTR pattern, LPCWSTR path, WIN32_FIND_DA
 static BOOL WhereSearchFiles(LPCWSTR pattern, LPCWSTR dir)
 {
     WCHAR szPath[MAX_PATH];
-    INT iExt;
+    INT iExt, cch;
+
+    StringCchCopyW(szPath, _countof(szPath), dir);
+    StringCchCatW(szPath, _countof(szPath), L"\\");
+    StringCchCatW(szPath, _countof(szPath), pattern);
+    cch = lstrlenW(szPath);
 
     for (iExt = 0; iExt < s_pathext.count; ++iExt)
     {
         // build path
-        StringCchCopyW(szPath, _countof(szPath), dir);
-        StringCchCatW(szPath, _countof(szPath), L"\\");
-        StringCchCatW(szPath, _countof(szPath), pattern);
+        szPath[cch] = 0;
         StringCchCatW(szPath, _countof(szPath), strlist_get_at(&s_pathext, iExt)); // extension
 
         if (!WhereSearchGeneric(pattern, szPath, FALSE, WherePrintPath))
