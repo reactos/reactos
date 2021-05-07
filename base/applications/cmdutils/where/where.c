@@ -69,7 +69,8 @@ static BOOL WhereSearchFiles(LPCWSTR filename, LPCWSTR dir, WHERE_PRINT_PATH cal
     pch = wcsrchr(szPath, L'\\') + 1; // file title
     cch = _countof(szPath) - (pch - szPath); // remainder
 
-    hFind = FindFirstFileW(szPath, &find); // enumerate file items
+    // enumerate file items
+    hFind = FindFirstFileExW(szPath, FindExInfoStandard, &find, FindExSearchNameMatch, NULL, 0);
     if (hFind != INVALID_HANDLE_VALUE)
     {
         do
@@ -107,7 +108,8 @@ static BOOL WhereSearchRecursive(LPCWSTR filename, LPCWSTR dir, WHERE_PRINT_PATH
     pch = wcsrchr(szPath, L'\\') + 1; // file title
     cch = _countof(szPath) - (pch - szPath); // remainder
 
-    hFind = FindFirstFileW(szPath, &find); // enumerate directory items
+    // enumerate directory items
+    hFind = FindFirstFileExW(szPath, FindExInfoStandard, &find, FindExSearchNameMatch, NULL, 0);
     if (hFind != INVALID_HANDLE_VALUE)
     {
         do
@@ -234,7 +236,9 @@ static BOOL CALLBACK WherePrintPath(LPCWSTR FoundPath)
 
     if (s_dwFlags & FLAG_T) // print detailed info
     {
-        hFind = FindFirstFileW(FoundPath, &find); // get info
+        // get info
+        hFind = FindFirstFileExW(FoundPath, FindExInfoStandard, &find, FindExSearchNameMatch,
+                                 NULL, 0);
         if (hFind != INVALID_HANDLE_VALUE)
             FindClose(hFind);
         // convert date/time
