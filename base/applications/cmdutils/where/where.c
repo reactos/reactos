@@ -16,7 +16,7 @@
 #include <string.h>
 #include <strsafe.h> // StringC...
 #include "resource.h"
-#if 1
+#if __REACTOS__
     #include <conutils.h> // StdOut/StdErr, Con...
 #else
     #include "miniconutils.h" // It can reduce the program size.
