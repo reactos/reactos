@@ -166,38 +166,32 @@ static BOOL WhereSearchRecursive(LPCWSTR filename, LPCWSTR dir)
     if (!ret)
         return ret;
 
-    for (iExt = 0; iExt < s_pathext.count; ++iExt)
+    // build path with wildcard
+    StringCchCopyW(szPath, _countof(szPath), dir);
+    StringCchCatW(szPath, _countof(szPath), L"\\*");
+
+    // enumerate directory items
+    hFind = FindFirstFileExW(szPath, FindExInfoStandard, &find, FindExSearchNameMatch,
+                             NULL, 0);
+    if (hFind != INVALID_HANDLE_VALUE)
     {
-        // build path with wildcard
-        StringCchCopyW(szPath, _countof(szPath), dir);
-        StringCchCatW(szPath, _countof(szPath), L"\\*");
-        StringCchCatW(szPath, _countof(szPath), strlist_get_at(&s_pathext, iExt));
-
-        // enumerate directory items
-        hFind = FindFirstFileExW(szPath, FindExInfoStandard, &find, FindExSearchNameMatch,
-                                 NULL, 0);
-        if (hFind != INVALID_HANDLE_VALUE)
+        pch = wcsrchr(szPath, L'\\') + 1; // file title
+        cch = _countof(szPath) - (pch - szPath); // remainder
+        do
         {
-            pch = wcsrchr(szPath, L'\\') + 1; // file title
-            cch = _countof(szPath) - (pch - szPath); // remainder
-            do
-            {
-                if (!(find.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
-                    continue; // not directory
+            if (!(find.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
+                continue; // not directory
 
-                if (IS_DOTS(find.cFileName))
-                    continue; // ignore "." or ".."
+            if (IS_DOTS(find.cFileName))
+                continue; // ignore "." or ".."
 
-                StringCchCopyW(pch, cch, find.cFileName); // build full path
+            StringCchCopyW(pch, cch, find.cFileName); // build full path
 
-                ret = WhereSearchRecursive(filename, szPath); // recurse
-                if (!ret)
-                    break;
-            } while (FindNextFileW(hFind, &find));
-            FindClose(hFind);
-        }
-        if (!ret)
-            break;
+            ret = WhereSearchRecursive(filename, szPath); // recurse
+            if (!ret)
+                break;
+        } while (FindNextFileW(hFind, &find));
+        FindClose(hFind);
     }
 
     return ret;
