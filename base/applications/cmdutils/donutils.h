@@ -1,7 +1,7 @@
 /*
  * PROJECT:     ReactOS command-line utilities
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
- * PURPOSE:     Fallback of <conutils.h>
+ * PURPOSE:     Providing <conutils.h> functionality outside of ReactOS
  * COPYRIGHT:   Copyright 2021 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 #pragma once
