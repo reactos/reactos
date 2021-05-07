@@ -54,9 +54,59 @@ static inline VOID WhereError(UINT nID)
         ConResPuts(StdErr, nID);
 }
 
-typedef BOOL (CALLBACK *WHERE_PRINT_PATH)(LPCWSTR FoundPath);
+static BOOL WherePrintPath(LPCWSTR FoundPath)
+{
+    WCHAR szPath[MAX_PATH], szDate[32], szTime[32];
+    LARGE_INTEGER FileSize;
+    HANDLE hFind;
+    WIN32_FIND_DATAW find;
+    FILETIME ftLocal;
+    SYSTEMTIME st;
+    INT iPath;
 
-static BOOL WhereSearchFiles(LPCWSTR filename, LPCWSTR dir, WHERE_PRINT_PATH callback)
+    iPath = strlist_find_i(&s_founds, FoundPath); // find string in s_founds
+    if (iPath >= 0)
+        return TRUE; // already exists
+    if (!strlist_add(&s_founds, str_clone(FoundPath))) // append found path
+        return FALSE; // failure
+    if (s_dwFlags & FLAG_Q) // quiet mode?
+        return TRUE; // success
+
+    if (s_dwFlags & FLAG_T) // print detailed info
+    {
+        // get info
+        hFind = FindFirstFileExW(FoundPath, FindExInfoStandard, &find, FindExSearchNameMatch,
+                                 NULL, 0);
+        if (hFind != INVALID_HANDLE_VALUE)
+            FindClose(hFind);
+        // convert date/time
+        FileTimeToLocalFileTime(&find.ftLastWriteTime, &ftLocal);
+        FileTimeToSystemTime(&ftLocal, &st);
+        // get date/time strings
+        GetDateFormatW(LOCALE_USER_DEFAULT, DATE_SHORTDATE, &st, NULL, szDate, _countof(szDate));
+        GetTimeFormatW(LOCALE_USER_DEFAULT, 0, &st, NULL, szTime, _countof(szTime));
+        // set size
+        FileSize.LowPart = find.nFileSizeLow;
+        FileSize.HighPart = find.nFileSizeHigh;
+        // print
+        if (s_dwFlags & FLAG_F) // double quote
+            StringCbPrintfW(szPath, sizeof(szPath), L"\"%s\"", FoundPath);
+        else
+            StringCbCopyW(szPath, sizeof(szPath), FoundPath);
+        ConResPrintf(StdOut, IDS_FILE_INFO, FileSize.QuadPart, szDate, szTime, szPath);
+    }
+    else // print path only
+    {
+        if (s_dwFlags & FLAG_F) // double quote
+            ConPrintf(StdOut, L"\"%ls\"\n", FoundPath);
+        else
+            ConPrintf(StdOut, L"%ls\n", FoundPath);
+    }
+
+    return TRUE; // success
+}
+
+static BOOL WhereSearchFiles(LPCWSTR filename, LPCWSTR dir)
 {
     WCHAR szPath[MAX_PATH];
     LPWSTR pch;
@@ -83,7 +133,7 @@ static BOOL WhereSearchFiles(LPCWSTR filename, LPCWSTR dir, WHERE_PRINT_PATH cal
 
             StringCchCopyW(pch, cch, find.cFileName); // build full path
 
-            if (!callback(szPath)) // call the callback function
+            if (!WherePrintPath(szPath))
             {
                 WhereError(IDS_OUTOFMEMORY);
                 ret = FALSE;
@@ -96,14 +146,14 @@ static BOOL WhereSearchFiles(LPCWSTR filename, LPCWSTR dir, WHERE_PRINT_PATH cal
     return ret;
 }
 
-static BOOL WhereSearchRecursive(LPCWSTR filename, LPCWSTR dir, WHERE_PRINT_PATH callback)
+static BOOL WhereSearchRecursive(LPCWSTR filename, LPCWSTR dir)
 {
     WCHAR szPath[MAX_PATH];
     LPWSTR pch;
     INT cch;
     HANDLE hFind;
     WIN32_FIND_DATAW find;
-    BOOL ret = WhereSearchFiles(filename, dir, callback); // search files in the directory
+    BOOL ret = WhereSearchFiles(filename, dir); // search files in the directory
     if (!ret)
         return ret;
 
@@ -127,7 +177,7 @@ static BOOL WhereSearchRecursive(LPCWSTR filename, LPCWSTR dir, WHERE_PRINT_PATH
 
             StringCchCopyW(pch, cch, find.cFileName); // build full path
 
-            ret = WhereSearchRecursive(filename, szPath, callback); // recurse
+            ret = WhereSearchRecursive(filename, szPath); // recurse
             if (!ret)
                 break;
         } while (FindNextFileW(hFind, &find));
@@ -137,13 +187,13 @@ static BOOL WhereSearchRecursive(LPCWSTR filename, LPCWSTR dir, WHERE_PRINT_PATH
     return ret;
 }
 
-static BOOL WhereSearch(LPCWSTR filename, strlist_t *dirlist, WHERE_PRINT_PATH callback)
+static BOOL WhereSearch(LPCWSTR filename, strlist_t *dirlist)
 {
     INT iDir;
     for (iDir = 0; iDir < dirlist->count; ++iDir) // for each directory
     {
         LPWSTR dir = strlist_get_at(dirlist, iDir);
-        BOOL ret = WhereSearchFiles(filename, dir, callback); // search
+        BOOL ret = WhereSearchFiles(filename, dir); // search
         if (!ret)
             return ret;
     }
@@ -216,58 +266,6 @@ static BOOL WhereParseCommandLine(INT argc, WCHAR** argv)
                 return FALSE; // failure
             }
         }
-    }
-
-    return TRUE; // success
-}
-
-static BOOL CALLBACK WherePrintPath(LPCWSTR FoundPath)
-{
-    WCHAR szPath[MAX_PATH], szDate[32], szTime[32];
-    LARGE_INTEGER FileSize;
-    HANDLE hFind;
-    WIN32_FIND_DATAW find;
-    FILETIME ftLocal;
-    SYSTEMTIME st;
-    INT iPath;
-
-    iPath = strlist_find_i(&s_founds, FoundPath); // find string in s_founds
-    if (iPath >= 0)
-        return TRUE; // already exists
-    if (!strlist_add(&s_founds, str_clone(FoundPath))) // append found path
-        return FALSE; // failure
-    if (s_dwFlags & FLAG_Q) // quiet mode?
-        return TRUE; // success
-
-    if (s_dwFlags & FLAG_T) // print detailed info
-    {
-        // get info
-        hFind = FindFirstFileExW(FoundPath, FindExInfoStandard, &find, FindExSearchNameMatch,
-                                 NULL, 0);
-        if (hFind != INVALID_HANDLE_VALUE)
-            FindClose(hFind);
-        // convert date/time
-        FileTimeToLocalFileTime(&find.ftLastWriteTime, &ftLocal);
-        FileTimeToSystemTime(&ftLocal, &st);
-        // get date/time strings
-        GetDateFormatW(LOCALE_USER_DEFAULT, DATE_SHORTDATE, &st, NULL, szDate, _countof(szDate));
-        GetTimeFormatW(LOCALE_USER_DEFAULT, 0, &st, NULL, szTime, _countof(szTime));
-        // set size
-        FileSize.LowPart = find.nFileSizeLow;
-        FileSize.HighPart = find.nFileSizeHigh;
-        // print
-        if (s_dwFlags & FLAG_F) // double quote
-            StringCbPrintfW(szPath, sizeof(szPath), L"\"%s\"", FoundPath);
-        else
-            StringCbCopyW(szPath, sizeof(szPath), FoundPath);
-        ConResPrintf(StdOut, IDS_FILE_INFO, FileSize.QuadPart, szDate, szTime, szPath);
-    }
-    else // print path only
-    {
-        if (s_dwFlags & FLAG_F) // double quote
-            ConPrintf(StdOut, L"\"%ls\"\n", FoundPath);
-        else
-            ConPrintf(StdOut, L"%ls\n", FoundPath);
     }
 
     return TRUE; // success
@@ -371,7 +369,7 @@ static BOOL WhereFind(LPCWSTR SearchFor, LPWSTR SearchData, BOOL IsVar)
         // append extension and search now
         StringCbCopyW(szPath, sizeof(szPath), SearchFor);
         StringCbCatW(szPath, sizeof(szPath), strlist_get_at(&s_pathext, iExt));
-        ret = WhereSearch(szPath, &dirlist, WherePrintPath);
+        ret = WhereSearch(szPath, &dirlist);
         if (!ret)
             goto quit;
     }
@@ -455,7 +453,7 @@ static BOOL WhereDoTarget(LPWSTR SearchFor)
             LPWSTR ext = strlist_get_at(&s_pathext, iExt);
             StringCbCopyW(filename, sizeof(filename), SearchFor);
             StringCbCatW(filename, sizeof(filename), ext);
-            ret = WhereSearchRecursive(filename, szPath, WherePrintPath);
+            ret = WhereSearchRecursive(filename, szPath);
             if (!ret)
                 return FALSE;
         }
