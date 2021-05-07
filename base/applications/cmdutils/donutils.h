@@ -4,6 +4,7 @@
  * PURPOSE:     Fallback of <conutils.h>
  * COPYRIGHT:   Copyright 2021 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
+#pragma once
 #include <stdio.h>
 #define ConInitStdStreams() /* empty */
 #define StdOut stdout
