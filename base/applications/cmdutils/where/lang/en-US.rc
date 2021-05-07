@@ -2,7 +2,7 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 
 STRINGTABLE
 BEGIN
-    IDS_USAGE "WHERE [options] pattern...\n\
+    IDS_USAGE "Usage: WHERE [options] pattern...\n\
 \n\
 Description:\n\
     Shows the location of the file(s) specified by the pattern(s).\n\
