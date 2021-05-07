@@ -105,7 +105,7 @@ static BOOL CALLBACK WherePrintPath(LPCWSTR pattern, LPCWSTR path, WIN32_FIND_DA
         FileTimeToLocalFileTime(&finddata->ftLastWriteTime, &ftLocal);
         FileTimeToSystemTime(&ftLocal, &st);
         // get date/time strings
-        GetDateFormatW(LOCALE_USER_DEFAULT, DATE_SHORTDATE, &st, NULL, szDate, _countof(szDate));
+        GetDateFormatW(LOCALE_USER_DEFAULT, 0, &st, NULL, szDate, _countof(szDate));
         GetTimeFormatW(LOCALE_USER_DEFAULT, 0, &st, NULL, szTime, _countof(szTime));
         // set size
         FileSize.LowPart = finddata->nFileSizeLow;
