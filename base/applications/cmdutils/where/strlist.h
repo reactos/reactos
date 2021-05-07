@@ -8,12 +8,11 @@
 
 static LPWSTR str_clone(LPCWSTR psz)
 {
-    size_t cch, cb;
+    size_t cb;
     LPWSTR pszNew;
     if (!psz)
         return NULL;
-    cch = wcslen(psz);
-    cb = (cch + 1) * sizeof(WCHAR);
+    cb = (wcslen(psz) + 1) * sizeof(WCHAR);
     pszNew = (LPWSTR)malloc(cb);
     if (!pszNew)
         return NULL;
