@@ -87,8 +87,6 @@ static BOOL CALLBACK WherePrintPath(LPCWSTR pattern, LPCWSTR path, WIN32_FIND_DA
 {
     WCHAR szPath[MAX_PATH], szDate[32], szTime[32];
     LARGE_INTEGER FileSize;
-    HANDLE hFind;
-    WIN32_FIND_DATAW find;
     FILETIME ftLocal;
     SYSTEMTIME st;
     INT iPath;
@@ -103,20 +101,15 @@ static BOOL CALLBACK WherePrintPath(LPCWSTR pattern, LPCWSTR path, WIN32_FIND_DA
 
     if (s_dwFlags & FLAG_T) // print detailed info
     {
-        // get info
-        hFind = FindFirstFileExW(path, FindExInfoStandard, &find, FindExSearchNameMatch,
-                                 NULL, 0);
-        if (hFind != INVALID_HANDLE_VALUE)
-            FindClose(hFind);
         // convert date/time
-        FileTimeToLocalFileTime(&find.ftLastWriteTime, &ftLocal);
+        FileTimeToLocalFileTime(&finddata->ftLastWriteTime, &ftLocal);
         FileTimeToSystemTime(&ftLocal, &st);
         // get date/time strings
         GetDateFormatW(LOCALE_USER_DEFAULT, DATE_SHORTDATE, &st, NULL, szDate, _countof(szDate));
         GetTimeFormatW(LOCALE_USER_DEFAULT, 0, &st, NULL, szTime, _countof(szTime));
         // set size
-        FileSize.LowPart = find.nFileSizeLow;
-        FileSize.HighPart = find.nFileSizeHigh;
+        FileSize.LowPart = finddata->nFileSizeLow;
+        FileSize.HighPart = finddata->nFileSizeHigh;
         // print
         if (s_dwFlags & FLAG_F) // double quote
             StringCbPrintfW(szPath, sizeof(szPath), L"\"%s\"", path);
