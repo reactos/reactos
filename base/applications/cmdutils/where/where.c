@@ -182,7 +182,7 @@ static BOOL WhereSearchRecursive(LPCWSTR filename, LPCWSTR dir)
                 continue; // not directory
 
             if (IS_DOTS(find.cFileName))
-                continue; // ignore "." or ".."
+                continue; // ignore "." and ".."
 
             StringCchCopyW(pch, cch, find.cFileName); // build full path
 
