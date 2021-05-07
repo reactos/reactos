@@ -244,13 +244,45 @@ static BOOL WhereParseCommandLine(INT argc, WCHAR** argv)
             {
                 switch (towupper(arg[1]))
                 {
-                    case L'?': s_dwFlags |= FLAG_HELP; continue;
-                    case L'F': s_dwFlags |= FLAG_F; continue;
-                    case L'Q': s_dwFlags |= FLAG_Q; continue;
-                    case L'T': s_dwFlags |= FLAG_T; continue;
+                    case L'?':
+                        if (s_dwFlags & FLAG_HELP) // already specified
+                        {
+                            ConResPrintf(StdErr, IDS_TOO_MANY, L"/?", 1);
+                            WhereError(IDS_TYPE_HELP);
+                            return FALSE; // failure
+                        }
+                        s_dwFlags |= FLAG_HELP;
+                        continue;
+                    case L'F':
+                        if (s_dwFlags & FLAG_F) // already specified
+                        {
+                            ConResPrintf(StdErr, IDS_TOO_MANY, L"/F", 1);
+                            WhereError(IDS_TYPE_HELP);
+                            return FALSE; // failure
+                        }
+                        s_dwFlags |= FLAG_F;
+                        continue;
+                    case L'Q':
+                        if (s_dwFlags & FLAG_Q) // already specified
+                        {
+                            ConResPrintf(StdErr, IDS_TOO_MANY, L"/Q", 1);
+                            WhereError(IDS_TYPE_HELP);
+                            return FALSE; // failure
+                        }
+                        s_dwFlags |= FLAG_Q;
+                        continue;
+                    case L'T':
+                        if (s_dwFlags & FLAG_T) // already specified
+                        {
+                            ConResPrintf(StdErr, IDS_TOO_MANY, L"/T", 1);
+                            WhereError(IDS_TYPE_HELP);
+                            return FALSE; // failure
+                        }
+                        s_dwFlags |= FLAG_T;
+                        continue;
                     case L'R':
                     {
-                        if (s_RecursiveDir) // already specified
+                        if (s_dwFlags & FLAG_R) // already specified
                         {
                             ConResPrintf(StdErr, IDS_TOO_MANY, L"/R", 1);
                             WhereError(IDS_TYPE_HELP);
