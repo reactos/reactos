@@ -19,7 +19,7 @@
 #ifdef __REACTOS__
     #include <conutils.h> // StdOut/StdErr, Con...
 #else
-    #include "../donutils.h"
+    #include "donutils.h"
 #endif
 #include "strlist.h" // strlist_...
 
