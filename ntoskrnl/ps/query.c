@@ -2454,14 +2454,6 @@ NtSetInformationThread(IN HANDLE ThreadHandle,
             }
             _SEH2_END;
 
-            /* This is only valid for the current thread */
-            if (Thread != PsGetCurrentThread())
-            {
-                /* Fail */
-                Status = STATUS_INVALID_PARAMETER;
-                break;
-            }
-
             /* Reference the thread */
             Status = ObReferenceObjectByHandle(ThreadHandle,
                                                THREAD_SET_INFORMATION,
@@ -2471,6 +2463,14 @@ NtSetInformationThread(IN HANDLE ThreadHandle,
                                                NULL);
             if (!NT_SUCCESS(Status))
                 break;
+
+            /* This is only valid for the current thread */
+            if (Thread != PsGetCurrentThread())
+            {
+                /* Fail */
+                Status = STATUS_INVALID_PARAMETER;
+                break;
+            }
 
             /* Get the process */
             Process = Thread->ThreadsProcess;
