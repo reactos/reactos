@@ -146,6 +146,7 @@ static BOOL WhereSearchFiles(LPCWSTR filename, LPCWSTR dir)
     return ret;
 }
 
+// FIXME: This function is too slow
 static BOOL WhereSearchRecursive(LPCWSTR filename, LPCWSTR dir)
 {
     WCHAR szPath[MAX_PATH];
@@ -446,7 +447,6 @@ static BOOL WhereDoTarget(LPWSTR SearchFor)
 
         GetFullPathNameW(s_RecursiveDir, _countof(szPath), szPath, NULL); // get full path
 
-        // FIXME: Too slow
         for (iExt = 0; iExt < s_pathext.count; ++iExt) // for all extensions
         {
             // append extension and search now
