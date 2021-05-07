@@ -51,4 +51,5 @@ Examples:\n\
     IDS_CANT_FOUND "ERROR: The system cannot find the file specified.\n"
     IDS_BAD_DIR "ERROR: Invalid directory specified.\n"
     IDS_BAD_NAME "ERROR: The filename, directory name, or volume label syntax is incorrect.\n"
+    IDS_MANY_OPTIONS "ERROR: Invalid syntax. '%ls' option is not allowed more than '%u' time(s).\n"
 END

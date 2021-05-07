@@ -249,6 +249,12 @@ static BOOL WhereParseCommandLine(INT argc, WCHAR** argv)
                     case L'T': s_dwFlags |= FLAG_T; continue;
                     case L'R':
                     {
+                        if (s_RecursiveDir) // already specified
+                        {
+                            ConResPrintf(StdErr, IDS_MANY_OPTIONS, L"/R", 1);
+                            WhereError(IDS_TYPE_HELP);
+                            return FALSE; // failure
+                        }
                         if (iArg + 1 < argc)
                         {
                             ++iArg;
