@@ -1,5 +1,5 @@
 #define IDS_USAGE 100
-#define IDS_INVALID_ARG 101
+#define IDS_BAD_ARG 101
 #define IDS_NOT_FOUND 103
 #define IDS_FILE_INFO 104
 #define IDS_WANT_VALUE 106

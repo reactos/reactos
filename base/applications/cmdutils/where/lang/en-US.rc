@@ -38,7 +38,7 @@ Examples:\n\
   WHERE /Q ??.???\n\
   WHERE ""c:\\reactos;c:\\reactos\\system32:*.dll""\n\
   WHERE /F /T *.dll\n"
-    IDS_INVALID_ARG "ERROR: Invalid argument or option - '%ls'.\n"
+    IDS_BAD_ARG "ERROR: Invalid argument or option - '%ls'.\n"
     IDS_NOT_FOUND "INFO: Could not find files for the given pattern(s).\n"
     IDS_FILE_INFO "%10I64u   %ls%14ls  %ls\n"
     IDS_WANT_VALUE "ERROR: Invalid syntax. Value expected for '%ls'.\n"

@@ -268,7 +268,7 @@ static BOOL WhereParseCommandLine(INT argc, WCHAR** argv)
                     }
                 }
             }
-            ConResPrintf(StdErr, IDS_INVALID_ARG, argv[iArg]); // invalid argument
+            ConResPrintf(StdErr, IDS_BAD_ARG, argv[iArg]); // invalid argument
             WhereError(IDS_TYPE_HELP);
             return FALSE; // failure
         }
