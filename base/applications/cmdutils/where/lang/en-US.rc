@@ -36,7 +36,7 @@ Example:\n\
     WHERE /R ""C:\\Program Files"" *.dll\n"
     IDS_BAD_ARG "ERROR: Invalid argument - '%ls'.\n"
     IDS_NOT_FOUND "INFO: Could not find files for the given pattern(s).\n"
-    IDS_FILE_INFO "%10I64u   %ls%14ls  %ls\n"
+    IDS_FILE_INFO "%10I64u  %-13ls %-13ls %ls\n"
     IDS_WANT_VALUE "ERROR: Value is needed for '%ls'.\n"
     IDS_TYPE_HELP "Type ""WHERE /?"" for usage help.\n"
     IDS_ENVPAT_WITH_R "ERROR: ""$env:pattern"" cannot be used with /R.\n"
