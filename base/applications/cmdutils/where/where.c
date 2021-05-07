@@ -153,7 +153,6 @@ static BOOL WhereSearchFiles(LPCWSTR filename, LPCWSTR dir)
     return ret;
 }
 
-// FIXME: This function is too slow
 static BOOL WhereSearchRecursive(LPCWSTR filename, LPCWSTR dir)
 {
     WCHAR szPath[MAX_PATH];
