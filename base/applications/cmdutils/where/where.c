@@ -53,13 +53,13 @@ static BOOL WherePrintPath(LPCWSTR FoundPath)
     SYSTEMTIME st;
     INT iPath;
 
-    iPath = strlist_find_i(&s_results, FoundPath); // find string in s_results
+    iPath = strlist_find_i(&s_results, FoundPath);
     if (iPath >= 0)
         return TRUE; // already exists
-    if (!strlist_add(&s_results, str_clone(FoundPath))) // append found path
-        return FALSE; // failure
+    if (!strlist_add(&s_results, str_clone(FoundPath)))
+        return FALSE;
     if (s_dwFlags & FLAG_Q) // quiet mode?
-        return TRUE; // success
+        return TRUE;
 
     if (s_dwFlags & FLAG_T) // print detailed info
     {
@@ -122,7 +122,7 @@ static BOOL WhereSearchFiles(LPCWSTR filename, LPCWSTR dir)
             do
             {
                 if (find.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
-                    continue; // it was directory
+                    continue;
 
                 StringCchCopyW(pch, cch, find.cFileName); // build full path
 
@@ -150,7 +150,7 @@ static BOOL WhereSearchRecursive(LPCWSTR filename, LPCWSTR dir)
     INT cch;
     HANDLE hFind;
     WIN32_FIND_DATAW find;
-    BOOL ret = WhereSearchFiles(filename, dir); // search files in the directory
+    BOOL ret = WhereSearchFiles(filename, dir);
     if (!ret)
         return ret;
 
@@ -168,7 +168,7 @@ static BOOL WhereSearchRecursive(LPCWSTR filename, LPCWSTR dir)
         do
         {
             if (!(find.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
-                continue; // not directory
+                continue;
 
             if (IS_DOTS(find.cFileName))
                 continue; // ignore "." and ".."
@@ -188,10 +188,10 @@ static BOOL WhereSearchRecursive(LPCWSTR filename, LPCWSTR dir)
 static BOOL WhereSearch(LPCWSTR filename, strlist_t *dirlist)
 {
     INT iDir;
-    for (iDir = 0; iDir < dirlist->count; ++iDir) // for each directory
+    for (iDir = 0; iDir < dirlist->count; ++iDir)
     {
         LPWSTR dir = strlist_get_at(dirlist, iDir);
-        BOOL ret = WhereSearchFiles(filename, dir); // search
+        BOOL ret = WhereSearchFiles(filename, dir);
         if (!ret)
             return ret;
     }
@@ -201,7 +201,7 @@ static BOOL WhereSearch(LPCWSTR filename, strlist_t *dirlist)
 // get environment variable
 static WRET WhereGetVariable(LPCWSTR name, LPWSTR *ppszData)
 {
-    DWORD cchData = GetEnvironmentVariableW(name, NULL, 0); // is there the variable?
+    DWORD cchData = GetEnvironmentVariableW(name, NULL, 0);
     *ppszData = NULL;
     if (cchData == 0) // variable not found
     {
@@ -210,7 +210,6 @@ static WRET WhereGetVariable(LPCWSTR name, LPWSTR *ppszData)
         return WRET_NOT_FOUND;
     }
 
-    // allocate and get the variable's value
     *ppszData = malloc(cchData * sizeof(WCHAR));
     if (!*ppszData || !GetEnvironmentVariableW(name, *ppszData, cchData))
     {
@@ -225,58 +224,58 @@ static WRET WhereGetVariable(LPCWSTR name, LPWSTR *ppszData)
 static BOOL WhereParseCommandLine(INT argc, WCHAR** argv)
 {
     INT iArg;
-    for (iArg = 1; iArg < argc; ++iArg) // for each parameter
+    for (iArg = 1; iArg < argc; ++iArg)
     {
         LPWSTR arg = argv[iArg];
-        if (arg[0] == L'/' || arg[0] == L'-') // flag?
+        if (arg[0] == L'/' || arg[0] == L'-')
         {
-            if (arg[2] == 0) // shortly terminated?
+            if (arg[2] == 0)
             {
                 switch (towupper(arg[1]))
                 {
                     case L'?':
-                        if (s_dwFlags & FLAG_HELP) // already specified
+                        if (s_dwFlags & FLAG_HELP)
                         {
                             ConResPrintf(StdErr, IDS_TOO_MANY, L"/?", 1);
                             WhereError(IDS_TYPE_HELP);
-                            return FALSE; // failure
+                            return FALSE;
                         }
                         s_dwFlags |= FLAG_HELP;
                         continue;
                     case L'F':
-                        if (s_dwFlags & FLAG_F) // already specified
+                        if (s_dwFlags & FLAG_F)
                         {
                             ConResPrintf(StdErr, IDS_TOO_MANY, L"/F", 1);
                             WhereError(IDS_TYPE_HELP);
-                            return FALSE; // failure
+                            return FALSE;
                         }
                         s_dwFlags |= FLAG_F;
                         continue;
                     case L'Q':
-                        if (s_dwFlags & FLAG_Q) // already specified
+                        if (s_dwFlags & FLAG_Q)
                         {
                             ConResPrintf(StdErr, IDS_TOO_MANY, L"/Q", 1);
                             WhereError(IDS_TYPE_HELP);
-                            return FALSE; // failure
+                            return FALSE;
                         }
                         s_dwFlags |= FLAG_Q;
                         continue;
                     case L'T':
-                        if (s_dwFlags & FLAG_T) // already specified
+                        if (s_dwFlags & FLAG_T)
                         {
                             ConResPrintf(StdErr, IDS_TOO_MANY, L"/T", 1);
                             WhereError(IDS_TYPE_HELP);
-                            return FALSE; // failure
+                            return FALSE;
                         }
                         s_dwFlags |= FLAG_T;
                         continue;
                     case L'R':
                     {
-                        if (s_dwFlags & FLAG_R) // already specified
+                        if (s_dwFlags & FLAG_R)
                         {
                             ConResPrintf(StdErr, IDS_TOO_MANY, L"/R", 1);
                             WhereError(IDS_TYPE_HELP);
-                            return FALSE; // failure
+                            return FALSE;
                         }
                         if (iArg + 1 < argc)
                         {
@@ -287,20 +286,20 @@ static BOOL WhereParseCommandLine(INT argc, WCHAR** argv)
                         }
                         ConResPrintf(StdErr, IDS_WANT_VALUE, L"/R");
                         WhereError(IDS_TYPE_HELP);
-                        return FALSE; // failure
+                        return FALSE;
                     }
                 }
             }
-            ConResPrintf(StdErr, IDS_BAD_ARG, argv[iArg]); // invalid argument
+            ConResPrintf(StdErr, IDS_BAD_ARG, argv[iArg]);
             WhereError(IDS_TYPE_HELP);
-            return FALSE; // failure
+            return FALSE;
         }
-        else // target?
+        else // pattern?
         {
-            if (!strlist_add(&s_patterns, str_clone(argv[iArg]))) // append target
+            if (!strlist_add(&s_patterns, str_clone(argv[iArg]))) // append pattern
             {
                 WhereError(IDS_OUTOFMEMORY);
-                return FALSE; // failure
+                return FALSE;
             }
         }
     }
@@ -314,7 +313,6 @@ static BOOL WhereGetPathExt(strlist_t *ext_list)
     LPWSTR pszPathExt, ext;
     DWORD cchPathExt = GetEnvironmentVariableW(L"PATHEXT", NULL, 0);
 
-    // allocate for PATHEXT info
     if (cchPathExt)
         pszPathExt = malloc(cchPathExt * sizeof(WCHAR));
     else
@@ -364,7 +362,7 @@ static BOOL WhereFind(LPCWSTR SearchFor, LPWSTR SearchData, BOOL IsVar)
             goto quit;
         dirs = pszValue;
     }
-    else // directories
+    else
     {
         dirs = SearchData;
         pszValue = NULL;
@@ -396,7 +394,7 @@ static BOOL WhereFind(LPCWSTR SearchFor, LPWSTR SearchData, BOOL IsVar)
         if (cch > 0 && dir[cch - 1] == L'\\')
             dir[cch - 1] = 0; // remove trailing backslash
 
-        if (!strlist_add(&dirlist, str_clone(dir))) // add directory of PATH
+        if (!strlist_add(&dirlist, str_clone(dir)))
         {
             ret = FALSE;
             goto quit;
@@ -416,7 +414,7 @@ quit:
 static BOOL WhereIsRecursiveDirOK(LPCWSTR name)
 {
     DWORD attrs;
-    if (wcschr(name, L';') == NULL) // not found ';'?
+    if (wcschr(name, L';') == NULL)
     {
         attrs = GetFileAttributesW(name);
         if (attrs == INVALID_FILE_ATTRIBUTES) // file not found
@@ -424,13 +422,13 @@ static BOOL WhereIsRecursiveDirOK(LPCWSTR name)
             WhereError(IDS_CANT_FOUND);
             return FALSE;
         }
-        if (!(attrs & FILE_ATTRIBUTE_DIRECTORY)) // not directory
+        if (!(attrs & FILE_ATTRIBUTE_DIRECTORY))
         {
             WhereError(IDS_BAD_DIR);
             return FALSE;
         }
     }
-    else // found ';'
+    else
     {
         WhereError(IDS_BAD_NAME);
         return FALSE;
@@ -438,10 +436,10 @@ static BOOL WhereIsRecursiveDirOK(LPCWSTR name)
     return TRUE;
 }
 
-static BOOL WhereDoTarget(LPWSTR SearchFor)
+static BOOL WhereDoPattern(LPWSTR SearchFor)
 {
     LPWSTR pch = wcsrchr(SearchFor, L':');
-    if (pch) // found ':'
+    if (pch)
     {
         *pch++ = 0; // this function is destructive against SearchFor
         if (SearchFor[0] == L'$') // $env:pattern
@@ -475,7 +473,7 @@ static BOOL WhereDoTarget(LPWSTR SearchFor)
         if (!WhereIsRecursiveDirOK(s_RecursiveDir))
             return FALSE;
 
-        GetFullPathNameW(s_RecursiveDir, _countof(szPath), szPath, NULL); // get full path
+        GetFullPathNameW(s_RecursiveDir, _countof(szPath), szPath, NULL);
 
         return WhereSearchRecursive(SearchFor, szPath);
     }
@@ -491,7 +489,7 @@ INT __cdecl wmain(INT argc, WCHAR **argv)
     HANDLE hKernel32 = GetModuleHandleA("kernel32");
     FN_DISABLE_WOW DisableWOW =
         (FN_DISABLE_WOW)GetProcAddress(hKernel32, "Wow64DisableWow64FsRedirection");
-    DWORD iTarget;
+    DWORD iPattern;
     WRET ret = WRET_ERROR;
     PVOID dummy;
 
@@ -509,30 +507,29 @@ INT __cdecl wmain(INT argc, WCHAR **argv)
     if (DisableWOW)
         DisableWOW(&dummy);
 
-    if (!WhereGetPathExt(&s_pathext)) // get PATHEXT info
+    if (!WhereGetPathExt(&s_pathext))
     {
         WhereError(IDS_OUTOFMEMORY);
         goto quit;
     }
 
-    // do targets
     ret = WRET_SUCCESS;
-    for (iTarget = 0; iTarget < s_patterns.count; ++iTarget)
+    for (iPattern = 0; iPattern < s_patterns.count; ++iPattern)
     {
-        if (!WhereDoTarget(strlist_get_at(&s_patterns, iTarget)))
+        if (!WhereDoPattern(strlist_get_at(&s_patterns, iPattern)))
         {
             ret = WRET_ERROR;
             goto quit;
         }
     }
 
-    if (!s_results.count) // not found
+    if (!s_results.count)
     {
         WhereError(IDS_NOT_FOUND);
         ret = WRET_NOT_FOUND;
     }
 
-quit: // cleanup
+quit:
     strlist_destroy(&s_results);
     strlist_destroy(&s_patterns);
     strlist_destroy(&s_pathext);
