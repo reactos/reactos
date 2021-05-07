@@ -48,7 +48,7 @@ typedef enum WRET // return code of WHERE command
     WRET_ERROR = 2
 } WRET;
 
-static inline VOID WhereError(UINT nID)
+static VOID WhereError(UINT nID)
 {
     if (!(s_dwFlags & FLAG_Q)) // not quiet mode?
         ConResPuts(StdErr, nID);
@@ -216,7 +216,8 @@ static WRET WhereGetVariable(LPCWSTR name, LPWSTR *ppszData)
     *ppszData = NULL;
     if (cchData == 0) // variable not found
     {
-        ConResPrintf(StdErr, IDS_BAD_ENVVAR, name);
+        if (!(s_dwFlags & FLAG_Q))
+            ConResPrintf(StdErr, IDS_BAD_ENVVAR, name);
         return WRET_NOT_FOUND;
     }
 
@@ -460,7 +461,7 @@ static BOOL WhereDoTarget(LPWSTR SearchFor)
         {
             if (s_dwFlags & FLAG_R) // recursive?
             {
-                ConResPuts(StdErr, IDS_ENVPAT_WITH_R);
+                WhereError(IDS_ENVPAT_WITH_R);
                 return FALSE;
             }
             return WhereFind(pch, SearchFor + 1, TRUE);
@@ -469,12 +470,12 @@ static BOOL WhereDoTarget(LPWSTR SearchFor)
         {
             if (s_dwFlags & FLAG_R) // recursive?
             {
-                ConResPuts(StdErr, IDS_PATHPAT_WITH_R);
+                WhereError(IDS_PATHPAT_WITH_R);
                 return FALSE;
             }
             if (wcschr(pch, L'\\') != NULL) // found '\\'?
             {
-                ConResPuts(StdErr, IDS_BAD_PATHPAT);
+                WhereError(IDS_BAD_PATHPAT);
                 return FALSE;
             }
             return WhereFind(pch, SearchFor, FALSE);
