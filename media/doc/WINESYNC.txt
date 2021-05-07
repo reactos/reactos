@@ -51,7 +51,7 @@ dll/win32/atl                 # Synced to WineStaging-4.18
 dll/win32/atl80               # Synced to WineStaging-4.18
 dll/win32/atl100              # Synced to WineStaging-3.3
 dll/win32/avifil32            # Synced to WineStaging-4.18
-dll/win32/bcrypt              # Synced to WineStaging-1.9.23
+dll/win32/bcrypt              # Synced to Wine-6.7
 dll/win32/browseui            # Out of sync
 dll/win32/cabinet             # Synced to WineStaging-4.18
 dll/win32/clusapi             # Synced to WineStaging-3.3
