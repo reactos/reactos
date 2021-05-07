@@ -6,7 +6,8 @@
  */
 #pragma once
 #include <stdio.h>
-#define ConInitStdStreams() /* empty */
+#include <locale.h>
+#define ConInitStdStreams() setlocale(LC_CTYPE, "")
 #define StdOut stdout
 #define StdErr stderr
 
