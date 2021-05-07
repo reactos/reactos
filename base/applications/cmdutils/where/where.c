@@ -4,7 +4,6 @@
  * PURPOSE:     Search executable files
  * COPYRIGHT:   Copyright 2021 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
-#define WIN32_LEAN_AND_MEAN
 #ifdef __REACTOS__
     #include <windef.h>
     #include <winbase.h>
