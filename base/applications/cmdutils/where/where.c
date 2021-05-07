@@ -4,23 +4,12 @@
  * PURPOSE:     Search executable files
  * COPYRIGHT:   Copyright 2021 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
-#ifdef __REACTOS__
-    #include <windef.h>
-    #include <winbase.h>
-    #include <winuser.h>
-    #include <winnls.h>
-#else
-    #include <windows.h>
-#endif
+#include <windows.h>
 #include <stdlib.h>
 #include <string.h>
-#include <strsafe.h> // StringC...
+#include <strsafe.h>
 #include "resource.h"
-#if __REACTOS__
-    #include <conutils.h> // StdOut/StdErr, Con...
-#else
-    #include "miniconutils.h" // It can reduce the program size.
-#endif
+#include <conutils.h>
 #include "strlist.h" // strlist_...
 
 #define FLAG_HELP (1 << 0) // "/?"
@@ -31,8 +20,8 @@
 
 static DWORD s_dwFlags = 0;
 static LPWSTR s_RecursiveDir = NULL;
-static strlist_t s_targets = strlist_default;
-static strlist_t s_founds = strlist_default;
+static strlist_t s_patterns = strlist_default;
+static strlist_t s_results = strlist_default;
 static strlist_t s_pathext = strlist_default;
 
 // is it either "." or ".."?
@@ -64,10 +53,10 @@ static BOOL WherePrintPath(LPCWSTR FoundPath)
     SYSTEMTIME st;
     INT iPath;
 
-    iPath = strlist_find_i(&s_founds, FoundPath); // find string in s_founds
+    iPath = strlist_find_i(&s_results, FoundPath); // find string in s_results
     if (iPath >= 0)
         return TRUE; // already exists
-    if (!strlist_add(&s_founds, str_clone(FoundPath))) // append found path
+    if (!strlist_add(&s_results, str_clone(FoundPath))) // append found path
         return FALSE; // failure
     if (s_dwFlags & FLAG_Q) // quiet mode?
         return TRUE; // success
@@ -308,7 +297,7 @@ static BOOL WhereParseCommandLine(INT argc, WCHAR** argv)
         }
         else // target?
         {
-            if (!strlist_add(&s_targets, str_clone(argv[iArg]))) // append target
+            if (!strlist_add(&s_patterns, str_clone(argv[iArg]))) // append target
             {
                 WhereError(IDS_OUTOFMEMORY);
                 return FALSE; // failure
@@ -336,8 +325,6 @@ static BOOL WhereGetPathExt(strlist_t *ext_list)
 
     if (cchPathExt)
         GetEnvironmentVariableW(L"PATHEXT", pszPathExt, cchPathExt); // get PATHEXT data
-
-    _wcslwr(pszPathExt); // make it lowercase
 
     if (!strlist_add(ext_list, str_clone(L""))) // add empty extension for normal search
     {
@@ -513,7 +500,7 @@ INT __cdecl wmain(INT argc, WCHAR **argv)
     if (!WhereParseCommandLine(argc, argv))
         goto quit;
 
-    if ((s_dwFlags & FLAG_HELP) || !s_targets.count)
+    if ((s_dwFlags & FLAG_HELP) || !s_patterns.count)
     {
         ConResPuts(StdOut, IDS_USAGE);
         goto quit;
@@ -530,35 +517,24 @@ INT __cdecl wmain(INT argc, WCHAR **argv)
 
     // do targets
     ret = WRET_SUCCESS;
-    for (iTarget = 0; iTarget < s_targets.count; ++iTarget)
+    for (iTarget = 0; iTarget < s_patterns.count; ++iTarget)
     {
-        if (!WhereDoTarget(strlist_get_at(&s_targets, iTarget)))
+        if (!WhereDoTarget(strlist_get_at(&s_patterns, iTarget)))
         {
             ret = WRET_ERROR;
             goto quit;
         }
     }
 
-    if (!s_founds.count) // not found
+    if (!s_results.count) // not found
     {
         WhereError(IDS_NOT_FOUND);
         ret = WRET_NOT_FOUND;
     }
 
 quit: // cleanup
-    strlist_destroy(&s_founds);
-    strlist_destroy(&s_targets);
+    strlist_destroy(&s_results);
+    strlist_destroy(&s_patterns);
     strlist_destroy(&s_pathext);
     return ret;
 }
-
-#ifndef __REACTOS__
-int main(int argc, char **argv)
-{
-    INT my_argc;
-    LPWSTR *my_argv = CommandLineToArgvW(GetCommandLineW(), &my_argc);
-    INT ret = wmain(my_argc, my_argv);
-    LocalFree(my_argv);
-    return ret;
-}
-#endif
