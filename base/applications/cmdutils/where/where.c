@@ -16,10 +16,10 @@
 #include <string.h>
 #include <strsafe.h> // StringC...
 #include "resource.h"
-#ifdef __REACTOS__
+#if 0
     #include <conutils.h> // StdOut/StdErr, Con...
 #else
-    #include "donutils.h"
+    #include "miniconutils.h" // It can reduce the program size.
 #endif
 #include "strlist.h" // strlist_...
 
