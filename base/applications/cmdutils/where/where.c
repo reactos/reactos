@@ -16,7 +16,7 @@
 #include <string.h>
 #include <strsafe.h> // StringC...
 #include "resource.h"
-#if 0
+#if 1
     #include <conutils.h> // StdOut/StdErr, Con...
 #else
     #include "miniconutils.h" // It can reduce the program size.
@@ -337,7 +337,7 @@ static BOOL WhereGetPathExt(strlist_t *ext_list)
     if (cchPathExt)
         GetEnvironmentVariableW(L"PATHEXT", pszPathExt, cchPathExt); // get PATHEXT data
 
-    CharLowerW(pszPathExt); // make it lowercase
+    _wcslwr(pszPathExt); // make it lowercase
 
     if (!strlist_add(ext_list, str_clone(L""))) // add empty extension for normal search
     {
