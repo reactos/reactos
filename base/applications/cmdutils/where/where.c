@@ -96,7 +96,7 @@ static BOOL CALLBACK WherePrintPath(LPCWSTR pattern, LPCWSTR path, WIN32_FIND_DA
     if (iPath >= 0)
         return TRUE; // already exists
     if (!strlist_add(&s_results, str_clone(path)))
-        return FALSE;
+        return FALSE; // out of memory
     if (s_dwFlags & FLAG_Q) // quiet mode?
         return TRUE;
 
