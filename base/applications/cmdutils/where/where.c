@@ -4,9 +4,11 @@
  * PURPOSE:     Search executable files
  * COPYRIGHT:   Copyright 2021 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
-#include <windows.h>
 #include <stdlib.h>
 #include <string.h>
+#include <windef.h>
+#include <winbase.h>
+#include <winnls.h>
 #include <strsafe.h>
 #include <conutils.h>
 #include "strlist.h" // strlist_...
@@ -43,7 +45,7 @@ static VOID WhereError(UINT nID)
         ConResPuts(StdErr, nID);
 }
 
-typedef BOOL (CALLBACK *WHERE_CALLBACK)(LPCWSTR pattern, LPCWSTR path, WIN32_FIND_DATAW *data);
+typedef BOOL (CALLBACK *WHERE_CALLBACK)(LPCWSTR pattern, LPCWSTR path, PWIN32_FIND_DATAW data);
 
 static BOOL
 WhereSearchGeneric(LPCWSTR pattern, LPWSTR path, BOOL bDir, WHERE_CALLBACK callback)
@@ -78,7 +80,7 @@ WhereSearchGeneric(LPCWSTR pattern, LPWSTR path, BOOL bDir, WHERE_CALLBACK callb
     return ret;
 }
 
-static BOOL CALLBACK WherePrintPath(LPCWSTR pattern, LPCWSTR path, WIN32_FIND_DATAW *data)
+static BOOL CALLBACK WherePrintPath(LPCWSTR pattern, LPCWSTR path, PWIN32_FIND_DATAW data)
 {
     WCHAR szPath[MAX_PATH + 2], szDate[32], szTime[32];
     LARGE_INTEGER FileSize;
@@ -87,7 +89,7 @@ static BOOL CALLBACK WherePrintPath(LPCWSTR pattern, LPCWSTR path, WIN32_FIND_DA
 
     if (strlist_find_i(&s_results, path) >= 0)
         return TRUE; // already exists
-    if (!strlist_add(&s_results, str_clone(path)))
+    if (!strlist_add(&s_results, path))
         return FALSE; // out of memory
     if (s_dwFlags & FLAG_Q) // quiet mode?
         return TRUE;
@@ -145,7 +147,7 @@ static BOOL WhereSearchFiles(LPCWSTR pattern, LPCWSTR dir)
 static BOOL WhereSearchRecursive(LPCWSTR pattern, LPCWSTR dir);
 
 static BOOL CALLBACK
-WhereSearchRecursiveCallback(LPCWSTR pattern, LPCWSTR path, WIN32_FIND_DATAW *data)
+WhereSearchRecursiveCallback(LPCWSTR pattern, LPCWSTR path, PWIN32_FIND_DATAW data)
 {
     return WhereSearchRecursive(pattern, path);
 }
@@ -165,7 +167,7 @@ static BOOL WhereSearchRecursive(LPCWSTR pattern, LPCWSTR dir)
 
 static BOOL WhereSearch(LPCWSTR pattern, strlist_t *dirlist)
 {
-    INT iDir;
+    UINT iDir;
     for (iDir = 0; iDir < dirlist->count; ++iDir)
     {
         if (!WhereSearchFiles(pattern, strlist_get_at(dirlist, iDir)))
@@ -257,7 +259,7 @@ static BOOL WhereParseCommandLine(INT argc, WCHAR** argv)
         }
         else // pattern?
         {
-            if (!strlist_add(&s_patterns, str_clone(argv[iArg]))) // append pattern
+            if (!strlist_add(&s_patterns, argv[iArg])) // append pattern
             {
                 ConResPuts(StdErr, IDS_OUTOFMEMORY);
                 return FALSE;
@@ -281,7 +283,7 @@ static BOOL WhereGetPathExt(strlist_t *ext_list)
     if (cchPathExt)
         GetEnvironmentVariableW(L"PATHEXT", pszPathExt, cchPathExt);
 
-    if (!strlist_add(ext_list, str_clone(L""))) // add empty extension for normal search
+    if (!strlist_add(ext_list, L"")) // add empty extension for normal search
     {
         strlist_destroy(ext_list);
         free(pszPathExt);
@@ -290,7 +292,7 @@ static BOOL WhereGetPathExt(strlist_t *ext_list)
 
     for (ext = wcstok(pszPathExt, L";"); ext; ext = wcstok(NULL, L";")) // for all extensions
     {
-        if (!strlist_add(ext_list, str_clone(ext))) // add extension to ext_list
+        if (!strlist_add(ext_list, ext)) // add extension to ext_list
         {
             strlist_destroy(ext_list);
             ret = FALSE;
@@ -311,7 +313,7 @@ static BOOL WhereFindByDirs(LPCWSTR pattern, LPWSTR dirs)
     strlist_t dirlist = strlist_default;
 
     GetCurrentDirectoryW(_countof(szPath), szPath);
-    if (!strlist_add(&dirlist, str_clone(szPath)))
+    if (!strlist_add(&dirlist, szPath))
         return FALSE; // out of memory
 
     for (dir = wcstok(dirs, L";"); dir; dir = wcstok(NULL, L";"))
@@ -330,7 +332,7 @@ static BOOL WhereFindByDirs(LPCWSTR pattern, LPWSTR dirs)
         if (cch > 0 && dir[cch - 1] == L'\\')
             dir[cch - 1] = 0; // remove trailing backslash
 
-        if (!strlist_add(&dirlist, str_clone(dir)))
+        if (!strlist_add(&dirlist, dir))
         {
             strlist_destroy(&dirlist);
             return FALSE; // out of memory

@@ -34,6 +34,7 @@ Example:\n\
     WHERE $WINDIR:notepad myfile???\n\
     WHERE C:\\ReactOS;C:\\ReactOS\\system32:exp*.exe\n\
     WHERE /R ""C:\\Program Files"" *.dll\n"
+
     IDS_BAD_ARG "ERROR: Invalid argument - '%ls'.\n"
     IDS_NOT_FOUND "INFO: Could not find files for the given pattern(s).\n"
     IDS_FILE_INFO "%10I64u  %-12ls %-12ls %ls\n"
