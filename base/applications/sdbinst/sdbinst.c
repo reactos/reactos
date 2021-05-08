@@ -131,7 +131,7 @@ AddUninstallKey(
         goto end;
     }
 
-    // Sdb guid reg key
+    // Sdb GUID registry key
     hres = StringCchPrintfW(regName, MAX_PATH, L"%ls\\%ls", UNINSTALL_REG_PATH, guidDbStr);
     if (FAILED(hres))
     {
@@ -205,7 +205,7 @@ end:
 }
 
 //
-// Get database guid id
+// Get database GUID id
 //
 BOOL
 GetSdbGuid(
@@ -414,7 +414,7 @@ SdbInstall(
     currentTime.LowPart  = systemTime.dwLowDateTime;
     currentTime.HighPart = systemTime.dwHighDateTime;
 
-    // Open db
+    // Open database
     pdb = SdbOpenDatabase(sdbPath, DOS_PATH);
     if (pdb == NULL)
     {
@@ -429,7 +429,7 @@ SdbInstall(
         goto end;
     }
 
-    // Get db guid
+    // Get database GUID
     if (!GetSdbGuid(pdb, tagDb, &dbGuid))    
     {
         wprintf(L"GetSdbGuid error\n");
@@ -589,7 +589,6 @@ SdbUninstall(
         goto end;
     }
 
-    //
     if (!GetSdbGuid(pdb, tagDb, &dbGuid))
     {
         wprintf(L"GetSdbGuid error\n");
@@ -751,7 +750,7 @@ SdbUninstallByName(
     status = RegEnumKeyEx(hKey, index, keyName, &keyNameLen, NULL, NULL, NULL, NULL);
     wprintf(L"0x%08X %d %ls \n", status, keyNameLen, keyName);
 
-    // Search db guid by name
+    // Search database GUID by name
     while (status == ERROR_SUCCESS)
     {
         status = RegOpenKeyExW(hKey, keyName, 0, KEY_READ | KEY_QUERY_VALUE, &subKey);
@@ -809,10 +808,11 @@ end:
 void
 ShowHelp()
 {
+    /* FIXME: to be localized */
     wprintf(L"Using: sdbinst [-?][-q][-u][-g][-n] foo.sdb | {guid} | \"name\" \n"
             L"-? - show help\n"
             L"-u - uninstall\n"
-            L"-g - {guid} file guid (only uninstall)\n"
+            L"-g - {guid} file GUID (only uninstall)\n"
             L"-n - \"name\" - file name (only uninstall)\n");
 }
 
@@ -889,7 +889,7 @@ int _tmain(int argc, LPWSTR argv[])
     }
     else if (isUninstByGuid)
     {
-        wprintf(L"uninstall by guid\n");
+        wprintf(L"uninstall by GUID\n");
         success = SdbUninstallByGuid(guidSdbStr);
     }
     else if (isUninstByName)
