@@ -28,6 +28,8 @@
 
 /* Bitmaps */
 #define IDB_REACTOS                 131
+#define IDB_REACTOS_WORKSTATION     400
+#define IDB_REACTOS_SERVER          401
 #define IDB_LINEBAR                 138
 #define IDB_SHELL_IEXPLORE_LG       204
 #define IDB_SHELL_IEXPLORE_LG_HOT   205
