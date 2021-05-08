@@ -14,12 +14,11 @@ typedef struct strlist_t
     LPWSTR *ppsz;
     unsigned int count;
 } strlist_t;
-#define strlist_default { NULL, 0 }
+#define strlist_default (strlist_t){ NULL, 0 }
 
 static inline void strlist_init(strlist_t *plist)
 {
-    plist->ppsz = NULL;
-    plist->count = 0;
+    *plist = strlist_default;
 }
 
 static inline LPWSTR strlist_get_at(strlist_t *plist, unsigned int i)
