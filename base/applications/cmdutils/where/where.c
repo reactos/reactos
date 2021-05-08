@@ -208,6 +208,18 @@ static WRET WhereGetVariable(LPCWSTR name, LPWSTR *value)
     return WRET_SUCCESS;
 }
 
+static BOOL WhereDoOption(DWORD dwFlag, LPCWSTR option)
+{
+    if (s_dwFlags & dwFlag)
+    {
+        ConResPrintf(StdErr, IDS_TOO_MANY, option, 1);
+        WhereError(IDS_TYPE_HELP);
+        return FALSE;
+    }
+    s_dwFlags |= dwFlag;
+    return TRUE;
+}
+
 static BOOL WhereParseCommandLine(INT argc, WCHAR** argv)
 {
     INT iArg;
@@ -221,54 +233,29 @@ static BOOL WhereParseCommandLine(INT argc, WCHAR** argv)
                 switch (towupper(arg[1]))
                 {
                     case L'?':
-                        if (s_dwFlags & FLAG_HELP)
-                        {
-                            ConResPrintf(StdErr, IDS_TOO_MANY, L"/?", 1);
-                            WhereError(IDS_TYPE_HELP);
+                        if (!WhereDoOption(FLAG_HELP, L"/?"))
                             return FALSE;
-                        }
-                        s_dwFlags |= FLAG_HELP;
                         continue;
                     case L'F':
-                        if (s_dwFlags & FLAG_F)
-                        {
-                            ConResPrintf(StdErr, IDS_TOO_MANY, L"/F", 1);
-                            WhereError(IDS_TYPE_HELP);
+                        if (!WhereDoOption(FLAG_F, L"/F"))
                             return FALSE;
-                        }
-                        s_dwFlags |= FLAG_F;
                         continue;
                     case L'Q':
-                        if (s_dwFlags & FLAG_Q)
-                        {
-                            ConResPrintf(StdErr, IDS_TOO_MANY, L"/Q", 1);
-                            WhereError(IDS_TYPE_HELP);
+                        if (!WhereDoOption(FLAG_Q, L"/Q"))
                             return FALSE;
-                        }
-                        s_dwFlags |= FLAG_Q;
                         continue;
                     case L'T':
-                        if (s_dwFlags & FLAG_T)
-                        {
-                            ConResPrintf(StdErr, IDS_TOO_MANY, L"/T", 1);
-                            WhereError(IDS_TYPE_HELP);
+                        if (!WhereDoOption(FLAG_T, L"/T"))
                             return FALSE;
-                        }
-                        s_dwFlags |= FLAG_T;
                         continue;
                     case L'R':
                     {
-                        if (s_dwFlags & FLAG_R)
-                        {
-                            ConResPrintf(StdErr, IDS_TOO_MANY, L"/R", 1);
-                            WhereError(IDS_TYPE_HELP);
+                        if (!WhereDoOption(FLAG_R, L"/R"))
                             return FALSE;
-                        }
                         if (iArg + 1 < argc)
                         {
                             ++iArg;
                             s_pszRecursiveDir = argv[iArg];
-                            s_dwFlags |= FLAG_R;
                             continue;
                         }
                         ConResPrintf(StdErr, IDS_WANT_VALUE, L"/R");
