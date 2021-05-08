@@ -51,10 +51,9 @@ WhereSearchGeneric(LPCWSTR pattern, LPWSTR path, BOOL bDir, WHERE_CALLBACK callb
     LPWSTR pch;
     size_t cch;
     BOOL ret;
-    HANDLE hFind;
     WIN32_FIND_DATAW data;
-
-    hFind = FindFirstFileExW(path, FindExInfoStandard, &data, FindExSearchNameMatch, NULL, 0);
+    HANDLE hFind = FindFirstFileExW(path, FindExInfoStandard, &data, FindExSearchNameMatch,
+                                    NULL, 0);
     if (hFind == INVALID_HANDLE_VALUE)
         return TRUE; // not found
 
@@ -85,10 +84,8 @@ static BOOL CALLBACK WherePrintPath(LPCWSTR pattern, LPCWSTR path, WIN32_FIND_DA
     LARGE_INTEGER FileSize;
     FILETIME ftLocal;
     SYSTEMTIME st;
-    INT iPath;
 
-    iPath = strlist_find_i(&s_results, path);
-    if (iPath >= 0)
+    if (strlist_find_i(&s_results, path) >= 0)
         return TRUE; // already exists
     if (!strlist_add(&s_results, str_clone(path)))
         return FALSE; // out of memory
@@ -376,8 +373,8 @@ static BOOL WhereIsRecursiveDirOK(LPCWSTR name)
             WhereError(IDS_BAD_DIR);
             return FALSE;
         }
+        return TRUE;
     }
-    return TRUE;
 }
 
 static BOOL WhereDoPattern(LPWSTR pattern)
