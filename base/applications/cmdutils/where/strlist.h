@@ -7,19 +7,7 @@
 
 #pragma once
 
-static LPWSTR str_clone(LPCWSTR psz)
-{
-    size_t cb;
-    LPWSTR pszNew;
-    if (!psz)
-        return NULL;
-    cb = (wcslen(psz) + 1) * sizeof(WCHAR);
-    pszNew = (LPWSTR)malloc(cb);
-    if (!pszNew)
-        return NULL;
-    memcpy(pszNew, psz, cb);
-    return pszNew;
-}
+#define str_clone _wcsdup
 
 typedef struct strlist_t
 {
