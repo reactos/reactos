@@ -376,8 +376,6 @@ static BOOL WhereFind(LPCWSTR pattern, LPWSTR data, BOOL is_data_var)
     }
 
     ret = WhereSearch(pattern, &dirlist);
-    if (!ret)
-        goto quit;
 
 quit:
     strlist_destroy(&dirlist);
