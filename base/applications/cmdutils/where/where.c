@@ -5,7 +5,6 @@
  * COPYRIGHT:   Copyright 2021 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 #include <stdlib.h>
-#include <string.h>
 #include <windef.h>
 #include <winbase.h>
 #include <winnls.h>
