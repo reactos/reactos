@@ -64,7 +64,12 @@ WhereSearchGeneric(LPCWSTR pattern, LPWSTR path, BOOL bDir, WHERE_CALLBACK callb
         if (bDir != !!(data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
             continue;
         if (bDir && IS_DOTS(data.cFileName))
-            continue;
+            continue; // ignore "." and ".."
+#ifndef FILE_ATTRIBUTE_VIRTUAL
+    #define FILE_ATTRIBUTE_VIRTUAL 0x00010000 // FIXME: Don't define it here
+#endif
+        if (data.dwFileAttributes & FILE_ATTRIBUTE_VIRTUAL)
+            continue; // ignore virtual
 
         StringCchCopyW(pch, cch, data.cFileName); // build full path
 
