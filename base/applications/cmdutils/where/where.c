@@ -43,11 +43,10 @@ static VOID WhereError(UINT nID)
         ConResPuts(StdErr, nID);
 }
 
-typedef BOOL (CALLBACK *WHERE_SEARCH_FN)
-    (LPCWSTR pattern, LPCWSTR path, WIN32_FIND_DATAW *data);
+typedef BOOL (CALLBACK *WHERE_CALLBACK)(LPCWSTR pattern, LPCWSTR path, WIN32_FIND_DATAW *data);
 
 static BOOL
-WhereSearchGeneric(LPCWSTR pattern, LPWSTR pszPath, BOOL bDir, WHERE_SEARCH_FN callback)
+WhereSearchGeneric(LPCWSTR pattern, LPWSTR pszPath, BOOL bDir, WHERE_CALLBACK callback)
 {
     LPWSTR pch;
     INT cch;
