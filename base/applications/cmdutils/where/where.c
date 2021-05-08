@@ -312,7 +312,7 @@ static BOOL WhereGetPathExt(strlist_t *ext_list)
 
 static BOOL WhereFindByDirs(LPCWSTR pattern, LPWSTR dirs)
 {
-    BOOL ret = TRUE;
+    BOOL ret;
     size_t cch;
     WCHAR szPath[MAX_PATH];
     LPWSTR dir, pch;
