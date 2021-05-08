@@ -50,7 +50,7 @@ WhereSearchGeneric(LPCWSTR pattern, LPWSTR path, BOOL bDir, WHERE_CALLBACK callb
 {
     LPWSTR pch;
     size_t cch;
-    BOOL ret = TRUE;
+    BOOL ret;
     HANDLE hFind;
     WIN32_FIND_DATAW data;
 
@@ -70,16 +70,12 @@ WhereSearchGeneric(LPCWSTR pattern, LPWSTR path, BOOL bDir, WHERE_CALLBACK callb
 
         StringCchCopyW(pch, cch, data.cFileName); // build full path
 
-        if (!callback(pattern, path, &data))
-        {
-            ret = FALSE; // out of memory
+        ret = callback(pattern, path, &data);
+        if (!ret) // out of memory
             break;
-        }
     } while (FindNextFileW(hFind, &data));
     FindClose(hFind);
 
-    //--pch;
-    //*pch = 0;
     return ret;
 }
 
