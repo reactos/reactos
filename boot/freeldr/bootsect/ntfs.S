@@ -446,11 +446,11 @@ ExploreIndexRoot:
     mov   ebx, ATTRIBUTE_INDEX_ROOT
     call  FindAttributeHdr
     test  ax, ax
-    jz    near ptr PrintFileSystemError         // fail if no INDEX_ROOT
+    jz    PrintFileSystemError         // fail if no INDEX_ROOT
 
     mov   si, ax
     cmp   byte ptr es:[si + 8], HEX(0)
-    jnz   near ptr PrintFileSystemError         // fail if attribute is non-resident
+    jnz   PrintFileSystemError         // fail if attribute is non-resident
 
     add   si, word ptr es:[si + HEX(14)]
     cmp   dword ptr es:[si], HEX(30)
@@ -488,7 +488,7 @@ ExploreIndexRoot:
         movzx cx, cl
         lea   si, [si + HEX(52)]
         mov   di, offset FreeLdr
-        call  CompareStrInsensitive
+        call  CompareWideStrInsensitive
         lea   si, [si - HEX(52)]
         test  ax, ax
         jz    RootIndexFound
@@ -575,7 +575,7 @@ Multiply64:
 // [ES:SI] - the source file name
 // [DS:DI] - the destination file name
 // CX - compare length
-CompareStrInsensitive:
+CompareWideStrInsensitive:
     push bx
     push si
     push di
@@ -639,7 +639,7 @@ ReadInode:
     call  ReadSectors
     
     cmp   dword ptr es:[bx], FILE_MAGIC // Ensure we get a valid FILE record
-    jnz   near ptr PrintFileSystemError
+    jnz   PrintFileSystemError
 
     call  ApplyFixups
 
@@ -798,7 +798,13 @@ UnpackLen:
     mov   ebx, dword ptr es:[si]
     add   si, ax
 
-    
+    cmp   al, 4
+    jnz   UnpackLen_not4
+    xor   eax, eax
+    dec   eax
+    jmp   UnpackLen_mask
+
+UnpackLen_not4:
     mov   cl, al    // Compute mask (2^(8*len) - 1)
     shl   cl, 3
     xor   eax, eax
@@ -806,6 +812,7 @@ UnpackLen:
     shl   eax, cl
     dec   eax
 
+UnpackLen_mask:
     and   ebx, eax // Apply mask
     pop   cx
     ret
