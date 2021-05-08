@@ -77,7 +77,7 @@ WhereSearchGeneric(LPCWSTR pattern, LPWSTR pszPath, BOOL bDir, WHERE_SEARCH_FN c
             ret = FALSE;
             break;
         }
-    } while (FindNextFile(hFind, &find));
+    } while (FindNextFileW(hFind, &find));
     FindClose(hFind);
 
     //--pch;
