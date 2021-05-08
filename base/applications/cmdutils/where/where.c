@@ -65,9 +65,6 @@ WhereSearchGeneric(LPCWSTR pattern, LPWSTR path, BOOL bDir, WHERE_CALLBACK callb
             continue;
         if (bDir && IS_DOTS(data.cFileName))
             continue; // ignore "." and ".."
-#ifndef FILE_ATTRIBUTE_VIRTUAL
-    #define FILE_ATTRIBUTE_VIRTUAL 0x00010000 // FIXME: Don't define it here
-#endif
         if (data.dwFileAttributes & FILE_ATTRIBUTE_VIRTUAL)
             continue; // ignore virtual
 
