@@ -46,7 +46,7 @@ static VOID WhereError(UINT nID)
 typedef BOOL (CALLBACK *WHERE_CALLBACK)(LPCWSTR pattern, LPCWSTR path, WIN32_FIND_DATAW *data);
 
 static BOOL
-WhereSearchGeneric(LPCWSTR pattern, LPWSTR pszPath, BOOL bDir, WHERE_CALLBACK callback)
+WhereSearchGeneric(LPCWSTR pattern, LPWSTR path, BOOL bDir, WHERE_CALLBACK callback)
 {
     LPWSTR pch;
     size_t cch;
@@ -54,12 +54,12 @@ WhereSearchGeneric(LPCWSTR pattern, LPWSTR pszPath, BOOL bDir, WHERE_CALLBACK ca
     HANDLE hFind;
     WIN32_FIND_DATAW data;
 
-    hFind = FindFirstFileExW(pszPath, FindExInfoStandard, &data, FindExSearchNameMatch, NULL, 0);
+    hFind = FindFirstFileExW(path, FindExInfoStandard, &data, FindExSearchNameMatch, NULL, 0);
     if (hFind == INVALID_HANDLE_VALUE)
         return TRUE; // not found
 
-    pch = wcsrchr(pszPath, L'\\') + 1;
-    cch = MAX_PATH - (pch - pszPath);
+    pch = wcsrchr(path, L'\\') + 1;
+    cch = MAX_PATH - (pch - path);
 
     do
     {
@@ -70,10 +70,9 @@ WhereSearchGeneric(LPCWSTR pattern, LPWSTR pszPath, BOOL bDir, WHERE_CALLBACK ca
 
         StringCchCopyW(pch, cch, data.cFileName); // build full path
 
-        if (!callback(pattern, pszPath, &data))
+        if (!callback(pattern, path, &data))
         {
-            WhereError(IDS_OUTOFMEMORY);
-            ret = FALSE;
+            ret = FALSE; // out of memory
             break;
         }
     } while (FindNextFileW(hFind, &data));
@@ -133,7 +132,6 @@ static BOOL WhereSearchFiles(LPCWSTR pattern, LPCWSTR dir)
     INT iExt;
     size_t cch;
     WCHAR szPath[MAX_PATH];
-
     StringCchCopyW(szPath, _countof(szPath), dir);
     StringCchCatW(szPath, _countof(szPath), L"\\");
     StringCchCatW(szPath, _countof(szPath), pattern);
@@ -141,9 +139,9 @@ static BOOL WhereSearchFiles(LPCWSTR pattern, LPCWSTR dir)
 
     for (iExt = 0; iExt < s_pathext.count; ++iExt)
     {
-        // build path
-        szPath[cch] = 0;
-        StringCchCatW(szPath, _countof(szPath), strlist_get_at(&s_pathext, iExt)); // extension
+        szPath[cch] = 0; // cut off
+        // append extension
+        StringCchCatW(szPath, _countof(szPath), strlist_get_at(&s_pathext, iExt));
 
         if (!WhereSearchGeneric(pattern, szPath, FALSE, WherePrintPath))
             return FALSE;
@@ -198,7 +196,6 @@ static BOOL WhereGetVariable(LPCWSTR name, LPWSTR *value)
     *value = malloc(cch * sizeof(WCHAR));
     if (!*value || !GetEnvironmentVariableW(name, *value, cch))
     {
-        WhereError(IDS_OUTOFMEMORY);
         free(*value);
         *value = NULL;
         return FALSE; // error
@@ -323,17 +320,13 @@ static BOOL WhereFindByDirs(LPCWSTR pattern, LPWSTR dirs)
 
     GetCurrentDirectoryW(_countof(szPath), szPath);
     if (!strlist_add(&dirlist, str_clone(szPath)))
-    {
-        WhereError(IDS_OUTOFMEMORY);
         return FALSE;
-    }
 
     for (dir = wcstok(dirs, L";"); dir; dir = wcstok(NULL, L";"))
     {
         if (*dir == L'"') // began from '"'
         {
-            ++dir;
-            pch = wcschr(dir, L'"'); // find '"'
+            pch = wcschr(++dir, L'"'); // find '"'
             if (*pch)
                 *pch = 0; // cut off
         }
@@ -347,7 +340,6 @@ static BOOL WhereFindByDirs(LPCWSTR pattern, LPWSTR dirs)
 
         if (!strlist_add(&dirlist, str_clone(dir)))
         {
-            WhereError(IDS_OUTOFMEMORY);
             strlist_destroy(&dirlist);
             return FALSE;
         }
@@ -394,6 +386,7 @@ static BOOL WhereIsRecursiveDirOK(LPCWSTR name)
 
 static BOOL WhereDoPattern(LPWSTR pattern)
 {
+    BOOL ret;
     LPWSTR pch = wcsrchr(pattern, L':');
     if (pch)
     {
@@ -405,7 +398,7 @@ static BOOL WhereDoPattern(LPWSTR pattern)
                 WhereError(IDS_ENVPAT_WITH_R);
                 return FALSE;
             }
-            return WhereFindByVar(pch, pattern + 1);
+            ret = WhereFindByVar(pch, pattern + 1);
         }
         else // path:pattern
         {
@@ -419,7 +412,7 @@ static BOOL WhereDoPattern(LPWSTR pattern)
                 WhereError(IDS_BAD_PATHPAT);
                 return FALSE;
             }
-            return WhereFindByDirs(pch, pattern);
+            ret = WhereFindByDirs(pch, pattern);
         }
     }
     else if (s_pszRecursiveDir) // recursive
@@ -431,12 +424,16 @@ static BOOL WhereDoPattern(LPWSTR pattern)
 
         GetFullPathNameW(s_pszRecursiveDir, _countof(szPath), szPath, NULL);
 
-        return WhereSearchRecursive(pattern, szPath);
+        ret = WhereSearchRecursive(pattern, szPath);
     }
     else // otherwise
     {
-        return WhereFindByVar(pattern, L"PATH");
+        ret = WhereFindByVar(pattern, L"PATH");
     }
+
+    if (!ret)
+        WhereError(IDS_OUTOFMEMORY);
+    return ret;
 }
 
 INT __cdecl wmain(INT argc, WCHAR **argv)
