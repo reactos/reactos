@@ -185,7 +185,6 @@ static BOOL WhereSearch(LPCWSTR pattern, strlist_t *dirlist)
     return TRUE;
 }
 
-// get environment variable
 static WRET WhereGetVariable(LPCWSTR name, LPWSTR *value)
 {
     DWORD cch = GetEnvironmentVariableW(name, NULL, 0);
@@ -296,7 +295,7 @@ static BOOL WhereGetPathExt(strlist_t *ext_list)
         return FALSE; // out of memory
 
     if (cchPathExt)
-        GetEnvironmentVariableW(L"PATHEXT", pszPathExt, cchPathExt); // get PATHEXT data
+        GetEnvironmentVariableW(L"PATHEXT", pszPathExt, cchPathExt);
 
     if (!strlist_add(ext_list, str_clone(L""))) // add empty extension for normal search
     {
