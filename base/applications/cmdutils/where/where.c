@@ -313,36 +313,21 @@ static BOOL WhereGetPathExt(strlist_t *ext_list)
     return ret;
 }
 
-static BOOL WhereFind(LPCWSTR pattern, LPWSTR data, BOOL is_data_var)
+static BOOL WhereFindByDirs(LPCWSTR pattern, LPWSTR dirs)
 {
     BOOL ret = TRUE;
     size_t cch;
     WCHAR szPath[MAX_PATH];
-    LPWSTR value, dir, dirs, pch;
+    LPWSTR dir, pch;
     strlist_t dirlist = strlist_default;
-
-    if (is_data_var) // is data a variable?
-    {
-        if (WhereGetVariable(data, &value) == WRET_ERROR)
-            ret = FALSE;
-        if (value == NULL)
-            goto quit;
-        dirs = value;
-    }
-    else
-    {
-        dirs = data;
-        value = NULL;
-    }
 
     GetCurrentDirectoryW(_countof(szPath), szPath);
     if (!strlist_add(&dirlist, str_clone(szPath)))
     {
-        ret = FALSE; // out of memory
-        goto quit;
+        WhereError(IDS_OUTOFMEMORY);
+        return FALSE;
     }
 
-    // this function is destructive against data
     for (dir = wcstok(dirs, L";"); dir; dir = wcstok(NULL, L";"))
     {
         if (*dir == L'"') // began from '"'
@@ -362,15 +347,23 @@ static BOOL WhereFind(LPCWSTR pattern, LPWSTR data, BOOL is_data_var)
 
         if (!strlist_add(&dirlist, str_clone(dir)))
         {
-            ret = FALSE; // out of memory
-            goto quit;
+            WhereError(IDS_OUTOFMEMORY);
+            strlist_destroy(&dirlist);
+            return FALSE;
         }
     }
 
     ret = WhereSearch(pattern, &dirlist);
-
-quit:
     strlist_destroy(&dirlist);
+    return ret;
+}
+
+static BOOL WhereFindByVar(LPCWSTR pattern, LPCWSTR name)
+{
+    BOOL ret = FALSE;
+    LPWSTR value;
+    if (WhereGetVariable(name, &value) != WRET_ERROR && value)
+        ret = WhereFindByDirs(pattern, value);
     free(value);
     return ret;
 }
@@ -404,7 +397,7 @@ static BOOL WhereDoPattern(LPWSTR pattern)
     LPWSTR pch = wcsrchr(pattern, L':');
     if (pch)
     {
-        *pch++ = 0; // this function is destructive against pattern
+        *pch++ = 0;
         if (pattern[0] == L'$') // $env:pattern
         {
             if (s_dwFlags & FLAG_R) // recursive?
@@ -412,7 +405,7 @@ static BOOL WhereDoPattern(LPWSTR pattern)
                 WhereError(IDS_ENVPAT_WITH_R);
                 return FALSE;
             }
-            return WhereFind(pch, pattern + 1, TRUE);
+            return WhereFindByVar(pch, pattern + 1);
         }
         else // path:pattern
         {
@@ -426,7 +419,7 @@ static BOOL WhereDoPattern(LPWSTR pattern)
                 WhereError(IDS_BAD_PATHPAT);
                 return FALSE;
             }
-            return WhereFind(pch, pattern, FALSE);
+            return WhereFindByDirs(pch, pattern);
         }
     }
     else if (s_pszRecursiveDir) // recursive
@@ -442,7 +435,7 @@ static BOOL WhereDoPattern(LPWSTR pattern)
     }
     else // otherwise
     {
-        return WhereFind(pattern, L"PATH", TRUE);
+        return WhereFindByVar(pattern, L"PATH");
     }
 }
 
