@@ -14,6 +14,8 @@
 
 START_TEST(WSAAsync)
 {
+    BOOL bRes;
+    int err;
     WSADATA    WsaData;
     SOCKET     ServerSocket = INVALID_SOCKET,
                ClientSocket = INVALID_SOCKET;
@@ -27,11 +29,11 @@ START_TEST(WSAAsync)
     int addrsize, len;
     WSAEVENT fEvents[2];
     SOCKET fSockets[2];
-    SOCKET sockaccept;
+    SOCKET sockaccept = INVALID_SOCKET;
     WSANETWORKEVENTS WsaNetworkEvents;
     ULONG ulValue = 1;
     DWORD dwWait;
-    DWORD dwFlags = 0;
+    DWORD dwFlags;
     struct fd_set select_rfds;
     struct fd_set select_wfds;
     struct fd_set select_efds;
@@ -40,54 +42,53 @@ START_TEST(WSAAsync)
     unsigned int Addr_con_locLoopCount = 0,
                  ServerSocketLoopCount = 0;
 
-    if (WSAStartup(MAKEWORD(2, 2), &WsaData) != 0)
+    err = WSAStartup(MAKEWORD(2, 2), &WsaData);
+    ok(err == 0, "WSAStartup() failed: %d\n", err);
+
+    if (err != 0)
     {
-        skip("WSAStartup failed\n");
+        skip("No Windows Sockets implementation\n");
         return;
     }
 
-    ServerSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-    ClientSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-    ServerEvent  = WSACreateEvent();
-    ClientEvent  = WSACreateEvent();
-
-    if (ServerSocket == INVALID_SOCKET)
-    {
-        skip("ERROR: Server socket creation failed\n");
-        return;
-    }
-    if (ClientSocket == INVALID_SOCKET)
-    {
-        skip("ERROR: Client socket creation failed\n");
-        closesocket(ServerSocket);
-        return;
-    }
-    if (ServerEvent == WSA_INVALID_EVENT)
-    {
-        skip("ERROR: Server WSAEvent creation failed\n");
-        closesocket(ClientSocket);
-        closesocket(ServerSocket);
-        return;
-    }
-    if (ClientEvent == WSA_INVALID_EVENT)
-    {
-        skip("ERROR: Client WSAEvent creation failed\n");
-        WSACloseEvent(ServerEvent);
-        closesocket(ClientSocket);
-        closesocket(ServerSocket);
-        return;
-    }
     ent = gethostbyname("127.0.0.1");
+    ok(ent != NULL, "gethostbyname(\"127.0.0.1\") failed: %d. Retrying with 'localhost'\n", WSAGetLastError());
     if (ent == NULL)
     {
-        ok(ent != NULL, "ERROR: gethostbyname '127.0.0.1' failed, trying 'localhost'\n");
         ent = gethostbyname("localhost");
+        ok(ent != NULL, "gethostbyname(\"localhost\") failed too: %d\n", WSAGetLastError());
 
         if (ent == NULL)
         {
-            skip("ERROR: gethostbyname 'localhost' failed\n");
+            skip("No host\n");
             goto done;
         }
+    }
+
+    trace("1st part: Events\n");
+
+    ServerEvent = WSACreateEvent();
+    ok(ServerEvent != WSA_INVALID_EVENT, "Server WSACreateEvent() failed: %d\n", WSAGetLastError());
+    ClientEvent = WSACreateEvent();
+    ok(ClientEvent != WSA_INVALID_EVENT, "Client WSACreateEvent() failed: %d\n", WSAGetLastError());
+
+    if (ServerEvent == WSA_INVALID_EVENT ||
+        ClientEvent == WSA_INVALID_EVENT)
+    {
+        skip("No ServerEvent/ClientEvent\n");
+        goto done;
+    }
+
+    ServerSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+    ok(ServerSocket != INVALID_SOCKET, "Server socket() failed: %d\n", WSAGetLastError());
+    ClientSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+    ok(ClientSocket != INVALID_SOCKET, "Client socket() failed: %d\n", WSAGetLastError());
+
+    if (ServerSocket == INVALID_SOCKET ||
+        ClientSocket == INVALID_SOCKET)
+    {
+        skip("No ServerSocket/ClientSocket\n");
+        goto done;
     }
 
     server_addr_in.sin_family = AF_INET;
@@ -120,6 +121,7 @@ START_TEST(WSAAsync)
     fEvents[0] = ServerEvent;
     fEvents[1] = ClientEvent;
 
+    dwFlags = 0;
     while (dwFlags != EXIT_FLAGS)
     {
         dwWait = WaitForMultipleObjects(2, fEvents, FALSE, WAIT_TIMEOUT_);
@@ -159,36 +161,41 @@ START_TEST(WSAAsync)
             }
         }
     }
-    closesocket(sockaccept);
-    closesocket(ServerSocket);
-    closesocket(ClientSocket);
+    // Loop code is not explicit in case of failure, so extra-check here.
+    if (sockaccept != INVALID_SOCKET)
+    {
+        err = closesocket(sockaccept);
+        ok(err == 0, "Accept closesocket() failed: %d\n", WSAGetLastError());
+        sockaccept = INVALID_SOCKET;
+    }
+
+    err = closesocket(ClientSocket);
+    ok(err == 0, "Client closesocket() failed: %d\n", WSAGetLastError());
+    ClientSocket = INVALID_SOCKET;
+    err = closesocket(ServerSocket);
+    ok(err == 0, "Server closesocket() failed: %d\n", WSAGetLastError());
+    ServerSocket = INVALID_SOCKET;
+
+    bRes = WSACloseEvent(ClientEvent);
+    ok(bRes, "Client WSACloseEvent() failed: %d\n", WSAGetLastError());
+    ClientEvent = WSA_INVALID_EVENT;
+    bRes = WSACloseEvent(ServerEvent);
+    ok(bRes, "Server WSACloseEvent() failed: %d\n", WSAGetLastError());
+    ServerEvent = WSA_INVALID_EVENT;
 
     /* same test but with waiting select and getsockname to return proper values */
+    trace("2nd part: select()\n");
+
     ServerSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+    ok(ServerSocket != INVALID_SOCKET, "Server socket() failed: %d\n", WSAGetLastError());
     ClientSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+    ok(ClientSocket != INVALID_SOCKET, "Client socket() failed: %d\n", WSAGetLastError());
 
-    if (ServerSocket == INVALID_SOCKET)
+    if (ServerSocket == INVALID_SOCKET ||
+        ClientSocket == INVALID_SOCKET)
     {
-        skip("ERROR: Server socket creation failed\n");
-        return;
-    }
-    if (ClientSocket == INVALID_SOCKET)
-    {
-        skip("ERROR: Client socket creation failed\n");
-        closesocket(ServerSocket);
-        return;
-    }
-    ent = gethostbyname("127.0.0.1");
-    if (ent == NULL)
-    {
-        ok(ent != NULL, "ERROR: gethostbyname '127.0.0.1' failed, trying 'localhost'\n");
-        ent = gethostbyname("localhost");
-
-        if (ent == NULL)
-        {
-            skip("ERROR: gethostbyname 'localhost' failed\n");
-            goto done;
-        }
+        skip("No ServerSocket/ClientSocket\n");
+        goto done;
     }
 
     server_addr_in.sin_family = AF_INET;
@@ -209,8 +216,8 @@ START_TEST(WSAAsync)
 
     memset(&timeval, 0, sizeof(timeval));
     timeval.tv_usec = WAIT_TIMEOUT_;
-    dwFlags = 0;
 
+    dwFlags = 0;
     while (dwFlags != EXIT_FLAGS)
     {
         len = sizeof(addr_con_loc);
@@ -219,6 +226,7 @@ START_TEST(WSAAsync)
         {
             ok(nSockNameRes == SOCKET_ERROR, "ERROR: getsockname function failed, expected %d error %d\n", SOCKET_ERROR, nSockNameRes);
             ok(WSAGetLastError() == WSAEINVAL, "ERROR: getsockname function failed, expected %ld error %d\n", WSAEINVAL, WSAGetLastError());
+
             trace("Starting client to server connection ...\n");
             // connect
             nConRes = connect(ClientSocket, (struct sockaddr*)&server_addr_in, sizeof(server_addr_in));
@@ -227,34 +235,33 @@ START_TEST(WSAAsync)
             ConnectSent = TRUE;
             continue;
         }
-        else
+
+        if (nSockNameRes != 0)
+            ok(FALSE, "ERROR: getsockname function failed, expected 0 error %d\n", nSockNameRes);
+        if (len != sizeof(addr_con_loc))
+            ok(FALSE, "ERROR: getsockname function wrong size, expected %Iu returned %d\n", sizeof(addr_con_loc), len);
+
+        if (addr_con_loc.sin_addr.s_addr == 0ul)
         {
-            if (nSockNameRes != 0)
-                ok(FALSE, "ERROR: getsockname function failed, expected 0 error %d\n", nSockNameRes);
-            if (len != sizeof(addr_con_loc))
-                ok(FALSE, "ERROR: getsockname function wrong size, expected %Iu returned %d\n", sizeof(addr_con_loc), len);
-
-            if (addr_con_loc.sin_addr.s_addr == 0ul)
+            if (++Addr_con_locLoopCount >= MAX_LOOPCOUNT)
             {
-                if (++Addr_con_locLoopCount >= MAX_LOOPCOUNT)
-                {
-                    ok(FALSE, "Giving up, on getsockname() (%u/%u), as addr_con_loc is not set yet\n",
-                       Addr_con_locLoopCount, MAX_LOOPCOUNT);
-                    goto done;
-                }
-
-                trace("Looping, for getsockname() (%u/%u), as addr_con_loc is not set yet\n",
-                      Addr_con_locLoopCount, MAX_LOOPCOUNT);
-                Sleep(1);
-                continue;
+                ok(FALSE, "Giving up, on getsockname() (%u/%u), as addr_con_loc is not set yet\n",
+                   Addr_con_locLoopCount, MAX_LOOPCOUNT);
+                goto done;
             }
 
-            if (addr_con_loc.sin_addr.s_addr != server_addr_in.sin_addr.s_addr)
-                ok(FALSE, "ERROR: getsockname function wrong addr, expected %08lx returned %08lx\n", server_addr_in.sin_addr.s_addr, addr_con_loc.sin_addr.s_addr);
+            trace("Looping, for getsockname() (%u/%u), as addr_con_loc is not set yet\n",
+                  Addr_con_locLoopCount, MAX_LOOPCOUNT);
+            Sleep(1);
+            continue;
         }
+
+        if (addr_con_loc.sin_addr.s_addr != server_addr_in.sin_addr.s_addr)
+            ok(FALSE, "ERROR: getsockname function wrong addr, expected %08lx returned %08lx\n", server_addr_in.sin_addr.s_addr, addr_con_loc.sin_addr.s_addr);
+
         if ((dwFlags & FD_ACCEPT) != 0)
         {// client connected
-            trace("Select CONNECT...\n");
+            trace("Add FD_CONNECT...\n");
             dwFlags |= FD_CONNECT;
         }
 
@@ -274,26 +281,26 @@ START_TEST(WSAAsync)
             FD_SET(sockaccept, &select_efds);
         }
         if (select(0, &select_rfds, &select_wfds, &select_efds, &timeval) != 0)
-        {// connection accepted
-            if (dwFlags == (FD_ACCEPT | FD_CONNECT))
+        {
+            if ((dwFlags & FD_CONNECT) != 0)
             {
-                trace("Select ACCEPT&CONNECT...\n");
+                trace("Select, already FD_CONNECT...\n");
                 ok(FD_ISSET(ClientSocket, &select_wfds), "ClientSocket is not writable\n");
                 ok(FD_ISSET(sockaccept, &select_wfds), "sockaccept is not writable\n");
                 ok(!FD_ISSET(ServerSocket, &select_rfds), "ServerSocket is readable\n");
             }
-            if (dwFlags == FD_ACCEPT)
+            else if ((dwFlags & FD_ACCEPT) != 0)
             {
-                trace("Select ACCEPT...\n");
+                trace("Select, already FD_ACCEPT...\n");
                 ok(!FD_ISSET(ClientSocket, &select_wfds), "ClientSocket is writable\n");
                 ok(FD_ISSET(sockaccept, &select_wfds), "sockaccept is not writable\n");
                 ok(FD_ISSET(ServerSocket, &select_rfds), "ServerSocket is not readable\n");
             }
-            if (dwFlags == 0)
+            else // if (dwFlags == 0)
             {
                 if (FD_ISSET(ServerSocket, &select_rfds))
-                {
-                    trace("Select ACCEPT...\n");
+                {// connection accepted
+                    trace("Select, add FD_ACCEPT...\n");
                     addrsize = sizeof(addr_remote);
                     sockaccept = accept(ServerSocket, (struct sockaddr*)&addr_remote, &addrsize);
                     ok(sockaccept != INVALID_SOCKET, "ERROR: Connection accept function failed, error %d\n", WSAGetLastError());
@@ -318,11 +325,34 @@ START_TEST(WSAAsync)
     }
 
 done:
-    WSACloseEvent(ServerEvent);
-    WSACloseEvent(ClientEvent);
-    closesocket(sockaccept);
-    closesocket(ServerSocket);
-    closesocket(ClientSocket);
+    if (sockaccept != INVALID_SOCKET)
+    {
+        err = closesocket(sockaccept);
+        ok(err == 0, "Accept closesocket() failed: %d\n", WSAGetLastError());
+    }
 
-    WSACleanup();
+    if (ClientSocket != INVALID_SOCKET)
+    {
+        err = closesocket(ClientSocket);
+        ok(err == 0, "Client closesocket() failed: %d\n", WSAGetLastError());
+    }
+    if (ServerSocket != INVALID_SOCKET)
+    {
+        err = closesocket(ServerSocket);
+        ok(err == 0, "Server closesocket() failed: %d\n", WSAGetLastError());
+    }
+
+    if (ClientEvent != WSA_INVALID_EVENT)
+    {
+        bRes = WSACloseEvent(ClientEvent);
+        ok(bRes, "Client WSACloseEvent() failed: %d\n", WSAGetLastError());
+    }
+    if (ServerEvent != WSA_INVALID_EVENT)
+    {
+        bRes = WSACloseEvent(ServerEvent);
+        ok(bRes, "Server WSACloseEvent() failed: %d\n", WSAGetLastError());
+    }
+
+    err = WSACleanup();
+    ok(err == 0, "WSACleanup() failed: %d\n", WSAGetLastError());
 }
