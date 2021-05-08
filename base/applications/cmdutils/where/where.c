@@ -59,7 +59,6 @@ WhereSearchGeneric(LPCWSTR pattern, LPWSTR path, BOOL bDir, WHERE_CALLBACK callb
 
     pch = wcsrchr(path, L'\\') + 1;
     cch = MAX_PATH - (pch - path);
-
     do
     {
         if (bDir != !!(data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
@@ -74,13 +73,12 @@ WhereSearchGeneric(LPCWSTR pattern, LPWSTR path, BOOL bDir, WHERE_CALLBACK callb
             break;
     } while (FindNextFileW(hFind, &data));
     FindClose(hFind);
-
     return ret;
 }
 
 static BOOL CALLBACK WherePrintPath(LPCWSTR pattern, LPCWSTR path, WIN32_FIND_DATAW *data)
 {
-    WCHAR szPath[MAX_PATH], szDate[32], szTime[32];
+    WCHAR szPath[MAX_PATH + 2], szDate[32], szTime[32];
     LARGE_INTEGER FileSize;
     FILETIME ftLocal;
     SYSTEMTIME st;
@@ -132,7 +130,7 @@ static BOOL WhereSearchFiles(LPCWSTR pattern, LPCWSTR dir)
 
     for (iExt = 0; iExt < s_pathext.count; ++iExt)
     {
-        szPath[cch] = 0; // cut off
+        szPath[cch] = 0; // cut off extension
         // append extension
         StringCchCatW(szPath, _countof(szPath), strlist_get_at(&s_pathext, iExt));
 
@@ -155,12 +153,11 @@ static BOOL WhereSearchRecursive(LPCWSTR pattern, LPCWSTR dir)
 {
     WCHAR szPath[MAX_PATH];
     if (!WhereSearchFiles(pattern, dir))
-        return FALSE;
+        return FALSE; // out of memory
 
     // build path with wildcard
     StringCchCopyW(szPath, _countof(szPath), dir);
     StringCchCatW(szPath, _countof(szPath), L"\\*");
-
     return WhereSearchGeneric(pattern, szPath, TRUE, WhereSearchRecursiveCallback);
 }
 
@@ -201,7 +198,7 @@ static BOOL WhereDoOption(DWORD flag, LPCWSTR option)
     if (s_dwFlags & flag)
     {
         ConResPrintf(StdErr, IDS_TOO_MANY, option, 1);
-        WhereError(IDS_TYPE_HELP);
+        ConResPuts(StdErr, IDS_TYPE_HELP);
         return FALSE;
     }
     s_dwFlags |= flag;
@@ -247,20 +244,20 @@ static BOOL WhereParseCommandLine(INT argc, WCHAR** argv)
                             continue;
                         }
                         ConResPrintf(StdErr, IDS_WANT_VALUE, L"/R");
-                        WhereError(IDS_TYPE_HELP);
+                        ConResPuts(StdErr, IDS_TYPE_HELP);
                         return FALSE;
                     }
                 }
             }
             ConResPrintf(StdErr, IDS_BAD_ARG, argv[iArg]);
-            WhereError(IDS_TYPE_HELP);
+            ConResPuts(StdErr, IDS_TYPE_HELP);
             return FALSE;
         }
         else // pattern?
         {
             if (!strlist_add(&s_patterns, str_clone(argv[iArg]))) // append pattern
             {
-                WhereError(IDS_OUTOFMEMORY);
+                ConResPuts(StdErr, IDS_OUTOFMEMORY);
                 return FALSE;
             }
         }
