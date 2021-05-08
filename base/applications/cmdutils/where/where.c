@@ -184,7 +184,7 @@ static BOOL WhereSearch(LPCWSTR pattern, strlist_t *dirlist)
     return TRUE;
 }
 
-static WRET WhereGetVariable(LPCWSTR name, LPWSTR *value)
+static BOOL WhereGetVariable(LPCWSTR name, LPWSTR *value)
 {
     DWORD cch = GetEnvironmentVariableW(name, NULL, 0);
     if (cch == 0) // variable not found
@@ -192,7 +192,7 @@ static WRET WhereGetVariable(LPCWSTR name, LPWSTR *value)
         *value = NULL;
         if (!(s_dwFlags & FLAG_Q)) // not quiet mode?
             ConResPrintf(StdErr, IDS_BAD_ENVVAR, name);
-        return WRET_NOT_FOUND;
+        return TRUE; // it is error, but continue the task
     }
 
     *value = malloc(cch * sizeof(WCHAR));
@@ -201,9 +201,9 @@ static WRET WhereGetVariable(LPCWSTR name, LPWSTR *value)
         WhereError(IDS_OUTOFMEMORY);
         free(*value);
         *value = NULL;
-        return WRET_ERROR;
+        return FALSE; // error
     }
-    return WRET_SUCCESS;
+    return TRUE;
 }
 
 static BOOL WhereDoOption(DWORD flag, LPCWSTR option)
@@ -360,9 +360,10 @@ static BOOL WhereFindByDirs(LPCWSTR pattern, LPWSTR dirs)
 
 static BOOL WhereFindByVar(LPCWSTR pattern, LPCWSTR name)
 {
-    BOOL ret = FALSE;
+    BOOL ret;
     LPWSTR value;
-    if (WhereGetVariable(name, &value) != WRET_ERROR && value)
+    ret = WhereGetVariable(name, &value);
+    if (ret && value)
         ret = WhereFindByDirs(pattern, value);
     free(value);
     return ret;
