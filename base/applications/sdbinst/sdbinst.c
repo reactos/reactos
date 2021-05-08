@@ -579,7 +579,7 @@ SdbUninstall(
     if (pdb == NULL)
     {
         wprintf(L"Can't open database %ls\n", sdbPath);
-        goto end;
+        return FALSE;
     }
 
     tagDb = SdbFindFirstTag(pdb, TAGID_ROOT, TAG_DATABASE);
@@ -590,7 +590,7 @@ SdbUninstall(
     }
 
     //
-    if (!GetSdbGuid(pdb, tagDb, &dbGuid))    
+    if (!GetSdbGuid(pdb, tagDb, &dbGuid))
     {
         wprintf(L"GetSdbGuid error\n");
         goto end;
@@ -620,29 +620,32 @@ SdbUninstall(
     }
 
     SdbCloseDatabase(pdb);
+    pdb = NULL;
 
     hres = DeleteUninstallKey(sdbName);
     if (FAILED(hres))
     {
         wprintf(L"Remove uninstall key fail\n");
-        //goto end;
     }
 
     if (!SdbUnregisterDatabase(&dbGuid))
     {
         wprintf(L"SdbUnregisterDatabase\n");
-        goto end;
+        return FALSE;
     }
 
-    if (!DeleteFile(sdbPath))
+    SetFileAttributesW(sdbPath, FILE_ATTRIBUTE_NORMAL);
+    if (!DeleteFileW(sdbPath))
     {
         wprintf(L"Remove file fail 0x%08X\n", GetLastError());
-        goto end;
+        return FALSE;
     }
 
     res = TRUE;
 
 end:
+    if (pdb)
+        SdbCloseDatabase(pdb);
     return res;
 }
 
@@ -871,7 +874,7 @@ int _tmain(int argc, LPWSTR argv[])
                 }
 
                 nameSdbStr = argv[i];
-                wprintf(L"guidSdbStr %ls\n", nameSdbStr);
+                wprintf(L"nameSdbStr %ls\n", nameSdbStr);
 
                 isUninstByName = TRUE;
                 isInstall = FALSE;
