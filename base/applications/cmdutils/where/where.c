@@ -132,12 +132,13 @@ static BOOL CALLBACK WherePrintPath(LPCWSTR pattern, LPCWSTR path, WIN32_FIND_DA
 static BOOL WhereSearchFiles(LPCWSTR pattern, LPCWSTR dir)
 {
     WCHAR szPath[MAX_PATH];
-    INT iExt, cch;
+    INT iExt;
+    size_t cch;
 
     StringCchCopyW(szPath, _countof(szPath), dir);
     StringCchCatW(szPath, _countof(szPath), L"\\");
     StringCchCatW(szPath, _countof(szPath), pattern);
-    cch = lstrlenW(szPath);
+    cch = wcslen(szPath);
 
     for (iExt = 0; iExt < s_pathext.count; ++iExt)
     {
