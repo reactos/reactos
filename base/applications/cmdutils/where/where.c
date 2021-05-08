@@ -44,7 +44,7 @@ static VOID WhereError(UINT nID)
 }
 
 typedef BOOL (CALLBACK *WHERE_SEARCH_FN)
-    (LPCWSTR pattern, LPCWSTR path, WIN32_FIND_DATAW *finddata);
+    (LPCWSTR pattern, LPCWSTR path, WIN32_FIND_DATAW *data);
 
 static BOOL
 WhereSearchGeneric(LPCWSTR pattern, LPWSTR pszPath, BOOL bDir, WHERE_SEARCH_FN callback)
@@ -53,9 +53,9 @@ WhereSearchGeneric(LPCWSTR pattern, LPWSTR pszPath, BOOL bDir, WHERE_SEARCH_FN c
     INT cch;
     BOOL ret = TRUE;
     HANDLE hFind;
-    WIN32_FIND_DATAW find;
+    WIN32_FIND_DATAW data;
 
-    hFind = FindFirstFileExW(pszPath, FindExInfoStandard, &find, FindExSearchNameMatch, NULL, 0);
+    hFind = FindFirstFileExW(pszPath, FindExInfoStandard, &data, FindExSearchNameMatch, NULL, 0);
     if (hFind == INVALID_HANDLE_VALUE)
         return TRUE; // not found
 
@@ -64,20 +64,20 @@ WhereSearchGeneric(LPCWSTR pattern, LPWSTR pszPath, BOOL bDir, WHERE_SEARCH_FN c
 
     do
     {
-        if (bDir != !!(find.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
+        if (bDir != !!(data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
             continue;
-        if (bDir && IS_DOTS(find.cFileName))
+        if (bDir && IS_DOTS(data.cFileName))
             continue;
 
-        StringCchCopyW(pch, cch, find.cFileName); // build full path
+        StringCchCopyW(pch, cch, data.cFileName); // build full path
 
-        if (!callback(pattern, pszPath, &find))
+        if (!callback(pattern, pszPath, &data))
         {
             WhereError(IDS_OUTOFMEMORY);
             ret = FALSE;
             break;
         }
-    } while (FindNextFileW(hFind, &find));
+    } while (FindNextFileW(hFind, &data));
     FindClose(hFind);
 
     //--pch;
@@ -85,7 +85,7 @@ WhereSearchGeneric(LPCWSTR pattern, LPWSTR pszPath, BOOL bDir, WHERE_SEARCH_FN c
     return ret;
 }
 
-static BOOL CALLBACK WherePrintPath(LPCWSTR pattern, LPCWSTR path, WIN32_FIND_DATAW *finddata)
+static BOOL CALLBACK WherePrintPath(LPCWSTR pattern, LPCWSTR path, WIN32_FIND_DATAW *data)
 {
     WCHAR szPath[MAX_PATH], szDate[32], szTime[32];
     LARGE_INTEGER FileSize;
@@ -104,14 +104,14 @@ static BOOL CALLBACK WherePrintPath(LPCWSTR pattern, LPCWSTR path, WIN32_FIND_DA
     if (s_dwFlags & FLAG_T) // print detailed info
     {
         // convert date/time
-        FileTimeToLocalFileTime(&finddata->ftLastWriteTime, &ftLocal);
+        FileTimeToLocalFileTime(&data->ftLastWriteTime, &ftLocal);
         FileTimeToSystemTime(&ftLocal, &st);
         // get date/time strings
         GetDateFormatW(LOCALE_USER_DEFAULT, 0, &st, NULL, szDate, _countof(szDate));
         GetTimeFormatW(LOCALE_USER_DEFAULT, 0, &st, NULL, szTime, _countof(szTime));
         // set size
-        FileSize.LowPart = finddata->nFileSizeLow;
-        FileSize.HighPart = finddata->nFileSizeHigh;
+        FileSize.LowPart = data->nFileSizeLow;
+        FileSize.HighPart = data->nFileSizeHigh;
         // print
         if (s_dwFlags & FLAG_F) // double quote
             StringCbPrintfW(szPath, sizeof(szPath), L"\"%s\"", path);
@@ -155,7 +155,7 @@ static BOOL WhereSearchFiles(LPCWSTR pattern, LPCWSTR dir)
 static BOOL WhereSearchRecursive(LPCWSTR pattern, LPCWSTR dir);
 
 static BOOL CALLBACK
-WhereSearchRecursiveCallback(LPCWSTR pattern, LPCWSTR path, WIN32_FIND_DATAW *finddata)
+WhereSearchRecursiveCallback(LPCWSTR pattern, LPCWSTR path, WIN32_FIND_DATAW *data)
 {
     return WhereSearchRecursive(pattern, path);
 }
@@ -333,7 +333,7 @@ static BOOL WhereGetPathExt(strlist_t *ext_list)
     return ret;
 }
 
-static BOOL WhereFind(LPCWSTR SearchFor, LPWSTR SearchData, BOOL IsVar)
+static BOOL WhereFind(LPCWSTR pattern, LPWSTR data, BOOL is_data_var)
 {
     BOOL ret = TRUE;
     size_t cch;
@@ -341,9 +341,9 @@ static BOOL WhereFind(LPCWSTR SearchFor, LPWSTR SearchData, BOOL IsVar)
     LPWSTR pszValue, dir, dirs, pch;
     strlist_t dirlist = strlist_default;
 
-    if (IsVar) // is SearchData a variable?
+    if (is_data_var) // is data a variable?
     {
-        if (WhereGetVariable(SearchData, &pszValue) == WRET_ERROR)
+        if (WhereGetVariable(data, &pszValue) == WRET_ERROR)
             ret = FALSE;
         if (pszValue == NULL)
             goto quit;
@@ -351,7 +351,7 @@ static BOOL WhereFind(LPCWSTR SearchFor, LPWSTR SearchData, BOOL IsVar)
     }
     else
     {
-        dirs = SearchData;
+        dirs = data;
         pszValue = NULL;
     }
 
@@ -363,7 +363,7 @@ static BOOL WhereFind(LPCWSTR SearchFor, LPWSTR SearchData, BOOL IsVar)
         goto quit;
     }
 
-    // this function is destructive against SearchData
+    // this function is destructive against data
     for (dir = wcstok(dirs, L";"); dir; dir = wcstok(NULL, L";"))
     {
         if (*dir == L'"') // began from '"'
@@ -388,7 +388,7 @@ static BOOL WhereFind(LPCWSTR SearchFor, LPWSTR SearchData, BOOL IsVar)
         }
     }
 
-    ret = WhereSearch(SearchFor, &dirlist);
+    ret = WhereSearch(pattern, &dirlist);
     if (!ret)
         goto quit;
 
@@ -423,20 +423,20 @@ static BOOL WhereIsRecursiveDirOK(LPCWSTR name)
     return TRUE;
 }
 
-static BOOL WhereDoPattern(LPWSTR SearchFor)
+static BOOL WhereDoPattern(LPWSTR pattern)
 {
-    LPWSTR pch = wcsrchr(SearchFor, L':');
+    LPWSTR pch = wcsrchr(pattern, L':');
     if (pch)
     {
-        *pch++ = 0; // this function is destructive against SearchFor
-        if (SearchFor[0] == L'$') // $env:pattern
+        *pch++ = 0; // this function is destructive against pattern
+        if (pattern[0] == L'$') // $env:pattern
         {
             if (s_dwFlags & FLAG_R) // recursive?
             {
                 WhereError(IDS_ENVPAT_WITH_R);
                 return FALSE;
             }
-            return WhereFind(pch, SearchFor + 1, TRUE);
+            return WhereFind(pch, pattern + 1, TRUE);
         }
         else // path:pattern
         {
@@ -450,7 +450,7 @@ static BOOL WhereDoPattern(LPWSTR SearchFor)
                 WhereError(IDS_BAD_PATHPAT);
                 return FALSE;
             }
-            return WhereFind(pch, SearchFor, FALSE);
+            return WhereFind(pch, pattern, FALSE);
         }
     }
     else if (s_pszRecursiveDir) // recursive
@@ -462,11 +462,11 @@ static BOOL WhereDoPattern(LPWSTR SearchFor)
 
         GetFullPathNameW(s_pszRecursiveDir, _countof(szPath), szPath, NULL);
 
-        return WhereSearchRecursive(SearchFor, szPath);
+        return WhereSearchRecursive(pattern, szPath);
     }
     else // otherwise
     {
-        return WhereFind(SearchFor, L"PATH", TRUE);
+        return WhereFind(pattern, L"PATH", TRUE);
     }
 }
 
