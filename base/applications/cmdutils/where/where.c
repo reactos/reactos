@@ -125,15 +125,14 @@ static BOOL CALLBACK WherePrintPath(LPCWSTR pattern, LPCWSTR path, WIN32_FIND_DA
         else
             ConPrintf(StdOut, L"%ls\n", path);
     }
-
     return TRUE; // success
 }
 
 static BOOL WhereSearchFiles(LPCWSTR pattern, LPCWSTR dir)
 {
-    WCHAR szPath[MAX_PATH];
     INT iExt;
     size_t cch;
+    WCHAR szPath[MAX_PATH];
 
     StringCchCopyW(szPath, _countof(szPath), dir);
     StringCchCatW(szPath, _countof(szPath), L"\\");
@@ -188,9 +187,9 @@ static BOOL WhereSearch(LPCWSTR pattern, strlist_t *dirlist)
 static WRET WhereGetVariable(LPCWSTR name, LPWSTR *value)
 {
     DWORD cch = GetEnvironmentVariableW(name, NULL, 0);
-    *value = NULL;
     if (cch == 0) // variable not found
     {
+        *value = NULL;
         if (!(s_dwFlags & FLAG_Q)) // not quiet mode?
             ConResPrintf(StdErr, IDS_BAD_ENVVAR, name);
         return WRET_NOT_FOUND;
@@ -207,15 +206,15 @@ static WRET WhereGetVariable(LPCWSTR name, LPWSTR *value)
     return WRET_SUCCESS;
 }
 
-static BOOL WhereDoOption(DWORD dwFlag, LPCWSTR option)
+static BOOL WhereDoOption(DWORD flag, LPCWSTR option)
 {
-    if (s_dwFlags & dwFlag)
+    if (s_dwFlags & flag)
     {
         ConResPrintf(StdErr, IDS_TOO_MANY, option, 1);
         WhereError(IDS_TYPE_HELP);
         return FALSE;
     }
-    s_dwFlags |= dwFlag;
+    s_dwFlags |= flag;
     return TRUE;
 }
 
@@ -286,11 +285,7 @@ static BOOL WhereGetPathExt(strlist_t *ext_list)
     LPWSTR pszPathExt, ext;
     DWORD cchPathExt = GetEnvironmentVariableW(L"PATHEXT", NULL, 0);
 
-    if (cchPathExt)
-        pszPathExt = malloc(cchPathExt * sizeof(WCHAR));
-    else
-        pszPathExt = str_clone(DEFAULT_PATHEXT);
-
+    pszPathExt = (cchPathExt ? malloc(cchPathExt * sizeof(WCHAR)) : str_clone(DEFAULT_PATHEXT));
     if (!pszPathExt)
         return FALSE; // out of memory
 
@@ -304,8 +299,7 @@ static BOOL WhereGetPathExt(strlist_t *ext_list)
         return FALSE;
     }
 
-    // for all extensions
-    for (ext = wcstok(pszPathExt, L";"); ext; ext = wcstok(NULL, L";"))
+    for (ext = wcstok(pszPathExt, L";"); ext; ext = wcstok(NULL, L";")) // for all extensions
     {
         if (!strlist_add(ext_list, str_clone(ext))) // add extension to ext_list
         {
@@ -341,11 +335,10 @@ static BOOL WhereFind(LPCWSTR pattern, LPWSTR data, BOOL is_data_var)
         value = NULL;
     }
 
-    // add the current directory
     GetCurrentDirectoryW(_countof(szPath), szPath);
     if (!strlist_add(&dirlist, str_clone(szPath)))
     {
-        ret = FALSE;
+        ret = FALSE; // out of memory
         goto quit;
     }
 
@@ -369,7 +362,7 @@ static BOOL WhereFind(LPCWSTR pattern, LPWSTR data, BOOL is_data_var)
 
         if (!strlist_add(&dirlist, str_clone(dir)))
         {
-            ret = FALSE;
+            ret = FALSE; // out of memory
             goto quit;
         }
     }
@@ -384,7 +377,6 @@ quit:
 
 static BOOL WhereIsRecursiveDirOK(LPCWSTR name)
 {
-    DWORD attrs;
     if (wcschr(name, L';') != NULL)
     {
         WhereError(IDS_BAD_NAME);
@@ -392,7 +384,7 @@ static BOOL WhereIsRecursiveDirOK(LPCWSTR name)
     }
     else
     {
-        attrs = GetFileAttributesW(name);
+        DWORD attrs = GetFileAttributesW(name);
         if (attrs == INVALID_FILE_ATTRIBUTES) // file not found
         {
             WhereError(IDS_CANT_FOUND);
