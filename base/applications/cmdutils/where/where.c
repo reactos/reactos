@@ -316,7 +316,7 @@ static BOOL WhereFindByDirs(LPCWSTR pattern, LPWSTR dirs)
 
     GetCurrentDirectoryW(_countof(szPath), szPath);
     if (!strlist_add(&dirlist, str_clone(szPath)))
-        return FALSE;
+        return FALSE; // out of memory
 
     for (dir = wcstok(dirs, L";"); dir; dir = wcstok(NULL, L";"))
     {
@@ -337,7 +337,7 @@ static BOOL WhereFindByDirs(LPCWSTR pattern, LPWSTR dirs)
         if (!strlist_add(&dirlist, str_clone(dir)))
         {
             strlist_destroy(&dirlist);
-            return FALSE;
+            return FALSE; // out of memory
         }
     }
 
