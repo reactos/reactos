@@ -325,21 +325,21 @@ static BOOL WhereFind(LPCWSTR pattern, LPWSTR data, BOOL is_data_var)
     BOOL ret = TRUE;
     size_t cch;
     WCHAR szPath[MAX_PATH];
-    LPWSTR pszValue, dir, dirs, pch;
+    LPWSTR value, dir, dirs, pch;
     strlist_t dirlist = strlist_default;
 
     if (is_data_var) // is data a variable?
     {
-        if (WhereGetVariable(data, &pszValue) == WRET_ERROR)
+        if (WhereGetVariable(data, &value) == WRET_ERROR)
             ret = FALSE;
-        if (pszValue == NULL)
+        if (value == NULL)
             goto quit;
-        dirs = pszValue;
+        dirs = value;
     }
     else
     {
         dirs = data;
-        pszValue = NULL;
+        value = NULL;
     }
 
     // add the current directory
@@ -379,7 +379,7 @@ static BOOL WhereFind(LPCWSTR pattern, LPWSTR data, BOOL is_data_var)
 
 quit:
     strlist_destroy(&dirlist);
-    free(pszValue);
+    free(value);
     return ret;
 }
 
