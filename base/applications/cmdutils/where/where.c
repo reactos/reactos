@@ -49,7 +49,7 @@ static BOOL
 WhereSearchGeneric(LPCWSTR pattern, LPWSTR pszPath, BOOL bDir, WHERE_CALLBACK callback)
 {
     LPWSTR pch;
-    INT cch;
+    size_t cch;
     BOOL ret = TRUE;
     HANDLE hFind;
     WIN32_FIND_DATAW data;
