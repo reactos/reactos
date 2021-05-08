@@ -360,9 +360,8 @@ static BOOL WhereFindByDirs(LPCWSTR pattern, LPWSTR dirs)
 
 static BOOL WhereFindByVar(LPCWSTR pattern, LPCWSTR name)
 {
-    BOOL ret;
     LPWSTR value;
-    ret = WhereGetVariable(name, &value);
+    BOOL ret = WhereGetVariable(name, &value);
     if (ret && value)
         ret = WhereFindByDirs(pattern, value);
     free(value);
