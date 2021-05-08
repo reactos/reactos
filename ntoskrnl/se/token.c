@@ -1823,6 +1823,12 @@ SeFilterToken(IN PACCESS_TOKEN ExistingToken,
  * pool memory allocation has failed to satisfy an operation. Otherwise
  * STATUS_INVALID_INFO_CLASS is returned indicating that the information
  * class provided is not supported by the routine.
+ *
+ * @remarks
+ * Only certain information classes are not implemented in this function and
+ * these are TokenOrigin, TokenGroupsAndPrivileges, TokenRestrictedSids and
+ * TokenSandBoxInert. The following classes are implemented in NtQueryInformationToken
+ * only.
  */
 NTSTATUS
 NTAPI
