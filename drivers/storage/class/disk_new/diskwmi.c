@@ -267,7 +267,7 @@ GUID DiskPredictFailureEventGuid = WMI_STORAGE_PREDICT_FAILURE_EVENT_GUID;
 //
 // Enable SMART
 //
-_inline NTSTATUS
+static NTSTATUS
 DiskEnableSmart(
     PFUNCTIONAL_DEVICE_EXTENSION FdoExtension
     )
@@ -289,7 +289,7 @@ DiskEnableSmart(
 //
 // Disable SMART
 //
-_inline NTSTATUS
+static NTSTATUS
 DiskDisableSmart(
     PFUNCTIONAL_DEVICE_EXTENSION FdoExtension
     )
@@ -307,7 +307,7 @@ DiskDisableSmart(
                                    &bufferSize);
 }
 
-
+#ifndef __REACTOS__ // functions are not used
 //
 // Enable Attribute Autosave
 //
@@ -350,12 +350,12 @@ DiskDisableSmartAttributeAutosave(
                                    (PSRB_IO_CONTROL)srbControl,
                                    &bufferSize);
 }
-
+#endif
 
 //
 // Initialize execution of SMART online diagnostics
 //
-_inline NTSTATUS
+static NTSTATUS
 DiskExecuteSmartDiagnostics(
     PFUNCTIONAL_DEVICE_EXTENSION FdoExtension,
     UCHAR Subcommand

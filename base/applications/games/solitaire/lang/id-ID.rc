@@ -71,6 +71,7 @@ BEGIN
     BEGIN
         MENUITEM "&Main Baru\tF2", IDM_GAME_NEW
         MENUITEM SEPARATOR
+        MENUITEM "&Undo", IDM_GAME_UNDO, GRAYED
         MENUITEM "&Dek...", IDM_GAME_DECK
         MENUITEM "&Pilihan...", IDM_GAME_OPTIONS
         MENUITEM SEPARATOR

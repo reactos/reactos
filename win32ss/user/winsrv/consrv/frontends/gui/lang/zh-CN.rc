@@ -5,7 +5,7 @@ BEGIN
     IDS_EDIT "编辑"
     IDS_MARK "标记"
     IDS_COPY "复制\tEnter"
-    IDS_PASTE "黏贴"
+    IDS_PASTE "粘贴"
     IDS_SELECTALL "全部选择"
     IDS_SCROLL "滚动"
     IDS_FIND "查找..."

@@ -1,5 +1,5 @@
 @ stdcall RtlAssert(ptr ptr long ptr)
-@ cdecl ScsiDebugPrint()
+@ varargs ScsiDebugPrint(long str)
 @ stdcall ScsiPortCompleteRequest(ptr long long long long)
 @ stdcall ScsiPortConvertPhysicalAddressToUlong(long long)
 @ stdcall -arch=i386 ScsiPortConvertUlongToPhysicalAddress(long)

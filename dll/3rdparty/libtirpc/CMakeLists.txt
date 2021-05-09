@@ -6,14 +6,6 @@ add_definitions(-DUNICODE -D_WIN32 -DPORTMAP -Dstrdup=_strdup -D_CRT_NONSTDC_NO_
 
 include_directories(${REACTOS_SOURCE_DIR}/dll/3rdparty/libtirpc/tirpc)
 
-if(MSVC)
-    # error C4133: '=': incompatible types - from 'char *' to 'int32_t *'
-    replace_compile_flags("/we4133" " ")
-
-    # Disable warning C4477 (printf format warnings)
-    add_compile_flags("/wd4313")
-endif()
-
 list(APPEND SOURCE
     src/asprintf.c
 #    src/auth_des.c
@@ -101,9 +93,17 @@ add_library(libtirpc MODULE
     libtirpc/libtirpc_ros.rc
     ${CMAKE_CURRENT_BINARY_DIR}/libtirpc.def)
 
-if(MSVC AND (NOT USE_CLANG_CL))
-    replace_compile_flags("/we4101" " ")
-    target_compile_options(libtirpc PRIVATE /wd4101 /wd4133 /wd4473 /wd4477)
+if(MSVC)
+    # error C4133: '=': incompatible types - from 'char *' to 'int32_t *'
+    remove_target_compile_option(libtirpc "/we4133")
+    # Disable warning C4313 (format string conflicts)
+    remove_target_compile_option(libtirpc "/we4313")
+    # Disable warning C4477 (printf format warnings)
+    remove_target_compile_option(libtirpc "/we4477")
+    if (NOT USE_CLANG_CL)
+        remove_target_compile_option(libtirpc "/we4101")
+        target_compile_options(libtirpc PRIVATE /wd4101 /wd4133 /wd4473 /wd4477)
+    endif()
 else()
     # FIXME: Tons of warnings.
     target_compile_options(libtirpc PRIVATE "-w")

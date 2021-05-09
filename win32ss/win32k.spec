@@ -30,7 +30,7 @@
 @ stdcall EngCreateSemaphore()
 @ stdcall EngCreateWnd(ptr ptr ptr long long)
 @ stdcall EngDebugBreak() NTOSKRNL.DbgBreakPoint
-@ stdcall EngDebugPrint(ptr ptr ptr)
+@ stdcall EngDebugPrint(str str ptr)
 @ stdcall EngDeleteClip(ptr)
 @ stdcall EngDeleteDriverObj(ptr long long)
 @ stdcall EngDeleteEvent(ptr)

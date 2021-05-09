@@ -213,13 +213,7 @@
 
 /* Inlines */
 #ifndef FORCEINLINE
- #if defined(_MSC_VER)
-  #define FORCEINLINE __forceinline
- #elif ( __MINGW_GNUC_PREREQ(4, 3)  &&  __STDC_VERSION__ >= 199901L)
-  #define FORCEINLINE extern inline __attribute__((__always_inline__,__gnu_inline__))
- #else
-  #define FORCEINLINE extern __inline__ __attribute__((__always_inline__))
- #endif
+ #define FORCEINLINE __forceinline
 #endif /* FORCEINLINE */
 
 #ifndef DECLSPEC_NOINLINE
@@ -320,9 +314,8 @@
 #endif /* DEPRECATE_DDK_FUNCTIONS */
 
 /* Use to silence unused variable warnings when it is intentional */
-#define UNREFERENCED_PARAMETER(P) {(P)=(P);}
-#define UNREFERENCED_LOCAL_VARIABLE(L) ((void)(L))
-#define DBG_UNREFERENCED_PARAMETER(P) {(P)=(P);}
+#define UNREFERENCED_PARAMETER(P) ((void)(P))
+#define DBG_UNREFERENCED_PARAMETER(P) ((void)(P))
 #define DBG_UNREFERENCED_LOCAL_VARIABLE(L) ((void)(L))
 
 /* Void Pointers */
@@ -742,12 +735,12 @@ extern "C++" { \
 #define COMPILETIME_OR_5FLAGS(a,b,c,d,e)    ((UINT)(a)|(UINT)(b)|(UINT)(c)|(UINT)(d)|(UINT)(e))
 
 /* Type Limits */
-#define MINCHAR   0x80
-#define MAXCHAR   0x7f
-#define MINSHORT  0x8000
-#define MAXSHORT  0x7fff
-#define MINLONG   0x80000000
-#define MAXLONG   0x7fffffff
+#define MINCHAR   (-128)
+#define MAXCHAR   127
+#define MINSHORT  (-32768)
+#define MAXSHORT  32767
+#define MINLONG   (-2147483648)
+#define MAXLONG   2147483647
 $if(_NTDEF_)
 #define MAXUCHAR  0xff
 #define MAXUSHORT 0xffff
@@ -804,6 +797,14 @@ $endif(_WINNT_)
  #define DEFAULT_UNREACHABLE default: __builtin_unreachable()
 #else
  #define DEFAULT_UNREACHABLE default: break
+#endif
+
+#if defined(__GNUC__) || defined(__clang__)
+ #define UNREACHABLE __builtin_unreachable()
+#elif defined(_MSC_VER)
+ #define UNREACHABLE __assume(0)
+#else
+ #define UNREACHABLE
 #endif
 
 #define VER_WORKSTATION_NT                  0x40000000
@@ -1080,6 +1081,24 @@ $endif(_WINNT_)
 #define LANG_YORUBA                               0x6a
 #define LANG_ZULU                                 0x35
 
+#ifdef __REACTOS__
+/* WINE extensions */
+/* These are documented by the MSDN but are missing from the Windows header */
+#define LANG_MALAGASY       0x8d
+
+/* FIXME: these are not defined anywhere */
+#define LANG_SUTU           0x30
+#define LANG_TSONGA         0x31
+#define LANG_VENDA          0x33
+
+/* non standard; keep the number high enough (but < 0xff) */
+#define LANG_ASTURIAN                    0xa5
+#define LANG_ESPERANTO                   0x8f
+#define LANG_WALON                       0x90
+#define LANG_CORNISH                     0x92
+#define LANG_MANX_GAELIC                 0x94
+#endif
+
 #define SUBLANG_NEUTRAL                             0x00
 #define SUBLANG_DEFAULT                             0x01
 #define SUBLANG_SYS_DEFAULT                         0x02
@@ -1324,6 +1343,15 @@ $endif(_WINNT_)
 #define SUBLANG_YI_PRC                              0x01
 #define SUBLANG_YORUBA_NIGERIA                      0x01
 #define SUBLANG_ZULU_SOUTH_AFRICA                   0x01
+
+#ifdef __REACTOS__
+/* WINE extensions */
+#define SUBLANG_DUTCH_SURINAM              0x03
+#define SUBLANG_ROMANIAN_MOLDAVIA          0x02
+#define SUBLANG_RUSSIAN_MOLDAVIA           0x02
+#define SUBLANG_LITHUANIAN_CLASSIC         0x02
+#define SUBLANG_MANX_GAELIC                0x01
+#endif
 
 #define SORT_DEFAULT                     0x0
 #define SORT_INVARIANT_MATH              0x1

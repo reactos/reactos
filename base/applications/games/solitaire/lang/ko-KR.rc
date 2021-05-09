@@ -65,6 +65,7 @@ BEGIN
     BEGIN
         MENUITEM "새 게임(&D)\tF2", IDM_GAME_NEW
         MENUITEM SEPARATOR
+        MENUITEM "&Undo", IDM_GAME_UNDO, GRAYED
         MENUITEM "덱(&C)...", IDM_GAME_DECK /* FIXME: is 덱 correct? */
         MENUITEM "옵션(&O)...", IDM_GAME_OPTIONS
         MENUITEM SEPARATOR

@@ -7449,7 +7449,9 @@ static INT LISTVIEW_GetNextItem(const LISTVIEW_INFO *infoPtr, INT nItem, UINT uF
     UINT uMask = 0;
     LVFINDINFOW lvFindInfo;
     INT nCountPerColumn;
+#ifndef __REACTOS__
     INT nCountPerRow;
+#endif
     INT i;
 
     TRACE("nItem=%d, uFlags=%x, nItemCount=%d\n", nItem, uFlags, infoPtr->nItemCount);
@@ -7490,6 +7492,7 @@ static INT LISTVIEW_GetNextItem(const LISTVIEW_INFO *infoPtr, INT nItem, UINT uF
       }
       else
       {
+#ifndef __REACTOS__
         /* Special case for autoarrange - move 'til the top of a list */
         if (is_autoarrange(infoPtr))
         {
@@ -7502,6 +7505,7 @@ static INT LISTVIEW_GetNextItem(const LISTVIEW_INFO *infoPtr, INT nItem, UINT uF
           }
           return -1;
         }
+#endif
         lvFindInfo.flags = LVFI_NEARESTXY;
         lvFindInfo.vkDirection = VK_UP;
         LISTVIEW_GetItemPosition(infoPtr, nItem, &lvFindInfo.pt);
@@ -7525,6 +7529,7 @@ static INT LISTVIEW_GetNextItem(const LISTVIEW_INFO *infoPtr, INT nItem, UINT uF
       }
       else
       {
+#ifndef __REACTOS__
         /* Special case for autoarrange - move 'til the bottom of a list */
         if (is_autoarrange(infoPtr))
         {
@@ -7537,6 +7542,7 @@ static INT LISTVIEW_GetNextItem(const LISTVIEW_INFO *infoPtr, INT nItem, UINT uF
           }
           return -1;
         }
+#endif
         lvFindInfo.flags = LVFI_NEARESTXY;
         lvFindInfo.vkDirection = VK_DOWN;
         LISTVIEW_GetItemPosition(infoPtr, nItem, &lvFindInfo.pt);
@@ -7561,6 +7567,7 @@ static INT LISTVIEW_GetNextItem(const LISTVIEW_INFO *infoPtr, INT nItem, UINT uF
       }
       else if ((infoPtr->uView == LV_VIEW_SMALLICON) || (infoPtr->uView == LV_VIEW_ICON))
       {
+#ifndef __REACTOS__
         /* Special case for autoarrange - move 'til the beginning of a row */
         if (is_autoarrange(infoPtr))
         {
@@ -7573,6 +7580,7 @@ static INT LISTVIEW_GetNextItem(const LISTVIEW_INFO *infoPtr, INT nItem, UINT uF
           }
           return -1;
         }
+#endif
         lvFindInfo.flags = LVFI_NEARESTXY;
         lvFindInfo.vkDirection = VK_LEFT;
         LISTVIEW_GetItemPosition(infoPtr, nItem, &lvFindInfo.pt);
@@ -7597,6 +7605,7 @@ static INT LISTVIEW_GetNextItem(const LISTVIEW_INFO *infoPtr, INT nItem, UINT uF
       }
       else if ((infoPtr->uView == LV_VIEW_SMALLICON) || (infoPtr->uView == LV_VIEW_ICON))
       {
+#ifndef __REACTOS__
         /* Special case for autoarrange - move 'til the end of a row */
         if (is_autoarrange(infoPtr))
         {
@@ -7609,6 +7618,7 @@ static INT LISTVIEW_GetNextItem(const LISTVIEW_INFO *infoPtr, INT nItem, UINT uF
           }
           return -1;
         }
+#endif
         lvFindInfo.flags = LVFI_NEARESTXY;
         lvFindInfo.vkDirection = VK_RIGHT;
         LISTVIEW_GetItemPosition(infoPtr, nItem, &lvFindInfo.pt);

@@ -1,10 +1,10 @@
 /*
  * PROJECT:     ReactOS cabinet manager
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
- * PURPOSE:     CCFDATAStorage class implementation for Linux/Unix
+ * PURPOSE:     CCFDATAStorage class implementation
  * COPYRIGHT:   Copyright 2017 Casper S. Hornstrup (chorns@users.sourceforge.net)
  *              Copyright 2017 Colin Finck <mail@colinfinck.de>
- *              Copyright 2018 Dmitry Bagdanov <dimbo_job@mail.ru>   
+ *              Copyright 2018 Dmitry Bagdanov <dimbo_job@mail.ru>
  */
 #include <stdio.h>
 #include <stdlib.h>
@@ -16,7 +16,7 @@
 #include <dirent.h>
 #endif
 
-#include "cabinet.h"
+#include "CCFDATAStorage.h"
 #include "raw.h"
 #include "mszip.h"
 

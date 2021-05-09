@@ -52,7 +52,7 @@ CsrCallServerFromServer(IN PCSR_API_MESSAGE ReceiveMsg,
                         IN OUT PCSR_API_MESSAGE ReplyMsg)
 {
     ULONG ServerId;
-    PCSR_SERVER_DLL ServerDll;
+    PCSR_SERVER_DLL ServerDll = NULL;
     ULONG ApiId;
     CSR_REPLY_CODE ReplyCode = CsrReplyImmediately;
 
@@ -64,7 +64,11 @@ CsrCallServerFromServer(IN PCSR_API_MESSAGE ReceiveMsg,
         (!(ServerDll = CsrLoadedServerDll[ServerId])))
     {
         /* We are beyond the Maximum Server ID */
-        DPRINT1("CSRSS: %lx is invalid ServerDllIndex (%08x)\n", ServerId, ServerDll);
+#ifdef CSR_DBG
+        DPRINT1("CSRSS: %lx is invalid ServerDllIndex (%08x)\n",
+                ServerId, ServerDll);
+        if (NtCurrentPeb()->BeingDebugged) DbgBreakPoint();
+#endif
         ReplyMsg->Status = STATUS_ILLEGAL_FUNCTION;
         return STATUS_ILLEGAL_FUNCTION;
     }
@@ -189,7 +193,7 @@ CsrApiHandleConnectionRequest(IN PCSR_API_MESSAGE ApiMessage)
     ConnectInfo->ServerProcessId = NtCurrentTeb()->ClientId.UniqueProcess;
 
     /* Accept the Connection */
-    ASSERT(!AllowConnection || (AllowConnection && CsrProcess));
+    ASSERT(!AllowConnection || CsrProcess);
     Status = NtAcceptConnectPort(&ServerPort,
                                  AllowConnection ? UlongToPtr(CsrProcess->SequenceNumber) : 0,
                                  &ApiMessage->Header,
@@ -547,7 +551,6 @@ CsrApiRequestThread(IN PVOID Parameter)
                             ServerId, ServerDll);
                     if (NtCurrentPeb()->BeingDebugged) DbgBreakPoint();
 #endif
-
                     ReplyMsg = NULL;
                     ReplyPort = CsrApiPort;
                     continue;
@@ -560,10 +563,11 @@ CsrApiRequestThread(IN PVOID Parameter)
                 if (ApiId >= ServerDll->HighestApiSupported)
                 {
                     /* We are beyond the Maximum API ID, or it doesn't exist */
+#ifdef CSR_DBG
                     DPRINT1("CSRSS: %lx is invalid ApiTableIndex for %Z\n",
                             CSR_API_NUMBER_TO_API_ID(ReceiveMsg.ApiNumber),
                             &ServerDll->Name);
-
+#endif
                     ReplyPort = CsrApiPort;
                     ReplyMsg = NULL;
                     continue;
@@ -751,7 +755,6 @@ CsrApiRequestThread(IN PVOID Parameter)
                     ServerId, ServerDll);
             if (NtCurrentPeb()->BeingDebugged) DbgBreakPoint();
 #endif
-
             ReplyPort = CsrApiPort;
             ReplyMsg = &ReceiveMsg;
             ReplyMsg->Status = STATUS_ILLEGAL_FUNCTION;
@@ -765,11 +768,12 @@ CsrApiRequestThread(IN PVOID Parameter)
         /* Make sure that the ID is within limits, and the entry exists */
         if (ApiId >= ServerDll->HighestApiSupported)
         {
+#ifdef CSR_DBG
             /* We are beyond the Maximum API ID, or it doesn't exist */
             DPRINT1("CSRSS: %lx is invalid ApiTableIndex for %Z\n",
                     CSR_API_NUMBER_TO_API_ID(ReceiveMsg.ApiNumber),
                     &ServerDll->Name);
-
+#endif
             ReplyPort = CsrApiPort;
             ReplyMsg = &ReceiveMsg;
             ReplyMsg->Status = STATUS_ILLEGAL_FUNCTION;
@@ -1240,7 +1244,7 @@ CsrCaptureArguments(IN PCSR_THREAD CsrThread,
     BufferDistance = (ULONG_PTR)ServerCaptureBuffer - (ULONG_PTR)ClientCaptureBuffer;
 
     /*
-     * All the pointer offsets correspond to pointers which point
+     * All the pointer offsets correspond to pointers that point
      * to the server data buffer instead of the client one.
      */
     // PointerCount  = ServerCaptureBuffer->PointerCount;
@@ -1355,7 +1359,7 @@ CsrReleaseCapturedArguments(IN PCSR_API_MESSAGE ApiMessage)
     BufferDistance = (ULONG_PTR)ServerCaptureBuffer - (ULONG_PTR)ClientCaptureBuffer;
 
     /*
-     * All the pointer offsets correspond to pointers which point
+     * All the pointer offsets correspond to pointers that point
      * to the client data buffer instead of the server one (reverse
      * the logic of CsrCaptureArguments()).
      */
@@ -1438,7 +1442,7 @@ CsrValidateMessageBuffer(IN PCSR_API_MESSAGE ApiMessage,
      * of non-trivial size and that we don't overflow.
      */
     if (!Buffer || ElementSize == 0 ||
-        (ULONGLONG)ElementCount * ElementSize > (ULONGLONG)0xFFFFFFFF)
+        (ULONGLONG)ElementCount * ElementSize > (ULONGLONG)MAXULONG)
     {
         return FALSE;
     }
@@ -1451,10 +1455,7 @@ CsrValidateMessageBuffer(IN PCSR_API_MESSAGE ApiMessage,
     /* Check if we have no capture buffer */
     if (!CaptureBuffer)
     {
-        /*
-         * In this case, check only the Process ID
-         * and if there is a match, we succeed.
-         */
+        /* In this case, succeed only if the caller is CSRSS */
         if (NtCurrentTeb()->ClientId.UniqueProcess ==
             ApiMessage->Header.ClientId.UniqueProcess)
         {
@@ -1463,7 +1464,7 @@ CsrValidateMessageBuffer(IN PCSR_API_MESSAGE ApiMessage,
     }
     else
     {
-        /* Make sure that there is still space left in the buffer */
+        /* Make sure that there is still space left in the capture buffer */
         if ((CaptureBuffer->Size - (ULONG_PTR)*Buffer + (ULONG_PTR)CaptureBuffer) >=
             (ElementCount * ElementSize))
         {
@@ -1473,8 +1474,8 @@ CsrValidateMessageBuffer(IN PCSR_API_MESSAGE ApiMessage,
             while (PointerCount--)
             {
                 /*
-                 * The pointer offset must be equal to the delta between
-                 * the addresses of the buffer and of the API message.
+                 * Find in the array, the pointer offset (from the
+                 * API message) that corresponds to the buffer.
                  */
                 if (*OffsetPointer == BufferDistance)
                 {

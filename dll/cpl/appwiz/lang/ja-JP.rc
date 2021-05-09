@@ -26,7 +26,7 @@ FONT 9, "MS UI Gothic", 0, 0, 0x0
 BEGIN
     LTEXT "このウィザードは、ローカルまたはネットワークプログラム、ファイル、フォルダー、コンピューター、またはインターネット アドレスへのショートカットを作成するのを助けます。", -1, 120, 15, 200, 30
     LTEXT "項目の位置を入力して下さい:", -1, 120, 50, 120, 10
-    EDITTEXT IDC_SHORTCUT_LOCATION, 120, 65, 150, 15, ES_LEFT
+    EDITTEXT IDC_SHORTCUT_LOCATION, 120, 65, 150, 15, ES_LEFT | ES_AUTOHSCROLL
     PUSHBUTTON "参照...", IDC_SHORTCUT_BROWSE, 272, 65, 55, 15, ES_LEFT
     LTEXT "次へをクリックすると続行します。", -1, 120, 97, 162, 10
 END
@@ -37,7 +37,7 @@ CAPTION "プログラムのタイトルを選択します"
 FONT 9, "MS UI Gothic", 0, 0, 0x0
 BEGIN
     LTEXT "このショートカットの名前を入力して下さい(&T):", -1, 120, 15, 150, 10
-    EDITTEXT IDC_SHORTCUT_NAME, 120, 35, 150, 15, ES_LEFT
+    EDITTEXT IDC_SHORTCUT_NAME, 120, 35, 150, 15, ES_LEFT | ES_AUTOHSCROLL
     LTEXT "完了をクリックするとショートカットを作成します。", -1, 118, 97, 178, 17
 END
 

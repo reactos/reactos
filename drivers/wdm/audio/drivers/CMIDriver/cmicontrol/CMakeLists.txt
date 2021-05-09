@@ -1,5 +1,4 @@
 
-set_cpp()
 include_directories(..)
 
 add_executable(cmicontrol main.cpp window.rc)

@@ -1733,6 +1733,7 @@ RamdiskQueryId(IN PRAMDISK_DRIVE_EXTENSION DriveExtension,
         }
 
         case BusQueryDeviceSerialNumber:
+        case BusQueryContainerID:
         {
             /* Nothing to do */
             break;
@@ -2418,17 +2419,19 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
     NTSTATUS Status;
     DPRINT("RAM Disk Driver Initialized\n");
 
-    /* Query ramdisk parameters */
-    QueryParameters(RegistryPath);
-
     /* Save the registry path */
-    DriverRegistryPath = *RegistryPath;
+    DriverRegistryPath.MaximumLength = RegistryPath->Length + sizeof(UNICODE_NULL);
     DriverRegistryPath.Buffer = ExAllocatePoolWithTag(PagedPool,
-                                                      RegistryPath->Length +
-                                                      sizeof(UNICODE_NULL),
+                                                      DriverRegistryPath.MaximumLength,
                                                       'dmaR');
-    if (!DriverRegistryPath.Buffer) return STATUS_INSUFFICIENT_RESOURCES;
+    if (!DriverRegistryPath.Buffer)
+    {
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
     RtlCopyUnicodeString(&DriverRegistryPath, RegistryPath);
+
+    /* Query ramdisk parameters */
+    QueryParameters(&DriverRegistryPath);
 
     /* Set device routines */
     DriverObject->MajorFunction[IRP_MJ_CREATE] = RamdiskOpenClose;

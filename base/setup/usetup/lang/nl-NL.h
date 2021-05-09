@@ -1344,6 +1344,37 @@ static MUI_ENTRY nlNLFormatPartitionEntries[] =
     }
 };
 
+static MUI_ENTRY nlNLCheckFSEntries[] =
+{
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        8,
+        "Setup controleert nu de geselecteerde partitie.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        "Een ogenblik geduld...",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
 static MUI_ENTRY nlNLInstallDirectoryEntries[] =
 {
     {
@@ -1496,6 +1527,30 @@ static MUI_ENTRY nlNLBootLoaderEntries[] =
         0,
         0,
         "ENTER = Doorgaan   F3 = Afsluiten",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
+static MUI_ENTRY nlNLBootLoaderInstallPageEntries[] =
+{
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        "Installing the bootloader onto the media, please wait...",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
         TEXT_ID_STATIC
     },
@@ -2126,6 +2181,10 @@ MUI_PAGE nlNLPages[] =
         nlNLFormatPartitionEntries
     },
     {
+        CHECK_FILE_SYSTEM_PAGE,
+        nlNLCheckFSEntries
+    },
+    {
         DELETE_PARTITION_PAGE,
         nlNLDeletePartitionEntries
     },
@@ -2160,6 +2219,10 @@ MUI_PAGE nlNLPages[] =
     {
         SUCCESS_PAGE,
         nlNLSuccessPageEntries
+    },
+    {
+        BOOT_LOADER_INSTALLATION_PAGE,
+        nlNLBootLoaderInstallPageEntries
     },
     {
         BOOT_LOADER_FLOPPY_PAGE,
@@ -2211,8 +2274,6 @@ MUI_STRING nlNLStrings[] =
     "The new partition is not formatted yet."},
     {STRING_INSTALLONPART,
     "Setup installeert ReactOS op Partitie"},
-    {STRING_CHECKINGPART,
-    "Setup controleert nu de geselecteerde partitie."},
     {STRING_CONTINUE,
     "ENTER = Doorgaan"},
     {STRING_QUITCONTINUE,
@@ -2264,31 +2325,21 @@ MUI_STRING nlNLStrings[] =
     {STRING_KEEPFORMAT,
     " Behoud huidig bestandssysteem (geen wijzigingen) "},
     {STRING_HDINFOPARTCREATE_1,
-    "%I64u %s  Schijf %lu  (Poort=%hu, Bus=%hu, Id=%hu) op %wZ [%s]."},
-    {STRING_HDINFOPARTCREATE_2,
-    "%I64u %s  Schijf %lu  (Poort=%hu, Bus=%hu, Id=%hu) [%s]."},
-    {STRING_HDDINFOUNK2,
-    "   %c%c  Type 0x%02X    %I64u %s"},
+    "%s."},
     {STRING_HDINFOPARTDELETE_1,
-    "op %I64u %s  Schijf %lu  (Poort=%hu, Bus=%hu, Id=%hu) op %wZ [%s]."},
-    {STRING_HDINFOPARTDELETE_2,
-    "op %I64u %s  Schijf %lu  (Poort=%hu, Bus=%hu, Id=%hu) [%s]."},
-    {STRING_HDINFOPARTZEROED_1,
-    "Schijf %lu (%I64u %s), Poort=%hu, Bus=%hu, Id=%hu (%wZ) [%s]."},
-    {STRING_HDDINFOUNK4,
-    "%c%c  Type 0x%02X    %I64u %s"},
-    {STRING_HDINFOPARTEXISTS_1,
-    "op Schijf %lu (%I64u %s), Poort=%hu, Bus=%hu, Id=%hu (%wZ) [%s]."},
-    {STRING_HDDINFOUNK5,
-    "%c%c %c %sType %-3u%s                      %6lu %s"},
-    {STRING_HDINFOPARTSELECT_1,
-    "%6lu %s  Schijf %lu  (Poort=%hu, Bus=%hu, Id=%hu) op %wZ [%s]"},
-    {STRING_HDINFOPARTSELECT_2,
-    "%6lu %s  Schijf %lu  (Poort=%hu, Bus=%hu, Id=%hu) [%s]"},
+    "op %s."},
+    {STRING_PARTTYPE,
+    "Type 0x%02x"},
+    {STRING_HDDINFO_1,
+    // "Schijf %lu (%I64u %s), Poort=%hu, Bus=%hu, Id=%hu (%wZ) [%s]"
+    "%I64u %s Schijf %lu (Poort=%hu, Bus=%hu, Id=%hu) op %wZ [%s]"},
+    {STRING_HDDINFO_2,
+    // "Schijf %lu (%I64u %s), Poort=%hu, Bus=%hu, Id=%hu [%s]"
+    "%I64u %s Schijf %lu (Poort=%hu, Bus=%hu, Id=%hu) [%s]"},
     {STRING_NEWPARTITION,
     "Setup heeft een nieuwe partitie aangemaakt op"},
     {STRING_UNPSPACE,
-    "    %sNiet gepartitioneerde ruimte%s   %6lu %s"},
+    "Niet gepartitioneerde ruimte"},
     {STRING_MAXSIZE,
     "MB (max. %lu MB)"},
     {STRING_EXTENDED_PARTITION,

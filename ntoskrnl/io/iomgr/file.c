@@ -3429,11 +3429,6 @@ IoCheckShareAccess(IN ACCESS_MASK DesiredAccess,
         SharedWrite = (DesiredShareAccess & FILE_SHARE_WRITE) != 0;
         SharedDelete = (DesiredShareAccess & FILE_SHARE_DELETE) != 0;
 
-        /* Set them */
-        FileObject->SharedRead = SharedRead;
-        FileObject->SharedWrite = SharedWrite;
-        FileObject->SharedDelete = SharedDelete;
-
         /* Check if the shared access is violated */
         if ((ReadAccess &&
              (ShareAccess->SharedRead < ShareAccess->OpenCount)) ||
@@ -3448,6 +3443,11 @@ IoCheckShareAccess(IN ACCESS_MASK DesiredAccess,
             /* Sharing violation, fail */
             return STATUS_SHARING_VIOLATION;
         }
+
+        /* Set them */
+        FileObject->SharedRead = SharedRead;
+        FileObject->SharedWrite = SharedWrite;
+        FileObject->SharedDelete = SharedDelete;
 
         /* It's not, check if caller wants us to update it */
         if (Update)

@@ -36,6 +36,11 @@
 #include <ndk/kefuncs.h>
 #include <ndk/rtlfuncs.h>
 
+/* For MSVC, this is required before using DATA_SEG (used in pcidata) */
+#ifdef _MSC_VER
+# pragma section("INIT", read,execute,discard)
+#endif
+
 /* Internal shared PCI and ACPI header */
 #include <drivers/pci/pci.h>
 #include <drivers/acpi/acpi.h>

@@ -478,8 +478,8 @@ typedef struct _PCIIDE_CONFIG_HEADER {
 
 VOID
 PciIdeXDebugPrint(
-    ULONG DebugPrintLevel,
-    PCCHAR DebugMessage,
+    _In_ ULONG DebugPrintLevel,
+    _In_z_ _Printf_format_string_ PCCHAR DebugMessage,
     ...
     );
 

@@ -26,7 +26,7 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     LTEXT "Penuntun ini membantu membuat pintasan pada lokal atau\njaringan berupa program, berkas, folder, Komputer, atau Alamat Internet.", -1, 120, 15, 200, 30
     LTEXT "Ketik lokasi butir:", -1, 120, 50, 120, 10
-    EDITTEXT IDC_SHORTCUT_LOCATION, 120, 65, 150, 15, ES_LEFT
+    EDITTEXT IDC_SHORTCUT_LOCATION, 120, 65, 150, 15, ES_LEFT | ES_AUTOHSCROLL
     PUSHBUTTON "Cari...", IDC_SHORTCUT_BROWSE, 272, 65, 55, 15, ES_LEFT
     LTEXT "Klik Lanjut untuk meneruskan.", -1, 120, 97, 162, 10
 END
@@ -37,7 +37,7 @@ CAPTION "Pilih Judul untuk Program"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     LTEXT "&Ketik nama untuk pintasan ini:", -1, 120, 15, 150, 10
-    EDITTEXT IDC_SHORTCUT_NAME, 120, 35, 150, 15, ES_LEFT
+    EDITTEXT IDC_SHORTCUT_NAME, 120, 35, 150, 15, ES_LEFT | ES_AUTOHSCROLL
     LTEXT "Klik Selesai untuk membuat pintasan.", -1, 118, 97, 178, 17
 END
 

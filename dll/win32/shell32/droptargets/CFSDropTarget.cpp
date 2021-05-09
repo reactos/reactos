@@ -75,7 +75,7 @@ HRESULT CFSDropTarget::_CopyItems(IShellFolder * pSFFrom, UINT cidl,
         return hr;
 
     pszSrcList = BuildPathsList(strretFrom.pOleStr, cidl, apidl);
-    ERR("Source file (just the first) = %s, target path = %s, bCopy: %d\n", debugstr_w(pszSrcList), debugstr_w(m_sPathTarget), bCopy);
+    TRACE("Source file (just the first) = %s, target path = %s, bCopy: %d\n", debugstr_w(pszSrcList), debugstr_w(m_sPathTarget), bCopy);
     CoTaskMemFree(strretFrom.pOleStr);
     if (!pszSrcList)
         return E_OUTOFMEMORY;
@@ -92,9 +92,11 @@ HRESULT CFSDropTarget::_CopyItems(IShellFolder * pSFFrom, UINT cidl,
     HeapFree(GetProcessHeap(), 0, pszSrcList);
 
     if (res)
+    {
+        ERR("SHFileOperationW failed with 0x%x\n", res);
         return E_FAIL;
-    else
-        return S_OK;
+    }
+    return S_OK;
 }
 
 CFSDropTarget::CFSDropTarget():
@@ -489,7 +491,10 @@ HRESULT CFSDropTarget::_DoDrop(IDataObject *pDataObject,
     {
         hr = pDataObject->GetData(&fmt, &medium);
         TRACE("CFSTR_SHELLIDLIST.\n");
-
+        if (FAILED(hr))
+        {
+            ERR("CFSTR_SHELLIDLIST failed\n");
+        }
         /* lock the handle */
         LPIDA lpcida = (LPIDA)GlobalLock(medium.hGlobal);
         if (!lpcida)
@@ -597,9 +602,9 @@ HRESULT CFSDropTarget::_DoDrop(IDataObject *pDataObject,
                     }
 
                     hr = ppf->Save(wszTarget, FALSE);
-					if (FAILED(hr))
-						break;
-					SHChangeNotify(SHCNE_CREATE, SHCNF_PATHW, wszTarget, NULL);
+                    if (FAILED(hr))
+                        break;
+                    SHChangeNotify(SHCNE_CREATE, SHCNF_PATHW, wszTarget, NULL);
                 }
                 else
                 {
@@ -636,9 +641,9 @@ HRESULT CFSDropTarget::_DoDrop(IDataObject *pDataObject,
                         break;
 
                     hr = ppf->Save(wszTarget, TRUE);
-					if (FAILED(hr))
-						break;
-					SHChangeNotify(SHCNE_CREATE, SHCNF_PATHW, wszTarget, NULL);
+                    if (FAILED(hr))
+                        break;
+                    SHChangeNotify(SHCNE_CREATE, SHCNF_PATHW, wszTarget, NULL);
                 }
             }
         }
@@ -680,7 +685,13 @@ HRESULT CFSDropTarget::_DoDrop(IDataObject *pDataObject,
             op.hwnd = m_hwndSite;
             op.wFunc = bCopy ? FO_COPY : FO_MOVE;
             op.fFlags = FOF_ALLOWUNDO | FOF_NOCONFIRMMKDIR;
-            hr = SHFileOperationW(&op);
+            int res = SHFileOperationW(&op);
+            if (res)
+            {
+                ERR("SHFileOperationW failed with 0x%x\n", res);
+                hr = E_FAIL;
+            }
+            
             return hr;
         }
         ERR("Error calling GetData\n");

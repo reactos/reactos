@@ -152,6 +152,8 @@ struct _SearchData
     CStringW szFileName;
     CStringA szQueryA;
     CStringW szQueryW;
+    CStringW szQueryU16BE;
+    CStringA szQueryU8;
     BOOL SearchHidden;
     CComPtr<CFindFolder> pFindFolder;
 };
@@ -171,61 +173,202 @@ static const TChar* StrStrN(const TChar *lpFirst, const TString &lpSrch, UINT cc
     return NULL;
 }
 
-template<typename TChar, typename TString, int (&StrNCmp)(const TChar *, const TChar *, size_t)>
-static UINT StrStrNCount(const TChar *lpFirst, const TString &lpSrch, UINT cchMax)
+static inline BOOL
+StrFindNIA(const CHAR *lpFirst, const CStringA &lpSrch, UINT cchMax)
 {
-    const TChar *lpSearchEnd = lpFirst + cchMax;
-    UINT uCount = 0;
-    while (lpFirst < lpSearchEnd && (lpFirst = StrStrN<TChar, TString, StrNCmp>(lpFirst, lpSrch, cchMax)))
+    return StrStrN<CHAR, CStringA, _strnicmp>(lpFirst, lpSrch, cchMax) != NULL;
+}
+
+static inline BOOL
+StrFindNIW(const WCHAR *lpFirst, const CStringW &lpSrch, UINT cchMax)
+{
+    return StrStrN<WCHAR, CStringW, _wcsnicmp>(lpFirst, lpSrch, cchMax) != NULL;
+}
+
+/*
+ * The following code is borrowed from base/applications/cmdutils/more/more.c .
+ */
+typedef enum
+{
+    ENCODING_ANSI    =  0,
+    ENCODING_UTF16LE =  1,
+    ENCODING_UTF16BE =  2,
+    ENCODING_UTF8    =  3
+} ENCODING;
+
+static BOOL
+IsDataUnicode(
+    IN PVOID Buffer,
+    IN DWORD BufferSize,
+    OUT ENCODING* Encoding OPTIONAL,
+    OUT PDWORD SkipBytes OPTIONAL)
+{
+    PBYTE pBytes = (PBYTE)Buffer;
+    ENCODING encFile = ENCODING_ANSI;
+    DWORD dwPos = 0;
+
+    /*
+     * See http://archives.miloush.net/michkap/archive/2007/04/22/2239345.html
+     * for more details about the algorithm and the pitfalls behind it.
+     * Of course it would be actually great to make a nice function that
+     * would work, once and for all, and put it into a library.
+     */
+
+    /* Look for Byte Order Marks */
+    if ((BufferSize >= 2) && (pBytes[0] == 0xFF) && (pBytes[1] == 0xFE))
     {
-        uCount++;
-        lpFirst += lpSrch.GetLength();
-        cchMax = lpSearchEnd - lpFirst;
+        encFile = ENCODING_UTF16LE;
+        dwPos = 2;
     }
-    return uCount;
-}
-
-static UINT StrStrCountNIA(const CHAR *lpFirst, const CStringA &lpSrch, UINT cchMax)
-{
-    return StrStrNCount<CHAR, CStringA, _strnicmp>(lpFirst, lpSrch, cchMax);
-}
-
-static UINT StrStrCountNIW(const WCHAR *lpFirst, const CStringW &lpSrch, UINT cchMax)
-{
-    return StrStrNCount<WCHAR, CStringW, _wcsnicmp>(lpFirst, lpSrch, cchMax);
-}
-
-static UINT SearchFile(LPCWSTR lpFilePath, _SearchData *pSearchData)
-{
-    HANDLE hFile = CreateFileW(lpFilePath, GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_READONLY, NULL);
-    if (hFile == INVALID_HANDLE_VALUE)
-        return 0;
-
-    DWORD size = GetFileSize(hFile, NULL);
-    HANDLE hFileMap = CreateFileMappingW(hFile, NULL, PAGE_READONLY, 0, 0, NULL);
-    CloseHandle(hFile);
-    if (hFileMap == INVALID_HANDLE_VALUE)
-        return 0;
-
-    LPBYTE lpFileContent = (LPBYTE) MapViewOfFile(hFileMap, FILE_MAP_READ, 0, 0, 0);
-    CloseHandle(hFileMap);
-    if (!lpFileContent)
-        return 0;
-
-    UINT uMatches = 0;
-    // Check for UTF-16 BOM
-    if (size >= 2 && lpFileContent[0] == 0xFF && lpFileContent[1] == 0xFE)
+    else if ((BufferSize >= 2) && (pBytes[0] == 0xFE) && (pBytes[1] == 0xFF))
     {
-        uMatches = StrStrCountNIW((LPCWSTR) lpFileContent, pSearchData->szQueryW, size / sizeof(WCHAR));
+        encFile = ENCODING_UTF16BE;
+        dwPos = 2;
+    }
+    else if ((BufferSize >= 3) && (pBytes[0] == 0xEF) && (pBytes[1] == 0xBB) && (pBytes[2] == 0xBF))
+    {
+        encFile = ENCODING_UTF8;
+        dwPos = 3;
     }
     else
     {
-        uMatches = StrStrCountNIA((LPCSTR) lpFileContent, pSearchData->szQueryA, size / sizeof(CHAR));
+        /*
+         * Try using statistical analysis. Do not rely on the return value of
+         * IsTextUnicode as we can get FALSE even if the text is in UTF-16 BE
+         * (i.e. we have some of the IS_TEXT_UNICODE_REVERSE_MASK bits set).
+         * Instead, set all the tests we want to perform, then just check
+         * the passed tests and try to deduce the string properties.
+         */
+
+/*
+ * This mask contains the 3 highest bits from IS_TEXT_UNICODE_NOT_ASCII_MASK
+ * and the 1st highest bit from IS_TEXT_UNICODE_NOT_UNICODE_MASK.
+ */
+#define IS_TEXT_UNKNOWN_FLAGS_MASK  ((7 << 13) | (1 << 11))
+
+        /* Flag out the unknown flags here, the passed tests will not have them either */
+        INT Tests = (IS_TEXT_UNICODE_NOT_ASCII_MASK   |
+                     IS_TEXT_UNICODE_NOT_UNICODE_MASK |
+                     IS_TEXT_UNICODE_REVERSE_MASK | IS_TEXT_UNICODE_UNICODE_MASK)
+                        & ~IS_TEXT_UNKNOWN_FLAGS_MASK;
+        INT Results;
+    
+        IsTextUnicode(Buffer, BufferSize, &Tests);
+        Results = Tests;
+
+        /*
+         * As the IS_TEXT_UNICODE_NULL_BYTES or IS_TEXT_UNICODE_ILLEGAL_CHARS
+         * flags are expected to be potentially present in the result without
+         * modifying our expectations, filter them out now.
+         */
+        Results &= ~(IS_TEXT_UNICODE_NULL_BYTES | IS_TEXT_UNICODE_ILLEGAL_CHARS);
+
+        /*
+         * NOTE: The flags IS_TEXT_UNICODE_ASCII16 and
+         * IS_TEXT_UNICODE_REVERSE_ASCII16 are not reliable.
+         *
+         * NOTE2: Check for potential "bush hid the facts" effect by also
+         * checking the original results (in 'Tests') for the absence of
+         * the IS_TEXT_UNICODE_NULL_BYTES flag, as we may presumably expect
+         * that in UTF-16 text there will be at some point some NULL bytes.
+         * If not, fall back to ANSI. This shows the limitations of using the
+         * IsTextUnicode API to perform such tests, and the usage of a more
+         * improved encoding detection algorithm would be really welcome.
+         */
+        if (!(Results & IS_TEXT_UNICODE_NOT_UNICODE_MASK) &&
+            !(Results & IS_TEXT_UNICODE_REVERSE_MASK)     &&
+             (Results & IS_TEXT_UNICODE_UNICODE_MASK)     &&
+             (Tests   & IS_TEXT_UNICODE_NULL_BYTES))
+        {
+            encFile = ENCODING_UTF16LE;
+            dwPos = (Results & IS_TEXT_UNICODE_SIGNATURE) ? 2 : 0;
+        }
+        else
+        if (!(Results & IS_TEXT_UNICODE_NOT_UNICODE_MASK) &&
+            !(Results & IS_TEXT_UNICODE_UNICODE_MASK)     &&
+             (Results & IS_TEXT_UNICODE_REVERSE_MASK)     &&
+             (Tests   & IS_TEXT_UNICODE_NULL_BYTES))
+        {
+            encFile = ENCODING_UTF16BE;
+            dwPos = (Results & IS_TEXT_UNICODE_REVERSE_SIGNATURE) ? 2 : 0;
+        }
+        else
+        {
+            /*
+             * Either 'Results' has neither of those masks set, as it can be
+             * the case for UTF-8 text (or ANSI), or it has both as can be the
+             * case when analysing pure binary data chunk. This is therefore
+             * invalid and we fall back to ANSI encoding.
+             * FIXME: In case of failure, assume ANSI (as long as we do not have
+             * correct tests for UTF8, otherwise we should do them, and at the
+             * very end, assume ANSI).
+             */
+            encFile = ENCODING_ANSI; // ENCODING_UTF8;
+            dwPos = 0;
+        }
     }
 
-    UnmapViewOfFile(lpFileContent);
+    if (Encoding)
+        *Encoding = encFile;
+    if (SkipBytes)
+        *SkipBytes = dwPos;
 
-    return uMatches;
+    return (encFile != ENCODING_ANSI);
+}
+
+static BOOL SearchFile(LPCWSTR lpFilePath, _SearchData *pSearchData)
+{
+    HANDLE hFile = CreateFileW(lpFilePath, GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_READONLY, NULL);
+    if (hFile == INVALID_HANDLE_VALUE)
+        return FALSE;
+
+    // FIXME: support large file
+    DWORD size = GetFileSize(hFile, NULL);
+    if (size == 0 || size == INVALID_FILE_SIZE)
+    {
+        CloseHandle(hFile);
+        return FALSE;
+    }
+
+    HANDLE hFileMap = CreateFileMappingW(hFile, NULL, PAGE_READONLY, 0, size, NULL);
+    CloseHandle(hFile);
+    if (hFileMap == INVALID_HANDLE_VALUE)
+        return FALSE;
+
+    LPBYTE pbContents = (LPBYTE)MapViewOfFile(hFileMap, FILE_MAP_READ, 0, 0, size);
+    CloseHandle(hFileMap);
+    if (!pbContents)
+        return FALSE;
+
+    ENCODING encoding;
+    IsDataUnicode(pbContents, size, &encoding, NULL);
+
+    BOOL bFound;
+    switch (encoding)
+    {
+        case ENCODING_UTF16LE:
+            // UTF-16
+            bFound = StrFindNIW((LPCWSTR)pbContents, pSearchData->szQueryW, size / sizeof(WCHAR));
+            break;
+        case ENCODING_UTF16BE:
+            // UTF-16 BE
+            bFound = StrFindNIW((LPCWSTR)pbContents, pSearchData->szQueryU16BE, size / sizeof(WCHAR));
+            break;
+        case ENCODING_UTF8:
+            // UTF-8
+            bFound = StrFindNIA((LPCSTR)pbContents, pSearchData->szQueryU8, size / sizeof(CHAR));
+            break;
+        case ENCODING_ANSI:
+        default:
+            // ANSI or UTF-8 without BOM
+            bFound = StrFindNIA((LPCSTR)pbContents, pSearchData->szQueryA, size / sizeof(CHAR));
+            if (!bFound && pSearchData->szQueryA != pSearchData->szQueryU8)
+                bFound = StrFindNIA((LPCSTR)pbContents, pSearchData->szQueryU8, size / sizeof(CHAR));
+            break;
+    }
+
+    UnmapViewOfFile(pbContents);
+    return bFound;
 }
 
 static BOOL FileNameMatch(LPCWSTR FindDataFileName, _SearchData *pSearchData)
@@ -266,13 +409,14 @@ static UINT RecursiveFind(LPCWSTR lpPath, _SearchData *pSearchData)
     BOOL bMoreFiles = TRUE;
     UINT uTotalFound = 0;
 
-    PathCombineW(szPath, lpPath, L"*.*");
+    PathCombineW(szPath, lpPath, L"*");
 
     for (hFindFile = FindFirstFileW(szPath, &FindData);
         bMoreFiles && hFindFile != INVALID_HANDLE_VALUE;
         bMoreFiles = FindNextFileW(hFindFile, &FindData))
     {
-        if (!wcscmp(FindData.cFileName, L".") || !wcscmp(FindData.cFileName, L".."))
+#define IS_DOTS(psz) ((psz)[0] == L'.' && ((psz)[1] == 0 || ((psz)[1] == L'.' && (psz)[2] == 0)))
+        if (IS_DOTS(FindData.cFileName))
             continue;
 
         PathCombineW(szPath, lpPath, FindData.cFileName);
@@ -280,8 +424,9 @@ static UINT RecursiveFind(LPCWSTR lpPath, _SearchData *pSearchData)
         if (FindData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
         {
             CStringW status;
-            if (FileNameMatch(FindData.cFileName, pSearchData)
-                && AttribHiddenMatch(FindData.dwFileAttributes, pSearchData))
+            if (pSearchData->szQueryW.IsEmpty() &&
+                FileNameMatch(FindData.cFileName, pSearchData) &&
+                AttribHiddenMatch(FindData.dwFileAttributes, pSearchData))
             {
                 PostMessageW(pSearchData->hwnd, WM_SEARCH_ADD_RESULT, 0, (LPARAM) StrDupW(szPath));
                 uTotalFound++;
@@ -367,6 +512,36 @@ LRESULT CFindFolder::StartSearch(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &
     pSearchData->szFileName = pSearchParams->szFileName;
     pSearchData->szQueryA = pSearchParams->szQuery;
     pSearchData->szQueryW = pSearchParams->szQuery;
+
+    // UTF-16 BE
+    {
+        CStringW utf16 = pSearchData->szQueryW;
+        LPWSTR psz = utf16.GetBuffer();
+        for (SIZE_T i = 0; psz[i]; ++i)
+        {
+            psz[i] = MAKEWORD(HIBYTE(psz[i]), LOBYTE(psz[i]));
+        }
+        utf16.ReleaseBuffer();
+        pSearchData->szQueryU16BE = utf16;
+    }
+
+    // UTF-8
+    {
+        CStringA utf8;
+        INT cch = WideCharToMultiByte(CP_UTF8, 0, pSearchData->szQueryW, -1, NULL, 0, NULL, NULL);
+        if (cch > 0)
+        {
+            LPSTR psz = utf8.GetBuffer(cch);
+            WideCharToMultiByte(CP_UTF8, 0, pSearchData->szQueryW, -1, psz, cch, NULL, NULL);
+            utf8.ReleaseBuffer();
+            pSearchData->szQueryU8 = utf8;
+        }
+        else
+        {
+            pSearchData->szQueryU8 = pSearchData->szQueryA;
+        }
+    }
+
     pSearchData->SearchHidden = pSearchParams->SearchHidden;
     SHFree(pSearchParams);
 

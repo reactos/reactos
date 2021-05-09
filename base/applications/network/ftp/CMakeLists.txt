@@ -1,6 +1,4 @@
 
-add_definitions(-Dlint)
-
 list(APPEND SOURCE
     cmds.c
     cmdtab.c
@@ -12,12 +10,14 @@ list(APPEND SOURCE
     precomp.h)
 
 add_executable(ftp ${SOURCE} ftp.rc)
+target_compile_definitions(ftp PRIVATE lint)
+
 set_module_type(ftp win32cui)
 add_importlibs(ftp ws2_32 iphlpapi msvcrt kernel32)
+target_link_libraries(ftp oldnames)
 add_pch(ftp precomp.h SOURCE)
 
 if(MSVC)
-    target_link_libraries(ftp oldnames)
     add_importlibs(ftp ntdll)
 endif()
 

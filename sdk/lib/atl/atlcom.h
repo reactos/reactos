@@ -22,6 +22,7 @@
 #pragma once
 
 #include <cguid.h>          // for GUID_NULL
+#include <pseh/pseh2.h>
 
 namespace ATL
 {
@@ -456,7 +457,7 @@ class CComCreator2
 public:
     static HRESULT WINAPI CreateInstance(void *pv, REFIID riid, LPVOID *ppv)
     {
-        ATLASSERT(ppv != NULL && &riid != NULL);
+        ATLASSERT(ppv != NULL);
 
         if (pv == NULL)
             return T1::CreateInstance(NULL, riid, ppv);

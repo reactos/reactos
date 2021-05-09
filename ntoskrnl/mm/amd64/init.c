@@ -15,29 +15,29 @@
 #include <debug.h>
 
 #include <mm/ARM3/miarm.h>
+#include <fltkernel.h>
 
 extern PMMPTE MmDebugPte;
 
 /* Helper macros */
-#define IS_ALIGNED(addr, align) (((ULONG64)(addr) & (align - 1)) == 0)
 #define IS_PAGE_ALIGNED(addr) IS_ALIGNED(addr, PAGE_SIZE)
 
 /* GLOBALS *****************************************************************/
 
 /* Template PTE and PDE for a kernel page */
-MMPTE ValidKernelPde = {{PTE_VALID|PTE_READWRITE|PTE_DIRTY|PTE_ACCESSED}};
-MMPTE ValidKernelPte = {{PTE_VALID|PTE_READWRITE|PTE_DIRTY|PTE_ACCESSED}};
+MMPTE ValidKernelPde = {{PTE_VALID|PTE_EXECUTE_READWRITE|PTE_DIRTY|PTE_ACCESSED}};
+MMPTE ValidKernelPte = {{PTE_VALID|PTE_EXECUTE_READWRITE|PTE_DIRTY|PTE_ACCESSED}};
 
 /* The same, but for local pages */
-MMPTE ValidKernelPdeLocal = {{PTE_VALID|PTE_READWRITE|PTE_DIRTY|PTE_ACCESSED}};
-MMPTE ValidKernelPteLocal = {{PTE_VALID|PTE_READWRITE|PTE_DIRTY|PTE_ACCESSED}};
+MMPTE ValidKernelPdeLocal = {{PTE_VALID|PTE_EXECUTE_READWRITE|PTE_DIRTY|PTE_ACCESSED}};
+MMPTE ValidKernelPteLocal = {{PTE_VALID|PTE_EXECUTE_READWRITE|PTE_DIRTY|PTE_ACCESSED}};
 
 /* Template PDE for a demand-zero page */
-MMPDE DemandZeroPde  = {{MM_READWRITE << MM_PTE_SOFTWARE_PROTECTION_BITS}};
+MMPDE DemandZeroPde  = {{MM_EXECUTE_READWRITE << MM_PTE_SOFTWARE_PROTECTION_BITS}};
 MMPTE DemandZeroPte  = {{MM_READWRITE << MM_PTE_SOFTWARE_PROTECTION_BITS}};
 
 /* Template PTE for prototype page */
-MMPTE PrototypePte = {{(MM_READWRITE << MM_PTE_SOFTWARE_PROTECTION_BITS) |
+MMPTE PrototypePte = {{(MM_EXECUTE_READWRITE << MM_PTE_SOFTWARE_PROTECTION_BITS) |
                       PTE_PROTOTYPE | (MI_PTE_LOOKUP_NEEDED << 32)}};
 
 /* Template PTE for decommited page */
@@ -57,33 +57,36 @@ BOOLEAN MiPfnsInitialized = FALSE;
 
 /* FUNCTIONS *****************************************************************/
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 VOID
 NTAPI
 MiInitializeSessionSpaceLayout(VOID)
 {
+    /* This is the entire size */
     MmSessionSize = MI_SESSION_SIZE;
-    MmSessionViewSize = MI_SESSION_VIEW_SIZE;
-    MmSessionPoolSize = MI_SESSION_POOL_SIZE;
-    MmSessionImageSize = MI_SESSION_IMAGE_SIZE;
-    MmSystemViewSize = MI_SYSTEM_VIEW_SIZE;
 
-    /* Set up session space */
+    /* Start with session space end */
     MiSessionSpaceEnd = (PVOID)MI_SESSION_SPACE_END;
 
-    /* This is where we will load Win32k.sys and the video driver */
+    /* The highest range is the session image range */
+    MmSessionImageSize = MI_SESSION_IMAGE_SIZE;
     MiSessionImageEnd = MiSessionSpaceEnd;
-    MiSessionImageStart = (PCHAR)MiSessionImageEnd - MmSessionImageSize;
+    MiSessionImageStart = (PUCHAR)MiSessionImageEnd - MmSessionImageSize;
+    ASSERT(IS_PAGE_ALIGNED(MiSessionImageStart));
 
-    /* The view starts right below the session working set (itself below
-     * the image area) */
-    MiSessionViewEnd = (PVOID)MI_SESSION_VIEW_END;
-    MiSessionViewStart = (PCHAR)MiSessionViewEnd - MmSessionViewSize;
+    /* Session working set is below the session image range */
+    MiSessionSpaceWs = (PUCHAR)MiSessionImageStart - MI_SESSION_WORKING_SET_SIZE;
+
+    /* Session view is below the session working set */
+    MmSessionViewSize = MI_SESSION_VIEW_SIZE;
+    MiSessionViewEnd = MiSessionSpaceWs;
+    MiSessionViewStart = (PUCHAR)MiSessionViewEnd - MmSessionViewSize;
     ASSERT(IS_PAGE_ALIGNED(MiSessionViewStart));
 
-    /* Session pool follows */
+    /* Session pool is below session view */
+    MmSessionPoolSize = MI_SESSION_POOL_SIZE;
     MiSessionPoolEnd = MiSessionViewStart;
-    MiSessionPoolStart = (PCHAR)MiSessionPoolEnd - MmSessionPoolSize;
+    MiSessionPoolStart = (PUCHAR)MiSessionPoolEnd - MmSessionPoolSize;
     ASSERT(IS_PAGE_ALIGNED(MiSessionPoolStart));
 
     /* And it all begins here */
@@ -91,12 +94,23 @@ MiInitializeSessionSpaceLayout(VOID)
 
     /* System view space ends at session space, so now that we know where
      * this is, we can compute the base address of system view space itself. */
-    MiSystemViewStart = (PCHAR)MmSessionBase - MmSystemViewSize;
+    MmSystemViewSize = MI_SYSTEM_VIEW_SIZE;
+    MiSystemViewStart = (PUCHAR)MmSessionBase - MmSystemViewSize;
     ASSERT(IS_PAGE_ALIGNED(MiSystemViewStart));
 
     /* Sanity checks */
+    ASSERT(Add2Ptr(MmSessionBase, MmSessionSize) == MiSessionSpaceEnd);
     ASSERT(MiSessionViewEnd <= MiSessionImageStart);
     ASSERT(MmSessionBase <= MiSessionPoolStart);
+
+    /* Compute the PTE addresses for all the addresses we carved out */
+    MiSessionImagePteStart = MiAddressToPte(MiSessionImageStart);
+    MiSessionImagePteEnd = MiAddressToPte(MiSessionImageEnd);
+    MiSessionBasePte = MiAddressToPte(MmSessionBase);
+    MiSessionLastPte = MiAddressToPte(MiSessionSpaceEnd);
+
+    /* Initialize the pointer to the session space structure */
+    MmSessionSpace = (PMM_SESSION_SPACE)Add2Ptr(MiSessionImageStart, 0x10000);
 }
 
 VOID
@@ -180,7 +194,7 @@ MiMapPTEs(
     }
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 VOID
 NTAPI
 MiInitializePageTable(VOID)
@@ -266,7 +280,7 @@ MiInitializePageTable(VOID)
     MiMapPTEs((PVOID)MI_VAD_BITMAP, (PVOID)(MI_WORKING_SET_LIST + PAGE_SIZE - 1));
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 VOID
 NTAPI
 MiBuildNonPagedPool(VOID)
@@ -357,7 +371,7 @@ MiBuildNonPagedPool(VOID)
 
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 VOID
 NTAPI
 MiBuildSystemPteSpace(VOID)
@@ -424,8 +438,9 @@ MiSetupPfnForPageTable(
     Pfn->u2.ShareCount++;
 }
 
+static
+CODE_SEG("INIT")
 VOID
-NTAPI
 MiBuildPfnDatabaseFromPageTables(VOID)
 {
     PVOID Address = NULL;
@@ -524,16 +539,15 @@ MiBuildPfnDatabaseFromPageTables(VOID)
 #endif
 }
 
-INIT_FUNCTION
+static
+CODE_SEG("INIT")
 VOID
-NTAPI
 MiAddDescriptorToDatabase(
     PFN_NUMBER BasePage,
     PFN_NUMBER PageCount,
     TYPE_OF_MEMORY MemoryType)
 {
     PMMPFN Pfn;
-    KIRQL OldIrql;
 
     ASSERT(!MiIsMemoryTypeInvisible(MemoryType));
 
@@ -543,22 +557,16 @@ MiAddDescriptorToDatabase(
         /* Get the last pfn of this descriptor. Note we loop backwards */
         Pfn = &MmPfnDatabase[BasePage + PageCount - 1];
 
-        /* Lock the PFN Database */
-        OldIrql = MiAcquirePfnLock();
-
         /* Loop all pages */
         while (PageCount--)
         {
             /* Add it to the free list */
-            Pfn->u3.e1.CacheAttribute = MiNonCached;
+            Pfn->u3.e1.CacheAttribute = MiNonCached; // FIXME: Windows ASSERTs MiChached, but why not MiNotMapped?
             MiInsertPageInFreeList(BasePage + PageCount);
 
             /* Go to the previous page */
             Pfn--;
         }
-
-        /* Release PFN database */
-        MiReleasePfnLock(OldIrql);
     }
     else if (MemoryType == LoaderXIPRom)
     {
@@ -589,8 +597,6 @@ MiAddDescriptorToDatabase(
     else
     {
         /* For now skip it */
-        DbgPrint("Skipping BasePage=0x%lx, PageCount=0x%lx, MemoryType=%lx\n",
-                 BasePage, PageCount, MemoryType);
         Pfn = &MmPfnDatabase[BasePage];
         while (PageCount--)
         {
@@ -603,7 +609,7 @@ MiAddDescriptorToDatabase(
     }
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 VOID
 NTAPI
 MiBuildPfnDatabase(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
@@ -611,6 +617,10 @@ MiBuildPfnDatabase(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     PLIST_ENTRY ListEntry;
     PMEMORY_ALLOCATION_DESCRIPTOR Descriptor;
     PFN_NUMBER BasePage, PageCount;
+    KIRQL OldIrql;
+
+    /* Lock the PFN Database */
+    OldIrql = MiAcquirePfnLock();
 
     /* Map the PDEs and PPEs for the pfn database (ignore holes) */
 #if (_MI_PAGING_LEVELS >= 3)
@@ -668,13 +678,25 @@ MiBuildPfnDatabase(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 
     /* Reset the descriptor back so we can create the correct memory blocks */
     *MxFreeDescriptor = MxOldFreeDescriptor;
+
+    /* Now process the page tables */
+    MiBuildPfnDatabaseFromPageTables();
+
+    /* PFNs are initialized now! */
+    MiPfnsInitialized = TRUE;
+
+    /* Release PFN database */
+    MiReleasePfnLock(OldIrql);
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 NTSTATUS
 NTAPI
 MiInitMachineDependent(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
+    NTSTATUS Status;
+    ULONG Flags;
+
     ASSERT(MxPfnAllocation != 0);
 
     /* Set some hardcoded addresses */
@@ -701,14 +723,17 @@ MiInitMachineDependent(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     /* Map the PFN database pages */
     MiBuildPfnDatabase(LoaderBlock);
 
-    /* Now process the page tables */
-    MiBuildPfnDatabaseFromPageTables();
-
-    /* PFNs are initialized now! */
-    MiPfnsInitialized = TRUE;
-
     /* Initialize the nonpaged pool */
     InitializePool(NonPagedPool, 0);
+
+    /* Initialize the bogus address space */
+    Flags = 0;
+    Status = MmInitializeProcessAddressSpace(PsGetCurrentProcess(), NULL, NULL, &Flags, NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("MmInitializeProcessAddressSpace(9 failed: 0x%lx\n", Status);
+        return Status;
+    }
 
     /* Initialize the balancer */
     MmInitializeBalancer((ULONG)MmAvailablePages, 0);

@@ -415,6 +415,7 @@ acpi_create_registry_table(HANDLE ParentKeyHandle, ACPI_TABLE_HEADER *OutTable, 
         if (!NT_SUCCESS(Status))
         {
             DPRINT1("RtlAnsiStringToUnicodeString() for %s failed (Status 0x%08lx)\n", HardwareKeyNameA, Status);
+            ZwClose(KeyHandle);
             return Status;
         }
 
@@ -444,6 +445,7 @@ acpi_create_registry_table(HANDLE ParentKeyHandle, ACPI_TABLE_HEADER *OutTable, 
         if (!NT_SUCCESS(Status))
         {
             DPRINT1("RtlAnsiStringToUnicodeString() for %s failed (Status 0x%08lx)\n", HardwareKeyNameA, Status);
+            ZwClose(KeyHandle);
             return Status;
         }
 
@@ -475,6 +477,7 @@ acpi_create_registry_table(HANDLE ParentKeyHandle, ACPI_TABLE_HEADER *OutTable, 
         if (!NT_SUCCESS(Status))
         {
             DPRINT1("RtlStringCbPrintfW() for 0x%08lx failed (Status 0x%08lx)\n", OutTable->OemRevision, Status);
+            ZwClose(KeyHandle);
             return Status;
         }
         RtlInitUnicodeString(&HardwareKeyName, OemRevision);

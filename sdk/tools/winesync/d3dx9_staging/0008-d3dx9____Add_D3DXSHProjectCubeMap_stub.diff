@@ -1,0 +1,297 @@
+diff --git a/dll/directx/wine/d3dx9_24/d3dx9_24.spec b/dll/directx/wine/d3dx9_24/d3dx9_24.spec
+index a45af880b61..3a043da3cf4 100644
+--- a/dll/directx/wine/d3dx9_24/d3dx9_24.spec
++++ b/dll/directx/wine/d3dx9_24/d3dx9_24.spec
+@@ -256,7 +256,7 @@
+ @ stdcall D3DXSHEvalSphericalLight(long ptr float float float float ptr ptr ptr)
+ @ stub D3DXSHPRTCompSplitMeshSC(ptr long long ptr long ptr long long ptr ptr long ptr ptr ptr ptr ptr)
+ @ stub D3DXSHPRTCompSuperCluster(ptr ptr long long ptr ptr)
+-@ stub D3DXSHProjectCubeMap(long ptr ptr ptr ptr)
++@ stdcall D3DXSHProjectCubeMap(long ptr ptr ptr ptr)
+ @ stdcall D3DXSHRotate(ptr long ptr ptr)
+ @ stdcall D3DXSHRotateZ(ptr long float ptr)
+ @ stdcall D3DXSHScale(ptr long ptr float)
+diff --git a/dll/directx/wine/d3dx9_25/d3dx9_25.spec b/dll/directx/wine/d3dx9_25/d3dx9_25.spec
+index 34c31eb7cc2..1a324b611c1 100644
+--- a/dll/directx/wine/d3dx9_25/d3dx9_25.spec
++++ b/dll/directx/wine/d3dx9_25/d3dx9_25.spec
+@@ -256,7 +256,7 @@
+ @ stdcall D3DXSHEvalSphericalLight(long ptr float float float float ptr ptr ptr)
+ @ stub D3DXSHPRTCompSplitMeshSC(ptr long long ptr long ptr long long ptr ptr long ptr ptr ptr ptr ptr)
+ @ stub D3DXSHPRTCompSuperCluster(ptr ptr long long ptr ptr)
+-@ stub D3DXSHProjectCubeMap(long ptr ptr ptr ptr)
++@ stdcall D3DXSHProjectCubeMap(long ptr ptr ptr ptr)
+ @ stdcall D3DXSHRotate(ptr long ptr ptr)
+ @ stdcall D3DXSHRotateZ(ptr long float ptr)
+ @ stdcall D3DXSHScale(ptr long ptr float)
+diff --git a/dll/directx/wine/d3dx9_26/d3dx9_26.spec b/dll/directx/wine/d3dx9_26/d3dx9_26.spec
+index f07c188a398..95cc814c497 100644
+--- a/dll/directx/wine/d3dx9_26/d3dx9_26.spec
++++ b/dll/directx/wine/d3dx9_26/d3dx9_26.spec
+@@ -260,7 +260,7 @@
+ @ stdcall D3DXSHEvalSphericalLight(long ptr float float float float ptr ptr ptr)
+ @ stub D3DXSHPRTCompSplitMeshSC(ptr long long ptr long ptr long long ptr ptr long ptr ptr ptr ptr ptr)
+ @ stub D3DXSHPRTCompSuperCluster(ptr ptr long long ptr ptr)
+-@ stub D3DXSHProjectCubeMap(long ptr ptr ptr ptr)
++@ stdcall D3DXSHProjectCubeMap(long ptr ptr ptr ptr)
+ @ stdcall D3DXSHRotate(ptr long ptr ptr)
+ @ stdcall D3DXSHRotateZ(ptr long float ptr)
+ @ stdcall D3DXSHScale(ptr long ptr float)
+diff --git a/dll/directx/wine/d3dx9_27/d3dx9_27.spec b/dll/directx/wine/d3dx9_27/d3dx9_27.spec
+index f07c188a398..95cc814c497 100644
+--- a/dll/directx/wine/d3dx9_27/d3dx9_27.spec
++++ b/dll/directx/wine/d3dx9_27/d3dx9_27.spec
+@@ -260,7 +260,7 @@
+ @ stdcall D3DXSHEvalSphericalLight(long ptr float float float float ptr ptr ptr)
+ @ stub D3DXSHPRTCompSplitMeshSC(ptr long long ptr long ptr long long ptr ptr long ptr ptr ptr ptr ptr)
+ @ stub D3DXSHPRTCompSuperCluster(ptr ptr long long ptr ptr)
+-@ stub D3DXSHProjectCubeMap(long ptr ptr ptr ptr)
++@ stdcall D3DXSHProjectCubeMap(long ptr ptr ptr ptr)
+ @ stdcall D3DXSHRotate(ptr long ptr ptr)
+ @ stdcall D3DXSHRotateZ(ptr long float ptr)
+ @ stdcall D3DXSHScale(ptr long ptr float)
+diff --git a/dll/directx/wine/d3dx9_28/d3dx9_28.spec b/dll/directx/wine/d3dx9_28/d3dx9_28.spec
+index 77454081317..b258cbab493 100644
+--- a/dll/directx/wine/d3dx9_28/d3dx9_28.spec
++++ b/dll/directx/wine/d3dx9_28/d3dx9_28.spec
+@@ -265,7 +265,7 @@
+ @ stdcall D3DXSHEvalSphericalLight(long ptr float float float float ptr ptr ptr)
+ @ stub D3DXSHPRTCompSplitMeshSC(ptr long long ptr long ptr long long ptr ptr long ptr ptr ptr ptr ptr)
+ @ stub D3DXSHPRTCompSuperCluster(ptr ptr long long ptr ptr)
+-@ stub D3DXSHProjectCubeMap(long ptr ptr ptr ptr)
++@ stdcall D3DXSHProjectCubeMap(long ptr ptr ptr ptr)
+ @ stdcall D3DXSHRotate(ptr long ptr ptr)
+ @ stdcall D3DXSHRotateZ(ptr long float ptr)
+ @ stdcall D3DXSHScale(ptr long ptr float)
+diff --git a/dll/directx/wine/d3dx9_29/d3dx9_29.spec b/dll/directx/wine/d3dx9_29/d3dx9_29.spec
+index 77454081317..b258cbab493 100644
+--- a/dll/directx/wine/d3dx9_29/d3dx9_29.spec
++++ b/dll/directx/wine/d3dx9_29/d3dx9_29.spec
+@@ -265,7 +265,7 @@
+ @ stdcall D3DXSHEvalSphericalLight(long ptr float float float float ptr ptr ptr)
+ @ stub D3DXSHPRTCompSplitMeshSC(ptr long long ptr long ptr long long ptr ptr long ptr ptr ptr ptr ptr)
+ @ stub D3DXSHPRTCompSuperCluster(ptr ptr long long ptr ptr)
+-@ stub D3DXSHProjectCubeMap(long ptr ptr ptr ptr)
++@ stdcall D3DXSHProjectCubeMap(long ptr ptr ptr ptr)
+ @ stdcall D3DXSHRotate(ptr long ptr ptr)
+ @ stdcall D3DXSHRotateZ(ptr long float ptr)
+ @ stdcall D3DXSHScale(ptr long ptr float)
+diff --git a/dll/directx/wine/d3dx9_30/d3dx9_30.spec b/dll/directx/wine/d3dx9_30/d3dx9_30.spec
+index 72418ac59ab..19871f33abc 100644
+--- a/dll/directx/wine/d3dx9_30/d3dx9_30.spec
++++ b/dll/directx/wine/d3dx9_30/d3dx9_30.spec
+@@ -265,7 +265,7 @@
+ @ stdcall D3DXSHEvalSphericalLight(long ptr float float float float ptr ptr ptr)
+ @ stub D3DXSHPRTCompSplitMeshSC(ptr long long ptr long ptr long long ptr ptr long ptr ptr ptr ptr ptr)
+ @ stub D3DXSHPRTCompSuperCluster(ptr ptr long long ptr ptr)
+-@ stub D3DXSHProjectCubeMap(long ptr ptr ptr ptr)
++@ stdcall D3DXSHProjectCubeMap(long ptr ptr ptr ptr)
+ @ stdcall D3DXSHRotate(ptr long ptr ptr)
+ @ stdcall D3DXSHRotateZ(ptr long float ptr)
+ @ stdcall D3DXSHScale(ptr long ptr float)
+diff --git a/dll/directx/wine/d3dx9_31/d3dx9_31.spec b/dll/directx/wine/d3dx9_31/d3dx9_31.spec
+index 12db9be10fc..38714f68127 100644
+--- a/dll/directx/wine/d3dx9_31/d3dx9_31.spec
++++ b/dll/directx/wine/d3dx9_31/d3dx9_31.spec
+@@ -262,7 +262,7 @@
+ @ stdcall D3DXSHEvalSphericalLight(long ptr float float float float ptr ptr ptr)
+ @ stub D3DXSHPRTCompSplitMeshSC(ptr long long ptr long ptr long long ptr ptr long ptr ptr ptr ptr ptr)
+ @ stub D3DXSHPRTCompSuperCluster(ptr ptr long long ptr ptr)
+-@ stub D3DXSHProjectCubeMap(long ptr ptr ptr ptr)
++@ stdcall D3DXSHProjectCubeMap(long ptr ptr ptr ptr)
+ @ stdcall D3DXSHRotate(ptr long ptr ptr)
+ @ stdcall D3DXSHRotateZ(ptr long float ptr)
+ @ stdcall D3DXSHScale(ptr long ptr float)
+diff --git a/dll/directx/wine/d3dx9_32/d3dx9_32.spec b/dll/directx/wine/d3dx9_32/d3dx9_32.spec
+index 4e85b4ca2f3..ed8efad9c6c 100644
+--- a/dll/directx/wine/d3dx9_32/d3dx9_32.spec
++++ b/dll/directx/wine/d3dx9_32/d3dx9_32.spec
+@@ -267,7 +267,7 @@
+ @ stub D3DXSHMultiply6(ptr ptr ptr)
+ @ stub D3DXSHPRTCompSplitMeshSC(ptr long long ptr long ptr long long ptr ptr long ptr ptr ptr ptr ptr)
+ @ stub D3DXSHPRTCompSuperCluster(ptr ptr long long ptr ptr)
+-@ stub D3DXSHProjectCubeMap(long ptr ptr ptr ptr)
++@ stdcall D3DXSHProjectCubeMap(long ptr ptr ptr ptr)
+ @ stdcall D3DXSHRotate(ptr long ptr ptr)
+ @ stdcall D3DXSHRotateZ(ptr long float ptr)
+ @ stdcall D3DXSHScale(ptr long ptr float)
+diff --git a/dll/directx/wine/d3dx9_33/d3dx9_33.spec b/dll/directx/wine/d3dx9_33/d3dx9_33.spec
+index 4e85b4ca2f3..ed8efad9c6c 100644
+--- a/dll/directx/wine/d3dx9_33/d3dx9_33.spec
++++ b/dll/directx/wine/d3dx9_33/d3dx9_33.spec
+@@ -267,7 +267,7 @@
+ @ stub D3DXSHMultiply6(ptr ptr ptr)
+ @ stub D3DXSHPRTCompSplitMeshSC(ptr long long ptr long ptr long long ptr ptr long ptr ptr ptr ptr ptr)
+ @ stub D3DXSHPRTCompSuperCluster(ptr ptr long long ptr ptr)
+-@ stub D3DXSHProjectCubeMap(long ptr ptr ptr ptr)
++@ stdcall D3DXSHProjectCubeMap(long ptr ptr ptr ptr)
+ @ stdcall D3DXSHRotate(ptr long ptr ptr)
+ @ stdcall D3DXSHRotateZ(ptr long float ptr)
+ @ stdcall D3DXSHScale(ptr long ptr float)
+diff --git a/dll/directx/wine/d3dx9_34/d3dx9_34.spec b/dll/directx/wine/d3dx9_34/d3dx9_34.spec
+index 4e85b4ca2f3..ed8efad9c6c 100644
+--- a/dll/directx/wine/d3dx9_34/d3dx9_34.spec
++++ b/dll/directx/wine/d3dx9_34/d3dx9_34.spec
+@@ -267,7 +267,7 @@
+ @ stub D3DXSHMultiply6(ptr ptr ptr)
+ @ stub D3DXSHPRTCompSplitMeshSC(ptr long long ptr long ptr long long ptr ptr long ptr ptr ptr ptr ptr)
+ @ stub D3DXSHPRTCompSuperCluster(ptr ptr long long ptr ptr)
+-@ stub D3DXSHProjectCubeMap(long ptr ptr ptr ptr)
++@ stdcall D3DXSHProjectCubeMap(long ptr ptr ptr ptr)
+ @ stdcall D3DXSHRotate(ptr long ptr ptr)
+ @ stdcall D3DXSHRotateZ(ptr long float ptr)
+ @ stdcall D3DXSHScale(ptr long ptr float)
+diff --git a/dll/directx/wine/d3dx9_35/d3dx9_35.spec b/dll/directx/wine/d3dx9_35/d3dx9_35.spec
+index 4e85b4ca2f3..ed8efad9c6c 100644
+--- a/dll/directx/wine/d3dx9_35/d3dx9_35.spec
++++ b/dll/directx/wine/d3dx9_35/d3dx9_35.spec
+@@ -267,7 +267,7 @@
+ @ stub D3DXSHMultiply6(ptr ptr ptr)
+ @ stub D3DXSHPRTCompSplitMeshSC(ptr long long ptr long ptr long long ptr ptr long ptr ptr ptr ptr ptr)
+ @ stub D3DXSHPRTCompSuperCluster(ptr ptr long long ptr ptr)
+-@ stub D3DXSHProjectCubeMap(long ptr ptr ptr ptr)
++@ stdcall D3DXSHProjectCubeMap(long ptr ptr ptr ptr)
+ @ stdcall D3DXSHRotate(ptr long ptr ptr)
+ @ stdcall D3DXSHRotateZ(ptr long float ptr)
+ @ stdcall D3DXSHScale(ptr long ptr float)
+diff --git a/dll/directx/wine/d3dx9_36/d3dx9_36.spec b/dll/directx/wine/d3dx9_36/d3dx9_36.spec
+index b07809e646c..13405ad8909 100644
+--- a/dll/directx/wine/d3dx9_36/d3dx9_36.spec
++++ b/dll/directx/wine/d3dx9_36/d3dx9_36.spec
+@@ -269,7 +269,7 @@
+ @ stub D3DXSHMultiply6(ptr ptr ptr)
+ @ stub D3DXSHPRTCompSplitMeshSC(ptr long long ptr long ptr long long ptr ptr long ptr ptr ptr ptr ptr)
+ @ stub D3DXSHPRTCompSuperCluster(ptr ptr long long ptr ptr)
+-@ stub D3DXSHProjectCubeMap(long ptr ptr ptr ptr)
++@ stdcall D3DXSHProjectCubeMap(long ptr ptr ptr ptr)
+ @ stdcall D3DXSHRotate(ptr long ptr ptr)
+ @ stdcall D3DXSHRotateZ(ptr long float ptr)
+ @ stdcall D3DXSHScale(ptr long ptr float)
+diff --git a/dll/directx/wine/d3dx9_36/math.c b/dll/directx/wine/d3dx9_36/math.c
+index cdc55feb64f..a575d659fca 100644
+--- a/dll/directx/wine/d3dx9_36/math.c
++++ b/dll/directx/wine/d3dx9_36/math.c
+@@ -2973,6 +2973,20 @@ static void rotate_X(FLOAT *out, UINT order, FLOAT a, FLOAT *in)
+     out[35] = 0.9057110548f * in[31] - 0.4192627370f * in[33] + 0.0624999329f * in[35];
+ }
+ 
++HRESULT WINAPI D3DXSHProjectCubeMap(UINT order, IDirect3DCubeTexture9 *cubemap, FLOAT *rout, FLOAT *gout, FLOAT *bout)
++{
++    FIXME("order %u, cubemap %p, rout %p, gout %p, bout %p: stub!\n", order, cubemap, rout, gout, bout);
++
++    if(!cubemap || order < D3DXSH_MINORDER || order > D3DXSH_MAXORDER)
++        return D3DERR_INVALIDCALL;
++
++    *rout = 0.0f;
++    *gout = 0.0f;
++    *bout = 0.0f;
++
++    return D3D_OK;
++}
++
+ FLOAT* WINAPI D3DXSHRotate(FLOAT *out, UINT order, const D3DXMATRIX *matrix, const FLOAT *in)
+ {
+     FLOAT alpha, beta, gamma, sinb, temp[36], temp1[36];
+diff --git a/dll/directx/wine/d3dx9_37/d3dx9_37.spec b/dll/directx/wine/d3dx9_37/d3dx9_37.spec
+index b07809e646c..13405ad8909 100644
+--- a/dll/directx/wine/d3dx9_37/d3dx9_37.spec
++++ b/dll/directx/wine/d3dx9_37/d3dx9_37.spec
+@@ -269,7 +269,7 @@
+ @ stub D3DXSHMultiply6(ptr ptr ptr)
+ @ stub D3DXSHPRTCompSplitMeshSC(ptr long long ptr long ptr long long ptr ptr long ptr ptr ptr ptr ptr)
+ @ stub D3DXSHPRTCompSuperCluster(ptr ptr long long ptr ptr)
+-@ stub D3DXSHProjectCubeMap(long ptr ptr ptr ptr)
++@ stdcall D3DXSHProjectCubeMap(long ptr ptr ptr ptr)
+ @ stdcall D3DXSHRotate(ptr long ptr ptr)
+ @ stdcall D3DXSHRotateZ(ptr long float ptr)
+ @ stdcall D3DXSHScale(ptr long ptr float)
+diff --git a/dll/directx/wine/d3dx9_38/d3dx9_38.spec b/dll/directx/wine/d3dx9_38/d3dx9_38.spec
+index b07809e646c..13405ad8909 100644
+--- a/dll/directx/wine/d3dx9_38/d3dx9_38.spec
++++ b/dll/directx/wine/d3dx9_38/d3dx9_38.spec
+@@ -269,7 +269,7 @@
+ @ stub D3DXSHMultiply6(ptr ptr ptr)
+ @ stub D3DXSHPRTCompSplitMeshSC(ptr long long ptr long ptr long long ptr ptr long ptr ptr ptr ptr ptr)
+ @ stub D3DXSHPRTCompSuperCluster(ptr ptr long long ptr ptr)
+-@ stub D3DXSHProjectCubeMap(long ptr ptr ptr ptr)
++@ stdcall D3DXSHProjectCubeMap(long ptr ptr ptr ptr)
+ @ stdcall D3DXSHRotate(ptr long ptr ptr)
+ @ stdcall D3DXSHRotateZ(ptr long float ptr)
+ @ stdcall D3DXSHScale(ptr long ptr float)
+diff --git a/dll/directx/wine/d3dx9_39/d3dx9_39.spec b/dll/directx/wine/d3dx9_39/d3dx9_39.spec
+index b07809e646c..13405ad8909 100644
+--- a/dll/directx/wine/d3dx9_39/d3dx9_39.spec
++++ b/dll/directx/wine/d3dx9_39/d3dx9_39.spec
+@@ -269,7 +269,7 @@
+ @ stub D3DXSHMultiply6(ptr ptr ptr)
+ @ stub D3DXSHPRTCompSplitMeshSC(ptr long long ptr long ptr long long ptr ptr long ptr ptr ptr ptr ptr)
+ @ stub D3DXSHPRTCompSuperCluster(ptr ptr long long ptr ptr)
+-@ stub D3DXSHProjectCubeMap(long ptr ptr ptr ptr)
++@ stdcall D3DXSHProjectCubeMap(long ptr ptr ptr ptr)
+ @ stdcall D3DXSHRotate(ptr long ptr ptr)
+ @ stdcall D3DXSHRotateZ(ptr long float ptr)
+ @ stdcall D3DXSHScale(ptr long ptr float)
+diff --git a/dll/directx/wine/d3dx9_40/d3dx9_40.spec b/dll/directx/wine/d3dx9_40/d3dx9_40.spec
+index b07809e646c..13405ad8909 100644
+--- a/dll/directx/wine/d3dx9_40/d3dx9_40.spec
++++ b/dll/directx/wine/d3dx9_40/d3dx9_40.spec
+@@ -269,7 +269,7 @@
+ @ stub D3DXSHMultiply6(ptr ptr ptr)
+ @ stub D3DXSHPRTCompSplitMeshSC(ptr long long ptr long ptr long long ptr ptr long ptr ptr ptr ptr ptr)
+ @ stub D3DXSHPRTCompSuperCluster(ptr ptr long long ptr ptr)
+-@ stub D3DXSHProjectCubeMap(long ptr ptr ptr ptr)
++@ stdcall D3DXSHProjectCubeMap(long ptr ptr ptr ptr)
+ @ stdcall D3DXSHRotate(ptr long ptr ptr)
+ @ stdcall D3DXSHRotateZ(ptr long float ptr)
+ @ stdcall D3DXSHScale(ptr long ptr float)
+diff --git a/dll/directx/wine/d3dx9_41/d3dx9_41.spec b/dll/directx/wine/d3dx9_41/d3dx9_41.spec
+index b07809e646c..13405ad8909 100644
+--- a/dll/directx/wine/d3dx9_41/d3dx9_41.spec
++++ b/dll/directx/wine/d3dx9_41/d3dx9_41.spec
+@@ -269,7 +269,7 @@
+ @ stub D3DXSHMultiply6(ptr ptr ptr)
+ @ stub D3DXSHPRTCompSplitMeshSC(ptr long long ptr long ptr long long ptr ptr long ptr ptr ptr ptr ptr)
+ @ stub D3DXSHPRTCompSuperCluster(ptr ptr long long ptr ptr)
+-@ stub D3DXSHProjectCubeMap(long ptr ptr ptr ptr)
++@ stdcall D3DXSHProjectCubeMap(long ptr ptr ptr ptr)
+ @ stdcall D3DXSHRotate(ptr long ptr ptr)
+ @ stdcall D3DXSHRotateZ(ptr long float ptr)
+ @ stdcall D3DXSHScale(ptr long ptr float)
+diff --git a/dll/directx/wine/d3dx9_42/d3dx9_42.spec b/dll/directx/wine/d3dx9_42/d3dx9_42.spec
+index 288ab27dd5d..1f4cf67c7b2 100644
+--- a/dll/directx/wine/d3dx9_42/d3dx9_42.spec
++++ b/dll/directx/wine/d3dx9_42/d3dx9_42.spec
+@@ -262,7 +262,7 @@
+ @ stub D3DXSHMultiply6(ptr ptr ptr)
+ @ stub D3DXSHPRTCompSplitMeshSC(ptr long long ptr long ptr long long ptr ptr long ptr ptr ptr ptr ptr)
+ @ stub D3DXSHPRTCompSuperCluster(ptr ptr long long ptr ptr)
+-@ stub D3DXSHProjectCubeMap(long ptr ptr ptr ptr)
++@ stdcall D3DXSHProjectCubeMap(long ptr ptr ptr ptr)
+ @ stdcall D3DXSHRotate(ptr long ptr ptr)
+ @ stdcall D3DXSHRotateZ(ptr long float ptr)
+ @ stdcall D3DXSHScale(ptr long ptr float)
+diff --git a/dll/directx/wine/d3dx9_43/d3dx9_43.spec b/dll/directx/wine/d3dx9_43/d3dx9_43.spec
+index 288ab27dd5d..1f4cf67c7b2 100644
+--- a/dll/directx/wine/d3dx9_43/d3dx9_43.spec
++++ b/dll/directx/wine/d3dx9_43/d3dx9_43.spec
+@@ -262,7 +262,7 @@
+ @ stub D3DXSHMultiply6(ptr ptr ptr)
+ @ stub D3DXSHPRTCompSplitMeshSC(ptr long long ptr long ptr long long ptr ptr long ptr ptr ptr ptr ptr)
+ @ stub D3DXSHPRTCompSuperCluster(ptr ptr long long ptr ptr)
+-@ stub D3DXSHProjectCubeMap(long ptr ptr ptr ptr)
++@ stdcall D3DXSHProjectCubeMap(long ptr ptr ptr ptr)
+ @ stdcall D3DXSHRotate(ptr long ptr ptr)
+ @ stdcall D3DXSHRotateZ(ptr long float ptr)
+ @ stdcall D3DXSHScale(ptr long ptr float)
+diff --git a/sdk/include/dxsdk/d3dx9math.h b/sdk/include/dxsdk/d3dx9math.h
+index 2c41b73d423..7aed21e3ee3 100644
+--- a/sdk/include/dxsdk/d3dx9math.h
++++ b/sdk/include/dxsdk/d3dx9math.h
+@@ -396,6 +396,7 @@ HRESULT WINAPI D3DXSHEvalSphericalLight(UINT order, const D3DXVECTOR3 *dir, FLOA
+ FLOAT* WINAPI D3DXSHMultiply2(FLOAT *out, const FLOAT *a, const FLOAT *b);
+ FLOAT* WINAPI D3DXSHMultiply3(FLOAT *out, const FLOAT *a, const FLOAT *b);
+ FLOAT* WINAPI D3DXSHMultiply4(FLOAT *out, const FLOAT *a, const FLOAT *b);
++HRESULT WINAPI D3DXSHProjectCubeMap(UINT order, IDirect3DCubeTexture9 *cubemap, FLOAT *rout, FLOAT *gout, FLOAT *bout);
+ FLOAT* WINAPI D3DXSHRotate(FLOAT *out, UINT order, const D3DXMATRIX *matrix, const FLOAT *in);
+ FLOAT* WINAPI D3DXSHRotateZ(FLOAT *out, UINT order, FLOAT angle, const FLOAT *in);
+ FLOAT* WINAPI D3DXSHScale(FLOAT *out, UINT order, const FLOAT *a, const FLOAT scale);

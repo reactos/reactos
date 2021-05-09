@@ -56,7 +56,7 @@ typedef enum _POWER_INFORMATION_LEVEL {
   SetPowerSettingValue,
   NotifyUserPowerSetting,
   PowerInformationLevelUnused0,
-  PowerInformationLevelUnused1,
+  SystemMonitorHiberBootPowerOff,
   SystemVideoState,
   TraceApplicationPowerMessage,
   TraceApplicationPowerMessageEnd,
@@ -80,6 +80,50 @@ typedef enum _POWER_INFORMATION_LEVEL {
   ProcessorIdleDomains,
   WakeTimerList,
   SystemHiberFileSize,
+  ProcessorIdleStatesHv,
+  ProcessorPerfStatesHv,
+  ProcessorPerfCapHv,
+  ProcessorSetIdle,
+  LogicalProcessorIdling,
+  UserPresence,
+  PowerSettingNotificationName,
+  GetPowerSettingValue,
+  IdleResiliency,
+  SessionRITState,
+  SessionConnectNotification,
+  SessionPowerCleanup,
+  SessionLockState,
+  SystemHiberbootState,
+  PlatformInformation,
+  PdcInvocation,
+  MonitorInvocation,
+  FirmwareTableInformationRegistered,
+  SetShutdownSelectedTime,
+  SuspendResumeInvocation,
+  PlmPowerRequestCreate,
+  ScreenOff,
+  CsDeviceNotification,
+  PlatformRole,
+  LastResumePerformance,
+  DisplayBurst,
+  ExitLatencySamplingPercentage,
+  RegisterSpmPowerSettings,
+  PlatformIdleStates,
+  ProcessorIdleVeto, // deprecated
+  PlatformIdleVeto,  // deprecated
+  SystemBatteryStatePrecise,
+  ThermalEvent,
+  PowerRequestActionInternal,
+  BatteryDeviceState,
+  PowerInformationInternal,
+  ThermalStandby,
+  SystemHiberFileType,
+  PhysicalPowerButtonPress,
+  QueryPotentialDripsConstraint,
+  EnergyTrackerCreate,
+  EnergyTrackerQuery,
+  UpdateBlackBoxRecorder,
+  SessionAllowExternalDmaDevices,
   PowerInformationLevelMaximum
 } POWER_INFORMATION_LEVEL;
 
@@ -254,8 +298,28 @@ typedef enum _POWER_PLATFORM_ROLE {
   PlatformRoleSOHOServer,
   PlatformRoleAppliancePC,
   PlatformRolePerformanceServer,
+  PlatformRoleSlate,
   PlatformRoleMaximum
 } POWER_PLATFORM_ROLE;
+
+#define POWER_PLATFORM_ROLE_V1     (0x00000001)
+#define POWER_PLATFORM_ROLE_V1_MAX (PlatformRolePerformanceServer + 1)
+
+#define POWER_PLATFORM_ROLE_V2     (0x00000002)
+#define POWER_PLATFORM_ROLE_V2_MAX (PlatformRoleSlate + 1)
+
+#if (NTDDI_VERSION >= NTDDI_WIN8)
+#define POWER_PLATFORM_ROLE_VERSION     POWER_PLATFORM_ROLE_V2
+#define POWER_PLATFORM_ROLE_VERSION_MAX POWER_PLATFORM_ROLE_V2_MAX
+#else
+#define POWER_PLATFORM_ROLE_VERSION     POWER_PLATFORM_ROLE_V1
+#define POWER_PLATFORM_ROLE_VERSION_MAX POWER_PLATFORM_ROLE_V1_MAX
+#endif
+
+typedef struct _POWER_PLATFORM_INFORMATION
+{
+  BOOLEAN AoAc;
+} POWER_PLATFORM_INFORMATION, *PPOWER_PLATFORM_INFORMATION;
 
 #if (NTDDI_VERSION >= NTDDI_WINXP) || !defined(_BATCLASS_)
 typedef struct {
@@ -413,6 +477,215 @@ typedef NTSTATUS
   _In_ ULONG ValueLength,
   _Inout_opt_ PVOID Context);
 typedef POWER_SETTING_CALLBACK *PPOWER_SETTING_CALLBACK;
+
+#if (NTDDI_VERSION >= NTDDI_WIN8)
+
+#define PO_FX_VERSION_V1 0x00000001
+#define PO_FX_VERSION_V2 0x00000002
+#define PO_FX_VERSION_V3 0x00000003
+#define PO_FX_VERSION PO_FX_VERSION_V1
+
+DECLARE_HANDLE(POHANDLE);
+
+typedef
+_Function_class_(PO_FX_COMPONENT_ACTIVE_CONDITION_CALLBACK)
+_IRQL_requires_max_(DISPATCH_LEVEL)
+VOID
+PO_FX_COMPONENT_ACTIVE_CONDITION_CALLBACK(
+  _In_ PVOID Context,
+  _In_ ULONG Component);
+
+typedef PO_FX_COMPONENT_ACTIVE_CONDITION_CALLBACK *PPO_FX_COMPONENT_ACTIVE_CONDITION_CALLBACK;
+
+typedef
+_Function_class_(PO_FX_COMPONENT_IDLE_CONDITION_CALLBACK)
+_IRQL_requires_max_(DISPATCH_LEVEL)
+VOID
+PO_FX_COMPONENT_IDLE_CONDITION_CALLBACK(
+  _In_ PVOID Context,
+  _In_ ULONG Component);
+
+typedef PO_FX_COMPONENT_IDLE_CONDITION_CALLBACK *PPO_FX_COMPONENT_IDLE_CONDITION_CALLBACK;
+
+typedef
+_Function_class_(PO_FX_COMPONENT_IDLE_STATE_CALLBACK)
+_IRQL_requires_max_(DISPATCH_LEVEL)
+VOID
+PO_FX_COMPONENT_IDLE_STATE_CALLBACK(
+  _In_ PVOID Context,
+  _In_ ULONG Component,
+  _In_ ULONG State);
+
+typedef PO_FX_COMPONENT_IDLE_STATE_CALLBACK *PPO_FX_COMPONENT_IDLE_STATE_CALLBACK;
+
+typedef
+_Function_class_(PO_FX_DEVICE_POWER_REQUIRED_CALLBACK)
+_IRQL_requires_max_(DISPATCH_LEVEL)
+VOID
+PO_FX_DEVICE_POWER_REQUIRED_CALLBACK(
+  _In_ PVOID Context);
+
+typedef PO_FX_DEVICE_POWER_REQUIRED_CALLBACK *PPO_FX_DEVICE_POWER_REQUIRED_CALLBACK;
+
+typedef
+_Function_class_(PO_FX_DEVICE_POWER_NOT_REQUIRED_CALLBACK)
+_IRQL_requires_max_(DISPATCH_LEVEL)
+VOID
+PO_FX_DEVICE_POWER_NOT_REQUIRED_CALLBACK(
+  _In_ PVOID Context);
+
+typedef PO_FX_DEVICE_POWER_NOT_REQUIRED_CALLBACK *PPO_FX_DEVICE_POWER_NOT_REQUIRED_CALLBACK;
+
+typedef
+_Function_class_(PO_FX_POWER_CONTROL_CALLBACK)
+_IRQL_requires_max_(DISPATCH_LEVEL)
+NTSTATUS
+PO_FX_POWER_CONTROL_CALLBACK(
+  _In_ PVOID DeviceContext,
+  _In_ LPCGUID PowerControlCode,
+  _In_reads_bytes_opt_(InBufferSize) PVOID InBuffer,
+  _In_ SIZE_T InBufferSize,
+  _Out_writes_bytes_opt_(OutBufferSize) PVOID OutBuffer,
+  _In_ SIZE_T OutBufferSize,
+  _Out_opt_ PSIZE_T BytesReturned);
+
+typedef PO_FX_POWER_CONTROL_CALLBACK *PPO_FX_POWER_CONTROL_CALLBACK;
+
+typedef
+_Function_class_(PO_FX_COMPONENT_CRITICAL_TRANSITION_CALLBACK)
+_IRQL_requires_max_(HIGH_LEVEL)
+VOID
+PO_FX_COMPONENT_CRITICAL_TRANSITION_CALLBACK(
+  _In_ PVOID Context,
+  _In_ ULONG Component,
+  _In_ BOOLEAN Active);
+
+typedef PO_FX_COMPONENT_CRITICAL_TRANSITION_CALLBACK *PPO_FX_COMPONENT_CRITICAL_TRANSITION_CALLBACK;
+
+typedef struct _PO_FX_COMPONENT_IDLE_STATE
+{
+  ULONGLONG TransitionLatency;
+  ULONGLONG ResidencyRequirement;
+  ULONG NominalPower;
+} PO_FX_COMPONENT_IDLE_STATE, *PPO_FX_COMPONENT_IDLE_STATE;
+
+typedef struct _PO_FX_COMPONENT_V1
+{
+  GUID Id;
+  ULONG IdleStateCount;
+  ULONG DeepestWakeableIdleState;
+  _Field_size_full_(IdleStateCount) PPO_FX_COMPONENT_IDLE_STATE IdleStates;
+} PO_FX_COMPONENT_V1, *PPO_FX_COMPONENT_V1;
+
+typedef struct _PO_FX_DEVICE_V1
+{
+  ULONG Version;
+  ULONG ComponentCount;
+  PPO_FX_COMPONENT_ACTIVE_CONDITION_CALLBACK ComponentActiveConditionCallback;
+  PPO_FX_COMPONENT_IDLE_CONDITION_CALLBACK ComponentIdleConditionCallback;
+  PPO_FX_COMPONENT_IDLE_STATE_CALLBACK ComponentIdleStateCallback;
+  PPO_FX_DEVICE_POWER_REQUIRED_CALLBACK DevicePowerRequiredCallback;
+  PPO_FX_DEVICE_POWER_NOT_REQUIRED_CALLBACK DevicePowerNotRequiredCallback;
+  PPO_FX_POWER_CONTROL_CALLBACK PowerControlCallback;
+  PVOID DeviceContext;
+  _Field_size_full_(ComponentCount) PO_FX_COMPONENT_V1 Components[ANYSIZE_ARRAY];
+} PO_FX_DEVICE_V1, *PPO_FX_DEVICE_V1;
+
+#define PO_FX_COMPONENT_FLAG_F0_ON_DX 0x0000000000000001
+#define PO_FX_COMPONENT_FLAG_NO_DEBOUNCE 0x0000000000000002
+
+typedef struct _PO_FX_COMPONENT_V2
+{
+  GUID Id;
+  ULONGLONG Flags;
+  ULONG DeepestWakeableIdleState;
+  ULONG IdleStateCount;
+  _Field_size_full_(IdleStateCount) PPO_FX_COMPONENT_IDLE_STATE IdleStates;
+  ULONG ProviderCount;
+  _Field_size_full_(ProviderCount) PULONG Providers;
+} PO_FX_COMPONENT_V2, *PPO_FX_COMPONENT_V2;
+
+typedef struct _PO_FX_DEVICE_V2
+{
+  ULONG Version;
+  ULONGLONG Flags;
+  PPO_FX_COMPONENT_ACTIVE_CONDITION_CALLBACK ComponentActiveConditionCallback;
+  PPO_FX_COMPONENT_IDLE_CONDITION_CALLBACK ComponentIdleConditionCallback;
+  PPO_FX_COMPONENT_IDLE_STATE_CALLBACK ComponentIdleStateCallback;
+  PPO_FX_DEVICE_POWER_REQUIRED_CALLBACK DevicePowerRequiredCallback;
+  PPO_FX_DEVICE_POWER_NOT_REQUIRED_CALLBACK DevicePowerNotRequiredCallback;
+  PPO_FX_POWER_CONTROL_CALLBACK PowerControlCallback;
+  PVOID DeviceContext;
+  ULONG ComponentCount;
+  _Field_size_full_(ComponentCount) PO_FX_COMPONENT_V2 Components[ANYSIZE_ARRAY];
+} PO_FX_DEVICE_V2, *PPO_FX_DEVICE_V2;
+
+#define PO_FX_DEVICE_FLAG_RESERVED_1                   (0x0000000000000001ull)
+#define PO_FX_DEVICE_FLAG_DFX_DIRECT_CHILDREN_OPTIONAL (0x0000000000000002ull)
+#define PO_FX_DEVICE_FLAG_DFX_POWER_CHILDREN_OPTIONAL  (0x0000000000000004ull)
+#define PO_FX_DEVICE_FLAG_DFX_CHILDREN_OPTIONAL \
+            (PO_FX_DEVICE_FLAG_DFX_DIRECT_CHILDREN_OPTIONAL | \
+             PO_FX_DEVICE_FLAG_DFX_POWER_CHILDREN_OPTIONAL)
+
+#define PO_FX_DIRECTED_FX_DEFAULT_IDLE_TIMEOUT    (0ul)
+#define PO_FX_DIRECTED_FX_IMMEDIATE_IDLE_TIMEOUT  ((ULONG)-1)
+#define PO_FX_DIRECTED_FX_MAX_IDLE_TIMEOUT        (10ul * 60)
+
+typedef
+_Function_class_(PO_FX_DIRECTED_POWER_UP_CALLBACK)
+_IRQL_requires_max_(DISPATCH_LEVEL)
+_IRQL_requires_same_
+VOID
+PO_FX_DIRECTED_POWER_UP_CALLBACK(
+  _In_ PVOID Context,
+  _In_ ULONG Flags);
+
+typedef PO_FX_DIRECTED_POWER_UP_CALLBACK *PPO_FX_DIRECTED_POWER_UP_CALLBACK;
+
+typedef
+_Function_class_(PO_FX_DIRECTED_POWER_DOWN_CALLBACK)
+_IRQL_requires_max_(DISPATCH_LEVEL)
+_IRQL_requires_same_
+VOID
+PO_FX_DIRECTED_POWER_DOWN_CALLBACK(
+  _In_ PVOID Context,
+  _In_ ULONG Flags);
+
+typedef PO_FX_DIRECTED_POWER_DOWN_CALLBACK *PPO_FX_DIRECTED_POWER_DOWN_CALLBACK;
+
+typedef struct _PO_FX_DEVICE_V3
+{
+  ULONG Version;
+  ULONGLONG Flags;
+  PPO_FX_COMPONENT_ACTIVE_CONDITION_CALLBACK ComponentActiveConditionCallback;
+  PPO_FX_COMPONENT_IDLE_CONDITION_CALLBACK ComponentIdleConditionCallback;
+  PPO_FX_COMPONENT_IDLE_STATE_CALLBACK ComponentIdleStateCallback;
+  PPO_FX_DEVICE_POWER_REQUIRED_CALLBACK DevicePowerRequiredCallback;
+  PPO_FX_DEVICE_POWER_NOT_REQUIRED_CALLBACK DevicePowerNotRequiredCallback;
+  PPO_FX_POWER_CONTROL_CALLBACK PowerControlCallback;
+  PPO_FX_DIRECTED_POWER_UP_CALLBACK DirectedPowerUpCallback;
+  PPO_FX_DIRECTED_POWER_DOWN_CALLBACK DirectedPowerDownCallback;
+  ULONG DirectedFxTimeoutInSeconds;
+  PVOID DeviceContext;
+  ULONG ComponentCount;
+  _Field_size_full_(ComponentCount) PO_FX_COMPONENT_V2 Components[ANYSIZE_ARRAY];
+} PO_FX_DEVICE_V3, *PPO_FX_DEVICE_V3;
+
+#if (PO_FX_VERSION == PO_FX_VERSION_V1)
+typedef PO_FX_COMPONENT_V1 PO_FX_COMPONENT, *PPO_FX_COMPONENT;
+typedef PO_FX_DEVICE_V1 PO_FX_DEVICE, *PPO_FX_DEVICE;
+#elif (PO_FX_VERSION == PO_FX_VERSION_V2)
+typedef PO_FX_COMPONENT_V2 PO_FX_COMPONENT, *PPO_FX_COMPONENT;
+typedef PO_FX_DEVICE_V2 PO_FX_DEVICE, *PPO_FX_DEVICE;
+#elif (PO_FX_VERSION == PO_FX_VERSION_V3)
+typedef PO_FX_COMPONENT_V2 PO_FX_COMPONENT, *PPO_FX_COMPONENT;
+typedef PO_FX_DEVICE_V3 PO_FX_DEVICE, *PPO_FX_DEVICE;
+#else
+#error PO_FX_VERSION undefined!
+#endif
+
+#endif // NTDDI_WIN8
+
 $endif (_WDMDDK_)
 $if (_NTIFS_)
 
@@ -423,4 +696,3 @@ $if (_NTIFS_)
 #define PO_CB_LID_SWITCH_STATE          4
 #define PO_CB_PROCESSOR_POWER_POLICY    5
 $endif (_NTIFS_)
-

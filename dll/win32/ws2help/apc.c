@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS WinSock 2 DLL
- * FILE:        include/ws2_32.h
+ * FILE:        dll/win32/ws2help/apc.c
  * PURPOSE:     WinSock 2 DLL header
  */
 

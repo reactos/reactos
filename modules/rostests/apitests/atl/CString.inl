@@ -439,3 +439,90 @@ TEST_NAMEX(bstr)
         ::SysFreeString(bstr);
     }
 }
+
+TEST_NAMEX(tokenize)
+{
+    CStringX str(_X("%#First Second#Third"));
+    const XCHAR* Tokens = _X("% #");
+    CStringX res;
+
+    int nCurPos = 0;
+
+    // All 'current' tokens are skipped
+    res = str.Tokenize(Tokens, nCurPos);
+    ok(res == _X("First"), "Expected str to be 'First', was: %s\n", dbgstrx(res));
+    ok_dec(nCurPos, 8);
+
+    res = str.Tokenize(Tokens, nCurPos);
+    ok(res == _X("Second"), "Expected str to be 'Second', was: %s\n", dbgstrx(res));
+    ok_dec(nCurPos, 15);
+
+    res = str.Tokenize(Tokens, nCurPos);
+    ok(res == _X("Third"), "Expected str to be 'Third', was: %s\n", dbgstrx(res));
+    ok_dec(nCurPos, 21);
+
+    // The final 'token' is empty, and nCurPos is set to -1
+    // (Calling with nCurPos=-1 will assert)
+    res = str.Tokenize(Tokens, nCurPos);
+    ok(res == _X(""), "Expected str to be '', was: %s\n", dbgstrx(res));
+    ok_dec(nCurPos, -1);
+
+    str =_X("StartWithToken#%#");
+    nCurPos = 0;
+
+    res = str.Tokenize(Tokens, nCurPos);
+    ok(res == _X("StartWithToken"), "Expected str to be 'StartWithToken', was: %s\n", dbgstrx(res));
+    ok_dec(nCurPos, 15);
+
+    // Ending with tokens acts as if there were no tokens at the end
+    res = str.Tokenize(Tokens, nCurPos);
+    ok(res == _X(""), "Expected str to be '', was: %s\n", dbgstrx(res));
+    ok_dec(nCurPos, -1);
+
+
+    str = _X("");
+    nCurPos = 0;
+
+    // Calling with an empty string returns 'no tokens'
+    res = str.Tokenize(Tokens, nCurPos);
+    ok(res == _X(""), "Expected str to be '', was: %s\n", dbgstrx(res));
+    ok_dec(nCurPos, -1);
+
+    str = _X("");
+    nCurPos = 20;
+
+    // Calling with a current position outside the strings acts the same as 'no tokens left'
+    res = str.Tokenize(Tokens, nCurPos);
+    ok(res == _X(""), "Expected str to be '', was: %s\n", dbgstrx(res));
+    ok_dec(nCurPos, -1);
+
+
+    str = _X("test");
+    nCurPos = 2;
+
+    // Calling with a NULL pszTokens returns a substring starting at 'nCurPos', but not updating nCurPos!
+    res = str.Tokenize(NULL, nCurPos);
+    ok(res == _X("st"), "Expected str to be 'st', was: %s\n", dbgstrx(res));
+    ok_dec(nCurPos, 2);
+
+
+    // Calling with an empty pszTokens behaves exactly the same
+    res = str.Tokenize(_X(""), nCurPos);
+    ok(res == _X("st"), "Expected str to be 'st', was: %s\n", dbgstrx(res));
+    ok_dec(nCurPos, 2);
+
+    nCurPos = 8;
+
+    // Calling with a NULL pszTokens and an nCurPos out of bounds returns 'no tokens left'
+    res = str.Tokenize(NULL, nCurPos);
+    ok(res == _X(""), "Expected str to be '', was: %s\n", dbgstrx(res));
+    ok_dec(nCurPos, -1);
+
+    nCurPos = 8;
+
+    // Calling with an empty pszTokens behaves exactly the same
+    res = str.Tokenize(_X(""), nCurPos);
+    ok(res == _X(""), "Expected str to be 'st', was: %s\n", dbgstrx(res));
+    ok(res == _X(""), "Expected str to be '', was: %s\n", dbgstrx(res));
+    ok_dec(nCurPos, -1);
+}

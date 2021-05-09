@@ -49,7 +49,7 @@ framebuf.dll
 [VGA_Inst.NT.Services]
 AddService = , 0x00000002
 ;AddService = VGA, , VGA_Service_Inst
-;AddService = VBE, 0x00000003, VBE_Service_Inst ; SPSVCINST_TAGTOFRONT + SPSVCINST_ASSOCSERVICE
+AddService = VBE, 0x00000003, VBE_Service_Inst ; SPSVCINST_TAGTOFRONT + SPSVCINST_ASSOCSERVICE
 ;AddService = XboxVmp, 0x00000003, XBOX_Service_Inst
 
 [VGA_Service_Inst]
@@ -81,6 +81,12 @@ DisplayClassName = "Display Adapters"
 
 StdMfg = "(Standard display adapters)"
 VGA.DeviceDesc = "VGA-compatible graphics card"
+
+[Strings.0404]
+DisplayClassName = "顯示配接器"
+
+StdMfg = "(標準顯示配接器)"
+VGA.DeviceDesc = "VGA 相容顯示卡"
 
 [Strings.0405]
 DisplayClassName = "Grafické adaptéry"

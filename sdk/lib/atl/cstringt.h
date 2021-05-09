@@ -140,6 +140,20 @@ public:
         return ::_wcsicmp(psz1, psz2);
     }
 
+    static int __cdecl StringSpanIncluding(
+        _In_z_ LPCWSTR pszBlock,
+        _In_z_ LPCWSTR pszSet)
+    {
+        return (int)::wcsspn(pszBlock, pszSet);
+    }
+
+    static int __cdecl StringSpanExcluding(
+        _In_z_ LPCWSTR pszBlock,
+        _In_z_ LPCWSTR pszSet)
+    {
+        return (int)::wcscspn(pszBlock, pszSet);
+    }
+
     static int __cdecl FormatV(
         _In_opt_z_ LPWSTR pszDest,
         _In_z_ LPCWSTR pszFormat,
@@ -287,6 +301,20 @@ public:
         _In_z_ LPCSTR psz2)
     {
         return ::_stricmp(psz1, psz2);
+    }
+
+    static int __cdecl StringSpanIncluding(
+        _In_z_ LPCSTR pszBlock,
+        _In_z_ LPCSTR pszSet)
+    {
+        return (int)::strspn(pszBlock, pszSet);
+    }
+
+    static int __cdecl StringSpanExcluding(
+        _In_z_ LPCSTR pszBlock,
+        _In_z_ LPCSTR pszSet)
+    {
+        return (int)::strcspn(pszBlock, pszSet);
     }
 
     static int __cdecl FormatV(
@@ -803,6 +831,42 @@ public:
         return nCount;
     }
 
+
+    CStringT Tokenize(_In_z_ PCXSTR pszTokens, _Inout_ int& iStart) const
+    {
+        ATLASSERT(iStart >= 0);
+
+        if (iStart < 0)
+            AtlThrow(E_INVALIDARG);
+
+        if (!pszTokens || !pszTokens[0])
+        {
+            if (iStart < CThisSimpleString::GetLength())
+            {
+                return Mid(iStart);
+            }
+            iStart = -1;
+            return CStringT();
+        }
+
+        if (iStart < CThisSimpleString::GetLength())
+        {
+            int iRangeOffset = StringTraits::StringSpanIncluding(CThisSimpleString::GetString() + iStart, pszTokens);
+
+            if (iRangeOffset + iStart < CThisSimpleString::GetLength())
+            {
+                int iNewStart = iStart + iRangeOffset;
+                int nCount = StringTraits::StringSpanExcluding(CThisSimpleString::GetString() + iNewStart, pszTokens);
+
+                iStart = iNewStart + nCount + 1;
+
+                return Mid(iNewStart, nCount);
+            }
+        }
+
+        iStart = -1;
+        return CStringT();
+    }
 
     static PCXSTR DefaultTrimChars()
     {

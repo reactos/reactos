@@ -1,5 +1,4 @@
 
-set_cpp()
 
 add_library(cmicpl MODULE
     cmicpl.cpp

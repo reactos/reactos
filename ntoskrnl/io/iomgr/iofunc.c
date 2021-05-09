@@ -2052,6 +2052,26 @@ NtQueryDirectoryFile(IN HANDLE FileHandle,
         _SEH2_END;
     }
 
+    /* Check input parameters */
+
+    switch (FileInformationClass)
+    {
+#define CHECK_LENGTH(class, struct)                      \
+        case class:                                 \
+            if (Length < sizeof(struct))                         \
+                return STATUS_INFO_LENGTH_MISMATCH; \
+            break
+        CHECK_LENGTH(FileDirectoryInformation, FILE_DIRECTORY_INFORMATION);
+        CHECK_LENGTH(FileFullDirectoryInformation, FILE_FULL_DIR_INFORMATION);
+        CHECK_LENGTH(FileIdFullDirectoryInformation, FILE_ID_FULL_DIR_INFORMATION);
+        CHECK_LENGTH(FileNamesInformation, FILE_NAMES_INFORMATION);
+        CHECK_LENGTH(FileBothDirectoryInformation, FILE_BOTH_DIR_INFORMATION);
+        CHECK_LENGTH(FileIdBothDirectoryInformation, FILE_ID_BOTH_DIR_INFORMATION);
+        default:
+            break;
+#undef CHECK_LENGTH
+    }
+
     /* Get File Object */
     Status = ObReferenceObjectByHandle(FileHandle,
                                        FILE_LIST_DIRECTORY,
@@ -2776,6 +2796,14 @@ NtReadFile(IN HANDLE FileHandle,
         if (Key) CapturedKey = *Key;
     }
 
+    /* Check for invalid offset */
+    if ((CapturedByteOffset.QuadPart < 0) && (CapturedByteOffset.QuadPart != -2))
+    {
+        /* -2 is FILE_USE_FILE_POINTER_POSITION */
+        ObDereferenceObject(FileObject);
+        return STATUS_INVALID_PARAMETER;
+    }
+
     /* Check for event */
     if (Event)
     {
@@ -2986,10 +3014,8 @@ NtReadFile(IN HANDLE FileHandle,
 
     /* Now set the deferred read flags */
     Irp->Flags |= (IRP_READ_OPERATION | IRP_DEFER_IO_COMPLETION);
-#if 0
-    /* FIXME: VFAT SUCKS */
+
     if (FileObject->Flags & FO_NO_INTERMEDIATE_BUFFERING) Irp->Flags |= IRP_NOCACHE;
-#endif
 
     /* Perform the call */
     return IopPerformSynchronousRequest(DeviceObject,
@@ -3827,6 +3853,15 @@ NtWriteFile(IN HANDLE FileHandle,
         if (Key) CapturedKey = *Key;
     }
 
+    /* Check for invalid offset */
+    if (CapturedByteOffset.QuadPart < -2)
+    {
+        /* -1 is FILE_WRITE_TO_END_OF_FILE */
+        /* -2 is FILE_USE_FILE_POINTER_POSITION */
+        ObDereferenceObject(FileObject);
+        return STATUS_INVALID_PARAMETER;
+    }
+
     /* Check if this is an append operation */
     if ((ObjectHandleInfo.GrantedAccess &
         (FILE_APPEND_DATA | FILE_WRITE_DATA)) == FILE_APPEND_DATA)
@@ -4045,10 +4080,8 @@ NtWriteFile(IN HANDLE FileHandle,
 
     /* Now set the deferred read flags */
     Irp->Flags |= (IRP_WRITE_OPERATION | IRP_DEFER_IO_COMPLETION);
-#if 0
-    /* FIXME: VFAT SUCKS */
+
     if (FileObject->Flags & FO_NO_INTERMEDIATE_BUFFERING) Irp->Flags |= IRP_NOCACHE;
-#endif
 
     /* Perform the call */
     return IopPerformSynchronousRequest(DeviceObject,

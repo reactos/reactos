@@ -10,6 +10,7 @@ BEGIN
     "^G", CMD_GOTO
     "H", CMD_REPLACE, VIRTKEY, CONTROL
     "^N", CMD_NEW
+    "N", CMD_NEW_WINDOW, VIRTKEY,CONTROL , SHIFT
     "^O", CMD_OPEN
     "^P", CMD_PRINT
     "^S", CMD_SAVE
@@ -25,6 +26,7 @@ BEGIN
     POPUP "文件(&F)"
     BEGIN
         MENUITEM "新建(&N)\tCtrl+N", CMD_NEW
+        MENUITEM "&New Window\tCtrl+Shift+N", CMD_NEW_WINDOW
         MENUITEM "打开(&O)...\tCtrl+O", CMD_OPEN
         MENUITEM "保存(&S)\tCtrl+S", CMD_SAVE
         MENUITEM "另存为(&A)...", CMD_SAVE_AS

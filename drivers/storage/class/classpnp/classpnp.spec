@@ -30,7 +30,7 @@
  @ stdcall ClassInvalidateBusRelations(ptr)
  @ stdcall ClassMarkChildrenMissing(ptr)
  @ stdcall ClassMarkChildMissing(ptr long)
- @ varargs ClassDebugPrint(long long)
+ @ varargs ClassDebugPrint(long str)
  @ stdcall ClassGetDriverExtension(ptr)
  @ stdcall ClassCompleteRequest(ptr ptr long)
  @ stdcall ClassReleaseRemoveLock(ptr ptr)

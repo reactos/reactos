@@ -23,12 +23,12 @@ public:
     virtual ULONG Compress(void* OutputBuffer,
                            void* InputBuffer,
                            ULONG InputLength,
-                           PULONG OutputLength);
+                           PULONG OutputLength) override;
     /* Uncompresses a data block */
     virtual ULONG Uncompress(void* OutputBuffer,
                              void* InputBuffer,
                              ULONG InputLength,
-                             PULONG OutputLength);
+                             PULONG OutputLength) override;
 };
 
 /* EOF */

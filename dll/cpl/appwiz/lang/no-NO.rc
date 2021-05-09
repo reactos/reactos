@@ -26,7 +26,7 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     LTEXT "Denne veiviseren vil hjelper deg å lage snarvei til en lokal eller\nnettverk programmer, filer, mapper, datamaskiner, eller internett\nadresse.", -1, 120, 15, 200, 30
     LTEXT "Velg din lagring plassering:", -1, 120, 50, 120, 10
-    EDITTEXT IDC_SHORTCUT_LOCATION, 120, 65, 150, 15, ES_LEFT
+    EDITTEXT IDC_SHORTCUT_LOCATION, 120, 65, 150, 15, ES_LEFT | ES_AUTOHSCROLL
     PUSHBUTTON "Bla gjennom...", IDC_SHORTCUT_BROWSE, 272, 65, 55, 15, ES_LEFT
     LTEXT "Trykk på neste for å fortsette.", -1, 120, 97, 162, 10
 END
@@ -37,7 +37,7 @@ CAPTION "Velg en tittel for programmet"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     LTEXT "&Skriv inn et navn for denne snarveien:", -1, 120, 15, 150, 10
-    EDITTEXT IDC_SHORTCUT_NAME, 120, 35, 150, 15, ES_LEFT
+    EDITTEXT IDC_SHORTCUT_NAME, 120, 35, 150, 15, ES_LEFT | ES_AUTOHSCROLL
     LTEXT "Trykk på fullført for å opprette snarveien.", -1, 118, 97, 178, 17
 END
 

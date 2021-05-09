@@ -31,7 +31,7 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     LTEXT "Tento průvodce pomůže s vytvořením zástupců na místní\nnebo síťové programy, soubory, složky, počítače nebo\ninternetové adresy.", -1, 120, 15, 200, 30
     LTEXT "Zadejte umístění položky:", -1, 120, 50, 120, 10
-    EDITTEXT IDC_SHORTCUT_LOCATION, 120, 65, 150, 15, ES_LEFT
+    EDITTEXT IDC_SHORTCUT_LOCATION, 120, 65, 150, 15, ES_LEFT | ES_AUTOHSCROLL
     PUSHBUTTON "Procházet...", IDC_SHORTCUT_BROWSE, 272, 65, 55, 15, ES_LEFT
     LTEXT "Pokračujte kliknutím na Další.", -1, 120, 97, 162, 10
 END
@@ -42,7 +42,7 @@ CAPTION "Zvolte název programu"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     LTEXT "&Zadejte název tohoto zástupce:", -1, 120, 15, 150, 10
-    EDITTEXT IDC_SHORTCUT_NAME, 120, 35, 150, 15, ES_LEFT
+    EDITTEXT IDC_SHORTCUT_NAME, 120, 35, 150, 15, ES_LEFT | ES_AUTOHSCROLL
     LTEXT "Kliknutím na Dokončit vytvoříte zástupce.", -1, 118, 97, 178, 17
 END
 

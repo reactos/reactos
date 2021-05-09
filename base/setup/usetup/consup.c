@@ -33,8 +33,8 @@
 
 /* GLOBALS ******************************************************************/
 
-HANDLE StdInput  = INVALID_HANDLE_VALUE;
-HANDLE StdOutput = INVALID_HANDLE_VALUE;
+HANDLE StdInput  = NULL;
+HANDLE StdOutput = NULL;
 
 SHORT xScreen = 0;
 SHORT yScreen = 0;
@@ -42,19 +42,27 @@ SHORT yScreen = 0;
 /* FUNCTIONS *****************************************************************/
 
 BOOLEAN
-CONSOLE_Init(
-    VOID)
+CONSOLE_Init(VOID)
 {
     CONSOLE_SCREEN_BUFFER_INFO csbi;
+
+    /* Allocate a new console */
     if (!AllocConsole())
         return FALSE;
 
-    StdInput = GetStdHandle(STD_INPUT_HANDLE);
+    /* Get the standard handles */
+    StdInput  = GetStdHandle(STD_INPUT_HANDLE);
     StdOutput = GetStdHandle(STD_OUTPUT_HANDLE);
+
+    /* Retrieve the size of the console */
     if (!GetConsoleScreenBufferInfo(StdOutput, &csbi))
+    {
+        FreeConsole();
         return FALSE;
+    }
     xScreen = csbi.dwSize.X;
     yScreen = csbi.dwSize.Y;
+
     return TRUE;
 }
 
@@ -108,12 +116,11 @@ CONSOLE_ConOutChar(
 {
     DWORD Written;
 
-    WriteConsole(
-        StdOutput,
-        &c,
-        1,
-        &Written,
-        NULL);
+    WriteConsole(StdOutput,
+                 &c,
+                 1,
+                 &Written,
+                 NULL);
 }
 
 VOID
@@ -122,18 +129,16 @@ CONSOLE_ConOutPuts(
 {
     DWORD Written;
 
-    WriteConsole(
-        StdOutput,
-        szText,
-        (ULONG)strlen(szText),
-        &Written,
-        NULL);
-    WriteConsole(
-        StdOutput,
-        "\n",
-        1,
-        &Written,
-        NULL);
+    WriteConsole(StdOutput,
+                 szText,
+                 (ULONG)strlen(szText),
+                 &Written,
+                 NULL);
+    WriteConsole(StdOutput,
+                 "\n",
+                 1,
+                 &Written,
+                 NULL);
 }
 
 VOID
@@ -146,12 +151,11 @@ CONSOLE_ConOutPrintfV(
 
     vsprintf(szOut, szFormat, args);
 
-    WriteConsole(
-        StdOutput,
-        szOut,
-        (ULONG)strlen(szOut),
-        &dwWritten,
-        NULL);
+    WriteConsole(StdOutput,
+                 szOut,
+                 (ULONG)strlen(szOut),
+                 &dwWritten,
+                 NULL);
 }
 
 VOID
@@ -175,12 +179,12 @@ CONSOLE_Flush(VOID)
 
 VOID
 CONSOLE_GetCursorXY(
-    PSHORT x,
-    PSHORT y)
+    OUT PSHORT x,
+    OUT PSHORT y)
 {
     CONSOLE_SCREEN_BUFFER_INFO csbi;
 
-    GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi);
+    GetConsoleScreenBufferInfo(StdOutput, &csbi);
 
     *x = csbi.dwCursorPosition.X;
     *y = csbi.dwCursorPosition.Y;
@@ -240,19 +244,32 @@ CONSOLE_ClearScreen(VOID)
     coPos.X = 0;
     coPos.Y = 0;
 
-    FillConsoleOutputAttribute(
-        StdOutput,
-        FOREGROUND_WHITE | BACKGROUND_BLUE,
-        xScreen * yScreen,
-        coPos,
-        &Written);
+    /*
+     * Hide everything under the same foreground & background colors, so that
+     * the actual color and text blanking reset does not create a visual "blinking".
+     * We do this because we cannot do the screen scrolling trick that would
+     * allow to change both the text and the colors at the same time (the
+     * function is currently not available in our console "emulation" layer).
+     */
+    FillConsoleOutputAttribute(StdOutput,
+                               FOREGROUND_BLUE | BACKGROUND_BLUE,
+                               xScreen * yScreen,
+                               coPos,
+                               &Written);
 
-    FillConsoleOutputCharacterA(
-        StdOutput,
-        ' ',
-        xScreen * yScreen,
-        coPos,
-        &Written);
+    /* Blank the text */
+    FillConsoleOutputCharacterA(StdOutput,
+                                ' ',
+                                xScreen * yScreen,
+                                coPos,
+                                &Written);
+
+    /* Reset the actual foreground & background colors */
+    FillConsoleOutputAttribute(StdOutput,
+                               FOREGROUND_WHITE | BACKGROUND_BLUE,
+                               xScreen * yScreen,
+                               coPos,
+                               &Written);
 }
 
 VOID
@@ -269,12 +286,11 @@ CONSOLE_InvertTextXY(
     {
         coPos.X = x;
 
-        FillConsoleOutputAttribute(
-            StdOutput,
-            FOREGROUND_BLUE | BACKGROUND_WHITE,
-            col,
-            coPos,
-            &Written);
+        FillConsoleOutputAttribute(StdOutput,
+                                   FOREGROUND_BLUE | BACKGROUND_WHITE,
+                                   col,
+                                   coPos,
+                                   &Written);
     }
 }
 
@@ -292,12 +308,11 @@ CONSOLE_NormalTextXY(
     {
         coPos.X = x;
 
-        FillConsoleOutputAttribute(
-            StdOutput,
-            FOREGROUND_WHITE | BACKGROUND_BLUE,
-            col,
-            coPos,
-            &Written);
+        FillConsoleOutputAttribute(StdOutput,
+                                   FOREGROUND_WHITE | BACKGROUND_BLUE,
+                                   col,
+                                   coPos,
+                                   &Written);
     }
 }
 
@@ -313,12 +328,11 @@ CONSOLE_SetTextXY(
     coPos.X = x;
     coPos.Y = y;
 
-    WriteConsoleOutputCharacterA(
-        StdOutput,
-        Text,
-        (ULONG)strlen(Text),
-        coPos,
-        &Written);
+    WriteConsoleOutputCharacterA(StdOutput,
+                                 Text,
+                                 (ULONG)strlen(Text),
+                                 coPos,
+                                 &Written);
 }
 
 VOID
@@ -357,29 +371,26 @@ CONSOLE_SetInputTextXY(
     if (Length > len - 1)
         Length = len - 1;
 
-    FillConsoleOutputAttribute(
-        StdOutput,
-        BACKGROUND_WHITE,
-        len,
-        coPos,
-        &Written);
+    FillConsoleOutputAttribute(StdOutput,
+                               BACKGROUND_WHITE,
+                               len,
+                               coPos,
+                               &Written);
 
-    WriteConsoleOutputCharacterW(
-        StdOutput,
-        Text,
-        (ULONG)Length,
-        coPos,
-        &Written);
+    WriteConsoleOutputCharacterW(StdOutput,
+                                 Text,
+                                 (ULONG)Length,
+                                 coPos,
+                                 &Written);
 
     coPos.X += Length;
     if (len > Length)
     {
-        FillConsoleOutputCharacterA(
-            StdOutput,
-            ' ',
-            len - Length,
-            coPos,
-            &Written);
+        FillConsoleOutputCharacterA(StdOutput,
+                                    ' ',
+                                    len - Length,
+                                    coPos,
+                                    &Written);
     }
 }
 
@@ -398,20 +409,18 @@ CONSOLE_SetUnderlinedTextXY(
 
     Length = (ULONG)strlen(Text);
 
-    WriteConsoleOutputCharacterA(
-        StdOutput,
-        Text,
-        Length,
-        coPos,
-        &Written);
+    WriteConsoleOutputCharacterA(StdOutput,
+                                 Text,
+                                 Length,
+                                 coPos,
+                                 &Written);
 
     coPos.Y++;
-    FillConsoleOutputCharacterA(
-        StdOutput,
-        0xCD,
-        Length,
-        coPos,
-        &Written);
+    FillConsoleOutputCharacterA(StdOutput,
+                                0xCD,
+                                Length,
+                                coPos,
+                                &Written);
 }
 
 VOID
@@ -429,28 +438,25 @@ CONSOLE_SetStatusTextXV(
     coPos.X = 0;
     coPos.Y = yScreen - 1;
 
-    FillConsoleOutputAttribute(
-        StdOutput,
-        BACKGROUND_WHITE,
-        xScreen,
-        coPos,
-        &Written);
+    FillConsoleOutputAttribute(StdOutput,
+                               BACKGROUND_WHITE,
+                               xScreen,
+                               coPos,
+                               &Written);
 
-    FillConsoleOutputCharacterA(
-        StdOutput,
-        ' ',
-        xScreen,
-        coPos,
-        &Written);
+    FillConsoleOutputCharacterA(StdOutput,
+                                ' ',
+                                xScreen,
+                                coPos,
+                                &Written);
 
     coPos.X = x;
 
-    WriteConsoleOutputCharacterA(
-        StdOutput,
-        Buffer,
-        (ULONG)strlen(Buffer),
-        coPos,
-        &Written);
+    WriteConsoleOutputCharacterA(StdOutput,
+                                 Buffer,
+                                 (ULONG)strlen(Buffer),
+                                 coPos,
+                                 &Written);
 }
 
 VOID
@@ -490,8 +496,9 @@ CONSOLE_SetStatusText(
 
 static
 VOID
-CONSOLE_ClearStatusTextX(IN SHORT x,
-                         IN SHORT Length)
+CONSOLE_ClearStatusTextX(
+    IN SHORT x,
+    IN SHORT Length)
 {
     COORD coPos;
     DWORD Written;
@@ -506,12 +513,12 @@ CONSOLE_ClearStatusTextX(IN SHORT x,
                                 &Written);
 }
 
-
 VOID
 __cdecl
 CONSOLE_SetStatusTextAutoFitX(
     IN SHORT x,
-    IN LPCSTR fmt, ...)
+    IN LPCSTR fmt,
+    ...)
 {
     CHAR Buffer[128];
     DWORD Length;
@@ -525,11 +532,11 @@ CONSOLE_SetStatusTextAutoFitX(
 
     if (Length + x <= 79)
     {
-        CONSOLE_SetStatusTextX (x , Buffer);
+        CONSOLE_SetStatusTextX(x , Buffer);
     }
     else
     {
-        CONSOLE_SetStatusTextX (79 - Length , Buffer);
+        CONSOLE_SetStatusTextX(79 - Length , Buffer);
     }
 }
 
@@ -548,19 +555,17 @@ CONSOLE_SetInvertedTextXY(
 
     Length = (ULONG)strlen(Text);
 
-    FillConsoleOutputAttribute(
-        StdOutput,
-        FOREGROUND_BLUE | BACKGROUND_WHITE,
-        Length,
-        coPos,
-        &Written);
+    FillConsoleOutputAttribute(StdOutput,
+                               FOREGROUND_BLUE | BACKGROUND_WHITE,
+                               Length,
+                               coPos,
+                               &Written);
 
-    WriteConsoleOutputCharacterA(
-        StdOutput,
-        Text,
-        Length,
-        coPos,
-        &Written);
+    WriteConsoleOutputCharacterA(StdOutput,
+                                 Text,
+                                 Length,
+                                 coPos,
+                                 &Written);
 }
 
 VOID
@@ -578,19 +583,17 @@ CONSOLE_SetHighlightedTextXY(
 
     Length = (ULONG)strlen(Text);
 
-    FillConsoleOutputAttribute(
-        StdOutput,
-        FOREGROUND_WHITE | FOREGROUND_INTENSITY | BACKGROUND_BLUE,
-        Length,
-        coPos,
-        &Written);
+    FillConsoleOutputAttribute(StdOutput,
+                               FOREGROUND_WHITE | FOREGROUND_INTENSITY | BACKGROUND_BLUE,
+                               Length,
+                               coPos,
+                               &Written);
 
-    WriteConsoleOutputCharacterA(
-        StdOutput,
-        Text,
-        Length,
-        coPos,
-        &Written);
+    WriteConsoleOutputCharacterA(StdOutput,
+                                 Text,
+                                 Length,
+                                 coPos,
+                                 &Written);
 }
 
 VOID
@@ -598,7 +601,8 @@ __cdecl
 CONSOLE_PrintTextXY(
     IN SHORT x,
     IN SHORT y,
-    IN LPCSTR fmt, ...)
+    IN LPCSTR fmt,
+    ...)
 {
     CHAR buffer[512];
     va_list ap;
@@ -612,12 +616,11 @@ CONSOLE_PrintTextXY(
     coPos.X = x;
     coPos.Y = y;
 
-    WriteConsoleOutputCharacterA(
-        StdOutput,
-        buffer,
-        (ULONG)strlen(buffer),
-        coPos,
-        &Written);
+    WriteConsoleOutputCharacterA(StdOutput,
+                                 buffer,
+                                 (ULONG)strlen(buffer),
+                                 coPos,
+                                 &Written);
 }
 
 VOID
@@ -626,7 +629,8 @@ CONSOLE_PrintTextXYN(
     IN SHORT x,
     IN SHORT y,
     IN SHORT len,
-    IN LPCSTR fmt, ...)
+    IN LPCSTR fmt,
+    ...)
 {
     CHAR buffer[512];
     va_list ap;
@@ -645,23 +649,21 @@ CONSOLE_PrintTextXYN(
     if (Length > len - 1)
         Length = len - 1;
 
-    WriteConsoleOutputCharacterA(
-        StdOutput,
-        buffer,
-        Length,
-        coPos,
-        &Written);
+    WriteConsoleOutputCharacterA(StdOutput,
+                                 buffer,
+                                 Length,
+                                 coPos,
+                                 &Written);
 
     coPos.X += Length;
 
     if (len > Length)
     {
-        FillConsoleOutputCharacterA(
-            StdOutput,
-            ' ',
-            len - Length,
-            coPos,
-            &Written);
+        FillConsoleOutputCharacterA(StdOutput,
+                                    ' ',
+                                    len - Length,
+                                    coPos,
+                                    &Written);
     }
 }
 
@@ -693,7 +695,7 @@ CONSOLE_SetStyledText(
 
     if (Flags & TEXT_ALIGN_CENTER)
     {
-        coPos.X = (xScreen - Length) /2;
+        coPos.X = (xScreen - Length) / 2;
     }
     else if(Flags & TEXT_ALIGN_RIGHT)
     {
@@ -749,12 +751,12 @@ CONSOLE_SetStyledText(
     }
 }
 
-
 VOID
-CONSOLE_ClearStyledText(IN SHORT x,
-                        IN SHORT y,
-                        IN INT Flags,
-                        IN SHORT Length)
+CONSOLE_ClearStyledText(
+    IN SHORT x,
+    IN SHORT y,
+    IN INT Flags,
+    IN SHORT Length)
 {
     COORD coPos;
 
@@ -774,7 +776,7 @@ CONSOLE_ClearStyledText(IN SHORT x,
 
     if (Flags & TEXT_ALIGN_CENTER)
     {
-        coPos.X = (xScreen - Length) /2;
+        coPos.X = (xScreen - Length) / 2;
     }
     else if(Flags & TEXT_ALIGN_RIGHT)
     {

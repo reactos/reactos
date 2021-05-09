@@ -85,7 +85,7 @@ setCx86(UCHAR reg, UCHAR data)
 
 /* FUNCTIONS *****************************************************************/
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 VOID
 NTAPI
 KiSetProcessorType(VOID)
@@ -152,7 +152,7 @@ KiSetProcessorType(VOID)
     __writeeflags(EFlags);
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 ULONG
 NTAPI
 KiGetCpuVendor(VOID)
@@ -208,7 +208,7 @@ KiGetCpuVendor(VOID)
     return CPU_UNKNOWN;
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 ULONG
 NTAPI
 KiGetFeatureBits(VOID)
@@ -454,7 +454,7 @@ KiGetFeatureBits(VOID)
     return FeatureBits;
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 VOID
 NTAPI
 KiGetCacheInformation(VOID)
@@ -722,7 +722,7 @@ KiGetCacheInformation(VOID)
             Pcr->SecondLevelCacheAssociativity);
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 VOID
 NTAPI
 KiSetCR0Bits(VOID)
@@ -739,7 +739,7 @@ KiSetCR0Bits(VOID)
     __writecr0(Cr0);
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 VOID
 NTAPI
 KiInitializeTSS2(IN PKTSS Tss,
@@ -793,7 +793,7 @@ KiInitializeTSS(IN PKTSS Tss)
     Tss->Ss0 = KGDT_R0_DATA;
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 VOID
 FASTCALL
 Ki386InitializeTss(IN PKTSS Tss,
@@ -979,10 +979,10 @@ KiSaveProcessorControlState(OUT PKPROCESSOR_STATE ProcessorState)
     Ke386GetGlobalDescriptorTable(&ProcessorState->SpecialRegisters.Gdtr.Limit);
     __sidt(&ProcessorState->SpecialRegisters.Idtr.Limit);
     ProcessorState->SpecialRegisters.Tr = Ke386GetTr();
-    ProcessorState->SpecialRegisters.Ldtr = Ke386GetLocalDescriptorTable();
+    Ke386GetLocalDescriptorTable(&ProcessorState->SpecialRegisters.Ldtr);
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 VOID
 NTAPI
 KiInitializeMachineType(VOID)
@@ -991,7 +991,7 @@ KiInitializeMachineType(VOID)
     KeI386MachineType = KeLoaderBlock->u.I386.MachineType & 0x000FF;
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 ULONG_PTR
 NTAPI
 KiLoadFastSyscallMachineSpecificRegisters(IN ULONG_PTR Context)
@@ -1005,7 +1005,7 @@ KiLoadFastSyscallMachineSpecificRegisters(IN ULONG_PTR Context)
     return 0;
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 VOID
 NTAPI
 KiRestoreFastSyscallReturnState(VOID)
@@ -1039,7 +1039,7 @@ KiRestoreFastSyscallReturnState(VOID)
     }
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 ULONG_PTR
 NTAPI
 Ki386EnableDE(IN ULONG_PTR Context)
@@ -1049,7 +1049,7 @@ Ki386EnableDE(IN ULONG_PTR Context)
     return 0;
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 ULONG_PTR
 NTAPI
 Ki386EnableFxsr(IN ULONG_PTR Context)
@@ -1059,7 +1059,7 @@ Ki386EnableFxsr(IN ULONG_PTR Context)
     return 0;
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 ULONG_PTR
 NTAPI
 Ki386EnableXMMIExceptions(IN ULONG_PTR Context)
@@ -1082,7 +1082,7 @@ Ki386EnableXMMIExceptions(IN ULONG_PTR Context)
     return 0;
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 VOID
 NTAPI
 KiI386PentiumLockErrataFixup(VOID)
@@ -1158,7 +1158,7 @@ KiSaveProcessorState(IN PKTRAP_FRAME TrapFrame,
     KiSaveProcessorControlState(&Prcb->ProcessorState);
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 BOOLEAN
 NTAPI
 KiIsNpxPresent(VOID)
@@ -1199,7 +1199,7 @@ KiIsNpxPresent(VOID)
     return TRUE;
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 BOOLEAN
 NTAPI
 KiIsNpxErrataPresent(VOID)

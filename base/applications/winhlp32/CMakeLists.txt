@@ -13,12 +13,11 @@ list(APPEND SOURCE
     macro.c
     winhelp.c)
 
-list(APPEND PCH_SKIP_SOURCE
-    macro.lex.yy.c
-    string.c)
+FLEX_TARGET(macro_scanner macro.lex.l ${CMAKE_CURRENT_BINARY_DIR}/macro.lex.yy.c)
 
-# macro.lex.yy.c has been generated with relative file paths...
-set_source_files_properties(macro.lex.yy.c PROPERTIES COMPILE_FLAGS "-UREACTOS_SOURCE_DIR -DREACTOS_SOURCE_DIR=\"\\\".\\\"\"")
+list(APPEND PCH_SKIP_SOURCE
+    ${FLEX_macro_scanner_OUTPUTS}
+    string.c)
 
 add_rc_deps(rsrc.rc ${CMAKE_CURRENT_SOURCE_DIR}/res/winhelp.ico)
 

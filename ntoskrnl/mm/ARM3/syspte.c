@@ -254,17 +254,6 @@ MiReserveSystemPtes(IN ULONG NumberOfPtes,
     PointerPte = MiReserveAlignedSystemPtes(NumberOfPtes, SystemPtePoolType, 0);
 
     //
-    // Check if allocation failed
-    //
-    if (!PointerPte)
-    {
-        //
-        // Warn that we are out of memory
-        //
-        DPRINT1("MiReserveSystemPtes: Failed to reserve %lu PTE(s)!\n", NumberOfPtes);
-    }
-
-    //
     // Return the PTE Pointer
     //
     return PointerPte;
@@ -393,7 +382,7 @@ MiReleaseSystemPtes(IN PMMPTE StartingPte,
     KeReleaseQueuedSpinLock(LockQueueSystemSpaceLock, OldIrql);
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 VOID
 NTAPI
 MiInitializeSystemPtes(IN PMMPTE StartingPte,

@@ -4,27 +4,36 @@
  * FILE:        include/reactos/libs/fslib/ffslib.h
  * PURPOSE:     Public definitions for FFS filesystem library
  */
+
 #ifndef __FFSLIB_H
 #define __FFSLIB_H
 
 #include <fmifs/fmifs.h>
 
-NTSTATUS NTAPI
+BOOLEAN
+NTAPI
 FfsChkdsk(
-	IN PUNICODE_STRING DriveRoot,
-	IN BOOLEAN FixErrors,
-	IN BOOLEAN Verbose,
-	IN BOOLEAN CheckOnlyIfDirty,
-	IN BOOLEAN ScanDrive,
-	IN PFMIFSCALLBACK Callback);
+    IN PUNICODE_STRING DriveRoot,
+    IN PFMIFSCALLBACK Callback,
+    IN BOOLEAN FixErrors,
+    IN BOOLEAN Verbose,
+    IN BOOLEAN CheckOnlyIfDirty,
+    IN BOOLEAN ScanDrive,
+    IN PVOID pUnknown1,
+    IN PVOID pUnknown2,
+    IN PVOID pUnknown3,
+    IN PVOID pUnknown4,
+    IN PULONG ExitStatus);
 
-NTSTATUS NTAPI
+BOOLEAN
+NTAPI
 FfsFormat(
-	IN PUNICODE_STRING DriveRoot,
-	IN FMIFS_MEDIA_FLAG MediaFlag,
-	IN PUNICODE_STRING Label,
-	IN BOOLEAN QuickFormat,
-	IN ULONG ClusterSize,
-	IN PFMIFSCALLBACK Callback);
+    IN PUNICODE_STRING DriveRoot,
+    IN PFMIFSCALLBACK Callback,
+    IN BOOLEAN QuickFormat,
+    IN BOOLEAN BackwardCompatible,
+    IN MEDIA_TYPE MediaType,
+    IN PUNICODE_STRING Label,
+    IN ULONG ClusterSize);
 
-#endif /*__FFSLIB_H */
+#endif /* __FFSLIB_H */

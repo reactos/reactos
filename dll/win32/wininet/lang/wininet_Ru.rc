@@ -30,6 +30,17 @@ STRINGTABLE
   IDS_CERT_DATE_INVALID "Данный сертификат недействителен. Проверьте правильность установленного на компьютере времени."
   IDS_CERT_CN_INVALID   "Просматриваемый сертификат не соответствует названию сайта."
   IDS_CERT_ERRORS       "Данный сертификат поврежден, и проверить его подлинность невозможно."
+  IDS_CERT_SUBJECT      "Subject"
+  IDS_CERT_ISSUER       "Issuer"
+  IDS_CERT_EFFECTIVE    "Effective Date"
+  IDS_CERT_EXPIRATION   "Expiration Date"
+  IDS_CERT_PROTOCOL     "Security Protocol"
+  IDS_CERT_SIGNATURE    "Signature Type"
+  IDS_CERT_ENCRYPTION   "Encryption Type"
+  IDS_CERT_PRIVACY      "Privacy Strength"
+  IDS_CERT_HIGH         "High"
+  IDS_CERT_LOW          "Low"
+  IDS_CERT_BITS         "bits"
 }
 
 IDD_PROXYDLG DIALOGEX 36, 24, 220, 146

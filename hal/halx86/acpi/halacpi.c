@@ -786,7 +786,7 @@ HaliAcpiTimerInit(IN ULONG TimerPort,
     //HalaAcpiTimerInit(TimerPort, TimerValExt);
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 NTSTATUS
 NTAPI
 HalpSetupAcpiPhase0(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
@@ -907,7 +907,7 @@ HalpSetupAcpiPhase0(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     return STATUS_SUCCESS;
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 VOID
 NTAPI
 HalpInitializePciBus(VOID)
@@ -929,7 +929,7 @@ HalpInitNonBusHandler(VOID)
     HalFindBusAddressTranslation = HalpFindBusAddressTranslation;
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 VOID
 NTAPI
 HalpInitBusHandlers(VOID)
@@ -938,7 +938,7 @@ HalpInitBusHandlers(VOID)
     HalpInitNonBusHandler();
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 VOID
 NTAPI
 HalpBuildAddressMap(VOID)
@@ -946,7 +946,7 @@ HalpBuildAddressMap(VOID)
     /* ACPI is magic baby */
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 BOOLEAN
 NTAPI
 HalpGetDebugPortTable(VOID)
@@ -955,7 +955,7 @@ HalpGetDebugPortTable(VOID)
             (HalpDebugPortTable->BaseAddress.AddressSpaceID == 1));
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 ULONG
 NTAPI
 HalpIs16BitPortDecodeSupported(VOID)
@@ -1065,7 +1065,7 @@ HalpQueryAcpiResourceRequirements(OUT PIO_RESOURCE_REQUIREMENTS_LIST *Requiremen
 /*
  * @implemented
  */
-INIT_FUNCTION
+CODE_SEG("INIT")
 VOID
 NTAPI
 HalReportResourceUsage(VOID)

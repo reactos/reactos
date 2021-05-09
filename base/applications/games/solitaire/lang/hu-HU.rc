@@ -56,7 +56,7 @@ STRINGTABLE
 BEGIN
     IDS_SOL_NAME "Pasziánsz"
     IDS_SOL_ABOUT "Pasziánsz, készítette J Brown\n\nCardLib verzió 1.0."
-    IDS_SOL_QUIT "Kilépés ebbõl a játékból?"
+    IDS_SOL_QUIT "Kilépés ebből a játékból?"
     IDS_SOL_WIN "Gratulálok, Ön nyert!"
     IDS_SOL_DEAL "Új leosztás?"
     IDS_SOL_SCORE "Pont: %d"
@@ -71,6 +71,7 @@ BEGIN
     BEGIN
         MENUITEM "&Osztás\tF2", IDM_GAME_NEW
         MENUITEM SEPARATOR
+        MENUITEM "&Visszavonás", IDM_GAME_UNDO, GRAYED
         MENUITEM "&Hátlap...", IDM_GAME_DECK
         MENUITEM "&Beállítások...", IDM_GAME_OPTIONS
         MENUITEM SEPARATOR

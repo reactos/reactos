@@ -1,4 +1,5 @@
 /* Simplified Chinese translation by Song Fuchang (0xfc) <sfc_0@yahoo.com.cn> 2011 */
+/* Improved by He Yang (@kernel.bin) <1160386205@qq.com> 2020 */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
@@ -67,14 +68,14 @@ COLOR [属性 [/-F]]\n\n\
 3) 两位十六进制数\n\n\
 颜色列表：\n\
 dec  hex  名称         dec  hex  名称\n\
-0    0    Black       8   8    Gray(Bright black)\n\
-1    1    Blue        9   9    Bright Blue\n\
-2    2    Green      10   A    Bright Green\n\
-3    3    Cyan       11   B    Bright Cyan\n\
-4    4    Red        12   C    Bright Red\n\
-5    5    Magenta    13   D    Bright Magenta\n\
-6    6    Yellow     14   E    Bright Yellow\n\
-7    7    White      15   F    Bright White\n"
+0    0    黑色         8    8    灰色\n\
+1    1    蓝色         9    9    淡蓝色\n\
+2    2    绿色        10    A    淡绿色\n\
+3    3    浅绿色      11    B    淡浅绿色\n\
+4    4    红色        12    C    淡红色\n\
+5    5    紫色        13    D    淡紫色\n\
+6    6    黄色        14    E    淡黄色\n\
+7    7    白色        15    F    亮白色\n"
     STRING_COPY_HELP1 "覆盖 %s 吗 (Yes/No/All)? "
     STRING_COPY_HELP2 "将一个或多个文件复制到另一个位置。\n\n\
 COPY [/V][/Y|/-Y][/A|/B] 源 [/A|/B]\n\
@@ -88,13 +89,13 @@ COPY [/V][/Y|/-Y][/A|/B] 源 [/A|/B]\n\
   /-Y            覆盖一个已存在的文件时请求确认。\n\n\
 /Y 开关也可以在 COPYCMD 环境变量中指定。\n\
 ...\n"
-    STRING_CTTY_HELP "Changes the standard I/O terminal device to an auxiliary device.\n\n\
+    STRING_CTTY_HELP "将标准 I/O 终端设备改为一个外置设备。\n\n\
 CTTY device\n\n\
-  device    The terminal device you want to use as the new standard I/O device.\n\
-            This name must refer to a valid character device:\n\
+  device    新的标准 I/O 终端设备名。\n\
+            该名称必须是一个有效的设备名：\n\
             AUX, COMx (x=1..N), CON, LPTx (x=1..N), PRN, NUL.\n\
-            CON is usually the default standard I/O device.\n\n\
-To return control to the standard console, type: CTTY CON on the auxiliary\n\
+            CON 一般是默认的标准 I/O 设备名。\n\n\
+想要把控制权交还给默认终端，在外置设备上输入：CTTY CON\n\
 device."
     STRING_DATE_HELP1 "\n输入新的日期 (mm%cdd%cyyyy)："
     STRING_DATE_HELP2 "\n输入新的日期 (dd%cmm%cyyyy)："
@@ -148,7 +149,7 @@ DELAY [/m]n\n\n\
                G  分组目录在前                    -  反转顺序的前缀\n\
   /P          在每屏幕信息输出后停顿。\n\
   /Q          显示文件的所有者。\n\
-  /R          Displays alternate data streams of the files.\n\
+  /R          显示文件的交换数据流。\n\
   /S          显示指定目录和所有子目录中的文件。\n\
   /T          控制要显示或者用于排序的时间字段。\n\
   时间字段    C  创建时间\n\
@@ -497,7 +498,7 @@ RESTORE       恢复窗口\n\
     STRING_REPLACE_ERROR6 "没有文件被发现 - %s\n"
     STRING_REPLACE_ERROR7 "扩展错误 32\n"
     STRING_CMD_INFOLINE "  ReactOS 命令行解释器                                       输入 HELP = 帮助  "
-    STRING_REACTOS_VERSION "ReactOS 操作系统 [版本 %s %s]\n"
+    STRING_REACTOS_VERSION "ReactOS [版本 %s %s]\n"
     STRING_CMD_SHELLINFO "\nReactOS 命令行解释器\n版本 %s %s"
     STRING_VERSION_RUNNING_ON "在 上运行"
     STRING_VERSION_RUNVER "%s [Version %d.%d.%d] %s"

@@ -25,6 +25,8 @@
 #include <pnp_c.h>
 #include <winsvc.h>
 
+#include <pseh/pseh2.h>
+
 #include "rpc_private.h"
 
 DWORD
@@ -35,7 +37,8 @@ I_ScPnPGetServiceName(IN SERVICE_STATUS_HANDLE hServiceStatus,
 
 
 /* Registry key and value names */
-static const WCHAR Backslash[] = {'\\', 0};
+static const WCHAR BackslashOpenBrace[] = {'\\', '{', 0};
+static const WCHAR CloseBrace[] = {'}', 0};
 static const WCHAR Class[]  = {'C','l','a','s','s',0};
 
 static const WCHAR ControlClass[] = {'S','y','s','t','e','m','\\',
@@ -2937,7 +2940,7 @@ CM_Get_Class_Registry_PropertyA(
         *pulLength = WideCharToMultiByte(CP_ACP,
                                          0,
                                          BufferW,
-                                         lstrlenW(BufferW) + 1,
+                                         ulLength,
                                          Buffer,
                                          *pulLength,
                                          NULL,
@@ -3859,7 +3862,7 @@ CM_Get_Device_ID_List_ExA(
     if (WideCharToMultiByte(CP_ACP,
                             0,
                             BufferW,
-                            lstrlenW(BufferW) + 1,
+                            BufferLen,
                             Buffer,
                             BufferLen,
                             NULL,
@@ -4344,7 +4347,7 @@ CM_Get_Device_Interface_List_ExA(
     if (WideCharToMultiByte(CP_ACP,
                             0,
                             BufferW,
-                            lstrlenW(BufferW) + 1,
+                            BufferLen,
                             Buffer,
                             BufferLen,
                             NULL,
@@ -6343,8 +6346,9 @@ CM_Open_Class_Key_ExW(
             return CR_INVALID_DATA;
         }
 
-        lstrcatW(szKeyName, Backslash);
+        lstrcatW(szKeyName, BackslashOpenBrace);
         lstrcatW(szKeyName, lpGuidString);
+        lstrcatW(szKeyName, CloseBrace);
     }
 
     if (Disposition == RegDisposition_OpenAlways)

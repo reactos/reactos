@@ -666,7 +666,7 @@ MmMapLockedPagesSpecifyCache(IN PMDL Mdl,
                              IN MEMORY_CACHING_TYPE CacheType,
                              IN PVOID BaseAddress,
                              IN ULONG BugCheckOnFailure,
-                             IN MM_PAGE_PRIORITY Priority)
+                             IN ULONG Priority) // MM_PAGE_PRIORITY
 {
     PVOID Base;
     PPFN_NUMBER MdlPages, LastPage;

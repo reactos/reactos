@@ -132,7 +132,9 @@ Return Value:
         queryTable[0].EntryContext = &(rootPartitionMountable);
         queryTable[0].DefaultType = (REG_DWORD << RTL_QUERY_REGISTRY_TYPECHECK_SHIFT) | REG_NONE;
 
+#ifdef _MSC_VER
 #pragma prefast(suppress:6309, "We don't have QueryRoutine so Context doesn't make any sense")
+#endif
         status = RtlQueryRegistryValues(RTL_REGISTRY_HANDLE,
                                         diskKey,
                                         queryTable,

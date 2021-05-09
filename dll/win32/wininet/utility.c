@@ -1,3 +1,7 @@
+#ifdef __REACTOS__
+#include "precomp.h"
+#include "inet_ntop.c"
+#else
 /*
  * Wininet - Utility functions
  *
@@ -36,11 +40,7 @@
 
 #include "wine/debug.h"
 #include "internet.h"
-
-#ifdef __REACTOS__
-#include <stdio.h>
-#include "inet_ntop.c"
-#endif
+#endif /* defined(__REACTOS__) */
 
 WINE_DEFAULT_DEBUG_CHANNEL(wininet);
 
@@ -51,7 +51,7 @@ time_t ConvertTimeString(LPCWSTR asctime)
     WCHAR tmpChar[TIME_STRING_LEN];
     WCHAR *tmpChar2;
     struct tm t;
-    int timelen = strlenW(asctime);
+    int timelen = lstrlenW(asctime);
 
     if(!timelen)
         return 0;
@@ -61,7 +61,7 @@ time_t ConvertTimeString(LPCWSTR asctime)
     lstrcpynW(tmpChar, asctime, TIME_STRING_LEN);
 
     /* Assert that the string is the expected length */
-    if (strlenW(asctime) >= TIME_STRING_LEN) FIXME("\n");
+    if (lstrlenW(asctime) >= TIME_STRING_LEN) FIXME("\n");
 
     /* Convert a time such as 'Mon, 15 Nov 1999 16:09:35 GMT' into a SYSTEMTIME structure
      * We assume the time is in this format
@@ -76,11 +76,11 @@ time_t ConvertTimeString(LPCWSTR asctime)
     tmpChar[25]='\0';
 
     memset( &t, 0, sizeof(t) );
-    t.tm_year = atoiW(tmpChar+12) - 1900;
-    t.tm_mday = atoiW(tmpChar+5);
-    t.tm_hour = atoiW(tmpChar+17);
-    t.tm_min = atoiW(tmpChar+20);
-    t.tm_sec = atoiW(tmpChar+23);
+    t.tm_year = wcstol(tmpChar+12, NULL, 10) - 1900;
+    t.tm_mday = wcstol(tmpChar+5, NULL, 10);
+    t.tm_hour = wcstol(tmpChar+17, NULL, 10);
+    t.tm_min = wcstol(tmpChar+20, NULL, 10);
+    t.tm_sec = wcstol(tmpChar+23, NULL, 10);
 
     /* and month */
     tmpChar2 = tmpChar + 8;
@@ -268,11 +268,11 @@ void INTERNET_SendCallback(object_header_t *hdr, DWORD_PTR context, DWORD status
             break;
         }
     }
-    
+
     TRACE(" callback(%p) (%p (%p), %08lx, %d (%s), %s, %d)\n",
 	  hdr->lpfnStatusCB, hdr->hInternet, hdr, context, status, get_callback_name(status),
 	  debugstr_status_info(status, new_info), info_len);
-    
+
     hdr->lpfnStatusCB(hdr->hInternet, context, status, new_info, info_len);
 
     TRACE(" end callback().\n");

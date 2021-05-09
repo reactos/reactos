@@ -1,4 +1,4 @@
-/* Translated by Baruch Rutman, additional translations by Shy Zedaka */
+/* Translated by Baruch Rutman, additional translations by Shy Zedaka and Omer I.S. */
 
 
 LANGUAGE LANG_HEBREW, SUBLANG_DEFAULT
@@ -26,7 +26,7 @@ BEGIN
     POPUP "עזרה"
     BEGIN
         MENUITEM "עזרה\tF1", ID_HELP, GRAYED
-        MENUITEM "אודות", ID_ABOUT
+        MENUITEM "על אודות", ID_ABOUT
     END
 END
 
@@ -147,6 +147,7 @@ BEGIN
     IDS_INFO_UNINSTALLSTR "\nמחרוזת הסרה: "
     IDS_INFO_MODIFYPATH "\nנתיב שינוי: "
     IDS_INFO_INSTALLDATE "\nתאריך התקנה: "
+    IDS_AINFO_PACKAGE_NAME "\nשם החבילה: "
 END
 
 STRINGTABLE
@@ -185,13 +186,13 @@ STRINGTABLE
 BEGIN
     IDS_APPTITLE "מנהל היישומים של ReactOS"
     IDS_APP_AUTHORS "Copyright 2009 Dmitry Chapyshev"
-    IDS_SEARCH_TEXT "חפש…"
+    IDS_SEARCH_TEXT "חיפוש…"
     IDS_INSTALL "התקנה"
     IDS_UNINSTALL "הסרה"
     IDS_MODIFY "שינוי"
     IDS_APPS_COUNT "ספירת יישומים: %d; Selected: %d"
     IDS_WELCOME_TITLE "ברוכים הבאים למנהל היישומים של ReactOS!\n\n"
-    IDS_WELCOME_TEXT "Choose a category on the left, then choose an application to install or uninstall.\nReactOS Web Site: "
+    IDS_WELCOME_TEXT "בחר קטגוריה בצד שמאל, לאחר מכן בחר יישום להתקנה או להסרה.\nהאתר של ReactOS: "
     IDS_WELCOME_URL "https://reactos.org/"
     IDS_INSTALLED "מותקן"
     IDS_AVAILABLEFORINST "זמין להתקנה"
@@ -211,11 +212,14 @@ BEGIN
     IDS_INTEG_CHECK_FAIL "The package did not pass the integrity check, it may have been corrupted or tampered with during downloading. Running the software is not recommended."
     IDS_INTERRUPTED_DOWNLOAD "The download was interrupted. Check connection to Internet."
     IDS_UNABLE_TO_WRITE "Unable to write to disk. Disk may be at capacity."
-    IDS_SELECT_ALL "Select/Deselect All"
-    IDS_INSTALL_SELECTED "Install Selected"
+    IDS_SELECT_ALL "בחר הכול/בטל בחירת הכול"
+    IDS_INSTALL_SELECTED "התקן נבחרים"
     IDS_SELECTEDFORINST "Selected for installation"
     IDS_MISMATCH_CERT_INFO "The certificate used is unknown:\nSubject: %s\nIssuer: %s\nDo you want to continue anyway?"
     IDS_UNABLE_PATH "Incorrect path format."
+    IDS_APP_DISPLAY_DETAILS "details"
+    IDS_APP_DISPLAY_LIST "list"
+    IDS_APP_DISPLAY_TILE "tile"
 END
 
 STRINGTABLE
@@ -233,23 +237,35 @@ END
 STRINGTABLE
 BEGIN
     IDS_LICENSE_OPENSOURCE "קוד פתוח"
-    IDS_LICENSE_FREEWARE "Freeware"
-    IDS_LICENSE_TRIAL "Trial/Demo"
+    IDS_LICENSE_FREEWARE "תוכנה חינמית"
+    IDS_LICENSE_TRIAL "גרסת ניסיון/דמו"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_LANGUAGE_AVAILABLE_TRANSLATION "Supports your language"
-    IDS_LANGUAGE_NO_TRANSLATION "Supports other languages"
-    IDS_LANGUAGE_ENGLISH_TRANSLATION "Supports English"
-    IDS_LANGUAGE_SINGLE "Single language"
-    IDS_LANGUAGE_MORE_PLACEHOLDER " (+%d more)"
-    IDS_LANGUAGE_AVAILABLE_PLACEHOLDER " (+%d available)"
+    IDS_LANGUAGE_AVAILABLE_TRANSLATION "עם תמיכה בשפה שלך"
+    IDS_LANGUAGE_NO_TRANSLATION "עם תמיכה בשפות אחרות"
+    IDS_LANGUAGE_ENGLISH_TRANSLATION "עם תמיכה באנגלית"
+    IDS_LANGUAGE_SINGLE "שפה יחידה"
+    IDS_LANGUAGE_MORE_PLACEHOLDER " (עוד +%d)"
+    IDS_LANGUAGE_AVAILABLE_PLACEHOLDER " (+%d זמינה)"
 END
 
 STRINGTABLE
 BEGIN
     IDS_DL_DIALOG_DB_DISP "מסד נתונים של היישומים"
     IDS_DL_DIALOG_DB_DOWNLOAD_DISP "מעדכן את מסד הנתונים..."
-    IDS_DL_DIALOG_DB_UNOFFICIAL_DOWNLOAD_DISP "Updating Database… (Unofficial source)"
+    IDS_DL_DIALOG_DB_UNOFFICIAL_DOWNLOAD_DISP "מעדכן את מסד הנתונים… (מקור לא רשמי)"
 END
+
+STRINGTABLE
+BEGIN
+    IDS_CMD_USAGE "שימוש: "
+    IDS_CMD_NEED_PACKAGE_NAME "Error: option %1 expects one or more package name.\n"
+    IDS_CMD_NEED_FILE_NAME "Error: option %1 expects a file name.\n"
+    IDS_CMD_NEED_PARAMS "Error: option %1 expects one or more parameters.\n"
+    IDS_CMD_INVALID_OPTION "Error: Unknown or invalid command line option specified.\n"
+    IDS_CMD_FIND_RESULT_FOR "Find result for %1:\n"
+    IDS_CMD_PACKAGE_NOT_FOUND "החבילה %1 לא נמצאה.\n"
+    IDS_CMD_PACKAGE_INFO "מידע על החבילה %1:\n"
+END 

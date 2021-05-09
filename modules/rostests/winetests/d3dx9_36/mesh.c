@@ -89,7 +89,7 @@ static void check_floats_(int line, const char *prefix, const float *got, const 
         equal = equal && compare(*exp, *got);
         exp_buffer_ptr += sprintf(exp_buffer_ptr, "%g", *exp);
         got_buffer_ptr += sprintf(got_buffer_ptr, "%g", *got);
-        exp++, got++;
+        exp++; got++;
     }
     ok_(__FILE__,line)(equal, "%sExpected (%s), got (%s)", prefix, exp_buffer, got_buffer);
 }
@@ -435,18 +435,42 @@ static void D3DXBoundProbeTest(void)
     radius = sqrt(77.0f);
     center.x = 1.0f; center.y = 2.0f; center.z = 3.0f;
     raydirection.x = 2.0f; raydirection.y = -4.0f; raydirection.z = 2.0f;
-
     rayposition.x = 5.0f; rayposition.y = 5.0f; rayposition.z = 9.0f;
     result = D3DXSphereBoundProbe(&center, radius, &rayposition, &raydirection);
-    ok(result == TRUE, "expected TRUE, received FALSE\n");
+    ok(result == TRUE, "Got unexpected result %#x.\n", result);
 
     rayposition.x = 45.0f; rayposition.y = -75.0f; rayposition.z = 49.0f;
     result = D3DXSphereBoundProbe(&center, radius, &rayposition, &raydirection);
-    ok(result == FALSE, "expected FALSE, received TRUE\n");
+    ok(result == FALSE, "Got unexpected result %#x.\n", result);
+
+    raydirection.x = -2.0f; raydirection.y = 4.0f; raydirection.z = -2.0f;
+    result = D3DXSphereBoundProbe(&center, radius, &rayposition, &raydirection);
+    ok(result == TRUE, "Got unexpected result %#x.\n", result);
 
     rayposition.x = 5.0f; rayposition.y = 11.0f; rayposition.z = 9.0f;
     result = D3DXSphereBoundProbe(&center, radius, &rayposition, &raydirection);
-    ok(result == FALSE, "expected FALSE, received TRUE\n");
+    ok(result == FALSE, "Got unexpected result %#x.\n", result);
+
+    raydirection.x = 2.0f; raydirection.y = -4.0f; raydirection.z = 2.0f;
+    result = D3DXSphereBoundProbe(&center, radius, &rayposition, &raydirection);
+    ok(result == FALSE, "Got unexpected result %#x.\n", result);
+
+    radius = 1.0f;
+    rayposition.x = 2.0f; rayposition.y = 2.0f; rayposition.z = 3.0f;
+    result = D3DXSphereBoundProbe(&center, radius, &rayposition, &raydirection);
+    ok(result == FALSE, "Got unexpected result %#x.\n", result);
+
+    raydirection.x = 0.0f; raydirection.y = 0.0f; raydirection.z = 1.0f;
+    result = D3DXSphereBoundProbe(&center, radius, &rayposition, &raydirection);
+    ok(result == TRUE, "Got unexpected result %#x.\n", result);
+
+    if (0)
+    {
+        /* All these crash on native. */
+        D3DXSphereBoundProbe(&center, radius, &rayposition, NULL);
+        D3DXSphereBoundProbe(&center, radius, NULL, &raydirection);
+        D3DXSphereBoundProbe(NULL, radius, &rayposition, &raydirection);
+    }
 }
 
 static void D3DXComputeBoundingBoxTest(void)
@@ -2545,129 +2569,6 @@ static void D3DXLoadMeshTest(void)
     test_LoadMeshFromX(device, framed_xfile, merged_vertex_buffer, framed_fvf, merged_index_buffer, default_materials, FALSE);
 
     free_test_context(test_context);
-}
-
-static ID3DXFileData *get_mesh_data(const char *memory, SIZE_T length)
-{
-    D3DXF_FILELOADMEMORY source;
-    ID3DXFileEnumObject *enumobj = NULL;
-    ID3DXFileData *filedata = NULL;
-    ID3DXFileData *ret = NULL;
-    ID3DXFile *d3dxfile = NULL;
-    SIZE_T i, nb_children;
-    HRESULT hr;
-    GUID guid;
-
-    hr = D3DXFileCreate(&d3dxfile);
-    if (FAILED(hr)) return NULL;
-
-    hr = d3dxfile->lpVtbl->RegisterTemplates(d3dxfile, D3DRM_XTEMPLATES, D3DRM_XTEMPLATE_BYTES);
-    if (FAILED(hr)) goto cleanup;
-
-    source.lpMemory = (void *)memory;
-    source.dSize    = length;
-
-    hr = d3dxfile->lpVtbl->CreateEnumObject(d3dxfile, &source, D3DXF_FILELOAD_FROMMEMORY, &enumobj);
-    if (FAILED(hr)) goto cleanup;
-
-    hr = enumobj->lpVtbl->GetChildren(enumobj, &nb_children);
-    if (FAILED(hr)) goto cleanup;
-
-    for (i = 0; i < nb_children; i++)
-    {
-        hr = enumobj->lpVtbl->GetChild(enumobj, i, &filedata);
-        if (FAILED(hr)) goto cleanup;
-
-        hr = filedata->lpVtbl->GetType(filedata, &guid);
-        if (SUCCEEDED(hr) && IsEqualGUID(&guid, &TID_D3DRMMesh))
-        {
-            ret = filedata;
-            break;
-        }
-        else
-            filedata->lpVtbl->Release(filedata);
-    }
-
-cleanup:
-    if (enumobj) enumobj->lpVtbl->Release(enumobj);
-    if (d3dxfile) d3dxfile->lpVtbl->Release(d3dxfile);
-
-    return ret;
-}
-
-static void D3DXLoadSkinMeshFromXofTest(void)
-{
-    static const char simple_xfile[] =
-        "xof 0303txt 0032"
-        "Mesh {"
-            "3;"
-            "0.0; 0.0; 0.0;,"
-            "0.0; 1.0; 0.0;,"
-            "1.0; 1.0; 0.0;;"
-            "1;"
-            "3; 0, 1, 2;;"
-        "}";
-    ID3DXBuffer *adjacency, *materials, *effects;
-    D3DPRESENT_PARAMETERS d3dpp;
-    IDirect3DDevice9 *device;
-    ID3DXFileData *filedata;
-    ID3DXSkinInfo *skininfo;
-    ID3DXMesh *mesh;
-    IDirect3D9 *d3d;
-    DWORD mat_count;
-    HRESULT hr;
-    HWND hwnd;
-
-    if (!(hwnd = CreateWindowA("static", "d3dx9_test", WS_OVERLAPPEDWINDOW, 0, 0,
-            640, 480, NULL, NULL, NULL, NULL)))
-    {
-        skip("Couldn't create application window\n");
-        return;
-    }
-
-    d3d = Direct3DCreate9(D3D_SDK_VERSION);
-    if (!d3d)
-    {
-        skip("Couldn't create IDirect3D9 object\n");
-        DestroyWindow(hwnd);
-        return;
-    }
-
-    ZeroMemory(&d3dpp, sizeof(d3dpp));
-    d3dpp.Windowed   = TRUE;
-    d3dpp.SwapEffect = D3DSWAPEFFECT_DISCARD;
-
-    hr = IDirect3D9_CreateDevice(d3d, D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, hwnd, D3DCREATE_SOFTWARE_VERTEXPROCESSING, &d3dpp, &device);
-    IDirect3D9_Release(d3d);
-    if (FAILED(hr))
-    {
-        skip("Failed to create IDirect3DDevice9 object %#x\n", hr);
-        DestroyWindow(hwnd);
-        return;
-    }
-
-    filedata = get_mesh_data(simple_xfile, sizeof(simple_xfile) - 1);
-    ok(filedata != NULL, "Failed to load mesh data\n");
-
-    adjacency = materials = effects = NULL;
-    skininfo = NULL;
-    mesh = NULL;
-
-    hr = D3DXLoadSkinMeshFromXof(filedata, 0, device, &adjacency, &materials, &effects, &mat_count, &skininfo, &mesh);
-    ok(hr == D3D_OK, "Got result %x, expected 0 (D3D_OK)\n", hr);
-    ok(skininfo != NULL, "Expected non-null skininfo\n");
-
-    /* FIXME: Add additional tests for skininfo interface. */
-
-    if (adjacency) adjacency->lpVtbl->Release(adjacency);
-    if (materials) materials->lpVtbl->Release(materials);
-    if (effects) effects->lpVtbl->Release(effects);
-    if (skininfo) skininfo->lpVtbl->Release(skininfo);
-    if (mesh) mesh->lpVtbl->Release(mesh);
-
-    filedata->lpVtbl->Release(filedata);
-    IDirect3DDevice9_Release(device);
-    DestroyWindow(hwnd);
 }
 
 static BOOL compute_box(struct mesh *mesh, float width, float height, float depth)
@@ -5089,14 +4990,20 @@ cleanup:
 
 static void test_create_skin_info(void)
 {
-    HRESULT hr;
-    ID3DXSkinInfo *skininfo = NULL;
     D3DVERTEXELEMENT9 empty_declaration[] = { D3DDECL_END() };
     D3DVERTEXELEMENT9 declaration_out[MAX_FVF_DECL_SIZE];
     const D3DVERTEXELEMENT9 declaration_with_nonzero_stream[] = {
         {1, 0, D3DDECLTYPE_FLOAT3, 0, D3DDECLUSAGE_POSITION, 0},
         D3DDECL_END()
     };
+    D3DVERTEXELEMENT9 declaration[MAX_FVF_DECL_SIZE];
+    DWORD exp_vertices[2], vertices[2];
+    float exp_weights[2], weights[2];
+    const char *exp_string, *string;
+    ID3DXSkinInfo *skininfo = NULL;
+    DWORD exp_fvf, fvf;
+    unsigned int i;
+    HRESULT hr;
 
     hr = D3DXCreateSkinInfo(0, empty_declaration, 0, &skininfo);
     ok(hr == D3D_OK, "Expected D3D_OK, got %#x\n", hr);
@@ -5113,6 +5020,7 @@ static void test_create_skin_info(void)
     ok(hr == D3D_OK, "Expected D3D_OK, got %#x\n", hr);
     if (skininfo)
     {
+        ID3DXSkinInfo *clone = NULL;
         DWORD dword_result;
         float flt_result;
         const char *string_result;
@@ -5145,6 +5053,10 @@ static void test_create_skin_info(void)
 
         transform = skininfo->lpVtbl->GetBoneOffsetMatrix(skininfo, -1);
         ok(transform == NULL, "Expected NULL, got %p\n", transform);
+
+        hr = skininfo->lpVtbl->Clone(skininfo, &clone);
+        ok(hr == D3D_OK, "Expected D3D_OK, got %#x\n", hr);
+        IUnknown_Release(clone);
 
         {
             /* test [GS]etBoneOffsetMatrix */
@@ -5189,12 +5101,7 @@ static void test_create_skin_info(void)
 
         {
             /* test [GS]etBoneInfluence */
-            DWORD vertices[2];
-            FLOAT weights[2];
-            int i;
             DWORD num_influences;
-            DWORD exp_vertices[2];
-            FLOAT exp_weights[2];
 
             /* vertex and weight arrays untouched when num_influences is 0 */
             vertices[0] = 0xdeadbeef;
@@ -5262,14 +5169,17 @@ static void test_create_skin_info(void)
             ok(hr == D3D_OK, "Expected D3D_OK, got %#x\n", hr);
             ok(vertices[0] == 0xdeadbeef, "expected vertex 0xdeadbeef, got %u\n", vertices[0]);
             ok(weights[0] == FLT_MAX, "expected weight %g, got %g\n", FLT_MAX, weights[0]);
+
+            hr = skininfo->lpVtbl->SetBoneInfluence(skininfo, 0, num_influences, exp_vertices, exp_weights);
+            ok(hr == D3D_OK, "Expected D3D_OK, got %#x\n", hr);
         }
 
         {
             /* test [GS]etFVF and [GS]etDeclaration */
             D3DVERTEXELEMENT9 declaration_in[MAX_FVF_DECL_SIZE];
-            DWORD fvf = D3DFVF_XYZ;
             DWORD got_fvf;
 
+            fvf = D3DFVF_XYZ;
             hr = skininfo->lpVtbl->SetDeclaration(skininfo, NULL);
             ok(hr == D3DERR_INVALIDCALL, "Expected D3DERR_INVALIDCALL, got %#x\n", hr);
 
@@ -5305,6 +5215,45 @@ static void test_create_skin_info(void)
             ok(hr == D3D_OK, "Expected D3D_OK, got %#x\n", hr);
             compare_elements(declaration_out, declaration_in, __LINE__, 0);
         }
+
+        /* Test Clone() */
+        hr = skininfo->lpVtbl->Clone(skininfo, NULL);
+        ok(hr == D3DERR_INVALIDCALL, "Got unexpected hr %#x.\n", hr);
+
+        clone = NULL;
+        hr = skininfo->lpVtbl->Clone(skininfo, &clone);
+        ok(hr == D3D_OK, "Got unexpected hr %#x.\n", hr);
+
+        hr = clone->lpVtbl->GetDeclaration(clone, declaration);
+        ok(hr == D3D_OK, "Got unexpected hr %#x.\n", hr);
+        compare_elements(declaration, declaration_out, __LINE__, 0);
+
+        hr = D3DXFVFFromDeclarator(declaration_out, &exp_fvf);
+        ok(hr == D3D_OK, "Got unexpected hr %#x.\n", hr);
+        fvf = clone->lpVtbl->GetFVF(clone);
+        ok(fvf == exp_fvf, "Got unexpected fvf %#x.\n", fvf);
+
+        exp_string = skininfo->lpVtbl->GetBoneName(skininfo, 0);
+        string = clone->lpVtbl->GetBoneName(clone, 0);
+        ok(!strcmp(string, exp_string), "Got unexpected bone 0 name %s.\n", debugstr_a(string));
+
+        transform = clone->lpVtbl->GetBoneOffsetMatrix(clone, 0);
+        check_matrix(transform, &identity_matrix);
+
+        hr = skininfo->lpVtbl->GetBoneInfluence(skininfo, 0, exp_vertices, exp_weights);
+        ok(hr == D3D_OK, "Got unexpected hr %#x.\n", hr);
+        hr = clone->lpVtbl->GetBoneInfluence(clone, 0, vertices, weights);
+        ok(hr == D3D_OK, "Got unexpected hr %#x.\n", hr);
+
+        for (i = 0; i < ARRAY_SIZE(vertices); ++i)
+        {
+            ok(vertices[i] == exp_vertices[i], "influence[%u]: got unexpected vertex %u, expected %u.\n",
+                    i, vertices[i], exp_vertices[i]);
+            ok(((DWORD *)weights)[i] == ((DWORD *)exp_weights)[i],
+                    "influence[%u]: got unexpected weight %.8e, expected %.8e.\n", i, weights[i], exp_weights[i]);
+        }
+
+        IUnknown_Release(clone);
     }
     if (skininfo) IUnknown_Release(skininfo);
     skininfo = NULL;
@@ -7708,9 +7657,9 @@ static void test_weld_vertices(void)
         {{ 2.0f,  3.0f,  0.f}, {0, 0, 0, 0}},
         {{ 0.0f,  0.0f,  0.f}, {0, 0, 0, 0}},
 
-        {{ 3.0f,  3.0f,  0.f}, {65535, 65535, 65535, 65535}},
+        {{ 3.0f,  3.0f,  0.f}, {-1, -1, -1, -1}},
         {{ 3.0f,  0.0f,  0.f}, {0, 0, 0, 0}},
-        {{ 1.0f,  0.0f,  0.f}, {65534, 65534, 65534, 65534}},
+        {{ 1.0f,  0.0f,  0.f}, {-2, -2, -2, -2}},
     };
     const DWORD indices22[] = {0, 1, 2, 3, 4, 5};
     const DWORD attributes22[] = {0, 0};
@@ -7725,7 +7674,7 @@ static void test_weld_vertices(void)
         {{ 2.0f,  3.0f,  0.f}, {0, 0, 0, 0}},
         {{ 0.0f,  0.0f,  0.f}, {0, 0, 0, 0}},
 
-        {{ 2.0f,  3.0f,  0.f}, {65535, 65535, 65535, 65535}},
+        {{ 2.0f,  3.0f,  0.f}, {-1, -1, -1, -1}},
         {{ 3.0f,  0.0f,  0.f}, {0, 0, 0, 0}},
     };
     const DWORD exp_indices22[] = {0, 1, 2, 3, 4, 2};
@@ -10362,10 +10311,10 @@ static void test_clone_mesh(void)
 
         hr = mesh->lpVtbl->CloneMesh(mesh, tc[i].clone_options, tc[i].new_declaration,
                                      test_context->device, &mesh_clone);
-        ok(hr == D3D_OK, "CloneMesh test case %d failed. Got %x, expected D3D_OK.\n", i, hr);
+        ok(hr == D3D_OK, "Test %u, got unexpected hr %#x.\n", i, hr);
 
         hr = mesh_clone->lpVtbl->GetDeclaration(mesh_clone, new_declaration);
-        ok(hr == D3D_OK, "GetDeclaration test case %d failed. Got %x, expected D3D_OK.\n", i, hr);
+        ok(hr == D3D_OK, "Test %u, got unexpected hr %#x.\n", i, hr);
         /* Check declaration elements */
         for (j = 0; tc[i].new_declaration[j].Stream != 0xFF; j++)
         {
@@ -10551,8 +10500,7 @@ static void test_valid_mesh(void)
         }
 
         hr = D3DXValidMesh(mesh, tc[i].adjacency, &errors_and_warnings);
-        todo_wine ok(hr == tc[i].exp_hr, "D3DXValidMesh test case %d failed. "
-                "Got %x, expected %x.\n", i, hr, tc[i].exp_hr);
+        todo_wine ok(hr == tc[i].exp_hr, "Test %u, got unexpected hr %#x, expected %#x.\n", i, hr, tc[i].exp_hr);
 
         /* Note errors_and_warnings is deliberately not checked because that
          * would require copying wast amounts of the text output. */
@@ -10716,8 +10664,7 @@ static void test_optimize_faces(void)
         hr = D3DXOptimizeFaces(tc[i].indices, tc[i].num_faces,
                                tc[i].num_vertices, tc[i].indices_are_32bit,
                                face_remap);
-        ok(hr == D3D_OK, "D3DXOptimizeFaces test case %d failed. "
-                "Got %x, expected D3D_OK.\n", i, hr);
+        ok(hr == D3D_OK, "Test %u, got unexpected hr %#x.\n", i, hr);
 
         /* Compare face remap with expected face remap */
         for (j = 0; j < tc[i].num_faces; j++)
@@ -10734,15 +10681,13 @@ static void test_optimize_faces(void)
     hr = D3DXOptimizeFaces(tc[0].indices, tc[0].num_faces,
                            tc[0].num_vertices, tc[0].indices_are_32bit,
                            NULL);
-    ok(hr == D3DERR_INVALIDCALL, "D3DXOptimizeFaces passed NULL face_remap "
-            "pointer. Got %x, expected D3DERR_INVALIDCALL.\n", hr);
+    ok(hr == D3DERR_INVALIDCALL, "Got unexpected hr %#x.\n", hr);
 
     /* Number of faces must be smaller than 2^15 */
     hr = D3DXOptimizeFaces(tc[0].indices, 2 << 15,
                            tc[0].num_vertices, FALSE,
                            &smallest_face_remap);
-    ok(hr == D3DERR_INVALIDCALL, "D3DXOptimizeFaces should not accept 2^15 "
-            "faces when using 16-bit indices. Got %x, expected D3DERR_INVALIDCALL.\n", hr);
+    ok(hr == D3DERR_INVALIDCALL, "Got unexpected hr %#x.\n", hr);
 }
 
 static HRESULT clear_normals(ID3DXMesh *mesh)
@@ -11376,6 +11321,32 @@ static void D3DXCreateAnimationControllerTest(void)
     animation->lpVtbl->Release(animation);
 }
 
+static void D3DXCreateKeyframedAnimationSetTest(void)
+{
+    ID3DXKeyframedAnimationSet *set;
+    D3DXPLAYBACK_TYPE type;
+    unsigned int count;
+    const char *name;
+    HRESULT hr;
+
+    hr = D3DXCreateKeyframedAnimationSet("wine_bottle", 5.0, D3DXPLAY_LOOP, 0, 0, NULL, &set);
+    ok(hr == D3DERR_INVALIDCALL, "Got unexpected hr %#x.\n", hr);
+
+    hr = D3DXCreateKeyframedAnimationSet("wine_bottle", 5.0, D3DXPLAY_LOOP, 10, 0, NULL, &set);
+    ok(hr == D3D_OK, "Got unexpected hr %#x.\n", hr);
+
+    name = set->lpVtbl->GetName(set);
+    ok(!strcmp(name, "wine_bottle"), "Got unexpected name %s.\n", debugstr_a(name));
+
+    type = set->lpVtbl->GetPlaybackType(set);
+    ok(type == D3DXPLAY_LOOP, "Got unexpected value %u.\n", type);
+
+    count = set->lpVtbl->GetNumAnimations(set);
+    ok(!count, "Got unexpected value %u.\n", count);
+
+    set->lpVtbl->Release(set);
+}
+
 static void test_D3DXFrameFind(void)
 {
     static char n1[] = "name1";
@@ -11451,6 +11422,182 @@ static void test_D3DXFrameFind(void)
     ok(ret == &child3, "Unexpected frame, %p.\n", ret);
 }
 
+static ID3DXFileData *get_mesh_data(const void *memory, SIZE_T length)
+{
+    ID3DXFileData *file_data, *ret = NULL;
+    ID3DXFileEnumObject *enum_obj = NULL;
+    D3DXF_FILELOADMEMORY source;
+    ID3DXFile *file;
+    SIZE_T i, count;
+    GUID guid;
+
+    if (FAILED(D3DXFileCreate(&file)))
+        return NULL;
+
+    if (FAILED(file->lpVtbl->RegisterTemplates(file, D3DRM_XTEMPLATES, D3DRM_XTEMPLATE_BYTES)))
+        goto cleanup;
+
+    source.lpMemory = memory;
+    source.dSize = length;
+    if (FAILED(file->lpVtbl->CreateEnumObject(file, &source, D3DXF_FILELOAD_FROMMEMORY, &enum_obj)))
+        goto cleanup;
+
+    if (FAILED(enum_obj->lpVtbl->GetChildren(enum_obj, &count)))
+        goto cleanup;
+
+    for (i = 0; i < count; ++i)
+    {
+        if (FAILED(enum_obj->lpVtbl->GetChild(enum_obj, i, &file_data)))
+            goto cleanup;
+
+        if (SUCCEEDED(file_data->lpVtbl->GetType(file_data, &guid))
+                && IsEqualGUID(&guid, &TID_D3DRMMesh))
+        {
+            ret = file_data;
+            break;
+        }
+        else
+        {
+            file_data->lpVtbl->Release(file_data);
+        }
+    }
+
+cleanup:
+    if (enum_obj)
+        enum_obj->lpVtbl->Release(enum_obj);
+    file->lpVtbl->Release(file);
+
+    return ret;
+}
+
+static void test_load_skin_mesh_from_xof(void)
+{
+    static const char simple_xfile[] =
+        "xof 0303txt 0032"
+        "Mesh {"
+            "3;"
+            "0.0; 0.0; 0.0;,"
+            "0.0; 1.0; 0.0;,"
+            "1.0; 1.0; 0.0;;"
+            "1;"
+            "3; 0, 1, 2;;"
+        "}";
+    static const D3DVERTEXELEMENT9 expected_declaration[] =
+    {
+        {0, 0, D3DDECLTYPE_FLOAT3, D3DDECLMETHOD_DEFAULT, D3DDECLUSAGE_POSITION, 0},
+        D3DDECL_END(),
+    };
+    D3DVERTEXELEMENT9 declaration[MAX_FVF_DECL_SIZE];
+    ID3DXBuffer *adjacency, *materials, *effects;
+    DWORD max_influences[3], count, fvf;
+    D3DPRESENT_PARAMETERS d3dpp;
+    IDirect3DDevice9 *device;
+    ID3DXSkinInfo *skin_info;
+    ID3DXFileData *file_data;
+    const char *bone_name;
+    D3DXMATRIX *matrix;
+    float influence;
+    ID3DXMesh *mesh;
+    IDirect3D9 *d3d;
+    ULONG refcount;
+    HRESULT hr;
+    HWND hwnd;
+
+    if (!(hwnd = CreateWindowA("static", "d3dx9_test", WS_OVERLAPPEDWINDOW, 0, 0,
+            640, 480, NULL, NULL, NULL, NULL)))
+    {
+        skip("Failed to create application window.\n");
+        return;
+    }
+
+    d3d = Direct3DCreate9(D3D_SDK_VERSION);
+    if (!d3d)
+    {
+        skip("Failed to create d3d object.\n");
+        DestroyWindow(hwnd);
+        return;
+    }
+
+    memset(&d3dpp, 0, sizeof(d3dpp));
+    d3dpp.Windowed = TRUE;
+    d3dpp.SwapEffect = D3DSWAPEFFECT_DISCARD;
+
+    hr = IDirect3D9_CreateDevice(d3d, D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, hwnd,
+            D3DCREATE_SOFTWARE_VERTEXPROCESSING, &d3dpp, &device);
+    IDirect3D9_Release(d3d);
+    if (FAILED(hr))
+    {
+        skip("Failed to create device, hr %#x.\n", hr);
+        DestroyWindow(hwnd);
+        return;
+    }
+
+    file_data = get_mesh_data(simple_xfile, sizeof(simple_xfile) - 1);
+    ok(!!file_data, "Failed to load mesh data.\n");
+
+    adjacency = materials = effects = (void *)0xdeadbeef;
+    count = ~0u;
+    skin_info = (void *)0xdeadbeef;
+    mesh = (void *)0xdeadbeef;
+
+    hr = D3DXLoadSkinMeshFromXof(file_data, 0, device, &adjacency, &materials, &effects, &count,
+            &skin_info, &mesh);
+    ok(hr == D3D_OK, "Got unexpected hr %#x.\n", hr);
+    ok(!!adjacency, "Got unexpected value %p.\n", adjacency);
+    ok(!materials, "Got unexpected value %p.\n", materials);
+    ok(!effects, "Got unexpected value %p.\n", effects);
+    ok(!count, "Got unexpected value %u.\n", count);
+    ok(!!skin_info, "Got unexpected value %p.\n", skin_info);
+    ok(!!mesh, "Got unexpected value %p.\n", mesh);
+    count = mesh->lpVtbl->GetNumVertices(mesh);
+    ok(count == 3, "Got unexpected value %u.\n", count);
+    count = mesh->lpVtbl->GetNumFaces(mesh);
+    ok(count == 1, "Got unexpected value %u.\n", count);
+
+    hr = skin_info->lpVtbl->GetDeclaration(skin_info, declaration);
+    ok(hr == D3D_OK, "Got unexpected hr %#x.\n", hr);
+    compare_elements(declaration, expected_declaration, __LINE__, 0);
+
+    fvf = skin_info->lpVtbl->GetFVF(skin_info);
+    ok(fvf == D3DFVF_XYZ, "Got unexpected value %u.\n", fvf);
+
+    count = skin_info->lpVtbl->GetNumBones(skin_info);
+    ok(!count, "Got unexpected value %u.\n", count);
+
+    influence = skin_info->lpVtbl->GetMinBoneInfluence(skin_info);
+    ok(!influence, "Got unexpected value %.8e.\n", influence);
+
+    memset(max_influences, 0x55, sizeof(max_influences));
+    hr = skin_info->lpVtbl->GetMaxVertexInfluences(skin_info, max_influences);
+    todo_wine ok(hr == D3D_OK, "Got unexpected value %#x.\n", hr);
+    todo_wine ok(!max_influences[0], "Got unexpected value %u.\n", max_influences[0]);
+    ok(max_influences[1] == 0x55555555, "Got unexpected value %u.\n", max_influences[1]);
+    ok(max_influences[2] == 0x55555555, "Got unexpected value %u.\n", max_influences[2]);
+
+    bone_name = skin_info->lpVtbl->GetBoneName(skin_info, 0);
+    ok(!bone_name, "Got unexpected value %p.\n", bone_name);
+
+    count = skin_info->lpVtbl->GetNumBoneInfluences(skin_info, 0);
+    ok(!count, "Got unexpected value %u.\n", count);
+
+    count = skin_info->lpVtbl->GetNumBoneInfluences(skin_info, 1);
+    ok(!count, "Got unexpected value %u.\n", count);
+
+    matrix = skin_info->lpVtbl->GetBoneOffsetMatrix(skin_info, -1);
+    ok(!matrix, "Got unexpected value %p.\n", matrix);
+
+    matrix = skin_info->lpVtbl->GetBoneOffsetMatrix(skin_info, 0);
+    ok(!matrix, "Got unexpected value %p.\n", matrix);
+
+    skin_info->lpVtbl->Release(skin_info);
+    mesh->lpVtbl->Release(mesh);
+    adjacency->lpVtbl->Release(adjacency);
+    file_data->lpVtbl->Release(file_data);
+    refcount = IDirect3DDevice9_Release(device);
+    ok(!refcount, "Device has %u references left.\n", refcount);
+    DestroyWindow(hwnd);
+}
+
 START_TEST(mesh)
 {
     D3DXBoundProbeTest();
@@ -11461,7 +11608,6 @@ START_TEST(mesh)
     D3DXCreateMeshTest();
     D3DXCreateMeshFVFTest();
     D3DXLoadMeshTest();
-    D3DXLoadSkinMeshFromXofTest();
     D3DXCreateBoxTest();
     D3DXCreatePolygonTest();
     D3DXCreateSphereTest();
@@ -11469,6 +11615,7 @@ START_TEST(mesh)
     D3DXCreateTextTest();
     D3DXCreateTorusTest();
     D3DXCreateAnimationControllerTest();
+    D3DXCreateKeyframedAnimationSetTest();
     test_get_decl_length();
     test_get_decl_vertex_size();
     test_fvf_decl_conversion();
@@ -11485,4 +11632,5 @@ START_TEST(mesh)
     test_optimize_faces();
     test_compute_normals();
     test_D3DXFrameFind();
+    test_load_skin_mesh_from_xof();
 }

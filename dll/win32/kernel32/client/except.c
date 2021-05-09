@@ -1041,21 +1041,6 @@ SetLastError(IN DWORD dwErrCode)
  */
 DWORD
 WINAPI
-BaseSetLastNTError(IN NTSTATUS Status)
-{
-    DWORD dwErrCode;
-
-    /* Convert from NT to Win32, then set */
-    dwErrCode = RtlNtStatusToDosError(Status);
-    SetLastError(dwErrCode);
-    return dwErrCode;
-}
-
-/*
- * @implemented
- */
-DWORD
-WINAPI
 GetLastError(VOID)
 {
     /* Return the current value */

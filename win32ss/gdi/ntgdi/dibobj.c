@@ -628,9 +628,17 @@ NtGdiSetDIBitsToDeviceInternal(
     pDestSurf = &pSurf->SurfObj;
 
     /* Copy the bits */
-    DPRINT("BitsToDev with dstsurf=(%d|%d) (%d|%d), src=(%d|%d) w=%d h=%d\n",
+    DPRINT("BitsToDev with rcDest=(%d|%d) (%d|%d), ptSource=(%d|%d) w=%d h=%d\n",
            rcDest.left, rcDest.top, rcDest.right, rcDest.bottom,
            ptSource.x, ptSource.y, SourceSize.cx, SourceSize.cy);
+
+    /* This fixes the large Google text on Google.com from being upside down */
+    if (rcDest.top > rcDest.bottom)
+    {
+        RECTL_vMakeWellOrdered(&rcDest);
+        ptSource.y -= SourceSize.cy;
+    }
+
     bResult = IntEngBitBlt(pDestSurf,
                           pSourceSurf,
                           pMaskSurf,
@@ -722,7 +730,7 @@ GreGetDIBitsInternal(
                                     &size);
     if(bitmap_type == -1)
     {
-        DPRINT("Wrong bitmap format\n");
+        DPRINT1("Wrong bitmap format\n");
         EngSetLastError(ERROR_INVALID_PARAMETER);
         ScanLines = 0;
         goto done;
@@ -951,25 +959,28 @@ GreGetDIBitsInternal(
         RECT rcDest;
         POINTL srcPoint;
         BOOL ret ;
+        int newLines = -1;
 
-        if (StartScan > (ULONG)psurf->SurfObj.sizlBitmap.cy)
+        if (StartScan >= abs(Info->bmiHeader.biHeight))
         {
-            ScanLines = 0;
+            ScanLines = 1;
             goto done;
         }
         else
         {
-            ScanLines = min(ScanLines, psurf->SurfObj.sizlBitmap.cy - StartScan);
+            ScanLines = min(ScanLines, abs(Info->bmiHeader.biHeight) - StartScan);
         }
 
+        if (abs(Info->bmiHeader.biHeight) < psurf->SurfObj.sizlBitmap.cy)
+        {
+            StartScan += psurf->SurfObj.sizlBitmap.cy - abs(Info->bmiHeader.biHeight);
+        }
         /* Fixup values */
-        Info->bmiHeader.biWidth = psurf->SurfObj.sizlBitmap.cx;
         Info->bmiHeader.biHeight = (height < 0) ?
                                    -(LONG)ScanLines : ScanLines;
         /* Create the DIB */
         hBmpDest = DIB_CreateDIBSection(pDC, Info, Usage, &pDIBits, NULL, 0, 0);
         /* Restore them */
-        Info->bmiHeader.biWidth = width;
         Info->bmiHeader.biHeight = height;
 
         if(!hBmpDest)
@@ -982,27 +993,33 @@ GreGetDIBitsInternal(
 
         psurfDest = SURFACE_ShareLockSurface(hBmpDest);
 
-        RECTL_vSetRect(&rcDest, 0, 0, psurf->SurfObj.sizlBitmap.cx, ScanLines);
-
+        RECTL_vSetRect(&rcDest, 0, 0, Info->bmiHeader.biWidth, ScanLines);
+        Info->bmiHeader.biWidth = width;
         srcPoint.x = 0;
 
-        if(height < 0)
+        if (abs(Info->bmiHeader.biHeight) <= psurf->SurfObj.sizlBitmap.cy)
         {
-            srcPoint.y = 0;
-
-            if(ScanLines <= StartScan)
-            {
-                ScanLines = 1;
-                SURFACE_ShareUnlockSurface(psurfDest);
-                GreDeleteObject(hBmpDest);
-                goto done;
-            }
-
-            ScanLines -= StartScan;
+            srcPoint.y = psurf->SurfObj.sizlBitmap.cy - StartScan - ScanLines;
         }
         else
         {
-            srcPoint.y = StartScan;
+            /*  Determine the actual number of lines copied from the  */
+            /*  original bitmap. It might be different from ScanLines. */
+            newLines = abs(Info->bmiHeader.biHeight) - psurf->SurfObj.sizlBitmap.cy;
+            newLines = min((int)(StartScan + ScanLines - newLines), psurf->SurfObj.sizlBitmap.cy);
+            if (newLines > 0)
+            {
+                srcPoint.y = psurf->SurfObj.sizlBitmap.cy - newLines;
+                if (StartScan > psurf->SurfObj.sizlBitmap.cy)
+                {
+                    newLines -= (StartScan - psurf->SurfObj.sizlBitmap.cy);
+                }
+            }
+            else
+            {
+                newLines = 0;
+                srcPoint.y = psurf->SurfObj.sizlBitmap.cy;
+            }
         }
 
         EXLATEOBJ_vInitialize(&exlo, psurf->ppal, psurfDest->ppal, 0xffffff, 0xffffff, 0);
@@ -1022,7 +1039,11 @@ GreGetDIBitsInternal(
         {
             RtlCopyMemory(Bits, pDIBits, DIB_GetDIBImageBytes (width, ScanLines, bpp));
         }
-
+        /* Update if line count has changed */
+        if (newLines != -1)
+        {
+            ScanLines = (UINT)newLines;
+        }
         GreDeleteObject(hBmpDest);
         EXLATEOBJ_vCleanup(&exlo);
     }

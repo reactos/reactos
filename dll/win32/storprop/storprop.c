@@ -19,6 +19,9 @@
 
 HINSTANCE hInstance = NULL;
 
+/*
+ * @unimplemented
+ */
 DWORD
 WINAPI
 DiskClassInstaller(
@@ -29,9 +32,74 @@ DiskClassInstaller(
     DPRINT("DiskClassInstaller(%u %p %p)\n",
            InstallFunction, DeviceInfoSet, DeviceInfoData);
 
+    if (InstallFunction == DIF_ADDPROPERTYPAGE_ADVANCED)
+    {
+        return ERROR_SUCCESS;
+    }
+
     return ERROR_DI_DO_DEFAULT;
 }
 
+/*
+ * @unimplemented
+ */
+DWORD
+WINAPI
+DvdClassInstaller(
+    _In_ DI_FUNCTION InstallFunction,
+    _In_ HDEVINFO DeviceInfoSet,
+    _In_ PSP_DEVINFO_DATA DeviceInfoData OPTIONAL)
+{
+    DPRINT("DvdClassInstaller(%u %p %p)\n",
+           InstallFunction, DeviceInfoSet, DeviceInfoData);
+
+    return ERROR_DI_DO_DEFAULT;
+}
+
+/*
+ * @unimplemented
+ */
+BOOL
+WINAPI
+DvdPropPageProvider(
+    _In_ PSP_PROPSHEETPAGE_REQUEST lpPropSheetPageRequest,
+    _In_ LPFNADDPROPSHEETPAGE lpfnAddPropSheetPageProc,
+    _In_ LPARAM lParam)
+{
+    DPRINT("DvdPropPageProvider(%p %p %lx)\n",
+           lpPropSheetPageRequest, lpfnAddPropSheetPageProc, lParam);
+    return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+BOOL
+WINAPI
+IdePropPageProvider(
+    _In_ PSP_PROPSHEETPAGE_REQUEST lpPropSheetPageRequest,
+    _In_ LPFNADDPROPSHEETPAGE lpfnAddPropSheetPageProc,
+    _In_ LPARAM lParam)
+{
+    DPRINT("IdePropPageProvider(%p %p %lx)\n",
+           lpPropSheetPageRequest, lpfnAddPropSheetPageProc, lParam);
+    return FALSE;
+}
+
+/*
+ * @implemented
+ */
+BOOL
+WINAPI
+VolumePropPageProvider(
+    _In_ PSP_PROPSHEETPAGE_REQUEST lpPropSheetPageRequest,
+    _In_ LPFNADDPROPSHEETPAGE lpfnAddPropSheetPageProc,
+    _In_ LPARAM lParam)
+{
+    DPRINT("VolumePropPageProvider(%p %p %lx)\n",
+           lpPropSheetPageRequest, lpfnAddPropSheetPageProc, lParam);
+    return FALSE;
+}
 
 BOOL
 WINAPI

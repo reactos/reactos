@@ -357,13 +357,15 @@ PVOID
 GetResourceList(
     LPWSTR pszDeviceID)
 {
-    WCHAR szBuffer[100];
     PCM_RESOURCE_LIST pResourceList = NULL;
     HKEY hKey = NULL;
     DWORD dwError, dwSize;
 
-    wsprintf(szBuffer, L"SYSTEM\\CurrentControlSet\\Enum\\%s\\LogConf", pszDeviceID);
-    dwError = RegOpenKeyExW(HKEY_LOCAL_MACHINE, szBuffer, 0, KEY_READ, &hKey);
+    CStringW keyName = L"SYSTEM\\CurrentControlSet\\Enum\\";
+    keyName += pszDeviceID;
+    keyName += L"\\LogConf";
+
+    dwError = RegOpenKeyExW(HKEY_LOCAL_MACHINE, keyName, 0, KEY_READ, &hKey);
     if (dwError != ERROR_SUCCESS)
     {
         /* failed to open device instance log conf dir */

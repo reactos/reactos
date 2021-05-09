@@ -102,7 +102,7 @@ AcpiDsExecBeginControlOp (
             }
         }
 
-        /*lint -fallthrough */
+        ACPI_FALLTHROUGH;
 
     case AML_IF_OP:
         /*

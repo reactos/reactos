@@ -22,7 +22,7 @@ static ULONG BugCheckFileId = 0x4 << 16;
 
 /* FUNCTIONS *****************************************************************/
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 VOID
 NTAPI
 CcPfInitializePrefetcher(VOID)
@@ -40,9 +40,8 @@ CcPfInitializePrefetcher(VOID)
     /* FIXME: Setup the rest of the prefetecher */
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 BOOLEAN
-NTAPI
 CcInitializeCacheManager(VOID)
 {
     ULONG Thread;
@@ -308,7 +307,7 @@ CcSetBcbOwnerPointer (
 	IN	PVOID	Owner
 	)
 {
-    PINTERNAL_BCB iBcb = Bcb;
+    PINTERNAL_BCB iBcb = CONTAINING_RECORD(Bcb, INTERNAL_BCB, PFCB);
 
     CCTRACE(CC_API_DEBUG, "Bcb=%p Owner=%p\n",
         Bcb, Owner);

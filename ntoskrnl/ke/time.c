@@ -31,8 +31,8 @@ KiWriteSystemTime(volatile KSYSTEM_TIME *SystemTime, ULARGE_INTEGER NewTime)
     /* Update in 3 steps, so that a reader can recognize partial updates */
     SystemTime->High1Time = NewTime.HighPart;
     SystemTime->LowPart = NewTime.LowPart;
-    SystemTime->High2Time = NewTime.HighPart;
 #endif
+    SystemTime->High2Time = NewTime.HighPart;
 }
 
 FORCEINLINE

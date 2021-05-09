@@ -1333,6 +1333,37 @@ static MUI_ENTRY heILFormatPartitionEntries[] =
     }
 };
 
+static MUI_ENTRY heILCheckFSEntries[] =
+{
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " \232\220\227\232\204 ",
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        8,
+        ".\204\230\207\201\220\231 \204\226\211\207\216\204 \232\200 \232\227\203\205\201 \205\211\231\213\222 \204\220\227\232\204\204 \232\211\220\213\232",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        "...\217\211\232\216\204\214 \200\220",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
 static MUI_ENTRY heILInstallDirectoryEntries[] =
 {
     {
@@ -1485,6 +1516,30 @@ static MUI_ENTRY heILBootLoaderEntries[] =
         0,
         0,
         "\204\220\227\232\204 \214\205\210\211\201 = F3  \212\231\216\204 = ENTER",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
+static MUI_ENTRY heILBootLoaderInstallPageEntries[] =
+{
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        "Installing the bootloader onto the media, please wait...",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
         TEXT_ID_STATIC
     },
@@ -2103,6 +2158,10 @@ MUI_PAGE heILPages[] =
         heILFormatPartitionEntries
     },
     {
+        CHECK_FILE_SYSTEM_PAGE,
+        heILCheckFSEntries
+    },
+    {
         DELETE_PARTITION_PAGE,
         heILDeletePartitionEntries
     },
@@ -2137,6 +2196,10 @@ MUI_PAGE heILPages[] =
     {
         SUCCESS_PAGE,
         heILSuccessPageEntries
+    },
+    {
+        BOOT_LOADER_INSTALLATION_PAGE,
+        heILBootLoaderInstallPageEntries
     },
     {
         BOOT_LOADER_FLOPPY_PAGE,
@@ -2186,8 +2249,6 @@ MUI_STRING heILStrings[] =
     ".\232\214\207\232\205\200\216 \200\214 \217\211\211\203\222 \204\231\203\207\204 \204\226\211\207\216\204"},
     {STRING_INSTALLONPART,
     "\204\226\211\207\216 \214\222 ReactOS \232\200 \204\220\211\227\232\216 \204\220\227\232\204\204 \232\211\220\213\232"},
-    {STRING_CHECKINGPART,
-    ".\204\230\207\201\220\231 \204\226\211\207\216\204 \232\200 \232\227\203\205\201 \205\211\231\213\222 \204\220\227\232\204\204 \232\211\220\213\232"},
     {STRING_CONTINUE,
     "\212\231\216\204 = ENTER"},
     {STRING_QUITCONTINUE,
@@ -2239,35 +2300,21 @@ MUI_STRING heILStrings[] =
     {STRING_KEEPFORMAT,
     " (\211\205\220\211\231 \200\214\214( \232\211\207\213\205\220 \215\211\226\201\227 \232\213\230\222\216 \232\230\200\231\204 "},
     {STRING_HDINFOPARTCREATE_1,
-    "%I64u %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) on %wZ [%s]."},
-    {STRING_HDINFOPARTCREATE_2,
-    "%I64u %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) [%s]."},
-    {STRING_HDDINFOUNK2,
-    "   %c%c  Type 0x%02X    %I64u %s"},
+    "%s."},
     {STRING_HDINFOPARTDELETE_1,
-    "on %I64u %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) on %wZ [%s]."},
-    {STRING_HDINFOPARTDELETE_2,
-    "on %I64u %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) [%s]."},
-    {STRING_HDINFOPARTZEROED_1,
-    "Harddisk %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ) [%s]."},
-    // {STRING_HDINFOPARTZEROED_2,
-    // "Harddisk %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu [%s]."},
-    {STRING_HDDINFOUNK4,
-    "%c%c  Type 0x%02X    %I64u %s"},
-    {STRING_HDINFOPARTEXISTS_1,
-    "on Harddisk %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ) [%s]."},
-    // {STRING_HDINFOPARTEXISTS_2,
-    // "on Harddisk %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu [%s]."},
-    {STRING_HDDINFOUNK5,
-    "%c%c %c %sType %-3u%s                      %6lu %s"},
-    {STRING_HDINFOPARTSELECT_1,
-    "%6lu %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) on %wZ [%s]"},
-    {STRING_HDINFOPARTSELECT_2,
-    "%6lu %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) [%s]"},
+    "on %s."},
+    {STRING_PARTTYPE,
+    "Type 0x%02x"},
+    {STRING_HDDINFO_1,
+    // "Harddisk %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ) [%s]"
+    "%I64u %s Harddisk %lu (Port=%hu, Bus=%hu, Id=%hu) on %wZ [%s]"},
+    {STRING_HDDINFO_2,
+    // "Harddisk %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu [%s]"
+    "%I64u %s Harddisk %lu (Port=%hu, Bus=%hu, Id=%hu) [%s]"},
     {STRING_NEWPARTITION,
     "\214\222 \204\231\203\207 \204\226\211\207\216 \204\230\226\211 \204\220\227\232\204\204 \232\211\220\213\232"},
     {STRING_UNPSPACE,
-    "    %sUnpartitioned space%s            %6lu %s"},
+    "Unpartitioned space"},
     {STRING_MAXSIZE,
     "\216\"\201 (\216\227\221. ul% \216\"\201)"},
     {STRING_EXTENDED_PARTITION,

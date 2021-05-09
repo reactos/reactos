@@ -1542,11 +1542,8 @@ SetSystemLocalTime(HWND hwnd, PSETUPDATA SetupData)
 
 
 static VOID
-UpdateLocalSystemTime(HWND hwnd)
+UpdateLocalSystemTime(HWND hwnd, SYSTEMTIME LocalTime)
 {
-    SYSTEMTIME LocalTime;
-
-    GetLocalTime(&LocalTime);
     DateTime_SetSystemtime(GetDlgItem(hwnd, IDC_DATEPICKER), GDT_VALID, &LocalTime);
     DateTime_SetSystemtime(GetDlgItem(hwnd, IDC_TIMEPICKER), GDT_VALID, &LocalTime);
 }
@@ -1625,25 +1622,43 @@ DateTimePageDlgProc(HWND hwndDlg,
         }
 
         case WM_TIMER:
-            UpdateLocalSystemTime(hwndDlg);
+        {
+            SYSTEMTIME LocalTime;
+
+            GetLocalTime(&LocalTime);
+            UpdateLocalSystemTime(hwndDlg, LocalTime);
+
+            // Reset timeout.
+            SetTimer(hwndDlg, 1, 1000 - LocalTime.wMilliseconds, NULL);
             break;
+        }
 
         case WM_NOTIFY:
             switch (((LPNMHDR)lParam)->code)
             {
                 case PSN_SETACTIVE:
+                {
+                    SYSTEMTIME LocalTime;
+
+                    GetLocalTime(&LocalTime);
+                    UpdateLocalSystemTime(hwndDlg, LocalTime);
+
                     /* Enable the Back and Next buttons */
                     PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_BACK | PSWIZB_NEXT);
+
                     if (SetupData->UnattendSetup && WriteDateTimeSettings(hwndDlg, SetupData))
                     {
                         SetWindowLongPtr(hwndDlg, DWLP_MSGRESULT, SetupData->uFirstNetworkWizardPage);
                         return TRUE;
                     }
-                    SetTimer(hwndDlg, 1, 1000, NULL);
+
+                    SetTimer(hwndDlg, 1, 1000 - LocalTime.wMilliseconds, NULL);
                     break;
+                }
 
                 case PSN_KILLACTIVE:
                 case DTN_DATETIMECHANGE:
+                    // NB: Not re-set until changing page (PSN_SETACTIVE).
                     KillTimer(hwndDlg, 1);
                     break;
 

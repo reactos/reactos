@@ -38,6 +38,7 @@
 #include "resource.h"
 
 #include "ACLCustomMRU.h"
+#include "aclhistory.h"
 #include "aclistisf.h"
 #include "aclmulti.h"
 #include "addressband.h"
@@ -54,9 +55,11 @@
 #include "commonbrowser.h"
 #include "globalfoldersettings.h"
 #include "regtreeoptions.h"
+#include "CShellTaskScheduler.h"
 #include "CTaskbarList.h"
 #include "explorerband.h"
 #include "CProgressDialog.h"
+#include "CUserAssist.h"
 #include "browseui.h"
 #include <stdio.h>
 

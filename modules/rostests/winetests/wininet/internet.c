@@ -25,6 +25,7 @@
 #include "winbase.h"
 #include "winuser.h"
 #include "wininet.h"
+#include "winineti.h"
 #include "winerror.h"
 #include "winreg.h"
 
@@ -376,7 +377,6 @@ static void test_complicated_cookie(void)
   BOOL ret;
 
   CHAR buffer[1024];
-  CHAR user[256];
   WCHAR wbuf[1024];
 
   static const WCHAR testing_example_comW[] =
@@ -510,7 +510,7 @@ static void test_complicated_cookie(void)
   len = 1024;
   ret = InternetGetCookieA("http://testing.example.com/bar/foo", NULL, buffer, &len);
   ok(ret == TRUE,"InternetGetCookie failed\n");
-  ok(len == 24, "len = %u\n", 24);
+  ok(len == 24, "len = %u\n", len);
   ok(strstr(buffer,"A=B")!=NULL,"A=B missing\n");
   ok(strstr(buffer,"C=D")!=NULL,"C=D missing\n");
   ok(strstr(buffer,"E=F")!=NULL,"E=F missing\n");
@@ -524,30 +524,31 @@ static void test_complicated_cookie(void)
   len = 1024;
   ret = InternetGetCookieA("http://testing.example.com/bar/foo", "A", buffer, &len);
   ok(ret == TRUE,"InternetGetCookie failed\n");
-  ok(len == 24, "len = %u\n", 24);
+  ok(len == 24, "len = %u\n", len);
 
   /* test persistent cookies */
   ret = InternetSetCookieA("http://testing.example.com", NULL, "A=B; expires=Fri, 01-Jan-2038 00:00:00 GMT");
   ok(ret, "InternetSetCookie failed with error %d\n", GetLastError());
 
-  len = sizeof(user);
-  ret = GetUserNameA(user, &len);
-  ok(ret, "GetUserName failed with error %d\n", GetLastError());
-  for(; len>0; len--)
-      user[len-1] = tolower(user[len-1]);
+  /* test invalid expires parameter */
+  ret = InternetSetCookieA("http://testing.example.com", NULL, "Q=R; expires=");
+  ok(ret, "InternetSetCookie failed %#x.\n", GetLastError());
+  len = 1024;
+  memset(buffer, 0xac, sizeof(buffer));
+  ret = InternetGetCookieA("http://testing.example.com/", NULL, buffer, &len);
+  ok(ret, "InternetGetCookie failed %#x.\n", GetLastError());
+  ok(len == 29, "got len %u.\n", len);
+  ok(!!strstr(buffer, "Q=R"), "cookie is not present.\n");
 
-  sprintf(buffer, "Cookie:%s@testing.example.com/", user);
-  ret = GetUrlCacheEntryInfoA(buffer, NULL, &len);
-  ok(!ret, "GetUrlCacheEntryInfo succeeded\n");
-  ok(GetLastError() == ERROR_INSUFFICIENT_BUFFER, "GetLastError() = %d\n", GetLastError());
+  len = sizeof(buffer);
+  ret = InternetGetCookieA("http://testing.example.com/foobar", NULL, buffer, &len);
+  ok(ret, "got error %#x\n", GetLastError());
+  ok(len == 29, "got len %u\n", len);
+  ok(!!strstr(buffer, "A=B"), "cookie is not present\n");
 
   /* remove persistent cookie */
   ret = InternetSetCookieA("http://testing.example.com", NULL, "A=B");
   ok(ret, "InternetSetCookie failed with error %d\n", GetLastError());
-
-  ret = GetUrlCacheEntryInfoA(buffer, NULL, &len);
-  ok(!ret, "GetUrlCacheEntryInfo succeeded\n");
-  ok(GetLastError() == ERROR_FILE_NOT_FOUND, "GetLastError() = %d\n", GetLastError());
 
   /* try setting cookie for different domain */
   ret = InternetSetCookieA("http://www.aaa.example.com/bar",NULL,"E=F; domain=different.com");
@@ -1469,7 +1470,7 @@ static void test_Option_PerConnectionOptionA(void)
 static void test_InternetErrorDlg(void)
 {
     HINTERNET ses, con, req;
-    DWORD res, flags;
+    DWORD res;
     HWND hwnd;
     ULONG i;
     static const struct {
@@ -1496,12 +1497,9 @@ static void test_InternetErrorDlg(void)
         { ERROR_INTERNET_UNABLE_TO_DOWNLOAD_SCRIPT, ERROR_CANCELLED, FLAG_TODO },
         { ERROR_HTTP_REDIRECT_NEEDS_CONFIRMATION, ERROR_CANCELLED, FLAG_TODO },
         { ERROR_INTERNET_SEC_CERT_REVOKED       , ERROR_CANCELLED, 0 },
-        { 0, ERROR_NOT_SUPPORTED }
     };
 
-    flags = 0;
-
-    res = InternetErrorDlg(NULL, NULL, 12055, flags, NULL);
+    res = InternetErrorDlg(NULL, NULL, ERROR_INTERNET_SEC_CERT_ERRORS, 0, NULL);
     ok(res == ERROR_INVALID_HANDLE, "Got %d\n", res);
 
     ses = InternetOpenA(NULL, INTERNET_OPEN_TYPE_DIRECT, NULL, NULL, 0);
@@ -1511,30 +1509,24 @@ static void test_InternetErrorDlg(void)
     req = HttpOpenRequestA(con, "GET", "/", NULL, NULL, NULL, 0, 0);
     ok(req != 0, "HttpOpenRequest failed: 0x%08x\n", GetLastError());
 
-    /* NULL hwnd and FLAGS_ERROR_UI_FLAGS_NO_UI not set */
-    for(i = INTERNET_ERROR_BASE; i < INTERNET_ERROR_LAST; i++)
-    {
-        res = InternetErrorDlg(NULL, req, i, flags, NULL);
-        ok(res == ERROR_INVALID_HANDLE, "Got %d (%d)\n", res, i);
-    }
-
     hwnd = GetDesktopWindow();
     ok(hwnd != NULL, "GetDesktopWindow failed (%d)\n", GetLastError());
 
-    flags = FLAGS_ERROR_UI_FLAGS_NO_UI;
     for(i = INTERNET_ERROR_BASE; i < INTERNET_ERROR_LAST; i++)
     {
-        DWORD expected, test_flags, j;
+        DWORD expected = ERROR_NOT_SUPPORTED, test_flags = 0, j;
 
-        for(j = 0; no_ui_res[j].error != 0; ++j)
-            if(no_ui_res[j].error == i)
-                break;
-
-        test_flags = no_ui_res[j].test_flags;
-        expected = no_ui_res[j].res;
+        for (j = 0; j < ARRAY_SIZE(no_ui_res); ++j)
+        {
+            if (no_ui_res[j].error == i)
+            {
+                test_flags = no_ui_res[j].test_flags;
+                expected = no_ui_res[j].res;
+            }
+        }
 
         /* Try an invalid request handle */
-        res = InternetErrorDlg(hwnd, (HANDLE)0xdeadbeef, i, flags, NULL);
+        res = InternetErrorDlg(hwnd, (HANDLE)0xdeadbeef, i, FLAGS_ERROR_UI_FLAGS_NO_UI, NULL);
         if(res == ERROR_CALL_NOT_IMPLEMENTED)
         {
             ok(test_flags & FLAG_UNIMPL, "%i is unexpectedly unimplemented.\n", i);
@@ -1549,8 +1541,10 @@ static void test_InternetErrorDlg(void)
 
         if(i == ERROR_INTERNET_SEC_CERT_REVOKED)
             continue; /* Interactive (XP, Win7) */
+        if (i == ERROR_INTERNET_PROXY_ALERT)
+            continue; /* Interactive (Win10 1607+) */
 
-        res = InternetErrorDlg(hwnd, req, i, flags, NULL);
+        res = InternetErrorDlg(hwnd, req, i, FLAGS_ERROR_UI_FLAGS_NO_UI, NULL);
 
         /* Handle some special cases */
         switch(i)
@@ -1562,13 +1556,8 @@ static void test_InternetErrorDlg(void)
                 expected = ERROR_CANCELLED;
             break;
         case ERROR_INTERNET_FORTEZZA_LOGIN_NEEDED:
-            if(res != expected)
-            {
-                /* Windows XP, W2K3 */
-                ok(res == NTE_PROV_TYPE_NOT_DEF, "Got %d\n", res);
-                win_skip("Skipping some tests for %d\n", i);
-                continue;
-            }
+            if (res == NTE_PROV_TYPE_NOT_DEF) /* XP, 2003 */
+                expected = NTE_PROV_TYPE_NOT_DEF;
             break;
         case ERROR_INTERNET_CHG_POST_IS_NON_SECURE:
             if(res == ERROR_SUCCESS) /* win10 returns ERROR_SUCCESS */
@@ -1577,11 +1566,14 @@ static void test_InternetErrorDlg(void)
         default: break;
         }
 
+        if (expected == ERROR_NOT_SUPPORTED && res == ERROR_CANCELLED) /* Win10 1607+ */
+            expected = ERROR_CANCELLED;
+
         todo_wine_if(test_flags & FLAG_TODO)
             ok(res == expected, "Got %d, expected %d (%d)\n", res, expected, i);
 
         /* Same thing with NULL hwnd */
-        res = InternetErrorDlg(NULL, req, i, flags, NULL);
+        res = InternetErrorDlg(NULL, req, i, FLAGS_ERROR_UI_FLAGS_NO_UI, NULL);
         todo_wine_if(test_flags & FLAG_TODO)
             ok(res == expected, "Got %d, expected %d (%d)\n", res, expected, i);
 
@@ -1590,7 +1582,7 @@ static void test_InternetErrorDlg(void)
         if(test_flags & FLAG_NEEDREQ)
             expected = ERROR_INVALID_PARAMETER;
 
-        res = InternetErrorDlg(hwnd, NULL, i, flags, NULL);
+        res = InternetErrorDlg(hwnd, NULL, i, FLAGS_ERROR_UI_FLAGS_NO_UI, NULL);
         todo_wine_if( test_flags & FLAG_TODO || i == ERROR_INTERNET_INCORRECT_PASSWORD)
             ok(res == expected, "Got %d, expected %d (%d)\n", res, expected, i);
     }

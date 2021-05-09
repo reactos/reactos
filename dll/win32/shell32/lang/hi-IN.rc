@@ -107,9 +107,8 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "", IDC_BROWSE_FOR_FOLDER_TITLE, 10, 8, 198, 24
     LTEXT "", IDC_BROWSE_FOR_FOLDER_STATUS, 10, 25, 198, 12
-    LTEXT "फ़ोल्डर:", IDC_BROWSE_FOR_FOLDER_FOLDER, 10, 152, 40, 12
-    CONTROL "", IDC_BROWSE_FOR_FOLDER_TREEVIEW, "SysTreeView32", TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_EDITLABELS | WS_BORDER | WS_TABSTOP, 12, 38, 194, 105
-    EDITTEXT IDC_BROWSE_FOR_FOLDER_FOLDER_TEXT, 46, 150, 160, 14, ES_AUTOHSCROLL | WS_BORDER | WS_GROUP | WS_TABSTOP
+    EDITTEXT IDC_BROWSE_FOR_FOLDER_FOLDER_TEXT, 12, 38, 194, 14, ES_AUTOHSCROLL | WS_GROUP
+    CONTROL "", IDC_BROWSE_FOR_FOLDER_TREEVIEW, "SysTreeView32", TVS_SHOWSELALWAYS | TVS_EDITLABELS | TVS_LINESATROOT | TVS_HASLINES | TVS_HASBUTTONS | WS_BORDER | WS_TABSTOP, 12, 58, 194, 105
     PUSHBUTTON "नया फ़ोल्डर &बनाओ", IDC_BROWSE_FOR_FOLDER_NEW_FOLDER, 12, 174, 77, 14, WS_GROUP | WS_TABSTOP
     DEFPUSHBUTTON "ओके", IDOK, 102, 174, 50, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
     PUSHBUTTON "रद्द करें", IDCANCEL, 156, 174, 50, 14, WS_GROUP | WS_TABSTOP
@@ -140,7 +139,7 @@ BEGIN
     LTEXT COPYRIGHT_YEAR, IDC_STATIC, 88, 75, 17, 10
     LTEXT " रिऐक्ट ओएस टीम\0", IDC_STATIC, 105, 75, 53, 10
     LTEXT "", IDC_ABOUT_OTHERSTUFF, 35, 90, 180, 20
-    LTEXT "यह रिऐक्ट ओएस वर्ज़न पंजीकृत है:", IDC_STATIC, 35, 115, 180, 10
+    LTEXT "यह रिऐक्ट ओएस वर्ज़न पंजीकृत है:", IDC_ABOUT_REG_TO, 35, 115, 180, 10
     LTEXT "", IDC_ABOUT_REG_USERNAME, 45, 125, 180, 10
     LTEXT "", IDC_ABOUT_REG_ORGNAME, 45, 135, 180, 10
     LTEXT "", IDC_STATIC, 35, 147, 235, 1, SS_ETCHEDHORZ
@@ -493,6 +492,20 @@ BEGIN
     PUSHBUTTON "रद्द करें", IDCANCEL, 99, 38, 43, 14
 END
 
+IDD_LOG_OFF_FANCY DIALOGEX 0, 0, 208, 122
+STYLE NOT WS_VISIBLE | DS_CENTER | DS_SHELLFONT | WS_BORDER | WS_POPUP
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL IDB_DLG_BG, IDC_STATIC, "STATIC", SS_BITMAP | SS_REALSIZECONTROL, 0, 0, 208, 122
+    CONTROL IDB_REACTOS_FLAG, IDC_STATIC, "STATIC", SS_BITMAP, 176, 1, 32, 26
+    PUSHBUTTON "&Switch User", IDC_SWITCH_USER_BUTTON, 55, 46, 22, 20, BS_OWNERDRAW | WS_DISABLED | WS_GROUP
+    PUSHBUTTON "&लॉग आफ़", IDC_LOG_OFF_BUTTON, 132, 46, 22, 20, BS_OWNERDRAW
+    PUSHBUTTON "रद्द करें", IDCANCEL, 162, 103, 40, 12, WS_GROUP | BS_FLAT
+    LTEXT "लॉग ऑफ़ रिऐक्ट ओएस", IDC_LOG_OFF_TEXT_STATIC, 4, 7, 130, 19
+    CTEXT "Switch User", IDC_SWITCH_USER_STATIC, 41, 70, 51, 11
+    CTEXT "लॉग आफ़", IDC_LOG_OFF_STATIC, 118, 70, 51, 11
+END
+
 IDD_DISCONNECT DIALOGEX 0, 0, 188, 60
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION
 CAPTION "डिस्कनेक्ट रिऐक्ट ओएस"
@@ -821,6 +834,10 @@ BEGIN
     IDS_SHUTDOWN_TITLE "शटडाउन"
     IDS_SHUTDOWN_PROMPT "क्या आप शटडाउन करना चाहते हैं?"
 
+    /* Warning format system drive dialog strings */
+    IDS_NO_FORMAT_TITLE "Cannot format this volume"
+    IDS_NO_FORMAT "This volume cannot be formatted! It contains important system files in order for ReactOS to run."
+
     /* Run File dialog */
     IDS_RUNDLG_ERROR "रन फ़ाइल डायलॉग बॉक्स डिस्प्ले करने में असमर्थ (आंतरिक त्रुटि)"
     IDS_RUNDLG_BROWSE_ERROR "ब्राउज़ डायलॉग बॉक्स डिस्प्ले करने में असमर्थ (आंतरिक त्रुटि)"
@@ -1001,4 +1018,12 @@ BEGIN
     IDS_MOVETOTITLE "Select the place where you want to move '%s' to. Then click the Move button."
     IDS_MOVEITEMS "Move Items"
     IDS_MOVEBUTTON "Move"
+
+    IDS_SYSTEMFOLDER "System Folder"
+
+    /* For IDD_LOG_OFF_FANCY */
+    IDS_LOG_OFF_DESC "Closes your programs and ends your ReactOS session."
+    IDS_SWITCH_USER_DESC "Lets another user log on while your programs and files remain open.\r\n\r\n(You can also switch users by pressing the Windows logo key + L.)"
+    IDS_LOG_OFF_TITLE "लॉग आफ़"
+    IDS_SWITCH_USER_TITLE "Switch User"
 END

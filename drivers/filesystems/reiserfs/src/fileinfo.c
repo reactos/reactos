@@ -3,7 +3,7 @@
  * PROJECT:          ReiserFs file system driver for Windows NT/2000/XP/Vista.
  * FILE:             fileinfo.c
  * PURPOSE:          
- * PROGRAMMER:       Mark Piper, Matt Wu, Bo Brantén.
+ * PROGRAMMER:       Mark Piper, Matt Wu, Bo BrantÃ©n.
  * HOMEPAGE:         
  * UPDATE HISTORY: 
  */
@@ -140,6 +140,8 @@ RfsdQueryInformation (IN PRFSD_IRP_CONTEXT IrpContext)
                 }
                 
                 FileBasicInformation = (PFILE_BASIC_INFORMATION) Buffer;
+
+                RtlZeroMemory(FileBasicInformation, sizeof(FILE_BASIC_INFORMATION));
                 
                 FileBasicInformation->CreationTime = RfsdSysTime(Fcb->Inode->i_ctime);
                 

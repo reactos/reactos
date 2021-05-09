@@ -514,22 +514,21 @@ CSR_API(BaseSrvDefineDosDevice)
     PWSTR InterPtr;
     BOOLEAN RemoveFound;
 
-#if 0
-    /* FIXME: Check why it fails.... */
     if (!CsrValidateMessageBuffer(ApiMessage,
-                                  (PVOID*)&DefineDosDeviceRequest->DeviceName,
+                                  (PVOID*)&DefineDosDeviceRequest->DeviceName.Buffer,
                                   DefineDosDeviceRequest->DeviceName.Length,
-                                  1) ||
+                                  sizeof(BYTE)) ||
         (DefineDosDeviceRequest->DeviceName.Length & 1) != 0 ||
         !CsrValidateMessageBuffer(ApiMessage,
-                                  (PVOID*)&DefineDosDeviceRequest->TargetPath,
-                                  (DefineDosDeviceRequest->TargetPath.Length != 0 ? sizeof(UNICODE_NULL) : 0) + DefineDosDeviceRequest->TargetPath.Length,
-                                  1) ||
+                                  (PVOID*)&DefineDosDeviceRequest->TargetPath.Buffer,
+                                  DefineDosDeviceRequest->TargetPath.Length +
+                                    (DefineDosDeviceRequest->TargetPath.Length != 0
+                                        ? sizeof(UNICODE_NULL) : 0),
+                                  sizeof(BYTE)) ||
         (DefineDosDeviceRequest->TargetPath.Length & 1) != 0)
     {
         return STATUS_INVALID_PARAMETER;
     }
-#endif
 
     DPRINT("BaseSrvDefineDosDevice entered, Flags:%d, DeviceName:%wZ (%d), TargetPath:%wZ (%d)\n",
            DefineDosDeviceRequest->Flags,

@@ -7,11 +7,8 @@ if(SEPARATE_DBG)
 endif()
 
 if(MSVC)
-    # We don't need hotpatching
-    replace_compile_flags("/hotpatch" " ")
-
     # Explicitly use string pooling
-    add_compile_flags("/GF")
+    add_compile_options("/GF")
 endif()
 
 spec2def(freeldr_pe.exe freeldr.spec)
@@ -228,6 +225,10 @@ if(NOT MSVC AND ARCH STREQUAL "i386" AND SARCH STREQUAL "xbox")
   # Prevent a warning when doing a memcmp with address 0
   set_source_files_properties(arch/i386/xbox/xboxmem.c PROPERTIES COMPILE_FLAGS "-Wno-nonnull")
 endif()
+if(ARCH STREQUAL "amd64" AND NOT MSVC)
+    # Prevent using SSE (not support in freeldr)
+    target_compile_options(freeldr_common PUBLIC -mno-sse)
+endif()
 
 set(PCH_SOURCE
     ${FREELDR_BOOTLIB_SOURCE}
@@ -254,6 +255,7 @@ list(APPEND FREELDR_BASE_SOURCE
                      ## otherwise we get linking errors with Rtl**Bitmap** APIs.
                      ## Do not happen on MSVC builds however...
     ntldr/inffile.c
+    ntldr/ntldropts.c
     lib/rtl/libsupp.c)
 
 if(ARCH STREQUAL "i386")
@@ -280,16 +282,20 @@ if(MSVC)
         add_target_link_flags(freeldr_pe "/ignore:4078 /ignore:4254 /DRIVER")
         add_target_link_flags(freeldr_pe_dbg "/ignore:4078 /ignore:4254 /DRIVER")
     else()
-        add_target_link_flags(freeldr_pe "/ignore:4078 /ignore:4254 /DRIVER /FIXED /FILEALIGN:0x200 /ALIGN:0x200")
+        target_link_options(freeldr_pe PRIVATE /ignore:4078 /ignore:4254 /DYNAMICBASE:NO /FIXED /FILEALIGN:512 /ALIGN:512)
         add_linker_script(freeldr_pe freeldr_i386.msvc.lds)
-        add_target_link_flags(freeldr_pe_dbg "/ignore:4078 /ignore:4254 /DRIVER /FIXED /FILEALIGN:0x200 /ALIGN:0x200")
+        target_link_options(freeldr_pe_dbg PRIVATE /ignore:4078 /ignore:4254 /DYNAMICBASE:NO /FIXED /FILEALIGN:512 /ALIGN:512)
         add_linker_script(freeldr_pe_dbg freeldr_i386.msvc.lds)
     endif()
+    # We don't need hotpatching
+    remove_target_compile_option(freeldr_pe "/hotpatch")
+    remove_target_compile_option(freeldr_pe_dbg "/hotpatch")
+    remove_target_compile_option(freeldr_common "/hotpatch")
 else()
     add_target_link_flags(freeldr_pe "-Wl,--strip-all,--exclude-all-symbols,--file-alignment,0x200,--section-alignment,0x200")
-    add_linker_script(freeldr_pe freeldr_i386.lds)
+    add_linker_script(freeldr_pe freeldr_gcc.lds)
     add_target_link_flags(freeldr_pe_dbg "-Wl,--exclude-all-symbols,--file-alignment,0x200,--section-alignment,0x200")
-    add_linker_script(freeldr_pe_dbg freeldr_i386.lds)
+    add_linker_script(freeldr_pe_dbg freeldr_gcc.lds)
 endif()
 
 set_image_base(freeldr_pe 0x10000)
@@ -310,8 +316,8 @@ target_link_libraries(freeldr_pe_dbg freeldr_common cportlib cmlib rtl libcntpr)
 
 # dynamic analysis switches
 if(STACK_PROTECTOR)
-    target_link_libraries(freeldr_pe gcc_ssp)
-    target_link_libraries(freeldr_pe_dbg gcc_ssp)
+    target_sources(freeldr_pe PRIVATE $<TARGET_OBJECTS:gcc_ssp_nt>)
+    target_sources(freeldr_pe_dbg PRIVATE $<TARGET_OBJECTS:gcc_ssp_nt>)
 endif()
 
 if(RUNTIME_CHECKS)

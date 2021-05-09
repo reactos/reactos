@@ -59,7 +59,6 @@ extern PPALETTE appalSurfaceDefault[];
 #define  PALETTE_ShareUnlockPalette(ppal)  \
   GDIOBJ_vDereferenceObject(&ppal->BaseObject)
 
-INIT_FUNCTION
 NTSTATUS
 NTAPI
 InitPaletteImpl(VOID);

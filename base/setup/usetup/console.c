@@ -733,8 +733,11 @@ SetConsoleOutputCP(
     if (CabStatus != CAB_STATUS_SUCCESS)
     {
         DPRINT("CabinetLoadFile('%S', '%S') returned 0x%08x\n", FontFile, FontName, CabStatus);
+        if (ConsoleCabinetContext.Data)
+            RtlFreeHeap(ProcessHeap, 0, ConsoleCabinetContext.Data);
         return FALSE;
     }
+    ASSERT(ConsoleCabinetContext.Data);
 
     Status = NtDeviceIoControlFile(hConsoleOutput,
                                    NULL,
@@ -746,6 +749,9 @@ SetConsoleOutputCP(
                                    ConsoleCabinetContext.Size,
                                    NULL,
                                    0);
+
+    RtlFreeHeap(ProcessHeap, 0, ConsoleCabinetContext.Data);
+
     if (!NT_SUCCESS(Status))
           return FALSE;
 

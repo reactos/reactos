@@ -16,15 +16,6 @@ _FLOATOBJ_Equal(FLOATOBJ *pf1, FLOATOBJ *pf2)
 }
 #define FLOATOBJ_Equal _FLOATOBJ_Equal
 
-FORCEINLINE
-LONG
-_FLOATOBJ_GetLong(FLOATOBJ *pf)
-{
-    EFLOAT_S *pef = (EFLOAT_S*)pf;
-    return pef->lMant >> (32 - pef->lExp);
-}
-#define FLOATOBJ_GetLong _FLOATOBJ_GetLong
-
 /*!
  * \brief Converts a FLOATOBJ into a LONG by truncating the value to integer
  *
@@ -37,16 +28,22 @@ _FLOATOBJ_GetLong(FLOATOBJ *pf)
  */
 FORCEINLINE
 BOOL
-FASTCALL
 FLOATOBJ_bConvertToLong(FLOATOBJ *pf, PLONG pl)
 {
     EFLOAT_S *pef = (EFLOAT_S*)pf;
-    LONG lShift = 32 - pef->lExp;
-    if (lShift < 0)
+
+    if (pef->lExp > 32)
     {
         return FALSE;
     }
-    *pl = pef->lMant >> lShift;
+    
+    if (pef->lExp < 2)
+    {
+        *pl = 0;
+        return TRUE;
+    }
+    
+    *pl = EngMulDiv(pef->lMant, 1 << (pef->lExp - 2), 0x40000000);
     return TRUE;
 }
 
@@ -89,6 +86,7 @@ FLOATOBJ_Equal1(FLOATOBJ *pf)
 
 extern const FLOATOBJ gef0;
 extern const FLOATOBJ gef1;
+extern const FLOATOBJ gef2;
 extern const FLOATOBJ gef16;
 
 #define FLOATOBJ_0 {0x00000000, 0x00000000}
@@ -114,6 +112,7 @@ extern const FLOATOBJ gef16;
 
 static const FLOATOBJ gef0 = 0.;
 static const FLOATOBJ gef1 = 1.;
+static const FLOATOBJ gef2 = 2.;
 static const FLOATOBJ gef16 = 16.;
 
 #define FLOATOBJ_Set0(fo) *(fo) = 0;

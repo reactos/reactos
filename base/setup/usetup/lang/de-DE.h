@@ -1096,7 +1096,7 @@ static MUI_ENTRY deDEChangeSystemPartition[] =
     {
         6,
         19,
-        "die Partition ändern, die derzeit als aktiv markiert ist.",
+        "die Partition \204ndern, die derzeit als aktiv markiert ist.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1331,6 +1331,37 @@ static MUI_ENTRY deDEFormatPartitionEntries[] =
     }
 };
 
+static MUI_ENTRY deDECheckFSEntries[] =
+{
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        8,
+        "Die ausgew\204hlte Partition wird \201berpr\201ft.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        "Bitte warten...",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
 static MUI_ENTRY deDEInstallDirectoryEntries[] =
 {
     {
@@ -1483,6 +1514,30 @@ static MUI_ENTRY deDEBootLoaderEntries[] =
         0,
         0,
         "EINGABETASTE = Fortfahren   F3 = Abbrechen",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
+static MUI_ENTRY deDEBootLoaderInstallPageEntries[] =
+{
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        "Installing the bootloader onto the media, please wait...",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
         TEXT_ID_STATIC
     },
@@ -2106,6 +2161,10 @@ MUI_PAGE deDEPages[] =
         deDEFormatPartitionEntries
     },
     {
+        CHECK_FILE_SYSTEM_PAGE,
+        deDECheckFSEntries
+    },
+    {
         DELETE_PARTITION_PAGE,
         deDEDeletePartitionEntries
     },
@@ -2140,6 +2199,10 @@ MUI_PAGE deDEPages[] =
     {
         SUCCESS_PAGE,
         deDESuccessPageEntries
+    },
+    {
+        BOOT_LOADER_INSTALLATION_PAGE,
+        deDEBootLoaderInstallPageEntries
     },
     {
         BOOT_LOADER_FLOPPY_PAGE,
@@ -2189,8 +2252,6 @@ MUI_STRING deDEStrings[] =
     "Die neue Partition ist noch nicht formatiert."},
     {STRING_INSTALLONPART,
     "ReactOS wird auf dieser Partition installiert."},
-    {STRING_CHECKINGPART,
-    "Die ausgew\204hlte Partition wird \201berpr\201ft."},
     {STRING_CONTINUE,
     "EINGABETASTE = Fortsetzen"},
     {STRING_QUITCONTINUE,
@@ -2242,31 +2303,21 @@ MUI_STRING deDEStrings[] =
     {STRING_KEEPFORMAT,
     " Dateisystem beibehalten (Keine Ver\204nderungen) "},
     {STRING_HDINFOPARTCREATE_1,
-    "%I64u %s  Festplatte %lu  (Port=%hu, Bus=%hu, Id=%hu) auf %wZ [%s]."},
-    {STRING_HDINFOPARTCREATE_2,
-    "%I64u %s  Festplatte %lu  (Port=%hu, Bus=%hu, Id=%hu) [%s]."},
-    {STRING_HDDINFOUNK2,
-    "   %c%c  Typ 0x%02X    %I64u %s"},
+    "%s."},
     {STRING_HDINFOPARTDELETE_1,
-    "auf %I64u %s  Festplatte %lu  (Port=%hu, Bus=%hu, Id=%hu) auf %wZ [%s]."},
-    {STRING_HDINFOPARTDELETE_2,
-    "auf %I64u %s  Festplatte %lu  (Port=%hu, Bus=%hu, Id=%hu) [%s]."},
-    {STRING_HDINFOPARTZEROED_1,
-    "Festplatte %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ) [%s]."},
-    {STRING_HDDINFOUNK4,
-    "%c%c  Typ 0x%02X    %I64u %s"},
-    {STRING_HDINFOPARTEXISTS_1,
-    "auf Festplatte %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ) [%s]."},
-    {STRING_HDDINFOUNK5,
-    "%c%c %c %sTyp %-3u%s                      %6lu %s"},
-    {STRING_HDINFOPARTSELECT_1,
-    "%6lu %s  Festplatte %lu  (Port=%hu, Bus=%hu, Id=%hu) auf %wZ [%s]"},
-    {STRING_HDINFOPARTSELECT_2,
-    "%6lu %s  Festplatte %lu  (Port=%hu, Bus=%hu, Id=%hu) [%s]"},
+    "auf %s."},
+    {STRING_PARTTYPE,
+    "Typ 0x%02x"},
+    {STRING_HDDINFO_1,
+    // "Festplatte %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ) [%s]"
+    "%I64u %s Festplatte %lu (Port=%hu, Bus=%hu, Id=%hu) auf %wZ [%s]"},
+    {STRING_HDDINFO_2,
+    // "Festplatte %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu [%s]"
+    "%I64u %s Festplatte %lu (Port=%hu, Bus=%hu, Id=%hu) [%s]"},
     {STRING_NEWPARTITION,
     "Setup erstellte eine neue Partition auf"},
     {STRING_UNPSPACE,
-    "    %sUnpartitionierter Speicher%s     %6lu %s"},
+    "Unpartitionierter Speicher"},
     {STRING_MAXSIZE,
     "MB (max. %lu MB)"},
     {STRING_EXTENDED_PARTITION,

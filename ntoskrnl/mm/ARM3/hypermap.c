@@ -20,8 +20,6 @@
 PMMPTE MmFirstReservedMappingPte, MmLastReservedMappingPte;
 PMMPTE MiFirstReservedZeroingPte;
 MMPTE HyperTemplatePte;
-PEPROCESS HyperProcess;
-KIRQL HyperIrql;
 
 /* PRIVATE FUNCTIONS **********************************************************/
 

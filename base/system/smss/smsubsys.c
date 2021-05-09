@@ -656,8 +656,8 @@ SmpLoadSubSystemsForMuSession(IN PULONG MuSessionId,
         if ((NT_SUCCESS(Status2)) && (InitialCommandBuffer[0]))
         {
             /* Put the debugger string with the Winlogon string */
-            wcscat(InitialCommandBuffer, L" ");
-            wcscat(InitialCommandBuffer, InitialCommand->Buffer);
+            RtlStringCbCatW(InitialCommandBuffer, sizeof(InitialCommandBuffer), L" ");
+            RtlStringCbCatW(InitialCommandBuffer, sizeof(InitialCommandBuffer), InitialCommand->Buffer);
             RtlInitUnicodeString(InitialCommand, InitialCommandBuffer);
         }
     }

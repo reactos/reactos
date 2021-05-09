@@ -522,7 +522,7 @@ BOOLEAN Ext2ReadFileBig(PEXT2_FILE_INFO Ext2FileInfo, ULONGLONG BytesToRead, ULO
         BlockNumber = Ext2FileInfo->FileBlockList[BlockNumberIndex];
 
         //
-        // Now do the read and update BytesRead, BytesToRead, FilePointer, & Buffer
+        // Now do the read and update BytesRead & FilePointer
         //
         if (!Ext2ReadPartialBlock(Volume, BlockNumber, 0, (ULONG)BytesToRead, Buffer))
         {
@@ -533,8 +533,6 @@ BOOLEAN Ext2ReadFileBig(PEXT2_FILE_INFO Ext2FileInfo, ULONGLONG BytesToRead, ULO
             *BytesRead += BytesToRead;
         }
         Ext2FileInfo->FilePointer += BytesToRead;
-        BytesToRead -= BytesToRead;
-        Buffer = (PVOID)((ULONG_PTR)Buffer + (ULONG_PTR)BytesToRead);
     }
 
     return TRUE;

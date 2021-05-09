@@ -31,11 +31,14 @@ private:
     bool CreateCabinet();
     bool DisplayCabinet();
     bool ExtractFromCabinet();
+
     /* Event handlers */
-    virtual bool OnOverwrite(PCFFILE File, char* FileName);
-    virtual void OnExtract(PCFFILE File, char* FileName);
-    virtual void OnDiskChange(char* CabinetName, char* DiskLabel);
-    virtual void OnAdd(PCFFILE Entry, char* FileName);
+    virtual bool OnOverwrite(PCFFILE File, const char* FileName) override;
+    virtual void OnExtract(PCFFILE File, const char* FileName) override;
+    virtual void OnDiskChange(const char* CabinetName, const char* DiskLabel) override;
+    virtual void OnAdd(PCFFILE Entry, const char* FileName) override;
+    virtual void OnVerboseMessage(const char* Message) override;
+
     /* Configuration */
     bool ProcessAll;
     ULONG Mode;
@@ -44,6 +47,5 @@ private:
     bool Verbose;
 };
 
-extern CCABManager CABMgr;
 
 /* EOF */

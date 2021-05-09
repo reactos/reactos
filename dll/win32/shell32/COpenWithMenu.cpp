@@ -111,7 +111,7 @@ COpenWithList::~COpenWithList()
 BOOL COpenWithList::Load()
 {
     HKEY hKey;
-    WCHAR wszName[256], wszBuf[100];;
+    WCHAR wszName[256], wszBuf[100];
     DWORD i = 0, cchName, dwSize;
     SApp *pApp;
 
@@ -155,7 +155,7 @@ COpenWithList::SApp *COpenWithList::Add(LPCWSTR pwszPath)
 
     if (pApp)
     {
-        StringCbPrintfW(pApp->wszCmd, sizeof(pApp->wszCmd), L"\"%s\" %%1", pwszPath);
+        StringCbPrintfW(pApp->wszCmd, sizeof(pApp->wszCmd), L"\"%s\" \"%%1\"", pwszPath);
         SaveApp(pApp);
     }
 
@@ -882,7 +882,7 @@ VOID COpenWithDialog::Browse()
     ofn.lStructSize  = sizeof(OPENFILENAMEW);
     ofn.hInstance = shell32_hInstance;
     ofn.hwndOwner = m_hDialog;
-    ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
+    ofn.Flags = OFN_EXPLORER | OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
     ofn.nMaxFile = (sizeof(wszPath) / sizeof(WCHAR));
     ofn.lpstrFile = wszPath;
     ofn.lpstrInitialDir = L"%programfiles%";

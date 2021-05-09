@@ -3,19 +3,54 @@
 #include <windef.h>
 #include <atlstr.h>
 
-struct INSTALLED_INFO
+class CInstalledApplicationInfo
 {
-    HKEY hRootKey;
+public:
+    BOOL IsUserKey;
+    REGSAM WowKey;
     HKEY hSubKey;
+    BOOL bIsUpdate = FALSE;
+
     ATL::CStringW szKeyName;
 
-    BOOL GetApplicationString(LPCWSTR lpKeyName, ATL::CStringW& String);
+    CInstalledApplicationInfo(BOOL bIsUserKey, REGSAM RegWowKey, HKEY hKey);
+    BOOL GetApplicationRegString(LPCWSTR lpKeyName, ATL::CStringW& String);
+    BOOL GetApplicationRegDword(LPCWSTR lpKeyName, DWORD *lpValue);
+    BOOL RetrieveIcon(ATL::CStringW& IconLocation);
+    BOOL UninstallApplication(BOOL bModify);
+    LSTATUS RemoveFromRegistry();
+
+    ATL::CStringW szDisplayIcon;
+    ATL::CStringW szDisplayName;
+    ATL::CStringW szDisplayVersion;
+    ATL::CStringW szPublisher;
+    ATL::CStringW szRegOwner;
+    ATL::CStringW szProductID;
+    ATL::CStringW szHelpLink;
+    ATL::CStringW szHelpTelephone;
+    ATL::CStringW szReadme;
+    ATL::CStringW szContact;
+    ATL::CStringW szURLUpdateInfo;
+    ATL::CStringW szURLInfoAbout;
+    ATL::CStringW szComments;
+    ATL::CStringW szInstallDate;
+    ATL::CStringW szInstallLocation;
+    ATL::CStringW szInstallSource;
+    ATL::CStringW szUninstallString;
+    ATL::CStringW szModifyPath;
+
+    ~CInstalledApplicationInfo();
 };
 
-typedef INSTALLED_INFO *PINSTALLED_INFO;
-typedef BOOL(CALLBACK *APPENUMPROC)(INT ItemIndex, ATL::CStringW &Name, PINSTALLED_INFO Info, PVOID param);
+typedef BOOL(CALLBACK *APPENUMPROC)(CInstalledApplicationInfo * Info, PVOID param);
 
-BOOL EnumInstalledApplications(INT EnumType, BOOL IsUserKey, APPENUMPROC lpEnumProc, PVOID param);
-BOOL GetApplicationString(HKEY hKey, LPCWSTR lpKeyName, LPWSTR szString);
+class CInstalledApps
+{
+    ATL::CAtlList<CInstalledApplicationInfo *> m_InfoList;
 
-BOOL UninstallApplication(PINSTALLED_INFO ItemInfo, BOOL bModify);
+public:
+    BOOL Enum(INT EnumType, APPENUMPROC lpEnumProc, PVOID param);
+
+    VOID FreeCachedEntries();
+};
+

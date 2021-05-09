@@ -425,7 +425,7 @@ FdoStartDevice(
         switch (ResourceDescriptor->Type)
         {
             case CmResourceTypeBusNumber:
-                if (FoundBusNumber || ResourceDescriptor->u.BusNumber.Length != 1)
+                if (FoundBusNumber || ResourceDescriptor->u.BusNumber.Length < 1)
                     return STATUS_INVALID_PARAMETER;
 
                 /* Use this one instead */

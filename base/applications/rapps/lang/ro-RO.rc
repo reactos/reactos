@@ -4,7 +4,7 @@
  * PURPOSE: Romanian Translation for RAPPS
  * TRANSLATORS:
  *          Ștefan Fulea (stefan dot fulea at mail dot com)
- *          Bișoc George (fraizeraust99 at gmail dot com)
+ *          George Bișoc (george.bisoc@reactos.org)
  */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
@@ -150,6 +150,7 @@ BEGIN
     IDS_INFO_UNINSTALLSTR "\nComanda pentru dezinstalare: "
     IDS_INFO_MODIFYPATH "\nComanda pentru modificare: "
     IDS_INFO_INSTALLDATE "\nData de instalare: "
+    IDS_AINFO_PACKAGE_NAME "\nPackage Name: "
 END
 
 STRINGTABLE
@@ -219,6 +220,9 @@ BEGIN
     IDS_SELECTEDFORINST "Selectate pentru instalare"
     IDS_MISMATCH_CERT_INFO "Certificatul în uz este necunoscut:\nSubiect: %s\nEmitent: %s\nVreți să continuați oricum?"
     IDS_UNABLE_PATH "Incorrect path format."
+    IDS_APP_DISPLAY_DETAILS "details"
+    IDS_APP_DISPLAY_LIST "list"
+    IDS_APP_DISPLAY_TILE "tile"
 END
 
 STRINGTABLE
@@ -255,4 +259,16 @@ BEGIN
     IDS_DL_DIALOG_DB_DISP "Aplicații baza de date"
     IDS_DL_DIALOG_DB_DOWNLOAD_DISP "Actualizare baza de date…"
     IDS_DL_DIALOG_DB_UNOFFICIAL_DOWNLOAD_DISP "Updating Database… (Unofficial source)"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_CMD_USAGE "Usage: "
+    IDS_CMD_NEED_PACKAGE_NAME "Error: option %1 expects one or more package name.\n"
+    IDS_CMD_NEED_FILE_NAME "Error: option %1 expects a file name.\n"
+    IDS_CMD_NEED_PARAMS "Error: option %1 expects one or more parameters.\n"
+    IDS_CMD_INVALID_OPTION "Error: Unknown or invalid command line option specified.\n"
+    IDS_CMD_FIND_RESULT_FOR "Find result for %1:\n"
+    IDS_CMD_PACKAGE_NOT_FOUND "Failed to find package %1.\n"
+    IDS_CMD_PACKAGE_INFO "Information about package %1:\n"
 END

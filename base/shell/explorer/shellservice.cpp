@@ -115,17 +115,18 @@ HRESULT InitShellServices(HDPA * phdpa)
         goto cleanup;
     }
 
-    RegCloseKey(hkey);
-
     /* Initialize */
     DPA_EnumCallback(hdpa, InitializeAllCallback, &hr);
     if (FAILED_UNEXPECTEDLY(hr))
         goto cleanup;
 
+    RegCloseKey(hkey);
+
     *phdpa = hdpa;
     return count > 0 ? S_OK : S_FALSE;
 
 cleanup:
+    RegCloseKey(hkey);
     *phdpa = NULL;
     ShutdownShellServices(hdpa);
     return hr;

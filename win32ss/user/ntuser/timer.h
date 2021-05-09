@@ -32,7 +32,7 @@ typedef struct _TIMER
 
 extern PKTIMER MasterTimer;
 
-INIT_FUNCTION NTSTATUS NTAPI InitTimerImpl(VOID);
+NTSTATUS NTAPI InitTimerImpl(VOID);
 BOOL FASTCALL DestroyTimersForThread(PTHREADINFO pti);
 BOOL FASTCALL DestroyTimersForWindow(PTHREADINFO pti, PWND Window);
 BOOL FASTCALL IntKillTimer(PWND Window, UINT_PTR IDEvent, BOOL SystemTimer);

@@ -6,10 +6,6 @@ add_definitions(
     -DLIBXML_STATIC
     -DCOM_NO_WINDOWS_H)
 
-if(MSVC)
-    add_compile_flags("/FIwine/typeof.h /FImsvc.h")
-endif()
-
 include_directories(
     ${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine
     ${REACTOS_SOURCE_DIR}/sdk/lib/3rdparty/libwin-iconv)
@@ -49,14 +45,15 @@ list(APPEND SOURCE
     xmlparser.c
     xmlview.c)
 
+FLEX_TARGET(xslpattern_scanner xslpattern.l ${CMAKE_CURRENT_BINARY_DIR}/xslpattern.yy.c)
+BISON_TARGET(xslpattern_parser xslpattern.y ${CMAKE_CURRENT_BINARY_DIR}/xslpattern.tab.c COMPILE_FLAGS "-p xslpattern_")
+ADD_FLEX_BISON_DEPENDENCY(xslpattern_scanner xslpattern_parser)
+
 list(APPEND PCH_SKIP_SOURCE
     factory.c
     uuid.c
-    xslpattern.tab.c
-    xslpattern.yy.c)
-
-# xslpattern.tab.c/xslpattern.yy.c have been generated with relative file paths...
-set_source_files_properties(xslpattern.tab.c xslpattern.yy.c PROPERTIES COMPILE_FLAGS "-UREACTOS_SOURCE_DIR -DREACTOS_SOURCE_DIR=\"\\\".\\\"\"")
+    ${FLEX_xslpattern_scanner_OUTPUTS}
+    ${BISON_xslpattern_parser_OUTPUTS})
 
 list(APPEND msxml3_rc_deps
     ${CMAKE_CURRENT_SOURCE_DIR}/msxml3.manifest
@@ -76,6 +73,11 @@ add_library(msxml3 MODULE
 add_idl_headers(xmlparser_idlheader xmlparser.idl)
 set_module_type(msxml3 win32dll)
 target_link_libraries(msxml3 libxml2 iconv-static uuid wine zlib)
+
+if(MSVC)
+    target_compile_options(msxml3 PRIVATE /FIwine/typeof.h /FImsvc.h)
+endif()
+
 add_importlibs(msxml3 urlmon ws2_32 shlwapi oleaut32 ole32 user32 msvcrt kernel32 ntdll)
 add_dependencies(msxml3 xmlparser_idlheader stdole2) # msxml3_v1.tlb needs stdole2.tlb
 add_pch(msxml3 precomp.h "${PCH_SKIP_SOURCE}")

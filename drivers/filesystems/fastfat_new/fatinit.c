@@ -15,10 +15,6 @@ Abstract:
 
 #include "fatprocs.h"
 
-#ifdef __REACTOS__
-#define _Unreferenced_parameter_
-#endif
-
 DRIVER_INITIALIZE DriverEntry;
 
 NTSTATUS

@@ -26,7 +26,7 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     LTEXT "Αυτός ο οδηγός σας βοηθάει να δημιουργήσετε συντομεύσεις σε τοπικά προγράμματα ή προγράμματα δικτύου, αρχεία, φακέλους, υπολογιστές ή διευθύνσεις στο διαδίκτυο.", -1, 120, 15, 200, 30
     LTEXT "Εισάγετε την θέση του στοιχείου:", -1, 120, 50, 120, 10
-    EDITTEXT IDC_SHORTCUT_LOCATION, 120, 65, 150, 15, ES_LEFT
+    EDITTEXT IDC_SHORTCUT_LOCATION, 120, 65, 150, 15, ES_LEFT | ES_AUTOHSCROLL
     PUSHBUTTON "Αναζήτηση...", IDC_SHORTCUT_BROWSE, 272, 65, 55, 15, ES_LEFT
     LTEXT "Πατήστε 'Επόμενο' για να συνεχίσετε.", -1, 120, 97, 162, 10
 END
@@ -37,7 +37,7 @@ CAPTION "Επιλέξτε τίτλο για το πρόγραμμα"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     LTEXT "&Πληκτρολογήστε ένα όνομα για τη συντόμευση:", -1, 120, 15, 150, 10
-    EDITTEXT IDC_SHORTCUT_NAME, 120, 35, 150, 15, ES_LEFT
+    EDITTEXT IDC_SHORTCUT_NAME, 120, 35, 150, 15, ES_LEFT | ES_AUTOHSCROLL
     LTEXT "Πατήστε 'Τέλος' για να δημιουργήσετε τη συντόμευση.", -1, 118, 97, 178, 17
 END
 

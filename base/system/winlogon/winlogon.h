@@ -327,17 +327,17 @@ GetSetupType(VOID);
 BOOL
 RunSetup(VOID);
 
-/* shutdown.h*/
+/* shutdown.h */
 DWORD
 TerminateSystemShutdown(VOID);
 
 DWORD
 StartSystemShutdown(
-    PUNICODE_STRING lpMessage,
-    ULONG dwTimeout,
-    BOOLEAN bForceAppsClosed,
-    BOOLEAN bRebootAfterShutdown,
-    ULONG dwReason);
+    IN PUNICODE_STRING pMessage,
+    IN ULONG dwTimeout,
+    IN BOOLEAN bForceAppsClosed,
+    IN BOOLEAN bRebootAfterShutdown,
+    IN ULONG dwReason);
 
 /* winlogon.c */
 BOOL

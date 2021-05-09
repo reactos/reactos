@@ -26,7 +26,7 @@ DoStopService(_In_z_ LPWSTR ServiceName,
     DWORD WaitTime;
     DWORD Timeout;
     DWORD dwResult = ERROR_SUCCESS;
-    
+
     hSCManager = OpenSCManagerW(NULL,
                                 NULL,
                                 SC_MANAGER_CONNECT);
@@ -113,7 +113,7 @@ DoStopService(_In_z_ LPWSTR ServiceName,
     }
     else
     {
-        dwResult = GetLastError();    
+        dwResult = GetLastError();
     }
 
     CloseServiceHandle(hService);

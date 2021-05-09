@@ -1258,7 +1258,11 @@ Return Value:
                         InsertTailList(&diskData->FlushContext.CurrList, listEntry);
                     }
 
+#ifndef __REACTOS__
+                    // ReactOS hits this assert, because CurrIrp can already be freed at this point
+                    // and it's possible that NextIrp has the same pointer value
                     NT_ASSERT(diskData->FlushContext.CurrIrp != diskData->FlushContext.NextIrp);
+#endif
                     diskData->FlushContext.CurrIrp = diskData->FlushContext.NextIrp;
                     diskData->FlushContext.NextIrp = NULL;
 
@@ -1678,7 +1682,7 @@ Return Value:
     irpSp->MajorFunction       = IRP_MJ_SCSI;
     irpSp->Parameters.Scsi.Srb = srb;
 
-    IoSetCompletionRoutine(FlushContext->CurrIrp, DiskFlushComplete, (PVOID)SyncCacheStatus, TRUE, TRUE, TRUE);
+    IoSetCompletionRoutine(FlushContext->CurrIrp, DiskFlushComplete, (PVOID)(ULONG_PTR)SyncCacheStatus, TRUE, TRUE, TRUE);
 
     TracePrint((TRACE_LEVEL_VERBOSE, TRACE_FLAG_SCSI, "DiskFlushDispatch: sending srb flush on irp %p\n", FlushContext->CurrIrp));
 
@@ -1728,7 +1732,7 @@ Return Value:
 #ifdef _MSC_VER
     #pragma warning(suppress:4311) // pointer truncation from 'PVOID' to 'NTSTATUS'
 #endif
-    NTSTATUS SyncCacheStatus = (NTSTATUS) Context;
+    NTSTATUS SyncCacheStatus = (NTSTATUS)(ULONG_PTR)Context;
 
     TracePrint((TRACE_LEVEL_VERBOSE, TRACE_FLAG_GENERAL, "DiskFlushComplete: %p %p\n", Fdo, Irp));
 

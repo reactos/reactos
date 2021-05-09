@@ -23,6 +23,8 @@ IDI_APPUPD ICON "res/appupd.ico"
 IDI_CATEGORY ICON "res/cat.ico"
 IDI_UPDATE_DB ICON "res/updatedb.ico"
 IDI_CHECK_ALL ICON "res/select.ico"
+IDI_SELECTEDFORINST ICON "res/select.ico"
+IDI_BROKEN_IMAGE ICON "res/brokenimg.ico"
 
 /* Categories */
 IDI_CAT_AUDIO ICON "res/cats/audio.ico"
@@ -41,7 +43,6 @@ IDI_CAT_SCIENCE ICON "res/cats/science.ico"
 IDI_CAT_TOOLS ICON "res/cats/tools.ico"
 IDI_CAT_VIDEO ICON "res/cats/video.ico"
 IDI_CAT_THEMES ICON "res/cats/themes.ico"
-IDI_SELECTEDFORINST ICON "res/select.ico"
 
 /* Accelerators -- key bindings */
 HOTKEYS ACCELERATORS
@@ -84,6 +85,9 @@ HOTKEYS ACCELERATORS
 #endif
 #ifdef LANGUAGE_HE_IL
     #include "lang/he-IL.rc"
+#endif
+#ifdef LANGUAGE_HU_HU
+    #include "lang/hu-HU.rc"
 #endif
 #ifdef LANGUAGE_ID_ID
     #include "lang/id-ID.rc"

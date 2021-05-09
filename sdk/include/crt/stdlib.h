@@ -1193,7 +1193,7 @@ extern "C" {
   _putenv(
     _In_z_ const char *_EnvString);
 
-#if !defined(__GNUC__) && !defined(__clang__)
+#if !defined(__clang__)
 
   _Check_return_
   unsigned int
@@ -1229,7 +1229,7 @@ extern "C" {
     _In_ int _Shift);
 #endif
 
-#endif /* !defined(__GNUC__) && !defined(__clang__) */
+#endif /* !defined(__clang__) */
 
   _CRTIMP
   void
@@ -1440,9 +1440,7 @@ extern "C" {
 
   _Check_return_ __MINGW_EXTENSION lldiv_t __cdecl lldiv(_In_ long long, _In_ long long);
 
-#ifndef _MSC_VER
   __MINGW_EXTENSION __CRT_INLINE long long __cdecl llabs(_In_ long long _j) { return (_j >= 0 ? _j : -_j); }
-#endif
 
   __MINGW_EXTENSION long long  __cdecl strtoll(const char* __restrict__, char** __restrict, int);
   __MINGW_EXTENSION unsigned long long  __cdecl strtoull(const char* __restrict__, char** __restrict__, int);

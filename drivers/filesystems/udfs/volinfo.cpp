@@ -197,6 +197,9 @@ UDFCommonQueryVolInfo(
             try_return(RC);
         }
 #endif //UDF_ENABLE_SECURITY
+
+        RtlZeroMemory(Irp->AssociatedIrp.SystemBuffer, Length);
+
         switch (IrpSp->Parameters.QueryVolume.FsInformationClass) {
     
         case FileFsVolumeInformation:

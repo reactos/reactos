@@ -124,7 +124,7 @@
 #define __drv_ret(annotes)
 #define __drv_sameIRQL
 #define __drv_savesIRQL
-#define __drv_savesIRQLGlobal
+#define __drv_savesIRQLGlobal(kind,param)
 #define __drv_strictType(typename,mode)
 #define __drv_strictTypeMatch(mode)
 #define __drv_unit(p)
@@ -306,7 +306,7 @@ __ANNOTATION(SAL_callbackType(__In_impl_ __AuToQuOtE char *);)
 #define __drv_ret(annotes)
 #define __drv_sameIRQL
 #define __drv_savesIRQL
-#define __drv_savesIRQLGlobal
+#define __drv_savesIRQLGlobal(kind,param)
 #define __drv_setsIRQL(irql)
 #define __drv_strictType(typename,mode)
 #define __drv_strictTypeMatch(mode)

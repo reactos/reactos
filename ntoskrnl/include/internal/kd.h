@@ -6,7 +6,6 @@
 // Kernel Debugger Port Definition
 //
 struct _KD_DISPATCH_TABLE;
-extern CPPORT GdbPortInfo;
 
 BOOLEAN
 NTAPI
@@ -31,53 +30,10 @@ KdPortPutByteEx(
 /* SYMBOL ROUTINES **********************************************************/
 #ifdef __NTOSKRNL__
 
-#if defined(KDBG) || DBG
-
-#if defined(KDBG)
-typedef
-BOOLEAN
-(NTAPI *PKDBG_CLI_ROUTINE)(
-    IN PCHAR Command,
-    IN ULONG Argc,
-    IN PCH Argv[]);
-
-BOOLEAN
-NTAPI
-KdbRegisterCliCallback(
-    PVOID Callback,
-    BOOLEAN Deregister);
-#endif
-
-VOID
-KdbSymProcessSymbols(
-    IN PLDR_DATA_TABLE_ENTRY LdrEntry);
-
-
-BOOLEAN
-KdbSymPrintAddress(
-    IN PVOID Address,
-    IN PKTRAP_FRAME Context
-);
-
-NTSTATUS
-KdbSymGetAddressInformation(
-    IN PROSSYM_INFO  RosSymInfo,
-    IN ULONG_PTR  RelativeAddress,
-#ifdef __ROS_DWARF__
-    IN PROSSYM_LINEINFO RosSymLineInfo
-#else
-    OUT PULONG LineNumber  OPTIONAL,
-    OUT PCH FileName  OPTIONAL,
-    OUT PCH FunctionName  OPTIONAL
-#endif
-);
-#endif
-
 #ifdef KDBG
 # define KdbInit()                                  KdbpCliInit()
 # define KdbModuleLoaded(FILENAME)                  KdbpCliModuleLoaded(FILENAME)
 #else
-# define KdbEnterDebuggerException(ER, PM, C, TF, F)    kdHandleException
 # define KdbInit()                                      do { } while (0)
 # define KdbEnter()                                     do { } while (0)
 # define KdbModuleLoaded(X)                             do { } while (0)
@@ -104,18 +60,6 @@ VOID
 (NTAPI*PKDP_PRINT_ROUTINE)(
     PCHAR String,
     ULONG Length
-);
-
-typedef
-VOID
-(NTAPI*PKDP_PROMPT_ROUTINE)(PCH String);
-
-typedef
-KD_CONTINUE_TYPE
-(NTAPI*PKDP_EXCEPTION_ROUTINE)(
-    PEXCEPTION_RECORD ExceptionRecord,
-    PCONTEXT Context,
-    PKTRAP_FRAME TrapFrame
 );
 
 /* INIT ROUTINES *************************************************************/
@@ -153,19 +97,6 @@ KdpDebugLogInit(
     struct _KD_DISPATCH_TABLE *DispatchTable,
     ULONG BootPhase
 );
-
-VOID
-NTAPI
-KdpBochsInit(
-    struct _KD_DISPATCH_TABLE *DispatchTable,
-    ULONG BootPhase
-);
-
-VOID
-NTAPI
-KdpGdbStubInit(
-    struct _KD_DISPATCH_TABLE *DispatchTable,
-    ULONG BootPhase);
 
 VOID
 NTAPI
@@ -209,9 +140,8 @@ KdpSafeWriteMemory(
 #define KdScreen    0
 #define KdSerial    1
 #define KdFile      2
-#define KdBochs     3
-#define KdKdbg      4
-#define KdMax       5
+#define KdKdbg      3
+#define KdMax       4
 
 /* KD Private Debug Modes */
 typedef struct _KDP_DEBUG_MODE
@@ -224,11 +154,6 @@ typedef struct _KDP_DEBUG_MODE
             UCHAR Screen :1;
             UCHAR Serial :1;
             UCHAR File   :1;
-            UCHAR Bochs  :1;
-
-            /* Currently Supported Wrappers */
-            UCHAR Pice   :1;
-            UCHAR Gdb    :1;
         };
 
         /* Generic Value */
@@ -259,18 +184,10 @@ typedef struct _KD_DISPATCH_TABLE
     LIST_ENTRY KdProvidersList;
     PKDP_INIT_ROUTINE KdpInitRoutine;
     PKDP_PRINT_ROUTINE KdpPrintRoutine;
-    PKDP_PROMPT_ROUTINE KdpPromptRoutine;
-    PKDP_EXCEPTION_ROUTINE KdpExceptionRoutine;
 } KD_DISPATCH_TABLE, *PKD_DISPATCH_TABLE;
 
 /* The current Debugging Mode */
 extern KDP_DEBUG_MODE KdpDebugMode;
-
-/* The current Port IRQ */
-extern ULONG KdpPortIrq;
-
-/* The current Port */
-extern ULONG KdpPort;
 
 /* Port Information for the Serial Native Mode */
 extern ULONG  SerialPortNumber;
@@ -279,14 +196,8 @@ extern CPPORT SerialPortInfo;
 /* Init Functions for Native Providers */
 extern PKDP_INIT_ROUTINE InitRoutines[KdMax];
 
-/* Wrapper Init Function */
-extern PKDP_INIT_ROUTINE WrapperInitRoutine;
-
 /* Dispatch Tables for Native Providers */
 extern KD_DISPATCH_TABLE DispatchTable[KdMax];
-
-/* Dispatch Table for the Wrapper */
-extern KD_DISPATCH_TABLE WrapperTable;
 
 /* The KD Native Provider List */
 extern LIST_ENTRY KdProviders;

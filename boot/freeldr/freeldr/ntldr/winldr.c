@@ -8,6 +8,7 @@
 #include <freeldr.h>
 #include <ndk/ldrtypes.h>
 #include "winldr.h"
+#include "ntldropts.h"
 #include "registry.h"
 
 #include <debug.h>
@@ -22,7 +23,7 @@ extern BOOLEAN AcpiPresent;
 
 extern HEADLESS_LOADER_BLOCK LoaderRedirectionInformation;
 extern BOOLEAN WinLdrTerminalConnected;
-extern void WinLdrSetupEms(IN PCHAR BootOptions);
+extern VOID WinLdrSetupEms(IN PCSTR BootOptions);
 
 PLOADER_SYSTEM_BLOCK WinLdrSystemBlock;
 
@@ -497,12 +498,13 @@ LoadWindowsCore(IN USHORT OperatingSystemVersion,
                 IN OUT PLDR_DATA_TABLE_ENTRY* KernelDTE)
 {
     BOOLEAN Success;
-    PCSTR Options;
+    PCSTR Option;
+    ULONG OptionLength;
+    PLDR_DATA_TABLE_ENTRY HalDTE, KdComDTE = NULL;
     CHAR DirPath[MAX_PATH];
     CHAR HalFileName[MAX_PATH];
     CHAR KernelFileName[MAX_PATH];
     CHAR KdTransportDllName[MAX_PATH];
-    PLDR_DATA_TABLE_ENTRY HalDTE, KdComDTE = NULL;
 
     if (!KernelDTE) return FALSE;
 
@@ -520,45 +522,24 @@ LoadWindowsCore(IN USHORT OperatingSystemVersion,
     RtlStringCbCopyA(HalFileName   , sizeof(HalFileName)   , "hal.dll");
     RtlStringCbCopyA(KernelFileName, sizeof(KernelFileName), "ntoskrnl.exe");
 
-    /* Find any "/HAL=" or "/KERNEL=" switch in the boot options */
-    Options = BootOptions;
-    while (Options)
+    /* Check for any "/HAL=" or "/KERNEL=" override option */
+
+    Option = NtLdrGetOptionEx(BootOptions, "HAL=", &OptionLength);
+    if (Option && (OptionLength > 4))
     {
-        /* Skip possible initial whitespace */
-        Options += strspn(Options, " \t");
+        /* Retrieve the HAL file name */
+        Option += 4; OptionLength -= 4;
+        RtlStringCbCopyNA(HalFileName, sizeof(HalFileName), Option, OptionLength);
+        _strupr(HalFileName);
+    }
 
-        /* Check whether a new option starts and it is either HAL or KERNEL */
-        if (*Options != '/' || (++Options,
-            !(_strnicmp(Options, "HAL=",    4) == 0 ||
-              _strnicmp(Options, "KERNEL=", 7) == 0)) )
-        {
-            /* Search for another whitespace */
-            Options = strpbrk(Options, " \t");
-            continue;
-        }
-        else
-        {
-            size_t i = strcspn(Options, " \t"); /* Skip whitespace */
-            if (i == 0)
-            {
-                /* Use the default values */
-                break;
-            }
-
-            /* We have found either HAL or KERNEL options */
-            if (_strnicmp(Options, "HAL=", 4) == 0)
-            {
-                Options += 4; i -= 4;
-                RtlStringCbCopyNA(HalFileName, sizeof(HalFileName), Options, i);
-                _strupr(HalFileName);
-            }
-            else if (_strnicmp(Options, "KERNEL=", 7) == 0)
-            {
-                Options += 7; i -= 7;
-                RtlStringCbCopyNA(KernelFileName, sizeof(KernelFileName), Options, i);
-                _strupr(KernelFileName);
-            }
-        }
+    Option = NtLdrGetOptionEx(BootOptions, "KERNEL=", &OptionLength);
+    if (Option && (OptionLength > 7))
+    {
+        /* Retrieve the KERNEL file name */
+        Option += 7; OptionLength -= 7;
+        RtlStringCbCopyNA(KernelFileName, sizeof(KernelFileName), Option, OptionLength);
+        _strupr(KernelFileName);
     }
 
     TRACE("HAL file = '%s' ; Kernel file = '%s'\n", HalFileName, KernelFileName);
@@ -583,65 +564,36 @@ LoadWindowsCore(IN USHORT OperatingSystemVersion,
          * the name "kdcom.dll". [...]"
          */
 
-        /*
-         * This loop replaces a dumb call to strstr(..., "DEBUGPORT=").
-         * Indeed I want it to be case-insensitive to allow "debugport="
-         * or "DeBuGpOrT=" or... , and I don't want it to match malformed
-         * command-line options, such as:
-         *
-         * "...foo DEBUGPORT=xxx bar..."
-         * "...foo/DEBUGPORT=xxx bar..."
-         * "...foo/DEBUGPORT=bar..."
-         *
-         * i.e. the "DEBUGPORT=" switch must start with a slash and be separated
-         * from the rest by whitespace, unless it begins the command-line, e.g.:
-         *
-         * "/DEBUGPORT=COM1 foo...bar..."
-         * "...foo /DEBUGPORT=USB bar..."
-         * or:
-         * "...foo /DEBUGPORT= bar..."
-         * (in that case, we default the port to COM).
-         */
-        Options = BootOptions;
-        while (Options)
+        /* Check whether there is a DEBUGPORT option */
+        Option = NtLdrGetOptionEx(BootOptions, "DEBUGPORT=", &OptionLength);
+        if (Option && (OptionLength > 10))
         {
-            /* Skip possible initial whitespace */
-            Options += strspn(Options, " \t");
+            /* Move to the debug port name */
+            Option += 10; OptionLength -= 10;
+            ASSERT(OptionLength > 0);
 
-            /* Check whether a new option starts and it is the DEBUGPORT one */
-            if (*Options != '/' || _strnicmp(++Options, "DEBUGPORT=", 10) != 0)
-            {
-                /* Search for another whitespace */
-                Options = strpbrk(Options, " \t");
-                continue;
-            }
-            else
-            {
-                /* We found the DEBUGPORT option. Move to the port name. */
-                Options += 10;
-                break;
-            }
-        }
-
-        if (Options)
-        {
             /*
-             * We have found the DEBUGPORT option. Parse the port name.
-             * Format: /DEBUGPORT=COM1 or /DEBUGPORT=FILE:\Device\HarddiskX\PartitionY\debug.log or /DEBUGPORT=FOO
-             * If we only have /DEBUGPORT= (i.e. without any port name), defaults it to "COM".
+             * Parse the port name.
+             * Format: /DEBUGPORT=COM[1-9]
+             * or: /DEBUGPORT=FILE:\Device\HarddiskX\PartitionY\debug.log
+             * or: /DEBUGPORT=FOO
+             * If we only have /DEBUGPORT= (i.e. without any port name),
+             * defaults it to "COM".
              */
             RtlStringCbCopyA(KdTransportDllName, sizeof(KdTransportDllName), "KD");
-            if (_strnicmp(Options, "COM", 3) == 0 && '0' <= Options[3] && Options[3] <= '9')
+            if (_strnicmp(Option, "COM", 3) == 0 && '0' <= Option[3] && Option[3] <= '9')
             {
-                RtlStringCbCatNA(KdTransportDllName, sizeof(KdTransportDllName), Options, 3);
+                RtlStringCbCatNA(KdTransportDllName, sizeof(KdTransportDllName), Option, 3);
             }
             else
             {
-                size_t i = strcspn(Options, " \t:"); /* Skip valid separators: whitespace or colon */
-                if (i == 0)
+                /* Get the actual length of the debug port
+                 * until the next whitespace or colon. */
+                OptionLength = (ULONG)strcspn(Option, " \t:");
+                if (OptionLength == 0)
                     RtlStringCbCatA(KdTransportDllName, sizeof(KdTransportDllName), "COM");
                 else
-                    RtlStringCbCatNA(KdTransportDllName, sizeof(KdTransportDllName), Options, i);
+                    RtlStringCbCatNA(KdTransportDllName, sizeof(KdTransportDllName), Option, OptionLength);
             }
             RtlStringCbCatA(KdTransportDllName, sizeof(KdTransportDllName), ".DLL");
             _strupr(KdTransportDllName);
@@ -655,93 +607,80 @@ LoadWindowsCore(IN USHORT OperatingSystemVersion,
     }
 
     /* Parse the boot options */
-    Options = BootOptions;
     TRACE("LoadWindowsCore: BootOptions '%s'\n", BootOptions);
-    while (Options)
+
+    if (NtLdrGetOption(BootOptions, "3GB"))
     {
-        /* Skip possible initial whitespace */
-        Options += strspn(Options, " \t");
-
-        /* Check whether a new option starts */
-        if (*Options == '/')
-        {
-            Options++;
-
-            if (_strnicmp(Options, "3GB", 3) == 0)
-            {
-                /* We found the 3GB option. */
-                FIXME("LoadWindowsCore: 3GB - TRUE (not implemented)\n");
-                VirtualBias = TRUE;
-            }
-            if (_strnicmp(Options, "SOS", 3) == 0)
-            {
-                /* We found the SOS option. */
-                FIXME("LoadWindowsCore: SOS - TRUE (not implemented)\n");
-                SosEnabled = TRUE;
-            }
-            if (OperatingSystemVersion > _WIN32_WINNT_NT4)
-            {
-                if (_strnicmp(Options, "SAFEBOOT", 8) == 0)
-                {
-                    /* We found the SAFEBOOT option. */
-                    FIXME("LoadWindowsCore: SAFEBOOT - TRUE (not implemented)\n");
-                    SafeBoot = TRUE;
-                }
-                if (_strnicmp(Options, "PAE", 3) == 0)
-                {
-                    /* We found the PAE option. */
-                    FIXME("LoadWindowsCore: PAE - TRUE (not implemented)\n");
-                    PaeEnabled = TRUE;
-                }
-            }
-            if (OperatingSystemVersion > _WIN32_WINNT_WIN2K)
-            {
-                if (_strnicmp(Options, "NOPAE", 5) == 0)
-                {
-                    /* We found the NOPAE option. */
-                    FIXME("LoadWindowsCore: NOPAE - TRUE (not implemented)\n");
-                    PaeDisabled = TRUE;
-                }
-                if (_strnicmp(Options, "BOOTLOGO", 8) == 0)
-                {
-                    /* We found the BOOTLOGO option. */
-                    FIXME("LoadWindowsCore: BOOTLOGO - TRUE (not implemented)\n");
-                    BootLogo = TRUE;
-                }
-                if (!LoaderBlock->SetupLdrBlock)
-                {
-                    if (_strnicmp(Options, "NOEXECUTE=ALWAYSOFF", 19) == 0)
-                    {
-                        /* We found the NOEXECUTE=ALWAYSOFF option. */
-                        FIXME("LoadWindowsCore: NOEXECUTE=ALWAYSOFF - TRUE (not implemented)\n");
-                        NoexecuteDisabled = TRUE;
-                    }
-                    else if (_strnicmp(Options, "NOEXECUTE", 9) == 0)
-                    {
-                        /* We found the NOEXECUTE option. */
-                        FIXME("LoadWindowsCore: NOEXECUTE - TRUE (not implemented)\n");
-                        NoexecuteEnabled = TRUE;
-                    }
-
-                    if (_strnicmp(Options, "EXECUTE", 7) == 0)
-                    {
-                        /* We found the EXECUTE option. */
-                        FIXME("LoadWindowsCore: EXECUTE - TRUE (not implemented)\n");
-                        NoexecuteDisabled = TRUE;
-                    }
-                }
-            }
-        }
-
-        /* Search for another whitespace */
-        Options = strpbrk(Options, " \t");
+        /* We found the 3GB option. */
+        FIXME("LoadWindowsCore: 3GB - TRUE (not implemented)\n");
+        VirtualBias = TRUE;
+    }
+    if (NtLdrGetOption(BootOptions, "SOS"))
+    {
+        /* We found the SOS option. */
+        FIXME("LoadWindowsCore: SOS - TRUE (not implemented)\n");
+        SosEnabled = TRUE;
     }
 
-    if (SafeBoot)   
-    {   
-        PaeDisabled = TRUE;   
-        NoexecuteDisabled = TRUE;   
-    }   
+    if (OperatingSystemVersion > _WIN32_WINNT_NT4)
+    {
+        if (NtLdrGetOption(BootOptions, "SAFEBOOT"))
+        {
+            /* We found the SAFEBOOT option. */
+            FIXME("LoadWindowsCore: SAFEBOOT - TRUE (not implemented)\n");
+            SafeBoot = TRUE;
+        }
+        if (NtLdrGetOption(BootOptions, "PAE"))
+        {
+            /* We found the PAE option. */
+            FIXME("LoadWindowsCore: PAE - TRUE (not implemented)\n");
+            PaeEnabled = TRUE;
+        }
+    }
+
+    if (OperatingSystemVersion > _WIN32_WINNT_WIN2K)
+    {
+        if (NtLdrGetOption(BootOptions, "NOPAE"))
+        {
+            /* We found the NOPAE option. */
+            FIXME("LoadWindowsCore: NOPAE - TRUE (not implemented)\n");
+            PaeDisabled = TRUE;
+        }
+        if (NtLdrGetOption(BootOptions, "BOOTLOGO"))
+        {
+            /* We found the BOOTLOGO option. */
+            FIXME("LoadWindowsCore: BOOTLOGO - TRUE (not implemented)\n");
+            BootLogo = TRUE;
+        }
+
+        if (!LoaderBlock->SetupLdrBlock)
+        {
+            if (NtLdrGetOption(BootOptions, "EXECUTE"))
+            {
+                /* We found the EXECUTE option. */
+                FIXME("LoadWindowsCore: EXECUTE - TRUE (not implemented)\n");
+                NoexecuteDisabled = TRUE;
+            }
+            if (NtLdrGetOption(BootOptions, "NOEXECUTE=ALWAYSOFF"))
+            {
+                /* We found the NOEXECUTE=ALWAYSOFF option. */
+                FIXME("LoadWindowsCore: NOEXECUTE=ALWAYSOFF - TRUE (not implemented)\n");
+                NoexecuteDisabled = TRUE;
+            }
+            if (NtLdrGetOption(BootOptions, "NOEXECUTE"))
+            {
+                /* We found the NOEXECUTE option. */
+                FIXME("LoadWindowsCore: NOEXECUTE - TRUE (not implemented)\n");
+                NoexecuteEnabled = TRUE;
+            }
+        }
+    }
+
+    if (SafeBoot)
+    {
+        PaeDisabled = TRUE;
+        NoexecuteDisabled = TRUE;
+    }
 
     /* Load all referenced DLLs for Kernel, HAL and Kernel Debugger Transport DLL */
     Success  = PeLdrScanImportDescriptorTable(&LoaderBlock->LoadOrderListHead, DirPath, *KernelDTE);
@@ -825,12 +764,13 @@ LoadAndBootWindows(
     ARC_STATUS Status;
     PCSTR ArgValue;
     PCSTR SystemPartition;
-    PCHAR File;
+    PCSTR FileName;
+    ULONG FileNameLength;
     BOOLEAN Success;
     USHORT OperatingSystemVersion;
     PLOADER_PARAMETER_BLOCK LoaderBlock;
     CHAR BootPath[MAX_PATH];
-    CHAR FileName[MAX_PATH];
+    CHAR FilePath[MAX_PATH];
     CHAR BootOptions[256];
 
     /* Retrieve the (mandatory) boot type */
@@ -883,17 +823,17 @@ LoadAndBootWindows(
     if (strrchr(BootPath, ')') == NULL)
     {
         /* Temporarily save the boot path */
-        RtlStringCbCopyA(FileName, sizeof(FileName), BootPath);
+        RtlStringCbCopyA(FilePath, sizeof(FilePath), BootPath);
 
         /* This is not a full path: prepend the SystemPartition */
         RtlStringCbCopyA(BootPath, sizeof(BootPath), SystemPartition);
 
         /* Append a path separator if needed */
-        if (*FileName != '\\' && *FileName != '/')
+        if (*FilePath != '\\' && *FilePath != '/')
             RtlStringCbCatA(BootPath, sizeof(BootPath), "\\");
 
         /* Append the remaining path */
-        RtlStringCbCatA(BootPath, sizeof(BootPath), FileName);
+        RtlStringCbCatA(BootPath, sizeof(BootPath), FilePath);
     }
 
     /* Append a path separator if needed */
@@ -912,12 +852,12 @@ LoadAndBootWindows(
     AppendBootTimeOptions(BootOptions);
 
     /*
-     * Set "/HAL=" and "/KERNEL=" options if needed.
+     * Set the "/HAL=" and "/KERNEL=" options if needed.
      * If already present on the standard "Options=" option line, they take
      * precedence over those passed via the separate "Hal=" and "Kernel="
      * options.
      */
-    if (strstr(BootOptions, "/HAL=") != 0)
+    if (!NtLdrGetOption(BootOptions, "HAL="))
     {
         /*
          * Not found in the options, try to retrieve the
@@ -930,7 +870,7 @@ LoadAndBootWindows(
             RtlStringCbCatA(BootOptions, sizeof(BootOptions), ArgValue);
         }
     }
-    if (strstr(BootOptions, "/KERNEL=") != 0)
+    if (!NtLdrGetOption(BootOptions, "KERNEL="))
     {
         /*
          * Not found in the options, try to retrieve the
@@ -946,17 +886,17 @@ LoadAndBootWindows(
 
     TRACE("BootOptions: '%s'\n", BootOptions);
 
-    /* Check if a ramdisk file was given */
-    File = strstr(BootOptions, "/RDPATH=");
-    if (File)
+    /* Check if a RAM disk file was given */
+    FileName = NtLdrGetOptionEx(BootOptions, "RDPATH=", &FileNameLength);
+    if (FileName && (FileNameLength > 7))
     {
-        /* Load the ramdisk */
+        /* Load the RAM disk */
         Status = RamDiskInitialize(FALSE, BootOptions, SystemPartition);
         if (Status != ESUCCESS)
         {
-            File += 8;
+            FileName += 7; FileNameLength -= 7;
             UiMessageBox("Failed to load RAM disk file '%.*s'",
-                         strcspn(File, " \t"), File);
+                         FileNameLength, FileName);
             return Status;
         }
     }
@@ -998,17 +938,15 @@ LoadAndBootWindows(
     return LoadAndBootWindowsCommon(OperatingSystemVersion,
                                     LoaderBlock,
                                     BootOptions,
-                                    BootPath,
-                                    FALSE);
+                                    BootPath);
 }
 
 ARC_STATUS
 LoadAndBootWindowsCommon(
-    USHORT OperatingSystemVersion,
-    PLOADER_PARAMETER_BLOCK LoaderBlock,
-    PCSTR BootOptions,
-    PCSTR BootPath,
-    BOOLEAN Setup)
+    IN USHORT OperatingSystemVersion,
+    IN PLOADER_PARAMETER_BLOCK LoaderBlock,
+    IN PCSTR BootOptions,
+    IN PCSTR BootPath)
 {
     PLOADER_PARAMETER_BLOCK LoaderBlockVA;
     BOOLEAN Success;
@@ -1022,7 +960,7 @@ LoadAndBootWindowsCommon(
 
 #ifdef _M_IX86
     /* Setup redirection support */
-    WinLdrSetupEms((PCHAR)BootOptions);
+    WinLdrSetupEms(BootOptions);
 #endif
 
     /* Convert BootPath to SystemRoot */
@@ -1097,7 +1035,8 @@ LoadAndBootWindowsCommon(
 
     /* Pass control */
     (*KiSystemStartup)(LoaderBlockVA);
-    return ESUCCESS;
+
+    UNREACHABLE; // return ESUCCESS;
 }
 
 VOID

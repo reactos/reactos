@@ -53,10 +53,12 @@ IntCreateDICW(
 
     if (lpwszOutput) RtlInitUnicodeString(&Output, lpwszOutput);
 
+    // Handle Print device or something else.
     if (!Display)
     {
-        //Handle Print device or something else.
+        // WIP - GDI Print Commit coming in soon.
         DPRINT1("Not a DISPLAY device! %wZ\n", &Device);
+        return NULL; // Return NULL until then.....
     }
 
     hdc = NtGdiOpenDCW((Default ? NULL : &Device),

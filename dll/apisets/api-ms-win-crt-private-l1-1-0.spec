@@ -18,7 +18,7 @@
 @ stub __BuildCatchObject
 @ stub __BuildCatchObjectHelper
 @ stdcall -arch=x86_64,arm __C_specific_handler() msvcrt.__C_specific_handler
-@ stdcall __CxxDetectRethrow() msvcrt.__CxxDetectRethrow
+@ stdcall -arch=i386 __CxxDetectRethrow() msvcrt.__CxxDetectRethrow
 @ stub __CxxExceptionFilter
 @ stdcall -arch=i386,x86_64 __CxxFrameHandler() msvcrt.__CxxFrameHandler
 @ stdcall -arch=i386 __CxxFrameHandler2() msvcrt.__CxxFrameHandler2

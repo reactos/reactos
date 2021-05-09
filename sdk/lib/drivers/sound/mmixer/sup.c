@@ -690,6 +690,8 @@ MMixerSetGetVolumeControlDetails(
 
     /* get input */
     Input = (LPMIXERCONTROLDETAILS_UNSIGNED)MixerControlDetails->paDetails;
+    if (!Input)
+        return MM_STATUS_UNSUCCESSFUL; /* to prevent dereferencing NULL */
 
     if (bSet)
     {

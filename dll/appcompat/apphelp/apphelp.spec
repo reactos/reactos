@@ -172,7 +172,7 @@
 @ stub SE_GetShimCount
 @ stub SE_LdrEntryRemoved
 @ stub SetPermLayers
-@ cdecl ShimDbgPrint(long str str)
+@ varargs ShimDbgPrint(long str str)
 @ stdcall ShimDumpCache(ptr ptr wstr long)
 @ stdcall ShimFlushCache(ptr ptr wstr long)
 @ stdcall SetPermLayerState(wstr wstr long long long)

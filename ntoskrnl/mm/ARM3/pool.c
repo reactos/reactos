@@ -178,7 +178,7 @@ MiProtectedPoolRemoveEntryList(IN PLIST_ENTRY Entry)
     if (PoolBlink) MiProtectFreeNonPagedPool(PoolBlink, 1);
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 VOID
 NTAPI
 MiInitializeNonPagedPoolThresholds(VOID)
@@ -195,7 +195,7 @@ MiInitializeNonPagedPoolThresholds(VOID)
     ASSERT(MiLowNonPagedPoolThreshold < MiHighNonPagedPoolThreshold);
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 VOID
 NTAPI
 MiInitializePoolEvents(VOID)
@@ -270,7 +270,7 @@ MiInitializePoolEvents(VOID)
     KeReleaseQueuedSpinLock(LockQueueMmNonPagedPoolLock, OldIrql);
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 VOID
 NTAPI
 MiInitializeNonPagedPool(VOID)
@@ -835,7 +835,7 @@ MiAllocatePoolPages(IN POOL_TYPE PoolType,
         //
         // Ran out of memory
         //
-        DPRINT1("Out of NP Expansion Pool\n");
+        DPRINT("Out of NP Expansion Pool\n");
         return NULL;
     }
 
@@ -848,6 +848,19 @@ MiAllocatePoolPages(IN POOL_TYPE PoolType,
     // Lock the PFN database too
     //
     MiAcquirePfnLockAtDpcLevel();
+
+    /* Check that we have enough available pages for this request */
+    if (MmAvailablePages < SizeInPages)
+    {
+        MiReleasePfnLockFromDpcLevel();
+        KeReleaseQueuedSpinLock(LockQueueMmNonPagedPoolLock, OldIrql);
+
+        MiReleaseSystemPtes(StartPte, SizeInPages, NonPagedPoolExpansion);
+
+        DPRINT1("OUT OF AVAILABLE PAGES! Required %lu, Available %lu\n", SizeInPages, MmAvailablePages);
+
+        return NULL;
+    }
 
     //
     // Loop the pages

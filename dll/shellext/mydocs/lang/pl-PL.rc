@@ -1,0 +1,6 @@
+LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
+
+STRINGTABLE
+{
+    IDS_NOSRCFILEFOUND "Nie odnaleziono pliku lub folderu źródłowego '%ls'."
+}

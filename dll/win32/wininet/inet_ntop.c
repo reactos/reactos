@@ -49,8 +49,13 @@ static const char *inet_ntop6(const u_char *src, char *dst, socklen_t size);
  * author:
  *	Paul Vixie, 1996.
  */
-const char *
-inet_ntop(int af, const void *src, char *dst, socklen_t size)
+PCSTR
+WSAAPI
+inet_ntop(
+  _In_ INT af,
+  _In_ PVOID src,
+  _Out_writes_(StringBufSize) PSTR dst,
+  _In_ size_t size)
 {
 
 	switch (af) {

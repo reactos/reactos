@@ -12,45 +12,6 @@
 #define NDEBUG
 #include <debug.h>
 
-INIT_FUNCTION
-VOID
-NTAPI
-HalpGetResourceSortValue(
-    IN PCM_PARTIAL_RESOURCE_DESCRIPTOR Descriptor,
-    OUT PULONG Scale,
-    OUT PLARGE_INTEGER Value
-);
-
-INIT_FUNCTION
-VOID
-NTAPI
-HalpBuildPartialFromIdt(
-    IN ULONG Entry,
-    IN PCM_PARTIAL_RESOURCE_DESCRIPTOR RawDescriptor,
-    IN PCM_PARTIAL_RESOURCE_DESCRIPTOR TranslatedDescriptor
-);
-
-INIT_FUNCTION
-VOID
-NTAPI
-HalpBuildPartialFromAddress(
-    IN INTERFACE_TYPE Interface,
-    IN PADDRESS_USAGE CurrentAddress,
-    IN ULONG Element,
-    IN PCM_PARTIAL_RESOURCE_DESCRIPTOR RawDescriptor,
-    IN PCM_PARTIAL_RESOURCE_DESCRIPTOR TranslatedDescriptor
-);
-
-#if defined(ALLOC_PRAGMA) && !defined(_MINIHAL_)
-#pragma alloc_text(INIT, HalpBuildPartialFromAddress)
-#pragma alloc_text(INIT, HalpBuildPartialFromIdt)
-#pragma alloc_text(INIT, HalpEnableInterruptHandler)
-#pragma alloc_text(INIT, HalpGetNMICrashFlag)
-#pragma alloc_text(INIT, HalpGetResourceSortValue)
-#pragma alloc_text(INIT, HalpRegisterVector)
-#pragma alloc_text(INIT, HalpReportResourceUsage)
-#endif
-
 /* GLOBALS ********************************************************************/
 
 BOOLEAN HalpGetInfoFromACPI;
@@ -155,7 +116,7 @@ ADDRESS_USAGE HalpDefaultIoSpace =
 /* FUNCTIONS ******************************************************************/
 
 #ifndef _MINIHAL_
-INIT_FUNCTION
+CODE_SEG("INIT")
 VOID
 NTAPI
 HalpGetResourceSortValue(IN PCM_PARTIAL_RESOURCE_DESCRIPTOR Descriptor,
@@ -195,7 +156,7 @@ HalpGetResourceSortValue(IN PCM_PARTIAL_RESOURCE_DESCRIPTOR Descriptor,
     }
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 VOID
 NTAPI
 HalpBuildPartialFromIdt(IN ULONG Entry,
@@ -233,7 +194,7 @@ HalpBuildPartialFromIdt(IN ULONG Entry,
     TranslatedDescriptor->u.Interrupt.Level = HalpIDTUsage[Entry].Irql;
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 VOID
 NTAPI
 HalpBuildPartialFromAddress(IN INTERFACE_TYPE Interface,
@@ -301,7 +262,7 @@ HalpBuildPartialFromAddress(IN INTERFACE_TYPE Interface,
     }
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 VOID
 NTAPI
 HalpReportResourceUsage(IN PUNICODE_STRING HalName,
@@ -580,7 +541,7 @@ HalpReportResourceUsage(IN PUNICODE_STRING HalName,
 }
 #endif /* !_MINIHAL_ */
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 VOID
 NTAPI
 HalpRegisterVector(IN UCHAR Flags,
@@ -597,7 +558,7 @@ HalpRegisterVector(IN UCHAR Flags,
 }
 
 #ifndef _MINIHAL_
-INIT_FUNCTION
+CODE_SEG("INIT")
 VOID
 NTAPI
 HalpEnableInterruptHandler(IN UCHAR Flags,
@@ -620,7 +581,7 @@ HalpEnableInterruptHandler(IN UCHAR Flags,
     HalEnableSystemInterrupt(SystemVector, Irql, Mode);
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 VOID
 NTAPI
 HalpGetNMICrashFlag(VOID)

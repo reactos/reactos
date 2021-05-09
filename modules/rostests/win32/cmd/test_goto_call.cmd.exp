@@ -2,6 +2,25 @@
 Test GOTO ok
 --------- Testing CALL within batch ---------
 Test CALL ok from :test_call
+Hi there!
+Hi there!
+Hi there!
+Hi there!
+goto with unrelated first character, and escape carets worked
+Params: ':dest1', '', '', ''
+goto with unrelated first character, and escape carets worked
+Params: ':dest1', '', '', ''
+goto with unrelated first character, and escape carets worked
+Params: ':dest1', '', '', ''
+goto with unrelated first character, and escape carets worked
+Params: ':dest1', '', '', ''
+goto with unrelated first character, and escape carets worked
+Params: ':dest1', 'a', 'b', 'c'
+goto with unrelated first character, and escape carets worked
+Params: ':dest1', '', '', ''
+OK
+OK
+CALL with escape caret worked
 GOTO with escape caret worked
 Hi there!
 Hi there!
@@ -10,6 +29,8 @@ Hi there!
 Hi there!
 Hi there!
 --------- Testing :EOF support ---------
+OK
+OK
 OK
 OK
 OK
@@ -228,4 +249,29 @@ B
 --------- Testing EXIT within IF ---------
 First block
 Second block
+--------- Testing CALL (triggers GOTO /?) ---------
+--- Direct label, redirection
+Test message -- ':/?','argument'
+Arguments: 'argument'
+Test message -- '',''
+OK, GOTO help.
+--- Direct label, piping
+OK, CALL help.@space@
+Test message -- '',''
+--------- Testing CALL with escape carets (triggers GOTO /?) ---------
+--- Direct label, redirection
+Test message -- ':myLabel /?','^arg ^argument'
+Arguments: '^arg ^argument'
+Test message -- '',''
+OK, GOTO help.
+--- Direct label, piping
+OK, CALL help.@space@
+Test message -- '',''
+--------- Testing CALL (NOT triggering GOTO /? or CALL /?) ---------
+Arguments: '/?'
+OK, ECHO help.@space@
+
+ Hello World
+--------- Testing CALL double delayed expansion ---------
+It works!
 --------- Finished  --------------

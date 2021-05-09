@@ -20,7 +20,7 @@ static PGRAPHICS_DEVICE gpGraphicsDeviceLast = NULL;
 static HSEMAPHORE ghsemGraphicsDeviceList;
 static ULONG giDevNum = 1;
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 NTSTATUS
 NTAPI
 InitDeviceImpl(VOID)

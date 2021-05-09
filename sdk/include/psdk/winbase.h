@@ -334,17 +334,33 @@ extern "C" {
 #define PROCESS_HEAP_ENTRY_MOVEABLE 16
 #define PROCESS_HEAP_ENTRY_DDESHARE 32
 
-#define DONT_RESOLVE_DLL_REFERENCES         1
-#define LOAD_LIBRARY_AS_DATAFILE            2
-#define LOAD_WITH_ALTERED_SEARCH_PATH       8
-#define LOAD_IGNORE_CODE_AUTHZ_LEVEL        16
-#define LOAD_LIBRARY_AS_IMAGE_RESOURCE      32
-#define LOAD_LIBRARY_AS_DATAFILE_EXCLUSIVE  64
-#define LOAD_LIBRARY_SEARCH_DLL_LOAD_DIR    256
-#define LOAD_LIBRARY_SEARCH_APPLICATION_DIR 512
-#define LOAD_LIBRARY_SEARCH_USER_DIRS       1024
-#define LOAD_LIBRARY_SEARCH_SYSTEM32        2048
-#define LOAD_LIBRARY_SEARCH_DEFAULT_DIRS    4096
+// LoadLibraryEx() dwFlags.
+#define DONT_RESOLVE_DLL_REFERENCES                 0x00000001
+#define LOAD_LIBRARY_AS_DATAFILE                    0x00000002
+// #define LOAD_PACKAGED_LIBRARY                       0x00000004 // Internal use only.
+#define LOAD_WITH_ALTERED_SEARCH_PATH               0x00000008
+#define LOAD_IGNORE_CODE_AUTHZ_LEVEL                0x00000010
+#if (_WIN32_WINNT >= _WIN32_WINNT_VISTA)
+#define LOAD_LIBRARY_AS_IMAGE_RESOURCE              0x00000020
+#define LOAD_LIBRARY_AS_DATAFILE_EXCLUSIVE          0x00000040
+#define LOAD_LIBRARY_REQUIRE_SIGNED_TARGET          0x00000080
+#define LOAD_LIBRARY_SEARCH_DLL_LOAD_DIR            0x00000100
+#define LOAD_LIBRARY_SEARCH_APPLICATION_DIR         0x00000200
+#define LOAD_LIBRARY_SEARCH_USER_DIRS               0x00000400
+#define LOAD_LIBRARY_SEARCH_SYSTEM32                0x00000800
+#define LOAD_LIBRARY_SEARCH_DEFAULT_DIRS            0x00001000
+#endif // _WIN32_WINNT_VISTA
+#if (NTDDI_VERSION >= NTDDI_WIN10_RS1)
+#define LOAD_LIBRARY_SAFE_CURRENT_DIRS              0x00002000
+#define LOAD_LIBRARY_SEARCH_SYSTEM32_NO_FORWARDER   0x00004000
+#else // NTDDI_WIN10_RS1
+#if (_WIN32_WINNT >= _WIN32_WINNT_VISTA)
+#define LOAD_LIBRARY_SEARCH_SYSTEM32_NO_FORWARDER   LOAD_LIBRARY_SEARCH_SYSTEM32
+#endif // _WIN32_WINNT_VISTA
+#endif // NTDDI_WIN10_RS1
+#if (NTDDI_VERSION >= NTDDI_WIN10_RS2)
+#define LOAD_LIBRARY_OS_INTEGRITY_CONTINUITY        0x00008000
+#endif // NTDDI_WIN10_RS2
 
 #define LMEM_FIXED 0
 #define LMEM_MOVEABLE 2
@@ -1639,7 +1655,7 @@ BOOL WINAPI ConvertFiberToThread(void);
 #endif
 _Ret_maybenull_ PVOID WINAPI ConvertThreadToFiber(_In_opt_ PVOID);
 BOOL WINAPI CopyFileA(_In_ LPCSTR, _In_ LPCSTR, _In_ BOOL);
-BOOL WINAPI CopyFileW(_In_ LPCWSTR, _In_ LPCWSTR, _In_ BOOL);
+BOOL WINAPI CopyFileW(_In_ LPCWSTR lpExistingFileName, _In_ LPCWSTR lpNewFileName, _In_ BOOL bFailIfExists);
 BOOL WINAPI CopyFileExA(_In_ LPCSTR, _In_ LPCSTR, _In_opt_ LPPROGRESS_ROUTINE, _In_opt_ LPVOID, _In_opt_ LPBOOL, _In_ DWORD);
 BOOL WINAPI CopyFileExW(_In_ LPCWSTR, _In_ LPCWSTR, _In_opt_ LPPROGRESS_ROUTINE, _In_opt_ LPVOID, _In_opt_ LPBOOL, _In_ DWORD);
 #define MoveMemory RtlMoveMemory
@@ -1652,8 +1668,8 @@ BOOL WINAPI CopySid(DWORD,PSID,PSID);
 HANDLE WINAPI CreateActCtxA(_In_ PCACTCTXA);
 HANDLE WINAPI CreateActCtxW(_In_ PCACTCTXW);
 #endif
-BOOL WINAPI CreateDirectoryA(LPCSTR,LPSECURITY_ATTRIBUTES);
-BOOL WINAPI CreateDirectoryW(LPCWSTR,LPSECURITY_ATTRIBUTES);
+BOOL WINAPI CreateDirectoryA(LPCSTR lpPathName,LPSECURITY_ATTRIBUTES lpSecurityAttributes);
+BOOL WINAPI CreateDirectoryW(LPCWSTR lpPathName,LPSECURITY_ATTRIBUTES lpSecurityAttributes);
 BOOL WINAPI CreateDirectoryExA(_In_ LPCSTR, _In_ LPCSTR, _In_opt_ LPSECURITY_ATTRIBUTES);
 BOOL WINAPI CreateDirectoryExW(_In_ LPCWSTR, _In_ LPCWSTR, _In_opt_ LPSECURITY_ATTRIBUTES);
 HANDLE WINAPI CreateEventA(_In_opt_ LPSECURITY_ATTRIBUTES lpEventAttributes, _In_ BOOL bManualReset, _In_ BOOL bInitialState, _In_opt_ LPCSTR lpName);
@@ -1976,8 +1992,8 @@ DWORD WINAPI FlsAlloc(PFLS_CALLBACK_FUNCTION);
 PVOID WINAPI FlsGetValue(DWORD);
 BOOL WINAPI FlsSetValue(DWORD,PVOID);
 BOOL WINAPI FlsFree(DWORD);
-DWORD WINAPI FormatMessageA(DWORD,LPCVOID,DWORD,DWORD,LPSTR,DWORD,va_list*);
-DWORD WINAPI FormatMessageW(DWORD,LPCVOID,DWORD,DWORD,LPWSTR,DWORD,va_list*);
+DWORD WINAPI FormatMessageA(DWORD dwFlags, LPCVOID lpSource, DWORD dwMessageId, DWORD dwLanguageId, LPSTR lpBuffer, DWORD nSize, va_list* Arguments);
+DWORD WINAPI FormatMessageW(DWORD dwFlags, LPCVOID lpSource, DWORD dwMessageId, DWORD dwLanguageId, LPWSTR lpBuffer, DWORD nSize, va_list* Arguments);
 BOOL WINAPI FreeEnvironmentStringsA(LPSTR);
 BOOL WINAPI FreeEnvironmentStringsW(LPWSTR);
 BOOL WINAPI FreeLibrary(HMODULE);
@@ -3209,7 +3225,7 @@ BOOL WINAPI TzSpecificLocalTimeToSystemTime(LPTIME_ZONE_INFORMATION,LPSYSTEMTIME
 LONG WINAPI UnhandledExceptionFilter(LPEXCEPTION_POINTERS);
 BOOL WINAPI UnlockFile(HANDLE,DWORD,DWORD,DWORD,DWORD);
 BOOL WINAPI UnlockFileEx(HANDLE,DWORD,DWORD,DWORD,LPOVERLAPPED);
-#define UnlockResource(h) (h)
+#define UnlockResource(handle) ((handle), 0)
 #define UnlockSegment(w) GlobalUnfix((HANDLE)(w)) /* Obsolete: Has no effect. */
 BOOL WINAPI UnmapViewOfFile(LPCVOID);
 #if (_WIN32_WINNT >= 0x0500)
@@ -3944,6 +3960,11 @@ QueryDepthSList(
   _In_ PSLIST_HEADER ListHead);
 
 #endif /* _SLIST_HEADER_ */
+
+#ifdef __WINESRC__
+/* Wine specific. Basically MultiByteToWideChar for us. */
+WCHAR * CDECL wine_get_dos_file_name(LPCSTR str);
+#endif
 
 #ifdef _MSC_VER
 #pragma warning(pop)

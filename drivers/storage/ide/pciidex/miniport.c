@@ -11,6 +11,9 @@
 #define NDEBUG
 #include <debug.h>
 
+/** @brief Global debugging level. Valid values are between 0 (Error) and 3 (Trace). */
+ULONG PciIdeDebug = 0;
+
 static DRIVER_DISPATCH PciIdeXForwardOrIgnore;
 static NTSTATUS NTAPI
 PciIdeXForwardOrIgnore(
@@ -88,6 +91,32 @@ PciIdeXPnpDispatch(
 		return PciIdeXFdoPnpDispatch(DeviceObject, Irp);
 	else
 		return PciIdeXPdoPnpDispatch(DeviceObject, Irp);
+}
+
+/**
+ * @brief Prints the given string with printf-like formatting to the kernel debugger.
+ * @param[in] DebugPrintLevel Level of the debug message.
+ *                            Valid values are between 0 (Error) and 3 (Trace).
+ * @param[in] DebugMessage    Format of the string/arguments.
+ * @param[in] ...             Variable number of arguments matching the format
+ *                            specified in \a DebugMessage.
+ * @sa PciIdeDebug
+ */
+VOID
+PciIdeXDebugPrint(
+    _In_ ULONG DebugPrintLevel,
+    _In_z_ _Printf_format_string_ PCCHAR DebugMessage,
+    ...)
+{
+    va_list ap;
+
+    /* Check if we can print anything */
+    if (DebugPrintLevel <= PciIdeDebug)
+        DebugPrintLevel = 0;
+
+    va_start(ap, DebugMessage);
+    vDbgPrintEx(DPFLTR_PCIIDE_ID, DebugPrintLevel, DebugMessage, ap);
+    va_end(ap);
 }
 
 NTSTATUS NTAPI

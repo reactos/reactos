@@ -3,13 +3,17 @@
 #include <windef.h>
 #include <atlstr.h>
 
+#define EPOCH_DIFF 116444736000000000 //FILETIME starts from 1601-01-01 UTC, UnixTime starts from 1970-01-01
+#define RATE_DIFF 10000000
+
+
 INT GetWindowWidth(HWND hwnd);
 INT GetWindowHeight(HWND hwnd);
 INT GetClientWindowWidth(HWND hwnd);
 INT GetClientWindowHeight(HWND hwnd);
 
 VOID CopyTextToClipboard(LPCWSTR lpszText);
-VOID SetWelcomeText();
+VOID ShowPopupMenuEx(HWND hwnd, HWND hwndOwner, UINT MenuID, UINT DefaultItem);
 VOID ShowPopupMenu(HWND hwnd, UINT MenuID, UINT DefaultItem);
 BOOL StartProcess(ATL::CStringW &Path, BOOL Wait);
 BOOL StartProcess(LPWSTR lpPath, BOOL Wait);
@@ -44,3 +48,19 @@ public:
     BOOL GetString(const ATL::CStringW& KeyName, ATL::CStringW& ResultString);
     BOOL GetInt(const ATL::CStringW& KeyName, INT& iResult);
 };
+
+BOOL PathAppendNoDirEscapeW(LPWSTR pszPath, LPCWSTR pszMore);
+
+BOOL IsSystem64Bit();
+
+INT GetSystemColorDepth();
+
+void UnixTimeToFileTime(DWORD dwUnixTime, LPFILETIME pFileTime);
+
+BOOL SearchPatternMatch(LPCWSTR szHaystack, LPCWSTR szNeedle);
+
+template<class T>
+class CLocalPtr : public CHeapPtr<T, CLocalAllocator>
+{
+};
+

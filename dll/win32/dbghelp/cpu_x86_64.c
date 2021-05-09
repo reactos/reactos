@@ -574,12 +574,13 @@ static BOOL interpret_function_table_entry(struct cpu_stack_walk* csw,
  * modify (at least) context.{rip, rsp, rbp} using unwind information
  * either out of PE exception handlers, debug info (dwarf), or simple stack unwind
  */
-static BOOL fetch_next_frame(struct cpu_stack_walk* csw, CONTEXT* context,
+static BOOL fetch_next_frame(struct cpu_stack_walk *csw, union ctx *pcontext,
                              DWORD_PTR curr_pc, void** prtf)
 {
-    DWORD_PTR               cfa;
+    DWORD64 cfa;
     RUNTIME_FUNCTION*       rtf;
     DWORD64                 base;
+    CONTEXT *context = &pcontext->ctx;
 
     if (!curr_pc || !(base = sw_module_base(csw, curr_pc))) return FALSE;
     rtf = sw_table_access(csw, curr_pc);
@@ -588,7 +589,7 @@ static BOOL fetch_next_frame(struct cpu_stack_walk* csw, CONTEXT* context,
     {
         return interpret_function_table_entry(csw, context, rtf, base);
     }
-    else if (dwarf2_virtual_unwind(csw, curr_pc, context, &cfa))
+    else if (dwarf2_virtual_unwind(csw, curr_pc, pcontext, &cfa))
     {
         context->Rsp = cfa;
         TRACE("next function rip=%016lx\n", context->Rip);
@@ -606,7 +607,8 @@ static BOOL fetch_next_frame(struct cpu_stack_walk* csw, CONTEXT* context,
         return default_unwind(csw, context);
 }
 
-static BOOL x86_64_stack_walk(struct cpu_stack_walk* csw, LPSTACKFRAME64 frame, CONTEXT* context)
+static BOOL x86_64_stack_walk(struct cpu_stack_walk *csw, STACKFRAME64 *frame,
+    union ctx *context)
 {
     unsigned    deltapc = curr_count <= 1 ? 0 : 1;
 
@@ -641,8 +643,8 @@ static BOOL x86_64_stack_walk(struct cpu_stack_walk* csw, LPSTACKFRAME64 frame, 
     }
     else
     {
-        if (context->Rsp != frame->AddrStack.Offset) FIXME("inconsistent Stack Pointer\n");
-        if (context->Rip != frame->AddrPC.Offset) FIXME("inconsistent Instruction Pointer\n");
+        if (context->ctx.Rsp != frame->AddrStack.Offset) FIXME("inconsistent Stack Pointer\n");
+        if (context->ctx.Rip != frame->AddrPC.Offset) FIXME("inconsistent Instruction Pointer\n");
 
         if (frame->AddrReturn.Offset == 0) goto done_err;
         if (!fetch_next_frame(csw, context, frame->AddrPC.Offset - deltapc, &frame->FuncTableEntry))
@@ -653,17 +655,17 @@ static BOOL x86_64_stack_walk(struct cpu_stack_walk* csw, LPSTACKFRAME64 frame, 
     memset(&frame->Params, 0, sizeof(frame->Params));
 
     /* set frame information */
-    frame->AddrStack.Offset = context->Rsp;
-    frame->AddrFrame.Offset = context->Rbp;
-    frame->AddrPC.Offset = context->Rip;
+    frame->AddrStack.Offset = context->ctx.Rsp;
+    frame->AddrFrame.Offset = context->ctx.Rbp;
+    frame->AddrPC.Offset = context->ctx.Rip;
     if (1)
     {
-        CONTEXT         newctx = *context;
+        union ctx newctx = *context;
 
         if (!fetch_next_frame(csw, &newctx, frame->AddrPC.Offset - deltapc, NULL))
             goto done_err;
         frame->AddrReturn.Mode = AddrModeFlat;
-        frame->AddrReturn.Offset = newctx.Rip;
+        frame->AddrReturn.Offset = newctx.ctx.Rip;
     }
 
     frame->Far = TRUE;
@@ -685,7 +687,8 @@ done_err:
     return FALSE;
 }
 #else
-static BOOL x86_64_stack_walk(struct cpu_stack_walk* csw, LPSTACKFRAME64 frame, CONTEXT* context)
+static BOOL x86_64_stack_walk(struct cpu_stack_walk *csw, STACKFRAME64 *frame,
+    union ctx *ctx)
 {
     return FALSE;
 }
@@ -721,7 +724,7 @@ static void*    x86_64_find_runtime_function(struct module* module, DWORD64 addr
     return NULL;
 }
 
-static unsigned x86_64_map_dwarf_register(unsigned regno, BOOL eh_frame)
+static unsigned x86_64_map_dwarf_register(unsigned regno, const struct module* module, BOOL eh_frame)
 {
     unsigned    reg;
 
@@ -775,9 +778,11 @@ static unsigned x86_64_map_dwarf_register(unsigned regno, BOOL eh_frame)
     return reg;
 }
 
-static void* x86_64_fetch_context_reg(CONTEXT* ctx, unsigned regno, unsigned* size)
+static void *x86_64_fetch_context_reg(union ctx *pctx, unsigned regno, unsigned *size)
 {
 #ifdef __x86_64__
+    CONTEXT *ctx = &pctx->ctx;
+
     switch (regno)
     {
     case CV_AMD64_RAX: *size = sizeof(ctx->Rax); return &ctx->Rax;
@@ -924,7 +929,7 @@ static BOOL x86_64_fetch_minidump_module(struct dump_context* dc, unsigned index
         const RUNTIME_FUNCTION* rtf;
         ULONG                   size;
 
-        if (!(pcs = process_find_by_handle(dc->hProcess)) ||
+        if (!(pcs = process_find_by_handle(dc->process->handle)) ||
             !(module = module_find_by_addr(pcs, dc->modules[index].base, DMT_UNKNOWN)))
             return FALSE;
         rtf = (const RUNTIME_FUNCTION*)pe_map_directory(module, IMAGE_DIRECTORY_ENTRY_EXCEPTION, &size);
@@ -942,9 +947,7 @@ static BOOL x86_64_fetch_minidump_module(struct dump_context* dc, unsigned index
                     /* we need to read into the other process */
                     /* rtf = (RUNTIME_FUNCTION*)(module->module.BaseOfImage + (rtf->UnwindData & ~1)); */
                 }
-                if (ReadProcessMemory(dc->hProcess,
-                                      (void*)(dc->modules[index].base + rtf->UnwindData),
-                                      &ui, sizeof(ui), NULL))
+                if (read_process_memory(dc->process, dc->modules[index].base + rtf->UnwindData, &ui, sizeof(ui)))
                     minidump_add_memory_block(dc, dc->modules[index].base + rtf->UnwindData,
                                               FIELD_OFFSET(UNWIND_INFO, UnwindCode) + ui.CountOfCodes * sizeof(UNWIND_CODE), 0);
                 rtf++;

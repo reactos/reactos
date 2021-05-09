@@ -5114,6 +5114,9 @@ static LRESULT CALLBACK import_file_dlg_proc(HWND hwnd, UINT msg, WPARAM wp,
             ofn.lpstrFilter = make_import_file_filter(data->dwFlags);
             ofn.lpstrFile = fileBuf;
             ofn.nMaxFile = ARRAY_SIZE(fileBuf);
+#ifdef __REACTOS__
+            ofn.Flags = OFN_EXPLORER;
+#endif
             fileBuf[0] = 0;
             if (GetOpenFileNameW(&ofn))
                 SendMessageW(GetDlgItem(hwnd, IDC_IMPORT_FILENAME), WM_SETTEXT,

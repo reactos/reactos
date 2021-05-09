@@ -1,8 +1,9 @@
 /*
- * PROJECT:         ReactOS api tests
- * LICENSE:         GPLv2+ - See COPYING in the top level directory
- * PURPOSE:         Test for ACListISF objects
- * PROGRAMMER:      Mark Jansen
+ * PROJECT:     ReactOS api tests
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Test for ACListISF objects
+ * COPYRIGHT:   Copyright 2016 Mark Jansen <mark.jansen@reactos.org>
+ *              Copyright 2021 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
 #define _UNICODE
@@ -39,9 +40,6 @@ static DWORD g_WinVersion;
         winetest_ok(_value == (expected), "Wrong value for '%s', expected: " #expected " (0x%x), got: 0x%x\n", \
            #expression, (int)(expected), _value); \
     } while (0)
-
-
-
 
 static void test_at_end_imp(CComPtr<IEnumString>& EnumStr)
 {
@@ -127,10 +125,8 @@ test_ExpectFolders_imp(CComPtr<IEnumString>& EnumStr, LPITEMIDLIST pidlTarget, c
         hr = EnumStr->Next(1, &Result, &Fetched);
         winetest_ok_hr(hr, S_OK);
 
-
         if (hr != S_OK)
             break;
-
 
         StringCchPrintfW(Buffer, _ARRAYSIZE(Buffer), L"%s%s", (options & IgnoreRoot) ? L"" : Root, (WCHAR*)DisplayName);
 
@@ -158,12 +154,18 @@ test_ACListISF_NONE()
     HRESULT hr = CoCreateInstance(CLSID_ACListISF, NULL, CLSCTX_ALL, IID_PPV_ARG(IEnumString, &EnumStr));
     ok_hr(hr, S_OK);
     if (!SUCCEEDED(hr))
+    {
+        skip("CoCreateInstance failed\n");
         return;
+    }
 
     CComPtr<IACList2> ACList;
     ok_hr(hr = EnumStr->QueryInterface(IID_IACList2, (void**)&ACList), S_OK);
     if (!SUCCEEDED(hr))
+    {
+        skip("QueryInterface failed\n");
         return;
+    }
 
     ok_hr(hr = ACList->SetOptions(ACLO_NONE), S_OK);
     test_at_end(EnumStr);
@@ -176,7 +178,10 @@ test_ACListISF_NONE()
     CComHeapPtr<ITEMIDLIST> pidlDiskRoot;
     ok_hr(hr = SHParseDisplayName(Buffer, NULL, &pidlDiskRoot, NULL, NULL), S_OK);
     if (!SUCCEEDED(hr))
+    {
+        skip("SHParseDisplayName failed\n");
         return;
+    }
 
     ok_hr(hr = ACList->Expand(Buffer), S_OK);
     test_ExpectFolders(EnumStr, pidlDiskRoot, Buffer, CheckLast | IgnoreHidden);
@@ -194,17 +199,26 @@ test_ACListISF_CURRENTDIR()
     HRESULT hr = CoCreateInstance(CLSID_ACListISF, NULL, CLSCTX_ALL, IID_PPV_ARG(IEnumString, &EnumStr));
     ok_hr(hr, S_OK);
     if (!SUCCEEDED(hr))
+    {
+        skip("CoCreateInstance failed\n");
         return;
+    }
 
     CComPtr<IACList2> ACList;
     ok_hr(hr = EnumStr->QueryInterface(IID_IACList2, (void**)&ACList), S_OK);
     if (!SUCCEEDED(hr))
+    {
+        skip("QueryInterface failed\n");
         return;
+    }
 
     CComPtr<ICurrentWorkingDirectory> CurrentWorkingDir;
     ok_hr(hr = EnumStr->QueryInterface(IID_ICurrentWorkingDirectory, (void**)&CurrentWorkingDir), S_OK);
     if (!SUCCEEDED(hr))
+    {
+        skip("QueryInterface failed\n");
         return;
+    }
 
     ok_hr(hr = ACList->SetOptions(ACLO_CURRENTDIR), S_OK);
     test_at_end(EnumStr);
@@ -259,6 +273,225 @@ test_ACListISF_CURRENTDIR()
     // The first set of results are absolute paths, without hidden files?!
     test_ExpectFolders(EnumStr, pidlDiskRoot, Buffer2, IgnoreHidden);
     test_ExpectFolders(EnumStr, pidlDiskRoot, Buffer2, IgnoreHidden | IgnoreRoot | CheckLast);
+
+    WCHAR szDir[MAX_PATH], szPath[MAX_PATH];
+    Buffer2[2] = 0;
+    StringCbCopyW(szDir, sizeof(szDir), Buffer2);
+
+    StringCbCopyW(szPath, sizeof(szPath), szDir);
+    StringCbCatW(szPath, sizeof(szPath), L"\\BROWSEUI-1");
+    CreateDirectoryW(szPath, NULL);
+
+    StringCbCopyW(szPath, sizeof(szPath), szDir);
+    StringCbCatW(szPath, sizeof(szPath), L"\\BROWSEUI-1\\TEST1");
+    CreateDirectoryW(szPath, NULL);
+
+    StringCbCopyW(szPath, sizeof(szPath), szDir);
+    StringCbCatW(szPath, sizeof(szPath), L"\\BROWSEUI-1\\TEST2");
+    CreateDirectoryW(szPath, NULL);
+
+    StringCbCopyW(szPath, sizeof(szPath), szDir);
+    StringCbCatW(szPath, sizeof(szPath), L"\\BROWSEUI-2");
+    CreateDirectoryW(szPath, NULL);
+
+    StringCbCopyW(szPath, sizeof(szPath), szDir);
+    StringCbCatW(szPath, sizeof(szPath), L"\\BROWSEUI-2\\tes1");
+    CreateDirectoryW(szPath, NULL);
+
+    StringCbCopyW(szPath, sizeof(szPath), szDir);
+    StringCbCatW(szPath, sizeof(szPath), L"\\BROWSEUI-2\\tes2");
+    CreateDirectoryW(szPath, NULL);
+
+    ULONG cGot;
+    LPWSTR psz = NULL;
+    EnumStr->Reset();
+
+    StringCbCopyW(szPath, sizeof(szPath), szDir);
+    StringCbCatW(szPath, sizeof(szPath), L"\\BROWSEUI-1\\");
+    ok_hr(hr = ACList->Expand(szPath), S_OK);
+
+    hr = EnumStr->Next(1, &psz, &cGot);
+    ok_hr(hr, S_OK);
+    StringCbCopyW(szPath, sizeof(szPath), szDir);
+    StringCbCatW(szPath, sizeof(szPath), L"\\BROWSEUI-1\\TEST1");
+    ok_wstr(szPath, psz);
+    CoTaskMemFree(psz);
+
+    hr = EnumStr->Next(1, &psz, &cGot);
+    ok_hr(hr, S_OK);
+    StringCbCopyW(szPath, sizeof(szPath), szDir);
+    StringCbCatW(szPath, sizeof(szPath), L"\\BROWSEUI-1\\TEST2");
+    ok_wstr(szPath, psz);
+    CoTaskMemFree(psz);
+
+    StringCbCopyW(szPath, sizeof(szPath), szDir);
+    StringCbCatW(szPath, sizeof(szPath), L"\\BROWSEUI-2\\");
+    ok_hr(hr = CurrentWorkingDir->SetDirectory(szPath), S_OK);
+
+    hr = EnumStr->Next(1, &psz, &cGot);
+    ok_hr(hr, S_OK);
+    ok_wstr(psz, L"tes1");
+    CoTaskMemFree(psz);
+
+    hr = EnumStr->Next(1, &psz, &cGot);
+    ok_hr(hr, S_OK);
+    ok_wstr(psz, L"tes2");
+    CoTaskMemFree(psz);
+
+    StringCbCopyW(szPath, sizeof(szPath), szDir);
+    StringCbCatW(szPath, sizeof(szPath), L"\\BROWSEUI-2");
+    ok_hr(hr = CurrentWorkingDir->SetDirectory(szPath), S_OK);
+
+    EnumStr->Reset();
+
+    hr = EnumStr->Next(1, &psz, &cGot);
+    ok_hr(hr, S_OK);
+    ok_wstr(psz, L"tes1");
+    CoTaskMemFree(psz);
+
+    hr = EnumStr->Next(1, &psz, &cGot);
+    ok_hr(hr, S_OK);
+    ok_wstr(psz, L"tes2");
+    CoTaskMemFree(psz);
+
+    StringCbCopyW(szPath, sizeof(szPath), szDir);
+    StringCbCatW(szPath, sizeof(szPath), L"\\BROWSEUI-1\\TEST1");
+    RemoveDirectoryW(szPath);
+
+    StringCbCopyW(szPath, sizeof(szPath), szDir);
+    StringCbCatW(szPath, sizeof(szPath), L"\\BROWSEUI-1\\TEST2");
+    RemoveDirectoryW(szPath);
+
+    StringCbCopyW(szPath, sizeof(szPath), szDir);
+    StringCbCatW(szPath, sizeof(szPath), L"\\BROWSEUI-1");
+    RemoveDirectoryW(szPath);
+
+    StringCbCopyW(szPath, sizeof(szPath), szDir);
+    StringCbCatW(szPath, sizeof(szPath), L"\\BROWSEUI-2\\tes1");
+    RemoveDirectoryW(szPath);
+
+    StringCbCopyW(szPath, sizeof(szPath), szDir);
+    StringCbCatW(szPath, sizeof(szPath), L"\\BROWSEUI-2\\tes2");
+    RemoveDirectoryW(szPath);
+
+    StringCbCopyW(szPath, sizeof(szPath), szDir);
+    StringCbCatW(szPath, sizeof(szPath), L"\\BROWSEUI-2");
+    RemoveDirectoryW(szPath);
+}
+
+static void
+test_ACListISF_CURRENTDIR2()
+{
+    CComPtr<IEnumString> EnumStr;
+    HRESULT hr = CoCreateInstance(CLSID_ACListISF, NULL, CLSCTX_ALL, IID_PPV_ARG(IEnumString, &EnumStr));
+    ok_hr(hr, S_OK);
+    if (!SUCCEEDED(hr))
+    {
+        skip("CoCreateInstance failed\n");
+        return;
+    }
+
+    CComPtr<IACList2> ACList;
+    ok_hr(hr = EnumStr->QueryInterface(IID_IACList2, (void**)&ACList), S_OK);
+    if (!SUCCEEDED(hr))
+    {
+        skip("QueryInterface failed\n");
+        return;
+    }
+
+    CComPtr<ICurrentWorkingDirectory> CurrentWorkingDir;
+    ok_hr(hr = EnumStr->QueryInterface(IID_ICurrentWorkingDirectory, (void**)&CurrentWorkingDir), S_OK);
+    if (!SUCCEEDED(hr))
+    {
+        skip("QueryInterface failed\n");
+        return;
+    }
+
+    ok_hr(hr = ACList->SetOptions(ACLO_CURRENTDIR), S_OK);
+    test_at_end(EnumStr);
+
+    CreateDirectoryW(L"C:\\BROWSEUI-1", NULL);
+    CreateDirectoryW(L"C:\\BROWSEUI-1\\TEST1", NULL);
+    CreateDirectoryW(L"C:\\BROWSEUI-1\\TEST2", NULL);
+    CreateDirectoryW(L"C:\\BROWSEUI-1\\TEST1\\TEST3", NULL);
+    CreateDirectoryW(L"C:\\BROWSEUI-2", NULL);
+    CreateDirectoryW(L"C:\\BROWSEUI-2\\TEST1", NULL);
+    CreateDirectoryW(L"C:\\BROWSEUI-2\\TEST2", NULL);
+    CreateDirectoryW(L"C:\\BROWSEUI-2\\TEST1\\TEST4", NULL);
+
+    ok_hr(hr = CurrentWorkingDir->SetDirectory(L"C:\\BROWSEUI-1\\TEST1"), S_OK);
+    test_at_end(EnumStr);
+
+    ok_hr(hr = ACList->Expand(L"C:\\BROWSEUI-2\\TEST1\\"), S_OK);
+
+    LPWSTR psz;
+    ULONG cGot;
+
+    hr = EnumStr->Next(1, &psz, &cGot);
+    ok_hr(hr, S_OK);
+    ok_wstr(psz, L"C:\\BROWSEUI-2\\TEST1\\TEST4");
+    CoTaskMemFree(psz);
+
+    hr = EnumStr->Next(1, &psz, &cGot);
+    ok_hr(hr, S_OK);
+    ok_wstr(psz, L"TEST3");
+    CoTaskMemFree(psz);
+
+    test_at_end(EnumStr);
+
+    ok_hr(hr = ACList->Expand(L"C:\\BROWSEUI-1\\TEST1\\"), S_OK);
+
+    hr = EnumStr->Next(1, &psz, &cGot);
+    ok_hr(hr, S_OK);
+    ok_wstr(psz, L"C:\\BROWSEUI-1\\TEST1\\TEST3");
+    CoTaskMemFree(psz);
+
+    hr = EnumStr->Next(1, &psz, &cGot);
+    ok_hr(hr, S_OK);
+    ok_wstr(psz, L"TEST3");
+    CoTaskMemFree(psz);
+
+    test_at_end(EnumStr);
+
+    ok_hr(hr = CurrentWorkingDir->SetDirectory(L"C:\\BROWSEUI-2\\TEST1"), S_OK);
+    test_at_end(EnumStr);
+
+    ok_hr(hr = ACList->Expand(L"..\\TEST1\\"), S_OK);
+
+    hr = EnumStr->Next(1, &psz, &cGot);
+    ok_hr(hr, S_OK);
+    ok_wstr(psz, L"..\\TEST1\\TEST4");
+    CoTaskMemFree(psz);
+
+    hr = EnumStr->Next(1, &psz, &cGot);
+    ok_hr(hr, S_OK);
+    ok_wstr(psz, L"TEST4");
+    CoTaskMemFree(psz);
+
+    test_at_end(EnumStr);
+
+    ok_hr(hr = ACList->Expand(L"\\BROWSEUI-2\\TEST1\\"), S_OK);
+
+    hr = EnumStr->Next(1, &psz, &cGot);
+    ok_hr(hr, S_OK);
+    ok_wstr(psz, L"\\BROWSEUI-2\\TEST1\\TEST4");
+    CoTaskMemFree(psz);
+
+    hr = EnumStr->Next(1, &psz, &cGot);
+    ok_hr(hr, S_OK);
+    ok_wstr(psz, L"TEST4");
+    CoTaskMemFree(psz);
+
+    test_at_end(EnumStr);
+
+    RemoveDirectoryW(L"C:\\BROWSEUI-1\\TEST1\\TEST3");
+    RemoveDirectoryW(L"C:\\BROWSEUI-1\\TEST1");
+    RemoveDirectoryW(L"C:\\BROWSEUI-1\\TEST2");
+    RemoveDirectoryW(L"C:\\BROWSEUI-1");
+    RemoveDirectoryW(L"C:\\BROWSEUI-2\\TEST1\\TEST4");
+    RemoveDirectoryW(L"C:\\BROWSEUI-2\\TEST1");
+    RemoveDirectoryW(L"C:\\BROWSEUI-2\\TEST2");
+    RemoveDirectoryW(L"C:\\BROWSEUI-2");
 }
 
 static void
@@ -268,7 +501,10 @@ test_ACListISF_MYCOMPUTER()
     HRESULT hr = CoCreateInstance(CLSID_ACListISF, NULL, CLSCTX_ALL, IID_PPV_ARG(IACList2, &ACList));
     ok_hr(hr, S_OK);
     if (!SUCCEEDED(hr))
+    {
+        skip("CoCreateInstance failed\n");
         return;
+    }
 
     // Check the default
     DWORD CurrentOption = 0xdeadbeef;
@@ -280,18 +516,26 @@ test_ACListISF_MYCOMPUTER()
     CComPtr<IEnumString> EnumStr;
     ok_hr(hr = ACList->QueryInterface(IID_IEnumString, (void**)&EnumStr), S_OK);
     if (!SUCCEEDED(hr))
+    {
+        skip("QueryInterface failed\n");
         return;
+    }
 
     CComPtr<IPersistFolder> PersistFolder;
     ok_hr(hr = EnumStr->QueryInterface(IID_IPersistFolder, (void**)&PersistFolder), S_OK);
     if (!SUCCEEDED(hr))
+    {
+        skip("QueryInterface failed\n");
         return;
+    }
 
     CComHeapPtr<ITEMIDLIST> pidlMyComputer;
     ok_hr(hr = SHGetSpecialFolderLocation(NULL, CSIDL_DRIVES, &pidlMyComputer), S_OK);
     if (!SUCCEEDED(hr))
+    {
+        skip("SHGetSpecialFolderLocation failed\n");
         return;
-
+    }
 
     hr = EnumStr->Reset();
     if (g_WinVersion < WINVER_VISTA)
@@ -338,12 +582,18 @@ test_ACListISF_DESKTOP()
     HRESULT hr = CoCreateInstance(CLSID_ACListISF, NULL, CLSCTX_ALL, IID_PPV_ARG(IEnumString, &EnumStr));
     ok_hr(hr, S_OK);
     if (!SUCCEEDED(hr))
+    {
+        skip("CoCreateInstance failed\n");
         return;
+    }
 
     CComPtr<IACList2> ACList;
     ok_hr(hr = EnumStr->QueryInterface(IID_IACList2, (void**)&ACList), S_OK);
     if (!SUCCEEDED(hr))
+    {
+        skip("QueryInterface failed\n");
         return;
+    }
 
     ok_hr(hr = ACList->SetOptions(ACLO_DESKTOP), S_OK);
     test_ExpectFolders(EnumStr, NULL, NULL, IgnoreRoot | CheckLast | IgnoreHidden);
@@ -356,17 +606,26 @@ test_ACListISF_FAVORITES()
     HRESULT hr = CoCreateInstance(CLSID_ACListISF, NULL, CLSCTX_ALL, IID_PPV_ARG(IEnumString, &EnumStr));
     ok_hr(hr, S_OK);
     if (!SUCCEEDED(hr))
+    {
+        skip("CoCreateInstance failed\n");
         return;
+    }
 
     CComPtr<IACList2> ACList;
     ok_hr(hr = EnumStr->QueryInterface(IID_IACList2, (void**)&ACList), S_OK);
     if (!SUCCEEDED(hr))
+    {
+        skip("QueryInterface failed\n");
         return;
+    }
 
     CComHeapPtr<ITEMIDLIST> pidlFavorites;
     ok_hr(hr = SHGetSpecialFolderLocation(NULL, CSIDL_FAVORITES, &pidlFavorites), S_OK);
     if (!SUCCEEDED(hr))
+    {
+        skip("SHGetSpecialFolderLocation failed\n");
         return;
+    }
 
     ok_hr(hr = ACList->SetOptions(ACLO_FAVORITES), S_OK);
     test_ExpectFolders(EnumStr, pidlFavorites, NULL, IgnoreRoot | CheckLast | IgnoreHidden);
@@ -379,12 +638,18 @@ test_ACListISF_FILESYSONLY()
     HRESULT hr = CoCreateInstance(CLSID_ACListISF, NULL, CLSCTX_ALL, IID_PPV_ARG(IEnumString, &EnumStr));
     ok_hr(hr, S_OK);
     if (!SUCCEEDED(hr))
+    {
+        skip("CoCreateInstance failed\n");
         return;
+    }
 
     CComPtr<IACList2> ACList;
     ok_hr(hr = EnumStr->QueryInterface(IID_IACList2, (void**)&ACList), S_OK);
     if (!SUCCEEDED(hr))
+    {
+        skip("QueryInterface failed\n");
         return;
+    }
 
     WCHAR Buffer[MAX_PATH];
     GetSystemWindowsDirectoryW(Buffer, _ARRAYSIZE(Buffer));
@@ -393,7 +658,10 @@ test_ACListISF_FILESYSONLY()
     CComHeapPtr<ITEMIDLIST> pidlDiskRoot;
     ok_hr(hr = SHParseDisplayName(Buffer, NULL, &pidlDiskRoot, NULL, NULL), S_OK);
     if (!SUCCEEDED(hr))
+    {
+        skip("SHParseDisplayName failed\n");
         return;
+    }
 
     ok_hr(hr = ACList->SetOptions(ACLO_FILESYSONLY), S_OK);
     test_at_end(EnumStr);
@@ -409,12 +677,18 @@ test_ACListISF_FILESYSDIRS()
     HRESULT hr = CoCreateInstance(CLSID_ACListISF, NULL, CLSCTX_ALL, IID_PPV_ARG(IEnumString, &EnumStr));
     ok_hr(hr, S_OK);
     if (!SUCCEEDED(hr))
+    {
+        skip("CoCreateInstance failed\n");
         return;
+    }
 
     CComPtr<IACList2> ACList;
     ok_hr(hr = EnumStr->QueryInterface(IID_IACList2, (void**)&ACList), S_OK);
     if (!SUCCEEDED(hr))
+    {
+        skip("QueryInterface failed\n");
         return;
+    }
 
     WCHAR Buffer[MAX_PATH];
     GetSystemWindowsDirectoryW(Buffer, _ARRAYSIZE(Buffer));
@@ -461,10 +735,14 @@ START_TEST(ACListISF)
     CCoInit init;
     ok_hr(init.hres, S_OK);
     if (!SUCCEEDED(init.hres))
+    {
+        skip("CoInitialize failed\n");
         return;
+    }
 
     test_ACListISF_NONE();
     test_ACListISF_CURRENTDIR();
+    test_ACListISF_CURRENTDIR2();
     test_ACListISF_MYCOMPUTER();
     test_ACListISF_DESKTOP();
     test_ACListISF_FAVORITES();

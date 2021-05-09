@@ -9,22 +9,10 @@
 
 #include "pc98vid.h"
 
-/* GLOBALS ********************************************************************/
-
-#ifdef ALLOC_PRAGMA
-#pragma alloc_text(PAGE, Pc98VidStartIO)
-#pragma alloc_text(PAGE, Pc98VidQueryMode)
-#pragma alloc_text(PAGE, Pc98VidQueryAvailModes)
-#pragma alloc_text(PAGE, Pc98VidQueryNumAvailModes)
-#pragma alloc_text(PAGE, Pc98VidQueryCurrentMode)
-#pragma alloc_text(PAGE, Pc98VidMapVideoMemory)
-#pragma alloc_text(PAGE, Pc98VidUnmapVideoMemory)
-#pragma alloc_text(PAGE, Pc98VidResetDevice)
-#pragma alloc_text(PAGE, Pc98VidGetChildState)
-#endif
-
 /* FUNCTIONS ******************************************************************/
 
+static
+CODE_SEG("PAGE")
 VOID
 FASTCALL
 Pc98VidQueryMode(
@@ -56,6 +44,8 @@ Pc98VidQueryMode(
                                 VIDEO_MODE_PALETTE_DRIVEN | VIDEO_MODE_MANAGED_PALETTE;
 }
 
+static
+CODE_SEG("PAGE")
 VP_STATUS
 FASTCALL
 Pc98VidQueryAvailModes(
@@ -82,6 +72,8 @@ Pc98VidQueryAvailModes(
     return NO_ERROR;
 }
 
+static
+CODE_SEG("PAGE")
 VP_STATUS
 FASTCALL
 Pc98VidQueryNumAvailModes(
@@ -101,6 +93,8 @@ Pc98VidQueryNumAvailModes(
     return NO_ERROR;
 }
 
+static
+CODE_SEG("PAGE")
 VP_STATUS
 FASTCALL
 Pc98VidQueryCurrentMode(
@@ -120,6 +114,8 @@ Pc98VidQueryCurrentMode(
     return NO_ERROR;
 }
 
+static
+CODE_SEG("PAGE")
 VP_STATUS
 FASTCALL
 Pc98VidMapVideoMemory(
@@ -159,6 +155,8 @@ Pc98VidMapVideoMemory(
     return Status;
 }
 
+static
+CODE_SEG("PAGE")
 VP_STATUS
 FASTCALL
 Pc98VidUnmapVideoMemory(
@@ -174,6 +172,8 @@ Pc98VidUnmapVideoMemory(
                                 NULL);
 }
 
+static
+CODE_SEG("PAGE")
 VP_STATUS
 FASTCALL
 Pc98VidResetDevice(VOID)
@@ -185,6 +185,8 @@ Pc98VidResetDevice(VOID)
     return NO_ERROR;
 }
 
+static
+CODE_SEG("PAGE")
 VP_STATUS
 FASTCALL
 Pc98VidGetChildState(
@@ -204,6 +206,7 @@ Pc98VidGetChildState(
     return NO_ERROR;
 }
 
+CODE_SEG("PAGE")
 BOOLEAN
 NTAPI
 Pc98VidStartIO(

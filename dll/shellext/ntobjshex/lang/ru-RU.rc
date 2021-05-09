@@ -4,6 +4,8 @@ LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-    IDS_NTOBJFLD_NAME "Пространство имен объектов NT"
+    IDS_NTOBJFLD_NAME "Пространство имён объектов NT"
     IDS_REGISTRY_NAME "Системный реестр"
+    IDS_NTOBJFLD_COMMENT "Позволяет просматривать пространство имён объектов NT"
+    IDS_REGISTRY_COMMENT "Позволяет просматривать системный реестр"
 END

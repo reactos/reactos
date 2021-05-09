@@ -141,6 +141,7 @@ BEGIN
     IDS_INFO_UNINSTALLSTR "\nСтрока для удаления: "
     IDS_INFO_MODIFYPATH "\nСтрока для изменения: "
     IDS_INFO_INSTALLDATE "\nДата установки: "
+    IDS_AINFO_PACKAGE_NAME "\nPackage Name: "
 END
 
 STRINGTABLE
@@ -210,6 +211,9 @@ BEGIN
     IDS_SELECTEDFORINST "Выбрано для установки"
     IDS_MISMATCH_CERT_INFO "Используемый сертификат не опознан:\nНазначение: %s\nВыдан: %s\nВы хотите продолжить в любом случае?"
     IDS_UNABLE_PATH "Incorrect path format."
+    IDS_APP_DISPLAY_DETAILS "details"
+    IDS_APP_DISPLAY_LIST "list"
+    IDS_APP_DISPLAY_TILE "tile"
 END
 
 STRINGTABLE
@@ -246,4 +250,16 @@ BEGIN
     IDS_DL_DIALOG_DB_DISP "База данных приложений"
     IDS_DL_DIALOG_DB_DOWNLOAD_DISP "Обновление базы данных…"
     IDS_DL_DIALOG_DB_UNOFFICIAL_DOWNLOAD_DISP "Updating Database… (Unofficial source)"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_CMD_USAGE "Usage: "
+    IDS_CMD_NEED_PACKAGE_NAME "Error: option %1 expects one or more package name.\n"
+    IDS_CMD_NEED_FILE_NAME "Error: option %1 expects a file name.\n"
+    IDS_CMD_NEED_PARAMS "Error: option %1 expects one or more parameters.\n"
+    IDS_CMD_INVALID_OPTION "Error: Unknown or invalid command line option specified.\n"
+    IDS_CMD_FIND_RESULT_FOR "Find result for %1:\n"
+    IDS_CMD_PACKAGE_NOT_FOUND "Failed to find package %1.\n"
+    IDS_CMD_PACKAGE_INFO "Information about package %1:\n"
 END

@@ -35,7 +35,7 @@ FONT 9, "宋体", 0, 0, 0x0
 BEGIN
     LTEXT "此向导可帮助您创建本地或网络程序、文件、文件夹、计算机或 Internet 地址的快捷方式。", -1, 120, 15, 200, 30
     LTEXT "请输入项目位置：", -1, 120, 50, 120, 10
-    EDITTEXT IDC_SHORTCUT_LOCATION, 120, 65, 150, 15, ES_LEFT
+    EDITTEXT IDC_SHORTCUT_LOCATION, 120, 65, 150, 15, ES_LEFT | ES_AUTOHSCROLL
     PUSHBUTTON "浏览...", IDC_SHORTCUT_BROWSE, 272, 65, 55, 15, ES_LEFT
     LTEXT "点击“下一步”继续。", -1, 120, 97, 162, 10
 END
@@ -46,7 +46,7 @@ CAPTION "选择程序标题"
 FONT 9, "宋体", 0, 0, 0x0
 BEGIN
     LTEXT "输入快捷方式名称(&T)：", -1, 120, 15, 150, 10
-    EDITTEXT IDC_SHORTCUT_NAME, 120, 35, 150, 15, ES_LEFT
+    EDITTEXT IDC_SHORTCUT_NAME, 120, 35, 150, 15, ES_LEFT | ES_AUTOHSCROLL
     LTEXT "点击“完成”创建快捷方式", -1, 118, 97, 178, 17
 END
 

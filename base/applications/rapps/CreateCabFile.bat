@@ -1,12 +1,32 @@
 @echo off
 
-cd ..\..\..\media
+IF "%1"=="" GOTO show_usage
+IF "%2"=="" GOTO show_usage
+IF "%3"=="" GOTO show_usage
 
-mkdir rapps\utf16
+SET CABMAN_CMD=%1
+SET UTF16LE_CMD=%2
+SET RAPPSDB_PATH=%3
 
-for %%f in (rapps\*.txt) do (
-     ..\output-MinGW-i386\host-tools\utf16le.exe "rapps\%%~nf.txt" "rapps\utf16\%%~nf.txt"
+mkdir "%RAPPSDB_PATH%\utf16"
+
+echo Converting txt files to utf16
+for %%f in (%RAPPSDB_PATH%\*.txt) do (
+     %UTF16LE_CMD% "%RAPPSDB_PATH%\%%~nf.txt" "%RAPPSDB_PATH%\utf16\%%~nf.txt"
 )
 
-..\output-MinGW-i386\host-tools\cabman.exe -M mszip -S rapps\rappmgr.cab rapps\utf16\*.txt
-rmdir /s /q rapps\utf16
+echo Building rappmgr.cab
+%CABMAN_CMD% -M mszip -S "%RAPPSDB_PATH%\rappmgr.cab" "%RAPPSDB_PATH%\utf16\*.txt"
+
+echo Building rappmgr2.cab
+%CABMAN_CMD% -M mszip -S "%RAPPSDB_PATH%\rappmgr2.cab" "%RAPPSDB_PATH%\utf16\*.txt" -F icons "%RAPPSDB_PATH%\icons\*.ico"
+
+echo Cleaning up
+rmdir /s /q "%RAPPSDB_PATH%\utf16"
+
+echo Done
+
+goto :eof
+
+:show_usage
+echo Usage: CreateCabFile.bat path\to\cabman.exe path\to\utf16le.exe path\to\rapps-db

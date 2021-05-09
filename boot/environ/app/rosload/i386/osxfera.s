@@ -16,7 +16,6 @@ EXTERN _OslKernelIdt:FWORD
 
 /* FUNCTIONS ****************************************************************/
 .code
-ASSUME nothing
 
 PUBLIC _OslArchTransferToKernel
 _OslArchTransferToKernel:

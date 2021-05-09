@@ -277,6 +277,52 @@ extern NTKERNELAPI ULONG NtGlobalFlag;
 #define IF_NTOS_DEBUG(FlagName) if(FALSE)
 #endif
 
+#if (NTDDI_VERSION >= NTDDI_WINBLUE)
+
+typedef struct _EXT_SET_PARAMETERS_V0
+{
+  ULONG Version;
+  ULONG Reserved;
+  LONGLONG NoWakeTolerance;
+} EXT_SET_PARAMETERS, *PEXT_SET_PARAMETERS;
+
+typedef EXT_SET_PARAMETERS KT2_SET_PARAMETERS, *PKT2_SET_PARAMETERS;
+
+typedef struct _EX_TIMER *PEX_TIMER;
+
+_Function_class_(EXT_CALLBACK)
+_IRQL_requires_(DISPATCH_LEVEL)
+_IRQL_requires_same_
+typedef
+VOID
+NTAPI
+EXT_CALLBACK(
+  _In_ PEX_TIMER Timer,
+  _In_opt_ PVOID Context);
+
+typedef EXT_CALLBACK *PEXT_CALLBACK;
+
+_Function_class_(EXT_DELETE_CALLBACK)
+_IRQL_requires_(DISPATCH_LEVEL)
+_IRQL_requires_same_
+typedef
+VOID
+NTAPI
+EXT_DELETE_CALLBACK(
+  _In_opt_ PVOID Context);
+
+typedef EXT_DELETE_CALLBACK *PEXT_DELETE_CALLBACK;
+typedef PVOID PEXT_CANCEL_PARAMETERS;
+typedef struct _EXT_DELETE_PARAMETERS
+{
+  ULONG Version;
+  ULONG Reserved;
+  PEXT_DELETE_CALLBACK DeleteCallback;
+  PVOID DeleteContext;
+} EXT_DELETE_PARAMETERS, *PEXT_DELETE_PARAMETERS;
+
+#endif // NTDDI_WINBLUE
+
 $endif (_WDMDDK_)
 $if (_NTDDK_)
 typedef struct _ZONE_SEGMENT_HEADER {

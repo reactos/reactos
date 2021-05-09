@@ -27,12 +27,15 @@ InitLogo(PIMGINFO pImgInfo, HWND hwndDlg)
     BITMAP logoBitmap;
     BITMAP maskBitmap;
     BITMAPINFO bmpi;
-    HDC hDC = GetDC(hwndDlg);
-    HDC hDCLogo = CreateCompatibleDC(NULL);
-    HDC hDCMask = CreateCompatibleDC(NULL);
-    HBITMAP hMask, hLogo, hAlphaLogo = NULL;
+    HDC hDC, hDCLogo, hDCMask;
+    HBITMAP hMask = NULL, hLogo = NULL;
+    HBITMAP hAlphaLogo = NULL;
     COLORREF *pBits;
     INT line, column;
+
+    hDC = GetDC(hwndDlg);
+    hDCLogo = CreateCompatibleDC(NULL);
+    hDCMask = CreateCompatibleDC(NULL);
 
     if (hDC == NULL || hDCLogo == NULL || hDCMask == NULL)
         goto Cleanup;
@@ -43,52 +46,52 @@ InitLogo(PIMGINFO pImgInfo, HWND hwndDlg)
     hLogo = (HBITMAP)LoadImageW(hInstance, MAKEINTRESOURCEW(IDB_ROSLOGO), IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR);
     hMask = (HBITMAP)LoadImageW(hInstance, MAKEINTRESOURCEW(IDB_ROSMASK), IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR);
 
-    if (hLogo != NULL && hMask != NULL)
+    if (hLogo == NULL || hMask == NULL)
+        goto Cleanup;
+
+    GetObject(hLogo, sizeof(logoBitmap), &logoBitmap);
+    GetObject(hMask, sizeof(maskBitmap), &maskBitmap);
+
+    if (logoBitmap.bmHeight != maskBitmap.bmHeight || logoBitmap.bmWidth != maskBitmap.bmWidth)
+        goto Cleanup;
+
+    bmpi.bmiHeader.biSize = sizeof(BITMAPINFO);
+    bmpi.bmiHeader.biWidth = logoBitmap.bmWidth;
+    bmpi.bmiHeader.biHeight = logoBitmap.bmHeight;
+    bmpi.bmiHeader.biPlanes = 1;
+    bmpi.bmiHeader.biBitCount = 32;
+    bmpi.bmiHeader.biCompression = BI_RGB;
+    bmpi.bmiHeader.biSizeImage = 4 * logoBitmap.bmWidth * logoBitmap.bmHeight;
+
+    /* Create a premultiplied bitmap */
+    hAlphaLogo = CreateDIBSection(hDC, &bmpi, DIB_RGB_COLORS, (PVOID*)&pBits, 0, 0);
+    if (!hAlphaLogo)
+        goto Cleanup;
+
+    SelectObject(hDCLogo, hLogo);
+    SelectObject(hDCMask, hMask);
+
+    for (line = logoBitmap.bmHeight - 1; line >= 0; line--)
     {
-        GetObject(hLogo, sizeof(logoBitmap), &logoBitmap);
-        GetObject(hMask, sizeof(maskBitmap), &maskBitmap);
-
-        if (logoBitmap.bmHeight != maskBitmap.bmHeight || logoBitmap.bmWidth != maskBitmap.bmWidth)
-            goto Cleanup;
-
-        bmpi.bmiHeader.biSize = sizeof(BITMAPINFO);
-        bmpi.bmiHeader.biWidth = logoBitmap.bmWidth;
-        bmpi.bmiHeader.biHeight = logoBitmap.bmHeight;
-        bmpi.bmiHeader.biPlanes = 1;
-        bmpi.bmiHeader.biBitCount = 32;
-        bmpi.bmiHeader.biCompression = BI_RGB;
-        bmpi.bmiHeader.biSizeImage = 4 * logoBitmap.bmWidth * logoBitmap.bmHeight;
-
-        /* Create a premultiplied bitmap */
-        hAlphaLogo = CreateDIBSection(hDC, &bmpi, DIB_RGB_COLORS, (PVOID*)&pBits, 0, 0);
-        if (!hAlphaLogo)
-            goto Cleanup;
-
-        SelectObject(hDCLogo, hLogo);
-        SelectObject(hDCMask, hMask);
-
-        for (line = logoBitmap.bmHeight - 1; line >= 0; line--)
+        for (column = 0; column < logoBitmap.bmWidth; column++)
         {
-            for (column = 0; column < logoBitmap.bmWidth; column++)
-            {
-                COLORREF alpha = GetPixel(hDCMask, column, line) & 0xFF;
-                COLORREF Color = GetPixel(hDCLogo, column, line);
-                DWORD r, g, b;
+            COLORREF alpha = GetPixel(hDCMask, column, line) & 0xFF;
+            COLORREF Color = GetPixel(hDCLogo, column, line);
+            DWORD r, g, b;
 
-                r = GetRValue(Color) * alpha / 255;
-                g = GetGValue(Color) * alpha / 255;
-                b = GetBValue(Color) * alpha / 255;
+            r = GetRValue(Color) * alpha / 255;
+            g = GetGValue(Color) * alpha / 255;
+            b = GetBValue(Color) * alpha / 255;
 
-                *pBits++ = b | (g << 8) | (r << 16) | (alpha << 24);
-            }
+            *pBits++ = b | (g << 8) | (r << 16) | (alpha << 24);
         }
-
-        pImgInfo->hBitmap = hAlphaLogo;
-        pImgInfo->cxSource = logoBitmap.bmWidth;
-        pImgInfo->cySource = logoBitmap.bmHeight;
-        pImgInfo->iBits = logoBitmap.bmBitsPixel;
-        pImgInfo->iPlanes = logoBitmap.bmPlanes;
     }
+
+    pImgInfo->hBitmap = hAlphaLogo;
+    pImgInfo->cxSource = logoBitmap.bmWidth;
+    pImgInfo->cySource = logoBitmap.bmHeight;
+    pImgInfo->iBits = logoBitmap.bmBitsPixel;
+    pImgInfo->iPlanes = logoBitmap.bmPlanes;
 
 Cleanup:
     if (hMask != NULL) DeleteObject(hMask);

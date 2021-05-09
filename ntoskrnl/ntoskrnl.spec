@@ -47,9 +47,9 @@
 @ stdcall DbgBreakPointWithStatus(long)
 @ stdcall DbgCommandString(ptr ptr)
 @ stdcall DbgLoadImageSymbols(ptr ptr long)
-@ cdecl DbgPrint(str)
-@ cdecl DbgPrintEx(long long str)
-@ cdecl DbgPrintReturnControlC(str)
+@ varargs DbgPrint(str)
+@ varargs DbgPrintEx(long long str)
+@ varargs DbgPrintReturnControlC(str)
 @ stdcall DbgPrompt(str ptr long)
 @ stdcall DbgQueryDebugFilterState(long long)
 @ stdcall DbgSetDebugFilterState(long long long)
@@ -630,7 +630,7 @@
 @ stdcall KeLeaveCriticalRegion() _KeLeaveCriticalRegion
 @ stdcall KeLeaveGuardedRegion() _KeLeaveGuardedRegion
 @ extern KeLoaderBlock
-@ cdecl -arch=x86_64 -private KeLowerIrql(long)
+@ cdecl -arch=x86_64 -private KeLowerIrql(long) KxLowerIrql
 @ extern KeNumberProcessors
 @ stdcall -arch=i386,arm KeProfileInterrupt(ptr)
 @ stdcall KeProfileInterruptWithSource(ptr long)
@@ -644,7 +644,7 @@
 @ stdcall -arch=i386,arm KeQuerySystemTime(ptr)
 @ stdcall -arch=i386,arm KeQueryTickCount(ptr)
 @ stdcall KeQueryTimeIncrement()
-@ cdecl -arch=x86_64 -private KeRaiseIrqlToDpcLevel()
+@ cdecl -arch=x86_64 -private KeRaiseIrqlToDpcLevel() KxRaiseIrqlToDpcLevel
 @ stdcall KeRaiseUserException(long)
 @ stdcall KeReadStateEvent(ptr)
 @ stdcall KeReadStateMutant(ptr)
@@ -720,7 +720,7 @@
 @ fastcall -arch=i386,arm KefAcquireSpinLockAtDpcLevel(ptr)
 @ fastcall -arch=i386,arm KefReleaseSpinLockFromDpcLevel(ptr)
 @ stdcall -arch=i386 Kei386EoiHelper()
-@ cdecl -arch=x86_64 -private KfRaiseIrql(long)
+@ cdecl -arch=x86_64 -private KfRaiseIrql(long) KxRaiseIrql
 @ fastcall -arch=i386 KiEoiHelper(ptr) #ReactOS-Specific
 @ fastcall -arch=i386,arm KiAcquireSpinLock(ptr)
 @ extern KiBugCheckData
@@ -868,9 +868,9 @@
 @ stdcall NtOpenThreadTokenEx(ptr long long long ptr)
 @ stdcall NtQueryDirectoryFile(ptr ptr ptr ptr ptr ptr long long long ptr long)
 @ stdcall NtQueryEaFile(ptr ptr ptr long long ptr long ptr long)
-@ stdcall NtQueryInformationAtom(ptr long ptr long ptr)
+@ stdcall NtQueryInformationAtom(long long ptr long ptr)
 @ stdcall NtQueryInformationFile(ptr ptr ptr long long)
-@ stdcall NtQueryInformationProcess(ptr ptr ptr long ptr)
+@ stdcall NtQueryInformationProcess(ptr long ptr long ptr)
 @ stdcall NtQueryInformationThread(ptr long ptr long ptr)
 @ stdcall NtQueryInformationToken(ptr long ptr long ptr)
 @ stdcall NtQueryQuotaInformationFile(ptr ptr ptr long long ptr long ptr long)
@@ -883,7 +883,7 @@
 @ stdcall NtSetEaFile(ptr ptr ptr long)
 @ stdcall NtSetEvent(ptr ptr)
 @ stdcall NtSetInformationFile(ptr ptr ptr long long)
-@ stdcall NtSetInformationProcess(ptr ptr ptr long)
+@ stdcall NtSetInformationProcess(ptr long ptr long)
 @ stdcall NtSetInformationThread(ptr long ptr long)
 @ stdcall NtSetQuotaInformationFile(ptr ptr ptr long)
 @ stdcall NtSetSecurityObject(ptr long ptr)
@@ -1249,7 +1249,7 @@
 @ fastcall RtlPrefetchMemoryNonTemporal(ptr long)
 @ stdcall RtlPrefixString(ptr ptr long)
 @ stdcall RtlPrefixUnicodeString(ptr ptr long)
-@ stdcall RtlQueryAtomInAtomTable(ptr ptr ptr ptr ptr ptr)
+@ stdcall RtlQueryAtomInAtomTable(ptr long ptr ptr ptr ptr)
 @ stdcall RtlQueryRegistryValues(long wstr ptr ptr ptr)
 @ stdcall RtlQueryTimeZoneInformation(ptr)
 @ stdcall RtlRaiseException(ptr)
@@ -1404,8 +1404,8 @@
 @ stdcall WmiStartTrace(ptr)
 @ stdcall WmiStopTrace(ptr)
 @ fastcall WmiTraceFastEvent(ptr)
-@ cdecl WmiTraceMessage()
-@ stdcall WmiTraceMessageVa(double long ptr long long)
+@ varargs WmiTraceMessage(int64 long ptr long)
+@ stdcall WmiTraceMessageVa(int64 long ptr long ptr)
 @ stdcall WmiUpdateTrace(ptr)
 @ stdcall XIPDispatch(long ptr long)
 @ stdcall ZwAccessCheckAndAuditAlarm(ptr ptr ptr ptr ptr long ptr long ptr ptr ptr)
@@ -1595,7 +1595,7 @@
 @ cdecl memset()
 @ cdecl qsort()
 @ cdecl rand()
-@ cdecl sprintf()
+@ varargs sprintf(ptr str)
 @ cdecl srand()
 @ cdecl strcat()
 @ cdecl strchr()
@@ -1615,7 +1615,7 @@
 @ cdecl towupper()
 @ stdcall vDbgPrintEx(long long str ptr)
 @ stdcall vDbgPrintExWithPrefix(str long long str ptr)
-@ cdecl vsprintf()
+@ cdecl vsprintf(ptr str ptr)
 @ cdecl wcscat()
 @ cdecl wcschr()
 @ cdecl wcscmp()

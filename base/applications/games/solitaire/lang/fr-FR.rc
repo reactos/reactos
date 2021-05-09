@@ -18,13 +18,13 @@ BEGIN
     GROUPBOX "Cartes", -1, 7, 7, 90, 40
     AUTORADIOBUTTON "En tirer une", IDC_OPT_DRAWONE, 14, 19, 70, 10, WS_GROUP | WS_TABSTOP
     AUTORADIOBUTTON "En tirer trois", IDC_OPT_DRAWTHREE, 14, 32, 70, 10
-    GROUPBOX "Scoring", -1, 100, 7, 75, 53
+    GROUPBOX "Score", -1, 100, 7, 75, 53
     AUTORADIOBUTTON "&Standard", IDC_OPT_STANDARD, 107, 19, 60, 10, WS_GROUP | WS_TABSTOP
     AUTORADIOBUTTON "&Vegas", IDC_OPT_VEGAS, 107, 32, 60, 10
-    AUTORADIOBUTTON "&None", IDC_OPT_NOSCORE, 107, 45, 60, 10
+    AUTORADIOBUTTON "&Aucun", IDC_OPT_NOSCORE, 107, 45, 60, 10
     AUTOCHECKBOX "Afficher le temp&s", IDC_OPT_SHOWTIME, 7 ,51 ,65 ,10, WS_TABSTOP
     AUTOCHECKBOX "Barre de s&tatut", IDC_OPT_STATUSBAR, 7, 66, 64, 10, WS_TABSTOP
-    AUTOCHECKBOX "&Keep Score", IDC_OPT_KEEPSCORE, 100, 66, 65, 10, WS_TABSTOP
+    AUTOCHECKBOX "&Score cumulatif", IDC_OPT_KEEPSCORE, 100, 66, 65, 10, WS_TABSTOP
     DEFPUSHBUTTON "OK", IDOK, 35, 97, 50, 14
     PUSHBUTTON "Annuler", IDCANCEL, 101, 97, 50, 14
 END
@@ -59,8 +59,8 @@ BEGIN
     IDS_SOL_QUIT "Quitter le jeu actuel ?"
     IDS_SOL_WIN "Félicitations ! Vous avez gagné !"
     IDS_SOL_DEAL "Redistribuer ?"
-    IDS_SOL_SCORE "Score: %d"
-    IDS_SOL_TIME "Time: %d"
+    IDS_SOL_SCORE "Score : %d"
+    IDS_SOL_TIME "Temps : %d"
 END
 
 /* Menus */
@@ -71,6 +71,7 @@ BEGIN
     BEGIN
         MENUITEM "&Donne\tF2", IDM_GAME_NEW
         MENUITEM SEPARATOR
+        MENUITEM "&Undo", IDM_GAME_UNDO, GRAYED
         MENUITEM "&Jeux...", IDM_GAME_DECK
         MENUITEM "&Options...", IDM_GAME_OPTIONS
         MENUITEM SEPARATOR

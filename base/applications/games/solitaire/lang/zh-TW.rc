@@ -59,8 +59,8 @@ BEGIN
     IDS_SOL_QUIT "退出目前遊戲？"
     IDS_SOL_WIN "恭喜你，你嬴了！！"
     IDS_SOL_DEAL "再玩一次？"
-    IDS_SOL_SCORE "Score: %d"
-    IDS_SOL_TIME "Time: %d"
+    IDS_SOL_SCORE "分數: %d"
+    IDS_SOL_TIME "時間: %d"
 END
 
 /* Menus */
@@ -71,6 +71,7 @@ BEGIN
     BEGIN
         MENUITEM "發牌(&D)\tF2", IDM_GAME_NEW
         MENUITEM SEPARATOR
+        MENUITEM "復原(&U)", IDM_GAME_UNDO, GRAYED
         MENUITEM "背面圖案(&C)...", IDM_GAME_DECK
         MENUITEM "選項(&O)...", IDM_GAME_OPTIONS
         MENUITEM SEPARATOR

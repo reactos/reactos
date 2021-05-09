@@ -2,6 +2,7 @@
  *  Shell AutoComplete list
  *
  *  Copyright 2015  Thomas Faber
+ *  Copyright 2020  Katayama Hirofumi MZ
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -25,40 +26,70 @@ class CACListISF :
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
     public IEnumString,
     public IACList2,
+    public ICurrentWorkingDirectory,
     public IShellService,
     public IPersistFolder
 {
 private:
+    enum LOCATION_TYPE
+    {
+        LT_DIRECTORY,
+        LT_DESKTOP,
+        LT_MYCOMPUTER,
+        LT_FAVORITES,
+        LT_MAX
+    };
+
     DWORD m_dwOptions;
+    LOCATION_TYPE m_iNextLocation;
+    BOOL m_fShowHidden;
+    CStringW m_szRawPath;
+    CStringW m_szExpanded;
+    CComHeapPtr<ITEMIDLIST> m_pidlLocation;
+    CComHeapPtr<ITEMIDLIST> m_pidlCurDir;
+    CComPtr<IEnumIDList> m_pEnumIDList;
+    CComPtr<IShellFolder> m_pShellFolder;
+    CComPtr<IBrowserService> m_pBrowserService;
 
 public:
     CACListISF();
     ~CACListISF();
 
+    HRESULT NextLocation();
+    HRESULT SetLocation(LPITEMIDLIST pidl);
+    HRESULT GetDisplayName(LPCITEMIDLIST pidlChild, CComHeapPtr<WCHAR>& pszChild);
+    HRESULT GetPaths(LPCITEMIDLIST pidlChild, CComHeapPtr<WCHAR>& pszRaw,
+                     CComHeapPtr<WCHAR>& pszExpanded);
+
     // *** IEnumString methods ***
-    virtual HRESULT STDMETHODCALLTYPE Next(ULONG celt, LPOLESTR *rgelt, ULONG *pceltFetched);
-    virtual HRESULT STDMETHODCALLTYPE Skip(ULONG celt);
-    virtual HRESULT STDMETHODCALLTYPE Reset();
-    virtual HRESULT STDMETHODCALLTYPE Clone(IEnumString **ppenum);
+    STDMETHODIMP Next(ULONG celt, LPOLESTR *rgelt, ULONG *pceltFetched) override;
+    STDMETHODIMP Skip(ULONG celt) override;
+    STDMETHODIMP Reset() override;
+    STDMETHODIMP Clone(IEnumString **ppenum) override;
 
     // *** IACList methods ***
-    virtual HRESULT STDMETHODCALLTYPE Expand(LPCOLESTR pszExpand);
+    STDMETHODIMP Expand(LPCOLESTR pszExpand) override;
 
     // *** IACList2 methods ***
-    virtual HRESULT STDMETHODCALLTYPE SetOptions(DWORD dwFlag);
-    virtual HRESULT STDMETHODCALLTYPE GetOptions(DWORD* pdwFlag);
+    STDMETHODIMP SetOptions(DWORD dwFlag) override;
+    STDMETHODIMP GetOptions(DWORD* pdwFlag) override;
+
+    // FIXME: These virtual keywords below should be removed.
 
     // *** IShellService methods ***
-    virtual HRESULT STDMETHODCALLTYPE SetOwner(IUnknown *);
+    virtual STDMETHODIMP SetOwner(IUnknown *punkOwner) override;
 
     // *** IPersist methods ***
-    virtual HRESULT STDMETHODCALLTYPE GetClassID(CLSID *pClassID);
+    virtual STDMETHODIMP GetClassID(CLSID *pClassID) override;
 
     // *** IPersistFolder methods ***
-    virtual HRESULT STDMETHODCALLTYPE Initialize(PCIDLIST_ABSOLUTE pidl);
+    virtual STDMETHODIMP Initialize(PCIDLIST_ABSOLUTE pidl) override;
+
+    // *** ICurrentWorkingDirectory methods ***
+    STDMETHODIMP GetDirectory(LPWSTR pwzPath, DWORD cchSize) override;
+    STDMETHODIMP SetDirectory(LPCWSTR pwzPath) override;
 
 public:
-
     DECLARE_REGISTRY_RESOURCEID(IDR_ACLISTISF)
     DECLARE_NOT_AGGREGATABLE(CACListISF)
 
@@ -72,5 +103,6 @@ public:
         // Windows doesn't return this
         //COM_INTERFACE_ENTRY_IID(IID_IPersist, IPersist)
         COM_INTERFACE_ENTRY_IID(IID_IPersistFolder, IPersistFolder)
+        COM_INTERFACE_ENTRY_IID(IID_ICurrentWorkingDirectory, ICurrentWorkingDirectory)
     END_COM_MAP()
 };

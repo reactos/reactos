@@ -1,0 +1,23 @@
+//+-------------------------------------------------------------------------
+//
+//  Microsoft Windows
+//
+//  Copyright (C) Microsoft Corporation, 1996 - 1999
+//
+//  File:       scsicdrm.rc
+//
+//--------------------------------------------------------------------------
+
+#include <verrsrc.h>
+
+#include <ntverp.h>
+
+#define VER_FILETYPE                VFT_DRV
+#define VER_FILESUBTYPE             VFT2_DRV_SYSTEM
+#define VER_FILEDESCRIPTION_STR     "SCSI CD-ROM Driver"
+#define VER_INTERNALNAME_STR        "cdrom.sys"
+#define VER_ORIGINALFILENAME_STR    "cdrom.sys"
+#define VER_LANGNEUTRAL
+
+#include "common.ver"
+

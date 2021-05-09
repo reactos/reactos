@@ -899,6 +899,8 @@ Return Value:
     //  We only support creation, last modify and last write times on Cdfs.
     //
 
+    RtlZeroMemory(Buffer, sizeof(FILE_BASIC_INFORMATION));
+
     Buffer->LastWriteTime.QuadPart =
     Buffer->CreationTime.QuadPart =
     Buffer->ChangeTime.QuadPart = Fcb->CreationTime;

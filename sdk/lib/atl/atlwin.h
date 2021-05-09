@@ -782,11 +782,14 @@ public:
     BOOL GetWindowText(BSTR& bstrText)
     {
         ATLASSERT(::IsWindow(m_hWnd));
-        int length = ::GetWindowTextLength(m_hWnd);
-        if (!SysReAllocStringLen(&bstrText, NULL, length))
+        INT length = ::GetWindowTextLengthW(m_hWnd);
+        if (!::SysReAllocStringLen(&bstrText, NULL, length))
             return FALSE;
-        ::GetWindowText(m_hWnd, (LPTSTR)&bstrText[2], length);
-        return TRUE;
+        if (::GetWindowTextW(m_hWnd, bstrText, length + 1))
+            return TRUE;
+        ::SysFreeString(bstrText);
+        bstrText = NULL;
+        return FALSE;
     }
 
     int GetWindowTextLength() const
@@ -1482,26 +1485,47 @@ public:
 
     BOOL SubclassWindow(HWND hWnd)
     {
-        CWindowImplBaseT<TBase, TWinTraits> *pThis;
-        WNDPROC newWindowProc;
-        WNDPROC oldWindowProc;
-        BOOL result;
-
         ATLASSERT(m_hWnd == NULL);
         ATLASSERT(::IsWindow(hWnd));
 
+        CWindowImplBaseT<TBase, TWinTraits> *pThis;
         pThis = reinterpret_cast<CWindowImplBaseT<TBase, TWinTraits>*>(this);
 
-        result = m_thunk.Init(GetWindowProc(), this);
+        BOOL result = m_thunk.Init(GetWindowProc(), this);
         if (result == FALSE)
             return FALSE;
-        newWindowProc = m_thunk.GetWNDPROC();
-        oldWindowProc = reinterpret_cast<WNDPROC>(::SetWindowLongPtr(hWnd, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(newWindowProc)));
+
+        WNDPROC newWindowProc = m_thunk.GetWNDPROC();
+        WNDPROC oldWindowProc = reinterpret_cast<WNDPROC>(
+            ::SetWindowLongPtr(hWnd, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(newWindowProc)));
         if (oldWindowProc == NULL)
             return FALSE;
-        m_pfnSuperWindowProc = oldWindowProc;
+
+        pThis->m_pfnSuperWindowProc = oldWindowProc;
         pThis->m_hWnd = hWnd;
         return TRUE;
+    }
+
+    HWND UnsubclassWindow(BOOL bForce = FALSE)
+    {
+        ATLASSERT(m_hWnd != NULL);
+        ATLASSERT(::IsWindow(m_hWnd));
+
+        CWindowImplBaseT<TBase, TWinTraits>* pThis;
+        pThis = reinterpret_cast<CWindowImplBaseT<TBase, TWinTraits>*>(this);
+
+        HWND hwndOld = pThis->m_hWnd;
+        WNDPROC oldWindowProc = m_thunk.GetWNDPROC();
+        WNDPROC subclassedProc = reinterpret_cast<WNDPROC>(
+            ::GetWindowLongPtr(hwndOld, GWLP_WNDPROC));
+        if (!bForce && oldWindowProc != subclassedProc)
+            return NULL;
+
+        ::SetWindowLongPtr(hwndOld, GWLP_WNDPROC,
+                           (LONG_PTR)pThis->m_pfnSuperWindowProc);
+        pThis->m_pfnSuperWindowProc = ::DefWindowProc;
+        pThis->m_hWnd = NULL;
+        return hwndOld;
     }
 
     virtual WNDPROC GetWindowProc()
@@ -1554,8 +1578,13 @@ public:
         BOOL handled;
         LONG_PTR saveWindowProc;
 
-        ATLASSERT(pThis != NULL && (pThis->m_dwState & WINSTATE_DESTROYED) == 0 && pThis->m_hWnd != NULL);
-        if (pThis == NULL || (pThis->m_dwState & WINSTATE_DESTROYED) != 0 || pThis->m_hWnd == NULL)
+        ATLASSERT(pThis != NULL);
+        if (pThis == NULL)
+            return 0;
+
+        ATLASSERT((pThis->m_dwState & WINSTATE_DESTROYED) == 0);
+        ATLASSERT(pThis->m_hWnd != NULL);
+        if ((pThis->m_dwState & WINSTATE_DESTROYED) != 0 || pThis->m_hWnd == NULL)
             return 0;
 
         hWnd = pThis->m_hWnd;
@@ -1609,7 +1638,7 @@ public:
             MenuOrID.m_hMenu = (HMENU)(UINT_PTR)this;
         if (rect.m_lpRect == NULL)
             rect.m_lpRect = &TBase::rcDefault;
-        hWnd = ::CreateWindowEx(dwExStyle, reinterpret_cast<LPCWSTR>(MAKEINTATOM(atom)), szWindowName, dwStyle, rect.m_lpRect->left,
+        hWnd = ::CreateWindowEx(dwExStyle, MAKEINTATOM(atom), szWindowName, dwStyle, rect.m_lpRect->left,
                     rect.m_lpRect->top, rect.m_lpRect->right - rect.m_lpRect->left, rect.m_lpRect->bottom - rect.m_lpRect->top,
                     hWndParent, MenuOrID.m_hMenu, _AtlBaseModule.GetModuleInstance(), lpCreateParam);
 
@@ -1681,7 +1710,7 @@ public:
         m_pCurrentMsg = NULL;
     }
 
-    CContainedWindowT(LPTSTR lpszClassName, CMessageMap *pObject, DWORD dwMsgMapID = 0)
+    CContainedWindowT(LPCTSTR lpszClassName, CMessageMap *pObject, DWORD dwMsgMapID = 0)
     {
         m_lpszClassName = lpszClassName;
         m_pfnSuperWindowProc = ::DefWindowProc;
@@ -1697,26 +1726,46 @@ public:
 
     BOOL SubclassWindow(HWND hWnd)
     {
-        CContainedWindowT<TBase> *pThis;
-        WNDPROC newWindowProc;
-        WNDPROC oldWindowProc;
-        BOOL result;
-
         ATLASSERT(m_hWnd == NULL);
         ATLASSERT(::IsWindow(hWnd));
 
+        CContainedWindowT<TBase> *pThis;
         pThis = reinterpret_cast<CContainedWindowT<TBase> *>(this);
 
-        result = m_thunk.Init(WindowProc, pThis);
+        BOOL result = m_thunk.Init(WindowProc, pThis);
         if (result == FALSE)
             return FALSE;
-        newWindowProc = m_thunk.GetWNDPROC();
-        oldWindowProc = reinterpret_cast<WNDPROC>(::SetWindowLongPtr(hWnd, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(newWindowProc)));
+
+        WNDPROC newWindowProc = m_thunk.GetWNDPROC();
+        WNDPROC oldWindowProc = reinterpret_cast<WNDPROC>(
+            ::SetWindowLongPtr(hWnd, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(newWindowProc)));
         if (oldWindowProc == NULL)
             return FALSE;
-        m_pfnSuperWindowProc = oldWindowProc;
+
+        pThis->m_pfnSuperWindowProc = oldWindowProc;
         pThis->m_hWnd = hWnd;
         return TRUE;
+    }
+
+    HWND UnsubclassWindow(BOOL bForce = FALSE)
+    {
+        ATLASSERT(m_hWnd != NULL);
+        ATLASSERT(::IsWindow(m_hWnd));
+
+        CContainedWindowT<TBase>* pThis;
+        pThis = reinterpret_cast<CContainedWindowT<TBase>*>(this);
+        HWND hwndOld = pThis->m_hWnd;
+
+        WNDPROC subclassedProc = reinterpret_cast<WNDPROC>(
+            ::GetWindowLongPtr(hwndOld, GWLP_WNDPROC));
+        if (!bForce && m_thunk.GetWNDPROC() != subclassedProc)
+            return NULL;
+
+        ::SetWindowLongPtr(hwndOld, GWLP_WNDPROC,
+                           (LONG_PTR)pThis->m_pfnSuperWindowProc);
+        pThis->m_pfnSuperWindowProc = ::DefWindowProc;
+        pThis->m_hWnd = NULL;
+        return hwndOld;
     }
 
     static LRESULT CALLBACK StartWindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -1897,13 +1946,13 @@ static ATL::CWndClassInfo& GetWndClassInfo()                                    
 
 struct _ATL_WNDCLASSINFOW
 {
-    WNDCLASSEXW m_wc;
-    LPCWSTR m_lpszOrigName;
+    WNDCLASSEX m_wc;
+    LPCTSTR m_lpszOrigName;
     WNDPROC pWndProc;
-    LPCWSTR m_lpszCursorID;
+    LPCTSTR m_lpszCursorID;
     BOOL m_bSystemCursor;
     ATOM m_atom;
-    WCHAR m_szAutoName[sizeof("ATL:") + sizeof(void *) * 2]; // == 4 characters + NULL + number of hexadecimal digits describing a pointer.
+    TCHAR m_szAutoName[sizeof("ATL:") + sizeof(void *) * 2]; // == 4 characters + NULL + number of hexadecimal digits describing a pointer.
 
     ATOM Register(WNDPROC *p)
     {

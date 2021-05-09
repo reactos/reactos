@@ -4,27 +4,36 @@
  * FILE:        include/reactos/libs/fslib/cdfslib.h
  * PURPOSE:     Public definitions for CDFS filesystem library
  */
+
 #ifndef __CDFSLIB_H
 #define __CDFSLIB_H
 
 #include <fmifs/fmifs.h>
 
-NTSTATUS NTAPI
+BOOLEAN
+NTAPI
 CdfsChkdsk(
-	IN PUNICODE_STRING DriveRoot,
-	IN BOOLEAN FixErrors,
-	IN BOOLEAN Verbose,
-	IN BOOLEAN CheckOnlyIfDirty,
-	IN BOOLEAN ScanDrive,
-	IN PFMIFSCALLBACK Callback);
+    IN PUNICODE_STRING DriveRoot,
+    IN PFMIFSCALLBACK Callback,
+    IN BOOLEAN FixErrors,
+    IN BOOLEAN Verbose,
+    IN BOOLEAN CheckOnlyIfDirty,
+    IN BOOLEAN ScanDrive,
+    IN PVOID pUnknown1,
+    IN PVOID pUnknown2,
+    IN PVOID pUnknown3,
+    IN PVOID pUnknown4,
+    IN PULONG ExitStatus);
 
-NTSTATUS NTAPI
+BOOLEAN
+NTAPI
 CdfsFormat(
-	IN PUNICODE_STRING DriveRoot,
-	IN FMIFS_MEDIA_FLAG MediaFlag,
-	IN PUNICODE_STRING Label,
-	IN BOOLEAN QuickFormat,
-	IN ULONG ClusterSize,
-	IN PFMIFSCALLBACK Callback);
+    IN PUNICODE_STRING DriveRoot,
+    IN PFMIFSCALLBACK Callback,
+    IN BOOLEAN QuickFormat,
+    IN BOOLEAN BackwardCompatible,
+    IN MEDIA_TYPE MediaType,
+    IN PUNICODE_STRING Label,
+    IN ULONG ClusterSize);
 
-#endif /*__CDFSLIB_H */
+#endif /* __CDFSLIB_H */

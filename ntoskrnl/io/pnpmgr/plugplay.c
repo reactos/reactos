@@ -12,10 +12,6 @@
 #define NDEBUG
 #include <debug.h>
 
-#if defined (ALLOC_PRAGMA)
-#pragma alloc_text(INIT, IopInitPlugPlayEvents)
-#endif
-
 typedef struct _PNP_EVENT_ENTRY
 {
     LIST_ENTRY ListEntry;
@@ -30,7 +26,8 @@ static KEVENT IopPnpNotifyEvent;
 
 /* FUNCTIONS *****************************************************************/
 
-NTSTATUS INIT_FUNCTION
+CODE_SEG("INIT")
+NTSTATUS
 IopInitPlugPlayEvents(VOID)
 {
     InitializeListHead(&IopPnpEventQueueHead);
@@ -188,40 +185,6 @@ IopCaptureUnicodeString(PUNICODE_STRING DstName, PUNICODE_STRING SrcName)
 
     return Status;
 }
-
-static NTSTATUS
-IopPnpEnumerateDevice(PPLUGPLAY_CONTROL_ENUMERATE_DEVICE_DATA DeviceData)
-{
-    PDEVICE_OBJECT DeviceObject;
-    UNICODE_STRING DeviceInstance;
-    NTSTATUS Status = STATUS_SUCCESS;
-
-    Status = IopCaptureUnicodeString(&DeviceInstance, &DeviceData->DeviceInstance);
-    if (!NT_SUCCESS(Status))
-    {
-        return Status;
-    }
-
-    DPRINT("IopPnpEnumerateDevice(%wZ)\n", &DeviceInstance);
-
-    /* Get the device object */
-    DeviceObject = IopGetDeviceObjectFromDeviceInstance(&DeviceInstance);
-    if (DeviceInstance.Buffer != NULL)
-    {
-        ExFreePool(DeviceInstance.Buffer);
-    }
-    if (DeviceObject == NULL)
-    {
-        return STATUS_NO_SUCH_DEVICE;
-    }
-
-    Status = PiPerformSyncDeviceAction(DeviceObject, PiActionEnumDeviceTree);
-
-    ObDereferenceObject(DeviceObject);
-
-    return Status;
-}
-
 
 /*
  * Remove the current PnP event from the tail of the event queue
@@ -692,37 +655,54 @@ IopGetRelatedDevice(PPLUGPLAY_CONTROL_RELATED_DEVICE_DATA RelatedDeviceData)
     return Status;
 }
 
+static
+BOOLEAN
+PiIsDevNodeStarted(
+    _In_ PDEVICE_NODE DeviceNode)
+{
+    return (DeviceNode->State == DeviceNodeStartPending ||
+            DeviceNode->State == DeviceNodeStartCompletion ||
+            DeviceNode->State == DeviceNodeStartPostWork ||
+            DeviceNode->State == DeviceNodeStarted ||
+            DeviceNode->State == DeviceNodeQueryStopped ||
+            DeviceNode->State == DeviceNodeEnumeratePending ||
+            DeviceNode->State == DeviceNodeEnumerateCompletion ||
+            DeviceNode->State == DeviceNodeStopped ||
+            DeviceNode->State == DeviceNodeRestartCompletion);
+}
+
 static ULONG
 IopGetDeviceNodeStatus(PDEVICE_NODE DeviceNode)
 {
-    ULONG Output = 0;
+    ULONG Output = DN_NT_ENUMERATOR | DN_NT_DRIVER;
 
     if (DeviceNode->Parent == IopRootDeviceNode)
         Output |= DN_ROOT_ENUMERATED;
 
-    if (DeviceNode->Flags & DNF_ADDED)
+    // FIXME: review for deleted and removed states
+    if (DeviceNode->State >= DeviceNodeDriversAdded)
         Output |= DN_DRIVER_LOADED;
 
-    /* FIXME: DN_ENUM_LOADED */
-
-    if (DeviceNode->Flags & DNF_STARTED)
+    if (PiIsDevNodeStarted(DeviceNode))
         Output |= DN_STARTED;
 
-    /* FIXME: Manual */
+    if (DeviceNode->UserFlags & DNUF_WILL_BE_REMOVED)
+        Output |= DN_WILL_BE_REMOVED;
 
-    if (!(DeviceNode->Flags & DNF_PROCESSED))
-        Output |= DN_NEED_TO_ENUM;
-
-    /* DN_NOT_FIRST_TIME is 9x only */
-
-    /* FIXME: DN_HARDWARE_ENUM */
-
-    /* DN_LIAR and DN_HAS_MARK are 9x only */
-
-    if (DeviceNode->Problem != 0)
+    if (DeviceNode->Flags & DNF_HAS_PROBLEM)
         Output |= DN_HAS_PROBLEM;
 
-    /* FIXME: DN_FILTERED */
+    if (DeviceNode->Flags & DNF_HAS_PRIVATE_PROBLEM)
+        Output |= DN_PRIVATE_PROBLEM;
+
+    if (DeviceNode->Flags & DNF_DRIVER_BLOCKED)
+        Output |= DN_DRIVER_BLOCKED;
+
+    if (DeviceNode->Flags & DNF_CHILD_WITH_INVALID_ID)
+        Output |= DN_CHILD_WITH_INVALID_ID;
+
+    if (DeviceNode->Flags & DNF_HAS_PRIVATE_PROBLEM)
+        Output |= DN_PRIVATE_PROBLEM;
 
     if (DeviceNode->Flags & DNF_LEGACY_DRIVER)
         Output |= DN_LEGACY_DRIVER;
@@ -732,10 +712,6 @@ IopGetDeviceNodeStatus(PDEVICE_NODE DeviceNode)
 
     if (!(DeviceNode->UserFlags & DNUF_NOT_DISABLEABLE))
         Output |= DN_DISABLEABLE;
-
-    /* FIXME: Implement the rest */
-
-    Output |= DN_NT_ENUMERATOR | DN_NT_DRIVER;
 
     return Output;
 }
@@ -1032,23 +1008,26 @@ IopGetDeviceDepth(PPLUGPLAY_CONTROL_DEPTH_DATA DepthData)
     return Status;
 }
 
-
-static NTSTATUS
-IopResetDevice(PPLUGPLAY_CONTROL_RESET_DEVICE_DATA ResetDeviceData)
+static
+NTSTATUS
+PiControlSyncDeviceAction(
+    _In_ PPLUGPLAY_CONTROL_DEVICE_CONTROL_DATA DeviceData,
+    _In_ PLUGPLAY_CONTROL_CLASS ControlClass)
 {
     PDEVICE_OBJECT DeviceObject;
     NTSTATUS Status;
     UNICODE_STRING DeviceInstance;
 
-    Status = IopCaptureUnicodeString(&DeviceInstance, &ResetDeviceData->DeviceInstance);
+    ASSERT(ControlClass == PlugPlayControlEnumerateDevice ||
+           ControlClass == PlugPlayControlStartDevice ||
+           ControlClass == PlugPlayControlResetDevice);
+
+    Status = IopCaptureUnicodeString(&DeviceInstance, &DeviceData->DeviceInstance);
     if (!NT_SUCCESS(Status))
     {
         return Status;
     }
 
-    DPRINT("IopResetDevice(%wZ)\n", &DeviceInstance);
-
-    /* Get the device object */
     DeviceObject = IopGetDeviceObjectFromDeviceInstance(&DeviceInstance);
     if (DeviceInstance.Buffer != NULL)
     {
@@ -1059,7 +1038,25 @@ IopResetDevice(PPLUGPLAY_CONTROL_RESET_DEVICE_DATA ResetDeviceData)
         return STATUS_NO_SUCH_DEVICE;
     }
 
-    Status = PiPerformSyncDeviceAction(DeviceObject, PiActionResetDevice);
+    DEVICE_ACTION Action;
+
+    switch (ControlClass)
+    {
+        case PlugPlayControlEnumerateDevice:
+            Action = PiActionEnumDeviceTree;
+            break;
+        case PlugPlayControlStartDevice:
+            Action = PiActionStartDevice;
+            break;
+        case PlugPlayControlResetDevice:
+            Action = PiActionResetDevice;
+            break;
+        default:
+            UNREACHABLE;
+            break;
+    }
+
+    Status = PiPerformSyncDeviceAction(DeviceObject, Action);
 
     ObDereferenceObject(DeviceObject);
 
@@ -1299,12 +1296,21 @@ NtPlugPlayControl(IN PLUGPLAY_CONTROL_CLASS PlugPlayControlClass,
         case PlugPlayControlEnumerateDevice:
             if (!Buffer || BufferLength < sizeof(PLUGPLAY_CONTROL_ENUMERATE_DEVICE_DATA))
                 return STATUS_INVALID_PARAMETER;
-            return IopPnpEnumerateDevice((PPLUGPLAY_CONTROL_ENUMERATE_DEVICE_DATA)Buffer);
+            // the Flags field is not used anyway
+            return PiControlSyncDeviceAction((PPLUGPLAY_CONTROL_DEVICE_CONTROL_DATA)Buffer,
+                                             PlugPlayControlClass);
 
 //        case PlugPlayControlRegisterNewDevice:
 //        case PlugPlayControlDeregisterDevice:
 //        case PlugPlayControlInitializeDevice:
-//        case PlugPlayControlStartDevice:
+
+        case PlugPlayControlStartDevice:
+        case PlugPlayControlResetDevice:
+            if (!Buffer || BufferLength < sizeof(PLUGPLAY_CONTROL_DEVICE_CONTROL_DATA))
+                return STATUS_INVALID_PARAMETER;
+            return PiControlSyncDeviceAction((PPLUGPLAY_CONTROL_DEVICE_CONTROL_DATA)Buffer,
+                                             PlugPlayControlClass);
+
 //        case PlugPlayControlUnlockDevice:
 //        case PlugPlayControlQueryAndRemoveDevice:
 
@@ -1352,12 +1358,6 @@ NtPlugPlayControl(IN PLUGPLAY_CONTROL_CLASS PlugPlayControlClass,
 //        case PlugPlayControlTargetDeviceRelation:
 //        case PlugPlayControlQueryConflictList:
 //        case PlugPlayControlRetrieveDock:
-
-        case PlugPlayControlResetDevice:
-            if (!Buffer || BufferLength < sizeof(PLUGPLAY_CONTROL_RESET_DEVICE_DATA))
-                return STATUS_INVALID_PARAMETER;
-            return IopResetDevice((PPLUGPLAY_CONTROL_RESET_DEVICE_DATA)Buffer);
-
 //        case PlugPlayControlHaltDevice:
 //        case PlugPlayControlGetBlockedDriverList:
 

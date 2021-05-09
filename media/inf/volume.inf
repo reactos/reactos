@@ -1,0 +1,45 @@
+; Volume.INF
+
+; Installation file for storage volumes
+
+[Version]
+Signature  = "$Windows NT$"
+;Signature  = "$ReactOS$"
+LayoutFile = layout.inf
+Class      = Volume
+ClassGUID  = {71A27CDD-812A-11D0-BEC7-08002BE2092F}
+Provider   = %ReactOS%
+DriverVer  = 09/10/2008,1.0.0.0
+
+[DestinationDirs]
+DefaultDestDir = 12
+
+[ClassInstall32.NT]
+AddReg = Volume.NT.AddReg
+
+[Volume.NT.AddReg]
+HKR, , ,                0, %VolumeClassName%
+HKR, , EnumPropPages32, 0, "storprop.dll,VolumePropPageProvider"
+HKR, , Icon,            0, "-53"
+HKR, , Installer32,     0, "syssetup.dll,VolumeClassInstaller"
+HKR, , NoInstallClass,  0, "1"
+HKR, , SilentInstall,   0, "1"
+
+[Manufacturer]
+%GenericMfg% = GenericMfg
+
+[GenericMfg]
+%STORAGE\Volume.DeviceDesc% = VolumeInstall,STORAGE\Volume
+
+[VolumeInstall]
+
+[VolumeInstall.Interfaces]
+;AddInterface = {53F5630D-B6BF-11D0-94F2-00A0C91EFb8B}
+
+;-------------------------------- STRINGS -------------------------------
+
+[Strings]
+ReactOS = "ReactOS Team"
+VolumeClassName = "Storage volumes"
+GenericMfg = "(Generic storage volumes)"
+STORAGE\Volume.DeviceDesc = "Storage volume"

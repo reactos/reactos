@@ -131,3 +131,11 @@ START_TEST(DefaultActCtx)
     }
     
 }
+
+HANDLE _CreateActCtxFromFile(LPCWSTR FileName, int line);
+
+START_TEST(ActCtxWithXmlNamespaces)
+{
+    // _CreateActCtxFromFile() contains all the assertions we need.
+    (void)_CreateActCtxFromFile(L"xmlns.manifest", __LINE__);
+}

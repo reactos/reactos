@@ -711,6 +711,12 @@ NTSTATUS DispTdiQueryInformation(
         switch ((ULONG_PTR)IrpSp->FileObject->FsContext2) {
           case TDI_TRANSPORT_ADDRESS_FILE:
             AddrFile = (PADDRESS_FILE)TranContext->Handle.AddressHandle;
+            if (AddrFile == NULL)
+            {
+                TI_DbgPrint(MIN_TRACE, ("FIXME: No address file object.\n"));
+                ASSERT(AddrFile != NULL);
+                return STATUS_INVALID_PARAMETER;
+            }
 
 			Address->TAAddressCount = 1;
 			Address->Address[0].AddressLength = TDI_ADDRESS_LENGTH_IP;
@@ -725,6 +731,12 @@ NTSTATUS DispTdiQueryInformation(
           case TDI_CONNECTION_FILE:
             Endpoint =
 				(PCONNECTION_ENDPOINT)TranContext->Handle.ConnectionContext;
+            if (Endpoint == NULL || Endpoint->AddressFile == NULL)
+            {
+                TI_DbgPrint(MIN_TRACE, ("FIXME: No connection endpoint file object.\n"));
+                ASSERT(Endpoint != NULL && Endpoint->AddressFile != NULL);
+                return STATUS_INVALID_PARAMETER;
+            }
 
             Address->TAAddressCount = 1;
             Address->Address[0].AddressLength = TDI_ADDRESS_LENGTH_IP;

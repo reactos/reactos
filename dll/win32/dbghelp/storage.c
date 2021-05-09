@@ -20,7 +20,6 @@
  */
 
 
-#include "config.h"
 #include <assert.h>
 #include <stdlib.h>
 #ifndef DBGHELP_STATIC_LIB
@@ -207,7 +206,7 @@ void* vector_add(struct vector* v, struct pool* pool)
  */
 struct key2index
 {
-    unsigned long       key;
+    ULONG_PTR           key;
     unsigned            index;
 };
 
@@ -223,7 +222,7 @@ void sparse_array_init(struct sparse_array* sa, unsigned elt_sz, unsigned bucket
  * Returns the first index which key is >= at passed key
  */
 static struct key2index* sparse_array_lookup(const struct sparse_array* sa,
-                                             unsigned long key, unsigned* idx)
+                                             ULONG_PTR key, unsigned* idx)
 {
     struct key2index*   pk2i;
     unsigned            low, high;
@@ -269,7 +268,7 @@ static struct key2index* sparse_array_lookup(const struct sparse_array* sa,
     return pk2i;
 }
 
-void*   sparse_array_find(const struct sparse_array* sa, unsigned long key)
+void*   sparse_array_find(const struct sparse_array* sa, ULONG_PTR key)
 {
     unsigned            idx;
     struct key2index*   pk2i;
@@ -279,7 +278,7 @@ void*   sparse_array_find(const struct sparse_array* sa, unsigned long key)
     return NULL;
 }
 
-void*   sparse_array_add(struct sparse_array* sa, unsigned long key, 
+void*   sparse_array_add(struct sparse_array* sa, ULONG_PTR key,
                          struct pool* pool)
 {
     unsigned            idx, i;
@@ -403,7 +402,7 @@ void hash_table_add(struct hash_table* ht, struct hash_table_elt* elt)
     ht->num_elts++;
 }
 
-void hash_table_iter_init(const struct hash_table* ht, 
+void hash_table_iter_init(const struct hash_table* ht,
                           struct hash_table_iter* hti, const char* name)
 {
     hti->ht = ht;
@@ -425,7 +424,7 @@ void* hash_table_iter_up(struct hash_table_iter* hti)
     if (!hti->ht->buckets) return NULL;
 
     if (hti->element) hti->element = hti->element->next;
-    while (!hti->element && hti->index < hti->last) 
+    while (!hti->element && hti->index < hti->last)
         hti->element = hti->ht->buckets[++hti->index].first;
     return hti->element;
 }

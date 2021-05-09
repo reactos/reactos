@@ -17,13 +17,25 @@ list(APPEND SOURCE
     reflection.c
     utils.c)
 
+FLEX_TARGET(asmshader_scanner asmshader.l ${CMAKE_CURRENT_BINARY_DIR}/asmshader.yy.c)
+BISON_TARGET(asmshader_parser asmshader.y ${CMAKE_CURRENT_BINARY_DIR}/asmshader.tab.c COMPILE_FLAGS "-p asmshader_")
+ADD_FLEX_BISON_DEPENDENCY(asmshader_scanner asmshader_parser)
+
+FLEX_TARGET(hlsl_scanner hlsl.l ${CMAKE_CURRENT_BINARY_DIR}/hlsl.yy.c)
+BISON_TARGET(hlsl_parser hlsl.y ${CMAKE_CURRENT_BINARY_DIR}/hlsl.tab.c COMPILE_FLAGS "-p hlsl_")
+ADD_FLEX_BISON_DEPENDENCY(hlsl_scanner hlsl_parser)
+
+FLEX_TARGET(pp_scanner ppl.l ${CMAKE_CURRENT_BINARY_DIR}/ppl.yy.c)
+BISON_TARGET(pp_parser ppy.y ${CMAKE_CURRENT_BINARY_DIR}/ppy.tab.c COMPILE_FLAGS "-p ppy_")
+ADD_FLEX_BISON_DEPENDENCY(pp_scanner pp_parser)
+
 list(APPEND PCH_SKIP_SOURCE
-    asmshader.tab.c
-    asmshader.yy.c
-    hlsl.tab.c
-    hlsl.yy.c
-    ppy.tab.c
-    ppl.yy.c)
+    ${FLEX_asmshader_scanner_OUTPUTS}
+    ${BISON_asmshader_parser_OUTPUTS}
+    ${FLEX_hlsl_scanner_OUTPUTS}
+    ${BISON_hlsl_parser_OUTPUTS}
+    ${FLEX_pp_scanner_OUTPUTS}
+    ${BISON_pp_parser_OUTPUTS})
 
 add_library(d3dcompiler_43 MODULE
     ${SOURCE}
@@ -31,16 +43,6 @@ add_library(d3dcompiler_43 MODULE
     version.rc
     ${CMAKE_CURRENT_BINARY_DIR}/d3dcompiler_43_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/d3dcompiler_43.def)
-
-# some files have been generated with relative file paths...
-set_source_files_properties(
-    asmshader.tab.c
-    asmshader.yy.c
-    hlsl.tab.c
-    hlsl.yy.c
-    ppy.tab.c
-    ppl.yy.c
-    PROPERTIES COMPILE_FLAGS "-UREACTOS_SOURCE_DIR -DREACTOS_SOURCE_DIR=\"\\\".\\\"\"")
 
 set_module_type(d3dcompiler_43 win32dll)
 target_link_libraries(d3dcompiler_43 dx10guid uuid wine wpp)

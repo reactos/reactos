@@ -107,9 +107,8 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "", IDC_BROWSE_FOR_FOLDER_TITLE, 10, 8, 198, 24
     LTEXT "", IDC_BROWSE_FOR_FOLDER_STATUS, 10, 25, 198, 12
-    LTEXT "Mappa:", IDC_BROWSE_FOR_FOLDER_FOLDER, 10, 152, 40, 12
-    CONTROL "", IDC_BROWSE_FOR_FOLDER_TREEVIEW, "SysTreeView32", TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_EDITLABELS | WS_BORDER | WS_TABSTOP, 12, 38, 194, 105
-    EDITTEXT IDC_BROWSE_FOR_FOLDER_FOLDER_TEXT, 46, 150, 160, 14, ES_AUTOHSCROLL | WS_BORDER | WS_GROUP | WS_TABSTOP
+    EDITTEXT IDC_BROWSE_FOR_FOLDER_FOLDER_TEXT, 12, 38, 194, 14, ES_AUTOHSCROLL | WS_GROUP
+    CONTROL "", IDC_BROWSE_FOR_FOLDER_TREEVIEW, "SysTreeView32", TVS_SHOWSELALWAYS | TVS_EDITLABELS | TVS_LINESATROOT | TVS_HASLINES | TVS_HASBUTTONS | WS_BORDER | WS_TABSTOP, 12, 58, 194, 105
     PUSHBUTTON "&Új mappa létrehozása", IDC_BROWSE_FOR_FOLDER_NEW_FOLDER, 12, 174, 77, 14, WS_GROUP | WS_TABSTOP
     DEFPUSHBUTTON "OK", IDOK, 102, 174, 50, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
     PUSHBUTTON "Mégse", IDCANCEL, 156, 174, 50, 14, WS_GROUP | WS_TABSTOP
@@ -140,7 +139,7 @@ BEGIN
     LTEXT COPYRIGHT_YEAR, IDC_STATIC, 88, 75, 17, 10
     LTEXT " ReactOS Team\0", IDC_STATIC, 105, 75, 53, 10
     LTEXT "", IDC_ABOUT_OTHERSTUFF, 35, 90, 180, 20
-    LTEXT "A ReactOS ezen verziója az alábbi névre van regisztrálva:", IDC_STATIC, 35, 115, 200, 10
+    LTEXT "A ReactOS ezen verziója az alábbi névre van regisztrálva:", IDC_ABOUT_REG_TO, 35, 115, 207, 10
     LTEXT "", IDC_ABOUT_REG_USERNAME, 45, 125, 180, 10
     LTEXT "", IDC_ABOUT_REG_ORGNAME, 45, 135, 180, 10
     LTEXT "", IDC_STATIC, 35, 147, 235, 1, SS_ETCHEDHORZ
@@ -208,7 +207,7 @@ BEGIN
     ICON IDI_SHELL_EXTENDED_PROPERTIES, IDI_SHELL_EXTENDED_PROPERTIES, 5, 5, 21, 20, SS_ICON
     LTEXT "Válassza ki a parancsikonhoz tartozó speciális tulajdonságokat.", -1, 5, 30, 210, 10
     CHECKBOX "Futtatás más hitelesítő adatokkal", IDC_SHORTEX_RUN_DIFFERENT, 25, 50, 150, 10
-    LTEXT "Ez a beállítás lehetővé teszi hogy más felhasználóként futtassa ezt a parancsikont, vagy folytathatja saját magaként, miközben megvédi a számítógépét és adatait illetéktelen programtevékenységektől.", -1, 50, 60, 175, 40
+    LTEXT "Ez a beállítás lehetővé teszi hogy más felhasználóként futtassa ezt a parancsikont, vagy folytathatja saját magaként, miközben megvédi a számítógépét és adatait illetéktelen programtevékenységektől.", -1, 47, 60, 178, 40
     CHECKBOX "Futtatás külön memóriaterületen", IDC_SHORTEX_RUN_SEPARATE, 25, 100, 150, 10, WS_DISABLED
     PUSHBUTTON "OK", IDOK, 63, 124, 50, 15, WS_VISIBLE
     PUSHBUTTON "Mégse", IDCANCEL, 120, 124, 50, 15, WS_VISIBLE
@@ -385,7 +384,7 @@ BEGIN
     GROUPBOX "A kijelölt hely beállításai", -1, 10, 72, 220, 70
     RADIOBUTTON "&Egyéni méret:", 14001, 20, 90, 80, 10, WS_TABSTOP
     EDITTEXT 14002, 116, 103, 50, 14, WS_TABSTOP | ES_NUMBER
-    LTEXT "&Maximális méret(MB):", -1, 20, 105, 70, 10
+    LTEXT "&Maximális méret(MB):", -1, 20, 105, 77, 10
     RADIOBUTTON "&Ne mozgassa a fájlokat a lomtárba. Törléskor azonnal távolítsa el azokat.", 14003, 20, 117, 170, 20, BS_MULTILINE | WS_TABSTOP
     AUTOCHECKBOX "&Törléskor jóváhagyás kérése", 14004, 20, 155, 140, 10, WS_TABSTOP
 END
@@ -425,7 +424,7 @@ BEGIN
     AUTORADIOBUTTON "Megnyitás &dupla kattintással (kijelölés egy kattintással)", IDC_FOLDER_OPTIONS_DOUBLECLICK, 40, 156, 195, 10
     AUTORADIOBUTTON "Ikonok címének aláhúzása mint a &böngészőben", IDC_FOLDER_OPTIONS_ULBROWSER, 50, 132, 170, 10, WS_TABSTOP | WS_GROUP
     AUTORADIOBUTTON "Ikonok címének aláhúzása csak &rámutatáskor", IDC_FOLDER_OPTIONS_ULPOINT, 50, 144, 170, 10
-    PUSHBUTTON "&Alapértelmezések visszaállítása", IDC_FOLDER_OPTIONS_RESTORE, 142, 175, 115, 14, WS_TABSTOP
+    PUSHBUTTON "&Alapértelmezések visszaállítása", IDC_FOLDER_OPTIONS_RESTORE, 132, 175, 125, 14, WS_TABSTOP
 END
 
 IDD_FOLDER_OPTIONS_VIEW DIALOGEX 0, 0, 264, 256
@@ -435,7 +434,7 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     GROUPBOX "Mappanézetek", -1, 7, 10, 249, 60
     ICON IDI_SHELL_PROGRAMS_FOLDER2, IDC_STATIC, 20, 20, 21, 20
-    LTEXT "Be tudja állítani a nézetet (mint részletek vagy csempe)\nerre a mappára vagy az összes mappára.", -1, 60, 20, 180, 20
+    LTEXT "Be tudja állítani a nézetet (mint részletek vagy csempe)\nerre a mappára vagy az összes mappára.", -1, 56, 20, 197, 20
     PUSHBUTTON "Összes &mappára", IDC_VIEW_APPLY_TO_ALL, 60, 50, 80, 14, WS_TABSTOP
     PUSHBUTTON "Összes mappa &visszaállítása", IDC_VIEW_RESET_ALL, 145, 50, 100, 14, WS_TABSTOP
     LTEXT "Haladó beállítások:", -1, 7, 80, 100, 10
@@ -491,6 +490,20 @@ BEGIN
     LTEXT "Biztosan ki akar jelentkezni?", -1, 49, 15, 131, 8
     DEFPUSHBUTTON "&Kijelentkezés", IDOK, 49, 38, 53, 14
     PUSHBUTTON "Mégse", IDCANCEL, 109, 38, 43, 14
+END
+
+IDD_LOG_OFF_FANCY DIALOGEX 0, 0, 208, 122
+STYLE NOT WS_VISIBLE | DS_CENTER | DS_SHELLFONT | WS_BORDER | WS_POPUP
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL IDB_DLG_BG, IDC_STATIC, "STATIC", SS_BITMAP | SS_REALSIZECONTROL, 0, 0, 208, 122
+    CONTROL IDB_REACTOS_FLAG, IDC_STATIC, "STATIC", SS_BITMAP, 176, 1, 32, 26
+    PUSHBUTTON "&Felhasználóváltás", IDC_SWITCH_USER_BUTTON, 55, 46, 22, 20, BS_OWNERDRAW | WS_DISABLED | WS_GROUP
+    PUSHBUTTON "&Kijelentkezés", IDC_LOG_OFF_BUTTON, 132, 46, 22, 20, BS_OWNERDRAW
+    PUSHBUTTON "Mégse", IDCANCEL, 162, 103, 40, 12, WS_GROUP | BS_FLAT
+    LTEXT "Kijelentkezés a ReactOS-ből", IDC_LOG_OFF_TEXT_STATIC, 4, 7, 165, 19
+    CTEXT "Felhasználóváltás", IDC_SWITCH_USER_STATIC, 35, 70, 61, 11
+    CTEXT "Kijelentkezés", IDC_LOG_OFF_STATIC, 118, 70, 51, 11
 END
 
 IDD_DISCONNECT DIALOGEX 0, 0, 188, 60
@@ -553,7 +566,7 @@ CAPTION "Automatikus lejátszás"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", 1000, 5, 7, 21, 20
-    LTEXT "A ReactOS minden alkalommal, amikor csatlakoztatja ezt az eszközt el tudja végezni ugyanazt a műveletet.", 1001, 32, 7, 190, 22
+    LTEXT "A ReactOS minden alkalommal, amikor csatlakoztatja ezt az eszközt el tudja végezni ugyanazt a műveletet.", 1001, 32, 7, 192, 22
     LTEXT "&Mit tegyen a ReactOS?", 1002, 32, 31, 190, 8
     CONTROL "", 1003, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000C04D, 32, 43, 187, 96
     AUTOCHECKBOX "&Mindig hajtsa végre a kijelölt műveletet", 1004, 32, 143, 190, 8
@@ -679,7 +692,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "&Művelet:", -1, 5, 7, 150, 10
     EDITTEXT IDC_ACTION_ACTION, 5, 20, 150, 14, ES_AUTOHSCROLL
-    LTEXT "A művelet elvégzésére használt &alkalmazás:", -1, 5, 42, 153, 10
+    LTEXT "A művelet elvégzésére használt &alkalmazás:", -1, 5, 42, 158, 10
     EDITTEXT IDC_ACTION_APP, 5, 55, 150, 14, ES_AUTOHSCROLL
     PUSHBUTTON "&Tallózás...", IDC_ACTION_BROWSE, 160, 60, 60, 14
     AUTOCHECKBOX "&DDE használata", IDC_ACTION_USE_DDE, 10, 75, 103, 14
@@ -709,17 +722,17 @@ BEGIN
 END
 
 IDD_LINK_PROBLEM DIALOGEX 0, 0, 250, 140
-CAPTION "Problem with Shortcut"
+CAPTION "Probléma a parancsikonnal"
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON 0, IDC_LINK_PROBLEM_ICON, 5, 5, 0, 0
-    LTEXT "The item '%s' that this shortcut refers to has been changed or moved, so this shortcut will no longer work properly.", IDC_LINK_PROBLEM_LABEL1, 35, 5, 210, 35
-    LTEXT "Nearest match based on name, type, size, and date:", IDC_LINK_PROBLEM_LABEL2, 35, 45, 210, 35
-    LTEXT "Do you want to fix this shortcut to point to this target or do you just want to delete it?", -1, 35, 85, 210, 30
-    DEFPUSHBUTTON "&Fix it", IDOK, 55, 120, 60, 15, WS_DISABLED
-    PUSHBUTTON "&Delete it", IDYES, 120, 120, 60, 15
-    PUSHBUTTON "Cancel", IDCANCEL, 185, 120, 60, 15
+    LTEXT "A(z) '%s' elem, amire ez a parancsikon hivatkozik megváltozott vagy áthelyezték, emiatt ez a parancsikon a továbbiakban nem fog működni.", IDC_LINK_PROBLEM_LABEL1, 35, 5, 210, 35
+    LTEXT "A legközelebbi ehhez hasonló, név, típus és dátum alapján:", IDC_LINK_PROBLEM_LABEL2, 35, 45, 210, 35
+    LTEXT "Szeretné javítani a parancsikont hogy erre mutasson, vagy inkább törölné?", -1, 35, 85, 210, 30
+    DEFPUSHBUTTON "&Javítás", IDOK, 55, 120, 60, 15, WS_DISABLED
+    PUSHBUTTON "&Törlés", IDYES, 120, 120, 60, 15
+    PUSHBUTTON "Mégse", IDCANCEL, 185, 120, 60, 15
 END
 
 STRINGTABLE
@@ -768,8 +781,8 @@ BEGIN
     IDS_VIEW_SMALL "Kis képek"
     IDS_VIEW_LIST "Lista"
     IDS_VIEW_DETAILS "Részletek"
-    IDS_SELECT "Kiválaszt"
-    IDS_OPEN "Megnyit"
+    IDS_SELECT "Kiválasztás"
+    IDS_OPEN "Megnyitás"
     IDS_CREATELINK "Parancsikon létrehozása"
     IDS_COPY "Másolás"
     IDS_DELETE "Törlés"
@@ -824,6 +837,10 @@ BEGIN
     IDS_FORMAT_TITLE "Helyi lemez formázása"
     IDS_FORMAT_WARNING "FIGYELEM: A formázás MINDEN adatot töröl a lemezről.\nA lemez formázásához kattintson az OK gombra. A kilépéshez kattintson a MÉGSE gombra."
     IDS_FORMAT_COMPLETE "A formázás kész."
+
+    /* Warning format system drive dialog strings */
+    IDS_NO_FORMAT_TITLE "Nem lehet formázni ezt a kötetet"
+    IDS_NO_FORMAT "Nem lehet formázni ezt a kötetet! Fontos rendszerfájlokat tartalmaz, ami a ReactOS futtatásához szükséges."
 
     /* Run File dialog */
     IDS_RUNDLG_ERROR "A futtatás párbeszédpanelt nem sikerült megjeleníteni (belső hiba)"
@@ -996,13 +1013,21 @@ BEGIN
     IDS_EDITING_ACTION "Művelet szerkesztése ehhez: "
     IDS_NO_ICONS "A fájl ('%s') nem tartalmaz ikonokat.\n\nVálasszon egy ikont a listából, vagy adjon meg egy másik fájlt."
     IDS_FILE_NOT_FOUND "A fájl ('%s') nem található."
-    IDS_LINK_INVALID "The item '%s' that this shortcut refers to has been changed or moved, so this shortcut will no longer work properly."
-    IDS_COPYTOMENU "Copy to &folder..."
-    IDS_COPYTOTITLE "Select the place where you want to copy '%s'. Then click the Copy button."
-    IDS_COPYITEMS "Copy Items"
-    IDS_COPYBUTTON "Copy"
-    IDS_MOVETOMENU "Mo&ve to folder..."
-    IDS_MOVETOTITLE "Select the place where you want to move '%s' to. Then click the Move button."
-    IDS_MOVEITEMS "Move Items"
-    IDS_MOVEBUTTON "Move"
+    IDS_LINK_INVALID "A(z) '%s' elem, amire ez a parancsikon hivatkozik megváltozott vagy áthelyezték, emiatt ez a parancsikon a továbbiakban nem fog működni."
+    IDS_COPYTOMENU "Má&solás mappába..."
+    IDS_COPYTOTITLE "Válassza ki a helyet, ahová ezt másolni szeretné: '%s'. Majd kattintson a másolás gombra."
+    IDS_COPYITEMS "Elemek másolása"
+    IDS_COPYBUTTON "Másolás"
+    IDS_MOVETOMENU "Mo&zgatás mappába..."
+    IDS_MOVETOTITLE "Válassza ki a helyet, ahová ezt át szeretné helyezni: '%s'. Majd kattintson az áthelyezés gombra."
+    IDS_MOVEITEMS "Elemek áthelyezése"
+    IDS_MOVEBUTTON "Áthelyezés"
+
+    IDS_SYSTEMFOLDER "Rendszermappa"
+
+    /* For IDD_LOG_OFF_FANCY */
+    IDS_LOG_OFF_DESC "Bezárja a programokat és befejezi az Ön ReactOS munkamenetét."
+    IDS_SWITCH_USER_DESC "Lehetővé teszi hogy egy másik felhasználó bejelentkezzen, miközben az Ön programjai és fájljai nyitva maradnak.\r\n\r\n(A felhasználóváltás a Windows logó gomb + L gyorsbillentyűvel is működik.)"
+    IDS_LOG_OFF_TITLE "Kijelentkezés"
+    IDS_SWITCH_USER_TITLE "Felhasználóváltás"
 END

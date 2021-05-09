@@ -1340,6 +1340,37 @@ static MUI_ENTRY plPLFormatPartitionEntries[] =
     }
 };
 
+static MUI_ENTRY plPLCheckFSEntries[] =
+{
+    {
+        4,
+        3,
+        " Instalator ReactOS " KERNEL_VERSION_STR " ",
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        8,
+        "Instalator sprawdza wybran\245 partycj\251.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        "Prosz\251 czeka\206...",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
 static MUI_ENTRY plPLInstallDirectoryEntries[] =
 {
     {
@@ -1492,6 +1523,30 @@ static MUI_ENTRY plPLBootLoaderEntries[] =
         0,
         0,
         "ENTER = Kontynuacja   F3 = Wyj\230cie",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
+static MUI_ENTRY plPLBootLoaderInstallPageEntries[] =
+{
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        "Installing the bootloader onto the media, please wait...",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
         TEXT_ID_STATIC
     },
@@ -2109,6 +2164,10 @@ MUI_PAGE plPLPages[] =
         plPLFormatPartitionEntries
     },
     {
+        CHECK_FILE_SYSTEM_PAGE,
+        plPLCheckFSEntries
+    },
+    {
         DELETE_PARTITION_PAGE,
         plPLDeletePartitionEntries
     },
@@ -2143,6 +2202,10 @@ MUI_PAGE plPLPages[] =
     {
         SUCCESS_PAGE,
         plPLSuccessPageEntries
+    },
+    {
+        BOOT_LOADER_INSTALLATION_PAGE,
+        plPLBootLoaderInstallPageEntries
     },
     {
         BOOT_LOADER_FLOPPY_PAGE,
@@ -2192,8 +2255,6 @@ MUI_STRING plPLStrings[] =
     "Nowa partycja nie jest jeszcze sformatowana."},
     {STRING_INSTALLONPART,
     "Instalator kopiuje pliki systemu na wybran\245 partycj\251."},
-    {STRING_CHECKINGPART,
-    "Instalator sprawdza wybran\245 partycj\251."},
     {STRING_CONTINUE,
     "ENTER = Kontynuacja"},
     {STRING_QUITCONTINUE,
@@ -2245,31 +2306,21 @@ MUI_STRING plPLStrings[] =
     {STRING_KEEPFORMAT,
     " Zachowaj obecny system plik\242w (bez zmian) "},
     {STRING_HDINFOPARTCREATE_1,
-    "%I64u %s  Dysku twardym %lu  (Port=%hu, Szyna=%hu, Id=%hu) na %wZ [%s]."},
-    {STRING_HDINFOPARTCREATE_2,
-    "%I64u %s  Dysk 02 twardy %lu  (Port=%hu, Szyna=%hu, Id=%hu) [%s]."},
-    {STRING_HDDINFOUNK2,
-    "   %c%c  03Typ 0x%02X    %I64u %s"},
+    "%s."},
     {STRING_HDINFOPARTDELETE_1,
-    "na %I64u %s  Dysku twardym %lu  (Port=%hu, Szyna=%hu, Id=%hu) na %wZ [%s]."},
-    {STRING_HDINFOPARTDELETE_2,
-    "na %I64u %s  Dysku 05 twardym %lu  (Port=%hu, Szyna=%hu, Id=%hu) [%s]."},
-    {STRING_HDINFOPARTZEROED_1,
-    "Dysk twardy %lu (%I64u %s), Port=%hu, Szyna=%hu, Id=%hu (%wZ) [%s]."},
-    {STRING_HDDINFOUNK4,
-    "%c%c  07Typ 0x%02X    %I64u %s"},
-    {STRING_HDINFOPARTEXISTS_1,
-    "na Dysku twardym %lu (%I64u %s), Port=%hu, Szyna=%hu, Id=%hu (%wZ) [%s]."},
-    {STRING_HDDINFOUNK5,
-    "%c%c %c %s09Typ %-3u%s                      %6lu %s"},
-    {STRING_HDINFOPARTSELECT_1,
-    "%6lu %s  Dysk twardy %lu  (Port=%hu, Szyna=%hu, Id=%hu) na %wZ [%s]"},
-    {STRING_HDINFOPARTSELECT_2,
-    "%6lu %s  Dysk11 twardy %lu  (Port=%hu, Szyna=%hu, Id=%hu) [%s]"},
+    "na: %s."},
+    {STRING_PARTTYPE,
+    "Typ 0x%02x"},
+    {STRING_HDDINFO_1,
+    // "Dysk twardy %lu (%I64u %s), Port=%hu, Szyna=%hu, Id=%hu (%wZ) [%s]"
+    "%I64u %s Dysk twardy %lu (Port=%hu, Szyna=%hu, Id=%hu) na %wZ [%s]"},
+    {STRING_HDDINFO_2,
+    // "Dysk twardy %lu (%I64u %s), Port=%hu, Szyna=%hu, Id=%hu [%s]"
+    "%I64u %s Dysk twardy %lu (Port=%hu, Szyna=%hu, Id=%hu) [%s]"},
     {STRING_NEWPARTITION,
     "Instalator utworzy\210 now\245 partycj\251"},
     {STRING_UNPSPACE,
-    "    %sMiejsce poza partycjami%s            %6lu %s"},
+    "Miejsce poza partycjami"},
     {STRING_MAXSIZE,
     "MB (maks. %lu MB)"},
     {STRING_EXTENDED_PARTITION,

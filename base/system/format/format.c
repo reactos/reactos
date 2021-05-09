@@ -562,6 +562,7 @@ int wmain(int argc, WCHAR *argv[])
     FormatEx(RootDirectory, media, FileSystem, Label, QuickFormat,
              ClusterSize, FormatExCallback);
     if (Error) return -1;
+    ConPuts(StdOut, L"\n");
     ConResPuts(StdOut, STRING_FMT_COMPLETE);
 
     //

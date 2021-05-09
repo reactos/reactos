@@ -1,0 +1,267 @@
+/* Hungarian translation by Tibor Lajos Füzi (tibor.fuzi@gmail.com) 2021 */
+
+LANGUAGE LANG_HUNGARIAN, SUBLANG_NEUTRAL
+
+IDR_MAINMENU MENU
+BEGIN
+    POPUP "&Fájl"
+    BEGIN
+        MENUITEM "&Beállítások", ID_SETTINGS
+        MENUITEM SEPARATOR
+        MENUITEM "&Kilépés", ID_EXIT
+    END
+    POPUP "&Programok"
+    BEGIN
+        MENUITEM "&Telepítés\tCtrl+Enter", ID_INSTALL
+        MENUITEM "&Eltávolítás\tCtrl+Del", ID_UNINSTALL
+        MENUITEM "&Módosítás", ID_MODIFY
+        MENUITEM SEPARATOR
+        MENUITEM "Eltávolítás a &registryből", ID_REGREMOVE
+        MENUITEM SEPARATOR
+        MENUITEM "&Frissítés\tF5", ID_REFRESH
+        MENUITEM SEPARATOR
+        MENUITEM "Ada&tbázis frissítése\tCtrl+F5", ID_RESETDB
+    END
+    POPUP "Súgó"
+    BEGIN
+        MENUITEM "Súgó\tF1", ID_HELP, GRAYED
+        MENUITEM "&Névjegy", ID_ABOUT
+    END
+END
+
+IDR_LINKMENU MENU
+BEGIN
+    POPUP "popup"
+    BEGIN
+        MENUITEM "Hivatkozás &megnyitása böngészőben", ID_OPEN_LINK
+        MENUITEM "Hivatkozás másolása a &vágólapra", ID_COPY_LINK
+    END
+END
+
+IDR_APPLICATIONMENU MENU
+BEGIN
+    POPUP "popup"
+    BEGIN
+        MENUITEM "&Telepítés\tCtrl+Enter", ID_INSTALL
+        MENUITEM "&Eltávolítás\tCtrl+Del", ID_UNINSTALL
+        MENUITEM "&Módosítás", ID_MODIFY
+        MENUITEM SEPARATOR
+        MENUITEM "Eltávolítás a &registryből", ID_REGREMOVE
+        MENUITEM SEPARATOR
+        MENUITEM "&Frissítés\tF5", ID_REFRESH
+        MENUITEM SEPARATOR
+        MENUITEM "Ada&tbázis frissítése\tCtrl+F5", ID_RESETDB
+    END
+END
+
+IDD_SETTINGS_DIALOG DIALOGEX 0, 0, 250, 265
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Beállítások"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX "Általános", -1, 4, 2, 240, 61
+    AUTOCHECKBOX "&Ablak helyének megjegyzése", IDC_SAVE_WINDOW_POS, 15, 12, 219, 12
+    AUTOCHECKBOX "Elérhető programok listájának &frissítése indításkor", IDC_UPDATE_AVLIST, 15, 29, 222, 12
+    AUTOCHECKBOX "Programok telepítésének és eltávolításának &naplózása", IDC_LOG_ENABLED, 15, 46, 219, 12
+    GROUPBOX "Letöltés", -1, 4, 65, 240, 51
+    LTEXT "Letöltés mappája:", -1, 16, 75, 100, 9
+    EDITTEXT IDC_DOWNLOAD_DIR_EDIT, 15, 86, 166, 12, WS_CHILD | WS_VISIBLE | WS_GROUP | ES_AUTOHSCROLL
+    PUSHBUTTON "&Kiválasztás", IDC_CHOOSE, 187, 85, 50, 14
+    AUTOCHECKBOX "Program telepítőjének &törlése telepítés után", IDC_DEL_AFTER_INSTALL, 16, 100, 218, 12
+    GROUPBOX "Programok forrása", -1, 4, 118, 240, 46
+    CONTROL "Alapértelmezett használata", IDC_SOURCE_DEFAULT, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 15, 132, 104, 10
+    CONTROL "Megadott forrás", IDC_USE_SOURCE, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 15, 147, 74, 10
+    EDITTEXT IDC_SOURCE_URL, 97, 147, 140, 12, ES_AUTOHSCROLL | WS_DISABLED
+    GROUPBOX "Proxy", -1, 4, 166, 240, 76
+    CONTROL "Rendszer proxy beállítások", IDC_PROXY_DEFAULT, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 15, 180, 210, 10
+    CONTROL "Közvetlen (nincs proxy)", IDC_NO_PROXY, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 15, 195, 210, 10
+    CONTROL "Proxy", IDC_USE_PROXY, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 15, 210, 74, 10
+    EDITTEXT IDC_PROXY_SERVER, 97, 210, 140, 12, ES_AUTOHSCROLL | WS_DISABLED
+    LTEXT "Nincs proxy ezekhez:", -1, 27, 225, 77, 10
+    EDITTEXT IDC_NO_PROXY_FOR, 97, 225, 140, 12, ES_AUTOHSCROLL | WS_DISABLED
+    PUSHBUTTON "Alapértelmezett", IDC_DEFAULT_SETTINGS, 8, 245, 70, 14
+    DEFPUSHBUTTON "OK", IDOK, 116, 245, 60, 14
+    PUSHBUTTON "Mégse", IDCANCEL, 181, 245, 60, 14
+END
+
+IDD_INSTALL_DIALOG DIALOGEX 0, 0, 216, 97
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Program telepítése"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "…", IDC_INSTALL_TEXT, 4, 5, 209, 35
+    AUTORADIOBUTTON "&Telepítés lemezről (CD vagy DVD)", IDC_CD_INSTALL, 10, 46, 197, 11, WS_GROUP
+    AUTORADIOBUTTON "&Letöltés és telepítés", IDC_DOWNLOAD_INSTALL, 10, 59, 197, 11, NOT WS_TABSTOP
+    DEFPUSHBUTTON "OK", IDOK, 86, 78, 60, 14
+    PUSHBUTTON "Mégse", IDCANCEL, 150, 78, 60, 14
+END
+
+IDD_DOWNLOAD_DIALOG DIALOGEX 0, 0, 220, 220
+STYLE DS_SHELLFONT | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION | WS_VISIBLE
+CAPTION "%ls letöltése…"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL "Progress1", IDC_DOWNLOAD_PROGRESS, "msctls_progress32", WS_BORDER | PBS_SMOOTH, 10, 10, 200, 12
+    EDITTEXT IDC_DOWNLOAD_STATUS, 10, 28, 200, 22, ES_CENTER | ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY | WS_DISABLED | NOT WS_BORDER
+    PUSHBUTTON "Mégse", IDCANCEL, 85, 53, 50, 15, WS_GROUP | WS_TABSTOP
+END
+
+STRINGTABLE
+BEGIN
+    IDS_TOOLTIP_INSTALL "Telepítés"
+    IDS_TOOLTIP_UNINSTALL "Eltávolítás"
+    IDS_TOOLTIP_MODIFY "Módosítás"
+    IDS_TOOLTIP_SETTINGS "Beállítások"
+    IDS_TOOLTIP_REFRESH "Frissítés"
+    IDS_TOOLTIP_UPDATE_DB "Adatbázis frissítése"
+    IDS_TOOLTIP_EXIT "Kilépés"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_APP_NAME "Név"
+    IDS_APP_INST_VERSION "Verzió"
+    IDS_APP_DESCRIPTION "Leírás"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_INFO_VERSION "\nVerzió: "
+    IDS_INFO_DESCRIPTION "\nLeírás: "
+    IDS_INFO_PUBLISHER "\nKiadó: "
+    IDS_INFO_HELPLINK "\nSúgó hivatkozás: "
+    IDS_INFO_HELPPHONE "\nTelefonos segítség: "
+    IDS_INFO_README "\nOlvass-el: "
+    IDS_INFO_REGOWNER "\nRegisztrált tulajdonos: "
+    IDS_INFO_PRODUCTID "\nTermékazonosító: "
+    IDS_INFO_CONTACT "\nKapcsolat: "
+    IDS_INFO_UPDATEINFO "\nFrissítési információk: "
+    IDS_INFO_INFOABOUT "\nNévjegy információk: "
+    IDS_INFO_COMMENTS "\nMegjegyzések: "
+    IDS_INFO_INSTLOCATION "\nTelepítés helye: "
+    IDS_INFO_INSTALLSRC "\nTelepítés forrása: "
+    IDS_INFO_UNINSTALLSTR "\nEltávolító parancs: "
+    IDS_INFO_MODIFYPATH "\nMódosítási útvonal: "
+    IDS_INFO_INSTALLDATE "\nTelepítés dátuma: "
+    IDS_AINFO_PACKAGE_NAME "\nCsomagnév: "
+END
+
+STRINGTABLE
+BEGIN
+    IDS_AINFO_VERSION "\nVerzió: "
+    IDS_AINFO_AVAILABLEVERSION "\nElérhető verzió: "
+    IDS_AINFO_DESCRIPTION "\nLeírás: "
+    IDS_AINFO_SIZE "\nMéret: "
+    IDS_AINFO_URLSITE "\nWeboldal: "
+    IDS_AINFO_LICENSE "\nLicensz: "
+    IDS_AINFO_URLDOWNLOAD "\nLetöltés: "
+    IDS_AINFO_LANGUAGES "\nNyelvek: "
+END
+
+STRINGTABLE
+BEGIN
+    IDS_CAT_AUDIO "Audió"
+    IDS_CAT_DEVEL "Fejlesztés"
+    IDS_CAT_DRIVERS "Eszközmeghajtók"
+    IDS_CAT_EDU "Oktatás"
+    IDS_CAT_ENGINEER "Mérnöki"
+    IDS_CAT_FINANCE "Pénzügy"
+    IDS_CAT_GAMES "Játékok és szórakozás"
+    IDS_CAT_GRAPHICS "Grafika"
+    IDS_CAT_INTERNET "Internet és hálózatok"
+    IDS_CAT_LIBS "Függvénykönyvtárak"
+    IDS_CAT_OFFICE "Iroda"
+    IDS_CAT_OTHER "Egyéb"
+    IDS_CAT_SCIENCE "Tudományos"
+    IDS_CAT_TOOLS "Eszközök"
+    IDS_CAT_VIDEO "Videó"
+    IDS_CAT_THEMES "Témák"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_APPTITLE "ReactOS Alkalmazáskezelő"
+    IDS_APP_AUTHORS "Copyright 2009 Dmitry Chapyshev"
+    IDS_SEARCH_TEXT "Keresés…"
+    IDS_INSTALL "Telepítés"
+    IDS_UNINSTALL "Eltávolítás"
+    IDS_MODIFY "Módosítás"
+    IDS_APPS_COUNT "Alkalmazások száma: %d; Kijelölve: %d"
+    IDS_WELCOME_TITLE "Üdvözöljük a ReactOS Alkalmazáskezelőben!\n\n"
+    IDS_WELCOME_TEXT "Bal oldalon válasszon kategóriát, majd válasszon egy telepíteni vagy eltávolítani kívánt alkalmazást.\nReactOS weboldal: "
+    IDS_WELCOME_URL "https://reactos.org/"
+    IDS_INSTALLED "Telepített"
+    IDS_AVAILABLEFORINST "Telepíthető alkalmazások"
+    IDS_UPDATES "Frissítések"
+    IDS_APPLICATIONS "Alkalmazások"
+    IDS_CHOOSE_FOLDER_TEXT "Válassza ki a mappát, ahová a letöltések kerüljenek:"
+    IDS_CHOOSE_FOLDER_ERROR "A megadott mappa nem létezik. Létrehozzam?"
+    IDS_URL_INVALID "A megadott URL érvénytelen vagy nem támogatott. Kérem javítsa ki!"
+    IDS_APP_REG_REMOVE "Biztosan törölni szeretné a telepített program adatait a registryből?"
+    IDS_INFORMATION "Információ"
+    IDS_UNABLE_TO_DOWNLOAD "Nem sikerült letölteni a csomagot! A cím nem található!"
+    IDS_UNABLE_TO_DOWNLOAD2 "Nem sikerült letölteni a csomagot! Ellenőrizze az internet kapcsolatot!"
+    IDS_UNABLE_TO_REMOVE "Nem sikerült eltávolítani a program adatait a registryből!"
+    IDS_UNABLE_TO_INSTALL "Nem lehet megnyitni a telepítőt!"
+    IDS_UNABLE_TO_QUERY_CERT "Nem sikerült lekérdezni a tanúsítvány információt.\n\nBiztosan folytatja?"
+    IDS_INTEG_CHECK_TITLE "Csomag épségének ellenőrzése…"
+    IDS_INTEG_CHECK_FAIL "A csomag nem ment át az épség-ellenőrzésen, lehet hogy megsérült a letöltés közben, vagy megváltoztatták. A program futtatása nem ajánlott."
+    IDS_INTERRUPTED_DOWNLOAD "Megszakadt a letöltés. Ellenőrizze az internet kapcsolatot."
+    IDS_UNABLE_TO_WRITE "Nem lehet írni a lemezre. Lehet hogy megtelt."
+    IDS_SELECT_ALL "Összes kijelölése/kijelölés megszüntetése"
+    IDS_INSTALL_SELECTED "Kijelöltek telepítése"
+    IDS_SELECTEDFORINST "Telepítésre kijelölve"
+    IDS_MISMATCH_CERT_INFO "A használt tanúsítvány ismeretlen:\nTárgy: %s\nKibocsátó: %s\nBiztosan folytatja?"
+    IDS_UNABLE_PATH "Az elérési út formátuma érvénytelen."
+    IDS_APP_DISPLAY_DETAILS "részletek"
+    IDS_APP_DISPLAY_LIST "lista"
+    IDS_APP_DISPLAY_TILE "csempe"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_STATUS_INSTALLED "Telepítve"
+    IDS_STATUS_NOTINSTALLED "Nincs telepítve"
+    IDS_STATUS_DOWNLOADED "Letöltve"
+    IDS_STATUS_UPDATE_AVAILABLE "Elérhető frissítés"
+    IDS_STATUS_DOWNLOADING "Letöltés…"
+    IDS_STATUS_INSTALLING "Telepítés…"
+    IDS_STATUS_WAITING "Várakozás a telepítésre…"
+    IDS_STATUS_FINISHED "Befejezve"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_LICENSE_OPENSOURCE "Nyílt forráskódú"
+    IDS_LICENSE_FREEWARE "Freeware"
+    IDS_LICENSE_TRIAL "Próba/Demó"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_LANGUAGE_AVAILABLE_TRANSLATION "Támogatja az Ön nyelvét"
+    IDS_LANGUAGE_NO_TRANSLATION "Más nyelveket támogat"
+    IDS_LANGUAGE_ENGLISH_TRANSLATION "Angol nyelvű"
+    IDS_LANGUAGE_SINGLE "Egy nyelvet támogat"
+    IDS_LANGUAGE_MORE_PLACEHOLDER " (+%d egyéb)"
+    IDS_LANGUAGE_AVAILABLE_PLACEHOLDER " (+%d elérhető)"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_DL_DIALOG_DB_DISP "Alkalmazás adatbázis"
+    IDS_DL_DIALOG_DB_DOWNLOAD_DISP "Adatbázis frissítése…"
+    IDS_DL_DIALOG_DB_UNOFFICIAL_DOWNLOAD_DISP "Adatbázis frissítése… (nem hivatalos forrásból)"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_CMD_USAGE "Használat: "
+    IDS_CMD_NEED_PACKAGE_NAME "Hiba: a(z) %1 opciónak egy vagy több csomagnevet kell megadni.\n"
+    IDS_CMD_NEED_FILE_NAME "Hiba: a(z) %1 opciónak egy fájlnevet kell megadni.\n"
+    IDS_CMD_NEED_PARAMS "Hiba: a(z) %1 opciónak egy vagy több paramétert kell megadni.\n"
+    IDS_CMD_INVALID_OPTION "Hiba: Ismeretlen vagy érvénytelen parancssori opció lett megadva.\n"
+    IDS_CMD_FIND_RESULT_FOR "Keresés eredménye erre: %1:\n"
+    IDS_CMD_PACKAGE_NOT_FOUND "Nem sikerült a(z) %1 csomagot megtalálni.\n"
+    IDS_CMD_PACKAGE_INFO "Információ a(z) %1 csomagról:\n"
+END

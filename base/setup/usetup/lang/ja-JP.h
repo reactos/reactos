@@ -1332,6 +1332,37 @@ static MUI_ENTRY jaJPFormatPartitionEntries[] =
     }
 };
 
+static MUI_ENTRY jaJPCheckFSEntries[] =
+{
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " \276\257\304\261\257\314\337 ",
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        8,
+        "\276\257\304\261\257\314\337\312 \276\335\300\270 \273\332\300 \312\337\260\303\250\274\256\335\246 \271\335\273 \274\303\262\317\275\241",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        "\265\317\301 \270\300\336\273\262...",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
 static MUI_ENTRY jaJPInstallDirectoryEntries[] =
 {
     {
@@ -1484,6 +1515,30 @@ static MUI_ENTRY jaJPBootLoaderEntries[] =
         0,
         0,
         "ENTER = \277\336\257\272\263   F3 = \301\255\263\274",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
+static MUI_ENTRY jaJPBootLoaderInstallPageEntries[] =
+{
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        "Installing the bootloader onto the media, please wait...",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
         TEXT_ID_STATIC
     },
@@ -2104,6 +2159,10 @@ MUI_PAGE jaJPPages[] =
         jaJPFormatPartitionEntries
     },
     {
+        CHECK_FILE_SYSTEM_PAGE,
+        jaJPCheckFSEntries
+    },
+    {
         DELETE_PARTITION_PAGE,
         jaJPDeletePartitionEntries
     },
@@ -2138,6 +2197,10 @@ MUI_PAGE jaJPPages[] =
     {
         SUCCESS_PAGE,
         jaJPSuccessPageEntries
+    },
+    {
+        BOOT_LOADER_INSTALLATION_PAGE,
+        jaJPBootLoaderInstallPageEntries
     },
     {
         BOOT_LOADER_FLOPPY_PAGE,
@@ -2189,8 +2252,6 @@ MUI_STRING jaJPStrings[] =
     "\261\300\327\274\262 \312\337\260\303\250\274\256\335 \312 \317\300\336 \314\253\260\317\257\304 \273\332\303 \262\317\276\335\241"},
     {STRING_INSTALLONPART,
     "\276\257\304\261\257\314\337\312 ReactOS\246 \312\337\260\303\250\274\256\335 \274\336\256\263\306 \262\335\275\304\260\331\274\317\275\241"},
-    {STRING_CHECKINGPART,
-    "\276\257\304\261\257\314\337\312 \276\335\300\270 \273\332\300 \312\337\260\303\250\274\256\335\246 \271\335\273 \274\303\262\317\275\241"},
     {STRING_CONTINUE,
     "ENTER = \277\336\257\272\263"},
     {STRING_QUITCONTINUE,
@@ -2242,31 +2303,21 @@ MUI_STRING jaJPStrings[] =
     {STRING_KEEPFORMAT,
     " \271\336\335\273\336\262\311 \314\247\262\331 \274\275\303\321\311 \317\317 (\315\335\272\263 \274\305\262) "},
     {STRING_HDINFOPARTCREATE_1,
-    "%I64u %s  \312\260\304\336\303\336\250\275\270 %lu  (\316\337\260\304=%hu, \312\336\275=%hu, Id=%hu) on %wZ [%s]."},
-    {STRING_HDINFOPARTCREATE_2,
-    "%I64u %s  \312\260\304\336\303\336\250\275\270 %lu  (\316\337\260\304=%hu, \312\336\275=%hu, Id=%hu) [%s]."},
-    {STRING_HDDINFOUNK2,
-    "   %c%c  \274\255\331\262 0x%02X    %I64u %s"},
+    "%s."},
     {STRING_HDINFOPARTDELETE_1,
-    "on %I64u %s  \312\260\304\336\303\336\250\275\270 %lu  (\316\337\260\304=%hu, \312\336\275=%hu, Id=%hu) on %wZ [%s]."},
-    {STRING_HDINFOPARTDELETE_2,
-    "on %I64u %s  \312\260\304\336\303\336\250\275\270 %lu  (\316\337\260\304=%hu, \312\336\275=%hu, Id=%hu) [%s]."},
-    {STRING_HDINFOPARTZEROED_1,
-    "\312\260\304\336\303\336\250\275\270 %lu (%I64u %s), \316\337\260\304=%hu, \312\336\275=%hu, Id=%hu (%wZ) [%s]."},
-    {STRING_HDDINFOUNK4,
-    "%c%c  \274\255\331\262 0x%02X    %I64u %s"},
-    {STRING_HDINFOPARTEXISTS_1,
-    "on \312\260\304\336\303\336\250\275\270 %lu (%I64u %s), \316\337\260\304=%hu, \312\336\275=%hu, Id=%hu (%wZ) [%s]."},
-    {STRING_HDDINFOUNK5,
-    "%c%c %c %s\274\255\331\262 %-3u%s                      %6lu %s"},
-    {STRING_HDINFOPARTSELECT_1,
-    "%6lu %s  \312\260\304\336\303\336\250\275\270 %lu  (\316\337\260\304=%hu, \312\336\275=%hu, Id=%hu) on %wZ [%s]"},
-    {STRING_HDINFOPARTSELECT_2,
-    "%6lu %s  \312\260\304\336\303\336\250\275\270 %lu  (\316\337\260\304=%hu, \312\336\275=%hu, Id=%hu) [%s]"},
+    "on %s."},
+    {STRING_PARTTYPE,
+    "\274\255\331\262 0x%02x"},
+    {STRING_HDDINFO_1,
+    // "\312\260\304\336\303\336\250\275\270 %lu (%I64u %s), \316\337\260\304=%hu, \312\336\275=%hu, Id=%hu (%wZ) [%s]"
+    "%I64u %s \312\260\304\336\303\336\250\275\270 %lu (\316\337\260\304=%hu, \312\336\275=%hu, Id=%hu) on %wZ [%s]"},
+    {STRING_HDDINFO_2,
+    // "\312\260\304\336\303\336\250\275\270 %lu (%I64u %s), \316\337\260\304=%hu, \312\336\275=%hu, Id=%hu [%s]"
+    "%I64u %s \312\260\304\336\303\336\250\275\270 %lu (\316\337\260\304=%hu, \312\336\275=%hu, Id=%hu) [%s]"},
     {STRING_NEWPARTITION,
     "\276\257\304\261\257\314\337\312 \261\300\327\274\262 \312\337\260\303\250\274\256\335\246 \302\267\336\306 \273\270\276\262\274\317\274\300:"},
     {STRING_UNPSPACE,
-    "    %s\320\314\336\335\266\302\311 \275\315\337\260\275%s            %6lu %s"},
+    "\320\314\336\335\266\302\311 \275\315\337\260\275"},
     {STRING_MAXSIZE,
     "MB (\273\262\300\336\262. %lu MB)"},
     {STRING_EXTENDED_PARTITION,

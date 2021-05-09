@@ -352,7 +352,11 @@ BUSMASTER_CONTROLLER_INFORMATION_BASE const BusMasterAdapters[] = {
     PCI_DEV_HW_SPEC_BM( 9d05, 8086, 0x00, ATA_SA300, "Intel Sunrise Point-LP" , UNIATA_SATA | UNIATA_AHCI | UNIATA_RAID_CONTROLLER),
     PCI_DEV_HW_SPEC_BM( 9d07, 8086, 0x00, ATA_SA300, "Intel Sunrise Point-LP" , UNIATA_SATA | UNIATA_AHCI | UNIATA_RAID_CONTROLLER),
 
-/*    PCI_DEV_HW_SPEC_BM( a102, 8086, 0x00, ATA_SA300, "Intel Sunrise Point" , UNIATA_SATA | UNIATA_AHCI               ),*/ /* workaround regression CORE-16078 */
+#ifndef __REACTOS__
+    PCI_DEV_HW_SPEC_BM( a102, 8086, 0x00, ATA_SA300, "Intel Sunrise Point" , UNIATA_SATA | UNIATA_AHCI               ),
+#else
+    /* workaround regression CORE-16078 */
+#endif
     PCI_DEV_HW_SPEC_BM( a103, 8086, 0x00, ATA_SA300, "Intel Sunrise Point" , UNIATA_SATA | UNIATA_AHCI               ),
     PCI_DEV_HW_SPEC_BM( a105, 8086, 0x00, ATA_SA300, "Intel Sunrise Point" , UNIATA_SATA | UNIATA_AHCI | UNIATA_RAID_CONTROLLER),
     PCI_DEV_HW_SPEC_BM( a106, 8086, 0x00, ATA_SA300, "Intel Sunrise Point" , UNIATA_SATA | UNIATA_AHCI | UNIATA_RAID_CONTROLLER),
@@ -714,4 +718,8 @@ BUSMASTER_CONTROLLER_INFORMATION_BASE const BusMasterAdapters[] = {
     PCI_DEV_HW_SPEC_BM( ffff, ffff, 0xff, BMLIST_TERMINATOR, NULL       , BMLIST_TERMINATOR )
 };
 
-/* static */ const ULONG _NUM_BUSMASTER_ADAPTERS = (sizeof(BusMasterAdapters) / sizeof(BUSMASTER_CONTROLLER_INFORMATION_BASE));
+#ifndef __REACTOS__
+static const ULONG _NUM_BUSMASTER_ADAPTERS = (sizeof(BusMasterAdapters) / sizeof(BUSMASTER_CONTROLLER_INFORMATION_BASE));
+#else
+const ULONG _NUM_BUSMASTER_ADAPTERS = (sizeof(BusMasterAdapters) / sizeof(BUSMASTER_CONTROLLER_INFORMATION_BASE));
+#endif

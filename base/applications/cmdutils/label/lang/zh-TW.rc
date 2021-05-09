@@ -1,21 +1,25 @@
-/* Traditional Chinese translation by Henry Tang Ih 2016 (henrytang2@hotmail.com) */
-/* Improved by Luo Yufan 2019 <njlyf2011@hotmail.com> */
+/*
+ * FILE:       base/applications/cmdutils/label/lang/zh-TW.rc
+ * PURPOSE:    Chinese (Traditional) Language File for label
+ * TRANSLATOR: Henry Tang Ih 2016 (henrytang2@hotmail.com)
+ *             Luo Yufan 2019 (njlyf2011@hotmail.com)
+ *             Chan Chilung 2021 (eason066@gmail.com)
+ */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
 
 STRINGTABLE
 BEGIN
-//    STRING_LABEL_HELP "顯示或改變驅動器卷標。\n\nLABEL [驅動器:][卷標]\n"
-    STRING_LABEL_HELP "Creates, changes or deletes the volume label of a disk.\n\n\
-LABEL [drive:][label]\n\n\
-  drive:          Specifies the drive letter of a drive.\n\
-  label           Specifies the label of the drive."
-    STRING_LABEL_TEXT1 "驅動器 %c 中的卷是 %s\n"
-    STRING_LABEL_TEXT2 "驅動器 %c 中的卷沒有卷標。\n"
-    STRING_LABEL_TEXT3 "卷的序列號是 %04X-%04X\n"
-    STRING_LABEL_TEXT4 "驅動器卷標 (32 個字元, 按 ENTER 忽略)? "
-    STRING_LABEL_PROMPT "Delete current volume label (Y/N)? "
+    STRING_LABEL_HELP "建立、更改或刪除磁碟的標籤。\n\n\
+LABEL [磁碟:][標籤]\n\n\
+  drive:          指定磁碟代號。\n\
+  label           指定磁碟區標籤"
+    STRING_LABEL_TEXT1 "磁碟 %c 中的磁碟區標籤是 %s\n"
+    STRING_LABEL_TEXT2 "磁碟 %c 中的磁碟區沒有標籤。\n"
+    STRING_LABEL_TEXT3 "磁碟區的序列號是 %04X-%04X\n"
+    STRING_LABEL_TEXT4 "磁碟區標籤 (最多 32 個字元, 直接按 ENTER 以表示不輸入)? "
+    STRING_LABEL_PROMPT "刪除目前的磁碟區標籤 (Y/N)? "
     STRING_LABEL_OPTIONS "YN"
-    STRING_ERROR_INVALID_DRIVE "無效驅動器指定\n"
-    STRING_ERROR_INVALID_LABEL "Invalid volume label\n"
-END 
+    STRING_ERROR_INVALID_DRIVE "無效的磁碟規格\n"
+    STRING_ERROR_INVALID_LABEL "無效的磁碟區標籤\n"
+END

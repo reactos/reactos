@@ -9,6 +9,9 @@
 
 HWND hWnd1, hWnd2;
 
+static BOOL g_bReadyForDisplayChange = FALSE;
+static HANDLE g_hSemDisplayChange;
+
 /* FIXME: test for HWND_TOP, etc...*/
 static int get_iwnd(HWND hWnd)
 {
@@ -37,6 +40,13 @@ LRESULT CALLBACK SysParamsTestProc(HWND hWnd, UINT message, WPARAM wParam, LPARA
             RECORD_MESSAGE(iwnd, message, SENT, get_iwnd(pwp->hwndInsertAfter), pwp->flags);
             break;
         }
+    case WM_DISPLAYCHANGE:
+        if (g_bReadyForDisplayChange)
+        {
+            g_bReadyForDisplayChange = FALSE;
+            ReleaseSemaphore(g_hSemDisplayChange, 1, 0);
+        }
+        break;
     default:
         RECORD_MESSAGE(iwnd, message, SENT, 0,0);
     }
@@ -171,6 +181,93 @@ static void Test_MouseSpeed()
     ok(ret, "SystemParametersInfo failed\n");
 }
 
+static void Test_GradientCaptions(void)
+{
+    BOOL ret;
+    LONG lResult;
+    DWORD dwResult;
+    BOOL bGradientCaptions, bModeFound;
+    DEVMODEW OldDevMode, NewDevMode;
+    INT iMode;
+
+    ret = SystemParametersInfo(SPI_GETGRADIENTCAPTIONS, 0, &bGradientCaptions, 0);
+    ok(ret, "SystemParametersInfo failed\n");
+    if (bGradientCaptions == FALSE)
+    {
+        skip("GRADIENTCAPTIONS value has changed from its original state\n");
+        return;
+    }
+
+    /* Try to find a graphics mode with 16 or 256 colors */
+    iMode = 0;
+    bModeFound = FALSE;
+    while (EnumDisplaySettingsW(NULL, iMode, &NewDevMode))
+    {
+        if ((NewDevMode.dmBitsPerPel == 4) ||
+            (NewDevMode.dmBitsPerPel == 8))
+        {
+            bModeFound = TRUE;
+            break;
+        }
+
+        ++iMode;
+    }
+    if (!bModeFound)
+    {
+        skip("4bpp/8bpp graphics mode is not supported\n");
+        return;
+    }
+
+    /* Save the current graphics mode */
+    ret = EnumDisplaySettingsW(NULL, ENUM_CURRENT_SETTINGS, &OldDevMode);
+    ok(ret, "EnumDisplaySettingsW failed\n");
+
+    g_hSemDisplayChange = CreateSemaphoreW(NULL, 0, 1, NULL);
+
+    /* Switch to the new graphics mode */
+    g_bReadyForDisplayChange = TRUE;
+    lResult = ChangeDisplaySettingsExW(NULL, &NewDevMode, NULL, 0, NULL);
+    if (lResult == DISP_CHANGE_SUCCESSFUL)
+    {
+        dwResult = WaitForSingleObject(g_hSemDisplayChange, 10000);
+        ok(dwResult == WAIT_OBJECT_0, "Waiting for the WM_DISPLAYCHANGE message timed out\n");
+    }
+    g_bReadyForDisplayChange = FALSE;
+    ok(lResult == DISP_CHANGE_SUCCESSFUL, "ChangeDisplaySettingsExW returned %ld\n", lResult);
+
+    /* SPI_GETGRADIENTCAPTIONS will now always return FALSE */
+    ret = SystemParametersInfo(SPI_GETGRADIENTCAPTIONS, 0, &bGradientCaptions, 0);
+    ok(ret, "SystemParametersInfo failed\n");
+    ok(bGradientCaptions == FALSE, "SPI_GETGRADIENTCAPTIONS got unexpected value (%d instead of 0)\n", bGradientCaptions);
+
+    /* Enable gradient captions */
+    bGradientCaptions = TRUE;
+    SystemParametersInfo(SPI_SETGRADIENTCAPTIONS, 0, UlongToPtr(bGradientCaptions), 0);
+
+    /* Still FALSE */
+    ret = SystemParametersInfo(SPI_GETGRADIENTCAPTIONS, 0, &bGradientCaptions, 0);
+    ok(ret, "SystemParametersInfo failed\n");
+    ok(bGradientCaptions == FALSE, "SPI_GETGRADIENTCAPTIONS got unexpected value (%d instead of 0)\n", bGradientCaptions);
+
+    /* Restore the previous graphics mode */
+    g_bReadyForDisplayChange = TRUE;
+    lResult = ChangeDisplaySettingsExW(NULL, &OldDevMode, NULL, 0, NULL);
+    if (lResult == DISP_CHANGE_SUCCESSFUL)
+    {
+        dwResult = WaitForSingleObject(g_hSemDisplayChange, 10000);
+        ok(dwResult == WAIT_OBJECT_0, "Waiting for the WM_DISPLAYCHANGE message timed out\n");
+    }
+    g_bReadyForDisplayChange = FALSE;
+    ok(lResult == DISP_CHANGE_SUCCESSFUL, "ChangeDisplaySettingsExW returned %ld\n", lResult);
+
+    /* The original value should be restored */
+    ret = SystemParametersInfo(SPI_GETGRADIENTCAPTIONS, 0, &bGradientCaptions, 0);
+    ok(ret, "SystemParametersInfo failed\n");
+    ok(bGradientCaptions == TRUE, "SPI_GETGRADIENTCAPTIONS got unexpected value (%d instead of 1)\n", bGradientCaptions);
+
+    CloseHandle(g_hSemDisplayChange);
+}
+
 START_TEST(SystemParametersInfo)
 {
     RegisterSimpleClass(SysParamsTestProc, L"sysparamstest"); 
@@ -182,6 +279,7 @@ START_TEST(SystemParametersInfo)
 
     Test_NonClientMetrics();
     Test_MouseSpeed();
+    Test_GradientCaptions();
 
     DestroyWindow(hWnd1);
     DestroyWindow(hWnd2);

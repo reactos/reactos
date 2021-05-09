@@ -302,8 +302,7 @@ AcpiPsParseLoop (
                  */
                 WalkState->Op = NULL;
                 Status = AcpiDsGetPredicateValue (WalkState, ACPI_TO_POINTER (TRUE));
-                if (ACPI_FAILURE (Status) &&
-                    ((Status & AE_CODE_MASK) != AE_CODE_CONTROL))
+                if (ACPI_FAILURE (Status) && !ACPI_CNTL_EXCEPTION (Status))
                 {
                     if (Status == AE_AML_NO_RETURN_VALUE)
                     {

@@ -9,12 +9,7 @@
 #pragma once
 
 #if defined(_MSC_VER)
-#define UNREACHABLE   __assume(0)
 #define               __builtin_expect(a,b) (a)
-#elif defined(__GNUC__)
-#define UNREACHABLE   __builtin_unreachable()
-#else
-#error
 #endif
 
 //
@@ -147,7 +142,7 @@ KiExitTrapDebugChecks(IN PKTRAP_FRAME TrapFrame,
     }
 
     /* If we're ignoring previous mode, make sure caller doesn't actually want it */
-    if (SkipPreviousMode && (TrapFrame->PreviousPreviousMode != -1))
+    if (SkipPreviousMode && (TrapFrame->PreviousPreviousMode != (ULONG)-1))
     {
         DbgPrint("Exiting a trap witout restoring previous mode, yet previous mode seems valid: %lx\n", TrapFrame->PreviousPreviousMode);
         __debugbreak();

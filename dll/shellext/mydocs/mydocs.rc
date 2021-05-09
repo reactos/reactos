@@ -24,6 +24,12 @@ IDR_MYDOCS REGISTRY "res/mydocs.rgs"
 #ifdef LANGUAGE_JA_JP
     #include "lang/ja-JP.rc"
 #endif
+#ifdef LANGUAGE_PL_PL
+    #include "lang/pl-PL.rc"
+#endif
 #ifdef LANGUAGE_RU_RU
     #include "lang/ru-RU.rc"
+#endif
+#ifdef LANGUAGE_ZH_TW
+    #include "lang/zh-TW.rc"
 #endif

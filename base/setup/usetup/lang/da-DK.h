@@ -1331,6 +1331,37 @@ static MUI_ENTRY daDKFormatPartitionEntries[] =
     }
 };
 
+static MUI_ENTRY daDKCheckFSEntries[] =
+{
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " installationen ",
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        8,
+        "Installationen tjekker den valgte partition.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        "Vent...",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
 static MUI_ENTRY daDKInstallDirectoryEntries[] =
 {
     {
@@ -1483,6 +1514,30 @@ static MUI_ENTRY daDKBootLoaderEntries[] =
         0,
         0,
         "ENTER = Forts\221t   F3 = Afslut",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
+static MUI_ENTRY daDKBootLoaderInstallPageEntries[] =
+{
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        "Installing the bootloader onto the media, please wait...",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
         TEXT_ID_STATIC
     },
@@ -2104,6 +2159,10 @@ MUI_PAGE daDKPages[] =
         daDKFormatPartitionEntries
     },
     {
+        CHECK_FILE_SYSTEM_PAGE,
+        daDKCheckFSEntries
+    },
+    {
         DELETE_PARTITION_PAGE,
         daDKDeletePartitionEntries
     },
@@ -2138,6 +2197,10 @@ MUI_PAGE daDKPages[] =
     {
         SUCCESS_PAGE,
         daDKSuccessPageEntries
+    },
+    {
+        BOOT_LOADER_INSTALLATION_PAGE,
+        daDKBootLoaderInstallPageEntries
     },
     {
         BOOT_LOADER_FLOPPY_PAGE,
@@ -2187,8 +2250,6 @@ MUI_STRING daDKStrings[] =
     "Den nye partition er endnu ikke blevet formateret."},
     {STRING_INSTALLONPART,
     "Installationen installere ReactOS p\206 partitionen"},
-    {STRING_CHECKINGPART,
-    "Installationen tjekker den valgte partition."},
     {STRING_CONTINUE,
     "ENTER = Forts\221t"},
     {STRING_QUITCONTINUE,
@@ -2240,31 +2301,21 @@ MUI_STRING daDKStrings[] =
     {STRING_KEEPFORMAT,
     " Behold nuv\221rende filsystem (ingen \221ndringer) "},
     {STRING_HDINFOPARTCREATE_1,
-    "%I64u %s  harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) p\206 %wZ [%s]."},
-    {STRING_HDINFOPARTCREATE_2,
-    "%I64u %s  harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) [%s]."},
-    {STRING_HDDINFOUNK2,
-    "   %c%c  type 0x%02X    %I64u %s"},
+    "%s."},
     {STRING_HDINFOPARTDELETE_1,
-    "p\206 %I64u %s  harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) p\206 %wZ [%s]."},
-    {STRING_HDINFOPARTDELETE_2,
-    "p\206 %I64u %s  harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) [%s]."},
-    {STRING_HDINFOPARTZEROED_1,
-    "Harddisk %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ) [%s]."},
-    {STRING_HDDINFOUNK4,
-    "%c%c  type 0x%02X    %I64u %s"},
-    {STRING_HDINFOPARTEXISTS_1,
-    "p\206 harddisk %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ) [%s]."},
-    {STRING_HDDINFOUNK5,
-    "%c%c %c %stype %-3u%s                      %6lu %s"},
-    {STRING_HDINFOPARTSELECT_1,
-    "%6lu %s  harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) p\206 %wZ [%s]"},
-    {STRING_HDINFOPARTSELECT_2,
-    "%6lu %s  harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) [%s]"},
+    "p\206 %s."},
+    {STRING_PARTTYPE,
+    "Type 0x%02x"},
+    {STRING_HDDINFO_1,
+    // "Harddisk %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ) [%s]"
+    "%I64u %s Harddisk %lu (Port=%hu, Bus=%hu, Id=%hu) p\206 %wZ [%s]"},
+    {STRING_HDDINFO_2,
+    // "Harddisk %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu [%s]"
+    "%I64u %s Harddisk %lu (Port=%hu, Bus=%hu, Id=%hu) [%s]"},
     {STRING_NEWPARTITION,
     "Installationen har lavet en ny partition p\206"},
     {STRING_UNPSPACE,
-    "    %sUpartitioneret plads%s           %6lu %s"},
+    "Upartitioneret plads"},
     {STRING_MAXSIZE,
     "MB (maks %lu MB)"},
     {STRING_EXTENDED_PARTITION,

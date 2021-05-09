@@ -65,6 +65,7 @@ BEGIN
     BEGIN
         MENUITEM "&Novo Jogo\tF2", IDM_GAME_NEW
         MENUITEM SEPARATOR
+        MENUITEM "&Undo", IDM_GAME_UNDO, GRAYED
         MENUITEM "Baralho...", IDM_GAME_DECK
         MENUITEM "&Opções...", IDM_GAME_OPTIONS
         MENUITEM SEPARATOR

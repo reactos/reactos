@@ -34,17 +34,10 @@
 
 #define NONAMELESSUNION
 
-#include "config.h"
-#include "wine/port.h"
-
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
-
 #include <string.h>
-#ifdef HAVE_UNISTD_H
-# include <unistd.h>
-#endif
 
 #include <stdarg.h>
 #include "windef.h"
@@ -1393,7 +1386,7 @@ static BOOL codeview_parse_type_table(struct codeview_type_parse* ctp)
 /*========================================================================
  * Process CodeView line number information.
  */
-static unsigned long codeview_get_address(const struct msc_debug_info* msc_dbg,
+static ULONG_PTR codeview_get_address(const struct msc_debug_info* msc_dbg,
                                           unsigned seg, unsigned offset);
 
 static void codeview_snarf_linetab(const struct msc_debug_info* msc_dbg, const BYTE* linetab,
@@ -1408,7 +1401,7 @@ static void codeview_snarf_linetab(const struct msc_debug_info* msc_dbg, const B
     const unsigned short*       linenos;
     const struct startend*      start;
     unsigned                    source;
-    unsigned long               addr, func_addr0;
+    ULONG_PTR                   addr, func_addr0;
     struct symt_function*       func;
     const struct codeview_linetab_block* ltb;
 
@@ -1555,7 +1548,7 @@ static unsigned int codeview_map_offset(const struct msc_debug_info* msc_dbg,
     return 0;
 }
 
-static unsigned long codeview_get_address(const struct msc_debug_info* msc_dbg,
+static ULONG_PTR codeview_get_address(const struct msc_debug_info* msc_dbg,
                                           unsigned seg, unsigned offset)
 {
     int			        nsect = msc_dbg->nsect;
@@ -2011,6 +2004,11 @@ static BOOL codeview_snarf(const struct msc_debug_info* msc_dbg, const BYTE* roo
         case S_ALIGN_V1:
             TRACE("S-Align V1\n");
             break;
+        case S_HEAPALLOCSITE:
+            TRACE("heap site: offset=0x%08x at sect_idx 0x%04x, inst_len 0x%08x, index 0x%08x\n",
+                    sym->heap_alloc_site.offset, sym->heap_alloc_site.sect_idx,
+                    sym->heap_alloc_site.inst_len, sym->heap_alloc_site.index);
+            break;
 
         /* the symbols we can safely ignore for now */
         case S_TRAMPOLINE:
@@ -2067,7 +2065,7 @@ static BOOL codeview_snarf_public(const struct msc_debug_info* msc_dbg, const BY
 
         switch (sym->generic.id)
         {
-	case S_PUB_V1:
+        case S_PUB_V1:
             if (!(dbghelp_options & SYMOPT_NO_PUBLICS))
             {
                 symt_new_public(msc_dbg->module, compiland,
@@ -2076,15 +2074,15 @@ static BOOL codeview_snarf_public(const struct msc_debug_info* msc_dbg, const BY
                                 codeview_get_address(msc_dbg, sym->public_v1.segment, sym->public_v1.offset), 1);
             }
             break;
-	case S_PUB_V2:
+        case S_PUB_V2:
             if (!(dbghelp_options & SYMOPT_NO_PUBLICS))
             {
                 symt_new_public(msc_dbg->module, compiland,
                                 terminate_string(&sym->public_v2.p_name),
-                                sym->public_v3.symtype == SYMTYPE_FUNCTION,
+                                sym->public_v2.symtype == SYMTYPE_FUNCTION,
                                 codeview_get_address(msc_dbg, sym->public_v2.segment, sym->public_v2.offset), 1);
             }
-	    break;
+            break;
 
         case S_PUB_V3:
             if (!(dbghelp_options & SYMOPT_NO_PUBLICS))
@@ -2447,17 +2445,17 @@ static HANDLE map_pdb_file(const struct process* pcs,
                            struct module* module)
 {
     HANDLE      hFile, hMap = NULL;
-    char        dbg_file_path[MAX_PATH];
+    WCHAR       dbg_file_path[MAX_PATH];
     BOOL        ret = FALSE;
 
     switch (lookup->kind)
     {
     case PDB_JG:
-        ret = path_find_symbol_file(pcs, module, lookup->filename, NULL, lookup->timestamp,
+        ret = path_find_symbol_file(pcs, module, lookup->filename, DMT_PDB, NULL, lookup->timestamp,
                                     lookup->age, dbg_file_path, &module->module.PdbUnmatched);
         break;
     case PDB_DS:
-        ret = path_find_symbol_file(pcs, module, lookup->filename, &lookup->guid, 0,
+        ret = path_find_symbol_file(pcs, module, lookup->filename, DMT_PDB, &lookup->guid, 0,
                                     lookup->age, dbg_file_path, &module->module.PdbUnmatched);
         break;
     }
@@ -2466,7 +2464,7 @@ static HANDLE map_pdb_file(const struct process* pcs,
         WARN("\tCouldn't find %s\n", lookup->filename);
         return NULL;
     }
-    if ((hFile = CreateFileA(dbg_file_path, GENERIC_READ, FILE_SHARE_READ, NULL,
+    if ((hFile = CreateFileW(dbg_file_path, GENERIC_READ, FILE_SHARE_READ, NULL,
                              OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL)) != INVALID_HANDLE_VALUE)
     {
         hMap = CreateFileMappingW(hFile, NULL, PAGE_READONLY, 0, 0, NULL);
@@ -2684,7 +2682,7 @@ static void pdb_process_symbol_imports(const struct process* pcs,
         {
             ptr = (const char*)imp + sizeof(*imp) + strlen(imp->filename);
             if (i >= CV_MAX_MODULES) FIXME("Out of bounds!!!\n");
-            if (!strcasecmp(pdb_lookup->filename, imp->filename))
+            if (!stricmp(pdb_lookup->filename, imp->filename))
             {
                 if (module_index != -1) FIXME("Twice the entry\n");
                 else module_index = i;
@@ -2896,7 +2894,7 @@ static BOOL pdb_process_file(const struct process* pcs,
         msc_dbg->module->module.PdbAge = pdb_info->pdb_files[0].age;
         MultiByteToWideChar(CP_ACP, 0, pdb_lookup->filename, -1,
                             msc_dbg->module->module.LoadedPdbName,
-                            sizeof(msc_dbg->module->module.LoadedPdbName) / sizeof(WCHAR));
+                            ARRAY_SIZE(msc_dbg->module->module.LoadedPdbName));
         /* FIXME: we could have a finer grain here */
         msc_dbg->module->module.LineNumbers = TRUE;
         msc_dbg->module->module.GlobalSymbols = TRUE;
@@ -3092,10 +3090,10 @@ static BOOL  pev_binop(struct pevaluator* pev, char op)
 static BOOL  pev_deref(struct pevaluator* pev)
 {
     char        res[PEV_MAX_LEN];
-    DWORD_PTR   v1, v2;
+    DWORD_PTR   v1, v2 = 0;
 
     if (!pev_pop_val(pev, &v1)) return FALSE;
-    if (!sw_read_mem(pev->csw, v1, &v2, sizeof(v2)))
+    if (!sw_read_mem(pev->csw, v1, &v2, pev->csw->cpu->word_size))
         return PEV_ERROR1(pev, "deref: cannot read mem at %lx\n", v1);
     snprintf(res, sizeof(res), "%ld", v2);
     pev_push(pev, res);
@@ -3199,8 +3197,8 @@ done:
     return FALSE;
 }
 
-BOOL         pdb_virtual_unwind(struct cpu_stack_walk* csw, DWORD_PTR ip,
-                                CONTEXT* context, struct pdb_cmd_pair* cpair)
+BOOL pdb_virtual_unwind(struct cpu_stack_walk *csw, DWORD_PTR ip,
+    union ctx *context, struct pdb_cmd_pair *cpair)
 {
     struct module_pair          pair;
     struct pdb_module_info*     pdb_info;

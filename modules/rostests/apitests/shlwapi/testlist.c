@@ -8,6 +8,7 @@ extern void func_isuncpathservershare(void);
 extern void func_PathUnExpandEnvStrings(void);
 extern void func_PathUnExpandEnvStringsForUser(void);
 extern void func_SHAreIconsEqual(void);
+extern void func_SHLoadIndirectString(void);
 extern void func_StrFormatByteSizeW(void);
 
 const struct test winetest_testlist[] =
@@ -19,6 +20,7 @@ const struct test winetest_testlist[] =
     { "PathUnExpandEnvStrings", func_PathUnExpandEnvStrings },
     { "PathUnExpandEnvStringsForUser", func_PathUnExpandEnvStringsForUser },
     { "SHAreIconsEqual", func_SHAreIconsEqual },
+    { "SHLoadIndirectString", func_SHLoadIndirectString },
     { "StrFormatByteSizeW", func_StrFormatByteSizeW },
     { 0, 0 }
 };
