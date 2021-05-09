@@ -28,7 +28,7 @@ GENERIC_MAPPING IopCompletionMapping =
 static const INFORMATION_CLASS_INFO IoCompletionInfoClass[] =
 {
      /* IoCompletionBasicInformation */
-    ICI_SQ_SAME(sizeof(IO_COMPLETION_BASIC_INFORMATION), sizeof(ULONG), ICIF_QUERY),
+    IQS_SAME(IO_COMPLETION_BASIC_INFORMATION, ULONG, ICIF_QUERY),
 };
 
 /* PRIVATE FUNCTIONS *********************************************************/

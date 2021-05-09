@@ -35,4 +35,3 @@ NTAPI
 KeGetCurrentThread(VOID);
 
 $endif
-

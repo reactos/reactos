@@ -54,9 +54,70 @@ goto :EOF
 :: and the label name, as well as leading and trailing whitespace.
   :@tab@continue@space@@space@
 
+:: CALL does an extra round of variable substitution.
+
+:: Existing labels (see below)
+set VAR=TOTO
+call :dest%VAR%
+call :dest%%VAR%%
+call :dest!VAR!
+call :dest!!VAR!!
+
+set VAR=1
+call :dest%VAR%
+call :dest%%VAR%%
+call :dest!VAR!
+call :dest!!VAR!!
+
+:: Exercise different whitespace separations
+call :dest1@space@@tab@ a b c
+call @space@:dest1@space@@space@
+
+:: Similar to GOTO, whitespace between ':' and the label name parameter are NOT ignored.
+call :setError 0
+call @space@:@space@dest1@space@@space@
+if %errorlevel% equ 0 (echo Unexpected: CALL did not fail^^!) else echo OK
+
+:: Only GOTO understands '+' instead of ':'.
+:: Here '+dest1' is understood as a (non-existing) command.
+call :setError 0
+call @space@+dest1@space@@space@
+if %errorlevel% equ 0 (echo Unexpected: CALL did not fail^^!) else echo OK
+
+
+:: Calling a label with escape carets.
+call :la^^bel1
 
 :: Jumping to a label with escape carets.
 goto :la^^bel2
+
+
+:: Label with percents (should not be called)
+:dest%%VAR%%
+echo Unexpected CALL/GOTO jump^^!
+
+:: Valid label (called from the variable substitution tests above)
+:destTOTO
+echo Hi there^^!
+:: We exit this CALL invocation
+goto :EOF
+
+:: Valid label with arbitrary first character before ':'
+:: (not just '@' as supposed by cmd_winetests!)
+?:de^st1
+echo goto with unrelated first character, and escape carets worked
+echo Params: '%0', '%1', '%2', '%3'
+:: We exit this CALL invocation
+goto :EOF
+
+
+:: Label with escape carets
+:la^bel1
+echo Unexpected CALL jump^^!
+:la^^bel1
+echo CALL with escape caret worked
+:: We exit this CALL invocation
+goto :EOF
 
 :la^bel2
 echo Unexpected GOTO jump^^!
@@ -116,6 +177,17 @@ echo --------- Testing :EOF support ---------
 
 :: Use an auxiliary CMD file to test GOTO :EOF
 mkdir foobar && cd foobar
+
+:: This CALL will fail: :EOF is indeed a reserved label for GOTO only.
+call :setError 0
+call :EOF
+if %errorlevel% equ 0 (echo Unexpected: CALL :EOF did not fail^^!) else echo OK
+
+:: This CALL will succeed silently: only the first ':' of ::EOF is stripped,
+:: thus calling in a new batch context GOTO :EOF.
+call :setError 0
+call ::EOF
+if %errorlevel% neq 0 (echo Unexpected: CALL ::EOF did fail^^!) else echo OK
 
 :: GOTO :EOF is available only if commands extensions are enabled
 echo @echo off> tmp.cmd
@@ -366,7 +438,7 @@ echo --------- Testing EXIT within IF ---------
 :: Use a CALL context, and we will only check EXIT /B.
 call :doExitIfTest 1
 call :doExitIfTest 2
-goto :finished
+goto :continue
 
 :doExitIfTest
 if %1==1 (
@@ -379,6 +451,203 @@ if %1==1 (
     echo Unexpected second block^^!
 )
 echo You won't see this^^!
+exit /b
+
+
+::
+:: Next suite of tests.
+::
+:continue
+
+echo --------- Testing CALL (triggers GOTO /?) ---------
+
+::
+:: Test that shows that CALL :label with the label name containing /?
+:: at delayed time, internally calls GOTO, and will end up calling GOTO /?,
+:: then jumps to the next command.
+::
+:: Adapted from https://stackoverflow.com/q/31987023/13530036
+:: and from https://stackoverflow.com/a/38938416/13530036
+:: The author of this test calls that "anonymous functions".
+::
+set "label=/?"
+
+:: Test 1: GOTO /? will be called.
+:: Since it is expected that the code below the CALL will also be called in
+:: its context, but we want its output to be redirected to STDOUT, we use a
+:: different redirection file so that it does not go into the tmp.txt file.
+echo --- Direct label, redirection
+
+:: Use an auxiliary CMD file
+mkdir foobar && cd foobar
+
+:: Call the label and redirect STDOUT to a file for later filtering.
+call :%%label%% argument > tmp.txt
+:: The following commands are called also within the CALL context.
+:: The message will be displayed both in the CALL context, and in the main one.
+echo Test message -- '%0','%*'>> tmpMsg.txt
+:: Within the CALL context, this is the expected value of %0. Quit early.
+if "%0" == ":/?" (
+    echo Arguments: '%*'>> tmpMsg.txt
+    exit /B
+)
+
+:: Back to the main context.
+:: Display the redirected messages, filtering out the batch file name.
+for /f "delims=" %%x in (tmpMsg.txt) do (
+    set "msg=%%x"
+    echo !msg:%0=!
+)
+
+:: Check whether CALL displayed GOTO help or CALL help.
+:: We differentiate between both, because GOTO /? mentions CALL /?, but CALL
+:: help does not mention GOTO, and contains the substring "CALL [" (part of the
+:: syntax example) that allows to discriminate between both cases.
+find "GOTO" tmp.txt > NUL && echo OK, GOTO help.|| echo Unexpected, no GOTO help^^!
+find "CALL [" tmp.txt > NUL && echo Unexpected CALL help^^!
+
+:: Cleanup
+del tmp.txt tmpMsg.txt > NUL
+
+:: Test 2: CALL /? will be called if piping.
+echo --- Direct label, piping
+
+call :%%label%% argument | (find "CALL [" > NUL && echo OK, CALL help.|| echo Unexpected, no CALL help^^!)
+echo Test message -- '%0','%*'>> tmpMsg.txt
+if "%0" == ":/?" (
+    echo Arguments: '%*'>> tmpMsg.txt
+    exit /B
+)
+
+:: Back to the main context.
+:: Display the redirected messages, filtering out the batch file name.
+for /f "delims=" %%x in (tmpMsg.txt) do (
+    set "msg=%%x"
+    echo !msg:%0=!
+)
+
+:: Cleanup
+del tmpMsg.txt > NUL
+cd .. & rd /s/q foobar
+
+
+::
+:: Repeat the same tests as above, but now with a slightly different label.
+::
+echo --------- Testing CALL with escape carets (triggers GOTO /?) ---------
+
+set "help=^ /? ^^^^arg"
+
+:: Test 1: GOTO /? will be called.
+:: See the explanations in the previous tests above
+echo --- Direct label, redirection
+
+:: Use an auxiliary CMD file
+mkdir foobar && cd foobar
+
+:: Call the label and redirect STDOUT to a file for later filtering.
+call :myLabel%%help%% ^^^^argument > tmp.txt
+echo Test message -- '%0','%*'>> tmpMsg.txt
+if "%0" == ":myLabel /?" (
+    echo Arguments: '%*'>> tmpMsg.txt
+    exit /B
+)
+
+:: Back to the main context.
+:: Display the redirected messages, filtering out the batch file name.
+for /f "delims=" %%x in (tmpMsg.txt) do (
+    set "msg=%%x"
+    echo !msg:%0=!
+)
+
+:: Check whether CALL displayed GOTO help or CALL help.
+find "GOTO" tmp.txt > NUL && echo OK, GOTO help.|| echo Unexpected, no GOTO help^^!
+find "CALL [" tmp.txt > NUL && echo Unexpected CALL help^^!
+
+:: Cleanup
+del tmp.txt tmpMsg.txt > NUL
+
+:: Test 2: CALL /? will be called if piping.
+echo --- Direct label, piping
+
+call :myLabel%%help%% ^^^^argument | (find "CALL [" > NUL && echo OK, CALL help.|| echo Unexpected, no CALL help^^!)
+echo Test message -- '%0','%*'>> tmpMsg.txt
+if "%0" == ":myLabel /?" (
+    echo Arguments: '%*'>> tmpMsg.txt
+    exit /B
+)
+
+:: Back to the main context.
+:: Display the redirected messages, filtering out the batch file name.
+for /f "delims=" %%x in (tmpMsg.txt) do (
+    set "msg=%%x"
+    echo !msg:%0=!
+)
+
+:: Cleanup
+del tmpMsg.txt > NUL
+cd .. & rd /s/q foobar
+
+goto :continue
+
+:/?
+:myLabel
+echo Unexpected CALL or GOTO! Arguments: '%*'
+exit /b 0
+
+
+::
+:: Next suite of tests.
+::
+:continue
+
+::
+:: This test will actually call the label.
+:: Adapted from https://stackoverflow.com/a/38938416/13530036
+::
+echo --------- Testing CALL (NOT triggering GOTO /? or CALL /?) ---------
+
+set "var=/?"
+call :sub %%var%%
+goto :otherTest
+
+:sub
+echo Arguments: '%*'
+exit /b
+
+
+:otherTest
+call :sub2 "/?" Hello World
+goto :continue
+
+:sub2
+:: 'args' contains the list of arguments
+set "args=%*"
+:: !args:%1=! will remove the first argument specified by %1 and keep the rest.
+echo %~1 | (find "ECHO [" > NUL && echo OK, ECHO help.|| echo Unexpected, no ECHO help^^!)
+echo/
+echo !args:%1=!
+exit /b
+
+
+::
+:: Next suite of tests.
+::
+:continue
+
+::
+:: CALL supports double delayed expansion.
+:: Test from https://stackoverflow.com/a/31990563/13530036
+::
+echo --------- Testing CALL double delayed expansion ---------
+
+set "label=myLabel"
+set "pointer=^!label^!"
+call :!pointer!
+goto :finished
+
+:myLabel
+echo It works^^!
 exit /b
 
 

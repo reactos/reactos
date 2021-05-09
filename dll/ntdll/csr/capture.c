@@ -91,19 +91,41 @@ CsrAllocateCaptureBuffer(IN ULONG ArgumentCount,
                          IN ULONG BufferSize)
 {
     PCSR_CAPTURE_BUFFER CaptureBuffer;
+    ULONG OffsetsArraySize;
+    ULONG MaximumSize;
 
-    /* Validate size */
-    if (BufferSize >= MAXLONG) return NULL;
+    /* Validate the argument count. Note that on server side, CSRSRV
+     * limits the count to MAXUSHORT; here we are a bit more lenient. */
+    if (ArgumentCount > (MAXLONG / sizeof(ULONG_PTR)))
+        return NULL;
 
-    /* Add the size of the header and for each offset to the pointers */
+    OffsetsArraySize = ArgumentCount * sizeof(ULONG_PTR);
+
+    /*
+     * Validate the total buffer size.
+     * The total size of the header plus the pointer-offset array and the
+     * provided buffer, together with the alignment padding for each argument,
+     * must be less than MAXLONG aligned to 4-byte boundary.
+     */
+    MaximumSize = (MAXLONG & ~3) - FIELD_OFFSET(CSR_CAPTURE_BUFFER, PointerOffsetsArray);
+    if (OffsetsArraySize >= MaximumSize)
+        return NULL;
+    MaximumSize -= OffsetsArraySize;
+    if (BufferSize >= MaximumSize)
+        return NULL;
+    MaximumSize -= BufferSize;
+    if ((ArgumentCount * 3) + 3 >= MaximumSize)
+        return NULL;
+
+    /* Add the size of the header and of the pointer-offset array */
     BufferSize += FIELD_OFFSET(CSR_CAPTURE_BUFFER, PointerOffsetsArray) +
-                    (ArgumentCount * sizeof(ULONG_PTR));
-
-    /* Align it to a 4-byte boundary */
-    BufferSize = (BufferSize + 3) & ~3;
+                    OffsetsArraySize;
 
     /* Add the size of the alignment padding for each argument */
     BufferSize += ArgumentCount * 3;
+
+    /* Align it to a 4-byte boundary */
+    BufferSize = (BufferSize + 3) & ~3;
 
     /* Allocate memory from the port heap */
     CaptureBuffer = RtlAllocateHeap(CsrPortHeap, HEAP_ZERO_MEMORY, BufferSize);
@@ -113,13 +135,12 @@ CsrAllocateCaptureBuffer(IN ULONG ArgumentCount,
     CaptureBuffer->Size = BufferSize;
     CaptureBuffer->PointerCount = 0;
 
-    /* Initialize all the offsets */
-    RtlZeroMemory(CaptureBuffer->PointerOffsetsArray,
-                  ArgumentCount * sizeof(ULONG_PTR));
+    /* Initialize the pointer-offset array */
+    RtlZeroMemory(CaptureBuffer->PointerOffsetsArray, OffsetsArraySize);
 
     /* Point to the start of the free buffer */
     CaptureBuffer->BufferEnd = (PVOID)((ULONG_PTR)CaptureBuffer->PointerOffsetsArray +
-                                       ArgumentCount * sizeof(ULONG_PTR));
+                                       OffsetsArraySize);
 
     /* Return the address of the buffer */
     return CaptureBuffer;

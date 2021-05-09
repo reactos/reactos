@@ -31,6 +31,8 @@
 
 /* GLOBAL VARIABLES ***********************************************************/
 
+ULONG VideoDebugLevel = 0;
+
 BOOLEAN VpBaseVideo = FALSE;
 BOOLEAN VpNoVesa = FALSE;
 
@@ -293,6 +295,8 @@ IntVideoPortFindAdapter(
         ConfigInfo.SystemMemorySize = SystemBasicInfo.NumberOfPhysicalPages *
                                       SystemBasicInfo.PageSize;
     }
+
+    // FIXME: Check the adapter key and update VideoDebugLevel variable.
 
     /*
      * Call miniport HwVidFindAdapter entry point to detect if
@@ -793,6 +797,9 @@ VideoPortDebugPrint(
     ...)
 {
     va_list ap;
+
+    if (VideoDebugLevel >= DebugPrintLevel)
+        DebugPrintLevel = Error;
 
     va_start(ap, DebugMessage);
     vDbgPrintEx(DPFLTR_IHVVIDEO_ID, DebugPrintLevel, DebugMessage, ap);
@@ -1470,14 +1477,10 @@ VideoPortAcquireDeviceLock(
     IN PVOID  HwDeviceExtension)
 {
     PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension;
-    NTSTATUS Status;
-
-    UNREFERENCED_LOCAL_VARIABLE(Status);
 
     TRACE_(VIDEOPRT, "VideoPortAcquireDeviceLock\n");
     DeviceExtension = VIDEO_PORT_GET_DEVICE_EXTENSION(HwDeviceExtension);
-    Status = KeWaitForMutexObject(&DeviceExtension->DeviceLock, Executive,
-                                  KernelMode, FALSE, NULL);
+    KeWaitForMutexObject(&DeviceExtension->DeviceLock, Executive, KernelMode, FALSE, NULL);
     // ASSERT(Status == STATUS_SUCCESS);
 }
 
@@ -1490,13 +1493,10 @@ VideoPortReleaseDeviceLock(
     IN PVOID HwDeviceExtension)
 {
     PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension;
-    LONG Status;
-
-    UNREFERENCED_LOCAL_VARIABLE(Status);
 
     TRACE_(VIDEOPRT, "VideoPortReleaseDeviceLock\n");
     DeviceExtension = VIDEO_PORT_GET_DEVICE_EXTENSION(HwDeviceExtension);
-    Status = KeReleaseMutex(&DeviceExtension->DeviceLock, FALSE);
+    KeReleaseMutex(&DeviceExtension->DeviceLock, FALSE);
     //ASSERT(Status == STATUS_SUCCESS);
 }
 

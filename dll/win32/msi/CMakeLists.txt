@@ -7,14 +7,6 @@ add_definitions(-D__WINESRC__ -D__ROS_LONG64__ -DMSIRUNMODE=MSIRUNMODE_T)
 spec2def(msi.dll msi.spec ADD_IMPORTLIB)
 generate_idl_iids(msiserver.idl)
 
-if(MSVC)
-    #  error C4133: 'function': incompatible types - from 'UINT *' to 'MSIINSTALLCONTEXT *'
-    replace_compile_flags("/we4133" " ")
-
-    # error C4312: 'type cast': conversion from 'unsigned int' to 'HANDLE' of greater size
-    replace_compile_flags("/we4312" " ")
-endif()
-
 list(APPEND SOURCE
     action.c
     alter.c
@@ -56,20 +48,28 @@ list(APPEND SOURCE
     upgrade.c
     where.c)
 
+BISON_TARGET(cond cond.y ${CMAKE_CURRENT_BINARY_DIR}/cond.tab.c COMPILE_FLAGS "-p cond_")
+BISON_TARGET(sql sql.y ${CMAKE_CURRENT_BINARY_DIR}/sql.tab.c COMPILE_FLAGS "-p sql_")
+
 list(APPEND PCH_SKIP_SOURCE
-    cond.tab.c
-    sql.tab.c
+    ${BISON_cond_OUTPUTS}
+    ${BISON_sql_OUTPUTS}
     ${CMAKE_CURRENT_BINARY_DIR}/msiserver_i.c
     ${CMAKE_CURRENT_BINARY_DIR}/msi_stubs.c)
-
-# cond.tab.c/sql.tab.c have been generated with relative file paths...
-set_source_files_properties(cond.tab.c sql.tab.c PROPERTIES COMPILE_FLAGS "-UREACTOS_SOURCE_DIR -DREACTOS_SOURCE_DIR=\"\\\".\\\"\"")
 
 add_library(msi MODULE
     ${SOURCE}
     ${PCH_SKIP_SOURCE}
     msi.rc
     ${CMAKE_CURRENT_BINARY_DIR}/msi.def)
+
+if(MSVC)
+    #  error C4133: 'function': incompatible types - from 'UINT *' to 'MSIINSTALLCONTEXT *'
+    remove_target_compile_option(msi "/we4133")
+
+    # error C4312: 'type cast': conversion from 'unsigned int' to 'HANDLE' of greater size
+    remove_target_compile_option(msi "/we4312")
+endif()
 
 add_idl_headers(msi_idlheader msiserver.idl)
 add_typelib(msiserver.idl)

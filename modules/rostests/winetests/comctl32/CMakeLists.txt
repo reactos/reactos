@@ -42,9 +42,7 @@ add_executable(comctl32_winetest
     ${PCH_SKIP_SOURCE}
     rsrc.rc)
 
-if(USE_CLANG_CL OR (NOT MSVC))
-    target_compile_options(comctl32_winetest PRIVATE "-Wno-format")
-endif()
+target_compile_options(comctl32_winetest PRIVATE $<$<NOT:$<C_COMPILER_ID:MSVC>>:-Wno-format>)
 
 set_module_type(comctl32_winetest win32cui)
 add_importlibs(comctl32_winetest comctl32 ole32 user32 gdi32 advapi32 msvcrt kernel32)

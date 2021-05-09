@@ -1646,6 +1646,16 @@ union codeview_symbol
         unsigned short          eh_sect;        /* section for exception handler */
         unsigned int            flags;
     } frame_info_v2;
+
+    struct
+    {
+        unsigned short  len;
+        unsigned short  id;
+        unsigned int    offset;
+        unsigned short  sect_idx;
+        unsigned short  inst_len;
+        unsigned int    index;
+    } heap_alloc_site;
 };
 
 #define S_COMPILAND_V1  0x0001

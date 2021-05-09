@@ -190,4 +190,7 @@ START_TEST(CString)
 
     test_bstrW();
     test_bstrA();
+
+    test_tokenizeW();
+    test_tokenizeA();
 }

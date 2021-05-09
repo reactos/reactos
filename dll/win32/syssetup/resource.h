@@ -24,6 +24,8 @@
 #define IDB_LAUTUS    103
 #define IDB_LUNAR     104
 #define IDB_MIZU      105
+#define IDB_REACTOS   106
+#define IDB_LINE      107
 
 #define IDI_ICON1 10
 #define IDI_ICON2 11
@@ -78,7 +80,8 @@
 
 #define IDD_STATUSWINDOW_DLG 2200
 #define IDC_STATUSLABEL      2201
-#define IDC_STATUSPROGRESS   2202
+#define IDC_ROSLOGO          2202
+#define IDC_BAR              2503
 
 #define IDD_PS2MOUSEPROPERTIES 2300
 #define IDC_PS2MOUSESAMPLERATE 2301
@@ -161,3 +164,6 @@
 #define IDS_DEFAULT                 3906
 
 #define IDR_GPL 4000
+
+/* Timer ID for the animated dialog bar. */
+#define IDT_BAR 1

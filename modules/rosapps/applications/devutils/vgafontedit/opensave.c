@@ -43,7 +43,7 @@ DoOpenFile(OUT PWSTR pszFileName)
         PrepareFilter(pszFilter);
         ofn.lpstrFilter = pszFilter;
         ofn.lpstrFile = pszFileName;
-        ofn.Flags = OFN_FILEMUSTEXIST;
+        ofn.Flags = OFN_EXPLORER | OFN_FILEMUSTEXIST;
 
         bRet = GetOpenFileNameW(&ofn);
         HeapFree(hProcessHeap, 0, pszFilter);

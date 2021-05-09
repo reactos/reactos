@@ -16,12 +16,18 @@ BEGIN
     /* Tooltips */
     IDS_TOOLTIP_NEXT_PIC "Imaginea următare"
     IDS_TOOLTIP_PREV_PIC "Imaginea precedentă"
+    IDS_TOOLTIP_BEST_FIT "Best fit to window (Ctrl+B)"
+    IDS_TOOLTIP_REAL_SIZE "Actual size (Ctrl+A)"
+    IDS_TOOLTIP_SLIDE_SHOW "Start slideshow (F11)"
     IDS_TOOLTIP_ZOOM_IN "Mărire (+)"
     IDS_TOOLTIP_ZOOM_OUT "Micșorare (-)"
     IDS_TOOLTIP_ROT_CLOCKW "Rotire în sens orar (Ctrl+K)"
     IDS_TOOLTIP_ROT_COUNCW "Rotire în sens antiorar (Ctrl+L)"
+    IDS_TOOLTIP_DELETE "Delete (DEL)"
     IDS_TOOLTIP_PRINT "Imprimă (Ctrl+P)"
     IDS_TOOLTIP_SAVEAS "Păstrare în… (Ctrl+S)"
+    IDS_TOOLTIP_MODIFY "Modify (Ctrl+E)"
+    IDS_TOOLTIP_HELP_TOC "Help topics (F1)"
 END
 
 STRINGTABLE

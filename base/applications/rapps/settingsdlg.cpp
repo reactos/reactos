@@ -1,7 +1,6 @@
 /*
  * PROJECT:     ReactOS Applications Manager
- * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
- * FILE:        base/applications/rapps/settingsdlg.cpp
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Settings Dialog
  * COPYRIGHT:   Copyright 2009 Dmitry Chapyshev           (dmitry@reactos.org)
  *              Copyright 2017 Alexander Shaposhnikov     (sanchaez@reactos.org)
@@ -67,6 +66,7 @@ BOOL IsUrlValid(const WCHAR * Url)
         case INTERNET_SCHEME_HTTP:
         case INTERNET_SCHEME_HTTPS:
         case INTERNET_SCHEME_FTP:
+        case INTERNET_SCHEME_FILE:
         // supported
             return TRUE;
             
@@ -261,7 +261,7 @@ namespace
                 }
 
                 SettingsInfo = NewSettingsInfo;
-                SaveSettings(GetParent(hDlg));
+                SaveSettings(GetParent(hDlg), &SettingsInfo);
                 EndDialog(hDlg, LOWORD(wParam));
             }
             break;

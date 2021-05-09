@@ -13,6 +13,20 @@ BEGIN
     IDS_ALIAS_POWER_USERS_COMMENT "Hauptbenutzer besitzen die meisten Rechte mit einigen Einschränkungen."
     IDS_ALIAS_USERS_NAME "Benutzer"
     IDS_ALIAS_USERS_COMMENT "Benutzer können keine Änderungen am System vornehmen."
+    IDS_ALIAS_PRINT_OPS_NAME "Druck-Operatoren"
+    IDS_ALIAS_PRINT_OPS_COMMENT "Mitglieder können Drucker in der Domäne verwalten."
+    IDS_ALIAS_BACKUP_OPS_NAME "Sicherungs-Operatoren"
+    IDS_ALIAS_BACKUP_OPS_COMMENT "Sicherungs-Operatoren können Sicherheitseinschränkungen nur zum Sichern und Wiederherstellen von Dateien außer Kraft setzen."
+    IDS_ALIAS_REPLICATOR_NAME "Replikations-Operator"
+    IDS_ALIAS_REPLICATOR_COMMENT "Unterstützt Dateireplikation in Domänen."
+    IDS_ALIAS_REMOTE_DESKTOP_USERS_NAME "Remotedesktopbenutzer"
+    IDS_ALIAS_REMOTE_DESKTOP_USERS_COMMENT "Mitglieder dieser Gruppe haben die Berechtigung, sich remote anzumelden."
+    IDS_ALIAS_NETWORK_CONFIGURATION_OPS_NAME "Netzwerkkonfigurations-Operator"
+    IDS_ALIAS_NETWORK_CONFIGURATION_OPS_COMMENT "Mitglieder dieser Gruppe verfügen über einige Administratorrechte zum Verwalten der Konfiguration von Netzwerkfunktionen."
+    IDS_ALIAS_MONITORING_USERS_NAME "Performance-Monitor Benutzer"
+    IDS_ALIAS_MONITORING_USERS_COMMENT "Mitglieder dieser Gruppe vefügen über Remotezugriff zum Überwachen dieses Computers."
+    IDS_ALIAS_LOGGING_USERS_NAME "Performance-Protokoll Benutzer"
+    IDS_ALIAS_LOGGING_USERS_COMMENT "Mitglieder dieser Gruppe verfügen über Remotezugriff um die Protokollierung von Leistungsindikatoren auf diesem Computer zu planen."
     /*
      * ATTENTION: 
      *   If you translate the administrator account name, keep IDS_USER_ADMINISTRATOR_NAME and

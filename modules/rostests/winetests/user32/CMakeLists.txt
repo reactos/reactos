@@ -2,13 +2,6 @@
 remove_definitions(-DWINVER=0x502 -D_WIN32_WINNT=0x502)
 add_definitions(-DWINVER=0x602 -D_WIN32_WINNT=0x602)
 
-if(MSVC)
-    # Disable warning C4477 (printf format warnings)
-    add_compile_flags("/wd4477")
-elseif(GCC)
-    add_compile_flags("-Wno-format-overflow")
-endif()
-
 list(APPEND SOURCE
     broadcast.c
     class.c
@@ -43,6 +36,15 @@ add_executable(user32_winetest
     ${SOURCE}
     ${PCH_SKIP_SOURCE}
     resource.rc)
+
+if(MSVC)
+    # Disable warning C4477 (printf format warnings)
+    remove_target_compile_option(user32_winetest "/we4477")
+endif()
+
+if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
+    target_compile_options(user32_winetest PRIVATE -Wno-format-overflow)
+endif()
 
 add_pch(user32_winetest precomp.h "${PCH_SKIP_SOURCE}")
 # some tests need to be run from an app compiled as GUI

@@ -49,7 +49,7 @@ static void rsym_finalize_function(struct module* module, struct symt_function* 
     {
         loc.kind = loc_absolute;
         loc.offset = il.Address - func->address;
-        symt_add_function_point(module, func, SymTagFuncDebugStart, 
+        symt_add_function_point(module, func, SymTagFuncDebugStart,
                                 &loc, NULL);
     }
 }

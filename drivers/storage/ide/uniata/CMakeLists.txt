@@ -1,5 +1,4 @@
 
-set_cpp()
 
 include_directories(
     BEFORE ${CMAKE_CURRENT_SOURCE_DIR}
@@ -26,9 +25,11 @@ if(USE_CLANG_CL OR (NOT MSVC))
     target_compile_options(uniata PRIVATE "-Wno-narrowing")
     if(USE_CLANG_CL)
         target_compile_options(uniata PRIVATE "-Wno-unused-const-variable")
-    else()
-        target_compile_options(uniata PRIVATE "-Wno-unused-but-set-variable")
     endif()
+endif()
+
+if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
+    target_compile_options(uniata PRIVATE -Wno-unused-but-set-variable)
 endif()
 
 add_pch(uniata stdafx.h SOURCE)
@@ -36,3 +37,4 @@ set_module_type(uniata kernelmodedriver)
 add_importlibs(uniata scsiport ntoskrnl hal)
 add_cd_file(TARGET uniata DESTINATION reactos/system32/drivers NO_CAB FOR all)
 add_registry_inf(uniata_reg.inf)
+add_driver_inf(uniata uniata_comm.inf)

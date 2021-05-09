@@ -11,6 +11,6 @@ elseif(ARCH STREQUAL "arm")
     add_executable(rsym rsym64.c)
 endif()
 
-target_link_libraries(rsym PRIVATE host_includes rsym_common dbghelphost zlibhost unicode)
+target_link_libraries(rsym PRIVATE host_includes rsym_common dbghelphost unicode)
 add_host_tool(raddr2line raddr2line.c)
 target_link_libraries(raddr2line PRIVATE host_includes rsym_common)

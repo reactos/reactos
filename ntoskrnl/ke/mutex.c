@@ -192,7 +192,7 @@ KeReleaseMutex(IN PKMUTEX Mutex,
     ASSERT_MUTANT(Mutex);
 
     /* There's no difference at this level between the two */
-    return KeReleaseMutant(Mutex, 1, FALSE, Wait);
+    return KeReleaseMutant(Mutex, MUTANT_INCREMENT, FALSE, Wait);
 }
 
 /* EOF */

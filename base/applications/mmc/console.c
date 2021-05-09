@@ -249,7 +249,7 @@ DoSaveFileAs(
     saveas.lpstrFilter = L"MSC Files\0*.msc\0";
     saveas.lpstrFile = szPath;
     saveas.nMaxFile = MAX_PATH;
-    saveas.Flags = OFN_HIDEREADONLY | OFN_PATHMUSTEXIST | OFN_OVERWRITEPROMPT;
+    saveas.Flags = OFN_EXPLORER | OFN_HIDEREADONLY | OFN_PATHMUSTEXIST | OFN_OVERWRITEPROMPT;
     saveas.lpstrDefExt = L"msc";
 
     if (GetSaveFileName(&saveas))

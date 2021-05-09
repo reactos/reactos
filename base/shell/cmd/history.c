@@ -113,7 +113,7 @@ INT CommandHistory(LPTSTR param)
     else
     {
         for (h_tmp = Top->prev; h_tmp != Bottom; h_tmp = h_tmp->prev)
-            ConErrPuts(h_tmp->string);
+            ConOutPrintf(_T("%s\n"), h_tmp->string);
     }
     return 0;
 }

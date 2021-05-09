@@ -2129,7 +2129,8 @@ CmLoadKey(IN POBJECT_ATTRIBUTES TargetKey,
     {
         DPRINT1("CmpLinkHiveToMaster failed, Status %lx\n", Status);
         /* FIXME: TODO */
-        ASSERT(FALSE);
+        // ASSERT(FALSE); see CORE-17263
+        ExReleasePushLock(&CmpLoadHiveLock);
     }
 
     /* Is this first profile load? */

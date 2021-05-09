@@ -23,6 +23,7 @@
 #define TAG_TAG_TUI_PALETTE 'PiuT'
 
 PVOID TextVideoBuffer = NULL;
+extern UCHAR MachDefaultTextColor;
 
 /*
  * TuiPrintf()
@@ -723,6 +724,9 @@ UCHAR TuiTextToColor(PCSTR ColorText)
         {"White"       , COLOR_WHITE       },
     };
     ULONG i;
+
+    if (_stricmp(ColorText, "Default") == 0)
+        return MachDefaultTextColor;
 
     for (i = 0; i < sizeof(Colors)/sizeof(Colors[0]); ++i)
     {

@@ -144,6 +144,7 @@ BEGIN
     IDS_INFO_UNINSTALLSTR "\n卸载字符串: "
     IDS_INFO_MODIFYPATH "\n修改路径: "
     IDS_INFO_INSTALLDATE "\n安装日期: "
+    IDS_AINFO_PACKAGE_NAME "\n包名称: "
 END
 
 STRINGTABLE
@@ -213,6 +214,9 @@ BEGIN
     IDS_SELECTEDFORINST "选中以安装"
     IDS_MISMATCH_CERT_INFO "所使用的证书未知:\n主题: %s\n发行方: %s\n您是否仍然想继续？"
     IDS_UNABLE_PATH "不正确的URL格式。"
+    IDS_APP_DISPLAY_DETAILS "细节"
+    IDS_APP_DISPLAY_LIST "列表"
+    IDS_APP_DISPLAY_TILE "卡片"
 END
 
 STRINGTABLE
@@ -249,4 +253,16 @@ BEGIN
     IDS_DL_DIALOG_DB_DISP "应用程序数据库"
     IDS_DL_DIALOG_DB_DOWNLOAD_DISP "正在更新数据库…"
     IDS_DL_DIALOG_DB_UNOFFICIAL_DOWNLOAD_DISP "正在更新数据库… (非官方源)"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_CMD_USAGE "用法："
+    IDS_CMD_NEED_PACKAGE_NAME "错误：选项 %1 需要一个或多个软件包名。\n"
+    IDS_CMD_NEED_FILE_NAME "错误：选项 %1 需要一个文件名。\n"
+    IDS_CMD_NEED_PARAMS "错误：选项 %1 需要一个或多个参数。\n"
+    IDS_CMD_INVALID_OPTION "错误：指定了未知或错误的命令行参数。\n"
+    IDS_CMD_FIND_RESULT_FOR "%1 的搜索结果：\n"
+    IDS_CMD_PACKAGE_NOT_FOUND "未能找到软件包 %1。\n"
+    IDS_CMD_PACKAGE_INFO "有关软件包 %1 的信息：\n"
 END

@@ -32,7 +32,7 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     LTEXT "Acest asistent vă va ajuta în crearea unei scurtături\ncătre adrese din Internet, calculatoare, dosare, fișiere\nlocale sau din rețea.", -1, 120, 15, 200, 30
     LTEXT "Scrieți adresa elementului:", -1, 120, 50, 120, 10
-    EDITTEXT IDC_SHORTCUT_LOCATION, 120, 65, 150, 15, ES_LEFT
+    EDITTEXT IDC_SHORTCUT_LOCATION, 120, 65, 150, 15, ES_LEFT | ES_AUTOHSCROLL
     PUSHBUTTON "Spe&cificare…",  IDC_SHORTCUT_BROWSE, 272, 65, 55, 15, ES_LEFT
     LTEXT "Apăsați „Înainte” pentru a continua.", -1, 120, 97, 162, 10
 END
@@ -43,7 +43,7 @@ CAPTION "Asistent pentru creare de scurtătură"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     LTEXT "Scrieți un n&ume pentru scurtătură:", -1, 120, 15, 150, 10
-    EDITTEXT IDC_SHORTCUT_NAME, 120, 35, 150, 15, ES_LEFT
+    EDITTEXT IDC_SHORTCUT_NAME, 120, 35, 150, 15, ES_LEFT | ES_AUTOHSCROLL
     LTEXT "Apăsați „Sfârșit” pentru a crea scurtătura.", -1, 118, 97, 178, 17
 END
 

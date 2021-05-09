@@ -42,9 +42,9 @@ time               指定命令运行的时间。\n\
     IDS_OK "确定"
 
     IDS_TASKID      "任务 ID:       %lu\n"
-    IDS_STATUS      "状态:    %s\n"
-    IDS_SCHEDULE    "安排:    %s\n"
+    IDS_STATUS      "状态:          %s\n"
+    IDS_SCHEDULE    "安排:          %s\n"
     IDS_TIME        "今日时间:      %s\n"
-    IDS_INTERACTIVE "交互:    %s\n"
-    IDS_COMMAND     "命令:    %s\n"
+    IDS_INTERACTIVE "交互:          %s\n"
+    IDS_COMMAND     "命令:          %s\n"
 END

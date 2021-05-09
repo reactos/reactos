@@ -1,0 +1,34 @@
+/* Translation has been created by Luo Yufan in 2018 (njlyf2011@hotmail.com) */
+/* HK Chinese Traditional Translation by Aobi Chan CL 2020 (eason066@gmail.com) */
+
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
+
+STRINGTABLE
+BEGIN
+    IDS_USAGE "\n\
+Usage: %s [磁碟機:] [-F] [-V] [-R] [-C]\n\n\
+[磁碟機:]    指定需要檢查的磁碟機。\n\
+-F          修復磁碟機上的錯誤。\n\
+-V          顯示每一個檔案的完整路徑。\n\
+-R          找出損壞的磁區並復原可讀取的資訊。\n\
+-C          僅在磁碟機被標記為出錯時檢查磁碟機。\n\
+\n"
+
+    IDS_PERCENT_COMPL "已完成百分之 %d。\r"
+    IDS_FILE_SYSTEM "檔案系統類型為 %s。\n"
+    IDS_ABOUT "\n\
+Chkdskx v1.0.1 by Mark Russinovich\n\
+Systems Internals - http://www.sysinternals.com\n\
+ReactOS 於 1999 年由 Emanuele Aliberti 編寫"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_VOLUME_IN_USE "磁碟區正被使用，無法鎖定。\n"
+    IDS_CHKDSK_FAIL "Chkdsk 沒有成功完成。\n\n"
+    IDS_NO_ENTRY_POINT "無法找到 FMIFS 進入點。\n\n"
+    IDS_BAD_ARGUMENT "未知參數: %s\n"
+    IDS_NO_CURRENT_DIR "無法獲得目前的目錄。錯誤碼: "
+    IDS_NO_QUERY_VOL "無法查詢磁碟區。錯誤碼: "
+    IDS_VOLUME_IN_USE_PROC "Chkdsk 無法執行，因為該磁碟區正被另一個處理程序所使用。\n\n"
+END

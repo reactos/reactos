@@ -1335,6 +1335,37 @@ static MUI_ENTRY esESFormatPartitionEntries[] =
     }
 };
 
+static MUI_ENTRY esESCheckFSEntries[] =
+{
+    {
+        4,
+        3,
+        " Instalaci\242n de ReactOS " KERNEL_VERSION_STR " ",
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        8,
+        "El instalador est\240 comprobando la Partici\242n seleccionada.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        "Espere un momento...",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
 static MUI_ENTRY esESInstallDirectoryEntries[] =
 {
     {
@@ -1488,6 +1519,30 @@ static MUI_ENTRY esESBootLoaderEntries[] =
         0,
         "   INTRO = Continuar   F3 = Salir",
         TEXT_TYPE_STATUS  | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
+static MUI_ENTRY etESBootLoaderInstallPageEntries[] =
+{
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        "Installing the bootloader onto the media, please wait...",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
         TEXT_ID_STATIC
     },
     {
@@ -2107,6 +2162,10 @@ MUI_PAGE esESPages[] =
         esESFormatPartitionEntries
     },
     {
+        CHECK_FILE_SYSTEM_PAGE,
+        esESCheckFSEntries
+    },
+    {
         DELETE_PARTITION_PAGE,
         esESDeletePartitionEntries
     },
@@ -2141,6 +2200,10 @@ MUI_PAGE esESPages[] =
     {
         SUCCESS_PAGE,
         esESSuccessPageEntries
+    },
+    {
+        BOOT_LOADER_INSTALLATION_PAGE,
+        etESBootLoaderInstallPageEntries
     },
     {
         BOOT_LOADER_FLOPPY_PAGE,
@@ -2190,8 +2253,6 @@ MUI_STRING esESStrings[] =
     "La Partici\242n nueva todav\241a no ha sido formateada."},
     {STRING_INSTALLONPART,
     "El instalador est\240 instalando ReactOS en la Partici\242n"},
-    {STRING_CHECKINGPART,
-    "El instalador est\240 comprobando la Partici\242n seleccionada."},
     {STRING_CONTINUE,
     "INTRO = Continuar"},
     {STRING_QUITCONTINUE,
@@ -2243,31 +2304,21 @@ MUI_STRING esESStrings[] =
     {STRING_KEEPFORMAT,
     " Mantener el sistema de archivos actual (sin cambios) "},
     {STRING_HDINFOPARTCREATE_1,
-    "%I64u %s  Disco duro %lu  (Puerto=%hu, Bus=%hu, Id=%hu) en %wZ [%s]."},
-    {STRING_HDINFOPARTCREATE_2,
-    "%I64u %s  Disco duro %lu  (Puerto=%hu, Bus=%hu, Id=%hu) [%s]."},
-    {STRING_HDDINFOUNK2,
-    "   %c%c  Tipo 0x%02X    %I64u %s"},
+    "%s."},
     {STRING_HDINFOPARTDELETE_1,
-    "en %I64u %s  Disco duro %lu  (Puerto=%hu, Bus=%hu, Id=%hu) en %wZ [%s]."},
-    {STRING_HDINFOPARTDELETE_2,
-    "en %I64u %s  Disco duro %lu  (Puerto=%hu, Bus=%hu, Id=%hu) [%s]."},
-    {STRING_HDINFOPARTZEROED_1,
-    "Disco duro %lu (%I64u %s), Puerto=%hu, Bus=%hu, Id=%hu (%wZ) [%s]."},
-    {STRING_HDDINFOUNK4,
-    "%c%c  Tipo 0x%02X    %I64u %s"},
-    {STRING_HDINFOPARTEXISTS_1,
-    "en Disco duro %lu (%I64u %s), Puerto=%hu, Bus=%hu, Id=%hu (%wZ) [%s]."},
-    {STRING_HDDINFOUNK5,
-    "%c%c %c %sTipo %-3u%s                      %6lu %s"},
-    {STRING_HDINFOPARTSELECT_1,
-    "%6lu %s  Disco duro %lu  (Puerto=%hu, Bus=%hu, Id=%hu) en %wZ [%s]"},
-    {STRING_HDINFOPARTSELECT_2,
-    "%6lu %s  Disco duro %lu  (Puerto=%hu, Bus=%hu, Id=%hu) [%s]"},
+    "en %s."},
+    {STRING_PARTTYPE,
+    "Tipo 0x%02x"},
+    {STRING_HDDINFO_1,
+    // "Disco duro %lu (%I64u %s), Puerto=%hu, Bus=%hu, Id=%hu (%wZ) [%s]"
+    "%I64u %s Disco duro %lu (Puerto=%hu, Bus=%hu, Id=%hu) en %wZ [%s]"},
+    {STRING_HDDINFO_2,
+    // "Disco duro %lu (%I64u %s), Puerto=%hu, Bus=%hu, Id=%hu [%s]"
+    "%I64u %s Disco duro %lu (Puerto=%hu, Bus=%hu, Id=%hu) [%s]"},
     {STRING_NEWPARTITION,
     "El instalador ha creado una nueva Partici\242n en"},
     {STRING_UNPSPACE,
-    "    %sEspacio sin particionar%s            %6lu %s"},
+    "Espacio sin particionar"},
     {STRING_MAXSIZE,
     "MB (m\240x. %lu MB)"},
     {STRING_EXTENDED_PARTITION,

@@ -12,7 +12,7 @@ BEGIN
     POPUP "檔案(&F)"
     BEGIN
         MENUITEM "開啟...(&O)", CMD_OPEN
-        MENUITEM "另存為...(&A)", CMD_SAVE_AS
+        MENUITEM "另存新檔...(&A)", CMD_SAVE_AS
         MENUITEM SEPARATOR
         MENUITEM "退出(&X)", CMD_EXIT
     END
@@ -34,9 +34,9 @@ END
 
 STRINGTABLE
 BEGIN
-    STRING_CLIPBOARD "剪貼簿查看程式"
+    STRING_CLIPBOARD "剪貼簿檢視器"
     STRING_CLIPFILE  "剪貼簿上的元素"
-    STRING_DELETE_MSG "清除剪貼簿的內容嗎?"
+    STRING_DELETE_MSG "要清除剪貼簿的內容嗎？"
     STRING_DELETE_TITLE "清除剪貼簿"
     STRING_FORMAT_NT "ReactOS 的剪貼簿檔案 (*.clp)"
     STRING_FORMAT_GEN "剪貼簿檔案 (*.clp)"
@@ -62,6 +62,6 @@ END
 
 STRINGTABLE
 BEGIN
-    ERROR_UNSUPPORTED_FORMAT "剪貼簿中包含格式，不能顯示的資料。"
+    ERROR_UNSUPPORTED_FORMAT "剪貼簿內的資料包含不能顯示的格式。"
     ERROR_INVALID_FILE_FORMAT "所選的檔案不是一個有效的剪貼簿檔案。"
 END

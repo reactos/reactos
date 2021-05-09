@@ -243,10 +243,11 @@ VOID PrintPrompt(VOID)
 
 INT cmd_prompt(LPTSTR param)
 {
+    INT retval = 0;
+
     if (!_tcsncmp(param, _T("/?"), 2))
     {
         ConOutResPaging(TRUE, STRING_PROMPT_HELP1);
-
 #ifdef FEATURE_DIRECTORY_STACK
         ConOutResPaging(FALSE, STRING_PROMPT_HELP2);
 #endif
@@ -263,10 +264,20 @@ INT cmd_prompt(LPTSTR param)
     if (!SetEnvironmentVariable(_T("PROMPT"),
                                 (param && param[0] != _T('\0') ? param : NULL)))
     {
-        return 1;
+        retval = 1;
     }
 
-    return 0;
+    if (BatType != CMD_TYPE)
+    {
+        if (retval != 0)
+            nErrorLevel = retval;
+    }
+    else
+    {
+        nErrorLevel = retval;
+    }
+
+    return retval;
 }
 #endif
 

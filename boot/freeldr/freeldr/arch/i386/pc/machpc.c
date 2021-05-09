@@ -273,7 +273,7 @@ DetectPnpBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
 
             if (PnpBufferSize + DeviceNode->Size > PnpBufferSizeLimit)
             {
-                ERR("Buffer too small! Ignoring remaining device nodes.\n");
+                ERR("Buffer too small! Ignoring remaining device nodes. (i = %d)\n", i);
                 break;
             }
 

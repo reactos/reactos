@@ -2,7 +2,8 @@
  * PROJECT:         ReactOS api tests
  * LICENSE:         GPLv2+ - See COPYING in the top level directory
  * PURPOSE:         Test for SHExplorerParseCmdLine
- * PROGRAMMER:      Thomas Faber <thomas.faber@reactos.org
+ * PROGRAMMERS:     Thomas Faber <thomas.faber@reactos.org>
+ *                  Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
 #include <apitest.h>
@@ -30,7 +31,7 @@ typedef struct _EXPLORER_INFO
     DWORD dwFlags;
     ULONG Unknown1[5];
     PIDLIST_ABSOLUTE pidlRoot;
-    ULONG Unknown3[4];
+    CLSID clsid;
     GUID guidInproc;
     ULONG Padding[PADDING_SIZE];
 } EXPLORER_INFO, *PEXPLORER_INFO;
@@ -85,6 +86,7 @@ _In_ INT ExpectedCsidl,
 _In_ DWORD ExpectedFlags,
 _In_ PCWSTR ExpectedFileName,
 _In_ PCWSTR PidlPath,
+_In_ PCWSTR pclsid,
 _Out_opt_ PUINT PWriteEnd)
 {
     EXPLORER_INFO Info;
@@ -220,6 +222,23 @@ _Out_opt_ PUINT PWriteEnd)
         }
     }
 
+    {
+        LPOLESTR psz;
+        BYTE ab[sizeof(CLSID)];
+
+        StringFromCLSID(&Info.clsid, &psz);
+        if (pclsid == NULL)
+        {
+            FillMemory(ab, sizeof(ab), 0x55);
+            ok(memcmp(ab, &Info.clsid, sizeof(ab)) == 0, "Line %lu: CLSID was %ls.\n", TestLine, psz);
+        }
+        else
+        {
+            ok(lstrcmpiW(psz, pclsid) == 0, "Line %lu: CLSID was %ls.\n", TestLine, psz);
+        }
+        CoTaskMemFree(psz);
+    }
+
     if (PWriteEnd)
     {
         PBYTE data = (PBYTE)&Info;
@@ -248,6 +267,7 @@ START_TEST(SHExplorerParseCmdLine)
         DWORD ExpectedFlags;
         PCWSTR ExpectedFileName;
         PCWSTR PidlPath;
+        PCWSTR pclsid;
     } Tests [] =
     {
         { __LINE__, L"", -1, CSIDL_MYDOCUMENTS, 0x00000009 },
@@ -401,6 +421,8 @@ START_TEST(SHExplorerParseCmdLine)
         { __LINE__, L"/inproc,c:\\", FALSE, PIDL_IS_UNTOUCHED, 0x00000000 },
         { __LINE__, L"/inproc,\"c:\\\"", FALSE, PIDL_IS_UNTOUCHED, 0x00000000 },
         { __LINE__, L"/inproc,{20d04fe0-3aea-1069-a2d8-08002b30309d}", TRUE, PIDL_IS_UNTOUCHED, 0x00000400 },
+        { __LINE__, L"shell:::{450D8FBA-AD25-11D0-98A8-0800361B1103}", TRUE, CSIDL_MYDOCUMENTS, 0x00000200 },
+        { __LINE__, L"::{450d8fba-ad25-11d0-98a8-0800361b1103}", TRUE, CSIDL_MYDOCUMENTS, 0x00000200 },
     };
     const int TestCount = sizeof(Tests) / sizeof(Tests[0]);
     PWSTR CommandLine;
@@ -440,6 +462,7 @@ START_TEST(SHExplorerParseCmdLine)
                         Tests[i].ExpectedFlags,
                         Tests[i].ExpectedFileName,
                         Tests[i].PidlPath,
+                        Tests[i].pclsid,
                         &cWrite);
 
         if (cWrite > maxWrite)

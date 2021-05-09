@@ -1337,6 +1337,37 @@ static MUI_ENTRY ukUAFormatPartitionEntries[] =
     }
 };
 
+static MUI_ENTRY ukUACheckFSEntries[] =
+{
+    {
+        4,
+        3,
+        " \202\341\342\240\255\256\242\253\245\255\255\357 ReactOS " KERNEL_VERSION_STR " ",
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        8,
+        "\202\341\342\240\255\256\242\253\356\242\240\347 \257\245\340\245\242i\340\357\363 \242\250\241\340\240\255\250\251 \340\256\247\244i\253.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        "\201\343\244\354-\253\240\341\252\240, \247\240\347\245\252\240\251\342\245...",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
 static MUI_ENTRY ukUAInstallDirectoryEntries[] =
 {
     {
@@ -1489,6 +1520,30 @@ static MUI_ENTRY ukUABootLoaderEntries[] =
         0,
         0,
         "ENTER = \217\340\256\244\256\242\246\250\342\250   F3 = \202\250\251\342\250",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
+static MUI_ENTRY ukUABootLoaderInstallPageEntries[] =
+{
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        "Installing the bootloader onto the media, please wait...",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
         TEXT_ID_STATIC
     },
@@ -2110,6 +2165,10 @@ MUI_PAGE ukUAPages[] =
         ukUAFormatPartitionEntries
     },
     {
+        CHECK_FILE_SYSTEM_PAGE,
+        ukUACheckFSEntries
+    },
+    {
         DELETE_PARTITION_PAGE,
         ukUADeletePartitionEntries
     },
@@ -2144,6 +2203,10 @@ MUI_PAGE ukUAPages[] =
     {
         SUCCESS_PAGE,
         ukUASuccessPageEntries
+    },
+    {
+        BOOT_LOADER_INSTALLATION_PAGE,
+        ukUABootLoaderInstallPageEntries
     },
     {
         BOOT_LOADER_FLOPPY_PAGE,
@@ -2195,8 +2258,6 @@ MUI_STRING ukUAStrings[] =
     "\215\256\242\250\251 \340\256\247\244i\253 \255\245 \242i\244\344\256\340\254\240\342\256\242\240\255\256."},
     {STRING_INSTALLONPART,
     "ReactOS \242\341\342\240\255\256\242\253\356\363\342\354\341\357 \255\240 \340\256\247\244i\253"},
-    {STRING_CHECKINGPART,
-    "\202\341\342\240\255\256\242\253\356\242\240\347 \257\245\340\245\242i\340\357\363 \242\250\241\340\240\255\250\251 \340\256\247\244i\253."},
     {STRING_CONTINUE,
     "ENTER = \217\340\256\244\256\242\246\250\342\250"},
     {STRING_QUITCONTINUE,
@@ -2248,31 +2309,21 @@ MUI_STRING ukUAStrings[] =
     {STRING_KEEPFORMAT,
     " \207\240\253\250\350\250\342\250 i\341\255\343\356\347\343 \344\240\251\253\256\242\343 \341\250\341\342\245\254\343 (\241\245\247 \247\254i\255) "},
     {STRING_HDINFOPARTCREATE_1,
-    "%I64u %s  \206\256\340\341\342\252\250\251 \244\250\341\252 %lu  (\217\256\340\342=%hu, \230\250\255\240=%hu, Id=%hu) \255\240 %wZ [%s]."},
-    {STRING_HDINFOPARTCREATE_2,
-    "%I64u %s  \206\256\340\341\342\252\250\251 \244\250\341\252 %lu  (\217\256\340\342=%hu, \230\250\255\240=%hu, Id=%hu) [%s]."},
-    {STRING_HDDINFOUNK2,
-    "   %c%c  Type 0x%02X    %I64u %s"},
+    "%s."},
     {STRING_HDINFOPARTDELETE_1,
-    "\255\240 %I64u %s  \206\256\340\341\342\252\250\251 \244\250\341\252 %lu  (\217\256\340\342=%hu, \230\250\255\240=%hu, Id=%hu) \255\240 %wZ [%s]."},
-    {STRING_HDINFOPARTDELETE_2,
-    "\255\240 %I64u %s  \206\256\340\341\342\252\250\251 \244\250\341\252 %lu  (\217\256\340\342=%hu, \230\250\255\240=%hu, Id=%hu) [%s]."},
-    {STRING_HDINFOPARTZEROED_1,
-    "\206\256\340\341\342\252\250\251 \244\250\341\252 %lu (%I64u %s), \217\256\340\342=%hu, \230\250\255\240=%hu, Id=%hu (%wZ) [%s]."},
-    {STRING_HDDINFOUNK4,
-    "%c%c  Type 0x%02X    %I64u %s"},
-    {STRING_HDINFOPARTEXISTS_1,
-    "\255\240 \206\256\340\341\342\252\256\254\343 \244\250\341\252\343 %lu (%I64u %s), \217\256\340\342=%hu, \230\250\255\240=%hu, Id=%hu (%wZ) [%s]."},
-    {STRING_HDDINFOUNK5,
-    "%c%c %c %sType %-3u%s                      %6lu %s"},
-    {STRING_HDINFOPARTSELECT_1,
-    "%6lu %s  \206\256\340\341\342\252\250\251 \244\250\341\252 %lu  (\217\256\340\342=%hu, \230\250\255\240=%hu, Id=%hu) \255\240 %wZ [%s]"},
-    {STRING_HDINFOPARTSELECT_2,
-    "%6lu %s  \206\256\340\341\342\252\250\251 \244\250\341\252 %lu  (\217\256\340\342=%hu, \230\250\255\240=%hu, Id=%hu) [%s]"},
+    "\255\240: %s."},
+    {STRING_PARTTYPE,
+    "Type 0x%02x"},
+    {STRING_HDDINFO_1,
+    // "\206\256\340\341\342\252\250\251 \244\250\341\252 %lu (%I64u %s), \217\256\340\342=%hu, \230\250\255\240=%hu, Id=%hu (%wZ) [%s]"
+    "%I64u %s \206\256\340\341\342\252\250\251 \244\250\341\252 %lu (\217\256\340\342=%hu, \230\250\255\240=%hu, Id=%hu) \255\240 %wZ [%s]"},
+    {STRING_HDDINFO_2,
+    // "\206\256\340\341\342\252\250\251 \244\250\341\252 %lu (%I64u %s), \217\256\340\342=%hu, \230\250\255\240=%hu, Id=%hu [%s]"
+    "%I64u %s \206\256\340\341\342\252\250\251 \244\250\341\252 %lu (\217\256\340\342=%hu, \230\250\255\240=%hu, Id=%hu) [%s]"},
     {STRING_NEWPARTITION,
     "\202\341\342\240\255\256\242\253\356\242\240\347 \341\342\242\256\340\250\242 \255\256\242\250\251 \340\256\247\244i\253 \255\240"},
     {STRING_UNPSPACE,
-    "    %s\215\245\340\256\247\254i\347\245\255\240 \256\241\253\240\341\342\354%s            %6lu %s"},
+    "\215\245\340\256\247\254i\347\245\255\240 \256\241\253\240\341\342\354"},
     {STRING_MAXSIZE,
     "MB (\254\240\252\341. %lu MB)"},
     {STRING_EXTENDED_PARTITION,

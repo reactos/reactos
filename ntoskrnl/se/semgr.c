@@ -15,6 +15,8 @@
 
 /* GLOBALS ********************************************************************/
 
+PTOKEN SeAnonymousLogonToken = NULL;
+PTOKEN SeAnonymousLogonTokenNoEveryone = NULL;
 PSE_EXPORTS SeExports = NULL;
 SE_EXPORTS SepExports;
 ULONG SidInTokenCalls = 0;
@@ -25,7 +27,7 @@ extern ERESOURCE SepSubjectContextLock;
 /* PRIVATE FUNCTIONS **********************************************************/
 
 static
-INIT_FUNCTION
+CODE_SEG("INIT")
 BOOLEAN
 SepInitExports(VOID)
 {
@@ -90,7 +92,7 @@ SepInitExports(VOID)
 }
 
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 BOOLEAN
 NTAPI
 SepInitializationPhase0(VOID)
@@ -122,10 +124,20 @@ SepInitializationPhase0(VOID)
     ObInitializeFastReference(&PsGetCurrentProcess()->Token, NULL);
     ObInitializeFastReference(&PsGetCurrentProcess()->Token,
                               SepCreateSystemProcessToken());
+
+    /* Initialise the anonymous logon tokens */
+    SeAnonymousLogonToken = SepCreateSystemAnonymousLogonToken();
+    if (!SeAnonymousLogonToken)
+        return FALSE;
+
+    SeAnonymousLogonTokenNoEveryone = SepCreateSystemAnonymousLogonTokenNoEveryone();
+    if (!SeAnonymousLogonTokenNoEveryone)
+        return FALSE;
+
     return TRUE;
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 BOOLEAN
 NTAPI
 SepInitializationPhase1(VOID)
@@ -233,7 +245,7 @@ SepInitializationPhase1(VOID)
     return TRUE;
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 BOOLEAN
 NTAPI
 SeInitSystem(VOID)

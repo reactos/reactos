@@ -2,7 +2,7 @@
  * PROJECT:         ReactOS Utility Manager Resources DLL (UManDlg.dll)
  * LICENSE:         GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:         Main DLL code file
- * COPYRIGHT:       Copyright 2019-2020 Bișoc George (fraizeraust99 at gmail dot com)
+ * COPYRIGHT:       Copyright 2019-2020 George Bișoc (george.bisoc@reactos.org)
  *                  Copyright 2019 Hermes Belusca-Maito
  */
 
@@ -283,7 +283,7 @@ INT ListBoxRefreshContents(VOID)
  *     Message parameter (in UINT_PTR).
  *
  * @param[in]   lParam
- *     Message paramater (in LONG_PTR).
+ *     Message parameter (in LONG_PTR).
  *
  * @return
  *     Returns 0 to inform the system that the procedure has been handled.

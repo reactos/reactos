@@ -8,6 +8,8 @@
 
 #include "precomp.h"
 
+#include <pseh/pseh2.h>
+
 void
 Test_PageFileSection(void)
 {
@@ -766,7 +768,7 @@ Test_ImageSection(void)
     ok_ntstatus(Status, STATUS_SUCCESS);
     if (!NT_SUCCESS(Status))
     {
-        skip("Failed to open file\n");
+        skip("Failed to open file %s\n", wine_dbgstr_wn(FileName.Buffer, FileName.Length / sizeof(WCHAR)));
         return;
     }
 
@@ -1165,7 +1167,7 @@ Test_BasedSection(void)
 #define BYTES512(x) BYTES256(x), BYTES256(x)
 #define BYTES1024(x) BYTES512(x), BYTES512(x)
 
-static struct _MY_IMAGE_FILE
+static struct _SECTION_CONTENTS_IMAGE_FILE
 {
     IMAGE_DOS_HEADER doshdr;
     WORD stub[32];
@@ -1179,7 +1181,7 @@ static struct _MY_IMAGE_FILE
     BYTE rossym_data[0x400];
     BYTE rsrc_data[0x400];
     BYTE clc_data[0x1000];
-} ImageFile =
+} SectionContentsImageFile =
 {
     /* IMAGE_DOS_HEADER */
     {
@@ -1358,10 +1360,10 @@ static struct _MY_IMAGE_FILE
     },
 };
 
-C_ASSERT(FIELD_OFFSET(struct _MY_IMAGE_FILE, text_data) == 0x400);
-C_ASSERT(FIELD_OFFSET(struct _MY_IMAGE_FILE, rossym_data) == 0x800);
-C_ASSERT(FIELD_OFFSET(struct _MY_IMAGE_FILE, rsrc_data) == 0xc00);
-C_ASSERT(FIELD_OFFSET(struct _MY_IMAGE_FILE, clc_data) == 0x1000);
+C_ASSERT(FIELD_OFFSET(struct _SECTION_CONTENTS_IMAGE_FILE, text_data) == 0x400);
+C_ASSERT(FIELD_OFFSET(struct _SECTION_CONTENTS_IMAGE_FILE, rossym_data) == 0x800);
+C_ASSERT(FIELD_OFFSET(struct _SECTION_CONTENTS_IMAGE_FILE, rsrc_data) == 0xc00);
+C_ASSERT(FIELD_OFFSET(struct _SECTION_CONTENTS_IMAGE_FILE, clc_data) == 0x1000);
 
 static
 void
@@ -1398,21 +1400,21 @@ Test_SectionContents(BOOL Relocate)
     if (Relocate)
     {
         ok((ULONG_PTR)GetModuleHandle(NULL) <= 0x80000000, "Module at %p\n", GetModuleHandle(NULL));
-        ImageFile.nthdrs.OptionalHeader.ImageBase = (ULONG)(ULONG_PTR)GetModuleHandle(NULL);
+        SectionContentsImageFile.nthdrs.OptionalHeader.ImageBase = (ULONG)(ULONG_PTR)GetModuleHandle(NULL);
     }
     else
     {
-        ImageFile.nthdrs.OptionalHeader.ImageBase = 0xe400000;
+        SectionContentsImageFile.nthdrs.OptionalHeader.ImageBase = 0xe400000;
     }
 
     Success = WriteFile(Handle,
-                        &ImageFile,
-                        sizeof(ImageFile),
+                        &SectionContentsImageFile,
+                        sizeof(SectionContentsImageFile),
                         &Written,
                         NULL);
     ok(Success == TRUE, "WriteFile failed with %lu\n", GetLastError());
-    ok(Written == sizeof(ImageFile), "WriteFile wrote %lu bytes\n", Written);
-    
+    ok(Written == sizeof(SectionContentsImageFile), "WriteFile wrote %lu bytes\n", Written);
+
     Status = NtCreateSection(&SectionHandle,
                              SECTION_ALL_ACCESS,
                              NULL,
@@ -1473,6 +1475,370 @@ Test_SectionContents(BOOL Relocate)
             TEST_WRITE(0x8000);
             TEST_BYTE(0x8000, 0x11);
             TEST_BYTE(0x8400, 0x33);
+#undef TEST_BYTE
+#undef TEST_WRITE
+#undef TEST_NOWRITE
+            Status = NtUnmapViewOfSection(NtCurrentProcess(), BaseAddress);
+            ok_ntstatus(Status, STATUS_SUCCESS);
+        }
+        Status = NtClose(SectionHandle);
+        ok_ntstatus(Status, STATUS_SUCCESS);
+    }
+
+    CloseHandle(Handle);
+    DeleteFileW(FileName);
+}
+
+static struct _RAW_SIZE_IMAGE_FILE
+{
+    IMAGE_DOS_HEADER doshdr;
+    WORD stub[32];
+    IMAGE_NT_HEADERS32 nthdrs;
+    IMAGE_SECTION_HEADER text_header;
+    IMAGE_SECTION_HEADER data_header;
+    IMAGE_SECTION_HEADER zdata_header;
+    IMAGE_SECTION_HEADER rsrc_header;
+    BYTE pad[488];
+    BYTE text_data[0x1200];
+    BYTE data_data[0x1200];
+    BYTE rsrc_data[0x400];
+} RawSizeImageFile =
+{
+    /* IMAGE_DOS_HEADER */
+    {
+        IMAGE_DOS_SIGNATURE, 144, 3, 0, 4, 0, 0xFFFF, 0, 0xB8, 0, 0, 0, 0x40,
+        0, { 0 }, 0, 0, { 0 }, 0x80
+    },
+    /* binary to print "This program cannot be run in DOS mode." */
+    {
+        0x1F0E, 0x0EBA, 0xB400, 0xCD09, 0xB821, 0x4C01, 0x21CD, 0x6854, 0x7369,
+        0x7020, 0x6F72, 0x7267, 0x6D61, 0x6320, 0x6E61, 0x6F6E, 0x2074, 0x6562,
+        0x7220, 0x6E75, 0x6920, 0x206E, 0x4F44, 0x2053, 0x6F6D, 0x6564, 0x0D2E,
+        0x0A0D, 0x0024, 0x0000, 0x0000, 0x0000
+    },
+    /* IMAGE_NT_HEADERS32 */
+    {
+        IMAGE_NT_SIGNATURE, /* Signature */
+        /* IMAGE_FILE_HEADER */
+        {
+            IMAGE_FILE_MACHINE_I386, /* Machine */
+            4, /* NumberOfSections */
+            0x47EFDF09, /* TimeDateStamp */
+            0, /* PointerToSymbolTable */
+            0, /* NumberOfSymbols */
+            0xE0, /* SizeOfOptionalHeader */
+            IMAGE_FILE_32BIT_MACHINE | IMAGE_FILE_LOCAL_SYMS_STRIPPED |
+            IMAGE_FILE_LINE_NUMS_STRIPPED | IMAGE_FILE_EXECUTABLE_IMAGE |
+            IMAGE_FILE_DLL, /* Characteristics */
+        },
+        /* IMAGE_OPTIONAL_HEADER32 */
+        {
+            IMAGE_NT_OPTIONAL_HDR32_MAGIC, /* Magic */
+            8, /* MajorLinkerVersion */
+            0, /* MinorLinkerVersion */
+            0x400, /* SizeOfCode */
+            0x000, /* SizeOfInitializedData */
+            0, /* SizeOfUninitializedData */
+            0x1000, /* AddressOfEntryPoint */
+            0x1000, /* BaseOfCode */
+            0x0000, /* BaseOfData */
+            0x400000, /* ImageBase */
+            0x1000, /* SectionAlignment */
+            0x200, /* FileAlignment */
+            4, /* MajorOperatingSystemVersion */
+            0, /* MinorOperatingSystemVersion */
+            0, /* MajorImageVersion */
+            0, /* MinorImageVersion */
+            4, /* MajorSubsystemVersion */
+            0, /* MinorSubsystemVersion */
+            0, /* Win32VersionValue */
+            0x5000, /* SizeOfImage */
+            0x400, /* SizeOfHeaders */
+            0x0, /* CheckSum */
+            IMAGE_SUBSYSTEM_WINDOWS_CUI, /* Subsystem */
+            IMAGE_DLLCHARACTERISTICS_DYNAMIC_BASE |
+            IMAGE_DLLCHARACTERISTICS_NO_SEH |
+            IMAGE_DLLCHARACTERISTICS_NX_COMPAT, /* DllCharacteristics */
+            0x100000, /* SizeOfStackReserve */
+            0x1000, /* SizeOfStackCommit */
+            0x100000, /* SizeOfHeapReserve */
+            0x1000, /* SizeOfHeapCommit */
+            0, /* LoaderFlags */
+            0x10, /* NumberOfRvaAndSizes */
+            /* IMAGE_DATA_DIRECTORY */
+            {
+                { 0 }, /* Export Table */
+                { 0 }, /* Import Table */
+                { 0 }, /* Resource Table */
+                { 0 }, /* Exception Table */
+                { 0 }, /* Certificate Table */
+                { 0 }, /* Base Relocation Table */
+                { 0 }, /* Debug */
+                { 0 }, /* Copyright */
+                { 0 }, /* Global Ptr */
+                { 0 }, /* TLS Table */
+                { 0 }, /* Load Config Table */
+                { 0 }, /* Bound Import */
+                { 0 }, /* IAT */
+                { 0 }, /* Delay Import Descriptor */
+                { 0 }, /* CLI Header */
+                { 0 } /* Reserved */
+            }
+        }
+    },
+    /* IMAGE_SECTION_HEADER */
+    {
+        /* SizeOfRawData larger than VirtualSize */
+        ".text", /* Name */
+        { 0x1000 }, /* Misc.VirtualSize */
+        0x1000, /* VirtualAddress */
+        0x1200, /* SizeOfRawData */
+        0x400, /* PointerToRawData */
+        0, /* PointerToRelocations */
+        0, /* PointerToLinenumbers */
+        0, /* NumberOfRelocations */
+        0, /* NumberOfLinenumbers */
+        IMAGE_SCN_MEM_READ | IMAGE_SCN_MEM_EXECUTE |
+            IMAGE_SCN_CNT_CODE, /* Characteristics */
+    },
+    /* IMAGE_SECTION_HEADER */
+    {
+        /* SizeOfRawData larger than VirtualSize */
+        ".data", /* Name */
+        { 0x100 }, /* Misc.VirtualSize */
+        0x2000, /* VirtualAddress */
+        0x1200, /* SizeOfRawData */
+        0x1600, /* PointerToRawData */
+        0, /* PointerToRelocations */
+        0, /* PointerToLinenumbers */
+        0, /* NumberOfRelocations */
+        0, /* NumberOfLinenumbers */
+        IMAGE_SCN_MEM_WRITE | IMAGE_SCN_MEM_READ |
+            IMAGE_SCN_CNT_INITIALIZED_DATA, /* Characteristics */
+    },
+    /* IMAGE_SECTION_HEADER */
+    {
+        /* SizeOfRawData = 0 */
+        ".zdata", /* Name */
+        { 0x100 }, /* Misc.VirtualSize */
+        0x3000, /* VirtualAddress */
+        0, /* SizeOfRawData */
+        0x2800, /* PointerToRawData */
+        0, /* PointerToRelocations */
+        0, /* PointerToLinenumbers */
+        0, /* NumberOfRelocations */
+        0, /* NumberOfLinenumbers */
+        IMAGE_SCN_MEM_WRITE | IMAGE_SCN_MEM_READ |
+            IMAGE_SCN_CNT_UNINITIALIZED_DATA, /* Characteristics */
+    },
+    /* IMAGE_SECTION_HEADER */
+    {
+        /* VirtualSize larger than SizeOfRawData */
+        ".rsrc", /* Name */
+        { 0x300 }, /* Misc.VirtualSize */
+        0x4000, /* VirtualAddress */
+        0x200, /* SizeOfRawData */
+        0x2800, /* PointerToRawData */
+        0, /* PointerToRelocations */
+        0, /* PointerToLinenumbers */
+        0, /* NumberOfRelocations */
+        0, /* NumberOfLinenumbers */
+        IMAGE_SCN_MEM_READ |
+            IMAGE_SCN_CNT_INITIALIZED_DATA, /* Characteristics */
+    },
+    /* fill */
+    { 0 },
+    /* text */
+    {
+        0xc3, 0, 0, 0, 0, 0, 0, 0,
+        BYTES8(1),
+        BYTES16(2),
+        BYTES32(3),
+        BYTES64(4),
+        BYTES128(5),
+        BYTES256(6),
+        BYTES512(7),
+        BYTES1024(8),
+        BYTES1024(9),
+        BYTES1024(0xa),
+        BYTES512(0xb),
+    },
+    /* data */
+    {
+        0x01, 0x23, 0x45, 0x67, 0x89, 0xab, 0xcd, 0xef,
+        BYTES8(0xaa),
+        BYTES16(0xbb),
+        BYTES32(0xcc),
+        BYTES64(0xdd),
+        BYTES128(0xee),
+        BYTES256(0xff),
+        BYTES512(0xee),
+        BYTES1024(0xdd),
+        BYTES1024(0xcc),
+        BYTES1024(0xbb),
+        BYTES512(0xaa),
+    },
+    /* rsrc */
+    {
+        BYTES256(0xff),
+        BYTES128(0xee),
+        BYTES64(0xdd),
+        BYTES32(0xcc),
+        BYTES16(0xbb),
+        BYTES8(0xaa),
+        0xef, 0xcd, 0xab, 0x89, 0x67, 0x45, 0x23, 0x01,
+    },
+};
+
+C_ASSERT(FIELD_OFFSET(struct _RAW_SIZE_IMAGE_FILE, text_data) == 0x400);
+C_ASSERT(FIELD_OFFSET(struct _RAW_SIZE_IMAGE_FILE, data_data) == 0x1600);
+C_ASSERT(FIELD_OFFSET(struct _RAW_SIZE_IMAGE_FILE, rsrc_data) == 0x2800);
+
+// CORE-17284
+static
+void
+Test_RawSize(ULONG TestNumber)
+{
+    NTSTATUS Status;
+    WCHAR TempPath[MAX_PATH];
+    WCHAR FileName[MAX_PATH];
+    HANDLE Handle;
+    HANDLE SectionHandle;
+    LARGE_INTEGER SectionOffset;
+    PVOID BaseAddress;
+    SIZE_T ViewSize;
+    ULONG Written;
+    ULONG Length;
+    BOOL Success;
+
+    Length = GetTempPathW(MAX_PATH, TempPath);
+    ok(Length != 0, "GetTempPathW failed with %lu\n", GetLastError());
+    Length = GetTempFileNameW(TempPath, L"nta", 0, FileName);
+    ok(Length != 0, "GetTempFileNameW failed with %lu\n", GetLastError());
+    Handle = CreateFileW(FileName,
+                         FILE_ALL_ACCESS,
+                         0,
+                         NULL,
+                         CREATE_ALWAYS,
+                         0,
+                         NULL);
+    if (Handle == INVALID_HANDLE_VALUE)
+    {
+        skip("Failed to create temp file %ls, error %lu\n", FileName, GetLastError());
+        return;
+    }
+    RawSizeImageFile.nthdrs.OptionalHeader.ImageBase = 0xe400000;
+    if (TestNumber == 1)
+    {
+        /* Just for fun, show that these flags don't matter. */
+        RawSizeImageFile.text_header.Characteristics &= ~(IMAGE_SCN_CNT_CODE | IMAGE_SCN_CNT_INITIALIZED_DATA | IMAGE_SCN_CNT_UNINITIALIZED_DATA);
+        RawSizeImageFile.data_header.Characteristics &= ~(IMAGE_SCN_CNT_CODE | IMAGE_SCN_CNT_INITIALIZED_DATA | IMAGE_SCN_CNT_UNINITIALIZED_DATA);
+        RawSizeImageFile.zdata_header.Characteristics &= ~(IMAGE_SCN_CNT_CODE | IMAGE_SCN_CNT_INITIALIZED_DATA | IMAGE_SCN_CNT_UNINITIALIZED_DATA);
+        RawSizeImageFile.rsrc_header.Characteristics &= ~(IMAGE_SCN_CNT_CODE | IMAGE_SCN_CNT_INITIALIZED_DATA | IMAGE_SCN_CNT_UNINITIALIZED_DATA);
+    }
+    else if (TestNumber == 2)
+    {
+        /* SizeOfRawData is too large and will overflow.
+         * This should cause failure to load the file */
+        RawSizeImageFile.rsrc_header.SizeOfRawData = (ULONG)-0x200;
+    }
+
+    Success = WriteFile(Handle,
+                        &RawSizeImageFile,
+                        sizeof(RawSizeImageFile),
+                        &Written,
+                        NULL);
+    ok(Success == TRUE, "WriteFile failed with %lu\n", GetLastError());
+    ok(Written == sizeof(RawSizeImageFile), "WriteFile wrote %lu bytes\n", Written);
+
+    Status = NtCreateSection(&SectionHandle,
+                             SECTION_ALL_ACCESS,
+                             NULL,
+                             NULL,
+                             PAGE_EXECUTE_READWRITE,
+                             SEC_IMAGE,
+                             Handle);
+    if (TestNumber == 2)
+    {
+        /* overflow in SizeOfRawData */
+        ok_ntstatus(Status, STATUS_INVALID_IMAGE_FORMAT);
+    }
+    else
+    {
+        ok_ntstatus(Status, STATUS_SUCCESS);
+    }
+
+    if (NT_SUCCESS(Status))
+    {
+        /* Map the section with  */
+        BaseAddress = NULL;
+        SectionOffset.QuadPart = 0;
+        ViewSize = 0;
+        Status = NtMapViewOfSection(SectionHandle,
+                                    NtCurrentProcess(),
+                                    &BaseAddress,
+                                    0,
+                                    0,
+                                    &SectionOffset,
+                                    &ViewSize,
+                                    ViewShare,
+                                    0,
+                                    PAGE_READWRITE);
+        ok_ntstatus(Status, STATUS_SUCCESS);
+        if (NT_SUCCESS(Status))
+        {
+            PUCHAR Bytes = BaseAddress;
+            struct _RAW_SIZE_IMAGE_FILE *ImageFile = BaseAddress;
+
+            /* .text section header is unmodified */
+            ok_hex(ImageFile->text_header.Misc.VirtualSize, RawSizeImageFile.text_header.Misc.VirtualSize);
+            ok_hex(ImageFile->text_header.VirtualAddress, RawSizeImageFile.text_header.VirtualAddress);
+            ok_hex(ImageFile->text_header.SizeOfRawData, RawSizeImageFile.text_header.SizeOfRawData);
+            ok_hex(ImageFile->text_header.PointerToRawData, RawSizeImageFile.text_header.PointerToRawData);
+
+            /* SizeOfRawData = 0 resets PointerToRawData to 0 */
+            ok_hex(ImageFile->zdata_header.Misc.VirtualSize, RawSizeImageFile.zdata_header.Misc.VirtualSize);
+            ok_hex(ImageFile->zdata_header.VirtualAddress, RawSizeImageFile.zdata_header.VirtualAddress);
+            ok_hex(ImageFile->zdata_header.SizeOfRawData, RawSizeImageFile.zdata_header.SizeOfRawData);
+            ok_hex(ImageFile->zdata_header.PointerToRawData, 0);
+
+#define TEST_BYTE(n, v) \
+    StartSeh() \
+        ok(Bytes[n] == v, "[%lu] Bytes[%u] = 0x%x, expected 0x%x\n", \
+           TestNumber, n, Bytes[n], v); \
+    EndSeh(STATUS_SUCCESS);
+            /* .text section data matches file up to 0x1000 */
+            TEST_BYTE(0x1000, 0xc3);
+            TEST_BYTE(0x1001, 0x00);
+            TEST_BYTE(0x1008, 0x01);
+            TEST_BYTE(0x1010, 0x02);
+            TEST_BYTE(0x1fff, 0x0a);
+
+            /* .data section data matches file up to 0x1000 */
+            TEST_BYTE(0x2000, 0x01);
+            TEST_BYTE(0x2001, 0x23);
+            TEST_BYTE(0x20ff, 0xee);
+            TEST_BYTE(0x2100, 0xff);
+            TEST_BYTE(0x2fff, 0xbb);
+
+            /* .zdata section data is all zeroes */
+            TEST_BYTE(0x3000, 0x00);
+            TEST_BYTE(0x3001, 0x00);
+            TEST_BYTE(0x3800, 0x00);
+            TEST_BYTE(0x3fff, 0x00);
+
+            /* .rsrc section data matches file up to VirtualSize 0x200 */
+            TEST_BYTE(0x4000, 0xff);
+            TEST_BYTE(0x4100, 0xee);
+            TEST_BYTE(0x4180, 0xdd);
+            TEST_BYTE(0x41c0, 0xcc);
+            TEST_BYTE(0x41e0, 0xbb);
+            TEST_BYTE(0x41f0, 0xaa);
+            TEST_BYTE(0x41fe, 0x23);
+            TEST_BYTE(0x41ff, 0x01);
+            TEST_BYTE(0x4200, 0x00);
+            TEST_BYTE(0x4fff, 0x00);
+#undef TEST_BYTE
             Status = NtUnmapViewOfSection(NtCurrentProcess(), BaseAddress);
             ok_ntstatus(Status, STATUS_SUCCESS);
         }
@@ -1510,7 +1876,7 @@ Test_EmptyFile(VOID)
         skip("Failed to create temp file %ls, error %lu\n", FileName, GetLastError());
         return;
     }
-    
+
     Status = NtCreateSection(&SectionHandle,
                              STANDARD_RIGHTS_REQUIRED | SECTION_QUERY | SECTION_MAP_READ,
                              0, 0, PAGE_READONLY, SEC_COMMIT, Handle);
@@ -1633,6 +1999,9 @@ START_TEST(NtMapViewOfSection)
     Test_BasedSection();
     Test_SectionContents(FALSE);
     Test_SectionContents(TRUE);
+    Test_RawSize(0);
+    Test_RawSize(1);
+    Test_RawSize(2);
     Test_EmptyFile();
     Test_Truncate();
 }

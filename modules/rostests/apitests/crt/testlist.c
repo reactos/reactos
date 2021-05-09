@@ -6,6 +6,7 @@
 #if defined(TEST_MSVCRT)
 extern void func__vscprintf(void);
 extern void func__vscwprintf(void);
+extern void func_atexit(void);
 #endif
 #if defined(TEST_NTDLL)
 extern void func__vscwprintf(void);
@@ -55,6 +56,7 @@ const struct test winetest_testlist[] =
 #endif
 #if defined(TEST_STATIC_CRT)
 #elif defined(TEST_MSVCRT)
+    { "atexit", func_atexit },
 #if defined(_M_IX86)
     { "__getmainargs", func___getmainargs },
 #endif

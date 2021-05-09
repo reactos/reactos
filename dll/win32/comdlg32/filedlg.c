@@ -79,6 +79,8 @@
 #include "wine/heap.h"
 #ifdef __REACTOS__
 #include "wine/unicode.h"
+EXTERN_C HRESULT DoInitAutoCompleteWithCWD(FileOpenDlgInfos *pInfo, HWND hwndEdit);
+EXTERN_C HRESULT DoReleaseAutoCompleteWithCWD(FileOpenDlgInfos *pInfo);
 #endif
 
 WINE_DEFAULT_DEBUG_CHANNEL(commdlg);
@@ -106,6 +108,78 @@ typedef struct tagLookInInfo
   UINT uSelectedItem;
 } LookInInfos;
 
+#ifdef __REACTOS__
+/* We have to call IShellView::TranslateAccelerator to handle the standard
+   key bindings of File Open Dialog. We use hook to realize them. */
+static HHOOK s_hFileDialogHook = NULL;
+static LONG s_nFileDialogHookCount = 0;
+
+#define MAX_TRANSLATE 8
+static HWND s_ahwndTranslate[MAX_TRANSLATE] = { NULL };
+
+static void FILEDLG95_AddRemoveTranslate(HWND hwndOld, HWND hwndNew)
+{
+    LONG i;
+    for (i = 0; i < MAX_TRANSLATE; ++i)
+    {
+        if (s_ahwndTranslate[i] == hwndOld)
+        {
+            s_ahwndTranslate[i] = hwndNew;
+            break;
+        }
+    }
+}
+
+static __inline BOOL
+FILEDLG95_DoTranslate(LONG i, HWND hwndFocus, LPMSG pMsg)
+{
+    FileOpenDlgInfos *fodInfos;
+    HWND hwndView;
+
+    if (s_ahwndTranslate[i] == NULL)
+        return FALSE;
+
+    fodInfos = get_filedlg_infoptr(s_ahwndTranslate[i]);
+    if (fodInfos == NULL)
+        return FALSE;
+
+    hwndView = fodInfos->ShellInfos.hwndView;
+    if (hwndView == hwndFocus || IsChild(hwndView, hwndFocus))
+    {
+        IShellView_TranslateAccelerator(fodInfos->Shell.FOIShellView, pMsg);
+        return TRUE;
+    }
+    return FALSE;
+}
+
+/* WH_MSGFILTER hook procedure */
+static LRESULT CALLBACK
+FILEDLG95_TranslateMsgProc(INT nCode, WPARAM wParam, LPARAM lParam)
+{
+    LPMSG pMsg;
+
+    if (nCode < 0)
+        return CallNextHookEx(s_hFileDialogHook, nCode, wParam, lParam);
+    if (nCode != MSGF_DIALOGBOX)
+        return 0;
+
+    pMsg = (LPMSG)lParam;
+    if (WM_KEYFIRST <= pMsg->message && pMsg->message <= WM_KEYLAST)
+    {
+        LONG i;
+        HWND hwndFocus = GetFocus();
+        EnterCriticalSection(&COMDLG32_OpenFileLock);
+        for (i = 0; i < MAX_TRANSLATE; ++i)
+        {
+            if (FILEDLG95_DoTranslate(i, hwndFocus, pMsg))
+                break;
+        }
+        LeaveCriticalSection(&COMDLG32_OpenFileLock);
+    }
+
+    return 0;
+}
+#endif
 
 /***********************************************************************
  * Defines and global variables
@@ -1428,6 +1502,17 @@ INT_PTR CALLBACK FileOpenDlgProc95(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
          if(fodInfos->ofnInfos->Flags & OFN_EXPLORER)
              SendCustomDlgNotificationMessage(hwnd,CDN_SELCHANGE);
 
+#ifdef __REACTOS__
+         /* Enable hook and translate */
+         EnterCriticalSection(&COMDLG32_OpenFileLock);
+         if (++s_nFileDialogHookCount == 1)
+         {
+             s_hFileDialogHook = SetWindowsHookEx(WH_MSGFILTER, FILEDLG95_TranslateMsgProc,
+                                                  0, GetCurrentThreadId());
+         }
+         FILEDLG95_AddRemoveTranslate(NULL, hwnd);
+         LeaveCriticalSection(&COMDLG32_OpenFileLock);
+#endif
          return 0;
        }
     case WM_SIZE:
@@ -1465,6 +1550,18 @@ INT_PTR CALLBACK FileOpenDlgProc95(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
               SendDlgItemMessageW(hwnd, IDC_TOOLBARPLACES, TB_SETIMAGELIST, 0, 0);
               ImageList_Destroy(himl);
           }
+#ifdef __REACTOS__
+          /* Disable hook and translate */
+          EnterCriticalSection(&COMDLG32_OpenFileLock);
+          FILEDLG95_AddRemoveTranslate(hwnd, NULL);
+          if (--s_nFileDialogHookCount == 0)
+          {
+              UnhookWindowsHookEx(s_hFileDialogHook);
+              s_hFileDialogHook = NULL;
+          }
+          LeaveCriticalSection(&COMDLG32_OpenFileLock);
+          DoReleaseAutoCompleteWithCWD(fodInfos);
+#endif
           return FALSE;
       }
 
@@ -1936,6 +2033,9 @@ static LRESULT FILEDLG95_InitControls(HWND hwnd)
 
   /* Initialize the filter combo box */
   FILEDLG95_FILETYPE_Init(hwnd);
+#ifdef __REACTOS__
+  DoInitAutoCompleteWithCWD(fodInfos, fodInfos->DlgInfos.hwndFileName);
+#endif
 
   return 0;
 }

@@ -3,9 +3,25 @@ if(ARCH STREQUAL "i386")
     list(APPEND ASM_SOURCE
         i386/seh.s
         i386/seh_prolog.s)
+elseif(ARCH STREQUAL "amd64")
+    list(APPEND ASM_SOURCE
+        amd64/seh.s
+        amd64/seh_prolog.s)
+elseif(ARCH STREQUAL "arm")
+    list(APPEND ASM_SOURCE
+        arm/seh_prolog.s)
 endif()
 
-if(NOT MSVC)
+if(MSVC OR ((CMAKE_C_COMPILER_ID STREQUAL "Clang") AND (ARCH STREQUAL "amd64")))
+    list(APPEND SOURCE dummy.c)
+    add_asm_files(pseh_asm ${ASM_SOURCE})
+    add_library(pseh ${SOURCE} ${pseh_asm})
+    add_dependencies(pseh asm)
+elseif((CMAKE_C_COMPILER_ID STREQUAL "GNU") AND (ARCH STREQUAL "amd64"))
+    # for GCC amd64 this is just an interface library, with our home-made plugin
+    add_library(pseh INTERFACE)
+    target_compile_options(pseh INTERFACE -fplugin=$<TARGET_FILE:native-gcc_plugin_seh>)
+else()
 
     if(USE_PSEH3)
         include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/libs/pseh)
@@ -29,20 +45,13 @@ if(NOT MSVC)
     target_link_libraries(pseh chkstk)
     add_dependencies(pseh psdk)
 
-else()
+    target_include_directories(pseh PRIVATE include/pseh)
+endif()
 
-    if(ARCH STREQUAL "amd64")
-        list(APPEND ASM_SOURCE
-            amd64/seh.s
-            amd64/seh_prolog.s)
-    elseif(ARCH STREQUAL "arm")
-        list(APPEND ASM_SOURCE
-            arm/seh_prolog.s)
-    endif()
+target_include_directories(pseh INTERFACE include)
 
-    list(APPEND SOURCE dummy.c)
-    add_asm_files(pseh_asm ${ASM_SOURCE})
-    add_library(pseh ${SOURCE} ${pseh_asm})
-    add_dependencies(pseh asm)
-
+# Make it clear that we are using PSEH2
+if ((CMAKE_C_COMPILER_ID STREQUAL "GNU") OR
+    ((CMAKE_C_COMPILER_ID STREQUAL "Clang") AND (NOT (ARCH STREQUAL "amd64"))))
+    target_compile_definitions(pseh INTERFACE __USE_PSEH2__)
 endif()

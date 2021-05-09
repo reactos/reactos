@@ -1,104 +1,275 @@
-Files synced with various file system upstreams can be found in /media/doc/README.FSD
-Files synced with Wine can be found in /media/doc/README.WINE
+This file contains 3rd party projects which are used by the ReactOS
+Files synced with Wine can be found in /media/doc/WINESYNC.txt
 
-Other things synced with other projects:
+Projects are sorted alphabetically by a path.
+SPDX identifier of a license was used where possible.
+Please update this file when you port/sync an external project.
 
-Title: Liberation Fonts
-Used Version: 2.00.1
-Website: https://fedorahosted.org/liberation-fonts/
 
-Title: DejaVu Fonts
-Used Version: 2.37
-Website: http://dejavu.sourceforge.net
+Title: rdesktop
+Path: base/applications/mstsc
+Used Version: 1.8.3
+License: GPL-3.0-or-later (https://spdx.org/licenses/GPL-3.0-or-later.html)
+URL: https://github.com/rdesktop/rdesktop
 
-Title: Ubuntu Fonts
-Used Version: 0.83
-Website: http://font.ubuntu.com
-
-Title: Open Sans Fonts
-Used Version: 1.10
-Website: http://www.google.com/fonts/specimen/Open+Sans
+Title: TreeList
+Path: base/setup/reactos/treelist.c
+Path: base/setup/reactos/treelist.h
+Used Version: ???
+License: GPL-3.0-or-later (https://spdx.org/licenses/GPL-3.0-or-later.html)
+URL: https://github.com/sebkirche/treelist
 
 Title: DXTN OpenGL Compression Libs
+Path: dll/3rdparty/dxtn
 Used Version: 1.1
-Website: http://www.geocities.com/dborca/opengl/tc.html
-
-Title: FreeType
-Used Version: 2.9.0
-Website: http://www.freetype.org
-
-Title: Mesa3D
-Used Version: 2.6
-Website: http://www.mesa3d.org
-
-Title: Mesa3D glu libary
-Used Version: 9.0.1
-Website: https://gitlab.freedesktop.org/mesa/glu | ftp://ftp.freedesktop.org/pub/mesa/glu/
-
-Title: GNU adns
-Used Version: 1.0 REV 5
-Website: http://www.gnu.org/software/adns/ | http://adns.jgaa.com
-
-Title: LibXML
-Used Version: 2.9.10
-Website: http://xmlsoft.org | ftp://xmlsoft.org/libxml2/
-
-Title: Libxslt
-Used Version: 1.1.34
-Website: http://xmlsoft.org
-
-Title: ZLib
-Used Version: 1.2.11
-Website: http://www.zlib.net
-
-Title: GNU FreeFont
-Used Version: 2012-05-03
-Website: http://savannah.gnu.org/projects/freefont/
-
-Title: CardLib
-Used Version: 2005-07-14
-Website: http://www.catch22.net/tuts/cardlib
-
-Title:  libsamplerate
-Used Version: 0.1.9
-Website: http://www.mega-nerd.com/SRC/download.html
-
-Title:  libmpg123 (used by winemp3.acm)
-Used Version: 1.26.1
-Website: http://www.mpg123.de/
-
-Title:  STLport
-Used Version: 5.2.1
-Website: http://stlport.sourceforge.net/
-
-Title: win-iconv
-Used Version: git commit 8765259
-Website: https://github.com/win-iconv/win-iconv
+License: MIT (https://spdx.org/licenses/MIT.html)
+URL: http://www.geocities.com/dborca/opengl/tc.html
 
 Title: libjpeg
+Path: dll/3rdparty/libjpeg
 Used Version: 9d
-Website: http://www.ijg.org/
-
-Title: libtiff
-Used Version: 4.1.0
-Website: http://www.simplesystems.org/libtiff/
-
-Title: mbed TLS
-Used Version: 2.7.16
-Website: https://tls.mbed.org/
+License: custom, BSD-like
+URL: http://www.ijg.org/
 
 Title: libpng
+Path: dll/3rdparty/libpng
 Used Version: 1.6.37
-Website: http://libpng.sourceforge.net/
+License: PNG Reference Library version 2
+URL: http://libpng.sourceforge.net/
+
+Title: libtiff
+Path: dll/3rdparty/libtiff
+Used Version: 4.1.0
+License: libtiff (https://spdx.org/licenses/libtiff.html)
+URL: http://www.simplesystems.org/libtiff/
+
+Title: Libxslt
+Path: dll/3rdparty/libxslt
+Used Version: 1.1.34
+License: MIT (https://spdx.org/licenses/MIT.html)
+URL: http://xmlsoft.org
+
+Title: mbed TLS
+Path: dll/3rdparty/mbedtls
+Used Version: 2.7.16
+License: Apache-2.0 (https://spdx.org/licenses/Apache-2.0.html)
+URL: https://tls.mbed.org/
+
+Title: Mesa3D
+Path: dll/opengl/mesa
+Used Version: 2.6
+License: GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later.html)
+URL: http://www.mesa3d.org
+
+Title: Mesa3D glu libary
+Path: dll/opengl/glu32
+Used Version: 9.0.1
+License: SGI-B-2.0 (https://spdx.org/licenses/SGI-B-2.0.html)
+URL: https://gitlab.freedesktop.org/mesa/glu, ftp://ftp.freedesktop.org/pub/mesa/glu/
 
 Title: ACPICA
-Used Version: 20200528
-Website: https://acpica.org/
+Path: drivers/bus/acpi/acpica
+Used Version: 20201217
+License: GPL-2.0 (https://spdx.org/licenses/GPL-2.0.html)
+URL: https://acpica.org/
 
-Title: Schily Tools, mkisofs
-Used Version: schily-2017-09-07
-Website: https://sourceforge.net/projects/schilytools/
+Title: WinBtrfs
+Path: dll/shellext/shellbtrfs
+Path: drivers/filesystems/btrfs
+Path: sdk/lib/fslib/btrfslib
+Used Version: 1.7.2
+License: LGPL-3.0-or-later (https://spdx.org/licenses/LGPL-3.0-or-later.html)
+URL: https://github.com/maharmstone/btrfs
+
+Title: Microsoft CDFS File System Driver
+Path: drivers/filesystems/cdfs
+Used Version: git commit f73e552
+License: MS-PL (https://spdx.org/licenses/MS-PL.html)
+URL: https://github.com/microsoft/Windows-driver-samples/tree/master/filesys/cdfs
+
+Title: Ext2Fsd
+Path: drivers/filesystems/ext2
+Path: sdk/lib/fslib/ext2lib
+Used Version: 0.69
+License: GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later.html)
+URL: http://www.ext2fsd.com
+
+Title: FFS/UFS file system driver for Windows
+Path: drivers/filesystems/ffs
+Used Version: 0.5.2
+License: GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later.html)
+URL: http://www.acc.umu.se/~bosse/
+
+Title: NFSv4.1 Client for Windows
+Path: base/services/nfsd
+Path: dll/3rdparty/libtirpc
+Path: dll/np/nfs
+Path: drivers/filesystems/nfs
+Used Version: ??? (Imported on 2017.06.18.)
+License: LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later.html)
+URL: http://www.citi.umich.edu/projects/nfsv4/windows/readme.html
+
+Title: ReiserFS file system driver for Windows
+Path: drivers/filesystems/reiserfs
+Used Version: 0.26
+License: GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later.html)
+URL: http://www.acc.umu.se/~bosse/
+
+Title: Microsoft fastfat File System Driver
+Path: drivers/filesystems/fastfat_new
+Used Version: git commit 16022c5
+License: MS-PL (https://spdx.org/licenses/MS-PL.html)
+URL: https://github.com/microsoft/Windows-driver-samples/tree/master/filesys/fastfat
+
+Title: VirtIO NetKVM Windows guest driver
+Path: drivers/network/dd/netkvm
+Used Version: git commit 5e01b36
+License: BSD-3-Clause (https://spdx.org/licenses/BSD-3-Clause.html)
+URL: https://github.com/virtio-win/kvm-guest-drivers-windows/tree/master/NetKVM/NDIS5
+
+Title: Microsoft CDROM Storage Class Driver
+Path: drivers/storage/class/cdrom_new
+Used Version: git commit 96eb96d
+License: MS-PL (https://spdx.org/licenses/MS-PL.html)
+URL: https://github.com/microsoft/Windows-driver-samples/tree/master/storage/class/cdrom
+
+Title: Microsoft ClassPnP Storage Class Driver Library
+Path: drivers/storage/class/classpnp
+Used Version: git commit 88541f7
+License: MS-PL (https://spdx.org/licenses/MS-PL.html)
+URL: https://github.com/microsoft/Windows-driver-samples/tree/master/storage/class/classpnp
+
+Title: Microsoft Disk Class Driver
+Path: drivers/storage/class/disk_new
+Used Version: git commit 3428c5f
+License: MS-PL (https://spdx.org/licenses/MS-PL.html)
+URL: https://github.com/microsoft/Windows-driver-samples/tree/master/storage/class/disk
+
+Title: Microsoft Super Floppy (sfloppy) Storage Class Driver
+Path: drivers/storage/floppy_new
+Used Version: git commit 8fb512a
+License: MS-PL (https://spdx.org/licenses/MS-PL.html)
+URL: https://github.com/microsoft/Windows-driver-samples/tree/master/storage/sfloppy
+
+Title: Universal ATA driver for Windows
+Path: drivers/storage/ide/uniata
+Used Version: 0.47a
+License: BSD-like
+URL: http://alter.org.ua/soft/win/uni_ata/
+
+Title: Miniport driver for the Buslogic BT 958 SCSI Controller
+Path: drivers/storage/port/buslogic
+Used Version: ???
+License: GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later.html)
+URL: http://www.vmware.com/download/open_sources.html
+
+Title: Open Source WDM Drivers for C-Media 8738/8768 based soundcards
+Path: drivers/wdm/audio/drivers/CMIDriver
+Used Version: 1.2.6
+License: BSD-3-Clause (https://opensource.org/licenses/BSD-3-Clause)
+URL: https://code.google.com/archive/p/cmediadrivers/
+
+Title: PCI hardware IDs database
+Path: hal/halx86/legacy/bus/pci_classes.ids
+Path: hal/halx86/legacy/bus/pci_vendors.ids
+Used Version: 2020.11.14
+License: GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later.html)
+URL: https://pci-ids.ucw.cz/
+URL: https://github.com/pciutils/pciids
+
+Title: DejaVu Fonts
+Path: media/fonts
+Used Version: 2.37
+License: media/fonts/doc/DejaVu/LICENSE.txt
+URL: http://dejavu.sourceforge.net
+
+Title: Open Sans Fonts
+Path: media/fonts
+Used Version: 1.10
+License: Apache-2.0 (https://spdx.org/licenses/Apache-2.0.html)
+URL: http://www.google.com/fonts/specimen/Open+Sans
+
+Title: GNU FreeFont
+Path: media/fonts
+Used Version: 2012-05-03
+License: GPL-3.0-or-later (https://spdx.org/licenses/GPL-3.0-or-later.html)
+URL: http://savannah.gnu.org/projects/freefont/
+
+Title: GNU adns
+Path: sdk/lib/adns
+Used Version: 1.0 REV 5
+License: GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later.html)
+URL: http://www.gnu.org/software/adns/, http://adns.jgaa.com
+
+Title: CardLib
+Path: sdk/lib/cardlib
+Used Version: 2005-07-14
+License:
+URL: http://www.catch22.net/tuts/cardlib
+
+Title: lwIP - A Lightweight TCP/IP stack
+Path: sdk/lib/drivers/lwip
+Used Version: 1.4.1
+License: Modified BSD License (sdk/lib/drivers/lwip/COPYING)
+URL: https://savannah.nongnu.org/projects/lwip/
+
+Title: FreeType
+Path: sdk/lib/freetype
+Used Version: 2.9.0
+License: FTL (https://spdx.org/licenses/FTL.html)
+URL: http://www.freetype.org
+
+Title: dosfstools
+Path: sdk/lib/fslib/vfatlib/check
+Used Version: 4.1
+License: GPL-3.0-or-later (https://spdx.org/licenses/GPL-3.0-or-later.html)
+URL: https://github.com/dosfstools/dosfstools
+
+Title: libmpg123 (used by winemp3.acm)
+Path: sdk/lib/libmpg123
+Used Version: 1.26.1
+License: LGPL-2.1 (https://spdx.org/licenses/LGPL-2.1.html)
+URL: http://www.mpg123.de/
+
+Title: libsamplerate
+Path: sdk/lib/libsamplerate
+Used Version: 0.1.9
+License: BSD-2-Clause (https://spdx.org/licenses/BSD-2-Clause.html)
+URL: http://www.mega-nerd.com/SRC/download.html
+
+Title: win-iconv
+Path: sdk/lib/libwin-iconv
+Used Version: git commit 8765259
+License:
+URL: https://github.com/win-iconv/win-iconv
+
+Title: LibXML
+Path: sdk/lib/libxml2
+Used Version: 2.9.10
+License: MIT (https://spdx.org/licenses/MIT.htmlf)
+URL: http://xmlsoft.org, ftp://xmlsoft.org/libxml2/
+
+Title: STLport
+Path: sdk/lib/stlport
+Used Version: 5.2.1
+License: BSD-2-Clause (https://spdx.org/licenses/BSD-2-Clause.html)
+URL: http://stlport.sourceforge.net/
+
+Title: ZLib
+Path: sdk/lib/zlib
+Used Version: 1.2.11
+License: Zlib (https://spdx.org/licenses/Zlib.html)
+URL: http://www.zlib.net
 
 Title: chmc and lzxcomp
+Path: sdk/tools/hhpcomp/chmc
+Path: sdk/tools/hhpcomp/lzx_compress
 Used Version: ??? (Imported on 2015.08.11.)
-Website: https://sourceforge.net/projects/chmc/
+License: GPL-3.0-or-later (https://spdx.org/licenses/GPL-3.0-or-later.html)
+URL: https://sourceforge.net/projects/chmc/
+
+Title: Schily Tools, mkisofs
+Path: sdk/tools/mkisofs/schilytools
+Used Version: schily-2017-09-07
+License: CDDL-1.0 (https://spdx.org/licenses/CDDL-1.0.html)
+URL: https://sourceforge.net/projects/schilytools/

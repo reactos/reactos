@@ -1,0 +1,50 @@
+/*++
+
+Copyright (c) Microsoft Corporation.  All rights reserved.
+
+Module Name:
+
+    VfEventHooks.hpp
+
+Abstract:
+    Generated header of verifier event callback hooks
+
+Environment:
+    kernel mode only
+
+    ** Warning ** : manual changes to this file will be lost.
+
+--*/
+
+#pragma once
+
+extern "C"
+{
+
+EVT_WDF_DEVICE_D0_ENTRY VfEvtDeviceD0Entry;
+EVT_WDF_DEVICE_D0_ENTRY_POST_INTERRUPTS_ENABLED VfEvtDeviceD0EntryPostInterruptsEnabled;
+EVT_WDF_DEVICE_D0_EXIT VfEvtDeviceD0Exit;
+EVT_WDF_DEVICE_D0_EXIT_PRE_INTERRUPTS_DISABLED VfEvtDeviceD0ExitPreInterruptsDisabled;
+EVT_WDF_DEVICE_PREPARE_HARDWARE VfEvtDevicePrepareHardware;
+EVT_WDF_DEVICE_RELEASE_HARDWARE VfEvtDeviceReleaseHardware;
+EVT_WDF_DEVICE_SELF_MANAGED_IO_CLEANUP VfEvtDeviceSelfManagedIoCleanup;
+EVT_WDF_DEVICE_SELF_MANAGED_IO_FLUSH VfEvtDeviceSelfManagedIoFlush;
+EVT_WDF_DEVICE_SELF_MANAGED_IO_INIT VfEvtDeviceSelfManagedIoInit;
+EVT_WDF_DEVICE_SELF_MANAGED_IO_SUSPEND VfEvtDeviceSelfManagedIoSuspend;
+EVT_WDF_DEVICE_SELF_MANAGED_IO_RESTART VfEvtDeviceSelfManagedIoRestart;
+EVT_WDF_DEVICE_QUERY_STOP VfEvtDeviceQueryStop;
+EVT_WDF_DEVICE_QUERY_REMOVE VfEvtDeviceQueryRemove;
+EVT_WDF_DEVICE_SURPRISE_REMOVAL VfEvtDeviceSurpriseRemoval;
+EVT_WDF_DEVICE_USAGE_NOTIFICATION VfEvtDeviceUsageNotification;
+EVT_WDF_DEVICE_USAGE_NOTIFICATION_EX VfEvtDeviceUsageNotificationEx;
+EVT_WDF_DEVICE_RELATIONS_QUERY VfEvtDeviceRelationsQuery;
+EVT_WDF_IO_QUEUE_IO_DEFAULT VfEvtIoDefault;
+EVT_WDF_IO_QUEUE_IO_STOP VfEvtIoStop;
+EVT_WDF_IO_QUEUE_IO_RESUME VfEvtIoResume;
+EVT_WDF_IO_QUEUE_IO_READ VfEvtIoRead;
+EVT_WDF_IO_QUEUE_IO_WRITE VfEvtIoWrite;
+EVT_WDF_IO_QUEUE_IO_DEVICE_CONTROL VfEvtIoDeviceControl;
+EVT_WDF_IO_QUEUE_IO_INTERNAL_DEVICE_CONTROL VfEvtIoInternalDeviceControl;
+EVT_WDF_IO_QUEUE_IO_CANCELED_ON_QUEUE VfEvtIoCanceledOnQueue;
+
+} // extern "C"

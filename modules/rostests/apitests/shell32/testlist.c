@@ -25,6 +25,7 @@ extern void func_SHCreateFileExtractIconW(void);
 extern void func_ShellExecCmdLine(void);
 extern void func_ShellExecuteEx(void);
 extern void func_ShellExecuteW(void);
+extern void func_ShellHook(void);
 extern void func_ShellState(void);
 extern void func_SHLimitInputEdit(void);
 extern void func_SHParseDisplayName(void);
@@ -53,6 +54,7 @@ const struct test winetest_testlist[] =
     { "ShellExecCmdLine", func_ShellExecCmdLine },
     { "ShellExecuteEx", func_ShellExecuteEx },
     { "ShellExecuteW", func_ShellExecuteW },
+    { "ShellHook", func_ShellHook },
     { "ShellState", func_ShellState },
     { "SHLimitInputEdit", func_SHLimitInputEdit },
     { "SHParseDisplayName", func_SHParseDisplayName },

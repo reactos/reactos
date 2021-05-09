@@ -226,99 +226,6 @@ Match:
     return TRUE;
 }
 
-VOID
-NTAPI
-CmpGetIntelBrandString(OUT PCHAR CpuString)
-{
-    CPU_INFO CpuInfo;
-    ULONG BrandId, Signature;
-
-    /* Get the Brand Id */
-    KiCpuId(&CpuInfo, 0x00000001);
-    Signature = CpuInfo.Eax;
-    BrandId = CpuInfo.Ebx & 0xFF;
-
-    switch (BrandId)
-    {
-        case 0x01:
-            strcpy(CpuString, "Intel(R) Celeron(R) processor");
-            break;
-        case 0x02:
-        case 0x04:
-            strcpy(CpuString, "Intel(R) Pentium(R) III processor");
-            break;
-        case 0x03:
-            if(Signature == 0x000006B1)
-                strcpy(CpuString, "Intel(R) Celeron(R) processor");
-            else
-                strcpy(CpuString, "Intel(R) Pentium(R) III Xeon(R) processor");
-            break;
-        case 0x06:
-            strcpy(CpuString, "Mobile Intel(R) Pentium(R) III Processor-M");
-            break;
-        case 0x08:
-            if(Signature >= 0x00000F13)
-                strcpy(CpuString, "Intel(R) Genuine Processor");
-            else
-                strcpy(CpuString, "Intel(R) Pentium(R) 4 processor");
-            break;
-        case 0x09:
-            strcpy(CpuString, "Intel(R) Pentium(R) 4 processor");
-            break;
-        case 0x0B:
-            if(Signature >= 0x00000F13)
-                strcpy(CpuString, "Intel(R) Xeon(R) processor");
-            else
-                strcpy(CpuString, "Intel(R) Xeon(R) processor MP");
-            break;
-        case 0x0C:
-            strcpy(CpuString, "Intel(R) Xeon(R) processor MP");
-            break;
-        case 0x0E:
-            if(Signature >= 0x00000F13)
-                strcpy(CpuString, "Mobile Intel(R) Pentium(R) 4 processor-M");
-            else
-                strcpy(CpuString, "Intel(R) Xeon(R) processor");
-            break;
-        case 0x12:
-            strcpy(CpuString, "Intel(R) Celeron(R) M processor");
-            break;
-        case 0x07:
-        case 0x0F:
-        case 0x13:
-        case 0x17:
-            strcpy(CpuString, "Mobile Intel(R) Celeron(R) processor");
-            break;
-        case 0x0A:
-        case 0x14:
-            strcpy(CpuString, "Intel(R) Celeron(R) Processor");
-            break;
-        case 0x15:
-            strcpy(CpuString, "Mobile Genuine Intel(R) Processor");
-            break;
-        case 0x16:
-            strcpy(CpuString, "Intel(R) Pentium(R) M processor");
-            break;
-        default:
-            strcpy(CpuString, "Unknown Intel processor");
-    }
-}
-
-VOID
-NTAPI
-CmpGetVendorString(IN PKPRCB Prcb, OUT PCHAR CpuString)
-{
-    /* Check if we have a Vendor String */
-    if (Prcb->VendorString[0])
-    {
-        strcpy(CpuString, Prcb->VendorString);
-    }
-    else
-    {
-        strcpy(CpuString, "Unknown x86 processor");
-    }
-}
-
 NTSTATUS
 NTAPI
 CmpInitializeMachineDependentConfiguration(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
@@ -332,7 +239,7 @@ CmpInitializeMachineDependentConfiguration(IN PLOADER_PARAMETER_BLOCK LoaderBloc
     CONFIGURATION_COMPONENT_DATA ConfigData;
     CHAR Buffer[128];
     CPU_INFO CpuInfo;
-    ULONG VendorId, ExtendedId;
+    ULONG ExtendedId;
     PKPRCB Prcb;
     USHORT IndexTable[MaximumType + 1] = {0};
     ANSI_STRING TempString;
@@ -527,9 +434,8 @@ CmpInitializeMachineDependentConfiguration(IN PLOADER_PARAMETER_BLOCK LoaderBloc
                 KeSetSystemAffinityThread(Prcb->SetMember);
                 if (!Prcb->CpuID)
                 {
-                    /* Uh oh, no CPUID! */
-                    PartialString = CpuString;
-                    CmpGetVendorString(Prcb, PartialString);
+                    /* Uh oh, no CPUID! Should not happen as we don't support 80386 and older 80486 */
+                    ASSERT(FALSE);
                 }
                 else
                 {
@@ -555,24 +461,6 @@ CmpInitializeMachineDependentConfiguration(IN PLOADER_PARAMETER_BLOCK LoaderBloc
 
                         /* Null-terminate it */
                         CpuString[47] = ANSI_NULL;
-                    }
-                    else
-                    {
-                        KiCpuId(&CpuInfo, 0x00000000);
-                        VendorId = CpuInfo.Ebx;
-                        PartialString = CpuString;
-                        switch (VendorId)
-                        {
-                            case 'uneG': /* Intel */
-                                CmpGetIntelBrandString(PartialString);
-                                break;
-                            case 'htuA': /* AMD */
-                                /* FIXME */
-                                CmpGetVendorString(Prcb, PartialString);
-                                break;
-                            default:
-                                CmpGetVendorString(Prcb, PartialString);
-                        }
                     }
                 }
 

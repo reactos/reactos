@@ -293,6 +293,8 @@ VfatGetBasicInformation(
     if (*BufferLength < sizeof(FILE_BASIC_INFORMATION))
         return STATUS_BUFFER_OVERFLOW;
 
+    RtlZeroMemory(BasicInfo, sizeof(FILE_BASIC_INFORMATION));
+
     if (vfatVolumeIsFatX(DeviceExt))
     {
         FsdDosDateTimeToSystemTime(DeviceExt,
@@ -378,9 +380,7 @@ VfatSetDispositionInformation(
         return STATUS_CANNOT_DELETE;
     }
 
-    if (vfatFCBIsRoot(FCB) ||
-        (FCB->LongNameU.Length == sizeof(WCHAR) && FCB->LongNameU.Buffer[0] == L'.') ||
-        (FCB->LongNameU.Length == 2 * sizeof(WCHAR) && FCB->LongNameU.Buffer[0] == L'.' && FCB->LongNameU.Buffer[1] == L'.'))
+    if (vfatFCBIsRoot(FCB) || IsDotOrDotDot(&FCB->LongNameU))
     {
         /* we cannot delete a '.', '..' or the root directory */
         return STATUS_ACCESS_DENIED;
@@ -801,6 +801,12 @@ VfatSetRenameInformation(
     DPRINT("Old dir: %wZ, Old file: %wZ\n", &SourcePath, &SourceFile);
     vfatSplitPathName(&NewName, &NewPath, &NewFile);
     DPRINT("New dir: %wZ, New file: %wZ\n", &NewPath, &NewFile);
+
+    if (IsDotOrDotDot(&NewFile))
+    {
+        Status = STATUS_OBJECT_NAME_INVALID;
+        goto Cleanup;
+    }
 
     if (vfatFCBIsDirectory(FCB) && !IsListEmpty(&FCB->ParentListHead))
     {

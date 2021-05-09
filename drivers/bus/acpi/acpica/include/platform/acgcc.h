@@ -88,6 +88,21 @@ typedef __builtin_va_list       va_list;
 
 #define ACPI_USE_NATIVE_MATH64
 
+/* GCC did not support __has_attribute until 5.1. */
+
+#ifndef __has_attribute
+#define __has_attribute(x) 0
+#endif
+
+/*
+ * Explictly mark intentional explicit fallthrough to silence
+ * -Wimplicit-fallthrough in GCC 7.1+.
+ */
+
+#if __has_attribute(__fallthrough__)
+#define ACPI_FALLTHROUGH __attribute__((__fallthrough__))
+#endif
+
 #ifdef __REACTOS__
 /* Flush CPU cache - used when going to sleep. Wbinvd or similar. */
 

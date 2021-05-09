@@ -13,3 +13,5 @@ list(APPEND SOURCE
 
 add_library(ntoskrnl_vista ${SOURCE})
 add_dependencies(ntoskrnl_vista bugcodes xdk)
+
+target_compile_definitions(ntoskrnl_vista PUBLIC NTKRNLVISTA)

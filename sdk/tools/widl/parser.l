@@ -318,6 +318,7 @@ static const struct keyword keywords[] = {
 static const struct keyword attr_keywords[] =
 {
         {"aggregatable",                tAGGREGATABLE},
+        {"all_nodes",                   tALLNODES},
         {"allocate",                    tALLOCATE},
         {"annotation",                  tANNOTATION},
         {"apartment",                   tAPARTMENT},
@@ -345,6 +346,7 @@ static const struct keyword attr_keywords[] =
         {"disable_consistency_check",   tDISABLECONSISTENCYCHECK},
         {"displaybind",                 tDISPLAYBIND},
         {"dllname",                     tDLLNAME},
+        {"dont_free",                   tDONTFREE},
         {"dual",                        tDUAL},
         {"enable_allocate",             tENABLEALLOCATE},
         {"encode",                      tENCODE},
@@ -406,6 +408,7 @@ static const struct keyword attr_keywords[] =
         {"restricted",                  tRESTRICTED},
         {"retval",                      tRETVAL},
         {"single",                      tSINGLE},
+        {"single_node",                 tSINGLENODE},
         {"size_is",                     tSIZEIS},
         {"source",                      tSOURCE},
         {"strict_context_handle",       tSTRICTCONTEXTHANDLE},

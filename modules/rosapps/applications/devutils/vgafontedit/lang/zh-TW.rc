@@ -1,0 +1,93 @@
+/*
+ * PROJECT:     ReactOS VGA Font Editor
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     Traditional Chinese resource file
+ * COPYRIGHT:   Copyright 2008 Colin Finck (colin@reactos.org)
+ * TRANSLATOR:  2021 Chan Chilung (eason066@gmail.com)
+ */
+
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
+
+IDD_ABOUT DIALOGEX 10, 10, 130, 62
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+CAPTION "關於"
+FONT 9, "新細明體"
+BEGIN
+    ICON           IDI_MAIN,                     IDC_STATIC, 10, 10, 20, 20
+    LTEXT          "ReactOS VGA 字體編輯器",    IDC_STATIC, 37, 10, 93, 10
+    LTEXT          "Copyright 2008 Colin Finck", IDC_STATIC, 37, 20, 93, 10
+    DEFPUSHBUTTON  "確定",                         IDCANCEL,   40, 44, 55, 15
+END
+
+IDD_EDITGLYPH DIALOGEX 32768, 32768, 246, 197
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "編輯字體"
+FONT 9, "新細明體"
+BEGIN
+    CONTROL "", IDC_EDIT_GLYPH_TOOLBOX, TOOLBARCLASSNAMEA,          CCS_NODIVIDER | CCS_NORESIZE, 5, 5, 24, 82
+    CONTROL "", IDC_EDIT_GLYPH_EDIT,    EDIT_GLYPH_EDIT_CLASSW,     0, 39, 5, 160, 160
+    CONTROL "", IDC_EDIT_GLYPH_PREVIEW, EDIT_GLYPH_PREVIEW_CLASSW,  0, 209, 5, 32, 32
+
+    DEFPUSHBUTTON "確定", IDOK, 48, 177, 70, 14
+    PUSHBUTTON "取消", IDCANCEL, 125, 177, 70, 14
+END
+
+IDM_MAINMENU MENU
+BEGIN
+    POPUP "檔案(&F)"
+    BEGIN
+        MENUITEM "新增(&N)\tCtrl+N", ID_FILE_NEW
+        MENUITEM "開啟(&O)...\tCtrl+O", ID_FILE_OPEN
+        MENUITEM "關閉", ID_FILE_CLOSE
+        MENUITEM SEPARATOR
+        MENUITEM "儲存\tCtrl+S", ID_FILE_SAVE
+        MENUITEM "另存新檔...", ID_FILE_SAVE_AS
+        MENUITEM SEPARATOR
+        MENUITEM "離開\tAlt+F4", ID_FILE_EXIT
+    END
+
+    POPUP "編輯(&E)"
+    BEGIN
+        MENUITEM "複製\tCtrl+C", ID_EDIT_COPY
+        MENUITEM "貼上\tCtrl+V", ID_EDIT_PASTE
+        MENUITEM SEPARATOR
+        MENUITEM "編輯字體...", ID_EDIT_GLYPH
+    END
+
+    POPUP "視窗(&W)"
+    BEGIN
+        MENUITEM "層疊(&C)", ID_WINDOW_CASCADE
+        MENUITEM "水平排列(&H)", ID_WINDOW_TILE_HORZ
+        MENUITEM "縱向排列(&V)", ID_WINDOW_TILE_VERT
+        MENUITEM "排列圖示(&A)", ID_WINDOW_ARRANGE
+        MENUITEM SEPARATOR
+        MENUITEM "下一個(&t)\tCtrl+F6", ID_WINDOW_NEXT
+    END
+
+    POPUP "說明(&H)"
+    BEGIN
+        MENUITEM "關於(&A)...", ID_HELP_ABOUT
+    END
+END
+
+STRINGTABLE
+BEGIN
+    IDS_OPENFILTER, "所有支援的格式 (*.bin,*.psf)|*.bin;*.psf|Binary Font Files (*.bin)|*.bin|PC Screen Fonts Version 1 (*.psf)|*.psf|"
+    IDS_SAVEFILTER, "二進制字體檔案 (*.bin)|*.bin|"
+    IDS_OPENERROR, "開啟檔案時發生錯誤! (錯誤碼 %1!u!)"
+    IDS_READERROR, "讀取檔案時發生錯誤! (錯誤碼 %1!u!)"
+    IDS_WRITEERROR, "寫入檔案時發生錯誤! (錯誤碼 %1!u!)"
+    IDS_UNSUPPORTEDFORMAT, "不支援的檔案格式!"
+    IDS_UNSUPPORTEDPSF, "不支援的 PSF 字體格式! 編輯器僅支援非特殊模式的 8x8 字體。"
+    IDS_DOCNAME, "字體 %1!u!"
+    IDS_SAVEPROMPT, "文件 ""%1"" 已被更改但尚未儲存。\n\n您是否要儲存檔案?"
+    IDS_APPTITLE, "ReactOS VGA 字體編輯器"
+    IDS_CLOSEEDIT, "請先關閉所有正在開啟的編輯視窗。"
+
+    IDS_TOOLTIP_NEW, "新增"
+    IDS_TOOLTIP_OPEN, "開啟"
+    IDS_TOOLTIP_SAVE, "儲存"
+    IDS_TOOLTIP_EDIT_GLYPH, "編輯字體"
+    IDS_TOOLTIP_COPY, "複製"
+    IDS_TOOLTIP_PASTE, "貼上"
+END

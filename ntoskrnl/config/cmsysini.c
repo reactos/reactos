@@ -391,7 +391,7 @@ CmpInitHiveFromFile(IN PCUNICODE_STRING HiveName,
     return STATUS_SUCCESS;
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 NTSTATUS
 NTAPI
 CmpSetSystemValues(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
@@ -447,7 +447,7 @@ Quit:
 }
 
 static
-INIT_FUNCTION
+CODE_SEG("INIT")
 NTSTATUS
 CmpCreateHardwareProfile(HANDLE ControlSetHandle)
 {
@@ -518,7 +518,7 @@ done:
     return Status;
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 NTSTATUS
 NTAPI
 CmpCreateControlSet(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
@@ -859,7 +859,7 @@ CmpLinkHiveToMaster(IN PUNICODE_STRING LinkName,
     return STATUS_SUCCESS;
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 BOOLEAN
 NTAPI
 CmpInitializeSystemHive(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
@@ -976,7 +976,7 @@ CmpInitializeSystemHive(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     return TRUE;
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 NTSTATUS
 NTAPI
 CmpCreateObjectTypes(VOID)
@@ -1010,7 +1010,7 @@ CmpCreateObjectTypes(VOID)
     return ObCreateObjectType(&Name, &ObjectTypeInitializer, NULL, &CmpKeyObjectType);
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 BOOLEAN
 NTAPI
 CmpCreateRootNode(IN PHHIVE Hive,
@@ -1066,7 +1066,7 @@ CmpCreateRootNode(IN PHHIVE Hive,
     return TRUE;
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 BOOLEAN
 NTAPI
 CmpCreateRegistryRoot(VOID)
@@ -1505,7 +1505,7 @@ CmpInitializeHiveList(VOID)
     CmpNoVolatileCreates = TRUE;
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 BOOLEAN
 NTAPI
 CmInitSystem1(VOID)
@@ -1721,7 +1721,7 @@ CmInitSystem1(VOID)
     return TRUE;
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 VOID
 NTAPI
 CmpFreeDriverList(IN PHHIVE Hive,
@@ -1770,7 +1770,7 @@ CmpFreeDriverList(IN PHHIVE Hive,
     }
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 PUNICODE_STRING*
 NTAPI
 CmGetSystemDriverList(VOID)

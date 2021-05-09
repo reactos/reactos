@@ -85,7 +85,7 @@ if(MSVC)
     if(ARCH STREQUAL "arm")
         add_target_link_flags(bootmgfw "/ignore:4078 /ignore:4254 /DRIVER")
     else()
-        add_target_link_flags(bootmgfw "/ignore:4078 /ignore:4254 /DRIVER /FIXED")
+        add_target_link_flags(bootmgfw "/ignore:4078 /ignore:4254 /DRIVER /DYNAMICBASE:NO /NXCOMPAT:NO /FIXED")
     endif()
 else()
     add_target_link_flags(bootmgfw "-Wl,--strip-all,--exclude-all-symbols")
@@ -105,7 +105,7 @@ target_link_libraries(bootmgfw bootlib cportlib cmlib rtl libcntpr)
 
 # dynamic analysis switches
 if(STACK_PROTECTOR)
-    target_link_libraries(bootmgfw gcc_ssp)
+    target_sources(bootmgfw PRIVATE $<TARGET_OBJECTS:gcc_ssp_nt>)
 endif()
 
 if(RUNTIME_CHECKS)
@@ -153,7 +153,7 @@ target_link_libraries(rosload bootlib cportlib cmlib rtl libcntpr)
 
 # dynamic analysis switches
 if(STACK_PROTECTOR)
-    target_link_libraries(rosload gcc_ssp)
+    target_sources(rosload PRIVATE $<TARGET_OBJECTS:gcc_ssp_nt>)
 endif()
 
 if(RUNTIME_CHECKS)

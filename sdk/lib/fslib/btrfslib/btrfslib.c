@@ -59,6 +59,11 @@
 #endif
 #endif // __REACTOS__
 
+#ifdef __REACTOS__
+#define malloc(size)    RtlAllocateHeap(RtlGetProcessHeap(), 0, (size))
+#define free(ptr)       RtlFreeHeap(RtlGetProcessHeap(), 0, (ptr))
+#endif
+
 #define SHA256_HASH_SIZE 32
 void calc_sha256(uint8_t* hash, const void* input, size_t len);
 
@@ -176,6 +181,7 @@ ULONG def_sector_size = 0, def_node_size = 0;
 uint64_t def_incompat_flags = BTRFS_INCOMPAT_FLAGS_EXTENDED_IREF | BTRFS_INCOMPAT_FLAGS_SKINNY_METADATA;
 uint16_t def_csum_type = CSUM_TYPE_CRC32C;
 
+#ifndef __REACTOS__
 // the following definitions come from fmifs.h in ReactOS
 
 typedef struct {
@@ -232,12 +238,32 @@ typedef enum {
 
 typedef BOOLEAN (NTAPI* PFMIFSCALLBACK)(CALLBACKCOMMAND Command, ULONG SubAction, PVOID ActionInfo);
 
+#else
+
+#include <fmifs/fmifs.h>
+
+#endif // __REACTOS__
+
 #ifndef __REACTOS__
 NTSTATUS WINAPI ChkdskEx(PUNICODE_STRING DriveRoot, BOOLEAN FixErrors, BOOLEAN Verbose, BOOLEAN CheckOnlyIfDirty,
-#else
-NTSTATUS NTAPI BtrfsChkdskEx(PUNICODE_STRING DriveRoot, BOOLEAN FixErrors, BOOLEAN Verbose, BOOLEAN CheckOnlyIfDirty,
-#endif
                          BOOLEAN ScanDrive, PFMIFSCALLBACK Callback) {
+#else
+BOOLEAN
+NTAPI
+BtrfsChkdsk(
+    IN PUNICODE_STRING DriveRoot,
+    IN PFMIFSCALLBACK Callback,
+    IN BOOLEAN FixErrors,
+    IN BOOLEAN Verbose,
+    IN BOOLEAN CheckOnlyIfDirty,
+    IN BOOLEAN ScanDrive,
+    IN PVOID pUnknown1,
+    IN PVOID pUnknown2,
+    IN PVOID pUnknown3,
+    IN PVOID pUnknown4,
+    IN PULONG ExitStatus)
+{
+#endif
     // STUB
 
     if (Callback) {
@@ -249,22 +275,21 @@ NTSTATUS NTAPI BtrfsChkdskEx(PUNICODE_STRING DriveRoot, BOOLEAN FixErrors, BOOLE
         Callback(OUTPUT, 0, &TextOut);
     }
 
+#ifndef __REACTOS__
     return STATUS_SUCCESS;
+#else
+    *ExitStatus = (ULONG)STATUS_SUCCESS;
+    return TRUE;
+#endif
 }
 
 static btrfs_root* add_root(LIST_ENTRY* roots, uint64_t id) {
     btrfs_root* root;
 
-#ifdef __REACTOS__
-    root = RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(btrfs_root));
-#else
     root = malloc(sizeof(btrfs_root));
-#endif
 
     root->id = id;
-#ifndef __REACTOS__
     RtlZeroMemory(&root->header, sizeof(tree_header));
-#endif
     InitializeListHead(&root->items);
     InsertTailList(roots, &root->list_entry);
 
@@ -285,24 +310,14 @@ static void free_roots(LIST_ENTRY* roots) {
             btrfs_item* item = CONTAINING_RECORD(le3, btrfs_item, list_entry);
 
             if (item->data)
-#ifdef __REACTOS__
-                RtlFreeHeap(RtlGetProcessHeap(), 0, item->data);
-
-            RtlFreeHeap(RtlGetProcessHeap(), 0, item);
-#else
                 free(item->data);
 
             free(item);
-#endif
 
             le3 = le4;
         }
 
-#ifdef __REACTOS__
-        RtlFreeHeap(RtlGetProcessHeap(), 0, r);
-#else
         free(r);
-#endif
 
         le = le2;
     }
@@ -316,13 +331,8 @@ static void free_chunks(LIST_ENTRY* chunks) {
         LIST_ENTRY *le2 = le->Flink;
         btrfs_chunk* c = CONTAINING_RECORD(le, btrfs_chunk, list_entry);
 
-#ifndef __REACTOS__
         free(c->chunk_item);
         free(c);
-#else
-        RtlFreeHeap(RtlGetProcessHeap(), 0, c->chunk_item);
-        RtlFreeHeap(RtlGetProcessHeap(), 0, c);
-#endif
 
         le = le2;
     }
@@ -332,11 +342,7 @@ static void add_item(btrfs_root* r, uint64_t obj_id, uint8_t obj_type, uint64_t 
     LIST_ENTRY* le;
     btrfs_item* item;
 
-#ifndef __REACTOS__
     item = malloc(sizeof(btrfs_item));
-#else
-    item = RtlAllocateHeap(RtlGetProcessHeap(), 0, sizeof(btrfs_item));
-#endif
 
     item->key.obj_id = obj_id;
     item->key.obj_type = obj_type;
@@ -346,11 +352,7 @@ static void add_item(btrfs_root* r, uint64_t obj_id, uint8_t obj_type, uint64_t 
     if (size == 0)
         item->data = NULL;
     else {
-#ifndef __REACTOS__
         item->data = malloc(size);
-#else
-        item->data = RtlAllocateHeap(RtlGetProcessHeap(), 0, size);
-#endif
         memcpy(item->data, data, size);
     }
 
@@ -423,20 +425,12 @@ static btrfs_chunk* add_chunk(LIST_ENTRY* chunks, uint64_t flags, btrfs_root* ch
     if (dev->dev_item.num_bytes - dev->dev_item.bytes_used < stripes * size) // not enough space
         return NULL;
 
-#ifndef __REACTOS__
     c = malloc(sizeof(btrfs_chunk));
-#else
-    c = RtlAllocateHeap(RtlGetProcessHeap(), 0, sizeof(btrfs_chunk));
-#endif
     c->offset = off;
     c->lastoff = off;
     c->used = 0;
 
-#ifndef __REACTOS__
     c->chunk_item = malloc(sizeof(CHUNK_ITEM) + (stripes * sizeof(CHUNK_ITEM_STRIPE)));
-#else
-    c->chunk_item = RtlAllocateHeap(RtlGetProcessHeap(), 0, sizeof(CHUNK_ITEM) + (stripes * sizeof(CHUNK_ITEM_STRIPE)));
-#endif
 
     c->chunk_item->size = size;
     c->chunk_item->root_id = BTRFS_ROOT_EXTENT;
@@ -630,11 +624,7 @@ static NTSTATUS write_roots(HANDLE h, LIST_ENTRY* roots, uint32_t node_size, BTR
     NTSTATUS Status;
     uint8_t* tree;
 
-#ifndef __REACTOS__
     tree = malloc(node_size);
-#else
-    tree = RtlAllocateHeap(RtlGetProcessHeap(), 0, node_size);
-#endif
 
     le = roots->Flink;
     while (le != roots) {
@@ -683,22 +673,14 @@ static NTSTATUS write_roots(HANDLE h, LIST_ENTRY* roots, uint32_t node_size, BTR
 
         Status = write_data(h, r->header.address, r->c, tree, node_size);
         if (!NT_SUCCESS(Status)) {
-#ifndef __REACTOS__
             free(tree);
-#else
-            RtlFreeHeap(RtlGetProcessHeap(), 0, tree);
-#endif
             return Status;
         }
 
         le = le->Flink;
     }
 
-#ifndef __REACTOS__
     free(tree);
-#else
-    RtlFreeHeap(RtlGetProcessHeap(), 0, tree);
-#endif
 
     return STATUS_SUCCESS;
 }
@@ -798,12 +780,8 @@ static NTSTATUS write_superblocks(HANDLE h, btrfs_dev* dev, btrfs_root* chunk_ro
         le = le->Flink;
     }
 
-#ifndef __REACTOS__
     sb = malloc(sblen);
     memset(sb, 0, sblen);
-#else
-    sb = RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, sblen);
-#endif
 
     sb->uuid = *fsuuid;
     sb->flags = 1;
@@ -837,11 +815,7 @@ static NTSTATUS write_superblocks(HANDLE h, btrfs_dev* dev, btrfs_root* chunk_ro
         for (unsigned int i = 0; i < label->Length / sizeof(WCHAR); i++) {
 #endif
             if (label->Buffer[i] == '/' || label->Buffer[i] == '\\') {
-#ifndef __REACTOS__
                 free(sb);
-#else
-                RtlFreeHeap(RtlGetProcessHeap(), 0, sb);
-#endif
                 return STATUS_INVALID_VOLUME_LABEL;
             }
         }
@@ -855,9 +829,6 @@ static NTSTATUS write_superblocks(HANDLE h, btrfs_dev* dev, btrfs_root* chunk_ro
         }
 
         if (WideCharToMultiByte(CP_UTF8, 0, label->Buffer, label->Length / sizeof(WCHAR), sb->label, utf8len, NULL, NULL) == 0) {
-            free(sb);
-            return STATUS_INVALID_VOLUME_LABEL;
-        }
 #else
         as.Buffer = sb->label;
         as.Length = 0;
@@ -865,10 +836,10 @@ static NTSTATUS write_superblocks(HANDLE h, btrfs_dev* dev, btrfs_root* chunk_ro
 
         if (!NT_SUCCESS(RtlUnicodeStringToAnsiString(&as, label, FALSE)))
         {
-            RtlFreeHeap(RtlGetProcessHeap(), 0, sb);
+#endif
+            free(sb);
             return STATUS_INVALID_VOLUME_LABEL;
         }
-#endif
     }
     sb->cache_generation = 0xffffffffffffffff;
 
@@ -893,22 +864,14 @@ static NTSTATUS write_superblocks(HANDLE h, btrfs_dev* dev, btrfs_root* chunk_ro
 
         Status = NtWriteFile(h, NULL, NULL, NULL, &iosb, sb, sblen, &off, NULL);
         if (!NT_SUCCESS(Status)) {
-#ifndef __REACTOS__
             free(sb);
-#else
-            RtlFreeHeap(RtlGetProcessHeap(), 0, sb);
-#endif
             return Status;
         }
 
         i++;
     }
 
-#ifndef __REACTOS__
     free(sb);
-#else
-    RtlFreeHeap(RtlGetProcessHeap(), 0, sb);
-#endif
 
     return STATUS_SUCCESS;
 }
@@ -941,11 +904,7 @@ GetSystemTimeAsFileTime(OUT PFILETIME lpFileTime)
 
 static void add_inode_ref(btrfs_root* r, uint64_t inode, uint64_t parent, uint64_t index, const char* name) {
     uint16_t name_len = (uint16_t)strlen(name);
-#ifndef __REACTOS__
     INODE_REF* ir = malloc(offsetof(INODE_REF, name[0]) + name_len);
-#else
-    INODE_REF* ir = RtlAllocateHeap(RtlGetProcessHeap(), 0, offsetof(INODE_REF, name[0]) + name_len);
-#endif
 
     ir->index = 0;
     ir->n = name_len;
@@ -953,11 +912,7 @@ static void add_inode_ref(btrfs_root* r, uint64_t inode, uint64_t parent, uint64
 
     add_item(r, inode, TYPE_INODE_REF, parent, ir, (uint16_t)offsetof(INODE_REF, name[0]) + ir->n);
 
-#ifndef __REACTOS__
     free(ir);
-#else
-    RtlFreeHeap(RtlGetProcessHeap(), 0, ir);
-#endif
 }
 
 static void init_fs_tree(btrfs_root* r, uint32_t node_size) {
@@ -1007,22 +962,14 @@ static NTSTATUS clear_first_megabyte(HANDLE h) {
     LARGE_INTEGER zero;
     uint8_t* mb;
 
-#ifndef __REACTOS__
     mb = malloc(0x100000);
     memset(mb, 0, 0x100000);
-#else
-    mb = RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, 0x100000);
-#endif
 
     zero.QuadPart = 0;
 
     Status = NtWriteFile(h, NULL, NULL, NULL, &iosb, mb, 0x100000, &zero, NULL);
 
-#ifndef __REACTOS__
     free(mb);
-#else
-    RtlFreeHeap(RtlGetProcessHeap(), 0, mb);
-#endif
 
     return Status;
 }
@@ -1035,13 +982,9 @@ static bool is_ssd(HANDLE h) {
     IDENTIFY_DEVICE_DATA* idd;
 
     aptelen = sizeof(ATA_PASS_THROUGH_EX) + 512;
-#ifndef __REACTOS__
     apte = malloc(aptelen);
 
     RtlZeroMemory(apte, aptelen);
-#else
-    apte = RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, aptelen);
-#endif
 
     apte->Length = sizeof(ATA_PASS_THROUGH_EX);
     apte->AtaFlags = ATA_FLAGS_DATA_IN;
@@ -1056,20 +999,12 @@ static bool is_ssd(HANDLE h) {
         idd = (IDENTIFY_DEVICE_DATA*)((uint8_t*)apte + sizeof(ATA_PASS_THROUGH_EX));
 
         if (idd->NominalMediaRotationRate == 1) {
-#ifndef __REACTOS__
             free(apte);
-#else
-            RtlFreeHeap(RtlGetProcessHeap(), 0, apte);
-#endif
             return true;
         }
     }
 
-#ifndef __REACTOS__
     free(apte);
-#else
-    RtlFreeHeap(RtlGetProcessHeap(), 0, apte);
-#endif
 
     return false;
 }
@@ -1077,11 +1012,7 @@ static bool is_ssd(HANDLE h) {
 static void add_dir_item(btrfs_root* root, uint64_t inode, uint32_t hash, uint64_t key_objid, uint8_t key_type,
                          uint64_t key_offset, uint64_t transid, uint8_t type, const char* name) {
     uint16_t name_len = (uint16_t)strlen(name);
-#ifndef __REACTOS__
     DIR_ITEM* di = malloc(offsetof(DIR_ITEM, name[0]) + name_len);
-#else
-    DIR_ITEM* di = RtlAllocateHeap(RtlGetProcessHeap(), 0, offsetof(DIR_ITEM, name[0]) + name_len);
-#endif
 
     di->key.obj_id = key_objid;
     di->key.obj_type = key_type;
@@ -1094,11 +1025,7 @@ static void add_dir_item(btrfs_root* root, uint64_t inode, uint32_t hash, uint64
 
     add_item(root, inode, TYPE_DIR_ITEM, hash, di, (uint16_t)(offsetof(DIR_ITEM, name[0]) + di->m + di->n));
 
-#ifndef __REACTOS__
     free(di);
-#else
-    RtlFreeHeap(RtlGetProcessHeap(), 0, di);
-#endif
 }
 
 static void set_default_subvol(btrfs_root* root_root, uint32_t node_size) {
@@ -1292,50 +1219,30 @@ static bool is_mounted_multi_device(HANDLE h, uint32_t sector_size) {
     if (sblen & (sector_size - 1))
         sblen = (sblen & sector_size) + sector_size;
 
-#ifndef __REACTOS__
     sb = malloc(sblen);
-#else
-    sb = RtlAllocateHeap(RtlGetProcessHeap(), 0, sblen);
-#endif
 
     off.QuadPart = superblock_addrs[0];
 
     Status = NtReadFile(h, NULL, NULL, NULL, &iosb, sb, sblen, &off, NULL);
     if (!NT_SUCCESS(Status)) {
-#ifndef __REACTOS__
         free(sb);
-#else
-        RtlFreeHeap(RtlGetProcessHeap(), 0, sb);
-#endif
         return false;
     }
 
     if (sb->magic != BTRFS_MAGIC) {
-#ifndef __REACTOS__
         free(sb);
-#else
-        RtlFreeHeap(RtlGetProcessHeap(), 0, sb);
-#endif
         return false;
     }
 
     if (!check_superblock_checksum(sb)) {
-#ifndef __REACTOS__
         free(sb);
-#else
-        RtlFreeHeap(RtlGetProcessHeap(), 0, sb);
-#endif
         return false;
     }
 
     fsuuid = sb->uuid;
     devuuid = sb->dev_item.device_uuid;
 
-#ifndef __REACTOS__
     free(sb);
-#else
-    RtlFreeHeap(RtlGetProcessHeap(), 0, sb);
-#endif
 
     us.Length = us.MaximumLength = (USHORT)(wcslen(btrfs) * sizeof(WCHAR));
     us.Buffer = btrfs;
@@ -1352,16 +1259,14 @@ static bool is_mounted_multi_device(HANDLE h, uint32_t sector_size) {
     do {
         bfssize += 1024;
 
-#ifndef __REACTOS__
         if (bfs) free(bfs);
         bfs = malloc(bfssize);
-#else
-        if (bfs) RtlFreeHeap(RtlGetProcessHeap(), 0, bfs);
-        bfs = RtlAllocateHeap(RtlGetProcessHeap(), 0, bfssize);
-#endif
 
         Status = NtDeviceIoControlFile(h2, NULL, NULL, NULL, &iosb, IOCTL_BTRFS_QUERY_FILESYSTEMS, NULL, 0, bfs, bfssize);
         if (!NT_SUCCESS(Status) && Status != STATUS_BUFFER_OVERFLOW) {
+#ifdef __REACTOS__
+            if (bfs) free(bfs);
+#endif
             NtClose(h2);
             return false;
         }
@@ -1393,11 +1298,7 @@ end:
     NtClose(h2);
 
     if (bfs)
-#ifndef __REACTOS__
         free(bfs);
-#else
-        RtlFreeHeap(RtlGetProcessHeap(), 0, bfs);
-#endif
 
     return ret;
 }
@@ -1441,11 +1342,7 @@ static void check_cpu() {
 }
 #endif
 
-#ifndef __REACTOS__
 static NTSTATUS NTAPI FormatEx2(PUNICODE_STRING DriveRoot, FMIFS_MEDIA_FLAG MediaFlag, PUNICODE_STRING Label,
-#else
-NTSTATUS NTAPI BtrfsFormatEx(PUNICODE_STRING DriveRoot, FMIFS_MEDIA_FLAG MediaFlag, PUNICODE_STRING Label,
-#endif // __REACTOS__
                                 BOOLEAN QuickFormat, ULONG ClusterSize, PFMIFSCALLBACK Callback)
 {
     NTSTATUS Status;
@@ -1589,22 +1486,14 @@ end:
             ULONG mdnsize;
 
             mdnsize = (ULONG)(offsetof(MOUNTDEV_NAME, Name[0]) + DriveRoot->Length);
-#ifndef __REACTOS__
             mdn = malloc(mdnsize);
-#else
-            mdn = RtlAllocateHeap(RtlGetProcessHeap(), 0, mdnsize);
-#endif
 
             mdn->NameLength = DriveRoot->Length;
             memcpy(mdn->Name, DriveRoot->Buffer, DriveRoot->Length);
 
             NtDeviceIoControlFile(btrfsh, NULL, NULL, NULL, &iosb, IOCTL_BTRFS_PROBE_VOLUME, mdn, mdnsize, NULL, 0);
 
-#ifndef __REACTOS__
             free(mdn);
-#else
-            RtlFreeHeap(RtlGetProcessHeap(), 0, mdn);
-#endif
 
             NtClose(btrfsh);
         }
@@ -1612,13 +1501,43 @@ end:
         Status = STATUS_SUCCESS;
     }
 
+#ifndef __REACTOS__
     if (Callback) {
         bool success = NT_SUCCESS(Status);
         Callback(DONE, 0, (PVOID)&success);
     }
+#endif
 
     return Status;
 }
+
+#ifdef __REACTOS__
+
+BOOLEAN
+NTAPI
+BtrfsFormat(
+    IN PUNICODE_STRING DriveRoot,
+    IN PFMIFSCALLBACK Callback,
+    IN BOOLEAN QuickFormat,
+    IN BOOLEAN BackwardCompatible,
+    IN MEDIA_TYPE MediaType,
+    IN PUNICODE_STRING Label,
+    IN ULONG ClusterSize)
+{
+    NTSTATUS Status;
+
+    if (BackwardCompatible)
+    {
+        // DPRINT1("BackwardCompatible == TRUE is unsupported!\n");
+        return FALSE;
+    }
+
+    Status = FormatEx2(DriveRoot, (FMIFS_MEDIA_FLAG)MediaType, Label, QuickFormat, ClusterSize, Callback);
+
+    return NT_SUCCESS(Status);
+}
+
+#else
 
 BOOL __stdcall FormatEx(DSTRING* root, STREAM_MESSAGE* message, options* opts, uint32_t unk1) {
     UNICODE_STRING DriveRoot, Label;
@@ -1638,14 +1557,12 @@ BOOL __stdcall FormatEx(DSTRING* root, STREAM_MESSAGE* message, options* opts, u
         Label.Buffer = NULL;
     }
 
-#ifndef __REACTOS__
     Status = FormatEx2(&DriveRoot, FMIFS_HARDDISK, &Label, opts && opts->flags & FORMAT_FLAG_QUICK_FORMAT, 0, NULL);
-#else
-    Status = BtrfsFormatEx(&DriveRoot, FMIFS_HARDDISK, &Label, opts && opts->flags & FORMAT_FLAG_QUICK_FORMAT, 0, NULL);
-#endif
 
     return NT_SUCCESS(Status);
 }
+
+#endif // __REACTOS__
 
 void __stdcall SetSizes(ULONG sector, ULONG node) {
     if (sector != 0)

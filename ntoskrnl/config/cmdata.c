@@ -65,7 +65,12 @@ ULONG CmpTypeCount[MaximumType + 1];
 
 HANDLE CmpRegistryRootHandle;
 
-INIT_SECTION UNICODE_STRING CmClassName[MaximumClass + 1] =
+// for MSVC, this is required before using DATA_SEG
+#ifdef _MSC_VER
+# pragma section("INIT", read,execute,discard)
+#endif
+
+DATA_SEG("INIT") UNICODE_STRING CmClassName[MaximumClass + 1] =
 {
     RTL_CONSTANT_STRING(L"System"),
     RTL_CONSTANT_STRING(L"Processor"),
@@ -77,7 +82,7 @@ INIT_SECTION UNICODE_STRING CmClassName[MaximumClass + 1] =
     RTL_CONSTANT_STRING(L"Undefined")
 };
 
-INIT_SECTION UNICODE_STRING CmTypeName[MaximumType + 1] =
+DATA_SEG("INIT") UNICODE_STRING CmTypeName[MaximumType + 1] =
 {
     RTL_CONSTANT_STRING(L"System"),
     RTL_CONSTANT_STRING(L"CentralProcessor"),
@@ -123,7 +128,7 @@ INIT_SECTION UNICODE_STRING CmTypeName[MaximumType + 1] =
     RTL_CONSTANT_STRING(L"Undefined")
 };
 
-INIT_SECTION CMP_MF_TYPE CmpMultifunctionTypes[] =
+DATA_SEG("INIT") CMP_MF_TYPE CmpMultifunctionTypes[] =
 {
     {"ISA", Isa, 0},
     {"MCA", MicroChannel, 0},
@@ -136,7 +141,7 @@ INIT_SECTION CMP_MF_TYPE CmpMultifunctionTypes[] =
     {NULL, Internal, 0}
 };
 
-INIT_SECTION CM_SYSTEM_CONTROL_VECTOR CmControlVector[] =
+DATA_SEG("INIT") CM_SYSTEM_CONTROL_VECTOR CmControlVector[] =
 {
     {
         L"Session Manager",

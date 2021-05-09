@@ -45,14 +45,16 @@ ULONG FsCheckFlags;
 PVOID FsCheckMemQueue;
 ULONG FsCheckTotalFiles;
 
-NTSTATUS
+BOOLEAN
 NTAPI
-VfatFormat(IN PUNICODE_STRING DriveRoot,
-           IN FMIFS_MEDIA_FLAG MediaFlag,
-           IN PUNICODE_STRING Label,
-           IN BOOLEAN QuickFormat,
-           IN ULONG ClusterSize,
-           IN PFMIFSCALLBACK Callback)
+VfatFormat(
+    IN PUNICODE_STRING DriveRoot,
+    IN PFMIFSCALLBACK Callback,
+    IN BOOLEAN QuickFormat,
+    IN BOOLEAN BackwardCompatible,
+    IN MEDIA_TYPE MediaType,
+    IN PUNICODE_STRING Label,
+    IN ULONG ClusterSize)
 {
     OBJECT_ATTRIBUTES ObjectAttributes;
     DISK_GEOMETRY DiskGeometry;
@@ -63,6 +65,10 @@ VfatFormat(IN PUNICODE_STRING DriveRoot,
     NTSTATUS Status, LockStatus;
 
     DPRINT("VfatFormat(DriveRoot '%wZ')\n", DriveRoot);
+
+    // FIXME:
+    UNREFERENCED_PARAMETER(BackwardCompatible);
+    UNREFERENCED_PARAMETER(MediaType);
 
     Context.TotalSectorCount = 0;
     Context.CurrentSectorCount = 0;
@@ -84,8 +90,8 @@ VfatFormat(IN PUNICODE_STRING DriveRoot,
                         FILE_SYNCHRONOUS_IO_ALERT);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("NtOpenFile() failed with status 0x%.08x\n", Status);
-        return Status;
+        DPRINT1("NtOpenFile() failed with status 0x%08x\n", Status);
+        return FALSE;
     }
 
     Status = NtDeviceIoControlFile(FileHandle,
@@ -100,9 +106,9 @@ VfatFormat(IN PUNICODE_STRING DriveRoot,
                                    sizeof(DISK_GEOMETRY));
     if (!NT_SUCCESS(Status))
     {
-        DPRINT("IOCTL_DISK_GET_DRIVE_GEOMETRY failed with status 0x%.08x\n", Status);
+        DPRINT("IOCTL_DISK_GET_DRIVE_GEOMETRY failed with status 0x%08x\n", Status);
         NtClose(FileHandle);
-        return Status;
+        return FALSE;
     }
 
     if (DiskGeometry.MediaType == FixedMedia)
@@ -129,9 +135,9 @@ VfatFormat(IN PUNICODE_STRING DriveRoot,
                                        sizeof(PARTITION_INFORMATION));
         if (!NT_SUCCESS(Status))
         {
-            DPRINT("IOCTL_DISK_GET_PARTITION_INFO failed with status 0x%.08x\n", Status);
+            DPRINT("IOCTL_DISK_GET_PARTITION_INFO failed with status 0x%08x\n", Status);
             NtClose(FileHandle);
-            return Status;
+            return FALSE;
         }
     }
     else
@@ -214,7 +220,7 @@ VfatFormat(IN PUNICODE_STRING DriveRoot,
     if (Callback != NULL)
     {
         Context.Percent = 0;
-        Callback (PROGRESS, 0, (PVOID)&Context.Percent);
+        Callback(PROGRESS, 0, (PVOID)&Context.Percent);
     }
 
     LockStatus = NtFsControlFile(FileHandle,
@@ -306,15 +312,8 @@ VfatFormat(IN PUNICODE_STRING DriveRoot,
 
     NtClose(FileHandle);
 
-    if (Callback != NULL)
-    {
-        Context.Success = (BOOLEAN)(NT_SUCCESS(Status));
-        Callback(DONE, 0, (PVOID)&Context.Success);
-    }
-
-    DPRINT("VfatFormat() done. Status 0x%.08x\n", Status);
-
-    return Status;
+    DPRINT("VfatFormat() done. Status 0x%08x\n", Status);
+    return NT_SUCCESS(Status);
 }
 
 
@@ -370,20 +369,31 @@ VfatPrint(PCHAR Format, ...)
 }
 
 
-NTSTATUS
+BOOLEAN
 NTAPI
-VfatChkdsk(IN PUNICODE_STRING DriveRoot,
-           IN BOOLEAN FixErrors,
-           IN BOOLEAN Verbose,
-           IN BOOLEAN CheckOnlyIfDirty,
-           IN BOOLEAN ScanDrive,
-           IN PFMIFSCALLBACK Callback)
+VfatChkdsk(
+    IN PUNICODE_STRING DriveRoot,
+    IN PFMIFSCALLBACK Callback,
+    IN BOOLEAN FixErrors,
+    IN BOOLEAN Verbose,
+    IN BOOLEAN CheckOnlyIfDirty,
+    IN BOOLEAN ScanDrive,
+    IN PVOID pUnknown1,
+    IN PVOID pUnknown2,
+    IN PVOID pUnknown3,
+    IN PVOID pUnknown4,
+    IN PULONG ExitStatus)
 {
     BOOLEAN verify;
     BOOLEAN salvage_files;
     ULONG free_clusters;
     DOS_FS fs;
     NTSTATUS Status;
+
+    UNREFERENCED_PARAMETER(pUnknown1);
+    UNREFERENCED_PARAMETER(pUnknown2);
+    UNREFERENCED_PARAMETER(pUnknown3);
+    UNREFERENCED_PARAMETER(pUnknown4);
 
     RtlZeroMemory(&fs, sizeof(fs));
 
@@ -416,7 +426,8 @@ VfatChkdsk(IN PUNICODE_STRING DriveRoot,
     if (!NT_SUCCESS(Status))
     {
         fs_close(FALSE);
-        return STATUS_DISK_CORRUPT_ERROR;
+        *ExitStatus = (ULONG)STATUS_DISK_CORRUPT_ERROR;
+        return FALSE;
     }
 
     if (CheckOnlyIfDirty && !fs_isdirty())
@@ -426,14 +437,17 @@ VfatChkdsk(IN PUNICODE_STRING DriveRoot,
             fs_lock(FALSE);
 
         /* No need to check FS */
-        return (fs_close(FALSE) == 0 ? STATUS_SUCCESS : STATUS_DISK_CORRUPT_ERROR);
+        Status = (fs_close(FALSE) == 0 ? STATUS_SUCCESS : STATUS_DISK_CORRUPT_ERROR);
+        *ExitStatus = (ULONG)Status;
+        return (Status == STATUS_SUCCESS);
     }
     else if (CheckOnlyIfDirty && fs_isdirty())
     {
         if (!(FsCheckFlags & FSCHECK_READ_WRITE) && !(FsCheckFlags & FSCHECK_INTERACTIVE))
         {
             fs_close(FALSE);
-            return STATUS_DISK_CORRUPT_ERROR;
+            *ExitStatus = (ULONG)STATUS_DISK_CORRUPT_ERROR;
+            return FALSE;
         }
     }
 
@@ -503,7 +517,9 @@ VfatChkdsk(IN PUNICODE_STRING DriveRoot,
     // https://support.microsoft.com/en-us/kb/265533
 
     /* Close the volume */
-    return (fs_close(FsCheckFlags & FSCHECK_READ_WRITE) == 0 ? STATUS_SUCCESS : STATUS_DISK_CORRUPT_ERROR);
+    Status = (fs_close(FsCheckFlags & FSCHECK_READ_WRITE) == 0 ? STATUS_SUCCESS : STATUS_DISK_CORRUPT_ERROR);
+    *ExitStatus = (ULONG)Status;
+    return (Status == STATUS_SUCCESS);
 }
 
 /* EOF */

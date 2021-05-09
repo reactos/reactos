@@ -95,9 +95,31 @@ ExecuteCommandWithEcho(
 LPCTSTR GetEnvVarOrSpecial ( LPCTSTR varName );
 VOID AddBreakHandler (VOID);
 VOID RemoveBreakHandler (VOID);
-BOOL SubstituteVars(TCHAR *Src, TCHAR *Dest, TCHAR Delim);
-BOOL SubstituteForVars(TCHAR *Src, TCHAR *Dest);
-LPTSTR DoDelayedExpansion(LPTSTR Line);
+
+BOOL
+SubstituteVar(
+    IN PCTSTR Src,
+    OUT size_t* SrcIncLen, // VarNameLen
+    OUT PTCHAR Dest,
+    IN PTCHAR DestEnd,
+    OUT size_t* DestIncLen,
+    IN TCHAR Delim);
+
+BOOL
+SubstituteVars(
+    IN PCTSTR Src,
+    OUT PTSTR Dest,
+    IN TCHAR Delim);
+
+BOOL
+SubstituteForVars(
+    IN PCTSTR Src,
+    OUT PTSTR Dest);
+
+PTSTR
+DoDelayedExpansion(
+    IN PCTSTR Line);
+
 INT DoCommand(LPTSTR first, LPTSTR rest, struct _PARSED_COMMAND *Cmd);
 BOOL ReadLine(TCHAR *commandline, BOOL bMore);
 
@@ -179,24 +201,24 @@ INT  CommandEchoserr (LPTSTR);
 VOID
 ErrorMessage(
     IN DWORD dwErrorCode,
-    IN LPTSTR szFormat OPTIONAL,
+    IN PCTSTR szFormat OPTIONAL,
     ...);
 
-VOID error_no_pipe (VOID);
-VOID error_bad_command (LPTSTR);
-VOID error_invalid_drive (VOID);
-VOID error_req_param_missing (VOID);
-VOID error_sfile_not_found (LPTSTR);
-VOID error_file_not_found (VOID);
-VOID error_path_not_found (VOID);
-VOID error_too_many_parameters (LPTSTR);
-VOID error_parameter_format(TCHAR);
-VOID error_invalid_switch (TCHAR);
-VOID error_invalid_parameter_format (LPTSTR);
-VOID error_out_of_memory (VOID);
-VOID error_syntax (LPTSTR);
+VOID error_no_pipe(VOID);
+VOID error_bad_command(PCTSTR s);
+VOID error_invalid_drive(VOID);
+VOID error_req_param_missing(VOID);
+VOID error_sfile_not_found(PCTSTR s);
+VOID error_file_not_found(VOID);
+VOID error_path_not_found(VOID);
+VOID error_too_many_parameters(PCTSTR s);
+VOID error_parameter_format(TCHAR ch);
+VOID error_invalid_switch(TCHAR ch);
+VOID error_invalid_parameter_format(PCTSTR s);
+VOID error_out_of_memory(VOID);
+VOID error_syntax(PCTSTR s);
 
-VOID msg_pause (VOID);
+VOID msg_pause(VOID);
 
 /* Prototypes for FILECOMP.C */
 #ifdef FEATURE_UNIX_FILENAME_COMPLETION
@@ -237,7 +259,8 @@ INT CommandHistory(LPTSTR param);
 /* Prototypes for IF.C */
 #define IFFLAG_NEGATE     1 /* NOT */
 #define IFFLAG_IGNORECASE 2 /* /I - Extended */
-enum {
+typedef enum _IF_OPERATOR
+{
     /** Unary operators **/
     /* Standard */
     IF_ERRORLEVEL, IF_EXIST,
@@ -249,7 +272,8 @@ enum {
     IF_STRINGEQ,    /* == */
     /* Extended */
     IF_EQU, IF_NEQ, IF_LSS, IF_LEQ, IF_GTR, IF_GEQ
-};
+} IF_OPERATOR;
+
 INT ExecuteIf(struct _PARSED_COMMAND *Cmd);
 
 /* Prototypes for INTERNAL.C */
@@ -323,46 +347,85 @@ INT CommandMsgbox (LPTSTR);
 /* These three characters act like spaces to the parser in most contexts */
 #define STANDARD_SEPS _T(",;=")
 
-enum { C_COMMAND, C_QUIET, C_BLOCK, C_MULTI, C_OR, C_AND, C_PIPE, C_IF, C_FOR };
+typedef enum _COMMAND_TYPE
+{
+    /* Standard command */
+    C_COMMAND,
+    /* Quiet operator */
+    C_QUIET,
+    /* Parenthesized block */
+    C_BLOCK,
+    /* Operators */
+    C_MULTI, C_OR, C_AND, C_PIPE,
+    /* Special parsed commands */
+    C_FOR, C_IF, C_REM
+} COMMAND_TYPE;
+
 typedef struct _PARSED_COMMAND
 {
+    /*
+     * For IF : this is the 'main' case (the 'else' is obtained via SubCmd->Next).
+     * For FOR: this is the list of all the subcommands in the DO.
+     */
     struct _PARSED_COMMAND *Subcommands;
-    struct _PARSED_COMMAND *Next;
+
+    struct _PARSED_COMMAND *Next; // Next command(s) in the chain.
     struct _REDIRECTION *Redirections;
-    BYTE Type;
+    COMMAND_TYPE Type;
     union
     {
         struct
         {
-            TCHAR *Rest;
+            PTSTR Rest;
             TCHAR First[];
         } Command;
         struct
         {
-            BYTE Flags;
-            BYTE Operator;
-            TCHAR *LeftArg;
-            TCHAR *RightArg;
-        } If;
-        struct
-        {
             BYTE Switches;
             TCHAR Variable;
-            LPTSTR Params;
-            LPTSTR List;
+            PTSTR Params;
+            PTSTR List;
             struct _FOR_CONTEXT *Context;
         } For;
+        struct
+        {
+            BYTE Flags;
+            IF_OPERATOR Operator;
+            PTSTR LeftArg;
+            PTSTR RightArg;
+        } If;
     };
 } PARSED_COMMAND;
 
-PARSED_COMMAND *ParseCommand(LPTSTR Line);
-VOID EchoCommand(PARSED_COMMAND *Cmd);
-TCHAR *Unparse(PARSED_COMMAND *Cmd, TCHAR *Out, TCHAR *OutEnd);
-VOID FreeCommand(PARSED_COMMAND *Cmd);
+PARSED_COMMAND*
+ParseCommand(
+    IN PCTSTR Line);
 
-void ParseErrorEx(LPTSTR s);
+VOID
+DumpCommand(
+    IN PARSED_COMMAND* Cmd,
+    IN ULONG SpacePad);
+
+VOID
+EchoCommand(
+    IN PARSED_COMMAND* Cmd);
+
+PTCHAR
+UnparseCommand(
+    IN PARSED_COMMAND* Cmd,
+    OUT PTCHAR Out,
+    IN  PTCHAR OutEnd);
+
+VOID
+FreeCommand(
+    IN OUT PARSED_COMMAND* Cmd);
+
+VOID ParseErrorEx(IN PCTSTR s);
 extern BOOL bParseError;
 extern TCHAR ParseLine[CMDLINE_LENGTH];
+
+extern BOOL bIgnoreParserComments;
+extern BOOL bHandleContinuations;
 
 /* Prototypes from PATH.C */
 INT cmd_path (LPTSTR);

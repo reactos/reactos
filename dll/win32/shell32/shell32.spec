@@ -178,8 +178,8 @@
 179 stdcall SHGetNewLinkInfoA(str str ptr long long)
 180 stdcall SHGetNewLinkInfoW(wstr wstr ptr long long)
 181 stdcall -noname RegisterShellHook(long long)
-182 varargs ShellMessageBoxW(long long wstr wstr long)
-183 varargs ShellMessageBoxA(long long str str long)
+182 varargs ShellMessageBoxW() ShellMessageBoxWrapW ## This is the no-named 'shlwapi.ShellMessageBoxWrapW' (i.e. 'shlwapi.#388')
+183 varargs ShellMessageBoxA(ptr ptr str str long)
 184 stdcall -noname ArrangeWindows(long long long long long)
 185 stdcall -noname SHHandleDiskFull(ptr long)
 186 stdcall -noname ILGetDisplayNameEx(ptr ptr ptr long)
@@ -456,8 +456,8 @@
 745 stub -noname Create_IUIElement
 747 stdcall SHLimitInputEdit(ptr ptr)
 748 stdcall -noname SHLimitInputCombo(ptr ptr)
-749 stub SHGetShellStyleHInstance
-750 stub SHGetAttributesFromDataObject
+749 stdcall -noname -version=0x501-0x502 SHGetShellStyleHInstance()
+750 stdcall -noname SHGetAttributesFromDataObject(ptr long ptr ptr)
 751 stub -noname SHSimulateDropOnClsid
 752 stdcall -noname SHGetComputerDisplayNameW(long long long long)
 753 stdcall -noname CheckStagingArea()

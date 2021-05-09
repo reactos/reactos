@@ -27,8 +27,6 @@ NpQueryFsVolumeInfo(IN PVOID Buffer,
 
     *Length -= FIELD_OFFSET(FILE_FS_VOLUME_INFORMATION, VolumeLabel);
 
-    InfoBuffer->VolumeCreationTime.QuadPart = 0;
-    InfoBuffer->VolumeSerialNumber = 0;
     InfoBuffer->SupportsObjects = 0;
 
     NameLength = 18;
@@ -61,8 +59,6 @@ NpQueryFsSizeInfo(IN PVOID Buffer,
 
     *Length -= sizeof(*InfoBuffer);
 
-    InfoBuffer->TotalAllocationUnits.QuadPart = 0;
-    InfoBuffer->AvailableAllocationUnits.QuadPart = 0;
     InfoBuffer->SectorsPerAllocationUnit = 1;
     InfoBuffer->BytesPerSector = 1;
 
@@ -78,8 +74,6 @@ NpQueryFsDeviceInfo(IN PVOID Buffer,
     PFILE_FS_DEVICE_INFORMATION InfoBuffer = Buffer;
     TRACE("Entered\n");
 
-    InfoBuffer->DeviceType = 0;
-    InfoBuffer->Characteristics = 0;
     InfoBuffer->DeviceType = FILE_DEVICE_NAMED_PIPE;
     *Length -= sizeof(*InfoBuffer);
 
@@ -152,6 +146,8 @@ NpCommonQueryVolumeInformation(IN PDEVICE_OBJECT DeviceObject,
     Buffer = Irp->AssociatedIrp.SystemBuffer;
     Length = IoStack->Parameters.QueryVolume.Length;
     InfoClass = IoStack->Parameters.QueryVolume.FsInformationClass;
+
+    RtlZeroMemory(Buffer, Length);
 
     switch (InfoClass)
     {

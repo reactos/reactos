@@ -1,7 +1,6 @@
 /*
  * PROJECT:     ReactOS Applications Manager
- * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
- * FILE:        base/applications/rapps/misc.cpp
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Misc functions
  * COPYRIGHT:   Copyright 2009 Dmitry Chapyshev           (dmitry@reactos.org)
  *              Copyright 2015 Ismael Ferreras Morezuelas (swyterzone+ros@gmail.com)
@@ -12,6 +11,9 @@
 #include "misc.h"
 
 static HANDLE hLog = NULL;
+
+static BOOL bIsSys64ResultCached = FALSE;
+static BOOL bIsSys64Result = FALSE;
 
 INT GetWindowWidth(HWND hwnd)
 {
@@ -71,7 +73,7 @@ VOID CopyTextToClipboard(LPCWSTR lpszText)
     CloseClipboard();
 }
 
-VOID ShowPopupMenu(HWND hwnd, UINT MenuID, UINT DefaultItem)
+VOID ShowPopupMenuEx(HWND hwnd, HWND hwndOwner, UINT MenuID, UINT DefaultItem)
 {
     HMENU hMenu = NULL;
     HMENU hPopupMenu;
@@ -102,13 +104,19 @@ VOID ShowPopupMenu(HWND hwnd, UINT MenuID, UINT DefaultItem)
     GetCursorPos(&pt);
 
     SetForegroundWindow(hwnd);
-    TrackPopupMenu(hPopupMenu, 0, pt.x, pt.y, 0, hMainWnd, NULL);
+    TrackPopupMenu(hPopupMenu, 0, pt.x, pt.y, 0, hwndOwner, NULL);
 
     if (hMenu)
     {
         DestroyMenu(hMenu);
     }
 }
+
+VOID ShowPopupMenu(HWND hwnd, UINT MenuID, UINT DefaultItem)
+{
+    ShowPopupMenuEx(hwnd, hMainWnd, MenuID, DefaultItem);
+}
+
 
 BOOL StartProcess(ATL::CStringW &Path, BOOL Wait)
 {
@@ -171,14 +179,15 @@ BOOL StartProcess(LPWSTR lpPath, BOOL Wait)
 
 BOOL GetStorageDirectory(ATL::CStringW& Directory)
 {
-    if (!SHGetSpecialFolderPathW(NULL, Directory.GetBuffer(MAX_PATH), CSIDL_LOCAL_APPDATA, TRUE))
+    LPWSTR DirectoryStr = Directory.GetBuffer(MAX_PATH);
+    if (!SHGetSpecialFolderPathW(NULL, DirectoryStr, CSIDL_LOCAL_APPDATA, TRUE))
     {
         Directory.ReleaseBuffer();
         return FALSE;
     }
 
+    PathAppendW(DirectoryStr, L"rapps");
     Directory.ReleaseBuffer();
-    Directory += L"\\rapps";
 
     return (CreateDirectoryW(Directory.GetString(), NULL) || GetLastError() == ERROR_ALREADY_EXISTS);
 }
@@ -400,3 +409,124 @@ BOOL CConfigParser::GetInt(const ATL::CStringW& KeyName, INT& iResult)
     return (iResult > 0);
 }
 // CConfigParser
+
+
+BOOL PathAppendNoDirEscapeW(LPWSTR pszPath, LPCWSTR pszMore)
+{
+    WCHAR pszPathBuffer[MAX_PATH]; // buffer to store result
+    WCHAR pszPathCopy[MAX_PATH];
+
+    if (!PathCanonicalizeW(pszPathCopy, pszPath))
+    {
+        return FALSE;
+    }
+
+    PathRemoveBackslashW(pszPathCopy);
+
+    if (StringCchCopyW(pszPathBuffer, _countof(pszPathBuffer), pszPathCopy) != S_OK)
+    {
+        return FALSE;
+    }
+
+    if (!PathAppendW(pszPathBuffer, pszMore))
+    {
+        return FALSE;
+    }
+
+    size_t PathLen;
+    if (StringCchLengthW(pszPathCopy, _countof(pszPathCopy), &PathLen) != S_OK)
+    {
+        return FALSE;
+    }
+    int CommonPrefixLen = PathCommonPrefixW(pszPathCopy, pszPathBuffer, NULL);
+
+    if ((unsigned int)CommonPrefixLen != PathLen)
+    {
+        // pszPathBuffer should be a file/folder under pszPath.
+        // but now common prefix len is smaller than length of pszPathCopy
+        // hacking use ".." ?
+        return FALSE;
+    }
+
+    if (StringCchCopyW(pszPath, MAX_PATH, pszPathBuffer) != S_OK)
+    {
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+
+
+BOOL IsSystem64Bit()
+{
+    if (bIsSys64ResultCached)
+    {
+        // just return cached result
+        return bIsSys64Result;
+    }
+
+    SYSTEM_INFO si;
+    typedef void (WINAPI *LPFN_PGNSI)(LPSYSTEM_INFO);
+    LPFN_PGNSI pGetNativeSystemInfo = (LPFN_PGNSI)GetProcAddress(GetModuleHandle(L"kernel32.dll"), "GetNativeSystemInfo");
+    if (pGetNativeSystemInfo)
+    {
+        pGetNativeSystemInfo(&si);
+        if (si.wProcessorArchitecture == PROCESSOR_ARCHITECTURE_AMD64 || si.wProcessorArchitecture == PROCESSOR_ARCHITECTURE_IA64)
+        {
+            bIsSys64Result = TRUE;
+        }
+    }
+    else
+    {
+        bIsSys64Result = FALSE;
+    }
+
+    bIsSys64ResultCached = TRUE; // next time calling this function, it will directly return bIsSys64Result
+    return bIsSys64Result;
+}
+
+INT GetSystemColorDepth()
+{
+    DEVMODEW pDevMode;
+    INT ColorDepth;
+
+    pDevMode.dmSize = sizeof(pDevMode);
+    pDevMode.dmDriverExtra = 0;
+
+    if (!EnumDisplaySettingsW(NULL, ENUM_CURRENT_SETTINGS, &pDevMode))
+    {
+        /* TODO: Error message */
+        return ILC_COLOR;
+    }
+
+    switch (pDevMode.dmBitsPerPel)
+    {
+    case 32: ColorDepth = ILC_COLOR32; break;
+    case 24: ColorDepth = ILC_COLOR24; break;
+    case 16: ColorDepth = ILC_COLOR16; break;
+    case  8: ColorDepth = ILC_COLOR8;  break;
+    case  4: ColorDepth = ILC_COLOR4;  break;
+    default: ColorDepth = ILC_COLOR;   break;
+    }
+
+    return ColorDepth;
+}
+
+void UnixTimeToFileTime(DWORD dwUnixTime, LPFILETIME pFileTime)
+{
+    // Note that LONGLONG is a 64-bit value
+    LONGLONG ll;
+
+    ll = Int32x32To64(dwUnixTime, 10000000) + 116444736000000000;
+    pFileTime->dwLowDateTime = (DWORD)ll;
+    pFileTime->dwHighDateTime = ll >> 32;
+}
+
+BOOL SearchPatternMatch(LPCWSTR szHaystack, LPCWSTR szNeedle)
+{
+    if (!*szNeedle)
+        return TRUE;
+    /* TODO: Improve pattern search beyond a simple case-insensitive substring search. */
+    return StrStrIW(szHaystack, szNeedle) != NULL;
+}

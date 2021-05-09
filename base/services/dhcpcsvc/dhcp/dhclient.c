@@ -1069,6 +1069,8 @@ void
 state_panic(void *ipp)
 {
 	struct interface_info *ip = ipp;
+	uint16_t address_low;
+	int i;
         PDHCP_ADAPTER Adapter = AdapterFindInfo(ip);
 
 	note("No DHCPOFFERS received.");
@@ -1079,7 +1081,11 @@ state_panic(void *ipp)
             DbgPrint("DHCPCSVC: Failed to receive a response from a DHCP server. An automatic private address will be assigned.\n");
 
             /* FIXME: The address generation code sucks */
-            AddIPAddress(htonl(0xA9FE0000 | (rand() % 0xFFFF)), //169.254.X.X
+            srand(0);
+            address_low = rand();
+            for (i = 0; i < ip->hw_address.hlen; i++)
+                address_low += ip->hw_address.haddr[i];
+            AddIPAddress(htonl(0xA9FE0000 | address_low), //169.254.X.X
                          htonl(0xFFFF0000), //255.255.0.0
                          Adapter->IfMib.dwIndex,
                          &Adapter->NteContext,

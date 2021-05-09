@@ -6,6 +6,7 @@
  *    Updated by Saibamen - Adam Stachowicz (saibamenppl@gmail.com) (Apr, 2011)
  *    UTF-8 conversion by Caemyr (May, 2011)
  *    updated by Wojciech Kozłowski (wojo664@gmail.com) (April, 2014)
+ *    Updated by Piotr Hetnarowicz <piotrhwz@gmail.com> (March, 2021)
  */
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
@@ -73,6 +74,7 @@ BEGIN
     BEGIN
         MENUITEM "&Rozdaj\tF2", IDM_GAME_NEW
         MENUITEM SEPARATOR
+        MENUITEM "&Cofnij", IDM_GAME_UNDO, GRAYED
         MENUITEM "&Talia...", IDM_GAME_DECK
         MENUITEM "&Opcje...", IDM_GAME_OPTIONS
         MENUITEM SEPARATOR

@@ -8,6 +8,7 @@ BEGIN
     "^G", CMD_GOTO
     "H", CMD_REPLACE, VIRTKEY, CONTROL
     "^N", CMD_NEW
+    "N", CMD_NEW_WINDOW, VIRTKEY,CONTROL , SHIFT
     "^O", CMD_OPEN
     "^P", CMD_PRINT
     "^S", CMD_SAVE
@@ -23,6 +24,7 @@ BEGIN
     POPUP "ファイル(&F)"
     BEGIN
         MENUITEM "新規作成(&N)\tCtrl+N", CMD_NEW
+        MENUITEM "&New Window\tCtrl+Shift+N", CMD_NEW_WINDOW
         MENUITEM "開く(&O)...\tCtrl+O", CMD_OPEN
         MENUITEM "上書き保存(&S)\tCtrl+S", CMD_SAVE
         MENUITEM "名前を付けて保存(&A)...", CMD_SAVE_AS

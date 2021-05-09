@@ -186,7 +186,7 @@
  *
  *****************************************************************************/
 
-#if (defined(__GNUC__) || defined(__clang__)) && !defined(__INTEL_COMPILER)
+#if (defined(__GNUC__) || defined(__clang__)) && !defined(__INTEL_COMPILER) && !defined(WIN64)
 #include "acgcc.h"
 
 #elif defined(_MSC_VER)

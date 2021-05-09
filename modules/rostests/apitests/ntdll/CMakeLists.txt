@@ -2,6 +2,7 @@
 add_subdirectory(load_notifications)
 
 include_directories($<TARGET_FILE_DIR:load_notifications>)
+include_directories(${REACTOS_SOURCE_DIR}/ntoskrnl/include)
 spec2def(ntdll_apitest.exe ntdll_apitest.spec)
 
 list(APPEND SOURCE
@@ -10,6 +11,7 @@ list(APPEND SOURCE
     NtAcceptConnectPort.c
     NtAllocateVirtualMemory.c
     NtApphelpCacheControl.c
+    NtCompareTokens.c
     NtContinue.c
     NtCreateFile.c
     NtCreateKey.c
@@ -17,6 +19,7 @@ list(APPEND SOURCE
     NtDeleteKey.c
     NtDuplicateObject.c
     NtFreeVirtualMemory.c
+    NtImpersonateAnonymousToken.c
     NtLoadUnloadKey.c
     NtMapViewOfSection.c
     NtMutant.c
@@ -30,6 +33,7 @@ list(APPEND SOURCE
     NtQueryKey.c
     NtQuerySystemEnvironmentValue.c
     NtQuerySystemInformation.c
+    NtQueryValueKey.c
     NtQueryVolumeInformationFile.c
     NtReadFile.c
     NtSaveKey.c
@@ -40,6 +44,7 @@ list(APPEND SOURCE
     NtSetVolumeInformationFile.c
     NtUnloadDriver.c
     NtWriteFile.c
+    probelib.c
     RtlAllocateHeap.c
     RtlBitmap.c
     RtlComputePrivatizedDllName_U.c
@@ -57,16 +62,19 @@ list(APPEND SOURCE
     RtlGetFullPathName_U.c
     RtlGetFullPathName_Ustr.c
     RtlGetFullPathName_UstrEx.c
+    RtlGetLengthWithoutLastFullDosOrNtPathElement.c
     RtlGetLengthWithoutTrailingPathSeperators.c
     RtlGetLongestNtPathLength.c
     RtlGetNtProductType.c
     RtlGetUnloadEventTrace.c
     RtlHandle.c
+    RtlImageDirectoryEntryToData.c
     RtlImageRvaToVa.c
     RtlIsNameLegalDOS8Dot3.c
     RtlMemoryStream.c
     RtlMultipleAllocateHeap.c
     RtlNtPathNameToDosPathName.c
+    RtlpApplyLengthFunction.c
     RtlpEnsureBufferSize.c
     RtlQueryTimeZoneInfo.c
     RtlReAllocateHeap.c
@@ -97,6 +105,7 @@ target_link_libraries(ntdll_apitest wine uuid ${PSEH_LIB})
 set_module_type(ntdll_apitest win32cui)
 add_importlibs(ntdll_apitest msvcrt advapi32 kernel32 ntdll)
 add_pch(ntdll_apitest precomp.h "${PCH_SKIP_SOURCE}")
+add_dependencies(ntdll_apitest load_notifications)
 
 if(NOT MSVC)
     set_source_files_properties(RtlGetFullPathName_UstrEx.c PROPERTIES COMPILE_FLAGS "-Wno-format")

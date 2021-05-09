@@ -10,6 +10,8 @@
 
 #include "precomp.h"
 
+#include <pseh/pseh2.h>
+
 static PVOID Allocations[4096] = { NULL };
 static ULONG CurrentAllocation = 0;
 

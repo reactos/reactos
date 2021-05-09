@@ -9,7 +9,7 @@
 #include <ntdef.h>
 #include <ntifs.h>
 
-NTKERNELAPI
+NTKRNLVISTAAPI
 ULONG
 NTAPI
 KeQueryActiveProcessorCount(OUT PKAFFINITY ActiveProcessors OPTIONAL)
@@ -26,7 +26,7 @@ KeQueryActiveProcessorCount(OUT PKAFFINITY ActiveProcessors OPTIONAL)
     return RtlNumberOfSetBits(&Bitmap);
 }
 
-NTKERNELAPI
+NTKRNLVISTAAPI
 USHORT
 NTAPI
 KeQueryHighestNodeNumber()
@@ -34,7 +34,7 @@ KeQueryHighestNodeNumber()
 	return 0;
 }
 
-NTKERNELAPI
+NTKRNLVISTAAPI
 USHORT
 NTAPI
 KeGetCurrentNodeNumber()
@@ -43,7 +43,7 @@ KeGetCurrentNodeNumber()
 }
 
 _IRQL_requires_max_(DISPATCH_LEVEL)
-NTKERNELAPI
+NTKRNLVISTAAPI
 BOOLEAN
 NTAPI
 KeSetCoalescableTimer(

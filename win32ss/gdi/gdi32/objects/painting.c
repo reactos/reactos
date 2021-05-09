@@ -469,12 +469,12 @@ BitBlt(
                   xDest,
                   yDest,
                   cx,
-                  cx,
+                  cy,
                   hdcSrc,
                   xSrc,
                   ySrc,
                   cx,
-                  cx,
+                  cy,
                   dwRop);
 
     if ( GdiConvertAndCheckDC(hdcDest) == NULL ) return FALSE;

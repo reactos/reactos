@@ -15,7 +15,7 @@ PPDEVOBJ gppdevPrimary = NULL;
 static PPDEVOBJ gppdevList = NULL;
 static HSEMAPHORE ghsemPDEV;
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 NTSTATUS
 NTAPI
 InitPDEVImpl(VOID)

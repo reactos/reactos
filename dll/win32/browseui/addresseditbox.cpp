@@ -31,8 +31,8 @@ TODO:
 */
 
 CAddressEditBox::CAddressEditBox() :
-    fCombobox(NULL, this, 1),
-    fEditWindow(NULL, this, 1),
+    fCombobox(WC_COMBOBOXEXW, this),
+    fEditWindow(WC_EDITW, this),
     fSite(NULL),
     pidlLastParsed(NULL)
 {
@@ -389,6 +389,12 @@ HRESULT STDMETHODCALLTYPE CAddressEditBox::Invoke(DISPID dispIdMember, REFIID ri
         hr = isb->GetPidl(&absolutePIDL);
         if (FAILED_UNEXPECTEDLY(hr))
             return hr;
+
+        if (!absolutePIDL)
+        {
+            ERR("Got no PIDL, investigate me!\n");
+            return S_OK;
+        }
 
         /* Fill the combobox */
         PopulateComboBox(absolutePIDL);

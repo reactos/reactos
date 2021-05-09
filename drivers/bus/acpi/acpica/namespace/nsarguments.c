@@ -97,7 +97,9 @@ AcpiNsCheckArgumentTypes (
         ArgType = METHOD_GET_NEXT_TYPE (ArgTypeList);
         UserArgType = Info->Parameters[i]->Common.Type;
 
-        if (UserArgType != ArgType)
+        /* No typechecking for ACPI_TYPE_ANY */
+
+        if ((UserArgType != ArgType) && (ArgType != ACPI_TYPE_ANY))
         {
             ACPI_WARN_PREDEFINED ((AE_INFO, Info->FullPathname, ACPI_WARN_ALWAYS,
                 "Argument #%u type mismatch - "

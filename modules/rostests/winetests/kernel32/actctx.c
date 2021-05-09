@@ -2792,7 +2792,7 @@ static void test_with_compat(HANDLE handle, DWORD num_compat, const GUID* expect
                             wine_dbgstr_guid(&compat_info.Elements[n].Id),
                             wine_dbgstr_guid(expected_compat[n]),
                             n);
-        ok_(__FILE__, line)(compat_info.Elements[n].Type == ACTCX_COMPATIBILITY_ELEMENT_TYPE_OS,
+        ok_(__FILE__, line)(compat_info.Elements[n].Type == ACTCTX_COMPATIBILITY_ELEMENT_TYPE_OS,
                             "Wrong type, got %u for %u\n", (DWORD)compat_info.Elements[n].Type, n);
     }
 }

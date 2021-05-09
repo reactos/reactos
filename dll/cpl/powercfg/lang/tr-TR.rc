@@ -1,4 +1,4 @@
-/* TRANSLATOR: 2013, 2014 Erdem Ersoy (eersoy93) (erdemersoy [at] erdemersoy [dot] net) */
+/* TRANSLATOR: 2013, 2014, 2020 Erdem Ersoy (eersoy93) (erdemersoy [at] erdemersoy [dot] net) */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
@@ -8,10 +8,10 @@ CAPTION "Güç Düzenleri"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ACDC, IDI_ACDC, 7, 7, 28, 22
-    LTEXT "Bu bilgisayar için en uygun ayarlarla bir güç düzeni seçiniz. Aşağıdaki ayarların değiştirilmesi seçili düzeni değiştireceğini göz önünde bulundurunuz.", -1, 37, 6, 209, 36
+    LTEXT "Bu bilgisayar için en uygun ayarlarla bir güç düzeni seçiniz. Aşağıdaki ayarların değiştirilmesinin seçili düzeni değiştireceğini göz önünde bulundurunuz.", -1, 37, 6, 209, 36
     GROUPBOX "&Güç Düzenleri", -1, 6, 43, 240, 50
     COMBOBOX IDC_ENERGYLIST, 14, 54, 224, 92, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON "&Ayrı Sakla...", IDC_SAVEAS_BTN, 109, 72, 70, 14, WS_DISABLED
+    PUSHBUTTON "&Ayrı Kaydet...", IDC_SAVEAS_BTN, 109, 72, 70, 14, WS_DISABLED
     PUSHBUTTON "&Sil", IDC_DELETE_BTN, 183, 72, 55, 14, WS_DISABLED
     GROUPBOX "Bilinmiyor", IDC_GRPDETAIL, 6, 95, 240, 136
     LTEXT "Bilgisyar:", IDC_SAT, 12, 109, 60, 12
@@ -19,16 +19,16 @@ BEGIN
     ICON IDI_AC, IDC_IAC, 97, 108, 21, 20
     LTEXT "Pilde Çalışıyorken", IDC_SDC, 195, 110, 45, 15
     ICON IDI_DC, IDC_IDC, 170, 108, 21, 20
-    LTEXT "G&östergeci Kapat:", IDC_MONITOR, 13, 148, 84, 10
+    LTEXT "&Monitörü Kapat:", IDC_MONITOR, 13, 148, 84, 10
     COMBOBOX IDC_MONITORACLIST, 100, 145, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     COMBOBOX IDC_MONITORDCLIST, 173, 145, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    LTEXT "Sâ&bit Diskleri Kapat:", IDC_DISK, 13, 171, 84, 10
+    LTEXT "Sabit &Diskleri Kapat:", IDC_DISK, 13, 171, 84, 10
     COMBOBOX IDC_DISKACLIST, 100, 167, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     COMBOBOX IDC_DISKDCLIST, 173, 167, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    LTEXT "&Dizgeyi Uykuya Geçir:", IDC_STANDBY, 13, 191, 84, 10
+    LTEXT "Sistemi &Uykuya Geçir:", IDC_STANDBY, 13, 191, 84, 10
     COMBOBOX IDC_STANDBYACLIST, 100, 188, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     COMBOBOX IDC_STANDBYDCLIST, 173, 188, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    LTEXT "D&izgeyi Anıkta Beklet:", IDC_HIBERNATE, 13, 212, 84, 10
+    LTEXT "Sistemi &Hazırda Beklet:", IDC_HIBERNATE, 13, 212, 84, 10
     COMBOBOX IDC_HIBERNATEACLIST, 100, 209, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     COMBOBOX IDC_HIBERNATEDCLIST, 173, 209, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
 END
@@ -39,19 +39,19 @@ CAPTION "Güç Düzenleri"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ACDC, IDI_ACDC, 7, 7, 28, 22
-    LTEXT "Bu bilgisayar için en uygun ayarlarla bir güç düzeni seçiniz. Aşağıdaki ayarların değiştirilmesi seçili düzeni değiştireceğini göz önünde bulundurunuz.", -1, 37, 6, 209, 36
+    LTEXT "Bu bilgisayar için en uygun ayarlarla bir güç düzeni seçiniz. Aşağıdaki ayarların değiştirilmesinin seçili düzeni değiştireceğini göz önünde bulundurunuz.", -1, 37, 6, 209, 36
     GROUPBOX "&Güç Düzenleri", -1, 6, 43, 240, 50
     COMBOBOX IDC_ENERGYLIST, 14, 54, 224, 92, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL
-    PUSHBUTTON "&Ayrı Sakla...", IDC_SAVEAS_BTN, 109, 72, 70, 14, WS_DISABLED
+    PUSHBUTTON "&Ayrı Kaydet...", IDC_SAVEAS_BTN, 109, 72, 70, 14, WS_DISABLED
     PUSHBUTTON "&Sil", IDC_DELETE_BTN, 183, 72, 55, 14, WS_DISABLED
     GROUPBOX "Bilinmiyor", IDC_GRPDETAIL, 6, 95, 240, 136
-    LTEXT "G&östergeci Kapat:", IDC_MONITOR, 13, 148, 84, 10
+    LTEXT "&Monitörü Kapat:", IDC_MONITOR, 13, 148, 84, 10
     COMBOBOX IDC_MONITORACLIST, 100, 145, 140, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    LTEXT "Sâ&bit Diskleri Kapat:", IDC_DISK, 13, 171, 84, 10
+    LTEXT "Sabit &Diskleri Kapat:", IDC_DISK, 13, 171, 84, 10
     COMBOBOX IDC_DISKACLIST, 100, 167, 140, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    LTEXT "&Dizgeyi Uykuya Geçir:", IDC_STANDBY, 13, 191, 84, 10
+    LTEXT "Sistemi &Uykuya Geçir:", IDC_STANDBY, 13, 191, 84, 10
     COMBOBOX IDC_STANDBYACLIST, 100, 188, 140, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    LTEXT "D&izgeyi Anıkta Beklet:", IDC_HIBERNATE, 13, 212, 84, 10
+    LTEXT "Sistemi &Hazırda Beklet:", IDC_HIBERNATE, 13, 212, 84, 10
     COMBOBOX IDC_HIBERNATEACLIST, 100, 209, 140, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
 END
 
@@ -60,31 +60,31 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Uyarılar"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Azalmış Pil Uyarısı", -1, 6, 7, 239, 104
-    AUTOCHECKBOX "&Güç düzeyi şuraya geldiğinde azalmış pil uyarısını etkinleştir:", IDC_ALARM1, 15, 17, 190, 15, WS_TABSTOP
+    GROUPBOX "Düşük Pil Uyarısı", -1, 6, 7, 239, 104
+    AUTOCHECKBOX "&Güç düzeyi şuraya geldiğinde düşük pil uyarısını etkinleştir:", IDC_ALARM1, 15, 17, 190, 15, WS_TABSTOP
     LTEXT "Bilinmiyor", IDC_ALARMVALUE1, 215, 20, 20, 10
-    LTEXT "%0", -1, 28, 43, 15, 10
+    LTEXT "%%0", -1, 28, 43, 15, 10
     CONTROL "Slider1", IDC_ALARMBAR1, "msctls_trackbar32", TBS_HORZ | TBS_AUTOTICKS | WS_TABSTOP, 42, 45, 170, 15
-    LTEXT "%100", -1, 214, 43, 25, 10
+    LTEXT "%%100", -1, 214, 43, 25, 10
     PUSHBUTTON "&Uyarı Eylemi...", -1, 17, 69, 70, 14,WS_DISABLED
     LTEXT "Bildirim:", -1, 95, 71, 57, 10
     LTEXT "Bilinmiyor", IDC_ALARMMSG1, 154, 71, 84, 10
     LTEXT "Eylem:", -1, 95, 83, 55, 10
     LTEXT "Bilinmiyor", IDC_ALARMAKTION1, 154, 83, 84, 10
-    LTEXT "İzlence Çalıştır:", -1, 95, 95, 55, 10
+    LTEXT "Program Çalıştır:", -1, 95, 95, 55, 10
     LTEXT "Bilinmiyor", IDC_ALARMPROG1, 154, 95, 84, 10
-    GROUPBOX "Çok Azalmış Pil Uyarısı", -1, 6, 120, 239, 106
-    AUTOCHECKBOX "G&üç düzeyi şuraya geldiğinde çok azalmış pil uyarısını etkinleştir:", IDC_ALARM2, 15, 131, 180, 15, WS_TABSTOP
+    GROUPBOX "Kritik Pil Uyarısı", -1, 6, 120, 239, 106
+    AUTOCHECKBOX "G&üç düzeyi şuraya geldiğinde kritik pil uyarısını etkinleştir:", IDC_ALARM2, 15, 131, 180, 15, WS_TABSTOP
     LTEXT "Bilinmiyor", IDC_ALARMVALUE2, 209, 133, 33, 10
-    LTEXT "%0", -1, 28, 154, 15, 10
+    LTEXT "%%0", -1, 28, 154, 15, 10
     CONTROL "Slider1", IDC_ALARMBAR2, "msctls_trackbar32", TBS_HORZ | TBS_AUTOTICKS | WS_TABSTOP, 42, 158, 170, 15
-    LTEXT "%100", -1, 214, 154, 25, 10
+    LTEXT "%%100", -1, 214, 154, 25, 10
     PUSHBUTTON "U&yarı Eylemi...", -1, 17, 183, 70, 14, WS_DISABLED
     LTEXT "Bildirim:", -1, 95, 185, 50, 10
     LTEXT "Bilinmiyor", IDC_ALARMMSG2, 154, 185, 84, 10
     LTEXT "Eylem:", -1, 95, 198, 45, 10
     LTEXT "Bilinmiyor", IDC_ALARMAKTION2, 154, 198, 84, 10
-    LTEXT "İzlence Çalıştır:", -1, 95, 211, 50, 10
+    LTEXT "Program Çalıştır:", -1, 95, 211, 50, 10
     LTEXT "Bilinmiyor", IDC_ALARMPROG2, 154, 211, 84, 10
 END
 
@@ -94,52 +94,52 @@ CAPTION "Gelişmiş"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ACDC, IDI_ACDC, 7, 7, 20, 20
-    LTEXT "Kullanmak istediğiniz güç tutumu ayarlarını seçiniz.", -1, 37, 6, 207, 20
+    LTEXT "Kullanmak istediğiniz güç tasarrufu ayarlarını seçiniz.", -1, 37, 6, 207, 20
     GROUPBOX "Seçenekler", -1, 6, 30, 240, 65
-    AUTOCHECKBOX "&Görev Çubuğunda Sürekli Simge Göster", IDC_SYSTRAYBATTERYMETER, 17, 43, 220, 10, WS_TABSTOP
-    AUTOCHECKBOX "&Bilgisayar Uykudan Döndüğünde Şifre İste", IDC_PASSWORDLOGON, 17, 60, 220, 10, WS_TABSTOP
-    AUTOCHECKBOX "&Pilde Çalışıyorken Görüntü Parlaklığını Azalt", IDC_VIDEODIMDISPLAY, 17, 78, 220, 10, WS_TABSTOP
+    AUTOCHECKBOX "&Görev çubuğunda sürekli simge göster", IDC_SYSTRAYBATTERYMETER, 17, 43, 220, 10, WS_TABSTOP
+    AUTOCHECKBOX "&Bilgisayar uykudan döndüğünde parola iste", IDC_PASSWORDLOGON, 17, 60, 220, 10, WS_TABSTOP
+    AUTOCHECKBOX "&Pilde çalışıyorken görüntü parlaklığını azalt", IDC_VIDEODIMDISPLAY, 17, 78, 220, 10, WS_TABSTOP
     GROUPBOX "Güç Düğmeleri", -1, 6, 101, 240, 127
-    LTEXT "&Taşınabilir Bilgisayarımın Kapağını Kapattığımda:", IDC_SLIDCLOSE, 15, 115, 222, 10
+    LTEXT "&Taşınabilir bilgisayarımın kapağını kapattığımda:", IDC_SLIDCLOSE, 15, 115, 222, 10
     COMBOBOX IDC_LIDCLOSE, 15, 127, 220, 90, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-    LTEXT "B&ilgisayarımdaki Güç Düğmesine Bastığımda:", IDC_SPOWERBUTTON, 15, 153, 222, 10
+    LTEXT "Bi&lgisayarımdaki güç düğmesine bastığımda:", IDC_SPOWERBUTTON, 15, 153, 222, 10
     COMBOBOX IDC_POWERBUTTON, 15, 165, 220, 90, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-    LTEXT "Bi&lgisayarımdaki Uyku Düğmesine Bastığımda:", IDC_SSLEEPBUTTON, 15, 191, 222, 10
+    LTEXT "Bilgi&sayarımdaki uyku düğmesine bastığımda:", IDC_SSLEEPBUTTON, 15, 191, 222, 10
     COMBOBOX IDC_SLEEPBUTTON, 15, 203, 220, 90, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
 END
 
 IDD_PROPPAGEHIBERNATE DIALOGEX 0, 0, 252, 237
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Anıkta Bekleme"
+CAPTION "Hazırda Bekleme"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_HIBERNATE, IDI_HIBERNATE, 7, 7, 20, 20
-    LTEXT "Bilgisayar anıkta bekletildiğinde sâbit diskinize bellekte ne varsa saklanır ve sonra bilgisayar kapatılır. Bilgisayarınız anıkta beklemeden çıktığında bir önceki durumuna döner.", -1, 37, 6, 210, 35
-    GROUPBOX "Anıkta Bekleme", -1, 6, 41, 240, 32
-    AUTOCHECKBOX "&Anıkta Beklemeyi Etkinleştir", IDC_HIBERNATEFILE, 17, 55, 210, 10, WS_TABSTOP
-    GROUPBOX "Anıkta Bekleme İçin Disk Alanı", -1, 6, 80, 240, 76
-    LTEXT "Boş Disk Alanı:", -1, 15, 95, 140, 10
+    LTEXT "Bilgisayar hazırda bekletildiğinde sabit diskinize bellekte ne varsa kaydedilir ve sonra bilgisayar kapatılır. Bilgisayarınız hazırda beklemeden çıktığında bir önceki durumuna döner.", -1, 37, 6, 210, 35
+    GROUPBOX "Hazırda Bekleme", -1, 6, 41, 240, 32
+    AUTOCHECKBOX "&Hazırda beklemeyi etkinleştir", IDC_HIBERNATEFILE, 17, 55, 210, 10, WS_TABSTOP
+    GROUPBOX "Hazırda Bekleme İçin Disk Alanı", -1, 6, 80, 240, 76
+    LTEXT "Boş disk alanı:", -1, 15, 95, 140, 10
     LTEXT "Bilinmiyor", IDC_FREESPACE, 160, 95, 80, 10
-    LTEXT "Anıkta Bekleme İçin Gereken Disk Alanı:", -1, 15, 115, 140, 10
+    LTEXT "Hazırda bekleme için gereken disk alanı:", -1, 15, 115, 140, 10
     LTEXT "Bilinmiyor", IDC_SPACEFORHIBERNATEFILE, 160, 115, 80, 10
-    LTEXT "Bilgisayarınız anıkta bekleyebilmeden önce biraz disk alanı oluşturmalısınız.", IDC_TOLESSFREESPACE, 15, 135, 224, 20
+    LTEXT "Bilgisayarınızın hazırda bekleyebilmesinden önce biraz disk alanı oluşturmalısınız.", IDC_TOLESSFREESPACE, 15, 135, 224, 20
 END
 
 IDD_SAVEPOWERSCHEME DIALOGEX 0, 0, 190, 62
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Save Scheme"
+CAPTION "Düzeni Kaydet"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Save this power scheme as:", -1, 7, 7, 104, 8
+    LTEXT "Bu güç düzenini şöyle kaydet:", -1, 7, 7, 104, 8
     EDITTEXT IDC_SCHEMENAME, 7, 18, 176, 14, ES_AUTOHSCROLL | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP
-    DEFPUSHBUTTON "OK", IDOK, 79, 40, 50, 14
-    PUSHBUTTON "Cancel", IDCANCEL, 133, 40, 50, 14
+    DEFPUSHBUTTON "Tamam", IDOK, 79, 40, 50, 14
+    PUSHBUTTON "İptal", IDCANCEL, 133, 40, 50, 14
 END
 
 STRINGTABLE
 BEGIN
     IDS_CPLNAME_1 "Güç Seçenekleri"
-    IDS_CPLDESCRIPTION_1 "Bilgisayarınız için erke tutumu ayarlarını yapılandırır."
+    IDS_CPLDESCRIPTION_1 "Bilgisayarınız için enerji tasarrufu ayarlarını yapılandırır."
     IDS_PERCENT "%%%i"
     IDS_SOUND "Ses"
     IDS_TEXT "Metin"
@@ -149,29 +149,29 @@ BEGIN
     IDS_PowerActionNone1 "Eylem Yok"
     IDS_PowerActionUnknown "Bilinmiyor"
     IDS_PowerActionSleep "Uykuya Geçir"
-    IDS_PowerActionHibernate "Anıkta Beklet"
+    IDS_PowerActionHibernate "Hazırda Beklet"
     IDS_PowerActionShutdown "Kapat"
     IDS_PowerActionRestart "Yeniden Başlat"
     IDS_PowerActionShutdownOff "Kapat ve Gücü Kes"
     IDS_PowerActionWarmEject "Bana Ne Yapılacağını Sor"
     IDS_PowerActionNone2 "Yok"
-    IDS_TIMEOUT1 "1 Dakîka Sonra"
-    IDS_TIMEOUT2 "2 Dakîka Sonra"
-    IDS_TIMEOUT3 "3 Dakîka Sonra"
-    IDS_TIMEOUT4 "5 Dakîka Sonra"
-    IDS_TIMEOUT5 "10 Dakîka Sonra"
-    IDS_TIMEOUT6 "15 Dakîka Sonra"
-    IDS_TIMEOUT7 "20 Dakîka Sonra"
-    IDS_TIMEOUT8 "25 Dakîka Sonra"
-    IDS_TIMEOUT9 "30 Dakîka Sonra"
-    IDS_TIMEOUT10 "45 Dakîka Sonra"
+    IDS_TIMEOUT1 "1 Dakika Sonra"
+    IDS_TIMEOUT2 "2 Dakika Sonra"
+    IDS_TIMEOUT3 "3 Dakika Sonra"
+    IDS_TIMEOUT4 "5 Dakika Sonra"
+    IDS_TIMEOUT5 "10 Dakika Sonra"
+    IDS_TIMEOUT6 "15 Dakika Sonra"
+    IDS_TIMEOUT7 "20 Dakika Sonra"
+    IDS_TIMEOUT8 "25 Dakika Sonra"
+    IDS_TIMEOUT9 "30 Dakika Sonra"
+    IDS_TIMEOUT10 "45 Dakika Sonra"
     IDS_TIMEOUT11 "1 Saat Sonra"
     IDS_TIMEOUT12 "2 Saat Sonra"
     IDS_TIMEOUT13 "3 Saat Sonra"
     IDS_TIMEOUT14 "4 Saat Sonra"
     IDS_TIMEOUT15 "5 Saat Sonra"
     IDS_TIMEOUT16 "Hiçbir Zaman"
-    IDS_DEL_SCHEME "Güç düzenini silmek istediğinizden emin misiniz: ""%s""?"
+    IDS_DEL_SCHEME "Şu güç düzenini silmek istediğinizden emin misiniz: ""%s""?"
     IDS_DEL_SCHEME_TITLE "Düzeni Sil"
-    IDS_DEL_SCHEME_ERROR "Unable to delete power scheme"
+    IDS_DEL_SCHEME_ERROR "Güç düzeyi silinemiyor"
 END

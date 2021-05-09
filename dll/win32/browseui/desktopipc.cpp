@@ -550,10 +550,16 @@ extern "C" HRESULT WINAPI SHOpenFolderWindow(PIE_THREAD_PARAM_BLOCK parameters)
     HANDLE                                  threadHandle;
     DWORD                                   threadID;
 
-    WCHAR debugStr[MAX_PATH + 1];
-    SHGetPathFromIDListW(parameters->directoryPIDL, debugStr);
-
-    TRACE("SHOpenFolderWindow %p(%S)\n", parameters->directoryPIDL, debugStr);
+    // Only try to convert the pidl when it is going to be printed
+    if (TRACE_ON(browseui))
+    {
+        WCHAR debugStr[MAX_PATH + 2] = { 0 };
+        if (!ILGetDisplayName(parameters->directoryPIDL, debugStr))
+        {
+            debugStr[0] = UNICODE_NULL;
+        }
+        TRACE("SHOpenFolderWindow %p(%S)\n", parameters->directoryPIDL, debugStr);
+    }
 
     PIE_THREAD_PARAM_BLOCK paramsCopy = SHCloneIETHREADPARAM(parameters);
 

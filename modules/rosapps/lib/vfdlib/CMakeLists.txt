@@ -1,4 +1,3 @@
-set_cpp(WITH_RUNTIME WITH_EXCEPTIONS WITH_STL)
 
 spec2def(vfd.dll vfdlib.spec ADD_IMPORTLIB)
 
@@ -31,7 +30,8 @@ add_library(vfd MODULE
 include_directories(${REACTOS_SOURCE_DIR}/modules/rosapps/include/vfd
                     ${REACTOS_SOURCE_DIR}/sdk/include/reactos/libs/zlib)
 set_module_type(vfd win32dll ENTRYPOINT DllMain 12)
-target_link_libraries(vfd zlib_solo uuid)
+target_link_libraries(vfd zlib_solo uuid cppstl)
+set_target_cpp_properties(vfd WITH_EXCEPTIONS)
 add_importlibs(vfd advapi32 user32 gdi32 shell32 comdlg32 comctl32 ole32 version psapi msvcrt kernel32 ntdll)
 add_dependencies(vfd vfdmsg_lib)
 add_cd_file(TARGET vfd DESTINATION reactos/system32 FOR all)

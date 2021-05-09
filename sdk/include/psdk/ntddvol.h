@@ -74,6 +74,8 @@ extern "C" {
 #define IOCTL_VOLUME_QUERY_FAILOVER_SET \
   CTL_CODE(IOCTL_VOLUME_BASE, 6, METHOD_BUFFERED, FILE_ANY_ACCESS)
 
+#define IOCTL_VOLUME_POST_ONLINE \
+  CTL_CODE(IOCTL_VOLUME_BASE, 25, METHOD_BUFFERED, FILE_READ_ACCESS | FILE_WRITE_ACCESS)
 
 typedef struct _VOLUME_LOGICAL_OFFSET {
   LONGLONG  LogicalOffset;
@@ -100,32 +102,32 @@ typedef struct _VOLUME_GET_GPT_ATTRIBUTES_INFORMATION {
 } VOLUME_GET_GPT_ATTRIBUTES_INFORMATION, *PVOLUME_GET_GPT_ATTRIBUTES_INFORMATION;
 
 typedef struct _VOLUME_SET_GPT_ATTRIBUTES_INFORMATION {
-	ULONGLONG  GptAttributes;
-	BOOLEAN  RevertOnClose;
-	BOOLEAN  ApplyToAllConnectedVolumes;
-	USHORT  Reserved1;
-	ULONG  Reserved2;
+  ULONGLONG GptAttributes;
+  BOOLEAN RevertOnClose;
+  BOOLEAN ApplyToAllConnectedVolumes;
+  USHORT Reserved1;
+  ULONG Reserved2;
 } VOLUME_SET_GPT_ATTRIBUTES_INFORMATION, *PVOLUME_SET_GPT_ATTRIBUTES_INFORMATION;
 
 typedef struct _DISK_EXTENT {
-	ULONG  DiskNumber;
-	LARGE_INTEGER  StartingOffset;
-	LARGE_INTEGER  ExtentLength;
+  ULONG DiskNumber;
+  LARGE_INTEGER StartingOffset;
+  LARGE_INTEGER ExtentLength;
 } DISK_EXTENT, *PDISK_EXTENT;
 
 typedef struct _VOLUME_DISK_EXTENTS {
-	ULONG  NumberOfDiskExtents;
-	DISK_EXTENT  Extents[1];
+  ULONG NumberOfDiskExtents;
+  DISK_EXTENT Extents[1];
 } VOLUME_DISK_EXTENTS, *PVOLUME_DISK_EXTENTS;
 
 typedef struct _VOLUME_NUMBER {
-	ULONG  VolumeNumber;
-	WCHAR  VolumeManagerName[8];
+  ULONG VolumeNumber;
+  WCHAR VolumeManagerName[8];
 } VOLUME_NUMBER, *PVOLUME_NUMBER;
 
 typedef struct _VOLUME_FAILOVER_SET {
-	ULONG  NumberOfDisks;
-	ULONG  DiskNumbers[1];
+  ULONG NumberOfDisks;
+  ULONG DiskNumbers[1];
 } VOLUME_FAILOVER_SET, *PVOLUME_FAILOVER_SET;
 
 #ifdef __cplusplus

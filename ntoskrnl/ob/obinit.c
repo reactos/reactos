@@ -46,7 +46,7 @@ GENERIC_MAPPING ObpSymbolicLinkMapping =
 PDEVICE_MAP ObSystemDeviceMap = NULL;
 ULONG ObpTraceLevel = 0;
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 VOID
 NTAPI
 PsInitializeQuotaSystem(VOID);
@@ -59,7 +59,7 @@ ULONG ObpProtectionMode = 0;
 /* PRIVATE FUNCTIONS *********************************************************/
 
 static
-INIT_FUNCTION
+CODE_SEG("INIT")
 NTSTATUS
 NTAPI
 ObpCreateKernelObjectsSD(OUT PSECURITY_DESCRIPTOR *SecurityDescriptor)
@@ -130,7 +130,7 @@ done:
     return Status;
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 BOOLEAN
 NTAPI
 ObInit2(VOID)
@@ -197,7 +197,7 @@ ObInit2(VOID)
     return TRUE;
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 BOOLEAN
 NTAPI
 ObInitSystem(VOID)

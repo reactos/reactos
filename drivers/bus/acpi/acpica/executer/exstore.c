@@ -140,7 +140,7 @@ AcpiExStore (
             return_ACPI_STATUS (AE_OK);
         }
 
-        /*lint -fallthrough */
+        ACPI_FALLTHROUGH;
 
     default:
 
@@ -477,7 +477,7 @@ AcpiExStoreObjectToNode (
                 break;
             }
 
-        /* Fallthrough */
+            ACPI_FALLTHROUGH;
 
         case ACPI_TYPE_DEVICE:
         case ACPI_TYPE_EVENT:

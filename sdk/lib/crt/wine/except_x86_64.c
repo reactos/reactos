@@ -674,11 +674,13 @@ unsigned int CDECL __CxxQueryExceptionSize(void)
 }
 
 
+#ifndef __REACTOS__
 /*******************************************************************
  *		_setjmp (MSVCRT.@)
  */
 __ASM_GLOBAL_FUNC( MSVCRT__setjmp,
                    "jmp " __ASM_NAME("__wine_setjmpex") );
+#endif
 
 /*******************************************************************
  *		longjmp (MSVCRT.@)

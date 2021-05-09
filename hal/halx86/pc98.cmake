@@ -27,12 +27,13 @@ list(APPEND HAL_PC98_ASM_SOURCE
 list(APPEND HAL_PC98_SOURCE
     pc98/irql.c
     generic/timer.c
-    up/halinit_up.c
-    up/pic.c)
+    pic/halinit.c
+    pic/pic.c
+    pic/processor.c)
 
 list(APPEND HAL_PC98_ASM_SOURCE
     generic/trap.S
-    up/pic.S)
+    pic/pic.S)
 
 # Legacy
 list(APPEND HAL_PC98_SOURCE
@@ -48,10 +49,8 @@ list(APPEND HAL_PC98_SOURCE
     legacy/halpcat.c)
 
 add_asm_files(lib_hal_pc98_asm ${HAL_PC98_ASM_SOURCE})
-add_object_library(lib_hal_pc98 ${HAL_PC98_SOURCE} ${lib_hal_pc98_asm})
+add_library(lib_hal_pc98 OBJECT ${HAL_PC98_SOURCE} ${lib_hal_pc98_asm})
 add_dependencies(lib_hal_pc98 bugcodes xdk asm)
 #add_pch(lib_hal_pc98 pc98/halpc98.h)
 
-if(MSVC)
-    target_link_libraries(lib_hal_pc98)
-endif()
+target_compile_definitions(lib_hal_pc98 PRIVATE SARCH_PC98)

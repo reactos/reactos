@@ -1,0 +1,9 @@
+Throwing 1...
+A() 1
+Throwing 2...
+A() 2
+Throwing 3...
+~A() 1
+Caught.
+~A() 2
+c == 2, d == 2

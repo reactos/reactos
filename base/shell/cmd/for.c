@@ -32,6 +32,10 @@
 
 #include "precomp.h"
 
+/* Enable this define for "buggy" Windows' CMD FOR-command compatibility.
+ * Currently, this enables the buggy behaviour of FOR /F token parsing. */
+#define MSCMD_FOR_QUIRKS
+
 
 /* FOR is a special command, so this function is only used for showing help now */
 INT cmd_for(LPTSTR param)
@@ -121,21 +125,27 @@ static LPTSTR ReadFileContents(FILE *InputFile, TCHAR *Buffer)
 static INT ForF(PARSED_COMMAND *Cmd, LPTSTR List, TCHAR *Buffer)
 {
     LPTSTR Delims = _T(" \t");
+    PTCHAR DelimsEndPtr = NULL;
+    TCHAR  DelimsEndChr = _T('\0');
     TCHAR Eol = _T(';');
     INT SkipLines = 0;
-    DWORD Tokens = (1 << 1);
-    BOOL RemainderVar = FALSE;
+    DWORD TokensMask = (1 << 1);
+#ifdef MSCMD_FOR_QUIRKS
+    DWORD NumTokens = 1;
+    DWORD RemainderVar = 0;
+#else
+    DWORD NumTokens = 0;
+#endif
     TCHAR StringQuote = _T('"');
     TCHAR CommandQuote = _T('\'');
     LPTSTR Variables[32];
-    TCHAR *Start, *End;
-    INT i;
+    PTCHAR Start, End;
     INT Ret = 0;
 
     if (Cmd->For.Params)
     {
         TCHAR Quote = 0;
-        TCHAR *Param = Cmd->For.Params;
+        PTCHAR Param = Cmd->For.Params;
         if (*Param == _T('"') || *Param == _T('\''))
             Quote = *Param++;
 
@@ -148,23 +158,34 @@ static INT ForF(PARSED_COMMAND *Cmd, LPTSTR List, TCHAR *Buffer)
             else if (_tcsnicmp(Param, _T("delims="), 7) == 0)
             {
                 Param += 7;
-                /* delims=xxx: Specifies the list of characters that separate tokens */
+                /*
+                 * delims=xxx: Specifies the list of characters that separate tokens.
+                 * This option does not cumulate: only the latest 'delims=' specification
+                 * is taken into account.
+                 */
                 Delims = Param;
+                DelimsEndPtr = NULL;
                 while (*Param && *Param != Quote)
                 {
                     if (*Param == _T(' '))
                     {
-                        TCHAR *FirstSpace = Param;
+                        PTCHAR FirstSpace = Param;
                         Param += _tcsspn(Param, _T(" "));
                         /* Exclude trailing spaces if this is not the last parameter */
                         if (*Param && *Param != Quote)
-                            *FirstSpace = _T('\0');
+                        {
+                            /* Save where the delimiters specification string ends */
+                            DelimsEndPtr = FirstSpace;
+                        }
                         break;
                     }
                     Param++;
                 }
                 if (*Param == Quote)
-                    *Param++ = _T('\0');
+                {
+                    /* Save where the delimiters specification string ends */
+                    DelimsEndPtr = Param++;
+                }
             }
             else if (_tcsnicmp(Param, _T("eol="), 4) == 0)
             {
@@ -184,24 +205,59 @@ static INT ForF(PARSED_COMMAND *Cmd, LPTSTR List, TCHAR *Buffer)
             }
             else if (_tcsnicmp(Param, _T("tokens="), 7) == 0)
             {
+#ifdef MSCMD_FOR_QUIRKS
+                DWORD NumToksInSpec = 0; // Number of tokens in this specification.
+#endif
                 Param += 7;
-                /* tokens=x,y,m-n: List of token numbers (must be between
-                 * 1 and 31) that will be assigned into variables. */
-                Tokens = 0;
+                /*
+                 * tokens=x,y,m-n: List of token numbers (must be between 1 and 31)
+                 * that will be assigned into variables. This option does not cumulate:
+                 * only the latest 'tokens=' specification is taken into account.
+                 *
+                 * NOTE: In MSCMD_FOR_QUIRKS mode, for Windows' CMD compatibility,
+                 * not all the tokens-state is reset. This leads to subtle bugs.
+                 */
+                TokensMask = 0;
+#ifdef MSCMD_FOR_QUIRKS
+                NumToksInSpec = 0;
+                // Windows' CMD compatibility: bug: the asterisk-token's position is not reset!
+                // RemainderVar = 0;
+#else
+                NumTokens = 0;
+#endif
+
                 while (*Param && *Param != Quote && *Param != _T('*'))
                 {
                     INT First = _tcstol(Param, &Param, 0);
                     INT Last = First;
+#ifdef MSCMD_FOR_QUIRKS
                     if (First < 1)
+#else
+                    if ((First < 1) || (First > 31))
+#endif
                         goto error;
                     if (*Param == _T('-'))
                     {
                         /* It's a range of tokens */
                         Last = _tcstol(Param + 1, &Param, 0);
-                        if (Last < First || Last > 31)
+#ifdef MSCMD_FOR_QUIRKS
+                        /* Ignore the range if the endpoints are not in correct order */
+                        if (Last < 1)
+#else
+                        if ((Last < First) || (Last > 31))
+#endif
                             goto error;
                     }
-                    Tokens |= (2 << Last) - (1 << First);
+#ifdef MSCMD_FOR_QUIRKS
+                    /* Ignore the range if the endpoints are not in correct order */
+                    if ((First <= Last) && (Last <= 31))
+                    {
+#endif
+                        TokensMask |= (2 << Last) - (1 << First);
+#ifdef MSCMD_FOR_QUIRKS
+                        NumToksInSpec += (Last - First + 1);
+                    }
+#endif
 
                     if (*Param != _T(','))
                         break;
@@ -209,12 +265,19 @@ static INT ForF(PARSED_COMMAND *Cmd, LPTSTR List, TCHAR *Buffer)
                 }
                 /* With an asterisk at the end, an additional variable
                  * will be created to hold the remainder of the line
-                 * (after the last token specified). */
+                 * (after the last specified token). */
                 if (*Param == _T('*'))
                 {
-                    RemainderVar = TRUE;
+#ifdef MSCMD_FOR_QUIRKS
+                    RemainderVar = ++NumToksInSpec;
+#else
+                    ++NumTokens;
+#endif
                     Param++;
                 }
+#ifdef MSCMD_FOR_QUIRKS
+                NumTokens = max(NumTokens, NumToksInSpec);
+#endif
             }
             else if (_tcsnicmp(Param, _T("useback"), 7) == 0)
             {
@@ -235,12 +298,31 @@ static INT ForF(PARSED_COMMAND *Cmd, LPTSTR List, TCHAR *Buffer)
         }
     }
 
+#ifdef MSCMD_FOR_QUIRKS
+    /* Windows' CMD compatibility: use the wrongly evaluated number of tokens */
+    fc->varcount = NumTokens;
+    /* Allocate a large enough variables array if needed */
+    if (NumTokens <= ARRAYSIZE(Variables))
+    {
+        fc->values = Variables;
+    }
+    else
+    {
+        fc->values = cmd_alloc(fc->varcount * sizeof(*fc->values));
+        if (!fc->values)
+        {
+            error_out_of_memory();
+            return 1;
+        }
+    }
+#else
     /* Count how many variables will be set: one for each token,
-     * plus maybe one for the remainder */
-    fc->varcount = RemainderVar;
-    for (i = 1; i < 32; i++)
-        fc->varcount += (Tokens >> i & 1);
+     * plus maybe one for the remainder. */
+    fc->varcount = NumTokens;
+    for (NumTokens = 1; NumTokens < 32; ++NumTokens)
+        fc->varcount += (TokensMask >> NumTokens) & 1;
     fc->values = Variables;
+#endif
 
     if (*List == StringQuote || *List == CommandQuote)
     {
@@ -254,7 +336,7 @@ static INT ForF(PARSED_COMMAND *Cmd, LPTSTR List, TCHAR *Buffer)
     End = List;
     while (!ExitingOrGoto(Cmd) && GetNextElement(&Start, &End))
     {
-        FILE *InputFile;
+        FILE* InputFile;
         LPTSTR FullInput, In, NextLine;
         INT Skip;
     single_element:
@@ -267,13 +349,18 @@ static INT ForF(PARSED_COMMAND *Cmd, LPTSTR List, TCHAR *Buffer)
         }
         else if (*Start == CommandQuote && End[-1] == CommandQuote)
         {
-            /* Read input from a command */
+            /*
+             * Read input from a command. We let the CRT do the ANSI/UNICODE conversion.
+             * NOTE: Should we do that, or instead read in binary mode and
+             * do the conversion by ourselves, using *OUR* current codepage??
+             */
             End[-1] = _T('\0');
             InputFile = _tpopen(Start + 1, _T("r"));
             if (!InputFile)
             {
                 error_bad_command(Start + 1);
-                return 1;
+                Ret = 1;
+                goto Quit;
             }
             FullInput = ReadFileContents(InputFile, Buffer);
             _pclose(InputFile);
@@ -289,7 +376,8 @@ static INT ForF(PARSED_COMMAND *Cmd, LPTSTR List, TCHAR *Buffer)
             if (!InputFile)
             {
                 error_sfile_not_found(Start);
-                return 1;
+                Ret = 1;
+                goto Quit;
             }
             FullInput = ReadFileContents(InputFile, Buffer);
             fclose(InputFile);
@@ -298,7 +386,15 @@ static INT ForF(PARSED_COMMAND *Cmd, LPTSTR List, TCHAR *Buffer)
         if (!FullInput)
         {
             error_out_of_memory();
-            return 1;
+            Ret = 1;
+            goto Quit;
+        }
+
+        /* Patch the delimiters string */
+        if (DelimsEndPtr)
+        {
+            DelimsEndChr = *DelimsEndPtr;
+            *DelimsEndPtr = _T('\0');
         }
 
         /* Loop over the input line by line */
@@ -306,8 +402,13 @@ static INT ForF(PARSED_COMMAND *Cmd, LPTSTR List, TCHAR *Buffer)
              !ExitingOrGoto(Cmd) && (In != NULL);
              In = NextLine)
         {
-            DWORD RemainingTokens = Tokens;
-            LPTSTR *CurVar = Variables;
+            DWORD RemainingTokens = TokensMask;
+            LPTSTR* CurVar = fc->values;
+
+            ZeroMemory(fc->values, fc->varcount * sizeof(*fc->values));
+#ifdef MSCMD_FOR_QUIRKS
+            NumTokens = fc->varcount;
+#endif
 
             NextLine = _tcschr(In, _T('\n'));
             if (NextLine)
@@ -321,11 +422,19 @@ static INT ForF(PARSED_COMMAND *Cmd, LPTSTR List, TCHAR *Buffer)
             if (*In == Eol)
                 continue;
 
-            while ((RemainingTokens >>= 1) != 0)
+            /* Loop as long as we have not reached the end of
+             * the line, and that we have tokens available.
+             * A maximum of 31 tokens will be enumerated. */
+            while (*In && ((RemainingTokens >>= 1) != 0))
             {
                 /* Save pointer to this token in a variable if requested */
                 if (RemainingTokens & 1)
+                {
+#ifdef MSCMD_FOR_QUIRKS
+                    --NumTokens;
+#endif
                     *CurVar++ = In;
+                }
                 /* Find end of token */
                 In += _tcscspn(In, Delims);
                 /* NULL-terminate it and advance to next token */
@@ -335,16 +444,36 @@ static INT ForF(PARSED_COMMAND *Cmd, LPTSTR List, TCHAR *Buffer)
                     In += _tcsspn(In, Delims);
                 }
             }
-            /* Save pointer to remainder of line */
-            *CurVar = In;
 
-            /* Don't run unless the line had enough tokens to fill at least one variable */
-            if (*Variables[0])
+            /* Save pointer to remainder of the line if we need to do so */
+            if (*In)
+#ifdef MSCMD_FOR_QUIRKS
+            if (RemainderVar && (fc->varcount - NumTokens + 1 == RemainderVar))
+#endif
+            {
+                /* NOTE: This sets fc->values[0] at least, if no tokens
+                 * were initialized so far, since CurVar is initialized
+                 * originally to point to fc->values. */
+                *CurVar = In;
+            }
+
+            /* Don't run unless we have at least one variable filled */
+            if (fc->values[0])
                 Ret = RunInstance(Cmd);
         }
 
+        /* Restore the delimiters string */
+        if (DelimsEndPtr)
+            *DelimsEndPtr = DelimsEndChr;
+
         cmd_free(FullInput);
     }
+
+Quit:
+#ifdef MSCMD_FOR_QUIRKS
+    if (fc->values && (fc->values != Variables))
+        cmd_free(fc->values);
+#endif
 
     return Ret;
 }

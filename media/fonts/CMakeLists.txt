@@ -41,14 +41,14 @@ list(APPEND FONT_FILES
     SourceSansPro-Bold.ttf
     SourceSansPro-BoldIt.ttf
     SourceSansPro-It.ttf
-    #ssee874.fon # to be added
-    #ssee1255.fon # to be added
-    #ssee1256.fon # to be added
-    #ssee1257.fon # to be added
-    #sserife.fon # to be added
-    #sserifeg.fon # to be added
-    #sserifer.fon # to be added
-    #sserifet.fon # to be added
+    #ssee874.fon # to be added (CORE-16165 and CORE-16166)
+    #ssee1255.fon # to be added (CORE-16165 and CORE-16166)
+    #ssee1256.fon # to be added (CORE-16165 and CORE-16166)
+    #ssee1257.fon # to be added (CORE-16165 and CORE-16166)
+    #sserife.fon # to be added (CORE-16165 and CORE-16166)
+    #sserifeg.fon # to be added (CORE-16165 and CORE-16166)
+    #sserifer.fon # to be added (CORE-16165 and CORE-16166)
+    #sserifet.fon # to be added (CORE-16165 and CORE-16166)
     symbol.ttf
     tahoma.ttf
     tahomabd.ttf
@@ -65,6 +65,7 @@ list(APPEND FONT_FILES
     verdanaz.ttf
     verdanai.ttf
     verdana.ttf
+    #vgaoem.fon # to be added (CORE-17327)
     wingding.ttf)
 
 foreach(item ${FONT_FILES})

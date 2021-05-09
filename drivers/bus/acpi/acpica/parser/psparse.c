@@ -425,7 +425,7 @@ AcpiPsNextParseState (
     default:
 
         Status = CallbackStatus;
-        if ((CallbackStatus & AE_CODE_MASK) == AE_CODE_CONTROL)
+        if (ACPI_CNTL_EXCEPTION (CallbackStatus))
         {
             Status = AE_OK;
         }
@@ -554,8 +554,8 @@ AcpiPsParseAml (
             }
 
             /*
-             * If the transfer to the new method method call worked
-             *, a new walk state was created -- get it
+             * If the transfer to the new method method call worked,
+             * a new walk state was created -- get it
              */
             WalkState = AcpiDsGetCurrentWalkState (Thread);
             continue;

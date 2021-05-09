@@ -52,7 +52,7 @@ static ADDRESS_MODE get_selector_type(HANDLE hThread, const CONTEXT* ctx, WORD s
 }
 
 static BOOL i386_build_addr(HANDLE hThread, const CONTEXT* ctx, ADDRESS64* addr,
-                            unsigned seg, unsigned long offset)
+                            unsigned seg, ULONG_PTR offset)
 {
     addr->Mode    = AddrModeFlat;
     addr->Segment = seg;
@@ -90,22 +90,21 @@ static BOOL i386_get_addr(HANDLE hThread, const CONTEXT* ctx,
 #endif
     return FALSE;
 }
-#endif /* DBGHELP_STATIC_LIB */
 
-#if defined(__i386__) && !defined(DBGHELP_STATIC_LIB)
 /* fetch_next_frame32()
  *
  * modify (at least) context.{eip, esp, ebp} using unwind information
  * either out of debug info (dwarf, pdb), or simple stack unwind
  */
 static BOOL fetch_next_frame32(struct cpu_stack_walk* csw,
-                               CONTEXT* context, DWORD_PTR curr_pc)
+                               union ctx *pcontext, DWORD_PTR curr_pc)
 {
-    DWORD_PTR               xframe;
+    DWORD64 xframe;
     struct pdb_cmd_pair     cpair[4];
     DWORD                   val32;
+    WOW64_CONTEXT *context = &pcontext->x86;
 
-    if (dwarf2_virtual_unwind(csw, curr_pc, context, &xframe))
+    if (dwarf2_virtual_unwind(csw, curr_pc, pcontext, &xframe))
     {
         context->Esp = xframe;
         return TRUE;
@@ -115,9 +114,7 @@ static BOOL fetch_next_frame32(struct cpu_stack_walk* csw,
     cpair[2].name = "$eip";      cpair[2].pvalue = &context->Eip;
     cpair[3].name = NULL;        cpair[3].pvalue = NULL;
 
-#ifndef DBGHELP_STATIC_LIB
-    if (!pdb_virtual_unwind(csw, curr_pc, context, cpair))
-#endif
+    if (!pdb_virtual_unwind(csw, curr_pc, pcontext, cpair))
     {
         /* do a simple unwind using ebp
          * we assume a "regular" prologue in the function has been used
@@ -138,7 +135,6 @@ static BOOL fetch_next_frame32(struct cpu_stack_walk* csw,
     }
     return TRUE;
 }
-#endif
 
 enum st_mode {stm_start, stm_32bit, stm_16bit, stm_done};
 
@@ -155,8 +151,8 @@ enum st_mode {stm_start, stm_32bit, stm_16bit, stm_done};
 #define set_curr_mode(m) {frame->Reserved[__CurrentModeCount] &= ~0x0F; frame->Reserved[__CurrentModeCount] |= (m & 0x0F);}
 #define inc_curr_count() (frame->Reserved[__CurrentModeCount] += 0x10)
 
-#ifndef DBGHELP_STATIC_LIB
-static BOOL i386_stack_walk(struct cpu_stack_walk* csw, LPSTACKFRAME64 frame, CONTEXT* context)
+static BOOL i386_stack_walk(struct cpu_stack_walk* csw, STACKFRAME64 *frame,
+    union ctx *context)
 {
     STACK32FRAME        frame32;
     STACK16FRAME        frame16;
@@ -166,10 +162,8 @@ static BOOL i386_stack_walk(struct cpu_stack_walk* csw, LPSTACKFRAME64 frame, CO
     WORD                val16;
     DWORD               val32;
     BOOL                do_switch;
-#ifdef __i386__
     unsigned            deltapc;
-    CONTEXT             _context;
-#endif
+    union ctx _context;
 
     /* sanity check */
     if (curr_mode >= stm_done) return FALSE;
@@ -183,7 +177,6 @@ static BOOL i386_stack_walk(struct cpu_stack_walk* csw, LPSTACKFRAME64 frame, CO
           wine_dbgstr_longlong(curr_count),
           (void*)(DWORD_PTR)curr_switch, (void*)(DWORD_PTR)next_switch);
 
-#ifdef __i386__
     /* if we're at first call (which doesn't actually unwind, it just computes ReturnPC,
      * or if we're doing the first real unwind (count == 1), then we can directly use
      * eip. otherwise, eip is *after* the insn that actually made the call to
@@ -199,15 +192,18 @@ static BOOL i386_stack_walk(struct cpu_stack_walk* csw, LPSTACKFRAME64 frame, CO
         /* setup a pseudo context for the rest of the code (esp. unwinding) */
         context = &_context;
         memset(context, 0, sizeof(*context));
-        context->ContextFlags = CONTEXT_CONTROL | CONTEXT_SEGMENTS;
-        if (frame->AddrPC.Mode != AddrModeFlat)    context->SegCs = frame->AddrPC.Segment;
-        context->Eip = frame->AddrPC.Offset;
-        if (frame->AddrFrame.Mode != AddrModeFlat) context->SegSs = frame->AddrFrame.Segment;
-        context->Ebp = frame->AddrFrame.Offset;
-        if (frame->AddrStack.Mode != AddrModeFlat) context->SegSs = frame->AddrStack.Segment;
-        context->Esp = frame->AddrStack.Offset;
+        context->x86.ContextFlags = WOW64_CONTEXT_CONTROL | WOW64_CONTEXT_SEGMENTS;
+        if (frame->AddrPC.Mode != AddrModeFlat)
+            context->x86.SegCs = frame->AddrPC.Segment;
+        context->x86.Eip = frame->AddrPC.Offset;
+        if (frame->AddrFrame.Mode != AddrModeFlat)
+            context->x86.SegSs = frame->AddrFrame.Segment;
+        context->x86.Ebp = frame->AddrFrame.Offset;
+        if (frame->AddrStack.Mode != AddrModeFlat)
+            context->x86.SegSs = frame->AddrStack.Segment;
+        context->x86.Esp = frame->AddrStack.Offset;
     }
-#endif
+
     if (curr_mode == stm_start)
     {
         THREAD_BASIC_INFORMATION info;
@@ -405,18 +401,16 @@ static BOOL i386_stack_walk(struct cpu_stack_walk* csw, LPSTACKFRAME64 frame, CO
             }
             else
             {
-#ifdef __i386__
                 if (!fetch_next_frame32(csw, context, sw_xlat_addr(csw, &frame->AddrPC) - deltapc))
                     goto done_err;
 
                 frame->AddrStack.Mode = frame->AddrFrame.Mode = frame->AddrPC.Mode = AddrModeFlat;
-                frame->AddrStack.Offset = context->Esp;
-                frame->AddrFrame.Offset = context->Ebp;
-                if (frame->AddrReturn.Offset != context->Eip)
+                frame->AddrStack.Offset = context->x86.Esp;
+                frame->AddrFrame.Offset = context->x86.Ebp;
+                if (frame->AddrReturn.Offset != context->x86.Eip)
                     FIXME("new PC=%s different from Eip=%x\n",
-                          wine_dbgstr_longlong(frame->AddrReturn.Offset), context->Eip);
-                frame->AddrPC.Offset = context->Eip;
-#endif
+                          wine_dbgstr_longlong(frame->AddrReturn.Offset), context->x86.Eip);
+                frame->AddrPC.Offset = context->x86.Eip;
             }
         }
     }
@@ -458,19 +452,18 @@ static BOOL i386_stack_walk(struct cpu_stack_walk* csw, LPSTACKFRAME64 frame, CO
          * work if the parameter is in fact bigger than 16bit, but
          * there's no way to know that here
          */
-        for (i = 0; i < sizeof(frame->Params) / sizeof(frame->Params[0]); i++)
+        for (i = 0; i < ARRAY_SIZE(frame->Params); i++)
         {
             sw_read_mem(csw, p + (2 + i) * sizeof(WORD), &val16, sizeof(val16));
             frame->Params[i] = val16;
         }
-#ifdef __i386__
         if (context)
         {
 #define SET(field, seg, reg) \
             switch (frame->field.Mode) \
             { \
-            case AddrModeFlat: context->reg = frame->field.Offset; break; \
-            case AddrMode1616: context->seg = frame->field.Segment; context->reg = frame->field.Offset; break; \
+            case AddrModeFlat: context->x86.reg = frame->field.Offset; break; \
+            case AddrMode1616: context->x86.seg = frame->field.Segment; context->x86.reg = frame->field.Offset; break; \
             default: assert(0); \
             }
             SET(AddrStack,  SegSs, Esp);
@@ -478,20 +471,18 @@ static BOOL i386_stack_walk(struct cpu_stack_walk* csw, LPSTACKFRAME64 frame, CO
             SET(AddrReturn, SegCs, Eip);
 #undef SET
         }
-#endif
     }
     else
     {
         unsigned int    i;
-#ifdef __i386__
-        CONTEXT         newctx = *context;
+        union ctx newctx = *context;
 
         if (!fetch_next_frame32(csw, &newctx, frame->AddrPC.Offset - deltapc))
             goto done_err;
         frame->AddrReturn.Mode = AddrModeFlat;
-        frame->AddrReturn.Offset = newctx.Eip;
-#endif
-        for (i = 0; i < sizeof(frame->Params) / sizeof(frame->Params[0]); i++)
+        frame->AddrReturn.Offset = newctx.x86.Eip;
+
+        for (i = 0; i < ARRAY_SIZE(frame->Params); i++)
         {
             sw_read_mem(csw, frame->AddrFrame.Offset + (2 + i) * sizeof(DWORD), &val32, sizeof(val32));
             frame->Params[i] = val32;
@@ -523,7 +514,7 @@ done_err:
 }
 #endif /* DBGHELP_STATIC_LIB */
 
-static unsigned i386_map_dwarf_register(unsigned regno, BOOL eh_frame)
+static unsigned i386_map_dwarf_register(unsigned regno, const struct module* module, BOOL eh_frame)
 {
     unsigned    reg;
 
@@ -535,13 +526,11 @@ static unsigned i386_map_dwarf_register(unsigned regno, BOOL eh_frame)
     case  3: reg = CV_REG_EBX; break;
     case  4:
     case  5:
-#ifdef __APPLE__
         /* On OS X, DWARF eh_frame uses a different mapping for the registers.  It's
            apparently the mapping as emitted by GCC, at least at some point in its history. */
-        if (eh_frame)
+        if (eh_frame && module->type == DMT_MACHO)
             reg = (regno == 4) ? CV_REG_EBP : CV_REG_ESP;
         else
-#endif
             reg = (regno == 4) ? CV_REG_ESP : CV_REG_EBP;
         break;
     case  6: reg = CV_REG_ESI; break;
@@ -578,9 +567,10 @@ reg: fop   31
     return reg;
 }
 
-static void* i386_fetch_context_reg(CONTEXT* ctx, unsigned regno, unsigned* size)
+static void *i386_fetch_context_reg(union ctx *pctx, unsigned regno, unsigned *size)
 {
-#ifdef __i386__
+    WOW64_CONTEXT *ctx = &pctx->x86;
+
     switch (regno)
     {
     case CV_REG_EAX: *size = sizeof(ctx->Eax); return &ctx->Eax;
@@ -620,8 +610,17 @@ static void* i386_fetch_context_reg(CONTEXT* ctx, unsigned regno, unsigned* size
     case CV_REG_FS: *size = sizeof(ctx->SegFs); return &ctx->SegFs;
     case CV_REG_GS: *size = sizeof(ctx->SegGs); return &ctx->SegGs;
 
+    case CV_REG_XMM0 + 0: *size = 16; return &ctx->ExtendedRegisters[10*16];
+    case CV_REG_XMM0 + 1: *size = 16; return &ctx->ExtendedRegisters[11*16];
+    case CV_REG_XMM0 + 2: *size = 16; return &ctx->ExtendedRegisters[12*16];
+    case CV_REG_XMM0 + 3: *size = 16; return &ctx->ExtendedRegisters[13*16];
+    case CV_REG_XMM0 + 4: *size = 16; return &ctx->ExtendedRegisters[14*16];
+    case CV_REG_XMM0 + 5: *size = 16; return &ctx->ExtendedRegisters[15*16];
+    case CV_REG_XMM0 + 6: *size = 16; return &ctx->ExtendedRegisters[16*16];
+    case CV_REG_XMM0 + 7: *size = 16; return &ctx->ExtendedRegisters[17*16];
+
+    case CV_REG_MXCSR: *size = sizeof(DWORD); return &ctx->ExtendedRegisters[24];
     }
-#endif
     FIXME("Unknown register %x\n", regno);
     return NULL;
 }

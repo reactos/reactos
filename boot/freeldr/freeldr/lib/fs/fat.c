@@ -1341,7 +1341,7 @@ BOOLEAN FatReadFile(PFAT_FILE_INFO FatFileInfo, ULONG BytesToRead, ULONG* BytesR
         ASSERT(!FAT_IS_END_CLUSTER(FatFileInfo->CurrentCluster));
 
         //
-        // Now do the read and update BytesRead, BytesToRead, FilePointer, & Buffer
+        // Now do the read and update BytesRead & FilePointer
         //
         if (!FatReadPartialCluster(Volume, FatFileInfo->CurrentCluster, 0, BytesToRead, Buffer))
         {
@@ -1352,8 +1352,6 @@ BOOLEAN FatReadFile(PFAT_FILE_INFO FatFileInfo, ULONG BytesToRead, ULONG* BytesR
             *BytesRead += BytesToRead;
         }
         FatFileInfo->FilePointer += BytesToRead;
-        BytesToRead -= BytesToRead;
-        Buffer = (PVOID)((ULONG_PTR)Buffer + BytesToRead);
     }
 
     return TRUE;

@@ -107,6 +107,8 @@ NtfsGetBasicInformation(PFILE_OBJECT FileObject,
     if (*BufferLength < sizeof(FILE_BASIC_INFORMATION))
         return STATUS_BUFFER_TOO_SMALL;
 
+    RtlZeroMemory(BasicInfo, sizeof(FILE_BASIC_INFORMATION));
+
     BasicInfo->CreationTime.QuadPart = FileName->CreationTime;
     BasicInfo->LastAccessTime.QuadPart = FileName->LastAccessTime;
     BasicInfo->LastWriteTime.QuadPart = FileName->LastWriteTime;

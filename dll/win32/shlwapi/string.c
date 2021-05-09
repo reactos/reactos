@@ -2896,7 +2896,11 @@ HRESULT WINAPI SHLoadIndirectString(LPCWSTR src, LPWSTR dst, UINT dst_len, void 
         index_str++;
         index = atoiW(index_str);
   
+#ifdef __REACTOS__
+        hmod = LoadLibraryExW(dllname, NULL, LOAD_LIBRARY_AS_DATAFILE);
+#else
         hmod = LoadLibraryW(dllname);
+#endif
         if(!hmod) goto end;
 
         if(index < 0)

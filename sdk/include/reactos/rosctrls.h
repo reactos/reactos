@@ -251,6 +251,8 @@ class CToolbar :
 {
 public: // Configuration methods
 
+    // Hack:
+    // Use DECLARE_WND_SUPERCLASS instead!
     HWND Create(HWND hWndParent, DWORD dwStyles = 0, DWORD dwExStyles = 0)
     {
         if (!dwStyles)

@@ -39,7 +39,8 @@
 @ stdcall _errno() msvcrt._errno
 @ stub -version=0xA00+ _execute_onexit_table
 @ stdcall _exit() msvcrt._exit
-@ stdcall _fpieee_flt() msvcrt._fpieee_flt
+@ stdcall -arch=i386 _fpieee_flt() msvcrt._fpieee_flt
+@ stdcall -stub -arch=x86_64 _fpieee_flt() # ucrtbase._fpieee_flt (msvcrt x64 doesn't have this!)
 @ stdcall _fpreset() msvcrt._fpreset
 @ stub _get_doserrno
 @ stub _get_errno

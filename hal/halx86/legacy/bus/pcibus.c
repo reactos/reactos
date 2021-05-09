@@ -12,14 +12,6 @@
 #define NDEBUG
 #include <debug.h>
 
-#if defined(ALLOC_PRAGMA) && !defined(_MINIHAL_)
-#pragma alloc_text(INIT, HalpInitializePciStubs)
-#pragma alloc_text(INIT, HalpQueryPciRegistryInfo)
-#pragma alloc_text(INIT, HalpRegisterPciDebuggingDeviceInfo)
-#pragma alloc_text(INIT, HalpReleasePciDeviceForDebugging)
-#pragma alloc_text(INIT, HalpSetupPciDeviceForDebugging)
-#endif
-
 /* GLOBALS *******************************************************************/
 
 extern BOOLEAN HalpPciLockSettings;
@@ -623,7 +615,7 @@ HalpGetISAFixedPCIIrq(IN PBUS_HANDLER BusHandler,
     return STATUS_SUCCESS;
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 NTSTATUS
 NTAPI
 HalpSetupPciDeviceForDebugging(IN PVOID LoaderBlock,
@@ -633,7 +625,7 @@ HalpSetupPciDeviceForDebugging(IN PVOID LoaderBlock,
     return STATUS_NOT_IMPLEMENTED;
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 NTSTATUS
 NTAPI
 HalpReleasePciDeviceForDebugging(IN OUT PDEBUG_DEVICE_DESCRIPTOR PciDevice)
@@ -642,7 +634,7 @@ HalpReleasePciDeviceForDebugging(IN OUT PDEBUG_DEVICE_DESCRIPTOR PciDevice)
     return STATUS_NOT_IMPLEMENTED;
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 VOID
 NTAPI
 HalpRegisterPciDebuggingDeviceInfo(VOID)
@@ -877,7 +869,7 @@ HaliPciInterfaceReadConfig(IN PBUS_HANDLER RootBusHandler,
     return Length;
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 PPCI_REGISTRY_INFO_INTERNAL
 NTAPI
 HalpQueryPciRegistryInfo(VOID)
@@ -1110,7 +1102,7 @@ HalpQueryPciRegistryInfo(VOID)
 #endif
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 VOID
 NTAPI
 HalpInitializePciStubs(VOID)

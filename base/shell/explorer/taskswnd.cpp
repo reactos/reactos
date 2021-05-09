@@ -287,6 +287,7 @@ public:
 
         HWND toolbar = CToolbar::Create(hWndParent, styles);
         SetDrawTextFlags(DT_NOPREFIX, DT_NOPREFIX);
+        // HACK & FIXME: CORE-17505
         return SubclassWindow(toolbar);
     }
 };

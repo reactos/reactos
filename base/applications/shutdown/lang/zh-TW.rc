@@ -10,9 +10,9 @@ BEGIN
     PUSHBUTTON "取消(&C)", IDC_CANCEL, 178, 232, 50, 14
     LTEXT "電腦:(&M)", IDC_STATIC, 9, 9, 35, 36
     LISTBOX IDC_COMPUTER_LIST, 8, 19, 162, 55
-    PUSHBUTTON "添加...(&A)", IDC_ADD_SYSTEM, 179, 19, 50, 14
+    PUSHBUTTON "新增...(&A)", IDC_ADD_SYSTEM, 179, 19, 50, 14
     PUSHBUTTON "刪除(&R)", IDC_REMOVE_SYSTEM, 179, 36, 50, 14, WS_DISABLED
-    PUSHBUTTON "流覽...(&B)", IDC_BROWSE_SYSTEM, 179, 53, 50, 14
+    PUSHBUTTON "瀏覽...(&B)", IDC_BROWSE_SYSTEM, 179, 53, 50, 14
     LTEXT "行動", IDC_ACTION, 11, 81, 20, 14
     COMBOBOX IDC_ACTION_TYPE, 37, 79, 129, 14, WS_TABSTOP | CBS_DROPDOWN
     CHECKBOX "警告使用者", IDC_WARN_USERS, 175, 79, 55, 14, BS_AUTOCHECKBOX | WS_TABSTOP
@@ -21,7 +21,7 @@ BEGIN
     LTEXT "秒", IDC_SHOW_WARN_TWO, 124, 99, 32, 10
     GROUPBOX "關閉事件跟蹤程式", IDC_STATIC, 5, 114, 224, 114
     LTEXT "原因:", IDC_STATIC, 16, 130, 27, 8
-    CHECKBOX "計畫", IDC_PLANNED, 175, 130, 40, 12, BS_AUTOCHECKBOX | WS_TABSTOP
+    CHECKBOX "計劃", IDC_PLANNED, 175, 130, 40, 12, BS_AUTOCHECKBOX | WS_TABSTOP
     COMBOBOX IDC_REASON_CODE, 17, 142, 198, 13, WS_TABSTOP | CBS_DROPDOWN
     LTEXT "評論:(&E)", IDC_COMMENT_CAPTION, 16, 159, 38, 8
     EDITTEXT IDC_COMMENT_TEXT, 17, 171, 198, 50, WS_VSCROLL
@@ -38,10 +38,10 @@ BEGIN
     沒有參數或 /?    顯示此説明。\n\
     /i      顯示圖形化使用者介面 (GUI)。此選項必須是\n\
             第一個。\n\
-    /l      只在本地系統上登出。不能使用與 /m 或 /d。\n\
+    /l      只在本地系統上登出。不能與 /m 或 /d 一起使用。\n\
     /s      關閉電腦。\n\
-    /r      重新開機電腦。\n\
-    /g      重新開機電腦並重新啟動所有已註冊的應用程式。\n\
+    /r      重新啟動電腦。\n\
+    /g      重新啟動電腦並重新啟動所有已註冊的應用程式。\n\
     /a      取消延遲關閉電源。只有在延遲週期\n\
             內使用。\n\
     /p      關閉本地電腦沒有任何超時或警告。 可以\n\
@@ -51,13 +51,13 @@ BEGIN
     /m \\\\computer  指定目的電腦 (UNC 或 IP 位址)。\n\
     /t xxx  將超時時間設置為 xxx 秒後關閉。\n\
             有效範圍從 0 開始到 315360000 (10 年)，\n\
-            30 的預設值。\n\
+            預設值為 30。\n\
     /c ""comment""  關閉原因發表評論，或重新開機。\n\
             512 個字元最大允許。\n\
     /f      強制運行沒有警告使用者關閉應用程式。如果您\n\
             不指定任何其他參數，此選項將也登出。\n\
     /d [p|u:]xx:yy  給關機或重新開機的原因代碼。\n\
-            p 指示關機或重新開機計畫。\n\
+            p 指示關機或重新開機計劃。\n\
             u 表示原因由使用者定義。\n\
             如果指定了既不是 p 也不是你，不會計畫關機或\n\
             重新開機。\n\
@@ -65,11 +65,11 @@ BEGIN
             yy 是次要原因代碼 (小於 65536 正整數)。\n"
 
     IDS_ERROR_SHUTDOWN_REBOOT "錯誤: 在同一時間無法關機和重新開機。\n"
-    IDS_ERROR_TIMEOUT "錯誤: %u 的超時值為 (0-315360000) 出界。\n"
-    IDS_ERROR_ABORT "錯誤: 無法中止的系統關閉。\n"
+    IDS_ERROR_TIMEOUT "錯誤: 等候逾時的值 %u 超出範圍 (0-315360000)。\n"
+    IDS_ERROR_ABORT "錯誤: 無法終止的系統關閉。\n"
     IDS_ERROR_LOGOFF "錯誤: 無法登出系統。\n"
     IDS_ERROR_SHUTDOWN "錯誤: 無法關閉系統。\n"
-    IDS_ERROR_RESTART "錯誤: 無法重新開機系統。\n"
+    IDS_ERROR_RESTART "錯誤: 無法重新啟動系統。\n"
     IDS_ERROR_MAX_COMMENT_LENGTH "錯誤: 評論長度超出由系統設置的最大字元數限制。\n"
     IDS_ERROR_HIBERNATE "錯誤: 無法發送系統進入睡眠模式。\n"
     IDS_ERROR_HIBERNATE_LOCAL "錯誤: 無法遠端啟動睡眠模式。\n"

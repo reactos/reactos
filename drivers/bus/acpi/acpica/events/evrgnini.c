@@ -75,6 +75,7 @@ AcpiEvSystemMemoryRegionSetup (
 {
     ACPI_OPERAND_OBJECT     *RegionDesc = (ACPI_OPERAND_OBJECT *) Handle;
     ACPI_MEM_SPACE_CONTEXT  *LocalRegionContext;
+    ACPI_MEM_MAPPING        *Mm;
 
 
     ACPI_FUNCTION_TRACE (EvSystemMemoryRegionSetup);
@@ -86,12 +87,14 @@ AcpiEvSystemMemoryRegionSetup (
         {
             LocalRegionContext = (ACPI_MEM_SPACE_CONTEXT *) *RegionContext;
 
-            /* Delete a cached mapping if present */
+            /* Delete memory mappings if present */
 
-            if (LocalRegionContext->MappedLength)
+            while (LocalRegionContext->FirstMm)
             {
-                AcpiOsUnmapMemory (LocalRegionContext->MappedLogicalAddress,
-                    LocalRegionContext->MappedLength);
+                Mm = LocalRegionContext->FirstMm;
+                LocalRegionContext->FirstMm = Mm->NextMm;
+                AcpiOsUnmapMemory(Mm->LogicalAddress, Mm->Length);
+                ACPI_FREE(Mm);
             }
             ACPI_FREE (LocalRegionContext);
             *RegionContext = NULL;

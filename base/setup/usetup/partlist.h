@@ -71,10 +71,22 @@ typedef struct _PARTLIST_UI
 
 
 VOID
-GetPartTypeStringFromPartitionType(
-    IN UCHAR partitionType,
-    OUT PCHAR strPartType,
-    IN ULONG cchPartType);
+GetPartitionTypeString(
+    IN PPARTENTRY PartEntry,
+    OUT PSTR strBuffer,
+    IN ULONG cchBuffer);
+
+VOID
+PartitionDescription(
+    IN PPARTENTRY PartEntry,
+    OUT PSTR strBuffer,
+    IN SIZE_T cchBuffer);
+
+VOID
+DiskDescription(
+    IN PDISKENTRY DiskEntry,
+    OUT PSTR strBuffer,
+    IN SIZE_T cchBuffer);
 
 VOID
 InitPartitionListUi(

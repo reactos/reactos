@@ -371,28 +371,58 @@ PerformTest(
                 }
                 else if (TestId == 4)
                 {
+                    FileSizes.AllocationSize.QuadPart += VACB_MAPPING_GRANULARITY;
+                    CcSetFileSizes(TestFileObject, &FileSizes);
+
                     /* Map after EOF */
                     Ret = FALSE;
                     Offset.QuadPart = FileSizes.FileSize.QuadPart + 0x1000;
 
                     KmtStartSeh();
-                    Ret = CcMapData(TestFileObject, &Offset, 0x1000, 0, &Bcb, (PVOID *)&Buffer);
+                    Ret = CcMapData(TestFileObject, &Offset, 0x1000, MAP_WAIT, &Bcb, (PVOID *)&Buffer);
                     KmtEndSeh(STATUS_SUCCESS);
-                    ok(Ret == FALSE, "CcMapData succeed\n");
+                    ok(Ret == TRUE, "CcMapData failed\n");
 
                     if (Ret)
                     {
                         CcUnpinData(Bcb);
                     }
 
-                    /* Map a VACB after EOF */
+                    /* Map a VACB after EOF. */
                     Ret = FALSE;
                     Offset.QuadPart = FileSizes.FileSize.QuadPart + 0x1000 + VACB_MAPPING_GRANULARITY;
 
                     KmtStartSeh();
-                    Ret = CcMapData(TestFileObject, &Offset, 0x1000, 0, &Bcb, (PVOID *)&Buffer);
-                    KmtEndSeh(STATUS_ACCESS_VIOLATION);
-                    ok(Ret == FALSE, "CcMapData succeed\n");
+                    Ret = CcMapData(TestFileObject, &Offset, 0x1000, MAP_WAIT, &Bcb, (PVOID *)&Buffer);
+                    KmtEndSeh(STATUS_SUCCESS);
+                    ok(Ret == TRUE, "CcMapData failed\n");
+
+                    if (Ret)
+                    {
+                        CcUnpinData(Bcb);
+                    }
+
+                    /* Map after Allocation */
+                    Ret = FALSE;
+                    Offset.QuadPart = FileSizes.AllocationSize.QuadPart + 0x1000;
+
+                    KmtStartSeh();
+                    Ret = CcMapData(TestFileObject, &Offset, 0x1000, MAP_WAIT, &Bcb, (PVOID *)&Buffer);
+                    KmtEndSeh(STATUS_SUCCESS);
+                    ok(Ret == TRUE, "CcMapData failed\n");
+
+                    if (Ret)
+                    {
+                        CcUnpinData(Bcb);
+                    }
+
+                    Ret = FALSE;
+                    Offset.QuadPart = FileSizes.AllocationSize.QuadPart + 0x1000 + VACB_MAPPING_GRANULARITY;
+
+                    KmtStartSeh();
+                    Ret = CcMapData(TestFileObject, &Offset, 0x1000, MAP_WAIT, &Bcb, (PVOID *)&Buffer);
+                    KmtEndSeh(STATUS_SUCCESS);
+                    ok(Ret == TRUE, "CcMapData failed\n");
 
                     if (Ret)
                     {
@@ -404,9 +434,9 @@ PerformTest(
                     Offset.QuadPart = 0x0;
 
                     KmtStartSeh();
-                    Ret = CcMapData(TestFileObject, &Offset, 0x1000 + VACB_MAPPING_GRANULARITY, 0, &Bcb, (PVOID *)&Buffer);
+                    Ret = CcMapData(TestFileObject, &Offset, 0x1000 + VACB_MAPPING_GRANULARITY, MAP_WAIT, &Bcb, (PVOID *)&Buffer);
                     KmtEndSeh(STATUS_SUCCESS);
-                    ok(Ret == FALSE, "CcMapData succeed\n");
+                    ok(Ret == TRUE, "CcMapData failed\n");
 
                     if (Ret)
                     {
@@ -475,7 +505,7 @@ TestMessageHandler(
             ok_eq_ulong((ULONG)InLength, sizeof(ULONG));
             PerformTest(*(PULONG)Buffer, DeviceObject);
             break;
-            
+
         case IOCTL_FINISH_TEST:
             ok_eq_ulong((ULONG)InLength, sizeof(ULONG));
             CleanupTest(*(PULONG)Buffer, DeviceObject);

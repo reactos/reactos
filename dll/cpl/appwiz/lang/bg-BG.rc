@@ -26,7 +26,7 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     LTEXT "Вълшебникът ви помага за създаването на препратки към местни или мрежови приложения, файлове, папки, компютри или адреси в интернет.", -1, 120, 15, 200, 32
     LTEXT "Напишете местоположението на предмета:", -1, 120, 50, 160, 10
-    EDITTEXT IDC_SHORTCUT_LOCATION, 120, 65, 150, 15, ES_LEFT
+    EDITTEXT IDC_SHORTCUT_LOCATION, 120, 65, 150, 15, ES_LEFT | ES_AUTOHSCROLL
     PUSHBUTTON "Обзор...", IDC_SHORTCUT_BROWSE, 275, 65, 55, 15, ES_LEFT
     LTEXT "Натиснете ""Напред"" за продължаване.", -1, 120, 100, 160, 10
 END
@@ -37,7 +37,7 @@ CAPTION "Изберете заглавие за приложението"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     LTEXT "&Напишете име за препратката:", -1, 120, 15, 150, 10
-    EDITTEXT IDC_SHORTCUT_NAME, 120, 35, 150, 15, ES_LEFT
+    EDITTEXT IDC_SHORTCUT_NAME, 120, 35, 150, 15, ES_LEFT | ES_AUTOHSCROLL
     LTEXT "Натиснете ""Край"" за създаване на препратка.", -1, 120, 50, 170, 10
 END
 

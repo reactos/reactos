@@ -185,7 +185,7 @@
 # Mount Point Manager
 #   M: HeisSpiter, Heis Spiter, Pierre Schweitzer
 #   S: Maintained
-/drivers/filters/mountmgr/ @HeisSpiter
+/drivers/storage/mountmgr/ @HeisSpiter
 
 # Network Drivers
 #   M:

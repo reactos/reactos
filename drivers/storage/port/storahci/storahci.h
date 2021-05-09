@@ -645,7 +645,7 @@ RemoveQueue (
     __inout PAHCI_QUEUE Queue
     );
 
-__inline
+FORCEINLINE
 PAHCI_SRB_EXTENSION
 GetSrbExtension(
     __in PSCSI_REQUEST_BLOCK Srb

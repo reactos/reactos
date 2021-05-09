@@ -1629,7 +1629,7 @@ IoForwardIrpSynchronously(IN PDEVICE_OBJECT DeviceObject,
     NTSTATUS Status;
 
     /* Check if next stack location is available */
-    if (Irp->CurrentLocation < Irp->StackCount)
+    if (Irp->CurrentLocation > Irp->StackCount || Irp->CurrentLocation <= 1)
     {
         /* No more stack location */
         return FALSE;

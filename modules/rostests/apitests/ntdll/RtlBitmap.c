@@ -2,6 +2,8 @@
 #include "precomp.h"
 #include <versionhelpers.h>
 
+#include <pseh/pseh2.h>
+
 static BOOL IsBroken = FALSE;
 
 void
@@ -307,7 +309,7 @@ Test_RtlNumberOfSetBits(void)
 
     RtlInitializeBitMap(&BitMapHeader, Buffer, 0);
     ok_int(RtlNumberOfSetBits(&BitMapHeader), 0);
-    ok_hex(Buffer[0], IsBroken ? 0x7f00ff0f : 0x7f00ff0f);
+    ok_hex(Buffer[0], IsBroken ? 0x7f00ff0f : 0xff00ff0f);
     ok_hex(Buffer[1], 0x3F303F30);
 
     FreeGuarded(Buffer);

@@ -1,0 +1,32 @@
+LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
+
+STRINGTABLE
+BEGIN
+    IDS_USAGE "\n\
+Uso: %s [unidade:] [-F] [-V] [-R] [-C]\n\n\
+[unidade:]  Especifica a unidade a verificar.\n\
+-F          Corrige os erros no disco.\n\
+-V          Mostra o caminho completo de cada ficheiro no disco.\n\
+-R          Localiza sectores danificados e recupera informações legíveis.\n\
+-C          Verifica a unidade sómente se existirem alterações desde a\n\
+            ultima verificação.\n\
+\n"
+
+    IDS_PERCENT_COMPL "%d percento completo.\r"
+    IDS_FILE_SYSTEM "O sistema de ficheiros é %s.\n"
+    IDS_ABOUT "\n\
+Chkdskx v1.0.1 by Mark Russinovich\n\
+Systems Internals - http://www.sysinternals.com\n\
+ReactOS adaptation 1999 by Emanuele Aliberti\n\n"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_VOLUME_IN_USE "O volume está em uso e não pode ser bloqueado\n"
+    IDS_CHKDSK_FAIL "O chkdsk não consegui terminar com sucesso.\n\n"
+    IDS_NO_ENTRY_POINT "O ponto de entrada FMIFS não foi encontrado.\n\n"
+    IDS_BAD_ARGUMENT "Argumento desconhecido: %s\n"
+    IDS_NO_CURRENT_DIR "Não foi possível obter o directório actual. Código de erro: "
+    IDS_NO_QUERY_VOL "Não foi possível consultar o volume. Código de erro: "
+    IDS_VOLUME_IN_USE_PROC "Chkdsk não pode ser executado porque o volume está em uso por outro processo.\n\n"
+END

@@ -54,15 +54,18 @@ void NewGame(void);
 #define Y_BORDERWITHFRAME        20
 #define Y_ROWSTACK_BORDER        32
 extern int yRowStackCardOffset;
+extern int VisiblePileCards;
 
 extern CardRegion *pDeck;
 extern CardRegion *pPile;
 extern CardRegion *pSuitStack[];
 extern CardRegion *pRowStack[];
+extern CardStack   activepile;
 
 extern void UpdateStatusBar(void);
 extern void SetPlayTimer(void);
 extern int GetScoreMode(void);
+extern void SetUndoMenuState(bool enable);
 
 bool CARDLIBPROC RowStackDragProc(CardRegion &stackobj, int iNumCards);
 bool CARDLIBPROC RowStackDropProc(CardRegion &stackobj,  CardStack &dragcards);
@@ -79,6 +82,10 @@ void CARDLIBPROC PileDblClickProc(CardRegion &stackobj, int iNumClicked);
 void CARDLIBPROC PileClickProc(CardRegion &stackobj, int iNumClicked);
 
 void CARDLIBPROC PileRemoveProc(CardRegion &stackobj, int iRemoved);
+
+void SetUndo(int set_source_id, int set_destination_id, int set_number_of_cards, int set_prev_score, int set_prev_visible_pile_cards);
+void ClearUndo(void);
+void Undo(void);
 
 
 #endif /* _SOL_PCH_ */

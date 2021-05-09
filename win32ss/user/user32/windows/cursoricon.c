@@ -1866,7 +1866,7 @@ CURSORICON_CopyImage(
             ustrRsrc.Buffer, IS_INTRESOURCE(ustrRsrc.Buffer) ? L"" : ustrRsrc.Buffer);
 
         /* Get the module handle or load the module */
-        hModule = LoadLibraryExW(ustrModule.Buffer, NULL, LOAD_LIBRARY_AS_IMAGE_RESOURCE | LOAD_LIBRARY_AS_DATAFILE);
+        hModule = LoadLibraryExW(ustrModule.Buffer, NULL, /* NT6+: LOAD_LIBRARY_AS_IMAGE_RESOURCE | */ LOAD_LIBRARY_AS_DATAFILE);
         if (!hModule)
         {
             DWORD err = GetLastError();
@@ -2615,7 +2615,7 @@ BOOL WINAPI SetSystemCursor(
 {
     if (hcur == NULL)
     {
-       hcur = LoadImageW( 0, MAKEINTRESOURCE(id), IMAGE_CURSOR, 0, 0, LR_DEFAULTSIZE );
+       hcur = LoadImageW(NULL, MAKEINTRESOURCEW(id), IMAGE_CURSOR, 0, 0, LR_DEFAULTSIZE);
        if (hcur == NULL)
        {
           return FALSE;

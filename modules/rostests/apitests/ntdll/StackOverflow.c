@@ -7,6 +7,8 @@
 
 #include "precomp.h"
 
+#include <pseh/pseh2.h>
+
 #ifdef _MSC_VER
 #pragma warning(disable : 4717) // disable warning about recursive function
 #endif

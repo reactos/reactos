@@ -28,6 +28,17 @@ STRINGTABLE
   IDS_CERT_DATE_INVALID "The date on the certificate is invalid."
   IDS_CERT_CN_INVALID   "The name on the certificate does not match the site."
   IDS_CERT_ERRORS       "There is at least one unspecified security problem with this certificate."
+  IDS_CERT_SUBJECT      "Subject"
+  IDS_CERT_ISSUER       "Issuer"
+  IDS_CERT_EFFECTIVE    "Effective Date"
+  IDS_CERT_EXPIRATION   "Expiration Date"
+  IDS_CERT_PROTOCOL     "Security Protocol"
+  IDS_CERT_SIGNATURE    "Signature Type"
+  IDS_CERT_ENCRYPTION   "Encryption Type"
+  IDS_CERT_PRIVACY      "Privacy Strength"
+  IDS_CERT_HIGH         "High"
+  IDS_CERT_LOW          "Low"
+  IDS_CERT_BITS         "bits"
 }
 
 IDD_PROXYDLG DIALOGEX 36, 24, 220, 146

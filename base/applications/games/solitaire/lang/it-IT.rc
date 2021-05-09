@@ -72,6 +72,7 @@ BEGIN
     BEGIN
         MENUITEM "&Dai carte\tF2", IDM_GAME_NEW
         MENUITEM SEPARATOR
+        MENUITEM "&Undo", IDM_GAME_UNDO, GRAYED
         MENUITEM "Maz&zo...", IDM_GAME_DECK
         MENUITEM "O&pzioni...", IDM_GAME_OPTIONS
         MENUITEM SEPARATOR

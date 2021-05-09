@@ -1,0 +1,9 @@
+#include <windef.h>
+
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
+
+STRINGTABLE
+BEGIN
+    3 "Test string one."
+END
+

@@ -1,10 +1,8 @@
 
-set_cpp(WITH_RUNTIME)
-include_directories(${REACTOS_SOURCE_DIR}/sdk/lib/3rdparty/cardlib)
-
 list(APPEND SOURCE
     solcreate.cpp
     solgame.cpp
+    solundo.cpp
     solitaire.cpp
     solitaire.h)
 

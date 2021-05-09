@@ -36,6 +36,9 @@ static BOOLEAN TestWriteCalled = FALSE;
 static ULONGLONG Memory = 0;
 static BOOLEAN TS = FALSE;
 
+LARGE_INTEGER WriteOffset;
+ULONG WriteLength;
+
 NTSTATUS
 TestEntry(
     _In_ PDRIVER_OBJECT DriverObject,
@@ -183,13 +186,13 @@ MapAndLockUserBuffer(
     return MmGetSystemAddressForMdlSafe(Irp->MdlAddress, NormalPagePriority);
 }
 
-#define ok_bcb(B, L, O)                                                                 \
-{                                                                                       \
-    PPUBLIC_BCB public_bcb = (B);                                                       \
-    ok(public_bcb->NodeTypeCode == 0x2FD, "Not a BCB: %x\n", public_bcb->NodeTypeCode); \
-    ok(public_bcb->NodeByteSize == 0, "Invalid size: %d\n", public_bcb->NodeByteSize);  \
-    ok_eq_ulong(public_bcb->MappedLength, (L));                                         \
-    ok_eq_longlong(public_bcb->MappedFileOffset.QuadPart, (O));                         \
+#define ok_bcb(B, L, O)                                                                   \
+{                                                                                         \
+    PPUBLIC_BCB public_bcb = (B);                                                         \
+    ok(public_bcb->NodeTypeCode == 0x2FD, "Not a BCB: %04x\n", public_bcb->NodeTypeCode); \
+    ok(public_bcb->NodeByteSize == 0, "Invalid size: %d\n", public_bcb->NodeByteSize);    \
+    ok_eq_ulong(public_bcb->MappedLength, (L));                                           \
+    ok_eq_longlong(public_bcb->MappedFileOffset.QuadPart, (O));                           \
 }
 
 static
@@ -558,15 +561,17 @@ PerformTest(
                 }
                 else if (TestId == 5)
                 {
+                    FileSizes.AllocationSize.QuadPart += VACB_MAPPING_GRANULARITY;
+                    CcSetFileSizes(TestFileObject, &FileSizes);
+
                     /* Pin after EOF */
                     Ret = FALSE;
                     Offset.QuadPart = FileSizes.FileSize.QuadPart + 0x1000;
 
                     KmtStartSeh();
-                    Ret = CcPinRead(TestFileObject, &Offset, 0x1000, 0, &Bcb, (PVOID *)&Buffer);
+                    Ret = CcPinRead(TestFileObject, &Offset, 0x1000, PIN_WAIT, &Bcb, (PVOID *)&Buffer);
                     KmtEndSeh(STATUS_SUCCESS);
-                    ok(Ret == FALSE, "CcPinRead succeed\n");
-
+                    ok(Ret == TRUE, "CcPinRead failed\n");
                     if (Ret)
                     {
                         CcUnpinData(Bcb);
@@ -577,13 +582,60 @@ PerformTest(
                     Offset.QuadPart = FileSizes.FileSize.QuadPart + 0x1000 + VACB_MAPPING_GRANULARITY;
 
                     KmtStartSeh();
-                    Ret = CcPinRead(TestFileObject, &Offset, 0x1000, 0, &Bcb, (PVOID *)&Buffer);
-                    KmtEndSeh(STATUS_ACCESS_VIOLATION);
-                    ok(Ret == FALSE, "CcPinRead succeed\n");
-
+                    Ret = CcPinRead(TestFileObject, &Offset, 0x1000, PIN_WAIT, &Bcb, (PVOID *)&Buffer);
+                    KmtEndSeh(STATUS_SUCCESS);
+                    ok(Ret == TRUE, "CcPinRead failed\n");
                     if (Ret)
                     {
                         CcUnpinData(Bcb);
+                    }
+
+                    /* Pin after Allocation */
+                    Ret = FALSE;
+                    Offset.QuadPart = FileSizes.AllocationSize.QuadPart + 0x1000;
+
+                    KmtStartSeh();
+                    Ret = CcPinRead(TestFileObject, &Offset, 0x1000, PIN_WAIT, &Bcb, (PVOID *)&Buffer);
+                    KmtEndSeh(STATUS_SUCCESS);
+                    ok(Ret == TRUE, "CcPinRead failed\n");
+                    if (Ret)
+                    {
+                        /* Set this one dirty */
+                        CcSetDirtyPinnedData(Bcb, NULL);
+
+                        CcUnpinData(Bcb);
+
+                        WriteOffset.QuadPart = -1LL;
+                        WriteLength = MAXULONG;
+                        /* Flush to trigger the write */
+                        CcFlushCache(TestFileObject->SectionObjectPointer, &Offset, 0x1000, NULL);
+
+                        ok_eq_longlong(WriteOffset.QuadPart, Offset.QuadPart);
+                        ok_eq_ulong(WriteLength, 0x1000);
+                    }
+
+                    /* Pin a VACB after Allocation */
+                    Ret = FALSE;
+                    Offset.QuadPart = FileSizes.AllocationSize.QuadPart + 0x1000 + VACB_MAPPING_GRANULARITY;
+
+                    KmtStartSeh();
+                    Ret = CcPinRead(TestFileObject, &Offset, 0x1000, PIN_WAIT, &Bcb, (PVOID *)&Buffer);
+                    KmtEndSeh(STATUS_SUCCESS);
+                    ok(Ret == TRUE, "CcPinRead failed\n");
+                    if (Ret)
+                    {
+                        /* Set this one dirty */
+                        CcSetDirtyPinnedData(Bcb, NULL);
+
+                        CcUnpinData(Bcb);
+
+                        WriteOffset.QuadPart = -1LL;
+                        WriteLength = MAXULONG;
+                        /* Flush to trigger the write */
+                        CcFlushCache(TestFileObject->SectionObjectPointer, &Offset, 0x1000, NULL);
+
+                        ok_eq_longlong(WriteOffset.QuadPart, Offset.QuadPart);
+                        ok_eq_ulong(WriteLength, 0x1000);
                     }
 
                     /* Pin more than a VACB */
@@ -591,13 +643,23 @@ PerformTest(
                     Offset.QuadPart = 0x0;
 
                     KmtStartSeh();
-                    Ret = CcPinRead(TestFileObject, &Offset, 0x1000 + VACB_MAPPING_GRANULARITY, 0, &Bcb, (PVOID *)&Buffer);
+                    Ret = CcPinRead(TestFileObject, &Offset, 0x1000 + VACB_MAPPING_GRANULARITY, PIN_WAIT, &Bcb, (PVOID *)&Buffer);
                     KmtEndSeh(STATUS_SUCCESS);
-                    ok(Ret == FALSE, "CcPinRead succeed\n");
-
+                    ok(Ret == TRUE, "CcPinRead failed\n");
                     if (Ret)
                     {
+                        /* Set this one dirty */
+                        CcSetDirtyPinnedData(Bcb, NULL);
+
                         CcUnpinData(Bcb);
+
+                        /* The data is dirtified through the VACB */
+                        WriteOffset.QuadPart = -1LL;
+                        WriteLength = MAXULONG;
+                        CcFlushCache(TestFileObject->SectionObjectPointer, &Offset, VACB_MAPPING_GRANULARITY + 0x1000, NULL);
+
+                        ok_eq_longlong(WriteOffset.QuadPart, Offset.QuadPart);
+                        ok_eq_ulong(WriteLength, VACB_MAPPING_GRANULARITY + 0x1000);
                     }
                 }
                 else if (TestId == 6)
@@ -690,7 +752,7 @@ TestMessageHandler(
             ok_eq_ulong((ULONG)InLength, sizeof(ULONG));
             PerformTest(*(PULONG)Buffer, DeviceObject);
             break;
-            
+
         case IOCTL_FINISH_TEST:
             ok_eq_ulong((ULONG)InLength, sizeof(ULONG));
             CleanupTest(*(PULONG)Buffer, DeviceObject);
@@ -775,28 +837,50 @@ TestIrpHandler(
         Offset = IoStack->Parameters.Write.ByteOffset;
         Length = IoStack->Parameters.Write.Length;
 
-        ok(TestTestId == 6, "Unexpected test id: %d\n", TestTestId);
+        ok((TestTestId == 5) || (TestTestId == 6), "Unexpected test id: %d\n", TestTestId);
         ok_eq_pointer(DeviceObject, TestDeviceObject);
         ok_eq_pointer(IoStack->FileObject, TestFileObject);
 
         ok(FlagOn(Irp->Flags, IRP_NOCACHE), "Not coming from Cc\n");
 
         ok_irql(PASSIVE_LEVEL);
-        ok(Offset.QuadPart == 0, "Offset is not null: %I64i\n", Offset.QuadPart);
-        ok(Length % PAGE_SIZE == 0, "Length is not aligned: %I64i\n", Length);
-        ok(Length == PAGE_SIZE * 4, "Length is not MappedLength-sized: %I64i\n", Length);
 
-        Buffer = MapAndLockUserBuffer(Irp, Length);
-        ok(Buffer != NULL, "Null pointer!\n");
+        if (TestTestId == 5)
+        {
+            /* This assumes continuous writes. */
+            if (WriteOffset.QuadPart != -1)
+            {
+                LONGLONG WriteEnd = WriteOffset.QuadPart + WriteLength;
 
-        Mdl = Irp->MdlAddress;
-        ok(Mdl != NULL, "Null pointer for MDL!\n");
-        ok((Mdl->MdlFlags & MDL_PAGES_LOCKED) != 0, "MDL not locked\n");
-        ok((Mdl->MdlFlags & MDL_SOURCE_IS_NONPAGED_POOL) == 0, "MDL from non paged\n");
-        ok((Irp->Flags & IRP_PAGING_IO) != 0, "Non paging IO\n");
+                if (WriteOffset.QuadPart > Offset.QuadPart)
+                    WriteOffset = Offset;
+                if (WriteEnd < (Offset.QuadPart + Length))
+                    WriteLength = (Offset.QuadPart + Length) - WriteOffset.QuadPart;
+            }
+            else
+            {
+                WriteOffset = Offset;
+                WriteLength = Length;
+            }
+        }
+        else
+        {
+            ok(Offset.QuadPart == 0, "Offset is not null: %I64i\n", Offset.QuadPart);
+            ok(Length % PAGE_SIZE == 0, "Length is not aligned: %I64i\n", Length);
+            ok(Length == PAGE_SIZE * 4, "Length is not MappedLength-sized: %I64i\n", Length);
 
-        ok_bool_false(TestWriteCalled, "Write has been unexpectedly called twice!\n");
-        TestWriteCalled = TRUE;
+            Buffer = MapAndLockUserBuffer(Irp, Length);
+            ok(Buffer != NULL, "Null pointer!\n");
+
+            Mdl = Irp->MdlAddress;
+            ok(Mdl != NULL, "Null pointer for MDL!\n");
+            ok((Mdl->MdlFlags & MDL_PAGES_LOCKED) != 0, "MDL not locked\n");
+            ok((Mdl->MdlFlags & MDL_SOURCE_IS_NONPAGED_POOL) == 0, "MDL from non paged\n");
+            ok((Irp->Flags & IRP_PAGING_IO) != 0, "Non paging IO\n");
+
+            ok_bool_false(TestWriteCalled, "Write has been unexpectedly called twice!\n");
+            TestWriteCalled = TRUE;
+        }
 
         Status = STATUS_SUCCESS;
         Irp->IoStatus.Information = Length;

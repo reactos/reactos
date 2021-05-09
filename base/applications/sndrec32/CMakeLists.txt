@@ -1,6 +1,4 @@
 
-set_cpp(WITH_RUNTIME)
-
 list(APPEND SOURCE
     audio_format.cpp
     audio_membuffer.cpp
@@ -15,6 +13,7 @@ list(APPEND SOURCE
 file(GLOB sndrec32_rc_deps resources/*.*)
 add_rc_deps(rsrc.rc ${sndrec32_rc_deps})
 add_executable(sndrec32 ${SOURCE} rsrc.rc)
+target_link_libraries(sndrec32 cpprt)
 set_module_type(sndrec32 win32gui UNICODE)
 add_importlibs(sndrec32 winmm user32 msacm32 comctl32 comdlg32 gdi32 shell32 msvcrt kernel32)
 add_pch(sndrec32 stdafx.h SOURCE)

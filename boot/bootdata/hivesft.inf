@@ -1229,11 +1229,11 @@ HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\Central Asia Stand
 0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,\
 0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00
 
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\N. Central Asia Standard Time","Display",0x00000000,%GMT_PLUS_06_B_DESC%
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\N. Central Asia Standard Time","Dlt",0x00000000,%GMT_PLUS_06_B_DAYLIGHT%
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\N. Central Asia Standard Time","Std",0x00000000,%GMT_PLUS_06_B_STANDARD%
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\N. Central Asia Standard Time","Index",0x00010001,201
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\N. Central Asia Standard Time","TZI",0x00000001,\
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\Omsk Standard Time","Display",0x00000000,%GMT_PLUS_06_B_DESC%
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\Omsk Standard Time","Dlt",0x00000000,%GMT_PLUS_06_B_DAYLIGHT%
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\Omsk Standard Time","Std",0x00000000,%GMT_PLUS_06_B_STANDARD%
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\Omsk Standard Time","Index",0x00010001,201
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\Omsk Standard Time","TZI",0x00000001,\
 0x98,0xfe,0xff,0xff,0x00,0x00,0x00,0x00,0xc4,0xff,0xff,0xff,\
 0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,\
 0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00
@@ -1247,20 +1247,38 @@ HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\Myanmar Standard T
 0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,\
 0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00
 
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\SE Asia Standard Time","Display",0x00000000,%GMT_PLUS_07_A_DESC%
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\SE Asia Standard Time","Dlt",0x00000000,%GMT_PLUS_07_A_DAYLIGHT%
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\SE Asia Standard Time","Std",0x00000000,%GMT_PLUS_07_A_STANDARD%
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\N. Central Asia Standard Time","Display",0x00000000,%GMT_PLUS_07_A_DESC%
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\N. Central Asia Standard Time","Dlt",0x00000000,%GMT_PLUS_07_A_DAYLIGHT%
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\N. Central Asia Standard Time","Std",0x00000000,%GMT_PLUS_07_A_STANDARD%
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\N. Central Asia Standard Time","Index",0x00010001,204
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\N. Central Asia Standard Time","TZI",0x00000001,\
+0x5c,0xfe,0xff,0xff,0x00,0x00,0x00,0x00,0xc4,0xff,0xff,0xff,\
+0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,\
+0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00
+
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\SE Asia Standard Time","Display",0x00000000,%GMT_PLUS_07_B_DESC%
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\SE Asia Standard Time","Dlt",0x00000000,%GMT_PLUS_07_B_DAYLIGHT%
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\SE Asia Standard Time","Std",0x00000000,%GMT_PLUS_07_B_STANDARD%
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\SE Asia Standard Time","Index",0x00010001,205
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\SE Asia Standard Time","TZI",0x00000001,\
 0x5c,0xfe,0xff,0xff,0x00,0x00,0x00,0x00,0xc4,0xff,0xff,0xff,\
 0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,\
 0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00
 
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\North Asia Standard Time","Display",0x00000000,%GMT_PLUS_07_B_DESC%
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\North Asia Standard Time","Dlt",0x00000000,%GMT_PLUS_07_B_DAYLIGHT%
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\North Asia Standard Time","Std",0x00000000,%GMT_PLUS_07_B_STANDARD%
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\North Asia Standard Time","Display",0x00000000,%GMT_PLUS_07_C_DESC%
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\North Asia Standard Time","Dlt",0x00000000,%GMT_PLUS_07_C_DAYLIGHT%
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\North Asia Standard Time","Std",0x00000000,%GMT_PLUS_07_C_STANDARD%
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\North Asia Standard Time","Index",0x00010001,207
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\North Asia Standard Time","TZI",0x00000001,\
+0x5c,0xfe,0xff,0xff,0x00,0x00,0x00,0x00,0xc4,0xff,0xff,0xff,\
+0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,\
+0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00
+
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\Tomsk Standard Time","Display",0x00000000,%GMT_PLUS_07_D_DESC%
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\Tomsk Standard Time","Dlt",0x00000000,%GMT_PLUS_07_D_DAYLIGHT%
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\Tomsk Standard Time","Std",0x00000000,%GMT_PLUS_07_D_STANDARD%
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\Tomsk Standard Time","Index",0x00010001,208
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\Tomsk Standard Time","TZI",0x00000001,\
 0x5c,0xfe,0xff,0xff,0x00,0x00,0x00,0x00,0xc4,0xff,0xff,0xff,\
 0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,\
 0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00
@@ -1409,15 +1427,6 @@ HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\West Pacific Stand
 0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,\
 0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00
 
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\Magadan Standard Time","Display",0x00000000,%GMT_PLUS_10_F_DESC%
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\Magadan Standard Time","Dlt",0x00000000,%GMT_PLUS_10_F_DAYLIGHT%
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\Magadan Standard Time","Std",0x00000000,%GMT_PLUS_10_F_STANDARD%
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\Magadan Standard Time","Index",0x00010001,278
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\Magadan Standard Time","TZI",0x00000001,\
-0xa8,0xfd,0xff,0xff,0x00,0x00,0x00,0x00,0xc4,0xff,0xff,0xff,\
-0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,\
-0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00
-
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\Central Pacific Standard Time","Display",0x00000000,%GMT_PLUS_11_A_DESC%
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\Central Pacific Standard Time","Dlt",0x00000000,%GMT_PLUS_11_A_DAYLIGHT%
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\Central Pacific Standard Time","Std",0x00000000,%GMT_PLUS_11_A_STANDARD%
@@ -1432,6 +1441,16 @@ HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\Russia Time Zone 1
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\Russia Time Zone 10","Std",0x00000000,%GMT_PLUS_11_B_STANDARD%
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\Russia Time Zone 10","Index",0x00010001,282
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\Russia Time Zone 10","TZI",0x00000001,\
+0x6c,0xfd,0xff,0xff,0x00,0x00,0x00,0x00,0xc4,0xff,0xff,0xff,\
+0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,\
+0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00
+
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\Magadan Standard Time","Display",0x00000000,%GMT_PLUS_11_C_DESC%
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\Magadan Standard Time","Dlt",0x00000000,%GMT_PLUS_11_C_DAYLIGHT%
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\Magadan Standard Time","Std",0x00000000,%GMT_PLUS_11_C_STANDARD%
+;; Was previously 278
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\Magadan Standard Time","Index",0x00010001,283
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\Magadan Standard Time","TZI",0x00000001,\
 0x6c,0xfd,0xff,0xff,0x00,0x00,0x00,0x00,0xc4,0xff,0xff,0xff,\
 0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,\
 0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00
@@ -2160,11 +2179,11 @@ GMT_MINUS_01_B_DESC    ="(GMT-01:00) Cape Verde Is."
 GMT_MINUS_01_B_DAYLIGHT="Cape Verde Daylight Time"
 GMT_MINUS_01_B_STANDARD="Cape Verde Standard Time"
 
-GMT_PLUS_00_A_DESC    ="(GMT) Greenwich Mean Time: Dublin, Edinburgh, Lisbon, London"
+GMT_PLUS_00_A_DESC    ="(GMT+00:00) Greenwich Mean Time: Dublin, Edinburgh, Lisbon, London"
 GMT_PLUS_00_A_DAYLIGHT="GMT Daylight Time"
 GMT_PLUS_00_A_STANDARD="GMT Standard Time"
 
-GMT_PLUS_00_B_DESC    ="(GMT) Casablanca, Monrovia, Reykjavik"
+GMT_PLUS_00_B_DESC    ="(GMT+00:00) Casablanca, Monrovia, Reykjavik"
 GMT_PLUS_00_B_DAYLIGHT="Greenwich Daylight Time"
 GMT_PLUS_00_B_STANDARD="Greenwich Standard Time"
 
@@ -2276,21 +2295,29 @@ GMT_PLUS_06_A_DESC    ="(GMT+06:00) Astana, Dhaka"
 GMT_PLUS_06_A_DAYLIGHT="Central Asia Daylight Time"
 GMT_PLUS_06_A_STANDARD="Central Asia Standard Time"
 
-GMT_PLUS_06_B_DESC    ="(GMT+06:00) Novosibirsk"
-GMT_PLUS_06_B_DAYLIGHT="RTZ 5 Daylight Time"
-GMT_PLUS_06_B_STANDARD="RTZ 5 Standard Time"
+GMT_PLUS_06_B_DESC    ="(GMT+06:00) Omsk"
+GMT_PLUS_06_B_DAYLIGHT="Omsk Daylight Time"
+GMT_PLUS_06_B_STANDARD="Omsk Standard Time"
 
 GMT_PLUS_0630_A_DESC    ="(GMT+06:30) Yangon (Rangoon)"
 GMT_PLUS_0630_A_DAYLIGHT="Myanmar Daylight Time"
 GMT_PLUS_0630_A_STANDARD="Myanmar Standard Time"
 
-GMT_PLUS_07_A_DESC    ="(GMT+07:00) Bangkok, Hanoi, Jakarta"
-GMT_PLUS_07_A_DAYLIGHT="SE Asia Daylight Time"
-GMT_PLUS_07_A_STANDARD="SE Asia Standard Time"
+GMT_PLUS_07_A_DESC    ="(GMT+07:00) Novosibirsk"
+GMT_PLUS_07_A_DAYLIGHT="Novosibirsk Daylight Time"
+GMT_PLUS_07_A_STANDARD="Novosibirsk Standard Time"
 
-GMT_PLUS_07_B_DESC    ="(GMT+07:00) Krasnoyarsk"
-GMT_PLUS_07_B_DAYLIGHT="RTZ 6 Daylight Time"
-GMT_PLUS_07_B_STANDARD="RTZ 6 Standard Time"
+GMT_PLUS_07_B_DESC    ="(GMT+07:00) Bangkok, Hanoi, Jakarta"
+GMT_PLUS_07_B_DAYLIGHT="SE Asia Daylight Time"
+GMT_PLUS_07_B_STANDARD="SE Asia Standard Time"
+
+GMT_PLUS_07_C_DESC    ="(GMT+07:00) Krasnoyarsk"
+GMT_PLUS_07_C_DAYLIGHT="RTZ 6 Daylight Time"
+GMT_PLUS_07_C_STANDARD="RTZ 6 Standard Time"
+
+GMT_PLUS_07_D_DESC    ="(GMT+07:00) Tomsk"
+GMT_PLUS_07_D_DAYLIGHT="Tomsk Daylight Time"
+GMT_PLUS_07_D_STANDARD="Tomsk Standard Time"
 
 GMT_PLUS_08_A_DESC    ="(GMT+08:00) Beijing, Chongqing, Hong Kong, Urumqi"
 GMT_PLUS_08_A_DAYLIGHT="China Daylight Time"
@@ -2356,10 +2383,6 @@ GMT_PLUS_10_E_DESC    ="(GMT+10:00) Guam, Port Moresby"
 GMT_PLUS_10_E_DAYLIGHT="West Pacific Daylight Time"
 GMT_PLUS_10_E_STANDARD="West Pacific Standard Time"
 
-GMT_PLUS_10_F_DESC    ="(GMT+10:00) Magadan"
-GMT_PLUS_10_F_DAYLIGHT="Magadan Daylight Time"
-GMT_PLUS_10_F_STANDARD="Magadan Standard Time"
-
 GMT_PLUS_11_A_DESC    ="(GMT+11:00) Solomon Is., New Caledonia"
 GMT_PLUS_11_A_DAYLIGHT="Central Pacific Daylight Time"
 GMT_PLUS_11_A_STANDARD="Central Pacific Standard Time"
@@ -2367,6 +2390,10 @@ GMT_PLUS_11_A_STANDARD="Central Pacific Standard Time"
 GMT_PLUS_11_B_DESC    ="(GMT+11:00) Chokurdakh"
 GMT_PLUS_11_B_DAYLIGHT="RTZ 10 Daylight Time"
 GMT_PLUS_11_B_STANDARD="RTZ 10 Standard Time"
+
+GMT_PLUS_11_C_DESC    ="(GMT+11:00) Magadan"
+GMT_PLUS_11_C_DAYLIGHT="Magadan Daylight Time"
+GMT_PLUS_11_C_STANDARD="Magadan Standard Time"
 
 GMT_PLUS_12_A_DESC    ="(GMT+12:00) Fiji, Kamchatka, Marshall Is."
 GMT_PLUS_12_A_DAYLIGHT="Fiji Daylight Time"
@@ -3144,11 +3171,11 @@ GMT_MINUS_01_B_DESC    ="(GMT-01:00) Wyspy Zielonego Przylądka."
 GMT_MINUS_01_B_DAYLIGHT="Wyspy Zielonego Przylądka (czas letni)"
 GMT_MINUS_01_B_STANDARD="Wyspy Zielonego Przylądka (czas standardowy)"
 
-GMT_PLUS_00_A_DESC    ="(GMT) Czas uniwersalny Greenwich: Dublin, Edynburg, Lizbona, Londyn"
+GMT_PLUS_00_A_DESC    ="(GMT+00:00) Czas uniwersalny Greenwich: Dublin, Edynburg, Lizbona, Londyn"
 GMT_PLUS_00_A_DAYLIGHT="GMT (czas letni)"
 GMT_PLUS_00_A_STANDARD="GMT (czas standardowy)"
 
-GMT_PLUS_00_B_DESC    ="(GMT) Casablanca, Monrovia, Reykjavik"
+GMT_PLUS_00_B_DESC    ="(GMT+00:00) Casablanca, Monrovia, Reykjavik"
 GMT_PLUS_00_B_DAYLIGHT="Greenwich (czas letni)"
 GMT_PLUS_00_B_STANDARD="Greenwich (czas standardowy)"
 
@@ -3260,21 +3287,29 @@ GMT_PLUS_06_A_DESC    ="(GMT+06:00) Astana, Dhaka"
 GMT_PLUS_06_A_DAYLIGHT="Azja (środkowy czas letni)"
 GMT_PLUS_06_A_STANDARD="Azja (środkowy czas standardowy)"
 
-GMT_PLUS_06_B_DESC    ="(GMT+06:00) Nowosybirsk"
-GMT_PLUS_06_B_DAYLIGHT="RTZ 5 (czas letni)"
-GMT_PLUS_06_B_STANDARD="RTZ 5 (czas standardowy)"
+GMT_PLUS_06_B_DESC    ="(GMT+06:00) Omsk"
+GMT_PLUS_06_B_DAYLIGHT="Omsk (czas letni)"
+GMT_PLUS_06_B_STANDARD="Omsk (czas standardowy)"
 
 GMT_PLUS_0630_A_DESC    ="(GMT+06:30) Yangon (Rangun)"
 GMT_PLUS_0630_A_DAYLIGHT="Myanmar (czas letni)"
 GMT_PLUS_0630_A_STANDARD="Myanmar (czas standardowy)"
 
-GMT_PLUS_07_A_DESC    ="(GMT+07:00) Bangkok, Hanoi, Dżakarta"
-GMT_PLUS_07_A_DAYLIGHT="Azja Południowo-Wschodnia (czas letni)"
-GMT_PLUS_07_A_STANDARD="Azja Południowo-Wschodnia (czas standardowy)"
+GMT_PLUS_07_A_DESC    ="(GMT+07:00) Nowosybirsk"
+GMT_PLUS_07_A_DAYLIGHT="Nowosybirsk (czas letni)"
+GMT_PLUS_07_A_STANDARD="Nowosybirsk (czas standardowy)"
 
-GMT_PLUS_07_B_DESC    ="(GMT+07:00) Krasnojarsk"
-GMT_PLUS_07_B_DAYLIGHT="RTZ 6 (czas letni)"
-GMT_PLUS_07_B_STANDARD="RTZ 6 (czas standardowy)"
+GMT_PLUS_07_B_DESC    ="(GMT+07:00) Bangkok, Hanoi, Dżakarta"
+GMT_PLUS_07_B_DAYLIGHT="Azja Południowo-Wschodnia (czas letni)"
+GMT_PLUS_07_B_STANDARD="Azja Południowo-Wschodnia (czas standardowy)"
+
+GMT_PLUS_07_C_DESC    ="(GMT+07:00) Krasnojarsk"
+GMT_PLUS_07_C_DAYLIGHT="RTZ 6 (czas letni)"
+GMT_PLUS_07_C_STANDARD="RTZ 6 (czas standardowy)"
+
+GMT_PLUS_07_D_DESC    ="(GMT+07:00) Tomsk"
+GMT_PLUS_07_D_DAYLIGHT="Tomsk (czas letni)"
+GMT_PLUS_07_D_STANDARD="Tomsk (czas standardowy)"
 
 GMT_PLUS_08_A_DESC    ="(GMT+08:00) Pekin, Chongqing, Hongkong, Urumczi"
 GMT_PLUS_08_A_DAYLIGHT="Chiny (czas letni)"
@@ -3340,10 +3375,6 @@ GMT_PLUS_10_E_DESC    ="(GMT+10:00) Guam, Port Moresby"
 GMT_PLUS_10_E_DAYLIGHT="Zachodni Pacyfik (czas letni)"
 GMT_PLUS_10_E_STANDARD="Zachodni Pacyfik (czas standardowy)"
 
-GMT_PLUS_10_F_DESC    ="(GMT+10:00) Magadan"
-GMT_PLUS_10_F_DAYLIGHT="Magadan (czas letni)"
-GMT_PLUS_10_F_STANDARD="Magadan (czas standardowy)"
-
 GMT_PLUS_11_A_DESC    ="(GMT+11:00) Wyspy Salomona, Nowa Kaledonia"
 GMT_PLUS_11_A_DAYLIGHT="Środkowy Pacyfik (czas letni)"
 GMT_PLUS_11_A_STANDARD="Środkowy Pacyfik (czas standardowy)"
@@ -3351,6 +3382,10 @@ GMT_PLUS_11_A_STANDARD="Środkowy Pacyfik (czas standardowy)"
 GMT_PLUS_11_B_DESC    ="(GMT+11:00) Czokurdach"
 GMT_PLUS_11_B_DAYLIGHT="RTZ 10 (czas letni)"
 GMT_PLUS_11_B_STANDARD="RTZ 10 (czas standardowy)"
+
+GMT_PLUS_11_C_DESC    ="(GMT+11:00) Magadan"
+GMT_PLUS_11_C_DAYLIGHT="Magadan (czas letni)"
+GMT_PLUS_11_C_STANDARD="Magadan (czas standardowy)"
 
 GMT_PLUS_12_A_DESC    ="(GMT+12:00) Fidżi, Kamczatka, Wyspy Marshalla"
 GMT_PLUS_12_A_DAYLIGHT="Fidżi (czas letni)"
@@ -3720,11 +3755,11 @@ GMT_MINUS_01_B_DESC    ="(UTC-01:00) Insula Capului Verde"
 GMT_MINUS_01_B_DAYLIGHT="Ora insulei Capul Verde diurnă"
 GMT_MINUS_01_B_STANDARD="Ora insulei Capul Verde standard"
 
-GMT_PLUS_00_A_DESC    ="(UTC) Ora medie Greenwich (GMT): Dublin, Edinburg, Lisabona, Londra"
+GMT_PLUS_00_A_DESC    ="(UTC+00:00) Ora medie Greenwich (GMT): Dublin, Edinburg, Lisabona, Londra"
 GMT_PLUS_00_A_DAYLIGHT="Ora medie Greenwich (GMT) diurnă"
 GMT_PLUS_00_A_STANDARD="Ora medie Greenwich (GMT) standard"
 
-GMT_PLUS_00_B_DESC    ="Ora medie Greenwich (GMT): Casablanca, Monrovia, Reykjavik"
+GMT_PLUS_00_B_DESC    ="(UTC+00:00) Casablanca, Monrovia, Reykjavik"
 GMT_PLUS_00_B_DAYLIGHT="Ora medie Greenwich (GMT) diurnă"
 GMT_PLUS_00_B_STANDARD="Ora medie Greenwich (GMT) standard"
 
@@ -3836,21 +3871,29 @@ GMT_PLUS_06_A_DESC    ="(UTC+06:00) Astana, Dacca"
 GMT_PLUS_06_A_DAYLIGHT="Ora Asiei Centrale diurnă"
 GMT_PLUS_06_A_STANDARD="Ora Asiei Centrale standard"
 
-GMT_PLUS_06_B_DESC    ="(UTC+06:00) Novosibirsk"
-GMT_PLUS_06_B_DAYLIGHT="Ora zonală rusă 5 diurnă"
-GMT_PLUS_06_B_STANDARD="Ora zonală rusă 5 standard"
+GMT_PLUS_06_B_DESC    ="(UTC+06:00) Omsk"
+GMT_PLUS_06_B_DAYLIGHT="Oră de Omsk diurnă"
+GMT_PLUS_06_B_STANDARD="Oră de Omsk standard"
 
 GMT_PLUS_0630_A_DESC    ="(UTC+06:30) Yangon (Rangoon)"
 GMT_PLUS_0630_A_DAYLIGHT="Oră de Myanmar diurnă"
 GMT_PLUS_0630_A_STANDARD="Oră de Myanmar standard"
 
-GMT_PLUS_07_A_DESC    ="(UTC+07:00) Bangkok, Hanoi, Jakarta"
-GMT_PLUS_07_A_DAYLIGHT="Ora Asiei de Sud-Est diurnă"
-GMT_PLUS_07_A_STANDARD="Ora Asiei de Sud-Est standard"
+GMT_PLUS_07_A_DESC    ="(UTC+07:00) Novosibirsk"
+GMT_PLUS_07_A_DAYLIGHT="Oră de Novosibirsk diurnă"
+GMT_PLUS_07_A_STANDARD="Oră de Novosibirsk standard"
 
-GMT_PLUS_07_B_DESC    ="(UTC+07:00) Krasnoiarsk"
-GMT_PLUS_07_B_DAYLIGHT="Ora zonală rusă 6 diurnă"
-GMT_PLUS_07_B_STANDARD="Ora zonală rusă 6 standard"
+GMT_PLUS_07_B_DESC    ="(UTC+07:00) Bangkok, Hanoi, Jakarta"
+GMT_PLUS_07_B_DAYLIGHT="Ora Asiei de Sud-Est diurnă"
+GMT_PLUS_07_B_STANDARD="Ora Asiei de Sud-Est standard"
+
+GMT_PLUS_07_C_DESC    ="(UTC+07:00) Krasnoiarsk"
+GMT_PLUS_07_C_DAYLIGHT="Ora zonală rusă 6 diurnă"
+GMT_PLUS_07_C_STANDARD="Ora zonală rusă 6 standard"
+
+GMT_PLUS_07_D_DESC    ="(UTC+07:00) Tomsk"
+GMT_PLUS_07_D_DAYLIGHT="Oră de Tomsk diurnă"
+GMT_PLUS_07_D_STANDARD="Oră de Tomsk standard"
 
 GMT_PLUS_08_A_DESC    ="(UTC+08:00) Beijing, Chongqing, Hong Kong, Urumci"
 GMT_PLUS_08_A_DAYLIGHT="Oră de China diurnă"
@@ -3916,10 +3959,6 @@ GMT_PLUS_10_E_DESC    ="(UTC+10:00) Guam, Port Moresby"
 GMT_PLUS_10_E_DAYLIGHT="Ora Pacificului de Vest diurnă"
 GMT_PLUS_10_E_STANDARD="Ora Pacificului de Vest standard"
 
-GMT_PLUS_10_F_DESC    ="(UTC+10:00) Magadan"
-GMT_PLUS_10_F_DAYLIGHT="Oră de Magadan diurnă"
-GMT_PLUS_10_F_STANDARD="Oră de Magadan standard"
-
 GMT_PLUS_11_A_DESC    ="(UTC+11:00) Insulele Solomon, Noua Caledonie"
 GMT_PLUS_11_A_DAYLIGHT="Ora Pacificului Central diurnă"
 GMT_PLUS_11_A_STANDARD="Ora Pacificului Central standard"
@@ -3927,6 +3966,10 @@ GMT_PLUS_11_A_STANDARD="Ora Pacificului Central standard"
 GMT_PLUS_11_B_DESC    ="(UTC+11:00) Ciocurdah"
 GMT_PLUS_11_B_DAYLIGHT="Ora zonală rusă 10 diurnă"
 GMT_PLUS_11_B_STANDARD="Ora zonală rusă 10 standard"
+
+GMT_PLUS_11_C_DESC    ="(UTC+11:00) Magadan"
+GMT_PLUS_11_C_DAYLIGHT="Oră de Magadan diurnă"
+GMT_PLUS_11_C_STANDARD="Oră de Magadan standard"
 
 GMT_PLUS_12_A_DESC    ="(UTC+12:00) Fiji, Kamceatka, Insulele Marshall"
 GMT_PLUS_12_A_DAYLIGHT="Oră de Fiji diurnă"
@@ -4221,8 +4264,8 @@ GMT_MINUS_03_D_DESC     ="(GMT-03:00) Гренландия"
 GMT_MINUS_02_A_DESC     ="(GMT-02:00) Среднеатлантическое время"
 GMT_MINUS_01_A_DESC     ="(GMT-01:00) Азорские о-ва"
 GMT_MINUS_01_B_DESC     ="(GMT-01:00) о-ва Зеленого мыса"
-GMT_PLUS_00_A_DESC      ="(GMT) Время по Гринвичу: Дублин, Лондон, Лиссабон, Эдинбург"
-GMT_PLUS_00_B_DESC      ="(GMT) Касабланка, Монровия, Рейкьявик"
+GMT_PLUS_00_A_DESC      ="(GMT+00:00) Время по Гринвичу: Дублин, Лондон, Лиссабон, Эдинбург"
+GMT_PLUS_00_B_DESC      ="(GMT+00:00) Касабланка, Монровия, Рейкьявик"
 GMT_PLUS_01_A_DESC      ="(GMT+01:00) Белград, Братислава, Будапешт, Любляна, Прага"
 GMT_PLUS_01_B_DESC      ="(GMT+01:00) Варшава, Загреб, Сараево, Скопье"
 GMT_PLUS_01_C_DESC      ="(GMT+01:00) Брюссель, Копенгаген, Мадрид, Париж"
@@ -4250,10 +4293,12 @@ GMT_PLUS_0530_A_DESC    ="(GMT+05:30) Калькутта, Мумбаи, Нью-�
 GMT_PLUS_0530_B_DESC    ="(GMT+05:30) Шри Джаяварденепура"
 GMT_PLUS_0545_A_DESC    ="(GMT+05:45) Катманду"
 GMT_PLUS_06_A_DESC      ="(GMT+06:00) Астана, Дхака"
-GMT_PLUS_06_B_DESC      ="(GMT+06:00) Новосибирск"
+GMT_PLUS_06_B_DESC      ="(GMT+06:00) Омск"
 GMT_PLUS_0630_A_DESC    ="(GMT+06:30) Янгун (Рангун)"
-GMT_PLUS_07_A_DESC      ="(GMT+07:00) Бангкок, Джакарта, Ханой"
-GMT_PLUS_07_B_DESC      ="(GMT+07:00) Красноярск"
+GMT_PLUS_07_A_DESC      ="(GMT+07:00) Новосибирск"
+GMT_PLUS_07_B_DESC      ="(GMT+07:00) Бангкок, Джакарта, Ханой"
+GMT_PLUS_07_C_DESC      ="(GMT+07:00) Красноярск"
+GMT_PLUS_07_D_DESC      ="(GMT+07:00) Томск"
 GMT_PLUS_08_A_DESC      ="(GMT+08:00) Гонконг, Пекин, Урумчи, Чунцин"
 GMT_PLUS_08_B_DESC      ="(GMT+08:00) Куала-Лумпур, Сингапур"
 GMT_PLUS_08_C_DESC      ="(GMT+08:00) Тайпей"
@@ -4270,9 +4315,9 @@ GMT_PLUS_10_B_DESC      ="(GMT+10:00) Брисбейн"
 GMT_PLUS_10_C_DESC      ="(GMT+10:00) Хобарт"
 GMT_PLUS_10_D_DESC      ="(GMT+10:00) Владивосток"
 GMT_PLUS_10_E_DESC      ="(GMT+10:00) Гуам, Порт Моресби"
-GMT_PLUS_10_F_DESC      ="(GMT+10:00) Магадан"
 GMT_PLUS_11_A_DESC      ="(GMT+11:00) Соломоновы о-ва, Новая Каледония"
 GMT_PLUS_11_B_DESC      ="(GMT+11:00) Чокурдах"
+GMT_PLUS_11_C_DESC      ="(GMT+11:00) Магадан"
 GMT_PLUS_12_A_DESC      ="(GMT+12:00) Камчатка, Маршалловы о-ва, Фиджи"
 GMT_PLUS_12_B_DESC      ="(GMT+12:00) Анадырь, Петропавловск-Камчатский"
 GMT_PLUS_12_C_DESC      ="(GMT+12:00) Окленд, Веллингтон"
@@ -4529,6 +4574,257 @@ COUNTRY_YT="Майотта"
 COUNTRY_ZA="Південна Африка"
 COUNTRY_ZM="Замбія"
 COUNTRY_ZW="Зімбабве"
+
+; LANG_CHINESE SUBLANG_CHINESE_TRADITIONAL
+[Strings.0404]
+COUNTRY_AD="安道爾"
+COUNTRY_AE="阿拉伯聯合大公國"
+COUNTRY_AF="阿富汗"
+COUNTRY_AG="安地卡及巴布達"
+COUNTRY_AI="安吉拉"
+COUNTRY_AL="阿爾巴尼亞"
+COUNTRY_AM="亞美尼亞"
+COUNTRY_AO="安哥拉"
+COUNTRY_AQ="南極洲"
+COUNTRY_AR="阿根廷"
+COUNTRY_AS="美屬薩摩亞"
+COUNTRY_AT="奧地利"
+COUNTRY_AU="澳洲"
+COUNTRY_AW="阿魯巴"
+COUNTRY_AX="奧蘭群島"
+COUNTRY_AZ="亞塞拜然"
+COUNTRY_BA="波士尼亞與赫塞哥維納"
+COUNTRY_BB="巴貝多"
+COUNTRY_BD="孟加拉"
+COUNTRY_BE="比利時"
+COUNTRY_BF="布吉納法索"
+COUNTRY_BG="保加利亞"
+COUNTRY_BH="巴林"
+COUNTRY_BI="蒲隆地"
+COUNTRY_BJ="貝南"
+COUNTRY_BL="聖巴泰勒米"
+COUNTRY_BM="百慕達"
+COUNTRY_BN="汶萊"
+COUNTRY_BO="玻利維亞"
+COUNTRY_BQ="荷蘭加勒比區"
+COUNTRY_BR="巴西"
+COUNTRY_BS="巴哈馬"
+COUNTRY_BT="不丹"
+COUNTRY_BV="割禮角"
+COUNTRY_BW="波札那"
+COUNTRY_BY="白俄羅斯"
+COUNTRY_BZ="貝里斯"
+COUNTRY_CA="加拿大"
+COUNTRY_CC="科科斯群島"
+COUNTRY_CD="剛果民主共和國"
+COUNTRY_CF="中非共和國"
+COUNTRY_CG="剛果共和國"
+COUNTRY_CH="瑞士"
+COUNTRY_CI="象牙海岸"
+COUNTRY_CK="庫克群島"
+COUNTRY_CL="智利"
+COUNTRY_CM="喀麥隆"
+COUNTRY_CN="中華人民共和國"
+COUNTRY_CO="哥倫比亞"
+COUNTRY_CR="哥斯大黎加"
+COUNTRY_CU="古巴"
+COUNTRY_CV="維德角"
+COUNTRY_CW="庫拉索"
+COUNTRY_CX="聖誕島"
+COUNTRY_CY="賽普勒斯"
+COUNTRY_CZ="捷克"
+COUNTRY_DE="德國"
+COUNTRY_DJ="吉布地"
+COUNTRY_DK="丹麥"
+COUNTRY_DM="多米尼克"
+COUNTRY_DO="多米尼加"
+COUNTRY_DZ="阿爾及利亞"
+COUNTRY_EC="厄瓜多"
+COUNTRY_EE="愛沙尼亞"
+COUNTRY_EG="埃及"
+COUNTRY_EH="西撒拉威"
+COUNTRY_ER="厄利垂亞"
+COUNTRY_ES="西班牙"
+COUNTRY_ET="衣索比亞"
+COUNTRY_FI="芬蘭"
+COUNTRY_FJ="斐濟"
+COUNTRY_FK="福克蘭群島"
+COUNTRY_FM="密克羅尼西亞聯邦"
+COUNTRY_FO="法羅群島"
+COUNTRY_FR="法國"
+COUNTRY_GA="加彭"
+COUNTRY_GD="格瑞那達"
+COUNTRY_GE="喬治亞"
+COUNTRY_GF="法屬圭亞那"
+COUNTRY_GG="根西"
+COUNTRY_GH="加納"
+COUNTRY_GI="直布羅陀"
+COUNTRY_GL="格陵蘭"
+COUNTRY_GM="甘比亞"
+COUNTRY_GN="幾內亞"
+COUNTRY_GP="瓜德羅普"
+COUNTRY_GQ="赤道幾內亞"
+COUNTRY_GR="希臘"
+COUNTRY_GS="南喬治亞和南桑威奇群島"
+COUNTRY_GT="瓜地馬拉"
+COUNTRY_GU="關島"
+COUNTRY_GW="幾內亞比索"
+COUNTRY_GY="蓋亞那"
+COUNTRY_HK="香港特別行政區"
+COUNTRY_HM="赫德島和麥克唐納群島"
+COUNTRY_HN="宏都拉斯"
+COUNTRY_HR="克羅埃西亞"
+COUNTRY_HT="海地"
+COUNTRY_HU="匈牙利"
+COUNTRY_ID="印度尼西亞"
+COUNTRY_IE="愛爾蘭"
+COUNTRY_IL="以色列"
+COUNTRY_IM="曼島"
+COUNTRY_IN="印度"
+COUNTRY_IO="英屬印度洋領地"
+COUNTRY_IQ="伊拉克"
+COUNTRY_IR="伊朗"
+COUNTRY_IS="冰島"
+COUNTRY_IT="義大利"
+COUNTRY_JE="澤西"
+COUNTRY_JM="牙買加"
+COUNTRY_JO="約旦"
+COUNTRY_JP="日本"
+COUNTRY_KE="肯亞"
+COUNTRY_KG="吉爾吉斯斯坦"
+COUNTRY_KH="柬埔寨"
+COUNTRY_KI="吉里巴斯"
+COUNTRY_KM="葛摩"
+COUNTRY_KN="聖克里斯多福及尼維斯"
+COUNTRY_KP="朝鮮"
+COUNTRY_KR="韓國"
+COUNTRY_KW="科威特"
+COUNTRY_KY="開曼群島"
+COUNTRY_KZ="哈薩克斯坦"
+COUNTRY_LA="寮國"
+COUNTRY_LB="黎巴嫩"
+COUNTRY_LC="聖露西亞"
+COUNTRY_LI="列支敦斯登"
+COUNTRY_LK="斯里蘭卡"
+COUNTRY_LR="賴比瑞亞"
+COUNTRY_LS="賴索托"
+COUNTRY_LT="立陶宛"
+COUNTRY_LU="盧森堡"
+COUNTRY_LV="拉脫維亞"
+COUNTRY_LY="利比亞"
+COUNTRY_MA="摩洛哥"
+COUNTRY_MC="摩納哥"
+COUNTRY_MD="摩爾多瓦"
+COUNTRY_ME="蒙特內哥羅"
+COUNTRY_MF="法屬聖馬丁"
+COUNTRY_MG="馬達加斯加"
+COUNTRY_MH="馬紹爾群島"
+COUNTRY_MK="北馬其頓"
+COUNTRY_ML="馬利"
+COUNTRY_MM="緬甸"
+COUNTRY_MN="蒙古"
+COUNTRY_MO="澳門特別行政區"
+COUNTRY_MP="北馬利安納群島"
+COUNTRY_MQ="馬丁尼克"
+COUNTRY_MR="茅利塔尼亞"
+COUNTRY_MS="蒙哲臘"
+COUNTRY_MT="馬爾他"
+COUNTRY_MU="模里西斯"
+COUNTRY_MV="馬爾地夫"
+COUNTRY_MW="馬拉威"
+COUNTRY_MX="墨西哥"
+COUNTRY_MY="馬來西亞"
+COUNTRY_MZ="莫三比克"
+COUNTRY_NA="納米比亞"
+COUNTRY_NC="新喀里多尼亞"
+COUNTRY_NE="尼日"
+COUNTRY_NF="諾福克島"
+COUNTRY_NG="奈及利亞"
+COUNTRY_NI="尼加拉瓜"
+COUNTRY_NL="荷蘭"
+COUNTRY_NO="挪威"
+COUNTRY_NP="尼泊爾"
+COUNTRY_NR="諾魯"
+COUNTRY_NU="紐埃"
+COUNTRY_NZ="紐西蘭"
+COUNTRY_OM="阿曼"
+COUNTRY_PA="巴拿馬"
+COUNTRY_PE="秘魯"
+COUNTRY_PF="法屬玻里尼西亞"
+COUNTRY_PG="巴布亞紐幾內亞"
+COUNTRY_PH="菲律賓"
+COUNTRY_PK="巴基斯坦"
+COUNTRY_PL="波蘭"
+COUNTRY_PM="聖皮埃與密克隆群島"
+COUNTRY_PN="皮特肯群島"
+COUNTRY_PR="波多黎各"
+COUNTRY_PS="巴勒斯坦"
+COUNTRY_PT="葡萄牙"
+COUNTRY_PW="帛琉"
+COUNTRY_PY="巴拉圭"
+COUNTRY_QA="卡達"
+COUNTRY_RE="留尼旺"
+COUNTRY_RO="羅馬尼亞"
+COUNTRY_RS="塞爾維亞"
+COUNTRY_RU="俄羅斯"
+COUNTRY_RW="盧安達"
+COUNTRY_SA="沙烏地阿拉伯"
+COUNTRY_SB="索羅門群島"
+COUNTRY_SC="塞席爾"
+COUNTRY_SD="蘇丹"
+COUNTRY_SE="瑞典"
+COUNTRY_SG="新加坡"
+COUNTRY_SH="聖赫勒拿、亞森欣與崔斯坦達庫尼亞"
+COUNTRY_SI="斯洛維尼亞"
+COUNTRY_SJ="斯瓦巴和揚馬延
+COUNTRY_SK="斯洛伐克"
+COUNTRY_SL="獅子山共和國"
+COUNTRY_SM="聖馬利諾"
+COUNTRY_SN="塞內加爾"
+COUNTRY_SO="索馬利亞"
+COUNTRY_SR="蘇利南"
+COUNTRY_ST="聖多美普林西比"
+COUNTRY_SV="薩爾瓦多"
+COUNTRY_SX="荷屬聖馬丁"
+COUNTRY_SY="敘利亞"
+COUNTRY_SZ="史瓦帝尼"
+COUNTRY_TC="土克凱可群島"
+COUNTRY_TD="查德"
+COUNTRY_TF="法屬南部領地"
+COUNTRY_TG="多哥"
+COUNTRY_TH="泰國"
+COUNTRY_TJ="塔吉克斯坦"
+COUNTRY_TK="托克勞"
+COUNTRY_TL="東帝汶"
+COUNTRY_TM="土庫曼斯坦"
+COUNTRY_TN="突尼西亞"
+COUNTRY_TO="東加"
+COUNTRY_TR="土耳其"
+COUNTRY_TT="千里達及托巴哥"
+COUNTRY_TV="吐瓦魯"
+COUNTRY_TW="臺灣 (中華民國)"
+COUNTRY_TZ="坦尚尼亞"
+COUNTRY_UA="烏克蘭"
+COUNTRY_UG="烏干達"
+COUNTRY_UK="英國"
+COUNTRY_UM="美國本土外小島嶼"
+COUNTRY_US="美國"
+COUNTRY_UY="烏拉圭"
+COUNTRY_UZ="烏茲別克斯坦"
+COUNTRY_VA="梵蒂岡"
+COUNTRY_VC="聖文森及格瑞那丁"
+COUNTRY_VE="委內瑞拉"
+COUNTRY_VG="英屬維京群島"
+COUNTRY_VI="美屬維京群島"
+COUNTRY_VN="越南"
+COUNTRY_VU="萬那杜"
+COUNTRY_WF="瓦利斯和富圖那"
+COUNTRY_WS="薩摩亞"
+COUNTRY_YE="葉門"
+COUNTRY_YT="馬約特"
+COUNTRY_ZA="南非"
+COUNTRY_ZM="尚比亞"
+COUNTRY_ZW="辛巴威"
 
 ; Turkish
 [Strings.041f]

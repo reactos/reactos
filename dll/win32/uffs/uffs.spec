@@ -1,2 +1,2 @@
-@ stdcall ChkdskEx(ptr long long long long ptr) FfsChkdsk
-@ stdcall FormatEx(ptr long ptr long long ptr) FfsFormat
+@ stdcall Chkdsk(ptr ptr long long long long ptr ptr ptr ptr ptr) FfsChkdsk
+@ stdcall Format(ptr ptr long long long ptr long) FfsFormat

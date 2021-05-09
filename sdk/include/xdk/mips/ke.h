@@ -1,4 +1,5 @@
 $if (_WDMDDK_)
+/** Kernel definitions for MIPS **/
 #error MIPS Headers are totally incorrect
 
 //
@@ -63,4 +64,3 @@ NTAPI
 KeRaiseIrqlToSynchLevel(VOID);
 
 $endif
-

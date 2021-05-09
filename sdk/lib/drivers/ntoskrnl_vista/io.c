@@ -18,7 +18,7 @@ typedef struct _EX_WORKITEM_CONTEXT
 
 #define TAG_IOWI 'IWOI'
 
-NTKERNELAPI
+NTKRNLVISTAAPI
 NTSTATUS
 NTAPI
 IoGetIrpExtraCreateParameter(IN PIRP Irp,
@@ -49,7 +49,7 @@ IopWorkItemExCallback(
     ExFreePoolWithTag(context, TAG_IOWI);
 }
 
-NTKERNELAPI
+NTKRNLVISTAAPI
 VOID
 NTAPI
 IoQueueWorkItemEx(
@@ -68,7 +68,24 @@ IoQueueWorkItemEx(
 
 _IRQL_requires_max_(PASSIVE_LEVEL)
 _Must_inspect_result_
-NTKERNELAPI
+NTKRNLVISTAAPI
+NTSTATUS
+NTAPI
+IoSetDevicePropertyData(
+    _In_ PDEVICE_OBJECT Pdo,
+    _In_ CONST DEVPROPKEY *PropertyKey,
+    _In_ LCID Lcid,
+    _In_ ULONG Flags,
+    _In_ DEVPROPTYPE Type,
+    _In_ ULONG Size,
+    _In_opt_ PVOID Data)
+{
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+_IRQL_requires_max_(PASSIVE_LEVEL)
+_Must_inspect_result_
+NTKRNLVISTAAPI
 NTSTATUS
 NTAPI
 IoGetDevicePropertyData(
@@ -86,7 +103,7 @@ IoGetDevicePropertyData(
 
 _IRQL_requires_max_(PASSIVE_LEVEL)
 _Must_inspect_result_
-NTKERNELAPI
+NTKRNLVISTAAPI
 NTSTATUS
 IoSetDeviceInterfacePropertyData(
     _In_ PUNICODE_STRING SymbolicLinkName,
@@ -100,7 +117,7 @@ IoSetDeviceInterfacePropertyData(
     return STATUS_NOT_IMPLEMENTED;
 }
 
-NTKERNELAPI
+NTKRNLVISTAAPI
 IO_PRIORITY_HINT
 NTAPI
 IoGetIoPriorityHint(
@@ -109,7 +126,7 @@ IoGetIoPriorityHint(
     return IoPriorityNormal;
 }
 
-NTKERNELAPI
+NTKRNLVISTAAPI
 VOID
 IoSetMasterIrpStatus(
     _Inout_ PIRP MasterIrp,

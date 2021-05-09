@@ -4,30 +4,14 @@ add_subdirectory(shelldesktop)
 add_subdirectory(shellmenu)
 add_subdirectory(shellrecyclebin)
 
-set_cpp(WITH_RUNTIME)
 spec2def(shell32.dll shell32.spec ADD_IMPORTLIB)
-
-if(NOT MSVC)
-    # HACK: this should be enabled globally!
-    add_compile_flags_language("-std=c++11" "CXX")
-endif()
-
-if(MSVC)
-    # error C4311: 'type cast': pointer truncation from 'HANDLE' to 'INT'
-    replace_compile_flags("/we4311" " ")
-endif()
 
 remove_definitions(-D_WIN32_WINNT=0x502)
 add_definitions(-D_WIN32_WINNT=0x600)
 
 add_definitions(
     -D_SHELL32_
-    -D_WINE
-    -D_ATL_NO_EXCEPTIONS)
-
-include_directories(
-    ${REACTOS_SOURCE_DIR}/sdk/lib/atl
-    ${REACTOS_SOURCE_DIR})
+    -D_WINE)
 
 list(APPEND SOURCE
     CActiveDesktop.cpp
@@ -118,11 +102,16 @@ add_library(shell32 MODULE
     shell32.rc
     ${CMAKE_CURRENT_BINARY_DIR}/shell32.def)
 
+if(MSVC)
+    # error C4311: 'type cast': pointer truncation from 'HANDLE' to 'INT'
+    remove_target_compile_option(shell32 "/we4311")
+endif()
+
 add_typelib(shell32_shldisp.idl)
 set_source_files_properties(shell32.rc PROPERTIES OBJECT_DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/shell32_shldisp.tlb)
 
 set_module_type(shell32 win32dll UNICODE)
-target_link_libraries(shell32 shellmenu shelldesktop wine uuid recyclebin)
+target_link_libraries(shell32 shellmenu shelldesktop wine uuid recyclebin cpprt atl_classes)
 add_delay_importlibs(shell32 powrprof shdocvw devmgr winspool.drv winmm mpr uxtheme ole32 oleaut32 userenv browseui version fmifs)
 add_importlibs(shell32 advapi32 gdi32 user32 comctl32 comdlg32 shlwapi msvcrt kernel32 ntdll)
 add_dependencies(shell32 stdole2) # shell32_shldisp.tlb needs stdole2.tlb

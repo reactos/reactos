@@ -33,7 +33,7 @@ static GENERIC_MAPPING ExpTimerMapping =
 static const INFORMATION_CLASS_INFO ExTimerInfoClass[] =
 {
     /* TimerBasicInformation */
-    ICI_SQ_SAME(sizeof(TIMER_BASIC_INFORMATION), sizeof(ULONG), ICIF_QUERY),
+    IQS_SAME(TIMER_BASIC_INFORMATION, ULONG, ICIF_QUERY),
 };
 
 /* PRIVATE FUNCTIONS *********************************************************/
@@ -217,7 +217,7 @@ ExpTimerApcKernelRoutine(IN PKAPC Apc,
     ObDereferenceObjectEx(Timer, DerefsToDo);
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 BOOLEAN
 NTAPI
 ExpInitializeTimerImplementation(VOID)

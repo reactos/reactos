@@ -9,7 +9,7 @@
 VOID CreateSettingsDlg(HWND hwnd);
 
 //Main window
-VOID ShowMainWindow(INT nShowCmd);
+VOID MainWindowLoop(INT nShowCmd);
 
 // Download dialogs
 VOID DownloadApplicationsDB(LPCWSTR lpUrl, BOOL IsOfficial);

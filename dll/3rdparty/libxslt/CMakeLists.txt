@@ -1,8 +1,4 @@
 
-if(NOT MSVC)
-    add_compile_flags("-Wno-misleading-indentation")
-endif()
-
 include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/libs/libxslt
                     ${REACTOS_SOURCE_DIR}/sdk/lib/3rdparty/libwin-iconv)
 
@@ -47,9 +43,9 @@ if(MSVC)
     add_importlibs(libxslt ntdll)
 endif()
 
+if(GCC OR CLANG)
+    target_compile_options(libxslt PRIVATE -Wno-misleading-indentation -Wno-pointer-sign -Wno-unused-function)
+endif()
+
 add_pch(libxslt precomp.h SOURCE)
 add_cd_file(TARGET libxslt DESTINATION reactos/system32 FOR all)
-
-if(USE_CLANG_CL OR (NOT MSVC))
-    target_compile_options(libxslt PRIVATE -Wno-pointer-sign -Wno-unused-function)
-endif()

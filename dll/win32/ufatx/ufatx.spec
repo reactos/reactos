@@ -1,2 +1,2 @@
-@ stdcall ChkdskEx(ptr long long long long ptr) VfatxChkdsk
-@ stdcall FormatEx(ptr long ptr long long ptr) VfatxFormat
+@ stdcall Chkdsk(ptr ptr long long long long ptr ptr ptr ptr ptr) VfatxChkdsk
+@ stdcall Format(ptr ptr long long long ptr long) VfatxFormat

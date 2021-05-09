@@ -4,6 +4,7 @@
 
 .code64
 
+PUBLIC _logb
 FUNC _logb
     .endprolog
 

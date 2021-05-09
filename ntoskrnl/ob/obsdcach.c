@@ -55,7 +55,7 @@ ObpSdReleaseLockShared(IN POB_SD_CACHE_LIST CacheEntry)
     KeLeaveCriticalRegion();
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 NTSTATUS
 NTAPI
 ObpInitSdCache(VOID)

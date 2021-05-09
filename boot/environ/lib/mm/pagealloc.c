@@ -1589,7 +1589,7 @@ MmPaReserveSelfMapPages (
     Request.Pages = PageCount;
     Request.Alignment = Alignment;
     Request.Type = BL_MM_REQUEST_DEFAULT_TYPE;
-    Request.Flags = 0;;
+    Request.Flags = 0;
     Status = MmPaAllocatePages(&MmMdlUnmappedUnallocated,
                                &Descriptor,
                                &MmMdlUnmappedUnallocated,

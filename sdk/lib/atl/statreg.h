@@ -68,19 +68,19 @@ public:
 
     HRESULT STDMETHODCALLTYPE QueryInterface(const IID & /* riid */, void ** /* ppvObject */ )
     {
-        ATLASSERT(_T("statically linked in CRegObject is not a com object. Do not callthis function"));
+        ATLASSERT(FALSE && TEXT("statically linked in CRegObject is not a com object. Do not call this function"));
         return E_NOTIMPL;
     }
 
     ULONG STDMETHODCALLTYPE AddRef()
     {
-        ATLASSERT(_T("statically linked in CRegObject is not a com object. Do not callthis function"));
+        ATLASSERT(FALSE && TEXT("statically linked in CRegObject is not a com object. Do not call this function"));
         return 1;
     }
 
     ULONG STDMETHODCALLTYPE Release()
     {
-        ATLASSERT(_T("statically linked in CRegObject is not a com object. Do not callthis function"));
+        ATLASSERT(FALSE && TEXT("statically linked in CRegObject is not a com object. Do not call this function"));
         return 0;
     }
 

@@ -25,9 +25,15 @@
 #include <stdio.h>
 #include <string.h>
 #include <limits.h>
+#include <string>
+#include <list>
 
 #ifndef PATH_MAX
 #define PATH_MAX MAX_PATH
+#endif
+
+#if !defined(C_ASSERT)
+#define C_ASSERT(expr) extern char (*c_assert(void)) [(expr) ? 1 : -1]
 #endif
 
 #if defined(_WIN32)
@@ -167,6 +173,8 @@ typedef struct _CFFOLDER
  */
 } CFFOLDER, *PCFFOLDER;
 
+C_ASSERT(sizeof(CFFOLDER) == 8);
+
 
 typedef struct _CFFILE
 {
@@ -179,6 +187,7 @@ typedef struct _CFFILE
     /* After this is the NULL terminated filename */
 } CFFILE, *PCFFILE;
 
+C_ASSERT(sizeof(CFFILE) == 16);
 
 typedef struct _CFDATA
 {
@@ -190,55 +199,52 @@ typedef struct _CFDATA
  */
 } CFDATA, *PCFDATA;
 
+C_ASSERT(sizeof(CFDATA) == 8);
+
+/* Application structures */
+
 typedef struct _CFDATA_NODE
 {
-    struct _CFDATA_NODE *Next;
-    struct _CFDATA_NODE *Prev;
-    ULONG       ScratchFilePosition;    // Absolute offset in scratch file
-    ULONG       AbsoluteOffset;         // Absolute offset in cabinet
-    ULONG       UncompOffset;           // Uncompressed offset in folder
-    CFDATA         Data;
+    ULONG       ScratchFilePosition = 0;    // Absolute offset in scratch file
+    ULONG       AbsoluteOffset = 0;         // Absolute offset in cabinet
+    ULONG       UncompOffset = 0;           // Uncompressed offset in folder
+    CFDATA      Data = { 0 };
 } CFDATA_NODE, *PCFDATA_NODE;
 
 typedef struct _CFFOLDER_NODE
 {
-    struct _CFFOLDER_NODE *Next;
-    struct _CFFOLDER_NODE *Prev;
-    ULONG         UncompOffset;     // File size accumulator
-    ULONG         AbsoluteOffset;
-    ULONG         TotalFolderSize;  // Total size of folder in current disk
-    PCFDATA_NODE     DataListHead;
-    PCFDATA_NODE     DataListTail;
-    ULONG         Index;
-    bool             Commit;           // true if the folder should be committed
-    bool             Delete;           // true if marked for deletion
-    CFFOLDER         Folder;
+    ULONG           UncompOffset = 0;       // File size accumulator
+    ULONG           AbsoluteOffset = 0;
+    ULONG           TotalFolderSize = 0;    // Total size of folder in current disk
+    std::list<PCFDATA_NODE> DataList;
+    ULONG           Index = 0;
+    bool            Commit = false;         // true if the folder should be committed
+    bool            Delete = false;         // true if marked for deletion
+    CFFOLDER        Folder = { 0 };
 } CFFOLDER_NODE, *PCFFOLDER_NODE;
 
 typedef struct _CFFILE_NODE
 {
-    struct _CFFILE_NODE *Next;
-    struct _CFFILE_NODE *Prev;
-    CFFILE              File;
-    char*               FileName;
-    PCFDATA_NODE        DataBlock;      // First data block of file. NULL if not known
-    bool                Commit;         // true if the file data should be committed
-    bool                Delete;         // true if marked for deletion
-    PCFFOLDER_NODE      FolderNode;     // Folder this file belong to
+    CFFILE              File = { 0 };
+    std::string         FileName;
+    std::string         TargetFolder;
+    PCFDATA_NODE        DataBlock = nullptr;    // First data block of file. NULL if not known
+    bool                Commit = false;         // true if the file data should be committed
+    bool                Delete = false;         // true if marked for deletion
+    PCFFOLDER_NODE      FolderNode = nullptr;   // Folder this file belong to
 } CFFILE_NODE, *PCFFILE_NODE;
 
 typedef struct _SEARCH_CRITERIA
 {
-    struct _SEARCH_CRITERIA  *Next;   // Pointer to next search criteria
-    struct _SEARCH_CRITERIA  *Prev;   // Pointer to previous search criteria
-    char*                    Search;  // The actual search criteria
+    std::string             Search;             // The actual search criteria
+    std::string             TargetFolder;       // The filename will be TargetFolder\file
 } SEARCH_CRITERIA, *PSEARCH_CRITERIA;
 
 typedef struct _CAB_SEARCH
 {
-    PCFFILE_NODE      Next;      // Pointer to next node
-    PCFFILE           File;      // Pointer to current CFFILE
-    char*             FileName;  // Current filename
+    std::list<PCFFILE_NODE>::iterator      Next;   // Pointer to next node
+    PCFFILE           File = nullptr;   // Pointer to current CFFILE
+    std::string       FileName;         // Current filename
 } CAB_SEARCH, *PCAB_SEARCH;
 
 
@@ -296,29 +302,6 @@ public:
 
 /* Classes */
 
-#ifndef CAB_READ_ONLY
-
-class CCFDATAStorage
-{
-public:
-    /* Default constructor */
-    CCFDATAStorage();
-    /* Default destructor */
-    virtual ~CCFDATAStorage();
-    ULONG Create();
-    ULONG Destroy();
-    ULONG Truncate();
-    ULONG Position();
-    ULONG Seek(LONG Position);
-    ULONG ReadBlock(PCFDATA Data, void* Buffer, PULONG BytesRead);
-    ULONG WriteBlock(PCFDATA Data, void* Buffer, PULONG BytesWritten);
-private:
-    char FullName[PATH_MAX];
-    FILE* FileHandle;
-};
-
-#endif /* CAB_READ_ONLY */
-
 class CCabinet
 {
 public:
@@ -329,25 +312,21 @@ public:
     /* Determines if a character is a separator */
     bool IsSeparator(char Char);
     /* Replaces \ or / with the one used be the host environment */
-    char* ConvertPath(char* Path, bool Allocate);
-    /* Returns a pointer to the filename part of a fully qualified filename */
-    char* GetFileName(char* Path);
-    /* Removes a filename from a fully qualified filename */
-    void RemoveFileName(char* Path);
+    void ConvertPath(std::string& Path);
+    /* Returns the filename part of a fully qualified filename */
+    std::string GetFileName(const std::string& Path);
     /* Normalizes a path */
-    bool NormalizePath(char* Path, ULONG Length);
+    void NormalizePath(std::string& Path);
     /* Returns name of cabinet file */
     char* GetCabinetName();
     /* Sets the name of the cabinet file */
-    void SetCabinetName(char* FileName);
+    void SetCabinetName(const char* FileName);
     /* Sets destination path for extracted files */
-    void SetDestinationPath(char* DestinationPath);
+    void SetDestinationPath(const char* DestinationPath);
     /* Sets cabinet reserved file */
-    bool SetCabinetReservedFile(char* FileName);
-    /* Returns cabinet reserved file */
-    char* GetCabinetReservedFile();
+    bool SetCabinetReservedFile(const char* FileName);
     /* Returns destination path */
-    char* GetDestinationPath();
+    const char* GetDestinationPath();
     /* Returns zero-based current disk number */
     ULONG GetCurrentDiskNumber();
     /* Opens the current cabinet file */
@@ -359,23 +338,25 @@ public:
     /* Locates the next file in the current cabinet file */
     ULONG FindNext(PCAB_SEARCH Search);
     /* Extracts a file from the current cabinet file */
-    ULONG ExtractFile(char* FileName);
+    ULONG ExtractFile(const char* FileName);
     /* Select codec engine to use */
     void SelectCodec(LONG Id);
     /* Returns whether a codec engine is selected */
     bool IsCodecSelected();
     /* Adds a search criteria for adding files to a simple cabinet, displaying files in a cabinet or extracting them */
-    ULONG AddSearchCriteria(char* SearchCriteria);
+    ULONG AddSearchCriteria(const std::string& SearchCriteria, const std::string& TargetFolder);
     /* Destroys the search criteria list */
     void DestroySearchCriteria();
     /* Returns whether we have search criteria */
     bool HasSearchCriteria();
 
+    std::string CreateCabFilename(PCFFILE_NODE Node);
+
 #ifndef CAB_READ_ONLY
     /* Creates a simple cabinet based on the search criteria data */
     bool CreateSimpleCabinet();
     /* Sets the codec to use for compression (based on a string value) */
-    bool SetCompressionCodec(char* CodecName);
+    bool SetCompressionCodec(const char* CodecName);
     /* Creates a new cabinet file */
     ULONG NewCabinet();
     /* Forces a new disk to be created */
@@ -393,7 +374,7 @@ public:
     /* Closes the current cabinet */
     ULONG CloseCabinet();
     /* Adds a file to the current disk */
-    ULONG AddFile(char* FileName);
+    ULONG AddFile(const std::string& FileName, const std::string& TargetFolder);
     /* Sets the maximum size of the current disk */
     void SetMaxDiskSize(ULONG Size);
 #endif /* CAB_READ_ONLY */
@@ -401,14 +382,16 @@ public:
     /* Default event handlers */
 
     /* Handler called when a file is about to be overridden */
-    virtual bool OnOverwrite(PCFFILE Entry, char* FileName);
+    virtual bool OnOverwrite(PCFFILE Entry, const char* FileName);
     /* Handler called when a file is about to be extracted */
-    virtual void OnExtract(PCFFILE Entry, char* FileName);
+    virtual void OnExtract(PCFFILE Entry, const char* FileName);
     /* Handler called when a new disk is to be processed */
-    virtual void OnDiskChange(char* CabinetName, char* DiskLabel);
+    virtual void OnDiskChange(const char* CabinetName, const char* DiskLabel);
+
+    virtual void OnVerboseMessage(const char* Message);
 #ifndef CAB_READ_ONLY
     /* Handler called when a file is about to be added */
-    virtual void OnAdd(PCFFILE Entry, char* FileName);
+    virtual void OnAdd(PCFFILE Entry, const char* FileName);
     /* Handler called when a cabinet need a name */
     virtual bool OnCabinetName(ULONG Number, char* Name);
     /* Handler called when a disk needs a label */
@@ -417,7 +400,7 @@ public:
 private:
     PCFFOLDER_NODE LocateFolderNode(ULONG Index);
     ULONG GetAbsoluteOffset(PCFFILE_NODE File);
-    ULONG LocateFile(char* FileName, PCFFILE_NODE *File);
+    ULONG LocateFile(const char* FileName, PCFFILE_NODE *File);
     ULONG ReadString(char* String, LONG MaxLength);
     ULONG ReadFileTable();
     ULONG ReadDataBlocks(PCFFOLDER_NODE FolderNode);
@@ -431,7 +414,7 @@ private:
     void DestroyDeletedFolderNodes();
     ULONG ComputeChecksum(void* Buffer, ULONG Size, ULONG Seed);
     ULONG ReadBlock(void* Buffer, ULONG Size, PULONG BytesRead);
-    bool MatchFileNamePattern(char* FileName, char* Pattern);
+    bool MatchFileNamePattern(const char* FileName, const char* Pattern);
 #ifndef CAB_READ_ONLY
     ULONG InitCabinetHeader();
     ULONG WriteCabinetHeader(bool MoreDisks);
@@ -459,8 +442,8 @@ private:
     ULONG FolderUncompSize;     // Uncompressed size of folder
     ULONG BytesLeftInBlock;     // Number of bytes left in current block
     bool ReuseBlock;
-    char DestPath[PATH_MAX];
-    char CabinetReservedFile[PATH_MAX];
+    std::string DestPath;
+    std::string CabinetReservedFile;
     void* CabinetReservedFileBuffer;
     ULONG CabinetReservedFileSize;
     FILE* FileHandle;
@@ -469,14 +452,11 @@ private:
     ULONG CabinetReserved;
     ULONG FolderReserved;
     ULONG DataReserved;
-    PCFFOLDER_NODE FolderListHead;
-    PCFFOLDER_NODE FolderListTail;
+    std::list<PCFFOLDER_NODE> FolderList;
     PCFFOLDER_NODE CurrentFolderNode;
     PCFDATA_NODE CurrentDataNode;
-    PCFFILE_NODE FileListHead;
-    PCFFILE_NODE FileListTail;
-    PSEARCH_CRITERIA CriteriaListHead;
-    PSEARCH_CRITERIA CriteriaListTail;
+    std::list<PCFFILE_NODE> FileList;
+    std::list<PSEARCH_CRITERIA> CriteriaList;
     CCABCodec *Codec;
     LONG CodecId;
     bool CodecSelected;
@@ -498,7 +478,7 @@ private:
     bool CreateNewDisk;
     bool CreateNewFolder;
 
-    CCFDATAStorage *ScratchFile;
+    class CCFDATAStorage *ScratchFile;
     FILE* SourceFile;
     bool ContinueFile;
     ULONG TotalBytesLeft;

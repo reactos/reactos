@@ -71,6 +71,7 @@ BEGIN
     BEGIN
         MENUITEM "&Dalinti\tF2", IDM_GAME_NEW
         MENUITEM SEPARATOR
+        MENUITEM "&Undo", IDM_GAME_UNDO, GRAYED
         MENUITEM "&Malka...", IDM_GAME_DECK
         MENUITEM "&Nuostatos...", IDM_GAME_OPTIONS
         MENUITEM SEPARATOR

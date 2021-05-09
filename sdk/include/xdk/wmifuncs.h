@@ -69,7 +69,7 @@ WmiQueryTraceInformation(
 
 _IRQL_requires_max_(PASSIVE_LEVEL)
 NTSTATUS
-// NTKERNELAPI // HACK: ntoskrnl_vista functions are statically linked thus don't need DECLSPEC_IMPORT
+NTKRNLVISTAAPI
 NTAPI
 EtwRegister(
   _In_ LPCGUID ProviderId,
@@ -79,7 +79,7 @@ EtwRegister(
 
 _IRQL_requires_max_(PASSIVE_LEVEL)
 NTSTATUS
-// NTKERNELAPI // HACK: ntoskrnl_vista functions are statically linked thus don't need DECLSPEC_IMPORT
+NTKRNLVISTAAPI
 NTAPI
 EtwUnregister(
   _In_ REGHANDLE RegHandle);
@@ -112,7 +112,7 @@ EtwActivityIdControl(
 
 _IRQL_requires_max_(HIGH_LEVEL)
 NTSTATUS
-// NTKERNELAPI // HACK: ntoskrnl_vista functions are statically linked thus don't need DECLSPEC_IMPORT
+NTKRNLVISTAAPI
 NTAPI
 EtwWrite(
   _In_ REGHANDLE RegHandle,

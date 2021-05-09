@@ -2,6 +2,7 @@
  *    Translated by Caemyr - Olaf Siejka (Aug, 2009)
  *    Use ReactOS forum PM or IRC to contact me
  *    Updated by Saibamen - Adam Stachowicz (saibamenppl@gmail.com) (May, 2020)
+ *    Updated by pithwz - Piotr Hetnarowicz (piotrhwz@gmail.com) (February, 2021)
  *    https://reactos.org/
  *    IRC: irc.freenode.net #reactos-pl;
  */
@@ -74,9 +75,9 @@ BEGIN
     EDITTEXT IDC_DOWNLOAD_DIR_EDIT, 15, 86, 166, 12, WS_CHILD | WS_VISIBLE | WS_GROUP
     PUSHBUTTON "&Wybierz", IDC_CHOOSE, 187, 85, 50, 14
     AUTOCHECKBOX "&Usuń instalatory programów po ich zainstalowaniu", IDC_DEL_AFTER_INSTALL, 16, 100, 218, 12
-    GROUPBOX "Software source", -1, 4, 118, 240, 46
-    CONTROL "Use default", IDC_SOURCE_DEFAULT, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 15, 132, 74, 10
-    CONTROL "Specified source", IDC_USE_SOURCE, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 15, 147, 74, 10
+    GROUPBOX "Źródło oprogramowania", -1, 4, 118, 240, 46
+    CONTROL "Używaj domyślnego", IDC_SOURCE_DEFAULT, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 15, 132, 76, 10
+    CONTROL "Określone źródło", IDC_USE_SOURCE, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 15, 147, 74, 10
     EDITTEXT IDC_SOURCE_URL, 97, 147, 140, 12, ES_AUTOHSCROLL | WS_DISABLED
     GROUPBOX "Proxy", -1, 4, 166, 240, 76
     CONTROL "Ustawienia systemowe proxy", IDC_PROXY_DEFAULT, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 15, 180, 210, 10
@@ -104,7 +105,7 @@ END
 
 IDD_DOWNLOAD_DIALOG DIALOGEX 0, 0, 220, 220
 STYLE DS_SHELLFONT | DS_CENTER | WS_BORDER | WS_CAPTION | WS_POPUP | WS_SYSMENU | WS_VISIBLE
-CAPTION "Pobierz %ls…"
+CAPTION "Pobieranie %ls…"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "Progress1", IDC_DOWNLOAD_PROGRESS, "msctls_progress32", WS_BORDER | PBS_SMOOTH, 10, 10, 200, 12
@@ -149,6 +150,7 @@ BEGIN
     IDS_INFO_UNINSTALLSTR "\nKomenda deinstalacji: "
     IDS_INFO_MODIFYPATH "\nModyfikacja ścieżki instalacji: "
     IDS_INFO_INSTALLDATE "\nData instalacji: "
+    IDS_AINFO_PACKAGE_NAME "\nNazwa pakietu: "
 END
 
 STRINGTABLE
@@ -191,7 +193,7 @@ BEGIN
     IDS_INSTALL "Instaluj"
     IDS_UNINSTALL "Odinstaluj"
     IDS_MODIFY "Modyfikuj"
-    IDS_APPS_COUNT "Licznik aplikacji: %d"
+    IDS_APPS_COUNT "Liczba aplikacji: %d; Wybranych: %d"
     IDS_WELCOME_TITLE "Witamy w Menedżerze aplikacji ReactOS!\n\n"
     IDS_WELCOME_TEXT "Z listy po lewej wybierz kategorię, a następnie aplikację, by ją zainstalować lub odinstalować.\nStrona projektu ReactOS: "
     IDS_WELCOME_URL "https://reactos.org/"
@@ -201,7 +203,7 @@ BEGIN
     IDS_APPLICATIONS "Aplikacje"
     IDS_CHOOSE_FOLDER_TEXT "Wybierz katalog, w którym będa zapisywane pobrane programy:"
     IDS_CHOOSE_FOLDER_ERROR "Wybrałeś nieistniejący katalog! Czy chcesz utworzyć nowy?"
-    IDS_URL_INVALID "The URL you have specified is invalid or not supported. Please correct it!"
+    IDS_URL_INVALID "Określony adres URL jest nieprawidłowy lub nieobsługiwany. Popraw go."
     IDS_APP_REG_REMOVE "Czy na pewno chcesz usunąć wpis tego programu z rejestru?"
     IDS_INFORMATION "Informacja"
     IDS_UNABLE_TO_DOWNLOAD "Nie można pobrać pakietu! Nie znaleziono adresu!"
@@ -218,6 +220,9 @@ BEGIN
     IDS_SELECTEDFORINST "Wybrane do instalacji"
     IDS_MISMATCH_CERT_INFO "Użyty certyfikat jest nieznany:\nSubject: %s\nIssuer: %s\nCzy chcesz mimo to kontynuować?"
     IDS_UNABLE_PATH "Niepoprawny format ścieżki."
+    IDS_APP_DISPLAY_DETAILS "szczegóły"
+    IDS_APP_DISPLAY_LIST "lista"
+    IDS_APP_DISPLAY_TILE "kafelki"
 END
 
 STRINGTABLE
@@ -253,5 +258,17 @@ STRINGTABLE
 BEGIN
     IDS_DL_DIALOG_DB_DISP "Baza programów"
     IDS_DL_DIALOG_DB_DOWNLOAD_DISP "Aktualizowanie bazy programów…"
-    IDS_DL_DIALOG_DB_UNOFFICIAL_DOWNLOAD_DISP "Updating Database… (Unofficial source)"
+    IDS_DL_DIALOG_DB_UNOFFICIAL_DOWNLOAD_DISP "Aktualizowanie bazy programów… (nieoficjalne źródło)"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_CMD_USAGE "Sposób użycia: "
+    IDS_CMD_NEED_PACKAGE_NAME "Błąd: oczekiwano jednej lub więcej nazw pakietu przy użyciu opcji %1.\n"
+    IDS_CMD_NEED_FILE_NAME "Błąd: oczekiwano nazwy pliku przy użyciu opcji %1.\n"
+    IDS_CMD_NEED_PARAMS "Błąd: oczekiwano jednego lub więcej parametrów przy użyciu opcji %1.\n"
+    IDS_CMD_INVALID_OPTION "Błąd: Określono nieprawidłową lub nieznaną opcję wiersza polecenia.\n"
+    IDS_CMD_FIND_RESULT_FOR "Wynik znajdowania dla %1:\n"
+    IDS_CMD_PACKAGE_NOT_FOUND "Nie można odnaleźć pakietu %1.\n"
+    IDS_CMD_PACKAGE_INFO "Informacje o pakiecie %1:\n"
 END

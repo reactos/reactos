@@ -24,7 +24,7 @@ static INT DCECount = 0; // Count of DCE in system.
 
 /* FUNCTIONS *****************************************************************/
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 NTSTATUS
 NTAPI
 InitDCEImpl(VOID)

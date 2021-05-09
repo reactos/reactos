@@ -16,7 +16,7 @@
 
 /* FUNCTIONS *****************************************************************/
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 LANGID
 NTAPI
 CmpConvertLangId(IN LPWSTR Name,
@@ -67,7 +67,7 @@ CmpConvertLangId(IN LPWSTR Name,
     return LangId;
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 HCELL_INDEX
 NTAPI
 CmpWalkPath(IN PHHIVE SystemHive,
@@ -98,7 +98,7 @@ CmpWalkPath(IN PHHIVE SystemHive,
     }
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 VOID
 NTAPI
 CmGetSystemControlValues(IN PVOID SystemHiveData,

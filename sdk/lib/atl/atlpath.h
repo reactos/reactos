@@ -23,10 +23,10 @@ class CPathT
     // const
     inline BOOL PathFileExistsX(LPCSTR pszPath) { return PathFileExistsA(pszPath); }
     inline BOOL PathFileExistsX(LPCWSTR pszPath) { return PathFileExistsW(pszPath); }
-    inline int PathFindExtensionX(LPCSTR pszPath) { return PathFindExtensionA(pszPath); }
-    inline int PathFindExtensionX(LPCWSTR pszPath) { return PathFindExtensionW(pszPath); }
-    inline int PathFindFileNameX(LPCSTR pszPath) { return PathFindFileNameA(pszPath); }
-    inline int PathFindFileNameX(LPCWSTR pszPath) { return PathFindFileNameW(pszPath); }
+    inline LPCSTR PathFindExtensionX(LPCSTR pszPath) { return PathFindExtensionA(pszPath); }
+    inline LPCWSTR PathFindExtensionX(LPCWSTR pszPath) { return PathFindExtensionW(pszPath); }
+    inline LPCSTR PathFindFileNameX(LPCSTR pszPath) { return PathFindFileNameA(pszPath); }
+    inline LPCWSTR PathFindFileNameX(LPCWSTR pszPath) { return PathFindFileNameW(pszPath); }
     inline int PathGetDriveNumberX(LPCSTR pszPath) { return PathGetDriveNumberA(pszPath); }
     inline int PathGetDriveNumberX(LPCWSTR pszPath) { return PathGetDriveNumberW(pszPath); }
     inline BOOL PathIsDirectoryX(LPCSTR pszPath) { return PathIsDirectoryA(pszPath); }
@@ -49,8 +49,8 @@ class CPathT
     inline BOOL PathIsUNCServerShareX(LPCWSTR pszPath) { return PathIsUNCServerShareW(pszPath); }
     inline BOOL PathMatchSpecX(LPCSTR pszPath, LPCSTR pszSpec) { return PathMatchSpecA(pszPath, pszSpec); }
     inline BOOL PathMatchSpecX(LPCWSTR pszPath, LPCWSTR pszSpec) { return PathMatchSpecW(pszPath, pszSpec); }
-    inline int PathSkipRootX(LPCSTR pszPath) { return PathSkipRootA(pszPath); }
-    inline int PathSkipRootX(LPCWSTR pszPath) { return PathSkipRootW(pszPath); }
+    inline LPCSTR PathSkipRootX(LPCSTR pszPath) { return PathSkipRootA(pszPath); }
+    inline LPCWSTR PathSkipRootX(LPCWSTR pszPath) { return PathSkipRootW(pszPath); }
 
     // non-const
     inline void PathAddBackslashX(LPSTR pszPath) { PathAddBackslashA(pszPath); }

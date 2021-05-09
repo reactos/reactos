@@ -3,11 +3,6 @@ add_definitions(-D_WINE)
 include_directories(BEFORE ${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 spec2def(winmm.dll winmm.spec ADD_IMPORTLIB)
 
-if(MSVC)
-    # error C4312: 'type cast': conversion from 'DWORD' to 'HTASK' of greater size
-    replace_compile_flags("/we4312" " ")
-endif()
-
 list(APPEND SOURCE
     driver.c
     joystick.c
@@ -26,14 +21,20 @@ add_library(winmm MODULE
     winmm_res.rc
     ${CMAKE_CURRENT_BINARY_DIR}/winmm.def)
 
+
+if(MSVC)
+    # error C4312: 'type cast': conversion from 'DWORD' to 'HTASK' of greater size
+    remove_target_compile_option(winmm "/we4312")
+endif()
+
 set_module_type(winmm win32dll)
 target_link_libraries(winmm wine ${PSEH_LIB})
 add_importlibs(winmm advapi32 user32 msvcrt kernel32 ntdll)
 add_pch(winmm winemm.h SOURCE)
 add_cd_file(TARGET winmm DESTINATION reactos/system32 FOR all)
 
-if(NOT MSVC)
-    target_compile_options(winmm PRIVATE "-Wno-unused-but-set-variable")
+if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
+    target_compile_options(winmm PRIVATE -Wno-unused-but-set-variable)
 endif()
 
 add_subdirectory(midimap)

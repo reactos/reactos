@@ -1,0 +1,9 @@
+LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    IDS_NTOBJFLD_NAME "NT オブジェクト名前空間"
+    IDS_REGISTRY_NAME "システム レジストリ"
+    IDS_NTOBJFLD_COMMENT "NT オブジェクト名前空間の閲覧を可能にします"
+    IDS_REGISTRY_COMMENT "システム レジストリの閲覧を可能にします"
+END

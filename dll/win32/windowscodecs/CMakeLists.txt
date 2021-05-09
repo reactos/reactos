@@ -9,21 +9,12 @@ add_definitions(
 remove_definitions(-D_WIN32_WINNT=0x502)
 add_definitions(-D_WIN32_WINNT=0x600)
 
-if(MSVC)
-    # error C4133: 'function': incompatible types - from 'WICPixelFormatNumericRepresentation *' to 'DWORD *'
-    replace_compile_flags("/we4133" " ")
-endif()
-
 include_directories(
     BEFORE ${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine
     ${REACTOS_SOURCE_DIR}/sdk/include/reactos/libs/libjpeg
     ${REACTOS_SOURCE_DIR}/sdk/include/reactos/libs/zlib
     ${REACTOS_SOURCE_DIR}/sdk/include/reactos/libs/libpng
     ${REACTOS_SOURCE_DIR}/sdk/include/reactos/libs/libtiff)
-
-if(MSVC)
-    add_compile_flags("/FItypeof.h")
-endif()
 
 spec2def(windowscodecs.dll windowscodecs.spec ADD_IMPORTLIB)
 add_rpcproxy_files(windowscodecs_wincodec.idl)
@@ -78,6 +69,13 @@ add_library(windowscodecs MODULE
     ${PCH_SKIP_SOURCE}
     version.rc
     ${CMAKE_CURRENT_BINARY_DIR}/windowscodecs.def)
+
+if(MSVC)
+    # error C4133: 'function': incompatible types - from 'WICPixelFormatNumericRepresentation *' to 'DWORD *'
+    remove_target_compile_option(windowscodecs "/we4133")
+
+    target_compile_options(windowscodecs PRIVATE /FItypeof.h)
+endif()
 
 set_module_type(windowscodecs win32dll)
 target_link_libraries(windowscodecs wine uuid ${PSEH_LIB})

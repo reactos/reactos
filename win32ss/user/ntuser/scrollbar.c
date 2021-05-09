@@ -597,7 +597,7 @@ co_IntSetScrollInfo(PWND Window, INT nBar, LPCSCROLLINFO lpsi, BOOL bRedraw)
    if (lpsi->fMask & (SIF_RANGE | SIF_PAGE | SIF_DISABLENOSCROLL))
    {
       new_flags = Window->pSBInfo->WSBflags;
-      if (Info->nMin >= (int)(Info->nMax - max(Info->nPage - 1, 0)))
+      if (Info->nMin + (int)max(Info->nPage, 1) > Info->nMax)
       {
          /* Hide or disable scroll-bar */
          if (lpsi->fMask & SIF_DISABLENOSCROLL)

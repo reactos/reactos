@@ -1,3 +1,6 @@
+#ifdef __REACTOS__
+#include "precomp.h"
+#else
 /*
  * Copyright 2010 Christian Costa
  *
@@ -17,10 +20,9 @@
  *
  */
 
-#include "config.h"
-#include "wine/port.h"
 
 #include "d3dx9_private.h"
+#endif /* __REACTOS__ */
 
 WINE_DEFAULT_DEBUG_CHANNEL(d3dx);
 
@@ -265,7 +267,7 @@ static HRESULT WINAPI d3dx9_line_OnResetDevice(ID3DXLine *iface)
 {
     FIXME("iface %p stub!\n", iface);
 
-    return E_NOTIMPL;
+    return S_OK;
 }
 
 static const struct ID3DXLineVtbl d3dx9_line_vtbl =

@@ -1014,7 +1014,7 @@ list(APPEND SOURCE_MSVCRT
 #    asin.c
 #    atan.c
 #    atan2.c
-#    atexit # <-- keep this as an extern, thank you
+    atexit.c
 #    atof.c
 #    atoi.c
 #    atol.c

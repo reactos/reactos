@@ -27,7 +27,7 @@ OPTION DOTNAME
 .686P
 .XMM
 .MODEL FLAT
-ASSUME CS:NOTHING, DS:NOTHING, ES:NOTHING, FS:NOTHING, GS:NOTHING
+ASSUME FS:NOTHING, GS:NOTHING
 #endif
 
 /* Explicit radix in MASM syntax  */
@@ -235,6 +235,9 @@ ENDM
 /* Force intel syntax */
 .intel_syntax noprefix
 
+/* Put dwarf debug info in the .dwarf_debug section, which will be properly stripped */
+.cfi_sections .debug_frame
+
 .altmacro
 
 /* Explicit radix in GAS syntax */
@@ -246,6 +249,10 @@ ENDM
 /* Macro values need to be marked */
 #define VAL(x) \x
 
+#define CR  "\r"
+#define LF  "\n"
+#define NUL "\0"
+
 /* Due to MASM's reverse syntax, we are forced to use a precompiler macro */
 #define MACRO(...) .macro __VA_ARGS__
 #define ENDM .endm
@@ -253,19 +260,22 @@ ENDM
 /* To avoid reverse syntax we provide a new macro .PROC, replacing PROC... */
 .macro .PROC name
     .func \name
-#ifdef _X86_
-    /* x86 GAS expects a label with _ prefix */
-    _\name:
-#endif
     \name:
+#ifdef _X86_
     .cfi_startproc
-    .equ cfa_current_offset, -8
+#else
+    .seh_proc \name
+#endif
 .endm
 #define FUNC .PROC
 
 /* ... and .ENDP, replacing ENDP */
 .macro .ENDP
+#ifdef _X86_
     .cfi_endproc
+#else
+    .seh_endproc
+#endif
     .endfunc
 .endm
 #define ENDFUNC .ENDP
@@ -332,45 +342,36 @@ ENDM
 .endm
 
 /* Macros for x64 stack unwind OPs */
-
 .macro .allocstack size
-    .cfi_adjust_cfa_offset \size
-    .set cfa_current_offset, cfa_current_offset - \size
+    .seh_stackalloc \size
 .endm
 
-code = 1
-.macro .pushframe param=0
-    .if (\param)
-        .cfi_adjust_cfa_offset 0x30
-        .set cfa_current_offset, cfa_current_offset - 0x30
-    .else
-        .cfi_adjust_cfa_offset 0x28
-        .set cfa_current_offset, cfa_current_offset - 0x28
-    .endif
+.macro .pushframe param
+    /*
+     * FIXME. .seh_pushframe doesn't accept code argument.
+     * Patch sent.
+     */
+    .seh_pushframe \param
 .endm
 
 .macro .pushreg reg
-    .cfi_adjust_cfa_offset 8
-    .equ cfa_current_offset, cfa_current_offset - 8
-    .cfi_offset \reg, cfa_current_offset
+    .seh_pushreg \reg
 .endm
 
 .macro .savereg reg, offset
-    // checkme!!!
-    .cfi_offset \reg, \offset
+    .seh_savereg \reg, \offset
 .endm
 
 .macro .savexmm128 reg, offset
-    // checkme!!!
-    .cfi_offset \reg, \offset
+    .seh_savexmm \reg, \offset
 .endm
 
 .macro .setframe reg, offset
-    .cfi_def_cfa reg, \offset
-    .equ cfa_current_offset, \offset
+    .seh_setframe \reg, \offset
 .endm
 
 .macro .endprolog
+    .seh_endprologue
 .endm
 
 .macro absolute address
@@ -383,14 +384,15 @@ code = 1
 .endm
 
 .macro UNIMPLEMENTED2 file, line, func
-    jmp 3f
-1:  .asciz "\func"
-2:  .asciz \file
-3:
+    jmp 4f
+1:  .ascii "Unimplemented", CR, LF, NUL
+2:  .asciz "\func"
+3:  .asciz \file
+4:
     sub rsp, 0x20
-    lea rcx, MsgUnimplemented[rip]
-    lea rdx, 1b[rip]
-    lea r8, 2b[rip]
+    lea rcx, 1b[rip]
+    lea rdx, 2b[rip]
+    lea r8, 3b[rip]
     mov r9, \line
     call DbgPrint
     add rsp, 0x20
@@ -403,10 +405,6 @@ code = 1
 #define endif .endif
 #define else .else
 #define elseif .elseif
-
-#define CR  "\r"
-#define LF  "\n"
-#define NUL "\0"
 
 /* CFI annotations */
 #define CFI_STARTPROC .cfi_startproc

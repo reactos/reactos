@@ -8,6 +8,7 @@
  * PROGRAMMERS:     Paolo Pantaleo
  *                  Timothy Schepens
  *                  Hermes Belusca-Maito (hermes.belusca@sfr.fr)
+ *                  Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
 /*
  * MORE.C - external command.
@@ -133,9 +134,21 @@ PagePrompt(PCON_PAGER Pager, DWORD Done, DWORD Total)
      */
     ConClearLine(Pager->Screen->Stream);
 
+    /* Ctrl+C or Ctrl+Esc: Control Break */
     if ((KeyEvent.wVirtualKeyCode == VK_ESCAPE) ||
         ((KeyEvent.wVirtualKeyCode == L'C') &&
          (KeyEvent.dwControlKeyState & (LEFT_CTRL_PRESSED | RIGHT_CTRL_PRESSED))))
+    {
+        /* We break, output a newline */
+        WCHAR ch = L'\n';
+        ConStreamWrite(Pager->Screen->Stream, &ch, 1);
+        return FALSE;
+    }
+
+    /* 'Q': Quit */
+    // FIXME: Available only when command extensions are enabled.
+    if ((KeyEvent.wVirtualKeyCode == L'Q') &&
+        !(KeyEvent.dwControlKeyState & (LEFT_CTRL_PRESSED | RIGHT_CTRL_PRESSED)))
     {
         /* We break, output a newline */
         WCHAR ch = L'\n';

@@ -288,7 +288,7 @@ static BOOL InitOpenFileName(HWND hWnd, OPENFILENAME* pofn)
     pofn->nMaxFile = _MAX_PATH;
     pofn->lpstrFileTitle = FileTitleBuffer;
     pofn->nMaxFileTitle = _MAX_PATH;
-    pofn->Flags = OFN_HIDEREADONLY;
+    pofn->Flags = OFN_EXPLORER | OFN_HIDEREADONLY;
     pofn->lpstrDefExt = L"reg";
     return TRUE;
 }
@@ -1230,7 +1230,7 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         FindDialog(hWnd);
         break;
     case ID_EDIT_FINDNEXT:
-        FindNext(hWnd);
+        FindNextMessageBox(hWnd);
         break;
     case ID_EDIT_COPYKEYNAME:
         CopyKeyName(hWnd, hKeyRoot, keyPath);

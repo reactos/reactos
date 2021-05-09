@@ -61,5 +61,5 @@ BEGIN
     IDS_ABOUT "&O programie..."
     IDS_TITLE "Tablica znaków"
     IDS_UNICODE "Unicode"
-    IDS_ALL "All"
+    IDS_ALL "Wszystko"
 END

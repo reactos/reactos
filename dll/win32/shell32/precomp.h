@@ -45,6 +45,19 @@
 #undef ShellExecute
 #include <undocshell.h>
 
+/*
+ * For versions < Vista+, redefine ShellMessageBoxW to ShellMessageBoxWrapW
+ * (this is needed to avoid a linker error). On Vista+ onwards, shell32.ShellMessageBoxW
+ * redirects to shlwapi.ShellMessageBoxW so the #define should not be needed.
+ *
+ * However our shell32 is built with _WIN32_WINNT set to 0x600 (Vista+),
+ * yet its exports (especially regarding ShellMessageBoxA/W) are Win2003
+ * compatible. So the #define is still needed, and the check be disabled.
+ */
+// #if (_WIN32_WINNT < 0x0600)
+#define ShellMessageBoxW ShellMessageBoxWrapW
+// #endif
+
 #include <browseui_undoc.h>
 
 #include <shellutils.h>

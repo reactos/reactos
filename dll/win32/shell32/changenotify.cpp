@@ -300,10 +300,7 @@ CreateNotificationParamAndSend(LONG wEventId, UINT uFlags, LPCITEMIDLIST pidl1, 
     // get server window
     HWND hwndServer = GetNotificationServer(FALSE);
     if (hwndServer == NULL)
-    {
-        ERR("hwndServer == NULL\n");
         return;
-    }
 
     // the ticket owner is the process of the notification server
     DWORD pid;

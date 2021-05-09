@@ -4,15 +4,15 @@ typedef struct
 {
     SHORT X;
     SHORT Y;
-    LPCSTR Buffer;
+    PCSTR Buffer;
     DWORD Flags;
     INT TextID;
 } MUI_ENTRY, *PMUI_ENTRY;
 
 typedef struct
 {
-    LPCSTR ErrorText;
-    LPCSTR ErrorStatus;
+    PCSTR ErrorText;
+    PCSTR ErrorStatus;
 } MUI_ERROR;
 
 typedef struct
@@ -24,7 +24,7 @@ typedef struct
 typedef struct
 {
     LONG Number;
-    LPSTR String;
+    PCSTR String;
 } MUI_STRING;
 
 typedef struct
@@ -68,7 +68,7 @@ MUIDisplayError(
 VOID
 SetConsoleCodePage(VOID);
 
-LPSTR
+PCSTR
 MUIGetString(
     ULONG Number);
 
@@ -124,7 +124,6 @@ MUISetStyledText(
 #define STRING_NONFORMATTEDSYSTEMPART    62
 #define STRING_NONFORMATTEDOTHERPART     63
 #define STRING_INSTALLONPART             10
-#define STRING_CHECKINGPART              11
 #define STRING_CONTINUE                  12
 #define STRING_QUITCONTINUE              13
 #define STRING_REBOOTCOMPUTER            14
@@ -150,16 +149,10 @@ MUISetStyledText(
 #define STRING_FORMATDISK2               34
 #define STRING_KEEPFORMAT                35
 #define STRING_HDINFOPARTCREATE_1        36
-#define STRING_HDINFOPARTCREATE_2        37
-#define STRING_HDDINFOUNK2               38
 #define STRING_HDINFOPARTDELETE_1        39
-#define STRING_HDINFOPARTDELETE_2        40
-#define STRING_HDINFOPARTZEROED_1        41
-#define STRING_HDDINFOUNK4               42
-#define STRING_HDINFOPARTEXISTS_1        43
-#define STRING_HDDINFOUNK5               44
-#define STRING_HDINFOPARTSELECT_1        45
-#define STRING_HDINFOPARTSELECT_2        46
+#define STRING_PARTTYPE                  42
+#define STRING_HDDINFO_1                 45
+#define STRING_HDDINFO_2                 46
 #define STRING_NEWPARTITION              47
 #define STRING_UNPSPACE                  48
 #define STRING_MAXSIZE                   49
