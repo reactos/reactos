@@ -34,7 +34,10 @@ static int strlist_add(strlist_t *plist, LPCWSTR psz)
         return 0;
     ppsz = (LPWSTR *)realloc(plist->ppsz, (plist->count + 1) * sizeof(LPWSTR));
     if (!ppsz)
+    {
+        free(clone);
         return 0;
+    }
     plist->ppsz = ppsz;
     plist->ppsz[plist->count] = clone;
     ++(plist->count);
