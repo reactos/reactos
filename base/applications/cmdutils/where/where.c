@@ -432,7 +432,7 @@ static BOOL WhereDoPattern(LPWSTR pattern)
     return ret;
 }
 
-INT __cdecl wmain(INT argc, WCHAR **argv)
+INT wmain(INT argc, WCHAR **argv)
 {
     typedef BOOL (WINAPI *FN_DISABLE_WOW)(PVOID *);
     HANDLE hKernel32 = GetModuleHandleA("kernel32");
