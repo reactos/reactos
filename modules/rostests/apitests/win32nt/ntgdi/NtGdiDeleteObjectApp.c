@@ -32,6 +32,23 @@ START_TEST(NtGdiDeleteObjectApp)
     ok_long(GetLastError(), 0);
     ok_int(GdiIsHandleValid(hdc), 0);
 
+#ifdef _WIN64
+    /* Test upper 32 bits */
+    SetLastError(0);
+    hdc = (HDC)((ULONG64)CreateCompatibleDC(NULL) | 0xFFFFFFFF00000000ULL);
+    ok_int(GdiIsHandleValid(hdc), 1);
+    ok_int(NtGdiDeleteObjectApp(hdc), 1);
+    ok_long(GetLastError(), 0);
+    ok_int(GdiIsHandleValid(hdc), 0);
+
+    SetLastError(0);
+    hdc = (HDC)((ULONG64)CreateCompatibleDC(NULL) | 0x537F9F2F00000000ULL);
+    ok_int(GdiIsHandleValid(hdc), 1);
+    ok_int(NtGdiDeleteObjectApp(hdc), 1);
+    ok_long(GetLastError(), 0);
+    ok_int(GdiIsHandleValid(hdc), 0);
+#endif
+
     /* Delete a display DC */
     SetLastError(0);
     hdc = CreateDC("DISPLAY", NULL, NULL, NULL);
@@ -55,6 +72,7 @@ START_TEST(NtGdiDeleteObjectApp)
     ok_long(GetLastError(), ERROR_INVALID_PARAMETER);
     /* Make sure */
     ok_ptr((void *)NtUserCallOneParam((DWORD_PTR)hdc, ONEPARAM_ROUTINE_RELEASEDC), NULL);
+
 
     /* Delete a brush */
     SetLastError(0);

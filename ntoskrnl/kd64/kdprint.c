@@ -13,9 +13,9 @@
 #define NDEBUG
 #include <debug.h>
 
-/* FUNCTIONS *****************************************************************/
+#define KD_PRINT_MAX_BYTES 512
 
-#ifdef _WINKD_
+/* FUNCTIONS *****************************************************************/
 
 BOOLEAN
 NTAPI
@@ -212,23 +212,6 @@ KdpSymbol(IN PSTRING DllPath,
     KdExitDebugger(Enable);
 }
 
-#else
-
-extern
-BOOLEAN
-NTAPI
-KdpPrintString(
-    _In_ PSTRING Output);
-
-extern
-BOOLEAN
-NTAPI
-KdpPromptString(
-    _In_ PSTRING PromptString,
-    _In_ PSTRING ResponseString);
-
-#endif // _WINKD_
-
 USHORT
 NTAPI
 KdpPrompt(
@@ -243,8 +226,8 @@ KdpPrompt(
     STRING PromptBuffer, ResponseBuffer;
     BOOLEAN Enable, Resend;
     PCHAR SafeResponseString;
-    CHAR CapturedPrompt[512];
-    CHAR SafeResponseBuffer[512];
+    CHAR CapturedPrompt[KD_PRINT_MAX_BYTES];
+    CHAR SafeResponseBuffer[KD_PRINT_MAX_BYTES];
 
     /* Normalize the lengths */
     PromptLength = min(PromptLength,
@@ -326,6 +309,50 @@ KdpPrompt(
     return ResponseBuffer.Length;
 }
 
+static
+NTSTATUS
+NTAPI
+KdpPrintFromUser(
+    _In_ ULONG ComponentId,
+    _In_ ULONG Level,
+    _In_reads_bytes_(Length) PCHAR String,
+    _In_ USHORT Length,
+    _In_ KPROCESSOR_MODE PreviousMode,
+    _In_ PKTRAP_FRAME TrapFrame,
+    _In_ PKEXCEPTION_FRAME ExceptionFrame,
+    _Out_ PBOOLEAN Handled)
+{
+    CHAR CapturedString[KD_PRINT_MAX_BYTES];
+
+    ASSERT(PreviousMode == UserMode);
+    ASSERT(Length <= sizeof(CapturedString));
+
+    /* Capture user-mode buffers */
+    _SEH2_TRY
+    {
+        /* Probe and capture the string */
+        ProbeForRead(String, Length, 1);
+        KdpMoveMemory(CapturedString, String, Length);
+        String = CapturedString;
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        /* Bad string pointer, bail out */
+        _SEH2_YIELD(return STATUS_ACCESS_VIOLATION);
+    }
+    _SEH2_END;
+
+    /* Now go through the kernel-mode code path */
+    return KdpPrint(ComponentId,
+                    Level,
+                    String,
+                    Length,
+                    KernelMode,
+                    TrapFrame,
+                    ExceptionFrame,
+                    Handled);
+}
+
 NTSTATUS
 NTAPI
 KdpPrint(
@@ -341,7 +368,6 @@ KdpPrint(
     NTSTATUS Status;
     BOOLEAN Enable;
     STRING OutputString;
-    CHAR CapturedString[512];
 
     if (NtQueryDebugFilterState(ComponentId, Level) == (NTSTATUS)FALSE)
     {
@@ -354,25 +380,24 @@ KdpPrint(
     *Handled = FALSE;
 
     /* Normalize the length */
-    Length = min(Length, sizeof(CapturedString));
+    Length = min(Length, KD_PRINT_MAX_BYTES);
 
     /* Check if we need to verify the string */
     if (PreviousMode != KernelMode)
     {
-        /* Capture user-mode buffers */
-        _SEH2_TRY
-        {
-            /* Probe and capture the string */
-            ProbeForRead(String, Length, 1);
-            KdpMoveMemory(CapturedString, String, Length);
-            String = CapturedString;
-        }
-        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-        {
-            /* Bad string pointer, bail out */
-            _SEH2_YIELD(return STATUS_ACCESS_VIOLATION);
-        }
-        _SEH2_END;
+        /* This case requires a 512 byte stack buffer.
+         * We don't want to use that much stack in the kernel case, but we
+         * can't use _alloca due to PSEH. So the buffer exists in this
+         * helper function instead.
+         */
+        return KdpPrintFromUser(ComponentId,
+                                Level,
+                                String,
+                                Length,
+                                PreviousMode,
+                                TrapFrame,
+                                ExceptionFrame,
+                                Handled);
     }
 
     /* Setup the output string */

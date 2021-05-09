@@ -212,6 +212,7 @@
 #define FILE_ATTRIBUTE_NOT_CONTENT_INDEXED    0x00002000
 #define FILE_ATTRIBUTE_ENCRYPTED        0x00004000
 #define FILE_ATTRIBUTE_INTEGRITY_STREAM   0x00008000
+#define FILE_ATTRIBUTE_VIRTUAL 0x00010000
 #define FILE_ATTRIBUTE_VALID_FLAGS        0x00007fb7
 #define FILE_ATTRIBUTE_VALID_SET_FLAGS        0x000031a7
 
@@ -4262,7 +4263,7 @@ VOID
 MemoryBarrier(VOID)
 {
     LONG Barrier, *Dummy = &Barrier;
-    UNREFERENCED_LOCAL_VARIABLE(Dummy);
+    (VOID)Dummy;
     __asm__ __volatile__("xchgl %%eax, %[Barrier]" : : [Barrier] "m" (Barrier) : "memory");
 }
 #endif

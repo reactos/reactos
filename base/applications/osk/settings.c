@@ -2,7 +2,7 @@
  * PROJECT:         ReactOS On-Screen Keyboard
  * LICENSE:         GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:         Configuration settings of the application
- * COPYRIGHT:       Copyright 2018-2019 Bișoc George (fraizeraust99 at gmail dot com)
+ * COPYRIGHT:       Copyright 2018-2019 George Bișoc (george.bisoc@reactos.org)
  */
 
 /* INCLUDES *******************************************************************/

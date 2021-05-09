@@ -35,9 +35,11 @@ if(USE_CLANG_CL OR (NOT MSVC))
     target_compile_options(ffs PRIVATE -Wno-unused-variable -Wno-missing-braces)
     if(USE_CLANG_CL)
         target_compile_options(ffs PRIVATE -Wno-empty-body)
-    else()
-        target_compile_options(ffs PRIVATE -Wno-unused-but-set-variable)
     endif()
+endif()
+
+if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
+    target_compile_options(ffs PRIVATE -Wno-unused-but-set-variable)
 endif()
 
 add_definitions(-D__KERNEL__)

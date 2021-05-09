@@ -58,8 +58,14 @@ HIMAGELIST CMainToolbar::InitImageList()
     return hImageList;
 }
 
-CMainToolbar::CMainToolbar() : m_iToolbarHeight(24)
+CMainToolbar::CMainToolbar()
+    : m_iToolbarHeight(24)
+    , m_dButtonsWidthMax(0)
 {
+    memset(szInstallBtn, 0, sizeof(szInstallBtn));
+    memset(szUninstallBtn, 0, sizeof(szUninstallBtn));
+    memset(szModifyBtn, 0, sizeof(szModifyBtn));
+    memset(szSelectAll, 0, sizeof(szSelectAll));
 }
 
 VOID CMainToolbar::OnGetDispInfo(LPTOOLTIPTEXT lpttt)
@@ -983,6 +989,7 @@ VOID CAppInfoDisplay::ResizeChildren(int Width, int Height)
 #if DBG
     ATLASSERT(dwError == ERROR_SUCCESS);
 #endif
+    UNREFERENCED_PARAMETER(dwError);
 
     UpdateWindow();
 }

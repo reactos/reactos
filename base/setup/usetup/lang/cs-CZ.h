@@ -1337,6 +1337,37 @@ static MUI_ENTRY csCZFormatPartitionEntries[] =
     }
 };
 
+static MUI_ENTRY csCZCheckFSEntries[] =
+{
+    {
+        4,
+        3,
+        " Instalace ReactOS " KERNEL_VERSION_STR " ",
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        8,
+        "Instalace nyn\241 kontroluje zvolen\354 odd\241l.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        "\254ekejte, pros\241m...",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
 static MUI_ENTRY csCZInstallDirectoryEntries[] =
 {
     {
@@ -1489,6 +1520,30 @@ static MUI_ENTRY csCZBootLoaderEntries[] =
         0,
         0,
         "ENTER = Pokra\237ovat   F3 = Ukon\237it",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
+static MUI_ENTRY csCZBootLoaderInstallPageEntries[] =
+{
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        "Installing the bootloader onto the media, please wait...",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
         TEXT_ID_STATIC
     },
@@ -2109,6 +2164,10 @@ MUI_PAGE csCZPages[] =
         csCZFormatPartitionEntries
     },
     {
+        CHECK_FILE_SYSTEM_PAGE,
+        csCZCheckFSEntries
+    },
+    {
         DELETE_PARTITION_PAGE,
         csCZDeletePartitionEntries
     },
@@ -2143,6 +2202,10 @@ MUI_PAGE csCZPages[] =
     {
         SUCCESS_PAGE,
         csCZSuccessPageEntries
+    },
+    {
+        BOOT_LOADER_INSTALLATION_PAGE,
+        csCZBootLoaderInstallPageEntries
     },
     {
         BOOT_LOADER_FLOPPY_PAGE,
@@ -2192,8 +2255,6 @@ MUI_STRING csCZStrings[] =
     "The new partition is not formatted yet."},
     {STRING_INSTALLONPART,
     "Instalace nakop\241ruje ReactOS na odd\241l"},
-    {STRING_CHECKINGPART,
-    "Instalace nyn\241 kontroluje zvolen\354 odd\241l."},
     {STRING_CONTINUE,
     "ENTER = Pokra\237ovat"},
     {STRING_QUITCONTINUE,
@@ -2245,31 +2306,21 @@ MUI_STRING csCZStrings[] =
     {STRING_KEEPFORMAT,
     " Ponechat sou\237asn\354 souborov\354 syst\202m (bez zm\330ny) "},
     {STRING_HDINFOPARTCREATE_1,
-    "%I64u %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) na %wZ [%s]."},
-    {STRING_HDINFOPARTCREATE_2,
-    "%I64u %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) [%s]."},
-    {STRING_HDDINFOUNK2,
-    "   %c%c  Typ 0x%02X    %I64u %s"},
+    "%s."},
     {STRING_HDINFOPARTDELETE_1,
-    "na %I64u %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) na %wZ [%s]."},
-    {STRING_HDINFOPARTDELETE_2,
-    "na %I64u %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) [%s]."},
-    {STRING_HDINFOPARTZEROED_1,
-    "Harddisk %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ) [%s]."},
-    {STRING_HDDINFOUNK4,
-    "%c%c  Typ 0x%02X    %I64u %s"},
-    {STRING_HDINFOPARTEXISTS_1,
-    "na harddisku %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ) [%s]."},
-    {STRING_HDDINFOUNK5,
-    "%c%c %c %sTyp %-3u%s                     %6lu %s"},
-    {STRING_HDINFOPARTSELECT_1,
-    "%6lu %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) na %wZ [%s]"},
-    {STRING_HDINFOPARTSELECT_2,
-    "%6lu %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) [%s]"},
+    "na: %s."},
+    {STRING_PARTTYPE,
+    "Typ 0x%02x"},
+    {STRING_HDDINFO_1,
+    // "Harddisk %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ) [%s]"
+    "%I64u %s Harddisk %lu (Port=%hu, Bus=%hu, Id=%hu) na %wZ [%s]"},
+    {STRING_HDDINFO_2,
+    // "Harddisk %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu [%s]"
+    "%I64u %s Harddisk %lu (Port=%hu, Bus=%hu, Id=%hu) [%s]"},
     {STRING_NEWPARTITION,
     "Instalace vytvo\375ila nov\354 odd\241l na"},
     {STRING_UNPSPACE,
-    "    %sM\241sto bez odd\241l\205%s               %6lu %s"},
+    "M\241sto bez odd\241l\205"},
     {STRING_MAXSIZE,
     "MB (max. %lu MB)"},
     {STRING_EXTENDED_PARTITION,

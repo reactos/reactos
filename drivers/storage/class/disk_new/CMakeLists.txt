@@ -21,7 +21,11 @@ if(USE_CLANG_CL OR (NOT MSVC))
 endif()
 
 if(GCC)
-    target_compile_options(disk PRIVATE -Wno-unused-but-set-variable -Wno-pointer-to-int-cast -Wno-switch)
+    target_compile_options(disk PRIVATE -Wno-pointer-to-int-cast -Wno-switch)
+endif()
+
+if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
+    target_compile_options(disk PRIVATE -Wno-unused-but-set-variable)
 endif()
 
 set_module_type(disk kernelmodedriver)

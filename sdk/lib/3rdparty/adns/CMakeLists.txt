@@ -24,8 +24,8 @@ list(APPEND SOURCE
 
 add_library(adns ${SOURCE})
 
-if(NOT MSVC)
-    target_compile_options(adns PRIVATE "-Wno-unused-but-set-variable")
+if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
+    target_compile_options(adns PRIVATE -Wno-unused-but-set-variable)
 endif()
 
 add_dependencies(adns psdk)

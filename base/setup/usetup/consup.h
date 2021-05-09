@@ -54,8 +54,7 @@ extern HANDLE StdInput, StdOutput;
 extern SHORT xScreen, yScreen;
 
 BOOLEAN
-CONSOLE_Init(
-    VOID);
+CONSOLE_Init(VOID);
 
 VOID
 CONSOLE_ClearScreen(VOID);
@@ -92,8 +91,8 @@ CONSOLE_Flush(VOID);
 
 VOID
 CONSOLE_GetCursorXY(
-    PSHORT x,
-    PSHORT y);
+    OUT PSHORT x,
+    OUT PSHORT y);
 
 SHORT
 CONSOLE_GetCursorX(VOID);
@@ -120,7 +119,8 @@ __cdecl
 CONSOLE_PrintTextXY(
     IN SHORT x,
     IN SHORT y,
-    IN LPCSTR fmt, ...);
+    IN LPCSTR fmt,
+    ...);
 
 VOID
 __cdecl
@@ -128,7 +128,8 @@ CONSOLE_PrintTextXYN(
     IN SHORT x,
     IN SHORT y,
     IN SHORT len,
-    IN LPCSTR fmt, ...);
+    IN LPCSTR fmt,
+    ...);
 
 VOID
 CONSOLE_SetCursorType(
@@ -192,7 +193,8 @@ VOID
 __cdecl
 CONSOLE_SetStatusTextAutoFitX(
     IN SHORT x,
-    IN LPCSTR fmt, ...);
+    IN LPCSTR fmt,
+    ...);
 
 VOID
 CONSOLE_SetTextXY(
@@ -220,9 +222,10 @@ CONSOLE_SetStyledText(
     IN LPCSTR Text);
 
 VOID
-CONSOLE_ClearStyledText(IN SHORT x,
-                        IN SHORT y,
-                        IN INT Flags,
-                        IN SHORT Length);
+CONSOLE_ClearStyledText(
+    IN SHORT x,
+    IN SHORT y,
+    IN INT Flags,
+    IN SHORT Length);
 
 /* EOF */

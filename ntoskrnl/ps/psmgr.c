@@ -62,7 +62,7 @@ BOOLEAN PspDoingGiveBacks;
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 USHORT
 NTAPI
 NameToOrdinal(IN PCHAR Name,
@@ -105,7 +105,7 @@ NameToOrdinal(IN PCHAR Name,
     return NameToOrdinal(Name, DllBase, NumberOfNames, NameTable, OrdinalTable);
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 NTSTATUS
 NTAPI
 LookupEntryPoint(IN PVOID DllBase,
@@ -157,7 +157,7 @@ LookupEntryPoint(IN PVOID DllBase,
     return STATUS_SUCCESS;
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 NTSTATUS
 NTAPI
 PspLookupSystemDllEntryPoint(IN PCHAR Name,
@@ -167,7 +167,7 @@ PspLookupSystemDllEntryPoint(IN PCHAR Name,
     return LookupEntryPoint(PspSystemDllBase, Name, EntryPoint);
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 NTSTATUS
 NTAPI
 PspLookupKernelUserEntryPoints(VOID)
@@ -273,7 +273,7 @@ PspMapSystemDll(IN PEPROCESS Process,
     return Status;
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 NTSTATUS
 NTAPI
 PsLocateSystemDll(VOID)
@@ -359,7 +359,7 @@ PsLocateSystemDll(VOID)
     return Status;
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 NTSTATUS
 NTAPI
 PspInitializeSystemDll(VOID)
@@ -390,7 +390,7 @@ PspInitializeSystemDll(VOID)
     return Status;
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 BOOLEAN
 NTAPI
 PspInitPhase1(VOID)
@@ -400,7 +400,7 @@ PspInitPhase1(VOID)
     return TRUE;
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 BOOLEAN
 NTAPI
 PspInitPhase0(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
@@ -618,7 +618,7 @@ PspInitPhase0(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     return TRUE;
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 BOOLEAN
 NTAPI
 PsInitSystem(IN PLOADER_PARAMETER_BLOCK LoaderBlock)

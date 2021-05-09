@@ -125,7 +125,7 @@ HRESULT CTravelEntry::GetToolTipText(IUnknown *punk, LPWSTR pwzText) const
 {
     HRESULT                                 hResult;
 
-    hResult = ILGetDisplayNameEx(NULL, fPIDL, pwzText, ILGDN_NORMAL) ? S_OK : S_FALSE;
+    hResult = ILGetDisplayNameEx(NULL, fPIDL, pwzText, ILGDN_NORMAL) ? S_OK : E_FAIL;
     if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
 

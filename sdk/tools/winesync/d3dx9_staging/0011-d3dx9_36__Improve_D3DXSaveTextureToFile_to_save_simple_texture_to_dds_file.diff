@@ -1,0 +1,102 @@
+diff --git a/dll/directx/wine/d3dx9_36/d3dx9_private.h b/dll/directx/wine/d3dx9_36/d3dx9_private.h
+index c3308b0..20ca848 100644
+--- a/dll/directx/wine/d3dx9_36/d3dx9_private.h
++++ b/dll/directx/wine/d3dx9_36/d3dx9_private.h
+@@ -126,6 +126,8 @@ HRESULT lock_surface(IDirect3DSurface9 *surface, const RECT *surface_rect, D3DLO
+         IDirect3DSurface9 **temp_surface, BOOL write) DECLSPEC_HIDDEN;
+ HRESULT unlock_surface(IDirect3DSurface9 *surface, const RECT *surface_rect,
+         IDirect3DSurface9 *temp_surface, BOOL update) DECLSPEC_HIDDEN;
++HRESULT save_dds_texture_to_memory(ID3DXBuffer **dst_buffer, IDirect3DBaseTexture9 *src_texture,
++    const PALETTEENTRY *src_palette) DECLSPEC_HIDDEN;
+ 
+ unsigned short float_32_to_16(const float in) DECLSPEC_HIDDEN;
+ float float_16_to_32(const unsigned short in) DECLSPEC_HIDDEN;
+diff --git a/dll/directx/wine/d3dx9_36/surface.c b/dll/directx/wine/d3dx9_36/surface.c
+index 8e2f2a2..4e391f7 100644
+--- a/dll/directx/wine/d3dx9_36/surface.c
++++ b/dll/directx/wine/d3dx9_36/surface.c
+@@ -650,6 +650,68 @@ static HRESULT save_dds_surface_to_memory(ID3DXBuffer **dst_buffer, IDirect3DSur
+     return D3D_OK;
+ }
+ 
++static HRESULT get_surface(D3DRESOURCETYPE type, struct IDirect3DBaseTexture9 *tex,
++        int face, UINT level, struct IDirect3DSurface9 **surf)
++{
++    switch (type)
++    {
++        case D3DRTYPE_TEXTURE:
++            return IDirect3DTexture9_GetSurfaceLevel((IDirect3DTexture9*) tex, level, surf);
++        case D3DRTYPE_CUBETEXTURE:
++            return IDirect3DCubeTexture9_GetCubeMapSurface((IDirect3DCubeTexture9*) tex, face, level, surf);
++        default:
++            ERR("Unexpected texture type\n");
++            return E_NOTIMPL;
++    }
++}
++
++HRESULT save_dds_texture_to_memory(ID3DXBuffer **dst_buffer, IDirect3DBaseTexture9 *src_texture, const PALETTEENTRY *src_palette)
++{
++    HRESULT hr;
++    D3DRESOURCETYPE type;
++    UINT mip_levels;
++    IDirect3DSurface9 *surface;
++
++    type = IDirect3DBaseTexture9_GetType(src_texture);
++
++    if ((type !=  D3DRTYPE_TEXTURE) && (type != D3DRTYPE_CUBETEXTURE) && (type != D3DRTYPE_VOLUMETEXTURE))
++        return D3DERR_INVALIDCALL;
++
++    if (type == D3DRTYPE_CUBETEXTURE)
++    {
++        FIXME("Cube texture not supported yet\n");
++        return E_NOTIMPL;
++    }
++    else if (type == D3DRTYPE_VOLUMETEXTURE)
++    {
++        FIXME("Volume texture not supported yet\n");
++        return E_NOTIMPL;
++    }
++
++    mip_levels = IDirect3DTexture9_GetLevelCount(src_texture);
++
++    if (mip_levels > 1)
++    {
++        FIXME("Mipmap not supported yet\n");
++        return E_NOTIMPL;
++    }
++
++    if (src_palette)
++    {
++        FIXME("Saving surfaces with palettized pixel formats not implemented yet\n");
++        return E_NOTIMPL;
++    }
++
++    hr = get_surface(type, src_texture, D3DCUBEMAP_FACE_POSITIVE_X, 0, &surface);
++
++    if (SUCCEEDED(hr))
++    {
++        hr = save_dds_surface_to_memory(dst_buffer, surface, NULL);
++        IDirect3DSurface9_Release(surface);
++    }
++
++    return hr;
++}
+ HRESULT load_volume_from_dds(IDirect3DVolume9 *dst_volume, const PALETTEENTRY *dst_palette,
+     const D3DBOX *dst_box, const void *src_data, const D3DBOX *src_box, DWORD filter, D3DCOLOR color_key,
+     const D3DXIMAGE_INFO *src_info)
+diff --git a/dll/directx/wine/d3dx9_36/texture.c b/dll/directx/wine/d3dx9_36/texture.c
+index 6af4458..635982d 100644
+--- a/dll/directx/wine/d3dx9_36/texture.c
++++ b/dll/directx/wine/d3dx9_36/texture.c
+@@ -1895,10 +1895,7 @@ HRESULT WINAPI D3DXSaveTextureToFileInMemory(ID3DXBuffer **dst_buffer, D3DXIMAGE
+     if (!dst_buffer || !src_texture) return D3DERR_INVALIDCALL;
+ 
+     if (file_format == D3DXIFF_DDS)
+-    {
+-        FIXME("DDS file format isn't supported yet\n");
+-        return E_NOTIMPL;
+-    }
++        return save_dds_texture_to_memory(dst_buffer, src_texture, src_palette);
+ 
+     type = IDirect3DBaseTexture9_GetType(src_texture);
+     switch (type)

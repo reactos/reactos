@@ -78,42 +78,9 @@
 #include "vdm.h"
 #include "hal.h"
 #include "hdl.h"
+#include "icif.h"
 #include "arch/intrin_i.h"
 #include <arbiter.h>
-
-/*
- * generic information class probing code
- */
-
-#define ICIF_QUERY               0x1
-#define ICIF_SET                 0x2
-#define ICIF_QUERY_SIZE_VARIABLE 0x4
-#define ICIF_SET_SIZE_VARIABLE   0x8
-#define ICIF_SIZE_VARIABLE (ICIF_QUERY_SIZE_VARIABLE | ICIF_SET_SIZE_VARIABLE)
-
-typedef struct _INFORMATION_CLASS_INFO
-{
-  ULONG RequiredSizeQUERY;
-  ULONG RequiredSizeSET;
-  ULONG AlignmentSET;
-  ULONG AlignmentQUERY;
-  ULONG Flags;
-} INFORMATION_CLASS_INFO, *PINFORMATION_CLASS_INFO;
-
-#define ICI_SQ_SAME(Type, Alignment, Flags)                                    \
-  { Type, Type, Alignment, Alignment, Flags }
-
-#define ICI_SQ(TypeQuery, TypeSet, AlignmentQuery, AlignmentSet, Flags)        \
-  { TypeQuery, TypeSet, AlignmentQuery, AlignmentSet, Flags }
-
-//
-// TEMPORARY
-//
-#define IQS_SAME(Type, Alignment, Flags)                                    \
-  { sizeof(Type), sizeof(Type), sizeof(Alignment), sizeof(Alignment), Flags }
-
-#define IQS(TypeQuery, TypeSet, AlignmentQuery, AlignmentSet, Flags)        \
-  { sizeof(TypeQuery), sizeof(TypeSet), sizeof(AlignmentQuery), sizeof(AlignmentSet), Flags }
 
 /*
  * Use IsPointerOffset to test whether a pointer should be interpreted as an offset

@@ -112,6 +112,7 @@ _MmUnlockSectionSegment(PMM_SECTION_SEGMENT Segment, const char *file, int line)
     //DPRINT("MmUnlockSectionSegment(%p,%s:%d)\n", Segment, file, line);
 }
 
+#ifdef NEWCC
 /*
 
 MiFlushMappedSection
@@ -265,7 +266,6 @@ This deletes a segment entirely including its page map.
 It must have been unmapped in every address space.
 
  */
-
 VOID
 NTAPI
 MmFinalizeSegment(PMM_SECTION_SEGMENT Segment)
@@ -603,6 +603,7 @@ _MiMapViewOfSegment(PMMSUPPORT AddressSpace,
 
     return STATUS_SUCCESS;
 }
+#endif
 
 /*
 
@@ -708,6 +709,7 @@ MmFreeCacheSectionPage(PVOID Context,
     }
 }
 
+#ifdef NEWCC
 NTSTATUS
 NTAPI
 MmUnmapViewOfCacheSegment(PMMSUPPORT AddressSpace,
@@ -840,5 +842,6 @@ MmUnmapCacheViewInSystemSpace (IN PVOID MappedBase)
 
     return Status;
 }
+#endif /* NEWCC */
 
 /* EOF */

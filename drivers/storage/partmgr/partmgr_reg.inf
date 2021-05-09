@@ -1,0 +1,7 @@
+[AddReg]
+HKLM,"SYSTEM\CurrentControlSet\Services\partmgr","ErrorControl",0x00010001,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Services\partmgr","DisplayName",0x00000000,"Partition Manager"
+HKLM,"SYSTEM\CurrentControlSet\Services\partmgr","Group",0x00000000,"Boot Bus Extender"
+HKLM,"SYSTEM\CurrentControlSet\Services\partmgr","ImagePath",0x00020000,"system32\drivers\partmgr.sys"
+HKLM,"SYSTEM\CurrentControlSet\Services\partmgr","Start",0x00010001,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Services\partmgr","Type",0x00010001,0x00000001

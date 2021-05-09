@@ -25,7 +25,7 @@ DWORD gdwLanguageToggleKey = 0;
  *
  * Initialization -- Right now, just zero the key state
  */
-INIT_FUNCTION
+CODE_SEG("INIT")
 NTSTATUS
 NTAPI
 InitKeyboardImpl(VOID)

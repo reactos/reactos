@@ -474,6 +474,7 @@ RecycleBin5_RecycleBin5_Restore(
     DELETED_FILE_RECORD *pRecord, *pLast;
     DWORD dwEntries, i;
     SHFILEOPSTRUCTW op;
+    int res;
 
     TRACE("(%p, %s, %p)\n", This, debugstr_w(pDeletedFileName), pDeletedFile);
 
@@ -503,7 +504,7 @@ RecycleBin5_RecycleBin5_Restore(
             op.pFrom = pDeletedFileName;
             op.pTo = pDeletedFile->FileNameW;
 
-            int res = SHFileOperationW(&op);
+            res = SHFileOperationW(&op);
             if (res)
             {
                 ERR("SHFileOperationW failed with 0x%x\n", res);

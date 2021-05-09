@@ -1,0 +1,570 @@
+LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
+
+STRINGTABLE
+BEGIN
+    STRING_ASSOC_HELP "Apresenta ou modifica as associações de extensão de arquivos.\n\n\
+assoc [.ext[=[TipoFicheiro]]]\n\n\
+assoc           (Apresenta todas as associações)\n\
+assoc .ext      (Apresenta associação específica)\n\
+assoc .ext=     (Remove associação específica)\n\
+assoc .ext=tipo (Adiciona nova associação)\n"
+    STRING_ALIAS_HELP "Define, remove ou apresenta aliases.\n\n\
+ALIAS [alias=[comando]]\n\n\
+  alias            Nome de um alias.\n\
+  comando          Texto a ser substituído por um alias.\n\n\
+  ALIAS            Lista todos os aliases:\n\
+  ALIAS da=dir a:  Define um novo alias ou substitui um existente:\n\
+  ALIAS da=        Remove um alias da lista de aliases:\n"
+    STRING_BEEP_HELP "Beep no alto-falante.\n\nBEEP\n"
+    STRING_CALL_HELP "Chama um programa batch a partir de outro.\n\n\
+CALL [unidade:][caminho]nome do ficheiro [parâmetro]\n\n\
+  parâmetro        Especifica qualquer informação na linha de comando\n\
+                   exigida pelo programa batch.\n"
+    STRING_CD_HELP "Apresenta o nome de ou altera o directório actual\n\n\
+CHDIR [/D][unidade:][caminho]\n\
+CHDIR [..|.]\n\
+CD [/D][unidade:][caminho]\n\
+CD [..|.]\n\n\
+  ..       directório pai\n\
+  .        directório actual\n\
+  /D       Altera a unidade e o directório actual.\n\n\
+Digite CD unidade: para apresentar o directório actual na unidade especificada.\n\
+Digite CD sem parâmetro para apresentar a unidade e o directório actual.\n"
+    STRING_CHOICE_HELP "Espera que o utilizador escolha uma das opções.\n\n\
+CHOICE [/C[:]opções][/N][/S][/T[:]c,nn][texto]\n\n\
+  /C [:]opções    Especifica a lista de opções. A lista predefinida é ""SN"".\n\n\
+  /N              Oculta a lista de opções na prompt.\n\n\
+  /S              Trata as chaves de escolha diferenciando maiúsculas de\n\
+                  minúsculas.\n\n\
+  /T[:]c,nn       Escolha padrão para c após nn segundos.\n\
+  texto           Prompt string a ser exibida.\n\n\
+                  A variável de ambiente ERRORLEVEL é definida para o indice da\n\
+                  chave seleccionada."
+    STRING_CLS_HELP "Limpa o ecrã.\n\nCLS\n"
+    STRING_CMD_HELP1 "\nComandos internos disponíveis:\n"
+    STRING_CMD_HELP2 "\nRecursos disponíveis:"
+    STRING_CMD_HELP3 "[aliases]"
+    STRING_CMD_HELP4 "[histórico]"
+    STRING_CMD_HELP5 "[conclusão do nome do ficheiro Bash]"
+    STRING_CMD_HELP6 "[pilha de directórios]"
+    STRING_CMD_HELP7 "[redirecionamentos e tubulação]"
+    STRING_CMD_HELP8 "Inicia uma nova instância do interpretador da linha de comando ReactOS.\n\n\
+CMD [/[C|K] comando] [/P][/Q][/T:bf]\n\n\
+  /C comando   Executa o comando especificado e termina.\n\
+  Comando /K   Executa o comando especificado e permanece.\n\
+  /P CMD       torna-se permanente e executa autoexec.bat\n\
+               (não pode ser encerrado).\n\
+  /T:bf        Define a cor de fundo/primeiro plano\n\
+               (consulte o comando COLOR)."
+    STRING_COLOR_HELP1 "Define as cores predefinidas de primeiro plano e do fundo da consola.\n\n\
+COLOR [atr[/-F]]\n\n\
+  attr Especifica o atributo de cor de saída da consola.\n\
+  /-F  Não preenche o espaço em branco da consola com o atributo da cor.\n\n\
+Existem três maneiras de especificar as cores:\n\
+1) nome [brilhante]          ([brilhante] apenas as três primeiras letras são necessárias)\n\
+2) dois valores em decimal   (fundo p.plano)\n\
+3) dois dígitos hexadecimais (fundo p.plano)\n\n\
+As cores são:\n\
+dec  hex  nome        dec  hex  name\n\
+0    0    Preto        8    8    Cinzento\n\
+1    1    Azul         9    9    Azul brilhante\n\
+2    2    Verde       10    A    Verde brilhante\n\
+3    3    Cian        11    B    Cian  brilhante\n\
+4    4    Vermelho    12    C    Vermelho brilhante\n\
+5    5    Violeta     13    D    Violeta brilhante\n\
+6    6    Amarelo     14    E    Amarelo brilhante\n\
+7    7    Branco      15    F    Branco brilhante\n\n"
+    STRING_COPY_HELP1 "Deseja substituir %s ? (Sim/Não/Tudo)\n\n"
+    STRING_COPY_HELP2 "Copia um ou mais ficheiros para outro local.\n\n\
+COPY [/V] [/Y | /-Y] [/A | /B] fonte [/A | /B]\n\
+     [+ fonte [/A | /B] [+ ...]] [destino [/A | /B]]\n\n\
+  source   Especifica o ficheiro ou ficheiros a copiar.\n\
+  /A       Indica um ficheiro de texto ASCII.\n\
+  /B       Indica um ficheiro binário.\n\
+  destino  Especifica o directório e/ou nome do ficheiro do(s) novo(s)\n\
+           ficheiro(s).\n\
+  /V       Verifica se os novos ficheiro foram escritos correctamente.\n\
+  /Y       Suprime as confirmações de substituição de um\n\
+           ficheiro de destino existente.\n\
+  /-Y      Solicita a confirmação de substituição de um\n\
+           ficheiro de destino existente.\n\n\
+O parâmetro /Y pode ser predefinido na variável de ambiente COPYCMD.\n\n\
+Para anexar ficheiros, especifique um único ficheiro no destino, mas\n\
+com vários ficheiros na origem (utilizando caracteres universais ou o formato\n\
+ficheiro1+ficheiro2+ficheiro3).\n\n"
+    STRING_CTTY_HELP "Altera o dispositivo terminal de E/S predefinido para um dispositivo auxiliar.\n\n\
+Dispositivo CTTY\n\n\
+  dispositivo O dispositivo que deseja usar como novo dispositivo de E/S padrão.\n\
+            Este nome deve referir um dispositivo de caractere válido:\n\
+            AUX, COMx (x = 1..N), CON, LPTx (x = 1..N), PRN, NUL.\n\
+            CON geralmente é o dispositivo de E/S predefinido.\n\n\
+Para atribuir o controle à consola predefinida, digite: CTTY CON no dispositivo\n\
+auxiliar."
+    STRING_DATE_HELP1 "\nInsira uma nova data (mm%cdd%cyyyy):"
+    STRING_DATE_HELP2 "\nInsira uma nova data (dd%cmm%cyyyy):"
+    STRING_DATE_HELP3 "\nInsira uma nova data (aaaa%cmm%cdd):"
+    STRING_DATE_HELP4 "Apresenta ou define a data.\n\n\
+DATE [/T][data]\n\n\
+  /T       Apresenta a data actual\n\n\
+Digite DATE sem parâmetros para apresentar a definição da data actual e\n\
+um pedido de nova data. Pressione ENTER para manter a mesma data.\n"
+    STRING_DEL_HELP1 "Exclui um ou mais ficheiros.\n\n\
+DEL [/N /P /T /Q /S /W /Y /Z /A [[:] atributos]] ficheiro ...\n\
+DELETE [/N /P /T /Q /S /W /Y /Z /A [[:] atributos]] ficheiro ...\n\
+ERASE [/N /P /T /Q /S /W /A /Z /A [[:] atributos]] ficheiro ...\n\n\
+  ficheiro  Especifica os ficheiros a serem excluídos.\n\n\
+  /P    Prompt. Perguntar antes de excluir cada ficheiro.\n\
+  /T    Total. Apresenta o número total de ficheiros excluídos e espaço livre em disco.\n\
+  /Q    Modo silencioso, não solicita confirmação do utilizador.\n\
+  /W    Wipe. Reescreve o ficheiro com números aleatórios antes de excluí-lo.\n\
+  /Y    Yes. Remove até *. * Sem perguntar.\n\
+  /F    Força a exclusão de ficheiros ocultos, só de leitura e de sistema.\n\
+  /S    Excluir ficheiro de todos os subdirectórios\n\
+  /A    Seleccione os ficheiros a serem excluídos com base nos atributos.\n\
+        atributos\n\
+        R     Ficheiros só de leitura\n\
+        S     Ficheiros de sistema\n\
+        A     Ficheiros arquiváveis\n\
+        H     Ficheiros ocultos\n\
+        -     prefixo que significa não\n"
+    STRING_DEL_HELP2 "Todos os ficheiros no directório serão excluídos!\nTem certeza (S/N)?"
+    STRING_DEL_HELP3 "    %lu ficheiro excluído\n"
+    STRING_DEL_HELP4 "    %lu ficheiros excluídos\n"
+    STRING_DELAY_HELP "Pausa por n segundos ou milissegundos.\n\
+DELAY [/m]n\n\n\
+  /m Especifica que n está em milissegundos,\n\
+              caso contrário, n está em segundos.\n"
+    STRING_DIR_HELP1 "DIR [unidade:][caminho][nome do ficheiro] [/A[[:]atributos]][/B][/C][/D][/L][/N]\n\
+  [/O[[:]ordenação]] [/P] [/Q] [/R] [/S] [/T[[:]hora]][/W][/X][/4]\n\n\
+  [unidade:] [caminho] [nome do ficheiro]\n\
+             Especifica a unidade, directório e/ou ficheiros a  listar.\n\n\
+  /A         Apresenta ficheiros com os atributos especificados.\n\
+atributos    D Diretórios           R Ficheiros só de leitura\n\
+             H Ficheiros ocultos    A Ficheiros de ficheiro\n\
+             S Ficheiros de sistema - Prefixo que significa não\n\
+  /B         Usa formato simples (sem informações de título ou resumo).\n\
+  /C         Apresenta o separador de milhares no tamanho dos ficheiros. Isto\n\
+             é o predefinido. Use /-C para desactivar a exibição do separador.\n\
+  /D         Igual à listagem em largura, mas com os ficheiros ordenados\n\
+             por colunas.\n\
+  /L         Utiliza minúsculas.\n\
+  /N         Novo formato de lista longa onde os nomes dos ficheiros estão\n\
+             mais à direita.\n\
+  /O         Lista os ficheiros em ordem classificada.\n\
+ordenação    N  Pelo nome (alfabético)     S Pelo tamanho (o menor primeiro)\n\
+             E  Pela extensão (alfabética) D Pela data/hora (mais antigo\n\
+                                                             primeiro)\n\
+             G  Primeiro os directórios    - Prefixo para inverter a ordem\n\
+                de grupo\n\
+  /P         Faz pausa após cada ecrã de informação.\n\
+  /Q         Apresenta o proprietário do ficheiro.\n\
+  /R         Apresenta fluxos de dados alternativos do ficheiro.\n\
+  /S         Apresenta os ficheiros no directório especificado e\n\
+             em todos os subdirectórios.\n\
+  /T         Controla o campo da hora que é apresentado ou usado para ordenar\n\
+  hora           C Criação\n\
+                 A último acesso\n\
+                 W Última escrita\n\
+  /W         Usa formato de listagem em largura.\n\
+  /X         Apresenta os nomes abreviados gerados para ficheiros não 8ponto3.\n\
+             O formato é igual ao de /N com o nome abreviado inserido\n\
+             antes do nome longo. Se nenhum nome abreviado estiver presente,\n\
+             serão apresentados espaços em branco em seu lugar.\n\
+  /4         Apresenta anos de quatro dígitos\n\n\
+Os parâmetros podem ser predefinidos na variável de ambiente DIRCMD. Substitua\n\
+os parâmetros predefinidos através do prefixo - (hífen) - antes de qualquer\n\
+parâmetro - por exemplo, /-W.\n"
+    STRING_DIR_HELP2 " O volume na unidade %c é %s\n"
+    STRING_DIR_HELP3 " Volume na unidade %c não tem rótulo.\n"
+    STRING_DIR_HELP4 " Número de série do volume é %04X-%04X\n"
+    STRING_DIR_HELP5 "\n     Total de ficheiros listados:\n%16i ficheiro(s) %14s bytes\n"
+    STRING_DIR_HELP6 "%16i Dir(s) %15s bytes livres\n"
+    STRING_DIR_HELP7 "\n Diretório de %s\n\n"
+    STRING_DIR_HELP8 "%16i ficheiro(s) %14s bytes\n"
+    STRING_DIRSTACK_HELP1 "Armazena o directório actual para uso pelo comando POPD, de\n\
+seguida, muda para o directório especificado.\n\n\
+PUSHD [caminho | ..]\n\n\
+  caminho     Especifica o directório a tornar o directório actual\n"
+    STRING_DIRSTACK_HELP2 "Mudanças no directório armazenado pelo comando PUSHD.\n\nPOPD"
+    STRING_DIRSTACK_HELP3 "Imprime o conteúdo da pilha de directórios.\n\nDIRS"
+    STRING_DIRSTACK_HELP4 "Pilha de directórios vazia"
+    STRING_ECHO_HELP1 "Apresenta mensagens sem retorno de carro à direita e avanço de linha.\n\n\
+  ECHOS mensagem  "
+    STRING_ECHO_HELP2 "Apresenta uma mensagem para a saída de erro padrão.\n\n\
+  ECHOERR mensagem\n\
+  ECHOERR. imprime uma linha vazia"
+    STRING_ECHO_HELP3 "Imprime uma mensagem na saída de erro padrão sem retorno de carro à direita e avanço de linha.\n\n\
+  ECHOSERR mensagem"
+    STRING_ECHO_HELP4 "Apresenta uma mensagem ou activa ou desactiva o eco de comandos.\n\n\
+  ECHO [ON | OFF]\n\
+  ECHO [mensagem]\n\
+  ECHO. imprime uma linha vazia\n\n\
+Digite ECHO sem um parâmetro para apresentar a configuração ECHO actual."
+     STRING_ECHO_HELP5 "ECHO está %s.\n"
+     STRING_EXIT_HELP "Sai do interpretador de linha de comando.\n\nEXIT [/b] [ExitCode]\n\n\
+   /B            Especifica que deve sair do scrip de comandos actual em vez\n\
+                 do CMD.EXE. Se for executado fora de um script de comandos,\n\
+                 sairá do CMD.EXE.\n\
+   ExitCode      Especifica um número. Se /B for especificado, define esse\n\
+                 número no ERRORLEVEL. Se sair do CMD.EXE define o código de\n\
+                 saida do processo." 
+     STRING_FOR_HELP1 "Executa um comando especificado para cada ficheiro num conjunto de ficheiros.\n\n\
+FOR  %variável IN (conjunto) DO comando [parâmetros]\n\
+FOR /L %variável IN (início, etapa, fim)DO comando [parâmetros]\n\
+FOR /D %variável IN (conjunto) DO comando [parâmetros]\n\
+FOR /R [[unidade:] caminho]%variavel IN (conjunto) DO comando [parâmetros]\n\
+FOR /F [""opções""]%variavel IN (comando)DO comando [parâmetros]\n\n\
+    /L Gera uma sequência numérica do início ao fim, incrementando por etapa.\n\
+    /D Modifica o conjunto para se referir a directórios em vez de ficheiros.\n\
+    /R Executa o comando para ficheiros no conjunto no caminho especificado\n\
+       (ou actual directório de trabalho, se não for especificado) e todos os\n\
+       subdirectórios.\n\
+    /F Modifica o conjunto para se referir ao conteúdo dos ficheiros no conjunto.\n\n\
+    %variável  Especifica um parâmetro substituível.\n\
+    (conjunto) Especifica um conjunto de um ou mais ficheiros.\n\
+               Podem ser usados ​​curingas.\n\
+    comando    Especifica o comando a ser executado para cada ficheiro.\n\
+    parâmetros Especifica parâmetros ou opções para o comando especificado.\n\
+    opções     As opções com suporte são: eol, skip, delims, tokens e usebackq.\n\n\
+  Os parâmetros substituíveis podem ser modificados adicionando um ~ e um\n\
+  qualificador opcional após % e antes do nome (por exemplo, %~X).\n\
+  Os qualificadores  suportados são: f, d, p, n, x, s, a, t, z.\n\n\
+  Para usar o comando FOR num programa batch, especifique a\n\
+  variável %% em vez de %variável.\n"
+    STRING_FREE_HELP1 "\nVolume na unidade %s é %-11s\n\
+ O número de série é %s\n\
+  %16s bytes de espaço total em disco\n\
+  %16s bytes usados ​\n\
+  %16s bytes livres\n"
+    STRING_FREE_HELP2 "Apresenta informações da unidade.\n\nFREE [unidade: ...]\n"
+    STRING_GOTO_HELP1 "Direcciona o CMD para uma linha rotulada num programa batch.\n\n\
+GOTO etiqueta\n\n\
+  etiqueta  Especifica uma cadeia de caracteres usada num programa batch\n\n\
+            como uma etiqueta.\n\n\
+Digite uma etiqueta numa linha isolada, começando por dois pontos.\n"
+    STRING_IF_HELP1 "Executa processamento condicional em programas batch.\n\n\
+  IF [NOT] ERRORLEVEL número comando\n\
+  IF [NOT] string1==string2 comando \n\
+  IF [NOT] EXIST ficheiro comando \n\
+  IF [NOT] DEFINED variável comando \n\n\
+NOT                Especifica que o CMD deve executar o comando apenas se\n\
+                   a condição é falsa\n\
+ERRORLEVEL número  Especifica uma condição verdadeira se a última execução\n\
+                   do programa retornou um código de saída igual ou maior que\n\
+                   o número especificado.\n\
+comando            Especifica o comando a ser executado se a condição for\n\
+                   atendida.\n\
+string1==string2   Especifica uma condição verdadeira se as strings de texto\n\
+                   especificadas coincidirem.\n\
+EXIST ficheiro     Especifica uma condição verdadeira se o nome do ficheiro\n\
+                   especificado existir.\n\
+DEFINED variável   Especifica uma condição verdadeira se a variável especificada\n\
+                   for definida.\n"
+    STRING_LOCALE_HELP1 "A hora actual é"
+    STRING_MKDIR_HELP "Cria um directório.\n\n\
+MKDIR [unidade:] caminho \nMD [unidade:] caminho"
+    STRING_MKLINK_HELP "Cria uma ligação simbólica.\n\n\
+MKLINK [/D | /H | /J] Ligação Destino\n\n\
+  /D        Cria uma ligação simbólica de directório. A predefinição é\n\
+            uma ligação simbólica de ficheiro.\n\
+  /H        Cria uma ligação fixa em vez de uma ligação simbólica.\n\
+  /J        Cria uma junção de directório.\n\
+  Ligação   Especifica o nome da nova ligação simbólica\n\
+  Destino   Especifica o caminho (relativo ou absoluto) a que a nova\n\
+            ligação se refere.\n\n\
+Se nem /H ou /J for especificado, um link simbólico será criado."
+    STRING_MEMORY_HELP1 "Apresenta a quantidade de memória do sistema.\n\nMEMORY"
+    STRING_MEMORY_HELP2 "\n  %12s%% carga de memória.\n\n\
+  %13s bytes de RAM física total.\n\
+  %13s bytes de RAM física disponível.\n\n\
+  %13s bytes no arquivo de páginação\n\
+  %13s bytes disponíveis no arquivo de páginação.\n\n\
+  %13s bytes de memória virtual total.\n\
+  %13s bytes de memória virtual disponível.\n"
+    STRING_MISC_HELP1 "Pressione uma tecla para continuar ..."
+    STRING_MOVE_HELP1 "Deseja substituir %s ? (Sim/Não/Tudo)"
+    STRING_MOVE_HELP2 "Move e altera o nome a ficheiros e directórios.\n\n\
+Para mover um ou mais ficheiros:\n\
+MOVE [/N] [/Y | /-Y] [unidade:] [caminho] arquivo1 [, ...] destino\n\n\
+Para alterar o nome de um directório:\n\
+MOVE [/N] [/Y | /-Y] [unidade:] [caminho] nome dir1 dir2\n\n\
+  [unidade:] [caminho] nome fich1\n\
+                           Especifica a localização e o nome do ficheiro\n\
+                           ou ficheiros que deseja mover.\n\
+  /N Nada.                 Simula o comando MOVE, sem mover ficheiros ou directórios.\n\n\
+Limitações actuais:\n\
+  - Não pode mover um ficheiro ou directório de uma unidade para outra.\n"
+    STRING_MSGBOX_HELP "Apresenta uma caixa de dialogo e retorna a resposta do utilizador\n\n\
+Tipo de MSGBOX ['título'] prompt\n\n\
+tipo             botão exibido\n\
+                 os valores possíveis são: OK, OKCANCEL, YESNO, YESNOCANCEL\n\
+título           título da caixa de dialogo\n\
+prompt           texto apresentado pela caixa de dialogo\n\n\n\
+ERRORLEVEL       é definido de acordo com o botão pressionado:\n\n\
+YES  :  10    |  NO     :  11\n\
+OK   :  10    |  CANCEL:  12\n"
+    STRING_PATH_HELP1 "Apresenta ou define um caminho de pesquisa para ficheiros executáveis.\n\n\
+PATH [[unidade:] caminho [; ...]]\nPATH;\n\n\
+Digite PATH; para limpar todas as definições do caminho de pesquisa e direccionar o shell de comando\n\
+para pesquisar apenas no directório actual.\n\
+Digite PATH sem parâmetros para apresentar o caminho actual.\n"
+    STRING_PAUSE_HELP1 "Suspende o processamento de um programa batch e apresenta a mensagem:\n\
+'Pressione qualquer tecla para continuar ...' ou uma mensagem definida pelo utilizador.\n\n\
+PAUSAR [mensagem]"
+    STRING_PROMPT_HELP1 "Altera o prompt de comando.\n\n\
+PROMPT [texto]\n\n\
+  texto     Especifica um novo prompt de comando.\n\n\
+O prompt pode ser composto de caracteres normais e os seguintes códigos especiais:\n\n\
+  $A        & (E comercial)\n\
+  $B        | (tubo)\n\
+  $C        ((parêntese esquerdo)\n\
+  $D        Data actual\n\
+  $E        Código de escape (código ASCII 27)\n\
+  $F        ) (parêntese direito)\n\
+  $G        > (sinal de maior que)\n\
+  $H        Retroceder (apaga o caractere anterior)\n\
+  $I        Linha de informações\n\
+  $L        <(sinal de menor que)\n\
+  $N        Unidade actual\n\
+  $P        Unidade e caminho atuais\n\
+  $Q        = (sinal de igual)\n\
+  $S        (espaço)\n\
+  $T        hora actual\n\
+  $V        Número da versão do sistema operacional\n\
+  $_        Retorno de carro e avanço de linha\n\
+  $$        $ (cifrão)\n"
+    STRING_PROMPT_HELP2 "$+ Apresenta a profundidade actual da pilha de directórios"
+    STRING_PROMPT_HELP3 "\nDigite PROMPT sem parâmetros para redefinir o prompt para a configuração predefinida."
+    STRING_REM_HELP "Inicia uma linha de comentário num arquivo de batch.\n\nREM [Comentário]"
+    STRING_RMDIR_HELP "Remove um directório.\n\n\
+RMDIR [/S] [/Q] [unidade:] caminho\nRD [/S][/Q][unidade:] caminho\n\
+  /S    Exclui todos os ficheiros e pastas do destino.\n\
+  /Q    Modo silencioso, não solicita confirmação do utilizador.\n"
+    STRING_RMDIR_HELP2 "O directório não está vazio!\n"
+    STRING_REN_HELP1 "Altera o nome a ficheiro(s) ou directório(s).\n\n\
+RENAME [/E /N /P /Q /S /T] nome_antigo ... nome_novo\n\
+REN [/E /N /P /Q /S /T] nome_antigo ... nome_novo\n\n\
+  /E    Nenhuma mensagem de erro.\n\
+  /N    Nada.\n\
+  /P    Solicita confirmação antes de renomear cada ficheiro.\n\
+        (ainda não implementado!)\n\
+  /Q    Modo silencioso, não solicita confirmação do utilizador.\n\
+  /S    Renomear subdiretórios.\n\
+  /T    Apresenta o número total de ficheiros renomeados.\n\n\
+Observe que não pode especificar uma nova unidade ou caminho para o seu destino. Use\n\
+o comando MOVE para esse propósito.\n"
+    STRING_REN_HELP2 "%lu ficheiro renomeado\n"
+    STRING_REN_HELP3 "%lu ficheiros renomeados\n"
+    STRING_REPLACE_HELP1 "Substitui ficheiros.\n\n\
+REPLACE [unidade1:][caminho1]ficheiro [unidade2:][caminho2][/A][/P][/R][/W]\n\
+REPLACE [unidade1:][caminho1]ficheiro [unidade2:][caminho2][/P][/R][/S][/W][/U]\n\n\
+  [unidade1:] [caminho1] ficheiro\n\
+                   Especifica o ficheiro ou ficheiros de origem.\n\
+  [unidade2:] [caminho2]\n\
+                   Especifica o directório onde os ficheiros devem ser\n\
+                   substituídos.\n\
+  /A               Adiciona novos ficheiros ao directório de destino.\n\
+                   Não pode usar com as opções /S ou /U.\n\
+  /P               Solicita confirmação antes de substituir ou adicionar\n\
+                   um ficheiro.\n\
+  /R               Substitui ficheiros só de leitura e ficheiros desprotegidos\n\
+  /S               Substitui os ficheiros em todos os subdiretórios do\n\
+                   directório de destino. Não é possível usar com a opção /A\n\
+  /W               Espera que insira um disco antes de começar.\n\
+  /U               Substitui (atualiza) apenas os ficheiros mais antigos que os\n\
+                   arquivos fonte. Não é possível usar com a opção /A.\n"
+    STRING_REPLACE_HELP2 "Caminho de origem obrigatório\n"
+    STRING_REPLACE_HELP3 "Nenhum ficheiro substituído\n"
+    STRING_REPLACE_HELP4 "%lu ficheiro(s) substituído(s)\n"
+    STRING_REPLACE_HELP5 "A substituir %s\n"
+    STRING_REPLACE_HELP6 "Substitua %s\n"
+    STRING_REPLACE_HELP7 "Nenhum ficheiro adicionado\n"
+    STRING_REPLACE_HELP8 "%lu ficheiro(s) adicionado(s)\n"
+    STRING_REPLACE_HELP9 "Adicionar %s (S/N)?"
+    STRING_REPLACE_HELP10 "Substituir %s (S/N)?"
+    STRING_REPLACE_HELP11 "A adicionar %s\n"
+    STRING_SHIFT_HELP "Altera a posição dos parâmetros substituíveis num arquivo em batch.\n\n\
+SHIFT [DOWN] "
+    STRING_SCREEN_HELP "move o cursor e opcionalmente imprime o texto\n\n\
+SCREEN linha col [texto]\n\n\
+  linha        linha para a qual move o cursor\n\
+  col          coluna para a qual move o cursor "
+    STRING_SET_HELP "Apresenta, define ou remove variáveis ​​de ambiente.\n\n\
+SET [variável[=][string]]\n\n\
+  variável      Especifíca o nome da variável de ambiente.\n\
+  string        Especifíca a cadeia de caracteres a serem atribuídos\n\
+                à variável.\n\n\
+Digite SET sem parâmetros para apresentar as variáveis ​​de ambiente actuais.\n"
+
+STRING_START_HELP1 "Inicia um comando.\n\n\
+START [""title""] [/D caminho] [/I] [/B] [/MIN] [/MAX] [/WAIT]\n\
+      [comando/programa] [parâmetros]\n\n\
+  ""título""        Título da janela.\n\
+  caminho         Especifica o directório de inicialização.\n\
+  I               Usa o ambiente original fornecido para o cmd.exe,\n\
+                  em vez do ambiente actual.\n\
+  B               Inicia o comando ou programa sem criar nenhuma janela.\n\
+  MIN             Inicia com uma janela minimizada.\n\
+  MAX             Inicia com uma janela maximizada.\n\
+  WAIT            Inicia o comando ou programa e aguarda seu término.\n\
+  comando         Especifica o comando ou programa a ser executado.\n\
+  parâmetros      Especifica os parâmetros a serem enviados ao comando\n\
+                  ou programa.\n"
+    STRING_TITLE_HELP "Define o título da janela do prompt de comando.\n\n\
+TITLE [string]\n\n\
+string            Especifíca o título da janela do prompt de comando.\n"
+    STRING_TIME_HELP1 "Apresenta ou define a hora do sistema.\n\n\
+TIME [/ T] [hora]\n\n\
+  /T Apenas apresenta a hora\n\n\
+Digite TIME sem parâmetros para apresentar a definição de hora actual e um prompt\n\
+para digitar nova hora. Pressione ENTER para manter a mesma hora.\n"
+    STRING_TIME_HELP2 "Digite o novo horário:"
+    STRING_TIMER_HELP1 "Tempo Decorrido %d msegs\n"
+    STRING_TIMER_HELP2 "Decorrido %02d%c%02d%c%02d%c%02d\n"
+    STRING_TIMER_HELP3 "permite o uso de dez cronômetros.\n\n\
+TIMER  [ON|OFF] [/S][/n][/Fn]\n\n\
+  ON          inicia a contagem do cronômetro (LIGADO)\n\
+  OFF         termina a contagem do cronômetro (DESLIGADO)\n\
+  /S          Tempo parcial. Retorna valor actual do cronômetro\n\
+  /n          Especifíca o número do cronômetro.\n\
+              Os cronômetros disponíveis são de 0 a 9\n\
+              Se não for especificado, o padrão é 1\n\
+  /Fn         Formato para saída\n\
+              n pode ser:\n\
+                    0 milissegundos\n\
+                    1 hh%cmm%css%cdd\n\n\
+se nenhum dos parâmetros ON, OFF ou /S for especificado o comando\n\
+irá alternar o estado do cronômetro\n\n"
+    STRING_TYPE_HELP1 "Apresenta o conteúdo dos ficheiros de texto.\n\nTYPE [unidade:] [caminho] nome do ficheiro\n\
+  /P          Mostra uma ecrã de saída por vez.\n"
+    STRING_VERIFY_HELP1 "Este comando é apenas um manequim !!\n\
+Activa ou desactiva a opção de verificação quando da gravação para um disco\n\
+VERIFICAR [ON | OFF]\n\n\
+Digite VERIFY sem parâmetro para apresentar a definição actual de VERIFY.\n"
+    STRING_VERIFY_HELP2 "VERIFY está %s.\n"
+    STRING_VERIFY_HELP3 "Deve especificar ON ou OFF."
+    STRING_VERSION_HELP1 "Apresenta informações da versão do shell\n\n\
+VER [/C][/R][/W]\n\n\
+  /C         Apresenta créditos.\n\
+  /R         Apresenta informações de redistribuição.\n\
+  /W         Apresenta informações de garantia."
+    STRING_VERSION_HELP2 "vem ABSOLUTAMENTE SEM GARANTIA; para obter detalhes\n\
+digite: `ver /w '. Este é um software livre e pode redistribuir\n\
+sob certas condições; digite `ver /r 'para obter detalhes. Digite `ver /c 'para uma\n\
+lista de créditos. "
+    STRING_VERSION_HELP3 "\n Este programa é distribuído na esperança de ser útil,\n\
+ mas SEM QUALQUER GARANTIA; sem mesmo a garantia implícita de\n\
+ COMERCIABILIDADE ou ADEQUAÇÃO A UM DETERMINADO FIM. Veja o\n\
+ GNU General Public License para mais detalhes."
+    STRING_VERSION_HELP4 "\n Este programa é um software livre; pode redistribuí-lo e/ou modificar\n\
+ sob os termos da GNU General Public License conforme publicada pela\n\
+ Fundação para o Software Livre; a versão 2 da Licença ou\n\
+ (à sua escolha) qualquer versão posterior.\n"
+    STRING_VERSION_HELP5 "\nEnvie relatórios de bug para <ros-dev@reactos.org>.\n\
+As actualizações estão disponíveis em: http://www.reactos.org"
+    STRING_VERSION_HELP6 "\nVersão do FreeDOS escrita por:\n"
+    STRING_VERSION_HELP7 "\nReactOS versão escrita por:\n"
+    STRING_VOL_HELP1 "O volume na unidade %c é %s\n"
+    STRING_VOL_HELP2 "Volume na unidade %c não tem nome.\n"
+    STRING_VOL_HELP3 "Número de série do volume é %04X-%04X\n"
+    STRING_VOL_HELP4 "Apresenta o nome do volume do disco e o número de série, se existirem.\n\nVOL [unidade:]"
+    STRING_WINDOW_HELP1 "alterar aspecto da janela da consola\n\n\
+WINDOW [/POS [=] esquerda, topo, largura, altura]\n\
+              [MIN | MAX | RESTORE] ['título']\n\n\
+/POS         Especifica o posicionamento e as dimensões da janela\n\
+MIN          Minimiza a janela\n\
+MAX          Maximiza a janela\n\
+RESTORE      Restaura a janela "
+    STRING_WINDOW_HELP2 "Altera o aspecto da janela da consola\n\n\
+ACTIVATE 'janela' [/POS [=] esquerda, topo, largura, altura]\n\
+              [MIN | MAX | RESTAURAR] ['título']\n\n\
+janela      Titulo da janela na qual se executam as acções\n\
+/POS        Especifíca o posicionamento e as dimensões da janela\n\
+MIN         Minimiza a janela\n\
+MAX         Maximiza a janela\n\
+RESTORE     Restaura a janela\n\
+título      Novo título\n"
+    STRING_CHOICE_OPTION "SN"
+    STRING_COPY_OPTION "SNT"
+    STRING_ALIAS_ERROR "Linha de comando muito longa após a expansão do alias!\n"
+    STRING_ASSOC_ERROR "Associação de ficheiro não encontrada para a extensão %s\n"
+    STRING_BATCH_ERROR "Erro ao abrir arquivo batch\n"
+    STRING_CHOICE_ERROR "Opção inválida. Formato esperado: /C[:]opções\n"
+    STRING_CHOICE_ERROR_TXT "Opção inválida. Formato esperado: /T[:]c,nn\n"
+    STRING_CHOICE_ERROR_OPTION "Opção ilegal: %s\n"
+    STRING_CMD_ERROR1 "Não é possível redirecionar a entrada do ficheiro %s\n"
+    STRING_CMD_ERROR2 "Erro ao criar ficheiro temporário para dados do tubo\n"
+    STRING_CMD_ERROR3 "Não é possível redirecionar para o ficheiro %s\n"
+    STRING_CMD_ERROR4 "A executar %s ...\n"
+    STRING_CMD_ERROR5 "A executar cmdexit.bat ...\n"
+    STRING_COLOR_ERROR1 "Erro nas mesmas cores! (O fundo e o primeiro plano não podem ser da mesma cor)"
+    STRING_COLOR_ERROR2 "Erro na especificação da cor"
+    STRING_CONSOLE_ERROR "Erro desconhecido: %d\n"
+    STRING_COPY_ERROR1 "Erro: Não é possível abrir o código - %s!\n"
+    STRING_COPY_ERROR2 "Erro: Não é possível copiar para si mesmo!\n"
+    STRING_COPY_ERROR3 "Erro ao escrever destino!\n"
+    STRING_COPY_ERROR4 "Erro: ainda não implementado!\n"
+    STRING_DATE_ERROR "Data inválida."
+    STRING_DEL_ERROR5 "O ficheiro %s será eliminado!"
+    STRING_DEL_ERROR6 "Tem a certeza? (S/N)"
+    STRING_DEL_ERROR7 "Excluindo: %s\n"
+    STRING_ERROR_ERROR1 "Erro desconhecido! Código do erro: 0x%lx\n"
+    STRING_ERROR_ERROR2 "Erro de sintaxe"
+    STRING_FOR_ERROR1 "Falta 'em' na declaração."
+    STRING_FOR_ERROR2 "nenhum colchete encontrado."
+    STRING_FOR_ERROR3 "falta 'do'."
+    STRING_FOR_ERROR4 "nenhum comando depois de 'do'."
+    STRING_FREE_ERROR1 "Unidade inválida"
+    STRING_FREE_ERROR2 "sem etiqueta"
+    STRING_GOTO_ERROR1 "Nenhum rótulo especificado para GOTO\n"
+    STRING_GOTO_ERROR2 "Etiqueta '%s' não encontrada\n"
+    STRING_MD_ERROR "Um ​​subdirectório ou ficheiro %s já existe.\n"
+    STRING_MD_ERROR2 "O caminho para a nova pasta não existe.\n"
+    STRING_MOVE_ERROR1 "[OK]\n"
+    STRING_MOVE_ERROR2 "[Erro]\n"
+    STRING_REN_ERROR1 "MoveFile () falhou. Erro: %lu\n"
+    STRING_TIME_ERROR1 "Horário inválido."
+    STRING_TYPE_ERROR1 "Opção inválida '/%s'\n"
+    STRING_WINDOW_ERROR1 "Janela não encontrada"
+    STRING_ERROR_PARAMETERF_ERROR "Formato de parâmetro incorrecto - %c\n"
+    STRING_ERROR_INVALID_SWITCH "Chave inválida - /%c\n"
+    STRING_ERROR_TOO_MANY_PARAMETERS "Muitos parâmetros - %s\n"
+    STRING_ERROR_PATH_NOT_FOUND "Caminho não encontrado\n"
+    STRING_ERROR_FILE_NOT_FOUND "Arquivo não encontrado\n"
+    STRING_ERROR_REQ_PARAM_MISSING "Parâmetro obrigatório ausente\n"
+    STRING_ERROR_INVALID_DRIVE "Especificação de unidade inválida\n"
+    STRING_ERROR_INVALID_PARAM_FORMAT "Formato de parâmetro inválido - %s\n"
+    STRING_ERROR_BADCOMMAND "Comando ou nome de ficheiro inválido - %s\n"
+    STRING_ERROR_OUT_OF_MEMORY "Erro de falta de memória.\n"
+    STRING_ERROR_CANNOTPIPE "Erro! Não é possível enviar! Não é possível abrir o ficheiro temporário!\n"
+    STRING_ERROR_D_PAUSEMSG "Pressione qualquer tecla para continuar..."
+    STRING_ERROR_DRIVER_NOT_READY "A unidade não está pronta"
+    STRING_SET_ENV_ERROR "Variável de ambiente '%s' não está definida\n"
+    STRING_REPLACE_ERROR1 "Opção inválida - %s\n"
+    STRING_REPLACE_ERROR2 "Caminho não encontrado - %s\n"
+    STRING_REPLACE_ERROR3 "O nome do ficheiro, nome do directório ou sintaxe do rótulo do volume está incorrecto.\n"
+    STRING_REPLACE_ERROR4 "Combinação de parâmetro inválida\n"
+    STRING_REPLACE_ERROR5 "Acesso negado - %s\n"
+    STRING_REPLACE_ERROR6 "Nenhum ficheiro encontrado - %s\n"
+    STRING_REPLACE_ERROR7 "Erro estendido 32\n"
+    STRING_CMD_INFOLINE "Tipo de prompt de comando do ReactOS HELP = Ajuda"
+    STRING_REACTOS_VERSION "ReactOS [Versão %s %s]\n"
+    STRING_CMD_SHELLINFO "\nReactOS Intérprete de linha de comando\nVersão %s %s"
+    STRING_VERSION_RUNNING_ON "Em execução em:"
+    STRING_VERSION_RUNVER "%s [Versão %d.%d.%d] %s"
+    STRING_COPY_FILE "%d ficheiro(s) copiado(s)\n"
+    STRING_DELETE_WIPE "eliminado"
+    STRING_FOR_ERROR "especificação de variável incorrecta."
+    STRING_SCREEN_COL "valor inválido para col"
+    STRING_SCREEN_ROW "valor inválido para linha"
+    STRING_TIMER_TIME "Timer %d é %s:"
+    STRING_MKLINK_CREATED_SYMBOLIC "Link simbólico criado para %s << === >> %s\n"
+    STRING_MKLINK_CREATED_HARD "Hard link criado para %s << === >> %s\n"
+    STRING_MKLINK_CREATED_JUNCTION "Junção criada para %s << === >> %s\n"
+    STRING_MORE "Mais?"
+    STRING_CANCEL_BATCH_FILE "\r\nCtrl-Break pressionado. Cancelar arquivo batch? (Sim/Não/Todos)"
+    STRING_INVALID_OPERAND "Operando inválido.\n"
+    STRING_EXPECTED_CLOSE_PAREN "Esperado ')'.\n"
+    STRING_EXPECTED_NUMBER_OR_VARIABLE "Esperado numero ou nome da variável.\n"
+    STRING_SYNTAX_COMMAND_INCORRECT "A sintaxe do comando está incorrecta.\n"
+END    

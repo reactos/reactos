@@ -9,6 +9,8 @@
 #include <shlwapi.h>
 #include "resource.h"
 
+#include <pseh/pseh2.h>
+
 static void execute_test(LPCWSTR DllFile)
 {
     WCHAR DllBuffer[MAX_PATH + 20];
@@ -16,6 +18,7 @@ static void execute_test(LPCWSTR DllFile)
     HRESULT hr;
     HANDLE hEvent;
     DWORD dwRet;
+    HMODULE mod;
 
     hEvent = CreateEventA(NULL, TRUE, FALSE, "Local\\shlwapi_apitest_evt");
 
@@ -24,7 +27,7 @@ static void execute_test(LPCWSTR DllFile)
     ok_hex(dwRet, WAIT_TIMEOUT);
 
     // Ensure the module is not loaded yet...
-    HMODULE mod = GetModuleHandleW(DllFile);
+    mod = GetModuleHandleW(DllFile);
     if (mod != NULL)
     {
         CloseHandle(hEvent);

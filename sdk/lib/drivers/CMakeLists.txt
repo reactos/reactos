@@ -1,5 +1,6 @@
 
 add_subdirectory(arbiter)
+add_subdirectory(aux_klib)
 add_subdirectory(chew)
 add_subdirectory(copysup)
 add_subdirectory(csq)
@@ -11,3 +12,4 @@ add_subdirectory(rdbsslib)
 add_subdirectory(rtlver)
 add_subdirectory(rxce)
 add_subdirectory(sound)
+add_subdirectory(wdf)

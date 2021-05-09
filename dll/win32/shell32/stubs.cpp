@@ -1301,3 +1301,28 @@ DWORD WINAPI SHGetComputerDisplayNameW(DWORD param1, DWORD param2, DWORD param3,
     FIXME("SHGetComputerDisplayNameW() stub\n");
     return E_FAIL;
 }
+
+/*
+ * Unimplemented
+ */
+EXTERN_C HRESULT
+WINAPI
+SHGetAttributesFromDataObject(IDataObject *pdo,
+                              DWORD dwAttributeMask,
+                              DWORD *pdwAttributes,
+                              UINT *pcItems)
+{
+    FIXME("SHGetAttributesFromDataObject() stub\n");
+    return E_NOTIMPL;
+}
+
+/*
+ * Unimplemented
+ */
+EXTERN_C HINSTANCE
+WINAPI
+SHGetShellStyleHInstance(VOID)
+{
+    FIXME("SHGetShellStyleHInstance() stub\n");
+    return NULL;
+}

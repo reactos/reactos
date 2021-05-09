@@ -20,10 +20,12 @@ machine.inf
 monitor.inf
 msmouse.inf
 NET_NIC.inf
+nettcpip.inf
 ports.inf
 scsi.inf
 unknown.inf
 usbport.inf
+volume.inf
 audio.inf
 ks.inf
 c_image.inf

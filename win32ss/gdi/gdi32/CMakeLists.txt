@@ -60,9 +60,12 @@ target_link_libraries(gdi32
     wine 
     win32ksys
     dxguid
-    msvcrtex
     atan2
     ${PSEH_LIB})
+
+if(MSVC AND (ARCH STREQUAL "i386"))
+    target_sources(gdi32 PRIVATE $<TARGET_OBJECTS:ftol2_sse>)
+endif()
 
 add_importlibs(gdi32 user32 advapi32 kernel32 ntdll)
 add_pch(gdi32 include/precomp.h SOURCE)

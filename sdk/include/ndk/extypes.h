@@ -756,7 +756,11 @@ typedef struct _SYSTEM_PROCESSOR_INFORMATION
     USHORT ProcessorArchitecture;
     USHORT ProcessorLevel;
     USHORT ProcessorRevision;
+#if (NTDDI_VERSION < NTDDI_WIN8)
     USHORT Reserved;
+#else
+    USHORT MaximumProcessors;
+#endif
     ULONG ProcessorFeatureBits;
 } SYSTEM_PROCESSOR_INFORMATION, *PSYSTEM_PROCESSOR_INFORMATION;
 

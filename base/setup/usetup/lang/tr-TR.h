@@ -1313,6 +1313,37 @@ static MUI_ENTRY trTRFormatPartitionEntries[] =
     }
 };
 
+static MUI_ENTRY trTRCheckFSEntries[] =
+{
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Kur ",
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        8,
+        "Kur, \237imdi se\207ili b\224l\201m\201 g\224zden ge\207iriyor.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        "L\201tfen bekleyiniz...",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
 static MUI_ENTRY trTRInstallDirectoryEntries[] =
 {
     {
@@ -1458,6 +1489,30 @@ static MUI_ENTRY trTRBootLoaderEntries[] =
         0,
         0,
         "ENTER = S\201rd\201r   F3 = \200\215k",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
+static MUI_ENTRY trTRBootLoaderInstallPageEntries[] =
+{
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        "Installing the bootloader onto the media, please wait...",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
         TEXT_ID_STATIC
     },
@@ -2078,6 +2133,10 @@ MUI_PAGE trTRPages[] =
         trTRFormatPartitionEntries
     },
     {
+        CHECK_FILE_SYSTEM_PAGE,
+        trTRCheckFSEntries
+    },
+    {
         DELETE_PARTITION_PAGE,
         trTRDeletePartitionEntries
     },
@@ -2112,6 +2171,10 @@ MUI_PAGE trTRPages[] =
     {
         SUCCESS_PAGE,
         trTRSuccessPageEntries
+    },
+    {
+        BOOT_LOADER_INSTALLATION_PAGE,
+        trTRBootLoaderInstallPageEntries
     },
     {
         BOOT_LOADER_FLOPPY_PAGE,
@@ -2161,8 +2224,6 @@ MUI_STRING trTRStrings[] =
     "Yeni b\224l\201m daha bi\207imlendirilmemi\237."},
     {STRING_INSTALLONPART,
     "Kur, ReactOS'u b\224l\201m \201zerine kurar."},
-    {STRING_CHECKINGPART,
-    "Kur, \237imdi se\207ili b\224l\201m\201 g\224zden ge\207iriyor."},
     {STRING_CONTINUE,
     "ENTER = S\201rd\201r"},
     {STRING_QUITCONTINUE,
@@ -2214,31 +2275,21 @@ MUI_STRING trTRStrings[] =
     {STRING_KEEPFORMAT,
     " \236imdiki dosya sistemini koru. (De\247i\237iklik yok.) "},
     {STRING_HDINFOPARTCREATE_1,
-    "%I64u %s  Sabit Disk %lu  (Giri\237=%hu, Veriyolu=%hu, Kimlik=%hu), %wZ \201zerinde [%s]."},
-    {STRING_HDINFOPARTCREATE_2,
-    "%I64u %s  abit Disk %lu  (Giri\237=%hu, Veriyolu=%hu, Kimlik=%hu) [%s]."},
-    {STRING_HDDINFOUNK2,
-    "   %c%c  T\201r  0x%02X    %I64u %s"},
+    "%s."},
     {STRING_HDINFOPARTDELETE_1,
-    "\232zerinde: %I64u %s  Sabit Disk %lu  (Giri\237=%hu, Veriyolu=%hu, Kimlik=%hu), %wZ \201zerinde [%s]."},
-    {STRING_HDINFOPARTDELETE_2,
-    "\232zerinde: %I64u %s  Sabit Disk %lu  (Giri\237=%hu, Veriyolu=%hu, Kimlik=%hu) [%s]."},
-    {STRING_HDINFOPARTZEROED_1,
-    "Sabit Disk %lu (%I64u %s), Giri\237=%hu, Veriyolu=%hu, Kimlik=%hu (%wZ) [%s]."},
-    {STRING_HDDINFOUNK4,
-    "%c%c  T\201r  0x%02X    %I64u %s"},
-    {STRING_HDINFOPARTEXISTS_1,
-    "\232zerinde: Sabit Disk %lu (%I64u %s), Giri\237=%hu, Veriyolu=%hu, Kimlik=%hu (%wZ) [%s]."},
-    {STRING_HDDINFOUNK5,
-    "%c%c %c %sT\201r  %-3u%s                      %6lu %s"},
-    {STRING_HDINFOPARTSELECT_1,
-    "%6lu %s  Sabit Disk %lu  (Giri\237=%hu, Veriyolu=%hu, Kimlik=%hu), %wZ \201zerinde [%s]"},
-    {STRING_HDINFOPARTSELECT_2,
-    "%6lu %s  Sabit Disk %lu  (Giri\237=%hu, Veriyolu=%hu, Kimlik=%hu) [%s]"},
+    "\232zerinde: %s."},
+    {STRING_PARTTYPE,
+    "T\201r 0x%02x"},
+    {STRING_HDDINFO_1,
+    // "Sabit Disk %lu (%I64u %s), Giri\237=%hu, Veriyolu=%hu, Kimlik=%hu (%wZ) [%s]"
+    "%I64u %s Sabit Disk %lu (Giri\237=%hu, Veriyolu=%hu, Kimlik=%hu), %wZ \201zerinde [%s]"},
+    {STRING_HDDINFO_2,
+    // "Sabit Disk %lu (%I64u %s), Giri\237=%hu, Veriyolu=%hu, Kimlik=%hu [%s]"
+    "%I64u %s Sabit Disk %lu (Giri\237=%hu, Veriyolu=%hu, Kimlik=%hu) [%s]"},
     {STRING_NEWPARTITION,
     "Kur, \201zerinde bir yeni b\224l\201m olu\237turdu:"},
     {STRING_UNPSPACE,
-    "    %sKullan\215lmayan Bo\237luk%s           %6lu %s"},
+    "Kullan\215lmayan Bo\237luk"},
     {STRING_MAXSIZE,
     "MB (En \207ok %lu MB)"},
     {STRING_EXTENDED_PARTITION,

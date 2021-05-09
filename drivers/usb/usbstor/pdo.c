@@ -604,14 +604,7 @@ USBSTOR_PdoHandlePnp(
        case IRP_MN_QUERY_REMOVE_DEVICE:
        case IRP_MN_QUERY_STOP_DEVICE:
        {
-#if 0
-           //
-           // if we're not claimed it's ok
-           //
            if (DeviceExtension->Claimed)
-#else
-           if (TRUE)
-#endif
            {
                Status = STATUS_UNSUCCESSFUL;
                DPRINT1("[USBSTOR] Request %x fails because device is still claimed\n", IoStack->MinorFunction);

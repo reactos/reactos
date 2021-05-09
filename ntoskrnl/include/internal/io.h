@@ -392,18 +392,6 @@ typedef struct _OPEN_PACKET
 } OPEN_PACKET, *POPEN_PACKET;
 
 //
-// Parameters packet for Load/Unload work item's context
-//
-typedef struct _LOAD_UNLOAD_PARAMS
-{
-    NTSTATUS Status;
-    PCUNICODE_STRING RegistryPath;
-    WORK_QUEUE_ITEM WorkItem;
-    KEVENT Event;
-    PDRIVER_OBJECT DriverObject;
-} LOAD_UNLOAD_PARAMS, *PLOAD_UNLOAD_PARAMS;
-
-//
 // Boot Driver List Entry
 //
 typedef struct _DRIVER_INFORMATION
@@ -545,7 +533,9 @@ typedef enum _DEVICE_ACTION
 {
     PiActionEnumDeviceTree,
     PiActionEnumRootDevices,
-    PiActionResetDevice
+    PiActionResetDevice,
+    PiActionAddBootDevices,
+    PiActionStartDevice
 } DEVICE_ACTION;
 
 //
@@ -581,15 +571,6 @@ IopDetectResourceConflict(
 //
 NTSTATUS
 NTAPI
-PipCallDriverAddDevice(
-    IN PDEVICE_NODE DeviceNode,
-    IN BOOLEAN LoadDriver,
-    IN PDRIVER_OBJECT DriverObject
-);
-
-INIT_FUNCTION
-NTSTATUS
-NTAPI
 IopInitializePlugPlayServices(
     VOID
 );
@@ -610,38 +591,34 @@ IopInitDriverImplementation(
     VOID
 );
 
-VOID
-IopInitPnpNotificationImplementation(
-    VOID
-);
-
-VOID
-IopNotifyPlugPlayNotification(
-    IN PDEVICE_OBJECT DeviceObject,
-    IN IO_NOTIFICATION_EVENT_CATEGORY EventCategory,
-    IN LPCGUID Event,
-    IN PVOID EventCategoryData1,
-    IN PVOID EventCategoryData2
-);
-
 NTSTATUS
 IopGetSystemPowerDeviceObject(
     IN PDEVICE_OBJECT *DeviceObject
 );
 
 PDEVICE_NODE
-NTAPI
 PipAllocateDeviceNode(
     IN PDEVICE_OBJECT PhysicalDeviceObject
 );
 
-NTSTATUS
-IopCreateDeviceNode(
-    IN PDEVICE_NODE ParentNode,
-    IN PDEVICE_OBJECT PhysicalDeviceObject,
-    IN PUNICODE_STRING ServiceName,
-    OUT PDEVICE_NODE *DeviceNode
-);
+VOID
+PiInsertDevNode(
+    _In_ PDEVICE_NODE DeviceNode,
+    _In_ PDEVICE_NODE ParentNode);
+
+PNP_DEVNODE_STATE
+PiSetDevNodeState(
+    _In_ PDEVICE_NODE DeviceNode,
+    _In_ PNP_DEVNODE_STATE NewState);
+
+VOID
+PiSetDevNodeProblem(
+    _In_ PDEVICE_NODE DeviceNode,
+    _In_ UINT32 Problem);
+
+VOID
+PiClearDevNodeProblem(
+    _In_ PDEVICE_NODE DeviceNode);
 
 NTSTATUS
 IopFreeDeviceNode(
@@ -654,7 +631,6 @@ IopQueryDeviceCapabilities(PDEVICE_NODE DeviceNode,
                            PDEVICE_CAPABILITIES DeviceCaps);
 
 NTSTATUS
-NTAPI
 IopSynchronousCall(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIO_STACK_LOCATION IoStackLocation,
@@ -677,18 +653,6 @@ IopGetDeviceNode(
 );
 
 NTSTATUS
-IopActionConfigureChildServices(
-    IN PDEVICE_NODE DeviceNode,
-    IN PVOID Context
-);
-
-NTSTATUS
-IopActionInitChildServices(
-    IN PDEVICE_NODE DeviceNode,
-    IN PVOID Context
-);
-
-NTSTATUS
 IoCreateDriverList(
     VOID
 );
@@ -698,7 +662,6 @@ IoDestroyDriverList(
     VOID
 );
 
-INIT_FUNCTION
 NTSTATUS
 IopInitPlugPlayEvents(VOID);
 
@@ -707,10 +670,6 @@ IopQueueTargetDeviceEvent(
     const GUID *Guid,
     PUNICODE_STRING DeviceIds
 );
-
-NTSTATUS
-IopInitializePnpServices(
-    IN PDEVICE_NODE DeviceNode);
 
 NTSTATUS
 NTAPI
@@ -754,14 +713,12 @@ IopCreateDeviceKeyPath(
 //
 // PnP Routines
 //
-INIT_FUNCTION
 NTSTATUS
 NTAPI
 IopUpdateRootKey(
     VOID
 );
 
-INIT_FUNCTION
 NTSTATUS
 NTAPI
 PiInitCacheGroupInformation(
@@ -796,17 +753,20 @@ PnpRegSzToString(
     OUT PUSHORT StringLength OPTIONAL
 );
 
+VOID
+PiSetDevNodeText(
+    _In_ PDEVICE_NODE DeviceNode,
+    _In_ HANDLE InstanceKey);
+
 //
 // Initialization Routines
 //
-INIT_FUNCTION
 NTSTATUS
 NTAPI
 IopCreateArcNames(
     IN PLOADER_PARAMETER_BLOCK LoaderBlock
 );
 
-INIT_FUNCTION
 NTSTATUS
 NTAPI
 IopReassignSystemRoot(
@@ -814,7 +774,6 @@ IopReassignSystemRoot(
     OUT PANSI_STRING NtBootPath
 );
 
-INIT_FUNCTION
 BOOLEAN
 NTAPI
 IoInitSystem(
@@ -835,6 +794,10 @@ IoInitializeCrashDump(
     IN HANDLE PageFileHandle
 );
 
+VOID
+PiInitializeNotifications(
+    VOID);
+
 //
 // Device/Volume Routines
 //
@@ -842,28 +805,6 @@ VOID
 NTAPI
 IopReadyDeviceObjects(
     IN PDRIVER_OBJECT Driver
-);
-
-NTSTATUS
-FASTCALL
-IopInitializeDevice(
-    IN PDEVICE_NODE DeviceNode,
-    IN PDRIVER_OBJECT DriverObject
-);
-
-NTSTATUS
-IopStartDevice(
-    IN PDEVICE_NODE DeviceNode
-);
-
-NTSTATUS
-IopStopDevice(
-    IN PDEVICE_NODE DeviceNode
-);
-
-NTSTATUS
-IopRemoveDevice(
-    IN PDEVICE_NODE DeviceNode
 );
 
 PVPB
@@ -932,6 +873,12 @@ IopDereferenceDeviceObject(
     IN PDEVICE_OBJECT DeviceObject,
     IN BOOLEAN ForceUnload
 );
+
+NTSTATUS
+NTAPI
+IopGetRelatedTargetDevice(
+    IN PFILE_OBJECT FileObject,
+    OUT PDEVICE_NODE *DeviceNode);
 
 NTSTATUS
 NTAPI
@@ -1011,13 +958,11 @@ IopShutdownBaseFileSystems(
 //
 // Boot logging support
 //
-INIT_FUNCTION
 VOID
 IopInitBootLog(
     IN BOOLEAN StartBootLog
 );
 
-INIT_FUNCTION
 VOID
 IopStartBootLog(
     VOID
@@ -1089,7 +1034,6 @@ RawFsIsRawFileSystemDeviceObject(
     IN PDEVICE_OBJECT DeviceObject
 );
 
-INIT_FUNCTION
 NTSTATUS
 NTAPI
 RawFsDriverEntry(
@@ -1122,28 +1066,17 @@ PnpRootRegisterDevice(
 //
 // Driver Routines
 //
-INIT_FUNCTION
 VOID
 FASTCALL
 IopInitializeBootDrivers(
     VOID
 );
 
-INIT_FUNCTION
 VOID
 FASTCALL
 IopInitializeSystemDrivers(
     VOID
 );
-
-NTSTATUS
-NTAPI
-IopCreateDriver(IN PUNICODE_STRING DriverName OPTIONAL,
-                IN PDRIVER_INITIALIZE InitializationFunction,
-                IN PUNICODE_STRING RegistryPath OPTIONAL,
-                IN PCUNICODE_STRING ServiceName,
-                IN PLDR_DATA_TABLE_ENTRY ModuleObject OPTIONAL,
-                OUT PDRIVER_OBJECT *pDriverObject);
 
 VOID
 NTAPI
@@ -1152,36 +1085,22 @@ IopDeleteDriver(
 );
 
 NTSTATUS
-FASTCALL
-IopGetDriverObject(
-    OUT PDRIVER_OBJECT *DriverObject,
-    IN PUNICODE_STRING ServiceName,
-    IN BOOLEAN FileSystem
-);
+IopLoadDriver(
+    _In_ HANDLE ServiceHandle,
+    _Out_ PDRIVER_OBJECT *DriverObject);
 
 NTSTATUS
-FASTCALL
-IopLoadServiceModule(
-    IN PUNICODE_STRING ServiceName,
-    OUT PLDR_DATA_TABLE_ENTRY *ModuleObject
-);
+IopGetDriverNames(
+    _In_ HANDLE ServiceHandle,
+    _Out_ PUNICODE_STRING DriverName,
+    _Out_opt_ PUNICODE_STRING ServiceName);
 
 NTSTATUS
-NTAPI
-IopLoadUnloadDriver(
-    _In_opt_ PCUNICODE_STRING RegistryPath,
-    _Inout_ PDRIVER_OBJECT *DriverObject
-);
-
-NTSTATUS
-FASTCALL
 IopInitializeDriverModule(
-    IN PDEVICE_NODE DeviceNode,
-    IN PLDR_DATA_TABLE_ENTRY ModuleObject,
-    IN PUNICODE_STRING ServiceName,
-    IN BOOLEAN FileSystemDriver,
-    OUT PDRIVER_OBJECT *DriverObject
-);
+    _In_ PLDR_DATA_TABLE_ENTRY ModuleObject,
+    _In_ HANDLE ServiceHandle,
+    _Out_ PDRIVER_OBJECT *DriverObject,
+    _Out_ NTSTATUS *DriverEntryStatus);
 
 NTSTATUS
 FASTCALL
@@ -1386,7 +1305,6 @@ IoSetIoCompletion(
 //
 // Ramdisk Routines
 //
-INIT_FUNCTION
 NTSTATUS
 NTAPI
 IopStartRamdisk(
@@ -1424,6 +1342,61 @@ NTSTATUS
 PiPerformSyncDeviceAction(
     _In_ PDEVICE_OBJECT DeviceObject,
     _In_ DEVICE_ACTION Action);
+
+//
+// PnP notifications
+//
+VOID
+PiNotifyDeviceInterfaceChange(
+    _In_ LPCGUID Event,
+    _In_ LPCGUID InterfaceClassGuid,
+    _In_ PUNICODE_STRING SymbolicLinkName);
+
+VOID
+PiNotifyHardwareProfileChange(
+    _In_ LPCGUID Event);
+
+VOID
+PiNotifyTargetDeviceChange(
+    _In_ LPCGUID Event,
+    _In_ PDEVICE_OBJECT DeviceObject,
+    _In_opt_ PTARGET_DEVICE_CUSTOM_NOTIFICATION CustomNotification);
+
+//
+// PnP IRPs
+//
+NTSTATUS
+PiIrpStartDevice(
+    _In_ PDEVICE_NODE DeviceNode);
+
+NTSTATUS
+PiIrpStopDevice(
+    _In_ PDEVICE_NODE DeviceNode);
+
+NTSTATUS
+PiIrpQueryStopDevice(
+    _In_ PDEVICE_NODE DeviceNode);
+
+NTSTATUS
+PiIrpCancelStopDevice(
+    _In_ PDEVICE_NODE DeviceNode);
+
+NTSTATUS
+PiIrpQueryDeviceRelations(
+    _In_ PDEVICE_NODE DeviceNode,
+    _In_ DEVICE_RELATION_TYPE Type);
+
+NTSTATUS
+PiIrpQueryDeviceText(
+    _In_ PDEVICE_NODE DeviceNode,
+    _In_ LCID LocaleId,
+    _In_ DEVICE_TEXT_TYPE Type,
+    _Out_ PWSTR *DeviceText);
+
+NTSTATUS
+PiIrpQueryPnPDeviceState(
+    _In_ PDEVICE_NODE DeviceNode,
+    _Out_ PPNP_DEVICE_STATE DeviceState);
 
 //
 // Global I/O Data

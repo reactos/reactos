@@ -54,7 +54,7 @@ ERRORLEVEL disetel ke ofset tombol yang ditekan pengguna dalam pilihan.\n"
     STRING_CMD_HELP7 "  [pengalihan dan piping]"
     STRING_CMD_HELP8 "Memulai instan baru dari interpreter baris perintah ReactOS.\n\n\
 CMD [/[C|K] command][/P][/Q][/T:bf]\n\n\
-  /C command  Menjalankan perintah yang ditetapkan dan mengakhiri.\n\
+  /C command  Menjalankan perintah yang ditetapkan dan mengakhirinya.\n\
   /K command  Menjalankan perintah yang ditetapkan dan tetap tinggal.\n\
   /P          CMD menjadi permanen dan menjalankan autoexec.bat\n\
               (tidak bisa diakhiri).\n\
@@ -66,17 +66,17 @@ COLOR [attr [/-F]]\n\n\
 Ada tiga cara untuk menetapkan warna:\n\
 1) [bright] nama pada [bright] nama  (hanya tiga huruf pertama yang dipakai)\n\
 2) desimal pada desimal\n\
-3) dua digit heksa\n\n\
+3) dua digit heksadesimal\n\n\
 Warna adalah:\n\
-des heksa nama       des  hex  nama\n\
-0    0    Black       8   8    Abu-Abu(Hitam terang)\n\
-1    1    Blue        9   9    Biru Terang\n\
-2    2    Green      10   A    Hijau Terang\n\
-3    3    Cyan       11   B    Biru Muda Terang\n\
-4    4    Red        12   C    Merah Terang\n\
-5    5    Magenta    13   D    Magenta Terang\n\
-6    6    Yellow     14   E    Kuning Terang\n\
-7    7    White      15   F    Putih Terang\n"
+des heksa nama       des  heksa nama\n\
+0    0    Hitam       8   8     Abu-Abu(Hitam terang)\n\
+1    1    Biru        9   9     Biru Terang\n\
+2    2    Hijau      10   A     Hijau Terang\n\
+3    3    Biru Muda  11   B     Biru Muda Terang\n\
+4    4    Merah      12   C     Merah Terang\n\
+5    5    Magenta    13   D     Magenta Terang\n\
+6    6    Kuning     14   E     Kuning Terang\n\
+7    7    Putih      15   F     Putih Terang\n"
     STRING_COPY_HELP1 "Timpa %s (Ya/Tidak/Semua)? "
     STRING_COPY_HELP2 "Mengcopy satu atau lebih file ke lokasi lain.\n\n\
 COPY [/V][/Y|/-Y][/A|/B] sumber [/A|/B]\n\
@@ -332,7 +332,7 @@ REN [/E /N /P /Q /S /T] nama_lama ... nama_baru\n\n\
   /Q    Diam-diam.\n\
   /S    Mengganti nama subdirektori.\n\
   /T    Menampilkan jumlah total dari file yang diganti nama.\n\n\
-Catatan bahwa anda tidak bisa menetapkan drive baru atau path untuk\n\
+Mohon dicatat bahwa anda tidak dapat menetapkan drive baru atau path untuk\n\
 tujuan anda. Gunakan perintah MOVE untuk keperluan itu.\n"
     STRING_REN_HELP2 "    %lu file diganti nama\n"
     STRING_REN_HELP3 "    %lu file diganti nama\n"
@@ -386,7 +386,7 @@ START [""title""] [/D path] [/I] [/B] [/MIN] [/MAX] [/WAIT]\n\
   MIN         Starts with a minimized window.\n\
   MAX         Starts with a maximized window.\n\
   WAIT        Starts the command or program and waits for its termination.\n\
-  command     Menetapkab perintah yang dilaksanakan.\n\
+  command     Menetapkan perintah yang dilaksanakan.\n\
   parameters  Specifies the parameters to be given to the command or program.\n"
     STRING_TITLE_HELP "Menyetel judul jendela untuk jendela prompt perintah.\n\n\
 TITLE [string]\n\n\
@@ -429,15 +429,15 @@ VER [/C][/R][/W]\n\n\
   /R  Menampilkan informasi redistribusi.\n\
   /W  menampilkan informasi jaminan."
     STRING_VERSION_HELP2 " datang dengan MUTLAK TANPA JAMINAN; untuk lengkapnya\n\
-ketik: 'ver /w'. Program ini adalah software bebas; anda bisa membagikannya\n\
-di bawah kondisi tertentu; ketik 'ver /r' untuk lengkapnya. Ketik 'ver /c'\n\
+ketik: 'ver /w'. Program ini adalah software bebas; anda dapat membagikannya\n\
+di bawah kondisi tertentu; ketik 'ver /r' untuk informasi selengkapnya. Ketik 'ver /c'\n\
 untuk daftar penghargaan."
     STRING_VERSION_HELP3 "\n Program ini didistribusikan dengan harapan berguna,\n\
  tetapi TANPA JAMINAN APAPUN; bahkan tanpa jaminan berarti dari\n\
  MERCANTABILITAS atau KECUKUPAN UNTUK KEPERLUAN TERTENTU.  Lihat\n\
  GNU General Public License untuk lebih jelasnya."
     STRING_VERSION_HELP4 "\n Program ini adalah software bebas; anda dapat mendistribusikan dan/atau\n\
- mengubahnya di bawah term GNU General Public License seperti dipublikasikan oleh Free Software Foundation; baik Lisensi versi 2, atau (menurut opini anda) setiap versi berikutnya.\n"
+ mengubahnya di bawah ketentuan lisensi GNU General Public License sebagaimana dipublikasikan oleh Free Software Foundation; baik Lisensi versi 2, atau (menurut opini anda) setiap versi berikutnya.\n"
     STRING_VERSION_HELP5 "\nKirim laporan bug ke <ros-dev@reactos.org>.\n\
 Pemutakiran tersedia di: http://www.reactos.org"
     STRING_VERSION_HELP6 "\nVersi FreeDOS ditulis oleh:\n"
@@ -517,19 +517,19 @@ title         judul baru\n"
     STRING_ERROR_CANNOTPIPE "Salah!  Tidak bisa melakukan pipe!  Tidak bisa membuka file temporal!\n"
     STRING_ERROR_D_PAUSEMSG "Tekan tombol untuk melanjutkan . . . "
     STRING_ERROR_DRIVER_NOT_READY "Drive tidak siap"
-    STRING_SET_ENV_ERROR "Environment variable '%s' is not defined\n"
-    STRING_REPLACE_ERROR1 "Invalid switch - %s\n"
-    STRING_REPLACE_ERROR2 "Path not found - %s\n"
-    STRING_REPLACE_ERROR3 "The filename, directory name, or volume label syntax is incorrect.\n"
-    STRING_REPLACE_ERROR4 "Invalid parameter combination\n"
-    STRING_REPLACE_ERROR5 "Access denied - %s\n"
+    STRING_SET_ENV_ERROR "Variabel lingkungan '%s' tidak terdefinisi\n"
+    STRING_REPLACE_ERROR1 "Saklar perintah tidak valid - %s\n"
+    STRING_REPLACE_ERROR2 "Alamat file/direktori tidak ditemukan - %s\n"
+    STRING_REPLACE_ERROR3 "Sintaks nama file, direktori, atau label volume tidak benar.\n"
+    STRING_REPLACE_ERROR4 "Kombinasi parameter tidak valid\n"
+    STRING_REPLACE_ERROR5 "Akses ditolak - %s\n"
     STRING_REPLACE_ERROR6 "No files found - %s\n"
     STRING_REPLACE_ERROR7 "Extended Error 32\n"
     STRING_CMD_INFOLINE "  ReactOS Command Prompt                                      Type HELP = Help  "
-    STRING_REACTOS_VERSION "ReactOS Operating System [Version %s %s]\n"
-    STRING_CMD_SHELLINFO "\nInterpreter Baris Perintah ReactOS\nVersion %s %s"
+    STRING_REACTOS_VERSION "ReactOS [Versi %s %s]\n"
+    STRING_CMD_SHELLINFO "\nInterpreter Baris Perintah ReactOS\nVersi %s %s"
     STRING_VERSION_RUNNING_ON "Berjalan pada: "
-    STRING_VERSION_RUNVER "%s [Version %d.%d.%d] %s"
+    STRING_VERSION_RUNVER "%s [Versi %d.%d.%d] %s"
     STRING_COPY_FILE "        %d file di-copy\n"
     STRING_DELETE_WIPE "dihapus"
     STRING_FOR_ERROR "spesifikasi variabel tidak baik."
@@ -540,7 +540,7 @@ title         judul baru\n"
     STRING_MKLINK_CREATED_HARD "Hard link created for %s <<===>> %s\n"
     STRING_MKLINK_CREATED_JUNCTION "Junction created for %s <<===>> %s\n"
     STRING_MORE "More? "
-    STRING_CANCEL_BATCH_FILE "\r\nCtrl-Break pressed.  Cancel batch file? (Ya/Tidak/Semua) "
+    STRING_CANCEL_BATCH_FILE "\r\nCtrl-Break ditekan.  Batalkan operasi file batch? (Ya/Tidak/Semua) "
     STRING_INVALID_OPERAND "Operand tidak benar.\n"
     STRING_EXPECTED_CLOSE_PAREN "Diharapkan ')'.\n"
     STRING_EXPECTED_NUMBER_OR_VARIABLE "Nomor  atau nama variabel diharapkan.\n"

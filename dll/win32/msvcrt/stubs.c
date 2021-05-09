@@ -96,7 +96,7 @@ typedef struct __crt_locale_data_public
                unsigned int _locale_lc_codepage;
 } __crt_locale_data_public;
 
-__inline
+static
 __crt_locale_data_public*
 __CRTDECL
 __acrt_get_locale_data_prefix(
@@ -106,7 +106,7 @@ __acrt_get_locale_data_prefix(
     return (__crt_locale_data_public*)_TypedLocalePointers->locinfo;
 }
 
-__inline
+static
 int
 __CRTDECL
 __acrt_locale_get_ctype_array_value(
@@ -137,7 +137,7 @@ const unsigned short* __cdecl __pctype_func(void);
     #define __chvalidchk(a, b) (__acrt_locale_get_ctype_array_value(__PCTYPE_FUNC, (a), (b)))
 #endif
 
-__inline
+static
 int
 __CRTDECL
 _chvalidchk_l(
@@ -158,7 +158,7 @@ _chvalidchk_l(
 #endif
 }
 
-__inline
+static
 int
 __CRTDECL
 _ischartype_l(

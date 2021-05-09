@@ -543,6 +543,12 @@ MiDeleteVirtualAddresses(IN ULONG_PTR Va,
 {
     PMMPTE PointerPte, PrototypePte, LastPrototypePte;
     PMMPDE PointerPde;
+#if (_MI_PAGING_LEVELS >= 3)
+    PMMPPE PointerPpe;
+#endif
+#if (_MI_PAGING_LEVELS >= 4)
+    PMMPPE PointerPxe;
+#endif
     MMPTE TempPte;
     PEPROCESS CurrentProcess;
     KIRQL OldIrql;
@@ -552,10 +558,8 @@ MiDeleteVirtualAddresses(IN ULONG_PTR Va,
     /* Get out if this is a fake VAD, RosMm will free the marea pages */
     if ((Vad) && (Vad->u.VadFlags.Spare == 1)) return;
 
-    /* Grab the process and PTE/PDE for the address being deleted */
+    /* Get the current process */
     CurrentProcess = PsGetCurrentProcess();
-    PointerPde = MiAddressToPde(Va);
-    PointerPte = MiAddressToPte(Va);
 
     /* Check if this is a section VAD or a VM VAD */
     if (!(Vad) || (Vad->u.VadFlags.PrivateMemory) || !(Vad->FirstPrototypePte))
@@ -573,24 +577,59 @@ MiDeleteVirtualAddresses(IN ULONG_PTR Va,
     /* In all cases, we don't support fork() yet */
     ASSERT(CurrentProcess->CloneRoot == NULL);
 
-    /* Loop the PTE for each VA */
-    while (TRUE)
+    /* Loop the PTE for each VA (EndingAddress is inclusive!) */
+    while (Va <= EndingAddress)
     {
-        /* First keep going until we find a valid PDE */
-        while (!PointerPde->u.Long)
+#if (_MI_PAGING_LEVELS >= 4)
+        /* Get the PXE and check if it's valid */
+        PointerPxe = MiAddressToPxe((PVOID)Va);
+        if (!PointerPxe->u.Hard.Valid)
+        {
+            /* Check for unmapped range and skip it */
+            if (!PointerPxe->u.Long)
+            {
+                /* There are gaps in the address space */
+                AddressGap = TRUE;
+
+                /* Update Va and continue looping */
+                Va = (ULONG_PTR)MiPxeToAddress(PointerPxe + 1);
+                continue;
+            }
+
+            /* Make the PXE valid */
+            MiMakeSystemAddressValid(MiPteToAddress(PointerPxe), CurrentProcess);
+        }
+#endif
+#if (_MI_PAGING_LEVELS >= 3)
+        /* Get the PPE and check if it's valid */
+        PointerPpe = MiAddressToPpe((PVOID)Va);
+        if (!PointerPpe->u.Hard.Valid)
+        {
+            /* Check for unmapped range and skip it */
+            if (!PointerPpe->u.Long)
+            {
+                /* There are gaps in the address space */
+                AddressGap = TRUE;
+
+                /* Update Va and continue looping */
+                Va = (ULONG_PTR)MiPpeToAddress(PointerPpe + 1);
+                continue;
+            }
+
+            /* Make the PPE valid */
+            MiMakeSystemAddressValid(MiPteToAddress(PointerPpe), CurrentProcess);
+        }
+#endif
+        /* Skip invalid PDEs */
+        PointerPde = MiAddressToPde((PVOID)Va);
+        if (!PointerPde->u.Long)
         {
             /* There are gaps in the address space */
             AddressGap = TRUE;
 
-            /* Still no valid PDE, try the next 4MB (or whatever) */
-            PointerPde++;
-
-            /* Update the PTE on this new boundary */
-            PointerPte = MiPteToAddress(PointerPde);
-
             /* Check if all the PDEs are invalid, so there's nothing to free */
-            Va = (ULONG_PTR)MiPteToAddress(PointerPte);
-            if (Va > EndingAddress) return;
+            Va = (ULONG_PTR)MiPdeToAddress(PointerPde + 1);
+            continue;
         }
 
         /* Now check if the PDE is mapped in */
@@ -627,6 +666,7 @@ MiDeleteVirtualAddresses(IN ULONG_PTR Va,
 
         /* Lock the PFN Database while we delete the PTEs */
         OldIrql = MiAcquirePfnLock();
+        PointerPte = MiAddressToPte(Va);
         do
         {
             /* Capture the PDE and make sure it exists */
@@ -1316,12 +1356,10 @@ MmFlushVirtualMemory(IN PEPROCESS Process,
                      OUT PIO_STATUS_BLOCK IoStatusBlock)
 {
     PAGED_CODE();
+
     UNIMPLEMENTED;
 
-    //
-    // Fake success
-    //
-    return STATUS_SUCCESS;
+    return STATUS_NOT_IMPLEMENTED;
 }
 
 ULONG
@@ -4999,7 +5037,7 @@ NtAllocateVirtualMemory(IN HANDLE ProcessHandle,
             if (PointerPte->u.Soft.Valid == 0)
             {
                 ASSERT(PointerPte->u.Soft.Prototype == 0);
-                ASSERT(PointerPte->u.Soft.PageFileHigh == 0);
+                ASSERT((PointerPte->u.Soft.PageFileHigh == 0) || (PointerPte->u.Soft.Transition == 1));
             }
 
             //
@@ -5241,7 +5279,7 @@ NtFreeVirtualMemory(IN HANDLE ProcessHandle,
          (Vad->u.VadFlags.VadType != VadRotatePhysical)) ||
         (Vad->u.VadFlags.VadType == VadDevicePhysicalMemory))
     {
-        DPRINT1("Attempt to free section memory\n");
+        DPRINT("Attempt to free section memory\n");
         Status = STATUS_UNABLE_TO_DELETE_SECTION;
         goto FailPath;
     }

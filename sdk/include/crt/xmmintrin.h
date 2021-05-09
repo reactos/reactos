@@ -55,48 +55,61 @@ void _mm_setcsr(unsigned int);
 #ifndef __clang__
 #pragma intrinsic(_mm_xor_ps)
 #pragma intrinsic(_mm_div_ps)
+#else
+
+/*
+ * Clang implements these as inline functions in the header instead of real builtins
+ */
+__forceinline __m128 _mm_xor_ps(__m128 a, __m128 b)
+{
+    return (__m128)((__v4su)a ^ (__v4su)b);
+}
+
+__forceinline __m128 _mm_div_ps(__m128 a, __m128 b)
+{
+    return (__m128)((__v4sf)a / (__v4sf)b);
+}
 #endif /* __clang__ */
 
 #else /* _MSC_VER */
 
-#if !defined(__INTRIN_INLINE) && !defined(__clang__)
-#define __ATTRIBUTE_ARTIFICIAL __attribute__((artificial))
-#define __INTRIN_INLINE extern __inline__ __attribute__((__always_inline__,__gnu_inline__)) __ATTRIBUTE_ARTIFICIAL
-#endif /* !__INTRIN_INLINE && !__clang__ */
+#if !defined(__INTRIN_INLINE)
+# ifdef __clang__
+#  define __ATTRIBUTE_ARTIFICIAL
+# else
+#  define __ATTRIBUTE_ARTIFICIAL __attribute__((artificial))
+# endif
+# define __INTRIN_INLINE extern __inline__ __attribute__((__always_inline__,__gnu_inline__)) __ATTRIBUTE_ARTIFICIAL
+#endif /* !__INTRIN_INLINE */
 
-/* 
+#ifndef HAS_BUILTIN
+#ifdef __clang__
+#define HAS_BUILTIN(x) __has_builtin(x)
+#else
+#define HAS_BUILTIN(x) 0
+#endif
+#endif
+
+/*
  * We can't use __builtin_ia32_* functions,
  * are they are only available with the -msse2 compiler switch
  */
+#if !HAS_BUILTIN(_mm_getcsr)
 __INTRIN_INLINE unsigned int _mm_getcsr(void)
 {
     unsigned int retval;
     __asm__ __volatile__("stmxcsr %0" : "=m"(retval));
     return retval;
 }
+#endif
 
+#if !HAS_BUILTIN(_mm_setcsr)
 __INTRIN_INLINE void _mm_setcsr(unsigned int val)
 {
     __asm__ __volatile__("ldmxcsr %0" : : "m"(val));
 }
+#endif
 #endif /* _MSC_VER */
-
-#ifdef __clang__
-#define __INTRIN_INLINE __forceinline
-
-/*
- * Clang implements these as inline functions in the header instead of real builtins
- */
-__INTRIN_INLINE __m128 _mm_xor_ps(__m128 a, __m128 b)
-{
-    return (__m128)((__v4su)a ^ (__v4su)b);
-}
-
-__INTRIN_INLINE __m128 _mm_div_ps(__m128 a, __m128 b)
-{
-    return (__m128)((__v4sf)a / (__v4sf)b);
-}
-#endif /* __clang__ */
 
 /* Alternate names */
 #define _mm_cvtss_si32 _mm_cvt_ss2si

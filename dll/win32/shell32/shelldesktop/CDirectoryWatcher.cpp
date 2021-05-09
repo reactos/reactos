@@ -162,8 +162,11 @@ void CDirectoryWatcher::ProcessNotification()
         // convert to long pathname if it contains '~'
         if (StrChrW(szPath, L'~') != NULL)
         {
-            GetLongPathNameW(szPath, szName, _countof(szName));
-            lstrcpynW(szPath, szName, _countof(szPath));
+            if (GetLongPathNameW(szPath, szName, _countof(szName)) &&
+                !PathIsRelativeW(szName))
+            {
+                lstrcpynW(szPath, szName, _countof(szPath));
+            }
         }
 
         // convert action to event

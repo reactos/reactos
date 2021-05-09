@@ -8,16 +8,23 @@
 
 #pragma once
 
-/* HELPERS FOR PARTITION TYPES **********************************************/
+/* EXTRA HANDFUL MACROS *****************************************************/
 
-typedef struct _PARTITION_TYPE
-{
-    UCHAR Type;
-    PCHAR Description;
-} PARTITION_TYPE, *PPARTITION_TYPE;
+// NOTE: They should be moved into some global header.
 
-#define NUM_PARTITION_TYPE_ENTRIES  143
-extern PARTITION_TYPE PartitionTypes[NUM_PARTITION_TYPE_ENTRIES];
+/* OEM MBR partition types recognized by NT (see [MS-DMRP] Appendix B) */
+#define PARTITION_EISA          0x12    // EISA partition
+#define PARTITION_HIBERNATION   0x84    // Hibernation partition for laptops
+#define PARTITION_DIAGNOSTIC    0xA0    // Diagnostic partition on some Hewlett-Packard (HP) notebooks
+#define PARTITION_DELL          0xDE    // Dell partition
+#define PARTITION_IBM           0xFE    // IBM Initial Microprogram Load (IML) partition
+
+#define IsOEMPartition(PartitionType) \
+    ( ((PartitionType) == PARTITION_EISA)        || \
+      ((PartitionType) == PARTITION_HIBERNATION) || \
+      ((PartitionType) == PARTITION_DIAGNOSTIC)  || \
+      ((PartitionType) == PARTITION_DELL)        || \
+      ((PartitionType) == PARTITION_IBM) )
 
 
 /* PARTITION UTILITY FUNCTIONS **********************************************/
@@ -349,7 +356,7 @@ SetMountedDeviceValues(
     IN PPARTLIST List);
 
 VOID
-SetPartitionType(
+SetMBRPartitionType(
     IN PPARTENTRY PartEntry,
     IN UCHAR PartitionType);
 

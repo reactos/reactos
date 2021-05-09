@@ -74,6 +74,7 @@ LsapOpenLsaPort(VOID)
                   sizeof(ConnectInfo));
 
     ConnectInfo.CreateContext = FALSE;
+    ConnectInfo.TrustedCaller = TRUE;
 
     ConnectInfoLength = sizeof(LSA_CONNECTION_INFO);
     Status = NtConnectPort(&LsaPortHandle,
@@ -174,7 +175,7 @@ LsaConnectUntrusted(
                   ConnectInfoLength);
 
     ConnectInfo.CreateContext = TRUE;
-    ConnectInfo.Untrusted = TRUE;
+    ConnectInfo.TrustedCaller = FALSE;
 
     Status = NtConnectPort(LsaHandle,
                            &PortName,

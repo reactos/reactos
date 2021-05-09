@@ -1,17 +1,22 @@
-/* Traditional Chinese translation by Henry Tang Ih 2016 (henrytang2@hotmail.com) */
-
+/*
+ * FILE:       base/applications/cmdutils/find/lang/zh-TW.rc
+ * PURPOSE:    Chinese (Traditional) Language File for find
+ * TRANSLATOR: Henry Tang Ih 2016 (henrytang2@hotmail.com)
+ *             Chan Chilung 2021 (eason066@gmail.com)
+ */
+ 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
 
 STRINGTABLE
 BEGIN
-    IDS_USAGE "FIND: 輸出某檔中包含指定字串的所有行。\n\n\
+    IDS_USAGE "FIND: 列出所有在檔案中包含指定字串的行。\n\n\
 FIND [/V] [/C] [/N] [/I] [/OFF[LINE]] ""字串"" [文件...]\n\
   /V         輸出不包含該指定字串的行。\n\
   /C         計算包含該字串的行數。\n\
   /N         從 1 開始為顯示的行編號。\n\
   /I         忽略大小寫。\n\
-  /OFF[LINE] Do not skip files that have the offline attribute set."
-    IDS_NO_SUCH_FILE "FIND: %s: 沒有這個檔\n"
-    IDS_CANNOT_OPEN "FIND: %s: 無法開啟檔\n"
-    IDS_INVALID_SWITCH "FIND: Invalid switch\n"
+  /OFF[LINE] 不忽略有離線屬性集的檔案。"
+    IDS_NO_SUCH_FILE "FIND: %s: 找不到這個檔案\n"
+    IDS_CANNOT_OPEN "FIND: %s: 無法開啟檔案\n"
+    IDS_INVALID_SWITCH "FIND: 無效的切換參數\n"
 END

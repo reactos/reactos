@@ -12,10 +12,6 @@
 #define NDEBUG
 #include <debug.h>
 
-#if defined (ALLOC_PRAGMA)
-#pragma alloc_text(INIT, ExpInitLookasideLists)
-#endif
-
 /* GLOBALS *******************************************************************/
 
 LIST_ENTRY ExpNonPagedLookasideListHead;
@@ -29,7 +25,7 @@ GENERAL_LOOKASIDE ExpSmallPagedPoolLookasideLists[MAXIMUM_PROCESSORS];
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 VOID
 NTAPI
 ExInitializeSystemLookasideList(IN PGENERAL_LOOKASIDE List,
@@ -57,7 +53,7 @@ ExInitializeSystemLookasideList(IN PGENERAL_LOOKASIDE List,
     List->LastAllocateHits = 0;
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 VOID
 NTAPI
 ExInitPoolLookasidePointers(VOID)
@@ -87,7 +83,7 @@ ExInitPoolLookasidePointers(VOID)
     }
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 VOID
 NTAPI
 ExpInitLookasideLists(VOID)

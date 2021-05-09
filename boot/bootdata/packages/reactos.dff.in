@@ -17,6 +17,10 @@ Signature = "$Windows NT$"
 ; Directories relative to the installation directory.
 ; For specifying absolute directories, use the SystemPartitionFiles section,
 ; or use names starting with \.
+;
+; WARNING!
+; Please keep the numbering in this list in sync with
+; sdk/cmake/CMakeMacros.cmake
 [Directories]
 1 = "\"
 2 = system32
@@ -26,7 +30,6 @@ Signature = "$Windows NT$"
 6 = inf
 7 = bin
 8 = bin\testdata
-80 = bin\suppl
 9 = media
 10 = Microsoft.NET
 11 = Microsoft.NET\Framework
@@ -78,13 +81,18 @@ Signature = "$Windows NT$"
 57 = winsxs\x86_microsoft.windows.common-controls_6595b64144ccf1df_6.0.2600.2982_none_deadbeef
 58 = winsxs\x86_microsoft.windows.gdiplus_6595b64144ccf1df_1.1.7601.23038_none_deadbeef
 59 = winsxs\x86_reactos.apisets_6595b64144ccf1df_1.0.0.0_none_deadbeef
-60 = winsxs\x86_reactos.newapi_6595b64144ccf1df_1.0.0.0_none_deadbeef
+60 = bin\suppl
 61 = winsxs\x86_microsoft.windows.gdiplus_6595b64144ccf1df_1.0.14393.0_none_deadbeef
 62 = Resources\Themes\Modern
 63 = 3rdParty
 64 = Resources\Themes\Lunar
 65 = Resources\Themes\Mizu
 66 = system32\spool\prtprocs\x64
+67 = winsxs\amd64_microsoft.windows.common-controls_6595b64144ccf1df_5.82.2600.2982_none_deadbeef
+68 = winsxs\amd64_microsoft.windows.common-controls_6595b64144ccf1df_6.0.2600.2982_none_deadbeef
+69 = winsxs\amd64_microsoft.windows.gdiplus_6595b64144ccf1df_1.1.7601.23038_none_deadbeef
+70 = winsxs\amd64_reactos.apisets_6595b64144ccf1df_1.0.0.0_none_deadbeef
+71 = winsxs\amd64_microsoft.windows.gdiplus_6595b64144ccf1df_1.0.14393.0_none_deadbeef
 
 .InfEnd
 

@@ -131,7 +131,6 @@ struct _SURFACE;
 struct _PALETTE;
 struct _DC;
 
-INIT_FUNCTION
 NTSTATUS
 NTAPI
 InitBrushImpl(VOID);

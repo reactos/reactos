@@ -9,7 +9,7 @@ LayoutFile = layout.inf
 Class      = System
 ClassGUID  = {4D36E97D-E325-11CE-BFC1-08002BE10318}
 Provider   = %ReactOS%
-DriverVer  = 12/7/2005,1.00
+DriverVer  = 12/07/2005,1.00
 
 [DestinationDirs]
 DefaultDestDir = 12

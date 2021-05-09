@@ -47,15 +47,21 @@ FormatEx(
     PIFS_PROVIDER Provider;
     UNICODE_STRING usDriveRoot;
     UNICODE_STRING usLabel;
-    BOOLEAN Argument = FALSE;
+    BOOLEAN Success = FALSE;
+    BOOLEAN BackwardCompatible = FALSE; // Default to latest FS versions.
+    MEDIA_TYPE MediaType;
     WCHAR VolumeName[MAX_PATH];
     //CURDIR CurDir;
+
+//
+// TODO: Convert filesystem Format into ULIB format string.
+//
 
     Provider = GetProvider(Format);
     if (!Provider)
     {
         /* Unknown file system */
-        Callback(DONE, 0, &Argument);
+        Callback(DONE, 0, &Success);
         return;
     }
 
@@ -65,24 +71,56 @@ FormatEx(
     RtlCreateUnicodeString(&usDriveRoot, VolumeName);
     /* Code disabled as long as our storage stack doesn't understand IOCTL_MOUNTDEV_QUERY_DEVICE_NAME */
 #else
-    if (!GetVolumeNameForVolumeMountPointW(DriveRoot, VolumeName, MAX_PATH) ||
+    if (!GetVolumeNameForVolumeMountPointW(DriveRoot, VolumeName, RTL_NUMBER_OF(VolumeName)) ||
         !RtlDosPathNameToNtPathName_U(VolumeName, &usDriveRoot, NULL, &CurDir))
     {
-        /* Report an error. */
-        Callback(DONE, 0, &Argument);
+        /* Report an error */
+        Callback(DONE, 0, &Success);
         return;
     }
 #endif
 
     RtlInitUnicodeString(&usLabel, Label);
 
-    DPRINT("FormatEx - %S\n", Format);
-    Provider->FormatEx(&usDriveRoot,
-                       MediaFlag,
-                       &usLabel,
-                       QuickFormat,
-                       ClusterSize,
-                       Callback);
+    /* Set the BackwardCompatible flag in case we format with older FAT12/16 */
+    if (wcsicmp(Format, L"FAT") == 0)
+        BackwardCompatible = TRUE;
+    // else if (wcsicmp(Format, L"FAT32") == 0)
+        // BackwardCompatible = FALSE;
+
+    /* Convert the FMIFS MediaFlag to a NT MediaType */
+    // FIXME: Actually covert all the possible flags.
+    switch (MediaFlag)
+    {
+    case FMIFS_FLOPPY:
+        MediaType = F5_320_1024; // FIXME: This is hardfixed!
+        break;
+    case FMIFS_REMOVABLE:
+        MediaType = RemovableMedia;
+        break;
+    case FMIFS_HARDDISK:
+        MediaType = FixedMedia;
+        break;
+    default:
+        DPRINT1("Unknown FMIFS MediaFlag %d, converting 1-to-1 to NT MediaType\n",
+                MediaFlag);
+        MediaType = (MEDIA_TYPE)MediaFlag;
+        break;
+    }
+
+    DPRINT("Format() - %S\n", Format);
+    Success = Provider->Format(&usDriveRoot,
+                               Callback,
+                               QuickFormat,
+                               BackwardCompatible,
+                               MediaType,
+                               &usLabel,
+                               ClusterSize);
+    if (!Success)
+        DPRINT1("Format() failed\n");
+
+    /* Report success */
+    Callback(DONE, 0, &Success);
 
     RtlFreeUnicodeString(&usDriveRoot);
 }

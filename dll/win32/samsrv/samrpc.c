@@ -7457,6 +7457,7 @@ SamrQueryInformationUser(IN SAMPR_HANDLE UserHandle,
         case UserHomeInformation:
             Status = SampQueryUserHome(UserObject,
                                        Buffer);
+            break;
 
         case UserScriptInformation:
             Status = SampQueryUserScript(UserObject,

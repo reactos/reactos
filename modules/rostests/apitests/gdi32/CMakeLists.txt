@@ -69,6 +69,7 @@ list(APPEND SOURCE
     SetDCPenColor.c
     SetDIBits.c
     SetDIBitsToDevice.c
+    SetLayout.c
     SetMapMode.c
     SetPixel.c
     SetSysColors.c

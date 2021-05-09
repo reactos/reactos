@@ -278,7 +278,7 @@ ExpGetRawSMBiosTable(
         DPRINT1("IoWMIOpenBlock failed: 0x%08lx\n", Status);
         return Status;
     }
-    
+
     AllData = ExAllocatePoolWithTag(PagedPool, WMIBufSize, 'itfS');
     if (AllData == NULL)
     {
@@ -657,7 +657,11 @@ QSI_DEF(SystemProcessorInformation)
     Spi->ProcessorArchitecture = KeProcessorArchitecture;
     Spi->ProcessorLevel = KeProcessorLevel;
     Spi->ProcessorRevision = KeProcessorRevision;
+#if (NTDDI_VERSION < NTDDI_WIN8)
     Spi->Reserved = 0;
+#else
+    Spi->MaximumProcessors = 0;
+#endif
     Spi->ProcessorFeatureBits = KeFeatureBits;
 
     DPRINT("Arch %u Level %u Rev 0x%x\n", Spi->ProcessorArchitecture,
@@ -715,7 +719,6 @@ QSI_DEF(SystemPerformanceInformation)
      *   Not sure this is right. 8^\
      */
     Spi->CommittedPages = MiMemoryConsumers[MC_SYSTEM].PagesUsed +
-                          MiMemoryConsumers[MC_CACHE].PagesUsed +
                           MiMemoryConsumers[MC_USER].PagesUsed +
                           MiUsedSwapPages;
     /*
@@ -763,7 +766,7 @@ QSI_DEF(SystemPerformanceInformation)
     Spi->TotalSystemDriverPages = 0; /* FIXME */
     Spi->Spare3Count = 0; /* FIXME */
 
-    Spi->ResidentSystemCachePage = MiMemoryConsumers[MC_CACHE].PagesUsed;
+    Spi->ResidentSystemCachePage = MiMemoryConsumers[MC_USER].PagesUsed; /* FIXME */
     Spi->ResidentPagedPoolPage = 0; /* FIXME */
 
     Spi->ResidentSystemDriverPage = 0; /* FIXME */
@@ -1022,12 +1025,12 @@ QSI_DEF(SystemProcessInformation)
                 SpiCurrent->PageFaultCount = Process->Vm.PageFaultCount;
                 SpiCurrent->PeakWorkingSetSize = Process->Vm.PeakWorkingSetSize;
                 SpiCurrent->WorkingSetSize = Process->Vm.WorkingSetSize;
-                SpiCurrent->QuotaPeakPagedPoolUsage = Process->QuotaPeak[0];
-                SpiCurrent->QuotaPagedPoolUsage = Process->QuotaUsage[0];
-                SpiCurrent->QuotaPeakNonPagedPoolUsage = Process->QuotaPeak[1];
-                SpiCurrent->QuotaNonPagedPoolUsage = Process->QuotaUsage[1];
-                SpiCurrent->PagefileUsage = Process->QuotaUsage[2];
-                SpiCurrent->PeakPagefileUsage = Process->QuotaPeak[2];
+                SpiCurrent->QuotaPeakPagedPoolUsage = Process->QuotaPeak[PsPagedPool];
+                SpiCurrent->QuotaPagedPoolUsage = Process->QuotaUsage[PsPagedPool];
+                SpiCurrent->QuotaPeakNonPagedPoolUsage = Process->QuotaPeak[PsNonPagedPool];
+                SpiCurrent->QuotaNonPagedPoolUsage = Process->QuotaUsage[PsNonPagedPool];
+                SpiCurrent->PagefileUsage = Process->QuotaUsage[PsPageFile];
+                SpiCurrent->PeakPagefileUsage = Process->QuotaPeak[PsPageFile];
                 SpiCurrent->PrivatePageCount = Process->CommitCharge;
                 ThreadInfo = (PSYSTEM_THREAD_INFORMATION)(SpiCurrent + 1);
 
@@ -1473,13 +1476,10 @@ QSI_DEF(SystemFileCacheInformation)
     RtlZeroMemory(Sci, sizeof(SYSTEM_FILECACHE_INFORMATION));
 
     /* Return the Byte size not the page size. */
-    Sci->CurrentSize =
-        MiMemoryConsumers[MC_CACHE].PagesUsed * PAGE_SIZE;
-    Sci->PeakSize =
-            MiMemoryConsumers[MC_CACHE].PagesUsed * PAGE_SIZE; /* FIXME */
+    Sci->CurrentSize = MiMemoryConsumers[MC_USER].PagesUsed; /* FIXME */
+    Sci->PeakSize = MiMemoryConsumers[MC_USER].PagesUsed; /* FIXME */
     /* Taskmgr multiplies this one by page size right away */
-    Sci->CurrentSizeIncludingTransitionInPages =
-        MiMemoryConsumers[MC_CACHE].PagesUsed; /* FIXME: Should be */
+    Sci->CurrentSizeIncludingTransitionInPages = MiMemoryConsumers[MC_USER].PagesUsed; /* FIXME: Should be */
     /* system working set and standby pages. */
     Sci->PageFaultCount = 0; /* FIXME */
     Sci->MinimumWorkingSet = 0; /* FIXME */

@@ -6,6 +6,11 @@
 * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
 */
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 #ifndef _M_ARM
 FORCEINLINE
 KPROCESSOR_MODE
@@ -1701,3 +1706,7 @@ KiCpuIdEx(
     __cpuidex((INT*)CpuInfo->AsUINT32, Function, SubFunction);
 }
 #endif /* _M_IX86 || _M_AMD64 */
+
+#ifdef __cplusplus
+} // extern "C"
+#endif

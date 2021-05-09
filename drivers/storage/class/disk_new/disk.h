@@ -985,7 +985,7 @@ DiskIoctlSmartSendDriveCommand(
     IN OUT PIRP Irp
     );
 
-__inline
+FORCEINLINE // __REACTOS__
 PCDB
 GetSrbScsiData(
     _In_ PSTORAGE_REQUEST_BLOCK SrbEx,
@@ -1175,7 +1175,7 @@ Return Value:
     return Cdb;
 }
 
-__inline
+FORCEINLINE // __REACTOS__
 VOID
 SetSrbScsiData(
     _In_ PSTORAGE_REQUEST_BLOCK SrbEx,

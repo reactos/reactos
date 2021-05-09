@@ -3,7 +3,7 @@
  * LICENSE:     MIT (https://spdx.org/licenses/MIT)
  * PURPOSE:     Standard Annotation Language (SAL) definitions
  * COPYRIGHT:   Microsoft Corporation.
- * SOURCE:      https://github.com/microsoft/service-fabric/blob/master/src/prod/src/pal/src/internal/rt/sal.h
+ * SOURCE:      https://github.com/microsoft/ChakraCore/blob/master/pal/inc/rt/sal.h
  */
 // ------------------------------------------------------------
 // Copyright (c) Microsoft Corporation.  All rights reserved.
@@ -26,7 +26,7 @@
 
    The comments in this file are intended to give basic understanding of
    the usage of SAL, the Microsoft Source Code Annotation Language.
-   For more details, please see http://go.microsoft.com/fwlink/?LinkID=242134
+   For more details, please see https://go.microsoft.com/fwlink/?LinkID=242134
 
    The macros are defined in 3 layers, plus the structural set:
 
@@ -2611,8 +2611,8 @@ extern "C" {
 #else // ][
 #ifndef PAL_STDCPP_COMPAT
     #define __null
-#endif // !PAL_STDCPP_COMPAT
     #define __notnull
+#endif // !PAL_STDCPP_COMPAT
     #define __maybenull
     #define __readonly
     #define __notreadonly
@@ -2666,10 +2666,6 @@ buffer, use the table in the buffer annotations section.
 #define __in                                                     _SAL1_Source_(__in, (), _In_)
 #define __out                                                    _SAL1_Source_(__out, (), _Out_)
 #endif // !PAL_STDCPP_COMPAT
-
-#define __in_xcount(size)                                        _SAL1_Source_(__in_xcount, (size), __in _Pre_ __inexpressible_readableTo(size))
-#define __in_xcount_opt(size)                                    _SAL1_Source_(__in_xcount_opt, (size), __in_xcount(size) __exceptthat __maybenull)
-#define __out_xcount(size)                                       _SAL1_Source_(__out_xcount, (size), __xcount(size) _Post_ __valid __refparam)
 
 #define __ecount(size)                                           _SAL1_Source_(__ecount, (size), __notnull __elem_writableTo(size))
 #define __bcount(size)                                           _SAL1_Source_(__bcount, (size), __notnull __byte_writableTo(size))
@@ -2873,7 +2869,7 @@ of each annotation, see the advanced annotations section.
 #define __success(expr)                      _Success_(expr)
 #define __nullterminated                     _Null_terminated_
 #define __nullnullterminated
-#define __clr_reserved                       _SAL1_Source_(__reserved, (), _Reserved_)
+#define __reserved                           _SAL1_Source_(__reserved, (), _Reserved_)
 #define __checkReturn                        _SAL1_Source_(__checkReturn, (), _Check_return_)
 #define __typefix(ctype)                     _SAL1_Source_(__typefix, (ctype), __inner_typefix(ctype))
 #define __override                           __inner_override
@@ -2966,3 +2962,4 @@ __PRIMOP(int, _In_function_class_(__In_impl_ char*);)
 
 // Rotor doesn't need concurrency sal.
 // #include <ConcurrencySal.h>
+

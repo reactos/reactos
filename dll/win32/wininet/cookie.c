@@ -1,3 +1,6 @@
+#ifdef __REACTOS__
+#include "precomp.h"
+#else
 /*
  * Wininet - cookie handling stuff
  *
@@ -27,6 +30,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
+#include <wchar.h>
 
 #include "windef.h"
 #include "winbase.h"
@@ -36,6 +40,7 @@
 
 #include "wine/debug.h"
 #include "internet.h"
+#endif /* defined(__REACTOS__) */
 
 #define RESPONSE_TIMEOUT        30            /* FROM internet.c */
 
@@ -146,34 +151,37 @@ static cookie_domain_t *get_cookie_domain(substr_t domain, BOOL create)
 
 static WCHAR *create_cookie_url(substr_t domain, substr_t path, substr_t *ret_path)
 {
-    WCHAR user[UNLEN], *p, *url;
+    WCHAR *p, *url;
     DWORD len, user_len, i;
 
     static const WCHAR cookie_prefix[] = {'C','o','o','k','i','e',':'};
 
-    user_len = ARRAY_SIZE(user);
-    if(!GetUserNameW(user, &user_len))
-        return FALSE;
-    user_len--;
+    user_len = 0;
+    if(GetUserNameW(NULL, &user_len) || GetLastError() != ERROR_INSUFFICIENT_BUFFER)
+        return NULL;
 
+    /* user_len already accounts for terminating NULL */
     len = ARRAY_SIZE(cookie_prefix) + user_len + 1 /* @ */ + domain.len + path.len;
-    url = heap_alloc((len+1) * sizeof(WCHAR));
+    url = heap_alloc(len * sizeof(WCHAR));
     if(!url)
         return NULL;
 
     memcpy(url, cookie_prefix, sizeof(cookie_prefix));
     p = url + ARRAY_SIZE(cookie_prefix);
 
-    memcpy(p, user, user_len*sizeof(WCHAR));
+    if(!GetUserNameW(p, &user_len)) {
+        heap_free(url);
+        return NULL;
+    }
     p += user_len;
 
-    *p++ = '@';
+    *(p - 1) = '@';
 
     memcpy(p, domain.str, domain.len*sizeof(WCHAR));
     p += domain.len;
 
     for(i=0; i < path.len; i++)
-        p[i] = tolowerW(path.str[i]);
+        p[i] = towlower(path.str[i]);
     p[path.len] = 0;
 
     ret_path->str = p;
@@ -194,7 +202,7 @@ static cookie_container_t *get_cookie_container(substr_t domain, substr_t path, 
         if(cookie_container->path.len < path.len)
             break;
 
-        if(path.len == cookie_container->path.len && !strncmpiW(cookie_container->path.str, path.str, path.len))
+        if(path.len == cookie_container->path.len && !wcsnicmp(cookie_container->path.str, path.str, path.len))
             return cookie_container;
     }
 
@@ -265,7 +273,7 @@ static cookie_t *find_cookie(cookie_container_t *container, substr_t name)
     cookie_t *iter;
 
     LIST_FOR_EACH_ENTRY(iter, &container->cookie_list, cookie_t, entry) {
-        if(strlenW(iter->name) == name.len && !strncmpiW(iter->name, name.str, name.len))
+        if(lstrlenW(iter->name) == name.len && !wcsnicmp(iter->name, name.str, name.len))
             return iter;
     }
 
@@ -294,7 +302,7 @@ static void replace_cookie(cookie_container_t *container, cookie_t *new_cookie)
 
 static BOOL cookie_match_path(cookie_container_t *container, substr_t path)
 {
-    return path.len >= container->path.len && !strncmpiW(container->path.str, path.str, container->path.len);
+    return path.len >= container->path.len && !wcsnicmp(container->path.str, path.str, container->path.len);
 }
 
 static BOOL load_persistent_cookie(substr_t domain, substr_t path)
@@ -388,8 +396,6 @@ static BOOL load_persistent_cookie(substr_t domain, substr_t path)
 
 static BOOL save_persistent_cookie(cookie_container_t *container)
 {
-    static const WCHAR txtW[] = {'t','x','t',0};
-
     WCHAR cookie_file[MAX_PATH];
     HANDLE cookie_handle;
     cookie_t *cookie_container = NULL, *cookie_iter;
@@ -420,7 +426,7 @@ static BOOL save_persistent_cookie(cookie_container_t *container)
         return TRUE;
     }
 
-    if(!CreateUrlCacheEntryW(container->cookie_url, 0, txtW, cookie_file, 0))
+    if(!CreateUrlCacheEntryW(container->cookie_url, 0, L"txt", cookie_file, 0))
         return FALSE;
 
     cookie_handle = CreateFileW(cookie_file, GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, NULL);
@@ -496,13 +502,12 @@ static BOOL save_persistent_cookie(cookie_container_t *container)
     }
 
     memset(&time, 0, sizeof(time));
-    return CommitUrlCacheEntryW(container->cookie_url, cookie_file, time, time, 0, NULL, 0, txtW, 0);
+    return CommitUrlCacheEntryW(container->cookie_url, cookie_file, time, time, 0, NULL, 0, L"txt", 0);
 }
 
 static BOOL cookie_parse_url(const WCHAR *url, substr_t *host, substr_t *path)
 {
     URL_COMPONENTSW comp = { sizeof(comp) };
-    static const WCHAR rootW[] = {'/',0};
 
     comp.dwHostNameLength = 1;
     comp.dwUrlPathLength = 1;
@@ -515,7 +520,7 @@ static BOOL cookie_parse_url(const WCHAR *url, substr_t *host, substr_t *path)
         comp.dwUrlPathLength--;
 
     *host = substr(comp.lpszHostName, comp.dwHostNameLength);
-    *path = comp.dwUrlPathLength ? substr(comp.lpszUrlPath, comp.dwUrlPathLength) : substr(rootW, 1);
+    *path = comp.dwUrlPathLength ? substr(comp.lpszUrlPath, comp.dwUrlPathLength) : substr(L"/", 1);
     return TRUE;
 }
 
@@ -529,8 +534,6 @@ typedef struct {
 
 static DWORD get_cookie(substr_t host, substr_t path, DWORD flags, cookie_set_t *res)
 {
-    static const WCHAR empty_path[] = { '/',0 };
-
     const WCHAR *p;
     cookie_domain_t *domain;
     cookie_container_t *container;
@@ -545,7 +548,7 @@ static DWORD get_cookie(substr_t host, substr_t path, DWORD flags, cookie_set_t 
         while(p > host.str && p[-1] != '.') p--;
         if(p == host.str) break;
 
-        load_persistent_cookie(substr(p, host.str+host.len-p), substr(empty_path, 1));
+        load_persistent_cookie(substr(p, host.str+host.len-p), substr(L"/", 1));
     }
 
     p = path.str + path.len;
@@ -603,9 +606,9 @@ static DWORD get_cookie(substr_t host, substr_t path, DWORD flags, cookie_set_t 
                     res->string_len += 2; /* '; ' */
                 res->cookies[res->cnt++] = cookie_iter;
 
-                res->string_len += strlenW(cookie_iter->name);
+                res->string_len += lstrlenW(cookie_iter->name);
                 if(*cookie_iter->data)
-                    res->string_len += 1 /* = */ + strlenW(cookie_iter->data);
+                    res->string_len += 1 /* = */ + lstrlenW(cookie_iter->data);
             }
         }
     }
@@ -624,13 +627,13 @@ static void cookie_set_to_string(const cookie_set_t *cookie_set, WCHAR *str)
             *ptr++ = ' ';
         }
 
-        len = strlenW(cookie_set->cookies[i]->name);
+        len = lstrlenW(cookie_set->cookies[i]->name);
         memcpy(ptr, cookie_set->cookies[i]->name, len*sizeof(WCHAR));
         ptr += len;
 
         if(*cookie_set->cookies[i]->data) {
             *ptr++ = '=';
-            len = strlenW(cookie_set->cookies[i]->data);
+            len = lstrlenW(cookie_set->cookies[i]->data);
             memcpy(ptr, cookie_set->cookies[i]->data, len*sizeof(WCHAR));
             ptr += len;
         }
@@ -872,11 +875,11 @@ static BOOL is_domain_legal_for_cookie(substr_t domain, substr_t full_domain)
         return FALSE;
     }
 
-    if(domain.len > full_domain.len || !memchrW(domain.str, '.', domain.len) || !memchrW(full_domain.str, '.', full_domain.len))
+    if(domain.len > full_domain.len || !wmemchr(domain.str, '.', domain.len) || !wmemchr(full_domain.str, '.', full_domain.len))
         return FALSE;
 
     ptr = full_domain.str + full_domain.len - domain.len;
-    if (strncmpiW(domain.str, ptr, domain.len) || (full_domain.len > domain.len && ptr[-1] != '.')) {
+    if (wcsnicmp(domain.str, ptr, domain.len) || (full_domain.len > domain.len && ptr[-1] != '.')) {
         SetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;
     }
@@ -924,7 +927,7 @@ DWORD set_cookie(substr_t domain, substr_t path, substr_t name, substr_t data, D
 
     /* lots of information can be parsed out of the cookie value */
 
-    if(!(end_ptr = memchrW(data.str, ';', data.len)))
+    if(!(end_ptr = wmemchr(data.str, ';', data.len)))
        end_ptr = data.str + data.len;
     value = substr(data.str, end_ptr-data.str);
     data.str += value.len;
@@ -949,10 +952,10 @@ DWORD set_cookie(substr_t domain, substr_t path, substr_t name, substr_t data, D
         if(!data.len)
             break;
 
-        if(!(end_ptr = memchrW(data.str, ';', data.len)))
+        if(!(end_ptr = wmemchr(data.str, ';', data.len)))
             end_ptr = data.str + data.len;
 
-        if(data.len >= (len = ARRAY_SIZE(szDomain)) && !strncmpiW(data.str, szDomain, len)) {
+        if(data.len >= (len = ARRAY_SIZE(szDomain)) && !wcsnicmp(data.str, szDomain, len)) {
             substr_skip(&data, len);
 
             if(data.len && *data.str == '.')
@@ -963,17 +966,17 @@ DWORD set_cookie(substr_t domain, substr_t path, substr_t name, substr_t data, D
 
             domain = substr(data.str, end_ptr-data.str);
             TRACE("Parsing new domain %s\n", debugstr_wn(domain.str, domain.len));
-        }else if(data.len >= (len = ARRAY_SIZE(szPath)) && !strncmpiW(data.str, szPath, len)) {
+        }else if(data.len >= (len = ARRAY_SIZE(szPath)) && !wcsnicmp(data.str, szPath, len)) {
             substr_skip(&data, len);
             path = substr(data.str, end_ptr - data.str);
             TRACE("Parsing new path %s\n", debugstr_wn(path.str, path.len));
-        }else if(data.len >= (len = ARRAY_SIZE(szExpires)) && !strncmpiW(data.str, szExpires, len)) {
+        }else if(data.len >= (len = ARRAY_SIZE(szExpires)) && !wcsnicmp(data.str, szExpires, len)) {
             SYSTEMTIME st;
             WCHAR buf[128];
 
             substr_skip(&data, len);
 
-            if(end_ptr - data.str < ARRAY_SIZE(buf)-1) {
+            if(end_ptr > data.str && (end_ptr - data.str < ARRAY_SIZE(buf) - 1)) {
                 memcpy(buf, data.str, data.len*sizeof(WCHAR));
                 buf[data.len] = 0;
 
@@ -986,10 +989,10 @@ DWORD set_cookie(substr_t domain, substr_t path, substr_t name, substr_t data, D
                     }
                 }
             }
-        }else if(data.len >= (len = ARRAY_SIZE(szSecure)) && !strncmpiW(data.str, szSecure, len)) {
+        }else if(data.len >= (len = ARRAY_SIZE(szSecure)) && !wcsnicmp(data.str, szSecure, len)) {
             substr_skip(&data, len);
             FIXME("secure not handled\n");
-        }else if(data.len >= (len = ARRAY_SIZE(szHttpOnly)) && !strncmpiW(data.str, szHttpOnly, len)) {
+        }else if(data.len >= (len = ARRAY_SIZE(szHttpOnly)) && !wcsnicmp(data.str, szHttpOnly, len)) {
             substr_skip(&data, len);
 
             if(!(flags & INTERNET_COOKIE_HTTPONLY)) {
@@ -999,11 +1002,11 @@ DWORD set_cookie(substr_t domain, substr_t path, substr_t name, substr_t data, D
             }
 
             cookie_flags |= INTERNET_COOKIE_HTTPONLY;
-        }else if(data.len >= (len = ARRAY_SIZE(szVersion)) && !strncmpiW(data.str, szVersion, len)) {
+        }else if(data.len >= (len = ARRAY_SIZE(szVersion)) && !wcsnicmp(data.str, szVersion, len)) {
             substr_skip(&data, len);
 
             FIXME("version not handled (%s)\n",debugstr_wn(data.str, data.len));
-        }else if(data.len >= (len = ARRAY_SIZE(max_ageW)) && !strncmpiW(data.str, max_ageW, len)) {
+        }else if(data.len >= (len = ARRAY_SIZE(max_ageW)) && !wcsnicmp(data.str, max_ageW, len)) {
             /* Native doesn't support Max-Age attribute. */
             WARN("Max-Age ignored\n");
         }else if(data.len) {
@@ -1098,8 +1101,8 @@ DWORD WINAPI InternetSetCookieExW(LPCWSTR lpszUrl, LPCWSTR lpszCookieName,
         /* some apps (or is it us??) try to add a cookie with no cookie name, but
          * the cookie data in the form of name[=data].
          */
-        if (!(ptr = strchrW(lpCookieData, '=')))
-            ptr = lpCookieData + strlenW(lpCookieData);
+        if (!(ptr = wcschr(lpCookieData, '=')))
+            ptr = lpCookieData + lstrlenW(lpCookieData);
 
         name = substr(lpCookieData, ptr - lpCookieData);
         data = substrz(*ptr == '=' ? ptr+1 : ptr);

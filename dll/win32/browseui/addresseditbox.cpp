@@ -31,8 +31,8 @@ TODO:
 */
 
 CAddressEditBox::CAddressEditBox() :
-    fCombobox(NULL, this, 1),
-    fEditWindow(NULL, this, 1),
+    fCombobox(WC_COMBOBOXEXW, this),
+    fEditWindow(WC_EDITW, this),
     fSite(NULL),
     pidlLastParsed(NULL)
 {

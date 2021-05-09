@@ -180,6 +180,8 @@
 #define TAG_TOKEN_DYNAMIC     'dTeS'
 #define TAG_SE_HANDLES_TAB    'aHeS'
 #define TAG_SE_DIR_BUFFER     'bDeS'
+#define TAG_SE_PROXY_DATA     'dPoT'
+#define TAG_SE_TOKEN_LOCK     'lTeS'
 
 /* LPC Tags */
 #define TAG_LPC_MESSAGE   'McpL'

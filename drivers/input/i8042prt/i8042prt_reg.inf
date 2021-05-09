@@ -1,0 +1,8 @@
+; Intel i8042 controller driver
+[AddReg]
+HKLM,"SYSTEM\CurrentControlSet\Services\i8042prt","ErrorControl",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\i8042prt","Group",0x00000000,"Keyboard Port"
+HKLM,"SYSTEM\CurrentControlSet\Services\i8042prt","ImagePath",0x00020000,"system32\drivers\i8042prt.sys"
+HKLM,"SYSTEM\CurrentControlSet\Services\i8042prt","Start",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\i8042prt","Tag",0x00010001,0x00000004
+HKLM,"SYSTEM\CurrentControlSet\Services\i8042prt","Type",0x00010001,0x00000001

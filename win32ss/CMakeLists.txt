@@ -1,11 +1,6 @@
 
 set(USE_DIBLIB FALSE)
 
-if(NOT MSVC)
-    # HACK: this should be enabled globally!
-    add_compile_flags_language("-std=c++11" "CXX")
-endif()
-
 # Give WIN32 subsystem its own project.
 PROJECT(WIN32SS)
 
@@ -22,6 +17,11 @@ add_subdirectory(user/user32)
 add_subdirectory(user/winsrv)
 
 spec2def(win32k.sys win32k.spec ADD_IMPORTLIB)
+
+# embed RTC libs
+if (STACK_PROTECTOR)
+    target_sources(libwin32k PRIVATE $<TARGET_OBJECTS:gcc_ssp_win32k>)
+endif()
 
 include_directories(
     .
@@ -213,6 +213,7 @@ list(APPEND ASM_SOURCE
     gdi/dib/i386/dib32bpp_hline.s
     gdi/dib/i386/dib32bpp_colorfill.s
     gdi/eng/i386/floatobj.S)
+list(APPEND SOURCE gdi/eng/i386/floatobj.c)
 else()
 list(APPEND SOURCE
     gdi/dib/dib24bppc.c

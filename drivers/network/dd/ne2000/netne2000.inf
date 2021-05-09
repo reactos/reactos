@@ -31,7 +31,6 @@ CopyFiles = NE2000_CopyFiles.NT
 [NE2000_AddReg.NT]
 HKR,,Port,0x00000000,"c100"
 HKR,,Irq,0x00000000,"B"
-HKR,,NetworkAddress,0x00000000,"001122334455"
 
 [NE2000_CopyFiles.NT]
 ne2000.sys

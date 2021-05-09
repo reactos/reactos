@@ -58,3 +58,9 @@ INT GetSystemColorDepth();
 void UnixTimeToFileTime(DWORD dwUnixTime, LPFILETIME pFileTime);
 
 BOOL SearchPatternMatch(LPCWSTR szHaystack, LPCWSTR szNeedle);
+
+template<class T>
+class CLocalPtr : public CHeapPtr<T, CLocalAllocator>
+{
+};
+

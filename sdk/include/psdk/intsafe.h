@@ -259,7 +259,7 @@ INTSAFE_NAME(_Name)( \
     _In_ _TypeFrom Input, \
     _Out_ _Deref_out_range_(==, Input) _TypeTo *pOutput) \
 { \
-    if (Input <= _TypeTo ## _MAX) \
+    if ((sizeof(_TypeFrom) < sizeof(_TypeTo)) || (Input <= _TypeTo ## _MAX)) \
     { \
         *pOutput = (_TypeTo)Input; \
         return INTSAFE_SUCCESS; \
@@ -382,6 +382,8 @@ DEFINE_SAFE_CONVERT_STOU(LongPtrToULong, LONG_PTR, ULONG)
 DEFINE_SAFE_CONVERT_STOU(LongPtrToUIntPtr, LONG_PTR, UINT_PTR)
 DEFINE_SAFE_CONVERT_STOU(LongPtrToULongPtr, LONG_PTR, ULONG_PTR)
 DEFINE_SAFE_CONVERT_STOU(LongPtrToULongLong, LONG_PTR, ULONGLONG)
+DEFINE_SAFE_CONVERT_STOU(LongLongToULong, LONGLONG, ULONG)
+DEFINE_SAFE_CONVERT_STOU(LongLongToULongPtr, LONGLONG, ULONG_PTR)
 #ifdef _CHAR_UNSIGNED
 DEFINE_SAFE_CONVERT_STOU(ShortToChar, SHORT, UINT8)
 DEFINE_SAFE_CONVERT_STOU(LongPtrToChar, LONG_PTR, UINT8)
@@ -460,6 +462,9 @@ DEFINE_SAFE_CONVERT_STOS(LongPtrToChar, LONG_PTR, _INTSAFE_CHAR)
 #define RtlSIZETToULong RtlULongPtrToULong
 #define RtlSSIZETToULongLong RtlLongPtrToULongLong
 #define RtlSSIZETToULong RtlLongPtrToULong
+#define RtlLongLongToSizeT RtlLongLongToUIntPtr
+#define RtlLongLongToSSIZET RtlLongLongToLongPtr
+#define RtlLongLongToSIZET RtlLongLongToULongPtr
 #ifdef _WIN64
 #define RtlIntToUIntPtr RtlIntToULongLong
 #define RtlULongLongToIntPtr RtlULongLongToLongLong
@@ -497,6 +502,9 @@ DEFINE_SAFE_CONVERT_STOS(LongPtrToChar, LONG_PTR, _INTSAFE_CHAR)
 #define SIZETToULong ULongPtrToULong
 #define SSIZETToULongLong LongPtrToULongLong
 #define SSIZETToULong LongPtrToULong
+#define LongLongToSizeT LongLongToUIntPtr
+#define LongLongToSSIZET LongLongToLongPtr
+#define LongLongToSIZET LongLongToULongPtr
 #ifdef _WIN64
 #define IntToUIntPtr IntToULongLong
 #define ULongLongToIntPtr ULongLongToLongLong

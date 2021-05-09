@@ -1505,17 +1505,7 @@ InfGetData (
     if (Key != NULL)
         *Key = CacheKey->Key;
 
-    if (Data != NULL)
-    {
-        if (CacheKey->FirstField == NULL)
-        {
-            *Data = NULL;
-        }
-        else
-        {
-            *Data = CacheKey->FirstField->Data;
-        }
-    }
+    *Data = (CacheKey->FirstField == NULL) ? NULL : CacheKey->FirstField->Data;
 
     return TRUE;
 }

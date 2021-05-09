@@ -1,7 +1,7 @@
 #define INITGUID
 
 #include <windef.h>
-#include <comsup.h>
+#include "comsup.h"
 
 LONG LockCount;
 LONG ObjectCount;

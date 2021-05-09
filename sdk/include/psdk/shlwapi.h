@@ -885,14 +885,14 @@ PathCreateFromUrlA(
 HRESULT
 WINAPI
 PathCreateFromUrlW(
-  _In_ LPCWSTR,
-  _Out_writes_to_(*pcchPath, *pcchPath) LPWSTR,
+  _In_ LPCWSTR pszUrl,
+  _Out_writes_to_(*pcchPath, *pcchPath) LPWSTR pszPath,
   _Inout_ LPDWORD pcchPath,
-  DWORD);
+  DWORD dwFlags);
 
 #define PathCreateFromUrl WINELIB_NAME_AW(PathCreateFromUrl)
 
-HRESULT WINAPI PathCreateFromUrlAlloc(_In_ LPCWSTR, _Outptr_ LPWSTR*, DWORD);
+HRESULT WINAPI PathCreateFromUrlAlloc(_In_ LPCWSTR pszUrl, _Outptr_ LPWSTR* pszPath, DWORD dwReserved);
 
 BOOL WINAPI PathFileExistsA(_In_ LPCSTR);
 BOOL WINAPI PathFileExistsW(_In_ LPCWSTR);

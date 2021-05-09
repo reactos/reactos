@@ -45,6 +45,9 @@ $if (_WDMDDK_)
 
 $endif (_WDMDDK_)
 $if (_WDMDDK_ || _DEVIOCTL_)
+/* DEVICE_OBJECT.DeviceType */
+#define DEVICE_TYPE ULONG
+
 #define FILE_DEVICE_BEEP                  0x00000001
 #define FILE_DEVICE_CD_ROM                0x00000002
 #define FILE_DEVICE_CD_ROM_FILE_SYSTEM    0x00000003
@@ -102,16 +105,34 @@ $if (_WDMDDK_ || _DEVIOCTL_)
 #define FILE_DEVICE_SERENUM               0x00000037
 #define FILE_DEVICE_TERMSRV               0x00000038
 #define FILE_DEVICE_KSEC                  0x00000039
-#define FILE_DEVICE_FIPS                  0x0000003A
-#define FILE_DEVICE_INFINIBAND            0x0000003B
-#define FILE_DEVICE_VMBUS                 0x0000003E
-#define FILE_DEVICE_CRYPT_PROVIDER        0x0000003F
+#define FILE_DEVICE_FIPS                  0x0000003a
+#define FILE_DEVICE_INFINIBAND            0x0000003b
+#define FILE_DEVICE_VMBUS                 0x0000003e
+#define FILE_DEVICE_CRYPT_PROVIDER        0x0000003f
 #define FILE_DEVICE_WPD                   0x00000040
 #define FILE_DEVICE_BLUETOOTH             0x00000041
 #define FILE_DEVICE_MT_COMPOSITE          0x00000042
 #define FILE_DEVICE_MT_TRANSPORT          0x00000043
 #define FILE_DEVICE_BIOMETRIC             0x00000044
 #define FILE_DEVICE_PMI                   0x00000045
+#define FILE_DEVICE_EHSTOR                0x00000046
+#define FILE_DEVICE_DEVAPI                0x00000047
+#define FILE_DEVICE_GPIO                  0x00000048
+#define FILE_DEVICE_USBEX                 0x00000049
+#define FILE_DEVICE_CONSOLE               0x00000050
+#define FILE_DEVICE_NFP                   0x00000051
+#define FILE_DEVICE_SYSENV                0x00000052
+#define FILE_DEVICE_VIRTUAL_BLOCK         0x00000053
+#define FILE_DEVICE_POINT_OF_SERVICE      0x00000054
+#define FILE_DEVICE_STORAGE_REPLICATION   0x00000055
+#define FILE_DEVICE_TRUST_ENV             0x00000056
+#define FILE_DEVICE_UCM                   0x00000057
+#define FILE_DEVICE_UCMTCPCI              0x00000058
+#define FILE_DEVICE_PERSISTENT_MEMORY     0x00000059
+#define FILE_DEVICE_NVDIMM                0x0000005a
+#define FILE_DEVICE_HOLOGRAPHIC           0x0000005b
+#define FILE_DEVICE_SDFXHCI               0x0000005c
+#define FILE_DEVICE_UCMUCSI               0x0000005d
 
 $endif (_WDMDDK_ || _DEVIOCTL_)
 $if (_WDMDDK_)
@@ -261,12 +282,8 @@ $if (_WDMDDK_)
 #define FILE_256_BYTE_ALIGNMENT         0x000000ff
 #define FILE_512_BYTE_ALIGNMENT         0x000001ff
 
-$endif (_NTDDK_)
-$if (_WDMDDK_ || _DEVIOCTL_)
-/* DEVICE_OBJECT.DeviceType */
-#define DEVICE_TYPE ULONG
+$endif (_WDMDDK_)
 
-$endif (_WDMDDK_ || _DEVIOCTL_)
 $if (_WDMDDK_)
 typedef struct DECLSPEC_ALIGN(MEMORY_ALLOCATION_ALIGNMENT) _DEVICE_OBJECT {
   CSHORT Type;
@@ -1199,6 +1216,9 @@ typedef enum {
   DevicePropertyAllocatedResources = 0x15,
   DevicePropertyContainerID = 0x16 | __string_type
 } DEVICE_REGISTRY_PROPERTY;
+#undef __string_type
+#undef __guid_type
+#undef __multiString_type
 
 typedef enum _IO_NOTIFICATION_EVENT_CATEGORY {
   EventCategoryReserved,

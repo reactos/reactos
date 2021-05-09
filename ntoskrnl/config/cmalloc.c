@@ -23,7 +23,7 @@ LIST_ENTRY CmpFreeDelayItemsListHead;
 
 /* FUNCTIONS *****************************************************************/
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 VOID
 NTAPI
 CmpInitCmPrivateAlloc(VOID)
@@ -38,7 +38,7 @@ CmpInitCmPrivateAlloc(VOID)
     }
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 VOID
 NTAPI
 CmpInitCmPrivateDelayAlloc(VOID)

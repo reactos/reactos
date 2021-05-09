@@ -350,7 +350,7 @@ REPLACE [Laufwerk1:][Pfad1]Dateiname [Laufwerk2:][Pfad2] [/P] [/R] [/S] [/W] [/U
   /W                           Wartet vor dem Start, bis ein Datenträger\n\
                                eingelegt wurde.\n\
   /U                           Ersetzt (aktualisiert) nur Dateien, die älter\n\
-                               sind als die Quelldaten. Kann nicht mit Paramater\n\
+                               sind als die Quelldaten. Kann nicht mit Parameter\n\
                                /A genutzt werden\n"
     STRING_REPLACE_HELP2 "Quellpfad benötigt\n"
     STRING_REPLACE_HELP3 "Keine Dateien ersetzt\n"
@@ -528,7 +528,7 @@ Titel         neuer Titel"
     STRING_REPLACE_ERROR6 "Keine Dateien gefunden - %s\n"
     STRING_REPLACE_ERROR7 "Erweiterter Fehler 32\n"
     STRING_CMD_INFOLINE "  ReactOS Eingabeaufforderung                            HELP eingeben = Hilfe  "
-    STRING_REACTOS_VERSION "ReactOS Betriebssystem [Version %s %s]\n"
+    STRING_REACTOS_VERSION "ReactOS [Version %s %s]\n"
     STRING_CMD_SHELLINFO "\nReactOS Eingabeaufforderung\nVersion %s %s"
     STRING_VERSION_RUNNING_ON "Läuft in: "
     STRING_VERSION_RUNVER "%s [Version %d.%d.%d] %s"

@@ -11,7 +11,7 @@ BEGIN
     BEGIN
         MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "&Automatisch anordnen", FCIDM_SHVIEW_AUTOARRANGE
-        MENUITEM "Align to &Grid", FCIDM_SHVIEW_ALIGNTOGRID
+        MENUITEM "Am &Raster ausrichten", FCIDM_SHVIEW_ALIGNTOGRID
     END
 END
 
@@ -32,7 +32,7 @@ BEGIN
         BEGIN
             MENUITEM "", -1, MFT_SEPARATOR
             MENUITEM "&Automatisch anordnen", FCIDM_SHVIEW_AUTOARRANGE
-            MENUITEM "Align to &Grid", FCIDM_SHVIEW_ALIGNTOGRID
+            MENUITEM "Am &Raster ausrichten", FCIDM_SHVIEW_ALIGNTOGRID
         END
         MENUITEM "Aktualisieren", FCIDM_SHVIEW_REFRESH
         MENUITEM "", -1, MFT_SEPARATOR
@@ -107,9 +107,8 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "", IDC_BROWSE_FOR_FOLDER_TITLE, 10, 8, 198, 24
     LTEXT "", IDC_BROWSE_FOR_FOLDER_STATUS, 10, 25, 198, 12
-    LTEXT "Ordner:", IDC_BROWSE_FOR_FOLDER_FOLDER, 10, 152, 40, 12
-    CONTROL "", IDC_BROWSE_FOR_FOLDER_TREEVIEW, "SysTreeView32", TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_EDITLABELS | WS_BORDER | WS_TABSTOP, 12, 38, 194, 105
-    EDITTEXT IDC_BROWSE_FOR_FOLDER_FOLDER_TEXT, 46, 150, 160, 14, ES_AUTOHSCROLL | WS_BORDER | WS_GROUP | WS_TABSTOP
+    EDITTEXT IDC_BROWSE_FOR_FOLDER_FOLDER_TEXT, 12, 38, 194, 14, ES_AUTOHSCROLL | WS_GROUP
+    CONTROL "", IDC_BROWSE_FOR_FOLDER_TREEVIEW, "SysTreeView32", TVS_SHOWSELALWAYS | TVS_EDITLABELS | TVS_LINESATROOT | TVS_HASLINES | TVS_HASBUTTONS | WS_BORDER | WS_TABSTOP, 12, 58, 194, 105
     PUSHBUTTON "&Neuen Ordner erstellen", IDC_BROWSE_FOR_FOLDER_NEW_FOLDER, 12, 174, 77, 14, WS_GROUP | WS_TABSTOP
     DEFPUSHBUTTON "OK", IDOK, 102, 174, 50, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
     PUSHBUTTON "Abbrechen", IDCANCEL, 156, 174, 50, 14, WS_GROUP | WS_TABSTOP
@@ -140,7 +139,7 @@ BEGIN
     LTEXT COPYRIGHT_YEAR, IDC_STATIC, 88, 75, 17, 10
     LTEXT " Das ReactOS Team\0", IDC_STATIC, 105, 75, 70, 10
     LTEXT "", IDC_ABOUT_OTHERSTUFF, 35, 90, 180, 20
-    LTEXT "Diese ReactOS-Version wurde registriert auf:", IDC_STATIC, 35, 115, 180, 10
+    LTEXT "Diese ReactOS-Version wurde registriert auf:", IDC_ABOUT_REG_TO, 35, 115, 180, 10
     LTEXT "", IDC_ABOUT_REG_USERNAME, 45, 125, 180, 10
     LTEXT "", IDC_ABOUT_REG_ORGNAME, 45, 135, 180, 10
     LTEXT "", IDC_STATIC, 35, 147, 235, 1, SS_ETCHEDHORZ
@@ -493,6 +492,20 @@ BEGIN
     PUSHBUTTON "Abbrechen", IDCANCEL, 95, 39, 50, 14
 END
 
+IDD_LOG_OFF_FANCY DIALOGEX 0, 0, 208, 122
+STYLE NOT WS_VISIBLE | DS_CENTER | DS_SHELLFONT | WS_BORDER | WS_POPUP
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL IDB_DLG_BG, IDC_STATIC, "STATIC", SS_BITMAP | SS_REALSIZECONTROL, 0, 0, 208, 122
+    CONTROL IDB_REACTOS_FLAG, IDC_STATIC, "STATIC", SS_BITMAP, 176, 1, 32, 26
+    PUSHBUTTON "&Switch User", IDC_SWITCH_USER_BUTTON, 55, 46, 22, 20, BS_OWNERDRAW | WS_DISABLED | WS_GROUP
+    PUSHBUTTON "&Abmelden", IDC_LOG_OFF_BUTTON, 132, 46, 22, 20, BS_OWNERDRAW
+    PUSHBUTTON "Abbrechen", IDCANCEL, 162, 103, 40, 12, WS_GROUP | BS_FLAT
+    LTEXT "Abmelden", IDC_LOG_OFF_TEXT_STATIC, 4, 7, 130, 19
+    CTEXT "Switch User", IDC_SWITCH_USER_STATIC, 41, 70, 51, 11
+    CTEXT "Abmelden", IDC_LOG_OFF_STATIC, 118, 70, 51, 11
+END
+
 IDD_DISCONNECT DIALOGEX 0, 0, 188, 60
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION
 CAPTION "ReactOS trennen"
@@ -702,7 +715,7 @@ BEGIN
     LTEXT "Wählen Sie eine Datei aus, die auf diesem Ordnersymbol angezeigt wird.", IDC_STATIC, 15, 87, 115, 33
     PUSHBUTTON "&Datei auswählen...", IDC_FOLDERCUST_CHOOSE_PIC, 15, 125, 115, 15
     PUSHBUTTON "&Wiederherstellen", IDC_FOLDERCUST_RESTORE_DEFAULTS, 15, 144, 115, 15
-    LTEXT "Preview:", IDC_STATIC, 139, 85, 81, 11
+    LTEXT "Vorschau:", IDC_STATIC, 139, 85, 81, 11
     CONTROL "", IDC_FOLDERCUST_PREVIEW_BITMAP, "STATIC", SS_BITMAP | WS_GROUP, 150, 100, 60, 60
     GROUPBOX "Ordnersymbole", IDC_STATIC, 5, 170, 230, 65, WS_TABSTOP
     LTEXT "Sie können das Ordnersymbol ändern. Wenn Sie das Symbol ändern, wird keine Vorschau der Ordnerinhalte mehr angezeigt.", IDC_STATIC, 15, 180, 210, 25
@@ -711,17 +724,17 @@ BEGIN
 END
 
 IDD_LINK_PROBLEM DIALOGEX 0, 0, 250, 140
-CAPTION "Problem with Shortcut"
+CAPTION "Verknüpfungsproblem"
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON 0, IDC_LINK_PROBLEM_ICON, 5, 5, 0, 0
-    LTEXT "The item '%s' that this shortcut refers to has been changed or moved, so this shortcut will no longer work properly.", IDC_LINK_PROBLEM_LABEL1, 35, 5, 210, 35
-    LTEXT "Nearest match based on name, type, size, and date:", IDC_LINK_PROBLEM_LABEL2, 35, 45, 210, 35
-    LTEXT "Do you want to fix this shortcut to point to this target or do you just want to delete it?", -1, 35, 85, 210, 30
-    DEFPUSHBUTTON "&Fix it", IDOK, 55, 120, 60, 15, WS_DISABLED
-    PUSHBUTTON "&Delete it", IDYES, 120, 120, 60, 15
-    PUSHBUTTON "Cancel", IDCANCEL, 185, 120, 60, 15
+    LTEXT "Das Ziel '%s', auf das sich die Verknüpfung bezieht, wurde verändert oder verschoben. Die Verknüpfung ist nicht länger funktionsfähig.", IDC_LINK_PROBLEM_LABEL1, 35, 5, 210, 35
+    LTEXT "Beste Übereinstimmung bezüglich Name, Typ, Größe und Datum:", IDC_LINK_PROBLEM_LABEL2, 35, 45, 210, 35
+    LTEXT "Möchten Sie die Verknüpfung korrigieren, auf das neue Ziel zu verweisen, oder soll die Verknüpfung gelöscht werden?", -1, 35, 85, 210, 30
+    DEFPUSHBUTTON "&Korrigieren", IDOK, 55, 120, 60, 15, WS_DISABLED
+    PUSHBUTTON "&Löschen", IDYES, 120, 120, 60, 15
+    PUSHBUTTON "Abbrechen", IDCANCEL, 185, 120, 60, 15
 END
 
 STRINGTABLE
@@ -827,6 +840,10 @@ BEGIN
     IDS_FORMAT_WARNING "ACHTUNG: Das Formatieren löscht ALLE Daten auf dem Datenträger.\nKlicken Sie auf OK zum Formatieren. Klicken Sie auf ABBRECHEN zum Beenden."
     IDS_FORMAT_COMPLETE "Formatieren abgeschlossen."
 
+    /* Warning format system drive dialog strings */
+    IDS_NO_FORMAT_TITLE "Cannot format this volume"
+    IDS_NO_FORMAT "This volume cannot be formatted! It contains important system files in order for ReactOS to run."
+
     /* Run File dialog */
     IDS_RUNDLG_ERROR "Anzeigen der Datei Ausführen Dialogbox nicht möglich (interner Fehler)"
     IDS_RUNDLG_BROWSE_ERROR "Anzeigen der Durchsuchen Dialogbox nicht möglich (interner Fehler)"
@@ -841,8 +858,8 @@ BEGIN
     IDS_RECENT "Dokumente"
     IDS_SENDTO "Senden an"
     IDS_STARTMENU "Startmenü"
-    IDS_MYMUSIC "Meine Musik"
-    IDS_MYVIDEO "Meine Videos"
+    IDS_MYMUSIC "Eigene Musik"
+    IDS_MYVIDEO "Eigene Videos"
     IDS_DESKTOPDIRECTORY "Desktop"
     IDS_NETHOOD "Netzwerkumgebung"
     IDS_TEMPLATES "Vorlagen"
@@ -896,7 +913,7 @@ BEGIN
     IDS_CANTEJECTMEDIA "Auswerfen des Mediums nicht möglich (Fehlercode: %lu)."
     IDS_CANTSHOWPROPERTIES "Anzeigen der Eigenschaften nicht möglich (Fehlercode: %lu)."
     IDS_CANTDISCONNECT "Trennen nicht möglich (Fehlercode: %lu)."
-    IDS_NONE "(None)"
+    IDS_NONE "(Leer)"
 
     /* Friendly File Type Names */
     IDS_DIRECTORY "Dateiordner"
@@ -933,7 +950,7 @@ BEGIN
     IDS_EDIT_VERB "Bearbeiten"
     IDS_FIND_VERB "Finden"
     IDS_PRINT_VERB "Drucken"
-    IDS_CMD_VERB "Command Prompt here"
+    IDS_CMD_VERB "Command Prompt hier"
 
     IDS_FILE_FOLDER "%u Dateien, %u Ordner"
     IDS_PRINTERS "Drucker"
@@ -998,7 +1015,7 @@ BEGIN
     IDS_EDITING_ACTION "Vorgang bearbeiten für Typ: "
     IDS_NO_ICONS "Die Datei '%s' enthält keine Symbole.\n\nWählen Sie ein Symbol aus der Liste oder wählen Sie eine andere Datei."
     IDS_FILE_NOT_FOUND "Die Datei '%s' wurde nicht gefunden."
-    IDS_LINK_INVALID "The item '%s' that this shortcut refers to has been changed or moved, so this shortcut will no longer work properly."
+    IDS_LINK_INVALID "Das Ziel '%s', auf das sich die Verknüpfung bezieht, wurde verändert oder verschoben. Die Verknüpfung ist nicht länger funktionsfähig."
     IDS_COPYTOMENU "In &Ordner kopieren..."
     IDS_COPYTOTITLE "Wählen Sie den Ort, in den '%s' kopiert werden soll. Klicken Sie anschließend auf Kopieren."
     IDS_COPYITEMS "Elemente kopieren"
@@ -1008,5 +1025,11 @@ BEGIN
     IDS_MOVEITEMS "Elemente verschieben"
     IDS_MOVEBUTTON "Verschieben"
 
-    IDS_SYSTEMFOLDER "System Folder"
+    IDS_SYSTEMFOLDER "Systemordner"
+
+    /* For IDD_LOG_OFF_FANCY */
+    IDS_LOG_OFF_DESC "Closes your programs and ends your ReactOS session."
+    IDS_SWITCH_USER_DESC "Lets another user log on while your programs and files remain open.\r\n\r\n(You can also switch users by pressing the Windows logo key + L.)"
+    IDS_LOG_OFF_TITLE "Abmelden"
+    IDS_SWITCH_USER_TITLE "Switch User"
 END

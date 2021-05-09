@@ -1344,14 +1344,14 @@ Facility=System
 Language=English
    The following commands are available:
 
-   NET ACCOUNTS             NET HELP                 NET SHARE
-   NET COMPUTER             NET HELPMSG              NET START
-   NET CONFIG               NET LOCALGROUP           NET STATISTICS
-   NET CONFIG SERVER        NET NAME                 NET STOP
-   NET CONFIG WORKSTATION   NET PAUSE                NET TIME
-   NET CONTINUE             NET PRINT                NET USE
-   NET FILE                 NET SEND                 NET USER
-   NET GROUP                NET SESSION              NET VIEW
+   NET ACCOUNTS             NET HELP                 NET STOP
+   NET COMPUTER             NET HELPMSG              NET TIME
+   NET CONFIG               NET LOCALGROUP           NET USE
+   NET CONFIG SERVER        NET PAUSE                NET USER
+   NET CONFIG WORKSTATION   NET SESSION              NET VIEW
+   NET CONTINUE             NET SHARE
+   NET FILE                 NET START
+   NET GROUP                NET STATISTCS
 
    NET HELP SYNTAX explains how to read NET HELP syntax lines.
    NET HELP command | MORE displays Help one screen at a time.
@@ -1359,14 +1359,14 @@ Language=English
 Language=Polish
    Dostępne polecenia to:
 
-   NET ACCOUNTS             NET HELP                 NET SHARE
-   NET COMPUTER             NET HELPMSG              NET START
-   NET CONFIG               NET LOCALGROUP           NET STATISTICS
-   NET CONFIG SERVER        NET NAME                 NET STOP
-   NET CONFIG WORKSTATION   NET PAUSE                NET TIME
-   NET CONTINUE             NET PRINT                NET USE
-   NET FILE                 NET SEND                 NET USER
-   NET GROUP                NET SESSION              NET VIEW
+   NET ACCOUNTS             NET HELP                 NET STOP
+   NET COMPUTER             NET HELPMSG              NET TIME
+   NET CONFIG               NET LOCALGROUP           NET USE
+   NET CONFIG SERVER        NET PAUSE                NET USER
+   NET CONFIG WORKSTATION   NET SESSION              NET VIEW
+   NET CONTINUE             NET SHARE
+   NET FILE                 NET START
+   NET GROUP                NET STATISTCS
 
    NET HELP SYNTAX wyświetla, jak odczytywać linie składni NET HELP.
    NET HELP polecenie | MORE wyświetla informacje na jednym ekranie na raz.
@@ -1374,14 +1374,14 @@ Language=Polish
 Language=Romanian
    Sunt disponibile următoarele comenzi:
 
-   NET ACCOUNTS             NET HELP                 NET SHARE
-   NET COMPUTER             NET HELPMSG              NET START
-   NET CONFIG               NET LOCALGROUP           NET STATISTICS
-   NET CONFIG SERVER        NET NAME                 NET STOP
-   NET CONFIG WORKSTATION   NET PAUSE                NET TIME
-   NET CONTINUE             NET PRINT                NET USE
-   NET FILE                 NET SEND                 NET USER
-   NET GROUP                NET SESSION              NET VIEW
+   NET ACCOUNTS             NET HELP                 NET STOP
+   NET COMPUTER             NET HELPMSG              NET TIME
+   NET CONFIG               NET LOCALGROUP           NET USE
+   NET CONFIG SERVER        NET PAUSE                NET USER
+   NET CONFIG WORKSTATION   NET SESSION              NET VIEW
+   NET CONTINUE             NET SHARE
+   NET FILE                 NET START
+   NET GROUP                NET STATISTCS
 
    NET HELP SYNTAX explains how to read NET HELP syntax lines.
    NET HELP comandă | MORE (pentru afișare paginată).
@@ -1389,14 +1389,14 @@ Language=Romanian
 Language=Russian
    Доступны следующие команды:
 
-   NET ACCOUNTS             NET HELP                 NET SHARE
-   NET COMPUTER             NET HELPMSG              NET START
-   NET CONFIG               NET LOCALGROUP           NET STATISTICS
-   NET CONFIG SERVER        NET NAME                 NET STOP
-   NET CONFIG WORKSTATION   NET PAUSE                NET TIME
-   NET CONTINUE             NET PRINT                NET USE
-   NET FILE                 NET SEND                 NET USER
-   NET GROUP                NET SESSION              NET VIEW
+   NET ACCOUNTS             NET HELP                 NET STOP
+   NET COMPUTER             NET HELPMSG              NET TIME
+   NET CONFIG               NET LOCALGROUP           NET USE
+   NET CONFIG SERVER        NET PAUSE                NET USER
+   NET CONFIG WORKSTATION   NET SESSION              NET VIEW
+   NET CONTINUE             NET SHARE
+   NET FILE                 NET START
+   NET GROUP                NET STATISTCS
 
    NET HELP SYNTAX explains how to read NET HELP syntax lines.
    NET HELP имя_команды | MORE - постраничный просмотр справки.
@@ -1404,14 +1404,14 @@ Language=Russian
 Language=Spanish
    Éstos son los argumentos de línea de comandos disponibles:
 
-   NET ACCOUNTS             NET HELP                 NET SHARE
-   NET COMPUTER             NET HELPMSG              NET START
-   NET CONFIG               NET LOCALGROUP           NET STATISTICS
-   NET CONFIG SERVER        NET NAME                 NET STOP
-   NET CONFIG WORKSTATION   NET PAUSE                NET TIME
-   NET CONTINUE             NET PRINT                NET USE
-   NET FILE                 NET SEND                 NET USER
-   NET GROUP                NET SESSION              NET VIEW
+   NET ACCOUNTS             NET HELP                 NET STOP
+   NET COMPUTER             NET HELPMSG              NET TIME
+   NET CONFIG               NET LOCALGROUP           NET USE
+   NET CONFIG SERVER        NET PAUSE                NET USER
+   NET CONFIG WORKSTATION   NET SESSION              NET VIEW
+   NET CONTINUE             NET SHARE
+   NET FILE                 NET START
+   NET GROUP                NET STATISTCS
 
    NET HELP SYNTAX explains how to read NET HELP syntax lines.
    NET HELP command | MORE displays Help one screen at a time.
@@ -1419,14 +1419,14 @@ Language=Spanish
 Language=Turkish
    Aşağıdaki komutlar kullanılabilir:
 
-   NET ACCOUNTS             NET HELP                 NET SHARE
-   NET COMPUTER             NET HELPMSG              NET START
-   NET CONFIG               NET LOCALGROUP           NET STATISTICS
-   NET CONFIG SERVER        NET NAME                 NET STOP
-   NET CONFIG WORKSTATION   NET PAUSE                NET TIME
-   NET CONTINUE             NET PRINT                NET USE
-   NET FILE                 NET SEND                 NET USER
-   NET GROUP                NET SESSION              NET VIEW
+   NET ACCOUNTS             NET HELP                 NET STOP
+   NET COMPUTER             NET HELPMSG              NET TIME
+   NET CONFIG               NET LOCALGROUP           NET USE
+   NET CONFIG SERVER        NET PAUSE                NET USER
+   NET CONFIG WORKSTATION   NET SESSION              NET VIEW
+   NET CONTINUE             NET SHARE
+   NET FILE                 NET START
+   NET GROUP                NET STATISTCS
 
    NET HELP SYNTAX explains how to read NET HELP syntax lines.
    NET HELP command | MORE displays Help one screen at a time.
@@ -1434,14 +1434,14 @@ Language=Turkish
 Language=Chinese
    以下命令可用:
 
-   NET ACCOUNTS             NET HELP                 NET SHARE
-   NET COMPUTER             NET HELPMSG              NET START
-   NET CONFIG               NET LOCALGROUP           NET STATISTICS
-   NET CONFIG SERVER        NET NAME                 NET STOP
-   NET CONFIG WORKSTATION   NET PAUSE                NET TIME
-   NET CONTINUE             NET PRINT                NET USE
-   NET FILE                 NET SEND                 NET USER
-   NET GROUP                NET SESSION              NET VIEW
+   NET ACCOUNTS             NET HELP                 NET STOP
+   NET COMPUTER             NET HELPMSG              NET TIME
+   NET CONFIG               NET LOCALGROUP           NET USE
+   NET CONFIG SERVER        NET PAUSE                NET USER
+   NET CONFIG WORKSTATION   NET SESSION              NET VIEW
+   NET CONTINUE             NET SHARE
+   NET FILE                 NET START
+   NET GROUP                NET STATISTCS
 
    NET HELP SYNTAX explains how to read NET HELP syntax lines.
    NET HELP command | MORE displays Help one screen at a time.
@@ -1449,14 +1449,14 @@ Language=Chinese
 Language=Taiwanese
    以下命令是可用的:
 
-   NET ACCOUNTS             NET HELP                 NET SHARE
-   NET COMPUTER             NET HELPMSG              NET START
-   NET CONFIG               NET LOCALGROUP           NET STATISTICS
-   NET CONFIG SERVER        NET NAME                 NET STOP
-   NET CONFIG WORKSTATION   NET PAUSE                NET TIME
-   NET CONTINUE             NET PRINT                NET USE
-   NET FILE                 NET SEND                 NET USER
-   NET GROUP                NET SESSION              NET VIEW
+   NET ACCOUNTS             NET HELP                 NET STOP
+   NET COMPUTER             NET HELPMSG              NET TIME
+   NET CONFIG               NET LOCALGROUP           NET USE
+   NET CONFIG SERVER        NET PAUSE                NET USER
+   NET CONFIG WORKSTATION   NET SESSION              NET VIEW
+   NET CONTINUE             NET SHARE
+   NET FILE                 NET START
+   NET GROUP                NET STATISTCS
 
    NET HELP SYNTAX explains how to read NET HELP syntax lines.
    NET HELP command | MORE displays Help one screen at a time.
@@ -1818,74 +1818,6 @@ NET HELP command | MORE displays one screen at a time.
 
 
 MessageId=10020
-SymbolicName=MSG_NAME_SYNTAX
-Severity=Success
-Facility=System
-Language=English
-NET NAME ...
-.
-Language=Polish
-NET NAME ...
-.
-Language=Romanian
-NET NAME ...
-.
-Language=Russian
-NET NAME ...
-.
-Language=Spanish
-NET NAME ...
-.
-Language=Turkish
-NET NAME ...
-.
-Language=Chinese
-NET NAME ...
-.
-Language=Taiwanese
-NET NAME ...
-.
-
-
-MessageId=10021
-SymbolicName=MSG_NAME_HELP
-Severity=Success
-Facility=System
-Language=English
-NAME
-...
-.
-Language=Polish
-NAME
-...
-.
-Language=Romanian
-NAME
-...
-.
-Language=Russian
-NAME
-...
-.
-Language=Spanish
-NAME
-...
-.
-Language=Turkish
-NAME
-...
-.
-Language=Chinese
-NAME
-...
-.
-Language=Taiwanese
-NAME
-...
-.
-
-
-MessageId=10022
 SymbolicName=MSG_PAUSE_SYNTAX
 Severity=Success
 Facility=System
@@ -1915,7 +1847,7 @@ NET PAUSE <服務名稱>
 .
 
 
-MessageId=10023
+MessageId=10021
 SymbolicName=MSG_PAUSE_HELP
 Severity=Success
 Facility=System
@@ -1976,143 +1908,7 @@ NET HELP command | MORE displays one screen at a time.
 .
 
 
-MessageId=10024
-SymbolicName=MSG_PRINT_SYNTAX
-Severity=Success
-Facility=System
-Language=English
-NET PRINT ...
-.
-Language=Polish
-NET PRINT ...
-.
-Language=Romanian
-NET PRINT ...
-.
-Language=Russian
-NET PRINT ...
-.
-Language=Spanish
-NET PRINT ...
-.
-Language=Turkish
-NET PRINT ...
-.
-Language=Chinese
-NET PRINT ...
-.
-Language=Taiwanese
-NET PRINT ...
-.
-
-
-MessageId=10025
-SymbolicName=MSG_PRINT_HELP
-Severity=Success
-Facility=System
-Language=English
-PRINT
-...
-.
-Language=Polish
-PRINT
-...
-.
-Language=Romanian
-PRINT
-...
-.
-Language=Russian
-PRINT
-...
-.
-Language=Spanish
-PRINT
-...
-.
-Language=Turkish
-PRINT
-...
-.
-Language=Chinese
-PRINT
-...
-.
-Language=Taiwanese
-PRINT
-...
-.
-
-
-MessageId=10026
-SymbolicName=MSG_SEND_SYNTAX
-Severity=Success
-Facility=System
-Language=English
-NET SEND ...
-.
-Language=Polish
-NET SEND ...
-.
-Language=Romanian
-NET SEND ...
-.
-Language=Russian
-NET SEND ...
-.
-Language=Spanish
-NET SEND ...
-.
-Language=Turkish
-NET SEND ...
-.
-Language=Chinese
-NET SEND ...
-.
-Language=Taiwanese
-NET SEND ...
-.
-
-
-MessageId=10027
-SymbolicName=MSG_SEND_HELP
-Severity=Success
-Facility=System
-Language=English
-SEND
-...
-.
-Language=Polish
-SEND
-...
-.
-Language=Romanian
-SEND
-...
-.
-Language=Russian
-SEND
-...
-.
-Language=Spanish
-SEND
-...
-.
-Language=Turkish
-SEND
-...
-.
-Language=Chinese
-SEND
-...
-.
-Language=Taiwanese
-SEND
-...
-.
-
-
-MessageId=10028
+MessageId=10022
 SymbolicName=MSG_SESSION_SYNTAX
 Severity=Success
 Facility=System
@@ -2142,7 +1938,7 @@ NET SESSION ...
 .
 
 
-MessageId=10029
+MessageId=10023
 SymbolicName=MSG_SESSION_HELP
 Severity=Success
 Facility=System
@@ -2180,7 +1976,7 @@ SESSION
 .
 
 
-MessageId=10030
+MessageId=10024
 SymbolicName=MSG_SHARE_SYNTAX
 Severity=Success
 Facility=System
@@ -2266,7 +2062,7 @@ NET SHARE sharename=drive:path [/GRANT:user,[READ | CHANGE | FULL]]
 .
 
 
-MessageId=10031
+MessageId=10025
 SymbolicName=MSG_SHARE_HELP
 Severity=Success
 Facility=System
@@ -2548,7 +2344,7 @@ NET HELP command | MORE displays Help one screen at a time.
 .
 
 
-MessageId=10032
+MessageId=10026
 SymbolicName=MSG_START_SYNTAX
 Severity=Success
 Facility=System
@@ -2578,7 +2374,7 @@ NET START [service]
 .
 
 
-MessageId=10033
+MessageId=10027
 SymbolicName=MSG_START_HELP
 Severity=Success
 Facility=System
@@ -2672,7 +2468,7 @@ NET HELP command | MORE displays one screen at a time.
 .
 
 
-MessageId=10034
+MessageId=10028
 SymbolicName=MSG_STATISTICS_SYNTAX
 Severity=Success
 Facility=System
@@ -2702,7 +2498,7 @@ NET STATISTICS [SERVER | WORKSTATION]
 .
 
 
-MessageId=10035
+MessageId=10029
 SymbolicName=MSG_STATISTICS_HELP
 Severity=Success
 Facility=System
@@ -2788,7 +2584,7 @@ NET HELP command | MORE displays one screen at a time.
 .
 
 
-MessageId=10036
+MessageId=10030
 SymbolicName=MSG_STOP_SYNTAX
 Severity=Success
 Facility=System
@@ -2818,7 +2614,7 @@ NET STOP <服務名稱>
 .
 
 
-MessageId=10037
+MessageId=10031
 SymbolicName=MSG_STOP_HELP
 Severity=Success
 Facility=System
@@ -2912,7 +2708,7 @@ NET HELP command | MORE displays one screen at a time.
 .
 
 
-MessageId=10038
+MessageId=10032
 SymbolicName=MSG_TIME_SYNTAX
 Severity=Success
 Facility=System
@@ -2942,7 +2738,7 @@ NET TIME ...
 .
 
 
-MessageId=10039
+MessageId=10033
 SymbolicName=MSG_TIME_HELP
 Severity=Success
 Facility=System
@@ -2980,7 +2776,7 @@ TIME
 .
 
 
-MessageId=10040
+MessageId=10034
 SymbolicName=MSG_USE_SYNTAX
 Severity=Success
 Facility=System
@@ -3010,7 +2806,7 @@ NET USE ...
 .
 
 
-MessageId=10041
+MessageId=10035
 SymbolicName=MSG_USE_HELP
 Severity=Success
 Facility=System
@@ -3048,7 +2844,7 @@ USE
 .
 
 
-MessageId=10042
+MessageId=10036
 SymbolicName=MSG_USER_SYNTAX
 Severity=Success
 Facility=System
@@ -3094,7 +2890,7 @@ NET USER [使用者名 [密碼 | *] [選項]] [/DOMAIN]
 .
 
 
-MessageId=10043
+MessageId=10037
 SymbolicName=MSG_USER_HELP
 Severity=Success
 Facility=System
@@ -3718,7 +3514,7 @@ NET HELP command | MORE displays Help one screen at a time.
 .
 
 
-MessageId=10044
+MessageId=10038
 SymbolicName=MSG_VIEW_SYNTAX
 Severity=Success
 Facility=System
@@ -3748,7 +3544,7 @@ NET VIEW ...
 .
 
 
-MessageId=10045
+MessageId=10039
 SymbolicName=MSG_VIEW_HELP
 Severity=Success
 Facility=System
@@ -3786,53 +3582,53 @@ VIEW
 .
 
 
-MessageId=10046
+MessageId=10040
 SymbolicName=MSG_NET_SYNTAX
 Severity=Success
 Facility=System
 Language=English
 NET [ ACCOUNTS | COMPUTER | CONFIG | CONTINUE | FILE | GROUP | HELP |
-      HELPMSG | LOCALGROUP | NAME | PAUSE | PRINT | SEND | SESSION |
-      SHARE | START | STATISTICS | STOP | TIME | USE | USER | VIEW ]
+      HELPMSG | LOCALGROUP | PAUSE | SESSION | SHARE | START |
+      STATISTICS | STOP | TIME | USE | USER | VIEW ]
 .
 Language=Polish
 NET [ ACCOUNTS | COMPUTER | CONFIG | CONTINUE | FILE | GROUP | HELP |
-      HELPMSG | LOCALGROUP | NAME | PAUSE | PRINT | SEND | SESSION |
-      SHARE | START | STATISTICS | STOP | TIME | USE | USER | VIEW ]
+      HELPMSG | LOCALGROUP | PAUSE | SESSION | SHARE | START |
+      STATISTICS | STOP | TIME | USE | USER | VIEW ]
 .
 Language=Romanian
 NET [ ACCOUNTS | COMPUTER | CONFIG | CONTINUE | FILE | GROUP | HELP |
-      HELPMSG | LOCALGROUP | NAME | PAUSE | PRINT | SEND | SESSION |
-      SHARE | START | STATISTICS | STOP | TIME | USE | USER | VIEW ]
+      HELPMSG | LOCALGROUP | PAUSE | SESSION | SHARE | START |
+      STATISTICS | STOP | TIME | USE | USER | VIEW ]
 .
 Language=Russian
 NET [ ACCOUNTS | COMPUTER | CONFIG | CONTINUE | FILE | GROUP | HELP |
-      HELPMSG | LOCALGROUP | NAME | PAUSE | PRINT | SEND | SESSION |
-      SHARE | START | STATISTICS | STOP | TIME | USE | USER | VIEW ]
+      HELPMSG | LOCALGROUP | PAUSE | SESSION | SHARE | START |
+      STATISTICS | STOP | TIME | USE | USER | VIEW ]
 .
 Language=Spanish
 NET [ ACCOUNTS | COMPUTER | CONFIG | CONTINUE | FILE | GROUP | HELP |
-      HELPMSG | LOCALGROUP | NAME | PAUSE | PRINT | SEND | SESSION |
-      SHARE | START | STATISTICS | STOP | TIME | USE | USER | VIEW ]
+      HELPMSG | LOCALGROUP | PAUSE | SESSION | SHARE | START |
+      STATISTICS | STOP | TIME | USE | USER | VIEW ]
 .
 Language=Turkish
 NET [ ACCOUNTS | COMPUTER | CONFIG | CONTINUE | FILE | GROUP | HELP |
-      HELPMSG | LOCALGROUP | NAME | PAUSE | PRINT | SEND | SESSION |
-      SHARE | START | STATISTICS | STOP | TIME | USE | USER | VIEW ]
+      HELPMSG | LOCALGROUP | PAUSE | SESSION | SHARE | START |
+      STATISTICS | STOP | TIME | USE | USER | VIEW ]
 .
 Language=Chinese
 NET [ ACCOUNTS | COMPUTER | CONFIG | CONTINUE | FILE | GROUP | HELP |
-      HELPMSG | LOCALGROUP | NAME | PAUSE | PRINT | SEND | SESSION |
-      SHARE | START | STATISTICS | STOP | TIME | USE | USER | VIEW ]
+      HELPMSG | LOCALGROUP | PAUSE | SESSION | SHARE | START |
+      STATISTICS | STOP | TIME | USE | USER | VIEW ]
 .
 Language=Taiwanese
 NET [ ACCOUNTS | COMPUTER | CONFIG | CONTINUE | FILE | GROUP | HELP |
-      HELPMSG | LOCALGROUP | NAME | PAUSE | PRINT | SEND | SESSION |
-      SHARE | START | STATISTICS | STOP | TIME | USE | USER | VIEW ]
+      HELPMSG | LOCALGROUP | PAUSE | SESSION | SHARE | START |
+      STATISTICS | STOP | TIME | USE | USER | VIEW ]
 .
 
 
-MessageId=10047
+MessageId=10041
 SymbolicName=MSG_SYNTAX_HELP
 Severity=Success
 Facility=System

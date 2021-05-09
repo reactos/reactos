@@ -1,5 +1,4 @@
 
-set_cpp()
 
 remove_definitions(-D_WIN32_WINNT=0x502)
 add_definitions(-D_WIN32_WINNT=0x600)

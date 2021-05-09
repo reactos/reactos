@@ -5,6 +5,7 @@
  *    Updated by Caemyr - Olaf Siejka (Jan-Feb, 2008)
  *    Updated by Saibamen - Adam Stachowicz (saibamenppl@gmail.com) (August, 2011)
  *    UTF-8 conversion by Caemyr (May, 2011)
+ *    Updated by Piotr Hetnarowicz <piotrhwz@gmail.com> (March, 2021)
  */
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
@@ -71,11 +72,11 @@ BEGIN
     LTEXT "Schemat kolorów", IDC_STATIC, 7, 157, 104, 9
     COMBOBOX IDC_APPEARANCE_COLORSCHEME, 7, 167, 134, 90, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-    LTEXT "Rozmiar", IDC_STATIC, 7, 184, 104, 9
+    LTEXT "Rozmiar czcionki", IDC_STATIC, 7, 184, 104, 9
     COMBOBOX IDC_APPEARANCE_SIZE, 7, 194, 134, 90, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON "&Efekty...", IDC_APPEARANCE_EFFECTS, 182, 150, 56, 15
-    PUSHBUTTON "Zaawansowane", IDC_APPEARANCE_ADVANCED, 182, 170, 56, 15
+    PUSHBUTTON "&Efekty...", IDC_APPEARANCE_EFFECTS, 178, 150, 63, 15
+    PUSHBUTTON "Zaawansowane...", IDC_APPEARANCE_ADVANCED, 178, 170, 63, 15
 END
 
 IDD_ADVAPPEARANCE DIALOGEX 0, 0, 250, 239
@@ -85,7 +86,7 @@ CAPTION "Ustawienia zaawansowane"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "", IDC_APPEARANCE_PREVIEW, "PreviewWndClass", WS_VISIBLE | WS_BORDER, 7, 7, 232, 120
-    LTEXT "Jeśli wybierzesz motyw inny niż ReactOS classic, zastąpi on następujące ustawienia, z wyjątkiem niektórych starszych programów.", IDC_ADVAPPEARANCE_DISCLAIMER, 7, 133, 232, 30, BS_MULTILINE
+    LTEXT "Jeśli wybierzesz motyw inny niż Klasyczny ReactOS, poniższe ustawienia zostaną zastąpione, ale nie we wszystkich starszych programach.", IDC_ADVAPPEARANCE_DISCLAIMER, 7, 132, 238, 25, BS_MULTILINE
     LTEXT "&Element", 8, 5, 160, 50, 9
     COMBOBOX IDC_ADVAPPEARANCE_ELEMENT, 5, 170, 130, 90, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | CBS_SORT | WS_CHILD | WS_VSCROLL | WS_TABSTOP
@@ -150,13 +151,13 @@ BEGIN
     LTEXT "<brak>", IDC_SETTINGS_DEVICE, 3, 116, 224, 9
     GROUPBOX "&Rozdzielczość ekranu", 1818, 3, 127, 115, 43
     CONTROL "", IDC_SETTINGS_RESOLUTION, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 30, 137, 58, 17
-    LTEXT "Mniej", 1815, 9, 137, 25, 9, NOT WS_GROUP
-    LTEXT "Więcej", 1816, 93, 137, 21, 9, NOT WS_GROUP
+    LTEXT "Mniej", 1815, 12, 137, 18, 9, NOT WS_GROUP
+    LTEXT "Więcej", 1816, 88, 137, 26, 9, NOT WS_GROUP
     LTEXT "", IDC_SETTINGS_RESOLUTION_TEXT, 10, 157, 100, 10, NOT WS_GROUP | SS_CENTER
     GROUPBOX "&Ilość kolorów", 1817, 125, 127, 115, 43
     COMBOBOX IDC_SETTINGS_BPP, 131, 137, 103, 80, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP
     CONTROL "", IDC_SETTINGS_SPECTRUM, "Static", SS_OWNERDRAW | SS_SUNKEN, 131, 155, 103, 9
-    PUSHBUTTON "Zaawa&nsowane...", IDC_SETTINGS_ADVANCED, 170, 174, 70, 15
+    PUSHBUTTON "Zaawa&nsowane...", IDC_SETTINGS_ADVANCED, 171, 174, 70, 15
 END
 
 IDD_ADVANCED_GENERAL DIALOGEX 0, 0, 253, 204
@@ -169,9 +170,9 @@ BEGIN
     COMBOBOX IDC_FONTSIZE_COMBO, 14, 30, 223, 80, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     LTEXT "", IDC_FONTSIZE_CUSTOM, 14, 46, 223, 12
     GROUPBOX "Tryb zgodności", -1, 7, 67, 237, 97
-    LTEXT "Niektóre programy mogą działać niepoprawnie, jeśli po zmianie ustawień ekranu nie zrestartujesz systemu.\r\n\nPo zmianie ustawień ekranu", -1, 12, 78, 228, 34
-    AUTORADIOBUTTON "&Zrestartuj system przed wprowadzeniem zmian.", IDC_RESTART_RB, 14, 116, 228, 10
-    AUTORADIOBUTTON "Zastosuj nowe ustawienia ekranu bez restartu systemu.", IDC_WITHOUTREBOOT_RB, 14, 131, 228, 10
+    LTEXT "Niektóre programy mogą działać niewłaściwie, jeśli komputer nie zostanie uruchomiony ponwnie po zmianie ustawień ekranuu.\r\n\nPo zmianie ustawień ekranu", -1, 12, 78, 228, 34
+    AUTORADIOBUTTON "&Uruchom ponownie komputer przed wprowadzeniem zmian.", IDC_RESTART_RB, 14, 116, 220, 10
+    AUTORADIOBUTTON "Zastosuj nowe ustawienia ekranu bez ponownego uruchamiania.", IDC_WITHOUTREBOOT_RB, 14, 131, 228, 10
     AUTORADIOBUTTON "Pytaj przed zastosowaniem nowych ustawień ekranu.", IDC_ASKME_RB, 14, 146, 228, 10
 END
 

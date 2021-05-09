@@ -410,6 +410,8 @@ GetSourcePaths(
     ULONG BufferSize;
     PWCHAR Ptr;
 
+    // FIXME: commented out to allow installation from USB
+#if 0
     /* Determine the installation source path via the full path of the installer */
     RtlInitEmptyUnicodeString(InstallSourcePath,
                               (PWSTR)((ULONG_PTR)ImageFileBuffer + sizeof(UNICODE_STRING)),
@@ -433,7 +435,7 @@ GetSourcePaths(
     if (Ptr)
         *Ptr = UNICODE_NULL;
     InstallSourcePath->Length = wcslen(InstallSourcePath->Buffer) * sizeof(WCHAR);
-
+#endif
 
     /*
      * Now resolve the full path to \SystemRoot. In case it prefixes
@@ -478,7 +480,8 @@ GetSourcePaths(
         return Status; // Unexpected error
 
     /* Check whether the resolved \SystemRoot is a prefix of the image file path */
-    if (RtlPrefixUnicodeString(&SystemRootPath, InstallSourcePath, TRUE))
+    // FIXME: commented out to allow installation from USB
+    // if (RtlPrefixUnicodeString(&SystemRootPath, InstallSourcePath, TRUE))
     {
         /* Yes it is, so we use instead SystemRoot as the installation source path */
         InstallSourcePath = &SystemRootPath;

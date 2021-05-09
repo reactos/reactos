@@ -22,6 +22,8 @@ IDB_CLASSIC BITMAP "resources/thmclassic.bmp"
 IDB_LAUTUS BITMAP "resources/thmlautus.bmp"
 IDB_LUNAR BITMAP "resources/thmlunar.bmp"
 IDB_MIZU BITMAP "resources/thmmizu.bmp"
+IDB_REACTOS BITMAP "resources/reactos.bmp"
+IDB_LINE BITMAP "resources/line.bmp"
 
 IDI_ICON1 ICON "resources/1.ico"
 IDI_ICON2 ICON "resources/2.ico"

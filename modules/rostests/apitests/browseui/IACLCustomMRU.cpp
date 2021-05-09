@@ -29,7 +29,8 @@ ULONG DbgPrint(PCH Format,...);
            #expression, (int)(result), _value, (char)key); \
     } while (0)
 
-
+#define ok_wstri(x, y) \
+    ok(lstrcmpiW(x, y) == 0, "Wrong string. Expected '%S', got '%S'\n", y, x)
 
 struct CCoInit
 {
@@ -401,6 +402,152 @@ test_IACLCustomMRU_Continue()
     verify_mru(CustomMRU, L"ba", L"FIRST_ENTRY", L"SECOND_ENTRY");
 }
 
+#define TYPED_URLS_KEY L"Software\\Microsoft\\Internet Explorer\\TypedURLs"
+
+static void
+RestoreTypedURLs(const CStringW& url1, const CStringW& url2)
+{
+    CRegKey key;
+    key.Open(HKEY_CURRENT_USER, TYPED_URLS_KEY, KEY_WRITE);
+    if (url1 != L"")
+        key.SetStringValue(L"url1", url1);
+    else
+        key.DeleteValue(L"url1");
+    if (url2 != L"")
+        key.SetStringValue(L"url2", url2);
+    else
+        key.DeleteValue(L"url2");
+}
+
+static void
+test_IACLCustomMRU_TypedURLs() // TypedURLs is special case
+{
+    CStringW url1, url2; // Save values
+    {
+        CRegKey key;
+        key.Create(HKEY_CURRENT_USER, TYPED_URLS_KEY);
+
+        WCHAR Value[MAX_PATH];
+        ULONG cch = _countof(Value);
+        LSTATUS Status = key.QueryStringValue(L"url1", Value, &cch);
+        if (!Status)
+            url1 = Value;
+
+        cch = _countof(Value);
+        Status = key.QueryStringValue(L"url2", Value, &cch);
+        if (!Status)
+            url2 = Value;
+
+        // Set values
+        key.SetStringValue(L"url1", L"aaa");
+        key.SetStringValue(L"url2", L"bbb");
+    }
+
+    CComPtr<IACLCustomMRU> CustomMRU;
+    HRESULT hr = CoCreateInstance(CLSID_ACLCustomMRU, NULL, CLSCTX_ALL,
+                                  IID_PPV_ARG(IACLCustomMRU, &CustomMRU));
+    ok_hex(hr, S_OK);
+    if (FAILED(hr))
+    {
+        skip("IACLCustomMRU was NULL\n");
+        RestoreTypedURLs(url1, url2);
+        return;
+    }
+
+    CComPtr<IACList> ACList;
+    hr = CustomMRU->QueryInterface(IID_PPV_ARG(IACList, &ACList));
+    ok_hex(hr, S_OK);
+    if (SUCCEEDED(hr))
+    {
+        hr = ACList->Expand(L"C:");
+        ok_hex(hr, E_NOTIMPL);
+        hr = ACList->Expand(L"C:\\");
+        ok_hex(hr, E_NOTIMPL);
+        hr = ACList->Expand(L"C:\\Program Files");
+        ok_hex(hr, E_NOTIMPL);
+        hr = ACList->Expand(L"C:\\Program Files\\");
+        ok_hex(hr, E_NOTIMPL);
+        hr = ACList->Expand(L"http://");
+        ok_hex(hr, E_NOTIMPL);
+        hr = ACList->Expand(L"https://");
+        ok_hex(hr, E_NOTIMPL);
+        hr = ACList->Expand(L"https://google.co.jp/");
+        ok_hex(hr, E_NOTIMPL);
+    }
+
+    hr = CustomMRU->Initialize(TYPED_URLS_KEY, 64);
+    ok_hex(hr, S_OK);
+
+    if (ACList)
+    {
+        hr = ACList->Expand(L"C:");
+        ok_hex(hr, E_NOTIMPL);
+        hr = ACList->Expand(L"C:\\");
+        ok_hex(hr, E_NOTIMPL);
+        hr = ACList->Expand(L"C:\\Program Files");
+        ok_hex(hr, E_NOTIMPL);
+        hr = ACList->Expand(L"C:\\Program Files\\");
+        ok_hex(hr, E_NOTIMPL);
+        hr = ACList->Expand(L"http://");
+        ok_hex(hr, E_NOTIMPL);
+        hr = ACList->Expand(L"https://");
+        ok_hex(hr, E_NOTIMPL);
+        hr = ACList->Expand(L"https://google.co.jp/");
+        ok_hex(hr, E_NOTIMPL);
+    }
+
+    CComPtr<IEnumString> pEnum;
+    hr = CustomMRU->QueryInterface(IID_PPV_ARG(IEnumString, &pEnum));
+    ok_hex(hr, S_OK);
+    if (FAILED(hr))
+    {
+        skip("IEnumString was NULL\n");
+        RestoreTypedURLs(url1, url2);
+        return;
+    }
+
+    CComPtr<IEnumString> pEnumClone;
+    hr = pEnum->Clone(&pEnumClone);
+    ok_hex(hr, E_NOTIMPL);
+
+    hr = pEnum->Skip(1);
+    ok_hex(hr, E_NOTIMPL);
+
+#define INVALID_LPOLESTR ((LPOLESTR)(LONG_PTR)0xDEADBEEF)
+    LPOLESTR apsz[2] = { NULL, INVALID_LPOLESTR };
+    ULONG c = 0;
+    hr = pEnum->Next(2, apsz, &c);
+    ok_hex(hr, S_OK);
+    ok_wstri(apsz[0], L"aaa");
+    ok_int(c, 1);
+    ok(apsz[1] == INVALID_LPOLESTR, "apsz[1] was '%S'\n", apsz[1]);
+    CoTaskMemFree(apsz[0]);
+
+    LPOLESTR psz = INVALID_LPOLESTR;
+    c = 0;
+    hr = pEnum->Next(0, &psz, &c);
+    ok_hex(hr, S_OK);
+    ok(psz == INVALID_LPOLESTR, "psz was '%S'\n", psz);
+    ok_int(c, 0);
+
+    psz = NULL;
+    c = 0;
+    hr = pEnum->Next(1, &psz, &c);
+    ok_hex(hr, S_OK);
+    ok_wstri(psz, L"bbb");
+    ok_int(c, 1);
+    CoTaskMemFree(psz);
+
+    hr = CustomMRU->AddMRUString(L"https://google.co.jp");
+    ok_hex(hr, E_FAIL);
+    hr = CustomMRU->AddMRUString(L"C:");
+    ok_hex(hr, E_FAIL);
+    hr = CustomMRU->AddMRUString(L"C:\\");
+    ok_hex(hr, E_FAIL);
+
+    RestoreTypedURLs(url1, url2);
+}
+
 START_TEST(IACLCustomMRU)
 {
     CCoInit init;
@@ -412,6 +559,7 @@ START_TEST(IACLCustomMRU)
     test_IACLCustomMRU_UpdateOrder();
     test_IACLCustomMRU_ExtraChars();
     test_IACLCustomMRU_Continue();
+    test_IACLCustomMRU_TypedURLs();
 
     Cleanup_Testdata();
 }

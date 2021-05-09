@@ -1330,6 +1330,37 @@ static MUI_ENTRY euESFormatPartitionEntries[] =
     }
 };
 
+static MUI_ENTRY euESCheckFSEntries[] =
+{
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Instalazioa ",
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        8,
+        "Instalazioa ikusi du partizio aukertatutan.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        "Itxaron mesedez...",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
 static MUI_ENTRY euESInstallDirectoryEntries[] =
 {
     {
@@ -1482,6 +1513,30 @@ static MUI_ENTRY euESBootLoaderEntries[] =
         0,
         0,
         "SARTU = Jarraitu   F3 = Irten",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
+static MUI_ENTRY euESBootLoaderInstallPageEntries[] =
+{
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        "Installing the bootloader onto the media, please wait...",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
         TEXT_ID_STATIC
     },
@@ -2102,6 +2157,10 @@ MUI_PAGE euESPages[] =
         euESFormatPartitionEntries
     },
     {
+        CHECK_FILE_SYSTEM_PAGE,
+        euESCheckFSEntries
+    },
+    {
         DELETE_PARTITION_PAGE,
         euESDeletePartitionEntries
     },
@@ -2136,6 +2195,10 @@ MUI_PAGE euESPages[] =
     {
         SUCCESS_PAGE,
         euESSuccessPageEntries
+    },
+    {
+        BOOT_LOADER_INSTALLATION_PAGE,
+        euESBootLoaderInstallPageEntries
     },
     {
         BOOT_LOADER_FLOPPY_PAGE,
@@ -2185,8 +2248,6 @@ MUI_STRING euESStrings[] =
     "Oraindik partizio berria ez dago formatuta."},
     {STRING_INSTALLONPART,
     "Instalazioa ReactOS instalatu du partizio barruan"},
-    {STRING_CHECKINGPART,
-    "Instalazioa ikusi du partizio aukertatutan."},
     {STRING_CONTINUE,
     "SARTU = Jarraitu"},
     {STRING_QUITCONTINUE,
@@ -2238,35 +2299,21 @@ MUI_STRING euESStrings[] =
     {STRING_KEEPFORMAT,
     " Mantendu sistemaren fitxategia (aldaketarik ez) "},
     {STRING_HDINFOPARTCREATE_1,
-    "%I64u %s  Disko gogorra %lu  (Port=%hu, Bus=%hu, Id=%hu) %wZn [%s]."},
-    {STRING_HDINFOPARTCREATE_2,
-    "%I64u %s  Disko gogorra %lu  (Port=%hu, Bus=%hu, Id=%hu) [%s]."},
-    {STRING_HDDINFOUNK2,
-    "   %c%c  Mota 0x%02X    %I64u %s"},
+    "%s."},
     {STRING_HDINFOPARTDELETE_1,
-    "%I64u %s  Disko gogorran %lu  (Port=%hu, Bus=%hu, Id=%hu) %wZn [%s]."},
-    {STRING_HDINFOPARTDELETE_2,
-    "%I64u %s  Disko gogorran %lu  (Port=%hu, Bus=%hu, Id=%hu) [%s]."},
-    {STRING_HDINFOPARTZEROED_1,
-    "Disko gogor %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ) [%s]."},
-    // {STRING_HDINFOPARTZEROED_2,
-    // "Disko gogor %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu [%s]."},
-    {STRING_HDDINFOUNK4,
-    "%c%c  Mota 0x%02X    %I64u %s"},
-    {STRING_HDINFOPARTEXISTS_1,
-    "Disko gogorran %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ) [%s]."},
-    // {STRING_HDINFOPARTEXISTS_2,
-    // "Disko gogor-an %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu [%s]."},
-    {STRING_HDDINFOUNK5,
-    "%c%c %c %sMota %-3u%s                      %6lu %s"},
-    {STRING_HDINFOPARTSELECT_1,
-    "%6lu %s  Disko gogor %lu  (Port=%hu, Bus=%hu, Id=%hu) %wZn [%s]"},
-    {STRING_HDINFOPARTSELECT_2,
-    "%6lu %s  Disko gogor %lu  (Port=%hu, Bus=%hu, Id=%hu) [%s]"},
+    "%s."},
+    {STRING_PARTTYPE,
+    "Mota 0x%02x"},
+    {STRING_HDDINFO_1,
+    // "Disko gogor %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ) [%s]"
+    "%I64u %s Disko gogor %lu (Port=%hu, Bus=%hu, Id=%hu) %wZn [%s]"},
+    {STRING_HDDINFO_2,
+    // "Disko gogor %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu [%s]"
+    "%I64u %s Disko gogor %lu (Port=%hu, Bus=%hu, Id=%hu) [%s]"},
     {STRING_NEWPARTITION,
     "Instalazioa sortu du partizio berria barruan"},
     {STRING_UNPSPACE,
-    "    %sEzpartizionatu espazio%s           %6lu %s"},
+    "Ezpartizionatu espazio"},
     {STRING_MAXSIZE,
     "MB (max. %lu MB)"},
     {STRING_EXTENDED_PARTITION,

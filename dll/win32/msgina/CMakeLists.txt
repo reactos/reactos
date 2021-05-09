@@ -1,13 +1,4 @@
 
-set_cpp(WITH_RUNTIME)
-
-add_definitions(
-    -D_ATL_NO_EXCEPTIONS)
-
-include_directories(
-    ${REACTOS_SOURCE_DIR}/sdk/lib/atl
-    ${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
-
 spec2def(msgina.dll msgina.spec)
 
 list(APPEND SOURCE
@@ -29,7 +20,7 @@ add_library(msgina MODULE
     ${CMAKE_CURRENT_BINARY_DIR}/msgina.def)
 
 set_module_type(msgina win32dll UNICODE)
-target_link_libraries(msgina wine uuid ${PSEH_LIB})
+target_link_libraries(msgina wine uuid ${PSEH_LIB} cpprt atl_classes)
 add_delay_importlibs(msgina secur32)
 add_importlibs(msgina advapi32 user32 gdi32 powrprof userenv msvcrt kernel32 ntdll)
 add_pch(msgina msgina.h "${PCH_SKIP_SOURCE}")

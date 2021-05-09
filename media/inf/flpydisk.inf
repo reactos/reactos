@@ -64,6 +64,11 @@ FloppyClassName = "Floppy disk drives"
 GenericMfg = "(Generic floppy disk drives)"
 Floppy.DeviceDesc = "Generic floppy disk drive"
 
+[Strings.0404]
+FloppyClassName = "軟碟機"
+GenericMfg = "(標準軟碟機)"
+Floppy.DeviceDesc = "標準軟碟機"
+
 [Strings.0405]
 ReactOS = "ReactOS Team"
 

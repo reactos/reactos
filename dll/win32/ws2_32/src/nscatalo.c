@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS WinSock 2 API
- * FILE:        dll/win32/ws2_32_new/src/nscatalo.c
+ * FILE:        dll/win32/ws2_32/src/nscatalo.c
  * PURPOSE:     Namespace Catalog Object
  * PROGRAMMER:  Alex Ionescu (alex@relsoft.net)
  */
@@ -58,23 +58,44 @@ WsNcOpen(IN PNSCATALOG Catalog,
                                 &RegType,
                                 NULL,
                                 &RegSize);
+    if (ErrorCode == ERROR_FILE_NOT_FOUND)
+    {
+        static const CHAR DefaultCatalogName[] = "NameSpace_Catalog5";
+        RegSize = sizeof(DefaultCatalogName);
+        CatalogKeyName = HeapAlloc(WsSockHeap, 0, RegSize);
+        memcpy(CatalogKeyName, DefaultCatalogName, RegSize);
+    }
+    else
+    {
+        if (ErrorCode != ERROR_SUCCESS)
+        {
+            DPRINT1("Failed to get namespace catalog name: %d.\n", ErrorCode);
+            return FALSE;
+        }
 
-    CatalogKeyName = HeapAlloc(WsSockHeap, 0, RegSize);
+        if (RegType != REG_SZ)
+        {
+            DPRINT1("Namespace catalog name is not a string (Type %d).\n", RegType);
+            return FALSE;
+        }
 
-    /* Read the catalog name */
-    ErrorCode = RegQueryValueEx(ParentKey,
-                                "Current_NameSpace_Catalog",
-                                0,
-                                &RegType,
-                                (LPBYTE)CatalogKeyName,
-                                &RegSize);
+        CatalogKeyName = HeapAlloc(WsSockHeap, 0, RegSize);
 
-    /* Open the Catalog Key */
-    ErrorCode = RegOpenKeyEx(ParentKey,
-                             CatalogKeyName,
-                             0,
-                             MAXIMUM_ALLOWED,
-                             &CatalogKey);
+        /* Read the catalog name */
+        ErrorCode = RegQueryValueEx(ParentKey,
+                                    "Current_NameSpace_Catalog",
+                                    0,
+                                    &RegType,
+                                    (LPBYTE)CatalogKeyName,
+                                    &RegSize);
+
+        /* Open the Catalog Key */
+        ErrorCode = RegOpenKeyEx(ParentKey,
+                                 CatalogKeyName,
+                                 0,
+                                 MAXIMUM_ALLOWED,
+                                 &CatalogKey);
+    }
 
     /* If we didn't find the key, create it */
     if (ErrorCode == ERROR_SUCCESS)

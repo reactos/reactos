@@ -90,7 +90,7 @@ UpdateGroupsList(HWND hwndListView)
 static VOID
 UpdateGroupProperties(HWND hwndDlg)
 {
-    TCHAR szGroupName[UNLEN];
+    TCHAR szGroupName[UNLEN + 1];
     INT iItem;
     HWND hwndLV;
     PLOCALGROUP_INFO_1 pGroupInfo = NULL;
@@ -104,7 +104,7 @@ UpdateGroupProperties(HWND hwndDlg)
     ListView_GetItemText(hwndLV,
                          iItem, 0,
                          szGroupName,
-                         UNLEN);
+                         UNLEN + 1);
 
     NetLocalGroupGetInfo(NULL, szGroupName, 1, (LPBYTE*)&pGroupInfo);
 
@@ -254,7 +254,7 @@ GroupRename(HWND hwndDlg)
 static BOOL
 GroupDelete(HWND hwndDlg)
 {
-    TCHAR szGroupName[UNLEN];
+    TCHAR szGroupName[UNLEN + 1];
     TCHAR szText[256];
     INT nItem;
     HWND hwndLV;
@@ -269,7 +269,7 @@ GroupDelete(HWND hwndDlg)
     ListView_GetItemText(hwndLV,
                          nItem, 0,
                          szGroupName,
-                         UNLEN);
+                         UNLEN + 1);
 
     /* Display a warning message, because the delete operation cannot be reverted */
     wsprintf(szText, TEXT("Dou you really want to delete the user group \"%s\"?"), szGroupName);
@@ -336,8 +336,8 @@ OnGroupsPageBeginLabelEdit(LPNMLVDISPINFO pnmv)
 static BOOL
 OnGroupsPageEndLabelEdit(LPNMLVDISPINFO pnmv)
 {
-    TCHAR szOldGroupName[UNLEN];
-    TCHAR szNewGroupName[UNLEN];
+    TCHAR szOldGroupName[UNLEN + 1];
+    TCHAR szNewGroupName[UNLEN + 1];
     LOCALGROUP_INFO_0 lgrpi0;
     NET_API_STATUS status;
 
@@ -349,7 +349,7 @@ OnGroupsPageEndLabelEdit(LPNMLVDISPINFO pnmv)
     ListView_GetItemText(pnmv->hdr.hwndFrom,
                          pnmv->item.iItem, 0,
                          szOldGroupName,
-                         UNLEN);
+                         UNLEN + 1);
 
     /* Leave, if the user canceled the edit action */
     if (pnmv->item.pszText == NULL)

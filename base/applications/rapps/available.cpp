@@ -7,15 +7,13 @@
  *              Copyright 2017 Alexander Shaposhnikov     (sanchaez@reactos.org)
  *              Copyright 2020 He Yang                    (1160386205@qq.com)
  */
+
 #include "rapps.h"
 
 #include "available.h"
 #include "misc.h"
 #include "dialogs.h"
 
-#include <atlcoll.h>
-#include <atlsimpcoll.h>
-#include <atlstr.h>
 
  // CAvailableApplicationInfo
 CAvailableApplicationInfo::CAvailableApplicationInfo(const ATL::CStringW& sFileNameParam, AvailableStrings& AvlbStrings)
@@ -69,7 +67,9 @@ VOID CAvailableApplicationInfo::RetrieveGeneralInfo(AvailableStrings& AvlbString
         CStringW ScrnshotLocation;
         if (!GetString(ScrnshotField, ScrnshotLocation))
         {
-            continue;
+            // We stop at the first screenshot not found,
+            // so screenshots _have_ to be consecutive
+            break;
         }
 
 
@@ -92,18 +92,32 @@ VOID CAvailableApplicationInfo::RetrieveGeneralInfo(AvailableStrings& AvlbString
         }
     }
 
+    ATL::CStringW IconPath = AvlbStrings.szAppsPath;
+    PathAppendW(IconPath.GetBuffer(MAX_PATH), L"icons");
+
     // TODO: are we going to support specify an URL for an icon ?
     ATL::CStringW IconLocation;
     if (GetString(L"Icon", IconLocation))
     {
-        // TODO: Does the filename contain anything stuff like ":" "<" ">" ?
-        // these stuff may lead to security issues
-        ATL::CStringW IconPath = AvlbStrings.szAppsPath;
-        PathAppendW(IconPath.GetBuffer(MAX_PATH), L"icons");
         BOOL bSuccess = PathAppendNoDirEscapeW(IconPath.GetBuffer(), IconLocation.GetString());
         IconPath.ReleaseBuffer();
 
-        if (bSuccess)
+        if (!bSuccess)
+        {
+            IconPath.Empty();
+        }
+    }
+    else
+    {
+        // inifile.ico
+        PathAppendW(IconPath.GetBuffer(), m_szPkgName);
+        IconPath.ReleaseBuffer();
+        IconPath += L".ico";
+    }
+
+    if (!IconPath.IsEmpty())
+    {
+        if (PathFileExistsW(IconPath))
         {
             m_szIconLocation = IconPath;
         }
@@ -308,7 +322,7 @@ AvailableStrings::AvailableStrings()
         PathAppendW(szAppsPath.GetBuffer(MAX_PATH), L"rapps");
         szAppsPath.ReleaseBuffer();
 
-        szCabName = L"rappmgr.cab";
+        szCabName = APPLICATION_DATABASE_NAME;
         szCabDir = szPath;
         szCabPath = szCabDir;
         PathAppendW(szCabPath.GetBuffer(MAX_PATH), szCabName);
@@ -342,26 +356,52 @@ VOID CAvailableApps::FreeCachedEntries()
     m_InfoList.RemoveAll();
 }
 
-VOID CAvailableApps::DeleteCurrentAppsDB()
+static void DeleteWithWildcard(const CStringW& DirWithFilter)
 {
     HANDLE hFind = INVALID_HANDLE_VALUE;
     WIN32_FIND_DATAW FindFileData;
 
-    hFind = FindFirstFileW(m_Strings.szSearchPath.GetString(), &FindFileData);
+    hFind = FindFirstFileW(DirWithFilter, &FindFileData);
 
-    if (hFind != INVALID_HANDLE_VALUE)
+    if (hFind == INVALID_HANDLE_VALUE)
+        return;
+
+    CStringW Dir = DirWithFilter;
+    PathRemoveFileSpecW(Dir.GetBuffer(MAX_PATH));
+    Dir.ReleaseBuffer();
+
+    do
     {
-        ATL::CStringW szTmp;
-        do
-        {
-            szTmp = m_Strings.szAppsPath;
-            PathAppendW(szTmp.GetBuffer(MAX_PATH), FindFileData.cFileName);
-            szTmp.ReleaseBuffer();
-            DeleteFileW(szTmp.GetString());
-        } while (FindNextFileW(hFind, &FindFileData) != 0);
-        FindClose(hFind);
-    }
+        ATL::CStringW szTmp = Dir + L"\\";
+        szTmp += FindFileData.cFileName;
 
+        if (!(FindFileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
+        {
+            DeleteFileW(szTmp);
+        }
+    } while (FindNextFileW(hFind, &FindFileData) != 0);
+    FindClose(hFind);
+}
+
+VOID CAvailableApps::DeleteCurrentAppsDB()
+{
+    // Delete icons
+    ATL::CStringW IconPath = m_Strings.szAppsPath;
+    PathAppendW(IconPath.GetBuffer(MAX_PATH), L"icons");
+    IconPath.ReleaseBuffer();
+    DeleteWithWildcard(IconPath + L"\\*.ico");
+
+    // Delete leftover screenshots
+    ATL::CStringW ScrnshotFolder = m_Strings.szAppsPath;
+    PathAppendW(ScrnshotFolder.GetBuffer(MAX_PATH), L"screenshots");
+    ScrnshotFolder.ReleaseBuffer();
+    DeleteWithWildcard(IconPath + L"\\*.tmp");
+
+    // Delete data base files (*.txt)
+    DeleteWithWildcard(m_Strings.szSearchPath);
+
+    RemoveDirectoryW(IconPath);
+    RemoveDirectoryW(ScrnshotFolder);
     RemoveDirectoryW(m_Strings.szAppsPath);
     RemoveDirectoryW(m_Strings.szPath);
 }

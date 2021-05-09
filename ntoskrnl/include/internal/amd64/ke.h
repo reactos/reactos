@@ -119,25 +119,84 @@ extern ULONG KeI386CpuStep;
 #define KD_BREAKPOINT_VALUE       0xCC
 
 //
-// Macros for getting and setting special purpose registers in portable code
+// One-liners for getting and setting special purpose registers in portable code
 //
-#define KeGetContextPc(Context) \
-    ((Context)->Rip)
+FORCEINLINE
+ULONG_PTR
+KeGetContextPc(PCONTEXT Context)
+{
+    return Context->Rip;
+}
 
-#define KeSetContextPc(Context, ProgramCounter) \
-    ((Context)->Rip = (ProgramCounter))
+FORCEINLINE
+VOID
+KeSetContextPc(PCONTEXT Context, ULONG_PTR ProgramCounter)
+{
+    Context->Rip = ProgramCounter;
+}
 
-#define KeGetTrapFramePc(TrapFrame) \
-    ((TrapFrame)->Rip)
+FORCEINLINE
+ULONG_PTR
+KeGetContextReturnRegister(PCONTEXT Context)
+{
+    return Context->Rax;
+}
 
-#define KiGetLinkedTrapFrame(x) \
-    (PKTRAP_FRAME)((x)->TrapFrame)
+FORCEINLINE
+VOID
+KeSetContextReturnRegister(PCONTEXT Context, ULONG_PTR ReturnValue)
+{
+    Context->Rax = ReturnValue;
+}
 
-#define KeGetContextReturnRegister(Context) \
-    ((Context)->Rax)
+FORCEINLINE
+ULONG_PTR
+KeGetContextStackRegister(PCONTEXT Context)
+{
+    return Context->Rsp;
+}
 
-#define KeSetContextReturnRegister(Context, ReturnValue) \
-    ((Context)->Rax = (ReturnValue))
+FORCEINLINE
+ULONG_PTR
+KeGetContextFrameRegister(PCONTEXT Context)
+{
+    return Context->Rbp;
+}
+
+FORCEINLINE
+VOID
+KeSetContextFrameRegister(PCONTEXT Context, ULONG_PTR Frame)
+{
+    Context->Rbp = Frame;
+}
+
+FORCEINLINE
+ULONG_PTR
+KeGetTrapFramePc(PKTRAP_FRAME TrapFrame)
+{
+    return TrapFrame->Rip;
+}
+
+FORCEINLINE
+PKTRAP_FRAME
+KiGetLinkedTrapFrame(PKTRAP_FRAME TrapFrame)
+{
+    return (PKTRAP_FRAME)TrapFrame->TrapFrame;
+}
+
+FORCEINLINE
+ULONG_PTR
+KeGetTrapFrameStackRegister(PKTRAP_FRAME TrapFrame)
+{
+    return TrapFrame->Rsp;
+}
+
+FORCEINLINE
+ULONG_PTR
+KeGetTrapFrameFrameRegister(PKTRAP_FRAME TrapFrame)
+{
+    return TrapFrame->Rbp;
+}
 
 //
 // Macro to get trap and exception frame from a thread stack
@@ -229,11 +288,7 @@ FORCEINLINE
 VOID
 KiRundownThread(IN PKTHREAD Thread)
 {
-#ifndef CONFIG_SMP
-    DbgPrint("KiRundownThread is unimplemented\n");
-#else
     /* Nothing to do */
-#endif
 }
 
 /* Registers an interrupt handler with an IDT vector */
@@ -314,7 +369,7 @@ struct _KPCR;
 
 //VOID KiInitializeTss(IN PKTSS Tss, IN UINT64 Stack);
 
-VOID KiSwitchToBootStack(IN ULONG_PTR InitialStack);
+DECLSPEC_NORETURN VOID KiSwitchToBootStack(IN ULONG_PTR InitialStack);
 VOID KiDivideErrorFault(VOID);
 VOID KiDebugTrapOrFault(VOID);
 VOID KiNmiInterrupt(VOID);
@@ -386,6 +441,13 @@ HalAllocateAdapterChannel(
   IN PWAIT_CONTEXT_BLOCK  Wcb,
   IN ULONG  NumberOfMapRegisters,
   IN PDRIVER_CONTROL  ExecutionRoutine);
+
+FORCEINLINE
+PULONG_PTR
+KiGetUserModeStackAddress(void)
+{
+    return &PsGetCurrentThread()->Tcb.TrapFrame->Rsp;
+}
 
 #endif /* __NTOSKRNL_INCLUDE_INTERNAL_AMD64_KE_H */
 

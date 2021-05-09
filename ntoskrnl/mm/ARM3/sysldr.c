@@ -50,6 +50,12 @@ PMMPTE MiKernelResourceStartPte, MiKernelResourceEndPte;
 ULONG_PTR ExPoolCodeStart, ExPoolCodeEnd, MmPoolCodeStart, MmPoolCodeEnd;
 ULONG_PTR MmPteCodeStart, MmPteCodeEnd;
 
+#ifdef _WIN64
+#define DEFAULT_SECURITY_COOKIE 0x00002B992DDFA232ll
+#else
+#define DEFAULT_SECURITY_COOKIE 0xBB40E64E
+#endif
+
 /* FUNCTIONS ******************************************************************/
 
 PVOID
@@ -81,13 +87,13 @@ MiCacheImageSymbols(IN PVOID BaseAddress)
 
 NTSTATUS
 NTAPI
-MiLoadImageSection(IN OUT PVOID *SectionPtr,
-                   OUT PVOID *ImageBase,
-                   IN PUNICODE_STRING FileName,
-                   IN BOOLEAN SessionLoad,
-                   IN PLDR_DATA_TABLE_ENTRY LdrEntry)
+MiLoadImageSection(_Inout_ PSECTION *SectionPtr,
+                   _Out_ PVOID *ImageBase,
+                   _In_ PUNICODE_STRING FileName,
+                   _In_ BOOLEAN SessionLoad,
+                   _In_ PLDR_DATA_TABLE_ENTRY LdrEntry)
 {
-    PROS_SECTION_OBJECT Section = *SectionPtr;
+    PSECTION Section = *SectionPtr;
     NTSTATUS Status;
     PEPROCESS Process;
     PVOID Base = NULL;
@@ -158,7 +164,7 @@ MiLoadImageSection(IN OUT PVOID *SectionPtr,
     }
 
     /* Reserve system PTEs needed */
-    PteCount = ROUND_TO_PAGES(Section->ImageSection->ImageInformation.ImageFileSize) >> PAGE_SHIFT;
+    PteCount = ROUND_TO_PAGES(((PMM_IMAGE_SECTION_OBJECT)Section->Segment)->ImageInformation.ImageFileSize) >> PAGE_SHIFT;
     PointerPte = MiReserveSystemPtes(PteCount, SystemPteSpace);
     if (!PointerPte)
     {
@@ -188,14 +194,7 @@ MiLoadImageSection(IN OUT PVOID *SectionPtr,
         /* Some debug stuff */
         MI_SET_USAGE(MI_USAGE_DRIVER_PAGE);
 #if MI_TRACE_PFNS
-        if (FileName->Buffer)
-        {
-            PWCHAR pos = NULL;
-            ULONG len = 0;
-            pos = wcsrchr(FileName->Buffer, '\\');
-            len = wcslen(pos) * sizeof(WCHAR);
-            if (pos) snprintf(MI_PFN_CURRENT_PROCESS_NAME, min(16, len), "%S", pos);
-        }
+        MI_SET_PROCESS_USTR(FileName);
 #endif
 
         /* Grab a page */
@@ -587,7 +586,7 @@ MiProcessLoaderEntry(IN PLDR_DATA_TABLE_ENTRY LdrEntry,
     KeLeaveCriticalRegion();
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 VOID
 NTAPI
 MiUpdateThunks(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
@@ -991,7 +990,7 @@ MmUnloadSystemImage(IN PVOID ImageHandle)
 
     /* Release the system lock and return */
 Done:
-    KeReleaseMutant(&MmSystemLoadLock, 1, FALSE, FALSE);
+    KeReleaseMutant(&MmSystemLoadLock, MUTANT_INCREMENT, FALSE, FALSE);
     KeLeaveCriticalRegion();
     return STATUS_SUCCESS;
 }
@@ -1445,7 +1444,7 @@ MiFreeInitializationCode(IN PVOID InitStart,
                                           NULL);
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 VOID
 NTAPI
 MiFindInitializationCode(OUT PVOID *StartVa,
@@ -1466,8 +1465,14 @@ MiFindInitializationCode(OUT PVOID *StartVa,
     /* Assume failure */
     *StartVa = NULL;
 
-    /* Enter a critical region while we loop the list */
+    /* Acquire the necessary locks while we loop the list */
     KeEnterCriticalRegion();
+    KeWaitForSingleObject(&MmSystemLoadLock,
+                          WrVirtualMemory,
+                          KernelMode,
+                          FALSE,
+                          NULL);
+    ExAcquireResourceExclusiveLite(&PsLoadedModuleResource, TRUE);
 
     /* Loop all loaded modules */
     NextEntry = PsLoadedModuleList.Flink;
@@ -1615,7 +1620,9 @@ MiFindInitializationCode(OUT PVOID *StartVa,
         NextEntry = NextEntry->Flink;
     }
 
-    /* Leave the critical region and return */
+    /* Release the locks and return */
+    ExReleaseResourceLite(&PsLoadedModuleResource);
+    KeReleaseMutant(&MmSystemLoadLock, MUTANT_INCREMENT, FALSE, FALSE);
     KeLeaveCriticalRegion();
 }
 
@@ -1680,7 +1687,7 @@ MmFreeDriverInitialization(IN PLDR_DATA_TABLE_ENTRY LdrEntry)
     MiDeleteSystemPageableVm(StartPte, PageCount, 0, NULL);
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 VOID
 NTAPI
 MiReloadBootLoadedDrivers(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
@@ -1869,7 +1876,7 @@ MiReloadBootLoadedDrivers(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     }
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 NTSTATUS
 NTAPI
 MiBuildImportsForBootDrivers(VOID)
@@ -2134,7 +2141,7 @@ MiBuildImportsForBootDrivers(VOID)
     return STATUS_SUCCESS;
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 VOID
 NTAPI
 MiLocateKernelSections(IN PLDR_DATA_TABLE_ENTRY LdrEntry)
@@ -2191,7 +2198,7 @@ MiLocateKernelSections(IN PLDR_DATA_TABLE_ENTRY LdrEntry)
     }
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 BOOLEAN
 NTAPI
 MiInitializeLoadedModuleList(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
@@ -2409,7 +2416,14 @@ MiSetSystemCodeProtection(
         TempPte = *PointerPte;
 
         /* Make sure it's valid */
-        ASSERT(TempPte.u.Hard.Valid == 1);
+        if (TempPte.u.Hard.Valid != 1)
+        {
+            DPRINT1("CORE-16449: FirstPte=%p, LastPte=%p, Protection=%lx\n", FirstPte, LastPte, Protection);
+            DPRINT1("CORE-16449: PointerPte=%p, TempPte=%lx\n", PointerPte, TempPte.u.Long);
+            DPRINT1("CORE-16449: Please issue the 'mod' and 'bt' (KDBG) or 'lm' and 'kp' (WinDbg) commands. Then report this in Jira.\n");
+            ASSERT(TempPte.u.Hard.Valid == 1);
+            break;
+        }
 
         /* Update the protection */
         TempPte.u.Hard.Write = BooleanFlagOn(Protection, IMAGE_SCN_MEM_WRITE);
@@ -2422,8 +2436,6 @@ MiSetSystemCodeProtection(
 
     /* Flush it all */
     KeFlushEntireTb(TRUE, TRUE);
-
-    return;
 }
 
 VOID
@@ -2548,17 +2560,20 @@ NTAPI
 MiSetPagingOfDriver(IN PMMPTE PointerPte,
                     IN PMMPTE LastPte)
 {
+#ifdef ENABLE_MISETPAGINGOFDRIVER
     PVOID ImageBase;
     PETHREAD CurrentThread = PsGetCurrentThread();
     PFN_COUNT PageCount = 0;
     PFN_NUMBER PageFrameIndex;
     PMMPFN Pfn1;
+#endif // ENABLE_MISETPAGINGOFDRIVER
+
     PAGED_CODE();
 
+#ifndef ENABLE_MISETPAGINGOFDRIVER
     /* The page fault handler is broken and doesn't page back in! */
     DPRINT1("WARNING: MiSetPagingOfDriver() called, but paging is broken! ignoring!\n");
-    return;
-
+#else  // ENABLE_MISETPAGINGOFDRIVER
     /* Get the driver's base address */
     ImageBase = MiPteToAddress(PointerPte);
     ASSERT(MI_IS_SESSION_IMAGE_ADDRESS(ImageBase) == FALSE);
@@ -2596,6 +2611,7 @@ MiSetPagingOfDriver(IN PMMPTE PointerPte,
         /* Update counters */
         InterlockedExchangeAdd((PLONG)&MmTotalSystemDriverPages, PageCount);
     }
+#endif // ENABLE_MISETPAGINGOFDRIVER
 }
 
 VOID
@@ -2799,6 +2815,84 @@ Fail:
     return Status;
 }
 
+
+PVOID
+NTAPI
+LdrpFetchAddressOfSecurityCookie(PVOID BaseAddress, ULONG SizeOfImage)
+{
+    PIMAGE_LOAD_CONFIG_DIRECTORY ConfigDir;
+    ULONG DirSize;
+    PVOID Cookie = NULL;
+
+    /* Check NT header first */
+    if (!RtlImageNtHeader(BaseAddress)) return NULL;
+
+    /* Get the pointer to the config directory */
+    ConfigDir = RtlImageDirectoryEntryToData(BaseAddress,
+                                             TRUE,
+                                             IMAGE_DIRECTORY_ENTRY_LOAD_CONFIG,
+                                             &DirSize);
+
+    /* Check for sanity */
+    if (!ConfigDir ||
+        DirSize < FIELD_OFFSET(IMAGE_LOAD_CONFIG_DIRECTORY, SEHandlerTable) ||  /* SEHandlerTable is after SecurityCookie */
+        (ConfigDir->Size != DirSize))
+    {
+        /* Invalid directory*/
+        return NULL;
+    }
+
+    /* Now get the cookie */
+    Cookie = (PVOID)ConfigDir->SecurityCookie;
+
+    /* Check this cookie */
+    if ((PCHAR)Cookie <= (PCHAR)BaseAddress ||
+        (PCHAR)Cookie >= (PCHAR)BaseAddress + SizeOfImage)
+    {
+        Cookie = NULL;
+    }
+
+    /* Return validated security cookie */
+    return Cookie;
+}
+
+PVOID
+NTAPI
+LdrpInitSecurityCookie(PLDR_DATA_TABLE_ENTRY LdrEntry)
+{
+    PULONG_PTR Cookie;
+    ULONG_PTR NewCookie;
+
+    /* Fetch address of the cookie */
+    Cookie = LdrpFetchAddressOfSecurityCookie(LdrEntry->DllBase, LdrEntry->SizeOfImage);
+
+    if (Cookie)
+    {
+        /* Check if it's a default one */
+        if ((*Cookie == DEFAULT_SECURITY_COOKIE) ||
+            (*Cookie == 0))
+        {
+            LARGE_INTEGER Counter = KeQueryPerformanceCounter(NULL);
+            /* The address should be unique */
+            NewCookie = (ULONG_PTR)Cookie;
+
+            /* We just need a simple tick, don't care about precision and whatnot */
+            NewCookie ^= (ULONG_PTR)Counter.LowPart;
+
+            /* If the result is 0 or the same as we got, just add one to the default value */
+            if ((NewCookie == 0) || (NewCookie == *Cookie))
+            {
+                NewCookie = DEFAULT_SECURITY_COOKIE + 1;
+            }
+
+            /* Set the new cookie value */
+            *Cookie = NewCookie;
+        }
+    }
+
+    return Cookie;
+}
+
 NTSTATUS
 NTAPI
 MmLoadSystemImage(IN PUNICODE_STRING FileName,
@@ -2822,7 +2916,7 @@ MmLoadSystemImage(IN PUNICODE_STRING FileName,
     PWCHAR MissingDriverName;
     HANDLE SectionHandle;
     ACCESS_MASK DesiredAccess;
-    PVOID Section = NULL;
+    PSECTION Section = NULL;
     BOOLEAN LockOwned = FALSE;
     PLIST_ENTRY NextEntry;
     IMAGE_INFO ImageInfo;
@@ -2957,7 +3051,7 @@ LoaderScan:
     else if (!Section)
     {
         /* It wasn't loaded, and we didn't have a previous attempt */
-        KeReleaseMutant(&MmSystemLoadLock, 1, FALSE, FALSE);
+        KeReleaseMutant(&MmSystemLoadLock, MUTANT_INCREMENT, FALSE, FALSE);
         KeLeaveCriticalRegion();
         LockOwned = FALSE;
 
@@ -3039,7 +3133,7 @@ LoaderScan:
                                            SECTION_MAP_EXECUTE,
                                            MmSectionObjectType,
                                            KernelMode,
-                                           &Section,
+                                           (PVOID*)&Section,
                                            NULL);
         ZwClose(SectionHandle);
         if (!NT_SUCCESS(Status)) goto Quickie;
@@ -3070,7 +3164,7 @@ LoaderScan:
     ASSERT(Status != STATUS_ALREADY_COMMITTED);
 
     /* Get the size of the driver */
-    DriverSize = ((PROS_SECTION_OBJECT)Section)->ImageSection->ImageInformation.ImageFileSize;
+    DriverSize = ((PMM_IMAGE_SECTION_OBJECT)Section->Segment)->ImageInformation.ImageFileSize;
 
     /* Make sure we're not being loaded into session space */
     if (!Flags)
@@ -3244,6 +3338,9 @@ LoaderScan:
     /* Write-protect the system image */
     MiWriteProtectSystemImage(LdrEntry->DllBase);
 
+    /* Initialize the security cookie (Win7 is not doing this yet!) */
+    LdrpInitSecurityCookie(LdrEntry);
+
     /* Check if notifications are enabled */
     if (PsImageNotifyEnabled)
     {
@@ -3309,7 +3406,7 @@ Quickie:
     if (LockOwned)
     {
         /* Release the lock */
-        KeReleaseMutant(&MmSystemLoadLock, 1, FALSE, FALSE);
+        KeReleaseMutant(&MmSystemLoadLock, MUTANT_INCREMENT, FALSE, FALSE);
         KeLeaveCriticalRegion();
         LockOwned = FALSE;
     }

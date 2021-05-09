@@ -94,7 +94,7 @@ SmpSbCreateSession(IN PVOID Reserved,
                 NtClose(ProcessInformation->ProcessHandle);
                 NtClose(ProcessInformation->ThreadHandle);
                 SmpDereferenceSubsystem(KnownSubsys);
-                DbgPrint("SmpSbCreateSession: NtDuplicateObject (Thread) Failed %lx\n", Status);
+                DPRINT1("SmpSbCreateSession: NtDuplicateObject (Thread) Failed %lx\n", Status);
                 return Status;
             }
 

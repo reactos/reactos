@@ -17,10 +17,10 @@ list(APPEND MINI_HAL_SOURCE
     ../generic/sysinfo.c
     ../generic/timer.c
     ../generic/usage.c
-    ../up/halinit_mini.c
-    ../up/pic.c
-    ../up/processor.c
-    ../include/hal.h)
+    ../pic/pic.c
+    ../pic/processor.c
+    ../include/hal.h
+    halinit.c)
 
 if(SARCH STREQUAL "xbox")
     list(APPEND MINI_HAL_SOURCE

@@ -1,16 +1,16 @@
 /* Traditional Chinese translation by Henry Tang Ih 2016 (henrytang2@hotmail.com) */
-/* Translation improved by Aobi Chan CL 2020 (eason066@gmail.com) */
+/* Translation improved by Chan Chilung 2020 - 2021 (eason066@gmail.com) */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
 
 STRINGTABLE
 BEGIN
-    STRING_HELP "用法：%s 磁碟區: [-FS:檔案系統] [-V:標籤] [-Q] [-A:大小] [-C]\n\n\
-  [磁碟區:]           指定要格式化的磁碟機。\n\
+    STRING_HELP "用法：%s 磁碟: [-FS:檔案系統] [-V:標籤] [-Q] [-A:大小] [-C]\n\n\
+  [磁碟:]             指定要格式化的磁碟代號。\n\
   -FS:檔案系統        指定檔案系統的類型 (%s)。\n\
   -V:標籤             指定磁碟區標籤。\n\
   -Q                  執行快速格式化。\n\
-  -A:大小             覆寫預設分配單元的大小。在一般情況下，強烈建議使用預設設定。\n\
+  -A:大小             覆寫預設分配單元的大小。建議在一般情況下使用預設設定。\n\
                         NTFS 支援 512, 1024, 2048, 4096, 8192, 16K, 32K, 64K.\n\
                         FAT 支援 8192, 16K, 32K, 64K, 128K, 256K.\n\
                         NTFS 壓縮不支援 4096 以上的分配單元大小。\n\
@@ -20,22 +20,22 @@ BEGIN
     STRING_NO_SUPPORT "不支援的動作"
     STRING_FMIFS_FAIL "無法定位 FMIFS 進入點。\n\n"
     STRING_UNKNOW_ARG "未知參數：%s\n"
-    STRING_DRIVE_PARM "缺少必要的磁碟機參數。\n\n"
+    STRING_DRIVE_PARM "缺少必要的磁碟參數。\n\n"
     STRING_ERROR_DRIVE_TYPE "無法獲得磁碟機類型"
-    STRING_INSERT_DISK "在磁碟機 %C: 中插入一張新的軟碟片\n如果您準備就緒，請按 Enter..."
-    STRING_NO_VOLUME "無法查詢磁碟區"
-    STRING_NO_VOLUME_SIZE "無法查詢磁碟區大小"
+    STRING_INSERT_DISK "在磁碟機 %C: 中插入一張新的軟碟片\n如果您準備就緒，請按 ENTER..."
+    STRING_NO_VOLUME "無法查詢磁碟"
+    STRING_NO_VOLUME_SIZE "無法查詢磁碟大小"
     STRING_FILESYSTEM "檔案系統的類型是 %s。\n"
-    STRING_LABEL_NAME_EDIT "輸入磁碟區 %C 目前的標籤："
+    STRING_LABEL_NAME_EDIT "輸入磁碟 %C 目前的標籤："
     STRING_ERROR_LABEL "輸入的磁碟區標籤不正確。\n"
-    STRING_YN_FORMAT "\n警告：在磁碟機 %C: 上的所有資料都將丟失！\n確認要格式化嗎 (Y/N)？"
+    STRING_YN_FORMAT "\n警告：在磁碟 %C: 上的所有資料都將丟失！\n確認要格式化嗎 (Y/N)？"
     STRING_YES_NO_FAQ "YN"
-    STRING_VERIFYING "正在檢驗"
+    STRING_VERIFYING "正在驗證"
     STRING_FAST_FMT "正在快速格式化"
     STRING_CREATE_FSYS "正在建立檔案系統結構。\n"
     STRING_FMT_COMPLETE "格式化完成。\n"
     STRING_VOL_COMPRESS "磁碟區不支援壓縮。\n"
-    STRING_ENTER_LABEL "輸入磁碟區標籤 (最多 11 個字元，如要略過請直接按 Enter)？"
+    STRING_ENTER_LABEL "輸入磁碟區標籤 (最多 11 個字元，如要略過請直接按 ENTER)？"
     STRING_NO_LABEL "無法為磁碟區新增標籤"
     STRING_FREE_SPACE "\n%I64d 位元組總磁碟空間。\n%I64d 位元組可用。\n"
     STRING_SERIAL_NUMBER "\n磁碟區的序列號是 %04X-%04X\n"

@@ -29,12 +29,6 @@
 /* 10000 in 100-ns model = 0.1 microsecond */
 #define TIME_FRAME 10000
 
-#if defined (ALLOC_PRAGMA)
-#pragma alloc_text(INIT, ExpUuidInitialization)
-#pragma alloc_text(INIT, ExLuidInitialization)
-#endif
-
-
 /* GLOBALS ****************************************************************/
 
 FAST_MUTEX ExpUuidLock;
@@ -42,7 +36,7 @@ LARGE_INTEGER ExpUuidLastTimeAllocated;
 ULONG ExpUuidSequenceNumber = 0;
 BOOLEAN ExpUuidSequenceNumberValid;
 BOOLEAN ExpUuidSequenceNumberNotSaved = FALSE;
-UUID_CACHED_VALUES_STRUCT ExpUuidCachedValues = {0ULL, 0xFFFFFFFF, 0, 0, { 0x80, 0x6E, 0x6F, 0x6E, 0x69, 0x63}};
+UUID_CACHED_VALUES_STRUCT ExpUuidCachedValues = {0ULL, 0xFFFFFFFF, {{0, 0, {0x80, 0x6E, 0x6F, 0x6E, 0x69, 0x63}}}};
 BOOLEAN ExpUuidCacheValid = FALSE;
 ULONG ExpLuidIncrement = 1;
 LARGE_INTEGER ExpLuid = {{0x3e9, 0x0}};
@@ -52,7 +46,7 @@ LARGE_INTEGER ExpLuid = {{0x3e9, 0x0}};
 /*
  * @implemented
  */
-INIT_FUNCTION
+CODE_SEG("INIT")
 BOOLEAN
 NTAPI
 ExpUuidInitialization(VOID)
@@ -324,7 +318,7 @@ ExpUuidGetValues(PUUID_CACHED_VALUES_STRUCT CachedValues)
 /*
  * @implemented
  */
-INIT_FUNCTION
+CODE_SEG("INIT")
 BOOLEAN
 NTAPI
 ExLuidInitialization(VOID)
@@ -400,9 +394,10 @@ ExUuidCreate(OUT UUID *Uuid)
         {
             Time.QuadPart = ExpUuidCachedValues.Time;
 
-            RtlCopyMemory(&Uuid->Data4[0],
-                          &ExpUuidCachedValues.NodeId[0],
-                          SEED_BUFFER_SIZE);
+            RtlCopyMemory(Uuid->Data4,
+                          ExpUuidCachedValues.GuidInit,
+                          sizeof(Uuid->Data4));
+
             Valid = ExpUuidCacheValid;
             AllocatedCount = InterlockedDecrement(&ExpUuidCachedValues.AllocatedCount);
         }

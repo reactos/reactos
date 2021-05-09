@@ -1,86 +1,4 @@
 
-# set_cpp
-#  Marks the current folder as containing C++ modules, additionally enabling
-#  specific C++ language features as specified (all of these default to off):
-#
-#  WITH_RUNTIME
-#   Links with the C++ runtime. Enable this for modules which use new/delete or
-#   RTTI, but do not require STL. This is the right choice if you see undefined
-#   references to operator new/delete, vector constructor/destructor iterator,
-#   type_info::vtable, ...
-#   Note: this only affects linking, so cannot be used for static libraries.
-#  WITH_RTTI
-#   Enables run-time type information. Enable this if the module uses typeid or
-#   dynamic_cast. You will probably need to enable WITH_RUNTIME as well, if
-#   you're not already using STL.
-#  WITH_EXCEPTIONS
-#   Enables C++ exception handling. Enable this if the module uses try/catch or
-#   throw. You might also need this if you use a standard operator new (the one
-#   without nothrow).
-#  WITH_STL
-#   Enables standard C++ headers and links to the Standard Template Library.
-#   Use this for modules using anything from the std:: namespace, e.g. maps,
-#   strings, vectors, etc.
-#   Note: this affects both compiling (via include directories) and
-#         linking (by adding STL). Implies WITH_RUNTIME.
-#   FIXME: WITH_STL is currently also required for runtime headers such as
-#          <new> and <exception>. This is not a big issue because in stl-less
-#          environments you usually don't want those anyway; but we might want
-#          to have modules like this in the future.
-#
-# Examples:
-#  set_cpp()
-#   Enables the C++ language, but will cause errors if any runtime or standard
-#   library features are used. This should be the default for C++ in kernel
-#   mode or otherwise restricted environments.
-#   Note: this is required to get libgcc (for multiplication/division) linked
-#         in for C++ modules, and to set the correct language for precompiled
-#         header files, so it IS required even with no features specified.
-#  set_cpp(WITH_RUNTIME)
-#   Links with the C++ runtime, so that e.g. custom operator new implementations
-#   can be used in a restricted environment. This is also required for linking
-#   with libraries (such as ATL) which have RTTI enabled, even if the module in
-#   question does not use WITH_RTTI.
-#  set_cpp(WITH_RTTI WITH_EXCEPTIONS WITH_STL)
-#   The full package. This will adjust compiler and linker so that all C++
-#   features can be used.
-macro(set_cpp)
-    cmake_parse_arguments(__cppopts "WITH_RUNTIME;WITH_RTTI;WITH_EXCEPTIONS;WITH_STL" "" "" ${ARGN})
-    if(__cppopts_UNPARSED_ARGUMENTS)
-        message(FATAL_ERROR "set_cpp: unparsed arguments ${__cppopts_UNPARSED_ARGUMENTS}")
-    endif()
-
-    if(__cppopts_WITH_RUNTIME)
-        set(CPP_USE_RT 1)
-    endif()
-    if(__cppopts_WITH_RTTI)
-        if(MSVC)
-            replace_compile_flags("/GR-" "/GR")
-        else()
-            replace_compile_flags_language("-fno-rtti" "-frtti" "CXX")
-        endif()
-    endif()
-    if(__cppopts_WITH_EXCEPTIONS)
-        if(MSVC)
-            replace_compile_flags("/EHs-c-" "/EHsc")
-        else()
-            replace_compile_flags_language("-fno-exceptions" "-fexceptions" "CXX")
-        endif()
-    endif()
-    if(__cppopts_WITH_STL)
-        set(CPP_USE_STL 1)
-        if(MSVC)
-            add_definitions(-DNATIVE_CPP_INCLUDE=${REACTOS_SOURCE_DIR}/sdk/include/c++)
-            include_directories(${REACTOS_SOURCE_DIR}/sdk/include/c++/stlport)
-        else()
-            replace_compile_flags("-nostdinc" " ")
-            add_definitions(-DPAL_STDCPP_COMPAT)
-        endif()
-    endif()
-
-    set(IS_CPP 1)
-endmacro()
-
 function(add_dependency_node _node)
     if(GENERATE_DEPENDENCY_GRAPH)
         get_target_property(_type ${_node} TYPE)
@@ -100,12 +18,16 @@ function(add_dependency_edge _source _target)
 endfunction()
 
 function(add_dependency_header)
-    file(WRITE ${REACTOS_BINARY_DIR}/dependencies.graphml "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<graphml>\n  <graph id=\"ReactOS dependencies\" edgedefault=\"directed\">\n")
+    if(GENERATE_DEPENDENCY_GRAPH)
+        file(WRITE ${REACTOS_BINARY_DIR}/dependencies.graphml "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<graphml>\n  <graph id=\"ReactOS dependencies\" edgedefault=\"directed\">\n")
+    endif()
 endfunction()
 
 function(add_dependency_footer)
-    add_dependency_node(ntdll)
-    file(APPEND ${REACTOS_BINARY_DIR}/dependencies.graphml "  </graph>\n</graphml>\n")
+    if(GENERATE_DEPENDENCY_GRAPH)
+        add_dependency_node(ntdll)
+        file(APPEND ${REACTOS_BINARY_DIR}/dependencies.graphml "  </graph>\n</graphml>\n")
+    endif()
 endfunction()
 
 function(add_message_headers _type)
@@ -185,8 +107,6 @@ macro(dir_to_num dir var)
         set(${var} 7)
     elseif(${dir} STREQUAL reactos/bin/testdata)
         set(${var} 8)
-    elseif(${dir} STREQUAL reactos/bin/suppl)
-        set(${var} 80)
     elseif(${dir} STREQUAL reactos/media)
         set(${var} 9)
     elseif(${dir} STREQUAL reactos/Microsoft.NET)
@@ -289,7 +209,7 @@ macro(dir_to_num dir var)
         set(${var} 58)
     elseif(${dir} STREQUAL reactos/winsxs/x86_reactos.apisets_6595b64144ccf1df_1.0.0.0_none_deadbeef)
         set(${var} 59)
-    elseif(${dir} STREQUAL reactos/winsxs/x86_reactos.newapi_6595b64144ccf1df_1.0.0.0_none_deadbeef)
+    elseif(${dir} STREQUAL reactos/bin/suppl)
         set(${var} 60)
     elseif(${dir} STREQUAL reactos/winsxs/x86_microsoft.windows.gdiplus_6595b64144ccf1df_1.0.14393.0_none_deadbeef)
         set(${var} 61)
@@ -303,6 +223,16 @@ macro(dir_to_num dir var)
         set(${var} 65)
     elseif(${dir} STREQUAL reactos/system32/spool/prtprocs/x64)
         set(${var} 66)
+    elseif(${dir} STREQUAL reactos/winsxs/amd64_microsoft.windows.common-controls_6595b64144ccf1df_5.82.2600.2982_none_deadbeef)
+        set(${var} 67)
+    elseif(${dir} STREQUAL reactos/winsxs/amd64_microsoft.windows.common-controls_6595b64144ccf1df_6.0.2600.2982_none_deadbeef)
+        set(${var} 68)
+    elseif(${dir} STREQUAL reactos/winsxs/amd64_microsoft.windows.gdiplus_6595b64144ccf1df_1.1.7601.23038_none_deadbeef)
+        set(${var} 69)
+    elseif(${dir} STREQUAL reactos/winsxs/amd64_reactos.apisets_6595b64144ccf1df_1.0.0.0_none_deadbeef)
+        set(${var} 70)
+    elseif(${dir} STREQUAL reactos/winsxs/amd64_microsoft.windows.gdiplus_6595b64144ccf1df_1.0.14393.0_none_deadbeef)
+        set(${var} 71)
     else()
         message(FATAL_ERROR "Wrong destination: ${dir}")
     endif()
@@ -556,15 +486,17 @@ elseif(USE_FOLDER_STRUCTURE)
 
     function(add_library name)
         _add_library(${name} ${ARGN})
-        get_target_property(_target_excluded ${name} EXCLUDE_FROM_ALL)
-        if(_target_excluded AND ${name} MATCHES "^lib.*")
-            set_property(TARGET "${name}" PROPERTY FOLDER "Importlibs")
-        else()
-            string(SUBSTRING ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_SOURCE_DIR_LENGTH} -1 CMAKE_CURRENT_SOURCE_DIR_RELATIVE)
-            set_property(TARGET "${name}" PROPERTY FOLDER "${CMAKE_CURRENT_SOURCE_DIR_RELATIVE}")
+        get_target_property(_type ${name} TYPE)
+        if (NOT _type STREQUAL "INTERFACE_LIBRARY")
+            get_target_property(_target_excluded ${name} EXCLUDE_FROM_ALL)
+            if(_target_excluded AND ${name} MATCHES "^lib.*")
+                set_property(TARGET "${name}" PROPERTY FOLDER "Importlibs")
+            else()
+                string(SUBSTRING ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_SOURCE_DIR_LENGTH} -1 CMAKE_CURRENT_SOURCE_DIR_RELATIVE)
+                set_property(TARGET "${name}" PROPERTY FOLDER "${CMAKE_CURRENT_SOURCE_DIR_RELATIVE}")
+            endif()
         endif()
         # cmake adds a module_EXPORTS define when compiling a module or a shared library. We don't use that.
-        get_target_property(_type ${name} TYPE)
         if(_type MATCHES SHARED_LIBRARY|MODULE_LIBRARY)
             set_target_properties(${name} PROPERTIES DEFINE_SYMBOL "")
         endif()
@@ -611,15 +543,15 @@ endif()
 function(add_importlibs _module)
     add_dependency_node(${_module})
     foreach(LIB ${ARGN})
-        if("${LIB}" MATCHES "msvcrt")
-            target_compile_definitions(${_module} PRIVATE _DLL __USE_CRTIMP)
-            target_link_libraries(${_module} msvcrtex)
-        endif()
         target_link_libraries(${_module} lib${LIB})
-        add_dependencies(${_module} lib${LIB})
         add_dependency_edge(${_module} ${LIB})
     endforeach()
 endfunction()
+
+# Some helper lists
+list(APPEND VALID_MODULE_TYPES kernel kerneldll kernelmodedriver wdmdriver nativecui nativedll win32cui win32gui win32dll win32ocx cpl module)
+list(APPEND KERNEL_MODULE_TYPES kernel kerneldll kernelmodedriver wdmdriver)
+list(APPEND NATIVE_MODULE_TYPES kernel kerneldll kernelmodedriver wdmdriver nativecui nativedll)
 
 function(set_module_type MODULE TYPE)
     cmake_parse_arguments(__module "UNICODE" "IMAGEBASE" "ENTRYPOINT" ${ARGN})
@@ -628,35 +560,26 @@ function(set_module_type MODULE TYPE)
         message(STATUS "set_module_type : unparsed arguments ${__module_UNPARSED_ARGUMENTS}, module : ${MODULE}")
     endif()
 
+    # Check this is a type that we know
+    if (NOT TYPE IN_LIST VALID_MODULE_TYPES)
+        message(FATAL_ERROR "Unknown type ${TYPE} for module ${MODULE}")
+    endif()
+
+    # Set our target property
+    set_target_properties(${MODULE} PROPERTIES REACTOS_MODULE_TYPE ${TYPE})
+
     # Add the module to the module group list, if it is defined
     if(DEFINED CURRENT_MODULE_GROUP)
         set_property(GLOBAL APPEND PROPERTY ${CURRENT_MODULE_GROUP}_MODULE_LIST "${MODULE}")
     endif()
 
-    # Set subsystem. Also take this as an occasion
-    # to error out if someone gave a non existing type
-    if((${TYPE} STREQUAL nativecui) OR (${TYPE} STREQUAL nativedll)
-            OR (${TYPE} STREQUAL kernelmodedriver) OR (${TYPE} STREQUAL wdmdriver) OR (${TYPE} STREQUAL kerneldll))
-        set(__subsystem native)
+    # Set subsystem.
+    if(TYPE IN_LIST NATIVE_MODULE_TYPES)
+        set_subsystem(${MODULE} native)
     elseif(${TYPE} STREQUAL win32cui)
-        set(__subsystem console)
+        set_subsystem(${MODULE} console)
     elseif(${TYPE} STREQUAL win32gui)
-        set(__subsystem windows)
-    elseif(NOT ((${TYPE} STREQUAL win32dll) OR (${TYPE} STREQUAL win32ocx)
-            OR (${TYPE} STREQUAL cpl) OR (${TYPE} STREQUAL module)))
-        message(FATAL_ERROR "Unknown type ${TYPE} for module ${MODULE}")
-    endif()
-
-    if(DEFINED __subsystem)
-        set_subsystem(${MODULE} ${__subsystem})
-    endif()
-
-    # Set the PE image version numbers from the NT OS version ReactOS is based on
-    if(MSVC)
-        add_target_link_flags(${MODULE} "/VERSION:5.01")
-    else()
-        add_target_link_flags(${MODULE} "-Wl,--major-image-version,5 -Wl,--minor-image-version,01")
-        add_target_link_flags(${MODULE} "-Wl,--major-os-version,5 -Wl,--minor-os-version,01")
+        set_subsystem(${MODULE} windows)
     endif()
 
     # Set unicode definitions
@@ -666,49 +589,32 @@ function(set_module_type MODULE TYPE)
 
     # Set entry point
     if(__module_ENTRYPOINT OR (__module_ENTRYPOINT STREQUAL "0"))
-        list(GET __module_ENTRYPOINT 0 __entrypoint)
-        list(LENGTH __module_ENTRYPOINT __length)
-        if(${__length} EQUAL 2)
-            list(GET __module_ENTRYPOINT 1 __entrystack)
-        elseif(NOT ${__length} EQUAL 1)
-            message(FATAL_ERROR "Wrong arguments for ENTRYPOINT parameter of set_module_type : ${__module_ENTRYPOINT}")
-        endif()
-        unset(__length)
+        set_entrypoint(${MODULE} ${__module_ENTRYPOINT})
     elseif(${TYPE} STREQUAL nativecui)
-        set(__entrypoint NtProcessStartup)
-        set(__entrystack 4)
+        set_entrypoint(${MODULE} NtProcessStartup 4)
     elseif(${TYPE} STREQUAL win32cui)
         if(__module_UNICODE)
-            set(__entrypoint wmainCRTStartup)
+            set_entrypoint(${MODULE} wmainCRTStartup)
         else()
-            set(__entrypoint mainCRTStartup)
+            set_entrypoint(${MODULE} mainCRTStartup)
         endif()
     elseif(${TYPE} STREQUAL win32gui)
         if(__module_UNICODE)
-            set(__entrypoint wWinMainCRTStartup)
+            set_entrypoint(${MODULE} wWinMainCRTStartup)
         else()
-            set(__entrypoint WinMainCRTStartup)
+            set_entrypoint(${MODULE} WinMainCRTStartup)
         endif()
     elseif((${TYPE} STREQUAL win32dll) OR (${TYPE} STREQUAL win32ocx)
             OR (${TYPE} STREQUAL cpl))
-        set(__entrypoint DllMainCRTStartup)
-        set(__entrystack 12)
+        set_entrypoint(${MODULE} DllMainCRTStartup 12)
     elseif((${TYPE} STREQUAL kernelmodedriver) OR (${TYPE} STREQUAL wdmdriver))
-        set(__entrypoint DriverEntry)
-        set(__entrystack 8)
+        set_entrypoint(${MODULE} DriverEntry 8)
     elseif(${TYPE} STREQUAL nativedll)
-        set(__entrypoint DllMain)
-        set(__entrystack 12)
+        set_entrypoint(${MODULE} DllMain 12)
+    elseif(TYPE STREQUAL kernel)
+        set_entrypoint(${MODULE} KiSystemStartup 4)
     elseif(${TYPE} STREQUAL module)
-        set(__entrypoint 0)
-    endif()
-
-    if(DEFINED __entrypoint)
-        if(DEFINED __entrystack)
-            set_entrypoint(${MODULE} ${__entrypoint} ${__entrystack})
-        else()
-            set_entrypoint(${MODULE} ${__entrypoint})
-        endif()
+        set_entrypoint(${MODULE} 0)
     endif()
 
     # Set base address
@@ -720,16 +626,27 @@ function(set_module_type MODULE TYPE)
         else()
             message(STATUS "${MODULE} has no base address")
         endif()
-    elseif((${TYPE} STREQUAL kernelmodedriver) OR (${TYPE} STREQUAL wdmdriver) OR (${TYPE} STREQUAL kerneldll))
-        set_image_base(${MODULE} 0x00010000)
+    elseif(TYPE IN_LIST KERNEL_MODULE_TYPES)
+        # special case for kernel
+        if (TYPE STREQUAL kernel)
+            set_image_base(${MODULE} 0x00400000)
+        else()
+            set_image_base(${MODULE} 0x00010000)
+        endif()
     endif()
 
     # Now do some stuff which is specific to each type
-    if((${TYPE} STREQUAL kernelmodedriver) OR (${TYPE} STREQUAL wdmdriver) OR (${TYPE} STREQUAL kerneldll))
+    if(TYPE IN_LIST KERNEL_MODULE_TYPES)
         add_dependencies(${MODULE} bugcodes xdk)
         if((${TYPE} STREQUAL kernelmodedriver) OR (${TYPE} STREQUAL wdmdriver))
             set_target_properties(${MODULE} PROPERTIES SUFFIX ".sys")
         endif()
+    endif()
+
+    if(TYPE STREQUAL kernel)
+        # Kernels are executables with exports
+        set_property(TARGET ${MODULE} PROPERTY ENABLE_EXPORTS TRUE)
+        set_target_properties(${MODULE} PROPERTIES DEFINE_SYMBOL "")
     endif()
 
     if(${TYPE} STREQUAL win32ocx)
@@ -787,20 +704,13 @@ endfunction()
 function(get_defines OUTPUT_VAR)
     get_directory_property(_defines COMPILE_DEFINITIONS)
     foreach(arg ${_defines})
-        list(APPEND __tmp_var -D${arg})
+        # Skip generator expressions
+        if (NOT arg MATCHES [[^\$<.*>$]])
+            list(APPEND __tmp_var -D${arg})
+        endif()
     endforeach()
     set(${OUTPUT_VAR} ${__tmp_var} PARENT_SCOPE)
 endfunction()
-
-if(NOT MSVC)
-    function(add_object_library _target)
-        add_library(${_target} OBJECT ${ARGN})
-    endfunction()
-else()
-    function(add_object_library _target)
-        add_library(${_target} ${ARGN})
-    endfunction()
-endif()
 
 function(add_registry_inf)
     # Add to the inf files list
@@ -821,8 +731,9 @@ function(create_registry_hives)
     # Convert files to utf16le
     foreach(_file ${_inf_files})
         get_filename_component(_file_name ${_file} NAME_WE)
-        string(REPLACE ${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR} _converted_file "${_file}")
-        string(REPLACE ${_file_name} "${_file_name}_utf16" _converted_file ${_converted_file})
+        file(RELATIVE_PATH _subdir ${CMAKE_SOURCE_DIR} ${_file})
+        get_filename_component(_subdir ${_subdir}  DIRECTORY)
+        set(_converted_file ${CMAKE_BINARY_DIR}/${_subdir}/${_file_name}_utf16.inf)
         add_custom_command(OUTPUT ${_converted_file}
                            COMMAND native-utf16le ${_file} ${_converted_file}
                            DEPENDS native-utf16le ${_file})
@@ -843,8 +754,8 @@ function(create_registry_hives)
     # BootCD setup system hive
     add_custom_command(
         OUTPUT ${CMAKE_BINARY_DIR}/boot/bootdata/SETUPREG.HIV
-        COMMAND native-mkhive -h:SETUPREG -u -d:${CMAKE_BINARY_DIR}/boot/bootdata ${CMAKE_BINARY_DIR}/boot/bootdata/hivesys_utf16.inf ${CMAKE_SOURCE_DIR}/boot/bootdata/setupreg.inf
-        DEPENDS native-mkhive ${CMAKE_BINARY_DIR}/boot/bootdata/hivesys_utf16.inf)
+        COMMAND native-mkhive -h:SETUPREG -u -d:${CMAKE_BINARY_DIR}/boot/bootdata ${_registry_inf} ${CMAKE_SOURCE_DIR}/boot/bootdata/setupreg.inf
+        DEPENDS native-mkhive ${_registry_inf})
 
     add_custom_target(bootcd_hives
         DEPENDS ${CMAKE_BINARY_DIR}/boot/bootdata/SETUPREG.HIV)
@@ -987,3 +898,15 @@ else()
     macro(add_pch _target _pch _skip_list)
     endmacro()
 endif()
+
+function(set_target_cpp_properties _target)
+    cmake_parse_arguments(_CPP "WITH_EXCEPTIONS;WITH_RTTI" "" "" ${ARGN})
+
+    if (_CPP_WITH_EXCEPTIONS)
+        set_target_properties(${_target} PROPERTIES WITH_CXX_EXCEPTIONS TRUE)
+    endif()
+
+    if (_CPP_WITH_RTTI)
+        set_target_properties(${_target} PROPERTIES WITH_CXX_RTTI TRUE)
+    endif()
+endfunction()

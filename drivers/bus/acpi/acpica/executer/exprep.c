@@ -543,10 +543,6 @@ AcpiExPrepFieldValue (
             }
         }
 
-        /* An additional reference for the container */
-
-        AcpiUtAddReference (ObjDesc->Field.RegionObj);
-
         ACPI_DEBUG_PRINT ((ACPI_DB_BFIELD,
             "RegionField: BitOff %X, Off %X, Gran %X, Region %p\n",
             ObjDesc->Field.StartFieldBitOffset,

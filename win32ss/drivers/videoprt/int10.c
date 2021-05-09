@@ -23,11 +23,62 @@
 
 #include <ndk/kefuncs.h>
 #include <ndk/halfuncs.h>
+#include <ndk/mmfuncs.h>
 
 #define NDEBUG
 #include <debug.h>
 
 /* PRIVATE FUNCTIONS **********************************************************/
+
+#define IsLowV86Mem(_Seg, _Off) ((((_Seg) << 4) + (_Off)) < (0xa0000))
+
+/* Those two functions below are there so that CSRSS can't access low mem.
+ * Expecially, MAKE IT CRASH ON NULL ACCESS */
+static
+VOID
+ProtectLowV86Mem(VOID)
+{
+    /* We pass a non-NULL address so that ZwAllocateVirtualMemory really does it
+     * And we truncate one page to get the right range spanned. */
+    PVOID BaseAddress = (PVOID)1;
+    NTSTATUS Status;
+    SIZE_T ViewSize = 0xa0000 - PAGE_SIZE;
+
+    /* We should only do that for CSRSS. */
+    ASSERT(PsGetCurrentProcess() == (PEPROCESS)CsrProcess);
+
+    /* Commit (again) the pages, but with PAGE_NOACCESS protection */
+    Status = ZwAllocateVirtualMemory(NtCurrentProcess(),
+                                     &BaseAddress,
+                                     0,
+                                     &ViewSize,
+                                     MEM_COMMIT,
+                                     PAGE_NOACCESS);
+    ASSERT(NT_SUCCESS(Status));
+}
+
+static
+VOID
+UnprotectLowV86Mem(VOID)
+{
+    /* We pass a non-NULL address so that ZwAllocateVirtualMemory really does it
+     * And we truncate one page to get the right range spanned. */
+    PVOID BaseAddress = (PVOID)1;
+    NTSTATUS Status;
+    SIZE_T ViewSize = 0xa0000 - PAGE_SIZE;
+
+    /* We should only do that for CSRSS, for the v86 address space */
+    ASSERT(PsGetCurrentProcess() == (PEPROCESS)CsrProcess);
+
+    /* Commit (again) the pages, but with PAGE_READWRITE protection */
+    Status = ZwAllocateVirtualMemory(NtCurrentProcess(),
+                                     &BaseAddress,
+                                     0,
+                                     &ViewSize,
+                                     MEM_COMMIT,
+                                     PAGE_READWRITE);
+    ASSERT(NT_SUCCESS(Status));
+}
 
 #if defined(_M_IX86) || defined(_M_AMD64)
 NTSTATUS
@@ -137,6 +188,9 @@ IntInitializeVideoAddressSpace(VOID)
     }
 #endif // _M_IX86
 
+    /* Protect the V86 address space after this */
+    ProtectLowV86Mem();
+
     /* Return success */
     return STATUS_SUCCESS;
 }
@@ -172,6 +226,7 @@ IntInt10AllocateBuffer(
 
     Size = *Length;
     MemoryAddress = (PVOID)0x20000;
+
     Status = ZwAllocateVirtualMemory(NtCurrentProcess(),
                                      &MemoryAddress,
                                      0,
@@ -266,7 +321,13 @@ IntInt10ReadMemory(
     INFO_(VIDEOPRT, "- Length: %x\n", Length);
 
     IntAttachToCSRSS(&CallingProcess, &ApcState);
+
+    if (IsLowV86Mem(Seg, Off))
+        UnprotectLowV86Mem();
     RtlCopyMemory(Buffer, (PVOID)((ULONG_PTR)(Seg << 4) | Off), Length);
+    if (IsLowV86Mem(Seg, Off))
+        ProtectLowV86Mem();
+
     IntDetachFromCSRSS(&CallingProcess, &ApcState);
 
     return NO_ERROR;
@@ -298,7 +359,11 @@ IntInt10WriteMemory(
     INFO_(VIDEOPRT, "- Length: %x\n", Length);
 
     IntAttachToCSRSS(&CallingProcess, &ApcState);
+    if (IsLowV86Mem(Seg, Off))
+        UnprotectLowV86Mem();
     RtlCopyMemory((PVOID)((ULONG_PTR)(Seg << 4) | Off), Buffer, Length);
+    if (IsLowV86Mem(Seg, Off))
+        ProtectLowV86Mem();
     IntDetachFromCSRSS(&CallingProcess, &ApcState);
 
     return NO_ERROR;
@@ -349,11 +414,14 @@ IntInt10CallBios(
                                FALSE,
                                NULL);
 
+    /* The kernel needs access here */
+    UnprotectLowV86Mem();
 #ifdef _M_AMD64
     Status = x86BiosCall(0x10, &BiosContext) ? STATUS_SUCCESS : STATUS_UNSUCCESSFUL;
 #else
     Status = Ke386CallBios(0x10, &BiosContext);
 #endif
+    ProtectLowV86Mem();
 
     KeReleaseMutex(&VideoPortInt10Mutex, FALSE);
 

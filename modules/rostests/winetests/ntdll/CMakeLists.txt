@@ -36,6 +36,8 @@ add_executable(ntdll_winetest
     ${SOURCE}
     ${PCH_SKIP_SOURCE})
 
+target_link_libraries(ntdll_winetest pseh)
+
 if(USE_CLANG_CL OR (NOT MSVC))
     target_compile_options(ntdll_winetest PRIVATE "-Wno-format")
 endif()

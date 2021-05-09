@@ -769,12 +769,6 @@ ParsePEHeaders(PFILE_INFO File)
                        + sizeof(IMAGE_FILE_HEADER)
                        + File->FileHeader->SizeOfOptionalHeader;
 
-    if (!File->FileHeader->PointerToSymbolTable)
-    {
-        fprintf(stderr, "No symbol table.\n");
-        return -1;
-    }
-
     /* Create some shortcuts */
     File->ImageBase = File->OptionalHeader->ImageBase;
     File->Symbols = File->FilePtr + File->FileHeader->PointerToSymbolTable;
@@ -865,15 +859,47 @@ int main(int argc, char* argv[])
     FILE_INFO File;
     FILE* outfile;
     int ret;
+    int arg, argstate = 0;
+    char *SourcePath = NULL;
 
-    if (argc != 3)
+    for (arg = 1; arg < argc; arg++)
     {
-        fprintf(stderr, "Usage: rsym <exefile> <symfile>\n");
-        exit(1);
+        switch (argstate)
+        {
+            default:
+                argstate = -1;
+                break;
+
+            case 0:
+                if (!strcmp(argv[arg], "-s"))
+                {
+                    argstate = 1;
+                }
+                else
+                {
+                    argstate = 2;
+                    pszInFile = convert_path(argv[arg]);
+                }
+            break;
+
+            case 1:
+                free(SourcePath);
+                SourcePath = strdup(argv[arg]);
+                argstate = 0;
+                break;
+
+            case 2:
+                pszOutFile = convert_path(argv[arg]);
+                argstate = 3;
+                break;
+        }
     }
 
-    pszInFile = convert_path(argv[1]);
-    pszOutFile = convert_path(argv[2]);
+    if (argstate != 3)
+    {
+        fprintf(stderr, "Usage: rsym [-s <sources>] <input> <output>\n");
+        exit(1);
+    }
 
     File.FilePtr = load_file(pszInFile, &File.cbInFileSize);
     if (!File.FilePtr)

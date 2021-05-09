@@ -152,10 +152,10 @@ ClockWndProc(HWND hwnd,
             pClockData->hGreyPen = CreatePen(PS_SOLID, 1, RGB(128, 128, 128));
             pClockData->hGreyBrush = CreateSolidBrush(RGB(128, 128, 128));
 
-            SetTimer(hwnd, ID_TIMER, 1000, NULL);
-            pClockData->bTimer = TRUE;
             GetLocalTime(&pClockData->stCurrent);
             pClockData->stPrevious = pClockData->stCurrent;
+
+            pClockData->bTimer = (SetTimer(hwnd, ID_TIMER, 1000 - pClockData->stCurrent.wMilliseconds, NULL) != 0);
             break;
 
         case WM_SIZE:
@@ -168,6 +168,12 @@ ClockWndProc(HWND hwnd,
             GetLocalTime(&pClockData->stCurrent);
             InvalidateRect(hwnd, NULL, FALSE);
             pClockData->stPrevious = pClockData->stCurrent;
+
+            // Reset timeout.
+            if (pClockData->bTimer)
+            {
+                SetTimer(hwnd, ID_TIMER, 1000 - pClockData->stCurrent.wMilliseconds, NULL);
+            }
             break;
 
         case WM_PAINT:
@@ -255,8 +261,10 @@ ClockWndProc(HWND hwnd,
         case CLM_STARTCLOCK:
             if (!pClockData->bTimer)
             {
-                SetTimer(hwnd, ID_TIMER, 1000, NULL);
-                pClockData->bTimer = TRUE;
+                SYSTEMTIME LocalTime;
+
+                GetLocalTime(&LocalTime);
+                pClockData->bTimer = (SetTimer(hwnd, ID_TIMER, 1000 - LocalTime.wMilliseconds, NULL) != 0);
             }
             break;
 

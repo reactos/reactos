@@ -8,14 +8,23 @@
 /* INCLUDES ******************************************************************/
 
 #include <ntoskrnl.h>
+#include <fltkernel.h>
 
 #define NDEBUG
 #include <debug.h>
+
+ULONG ProcessCount;
+BOOLEAN CcPfEnablePrefetcher;
+SIZE_T KeXStateLength = sizeof(XSAVE_FORMAT);
 
 VOID
 KiRetireDpcListInDpcStack(
     PKPRCB Prcb,
     PVOID DpcStack);
+
+NTSTATUS
+KiConvertToGuiThread(
+    VOID);
 
 VOID
 NTAPI
@@ -87,29 +96,79 @@ KeZeroPages(IN PVOID Address,
 }
 
 PVOID
+KiSwitchKernelStackHelper(
+    LONG_PTR StackOffset,
+    PVOID OldStackBase);
+
+/*
+ * Kernel stack layout (example pointers):
+ * 0xFFFFFC0F'2D008000 KTHREAD::StackBase
+ *    [XSAVE_AREA size == KeXStateLength = 0x440]
+ * 0xFFFFFC0F'2D007BC0 KTHREAD::StateSaveArea _XSAVE_FORMAT
+ * 0xFFFFFC0F'2D007B90 KTHREAD::InitialStack
+ *    [0x190 bytes KTRAP_FRAME]
+ * 0xFFFFFC0F'2D007A00 KTHREAD::TrapFrame
+ *    [KSTART_FRAME] or ...
+ *    [KSWITCH_FRAME]
+ * 0xFFFFFC0F'2D007230 KTHREAD::KernelStack
+ */
+
+PVOID
 NTAPI
-KeSwitchKernelStack(PVOID StackBase, PVOID StackLimit)
+KiSwitchKernelStack(PVOID StackBase, PVOID StackLimit)
 {
-    UNIMPLEMENTED;
-    __debugbreak();
-    return NULL;
+    PKTHREAD CurrentThread;
+    PVOID OldStackBase;
+    LONG_PTR StackOffset;
+    SIZE_T StackSize;
+    PKIPCR Pcr;
+
+    /* Get the current thread */
+    CurrentThread = KeGetCurrentThread();
+
+    /* Save the old stack base */
+    OldStackBase = CurrentThread->StackBase;
+
+    /* Get the size of the current stack */
+    StackSize = (ULONG_PTR)CurrentThread->StackBase - CurrentThread->StackLimit;
+    ASSERT(StackSize <= (ULONG_PTR)StackBase - (ULONG_PTR)StackLimit);
+
+    /* Copy the current stack contents to the new stack */
+    RtlCopyMemory((PUCHAR)StackBase - StackSize,
+                  (PVOID)CurrentThread->StackLimit,
+                  StackSize);
+
+    /* Calculate the offset between the old and the new stack */
+    StackOffset = (PUCHAR)StackBase - (PUCHAR)CurrentThread->StackBase;
+
+    /* Disable interrupts while messing with the stack */
+    _disable();
+
+    /* Set the new trap frame */
+    CurrentThread->TrapFrame = (PKTRAP_FRAME)Add2Ptr(CurrentThread->TrapFrame,
+                                                     StackOffset);
+
+    /* Set the new initial stack */
+    CurrentThread->InitialStack = Add2Ptr(CurrentThread->InitialStack,
+                                          StackOffset);
+
+    /* Set the new stack limits */
+    CurrentThread->StackBase = StackBase;
+    CurrentThread->StackLimit = (ULONG_PTR)StackLimit;
+    CurrentThread->LargeStack = TRUE;
+
+    /* Adjust RspBase in the PCR */
+    Pcr = (PKIPCR)KeGetPcr();
+    Pcr->Prcb.RspBase += StackOffset;
+
+    /* Adjust Rsp0 in the TSS */
+    Pcr->TssBase->Rsp0 += StackOffset;
+
+    return OldStackBase;
 }
 
-NTSTATUS
-NTAPI
-KeUserModeCallback(IN ULONG RoutineIndex,
-                   IN PVOID Argument,
-                   IN ULONG ArgumentLength,
-                   OUT PVOID *Result,
-                   OUT PULONG ResultLength)
-{
-    UNIMPLEMENTED;
-    __debugbreak();
-    return STATUS_UNSUCCESSFUL;
-}
-
+DECLSPEC_NORETURN
 VOID
-FASTCALL
 KiIdleLoop(VOID)
 {
     PKPRCB Prcb = KeGetCurrentPrcb();
@@ -170,108 +229,6 @@ KiIdleLoop(VOID)
     }
 }
 
-
-/*! \name KiInitializeUserApc
- *
- *  \brief
- *      Prepares the current trap frame (which must have come from user mode)
- *      with the ntdll.KiUserApcDispatcher entrypoint, copying a CONTEXT
- *      record with the context from the old trap frame to the threads user
- *      mode stack.
- *
- *  \param ExceptionFrame
- *  \param TrapFrame
- *  \param NormalRoutine
- *  \param NormalContext
- *  \param SystemArgument1
- *  \param SystemArgument2
- *
- *  \remarks
- *      This function is called from KiDeliverApc, when the trap frame came
- *      from user mode. This happens before a systemcall or interrupt exits back
- *      to usermode or when a thread is started from PspUserThreadstartup.
- *      The trap exit code will then leave to KiUserApcDispatcher which in turn
- *      calls the NormalRoutine, passing NormalContext, SystemArgument1 and
- *      SystemArgument2 as parameters. When that function returns, it calls
- *      NtContinue to return back to the kernel, where the old context that was
- *      saved on the usermode stack is restored and execution is transferred
- *      back to usermode, where the original trap originated from.
- *
- *--*/
-VOID
-NTAPI
-KiInitializeUserApc(IN PKEXCEPTION_FRAME ExceptionFrame,
-                    IN PKTRAP_FRAME TrapFrame,
-                    IN PKNORMAL_ROUTINE NormalRoutine,
-                    IN PVOID NormalContext,
-                    IN PVOID SystemArgument1,
-                    IN PVOID SystemArgument2)
-{
-    CONTEXT Context = { 0 };
-    ULONG64 AlignedRsp, Stack;
-    EXCEPTION_RECORD SehExceptRecord;
-
-    /* Sanity check, that the trap frame is from user mode */
-    ASSERT((TrapFrame->SegCs & MODE_MASK) != KernelMode);
-
-    /* Convert the current trap frame to a context */
-    Context.ContextFlags = CONTEXT_FULL | CONTEXT_DEBUG_REGISTERS;
-    KeTrapFrameToContext(TrapFrame, ExceptionFrame, &Context);
-
-    /* We jump to KiUserApcDispatcher in ntdll */
-    TrapFrame->Rip = (ULONG64)KeUserApcDispatcher;
-
-    /* Setup Ring 3 segments */
-    TrapFrame->SegCs = KGDT64_R3_CODE | RPL_MASK;
-    TrapFrame->SegDs = KGDT64_R3_DATA | RPL_MASK;
-    TrapFrame->SegEs = KGDT64_R3_DATA | RPL_MASK;
-    TrapFrame->SegFs = KGDT64_R3_CMTEB | RPL_MASK;
-    TrapFrame->SegGs = KGDT64_R3_DATA | RPL_MASK;
-    TrapFrame->SegSs = KGDT64_R3_DATA | RPL_MASK;
-
-    /* Sanitize EFLAGS, enable interrupts */
-    TrapFrame->EFlags = (Context.EFlags & EFLAGS_USER_SANITIZE);
-    TrapFrame->EFlags |= EFLAGS_INTERRUPT_MASK;
-
-    /* Set parameters for KiUserApcDispatcher */
-    Context.P1Home = (ULONG64)NormalContext;
-    Context.P2Home = (ULONG64)SystemArgument1;
-    Context.P3Home = (ULONG64)SystemArgument2;
-    Context.P4Home = (ULONG64)NormalRoutine;
-
-    /* Check if thread has IOPL and force it enabled if so */
-    //if (KeGetCurrentThread()->Iopl) TrapFrame->EFlags |= EFLAGS_IOPL;
-
-    /* Align Stack to 16 bytes and allocate space */
-    AlignedRsp = Context.Rsp & ~15;
-    Stack = AlignedRsp - sizeof(CONTEXT);
-    TrapFrame->Rsp = Stack;
-
-    /* The stack must be 16 byte aligned for KiUserApcDispatcher */
-    ASSERT((Stack & 15) == 0);
-
-    /* Protect with SEH */
-    _SEH2_TRY
-    {
-         /* Probe the stack */
-        ProbeForWrite((PCONTEXT)Stack,  sizeof(CONTEXT), 8);
-
-        /* Copy the context */
-        RtlCopyMemory((PCONTEXT)Stack, &Context, sizeof(CONTEXT));
-    }
-    _SEH2_EXCEPT((RtlCopyMemory(&SehExceptRecord, _SEH2_GetExceptionInformation()->ExceptionRecord, sizeof(EXCEPTION_RECORD)), EXCEPTION_EXECUTE_HANDLER))
-    {
-        /* Dispatch the exception */
-        SehExceptRecord.ExceptionAddress = (PVOID)TrapFrame->Rip;
-        KiDispatchException(&SehExceptRecord,
-                            ExceptionFrame,
-                            TrapFrame,
-                            UserMode,
-                            TRUE);
-    }
-    _SEH2_END;
-}
-
 VOID
 NTAPI
 KiSwapProcess(IN PKPROCESS NewProcess,
@@ -298,24 +255,31 @@ NTSTATUS
 NtSyscallFailure(void)
 {
     /* This is the failure function */
-    return STATUS_ACCESS_VIOLATION;
+    return (NTSTATUS)KeGetCurrentThread()->TrapFrame->Rax;
 }
 
 PVOID
 KiSystemCallHandler(
-    IN PKTRAP_FRAME TrapFrame,
-    IN ULONG64 P2,
-    IN ULONG64 P3,
-    IN ULONG64 P4)
+    _In_ ULONG64 ReturnAddress,
+    _In_ ULONG64 P2,
+    _In_ ULONG64 P3,
+    _In_ ULONG64 P4)
 {
+    PKTRAP_FRAME TrapFrame;
     PKSERVICE_TABLE_DESCRIPTOR DescriptorTable;
     PKTHREAD Thread;
     PULONG64 KernelParams, UserParams;
     ULONG ServiceNumber, Offset, Count;
     ULONG64 UserRsp;
 
-    DPRINT("Syscall #%ld\n", TrapFrame->Rax);
-    //__debugbreak();
+    /* Get a pointer to the trap frame */
+    TrapFrame = (PKTRAP_FRAME)((PULONG64)_AddressOfReturnAddress() + 1 + MAX_SYSCALL_PARAMS);
+
+    /* Save some values in the trap frame */
+    TrapFrame->Rip = ReturnAddress;
+    TrapFrame->Rdx = P2;
+    TrapFrame->R8 = P3;
+    TrapFrame->R9 = P4;
 
     /* Increase system call count */
     __addgsdword(FIELD_OFFSET(KIPCR, Prcb.KeSystemCalls), 1);
@@ -352,13 +316,55 @@ KiSystemCallHandler(
     Offset = (ServiceNumber >> SERVICE_TABLE_SHIFT) & SERVICE_TABLE_MASK;
     ServiceNumber &= SERVICE_NUMBER_MASK;
 
+    /* Check for win32k system calls */
+    if (Offset & SERVICE_TABLE_TEST)
+    {
+        ULONG GdiBatchCount;
+
+        /* Read the GDI batch count from the TEB */
+        _SEH2_TRY
+        {
+            GdiBatchCount = NtCurrentTeb()->GdiBatchCount;
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            GdiBatchCount = 0;
+        }
+        _SEH2_END;
+
+        /* Flush batch, if there are entries */
+        if (GdiBatchCount != 0)
+        {
+            KeGdiFlushUserBatch();
+        }
+    }
+
     /* Get descriptor table */
     DescriptorTable = (PVOID)((ULONG_PTR)Thread->ServiceTable + Offset);
+
+    /* Validate the system call number */
+    if (ServiceNumber >= DescriptorTable->Limit)
+    {
+        /* Check if this is a GUI call */
+        if (!(Offset & SERVICE_TABLE_TEST))
+        {
+            /* Fail the call */
+            TrapFrame->Rax = STATUS_INVALID_SYSTEM_SERVICE;
+            return (PVOID)NtSyscallFailure;
+        }
+
+        /* Convert us to a GUI thread 
+           To be entirely correct. we return KiConvertToGuiThread,
+           which allocates a new stack, switches to it, calls
+           PsConvertToGuiThread and resumes in the middle of
+           KiSystemCallEntry64 to restart the system call handling. */
+        return (PVOID)KiConvertToGuiThread;
+    }
 
     /* Get stack bytes and calculate argument count */
     Count = DescriptorTable->Number[ServiceNumber] / 8;
 
-    __try
+    _SEH2_TRY
     {
         switch (Count)
         {
@@ -374,10 +380,10 @@ KiSystemCallHandler(
             case 7: KernelParams[6] = UserParams[6];
             case 6: KernelParams[5] = UserParams[5];
             case 5: KernelParams[4] = UserParams[4];
-            case 4: KernelParams[3] = P4;
-            case 3: KernelParams[2] = P3;
-            case 2: KernelParams[1] = P2;
-            case 1: KernelParams[0] = TrapFrame->R10;
+            case 4:
+            case 3:
+            case 2:
+            case 1:
             case 0:
                 break;
 
@@ -386,12 +392,12 @@ KiSystemCallHandler(
                 break;
         }
     }
-    __except(1)
+    _SEH2_EXCEPT(1)
     {
         TrapFrame->Rax = _SEH2_GetExceptionCode();
         return (PVOID)NtSyscallFailure;
     }
-
+    _SEH2_END;
 
     return (PVOID)DescriptorTable->Base[ServiceNumber];
 }
@@ -405,17 +411,6 @@ KiSystemService(IN PKTHREAD Thread,
 {
     UNIMPLEMENTED;
     __debugbreak();
-}
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-NtCallbackReturn
-( IN PVOID Result OPTIONAL, IN ULONG ResultLength, IN NTSTATUS Status )
-{
-    UNIMPLEMENTED;
-    __debugbreak();
-    return STATUS_UNSUCCESSFUL;
 }
 
 NTSTATUS
@@ -436,19 +431,5 @@ NtVdmControl(IN ULONG ControlCode,
     /* Not supported */
     return STATUS_NOT_IMPLEMENTED;
 }
-
-NTSTATUS
-NTAPI
-KiCallUserMode(
-    IN PVOID *OutputBuffer,
-    IN PULONG OutputLength)
-{
-    UNIMPLEMENTED;
-    __debugbreak();
-    return STATUS_UNSUCCESSFUL;
-}
-
-ULONG ProcessCount;
-BOOLEAN CcPfEnablePrefetcher;
 
 

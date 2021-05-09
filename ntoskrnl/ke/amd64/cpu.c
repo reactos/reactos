@@ -50,6 +50,7 @@ static const CHAR CmpRiseID[]        = "RiseRiseRise";
 
 /* FUNCTIONS *****************************************************************/
 
+CODE_SEG("INIT")
 VOID
 NTAPI
 KiSetProcessorType(VOID)
@@ -120,6 +121,7 @@ KiGetCpuVendor(VOID)
     return CPU_UNKNOWN;
 }
 
+CODE_SEG("INIT")
 ULONG
 NTAPI
 KiGetFeatureBits(VOID)
@@ -209,6 +211,7 @@ KiGetFeatureBits(VOID)
     return FeatureBits;
 }
 
+CODE_SEG("INIT")
 VOID
 NTAPI
 KiGetCacheInformation(VOID)

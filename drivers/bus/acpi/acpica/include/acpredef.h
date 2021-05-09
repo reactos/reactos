@@ -138,7 +138,7 @@ enum AcpiReturnPackageTypes
 
 /* Support macros for users of the predefined info table */
 
-#define METHOD_PREDEF_ARGS_MAX          4
+#define METHOD_PREDEF_ARGS_MAX          5
 #define METHOD_ARG_BIT_WIDTH            3
 #define METHOD_ARG_MASK                 0x0007
 #define ARG_COUNT_IS_MINIMUM            0x8000
@@ -154,6 +154,7 @@ enum AcpiReturnPackageTypes
 #define METHOD_2ARGS(a1,a2)             (2 | (a1 << 3) | (a2 << 6))
 #define METHOD_3ARGS(a1,a2,a3)          (3 | (a1 << 3) | (a2 << 6) | (a3 << 9))
 #define METHOD_4ARGS(a1,a2,a3,a4)       (4 | (a1 << 3) | (a2 << 6) | (a3 << 9) | (a4 << 12))
+#define METHOD_5ARGS(a1,a2,a3,a4,a5)    (5 | (a1 << 3) | (a2 << 6) | (a3 << 9) | (a4 << 12) | (a5 << 15))
 
 #define METHOD_RETURNS(type)            (type)
 #define METHOD_NO_RETURN_VALUE          0
@@ -915,8 +916,28 @@ const ACPI_PREDEFINED_INFO          AcpiGbl_PredefinedMethods[] =
     {{"_S4W",   METHOD_0ARGS,
                 METHOD_RETURNS (ACPI_RTYPE_INTEGER)}},
 
+    {{"_SBA",   METHOD_0ARGS,
+                METHOD_RETURNS (ACPI_RTYPE_PACKAGE)}}, /* Fixed-length (4 Int) */
+                    PACKAGE_INFO (ACPI_PTYPE1_FIXED, ACPI_RTYPE_INTEGER, 4,0,0,0),
+
+    {{"_SBI",   METHOD_0ARGS,
+                METHOD_RETURNS (ACPI_RTYPE_PACKAGE)}}, /* Fixed-length (1 Int, 1 Buf) */
+                    PACKAGE_INFO (ACPI_PTYPE1_FIXED, ACPI_RTYPE_INTEGER, 1, ACPI_RTYPE_BUFFER,1,0),
+
+    {{"_SBR",   METHOD_3ARGS (ACPI_TYPE_INTEGER, ACPI_TYPE_INTEGER, ACPI_TYPE_INTEGER),
+                METHOD_RETURNS (ACPI_RTYPE_PACKAGE)}}, /* Fixed-length (2 Int) */
+                    PACKAGE_INFO (ACPI_PTYPE1_FIXED, ACPI_RTYPE_INTEGER, 2, ACPI_RTYPE_BUFFER | ACPI_RTYPE_INTEGER, 1,0),
+
     {{"_SBS",   METHOD_0ARGS,
                 METHOD_RETURNS (ACPI_RTYPE_INTEGER)}},
+
+    {{"_SBT",   METHOD_4ARGS (ACPI_TYPE_INTEGER, ACPI_TYPE_INTEGER, ACPI_TYPE_INTEGER, ACPI_TYPE_ANY),
+                METHOD_RETURNS (ACPI_RTYPE_PACKAGE)}}, /* Fixed-length (2 Int, 1 Buf | Int) */
+                    PACKAGE_INFO (ACPI_PTYPE1_FIXED, ACPI_RTYPE_INTEGER, 2, ACPI_RTYPE_BUFFER | ACPI_RTYPE_INTEGER, 1,0),
+
+    {{"_SBW",   METHOD_5ARGS (ACPI_TYPE_INTEGER, ACPI_TYPE_INTEGER, ACPI_TYPE_INTEGER, ACPI_TYPE_INTEGER, ACPI_TYPE_ANY),
+                METHOD_RETURNS (ACPI_RTYPE_PACKAGE)}},
+                    PACKAGE_INFO (ACPI_PTYPE1_FIXED, ACPI_RTYPE_BUFFER | ACPI_RTYPE_INTEGER, 1, 0,0,0),
 
     {{"_SCP",   METHOD_1ARGS (ACPI_TYPE_INTEGER) | ARG_COUNT_IS_MINIMUM,
                 METHOD_NO_RETURN_VALUE}},   /* Acpi 1.0 allowed 1 integer arg. Acpi 3.0 expanded to 3 args. Allow both. */

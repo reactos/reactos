@@ -49,7 +49,6 @@ typedef struct _DC *PDC;
 #include "gdi/ntgdi/pen.h"
 #include "gdi/ntgdi/cliprgn.h"
 #include "gdi/ntgdi/coord.h"
-#include "gdi/ntgdi/gdifloat.h"
 #include "gdi/ntgdi/path.h"
 #include "gdi/dib/dib.h"
 #include "reactx/ntddraw/intddraw.h"

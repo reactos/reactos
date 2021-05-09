@@ -108,14 +108,12 @@ typedef struct _INT_MAPPING
 //
 // Initialization Routines
 //
-INIT_FUNCTION
 VOID
 NTAPI
 FsRtlInitializeLargeMcbs(
     VOID
 );
 
-INIT_FUNCTION
 VOID
 NTAPI
 FsRtlInitializeTunnels(
@@ -131,7 +129,6 @@ FsRtlPTeardownPerFileObjectContexts(
     IN PFILE_OBJECT FileObject
 );
 
-INIT_FUNCTION
 BOOLEAN
 NTAPI
 FsRtlInitSystem(
@@ -143,3 +140,19 @@ FsRtlInitSystem(
 //
 extern PERESOURCE FsRtlPagingIoResources;
 extern PAGED_LOOKASIDE_LIST FsRtlFileLockLookasideList;
+
+//
+// File locking routine
+//
+NTSTATUS
+NTAPI
+FsRtlAcquireToCreateMappedSection(_In_ PFILE_OBJECT FileObject,
+                                  _In_ ULONG SectionPageProtection);
+
+VOID
+NTAPI
+FsRtlReleaseFileForCcFlush(IN PFILE_OBJECT FileObject);
+
+NTSTATUS
+NTAPI
+FsRtlAcquireFileForCcFlushEx(IN PFILE_OBJECT FileObject);

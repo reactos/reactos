@@ -263,7 +263,7 @@ HRESULT CMenuToolbarBase::OnCustomDraw(LPNMTBCUSTOMDRAW cdraw, LRESULT * theResu
 }
 
 CMenuToolbarBase::CMenuToolbarBase(CMenuBand *menuBand, BOOL usePager) :
-    m_pager(this, 1),
+    m_pager(WC_PAGESCROLLER, this),
     m_useFlatMenus(FALSE),
     m_disableMouseTrack(FALSE),
     m_timerEnabled(FALSE),
@@ -398,6 +398,7 @@ HRESULT CMenuToolbarBase::CreateToolbar(HWND hwndParent, DWORD dwFlags)
         rc.bottom = 1;
     }
 
+    // HACK & FIXME: CORE-17505
     SubclassWindow(CToolbar::Create(hwndParent, tbStyles, tbExStyles));
 
     SetWindowTheme(m_hWnd, L"", L"");
@@ -1163,7 +1164,8 @@ HRESULT  CMenuStaticToolbar::SetMenu(
     m_hwndMenu = hwnd;
     m_dwMenuFlags = dwFlags;
 
-    ClearToolbar();
+    if (IsWindow())
+        ClearToolbar();
 
     return S_OK;
 }
@@ -1408,7 +1410,8 @@ HRESULT CMenuSFToolbar::SetShellFolder(IShellFolder *psf, LPCITEMIDLIST pidlFold
     m_hKey = hKey;
     m_dwMenuFlags = dwFlags;
 
-    ClearToolbar();
+    if (IsWindow())
+        ClearToolbar();
 
     return S_OK;
 }

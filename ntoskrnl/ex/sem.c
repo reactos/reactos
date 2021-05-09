@@ -13,10 +13,6 @@
 #define NDEBUG
 #include <debug.h>
 
-#if defined (ALLOC_PRAGMA)
-#pragma alloc_text(INIT, ExpInitializeSemaphoreImplementation)
-#endif
-
 /* GLOBALS ******************************************************************/
 
 POBJECT_TYPE ExSemaphoreObjectType;
@@ -32,12 +28,12 @@ GENERIC_MAPPING ExSemaphoreMapping =
 static const INFORMATION_CLASS_INFO ExSemaphoreInfoClass[] =
 {
      /* SemaphoreBasicInformation */
-    ICI_SQ_SAME( sizeof(SEMAPHORE_BASIC_INFORMATION), sizeof(ULONG), ICIF_QUERY),
+    IQS_SAME(SEMAPHORE_BASIC_INFORMATION, ULONG, ICIF_QUERY),
 };
 
 /* FUNCTIONS *****************************************************************/
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 BOOLEAN
 NTAPI
 ExpInitializeSemaphoreImplementation(VOID)

@@ -1,0 +1,358 @@
+diff --git a/dll/directx/wine/d3dx9_36/shader.c b/dll/directx/wine/d3dx9_36/shader.c
+index 6a038265d11..c54bacc364b 100644
+--- a/dll/directx/wine/d3dx9_36/shader.c
++++ b/dll/directx/wine/d3dx9_36/shader.c
+@@ -4,6 +4,7 @@
+ /*
+  * Copyright 2008 Luis Busquets
+  * Copyright 2009 Matteo Bruni
++ * Copyright 2010, 2013, 2016 Christian Costa
+  * Copyright 2011 Travis Athougies
+  *
+  * This library is free software; you can redistribute it and/or
+@@ -21,7 +22,7 @@
+  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+  */
+ 
+-
++#include <stdio.h>
+ #include "d3dx9_private.h"
+ #include "d3dcommon.h"
+ #include "d3dcompiler.h"
+@@ -2341,10 +2342,334 @@ HRESULT WINAPI D3DXGetShaderSamplers(const DWORD *byte_code, const char **sample
+     return D3D_OK;
+ }
+ 
++
++static const char *decl_usage[] = { "position", "blendweight", "blendindices", "normal", "psize", "texcoord",
++                                    "tangent", "binormal", "tessfactor", "positiont", "color" };
++
++static const char *tex_type[] = { "", "1d", "2d", "cube", "volume" };
++
++static int add_modifier(char *buffer, DWORD param)
++{
++    char *buf = buffer;
++    DWORD dst_mod = param & D3DSP_DSTMOD_MASK;
++
++    if (dst_mod & D3DSPDM_SATURATE)
++        buf += sprintf(buf, "_sat");
++    if (dst_mod & D3DSPDM_PARTIALPRECISION)
++        buf += sprintf(buf, "_pp");
++    if (dst_mod & D3DSPDM_MSAMPCENTROID)
++        buf += sprintf(buf, "_centroid");
++
++    return buf - buffer;
++}
++
++static int add_register(char *buffer, DWORD param, BOOL dst, BOOL ps)
++{
++    char *buf = buffer;
++    DWORD reg_type = ((param & D3DSP_REGTYPE_MASK2) >> D3DSP_REGTYPE_SHIFT2)
++                   | ((param & D3DSP_REGTYPE_MASK) >> D3DSP_REGTYPE_SHIFT);
++    DWORD reg_num = param & D3DSP_REGNUM_MASK;
++
++    if (reg_type == D3DSPR_INPUT)
++        buf += sprintf(buf, "v%d", reg_num);
++    else if (reg_type == D3DSPR_CONST)
++        buf += sprintf(buf, "c%d", reg_num);
++    else if (reg_type == D3DSPR_TEMP)
++        buf += sprintf(buf, "r%d", reg_num);
++    else if (reg_type == D3DSPR_ADDR)
++        buf += sprintf(buf, "%s%d", ps ? "t" : "a", reg_num);
++    else if (reg_type == D3DSPR_SAMPLER)
++        buf += sprintf(buf, "s%d", reg_num);
++    else if (reg_type == D3DSPR_RASTOUT)
++        buf += sprintf(buf, "oPos");
++    else if (reg_type == D3DSPR_COLOROUT)
++        buf += sprintf(buf, "oC%d", reg_num);
++    else if (reg_type == D3DSPR_TEXCRDOUT)
++        buf += sprintf(buf, "oT%d", reg_num);
++    else if (reg_type == D3DSPR_ATTROUT)
++        buf += sprintf(buf, "oD%d", reg_num);
++    else
++        buf += sprintf(buf, "? (%d)", reg_type);
++
++    if (dst)
++    {
++        if ((param & D3DSP_WRITEMASK_ALL) != D3DSP_WRITEMASK_ALL)
++        {
++            buf += sprintf(buf, ".%s%s%s%s", param & D3DSP_WRITEMASK_0 ? "x" : "",
++                                             param & D3DSP_WRITEMASK_1 ? "y" : "",
++                                             param & D3DSP_WRITEMASK_2 ? "z" : "",
++                                             param & D3DSP_WRITEMASK_3 ? "w" : "");
++        }
++    }
++    else
++    {
++        if ((param & D3DVS_SWIZZLE_MASK) != D3DVS_NOSWIZZLE)
++        {
++            if ( ((param & D3DSP_SWIZZLE_MASK) == (D3DVS_X_X | D3DVS_Y_X | D3DVS_Z_X | D3DVS_W_X)) ||
++                 ((param & D3DSP_SWIZZLE_MASK) == (D3DVS_X_Y | D3DVS_Y_Y | D3DVS_Z_Y | D3DVS_W_Y)) ||
++                 ((param & D3DSP_SWIZZLE_MASK) == (D3DVS_X_Z | D3DVS_Y_Z | D3DVS_Z_Z | D3DVS_W_Z)) ||
++                 ((param & D3DSP_SWIZZLE_MASK) == (D3DVS_X_W | D3DVS_Y_W | D3DVS_Z_W | D3DVS_W_W)) )
++                buf += sprintf(buf, ".%c", 'w' + (((param >> D3DVS_SWIZZLE_SHIFT) + 1) & 0x3));
++            else
++                buf += sprintf(buf, ".%c%c%c%c", 'w' + (((param >> (D3DVS_SWIZZLE_SHIFT+0)) + 1) & 0x3),
++                                                 'w' + (((param >> (D3DVS_SWIZZLE_SHIFT+2)) + 1) & 0x3),
++                                                 'w' + (((param >> (D3DVS_SWIZZLE_SHIFT+4)) + 1) & 0x3),
++                                                 'w' + (((param >> (D3DVS_SWIZZLE_SHIFT+6)) + 1) & 0x3));
++        }
++    }
++
++    return buf - buffer;
++}
++
++struct instr_info
++{
++    DWORD opcode;
++    const char *name;
++    int length;
++    int (*function)(const struct instr_info *info, DWORD **ptr, char *buffer, BOOL ps);
++    WORD min_version;
++    WORD max_version;
++};
++
++static int instr_comment(const struct instr_info *info, DWORD **ptr, char *buffer, BOOL ps)
++{
++    *ptr += 1 + ((**ptr & D3DSI_COMMENTSIZE_MASK) >> D3DSI_COMMENTSIZE_SHIFT);
++    return 0;
++}
++
++static int instr_def(const struct instr_info *info, DWORD **ptr, char *buffer, BOOL ps)
++{
++    int len = sprintf(buffer, "    def c%d, %g, %g, %g, %g\n", *(*ptr+1) & D3DSP_REGNUM_MASK,
++                      (double)*(float*)(*ptr+2), (double)*(float*)(*ptr+3),
++                      (double)*(float*)(*ptr+4), (double)*(float*)(*ptr+5));
++    *ptr += 6;
++    return len;
++}
++
++static int instr_dcl(const struct instr_info *info, DWORD **ptr, char *buffer, BOOL ps)
++{
++    DWORD param1 = *++*ptr;
++    DWORD param2 = *++*ptr;
++    DWORD usage = (param1 & D3DSP_DCL_USAGE_MASK) >> D3DSP_DCL_USAGE_SHIFT;
++    DWORD usage_index = (param1 & D3DSP_DCL_USAGEINDEX_MASK) >> D3DSP_DCL_USAGEINDEX_SHIFT;
++    char *buf = buffer;
++
++    buf += sprintf(buf, "    dcl");
++    if (ps)
++    {
++        if (param1 & D3DSP_TEXTURETYPE_MASK)
++            buf += sprintf(buf, "_%s", (usage <= D3DSTT_VOLUME) ?
++                tex_type[(param1 & D3DSP_TEXTURETYPE_MASK) >> D3DSP_TEXTURETYPE_SHIFT] : "???");
++    }
++    else
++    {
++        buf += sprintf(buf, "_%s", (usage <= D3DDECLUSAGE_COLOR) ? decl_usage[usage] : "???");
++        if (usage_index)
++            buf += sprintf(buf, "%d", usage_index);
++    }
++
++    buf += add_modifier(buf, param2);
++    buf += sprintf(buf, " ");
++    buf += add_register(buf, param2, TRUE, TRUE);
++    buf += sprintf(buf, "\n");
++    (*ptr)++;
++    return buf - buffer;
++}
++
++static int instr_generic(const struct instr_info *info, DWORD **ptr, char *buffer, BOOL ps)
++{
++    char *buf = buffer;
++    int j;
++
++    buf += sprintf(buf, "    %s", info->name);
++    (*ptr)++;
++
++    if (info->length)
++    {
++        buf += add_modifier(buf, **ptr);
++
++        for (j = 0; j < info->length; j++)
++        {
++            buf += sprintf(buf, "%s ", j ? "," : "");
++
++            if ((j != 0) && ((**ptr & D3DSP_SRCMOD_MASK) != D3DSPSM_NONE))
++            {
++                if ((**ptr & D3DSP_SRCMOD_MASK) == D3DSPSM_NEG)
++                    buf += sprintf(buf, "-");
++                else
++                    buf += sprintf(buf, "*");
++            }
++
++            buf += add_register(buf, **ptr, j == 0, ps);
++
++            if (*(*ptr)++ & D3DVS_ADDRESSMODE_MASK)
++            {
++                buf += sprintf(buf, "[");
++                buf += add_register(buf, **ptr, FALSE, FALSE);
++                buf += sprintf(buf, "]");
++                (*ptr)++;
++            }
++        }
++    }
++    buf += sprintf(buf, "\n");
++    return buf - buffer;
++}
++
++const struct instr_info instructions[] =
++{
++    { D3DSIO_NOP,          "nop",           0, instr_generic, 0x0100, 0xFFFF },
++    { D3DSIO_MOV,          "mov",           2, instr_generic, 0x0100, 0xFFFF },
++    { D3DSIO_ADD,          "add",           3, instr_generic, 0x0100, 0xFFFF },
++    { D3DSIO_SUB,          "sub",           3, instr_generic, 0x0100, 0xFFFF },
++    { D3DSIO_MAD,          "mad",           4, instr_generic, 0x0100, 0xFFFF },
++    { D3DSIO_MUL,          "mul",           3, instr_generic, 0x0100, 0xFFFF },
++    { D3DSIO_RCP,          "rcp",           2, instr_generic, 0x0100, 0xFFFF }, /* >= 2.0 for PS */
++    { D3DSIO_RSQ,          "rsq",           2, instr_generic, 0x0100, 0xFFFF }, /* >= 2.0 for PS */
++    { D3DSIO_DP3,          "dp3",           3, instr_generic, 0x0100, 0xFFFF },
++    { D3DSIO_DP4,          "dp4",           3, instr_generic, 0x0100, 0xFFFF }, /* >= 1.2 for PS */
++    { D3DSIO_MIN,          "min",           3, instr_generic, 0x0100, 0xFFFF }, /* >= 2.0 for PS */
++    { D3DSIO_MAX,          "max",           3, instr_generic, 0x0100, 0xFFFF }, /* >= 2.0 for PS */
++    { D3DSIO_SLT,          "slt",           3, instr_generic, 0x0100, 0xFFFF },
++    { D3DSIO_SGE,          "sge",           3, instr_generic, 0x0100, 0xFFFF }, /* VS only */
++    { D3DSIO_EXP,          "exp",           2, instr_generic, 0x0100, 0xFFFF }, /* >= 2.0 for PS */
++    { D3DSIO_LOG,          "log",           2, instr_generic, 0x0100, 0xFFFF }, /* >= 2.0 for PS */
++    { D3DSIO_LIT,          "lit",           2, instr_generic, 0x0100, 0xFFFF }, /* VS only */
++    { D3DSIO_DST,          "dst",           3, instr_generic, 0x0100, 0xFFFF }, /* VS only */
++    { D3DSIO_LRP,          "lrp",           4, instr_generic, 0x0100, 0xFFFF }, /* >= 2.0 for VS */
++    { D3DSIO_FRC,          "frc",           2, instr_generic, 0x0100, 0xFFFF }, /* >= 2.0 for PS */
++    { D3DSIO_M4x4,         "m4x4",          3, instr_generic, 0x0100, 0xFFFF }, /* >= 2.0 for PS */
++    { D3DSIO_M4x3,         "m4x3",          3, instr_generic, 0x0100, 0xFFFF }, /* >= 2.0 for PS */
++    { D3DSIO_M3x4,         "m3x4",          3, instr_generic, 0x0100, 0xFFFF }, /* >= 2.0 for PS */
++    { D3DSIO_M3x3,         "m3x3",          3, instr_generic, 0x0100, 0xFFFF }, /* >= 2.0 for PS */
++    { D3DSIO_M3x2,         "m3x2",          3, instr_generic, 0x0100, 0xFFFF }, /* >= 2.0 for PS */
++    { D3DSIO_CALL,         "call",          1, instr_generic, 0x0200, 0xFFFF }, /* >= 2.a for PS */
++    { D3DSIO_CALLNZ,       "callnz",        2, instr_generic, 0x0200, 0xFFFF }, /* >= 2.a for PS */
++    { D3DSIO_LOOP,         "loop",          2, instr_generic, 0x0200, 0xFFFF }, /* >= 3.0 for PS */
++    { D3DSIO_RET,          "ret",           0, instr_generic, 0x0200, 0xFFFF }, /* >= 2.a for PS */
++    { D3DSIO_ENDLOOP,      "endloop",       1, instr_generic, 0x0200, 0xFFFF }, /* >= 3.0 for PS */
++    { D3DSIO_LABEL,        "label",         1, instr_generic, 0x0200, 0xFFFF }, /* >= 2.a for PS */
++    { D3DSIO_DCL,          "dcl",           1, instr_dcl,     0x0100, 0xFFFF },
++    { D3DSIO_POW,          "pow",           3, instr_generic, 0x0200, 0xFFFF },
++    { D3DSIO_CRS,          "crs",           3, instr_generic, 0x0200, 0xFFFF },
++    { D3DSIO_SGN,          "sgn",           4, instr_generic, 0x0200, 0xFFFF }, /* VS only */
++    { D3DSIO_ABS,          "abs",           2, instr_generic, 0x0200, 0xFFFF },
++    { D3DSIO_NRM,          "nrm",           2, instr_generic, 0x0200, 0xFFFF },
++    { D3DSIO_SINCOS,       "sincos",        4, instr_generic, 0x0200, 0x02FF },
++    { D3DSIO_SINCOS,       "sincos",        2, instr_generic, 0x0300, 0xFFFF },
++    { D3DSIO_REP,          "rep",           1, instr_generic, 0x0200, 0xFFFF }, /* >= 2.a for PS */
++    { D3DSIO_ENDREP,       "endrep",        0, instr_generic, 0x0200, 0xFFFF }, /* >= 2.a for PS */
++    { D3DSIO_IF,           "if",            1, instr_generic, 0x0200, 0xFFFF }, /* >= 2.a for PS */
++    { D3DSIO_IFC,          "if_comp",       2, instr_generic, 0x0200, 0xFFFF },
++    { D3DSIO_ELSE,         "else",          0, instr_generic, 0x0200, 0xFFFF }, /* >= 2.a for PS */
++    { D3DSIO_ENDIF,        "endif",         0, instr_generic, 0x0200, 0xFFFF }, /* >= 2.a for PS */
++    { D3DSIO_BREAK,        "break",         0, instr_generic, 0x0201, 0xFFFF },
++    { D3DSIO_BREAKC,       "break_comp",    2, instr_generic, 0x0201, 0xFFFF },
++    { D3DSIO_MOVA,         "mova",          2, instr_generic, 0x0200, 0xFFFF }, /* VS only */
++    { D3DSIO_DEFB,         "defb",          2, instr_generic, 0x0100, 0xFFFF },
++    { D3DSIO_DEFI,         "defi",          2, instr_generic, 0x0100, 0xFFFF },
++    { D3DSIO_TEXCOORD,     "texcoord",      1, instr_generic, 0x0100, 0x0103 }, /* PS only */
++    { D3DSIO_TEXCOORD,     "texcrd",        2, instr_generic, 0x0104, 0x0104 }, /* PS only */
++    { D3DSIO_TEXKILL,      "texkill",       1, instr_generic, 0x0100, 0xFFFF }, /* PS only */
++    { D3DSIO_TEX,          "tex",           1, instr_generic, 0x0100, 0x0103 }, /* PS only */
++    { D3DSIO_TEX,          "texld",         2, instr_generic, 0x0104, 0x0104 }, /* PS only */
++    { D3DSIO_TEX,          "texld",         3, instr_generic, 0x0200, 0xFFFF }, /* PS only */
++    { D3DSIO_TEXBEM,       "texbem",        2, instr_generic, 0x0100, 0x0103 }, /* PS only */
++    { D3DSIO_TEXBEML,      "texbeml",       2, instr_generic, 0x0100, 0x0103 }, /* PS only */
++    { D3DSIO_TEXREG2AR,    "texreg2ar",     2, instr_generic, 0x0100, 0x0103 }, /* PS only */
++    { D3DSIO_TEXREG2GB,    "texreg2gb",     2, instr_generic, 0x0102, 0x0103 }, /* PS only */
++    { D3DSIO_TEXM3x2PAD,   "texm3x2pad",    2, instr_generic, 0x0100, 0x0103 }, /* PS only */
++    { D3DSIO_TEXM3x2TEX,   "texm3x2tex",    2, instr_generic, 0x0100, 0x0103 }, /* PS only */
++    { D3DSIO_TEXM3x3PAD,   "texm3x3pad",    2, instr_generic, 0x0100, 0x0103 }, /* PS only */
++    { D3DSIO_TEXM3x3TEX,   "texm3x3tex",    2, instr_generic, 0x0100, 0x0103 }, /* PS only */
++    { D3DSIO_TEXM3x3DIFF,  "texm3x3diff",   2, instr_generic, 0x0100, 0xFFFF }, /* PS only - Not documented */
++    { D3DSIO_TEXM3x3SPEC,  "texm3x3spec",   3, instr_generic, 0x0100, 0x0103 }, /* PS only */
++    { D3DSIO_TEXM3x3VSPEC, "texm3x3vspec",  2, instr_generic, 0x0100, 0x0103 }, /* PS only */
++    { D3DSIO_EXPP,         "expp",          2, instr_generic, 0x0100, 0xFFFF }, /* VS only */
++    { D3DSIO_LOGP,         "logp",          2, instr_generic, 0x0100, 0xFFFF }, /* VS only */
++    { D3DSIO_CND,          "cnd",           4, instr_generic, 0x0100, 0x0104 }, /* PS only */
++    { D3DSIO_DEF,          "def",           5, instr_def,     0x0100, 0xFFFF },
++    { D3DSIO_TEXREG2RGB,   "texreg2rgb",    2, instr_generic, 0x0102, 0x0103 }, /* PS only */
++    { D3DSIO_TEXDP3TEX,    "texdp3tex",     2, instr_generic, 0x0102, 0x0103 }, /* PS only */
++    { D3DSIO_TEXM3x2DEPTH, "texm3x2depth",  2, instr_generic, 0x0103, 0x0103 }, /* PS only */
++    { D3DSIO_TEXDP3,       "texdp3",        2, instr_generic, 0x0102, 0x0103 }, /* PS only */
++    { D3DSIO_TEXM3x3,      "texm3x3",       2, instr_generic, 0x0102, 0x0103 }, /* PS only */
++    { D3DSIO_TEXDEPTH,     "texdepth",      1, instr_generic, 0x0104, 0x0104 }, /* PS only */
++    { D3DSIO_CMP,          "cmp",           4, instr_generic, 0x0102, 0xFFFF }, /* PS only */
++    { D3DSIO_BEM,          "bem",           3, instr_generic, 0x0104, 0x0104 }, /* PS only */
++    { D3DSIO_DP2ADD,       "dp2add",        4, instr_generic, 0x0200, 0xFFFF }, /* PS only */
++    { D3DSIO_DSX,          "dsx",           2, instr_generic, 0x0201, 0xFFFF }, /* PS only */
++    { D3DSIO_DSY,          "dsy",           2, instr_generic, 0x0201, 0xFFFF }, /* PS only */
++    { D3DSIO_TEXLDD,       "texldd",        5, instr_generic, 0x0201, 0xFFFF }, /* PS only - not existing for 2.b */
++    { D3DSIO_SETP,         "setp_comp",     3, instr_generic, 0x0201, 0xFFFF },
++    { D3DSIO_TEXLDL,       "texldl",        3, instr_generic, 0x0300, 0xFFFF },
++    { D3DSIO_BREAKP,       "breakp",        1, instr_generic, 0x0201, 0xFFFF },
++    { D3DSIO_PHASE,        "phase",         0, instr_generic, 0x0104, 0x0104 },  /* PS only */
++    { D3DSIO_COMMENT,      "",              0, instr_comment, 0x0100, 0xFFFF }
++};
++
+ HRESULT WINAPI D3DXDisassembleShader(const DWORD *shader, BOOL colorcode, const char *comments, ID3DXBuffer **disassembly)
+ {
+-   FIXME("%p %d %s %p: stub\n", shader, colorcode, debugstr_a(comments), disassembly);
+-   return E_OUTOFMEMORY;
++    DWORD *ptr = (DWORD *)shader;
++    char *buffer, *buf;
++    UINT capacity = 4096;
++    BOOL ps;
++    WORD version;
++    HRESULT hr;
++
++    TRACE("%p %d %s %p\n", shader, colorcode, debugstr_a(comments), disassembly);
++
++    if (!shader || !disassembly)
++        return D3DERR_INVALIDCALL;
++
++    buf = buffer = HeapAlloc(GetProcessHeap(), 0, capacity);
++    if (!buffer)
++        return E_OUTOFMEMORY;
++
++    ps = (*ptr >> 16) & 1;
++    version = *ptr & 0xFFFF;
++    buf += sprintf(buf, "    %s_%d_%d\n", ps ? "ps" : "vs", D3DSHADER_VERSION_MAJOR(*ptr), D3DSHADER_VERSION_MINOR(*ptr));
++    ptr++;
++
++    while (*ptr != D3DSIO_END)
++    {
++        DWORD index;
++
++        if ((buf - buffer + 128) > capacity)
++        {
++            UINT count = buf - buffer;
++            char *new_buffer = HeapReAlloc(GetProcessHeap(), 0, buffer, capacity * 2);
++            if (!new_buffer)
++            {
++                HeapFree(GetProcessHeap(), 0, buffer);
++                return E_OUTOFMEMORY;
++            }
++            capacity *= 2;
++            buffer = new_buffer;
++            buf = buffer + count;
++        }
++
++        for (index = 0; index < sizeof(instructions)/sizeof(instructions[0]); index++)
++            if (((*ptr & D3DSI_OPCODE_MASK) == instructions[index].opcode) &&
++                (version >= instructions[index].min_version) && (version <= instructions[index].max_version))
++                break;
++
++        if (index != sizeof(instructions)/sizeof(instructions[0]))
++        {
++            buf += instructions[index].function(&(instructions[index]), &ptr, buf, ps);
++        }
++        else
++        {
++            buf += sprintf(buf, "    ??? (Unknown opcode %x)\n", *ptr);
++            while (*++ptr & (1u << 31));
++        }
++    }
++
++    hr = D3DXCreateBuffer(buf - buffer + 1 , disassembly);
++    if (SUCCEEDED(hr))
++        strcpy(ID3DXBuffer_GetBufferPointer(*disassembly), buffer);
++    HeapFree(GetProcessHeap(), 0, buffer);
++
++    return hr;
+ }
+ 
+ struct d3dx9_texture_shader

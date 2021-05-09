@@ -1477,14 +1477,10 @@ VideoPortAcquireDeviceLock(
     IN PVOID  HwDeviceExtension)
 {
     PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension;
-    NTSTATUS Status;
-
-    UNREFERENCED_LOCAL_VARIABLE(Status);
 
     TRACE_(VIDEOPRT, "VideoPortAcquireDeviceLock\n");
     DeviceExtension = VIDEO_PORT_GET_DEVICE_EXTENSION(HwDeviceExtension);
-    Status = KeWaitForMutexObject(&DeviceExtension->DeviceLock, Executive,
-                                  KernelMode, FALSE, NULL);
+    KeWaitForMutexObject(&DeviceExtension->DeviceLock, Executive, KernelMode, FALSE, NULL);
     // ASSERT(Status == STATUS_SUCCESS);
 }
 
@@ -1497,13 +1493,10 @@ VideoPortReleaseDeviceLock(
     IN PVOID HwDeviceExtension)
 {
     PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension;
-    LONG Status;
-
-    UNREFERENCED_LOCAL_VARIABLE(Status);
 
     TRACE_(VIDEOPRT, "VideoPortReleaseDeviceLock\n");
     DeviceExtension = VIDEO_PORT_GET_DEVICE_EXTENSION(HwDeviceExtension);
-    Status = KeReleaseMutex(&DeviceExtension->DeviceLock, FALSE);
+    KeReleaseMutex(&DeviceExtension->DeviceLock, FALSE);
     //ASSERT(Status == STATUS_SUCCESS);
 }
 

@@ -42,12 +42,12 @@ ENDM
     CREATE_ALIAS1   $alias, $target
     IMPORT  SYM($alias), WEAK SYM($target)
     MEND
-    
+
     MACRO
     CREATE_ALIAS2   $alias, $target
     IMPORT  IMPSYM($alias), WEAK IMPSYM($target)
     MEND
-    
+
     MACRO
     CREATE_ALIAS   $alias, $target
     CREATE_ALIAS1 $alias, $target
@@ -97,6 +97,7 @@ ENDM
     CREATE_ALIAS getw, _getw
     CREATE_ALIAS heapwalk, _heapwalk
     CREATE_ALIAS isatty, _isatty
+    CREATE_ALIAS isascii, __isascii
     CREATE_ALIAS itoa, _itoa
     CREATE_ALIAS kbhit, _kbhit
     CREATE_ALIAS lfind, _lfind

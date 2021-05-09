@@ -7,15 +7,10 @@
  *              Copyright 2017 Alexander Shaposhnikov      (sanchaez@reactos.org)
  */
 #include "rapps.h"
-
 #include "unattended.h"
-
 #include "winmain.h"
-
 #include <atlcom.h>
-
 #include <gdiplus.h>
-
 #include <conutils.h>
 
 LPCWSTR szWindowClass = L"ROSAPPMGR";
@@ -63,11 +58,11 @@ VOID InitializeGDIPlus(BOOL bInitialize)
     }
 }
 
-int wmain(int argc, wchar_t *argv[])
+INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, INT nShowCmd)
 {
     BOOL bIsFirstLaunch;
     
-    InitializeAtlModule(GetModuleHandle(NULL), TRUE);
+    InitializeAtlModule(hInstance, TRUE);
     InitializeGDIPlus(TRUE);
 
     if (GetUserDefaultUILanguage() == MAKELANGID(LANG_HEBREW, SUBLANG_DEFAULT))
@@ -75,7 +70,7 @@ int wmain(int argc, wchar_t *argv[])
         SetProcessDefaultLayout(LAYOUT_RTL);
     }
 
-    hInst = GetModuleHandle(NULL);
+    hInst = hInstance;
 
     bIsFirstLaunch = !LoadSettings(&SettingsInfo);
     if (bIsFirstLaunch)

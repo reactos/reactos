@@ -3,10 +3,6 @@ add_definitions(-DWINETEST_USE_DBGSTR_LONGLONG)
 
 remove_definitions(-DWINVER=0x502 -D_WIN32_IE=0x600 -D_WIN32_WINNT=0x502)
 
-if(GCC)
-    add_compile_flags("-Wno-format-overflow")
-endif()
-
 list(APPEND SOURCE
     appbar.c
     assoc.c
@@ -42,6 +38,10 @@ add_importlibs(shell32_winetest shell32 shlwapi ole32 oleaut32 user32 gdi32 adva
 
 if(MSVC)
     add_importlibs(shell32_winetest ntdll)
+endif()
+
+if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
+    target_compile_options(shell32_winetest PRIVATE -Wno-format-overflow)
 endif()
 
 add_pch(shell32_winetest precomp.h "${PCH_SKIP_SOURCE}")

@@ -8,13 +8,13 @@ CAPTION "General"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     CONTROL "", IDC_ROSIMG, "Static", SS_OWNERDRAW, 4, 5, 248, 111
-    LTEXT "Sistema operativo:", IDC_STATIC, 4, 116, 80, 9
+    LTEXT "Sistema operativo:", IDC_STATIC, 4, 116, 100, 9
     LTEXT REACTOS_STR_PRODUCT_NAME, IDC_STATIC, 10, 128, 116, 9
     LTEXT "Versión", IDC_ROSVERSION, 10, 137, 116, 9
-    LTEXT REACTOS_STR_PRODUCT_BUILD, IDC_STATIC, 10, 146, 110, 9
-    LTEXT "Tiempo de operación:", IDC_STATIC, 4, 158, 86, 9
-    LTEXT "", IDC_UPTIME, 10, 170, 116, 9
-    LTEXT "Equipo:", IDC_STATIC, 124, 116, 34, 9
+    LTEXT KERNEL_VERSION_REVISION_RC, IDC_STATIC, 10, 146, 110, 9
+    LTEXT "Tiempo de operación:", IDC_STATIC, 4, 161, 100, 9
+    LTEXT "", IDC_UPTIME, 10, 173, 116, 9
+    LTEXT "Equipo:", IDC_STATIC, 124, 116, 100, 9
     LTEXT "", IDC_MACHINELINE1, 130, 128, 118, 9
     LTEXT "", IDC_MACHINELINE2, 130, 137, 118, 9
     LTEXT "", IDC_MACHINELINE3, 130, 146, 118, 9
@@ -341,7 +341,6 @@ BEGIN
     IDS_PAGEFILE_NONE "Ninguno"
     IDS_PAGEFILE_SYSTEM "Administrado por el sistema"
     IDS_INFOREBOOT "Es necesario reiniciar el equipo para que se apliquen los cambios."
-    IDS_DEVS "\nEquipo de ReactOS\n\nCoordinador del proyecto\n\nAleksey Bragin\n\nEquipo de desarrollo\n\nAleksandar Andrejevic\nAleksey Bragin\nAlexander Shaposhnikov\nAmine Khaldi\nAndrew Greenwood\nAndrey Korotaev\nArt Yerkes\nBenedikt Freisen\nCameron Gutman\nChristoph von Wittich\nColin Finck\nDaniel Reimer\nDavid Quintana\nDmitry Chapyshev\nEric Kohl\nGed Murphy\nGiannis Adamopoulos\nGregor Brunmar\nHermès Bélusca-Maïto\nHervé Poussineau\nJames Tabor\nJeffrey Morlan\nJérôme Gardou\nJohannes Anderwald\nKamil Horníček\nKatayama Hirofumi MZ\nKJK::Hyperion\nMaarten Bosma\nMagnus Olsen\nMarc Piulachs\nMark Jansen\nMatthias Kupfer\nMike Nordell\nPeter Hater\nPeter Ward\nPierre Schweitzer\nSaveliy Tretiakov\nStanislav Motylkov\nStefan Ginsberg\nSylvain Petreolle\nThomas Blümel\nThomas Faber\nTimo Kreuzer\nVadim Galyant\n\nAlex Ionescu\nFilip Navara\nGunnar Dalsnes\nMartin Fuchs\nRoyce Mitchell III\nBrandon Turner\nBrian Palmer\nCasper Hornstrup\nDavid Welch\nEmanuele Aliberti\nGé van Geldorp\nGregor Anich\nJason Filby\nJens Collin\nMichael Wirth\nNathan Woods\nRobert Dickenson\nRex Jolliff\nVizzini\n\nIngenieros de publicación de versión\n\nAmine Khaldi\nColin Finck\nJoachim Henze\nThomas Faber\nZ98\n\nEquipo Web\n\nColin Finck\nJaix Bly\nKlemens Friedl\nZ98\n\nEquipo multimedia\n\nMindflyer\nWierd_W\n\nqueremos agradecer especialmente el trabajo realizado por\n\ntodos los colaboradores\nEl equipo de Wine\n\n"
     IDS_HWPROFILE_CONFIRM_DELETE_TITLE "Confirmar el borrado del perfil"
     IDS_HWPROFILE_CONFIRM_DELETE "¿Seguro que quiere borrar el perfil de hardware «%s»?"
     IDS_HWPROFILE_ALREADY_IN_USE "El nombre de perfil ya está en uso."

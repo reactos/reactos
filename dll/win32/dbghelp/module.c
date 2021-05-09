@@ -542,7 +542,11 @@ static BOOL image_check_debug_link(const WCHAR* file, struct image_file_map* fma
  */
 static BOOL image_locate_debug_link(const struct module* module, struct image_file_map* fmap, const char* filename, DWORD crc)
 {
+#ifndef __REACTOS__
     static const WCHAR globalDebugDirW[] = {'/','u','s','r','/','l','i','b','/','d','e','b','u','g','/'};
+#else
+    static const WCHAR globalDebugDirW[] = {'\0'};
+#endif
     static const WCHAR dotDebugW[] = {'.','d','e','b','u','g','/'};
     const size_t globalDebugDirLen = ARRAY_SIZE(globalDebugDirW);
     size_t filename_len, path_len;

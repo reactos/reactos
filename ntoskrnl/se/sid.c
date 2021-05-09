@@ -15,10 +15,6 @@
 
 #define TAG_SID_AND_ATTRIBUTES 'aSeS'
 
-#if defined (ALLOC_PRAGMA)
-#pragma alloc_text(INIT, SepInitSecurityIDs)
-#endif
-
 /* GLOBALS ********************************************************************/
 
 SID_IDENTIFIER_AUTHORITY SeNullSidAuthority = {SECURITY_NULL_SID_AUTHORITY};
@@ -94,7 +90,7 @@ FreeInitializedSids(VOID)
     if (SeAnonymousLogonSid) ExFreePoolWithTag(SeAnonymousLogonSid, TAG_SID);
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 BOOLEAN
 NTAPI
 SepInitSecurityIDs(VOID)

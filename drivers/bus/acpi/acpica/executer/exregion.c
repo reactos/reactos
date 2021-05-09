@@ -80,6 +80,7 @@ AcpiExSystemMemorySpaceHandler (
     ACPI_STATUS             Status = AE_OK;
     void                    *LogicalAddrPtr = NULL;
     ACPI_MEM_SPACE_CONTEXT  *MemInfo = RegionContext;
+    ACPI_MEM_MAPPING        *Mm = MemInfo->CurMm;
     UINT32                  Length;
     ACPI_SIZE               MapLength;
     ACPI_SIZE               PageBoundaryMapLength;
@@ -139,21 +140,46 @@ AcpiExSystemMemorySpaceHandler (
      * Is 1) Address below the current mapping? OR
      *    2) Address beyond the current mapping?
      */
-    if ((Address < MemInfo->MappedPhysicalAddress) ||
-        (((UINT64) Address + Length) >
-            ((UINT64)
-            MemInfo->MappedPhysicalAddress + MemInfo->MappedLength)))
+    if (!Mm || (Address < Mm->PhysicalAddress) ||
+        ((UINT64) Address + Length > (UINT64) Mm->PhysicalAddress + Mm->Length))
     {
         /*
-         * The request cannot be resolved by the current memory mapping;
-         * Delete the existing mapping and create a new one.
+         * The request cannot be resolved by the current memory mapping.
+         *
+         * Look for an existing saved mapping covering the address range
+         * at hand. If found, save it as the current one and carry out
+         * the access.
          */
-        if (MemInfo->MappedLength)
+        for (Mm = MemInfo->FirstMm; Mm; Mm = Mm->NextMm)
         {
-            /* Valid mapping, delete it */
+            if (Mm == MemInfo->CurMm)
+            {
+                continue;
+            }
 
-            AcpiOsUnmapMemory (MemInfo->MappedLogicalAddress,
-                MemInfo->MappedLength);
+            if (Address < Mm->PhysicalAddress)
+            {
+                continue;
+            }
+
+            if ((UINT64) Address + Length > (UINT64) Mm->PhysicalAddress + Mm->Length)
+            {
+                continue;
+            }
+
+            MemInfo->CurMm = Mm;
+            goto access;
+        }
+
+        /* Create a new mappings list entry */
+
+        Mm = ACPI_ALLOCATE_ZEROED(sizeof(*Mm));
+        if (!Mm)
+        {
+            ACPI_ERROR((AE_INFO,
+                "Unable to save memory mapping at 0x%8.8X%8.8X, size %u",
+                ACPI_FORMAT_UINT64(Address), Length));
+            return_ACPI_STATUS(AE_NO_MEMORY);
         }
 
         /*
@@ -189,28 +215,38 @@ AcpiExSystemMemorySpaceHandler (
 
         /* Create a new mapping starting at the address given */
 
-        MemInfo->MappedLogicalAddress = AcpiOsMapMemory (Address, MapLength);
-        if (!MemInfo->MappedLogicalAddress)
+        LogicalAddrPtr = AcpiOsMapMemory(Address, MapLength);
+        if (!LogicalAddrPtr)
         {
             ACPI_ERROR ((AE_INFO,
                 "Could not map memory at 0x%8.8X%8.8X, size %u",
                 ACPI_FORMAT_UINT64 (Address), (UINT32) MapLength));
-            MemInfo->MappedLength = 0;
+            ACPI_FREE(Mm);
             return_ACPI_STATUS (AE_NO_MEMORY);
         }
 
         /* Save the physical address and mapping size */
 
-        MemInfo->MappedPhysicalAddress = Address;
-        MemInfo->MappedLength = MapLength;
+        Mm->LogicalAddress = LogicalAddrPtr;
+        Mm->PhysicalAddress = Address;
+        Mm->Length = MapLength;
+
+        /*
+         * Add the new entry to the mappigs list and save it as the
+         * current mapping.
+         */
+        Mm->NextMm = MemInfo->FirstMm;
+        MemInfo->FirstMm = Mm;
+        MemInfo->CurMm = Mm;
     }
 
+access:
     /*
      * Generate a logical pointer corresponding to the address we want to
      * access
      */
-    LogicalAddrPtr = MemInfo->MappedLogicalAddress +
-        ((UINT64) Address - (UINT64) MemInfo->MappedPhysicalAddress);
+    LogicalAddrPtr = Mm->LogicalAddress +
+        ((UINT64) Address - (UINT64) Mm->PhysicalAddress);
 
     ACPI_DEBUG_PRINT ((ACPI_DB_INFO,
         "System-Memory (width %u) R/W %u Address=%8.8X%8.8X\n",

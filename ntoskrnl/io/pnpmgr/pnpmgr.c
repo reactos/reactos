@@ -391,75 +391,6 @@ IopInstallCriticalDevice(PDEVICE_NODE DeviceNode)
 }
 
 NTSTATUS
-FASTCALL
-IopInitializeDevice(PDEVICE_NODE DeviceNode,
-                    PDRIVER_OBJECT DriverObject)
-{
-    PDEVICE_OBJECT Fdo;
-    NTSTATUS Status;
-
-    if (!DriverObject)
-    {
-        /* Special case for bus driven devices */
-        DeviceNode->Flags |= DNF_ADDED;
-        return STATUS_SUCCESS;
-    }
-
-    if (!DriverObject->DriverExtension->AddDevice)
-    {
-        DeviceNode->Flags |= DNF_LEGACY_DRIVER;
-    }
-
-    if (DeviceNode->Flags & DNF_LEGACY_DRIVER)
-    {
-        DeviceNode->Flags |= (DNF_ADDED | DNF_STARTED);
-        return STATUS_SUCCESS;
-    }
-
-    /* This is a Plug and Play driver */
-    DPRINT("Plug and Play driver found\n");
-    ASSERT(DeviceNode->PhysicalDeviceObject);
-
-    DPRINT("Calling %wZ->AddDevice(%wZ)\n",
-           &DriverObject->DriverName,
-           &DeviceNode->InstancePath);
-    Status = DriverObject->DriverExtension->AddDevice(DriverObject,
-                                                      DeviceNode->PhysicalDeviceObject);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("%wZ->AddDevice(%wZ) failed with status 0x%x\n",
-                &DriverObject->DriverName,
-                &DeviceNode->InstancePath,
-                Status);
-        IopDeviceNodeSetFlag(DeviceNode, DNF_DISABLED);
-        DeviceNode->Problem = CM_PROB_FAILED_ADD;
-        return Status;
-    }
-
-    Fdo = IoGetAttachedDeviceReference(DeviceNode->PhysicalDeviceObject);
-
-    /* Check if we have a ACPI device (needed for power management) */
-    if (Fdo->DeviceType == FILE_DEVICE_ACPI)
-    {
-        static BOOLEAN SystemPowerDeviceNodeCreated = FALSE;
-
-        /* There can be only one system power device */
-        if (!SystemPowerDeviceNodeCreated)
-        {
-            PopSystemPowerDeviceNode = DeviceNode;
-            ObReferenceObject(PopSystemPowerDeviceNode->PhysicalDeviceObject);
-            SystemPowerDeviceNodeCreated = TRUE;
-        }
-    }
-
-    ObDereferenceObject(Fdo);
-
-    IopDeviceNodeSetFlag(DeviceNode, DNF_ADDED);
-
-    return STATUS_SUCCESS;
-}
-
-NTSTATUS
 IopGetSystemPowerDeviceObject(PDEVICE_OBJECT *DeviceObject)
 {
     KIRQL OldIrql;
@@ -542,80 +473,6 @@ IopGetBusTypeGuidIndex(LPGUID BusTypeGuid)
 Quickie:
     ExReleaseFastMutex(&PnpBusTypeGuidList->Lock);
     return FoundIndex;
-}
-
-NTSTATUS
-NTAPI
-IopSynchronousCall(IN PDEVICE_OBJECT DeviceObject,
-                   IN PIO_STACK_LOCATION IoStackLocation,
-                   OUT PVOID *Information)
-{
-    PIRP Irp;
-    PIO_STACK_LOCATION IrpStack;
-    IO_STATUS_BLOCK IoStatusBlock;
-    KEVENT Event;
-    NTSTATUS Status;
-    PDEVICE_OBJECT TopDeviceObject;
-    PAGED_CODE();
-
-    /* Call the top of the device stack */
-    TopDeviceObject = IoGetAttachedDeviceReference(DeviceObject);
-
-    /* Allocate an IRP */
-    Irp = IoAllocateIrp(TopDeviceObject->StackSize, FALSE);
-    if (!Irp)
-    {
-        ObDereferenceObject(TopDeviceObject);
-        return STATUS_INSUFFICIENT_RESOURCES;
-    }
-
-    /* Initialize to failure */
-    Irp->IoStatus.Status = IoStatusBlock.Status = STATUS_NOT_SUPPORTED;
-    Irp->IoStatus.Information = IoStatusBlock.Information = 0;
-
-    /* Special case for IRP_MN_FILTER_RESOURCE_REQUIREMENTS */
-    if ((IoStackLocation->MajorFunction == IRP_MJ_PNP) &&
-        (IoStackLocation->MinorFunction == IRP_MN_FILTER_RESOURCE_REQUIREMENTS))
-    {
-        /* Copy the resource requirements list into the IOSB */
-        Irp->IoStatus.Information =
-        IoStatusBlock.Information = (ULONG_PTR)IoStackLocation->Parameters.FilterResourceRequirements.IoResourceRequirementList;
-    }
-
-    /* Initialize the event */
-    KeInitializeEvent(&Event, SynchronizationEvent, FALSE);
-
-    /* Set them up */
-    Irp->UserIosb = &IoStatusBlock;
-    Irp->UserEvent = &Event;
-
-    /* Queue the IRP */
-    Irp->Tail.Overlay.Thread = PsGetCurrentThread();
-    IoQueueThreadIrp(Irp);
-
-    /* Copy-in the stack */
-    IrpStack = IoGetNextIrpStackLocation(Irp);
-    *IrpStack = *IoStackLocation;
-
-    /* Call the driver */
-    Status = IoCallDriver(TopDeviceObject, Irp);
-    if (Status == STATUS_PENDING)
-    {
-        /* Wait for it */
-        KeWaitForSingleObject(&Event,
-                              Executive,
-                              KernelMode,
-                              FALSE,
-                              NULL);
-        Status = IoStatusBlock.Status;
-    }
-
-    /* Remove the reference */
-    ObDereferenceObject(TopDeviceObject);
-
-    /* Return the information */
-    *Information = (PVOID)IoStatusBlock.Information;
-    return Status;
 }
 
 NTSTATUS
@@ -1025,7 +882,7 @@ cleanup:
 }
 
 static
-INIT_FUNCTION
+CODE_SEG("INIT")
 NTSTATUS
 IopEnumerateDetectedDevices(
    IN HANDLE hBaseKey,
@@ -1065,7 +922,15 @@ IopEnumerateDetectedDevices(
    UNICODE_STRING HardwareIdKeyboard = RTL_CONSTANT_STRING(L"*PNP0303\0");
    static ULONG DeviceIndexKeyboard = 0;
    const UNICODE_STRING IdentifierMouse = RTL_CONSTANT_STRING(L"PointerController");
+   /* FIXME: IopEnumerateDetectedDevices() should be rewritten.
+    * The PnP identifiers can either be hardcoded or parsed from a LegacyXlate
+    * sections of driver INF files.
+    */
+#if defined(SARCH_PC98)
+   UNICODE_STRING HardwareIdMouse = RTL_CONSTANT_STRING(L"*nEC1F00\0");
+#else
    UNICODE_STRING HardwareIdMouse = RTL_CONSTANT_STRING(L"*PNP0F13\0");
+#endif
    static ULONG DeviceIndexMouse = 0;
    const UNICODE_STRING IdentifierParallel = RTL_CONSTANT_STRING(L"ParallelController");
    UNICODE_STRING HardwareIdParallel = RTL_CONSTANT_STRING(L"*PNP0400\0");
@@ -1458,7 +1323,7 @@ cleanup:
 }
 
 static
-INIT_FUNCTION
+CODE_SEG("INIT")
 BOOLEAN
 IopIsFirmwareMapperDisabled(VOID)
 {
@@ -1527,7 +1392,7 @@ IopIsFirmwareMapperDisabled(VOID)
     return (KeyValue != 0) ? TRUE : FALSE;
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 NTSTATUS
 NTAPI
 IopUpdateRootKey(VOID)

@@ -5,11 +5,6 @@ add_definitions(
 
 include_directories(include)
 
-if(MSVC)
-    # error C4312: 'type cast': conversion from 'unsigned long' to 'void *' of greater size
-    replace_compile_flags("/we4312" " ")
-endif()
-
 list(APPEND SOURCE
     src/autofit/autofit.c
     src/base/ftadvanc.c
@@ -60,7 +55,10 @@ list(APPEND SOURCE
 
 add_library(freetype ${SOURCE})
 
-if(GCC)
+if (MSVC)
+    # error C4312: 'type cast': conversion from 'unsigned long' to 'void *' of greater size
+    remove_target_compile_option(freetype "/we4312")
+elseif(GCC)
     target_compile_options(freetype PRIVATE -fno-builtin-malloc)
 elseif(CLANG)
     target_compile_options(freetype PRIVATE -Wno-tautological-constant-compare)

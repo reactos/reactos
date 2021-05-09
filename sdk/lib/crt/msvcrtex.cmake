@@ -1,13 +1,6 @@
 
 include_directories(include/internal/mingw-w64)
 
-if(NOT MSVC)
-    add_compile_flags("-Wno-main")
-    if(LTCG)
-        add_compile_flags("-fno-lto")
-    endif()
-endif()
-
 list(APPEND MSVCRTEX_SOURCE
     startup/crtexe.c
     startup/wcrtexe.c
@@ -50,21 +43,26 @@ else()
     list(APPEND MSVCRTEX_SOURCE
         startup/pseudo-reloc.c
         startup/pseudo-reloc-list.c)
+    if (CLANG)
+        # CLang performs some optimisations requiring those funtions
+        list(APPEND MSVCRTEX_SOURCE
+            math/exp2.c
+            math/exp2f.c)
+    endif()
 endif()
 
 if(ARCH STREQUAL "i386")
     list(APPEND MSVCRTEX_ASM_SOURCE
         except/i386/chkstk_asm.s
         except/i386/chkstk_ms.s
-        math/i386/ftol2_asm.s
         math/i386/alldiv_asm.s)
-    list(APPEND MSVCRTEX_SOURCE
-        math/i386/ci.c
-        math/i386/cicos.c
-        math/i386/cilog.c
-        math/i386/cipow.c
-        math/i386/cisin.c
-        math/i386/cisqrt.c)
+    if (GCC AND CLANG)
+        list(APPEND MSVCRTEX_ASM_SOURCE
+            math/i386/ceilf.S
+            math/i386/floorf.S)
+        list(APPEND MSVCRTEX_SOURCE
+            math/i386/sqrtf.c)
+    endif()
 elseif(ARCH STREQUAL "amd64")
     list(APPEND MSVCRTEX_ASM_SOURCE
         except/amd64/chkstk_ms.s)
@@ -100,18 +98,31 @@ endif()
 set_source_files_properties(${MSVCRTEX_ASM_SOURCE} PROPERTIES COMPILE_DEFINITIONS "_DLL;_MSVCRTEX_")
 add_asm_files(msvcrtex_asm ${MSVCRTEX_ASM_SOURCE})
 
-add_library(msvcrtex ${MSVCRTEX_SOURCE} ${msvcrtex_asm})
+add_library(msvcrtex OBJECT ${MSVCRTEX_SOURCE} ${msvcrtex_asm})
 target_compile_definitions(msvcrtex PRIVATE _DLL _MSVCRTEX_)
+
+if(MSVC AND (ARCH STREQUAL "i386"))
+    # user32.dll needs this as a stand-alone object file
+    add_asm_files(ftol2_asm math/i386/ftol2_asm.s)
+    add_library(ftol2_sse OBJECT ${ftol2_asm})
+    target_compile_definitions(ftol2_sse PRIVATE $<TARGET_PROPERTY:msvcrtex,COMPILE_DEFINITIONS>)
+    set_target_properties(ftol2_sse PROPERTIES LINKER_LANGUAGE C)
+endif()
+
+
+if(GCC OR CLANG)
+    target_compile_options(msvcrtex PRIVATE $<$<COMPILE_LANGUAGE:C>:-Wno-main>)
+    if(LTCG)
+        target_compile_options(msvcrtex PRIVATE -fno-lto)
+    endif()
+endif()
+
 set_source_files_properties(startup/crtdll.c PROPERTIES COMPILE_DEFINITIONS CRTDLL)
 set_source_files_properties(startup/crtexe.c
                             startup/wcrtexe.c PROPERTIES COMPILE_DEFINITIONS _M_CEE_PURE)
 
 if(NOT MSVC)
     target_link_libraries(msvcrtex oldnames)
-endif()
-
-if(STACK_PROTECTOR)
-    target_link_libraries(msvcrtex gcc_ssp)
 endif()
 
 add_dependencies(msvcrtex psdk asm)

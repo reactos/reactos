@@ -1,4 +1,4 @@
-/* TRANSLATOR: 2013, 2014, 2016 Erdem Ersoy (eersoy93) (erdemersoy [at] erdemersoy [dot] net) */
+/* TRANSLATOR: 2013, 2014, 2016, 2020 Erdem Ersoy (eersoy93) (erdemersoy [at] erdemersoy [dot] net) */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
@@ -26,16 +26,16 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Kısayol Oluştur"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT "Bu yardımcı, yerli ya da ağdaki izlencelere, kütüklere,\ndizinlere, bilgisayarlara ve Umûmî Ağ adreslerine\nkısayollar oluşturmanıza yardım eder.", -1, 120, 15, 200, 30
-    LTEXT "Öğenin konumunu yazınız:", -1, 120, 50, 120, 10
+    LTEXT "Bu sihirbaz, yerel ya da ağdaki programlara, dosyalara,\nklasörlere, bilgisayarlara ve İnternet adreslerine\nkısayollar oluşturmanıza yardımcı olur.", -1, 120, 15, 200, 30
+    LTEXT "Ögenin konumunu yazınız:", -1, 120, 50, 120, 10
     EDITTEXT IDC_SHORTCUT_LOCATION, 120, 65, 150, 15, ES_LEFT | ES_AUTOHSCROLL
     PUSHBUTTON "&Göz At...", IDC_SHORTCUT_BROWSE, 272, 65, 55, 15, ES_LEFT
-    LTEXT "Sürdürmek için ""İleri""ye tıklayınız.", -1, 120, 97, 162, 10
+    LTEXT "Devam etmek için ""İleri""ye tıklayınız.", -1, 120, 97, 162, 10
 END
 
 IDD_SHORTCUT_FINISH DIALOGEX 0, 0, 340, 200
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "İzlencenin Adını Seç"
+CAPTION "Program İçin Bir Başlık Seç"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     LTEXT "&Bu kısayol için bir ad yazınız:", -1, 120, 15, 150, 10
@@ -45,10 +45,10 @@ END
 
 IDD_CONFIG_STARTMENU DIALOGEX 0, 0, 212, 200
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Kısayolları ve Dizinleri Sil"
+CAPTION "Kısayolları ve Klasörleri Sil"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "&Başlat seçkesinden bir öğe silmek için öğeyi seçiniz ve Sil'e tıklayınız.", -1, 10, 10, 192, 16
+    LTEXT "&Başlat menüsünden bir öge silmek için ögeyi seçiniz ve Sil'e tıklayınız.", -1, 10, 10, 192, 16
     CONTROL "List1", IDC_STARTMENU_TREE, "SysListView32", LVS_REPORT | LVS_SHOWSELALWAYS |
             LVS_SORTASCENDING | WS_BORDER | WS_TABSTOP, 10, 32, 192, 138
     PUSHBUTTON "&Sil", IDC_REMOVE_ENTRIES, 98, 176, 50, 14, WS_GROUP | WS_TABSTOP
@@ -60,7 +60,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPT
 CAPTION "Wine Gecko Kurucusu"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "ReactOS, HTML gömülü uygulamaları düzgün çalıştırmak için gereken bir Wine Gecko paketi bulamadı. ReactOS, sizin için onu kendiliğinden indirebilir ve kurabilir.",
+    CONTROL "ReactOS, HTML gömülü uygulamaların düzgün çalışması için gereken bir Wine Gecko paketi bulamadı. ReactOS, sizin için onu, otomatik indirebilir ve kurabilir.",
           ID_DWL_STATUS, "SysLink", 0, 10, 10, 240, 65
     CONTROL "", ID_DWL_PROGRESS, PROGRESS_CLASSA, WS_BORDER | PBS_SMOOTH, 10, 40, 240, 12
     DEFPUSHBUTTON "&Kur", ID_DWL_INSTALL, 200, 76, 50, 14, WS_GROUP | WS_TABSTOP
@@ -69,23 +69,23 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_CPLSYSTEMNAME "İzlence Ekle ve Kaldır"
-    IDS_CPLSYSTEMDESCRIPTION "İzlenceler kurar ve kısayollar oluşturur."
+    IDS_CPLSYSTEMNAME "Program Ekle ve Kaldır"
+    IDS_CPLSYSTEMDESCRIPTION "Programlar kurar ve kısayollar oluşturur."
     IDS_CREATE_SHORTCUT "Kısayol Oluştur"
-    IDS_ERROR_NOT_FOUND "%s kütüğü bulunamadı."
+    IDS_ERROR_NOT_FOUND "%s dosyası bulunamadı."
 END
 
 STRINGTABLE
 BEGIN
     IDS_DOWNLOADING "İndiriliyor..."
     IDS_INSTALLING "Kuruluyor..."
-    IDS_INVALID_SHA "İndirilen kütüğün sağlama toplamı beklenmeyen. Bozuk kütüğün kurulumu iptal ediliyor."
-    IDS_NEW_INTERNET_SHORTCUT "New Internet Shortcut"
-    IDS_DWL_FAILED "Failed to download the Gecko package. Make sure you have an internet connection in order to download it. The setup will proceed without installing Gecko."
-    IDS_CANTMAKEINETSHORTCUT "Failed to create internet shortcut."
-    IDS_CANTMAKESHORTCUT "Failed to create shortcut."
-    IDS_NO_MEMORY "No memory could be allocated!"
-    IDS_NO_DIRECTORY "No directory given!"
-    IDS_INVALID_PATH "The given path is invalid!"
-    IDS_INVALID_NAME "The shortcut name you entered either contained characters that are invalid for file names or was too long."
+    IDS_INVALID_SHA "İndirilen dosyanın sağlama toplamı beklenildiği gibi değil. Bozuk dosyanın kurulumu iptal ediliyor."
+    IDS_NEW_INTERNET_SHORTCUT "Yeni İnternet Kısayolu"
+    IDS_DWL_FAILED "Gecko paketini indirme başarısız oldu. Onu indirmek için bir İnternet bağlantızın olması gerekir. Kur, Gecko'yu kuramdan devam edecektir."
+    IDS_CANTMAKEINETSHORTCUT "İnternet kısayolu oluşturma başarısız oldu."
+    IDS_CANTMAKESHORTCUT "KIsayol oluşturma başarısız oldu."
+    IDS_NO_MEMORY "Ayrılacak bellek yok!"
+    IDS_NO_DIRECTORY "Hiç dizin verilmedi!"
+    IDS_INVALID_PATH "Verilen yol geçersiz!"
+    IDS_INVALID_NAME "Girdiğiniz kısayol adı, ya geçersiz karakterler içeriyor ya dosya adları için geçersiz ya da çok uzun."
 END

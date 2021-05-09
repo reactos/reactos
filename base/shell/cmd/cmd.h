@@ -424,6 +424,9 @@ VOID ParseErrorEx(IN PCTSTR s);
 extern BOOL bParseError;
 extern TCHAR ParseLine[CMDLINE_LENGTH];
 
+extern BOOL bIgnoreParserComments;
+extern BOOL bHandleContinuations;
+
 /* Prototypes from PATH.C */
 INT cmd_path (LPTSTR);
 

@@ -10,6 +10,7 @@
 
 #include <freeldr.h>
 #include <cportlib/cportlib.h>
+#include "ntldropts.h"
 
 /* Note: Move these to some smbios.h header */
 #define SYSID_TYPE_UUID "_UUID_"
@@ -206,7 +207,7 @@ WinLdrInitializeHeadlessPort(VOID)
 {
     ULONG PortNumber, BaudRate;
     PUCHAR PortAddress;
-    PCHAR AnsiReset = "\x1B[m";
+    PCSTR AnsiReset = "\x1B[m";
     ULONG i;
 
     PortNumber = LoaderRedirectionInformation.PortNumber;
@@ -267,13 +268,11 @@ WinLdrInitializeHeadlessPort(VOID)
 
     /* Call arch code to initialize the port */
     PortAddress = LoaderRedirectionInformation.PortAddress;
-    WinLdrTerminalConnected = WinLdrPortInitialize(
-        BaudRate,
-        PortNumber,
-        PortAddress,
-        WinLdrTerminalConnected,
-        &WinLdrTerminalDeviceId);
-
+    WinLdrTerminalConnected = WinLdrPortInitialize(BaudRate,
+                                                   PortNumber,
+                                                   PortAddress,
+                                                   WinLdrTerminalConnected,
+                                                   &WinLdrTerminalDeviceId);
     if (WinLdrTerminalConnected)
     {
         /* Port seems usable, set it up and get the BIOS GUID */
@@ -300,57 +299,56 @@ WinLdrInitializeHeadlessPort(VOID)
 }
 
 VOID
-WinLdrSetupEms(IN PCHAR BootOptions)
+WinLdrSetupEms(IN PCSTR BootOptions)
 {
-    PCHAR Settings, RedirectPort;
+    PCSTR Option;
 
     /* Start fresh */
     RtlZeroMemory(&LoaderRedirectionInformation, sizeof(HEADLESS_LOADER_BLOCK));
     LoaderRedirectionInformation.PciDeviceId = PCI_INVALID_VENDORID;
 
     /* Use a direction port if one was given, or use ACPI to detect one instead */
-    Settings = strstr(BootOptions, "/redirect=");
-    if (Settings)
+    Option = NtLdrGetOption(BootOptions, "redirect=");
+    if (Option)
     {
-        RedirectPort = strstr(Settings, "com");
-        if (RedirectPort)
+        Option += 9;
+        if (_strnicmp(Option, "com", 3) == 0)
         {
-            RedirectPort += sizeof("com") - 1;
-            LoaderRedirectionInformation.PortNumber = atoi(RedirectPort);
-            LoaderRedirectionInformation.TerminalType = 1; // HeadlessSerialPort
+            Option += 3;
+            LoaderRedirectionInformation.PortNumber = atoi(Option);
+            LoaderRedirectionInformation.TerminalType = 1; // VT100+
+        }
+        else if (_strnicmp(Option, "usebiossettings", 15) == 0)
+        {
+            // FIXME: TODO!
+            UiDrawStatusText("ACPI SRT/SPCR Table Not Supported...");
+            return;
         }
         else
         {
-            RedirectPort = strstr(Settings, "usebiossettings");
-            if (RedirectPort)
+            LoaderRedirectionInformation.PortAddress = (PUCHAR)strtoul(Option, 0, 16);
+            if (LoaderRedirectionInformation.PortAddress)
             {
-                UiDrawStatusText("ACPI SRT Table Not Supported...");
-                return;
-            }
-            else
-            {
-                LoaderRedirectionInformation.PortAddress = (PUCHAR)strtoul(Settings, 0, 16);
-                if (LoaderRedirectionInformation.PortAddress)
-                {
-                    LoaderRedirectionInformation.PortNumber = 3;
-                }
+                LoaderRedirectionInformation.PortNumber = 3;
             }
         }
     }
 
     /* Use a direction baudrate if one was given */
-    Settings = strstr(BootOptions, "/redirectbaudrate=");
-    if (Settings)
+    Option = NtLdrGetOption(BootOptions, "redirectbaudrate=");
+    if (Option)
     {
-        if (strstr(Settings, "115200"))
+        Option += 17;
+        // LoaderRedirectionInformation.BaudRate = atoi(Option);
+        if (strncmp(Option, "115200", 6) == 0)
         {
             LoaderRedirectionInformation.BaudRate = 115200;
         }
-        else if (strstr(Settings, "57600"))
+        else if (strncmp(Option, "57600", 5) == 0)
         {
             LoaderRedirectionInformation.BaudRate = 57600;
         }
-        else if (strstr(Settings, "19200"))
+        else if (strncmp(Option, "19200", 5) == 0)
         {
             LoaderRedirectionInformation.BaudRate = 19200;
         }

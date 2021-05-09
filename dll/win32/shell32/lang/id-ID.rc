@@ -11,7 +11,7 @@ BEGIN
     BEGIN
         MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "Otomatis &Urutkan", FCIDM_SHVIEW_AUTOARRANGE
-        MENUITEM "Align to &Grid", FCIDM_SHVIEW_ALIGNTOGRID
+        MENUITEM "Sejajarkan dengan &Kisi", FCIDM_SHVIEW_ALIGNTOGRID
     END
 END
 
@@ -32,7 +32,7 @@ BEGIN
         BEGIN
             MENUITEM "", -1, MFT_SEPARATOR
             MENUITEM "Otomatis &Urutkan", FCIDM_SHVIEW_AUTOARRANGE
-            MENUITEM "Align to &Grid", FCIDM_SHVIEW_ALIGNTOGRID
+            MENUITEM "Sejajarkan dengan &Kisi", FCIDM_SHVIEW_ALIGNTOGRID
         END
         MENUITEM "Segarkan", FCIDM_SHVIEW_REFRESH
         MENUITEM "", -1, MFT_SEPARATOR
@@ -107,9 +107,8 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "", IDC_BROWSE_FOR_FOLDER_TITLE, 10, 8, 198, 24
     LTEXT "", IDC_BROWSE_FOR_FOLDER_STATUS, 10, 25, 198, 12
-    LTEXT "Folder:", IDC_BROWSE_FOR_FOLDER_FOLDER, 10, 152, 40, 12
-    CONTROL "", IDC_BROWSE_FOR_FOLDER_TREEVIEW, "SysTreeView32", TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_EDITLABELS | WS_BORDER | WS_TABSTOP, 12, 38, 194, 105
-    EDITTEXT IDC_BROWSE_FOR_FOLDER_FOLDER_TEXT, 46, 150, 160, 14, ES_AUTOHSCROLL | WS_BORDER | WS_GROUP | WS_TABSTOP
+    EDITTEXT IDC_BROWSE_FOR_FOLDER_FOLDER_TEXT, 12, 38, 194, 14, ES_AUTOHSCROLL | WS_GROUP
+    CONTROL "", IDC_BROWSE_FOR_FOLDER_TREEVIEW, "SysTreeView32", TVS_SHOWSELALWAYS | TVS_EDITLABELS | TVS_LINESATROOT | TVS_HASLINES | TVS_HASBUTTONS | WS_BORDER | WS_TABSTOP, 12, 58, 194, 105
     PUSHBUTTON "&Buat Folder Baru", IDC_BROWSE_FOR_FOLDER_NEW_FOLDER, 12, 174, 77, 14, WS_GROUP | WS_TABSTOP
     DEFPUSHBUTTON "OK", IDOK, 102, 174, 50, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
     PUSHBUTTON "Batal", IDCANCEL, 156, 174, 50, 14, WS_GROUP | WS_TABSTOP
@@ -140,7 +139,7 @@ BEGIN
     LTEXT COPYRIGHT_YEAR, IDC_STATIC, 88, 75, 17, 10
     LTEXT " Tim ReactOS\0", IDC_STATIC, 105, 75, 53, 10
     LTEXT "", IDC_ABOUT_OTHERSTUFF, 35, 90, 180, 20
-    LTEXT "Versi ReactOS ini terdaftar kepada:", IDC_STATIC, 35, 115, 180, 10
+    LTEXT "Versi ReactOS ini terdaftar kepada:", IDC_ABOUT_REG_TO, 35, 115, 180, 10
     LTEXT "", IDC_ABOUT_REG_USERNAME, 45, 125, 180, 10
     LTEXT "", IDC_ABOUT_REG_ORGNAME, 45, 135, 180, 10
     LTEXT "", IDC_STATIC, 35, 147, 235, 1, SS_ETCHEDHORZ
@@ -202,7 +201,7 @@ END
 
 IDD_SHORTCUT_EXTENDED_PROPERTIES DIALOGEX 0, 0, 230, 150
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
-CAPTION "Properti yang Diperpanjang"
+CAPTION "Perluasan Properti"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     ICON IDI_SHELL_EXTENDED_PROPERTIES, IDI_SHELL_EXTENDED_PROPERTIES, 5, 5, 21, 20, SS_ICON
@@ -237,10 +236,10 @@ BEGIN
     EDITTEXT 14015, 58, 128, 170, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     LTEXT "", -1, 8, 144, 221, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
     LTEXT "Atribut:", 14020, 8, 152, 46, 10
-    AUTOCHECKBOX "&Hanya-baca", 14021, 58, 188, 53, 10
-    AUTOCHECKBOX "&Tersembunyi", 14022, 112, 188, 53, 10
-    AUTOCHECKBOX "&Arsip", 14023, 181, 188, 49, 10
-    PUSHBUTTON "Tin&gkat Lanjut...", 14028, 166, 185, 64, 15, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+    AUTOCHECKBOX "&Hanya-baca", 14021, 58, 151, 70, 10
+    AUTOCHECKBOX "&Tersembunyi", 14022, 126, 151, 70, 10
+    AUTOCHECKBOX "&Arsip", 14023, 181, 151, 70, 10
+    PUSHBUTTON "Tin&gkat Lanjut...", 14028, 158, 150, 70, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
 END
 
 IDD_FILE_PROPERTIES DIALOGEX 0, 0, 240, 205
@@ -272,11 +271,11 @@ BEGIN
     LTEXT "Diakses:", 14018, 8, 163, 45, 10
     EDITTEXT 14019, 58, 163, 170, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT "", -1, 8, 179, 221, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
-    LTEXT "Atribut:", 14020, 8, 189, 53, 10
-    AUTOCHECKBOX "&Hanya-baca", 14021, 58, 151, 53, 10
-    AUTOCHECKBOX "&Tersembunyi", 14022, 112, 151, 50, 10
-    AUTOCHECKBOX "&Arsip", 14023, 181, 151, 70, 10
-    PUSHBUTTON "Tin&gkat Lanjut...", 14028, 165, 150, 63, 14, WS_TABSTOP
+    LTEXT "Atribut:", 14020, 8, 189, 45, 10
+    AUTOCHECKBOX "&Hanya-baca", 14021, 58, 188, 67, 10
+    AUTOCHECKBOX "&Tersembunyi", 14022, 126, 188, 50, 10
+    AUTOCHECKBOX "&Arsip", 14023, 181, 188, 49, 10
+    PUSHBUTTON "Tin&gkat Lanjut...", 14028, 180, 185, 50, 14, WS_TABSTOP
 END
 
 IDD_FILE_VERSION DIALOGEX 0, 0, 235, 215
@@ -493,6 +492,20 @@ BEGIN
     PUSHBUTTON "Batal", IDCANCEL, 99, 38, 43, 14
 END
 
+IDD_LOG_OFF_FANCY DIALOGEX 0, 0, 208, 122
+STYLE NOT WS_VISIBLE | DS_CENTER | DS_SHELLFONT | WS_BORDER | WS_POPUP
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL IDB_DLG_BG, IDC_STATIC, "STATIC", SS_BITMAP | SS_REALSIZECONTROL, 0, 0, 208, 122
+    CONTROL IDB_REACTOS_FLAG, IDC_STATIC, "STATIC", SS_BITMAP, 176, 1, 32, 26
+    PUSHBUTTON "&Ganti Pengguna", IDC_SWITCH_USER_BUTTON, 55, 46, 22, 20, BS_OWNERDRAW | WS_DISABLED | WS_GROUP
+    PUSHBUTTON "&Keluar", IDC_LOG_OFF_BUTTON, 132, 46, 22, 20, BS_OWNERDRAW
+    PUSHBUTTON "Cancel", IDCANCEL, 162, 103, 40, 12, WS_GROUP | BS_FLAT
+    LTEXT "Keluar ReactOS", IDC_LOG_OFF_TEXT_STATIC, 4, 7, 130, 19
+    CTEXT "Ganti Pengguna", IDC_SWITCH_USER_STATIC, 41, 70, 51, 11
+    CTEXT "Keluar", IDC_LOG_OFF_STATIC, 118, 70, 51, 11
+END
+
 IDD_DISCONNECT DIALOGEX 0, 0, 188, 60
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION
 CAPTION "Pemutusan ReactOS"
@@ -707,17 +720,17 @@ BEGIN
 END
 
 IDD_LINK_PROBLEM DIALOGEX 0, 0, 250, 140
-CAPTION "Problem with Shortcut"
+CAPTION "Masalah pada Pintasan"
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON 0, IDC_LINK_PROBLEM_ICON, 5, 5, 0, 0
-    LTEXT "The item '%s' that this shortcut refers to has been changed or moved, so this shortcut will no longer work properly.", IDC_LINK_PROBLEM_LABEL1, 35, 5, 210, 35
-    LTEXT "Nearest match based on name, type, size, and date:", IDC_LINK_PROBLEM_LABEL2, 35, 45, 210, 35
-    LTEXT "Do you want to fix this shortcut to point to this target or do you just want to delete it?", -1, 35, 85, 210, 30
-    DEFPUSHBUTTON "&Fix it", IDOK, 55, 120, 60, 15, WS_DISABLED
-    PUSHBUTTON "&Delete it", IDYES, 120, 120, 60, 15
-    PUSHBUTTON "Cancel", IDCANCEL, 185, 120, 60, 15
+    LTEXT "Item '%s' yang menjadi rujukan pintasan telah berubah atau berpindah, pintasan ini akan bekerja tidak semestinya.", IDC_LINK_PROBLEM_LABEL1, 35, 5, 210, 35
+    LTEXT "Kecocokan terdekat yang didasarkan pada nama, jenis, ukuran, dan tanggal:", IDC_LINK_PROBLEM_LABEL2, 35, 45, 210, 35
+    LTEXT "Apakah anda ingin mempernaiki rujukan dari pintasan atau hanya ingin menghapusnya?", -1, 35, 85, 210, 30
+    DEFPUSHBUTTON "&Perbaiki", IDOK, 55, 120, 60, 15, WS_DISABLED
+    PUSHBUTTON "&Hapus", IDYES, 120, 120, 60, 15
+    PUSHBUTTON "Batal", IDCANCEL, 185, 120, 60, 15
 END
 
 STRINGTABLE
@@ -817,11 +830,15 @@ BEGIN
     IDS_RESTART_PROMPT "Anda ingin memulai ulang sistem?"
     IDS_SHUTDOWN_TITLE "Nonaktifkan"
     IDS_SHUTDOWN_PROMPT "Anda ingin menonaktifkan?"
-    
+
     /* Format Dialog Strings */
     IDS_FORMAT_TITLE "Format Disk Lokal"
     IDS_FORMAT_WARNING "PERINGATAN: Memformat akan menghapus SELURUH data dalam disk.\nUntuk memformat disk, klik OK. untuk keluar, klik BATAL."
     IDS_FORMAT_COMPLETE "Format Selesai."
+
+    /* Warning format system drive dialog strings */
+    IDS_NO_FORMAT_TITLE "Tidak bisa memformat volume ini"
+    IDS_NO_FORMAT "Volume ini tidak bisa diformat! Volume ini berisi berkas sistem yang penting agar ReactOS dapat berjalan."
 
     /* Run File dialog */
     IDS_RUNDLG_ERROR "Tidak bisa menampilkan kotak dialog Jalankan Berkas (kesalahan internal)"
@@ -994,14 +1011,20 @@ BEGIN
     IDS_NO_ICONS "Berkas '%s' tidak berisi ikon.\n\nPilih ikon dari daftar atau pilih berkas yang berbeda."
     IDS_FILE_NOT_FOUND "Berkas '%s' tidak ditemukan."
     IDS_LINK_INVALID "The item '%s' that this shortcut refers to has been changed or moved, so this shortcut will no longer work properly."
-    IDS_COPYTOMENU "Copy to &folder..."
-    IDS_COPYTOTITLE "Select the place where you want to copy '%s'. Then click the Copy button."
-    IDS_COPYITEMS "Copy Items"
-    IDS_COPYBUTTON "Copy"
-    IDS_MOVETOMENU "Mo&ve to folder..."
-    IDS_MOVETOTITLE "Select the place where you want to move '%s' to. Then click the Move button."
-    IDS_MOVEITEMS "Move Items"
-    IDS_MOVEBUTTON "Move"
+    IDS_COPYTOMENU "Salin ke &folder..."
+    IDS_COPYTOTITLE "Pilih tempat dimana anda ingin menyalin '%s'. Kemudian klik tombol Salin."
+    IDS_COPYITEMS "Salin Item"
+    IDS_COPYBUTTON "Salin"
+    IDS_MOVETOMENU "&Pindahkan ke folder..."
+    IDS_MOVETOTITLE "Pilih tempat dimana anda ingin memindahkan '%s' to. Kemudian klik tombol Pindahkan."
+    IDS_MOVEITEMS "Pindahkan Item"
+    IDS_MOVEBUTTON "Pindahkan"
 
-    IDS_SYSTEMFOLDER "System Folder"
+    IDS_SYSTEMFOLDER "Folder Sistem"
+
+    /* For IDD_LOG_OFF_FANCY */
+    IDS_LOG_OFF_DESC "Menutup semua program dan mengakhiri sesi ReactOS anda."
+    IDS_SWITCH_USER_DESC "Memungkinkan pengguna lain masuk saat program dan Berkas anda masih terbuka.\r\n\r\n(Anda bisa mengganti pengguna dengan menekan tombol logo Windows + L.)"
+    IDS_LOG_OFF_TITLE "Keluar"
+    IDS_SWITCH_USER_TITLE "Ganti Pengguna"
 END

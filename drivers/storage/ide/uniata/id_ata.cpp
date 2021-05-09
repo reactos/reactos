@@ -6184,6 +6184,7 @@ CompleteRequest:
 #ifdef __REACTOS__
                 (void)senseData;
 #endif
+
                 KdPrint3((PRINT_PREFIX "AtapiInterrupt: ATAPI command status %#x\n", status));
                 if (status == SRB_STATUS_DATA_OVERRUN) {
                     // Check to see if we at least get mininum number of bytes
@@ -9499,6 +9500,82 @@ reject_srb:
                    (Srb->Cdb[0] != SCSIOP_ATA_PASSTHROUGH)/* &&
                    (Srb->Cdb[0] != SCSIOP_REPORT_LUNS)*/) {
                     KdPrint3((PRINT_PREFIX "Try ATAPI send %x\n", Srb->Cdb[0]));
+#ifdef __REACTOS__
+                    status = SRB_STATUS_BUSY;
+
+                    if (Srb->Cdb[0] == SCSIOP_INQUIRY &&
+                        (LunExt->DeviceFlags & DFLAGS_ATAPI_DEVICE) &&
+                        (LunExt->IdentifyData.DeviceType == ATAPI_TYPE_CDROM ||
+                        LunExt->IdentifyData.DeviceType == ATAPI_TYPE_OPTICAL) &&
+                        LunExt->IdentifyData.ModelNumber[0])
+                    {
+                        ULONG j;
+                        CCHAR vendorId[26];
+
+                        // Attempt to identify known broken CD/DVD drives
+                        for (j = 0; j < sizeof(vendorId); j += 2)
+                        {
+                            // Build a buffer based on the identify data.
+                            MOV_DW_SWP(vendorId[j], ((PUCHAR)LunExt->IdentifyData.ModelNumber)[j]);
+                        }
+
+                        // Emulate INQUIRY support for broken CD/DVD drives (e.g. Microsoft Xbox).
+                        // Currently we implement it by explicitly checking the drive name from ATA IDENTIFY PACKET.
+                        if (!AtapiStringCmp(vendorId, "THOMSON-DVD", 11) ||
+                            !AtapiStringCmp(vendorId, "PHILIPS XBOX DVD DRIVE", 22) ||
+                            !AtapiStringCmp(vendorId, "PHILIPS J5 3235C", 16) ||
+                            !AtapiStringCmp(vendorId, "SAMSUNG DVD-ROM SDG-605B", 24))
+                        {
+                            // TODO:
+                            // Better send INQUIRY and then check for chan->ReturningMediaStatus >> 4 == SCSI_SENSE_ILLEGAL_REQUEST
+                            // in AtapiInterrupt__() and emulate the response only in this case.
+
+                            // If this hack stays for long enough, consider adding Xbox 360 drive names to the condition,
+                            // as they are affected by the same problem.
+
+                            // See https://jira.reactos.org/browse/CORE-16692
+                            ULONG i;
+                            PINQUIRYDATA inquiryData = (PINQUIRYDATA)(Srb->DataBuffer);
+                            PIDENTIFY_DATA2 identifyData = &(LunExt->IdentifyData);
+
+                            // Zero INQUIRY data structure.
+                            RtlZeroMemory((PCHAR)(Srb->DataBuffer), Srb->DataTransferLength);
+
+                            // This is ATAPI CD- or DVD-ROM.
+                            inquiryData->DeviceType = READ_ONLY_DIRECT_ACCESS_DEVICE;
+
+                            // Set the removable bit, if applicable.
+                            if (LunExt->DeviceFlags & DFLAGS_REMOVABLE_DRIVE) {
+                                KdPrint2((PRINT_PREFIX 
+                                          "RemovableMedia\n"));
+                                inquiryData->RemovableMedia = 1;
+                            }
+                            // Set the Relative Addressing (LBA) bit, if applicable.
+                            if (LunExt->DeviceFlags & DFLAGS_LBA_ENABLED) {
+                                inquiryData->RelativeAddressing = 1;
+                                KdPrint2((PRINT_PREFIX 
+                                          "RelativeAddressing\n"));
+                            }
+                            // Set the CommandQueue bit
+                            inquiryData->CommandQueue = 1;
+
+                            // Fill in vendor identification fields.
+                            for (i = 0; i < 24; i += 2) {
+                                MOV_DW_SWP(inquiryData->DeviceIdentificationString[i], ((PUCHAR)identifyData->ModelNumber)[i]);
+                            }
+
+                            // Move firmware revision from IDENTIFY data to
+                            // product revision in INQUIRY data.
+                            for (i = 0; i < 4; i += 2) {
+                                MOV_DW_SWP(inquiryData->ProductRevisionLevel[i], ((PUCHAR)identifyData->FirmwareRevision)[i]);
+                            }
+
+                            status = SRB_STATUS_SUCCESS;
+                        }
+                    }
+
+                    if (status != SRB_STATUS_SUCCESS)
+#endif
                     status = AtapiSendCommand(HwDeviceExtension, Srb, CMD_ACTION_ALL);
                 } else {
                     KdPrint2((PRINT_PREFIX "Try IDE send\n"));
@@ -10677,11 +10754,19 @@ DriverEntry(
     }
 
     if(WinVer_Id() >= WinVer_2k) {
+#ifndef __REACTOS__
         if(AtapiRegCheckParameterValue(NULL, L"Paramaters\\PnpInterface", L"1", 0)) {
+#else
+        if(AtapiRegCheckParameterValue(NULL, L"Parameters\\PnpInterface", L"1", 0)) {
+#endif
             KdPrint(("UniATA: Behave as WDM, mlia (1)\n"));
             WinVer_WDM_Model = TRUE;
         }
+#ifndef __REACTOS__
         if(AtapiRegCheckParameterValue(NULL, L"Paramaters\\PnpInterface", L"5", 0)) {
+#else
+        if(AtapiRegCheckParameterValue(NULL, L"Parameters\\PnpInterface", L"5", 0)) {
+#endif
             KdPrint(("UniATA: Behave as WDM, mlia (5)\n"));
             WinVer_WDM_Model = TRUE;
         }

@@ -1321,7 +1321,9 @@ static void write_proc_func_header( FILE *file, int indent, const type_t *iface,
         }
         stack_size += get_stack_size( var, NULL );
         param_num++;
-        nb_args++;
+
+        if (var != handle_var || implicit_fc || explicit_fc != FC_BIND_PRIMITIVE)
+            nb_args++;
     }
     if (!is_void( type_function_get_rettype( func->type )))
     {
@@ -1428,6 +1430,8 @@ static void write_procformatstring_func( FILE *file, int indent, const type_t *i
     int is_interpreted = is_interpreted_func( iface, func );
     int is_new_style = is_interpreted && (get_stub_mode() == MODE_Oif);
     var_t *retval = type_function_get_retval( func->type );
+    unsigned char explicit_fc, implicit_fc;
+    const var_t *handle_var = get_func_handle_var( iface, func, &explicit_fc, &implicit_fc );
 
     if (is_interpreted) write_proc_func_header( file, indent, iface, func, offset, num_proc );
 
@@ -1437,11 +1441,18 @@ static void write_procformatstring_func( FILE *file, int indent, const type_t *i
         const var_t *var;
         LIST_FOR_EACH_ENTRY( var, type_get_function_args(func->type), const var_t, entry )
         {
-            print_file( file, 0, "/* %u (parameter %s) */\n", *offset, var->name );
-            if (is_new_style)
-                *offset += write_new_procformatstring_type(file, indent, var, FALSE, &stack_offset);
+            if (var != handle_var || implicit_fc || explicit_fc != FC_BIND_PRIMITIVE)
+            {
+                print_file( file, 0, "/* %u (parameter %s) */\n", *offset, var->name );
+                if (is_new_style)
+                    *offset += write_new_procformatstring_type(file, indent, var, FALSE, &stack_offset);
+                else
+                    *offset += write_old_procformatstring_type(file, indent, var, FALSE, is_interpreted);
+            }
             else
-                *offset += write_old_procformatstring_type(file, indent, var, FALSE, is_interpreted);
+            {
+                stack_offset += pointer_size;
+            }
         }
     }
 
@@ -2137,6 +2148,9 @@ static unsigned int write_nonsimple_pointer(FILE *file, const attr_list_t *attrs
         type_t *ref = type_pointer_get_ref(type);
         if(is_declptr(ref) && !is_user_type(ref))
             flags |= FC_POINTER_DEREF;
+        if (pointer_type != FC_RP) {
+            flags |= get_attrv(type->attrs, ATTR_ALLOCATE);
+        }
     }
 
     print_file(file, 2, "0x%x, 0x%x,\t\t/* %s",
@@ -2149,6 +2163,10 @@ static unsigned int write_nonsimple_pointer(FILE *file, const attr_list_t *attrs
             fprintf(file, " [allocated_on_stack]");
         if (flags & FC_POINTER_DEREF)
             fprintf(file, " [pointer_deref]");
+        if (flags & FC_DONT_FREE)
+            fprintf(file, " [dont_free]");
+        if (flags & FC_ALLOCATE_ALL_NODES)
+            fprintf(file, " [all_nodes]");
         fprintf(file, " */\n");
     }
 

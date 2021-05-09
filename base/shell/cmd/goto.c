@@ -41,7 +41,24 @@ INT cmd_goto(LPTSTR param)
 
     TRACE("cmd_goto(\'%s\')\n", debugstr_aw(param));
 
-    if (!_tcsncmp(param, _T("/?"), 2))
+    /*
+     * Keep the help message handling here too.
+     * This allows us to reproduce the Windows' CMD "bug"
+     * (from a batch script):
+     *
+     * SET label=/?
+     * CALL :%%label%%
+     *
+     * calls GOTO help, due to how CALL :label functionality
+     * is internally implemented.
+     *
+     * See https://stackoverflow.com/q/31987023/13530036
+     * for more details.
+     *
+     * Note that the choice of help parsing forbids
+     * any label containing '/?' in it.
+     */
+    if (_tcsstr(param, _T("/?")))
     {
         ConOutResPaging(TRUE, STRING_GOTO_HELP1);
         return 0;

@@ -119,12 +119,12 @@ reloc_down:
 #if 0
     rep movsb
 #else
-    mov rdx, rcx            // Copy the total number of bytes in EDX
-    and rdx, HEX(0FFFFFFFC) // Number of bytes we copy using DWORDs
-    xor rdx, rcx            // Number of remaining bytes to copy after the DWORDs
-    shr rcx, 2      // Count number of DWORDs
+    mov edx, ecx            // Copy the total number of bytes in EDX
+    and edx, HEX(0FFFFFFFC) // Number of bytes we copy using DWORDs
+    xor edx, ecx            // Number of remaining bytes to copy after the DWORDs
+    shr ecx, 2      // Count number of DWORDs
     rep movsd       // Move DWORDs
-    mov rcx, rdx    // Count number of remaining bytes
+    mov ecx, edx    // Count number of remaining bytes
     rep movsb       // Move bytes
 #endif
     jmp after_reloc
