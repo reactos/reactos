@@ -47,7 +47,8 @@ static VOID WhereError(UINT nID)
 typedef BOOL (CALLBACK *WHERE_CALLBACK)(LPCWSTR pattern, LPCWSTR path, PWIN32_FIND_DATAW data);
 
 static BOOL
-WhereSearchGeneric(LPCWSTR pattern, LPWSTR path, BOOL bDir, WHERE_CALLBACK callback)
+WhereSearchGeneric(LPCWSTR pattern, LPWSTR path, size_t path_len, BOOL bDir,
+                   WHERE_CALLBACK callback)
 {
     LPWSTR pch;
     size_t cch;
@@ -59,7 +60,7 @@ WhereSearchGeneric(LPCWSTR pattern, LPWSTR path, BOOL bDir, WHERE_CALLBACK callb
         return TRUE; // not found
 
     pch = wcsrchr(path, L'\\') + 1;
-    cch = MAX_PATH - (pch - path);
+    cch = path_len - (pch - path);
     do
     {
         if (bDir != !!(data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
@@ -137,7 +138,7 @@ static BOOL WhereSearchFiles(LPCWSTR pattern, LPCWSTR dir)
         // append extension
         StringCchCatW(szPath, _countof(szPath), strlist_get_at(&s_pathext, iExt));
 
-        if (!WhereSearchGeneric(pattern, szPath, FALSE, WherePrintPath))
+        if (!WhereSearchGeneric(pattern, szPath, _countof(szPath), FALSE, WherePrintPath))
             return FALSE;
     }
     return TRUE;
@@ -161,7 +162,8 @@ static BOOL WhereSearchRecursive(LPCWSTR pattern, LPCWSTR dir)
     // build path with wildcard
     StringCchCopyW(szPath, _countof(szPath), dir);
     StringCchCatW(szPath, _countof(szPath), L"\\*");
-    return WhereSearchGeneric(pattern, szPath, TRUE, WhereSearchRecursiveCallback);
+    return WhereSearchGeneric(pattern, szPath, _countof(szPath), TRUE,
+                              WhereSearchRecursiveCallback);
 }
 
 static BOOL WhereSearch(LPCWSTR pattern, strlist_t *dirlist)
