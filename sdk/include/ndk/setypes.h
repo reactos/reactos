@@ -221,12 +221,12 @@ typedef struct _TOKEN
     TOKEN_TYPE TokenType;                             /* 0x80 */
     SECURITY_IMPERSONATION_LEVEL ImpersonationLevel;  /* 0x84 */
     ULONG TokenFlags;                                 /* 0x88 */
-    BOOLEAN TokenInUse;                               /* 0x89 */
-    PSECURITY_TOKEN_PROXY_DATA ProxyData;             /* 0x8C */
-    PSECURITY_TOKEN_AUDIT_DATA AuditData;             /* 0x90 */
-    PSEP_LOGON_SESSION_REFERENCES LogonSession;       /* 0x94 */
-    LUID OriginatingLogonSession;                     /* 0x98 */
-    ULONG VariablePart;                               /* 0xA0 */
+    BOOLEAN TokenInUse;                               /* 0x8C */
+    PSECURITY_TOKEN_PROXY_DATA ProxyData;             /* 0x90 */
+    PSECURITY_TOKEN_AUDIT_DATA AuditData;             /* 0x94 */
+    PSEP_LOGON_SESSION_REFERENCES LogonSession;       /* 0x98 */
+    LUID OriginatingLogonSession;                     /* 0x9C */
+    ULONG VariablePart;                               /* 0xA4 */
 } TOKEN, *PTOKEN;
 
 typedef struct _AUX_ACCESS_DATA
