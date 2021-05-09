@@ -151,6 +151,19 @@ typedef struct _SEP_AUDIT_POLICY
     };
 } SEP_AUDIT_POLICY, *PSEP_AUDIT_POLICY;
 
+//
+// Security Logon Session References
+//
+typedef struct _SEP_LOGON_SESSION_REFERENCES
+{
+    struct _SEP_LOGON_SESSION_REFERENCES *Next;
+    LUID LogonId;
+    ULONG ReferenceCount;
+    ULONG Flags;
+    PDEVICE_MAP pDeviceMap;
+    LIST_ENTRY TokenList;
+} SEP_LOGON_SESSION_REFERENCES, *PSEP_LOGON_SESSION_REFERENCES;
+
 typedef struct _SE_AUDIT_PROCESS_CREATION_INFO
 {
     POBJECT_NAME_INFORMATION ImageFileName;
@@ -189,7 +202,7 @@ typedef struct _TOKEN
     LUID ParentTokenId;                               /* 0x20 */
     LARGE_INTEGER ExpirationTime;                     /* 0x28 */
     PERESOURCE TokenLock;                             /* 0x30 */
-    SEP_AUDIT_POLICY  AuditPolicy;                    /* 0x38 */
+    SEP_AUDIT_POLICY AuditPolicy;                     /* 0x38 */
     LUID ModifiedId;                                  /* 0x40 */
     ULONG SessionId;                                  /* 0x48 */
     ULONG UserAndGroupCount;                          /* 0x4C */
@@ -208,9 +221,10 @@ typedef struct _TOKEN
     TOKEN_TYPE TokenType;                             /* 0x80 */
     SECURITY_IMPERSONATION_LEVEL ImpersonationLevel;  /* 0x84 */
     ULONG TokenFlags;                                 /* 0x88 */
-    BOOLEAN TokenInUse;                               /* 0x8C */
-    PSECURITY_TOKEN_PROXY_DATA ProxyData;             /* 0x90 */
-    PSECURITY_TOKEN_AUDIT_DATA AuditData;             /* 0x94 */
+    BOOLEAN TokenInUse;                               /* 0x89 */
+    PSECURITY_TOKEN_PROXY_DATA ProxyData;             /* 0x8C */
+    PSECURITY_TOKEN_AUDIT_DATA AuditData;             /* 0x90 */
+    PSEP_LOGON_SESSION_REFERENCES LogonSession;       /* 0x94 */
     LUID OriginatingLogonSession;                     /* 0x98 */
     ULONG VariablePart;                               /* 0xA0 */
 } TOKEN, *PTOKEN;
