@@ -4,6 +4,7 @@
  * PURPOSE:     Search executable files
  * COPYRIGHT:   Copyright 2021 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
+
 #include <stdlib.h>
 #include <windef.h>
 #include <winbase.h>
