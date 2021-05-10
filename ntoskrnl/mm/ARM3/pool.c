@@ -1395,26 +1395,101 @@ MiInitializeSessionPool(VOID)
 /* PUBLIC FUNCTIONS ***********************************************************/
 
 /*
- * @unimplemented
+ * @implemented
  */
 PVOID
 NTAPI
 MmAllocateMappingAddress(IN SIZE_T NumberOfBytes,
                          IN ULONG PoolTag)
 {
-    UNIMPLEMENTED;
+    PFN_NUMBER SizeInPages;
+    PMMPTE PointerPte;
+    MMPTE TempPte;
+
+    /* How many PTEs does the caller want? */
+    SizeInPages = BYTES_TO_PAGES(NumberOfBytes);
+    if (SizeInPages == 0)
+    {
+        KeBugCheckEx(SYSTEM_PTE_MISUSE,
+                     0x100, /* Requested 0 mappings */
+                     SizeInPages,
+                     PoolTag,
+                     (ULONG_PTR)_ReturnAddress());
+    }
+
+    /* We need two extra PTEs to store size and pool tag in */
+    SizeInPages += 2;
+
+    /* Reserve our PTEs */
+    PointerPte = MiReserveSystemPtes(SizeInPages, SystemPteSpace);
+    if (PointerPte)
+    {
+        TempPte.u.Long = SizeInPages << 1;
+        MI_WRITE_INVALID_PTE(&PointerPte[0], TempPte);
+        TempPte.u.Long = PoolTag;
+        TempPte.u.Hard.Valid = 0;
+        MI_WRITE_INVALID_PTE(&PointerPte[1], TempPte);
+        return MiPteToAddress(PointerPte + 2);
+    }
+
+    /* Failed to reserve PTEs */
     return NULL;
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 VOID
 NTAPI
 MmFreeMappingAddress(IN PVOID BaseAddress,
                      IN ULONG PoolTag)
 {
-    UNIMPLEMENTED;
+    PMMPTE PointerPte;
+    MMPTE TempPte;
+    PFN_NUMBER SizeInPages;
+    PFN_NUMBER i;
+
+    /* Get the first PTE we reserved */
+    PointerPte = MiAddressToPte(BaseAddress) - 2;
+
+    /* Verify that the pool tag matches */
+    TempPte.u.Long = PoolTag;
+    TempPte.u.Hard.Valid = 0;
+    if (PointerPte[1].u.Long != TempPte.u.Long)
+    {
+        KeBugCheckEx(SYSTEM_PTE_MISUSE,
+                     0x101, /* Trying to free an address it does not own */
+                     (ULONG_PTR)BaseAddress,
+                     PoolTag,
+                     PointerPte[1].u.Long);
+    }
+
+    /* We must have a size */
+    SizeInPages = PointerPte[0].u.Long >> 1;
+    if (PointerPte[0].u.Long < (3 << 1))
+    {
+        KeBugCheckEx(SYSTEM_PTE_MISUSE,
+                     0x102, /* Mapping apparently empty */
+                     (ULONG_PTR)BaseAddress,
+                     PoolTag,
+                     (ULONG_PTR)_ReturnAddress());
+    }
+    
+    /* The PTEs must not be mapped. Check the first one to make sure */
+    for (i = 2; i < SizeInPages; i++)
+    {
+        if (PointerPte[i].u.Long != 0)
+        {
+            KeBugCheckEx(SYSTEM_PTE_MISUSE,
+                         0x103, /* Mapping address still reserved */
+                         (ULONG_PTR)PointerPte,
+                         PoolTag,
+                         SizeInPages - 2);
+        }
+    }
+
+    /* Release the PTEs */
+    MiReleaseSystemPtes(PointerPte, SizeInPages, SystemPteSpace);
 }
 
 /* EOF */
