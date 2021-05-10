@@ -29,11 +29,11 @@ NOTE: This tool returns an error level of 0 if the search was successful,\n\
       1 if the file was not found, and 2 if there was an error.\n\
 \n\
 Example:\n\
-    where myfile*.exe\n\
-    where /F /T mspaint\n\
-    where $WINDIR:notepad myfile???\n\
-    where C:\\ReactOS;C:\\ReactOS\\system32:exp*.exe\n\
-    where /R ""C:\\Program Files"" *.dll\n"
+    WHERE myfile*.exe\n\
+    WHERE /F /T mspaint\n\
+    WHERE $WINDIR:notepad myfile???\n\
+    WHERE C:\\ReactOS;C:\\ReactOS\\system32:exp*.exe\n\
+    WHERE /R ""C:\\Program Files"" *.dll\n"
 
     IDS_BAD_ARG "ERROR: Invalid argument - '%ls'.\n"
     IDS_NOT_FOUND "INFO: Could not find files for the given pattern(s).\n"
