@@ -108,9 +108,9 @@ static BOOL CALLBACK WherePrintPath(LPCWSTR pattern, LPCWSTR path, PWIN32_FIND_D
         FileSize.HighPart = data->nFileSizeHigh;
         // print
         if (s_dwFlags & FLAG_F) // double quote
-            StringCbPrintfW(szPath, sizeof(szPath), L"\"%s\"", path);
+            StringCchPrintfW(szPath, _countof(szPath), L"\"%s\"", path);
         else
-            StringCbCopyW(szPath, sizeof(szPath), path);
+            StringCchCopyW(szPath, _countof(szPath), path);
         ConResPrintf(StdOut, IDS_FILE_INFO, FileSize.QuadPart, szDate, szTime, szPath);
     }
     else // print path only
