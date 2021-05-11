@@ -993,6 +993,9 @@ MmInitializeProcessAddressSpace(IN PEPROCESS Process,
     PageFrameNumber = PFN_FROM_PTE(PointerPte);
     MiInitializePfn(PageFrameNumber, PointerPte, TRUE);
 
+    /* All our pages are now active & valid. Release the lock. */
+    MiReleasePfnLock(OldIrql);
+
     /* This should be in hyper space, but not in the mapping range */
     Process->Vm.VmWorkingSetList = MmWorkingSetList;
     ASSERT(((ULONG_PTR)MmWorkingSetList >= MI_MAPPING_RANGE_END) && ((ULONG_PTR)MmWorkingSetList <= HYPER_SPACE_END));
@@ -1015,9 +1018,6 @@ MmInitializeProcessAddressSpace(IN PEPROCESS Process,
 
     /* Sanity check */
     ASSERT(Process->PhysicalVadRoot == NULL);
-
-    /* Release PFN lock */
-    MiReleasePfnLock(OldIrql);
 
     /* Release the process working set */
     MiUnlockProcessWorkingSet(Process, PsGetCurrentThread());

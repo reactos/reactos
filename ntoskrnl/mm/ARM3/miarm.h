@@ -1052,6 +1052,15 @@ MM_ANY_WS_LOCK_HELD(IN PETHREAD Thread)
             (Thread->OwnsSessionWorkingSetShared));
 }
 
+FORCEINLINE
+BOOLEAN
+MM_ANY_WS_LOCK_HELD_EXCLUSIVE(_In_ PETHREAD Thread)
+{
+    return ((Thread->OwnsProcessWorkingSetExclusive) ||
+            (Thread->OwnsSystemWorkingSetExclusive) ||
+            (Thread->OwnsSessionWorkingSetExclusive));
+}
+
 //
 // Checks if the process owns the working set lock
 //

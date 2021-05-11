@@ -84,11 +84,15 @@ static void FreeWsleIndex(PMMWSL WsList, ULONG Index)
             ASSERT(MiPteToAddress(PointerPte) != WsList);
 
             PFN_NUMBER Page = PFN_FROM_PTE(PointerPte);
-            PMMPFN Pfn = MiGetPfnEntry(Page);
 
-            MI_SET_PFN_DELETED(Pfn);
-            MiDecrementShareCount(MiGetPfnEntry(Pfn->u4.PteFrame), Pfn->u4.PteFrame);
-            MiDecrementShareCount(Pfn, Page);
+            {
+                MiPfnLockGuard PfnLock;
+
+                PMMPFN Pfn = MiGetPfnEntry(Page);
+                MI_SET_PFN_DELETED(Pfn);
+                MiDecrementShareCount(MiGetPfnEntry(Pfn->u4.PteFrame), Pfn->u4.PteFrame);
+                MiDecrementShareCount(Pfn, Page);
+            }
 
             PointerPte->u.Long = 0;
 
@@ -172,8 +176,13 @@ static ULONG GetFreeWsleIndex(PMMWSL WsList)
             PMMPTE PointerPte = MiAddressToPte(&WsList->Wsle[WsList->LastInitializedWsle]);
             ASSERT(PointerPte->u.Hard.Valid == 0);
             MMPTE TempPte = GetPteTemplateForWsList(WsList);
-            TempPte.u.Hard.PageFrameNumber = MiRemoveAnyPage(GetNextPageColorForWsList(WsList));
-            MiInitializePfnAndMakePteValid(TempPte.u.Hard.PageFrameNumber, PointerPte, TempPte);
+            {
+                MiPfnLockGuard PfnLock;
+
+                TempPte.u.Hard.PageFrameNumber = MiRemoveAnyPage(GetNextPageColorForWsList(WsList));
+                MiInitializePfnAndMakePteValid(TempPte.u.Hard.PageFrameNumber, PointerPte, TempPte);
+            }
+
             WsList->LastInitializedWsle += PAGE_SIZE / sizeof(MMWSLE);
         }
     }
@@ -187,8 +196,7 @@ VOID
 RemoveFromWsList(PMMWSL WsList, PVOID Address)
 {
     /* Make sure that we are holding the right locks. */
-    ASSERT(MM_ANY_WS_LOCK_HELD(PsGetCurrentThread()));
-    MI_ASSERT_PFN_LOCK_HELD();
+    ASSERT(MM_ANY_WS_LOCK_HELD_EXCLUSIVE(PsGetCurrentThread()));
 
     PMMPTE PointerPte = MiAddressToPte(Address);
 
@@ -262,37 +270,37 @@ TrimWsList(PMMWSL WsList)
 
         /* Please put yourself aside and make place for the younger ones */
         PFN_NUMBER Page = PFN_FROM_PTE(PointerPte);
-        KIRQL OldIrql = MiAcquirePfnLock();
-
-        PMMPFN Pfn = MiGetPfnEntry(Page);
-
-        /* Not supported yet */
-        ASSERT(Pfn->u3.e1.PrototypePte == 0);
-        ASSERT(!MI_IS_ROS_PFN(Pfn));
-
-        /* FIXME: Remove this hack when possible */
-        if (Pfn->Wsle.u1.e1.LockedInMemory || (Pfn->Wsle.u1.e1.LockedInWs))
         {
-            MiReleasePfnLock(OldIrql);
-            continue;
+            MiPfnLockGuard PfnLock;
+
+            PMMPFN Pfn = MiGetPfnEntry(Page);
+
+            /* Not supported yet */
+            ASSERT(Pfn->u3.e1.PrototypePte == 0);
+            ASSERT(!MI_IS_ROS_PFN(Pfn));
+
+            /* FIXME: Remove this hack when possible */
+            if (Pfn->Wsle.u1.e1.LockedInMemory || (Pfn->Wsle.u1.e1.LockedInWs))
+            {
+                continue;
+            }
+
+            /* We can remove it from the list. Save Protection first */
+            ULONG Protection = Entry.u1.e1.Protection;
+            RemoveFromWsList(WsList, Entry.u1.VirtualAddress);
+
+            /* Dirtify the page, if needed */
+            if (PointerPte->u.Hard.Dirty)
+                Pfn->u3.e1.Modified = 1;
+
+            /* Make this a transition PTE */
+            MI_MAKE_TRANSITION_PTE(PointerPte, Page, Protection);
+            KeInvalidateTlbEntry(MiAddressToPte(PointerPte));
+
+            /* Drop the share count. This will take care of putting it in the standby or modified list. */
+            MiDecrementShareCount(Pfn, Page);
         }
 
-        /* We can remove it from the list. Save Protection first */
-        ULONG Protection = Entry.u1.e1.Protection;
-        RemoveFromWsList(WsList, Entry.u1.VirtualAddress);
-
-        /* Dirtify the page, if needed */
-        if (PointerPte->u.Hard.Dirty)
-            Pfn->u3.e1.Modified = 1;
-
-        /* Make this a transition PTE */
-        MI_MAKE_TRANSITION_PTE(PointerPte, Page, Protection);
-        KeInvalidateTlbEntry(MiAddressToPte(PointerPte));
-
-        /* Drop the share count. This will take care of putting it in the standby or modified list. */
-        MiDecrementShareCount(Pfn, Page);
-
-        MiReleasePfnLock(OldIrql);
         Ret++;
     }
     return Ret;
@@ -302,6 +310,7 @@ TrimWsList(PMMWSL WsList)
 extern "C"
 {
 
+_Use_decl_annotations_
 VOID
 NTAPI
 MiInsertInWorkingSetList(
@@ -311,9 +320,8 @@ MiInsertInWorkingSetList(
 {
     PMMWSL WsList = Vm->VmWorkingSetList;
 
-    /* Make sure that we are holding the right locks. */
-    ASSERT(MM_ANY_WS_LOCK_HELD(PsGetCurrentThread()));
-    MI_ASSERT_PFN_LOCK_HELD();
+    /* Make sure that we are holding the WS lock. */
+    ASSERT(MM_ANY_WS_LOCK_HELD_EXCLUSIVE(PsGetCurrentThread()));
 
     PMMPTE PointerPte = MiAddressToPte(Address);
 
@@ -345,6 +353,7 @@ MiInsertInWorkingSetList(
         Vm->PeakWorkingSetSize = Vm->WorkingSetSize;
 }
 
+_Use_decl_annotations_
 VOID
 NTAPI
 MiRemoveFromWorkingSetList(
@@ -356,7 +365,7 @@ MiRemoveFromWorkingSetList(
     Vm->WorkingSetSize -= PAGE_SIZE;
 }
 
-_Requires_exclusive_lock_held_(WorkingSet->WorkingSetMutex)
+_Use_decl_annotations_
 VOID
 NTAPI
 MiInitializeWorkingSetList(_Inout_ PMMSUPPORT WorkingSet)
