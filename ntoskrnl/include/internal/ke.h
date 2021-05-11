@@ -1056,6 +1056,40 @@ KeBugCheckUnicodeToAnsi(
 
 #ifdef __cplusplus
 } // extern "C"
+
+namespace ntoskrnl
+{
+
+/* Like std::lock_guard, but for a Queued Spinlock */
+template <KSPIN_LOCK_QUEUE_NUMBER n>
+class KiQueuedSpinLockGuard
+{
+private:
+    KIRQL m_OldIrql;
+public:
+
+    _Requires_lock_not_held_(n)
+    _Acquires_lock_(n)
+    _IRQL_raises_(DISPATCH_LEVEL)
+    explicit KiQueuedSpinLockGuard()
+    {
+        m_OldIrql = KeAcquireQueuedSpinLock(n);
+    }
+
+    _Requires_lock_held_(n)
+    _Releases_lock_(n)
+    ~KiQueuedSpinLockGuard()
+    {
+        KeReleaseQueuedSpinLock(n, m_OldIrql);
+    }
+
+private:
+    KiQueuedSpinLockGuard(KiQueuedSpinLockGuard const&) = delete;
+    KiQueuedSpinLockGuard& operator=(KiQueuedSpinLockGuard const&) = delete;
+};
+
+}
+
 #endif
 
 #include "ke_x.h"

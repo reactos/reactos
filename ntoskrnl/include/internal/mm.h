@@ -1653,4 +1653,10 @@ MiInitializeWorkingSetList(_Inout_ PMMSUPPORT WorkingSet);
 
 #ifdef __cplusplus
 } // extern "C"
+
+namespace ntoskrnl
+{
+using MiPfnLockGuard = const KiQueuedSpinLockGuard<LockQueuePfnLock>;
+} // namespace ntoskrnl
+
 #endif
