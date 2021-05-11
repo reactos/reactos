@@ -26,8 +26,7 @@ static KEVENT IopPnpNotifyEvent;
 
 /* FUNCTIONS *****************************************************************/
 
-CODE_SEG("INIT")
-NTSTATUS
+NTSTATUS CODE_SEG("INIT")
 IopInitPlugPlayEvents(VOID)
 {
     InitializeListHead(&IopPnpEventQueueHead);

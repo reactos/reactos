@@ -12,16 +12,9 @@
 #define NDEBUG
 #include <debug.h>
 
-/* GLOBALS ********************************************************************/
-
-#ifdef ALLOC_PRAGMA
-#pragma alloc_text(PAGE, InPortPnp)
-#pragma alloc_text(PAGE, InPortStartDevice)
-#pragma alloc_text(PAGE, InPortRemoveDevice)
-#endif
-
 /* FUNCTIONS ******************************************************************/
 
+CODE_SEG("PAGE")
 NTSTATUS
 NTAPI
 InPortStartDevice(
@@ -178,6 +171,7 @@ Complete:
     return Status;
 }
 
+CODE_SEG("PAGE")
 NTSTATUS
 NTAPI
 InPortRemoveDevice(
@@ -221,6 +215,7 @@ InPortRemoveDevice(
     return Status;
 }
 
+CODE_SEG("PAGE")
 NTSTATUS
 NTAPI
 InPortPnp(

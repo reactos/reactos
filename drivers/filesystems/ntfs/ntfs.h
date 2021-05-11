@@ -1276,8 +1276,10 @@ NtfsSetVolumeInformation(PNTFS_IRP_CONTEXT IrpContext);
 
 /* ntfs.c */
 
+CODE_SEG("INIT")
 DRIVER_INITIALIZE DriverEntry;
 
+CODE_SEG("INIT")
 VOID
 NTAPI
 NtfsInitializeFunctionPointers(PDRIVER_OBJECT DriverObject);

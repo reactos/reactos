@@ -824,6 +824,7 @@ VfatSetExtendedAttributes(
 
 /* fastio.c */
 
+CODE_SEG("INIT")
 VOID
 VfatInitFastIoRoutines(
     PFAST_IO_DISPATCH FastIoDispatch);
@@ -1128,6 +1129,7 @@ VfatFileSystemControl(
 
 /* iface.c */
 
+CODE_SEG("INIT")
 NTSTATUS
 NTAPI
 DriverEntry(

@@ -728,10 +728,12 @@ KeQueryValuesProcess(IN PKPROCESS Process,
 
 /* INITIALIZATION FUNCTIONS *************************************************/
 
+CODE_SEG("INIT")
 BOOLEAN
 NTAPI
 KeInitSystem(VOID);
 
+CODE_SEG("INIT")
 VOID
 NTAPI
 KeInitExceptions(VOID);
@@ -740,11 +742,13 @@ VOID
 NTAPI
 KeInitInterrupts(VOID);
 
+CODE_SEG("INIT")
 VOID
 NTAPI
 KiInitializeBugCheck(VOID);
 
 DECLSPEC_NORETURN
+CODE_SEG("INIT")
 VOID
 NTAPI
 KiSystemStartup(
@@ -905,6 +909,7 @@ KiChainedDispatch(
     IN PKINTERRUPT Interrupt
 );
 
+CODE_SEG("INIT")
 VOID
 NTAPI
 KiInitializeMachineType(
@@ -922,6 +927,7 @@ KiSetupStackAndInitializeKernel(
     IN PLOADER_PARAMETER_BLOCK LoaderBlock
 );
 
+CODE_SEG("INIT")
 VOID
 NTAPI
 KiInitSpinLocks(
@@ -929,6 +935,7 @@ KiInitSpinLocks(
     IN CCHAR Number
 );
 
+CODE_SEG("INIT")
 LARGE_INTEGER
 NTAPI
 KiComputeReciprocal(
@@ -936,6 +943,7 @@ KiComputeReciprocal(
     OUT PUCHAR Shift
 );
 
+CODE_SEG("INIT")
 VOID
 NTAPI
 KiInitSystem(
@@ -964,6 +972,7 @@ KiCallbackReturn(
     IN NTSTATUS Status
 );
 
+CODE_SEG("INIT")
 VOID
 NTAPI
 KiInitMachineDependent(VOID);
