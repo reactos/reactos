@@ -1,0 +1,52 @@
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+
+STRINGTABLE
+BEGIN
+    IDS_USAGE "Usage: WHERE [options] pattern...\n\
+\n\
+Description:\n\
+    Shows the location of the file(s) specified by the pattern(s).\n\
+    By default, this tool searches by using the pattern(s) and the paths\n\
+    of the PATH environment variable.\n\
+\n\
+Options:\n\
+  /F       Displays all matched file(s) in double quotes.\n\
+  /Q       Quiet mode. Doesn't show any files and messages.\n\
+  /R dir   Starts searching from the specified directory and recursively\n\
+           performs the search.\n\
+  /T       Shows the file size and last modified date of all matched\n\
+           files.\n\
+  pattern  Specifies the pattern to search files. Wildcards * and ? can\n\
+           be used. ""$env:pattern"" and ""path:pattern"" formats can also\n\
+           be used, where ""env"" is an environment variable and\n\
+           the search is done in the paths of the ""env"" environment\n\
+           variable. Don't use these formats with /R. The search is also\n\
+           performed by adding the extension of the PATHEXT variable to\n\
+           the pattern.\n\
+  /?       Displays this message.\n\
+\n\
+NOTE: This tool returns an error level of 0 if the search was successful,\n\
+      1 if the file was not found, and 2 if there was an error.\n\
+\n\
+Example:\n\
+    WHERE myfile*.exe\n\
+    WHERE /F /T mspaint\n\
+    WHERE $WINDIR:notepad myfile???\n\
+    WHERE C:\\ReactOS;C:\\ReactOS\\system32:exp*.exe\n\
+    WHERE /R ""C:\\Program Files"" *.dll\n"
+
+    IDS_BAD_ARG "ERROR: Invalid argument - '%ls'.\n"
+    IDS_NOT_FOUND "INFO: Could not find files for the given pattern(s).\n"
+    IDS_FILE_INFO "%10I64u  %-12ls %-12ls %ls\n"
+    IDS_WANT_VALUE "ERROR: Value is needed for '%ls'.\n"
+    IDS_TYPE_HELP "Type ""WHERE /?"" for usage help.\n"
+    IDS_ENVPAT_WITH_R "ERROR: ""$env:pattern"" cannot be used with /R.\n"
+    IDS_PATHPAT_WITH_R "ERROR: ""path:pattern"" format cannot be used with /R.\n"
+    IDS_BAD_PATHPAT "ERROR: Invalid pattern is specified in ""path:pattern"".\n"
+    IDS_OUTOFMEMORY "ERROR: Out of memory.\n"
+    IDS_BAD_ENVVAR "ERROR: Environment variable ""%ls"" is not found.\n"
+    IDS_CANT_FOUND "ERROR: The system could not find the file specified.\n"
+    IDS_BAD_DIR "ERROR: Invalid directory is specified.\n"
+    IDS_BAD_NAME "ERROR: The filename, directory name or volume label syntax is wrong.\n"
+    IDS_TOO_MANY "ERROR: '%ls' option is not allowed more than '%u' time(s).\n"
+END
