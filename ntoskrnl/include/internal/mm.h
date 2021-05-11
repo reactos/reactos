@@ -602,6 +602,7 @@ MiCheckAllProcessMemoryAreas(VOID);
 
 /* npool.c *******************************************************************/
 
+CODE_SEG("INIT")
 VOID
 NTAPI
 MiInitializeNonPagedPool(VOID);
@@ -652,6 +653,7 @@ MmInit1(
     VOID
 );
 
+CODE_SEG("INIT")
 BOOLEAN
 NTAPI
 MmInitSystem(IN ULONG Phase,
@@ -668,6 +670,7 @@ VOID
 NTAPI
 MmFreeSwapPage(SWAPENTRY Entry);
 
+CODE_SEG("INIT")
 VOID
 NTAPI
 MmInitPagingFile(VOID);
@@ -827,6 +830,7 @@ MmDeleteKernelStack(PVOID Stack,
 
 /* balance.c *****************************************************************/
 
+CODE_SEG("INIT")
 VOID
 NTAPI
 MmInitializeMemoryConsumer(
@@ -834,6 +838,7 @@ MmInitializeMemoryConsumer(
     NTSTATUS (*Trim)(ULONG Target, ULONG Priority, PULONG NrFreed)
 );
 
+CODE_SEG("INIT")
 VOID
 NTAPI
 MmInitializeBalancer(
@@ -856,6 +861,7 @@ MmRequestPageMemoryConsumer(
     PPFN_NUMBER AllocatedPage
 );
 
+CODE_SEG("INIT")
 VOID
 NTAPI
 MiInitBalancerThread(VOID);
@@ -903,6 +909,7 @@ MmDeleteRmap(
     PVOID Address
 );
 
+CODE_SEG("INIT")
 VOID
 NTAPI
 MmInitializeRmapList(VOID);
@@ -1078,6 +1085,7 @@ MmIsDisabledPage(
     PVOID Address
 );
 
+CODE_SEG("INIT")
 VOID
 NTAPI
 MmInitGlobalKernelPageDirectory(VOID);
@@ -1179,6 +1187,7 @@ MmCreateProcessAddressSpace(
     IN PULONG_PTR DirectoryTableBase
 );
 
+CODE_SEG("INIT")
 NTSTATUS
 NTAPI
 MmInitializeHandBuiltProcess(
@@ -1186,6 +1195,7 @@ MmInitializeHandBuiltProcess(
     IN PULONG_PTR DirectoryTableBase
 );
 
+CODE_SEG("INIT")
 NTSTATUS
 NTAPI
 MmInitializeHandBuiltProcess2(
@@ -1340,6 +1350,7 @@ MmProtectSectionView(
     PULONG OldProtect
 );
 
+CODE_SEG("INIT")
 NTSTATUS
 NTAPI
 MmInitSectionImplementation(VOID);
@@ -1353,6 +1364,16 @@ MmNotPresentFaultSectionView(
     BOOLEAN Locked
 );
 
+NTSTATUS
+NTAPI
+MmPageOutSectionView(
+    PMMSUPPORT AddressSpace,
+    PMEMORY_AREA MemoryArea,
+    PVOID Address,
+    ULONG_PTR Entry
+);
+
+CODE_SEG("INIT")
 NTSTATUS
 NTAPI
 MmCreatePhysicalMemorySection(VOID);
@@ -1468,12 +1489,14 @@ _MmGetPageEntrySectionSegment(PMM_SECTION_SEGMENT Segment,
 
 /* sysldr.c ******************************************************************/
 
+CODE_SEG("INIT")
 VOID
 NTAPI
 MiReloadBootLoadedDrivers(
     IN PLOADER_PARAMETER_BLOCK LoaderBlock
 );
 
+CODE_SEG("INIT")
 BOOLEAN
 NTAPI
 MiInitializeLoadedModuleList(

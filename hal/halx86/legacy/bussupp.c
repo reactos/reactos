@@ -12,6 +12,92 @@
 #define NDEBUG
 #include <debug.h>
 
+CODE_SEG("INIT")
+PBUS_HANDLER
+NTAPI
+HalpAllocateAndInitPciBusHandler(
+    IN ULONG PciType,
+    IN ULONG BusNo,
+    IN BOOLEAN TestAllocation
+);
+
+CODE_SEG("INIT")
+VOID
+NTAPI
+HalpFixupPciSupportedRanges(
+    IN ULONG BusCount
+);
+
+CODE_SEG("INIT")
+NTSTATUS
+NTAPI
+HalpGetChipHacks(
+    IN USHORT VendorId,
+    IN USHORT DeviceId,
+    IN UCHAR RevisionId,
+    IN PULONG HackFlags
+);
+
+CODE_SEG("INIT")
+BOOLEAN
+NTAPI
+HalpGetPciBridgeConfig(
+    IN ULONG PciType,
+    IN PUCHAR BusCount
+);
+
+CODE_SEG("INIT")
+BOOLEAN
+NTAPI
+HalpIsBridgeDevice(
+    IN PPCI_COMMON_CONFIG PciData
+);
+
+CODE_SEG("INIT")
+BOOLEAN
+NTAPI
+HalpIsIdeDevice(
+    IN PPCI_COMMON_CONFIG PciData
+);
+
+CODE_SEG("INIT")
+BOOLEAN
+NTAPI
+HalpIsRecognizedCard(
+    IN PPCI_REGISTRY_INFO_INTERNAL PciRegistryInfo,
+    IN PPCI_COMMON_CONFIG PciData,
+    IN ULONG Flags
+);
+
+CODE_SEG("INIT")
+BOOLEAN
+NTAPI
+HalpIsValidPCIDevice(
+    IN PBUS_HANDLER BusHandler,
+    IN PCI_SLOT_NUMBER Slot
+);
+
+CODE_SEG("INIT")
+NTSTATUS
+NTAPI
+HalpMarkChipsetDecode(
+    IN BOOLEAN OverrideEnable
+);
+
+CODE_SEG("INIT")
+VOID
+NTAPI
+HalpRegisterInternalBusHandlers(
+    VOID
+);
+
+CODE_SEG("INIT")
+VOID
+NTAPI
+ShowSize(
+    IN ULONG Size
+);
+
 /* GLOBALS ********************************************************************/
 
 extern KSPIN_LOCK HalpPCIConfigLock;

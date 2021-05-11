@@ -193,7 +193,6 @@ Pc98VidGetVideoChildDescriptor(
     return ERROR_NO_MORE_DEVICES;
 }
 
-CODE_SEG("INIT")
 ULONG
 NTAPI
 DriverEntry(

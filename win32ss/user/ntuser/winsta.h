@@ -73,6 +73,7 @@ extern UNICODE_STRING gustrWindowStationsDir;
                           WINSTA_READSCREEN        | \
                           WINSTA_WRITEATTRIBUTES
 
+CODE_SEG("INIT")
 NTSTATUS
 NTAPI
 InitWindowStationImpl(VOID);

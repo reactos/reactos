@@ -14,17 +14,11 @@
 
 /* GLOBALS ********************************************************************/
 
-#ifdef ALLOC_PRAGMA
-#pragma alloc_text(INIT, DriverEntry)
-#pragma alloc_text(PAGE, InPortCreateClose)
-#pragma alloc_text(PAGE, InPortAddDevice)
-#pragma alloc_text(PAGE, InPortUnload)
-#endif
-
 UNICODE_STRING DriverRegistryPath;
 
 /* FUNCTIONS ******************************************************************/
 
+CODE_SEG("PAGE")
 NTSTATUS
 NTAPI
 InPortCreateClose(
@@ -43,6 +37,7 @@ InPortCreateClose(
     return STATUS_SUCCESS;
 }
 
+CODE_SEG("PAGE")
 NTSTATUS
 NTAPI
 InPortAddDevice(
@@ -161,6 +156,7 @@ Failure:
     return Status;
 }
 
+CODE_SEG("PAGE")
 VOID
 NTAPI
 InPortUnload(
@@ -204,6 +200,7 @@ InPortPower(
     return Status;
 }
 
+CODE_SEG("INIT")
 NTSTATUS
 NTAPI
 DriverEntry(

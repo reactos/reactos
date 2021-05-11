@@ -164,6 +164,7 @@ typedef struct _OB_TEMP_BUFFER
 //
 // Startup and Shutdown Functions
 //
+CODE_SEG("INIT")
 BOOLEAN
 NTAPI
 ObInitSystem(
@@ -434,6 +435,7 @@ ObInheritDeviceMap(
     IN PEPROCESS Process
 );
 
+CODE_SEG("INIT")
 NTSTATUS
 NTAPI
 ObpCreateDosDevicesDirectory(
@@ -455,6 +457,7 @@ ObpReferenceDeviceMap(
 //
 // Security descriptor cache functions
 //
+CODE_SEG("INIT")
 NTSTATUS
 NTAPI
 ObpInitSdCache(

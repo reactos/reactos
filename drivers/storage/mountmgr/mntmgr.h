@@ -176,6 +176,7 @@ extern UNICODE_STRING Volume;
 extern KEVENT UnloadEvent;
 extern LONG Unloading;
 
+CODE_SEG("INIT")
 DRIVER_INITIALIZE DriverEntry;
 
 VOID
@@ -228,6 +229,7 @@ HasDriveLetter(
     IN PDEVICE_INFORMATION DeviceInformation
 );
 
+CODE_SEG("INIT")
 BOOLEAN
 MountmgrReadNoAutoMount(
     IN PUNICODE_STRING RegistryPath

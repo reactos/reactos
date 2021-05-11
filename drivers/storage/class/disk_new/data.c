@@ -22,8 +22,10 @@ Revision History:
 
 #include "disk.h"
 
+#ifndef __REACTOS__
 #ifdef ALLOC_DATA_PRAGMA
 #pragma data_seg("PAGE")
+#endif
 #endif
 
 /*
@@ -34,7 +36,9 @@ Revision History:
 #define HackCauseNotReportableHack          (0x10)
 #define HackRequiresStartUnitCommand        (0x20)
 */
-
+#ifdef __REACTOS__
+DATA_SEG("PAGEDATA")
+#endif
 CLASSPNP_SCAN_FOR_SPECIAL_INFO DiskBadControllers[] = {
     { "COMPAQ"  , "PD-1"                           , NULL,   0x02 },
     { "CONNER"  , "CP3500"                         , NULL,   0x02 },
@@ -64,11 +68,17 @@ CLASSPNP_SCAN_FOR_SPECIAL_INFO DiskBadControllers[] = {
 // Added MediaTypes in their own brace nesting level
 // ======== ROS DIFF ========
 
+#ifdef __REACTOS__
+DATA_SEG("PAGECONS")
+#endif
 DISK_MEDIA_TYPES_LIST const DiskMediaTypesExclude[] = {
     { "HP"      , "RDX"          , NULL,  0, 0, {0                 , 0      , 0      , 0 }},
     { NULL      , NULL           , NULL,  0, 0, {0                 , 0      , 0      , 0 }}
 };
 
+#ifdef __REACTOS__
+DATA_SEG("PAGECONS")
+#endif
 DISK_MEDIA_TYPES_LIST const DiskMediaTypes[] = {
     { "COMPAQ"  , "PD-1 LF-1094" , NULL,  1, 1, {PC_5_RW           , 0      , 0      , 0 }},
     { "HP"      , NULL           , NULL,  2, 2, {MO_5_WO           , MO_5_RW, 0      , 0 }},
@@ -83,6 +93,8 @@ DISK_MEDIA_TYPES_LIST const DiskMediaTypes[] = {
     { NULL      , NULL           , NULL,  0, 0, {0                 , 0      , 0      , 0 }}
 };
 
+#ifndef __REACTOS__
 #ifdef ALLOC_DATA_PRAGMA
 #pragma data_seg()
+#endif
 #endif

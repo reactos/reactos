@@ -571,6 +571,15 @@ IopDetectResourceConflict(
 //
 NTSTATUS
 NTAPI
+PipCallDriverAddDevice(
+    IN PDEVICE_NODE DeviceNode,
+    IN BOOLEAN LoadDriver,
+    IN PDRIVER_OBJECT DriverObject
+);
+
+CODE_SEG("INIT")
+NTSTATUS
+NTAPI
 IopInitializePlugPlayServices(
     VOID
 );
@@ -662,6 +671,7 @@ IoDestroyDriverList(
     VOID
 );
 
+CODE_SEG("INIT")
 NTSTATUS
 IopInitPlugPlayEvents(VOID);
 
@@ -713,12 +723,14 @@ IopCreateDeviceKeyPath(
 //
 // PnP Routines
 //
+CODE_SEG("INIT")
 NTSTATUS
 NTAPI
 IopUpdateRootKey(
     VOID
 );
 
+CODE_SEG("INIT")
 NTSTATUS
 NTAPI
 PiInitCacheGroupInformation(
@@ -761,12 +773,14 @@ PiSetDevNodeText(
 //
 // Initialization Routines
 //
+CODE_SEG("INIT")
 NTSTATUS
 NTAPI
 IopCreateArcNames(
     IN PLOADER_PARAMETER_BLOCK LoaderBlock
 );
 
+CODE_SEG("INIT")
 NTSTATUS
 NTAPI
 IopReassignSystemRoot(
@@ -774,6 +788,7 @@ IopReassignSystemRoot(
     OUT PANSI_STRING NtBootPath
 );
 
+CODE_SEG("INIT")
 BOOLEAN
 NTAPI
 IoInitSystem(
@@ -794,6 +809,7 @@ IoInitializeCrashDump(
     IN HANDLE PageFileHandle
 );
 
+CODE_SEG("INIT")
 VOID
 PiInitializeNotifications(
     VOID);
@@ -958,11 +974,13 @@ IopShutdownBaseFileSystems(
 //
 // Boot logging support
 //
+CODE_SEG("INIT")
 VOID
 IopInitBootLog(
     IN BOOLEAN StartBootLog
 );
 
+CODE_SEG("INIT")
 VOID
 IopStartBootLog(
     VOID
@@ -1034,6 +1052,7 @@ RawFsIsRawFileSystemDeviceObject(
     IN PDEVICE_OBJECT DeviceObject
 );
 
+CODE_SEG("INIT")
 NTSTATUS
 NTAPI
 RawFsDriverEntry(
@@ -1066,12 +1085,14 @@ PnpRootRegisterDevice(
 //
 // Driver Routines
 //
+CODE_SEG("INIT")
 VOID
 FASTCALL
 IopInitializeBootDrivers(
     VOID
 );
 
+CODE_SEG("INIT")
 VOID
 FASTCALL
 IopInitializeSystemDrivers(
@@ -1305,6 +1326,7 @@ IoSetIoCompletion(
 //
 // Ramdisk Routines
 //
+CODE_SEG("INIT")
 NTSTATUS
 NTAPI
 IopStartRamdisk(
@@ -1346,16 +1368,19 @@ PiPerformSyncDeviceAction(
 //
 // PnP notifications
 //
+CODE_SEG("PAGE")
 VOID
 PiNotifyDeviceInterfaceChange(
     _In_ LPCGUID Event,
     _In_ LPCGUID InterfaceClassGuid,
     _In_ PUNICODE_STRING SymbolicLinkName);
 
+CODE_SEG("PAGE")
 VOID
 PiNotifyHardwareProfileChange(
     _In_ LPCGUID Event);
 
+CODE_SEG("PAGE")
 VOID
 PiNotifyTargetDeviceChange(
     _In_ LPCGUID Event,

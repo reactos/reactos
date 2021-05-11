@@ -381,6 +381,7 @@ KiSetTebBase(PKPCR Pcr, PNT_TIB TebAddress)
     Ke386SetGdtEntryBase(&Pcr->GDT[KGDT_R3_TEB / sizeof(KGDTENTRY)], TebAddress);
 }
 
+CODE_SEG("INIT")
 VOID
 FASTCALL
 Ki386InitializeTss(
@@ -389,30 +390,36 @@ Ki386InitializeTss(
     IN PKGDTENTRY Gdt
 );
 
+CODE_SEG("INIT")
 VOID
 NTAPI
 KiSetCR0Bits(VOID);
 
+CODE_SEG("INIT")
 VOID
 NTAPI
 KiGetCacheInformation(VOID);
 
+CODE_SEG("INIT")
 BOOLEAN
 NTAPI
 KiIsNpxPresent(
     VOID
 );
 
+CODE_SEG("INIT")
 BOOLEAN
 NTAPI
 KiIsNpxErrataPresent(
     VOID
 );
 
+CODE_SEG("INIT")
 VOID
 NTAPI
 KiSetProcessorType(VOID);
 
+CODE_SEG("INIT")
 ULONG
 NTAPI
 KiGetFeatureBits(VOID);
@@ -447,18 +454,21 @@ Ki386SetupAndExitToV86Mode(
     OUT PTEB VdmTeb
 );
 
+CODE_SEG("INIT")
 VOID
 NTAPI
 KeI386VdmInitialize(
     VOID
 );
 
+CODE_SEG("INIT")
 ULONG_PTR
 NTAPI
 Ki386EnableGlobalPage(
     IN ULONG_PTR Context
 );
 
+CODE_SEG("INIT")
 ULONG_PTR
 NTAPI
 Ki386EnableTargetLargePage(
@@ -486,48 +496,56 @@ Ki386EnableCurrentLargePage(
     IN ULONG Cr3
 );
 
+CODE_SEG("INIT")
 VOID
 NTAPI
 KiI386PentiumLockErrataFixup(
     VOID
 );
 
+CODE_SEG("INIT")
 VOID
 NTAPI
 KiInitializePAT(
     VOID
 );
 
+CODE_SEG("INIT")
 VOID
 NTAPI
 KiInitializeMTRR(
     IN BOOLEAN FinalCpu
 );
 
+CODE_SEG("INIT")
 VOID
 NTAPI
 KiAmdK6InitializeMTRR(
     VOID
 );
 
+CODE_SEG("INIT")
 VOID
 NTAPI
 KiRestoreFastSyscallReturnState(
     VOID
 );
 
+CODE_SEG("INIT")
 ULONG_PTR
 NTAPI
 Ki386EnableDE(
     IN ULONG_PTR Context
 );
 
+CODE_SEG("INIT")
 ULONG_PTR
 NTAPI
 Ki386EnableFxsr(
     IN ULONG_PTR Context
 );
 
+CODE_SEG("INIT")
 ULONG_PTR
 NTAPI
 Ki386EnableXMMIExceptions(
@@ -791,12 +809,13 @@ KiCheckForApcDelivery(IN PKTRAP_FRAME TrapFrame)
 //
 // Switches from boot loader to initial kernel stack
 //
+CODE_SEG("INIT")
 FORCEINLINE
 DECLSPEC_NORETURN
 VOID
 KiSwitchToBootStack(IN ULONG_PTR InitialStack)
 {
-    DECLSPEC_NORETURN VOID NTAPI KiSystemStartupBootStack(VOID);
+    CODE_SEG("INIT") DECLSPEC_NORETURN VOID NTAPI KiSystemStartupBootStack(VOID);
 
     /* We have to switch to a new stack before continuing kernel initialization */
 #ifdef __GNUC__

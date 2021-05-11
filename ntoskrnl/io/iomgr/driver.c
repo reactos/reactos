@@ -752,6 +752,7 @@ IopGetDeviceObjectFromDeviceInstance(PUNICODE_STRING DeviceInstance);
  * Initialize a driver that is already loaded in memory.
  */
 CODE_SEG("INIT")
+static
 BOOLEAN
 IopInitializeBuiltinDriver(IN PLDR_DATA_TABLE_ENTRY BootLdrEntry)
 {
@@ -869,7 +870,7 @@ IopInitializeBuiltinDriver(IN PLDR_DATA_TABLE_ENTRY BootLdrEntry)
     // for that driver, and queue AddDevice call for them.
     // The check is possible because HKLM/SYSTEM/CCS/Services/<ServiceName>/Enum directory
     // is populated upon a new device arrival based on a (critical) device database
-    
+
     // Legacy drivers may add devices inside DriverEntry.
     // We're lazy and always assume that they are doing so
     BOOLEAN deviceAdded = (_Bool)(DriverObject->Flags & DRVO_LEGACY_DRIVER);
@@ -936,7 +937,7 @@ IopInitializeBuiltinDriver(IN PLDR_DATA_TABLE_ENTRY BootLdrEntry)
                 deviceAdded = TRUE;
             }
 
-            ExFreePool(kvInfo);            
+            ExFreePool(kvInfo);
         }
 
         ZwClose(enumServiceHandle);
@@ -1118,7 +1119,7 @@ IopInitializeBootDrivers(VOID)
                                     PiActionEnumRootDevices,
                                     NULL,
                                     NULL);
-            }           
+            }
 
             /* Next entry */
             NextEntry = NextEntry->Flink;
