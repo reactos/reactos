@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <assembly xmlns="urn:schemas-microsoft-com:asm.v1" manifestVersion="1.0">
-  <!-- Generated from wine-6.6 -->
+  <!-- Generated from wine-6.8 -->
   <assemblyIdentity type="win32" name="ReactOS.Apisets" version="1.0.0.0" publicKeyToken="6595b64144ccf1df"/>
   <file name="api-ms-win-appmodel-identity-l1-1-0.dll"/>
   <file name="api-ms-win-appmodel-runtime-l1-1-1.dll"/>
@@ -15,6 +15,7 @@
   <file name="api-ms-win-core-com-private-l1-1-0.dll"/>
   <file name="api-ms-win-core-comm-l1-1-0.dll"/>
   <file name="api-ms-win-core-console-l1-1-0.dll"/>
+  <file name="api-ms-win-core-console-l1-2-0.dll"/>
   <file name="api-ms-win-core-console-l2-1-0.dll"/>
   <file name="api-ms-win-core-crt-l1-1-0.dll"/>
   <file name="api-ms-win-core-crt-l2-1-0.dll"/>
@@ -181,6 +182,7 @@
   <file name="api-ms-win-eventing-legacy-l1-1-0.dll"/>
   <file name="api-ms-win-eventing-provider-l1-1-0.dll"/>
   <file name="api-ms-win-eventlog-legacy-l1-1-0.dll"/>
+  <file name="api-ms-win-gaming-tcui-l1-1-0.dll"/>
   <file name="api-ms-win-gdi-dpiinfo-l1-1-0.dll"/>
   <file name="api-ms-win-mm-joystick-l1-1-0.dll"/>
   <file name="api-ms-win-mm-misc-l1-1-1.dll"/>

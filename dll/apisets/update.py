@@ -43,6 +43,12 @@ ALIAS_DLL = {
     # These modules cannot be linked against in ROS, so forward it
     'cfgmgr32': 'setupapi', # Forward everything
     'wmi': 'advapi32',      # Forward everything
+	'gamingtcui' : 'setupapi', # Force everything as a stub
+}
+
+MANIFESTS = {
+    'x86_reactos.apisets_6595b64144ccf1df_1.0.0.0_none_deadbeef.manifest',
+    'amd64_reactos.apisets_6595b64144ccf1df_1.0.0.0_none_deadbeef.manifest',
 }
 
 class InvalidSpecError(Exception):
@@ -476,14 +482,14 @@ def run(wineroot):
         manifest_files.append('  <file name="{}.dll"/>'.format(apiset.name))
 
     print 'Generating manifest'
-    manifest_name = 'x86_reactos.apisets_6595b64144ccf1df_1.0.0.0_none_deadbeef.manifest'
-    with open(os.path.join(SCRIPT_DIR, manifest_name + '.in'), 'rb') as template:
-        manifest_template = template.read()
-        manifest_template = manifest_template.replace('%WINE_GIT_VERSION%', version)
-        file_list = '\r\n'.join(manifest_files)
-        manifest_template = manifest_template.replace('%MANIFEST_FILE_LIST%', file_list)
-        with open(os.path.join(SCRIPT_DIR, manifest_name), 'wb') as manifest:
-            manifest.write(manifest_template)
+    for manifest_name in MANIFESTS:
+        with open(os.path.join(SCRIPT_DIR, manifest_name + '.in'), 'rb') as template:
+            manifest_template = template.read()
+            manifest_template = manifest_template.replace('%WINE_GIT_VERSION%', version)
+            file_list = '\r\n'.join(manifest_files)
+            manifest_template = manifest_template.replace('%MANIFEST_FILE_LIST%', file_list)
+            with open(os.path.join(SCRIPT_DIR, manifest_name), 'wb') as manifest:
+                manifest.write(manifest_template)
 
     print 'Writing CMakeLists.txt'
     baseaddress = 0x60000000
