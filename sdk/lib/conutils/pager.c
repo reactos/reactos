@@ -45,7 +45,7 @@ static BOOL ConPagerAction(PCON_PAGER Pager)
     switch (Pager->PagerAction)
     {
         case CON_PAGER_ACTION_SHOW_LINE:
-            MaxRows = iLine + 1;
+            MaxRows = min(iLine + 1, ScrollRows);
             /* ...FALL THROUGH... */
         case CON_PAGER_ACTION_SHOW_PAGE:
             for (iColumn = 0; ich < cch && iLine < MaxRows; ++ich)
