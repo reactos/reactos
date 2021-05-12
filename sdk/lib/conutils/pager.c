@@ -46,7 +46,7 @@ static BOOL DoPagerAction(PCON_PAGER Pager)
     {
         case CPA_SHOW_LINE:
             ScrollRows = iLine + 1;
-            // ...FALL THROUGH...
+            /* ...FALL THROUGH... */
         case CPA_SHOW_PAGE:
         {
             for (iColumn = 0; ich < cch && iLine < ScrollRows; ++ich)
@@ -128,8 +128,17 @@ ConWritePaging(
 
     while (!DoPagerAction(Pager))
     {
+        /* Prompt the user; give him some values for statistics */
         if (!PagePrompt(Pager, Pager->ich, Pager->cch))
             return FALSE;
+
+        /* Recalculate 'ScreenLines' in case the user redimensions
+           the window during the prompt. */
+        if (ConGetScreenInfo(Pager->Screen, &csbi))
+        {
+            Pager->ScreenColumns = csbi.srWindow.Right - csbi.srWindow.Left + 1;
+            Pager->ScreenRows = csbi.srWindow.Bottom - csbi.srWindow.Top + 1;
+        }
     }
 
     return TRUE;
