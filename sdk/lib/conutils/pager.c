@@ -71,17 +71,23 @@ static BOOL ConPagerAction(PCON_PAGER Pager)
                 if (IsCJK)
                 {
                     nWidthOfChar = GetWidthOfChar(nCodePage, TextBuff[ich]);
-                    IsDoubleWidthCharTrailing =
-                        (TextBuff[ich] != TEXT('\n')) &&
-                        (iColumn + 1 == ScreenColumns);
+                    IsDoubleWidthCharTrailing = (nWidthOfChar == 2) &&
+                                                (TextBuff[ich] != TEXT('\n')) &&
+                                                (iColumn + 1 == ScreenColumns);
                 }
                 if (TextBuff[ich] == TEXT('\n') || iColumn + nWidthOfChar >= ScreenColumns)
                 {
                     CON_STREAM_WRITE(Pager->Screen->Stream, &TextBuff[ichLast],
-                                     ich - ichLast + 1);
-                    ichLast = ich + 1;
+                                     ich - ichLast + !IsDoubleWidthCharTrailing);
+                    ichLast = ich + !IsDoubleWidthCharTrailing;
+                    if (IsDoubleWidthCharTrailing)
+                    {
+                        WCHAR chSpace = L' ';
+                        CON_STREAM_WRITE(Pager->Screen->Stream, &chSpace, 1);
+                        --ich;
+                    }
                     ++iLine;
-                    iColumn = (IsDoubleWidthCharTrailing ? 2 : 0);
+                    iColumn = 0;
                     continue;
                 }
                 iColumn += nWidthOfChar;
