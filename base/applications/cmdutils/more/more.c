@@ -59,6 +59,7 @@ PagePrompt(PCON_PAGER Pager, DWORD Done, DWORD Total)
     HANDLE hInput = ConStreamGetOSHandle(StdIn);
     DWORD dwMode;
     KEY_EVENT_RECORD KeyEvent;
+    BOOL fCtrlPressed;
 
     /*
      * Just use the simple prompt if the file being displayed is the STDIN,
@@ -133,6 +134,8 @@ PagePrompt(PCON_PAGER Pager, DWORD Done, DWORD Total)
     dwMode |= ENABLE_PROCESSED_INPUT;
     SetConsoleMode(hInput, dwMode);
 
+    fCtrlPressed = !!(KeyEvent.dwControlKeyState & (LEFT_CTRL_PRESSED | RIGHT_CTRL_PRESSED));
+
     /*
      * Erase the full line where the cursor is, and move
      * the cursor back to the beginning of the line.
@@ -141,8 +144,7 @@ PagePrompt(PCON_PAGER Pager, DWORD Done, DWORD Total)
 
     /* Ctrl+C or Ctrl+Esc: Control Break */
     if ((KeyEvent.wVirtualKeyCode == VK_ESCAPE) ||
-        ((KeyEvent.wVirtualKeyCode == L'C') &&
-         (KeyEvent.dwControlKeyState & (LEFT_CTRL_PRESSED | RIGHT_CTRL_PRESSED))))
+        ((KeyEvent.wVirtualKeyCode == L'C') && fCtrlPressed))
     {
         /* We break, output a newline */
         WCHAR ch = L'\n';
@@ -152,8 +154,7 @@ PagePrompt(PCON_PAGER Pager, DWORD Done, DWORD Total)
 
     /* 'Q': Quit */
     // FIXME: Available only when command extensions are enabled.
-    if ((KeyEvent.wVirtualKeyCode == L'Q') &&
-        !(KeyEvent.dwControlKeyState & (LEFT_CTRL_PRESSED | RIGHT_CTRL_PRESSED)))
+    if ((KeyEvent.wVirtualKeyCode == L'Q') && !fCtrlPressed)
     {
         /* We break, output a newline */
         WCHAR ch = L'\n';
@@ -162,14 +163,13 @@ PagePrompt(PCON_PAGER Pager, DWORD Done, DWORD Total)
     }
 
     /* [Enter] key: One line go */
-    if ((KeyEvent.wVirtualKeyCode == VK_RETURN) &&
-        !(KeyEvent.dwControlKeyState & (LEFT_CTRL_PRESSED | RIGHT_CTRL_PRESSED)))
+    if ((KeyEvent.wVirtualKeyCode == VK_RETURN) && !fCtrlPressed)
     {
         Pager->PagerAction = CON_PAGER_ACTION_SHOW_LINE;
         return TRUE;
     }
 
-    if (KeyEvent.dwControlKeyState & (LEFT_CTRL_PRESSED | RIGHT_CTRL_PRESSED))
+    if (fCtrlPressed)
     {
         Pager->PagerAction = CON_PAGER_ACTION_DO_NOTHING;
         return TRUE;
