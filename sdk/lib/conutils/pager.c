@@ -38,6 +38,8 @@ static inline INT GetWidthOfChar(UINT nCodePage, WCHAR ch)
     INT ret = WideCharToMultiByte(nCodePage, 0, &ch, 1, NULL, 0, NULL, NULL);
     if (ret == 0)
         ret = 1;
+    else if (ret > 2)
+        ret = 2;
     return ret;
 }
 
