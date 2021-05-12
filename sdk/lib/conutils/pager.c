@@ -22,6 +22,7 @@
 #include <winbase.h>
 // #include <winnls.h>
 #include <wincon.h>  // Console APIs (only if kernel32 support included)
+#include <winnls.h> // for WideCharToMultiByte
 #include <strsafe.h>
 
 #include "conutils.h"
@@ -32,15 +33,32 @@
 // Temporary HACK
 #define CON_STREAM_WRITE    ConStreamWrite
 
+static inline INT GetWidthOfChar(UINT nCodePage, WCHAR ch)
+{
+    INT ret = WideCharToMultiByte(nCodePage, 0, &ch, 1, NULL, 0, NULL, NULL);
+    if (ret == 0)
+        ret = 1;
+    return ret;
+}
+
 static BOOL ConPagerAction(PCON_PAGER Pager)
 {
     PCTCH TextBuff = Pager->TextBuff;
     DWORD ich = Pager->ich, cch = Pager->cch, iLine = Pager->iLine, iColumn;
     DWORD ScreenColumns = Pager->ScreenColumns, ScreenRows = Pager->ScreenRows;
     DWORD ScrollRows = ScreenRows - 1, ichLast = ich, MaxRows = ScrollRows;
+    UINT nWidthOfChar = 1, nCodePage = GetConsoleOutputCP();
+    BOOL IsCJK = FALSE, IsDoubleWidthCharTrailing = FALSE;
 
     if (ich >= cch)
         return TRUE;
+
+    switch (nCodePage)
+    {
+    case 936: case 950: case 932: case 949:
+        IsCJK = TRUE; // Chinese, Japanese or Korean
+        break;
+    }
 
     switch (Pager->PagerAction)
     {
@@ -50,16 +68,23 @@ static BOOL ConPagerAction(PCON_PAGER Pager)
         case CON_PAGER_ACTION_SHOW_PAGE:
             for (iColumn = 0; ich < cch && iLine < MaxRows; ++ich)
             {
-                if (TextBuff[ich] == TEXT('\n') || iColumn + 1 >= ScreenColumns)
+                if (IsCJK)
+                {
+                    nWidthOfChar = GetWidthOfChar(nCodePage, TextBuff[ich]);
+                    IsDoubleWidthCharTrailing =
+                        (TextBuff[ich] != TEXT('\n')) &&
+                        (iColumn + 1 == ScreenColumns);
+                }
+                if (TextBuff[ich] == TEXT('\n') || iColumn + nWidthOfChar >= ScreenColumns)
                 {
                     CON_STREAM_WRITE(Pager->Screen->Stream, &TextBuff[ichLast],
                                      ich - ichLast + 1);
                     ichLast = ich + 1;
                     ++iLine;
-                    iColumn = 0;
+                    iColumn = (IsDoubleWidthCharTrailing ? 2 : 0);
                     continue;
                 }
-                ++iColumn;
+                iColumn += nWidthOfChar;
             }
             if (iLine < MaxRows)
             {
