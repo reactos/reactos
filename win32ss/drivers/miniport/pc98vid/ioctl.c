@@ -206,6 +206,7 @@ Pc98VidGetChildState(
     return NO_ERROR;
 }
 
+CODE_SEG("PAGE")
 BOOLEAN
 NTAPI
 Pc98VidStartIO(
