@@ -44,10 +44,10 @@ static BOOL ConPagerAction(PCON_PAGER Pager)
 
     switch (Pager->PagerAction)
     {
-        case CPA_SHOW_LINE:
+        case CON_PAGER_ACTION_SHOW_LINE:
             ScrollRows = iLine + 1;
             /* ...FALL THROUGH... */
-        case CPA_SHOW_PAGE:
+        case CON_PAGER_ACTION_SHOW_PAGE:
         {
             for (iColumn = 0; ich < cch && iLine < ScrollRows; ++ich)
             {
@@ -114,7 +114,7 @@ ConWritePaging(
     Pager->ich = 0;
     Pager->cch = len;
     Pager->TextBuff = szStr;
-    Pager->PagerAction = CPA_DEFAULT;
+    Pager->PagerAction = CON_PAGER_ACTION_DEFAULT;
 
     if (len == 0)
         return TRUE;
@@ -128,7 +128,8 @@ ConWritePaging(
 
     while (!ConPagerAction(Pager))
     {
-        Pager->PagerAction = CPA_DEFAULT; /* PagePrompt might change this */
+        /* PagePrompt might change this */
+        Pager->PagerAction = CON_PAGER_ACTION_DEFAULT;
 
         /* Prompt the user; give him some values for statistics */
         if (!PagePrompt(Pager, Pager->ich, Pager->cch))

@@ -165,7 +165,7 @@ PagePrompt(PCON_PAGER Pager, DWORD Done, DWORD Total)
     if ((KeyEvent.wVirtualKeyCode == VK_RETURN) &&
         !(KeyEvent.dwControlKeyState & (LEFT_CTRL_PRESSED | RIGHT_CTRL_PRESSED)))
     {
-        Pager->PagerAction = CPA_SHOW_LINE;
+        Pager->PagerAction = CON_PAGER_ACTION_SHOW_LINE;
         return TRUE;
     }
 
