@@ -11,6 +11,7 @@
 #include <wingdi.h>
 #include <winnls.h>
 #include <winreg.h>
+#include <versionhelpers.h>
 
 typedef struct _DISPLAYSTATUSMSG
 {
@@ -66,16 +67,26 @@ DlgData_LoadBitmaps(_Inout_ PDLG_DATA pDlgData)
         return;
     }
 
-    pDlgData->hLogoBitmap = LoadImageW(pDlgData->pgContext->hDllInstance,
-                                       MAKEINTRESOURCEW(IDI_ROSLOGO), IMAGE_BITMAP,
-                                       0, 0, LR_DEFAULTCOLOR);
+    if (IsWindowsServer())
+    {
+        pDlgData->hLogoBitmap = LoadImageW(pDlgData->pgContext->hDllInstance,
+                                           MAKEINTRESOURCEW(IDI_ROSLOGO_SERVER), IMAGE_BITMAP,
+                                           0, 0, LR_DEFAULTCOLOR);
+    }
+    else
+    {
+        pDlgData->hLogoBitmap = LoadImageW(pDlgData->pgContext->hDllInstance,
+                                           MAKEINTRESOURCEW(IDI_ROSLOGO_WORKSTATION), IMAGE_BITMAP,
+                                           0, 0, LR_DEFAULTCOLOR);
+
+    }
     if (pDlgData->hLogoBitmap)
     {
         GetObject(pDlgData->hLogoBitmap, sizeof(bm), &bm);
         pDlgData->LogoWidth = bm.bmWidth;
-        pDlgData->LogoHeight = bm.bmHeight;
+        pDlgData->LogoHeight = bm.bmHeight; 
     }
-
+        
     pDlgData->hBarBitmap = LoadImageW(hDllInstance, MAKEINTRESOURCEW(IDI_BAR),
                                       IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR);
     if (pDlgData->hBarBitmap)
@@ -345,6 +356,18 @@ StatusDialogProc(
                 KillTimer(hwndDlg, IDT_BAR);
             }
             DlgData_Destroy(hwndDlg);
+            return TRUE;
+        }
+
+        case WM_PAINT:
+        {
+            PAINTSTRUCT ps;
+            if (pDlgData && pDlgData->hLogoBitmap)
+            {
+                BeginPaint(hwndDlg, &ps);
+                DrawStateW(ps.hdc, NULL, NULL, (LPARAM)pDlgData->hLogoBitmap, (WPARAM)0, 0, 0, 0, 0, DST_BITMAP);
+                EndPaint(hwndDlg, &ps);
+            }
             return TRUE;
         }
     }

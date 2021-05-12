@@ -18,11 +18,13 @@ IDI_HARDWARE ICON "resources/110.ico"
 IDI_LOCKICON ICON "resources/115.ico"
 
 /* Bitmaps */
-IDI_ROSLOGO BITMAP "resources/reactos.bmp"
-IDI_ROSLOGO_FLAG BITMAP "resources/reactos_flag.bmp"
-IDI_BAR BITMAP "resources/line.bmp"
-IDI_DLG_BG BITMAP "resources/dlg_bg.bmp"
-IDB_IMAGE_STRIP BITMAP "resources/image_strip.bmp"
+IDI_ROSLOGO             BITMAP "resources/reactos.bmp"
+IDI_ROSLOGO_WORKSTATION BITMAP "resources/reactosworkstation.bmp"
+IDI_ROSLOGO_SERVER      BITMAP "resources/reactosserver.bmp"
+IDI_ROSLOGO_FLAG        BITMAP "resources/reactos_flag.bmp"
+IDI_BAR                 BITMAP "resources/line.bmp"
+IDI_DLG_BG              BITMAP "resources/dlg_bg.bmp"
+IDB_IMAGE_STRIP         BITMAP "resources/image_strip.bmp"
 
 /* UTF-8 */
 #pragma code_page(65001)

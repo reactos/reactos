@@ -13,6 +13,7 @@
 #include <wingdi.h>
 #include <windowsx.h>
 #include <commctrl.h>
+#include <versionhelpers.h>
 
 /* Shutdown state flags */
 #define WLX_SHUTDOWN_STATE_LOGOFF       0x01
@@ -1029,9 +1030,18 @@ ShutdownDialogProc(
             ShutdownOnInit(hDlg, pContext);
 
             /* Draw the logo bitmap */
-            pContext->hBitmap =
-                LoadImageW(pContext->pgContext->hDllInstance, MAKEINTRESOURCEW(IDI_ROSLOGO), IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR);
-            return TRUE;
+            if (IsWindowsServer())
+            {
+                pContext->hBitmap =
+                    LoadImageW(pContext->pgContext->hDllInstance, MAKEINTRESOURCEW(IDI_ROSLOGO_SERVER), IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR);
+                return TRUE;
+            }
+            else
+            {
+                pContext->hBitmap =
+                    LoadImageW(pContext->pgContext->hDllInstance, MAKEINTRESOURCEW(IDI_ROSLOGO_WORKSTATION), IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR);
+                return TRUE;
+            }
         }
 
         case WM_DESTROY:
