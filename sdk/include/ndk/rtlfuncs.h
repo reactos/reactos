@@ -1882,6 +1882,14 @@ RtlUnicodeStringToOemString(
 NTSYSAPI
 NTSTATUS
 NTAPI
+RtlUnicodeStringToCountedOemString(
+    _Inout_ POEM_STRING OemDest,
+    _In_ PCUNICODE_STRING UniSource,
+    _In_ BOOLEAN AllocateDestinationString);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
 RtlUpcaseUnicodeToOemN(
     PCHAR OemString,
     ULONG OemSize,

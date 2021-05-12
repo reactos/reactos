@@ -76,6 +76,7 @@ extern void func_RtlpEnsureBufferSize(void);
 extern void func_RtlQueryTimeZoneInformation(void);
 extern void func_RtlReAllocateHeap(void);
 extern void func_RtlUnicodeStringToAnsiString(void);
+extern void func_RtlUnicodeStringToCountedOemString(void);
 extern void func_RtlUpcaseUnicodeStringToCountedOemString(void);
 extern void func_RtlValidateUnicodeString(void);
 extern void func_RtlxUnicodeStringToAnsiSize(void);
@@ -159,6 +160,7 @@ const struct test winetest_testlist[] =
     { "RtlReAllocateHeap",              func_RtlReAllocateHeap },
     { "RtlUnicodeStringToAnsiSize",     func_RtlxUnicodeStringToAnsiSize }, /* For some reason, starting test name with Rtlx hides it */
     { "RtlUnicodeStringToAnsiString",   func_RtlUnicodeStringToAnsiString },
+    { "RtlUnicodeStringToCountedOemString", func_RtlUnicodeStringToCountedOemString },
     { "RtlUnicodeStringToOemSize",      func_RtlxUnicodeStringToOemSize },
     { "RtlUpcaseUnicodeStringToCountedOemString", func_RtlUpcaseUnicodeStringToCountedOemString },
     { "RtlValidateUnicodeString",       func_RtlValidateUnicodeString },
