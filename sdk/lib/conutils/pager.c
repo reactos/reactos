@@ -57,9 +57,12 @@ static BOOL ConPagerAction(PCON_PAGER Pager)
 
     switch (nCodePage)
     {
-    case 936: case 950: case 932: case 949:
-        IsCJK = TRUE; // Chinese, Japanese or Korean
-        break;
+        case 936: case 950: case 932: case 949:
+        {
+            /* Chinese, Japanese or Korean. They uses double-width characters. */
+            IsCJK = TRUE;
+            break;
+        }
     }
 
     switch (Pager->PagerAction)
