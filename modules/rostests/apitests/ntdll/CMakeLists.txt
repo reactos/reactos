@@ -80,6 +80,7 @@ list(APPEND SOURCE
     RtlQueryTimeZoneInfo.c
     RtlReAllocateHeap.c
     RtlUnicodeStringToAnsiString.c
+    RtlUnicodeStringToCountedOemString.c
     RtlUpcaseUnicodeStringToCountedOemString.c
     RtlValidateUnicodeString.c
     RtlxUnicodeStringToAnsiSize.c
