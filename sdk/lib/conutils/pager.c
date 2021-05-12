@@ -33,7 +33,7 @@
 // Temporary HACK
 #define CON_STREAM_WRITE    ConStreamWrite
 
-static inline INT GetWidthOfChar(UINT nCodePage, WCHAR ch)
+static inline INT GetWidthOfCharCJK(UINT nCodePage, WCHAR ch)
 {
     INT ret = WideCharToMultiByte(nCodePage, 0, &ch, 1, NULL, 0, NULL, NULL);
     if (ret == 0)
@@ -72,7 +72,7 @@ static BOOL ConPagerAction(PCON_PAGER Pager)
             {
                 if (IsCJK)
                 {
-                    nWidthOfChar = GetWidthOfChar(nCodePage, TextBuff[ich]);
+                    nWidthOfChar = GetWidthOfCharCJK(nCodePage, TextBuff[ich]);
                     IsDoubleWidthCharTrailing = (nWidthOfChar == 2) &&
                                                 (TextBuff[ich] != TEXT('\n')) &&
                                                 (iColumn + 1 == ScreenColumns);
