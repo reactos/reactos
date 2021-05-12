@@ -86,7 +86,7 @@ DlgData_LoadBitmaps(_Inout_ PDLG_DATA pDlgData)
         pDlgData->LogoWidth = bm.bmWidth;
         pDlgData->LogoHeight = bm.bmHeight; 
     }
-        
+   
     pDlgData->hBarBitmap = LoadImageW(hDllInstance, MAKEINTRESOURCEW(IDI_BAR),
                                       IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR);
     if (pDlgData->hBarBitmap)
