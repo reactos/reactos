@@ -187,6 +187,19 @@ mylex_array.DeviceDesc = "Mylex RAID Disk Device"
 
 VHD_Generic_FriendlyName = "Microsoft Virtual Disk"
 
+[Strings.0415]
+DiskClassName="Stacje dysków"
+GenManufacturer="(Standardowe stacje dysków)"
+
+disk_devdesc="Stacja dysków"
+opticaldisk_devdesc="Stacja dysków optycznych"
+
+disk_ServiceDesc="Sterownik dysku"
+compaq_array.DeviceDesc = "Zestaw dysków SCSI Compaq"
+mylex_array.DeviceDesc = "Urządzenie dyskowe Mylex RAID"
+
+VHD_Generic_FriendlyName = "Dysk wirtualny firmy Microsoft"
+
 [Strings.0419]
 DiskClassName="Дисковые устройства"
 GenManufacturer="(Стандартные дисковые накопители)"
