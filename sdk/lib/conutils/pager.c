@@ -33,6 +33,18 @@
 // Temporary HACK
 #define CON_STREAM_WRITE    ConStreamWrite
 
+#define CP_SHIFTJIS 932  // Japanese Shift-JIS
+#define CP_HANGUL   949  // Korean Hangul/Wansung
+#define CP_JOHAB    1361 // Korean Johab
+#define CP_GB2312   936  // Chinese Simplified (GB2312)
+#define CP_BIG5     950  // Chinese Traditional (Big5)
+
+/* IsFarEastCP(CodePage) */
+#define IsCJKCodePage(CodePage) \
+    ((CodePage) == CP_SHIFTJIS || (CodePage) == CP_HANGUL || \
+  /* (CodePage) == CP_JOHAB || */ \
+     (CodePage) == CP_BIG5     || (CodePage) == CP_GB2312)
+
 static inline INT GetWidthOfCharCJK(UINT nCodePage, WCHAR ch)
 {
     INT ret = WideCharToMultiByte(nCodePage, 0, &ch, 1, NULL, 0, NULL, NULL);
@@ -46,24 +58,25 @@ static inline INT GetWidthOfCharCJK(UINT nCodePage, WCHAR ch)
 static BOOL ConPagerAction(PCON_PAGER Pager)
 {
     PCTCH TextBuff = Pager->TextBuff;
-    DWORD ich = Pager->ich, cch = Pager->cch, iLine = Pager->iLine, iColumn;
-    DWORD ScreenColumns = Pager->ScreenColumns, ScreenRows = Pager->ScreenRows;
-    DWORD ScrollRows = ScreenRows - 1, ichLast = ich, MaxRows = ScrollRows;
-    UINT nWidthOfChar = 1, nCodePage = GetConsoleOutputCP();
-    BOOL IsCJK = FALSE, IsDoubleWidthCharTrailing = FALSE;
+    DWORD ich = Pager->ich;
+    DWORD cch = Pager->cch;
+    DWORD iLine = Pager->iLine;
+    DWORD iColumn;
+    DWORD ScreenColumns = Pager->ScreenColumns;
+    DWORD ScreenRows = Pager->ScreenRows;
+    DWORD ScrollRows = ScreenRows - 1;
+    DWORD ichLast = ich;
+    DWORD MaxRows = ScrollRows;
+    UINT nWidthOfChar = 1;
+    UINT nCodePage;
+    BOOL IsCJK = FALSE;
+    BOOL IsDoubleWidthCharTrailing = FALSE;
 
     if (ich >= cch)
         return TRUE;
 
-    switch (nCodePage)
-    {
-        case 936: case 950: case 932: case 949:
-        {
-            /* Chinese, Japanese or Korean. They uses double-width characters. */
-            IsCJK = TRUE;
-            break;
-        }
-    }
+    nCodePage = GetConsoleOutputCP();
+    IsCJK = IsCJKCodePage(nCodePage);
 
     switch (Pager->PagerAction)
     {
