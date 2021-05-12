@@ -27,18 +27,25 @@ extern "C" {
 #endif
 
 
-// #include <wincon.h>
+typedef enum CON_PAGER_ACTION
+{
+    CPA_SHOW_PAGE,
+    CPA_SHOW_LINE,
+    CPA_DEFAULT = CPA_SHOW_PAGE
+} CON_PAGER_ACTION;
 
+// #include <wincon.h>
 
 typedef struct _CON_PAGER
 {
     PCON_SCREEN Screen;
-
-    // TODO: Add more properties. Maybe those extra parameters
-    // of PAGE_PROMPT could go there?
-
-    /* Used to count number of lines since last pause */
-    DWORD LineCount;
+    DWORD ScreenColumns;
+    DWORD ScreenRows;
+    PCTCH TextBuff; /* the text buffer */
+    DWORD ich; /* current index of character */
+    DWORD cch; /* the total number of characters */
+    DWORD iLine; /* current index of line */
+    CON_PAGER_ACTION PagerAction;
 } CON_PAGER, *PCON_PAGER;
 
 #define INIT_CON_PAGER(pScreen)     {(pScreen), 0}

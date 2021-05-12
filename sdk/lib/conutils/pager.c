@@ -4,6 +4,7 @@
  * PURPOSE:     Console/terminal paging functionality.
  * COPYRIGHT:   Copyright 2017-2018 ReactOS Team
  *              Copyright 2017-2018 Hermes Belusca-Maito
+ *              Copyright 2021 Katayama Hirofumi MZ
  */
 
 /**
@@ -31,7 +32,53 @@
 // Temporary HACK
 #define CON_STREAM_WRITE    ConStreamWrite
 
+static BOOL DoPagerAction(PCON_PAGER Pager)
+{
+    PCTCH TextBuff = Pager->TextBuff;
+    DWORD ich = Pager->ich, cch = Pager->cch, iLine = Pager->iLine, iColumn;
+    DWORD ScreenColumns = Pager->ScreenColumns, ScreenRows = Pager->ScreenRows;
+    DWORD ScrollRows = ScreenRows - 1, ichLast = ich;
 
+    if (ich >= cch)
+        return TRUE;
+
+    switch (Pager->PagerAction)
+    {
+        case CPA_SHOW_LINE:
+            ScrollRows = iLine + 1;
+            // ...FALL THROUGH...
+        case CPA_SHOW_PAGE:
+        {
+            for (iColumn = 0; ich < cch && iLine < ScrollRows; ++ich)
+            {
+                if (TextBuff[ich] == TEXT('\n') || iColumn + 1 >= ScreenColumns)
+                {
+                    CON_STREAM_WRITE(Pager->Screen->Stream, &TextBuff[ichLast],
+                                     ich - ichLast + 1);
+                    ichLast = ich + 1;
+                    ++iLine;
+                    iColumn = 0;
+                    continue;
+                }
+                ++iColumn;
+            }
+            if (iLine < ScrollRows)
+            {
+                CON_STREAM_WRITE(Pager->Screen->Stream, &TextBuff[ichLast], ich - ichLast);
+                ++iLine;
+            }
+            iLine = 0;
+            break;
+        }
+        default:
+            break;
+    }
+
+    Pager->ich = ich;
+    Pager->iLine = iLine;
+
+    return Pager->ich >= Pager->cch;
+}
 
 /* Returns TRUE when all the text is displayed, and FALSE if display is stopped */
 BOOL
@@ -44,23 +91,14 @@ ConWritePaging(
 {
     CONSOLE_SCREEN_BUFFER_INFO csbi;
 
-    /* Used to see how big the screen is */
-    DWORD ScreenLines = 0;
-
-    /* Chars since start of line */
-    DWORD CharSL;
-
-    DWORD from = 0, i = 0;
-
     /* Parameters validation */
     if (!Pager)
         return FALSE;
 
-    /* Reset LineCount and return if no string has been given */
-    if (StartPaging == TRUE)
-        Pager->LineCount = 0;
+    if (StartPaging)
+        Pager->iLine = 0; /* Reset the line count */
     if (szStr == NULL)
-        return TRUE;
+        return TRUE; /* Return if no string has been given */
 
     /* Get the size of the visual screen that can be printed to */
     if (!ConGetScreenInfo(Pager->Screen, &csbi))
@@ -70,48 +108,29 @@ ConWritePaging(
         return TRUE;
     }
 
-    /*
-     * Get the number of lines currently displayed on screen, minus 1
-     * to account for the "press any key..." prompt from PagePrompt().
-     */
-    ScreenLines = (csbi.srWindow.Bottom - csbi.srWindow.Top);
-    CharSL = csbi.dwCursorPosition.X;
+    /* Fill the pager info */
+    Pager->ScreenColumns = csbi.srWindow.Right - csbi.srWindow.Left + 1;
+    Pager->ScreenRows = csbi.srWindow.Bottom - csbi.srWindow.Top + 1;
+    Pager->ich = 0;
+    Pager->cch = len;
+    Pager->TextBuff = szStr;
+    Pager->PagerAction = CPA_DEFAULT;
+
+    if (len == 0)
+        return TRUE;
 
     /* Make sure the user doesn't have the screen too small */
-    if (ScreenLines < 4)
+    if (Pager->ScreenRows < 4)
     {
         CON_STREAM_WRITE(Pager->Screen->Stream, szStr, len);
         return TRUE;
     }
 
-    while (i < len)
+    while (!DoPagerAction(Pager))
     {
-        /* Search until the end of a line is reached */
-        if (szStr[i++] != TEXT('\n') && ++CharSL < csbi.dwSize.X)
-            continue;
-
-        Pager->LineCount++;
-        CharSL = 0;
-
-        if (Pager->LineCount >= ScreenLines)
-        {
-            CON_STREAM_WRITE(Pager->Screen->Stream, &szStr[from], i-from);
-            from = i;
-
-            /* Prompt the user; give him some values for statistics */
-            // FIXME TODO: The prompt proc can also take ScreenLines ??
-            if (!PagePrompt(Pager, from, len))
-                return FALSE;
-
-            // TODO: Recalculate 'ScreenLines' in case the user redimensions
-            // the window during the prompt.
-
-            /* Reset the number of lines being printed */
-            Pager->LineCount = 0;
-        }
+        if (!PagePrompt(Pager, Pager->ich, Pager->cch))
+            return FALSE;
     }
-    if (i > from)
-        CON_STREAM_WRITE(Pager->Screen->Stream, &szStr[from], i-from);
 
     return TRUE;
 }

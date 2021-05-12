@@ -161,6 +161,15 @@ PagePrompt(PCON_PAGER Pager, DWORD Done, DWORD Total)
         return FALSE;
     }
 
+    /* [Enter] key: One line go */
+    if ((KeyEvent.wVirtualKeyCode == VK_RETURN) &&
+        !(KeyEvent.dwControlKeyState & (LEFT_CTRL_PRESSED | RIGHT_CTRL_PRESSED)))
+    {
+        Pager->PagerAction = CPA_SHOW_LINE;
+        return TRUE;
+    }
+
+    Pager->PagerAction = CPA_DEFAULT;
     return TRUE;
 }
 
