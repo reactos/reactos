@@ -32,7 +32,7 @@
 // Temporary HACK
 #define CON_STREAM_WRITE    ConStreamWrite
 
-static BOOL DoPagerAction(PCON_PAGER Pager)
+static BOOL ConPagerAction(PCON_PAGER Pager)
 {
     PCTCH TextBuff = Pager->TextBuff;
     DWORD ich = Pager->ich, cch = Pager->cch, iLine = Pager->iLine, iColumn;
@@ -126,7 +126,7 @@ ConWritePaging(
         return TRUE;
     }
 
-    while (!DoPagerAction(Pager))
+    while (!ConPagerAction(Pager))
     {
         /* Prompt the user; give him some values for statistics */
         if (!PagePrompt(Pager, Pager->ich, Pager->cch))
