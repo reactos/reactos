@@ -169,7 +169,6 @@ PagePrompt(PCON_PAGER Pager, DWORD Done, DWORD Total)
         return TRUE;
     }
 
-    Pager->PagerAction = CPA_DEFAULT;
     return TRUE;
 }
 
