@@ -48,7 +48,6 @@ static BOOL ConPagerAction(PCON_PAGER Pager)
             ScrollRows = iLine + 1;
             /* ...FALL THROUGH... */
         case CON_PAGER_ACTION_SHOW_PAGE:
-        {
             for (iColumn = 0; ich < cch && iLine < ScrollRows; ++ich)
             {
                 if (TextBuff[ich] == TEXT('\n') || iColumn + 1 >= ScreenColumns)
@@ -69,8 +68,7 @@ static BOOL ConPagerAction(PCON_PAGER Pager)
             }
             iLine = 0;
             break;
-        }
-        default:
+        case CON_PAGER_ACTION_DO_NOTHING:
             break;
     }
 

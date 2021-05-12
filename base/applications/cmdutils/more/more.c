@@ -169,6 +169,12 @@ PagePrompt(PCON_PAGER Pager, DWORD Done, DWORD Total)
         return TRUE;
     }
 
+    if (KeyEvent.dwControlKeyState & (LEFT_CTRL_PRESSED | RIGHT_CTRL_PRESSED))
+    {
+        Pager->PagerAction = CON_PAGER_ACTION_DO_NOTHING;
+        return TRUE;
+    }
+
     return TRUE;
 }
 
