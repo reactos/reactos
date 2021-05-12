@@ -26,6 +26,7 @@
 extern "C" {
 #endif
 
+// #include <wincon.h>
 
 typedef enum CON_PAGER_ACTION
 {
@@ -33,8 +34,6 @@ typedef enum CON_PAGER_ACTION
     CPA_SHOW_LINE,
     CPA_DEFAULT = CPA_SHOW_PAGE
 } CON_PAGER_ACTION;
-
-// #include <wincon.h>
 
 typedef struct _CON_PAGER
 {
