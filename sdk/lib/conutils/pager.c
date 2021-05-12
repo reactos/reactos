@@ -128,6 +128,8 @@ ConWritePaging(
 
     while (!ConPagerAction(Pager))
     {
+        Pager->PagerAction = CPA_DEFAULT; /* PagePrompt might change this */
+
         /* Prompt the user; give him some values for statistics */
         if (!PagePrompt(Pager, Pager->ich, Pager->cch))
             return FALSE;
