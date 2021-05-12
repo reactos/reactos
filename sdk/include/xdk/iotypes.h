@@ -2826,11 +2826,12 @@ typedef enum _IO_PAGING_PRIORITY {
 
 _Function_class_(IO_COMPLETION_ROUTINE)
 _IRQL_requires_same_
+_IRQL_requires_max_(DISPATCH_LEVEL)
 typedef NTSTATUS
 (NTAPI IO_COMPLETION_ROUTINE)(
   _In_ struct _DEVICE_OBJECT *DeviceObject,
   _In_ struct _IRP *Irp,
-  _In_opt_ PVOID Context);
+  _In_reads_opt_(_Inexpressible_("varies")) PVOID Context);
 typedef IO_COMPLETION_ROUTINE *PIO_COMPLETION_ROUTINE;
 
 _Function_class_(IO_DPC_ROUTINE)
