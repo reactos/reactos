@@ -83,8 +83,7 @@ static BOOL ConPagerAction(PCON_PAGER Pager)
                     ichLast = ich + !IsDoubleWidthCharTrailing;
                     if (IsDoubleWidthCharTrailing)
                     {
-                        WCHAR chSpace = L' ';
-                        CON_STREAM_WRITE(Pager->Screen->Stream, &chSpace, 1);
+                        CON_STREAM_WRITE(Pager->Screen->Stream, L" ", 1);
                         --ich;
                     }
                     ++iLine;
