@@ -132,7 +132,7 @@ ConWritePaging(
         if (!PagePrompt(Pager, Pager->ich, Pager->cch))
             return FALSE;
 
-        /* Recalculate 'ScreenLines' in case the user redimensions
+        /* Recalculate the screen extent in case the user redimensions
            the window during the prompt. */
         if (ConGetScreenInfo(Pager->Screen, &csbi))
         {
