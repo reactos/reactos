@@ -37,7 +37,7 @@ static BOOL ConPagerAction(PCON_PAGER Pager)
     PCTCH TextBuff = Pager->TextBuff;
     DWORD ich = Pager->ich, cch = Pager->cch, iLine = Pager->iLine, iColumn;
     DWORD ScreenColumns = Pager->ScreenColumns, ScreenRows = Pager->ScreenRows;
-    DWORD ScrollRows = ScreenRows - 1, ichLast = ich;
+    DWORD ScrollRows = ScreenRows - 1, ichLast = ich, MaxRows = ScrollRows;
 
     if (ich >= cch)
         return TRUE;
@@ -45,10 +45,10 @@ static BOOL ConPagerAction(PCON_PAGER Pager)
     switch (Pager->PagerAction)
     {
         case CON_PAGER_ACTION_SHOW_LINE:
-            ScrollRows = iLine + 1;
+            MaxRows = iLine + 1;
             /* ...FALL THROUGH... */
         case CON_PAGER_ACTION_SHOW_PAGE:
-            for (iColumn = 0; ich < cch && iLine < ScrollRows; ++ich)
+            for (iColumn = 0; ich < cch && iLine < MaxRows; ++ich)
             {
                 if (TextBuff[ich] == TEXT('\n') || iColumn + 1 >= ScreenColumns)
                 {
@@ -61,21 +61,23 @@ static BOOL ConPagerAction(PCON_PAGER Pager)
                 }
                 ++iColumn;
             }
-            if (iLine < ScrollRows)
+            if (iLine < MaxRows)
             {
                 CON_STREAM_WRITE(Pager->Screen->Stream, &TextBuff[ichLast], ich - ichLast);
                 ++iLine;
             }
-            iLine = 0;
             break;
         case CON_PAGER_ACTION_DO_NOTHING:
             break;
     }
 
+    if (iLine >= ScrollRows)
+        iLine = 0; /* Reset the number of lines being printed */
+
     Pager->ich = ich;
     Pager->iLine = iLine;
 
-    return Pager->ich >= Pager->cch;
+    return ich >= cch;
 }
 
 /* Returns TRUE when all the text is displayed, and FALSE if display is stopped */
