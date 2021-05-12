@@ -74,7 +74,6 @@ static BOOL ConPagerAction(PCON_PAGER Pager)
                 {
                     nWidthOfChar = GetWidthOfCharCJK(nCodePage, TextBuff[ich]);
                     IsDoubleWidthCharTrailing = (nWidthOfChar == 2) &&
-                                                (TextBuff[ich] != TEXT('\n')) &&
                                                 (iColumn + 1 == ScreenColumns);
                 }
                 if (TextBuff[ich] == TEXT('\n') || iColumn + nWidthOfChar >= ScreenColumns)
