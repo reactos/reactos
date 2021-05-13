@@ -16,7 +16,8 @@ add_registry_inf(
     hivedef.inf
     hivesft.inf
     hivesys.inf
-    hivebcd.inf)
+    hivebcd.inf
+    timezones.inf)
 
 
 # Regtest
