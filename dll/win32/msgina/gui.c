@@ -83,7 +83,7 @@ DlgData_LoadBitmaps(_Inout_ PDLG_DATA pDlgData)
     {
         GetObject(pDlgData->hLogoBitmap, sizeof(bm), &bm);
         pDlgData->LogoWidth = bm.bmWidth;
-        pDlgData->LogoHeight = bm.bmHeight; 
+        pDlgData->LogoHeight = bm.bmHeight;
     }
 
     pDlgData->hBarBitmap = LoadImageW(hDllInstance, MAKEINTRESOURCEW(IDI_BAR),
