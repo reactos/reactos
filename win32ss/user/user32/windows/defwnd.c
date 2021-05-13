@@ -306,7 +306,8 @@ DefWndGetIcon(PWND pWnd, WPARAM wParam, LPARAM lParam)
             hIconRet = UserGetProp(UserHMGetHandle(pWnd), gpsi->atomIconSmProp, TRUE);
             break;
         default:
-            break;
+            ASSERT(FALSE);
+            UNREACHABLE;
     }
     return (LRESULT)hIconRet;
 }
