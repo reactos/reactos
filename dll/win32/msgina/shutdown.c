@@ -1033,17 +1033,21 @@ ShutdownDialogProc(
             if (IsWindowsServer())
             {
                 pContext->hBitmap =
-                    LoadImageW(pContext->pgContext->hDllInstance, MAKEINTRESOURCEW(IDI_ROSLOGO_SERVER), IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR);
-                return TRUE;
+                    LoadImageW(pContext->pgContext->hDllInstance,
+                               MAKEINTRESOURCEW(IDI_ROSLOGO_SERVER), IMAGE_BITMAP,
+                               0, 0, LR_DEFAULTCOLOR);
             }
             else
             {
                 pContext->hBitmap =
-                    LoadImageW(pContext->pgContext->hDllInstance, MAKEINTRESOURCEW(IDI_ROSLOGO_WORKSTATION), IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR);
-                return TRUE;
-            }
-        }
+                    LoadImageW(pContext->pgContext->hDllInstance,
+                               MAKEINTRESOURCEW(IDI_ROSLOGO_WORKSTATION), IMAGE_BITMAP,
+                               0, 0, LR_DEFAULTCOLOR);
 
+            }
+        return TRUE;
+        }
+        
         case WM_DESTROY:
             DeleteObject(pContext->hBitmap);
             DeleteObject(pContext->hBrush);

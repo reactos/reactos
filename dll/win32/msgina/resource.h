@@ -80,7 +80,6 @@
 #define IDI_ROSLOGO_WORKSTATION  20005
 #define IDI_ROSLOGO_SERVER       20006
 
-
 #define IDI_NOT_CONNECTED            13
 #define IDI_LOGOFF                   21
 #define IDI_SHUTDOWN                 22
