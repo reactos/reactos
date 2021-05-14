@@ -28,24 +28,21 @@ extern "C" {
 
 // #include <wincon.h>
 
-typedef enum CON_PAGER_ACTION
-{
-    CON_PAGER_ACTION_SHOW_PAGE,
-    CON_PAGER_ACTION_SHOW_LINE,
-    CON_PAGER_ACTION_DO_NOTHING,
-    CON_PAGER_ACTION_DEFAULT = CON_PAGER_ACTION_SHOW_PAGE
-} CON_PAGER_ACTION;
+struct _CON_PAGER;
+typedef BOOL (CALLBACK *CON_PAGER_ACTION_FN)(struct _CON_PAGER *Pager);
 
 typedef struct _CON_PAGER
 {
     PCON_SCREEN Screen;
     DWORD ScreenColumns;
     DWORD ScreenRows;
+    DWORD ScrollRows;
+    CON_PAGER_ACTION_FN PagerAction;
     PCTCH TextBuff; /* the text buffer */
     DWORD ich; /* current index of character */
     DWORD cch; /* the total number of characters */
+    DWORD iColumn; /* current index of column */
     DWORD iLine; /* current index of line */
-    CON_PAGER_ACTION PagerAction;
 } CON_PAGER, *PCON_PAGER;
 
 #define INIT_CON_PAGER(pScreen)     {(pScreen), 0}

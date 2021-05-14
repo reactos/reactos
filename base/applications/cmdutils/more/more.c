@@ -51,6 +51,10 @@ HANDLE hKeyboard;
 /* Enable/Disable extensions */
 BOOL bEnableExtensions = TRUE; // FIXME: By default, it should be FALSE.
 
+static BOOL CALLBACK ConPagerDoNothing(PCON_PAGER Pager)
+{
+    return Pager->ich >= Pager->cch;
+}
 
 static BOOL
 __stdcall
@@ -165,13 +169,13 @@ PagePrompt(PCON_PAGER Pager, DWORD Done, DWORD Total)
     /* [Enter] key: One line go */
     if ((KeyEvent.wVirtualKeyCode == VK_RETURN) && !fCtrlPressed)
     {
-        Pager->PagerAction = CON_PAGER_ACTION_SHOW_LINE;
+        Pager->ScrollRows = min(1, Pager->ScreenRows - 1);
         return TRUE;
     }
 
     if (fCtrlPressed)
     {
-        Pager->PagerAction = CON_PAGER_ACTION_DO_NOTHING;
+        Pager->PagerAction = ConPagerDoNothing;
         return TRUE;
     }
 
@@ -458,7 +462,6 @@ FileGetString(
 
     return TRUE;
 }
-
 
 static VOID
 LoadRegistrySettings(HKEY hKeyRoot)
