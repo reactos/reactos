@@ -170,16 +170,16 @@ ConWritePaging(
 
     while (!(*Pager->PagerAction)(Pager))
     {
-        /* PagePrompt might change these values */
-        Pager->PagerAction = ConPagerDefaultAction;
-        Pager->ScrollRows = Pager->ScreenRows - 1;
-
         /* Recalculate the screen extent in case the user redimensions the window. */
         if (ConGetScreenInfo(Pager->Screen, &csbi))
         {
             Pager->ScreenColumns = csbi.srWindow.Right - csbi.srWindow.Left + 1;
             Pager->ScreenRows = csbi.srWindow.Bottom - csbi.srWindow.Top + 1;
         }
+
+        /* PagePrompt might change these values */
+        Pager->PagerAction = ConPagerDefaultAction;
+        Pager->ScrollRows = Pager->ScreenRows - 1;
 
         /* Prompt the user; give him some values for statistics */
         if (!PagePrompt(Pager, Pager->ich, Pager->cch))
