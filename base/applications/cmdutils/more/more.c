@@ -136,7 +136,7 @@ PagePrompt(PCON_PAGER Pager, DWORD Done, DWORD Total)
     HANDLE hInput = ConStreamGetOSHandle(StdIn);
     DWORD dwMode;
     KEY_EVENT_RECORD KeyEvent;
-    BOOL fCtrlPressed;
+    BOOL fCtrl;
     DWORD nLines = 0;
     static UINT s_nPromptID = IDS_CONTINUE_PROGRESS;
     static WCHAR s_chSubCommand = 0;
@@ -206,6 +206,17 @@ PagePrompt(PCON_PAGER Pager, DWORD Done, DWORD Total)
         /* Got our key, return to caller */
         KeyEvent = ir.Event.KeyEvent;
 
+        /* Ctrl key is pressed? */
+        fCtrl = !!(KeyEvent.dwControlKeyState & (LEFT_CTRL_PRESSED | RIGHT_CTRL_PRESSED));
+
+        /* Ctrl+C or Ctrl+Esc? */
+        if (fCtrl && ((KeyEvent.wVirtualKeyCode == VK_ESCAPE) ||
+                      (KeyEvent.wVirtualKeyCode == L'C')))
+        {
+            s_chSubCommand = 0;
+            break;
+        }
+
         switch (KeyEvent.wVirtualKeyCode)
         {
             case VK_SHIFT:
@@ -215,18 +226,13 @@ PagePrompt(PCON_PAGER Pager, DWORD Done, DWORD Total)
             default:
             {
                 WCHAR ch;
-                fCtrlPressed = !!(KeyEvent.dwControlKeyState &
-                                  (LEFT_CTRL_PRESSED | RIGHT_CTRL_PRESSED));
-                if (fCtrlPressed)
-                {
-                    s_chSubCommand = 0;
-                    goto skip;
-                }
                 if (s_chSubCommand == L'P' || s_chSubCommand == L'S')
                 {
                     ch = KeyEvent.uChar.UnicodeChar;
                     if (L'0' <= ch && ch <= L'9')
                     {
+                        if (nLines == 0 && ch == L'0')
+                            continue;
                         nLines *= 10;
                         nLines += ch - L'0';
                         ConStreamWrite(Pager->Screen->Stream, &ch, 1);
@@ -304,8 +310,8 @@ skip:
     s_chSubCommand = 0;
 
     /* Ctrl+C or Ctrl+Esc: Control Break */
-    if ((KeyEvent.wVirtualKeyCode == VK_ESCAPE) ||
-        ((KeyEvent.wVirtualKeyCode == L'C') && fCtrlPressed))
+    if (fCtrl && ((KeyEvent.wVirtualKeyCode == VK_ESCAPE) ||
+                  (KeyEvent.wVirtualKeyCode == L'C')))
     {
         /* We break, output a newline */
         WCHAR ch = L'\n';
@@ -316,7 +322,7 @@ skip:
     if (s_dwFlags & FLAG_E) /* If extended features are available */
     {
         /* 'Q': Quit */
-        if ((KeyEvent.wVirtualKeyCode == L'Q') && !fCtrlPressed)
+        if ((KeyEvent.wVirtualKeyCode == L'Q') && !fCtrl)
         {
             /* We break, output a newline */
             WCHAR ch = L'\n';
@@ -325,14 +331,14 @@ skip:
         }
 
         /* 'F': Next file */
-        if ((KeyEvent.wVirtualKeyCode == L'F') && !fCtrlPressed)
+        if ((KeyEvent.wVirtualKeyCode == L'F') && !fCtrl)
         {
             Pager->PagerAction = MorePageActionNextFile;
             return TRUE;
         }
 
         /* '?': Show Options */
-        if (KeyEvent.uChar.UnicodeChar == L'?' && !fCtrlPressed)
+        if (KeyEvent.uChar.UnicodeChar == L'?' && !fCtrl)
         {
             Pager->PagerAction = MorePageActionDoNothing;
             s_nPromptID = IDS_CONTINUE_OPTIONS;
@@ -340,14 +346,14 @@ skip:
         }
 
         /* [Enter] key: One line */
-        if ((KeyEvent.wVirtualKeyCode == VK_RETURN) && !fCtrlPressed)
+        if ((KeyEvent.wVirtualKeyCode == VK_RETURN) && !fCtrl)
         {
             Pager->ScrollRows = 1;
             return TRUE;
         }
 
         /* 'P': Display n lines */
-        if (KeyEvent.uChar.UnicodeChar == L'P' && !fCtrlPressed)
+        if (KeyEvent.wVirtualKeyCode == L'P' && !fCtrl)
         {
             Pager->PagerAction = MorePageActionDoNothing;
             s_nPromptID = IDS_CONTINUE_LINES;
@@ -356,7 +362,7 @@ skip:
         }
 
         /* 'S': Skip n lines */
-        if (KeyEvent.uChar.UnicodeChar == L'S' && !fCtrlPressed)
+        if (KeyEvent.wVirtualKeyCode == L'S' && !fCtrl)
         {
             Pager->PagerAction = MorePageActionDoNothing;
             s_nPromptID = IDS_CONTINUE_LINES;
@@ -365,7 +371,7 @@ skip:
         }
 
         /* '=': Show current line */
-        if (KeyEvent.uChar.UnicodeChar == L'=' && !fCtrlPressed)
+        if (KeyEvent.uChar.UnicodeChar == L'=' && !fCtrl)
         {
             Pager->PagerAction = MorePageActionDoNothing;
             s_nPromptID = IDS_CONTINUE_LINE_AT;
@@ -374,7 +380,7 @@ skip:
     }
 
     /* [Space] key: One page */
-    if ((KeyEvent.wVirtualKeyCode == VK_SPACE) && !fCtrlPressed)
+    if ((KeyEvent.wVirtualKeyCode == VK_SPACE) && !fCtrl)
     {
         Pager->ScrollRows = Pager->ScreenRows - 1;
         return TRUE;
