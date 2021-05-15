@@ -55,6 +55,21 @@ static inline INT GetWidthOfCharCJK(UINT nCodePage, WCHAR ch)
     return ret;
 }
 
+static BOOL CALLBACK
+ConDefaultOutputLine(PCON_PAGER Pager, LPCWSTR line, DWORD cch, DWORD lineno)
+{
+    CON_STREAM_WRITE(Pager->Screen->Stream, line, cch);
+    return TRUE;
+}
+
+static BOOL CALLBACK
+ConCallOutputLine(PCON_PAGER Pager, LPCWSTR line, DWORD cch, DWORD lineno)
+{
+    if (!(*Pager->OutputLine)(Pager, line, cch, lineno))
+        ConDefaultOutputLine(Pager, line, cch, lineno);
+    return TRUE;
+}
+
 static BOOL CALLBACK ConPagerDefaultAction(PCON_PAGER Pager)
 {
     PCTCH TextBuff = Pager->TextBuff;
@@ -86,12 +101,12 @@ static BOOL CALLBACK ConPagerDefaultAction(PCON_PAGER Pager)
         }
         if (TextBuff[ich] == TEXT('\n') || iColumn + nWidthOfChar >= ScreenColumns)
         {
-            CON_STREAM_WRITE(Pager->Screen->Stream, &TextBuff[ichLast],
-                             ich - ichLast + !IsDoubleWidthCharTrailing);
+            ConCallOutputLine(Pager, &TextBuff[ichLast],
+                              ich - ichLast + !IsDoubleWidthCharTrailing, iLine + 1);
             ichLast = ich + !IsDoubleWidthCharTrailing;
             if (IsDoubleWidthCharTrailing)
             {
-                CON_STREAM_WRITE(Pager->Screen->Stream, L" ", 1);
+                ConCallOutputLine(Pager, L" ", 1, iLine + 1);
                 --ich;
             }
             ++iLine;
@@ -103,7 +118,7 @@ static BOOL CALLBACK ConPagerDefaultAction(PCON_PAGER Pager)
 
     if (iLine < ScrollRows)
     {
-        CON_STREAM_WRITE(Pager->Screen->Stream, &TextBuff[ichLast], ich - ichLast);
+        ConCallOutputLine(Pager, &TextBuff[ichLast], ich - ichLast, iLine + 1);
     }
     else
     {
@@ -154,19 +169,13 @@ ConWritePaging(
     Pager->ScreenRows = csbi.srWindow.Bottom - csbi.srWindow.Top + 1;
     Pager->ScrollRows = Pager->ScreenRows - 1;
     Pager->PagerAction = ConPagerDefaultAction;
+    Pager->OutputLine = ConDefaultOutputLine;
     Pager->ich = 0;
     Pager->cch = len;
     Pager->TextBuff = szStr;
 
     if (len == 0)
         return TRUE;
-
-    /* Make sure the user doesn't have the screen too small */
-    if (Pager->ScreenRows < 4)
-    {
-        CON_STREAM_WRITE(Pager->Screen->Stream, szStr, len);
-        return TRUE;
-    }
 
     while (!(*Pager->PagerAction)(Pager))
     {
@@ -179,7 +188,12 @@ ConWritePaging(
 
         /* PagePrompt might change these values */
         Pager->PagerAction = ConPagerDefaultAction;
+        Pager->OutputLine = ConDefaultOutputLine;
         Pager->ScrollRows = Pager->ScreenRows - 1;
+
+        /* Make sure the user doesn't have the screen too small */
+        if (Pager->ScrollRows <= 3)
+            break;
 
         /* Prompt the user; give him some values for statistics */
         if (!PagePrompt(Pager, Pager->ich, Pager->cch))
