@@ -806,7 +806,7 @@ BEGIN
     IDS_RESTART_PROMPT "Haluatko simuloida ReactOS:n uudelleenkäynnistämistä?"
     IDS_SHUTDOWN_TITLE "Sammuta"
     IDS_SHUTDOWN_PROMPT "Haluatko lopettaa ReactOS:n istunnon?"
-    
+
     /* Format Dialog Strings */
     IDS_FORMAT_TITLE "Format Local Disk"
     IDS_FORMAT_WARNING "WARNING: Formatting will erase ALL data on this disk.\nTo format the disk, click OK. To quit, click CANCEL."

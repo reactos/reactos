@@ -806,7 +806,7 @@ BEGIN
     IDS_RESTART_PROMPT "Újra szeretné indítani a rendszert?"
     IDS_SHUTDOWN_TITLE "Kikapcsolás"
     IDS_SHUTDOWN_PROMPT "Ki szeretné kapcsolni számítógépét?"
-    
+
     /* Format Dialog Strings */
     IDS_FORMAT_TITLE "Format Local Disk"
     IDS_FORMAT_WARNING "WARNING: Formatting will erase ALL data on this disk.\nTo format the disk, click OK. To quit, click CANCEL."

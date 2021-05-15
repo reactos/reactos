@@ -810,7 +810,7 @@ BEGIN
     IDS_RESTART_PROMPT "Doni të rifilloni sistemin?"
     IDS_SHUTDOWN_TITLE "Fike"
     IDS_SHUTDOWN_PROMPT "Doni ta filkni sistemin?"
-    
+
     /* Format Dialog Strings */
     IDS_FORMAT_TITLE "Format Local Disk"
     IDS_FORMAT_WARNING "WARNING: Formatting will erase ALL data on this disk.\nTo format the disk, click OK. To quit, click CANCEL."

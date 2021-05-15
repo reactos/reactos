@@ -803,7 +803,7 @@ BEGIN
     IDS_RESTART_PROMPT "Anda ingin memulai ulang sistem?"
     IDS_SHUTDOWN_TITLE "Nonaktifkan"
     IDS_SHUTDOWN_PROMPT "Anda ingin menonaktifkan?"
-    
+
     /* Format Dialog Strings */
     IDS_FORMAT_TITLE "Format Disk Lokal"
     IDS_FORMAT_WARNING "PERINGATAN: Memformat akan menghapus SELURUH data dalam disk.\nUntuk memformat disk, klik OK. untuk keluar, klik BATAL."

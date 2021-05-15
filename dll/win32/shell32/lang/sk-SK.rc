@@ -806,7 +806,7 @@ BEGIN
     IDS_RESTART_PROMPT "Naozaj chcete reštartovať systém?"
     IDS_SHUTDOWN_TITLE "Vypnúť"
     IDS_SHUTDOWN_PROMPT "Naozaj chcete vypnúť počítač?"
-    
+
     /* Format Dialog Strings */
     IDS_FORMAT_TITLE "Format Local Disk"
     IDS_FORMAT_WARNING "WARNING: Formatting will erase ALL data on this disk.\nTo format the disk, click OK. To quit, click CANCEL."

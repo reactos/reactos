@@ -814,7 +814,7 @@ BEGIN
     IDS_RESTART_PROMPT "您确定要重启系统吗?"
     IDS_SHUTDOWN_TITLE "关机"
     IDS_SHUTDOWN_PROMPT "您确定要关机吗"
-    
+
     /* Format Dialog Strings */
     IDS_FORMAT_TITLE "格式化本地磁盘"
     IDS_FORMAT_WARNING "警告: 格式化将会擦除磁盘上的所有数据。\n想要格式化这个磁盘, 请点击确定。若想退出，请点击返回。"

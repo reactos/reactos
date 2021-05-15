@@ -746,7 +746,7 @@ BEGIN
     IDS_FOLDER_OPTIONS_DESCRIPTION "Customize the display of files and folders and change file associations."
     IDS_FONTS_DESCRIPTION "Add, change, and manage fonts on your computer."
     IDS_PRINTERS_DESCRIPTION "Shows installed printers and fax printers and helps you add new ones."
-    
+
     /* About shell dialog version string */
     IDS_ABOUT_VERSION_STRING "Έκδοση %S (%S)"
 
@@ -806,7 +806,7 @@ BEGIN
     IDS_RESTART_PROMPT "Είστε σίγουροι ότι θέλετε να επανεκκινήσετε τον υπολογιστή σας;"
     IDS_SHUTDOWN_TITLE "Απενεργοποίηση"
     IDS_SHUTDOWN_PROMPT "Είστε σίγουροι ότι θέλετε να απενεργοποιήσετε τον υπολογιστή σας;"
-    
+
     /* Format Dialog Strings */
     IDS_FORMAT_TITLE "Format Local Disk"
     IDS_FORMAT_WARNING "WARNING: Formatting will erase ALL data on this disk.\nTo format the disk, click OK. To quit, click CANCEL."

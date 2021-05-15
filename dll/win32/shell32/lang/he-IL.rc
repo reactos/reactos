@@ -808,7 +808,7 @@ BEGIN
     IDS_RESTART_PROMPT "האם ברצונך להפעיל מחדש את המערכת?"
     IDS_SHUTDOWN_TITLE "כיבוי"
     IDS_SHUTDOWN_PROMPT "האם ברצונך לכבות את המחשב?"
-    
+
     /* Format Dialog Strings */
     IDS_FORMAT_TITLE "אתחול כונן מקומי"
     IDS_FORMAT_WARNING "WARNING: Formatting will erase ALL data on this disk.\nTo format the disk, click OK. To quit, click CANCEL."

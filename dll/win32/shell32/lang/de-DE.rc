@@ -807,7 +807,7 @@ BEGIN
     IDS_RESTART_PROMPT "Möchten Sie das System neu starten?"
     IDS_SHUTDOWN_TITLE "Herunterfahren"
     IDS_SHUTDOWN_PROMPT "Möchten Sie das System herunterfahren?"
-    
+
     /* Format Dialog Strings */
     IDS_FORMAT_TITLE "Lokalen Datenträger formatieren"
     IDS_FORMAT_WARNING "ACHTUNG: Das Formatieren löscht ALLE Daten auf dem Datenträger.\nKlicken Sie auf OK zum Formatieren. Klicken Sie auf ABBRECHEN zum Beenden."

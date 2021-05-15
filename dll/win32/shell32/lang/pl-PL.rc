@@ -812,7 +812,7 @@ BEGIN
     IDS_RESTART_PROMPT "Czy chcesz ponownie uruchomić system?"
     IDS_SHUTDOWN_TITLE "Zamknij"
     IDS_SHUTDOWN_PROMPT "Czy chcesz zamknąć system?"
-    
+
     /* Format Dialog Strings */
     IDS_FORMAT_TITLE "Formatuj dysk lokalny"
     IDS_FORMAT_WARNING "OSTRZEŻENIE: Formatowanie wymaże WSZYSTKIE dane na tym dysku.\nNaciśnij przycisk OK, aby sformatować dysk lub przycisk ANULUJ, aby pozostawić dysk bez zmian."

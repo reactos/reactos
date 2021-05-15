@@ -806,7 +806,7 @@ BEGIN
     IDS_RESTART_PROMPT "Volete riavviare il sistema?"
     IDS_SHUTDOWN_TITLE "Arresta sistema"
     IDS_SHUTDOWN_PROMPT "Volete arrestare il sistema?"
-    
+
     /* Format Dialog Strings */
     IDS_FORMAT_TITLE "Format Local Disk"
     IDS_FORMAT_WARNING "WARNING: Formatting will erase ALL data on this disk.\nTo format the disk, click OK. To quit, click CANCEL."

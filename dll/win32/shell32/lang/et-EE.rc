@@ -813,7 +813,7 @@ BEGIN
     IDS_RESTART_PROMPT "Kas soovid taaskäivitada süsteemi?"
     IDS_SHUTDOWN_TITLE "Lülita välja"
     IDS_SHUTDOWN_PROMPT "Kas soovid arvuti välja lülitada?"
-    
+
     /* Format Dialog Strings */
     IDS_FORMAT_TITLE "Format Local Disk"
     IDS_FORMAT_WARNING "WARNING: Formatting will erase ALL data on this disk.\nTo format the disk, click OK. To quit, click CANCEL."

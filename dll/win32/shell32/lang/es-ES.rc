@@ -815,7 +815,7 @@ BEGIN
     IDS_RESTART_PROMPT "¿Desea reiniciar el equipo?"
     IDS_SHUTDOWN_TITLE "Apagar"
     IDS_SHUTDOWN_PROMPT "¿Desea apagar el equipo?"
-    
+
     /* Format Dialog Strings */
     IDS_FORMAT_TITLE "Formatear Disco Local"
     IDS_FORMAT_WARNING "ADVERTENCIA: Formatear eliminará TODOS los datos de este disco.\n Para formatear, haga clic en OK. Para salir, haga clic en CANCELAR."
