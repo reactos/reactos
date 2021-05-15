@@ -122,11 +122,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", IDC_ABOUT_ICON, 7, 55, 21, 20
     LTEXT "", IDC_ABOUT_APPNAME, 35, 55, 200, 10
-    LTEXT "Version ", IDC_STATIC, 35, 65, 28, 10
-    LTEXT KERNEL_VERSION_STR, IDC_STATIC, 63, 65, 27, 10
-    LTEXT " (", IDC_STATIC, 90, 65, 5, 10
-    LTEXT KERNEL_VERSION_BUILD_STR, IDC_STATIC, 95, 65, 58, 10
-    LTEXT ")", IDC_STATIC, 153, 65, 5, 10
+    LTEXT "", IDC_ABOUT_VERSION, 35, 65, 250, 10
     LTEXT "Copyright 1998-", IDC_STATIC, 35, 75, 53, 10
     LTEXT COPYRIGHT_YEAR, IDC_STATIC, 88, 75, 17, 10
     LTEXT " Das ReactOS Team\0", IDC_STATIC, 105, 75, 70, 10
@@ -145,7 +141,7 @@ IDD_ABOUT_AUTHORS DIALOGEX 35, 90, 235, 85
 STYLE DS_SHELLFONT | WS_CHILD
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "ReactOS wurde Ihnen zur Verfügung gestellt von:", IDC_STATIC, 0, 0, 180, 10
+    LTEXT "ReactOS wird Ihnen zur Verfügung gestellt von:", IDC_STATIC, 0, 0, 180, 10
     LISTBOX IDC_ABOUT_AUTHORS_LISTBOX, 0, 10, 165, 75
 END
 
@@ -606,10 +602,10 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBL
 CAPTION "Anderes Symbol"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
-    LTEXT "Look for icons in this file:", -1, 7, 7, 179, 10
+    LTEXT "Datei nach Symbolen durchsuchen:", -1, 7, 7, 179, 10
     PUSHBUTTON "Durchsuchen...", IDC_BUTTON_PATH, 126, 17, 59, 14
     EDITTEXT IDC_EDIT_PATH, 7, 17, 114, 14, ES_AUTOHSCROLL
-    LTEXT "Select an icon from the list below:", -1, 7, 36, 179, 10
+    LTEXT "Wählen Sie ein Symbol aus der folgenden Liste:", -1, 7, 36, 179, 10
     LISTBOX IDC_PICKICON_LIST, 7, 47, 181, 120, LBS_OWNERDRAWFIXED | LBS_NOINTEGRALHEIGHT | LBS_MULTICOLUMN | LBS_DISABLENOSCROLL | WS_HSCROLL | WS_TABSTOP
     DEFPUSHBUTTON "OK", IDOK, 81, 179, 50, 14
     PUSHBUTTON "Abbrechen", IDCANCEL, 135, 179, 50, 14
@@ -663,10 +659,13 @@ BEGIN
     IDS_ADMINISTRATIVETOOLS "Verwaltung"
 
     /* special folders descriptions */
-    IDS_ADMINISTRATIVETOOLS_DESCRIPTION "Configure administrative settings for your computer."
-    IDS_FOLDER_OPTIONS_DESCRIPTION "Customize the display of files and folders and change file associations."
-    IDS_FONTS_DESCRIPTION "Add, change, and manage fonts on your computer."
-    IDS_PRINTERS_DESCRIPTION "Shows installed printers and fax printers and helps you add new ones."
+    IDS_ADMINISTRATIVETOOLS_DESCRIPTION "Verwalten von administrativen Einstellungen."
+    IDS_FOLDER_OPTIONS_DESCRIPTION "Anpassen der Ansicht von Dateien, Ordnern und Verwalten von Dateiendungen."
+    IDS_FONTS_DESCRIPTION "Hinzufügen, Ändern und Verwalten von Schriftarten."
+    IDS_PRINTERS_DESCRIPTION "Anzeigen und Hinzufügen von Drucker und Faxgeräten."
+
+    /* About shell dialog version string */
+    IDS_ABOUT_VERSION_STRING "Version %S (%S)"
 
     /* context menus */
     IDS_VIEW_LARGE "&Große Symbole"
@@ -754,7 +753,7 @@ BEGIN
     IDS_DRIVE_FIXED "Lokaler Datenträger"
     IDS_DRIVE_CDROM "CD-Laufwerk"
     IDS_DRIVE_NETWORK "Netzlaufwerk"
-    IDS_DRIVE_FLOPPY "3.5 Floppy"
+    IDS_DRIVE_FLOPPY "3.5 Diskette"
     IDS_DRIVE_REMOVABLE "Wechseldatenträger"
     IDS_FS_UNKNOWN "Unbekannt"
 
@@ -777,6 +776,7 @@ BEGIN
     IDS_PICK_ICON_FILTER "Symboldateien (*.ico, *.icl, *.exe, *.dll)\0*.ico;*.icl;*.exe;*.dll\0Alle Dateien (*.*)\0*.*\0"
     IDS_OPEN_WITH_FILTER "Programme (*.exe)\0*.exe\0Alle Dateien (*.*)\0*.*\0"
 
+    /* Friendly File Type Names */
     IDS_DIRECTORY "Dateiordner"
     IDS_BAT_FILE "ReactOS-Stapelverarbeitungsdatei"
     IDS_CMD_FILE "ReactOS-Befehlsskript"
@@ -797,7 +797,7 @@ BEGIN
     IDS_SCR_FILE "Bildschirmschoner"
     IDS_SYS_FILE "Systemdatei"
     IDS_VXD_FILE "Virtueller Gerätetreiber"
-    IDS_ANY_FILE "%s-file"
+    IDS_ANY_FILE "%s-Datei"
 
     IDS_OPEN_VERB "Öffnen"
     IDS_EXPLORE_VERB "Durchsuchen"
@@ -823,7 +823,7 @@ BEGIN
 
     /* As in 'INI File' or 'WAV File', fallback string for no-name extensions
        used in the _File type_ tab of the _Folder Options_ dialog */
-    IDS_FILE_EXT_TYPE "%s File"
+    IDS_FILE_EXT_TYPE "%s-Datei"
 
     IDS_BYTES_FORMAT "Bytes"
     IDS_UNKNOWN_APP "Unbekannte Anwendung"
