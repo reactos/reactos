@@ -22,6 +22,7 @@
  *     use window size instead of buffer size.
  */
 
+#include <stdlib.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -30,8 +31,6 @@
 #include <winnls.h>
 #include <winreg.h>
 #include <winuser.h>
-
-#include <stdlib.h>
 
 #include <conutils.h>
 
