@@ -30,8 +30,13 @@ extern "C" {
 
 struct _CON_PAGER;
 typedef BOOL (CALLBACK *CON_PAGER_ACTION_FN)(struct _CON_PAGER *Pager);
-typedef BOOL (CALLBACK *CON_PAGER_OUTPUT_LINE_FN)(
-    struct _CON_PAGER *Pager, LPCWSTR line, DWORD cch, BOOL *pbNewLine);
+typedef BOOL (CALLBACK *CON_PAGER_LINE_FN)(
+    struct _CON_PAGER *Pager, LPCWSTR line, DWORD cch, DWORD *pdwFlags);
+
+// flags for CON_PAGER_LINE_FN
+#define CON_PAGER_LINE_FLAG_NEWLINE (1 << 0)
+#define CON_PAGER_LINE_FLAG_PROMPT (1 << 1)
+#define CON_PAGER_LINE_FLAG_QUIT (1 << 2)
 
 typedef struct _CON_PAGER
 {
@@ -40,7 +45,7 @@ typedef struct _CON_PAGER
     DWORD ScreenRows;
     DWORD ScrollRows;
     CON_PAGER_ACTION_FN PagerAction;
-    CON_PAGER_OUTPUT_LINE_FN OutputLine;
+    CON_PAGER_LINE_FN PagerLine;
     PCTCH TextBuff; /* The text buffer */
     DWORD ich; /* The current index of character */
     DWORD cch; /* The total number of characters */

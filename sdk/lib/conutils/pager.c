@@ -56,17 +56,17 @@ static inline INT GetWidthOfCharCJK(UINT nCodePage, WCHAR ch)
 }
 
 static BOOL CALLBACK
-ConDefaultOutputLine(PCON_PAGER Pager, LPCWSTR line, DWORD cch, BOOL *pbNewLine)
+ConDefaultPagerLine(PCON_PAGER Pager, LPCWSTR line, DWORD cch, DWORD *pdwFlags)
 {
     CON_STREAM_WRITE(Pager->Screen->Stream, line, cch);
     return TRUE;
 }
 
 static VOID CALLBACK
-ConCallOutputLine(PCON_PAGER Pager, LPCWSTR line, DWORD cch, BOOL *pbNewLine)
+ConCallPagerLine(PCON_PAGER Pager, LPCWSTR line, DWORD cch, DWORD *pdwFlags)
 {
-    if (!Pager->OutputLine || !(*Pager->OutputLine)(Pager, line, cch, pbNewLine))
-        ConDefaultOutputLine(Pager, line, cch, pbNewLine);
+    if (!Pager->PagerLine || !(*Pager->PagerLine)(Pager, line, cch, pdwFlags))
+        ConDefaultPagerLine(Pager, line, cch, pdwFlags);
 }
 
 static BOOL CALLBACK ConPagerDefaultAction(PCON_PAGER Pager)
@@ -84,7 +84,7 @@ static BOOL CALLBACK ConPagerDefaultAction(PCON_PAGER Pager)
     UINT nCodePage;
     BOOL IsCJK = FALSE;
     BOOL IsDoubleWidthCharTrailing = FALSE;
-    BOOL bNewLine;
+    DWORD dwFlags = 0;
 
     if (ich >= cch)
         return TRUE;
@@ -103,20 +103,22 @@ static BOOL CALLBACK ConPagerDefaultAction(PCON_PAGER Pager)
         }
         if (TextBuff[ich] == TEXT('\n') || iColumn + nWidthOfChar >= ScreenColumns)
         {
-            bNewLine = TRUE;
-            ConCallOutputLine(Pager, &TextBuff[ichLast],
-                              ich - ichLast + !IsDoubleWidthCharTrailing, &bNewLine);
+            dwFlags = CON_PAGER_LINE_FLAG_NEWLINE;
+            ConCallPagerLine(Pager, &TextBuff[ichLast],
+                              ich - ichLast + !IsDoubleWidthCharTrailing, &dwFlags);
             ichLast = ich + !IsDoubleWidthCharTrailing;
             if (IsDoubleWidthCharTrailing)
             {
-                bNewLine = TRUE;
-                ConCallOutputLine(Pager, L" ", 1, &bNewLine);
+                CON_STREAM_WRITE(Pager->Screen->Stream, L" ", 1);
                 --ich;
             }
-            if (bNewLine)
+            if (dwFlags & CON_PAGER_LINE_FLAG_NEWLINE)
                 ++iLine;
-            ++lineno;
+            if (TextBuff[ich] == TEXT('\n'))
+                ++lineno;
             iColumn = 0;
+            if (dwFlags & (CON_PAGER_LINE_FLAG_QUIT | CON_PAGER_LINE_FLAG_PROMPT))
+                break;
             continue;
         }
         iColumn += nWidthOfChar;
@@ -124,9 +126,10 @@ static BOOL CALLBACK ConPagerDefaultAction(PCON_PAGER Pager)
 
     if (ich < cch)
     {
-        bNewLine = FALSE;
-        ConCallOutputLine(Pager, &TextBuff[ichLast], ich - ichLast, &bNewLine);
+        dwFlags &= ~CON_PAGER_LINE_FLAG_NEWLINE;
+        ConCallPagerLine(Pager, &TextBuff[ichLast], ich - ichLast, &dwFlags);
     }
+
     if (iLine >= ScrollRows)
     {
         iLine = 0; /* Reset the count of lines being printed */
@@ -137,6 +140,9 @@ static BOOL CALLBACK ConPagerDefaultAction(PCON_PAGER Pager)
     Pager->iColumn = iColumn;
     Pager->iLine = iLine;
     Pager->lineno = lineno;
+
+    if (dwFlags & CON_PAGER_LINE_FLAG_QUIT)
+        return TRUE;
 
     return ich >= cch;
 }

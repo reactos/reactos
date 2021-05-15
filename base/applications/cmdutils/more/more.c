@@ -63,40 +63,37 @@ BOOL bEnableExtensions = TRUE; // FIXME: By default, it should be FALSE.
 static DWORD s_dwFlags = 0;
 static DWORD s_nTabWidth = 8;
 static DWORD s_nNextLineNo = 0;
-static BOOL s_fOutput = TRUE;
 
 static inline BOOL IsFlag(LPCWSTR param)
 {
     return param[0] == L'/' || param[0] == L'+';
 }
 
-static BOOL CALLBACK ConPagerActionDoNothing(PCON_PAGER Pager)
+static BOOL CALLBACK MorePageActionDoNothing(PCON_PAGER Pager)
 {
     return Pager->ich >= Pager->cch;
 }
 
-static BOOL CALLBACK ConPagerActionNextFile(PCON_PAGER Pager)
+static BOOL CALLBACK MorePageActionNextFile(PCON_PAGER Pager)
 {
     return TRUE;
 }
 
 static BOOL CALLBACK
-ConDoOutputLine(PCON_PAGER Pager, LPCWSTR line, DWORD cch, BOOL *pbNewLine)
+MorePagerLine(PCON_PAGER Pager, LPCWSTR line, DWORD cch, DWORD *pdwFlags)
 {
-    if (Pager->lineno < s_nNextLineNo)
+    if (s_dwFlags & FLAG_PLUSn)
     {
-        if (!s_fOutput)
+        if (Pager->lineno < s_nNextLineNo)
         {
-            *pbNewLine = FALSE;
+            *pdwFlags &= ~CON_PAGER_LINE_FLAG_NEWLINE;
             return TRUE; /* Don't output */
         }
+        s_dwFlags &= ~FLAG_PLUSn;
+        return FALSE; /* Do output */
     }
-    else
-    {
-        /* Reset */
-        s_nNextLineNo = 0;
-        s_fOutput = TRUE;
-    }
+
+    s_nNextLineNo = 0;
     return FALSE; /* Do output */
 }
 
@@ -108,7 +105,9 @@ PagePrompt(PCON_PAGER Pager, DWORD Done, DWORD Total)
     DWORD dwMode;
     KEY_EVENT_RECORD KeyEvent;
     BOOL fCtrlPressed;
+    DWORD nLines = 0;
     static UINT s_nPromptID = IDS_CONTINUE_PROGRESS;
+    static WCHAR s_chSubCommand = 0;
 
     /*
      * Just use the simple prompt if the file being displayed is the STDIN,
@@ -157,13 +156,12 @@ PagePrompt(PCON_PAGER Pager, DWORD Done, DWORD Total)
     dwMode &= ~ENABLE_PROCESSED_INPUT;
     SetConsoleMode(hInput, dwMode);
 
-    do
+    // FIXME: Does not support TTY yet!
+    for (;;)
     {
-        // FIXME: Does not support TTY yet!
-
-        // ConInKey(&KeyEvent);
         INPUT_RECORD ir;
         DWORD dwRead;
+
         do
         {
             ReadConsoleInput(hInput, &ir, 1, &dwRead);
@@ -172,11 +170,45 @@ PagePrompt(PCON_PAGER Pager, DWORD Done, DWORD Total)
 
         /* Got our key, return to caller */
         KeyEvent = ir.Event.KeyEvent;
-    }
-    while ((KeyEvent.wVirtualKeyCode == VK_SHIFT) ||
-           (KeyEvent.wVirtualKeyCode == VK_MENU) ||
-           (KeyEvent.wVirtualKeyCode == VK_CONTROL));
 
+        switch (KeyEvent.wVirtualKeyCode)
+        {
+            case VK_SHIFT:
+            case VK_MENU:
+            case VK_CONTROL:
+                continue;
+            default:
+            {
+                if (s_chSubCommand == L'P' || s_chSubCommand == L'S')
+                {
+                    WCHAR ch = KeyEvent.uChar.UnicodeChar;
+                    if (L'0' <= ch && ch <= L'9')
+                    {
+                        nLines *= 10;
+                        nLines += ch - L'0';
+                        ConStreamWrite(Pager->Screen->Stream, &ch, 1);
+                        continue;
+                    }
+                    if (KeyEvent.wVirtualKeyCode == VK_RETURN)
+                    {
+                        if (s_chSubCommand != L'P' && s_chSubCommand != L'S')
+                        {
+                            s_chSubCommand = L'N';
+                        }
+                        goto skip;
+                    }
+                    else if (KeyEvent.wVirtualKeyCode == VK_ESCAPE)
+                    {
+                        s_chSubCommand = L'N';
+                        goto skip;
+                    }
+                    break;
+                }
+                goto skip;
+            }
+        }
+    }
+skip:
     /* AddBreakHandler */
     SetConsoleCtrlHandler(NULL, FALSE);
     /* ConInEnable */
@@ -184,13 +216,31 @@ PagePrompt(PCON_PAGER Pager, DWORD Done, DWORD Total)
     dwMode |= ENABLE_PROCESSED_INPUT;
     SetConsoleMode(hInput, dwMode);
 
-    fCtrlPressed = !!(KeyEvent.dwControlKeyState & (LEFT_CTRL_PRESSED | RIGHT_CTRL_PRESSED));
-
     /*
      * Erase the full line where the cursor is, and move
      * the cursor back to the beginning of the line.
      */
     ConClearLine(Pager->Screen->Stream);
+
+    switch (s_chSubCommand)
+    {
+        case L'P':
+            s_chSubCommand = 0;
+            Pager->ScrollRows = nLines;
+            return TRUE;
+        case L'S':
+            s_chSubCommand = 0;
+            s_dwFlags |= FLAG_PLUSn;
+            s_nNextLineNo = Pager->lineno + nLines;
+            return TRUE;
+        case L'N':
+            s_chSubCommand = 0;
+            Pager->PagerAction = MorePageActionDoNothing;
+            return TRUE;
+    }
+    s_chSubCommand = 0;
+
+    fCtrlPressed = !!(KeyEvent.dwControlKeyState & (LEFT_CTRL_PRESSED | RIGHT_CTRL_PRESSED));
 
     /* Ctrl+C or Ctrl+Esc: Control Break */
     if ((KeyEvent.wVirtualKeyCode == VK_ESCAPE) ||
@@ -216,26 +266,44 @@ PagePrompt(PCON_PAGER Pager, DWORD Done, DWORD Total)
         /* 'F': Next file */
         if ((KeyEvent.wVirtualKeyCode == L'F') && !fCtrlPressed)
         {
-            Pager->PagerAction = ConPagerActionNextFile;
+            Pager->PagerAction = MorePageActionNextFile;
             return TRUE;
         }
 
         /* '?': Show Options */
         if (KeyEvent.uChar.UnicodeChar == L'?' && !fCtrlPressed)
         {
-            Pager->PagerAction = ConPagerActionDoNothing;
+            Pager->PagerAction = MorePageActionDoNothing;
             s_nPromptID = IDS_CONTINUE_OPTIONS;
             return TRUE;
         }
 
-        // TODO: More features
-    }
+        /* [Enter] key: One line */
+        if ((KeyEvent.wVirtualKeyCode == VK_RETURN) && !fCtrlPressed)
+        {
+            Pager->ScrollRows = min(1, Pager->ScreenRows - 1);
+            return TRUE;
+        }
 
-    /* [Enter] key: One line */
-    if ((KeyEvent.wVirtualKeyCode == VK_RETURN) && !fCtrlPressed)
-    {
-        Pager->ScrollRows = min(1, Pager->ScreenRows - 1);
-        return TRUE;
+        /* 'P': Display n lines */
+        if (KeyEvent.uChar.UnicodeChar == L'P' && !fCtrlPressed)
+        {
+            Pager->PagerAction = MorePageActionDoNothing;
+            s_nPromptID = IDS_CONTINUE_LINES;
+            s_chSubCommand = L'P';
+            return TRUE;
+        }
+
+        /* 'S': Skip n lines */
+        if (KeyEvent.uChar.UnicodeChar == L'S' && !fCtrlPressed)
+        {
+            Pager->PagerAction = MorePageActionDoNothing;
+            s_nPromptID = IDS_CONTINUE_LINES;
+            s_chSubCommand = L'S';
+            return TRUE;
+        }
+
+        // TODO: More features
     }
 
     /* [Space] key: One page */
@@ -244,7 +312,7 @@ PagePrompt(PCON_PAGER Pager, DWORD Done, DWORD Total)
         return TRUE;
     }
 
-    Pager->PagerAction = ConPagerActionDoNothing;
+    Pager->PagerAction = MorePageActionDoNothing;
     return TRUE;
 }
 
@@ -701,7 +769,6 @@ int wmain(int argc, WCHAR* argv[])
                 LPWSTR endptr;
                 s_dwFlags |= FLAG_PLUSn;
                 s_nNextLineNo = wcstoul(&argv[i][1], &endptr, 10);
-                s_fOutput = FALSE;
                 if (*endptr == 0)
                     continue;
             }
@@ -724,7 +791,7 @@ int wmain(int argc, WCHAR* argv[])
         return 0;
     }
 
-    Pager.OutputLine = ConDoOutputLine;
+    Pager.PagerLine = MorePagerLine;
 
     /* Special case where we run 'MORE' without any argument: we use STDIN */
     if (!HasFiles)
