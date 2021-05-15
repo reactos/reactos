@@ -74,6 +74,11 @@ static BOOL CALLBACK ConPagerActionDoNothing(PCON_PAGER Pager)
     return Pager->ich >= Pager->cch;
 }
 
+static BOOL CALLBACK ConPagerActionNextFile(PCON_PAGER Pager)
+{
+    return TRUE;
+}
+
 static BOOL
 __stdcall
 PagePrompt(PCON_PAGER Pager, DWORD Done, DWORD Total)
@@ -174,29 +179,41 @@ PagePrompt(PCON_PAGER Pager, DWORD Done, DWORD Total)
         return FALSE;
     }
 
-    /* 'Q': Quit */
-    // FIXME: Available only when command extensions are enabled.
-    if ((KeyEvent.wVirtualKeyCode == L'Q') && !fCtrlPressed)
+    if (s_dwFlags & FLAG_E) /* If extended features are available */
     {
-        /* We break, output a newline */
-        WCHAR ch = L'\n';
-        ConStreamWrite(Pager->Screen->Stream, &ch, 1);
-        return FALSE;
+        /* 'Q': Quit */
+        if ((KeyEvent.wVirtualKeyCode == L'Q') && !fCtrlPressed)
+        {
+            /* We break, output a newline */
+            WCHAR ch = L'\n';
+            ConStreamWrite(Pager->Screen->Stream, &ch, 1);
+            return FALSE;
+        }
+
+        /* 'F': Next file */
+        if ((KeyEvent.wVirtualKeyCode == L'F') && !fCtrlPressed)
+        {
+            Pager->PagerAction = ConPagerActionNextFile;
+            return TRUE;
+        }
+
+        // TODO: More features
     }
 
-    /* [Enter] key: One line go */
+    /* [Enter] key: One line */
     if ((KeyEvent.wVirtualKeyCode == VK_RETURN) && !fCtrlPressed)
     {
         Pager->ScrollRows = min(1, Pager->ScreenRows - 1);
         return TRUE;
     }
 
-    if (fCtrlPressed)
+    /* [Space] key: One page */
+    if ((KeyEvent.wVirtualKeyCode == VK_SPACE) && !fCtrlPressed)
     {
-        Pager->PagerAction = ConPagerActionDoNothing;
         return TRUE;
     }
 
+    Pager->PagerAction = ConPagerActionDoNothing;
     return TRUE;
 }
 
