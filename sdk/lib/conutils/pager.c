@@ -196,7 +196,6 @@ ConWritePaging(
 
         /* PagePrompt might change these values */
         Pager->PagerAction = ConPagerDefaultAction;
-        Pager->OutputLine = ConDefaultOutputLine;
         Pager->ScrollRows = Pager->ScreenRows - 1;
 
         /* Make sure the user doesn't have the screen too small */

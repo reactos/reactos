@@ -63,6 +63,7 @@ BOOL bEnableExtensions = TRUE; // FIXME: By default, it should be FALSE.
 static DWORD s_dwFlags = 0;
 static DWORD s_nTabWidth = 8;
 static DWORD s_nNextLineNo = 0;
+static BOOL s_fOutput = TRUE;
 
 static inline BOOL IsFlag(LPCWSTR param)
 {
@@ -84,11 +85,18 @@ ConDoOutputLine(PCON_PAGER Pager, LPCWSTR line, DWORD cch, BOOL *pbNewLine)
 {
     if (Pager->lineno < s_nNextLineNo)
     {
-        *pbNewLine = FALSE;
-        return TRUE; /* Don't output */
+        if (!s_fOutput)
+        {
+            *pbNewLine = FALSE;
+            return TRUE; /* Don't output */
+        }
     }
-
-    s_nNextLineNo = 0;
+    else
+    {
+        /* Reset */
+        s_nNextLineNo = 0;
+        s_fOutput = TRUE;
+    }
     return FALSE; /* Do output */
 }
 
@@ -693,6 +701,7 @@ int wmain(int argc, WCHAR* argv[])
                 LPWSTR endptr;
                 s_dwFlags |= FLAG_PLUSn;
                 s_nNextLineNo = wcstoul(&argv[i][1], &endptr, 10);
+                s_fOutput = FALSE;
                 if (*endptr == 0)
                     continue;
             }
