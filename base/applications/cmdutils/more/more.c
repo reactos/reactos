@@ -67,7 +67,7 @@ static DWORD s_nPlusN = 0;
 
 static inline BOOL IsFlag(LPCWSTR param)
 {
-    return param[0] == '/' || param[0] == '+';
+    return param[0] == L'/' || param[0] == L'+';
 }
 
 static BOOL CALLBACK ConPagerDoNothing(PCON_PAGER Pager)
