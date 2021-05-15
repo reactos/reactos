@@ -53,12 +53,14 @@ HANDLE hKeyboard;
 /* Enable/Disable extensions */
 BOOL bEnableExtensions = TRUE; // FIXME: By default, it should be FALSE.
 
-#define FLAG_E (1 << 0)
-#define FLAG_C (1 << 1)
-#define FLAG_P (1 << 2)
-#define FLAG_S (1 << 3)
-#define FLAG_Tn (1 << 4)
-#define FLAG_PLUSn (1 << 5)
+#define FLAG_HELP (1 << 0)
+#define FLAG_E (1 << 1)
+#define FLAG_C (1 << 2)
+#define FLAG_P (1 << 3)
+#define FLAG_S (1 << 4)
+#define FLAG_Tn (1 << 5)
+#define FLAG_PLUSn (1 << 6)
+
 static DWORD s_dwFlags = 0;
 static DWORD s_nTabWidth = 8;
 static DWORD s_nPlusN = 0;
@@ -596,6 +598,9 @@ int wmain(int argc, WCHAR* argv[])
         {
             switch (towupper(argv[i][1]))
             {
+                case L'?':
+                    s_dwFlags |= FLAG_HELP;
+                    continue;
                 case L'E':
                     s_dwFlags |= FLAG_E;
                     continue;
@@ -638,6 +643,12 @@ int wmain(int argc, WCHAR* argv[])
         {
             HasArg = TRUE;
         }
+    }
+
+    if (s_dwFlags & FLAG_HELP)
+    {
+        ConResPuts(StdOut, IDS_USAGE);
+        return 0;
     }
 
     /* Special case where we run 'MORE' without any argument: we use STDIN */
