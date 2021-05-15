@@ -67,7 +67,7 @@ static BOOL s_bPrevLineIsBlank = FALSE;
 
 static inline BOOL IsFlag(LPCWSTR param)
 {
-    return param[0] == L'/' || param[0] == L'+';
+    return param[0] == L'/' || param[0] == L'-' || param[0] == L'+';
 }
 
 static BOOL CALLBACK MorePageActionDoNothing(PCON_PAGER Pager)
@@ -783,7 +783,7 @@ int wmain(int argc, WCHAR* argv[])
     HasFiles = FALSE;
     for (i = 1; i < argc; i++)
     {
-        if (argv[i][0] == L'/')
+        if (argv[i][0] == L'/' || argv[i][0] == L'-')
         {
             switch (towupper(argv[i][1]))
             {
