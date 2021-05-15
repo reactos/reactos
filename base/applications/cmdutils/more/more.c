@@ -31,6 +31,8 @@
 #include <winreg.h>
 #include <winuser.h>
 
+#include <stdlib.h>
+
 #include <conutils.h>
 
 #include "resource.h"
@@ -50,6 +52,21 @@ HANDLE hKeyboard;
 
 /* Enable/Disable extensions */
 BOOL bEnableExtensions = TRUE; // FIXME: By default, it should be FALSE.
+
+#define FLAG_E (1 << 0)
+#define FLAG_C (1 << 1)
+#define FLAG_P (1 << 2)
+#define FLAG_S (1 << 3)
+#define FLAG_Tn (1 << 4)
+#define FLAG_PLUSn (1 << 5)
+static DWORD s_dwFlags = 0;
+static DWORD s_nTabWidth = 8;
+static DWORD s_nPlusN = 0;
+
+static inline BOOL IsFlag(LPCWSTR param)
+{
+    return param[0] == '/' || param[0] == '+';
+}
 
 static BOOL CALLBACK ConPagerDoNothing(PCON_PAGER Pager)
 {
@@ -619,9 +636,58 @@ int wmain(int argc, WCHAR* argv[])
         goto Quit;
     }
 
+    /* Parse flags */
+    for (i = 1; i < argc; i++)
+    {
+        if (argv[i][0] == L'/')
+        {
+            switch (towupper(argv[i][1]))
+            {
+                case L'E':
+                    s_dwFlags |= FLAG_E;
+                    continue;
+                case L'C':
+                    s_dwFlags |= FLAG_C;
+                    continue;
+                case L'P':
+                    s_dwFlags |= FLAG_P;
+                    continue;
+                case L'S':
+                    s_dwFlags |= FLAG_S;
+                    continue;
+                case L'T':
+                    if (L'0' <= argv[i][2] && argv[i][2] <= L'9')
+                    {
+                        s_dwFlags |= FLAG_Tn;
+                        s_nTabWidth = wcstoul(&argv[i][2], NULL, 10);
+                        continue;
+                    }
+                    break;
+                default:
+                    break;
+            }
+        }
+        else if (argv[i][0] == L'+')
+        {
+            s_dwFlags |= FLAG_PLUSn;
+            if (L'0' <= argv[i][1] && argv[i][1] <= L'9')
+            {
+                s_nPlusN = wcstoul(&argv[i][1], NULL, 10);
+                continue;
+            }
+        }
+        if (IsFlag(argv[i]))
+        {
+            /* TODO: error */
+        }
+    }
+
     /* We have files: read them and output them to STDOUT */
     for (i = 1; i < argc; i++)
     {
+        if (IsFlag(argv[i]))
+            continue;
+
         GetFullPathNameW(argv[i], ARRAYSIZE(szFullPath), szFullPath, NULL);
         hFile = CreateFileW(szFullPath, 
                             GENERIC_READ,
