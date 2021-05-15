@@ -14,4 +14,5 @@ BEGIN
     IDS_CONTINUE "-- 繼續 --"
     IDS_CONTINUE_PROGRESS "-- 繼續 (%d%%) --"
     IDS_FILE_ACCESS "無法訪問檔案 %s。\n"
+    IDS_BAD_FLAG "Invalid argument - '%ls'\n"
 END

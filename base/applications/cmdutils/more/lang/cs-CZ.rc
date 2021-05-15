@@ -19,4 +19,5 @@ BEGIN
     IDS_CONTINUE "-- Pokračovat --"
     IDS_CONTINUE_PROGRESS "-- Pokračovat (%d%%) --"
     IDS_FILE_ACCESS "Nelze získat přístup k souboru %s.\n"
+    IDS_BAD_FLAG "Invalid argument - '%ls'\n"
 END

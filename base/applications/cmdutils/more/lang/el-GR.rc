@@ -12,4 +12,5 @@ BEGIN
     IDS_CONTINUE "-- Συνέχεια --"
     IDS_CONTINUE_PROGRESS "-- Συνέχεια (%d%%) --"
     IDS_FILE_ACCESS "Δεν ήταν δυνατή η προσπέλαση του αρχείου %s.\n"
+    IDS_BAD_FLAG "Invalid argument - '%ls'\n"
 END

@@ -12,4 +12,5 @@ BEGIN
     IDS_CONTINUE "-- Jätka --"
     IDS_CONTINUE_PROGRESS "-- Jätka (%d%%) --"
     IDS_FILE_ACCESS "Ei saa ligi failile %s.\n"
+    IDS_BAD_FLAG "Invalid argument - '%ls'\n"
 END

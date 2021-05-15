@@ -12,4 +12,5 @@ BEGIN
     IDS_CONTINUE "-- Continuar --"
     IDS_CONTINUE_PROGRESS "-- Continuar (%d%%) --"
     IDS_FILE_ACCESS "No se puede acceder al fichero %s.\n"
+    IDS_BAD_FLAG "Invalid argument - '%ls'\n"
 END

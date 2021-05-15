@@ -660,7 +660,8 @@ int wmain(int argc, WCHAR* argv[])
 
         if (IsFlag(argv[i]))
         {
-            /* TODO: error */
+            ConResPrintf(StdErr, IDS_BAD_FLAG, argv[i]);
+            return 1;
         }
         else
         {

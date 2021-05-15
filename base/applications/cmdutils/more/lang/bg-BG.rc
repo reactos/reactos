@@ -12,4 +12,5 @@ BEGIN
     IDS_CONTINUE "-- Продължаване --"
     IDS_CONTINUE_PROGRESS "-- Продължаване (%d%%) --"
     IDS_FILE_ACCESS "Няма достъп до файл %s.\n"
+    IDS_BAD_FLAG "Invalid argument - '%ls'\n"
 END
