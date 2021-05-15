@@ -3,12 +3,29 @@ LANGUAGE LANG_GREEK, SUBLANG_DEFAULT
 STRINGTABLE
 BEGIN
     IDS_USAGE "Εμφανίζει τα δεδομένα σελίδα-παρά-σελίδα στην οθόνη.\n\n\
-  MORE < [Δίσκος:][Μονοπάτι]Όνομα αρχείου\n\
-  Εντολή | MORE\n\
-  MORE [Δίσκος:][Μονοπάτι]Όνομα αρχείου\n\n\
-  [Δίσκος:][Μονοπάτι]Όνομα αρχείου    Το αρχείο, τα δεδομένα του οποίου θα εμφανιστούν.\n\
-  Εντολή\t\t     Η εντολή, της οποίας η έξοδος θα εμφανιστεί.\n\n\
-  Στη γραμμή εντολών ""-- Συνέχεια --"" μπορείτε να πατήσετε οποιοδήποτε κουμπί για να δείτε την επόμενη σελίδα.\n"
+  MORE [flags] < [Drive:][Path]File name\n\
+  Command | MORE [flags]\n\
+  MORE [flags] [Drive:][Path]File name\n\n\
+Flags:\n\
+  /E        Enable extended features.\n\
+  /C        Clear screen before displaying page.\n\
+  /P        Expand form-feed characters.\n\
+  /S        Shrink multiple blank lines to a single line.\n\
+  /Tn       Expand tabs to n spaces (default: 8).\n\
+  +n        Start displaying the first file at line n.\n\
+  [Drive:][Path]File name    A file, whose content shall be displayed.\n\
+  Command\t\t     A command, whose output shall be displayed.\n\n\
+If extended features are enabled, the following commands are available\n\
+at ""-- Continue --"" prompt:\n\
+   P n      Display n lines.\n\
+   S n      Skip n lines.\n\
+   F        Display next file.\n\
+   Q        Quit.\n\
+   =        Show line number.\n\
+   ?        Show help line.\n\
+   <Space>  Display next page.\n\
+   <Enter>  Display next line.\n"
+
     IDS_CONTINUE "-- Συνέχεια --"
     IDS_CONTINUE_PROGRESS "-- Συνέχεια (%d%%) --"
     IDS_FILE_ACCESS "Δεν ήταν δυνατή η προσπέλαση του αρχείου %s.\n"

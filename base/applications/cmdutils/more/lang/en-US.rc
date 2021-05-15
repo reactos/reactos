@@ -3,12 +3,29 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 STRINGTABLE
 BEGIN
     IDS_USAGE "Displays data page-by-page on the screen.\n\n\
-  MORE < [Drive:][Path]File name\n\
-  Command | MORE\n\
-  MORE [Drive:][Path]File name\n\n\
+  MORE [flags] < [Drive:][Path]File name\n\
+  Command | MORE [flags]\n\
+  MORE [flags] [Drive:][Path]File name\n\n\
+Flags:\n\
+  /E        Enable extended features.\n\
+  /C        Clear screen before displaying page.\n\
+  /P        Expand form-feed characters.\n\
+  /S        Shrink multiple blank lines to a single line.\n\
+  /Tn       Expand tabs to n spaces (default: 8).\n\
+  +n        Start displaying the first file at line n.\n\
   [Drive:][Path]File name    A file, whose content shall be displayed.\n\
   Command\t\t     A command, whose output shall be displayed.\n\n\
-  At the prompt ""-- Continue --"" you can press any key to show the next page.\n"
+If extended features are enabled, the following commands are available\n\
+at ""-- Continue --"" prompt:\n\
+   P n      Display n lines.\n\
+   S n      Skip n lines.\n\
+   F        Display next file.\n\
+   Q        Quit.\n\
+   =        Show line number.\n\
+   ?        Show help line.\n\
+   <Space>  Display next page.\n\
+   <Enter>  Display next line.\n"
+
     IDS_CONTINUE "-- Continue --"
     IDS_CONTINUE_PROGRESS "-- Continue (%d%%) --"
     IDS_FILE_ACCESS "Cannot access the file %s.\n"

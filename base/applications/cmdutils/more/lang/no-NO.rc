@@ -3,12 +3,29 @@ LANGUAGE LANG_NORWEGIAN, SUBLANG_NEUTRAL
 STRINGTABLE
 BEGIN
     IDS_USAGE "Vis data side-etter-side på skjermen.\n\n\
-  MORE < [Stasjon:][Mappe]Filnavn\n\
-  command | MORE\n\
-  MORE [Stasjon:][Mappe]Filenavn\n\n\
-  [Stasjon:][Mappe]Filnavn    En fil, Velg innhold som skal vises.\n\
-  Command\t\t     En kommando, Velg output som skal vises.\n\n\
-  At the prompt ""-- Fortsett --"" du kan trykke en tast for å vise neste side.\n"
+  MORE [flags] < [Drive:][Path]File name\n\
+  Command | MORE [flags]\n\
+  MORE [flags] [Drive:][Path]File name\n\n\
+Flags:\n\
+  /E        Enable extended features.\n\
+  /C        Clear screen before displaying page.\n\
+  /P        Expand form-feed characters.\n\
+  /S        Shrink multiple blank lines to a single line.\n\
+  /Tn       Expand tabs to n spaces (default: 8).\n\
+  +n        Start displaying the first file at line n.\n\
+  [Drive:][Path]File name    A file, whose content shall be displayed.\n\
+  Command\t\t     A command, whose output shall be displayed.\n\n\
+If extended features are enabled, the following commands are available\n\
+at ""-- Continue --"" prompt:\n\
+   P n      Display n lines.\n\
+   S n      Skip n lines.\n\
+   F        Display next file.\n\
+   Q        Quit.\n\
+   =        Show line number.\n\
+   ?        Show help line.\n\
+   <Space>  Display next page.\n\
+   <Enter>  Display next line.\n"
+
     IDS_CONTINUE "-- Fortsett --"
     IDS_CONTINUE_PROGRESS "-- Fortsett (%d%%) --"
     IDS_FILE_ACCESS "Får ikke tilgang til filen %s.\n"

@@ -7,13 +7,29 @@ LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
 STRINGTABLE
 BEGIN
     IDS_USAGE "Zobrazuje údaje, stránku za stránkou, na obrazovke.\n\n\
-  MORE < [Jednotka:][Cesta]Názov súboru\n\
-  Príkaz | MORE\n\
-  MORE [Jednotka:][Cesta]Názov súboru\n\n\
-  [Jednotka:][Cesta]Názov súboru    Súbor, ktorého obsah má byť zobrazený.\n\
-  Príkaz\t\t     Príkaz, ktorého výstup má byť zobrazený.\n\n\
-  Pri výzve ""-- Pokračujte --"" môžete stlačiť ľubovoľný kláves\n\
-  k zobrazeniu nasledujúcej stránky.\n"
+  MORE [flags] < [Drive:][Path]File name\n\
+  Command | MORE [flags]\n\
+  MORE [flags] [Drive:][Path]File name\n\n\
+Flags:\n\
+  /E        Enable extended features.\n\
+  /C        Clear screen before displaying page.\n\
+  /P        Expand form-feed characters.\n\
+  /S        Shrink multiple blank lines to a single line.\n\
+  /Tn       Expand tabs to n spaces (default: 8).\n\
+  +n        Start displaying the first file at line n.\n\
+  [Drive:][Path]File name    A file, whose content shall be displayed.\n\
+  Command\t\t     A command, whose output shall be displayed.\n\n\
+If extended features are enabled, the following commands are available\n\
+at ""-- Continue --"" prompt:\n\
+   P n      Display n lines.\n\
+   S n      Skip n lines.\n\
+   F        Display next file.\n\
+   Q        Quit.\n\
+   =        Show line number.\n\
+   ?        Show help line.\n\
+   <Space>  Display next page.\n\
+   <Enter>  Display next line.\n"
+
     IDS_CONTINUE "-- Pokračujte --"
     IDS_CONTINUE_PROGRESS "-- Pokračujte (%d%%) --"
     IDS_FILE_ACCESS "Neviem získať prístup k súboru %s.\n"

@@ -3,12 +3,29 @@ LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
 STRINGTABLE
 BEGIN
     IDS_USAGE "Affiche les données page par page à l'écran.\n\n\
-  MORE < [Lecteur:][Chemin]Nom du fichier\n\
-  Commande | MORE\n\
-  MORE [Lecteur:][Chemin]Nom du fichier\n\n\
-  [Lecteur:][Chemin]Nom du fichier    Un fichier, dont le contenu sera affiché.\n\
-  Commande\t\t     Une commande, dont la sortie sera affichée.\n\n\
-  À l'invite ""-- Continuer --"" Vous pouvez appuyer sur n'importe quelle touche pour afficher la page suivante.\n"
+  MORE [flags] < [Drive:][Path]File name\n\
+  Command | MORE [flags]\n\
+  MORE [flags] [Drive:][Path]File name\n\n\
+Flags:\n\
+  /E        Enable extended features.\n\
+  /C        Clear screen before displaying page.\n\
+  /P        Expand form-feed characters.\n\
+  /S        Shrink multiple blank lines to a single line.\n\
+  /Tn       Expand tabs to n spaces (default: 8).\n\
+  +n        Start displaying the first file at line n.\n\
+  [Drive:][Path]File name    A file, whose content shall be displayed.\n\
+  Command\t\t     A command, whose output shall be displayed.\n\n\
+If extended features are enabled, the following commands are available\n\
+at ""-- Continue --"" prompt:\n\
+   P n      Display n lines.\n\
+   S n      Skip n lines.\n\
+   F        Display next file.\n\
+   Q        Quit.\n\
+   =        Show line number.\n\
+   ?        Show help line.\n\
+   <Space>  Display next page.\n\
+   <Enter>  Display next line.\n"
+
     IDS_CONTINUE "-- Continuer --"
     IDS_CONTINUE_PROGRESS "-- Continuer (%d %%) --"
     IDS_FILE_ACCESS "Impossible d'accéder au fichier %s.\n"
