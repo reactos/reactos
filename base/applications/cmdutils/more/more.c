@@ -384,6 +384,11 @@ top:
     /* [Space] key: One page */
     if (KeyEvent.wVirtualKeyCode == VK_SPACE)
     {
+        if (s_dwFlags & FLAG_C)
+        {
+            /* Clear the screen */
+            ConClearScreen(Pager->Screen);
+        }
         Pager->ScrollRows = Pager->ScreenRows - 1;
         return TRUE;
     }
@@ -923,12 +928,6 @@ int wmain(int argc, WCHAR* argv[])
     {
         ConResPuts(StdOut, IDS_USAGE);
         return 0;
-    }
-
-    if (s_dwFlags & FLAG_C)
-    {
-        /* Clear the screen */
-        ConClearScreen(&Screen);
     }
 
     Pager.PagerLine = MorePagerLine;
