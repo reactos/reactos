@@ -1132,7 +1132,7 @@ SetSearchPathMode(IN DWORD dwFlags)
         return FALSE;
     }
 
-    return NT_SUCCESS(Status);
+    return TRUE;
 }
 
 /*
