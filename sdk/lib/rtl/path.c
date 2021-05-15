@@ -2171,7 +2171,7 @@ NTSTATUS NTAPI RtlNtPathNameToDosPathName(IN ULONG Flags,
  */
 NTSTATUS
 NTAPI
-RtlSetSearchPathMode(IN ULONG Flags)
+RtlSetSearchPathMode(_In_ ULONG Flags)
 {
     LONG RetVal;
 
