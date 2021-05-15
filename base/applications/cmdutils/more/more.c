@@ -599,26 +599,48 @@ int wmain(int argc, WCHAR* argv[])
             switch (towupper(argv[i][1]))
             {
                 case L'?':
-                    s_dwFlags |= FLAG_HELP;
-                    continue;
+                    if (argv[i][2] == 0)
+                    {
+                        s_dwFlags |= FLAG_HELP;
+                        continue;
+                    }
+                    break;
                 case L'E':
-                    s_dwFlags |= FLAG_E;
-                    continue;
+                    if (argv[i][2] == 0)
+                    {
+                        s_dwFlags |= FLAG_E;
+                        continue;
+                    }
+                    break;
                 case L'C':
-                    s_dwFlags |= FLAG_C;
-                    continue;
+                    if (argv[i][2] == 0)
+                    {
+                        s_dwFlags |= FLAG_C;
+                        continue;
+                    }
+                    break;
                 case L'P':
-                    s_dwFlags |= FLAG_P;
-                    continue;
+                    if (argv[i][2] == 0)
+                    {
+                        s_dwFlags |= FLAG_P;
+                        continue;
+                    }
+                    break;
                 case L'S':
-                    s_dwFlags |= FLAG_S;
-                    continue;
+                    if (argv[i][2] == 0)
+                    {
+                        s_dwFlags |= FLAG_S;
+                        continue;
+                    }
+                    break;
                 case L'T':
                     if (L'0' <= argv[i][2] && argv[i][2] <= L'9')
                     {
+                        LPWSTR endptr;
                         s_dwFlags |= FLAG_Tn;
-                        s_nTabWidth = wcstoul(&argv[i][2], NULL, 10);
-                        continue;
+                        s_nTabWidth = wcstoul(&argv[i][2], &endptr, 10);
+                        if (*endptr == 0)
+                            continue;
                     }
                     break;
                 default:
@@ -629,9 +651,11 @@ int wmain(int argc, WCHAR* argv[])
         {
             if (L'0' <= argv[i][1] && argv[i][1] <= L'9')
             {
+                LPWSTR endptr;
                 s_dwFlags |= FLAG_PLUSn;
-                s_nPlusN = wcstoul(&argv[i][1], NULL, 10);
-                continue;
+                s_nPlusN = wcstoul(&argv[i][1], &endptr, 10);
+                if (*endptr == 0)
+                    continue;
             }
         }
 
