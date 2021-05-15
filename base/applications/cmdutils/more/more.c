@@ -23,10 +23,12 @@
  */
 
 #include <stdio.h>
+#include <stdlib.h>
 
 #include <windef.h>
 #include <winbase.h>
 #include <winnls.h>
+#include <winreg.h>
 #include <winuser.h>
 
 #include <conutils.h>
@@ -45,6 +47,9 @@ DWORD dwSumReadBytes, dwSumReadChars;
 HANDLE hFile = INVALID_HANDLE_VALUE;
 HANDLE hStdIn, hStdOut;
 HANDLE hKeyboard;
+
+/* Enable/Disable extensions */
+BOOL bEnableExtensions = TRUE; // FIXME: By default, it should be FALSE.
 
 
 static BOOL
@@ -440,6 +445,47 @@ FileGetString(
     return TRUE;
 }
 
+
+static VOID
+LoadRegistrySettings(HKEY hKeyRoot)
+{
+    LONG lRet;
+    HKEY hKey;
+    DWORD dwType, len;
+    /*
+     * Buffer big enough to hold the string L"4294967295",
+     * corresponding to the literal 0xFFFFFFFF (MAXULONG) in decimal.
+     */
+    DWORD Buffer[6];
+
+    lRet = RegOpenKeyExW(hKeyRoot,
+                         L"Software\\Microsoft\\Command Processor",
+                         0,
+                         KEY_QUERY_VALUE,
+                         &hKey);
+    if (lRet != ERROR_SUCCESS)
+        return;
+
+    len = sizeof(Buffer);
+    lRet = RegQueryValueExW(hKey,
+                            L"EnableExtensions",
+                            NULL,
+                            &dwType,
+                            (LPBYTE)&Buffer,
+                            &len);
+    if (lRet == ERROR_SUCCESS)
+    {
+        /* Overwrite the default setting */
+        if (dwType == REG_DWORD)
+            bEnableExtensions = !!*(PDWORD)Buffer;
+        else if (dwType == REG_SZ)
+            bEnableExtensions = (_wtol((PWSTR)Buffer) == 1);
+    }
+    // else, use the default setting set globally.
+
+    RegCloseKey(hKey);
+}
+
 // INT CommandMore(LPTSTR cmd, LPTSTR param)
 int wmain(int argc, WCHAR* argv[])
 {
@@ -479,6 +525,13 @@ int wmain(int argc, WCHAR* argv[])
         ConResPuts(StdOut, IDS_USAGE);
         return 0;
     }
+
+    /* Load the registry settings */
+    LoadRegistrySettings(HKEY_LOCAL_MACHINE);
+    LoadRegistrySettings(HKEY_CURRENT_USER);
+
+    // TODO: First, load the "MORE" environment variable and parse it,
+    // then parse the command-line parameters.
 
     // FIXME: Parse all the remaining parameters.
     // Then the file list can be found at the very end.
