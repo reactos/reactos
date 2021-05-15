@@ -169,7 +169,8 @@ ConWritePaging(
     if (!ConGetScreenInfo(Pager->Screen, &csbi))
     {
         /* We assume it's a file handle */
-        CON_STREAM_WRITE(Pager->Screen->Stream, szStr, len);
+        DWORD dwFlags = 0;
+        ConCallPagerLine(Pager, szStr, len, &dwFlags);
         return TRUE;
     }
 

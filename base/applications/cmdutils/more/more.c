@@ -96,10 +96,37 @@ static BOOL IsBlankLine(LPCWSTR line, DWORD cch)
 static BOOL CALLBACK
 MorePagerExpandTab(PCON_PAGER Pager, LPCWSTR line, DWORD cch, DWORD *pdwFlags)
 {
-    WCHAR sz2[512];
-    DWORD ich1, ich2, spaces, iColumn = Pager->iColumn;
+    LPWSTR psz;
+    DWORD ich1, ich2, cch2, spaces, iColumn = Pager->iColumn;
+    BOOL ret;
 
-    for (ich1 = ich2 = 0; ich1 < cch && ich2 < _countof(sz2); ++ich1)
+    for (ich1 = ich2 = 0; ich1 < cch; ++ich1)
+    {
+        if (line[ich1] == L'\t')
+        {
+            spaces = s_nTabWidth - (iColumn % s_nTabWidth);
+            iColumn += spaces;
+            ich2 += spaces;
+        }
+        else if (line[ich1] == L'\n')
+        {
+            iColumn = 0;
+            ++ich2;
+        }
+        else
+        {
+            ++ich2;
+            ++iColumn;
+        }
+    }
+
+    cch2 = ich2;
+    psz = (LPWSTR)malloc((cch2 + 1) * sizeof(WCHAR));
+    if (!psz)
+        return FALSE;
+
+    iColumn = Pager->iColumn;
+    for (ich1 = ich2 = 0; ich1 < cch && ich2 < cch2; ++ich1)
     {
         if (line[ich1] == L'\t')
         {
@@ -107,18 +134,25 @@ MorePagerExpandTab(PCON_PAGER Pager, LPCWSTR line, DWORD cch, DWORD *pdwFlags)
             iColumn += spaces;
             while (spaces-- > 0)
             {
-                sz2[ich2++] = L' ';
+                psz[ich2++] = L' ';
             }
+        }
+        else if (line[ich1] == L'\n')
+        {
+            iColumn = 0;
+            psz[ich2++] = line[ich1];
         }
         else
         {
-            sz2[ich2++] = line[ich1];
+            psz[ich2++] = line[ich1];
             ++iColumn;
         }
     }
 
+    ret = (*Pager->DefPagerLine)(Pager, psz, ich2, pdwFlags);
+    free(psz);
     Pager->iColumn = iColumn;
-    return (*Pager->DefPagerLine)(Pager, sz2, ich2, pdwFlags);
+    return ret;
 }
 
 static BOOL CALLBACK
