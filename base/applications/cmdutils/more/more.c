@@ -214,9 +214,17 @@ PagePrompt(PCON_PAGER Pager, DWORD Done, DWORD Total)
                 continue;
             default:
             {
+                WCHAR ch;
+                fCtrlPressed = !!(KeyEvent.dwControlKeyState &
+                                  (LEFT_CTRL_PRESSED | RIGHT_CTRL_PRESSED));
+                if (fCtrlPressed)
+                {
+                    s_chSubCommand = 0;
+                    goto skip;
+                }
                 if (s_chSubCommand == L'P' || s_chSubCommand == L'S')
                 {
-                    WCHAR ch = KeyEvent.uChar.UnicodeChar;
+                    ch = KeyEvent.uChar.UnicodeChar;
                     if (L'0' <= ch && ch <= L'9')
                     {
                         nLines *= 10;
@@ -236,6 +244,25 @@ PagePrompt(PCON_PAGER Pager, DWORD Done, DWORD Total)
                     {
                         s_chSubCommand = L'-';
                         goto skip;
+                    }
+                    else if (KeyEvent.wVirtualKeyCode == VK_BACK)
+                    {
+                        CONSOLE_SCREEN_BUFFER_INFO csbi;
+                        HANDLE hOutput = ConStreamGetOSHandle(Pager->Screen->Stream);
+                        ConGetScreenInfo(Pager->Screen, &csbi);
+
+                        if (nLines == 0)
+                            continue;
+                        nLines /= 10;
+
+                        if (csbi.dwCursorPosition.X > 0)
+                            csbi.dwCursorPosition.X = csbi.dwCursorPosition.X - 1;
+                        SetConsoleCursorPosition(hOutput, csbi.dwCursorPosition);
+
+                        ch = L' ';
+                        ConStreamWrite(Pager->Screen->Stream, &ch, 1);
+                        SetConsoleCursorPosition(hOutput, csbi.dwCursorPosition);
+                        continue;
                     }
                     break;
                 }
@@ -275,8 +302,6 @@ skip:
             return TRUE;
     }
     s_chSubCommand = 0;
-
-    fCtrlPressed = !!(KeyEvent.dwControlKeyState & (LEFT_CTRL_PRESSED | RIGHT_CTRL_PRESSED));
 
     /* Ctrl+C or Ctrl+Esc: Control Break */
     if ((KeyEvent.wVirtualKeyCode == VK_ESCAPE) ||
