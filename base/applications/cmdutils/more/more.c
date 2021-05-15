@@ -62,7 +62,7 @@ BOOL bEnableExtensions = TRUE; // FIXME: By default, it should be FALSE.
 
 static DWORD s_dwFlags = 0;
 static DWORD s_nTabWidth = 8;
-static DWORD s_nPlusN = 0;
+static DWORD s_nNextLineNo = 0;
 
 static inline BOOL IsFlag(LPCWSTR param)
 {
@@ -77,6 +77,19 @@ static BOOL CALLBACK ConPagerActionDoNothing(PCON_PAGER Pager)
 static BOOL CALLBACK ConPagerActionNextFile(PCON_PAGER Pager)
 {
     return TRUE;
+}
+
+static BOOL CALLBACK
+ConDoOutputLine(PCON_PAGER Pager, LPCWSTR line, DWORD cch, BOOL *pbNewLine)
+{
+    if (Pager->lineno < s_nNextLineNo)
+    {
+        *pbNewLine = FALSE;
+        return TRUE; /* Don't output */
+    }
+
+    s_nNextLineNo = 0;
+    return FALSE; /* Do output */
 }
 
 static BOOL
@@ -679,7 +692,7 @@ int wmain(int argc, WCHAR* argv[])
             {
                 LPWSTR endptr;
                 s_dwFlags |= FLAG_PLUSn;
-                s_nPlusN = wcstoul(&argv[i][1], &endptr, 10);
+                s_nNextLineNo = wcstoul(&argv[i][1], &endptr, 10);
                 if (*endptr == 0)
                     continue;
             }
@@ -701,6 +714,8 @@ int wmain(int argc, WCHAR* argv[])
         ConResPuts(StdOut, IDS_USAGE);
         return 0;
     }
+
+    Pager.OutputLine = ConDoOutputLine;
 
     /* Special case where we run 'MORE' without any argument: we use STDIN */
     if (!HasFiles)

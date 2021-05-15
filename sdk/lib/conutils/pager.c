@@ -56,18 +56,17 @@ static inline INT GetWidthOfCharCJK(UINT nCodePage, WCHAR ch)
 }
 
 static BOOL CALLBACK
-ConDefaultOutputLine(PCON_PAGER Pager, LPCWSTR line, DWORD cch, DWORD lineno)
+ConDefaultOutputLine(PCON_PAGER Pager, LPCWSTR line, DWORD cch, BOOL *pbNewLine)
 {
     CON_STREAM_WRITE(Pager->Screen->Stream, line, cch);
     return TRUE;
 }
 
-static BOOL CALLBACK
-ConCallOutputLine(PCON_PAGER Pager, LPCWSTR line, DWORD cch, DWORD lineno)
+static VOID CALLBACK
+ConCallOutputLine(PCON_PAGER Pager, LPCWSTR line, DWORD cch, BOOL *pbNewLine)
 {
-    if (!(*Pager->OutputLine)(Pager, line, cch, lineno))
-        ConDefaultOutputLine(Pager, line, cch, lineno);
-    return TRUE;
+    if (!Pager->OutputLine || !(*Pager->OutputLine)(Pager, line, cch, pbNewLine))
+        ConDefaultOutputLine(Pager, line, cch, pbNewLine);
 }
 
 static BOOL CALLBACK ConPagerDefaultAction(PCON_PAGER Pager)
@@ -75,8 +74,9 @@ static BOOL CALLBACK ConPagerDefaultAction(PCON_PAGER Pager)
     PCTCH TextBuff = Pager->TextBuff;
     DWORD ich = Pager->ich;
     DWORD cch = Pager->cch;
-    DWORD iLine = Pager->iLine;
     DWORD iColumn = Pager->iColumn;
+    DWORD iLine = Pager->iLine;
+    DWORD lineno = Pager->lineno;
     DWORD ScreenColumns = Pager->ScreenColumns;
     DWORD ScrollRows = Pager->ScrollRows;
     DWORD ichLast = ich;
@@ -84,6 +84,7 @@ static BOOL CALLBACK ConPagerDefaultAction(PCON_PAGER Pager)
     UINT nCodePage;
     BOOL IsCJK = FALSE;
     BOOL IsDoubleWidthCharTrailing = FALSE;
+    BOOL bNewLine;
 
     if (ich >= cch)
         return TRUE;
@@ -93,6 +94,7 @@ static BOOL CALLBACK ConPagerDefaultAction(PCON_PAGER Pager)
 
     for (; ich < cch && iLine < ScrollRows; ++ich)
     {
+        Pager->lineno = lineno;
         if (IsCJK)
         {
             nWidthOfChar = GetWidthOfCharCJK(nCodePage, TextBuff[ich]);
@@ -101,26 +103,31 @@ static BOOL CALLBACK ConPagerDefaultAction(PCON_PAGER Pager)
         }
         if (TextBuff[ich] == TEXT('\n') || iColumn + nWidthOfChar >= ScreenColumns)
         {
+            bNewLine = TRUE;
             ConCallOutputLine(Pager, &TextBuff[ichLast],
-                              ich - ichLast + !IsDoubleWidthCharTrailing, iLine + 1);
+                              ich - ichLast + !IsDoubleWidthCharTrailing, &bNewLine);
             ichLast = ich + !IsDoubleWidthCharTrailing;
             if (IsDoubleWidthCharTrailing)
             {
-                ConCallOutputLine(Pager, L" ", 1, iLine + 1);
+                bNewLine = TRUE;
+                ConCallOutputLine(Pager, L" ", 1, &bNewLine);
                 --ich;
             }
-            ++iLine;
+            if (bNewLine)
+                ++iLine;
+            ++lineno;
             iColumn = 0;
             continue;
         }
         iColumn += nWidthOfChar;
     }
 
-    if (iLine < ScrollRows)
+    if (ich < cch)
     {
-        ConCallOutputLine(Pager, &TextBuff[ichLast], ich - ichLast, iLine + 1);
+        bNewLine = FALSE;
+        ConCallOutputLine(Pager, &TextBuff[ichLast], ich - ichLast, &bNewLine);
     }
-    else
+    if (iLine >= ScrollRows)
     {
         iLine = 0; /* Reset the count of lines being printed */
         iColumn = 0; /* Reset the index of column */
@@ -129,6 +136,7 @@ static BOOL CALLBACK ConPagerDefaultAction(PCON_PAGER Pager)
     Pager->ich = ich;
     Pager->iColumn = iColumn;
     Pager->iLine = iLine;
+    Pager->lineno = lineno;
 
     return ich >= cch;
 }
@@ -150,8 +158,9 @@ ConWritePaging(
 
     if (StartPaging)
     {
-        Pager->iLine = 0; /* Reset the line count */
+        Pager->iLine = 0; /* Reset the output line count */
         Pager->iColumn = 0; /* Reset the column index */
+        Pager->lineno = 1; /* Reset the line number */
     }
     if (szStr == NULL)
         return TRUE; /* Return if no string has been given */
@@ -169,7 +178,6 @@ ConWritePaging(
     Pager->ScreenRows = csbi.srWindow.Bottom - csbi.srWindow.Top + 1;
     Pager->ScrollRows = Pager->ScreenRows - 1;
     Pager->PagerAction = ConPagerDefaultAction;
-    Pager->OutputLine = ConDefaultOutputLine;
     Pager->ich = 0;
     Pager->cch = len;
     Pager->TextBuff = szStr;
