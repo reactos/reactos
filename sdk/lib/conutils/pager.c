@@ -122,7 +122,7 @@ static BOOL CALLBACK ConPagerDefaultAction(PCON_PAGER Pager)
         iColumn += nWidthOfChar;
     }
 
-    if (ich < cch)
+    if (iColumn > 0)
     {
         dwFlags &= ~CON_PAGER_LINE_FLAG_NEWLINE;
         ConCallPagerLine(Pager, &TextBuff[ichLast], ich - ichLast, &dwFlags);
