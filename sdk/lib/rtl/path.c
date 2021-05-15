@@ -8,6 +8,7 @@
  *                  Gunnar Dalsnes
  *                  Alex Ionescu (alex.ionescu@reactos.org)
  *                  Pierre Schweitzer (pierre@reactos.org)
+ *                  Oleg Dubinskiy (oleg.dubinskij2013@yandex.ua)
  */
 
 /* INCLUDES *******************************************************************/
@@ -51,6 +52,11 @@ static const UNICODE_STRING RtlpDefaultExtension = RTL_CONSTANT_STRING(L".DLL");
 static const UNICODE_STRING RtlpDotLocal = RTL_CONSTANT_STRING(L".Local\\");
 static const UNICODE_STRING RtlpPathDividers = RTL_CONSTANT_STRING(L"\\/");
 
+/* Search mode used by RtlDosSearchPath_Ustr() and RtlSetSeatchPathMode() */
+// TODO: this value should be obtained from predefined registry entry.
+// Perhaps RtlDosSearchPath_Ustr() should do it.
+// For now initialize it as zero.
+static LONG RtlPathSafeMode = 0;
 
 PRTLP_CURDIR_REF RtlpCurDirRef;
 
@@ -2158,6 +2164,44 @@ NTSTATUS NTAPI RtlNtPathNameToDosPathName(IN ULONG Flags,
     }
 
     return STATUS_SUCCESS;
+}
+
+/*
+ * @implemented
+ */
+NTSTATUS
+NTAPI
+RtlSetSearchPathMode(IN ULONG Flags)
+{
+    LONG RetVal;
+
+    switch (Flags)
+    {
+    case BASE_SEARCH_PATH_ENABLE_SAFE_SEARCHMODE:
+        RetVal = 1;
+        break;
+    case BASE_SEARCH_PATH_DISABLE_SAFE_SEARCHMODE:
+        RetVal = 0;
+        break;
+    case BASE_SEARCH_PATH_ENABLE_SAFE_SEARCHMODE | BASE_SEARCH_PATH_PERMANENT:
+        InterlockedExchange((LONG *)&RtlPathSafeMode, 2);
+        return STATUS_SUCCESS;
+    default:
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    for (;;)
+    {
+        LONG PrevVal = RtlPathSafeMode;
+
+        if (PrevVal == 2)
+            break;  /* Permanently set */
+
+        if (InterlockedCompareExchange((LONG *)&RtlPathSafeMode, RetVal, PrevVal) == PrevVal)
+            return STATUS_SUCCESS;
+    }
+
+    return STATUS_ACCESS_DENIED;
 }
 
 /*

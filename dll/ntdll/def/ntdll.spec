@@ -1158,6 +1158,7 @@
 @ stub -version=0x600+ RtlSetProcessDebugInformation
 @ cdecl RtlSetProcessIsCritical(long ptr long)
 @ stdcall RtlSetSaclSecurityDescriptor(ptr long ptr long)
+@ stdcall RtlSetSearchPathMode(long)
 @ stdcall RtlSetSecurityDescriptorRMControl(ptr ptr)
 @ stdcall RtlSetSecurityObject(long ptr ptr ptr ptr)
 @ stdcall RtlSetSecurityObjectEx(long ptr ptr long ptr ptr)
