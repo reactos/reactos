@@ -105,7 +105,7 @@ static BOOL CALLBACK ConPagerDefaultAction(PCON_PAGER Pager)
         {
             dwFlags = CON_PAGER_LINE_FLAG_NEWLINE;
             ConCallPagerLine(Pager, &TextBuff[ichLast],
-                              ich - ichLast + !IsDoubleWidthCharTrailing, &dwFlags);
+                             ich - ichLast + !IsDoubleWidthCharTrailing, &dwFlags);
             ichLast = ich + !IsDoubleWidthCharTrailing;
             if (IsDoubleWidthCharTrailing)
             {
@@ -117,8 +117,6 @@ static BOOL CALLBACK ConPagerDefaultAction(PCON_PAGER Pager)
             if (TextBuff[ich] == TEXT('\n'))
                 ++lineno;
             iColumn = 0;
-            if (dwFlags & (CON_PAGER_LINE_FLAG_QUIT | CON_PAGER_LINE_FLAG_PROMPT))
-                break;
             continue;
         }
         iColumn += nWidthOfChar;
@@ -140,9 +138,6 @@ static BOOL CALLBACK ConPagerDefaultAction(PCON_PAGER Pager)
     Pager->iColumn = iColumn;
     Pager->iLine = iLine;
     Pager->lineno = lineno;
-
-    if (dwFlags & CON_PAGER_LINE_FLAG_QUIT)
-        return TRUE;
 
     return ich >= cch;
 }
@@ -191,6 +186,13 @@ ConWritePaging(
     if (len == 0)
         return TRUE;
 
+    /* Make sure the user doesn't have the screen too small */
+    if (Pager->ScrollRows <= 3)
+    {
+        CON_STREAM_WRITE(Pager->Screen->Stream, szStr, len);
+        return TRUE;
+    }
+
     while (!(*Pager->PagerAction)(Pager))
     {
         /* Recalculate the screen extent in case the user redimensions the window. */
@@ -203,10 +205,6 @@ ConWritePaging(
         /* PagePrompt might change these values */
         Pager->PagerAction = ConPagerDefaultAction;
         Pager->ScrollRows = Pager->ScreenRows - 1;
-
-        /* Make sure the user doesn't have the screen too small */
-        if (Pager->ScrollRows <= 3)
-            break;
 
         /* Prompt the user; give him some values for statistics */
         if (!PagePrompt(Pager, Pager->ich, Pager->cch))

@@ -35,8 +35,6 @@ typedef BOOL (CALLBACK *CON_PAGER_LINE_FN)(
 
 // flags for CON_PAGER_LINE_FN
 #define CON_PAGER_LINE_FLAG_NEWLINE (1 << 0)
-#define CON_PAGER_LINE_FLAG_PROMPT (1 << 1)
-#define CON_PAGER_LINE_FLAG_QUIT (1 << 2)
 
 typedef struct _CON_PAGER
 {
