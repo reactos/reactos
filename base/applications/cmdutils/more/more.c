@@ -316,7 +316,7 @@ skip:
         /* [Enter] key: One line */
         if ((KeyEvent.wVirtualKeyCode == VK_RETURN) && !fCtrlPressed)
         {
-            Pager->ScrollRows = min(1, Pager->ScreenRows - 1);
+            Pager->ScrollRows = 1;
             return TRUE;
         }
 
@@ -350,6 +350,7 @@ skip:
     /* [Space] key: One page */
     if ((KeyEvent.wVirtualKeyCode == VK_SPACE) && !fCtrlPressed)
     {
+        Pager->ScrollRows = Pager->ScreenRows - 1;
         return TRUE;
     }
 

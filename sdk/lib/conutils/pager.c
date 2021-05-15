@@ -163,8 +163,6 @@ ConWritePaging(
         Pager->iColumn = 0; /* Reset the column index */
         Pager->lineno = 1; /* Reset the line number */
     }
-    if (szStr == NULL)
-        return TRUE; /* Return if no string has been given */
 
     /* Get the size of the visual screen that can be printed to */
     if (!ConGetScreenInfo(Pager->Screen, &csbi))
@@ -177,19 +175,20 @@ ConWritePaging(
     /* Fill the pager info */
     Pager->ScreenColumns = csbi.srWindow.Right - csbi.srWindow.Left + 1;
     Pager->ScreenRows = csbi.srWindow.Bottom - csbi.srWindow.Top + 1;
-    Pager->ScrollRows = Pager->ScreenRows - 1;
     Pager->DefPagerAction = ConPagerDefaultAction;
     Pager->PagerAction = ConPagerDefaultAction;
     Pager->DefPagerLine = ConDefaultPagerLine;
     Pager->ich = 0;
     Pager->cch = len;
     Pager->TextBuff = szStr;
+    if (StartPaging)
+        Pager->ScrollRows = Pager->ScreenRows - 1;
 
-    if (len == 0)
+    if (len == 0 || szStr == NULL)
         return TRUE;
 
     /* Make sure the user doesn't have the screen too small */
-    if (Pager->ScrollRows <= 3)
+    if (Pager->ScreenRows < 4)
     {
         CON_STREAM_WRITE(Pager->Screen->Stream, szStr, len);
         return TRUE;
@@ -204,9 +203,8 @@ ConWritePaging(
             Pager->ScreenRows = csbi.srWindow.Bottom - csbi.srWindow.Top + 1;
         }
 
-        /* PagePrompt might change these values */
+        /* PagePrompt might change this value */
         Pager->PagerAction = ConPagerDefaultAction;
-        Pager->ScrollRows = Pager->ScreenRows - 1;
 
         /* Prompt the user; give him some values for statistics */
         if (!PagePrompt(Pager, Pager->ich, Pager->cch))
