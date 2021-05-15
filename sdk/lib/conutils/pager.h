@@ -56,7 +56,7 @@ typedef struct _CON_PAGER
 
 #define InitializeConPager(pPager, pScreen) \
 do { \
-    ZeroMemory(pPager, sizeof(*pPager)); \
+    ZeroMemory((pPager), sizeof(*(pPager))); \
     (pPager)->Screen = (pScreen); \
 } while (0)
 
