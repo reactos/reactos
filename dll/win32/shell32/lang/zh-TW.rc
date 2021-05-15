@@ -144,11 +144,7 @@ FONT 9, "新細明體"
 BEGIN
     ICON "", IDC_ABOUT_ICON, 7, 55, 21, 20
     LTEXT "", IDC_ABOUT_APPNAME, 35, 55, 200, 10
-    LTEXT "版本 ", IDC_STATIC, 35, 65, 28, 10
-    LTEXT KERNEL_VERSION_STR, IDC_STATIC, 63, 65, 27, 10
-    LTEXT " (", IDC_STATIC, 90, 65, 5, 10
-    LTEXT KERNEL_VERSION_BUILD_STR, IDC_STATIC, 95, 65, 58, 10
-    LTEXT ")", IDC_STATIC, 153, 65, 5, 10
+    LTEXT "", IDC_ABOUT_VERSION, 35, 65, 250, 10
     LTEXT "Copyright 1998-", IDC_STATIC, 35, 75, 53, 10
     LTEXT COPYRIGHT_YEAR, IDC_STATIC, 88, 75, 17, 10
     LTEXT " ReactOS Team\0", IDC_STATIC, 105, 75, 53, 10
@@ -760,6 +756,9 @@ BEGIN
     IDS_FONTS_DESCRIPTION "新增、變更和管理您電腦上的字型。"
     IDS_PRINTERS_DESCRIPTION "顯示已安裝的印表機和傳真印表機並幫助您新增印表機。"
 
+    /* About shell dialog version string */
+    IDS_ABOUT_VERSION_STRING "版本 %S (%S)"
+
     /* context menus */
     IDS_VIEW_LARGE "大圖示(&G)"
     IDS_VIEW_SMALL "小圖示(&M)"
@@ -806,7 +805,7 @@ BEGIN
     IDS_RESTART_PROMPT "您確定要重新開機嗎?"
     IDS_SHUTDOWN_TITLE "關機"
     IDS_SHUTDOWN_PROMPT "您確定要關機嗎?"
-    
+
     /* Format Dialog Strings */
     IDS_FORMAT_TITLE "格式化本機磁碟"
     IDS_FORMAT_WARNING "警告: 格式化將會清除磁碟上的所有數據。\n想要格式化這個磁碟, 請點選確定。若想退出，請點選 [返回]。"

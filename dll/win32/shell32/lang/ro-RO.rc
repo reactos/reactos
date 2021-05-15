@@ -137,11 +137,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", IDC_ABOUT_ICON, 7, 55, 21, 20
     LTEXT "", IDC_ABOUT_APPNAME, 35, 55, 200, 10
-    LTEXT "Versiune", IDC_STATIC, 35, 65, 28, 10
-    LTEXT KERNEL_VERSION_STR, IDC_STATIC, 68, 65, 27, 10
-    LTEXT " (", IDC_STATIC, 95, 65, 5, 10
-    LTEXT KERNEL_VERSION_BUILD_STR, IDC_STATIC, 100, 65, 58, 10
-    LTEXT ")", IDC_STATIC, 158, 65, 5, 10
+    LTEXT "", IDC_ABOUT_VERSION, 35, 65, 250, 10
     LTEXT "Drept de autor 1998-", IDC_STATIC, 35, 75, 68, 10
     LTEXT COPYRIGHT_YEAR, IDC_STATIC, 103, 75, 17, 10
     LTEXT " Echipa ReactOS\0", IDC_STATIC, 120, 75, 53, 10
@@ -753,6 +749,9 @@ BEGIN
     IDS_FONTS_DESCRIPTION "Adăugarea, modificarea, și gestiunea fonturilor din calculator."
     IDS_PRINTERS_DESCRIPTION "Prezentarea imprimantelor și faxurilor, precum și asistență la instalarea unora noi."
 
+    /* About shell dialog version string */
+    IDS_ABOUT_VERSION_STRING "Versiune %S (%S)"
+
     /* context menus */
     IDS_VIEW_LARGE "D&ale"
     IDS_VIEW_SMALL "&Pictograme"
@@ -799,7 +798,7 @@ BEGIN
     IDS_RESTART_PROMPT "Doriți să reporniți sistemul?"
     IDS_SHUTDOWN_TITLE "Închidere"
     IDS_SHUTDOWN_PROMPT "Doriți să închideți calculatorul?"
-    
+
     /* Format Dialog Strings */
     IDS_FORMAT_TITLE "Formatare disc local"
     IDS_FORMAT_WARNING "AVERTISMENT: Formatarea va șterge TOATE datele de pe acest disc.\nConfirmați pentru a formata, anulați pentru a ieși."

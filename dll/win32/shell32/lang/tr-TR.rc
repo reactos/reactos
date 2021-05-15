@@ -137,11 +137,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", IDC_ABOUT_ICON, 7, 55, 21, 20
     LTEXT "", IDC_ABOUT_APPNAME, 35, 55, 200, 10
-    LTEXT "Sürüm ", IDC_STATIC, 35, 65, 28, 10
-    LTEXT KERNEL_VERSION_STR, IDC_STATIC, 63, 65, 27, 10
-    LTEXT " (", IDC_STATIC, 90, 65, 5, 10
-    LTEXT KERNEL_VERSION_BUILD_STR, IDC_STATIC, 95, 65, 58, 10
-    LTEXT ")", IDC_STATIC, 153, 65, 5, 10
+    LTEXT "", IDC_ABOUT_VERSION, 35, 65, 250, 10
     LTEXT "Telif Hakkı 1998-", IDC_STATIC, 35, 75, 53, 10
     LTEXT COPYRIGHT_YEAR, IDC_STATIC, 88, 75, 17, 10
     LTEXT " ReactOS Takımı\0", IDC_STATIC, 105, 75, 53, 10
@@ -753,6 +749,9 @@ BEGIN
     IDS_FONTS_DESCRIPTION "Bilgisayarınızda yazı tiplerini ekle, değiştir ve yönet."
     IDS_PRINTERS_DESCRIPTION "Kurulu yazıcıları ve belgegeçer yazıcılarını gösterir ve yenilerini eklemene yardımcı olur."
 
+    /* About shell dialog version string */
+    IDS_ABOUT_VERSION_STRING "Sürüm %S (%S)"
+
     /* context menus */
     IDS_VIEW_LARGE "&Büyük Simgeler"
     IDS_VIEW_SMALL "&Küçük Simgeler"
@@ -799,7 +798,7 @@ BEGIN
     IDS_RESTART_PROMPT "Dizgeyi yeniden başlatmak ister misiniz?"
     IDS_SHUTDOWN_TITLE "Bilgisayarı Kapat"
     IDS_SHUTDOWN_PROMPT "Bilgisayarı kapatmak ister misiniz?"
-    
+
     /* Format Dialog Strings */
     IDS_FORMAT_TITLE "Format Local Disk"
     IDS_FORMAT_WARNING "WARNING: Formatting will erase ALL data on this disk.\nTo format the disk, click OK. To quit, click CANCEL."
