@@ -70,7 +70,7 @@ static inline BOOL IsFlag(LPCWSTR param)
     return param[0] == L'/' || param[0] == L'+';
 }
 
-static BOOL CALLBACK ConPagerDoNothing(PCON_PAGER Pager)
+static BOOL CALLBACK ConPagerActionDoNothing(PCON_PAGER Pager)
 {
     return Pager->ich >= Pager->cch;
 }
@@ -194,7 +194,7 @@ PagePrompt(PCON_PAGER Pager, DWORD Done, DWORD Total)
 
     if (fCtrlPressed)
     {
-        Pager->PagerAction = ConPagerDoNothing;
+        Pager->PagerAction = ConPagerActionDoNothing;
         return TRUE;
     }
 
