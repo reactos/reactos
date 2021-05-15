@@ -115,13 +115,10 @@ PagePrompt(PCON_PAGER Pager, DWORD Done, DWORD Total)
     {
         ConResPuts(Pager->Screen->Stream, IDS_CONTINUE);
     }
-    else if (s_fShowOptions)
-    {
-        ConResPuts(Pager->Screen->Stream, IDS_CONTINUE_OPTIONS);
-    }
     else
     {
-        ConResPrintf(Pager->Screen->Stream, IDS_CONTINUE_PROGRESS,
+        ConResPrintf(Pager->Screen->Stream,
+                     (s_fShowOptions ? IDS_CONTINUE_OPTIONS : IDS_CONTINUE_PROGRESS),
                      // (dwSumReadChars - Total + Done) * 100 / dwFileSize
                      (dwSumReadBytes - (Total - Done) *
                         (dwSumReadBytes / dwSumReadChars)) * 100 / dwFileSize

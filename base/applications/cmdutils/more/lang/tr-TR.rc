@@ -32,5 +32,5 @@ at ""-- Continue --"" prompt:\n\
     IDS_CONTINUE_PROGRESS "-- Sürdür (%%%d) --"
     IDS_FILE_ACCESS "%s kütüğüne erişilemiyor.\n"
     IDS_BAD_FLAG "Invalid argument - '%ls'\n"
-    IDS_CONTINUE_OPTIONS "-- Continue --[Options: psfq=<Space><Enter>]"
+    IDS_CONTINUE_OPTIONS "-- Continue (%d%%) --[Options: psfq=<Space><Enter>]"
 END
