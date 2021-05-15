@@ -267,6 +267,7 @@ skip:
             s_chSubCommand = 0;
             s_dwFlags |= FLAG_PLUSn;
             s_nNextLineNo = Pager->lineno + nLines;
+            Pager->ScrollRows = Pager->ScreenRows - 1;
             return TRUE;
         case L'-':
             s_chSubCommand = 0;
