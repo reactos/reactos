@@ -30,4 +30,5 @@ at ""-- Continue --"" prompt:\n\
     IDS_CONTINUE_PROGRESS "-- Продължаване (%d%%) --"
     IDS_FILE_ACCESS "Няма достъп до файл %s.\n"
     IDS_BAD_FLAG "Invalid argument - '%ls'\n"
+    IDS_CONTINUE_OPTIONS "-- Continue --[Options: psfq=<Space><Enter>]"
 END

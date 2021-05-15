@@ -39,4 +39,5 @@ at ""-- Continue --"" prompt:\n\
     IDS_CONTINUE_PROGRESS "-- Toliau (%d%%) --"
     IDS_FILE_ACCESS "Nepavyko atverti bylos %s.\n"
     IDS_BAD_FLAG "Invalid argument - '%ls'\n"
+    IDS_CONTINUE_OPTIONS "-- Continue --[Options: psfq=<Space><Enter>]"
 END
