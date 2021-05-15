@@ -175,7 +175,6 @@ ConWritePaging(
     /* Fill the pager info */
     Pager->ScreenColumns = csbi.srWindow.Right - csbi.srWindow.Left + 1;
     Pager->ScreenRows = csbi.srWindow.Bottom - csbi.srWindow.Top + 1;
-    Pager->DefPagerAction = ConPagerDefaultAction;
     Pager->PagerAction = ConPagerDefaultAction;
     Pager->DefPagerLine = ConDefaultPagerLine;
     Pager->ich = 0;

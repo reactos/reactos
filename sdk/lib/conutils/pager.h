@@ -44,7 +44,6 @@ typedef struct _CON_PAGER
     DWORD ScrollRows;
     CON_PAGER_ACTION_FN PagerAction; /* The action function */
     CON_PAGER_LINE_FN PagerLine; /* The line function */
-    CON_PAGER_ACTION_FN DefPagerAction; /* Default action function */
     CON_PAGER_LINE_FN DefPagerLine; /* Default line function */
     PCTCH TextBuff; /* The text buffer */
     DWORD ich; /* The current index of character */
