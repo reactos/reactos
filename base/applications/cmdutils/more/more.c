@@ -118,6 +118,7 @@ MorePagerExpandTab(PCON_PAGER Pager, LPCWSTR line, DWORD cch, DWORD *pdwFlags)
         }
     }
 
+    Pager->iColumn = iColumn;
     return (*Pager->DefPagerLine)(Pager, sz2, ich2, pdwFlags);
 }
 

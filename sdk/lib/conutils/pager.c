@@ -126,6 +126,7 @@ static BOOL CALLBACK ConPagerDefaultAction(PCON_PAGER Pager)
     {
         dwFlags &= ~CON_PAGER_LINE_FLAG_NEWLINE;
         ConCallPagerLine(Pager, &TextBuff[ichLast], ich - ichLast, &dwFlags);
+        iColumn = Pager->iColumn;
     }
 
     if (iLine >= ScrollRows)
