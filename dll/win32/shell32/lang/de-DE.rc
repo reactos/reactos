@@ -134,11 +134,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", IDC_ABOUT_ICON, 7, 55, 21, 20
     LTEXT "", IDC_ABOUT_APPNAME, 35, 55, 200, 10
-    LTEXT "Version ", IDC_STATIC, 35, 65, 28, 10
-    LTEXT KERNEL_VERSION_STR, IDC_STATIC, 63, 65, 27, 10
-    LTEXT " (", IDC_STATIC, 90, 65, 5, 10
-    LTEXT KERNEL_VERSION_BUILD_STR, IDC_STATIC, 95, 65, 58, 10
-    LTEXT ")", IDC_STATIC, 153, 65, 5, 10
+    LTEXT "", IDC_ABOUT_VERSION, 35, 65, 250, 10
     LTEXT "Copyright 1998-", IDC_STATIC, 35, 75, 53, 10
     LTEXT COPYRIGHT_YEAR, IDC_STATIC, 88, 75, 17, 10
     LTEXT " Das ReactOS Team\0", IDC_STATIC, 105, 75, 70, 10
@@ -157,7 +153,7 @@ IDD_ABOUT_AUTHORS DIALOGEX 35, 90, 235, 85
 STYLE DS_SHELLFONT | WS_CHILD
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "ReactOS wurde Ihnen zur Verfügung gestellt von:", IDC_STATIC, 0, 0, 180, 10
+    LTEXT "ReactOS wird Ihnen zur Verfügung gestellt von:", IDC_STATIC, 0, 0, 180, 10
     LISTBOX IDC_ABOUT_AUTHORS_LISTBOX, 0, 10, 165, 75
 END
 
@@ -693,6 +689,9 @@ BEGIN
     IDS_FOLDER_OPTIONS_DESCRIPTION "Anpassen der Ansicht von Dateien, Ordnern und Verwalten von Dateiendungen."
     IDS_FONTS_DESCRIPTION "Hinzufügen, Ändern und Verwalten von Schriftarten."
     IDS_PRINTERS_DESCRIPTION "Anzeigen und Hinzufügen von Drucker und Faxgeräten."
+
+    /* About shell dialog version string */
+    IDS_ABOUT_VERSION_STRING "Version %S (%S)"
 
     /* context menus */
     IDS_VIEW_LARGE "&Große Symbole"

@@ -279,13 +279,15 @@
 #define IDC_RUNDLG_LABEL       12305
 
 /* ShellAbout dialog */
-#define IDD_ABOUT              2
-#define IDC_ABOUT_ICON         0x3009
-#define IDC_ABOUT_APPNAME      0x3500
-#define IDC_ABOUT_OTHERSTUFF   0x350D
-#define IDC_ABOUT_REG_USERNAME 0x3507
-#define IDC_ABOUT_REG_ORGNAME  0x3508
-#define IDC_ABOUT_PHYSMEM      0x3503
+#define IDD_ABOUT                     2
+#define IDC_ABOUT_ICON                0x3009
+#define IDC_ABOUT_APPNAME             0x3500
+#define IDS_ABOUT_VERSION_STRING      0x3501
+#define IDC_ABOUT_VERSION             0x3502
+#define IDC_ABOUT_OTHERSTUFF          0x350D
+#define IDC_ABOUT_REG_USERNAME        0x3507
+#define IDC_ABOUT_REG_ORGNAME         0x3508
+#define IDC_ABOUT_PHYSMEM             0x3503
 
 /* About authors dialog */
 #define IDD_ABOUT_AUTHORS         3
