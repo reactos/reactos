@@ -1128,7 +1128,7 @@ SetSearchPathMode(IN DWORD dwFlags)
     Status = RtlSetSearchPathMode(dwFlags);
     if (!NT_SUCCESS(Status))
     {
-        SetLastError(RtlNtStatusToDosError(Status));
+        BaseSetLastNTError(Status);
         return FALSE;
     }
 
