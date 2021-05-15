@@ -135,11 +135,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", IDC_ABOUT_ICON, 7, 55, 21, 20
     LTEXT "", IDC_ABOUT_APPNAME, 35, 55, 200, 10
-    LTEXT "Version ", IDC_STATIC, 35, 65, 28, 10
-    LTEXT KERNEL_VERSION_STR, IDC_STATIC, 63, 65, 27, 10
-    LTEXT " (", IDC_STATIC, 90, 65, 5, 10
-    LTEXT KERNEL_VERSION_BUILD_STR, IDC_STATIC, 95, 65, 58, 10
-    LTEXT ")", IDC_STATIC, 153, 65, 5, 10
+    LTEXT "", IDC_ABOUT_VERSION, 35, 65, 250, 10
     LTEXT "Copyright 1998-", IDC_STATIC, 35, 75, 53, 10
     LTEXT COPYRIGHT_YEAR, IDC_STATIC, 88, 75, 17, 10
     LTEXT " ReactOS Team\0", IDC_STATIC, 105, 75, 53, 10
@@ -751,6 +747,9 @@ BEGIN
     IDS_FONTS_DESCRIPTION "Add, change, and manage fonts on your computer."
     IDS_PRINTERS_DESCRIPTION "Shows installed printers and fax printers and helps you add new ones."
 
+    /* About shell dialog version string */
+    IDS_ABOUT_VERSION_STRING "Version %S (%S)"
+
     /* context menus */
     IDS_VIEW_LARGE "Lar&ge Icons"
     IDS_VIEW_SMALL "S&mall Icons"
@@ -797,7 +796,7 @@ BEGIN
     IDS_RESTART_PROMPT "Do you want to restart the system?"
     IDS_SHUTDOWN_TITLE "Shutdown"
     IDS_SHUTDOWN_PROMPT "Do you want to shutdown?"
-    
+
     /* Format Dialog Strings */
     IDS_FORMAT_TITLE "Format Local Disk"
     IDS_FORMAT_WARNING "WARNING: Formatting will erase ALL data on this disk.\nTo format the disk, click OK. To quit, click CANCEL."

@@ -145,11 +145,7 @@ FONT 9, "宋体"
 BEGIN
     ICON "", IDC_ABOUT_ICON, 7, 55, 21, 20
     LTEXT "", IDC_ABOUT_APPNAME, 35, 55, 200, 10
-    LTEXT "版本 ", IDC_STATIC, 35, 65, 28, 10
-    LTEXT KERNEL_VERSION_STR, IDC_STATIC, 63, 65, 27, 10
-    LTEXT " (", IDC_STATIC, 90, 65, 5, 10
-    LTEXT KERNEL_VERSION_BUILD_STR, IDC_STATIC, 95, 65, 58, 10
-    LTEXT ")", IDC_STATIC, 153, 65, 5, 10
+    LTEXT "", IDC_ABOUT_VERSION, 35, 65, 250, 10
     LTEXT "版权所有 1998-", IDC_STATIC, 35, 75, 53, 10
     LTEXT COPYRIGHT_YEAR, IDC_STATIC, 88, 75, 17, 10
     LTEXT " ReactOS Team\0", IDC_STATIC, 105, 75, 53, 10
@@ -759,6 +755,9 @@ BEGIN
     IDS_FONTS_DESCRIPTION "添加、更改和管理您计算机上的字体"
     IDS_PRINTERS_DESCRIPTION "显示安装的打印机和传真打印机，并帮助您添加新的。"
 
+    /* About shell dialog version string */
+    IDS_ABOUT_VERSION_STRING "版本 %S (%S)"
+
     /* context menus */
     IDS_VIEW_LARGE "大图标(&G)"
     IDS_VIEW_SMALL "小图标(&M)"
@@ -805,7 +804,7 @@ BEGIN
     IDS_RESTART_PROMPT "您确定要重启系统吗?"
     IDS_SHUTDOWN_TITLE "关机"
     IDS_SHUTDOWN_PROMPT "您确定要关机吗"
-    
+
     /* Format Dialog Strings */
     IDS_FORMAT_TITLE "格式化本地磁盘"
     IDS_FORMAT_WARNING "警告: 格式化将会擦除磁盘上的所有数据。\n想要格式化这个磁盘, 请点击确定。若想退出，请点击返回。"
