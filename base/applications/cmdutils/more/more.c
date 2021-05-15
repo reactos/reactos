@@ -535,7 +535,7 @@ int wmain(int argc, WCHAR* argv[])
 
     ENCODING Encoding;
     DWORD SkipBytes = 0;
-    BOOL HasArg;
+    BOOL HasFiles;
 
 #define FileCacheBufferSize 4096
     PVOID FileCacheBuffer = NULL;
@@ -591,7 +591,7 @@ int wmain(int argc, WCHAR* argv[])
     }
 
     /* Parse flags */
-    HasArg = FALSE;
+    HasFiles = FALSE;
     for (i = 1; i < argc; i++)
     {
         if (argv[i][0] == L'/')
@@ -665,7 +665,7 @@ int wmain(int argc, WCHAR* argv[])
         }
         else
         {
-            HasArg = TRUE;
+            HasFiles = TRUE;
         }
     }
 
@@ -676,7 +676,7 @@ int wmain(int argc, WCHAR* argv[])
     }
 
     /* Special case where we run 'MORE' without any argument: we use STDIN */
-    if (!HasArg)
+    if (!HasFiles)
     {
         /*
          * Assign STDIN handle to hFile so that the page prompt function will
