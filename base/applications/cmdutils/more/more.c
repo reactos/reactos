@@ -95,6 +95,33 @@ static BOOL IsBlankLine(LPCWSTR line, DWORD cch)
 }
 
 static BOOL CALLBACK
+MorePagerExpandTab(PCON_PAGER Pager, LPCWSTR line, DWORD cch, DWORD *pdwFlags)
+{
+    WCHAR sz2[512];
+    DWORD ich1, ich2, spaces, iColumn = Pager->iColumn;
+
+    for (ich1 = ich2 = 0; ich1 < cch && ich2 < _countof(sz2); ++ich1)
+    {
+        if (line[ich1] == L'\t')
+        {
+            spaces = s_nTabWidth - (iColumn % s_nTabWidth);
+            iColumn += spaces;
+            while (spaces-- > 0)
+            {
+                sz2[ich2++] = L' ';
+            }
+        }
+        else
+        {
+            sz2[ich2++] = line[ich1];
+            ++iColumn;
+        }
+    }
+
+    return (*Pager->DefPagerLine)(Pager, sz2, ich2, pdwFlags);
+}
+
+static BOOL CALLBACK
 MorePagerLine(PCON_PAGER Pager, LPCWSTR line, DWORD cch, DWORD *pdwFlags)
 {
     if (s_dwFlags & FLAG_PLUSn)
@@ -126,7 +153,7 @@ MorePagerLine(PCON_PAGER Pager, LPCWSTR line, DWORD cch, DWORD *pdwFlags)
     }
 
     s_nNextLineNo = 0;
-    return FALSE; /* Do output */
+    return MorePagerExpandTab(Pager, line, cch, pdwFlags);
 }
 
 static BOOL
