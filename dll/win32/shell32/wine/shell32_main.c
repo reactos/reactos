@@ -31,6 +31,8 @@
 #include <shellapi.h>
 #include <shlobj.h>
 #include <shlwapi.h>
+#include <strsafe.h>
+#include <winnls.h>
 
 #include "undocshell.h"
 #include "pidl.h"
@@ -41,6 +43,7 @@
 #include <wine/unicode.h>
 
 #include <reactos/version.h>
+#include <reactos/buildno.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
@@ -948,6 +951,9 @@ VOID WINAPI Printers_UnregisterWindow(HANDLE hClassPidl, HWND hwnd)
 typedef struct
 {
     LPCWSTR  szApp;
+#ifdef __REACTOS__
+    LPCWSTR  szOSVersion;
+#endif
     LPCWSTR  szOtherStuff;
     HICON hIcon;
 } ABOUT_INFO;
@@ -1159,6 +1165,9 @@ static INT_PTR CALLBACK AboutDlgProc( HWND hWnd, UINT msg, WPARAM wParam, LPARAM
                 SetWindowTextW( hWnd, szAppTitle );
 
                 SetDlgItemTextW( hWnd, IDC_ABOUT_APPNAME, info->szApp );
+#ifdef __REACTOS__
+                SetDlgItemTextW( hWnd, IDC_ABOUT_VERSION, info->szOSVersion );
+#endif
                 SetDlgItemTextW( hWnd, IDC_ABOUT_OTHERSTUFF, info->szOtherStuff );
 
                 // Set the registered user and organization name
@@ -1347,6 +1356,10 @@ BOOL WINAPI ShellAboutW( HWND hWnd, LPCWSTR szApp, LPCWSTR szOtherStuff,
     HRSRC hRes;
     DLGTEMPLATE *DlgTemplate;
     BOOL bRet;
+#ifdef __REACTOS__
+    WCHAR szVersionString[256];
+    WCHAR szFormat[256];
+#endif
 
     TRACE("\n");
 
@@ -1359,7 +1372,16 @@ BOOL WINAPI ShellAboutW( HWND hWnd, LPCWSTR szApp, LPCWSTR szOtherStuff,
     if(!DlgTemplate)
         return FALSE;
 
+#ifdef __REACTOS__
+    /* Output the version OS kernel strings */
+    LoadStringW(shell32_hInstance, IDS_ABOUT_VERSION_STRING, szFormat, _countof(szFormat));
+    StringCchPrintfW(szVersionString, _countof(szVersionString), szFormat, KERNEL_VERSION_STR, KERNEL_VERSION_BUILD_STR);
+#endif
+
     info.szApp        = szApp;
+#ifdef __REACTOS__
+    info.szOSVersion  = szVersionString;
+#endif
     info.szOtherStuff = szOtherStuff;
     info.hIcon        = hIcon ? hIcon : LoadIconW( 0, (LPWSTR)IDI_WINLOGO );
 
