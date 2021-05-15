@@ -283,12 +283,15 @@ top:
             CONSOLE_SCREEN_BUFFER_INFO csbi;
             HANDLE hOutput = ConStreamGetOSHandle(Pager->Screen->Stream);
             ConGetScreenInfo(Pager->Screen, &csbi);
+
             if (nLines == 0)
                 continue;
             nLines /= 10;
+
             if (csbi.dwCursorPosition.X > 0)
                 csbi.dwCursorPosition.X = csbi.dwCursorPosition.X - 1;
             SetConsoleCursorPosition(hOutput, csbi.dwCursorPosition);
+
             ch = L' ';
             ConStreamWrite(Pager->Screen->Stream, &ch, 1);
             SetConsoleCursorPosition(hOutput, csbi.dwCursorPosition);
