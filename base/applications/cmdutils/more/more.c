@@ -22,7 +22,6 @@
  *     use window size instead of buffer size.
  */
 
-#include <stdlib.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -67,7 +66,7 @@ static BOOL s_bPrevLineIsBlank = FALSE;
 
 static inline BOOL IsFlag(LPCWSTR param)
 {
-    return param[0] == L'/' || param[0] == L'-' || param[0] == L'+';
+    return (param[0] == L'/') || (param[0] == L'+');
 }
 
 static BOOL CALLBACK MorePageActionDoNothing(PCON_PAGER Pager)
@@ -165,9 +164,12 @@ PagePrompt(PCON_PAGER Pager, DWORD Done, DWORD Total)
     DWORD dwMode;
     KEY_EVENT_RECORD KeyEvent;
     BOOL fCtrl;
-    DWORD nLines = 0;
+    DWORD nLines;
+    WCHAR ch;
     static UINT s_nPromptID = IDS_CONTINUE_PROGRESS;
     static WCHAR s_chSubCommand = 0;
+top:
+    nLines = 0;
 
     /*
      * Just use the simple prompt if the file being displayed is the STDIN,
@@ -245,66 +247,54 @@ PagePrompt(PCON_PAGER Pager, DWORD Done, DWORD Total)
             break;
         }
 
-        switch (KeyEvent.wVirtualKeyCode)
+        /* Ignore any unsupported keyboard press */
+        if ((KeyEvent.wVirtualKeyCode == VK_SHIFT) ||
+            (KeyEvent.wVirtualKeyCode == VK_MENU)  ||
+            (KeyEvent.wVirtualKeyCode == VK_CONTROL))
         {
-            case VK_SHIFT:
-            case VK_MENU:
-            case VK_CONTROL:
+            continue;
+        }
+
+        /* Ignore any unsupported subcommand */
+        if (s_chSubCommand != L'P' && s_chSubCommand != L'S')
+            break;
+
+        ch = KeyEvent.uChar.UnicodeChar;
+        if (L'0' <= ch && ch <= L'9')
+        {
+            if (nLines == 0 && ch == L'0')
                 continue;
-            default:
-            {
-                WCHAR ch;
-                if (s_chSubCommand == L'P' || s_chSubCommand == L'S')
-                {
-                    ch = KeyEvent.uChar.UnicodeChar;
-                    if (L'0' <= ch && ch <= L'9')
-                    {
-                        if (nLines == 0 && ch == L'0')
-                            continue;
-                        nLines *= 10;
-                        nLines += ch - L'0';
-                        ConStreamWrite(Pager->Screen->Stream, &ch, 1);
-                        continue;
-                    }
-                    if (KeyEvent.wVirtualKeyCode == VK_RETURN)
-                    {
-                        if (s_chSubCommand != L'P' && s_chSubCommand != L'S')
-                        {
-                            s_chSubCommand = L'-';
-                        }
-                        goto skip;
-                    }
-                    else if (KeyEvent.wVirtualKeyCode == VK_ESCAPE)
-                    {
-                        s_chSubCommand = L'-';
-                        goto skip;
-                    }
-                    else if (KeyEvent.wVirtualKeyCode == VK_BACK)
-                    {
-                        CONSOLE_SCREEN_BUFFER_INFO csbi;
-                        HANDLE hOutput = ConStreamGetOSHandle(Pager->Screen->Stream);
-                        ConGetScreenInfo(Pager->Screen, &csbi);
-
-                        if (nLines == 0)
-                            continue;
-                        nLines /= 10;
-
-                        if (csbi.dwCursorPosition.X > 0)
-                            csbi.dwCursorPosition.X = csbi.dwCursorPosition.X - 1;
-                        SetConsoleCursorPosition(hOutput, csbi.dwCursorPosition);
-
-                        ch = L' ';
-                        ConStreamWrite(Pager->Screen->Stream, &ch, 1);
-                        SetConsoleCursorPosition(hOutput, csbi.dwCursorPosition);
-                        continue;
-                    }
-                    break;
-                }
-                goto skip;
-            }
+            nLines *= 10;
+            nLines += ch - L'0';
+            ConStreamWrite(Pager->Screen->Stream, &ch, 1);
+            continue;
+        }
+        if (KeyEvent.wVirtualKeyCode == VK_RETURN)
+        {
+            break;
+        }
+        else if (KeyEvent.wVirtualKeyCode == VK_ESCAPE)
+        {
+            s_chSubCommand = L'-';
+            break;
+        }
+        else if (KeyEvent.wVirtualKeyCode == VK_BACK)
+        {
+            CONSOLE_SCREEN_BUFFER_INFO csbi;
+            HANDLE hOutput = ConStreamGetOSHandle(Pager->Screen->Stream);
+            ConGetScreenInfo(Pager->Screen, &csbi);
+            if (nLines == 0)
+                continue;
+            nLines /= 10;
+            if (csbi.dwCursorPosition.X > 0)
+                csbi.dwCursorPosition.X = csbi.dwCursorPosition.X - 1;
+            SetConsoleCursorPosition(hOutput, csbi.dwCursorPosition);
+            ch = L' ';
+            ConStreamWrite(Pager->Screen->Stream, &ch, 1);
+            SetConsoleCursorPosition(hOutput, csbi.dwCursorPosition);
+            continue;
         }
     }
-skip:
     /* AddBreakHandler */
     SetConsoleCtrlHandler(NULL, FALSE);
     /* ConInEnable */
@@ -347,10 +337,25 @@ skip:
         return FALSE;
     }
 
-    if (s_dwFlags & FLAG_E) /* If extended features are available */
+    if (fCtrl)
+    {
+        /* Do nothing */
+        Pager->PagerAction = MorePageActionDoNothing;
+        return TRUE;
+    }
+
+    /* [Space] key: One page */
+    if (KeyEvent.wVirtualKeyCode == VK_SPACE)
+    {
+        Pager->ScrollRows = Pager->ScreenRows - 1;
+        return TRUE;
+    }
+
+    /* If extended features are available */
+    if (s_dwFlags & FLAG_E)
     {
         /* 'Q': Quit */
-        if ((KeyEvent.wVirtualKeyCode == L'Q') && !fCtrl)
+        if (KeyEvent.wVirtualKeyCode == L'Q')
         {
             /* We break, output a newline */
             WCHAR ch = L'\n';
@@ -359,14 +364,14 @@ skip:
         }
 
         /* 'F': Next file */
-        if ((KeyEvent.wVirtualKeyCode == L'F') && !fCtrl)
+        if (KeyEvent.wVirtualKeyCode == L'F')
         {
             Pager->PagerAction = MorePageActionNextFile;
             return TRUE;
         }
 
         /* '?': Show Options */
-        if (KeyEvent.uChar.UnicodeChar == L'?' && !fCtrl)
+        if (KeyEvent.uChar.UnicodeChar == L'?')
         {
             Pager->PagerAction = MorePageActionDoNothing;
             s_nPromptID = IDS_CONTINUE_OPTIONS;
@@ -374,44 +379,34 @@ skip:
         }
 
         /* [Enter] key: One line */
-        if ((KeyEvent.wVirtualKeyCode == VK_RETURN) && !fCtrl)
+        if (KeyEvent.wVirtualKeyCode == VK_RETURN)
         {
             Pager->ScrollRows = 1;
             return TRUE;
         }
 
         /* 'P': Display n lines */
-        if (KeyEvent.wVirtualKeyCode == L'P' && !fCtrl)
+        if (KeyEvent.wVirtualKeyCode == L'P')
         {
-            Pager->PagerAction = MorePageActionDoNothing;
             s_nPromptID = IDS_CONTINUE_LINES;
             s_chSubCommand = L'P';
-            return TRUE;
+            goto top;
         }
 
         /* 'S': Skip n lines */
-        if (KeyEvent.wVirtualKeyCode == L'S' && !fCtrl)
+        if (KeyEvent.wVirtualKeyCode == L'S')
         {
-            Pager->PagerAction = MorePageActionDoNothing;
             s_nPromptID = IDS_CONTINUE_LINES;
             s_chSubCommand = L'S';
-            return TRUE;
+            goto top;
         }
 
         /* '=': Show current line */
-        if (KeyEvent.uChar.UnicodeChar == L'=' && !fCtrl)
+        if (KeyEvent.uChar.UnicodeChar == L'=')
         {
-            Pager->PagerAction = MorePageActionDoNothing;
             s_nPromptID = IDS_CONTINUE_LINE_AT;
-            return TRUE;
+            goto top;
         }
-    }
-
-    /* [Space] key: One page */
-    if ((KeyEvent.wVirtualKeyCode == VK_SPACE) && !fCtrl)
-    {
-        Pager->ScrollRows = Pager->ScreenRows - 1;
-        return TRUE;
     }
 
     Pager->PagerAction = MorePageActionDoNothing;
@@ -811,7 +806,7 @@ int wmain(int argc, WCHAR* argv[])
     HasFiles = FALSE;
     for (i = 1; i < argc; i++)
     {
-        if (argv[i][0] == L'/' || argv[i][0] == L'-')
+        if (argv[i][0] == L'/')
         {
             switch (towupper(argv[i][1]))
             {

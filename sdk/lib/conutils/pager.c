@@ -190,11 +190,12 @@ ConWritePaging(
     /* Make sure the user doesn't have the screen too small */
     if (Pager->ScreenRows < 4)
     {
-        CON_STREAM_WRITE(Pager->Screen->Stream, szStr, len);
+        DWORD dwFlags = 0;
+        ConCallPagerLine(Pager, szStr, len, &dwFlags);
         return TRUE;
     }
 
-    while (!(*Pager->PagerAction)(Pager))
+    while (!Pager->PagerAction(Pager))
     {
         /* Recalculate the screen extent in case the user redimensions the window. */
         if (ConGetScreenInfo(Pager->Screen, &csbi))
