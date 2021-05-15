@@ -36,6 +36,7 @@ at ""-- Continue --"" prompt:\n\
     IDS_CONTINUE_PROGRESS "-- Pokračovat (%d%%) --"
     IDS_FILE_ACCESS "Nelze získat přístup k souboru %s.\n"
     IDS_BAD_FLAG "Invalid argument - '%ls'\n"
-    IDS_CONTINUE_OPTIONS "-- Continue (%d%%) --[Options: psfq=<Space><Enter>]"
+    IDS_CONTINUE_OPTIONS "-- Continue (%d%%) -- [Options: psfq=<Space><Enter>]"
     IDS_CONTINUE_LINES "-- Continue (%d%%) -- Lines: "
+    IDS_CONTINUE_LINE_AT "-- Continue (%d%%) -- [Line:%d]"
 END

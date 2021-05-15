@@ -137,15 +137,18 @@ PagePrompt(PCON_PAGER Pager, DWORD Done, DWORD Total)
     }
     else
     {
-        ConResPrintf(Pager->Screen->Stream, s_nPromptID,
-                     // (dwSumReadChars - Total + Done) * 100 / dwFileSize
-                     (dwSumReadBytes - (Total - Done) *
-                        (dwSumReadBytes / dwSumReadChars)) * 100 / dwFileSize
-                     );
+        DWORD dwPercent = (dwSumReadBytes - (Total - Done) *
+                           (dwSumReadBytes / dwSumReadChars)) * 100 / dwFileSize;
+        if (s_nPromptID == IDS_CONTINUE_LINE_AT)
+        {
+            ConResPrintf(Pager->Screen->Stream, s_nPromptID, dwPercent, Pager->lineno);
+        }
+        else
+        {
+            ConResPrintf(Pager->Screen->Stream, s_nPromptID, dwPercent);
+        }
     }
     s_nPromptID = IDS_CONTINUE_PROGRESS;
-
-    // TODO: Implement prompt read line!
 
     // FIXME: Does not support TTY yet!
 
@@ -300,6 +303,14 @@ skip:
             Pager->PagerAction = MorePageActionDoNothing;
             s_nPromptID = IDS_CONTINUE_LINES;
             s_chSubCommand = L'S';
+            return TRUE;
+        }
+
+        /* '=': Show current line */
+        if (KeyEvent.uChar.UnicodeChar == L'=' && !fCtrlPressed)
+        {
+            Pager->PagerAction = MorePageActionDoNothing;
+            s_nPromptID = IDS_CONTINUE_LINE_AT;
             return TRUE;
         }
 

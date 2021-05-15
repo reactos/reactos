@@ -37,6 +37,7 @@ at ""-- Continue --"" prompt:\n\
     IDS_CONTINUE_PROGRESS "-- Далi (%d%%) --"
     IDS_FILE_ACCESS "Не можу отримати доступ до файла %s.\n"
     IDS_BAD_FLAG "Invalid argument - '%ls'\n"
-    IDS_CONTINUE_OPTIONS "-- Continue (%d%%) --[Options: psfq=<Space><Enter>]"
+    IDS_CONTINUE_OPTIONS "-- Continue (%d%%) -- [Options: psfq=<Space><Enter>]"
     IDS_CONTINUE_LINES "-- Continue (%d%%) -- Lines: "
+    IDS_CONTINUE_LINE_AT "-- Continue (%d%%) -- [Line:%d]"
 END
