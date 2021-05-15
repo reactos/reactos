@@ -622,9 +622,9 @@ int wmain(int argc, WCHAR* argv[])
         }
         else if (argv[i][0] == L'+')
         {
-            s_dwFlags |= FLAG_PLUSn;
             if (L'0' <= argv[i][1] && argv[i][1] <= L'9')
             {
+                s_dwFlags |= FLAG_PLUSn;
                 s_nPlusN = wcstoul(&argv[i][1], NULL, 10);
                 continue;
             }
