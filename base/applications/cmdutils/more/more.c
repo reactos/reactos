@@ -87,7 +87,7 @@ PagePrompt(PCON_PAGER Pager, DWORD Done, DWORD Total)
     DWORD dwMode;
     KEY_EVENT_RECORD KeyEvent;
     BOOL fCtrlPressed;
-    static BOOL s_fShowOptions = FALSE;
+    static UINT s_nPromptID = IDS_CONTINUE_PROGRESS;
 
     /*
      * Just use the simple prompt if the file being displayed is the STDIN,
@@ -117,14 +117,13 @@ PagePrompt(PCON_PAGER Pager, DWORD Done, DWORD Total)
     }
     else
     {
-        ConResPrintf(Pager->Screen->Stream,
-                     (s_fShowOptions ? IDS_CONTINUE_OPTIONS : IDS_CONTINUE_PROGRESS),
+        ConResPrintf(Pager->Screen->Stream, s_nPromptID,
                      // (dwSumReadChars - Total + Done) * 100 / dwFileSize
                      (dwSumReadBytes - (Total - Done) *
                         (dwSumReadBytes / dwSumReadChars)) * 100 / dwFileSize
                      );
     }
-    s_fShowOptions = FALSE;
+    s_nPromptID = IDS_CONTINUE_PROGRESS;
 
     // TODO: Implement prompt read line!
 
@@ -204,7 +203,7 @@ PagePrompt(PCON_PAGER Pager, DWORD Done, DWORD Total)
         if (KeyEvent.uChar.UnicodeChar == L'?' && !fCtrlPressed)
         {
             Pager->PagerAction = ConPagerActionDoNothing;
-            s_fShowOptions = TRUE;
+            s_nPromptID = IDS_CONTINUE_OPTIONS;
             return TRUE;
         }
 

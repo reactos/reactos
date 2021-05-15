@@ -39,4 +39,5 @@ at ""-- Continue --"" prompt:\n\
     IDS_FILE_ACCESS "Brak dostępu do pliku: %s.\n"
     IDS_BAD_FLAG "Invalid argument - '%ls'\n"
     IDS_CONTINUE_OPTIONS "-- Continue (%d%%) --[Options: psfq=<Space><Enter>]"
+    IDS_CONTINUE_LINES "-- Continue (%d%%) -- Lines: "
 END
