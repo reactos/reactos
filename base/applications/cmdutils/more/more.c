@@ -533,6 +533,7 @@ int wmain(int argc, WCHAR* argv[])
 
     ENCODING Encoding;
     DWORD SkipBytes = 0;
+    BOOL HasArg;
 
 #define FileCacheBufferSize 4096
     PVOID FileCacheBuffer = NULL;
@@ -587,8 +588,60 @@ int wmain(int argc, WCHAR* argv[])
         return 1;
     }
 
+    /* Parse flags */
+    HasArg = FALSE;
+    for (i = 1; i < argc; i++)
+    {
+        if (argv[i][0] == L'/')
+        {
+            switch (towupper(argv[i][1]))
+            {
+                case L'E':
+                    s_dwFlags |= FLAG_E;
+                    continue;
+                case L'C':
+                    s_dwFlags |= FLAG_C;
+                    continue;
+                case L'P':
+                    s_dwFlags |= FLAG_P;
+                    continue;
+                case L'S':
+                    s_dwFlags |= FLAG_S;
+                    continue;
+                case L'T':
+                    if (L'0' <= argv[i][2] && argv[i][2] <= L'9')
+                    {
+                        s_dwFlags |= FLAG_Tn;
+                        s_nTabWidth = wcstoul(&argv[i][2], NULL, 10);
+                        continue;
+                    }
+                    break;
+                default:
+                    break;
+            }
+        }
+        else if (argv[i][0] == L'+')
+        {
+            s_dwFlags |= FLAG_PLUSn;
+            if (L'0' <= argv[i][1] && argv[i][1] <= L'9')
+            {
+                s_nPlusN = wcstoul(&argv[i][1], NULL, 10);
+                continue;
+            }
+        }
+
+        if (IsFlag(argv[i]))
+        {
+            /* TODO: error */
+        }
+        else
+        {
+            HasArg = TRUE;
+        }
+    }
+
     /* Special case where we run 'MORE' without any argument: we use STDIN */
-    if (argc <= 1)
+    if (!HasArg)
     {
         /*
          * Assign STDIN handle to hFile so that the page prompt function will
@@ -634,52 +687,6 @@ int wmain(int argc, WCHAR* argv[])
         }
         while (bRet && dwReadBytes > 0);
         goto Quit;
-    }
-
-    /* Parse flags */
-    for (i = 1; i < argc; i++)
-    {
-        if (argv[i][0] == L'/')
-        {
-            switch (towupper(argv[i][1]))
-            {
-                case L'E':
-                    s_dwFlags |= FLAG_E;
-                    continue;
-                case L'C':
-                    s_dwFlags |= FLAG_C;
-                    continue;
-                case L'P':
-                    s_dwFlags |= FLAG_P;
-                    continue;
-                case L'S':
-                    s_dwFlags |= FLAG_S;
-                    continue;
-                case L'T':
-                    if (L'0' <= argv[i][2] && argv[i][2] <= L'9')
-                    {
-                        s_dwFlags |= FLAG_Tn;
-                        s_nTabWidth = wcstoul(&argv[i][2], NULL, 10);
-                        continue;
-                    }
-                    break;
-                default:
-                    break;
-            }
-        }
-        else if (argv[i][0] == L'+')
-        {
-            s_dwFlags |= FLAG_PLUSn;
-            if (L'0' <= argv[i][1] && argv[i][1] <= L'9')
-            {
-                s_nPlusN = wcstoul(&argv[i][1], NULL, 10);
-                continue;
-            }
-        }
-        if (IsFlag(argv[i]))
-        {
-            /* TODO: error */
-        }
     }
 
     /* We have files: read them and output them to STDOUT */
