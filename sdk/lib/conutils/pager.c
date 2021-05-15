@@ -66,7 +66,7 @@ static VOID CALLBACK
 ConCallPagerLine(PCON_PAGER Pager, LPCWSTR line, DWORD cch, DWORD *pdwFlags)
 {
     if (!Pager->PagerLine || !(*Pager->PagerLine)(Pager, line, cch, pdwFlags))
-        ConDefaultPagerLine(Pager, line, cch, pdwFlags);
+        (*Pager->DefPagerLine)(Pager, line, cch, pdwFlags);
 }
 
 static BOOL CALLBACK ConPagerDefaultAction(PCON_PAGER Pager)
@@ -178,7 +178,9 @@ ConWritePaging(
     Pager->ScreenColumns = csbi.srWindow.Right - csbi.srWindow.Left + 1;
     Pager->ScreenRows = csbi.srWindow.Bottom - csbi.srWindow.Top + 1;
     Pager->ScrollRows = Pager->ScreenRows - 1;
+    Pager->DefPagerAction = ConPagerDefaultAction;
     Pager->PagerAction = ConPagerDefaultAction;
+    Pager->DefPagerLine = ConDefaultPagerLine;
     Pager->ich = 0;
     Pager->cch = len;
     Pager->TextBuff = szStr;

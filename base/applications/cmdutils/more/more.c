@@ -63,6 +63,7 @@ BOOL bEnableExtensions = TRUE; // FIXME: By default, it should be FALSE.
 static DWORD s_dwFlags = 0;
 static DWORD s_nTabWidth = 8;
 static DWORD s_nNextLineNo = 0;
+static BOOL s_bPrevLineIsBlank = FALSE;
 
 static inline BOOL IsFlag(LPCWSTR param)
 {
@@ -79,6 +80,20 @@ static BOOL CALLBACK MorePageActionNextFile(PCON_PAGER Pager)
     return TRUE;
 }
 
+static BOOL IsBlankLine(LPCWSTR line, DWORD cch)
+{
+    DWORD ich;
+    WORD wType;
+    for (ich = 0; ich < cch; ++ich)
+    {
+        wType = 0;
+        GetStringTypeW(CT_CTYPE1, &line[ich], 1, &wType);
+        if (!(wType & (C1_BLANK | C1_SPACE)))
+            return FALSE;
+    }
+    return TRUE;
+}
+
 static BOOL CALLBACK
 MorePagerLine(PCON_PAGER Pager, LPCWSTR line, DWORD cch, DWORD *pdwFlags)
 {
@@ -87,10 +102,27 @@ MorePagerLine(PCON_PAGER Pager, LPCWSTR line, DWORD cch, DWORD *pdwFlags)
         if (Pager->lineno < s_nNextLineNo)
         {
             *pdwFlags &= ~CON_PAGER_LINE_FLAG_NEWLINE;
+            s_bPrevLineIsBlank = IsBlankLine(line, cch);
             return TRUE; /* Don't output */
         }
         s_dwFlags &= ~FLAG_PLUSn;
-        return FALSE; /* Do output */
+    }
+
+    if (s_dwFlags & FLAG_S) /* Shrink blank lines */
+    {
+        if (IsBlankLine(line, cch))
+        {
+            if (s_bPrevLineIsBlank)
+            {
+                *pdwFlags &= ~CON_PAGER_LINE_FLAG_NEWLINE;
+                return TRUE; /* Don't output */
+            }
+            s_bPrevLineIsBlank = TRUE;
+        }
+        else
+        {
+            s_bPrevLineIsBlank = FALSE;
+        }
     }
 
     s_nNextLineNo = 0;
@@ -313,8 +345,6 @@ skip:
             s_nPromptID = IDS_CONTINUE_LINE_AT;
             return TRUE;
         }
-
-        // TODO: More features
     }
 
     /* [Space] key: One page */
@@ -802,6 +832,12 @@ int wmain(int argc, WCHAR* argv[])
         return 0;
     }
 
+    if (s_dwFlags & FLAG_C)
+    {
+        /* Clear the screen */
+        ConClearScreen(&Screen);
+    }
+
     Pager.PagerLine = MorePagerLine;
 
     /* Special case where we run 'MORE' without any argument: we use STDIN */
@@ -856,6 +892,8 @@ int wmain(int argc, WCHAR* argv[])
     /* We have files: read them and output them to STDOUT */
     for (i = 1; i < argc; i++)
     {
+        s_bPrevLineIsBlank = FALSE;
+
         if (IsFlag(argv[i]))
             continue;
 
