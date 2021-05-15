@@ -228,13 +228,13 @@ PagePrompt(PCON_PAGER Pager, DWORD Done, DWORD Total)
                     {
                         if (s_chSubCommand != L'P' && s_chSubCommand != L'S')
                         {
-                            s_chSubCommand = L'N';
+                            s_chSubCommand = L'-';
                         }
                         goto skip;
                     }
                     else if (KeyEvent.wVirtualKeyCode == VK_ESCAPE)
                     {
-                        s_chSubCommand = L'N';
+                        s_chSubCommand = L'-';
                         goto skip;
                     }
                     break;
@@ -268,7 +268,7 @@ skip:
             s_dwFlags |= FLAG_PLUSn;
             s_nNextLineNo = Pager->lineno + nLines;
             return TRUE;
-        case L'N':
+        case L'-':
             s_chSubCommand = 0;
             Pager->PagerAction = MorePageActionDoNothing;
             return TRUE;
