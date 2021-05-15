@@ -830,7 +830,7 @@ BEGIN
     IDS_RESTART_PROMPT "システムを再起動しますか?"
     IDS_SHUTDOWN_TITLE "シャットダウン"
     IDS_SHUTDOWN_PROMPT "シャットダウンしますか?"
-    
+
     /* Format Dialog Strings */
     IDS_FORMAT_TITLE "ローカルディスクをフォーマット"
     IDS_FORMAT_WARNING "警告: フォーマットはこのディスクの「すべての」データを消去します。\nフォーマットするならOKをクリック。終了するにはキャンセルをクリックして下さい。"

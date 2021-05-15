@@ -833,7 +833,7 @@ BEGIN
     IDS_RESTART_PROMPT "Voulez-vous redémarrer votre ordinateur ?"
     IDS_SHUTDOWN_TITLE "Arrêter"
     IDS_SHUTDOWN_PROMPT "Voulez-vous fermer la session ReactOS ?"
-    
+
     /* Format Dialog Strings */
     IDS_FORMAT_TITLE "Formater un disque logique"
     IDS_FORMAT_WARNING "Attention: Le formatage effacera toutes les données présentes sur ce disque.\nPour formater ce disque, cliquez sur OK. Pour quitter, cliquez sur Annuler."

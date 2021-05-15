@@ -835,7 +835,7 @@ BEGIN
     IDS_RESTART_PROMPT "Doriți să reporniți sistemul?"
     IDS_SHUTDOWN_TITLE "Închidere"
     IDS_SHUTDOWN_PROMPT "Doriți să închideți calculatorul?"
-    
+
     /* Format Dialog Strings */
     IDS_FORMAT_TITLE "Formatare disc local"
     IDS_FORMAT_WARNING "AVERTISMENT: Formatarea va șterge TOATE datele de pe acest disc.\nConfirmați pentru a formata, anulați pentru a ieși."

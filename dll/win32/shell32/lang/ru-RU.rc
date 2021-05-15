@@ -840,7 +840,7 @@ BEGIN
     IDS_RESTART_PROMPT "Вы действительно хотите перезагрузить ReactOS?"
     IDS_SHUTDOWN_TITLE "Завершение работы"
     IDS_SHUTDOWN_PROMPT "Вы действительно хотите завершить работу ReactOS?"
-    
+
     /* Format Dialog Strings */
     IDS_FORMAT_TITLE "Format Local Disk"
     IDS_FORMAT_WARNING "WARNING: Formatting will erase ALL data on this disk.\nTo format the disk, click OK. To quit, click CANCEL."

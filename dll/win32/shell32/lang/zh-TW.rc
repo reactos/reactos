@@ -841,7 +841,7 @@ BEGIN
     IDS_RESTART_PROMPT "您確定要重新開機嗎?"
     IDS_SHUTDOWN_TITLE "關機"
     IDS_SHUTDOWN_PROMPT "您確定要關機嗎?"
-    
+
     /* Format Dialog Strings */
     IDS_FORMAT_TITLE "格式化本機磁碟"
     IDS_FORMAT_WARNING "警告: 格式化將會清除磁碟上的所有數據。\n想要格式化這個磁碟, 請按 [確定]。若想退出，請按 [返回]。"

@@ -833,7 +833,7 @@ BEGIN
     IDS_RESTART_PROMPT "Vill du starta om systemet?"
     IDS_SHUTDOWN_TITLE "Stäng av"
     IDS_SHUTDOWN_PROMPT "Vill du stänga av?"
-    
+
     /* Format Dialog Strings */
     IDS_FORMAT_TITLE "Format Local Disk"
     IDS_FORMAT_WARNING "WARNING: Formatting will erase ALL data on this disk.\nTo format the disk, click OK. To quit, click CANCEL."

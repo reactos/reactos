@@ -833,7 +833,7 @@ BEGIN
     IDS_RESTART_PROMPT "Do you want to restart the system?"
     IDS_SHUTDOWN_TITLE "Shutdown"
     IDS_SHUTDOWN_PROMPT "Do you want to shutdown?"
-    
+
     /* Format Dialog Strings */
     IDS_FORMAT_TITLE "Format Local Disk"
     IDS_FORMAT_WARNING "WARNING: Formatting will erase ALL data on this disk.\nTo format the disk, click OK. To quit, click CANCEL."
@@ -1025,7 +1025,7 @@ BEGIN
     IDS_MOVEBUTTON "Move"
 
     IDS_SYSTEMFOLDER "System Folder"
-    
+
     /* For IDD_LOG_OFF_FANCY */
     IDS_LOG_OFF_DESC "Closes your programs and ends your ReactOS session."
     IDS_SWITCH_USER_DESC "Lets another user log on while your programs and files remain open.\r\n\r\n(You can also switch users by pressing the Windows logo key + L.)"
