@@ -49,7 +49,7 @@ HANDLE hStdIn, hStdOut;
 HANDLE hKeyboard;
 
 /* Enable/Disable extensions */
-BOOL s_bEnableExtensions = TRUE; // FIXME: By default, it should be FALSE.
+BOOL s_bEnableExtensions = FALSE;
 
 #define FLAG_HELP (1 << 0)
 #define FLAG_E (1 << 1)
@@ -749,17 +749,20 @@ FileGetString(
     return TRUE;
 }
 
-static VOID
-LoadRegistrySettings(HKEY hKeyRoot)
+static BOOL
+LoadRegistrySettings(HKEY hKeyRoot, BOOL bDefault)
 {
     LONG lRet;
     HKEY hKey;
-    DWORD dwType, len;
+    DWORD dwType, dwSize;
+    BOOL ret = bDefault;
     /*
      * Buffer big enough to hold the string L"4294967295",
      * corresponding to the literal 0xFFFFFFFF (MAXULONG) in decimal.
      */
-    DWORD Buffer[6];
+    WCHAR Buffer[11];
+    typedef char assertion_1[(sizeof(Buffer) >= sizeof(L"4294967295")) ? 1 : -1];
+    typedef char assertion_2[(sizeof(Buffer) >= sizeof(DWORD)) ? 1 : -1];
 
     lRet = RegOpenKeyExW(hKeyRoot,
                          L"Software\\Microsoft\\Command Processor",
@@ -767,26 +770,27 @@ LoadRegistrySettings(HKEY hKeyRoot)
                          KEY_QUERY_VALUE,
                          &hKey);
     if (lRet != ERROR_SUCCESS)
-        return;
+        return ret;
 
-    len = sizeof(Buffer);
+    dwSize = sizeof(Buffer);
     lRet = RegQueryValueExW(hKey,
                             L"EnableExtensions",
                             NULL,
                             &dwType,
                             (LPBYTE)&Buffer,
-                            &len);
+                            &dwSize);
     if (lRet == ERROR_SUCCESS)
     {
         /* Overwrite the default setting */
         if (dwType == REG_DWORD)
-            s_bEnableExtensions = !!*(PDWORD)Buffer;
+            ret = (*(PDWORD)Buffer != 0);
         else if (dwType == REG_SZ)
-            s_bEnableExtensions = (_wtol((PWSTR)Buffer) == 1);
+            ret = (_wtol(Buffer) != 0);
     }
     // else, use the default setting set globally.
 
     RegCloseKey(hKey);
+    return ret;
 }
 
 static BOOL ParseArgument(LPCWSTR arg, BOOL *pbHasFiles)
@@ -945,9 +949,17 @@ int wmain(int argc, WCHAR* argv[])
     }
 
     /* Load the registry settings */
-    LoadRegistrySettings(HKEY_LOCAL_MACHINE);
-    LoadRegistrySettings(HKEY_CURRENT_USER);
-    s_dwFlags = (s_bEnableExtensions ? FLAG_E : 0);
+    s_dwFlags = 0;
+    if (LoadRegistrySettings(HKEY_LOCAL_MACHINE, FALSE))
+    {
+        if (LoadRegistrySettings(HKEY_CURRENT_USER, TRUE))
+            s_dwFlags = FLAG_E;
+    }
+    else
+    {
+        if (LoadRegistrySettings(HKEY_CURRENT_USER, FALSE))
+            s_dwFlags = FLAG_E;
+    }
 
     // TODO: First, load the "MORE" environment variable and parse it,
     // then parse the command-line parameters.
