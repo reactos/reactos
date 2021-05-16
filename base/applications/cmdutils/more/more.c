@@ -27,6 +27,7 @@
 
 #include <windef.h>
 #include <winbase.h>
+#include <winnt.h>
 #include <winnls.h>
 #include <winreg.h>
 #include <winuser.h>
@@ -761,6 +762,8 @@ LoadRegistrySettings(HKEY hKeyRoot)
      * corresponding to the literal 0xFFFFFFFF (MAXULONG) in decimal.
      */
     WCHAR Buffer[11];
+    C_ASSERT(sizeof(Buffer) >= sizeof(L"4294967295"));
+    C_ASSERT(sizeof(Buffer) >= sizeof(DWORD));
 
     lRet = RegOpenKeyExW(hKeyRoot,
                          L"Software\\Microsoft\\Command Processor",
