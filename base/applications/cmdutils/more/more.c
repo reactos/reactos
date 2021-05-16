@@ -218,7 +218,7 @@ PagePrompt(PCON_PAGER Pager, DWORD Done, DWORD Total)
     WCHAR ch;
     static UINT s_nPromptID = IDS_CONTINUE_PROGRESS;
     static WCHAR s_chSubCommand = 0;
-top:
+Restart:
     nLines = 0;
 
     /*
@@ -448,7 +448,7 @@ top:
         {
             s_nPromptID = IDS_CONTINUE_LINES;
             s_chSubCommand = L'P';
-            goto top;
+            goto Restart;
         }
 
         /* 'S': Skip n lines */
@@ -456,14 +456,14 @@ top:
         {
             s_nPromptID = IDS_CONTINUE_LINES;
             s_chSubCommand = L'S';
-            goto top;
+            goto Restart;
         }
 
         /* '=': Show current line */
         if (KeyEvent.uChar.UnicodeChar == L'=')
         {
             s_nPromptID = IDS_CONTINUE_LINE_AT;
-            goto top;
+            goto Restart;
         }
     }
 
