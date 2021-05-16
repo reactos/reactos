@@ -188,10 +188,6 @@ OnHScroll(
     DWORD dwControlID = 0, dwStep, dwPosition;
     DWORD dwMaximum, dwMinimum;
 
-    if (dwCtrlID != IDC_ADV_BASS_SLIDER &&
-        dwCtrlID != IDC_ADV_TREBLE_SLIDER)
-        return;
-
     if (dwCtrlID == IDC_ADV_BASS_SLIDER)
     {
         if (pData->bEnabled[0] == FALSE)
@@ -209,6 +205,10 @@ OnHScroll(
         dwControlID = pData->dwControlId[1];
         dwMaximum = pData->dwMaximum[1];
         dwMinimum = pData->dwMinimum[1];
+    }
+    else
+    {
+        return;
     }
 
     dwPosition = (DWORD)SendDlgItemMessage(hwndDlg, dwCtrlID, TBM_GETPOS, 0, 0);
