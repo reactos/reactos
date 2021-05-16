@@ -49,7 +49,7 @@ HANDLE hStdIn, hStdOut;
 HANDLE hKeyboard;
 
 /* Enable/Disable extensions */
-BOOL bEnableExtensions = TRUE; // FIXME: By default, it should be FALSE.
+BOOL s_bEnableExtensions = TRUE; // FIXME: By default, it should be FALSE.
 
 #define FLAG_HELP (1 << 0)
 #define FLAG_E (1 << 1)
@@ -59,7 +59,7 @@ BOOL bEnableExtensions = TRUE; // FIXME: By default, it should be FALSE.
 #define FLAG_Tn (1 << 5)
 #define FLAG_PLUSn (1 << 6)
 
-static DWORD s_dwFlags = 0;
+static DWORD s_dwFlags = FLAG_E;
 static DWORD s_nTabWidth = 8;
 static DWORD s_nNextLineNo = 0;
 static BOOL s_bPrevLineIsBlank = FALSE;
@@ -783,9 +783,9 @@ LoadRegistrySettings(HKEY hKeyRoot)
     {
         /* Overwrite the default setting */
         if (dwType == REG_DWORD)
-            bEnableExtensions = !!*(PDWORD)Buffer;
+            s_bEnableExtensions = !!*(PDWORD)Buffer;
         else if (dwType == REG_SZ)
-            bEnableExtensions = (_wtol((PWSTR)Buffer) == 1);
+            s_bEnableExtensions = (_wtol((PWSTR)Buffer) == 1);
     }
     // else, use the default setting set globally.
 
@@ -836,6 +836,7 @@ int wmain(int argc, WCHAR* argv[])
     /* Load the registry settings */
     LoadRegistrySettings(HKEY_LOCAL_MACHINE);
     LoadRegistrySettings(HKEY_CURRENT_USER);
+    s_dwFlags = (s_bEnableExtensions ? FLAG_E : 0);
 
     // TODO: First, load the "MORE" environment variable and parse it,
     // then parse the command-line parameters.
@@ -850,7 +851,6 @@ int wmain(int argc, WCHAR* argv[])
                             OPEN_EXISTING, 0, NULL);
     FlushConsoleInputBuffer(hKeyboard);
     ConStreamSetOSHandle(StdIn, hKeyboard);
-
 
     FileCacheBuffer = HeapAlloc(GetProcessHeap(), 0, FileCacheBufferSize);
     if (!FileCacheBuffer)
