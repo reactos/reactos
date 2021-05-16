@@ -63,6 +63,8 @@ static DWORD s_dwFlags = FLAG_E;
 static DWORD s_nTabWidth = 8;
 static DWORD s_nNextLineNo = 0;
 static BOOL s_bPrevLineIsBlank = FALSE;
+static UINT s_nPromptID = IDS_CONTINUE_PROGRESS;
+static WCHAR s_chSubCommand = 0;
 
 static inline BOOL IsFlag(LPCWSTR param)
 {
@@ -217,8 +219,6 @@ PagePrompt(PCON_PAGER Pager, DWORD Done, DWORD Total)
     BOOL fCtrl;
     DWORD nLines;
     WCHAR ch;
-    static UINT s_nPromptID = IDS_CONTINUE_PROGRESS;
-    static WCHAR s_chSubCommand = 0;
 Restart:
     nLines = 0;
 
@@ -1001,6 +1001,8 @@ int wmain(int argc, WCHAR* argv[])
     for (i = 1; i < argc; i++)
     {
         s_bPrevLineIsBlank = FALSE;
+        s_nPromptID = IDS_CONTINUE_PROGRESS;
+        s_chSubCommand = 0;
 
         if (IsFlag(argv[i]))
             continue;
