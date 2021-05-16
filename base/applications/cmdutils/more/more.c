@@ -257,8 +257,6 @@ Restart:
     }
     s_nPromptID = IDS_CONTINUE_PROGRESS;
 
-    // FIXME: Does not support TTY yet!
-
     /* RemoveBreakHandler */
     SetConsoleCtrlHandler(NULL, TRUE);
     /* ConInDisable */
@@ -950,11 +948,6 @@ int wmain(int argc, WCHAR* argv[])
     if (LoadRegistrySettings(HKEY_CURRENT_USER, bLoaded))
         s_dwFlags |= FLAG_E;
 
-    // TODO: First, load the "MORE" environment variable and parse it,
-    // then parse the command-line parameters.
-
-    // FIXME: Parse all the remaining parameters.
-    // Then the file list can be found at the very end.
     // FIXME2: Use the PARSER api that can be found in EVENTCREATE.
 
     // NOTE: We might try to duplicate the ConOut for read access... ?
@@ -972,6 +965,8 @@ int wmain(int argc, WCHAR* argv[])
         return 1;
     }
 
+    // First, load the "MORE" environment variable and parse it,
+    // then parse the command-line parameters.
     HasFiles = FALSE;
     if (!ParseMoreVariable(&HasFiles))
         return 1;
