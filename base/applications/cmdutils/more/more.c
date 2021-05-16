@@ -113,8 +113,9 @@ static BOOL CALLBACK
 MorePagerExpandTab(PCON_PAGER Pager, LPCWSTR line, DWORD cch, DWORD *pdwFlags)
 {
     LPWSTR psz;
-    DWORD ich1, ich2, cch2, spaces, iColumn = Pager->iColumn;
+    DWORD ich1, ich2, cch2, spaces;
     BOOL ret;
+    DWORD iColumn = Pager->iColumn;
 
     for (ich1 = ich2 = 0; ich1 < cch; ++ich1)
     {
