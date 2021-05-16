@@ -65,6 +65,7 @@ static DWORD s_nNextLineNo = 0;
 static BOOL s_bPrevLineIsBlank = FALSE;
 static UINT s_nPromptID = IDS_CONTINUE_PROGRESS;
 static WCHAR s_chSubCommand = 0;
+static BOOL s_bDoNextFile = FALSE;
 
 static inline BOOL IsFlag(LPCWSTR param)
 {
@@ -90,11 +91,6 @@ static inline BOOL IsFlag(LPCWSTR param)
 static BOOL CALLBACK MorePageActionDoNothing(PCON_PAGER Pager)
 {
     return Pager->ich >= Pager->cch;
-}
-
-static BOOL CALLBACK MorePageActionNextFile(PCON_PAGER Pager)
-{
-    return TRUE;
 }
 
 static BOOL IsBlankLine(LPCWSTR line, DWORD cch)
@@ -425,8 +421,8 @@ Restart:
         /* 'F': Next file */
         if (KeyEvent.wVirtualKeyCode == L'F')
         {
-            Pager->PagerAction = MorePageActionNextFile;
-            return TRUE;
+            s_bDoNextFile = TRUE;
+            return FALSE;
         }
 
         /* '?': Show Options */
@@ -1003,6 +999,7 @@ int wmain(int argc, WCHAR* argv[])
         s_bPrevLineIsBlank = FALSE;
         s_nPromptID = IDS_CONTINUE_PROGRESS;
         s_chSubCommand = 0;
+        s_bDoNextFile = FALSE;
 
         if (IsFlag(argv[i]))
             continue;
@@ -1044,8 +1041,16 @@ int wmain(int argc, WCHAR* argv[])
         bContinue = ConPutsPaging(&Pager, PagePrompt, TRUE, L"");
         if (!bContinue)
         {
-            CloseHandle(hFile);
-            goto Quit;
+            if (s_bDoNextFile)
+            {
+                /* Bail out and continue with the other files */
+                s_bDoNextFile = FALSE;
+            }
+            else
+            {
+                CloseHandle(hFile);
+                goto Quit;
+            }
         }
 
         do
@@ -1077,9 +1082,17 @@ int wmain(int argc, WCHAR* argv[])
                 bContinue = ConWritePaging(&Pager, PagePrompt, FALSE,
                                            StringBuffer, dwReadChars);
             }
-            /* If we Ctrl-C/Ctrl-Break, stop everything */
+            /* Check whether we should stop displaying this file */
             if (!bContinue)
             {
+                if (s_bDoNextFile)
+                {
+                    /* Bail out and continue with the other files */
+                    s_bDoNextFile = FALSE;
+                    continue;
+                }
+
+                /* We Ctrl-C/Ctrl-Break, stop everything */
                 CloseHandle(hFile);
                 goto Quit;
             }
