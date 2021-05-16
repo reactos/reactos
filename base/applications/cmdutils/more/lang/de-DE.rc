@@ -17,15 +17,11 @@ Options:\n\
   Command                    A command, whose output shall be displayed.\n\n\
 If extended features are enabled, the following commands are available\n\
 at ""-- Continue --"" prompt:\n\
-   P n      Display n lines.\n\
-   S n      Skip n lines.\n\
-   F        Display next file.\n\
-   Q        Quit.\n\
-   =        Show line number.\n\
-   ?        Show help line.\n\
-   <Space>  Display next page.\n\
-   <Enter>  Display next line.\n\
-   <Esc>    Same as Q.\n"
+   P n      Display n lines.        <Space>  Display next page.\n\
+   S n      Skip n lines.           <Enter>  Display next line.\n\
+   F        Display next file.      <Esc>    Same as Q.\n\
+   Q        Quit.                   =        Show line number.\n\
+   ?        Show help line.\n"
 
     IDS_CONTINUE "-- Fortsetzung --"
     IDS_CONTINUE_PROGRESS "-- Fortsetzung (%d%%) --"
