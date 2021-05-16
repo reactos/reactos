@@ -112,6 +112,7 @@ MorePagerExpandTab(PCON_PAGER Pager, LPCWSTR line, DWORD cch, DWORD *pdwFlags)
     BOOL ret;
     DWORD iColumn = Pager->iColumn;
 
+    /* Calculate expanded length */
     for (ich1 = ich2 = 0; ich1 < cch; ++ich1)
     {
         if (line[ich1] == L'\t')
@@ -137,6 +138,7 @@ MorePagerExpandTab(PCON_PAGER Pager, LPCWSTR line, DWORD cch, DWORD *pdwFlags)
     if (!psz)
         return FALSE;
 
+    /* Store to buffer */
     iColumn = Pager->iColumn;
     for (ich1 = ich2 = 0; ich1 < cch && ich2 < cch2; ++ich1)
     {
@@ -161,6 +163,7 @@ MorePagerExpandTab(PCON_PAGER Pager, LPCWSTR line, DWORD cch, DWORD *pdwFlags)
         }
     }
 
+    /* Do output */
     ret = (*Pager->DefPagerLine)(Pager, psz, ich2, pdwFlags);
     free(psz);
     Pager->iColumn = iColumn;
