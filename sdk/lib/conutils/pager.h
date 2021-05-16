@@ -49,8 +49,8 @@ typedef struct _CON_PAGER
     DWORD ich; /* The current index of character */
     DWORD cch; /* The total number of characters */
     DWORD iColumn; /* The current index of column */
-    DWORD iLine; /* The output line count */
-    DWORD lineno; /* The line number */
+    DWORD iLine; /* The physical output line count of screen */
+    DWORD lineno; /* The logical line number */
 } CON_PAGER, *PCON_PAGER;
 
 #define INIT_CON_PAGER(pScreen)     {(pScreen), 0}
