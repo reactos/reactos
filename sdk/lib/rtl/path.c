@@ -52,7 +52,7 @@ static const UNICODE_STRING RtlpDefaultExtension = RTL_CONSTANT_STRING(L".DLL");
 static const UNICODE_STRING RtlpDotLocal = RTL_CONSTANT_STRING(L".Local\\");
 static const UNICODE_STRING RtlpPathDividers = RTL_CONSTANT_STRING(L"\\/");
 
-/* Search mode used by RtlDosSearchPath_Ustr() and RtlSetSeatchPathMode() */
+/* Search mode used by RtlDosSearchPath_Ustr() and RtlSetSearchPathMode() */
 // TODO: this value should be obtained from predefined registry entry.
 // Perhaps RtlDosSearchPath_Ustr() should do it.
 // For now initialize it as zero.
