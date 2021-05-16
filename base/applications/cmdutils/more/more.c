@@ -56,7 +56,7 @@ HANDLE hKeyboard;
 #define FLAG_Tn (1 << 5)
 #define FLAG_PLUSn (1 << 6)
 
-static DWORD s_dwFlags = FLAG_E;
+static DWORD s_dwFlags = 0;
 static DWORD s_nTabWidth = 8;
 static DWORD s_nNextLineNo = 0;
 static BOOL s_bPrevLineIsBlank = FALSE;
@@ -913,7 +913,7 @@ int wmain(int argc, WCHAR* argv[])
 
     int i;
 
-    BOOL bRet, bContinue;
+    BOOL bRet, bContinue, bLoaded;
 
     ENCODING Encoding;
     DWORD SkipBytes = 0;
@@ -946,17 +946,9 @@ int wmain(int argc, WCHAR* argv[])
     }
 
     /* Load the registry settings */
-    s_dwFlags = 0;
-    if (LoadRegistrySettings(HKEY_LOCAL_MACHINE, FALSE))
-    {
-        if (LoadRegistrySettings(HKEY_CURRENT_USER, TRUE))
-            s_dwFlags = FLAG_E;
-    }
-    else
-    {
-        if (LoadRegistrySettings(HKEY_CURRENT_USER, FALSE))
-            s_dwFlags = FLAG_E;
-    }
+    bLoaded = LoadRegistrySettings(HKEY_LOCAL_MACHINE, FALSE);
+    if (LoadRegistrySettings(HKEY_CURRENT_USER, bLoaded))
+        s_dwFlags |= FLAG_E;
 
     // TODO: First, load the "MORE" environment variable and parse it,
     // then parse the command-line parameters.
