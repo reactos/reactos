@@ -913,7 +913,7 @@ int wmain(int argc, WCHAR* argv[])
 
     int i;
 
-    BOOL bRet, bContinue, bExtended;
+    BOOL bRet, bContinue;
 
     ENCODING Encoding;
     DWORD SkipBytes = 0;
