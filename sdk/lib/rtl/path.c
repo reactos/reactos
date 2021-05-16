@@ -2177,17 +2177,17 @@ RtlSetSearchPathMode(_In_ ULONG Flags)
 
     switch (Flags)
     {
-    case BASE_SEARCH_PATH_ENABLE_SAFE_SEARCHMODE:
-        RetVal = 1;
-        break;
-    case BASE_SEARCH_PATH_DISABLE_SAFE_SEARCHMODE:
-        RetVal = 0;
-        break;
-    case BASE_SEARCH_PATH_ENABLE_SAFE_SEARCHMODE | BASE_SEARCH_PATH_PERMANENT:
-        InterlockedExchange((LONG *)&RtlPathSafeMode, 2);
-        return STATUS_SUCCESS;
-    default:
-        return STATUS_INVALID_PARAMETER;
+        case BASE_SEARCH_PATH_ENABLE_SAFE_SEARCHMODE:
+            RetVal = 1;
+            break;
+        case BASE_SEARCH_PATH_DISABLE_SAFE_SEARCHMODE:
+            RetVal = 0;
+            break;
+        case BASE_SEARCH_PATH_ENABLE_SAFE_SEARCHMODE | BASE_SEARCH_PATH_PERMANENT:
+            InterlockedExchange((LONG *)&RtlPathSafeMode, 2);
+            return STATUS_SUCCESS;
+        default:
+            return STATUS_INVALID_PARAMETER;
     }
 
     for (;;)
