@@ -1120,7 +1120,7 @@ GetFullPathNameW(IN LPCWSTR lpFileName,
  */
 BOOL
 WINAPI
-SetSearchPathMode(IN DWORD dwFlags)
+SetSearchPathMode(_In_ DWORD dwFlags)
 {
     NTSTATUS Status;
 
