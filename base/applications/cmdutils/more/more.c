@@ -408,8 +408,8 @@ Restart:
     /* If extended features are available */
     if (s_dwFlags & FLAG_E)
     {
-        /* 'Q': Quit */
-        if (KeyEvent.wVirtualKeyCode == L'Q')
+        /* 'Q' or [Esc]: Quit */
+        if (KeyEvent.wVirtualKeyCode == L'Q' || KeyEvent.wVirtualKeyCode == VK_ESCAPE)
         {
             /* We break, output a newline */
             WCHAR ch = L'\n';

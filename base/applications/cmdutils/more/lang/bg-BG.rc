@@ -24,13 +24,14 @@ at ""-- Continue --"" prompt:\n\
    =        Show line number.\n\
    ?        Show help line.\n\
    <Space>  Display next page.\n\
-   <Enter>  Display next line.\n"
+   <Enter>  Display next line.\n\
+   <Esc>    Same as Q.\n"
 
     IDS_CONTINUE "-- Продължаване --"
     IDS_CONTINUE_PROGRESS "-- Продължаване (%d%%) --"
     IDS_FILE_ACCESS "Няма достъп до файл %s.\n"
     IDS_BAD_FLAG "Invalid argument - '%ls'\n"
-    IDS_CONTINUE_OPTIONS "-- Continue (%d%%) -- [Options: psfq=<Space><Enter>]"
+    IDS_CONTINUE_OPTIONS "-- Continue (%d%%) -- [Options: psfq=<Space><Enter><Esc>]"
     IDS_CONTINUE_LINES "-- Continue (%d%%) -- Lines: "
     IDS_CONTINUE_LINE_AT "-- Continue (%d%%) -- [Line:%d]"
 END
