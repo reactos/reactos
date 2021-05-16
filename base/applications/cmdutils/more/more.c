@@ -788,6 +788,120 @@ LoadRegistrySettings(HKEY hKeyRoot)
     RegCloseKey(hKey);
 }
 
+static BOOL ParseArgument(LPCWSTR arg, BOOL *pbHasFiles)
+{
+    if (arg[0] == L'/')
+    {
+        switch (towupper(arg[1]))
+        {
+            case L'?':
+                if (arg[2] == 0)
+                {
+                    s_dwFlags |= FLAG_HELP;
+                    return TRUE;
+                }
+                break;
+            case L'E':
+                if (arg[2] == 0)
+                {
+                    s_dwFlags |= FLAG_E;
+                    return TRUE;
+                }
+                break;
+            case L'C':
+                if (arg[2] == 0)
+                {
+                    s_dwFlags |= FLAG_C;
+                    return TRUE;
+                }
+                break;
+            case L'P':
+                if (arg[2] == 0)
+                {
+                    s_dwFlags |= FLAG_P;
+                    return TRUE;
+                }
+                break;
+            case L'S':
+                if (arg[2] == 0)
+                {
+                    s_dwFlags |= FLAG_S;
+                    return TRUE;
+                }
+                break;
+            case L'T':
+                if (L'0' <= arg[2] && arg[2] <= L'9')
+                {
+                    LPWSTR endptr;
+                    s_dwFlags |= FLAG_Tn;
+                    s_nTabWidth = wcstoul(&arg[2], &endptr, 10);
+                    if (*endptr == 0)
+                        return TRUE;
+                }
+                break;
+            default:
+                break;
+        }
+    }
+    else if (arg[0] == L'+')
+    {
+        if (L'0' <= arg[1] && arg[1] <= L'9')
+        {
+            LPWSTR endptr;
+            s_dwFlags |= FLAG_PLUSn;
+            s_nNextLineNo = wcstoul(&arg[1], &endptr, 10);
+            if (*endptr == 0)
+                return TRUE;
+        }
+    }
+
+    if (IsFlag(arg))
+    {
+        ConResPrintf(StdErr, IDS_BAD_FLAG, arg);
+        return FALSE;
+    }
+    else
+    {
+        *pbHasFiles = TRUE;
+    }
+
+    return TRUE;
+}
+
+static BOOL ParseMoreVariable(BOOL *pbHasFiles)
+{
+    LPWSTR psz, pch;
+    DWORD cch;
+    BOOL ret;
+
+    cch = GetEnvironmentVariableW(L"MORE", NULL, 0);
+    if (cch == 0)
+        return TRUE;
+
+    psz = (LPWSTR)malloc((cch + 1) * sizeof(WCHAR));
+    if (!psz)
+        return TRUE;
+
+    if (!GetEnvironmentVariableW(L"MORE", psz, cch + 1))
+    {
+        free(psz);
+        return TRUE;
+    }
+
+    pch = wcstok(psz, L" ");
+    while (pch)
+    {
+        ret = ParseArgument(pch, pbHasFiles);
+        if (!ret)
+            break;
+
+        pch = wcstok(NULL, L" ");
+    }
+
+    free(psz);
+    return ret;
+}
+
 // INT CommandMore(LPTSTR cmd, LPTSTR param)
 int wmain(int argc, WCHAR* argv[])
 {
@@ -856,84 +970,13 @@ int wmain(int argc, WCHAR* argv[])
         return 1;
     }
 
-    /* Parse flags */
     HasFiles = FALSE;
+    if (!ParseMoreVariable(&HasFiles))
+        return 1;
     for (i = 1; i < argc; i++)
     {
-        if (argv[i][0] == L'/')
-        {
-            switch (towupper(argv[i][1]))
-            {
-                case L'?':
-                    if (argv[i][2] == 0)
-                    {
-                        s_dwFlags |= FLAG_HELP;
-                        continue;
-                    }
-                    break;
-                case L'E':
-                    if (argv[i][2] == 0)
-                    {
-                        s_dwFlags |= FLAG_E;
-                        continue;
-                    }
-                    break;
-                case L'C':
-                    if (argv[i][2] == 0)
-                    {
-                        s_dwFlags |= FLAG_C;
-                        continue;
-                    }
-                    break;
-                case L'P':
-                    if (argv[i][2] == 0)
-                    {
-                        s_dwFlags |= FLAG_P;
-                        continue;
-                    }
-                    break;
-                case L'S':
-                    if (argv[i][2] == 0)
-                    {
-                        s_dwFlags |= FLAG_S;
-                        continue;
-                    }
-                    break;
-                case L'T':
-                    if (L'0' <= argv[i][2] && argv[i][2] <= L'9')
-                    {
-                        LPWSTR endptr;
-                        s_dwFlags |= FLAG_Tn;
-                        s_nTabWidth = wcstoul(&argv[i][2], &endptr, 10);
-                        if (*endptr == 0)
-                            continue;
-                    }
-                    break;
-                default:
-                    break;
-            }
-        }
-        else if (argv[i][0] == L'+')
-        {
-            if (L'0' <= argv[i][1] && argv[i][1] <= L'9')
-            {
-                LPWSTR endptr;
-                s_dwFlags |= FLAG_PLUSn;
-                s_nNextLineNo = wcstoul(&argv[i][1], &endptr, 10);
-                if (*endptr == 0)
-                    continue;
-            }
-        }
-
-        if (IsFlag(argv[i]))
-        {
-            ConResPrintf(StdErr, IDS_BAD_FLAG, argv[i]);
+        if (!ParseArgument(argv[i], &HasFiles))
             return 1;
-        }
-        else
-        {
-            HasFiles = TRUE;
-        }
     }
 
     if (s_dwFlags & FLAG_HELP)
