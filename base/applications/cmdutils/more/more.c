@@ -48,6 +48,9 @@ HANDLE hFile = INVALID_HANDLE_VALUE;
 HANDLE hStdIn, hStdOut;
 HANDLE hKeyboard;
 
+/* Enable/Disable extensions */
+BOOL bEnableExtensions = TRUE; // FIXME: By default, it should be FALSE.
+
 #define FLAG_HELP (1 << 0)
 #define FLAG_E (1 << 1)
 #define FLAG_C (1 << 2)
@@ -747,20 +750,17 @@ FileGetString(
     return TRUE;
 }
 
-static BOOL
-LoadRegistrySettings(HKEY hKeyRoot, BOOL bDefault)
+static VOID
+LoadRegistrySettings(HKEY hKeyRoot)
 {
     LONG lRet;
     HKEY hKey;
-    DWORD dwType, dwSize;
-    BOOL ret = bDefault;
+    DWORD dwType, len;
     /*
      * Buffer big enough to hold the string L"4294967295",
      * corresponding to the literal 0xFFFFFFFF (MAXULONG) in decimal.
      */
     WCHAR Buffer[11];
-    typedef char assertion_1[(sizeof(Buffer) >= sizeof(L"4294967295")) ? 1 : -1];
-    typedef char assertion_2[(sizeof(Buffer) >= sizeof(DWORD)) ? 1 : -1];
 
     lRet = RegOpenKeyExW(hKeyRoot,
                          L"Software\\Microsoft\\Command Processor",
@@ -768,27 +768,26 @@ LoadRegistrySettings(HKEY hKeyRoot, BOOL bDefault)
                          KEY_QUERY_VALUE,
                          &hKey);
     if (lRet != ERROR_SUCCESS)
-        return ret;
+        return;
 
-    dwSize = sizeof(Buffer);
+    len = sizeof(Buffer);
     lRet = RegQueryValueExW(hKey,
                             L"EnableExtensions",
                             NULL,
                             &dwType,
                             (LPBYTE)&Buffer,
-                            &dwSize);
+                            &len);
     if (lRet == ERROR_SUCCESS)
     {
         /* Overwrite the default setting */
         if (dwType == REG_DWORD)
-            ret = (*(PDWORD)Buffer != 0);
+            bEnableExtensions = !!*(PDWORD)Buffer;
         else if (dwType == REG_SZ)
-            ret = (_wtol(Buffer) != 0);
+            bEnableExtensions = (_wtol((PWSTR)Buffer) == 1);
     }
     // else, use the default setting set globally.
 
     RegCloseKey(hKey);
-    return ret;
 }
 
 static BOOL ParseArgument(LPCWSTR arg, BOOL *pbHasFiles)
@@ -947,9 +946,9 @@ int wmain(int argc, WCHAR* argv[])
     }
 
     /* Load the registry settings */
-    bExtended = LoadRegistrySettings(HKEY_LOCAL_MACHINE, FALSE);
-    bExtended = LoadRegistrySettings(HKEY_CURRENT_USER, bExtended);
-    if (bExtended)
+    LoadRegistrySettings(HKEY_LOCAL_MACHINE);
+    LoadRegistrySettings(HKEY_CURRENT_USER);
+    if (bEnableExtensions)
         s_dwFlags |= FLAG_E;
 
     // FIXME2: Use the PARSER api that can be found in EVENTCREATE.
