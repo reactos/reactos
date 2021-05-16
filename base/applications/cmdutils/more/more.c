@@ -911,7 +911,7 @@ int wmain(int argc, WCHAR* argv[])
 
     int i;
 
-    BOOL bRet, bContinue, bLoaded;
+    BOOL bRet, bContinue, bExtended;
 
     ENCODING Encoding;
     DWORD SkipBytes = 0;
@@ -944,8 +944,9 @@ int wmain(int argc, WCHAR* argv[])
     }
 
     /* Load the registry settings */
-    bLoaded = LoadRegistrySettings(HKEY_LOCAL_MACHINE, FALSE);
-    if (LoadRegistrySettings(HKEY_CURRENT_USER, bLoaded))
+    bExtended = LoadRegistrySettings(HKEY_LOCAL_MACHINE, FALSE);
+    bExtended = LoadRegistrySettings(HKEY_CURRENT_USER, bExtended);
+    if (bExtended)
         s_dwFlags |= FLAG_E;
 
     // FIXME2: Use the PARSER api that can be found in EVENTCREATE.
