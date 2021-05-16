@@ -104,9 +104,11 @@ private:
 #ifndef NOWIREFRAME
     int			wireframetris;
     int			wireframequads;
+#ifndef __REACTOS__
     int			npts;
     REAL		mesh[3][4];
     int			meshindex;
+#endif
 #endif
 };
 
