@@ -66,7 +66,23 @@ static BOOL s_bPrevLineIsBlank = FALSE;
 
 static inline BOOL IsFlag(LPCWSTR param)
 {
-    return (param[0] == L'/') || (param[0] == L'+');
+    if (param[0] == L'/')
+        return TRUE;
+
+    if (param[0] == L'+')
+    {
+        LPCWSTR pch = param + 1;
+        if (L'0' <= *pch && *pch <= L'9')
+        {
+            do
+            {
+                ++pch;
+            } while (L'0' <= *pch && *pch <= L'9');
+
+            return (*pch == 0);
+        }
+    }
+    return FALSE;
 }
 
 static BOOL CALLBACK MorePageActionDoNothing(PCON_PAGER Pager)
@@ -1000,7 +1016,7 @@ int wmain(int argc, WCHAR* argv[])
         if (hFile == INVALID_HANDLE_VALUE)
         {
             ConResPrintf(StdErr, IDS_FILE_ACCESS, szFullPath);
-            continue;
+            goto Quit;
         }
 
         /* We currently do not support files too big */
