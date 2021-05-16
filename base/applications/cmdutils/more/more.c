@@ -432,9 +432,8 @@ Restart:
         /* '?': Show Options */
         if (KeyEvent.uChar.UnicodeChar == L'?')
         {
-            Pager->PagerAction = MorePageActionDoNothing;
             s_nPromptID = IDS_CONTINUE_OPTIONS;
-            return TRUE;
+            goto Restart;
         }
 
         /* [Enter] key: One line */
