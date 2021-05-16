@@ -59,7 +59,6 @@ extern "C" {
     _In_z_ const char *_Filename,
     _In_opt_ struct _utimbuf *_Time);
 
-  _CRTIMP
   int
   __cdecl
   _utime32(
@@ -73,7 +72,6 @@ extern "C" {
     _In_ int _FileDes,
     _In_opt_ struct _utimbuf *_Time);
 
-  _CRTIMP
   int
   __cdecl
   _futime32(
@@ -87,7 +85,6 @@ extern "C" {
     _In_z_ const wchar_t *_Filename,
     _In_opt_ struct _utimbuf *_Time);
 
-  _CRTIMP
   int
   __cdecl
   _wutime32(

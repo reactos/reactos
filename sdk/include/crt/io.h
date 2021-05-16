@@ -413,7 +413,6 @@ _getcwd(
     _Out_ struct _finddata32i64_t *_FindData);
 
   _Check_return_
-  _CRTIMP
   intptr_t
   __cdecl
   _findfirst64i32(
@@ -437,7 +436,6 @@ _getcwd(
     _Out_ struct _finddata32i64_t *_FindData);
 
   _Check_return_
-  _CRTIMP
   int
   __cdecl
   _findnext64i32(

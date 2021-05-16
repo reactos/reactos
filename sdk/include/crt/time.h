@@ -299,7 +299,7 @@ extern "C" {
   _wasctime(
     _In_ const struct tm *_Tm);
 
-  _CRTIMP wchar_t *__cdecl _wctime(const time_t *_Time);
+  wchar_t *__cdecl _wctime(const time_t *_Time);
 
   _CRTIMP
   _CRT_INSECURE_DEPRECATE(_wctime32_s)
