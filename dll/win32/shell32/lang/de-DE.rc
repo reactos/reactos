@@ -94,7 +94,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     DEFPUSHBUTTON "OK", 1, 60, 175, 60, 15, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
     PUSHBUTTON "Abbrechen", 2, 125, 175, 60, 15, WS_GROUP | WS_TABSTOP
-    LTEXT "", IDC_BROWSE_FOR_FOLDER_TITLE, 4, 4, 180, 12
+    LTEXT "", IDC_BROWSE_FOR_FOLDER_TITLE, 4, 4, 180, 24
     LTEXT "", IDC_BROWSE_FOR_FOLDER_STATUS, 4, 25, 180, 12
     CONTROL "", IDC_BROWSE_FOR_FOLDER_TREEVIEW, "SysTreeView32", TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | WS_BORDER | WS_TABSTOP, 4, 40, 180, 120
 END
@@ -639,17 +639,17 @@ Sind Sie sicher, dass Sie diese Datei öffnen möchten?", IDC_STATIC, 35, 5, 230
 END
 
 IDD_NEWEXTENSION DIALOGEX 0, 0, 260, 75
-CAPTION "Create New Extension"
+CAPTION "Eine neue Erweiterung erstellen"
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "&File Extension:", -1, 10, 10, 85, 14
+    LTEXT "&Dateierweiterung:", -1, 10, 10, 85, 14
     EDITTEXT IDC_NEWEXT_EDIT, 105, 8, 60, 14
-    PUSHBUTTON "<< Ad&vanced", IDC_NEWEXT_ADVANCED, 185, 8, 65, 15
-    LTEXT "&Associated File Type:", IDC_NEWEXT_ASSOC, 10, 34, 85, 14
+    PUSHBUTTON "<< Er&weitert", IDC_NEWEXT_ADVANCED, 185, 8, 65, 15
+    LTEXT "&Verknüpfung mir Dateityp:", IDC_NEWEXT_ASSOC, 10, 34, 85, 14
     COMBOBOX IDC_NEWEXT_COMBOBOX, 105, 32, 145, 120, CBS_AUTOHSCROLL | CBS_DROPDOWNLIST | WS_VSCROLL | WS_GROUP | WS_TABSTOP
     DEFPUSHBUTTON "OK", IDOK, 125, 55, 60, 14
-    PUSHBUTTON "Cancel", IDCANCEL, 190, 55, 60, 14
+    PUSHBUTTON "Abbrechen", IDCANCEL, 190, 55, 60, 14
 END
 
 STRINGTABLE
@@ -893,12 +893,12 @@ BEGIN
     IDS_ADVANCED_SHOW_COMP_COLOR "Verschlüsselte oder komprimierte NTFS-Dateien farbig anzeigen"
     IDS_ADVANCED_SHOW_INFO_TIP "Popupinformationen für Ordner- und Desktop-Elemente anzeigen"
 
-    IDS_NEWEXT_ADVANCED_LEFT "<< Ad&vanced"
-    IDS_NEWEXT_ADVANCED_RIGHT "Ad&vanced >>"
-    IDS_NEWEXT_NEW "<New>"
-    IDS_NEWEXT_SPECIFY_EXT "You must specify an extension."
-    IDS_NEWEXT_ALREADY_ASSOC "Extension %s is already associated with File Type %s. Do you want to un-associate %s with %s and create a new File Type for it?"
-    IDS_NEWEXT_EXT_IN_USE "Extension is in use"
+    IDS_NEWEXT_ADVANCED_LEFT "<< Er&weitert"
+    IDS_NEWEXT_ADVANCED_RIGHT "&Erweitert >>"
+    IDS_NEWEXT_NEW "<Neu>"
+    IDS_NEWEXT_SPECIFY_EXT "Es muss eine Erweiterung angegeben werden."
+    IDS_NEWEXT_ALREADY_ASSOC "Die Erweiterung %s ist bereits mit dem Dateityp %s verknüpft. Möchten Sie die Verknüpfung von %s mit %s entfernen und einen neuen Dateityp erstellen?"
+    IDS_NEWEXT_EXT_IN_USE "Erweiterung wird bereits verwendet"
 
-    IDS_REMOVE_EXT "If you remove a registered file name extension, you will not be able to open files with this extension by double-clicking their icons.\n\nAre you sure you want to remove this extension?"
+    IDS_REMOVE_EXT "Nach dem Entfernen einer registrierten Dateinamenerweiterung können Dateien mit dieser Erweiterung nicht mehr durch Doppelklicken auf das Dateisymbol geöffnet werden.\n\nSoll die Erweiterung trotzdem entfernt werden?"
 END
