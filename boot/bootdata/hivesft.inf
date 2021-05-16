@@ -469,7 +469,6 @@ HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\BitBucket\Volume",,0x00
 
 ; CMD Settings
 HKLM,"SOFTWARE\Microsoft\Command Processor","AutoRun",0x00020000,""
-HKLM,"SOFTWARE\Microsoft\Command Processor","EnableExtensions",0x00010003,1
 
 ; Uninstall Application list
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall",,0x00000012
