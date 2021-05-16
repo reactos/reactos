@@ -215,6 +215,7 @@ PagePrompt(PCON_PAGER Pager, DWORD Done, DWORD Total)
     BOOL fCtrl;
     DWORD nLines;
     WCHAR ch;
+
 Restart:
     nLines = 0;
 
