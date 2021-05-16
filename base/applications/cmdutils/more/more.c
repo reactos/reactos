@@ -48,9 +48,6 @@ HANDLE hFile = INVALID_HANDLE_VALUE;
 HANDLE hStdIn, hStdOut;
 HANDLE hKeyboard;
 
-/* Enable/Disable extensions */
-BOOL s_bEnableExtensions = FALSE;
-
 #define FLAG_HELP (1 << 0)
 #define FLAG_E (1 << 1)
 #define FLAG_C (1 << 2)
