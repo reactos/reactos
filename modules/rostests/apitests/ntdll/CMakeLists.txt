@@ -81,6 +81,7 @@ list(APPEND SOURCE
     RtlReAllocateHeap.c
     RtlUnicodeStringToAnsiString.c
     RtlUnicodeStringToCountedOemString.c
+    RtlUnicodeToOemN.c
     RtlUpcaseUnicodeStringToCountedOemString.c
     RtlValidateUnicodeString.c
     RtlxUnicodeStringToAnsiSize.c
