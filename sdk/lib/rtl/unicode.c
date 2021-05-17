@@ -519,16 +519,24 @@ RtlIsValidOemCharacter(IN PWCHAR Char)
     /* If multi-byte code page present */
     if (NlsMbOemCodePageTag)
     {
-        USHORT Offset = 0;
+        USHORT Offset;
 
         OemChar = NlsUnicodeToMbOemTable[*Char];
 
         /* If character has Lead Byte */
-        if (NlsOemLeadByteInfo[HIBYTE(OemChar)])
-            Offset = NlsOemLeadByteInfo[HIBYTE(OemChar)];
+        Offset = NlsOemLeadByteInfo[HIBYTE(OemChar)];
+        if (Offset)
+        {
+            /* Use DBCS table */
+            UnicodeChar = NlsOemLeadByteInfo[Offset + LOBYTE(OemChar)];
+        }
+        else
+        {
+            UnicodeChar = NlsOemToUnicodeTable[OemChar];
+        }
 
-        /* Receive Unicode character from the table */
-        UnicodeChar = RtlpUpcaseUnicodeChar(NlsOemToUnicodeTable[LOBYTE(OemChar) + Offset]);
+        /* Upcase */
+        UnicodeChar = RtlpUpcaseUnicodeChar(UnicodeChar);
 
         /* Receive OEM character from the table */
         OemChar = NlsUnicodeToMbOemTable[UnicodeChar];
@@ -544,7 +552,10 @@ RtlIsValidOemCharacter(IN PWCHAR Char)
 
     /* Not valid character, failed */
     if (OemChar == NlsOemDefaultChar)
+    {
+        DPRINT1("\\u%04x is not valid for OEM\n", *Char);
         return FALSE;
+    }
 
     *Char = UnicodeChar;
 
