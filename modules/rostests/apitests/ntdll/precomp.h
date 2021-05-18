@@ -35,4 +35,10 @@ QuerySetThreadValidator(
     _In_ ULONG InfoLength,
     _In_ NTSTATUS ExpectedStatus);
 
+void
+SetupLocale(
+    _In_ ULONG AnsiCode,
+    _In_ ULONG OemCode,
+    _In_ ULONG Unicode);
+
 #endif /* _NTDLL_APITEST_PRECOMP_H_ */
