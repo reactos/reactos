@@ -1,7 +1,4 @@
 
-list(APPEND SOURCE
-    main.c
-    txt.c
-    nls.c)
+list(APPEND SOURCE main.cpp)
 
 add_host_tool(txt2nls ${SOURCE})
