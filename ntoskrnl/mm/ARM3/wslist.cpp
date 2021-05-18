@@ -20,8 +20,6 @@ PMMWSL MmWorkingSetList;
 KEVENT MmWorkingSetManagerEvent;
 
 /* LOCAL FUNCTIONS ************************************************************/
-namespace ntoskrnl
-{
 
 static MMPTE GetPteTemplateForWsList(PMMWSL WsList)
 {
@@ -86,7 +84,7 @@ static void FreeWsleIndex(PMMWSL WsList, ULONG Index)
             PFN_NUMBER Page = PFN_FROM_PTE(PointerPte);
 
             {
-                MiPfnLockGuard PfnLock;
+                ntoskrnl::MiPfnLockGuard PfnLock;
 
                 PMMPFN Pfn = MiGetPfnEntry(Page);
                 MI_SET_PFN_DELETED(Pfn);
@@ -177,7 +175,7 @@ static ULONG GetFreeWsleIndex(PMMWSL WsList)
             ASSERT(PointerPte->u.Hard.Valid == 0);
             MMPTE TempPte = GetPteTemplateForWsList(WsList);
             {
-                MiPfnLockGuard PfnLock;
+                ntoskrnl::MiPfnLockGuard PfnLock;
 
                 TempPte.u.Hard.PageFrameNumber = MiRemoveAnyPage(GetNextPageColorForWsList(WsList));
                 MiInitializePfnAndMakePteValid(TempPte.u.Hard.PageFrameNumber, PointerPte, TempPte);
@@ -271,7 +269,7 @@ TrimWsList(PMMWSL WsList)
         /* Please put yourself aside and make place for the younger ones */
         PFN_NUMBER Page = PFN_FROM_PTE(PointerPte);
         {
-            MiPfnLockGuard PfnLock;
+            ntoskrnl::MiPfnLockGuard PfnLock;
 
             PMMPFN Pfn = MiGetPfnEntry(Page);
 
@@ -489,5 +487,3 @@ MmWorkingSetManager(VOID)
 }
 
 } // extern "C"
-
-} // namespace ntoskrnl
