@@ -5,12 +5,13 @@ list(APPEND SOURCE
     pc98vid.c
     pc98vid.h)
 
-# Actual binary filename is vga.sys
-add_library(vga MODULE ${SOURCE} pc98vid.rc)
+add_library(pc98vid MODULE ${SOURCE} pc98vid.rc)
 
-set_module_type(vga kernelmodedriver)
-add_pch(vga pc98vid.h SOURCE)
-add_importlibs(vga ntoskrnl videoprt)
-add_cd_file(TARGET vga DESTINATION reactos/system32/drivers FOR all)
+set_module_type(pc98vid kernelmodedriver)
+# Actual binary filename is vga.sys
+set_target_properties(pc98vid PROPERTIES OUTPUT_NAME "vga" PDB_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}")
+add_pch(pc98vid pc98vid.h SOURCE)
+add_importlibs(pc98vid ntoskrnl videoprt)
+add_cd_file(TARGET pc98vid DESTINATION reactos/system32/drivers FOR all)
 add_registry_inf(pc98vid_reg.inf)
-add_driver_inf(vga pc98disp.inf)
+add_driver_inf(pc98vid pc98disp.inf)

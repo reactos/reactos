@@ -1,6 +1,5 @@
 
 if(SARCH STREQUAL "pc98")
-    # Actual binary filename is vga.sys
     add_subdirectory(pc98vid)
 elseif(SARCH STREQUAL "xbox")
     add_subdirectory(xboxvmp)
