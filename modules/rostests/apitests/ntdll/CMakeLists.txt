@@ -8,6 +8,7 @@ spec2def(ntdll_apitest.exe ntdll_apitest.spec)
 list(APPEND SOURCE
     LdrEnumResources.c
     load_notifications.c
+    locale.c
     NtAcceptConnectPort.c
     NtAllocateVirtualMemory.c
     NtApphelpCacheControl.c
@@ -81,6 +82,8 @@ list(APPEND SOURCE
     RtlUnicodeStringToAnsiString.c
     RtlUpcaseUnicodeStringToCountedOemString.c
     RtlValidateUnicodeString.c
+    RtlxUnicodeStringToAnsiSize.c
+    RtlxUnicodeStringToOemSize.c
     StackOverflow.c
     SystemInfo.c
     Timer.c)
