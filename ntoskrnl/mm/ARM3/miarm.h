@@ -210,11 +210,6 @@ extern const ULONG MmProtectToValue[32];
 #endif
 
 //
-// Special IRQL value (found in assertions)
-//
-#define MM_NOIRQL (KIRQL)0xFFFFFFFF
-
-//
 // Prototype PTEs that don't yet have a pagefile association
 //
 #ifdef _WIN64

@@ -114,6 +114,11 @@ typedef ULONG_PTR SWAPENTRY;
 
 #define MAX_PAGING_FILES                    (16)
 
+//
+// Special IRQL value (found in assertions)
+//
+#define MM_NOIRQL (KIRQL)0xFFFFFFFF
+
 // FIXME: use ALIGN_UP_BY
 #define MM_ROUND_UP(x,s)                    \
     ((PVOID)(((ULONG_PTR)(x)+(s)-1) & ~((ULONG_PTR)(s)-1)))
@@ -1061,11 +1066,27 @@ MiMapPageInHyperSpace(IN PEPROCESS Process,
                       IN PFN_NUMBER Page,
                       IN PKIRQL OldIrql);
 
+FORCEINLINE
+PVOID
+MiMapPageInHyperSpaceAtDpcLevel(_In_ PEPROCESS Process,
+                                _In_ PFN_NUMBER Page)
+{
+    return MiMapPageInHyperSpace(Process, Page, NULL);
+}
+
 VOID
 NTAPI
 MiUnmapPageInHyperSpace(IN PEPROCESS Process,
                         IN PVOID Address,
                         IN KIRQL OldIrql);
+
+FORCEINLINE
+VOID
+MiUnmapPageInHyperSpaceAtDpcLevel(_In_ PEPROCESS Process,
+                                  _In_ PVOID Address)
+{
+    MiUnmapPageInHyperSpace(Process, Address, MM_NOIRQL);
+}
 
 PVOID
 NTAPI
