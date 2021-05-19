@@ -681,6 +681,13 @@ MI_IS_PAGE_TABLE_OR_HYPER_ADDRESS(PVOID Address)
     return (AddressAsUlong >= PTE_BASE) && (AddressAsUlong <= (ULONG_PTR)MmHyperSpaceEnd);
 }
 
+FORCEINLINE
+BOOLEAN
+MI_IS_PRIVATE_PTE(PMMPTE Pte)
+{
+    return (Pte <= MiHighestUserPte) || MI_IS_PAGE_TABLE_OR_HYPER_ADDRESS(MiPteToAddress(Pte));
+}
+
 //
 // Working set manipulation
 //

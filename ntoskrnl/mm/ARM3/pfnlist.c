@@ -266,28 +266,77 @@ MiUnlinkFreeOrZeroedPage(IN PMMPFN Entry)
 }
 
 static
-VOID
-MiRestoreOriginalPte(_In_ PMMPFN Pfn)
+BOOLEAN
+MiRestoreOriginalPte(_In_ PFN_NUMBER Page)
 {
+    /*
+     * NB: There can be a deadlock here because we have to lock
+     * working sets while holding the PFN lock, while the page fault
+     * handler does it the other way around. Hence we only try to lock
+     * the working sets, and make place to the one holding it, if any.
+     */
+    PMMPFN Pfn = MI_PFN_ELEMENT(Page);
+
     ASSERT((Pfn->u3.e1.PageLocation == ModifiedPageList) || (Pfn->u3.e1.PageLocation == StandbyPageList));
 
     DPRINT("Restoring PTE %p to %lx\n", Pfn->PteAddress, Pfn->OriginalPte.u.Long);
 
-    if (Pfn->PteAddress > MiHighestUserPte)
+    BOOLEAN HaveLock = FALSE;
+    PEX_PUSH_LOCK WorkingSetMutex;
+
+    /* Check where this PTE belongs */
+    if (MI_IS_SESSION_PTE(Pfn->PteAddress))
     {
-        /* Easy. The PTE lives in global space */
-        *Pfn->PteAddress = Pfn->OriginalPte;
+        UNIMPLEMENTED_DBGBREAK("No paging for session space yet!");
+    }
+    else if (MI_IS_PRIVATE_PTE(Pfn->PteAddress))
+    {
+        /* PTE is private to a process. We must go up the chain until we find it. */
+        PMMPFN ProcessPfn = MiGetPfnEntry(Pfn->u4.PteFrame);
+
+        /* The top-level PFN is self mapping and this is how we find it */
+        while (ProcessPfn->u4.PteFrame != MiGetPfnEntryIndex(ProcessPfn))
+            ProcessPfn = MiGetPfnEntry(ProcessPfn->u4.PteFrame);
+
+        PEPROCESS Process = (PEPROCESS)ProcessPfn->u1.Event;
+        PETHREAD Thread = PsGetCurrentThread();
+
+        /* This is not a place for shared lock */
+        ASSERT(!Thread->OwnsProcessWorkingSetShared);
+
+        if ((Process != PsGetCurrentProcess()) || !Thread->OwnsProcessWorkingSetExclusive)
+        {
+            if (!ExTryToAcquirePushLockExclusive(&Process->Vm.WorkingSetMutex))
+                return FALSE;
+            HaveLock = TRUE;
+            WorkingSetMutex = &Process->Vm.WorkingSetMutex;
+        }
     }
     else
     {
-        KIRQL OldIrql;
-        /* We need to map the PDE to get to the PTE. */
-        PMMPTE PteFrame = MiMapPageInHyperSpace(PsGetCurrentProcess(), Pfn->u4.PteFrame, &OldIrql);
+        PETHREAD Thread = PsGetCurrentThread();
 
-        PteFrame[MiPteToPteOffset(Pfn->PteAddress)] = Pfn->OriginalPte;
+        /* This is not a place for shared lock */
+        ASSERT(!Thread->OwnsSystemWorkingSetShared);
 
-        MiUnmapPageInHyperSpace(PsGetCurrentProcess(), PteFrame, OldIrql);
+        if (!Thread->OwnsSystemWorkingSetExclusive)
+        {
+            if (!ExTryToAcquirePushLockExclusive(&MmSystemCacheWs.WorkingSetMutex))
+                return FALSE;
+            HaveLock = TRUE;
+            WorkingSetMutex = &MmSystemCacheWs.WorkingSetMutex;
+        }
     }
+
+    /* Map the Frame PTE. Do not dereference PteAddress, we don't know the state of the PDE. */
+    PMMPTE Frame = MiMapPageInHyperSpaceAtDpcLevel(PsGetCurrentProcess(), Pfn->u4.PteFrame);
+
+    Frame[MiPteToPteOffset(Pfn->PteAddress)] = Pfn->OriginalPte;
+
+    MiUnmapPageInHyperSpaceAtDpcLevel(PsGetCurrentProcess(), Frame);
+
+    if (HaveLock)
+        ExReleasePushLockExclusive(WorkingSetMutex);
 
     /* Kill whatever was a reference to the now restored PTE */
     MiDecrementShareCount(MiGetPfnEntry(Pfn->u4.PteFrame), Pfn->u4.PteFrame);
@@ -296,6 +345,8 @@ MiRestoreOriginalPte(_In_ PMMPFN Pfn)
     Pfn->PteAddress = NULL;
     Pfn->OriginalPte.u.Long = 0;
     Pfn->u3.e1.PrototypePte = 0;
+
+    return TRUE;
 }
 
 VOID
@@ -544,8 +595,19 @@ MiRemoveAnyPage(IN ULONG Color)
                         if (MmStandbyPageListByPriority[i].Total != 0)
                         {
                             PageIndex = MmStandbyPageListByPriority[i].Blink;
-                            DPRINT("Taking page %lx from Stand-by list.\n", PageIndex);
-                            break;
+
+                            while (!MiRestoreOriginalPte(PageIndex))
+                            {
+                                PageIndex = MI_PFN_ELEMENT(PageIndex)->u2.Blink;
+                                if (PageIndex == LIST_HEAD)
+                                    break;
+                            }
+
+                            if (PageIndex != LIST_HEAD)
+                            {
+                                DPRINT("Taking page %lx from Stand-by list.\n", PageIndex);
+                                break;
+                            }
                         }
                     }
                 }
@@ -560,8 +622,6 @@ MiRemoveAnyPage(IN ULONG Color)
     Pfn1 = MI_PFN_ELEMENT(PageIndex);
     if (Pfn1->u3.e1.PageLocation == StandbyPageList)
     {
-        MiRestoreOriginalPte(Pfn1);
-
         MiUnlinkPageFromList(Pfn1);
 
 #if MI_TRACE_PFNS
@@ -634,8 +694,19 @@ MiRemoveZeroPage(IN ULONG Color)
                         if (MmStandbyPageListByPriority[i].Total != 0)
                         {
                             PageIndex = MmStandbyPageListByPriority[i].Blink;
-                            DPRINT("Taking page %lx from Stand-by list.\n", PageIndex);
-                            break;
+
+                            while (!MiRestoreOriginalPte(PageIndex))
+                            {
+                                PageIndex = MI_PFN_ELEMENT(PageIndex)->u2.Blink;
+                                if (PageIndex == LIST_HEAD)
+                                    break;
+                            }
+
+                            if (PageIndex != LIST_HEAD)
+                            {
+                                DPRINT("Taking page %lx from Stand-by list.\n", PageIndex);
+                                break;
+                            }
                         }
                     }
                 }
@@ -654,7 +725,6 @@ MiRemoveZeroPage(IN ULONG Color)
     Pfn1 = MI_PFN_ELEMENT(PageIndex);
     if (Pfn1->u3.e1.PageLocation == StandbyPageList)
     {
-        MiRestoreOriginalPte(Pfn1);
         MiUnlinkPageFromList(Pfn1);
 
 #if MI_TRACE_PFNS
