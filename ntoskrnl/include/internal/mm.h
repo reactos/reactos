@@ -1674,21 +1674,6 @@ VOID
 NTAPI
 MiInitializeWorkingSetList(_Inout_ PMMSUPPORT WorkingSet);
 
-_Requires_exclusive_lock_held_(Vm->WorkingSetMutex)
-VOID
-NTAPI
-MiInsertInWorkingSetList(
-    _Inout_ PMMSUPPORT Vm,
-    _In_ PVOID Address,
-    _In_ ULONG Protection);
-
-_Requires_exclusive_lock_held_(Vm->WorkingSetMutex)
-VOID
-NTAPI
-MiRemoveFromWorkingSetList(
-    _Inout_ PMMSUPPORT Vm,
-    _In_ PVOID Address);
-
 #ifdef __cplusplus
 } // extern "C"
 

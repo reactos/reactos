@@ -572,14 +572,15 @@ MmDeleteProcessAddressSpace(PEPROCESS Process)
 
 #if (_MI_PAGING_LEVELS == 2)
     {
+        KIRQL OldIrql;
         PVOID Address;
         PMMPDE pointerPde;
-        KAPC_STATE ApcState;
 
         /* Attach to Process */
-        KeStackAttachProcess(&Process->Pcb, &ApcState);
+        KeAttachProcess(&Process->Pcb);
 
-        MiLockProcessWorkingSet(Process, PsGetCurrentThread());
+        /* Acquire PFN lock */
+        OldIrql = MiAcquirePfnLock();
 
         for (Address = MI_LOWEST_VAD_ADDRESS;
              Address < MM_HIGHEST_VAD_ADDRESS;
@@ -603,10 +604,11 @@ MmDeleteProcessAddressSpace(PEPROCESS Process)
             ASSERT(pointerPde->u.Hard.Valid == 0);
         }
 
-        MiUnlockProcessWorkingSet(Process, PsGetCurrentThread());
+        /* Release lock */
+        MiReleasePfnLock(OldIrql);
 
         /* Detach */
-        KeUnstackDetachProcess(&ApcState);
+        KeDetachProcess();
     }
 #endif
 
