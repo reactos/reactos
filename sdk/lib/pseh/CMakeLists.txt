@@ -20,7 +20,13 @@ if(MSVC OR ((CMAKE_C_COMPILER_ID STREQUAL "Clang") AND (ARCH STREQUAL "amd64")))
 elseif((CMAKE_C_COMPILER_ID STREQUAL "GNU") AND (ARCH STREQUAL "amd64"))
     # for GCC amd64 this is just an interface library, with our home-made plugin
     add_library(pseh INTERFACE)
-    target_compile_options(pseh INTERFACE -fplugin=$<TARGET_FILE:native-gcc_plugin_seh>)
+    if (CMAKE_HOST_WIN32)
+        target_compile_options(pseh INTERFACE
+            $<$<COMPILE_LANGUAGE:C>:-fplugin=$<TARGET_FILE:native-gcc_plugin_seh>>
+            $<$<COMPILE_LANGUAGE:CXX>:-fplugin=$<TARGET_FILE:native-g++_plugin_seh>>)
+    else()
+        target_compile_options(pseh INTERFACE $<$<COMPILE_LANGUAGE:C,CXX>:-fplugin=$<TARGET_FILE:native-gcc_plugin_seh>>)
+    endif()
 else()
 
     if(USE_PSEH3)

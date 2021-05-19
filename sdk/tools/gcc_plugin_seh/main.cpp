@@ -20,7 +20,7 @@
 #define is_alpha(c) (((c)>64 && (c)<91) || ((c)>96 && (c)<123))
 
 #if defined(_WIN32) || defined(WIN32)
-#define VISIBLE __decspec(dllexport)
+#define VISIBLE __declspec(dllexport)
 #else
 #define VISIBLE __attribute__((__visibility__("default")))
 #endif
