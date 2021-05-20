@@ -24,6 +24,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <assert.h>
 
 #include <windef.h>
 #include <winbase.h>
@@ -300,8 +301,9 @@ Restart:
             continue;
         }
 
-        /* Ignore any unsupported subcommand */
-        if (s_chSubCommand != L'P' && s_chSubCommand != L'S')
+        assert(s_chSubCommand == L'P' || s_chSubCommand == L'S' || s_chSubCommand == 0);
+
+        if (s_chSubCommand == 0)
             break;
 
         ch = KeyEvent.uChar.UnicodeChar;
