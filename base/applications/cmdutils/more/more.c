@@ -69,27 +69,6 @@ static UINT s_nPromptID = IDS_CONTINUE_PROGRESS;
 static WCHAR s_chSubCommand = 0;
 static BOOL s_bDoNextFile = FALSE;
 
-static inline BOOL IsFlag(LPCWSTR param)
-{
-    if (param[0] == L'/')
-        return TRUE;
-
-    if (param[0] == L'+')
-    {
-        LPCWSTR pch = param + 1;
-        if (L'0' <= *pch && *pch <= L'9')
-        {
-            do
-            {
-                ++pch;
-            } while (L'0' <= *pch && *pch <= L'9');
-
-            return (*pch == 0);
-        }
-    }
-    return FALSE;
-}
-
 static BOOL IsBlankLine(IN PCWCH line, IN DWORD cch)
 {
     DWORD ich;
@@ -802,6 +781,27 @@ LoadRegistrySettings(HKEY hKeyRoot)
     // else, use the default setting set globally.
 
     RegCloseKey(hKey);
+}
+
+static inline BOOL IsFlag(LPCWSTR param)
+{
+    if (param[0] == L'/')
+        return TRUE;
+
+    if (param[0] == L'+')
+    {
+        LPCWSTR pch = param + 1;
+        if (L'0' <= *pch && *pch <= L'9')
+        {
+            do
+            {
+                ++pch;
+            } while (L'0' <= *pch && *pch <= L'9');
+
+            return (*pch == 0);
+        }
+    }
+    return FALSE;
 }
 
 static BOOL ParseArgument(LPCWSTR arg, BOOL *pbHasFiles)
