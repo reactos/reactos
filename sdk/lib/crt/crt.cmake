@@ -117,6 +117,7 @@ list(APPEND CRT_SOURCE
     mem/memcmp.c
     mem/memccpy.c
     mem/memicmp.c
+    mem/memset.c
     misc/__crt_MessageBoxA.c
     misc/amsg.c
     misc/assert.c
@@ -399,7 +400,7 @@ if(ARCH STREQUAL "i386")
         math/i386/fmodf_asm.s
         mem/i386/memchr_asm.s
         mem/i386/memmove_asm.s
-        mem/i386/memset_asm.s
+        # mem/i386/memset_asm.s
         misc/i386/readcr4.S
         setjmp/i386/setjmp.s
         string/i386/strcat_asm.s

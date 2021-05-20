@@ -28,6 +28,14 @@ FASTCALL
 KefAcquireSpinLockAtDpcLevel(
     IN PKSPIN_LOCK SpinLock)
 {
+#if DBG
+    /* To be on par with HAL/NTOSKRNL */
+#ifdef _M_AMD64
+    *SpinLock = (KSPIN_LOCK)KeGetCurrentThread() | 1;
+#else
+    *SpinLock = (KSPIN_LOCK)(((PKIPCR)KeGetPcr())->PrcbData.CurrentThread) | 1;
+#endif
+#endif
 }
 
 VOID
