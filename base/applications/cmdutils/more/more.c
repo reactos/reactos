@@ -316,9 +316,9 @@ Restart:
         }
         if (KeyEvent.wVirtualKeyCode == VK_RETURN)
         {
-            s_chSubCommand = 0;
             if (nLines == 0)
             {
+                s_chSubCommand = 0;
                 ConClearLine(Pager->Screen->Stream);
                 goto Restart;
             }
