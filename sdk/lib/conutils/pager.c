@@ -45,7 +45,10 @@
   /* (CodePage) == CP_JOHAB || */ \
      (CodePage) == CP_BIG5     || (CodePage) == CP_GB2312)
 
-static inline INT GetWidthOfCharCJK(UINT nCodePage, WCHAR ch)
+static inline INT
+GetWidthOfCharCJK(
+    IN UINT nCodePage,
+    IN WCHAR ch)
 {
     INT ret = WideCharToMultiByte(nCodePage, 0, &ch, 1, NULL, 0, NULL, NULL);
     if (ret == 0)
@@ -55,21 +58,30 @@ static inline INT GetWidthOfCharCJK(UINT nCodePage, WCHAR ch)
     return ret;
 }
 
-static BOOL CALLBACK
-ConDefaultPagerLine(PCON_PAGER Pager, LPCWSTR line, DWORD cch, DWORD *pdwFlags)
+static BOOL __stdcall
+ConDefaultPagerLine(
+    IN OUT PCON_PAGER Pager,
+    IN PCTCH line,
+    IN DWORD cch,
+    IN OUT PDWORD pdwFlags)
 {
     CON_STREAM_WRITE(Pager->Screen->Stream, line, cch);
     return TRUE;
 }
 
-static VOID CALLBACK
-ConCallPagerLine(PCON_PAGER Pager, LPCWSTR line, DWORD cch, DWORD *pdwFlags)
+static VOID
+ConCallPagerLine(
+    IN OUT PCON_PAGER Pager,
+    IN PCTCH line,
+    IN DWORD cch,
+    IN OUT PDWORD pdwFlags)
 {
-    if (!Pager->PagerLine || !(*Pager->PagerLine)(Pager, line, cch, pdwFlags))
-        (*Pager->DefPagerLine)(Pager, line, cch, pdwFlags);
+    if (!Pager->PagerLine || !Pager->PagerLine(Pager, line, cch, pdwFlags))
+        Pager->DefPagerLine(Pager, line, cch, pdwFlags);
 }
 
-static BOOL CALLBACK ConPagerDefaultAction(PCON_PAGER Pager)
+static BOOL
+ConPagerDefaultAction(IN PCON_PAGER Pager)
 {
     PCTCH TextBuff = Pager->TextBuff;
     DWORD ich = Pager->ich;

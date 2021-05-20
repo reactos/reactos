@@ -90,7 +90,7 @@ static inline BOOL IsFlag(LPCWSTR param)
     return FALSE;
 }
 
-static BOOL IsBlankLine(LPCWSTR line, DWORD cch)
+static BOOL IsBlankLine(IN PCWCH line, IN DWORD cch)
 {
     DWORD ich;
     WORD wType;
@@ -104,10 +104,14 @@ static BOOL IsBlankLine(LPCWSTR line, DWORD cch)
     return TRUE;
 }
 
-static BOOL CALLBACK
-MorePagerExpandTab(PCON_PAGER Pager, LPCWSTR line, DWORD cch, DWORD *pdwFlags)
+static BOOL __stdcall
+MorePagerExpandTab(
+    IN OUT PCON_PAGER Pager,
+    IN PCWCH line,
+    IN DWORD cch,
+    IN OUT PDWORD pdwFlags)
 {
-    LPWSTR psz;
+    PWCHAR psz;
     DWORD ich1, ich2, cch2, spaces;
     BOOL ret;
     DWORD iColumn = Pager->iColumn;
@@ -134,7 +138,7 @@ MorePagerExpandTab(PCON_PAGER Pager, LPCWSTR line, DWORD cch, DWORD *pdwFlags)
     }
 
     cch2 = ich2;
-    psz = (LPWSTR)malloc((cch2 + 1) * sizeof(WCHAR));
+    psz = malloc((cch2 + 1) * sizeof(WCHAR));
     if (!psz)
         return FALSE;
 
@@ -164,14 +168,18 @@ MorePagerExpandTab(PCON_PAGER Pager, LPCWSTR line, DWORD cch, DWORD *pdwFlags)
     }
 
     /* Do output */
-    ret = (*Pager->DefPagerLine)(Pager, psz, ich2, pdwFlags);
+    ret = Pager->DefPagerLine(Pager, psz, ich2, pdwFlags);
     free(psz);
     Pager->iColumn = iColumn;
     return ret;
 }
 
-static BOOL CALLBACK
-MorePagerLine(PCON_PAGER Pager, LPCWSTR line, DWORD cch, DWORD *pdwFlags)
+static BOOL __stdcall
+MorePagerLine(
+    IN OUT PCON_PAGER Pager,
+    IN PCWCH line,
+    IN DWORD cch,
+    IN OUT PDWORD pdwFlags)
 {
     if (s_dwFlags & FLAG_PLUSn)
     {

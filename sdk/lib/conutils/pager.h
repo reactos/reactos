@@ -29,10 +29,13 @@ extern "C" {
 // #include <wincon.h>
 
 struct _CON_PAGER;
-typedef BOOL (CALLBACK *CON_PAGER_LINE_FN)(
-    struct _CON_PAGER *Pager, LPCWSTR line, DWORD cch, DWORD *pdwFlags);
+typedef BOOL (__stdcall *CON_PAGER_LINE_FN)(
+    IN OUT struct _CON_PAGER *Pager,
+    IN PCTCH line,
+    IN DWORD cch,
+    IN OUT PDWORD pdwFlags);
 
-// flags for CON_PAGER_LINE_FN
+/* Flags for CON_PAGER_LINE_FN */
 #define CON_PAGER_LINE_FLAG_NEWLINE (1 << 0)
 
 typedef struct _CON_PAGER
@@ -53,10 +56,10 @@ typedef struct _CON_PAGER
 
 #define INIT_CON_PAGER(pScreen)     {(pScreen), 0}
 
-#define InitializeConPager(pPager, pScreen) \
+#define InitializeConPager(pPager, pScreen)  \
 do { \
     ZeroMemory((pPager), sizeof(*(pPager))); \
-    (pPager)->Screen = (pScreen); \
+    (pPager)->Screen = (pScreen);            \
 } while (0)
 
 
