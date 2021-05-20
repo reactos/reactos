@@ -29,7 +29,6 @@ extern "C" {
 // #include <wincon.h>
 
 struct _CON_PAGER;
-typedef BOOL (CALLBACK *CON_PAGER_ACTION_FN)(struct _CON_PAGER *Pager);
 typedef BOOL (CALLBACK *CON_PAGER_LINE_FN)(
     struct _CON_PAGER *Pager, LPCWSTR line, DWORD cch, DWORD *pdwFlags);
 
@@ -42,7 +41,6 @@ typedef struct _CON_PAGER
     DWORD ScreenColumns;
     DWORD ScreenRows;
     DWORD ScrollRows;
-    CON_PAGER_ACTION_FN PagerAction; /* The action function */
     CON_PAGER_LINE_FN PagerLine; /* The line function */
     CON_PAGER_LINE_FN DefPagerLine; /* Default line function */
     PCTCH TextBuff; /* The text buffer */
