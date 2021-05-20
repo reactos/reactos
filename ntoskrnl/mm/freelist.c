@@ -537,20 +537,19 @@ ULONG
 NTAPI
 MmGetReferenceCountPage(PFN_NUMBER Pfn)
 {
-    KIRQL oldIrql;
     ULONG RCount;
     PMMPFN Pfn1;
 
+    MI_ASSERT_PFN_LOCK_HELD();
+
     DPRINT("MmGetReferenceCountPage(PhysicalAddress %x)\n", Pfn << PAGE_SHIFT);
 
-    oldIrql = MiAcquirePfnLock();
     Pfn1 = MiGetPfnEntry(Pfn);
     ASSERT(Pfn1);
     ASSERT_IS_ROS_PFN(Pfn1);
 
     RCount = Pfn1->u3.e2.ReferenceCount;
 
-    MiReleasePfnLock(oldIrql);
     return(RCount);
 }
 
