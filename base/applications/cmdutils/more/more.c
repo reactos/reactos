@@ -144,7 +144,8 @@ MorePagerExpandTab(
 
     /* Store to buffer */
     iColumn = Pager->iColumn;
-    for (ich1 = ich2 = 0; ich1 < cch && ich2 < cch2; ++ich1)
+    // NOTE: Also, it would have been: ich2 <= cch2
+    for (ich1 = ich2 = 0; ich1 < cch /*&& ich2 < cch2*/; ++ich1)
     {
         if (line[ich1] == L'\t')
         {
@@ -278,7 +279,7 @@ Restart:
     // FIXME: Does not support TTY yet!
     for (;;)
     {
-        INPUT_RECORD ir;
+        INPUT_RECORD ir = {0};
         DWORD dwRead;
 
         do
@@ -885,9 +886,9 @@ static BOOL ParseArgument(LPCWSTR arg, BOOL *pbHasFiles)
 
 static BOOL ParseMoreVariable(BOOL *pbHasFiles)
 {
+    BOOL ret = TRUE;
     LPWSTR psz, pch;
     DWORD cch;
-    BOOL ret;
 
     cch = GetEnvironmentVariableW(L"MORE", NULL, 0);
     if (cch == 0)
@@ -936,7 +937,7 @@ int wmain(int argc, WCHAR* argv[])
     PVOID FileCacheBuffer = NULL;
     PWCHAR StringBuffer = NULL;
     DWORD StringBufferLength = 0;
-    DWORD dwReadBytes, dwReadChars;
+    DWORD dwReadBytes = 0, dwReadChars = 0;
 
     TCHAR szFullPath[MAX_PATH];
 
