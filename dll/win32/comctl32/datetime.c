@@ -44,7 +44,6 @@
 #include "commctrl.h"
 #include "comctl32.h"
 #include "wine/debug.h"
-#include "wine/unicode.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(datetime);
 
@@ -127,12 +126,12 @@ extern int MONTHCAL_CalculateDayOfWeek(SYSTEMTIME *date, BOOL inplace);
 
 static BOOL DATETIME_SendSimpleNotify (const DATETIME_INFO *infoPtr, UINT code);
 static BOOL DATETIME_SendDateTimeChangeNotify (const DATETIME_INFO *infoPtr);
-static const WCHAR allowedformatchars[] = {'d', 'h', 'H', 'm', 'M', 's', 't', 'y', 'X', 0};
+static const WCHAR allowedformatchars[] = L"dhHmMstyX";
 static const int maxrepetition [] = {4,2,2,2,4,2,2,4,-1};
 
 /* valid date limits */
-static const SYSTEMTIME max_allowed_date = { /* wYear */ 9999, /* wMonth */ 12, /* wDayOfWeek */ 0, /* wDay */ 31 };
-static const SYSTEMTIME min_allowed_date = { /* wYear */ 1752, /* wMonth */ 9,  /* wDayOfWeek */ 0, /* wDay */ 14 };
+static const SYSTEMTIME max_allowed_date = { .wYear = 9999, .wMonth = 12, .wDayOfWeek = 0, .wDay = 31 };
+static const SYSTEMTIME min_allowed_date = { .wYear = 1752, .wMonth = 9, .wDayOfWeek = 0, .wDay = 14 };
 
 static DWORD
 DATETIME_GetSystemTime (const DATETIME_INFO *infoPtr, SYSTEMTIME *systime)
@@ -238,7 +237,7 @@ DATETIME_SetSystemTime (DATETIME_INFO *infoPtr, DWORD flag, const SYSTEMTIME *sy
  * *'dddddd' is handled as 'dddd' plus 'dd'.
  * *unrecognized formats are strings (here given the type DT_STRING;
  * start of the string is encoded in lower bits of DT_STRING.
- * Therefore, 'string' ends finally up as '<show seconds>tring'.
+ * Therefore, 'string' ends up as '<show seconds>tring'.
  *
  */
 static void
@@ -251,7 +250,7 @@ DATETIME_UseFormat (DATETIME_INFO *infoPtr, LPCWSTR formattxt)
 
     *nrFields = 0;
     infoPtr->fieldspec[*nrFields] = 0;
-    len = strlenW(allowedformatchars);
+    len = lstrlenW(allowedformatchars);
     k = 0;
 
     for (i = 0; formattxt[i]; i++)  {
@@ -322,10 +321,12 @@ DATETIME_SetFormatW (DATETIME_INFO *infoPtr, LPCWSTR format)
     if (!format) {
 	DWORD format_item;
 
-	if (infoPtr->dwStyle & DTS_LONGDATEFORMAT)
-	    format_item = LOCALE_SLONGDATE;
-	else if ((infoPtr->dwStyle & DTS_TIMEFORMAT) == DTS_TIMEFORMAT)
-	    format_item = LOCALE_STIMEFORMAT;
+        if ((infoPtr->dwStyle & DTS_SHORTDATECENTURYFORMAT) == DTS_SHORTDATECENTURYFORMAT)
+            format_item = LOCALE_SSHORTDATE;
+        else if ((infoPtr->dwStyle & DTS_LONGDATEFORMAT) == DTS_LONGDATEFORMAT)
+            format_item = LOCALE_SLONGDATE;
+        else if ((infoPtr->dwStyle & DTS_TIMEFORMAT) == DTS_TIMEFORMAT)
+            format_item = LOCALE_STIMEFORMAT;
         else /* DTS_SHORTDATEFORMAT */
 	    format_item = LOCALE_SSHORTDATE;
 	GetLocaleInfoW(LOCALE_USER_DEFAULT, format_item, format_buf, ARRAY_SIZE(format_buf));
@@ -360,9 +361,6 @@ DATETIME_SetFormatA (DATETIME_INFO *infoPtr, LPCSTR lpszFormat)
 static void
 DATETIME_ReturnTxt (const DATETIME_INFO *infoPtr, int count, LPWSTR result, int resultSize)
 {
-    static const WCHAR fmt_dW[] = { '%', 'd', 0 };
-    static const WCHAR fmt__2dW[] = { '%', '.', '2', 'd', 0 };
-    static const WCHAR fmt__3sW[] = { '%', '.', '3', 's', 0 };
     SYSTEMTIME date = infoPtr->date;
     int spec;
     WCHAR buffer[80];
@@ -394,10 +392,10 @@ DATETIME_ReturnTxt (const DATETIME_INFO *infoPtr, int count, LPWSTR result, int 
 	    *result = 0;
 	    break;
 	case ONEDIGITDAY:
-	    wsprintfW (result, fmt_dW, date.wDay);
+	    wsprintfW (result, L"%d", date.wDay);
 	    break;
 	case TWODIGITDAY:
-	    wsprintfW (result, fmt__2dW, date.wDay);
+	    wsprintfW (result, L"%.2d", date.wDay);
 	    break;
 	case THREECHARDAY:
 	    GetLocaleInfoW(LOCALE_USER_DEFAULT, LOCALE_SABBREVDAYNAME1+(date.wDayOfWeek+6)%7, result, 4);
@@ -413,7 +411,7 @@ DATETIME_ReturnTxt (const DATETIME_INFO *infoPtr, int count, LPWSTR result, int 
 	        result[2] = 0;
 	    }
 	    else
-	        wsprintfW (result, fmt_dW, date.wHour - (date.wHour > 12 ? 12 : 0));
+	        wsprintfW (result, L"%d", date.wHour - (date.wHour > 12 ? 12 : 0));
 	    break;
 	case TWODIGIT12HOUR:
 	    if (date.wHour == 0) {
@@ -422,35 +420,35 @@ DATETIME_ReturnTxt (const DATETIME_INFO *infoPtr, int count, LPWSTR result, int 
 	        result[2] = 0;
 	    }
 	    else
-	        wsprintfW (result, fmt__2dW, date.wHour - (date.wHour > 12 ? 12 : 0));
+	        wsprintfW (result, L"%.2d", date.wHour - (date.wHour > 12 ? 12 : 0));
 	    break;
 	case ONEDIGIT24HOUR:
-	    wsprintfW (result, fmt_dW, date.wHour);
+	    wsprintfW (result, L"%d", date.wHour);
 	    break;
 	case TWODIGIT24HOUR:
-	    wsprintfW (result, fmt__2dW, date.wHour);
+	    wsprintfW (result, L"%.2d", date.wHour);
 	    break;
 	case ONEDIGITSECOND:
-	    wsprintfW (result, fmt_dW, date.wSecond);
+	    wsprintfW (result, L"%d", date.wSecond);
 	    break;
 	case TWODIGITSECOND:
-	    wsprintfW (result, fmt__2dW, date.wSecond);
+	    wsprintfW (result, L"%.2d", date.wSecond);
 	    break;
 	case ONEDIGITMINUTE:
-	    wsprintfW (result, fmt_dW, date.wMinute);
+	    wsprintfW (result, L"%d", date.wMinute);
 	    break;
 	case TWODIGITMINUTE:
-	    wsprintfW (result, fmt__2dW, date.wMinute);
+	    wsprintfW (result, L"%.2d", date.wMinute);
 	    break;
 	case ONEDIGITMONTH:
-	    wsprintfW (result, fmt_dW, date.wMonth);
+	    wsprintfW (result, L"%d", date.wMonth);
 	    break;
 	case TWODIGITMONTH:
-	    wsprintfW (result, fmt__2dW, date.wMonth);
+	    wsprintfW (result, L"%.2d", date.wMonth);
 	    break;
 	case THREECHARMONTH:
 	    GetLocaleInfoW(LOCALE_USER_DEFAULT, LOCALE_SMONTHNAME1+date.wMonth -1, buffer, ARRAY_SIZE(buffer));
-	    wsprintfW (result, fmt__3sW, buffer);
+	    wsprintfW (result, L"%s.3s", buffer);
 	    break;
 	case FULLMONTH:
 	    GetLocaleInfoW(LOCALE_USER_DEFAULT, LOCALE_SMONTHNAME1+date.wMonth -1,
@@ -471,14 +469,14 @@ DATETIME_ReturnTxt (const DATETIME_INFO *infoPtr, int count, LPWSTR result, int 
 	    result[1] = 0;
 	    break;
 	case ONEDIGITYEAR:
-	    wsprintfW (result, fmt_dW, date.wYear-10* (int) floor(date.wYear/10));
+	    wsprintfW (result, L"%d", date.wYear % 10);
 	    break;
 	case TWODIGITYEAR:
-	    wsprintfW (result, fmt__2dW, date.wYear-100* (int) floor(date.wYear/100));
+	    wsprintfW (result, L"%.2d", date.wYear % 100);
 	    break;
         case INVALIDFULLYEAR:
 	case FULLYEAR:
-	    wsprintfW (result, fmt_dW, date.wYear);
+	    wsprintfW (result, L"%d", date.wYear);
 	    break;
     }
 
@@ -596,28 +594,16 @@ DATETIME_IncreaseField (DATETIME_INFO *infoPtr, int number, int delta)
     }
 }
 
-static void
-DATETIME_ReturnFieldWidth (const DATETIME_INFO *infoPtr, HDC hdc, int count, SHORT *width)
+static int DATETIME_GetFieldWidth (const DATETIME_INFO *infoPtr, HDC hdc, int count)
 {
     /* fields are a fixed width, determined by the largest possible string */
     /* presumably, these widths should be language dependent */
-    static const WCHAR fld_d1W[] = { '2', 0 };
-    static const WCHAR fld_d2W[] = { '2', '2', 0 };
-    static const WCHAR fld_d4W[] = { '2', '2', '2', '2', 0 };
-    static const WCHAR fld_am1[] = { 'A', 0 };
-    static const WCHAR fld_am2[] = { 'A', 'M', 0 };
     int spec;
     WCHAR buffer[80];
     LPCWSTR bufptr;
     SIZE size;
 
-    TRACE ("%d,%d\n", infoPtr->nrFields, count);
-    if (count>infoPtr->nrFields || count < 0) {
-	WARN ("buffer overrun, have %d want %d\n", infoPtr->nrFields, count);
-	return;
-    }
-
-    if (!infoPtr->fieldspec) return;
+    if (!infoPtr->fieldspec) return 0;
 
     spec = infoPtr->fieldspec[count];
     if (spec & DT_STRING) {
@@ -646,22 +632,17 @@ DATETIME_ReturnFieldWidth (const DATETIME_INFO *infoPtr, HDC hdc, int count, SHO
 	    case TWODIGITMINUTE:
 	    case TWODIGITMONTH:
 	    case TWODIGITYEAR:
-	        bufptr = fld_d2W;
+	        bufptr = L"22";
 	        break;
             case INVALIDFULLYEAR:
 	    case FULLYEAR:
-	        bufptr = fld_d4W;
+	        bufptr = L"2222";
 	        break;
 	    case THREECHARMONTH:
 	    case FULLMONTH:
 	    case THREECHARDAY:
 	    case FULLDAY:
 	    {
-		static const WCHAR fld_day[] = {'W','e','d','n','e','s','d','a','y',0};
-		static const WCHAR fld_abbrday[] = {'W','e','d',0};
-		static const WCHAR fld_mon[] = {'S','e','p','t','e','m','b','e','r',0};
-		static const WCHAR fld_abbrmon[] = {'D','e','c',0};
-
 		const WCHAR *fall;
 		LCTYPE lctype;
 		INT i, max_count;
@@ -670,22 +651,22 @@ DATETIME_ReturnFieldWidth (const DATETIME_INFO *infoPtr, HDC hdc, int count, SHO
 		/* choose locale data type and fallback string */
 		switch (spec) {
 		case THREECHARDAY:
-		    fall   = fld_abbrday;
+		    fall   = L"Wed";
 		    lctype = LOCALE_SABBREVDAYNAME1;
 		    max_count = 7;
 		    break;
 		case FULLDAY:
-		    fall   = fld_day;
+		    fall   = L"Wednesday";
 		    lctype = LOCALE_SDAYNAME1;
 		    max_count = 7;
 		    break;
 		case THREECHARMONTH:
-		    fall   = fld_abbrmon;
+		    fall   = L"Dec";
 		    lctype = LOCALE_SABBREVMONTHNAME1;
 		    max_count = 12;
 		    break;
 		default: /* FULLMONTH */
-		    fall   = fld_mon;
+		    fall   = L"September";
 		    lctype = LOCALE_SMONTHNAME1;
 		    max_count = 12;
 		    break;
@@ -695,7 +676,7 @@ DATETIME_ReturnFieldWidth (const DATETIME_INFO *infoPtr, HDC hdc, int count, SHO
 		for (i = 0; i < max_count; i++)
 		{
 		    if(GetLocaleInfoW(LOCALE_USER_DEFAULT, lctype + i,
-			buffer, lstrlenW(buffer)))
+			buffer, ARRAY_SIZE(buffer)))
 		    {
 			GetTextExtentPoint32W(hdc, buffer, lstrlenW(buffer), &size);
 			if (size.cx > cx) cx = size.cx;
@@ -707,22 +688,21 @@ DATETIME_ReturnFieldWidth (const DATETIME_INFO *infoPtr, HDC hdc, int count, SHO
 		        break;
 		    }
 		}
-		*width = cx;
-		return;
+		return cx;
 	    }
 	    case ONELETTERAMPM:
-	        bufptr = fld_am1;
+	        bufptr = L"A";
 	        break;
 	    case TWOLETTERAMPM:
-	        bufptr = fld_am2;
+	        bufptr = L"AM";
 	        break;
 	    default:
-	        bufptr = fld_d1W;
+	        bufptr = L"2";
 	        break;
         }
     }
-    GetTextExtentPoint32W (hdc, bufptr, strlenW(bufptr), &size);
-    *width = size.cx;
+    GetTextExtentPoint32W (hdc, bufptr, lstrlenW(bufptr), &size);
+    return size.cx;
 }
 
 static void 
@@ -736,24 +716,22 @@ DATETIME_Refresh (DATETIME_INFO *infoPtr, HDC hdc)
         RECT *rcDraw = &infoPtr->rcDraw;
         SIZE size;
         COLORREF oldTextColor;
-        SHORT fieldWidth = 0;
         HFONT oldFont = SelectObject (hdc, infoPtr->hFont);
         INT oldBkMode = SetBkMode (hdc, TRANSPARENT);
         WCHAR txt[80];
 
         DATETIME_ReturnTxt (infoPtr, 0, txt, ARRAY_SIZE(txt));
-        GetTextExtentPoint32W (hdc, txt, strlenW(txt), &size);
+        GetTextExtentPoint32W (hdc, txt, lstrlenW(txt), &size);
         rcDraw->bottom = size.cy + 2;
 
         prevright = infoPtr->checkbox.right = ((infoPtr->dwStyle & DTS_SHOWNONE) ? 18 : 2);
 
         for (i = 0; i < infoPtr->nrFields; i++) {
             DATETIME_ReturnTxt (infoPtr, i, txt, ARRAY_SIZE(txt));
-            GetTextExtentPoint32W (hdc, txt, strlenW(txt), &size);
-            DATETIME_ReturnFieldWidth (infoPtr, hdc, i, &fieldWidth);
+            GetTextExtentPoint32W (hdc, txt, lstrlenW(txt), &size);
             field = &infoPtr->fieldRect[i];
             field->left   = prevright;
-            field->right  = prevright + fieldWidth;
+            field->right  = prevright + DATETIME_GetFieldWidth (infoPtr, hdc, i);
             field->top    = rcDraw->top;
             field->bottom = rcDraw->bottom;
             prevright = field->right;
@@ -770,7 +748,7 @@ DATETIME_Refresh (DATETIME_INFO *infoPtr, HDC hdc)
                 {
                     memcpy(txt, infoPtr->charsEntered, infoPtr->nCharsEntered * sizeof(WCHAR));
                     txt[infoPtr->nCharsEntered] = 0;
-                    GetTextExtentPoint32W (hdc, txt, strlenW(txt), &size);
+                    GetTextExtentPoint32W (hdc, txt, lstrlenW(txt), &size);
                 }
 
                 SetRect(&selection, 0, 0, size.cx, size.cy);
@@ -786,7 +764,7 @@ DATETIME_Refresh (DATETIME_INFO *infoPtr, HDC hdc)
                 oldTextColor = SetTextColor (hdc, comctl32_color.clrWindowText);
 
             /* draw the date text using the colour set above */
-            DrawTextW (hdc, txt, strlenW(txt), field, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+            DrawTextW (hdc, txt, lstrlenW(txt), field, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
             SetTextColor (hdc, oldTextColor);
         }
         SetBkMode (hdc, oldBkMode);
@@ -1299,7 +1277,7 @@ DATETIME_NCCreate (HWND hwnd, const CREATESTRUCTW *lpcs)
     dwExStyle |= WS_EX_CLIENTEDGE;
     SetWindowLongW(hwnd, GWL_EXSTYLE, dwExStyle);
 
-    return DefWindowProcW(hwnd, WM_NCCREATE, 0, (LPARAM)lpcs);
+    return 1;
 }
 
 
@@ -1452,6 +1430,56 @@ DATETIME_StyleChanged(DATETIME_INFO *infoPtr, WPARAM wStyleType, const STYLESTRU
     return 0;
 }
 
+static BOOL DATETIME_GetIdealSize(DATETIME_INFO *infoPtr, SIZE *size)
+{
+    SIZE field_size;
+    RECT rect;
+    WCHAR txt[80];
+    HDC hdc;
+    HFONT oldFont;
+    int i;
+
+    size->cx = size->cy = 0;
+
+    hdc = GetDC(infoPtr->hwndSelf);
+    oldFont = SelectObject(hdc, infoPtr->hFont);
+
+    /* Get text font height */
+    DATETIME_ReturnTxt(infoPtr, 0, txt, ARRAY_SIZE(txt));
+    GetTextExtentPoint32W(hdc, txt, lstrlenW(txt), &field_size);
+    size->cy = field_size.cy;
+
+    /* Get text font width */
+    for (i = 0; i < infoPtr->nrFields; i++)
+    {
+        size->cx += DATETIME_GetFieldWidth(infoPtr, hdc, i);
+    }
+
+    SelectObject(hdc, oldFont);
+    ReleaseDC(infoPtr->hwndSelf, hdc);
+
+    if (infoPtr->dwStyle & DTS_UPDOWN)
+    {
+        GetWindowRect(infoPtr->hUpdown, &rect);
+        size->cx += rect.right - rect.left;
+    }
+    else
+    {
+        size->cx += infoPtr->calbutton.right - infoPtr->calbutton.left;
+    }
+
+    if (infoPtr->dwStyle & DTS_SHOWNONE)
+    {
+        size->cx += infoPtr->checkbox.right - infoPtr->checkbox.left;
+    }
+
+    /* Add space between controls for them not to get too close */
+    size->cx += 12;
+    size->cy += 4;
+
+    TRACE("cx=%d cy=%d\n", size->cx, size->cy);
+    return TRUE;
+}
 
 static LRESULT
 DATETIME_SetFont (DATETIME_INFO *infoPtr, HFONT font, BOOL repaint)
@@ -1530,13 +1558,27 @@ DATETIME_GetText (const DATETIME_INFO *infoPtr, INT count, LPWSTR dst)
     for (i = 0; i < infoPtr->nrFields; i++)
     {
         DATETIME_ReturnTxt(infoPtr, i, buf, ARRAY_SIZE(buf));
-        if ((strlenW(dst) + strlenW(buf)) < count)
-            strcatW(dst, buf);
+        if ((lstrlenW(dst) + lstrlenW(buf)) < count)
+            lstrcatW(dst, buf);
         else break;
     }
-    return strlenW(dst);
+    return lstrlenW(dst);
 }
 
+static int DATETIME_GetTextLength(const DATETIME_INFO *info)
+{
+    int i, length = 0;
+    WCHAR buffer[80];
+
+    TRACE("%p.\n", info);
+
+    for (i = 0; i < info->nrFields; i++)
+    {
+        DATETIME_ReturnTxt(info, i, buffer, ARRAY_SIZE(buffer));
+        length += lstrlenW(buffer);
+    }
+    return length;
+}
 
 static LRESULT WINAPI
 DATETIME_WindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -1582,6 +1624,9 @@ DATETIME_WindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
     case DTM_GETMCFONT:
 	return SendMessageW (infoPtr->hMonthCal, WM_GETFONT, wParam, lParam);
+
+    case DTM_GETIDEALSIZE:
+        return DATETIME_GetIdealSize(infoPtr, (SIZE *)lParam);
 
     case WM_NOTIFY:
 	return DATETIME_Notify (infoPtr, (LPNMHDR)lParam);
@@ -1649,6 +1694,9 @@ DATETIME_WindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
     case WM_GETTEXT:
         return (LRESULT) DATETIME_GetText(infoPtr, wParam, (LPWSTR)lParam);
+
+    case WM_GETTEXTLENGTH:
+        return (LRESULT)DATETIME_GetTextLength(infoPtr);
 
     case WM_SETTEXT:
         return CB_ERR;
