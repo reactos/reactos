@@ -89,11 +89,6 @@ static inline BOOL IsFlag(LPCWSTR param)
     return FALSE;
 }
 
-static BOOL CALLBACK MorePageActionDoNothing(PCON_PAGER Pager)
-{
-    return Pager->ich >= Pager->cch;
-}
-
 static BOOL IsBlankLine(LPCWSTR line, DWORD cch)
 {
     DWORD ich;
@@ -321,12 +316,19 @@ Restart:
         }
         if (KeyEvent.wVirtualKeyCode == VK_RETURN)
         {
+            s_chSubCommand = 0;
+            if (nLines == 0)
+            {
+                ConClearLine(Pager->Screen->Stream);
+                goto Restart;
+            }
             break;
         }
         else if (KeyEvent.wVirtualKeyCode == VK_ESCAPE)
         {
-            s_chSubCommand = L'-';
-            break;
+            s_chSubCommand = 0;
+            ConClearLine(Pager->Screen->Stream);
+            goto Restart;
         }
         else if (KeyEvent.wVirtualKeyCode == VK_BACK)
         {
@@ -348,6 +350,7 @@ Restart:
             continue;
         }
     }
+
     /* AddBreakHandler */
     SetConsoleCtrlHandler(NULL, FALSE);
     /* ConInEnable */
@@ -373,12 +376,10 @@ Restart:
             s_nNextLineNo = Pager->lineno + nLines;
             Pager->ScrollRows = Pager->ScreenRows - 1;
             return TRUE;
-        case L'-':
+        default:
             s_chSubCommand = 0;
-            Pager->PagerAction = MorePageActionDoNothing;
-            return TRUE;
+            break;
     }
-    s_chSubCommand = 0;
 
     /* Ctrl+C or Ctrl+Esc: Control Break */
     if (fCtrl && ((KeyEvent.wVirtualKeyCode == VK_ESCAPE) ||
@@ -392,9 +393,8 @@ Restart:
 
     if (fCtrl)
     {
-        /* Do nothing */
-        Pager->PagerAction = MorePageActionDoNothing;
-        return TRUE;
+        s_chSubCommand = 0;
+        goto Restart;
     }
 
     /* [Space] key: One page */
@@ -466,8 +466,9 @@ Restart:
         }
     }
 
-    Pager->PagerAction = MorePageActionDoNothing;
-    return TRUE;
+    s_nPromptID = IDS_CONTINUE_PROGRESS;
+    s_chSubCommand = 0;
+    goto Restart;
 }
 
 /*
@@ -761,8 +762,7 @@ LoadRegistrySettings(HKEY hKeyRoot)
      * Buffer big enough to hold the string L"4294967295",
      * corresponding to the literal 0xFFFFFFFF (MAXULONG) in decimal.
      */
-    WCHAR Buffer[11];
-    C_ASSERT(sizeof(Buffer) >= sizeof(L"4294967295"));
+    WCHAR Buffer[sizeof("4294967295")];
     C_ASSERT(sizeof(Buffer) >= sizeof(DWORD));
 
     lRet = RegOpenKeyExW(hKeyRoot,
@@ -954,8 +954,6 @@ int wmain(int argc, WCHAR* argv[])
     if (bEnableExtensions)
         s_dwFlags |= FLAG_E;
 
-    // FIXME2: Use the PARSER api that can be found in EVENTCREATE.
-
     // NOTE: We might try to duplicate the ConOut for read access... ?
     hKeyboard = CreateFileW(L"CONIN$", GENERIC_READ|GENERIC_WRITE,
                             FILE_SHARE_READ|FILE_SHARE_WRITE, NULL,
@@ -971,8 +969,8 @@ int wmain(int argc, WCHAR* argv[])
         return 1;
     }
 
-    // First, load the "MORE" environment variable and parse it,
-    // then parse the command-line parameters.
+    /* First, load the "MORE" environment variable and parse it,
+     * then parse the command-line parameters. */
     HasFiles = FALSE;
     if (!ParseMoreVariable(&HasFiles))
         return 1;
