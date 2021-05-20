@@ -66,7 +66,6 @@ static DWORD s_nTabWidth = 8;
 static DWORD s_nNextLineNo = 0;
 static BOOL s_bPrevLineIsBlank = FALSE;
 static UINT s_nPromptID = IDS_CONTINUE_PROGRESS;
-static WCHAR s_chSubCommand = 0;
 static BOOL s_bDoNextFile = FALSE;
 
 static BOOL IsBlankLine(IN PCWCH line, IN DWORD cch)
@@ -111,8 +110,8 @@ MorePagerExpandTab(
         }
         else
         {
-            ++ich2;
             ++iColumn;
+            ++ich2;
         }
     }
 
@@ -142,8 +141,8 @@ MorePagerExpandTab(
         }
         else
         {
-            psz[ich2++] = line[ich1];
             ++iColumn;
+            psz[ich2++] = line[ich1];
         }
     }
 
@@ -203,6 +202,7 @@ PagePrompt(PCON_PAGER Pager, DWORD Done, DWORD Total)
     BOOL fCtrl;
     DWORD nLines;
     WCHAR ch;
+    WCHAR chSubCommand = 0;
 
 Restart:
     nLines = 0;
@@ -277,7 +277,7 @@ Restart:
         if (fCtrl && ((KeyEvent.wVirtualKeyCode == VK_ESCAPE) ||
                       (KeyEvent.wVirtualKeyCode == L'C')))
         {
-            s_chSubCommand = 0;
+            chSubCommand = 0;
             break;
         }
 
@@ -289,9 +289,9 @@ Restart:
             continue;
         }
 
-        assert(s_chSubCommand == L'P' || s_chSubCommand == L'S' || s_chSubCommand == 0);
+        assert(chSubCommand == L'P' || chSubCommand == L'S' || chSubCommand == 0);
 
-        if (s_chSubCommand == 0)
+        if (chSubCommand == 0)
             break;
 
         ch = KeyEvent.uChar.UnicodeChar;
@@ -308,7 +308,7 @@ Restart:
         {
             if (nLines == 0)
             {
-                s_chSubCommand = 0;
+                chSubCommand = 0;
                 ConClearLine(Pager->Screen->Stream);
                 goto Restart;
             }
@@ -316,7 +316,7 @@ Restart:
         }
         else if (KeyEvent.wVirtualKeyCode == VK_ESCAPE)
         {
-            s_chSubCommand = 0;
+            chSubCommand = 0;
             ConClearLine(Pager->Screen->Stream);
             goto Restart;
         }
@@ -354,20 +354,20 @@ Restart:
      */
     ConClearLine(Pager->Screen->Stream);
 
-    switch (s_chSubCommand)
+    switch (chSubCommand)
     {
         case L'P':
-            s_chSubCommand = 0;
+            chSubCommand = 0;
             Pager->ScrollRows = nLines;
             return TRUE;
         case L'S':
-            s_chSubCommand = 0;
+            chSubCommand = 0;
             s_dwFlags |= FLAG_PLUSn;
             s_nNextLineNo = Pager->lineno + nLines;
             Pager->ScrollRows = Pager->ScreenRows - 1;
             return TRUE;
         default:
-            s_chSubCommand = 0;
+            chSubCommand = 0;
             break;
     }
 
@@ -383,7 +383,7 @@ Restart:
 
     if (fCtrl)
     {
-        s_chSubCommand = 0;
+        chSubCommand = 0;
         goto Restart;
     }
 
@@ -436,7 +436,7 @@ Restart:
         if (KeyEvent.wVirtualKeyCode == L'P')
         {
             s_nPromptID = IDS_CONTINUE_LINES;
-            s_chSubCommand = L'P';
+            chSubCommand = L'P';
             goto Restart;
         }
 
@@ -444,7 +444,7 @@ Restart:
         if (KeyEvent.wVirtualKeyCode == L'S')
         {
             s_nPromptID = IDS_CONTINUE_LINES;
-            s_chSubCommand = L'S';
+            chSubCommand = L'S';
             goto Restart;
         }
 
@@ -457,7 +457,7 @@ Restart:
     }
 
     s_nPromptID = IDS_CONTINUE_PROGRESS;
-    s_chSubCommand = 0;
+    chSubCommand = 0;
     goto Restart;
 }
 
@@ -1053,7 +1053,6 @@ int wmain(int argc, WCHAR* argv[])
     {
         s_bPrevLineIsBlank = FALSE;
         s_nPromptID = IDS_CONTINUE_PROGRESS;
-        s_chSubCommand = 0;
         s_bDoNextFile = FALSE;
 
         if (IsFlag(argv[i]))
