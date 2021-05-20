@@ -24,7 +24,6 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <assert.h>
 
 #include <windef.h>
 #include <winbase.h>
@@ -201,7 +200,6 @@ PagePrompt(PCON_PAGER Pager, DWORD Done, DWORD Total)
     KEY_EVENT_RECORD KeyEvent;
     BOOL fCtrl;
     DWORD nLines;
-    WCHAR ch;
     WCHAR chSubCommand = 0;
 
 Restart:
@@ -260,6 +258,7 @@ Restart:
     {
         INPUT_RECORD ir = {0};
         DWORD dwRead;
+        WCHAR ch;
 
         do
         {
@@ -267,8 +266,16 @@ Restart:
         }
         while ((ir.EventType != KEY_EVENT) || (!ir.Event.KeyEvent.bKeyDown));
 
-        /* Got our key, return to caller */
+        /* Got our key */
         KeyEvent = ir.Event.KeyEvent;
+
+        /* Ignore any unsupported keyboard press */
+        if ((KeyEvent.wVirtualKeyCode == VK_SHIFT) ||
+            (KeyEvent.wVirtualKeyCode == VK_MENU)  ||
+            (KeyEvent.wVirtualKeyCode == VK_CONTROL))
+        {
+            continue;
+        }
 
         /* Ctrl key is pressed? */
         fCtrl = !!(KeyEvent.dwControlKeyState & (LEFT_CTRL_PRESSED | RIGHT_CTRL_PRESSED));
@@ -281,17 +288,9 @@ Restart:
             break;
         }
 
-        /* Ignore any unsupported keyboard press */
-        if ((KeyEvent.wVirtualKeyCode == VK_SHIFT) ||
-            (KeyEvent.wVirtualKeyCode == VK_MENU)  ||
-            (KeyEvent.wVirtualKeyCode == VK_CONTROL))
-        {
-            continue;
-        }
-
-        assert(chSubCommand == L'P' || chSubCommand == L'S' || chSubCommand == 0);
-
-        if (chSubCommand == 0)
+        /* If extended features are unavailable, or no
+         * pending commands, don't do more processing. */
+        if (!(s_dwFlags & FLAG_E) || (chSubCommand == 0))
             break;
 
         ch = KeyEvent.uChar.UnicodeChar;
@@ -304,7 +303,7 @@ Restart:
             ConStreamWrite(Pager->Screen->Stream, &ch, 1);
             continue;
         }
-        if (KeyEvent.wVirtualKeyCode == VK_RETURN)
+        else if (KeyEvent.wVirtualKeyCode == VK_RETURN)
         {
             if (nLines == 0)
             {
@@ -354,6 +353,16 @@ Restart:
      */
     ConClearLine(Pager->Screen->Stream);
 
+    /* Ctrl+C or Ctrl+Esc: Control Break */
+    if (fCtrl && ((KeyEvent.wVirtualKeyCode == VK_ESCAPE) ||
+                  (KeyEvent.wVirtualKeyCode == L'C')))
+    {
+        /* We break, output a newline */
+        WCHAR ch = L'\n';
+        ConStreamWrite(Pager->Screen->Stream, &ch, 1);
+        return FALSE;
+    }
+
     switch (chSubCommand)
     {
         case L'P':
@@ -371,39 +380,19 @@ Restart:
             break;
     }
 
-    /* Ctrl+C or Ctrl+Esc: Control Break */
-    if (fCtrl && ((KeyEvent.wVirtualKeyCode == VK_ESCAPE) ||
-                  (KeyEvent.wVirtualKeyCode == L'C')))
-    {
-        /* We break, output a newline */
-        WCHAR ch = L'\n';
-        ConStreamWrite(Pager->Screen->Stream, &ch, 1);
-        return FALSE;
-    }
-
-    if (fCtrl)
-    {
-        chSubCommand = 0;
-        goto Restart;
-    }
-
-    /* [Space] key: One page */
-    if (KeyEvent.wVirtualKeyCode == VK_SPACE)
-    {
-        if (s_dwFlags & FLAG_C)
-        {
-            /* Clear the screen */
-            ConClearScreen(Pager->Screen);
-        }
-        Pager->ScrollRows = Pager->ScreenRows - 1;
-        return TRUE;
-    }
-
     /* If extended features are available */
     if (s_dwFlags & FLAG_E)
     {
+        /* Ignore any key presses if Ctrl is pressed */
+        if (fCtrl)
+        {
+            chSubCommand = 0;
+            goto Restart;
+        }
+
         /* 'Q' or [Esc]: Quit */
-        if (KeyEvent.wVirtualKeyCode == L'Q' || KeyEvent.wVirtualKeyCode == VK_ESCAPE)
+        if (KeyEvent.wVirtualKeyCode == L'Q' ||
+            KeyEvent.wVirtualKeyCode == VK_ESCAPE)
         {
             /* We break, output a newline */
             WCHAR ch = L'\n';
@@ -425,10 +414,22 @@ Restart:
             goto Restart;
         }
 
-        /* [Enter] key: One line */
+        /* [Enter] key: Display one line */
         if (KeyEvent.wVirtualKeyCode == VK_RETURN)
         {
             Pager->ScrollRows = 1;
+            return TRUE;
+        }
+
+        /* [Space] key: Display one page */
+        if (KeyEvent.wVirtualKeyCode == VK_SPACE)
+        {
+            if (s_dwFlags & FLAG_C)
+            {
+                /* Clear the screen */
+                ConClearScreen(Pager->Screen);
+            }
+            Pager->ScrollRows = Pager->ScreenRows - 1;
             return TRUE;
         }
 
@@ -448,17 +449,23 @@ Restart:
             goto Restart;
         }
 
-        /* '=': Show current line */
+        /* '=': Show current line number */
         if (KeyEvent.uChar.UnicodeChar == L'=')
         {
             s_nPromptID = IDS_CONTINUE_LINE_AT;
             goto Restart;
         }
-    }
 
-    s_nPromptID = IDS_CONTINUE_PROGRESS;
-    chSubCommand = 0;
-    goto Restart;
+        s_nPromptID = IDS_CONTINUE_PROGRESS;
+        chSubCommand = 0;
+        goto Restart;
+    }
+    else
+    {
+        /* Extended features are unavailable: display one page */
+        Pager->ScrollRows = Pager->ScreenRows - 1;
+        return TRUE;
+    }
 }
 
 /*
