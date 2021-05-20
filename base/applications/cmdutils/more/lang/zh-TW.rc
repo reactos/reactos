@@ -5,13 +5,13 @@ LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
 STRINGTABLE
 BEGIN
     IDS_USAGE "在螢幕上一頁一頁地顯示內容。\n\n\
-  MORE < [磁碟機:][路徑]檔案名\n\
+  MORE < [磁碟機:][路徑]檔案名稱\n\
   命令 | MORE\n\
-  MORE [磁碟機:][路徑]檔案名\n\n\
-  [磁碟機:][路徑]檔案名    一個將要被如此顯示內容的檔案。\n\
+  MORE [磁碟機:][路徑]檔案名稱\n\n\
+  [磁碟機:][路徑]檔案名稱    一個將要被如此顯示內容的檔案。\n\
   命令\t\t     一個輸出將要被如此顯示的命令。\n\n\
   在 ""-- 繼續 --"" 的提示出現時你可以按任意鍵來顯示下一頁。\n"
     IDS_CONTINUE "-- 繼續 --"
     IDS_CONTINUE_PROGRESS "-- 繼續 (%d%%) --"
-    IDS_FILE_ACCESS "無法訪問檔案 %s。\n"
+    IDS_FILE_ACCESS "無法存取檔案 %s。\n"
 END

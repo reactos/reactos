@@ -25,7 +25,7 @@ BEGIN
     EDITTEXT IDC_SHORTTIMESAMPLE_EDIT, 89, 131, 140, 12, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | NOT WS_TABSTOP
     EDITTEXT IDC_FULLTIMESAMPLE_EDIT, 89, 146, 140, 12, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | NOT WS_TABSTOP
     GROUPBOX "位置", -1, 5, 172, 234, 55
-    LTEXT "為了便於為您提供當地資訊如新聞和天氣，請選擇您的所在地(&T):", -1, 14, 184, 210, 24
+    LTEXT "為了向您提供當地資訊如新聞和天氣，請選擇您的所在地(&T):", -1, 14, 184, 210, 24
     COMBOBOX IDC_LOCATION_COMBO, 14, 207, 217, 160, CBS_DROPDOWNLIST | CBS_NOINTEGRALHEIGHT | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | CBS_SORT
 END
 
@@ -211,12 +211,12 @@ BEGIN
     IDS_ERROR_SYMBOL_SEPARATE "短日期元件分隔符包含不正確的符號"
     IDS_ERROR_SYMBOL_FORMAT_SHORT "短日期格式包含不正確的符號"
     IDS_ERROR_SYMBOL_FORMAT_LONG "長日期格式包含不正確的符號"
-    IDS_ERROR_OEM_CODE_PAGE "閱讀 OEM 內碼表時有個問題。"
-    IDS_ERROR_ANSI_CODE_PAGE "閱讀 ANSI 內碼表時有個問題。"
+    IDS_ERROR_OEM_CODE_PAGE "閱讀 OEM 內碼表時出現問題。"
+    IDS_ERROR_ANSI_CODE_PAGE "閱讀 ANSI 內碼表時出現問題。"
     IDS_ERROR_INT_KEY_REG "問題開啟項: HKCU\\Control Panel\\International"
     IDS_ERROR_DEF_INT_KEY_REG "問題開啟項: HKU\\.DEFAULT\\Control Panel\\International"
     IDS_ERROR_NLS_KEY_REG "問題開啟項: HKLM\\SYSTEM\\CurrentControlSet\\Control\\NLS\\Language"
     IDS_ERROR_NLS_CODE_REG "問題開啟項: HKLM\\SYSTEM\\CurrentControlSet\\Control\\NLS\\CodePage"
     IDS_ERROR_INPUT_DLL "無法啟動 input.dll"
-    IDS_ERROR_UNICODE "Unable to install a new language for programs that don't support Unicode!"
+    IDS_ERROR_UNICODE "無法為不支援 Unicode 的程式安裝新語言!"
 END
