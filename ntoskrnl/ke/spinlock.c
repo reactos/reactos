@@ -94,11 +94,14 @@ KeReleaseQueuedSpinLockFromDpcLevel(IN PKSPIN_LOCK_QUEUE LockHandle)
 // HACK: Hacked to work like normal spinlocks
 //
 
+_IRQL_requires_min_(DISPATCH_LEVEL)
+_Acquires_nonreentrant_lock_(*LockHandle->Lock)
+_Acquires_exclusive_lock_(*LockHandle->Lock)
 VOID
 FASTCALL
-KeAcquireQueuedSpinLockAtDpcLevel(IN PKSPIN_LOCK_QUEUE LockHandle)
+KeAcquireQueuedSpinLockAtDpcLevel(_Inout_ PKSPIN_LOCK_QUEUE LockHandle)
 {
-#ifdef CONFIG_SMP
+#if defined(CONFIG_SMP) || DBG
     /* Make sure we are at DPC or above! */
     if (KeGetCurrentIrql() < DISPATCH_LEVEL)
     {
@@ -115,11 +118,14 @@ KeAcquireQueuedSpinLockAtDpcLevel(IN PKSPIN_LOCK_QUEUE LockHandle)
     KxAcquireSpinLock(LockHandle->Lock);
 }
 
+_IRQL_requires_min_(DISPATCH_LEVEL)
+_Releases_nonreentrant_lock_(*LockHandle->Lock)
+_Releases_exclusive_lock_(*LockHandle->Lock)
 VOID
 FASTCALL
-KeReleaseQueuedSpinLockFromDpcLevel(IN PKSPIN_LOCK_QUEUE LockHandle)
+KeReleaseQueuedSpinLockFromDpcLevel(_Inout_ PKSPIN_LOCK_QUEUE LockHandle)
 {
-#ifdef CONFIG_SMP
+#if defined(CONFIG_SMP) || DBG
     /* Make sure we are at DPC or above! */
     if (KeGetCurrentIrql() < DISPATCH_LEVEL)
     {
@@ -303,6 +309,17 @@ FASTCALL
 KeTryToAcquireSpinLockAtDpcLevel(IN OUT PKSPIN_LOCK SpinLock)
 {
 #if DBG
+    /* Make sure we are at DPC or above! */
+    if (KeGetCurrentIrql() < DISPATCH_LEVEL)
+    {
+        /* We aren't -- bugcheck */
+        KeBugCheckEx(IRQL_NOT_GREATER_OR_EQUAL,
+                     (ULONG_PTR)SpinLock,
+                     KeGetCurrentIrql(),
+                     0,
+                     0);
+    }
+
     /* Make sure that we don't own the lock already */
     if (((KSPIN_LOCK)KeGetCurrentThread() | 1) == *SpinLock)
     {
