@@ -1,0 +1,14 @@
+/*
+ * PROJECT:     Dr. Watson crash reporter
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     zh-HK resource file
+ * COPYRIGHT:   2020 Chan Chilung (eason066 [at] gmail [dot] com)
+ */
+
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_HONGKONG
+
+STRINGTABLE
+BEGIN
+    IDS_APP_TITLE "ReactOS 當機報告"
+    IDS_USER_ALERT_MESSAGE "應用程式 %ls 發生錯誤並已強制結束。有關本次錯誤嘅資訊將儲存喺︰\r\n\r\n%ls"
+END

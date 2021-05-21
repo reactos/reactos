@@ -1,0 +1,9 @@
+/* Translated by Elton Chung aka MfldElton <elton328@gmail.com> */
+
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_HONGKONG
+
+STRINGTABLE
+BEGIN
+    IDS_DESCRIPTION "登入螢幕保護程式"
+    IDS_TEXT "沒有需要設定嘅選項。"
+END
