@@ -365,11 +365,9 @@ Restart:
     switch (chSubCommand)
     {
         case L'P':
-            chSubCommand = 0;
             Pager->ScrollRows = nLines;
             return TRUE;
         case L'S':
-            chSubCommand = 0;
             s_dwFlags |= FLAG_PLUSn;
             s_nNextLineNo = Pager->lineno + nLines;
             Pager->ScrollRows = Pager->ScreenRows - 1;
