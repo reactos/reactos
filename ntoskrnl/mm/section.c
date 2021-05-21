@@ -2385,6 +2385,7 @@ MmCreateDataFileSection(PSECTION *SectionObject,
     }
 
     /* Lock the PFN lock while messing with Section Object pointers */
+grab_segment:
     OldIrql = MiAcquirePfnLock();
     Segment = FileObject->SectionObjectPointer->DataSectionObject;
 
@@ -2402,12 +2403,14 @@ MmCreateDataFileSection(PSECTION *SectionObject,
      */
     if (Segment == NULL)
     {
+        /* Release the lock. ExAllocatePoolWithTag might acquire it */
+        MiReleasePfnLock(OldIrql);
+
         Segment = ExAllocatePoolWithTag(NonPagedPool, sizeof(MM_SECTION_SEGMENT),
                                         TAG_MM_SECTION_SEGMENT);
         if (Segment == NULL)
         {
             //KeSetEvent((PVOID)&FileObject->Lock, IO_NO_INCREMENT, FALSE);
-            MiReleasePfnLock(OldIrql);
             ObDereferenceObject(Section);
             return STATUS_NO_MEMORY;
         }
@@ -2416,6 +2419,17 @@ MmCreateDataFileSection(PSECTION *SectionObject,
         RtlZeroMemory(Segment, sizeof(*Segment));
         Segment->SegFlags = MM_DATAFILE_SEGMENT | MM_SEGMENT_INCREATE;
         Segment->RefCount = 1;
+
+        /* Acquire lock again */
+        OldIrql = MiAcquirePfnLock();
+
+        if (FileObject->SectionObjectPointer->DataSectionObject != NULL)
+        {
+            /* Well that's bad luck. Restart it all over */
+            MiReleasePfnLock(OldIrql);
+            ExFreePoolWithTag(Segment, TAG_MM_SECTION_SEGMENT);
+            goto grab_segment;
+        }
 
         FileObject->SectionObjectPointer->DataSectionObject = Segment;
 
@@ -3160,6 +3174,7 @@ MmCreateImageSection(PSECTION *SectionObject,
     if (AllocationAttributes & SEC_NO_CHANGE)
         Section->u.Flags.NoChange = 1;
 
+grab_image_section_object:
     OldIrql = MiAcquirePfnLock();
 
     /* Wait for it to be properly created or deleted */
@@ -3178,16 +3193,28 @@ MmCreateImageSection(PSECTION *SectionObject,
     {
         NTSTATUS StatusExeFmt;
 
+        /* Release the lock because ExAllocatePoolWithTag could need to acquire it */
+        MiReleasePfnLock(OldIrql);
+
         ImageSectionObject = ExAllocatePoolZero(NonPagedPool, sizeof(MM_IMAGE_SECTION_OBJECT), TAG_MM_SECTION_SEGMENT);
         if (ImageSectionObject == NULL)
         {
-            MiReleasePfnLock(OldIrql);
             ObDereferenceObject(Section);
             return STATUS_NO_MEMORY;
         }
 
         ImageSectionObject->SegFlags = MM_SEGMENT_INCREATE;
         ImageSectionObject->RefCount = 1;
+
+        OldIrql = MiAcquirePfnLock();
+        if (FileObject->SectionObjectPointer->ImageSectionObject != NULL)
+        {
+            MiReleasePfnLock(OldIrql);
+            /* Bad luck. Start over */
+            ExFreePoolWithTag(ImageSectionObject, TAG_MM_SECTION_SEGMENT);
+            goto grab_image_section_object;
+        }
+
         FileObject->SectionObjectPointer->ImageSectionObject = ImageSectionObject;
 
         MiReleasePfnLock(OldIrql);
