@@ -1089,6 +1089,7 @@ KiI386PentiumLockErrataFixup(VOID)
 {
     KDESCRIPTOR IdtDescriptor = {0, 0, 0};
     PKIDTENTRY NewIdt, NewIdt2;
+    PMMPTE PointerPte;
 
     /* Allocate memory for a new IDT */
     NewIdt = ExAllocatePool(NonPagedPool, 2 * PAGE_SIZE);
@@ -1114,7 +1115,10 @@ KiI386PentiumLockErrataFixup(VOID)
     _enable();
 
     /* Set the first 7 entries as read-only to produce a fault */
-    MmSetPageProtect(NULL, NewIdt, PAGE_READONLY);
+    PointerPte = MiAddressToPte(NewIdt);
+    ASSERT(PointerPte->u.Hard.Write == 1);
+    PointerPte->u.Hard.Write = 0;
+    KeInvalidateTlbEntry(NewIdt);
 }
 
 BOOLEAN
