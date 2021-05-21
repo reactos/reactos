@@ -121,7 +121,7 @@ ConPagerDefaultAction(IN PCON_PAGER Pager)
             ichLast = ich + !IsDoubleWidthCharTrailing;
             if (IsDoubleWidthCharTrailing)
             {
-                CON_STREAM_WRITE(Pager->Screen->Stream, L" ", 1);
+                CON_STREAM_WRITE(Pager->Screen->Stream, TEXT(" "), 1);
                 --ich;
             }
             if (dwFlags & CON_PAGER_LINE_FLAG_NEWLINE)
@@ -138,7 +138,6 @@ ConPagerDefaultAction(IN PCON_PAGER Pager)
     {
         dwFlags &= ~CON_PAGER_LINE_FLAG_NEWLINE;
         ConCallPagerLine(Pager, &TextBuff[ichLast], ich - ichLast, &dwFlags);
-        iColumn = Pager->iColumn;
     }
 
     if (iLine >= ScrollRows)
