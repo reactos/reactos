@@ -121,8 +121,7 @@ MorePagerExpandTab(
 
     /* Store to buffer */
     iColumn = Pager->iColumn;
-    // NOTE: Also, it would have been: ich2 <= cch2
-    for (ich1 = ich2 = 0; ich1 < cch /*&& ich2 < cch2*/; ++ich1)
+    for (ich1 = ich2 = 0; ich1 < cch; ++ich1)
     {
         if (line[ich1] == L'\t')
         {
