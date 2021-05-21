@@ -14,6 +14,6 @@ BEGIN
   /v\t\t顯示有關已執行動作的資訊。\n\
   /?\t\t顯示此資訊。\n\n"
     IDS_LOGOFF_REMOTE "正在終止遠端機器的階段。"
-    IDS_LOGOFF_LOCAL "正在終止本機器的當前階段。"
+    IDS_LOGOFF_LOCAL "正在終止本機器的目前階段。"
     IDS_ILLEGAL_PARAM "無效的參數\n"
 END

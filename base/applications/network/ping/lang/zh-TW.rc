@@ -1,7 +1,7 @@
 /*
  * FILE:        base/applications/network/ping/lang/zh-TW.rc
  * PURPOSE:     Chinese (Traditional) translations for ReactOS Ping Command
- * TRANSLATORS: 2021 Aobi Chan CL (eason066@gmail.com)
+ * TRANSLATORS: 2021 Chan Chilung (eason066@gmail.com)
  */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL

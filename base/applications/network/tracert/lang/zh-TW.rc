@@ -1,26 +1,27 @@
+// Traditional Chinese translation by 2021 Chan Chilung <eason066@gmail.com>
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
 
 STRINGTABLE
 BEGIN
     IDS_USAGE "\r\n\
-Usage: tracert [-d] [-h maximum_hops] [-j host-list] [-w timeout] target_name \r\n\r\n\
-Options:\r\n\
-    -d                 Do not resolve addresses to hostnames.\r\n\
-    -h maximum_hops    Maximum number of hops to search for target.\r\n\
-    -j host-list       Loose source route along host-list.\r\n\
-    -w timeout         Wait timeout milliseconds for each reply.\r\n\
-    -4                 Force using IPv4.\r\n\
-    -6                 Force using IPv6.\r\n\
+用法: tracert [-d] [-h 最大躍點數目] [-j 主機清單] [-w 逾時] 目標名稱 \r\n\r\n\
+選項:\r\n\
+    -d                 不要將位址解析為主機名稱。\r\n\
+    -h 最大躍點數目    搜尋目標所使用的最大躍點數目。\r\n\
+    -j 主機清單        鬆散的主機清單來源路由\r\n\
+    -w 逾時            每個回覆的等候逾時 (毫秒)。\r\n\
+    -4                 強制使用 IPv4。\r\n\
+    -6                 強制使用 IPv6。\r\n\
 \r\n"
 
-    IDS_INVALID_OPTION  "%1 is not a valid command option.\r\n"
-    IDS_TRACE_INFO      "\r\nTracing route to %1 [%2]\r\nover a maximum of %3!u! hops:\r\n\r\n"
-    IDS_TRACE_COMPLETE  "\r\nTrace complete.\r\n"
-    IDS_UNABLE_RESOLVE  "Unable to resolve target system name %1.\r\n"
+    IDS_INVALID_OPTION  "%1 不是有效的選項。\r\n"
+    IDS_TRACE_INFO      "\r\n在上限 %3!u! 個躍點上\r\n追蹤 %1 [%2] 的路由:\r\n\r\n"
+    IDS_TRACE_COMPLETE  "\r\n追蹤完成。\r\n"
+    IDS_UNABLE_RESOLVE  "無法解析目標系統名稱 %1.\r\n"
 
-    IDS_GEN_FAILURE     "General failure.\r\n"
-    IDS_TRANSMIT_FAILED "Transmit failed. (Error %1!u!)\r\n"
+    IDS_GEN_FAILURE     "一般失敗。\r\n"
+    IDS_TRANSMIT_FAILED "傳輸失敗。 (錯誤 %1!u!)\r\n"
 
     IDS_HOP_COUNT       "%1!3lu!  %0\r\n"
     IDS_HOP_TIME        "%1!4lu! ms  %0\r\n"
@@ -29,9 +30,9 @@ Options:\r\n\
     IDS_HOP_RES_INFO    "%1 [%2]"
     IDS_HOP_IP_INFO     "%1"
     IDS_LINEBREAK       "\r\n"
-    IDS_REQ_TIMED_OUT   "Request timed out.\r\n"
+    IDS_REQ_TIMED_OUT   "要求逾時。\r\n"
     IDS_HOP_RESPONSE    "  reports: "
-    IDS_DEST_HOST_UNREACHABLE "Destination host unreachable.\r\n"
-    IDS_DEST_NET_UNREACHABLE  "Destination network unreachable.\r\n"
+    IDS_DEST_HOST_UNREACHABLE "無法連線至目標主機。\r\n"
+    IDS_DEST_NET_UNREACHABLE  "無法連線至目標網路。\r\n"
 
 END

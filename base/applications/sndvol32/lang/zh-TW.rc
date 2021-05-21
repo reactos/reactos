@@ -132,7 +132,7 @@ BEGIN
     LTEXT "低", IDC_ADV_TREBLE_LOW, 77, 90, 20, 8
     LTEXT "高", IDC_ADV_TREBLE_HIGH, 182, 90, 20, 8
     CONTROL "", IDC_ADV_TREBLE_SLIDER, "msctls_trackbar32", TBS_HORZ | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 97, 90, 80, 20
-    GROUPBOX "Other Controls", IDC_ADV_OTHER_CONTROLS, 7, 119, 240, 66
+    GROUPBOX "其他控制", IDC_ADV_OTHER_CONTROLS, 7, 119, 240, 66
     LTEXT "These settings make other changes to how your audio sounds. See your hardware documentation for details.", IDC_ADV_OTHER_TEXT, 17, 135, 220, 28
     AUTOCHECKBOX "&1 ", IDC_ADV_OTHER_CHECK1, 17, 159, 220, 14
     AUTOCHECKBOX "&2 ", IDC_ADV_OTHER_CHECK2, 17, 174, 220, 14

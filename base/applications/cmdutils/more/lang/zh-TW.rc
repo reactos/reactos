@@ -1,17 +1,56 @@
-/* Traditional Chinese translation by Henry Tang Ih 2016 (henrytang2@hotmail.com) */
+/* Traditional Chinese translation by:
+ * Henry Tang Ih 2016 (henrytang2@hotmail.com) 
+ * Chan Chilung 2021 (eason066@gmail.com)  */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
 
 STRINGTABLE
 BEGIN
-    IDS_USAGE "在螢幕上一頁一頁地顯示內容。\n\n\
-  MORE < [磁碟機:][路徑]檔案名稱\n\
-  命令 | MORE\n\
-  MORE [磁碟機:][路徑]檔案名稱\n\n\
-  [磁碟機:][路徑]檔案名稱    一個將要被如此顯示內容的檔案。\n\
-  命令\t\t     一個輸出將要被如此顯示的命令。\n\n\
-  在 ""-- 繼續 --"" 的提示出現時你可以按任意鍵來顯示下一頁。\n"
+    IDS_USAGE "在螢幕上以一次一頁螢幕的方式來顯示輸出。\n\
+\n\
+MORE [/E [選項]] < [磁碟機:][路徑]檔案名稱\n\
+命令 | MORE [/E [命令]]\n\
+\n\
+    [磁碟機:][路徑]檔案名稱   一個將要被如此顯示內容的檔案。\n\
+    命令                      一個將要被如此顯示輸出的命令。\n\
+\n\
+當擴充功能啟用時，將支援以下格式:\n\
+MORE [/E] [選項] [檔案]\n\
+\n\
+選項:\n\
+    /E       啟用擴充功能。\n\
+	擴充功能的預設狀態由 CMD.EXE 的預設註冊表設定控制。\n\
+    有關如何更改這些設定的更多詳細資訊，請參閱\n\
+    CMD.EXE 說明中的 ""Command Extensions"" 部分。\n\
+\n\
+    當擴充功能啟用時，可以使用以下選項:\n\
+    /C       在顯示一頁之前先清除螢幕。\n\
+    /P       展開 FormFeed 字元。\n\
+    /S       將數個空白行顯示為一行。\n\
+    /Tn      將定位字元展開為 n 個空白 (預設值: 8)\n\
+\n\
+    MORE 環境變數中可以有切換參數。\n\
+\n\
+    +n       在第 n 行開始顯示第一個檔案。\n\
+    files    要顯示的檔案清單。以空格分開在清單中的檔案。\n\
+\n\
+當擴充功能啟用時，可以在 ""-- Continue --""\n\
+提示出現時使用以下命令:\n\
+\n\
+    P n      顯示下面 n 行。\n\
+    S n      跳過下面 n 行。\n\
+    F        顯示下一個檔案。\n\
+    Q        結束。\n\
+    =        顯示行號。\n\
+    ?        顯示說明行。\n\
+    <Space>  顯示下一頁。\n\
+    <Enter>  顯示下一行。\n"
+
     IDS_CONTINUE "-- 繼續 --"
     IDS_CONTINUE_PROGRESS "-- 繼續 (%d%%) --"
     IDS_FILE_ACCESS "無法存取檔案 %s。\n"
+    IDS_BAD_FLAG "無效的參數 - '%ls'\n"
+    IDS_CONTINUE_OPTIONS "-- 繼續 (%d%%) [選項: psfq=<Space><Enter>] --"
+    IDS_CONTINUE_LINES "-- 繼續 (%d%%) -- 行: "
+    IDS_CONTINUE_LINE_AT "-- 繼續 (%d%%) [行:%d] --"
 END

@@ -21,11 +21,11 @@ BEGIN
     LTEXT "這個連線使用下列元件:", -1, 9, 59, 217, 8
     PUSHBUTTON "安裝(&I)", IDC_INSTALL, 9, 130, 65, 14, WS_DISABLED | WS_TABSTOP
     PUSHBUTTON "解除安裝(&U)", IDC_UNINSTALL, 90, 130, 65, 14, WS_DISABLED | WS_TABSTOP
-    PUSHBUTTON "屬性(&P)", IDC_PROPERTIES, 174, 130, 65, 14
+    PUSHBUTTON "內容(&P)", IDC_PROPERTIES, 174, 130, 65, 14
     GROUPBOX "描述", -1, 9, 153, 230, 46, BS_GROUPBOX
     LTEXT "元件描述在此處...", IDC_DESCRIPTION, 15, 165, 217, 28, WS_GROUP
     AUTOCHECKBOX "連接後在通知區域顯示圖示", IDC_SHOWTASKBAR, 9, 206, 230, 12, WS_TABSTOP
-    AUTOCHECKBOX "在連接通知我時此連接受限制或無連接(&N)", IDC_NOTIFYNOCONNECTION, 9, 220, 230, 20, BS_MULTILINE | BS_TOP | WS_TABSTOP
+    AUTOCHECKBOX "在此連線受限制或無連線時通知我(&N)", IDC_NOTIFYNOCONNECTION, 9, 220, 230, 20, BS_MULTILINE | BS_TOP | WS_TABSTOP
 END
 
 IDD_STATUS DIALOGEX 0, 0, 200, 280
@@ -124,7 +124,7 @@ BEGIN
     AUTORADIOBUTTON "是，這台電腦將成為網域的成員之一。", IDC_SELECT_DOMAIN, 33, 47, 253, 20, WS_TABSTOP
     LTEXT "工作群組或網域名稱:", IDC_STATIC, 33, 72, 126, 14
     EDITTEXT IDC_DOMAIN_NAME, 33, 82, 126, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "NOTE: If this computer isn't going to be part of a network, you don't have sufficient rights to join a domain, or you don't know what to enter, then just choose workgroup for now. These options can be changed at a later time.", IDC_STATIC, 33, 107, 263, 50
+    LTEXT "注意: 如果這台電腦不會成為網路的一部分、您沒有足夠的權限加入網域、或您不知道要輸入什麼，您應該先選擇加入工作群組。這些選項可以在以後更改。", IDC_STATIC, 33, 107, 263, 50
 END
 
 STRINGTABLE
@@ -147,7 +147,7 @@ BEGIN
     IDS_SHV_COLUMN_DEVNAME "裝置名稱"
     IDS_SHV_COLUMN_PHONE "電話 # 或主機位址"
     IDS_SHV_COLUMN_OWNER "擁有者"
-    IDS_TYPE_ETHERNET "局域網或高速互聯網"
+    IDS_TYPE_ETHERNET "區域網路或高速網際網路"
     IDS_STATUS_NON_OPERATIONAL "停用"
     IDS_STATUS_UNREACHABLE "未連接"
     IDS_STATUS_DISCONNECTED "網路纜線已拔除"
@@ -161,7 +161,7 @@ BEGIN
     IDS_NET_CREATELINK "建立捷徑"
     IDS_NET_DELETE "刪除"
     IDS_NET_RENAME "重新命名"
-    IDS_NET_PROPERTIES "屬性"
+    IDS_NET_PROPERTIES "內容"
     IDS_FORMAT_BIT "%u Bit/秒"
     IDS_FORMAT_KBIT "%u KBit/秒"
     IDS_FORMAT_MBIT "%u MBit/秒"
@@ -175,11 +175,11 @@ END
 STRINGTABLE
 BEGIN
     IDS_NETWORKSETTINGSTITLE "網路設定"
-    IDS_NETWORKSETTINGSSUBTITLE "安裝用於連接到其他網路、電腦和互聯網的網路軟體。"
+    IDS_NETWORKSETTINGSSUBTITLE "安裝用於連接到其他網路、電腦和網際網路的網路軟體。"
     IDS_NETWORKCOMPONENTTITLE "網路元件"
     IDS_NETWORKCOMPONENTSUBTITLE "Determine which networking components are used on your computer. To add new components, click on Install."
     IDS_NETWORKDOMAINTITLE "工作群組或電腦網域"
-    IDS_NETWORKDOMAINSUBTITLE "A domain is a group of computers defined by a network administrator. A workgroup is a group of computers sharing the same workgroup name."
+    IDS_NETWORKDOMAINSUBTITLE "網域是一組由網路管理員定義的電腦群組。工作群組是一組共同使用同一個工作群組名稱的電腦群組。"
     IDS_REACTOS_SETUP "ReactOS 安裝程式"
     IDS_WZD_DOMAIN_NAME "除非您輸入網域或工作群組名稱，\n否則安裝程式無法繼續。"
 END

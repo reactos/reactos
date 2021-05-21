@@ -19,8 +19,8 @@ BEGIN
     END
     POPUP "查看(&V)"
     BEGIN
-        MENUITEM "後進先出(&N)", IDM_LIST_NEWEST
-        MENUITEM "先進先出 (&O)", IDM_LIST_OLDEST
+        MENUITEM "最新的在前(&N)", IDM_LIST_NEWEST
+        MENUITEM "最舊的在前(&O)", IDM_LIST_OLDEST
         MENUITEM SEPARATOR
         MENUITEM "詳情... (&D)\tEnter", IDM_EVENT_DETAILS
         MENUITEM SEPARATOR
@@ -33,9 +33,9 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "結束時儲存設定(&S)", IDM_SAVE_SETTINGS
     END
-    POPUP "説明(&H)"
+    POPUP "說明(&H)"
     BEGIN
-        MENUITEM "説明內容(&E)", IDM_HELP
+        MENUITEM "說明內容(&E)", IDM_HELP
         MENUITEM SEPARATOR
         MENUITEM "關於... (&A)", IDM_ABOUT
     END
@@ -56,7 +56,7 @@ CAPTION "事件詳細資訊"
 FONT 9, "新細明體", 400, 0, 0x1
 BEGIN
     LTEXT "EvtDetailsCtrl", IDC_STATIC, 0, 0, 266, 215
-    PUSHBUTTON "説明(&H)", IDHELP, 8, 220, 50, 14
+    PUSHBUTTON "說明(&H)", IDHELP, 8, 220, 50, 14
     DEFPUSHBUTTON "關閉(&C)", IDOK, 208, 220, 50, 14
 END
 
@@ -125,11 +125,11 @@ BEGIN
     EDITTEXT IDC_EDIT_EVENTS_AGE, 122, 165, 35, 14, ES_LEFT | ES_NUMBER | WS_GROUP
     CONTROL "", IDC_UPDOWN_EVENTS_AGE, UPDOWN_CLASS, UDS_SETBUDDYINT | UDS_ALIGNRIGHT |
             UDS_AUTOBUDDY | UDS_ARROWKEYS | WS_GROUP, 157, 165, 10, 14
-    LTEXT "days", IDC_STATIC, 162, 168, 20, 8
+    LTEXT "天", IDC_STATIC, 162, 168, 20, 8
     CONTROL "Do &not overwrite events\n(clear log manually)", IDC_NO_OVERWRITE, "Button", BS_AUTORADIOBUTTON | BS_MULTILINE | WS_GROUP | WS_TABSTOP, 17, 180, 143, 20
-    PUSHBUTTON "&Restore Defaults", IDC_RESTOREDEFAULTS, 166, 183, 70, 14
+    PUSHBUTTON "還原至預設值(&R)", IDC_RESTOREDEFAULTS, 166, 183, 70, 14
     AUTOCHECKBOX "Using a lo&w-speed connection", IDC_LOW_SPEED_CONNECTION, 7, 217, 167, 10
-    PUSHBUTTON "&Clear Log", ID_CLEARLOG, 195, 213, 50, 14
+    PUSHBUTTON "清除記錄(&C)", ID_CLEARLOG, 195, 213, 50, 14
 END
 
 STRINGTABLE
@@ -138,15 +138,15 @@ BEGIN
     IDS_APP_TITLE "事件檢視器"
     IDS_APP_TITLE_EX "%s - %s Log on \\\\"
     IDS_STATUS_MSG "%s has %lu event(s) (listed: %lu)"
-    IDS_LOADING_WAIT "正在載入日誌。 請稍候..."
+    IDS_LOADING_WAIT "正在載入記錄。 請稍候..."
     IDS_NO_ITEMS "There are no items to show in this view." // "No events in this log."
-    IDS_EVENTLOG_SYSTEM "System Logs"
-    IDS_EVENTLOG_APP "Application Logs"
-    IDS_EVENTLOG_USER "User Logs"
-    IDS_SAVE_FILTER "事件日誌 (*.evt)\0*.evt\0"
-    IDS_CLEAREVENTS_MSG "你想要在清除之前保存此事件日誌嗎？"
-    IDS_RESTOREDEFAULTS "Do you want to restore all settings for this log to their default values?"
-    IDS_EVENTSTRINGIDNOTFOUND "來源 ( %s ) 中的事件 ID ( %lu ) 的描述無法找到。 本地電腦可能沒有顯示來自遠端電腦消息所必需的註冊表資訊或消息 DLL 檔。\n\nThe following information is part of the event:\n\n"
+    IDS_EVENTLOG_SYSTEM "系統記錄"
+    IDS_EVENTLOG_APP "應用程式記錄"
+    IDS_EVENTLOG_USER "使用者記錄"
+    IDS_SAVE_FILTER "事件記錄 (*.evt)\0*.evt\0"
+    IDS_CLEAREVENTS_MSG "你想要在清除之前保存此事件記錄嗎？"
+    IDS_RESTOREDEFAULTS "您要這個記錄的所有設定還原至預設值嗎?"
+    IDS_EVENTSTRINGIDNOTFOUND "找不到來源 ( %s ) 中的事件 ID ( %lu ) 的描述。 本地電腦可能沒有顯示來自遠端電腦消息所必需的註冊表資訊或消息 DLL 檔。\n\n下列資訊是部分事件:\n\n"
 END
 
 STRINGTABLE
@@ -165,7 +165,7 @@ EventVwr [computer name] [/l:<event log file>] [/?]\n\
 \n\
 /? : Displays this help message.\n\
 "
-    IDS_EVENTLOGFILE "Event Log File"
+    IDS_EVENTLOGFILE "事件記錄檔案"
 END
 
 STRINGTABLE

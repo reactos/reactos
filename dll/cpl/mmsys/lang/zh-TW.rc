@@ -1,9 +1,6 @@
-/*
- * (Traditional Chinese resources)
- * (繁体中文资源)
- * by Henry Tang Ih 2016 (henrytang2@hotmail.com)
- * by Aobi Chan CL 2020 (eason066@gmail.com)
- */
+/* Traditional Chinese resources (繁體中文資源) by:
+ * Henry Tang Ih 2016 (henrytang2@hotmail.com)
+ * Chan Chilung 2020 - 2021 (eason066@gmail.com)  */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
 
@@ -37,9 +34,9 @@ BEGIN
     LTEXT "聲音方案是應用於 ReactOS 和程式事件中的一組聲音。請選擇一個現有方案或儲存您已經更改的方案。", -1, 8, 7, 230, 40
     LTEXT "聲音方案(&C):", -1, 8, 42, 150, 17
     COMBOBOX IDC_SOUND_SCHEME, 8, 53, 230, 46, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON "另存為(&E)...", IDC_SAVEAS_BTN, 134, 70, 50, 15
+    PUSHBUTTON "另存新檔(&E)...", IDC_SAVEAS_BTN, 134, 70, 50, 15
     PUSHBUTTON "刪除(&D)", IDC_DELETE_BTN, 188, 70, 50, 15
-    LTEXT "要改變聲音，請單擊下列表中的程式事件然後選擇聲音。您可將更改儲存為新聲音方案。", -1, 8, 90, 230, 40
+    LTEXT "要更改聲音，請單擊下列表中的程式事件然後選擇聲音。您可將更改儲存為新聲音方案。", -1, 8, 90, 230, 40
     LTEXT "程式事件(&P):", -1, 8, 118, 150, 17
     CONTROL "", IDC_SCHEME_LIST, "SysTreeView32", TVS_DISABLEDRAGDROP| TVS_SHOWSELALWAYS | WS_CHILD | WS_VISIBLE| WS_BORDER | WS_TABSTOP, 8, 130, 230, 60
     LTEXT "聲音(&S):", IDC_TEXT_SOUND, 8, 194, 80, 17, WS_DISABLED
@@ -55,23 +52,23 @@ FONT 9, "新細明體"
 BEGIN
     GROUPBOX "聲音播放", -1, 7, 7, 230, 60, WS_GROUP
     ICON IDI_CPLICON, IDI_CPLICON, 15, 20, 32, 32
-    LTEXT "默認裝置(&D):", -1, 50, 20, 80, 17
+    LTEXT "預設裝置(&D):", -1, 50, 20, 80, 17
     COMBOBOX IDC_DEVICE_PLAY_LIST, 50, 30, 180, 46, CBS_DROPDOWNLIST | WS_TABSTOP
     PUSHBUTTON "音量(&V)...", IDC_VOLUME1_BTN, 85, 47, 70, 15
     PUSHBUTTON "進階(&D)...", IDC_ADV2_BTN, 160, 47, 70, 15
     GROUPBOX "錄音", -1, 7, 75, 230, 60, WS_GROUP
     ICON IDI_MICROPHONE_ICON, IDI_MICROPHONE_ICON, 15, 88, 32, 32
-    LTEXT "默認裝置(&E):", -1, 50, 88, 80, 17
+    LTEXT "預設裝置(&E):", -1, 50, 88, 80, 17
     COMBOBOX IDC_DEVICE_REC_LIST, 50, 98, 180, 46, CBS_DROPDOWNLIST | WS_TABSTOP
     PUSHBUTTON "音量(&O)...", IDC_VOLUME2_BTN, 85, 115, 70, 15
     PUSHBUTTON "進階(&C)...", IDC_ADV1_BTN, 160, 115, 70, 15
     GROUPBOX "MIDI 音樂播放", -1, 7, 145, 230, 60, WS_GROUP
     ICON IDI_MIDICON, IDI_MIDICON, 15, 158, 32, 32
-    LTEXT "默認裝置(&F):", -1, 50, 158, 80, 17
+    LTEXT "預設裝置(&F):", -1, 50, 158, 80, 17
     COMBOBOX IDC_DEVICE_MIDI_LIST, 50, 168, 180, 46, CBS_DROPDOWNLIST | WS_TABSTOP
     PUSHBUTTON "音量(&M)...", IDC_VOLUME3_BTN, 85, 185, 70, 15
     PUSHBUTTON "關於(&B)...", IDC_ADV3_BTN, 160, 185, 70, 15
-    AUTOCHECKBOX "僅使用默認裝置(&U)", IDC_DEFAULT_DEV_CHECKBOX, 7, 212, 140, 10, WS_GROUP | WS_TABSTOP
+    AUTOCHECKBOX "僅使用預設裝置(&U)", IDC_DEFAULT_DEV_CHECKBOX, 7, 212, 140, 10, WS_GROUP | WS_TABSTOP
 END
 
 IDD_VOICE DIALOGEX 0, 0, 246, 228
@@ -79,7 +76,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "語音"
 FONT 9, "新細明體"
 BEGIN
-    LTEXT "這些設定控制聲音播放或您選擇的錄音裝置的音量和高階選項。", -1, 8, 7, 230, 40
+    LTEXT "這些設定控制聲音播放或您選擇的錄音裝置的音量和進階選項。", -1, 8, 7, 230, 40
     GROUPBOX "聲音播放", -1, 7, 37, 230, 60, WS_GROUP
     ICON IDI_CPLICON, IDI_CPLICON, 15, 50, 32, 32
     LTEXT "預設裝置(&D):", -1, 50, 50, 80, 17
@@ -130,7 +127,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "效能"
 FONT 9, "新細明體"
 BEGIN
-    LTEXT "這些設定控制 ReactOS 如何播放音訊。他們能夠幫助您解答有關音訊方面的問題。", 8492, 34, 7, 218, 23
+    LTEXT "這些設定控制 ReactOS 如何播放音訊。它們能夠幫助您解決有關音訊方面的問題。", 8492, 34, 7, 218, 23
     GROUPBOX "音訊播放", 8494, 7, 32, 243, 152
     ICON 4379, 8512, 8, 8, 20, 20
     LTEXT "硬體加速(&H):", 8495, 13, 56, 111, 14
@@ -238,7 +235,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_CPLNAME "聲音和音訊裝置"
-    IDS_CPLDESCRIPTION "更改電腦的聲音方案，或者配置揚聲器和錄音裝置的設定"
+    IDS_CPLDESCRIPTION "更改電腦的聲音方案，或配置揚聲器和錄音裝置的設定"
     IDS_NO_SOUND "(無)"
     IDS_NO_DEVICES "沒有裝置"
     IDS_SPEAKER_VOLUME "Speaker Volume"
@@ -267,7 +264,7 @@ BEGIN
     5841 "向下還原"
     5842 "向上還原"
     5843 "星號"
-    5844 "默認聲音"
+    5844 "預設聲音"
     5845 "感歎號"
     5846 "退出 ReactOS"
     5847 "關鍵性停止"
@@ -278,6 +275,6 @@ BEGIN
     IDS_REACTOS_LOGOFF "ReactOS 登出"
     IDS_REACTOS_LOGON "ReactOS 登入"
     5854 "ReactOS 瀏覽器"
-    IDS_BROWSE_FOR_SOUND "Search for new sounds"
-    IDS_WAVE_FILES_FILTER "Wave Files (*.wav)|*.wav|"
+    IDS_BROWSE_FOR_SOUND "搜尋新的聲音"
+    IDS_WAVE_FILES_FILTER "Wave 檔案 (*.wav)|*.wav|"
 END

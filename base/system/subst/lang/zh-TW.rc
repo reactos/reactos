@@ -11,7 +11,7 @@ BEGIN
     IDS_INVALID_PARAMETER2 "無效的參數 - %s\n"
     IDS_PATH_NOT_FOUND "找不到路徑 - %s\n"
     IDS_ACCESS_DENIED "存取被拒 - %s\n"
-    IDS_DRIVE_ALREADY_SUBSTED "驅動器已經運行過 SUBST\n"
+    IDS_DRIVE_ALREADY_SUBSTED "磁碟機已經執行過 SUBST\n"
     IDS_FAILED_WITH_ERRORCODE "操作失敗！錯誤碼 0x%x：%s\n"
     IDS_USAGE "建立一個路徑與磁碟機代號間的關聯。\n\n\
 SUBST [磁碟機1: [磁碟機2:]路徑]\n\
