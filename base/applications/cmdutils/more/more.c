@@ -115,7 +115,7 @@ MorePagerExpandTab(
     }
 
     cch2 = ich2;
-    psz = malloc((cch2 + 1) * sizeof(WCHAR));
+    psz = malloc(cch2 * sizeof(WCHAR));
     if (!psz)
         return FALSE;
 
