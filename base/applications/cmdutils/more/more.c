@@ -87,12 +87,14 @@ MorePagerLine(
     IN PCWCH line,
     IN DWORD cch)
 {
+    DWORD ich;
+
     if (s_dwFlags & FLAG_PLUSn)
     {
         if (Pager->lineno < s_nNextLineNo)
         {
-            Pager->dwFlags &= ~CON_PAGER_FLAG_NEWLINE;
-            s_bPrevLineIsBlank = IsBlankLine(line, cch);
+            Pager->dwFlags |= CON_PAGER_FLAG_DONT_OUTPUT;
+            s_bPrevLineIsBlank = FALSE;
             return TRUE; /* Don't output */
         }
         s_dwFlags &= ~FLAG_PLUSn;
@@ -104,10 +106,14 @@ MorePagerLine(
         {
             if (s_bPrevLineIsBlank)
             {
-                Pager->dwFlags &= ~CON_PAGER_FLAG_NEWLINE;
+                Pager->dwFlags |= CON_PAGER_FLAG_DONT_OUTPUT;
                 return TRUE; /* Don't output */
             }
-            s_bPrevLineIsBlank = TRUE;
+            for (ich = 0; ich < cch; ++ich)
+            {
+                if (line[ich] == L'\n')
+                    s_bPrevLineIsBlank = TRUE;
+            }
         }
         else
         {
@@ -739,6 +745,8 @@ static BOOL IsFlag(LPCWSTR param)
 
 static BOOL ParseArgument(LPCWSTR arg, BOOL *pbHasFiles)
 {
+    LPWSTR endptr;
+
     if (arg[0] == L'/')
     {
         switch (towupper(arg[1]))
@@ -781,7 +789,6 @@ static BOOL ParseArgument(LPCWSTR arg, BOOL *pbHasFiles)
             case L'T':
                 if (L'0' <= arg[2] && arg[2] <= L'9')
                 {
-                    LPWSTR endptr;
                     s_dwFlags |= FLAG_Tn;
                     s_nTabWidth = wcstoul(&arg[2], &endptr, 10);
                     if (*endptr == 0)
@@ -796,9 +803,8 @@ static BOOL ParseArgument(LPCWSTR arg, BOOL *pbHasFiles)
     {
         if (L'0' <= arg[1] && arg[1] <= L'9')
         {
-            LPWSTR endptr;
             s_dwFlags |= FLAG_PLUSn;
-            s_nNextLineNo = wcstoul(&arg[1], &endptr, 10);
+            s_nNextLineNo = wcstoul(&arg[1], &endptr, 10) + 1;
             if (*endptr == 0)
                 return TRUE;
         }

@@ -107,12 +107,14 @@ ConPagerDefaultAction(IN PCON_PAGER Pager)
 ExpandTab:
         while ((Pager->nSpacePending > 0) && (iLine < ScrollRows))
         {
-            CON_STREAM_WRITE(Pager->Screen->Stream, TEXT(" "), 1);
+            Pager->dwFlags &= ~CON_PAGER_FLAG_DONT_OUTPUT;
+            ConCallPagerLine(Pager, L" ", 1);
             --(Pager->nSpacePending);
             ++iColumn;
             if (iColumn >= ScreenColumns)
             {
-                ++iLine;
+                if (!(Pager->dwFlags & CON_PAGER_FLAG_DONT_OUTPUT))
+                    ++iLine;
                 iColumn = 0;
             }
         }
@@ -130,7 +132,7 @@ ExpandTab:
         if (TextBuff[ich] == TEXT('\t') &&
             (Pager->dwFlags & CON_PAGER_FLAG_EXPAND_TABS))
         {
-            Pager->dwFlags &= ~CON_PAGER_FLAG_NEWLINE;
+            Pager->dwFlags &= ~CON_PAGER_FLAG_DONT_OUTPUT;
             ConCallPagerLine(Pager, &TextBuff[ichLast], ich - ichLast);
             ichLast = ++ich;
             Pager->nSpacePending += nTabWidth - (iColumn % nTabWidth);
@@ -138,7 +140,7 @@ ExpandTab:
         }
         if (TextBuff[ich] == TEXT('\n') || iColumn + nWidthOfChar >= ScreenColumns)
         {
-            Pager->dwFlags |= CON_PAGER_FLAG_NEWLINE;
+            Pager->dwFlags &= ~CON_PAGER_FLAG_DONT_OUTPUT;
             ConCallPagerLine(Pager, &TextBuff[ichLast],
                              ich - ichLast + !IsDoubleWidthCharTrailing);
             ichLast = ich + !IsDoubleWidthCharTrailing;
@@ -147,7 +149,7 @@ ExpandTab:
                 CON_STREAM_WRITE(Pager->Screen->Stream, TEXT(" "), 1);
                 --ich;
             }
-            if (Pager->dwFlags & CON_PAGER_FLAG_NEWLINE)
+            if (!(Pager->dwFlags & CON_PAGER_FLAG_DONT_OUTPUT))
                 ++iLine;
             if (TextBuff[ich] == TEXT('\n'))
                 ++lineno;
@@ -159,7 +161,7 @@ ExpandTab:
 
     if (iColumn > 0)
     {
-        Pager->dwFlags &= ~CON_PAGER_FLAG_NEWLINE;
+        Pager->dwFlags &= ~CON_PAGER_FLAG_DONT_OUTPUT;
         ConCallPagerLine(Pager, &TextBuff[ichLast], ich - ichLast);
     }
 
@@ -201,7 +203,7 @@ ConWritePaging(
     if (!ConGetScreenInfo(Pager->Screen, &csbi))
     {
         /* We assume it's a file handle */
-        Pager->dwFlags &= ~CON_PAGER_FLAG_NEWLINE;
+        Pager->dwFlags &= ~CON_PAGER_FLAG_DONT_OUTPUT;
         ConCallPagerLine(Pager, szStr, len);
         return TRUE;
     }
@@ -222,7 +224,7 @@ ConWritePaging(
     /* Make sure the user doesn't have the screen too small */
     if (Pager->ScreenRows < 4)
     {
-        Pager->dwFlags &= ~CON_PAGER_FLAG_NEWLINE;
+        Pager->dwFlags &= ~CON_PAGER_FLAG_DONT_OUTPUT;
         ConCallPagerLine(Pager, szStr, len);
         return TRUE;
     }
