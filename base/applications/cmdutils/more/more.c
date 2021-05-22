@@ -847,14 +847,11 @@ static BOOL ParseMoreVariable(BOOL *pbHasFiles)
         return TRUE;
     }
 
-    pch = wcstok(psz, L" ");
-    while (pch)
+    for (pch = wcstok(psz, L" "); pch; pch = wcstok(NULL, L" "))
     {
         ret = ParseArgument(pch, pbHasFiles);
         if (!ret)
             break;
-
-        pch = wcstok(NULL, L" ");
     }
 
     free(psz);
