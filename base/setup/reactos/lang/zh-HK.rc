@@ -143,7 +143,7 @@ FONT 9, "新細明體"
 BEGIN
     LTEXT "正在完成 ReactOS 安裝程式", IDC_FINISHTITLE, 115, 8, 195, 24
     LTEXT "ReactOS 嘅第一階段安裝已順利完成。", IDC_STATIC, 20, 50, 277, 10
-    LTEXT "按下 [完成] 後，您的電腦將會重新啟動。", IDC_STATIC, 20, 80, 277, 10
+    LTEXT "按下 [完成] 後，您嘅電腦將會重新啟動。", IDC_STATIC, 20, 80, 277, 10
     CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 20, 120, 277, 8
     LTEXT "如果光碟機入面仲有光碟，請將其取出。然後按 [完成]，重新啟動您嘅電腦。", IDC_STATIC, 10, 180, 297, 20
 END
