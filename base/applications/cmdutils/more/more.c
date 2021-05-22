@@ -109,6 +109,7 @@ MorePagerLine(
                 Pager->dwFlags |= CON_PAGER_FLAG_DONT_OUTPUT;
                 return TRUE; /* Don't output */
             }
+
             for (ich = 0; ich < cch; ++ich)
             {
                 if (line[ich] == L'\n')

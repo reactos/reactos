@@ -130,6 +130,7 @@ ExpandTab:
             IsDoubleWidthCharTrailing = (nWidthOfChar == 2) &&
                                         (iColumn + 1 == ScreenColumns);
         }
+
         if (TextBuff[ich] == TEXT('\t') &&
             (Pager->dwFlags & CON_PAGER_FLAG_EXPAND_TABS))
         {
@@ -138,6 +139,7 @@ ExpandTab:
             Pager->nSpacePending += nTabWidth - (iColumn % nTabWidth);
             goto ExpandTab;
         }
+
         if (TextBuff[ich] == TEXT('\n') || iColumn + nWidthOfChar >= ScreenColumns)
         {
             ConCallPagerLine(Pager, &TextBuff[ichLast],
