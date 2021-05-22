@@ -716,7 +716,7 @@ LoadRegistrySettings(HKEY hKeyRoot)
     RegCloseKey(hKey);
 }
 
-static inline BOOL IsFlag(LPCWSTR param)
+static BOOL IsFlag(LPCWSTR param)
 {
     if (param[0] == L'/')
         return TRUE;
