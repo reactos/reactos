@@ -62,8 +62,7 @@ static BOOL __stdcall
 ConDefaultPagerLine(
     IN OUT PCON_PAGER Pager,
     IN PCTCH line,
-    IN DWORD cch,
-    IN OUT PDWORD pdwFlags)
+    IN DWORD cch)
 {
     CON_STREAM_WRITE(Pager->Screen->Stream, line, cch);
     return TRUE;
@@ -73,11 +72,10 @@ static VOID
 ConCallPagerLine(
     IN OUT PCON_PAGER Pager,
     IN PCTCH line,
-    IN DWORD cch,
-    IN OUT PDWORD pdwFlags)
+    IN DWORD cch)
 {
-    if (!Pager->PagerLine || !Pager->PagerLine(Pager, line, cch, pdwFlags))
-        Pager->DefPagerLine(Pager, line, cch, pdwFlags);
+    if (!Pager->PagerLine || !Pager->PagerLine(Pager, line, cch))
+        Pager->DefPagerLine(Pager, line, cch);
 }
 
 static BOOL
@@ -85,24 +83,40 @@ ConPagerDefaultAction(IN PCON_PAGER Pager)
 {
     PCTCH TextBuff = Pager->TextBuff;
     DWORD ich = Pager->ich;
-    DWORD cch = Pager->cch;
+    const DWORD cch = Pager->cch;
     DWORD iColumn = Pager->iColumn;
     DWORD iLine = Pager->iLine;
     DWORD lineno = Pager->lineno;
-    DWORD ScreenColumns = Pager->ScreenColumns;
-    DWORD ScrollRows = Pager->ScrollRows;
+    const DWORD ScreenColumns = Pager->ScreenColumns;
+    const DWORD ScrollRows = Pager->ScrollRows;
+    const DWORD nTabWidth = Pager->nTabWidth;
     DWORD ichLast = ich;
     UINT nWidthOfChar = 1;
     UINT nCodePage;
     BOOL IsCJK = FALSE;
     BOOL IsDoubleWidthCharTrailing = FALSE;
-    DWORD dwFlags = 0;
 
     if (ich >= cch)
         return TRUE;
 
     nCodePage = GetConsoleOutputCP();
     IsCJK = IsCJKCodePage(nCodePage);
+
+    if (Pager->dwFlags & CON_PAGER_FLAG_EXPAND_TABS)
+    {
+ExpandTab:
+        while ((Pager->nSpacePending > 0) && (iLine < ScrollRows))
+        {
+            CON_STREAM_WRITE(Pager->Screen->Stream, TEXT(" "), 1);
+            --(Pager->nSpacePending);
+            ++iColumn;
+            if (iColumn >= ScreenColumns)
+            {
+                ++iLine;
+                iColumn = 0;
+            }
+        }
+    }
 
     for (; ich < cch && iLine < ScrollRows; ++ich)
     {
@@ -113,18 +127,27 @@ ConPagerDefaultAction(IN PCON_PAGER Pager)
             IsDoubleWidthCharTrailing = (nWidthOfChar == 2) &&
                                         (iColumn + 1 == ScreenColumns);
         }
+        if (TextBuff[ich] == TEXT('\t') &&
+            (Pager->dwFlags & CON_PAGER_FLAG_EXPAND_TABS))
+        {
+            Pager->dwFlags &= ~CON_PAGER_FLAG_NEWLINE;
+            ConCallPagerLine(Pager, &TextBuff[ichLast], ich - ichLast);
+            ichLast = ++ich;
+            Pager->nSpacePending += nTabWidth - (iColumn % nTabWidth);
+            goto ExpandTab;
+        }
         if (TextBuff[ich] == TEXT('\n') || iColumn + nWidthOfChar >= ScreenColumns)
         {
-            dwFlags = CON_PAGER_LINE_FLAG_NEWLINE;
+            Pager->dwFlags |= CON_PAGER_FLAG_NEWLINE;
             ConCallPagerLine(Pager, &TextBuff[ichLast],
-                             ich - ichLast + !IsDoubleWidthCharTrailing, &dwFlags);
+                             ich - ichLast + !IsDoubleWidthCharTrailing);
             ichLast = ich + !IsDoubleWidthCharTrailing;
             if (IsDoubleWidthCharTrailing)
             {
                 CON_STREAM_WRITE(Pager->Screen->Stream, TEXT(" "), 1);
                 --ich;
             }
-            if (dwFlags & CON_PAGER_LINE_FLAG_NEWLINE)
+            if (Pager->dwFlags & CON_PAGER_FLAG_NEWLINE)
                 ++iLine;
             if (TextBuff[ich] == TEXT('\n'))
                 ++lineno;
@@ -136,15 +159,12 @@ ConPagerDefaultAction(IN PCON_PAGER Pager)
 
     if (iColumn > 0)
     {
-        dwFlags &= ~CON_PAGER_LINE_FLAG_NEWLINE;
-        ConCallPagerLine(Pager, &TextBuff[ichLast], ich - ichLast, &dwFlags);
+        Pager->dwFlags &= ~CON_PAGER_FLAG_NEWLINE;
+        ConCallPagerLine(Pager, &TextBuff[ichLast], ich - ichLast);
     }
 
     if (iLine >= ScrollRows)
-    {
         iLine = 0; /* Reset the count of lines being printed */
-        iColumn = 0; /* Reset the index of column */
-    }
 
     Pager->ich = ich;
     Pager->iColumn = iColumn;
@@ -174,14 +194,15 @@ ConWritePaging(
         Pager->iLine = 0; /* Reset the output line count */
         Pager->iColumn = 0; /* Reset the column index */
         Pager->lineno = 1; /* Reset the line number */
+        Pager->nSpacePending = 0;
     }
 
     /* Get the size of the visual screen that can be printed to */
     if (!ConGetScreenInfo(Pager->Screen, &csbi))
     {
         /* We assume it's a file handle */
-        DWORD dwFlags = 0;
-        ConCallPagerLine(Pager, szStr, len, &dwFlags);
+        Pager->dwFlags &= ~CON_PAGER_FLAG_NEWLINE;
+        ConCallPagerLine(Pager, szStr, len);
         return TRUE;
     }
 
@@ -201,8 +222,8 @@ ConWritePaging(
     /* Make sure the user doesn't have the screen too small */
     if (Pager->ScreenRows < 4)
     {
-        DWORD dwFlags = 0;
-        ConCallPagerLine(Pager, szStr, len, &dwFlags);
+        Pager->dwFlags &= ~CON_PAGER_FLAG_NEWLINE;
+        ConCallPagerLine(Pager, szStr, len);
         return TRUE;
     }
 

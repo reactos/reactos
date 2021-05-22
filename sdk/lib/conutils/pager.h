@@ -32,11 +32,11 @@ struct _CON_PAGER;
 typedef BOOL (__stdcall *CON_PAGER_LINE_FN)(
     IN OUT struct _CON_PAGER *Pager,
     IN PCTCH line,
-    IN DWORD cch,
-    IN OUT PDWORD pdwFlags);
+    IN DWORD cch);
 
-/* Flags for CON_PAGER_LINE_FN */
-#define CON_PAGER_LINE_FLAG_NEWLINE (1 << 0)
+/* Flags for CON_PAGER */
+#define CON_PAGER_FLAG_NEWLINE (1 << 0)
+#define CON_PAGER_FLAG_EXPAND_TABS (1 << 1)
 
 typedef struct _CON_PAGER
 {
@@ -52,6 +52,9 @@ typedef struct _CON_PAGER
     DWORD iColumn; /* The current index of column */
     DWORD iLine; /* The physical output line count of screen */
     DWORD lineno; /* The logical line number */
+    DWORD dwFlags; /* The CON_PAGER_FLAG_... flags */
+    DWORD nTabWidth;
+    DWORD nSpacePending;
 } CON_PAGER, *PCON_PAGER;
 
 #define INIT_CON_PAGER(pScreen)     {(pScreen), 0}

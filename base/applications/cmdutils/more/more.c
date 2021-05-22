@@ -82,87 +82,16 @@ static BOOL IsBlankLine(IN PCWCH line, IN DWORD cch)
 }
 
 static BOOL __stdcall
-MorePagerExpandTab(
-    IN OUT PCON_PAGER Pager,
-    IN PCWCH line,
-    IN DWORD cch,
-    IN OUT PDWORD pdwFlags)
-{
-    PWCHAR psz;
-    DWORD ich1, ich2, cch2, spaces;
-    BOOL ret;
-    DWORD iColumn = Pager->iColumn;
-
-    /* Calculate expanded length */
-    for (ich1 = ich2 = 0; ich1 < cch; ++ich1)
-    {
-        if (line[ich1] == L'\t')
-        {
-            spaces = s_nTabWidth - (iColumn % s_nTabWidth);
-            iColumn += spaces;
-            ich2 += spaces;
-        }
-        else if (line[ich1] == L'\n')
-        {
-            iColumn = 0;
-            ++ich2;
-        }
-        else
-        {
-            ++iColumn;
-            ++ich2;
-        }
-    }
-
-    cch2 = ich2;
-    psz = malloc(cch2 * sizeof(WCHAR));
-    if (!psz)
-        return FALSE;
-
-    /* Store to buffer */
-    iColumn = Pager->iColumn;
-    for (ich1 = ich2 = 0; ich1 < cch; ++ich1)
-    {
-        if (line[ich1] == L'\t')
-        {
-            spaces = s_nTabWidth - (iColumn % s_nTabWidth);
-            iColumn += spaces;
-            while (spaces-- > 0)
-            {
-                psz[ich2++] = L' ';
-            }
-        }
-        else if (line[ich1] == L'\n')
-        {
-            iColumn = 0;
-            psz[ich2++] = line[ich1];
-        }
-        else
-        {
-            ++iColumn;
-            psz[ich2++] = line[ich1];
-        }
-    }
-
-    /* Do output */
-    ret = Pager->DefPagerLine(Pager, psz, ich2, pdwFlags);
-    free(psz);
-    Pager->iColumn = iColumn;
-    return ret;
-}
-
-static BOOL __stdcall
 MorePagerLine(
     IN OUT PCON_PAGER Pager,
     IN PCWCH line,
-    IN DWORD cch,
-    IN OUT PDWORD pdwFlags)
+    IN DWORD cch)
 {
     if (s_dwFlags & FLAG_PLUSn)
     {
         if (Pager->lineno < s_nNextLineNo)
         {
-            *pdwFlags &= ~CON_PAGER_LINE_FLAG_NEWLINE;
+            Pager->dwFlags &= ~CON_PAGER_FLAG_NEWLINE;
             s_bPrevLineIsBlank = IsBlankLine(line, cch);
             return TRUE; /* Don't output */
         }
@@ -175,7 +104,7 @@ MorePagerLine(
         {
             if (s_bPrevLineIsBlank)
             {
-                *pdwFlags &= ~CON_PAGER_LINE_FLAG_NEWLINE;
+                Pager->dwFlags &= ~CON_PAGER_FLAG_NEWLINE;
                 return TRUE; /* Don't output */
             }
             s_bPrevLineIsBlank = TRUE;
@@ -187,7 +116,7 @@ MorePagerLine(
     }
 
     s_nNextLineNo = 0;
-    return MorePagerExpandTab(Pager, line, cch, pdwFlags);
+    return Pager->DefPagerLine(Pager, line, cch);
 }
 
 static BOOL
@@ -1002,6 +931,8 @@ int wmain(int argc, WCHAR* argv[])
     }
 
     Pager.PagerLine = MorePagerLine;
+    Pager.dwFlags |= CON_PAGER_FLAG_EXPAND_TABS;
+    Pager.nTabWidth = s_nTabWidth;
 
     /* Special case where we run 'MORE' without any argument: we use STDIN */
     if (!HasFiles)
