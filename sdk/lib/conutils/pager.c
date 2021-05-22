@@ -74,6 +74,8 @@ ConCallPagerLine(
     IN PCTCH line,
     IN DWORD cch)
 {
+    Pager->dwFlags &= ~CON_PAGER_FLAG_DONT_OUTPUT; /* Clear the flag */
+
     if (!Pager->PagerLine || !Pager->PagerLine(Pager, line, cch))
         Pager->DefPagerLine(Pager, line, cch);
 }
@@ -107,7 +109,6 @@ ConPagerDefaultAction(IN PCON_PAGER Pager)
 ExpandTab:
         while ((Pager->nSpacePending > 0) && (iLine < ScrollRows))
         {
-            Pager->dwFlags &= ~CON_PAGER_FLAG_DONT_OUTPUT;
             ConCallPagerLine(Pager, L" ", 1);
             --(Pager->nSpacePending);
             ++iColumn;
@@ -132,7 +133,6 @@ ExpandTab:
         if (TextBuff[ich] == TEXT('\t') &&
             (Pager->dwFlags & CON_PAGER_FLAG_EXPAND_TABS))
         {
-            Pager->dwFlags &= ~CON_PAGER_FLAG_DONT_OUTPUT;
             ConCallPagerLine(Pager, &TextBuff[ichLast], ich - ichLast);
             ichLast = ++ich;
             Pager->nSpacePending += nTabWidth - (iColumn % nTabWidth);
@@ -140,7 +140,6 @@ ExpandTab:
         }
         if (TextBuff[ich] == TEXT('\n') || iColumn + nWidthOfChar >= ScreenColumns)
         {
-            Pager->dwFlags &= ~CON_PAGER_FLAG_DONT_OUTPUT;
             ConCallPagerLine(Pager, &TextBuff[ichLast],
                              ich - ichLast + !IsDoubleWidthCharTrailing);
             ichLast = ich + !IsDoubleWidthCharTrailing;
@@ -160,10 +159,7 @@ ExpandTab:
     }
 
     if (iColumn > 0)
-    {
-        Pager->dwFlags &= ~CON_PAGER_FLAG_DONT_OUTPUT;
         ConCallPagerLine(Pager, &TextBuff[ichLast], ich - ichLast);
-    }
 
     if (iLine >= ScrollRows)
         iLine = 0; /* Reset the count of lines being printed */
@@ -203,7 +199,6 @@ ConWritePaging(
     if (!ConGetScreenInfo(Pager->Screen, &csbi))
     {
         /* We assume it's a file handle */
-        Pager->dwFlags &= ~CON_PAGER_FLAG_DONT_OUTPUT;
         ConCallPagerLine(Pager, szStr, len);
         return TRUE;
     }
@@ -224,7 +219,6 @@ ConWritePaging(
     /* Make sure the user doesn't have the screen too small */
     if (Pager->ScreenRows < 4)
     {
-        Pager->dwFlags &= ~CON_PAGER_FLAG_DONT_OUTPUT;
         ConCallPagerLine(Pager, szStr, len);
         return TRUE;
     }
