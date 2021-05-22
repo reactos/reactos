@@ -112,7 +112,10 @@ MorePagerLine(
             for (ich = 0; ich < cch; ++ich)
             {
                 if (line[ich] == L'\n')
+                {
                     s_bPrevLineIsBlank = TRUE;
+                    break;
+                }
             }
         }
         else
