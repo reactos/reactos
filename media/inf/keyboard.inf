@@ -208,3 +208,9 @@ StdMfg = "(Standartinė klaviatūra)"
 HID.KeyboardDevice    = "HID 键盘"
 StdMfg = "(标准键盘)"
 *PNP0303.DeviceDesc = "IBM PC/AT 键盘"
+
+[Strings.0C04]
+KeyboardClassName = "鍵盤"
+HID.KeyboardDevice    = "HID 鍵盤"
+StdMfg = "(標準鍵盤)"
+*PNP0303.DeviceDesc = "IBM PC/AT 鍵盤"

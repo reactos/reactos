@@ -110,3 +110,6 @@ AUDIOClassName = "Garso, vaizdo ir žaidimu irenginiai"
 
 [Strings.0804]
 AUDIOClassName = "音视频控制器"
+
+[Strings.0C04]
+AUDIOClassName = "音頻及視頻控制器"

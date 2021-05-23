@@ -60,3 +60,6 @@ UnknownClassName = "Інші пристрої"
 [Strings.0804]
 ReactOS = "ReactOS Team"
 UnknownClassName = "其它设备"
+
+[Strings.0C04]
+UnknownClassName = "其他裝置"
