@@ -730,7 +730,7 @@ UINT
 FASTCALL
 IntGdiRealizePalette(HDC hDC)
 {
-    UINT i, realize = 0;
+    UINT /*i,*/ realize = 0;  // Removed i for CORE-13748 revert.
     PDC pdc;
     PALETTE *ppalSurf, *ppalDC;
 
@@ -769,12 +769,24 @@ IntGdiRealizePalette(HDC hDC)
 
     ASSERT(ppalDC->flFlags & PAL_INDEXED);
 
+/* These next lines are removed because of failures shown in CORE-13748 */
+#if 0
     // FIXME: Should we resize ppalSurf if it's too small?
     realize = (ppalDC->NumColors < ppalSurf->NumColors) ? ppalDC->NumColors : ppalSurf->NumColors;
 
     for (i=0; i<realize; i++)
     {
         InterlockedExchange((LONG*)&ppalSurf->IndexedColors[i], *(LONG*)&ppalDC->IndexedColors[i]);
+    }
+#endif
+    /* These next lines provide messages showing functions needing implementation */
+    if(pdc->dctype == DC_TYPE_MEMORY)
+    {
+        DPRINT1("RealizePalette unimplemented for memory managed DCs\n");
+    }
+    else
+    {
+        DPRINT1("RealizePalette unimplemented for device DCs\n");
     }
 
 cleanup:
