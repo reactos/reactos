@@ -77,7 +77,7 @@ ConCallPagerLine(
     Pager->dwFlags &= ~CON_PAGER_FLAG_DONT_OUTPUT; /* Clear the flag */
 
     if (!Pager->PagerLine || !Pager->PagerLine(Pager, line, cch))
-        Pager->DefPagerLine(Pager, line, cch);
+        ConDefaultPagerLine(Pager, line, cch);
 }
 
 static BOOL
@@ -213,7 +213,6 @@ ConWritePaging(
     /* Fill the pager info */
     Pager->ScreenColumns = csbi.srWindow.Right - csbi.srWindow.Left + 1;
     Pager->ScreenRows = csbi.srWindow.Bottom - csbi.srWindow.Top + 1;
-    Pager->DefPagerLine = ConDefaultPagerLine;
     Pager->ich = 0;
     Pager->cch = len;
     Pager->TextBuff = szStr;

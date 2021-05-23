@@ -126,7 +126,7 @@ MorePagerLine(
     }
 
     s_nNextLineNo = 0;
-    return Pager->DefPagerLine(Pager, line, cch);
+    return FALSE; /* Do output */
 }
 
 static BOOL
