@@ -135,6 +135,11 @@ ExpandTab:
             (Pager->dwFlags & CON_PAGER_FLAG_EXPAND_TABS))
         {
             ConCallPagerLine(Pager, &TextBuff[ichLast], ich - ichLast);
+            if (nTabWidth == 0)
+            {
+                ichLast = ich + 1;
+                continue;
+            }
             ichLast = ++ich;
             Pager->nSpacePending += nTabWidth - (iColumn % nTabWidth);
             goto ExpandTab;
