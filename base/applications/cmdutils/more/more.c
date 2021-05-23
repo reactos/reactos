@@ -790,13 +790,10 @@ static BOOL ParseArgument(LPCWSTR arg, BOOL *pbHasFiles)
                 }
                 break;
             case L'T':
-                if ((L'0' <= arg[2] && arg[2] <= L'9') || (arg[2] == L'-'))
-                {
-                    s_dwFlags |= FLAG_Tn;
-                    s_nTabWidth = wcstol(&arg[2], &endptr, 10);
-                    if (*endptr == 0)
-                        return TRUE;
-                }
+                s_dwFlags |= FLAG_Tn;
+                s_nTabWidth = wcstol(&arg[2], &endptr, 10);
+                if (*endptr == 0)
+                    return TRUE;
                 break;
             default:
                 break;
@@ -804,13 +801,10 @@ static BOOL ParseArgument(LPCWSTR arg, BOOL *pbHasFiles)
     }
     else if (arg[0] == L'+')
     {
-        if ((L'0' <= arg[1] && arg[1] <= L'9') || (arg[1] == L'-'))
-        {
-            s_dwFlags |= FLAG_PLUSn;
-            s_nNextLineNo = wcstol(&arg[1], &endptr, 10) + 1;
-            if (*endptr == 0)
-                return TRUE;
-        }
+        s_dwFlags |= FLAG_PLUSn;
+        s_nNextLineNo = wcstol(&arg[1], &endptr, 10) + 1;
+        if (*endptr == 0)
+            return TRUE;
     }
 
     if (IsFlag(arg))
