@@ -194,7 +194,7 @@ Restart:
     // FIXME: Does not support TTY yet!
     for (;;)
     {
-        INPUT_RECORD ir;
+        INPUT_RECORD ir = {0};
         DWORD dwRead;
         WCHAR ch;
 
