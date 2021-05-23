@@ -13,12 +13,6 @@
 #define NDEBUG
 #include <debug.h>
 
-/* FIXME: Local EFLAGS defines not used anywhere else */
-#define EFLAGS_IOPL     0x3000
-#define EFLAGS_NF       0x4000
-#define EFLAGS_RF       0x10000
-#define EFLAGS_ID       0x200000
-
 /* GLOBALS *******************************************************************/
 
 /* The Boot TSS */
