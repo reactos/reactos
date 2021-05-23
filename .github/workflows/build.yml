@@ -128,6 +128,37 @@ jobs:
         name: reactos-syms-msvc${{matrix.toolset}}-${{matrix.arch}}-${{github.sha}}
         path: build/msvc_pdb
 
+  build-msvc-arm:
+    strategy:
+      matrix:
+        arch: [arm]
+        toolset: ['14.2', '14.1'] # VS 2019, 2017
+      fail-fast: false
+    runs-on: windows-latest
+    steps:
+    - name: Install ninja
+      run: choco install -y ninja
+    - name: Install Flex & Bison
+      run: |
+        curl -O https://svn.reactos.org/storage/vperevertkin/flexbison.7z
+        7z x flexbison.7z -O${{github.workspace}}\bin
+        echo "${{github.workspace}}\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+        echo "BISON_PKGDATADIR=${{github.workspace}}\bin\share\bison" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+        echo "M4=${{github.workspace}}\bin\m4.exe" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+    - name: Activate VS cmd (arm)
+      uses: ilammy/msvc-dev-cmd@v1
+      with:
+        arch: x86_arm
+        toolset: ${{matrix.toolset}}
+    - name: Source checkout
+      uses: actions/checkout@v2
+      with:
+        path: src
+    - name: Configure
+      run: cmake -S src -B build -G Ninja -DCMAKE_TOOLCHAIN_FILE:FILEPATH=toolchain-msvc.cmake -DARCH:STRING=${{matrix.arch}} -DENABLE_ROSTESTS=1 -DENABLE_ROSAPPS=1
+    - name: Build rapps
+      run: cmake --build build --target rapps
+
   build-clang-cl:
     strategy:
       matrix:
