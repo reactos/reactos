@@ -61,7 +61,7 @@ BOOL bEnableExtensions = TRUE; // FIXME: By default, it should be FALSE.
 #define FLAG_PLUSn (1 << 6)
 
 static DWORD s_dwFlags = 0;
-static DWORD s_nTabWidth = 8;
+static LONG s_nTabWidth = 8;
 static DWORD s_nNextLineNo = 0;
 static BOOL s_bPrevLineIsBlank = FALSE;
 static UINT s_nPromptID = IDS_CONTINUE_PROGRESS;
@@ -728,20 +728,19 @@ LoadRegistrySettings(HKEY hKeyRoot)
 
 static BOOL IsFlag(LPCWSTR param)
 {
+    LPCWSTR pch;
+    LPWCH endptr;
+
     if (param[0] == L'/')
         return TRUE;
 
     if (param[0] == L'+')
     {
-        LPCWSTR pch = param + 1;
-        if (L'0' <= *pch && *pch <= L'9')
+        pch = param + 1;
+        if (*pch)
         {
-            do
-            {
-                ++pch;
-            } while (L'0' <= *pch && *pch <= L'9');
-
-            return (*pch == 0);
+            wcstol(pch, &endptr, 10);
+            return (*endptr == 0);
         }
     }
     return FALSE;
@@ -749,7 +748,7 @@ static BOOL IsFlag(LPCWSTR param)
 
 static BOOL ParseArgument(LPCWSTR arg, BOOL *pbHasFiles)
 {
-    LPWSTR endptr;
+    LPWCH endptr;
 
     if (arg[0] == L'/')
     {
@@ -791,10 +790,10 @@ static BOOL ParseArgument(LPCWSTR arg, BOOL *pbHasFiles)
                 }
                 break;
             case L'T':
-                if (L'0' <= arg[2] && arg[2] <= L'9')
+                if ((L'0' <= arg[2] && arg[2] <= L'9') || (arg[2] == L'-'))
                 {
                     s_dwFlags |= FLAG_Tn;
-                    s_nTabWidth = wcstoul(&arg[2], &endptr, 10);
+                    s_nTabWidth = wcstol(&arg[2], &endptr, 10);
                     if (*endptr == 0)
                         return TRUE;
                 }
@@ -805,10 +804,10 @@ static BOOL ParseArgument(LPCWSTR arg, BOOL *pbHasFiles)
     }
     else if (arg[0] == L'+')
     {
-        if (L'0' <= arg[1] && arg[1] <= L'9')
+        if ((L'0' <= arg[1] && arg[1] <= L'9') || (arg[1] == L'-'))
         {
             s_dwFlags |= FLAG_PLUSn;
-            s_nNextLineNo = wcstoul(&arg[1], &endptr, 10) + 1;
+            s_nNextLineNo = wcstol(&arg[1], &endptr, 10) + 1;
             if (*endptr == 0)
                 return TRUE;
         }
@@ -830,7 +829,8 @@ static BOOL ParseArgument(LPCWSTR arg, BOOL *pbHasFiles)
 static BOOL ParseMoreVariable(BOOL *pbHasFiles)
 {
     BOOL ret = TRUE;
-    LPWSTR psz, pch;
+    LPWSTR psz;
+    LPWCH pch;
     DWORD cch;
 
     cch = GetEnvironmentVariableW(L"MORE", NULL, 0);

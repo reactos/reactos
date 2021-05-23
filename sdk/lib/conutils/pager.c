@@ -91,7 +91,7 @@ ConPagerDefaultAction(IN PCON_PAGER Pager)
     DWORD lineno = Pager->lineno;
     const DWORD ScreenColumns = Pager->ScreenColumns;
     const DWORD ScrollRows = Pager->ScrollRows;
-    const DWORD nTabWidth = Pager->nTabWidth;
+    const LONG nTabWidth = Pager->nTabWidth;
     DWORD ichLast = ich;
     UINT nWidthOfChar = 1;
     UINT nCodePage;

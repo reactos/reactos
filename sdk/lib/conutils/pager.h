@@ -53,7 +53,7 @@ typedef struct _CON_PAGER
     DWORD iLine; /* The physical output line count of screen */
     DWORD lineno; /* The logical line number */
     DWORD dwFlags; /* The CON_PAGER_FLAG_... flags */
-    DWORD nTabWidth;
+    LONG nTabWidth;
     DWORD nSpacePending;
 } CON_PAGER, *PCON_PAGER;
 
