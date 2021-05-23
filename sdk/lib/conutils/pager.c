@@ -58,16 +58,6 @@ GetWidthOfCharCJK(
     return ret;
 }
 
-static BOOL __stdcall
-ConDefaultPagerLine(
-    IN OUT PCON_PAGER Pager,
-    IN PCTCH line,
-    IN DWORD cch)
-{
-    CON_STREAM_WRITE(Pager->Screen->Stream, line, cch);
-    return TRUE;
-}
-
 static VOID
 ConCallPagerLine(
     IN OUT PCON_PAGER Pager,
@@ -77,7 +67,7 @@ ConCallPagerLine(
     Pager->dwFlags &= ~CON_PAGER_FLAG_DONT_OUTPUT; /* Clear the flag */
 
     if (!Pager->PagerLine || !Pager->PagerLine(Pager, line, cch))
-        ConDefaultPagerLine(Pager, line, cch);
+        CON_STREAM_WRITE(Pager->Screen->Stream, line, cch);
 }
 
 static BOOL
