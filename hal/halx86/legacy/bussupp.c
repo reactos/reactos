@@ -929,6 +929,17 @@ HalpDebugPciDumpBus(IN ULONG i,
     else if (PciData->u.type0.InterruptPin != 0) DbgPrint(", IRQ assignment required");
     DbgPrint("\n");
 
+    if ((PciData->HeaderType & ~PCI_MULTIFUNCTION) == PCI_BRIDGE_TYPE &&
+        PciData->BaseClass == PCI_CLASS_BRIDGE_DEV)
+    {
+        DbgPrint("\tBridge:");
+        DbgPrint(" primary bus %d,", PciData->u.type1.PrimaryBus);
+        DbgPrint(" secondary bus %d,", PciData->u.type1.SecondaryBus);
+        DbgPrint(" subordinate bus %d,", PciData->u.type1.SubordinateBus);
+        DbgPrint(" secondary latency %d", PciData->u.type1.SecondaryLatency);
+        DbgPrint("\n");
+    }
+
     /* Scan addresses */
     Size = 0;
     for (b = 0; b < PCI_TYPE0_ADDRESSES; b++)
