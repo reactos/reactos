@@ -592,18 +592,10 @@ IntLoadRegistryParameters(VOID)
     /* Check if BASEVIDEO or NOVESA is present in the start options */
     if (wcsstr((PWCHAR)KeyInfo->Data, L"BASEVIDEO"))
         VpBaseVideo = TRUE;
-    if (wcsstr((PWCHAR)KeyInfo->Data, L"NOVESA"))
+    else if (wcsstr((PWCHAR)KeyInfo->Data, L"NOVESA"))
         VpNoVesa = TRUE;
 
     ExFreePoolWithTag(KeyInfo, TAG_VIDEO_PORT);
-
-    /* FIXME: Old ReactOS-compatibility... */
-    if (VpBaseVideo) VpNoVesa = TRUE;
-
-    if (VpNoVesa)
-        VideoPortDebugPrint(Info, "VESA mode disabled\n");
-    else
-        VideoPortDebugPrint(Info, "VESA mode enabled\n");
 
     /* If we are in BASEVIDEO, create the volatile registry key for Win32k */
     if (VpBaseVideo)
@@ -624,9 +616,25 @@ IntLoadRegistryParameters(VOID)
                              REG_OPTION_VOLATILE,
                              NULL);
         if (NT_SUCCESS(Status))
+        {
             ObCloseHandle(KeyHandle, KernelMode);
+            VideoPortDebugPrint(Info, "BaseVideo mode enabled\n");
+        }
         else
+        {
             ERR_(VIDEOPRT, "Failed to create the BaseVideo key (0x%x)\n", Status);
+            // Fallback to implied NoVesa mode.
+            VpBaseVideo = FALSE;
+            VpNoVesa = TRUE;
+        }
+    }
+
+    if (!VpBaseVideo)
+    {
+        if (VpNoVesa)
+            VideoPortDebugPrint(Info, "VESA mode disabled\n");
+        else
+            VideoPortDebugPrint(Info, "VESA mode enabled\n");
     }
 
     return;
@@ -1615,5 +1623,5 @@ BOOLEAN
 NTAPI
 VideoPortIsNoVesa(VOID)
 {
-    return VpNoVesa;
+    return VpBaseVideo || VpNoVesa;
 }
