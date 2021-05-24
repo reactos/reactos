@@ -104,16 +104,11 @@ static BOOLEAN KdbpCmdPrintStruct(ULONG Argc, PCHAR Argv[]);
 #endif
 
 /* Portability */
-FORCEINLINE
-ULONG_PTR
-strtoulptr(const char* nptr, char** endptr, int base)
-{
-#ifdef _M_IX86
-    return strtoul(nptr, endptr, base);
+#ifdef _WIN64
+#define strtoulptr strtoull
 #else
-    return strtoull(nptr, endptr, base);
+#define strtoulptr strtoul
 #endif
-}
 
 /* GLOBALS *******************************************************************/
 
@@ -457,7 +452,7 @@ KdbpGetHexNumber(
         pszNum += 2;
 
     /* Make a number from the string (hex) */
-    *pulValue = strtoul(pszNum, &endptr, 16);
+    *pulValue = strtoulptr(pszNum, &endptr, 16);
 
     return (*endptr == '\0');
 }
