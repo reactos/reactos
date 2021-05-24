@@ -477,7 +477,7 @@ LoadModule(
     Success = PeLdrLoadImage(FullFileName, MemoryType, &BaseAddress);
     if (!Success)
     {
-        TRACE("Loading %s failed\n", File);
+        ERR("PeLdrLoadImage() failed for %s\n", FullFileName);
         return FALSE;
     }
     TRACE("%s loaded successfully at %p\n", File, BaseAddress);
@@ -492,6 +492,10 @@ LoadModule(
                                           FullFileName,
                                           BaseAddress,
                                           Dte);
+    if (!Success)
+    {
+        ERR("PeLdrAllocateDataTableEntry() failed for %s\n", FullFileName);
+    }
 
     return Success;
 }
@@ -552,10 +556,18 @@ LoadWindowsCore(IN USHORT OperatingSystemVersion,
     TRACE("HAL file = '%s' ; Kernel file = '%s'\n", HalFileName, KernelFileName);
 
     /* Load the Kernel */
-    LoadModule(LoaderBlock, DirPath, KernelFileName, "ntoskrnl.exe", LoaderSystemCode, KernelDTE, 30);
+    if (!LoadModule(LoaderBlock, DirPath, KernelFileName, "ntoskrnl.exe", LoaderSystemCode, KernelDTE, 30))
+    {
+        ERR("LoadModule() failed for %s\n", KernelFileName);
+        return FALSE;
+    }
 
     /* Load the HAL */
-    LoadModule(LoaderBlock, DirPath, HalFileName, "hal.dll", LoaderHalCode, &HalDTE, 45);
+    if (!LoadModule(LoaderBlock, DirPath, HalFileName, "hal.dll", LoaderHalCode, &HalDTE, 45))
+    {
+        ERR("LoadModule() failed for %s\n", HalFileName);
+        return FALSE;
+    }
 
     /* Load the Kernel Debugger Transport DLL */
     if (OperatingSystemVersion > _WIN32_WINNT_WIN2K)
@@ -612,7 +624,11 @@ LoadWindowsCore(IN USHORT OperatingSystemVersion,
              * Load the transport DLL. Override the base DLL name of the
              * loaded transport DLL to the default "KDCOM.DLL" name.
              */
-            LoadModule(LoaderBlock, DirPath, KdTransportDllName, "kdcom.dll", LoaderSystemCode, &KdComDTE, 60);
+            if (!LoadModule(LoaderBlock, DirPath, KdTransportDllName, "kdcom.dll", LoaderSystemCode, &KdComDTE, 60))
+            {
+                ERR("LoadModule() failed for %s\n", KdTransportDllName);
+                return FALSE;
+            }
         }
     }
 
