@@ -173,6 +173,20 @@ jobs:
     - name: Build modules/rostests
       if: false # ${{ matrix.arch == 'arm' }}
       run: cmake --build build --target modules/rostests/all -- -k0
+    - name: Upload applications (as is)
+      uses: actions/upload-artifact@v2
+      with:
+        name: reactos-msvc${{matrix.toolset}}-${{matrix.arch}}-${{github.sha}}
+        path: |
+          build/base/applications
+          build/modules/rosapps
+          !**/CMakeFiles
+          !**/cmake_install.cmake
+    - name: Upload debug symbols
+      uses: actions/upload-artifact@v2
+      with:
+        name: reactos-syms-msvc${{matrix.toolset}}-${{matrix.arch}}-${{github.sha}}
+        path: build/msvc_pdb
 
   build-clang-cl:
     strategy:
