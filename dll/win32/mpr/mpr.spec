@@ -84,8 +84,8 @@
 @ stub WNetGetConnection3W
 @ stdcall WNetGetConnectionA(str ptr ptr)
 @ stdcall WNetGetConnectionW(wstr ptr ptr)
-@ stub WNetGetDirectoryTypeA
-@ stub WNetGetDirectoryTypeW # (wstr ptr long)
+@ stdcall -stub WNetGetDirectoryTypeA(str ptr long)
+@ stdcall -stub WNetGetDirectoryTypeW(wstr ptr long)
 @ stub WNetGetHomeDirectoryA
 @ stub WNetGetHomeDirectoryW
 @ stdcall WNetGetLastErrorA(ptr ptr long ptr long)
