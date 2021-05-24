@@ -12,6 +12,9 @@
 
 /* DATA VARIABLES ************************************************************/
 
+// #define LOG_ALLOC_FREE_BUFFER
+// #define CORE_17962_IS_FIXED
+
 #define BL_HEAP_POINTER_FLAG_BITS   3
 
 typedef struct _BL_HEAP_POINTER
@@ -655,7 +658,9 @@ BlMmAllocateHeap (
     BusyEntry->BufferNext.P = MmHapDecodeLink(BusyEntry->BufferNext);
 
     /* Return the entry's data buffer */
-    //EfiPrintf(L"Returning buffer at 0x%p\r\n", &BusyEntry->Buffer);
+#ifdef LOG_ALLOC_FREE_BUFFER
+    EfiPrintf(L"Returning buffer at 0x%p\r\n", &BusyEntry->Buffer);
+#endif
     return &BusyEntry->Buffer;
 }
 
@@ -664,9 +669,13 @@ BlMmFreeHeap (
     _In_ PVOID Buffer
     )
 {
+#ifdef CORE_17962_IS_FIXED
     PBL_BUSY_HEAP_ENTRY BusyEntry;
     PBL_HEAP_BOUNDARIES Heap;
     PLIST_ENTRY NextEntry;
+#endif // CORE_17962_IS_FIXED
+
+    ASSERT(Buffer);
 
     /* If the heap is not initialized, fail */
     if (HapInitializationStatus != 1)
@@ -674,14 +683,18 @@ BlMmFreeHeap (
         return STATUS_UNSUCCESSFUL;
     }
 
-    /* Get the heap header */
-    //EfiPrintf(L"Freeing entry at: %p\r\n", Buffer);
-    if (Buffer)
-    {
-        /* Don't free heap until we discover the corruption */
-        return STATUS_SUCCESS;
-    }
+#ifdef LOG_ALLOC_FREE_BUFFER
+    EfiPrintf(L"Freeing entry at: 0x%p\r\n", Buffer);
+#endif
 
+#ifndef CORE_17962_IS_FIXED
+
+    /* Don't free heap until we discover the corruption */
+    return STATUS_SUCCESS;
+
+#else // CORE_17962_IS_FIXED
+
+    /* Get the heap header */
     BusyEntry = CONTAINING_RECORD(Buffer, BL_BUSY_HEAP_ENTRY, Buffer);
 
     /* Loop all the heaps */
@@ -712,5 +725,7 @@ BlMmFreeHeap (
 
     /* The entry is not on any valid heap */
     return STATUS_INVALID_PARAMETER;
+
+#endif // CORE_17962_IS_FIXED
 }
 
