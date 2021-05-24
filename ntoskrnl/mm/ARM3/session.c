@@ -364,10 +364,11 @@ MiDereferenceSession(VOID)
     {
         /* No more references left, kill the session completely */
         MiDereferenceSessionFinal();
+        return;
     }
 
-    /* Check if tis is the session leader or the last process in the session */
-    if ((Process->Vm.Flags.SessionLeader) || (ReferenceCount == 0))
+    /* Check if this is the session leader */
+    if (Process->Vm.Flags.SessionLeader)
     {
         /* Get the global session address before we kill the session mapping */
         SessionGlobal = MmSessionSpace->GlobalVirtualAddress;
@@ -377,13 +378,9 @@ MiDereferenceSession(VOID)
                       BYTES_TO_PAGES(MmSessionSize) * sizeof(MMPDE));
         KeFlushEntireTb(FALSE, FALSE);
 
-        /* Is this the session leader? */
-        if (Process->Vm.Flags.SessionLeader)
-        {
-            /* Clean up the references here. */
-            ASSERT(Process->Session == NULL);
-            MiReleaseProcessReferenceToSessionDataPage(SessionGlobal);
-        }
+        /* Clean up the references here. */
+        ASSERT(Process->Session == NULL);
+        MiReleaseProcessReferenceToSessionDataPage(SessionGlobal);
     }
 
     /* Reset the current process' session flag */
