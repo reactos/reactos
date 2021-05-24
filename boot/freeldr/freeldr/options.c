@@ -84,8 +84,9 @@ enum BootOption
 
 static enum BootOption BootOptionChoice = NO_OPTION;
 static BOOLEAN BootLogging = FALSE;
-static BOOLEAN VgaMode = FALSE;
+static BOOLEAN VgaMode = FALSE; // Use 640*480*N resolution(s) only, with current video driver.
 static BOOLEAN DebuggingMode = FALSE;
+static BOOLEAN VgaDriverOnly = FALSE; // Use VGA driver only.
 
 /* FUNCTIONS ******************************************************************/
 
@@ -116,14 +117,17 @@ VOID DoOptionsMenu(IN OperatingSystemItem* OperatingSystem)
         case 0: // Safe Mode
             BootOptionChoice = SAFE_MODE;
             BootLogging = TRUE;
+            VgaDriverOnly = TRUE;
             break;
         case 1: // Safe Mode with Networking
             BootOptionChoice = SAFE_MODE_WITH_NETWORKING;
             BootLogging = TRUE;
+            VgaDriverOnly = TRUE;
             break;
         case 2: // Safe Mode with Command Prompt
             BootOptionChoice = SAFE_MODE_WITH_COMMAND_PROMPT;
             BootLogging = TRUE;
+            VgaDriverOnly = TRUE;
             break;
         // case 3: // Separator
         //     break;
@@ -159,6 +163,7 @@ VOID DoOptionsMenu(IN OperatingSystemItem* OperatingSystem)
             BootLogging = FALSE;
             VgaMode = FALSE;
             DebuggingMode = FALSE;
+            VgaDriverOnly = FALSE;
             break;
 #ifdef HAS_OPTION_MENU_EDIT_CMDLINE
         case 12: // Edit command line
@@ -214,31 +219,23 @@ VOID DisplayBootTimeOptions(VOID)
              (BootOptionChoice != SAFE_MODE_WITH_NETWORKING) &&
              (BootOptionChoice != SAFE_MODE_WITH_COMMAND_PROMPT) )
         {
-            if (BootOptionChoice != NO_OPTION)
-            {
+            if (BootOptions[0] != ANSI_NULL)
                 strcat(BootOptions, ", ");
-            }
             strcat(BootOptions, OptionsMenuList[4]);
         }
     }
 
     if (VgaMode)
     {
-        if ((BootOptionChoice != NO_OPTION) ||
-             BootLogging)
-        {
+        if (BootOptions[0] != ANSI_NULL)
             strcat(BootOptions, ", ");
-        }
         strcat(BootOptions, OptionsMenuList[5]);
     }
 
     if (DebuggingMode)
     {
-        if ((BootOptionChoice != NO_OPTION) ||
-             BootLogging || VgaMode)
-        {
+        if (BootOptions[0] != ANSI_NULL)
             strcat(BootOptions, ", ");
-        }
         strcat(BootOptions, OptionsMenuList[8]);
     }
 
@@ -281,8 +278,11 @@ VOID AppendBootTimeOptions(PCHAR BootOptions)
         strcat(BootOptions, " /BOOTLOG");
 
     if (VgaMode)
-        strcat(BootOptions, " /BASEVIDEO");
+        strcat(BootOptions, " /NOVESA");
 
     if (DebuggingMode)
         strcat(BootOptions, " /DEBUG");
+
+    if (VgaDriverOnly)
+        strcat(BootOptions, " /BASEVIDEO");
 }
