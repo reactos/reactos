@@ -1547,7 +1547,7 @@ IntGdiAddFontResourceEx(PUNICODE_STRING FileName, DWORD Characteristics,
     Status = MmCreateSection(&SectionObject,
                              STANDARD_RIGHTS_REQUIRED | SECTION_QUERY | SECTION_MAP_READ,
                              NULL, &SectionSize, PAGE_READONLY,
-                             SEC_COMMIT, FileHandle, FileObject);
+                             SEC_COMMIT, FileHandle, NULL); // FileHandle only, not FileObject too.
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Could not map file: %wZ\n", &PathName);
