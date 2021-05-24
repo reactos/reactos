@@ -137,6 +137,9 @@ jobs:
       matrix:
         toolset: ['14.2', '14.1'] # VS 2019, 2017
         arch: [arm]
+        include:
+        - arch: arm
+          toolset: '14.0' # VS 2015
       fail-fast: false
     runs-on: windows-latest
     steps:
@@ -152,7 +155,7 @@ jobs:
     - name: Activate VS cmd (arm)
       uses: ilammy/msvc-dev-cmd@v1
       with:
-        arch: x86_arm
+        arch: amd64_arm
         toolset: ${{matrix.toolset}}
     - name: Source checkout
       uses: actions/checkout@v2
@@ -161,7 +164,7 @@ jobs:
     - name: Configure
       run: cmake -S src -B build -G Ninja -DCMAKE_TOOLCHAIN_FILE:FILEPATH=toolchain-msvc.cmake -DARCH:STRING=${{matrix.arch}} -DENABLE_ROSTESTS=1 -DENABLE_ROSAPPS=1
     - name: Build rapps
-      run: cmake --build build --target rapps
+      run: cmake --build build --target rapps -- -k0
 
   build-clang-cl:
     strategy:
