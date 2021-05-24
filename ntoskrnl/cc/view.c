@@ -1045,7 +1045,7 @@ CcFlushCache (
         {
             if (vacb->Dirty)
             {
-                IO_STATUS_BLOCK VacbIosb = { 0 };
+                IO_STATUS_BLOCK VacbIosb;
                 Status = CcRosFlushVacb(vacb, &VacbIosb);
                 if (!NT_SUCCESS(Status))
                 {
