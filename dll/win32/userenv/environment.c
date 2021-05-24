@@ -88,8 +88,6 @@ SetUserEnvironmentVariable(PWSTR* Environment,
         {
             DPRINT("GetShortPathNameW() failed for %S (Error %lu)\n", DstValue.Buffer, GetLastError());
         }
-
-        DPRINT("Buffer: %S\n", ShortName);
     }
 
     RtlInitUnicodeString(&Name, lpName);
