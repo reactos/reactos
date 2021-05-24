@@ -40,8 +40,9 @@ static UNICODE_STRING AppCompatCacheValue = RTL_CONSTANT_STRING(L"AppCompatCache
 #define EMPTY_SHIM_ENTRY    { { 0 }, { { 0 } }, 0 }
 #define MAX_SHIM_ENTRIES    0x200
 
+// AppHelp uses INVALID_HANDLE_VALUE, which is a Win32 concept, not a NT kernel one.
 #ifndef INVALID_HANDLE_VALUE
-#define INVALID_HANDLE_VALUE (HANDLE)(-1)
+#define INVALID_HANDLE_VALUE ((HANDLE)-1)
 #endif
 
 #include <pshpack1.h>
@@ -180,6 +181,8 @@ ApphelpCacheQueryInfo(
     FILE_BASIC_INFORMATION FileBasic;
     FILE_STANDARD_INFORMATION FileStandard;
     NTSTATUS Status;
+
+    ASSERT(ImageHandle != INVALID_HANDLE_VALUE);
 
     Status = ZwQueryInformationFile(ImageHandle,
                                     &IoStatusBlock,
@@ -731,7 +734,7 @@ NtApphelpCacheControl(
 {
     NTSTATUS Status = STATUS_INVALID_PARAMETER;
     UNICODE_STRING ImageName = { 0 };
-    HANDLE Handle = INVALID_HANDLE_VALUE;
+    HANDLE Handle;
 
     if (!ApphelpCacheEnabled)
     {
@@ -789,4 +792,3 @@ NtApphelpCacheControl(
     }
     return Status;
 }
-
