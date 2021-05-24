@@ -18,6 +18,10 @@ elseif(ARCH STREQUAL "arm")
     list(APPEND CRT_WINE_SOURCE
         wine/except_arm.c
     )
+elseif(ARCH STREQUAL "arm64")
+    list(APPEND CRT_WINE_SOURCE
+        wine/except_arm64.c
+    )
 endif()
 
 # includes for wine code
