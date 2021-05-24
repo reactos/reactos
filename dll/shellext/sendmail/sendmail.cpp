@@ -44,7 +44,7 @@ CreateSendToDeskLink(LPCWSTR pszSendTo)
 
     if (!CreateEmptyFile(szSendToFile))
     {
-        ERR("CreateEmptyFile('%ls')\n", szSendToFile);
+        ERR("CreateEmptyFile('%S') failed\n", szSendToFile);
         return E_FAIL;
     }
     return S_OK;

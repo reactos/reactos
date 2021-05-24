@@ -73,7 +73,7 @@ CreateSendToZip(LPCWSTR pszSendTo)
     StringCbCatW(szSendToFile, sizeof(szSendToFile), L".ZFSendToTarget");
     if (!CreateEmptyFile(szSendToFile))
     {
-        DPRINT1("CreateEmptyFile('%ls')\n", szSendToFile);
+        DPRINT1("CreateEmptyFile('%S') failed\n", szSendToFile);
         return E_FAIL;
     }
     return S_OK;

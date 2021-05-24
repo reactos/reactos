@@ -43,7 +43,7 @@ CreateSendToMyDocuments(LPCWSTR pszSendTo)
 
     if (!CreateEmptyFile(szSendToFile))
     {
-        ERR("CreateEmptyFile(%S, %S) failed!\n", szSendToFile, szTarget);
+        ERR("CreateEmptyFile('%S') failed\n", szSendToFile);
         return E_FAIL;
     }
 
