@@ -310,9 +310,6 @@ CcMdlWriteComplete2(
 );
 
 NTSTATUS
-CcRosFlushVacb(PROS_VACB Vacb, PIO_STATUS_BLOCK Iosb);
-
-NTSTATUS
 CcRosGetVacb(
     PROS_SHARED_CACHE_MAP SharedCacheMap,
     LONGLONG FileOffset,

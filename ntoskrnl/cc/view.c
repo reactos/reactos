@@ -155,6 +155,7 @@ CcRosTraceCacheMap (
 #endif
 }
 
+static
 NTSTATUS
 CcRosFlushVacb (
     _In_ PROS_VACB Vacb,
