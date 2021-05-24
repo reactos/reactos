@@ -138,7 +138,9 @@ START_TEST(NtContinue)
     /* First time */
     if(setjmp(jmpbuf) == 0)
     {
+#if defined(_M_IX86) || defined(_M_AMD64)
         CONTEXT bogus;
+#endif
 
         continueContext.ContextFlags = CONTEXT_FULL;
         GetThreadContext(GetCurrentThread(), &continueContext);
@@ -187,7 +189,10 @@ START_TEST(NtContinue)
 
         /* continuePoint() is implemented in assembler */
         //continueContext.Rip = ((ULONG_PTR)continuePoint);
-        skip("NtContinue test does not yet work on x64.");
+        skip("NtContinue test does not yet work on amd64.\n");
+        return;
+#else
+        skip("NtContinue test is not implemented on this architecture.\n");
         return;
 #endif
 
