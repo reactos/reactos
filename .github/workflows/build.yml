@@ -33,7 +33,7 @@ jobs:
     - name: Install LLVM
       if: ${{ matrix.compiler == 'clang' }}
       run: |
-        echo "LLVM_VERSION=12" >> $GITHUB_ENV
+        export LLVM_VERSION=12
         wget https://apt.llvm.org/llvm.sh
         chmod +x llvm.sh
         sudo ./llvm.sh $LLVM_VERSION
