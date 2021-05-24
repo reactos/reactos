@@ -151,7 +151,11 @@ typedef enum _MM_SYSTEM_SIZE {
 __CREATE_NTOS_DATA_IMPORT_ALIAS(Mm64BitPhysicalAddress)
 extern PBOOLEAN Mm64BitPhysicalAddress;
 #endif
+
+#if (NTDDI_VERSION >= NTDDI_VISTA)
+// On NT6.3+, MmBadPointer is deprecated. Use MM_BAD_POINTER macro instead.
 extern NTKERNELAPI PVOID MmBadPointer;
+#endif
 
 $endif (_WDMDDK_)
 $if (_NTDDK_)
