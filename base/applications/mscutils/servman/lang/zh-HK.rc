@@ -9,7 +9,7 @@ BEGIN
     BEGIN
         MENUITEM "匯出...", ID_EXPORT
         MENUITEM SEPARATOR
-        MENUITEM "退出(&X)", ID_EXIT
+        MENUITEM "結束(&X)", ID_EXIT
     END
     POPUP "行動"
     BEGIN
@@ -291,7 +291,7 @@ STRINGTABLE
 BEGIN
     IDS_HINT_BLANK " "
     IDS_HINT_EXPORT " 將當前服務清單匯出為一個檔。"
-    IDS_HINT_EXIT " 退出依個程式。"
+    IDS_HINT_EXIT " 結束依個程式。"
     IDS_HINT_CONNECT " 管理一台不同嘅電腦。"
     IDS_HINT_START " 啟動選定嘅服務。"
     IDS_HINT_STOP " 停止選定嘅服務。"

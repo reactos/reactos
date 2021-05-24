@@ -31,7 +31,7 @@ CAPTION "ReactOS 安裝程式"
 FONT 9, "新細明體"
 BEGIN
     LTEXT "歡迎使用 ReactOS 安裝程式。", IDC_WELCOMETITLE, 115, 8, 195, 24
-    LTEXT "安裝程式將會喺電腦上安裝 ReactOS。佢需要收集有關您同您嘅電腦嘅資訊以正確安裝 ReactOS。", IDC_STATIC, 115, 40, 195, 100
+    LTEXT "安裝程式將會喺電腦上安裝 ReactOS 作業系統。\n佢需要收集有關您同您嘅電腦嘅資訊以正確安裝 ReactOS。", IDC_STATIC, 115, 40, 195, 100
     LTEXT "按 [下一步] 繼續安裝程式。", IDC_STATIC, 115, 169, 195, 17
 END
 

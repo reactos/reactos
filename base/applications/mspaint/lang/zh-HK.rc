@@ -16,7 +16,7 @@ BEGIN
         MENUITEM "新增(&N)\tCtrl+N", IDM_FILENEW
         MENUITEM "開啟...(&O)\tCtrl+O", IDM_FILEOPEN
         MENUITEM "儲存(&S)\tCtrl+S", IDM_FILESAVE
-        MENUITEM "另存為...(&A)", IDM_FILESAVEAS
+        MENUITEM "另存新檔...(&A)", IDM_FILESAVEAS
         MENUITEM SEPARATOR
         MENUITEM "從掃描器或相機匯入...", IDM_FILEFROMSCANNERORCAMERA
         MENUITEM SEPARATOR

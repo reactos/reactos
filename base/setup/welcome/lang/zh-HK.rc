@@ -13,7 +13,7 @@ BEGIN
     IDS_DEFAULT_TOPIC_DESC "歡迎使用 ReactOS 作業系統。\n\n 請點選左邊嘅主題。"
     IDS_FONTNAME "新細明體"
     IDS_CHECKTEXT "再次顯示呢個對話方塊(&S)"
-    IDS_CLOSETEXT "退出(&Q)"
+    IDS_CLOSETEXT "結束(&Q)"
 END
 
 /* Topic buttons */
@@ -21,7 +21,7 @@ STRINGTABLE
 BEGIN
     IDS_TOPIC_BUTTON0 "安裝 &ReactOS"
     IDS_TOPIC_BUTTON1 "瀏覽 &CD"
-    IDS_TOPIC_BUTTON2 "退出(&Q)"
+    IDS_TOPIC_BUTTON2 "結束(&Q)"
 END
 
 /* Topic titles */
@@ -29,7 +29,7 @@ STRINGTABLE
 BEGIN
     IDS_TOPIC_TITLE0 "安裝 ReactOS"
     IDS_TOPIC_TITLE1 "瀏覽 CD"
-    IDS_TOPIC_TITLE2 "退出"
+    IDS_TOPIC_TITLE2 "結束"
 END
 
 /* Topic descriptions */
@@ -37,5 +37,5 @@ STRINGTABLE
 BEGIN
     IDS_TOPIC_DESC0 "重新安裝 ReactOS 或更新您嘅 ReactOS 。"
     IDS_TOPIC_DESC1 "瀏覽 CD 的內容。"
-    IDS_TOPIC_DESC2 "按下以退出應用程式。"
+    IDS_TOPIC_DESC2 "按下以結束應用程式。"
 END

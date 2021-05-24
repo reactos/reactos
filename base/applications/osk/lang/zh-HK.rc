@@ -279,9 +279,9 @@ BEGIN
         MENUITEM "字型(&F)...", IDM_FONT, GRAYED
     END
 
-    POPUP "說明"
+    POPUP "説明"
     BEGIN
-        MENUITEM "說明主題(&H)", IDM_HELP_TOPICS, GRAYED
+        MENUITEM "説明主題(&H)", IDM_HELP_TOPICS, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "關於螢幕小鍵盤(&A)...", IDM_ABOUT
     END
