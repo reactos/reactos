@@ -36,7 +36,12 @@ function(setup_host_tools)
         set(VCVARSALL_ARCH x86)
     elseif(lowercase_CMAKE_HOST_SYSTEM_PROCESSOR STREQUAL x86_64 OR lowercase_CMAKE_HOST_SYSTEM_PROCESSOR STREQUAL amd64)
         set(HOST_ARCH amd64)
-        set(VCVARSALL_ARCH amd64_x86) # x64 host-tools are not happy compiling for x86...
+        if(ARCH STREQUAL "i386" AND NOT MSVC_IDE)
+            # x64 host-tools are not happy compiling for x86, except msbuild...
+            set(VCVARSALL_ARCH amd64_x86)
+        else()
+            set(VCVARSALL_ARCH amd64)
+        endif()
     elseif(lowercase_CMAKE_HOST_SYSTEM_PROCESSOR STREQUAL arm)
         set(HOST_ARCH arm)
         set(VCVARSALL_ARCH arm)
