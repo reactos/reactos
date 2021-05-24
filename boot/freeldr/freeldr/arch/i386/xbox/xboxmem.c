@@ -54,6 +54,40 @@ extern ULONG
 PcMemFinalizeMemoryMap(
     PFREELDR_MEMORY_DESCRIPTOR MemoryMap);
 
+static
+VOID
+XboxInitializePCI(VOID)
+{
+    PCI_TYPE1_CFG_BITS PciCfg1;
+    ULONG PciData;
+
+    /* Select PCI to PCI bridge */
+    PciCfg1.u.bits.Enable = 1;
+    PciCfg1.u.bits.BusNumber = 0;
+    PciCfg1.u.bits.DeviceNumber = 8;
+    PciCfg1.u.bits.FunctionNumber = 0;
+    /* Select register VendorID & DeviceID */
+    PciCfg1.u.bits.RegisterNumber = 0x00;
+    PciCfg1.u.bits.Reserved = 0;
+
+    WRITE_PORT_ULONG(PCI_TYPE1_ADDRESS_PORT, PciCfg1.u.AsULONG);
+    PciData = READ_PORT_ULONG((PULONG)PCI_TYPE1_DATA_PORT);
+
+    if (PciData == 0x01B810DE)
+    {
+        /* Select register PrimaryBus/SecondaryBus/SubordinateBus/SecondaryLatency */
+        PciCfg1.u.bits.RegisterNumber = 0x18;
+        WRITE_PORT_ULONG(PCI_TYPE1_ADDRESS_PORT, PciCfg1.u.AsULONG);
+
+        /* Link uninitialized PCI bridge to the empty PCI bus 2,
+         * it's not supposed to have any devices attached anyway */
+        PciData = READ_PORT_ULONG((PULONG)PCI_TYPE1_DATA_PORT);
+        PciData &= 0xFF0000FF;
+        PciData |= 0x00020200;
+        WRITE_PORT_ULONG((PULONG)PCI_TYPE1_DATA_PORT, PciData);
+    }
+}
+
 VOID
 XboxMemInit(VOID)
 {
@@ -108,6 +142,8 @@ XboxMemInit(VOID)
     WRITE_PORT_ULONG((PULONG)PCI_TYPE1_DATA_PORT, InstalledMemoryMb * 1024 * 1024 - 1);
 
     AvailableMemoryMb = InstalledMemoryMb;
+
+    XboxInitializePCI();
 }
 
 memory_map_t *
