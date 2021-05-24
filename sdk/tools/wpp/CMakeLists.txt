@@ -1,22 +1,9 @@
 
 if(MSVC)
-    if(MSVC_VERSION LESS 1900)
-        add_definitions(
-            -Dsnprintf=_snprintf
-            -Dstrtoull=_strtoui64
-            -Dstrtoll=_strtoi64)
-
-        # Add this definition for WDK only, VS 9 doesn't like that
-        if(DEFINED ENV{DDKBUILDENV})
-            add_definitions(-Dvsnprintf=_vsnprintf)
-        endif()
-    endif()
-
     # Disable warnings
     add_compile_options(
         /wd4146  # "unary minus operator applied to unsigned type, result still unsigned"
         /wd4244) # "'=': conversion from 'a' to 'b', possible loss of data"
-
 endif()
 
 if(CMAKE_CROSSCOMPILING)

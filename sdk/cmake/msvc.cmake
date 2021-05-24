@@ -413,7 +413,7 @@ set(PSEH_LIB "pseh")
 
 # Setup MASM/ML for compiling 16-bit x86 ASM code on x86 or non-x86 ports.
 if(NOT ARCH STREQUAL "i386")
-    if((MSVC_VERSION LESS_EQUAL 1900) AND (DEFINED ENV{VCINSTALLDIR}))
+    if((MSVC_VERSION EQUAL 1900) AND (DEFINED ENV{VCINSTALLDIR}))
         set(CMAKE_ASM16_COMPILER $ENV{VCINSTALLDIR}/bin/ml.exe)
     elseif(DEFINED ENV{VCToolsInstallDir})
         set(CMAKE_ASM16_COMPILER $ENV{VCToolsInstallDir}/bin/Host$ENV{VSCMD_ARG_HOST_ARCH}/x86/ml.exe)

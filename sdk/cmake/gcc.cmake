@@ -55,12 +55,9 @@ elseif(CMAKE_C_COMPILER_ID STREQUAL "Clang")
     add_compile_options("$<$<COMPILE_LANGUAGE:C>:-Wno-microsoft>")
     add_compile_options(-Wno-pragma-pack)
     add_compile_options(-fno-associative-math)
-
-    if(CMAKE_C_COMPILER_VERSION VERSION_GREATER_EQUAL 12.0)
-        # disable "libcall optimization"
-        # see https://mudongliang.github.io/2020/12/02/undefined-reference-to-stpcpy.html
-        add_compile_options(-fno-builtin-stpcpy)
-    endif()
+    # disable "libcall optimization"
+    # see https://mudongliang.github.io/2020/12/02/undefined-reference-to-stpcpy.html
+    add_compile_options(-fno-builtin-stpcpy)
 
     set(CMAKE_LINK_DEF_FILE_FLAG "")
     set(CMAKE_STATIC_LIBRARY_SUFFIX ".a")
