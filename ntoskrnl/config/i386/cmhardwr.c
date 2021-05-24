@@ -294,7 +294,7 @@ CmpInitializeMachineDependentConfiguration(IN PLOADER_PARAMETER_BLOCK LoaderBloc
     /* Create the BIOS Information key */
     RtlInitUnicodeString(&KeyName,
                          L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\"
-                         L"Control\\BIOSINFO");
+                         L"Control\\Biosinfo");
     InitializeObjectAttributes(&ObjectAttributes,
                                &KeyName,
                                OBJ_CASE_INSENSITIVE,

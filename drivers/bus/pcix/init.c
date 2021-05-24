@@ -804,7 +804,7 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
 
         /* The PCILOCK feature can also be enabled per-system in the registry */
         Status = PciGetRegistryValue(L"PCILock",
-                                     L"Control\\BiosInfo\\PCI",
+                                     L"Control\\Biosinfo\\PCI",
                                      ControlSetKey,
                                      REG_DWORD,
                                      (PVOID*)&Value,

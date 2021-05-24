@@ -92,9 +92,9 @@ SetupLdrInitErrataInf(
     CHAR ErrataFilePath[MAX_PATH];
 
     /* Retrieve the INF file name value */
-    if (!InfFindFirstLine(InfHandle, "BiosInfo", "InfName", &InfContext))
+    if (!InfFindFirstLine(InfHandle, "Biosinfo", "InfName", &InfContext))
     {
-        WARN("Failed to find 'BiosInfo/InfName'\n");
+        WARN("Failed to find 'Biosinfo/InfName'\n");
         return FALSE;
     }
     if (!InfGetDataField(&InfContext, 1, &FileName))
