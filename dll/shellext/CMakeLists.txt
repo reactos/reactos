@@ -10,6 +10,8 @@ add_subdirectory(netplwiz)
 add_subdirectory(netshell)
 add_subdirectory(ntobjshex)
 add_subdirectory(sendmail)
+if(NOT MSVC OR NOT ARCH STREQUAL "arm") # FIXME: CORE-17606.
 add_subdirectory(shellbtrfs)
+endif()
 add_subdirectory(stobject)
 add_subdirectory(zipfldr)
