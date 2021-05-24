@@ -168,6 +168,11 @@ jobs:
       run: cmake --build build --target rapps -- -k0
     - name: Build base/applications
       run: cmake --build build --target base/applications/all -- -k0
+    - name: Build modules/rosapps
+      run: cmake --build build --target modules/rosapps/all -- -k0
+    - name: Build modules/rostests
+      if: false # ${{ matrix.arch == 'arm' }}
+      run: cmake --build build --target modules/rostests/all -- -k0
 
   build-clang-cl:
     strategy:
