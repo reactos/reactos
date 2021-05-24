@@ -8,7 +8,7 @@
 /* INCLUDES *****************************************************************/
 
 #include <hal.h>
-#include <apic.h>
+#include "apicp.h"
 #define NDEBUG
 #include <debug.h>
 
