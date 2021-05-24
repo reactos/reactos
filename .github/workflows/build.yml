@@ -164,7 +164,10 @@ jobs:
     - name: Configure
       run: cmake -S src -B build -G Ninja -DCMAKE_TOOLCHAIN_FILE:FILEPATH=toolchain-msvc.cmake -DARCH:STRING=${{matrix.arch}} -DENABLE_ROSTESTS=1 -DENABLE_ROSAPPS=1
     - name: Build rapps
+      if: false # ${{ matrix.arch == 'arm64' }}
       run: cmake --build build --target rapps -- -k0
+    - name: Build base/applications
+      run: cmake --build build --target base/applications/all -- -k0
 
   build-clang-cl:
     strategy:
