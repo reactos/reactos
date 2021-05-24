@@ -1453,7 +1453,7 @@ KdbpCmdBreakPointList(
     BOOLEAN Global = FALSE;
     PEPROCESS Process = NULL;
     PCHAR str1, str2, ConditionExpr, GlobalOrLocal;
-    CHAR Buffer[20];
+    CHAR Buffer[8 + 2 * sizeof(DWORD) + 1];
 
     l = KdbpGetNextBreakPointNr(0);
     if (l < 0)
@@ -1489,8 +1489,10 @@ KdbpCmdBreakPointList(
         else
         {
             GlobalOrLocal = Buffer;
-            sprintf(Buffer, "  PID 0x%Ix",
-                    (ULONG_PTR)(Process ? Process->UniqueProcessId : INVALID_HANDLE_VALUE));
+#define PID_NO_PROCESS ((DWORD) -1)
+            sprintf(Buffer, "  PID 0x%08lx",
+                    (Process ? HandleToUlong(Process->UniqueProcessId) : PID_NO_PROCESS));
+#undef PID_NO_PROCESS
         }
 
         if (Type == KdbBreakPointSoftware || Type == KdbBreakPointTemporary)
@@ -1949,9 +1951,9 @@ KdbpCmdProc(
             State = ((Process->Pcb.State == ProcessInMemory) ? "In Memory" :
                     ((Process->Pcb.State == ProcessOutOfMemory) ? "Out of Memory" : "In Transition"));
 
-            KdbpPrint(" %s0x%08x  %-10s  %s%s\n",
+            KdbpPrint(" %s0x%08lx  %-10s  %s%s\n",
                       str1,
-                      Process->UniqueProcessId,
+                      HandleToUlong(Process->UniqueProcessId),
                       State,
                       Process->ImageFileName,
                       str2);
@@ -2009,11 +2011,11 @@ KdbpCmdProc(
         State = ((Process->Pcb.State == ProcessInMemory) ? "In Memory" :
                 ((Process->Pcb.State == ProcessOutOfMemory) ? "Out of Memory" : "In Transition"));
         KdbpPrint("%s"
-                  "  PID:             0x%08x\n"
+                  "  PID:             0x%08lx\n"
                   "  State:           %s (0x%x)\n"
                   "  Image Filename:  %s\n",
                   (Argc < 2) ? "Current process:\n" : "",
-                  Process->UniqueProcessId,
+                  HandleToUlong(Process->UniqueProcessId),
                   State, Process->Pcb.State,
                   Process->ImageFileName);
 
