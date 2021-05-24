@@ -583,14 +583,17 @@ LoadWindowsCore(IN USHORT OperatingSystemVersion,
              * Parse the port name.
              * Format: /DEBUGPORT=COM[1-9]
              * or: /DEBUGPORT=FILE:\Device\HarddiskX\PartitionY\debug.log
+             * or: /DEBUGPORT=SCREEN
              * or: /DEBUGPORT=FOO
              * If we only have /DEBUGPORT= (i.e. without any port name),
              * defaults it to "COM".
              */
             RtlStringCbCopyA(KdTransportDllName, sizeof(KdTransportDllName), "KD");
-            if (_strnicmp(Option, "COM", 3) == 0 && '0' <= Option[3] && Option[3] <= '9')
+            if ((OptionLength == 4 && _strnicmp(Option, "COM", 3) == 0 && '1' <= Option[3] && Option[3] <= '9') ||
+                (OptionLength > 5 && _strnicmp(Option, "FILE", 4) == 0 && Option[4] == ':') ||
+                (OptionLength == 6 && _strnicmp(Option, "SCREEN", 6) == 0))
             {
-                RtlStringCbCatNA(KdTransportDllName, sizeof(KdTransportDllName), Option, 3);
+                RtlStringCbCatA(KdTransportDllName, sizeof(KdTransportDllName), "COM");
             }
             else
             {
