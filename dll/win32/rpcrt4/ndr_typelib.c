@@ -1029,15 +1029,17 @@ static HRESULT write_param_fs(ITypeInfo *typeinfo, unsigned char *type,
         BOOL is_return, unsigned short *stack_offset)
 {
     USHORT param_flags = desc->paramdesc.wParamFlags;
-    int is_in  = param_flags & PARAMFLAG_FIN;
-    int is_out = param_flags & PARAMFLAG_FOUT;
     TYPEDESC *tdesc = &desc->tdesc, *tfs_tdesc;
     unsigned short server_size;
     unsigned short stack_size = get_stack_size(typeinfo, tdesc);
     unsigned char basetype;
     unsigned short flags;
+    int is_in, is_out;
     size_t off = 0;
     HRESULT hr;
+
+    is_out = param_flags & PARAMFLAG_FOUT;
+    is_in = (param_flags & PARAMFLAG_FIN) || (!is_out && !is_return);
 
     hr = get_param_info(typeinfo, tdesc, is_in, is_out, &server_size, &flags,
             &basetype, &tfs_tdesc);
