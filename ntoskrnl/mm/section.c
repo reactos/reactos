@@ -4499,13 +4499,20 @@ MiRosUnmapViewInSystemSpace(IN PVOID MappedBase)
  *  instead of a memory backed section;
  *
  * File
- *  Unknown.
+ *  File object managed by CC manager.
  *
  * RETURN VALUE
  *  Status.
  *
  * @implemented
  */
+/*
+Use cases:
+1) !FileHandle && !FileObject: the section is backed by the paging file.
+2)  FileHandle && !FileObject: the section is backed by the specified file.
+3) !FileHandle &&  FileObject: the section is backed by the CC manager.
+4)  FileHandle &&  FileObject: (accepted, but should not happen!?).
+*/
 NTSTATUS NTAPI
 MmCreateSection (OUT PVOID  * Section,
                  IN ACCESS_MASK  DesiredAccess,
@@ -4531,9 +4538,9 @@ MmCreateSection (OUT PVOID  * Section,
                                        ObjectAttributes,
                                        MaximumSize,
                                        SectionPageProtection,
-                                       AllocationAttributes &~ 1,
-                                       FileHandle,
-                                       FileObject);
+                                       AllocationAttributes & ~1,
+                                       NULL,
+                                       NULL);
         }
     }
 
