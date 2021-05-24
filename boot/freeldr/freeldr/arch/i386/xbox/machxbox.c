@@ -301,14 +301,25 @@ VOID XboxHwIdle(VOID)
 VOID
 MachInit(const char *CmdLine)
 {
+    PCI_TYPE1_CFG_BITS PciCfg1;
     ULONG PciId;
 
     memset(&MachVtbl, 0, sizeof(MACHVTBL));
 
     /* Check for Xbox by identifying device at PCI 0:0:0, if it's
      * 0x10DE/0x02A5 then we're running on an Xbox */
-    WRITE_PORT_ULONG((PULONG)0xCF8, CONFIG_CMD(0, 0, 0));
-    PciId = READ_PORT_ULONG((PULONG)0xCFC);
+
+    /* Select Host to PCI bridge */
+    PciCfg1.u.bits.Enable = 1;
+    PciCfg1.u.bits.BusNumber = 0;
+    PciCfg1.u.bits.DeviceNumber = 0;
+    PciCfg1.u.bits.FunctionNumber = 0;
+    /* Select register VendorID & DeviceID */
+    PciCfg1.u.bits.RegisterNumber = 0x00;
+    PciCfg1.u.bits.Reserved = 0;
+
+    WRITE_PORT_ULONG(PCI_TYPE1_ADDRESS_PORT, PciCfg1.u.AsULONG);
+    PciId = READ_PORT_ULONG((PULONG)PCI_TYPE1_DATA_PORT);
     if (PciId != 0x02A510DE)
     {
         ERR("This is not original Xbox!\n");

@@ -57,6 +57,7 @@ PcMemFinalizeMemoryMap(
 VOID
 XboxMemInit(VOID)
 {
+    PCI_TYPE1_CFG_BITS PciCfg1;
     UCHAR ControlRegion[TEST_SIZE];
     PVOID MembaseTop = (PVOID)(64 * 1024 * 1024);
     PVOID MembaseLow = (PVOID)0;
@@ -64,9 +65,17 @@ XboxMemInit(VOID)
     WRITE_REGISTER_ULONG((PULONG)(NvBase + NV2A_FB_CFG0), 0x03070103);
     WRITE_REGISTER_ULONG((PULONG)(NvBase + NV2A_FB_CFG0 + 4), 0x11448000);
 
-    /* Prep hardware for 128 Mb */
-    WRITE_PORT_ULONG((PULONG)0xCF8, CONFIG_CMD(0, 0, 0x84));
-    WRITE_PORT_ULONG((PULONG)0xCFC, 0x7FFFFFF);
+    /* Select Host to PCI bridge */
+    PciCfg1.u.bits.Enable = 1;
+    PciCfg1.u.bits.BusNumber = 0;
+    PciCfg1.u.bits.DeviceNumber = 0;
+    PciCfg1.u.bits.FunctionNumber = 0;
+    PciCfg1.u.bits.Reserved = 0;
+    /* Prepare hardware for 128 MB */
+    PciCfg1.u.bits.RegisterNumber = 0x84;
+
+    WRITE_PORT_ULONG(PCI_TYPE1_ADDRESS_PORT, PciCfg1.u.AsULONG);
+    WRITE_PORT_ULONG((PULONG)PCI_TYPE1_DATA_PORT, 0x7FFFFFF);
 
     InstalledMemoryMb = 64;
     memset(ControlRegion, TEST_PATTERN1, TEST_SIZE);
@@ -95,8 +104,8 @@ XboxMemInit(VOID)
     }
 
     /* Set hardware for amount of memory detected */
-    WRITE_PORT_ULONG((PULONG)0xCF8, CONFIG_CMD(0, 0, 0x84));
-    WRITE_PORT_ULONG((PULONG)0xCFC, InstalledMemoryMb * 1024 * 1024 - 1);
+    WRITE_PORT_ULONG(PCI_TYPE1_ADDRESS_PORT, PciCfg1.u.AsULONG);
+    WRITE_PORT_ULONG((PULONG)PCI_TYPE1_DATA_PORT, InstalledMemoryMb * 1024 * 1024 - 1);
 
     AvailableMemoryMb = InstalledMemoryMb;
 }
