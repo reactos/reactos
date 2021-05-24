@@ -5,6 +5,10 @@
  * PROGRAMMER:      Mark Jansen
  */
 
+// NB:
+// UNICODE_STRING paths are assigned (shared buffer), not duplicated (deep-copied) :-|
+// IsWindows7OrGreater()s are always false, as test is skipped earlier on NT6+.
+
 #include "precomp.h"
 
 #include <winsvc.h>
@@ -18,15 +22,35 @@ enum ServiceCommands
 
 static NTSTATUS (NTAPI *pNtApphelpCacheControl)(APPHELPCACHESERVICECLASS, PAPPHELP_CACHE_SERVICE_LOOKUP);
 
+/* Check that NULL handle fails. (INVALID_HANDLE_VALUE is expected.) */
+void CallCacheControl_WithNullHandle(UNICODE_STRING* PathName, APPHELPCACHESERVICECLASS Service)
+{
+    NTSTATUS Status;
+    APPHELP_CACHE_SERVICE_LOOKUP CacheEntry;
+
+    CacheEntry.ImageName = *PathName;
+    CacheEntry.ImageHandle = NULL;
+    Status = pNtApphelpCacheControl(Service, &CacheEntry);
+    ok_ntstatus(Status, STATUS_INVALID_PARAMETER);
+    ok(!memcmp(&CacheEntry.ImageName, PathName, sizeof(CacheEntry.ImageName)), "CacheEntry.ImageName was modified\n");
+    ok_hdl(CacheEntry.ImageHandle, NULL);
+
+    if (CacheEntry.ImageHandle != NULL)
+        NtClose(CacheEntry.ImageHandle);
+}
+
 NTSTATUS CallCacheControl(UNICODE_STRING* PathName, BOOLEAN WithMapping, APPHELPCACHESERVICECLASS Service)
 {
-    APPHELP_CACHE_SERVICE_LOOKUP CacheEntry = { {0} };
+    APPHELP_CACHE_SERVICE_LOOKUP CacheEntry;
     NTSTATUS Status;
+
     CacheEntry.ImageName = *PathName;
+
     if (WithMapping)
     {
         OBJECT_ATTRIBUTES LocalObjectAttributes;
         IO_STATUS_BLOCK IoStatusBlock;
+
         InitializeObjectAttributes(&LocalObjectAttributes, PathName,
             OBJ_CASE_INSENSITIVE, NULL, NULL);
         Status = NtOpenFile(&CacheEntry.ImageHandle,
@@ -40,23 +64,43 @@ NTSTATUS CallCacheControl(UNICODE_STRING* PathName, BOOLEAN WithMapping, APPHELP
     {
         CacheEntry.ImageHandle = INVALID_HANDLE_VALUE;
     }
+
     Status = pNtApphelpCacheControl(Service, &CacheEntry);
+    ok(!memcmp(&CacheEntry.ImageName, PathName, sizeof(CacheEntry.ImageName)), "CacheEntry.ImageName was modified\n");
+    if (WithMapping)
+    {
+        ok(CacheEntry.ImageHandle != NULL, "CacheEntry.ImageHandle is NULL\n");
+        ok(CacheEntry.ImageHandle != INVALID_HANDLE_VALUE, "CacheEntry.ImageHandle is INVALID_HANDLE_VALUE\n");
+    }
+    else
+    {
+        ok_hdl(CacheEntry.ImageHandle, INVALID_HANDLE_VALUE);;
+    }
+
     if (CacheEntry.ImageHandle != INVALID_HANDLE_VALUE)
         NtClose(CacheEntry.ImageHandle);
+
     return Status;
 }
 
 int InitEnv(UNICODE_STRING* PathName)
 {
-    NTSTATUS Status = CallCacheControl(PathName, FALSE, ApphelpCacheServiceRemove);
+    NTSTATUS Status;
+
+    CallCacheControl_WithNullHandle(PathName, ApphelpCacheServiceRemove);
+
+    Status = CallCacheControl(PathName, FALSE, ApphelpCacheServiceRemove);
+
     if (Status == STATUS_INVALID_PARAMETER)
     {
-        /* Windows Vista+ has a different layout for APPHELP_CACHE_SERVICE_LOOKUP */
+        /* NT6+ has a different layout for APPHELP_CACHE_SERVICE_LOOKUP */
         return 0;
     }
+
     ok(Status == STATUS_SUCCESS || Status == STATUS_NOT_FOUND,
         "Wrong value for Status, expected: SUCCESS or NOT_FOUND, got: 0x%lx\n",
         Status);
+
     return 1;
 }
 
@@ -71,11 +115,38 @@ void CheckValidation(UNICODE_STRING* PathName)
     Status = pNtApphelpCacheControl(ApphelpCacheServiceLookup, NULL);
     ok_ntstatus(Status, STATUS_INVALID_PARAMETER);
 
-    /* Validate the handling of a NULL pointer inside the struct */
+    /* Validate the handling of a NULL pointer inside the struct, with a NULL handle */
     Status = pNtApphelpCacheControl(ApphelpCacheServiceRemove, &CacheEntry);
     ok_ntstatus(Status, STATUS_INVALID_PARAMETER);
+    ok(CacheEntry.ImageName.Length == 0 &&
+       CacheEntry.ImageName.MaximumLength == 0 &&
+       CacheEntry.ImageName.Buffer == NULL,
+       "CacheEntry.ImageName was modified\n");
+    ok_hdl(CacheEntry.ImageHandle, NULL);
     Status = pNtApphelpCacheControl(ApphelpCacheServiceLookup, &CacheEntry);
     ok_ntstatus(Status, STATUS_INVALID_PARAMETER);
+    ok(CacheEntry.ImageName.Length == 0 &&
+       CacheEntry.ImageName.MaximumLength == 0 &&
+       CacheEntry.ImageName.Buffer == NULL,
+       "CacheEntry.ImageName was modified\n");
+    ok_hdl(CacheEntry.ImageHandle, NULL);
+
+    /* Validate the handling of a NULL pointer inside the struct, without file info */
+    CacheEntry.ImageHandle = INVALID_HANDLE_VALUE;
+    Status = pNtApphelpCacheControl(ApphelpCacheServiceRemove, &CacheEntry);
+    ok_ntstatus(Status, STATUS_INVALID_PARAMETER);
+    ok(CacheEntry.ImageName.Length == 0 &&
+       CacheEntry.ImageName.MaximumLength == 0 &&
+       CacheEntry.ImageName.Buffer == NULL,
+       "CacheEntry.ImageName was modified\n");
+    ok_hdl(CacheEntry.ImageHandle, INVALID_HANDLE_VALUE);
+    Status = pNtApphelpCacheControl(ApphelpCacheServiceLookup, &CacheEntry);
+    ok_ntstatus(Status, STATUS_INVALID_PARAMETER);
+    ok(CacheEntry.ImageName.Length == 0 &&
+       CacheEntry.ImageName.MaximumLength == 0 &&
+       CacheEntry.ImageName.Buffer == NULL,
+       "CacheEntry.ImageName was modified\n");
+    ok_hdl(CacheEntry.ImageHandle, INVALID_HANDLE_VALUE);
 
     /* Just call the dump function */
     Status = pNtApphelpCacheControl(ApphelpCacheServiceDump, NULL);
@@ -86,12 +157,22 @@ void CheckValidation(UNICODE_STRING* PathName)
     CacheEntry.ImageHandle = (HANDLE)2;
     Status = pNtApphelpCacheControl(ApphelpCacheServiceLookup, &CacheEntry);
     ok_ntstatus(Status, IsWindows7OrGreater() ? STATUS_NOT_FOUND : STATUS_INVALID_PARAMETER);
+    ok(!memcmp(&CacheEntry.ImageName, PathName, sizeof(CacheEntry.ImageName)), "CacheEntry.ImageName was modified\n");
+    ok_hdl(CacheEntry.ImageHandle, (HANDLE)2);
 
     /* Validate the handling of an invalid service number */
     Status = pNtApphelpCacheControl(999, NULL);
     ok_ntstatus(Status, STATUS_INVALID_PARAMETER);
     Status = pNtApphelpCacheControl(999, &CacheEntry);
     ok_ntstatus(Status, STATUS_INVALID_PARAMETER);
+    ok(!memcmp(&CacheEntry.ImageName, PathName, sizeof(CacheEntry.ImageName)), "CacheEntry.ImageName was modified\n");
+    ok_hdl(CacheEntry.ImageHandle, (HANDLE)2);
+    CacheEntry.ImageHandle = INVALID_HANDLE_VALUE;
+    Status = pNtApphelpCacheControl(999, &CacheEntry);
+    ok_ntstatus(Status, STATUS_INVALID_PARAMETER);
+    ok(!memcmp(&CacheEntry.ImageName, PathName, sizeof(CacheEntry.ImageName)), "CacheEntry.ImageName was modified\n");
+    ok_hdl(CacheEntry.ImageHandle, INVALID_HANDLE_VALUE);
+    // TODO: Test with actual handle too?
 }
 
 static BOOLEAN RequestAddition(SC_HANDLE service_handle, BOOLEAN WithMapping)
@@ -111,16 +192,18 @@ static void RunApphelpCacheControlTests(SC_HANDLE service_handle)
     NTSTATUS Status;
     APPHELP_CACHE_SERVICE_LOOKUP CacheEntry;
 
-    GetModuleFileNameW(NULL, szPath, sizeof(szPath) / sizeof(szPath[0]));
+    GetModuleFileNameW(NULL, szPath, _countof(szPath));
     Result = RtlDosPathNameToNtPathName_U(szPath, &ntPath, NULL, NULL);
-    ok(Result == TRUE, "RtlDosPathNameToNtPathName_U\n");
+    ok(Result, "RtlDosPathNameToNtPathName_U failed\n");
+
     if (!InitEnv(&ntPath))
     {
-        skip("NtApphelpCacheControl expects a different structure layout\n");
+        skip("NtApphelpCacheControl expects a different structure layout (as on NT6+)\n");
         return;
     }
+
     /* At this point we have made sure that our binary is not present in the cache,
-        and that the NtApphelpCacheControl function expects the struct layout we use. */
+        and that the NtApphelpCacheControl function expects the struct layout we use */
     CheckValidation(&ntPath);
 
     /* We expect not to find it */
@@ -135,13 +218,12 @@ static void RunApphelpCacheControlTests(SC_HANDLE service_handle)
     /* now we try to find it without validating file info */
     Status = CallCacheControl(&ntPath, FALSE, ApphelpCacheServiceLookup);
     ok_ntstatus(Status, STATUS_SUCCESS);
-    /* when validating file info the cache notices the file is wrong, so it is dropped from the cache */
+    /* when validating file info, the cache removes the entry without file info */
     Status = CallCacheControl(&ntPath, TRUE, ApphelpCacheServiceLookup);
     ok_ntstatus(Status, STATUS_NOT_FOUND);
-    /* making the second check without info also fail. */
+    /* making a second check without file info fails then */
     Status = CallCacheControl(&ntPath, FALSE, ApphelpCacheServiceLookup);
     ok_ntstatus(Status, STATUS_NOT_FOUND);
-
 
     /* Now we add the file with file info */
     RequestAddition(service_handle, TRUE);
@@ -152,32 +234,71 @@ static void RunApphelpCacheControlTests(SC_HANDLE service_handle)
     Status = CallCacheControl(&ntPath, FALSE, ApphelpCacheServiceLookup);
     ok_ntstatus(Status, STATUS_SUCCESS);
 
-    /* We know the file is in the cache now (assuming previous tests succeeded,
-        let's test invalid handle behavior */
+    /* We know the file is in the cache now (assuming previous tests succeeded),
+        let's test NULL handle behavior */
     CacheEntry.ImageName = ntPath;
-    CacheEntry.ImageHandle = 0;
+    CacheEntry.ImageHandle = NULL;
     Status = pNtApphelpCacheControl(ApphelpCacheServiceLookup, &CacheEntry);
     ok_ntstatus(Status, IsWindows7OrGreater() ? STATUS_NOT_FOUND : STATUS_INVALID_PARAMETER);
+    ok(!memcmp(&CacheEntry.ImageName, &ntPath, sizeof(CacheEntry.ImageName)), "CacheEntry.ImageName was modified\n");
+    ok_hdl(CacheEntry.ImageHandle, NULL);
 
-    /* re-add it for the next test */
-    RequestAddition(service_handle, TRUE);
+    /* Valid entry is still cached */
     Status = CallCacheControl(&ntPath, TRUE, ApphelpCacheServiceLookup);
     ok_ntstatus(Status, STATUS_SUCCESS);
+
+    /* We know the file is in the cache now (assuming previous tests succeeded),
+        let's test invalid handle behavior */
+    // INVALID_HANDLE_VALUE is already tested by CallCacheControl(&ntPath, FALSE, ApphelpCacheServiceLookup).
     CacheEntry.ImageHandle = (HANDLE)1;
     Status = pNtApphelpCacheControl(ApphelpCacheServiceLookup, &CacheEntry);
     ok_ntstatus(Status, IsWindows7OrGreater() ? STATUS_NOT_FOUND : STATUS_INVALID_PARAMETER);
+    ok(!memcmp(&CacheEntry.ImageName, &ntPath, sizeof(CacheEntry.ImageName)), "CacheEntry.ImageName was modified\n");
+    ok_hdl(CacheEntry.ImageHandle, (HANDLE)1);
 
-    /* and again */
-    RequestAddition(service_handle, TRUE);
+    /* Valid entry is still cached */
     Status = CallCacheControl(&ntPath, TRUE, ApphelpCacheServiceLookup);
     ok_ntstatus(Status, STATUS_SUCCESS);
+
+    /* and again */
 #ifdef _WIN64
     CacheEntry.ImageHandle = (HANDLE)0x8000000000000000ULL;
 #else
-    CacheEntry.ImageHandle = (HANDLE)0x80000000;
+    CacheEntry.ImageHandle = (HANDLE)0x80000000UL;
 #endif
     Status = pNtApphelpCacheControl(ApphelpCacheServiceLookup, &CacheEntry);
     ok_ntstatus(Status, IsWindows7OrGreater() ? STATUS_NOT_FOUND : STATUS_INVALID_PARAMETER);
+    ok(!memcmp(&CacheEntry.ImageName, &ntPath, sizeof(CacheEntry.ImageName)), "CacheEntry.ImageName was modified\n");
+#ifdef _WIN64
+    ok_hdl(CacheEntry.ImageHandle, (HANDLE)0x8000000000000000ULL);
+#else
+    ok_hdl(CacheEntry.ImageHandle, (HANDLE)0x80000000UL);
+#endif
+
+    /* Valid entry is still cached */
+    Status = CallCacheControl(&ntPath, TRUE, ApphelpCacheServiceLookup);
+    ok_ntstatus(Status, STATUS_SUCCESS);
+
+    /* Remove the entry, without file info */
+    Status = CallCacheControl(&ntPath, FALSE, ApphelpCacheServiceRemove);
+    ok_ntstatus(Status, STATUS_SUCCESS);
+
+    /* Valid entry was removed from the cache */
+    Status = CallCacheControl(&ntPath, FALSE, ApphelpCacheServiceLookup);
+    ok_ntstatus(Status, STATUS_NOT_FOUND);
+
+    RequestAddition(service_handle, TRUE);
+
+    Status = CallCacheControl(&ntPath, TRUE, ApphelpCacheServiceLookup);
+    ok_ntstatus(Status, STATUS_SUCCESS);
+
+    /* Remove the entry, with file info */
+    Status = CallCacheControl(&ntPath, TRUE, ApphelpCacheServiceRemove);
+    ok_ntstatus(Status, STATUS_SUCCESS);
+
+    /* Valid entry was removed from the cache */
+    Status = CallCacheControl(&ntPath, FALSE, ApphelpCacheServiceLookup);
+    ok_ntstatus(Status, STATUS_NOT_FOUND);
 
     RtlFreeHeap(RtlGetProcessHeap(), 0, ntPath.Buffer);
 }
@@ -186,7 +307,6 @@ static void RunApphelpCacheControlTests(SC_HANDLE service_handle)
 /* Most service related code was taken from services_winetest:service and modified for usage here
     The rest came from MSDN */
 
-static SERVICE_STATUS_HANDLE (WINAPI *pRegisterServiceCtrlHandlerExA)(LPCSTR,LPHANDLER_FUNCTION_EX,LPVOID);
 static char service_name[100] = "apphelp_test_service";
 static HANDLE service_stop_event;
 static SERVICE_STATUS_HANDLE service_status;
@@ -197,7 +317,7 @@ static BOOLEAN RegisterInShimCache(BOOLEAN WithMapping)
     UNICODE_STRING ntPath;
     BOOLEAN Result;
     NTSTATUS Status;
-    GetModuleFileNameW(NULL, szPath, sizeof(szPath) / sizeof(szPath[0]));
+    GetModuleFileNameW(NULL, szPath, _countof(szPath));
     Result = RtlDosPathNameToNtPathName_U(szPath, &ntPath, NULL, NULL);
     if (!Result)
     {
@@ -256,8 +376,9 @@ static DWORD WINAPI service_handler(DWORD ctrl, DWORD event_type, void *event_da
 static void WINAPI service_main(DWORD argc, char **argv)
 {
     SERVICE_STATUS status = {0};
-    service_status = pRegisterServiceCtrlHandlerExA(service_name, service_handler, NULL);
-    if(!service_status)
+    service_status = RegisterServiceCtrlHandlerExA(service_name, service_handler, NULL);
+
+    if (!service_status)
         return;
 
     status.dwServiceType = SERVICE_WIN32;
@@ -343,22 +464,15 @@ START_TEST(NtApphelpCacheControl)
     char **argv;
     int argc;
 
-    pRegisterServiceCtrlHandlerExA = (void*)GetProcAddress(GetModuleHandleA("advapi32.dll"), "RegisterServiceCtrlHandlerExA");
-    if (!pRegisterServiceCtrlHandlerExA)
-    {
-        win_skip("RegisterServiceCtrlHandlerExA not available, skipping tests\n");
-        return;
-    }
-
     pNtApphelpCacheControl = (void*)GetProcAddress(GetModuleHandleA("ntdll.dll"), "NtApphelpCacheControl");
     if (!pNtApphelpCacheControl)
     {
-        win_skip("NtApphelpCacheControl not available, skipping tests\n");
+        win_skip("NtApphelpCacheControl not available (as on NT5.1)\n");
         return;
     }
 
     argc = winetest_get_mainargs(&argv);
-    if(argc < 3)
+    if (argc < 3)
     {
         RunTest();
     }
@@ -374,5 +488,3 @@ START_TEST(NtApphelpCacheControl)
         CloseHandle(service_stop_event);
     }
 }
-
-
