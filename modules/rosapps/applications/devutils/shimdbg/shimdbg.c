@@ -67,7 +67,7 @@ void CallApphelpWithImage(char* filename, int MapIt,
     xprintf("Calling %s %s mapping\n", ServiceName, (MapIt ? "with" : "without"));
 
     RtlInitUnicodeString(&CacheEntry.ImageName, PathName.Buffer);
-    CacheEntry.ImageHandle = FileHandle ? FileHandle : (HANDLE)-1;
+    CacheEntry.ImageHandle = FileHandle ? FileHandle : (HANDLE)-1; // == INVALID_HANDLE_VALUE.
     CallApphelp(Service, &CacheEntry);
     // we piggy-back on the PathName, so let the Cleanup take care of the string
     //RtlFreeUnicodeString(&CacheEntry.ImageName);
