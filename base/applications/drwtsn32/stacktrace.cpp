@@ -38,7 +38,7 @@ void PrintStackBacktrace(FILE* output, DumpData& data, ThreadData& thread)
     DWORD MachineType;
     STACKFRAME64 StackFrame = { { 0 } };
 
-#ifdef _M_X64
+#if defined(_M_AMD64)
     MachineType = IMAGE_FILE_MACHINE_AMD64;
     StackFrame.AddrPC.Offset = thread.Context.Rip;
     StackFrame.AddrPC.Mode = AddrModeFlat;
@@ -46,7 +46,7 @@ void PrintStackBacktrace(FILE* output, DumpData& data, ThreadData& thread)
     StackFrame.AddrStack.Mode = AddrModeFlat;
     StackFrame.AddrFrame.Offset = thread.Context.Rbp;
     StackFrame.AddrFrame.Mode = AddrModeFlat;
-#else
+#elif defined(_M_IX86)
     MachineType = IMAGE_FILE_MACHINE_I386;
     StackFrame.AddrPC.Offset =  thread.Context.Eip;
     StackFrame.AddrPC.Mode = AddrModeFlat;
@@ -54,6 +54,8 @@ void PrintStackBacktrace(FILE* output, DumpData& data, ThreadData& thread)
     StackFrame.AddrStack.Mode = AddrModeFlat;
     StackFrame.AddrFrame.Offset = thread.Context.Ebp;
     StackFrame.AddrFrame.Mode = AddrModeFlat;
+#else
+#error Unknown architecture
 #endif
 
 
