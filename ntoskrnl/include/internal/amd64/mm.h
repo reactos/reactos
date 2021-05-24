@@ -125,7 +125,8 @@
 #define MI_IS_INSTRUCTION_FETCH(FaultCode)   BooleanFlagOn(FaultCode, 0x00000010)
 // 0x00000020: protection-key violation.
 // 0x00000040: shadow-stack access.
-// Bits 7-14: reserved.
+// 0x00000080: HLAT paging.
+// Bits 8-14: reserved.
 // 0x00008000: violation of SGX-specific access-control requirements.
 // Bits 16-31: reserved.
 
