@@ -1434,7 +1434,7 @@ MmFlushSegment(
     _In_ PSECTION_OBJECT_POINTERS SectionObjectPointer,
     _In_opt_ PLARGE_INTEGER Offset,
     _In_ ULONG Length,
-    _In_opt_ PIO_STATUS_BLOCK Iosb);
+    _Out_opt_ PIO_STATUS_BLOCK Iosb);
 
 NTSTATUS
 NTAPI
