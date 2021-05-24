@@ -78,6 +78,14 @@ function(setup_host_tools)
             -DCMAKE_CXX_COMPILER=cl)
     endif()
 
+    if (MSVC_IDE)
+        # Required for Bison/Flex wrappers created by /CMakeLists.txt.
+        list(APPEND CMAKE_HOST_TOOLS_EXTRA_ARGS
+            -DROS_SAVED_BISON_PKGDATADIR=${ROS_SAVED_BISON_PKGDATADIR}
+            -DROS_SAVED_M4=${ROS_SAVED_M4}
+            )
+    endif()
+
     ExternalProject_Add(host-tools
         SOURCE_DIR ${REACTOS_SOURCE_DIR}
         PREFIX ${REACTOS_BINARY_DIR}/host-tools
@@ -88,8 +96,6 @@ function(setup_host_tools)
             -DARCH:STRING=${ARCH}
             -DCMAKE_INSTALL_PREFIX=${REACTOS_BINARY_DIR}/host-tools
             -DTOOLS_FOLDER=${REACTOS_BINARY_DIR}/host-tools/bin
-            -DROS_SAVED_M4=${ROS_SAVED_M4}
-            -DROS_SAVED_BISON_PKGDATADIR=${ROS_SAVED_BISON_PKGDATADIR}
             -DTARGET_COMPILER_ID=${CMAKE_C_COMPILER_ID}
             ${CMAKE_HOST_TOOLS_EXTRA_ARGS}
         BUILD_ALWAYS TRUE
