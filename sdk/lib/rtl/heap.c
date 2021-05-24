@@ -4028,10 +4028,10 @@ RtlExtendHeap(IN HANDLE Heap,
 
 ULONG
 NTAPI
-RtlCreateTagHeap(IN HANDLE HeapHandle,
-                 IN ULONG Flags,
-                 IN PWSTR TagName,
-                 IN PWSTR TagSubName)
+RtlCreateTagHeap(_In_ HANDLE HeapHandle,
+                 _In_ ULONG Flags,
+                 _In_opt_ PWSTR TagName,
+                 _In_ PWSTR TagSubName)
 {
     /* TODO */
     UNIMPLEMENTED;
