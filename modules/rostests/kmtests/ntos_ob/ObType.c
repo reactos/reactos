@@ -187,8 +187,8 @@ ObtCreateObjectTypes(VOID)
 
     for (i = 0; i < NUM_OBTYPES; ++i)
     {
-        Status = RtlStringCbPrintfW(Name.TypeName, sizeof Name.TypeName, L"MyObjectType%x", i);
-        ASSERT(NT_SUCCESS(Status));
+        Status = RtlStringCbPrintfW(Name.TypeName, sizeof Name.TypeName, L"MyObjectType%d", i);
+        ok_eq_hex(Status, STATUS_SUCCESS);
         RtlInitUnicodeString(&ObTypeName[i], Name.TypeName);
         DPRINT("Creating object type %wZ\n", &ObTypeName[i]);
 
@@ -290,9 +290,9 @@ ObtCreateObjects(VOID)
     {
         ASSERT(sizeof Name[i] == MAX_PATH * sizeof(WCHAR));
         Status = RtlStringCbPrintfW(Name[i], sizeof Name[i], L"\\ObtDirectory\\MyObject%d", i + 1);
-        ASSERT(Status == STATUS_SUCCESS);
+        ok_eq_hex(Status, STATUS_SUCCESS);
         RtlInitUnicodeString(&ObName[i], Name[i]);
-        InitializeObjectAttributes(&ObAttributes[i], &ObName[i], OBJ_CASE_INSENSITIVE, NULL, NULL);
+        InitializeObjectAttributes(&ObAttributes[i], &ObName[i], OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE, NULL, NULL);
     }
     CheckObject(DirectoryHandle, 3LU, 1LU);
 
@@ -395,8 +395,9 @@ ObtClose(
             if (!skip(ObTypes[i] != NULL, "No object type to delete\n"))
             {
                 Status = RtlStringCbPrintfW(Name, sizeof Name, L"\\ObjectTypes\\MyObjectType%d", i);
+                ok_eq_hex(Status, STATUS_SUCCESS);
                 RtlInitUnicodeString(&ObPathName[i], Name);
-                Status = ObReferenceObjectByName(&ObPathName[i], OBJ_CASE_INSENSITIVE, NULL, 0L, NULL, KernelMode, NULL, &TypeObject);
+                Status = ObReferenceObjectByName(&ObPathName[i], OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE, NULL, 0L, NULL, KernelMode, NULL, &TypeObject);
 
                 Ret = ObDereferenceObject(TypeObject);
                 ok_eq_longptr(Ret, (LONG_PTR)2);
