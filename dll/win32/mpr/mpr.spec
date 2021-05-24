@@ -62,13 +62,13 @@
 @ stdcall WNetConnectionDialog1A(ptr)
 @ stdcall WNetConnectionDialog1W(ptr)
 @ stdcall WNetConnectionDialog(long long)
-@ stub WNetConnectionDialog2
+@ stub WNetConnectionDialog2 # (ptr long wstr long)
 @ stub WNetDirectoryNotifyA
-@ stub WNetDirectoryNotifyW
+@ stub WNetDirectoryNotifyW # (ptr wstr long)
 @ stdcall WNetDisconnectDialog1A(ptr)
 @ stdcall WNetDisconnectDialog1W(ptr)
 @ stdcall WNetDisconnectDialog(long long)
-@ stub WNetDisconnectDialog2
+@ stub WNetDisconnectDialog2 # (ptr long wstr long)
 @ stdcall WNetEnumCachedPasswords(str long long ptr long)
 @ stdcall WNetEnumResourceA(long ptr ptr ptr)
 @ stdcall WNetEnumResourceW(long ptr ptr ptr)
@@ -76,16 +76,16 @@
 @ stub WNetFMXGetPermCaps
 @ stub WNetFMXGetPermHelp
 @ stub WNetFormatNetworkNameA
-@ stub WNetFormatNetworkNameW
+@ stub WNetFormatNetworkNameW # (wstr wstr ptr ptr long long)
 @ stdcall WNetGetCachedPassword(ptr long ptr ptr long)
 @ stub WNetGetConnection2A
-@ stub WNetGetConnection2W
+@ stub WNetGetConnection2W # (wstr ptr ptr)
 @ stub WNetGetConnection3A
 @ stub WNetGetConnection3W
 @ stdcall WNetGetConnectionA(str ptr ptr)
 @ stdcall WNetGetConnectionW(wstr ptr ptr)
 @ stub WNetGetDirectoryTypeA
-@ stub WNetGetDirectoryTypeW
+@ stub WNetGetDirectoryTypeW # (wstr ptr long)
 @ stub WNetGetHomeDirectoryA
 @ stub WNetGetHomeDirectoryW
 @ stdcall WNetGetLastErrorA(ptr ptr long ptr long)
@@ -93,7 +93,7 @@
 @ stdcall WNetGetNetworkInformationA(str ptr)
 @ stdcall WNetGetNetworkInformationW(wstr ptr)
 @ stub WNetGetPropertyTextA
-@ stub WNetGetPropertyTextW
+@ stub WNetGetPropertyTextW # (long long wstr ptr long long)
 @ stdcall WNetGetProviderNameA(long ptr ptr)
 @ stdcall WNetGetProviderNameW(long ptr ptr)
 @ stub WNetGetProviderTypeA
@@ -116,12 +116,13 @@
 @ stdcall WNetOpenEnumW(long long long ptr ptr)
 @ stub WNetPasswordChangeNotify
 @ stub WNetPropertyDialogA
-@ stub WNetPropertyDialogW
+@ stub WNetPropertyDialogW # (ptr long long wstr long)
 @ stdcall WNetRemoveCachedPassword(ptr long long)
 @ stub WNetRestoreConnection
 @ stub WNetRestoreConnection2W
 @ stdcall WNetRestoreConnectionA(long str)
 @ stdcall WNetRestoreConnectionW(long wstr)
+# WNetRestoreSingleConnectionW # (ptr wstr long) # Not in WS03 yet?
 @ stdcall WNetSetConnectionA(str long ptr)
 @ stdcall WNetSetConnectionW(wstr long ptr)
 @ stub WNetSetLastErrorA # {long str str)
