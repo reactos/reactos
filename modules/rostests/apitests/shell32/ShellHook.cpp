@@ -11,7 +11,7 @@ static UINT s_uShellHookMsg = 0;
 static HWND s_hwndHookViewer = NULL;
 static HWND s_hwndParent = NULL;
 static HWND s_hwndTarget = NULL;
-static DWORD s_dwFlags = 0;
+static UINT s_nCount = 0;
 static WCHAR s_szName[] = L"ReactOS ShellHook testcase";
 
 static HWND
@@ -25,7 +25,7 @@ DoCreateWindow(HWND hwndParent, DWORD style, DWORD exstyle)
 struct TEST_ENTRY
 {
     INT lineno;
-    DWORD dwFlags;
+    UINT nCount;
     BOOL bIsChild;
     BOOL bHasOwner;
     DWORD style;
@@ -82,35 +82,35 @@ static const TEST_ENTRY s_entries[] =
     { __LINE__, 0, TYPE_2, STYLE_0, EXSTYLE_0, STYLE_1, EXSTYLE_3 },
 
     // STYLE_1, EXSTYLE_0
-    { __LINE__, 3, TYPE_0, STYLE_1, EXSTYLE_0 },
+    { __LINE__, 1, TYPE_0, STYLE_1, EXSTYLE_0 },
     { __LINE__, 0, TYPE_1, STYLE_1, EXSTYLE_0, STYLE_0, EXSTYLE_0 },
     { __LINE__, 0, TYPE_2, STYLE_1, EXSTYLE_0, STYLE_0, EXSTYLE_0 },
 
-    { __LINE__, 3, TYPE_0, STYLE_1, EXSTYLE_0 },
+    { __LINE__, 1, TYPE_0, STYLE_1, EXSTYLE_0 },
     { __LINE__, 0, TYPE_1, STYLE_1, EXSTYLE_0, STYLE_1, EXSTYLE_0 },
     { __LINE__, 0, TYPE_2, STYLE_1, EXSTYLE_0, STYLE_1, EXSTYLE_0 },
 
-    { __LINE__, 3, TYPE_0, STYLE_1, EXSTYLE_0 },
+    { __LINE__, 1, TYPE_0, STYLE_1, EXSTYLE_0 },
     { __LINE__, 0, TYPE_1, STYLE_1, EXSTYLE_0, STYLE_0, EXSTYLE_1 },
     { __LINE__, 0, TYPE_2, STYLE_1, EXSTYLE_0, STYLE_0, EXSTYLE_1 },
 
-    { __LINE__, 3, TYPE_0, STYLE_1, EXSTYLE_0 },
+    { __LINE__, 1, TYPE_0, STYLE_1, EXSTYLE_0 },
     { __LINE__, 0, TYPE_1, STYLE_1, EXSTYLE_0, STYLE_1, EXSTYLE_1 },
     { __LINE__, 0, TYPE_2, STYLE_1, EXSTYLE_0, STYLE_1, EXSTYLE_1 },
 
-    { __LINE__, 3, TYPE_0, STYLE_1, EXSTYLE_0 },
+    { __LINE__, 1, TYPE_0, STYLE_1, EXSTYLE_0 },
     { __LINE__, 0, TYPE_1, STYLE_1, EXSTYLE_0, STYLE_0, EXSTYLE_2 },
     { __LINE__, 0, TYPE_2, STYLE_1, EXSTYLE_0, STYLE_0, EXSTYLE_2 },
 
-    { __LINE__, 3, TYPE_0, STYLE_1, EXSTYLE_0 },
+    { __LINE__, 1, TYPE_0, STYLE_1, EXSTYLE_0 },
     { __LINE__, 0, TYPE_1, STYLE_1, EXSTYLE_0, STYLE_1, EXSTYLE_2 },
     { __LINE__, 0, TYPE_2, STYLE_1, EXSTYLE_0, STYLE_1, EXSTYLE_2 },
 
-    { __LINE__, 3, TYPE_0, STYLE_1, EXSTYLE_0 },
+    { __LINE__, 1, TYPE_0, STYLE_1, EXSTYLE_0 },
     { __LINE__, 0, TYPE_1, STYLE_1, EXSTYLE_0, STYLE_0, EXSTYLE_3 },
     { __LINE__, 0, TYPE_2, STYLE_1, EXSTYLE_0, STYLE_0, EXSTYLE_3 },
 
-    { __LINE__, 3, TYPE_0, STYLE_1, EXSTYLE_0 },
+    { __LINE__, 1, TYPE_0, STYLE_1, EXSTYLE_0 },
     { __LINE__, 0, TYPE_1, STYLE_1, EXSTYLE_0, STYLE_1, EXSTYLE_3 },
     { __LINE__, 0, TYPE_2, STYLE_1, EXSTYLE_0, STYLE_1, EXSTYLE_3 },
 
@@ -148,37 +148,37 @@ static const TEST_ENTRY s_entries[] =
     { __LINE__, 0, TYPE_2, STYLE_0, EXSTYLE_1, STYLE_1, EXSTYLE_3 },
 
     // STYLE_1, EXSTYLE_1
-    { __LINE__, 0xB, TYPE_0, STYLE_1, EXSTYLE_1 },
-    { __LINE__, 0xB, TYPE_1, STYLE_1, EXSTYLE_1, STYLE_0, EXSTYLE_0 },
-    { __LINE__, 0xB, TYPE_2, STYLE_1, EXSTYLE_1, STYLE_0, EXSTYLE_0 },
+    { __LINE__, 1, TYPE_0, STYLE_1, EXSTYLE_1 },
+    { __LINE__, 1, TYPE_1, STYLE_1, EXSTYLE_1, STYLE_0, EXSTYLE_0 },
+    { __LINE__, 1, TYPE_2, STYLE_1, EXSTYLE_1, STYLE_0, EXSTYLE_0 },
 
-    { __LINE__, 0xB, TYPE_0, STYLE_1, EXSTYLE_1 },
-    { __LINE__, 0x1B, TYPE_1, STYLE_1, EXSTYLE_1, STYLE_1, EXSTYLE_0 },
-    { __LINE__, 0x1B, TYPE_2, STYLE_1, EXSTYLE_1, STYLE_1, EXSTYLE_0 },
+    { __LINE__, 1, TYPE_0, STYLE_1, EXSTYLE_1 },
+    { __LINE__, 1, TYPE_1, STYLE_1, EXSTYLE_1, STYLE_1, EXSTYLE_0 },
+    { __LINE__, 1, TYPE_2, STYLE_1, EXSTYLE_1, STYLE_1, EXSTYLE_0 },
 
-    { __LINE__, 0xB, TYPE_0, STYLE_1, EXSTYLE_1 },
-    { __LINE__, 0x4B, TYPE_1, STYLE_1, EXSTYLE_1, STYLE_0, EXSTYLE_1 },
-    { __LINE__, 0x4B, TYPE_2, STYLE_1, EXSTYLE_1, STYLE_0, EXSTYLE_1 },
+    { __LINE__, 1, TYPE_0, STYLE_1, EXSTYLE_1 },
+    { __LINE__, 1, TYPE_1, STYLE_1, EXSTYLE_1, STYLE_0, EXSTYLE_1 },
+    { __LINE__, 1, TYPE_2, STYLE_1, EXSTYLE_1, STYLE_0, EXSTYLE_1 },
 
-    { __LINE__, 0xB, TYPE_0, STYLE_1, EXSTYLE_1 },
-    { __LINE__, 0x5B, TYPE_1, STYLE_1, EXSTYLE_1, STYLE_1, EXSTYLE_1 },
-    { __LINE__, 0x5B, TYPE_2, STYLE_1, EXSTYLE_1, STYLE_1, EXSTYLE_1 },
+    { __LINE__, 1, TYPE_0, STYLE_1, EXSTYLE_1 },
+    { __LINE__, 1, TYPE_1, STYLE_1, EXSTYLE_1, STYLE_1, EXSTYLE_1 },
+    { __LINE__, 1, TYPE_2, STYLE_1, EXSTYLE_1, STYLE_1, EXSTYLE_1 },
 
-    { __LINE__, 0xB, TYPE_0, STYLE_1, EXSTYLE_1 },
-    { __LINE__, 0x2B, TYPE_1, STYLE_1, EXSTYLE_1, STYLE_0, EXSTYLE_2 },
-    { __LINE__, 0x2B, TYPE_2, STYLE_1, EXSTYLE_1, STYLE_0, EXSTYLE_2 },
+    { __LINE__, 1, TYPE_0, STYLE_1, EXSTYLE_1 },
+    { __LINE__, 1, TYPE_1, STYLE_1, EXSTYLE_1, STYLE_0, EXSTYLE_2 },
+    { __LINE__, 1, TYPE_2, STYLE_1, EXSTYLE_1, STYLE_0, EXSTYLE_2 },
 
-    { __LINE__, 0xB, TYPE_0, STYLE_1, EXSTYLE_1 },
-    { __LINE__, 0x3B, TYPE_1, STYLE_1, EXSTYLE_1, STYLE_1, EXSTYLE_2 },
-    { __LINE__, 0x3B, TYPE_2, STYLE_1, EXSTYLE_1, STYLE_1, EXSTYLE_2 },
+    { __LINE__, 1, TYPE_0, STYLE_1, EXSTYLE_1 },
+    { __LINE__, 1, TYPE_1, STYLE_1, EXSTYLE_1, STYLE_1, EXSTYLE_2 },
+    { __LINE__, 1, TYPE_2, STYLE_1, EXSTYLE_1, STYLE_1, EXSTYLE_2 },
 
-    { __LINE__, 0xB, TYPE_0, STYLE_1, EXSTYLE_1 },
-    { __LINE__, 0x6B, TYPE_1, STYLE_1, EXSTYLE_1, STYLE_0, EXSTYLE_3 },
-    { __LINE__, 0x6B, TYPE_2, STYLE_1, EXSTYLE_1, STYLE_0, EXSTYLE_3 },
+    { __LINE__, 1, TYPE_0, STYLE_1, EXSTYLE_1 },
+    { __LINE__, 1, TYPE_1, STYLE_1, EXSTYLE_1, STYLE_0, EXSTYLE_3 },
+    { __LINE__, 1, TYPE_2, STYLE_1, EXSTYLE_1, STYLE_0, EXSTYLE_3 },
 
-    { __LINE__, 0xB, TYPE_0, STYLE_1, EXSTYLE_1 },
-    { __LINE__, 0x7B, TYPE_1, STYLE_1, EXSTYLE_1, STYLE_1, EXSTYLE_3 },
-    { __LINE__, 0x7B, TYPE_2, STYLE_1, EXSTYLE_1, STYLE_1, EXSTYLE_3 },
+    { __LINE__, 1, TYPE_0, STYLE_1, EXSTYLE_1 },
+    { __LINE__, 1, TYPE_1, STYLE_1, EXSTYLE_1, STYLE_1, EXSTYLE_3 },
+    { __LINE__, 1, TYPE_2, STYLE_1, EXSTYLE_1, STYLE_1, EXSTYLE_3 },
 
     // STYLE_0, EXSTYLE_2
     { __LINE__, 0, TYPE_0, STYLE_0, EXSTYLE_2 },
@@ -280,37 +280,37 @@ static const TEST_ENTRY s_entries[] =
     { __LINE__, 0, TYPE_2, STYLE_0, EXSTYLE_3, STYLE_1, EXSTYLE_3 },
 
     // STYLE_1, EXSTYLE_3
-    { __LINE__, 0xF, TYPE_0, STYLE_1, EXSTYLE_3 },
-    { __LINE__, 0xF, TYPE_1, STYLE_1, EXSTYLE_3, STYLE_0, EXSTYLE_0 },
-    { __LINE__, 0xF, TYPE_2, STYLE_1, EXSTYLE_3, STYLE_0, EXSTYLE_0 },
+    { __LINE__, 1, TYPE_0, STYLE_1, EXSTYLE_3 },
+    { __LINE__, 1, TYPE_1, STYLE_1, EXSTYLE_3, STYLE_0, EXSTYLE_0 },
+    { __LINE__, 1, TYPE_2, STYLE_1, EXSTYLE_3, STYLE_0, EXSTYLE_0 },
 
-    { __LINE__, 0xF, TYPE_0, STYLE_1, EXSTYLE_3 },
-    { __LINE__, 0x1F, TYPE_1, STYLE_1, EXSTYLE_3, STYLE_1, EXSTYLE_0 },
-    { __LINE__, 0x1F, TYPE_2, STYLE_1, EXSTYLE_3, STYLE_1, EXSTYLE_0 },
+    { __LINE__, 1, TYPE_0, STYLE_1, EXSTYLE_3 },
+    { __LINE__, 1, TYPE_1, STYLE_1, EXSTYLE_3, STYLE_1, EXSTYLE_0 },
+    { __LINE__, 1, TYPE_2, STYLE_1, EXSTYLE_3, STYLE_1, EXSTYLE_0 },
 
-    { __LINE__, 0xF, TYPE_0, STYLE_1, EXSTYLE_3 },
-    { __LINE__, 0x4F, TYPE_1, STYLE_1, EXSTYLE_3, STYLE_0, EXSTYLE_1 },
-    { __LINE__, 0x4F, TYPE_2, STYLE_1, EXSTYLE_3, STYLE_0, EXSTYLE_1 },
+    { __LINE__, 1, TYPE_0, STYLE_1, EXSTYLE_3 },
+    { __LINE__, 1, TYPE_1, STYLE_1, EXSTYLE_3, STYLE_0, EXSTYLE_1 },
+    { __LINE__, 1, TYPE_2, STYLE_1, EXSTYLE_3, STYLE_0, EXSTYLE_1 },
 
-    { __LINE__, 0xF, TYPE_0, STYLE_1, EXSTYLE_3 },
-    { __LINE__, 0x5F, TYPE_1, STYLE_1, EXSTYLE_3, STYLE_1, EXSTYLE_1 },
-    { __LINE__, 0x5F, TYPE_2, STYLE_1, EXSTYLE_3, STYLE_1, EXSTYLE_1 },
+    { __LINE__, 1, TYPE_0, STYLE_1, EXSTYLE_3 },
+    { __LINE__, 1, TYPE_1, STYLE_1, EXSTYLE_3, STYLE_1, EXSTYLE_1 },
+    { __LINE__, 1, TYPE_2, STYLE_1, EXSTYLE_3, STYLE_1, EXSTYLE_1 },
 
-    { __LINE__, 0xF, TYPE_0, STYLE_1, EXSTYLE_3 },
-    { __LINE__, 0x2F, TYPE_1, STYLE_1, EXSTYLE_3, STYLE_0, EXSTYLE_2 },
-    { __LINE__, 0x2F, TYPE_2, STYLE_1, EXSTYLE_3, STYLE_0, EXSTYLE_2 },
+    { __LINE__, 1, TYPE_0, STYLE_1, EXSTYLE_3 },
+    { __LINE__, 1, TYPE_1, STYLE_1, EXSTYLE_3, STYLE_0, EXSTYLE_2 },
+    { __LINE__, 1, TYPE_2, STYLE_1, EXSTYLE_3, STYLE_0, EXSTYLE_2 },
 
-    { __LINE__, 0xF, TYPE_0, STYLE_1, EXSTYLE_3 },
-    { __LINE__, 0x3F, TYPE_1, STYLE_1, EXSTYLE_3, STYLE_1, EXSTYLE_2 },
-    { __LINE__, 0x3F, TYPE_2, STYLE_1, EXSTYLE_3, STYLE_1, EXSTYLE_2 },
+    { __LINE__, 1, TYPE_0, STYLE_1, EXSTYLE_3 },
+    { __LINE__, 1, TYPE_1, STYLE_1, EXSTYLE_3, STYLE_1, EXSTYLE_2 },
+    { __LINE__, 1, TYPE_2, STYLE_1, EXSTYLE_3, STYLE_1, EXSTYLE_2 },
 
-    { __LINE__, 0xF, TYPE_0, STYLE_1, EXSTYLE_3 },
-    { __LINE__, 0x6F, TYPE_1, STYLE_1, EXSTYLE_3, STYLE_0, EXSTYLE_3 },
-    { __LINE__, 0x6F, TYPE_2, STYLE_1, EXSTYLE_3, STYLE_0, EXSTYLE_3 },
+    { __LINE__, 1, TYPE_0, STYLE_1, EXSTYLE_3 },
+    { __LINE__, 1, TYPE_1, STYLE_1, EXSTYLE_3, STYLE_0, EXSTYLE_3 },
+    { __LINE__, 1, TYPE_2, STYLE_1, EXSTYLE_3, STYLE_0, EXSTYLE_3 },
 
-    { __LINE__, 0xF, TYPE_0, STYLE_1, EXSTYLE_3 },
-    { __LINE__, 0x7F, TYPE_1, STYLE_1, EXSTYLE_3, STYLE_1, EXSTYLE_3 },
-    { __LINE__, 0x7F, TYPE_2, STYLE_1, EXSTYLE_3, STYLE_1, EXSTYLE_3 },
+    { __LINE__, 1, TYPE_0, STYLE_1, EXSTYLE_3 },
+    { __LINE__, 1, TYPE_1, STYLE_1, EXSTYLE_3, STYLE_1, EXSTYLE_3 },
+    { __LINE__, 1, TYPE_2, STYLE_1, EXSTYLE_3, STYLE_1, EXSTYLE_3 },
 };
 
 static const size_t s_num_entries = sizeof(s_entries) / sizeof(s_entries[0]);
@@ -333,14 +333,15 @@ static void DoTestEntryPart1(const TEST_ENTRY *pEntry)
     else
         style &= ~WS_CHILD;
 
-    s_dwFlags = 0;
+    s_nCount = 0;
     s_hwndTarget = DoCreateWindow(s_hwndParent, style, exstyle);
 }
 
 static void DoTestEntryPart2(const TEST_ENTRY *pEntry)
 {
-    ok(s_dwFlags == pEntry->dwFlags, "Line %d: s_dwFlags expected 0x%lX but was 0x%lX\n",
-       pEntry->lineno, pEntry->dwFlags, s_dwFlags);
+    ok(s_nCount == pEntry->nCount,
+       "Line %d: s_nCount expected %u but was %u\n",
+       pEntry->lineno, pEntry->nCount, s_nCount);
 
     PostMessageW(s_hwndTarget, WM_CLOSE, 0, 0);
     s_hwndTarget = NULL;
@@ -357,36 +358,12 @@ WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     if (uMsg == s_uShellHookMsg && uMsg != 0)
     {
-        DWORD style, exstyle, owner_style, owner_exstyle;
-        HWND hwndOwner;
-        DWORD dwFlags;
         switch (wParam)
         {
             case HSHELL_WINDOWCREATED:
                 if ((HWND)lParam != s_hwndTarget)
                     break;
-                style = (LONG)GetWindowLongPtrW(s_hwndTarget, GWL_STYLE);
-                exstyle = (LONG)GetWindowLongPtrW(s_hwndTarget, GWL_EXSTYLE);
-                if (style & WS_CHILD)
-                    hwndOwner = GetParent(s_hwndTarget);
-                else
-                    hwndOwner = GetWindow(s_hwndTarget, GW_OWNER);
-                owner_style = (LONG)GetWindowLongPtrW(hwndOwner, GWL_STYLE);
-                owner_exstyle = (LONG)GetWindowLongPtrW(hwndOwner, GWL_EXSTYLE);
-                dwFlags = (1 << 0);
-                if (style & WS_VISIBLE)
-                    dwFlags |= (1 << 1);
-                if (exstyle & WS_EX_TOOLWINDOW)
-                    dwFlags |= (1 << 2);
-                if (exstyle & WS_EX_APPWINDOW)
-                    dwFlags |= (1 << 3);
-                if (owner_style & WS_VISIBLE)
-                    dwFlags |= (1 << 4);
-                if (owner_exstyle & WS_EX_TOOLWINDOW)
-                    dwFlags |= (1 << 5);
-                if (owner_exstyle & WS_EX_APPWINDOW)
-                    dwFlags |= (1 << 6);
-                s_dwFlags = dwFlags;
+                ++s_nCount;
                 break;
         }
     }
