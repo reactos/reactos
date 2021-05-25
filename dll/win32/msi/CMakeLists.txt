@@ -57,9 +57,6 @@ list(APPEND SOURCE
     where.c
     precomp.h)
 
-# cond.tab.c/sql.tab.c have been generated with relative file paths...
-set_source_files_properties(cond.tab.c sql.tab.c PROPERTIES COMPILE_FLAGS "-UREACTOS_SOURCE_DIR -DREACTOS_SOURCE_DIR=\"\\\".\\\"\"")
-
 add_library(msi MODULE
     ${SOURCE}
     cond.tab.c
