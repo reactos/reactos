@@ -21,9 +21,6 @@ list(APPEND SOURCE
     wbemlocator.c
     precomp.h)
 
-# wql.tab.c has been generated with relative file paths...
-set_source_files_properties(wql.tab.c PROPERTIES COMPILE_FLAGS "-UREACTOS_SOURCE_DIR -DREACTOS_SOURCE_DIR=\"\\\".\\\"\"")
-
 add_library(wbemprox MODULE
     ${SOURCE}
     wql.tab.c

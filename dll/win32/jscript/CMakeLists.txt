@@ -34,9 +34,6 @@ list(APPEND SOURCE
     vbarray.c
     precomp.h)
 
-# cc_parser.tab.c/parser.tab.c have been generated with relative file paths...
-set_source_files_properties(cc_parser.tab.c parser.tab.c PROPERTIES COMPILE_FLAGS "-UREACTOS_SOURCE_DIR -DREACTOS_SOURCE_DIR=\"\\\".\\\"\"")
-
 list(APPEND jscript_rc_deps
     ${CMAKE_CURRENT_SOURCE_DIR}/jscript.rgs
     ${CMAKE_CURRENT_SOURCE_DIR}/jscript_classes.rgs
