@@ -11,7 +11,7 @@ static UINT s_uShellHookMsg = 0;
 static HWND s_hwndHookViewer = NULL;
 static HWND s_hwndParent = NULL;
 static HWND s_hwndTarget = NULL;
-static UINT s_nCount = 0;
+static UINT s_nWindowCreatedCount = 0;
 static WCHAR s_szName[] = L"ReactOS ShellHook testcase";
 
 static HWND
@@ -333,15 +333,15 @@ static void DoTestEntryPart1(const TEST_ENTRY *pEntry)
     else
         style &= ~WS_CHILD;
 
-    s_nCount = 0;
+    s_nWindowCreatedCount = 0;
     s_hwndTarget = DoCreateWindow(s_hwndParent, style, exstyle);
 }
 
 static void DoTestEntryPart2(const TEST_ENTRY *pEntry)
 {
-    ok(s_nCount == pEntry->nCount,
-       "Line %d: s_nCount expected %u but was %u\n",
-       pEntry->lineno, pEntry->nCount, s_nCount);
+    ok(s_nWindowCreatedCount == pEntry->nCount,
+       "Line %d: s_nWindowCreatedCount expected %u but was %u\n",
+       pEntry->lineno, pEntry->nCount, s_nWindowCreatedCount);
 
     PostMessageW(s_hwndTarget, WM_CLOSE, 0, 0);
     s_hwndTarget = NULL;
@@ -363,36 +363,38 @@ WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             case HSHELL_WINDOWCREATED:
                 if ((HWND)lParam != s_hwndTarget)
                     break;
-                ++s_nCount;
+                ++s_nWindowCreatedCount;
                 break;
         }
     }
+#define ID_IGNITION 1000
+#define ID_BURNING 2000
     switch (uMsg)
     {
         case WM_CREATE:
-            PostMessageW(hwnd, WM_COMMAND, 1000, 0);
+            PostMessageW(hwnd, WM_COMMAND, ID_IGNITION, 0);
             return DefWindowProcW(hwnd, uMsg, wParam, lParam);
         case WM_COMMAND:
-            if (hwnd == s_hwndHookViewer)
+            if (hwnd != s_hwndHookViewer)
+                break;
+
+            if (ID_IGNITION <= wParam && wParam < ID_BURNING)
             {
-                if (1000 <= wParam && wParam < 2000)
+                INT i = (INT)wParam - ID_IGNITION;
+                DoTestEntryPart1(&s_entries[i]);
+                PostMessageW(hwnd, WM_COMMAND, ID_BURNING + i, 0);
+            }
+            else if (ID_BURNING <= wParam)
+            {
+                INT i = (INT)wParam - ID_BURNING;
+                DoTestEntryPart2(&s_entries[i]);
+                ++i;
+                if (i == s_num_entries)
                 {
-                    INT i = (INT)wParam - 1000;
-                    DoTestEntryPart1(&s_entries[i]);
-                    PostMessageW(hwnd, WM_COMMAND, 2000 + i, 0);
+                    PostQuitMessage(0);
+                    break;
                 }
-                else if (2000 <= wParam && wParam < 3000)
-                {
-                    INT i = (INT)wParam - 2000;
-                    DoTestEntryPart2(&s_entries[i]);
-                    ++i;
-                    if (i == s_num_entries)
-                    {
-                        PostQuitMessage(0);
-                        break;
-                    }
-                    PostMessageW(hwnd, WM_COMMAND, 1000 + i, 0);
-                }
+                PostMessageW(hwnd, WM_COMMAND, ID_IGNITION + i, 0);
             }
             break;
         default:
