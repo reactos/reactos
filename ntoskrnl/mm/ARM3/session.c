@@ -374,8 +374,8 @@ MiDereferenceSession(VOID)
         SessionGlobal = MmSessionSpace->GlobalVirtualAddress;
 
         /* Delete all session PDEs and flush the TB */
-        RtlZeroMemory(MiAddressToPde(MmSessionBase),
-                      BYTES_TO_PAGES(MmSessionSize) * sizeof(MMPDE));
+        //RtlZeroMemory(MiAddressToPde(MmSessionBase),
+        //              BYTES_TO_PAGES(MmSessionSize) * sizeof(MMPDE));
         KeFlushEntireTb(FALSE, FALSE);
 
         /* Clean up the references here. */
