@@ -305,7 +305,7 @@ INT cmd_start (LPTSTR Rest)
         }
         CloseHandle (prci.hProcess);
 
-        /* Update our local codepage cache */
+        /* Update the local code page cache */
         {
             UINT uNewInputCodePage  = GetConsoleCP();
             UINT uNewOutputCodePage = GetConsoleOutputCP();
@@ -313,15 +313,21 @@ INT cmd_start (LPTSTR Rest)
             if ((InputCodePage  != uNewInputCodePage) ||
                 (OutputCodePage != uNewOutputCodePage))
             {
+                InputCodePage  = uNewInputCodePage;
+                OutputCodePage = uNewOutputCodePage;
+
+                /* Reset the current thread UI language */
+                if (IsConsoleHandle(ConStreamGetOSHandle(StdOut)) ||
+                    IsConsoleHandle(ConStreamGetOSHandle(StdErr)))
+                {
+                    ConSetThreadUILanguage(0);
+                }
+                /* Update the streams cached code page */
+                ConStdStreamsSetCacheCodePage(InputCodePage, OutputCodePage);
+
                 /* Update the locale as well */
                 InitLocale();
             }
-
-            InputCodePage  = uNewInputCodePage;
-            OutputCodePage = uNewOutputCodePage;
-
-            /* Update the streams codepage cache as well */
-            ConStdStreamsSetCacheCodePage(InputCodePage, OutputCodePage);
         }
     }
     else
