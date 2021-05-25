@@ -17,9 +17,6 @@ list(APPEND SOURCE
     vbscript_main.c
     precomp.h)
 
-# parser.tab.c has been generated with relative file paths...
-set_source_files_properties(parser.tab.c PROPERTIES COMPILE_FLAGS "-UREACTOS_SOURCE_DIR -DREACTOS_SOURCE_DIR=\"\\\".\\\"\"")
-
 list(APPEND vbscript_rc_deps
     ${CMAKE_CURRENT_SOURCE_DIR}/vbscript_classes.rgs
     ${CMAKE_CURRENT_SOURCE_DIR}/vbsglobal.rgs
