@@ -943,10 +943,6 @@ MmInitializeProcessAddressSpace(IN PEPROCESS Process,
     ASSERT(Process->VadRoot.NumberGenericTableElements == 0);
     Process->VadRoot.BalancedRoot.u1.Parent = &Process->VadRoot.BalancedRoot;
 
-#ifdef _M_AMD64
-    /* On x64 the PFNs for the initial process are already set up */
-    if (Process != &KiInitialProcess) {
-#endif
     /* Lock our working set */
     MiLockProcessWorkingSet(Process, PsGetCurrentThread());
 
@@ -1014,9 +1010,6 @@ MmInitializeProcessAddressSpace(IN PEPROCESS Process,
 
     /* Release the process working set */
     MiUnlockProcessWorkingSet(Process, PsGetCurrentThread());
-#ifdef _M_AMD64
-   } /* On x64 the PFNs for the initial process are already set up */
-#endif
 
 #ifdef _M_AMD64
     /* On x64 we need a VAD for the shared user page */

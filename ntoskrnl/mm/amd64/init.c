@@ -252,6 +252,8 @@ MiInitializePageTable(VOID)
             RtlZeroMemory(MiPteToAddress(PointerPxe), PAGE_SIZE);
         }
     }
+    PxePfn = PFN_FROM_PXE(MiAddressToPxe((PVOID)HYPER_SPACE));
+    PsGetCurrentProcess()->Pcb.DirectoryTableBase[1] = PxePfn << PAGE_SHIFT;
 
     /* Map PPEs for paged pool */
     MiMapPPEs(MmPagedPoolStart, MmPagedPoolEnd);
@@ -713,7 +715,6 @@ MiInitMachineDependent(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 //    PrototypePte.u.ProtoAddress
     PrototypePte.u.Soft.PageFileHigh = MI_PTE_LOOKUP_NEEDED;
 
-
     MiInitializePageTable();
 
     MiBuildNonPagedPool();
@@ -722,6 +723,27 @@ MiInitMachineDependent(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 
     /* Map the PFN database pages */
     MiBuildPfnDatabase(LoaderBlock);
+
+    /* Reset the ref/share count so that MmInitializeProcessAddressSpace works */
+    PMMPFN Pfn = MiGetPfnEntry(PFN_FROM_PTE((PMMPTE)PXE_SELFMAP));
+    Pfn->u2.ShareCount = 0;
+    Pfn->u3.e2.ReferenceCount = 0;
+
+    Pfn = MiGetPfnEntry(PFN_FROM_PDE(MiAddressToPde((PVOID)HYPER_SPACE)));
+    Pfn->u2.ShareCount = 0;
+    Pfn->u3.e2.ReferenceCount = 0;
+
+    Pfn = MiGetPfnEntry(PFN_FROM_PPE(MiAddressToPpe((PVOID)HYPER_SPACE)));
+    Pfn->u2.ShareCount = 0;
+    Pfn->u3.e2.ReferenceCount = 0;
+
+    Pfn = MiGetPfnEntry(PFN_FROM_PXE(MiAddressToPxe((PVOID)HYPER_SPACE)));
+    Pfn->u2.ShareCount = 0;
+    Pfn->u3.e2.ReferenceCount = 0;
+
+    Pfn = MiGetPfnEntry(PFN_FROM_PTE(MiAddressToPte(MmWorkingSetList)));
+    Pfn->u2.ShareCount = 0;
+    Pfn->u3.e2.ReferenceCount = 0;
 
     /* Initialize the nonpaged pool */
     InitializePool(NonPagedPool, 0);
