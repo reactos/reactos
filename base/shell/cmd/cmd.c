@@ -529,9 +529,7 @@ Execute(LPTSTR Full, LPTSTR First, LPTSTR Rest, PARSED_COMMAND *Cmd)
         OutputCodePage = uNewOutputCodePage;
 
         /* Update the streams codepage cache as well */
-        ConStreamSetCacheCodePage(StdIn , InputCodePage );
-        ConStreamSetCacheCodePage(StdOut, OutputCodePage);
-        ConStreamSetCacheCodePage(StdErr, OutputCodePage);
+        ConStdStreamsSetCacheCodePage(InputCodePage, OutputCodePage);
     }
 
     /* Restore the original console title */

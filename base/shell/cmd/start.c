@@ -321,9 +321,7 @@ INT cmd_start (LPTSTR Rest)
             OutputCodePage = uNewOutputCodePage;
 
             /* Update the streams codepage cache as well */
-            ConStreamSetCacheCodePage(StdIn , InputCodePage );
-            ConStreamSetCacheCodePage(StdOut, OutputCodePage);
-            ConStreamSetCacheCodePage(StdErr, OutputCodePage);
+            ConStdStreamsSetCacheCodePage(InputCodePage, OutputCodePage);
         }
     }
     else
