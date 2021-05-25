@@ -68,4 +68,5 @@ BEGIN
     IDS_ERROR_INVALID_STOP_BITS "错误: 终止位 %d 值无效:\n"
     IDS_ERROR_NO_MEMORY "错误: 内存不足。\n"
     IDS_ERROR_SCREEN_LINES_COL "屏幕无法被设置成指定的行数和列数。\n"
+    IDS_ERROR_INVALID_CODEPAGE "The code page specified is not valid.\n"
 END
