@@ -2,6 +2,7 @@
  * Regedit main function
  *
  * Copyright (C) 2002 Robert Dickenson <robd@reactos.org>
+ * Copyright (C) 2021 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -57,7 +58,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 {
     BOOL AclUiAvailable;
     HMENU hEditMenu;
-
+    INITCOMMONCONTROLSEX icce;
     WNDCLASSEXW wcFrame;
     WNDCLASSEXW wcChild;
     ATOM hFrameWndClass;
@@ -97,8 +98,9 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
     hPopupMenus = LoadMenuW(hInstance, MAKEINTRESOURCEW(IDR_POPUP_MENUS));
 
     /* Initialize the Windows Common Controls DLL */
-    // TODO: Replace this call by InitCommonControlsEx(_something_)
-    InitCommonControls();
+    icce.dwSize = sizeof(icce);
+    icce.dwICC = 0xFFFF; /* Windows does this! */
+    InitCommonControlsEx(&icce);
 
     hEditMenu = GetSubMenu(hMenuFrame, 1);
 
