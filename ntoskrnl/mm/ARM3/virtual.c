@@ -46,157 +46,135 @@ MiCalculatePageCommitment(IN ULONG_PTR StartingAddress,
 {
     PMMPTE PointerPte, LastPte;
     PMMPDE PointerPde;
-    ULONG CommittedPages;
+    BOOLEAN OnPdeBoundary = TRUE;
+#if _MI_PAGING_LEVELS >= 3
+    PMMPPE PointerPpe;
+    BOOLEAN OnPpeBoundary = TRUE;
+#if _MI_PAGING_LEVELS == 4
+    PMMPXE PointerPxe;
+    BOOLEAN OnPxeBoundary = TRUE;
+#endif
+#endif
 
-    /* Compute starting and ending PTE and PDE addresses */
-    PointerPde = MiAddressToPde(StartingAddress);
+    /* Make sure this all makes sense */
+    ASSERT(PsGetCurrentThread()->OwnsProcessWorkingSetExclusive || PsGetCurrentThread()->OwnsProcessWorkingSetShared);
+    ASSERT(EndingAddress >= StartingAddress);
     PointerPte = MiAddressToPte(StartingAddress);
     LastPte = MiAddressToPte(EndingAddress);
 
-    /* Handle commited pages first */
-    if (Vad->u.VadFlags.MemCommit == 1)
-    {
-        /* This is a committed VAD, so Assume the whole range is committed */
-        CommittedPages = (ULONG)BYTES_TO_PAGES(EndingAddress - StartingAddress);
+    /*
+     * In case this is a committed VAD, assume the whole range is committed
+     * and count the individually decommitted pages.
+     * In case it is not, assume the range is not committed and count the individually committed pages.
+     */
+    ULONG_PTR CommittedPages = Vad->u.VadFlags.MemCommit ? BYTES_TO_PAGES(EndingAddress - StartingAddress) : 0;
 
-        /* Is the PDE demand-zero? */
-        PointerPde = MiPteToPde(PointerPte);
-        if (PointerPde->u.Long != 0)
-        {
-            /* It is not. Is it valid? */
-            if (PointerPde->u.Hard.Valid == 0)
-            {
-                /* Fault it in */
-                PointerPte = MiPteToAddress(PointerPde);
-                MiMakeSystemAddressValid(PointerPte, Process);
-            }
-        }
-        else
-        {
-            /* It is, skip it and move to the next PDE, unless we're done */
-            PointerPde++;
-            PointerPte = MiPteToAddress(PointerPde);
-            if (PointerPte > LastPte) return CommittedPages;
-        }
-
-        /* Now loop all the PTEs in the range */
-        while (PointerPte <= LastPte)
-        {
-            /* Have we crossed a PDE boundary? */
-            if (MiIsPteOnPdeBoundary(PointerPte))
-            {
-                /* Is this PDE demand zero? */
-                PointerPde = MiPteToPde(PointerPte);
-                if (PointerPde->u.Long != 0)
-                {
-                    /* It isn't -- is it valid? */
-                    if (PointerPde->u.Hard.Valid == 0)
-                    {
-                        /* Nope, fault it in */
-                        PointerPte = MiPteToAddress(PointerPde);
-                        MiMakeSystemAddressValid(PointerPte, Process);
-                    }
-                }
-                else
-                {
-                    /* It is, skip it and move to the next PDE */
-                    PointerPde++;
-                    PointerPte = MiPteToAddress(PointerPde);
-                    continue;
-                }
-            }
-
-            /* Is this PTE demand zero? */
-            if (PointerPte->u.Long != 0)
-            {
-                /* It isn't -- is it a decommited, invalid, or faulted PTE? */
-                if ((PointerPte->u.Soft.Protection == MM_DECOMMIT) &&
-                    (PointerPte->u.Hard.Valid == 0) &&
-                    ((PointerPte->u.Soft.Prototype == 0) ||
-                     (PointerPte->u.Soft.PageFileHigh == MI_PTE_LOOKUP_NEEDED)))
-                {
-                    /* It is, so remove it from the count of commited pages */
-                    CommittedPages--;
-                }
-            }
-
-            /* Move to the next PTE */
-            PointerPte++;
-        }
-
-        /* Return how many committed pages there still are */
-        return CommittedPages;
-    }
-
-    /* This is a non-commited VAD, so assume none of it is committed */
-    CommittedPages = 0;
-
-    /* Is the PDE demand-zero? */
-    PointerPde = MiPteToPde(PointerPte);
-    if (PointerPde->u.Long != 0)
-    {
-        /* It isn't -- is it invalid? */
-        if (PointerPde->u.Hard.Valid == 0)
-        {
-            /* It is, so page it in */
-            PointerPte = MiPteToAddress(PointerPde);
-            MiMakeSystemAddressValid(PointerPte, Process);
-        }
-    }
-    else
-    {
-        /* It is, so skip it and move to the next PDE */
-        PointerPde++;
-        PointerPte = MiPteToAddress(PointerPde);
-        if (PointerPte > LastPte) return CommittedPages;
-    }
-
-    /* Loop all the PTEs in this PDE */
     while (PointerPte <= LastPte)
     {
-        /* Have we crossed a PDE boundary? */
-        if (MiIsPteOnPdeBoundary(PointerPte))
+#if _MI_PAGING_LEVELS == 4
+        /* Check if PXE was ever paged in. */
+        if (OnPxeBoundary)
         {
-            /* Is this new PDE demand-zero? */
-            PointerPde = MiPteToPde(PointerPte);
-            if (PointerPde->u.Long != 0)
+            PointerPxe = MiPteToPxe(PointerPte);
+
+            /* Check that this loop is sane */
+            ASSERT(OnPpeBoundary);
+            ASSERT(OnPdeBoundary);
+
+            if (PointerPxe->u.Long == 0)
             {
-                /* It isn't. Is it valid? */
-                if (PointerPde->u.Hard.Valid == 0)
-                {
-                    /* It isn't, so make it valid */
-                    PointerPte = MiPteToAddress(PointerPde);
-                    MiMakeSystemAddressValid(PointerPte, Process);
-                }
-            }
-            else
-            {
-                /* It is, so skip it and move to the next one */
-                PointerPde++;
-                PointerPte = MiPteToAddress(PointerPde);
+                PointerPxe++;
+                PointerPte = MiPxeToPte(PointerPde);
                 continue;
             }
-        }
 
-        /* Is this PTE demand-zero? */
+            if (PointerPxe->u.Hard.Valid == 0)
+                MiMakeSystemAddressValid(MiPteToPpe(PointerPte), Process);
+        }
+        ASSERT(PointerPxe->u.Hard.Valid == 1);
+#endif
+
+#if _MI_PAGING_LEVELS >= 3
+        /* Now PPE */
+        if (OnPpeBoundary)
+        {
+            PointerPpe = MiPteToPpe(PointerPte);
+
+            /* Sanity again */
+            ASSERT(OnPdeBoundary);
+
+            if (PointerPpe->u.Long == 0)
+            {
+                PointerPpe++;
+                PointerPte = MiPpeToPte(PointerPpe);
+#if _MI_PAGING_LEVELS == 4
+                OnPxeBoundary = MiIsPteOnPxeBoundary(PointerPte);
+#endif
+                continue;
+            }
+
+            if (PointerPpe->u.Hard.Valid == 0)
+                MiMakeSystemAddressValid(MiPteToPde(PointerPte), Process);
+        }
+        ASSERT(PointerPpe->u.Hard.Valid == 1);
+#endif
+
+        /* Last level is the PDE */
+        if (OnPdeBoundary)
+        {
+            PointerPde = MiPteToPde(PointerPte);
+            if (PointerPde->u.Long == 0)
+            {
+                PointerPde++;
+                PointerPte = MiPdeToPte(PointerPde);
+#if _MI_PAGING_LEVELS >= 3
+                OnPpeBoundary = MiIsPteOnPpeBoundary(PointerPte);
+#if _MI_PAGING_LEVELS == 4
+                OnPxeBoundary = MiIsPteOnPxeBoundary(PointerPte);
+#endif
+#endif
+                continue;
+            }
+
+            if (PointerPde->u.Hard.Valid == 0)
+                MiMakeSystemAddressValid(PointerPte, Process);
+        }
+        ASSERT(PointerPde->u.Hard.Valid == 1);
+
+        /* Is this PTE demand zero? */
         if (PointerPte->u.Long != 0)
         {
-            /* Nope. Is it a valid, non-decommited, non-paged out PTE? */
-            if ((PointerPte->u.Soft.Protection != MM_DECOMMIT) ||
-                (PointerPte->u.Hard.Valid == 1) ||
-                ((PointerPte->u.Soft.Prototype == 1) &&
-                 (PointerPte->u.Soft.PageFileHigh != MI_PTE_LOOKUP_NEEDED)))
+            /* It isn't -- is it a decommited, invalid, or faulted PTE? */
+            if ((PointerPte->u.Hard.Valid == 0) &&
+                (PointerPte->u.Soft.Protection == MM_DECOMMIT) &&
+                ((PointerPte->u.Soft.Prototype == 0) ||
+                    (PointerPte->u.Soft.PageFileHigh == MI_PTE_LOOKUP_NEEDED)))
             {
-                /* It is! So we'll treat this as a committed page */
+                /* It is, so remove it from the count of committed pages if we have to */
+                if (Vad->u.VadFlags.MemCommit)
+                    CommittedPages--;
+            }
+            else if (!Vad->u.VadFlags.MemCommit)
+            {
+                /* It is a valid, non-decommited, non-paged out PTE. Count it in. */
                 CommittedPages++;
             }
         }
 
         /* Move to the next PTE */
         PointerPte++;
+        /* Manage page tables */
+        OnPdeBoundary = MiIsPteOnPdeBoundary(PointerPte);
+#if _MI_PAGING_LEVELS >= 3
+        OnPpeBoundary = MiIsPteOnPpeBoundary(PointerPte);
+#if _MI_PAGING_LEVELS == 4
+        OnPxeBoundary = MiIsPteOnPxeBoundary(PointerPte);
+#endif
+#endif
     }
 
-    /* Return how many committed pages we found in this VAD */
+    /* Make sure we didn't mess this up */
+    ASSERT(CommittedPages <= BYTES_TO_PAGES(EndingAddress - StartingAddress));
     return CommittedPages;
 }
 
