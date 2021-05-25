@@ -247,7 +247,7 @@ K32LoadStringW(
  *     crash if a malformed source string is retrieved and then being used
  *     for formatting. It basically wraps calls to FormatMessage() within SEH.
  *
- * @see <a href="https://msdn.microsoft.com/en-us/library/windows/desktop/ms679351(v=vs.85).aspx">FormatMessage() (on MSDN)</a>
+ * @see <a href="https://docs.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-formatmessage">FormatMessage() (on MSDN)</a>
  **/
 DWORD
 WINAPI
@@ -290,7 +290,7 @@ FormatMessageSafeW(
              * and we did not pass the flag FORMAT_MESSAGE_IGNORE_INSERTS, and the
              * message string expected too many inserts.
              * In this last case only, we can call again FormatMessage but ignore
-             * explicitely the inserts. The string that we will return to the user
+             * explicitly the inserts. The string that we will return to the user
              * will not be pre-formatted.
              */
             if (((dwFlags & FORMAT_MESSAGE_ALLOCATE_BUFFER) || lpBuffer) &&
