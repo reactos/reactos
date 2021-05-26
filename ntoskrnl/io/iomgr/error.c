@@ -713,7 +713,7 @@ IoRaiseInformationalHardError(IN NTSTATUS ErrorStatus,
 {
     DPRINT1("IoRaiseInformationalHardError: %lx, '%wZ'\n", ErrorStatus, String);
 #if DBG
-    __debugbreak(); /* CORE-17587 */
+    ASSERT(ErrorStatus != STATUS_FILE_CORRUPT_ERROR); /* CORE-17587 */
 #endif
     return FALSE;
 }
