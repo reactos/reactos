@@ -236,7 +236,8 @@ IopDmaScoreRequirement(
 
 NTSTATUS
 NTAPI
-IopDmaOverrideConflict()
+IopDmaOverrideConflict(
+    _In_ PARBITER_INSTANCE Arbiter)
 {
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
