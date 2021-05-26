@@ -712,6 +712,9 @@ IoRaiseInformationalHardError(IN NTSTATUS ErrorStatus,
                               IN PKTHREAD Thread)
 {
     DPRINT1("IoRaiseInformationalHardError: %lx, '%wZ'\n", ErrorStatus, String);
+#if DBG
+    __debugbreak(); /* CORE-17587 */
+#endif
     return FALSE;
 }
 
