@@ -2008,19 +2008,87 @@ MiIsEntireRangeCommitted(IN ULONG_PTR StartingAddress,
 {
     PMMPTE PointerPte, LastPte;
     PMMPDE PointerPde;
-    BOOLEAN OnBoundary = TRUE;
+    BOOLEAN OnPdeBoundary = TRUE;
+#if _MI_PAGING_LEVELS >= 3
+    PMMPPE PointerPpe;
+    BOOLEAN OnPpeBoundary = TRUE;
+#if _MI_PAGING_LEVELS == 4
+    PMMPXE PointerPxe;
+    BOOLEAN OnPxeBoundary = TRUE;
+#endif
+#endif
+
     PAGED_CODE();
 
-    /* Get the PDE and PTE addresses */
-    PointerPde = MiAddressToPde(StartingAddress);
+    /* Check that we hols the right locks */
+    ASSERT(PsGetCurrentThread()->OwnsProcessWorkingSetExclusive || PsGetCurrentThread()->OwnsProcessWorkingSetShared);
+
+    /* Get the PTE addresses */
     PointerPte = MiAddressToPte(StartingAddress);
     LastPte = MiAddressToPte(EndingAddress);
 
     /* Loop all the PTEs */
     while (PointerPte <= LastPte)
     {
-        /* Check if we've hit an new PDE boundary */
-        if (OnBoundary)
+#if _MI_PAGING_LEVELS == 4
+        /* Check for new PXE boundary */
+        if (OnPxeBoundary)
+        {
+            PointerPxe = MiPteToPxe(PointerPte);
+
+            /* Check that this loop is sane */
+            ASSERT(OnPpeBoundary);
+            ASSERT(OnPdeBoundary);
+
+            if (PointerPxe->u.Long != 0)
+            {
+                /* Make it valid if needed */
+                if (PointerPxe->u.Hard.Valid == 0)
+                    MiMakeSystemAddressValid(MiPteToPpe(PointerPte), Process);
+            }
+            else
+            {
+                /* Is the entire VAD committed? If not, fail */
+                if (!Vad->u.VadFlags.MemCommit) return FALSE;
+
+                PointerPxe++;
+                PointerPte = MiPxeToPte(PointerPte);
+                continue;
+            }
+        }
+#endif
+
+#if _MI_PAGING_LEVELS >= 3
+        /* Check for new PPE boundary */
+        if (OnPpeBoundary)
+        {
+            PointerPpe = MiPteToPpe(PointerPte);
+
+            /* Check that this loop is sane */
+            ASSERT(OnPdeBoundary);
+
+            if (PointerPpe->u.Long != 0)
+            {
+                /* Make it valid if needed */
+                if (PointerPpe->u.Hard.Valid == 0)
+                    MiMakeSystemAddressValid(MiPteToPde(PointerPte), Process);
+            }
+            else
+            {
+                /* Is the entire VAD committed? If not, fail */
+                if (!Vad->u.VadFlags.MemCommit) return FALSE;
+
+                PointerPpe++;
+                PointerPte = MiPpeToPte(PointerPpe);
+#if _MI_PAGING_LEVELS == 4
+                OnPxeBoundary = MiIsPteOnPxeBoundary(PointerPte);
+#endif
+                continue;
+            }
+        }
+#endif
+        /* Check if we've hit a new PDE boundary */
+        if (OnPdeBoundary)
         {
             /* Is this PDE demand zero? */
             PointerPde = MiPteToPde(PointerPte);
@@ -2035,12 +2103,18 @@ MiIsEntireRangeCommitted(IN ULONG_PTR StartingAddress,
             }
             else
             {
+                /* Is the entire VAD committed? If not, fail */
+                if (!Vad->u.VadFlags.MemCommit) return FALSE;
+
                 /* The PTE was already valid, so move to the next one */
                 PointerPde++;
                 PointerPte = MiPdeToPte(PointerPde);
-
-                /* Is the entire VAD committed? If not, fail */
-                if (!Vad->u.VadFlags.MemCommit) return FALSE;
+#if _MI_PAGING_LEVELS >= 3
+                OnPpeBoundary = MiIsPteOnPpeBoundary(PointerPte);
+#if _MI_PAGING_LEVELS == 4
+                OnPxeBoundary = MiIsPteOnPxeBoundary(PointerPte);
+#endif
+#endif
 
                 /* New loop iteration with our new, on-boundary PTE. */
                 continue;
@@ -2068,7 +2142,13 @@ MiIsEntireRangeCommitted(IN ULONG_PTR StartingAddress,
 
         /* Move to the next PTE */
         PointerPte++;
-        OnBoundary = MiIsPteOnPdeBoundary(PointerPte);
+        OnPdeBoundary = MiIsPteOnPdeBoundary(PointerPte);
+#if _MI_PAGING_LEVELS >= 3
+        OnPpeBoundary = MiIsPteOnPpeBoundary(PointerPte);
+#if _MI_PAGING_LEVELS == 4
+        OnPxeBoundary = MiIsPteOnPxeBoundary(PointerPte);
+#endif
+#endif
     }
 
     /* All PTEs seem valid, and no VAD checks failed, the range is okay */
