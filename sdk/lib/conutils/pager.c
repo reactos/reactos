@@ -80,7 +80,7 @@ ConPagerDefaultAction(IN PCON_PAGER Pager)
     DWORD lineno = Pager->lineno;
     const DWORD ScreenColumns = Pager->ScreenColumns;
     const DWORD ScrollRows = Pager->ScrollRows;
-    const LONG nTabWidth = Pager->nTabWidth;
+    LONG nTabWidth = Pager->nTabWidth;
     DWORD ichLast = ich;
     UINT nCodePage;
     BOOL IsCJK;
@@ -92,6 +92,13 @@ ConPagerDefaultAction(IN PCON_PAGER Pager)
 
     nCodePage = GetConsoleOutputCP();
     IsCJK = IsCJKCodePage(nCodePage);
+
+    /* Normalize the tab width: if negative or too large,
+     * cap it to the number of columns. */
+    if (nTabWidth < 0)
+        nTabWidth = Pager->ScreenColumns - 1;
+    else
+        nTabWidth = min(nTabWidth, Pager->ScreenColumns - 1);
 
     if (Pager->dwFlags & CON_PAGER_FLAG_EXPAND_TABS)
     {
