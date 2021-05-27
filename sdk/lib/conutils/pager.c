@@ -147,19 +147,21 @@ ExpandTab:
 
         if ((iColumn + nWidthOfChar) % ScreenColumns == 0)
         {
-            if (IsDoubleWidthCharTrailing)
-            {
-                ConCallPagerLine(Pager, &TextBuff[ichLast], ich - ichLast);
-                ichLast = ich;
-                if (!(Pager->dwFlags & CON_PAGER_FLAG_DONT_OUTPUT))
-                    CON_STREAM_WRITE(Pager->Screen->Stream, TEXT(" "), 1);
-                --ich;
-            }
-            else
-            {
-                ConCallPagerLine(Pager, &TextBuff[ichLast], ich - ichLast + 1);
-                ichLast = ich + 1;
-            }
+            ConCallPagerLine(Pager, &TextBuff[ichLast], ich - ichLast + 1);
+            ichLast = ich + 1;
+            if (!(Pager->dwFlags & CON_PAGER_FLAG_DONT_OUTPUT))
+                ++iLine;
+            iColumn += nWidthOfChar;
+            continue;
+        }
+
+        if (IsDoubleWidthCharTrailing)
+        {
+            ConCallPagerLine(Pager, &TextBuff[ichLast], ich - ichLast);
+            ichLast = ich;
+            if (!(Pager->dwFlags & CON_PAGER_FLAG_DONT_OUTPUT))
+                CON_STREAM_WRITE(Pager->Screen->Stream, TEXT(" "), 1);
+            --ich;
             if (!(Pager->dwFlags & CON_PAGER_FLAG_DONT_OUTPUT))
                 ++iLine;
             ++iColumn;
