@@ -30,7 +30,8 @@ static void DoTestEntry(const TEST_ENTRY *pEntry)
     ok(!!hwnd, "Line %d: CreateWindowA failed\n", pEntry->lineno);
 
     ret = !!ShowWindow(hwnd, pEntry->nCmdShow);
-    ok(ret == pEntry->ret, "Line %d: ShowWindow returns %d\n", pEntry->lineno, ret);
+    ok(ret == pEntry->ret, "Line %d: ShowWindow returns %s\n", pEntry->lineno,
+       (ret ? "TRUE" : "FALSE"));
 
     style = (LONG)GetWindowLongPtrA(hwnd, GWL_STYLE);
     ok(style == pEntry->style1, "Line %d: style was 0x%lX\n", pEntry->lineno, style);
