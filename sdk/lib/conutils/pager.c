@@ -134,28 +134,34 @@ ExpandTab:
             goto ExpandTab;
         }
 
-        if (TextBuff[ich] == TEXT('\n') ||
-            ((iColumn + nWidthOfChar) % ScreenColumns == 0))
+        if (TextBuff[ich] == TEXT('\n'))
         {
-            ConCallPagerLine(Pager, &TextBuff[ichLast],
-                             ich - ichLast + !IsDoubleWidthCharTrailing);
-            ichLast = ich + !IsDoubleWidthCharTrailing;
+            ConCallPagerLine(Pager, &TextBuff[ichLast], ich - ichLast + 1);
+            ichLast = ich + 1;
+            if (!(Pager->dwFlags & CON_PAGER_FLAG_DONT_OUTPUT))
+                ++iLine;
+            ++lineno;
+            iColumn = 0;
+            continue;
+        }
+
+        if ((iColumn + nWidthOfChar) % ScreenColumns == 0)
+        {
             if (IsDoubleWidthCharTrailing)
             {
+                ConCallPagerLine(Pager, &TextBuff[ichLast], ich - ichLast);
+                ichLast = ich;
                 CON_STREAM_WRITE(Pager->Screen->Stream, TEXT(" "), 1);
                 --ich;
             }
-            if (!(Pager->dwFlags & CON_PAGER_FLAG_DONT_OUTPUT))
-                ++iLine;
-            if (TextBuff[ich] == TEXT('\n'))
-            {
-                ++lineno;
-                iColumn = 0;
-            }
             else
             {
-                ++iColumn;
+                ConCallPagerLine(Pager, &TextBuff[ichLast], ich - ichLast + 1);
+                ichLast = ich + 1;
             }
+            if (!(Pager->dwFlags & CON_PAGER_FLAG_DONT_OUTPUT))
+                ++iLine;
+            ++iColumn;
             continue;
         }
 
