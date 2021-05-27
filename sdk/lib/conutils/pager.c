@@ -151,7 +151,8 @@ ExpandTab:
             {
                 ConCallPagerLine(Pager, &TextBuff[ichLast], ich - ichLast);
                 ichLast = ich;
-                CON_STREAM_WRITE(Pager->Screen->Stream, TEXT(" "), 1);
+                if (!(Pager->dwFlags & CON_PAGER_FLAG_DONT_OUTPUT))
+                    CON_STREAM_WRITE(Pager->Screen->Stream, TEXT(" "), 1);
                 --ich;
             }
             else
