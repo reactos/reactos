@@ -102,11 +102,10 @@ ExpandTab:
             ConCallPagerLine(Pager, L" ", 1);
             --(Pager->nSpacePending);
             ++iColumn;
-            if (iColumn >= ScreenColumns)
+            if (iColumn % ScreenColumns == 0)
             {
                 if (!(Pager->dwFlags & CON_PAGER_FLAG_DONT_OUTPUT))
                     ++iLine;
-                iColumn = 0;
             }
         }
     }
@@ -118,7 +117,7 @@ ExpandTab:
         {
             nWidthOfChar = GetWidthOfCharCJK(nCodePage, TextBuff[ich]);
             IsDoubleWidthCharTrailing = (nWidthOfChar == 2) &&
-                                        (iColumn + 1 == ScreenColumns);
+                                        ((iColumn + 1) % ScreenColumns == 0);
         }
 
         if (TextBuff[ich] == TEXT('\t') &&
@@ -135,7 +134,8 @@ ExpandTab:
             goto ExpandTab;
         }
 
-        if (TextBuff[ich] == TEXT('\n') || iColumn + nWidthOfChar >= ScreenColumns)
+        if (TextBuff[ich] == TEXT('\n') ||
+            ((iColumn + nWidthOfChar) % ScreenColumns == 0))
         {
             ConCallPagerLine(Pager, &TextBuff[ichLast],
                              ich - ichLast + !IsDoubleWidthCharTrailing);
@@ -148,14 +148,21 @@ ExpandTab:
             if (!(Pager->dwFlags & CON_PAGER_FLAG_DONT_OUTPUT))
                 ++iLine;
             if (TextBuff[ich] == TEXT('\n'))
+            {
                 ++lineno;
-            iColumn = 0;
+                iColumn = 0;
+            }
+            else
+            {
+                ++iColumn;
+            }
             continue;
         }
+
         iColumn += nWidthOfChar;
     }
 
-    if (iColumn > 0)
+    if (iColumn % ScreenColumns > 0)
         ConCallPagerLine(Pager, &TextBuff[ichLast], ich - ichLast);
 
     if (iLine >= ScrollRows)
