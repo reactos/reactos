@@ -2477,7 +2477,13 @@ MiMakePdeExistAndMakeValid(IN PMMPDE PointerPde,
                            IN PEPROCESS TargetProcess,
                            IN KIRQL OldIrql)
 {
-   PMMPTE PointerPte, PointerPpe, PointerPxe;
+   PMMPTE PointerPte;
+#if _MI_PAGING_LEVELS >= 3
+   PMMPPE PointerPpe = MiPdeToPpe(PointerPde);
+#if _MI_PAGING_LEVELS == 4
+   PMMPXE PointerPxe = MiPdeToPxe(PointerPde);
+#endif
+#endif
 
    //
    // Sanity checks. The latter is because we only use this function with the
@@ -2487,15 +2493,15 @@ MiMakePdeExistAndMakeValid(IN PMMPDE PointerPde,
    ASSERT(OldIrql == MM_NOIRQL);
 
    //
-   // Also get the PPE and PXE. This is okay not to #ifdef because they will
-   // return the same address as the PDE on 2-level page table systems.
-   //
    // If everything is already valid, there is nothing to do.
    //
-   PointerPpe = MiAddressToPte(PointerPde);
-   PointerPxe = MiAddressToPde(PointerPde);
-   if ((PointerPxe->u.Hard.Valid) &&
+   if (
+#if _MI_PAGING_LEVELS == 4
+       (PointerPxe->u.Hard.Valid) &&
+#endif
+#if _MI_PAGING_LEVELS >= 3
        (PointerPpe->u.Hard.Valid) &&
+#endif
        (PointerPde->u.Hard.Valid))
    {
        return;
@@ -2515,6 +2521,7 @@ MiMakePdeExistAndMakeValid(IN PMMPDE PointerPde,
        //
        ASSERT(KeAreAllApcsDisabled() == TRUE);
 
+#if _MI_PAGING_LEVELS == 4
        //
        // First, make the PXE valid if needed
        //
@@ -2523,31 +2530,47 @@ MiMakePdeExistAndMakeValid(IN PMMPDE PointerPde,
            MiMakeSystemAddressValid(PointerPpe, TargetProcess);
            ASSERT(PointerPxe->u.Hard.Valid == 1);
        }
+#endif
 
+#if _MI_PAGING_LEVELS >= 3
        //
        // Next, the PPE
        //
        if (!PointerPpe->u.Hard.Valid)
        {
+#if _MI_PAGING_LEVELS == 4
+           if (PointerPpe->u.Long == 0)
+               MiIncrementPageTableReferences(PointerPde);
+#endif
            MiMakeSystemAddressValid(PointerPde, TargetProcess);
            ASSERT(PointerPpe->u.Hard.Valid == 1);
        }
+#endif
 
        //
        // And finally, make the PDE itself valid.
        //
+#if _MI_PAGING_LEVELS >= 3
+       if (PointerPde->u.Long == 0)
+            MiIncrementPageTableReferences(PointerPte);
+#endif
        MiMakeSystemAddressValid(PointerPte, TargetProcess);
+
+       /* Do not increment Page table refcount here for the PDE, this must be managed by caller */
 
        //
        // This should've worked the first time so the loop is really just for
        // show -- ASSERT that we're actually NOT going to be looping.
        //
-       ASSERT(PointerPxe->u.Hard.Valid == 1);
-       ASSERT(PointerPpe->u.Hard.Valid == 1);
        ASSERT(PointerPde->u.Hard.Valid == 1);
-   } while (!(PointerPxe->u.Hard.Valid) ||
-            !(PointerPpe->u.Hard.Valid) ||
-            !(PointerPde->u.Hard.Valid));
+   } while (
+#if _MI_PAGING_LEVELS == 4
+        !PointerPxe->u.Hard.Valid ||
+#endif
+#if _MI_PAGING_LEVELS >= 3
+        !PointerPpe->u.Hard.Valid ||
+#endif
+        !PointerPde->u.Hard.Valid);
 }
 
 VOID
