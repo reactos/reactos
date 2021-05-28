@@ -727,18 +727,15 @@ MiDeleteVirtualAddresses(IN ULONG_PTR Va,
         /* Check remaining PTE count (go back 1 page due to above loop) */
         if (MiQueryPageTableReferences((PVOID)(Va - PAGE_SIZE)) == 0)
         {
-            if (PointerPde->u.Long != 0)
-            {
-                /* Delete the PTE proper */
-                MiDeletePte(PointerPde,
-                            MiPteToAddress(PointerPde),
-                            CurrentProcess,
-                            NULL);
-            }
+            ASSERT(PointerPde->u.Long != 0);
+
+            /* Delete the PDE proper */
+            MiDeletePde(PointerPde, CurrentProcess);
         }
 
-        /* Release the lock and get out if we're done */
+        /* Release the lock */
         MiReleasePfnLock(OldIrql);
+
         if (Va > EndingAddress) return;
 
         /* Otherwise, we exited because we hit a new PDE boundary, so start over */

@@ -1823,40 +1823,7 @@ MiReferenceUnusedPageAndBumpLockCount(IN PMMPFN Pfn1)
     }
 }
 
-FORCEINLINE
-VOID
-MiIncrementPageTableReferences(IN PVOID Address)
-{
-    PUSHORT RefCount;
 
-    RefCount = &MmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)];
-
-    *RefCount += 1;
-    ASSERT(*RefCount <= PTE_PER_PAGE);
-}
-
-FORCEINLINE
-VOID
-MiDecrementPageTableReferences(IN PVOID Address)
-{
-    PUSHORT RefCount;
-
-    RefCount = &MmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)];
-
-    *RefCount -= 1;
-    ASSERT(*RefCount < PTE_PER_PAGE);
-}
-
-FORCEINLINE
-USHORT
-MiQueryPageTableReferences(IN PVOID Address)
-{
-    PUSHORT RefCount;
-
-    RefCount = &MmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)];
-
-    return *RefCount;
-}
 
 CODE_SEG("INIT")
 BOOLEAN
@@ -2484,8 +2451,190 @@ MiSynchronizeSystemPde(PMMPDE PointerPde)
 }
 #endif
 
+#if _MI_PAGING_LEVELS == 2
+FORCEINLINE
+USHORT
+MiIncrementPageTableReferences(IN PVOID Address)
+{
+    PUSHORT RefCount;
+
+    RefCount = &MmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)];
+
+    *RefCount += 1;
+    ASSERT(*RefCount <= PTE_PER_PAGE);
+    return *RefCount;
+}
+
+FORCEINLINE
+USHORT
+MiDecrementPageTableReferences(IN PVOID Address)
+{
+    PUSHORT RefCount;
+
+    RefCount = &MmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)];
+
+    *RefCount -= 1;
+    ASSERT(*RefCount < PTE_PER_PAGE);
+    return *RefCount;
+}
+
+FORCEINLINE
+USHORT
+MiQueryPageTableReferences(IN PVOID Address)
+{
+    PUSHORT RefCount;
+
+    RefCount = &MmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)];
+
+    return *RefCount;
+}
+#else
+FORCEINLINE
+USHORT
+MiIncrementPageTableReferences(IN PVOID Address)
+{
+    PMMPDE PointerPde = MiAddressToPde(Address);
+    PMMPFN Pfn;
+
+    /* We should not tinker with this one. */
+    ASSERT(PointerPde != (PMMPDE)PXE_SELFMAP);
+    DPRINT("Incrementing %p from %p\n", Address, _ReturnAddress());
+
+    /* Make sure we're locked */
+    ASSERT(PsGetCurrentThread()->OwnsProcessWorkingSetExclusive);
+
+    /* If we're bumping refcount, then it must be valid! */
+    ASSERT(PointerPde->u.Hard.Valid == 1);
+
+    /* This lies on the PFN */
+    Pfn = MiGetPfnEntry(PFN_FROM_PDE(PointerPde));
+    Pfn->OriginalPte.u.Soft.UsedPageTableEntries++;
+
+    ASSERT(Pfn->OriginalPte.u.Soft.UsedPageTableEntries <= PTE_PER_PAGE);
+
+    return Pfn->OriginalPte.u.Soft.UsedPageTableEntries;
+}
+
+FORCEINLINE
+USHORT
+MiDecrementPageTableReferences(IN PVOID Address)
+{
+    PMMPDE PointerPde = MiAddressToPde(Address);
+    PMMPFN Pfn;
+
+    /* We should not tinker with this one. */
+    ASSERT(PointerPde != (PMMPDE)PXE_SELFMAP);
+
+    DPRINT("Decrementing %p from %p\n", PointerPde, _ReturnAddress());
+
+    /* Make sure we're locked */
+    ASSERT(PsGetCurrentThread()->OwnsProcessWorkingSetExclusive);
+
+    /* If we're decreasing refcount, then it must be valid! */
+    ASSERT(PointerPde->u.Hard.Valid == 1);
+
+    /* This lies on the PFN */
+    Pfn = MiGetPfnEntry(PFN_FROM_PDE(PointerPde));
+
+    ASSERT(Pfn->OriginalPte.u.Soft.UsedPageTableEntries != 0);
+    Pfn->OriginalPte.u.Soft.UsedPageTableEntries--;
+
+    ASSERT(Pfn->OriginalPte.u.Soft.UsedPageTableEntries < PTE_PER_PAGE);
+
+    return Pfn->OriginalPte.u.Soft.UsedPageTableEntries;
+}
+
+FORCEINLINE
+USHORT
+MiQueryPageTableReferences(IN PVOID Address)
+{
+    PMMPDE PointerPde;
+    PMMPPE PointerPpe;
+#if _MI_PAGING_LEVELS == 4
+    PMMPXE PointerPxe;
+#endif
+    PMMPFN Pfn;
+
+    /* Make sure we're locked */
+    ASSERT((PsGetCurrentThread()->OwnsProcessWorkingSetExclusive) || (PsGetCurrentThread()->OwnsProcessWorkingSetShared));
+
+    /* Check if PXE or PPE have references first. */
+#if _MI_PAGING_LEVELS == 4
+    PointerPxe = MiAddressToPxe(Address);
+    if ((PointerPxe->u.Hard.Valid == 1) || (PointerPxe->u.Soft.Transition == 1))
+    {
+        Pfn = MiGetPfnEntry(PFN_FROM_PXE(PointerPxe));
+        if (Pfn->OriginalPte.u.Soft.UsedPageTableEntries == 0)
+            return 0;
+    }
+    else if (PointerPxe->u.Soft.UsedPageTableEntries == 0)
+    {
+        return 0;
+    }
+
+    if (PointerPxe->u.Hard.Valid == 0)
+    {
+        MiMakeSystemAddressValid(MiPteToAddress(PointerPxe), PsGetCurrentProcess());
+    }
+#endif
+
+    PointerPpe = MiAddressToPpe(Address);
+    if ((PointerPpe->u.Hard.Valid == 1) || (PointerPpe->u.Soft.Transition == 1))
+    {
+        Pfn = MiGetPfnEntry(PFN_FROM_PPE(PointerPpe));
+        if (Pfn->OriginalPte.u.Soft.UsedPageTableEntries == 0)
+            return 0;
+    }
+    else if (PointerPpe->u.Soft.UsedPageTableEntries == 0)
+    {
+        return 0;
+    }
+
+    if (PointerPpe->u.Hard.Valid == 0)
+    {
+        MiMakeSystemAddressValid(MiPteToAddress(PointerPpe), PsGetCurrentProcess());
+    }
+
+    PointerPde = MiAddressToPde(Address);
+    if ((PointerPde->u.Hard.Valid == 0) && (PointerPde->u.Soft.Transition == 0))
+    {
+        return PointerPde->u.Soft.UsedPageTableEntries;
+    }
+
+    /* This lies on the PFN */
+    Pfn = MiGetPfnEntry(PFN_FROM_PDE(PointerPde));
+    return Pfn->OriginalPte.u.Soft.UsedPageTableEntries;
+}
+#endif
+
 #ifdef __cplusplus
 } // extern "C"
 #endif
+
+FORCEINLINE
+VOID
+MiDeletePde(
+    _In_ PMMPDE PointerPde,
+    _In_ PEPROCESS CurrentProcess)
+{
+    /* Only for user-mode ones */
+    ASSERT(MiIsUserPde(PointerPde));
+
+    /* Kill this one as a PTE */
+    MiDeletePte((PMMPTE)PointerPde, MiPdeToPte(PointerPde), CurrentProcess, NULL);
+#if _MI_PAGING_LEVELS >= 3
+    /* Cascade down */
+    if (MiDecrementPageTableReferences(MiPdeToPte(PointerPde)) == 0)
+    {
+        MiDeletePte(MiPdeToPpe(PointerPde), PointerPde, CurrentProcess, NULL);
+#if _MI_PAGING_LEVELS == 4
+        if (MiDecrementPageTableReferences(PointerPde) == 0)
+        {
+            MiDeletePte(MiPdeToPxe(PointerPde), MiPdeToPpe(PointerPde), CurrentProcess, NULL);
+        }
+#endif
+    }
+#endif
+}
 
 /* EOF */

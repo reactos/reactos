@@ -1027,6 +1027,8 @@ MiInitializePfn(IN PFN_NUMBER PageFrameIndex,
     ASSERT(PageFrameIndex != 0);
     Pfn1->u4.PteFrame = PageFrameIndex;
 
+    DPRINT("Incrementing share count of %lp from %p\n", PageFrameIndex, _ReturnAddress());
+
     /* Increase its share count so we don't get rid of it */
     Pfn1 = MI_PFN_ELEMENT(PageFrameIndex);
     Pfn1->u2.ShareCount++;
