@@ -1,7 +1,7 @@
 /*
  * PROJECT:     ReactOS CRT library
  * LICENSE:     MIT (https://spdx.org/licenses/MIT)
- * PURPOSE:     x64 asm implementation of fabs
+ * PURPOSE:     x64 asm implementation of fabsf
  * COPYRIGHT:   Copyright 2021 Timo Kreuzer <timo.kreuzer@reactos.org>
  */
 
@@ -12,15 +12,8 @@
 /* CODE **********************************************************************/
 .code64
 
-#ifdef _USE_ML
-/* fabs is not allowed as label name, so create _fabs instead and alias fabs to it */
-ALIAS <fabs> = <_fabs>
-PUBLIC _fabs
-_fabs:
-#else
-PUBLIC fabs
-fabs:
-#endif
+PUBLIC fabsf
+fabsf:
     /* Copy parameter into rcx */
 #if !defined(_MSC_VER) || (_MSC_VER >= 1916)
     movq rcx, xmm0
@@ -29,18 +22,20 @@ fabs:
     movd rcx, xmm0
 #endif
 
-    /* Copy into rax */
-    mov rax, rcx
+    /* Copy into eax */
+    mov eax, ecx
 
-    /* Clear sign bit in rax */
-    btr rax, 63
+    /* Clear sign bit in eax */
+    btr eax, 31
+
+    /* Set error bit in rcx */
+    bts ecx, 22
 
     /* Check for NAN */
-    mov r8, HEX(7FF0000000000000)
-    cmp rax, r8
+    cmp eax, HEX(7F800000)
 
-    /* If it is NAN, copy original value back to rax */
-    cmova rax, rcx
+    /* If eax is NAN, copy error result to rax */
+    cmova eax, ecx
 
 #if !defined(_MSC_VER) || (_MSC_VER >= 1916)
     movq xmm0, rax
