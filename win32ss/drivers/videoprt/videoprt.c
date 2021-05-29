@@ -1233,10 +1233,6 @@ VideoPortEnumerateChildren(
                 {
                     /* Mark it invalid */
                     ChildExtension->EdidValid = FALSE;
-                    // FIXME: the following break workarounds CORE-16695
-                    // but prevents graphic cards to return an invalid
-                    // EDID as first child, and a valid one as second child.
-                    break;
                 }
             }
         }
