@@ -20,7 +20,7 @@ static TESTENTRY_DBL s_fabs_tests[] =
 {
     /* Special values */
     { 0x7FF0000000000000ull /* INF        */, 0x7FF0000000000000ull /* INF        */ },
-#ifdef _M_AMD64
+#ifndef _M_IX86
     { 0x7FF0000000000001ull /* NAN(SNAN)  */, 0x7FF0000000000001ull /* NAN(SNAN) */ },
     { 0x7FF7FFFFFFFFFFFFull /* NAN(SNAN)  */, 0x7FF7FFFFFFFFFFFFull /* NAN(SNAN) */ },
 #else
@@ -31,7 +31,7 @@ static TESTENTRY_DBL s_fabs_tests[] =
     { 0x7FF8000000000001ull /* NAN        */, 0x7FF8000000000001ull /* NAN       */ },
     { 0x7FFFFFFFFFFFFFFFull /* NAN        */, 0x7FFFFFFFFFFFFFFFull /* NAN       */ },
     { 0xFFF0000000000000ull /* -INF       */, 0x7FF0000000000000ull /* INF       */ },
-#ifdef _M_AMD64
+#ifndef _M_IX86
     { 0xFFF0000000000001ull /* -NAN(SNAN) */, 0xFFF0000000000001ull /* NAN(SNAN) */ },
     { 0xFFF7FFFFFFFFFFFFull /* -NAN(SNAN) */, 0xFFF7FFFFFFFFFFFFull /* NAN(SNAN) */ },
 #else
