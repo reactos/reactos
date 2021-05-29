@@ -531,17 +531,32 @@ NTSTATUS
 NTAPI
 IntCreateRegistryPath(
     IN PCUNICODE_STRING DriverRegistryPath,
+    IN ULONG DeviceNumber,
     OUT PUNICODE_STRING DeviceRegistryPath)
 {
     static WCHAR RegistryMachineSystem[] = L"\\REGISTRY\\MACHINE\\SYSTEM\\";
     static WCHAR CurrentControlSet[] = L"CURRENTCONTROLSET\\";
     static WCHAR ControlSet[] = L"CONTROLSET";
     static WCHAR Insert1[] = L"Hardware Profiles\\Current\\System\\CurrentControlSet\\";
-    static WCHAR Insert2[] = L"\\Device0";
+    static WCHAR Insert2[] = L"\\Device";
+    UNICODE_STRING DeviceNumberString;
+    WCHAR DeviceNumberBuffer[20];
     BOOLEAN Valid;
     UNICODE_STRING AfterControlSet;
+    NTSTATUS Status;
 
     AfterControlSet = *DriverRegistryPath;
+
+    /* Convert DeviceNumber to string */
+    DeviceNumberString.Length = 0;
+    DeviceNumberString.MaximumLength = sizeof(DeviceNumberBuffer);
+    DeviceNumberString.Buffer = DeviceNumberBuffer;
+    Status = RtlIntegerToUnicodeString(DeviceNumber, 10, &DeviceNumberString);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR_(VIDEOPRT, "RtlIntegerToUnicodeString(%u) returned 0x%08x\n", DeviceNumber, Status);
+        return Status;
+    }
 
     /* Check if path begins with \\REGISTRY\\MACHINE\\SYSTEM\\ */
     Valid = (DriverRegistryPath->Length > sizeof(RegistryMachineSystem) &&
@@ -586,7 +601,8 @@ IntCreateRegistryPath(
 
     if (Valid)
     {
-        DeviceRegistryPath->MaximumLength = DriverRegistryPath->Length + sizeof(Insert1) + sizeof(Insert2);
+        DeviceRegistryPath->MaximumLength = DriverRegistryPath->Length + sizeof(Insert1) + sizeof(Insert2)
+                                          + DeviceNumberString.Length;
         DeviceRegistryPath->Buffer = ExAllocatePoolWithTag(PagedPool,
                                                            DeviceRegistryPath->MaximumLength,
                                                            TAG_VIDEO_PORT);
@@ -600,6 +616,7 @@ IntCreateRegistryPath(
             RtlAppendUnicodeToString(DeviceRegistryPath, Insert1);
             RtlAppendUnicodeStringToString(DeviceRegistryPath, &AfterControlSet);
             RtlAppendUnicodeToString(DeviceRegistryPath, Insert2);
+            RtlAppendUnicodeStringToString(DeviceRegistryPath, &DeviceNumberString);
 
             /* Check if registry key exists */
             Valid = NT_SUCCESS(RtlCheckRegistryKey(RTL_REGISTRY_ABSOLUTE, DeviceRegistryPath->Buffer));
@@ -620,7 +637,7 @@ IntCreateRegistryPath(
     /* If path doesn't point to *ControlSet*, use DriverRegistryPath directly */
     if (!Valid)
     {
-        DeviceRegistryPath->MaximumLength = DriverRegistryPath->Length + sizeof(Insert2);
+        DeviceRegistryPath->MaximumLength = DriverRegistryPath->Length + sizeof(Insert2) + DeviceNumberString.Length;
         DeviceRegistryPath->Buffer = ExAllocatePoolWithTag(NonPagedPool,
                                                            DeviceRegistryPath->MaximumLength,
                                                            TAG_VIDEO_PORT);
@@ -630,6 +647,7 @@ IntCreateRegistryPath(
 
         RtlCopyUnicodeString(DeviceRegistryPath, DriverRegistryPath);
         RtlAppendUnicodeToString(DeviceRegistryPath, Insert2);
+        RtlAppendUnicodeStringToString(DeviceRegistryPath, &DeviceNumberString);
     }
 
     DPRINT("Formatted registry key '%wZ' -> '%wZ'\n",

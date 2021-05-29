@@ -170,6 +170,7 @@ IntVideoPortCreateAdapterDeviceObject(
 
     /* Get the registry path associated with this device. */
     Status = IntCreateRegistryPath(&DriverExtension->RegistryPath,
+                                   DriverExtension->InitializationData.StartingDeviceNumber,
                                    &DeviceExtension->RegistryPath);
     if (!NT_SUCCESS(Status))
     {
@@ -242,6 +243,7 @@ IntVideoPortCreateAdapterDeviceObject(
 
     IntCreateNewRegistryPath(DeviceExtension);
     IntSetupDeviceSettingsKey(DeviceExtension);
+    DriverExtension->InitializationData.StartingDeviceNumber++;
 
     /* Remove the initailizing flag */
     (*DeviceObject)->Flags &= ~DO_DEVICE_INITIALIZING;
