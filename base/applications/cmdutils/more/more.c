@@ -710,7 +710,7 @@ LoadRegistrySettings(HKEY hKeyRoot)
                             L"EnableExtensions",
                             NULL,
                             &dwType,
-                            (LPBYTE)&Buffer,
+                            (PBYTE)&Buffer,
                             &len);
     if (lRet == ERROR_SUCCESS)
     {
@@ -725,10 +725,10 @@ LoadRegistrySettings(HKEY hKeyRoot)
     RegCloseKey(hKey);
 }
 
-static BOOL IsFlag(LPCWSTR param)
+static BOOL IsFlag(PCWSTR param)
 {
-    LPCWSTR pch;
-    LPWCH endptr;
+    PCWSTR pch;
+    PWCHAR endptr;
 
     if (param[0] == L'/')
         return TRUE;
@@ -745,9 +745,9 @@ static BOOL IsFlag(LPCWSTR param)
     return FALSE;
 }
 
-static BOOL ParseArgument(LPCWSTR arg, BOOL *pbHasFiles)
+static BOOL ParseArgument(PCWSTR arg, BOOL* pbHasFiles)
 {
-    LPWCH endptr;
+    PWCHAR endptr;
 
     if (arg[0] == L'/')
     {
@@ -825,18 +825,18 @@ static BOOL ParseArgument(LPCWSTR arg, BOOL *pbHasFiles)
     return TRUE;
 }
 
-static BOOL ParseMoreVariable(BOOL *pbHasFiles)
+static BOOL ParseMoreVariable(BOOL* pbHasFiles)
 {
     BOOL ret = TRUE;
-    LPWSTR psz;
-    LPWCH pch;
+    PWSTR psz;
+    PWCHAR pch;
     DWORD cch;
 
     cch = GetEnvironmentVariableW(L"MORE", NULL, 0);
     if (cch == 0)
         return TRUE;
 
-    psz = (LPWSTR)malloc((cch + 1) * sizeof(WCHAR));
+    psz = (PWSTR)malloc((cch + 1) * sizeof(WCHAR));
     if (!psz)
         return TRUE;
 
