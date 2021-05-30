@@ -981,8 +981,8 @@ BEGIN
     IDS_EXE_DESCRIPTION "Opis:"
 
     IDS_MENU_EMPTY "(Puste)"
-    IDS_OBJECTS "%d Obiektów"
-    IDS_OBJECTS_SELECTED "%d Zaznaczonych obiektów"
+    IDS_OBJECTS "Elementów: %d"
+    IDS_OBJECTS_SELECTED "Zaznaczonych elementów: %d"
 
     IDS_ADVANCED_FOLDER "Pliki i Foldery"
     IDS_ADVANCED_NET_CRAWLER "Automatycznie wyszukuj foldery sieciowe i drukarki"
