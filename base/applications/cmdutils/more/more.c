@@ -89,7 +89,7 @@ MorePagerLine(
 {
     DWORD ich;
 
-    if (s_dwFlags & FLAG_PLUSn)
+    if (s_dwFlags & FLAG_PLUSn) /* Skip lines */
     {
         if (Pager->lineno < s_nNextLineNo)
         {
@@ -960,6 +960,7 @@ int wmain(int argc, WCHAR* argv[])
         // SetFilePointer(hFile, 0, NULL, FILE_BEGIN);
         Encoding = ENCODING_ANSI; // ENCODING_UTF8;
 
+        /* Start paging */
         bContinue = ConPutsPaging(&Pager, PagePrompt, TRUE, L"");
         if (!bContinue)
             goto Quit;
@@ -984,7 +985,7 @@ int wmain(int argc, WCHAR* argv[])
                                        StringBuffer, dwReadChars);
             /* If we Ctrl-C/Ctrl-Break, stop everything */
             if (!bContinue)
-                goto Quit;
+                break;
         }
         while (bRet && dwReadBytes > 0);
         goto Quit;
@@ -993,10 +994,6 @@ int wmain(int argc, WCHAR* argv[])
     /* We have files: read them and output them to STDOUT */
     for (i = 1; i < argc; i++)
     {
-        s_bPrevLineIsBlank = FALSE;
-        s_nPromptID = IDS_CONTINUE_PROGRESS;
-        s_bDoNextFile = FALSE;
-
         if (IsFlag(argv[i]))
             continue;
 
@@ -1031,22 +1028,28 @@ int wmain(int argc, WCHAR* argv[])
         IsDataUnicode(FileCacheBuffer, dwReadBytes, &Encoding, &SkipBytes);
         SetFilePointer(hFile, SkipBytes, NULL, FILE_BEGIN);
 
+        /* Reset state for paging */
+        s_bPrevLineIsBlank = FALSE;
+        s_nPromptID = IDS_CONTINUE_PROGRESS;
+        s_bDoNextFile = FALSE;
+
         /* Update the statistics for PagePrompt */
         dwSumReadBytes = dwSumReadChars = 0;
 
+        /* Start paging */
         bContinue = ConPutsPaging(&Pager, PagePrompt, TRUE, L"");
         if (!bContinue)
         {
+            /* We stop displaying this file */
+            CloseHandle(hFile);
             if (s_bDoNextFile)
             {
                 /* Bail out and continue with the other files */
-                s_bDoNextFile = FALSE;
+                continue;
             }
-            else
-            {
-                CloseHandle(hFile);
-                goto Quit;
-            }
+
+            /* We Ctrl-C/Ctrl-Break, stop everything */
+            goto Quit;
         }
 
         do
@@ -1058,8 +1061,8 @@ int wmain(int argc, WCHAR* argv[])
             if (!bRet || dwReadBytes == 0 || dwReadChars == 0)
             {
                 /*
-                 * We failed at reading the file, bail out and
-                 * continue with the other files.
+                 * We failed at reading the file, bail out
+                 * and continue with the other files.
                  */
                 break;
             }
@@ -1078,24 +1081,28 @@ int wmain(int argc, WCHAR* argv[])
                 bContinue = ConWritePaging(&Pager, PagePrompt, FALSE,
                                            StringBuffer, dwReadChars);
             }
-            /* Check whether we should stop displaying this file */
             if (!bContinue)
             {
-                if (s_bDoNextFile)
-                {
-                    /* Bail out and continue with the other files */
-                    s_bDoNextFile = FALSE;
-                    continue;
-                }
-
-                /* We Ctrl-C/Ctrl-Break, stop everything */
-                CloseHandle(hFile);
-                goto Quit;
+                /* We stop displaying this file */
+                break;
             }
         }
         while (bRet && dwReadBytes > 0);
 
         CloseHandle(hFile);
+
+        /* Check whether we should stop displaying this file */
+        if (!bContinue)
+        {
+            if (s_bDoNextFile)
+            {
+                /* Bail out and continue with the other files */
+                continue;
+            }
+
+            /* We Ctrl-C/Ctrl-Break, stop everything */
+            goto Quit;
+        }
     }
 
 Quit:
