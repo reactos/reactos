@@ -8,8 +8,8 @@ LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 
 MENU_001 MENUEX
 BEGIN
-    MENUITEM "&Duże Ikony", FCIDM_SHVIEW_BIGICON
-    MENUITEM "&Małe Ikony", FCIDM_SHVIEW_SMALLICON
+    MENUITEM "&Duże ikony", FCIDM_SHVIEW_BIGICON
+    MENUITEM "&Małe ikony", FCIDM_SHVIEW_SMALLICON
     MENUITEM "&Lista", FCIDM_SHVIEW_LISTVIEW
     MENUITEM "&Szczegóły", FCIDM_SHVIEW_REPORTVIEW
     MENUITEM "", -1, MFT_SEPARATOR
@@ -28,8 +28,8 @@ BEGIN
     BEGIN
         POPUP "&Widok", FCIDM_SHVIEW_VIEW
         BEGIN
-            MENUITEM "&Duże Ikony", FCIDM_SHVIEW_BIGICON
-            MENUITEM "&Małe Ikony", FCIDM_SHVIEW_SMALLICON
+            MENUITEM "&Duże ikony", FCIDM_SHVIEW_BIGICON
+            MENUITEM "&Małe ikony", FCIDM_SHVIEW_SMALLICON
             MENUITEM "&Lista", FCIDM_SHVIEW_LISTVIEW
             MENUITEM "&Szczegóły", FCIDM_SHVIEW_REPORTVIEW
         END
@@ -784,8 +784,8 @@ BEGIN
     IDS_ABOUT_VERSION_STRING "Wersja %S (%S)"
 
     /* context menus */
-    IDS_VIEW_LARGE "&Duże Ikony"
-    IDS_VIEW_SMALL "&Małe Ikony"
+    IDS_VIEW_LARGE "&Duże ikony"
+    IDS_VIEW_SMALL "&Małe ikony"
     IDS_VIEW_LIST "&Lista"
     IDS_VIEW_DETAILS "&Szczegóły"
     IDS_SELECT "Zaznacz"
