@@ -166,7 +166,7 @@ BEGIN
     CONTROL          "StartMenuSe&ttings", IDC_ITEMS, "SysTreeView32", WS_BORDER | 0x00000001, 7, 63, 238, 67, WS_EX_CLIENTEDGE
     GROUPBOX         "Niedawno używane dokumenty ", IDC_STATIC, 7, 133, 238, 56
     LTEXT            "Zaznacz tę opcję, aby zapewnić szybki dostęp do niedawno otwieranych dokumentów.  Wyczyszczenie tej listy nie powoduje usunięcia dokumentów.", IDC_STATIC, 14, 144, 224, 21
-    AUTOCHECKBOX     "Wyczyść &moje ostatnio otwierane dokumenty", IDC_RECENTLY, 14, 171, 162, 10
+    AUTOCHECKBOX     "Wyświetl moje ostatnio otwierane dokumenty", IDC_RECENTLY, 14, 171, 162, 10
     PUSHBUTTON       "Wy&czyść listę", IDC_CLEAR, 182, 168, 55, 14
 END
 
