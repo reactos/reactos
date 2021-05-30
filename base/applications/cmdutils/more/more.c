@@ -738,7 +738,7 @@ static BOOL IsFlag(PCWSTR param)
         pch = param + 1;
         if (*pch)
         {
-            wcstol(pch, &endptr, 10);
+            (void)wcstol(pch, &endptr, 10);
             return (*endptr == 0);
         }
     }
