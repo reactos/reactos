@@ -39,15 +39,15 @@ BEGIN
         MENUITEM "", -1, MFT_SEPARATOR
         POPUP "&Programy", IDM_PROGRAMS
         BEGIN
-            MENUITEM "(Pusty)", -1, MFT_STRING, MFS_GRAYED
+            MENUITEM "(Puste)", -1, MFT_STRING, MFS_GRAYED
         END
         POPUP "&Ulubione", IDM_FAVORITES
         BEGIN
-            MENUITEM "(Pusty)", -1, MFT_STRING, MFS_GRAYED
+            MENUITEM "(Puste)", -1, MFT_STRING, MFS_GRAYED
         END
         POPUP "&Dokumenty", IDM_DOCUMENTS
         BEGIN
-            MENUITEM "(Pusty)", -1, MFT_STRING, MFS_GRAYED
+            MENUITEM "(Puste)", -1, MFT_STRING, MFS_GRAYED
         END
         POPUP "Us&tawienia", IDM_SETTINGS
         BEGIN
@@ -197,8 +197,8 @@ STRINGTABLE
 BEGIN
     IDS_START "Start"
     IDS_PROPERTIES "Właś&ciwości"
-    IDS_OPEN_ALL_USERS "&Otwórz - wszyscy użytkownicy"
-    IDS_EXPLORE_ALL_USERS "&Eksploruj - wszyscy użytkownicy"
+    IDS_OPEN_ALL_USERS "&Otwórz - wszystkich użytkowników"
+    IDS_EXPLORE_ALL_USERS "&Eksploruj - wszystkich użytkowników"
     IDS_STARTUP_ERROR "System nie może uruchomić eksploratora, ponieważ rejestr jest niedostępny lub uszkodzony."
 END
 
