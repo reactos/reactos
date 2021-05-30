@@ -42,6 +42,7 @@ list(APPEND SOURCE
     SetProp.c
     SetScrollInfo.c
     SetScrollRange.c
+    ShowWindow.c
     SwitchToThisWindow.c
     SystemParametersInfo.c
     TrackMouseEvent.c
