@@ -308,7 +308,6 @@ Restart:
         case L'S':
             s_dwFlags |= FLAG_PLUSn;
             s_nNextLineNo = Pager->lineno + nLines;
-            Pager->ScrollRows = Pager->ScreenRows - 1;
             return TRUE;
         default:
             chSubCommand = 0;
@@ -364,7 +363,6 @@ Restart:
                 /* Clear the screen */
                 ConClearScreen(Pager->Screen);
             }
-            Pager->ScrollRows = Pager->ScreenRows - 1;
             return TRUE;
         }
 
@@ -398,7 +396,6 @@ Restart:
     else
     {
         /* Extended features are unavailable: display one page */
-        Pager->ScrollRows = Pager->ScreenRows - 1;
         return TRUE;
     }
 }

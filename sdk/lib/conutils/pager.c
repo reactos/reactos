@@ -235,7 +235,10 @@ ConWritePaging(
     Pager->cch = len;
     Pager->TextBuff = szStr;
     if (StartPaging)
+    {
+        /* Reset to display one page by default */
         Pager->ScrollRows = Pager->ScreenRows - 1;
+    }
 
     if (len == 0 || szStr == NULL)
         return TRUE;
@@ -255,6 +258,9 @@ ConWritePaging(
             Pager->ScreenColumns = csbi.srWindow.Right - csbi.srWindow.Left + 1;
             Pager->ScreenRows = csbi.srWindow.Bottom - csbi.srWindow.Top + 1;
         }
+
+        /* Reset to display one page by default */
+        Pager->ScrollRows = Pager->ScreenRows - 1;
 
         /* Prompt the user; give him some values for statistics */
         if (!PagePrompt(Pager, Pager->ich, Pager->cch))
