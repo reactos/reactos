@@ -119,12 +119,6 @@ ExpandTab:
     for (; ich < cch && iLine < ScrollRows; ++ich)
     {
         Pager->lineno = lineno;
-        if (IsCJK)
-        {
-            nWidthOfChar = GetWidthOfCharCJK(nCodePage, TextBuff[ich]);
-            IsDoubleWidthCharTrailing = (nWidthOfChar == 2) &&
-                                        ((iColumn + 1) % ScreenColumns == 0);
-        }
 
         /* TAB character */
         if (TextBuff[ich] == TEXT('\t') &&
@@ -154,6 +148,13 @@ ExpandTab:
         }
 
         /* Other character - Handle double-width for CJK */
+
+        if (IsCJK)
+        {
+            nWidthOfChar = GetWidthOfCharCJK(nCodePage, TextBuff[ich]);
+            IsDoubleWidthCharTrailing = (nWidthOfChar == 2) &&
+                                        ((iColumn + 1) % ScreenColumns == 0);
+        }
 
         if ((iColumn + nWidthOfChar) % ScreenColumns == 0)
         {
