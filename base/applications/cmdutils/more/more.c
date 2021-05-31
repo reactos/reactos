@@ -1,14 +1,13 @@
 /*
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS More Command
- * FILE:            base/applications/cmdutils/more/more.c
- * PURPOSE:         Displays text stream from STDIN or from an arbitrary number
- *                  of files to STDOUT, with screen capabilities (more than CAT,
- *                  but less than LESS ^^).
- * PROGRAMMERS:     Paolo Pantaleo
- *                  Timothy Schepens
- *                  Hermes Belusca-Maito (hermes.belusca@sfr.fr)
- *                  Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
+ * PROJECT:     ReactOS More Command
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     Displays text stream from STDIN or from an arbitrary number
+ *              of files to STDOUT, with screen capabilities (more than CAT,
+ *              but less than LESS ^^).
+ * COPYRIGHT:   Copyright 1999 Paolo Pantaleo
+ *              Copyright 2003 Timothy Schepens
+ *              Copyright 2016-2021 Hermes Belusca-Maito
+ *              Copyright 2021 Katayama Hirofumi MZ
  */
 /*
  * MORE.C - external command.
