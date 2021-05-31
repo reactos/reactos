@@ -1904,7 +1904,16 @@ co_WinPosSetWindowPos(
    }
    else if (WinPos.flags & SWP_SHOWWINDOW)
    {
-      if ((Window->ExStyle & WS_EX_APPWINDOW) ||
+      if (Window->style & WS_CHILD)
+      {
+         if ((Window->style & WS_POPUP) && (Window->ExStyle & WS_EX_APPWINDOW))
+         {
+            co_IntShellHookNotify(HSHELL_WINDOWCREATED, (WPARAM)Window->head.h, 0);
+            if (!(WinPos.flags & SWP_NOACTIVATE))
+               UpdateShellHook(Window);
+         }
+      }
+      else if ((Window->ExStyle & WS_EX_APPWINDOW) ||
           (!(Window->ExStyle & WS_EX_TOOLWINDOW) && !Window->spwndOwner &&
            (!Window->spwndParent || UserIsDesktopWindow(Window->spwndParent))))
       {
