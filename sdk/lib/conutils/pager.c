@@ -2,8 +2,7 @@
  * PROJECT:     ReactOS Console Utilities Library
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Console/terminal paging functionality.
- * COPYRIGHT:   Copyright 2017-2018 ReactOS Team
- *              Copyright 2017-2018 Hermes Belusca-Maito
+ * COPYRIGHT:   Copyright 2017-2021 Hermes Belusca-Maito
  *              Copyright 2021 Katayama Hirofumi MZ
  */
 
@@ -83,9 +82,9 @@ ConPagerDefaultAction(IN PCON_PAGER Pager)
     const DWORD ScrollRows = Pager->ScrollRows;
     const LONG nTabWidth = Pager->nTabWidth;
     DWORD ichLast = ich;
-    UINT nWidthOfChar = 1;
     UINT nCodePage;
-    BOOL IsCJK = FALSE;
+    BOOL IsCJK;
+    UINT nWidthOfChar = 1;
     BOOL IsDoubleWidthCharTrailing = FALSE;
 
     if (ich >= cch)
@@ -120,6 +119,7 @@ ExpandTab:
                                         ((iColumn + 1) % ScreenColumns == 0);
         }
 
+        /* TAB character */
         if (TextBuff[ich] == TEXT('\t') &&
             (Pager->dwFlags & CON_PAGER_FLAG_EXPAND_TABS))
         {
@@ -134,6 +134,7 @@ ExpandTab:
             goto ExpandTab;
         }
 
+        /* NEWLINE character */
         if (TextBuff[ich] == TEXT('\n'))
         {
             ConCallPagerLine(Pager, &TextBuff[ichLast], ich - ichLast + 1);
@@ -144,6 +145,8 @@ ExpandTab:
             iColumn = 0;
             continue;
         }
+
+        /* Other character - Handle double-width for CJK */
 
         if ((iColumn + nWidthOfChar) % ScreenColumns == 0)
         {
@@ -182,7 +185,7 @@ ExpandTab:
     Pager->iLine = iLine;
     Pager->lineno = lineno;
 
-    return ich >= cch;
+    return (ich >= cch);
 }
 
 /* Returns TRUE when all the text is displayed, and FALSE if display is stopped */
@@ -202,9 +205,10 @@ ConWritePaging(
 
     if (StartPaging)
     {
-        Pager->iLine = 0; /* Reset the output line count */
-        Pager->iColumn = 0; /* Reset the column index */
-        Pager->lineno = 1; /* Reset the line number */
+        /* Reset the output line count, the column index and the line number */
+        Pager->iLine = 0;
+        Pager->iColumn = 0;
+        Pager->lineno = 1;
         Pager->nSpacePending = 0;
     }
 
@@ -237,7 +241,7 @@ ConWritePaging(
 
     while (!ConPagerDefaultAction(Pager))
     {
-        /* Recalculate the screen extent in case the user redimensions the window. */
+        /* Recalculate the screen extent in case the user redimensions the window */
         if (ConGetScreenInfo(Pager->Screen, &csbi))
         {
             Pager->ScreenColumns = csbi.srWindow.Right - csbi.srWindow.Left + 1;

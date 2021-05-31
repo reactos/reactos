@@ -2,8 +2,8 @@
  * PROJECT:     ReactOS Console Utilities Library
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Console/terminal paging functionality.
- * COPYRIGHT:   Copyright 2017-2018 ReactOS Team
- *              Copyright 2017-2018 Hermes Belusca-Maito
+ * COPYRIGHT:   Copyright 2017-2021 Hermes Belusca-Maito
+ *              Copyright 2021 Katayama Hirofumi MZ
  */
 
 /**
@@ -46,12 +46,12 @@ typedef struct _CON_PAGER
     DWORD ScrollRows;
     CON_PAGER_LINE_FN PagerLine; /* The line function */
     PCTCH TextBuff; /* The text buffer */
-    DWORD ich; /* The current index of character */
-    DWORD cch; /* The total number of characters */
-    DWORD iColumn; /* The current index of column */
-    DWORD iLine; /* The physical output line count of screen */
-    DWORD lineno; /* The logical line number */
-    DWORD dwFlags; /* The CON_PAGER_FLAG_... flags */
+    DWORD ich;      /* The current index of character */
+    DWORD cch;      /* The total number of characters */
+    DWORD iColumn;  /* The current index of column */
+    DWORD iLine;    /* The physical output line count of screen */
+    DWORD lineno;   /* The logical line number */
+    DWORD dwFlags;  /* The CON_PAGER_FLAG_... flags */
     LONG nTabWidth;
     DWORD nSpacePending;
 } CON_PAGER, *PCON_PAGER;
