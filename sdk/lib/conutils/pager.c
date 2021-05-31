@@ -147,6 +147,25 @@ ExpandTab:
             continue;
         }
 
+        /* FORM-FEED character */
+        if (TextBuff[ich] == TEXT('\f') &&
+            (Pager->dwFlags & CON_PAGER_FLAG_EXPAND_FF))
+        {
+            /* Skip the form-feed and clear until the end of the screen */
+            ConCallPagerLine(Pager, &TextBuff[ichLast], ich - ichLast);
+            ichLast = ich + 1;
+            // FIXME: Should we handle CON_PAGER_FLAG_DONT_OUTPUT ?
+            while (iLine < ScrollRows)
+            {
+                ConCallPagerLine(Pager, L"\n", 1);
+                // CON_STREAM_WRITE(Pager->Screen->Stream, TEXT("\n"), 1);
+                // if (!(Pager->dwFlags & CON_PAGER_FLAG_DONT_OUTPUT))
+                ++iLine;
+            }
+            iColumn = 0;
+            continue;
+        }
+
         /* Other character - Handle double-width for CJK */
 
         if (IsCJK)

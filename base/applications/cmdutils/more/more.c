@@ -935,6 +935,8 @@ int wmain(int argc, WCHAR* argv[])
 
     Pager.PagerLine = MorePagerLine;
     Pager.dwFlags |= CON_PAGER_FLAG_EXPAND_TABS;
+    if (s_dwFlags & FLAG_P)
+        Pager.dwFlags |= CON_PAGER_FLAG_EXPAND_FF;
     Pager.nTabWidth = s_nTabWidth;
 
     /* Special case where we run 'MORE' without any argument: we use STDIN */

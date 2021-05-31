@@ -37,6 +37,7 @@ typedef BOOL (__stdcall *CON_PAGER_LINE_FN)(
 /* Flags for CON_PAGER */
 #define CON_PAGER_FLAG_DONT_OUTPUT (1 << 0)
 #define CON_PAGER_FLAG_EXPAND_TABS (1 << 1)
+#define CON_PAGER_FLAG_EXPAND_FF   (1 << 2)
 
 typedef struct _CON_PAGER
 {
