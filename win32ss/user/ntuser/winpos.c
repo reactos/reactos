@@ -2560,9 +2560,8 @@ co_WinPosShowWindow(PWND Wnd, INT Cmd)
          Swp |= SWP_NOACTIVATE | SWP_NOZORDER;
          /* Fall through. */
       case SW_SHOWMINIMIZED:
+      case SW_MINIMIZE: /* CORE-15669: SW_MINIMIZE also shows */
          Swp |= SWP_SHOWWINDOW;
-         /* Fall through. */
-      case SW_MINIMIZE:
          {
             Swp |= SWP_NOACTIVATE;
             if (!(style & WS_MINIMIZE))
@@ -2657,7 +2656,7 @@ co_WinPosShowWindow(PWND Wnd, INT Cmd)
 
       default:
          //ERR("co_WinPosShowWindow Exit Good 4\n");
-         return WasVisible;
+         return FALSE;
    }
 
    ShowFlag = (Cmd != SW_HIDE);
