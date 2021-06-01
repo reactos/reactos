@@ -540,6 +540,10 @@ MmCreateVirtualMappingUnsafe(PEPROCESS Process,
     /* Make sure our PDE is valid, and that everything is going fine */
     if (Process == NULL)
     {
+        /* We don't support this in legacy Mm for kernel mappings */
+        ASSERT(ProtectionMask != MM_WRITECOPY);
+        ASSERT(ProtectionMask != MM_EXECUTE_WRITECOPY);
+
         if (Address < MmSystemRangeStart)
         {
             DPRINT1("NULL process given for user-mode mapping at %p\n", Address);
@@ -567,14 +571,7 @@ MmCreateVirtualMappingUnsafe(PEPROCESS Process,
 
     PointerPte = MiAddressToPte(Address);
 
-    if (Address >= MmSystemRangeStart)
-    {
-        MI_MAKE_HARDWARE_PTE_KERNEL(&TempPte, PointerPte, ProtectionMask, Page);
-    }
-    else
-    {
-        MI_MAKE_HARDWARE_PTE_USER(&TempPte, PointerPte, ProtectionMask, Page);
-    }
+    MI_MAKE_HARDWARE_PTE(&TempPte, PointerPte, ProtectionMask, Page);
 
     Pte = InterlockedExchangePte(PointerPte, TempPte.u.Long);
     /* There should not have been anything valid here */
@@ -710,7 +707,18 @@ MmSetPageProtect(PEPROCESS Process, PVOID Address, ULONG flProtect)
 
     PointerPte = MiAddressToPte(Address);
 
-    MI_MAKE_HARDWARE_PTE_USER(&TempPte, PointerPte, ProtectionMask, PFN_FROM_PTE(PointerPte));
+    /* Sanity check */
+    ASSERT(PointerPte->u.Hard.Owner == 1);
+
+    TempPte.u.Long = 0;
+    TempPte.u.Hard.PageFrameNumber = PointerPte->u.Hard.PageFrameNumber;
+    TempPte.u.Long |= MmProtectToPteMask[ProtectionMask];
+    TempPte.u.Hard.Owner = 1;
+
+    /* Only set valid bit if we have to */
+    if ((ProtectionMask != MM_NOACCESS) && !FlagOn(ProtectionMask, MM_GUARDPAGE))
+        TempPte.u.Hard.Valid = 1;
+
     /* Keep dirty & accessed bits */
     TempPte.u.Hard.Accessed = PointerPte->u.Hard.Accessed;
     TempPte.u.Hard.Dirty = PointerPte->u.Hard.Dirty;

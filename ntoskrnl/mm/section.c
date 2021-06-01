@@ -1474,7 +1474,7 @@ MmAlterViewAttributes(PMMSUPPORT AddressSpace,
              * If we doing COW for this segment then check if the page is
              * already private.
              */
-            if (DoCOW && MmIsPagePresent(Process, Address))
+            if (DoCOW && (MmIsPagePresent(Process, Address) || MmIsDisabledPage(Process, Address)))
             {
                 LARGE_INTEGER Offset;
                 ULONG_PTR Entry;
