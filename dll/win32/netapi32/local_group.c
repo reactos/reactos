@@ -1070,7 +1070,10 @@ NetLocalGroupEnum(
             TRACE("SamEnumerateAliasesInDomain returned (Status %08lx)\n", Status);
             if (!NT_SUCCESS(Status))
             {
-                ERR("SamEnumerateAliasesInDomain failed (Status %08lx)\n", Status);
+                if (Status != STATUS_NO_MORE_ENTRIES)
+                {
+                    ERR("SamEnumerateAliasesInDomain() failed (Status 0x%08lx)\n", Status);
+                }
                 ApiStatus = NetpNtStatusToApiStatus(Status);
                 goto done;
             }
