@@ -1,15 +1,15 @@
 /*
  *      Updated by Saibamen (July, 2015)
  *      Updated by BlackDragonDv (January, 2018)
- *      Updated by Piotr Hetnarowicz <piotrhwz@gmail.com> (February, 2021)
+ *      Updated by Piotr Hetnarowicz <piotrhwz@gmail.com> (May, 2021)
  */
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 
 MENU_001 MENUEX
 BEGIN
-    MENUITEM "&Duże Ikony", FCIDM_SHVIEW_BIGICON
-    MENUITEM "&Małe Ikony", FCIDM_SHVIEW_SMALLICON
+    MENUITEM "&Duże ikony", FCIDM_SHVIEW_BIGICON
+    MENUITEM "&Małe ikony", FCIDM_SHVIEW_SMALLICON
     MENUITEM "&Lista", FCIDM_SHVIEW_LISTVIEW
     MENUITEM "&Szczegóły", FCIDM_SHVIEW_REPORTVIEW
     MENUITEM "", -1, MFT_SEPARATOR
@@ -28,8 +28,8 @@ BEGIN
     BEGIN
         POPUP "&Widok", FCIDM_SHVIEW_VIEW
         BEGIN
-            MENUITEM "&Duże Ikony", FCIDM_SHVIEW_BIGICON
-            MENUITEM "&Małe Ikony", FCIDM_SHVIEW_SMALLICON
+            MENUITEM "&Duże ikony", FCIDM_SHVIEW_BIGICON
+            MENUITEM "&Małe ikony", FCIDM_SHVIEW_SMALLICON
             MENUITEM "&Lista", FCIDM_SHVIEW_LISTVIEW
             MENUITEM "&Szczegóły", FCIDM_SHVIEW_REPORTVIEW
         END
@@ -784,8 +784,8 @@ BEGIN
     IDS_ABOUT_VERSION_STRING "Wersja %S (%S)"
 
     /* context menus */
-    IDS_VIEW_LARGE "&Duże Ikony"
-    IDS_VIEW_SMALL "&Małe Ikony"
+    IDS_VIEW_LARGE "&Duże ikony"
+    IDS_VIEW_SMALL "&Małe ikony"
     IDS_VIEW_LIST "&Lista"
     IDS_VIEW_DETAILS "&Szczegóły"
     IDS_SELECT "Zaznacz"
@@ -846,8 +846,8 @@ BEGIN
     IDS_FORMAT_COMPLETE "Formatowanie zakończone."
 
     /* Warning format system drive dialog strings */
-    IDS_NO_FORMAT_TITLE "Cannot format this volume"
-    IDS_NO_FORMAT "This volume cannot be formatted! It contains important system files in order for ReactOS to run."
+    IDS_NO_FORMAT_TITLE "Nie można sformatować tego dysku"
+    IDS_NO_FORMAT "Nie można sformatować tego dysku! Zawiera ważne pliki systemowe wymagane do uruchamiania i pracy systemu ReactOS."
 
     /* Run File dialog */
     IDS_RUNDLG_ERROR "Nie można wyświetlić okna Uruchom (błąd wewnętrzny)"
@@ -981,8 +981,8 @@ BEGIN
     IDS_EXE_DESCRIPTION "Opis:"
 
     IDS_MENU_EMPTY "(Puste)"
-    IDS_OBJECTS "%d Obiektów"
-    IDS_OBJECTS_SELECTED "%d Zaznaczonych obiektów"
+    IDS_OBJECTS "Elementów: %d"
+    IDS_OBJECTS_SELECTED "Zaznaczonych elementów: %d"
 
     IDS_ADVANCED_FOLDER "Pliki i Foldery"
     IDS_ADVANCED_NET_CRAWLER "Automatycznie wyszukuj foldery sieciowe i drukarki"
@@ -1036,5 +1036,5 @@ BEGIN
     IDS_LOG_OFF_DESC "Zamyka programy i kończy sesję systemu ReactOS."
     IDS_SWITCH_USER_DESC "Umożliwia innemu użytkownikowi zalogowanie się, podczas gdy Twoje programy i pliki są otwarte.\r\n\r\n(Możesz także przełączać użytkowników naciskając klawisze logo + L.)"
     IDS_LOG_OFF_TITLE "Wyloguj"
-    IDS_SWITCH_USER_TITLE "Switch User"
+    IDS_SWITCH_USER_TITLE "Przełącz użytkownika"
 END
