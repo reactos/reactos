@@ -39,15 +39,15 @@ BEGIN
         MENUITEM "", -1, MFT_SEPARATOR
         POPUP "&Programy", IDM_PROGRAMS
         BEGIN
-            MENUITEM "(Pusty)", -1, MFT_STRING, MFS_GRAYED
+            MENUITEM "(Puste)", -1, MFT_STRING, MFS_GRAYED
         END
         POPUP "&Ulubione", IDM_FAVORITES
         BEGIN
-            MENUITEM "(Pusty)", -1, MFT_STRING, MFS_GRAYED
+            MENUITEM "(Puste)", -1, MFT_STRING, MFS_GRAYED
         END
         POPUP "&Dokumenty", IDM_DOCUMENTS
         BEGIN
-            MENUITEM "(Pusty)", -1, MFT_STRING, MFS_GRAYED
+            MENUITEM "(Puste)", -1, MFT_STRING, MFS_GRAYED
         END
         POPUP "Us&tawienia", IDM_SETTINGS
         BEGIN
@@ -58,15 +58,15 @@ BEGIN
             MENUITEM "&Drukarki i faksy", IDM_PRINTERSANDFAXES, MFT_STRING, MFS_ENABLED
             MENUITEM "P&asek zadań i menu Start", IDM_TASKBARANDSTARTMENU, MFT_STRING, MFS_ENABLED
         END
-        MENUITEM "&Szukaj", IDM_SEARCH, MFT_STRING, MFS_ENABLED
-        MENUITEM "Po&moc", IDM_HELPANDSUPPORT, MFT_STRING, MFS_ENABLED
+        MENUITEM "Wy&szukaj", IDM_SEARCH, MFT_STRING, MFS_ENABLED
+        MENUITEM "Po&moc i obsługa techniczna", IDM_HELPANDSUPPORT, MFT_STRING, MFS_ENABLED
         MENUITEM "&Uruchom...", IDM_RUN, MFT_STRING, MFS_ENABLED
         MENUITEM "", 450, MFT_SEPARATOR, MFS_ENABLED
         MENUITEM "S&ynchronizuj", IDM_SYNCHRONIZE, MFT_STRING, MFS_ENABLED
         MENUITEM "&Wyloguj %s...", IDM_LOGOFF, MFT_STRING, MFS_ENABLED
         MENUITEM "&Rozłącz...", IDM_DISCONNECT, MFT_STRING, MFS_ENABLED
         MENUITEM "Oddokuj &komputer", IDM_UNDOCKCOMPUTER, MFT_STRING, MFS_ENABLED
-        MENUITEM "&Zamknij system...", IDM_SHUTDOWN, MFT_STRING, MFS_ENABLED
+        MENUITEM "&Zamknij...", IDM_SHUTDOWN, MFT_STRING, MFS_ENABLED
     END
 END
 
@@ -84,8 +84,8 @@ BEGIN
     AUTOCHECKBOX "Pokaż pasek &Szybkiego uruchamiania", IDC_TASKBARPROP_SHOWQL, 13, 97, 200, 10
     GROUPBOX "Pasek powiadomień", IDC_STATIC, 6, 114, 240, 96
     CONTROL "", IDC_TASKBARPROP_NOTIFICATIONBITMAP, "Static", SS_BITMAP | SS_SUNKEN | SS_CENTERIMAGE, 12, 126, 229, 24
-    AUTOCHECKBOX "&Zegar", IDC_TASKBARPROP_CLOCK, 13, 153, 80, 10
-    AUTOCHECKBOX "Pokazuj sekundy", IDC_TASKBARPROP_SECONDS, 120, 153, 80, 10, WS_DISABLED
+    AUTOCHECKBOX "Pokaż &zegar", IDC_TASKBARPROP_CLOCK, 13, 153, 80, 10
+    AUTOCHECKBOX "Pokaż sekundy", IDC_TASKBARPROP_SECONDS, 120, 153, 80, 10, WS_DISABLED
     LTEXT "Możesz uporządkować obszar powiadomień poprzez ukrycie rzadko używanych ikon.", IDC_STATIC, 13, 169, 223, 16
     AUTOCHECKBOX "&Ukryj nieaktywne ikony", IDC_TASKBARPROP_HIDEICONS, 13, 191, 125, 10
     PUSHBUTTON "&Dostosuj...", IDC_TASKBARPROP_ICONCUST, 188, 191, 50, 14
@@ -111,7 +111,7 @@ EXSTYLE WS_EX_CONTEXTHELP
 CAPTION "Dostosuj powiadomienia"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT            "Domyślnie ReactOS wyświetla ikony aktywnych i ważnych powiadomień, ukrywając te nieaktywne. Możesz zmienić to zachowanie lub wybrać elementy korzystając z poniższej listy.", IDC_STATIC, 6, 6, 220, 30
+    LTEXT            "System ReactOS wyświetla ikony dla powiadomień aktywnych i ważnych oraz ukrywa ikony powiadomień nieaktywnych. Możesz zmienić to zachowanie dla elementów wyświetlonych na poniższej liście.", IDC_STATIC, 6, 6, 220, 32
     LTEXT            "Zaznacz element, a następnie wybierz zachowanie powiadomienia:", IDC_STATIC, 6, 40, 220, 10
     CONTROL          "", IDC_NOTIFICATION_LIST, "SysListView32", WS_CLIPSIBLINGS | WS_BORDER | 0x00008005, 6, 50, 220, 128
     COMBOBOX         IDC_NOTIFICATION_BEHAVIOUR, 103, 178, 78, 200, CBS_DROPDOWNLIST | NOT WS_VISIBLE | WS_CLIPSIBLINGS
@@ -151,7 +151,7 @@ BEGIN
     LTEXT            "", IDC_STATIC, 7, 51, 258, 1, NOT WS_GROUP
     AUTOCHECKBOX     "&Nie sprawdzaj tego przy starcie systemu", IDC_NOTCHECK, 7, 62, 139, 10
     ICON             32515, IDC_STATIC, 7, 7, 21, 20
-    LTEXT            "Na Twoim komputerze znajduje się plik folderu o nazwie %s , który może spowodować nieprawidłowe działanie niektórych aplikacji.  Zmienienie nazwy na %s rozwiązało by ten problem.  Czy chcesz teraz zmienić nazwę tego pliku?", IDC_STATIC, 34, 7, 224, 37
+    LTEXT            "Na tym komputerze znajduje się plik folderu o nazwie %s, który może powodować nieprawidłowe działanie niektórych aplikacji.  Zmiana jego nazwy na %s może rozwiązać ten problem.  Czy chcesz teraz zmienić jego nazwę?", IDC_STATIC, 34, 7, 224, 37
 END
 
 IDD_MODERNSTART_ADVANCED DIALOGEX 0, 0, 251, 198, 0
@@ -162,11 +162,11 @@ BEGIN
     GROUPBOX         "Ustawienia menu Start ", IDC_STATIC, 7, 7, 238, 42
     AUTOCHECKBOX     "&Otwieraj podmenu po zatrzymaniu na nich wskaźnika myszy", IDC_AUTOOPEN, 14, 21, 224, 10
     AUTOCHECKBOX     "Wyróżnij &nowo zainstalowane programy", IDC_HIGHLIGHT, 14, 35, 224, 10
-    LTEXT            "Elementy %menu Start:", IDC_STATIC, 7, 53, 238, 8
+    LTEXT            "Elementy menu Start:", IDC_STATIC, 7, 53, 238, 8
     CONTROL          "StartMenuSe&ttings", IDC_ITEMS, "SysTreeView32", WS_BORDER | 0x00000001, 7, 63, 238, 67, WS_EX_CLIENTEDGE
     GROUPBOX         "Niedawno używane dokumenty ", IDC_STATIC, 7, 133, 238, 56
     LTEXT            "Zaznacz tę opcję, aby zapewnić szybki dostęp do niedawno otwieranych dokumentów.  Wyczyszczenie tej listy nie powoduje usunięcia dokumentów.", IDC_STATIC, 14, 144, 224, 21
-    AUTOCHECKBOX     "Wyczyść &moje ostatnio otwierane dokumenty", IDC_RECENTLY, 14, 168, 147, 10
+    AUTOCHECKBOX     "Wyświetl moje ostatnio otwierane dokumenty", IDC_RECENTLY, 14, 171, 162, 10
     PUSHBUTTON       "Wy&czyść listę", IDC_CLEAR, 182, 168, 55, 14
 END
 
@@ -181,7 +181,7 @@ BEGIN
     AUTORADIOBUTTON  "&Duże ikony", IDC_CHOOSELARGE, 43, 25, 53, 10
     AUTORADIOBUTTON  "&Małe ikony", IDC_CHOOSESMALL, 177, 25, 51, 10, NOT WS_TABSTOP
     GROUPBOX         "Programy ", IDC_STATIC, 7, 49, 238, 70
-    LTEXT            "Menu Start zawiera skróty do najczęściej używanych programów. Wyczyszczenie tej listy nie spowoduje usunięcia programów.", IDC_STATIC, 14, 63, 224, 20
+    LTEXT            "Menu Start zawiera skróty do najczęściej używanych programów. Wyczyszczenie tej listy nie spowoduje usunięcia programów.", IDC_STATIC, 14, 63, 224, 24
     LTEXT            "Liczba programów w me&nu Start:", IDC_STATIC, 14, 86, 112, 8
     EDITTEXT         IDC_NUMBEROFPROGRAMS, 133, 84, 27, 12, ES_LEFT | ES_RIGHT | ES_NUMBER
     CONTROL          "", IDC_NUMBERUPDOWN, "msctls_updown32", WS_BORDER | 0x000000B6, 160, 84, 11, 12
@@ -197,8 +197,8 @@ STRINGTABLE
 BEGIN
     IDS_START "Start"
     IDS_PROPERTIES "Właś&ciwości"
-    IDS_OPEN_ALL_USERS "&Otwórz - wszyscy użytkownicy"
-    IDS_EXPLORE_ALL_USERS "&Eksploruj - wszyscy użytkownicy"
+    IDS_OPEN_ALL_USERS "&Otwórz - wszystkich użytkowników"
+    IDS_EXPLORE_ALL_USERS "&Eksploruj - wszystkich użytkowników"
     IDS_STARTUP_ERROR "System nie może uruchomić eksploratora, ponieważ rejestr jest niedostępny lub uszkodzony."
 END
 
