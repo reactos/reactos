@@ -5,7 +5,6 @@ list(APPEND MINI_HAL_SOURCE
     ../legacy/bus/cmosbus.c
     ../legacy/bus/isabus.c
     ../legacy/bus/pcibus.c
-    ../legacy/bus/sysbus.c
     ../legacy/bussupp.c
     ../generic/bios.c
     ../generic/dma.c
