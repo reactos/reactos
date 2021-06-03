@@ -1132,7 +1132,7 @@ HRESULT WINAPI SHEmptyRecycleBinW(HWND hwnd, LPCWSTR pszRootPath, DWORD dwFlags)
         if (ret != ERROR_SUCCESS)
             return S_OK;
 
-        if (dwType != REG_EXPAND_SZ || dwType != REG_SZ) /* type dismatch */
+        if (dwType != REG_SZ || dwType != REG_EXPAND_SZ) /* Check whether the type is valid */
             return S_OK;
 
         szPath[_countof(szPath)-1] = L'\0';
