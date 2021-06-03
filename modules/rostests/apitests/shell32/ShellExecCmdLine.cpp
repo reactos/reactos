@@ -59,6 +59,9 @@ HRESULT WINAPI ShellExecCmdLine(
         RaiseException(EXCEPTION_ACCESS_VIOLATION, EXCEPTION_NONCONTINUABLE,
                        1, (ULONG_PTR*)pwszCommand);
 
+    if (pwszStartDir && *pwszStartDir == 0)
+        pwszStartDir = NULL;
+
     __SHCloneStrW(&lpCommand, pwszCommand);
     PathRemoveBlanksW(lpCommand);
 
@@ -91,15 +94,23 @@ HRESULT WINAPI ShellExecCmdLine(
     }
     else
     {
+        WCHAR szFile2[MAX_PATH];
+        LPCWSTR dirs[] = { pwszStartDir, NULL };
+        BOOL b0 = PathFileExistsW(lpCommand);
+        BOOL b1 = (INT_PTR)FindExecutableW(szFile, NULL, szFile2) > 32;
+        BOOL b2 = (INT_PTR)FindExecutableW(szFile, pwszStartDir, szFile2) > 32;
+
         pchParams = PathGetArgsW(lpCommand);
         PathRemoveArgsW(lpCommand);
         PathUnquoteSpacesW(lpCommand);
         StringCchCopyW(szFile, _countof(szFile), lpCommand);
 
-        if (PathIsRootW(szFile))
-        {
-            PathAddBackslashW(szFile);
-        }
+        StringCchCopyW(szFile2, _countof(szFile2), szFile);
+
+        BOOL b3 = PathFindOnPathExW(szFile, NULL, 0xFF);
+        BOOL b4 = PathFindOnPathExW(szFile2, dirs, 0xFF);
+        BOOL b5 = !!(dwSeclFlags & SECL_ALLOW_NONEXE);
+        printf("%d<>%d<>%d<>%d<>%d<>%d\n", b0, b1, b2, b3, b4, b5);
     }
 
     ZeroMemory(&info, sizeof(info));
@@ -109,7 +120,7 @@ HRESULT WINAPI ShellExecCmdLine(
     info.lpVerb = pszVerb;
     info.lpFile = szFile;
     info.lpParameters = (pchParams && *pchParams) ? pchParams : NULL;
-    info.lpDirectory = (pwszStartDir && *pwszStartDir) ? pwszStartDir : NULL;
+    info.lpDirectory = pwszStartDir;
     info.nShow = nShow;
     if (ShellExecuteExW(&info))
     {
