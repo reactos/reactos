@@ -519,7 +519,7 @@ HalpSetPCIData(IN PBUS_HANDLER BusHandler,
     /* Update the total length read */
     return Len;
 }
-
+#ifndef _MINIHAL_
 ULONG
 NTAPI
 HalpGetPCIIntOnISABus(IN PBUS_HANDLER BusHandler,
@@ -540,6 +540,7 @@ HalpGetPCIIntOnISABus(IN PBUS_HANDLER BusHandler,
                                  Irql,
                                  Affinity);
 }
+#endif // _MINIHAL_
 
 VOID
 NTAPI
@@ -562,6 +563,7 @@ HalpPCIISALine2Pin(IN PBUS_HANDLER BusHandler,
     UNIMPLEMENTED_DBGBREAK();
 }
 
+#ifndef _MINIHAL_
 NTSTATUS
 NTAPI
 HalpGetISAFixedPCIIrq(IN PBUS_HANDLER BusHandler,
@@ -654,6 +656,7 @@ HalpRegisterPciDebuggingDeviceInfo(VOID)
     UNIMPLEMENTED_DBGBREAK("You have implemented the KD routines for searching PCI debugger"
                            "devices, but you have forgotten to implement this routine\n");
 }
+#endif // _MINIHAL_
 
 static ULONG NTAPI
 PciSize(ULONG Base, ULONG Mask)

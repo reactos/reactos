@@ -152,6 +152,7 @@ HalpAllocateBusHandler(IN INTERFACE_TYPE InterfaceType,
     return Bus;
 }
 
+#ifndef _MINIHAL_
 CODE_SEG("INIT")
 VOID
 NTAPI
@@ -225,6 +226,7 @@ HalpRegisterInternalBusHandlers(VOID)
     /* No support for EISA or MCA */
     ASSERT(HalpBusType == MACHINE_TYPE_ISA);
 }
+#endif // _MINIHAL_
 
 #ifndef _MINIHAL_
 CODE_SEG("INIT")
@@ -1230,6 +1232,7 @@ HalpInitializePciBus(VOID)
 #endif
 }
 
+#ifndef _MINIHAL_
 CODE_SEG("INIT")
 VOID
 NTAPI
@@ -1262,6 +1265,7 @@ HalpRegisterKdSupportFunctions(VOID)
     /* Register ACPI stub */
     KdCheckPowerButton = HalpCheckPowerButton;
 }
+#endif // _MINIHAL_
 
 NTSTATUS
 NTAPI
@@ -1405,6 +1409,7 @@ HaliTranslateBusAddress(IN INTERFACE_TYPE InterfaceType,
 
 /* PUBLIC FUNCTIONS **********************************************************/
 
+#ifndef _MINIHAL_
 /*
  * @implemented
  */
@@ -1430,6 +1435,7 @@ HalAdjustResourceList(IN PIO_RESOURCE_REQUIREMENTS_LIST *ResourceList)
     HalDereferenceBusHandler(Handler);
     return Status;
 }
+#endif // _MINIHAL_
 
 /*
  * @implemented
@@ -1474,6 +1480,7 @@ HalAssignSlotResources(IN PUNICODE_STRING RegistryPath,
     }
 }
 
+#ifndef _MINIHAL_
 /*
  * @implemented
  */
@@ -1493,6 +1500,7 @@ HalGetBusData(IN BUS_DATA_TYPE BusDataType,
                                  0,
                                  Length);
 }
+#endif // _MINIHAL_
 
 /*
  * @implemented
@@ -1526,6 +1534,7 @@ HalGetBusDataByOffset(IN BUS_DATA_TYPE BusDataType,
     return Status;
 }
 
+#ifndef _MINIHAL_
 /*
  * @implemented
  */
@@ -1623,6 +1632,7 @@ HalSetBusDataByOffset(IN BUS_DATA_TYPE BusDataType,
     HalDereferenceBusHandler(Handler);
     return Status;
 }
+#endif // _MINIHAL_
 
 /*
  * @implemented
