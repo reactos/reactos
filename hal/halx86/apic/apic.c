@@ -16,8 +16,6 @@
 #define NDEBUG
 #include <debug.h>
 
-void __cdecl HackEoi(void);
-
 #ifndef _M_AMD64
 //#define APIC_LAZY_IRQL //FIXME: Disabled due to bug.
 #endif
@@ -155,8 +153,7 @@ FORCEINLINE
 VOID
 ApicSendEOI(void)
 {
-    //ApicWrite(APIC_EOI, 0);
-    HackEoi();
+    ApicWrite(APIC_EOI, 0);
 }
 
 FORCEINLINE
@@ -174,15 +171,9 @@ ApicGetCurrentIrql(VOID)
 #ifdef _M_AMD64
     return (KIRQL)__readcr8();
 #elif defined(APIC_LAZY_IRQL)
-    // HACK: some magic to Sync VBox's APIC registers
-    ApicRead(APIC_VER);
-
     /* Return the field in the PCR */
     return (KIRQL)__readfsbyte(FIELD_OFFSET(KPCR, Irql));
 #else
-    // HACK: some magic to Sync VBox's APIC registers
-    ApicRead(APIC_VER);
-
     /* Read the TPR and convert it to an IRQL */
     return TprToIrql(ApicRead(APIC_TPR));
 #endif
