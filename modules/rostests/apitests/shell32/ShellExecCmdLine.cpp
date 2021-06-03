@@ -7,6 +7,7 @@
 #include "shelltest.h"
 #include <shlwapi.h>
 #include <strsafe.h>
+#include <shlwapi_undoc.h>
 #include <versionhelpers.h>
 
 #define NDEBUG
