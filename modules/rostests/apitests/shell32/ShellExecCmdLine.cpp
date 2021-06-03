@@ -253,7 +253,6 @@ typedef struct TEST_ENTRY
 
 static const char s_testfile1[] = "Test File.txt";
 static const char s_testfile2[] = "Test File.bat";
-static char s_notepad[] = "notepad.exe";
 
 static const TEST_ENTRY s_entries[] =
 {
@@ -402,15 +401,17 @@ static const TEST_ENTRY s_entries[] =
     // Control Panel
     { __LINE__, S_OK, TRUE, NULL, L"::{5399E694-6CE5-4D6C-8FCE-1D8870FDCBA0}", NULL },
     { __LINE__, S_OK, TRUE, NULL, L"shell:::{5399E694-6CE5-4D6C-8FCE-1D8870FDCBA0}", NULL },
+    // shell:sendto
+    { __LINE__, S_OK, TRUE, NULL, L"shell:sendto", NULL },
 };
 
-static BOOL CloseNotepads(BOOL bRetry, INT nCount = 10)
+static BOOL CloseAppWindows(LPCWSTR pwszWindowClass, BOOL bRetry, INT nCount = 10)
 {
 #define INTERVAL 100
     BOOL bFound = FALSE;
     for (INT i = 0; i < nCount; ++i)
     {
-        HWND hwnd = FindWindowW(L"Notepad", NULL);
+        HWND hwnd = FindWindowW(pwszWindowClass, NULL);
         if (!hwnd)
         {
             if (!bRetry)
@@ -466,7 +467,7 @@ static void DoEntry(const TEST_ENTRY *pEntry)
 
     if (SUCCEEDED(hr) && pEntry->pwszWindowClass)
     {
-        BOOL bFound = CloseNotepads(TRUE);
+        BOOL bFound = CloseAppWindows(pEntry->pwszWindowClass, TRUE);
         ok(bFound, "Line %d: The window not found\n", pEntry->lineno);
     }
 }
@@ -492,7 +493,7 @@ START_TEST(ShellExecCmdLine)
         }
     }
 
-    CloseNotepads(FALSE);
+    CloseAppWindows(L"Notepad", FALSE);
 
     // s_testfile1
     FILE *fp = fopen(s_testfile1, "wb");
@@ -576,63 +577,8 @@ START_TEST(ShellExecCmdLine)
         DoEntry(&additionals2[i]);
     }
 
-    char path[MAX_PATH];
-    ok((INT_PTR)FindExecutableA("notepad.exe", NULL, s_notepad) >= 32, "FindExecutableA failed\n");
-    ok(GetModuleFileNameA(NULL, path, _countof(path)), "GetModuleFileNameA failed\n");
-    char *pch = strrchr(path, '\\');
-
-    if (pch == NULL)
-    {
-        skip("pch == NULL\n");
-    }
-    else
-    {
-        // create "My Directory"
-        strcpy(pch, "\\My Directory");
-        if (GetFileAttributesA(path) == INVALID_FILE_ATTRIBUTES)
-            ok(CreateDirectoryA(path, NULL), "CreateDirectoryA failed\n");
-
-        // create "My Directory\\Notepad.exe" as clone of Notepad.exe
-        strcpy(pch, "\\My Directory\\Notepad.exe");
-        ok(CopyFileA(s_notepad, path, FALSE), "CopyFileA failed\n");
-
-        wsprintfW(buf0, L"%hs", path);
-        wsprintfW(buf1, L"\"%hs\"", path);
-        wsprintfW(buf2, L"\"%hs\" \"Test File.txt\"", path);
-        TEST_ENTRY additionals3[] =
-        {
-            { __LINE__, S_OK, FALSE, NULL, buf0, NULL },
-            { __LINE__, S_OK, FALSE, NULL, buf0, L"." },
-            { __LINE__, S_OK, FALSE, NULL, buf0, L"system32" },
-            { __LINE__, S_OK, FALSE, NULL, buf1, NULL },
-            { __LINE__, S_OK, FALSE, NULL, buf1, L"." },
-            { __LINE__, S_OK, FALSE, NULL, buf1, L"system32" },
-            { __LINE__, S_OK, FALSE, NULL, buf2, NULL },
-            { __LINE__, S_OK, FALSE, NULL, buf2, L"." },
-            { __LINE__, S_OK, FALSE, NULL, buf2, L"system32" },
-            { __LINE__, S_OK, TRUE, NULL, buf0, NULL },
-            { __LINE__, S_OK, TRUE, NULL, buf0, L"." },
-            { __LINE__, S_OK, TRUE, NULL, buf0, L"system32" },
-            { __LINE__, S_OK, TRUE, NULL, buf1, NULL },
-            { __LINE__, S_OK, TRUE, NULL, buf1, L"." },
-            { __LINE__, S_OK, TRUE, NULL, buf1, L"system32" },
-            { __LINE__, S_OK, TRUE, NULL, buf2, NULL },
-            { __LINE__, S_OK, TRUE, NULL, buf2, L"." },
-            { __LINE__, S_OK, TRUE, NULL, buf2, L"system32" },
-        };
-        for (size_t i = 0; i < _countof(additionals3); ++i)
-        {
-            DoEntry(&additionals3[i]);
-        }
-
-        DeleteFileA(path);
-
-        strcpy(pch, "\\My Directory");
-        RemoveDirectory(path);
-    }
-
     // clean up
     ok(DeleteFileA(s_testfile1), "failed to delete the test file\n");
     ok(DeleteFileA(s_testfile2), "failed to delete the test file\n");
-    CloseNotepads(FALSE);
+    CloseAppWindows(L"Notepad", FALSE);
 }
