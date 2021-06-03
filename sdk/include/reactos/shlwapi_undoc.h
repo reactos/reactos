@@ -150,6 +150,8 @@ ShellMessageBoxWrapW(
   _In_ UINT fuStyle,
   ...);
 
+BOOL WINAPI PathFindOnPathExW(LPWSTR lpszFile, LPCWSTR *lppszOtherDirs, DWORD dwWhich);
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif /* defined(__cplusplus) */

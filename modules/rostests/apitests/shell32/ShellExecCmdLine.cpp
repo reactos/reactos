@@ -37,52 +37,6 @@ static __inline void __SHCloneStrW(WCHAR **target, const WCHAR *source)
 }
 
 // NOTE: You have to sync the following code to dll/win32/shell32/shlexec.cpp.
-static LPCWSTR
-SplitParams(LPCWSTR psz, LPWSTR pszArg0, size_t cchArg0)
-{
-    LPCWSTR pch;
-    size_t ich = 0;
-    if (*psz == L'"')
-    {
-        // 1st argument is quoted. the string in quotes is quoted 1st argument.
-        // [pch] --> [pszArg0+ich]
-        for (pch = psz + 1; *pch && ich + 1 < cchArg0; ++ich, ++pch)
-        {
-            if (*pch == L'"' && pch[1] == L'"')
-            {
-                // doubled double quotations found!
-                pszArg0[ich] = L'"';
-            }
-            else if (*pch == L'"')
-            {
-                // single double quotation found!
-                ++pch;
-                break;
-            }
-            else
-            {
-                // otherwise
-                pszArg0[ich] = *pch;
-            }
-        }
-    }
-    else
-    {
-        // 1st argument is unquoted. non-space sequence is 1st argument.
-        // [pch] --> [pszArg0+ich]
-        for (pch = psz; *pch && !iswspace(*pch) && ich + 1 < cchArg0; ++ich, ++pch)
-        {
-            pszArg0[ich] = *pch;
-        }
-    }
-    pszArg0[ich] = 0;
-
-    // skip space
-    while (iswspace(*pch))
-        ++pch;
-
-    return pch;
-}
 
 HRESULT WINAPI ShellExecCmdLine(
     HWND hwnd,
@@ -93,9 +47,9 @@ HRESULT WINAPI ShellExecCmdLine(
     DWORD dwSeclFlags)
 {
     SHELLEXECUTEINFOW info;
-    DWORD dwSize, dwError, dwType, dwFlags = SEE_MASK_DOENVSUBST | SEE_MASK_NOASYNC;
+    DWORD dwSize, dwError, dwFlags = SEE_MASK_DOENVSUBST | SEE_MASK_NOASYNC;
     LPCWSTR pszVerb = NULL;
-    WCHAR szFile[MAX_PATH], szFile2[MAX_PATH];
+    WCHAR szFile[MAX_PATH];
     HRESULT hr;
     LPCWSTR pchParams;
     LPWSTR lpCommand = NULL;
@@ -105,7 +59,7 @@ HRESULT WINAPI ShellExecCmdLine(
                        1, (ULONG_PTR*)pwszCommand);
 
     __SHCloneStrW(&lpCommand, pwszCommand);
-    StrTrimW(lpCommand, L" \t");
+    PathRemoveBlanksW(lpCommand);
 
     if (dwSeclFlags & SECL_NO_UI)
         dwFlags |= SEE_MASK_FLAG_NO_UI;
@@ -124,89 +78,26 @@ HRESULT WINAPI ShellExecCmdLine(
         }
     }
 
-    if (UrlIsFileUrlW(lpCommand))
+    dwSize = _countof(szFile);
+    if (UrlIsW(lpCommand, URLIS_URL))
     {
         StringCchCopyW(szFile, _countof(szFile), lpCommand);
         pchParams = NULL;
     }
+    else if (UrlApplySchemeW(lpCommand, szFile, &dwSize, URL_APPLY_GUESSSCHEME) == S_OK)
+    {
+        pchParams = NULL;
+    }
     else
     {
-        pchParams = SplitParams(lpCommand, szFile, _countof(szFile));
-        if (szFile[0] != UNICODE_NULL && szFile[1] == L':' &&
-            szFile[2] == UNICODE_NULL)
+        pchParams = PathGetArgsW(lpCommand);
+        PathRemoveArgsW(lpCommand);
+        PathUnquoteSpacesW(lpCommand);
+        StringCchCopyW(szFile, _countof(szFile), lpCommand);
+
+        if (PathIsRootW(szFile))
         {
             PathAddBackslashW(szFile);
-        }
-
-        WCHAR szCurDir[MAX_PATH];
-        GetCurrentDirectoryW(_countof(szCurDir), szCurDir);
-        if (pwszStartDir)
-        {
-            SetCurrentDirectoryW(pwszStartDir);
-        }
-
-        if (PathIsRelativeW(szFile) &&
-            GetFullPathNameW(szFile, _countof(szFile2), szFile2, NULL) &&
-            PathFileExistsW(szFile2))
-        {
-            StringCchCopyW(szFile, _countof(szFile), szFile2);
-        }
-        else if (SearchPathW(NULL, szFile, NULL, _countof(szFile2), szFile2, NULL) ||
-                 SearchPathW(NULL, szFile, wszExe, _countof(szFile2), szFile2, NULL) ||
-                 SearchPathW(NULL, szFile, wszCom, _countof(szFile2), szFile2, NULL) ||
-                 SearchPathW(pwszStartDir, szFile, NULL, _countof(szFile2), szFile2, NULL) ||
-                 SearchPathW(pwszStartDir, szFile, wszExe, _countof(szFile2), szFile2, NULL) ||
-                 SearchPathW(pwszStartDir, szFile, wszCom, _countof(szFile2), szFile2, NULL))
-        {
-            StringCchCopyW(szFile, _countof(szFile), szFile2);
-        }
-        else if (SearchPathW(NULL, lpCommand, NULL, _countof(szFile2), szFile2, NULL) ||
-                 SearchPathW(NULL, lpCommand, wszExe, _countof(szFile2), szFile2, NULL) ||
-                 SearchPathW(NULL, lpCommand, wszCom, _countof(szFile2), szFile2, NULL) ||
-                 SearchPathW(pwszStartDir, lpCommand, NULL, _countof(szFile2), szFile2, NULL) ||
-                 SearchPathW(pwszStartDir, lpCommand, wszExe, _countof(szFile2), szFile2, NULL) ||
-                 SearchPathW(pwszStartDir, lpCommand, wszCom, _countof(szFile2), szFile2, NULL))
-        {
-            StringCchCopyW(szFile, _countof(szFile), szFile2);
-            pchParams = NULL;
-        }
-
-        if (pwszStartDir)
-        {
-            SetCurrentDirectoryW(szCurDir);
-        }
-
-        if (!(dwSeclFlags & SECL_ALLOW_NONEXE))
-        {
-            if (!GetBinaryTypeW(szFile, &dwType))
-            {
-                SHFree(lpCommand);
-
-                if (!(dwSeclFlags & SECL_NO_UI))
-                {
-                    WCHAR szText[128 + MAX_PATH], szFormat[128];
-                    LoadStringW(shell32_hInstance, IDS_FILE_NOT_FOUND, szFormat, _countof(szFormat));
-                    StringCchPrintfW(szText, _countof(szText), szFormat, szFile);
-                    MessageBoxW(hwnd, szText, NULL, MB_ICONERROR);
-                }
-                return CO_E_APPNOTFOUND;
-            }
-        }
-        else
-        {
-            if (GetFileAttributesW(szFile) == INVALID_FILE_ATTRIBUTES)
-            {
-                SHFree(lpCommand);
-
-                if (!(dwSeclFlags & SECL_NO_UI))
-                {
-                    WCHAR szText[128 + MAX_PATH], szFormat[128];
-                    LoadStringW(shell32_hInstance, IDS_FILE_NOT_FOUND, szFormat, _countof(szFormat));
-                    StringCchPrintfW(szText, _countof(szText), szFormat, szFile);
-                    MessageBoxW(hwnd, szText, NULL, MB_ICONERROR);
-                }
-                return HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
-            }
         }
     }
 
@@ -217,7 +108,7 @@ HRESULT WINAPI ShellExecCmdLine(
     info.lpVerb = pszVerb;
     info.lpFile = szFile;
     info.lpParameters = (pchParams && *pchParams) ? pchParams : NULL;
-    info.lpDirectory = pwszStartDir;
+    info.lpDirectory = (pwszStartDir && *pwszStartDir) ? pwszStartDir : NULL;
     info.nShow = nShow;
     if (ShellExecuteExW(&info))
     {
