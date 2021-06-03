@@ -404,6 +404,35 @@ static const TEST_ENTRY s_entries[] =
     { __LINE__, S_OK, TRUE, NULL, L"shell:::{5399E694-6CE5-4D6C-8FCE-1D8870FDCBA0}", NULL },
 };
 
+static BOOL CloseNotepads(BOOL bRetry, INT nCount = 10)
+{
+#define INTERVAL 100
+    BOOL bFound = FALSE;
+    for (INT i = 0; i < nCount; ++i)
+    {
+        HWND hwnd = FindWindowW(L"Notepad", NULL);
+        if (!hwnd)
+        {
+            if (!bRetry)
+                break;
+            Sleep(INTERVAL);
+            continue;
+        }
+        bFound = TRUE;
+        HWND hwndPopup = GetLastActivePopup(hwnd);
+        if (hwndPopup && hwnd != hwndPopup)
+        {
+            PostMessageW(hwndPopup, WM_COMMAND, IDCANCEL, 0);
+            PostMessageW(hwndPopup, WM_COMMAND, IDNO, 0);
+            PostMessageW(hwndPopup, WM_CLOSE, 0, 0);
+        }
+        PostMessageW(hwnd, WM_CLOSE, 0, 0);
+        Sleep(INTERVAL);
+    }
+    return bFound;
+#undef INTERVAL
+}
+
 static void DoEntry(const TEST_ENTRY *pEntry)
 {
     HRESULT hr;
@@ -435,28 +464,11 @@ static void DoEntry(const TEST_ENTRY *pEntry)
 
     ok(hr == pEntry->hr, "Line %d: hr expected 0x%lX, was 0x%lX\n", pEntry->lineno, pEntry->hr, hr);
 
-#define RETRY_COUNT     5
-#define RETRY_INTERVAL  250
     if (SUCCEEDED(hr) && pEntry->pwszWindowClass)
     {
-        BOOL bFound = FALSE;
-        Sleep(RETRY_INTERVAL / 2);
-        for (int i = 0; i < RETRY_COUNT; ++i)
-        {
-            HWND hwnd = FindWindowW(pEntry->pwszWindowClass, NULL);
-            if (hwnd)
-            {
-                bFound = TRUE;
-                SendMessage(hwnd, WM_CLOSE, 0, 0);
-                Sleep(RETRY_INTERVAL);
-                break;
-            }
-            Sleep(RETRY_INTERVAL);
-        }
+        BOOL bFound = CloseNotepads(TRUE);
         ok(bFound, "Line %d: The window not found\n", pEntry->lineno);
     }
-#undef RETRY_COUNT
-#undef RETRY_INTERVAL
 }
 
 START_TEST(ShellExecCmdLine)
@@ -479,6 +491,8 @@ START_TEST(ShellExecCmdLine)
             return;
         }
     }
+
+    CloseNotepads(FALSE);
 
     // s_testfile1
     FILE *fp = fopen(s_testfile1, "wb");
@@ -620,4 +634,5 @@ START_TEST(ShellExecCmdLine)
     // clean up
     ok(DeleteFileA(s_testfile1), "failed to delete the test file\n");
     ok(DeleteFileA(s_testfile2), "failed to delete the test file\n");
+    CloseNotepads(FALSE);
 }
