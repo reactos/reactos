@@ -229,6 +229,8 @@ pci_up = "Standard PC Uniprocessor"
 ;pci_mp = "Standard PC Multiprocessor"
 acpi_up = "ACPI PC Uniprocessor"
 ;acpi_mp = "ACPI PC Multiprocessor"
+apic_up = "Standard APIC PC Uniprocessor"
+aacpi_up = "ACPI APIC PC Uniprocessor"
 xbox = "Original Xbox (x86 based)"
 pc98_up = "NEC PC-98 Uniprocessor"
 
@@ -241,6 +243,8 @@ pci_up = "PC UP"
 ;pci_mp = "PC MP"
 acpi_up = "ACPI UP"
 ;acpi_mp = "ACPI MP"
+apic_up = "APIC UP"
+aacpi_up = "AAPIC UP"
 xbox = "Xbox"
 pc98_up = "NEC PC-98 UP"
 
@@ -262,6 +266,14 @@ halacpi.dll  = 1,,,,,,,2,,,hal.dll,1,2
 ;[Files.acpi_mp]
 ;ntkrnlmp.exe = 1,,,,,,,2,,,ntoskrnl.exe,1,2
 ;halacpi.dll  = 1,,,,,,,2,,,hal.dll,1,2
+
+[Files.apic_up]
+ntoskrnl.exe = 1,,,,,,,2,,,,1,2
+halapic.dll  = 1,,,,,,,2,,,hal.dll,1,2
+
+[Files.aacpi_up]
+ntoskrnl.exe = 1,,,,,,,2,,,,1,2
+halaacpi.dll  = 1,,,,,,,2,,,hal.dll,1,2
 
 [Files.xbox]
 ntoskrnl.exe = 1,,,,,,,2,,,,1,2
