@@ -1125,14 +1125,14 @@ HRESULT WINAPI SHEmptyRecycleBinW(HWND hwnd, LPCWSTR pszRootPath, DWORD dwFlags)
         ret = RegGetValueW(HKEY_CURRENT_USER,
                            L"AppEvents\\Schemes\\Apps\\Explorer\\EmptyRecycleBin\\.Current",
                            NULL,
-                           RRF_RT_REG_SZ,
+                           RRF_RT_REG_SZ | RRF_RT_REG_EXPAND_SZ | RRF_NOEXPAND,
                            &dwType,
                            (PVOID)szPath,
                            &dwSize);
         if (ret != ERROR_SUCCESS)
             return S_OK;
 
-        if (dwType != REG_EXPAND_SZ) /* type dismatch */
+        if (dwType != REG_EXPAND_SZ || dwType != REG_SZ) /* type dismatch */
             return S_OK;
 
         szPath[_countof(szPath)-1] = L'\0';
