@@ -1137,7 +1137,7 @@ HRESULT WINAPI SHEmptyRecycleBinW(HWND hwnd, LPCWSTR pszRootPath, DWORD dwFlags)
 
         if (dwType == REG_EXPAND_SZ)
         {
-            if (!ExpandEnvironmentStringsW(szPath, szDest, MAX_PATH))
+            if (!ExpandEnvironmentStringsW(szPath, szDest, _countof(szDest)))
                 return S_OK;
         }
 
