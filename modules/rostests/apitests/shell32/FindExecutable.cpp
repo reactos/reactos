@@ -123,6 +123,15 @@ START_TEST(FindExecutable)
     if (!GetSubProgramPath())
     {
         skip("shell32_apitest_sub.exe not found\n");
+        return;
+    }
+
+    char cur_dir[MAX_PATH];
+    GetCurrentDirectoryA(_countof(cur_dir), cur_dir);
+    if (PathIsRootA(cur_dir))
+    {
+        skip("Don't use this program at root directory\n");
+        return;
     }
 
     GetWindowsDirectoryA(s_win_dir, _countof(s_win_dir));
