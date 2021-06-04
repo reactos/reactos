@@ -1135,18 +1135,11 @@ HRESULT WINAPI SHEmptyRecycleBinW(HWND hwnd, LPCWSTR pszRootPath, DWORD dwFlags)
         if (dwType != REG_SZ && dwType != REG_EXPAND_SZ) /* Check whether the type is valid */
             return S_OK;
 
-        ERR("szPath is %ls, size %d\n", szPath, dwSize);
-
         if (dwType == REG_EXPAND_SZ)
         {
             if (!ExpandEnvironmentStringsW(szPath, szDest, MAX_PATH))
-            {
-                ERR("ExpandEnvironmentStringsW failed for %ls\n", szPath);
                 return S_OK;
-            }
         }
-
-        ERR("szDest is %ls\n", szDest);
 
         szDest[_countof(szDest)-1] = L'\0';
         PlaySoundW(szDest, NULL, SND_FILENAME);
