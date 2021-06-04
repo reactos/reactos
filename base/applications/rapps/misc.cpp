@@ -351,13 +351,13 @@ VOID CConfigParser::CacheINILocale()
         m_szCachedINISectionLocaleNeutral = m_szCachedINISectionLocale;
 }
 
-BOOL CConfigParser::GetString(const ATL::CStringW& KeyName, ATL::CStringW& ResultString)
+BOOL CConfigParser::GetStringWorker(const ATL::CStringW& KeyName, PCWSTR Suffix, ATL::CStringW& ResultString)
 {
     DWORD dwResult;
 
     LPWSTR ResultStringBuffer = ResultString.GetBuffer(MAX_PATH);
     // 1st - find localized strings (e.g. "Section.0c0a")
-    dwResult = GetPrivateProfileStringW(m_szCachedINISectionLocale.GetString(),
+    dwResult = GetPrivateProfileStringW((m_szCachedINISectionLocale + Suffix).GetString(),
                                         KeyName.GetString(),
                                         NULL,
                                         ResultStringBuffer,
@@ -367,7 +367,7 @@ BOOL CConfigParser::GetString(const ATL::CStringW& KeyName, ATL::CStringW& Resul
     if (!dwResult)
     {
         // 2nd - if they weren't present check for neutral sub-langs/ generic translations (e.g. "Section.0a")
-        dwResult = GetPrivateProfileStringW(m_szCachedINISectionLocaleNeutral.GetString(),
+        dwResult = GetPrivateProfileStringW((m_szCachedINISectionLocaleNeutral + Suffix).GetString(),
                                             KeyName.GetString(),
                                             NULL,
                                             ResultStringBuffer,
@@ -376,7 +376,7 @@ BOOL CConfigParser::GetString(const ATL::CStringW& KeyName, ATL::CStringW& Resul
         if (!dwResult)
         {
             // 3rd - if they weren't present fallback to standard english strings (just "Section")
-            dwResult = GetPrivateProfileStringW(L"Section",
+            dwResult = GetPrivateProfileStringW((ATL::CStringW(L"Section") + Suffix).GetString(),
                                                 KeyName.GetString(),
                                                 NULL,
                                                 ResultStringBuffer,
@@ -387,6 +387,26 @@ BOOL CConfigParser::GetString(const ATL::CStringW& KeyName, ATL::CStringW& Resul
 
     ResultString.ReleaseBuffer();
     return (dwResult != 0 ? TRUE : FALSE);
+}
+
+BOOL CConfigParser::GetString(const ATL::CStringW& KeyName, ATL::CStringW& ResultString)
+{
+    /* First try */
+    if (GetStringWorker(KeyName, L"." CurrentArchitecture, ResultString))
+    {
+        return TRUE;
+    }
+
+#ifndef _M_IX86
+    /* On non-x86 architecture we need the architecture specific URL */
+    if (KeyName == L"URLDownload")
+    {
+        return FALSE;
+    }
+#endif
+
+    /* Fall back to default */
+    return GetStringWorker(KeyName, L"", ResultString);
 }
 
 BOOL CConfigParser::GetInt(const ATL::CStringW& KeyName, INT& iResult)
