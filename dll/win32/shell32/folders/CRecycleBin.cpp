@@ -1028,7 +1028,7 @@ HRESULT WINAPI SHEmptyRecycleBinA(HWND hwnd, LPCSTR pszRootPath, DWORD dwFlags)
 
 HRESULT WINAPI SHEmptyRecycleBinW(HWND hwnd, LPCWSTR pszRootPath, DWORD dwFlags)
 {
-    WCHAR szPath[MAX_PATH] = {0}, szBuffer[MAX_PATH], szDest[MAX_PATH];
+    WCHAR szPath[MAX_PATH] = {0}, szBuffer[MAX_PATH];
     DWORD dwSize, dwType, count;
     LONG ret;
     IShellFolder *pDesktop, *pRecycleBin;
@@ -1127,7 +1127,7 @@ HRESULT WINAPI SHEmptyRecycleBinW(HWND hwnd, LPCWSTR pszRootPath, DWORD dwFlags)
                            NULL,
                            RRF_RT_REG_SZ | RRF_RT_REG_EXPAND_SZ | RRF_NOEXPAND,
                            &dwType,
-                           (PVOID)szPath,
+                           (PVOID)szBuffer,
                            &dwSize);
         if (ret != ERROR_SUCCESS)
             return S_OK;
@@ -1137,12 +1137,12 @@ HRESULT WINAPI SHEmptyRecycleBinW(HWND hwnd, LPCWSTR pszRootPath, DWORD dwFlags)
 
         if (dwType == REG_EXPAND_SZ)
         {
-            if (!ExpandEnvironmentStringsW(szPath, szDest, _countof(szDest)))
+            if (!ExpandEnvironmentStringsW(szBuffer, szPath, _countof(szPath)))
                 return S_OK;
         }
 
-        szDest[_countof(szDest)-1] = L'\0';
-        PlaySoundW(szDest, NULL, SND_FILENAME);
+        szPath[_countof(szPath)-1] = L'\0';
+        PlaySoundW(szPath, NULL, SND_FILENAME);
     }
     return S_OK;
 }
