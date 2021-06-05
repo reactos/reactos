@@ -112,35 +112,6 @@ HalpTranslateSystemBusAddress(IN PBUS_HANDLER BusHandler,
 
 ULONG
 NTAPI
-HalpGetRootInterruptVector(IN ULONG BusInterruptLevel,
-                           IN ULONG BusInterruptVector,
-                           OUT PKIRQL Irql,
-                           OUT PKAFFINITY Affinity)
-{
-    UCHAR SystemVector;
-
-    /* Validate the IRQ */
-    if (BusInterruptLevel > 23)
-    {
-        /* Invalid vector */
-        DPRINT1("IRQ %lx is too high!\n", BusInterruptLevel);
-        return 0;
-    }
-
-    /* Get the system vector */
-    SystemVector = HalpIrqToVector((UCHAR)BusInterruptLevel);
-
-    /* Return the IRQL and affinity */
-    *Irql = HalpVectorToIrql(SystemVector);
-    *Affinity = HalpDefaultInterruptAffinity;
-    ASSERT(HalpDefaultInterruptAffinity);
-
-    /* Return the vector */
-    return SystemVector;
-}
-
-ULONG
-NTAPI
 HalpGetSystemInterruptVector(IN PBUS_HANDLER BusHandler,
                              IN PBUS_HANDLER RootHandler,
                              IN ULONG BusInterruptLevel,

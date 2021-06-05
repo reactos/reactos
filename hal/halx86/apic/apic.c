@@ -4,9 +4,11 @@
  * FILE:            hal/halx86/apic/apic.c
  * PURPOSE:         HAL APIC Management and Control Code
  * PROGRAMMERS:     Timo Kreuzer (timo.kreuzer@reactos.org)
- * REFERENCES:      http://www.joseflores.com/docs/ExploringIrql.html
+ * REFERENCES:      https://web.archive.org/web/20190407074221/http://www.joseflores.com/docs/ExploringIrql.html
  *                  http://www.codeproject.com/KB/system/soviet_kernel_hack.aspx
  *                  http://bbs.unixmap.net/thread-2022-1-1.html
+ *                  https://www.codemachine.com/article_interruptdispatching.html
+ *                  https://www.osronline.com/article.cfm%5Earticle=211.htm
  */
 
 /* INCLUDES *******************************************************************/
@@ -17,7 +19,7 @@
 #include <debug.h>
 
 #ifndef _M_AMD64
-//#define APIC_LAZY_IRQL //FIXME: Disabled due to bug.
+#define APIC_LAZY_IRQL
 #endif
 
 /* GLOBALS ********************************************************************/
@@ -329,30 +331,13 @@ ApicInitializeLocalApic(ULONG Cpu)
 UCHAR
 NTAPI
 HalpAllocateSystemInterrupt(
-    IN UCHAR Irq,
-    IN KIRQL Irql)
+    _In_ UCHAR Irq,
+    _In_ UCHAR Vector)
 {
     IOAPIC_REDIRECTION_REGISTER ReDirReg;
-    IN UCHAR Vector;
 
-    /* Start with lowest vector */
-    Vector = IrqlToTpr(Irql) & 0xF0;
-
-    /* Find an empty vector */
-    while (HalpVectorToIndex[Vector] != APIC_FREE_VECTOR)
-    {
-        Vector++;
-
-        /* Check if we went over the edge */
-        if (TprToIrql(Vector) > Irql)
-        {
-            /* Nothing free, return failure */
-            return 0;
-        }
-    }
-
-    /* Save irq in the table */
-    HalpVectorToIndex[Vector] = Irq;
+    ASSERT(Irq < 24);
+    ASSERT(HalpVectorToIndex[Vector] == APIC_FREE_VECTOR);
 
     /* Setup a redirection entry */
     ReDirReg.Vector = Vector;
@@ -368,6 +353,68 @@ HalpAllocateSystemInterrupt(
 
     /* Initialize entry */
     ApicWriteIORedirectionEntry(Irq, ReDirReg);
+
+    /* Save irq in the table */
+    HalpVectorToIndex[Vector] = Irq;
+
+    return Vector;
+}
+
+ULONG
+NTAPI
+HalpGetRootInterruptVector(
+    _In_ ULONG BusInterruptLevel,
+    _In_ ULONG BusInterruptVector,
+    _Out_ PKIRQL OutIrql,
+    _Out_ PKAFFINITY OutAffinity)
+{
+    UCHAR Vector;
+    KIRQL Irql;
+
+    /* Get the vector currently registered */
+    Vector = HalpIrqToVector(BusInterruptLevel);
+
+    /* Check if it's used */
+    if (Vector != 0xFF)
+    {
+        /* Calculate IRQL */
+        NT_ASSERT(HalpVectorToIndex[Vector] == BusInterruptLevel);
+        *OutIrql = HalpVectorToIrql(Vector);
+    }
+    else
+    {
+        ULONG Offset;
+
+        /* Outer loop to find alternative slots, when all IRQLs are in use */
+        for (Offset = 0; Offset < 15; Offset++)
+        {
+            /* Loop allowed IRQL range */
+            for (Irql = CLOCK_LEVEL - 1; Irql >= CMCI_LEVEL; Irql--)
+            {
+                /* Calculate the vactor */
+                Vector = IrqlToTpr(Irql) + Offset;
+
+                /* Check if the vector is free */
+                if (HalpVectorToIrq(Vector) == APIC_FREE_VECTOR)
+                {
+                    /* Found one, allocate the interrupt */
+                    Vector = HalpAllocateSystemInterrupt(BusInterruptLevel, Vector);
+                    *OutIrql = Irql;
+                    goto Exit;
+                }
+            }
+        }
+
+        DPRINT1("Failed to get an interrupt vector for IRQ %lu\n", BusInterruptLevel);
+        *OutAffinity = 0;
+        *OutIrql = 0;
+        return 0;
+    }
+
+Exit:
+
+    *OutAffinity = HalpDefaultInterruptAffinity;
+    ASSERT(HalpDefaultInterruptAffinity);
 
     return Vector;
 }
@@ -414,13 +461,6 @@ ApicInitializeIOApic(VOID)
     for (Vector = 0; Vector <= 255; Vector++)
     {
         HalpVectorToIndex[Vector] = APIC_FREE_VECTOR;
-    }
-
-    // HACK: Allocate all IRQs, should rather do that on demand
-    for (Index = 0; Index <= 15; Index++)
-    {
-        /* Map the IRQs to IRQLs like with the PIC */
-        HalpAllocateSystemInterrupt(Index, 27 - Index);
     }
 
     /* Enable the timer interrupt */
