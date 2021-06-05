@@ -533,6 +533,43 @@ public:
         return str2.GetLength() == 1 && str2[0] == ch1;
     }
 
+    friend bool operator!=(const CStringT& str1, const CStringT& str2) throw()
+    {
+        return str1.Compare(str2) != 0;
+    }
+
+    friend bool operator!=(const CStringT& str1, PCXSTR psz2) throw()
+    {
+        return str1.Compare(psz2) != 0;
+    }
+
+    friend bool operator!=(const CStringT& str1, PCYSTR psz2) throw()
+    {
+        CStringT tmp(psz2, str1.GetManager());
+        return tmp.Compare(str1) != 0;
+    }
+
+    friend bool operator!=(const CStringT& str1, XCHAR ch2) throw()
+    {
+        return str1.GetLength() != 1 || str1[0] != ch2;
+    }
+
+    friend bool operator!=(PCXSTR psz1, const CStringT& str2) throw()
+    {
+        return str2.Compare(psz1) != 0;
+    }
+
+    friend bool operator!=(PCYSTR psz1, const CStringT& str2) throw()
+    {
+        CStringT tmp(psz1, str2.GetManager());
+        return tmp.Compare(str2) != 0;
+    }
+
+    friend bool operator!=(XCHAR ch1, const CStringT& str2) throw()
+    {
+        return str2.GetLength() != 1 || str2[0] != ch1;
+    }
+
     CStringT& operator+=(_In_ const CThisSimpleString& str)
     {
         CThisSimpleString::operator+=(str);
