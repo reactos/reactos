@@ -48,6 +48,8 @@ static char s_win_test_exe[MAX_PATH];
 static char s_sys_test_exe[MAX_PATH];
 static char s_win_bat_file[MAX_PATH];
 static char s_sys_bat_file[MAX_PATH];
+static char s_win_txt_file[MAX_PATH];
+static char s_sys_txt_file[MAX_PATH];
 
 #define DIR_0 NULL
 #define DIR_1 "."
@@ -97,6 +99,21 @@ static const TEST_ENTRY s_entries[] =
     { __LINE__, FALSE, "..\\notepad.exe", DIR_2, "" },
     { __LINE__, FALSE, "..\\notepad.exe", DIR_3, "" },
     { __LINE__, FALSE, "..\\notepad.exe", DIR_4, "" },
+    { __LINE__, FALSE, ".\\notepad.exe", DIR_0, "" },
+    { __LINE__, FALSE, ".\\notepad.exe", DIR_1, "" },
+    { __LINE__, FALSE, ".\\notepad.exe", DIR_2, "" },
+    { __LINE__, TRUE, ".\\notepad.exe", DIR_3, s_win_notepad },
+    { __LINE__, FALSE, ".\\notepad.exe", DIR_4, "" },
+    { __LINE__, FALSE, "system32\\notepad.exe", DIR_0, "" },
+    { __LINE__, FALSE, "system32\\notepad.exe", DIR_1, "" },
+    { __LINE__, FALSE, "system32\\notepad.exe", DIR_2, "" },
+    { __LINE__, TRUE, "system32\\notepad.exe", DIR_3, s_sys_notepad },
+    { __LINE__, FALSE, "system32\\notepad.exe", DIR_4, "" },
+    { __LINE__, TRUE, s_win_notepad, DIR_0, s_win_notepad },
+    { __LINE__, TRUE, s_win_notepad, DIR_1, s_win_notepad },
+    { __LINE__, TRUE, s_win_notepad, DIR_2, s_win_notepad },
+    { __LINE__, TRUE, s_win_notepad, DIR_3, s_win_notepad },
+    { __LINE__, TRUE, s_win_notepad, DIR_4, s_win_notepad },
     { __LINE__, TRUE, "test program", DIR_0, s_sys_test_exe },
     { __LINE__, TRUE, "test program", DIR_1, s_sys_test_exe },
     { __LINE__, TRUE, "test program", DIR_2, s_sys_test_exe },
@@ -157,6 +174,16 @@ static const TEST_ENTRY s_entries[] =
     { __LINE__, FALSE, "shell32_apitest_sub.exe", DIR_2, "" },
     { __LINE__, FALSE, "shell32_apitest_sub.exe", DIR_3, "" },
     { __LINE__, FALSE, "shell32_apitest_sub.exe", DIR_4, "" },
+    { __LINE__, TRUE, "test file.txt", DIR_0, s_sys_notepad },
+    { __LINE__, TRUE, "test file.txt", DIR_1, s_sys_notepad },
+    { __LINE__, TRUE, "test file.txt", DIR_2, s_sys_notepad },
+    { __LINE__, TRUE, "test file.txt", DIR_3, s_sys_notepad },
+    { __LINE__, TRUE, "test file.txt", DIR_4, s_sys_notepad },
+    { __LINE__, FALSE, "invalid file.txt", DIR_0, "" },
+    { __LINE__, FALSE, "invalid file.txt", DIR_1, "" },
+    { __LINE__, FALSE, "invalid file.txt", DIR_2, "" },
+    { __LINE__, FALSE, "invalid file.txt", DIR_3, "" },
+    { __LINE__, FALSE, "invalid file.txt", DIR_4, "" },
 };
 
 static void DoTestEntry(const TEST_ENTRY *pEntry)
@@ -220,6 +247,16 @@ START_TEST(FindExecutable)
     fclose(fopen(s_sys_bat_file, "wb"));
     ok_int(PathFileExistsA(s_sys_bat_file), TRUE);
 
+    GetWindowsDirectoryA(s_win_txt_file, _countof(s_win_txt_file));
+    PathAppendA(s_win_txt_file, "test file.txt");
+    fclose(fopen(s_win_txt_file, "wb"));
+    ok_int(PathFileExistsA(s_win_txt_file), TRUE);
+
+    GetSystemDirectoryA(s_sys_txt_file, _countof(s_sys_txt_file));
+    PathAppendA(s_sys_txt_file, "test file.txt");
+    fclose(fopen(s_sys_txt_file, "wb"));
+    ok_int(PathFileExistsA(s_sys_txt_file), TRUE);
+
     for (UINT iTest = 0; iTest < _countof(s_entries); ++iTest)
     {
         DoTestEntry(&s_entries[iTest]);
@@ -229,4 +266,6 @@ START_TEST(FindExecutable)
     DeleteFileA(s_sys_test_exe);
     DeleteFileA(s_win_bat_file);
     DeleteFileA(s_sys_bat_file);
+    DeleteFileA(s_win_txt_file);
+    DeleteFileA(s_sys_txt_file);
 }
