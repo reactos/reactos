@@ -1139,10 +1139,15 @@ HRESULT WINAPI SHEmptyRecycleBinW(HWND hwnd, LPCWSTR pszRootPath, DWORD dwFlags)
         {
             if (!ExpandEnvironmentStringsW(szBuffer, szPath, _countof(szPath)))
                 return S_OK;
-        }
 
-        szPath[_countof(szPath)-1] = L'\0';
-        PlaySoundW(szPath, NULL, SND_FILENAME);
+            szPath[_countof(szPath)-1] = L'\0';
+            PlaySoundW(szPath, NULL, SND_FILENAME);
+        }
+        else if (dwType == REG_SZ)
+        {
+            szBuffer[_countof(szBuffer)-1] = L'\0';
+            PlaySoundW(szBuffer, NULL, SND_FILENAME);
+        }
     }
     return S_OK;
 }
