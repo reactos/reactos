@@ -322,12 +322,12 @@ GetSubProgramPath(void)
 {
     GetModuleFileNameW(NULL, s_szSubProgram, _countof(s_szSubProgram));
     PathRemoveFileSpecW(s_szSubProgram);
-    PathAppendW(s_szSubProgram, L"shell-notify.exe");
+    PathAppendW(s_szSubProgram, L"shell32_apitest_sub.exe");
 
     if (!PathFileExistsW(s_szSubProgram))
     {
         PathRemoveFileSpecW(s_szSubProgram);
-        PathAppendW(s_szSubProgram, L"testdata\\shell-notify.exe");
+        PathAppendW(s_szSubProgram, L"testdata\\shell32_apitest_sub.exe");
 
         if (!PathFileExistsW(s_szSubProgram))
         {
@@ -356,7 +356,7 @@ JustDoIt(INT nMode)
     HINSTANCE hinst = ShellExecuteW(NULL, NULL, s_szSubProgram, szParams, NULL, SW_SHOWNORMAL);
     if ((INT_PTR)hinst <= 32)
     {
-        skip("Unable to run shell-notify.exe.\n");
+        skip("Unable to run shell32_apitest_sub.exe.\n");
         return;
     }
 
@@ -421,7 +421,7 @@ START_TEST(SHChangeNotify)
 {
     if (!GetSubProgramPath())
     {
-        skip("shell-notify.exe not found\n");
+        skip("shell32_apitest_sub.exe not found\n");
     }
 
     JustDoIt(0);

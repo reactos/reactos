@@ -13,6 +13,7 @@ list(APPEND SOURCE
     Control_RunDLLW.cpp
     DragDrop.cpp
     ExtractIconEx.cpp
+    FindExecutable.cpp
     IShellFolderViewCB.cpp
     OpenAs_RunDLL.cpp
     PathResolve.cpp
@@ -45,9 +46,9 @@ add_importlibs(shell32_apitest user32 gdi32 shell32 ole32 oleaut32 advapi32 shlw
 add_pch(shell32_apitest shelltest.h "${PCH_SKIP_SOURCE}")
 add_rostests_file(TARGET shell32_apitest)
 
-# shell-notify.exe
-add_executable(shell-notify shell-notify.cpp)
-target_link_libraries(shell-notify cpprt atl_classes)
-set_module_type(shell-notify win32gui UNICODE)
-add_importlibs(shell-notify msvcrt kernel32 user32 shell32 shlwapi ole32)
-add_rostests_file(TARGET shell-notify SUBDIR testdata)
+# shell32_apitest_sub.exe
+add_executable(shell32_apitest_sub shell32_apitest_sub.cpp)
+target_link_libraries(shell32_apitest_sub cpprt atl_classes)
+set_module_type(shell32_apitest_sub win32gui UNICODE)
+add_importlibs(shell32_apitest_sub msvcrt kernel32 user32 shell32 shlwapi ole32)
+add_rostests_file(TARGET shell32_apitest_sub SUBDIR testdata)
