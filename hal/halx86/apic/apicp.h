@@ -25,6 +25,10 @@
     #define TprToIrql(Tpr)  (HalVectorToIRQL[Tpr >> 4])
 #endif
 
+#define APIC_MAX_IRQ 24
+#define APIC_FREE_VECTOR 0xFF
+#define APIC_RESERVED_VECTOR 0xFE
+
 /* The IMCR is supported by two read/writable or write-only I/O ports,
    22h and 23h, which receive address and data respectively.
    To access the IMCR, write a value of 70h to I/O port 22h, which selects the IMCR.
@@ -284,14 +288,14 @@ FORCEINLINE
 ULONG
 ApicRead(ULONG Offset)
 {
-    return *(volatile ULONG *)(APIC_BASE + Offset);
+    return READ_REGISTER_ULONG((PULONG)(APIC_BASE + Offset));
 }
 
 FORCEINLINE
 VOID
 ApicWrite(ULONG Offset, ULONG Value)
 {
-    *(volatile ULONG *)(APIC_BASE + Offset) = Value;
+    WRITE_REGISTER_ULONG((PULONG)(APIC_BASE + Offset), Value);
 }
 
 VOID
