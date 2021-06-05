@@ -94,8 +94,9 @@ ULONG
 IOApicRead(UCHAR Register)
 {
     /* Select the register, then do the read */
-    *(volatile UCHAR *)(IOAPIC_BASE + IOAPIC_IOREGSEL) = Register;
-    return *(volatile ULONG *)(IOAPIC_BASE + IOAPIC_IOWIN);
+    ASSERT(Register <= 0x3F);
+    WRITE_REGISTER_ULONG((PULONG)(IOAPIC_BASE + IOAPIC_IOREGSEL), Register);
+    return READ_REGISTER_ULONG((PULONG)(IOAPIC_BASE + IOAPIC_IOWIN));
 }
 
 FORCEINLINE
@@ -103,8 +104,9 @@ VOID
 IOApicWrite(UCHAR Register, ULONG Value)
 {
     /* Select the register, then do the write */
-    *(volatile UCHAR *)(IOAPIC_BASE + IOAPIC_IOREGSEL) = Register;
-    *(volatile ULONG *)(IOAPIC_BASE + IOAPIC_IOWIN) = Value;
+    ASSERT(Register <= 0x3F);
+    WRITE_REGISTER_ULONG((PULONG)(IOAPIC_BASE + IOAPIC_IOREGSEL), Register);
+    WRITE_REGISTER_ULONG((PULONG)(IOAPIC_BASE + IOAPIC_IOWIN), Value);
 }
 
 FORCEINLINE
@@ -113,6 +115,7 @@ ApicWriteIORedirectionEntry(
     UCHAR Index,
     IOAPIC_REDIRECTION_REGISTER ReDirReg)
 {
+    ASSERT(Index < APIC_MAX_IRQ);
     IOApicWrite(IOAPIC_REDTBL + 2 * Index, ReDirReg.Long0);
     IOApicWrite(IOAPIC_REDTBL + 2 * Index + 1, ReDirReg.Long1);
 }
@@ -124,6 +127,7 @@ ApicReadIORedirectionEntry(
 {
     IOAPIC_REDIRECTION_REGISTER ReDirReg;
 
+    ASSERT(Index < APIC_MAX_IRQ);
     ReDirReg.Long0 = IOApicRead(IOAPIC_REDTBL + 2 * Index);
     ReDirReg.Long1 = IOApicRead(IOAPIC_REDTBL + 2 * Index + 1);
 
@@ -344,7 +348,7 @@ HalpAllocateSystemInterrupt(
     Vector = IrqlToTpr(Irql) & 0xF0;
 
     /* Find an empty vector */
-    while (HalpVectorToIndex[Vector] != 0xFF)
+    while (HalpVectorToIndex[Vector] != APIC_FREE_VECTOR)
     {
         Vector++;
 
@@ -372,8 +376,7 @@ HalpAllocateSystemInterrupt(
     ReDirReg.Destination = 0;
 
     /* Initialize entry */
-    IOApicWrite(IOAPIC_REDTBL + 2 * Irq, ReDirReg.Long0);
-    IOApicWrite(IOAPIC_REDTBL + 2 * Irq + 1, ReDirReg.Long1);
+    ApicWriteIORedirectionEntry(Irq, ReDirReg);
 
     return Vector;
 }
@@ -410,17 +413,16 @@ ApicInitializeIOApic(VOID)
     ReDirReg.Destination = 0;
 
     /* Loop all table entries */
-    for (Index = 0; Index < 24; Index++)
+    for (Index = 0; Index < APIC_MAX_IRQ; Index++)
     {
         /* Initialize entry */
-        IOApicWrite(IOAPIC_REDTBL + 2 * Index, ReDirReg.Long0);
-        IOApicWrite(IOAPIC_REDTBL + 2 * Index + 1, ReDirReg.Long1);
+        ApicWriteIORedirectionEntry(Index, ReDirReg);
     }
 
     /* Init the vactor to index table */
     for (Vector = 0; Vector <= 255; Vector++)
     {
-        HalpVectorToIndex[Vector] = 0xFF;
+        HalpVectorToIndex[Vector] = APIC_FREE_VECTOR;
     }
 
     // HACK: Allocate all IRQs, should rather do that on demand
@@ -437,7 +439,7 @@ ApicInitializeIOApic(VOID)
     ReDirReg.TriggerMode = APIC_TGM_Edge;
     ReDirReg.Mask = 0;
     ReDirReg.Destination = ApicRead(APIC_ID);
-    IOApicWrite(IOAPIC_REDTBL + 2 * APIC_CLOCK_INDEX, ReDirReg.Long0);
+    ApicWriteIORedirectionEntry(APIC_CLOCK_INDEX, ReDirReg);
 }
 
 VOID
@@ -457,9 +459,10 @@ HalpInitializePICs(IN BOOLEAN EnableInterrupts)
     ApicInitializeIOApic();
 
     /* Manually reserve some vectors */
+    HalpVectorToIndex[APC_VECTOR] = APIC_RESERVED_VECTOR;
+    HalpVectorToIndex[DISPATCH_VECTOR] = APIC_RESERVED_VECTOR;
     HalpVectorToIndex[APIC_CLOCK_VECTOR] = 8;
-    HalpVectorToIndex[APC_VECTOR] = 99;
-    HalpVectorToIndex[DISPATCH_VECTOR] = 99;
+    HalpVectorToIndex[APIC_SPURIOUS_VECTOR] = APIC_RESERVED_VECTOR;
 
     /* Set interrupt handlers in the IDT */
     KeRegisterInterruptHandler(APIC_CLOCK_VECTOR, HalpClockInterrupt);
@@ -669,7 +672,7 @@ HalDisableSystemInterrupt(
     ReDirReg.Mask = 1;
 
     /* Write back lower dword */
-    IOApicWrite(IOAPIC_REDTBL + 2 * Irql, ReDirReg.Long0);
+    IOApicWrite(IOAPIC_REDTBL + 2 * Index, ReDirReg.Long0);
 }
 
 #ifndef _M_AMD64
@@ -704,8 +707,8 @@ HalBeginSystemInterrupt(
         /* Get the irq for this vector */
         Index = HalpVectorToIndex[Vector];
 
-        /* Check if its valid */
-        if (Index != 0xff)
+        /* Check if it's valid */
+        if (Index < APIC_MAX_IRQ)
         {
             /* Read the I/O redirection entry */
             RedirReg = ApicReadIORedirectionEntry(Index);
@@ -715,6 +718,9 @@ HalBeginSystemInterrupt(
        }
        else
        {
+            /* This should be a reserved vector! */
+            ASSERT(Index == APIC_RESERVED_VECTOR);
+
             /* Re-request the interrupt to be handled later */
             ApicRequestInterrupt(Vector, APIC_TGM_Edge);
        }

@@ -61,6 +61,13 @@ ApicInitializeTimer(ULONG Cpu)
 // KeSetTimeIncrement
 }
 
+VOID
+FASTCALL
+HalpProfileInterruptHandler(_In_ PKTRAP_FRAME TrapFrame)
+{
+    KeProfileInterruptWithSource(TrapFrame, ProfileTime);
+}
+
 
 /* PUBLIC FUNCTIONS ***********************************************************/
 

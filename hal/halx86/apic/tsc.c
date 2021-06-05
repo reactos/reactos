@@ -55,8 +55,7 @@ NTAPI
 HalpInitializeTsc(VOID)
 {
     ULONG_PTR Flags;
-    KIDTENTRY OldIdtEntry, *IdtPointer;
-    PKPCR Pcr = KeGetPcr();
+    PVOID PreviousHandler;
     UCHAR RegisterA, RegisterB;
 
     /* Check if the CPU supports RDTSC */
@@ -79,8 +78,7 @@ HalpInitializeTsc(VOID)
     HalpWriteCmos(RTC_REGISTER_A, RegisterA);
 
     /* Save old IDT entry */
-    IdtPointer = KiGetIdtEntry(Pcr, HalpRtcClockVector);
-    OldIdtEntry = *IdtPointer;
+    PreviousHandler = KeQueryInterruptHandler(HalpRtcClockVector);
 
     /* Set the calibration ISR */
     KeRegisterInterruptHandler(HalpRtcClockVector, TscCalibrationISR);
@@ -105,8 +103,8 @@ HalpInitializeTsc(VOID)
     /* Disable the timer interrupt */
     HalDisableSystemInterrupt(HalpRtcClockVector, CLOCK_LEVEL);
 
-    /* Restore old IDT entry */
-    *IdtPointer = OldIdtEntry;
+    /* Restore the previous handler */
+    KeRegisterInterruptHandler(HalpRtcClockVector, PreviousHandler);
 
     /* Calculate an average, using simplified linear regression */
     HalpCpuClockFrequency.QuadPart = DoLinearRegression(NUM_SAMPLES - 1,
