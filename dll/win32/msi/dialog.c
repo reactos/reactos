@@ -3237,6 +3237,13 @@ static void msi_dialog_vcl_add_drives( msi_dialog *dialog, msi_control *control 
     ptr = drives;
     while (*ptr)
     {
+#ifdef __REACTOS__
+        if (GetDriveTypeW(ptr) == DRIVE_CDROM)
+        {
+            ptr += lstrlenW(ptr) + 1;
+            continue;
+        }
+#endif
         lvitem.mask = LVIF_TEXT;
         lvitem.iItem = i;
         lvitem.iSubItem = 0;
