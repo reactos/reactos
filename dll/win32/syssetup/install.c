@@ -467,7 +467,7 @@ RegisterTypeLibraries(HINF hinf, LPCWSTR szSection)
         p = PathAddBackslash(szPath);
         wcscpy(p, szName);
 
-        hmod = LoadLibraryW(szName);
+        hmod = LoadLibraryW(szPath);
         if (hmod == NULL)
         {
             FatalError("LoadLibraryW failed\n");
