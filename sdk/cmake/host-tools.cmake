@@ -52,6 +52,7 @@ function(setup_host_tools)
         set(HOST_TOOLS_CMAKE_COMMAND "${REACTOS_BINARY_DIR}/host-tools/cmake_shim.cmd")
         if(MSVC_VERSION EQUAL 1900)
             file(WRITE ${HOST_TOOLS_CMAKE_COMMAND}
+                "set VSCMD_SKIP_SENDTELEMETRY=1\n"
                 "@call \"$ENV{VCINSTALLDIR}\\vcvarsall.bat\" ${VCVARSALL_ARCH}\n"
                 "\"${CMAKE_COMMAND}\" %*"
             )
