@@ -336,7 +336,7 @@ WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                 INT i = (INT)wParam - ID_BURNING;
                 DoTestEntryPart2(&s_entries[i]);
                 ++i;
-                if (i == s_num_entries)
+                if (i == (INT)s_num_entries)
                 {
                     PostQuitMessage(0);
                     break;
