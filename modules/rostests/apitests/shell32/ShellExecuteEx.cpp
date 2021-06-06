@@ -237,7 +237,7 @@ static VOID DoTestEntry(const TEST_ENTRY *pEntry)
 
     WaitForInputIdle(info.hProcess, INFINITE);
 
-    // close newly opened window
+    // close newly opened windows
     EnumWindows(EnumWindowsProc, (LPARAM)&s_wi1);
     for (UINT i1 = 0; i1 < s_wi1.count; ++i1)
     {
@@ -289,13 +289,6 @@ static void DoTestEntries(void)
         return;
     }
 
-    // record open windows
-    if (!EnumWindows(EnumWindowsProc, (LPARAM)&s_wi0))
-    {
-        skip("EnumWindows failed\n");
-        return;
-    }
-
     // s_win_test_exe
     GetWindowsDirectoryA(s_win_test_exe, _countof(s_win_test_exe));
     PathAppendA(s_win_test_exe, "test program.exe");
@@ -303,6 +296,15 @@ static void DoTestEntries(void)
     if (!ret)
     {
         skip("Please retry with admin rights\n");
+        return;
+    }
+
+    // record open windows
+    if (!EnumWindows(EnumWindowsProc, (LPARAM)&s_wi0))
+    {
+        skip("EnumWindows failed\n");
+        DeleteFileA(s_win_test_exe);
+        free(s_wi0.phwnd);
         return;
     }
 
