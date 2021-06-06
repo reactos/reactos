@@ -38,6 +38,7 @@ list(APPEND SOURCE
     SendMessageTimeout.c
     SetActiveWindow.c
     SetCursorPos.c
+    SetFocus.c
     SetParent.c
     SetProp.c
     SetScrollInfo.c
