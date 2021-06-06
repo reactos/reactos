@@ -149,6 +149,14 @@ typedef struct _SecPkgInfoW
 #define SECPKG_FLAG_APPCONTAINER_CHECKS      0x00800000
 #define SECPKG_FLAG_APPLY_LOOPBACK           0x02000000
 
+typedef struct _SECURITY_PACKAGE_OPTIONS {
+  unsigned long Size;
+  unsigned long Type;
+  unsigned long Flags;
+  unsigned long SignatureSize;
+  void *Signature;
+} SECURITY_PACKAGE_OPTIONS,*PSECURITY_PACKAGE_OPTIONS;
+
 typedef struct _SecBuffer {
   ULONG cbBuffer;
   ULONG BufferType;

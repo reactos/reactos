@@ -1,0 +1,342 @@
+/*
+ * PROJECT:         ReactOS api tests
+ * LICENSE:         GPLv2+ - See COPYING in the top level directory
+ * PURPOSE:         Tests for client/server authentication via secur32 API.
+ * PROGRAMMERS:     Samuel Serapión
+ *                  Hermes Belusca-Maito
+ */
+
+#ifndef __CLIENT_SERVER_H__
+#define __CLIENT_SERVER_H__
+
+// enable only for debug
+//#define DBG_PRINT_MSG
+//#define DBG_PRINT_TRACE
+
+#pragma once
+
+#define UNICODE
+#define _UNICODE
+
+#include <apitest.h>
+
+#include <tchar.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <assert.h>
+#include <strsafe.h>
+#include <sspi.h>
+#include <math.h>
+#include <shellapi.h>
+
+#include <ntstatus.h>
+#define WIN32_NO_STATUS
+// #define __USE_W32_SOCKETS
+#include <windows.h>
+// #include <winsock.h>
+#include <winsock2.h>
+
+/*#include <malloc.h>
+#include <stdarg.h>
+#include <stdio.h>
+#include <wchar.h>
+#include <windef.h>
+#include <winbase.h>
+#include <winnls.h>
+#include <winreg.h>
+#include <wincrypt.h>*/
+//#define NTOS_MODE_USER
+/*#include <ndk/cmfuncs.h>*/
+//#include <ndk/kefuncs.h>
+/*#include <ndk/lpctypes.h>
+#include <ndk/lpcfuncs.h>
+#include <ndk/mmfuncs.h>*/
+/*#include <ndk/obfuncs.h>
+#include <ndk/psfuncs.h>
+#include <ndk/rtlfuncs.h>
+#include <ndk/setypes.h>
+#include <ndk/sefuncs.h>*/
+
+#include <lmcons.h>
+#include <lmjoin.h>
+#include <lmwksta.h>
+#include <lmerr.h>
+#include <lmapibuf.h>
+
+#define SECURITY_WIN32  // Needed by sspi.h (SECURITY_WIN32 or SECURITY_KERNEL or SECURITY_MAC)
+#define _NO_KSECDD_IMPORT_
+#include <sspi.h>
+/** Our broken psdk sspi.h misses this definition. But it's present in xdk sspi.h. I guess the psdk one needs some sync... **/
+#ifndef SECPKG_ID_NONE
+#define SECPKG_ID_NONE 0xFFFF
+#endif
+
+// ntlmssp-protocol.h
+#include "ntsecapi.h"
+#include "ntsecpkg.h"
+#include "ntlm/ciphers.h"
+#include "ntlm/strutil.h"
+#include "ntlm/ntlmssp.h"
+#include "ntlm/protocol.h"
+#include "client_server.h"
+
+#include "smb_nego.h"
+
+typedef struct _NTLM_MESSAGE_HEAD
+{
+    CHAR Signature[8];
+    ULONG MsgType;
+} *PNTLM_MESSAGE_HEAD;
+
+#include <ntsecapi.h>
+#include <security.h>   // Security.h must come *before* secext.h
+#include <secext.h>
+
+#define SEC_SUCCESS(Status) ((Status) >= 0)
+#define BIG_BUFF 2048
+
+#define printerr(errnum)    \
+do { \
+    LPWSTR buffer;  \
+    DWORD res;  \
+    res = FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM, \
+                         NULL,    \
+                         errnum,  \
+                         LANG_USER_DEFAULT,   \
+                         (LPWSTR)&buffer,     \
+                         0,       \
+                         NULL);   \
+    if (res > 0)    \
+    {   \
+        sync_err("%S\n", buffer); \
+        LocalFree(buffer);      \
+    }   \
+    else    \
+    {   \
+        sync_err("FormatMessageW for error 0x%x failed with error 0x%x\n", errnum, GetLastError()); \
+    }   \
+} while (0)
+
+void sync_msg(char* msg, ...);
+
+#ifdef __MSVC__
+#define sync_ok(cond, msg, ...) \
+do {   \
+    char buf[512];  \
+    \
+    StringCbPrintfA(buf, sizeof(buf), msg, __VA_ARGS__); \
+    sync_msg_enter();   \
+    ok(cond, "[%.4ld] %s", GetCurrentThreadId(), buf); \
+    sync_msg_leave();   \
+} while (0)
+#else
+#define sync_ok(cond, msg, ...) \
+do {   \
+    char buf[512];  \
+    \
+    StringCbPrintfA(buf, sizeof(buf), msg, ##__VA_ARGS__); \
+    sync_msg_enter();   \
+    ok(cond, "[%.4ld] %s", GetCurrentThreadId(), buf); \
+    sync_msg_leave();   \
+} while (0)
+#endif
+
+#ifdef __MSVC__
+#define sync_trace(msg, ...)  \
+do {   \
+    char buf[512]; \
+    \
+    StringCbPrintfA(buf, sizeof(buf), msg, __VA_ARGS__);   \
+    sync_msg_enter();   \
+    trace("[%.4ld] %s", GetCurrentThreadId(), buf);    \
+    sync_msg_leave();   \
+} while (0)
+#else
+#define sync_trace(msg, ...)  \
+do {   \
+    char buf[512]; \
+    \
+    StringCbPrintfA(buf, sizeof(buf), msg, ##__VA_ARGS__);   \
+    sync_msg_enter();   \
+    trace("[%.4ld] %s", GetCurrentThreadId(), buf);    \
+    sync_msg_leave();   \
+} while (0)
+#endif
+
+#ifndef DBG_PRINT_TRACE
+#undef sync_trace
+#define sync_trace
+#endif
+
+#ifdef __MSVC__
+#define sync_msg(msg, ...) \
+{ \
+    char buf[512]; \
+ \
+    StringCbPrintfA(buf, sizeof(buf), msg, __VA_ARGS__); \
+    sync_msg_enter();   \
+    printf("[%.4ld] %s", GetCurrentThreadId(), buf);  \
+    sync_msg_leave();   \
+}
+#else
+#define sync_msg(msg, ...) \
+{ \
+    char buf[512]; \
+ \
+    StringCbPrintfA(buf, sizeof(buf), msg, ##__VA_ARGS__); \
+    \
+    sync_msg_enter();   \
+    printf("[%.4ld] %s", GetCurrentThreadId(), buf); \
+    sync_msg_leave();   \
+}
+#endif
+
+#ifndef DBG_PRINT_MSG
+#undef sync_msg
+#define sync_msg
+#endif
+
+#ifdef __MSVC__
+#define sync_err(msg, ...) sync_ok(FALSE, msg, __VA_ARGS__)
+#else
+#define sync_err(msg, ...) sync_ok(FALSE, msg, ##__VA_ARGS__)
+#endif
+
+void sync_msg_enter();
+void sync_msg_leave();
+
+extern PSecurityFunctionTable client1_SecFuncTable;
+extern PSecurityFunctionTable server1_SecFuncTable;
+
+void PrintErrorString(int errnum);
+void wserr( int rc, LPCWSTR  const funcname );
+
+void initSecLib(
+    HINSTANCE* phSec,
+    PSecurityFunctionTable* pSecFuncTable);
+
+BOOL SendMsg(SOCKET s, PBYTE pBuf, DWORD cbBuf);
+BOOL SendMsgSMB(SOCKET s, PBYTE pBuf, DWORD cbBuf);
+BOOL ReceiveMsg(SOCKET s,PBYTE pBuf,DWORD cbBuf,DWORD *pcbRead);
+BOOL ReceiveMsgSMB(SOCKET s,PBYTE pBuf,DWORD cbBuf,DWORD *pcbRead);
+BOOL SendBytes(SOCKET s, PBYTE pBuf, DWORD cbBuf);
+BOOL ReceiveBytes(SOCKET s, PBYTE pBuf, DWORD cbBuf, DWORD *pcbRead);
+DWORD inet_addr_w(const WCHAR *pszAddr);
+
+/* allocates and returns a buffer that is
+ * big enough to hold the message an a few
+ * additonal stuff
+ * if ppBuffer is NULL no allocations is done */
+VOID
+CodeCalcAndAllocBuffer(
+    IN ULONG cbMessage,
+    IN PSecPkgContext_Sizes pSecSizes,
+    OUT PBYTE* ppBuffer,
+    OUT PULONG pBufLen);
+BOOL
+CodeEncrypt(
+    IN PSecHandle hCtxt,
+    IN PBYTE pMessage,
+    IN ULONG cbMessage,
+    IN PSecPkgContext_Sizes pSecSizes,
+    IN ULONG cbBufLen,
+    OUT PBYTE pOutBuf);
+/* no buffer is allocated !
+ * the decryption uses pBuffer.
+ * on success pMsg points to pBuffer + n; */
+BOOL
+CodeDecrypt(
+    IN PSecHandle hCtxt,
+    IN PBYTE pBuffer,
+    IN ULONG cbBuffer,
+    IN PSecPkgContext_Sizes pSecSizes,
+    OUT PBYTE* pMsg,
+    OUT LPDWORD pcbMessage);
+
+BOOL
+msgtest_recv(
+    IN SOCKET socket,
+    IN PSecHandle phCtxt,
+    IN PSecPkgContext_Sizes pSecPkgSizes,
+    IN BOOL hasOwnServer,
+    IN WCHAR* expectedmsg);
+BOOL
+msgtest_send(
+    IN SOCKET socket,
+    IN PSecHandle phCtxt,
+    IN PSecPkgContext_Sizes pSecPkgSizes,
+    IN WCHAR* msg);
+
+void PrintHexDumpMax(DWORD length, PBYTE buffer, int printmax);
+void PrintHexDump(DWORD length, PBYTE buffer);
+void PrintSecBuffer(PSecBuffer buf);
+
+void PrintISCRetAttr(IN ULONG RetAttr);
+void PrintISCReqAttr(IN ULONG ReqAttr);
+void PrintASCRetAttr(IN ULONG RetAttr);
+void PrintASCReqAttr(IN ULONG ReqAttr);
+
+typedef struct auth_test_data_svr
+{
+    ULONG MessageAttribute;
+    /* challenge-message */
+    ULONG ChaMsg_NegotiateFlags;
+    /* Accept security context (nego->challenge)*/
+    ULONG ASCContextRETAttr1;
+    /* Accept security context (auth->)*/
+    ULONG ASCContextRETAttr2;
+    BOOL ChaMsg_hasAvTimestamp;
+} AUTH_TEST_DATA_SVR, *PAUTH_TEST_DATA_SVR;
+
+typedef struct auth_test_data_cli
+{
+    WCHAR* user;
+    WCHAR* pass;
+    WCHAR* userdom;
+    ULONG MessageAttribute;
+    /* negotiate-message */
+    ULONG NegMsg_NegotiateFlags;
+    ULONG ISCContextRETAttr1;
+    /* authenticate-message */
+    ULONG AuthMsg_NegotiateFlags;
+    ULONG ISCContextRETAttr2;
+} AUTH_TEST_DATA_CLI, *PAUTH_TEST_DATA_CLI;
+
+typedef struct auth_test_data
+{
+    WCHAR* PackageName;
+    AUTH_TEST_DATA_CLI cli;
+    AUTH_TEST_DATA_SVR svr;
+} AUTH_TEST_DATA, *PAUTH_TEST_DATA;
+
+extern int AUTH_TEST_DATA_SIZE;
+extern AUTH_TEST_DATA authtestdata[];
+
+typedef struct _CLI_PARAMS
+{
+    WCHAR* PackageName;
+    WCHAR* ServerName;
+    int ServerPort;
+    BOOL ownServer;
+    PAUTH_TEST_DATA_CLI ptest;
+} CLI_PARAMS, *PCLI_PARAMS;
+
+typedef struct _SVR_PARAMS
+{
+    WCHAR* PackageName;
+    PAUTH_TEST_DATA_SVR ptest;
+} SVR_PARAMS, *PSVR_PARAMS;
+
+#define TESTSEC_CLI_AUTH_INIT  1
+#define TESTSEC_SVR_AUTH       2
+#define TESTSEC_CLI_AUTH_FINI  3
+
+void NtlmCheckInit();
+void NtlmCheckFini();
+void NtlmCheckSecBuffer(
+    IN int TESTSEC_idx,
+    IN PBYTE buffer,
+    IN PCLI_PARAMS pcp,
+    IN PSVR_PARAMS psp);
+
+#endif // __CLIENT_SERVER_H__

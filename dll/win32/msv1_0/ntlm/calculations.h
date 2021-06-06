@@ -1,0 +1,4 @@
+#ifndef _MSV1_0_CALCULATI0NS_H_
+#define _MSV1_0_CALCULATI0NS_H_
+
+#endif /* _MSV1_0_CALCULATI0NS_H_ */

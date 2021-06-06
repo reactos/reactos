@@ -883,7 +883,11 @@ static void test_register_device_iface(void)
      'C','u','r','r','e','n','t','C','o','n','t','r','o','l','S','e','t','\\',
      'E','n','u','m','\\','R','o','o','t','\\',
      'L','E','G','A','C','Y','_','B','O','G','U','S',0};
+#ifdef __REACTOS__
+    SP_DEVICE_INTERFACE_DATA iface = {sizeof(iface)};
+#else
     SP_DEVICE_INTERFACE_DATA iface = {sizeof(iface)}, ret_iface = {sizeof(ret_iface)};
+#endif
     SP_DEVINFO_DATA device = {sizeof(device)};
     HDEVINFO set, set2;
     BOOL ret;

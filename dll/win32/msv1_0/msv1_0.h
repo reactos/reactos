@@ -326,4 +326,27 @@ SystemFunction012(const BYTE *in,
                   const BYTE *key,
                   LPBYTE out);
 
+
+NTSTATUS
+NTAPI
+LsaApLogonUserEx2(
+    IN PLSA_CLIENT_REQUEST ClientRequest,
+    IN SECURITY_LOGON_TYPE LogonType,
+    IN PVOID ProtocolSubmitBuffer,
+    IN PVOID ClientBufferBase,
+    IN ULONG SubmitBufferSize,
+    OUT PVOID *ProfileBuffer,
+    OUT PULONG ProfileBufferSize,
+    OUT PLUID LogonId,
+    OUT PNTSTATUS SubStatus,
+    OUT PLSA_TOKEN_INFORMATION_TYPE TokenInformationType,
+    OUT PVOID *TokenInformation,
+    OUT PUNICODE_STRING *AccountName,
+    OUT PUNICODE_STRING *AuthenticatingAuthority,
+    OUT PUNICODE_STRING *MachineName,
+    OUT PSECPKG_PRIMARY_CRED PrimaryCredentials,
+    OUT PSECPKG_SUPPLEMENTAL_CRED_ARRAY *SupplementalCredentials);
+
+extern LSA_DISPATCH_TABLE DispatchTable;
+
 /* EOF */

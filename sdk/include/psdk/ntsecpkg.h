@@ -23,6 +23,8 @@
 extern "C" {
 #endif
 
+#define SECPKG_USERMODEINIT_NAME "SpUserModeInitialize"
+
 /* Flags for the MachineState field in SECPKG_PARAMETERS */
 #define SECPKG_STATE_ENCRYPTION_PERMITTED               0x01
 #define SECPKG_STATE_STRONG_ENCRYPTION_PERMITTED        0x02
@@ -38,6 +40,25 @@ extern "C" {
 #define SECPKG_INTERFACE_VERSION_5                  0x100000
 #define SECPKG_INTERFACE_VERSION_6                  0x200000
 #define SECPKG_INTERFACE_VERSION_7                  0x400000
+
+/* Attributes for SECPKG_CALL_INFO */
+#define SECPKG_CALL_KERNEL_MODE     0x00000001  // Call originated in kernel mode
+#define SECPKG_CALL_ANSI            0x00000002  // Call came from ANSI stub
+#define SECPKG_CALL_URGENT          0x00000004  // Call designated urgent
+#define SECPKG_CALL_RECURSIVE       0x00000008  // Call is recursing
+#define SECPKG_CALL_IN_PROC         0x00000010  // Call originated in process
+#define SECPKG_CALL_CLEANUP         0x00000020  // Call is cleanup from a client
+#define SECPKG_CALL_WOWCLIENT       0x00000040L
+#define SECPKG_CALL_THREAD_TERM     0x00000080L
+#define SECPKG_CALL_PROCESS_TERM    0x00000100L
+#define SECPKG_CALL_IS_TCB          0x00000200L
+#define SECPKG_CALL_NETWORK_ONLY    0x00000400L
+#define SECPKG_CALL_WINLOGON        0x00000800L
+#define SECPKG_CALL_ASYNC_UPDATE    0x00001000L
+#define SECPKG_CALL_SYSTEM_PROC     0x00002000L
+#define SECPKG_CALL_NEGO            0x00004000L
+#define SECPKG_CALL_NEGO_EXTENDER   0x00008000L
+#define SECPKG_CALL_BUFFER_MARSHAL  0x00010000L
 
 /* enum definitions for Secure Service Provider/Authentication Packages */
 typedef enum _LSA_TOKEN_INFORMATION_TYPE {
@@ -129,6 +150,11 @@ typedef struct _SECPKG_CLIENT_INFO {
     BOOLEAN HasTcbPrivilege;
     BOOLEAN Impersonating;
     BOOLEAN Restricted;
+    /* NT 5.1 */
+    UCHAR ClientFlags;
+    SECURITY_IMPERSONATION_LEVEL ImpersonationLevel;
+    /* NT 6 */
+    HANDLE ClientToken;
 } SECPKG_CLIENT_INFO,
  *PSECPKG_CLIENT_INFO;
 
@@ -532,7 +558,7 @@ typedef NTSTATUS (NTAPI *SpLsaModeInitializeFn)(ULONG, PULONG,
  PSECPKG_FUNCTION_TABLE *, PULONG);
 
 /* User-mode entry point to SSP/APs */
-typedef NTSTATUS (WINAPI *SpUserModeInitializeFn)(ULONG, PULONG,
+typedef NTSTATUS (SEC_ENTRY *SpUserModeInitializeFn)(ULONG, PULONG,
  PSECPKG_USER_FUNCTION_TABLE *, PULONG);
 
 #ifdef __cplusplus

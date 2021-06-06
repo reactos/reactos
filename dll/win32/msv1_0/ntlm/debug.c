@@ -1,0 +1,215 @@
+/*
+ * Copyright 2011 Samuel Serapion
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ *
+ */
+
+#include <precomp.h>
+
+#include "wine/debug.h"
+WINE_DEFAULT_DEBUG_CHANNEL(ntlm);
+
+void
+NtlmPrintNegotiateFlags(ULONG Flags)
+{
+	TRACE("negotiateFlags \"0x%08lx\"{\n", Flags);
+
+	if (Flags & NTLMSSP_NEGOTIATE_56)
+		TRACE("\tNTLMSSP_NEGOTIATE_56\n");
+	if (Flags & NTLMSSP_NEGOTIATE_KEY_EXCH)
+		TRACE("\tNTLMSSP_NEGOTIATE_KEY_EXCH\n");
+	if (Flags & NTLMSSP_NEGOTIATE_128)
+		TRACE("\tNTLMSSP_NEGOTIATE_128\n");
+	if (Flags & NTLMSSP_NEGOTIATE_VERSION)
+		TRACE("\tNTLMSSP_NEGOTIATE_VERSION\n");
+	if (Flags & NTLMSSP_NEGOTIATE_TARGET_INFO)
+		TRACE("\tNTLMSSP_NEGOTIATE_TARGET_INFO\n");
+	if (Flags & NTLMSSP_REQUEST_NON_NT_SESSION_KEY)
+		TRACE("\tNTLMSSP_REQUEST_NON_NT_SESSION_KEY\n");
+	if (Flags & NTLMSSP_REQUEST_INIT_RESP)
+		TRACE("\tNTLMSSP_REQUEST_INIT_RESP\n");
+	if (Flags & NTLMSSP_TARGET_TYPE_SHARE)
+		TRACE("\tNTLMSSP_TARGET_TYPE_SHARE\n");
+	if (Flags & NTLMSSP_TARGET_TYPE_SERVER)
+		TRACE("\tNTLMSSP_TARGET_TYPE_SERVER\n");
+	if (Flags & NTLMSSP_TARGET_TYPE_DOMAIN)
+		TRACE("\tNTLMSSP_TARGET_TYPE_DOMAIN\n");
+	if (Flags & NTLMSSP_NEGOTIATE_ALWAYS_SIGN)
+		TRACE("\tNTLMSSP_NEGOTIATE_ALWAYS_SIGN\n");
+	if (Flags & NTLMSSP_NEGOTIATE_OEM_WORKSTATION_SUPPLIED)
+		TRACE("\tNTLMSSP_NEGOTIATE_WORKSTATION_SUPPLIED\n");
+	if (Flags & NTLMSSP_NEGOTIATE_OEM_DOMAIN_SUPPLIED)
+		TRACE("\tNTLMSSP_NEGOTIATE_DOMAIN_SUPPLIED\n");
+	if (Flags & NTLMSSP_NEGOTIATE_NTLM)
+		TRACE("\tNTLMSSP_NEGOTIATE_NTLM\n");
+	if (Flags & NTLMSSP_NEGOTIATE_EXTENDED_SESSIONSECURITY)
+		TRACE("\tNTLMSSP_NEGOTIATE_EXTENDED_SESSIONSECURITY\n");
+	if (Flags & NTLMSSP_NEGOTIATE_LM_KEY)
+		TRACE("\tNTLMSSP_NEGOTIATE_LM_KEY\n");
+	if (Flags & NTLMSSP_NEGOTIATE_DATAGRAM)
+		TRACE("\tNTLMSSP_NEGOTIATE_DATAGRAM\n");
+	if (Flags & NTLMSSP_NEGOTIATE_SEAL)
+		TRACE("\tNTLMSSP_NEGOTIATE_SEAL\n");
+	if (Flags & NTLMSSP_NEGOTIATE_SIGN)
+		TRACE("\tNTLMSSP_NEGOTIATE_SIGN\n");
+	if (Flags & NTLMSSP_REQUEST_TARGET)
+		TRACE("\tNTLMSSP_REQUEST_TARGET\n");
+	if (Flags & NTLMSSP_NEGOTIATE_OEM)
+		TRACE("\tNTLMSSP_NEGOTIATE_OEM\n");
+	if (Flags & NTLMSSP_NEGOTIATE_UNICODE)
+		TRACE("\tNTLMSSP_NEGOTIATE_UNICODE\n");
+    if (Flags & NTLMSSP_NEGOTIATE_NT_ONLY)
+		TRACE("\tNTLMSSP_NEGOTIATE_NT_ONLY\n");
+	TRACE("}\n");
+}
+
+void NtlmPrintHexDump(PBYTE buffer, DWORD length)
+{
+    #define LINE_LEN 100
+    /*#define ADD_CHAR(ch) \
+        { \
+            rgbLine[cbLine++] = ch; \
+            if (cbLine + 3 >= LINE_LEN) \
+            { \
+                __debugbreak(); \
+                rgbLine[cbLine++] = '>'; \
+                rgbLine[cbLine++] = '>'; \
+                goto printline; \
+            } \
+        }*/
+    #define ADD_CHAR(ch) rgbLine[cbLine++] = ch
+
+    unsigned int i, index;
+    DWORD count;
+    CHAR rgbDigits[]="0123456789abcdef";
+    CHAR rgbLine[LINE_LEN];
+    int cbLine;
+
+    for(index = 0; length;
+        length -= count, buffer += count, index += count) 
+    {
+        count = (length > 16) ? 16:length;
+
+        sprintf(rgbLine, "%4.4x  ", index);
+        cbLine = 6;
+        for(i=0;i<count;i++) 
+        {
+            ADD_CHAR(rgbDigits[buffer[i] >> 4]);
+            ADD_CHAR(rgbDigits[buffer[i] & 0x0f]);
+            if(i == 7)
+            {
+                ADD_CHAR(':');
+            }
+            else
+            {
+                ADD_CHAR(' ');
+            }
+        }
+        for(; i < 16; i++) 
+        {
+            ADD_CHAR(' ');
+            ADD_CHAR(' ');
+            ADD_CHAR(' ');
+        }
+        ADD_CHAR(' ');
+
+        for(i = 0; i < count; i++) 
+        {
+            if(buffer[i] < 32 || buffer[i] > 126)
+            {
+                ADD_CHAR('.');
+            }
+            else
+            {
+                ADD_CHAR(buffer[i]);
+            }
+        }
+    //printline:
+        rgbLine[cbLine++] = 0;
+        TRACE("%s\n", rgbLine);
+        //printf("%s\n", rgbLine);
+    }
+}
+
+void
+NtlmPrintAvPairs(
+    IN PEXT_DATA pAvData)
+{
+    PMSV1_0_AV_PAIR pAvPair = (PMSV1_0_AV_PAIR)pAvData->Buffer;
+
+    /* warning: the string buffers are not null terminated! */
+    #define AV_DESC(av_name) \
+        TRACE("%s: len: %x value: %.*S\n", \
+              av_name, pAvPair->AvLen, \
+              av_chlen, av_value);
+    do
+    {
+        WCHAR *av_value = (WCHAR*)((PCHAR)pAvPair + sizeof(MSV1_0_AV_PAIR));
+        ULONG av_chlen = pAvPair->AvLen / sizeof(WCHAR);
+        switch(pAvPair->AvId)
+        {
+        case MsvAvNbComputerName:
+            AV_DESC("MsvAvNbComputerName");
+            break;
+        case MsvAvNbDomainName:
+            AV_DESC("MsvAvNbDomainName");
+            break;
+        case MsvAvDnsComputerName:
+            AV_DESC("MsvAvDnsComputerName");
+            break;
+        case MsvAvDnsDomainName:
+            AV_DESC("MsvAvDnsDomainName");
+            break;
+        case MsvAvDnsTreeName:
+            AV_DESC("MsvAvDnsTreeName");
+            break;
+        case MsvAvFlags:
+            AV_DESC("MsvAvFlags");
+            break;
+        case MsvAvTimestamp:
+            TRACE("MsvAvTimestamp");
+            break;
+        case MsvAvRestrictions:
+            TRACE("MsAvRestrictions");
+            break;
+        case MsvAvTargetName:
+            AV_DESC("MsvAvTargetName");
+            break;
+        case MsvAvChannelBindings:
+            TRACE("MsvChannelBindings");
+            break;
+        }
+        pAvPair = (PMSV1_0_AV_PAIR)((PUCHAR)pAvPair + pAvPair->AvLen
+            + sizeof(MSV1_0_AV_PAIR));
+    }while(pAvPair->AvId != MsvAvEOL);
+}
+
+void
+PrintSignSealKeyInfo(PNTLMSSP_CONTEXT_MSG msg)
+{
+    TRACE("ClientSigningKey\n");
+    NtlmPrintHexDump((PBYTE)msg->ClientSigningKey, NTLM_SIGNKEY_LENGTH);
+    TRACE("ServerSigningKey\n");
+    NtlmPrintHexDump((PBYTE)msg->ServerSigningKey, NTLM_SIGNKEY_LENGTH);
+    TRACE("ClientSealingKey\n");
+    NtlmPrintHexDump((PBYTE)msg->ClientSealingKey, NTLM_SEALINGKEY_LENGTH);
+    TRACE("ClientHandle\n");
+    NtlmPrintHexDump((PBYTE)msg->ServerSealingKey, NTLM_SEALINGKEY_LENGTH);
+    TRACE("ClientHandle\n");
+    NtlmPrintHexDump((PBYTE)&msg->ClientHandle, sizeof(rc4_key));
+    TRACE("ServerHandle\n");
+    NtlmPrintHexDump((PBYTE)&msg->ServerHandle, sizeof(rc4_key));
+}
