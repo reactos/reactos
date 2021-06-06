@@ -1547,7 +1547,7 @@ static MUI_ENTRY plPLBootLoaderInstallPageEntries[] =
     {
         0,
         0,
-        "Instalacja mened\276era rozruchu na nosniku, Prosz\251 czeka\206...",
+        "Instalacja mened\276era rozruchu na no\230niku, prosz\251 czeka\206...",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
         TEXT_ID_STATIC
     },
