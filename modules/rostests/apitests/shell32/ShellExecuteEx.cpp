@@ -290,7 +290,11 @@ static void DoTestEntries(void)
     }
 
     // record open windows
-    EnumWindows(EnumWindowsProc, (LPARAM)&s_wi0);
+    if (!EnumWindows(EnumWindowsProc, (LPARAM)&s_wi0))
+    {
+        skip("EnumWindows failed\n");
+        return;
+    }
 
     // s_win_test_exe
     GetWindowsDirectoryA(s_win_test_exe, _countof(s_win_test_exe));
