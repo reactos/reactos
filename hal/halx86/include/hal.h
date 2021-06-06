@@ -47,12 +47,12 @@
 #include <drivers/acpi/acpi.h>
 
 /* Internal kernel headers */
-#define KeGetCurrentThread _KeGetCurrentThread
 #ifdef _M_AMD64
 #include <internal/amd64/ke.h>
 #include <internal/amd64/mm.h>
 #include "internal/amd64/intrin_i.h"
 #else
+#define KeGetCurrentThread _KeGetCurrentThread
 #include <internal/i386/ke.h>
 #include <internal/i386/mm.h>
 #include "internal/i386/intrin_i.h"
