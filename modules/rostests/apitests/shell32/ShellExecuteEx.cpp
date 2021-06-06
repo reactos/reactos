@@ -9,7 +9,6 @@
 #include "shelltest.h"
 #include <shlwapi.h>
 #include <stdio.h>
-#include <versionhelpers.h>
 
 #define ok_ShellExecuteEx (winetest_set_location(__FILE__, __LINE__), 0) ? (void)0 : TestShellExecuteEx
 
