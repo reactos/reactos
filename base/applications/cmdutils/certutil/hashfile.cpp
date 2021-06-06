@@ -1,10 +1,8 @@
 /*
  * PROJECT:     ReactOS certutil
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
- * PURPOSE:     CertUtil stub
+ * PURPOSE:     CertUtil hashfile implementation
  * COPYRIGHT:   Copyright 2020 Mark Jansen (mark.jansen@reactos.org)
- *
- * Note: Only -hashfile is implemented for now, the rest is not present!
  */
 
 #include "precomp.h"
@@ -12,7 +10,7 @@
 #include <stdlib.h>
 
 
-static BOOL hash_file(LPCWSTR Filename)
+BOOL hash_file(LPCWSTR Filename)
 {
     HCRYPTPROV hProv;
     BOOL bSuccess = FALSE;
@@ -87,69 +85,3 @@ static BOOL hash_file(LPCWSTR Filename)
     return bSuccess;
 }
 
-
-static void print_usage()
-{
-    ConPuts(StdOut, L"Verbs:\n");
-    ConPuts(StdOut, L"  -hashfile           -- Display cryptographic hash over a file\n");
-    ConPuts(StdOut, L"\n");
-    ConPuts(StdOut, L"CertUtil -?           -- Display a list of all verbs\n");
-    ConPuts(StdOut, L"CertUtil -hashfile -? -- Display help text for the 'hashfile' verb\n");
-}
-
-int wmain(int argc, WCHAR *argv[])
-{
-    int n;
-
-    /* Initialize the Console Standard Streams */
-    ConInitStdStreams();
-
-    if (argc == 1) /* i.e. no commandline arguments given */
-    {
-        print_usage();
-        return EXIT_SUCCESS;
-    }
-
-    for (n = 1; n < argc; ++n)
-    {
-        if (!_wcsicmp(argv[n], L"-?"))
-        {
-            print_usage();
-            return EXIT_SUCCESS;
-        }
-        else if (!_wcsicmp(argv[n], L"-hashfile"))
-        {
-            if (argc == 3)
-            {
-                if (!_wcsicmp(argv[n+1], L"-?"))
-                {
-                    print_usage();
-                    return EXIT_SUCCESS;
-                }
-                else
-                {
-                    if (!hash_file(argv[n+1]))
-                    {
-                        /* hash_file prints the failure itself */
-                        return EXIT_FAILURE;
-                    }
-
-                    ConPuts(StdOut, L"CertUtil: -hashfile command completed successfully\n");
-                    return EXIT_SUCCESS;
-                }
-            }
-            else
-            {
-                ConPrintf(StdOut, L"CertUtil: -hashfile expected 1 argument, got %d\n", argc - 2);
-                return EXIT_FAILURE;
-            }
-        }
-        else
-        {
-            ConPrintf(StdOut, L"CertUtil: Unknown verb: %s\n", argv[n]);
-            return EXIT_FAILURE;
-        }
-    }
-
-    return EXIT_SUCCESS;
-}
