@@ -350,7 +350,6 @@ DECLARE_INTERFACE_(IIrpQueue, IUnknown)
     STDMETHOD_(NTSTATUS, ReleaseMappingWithTag)(THIS_
         IN PVOID Tag) PURE;
 
-    STDMETHOD_(BOOLEAN, HasLastMappingFailed)(THIS) PURE;
     STDMETHOD_(ULONG, GetCurrentIrpOffset)(THIS) PURE;
 
     STDMETHOD_(BOOLEAN, GetAcquiredTagRange)(THIS_
