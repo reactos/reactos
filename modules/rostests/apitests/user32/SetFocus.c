@@ -26,23 +26,19 @@ static unsigned __stdcall thread_proc_0(void *arg)
 
     ok_int(GetFocus() == NULL, TRUE);
     ok_int(GetMainThreadFocus() == GetDlgItem(hwnd, IDOK), TRUE);
-    PostMessageA(hwnd, WM_NEXTDLGCTL, FALSE, FALSE);
-    Sleep(INTERVAL);
+    SendMessageA(hwnd, WM_NEXTDLGCTL, FALSE, FALSE);
 
     ok_int(GetFocus() == NULL, TRUE);
     ok_int(GetMainThreadFocus() == GetDlgItem(hwnd, IDCANCEL), TRUE);
-    PostMessageA(hwnd, WM_NEXTDLGCTL, FALSE, FALSE);
-    Sleep(INTERVAL);
+    SendMessageA(hwnd, WM_NEXTDLGCTL, FALSE, FALSE);
 
     ok_int(GetFocus() == NULL, TRUE);
     ok_int(GetMainThreadFocus() == GetDlgItem(hwnd, psh1), TRUE);
-    PostMessageA(hwnd, WM_NEXTDLGCTL, FALSE, FALSE);
-    Sleep(INTERVAL);
+    SendMessageA(hwnd, WM_NEXTDLGCTL, FALSE, FALSE);
 
     ok_int(GetFocus() == NULL, TRUE);
     ok_int(GetMainThreadFocus() == GetDlgItem(hwnd, IDOK), TRUE);
-    PostMessageA(hwnd, WM_NEXTDLGCTL, TRUE, FALSE);
-    Sleep(INTERVAL);
+    SendMessageA(hwnd, WM_NEXTDLGCTL, TRUE, FALSE);
 
     ok_int(GetFocus() == NULL, TRUE);
     ok_int(GetMainThreadFocus() == GetDlgItem(hwnd, psh1), TRUE);
@@ -139,8 +135,10 @@ DialogProc_0(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             SendMessageA(hwnd, WM_NEXTDLGCTL, FALSE, FALSE);
 
             ok_int(GetFocus() == GetDlgItem(hwnd, IDOK), TRUE);
+            SetFocus(GetDlgItem(hwnd, IDCANCEL));
             PostMessageA(hwnd, WM_COMMAND, psh2, 0);
             return TRUE;
+
         case WM_COMMAND:
             switch (LOWORD(wParam))
             {
@@ -149,6 +147,7 @@ DialogProc_0(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                     hThread = (HANDLE)_beginthreadex(NULL, 0, thread_proc_0, hwnd, 0, NULL);
                     CloseHandle(hThread);
                     break;
+
                 case psh3:
                     ok_int(GetFocus() == GetDlgItem(hwnd, IDOK), TRUE);
                     EndDialog(hwnd, IDCANCEL);
@@ -169,6 +168,7 @@ DialogProc_1(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             SetFocus(GetDlgItem(hwnd, IDCANCEL));
             PostMessageA(hwnd, WM_COMMAND, psh2, 0);
             return FALSE;
+
         case WM_COMMAND:
             switch (LOWORD(wParam))
             {
@@ -180,6 +180,7 @@ DialogProc_1(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                     hThread = (HANDLE)_beginthreadex(NULL, 0, thread_proc_1, hwnd, 0, NULL);
                     CloseHandle(hThread);
                     break;
+
                 case psh3:
                     ok_int(GetFocus() == NULL, TRUE);
                     EnableWindow(GetDlgItem(hwnd, IDCANCEL), TRUE);
@@ -190,6 +191,7 @@ DialogProc_1(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                     hThread = (HANDLE)_beginthreadex(NULL, 0, thread_proc_2, hwnd, 0, NULL);
                     CloseHandle(hThread);
                     break;
+
                 case psh4:
                     ok_int(GetFocus() == GetDlgItem(hwnd, IDCANCEL), TRUE);
                     EndDialog(hwnd, IDCANCEL);
