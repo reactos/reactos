@@ -4,7 +4,7 @@
  * PURPOSE:     Info Classes for the Process Manager
  * COPYRIGHT:   Copyright Alex Ionescu <alex.ionescu@reactos.org>
  *              Copyright Thomas Weidenmueller <w3seek@reactos.org>
- *              Copyright 2020 George Bișoc <george.bisoc@reactos.org>
+ *              Copyright 2020-2021 George Bișoc <george.bisoc@reactos.org>
  */
 
 #include "icif.h"
@@ -289,12 +289,7 @@ static const INFORMATION_CLASS_INFO PsProcessInfoClass[] =
     ),
 
     /* ProcessIoPriority */
-    IQS_SAME
-    (
-        CHAR,
-        CHAR,
-        ICIF_NONE
-    ),
+    IQS_NONE,
 
     /* ProcessExecuteFlags */
     IQS_SAME
@@ -305,12 +300,7 @@ static const INFORMATION_CLASS_INFO PsProcessInfoClass[] =
     ),
 
     /* ProcessTlsInformation */
-    IQS_SAME
-    (
-        CHAR,
-        CHAR,
-        ICIF_NONE
-    ),
+    IQS_NONE,
 
     /* ProcessCookie */
     IQS_SAME
@@ -329,44 +319,19 @@ static const INFORMATION_CLASS_INFO PsProcessInfoClass[] =
     ),
 
     /* ProcessCycleTime */
-    IQS_SAME
-    (
-        CHAR,
-        CHAR,
-        ICIF_NONE
-    ),
+    IQS_NONE,
 
     /* ProcessPagePriority */
-    IQS_SAME
-    (
-        CHAR,
-        CHAR,
-        ICIF_NONE
-    ),
+    IQS_NONE,
 
     /* ProcessInstrumentationCallback */
-    IQS_SAME
-    (
-        CHAR,
-        CHAR,
-        ICIF_NONE
-    ),
+    IQS_NONE,
 
     /* ProcessThreadStackAllocation */
-    IQS_SAME
-    (
-        CHAR,
-        CHAR,
-        ICIF_NONE
-    ),
+    IQS_NONE,
 
     /* ProcessWorkingSetWatchEx */
-    IQS_SAME
-    (
-        CHAR,
-        CHAR,
-        ICIF_NONE
-    ),
+    IQS_NONE,
 
     /* ProcessImageFileNameWin32 */
     IQS_SAME
@@ -377,28 +342,13 @@ static const INFORMATION_CLASS_INFO PsProcessInfoClass[] =
     ),
 
     /* ProcessImageFileMapping */
-    IQS_SAME
-    (
-        CHAR,
-        CHAR,
-        ICIF_NONE
-    ),
+    IQS_NONE,
 
     /* ProcessAffinityUpdateMode */
-    IQS_SAME
-    (
-        CHAR,
-        CHAR,
-        ICIF_NONE
-    ),
+    IQS_NONE,
 
     /* ProcessMemoryAllocationMode */
-    IQS_SAME
-    (
-        CHAR,
-        CHAR,
-        ICIF_NONE
-    ),
+    IQS_NONE,
 };
 
 //
@@ -478,12 +428,7 @@ static const INFORMATION_CLASS_INFO PsThreadInfoClass[] =
     ),
 
     /* ThreadEventPair_Reusable */
-    IQS_SAME
-    (
-        CHAR,
-        CHAR,
-        ICIF_NONE
-    ),
+    IQS_NONE,
 
     /* ThreadQuerySetWin32StartAddress */
     IQS
@@ -586,58 +531,23 @@ static const INFORMATION_CLASS_INFO PsThreadInfoClass[] =
     ),
 
     /* ThreadLastSystemCall */
-    IQS_SAME
-    (
-        CHAR,
-        CHAR,
-        ICIF_NONE
-    ),
+    IQS_NONE,
 
     /* ThreadIoPriority */
-    IQS_SAME
-    (
-        CHAR,
-        CHAR,
-        ICIF_NONE
-    ),
+    IQS_NONE,
 
     /* ThreadCycleTime */
-    IQS_SAME
-    (
-        CHAR,
-        CHAR,
-        ICIF_NONE
-    ),
+    IQS_NONE,
 
     /* ThreadPagePriority */
-    IQS_SAME
-    (
-        CHAR,
-        CHAR,
-        ICIF_NONE
-    ),
+    IQS_NONE,
 
     /* ThreadActualBasePriority */
-    IQS_SAME
-    (
-        CHAR,
-        CHAR,
-        ICIF_NONE
-    ),
+    IQS_NONE,
 
     /* ThreadTebInformation */
-    IQS_SAME
-    (
-        CHAR,
-        CHAR,
-        ICIF_NONE
-    ),
+    IQS_NONE,
 
     /* ThreadCSwitchMon */
-    IQS_SAME
-    (
-        CHAR,
-        CHAR,
-        ICIF_NONE
-    ),
+    IQS_NONE,
 };
