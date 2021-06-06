@@ -262,8 +262,19 @@ wWinMain(HINSTANCE hInstance,
          LPWSTR    lpCmdLine,
          INT       nCmdShow)
 {
-    if (lstrcmpiW(lpCmdLine, L"") == 0)
+    if (lstrcmpiW(lpCmdLine, L"") == 0 || lstrcmpiW(lpCmdLine, L"TEST") == 0)
+    {
+        WCHAR szPath[MAX_PATH], szWinDir[MAX_PATH], szSysDir[MAX_PATH];
+        GetModuleFileNameW(NULL, szPath, _countof(szPath));
+        PathRemoveFileSpecW(szPath);
+        GetWindowsDirectoryW(szWinDir, _countof(szWinDir));
+        GetSystemDirectoryW(szWinDir, _countof(szWinDir));
+        if (StrCmpNIW(szPath, szSysDir, lstrlenW(szSysDir)) == 0)
+            return 1;
+        if (StrCmpNIW(szPath, szWinDir, lstrlenW(szWinDir)) == 0)
+            return 2;
         return 0;
+    }
 
     s_nMode = _wtoi(lpCmdLine);
 
