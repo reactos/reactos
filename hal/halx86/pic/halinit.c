@@ -12,10 +12,6 @@
 #define NDEBUG
 #include <debug.h>
 
-/* GLOBALS ******************************************************************/
-
-const USHORT HalpBuildType = HAL_BUILD_TYPE;
-
 /* FUNCTIONS ****************************************************************/
 
 VOID
