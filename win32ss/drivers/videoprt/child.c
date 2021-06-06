@@ -40,10 +40,12 @@ IntVideoPortGetMonitorId(
 
     /* 3 letters 5-bit ANSI manufacturer code (big endian) */
     /* Letters encoded as A=1 to Z=26 */
-    Manufacturer = *(PUSHORT)(&ChildExtension->ChildDescriptor[8]);
+    Manufacturer = ((USHORT)ChildExtension->ChildDescriptor[8] << 8) +
+                   (USHORT)ChildExtension->ChildDescriptor[9];
 
     /* Model number (16-bit little endian) */
-    Model = *(PUSHORT)(&ChildExtension->ChildDescriptor[10]);
+    Model = ((USHORT)ChildExtension->ChildDescriptor[11] << 8) +
+             (USHORT)ChildExtension->ChildDescriptor[10];
 
     /* Convert the Monitor ID to a readable form */
     swprintf(Buffer,
