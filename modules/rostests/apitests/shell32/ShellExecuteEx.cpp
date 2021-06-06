@@ -122,6 +122,8 @@ static char s_sys_bat_file[MAX_PATH];
 static char s_win_txt_file[MAX_PATH];
 static char s_sys_txt_file[MAX_PATH];
 
+#define DONT_CARE 0x0BADF00D
+
 static const TEST_ENTRY s_entries_1[] =
 {
     { __LINE__, TRUE, TRUE, "test program" },
@@ -153,6 +155,7 @@ static const TEST_ENTRY s_entries_1[] =
     { __LINE__, TRUE, TRUE, ".\\shell32_apitest_sub.exe" },
     { __LINE__, TRUE, TRUE, "\"shell32_apitest_sub.exe\"" },
     { __LINE__, TRUE, TRUE, "\".\\shell32_apitest_sub.exe\"" },
+    { __LINE__, TRUE, DONT_CARE, "https://google.com" },
     { __LINE__, TRUE, FALSE, "::{450d8fba-ad25-11d0-98a8-0800361b1103}" },
     { __LINE__, TRUE, FALSE, "shell:::{450d8fba-ad25-11d0-98a8-0800361b1103}" },
     { __LINE__, TRUE, FALSE, "shell:sendto" },
@@ -204,14 +207,17 @@ static VOID DoTestEntry(const TEST_ENTRY *pEntry)
     if (!pEntry->ret)
         return;
 
-    if (pEntry->bProcessHandle)
+    if ((UINT)pEntry->bProcessHandle != DONT_CARE)
     {
-        ok(!!info.hProcess, "Line %u: hProcess expected non-NULL\n", pEntry->lineno);
-    }
-    else
-    {
-        ok(!info.hProcess, "Line %u: hProcess expected NULL\n", pEntry->lineno);
-        return;
+        if (pEntry->bProcessHandle)
+        {
+            ok(!!info.hProcess, "Line %u: hProcess expected non-NULL\n", pEntry->lineno);
+        }
+        else
+        {
+            ok(!info.hProcess, "Line %u: hProcess expected NULL\n", pEntry->lineno);
+            return;
+        }
     }
 
     WaitForInputIdle(info.hProcess, INFINITE);
