@@ -122,8 +122,6 @@ static char s_sys_bat_file[MAX_PATH];
 static char s_win_txt_file[MAX_PATH];
 static char s_sys_txt_file[MAX_PATH];
 
-#define DONT_CARE 0xDEADBEEF
-
 static const TEST_ENTRY s_entries_1[] =
 {
     { __LINE__, TRUE, TRUE, "test program" },
