@@ -45,6 +45,7 @@ include(generic.cmake)
 include(acpi.cmake)
 include(apic.cmake)
 include(up.cmake)
+include(smp.cmake)
 
 if(ARCH STREQUAL "i386")
     include(pcidata.cmake)
@@ -73,7 +74,9 @@ elseif(ARCH STREQUAL "amd64")
         amd64/x86bios.c)
 
     add_hal(hal SOURCES ${HAL_SOURCE} COMPONENTS generic acpi up apic)
-    #add_hal(halmacpi SOURCES acpi/halacpi.rc COMPONENTS generic acpi smp pic)
     target_link_libraries(hal fast486)
+
+    add_hal(halmp SOURCES ${HAL_SOURCE} COMPONENTS generic acpi smp apic)
+    target_link_libraries(halmp fast486)
 
 endif()
