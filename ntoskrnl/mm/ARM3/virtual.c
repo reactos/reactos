@@ -659,12 +659,13 @@ MiDeleteVirtualAddresses(IN ULONG_PTR Va,
         PointerPte = MiAddressToPte(Va);
         do
         {
+            /* Making sure the PDE is still valid */
+            ASSERT(PointerPde->u.Hard.Valid == 1);
+
             /* Capture the PDE and make sure it exists */
             TempPte = *PointerPte;
             if (TempPte.u.Long)
             {
-                MiDecrementPageTableReferences((PVOID)Va);
-
                 /* Check if the PTE is actually mapped in */
                 if (MI_IS_MAPPED_PTE(&TempPte))
                 {
@@ -709,29 +710,23 @@ MiDeleteVirtualAddresses(IN ULONG_PTR Va,
                     /* The PTE was never mapped, just nuke it here */
                     MI_ERASE_PTE(PointerPte);
                 }
+
+                if (MiDecrementPageTableReferences((PVOID)Va) == 0)
+                {
+                    ASSERT(PointerPde->u.Long != 0);
+                    /* Delete the PDE proper */
+                    MiDeletePde(PointerPde, CurrentProcess);
+                    /* Jump */
+                    Va = (ULONG_PTR)MiPdeToAddress(PointerPde + 1);
+                    break;
+                }
             }
 
             /* Update the address and PTE for it */
             Va += PAGE_SIZE;
             PointerPte++;
             PrototypePte++;
-
-            /* Making sure the PDE is still valid */
-            ASSERT(PointerPde->u.Hard.Valid == 1);
-        }
-        while ((Va & (PDE_MAPPED_VA - 1)) && (Va <= EndingAddress));
-
-        /* The PDE should still be valid at this point */
-        ASSERT(PointerPde->u.Hard.Valid == 1);
-
-        /* Check remaining PTE count (go back 1 page due to above loop) */
-        if (MiQueryPageTableReferences((PVOID)(Va - PAGE_SIZE)) == 0)
-        {
-            ASSERT(PointerPde->u.Long != 0);
-
-            /* Delete the PDE proper */
-            MiDeletePde(PointerPde, CurrentProcess);
-        }
+        } while ((Va & (PDE_MAPPED_VA - 1)) && (Va <= EndingAddress));
 
         /* Release the lock */
         MiReleasePfnLock(OldIrql);
@@ -739,7 +734,6 @@ MiDeleteVirtualAddresses(IN ULONG_PTR Va,
         if (Va > EndingAddress) return;
 
         /* Otherwise, we exited because we hit a new PDE boundary, so start over */
-        PointerPde = MiAddressToPde(Va);
         AddressGap = FALSE;
     }
 }

@@ -119,7 +119,7 @@ BOOLEAN
 MiIsPageTablePresent(PVOID Address)
 {
 #if _MI_PAGING_LEVELS == 2
-    return MiQueryPageTableReferences(Address) != 0;
+    return MmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)] != 0;
 #else
     PMMPDE PointerPde;
     PMMPPE PointerPpe;
