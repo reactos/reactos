@@ -118,6 +118,7 @@ DialogProc_0(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     switch (uMsg)
     {
         case WM_INITDIALOG:
+            ok_int(GetFocus() == NULL, TRUE);
             SetFocus(GetDlgItem(hwnd, IDOK));
             ok_int(GetFocus() == GetDlgItem(hwnd, IDOK), TRUE);
             SendMessageA(hwnd, WM_NEXTDLGCTL, FALSE, FALSE);
@@ -150,7 +151,7 @@ DialogProc_0(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
                 case psh3:
                     ok_int(GetFocus() == GetDlgItem(hwnd, IDOK), TRUE);
-                    EndDialog(hwnd, IDCANCEL);
+                    EndDialog(hwnd, IDCLOSE);
                     break;
             }
             break;
@@ -184,6 +185,7 @@ DialogProc_1(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                 case psh3:
                     ok_int(GetFocus() == NULL, TRUE);
                     EnableWindow(GetDlgItem(hwnd, IDCANCEL), TRUE);
+
                     ok_int(GetFocus() == NULL, TRUE);
                     SetFocus(GetDlgItem(hwnd, IDCANCEL));
                     ok_int(GetFocus() == GetDlgItem(hwnd, IDCANCEL), TRUE);
@@ -194,7 +196,13 @@ DialogProc_1(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
                 case psh4:
                     ok_int(GetFocus() == GetDlgItem(hwnd, IDCANCEL), TRUE);
-                    EndDialog(hwnd, IDCANCEL);
+                    ShowWindow(GetDlgItem(hwnd, IDCANCEL), SW_HIDE);
+
+                    ok_int(GetFocus() == GetDlgItem(hwnd, IDOK), TRUE);
+                    ShowWindow(GetDlgItem(hwnd, IDCANCEL), SW_SHOW);
+
+                    ok_int(GetFocus() == GetDlgItem(hwnd, IDOK), TRUE);
+                    EndDialog(hwnd, IDCLOSE);
                     break;
             }
             break;
@@ -206,6 +214,6 @@ START_TEST(SetFocus)
 {
     s_dwMainThreadID = GetCurrentThreadId();
     Sleep(INTERVAL);
-    DialogBoxA(GetModuleHandleA(NULL), "SETFOCUS", NULL, DialogProc_0);
-    DialogBoxA(GetModuleHandleA(NULL), "SETFOCUS", NULL, DialogProc_1);
+    ok_int((INT)DialogBoxA(GetModuleHandleA(NULL), "SETFOCUS", NULL, DialogProc_0), IDCLOSE);
+    ok_int((INT)DialogBoxA(GetModuleHandleA(NULL), "SETFOCUS", NULL, DialogProc_1), IDCLOSE);
 }
