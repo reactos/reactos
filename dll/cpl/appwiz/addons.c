@@ -388,17 +388,10 @@ static DWORD WINAPI download_proc(PVOID arg)
 
 static INT_PTR CALLBACK installer_proc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
-    HWND hwndProgress, hwndInstallButton;
+    HWND hwndInstallButton;
     switch(msg) {
     case WM_INITDIALOG:
-
-        hwndProgress = GetDlgItem(hwnd, ID_DWL_PROGRESS);
-        if (hwndProgress == GetFocus()) /* Avoid CORE-5737 */
-        {
-            SendMessageW(hwnd, WM_NEXTDLGCTL, 0, FALSE);
-        }
-        ShowWindow(hwndProgress, SW_HIDE);
-
+        ShowWindow(GetDlgItem(hwnd, ID_DWL_PROGRESS), SW_HIDE);
         install_dialog = hwnd;
         return TRUE;
 
