@@ -367,6 +367,9 @@ KeSetPriorityAndQuantumProcess(IN PKPROCESS Process,
     /* Lock the process */
     KiAcquireProcessLockRaiseToSynch(Process, &ProcessLock);
 
+    /* Acquire the dispatcher lock */
+    KiAcquireDispatcherLockAtSynchLevel();
+
     /* Check if we are modifying the quantum too */
     if (Quantum) Process->QuantumReset = Quantum;
 

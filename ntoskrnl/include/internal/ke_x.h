@@ -1347,6 +1347,8 @@ KxUnwaitThreadForEvent(IN PKEVENT Event,
 // This routine must be entered with the PRCB lock held and it will exit
 // with the PRCB lock released!
 //
+_Requires_lock_held_(Prcb->PrcbLock)
+_Releases_lock_(Prcb->PrcbLock)
 FORCEINLINE
 VOID
 KxQueueReadyThread(IN PKTHREAD Thread,

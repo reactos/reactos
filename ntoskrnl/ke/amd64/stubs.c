@@ -26,6 +26,7 @@ NTSTATUS
 KiConvertToGuiThread(
     VOID);
 
+_Requires_lock_not_held_(Prcb->PrcbLock)
 VOID
 NTAPI
 KiDpcInterruptHandler(VOID)
@@ -61,6 +62,9 @@ KiDpcInterruptHandler(VOID)
     }
     else if (Prcb->NextThread)
     {
+        /* Acquire the PRCB lock */
+        KiAcquirePrcbLock(Prcb);
+
         /* Capture current thread data */
         OldThread = Prcb->CurrentThread;
         NewThread = Prcb->NextThread;
