@@ -989,23 +989,29 @@ FreeSegmentPage(PMM_SECTION_SEGMENT Segment, PLARGE_INTEGER Offset)
 
 VOID
 NTAPI
-MmDereferenceSegment(PMM_SECTION_SEGMENT Segment)
+MmDereferenceSegmentWithLock(PMM_SECTION_SEGMENT Segment, KIRQL OldIrql)
 {
-    KIRQL OldIrql;
+    BOOLEAN HaveLock = FALSE;
 
     /* Lock the PFN lock because we mess around with SectionObjectPointers */
-    OldIrql = MiAcquirePfnLock();
+    if (OldIrql == MM_NOIRQL)
+    {
+        HaveLock = TRUE;
+        OldIrql = MiAcquirePfnLock();
+    }
 
     if (InterlockedDecrement64(Segment->ReferenceCount) > 0)
     {
         /* Nothing to do yet */
-        MiReleasePfnLock(OldIrql);
+        if (HaveLock)
+            MiReleasePfnLock(OldIrql);
         return;
     }
 
     *Segment->Flags |= MM_SEGMENT_INDELETE;
 
-    MiReleasePfnLock(OldIrql);
+    if (HaveLock)
+        MiReleasePfnLock(OldIrql);
 
     /* Flush the segment */
     if (*Segment->Flags & MM_DATAFILE_SEGMENT)
@@ -1013,11 +1019,13 @@ MmDereferenceSegment(PMM_SECTION_SEGMENT Segment)
         /* Free the page table. This will flush any remaining dirty data */
         MmFreePageTablesSectionSegment(Segment, FreeSegmentPage);
 
-        OldIrql = MiAcquirePfnLock();
+        if (HaveLock)
+            OldIrql = MiAcquirePfnLock();
         /* Delete the pointer on the file */
         ASSERT(Segment->FileObject->SectionObjectPointer->DataSectionObject == Segment);
         Segment->FileObject->SectionObjectPointer->DataSectionObject = NULL;
-        MiReleasePfnLock(OldIrql);
+        if (HaveLock)
+            MiReleasePfnLock(OldIrql);
         ObDereferenceObject(Segment->FileObject);
 
         ExFreePoolWithTag(Segment, TAG_MM_SECTION_SEGMENT);
@@ -1030,11 +1038,13 @@ MmDereferenceSegment(PMM_SECTION_SEGMENT Segment)
         ULONG NrSegments;
         ULONG i;
 
-        OldIrql = MiAcquirePfnLock();
+        if (HaveLock)
+            OldIrql = MiAcquirePfnLock();
         /* Delete the pointer on the file */
         ASSERT(ImageSectionObject->FileObject->SectionObjectPointer->ImageSectionObject == ImageSectionObject);
         ImageSectionObject->FileObject->SectionObjectPointer->ImageSectionObject = NULL;
-        MiReleasePfnLock(OldIrql);
+        if (HaveLock)
+            MiReleasePfnLock(OldIrql);
 
         ObDereferenceObject(ImageSectionObject->FileObject);
 
@@ -2113,9 +2123,13 @@ MmpDeleteSection(PVOID ObjectBody)
         if (Section->Segment == NULL)
             return;
 
+        KIRQL OldIrql = MiAcquirePfnLock();
+        ImageSectionObject->SectionCount--;
+
         /* We just dereference the first segment */
         ASSERT(ImageSectionObject->RefCount > 0);
-        MmDereferenceSegment(ImageSectionObject->Segments);
+        MmDereferenceSegmentWithLock(ImageSectionObject->Segments, OldIrql);
+        MiReleasePfnLock(OldIrql);
     }
     else
     {
@@ -2128,8 +2142,11 @@ MmpDeleteSection(PVOID ObjectBody)
         if (Segment == NULL)
             return;
 
+        KIRQL OldIrql = MiAcquirePfnLock();
         Segment->SectionCount--;
-        MmDereferenceSegment(Segment);
+
+        MmDereferenceSegmentWithLock(Segment, OldIrql);
+        MiReleasePfnLock(OldIrql);
     }
 }
 
@@ -2473,7 +2490,7 @@ grab_segment:
     else
     {
         Section->Segment = (PSEGMENT)Segment;
-        Segment->RefCount++;
+        InterlockedIncrement64(&Segment->RefCount);
         InterlockedIncrementUL(&Segment->SectionCount);
 
         MiReleasePfnLock(OldIrql);
@@ -3205,6 +3222,7 @@ grab_image_section_object:
 
         ImageSectionObject->SegFlags = MM_SEGMENT_INCREATE;
         ImageSectionObject->RefCount = 1;
+        ImageSectionObject->SectionCount = 1;
 
         OldIrql = MiAcquirePfnLock();
         if (FileObject->SectionObjectPointer->ImageSectionObject != NULL)
@@ -3281,8 +3299,12 @@ grab_image_section_object:
     }
     else
     {
+        /* If FS driver called for delete, tell them it's not possible anymore. */
+        ImageSectionObject->SegFlags &= ~MM_IMAGE_SECTION_FLUSH_DELETE;
+
         /* Take one ref */
-        ImageSectionObject->RefCount++;
+        InterlockedIncrement64(&ImageSectionObject->RefCount);
+        ImageSectionObject->SectionCount++;
 
         MiReleasePfnLock(OldIrql);
 
@@ -3603,6 +3625,7 @@ MiRosUnmapViewOfSection(IN PEPROCESS Process,
                 ASSERT(NT_SUCCESS(Status));
             }
         }
+        InterlockedDecrement(&ImageSectionObject->MapCount);
     }
     else
     {
@@ -4026,6 +4049,9 @@ MmMapViewOfSection(IN PVOID SectionObject,
 
         *BaseAddress = (PVOID)ImageBase;
         *ViewSize = ImageSize;
+
+        /* One more map */
+        InterlockedIncrement(&ImageSectionObject->MapCount);
     }
     else
     {
@@ -4172,6 +4198,87 @@ MmFlushImageSection (IN PSECTION_OBJECT_POINTERS SectionObjectPointer,
     switch(FlushType)
     {
         case MmFlushForDelete:
+        {
+            KIRQL OldIrql = MiAcquirePfnLock();
+            PMM_IMAGE_SECTION_OBJECT ImageSectionObject = SectionObjectPointer->ImageSectionObject;
+
+            if (!ImageSectionObject || (ImageSectionObject->SegFlags & MM_SEGMENT_INDELETE))
+            {
+                MiReleasePfnLock(OldIrql);
+                return TRUE;
+            }
+
+            /* Do we have open sections or mappings on it ? */
+            if ((ImageSectionObject->SectionCount) || (ImageSectionObject->MapCount))
+            {
+                /* We do. No way to delete it */
+                MiReleasePfnLock(OldIrql);
+                return FALSE;
+            }
+
+            /* There are no sections open on it, but we must still have pages around. Discard everything */
+            ImageSectionObject->SegFlags |= MM_IMAGE_SECTION_FLUSH_DELETE;
+            InterlockedIncrement64(&ImageSectionObject->RefCount);
+            MiReleasePfnLock(OldIrql);
+
+            for (ULONG i = 0; i < ImageSectionObject->NrSegments; i++)
+            {
+                PMM_SECTION_SEGMENT Segment = &ImageSectionObject->Segments[i];
+                LONGLONG Length;
+
+                MmLockSectionSegment(Segment);
+                /* Loop over all entries */
+                LARGE_INTEGER Offset;
+                Offset.QuadPart = 0;
+
+                Length = Segment->Length.QuadPart;
+                if (Length < Segment->RawLength.QuadPart)
+                    Length = Segment->RawLength.QuadPart;
+
+                while (Offset.QuadPart < Length)
+                {
+                    ULONG_PTR Entry = MmGetPageEntrySectionSegment(Segment, &Offset);
+
+                    /* Shared data must already be discarded, and nobody should be reading it. */
+                    ASSERT(!IS_SWAP_FROM_SSE(Entry));
+                    if (Entry != 0)
+                    {
+                        DPRINT1("Freeing page %lx for image section %p\n", PFN_FROM_SSE(Entry), ImageSectionObject);
+                        /* Release the page */
+                        ASSERT(SHARE_COUNT_FROM_SSE(Entry) == 0);
+                        ASSERT(!IS_WRITE_SSE(Entry));
+                        ASSERT(MmGetSavedSwapEntryPage(PFN_FROM_SSE(Entry)) == 0);
+                        MmSetPageEntrySectionSegment(Segment, &Offset, 0);
+                        MmReleasePageMemoryConsumer(MC_USER, PFN_FROM_SSE(Entry));
+                    }
+                    Offset.QuadPart += PAGE_SIZE;
+                }
+                MmUnlockSectionSegment(Segment);
+            }
+
+            /* Grab lock again */
+            OldIrql = MiAcquirePfnLock();
+
+            if (!(ImageSectionObject->SegFlags & MM_IMAGE_SECTION_FLUSH_DELETE))
+            {
+                /*
+                 * Someone actually created a section while we were not looking.
+                 * Drop our ref and deny.
+                 */
+                MmDereferenceSegmentWithLock(&ImageSectionObject->Segments[0], OldIrql);
+                MiReleasePfnLock(OldIrql);
+                return FALSE;
+            }
+
+            /* We should be the last one holding a ref here. */
+            ASSERT(ImageSectionObject->RefCount == 1);
+            ASSERT(ImageSectionObject->SectionCount == 0);
+
+            /* Dereference the first segment, this will free everything & release the lock */
+            MmDereferenceSegmentWithLock(&ImageSectionObject->Segments[0], OldIrql);
+            MiReleasePfnLock(OldIrql);
+            return TRUE;
+        }
         case MmFlushForWrite:
         {
             BOOLEAN Ret = TRUE;
@@ -4236,6 +4343,9 @@ MmMapViewInSystemSpaceEx (
     }
 
     DPRINT("MmMapViewInSystemSpaceEx() called\n");
+
+    /* unsupported for now */
+    ASSERT(Section->u.Flags.Image == 0);
 
     Section = SectionObject;
     Segment = (PMM_SECTION_SEGMENT)Section->Segment;
@@ -4761,7 +4871,6 @@ MmFlushSegment(
     }
 
     MmUnlockSectionSegment(Segment);
-
     MmDereferenceSegment(Segment);
 
     if (Iosb)
