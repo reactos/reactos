@@ -70,7 +70,7 @@ ConCallPagerLine(
 }
 
 static BOOL
-ConPagerDefaultAction(IN PCON_PAGER Pager)
+ConPagerWorker(IN PCON_PAGER Pager)
 {
     PCTCH TextBuff = Pager->TextBuff;
     DWORD ich = Pager->ich;
@@ -88,7 +88,7 @@ ConPagerDefaultAction(IN PCON_PAGER Pager)
     BOOL IsDoubleWidthCharTrailing = FALSE;
 
     if (ich >= cch)
-        return TRUE;
+        return FALSE;
 
     nCodePage = GetConsoleOutputCP();
     IsCJK = IsCJKCodePage(nCodePage);
@@ -212,7 +212,7 @@ ExpandTab:
     Pager->iLine = iLine;
     Pager->lineno = lineno;
 
-    return (ich >= cch);
+    return (ich < cch);
 }
 
 /* Returns TRUE when all the text is displayed, and FALSE if display is stopped */
@@ -269,7 +269,7 @@ ConWritePaging(
         return TRUE;
     }
 
-    while (!ConPagerDefaultAction(Pager))
+    while (ConPagerWorker(Pager))
     {
         /* Recalculate the screen extent in case the user redimensions the window */
         if (ConGetScreenInfo(Pager->Screen, &csbi))
