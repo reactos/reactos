@@ -262,7 +262,7 @@ wWinMain(HINSTANCE hInstance,
          LPWSTR    lpCmdLine,
          INT       nCmdShow)
 {
-    if (lstrcmpiW(lpCmdLine, L"") == 0)
+    if (lstrcmpiW(lpCmdLine, L"") == 0 || lstrcmpiW(lpCmdLine, L"TEST") == 0)
         return 0;
 
     s_nMode = _wtoi(lpCmdLine);
