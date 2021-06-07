@@ -2532,10 +2532,6 @@ MiMakePdeExistAndMakeValid(IN PMMPDE PointerPde,
        //
        if (!PointerPpe->u.Hard.Valid)
        {
-#if _MI_PAGING_LEVELS == 4
-           if (PointerPpe->u.Long == 0)
-               MiIncrementPageTableReferences(PointerPde);
-#endif
            MiMakeSystemAddressValid(PointerPde, TargetProcess);
            ASSERT(PointerPpe->u.Hard.Valid == 1);
        }
@@ -2544,10 +2540,6 @@ MiMakePdeExistAndMakeValid(IN PMMPDE PointerPde,
        //
        // And finally, make the PDE itself valid.
        //
-#if _MI_PAGING_LEVELS >= 3
-       if (PointerPde->u.Long == 0)
-            MiIncrementPageTableReferences(PointerPte);
-#endif
        MiMakeSystemAddressValid(PointerPte, TargetProcess);
 
        /* Do not increment Page table refcount here for the PDE, this must be managed by caller */
