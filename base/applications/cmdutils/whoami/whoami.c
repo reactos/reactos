@@ -80,35 +80,43 @@ BOOL WhoamiFree(VOID* Buffer)
 
 VOID* WhoamiGetTokenInfo(TOKEN_INFORMATION_CLASS TokenType)
 {
-    HANDLE hToken = 0;
-    DWORD dwLength = 0;
-    VOID* pTokenInfo = 0;
+    HANDLE hToken;
+    DWORD dwLength;
+    VOID* pTokenInfo = NULL;
+    BOOL bRet;
 
     if (OpenProcessToken(GetCurrentProcess(), TOKEN_READ, &hToken))
     {
-        GetTokenInformation(hToken,
-                            TokenType,
-                            NULL,
-                            dwLength,
-                            &dwLength);
-
-        if (GetLastError() == ERROR_INSUFFICIENT_BUFFER)
+        bRet = GetTokenInformation(hToken,
+                                   TokenType,
+                                   NULL,
+                                   0,
+                                   &dwLength);
+        if (bRet || GetLastError() != ERROR_INSUFFICIENT_BUFFER)
         {
-            pTokenInfo = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, dwLength);
-            if (pTokenInfo == NULL)
-            {
-                wprintf(L"ERROR: not enough memory to allocate the token structure.\r\n");
-                exit(1);
-            }
+            wprintf(L"ERROR %lu: could not get token length.\r\n",
+                    bRet ? ERROR_SUCCESS : GetLastError());
+            CloseHandle(hToken);
+            exit(1);
         }
 
-        if (!GetTokenInformation(hToken, TokenType,
-                                 (LPVOID)pTokenInfo,
+        pTokenInfo = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, dwLength);
+        if (pTokenInfo == NULL)
+        {
+            wprintf(L"ERROR: not enough memory to allocate the token structure.\r\n");
+            CloseHandle(hToken);
+            exit(1);
+        }
+
+        if (!GetTokenInformation(hToken,
+                                 TokenType,
+                                 pTokenInfo,
                                  dwLength,
                                  &dwLength))
         {
-            wprintf(L"ERROR 0x%x: could not get token information.\r\n", GetLastError());
+            wprintf(L"ERROR %lu: could not get token information.\r\n", GetLastError());
             WhoamiFree(pTokenInfo);
+            CloseHandle(hToken);
             exit(1);
         }
 
