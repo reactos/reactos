@@ -133,7 +133,11 @@ __stdcall
 PagePrompt(PCON_PAGER Pager, DWORD Done, DWORD Total)
 {
     HANDLE hInput = ConStreamGetOSHandle(StdIn);
+    HANDLE hOutput = ConStreamGetOSHandle(Pager->Screen->Stream);
+    CONSOLE_SCREEN_BUFFER_INFO csbi;
+    COORD orgCursorPosition;
     DWORD dwMode;
+
     KEY_EVENT_RECORD KeyEvent;
     BOOL fCtrl;
     DWORD nLines;
@@ -191,6 +195,8 @@ Restart:
     SetConsoleMode(hInput, dwMode);
 
     // FIXME: Does not support TTY yet!
+    ConGetScreenInfo(Pager->Screen, &csbi);
+    orgCursorPosition = csbi.dwCursorPosition;
     for (;;)
     {
         INPUT_RECORD ir = {0};
@@ -233,8 +239,6 @@ Restart:
         ch = KeyEvent.uChar.UnicodeChar;
         if (L'0' <= ch && ch <= L'9')
         {
-            if (nLines == 0 && ch == L'0')
-                continue;
             nLines *= 10;
             nLines += ch - L'0';
             ConStreamWrite(Pager->Screen->Stream, &ch, 1);
@@ -242,37 +246,43 @@ Restart:
         }
         else if (KeyEvent.wVirtualKeyCode == VK_RETURN)
         {
-            if (nLines == 0)
-            {
-                chSubCommand = 0;
-                ConClearLine(Pager->Screen->Stream);
-                goto Restart;
-            }
+            /* Validate the line number */
             break;
         }
         else if (KeyEvent.wVirtualKeyCode == VK_ESCAPE)
         {
+            /* Cancel the current command */
             chSubCommand = 0;
-            ConClearLine(Pager->Screen->Stream);
-            goto Restart;
+            break;
         }
         else if (KeyEvent.wVirtualKeyCode == VK_BACK)
         {
-            CONSOLE_SCREEN_BUFFER_INFO csbi;
-            HANDLE hOutput = ConStreamGetOSHandle(Pager->Screen->Stream);
+            if (nLines != 0)
+                nLines /= 10;
+
+            /* Erase the current character */
             ConGetScreenInfo(Pager->Screen, &csbi);
+            if ( (csbi.dwCursorPosition.Y  > orgCursorPosition.Y) ||
+                ((csbi.dwCursorPosition.Y == orgCursorPosition.Y) &&
+                 (csbi.dwCursorPosition.X  > orgCursorPosition.X)) )
+            {
+                if (csbi.dwCursorPosition.X > 0)
+                {
+                    csbi.dwCursorPosition.X = csbi.dwCursorPosition.X - 1;
+                }
+                else if (csbi.dwCursorPosition.Y > 0)
+                {
+                    csbi.dwCursorPosition.Y = csbi.dwCursorPosition.Y - 1;
+                    csbi.dwCursorPosition.X = (csbi.dwSize.X ? csbi.dwSize.X - 1 : 0);
+                }
 
-            if (nLines == 0)
-                continue;
-            nLines /= 10;
+                SetConsoleCursorPosition(hOutput, csbi.dwCursorPosition);
 
-            if (csbi.dwCursorPosition.X > 0)
-                csbi.dwCursorPosition.X = csbi.dwCursorPosition.X - 1;
-            SetConsoleCursorPosition(hOutput, csbi.dwCursorPosition);
+                ch = L' ';
+                ConStreamWrite(Pager->Screen->Stream, &ch, 1);
+                SetConsoleCursorPosition(hOutput, csbi.dwCursorPosition);
+            }
 
-            ch = L' ';
-            ConStreamWrite(Pager->Screen->Stream, &ch, 1);
-            SetConsoleCursorPosition(hOutput, csbi.dwCursorPosition);
             continue;
         }
     }
@@ -303,12 +313,23 @@ Restart:
     switch (chSubCommand)
     {
         case L'P':
+        {
+            /* If we don't display other lines, just restart the prompt */
+            if (nLines == 0)
+            {
+                chSubCommand = 0;
+                goto Restart;
+            }
+            /* Otherwise tell the pager to display them */
             Pager->ScrollRows = nLines;
             return TRUE;
+        }
         case L'S':
+        {
             s_dwFlags |= FLAG_PLUSn;
             s_nNextLineNo = Pager->lineno + nLines;
             return TRUE;
+        }
         default:
             chSubCommand = 0;
             break;
@@ -324,9 +345,8 @@ Restart:
             goto Restart;
         }
 
-        /* 'Q' or [Esc]: Quit */
-        if (KeyEvent.wVirtualKeyCode == L'Q' ||
-            KeyEvent.wVirtualKeyCode == VK_ESCAPE)
+        /* 'Q': Quit */
+        if (KeyEvent.wVirtualKeyCode == L'Q')
         {
             /* We break, output a newline */
             WCHAR ch = L'\n';
