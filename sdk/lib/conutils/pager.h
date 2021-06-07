@@ -41,19 +41,26 @@ typedef BOOL (__stdcall *CON_PAGER_LINE_FN)(
 
 typedef struct _CON_PAGER
 {
+    /* Console screen properties */
     PCON_SCREEN Screen;
     DWORD ScreenColumns;
     DWORD ScreenRows;
-    DWORD ScrollRows;
+
+    /* Paging parameters */
     CON_PAGER_LINE_FN PagerLine; /* The line function */
+    LONG  nTabWidth;
+    DWORD ScrollRows;
+
+    /* Data buffer */
     PCTCH TextBuff; /* The text buffer */
-    DWORD ich;      /* The current index of character */
     DWORD cch;      /* The total number of characters */
+
+    /* Paging state */
+    DWORD ich;      /* The current index of character */
     DWORD iColumn;  /* The current index of column */
     DWORD iLine;    /* The physical output line count of screen */
     DWORD lineno;   /* The logical line number */
     DWORD dwFlags;  /* The CON_PAGER_FLAG_... flags */
-    LONG nTabWidth;
     DWORD nSpacePending;
 } CON_PAGER, *PCON_PAGER;
 

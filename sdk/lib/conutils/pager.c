@@ -72,16 +72,18 @@ ConCallPagerLine(
 static BOOL
 ConPagerWorker(IN PCON_PAGER Pager)
 {
-    PCTCH TextBuff = Pager->TextBuff;
-    DWORD ich = Pager->ich;
+    const DWORD ScreenColumns = Pager->ScreenColumns;
+    const DWORD ScrollRows = Pager->ScrollRows;
+    const PCTCH TextBuff = Pager->TextBuff;
     const DWORD cch = Pager->cch;
+    LONG nTabWidth = Pager->nTabWidth;
+
+    DWORD ich = Pager->ich;
     DWORD iColumn = Pager->iColumn;
     DWORD iLine = Pager->iLine;
     DWORD lineno = Pager->lineno;
-    const DWORD ScreenColumns = Pager->ScreenColumns;
-    const DWORD ScrollRows = Pager->ScrollRows;
-    LONG nTabWidth = Pager->nTabWidth;
-    DWORD ichLast = ich;
+
+    DWORD ichStart = ich;
     UINT nCodePage;
     BOOL IsCJK;
     UINT nWidthOfChar = 1;
@@ -96,9 +98,9 @@ ConPagerWorker(IN PCON_PAGER Pager)
     /* Normalize the tab width: if negative or too large,
      * cap it to the number of columns. */
     if (nTabWidth < 0)
-        nTabWidth = Pager->ScreenColumns - 1;
+        nTabWidth = ScreenColumns - 1;
     else
-        nTabWidth = min(nTabWidth, Pager->ScreenColumns - 1);
+        nTabWidth = min(nTabWidth, ScreenColumns - 1);
 
     if (Pager->dwFlags & CON_PAGER_FLAG_EXPAND_TABS)
     {
@@ -116,45 +118,54 @@ ExpandTab:
         }
     }
 
+    /* Loop over each character in the buffer */
     for (; ich < cch && iLine < ScrollRows; ++ich)
     {
         Pager->lineno = lineno;
+
+        /* NEWLINE character */
+        if (TextBuff[ich] == TEXT('\n'))
+        {
+            /* Output the pending text, including the newline */
+            ConCallPagerLine(Pager, &TextBuff[ichStart], ich - ichStart + 1);
+            ichStart = ich + 1;
+            if (!(Pager->dwFlags & CON_PAGER_FLAG_DONT_OUTPUT))
+                ++iLine;
+            iColumn = 0;
+
+            /* Done with this line; start a new one */
+            ++lineno;
+            continue;
+        }
 
         /* TAB character */
         if (TextBuff[ich] == TEXT('\t') &&
             (Pager->dwFlags & CON_PAGER_FLAG_EXPAND_TABS))
         {
-            ConCallPagerLine(Pager, &TextBuff[ichLast], ich - ichLast);
+            /* Output the pending text */
+            ConCallPagerLine(Pager, &TextBuff[ichStart], ich - ichStart);
+
+            /* Perform tab expansion, unless the tab width is zero */
             if (nTabWidth == 0)
             {
-                ichLast = ich + 1;
+                ichStart = ich + 1;
                 continue;
             }
-            ichLast = ++ich;
+            ichStart = ++ich;
             Pager->nSpacePending += nTabWidth - (iColumn % nTabWidth);
             goto ExpandTab;
-        }
-
-        /* NEWLINE character */
-        if (TextBuff[ich] == TEXT('\n'))
-        {
-            ConCallPagerLine(Pager, &TextBuff[ichLast], ich - ichLast + 1);
-            ichLast = ich + 1;
-            if (!(Pager->dwFlags & CON_PAGER_FLAG_DONT_OUTPUT))
-                ++iLine;
-            ++lineno;
-            iColumn = 0;
-            continue;
         }
 
         /* FORM-FEED character */
         if (TextBuff[ich] == TEXT('\f') &&
             (Pager->dwFlags & CON_PAGER_FLAG_EXPAND_FF))
         {
-            /* Skip the form-feed and clear until the end of the screen */
-            ConCallPagerLine(Pager, &TextBuff[ichLast], ich - ichLast);
-            ichLast = ich + 1;
+            /* Output the pending text, skipping the form-feed */
+            ConCallPagerLine(Pager, &TextBuff[ichStart], ich - ichStart);
+            ichStart = ich + 1;
             // FIXME: Should we handle CON_PAGER_FLAG_DONT_OUTPUT ?
+
+            /* Clear until the end of the screen */
             while (iLine < ScrollRows)
             {
                 ConCallPagerLine(Pager, L"\n", 1);
@@ -162,6 +173,7 @@ ExpandTab:
                 // if (!(Pager->dwFlags & CON_PAGER_FLAG_DONT_OUTPUT))
                 ++iLine;
             }
+
             iColumn = 0;
             continue;
         }
@@ -177,8 +189,9 @@ ExpandTab:
 
         if ((iColumn + nWidthOfChar) % ScreenColumns == 0)
         {
-            ConCallPagerLine(Pager, &TextBuff[ichLast], ich - ichLast + 1);
-            ichLast = ich + 1;
+            /* Output the pending text, including the last double-width character */
+            ConCallPagerLine(Pager, &TextBuff[ichStart], ich - ichStart + 1);
+            ichStart = ich + 1;
             if (!(Pager->dwFlags & CON_PAGER_FLAG_DONT_OUTPUT))
                 ++iLine;
             iColumn += nWidthOfChar;
@@ -187,8 +200,9 @@ ExpandTab:
 
         if (IsDoubleWidthCharTrailing)
         {
-            ConCallPagerLine(Pager, &TextBuff[ichLast], ich - ichLast);
-            ichLast = ich;
+            /* Output the pending text, excluding the last double-width character */
+            ConCallPagerLine(Pager, &TextBuff[ichStart], ich - ichStart);
+            ichStart = ich;
             if (!(Pager->dwFlags & CON_PAGER_FLAG_DONT_OUTPUT))
                 CON_STREAM_WRITE(Pager->Screen->Stream, TEXT(" "), 1);
             --ich;
@@ -201,8 +215,9 @@ ExpandTab:
         iColumn += nWidthOfChar;
     }
 
+    /* Output the remaining text */
     if (iColumn % ScreenColumns > 0)
-        ConCallPagerLine(Pager, &TextBuff[ichLast], ich - ichLast);
+        ConCallPagerLine(Pager, &TextBuff[ichStart], ich - ichStart);
 
     if (iLine >= ScrollRows)
         iLine = 0; /* Reset the count of lines being printed */
