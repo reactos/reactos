@@ -77,6 +77,8 @@ NTSTATUS
 NTAPI
 MmReleasePageMemoryConsumer(ULONG Consumer, PFN_NUMBER Page)
 {
+    KIRQL OldIrql;
+
     if (Page == 0)
     {
         DPRINT1("Tried to release page zero.\n");
@@ -85,7 +87,11 @@ MmReleasePageMemoryConsumer(ULONG Consumer, PFN_NUMBER Page)
 
     (void)InterlockedDecrementUL(&MiMemoryConsumers[Consumer].PagesUsed);
 
+    OldIrql = MiAcquirePfnLock();
+
     MmDereferencePage(Page);
+
+    MiReleasePfnLock(OldIrql);
 
     return(STATUS_SUCCESS);
 }
