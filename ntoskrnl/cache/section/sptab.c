@@ -204,6 +204,16 @@ _MmSetPageEntrySectionSegment(PMM_SECTION_SEGMENT Segment,
             OldEntry,
             Entry);
 
+    /* Manage ref on segment */
+    if (Entry && !OldEntry)
+    {
+        InterlockedIncrement64(Segment->ReferenceCount);
+    }
+    if (OldEntry && !Entry)
+    {
+        MmDereferenceSegment(Segment);
+    }
+
     if (Entry && !IS_SWAP_FROM_SSE(Entry))
     {
         /* We have a valid entry. See if we must do something */
@@ -223,7 +233,6 @@ _MmSetPageEntrySectionSegment(PMM_SECTION_SEGMENT Segment,
              * Add the Rmap and take a ref on the segment.
              */
             MmSetSectionAssociation(PFN_FROM_SSE(Entry), Segment, Offset);
-            InterlockedIncrement64(Segment->ReferenceCount);
 
             if (Offset->QuadPart >= (Segment->LastPage << PAGE_SHIFT))
                 Segment->LastPage = (Offset->QuadPart >> PAGE_SHIFT) + 1;
@@ -233,7 +242,6 @@ _MmSetPageEntrySectionSegment(PMM_SECTION_SEGMENT Segment,
     {
         /* We're switching to an invalid entry from a valid one */
         MmDeleteSectionAssociation(PFN_FROM_SSE(OldEntry));
-        MmDereferenceSegment(Segment);
 
         if (Offset->QuadPart == ((Segment->LastPage - 1ULL) << PAGE_SHIFT))
         {
@@ -363,6 +371,7 @@ MmGetSectionAssociation(PFN_NUMBER Page,
         Offset->QuadPart = PageTable->FileOffset.QuadPart +
                            ((ULONG64)RawOffset << PAGE_SHIFT);
         ASSERT(PFN_FROM_SSE(PageTable->PageEntries[RawOffset]) == Page);
+        InterlockedIncrement64(Segment->ReferenceCount);
     }
 
     return Segment;
