@@ -460,6 +460,7 @@ KiTimerListExpire(IN PLIST_ENTRY ExpiredListHead,
     }
 }
 
+_Requires_lock_not_held_(Prcb->PrcbLock)
 VOID
 NTAPI
 KiQuantumEnd(VOID)
