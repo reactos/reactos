@@ -762,6 +762,7 @@ OFFSET(ThSystemCallNumber, KTHREAD, SystemCallNumber),
 OFFSET(ThTrapFrame, KTHREAD, TrapFrame),
 OFFSET(ThApcState, KTHREAD, ApcState),
 OFFSET(ThPriority, KTHREAD, Priority), // obsolete
+OFFSET(ThSwapBusy, KTHREAD, SwapBusy),
 OFFSET(ThContextSwitches, KTHREAD, ContextSwitches),
 OFFSET(ThState, KTHREAD, State),
 OFFSET(ThProcess, KTHREAD, Process), // thProcess in native headers
