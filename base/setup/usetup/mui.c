@@ -24,8 +24,8 @@
  * PROGRAMMER:
  */
 
-#include "usetup.h"
-#include "muilanguages.h"
+#include "headers/usetup.h"
+#include "headers/muilanguages.h"
 
 #define NDEBUG
 #include <debug.h>

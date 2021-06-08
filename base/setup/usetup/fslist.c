@@ -24,7 +24,7 @@
  * PROGRAMMER:      Casper S. Hornstrup (chorns@users.sourceforge.net)
  */
 
-#include "usetup.h"
+#include "headers/usetup.h"
 
 #define NDEBUG
 #include <debug.h>
