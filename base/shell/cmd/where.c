@@ -106,7 +106,7 @@ SearchForExecutableSingle (LPCTSTR pFileName, LPTSTR pFullName, LPTSTR pPathExt,
     if (IsExistingFile (szPathBuffer))
     {
         TRACE ("Found: \'%s\'\n", debugstr_aw(szPathBuffer));
-        _tcscpy (pFullName, szPathBuffer);
+        GetFullPathName(szPathBuffer, MAX_PATH, pFullName, NULL);
         return TRUE;
     }
 
@@ -130,7 +130,7 @@ SearchForExecutableSingle (LPCTSTR pFileName, LPTSTR pFullName, LPTSTR pPathExt,
         if (IsExistingFile (szPathBuffer))
         {
             TRACE ("Found: \'%s\'\n", debugstr_aw(szPathBuffer));
-            _tcscpy (pFullName, szPathBuffer);
+            GetFullPathName(szPathBuffer, MAX_PATH, pFullName, NULL);
             return TRUE;
         }
     }
