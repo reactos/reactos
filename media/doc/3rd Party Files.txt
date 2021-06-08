@@ -146,7 +146,7 @@ License: MS-PL (https://spdx.org/licenses/MS-PL.html)
 URL: https://github.com/microsoft/Windows-driver-samples/tree/master/storage/class/disk
 
 Title: Microsoft Super Floppy (sfloppy) Storage Class Driver
-Path: drivers/storage/floppy_new
+Path: drivers/storage/class/sfloppy
 Used Version: git commit 8fb512a
 License: MS-PL (https://spdx.org/licenses/MS-PL.html)
 URL: https://github.com/microsoft/Windows-driver-samples/tree/master/storage/sfloppy
