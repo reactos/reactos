@@ -466,6 +466,9 @@ static const TEST_ENTRY s_entries_1[] =
     { __LINE__, TRUE, FALSE, L"iexplore.exe", NULL },
     { __LINE__, TRUE, TRUE, L"iexplore", NULL },
     { __LINE__, TRUE, TRUE, L"iexplore.exe", NULL },
+    // https://google.com
+    { __LINE__, TRUE, FALSE, L"https://google.com", NULL },
+    { __LINE__, TRUE, TRUE, L"https://google.com", NULL },
     // Test File 1.txt
     { __LINE__, FALSE, FALSE, L"Test File 1.txt", NULL },
     { __LINE__, FALSE, FALSE, L"Test File 1.txt", L"." },
