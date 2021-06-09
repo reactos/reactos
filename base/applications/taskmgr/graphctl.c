@@ -430,10 +430,10 @@ void GraphCtrl_ShiftGrid(TGraphCtrl* this)
 
     solidPen = CreatePen(PS_SOLID, 0, this->m_crGridColor);
 
-    /*  Scroll the grid left: BitBlt it to itself */
-    BitBlt(this->m_dcGrid, this->m_rectPlot.left, this->m_rectPlot.top+1,
+    /* Scroll the grid left: BitBlt it to itself */
+    BitBlt(this->m_dcGrid, this->m_rectPlot.left, this->m_rectPlot.top + 1,
            this->m_nPlotWidth, this->m_nPlotHeight,
-           this->m_dcGrid, this->m_rectPlot.left + this->m_nShiftPixels, this->m_rectPlot.top+1,
+           this->m_dcGrid, this->m_rectPlot.left + this->m_nShiftPixels, this->m_rectPlot.top + 1,
            SRCCOPY);
 
     /* Set shift pixels */
@@ -443,10 +443,10 @@ void GraphCtrl_ShiftGrid(TGraphCtrl* this)
     rectCleanUp = this->m_rectPlot;
     rectCleanUp.left = rectCleanUp.right - this->m_nShiftPixels;
 
-    /* fill the cleanup area with the background */
+    /* Fill the cleanup area with the background */
     FillRect(this->m_dcGrid, &rectCleanUp, this->m_brushBack);
 
-    /* draw the plot rectangle */
+    /* Draw the plot rectangle */
     oldPen = (HPEN)SelectObject(this->m_dcGrid, solidPen);
 
     /* Redraw horizontal axis */
