@@ -4572,55 +4572,6 @@ FORCEINLINE PVOID GetFiberData(VOID)
     return *((PVOID *)GetCurrentFiber());
 }
 
-/* TODO: Other architectures than X86 */
-#if defined(_M_IX86)
-#define PF_TEMPORAL_LEVEL_1
-#define PF_NON_TEMPORAL_LEVEL_ALL
-#define PreFetchCacheLine(l, a)
-#elif defined (_M_AMD64)
-#define PreFetchCacheLine(l, a)
-#elif defined(_M_PPC)
-#define PreFetchCacheLine(l, a)
-#elif defined(_M_ARM)
-#define PreFetchCacheLine(l, a)
-#elif defined(_M_ARM64)
-#define PreFetchCacheLine(l, a)
-#else
-#error Unknown architecture
-#endif
-
-/* TODO: Other architectures than X86 */
-#if defined(_M_IX86)
-#if defined(_MSC_VER)
-FORCEINLINE
-VOID
-MemoryBarrier(VOID)
-{
-    LONG Barrier;
-    __asm { xchg Barrier, eax }
-}
-#else
-FORCEINLINE
-VOID
-MemoryBarrier(VOID)
-{
-    LONG Barrier, *Dummy = &Barrier;
-    (VOID)Dummy;
-    __asm__ __volatile__("xchgl %%eax, %[Barrier]" : : [Barrier] "m" (Barrier) : "memory");
-}
-#endif
-#elif defined (_M_AMD64)
-#define MemoryBarrier __faststorefence
-#elif defined(_M_PPC)
-#define MemoryBarrier()
-#elif defined(_M_ARM)
-#define MemoryBarrier()
-#elif defined(_M_ARM64)
-#define MemoryBarrier()
-#else
-#error Unknown architecture
-#endif
-
 #if defined(_M_IX86) || defined(_M_AMD64)
 
 #define YieldProcessor _mm_pause
