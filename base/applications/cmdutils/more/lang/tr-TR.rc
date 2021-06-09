@@ -5,13 +5,34 @@ LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 STRINGTABLE
 BEGIN
     IDS_USAGE "Görüntülükte veriyi sayfa sayfa görüntüler.\n\n\
-  MORE < [Sürücü:][Yol]Kütük adı\n\
-  Komut | MORE\n\
-  MORE [Sürücü:][Yol]Kütük adı\n\n\
-  [Sürücü:][Yol]Kütük adı    İçeriği görüntülenecek bir kütük.\n\
-  Komut\t\t     Çıkışı görüntülenecek bir komut.\n\n\
-  İstemde ""-- Sürdür --"" ile bir sonraki sayfayı göstermek için rastgele bir düğmeye basabilirsiniz.\n"
+  MORE [options] < [Drive:][Path]Filename\n\
+  Command | MORE [options]\n\
+  MORE [options] [Drive:][Path]Filename\n\n\
+Options:\n\
+  /E        Enable extended features.\n\
+  /C        Clear screen before displaying page.\n\
+  /P        Expand form-feed characters.\n\
+  /S        Shrink multiple blank lines to a single line.\n\
+  /Tn       Expand tabs to n spaces (default: 8).\n\
+  +n        Start displaying the first file at line n.\n\n\
+  [Drive:][Path]Filename     A file, whose content shall be displayed.\n\
+  Command                    A command, whose output shall be displayed.\n\n\
+If extended features are enabled, the following commands are available\n\
+at ""-- Continue --"" prompt:\n\
+   P n      Display n lines.\n\
+   S n      Skip n lines.\n\
+   F        Display next file.\n\
+   Q        Quit.\n\
+   ?        Show help line.\n\
+   =        Show line number.\n\
+   <Space>  Display next page.\n\
+   <Enter>  Display next line.\n"
+
     IDS_CONTINUE "-- Sürdür --"
     IDS_CONTINUE_PROGRESS "-- Sürdür (%%%d) --"
     IDS_FILE_ACCESS "%s kütüğüne erişilemiyor.\n"
+    IDS_BAD_FLAG "Invalid argument - '%ls'\n"
+    IDS_CONTINUE_OPTIONS "-- Continue (%d%%) [Options: psfq=<Space><Enter>] --"
+    IDS_CONTINUE_LINES "-- Continue (%d%%) -- Lines: "
+    IDS_CONTINUE_LINE_AT "-- Continue (%d%%) [Line:%d] --"
 END

@@ -5,13 +5,34 @@ LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
 STRINGTABLE
 BEGIN
     IDS_USAGE "在螢幕上一頁一頁地顯示內容。\n\n\
-  MORE < [磁碟機:][路徑]檔案名\n\
-  命令 | MORE\n\
-  MORE [磁碟機:][路徑]檔案名\n\n\
-  [磁碟機:][路徑]檔案名    一個將要被如此顯示內容的檔案。\n\
-  命令\t\t     一個輸出將要被如此顯示的命令。\n\n\
-  在 ""-- 繼續 --"" 的提示出現時你可以按任意鍵來顯示下一頁。\n"
+  MORE [options] < [Drive:][Path]Filename\n\
+  Command | MORE [options]\n\
+  MORE [options] [Drive:][Path]Filename\n\n\
+Options:\n\
+  /E        Enable extended features.\n\
+  /C        Clear screen before displaying page.\n\
+  /P        Expand form-feed characters.\n\
+  /S        Shrink multiple blank lines to a single line.\n\
+  /Tn       Expand tabs to n spaces (default: 8).\n\
+  +n        Start displaying the first file at line n.\n\n\
+  [Drive:][Path]Filename     A file, whose content shall be displayed.\n\
+  Command                    A command, whose output shall be displayed.\n\n\
+If extended features are enabled, the following commands are available\n\
+at ""-- Continue --"" prompt:\n\
+   P n      Display n lines.\n\
+   S n      Skip n lines.\n\
+   F        Display next file.\n\
+   Q        Quit.\n\
+   ?        Show help line.\n\
+   =        Show line number.\n\
+   <Space>  Display next page.\n\
+   <Enter>  Display next line.\n"
+
     IDS_CONTINUE "-- 繼續 --"
     IDS_CONTINUE_PROGRESS "-- 繼續 (%d%%) --"
     IDS_FILE_ACCESS "無法訪問檔案 %s。\n"
+    IDS_BAD_FLAG "Invalid argument - '%ls'\n"
+    IDS_CONTINUE_OPTIONS "-- Continue (%d%%) [Options: psfq=<Space><Enter>] --"
+    IDS_CONTINUE_LINES "-- Continue (%d%%) -- Lines: "
+    IDS_CONTINUE_LINE_AT "-- Continue (%d%%) [Line:%d] --"
 END

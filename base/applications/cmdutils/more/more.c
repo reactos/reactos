@@ -1,14 +1,13 @@
 /*
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS More Command
- * FILE:            base/applications/cmdutils/more/more.c
- * PURPOSE:         Displays text stream from STDIN or from an arbitrary number
- *                  of files to STDOUT, with screen capabilities (more than CAT,
- *                  but less than LESS ^^).
- * PROGRAMMERS:     Paolo Pantaleo
- *                  Timothy Schepens
- *                  Hermes Belusca-Maito (hermes.belusca@sfr.fr)
- *                  Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
+ * PROJECT:     ReactOS More Command
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     Displays text stream from STDIN or from an arbitrary number
+ *              of files to STDOUT, with screen capabilities (more than CAT,
+ *              but less than LESS ^^).
+ * COPYRIGHT:   Copyright 1999 Paolo Pantaleo
+ *              Copyright 2003 Timothy Schepens
+ *              Copyright 2016-2021 Hermes Belusca-Maito
+ *              Copyright 2021 Katayama Hirofumi MZ
  */
 /*
  * MORE.C - external command.
@@ -27,6 +26,7 @@
 
 #include <windef.h>
 #include <winbase.h>
+#include <winnt.h>
 #include <winnls.h>
 #include <winreg.h>
 #include <winuser.h>
@@ -51,14 +51,100 @@ HANDLE hKeyboard;
 /* Enable/Disable extensions */
 BOOL bEnableExtensions = TRUE; // FIXME: By default, it should be FALSE.
 
+#define FLAG_HELP (1 << 0)
+#define FLAG_E (1 << 1)
+#define FLAG_C (1 << 2)
+#define FLAG_P (1 << 3)
+#define FLAG_S (1 << 4)
+#define FLAG_Tn (1 << 5)
+#define FLAG_PLUSn (1 << 6)
+
+static DWORD s_dwFlags = 0;
+static LONG s_nTabWidth = 8;
+static DWORD s_nNextLineNo = 0;
+static BOOL s_bPrevLineIsBlank = FALSE;
+static UINT s_nPromptID = IDS_CONTINUE_PROGRESS;
+static BOOL s_bDoNextFile = FALSE;
+
+static BOOL IsBlankLine(IN PCWCH line, IN DWORD cch)
+{
+    DWORD ich;
+    WORD wType;
+    for (ich = 0; ich < cch; ++ich)
+    {
+        wType = 0;
+        GetStringTypeW(CT_CTYPE1, &line[ich], 1, &wType);
+        if (!(wType & (C1_BLANK | C1_SPACE)))
+            return FALSE;
+    }
+    return TRUE;
+}
+
+static BOOL __stdcall
+MorePagerLine(
+    IN OUT PCON_PAGER Pager,
+    IN PCWCH line,
+    IN DWORD cch)
+{
+    DWORD ich;
+
+    if (s_dwFlags & FLAG_PLUSn) /* Skip lines */
+    {
+        if (Pager->lineno < s_nNextLineNo)
+        {
+            Pager->dwFlags |= CON_PAGER_FLAG_DONT_OUTPUT;
+            s_bPrevLineIsBlank = FALSE;
+            return TRUE; /* Don't output */
+        }
+        s_dwFlags &= ~FLAG_PLUSn;
+    }
+
+    if (s_dwFlags & FLAG_S) /* Shrink blank lines */
+    {
+        if (IsBlankLine(line, cch))
+        {
+            if (s_bPrevLineIsBlank)
+            {
+                Pager->dwFlags |= CON_PAGER_FLAG_DONT_OUTPUT;
+                return TRUE; /* Don't output */
+            }
+
+            for (ich = 0; ich < cch; ++ich)
+            {
+                if (line[ich] == L'\n')
+                {
+                    s_bPrevLineIsBlank = TRUE;
+                    break;
+                }
+            }
+        }
+        else
+        {
+            s_bPrevLineIsBlank = FALSE;
+        }
+    }
+
+    s_nNextLineNo = 0;
+    return FALSE; /* Do output */
+}
 
 static BOOL
 __stdcall
 PagePrompt(PCON_PAGER Pager, DWORD Done, DWORD Total)
 {
     HANDLE hInput = ConStreamGetOSHandle(StdIn);
+    HANDLE hOutput = ConStreamGetOSHandle(Pager->Screen->Stream);
+    CONSOLE_SCREEN_BUFFER_INFO csbi;
+    COORD orgCursorPosition;
     DWORD dwMode;
+
     KEY_EVENT_RECORD KeyEvent;
+    BOOL fCtrl;
+    DWORD nLines;
+    WCHAR chSubCommand = 0;
+
+Restart:
+    nLines = 0;
 
     /*
      * Just use the simple prompt if the file being displayed is the STDIN,
@@ -88,16 +174,18 @@ PagePrompt(PCON_PAGER Pager, DWORD Done, DWORD Total)
     }
     else
     {
-        ConResPrintf(Pager->Screen->Stream, IDS_CONTINUE_PROGRESS,
-                     // (dwSumReadChars - Total + Done) * 100 / dwFileSize
-                     (dwSumReadBytes - (Total - Done) *
-                        (dwSumReadBytes / dwSumReadChars)) * 100 / dwFileSize
-                     );
+        DWORD dwPercent = (dwSumReadBytes - (Total - Done) *
+                           (dwSumReadBytes / dwSumReadChars)) * 100 / dwFileSize;
+        if (s_nPromptID == IDS_CONTINUE_LINE_AT)
+        {
+            ConResPrintf(Pager->Screen->Stream, s_nPromptID, dwPercent, Pager->lineno);
+        }
+        else
+        {
+            ConResPrintf(Pager->Screen->Stream, s_nPromptID, dwPercent);
+        }
     }
-
-    // TODO: Implement prompt read line!
-
-    // FIXME: Does not support TTY yet!
+    s_nPromptID = IDS_CONTINUE_PROGRESS;
 
     /* RemoveBreakHandler */
     SetConsoleCtrlHandler(NULL, TRUE);
@@ -106,25 +194,98 @@ PagePrompt(PCON_PAGER Pager, DWORD Done, DWORD Total)
     dwMode &= ~ENABLE_PROCESSED_INPUT;
     SetConsoleMode(hInput, dwMode);
 
-    do
+    // FIXME: Does not support TTY yet!
+    ConGetScreenInfo(Pager->Screen, &csbi);
+    orgCursorPosition = csbi.dwCursorPosition;
+    for (;;)
     {
-        // FIXME: Does not support TTY yet!
-
-        // ConInKey(&KeyEvent);
-        INPUT_RECORD ir;
+        INPUT_RECORD ir = {0};
         DWORD dwRead;
+        WCHAR ch;
+
         do
         {
             ReadConsoleInput(hInput, &ir, 1, &dwRead);
         }
         while ((ir.EventType != KEY_EVENT) || (!ir.Event.KeyEvent.bKeyDown));
 
-        /* Got our key, return to caller */
+        /* Got our key */
         KeyEvent = ir.Event.KeyEvent;
+
+        /* Ignore any unsupported keyboard press */
+        if ((KeyEvent.wVirtualKeyCode == VK_SHIFT) ||
+            (KeyEvent.wVirtualKeyCode == VK_MENU)  ||
+            (KeyEvent.wVirtualKeyCode == VK_CONTROL))
+        {
+            continue;
+        }
+
+        /* Ctrl key is pressed? */
+        fCtrl = !!(KeyEvent.dwControlKeyState & (LEFT_CTRL_PRESSED | RIGHT_CTRL_PRESSED));
+
+        /* Ctrl+C or Ctrl+Esc? */
+        if (fCtrl && ((KeyEvent.wVirtualKeyCode == VK_ESCAPE) ||
+                      (KeyEvent.wVirtualKeyCode == L'C')))
+        {
+            chSubCommand = 0;
+            break;
+        }
+
+        /* If extended features are unavailable, or no
+         * pending commands, don't do more processing. */
+        if (!(s_dwFlags & FLAG_E) || (chSubCommand == 0))
+            break;
+
+        ch = KeyEvent.uChar.UnicodeChar;
+        if (L'0' <= ch && ch <= L'9')
+        {
+            nLines *= 10;
+            nLines += ch - L'0';
+            ConStreamWrite(Pager->Screen->Stream, &ch, 1);
+            continue;
+        }
+        else if (KeyEvent.wVirtualKeyCode == VK_RETURN)
+        {
+            /* Validate the line number */
+            break;
+        }
+        else if (KeyEvent.wVirtualKeyCode == VK_ESCAPE)
+        {
+            /* Cancel the current command */
+            chSubCommand = 0;
+            break;
+        }
+        else if (KeyEvent.wVirtualKeyCode == VK_BACK)
+        {
+            if (nLines != 0)
+                nLines /= 10;
+
+            /* Erase the current character */
+            ConGetScreenInfo(Pager->Screen, &csbi);
+            if ( (csbi.dwCursorPosition.Y  > orgCursorPosition.Y) ||
+                ((csbi.dwCursorPosition.Y == orgCursorPosition.Y) &&
+                 (csbi.dwCursorPosition.X  > orgCursorPosition.X)) )
+            {
+                if (csbi.dwCursorPosition.X > 0)
+                {
+                    csbi.dwCursorPosition.X = csbi.dwCursorPosition.X - 1;
+                }
+                else if (csbi.dwCursorPosition.Y > 0)
+                {
+                    csbi.dwCursorPosition.Y = csbi.dwCursorPosition.Y - 1;
+                    csbi.dwCursorPosition.X = (csbi.dwSize.X ? csbi.dwSize.X - 1 : 0);
+                }
+
+                SetConsoleCursorPosition(hOutput, csbi.dwCursorPosition);
+
+                ch = L' ';
+                ConStreamWrite(Pager->Screen->Stream, &ch, 1);
+                SetConsoleCursorPosition(hOutput, csbi.dwCursorPosition);
+            }
+
+            continue;
+        }
     }
-    while ((KeyEvent.wVirtualKeyCode == VK_SHIFT) ||
-           (KeyEvent.wVirtualKeyCode == VK_MENU) ||
-           (KeyEvent.wVirtualKeyCode == VK_CONTROL));
 
     /* AddBreakHandler */
     SetConsoleCtrlHandler(NULL, FALSE);
@@ -140,9 +301,8 @@ PagePrompt(PCON_PAGER Pager, DWORD Done, DWORD Total)
     ConClearLine(Pager->Screen->Stream);
 
     /* Ctrl+C or Ctrl+Esc: Control Break */
-    if ((KeyEvent.wVirtualKeyCode == VK_ESCAPE) ||
-        ((KeyEvent.wVirtualKeyCode == L'C') &&
-         (KeyEvent.dwControlKeyState & (LEFT_CTRL_PRESSED | RIGHT_CTRL_PRESSED))))
+    if (fCtrl && ((KeyEvent.wVirtualKeyCode == VK_ESCAPE) ||
+                  (KeyEvent.wVirtualKeyCode == L'C')))
     {
         /* We break, output a newline */
         WCHAR ch = L'\n';
@@ -150,18 +310,114 @@ PagePrompt(PCON_PAGER Pager, DWORD Done, DWORD Total)
         return FALSE;
     }
 
-    /* 'Q': Quit */
-    // FIXME: Available only when command extensions are enabled.
-    if ((KeyEvent.wVirtualKeyCode == L'Q') &&
-        !(KeyEvent.dwControlKeyState & (LEFT_CTRL_PRESSED | RIGHT_CTRL_PRESSED)))
+    switch (chSubCommand)
     {
-        /* We break, output a newline */
-        WCHAR ch = L'\n';
-        ConStreamWrite(Pager->Screen->Stream, &ch, 1);
-        return FALSE;
+        case L'P':
+        {
+            /* If we don't display other lines, just restart the prompt */
+            if (nLines == 0)
+            {
+                chSubCommand = 0;
+                goto Restart;
+            }
+            /* Otherwise tell the pager to display them */
+            Pager->ScrollRows = nLines;
+            return TRUE;
+        }
+        case L'S':
+        {
+            s_dwFlags |= FLAG_PLUSn;
+            s_nNextLineNo = Pager->lineno + nLines;
+            return TRUE;
+        }
+        default:
+            chSubCommand = 0;
+            break;
     }
 
-    return TRUE;
+    /* If extended features are available */
+    if (s_dwFlags & FLAG_E)
+    {
+        /* Ignore any key presses if Ctrl is pressed */
+        if (fCtrl)
+        {
+            chSubCommand = 0;
+            goto Restart;
+        }
+
+        /* 'Q': Quit */
+        if (KeyEvent.wVirtualKeyCode == L'Q')
+        {
+            /* We break, output a newline */
+            WCHAR ch = L'\n';
+            ConStreamWrite(Pager->Screen->Stream, &ch, 1);
+            return FALSE;
+        }
+
+        /* 'F': Next file */
+        if (KeyEvent.wVirtualKeyCode == L'F')
+        {
+            s_bDoNextFile = TRUE;
+            return FALSE;
+        }
+
+        /* '?': Show Options */
+        if (KeyEvent.uChar.UnicodeChar == L'?')
+        {
+            s_nPromptID = IDS_CONTINUE_OPTIONS;
+            goto Restart;
+        }
+
+        /* [Enter] key: Display one line */
+        if (KeyEvent.wVirtualKeyCode == VK_RETURN)
+        {
+            Pager->ScrollRows = 1;
+            return TRUE;
+        }
+
+        /* [Space] key: Display one page */
+        if (KeyEvent.wVirtualKeyCode == VK_SPACE)
+        {
+            if (s_dwFlags & FLAG_C)
+            {
+                /* Clear the screen */
+                ConClearScreen(Pager->Screen);
+            }
+            return TRUE;
+        }
+
+        /* 'P': Display n lines */
+        if (KeyEvent.wVirtualKeyCode == L'P')
+        {
+            s_nPromptID = IDS_CONTINUE_LINES;
+            chSubCommand = L'P';
+            goto Restart;
+        }
+
+        /* 'S': Skip n lines */
+        if (KeyEvent.wVirtualKeyCode == L'S')
+        {
+            s_nPromptID = IDS_CONTINUE_LINES;
+            chSubCommand = L'S';
+            goto Restart;
+        }
+
+        /* '=': Show current line number */
+        if (KeyEvent.uChar.UnicodeChar == L'=')
+        {
+            s_nPromptID = IDS_CONTINUE_LINE_AT;
+            goto Restart;
+        }
+
+        s_nPromptID = IDS_CONTINUE_PROGRESS;
+        chSubCommand = 0;
+        goto Restart;
+    }
+    else
+    {
+        /* Extended features are unavailable: display one page */
+        return TRUE;
+    }
 }
 
 /*
@@ -445,7 +701,6 @@ FileGetString(
     return TRUE;
 }
 
-
 static VOID
 LoadRegistrySettings(HKEY hKeyRoot)
 {
@@ -456,7 +711,8 @@ LoadRegistrySettings(HKEY hKeyRoot)
      * Buffer big enough to hold the string L"4294967295",
      * corresponding to the literal 0xFFFFFFFF (MAXULONG) in decimal.
      */
-    DWORD Buffer[6];
+    WCHAR Buffer[sizeof("4294967295")];
+    C_ASSERT(sizeof(Buffer) >= sizeof(DWORD));
 
     lRet = RegOpenKeyExW(hKeyRoot,
                          L"Software\\Microsoft\\Command Processor",
@@ -471,7 +727,7 @@ LoadRegistrySettings(HKEY hKeyRoot)
                             L"EnableExtensions",
                             NULL,
                             &dwType,
-                            (LPBYTE)&Buffer,
+                            (PBYTE)&Buffer,
                             &len);
     if (lRet == ERROR_SUCCESS)
     {
@@ -484,6 +740,138 @@ LoadRegistrySettings(HKEY hKeyRoot)
     // else, use the default setting set globally.
 
     RegCloseKey(hKey);
+}
+
+static BOOL IsFlag(PCWSTR param)
+{
+    PCWSTR pch;
+    PWCHAR endptr;
+
+    if (param[0] == L'/')
+        return TRUE;
+
+    if (param[0] == L'+')
+    {
+        pch = param + 1;
+        if (*pch)
+        {
+            (void)wcstol(pch, &endptr, 10);
+            return (*endptr == 0);
+        }
+    }
+    return FALSE;
+}
+
+static BOOL ParseArgument(PCWSTR arg, BOOL* pbHasFiles)
+{
+    PWCHAR endptr;
+
+    if (arg[0] == L'/')
+    {
+        switch (towupper(arg[1]))
+        {
+            case L'?':
+                if (arg[2] == 0)
+                {
+                    s_dwFlags |= FLAG_HELP;
+                    return TRUE;
+                }
+                break;
+            case L'E':
+                if (arg[2] == 0)
+                {
+                    s_dwFlags |= FLAG_E;
+                    return TRUE;
+                }
+                break;
+            case L'C':
+                if (arg[2] == 0)
+                {
+                    s_dwFlags |= FLAG_C;
+                    return TRUE;
+                }
+                break;
+            case L'P':
+                if (arg[2] == 0)
+                {
+                    s_dwFlags |= FLAG_P;
+                    return TRUE;
+                }
+                break;
+            case L'S':
+                if (arg[2] == 0)
+                {
+                    s_dwFlags |= FLAG_S;
+                    return TRUE;
+                }
+                break;
+            case L'T':
+                if (arg[2] != 0)
+                {
+                    s_dwFlags |= FLAG_Tn;
+                    s_nTabWidth = wcstol(&arg[2], &endptr, 10);
+                    if (*endptr == 0)
+                        return TRUE;
+                }
+                break;
+            default:
+                break;
+        }
+    }
+    else if (arg[0] == L'+')
+    {
+        if (arg[1] != 0)
+        {
+            s_dwFlags |= FLAG_PLUSn;
+            s_nNextLineNo = wcstol(&arg[1], &endptr, 10) + 1;
+            if (*endptr == 0)
+                return TRUE;
+        }
+    }
+
+    if (IsFlag(arg))
+    {
+        ConResPrintf(StdErr, IDS_BAD_FLAG, arg);
+        return FALSE;
+    }
+    else
+    {
+        *pbHasFiles = TRUE;
+    }
+
+    return TRUE;
+}
+
+static BOOL ParseMoreVariable(BOOL* pbHasFiles)
+{
+    BOOL ret = TRUE;
+    PWSTR psz;
+    PWCHAR pch;
+    DWORD cch;
+
+    cch = GetEnvironmentVariableW(L"MORE", NULL, 0);
+    if (cch == 0)
+        return TRUE;
+
+    psz = (PWSTR)malloc((cch + 1) * sizeof(WCHAR));
+    if (!psz)
+        return TRUE;
+
+    if (!GetEnvironmentVariableW(L"MORE", psz, cch + 1))
+    {
+        free(psz);
+        return TRUE;
+    }
+
+    for (pch = wcstok(psz, L" "); pch; pch = wcstok(NULL, L" "))
+    {
+        ret = ParseArgument(pch, pbHasFiles);
+        if (!ret)
+            break;
+    }
+
+    free(psz);
+    return ret;
 }
 
 // INT CommandMore(LPTSTR cmd, LPTSTR param)
@@ -499,12 +887,13 @@ int wmain(int argc, WCHAR* argv[])
 
     ENCODING Encoding;
     DWORD SkipBytes = 0;
+    BOOL HasFiles;
 
 #define FileCacheBufferSize 4096
     PVOID FileCacheBuffer = NULL;
     PWCHAR StringBuffer = NULL;
     DWORD StringBufferLength = 0;
-    DWORD dwReadBytes, dwReadChars;
+    DWORD dwReadBytes = 0, dwReadChars = 0;
 
     TCHAR szFullPath[MAX_PATH];
 
@@ -529,13 +918,8 @@ int wmain(int argc, WCHAR* argv[])
     /* Load the registry settings */
     LoadRegistrySettings(HKEY_LOCAL_MACHINE);
     LoadRegistrySettings(HKEY_CURRENT_USER);
-
-    // TODO: First, load the "MORE" environment variable and parse it,
-    // then parse the command-line parameters.
-
-    // FIXME: Parse all the remaining parameters.
-    // Then the file list can be found at the very end.
-    // FIXME2: Use the PARSER api that can be found in EVENTCREATE.
+    if (bEnableExtensions)
+        s_dwFlags |= FLAG_E;
 
     // NOTE: We might try to duplicate the ConOut for read access... ?
     hKeyboard = CreateFileW(L"CONIN$", GENERIC_READ|GENERIC_WRITE,
@@ -543,7 +927,6 @@ int wmain(int argc, WCHAR* argv[])
                             OPEN_EXISTING, 0, NULL);
     FlushConsoleInputBuffer(hKeyboard);
     ConStreamSetOSHandle(StdIn, hKeyboard);
-
 
     FileCacheBuffer = HeapAlloc(GetProcessHeap(), 0, FileCacheBufferSize);
     if (!FileCacheBuffer)
@@ -553,8 +936,31 @@ int wmain(int argc, WCHAR* argv[])
         return 1;
     }
 
+    /* First, load the "MORE" environment variable and parse it,
+     * then parse the command-line parameters. */
+    HasFiles = FALSE;
+    if (!ParseMoreVariable(&HasFiles))
+        return 1;
+    for (i = 1; i < argc; i++)
+    {
+        if (!ParseArgument(argv[i], &HasFiles))
+            return 1;
+    }
+
+    if (s_dwFlags & FLAG_HELP)
+    {
+        ConResPuts(StdOut, IDS_USAGE);
+        return 0;
+    }
+
+    Pager.PagerLine = MorePagerLine;
+    Pager.dwFlags |= CON_PAGER_FLAG_EXPAND_TABS;
+    if (s_dwFlags & FLAG_P)
+        Pager.dwFlags |= CON_PAGER_FLAG_EXPAND_FF;
+    Pager.nTabWidth = s_nTabWidth;
+
     /* Special case where we run 'MORE' without any argument: we use STDIN */
-    if (argc <= 1)
+    if (!HasFiles)
     {
         /*
          * Assign STDIN handle to hFile so that the page prompt function will
@@ -572,6 +978,7 @@ int wmain(int argc, WCHAR* argv[])
         // SetFilePointer(hFile, 0, NULL, FILE_BEGIN);
         Encoding = ENCODING_ANSI; // ENCODING_UTF8;
 
+        /* Start paging */
         bContinue = ConPutsPaging(&Pager, PagePrompt, TRUE, L"");
         if (!bContinue)
             goto Quit;
@@ -596,7 +1003,7 @@ int wmain(int argc, WCHAR* argv[])
                                        StringBuffer, dwReadChars);
             /* If we Ctrl-C/Ctrl-Break, stop everything */
             if (!bContinue)
-                goto Quit;
+                break;
         }
         while (bRet && dwReadBytes > 0);
         goto Quit;
@@ -605,6 +1012,9 @@ int wmain(int argc, WCHAR* argv[])
     /* We have files: read them and output them to STDOUT */
     for (i = 1; i < argc; i++)
     {
+        if (IsFlag(argv[i]))
+            continue;
+
         GetFullPathNameW(argv[i], ARRAYSIZE(szFullPath), szFullPath, NULL);
         hFile = CreateFileW(szFullPath, 
                             GENERIC_READ,
@@ -616,7 +1026,7 @@ int wmain(int argc, WCHAR* argv[])
         if (hFile == INVALID_HANDLE_VALUE)
         {
             ConResPrintf(StdErr, IDS_FILE_ACCESS, szFullPath);
-            continue;
+            goto Quit;
         }
 
         /* We currently do not support files too big */
@@ -636,13 +1046,27 @@ int wmain(int argc, WCHAR* argv[])
         IsDataUnicode(FileCacheBuffer, dwReadBytes, &Encoding, &SkipBytes);
         SetFilePointer(hFile, SkipBytes, NULL, FILE_BEGIN);
 
+        /* Reset state for paging */
+        s_bPrevLineIsBlank = FALSE;
+        s_nPromptID = IDS_CONTINUE_PROGRESS;
+        s_bDoNextFile = FALSE;
+
         /* Update the statistics for PagePrompt */
         dwSumReadBytes = dwSumReadChars = 0;
 
+        /* Start paging */
         bContinue = ConPutsPaging(&Pager, PagePrompt, TRUE, L"");
         if (!bContinue)
         {
+            /* We stop displaying this file */
             CloseHandle(hFile);
+            if (s_bDoNextFile)
+            {
+                /* Bail out and continue with the other files */
+                continue;
+            }
+
+            /* We Ctrl-C/Ctrl-Break, stop everything */
             goto Quit;
         }
 
@@ -655,8 +1079,8 @@ int wmain(int argc, WCHAR* argv[])
             if (!bRet || dwReadBytes == 0 || dwReadChars == 0)
             {
                 /*
-                 * We failed at reading the file, bail out and
-                 * continue with the other files.
+                 * We failed at reading the file, bail out
+                 * and continue with the other files.
                  */
                 break;
             }
@@ -675,16 +1099,28 @@ int wmain(int argc, WCHAR* argv[])
                 bContinue = ConWritePaging(&Pager, PagePrompt, FALSE,
                                            StringBuffer, dwReadChars);
             }
-            /* If we Ctrl-C/Ctrl-Break, stop everything */
             if (!bContinue)
             {
-                CloseHandle(hFile);
-                goto Quit;
+                /* We stop displaying this file */
+                break;
             }
         }
         while (bRet && dwReadBytes > 0);
 
         CloseHandle(hFile);
+
+        /* Check whether we should stop displaying this file */
+        if (!bContinue)
+        {
+            if (s_bDoNextFile)
+            {
+                /* Bail out and continue with the other files */
+                continue;
+            }
+
+            /* We Ctrl-C/Ctrl-Break, stop everything */
+            goto Quit;
+        }
     }
 
 Quit:
