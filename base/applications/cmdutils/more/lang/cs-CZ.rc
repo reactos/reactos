@@ -30,14 +30,13 @@ at ""-- Continue --"" prompt:\n\
    ?        Show help line.\n\
    =        Show line number.\n\
    <Space>  Display next page.\n\
-   <Enter>  Display next line.\n\
-   <Esc>    Same as Q.\n"
+   <Enter>  Display next line.\n"
 
     IDS_CONTINUE "-- Pokračovat --"
     IDS_CONTINUE_PROGRESS "-- Pokračovat (%d%%) --"
     IDS_FILE_ACCESS "Nelze získat přístup k souboru %s.\n"
     IDS_BAD_FLAG "Invalid argument - '%ls'\n"
-    IDS_CONTINUE_OPTIONS "-- Continue (%d%%) [Options: psfq=<Space><Enter><Esc>] --"
+    IDS_CONTINUE_OPTIONS "-- Continue (%d%%) [Options: psfq=<Space><Enter>] --"
     IDS_CONTINUE_LINES "-- Continue (%d%%) -- Lines: "
     IDS_CONTINUE_LINE_AT "-- Continue (%d%%) [Line:%d] --"
 END
