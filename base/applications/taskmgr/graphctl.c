@@ -259,7 +259,7 @@ void GraphCtrl_InvalidateCtrl(TGraphCtrl* this, BOOL bResize)
     /*   LineTo(m_dcGrid, m_rectPlot.left, m_rectPlot.top); */
 
     /*  draw the horizontal axis */
-    for (i = this->m_rectPlot.top; i < this->m_rectPlot.bottom; i += this->m_nGridYPixels)
+    for (i = this->m_rectPlot.top; i <= this->m_rectPlot.bottom; i += this->m_nGridYPixels)
     {
         MoveToEx(this->m_dcGrid, this->m_rectPlot.left, this->m_rectPlot.top + i, NULL);
         LineTo(this->m_dcGrid, this->m_rectPlot.right, this->m_rectPlot.top + i);
@@ -268,7 +268,7 @@ void GraphCtrl_InvalidateCtrl(TGraphCtrl* this, BOOL bResize)
     /*  draw the vertical axis */
     /*  In order to keep grid position uniform when resizing, vertical axis should be  */
     /*  drawn from right to left  */
-    for (i = this->m_rectPlot.right - this->m_nGridOffsetPixels; i > this->m_rectPlot.left; i -= this->m_nGridXPixels)
+    for (i = this->m_rectPlot.right - this->m_nGridOffsetPixels; i >= this->m_rectPlot.left; i -= this->m_nGridXPixels)
     {
         MoveToEx(this->m_dcGrid, i, this->m_rectPlot.bottom, NULL);
         LineTo(this->m_dcGrid, i, this->m_rectPlot.top);
