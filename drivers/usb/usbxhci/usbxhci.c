@@ -25,7 +25,7 @@ XHCI_Write64bitReg(IN PULONG BaseAddr,
 MPSTATUS
 NTAPI
 XHCI_OpenEndpoint(IN PVOID xhciExtension,
-                  IN PVOID endpointParameters,
+                  IN PUSBPORT_ENDPOINT_PROPERTIES  endpointParameters,
                   IN PVOID xhciEndpoint)
 {
     DPRINT1("XHCI_OpenEndpoint: function initiated\n");
@@ -35,8 +35,8 @@ XHCI_OpenEndpoint(IN PVOID xhciExtension,
 MPSTATUS
 NTAPI
 XHCI_ReopenEndpoint(IN PVOID xhciExtension,
-                    IN PVOID endpointParameters,
-                    IN PVOID xhciEndpoint)
+                    IN PUSBPORT_ENDPOINT_PROPERTIES  endpointParameters,
+                    IN PVOID  xhciEndpoint)
 {
     DPRINT1("XHCI_ReopenEndpoint: function initiated\n");
     return MP_STATUS_SUCCESS;
@@ -45,8 +45,8 @@ XHCI_ReopenEndpoint(IN PVOID xhciExtension,
 VOID
 NTAPI
 XHCI_QueryEndpointRequirements(IN PVOID xhciExtension,
-                               IN PVOID endpointParameters,
-                               IN PULONG EndpointRequirements)
+                               IN PUSBPORT_ENDPOINT_PROPERTIES  endpointParameters,
+                               IN PUSBPORT_ENDPOINT_REQUIREMENTS EndpointRequirements)
 {
     PUSBPORT_ENDPOINT_PROPERTIES EndpointProperties = endpointParameters;
     ULONG TransferType;
@@ -347,8 +347,8 @@ XHCI_ControllerWorkTest(IN PXHCI_EXTENSION XhciExtension,
 MPSTATUS
 NTAPI
 XHCI_InitializeResources(IN PXHCI_EXTENSION XhciExtension,
-                         IN PVOID resourcesStartVA,
-                         IN PVOID resourcesStartPA)
+                         IN ULONG_PTR resourcesStartVA,
+                         IN ULONG  resourcesStartPA)
 {
     
     
@@ -839,9 +839,9 @@ MPSTATUS
 NTAPI
 XHCI_SubmitTransfer(IN PVOID xhciExtension,
                     IN PVOID xhciEndpoint,
-                    IN PVOID transferParameters,
+                    IN PUSBPORT_TRANSFER_PARAMETERS  transferParameters,
                     IN PVOID xhciTransfer,
-                    IN PVOID sgList)
+                    IN PUSBPORT_SCATTER_GATHER_LIST  sgList)
 {
     DPRINT1("XHCI_SubmitTransfer: function initiated\n");
     return MP_STATUS_SUCCESS;
@@ -851,7 +851,7 @@ MPSTATUS
 NTAPI
 XHCI_SubmitIsoTransfer(IN PVOID xhciExtension,
                        IN PVOID xhciEndpoint,
-                       IN PVOID transferParameters,
+                       IN PUSBPORT_TRANSFER_PARAMETERS transferParameters,
                        IN PVOID xhciTransfer,
                        IN PVOID isoParameters)
 {
@@ -1061,7 +1061,7 @@ XHCI_PassThru(IN PVOID xhciExtension,
 VOID
 NTAPI
 XHCI_RebalanceEndpoint(IN PVOID ohciExtension,
-                       IN PVOID endpointParameters,
+                       IN PUSBPORT_ENDPOINT_PROPERTIES endpointParameters,
                        IN PVOID ohciEndpoint)
 {
     DPRINT1("XHCI_RebalanceEndpoint: UNIMPLEMENTED. FIXME\n");
