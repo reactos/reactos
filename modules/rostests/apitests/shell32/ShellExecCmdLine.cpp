@@ -32,8 +32,8 @@ static const WCHAR wszCom[] = L".com";
 
 static __inline void __SHCloneStrW(WCHAR **target, const WCHAR *source)
 {
-	*target = (WCHAR *)SHAlloc((lstrlenW(source) + 1) * sizeof(WCHAR) );
-	lstrcpyW(*target, source);
+    *target = (WCHAR *)SHAlloc((lstrlenW(source) + 1) * sizeof(WCHAR) );
+    lstrcpyW(*target, source);
 }
 
 // NOTE: You have to sync the following code to dll/win32/shell32/shlexec.cpp.
@@ -244,200 +244,360 @@ SHELLEXECCMDLINE g_pShellExecCmdLine = NULL;
 typedef struct TEST_ENTRY
 {
     INT lineno;
-    HRESULT hr;
+    BOOL result;
     BOOL bAllowNonExe;
-    LPCWSTR pwszWindowClass;
     LPCWSTR pwszCommand;
     LPCWSTR pwszStartDir;
 } TEST_ENTRY;
 
-static const char s_testfile1[] = "Test File.txt";
-static const char s_testfile2[] = "Test File.bat";
+static WCHAR s_sub_program[MAX_PATH];
+static WCHAR s_win_test_exe[MAX_PATH];
+static WCHAR s_sys_bat_file[MAX_PATH];
+static WCHAR s_cur_dir[MAX_PATH];
 
-static const TEST_ENTRY s_entries[] =
+static BOOL
+GetSubProgramPath(void)
+{
+    GetModuleFileNameW(NULL, s_sub_program, _countof(s_sub_program));
+    PathRemoveFileSpecW(s_sub_program);
+    PathAppendW(s_sub_program, L"shell32_apitest_sub.exe");
+
+    if (!PathFileExistsW(s_sub_program))
+    {
+        PathRemoveFileSpecW(s_sub_program);
+        PathAppendW(s_sub_program, L"testdata\\shell32_apitest_sub.exe");
+
+        if (!PathFileExistsW(s_sub_program))
+        {
+            return FALSE;
+        }
+    }
+
+    return TRUE;
+}
+
+static const TEST_ENTRY s_entries_1[] =
 {
     // NULL
-    { __LINE__, (HRESULT)0xDEADFACE, FALSE, NULL, NULL, NULL },
-    { __LINE__, (HRESULT)0xDEADFACE, FALSE, NULL, NULL, L"." },
-    { __LINE__, (HRESULT)0xDEADFACE, FALSE, NULL, NULL, L"system32" },
-    { __LINE__, (HRESULT)0xDEADFACE, FALSE, NULL, NULL, L"C:\\Program Files" },
-    { __LINE__, (HRESULT)0xDEADFACE, TRUE, NULL, NULL, NULL },
-    { __LINE__, (HRESULT)0xDEADFACE, TRUE, NULL, NULL, L"." },
-    { __LINE__, (HRESULT)0xDEADFACE, TRUE, NULL, NULL, L"system32" },
-    { __LINE__, (HRESULT)0xDEADFACE, TRUE, NULL, NULL, L"C:\\Program Files" },
+    { __LINE__, 0xBADFACE, FALSE, NULL, NULL },
+    { __LINE__, 0xBADFACE, FALSE, NULL, L"." },
+    { __LINE__, 0xBADFACE, FALSE, NULL, L"system32" },
+    { __LINE__, 0xBADFACE, FALSE, NULL, L"C:\\Program Files" },
+    { __LINE__, 0xBADFACE, TRUE, NULL, NULL },
+    { __LINE__, 0xBADFACE, TRUE, NULL, L"." },
+    { __LINE__, 0xBADFACE, TRUE, NULL, L"system32" },
+    { __LINE__, 0xBADFACE, TRUE, NULL, L"C:\\Program Files" },
     // notepad
-    { __LINE__, S_OK, FALSE, L"Notepad", L"notepad", NULL },
-    { __LINE__, S_OK, FALSE, L"Notepad", L"notepad", L"." },
-    { __LINE__, S_OK, FALSE, L"Notepad", L"notepad", L"system32" },
-    { __LINE__, S_OK, FALSE, L"Notepad", L"notepad", L"C:\\Program Files" },
-    { __LINE__, S_OK, FALSE, L"Notepad", L"notepad \"Test File.txt\"", NULL },
-    { __LINE__, S_OK, FALSE, L"Notepad", L"notepad \"Test File.txt\"", L"." },
-    { __LINE__, S_OK, TRUE, L"Notepad", L"notepad", NULL },
-    { __LINE__, S_OK, TRUE, L"Notepad", L"notepad", L"." },
-    { __LINE__, S_OK, TRUE, L"Notepad", L"notepad", L"system32" },
-    { __LINE__, S_OK, TRUE, L"Notepad", L"notepad", L"C:\\Program Files" },
-    { __LINE__, S_OK, TRUE, L"Notepad", L"notepad \"Test File.txt\"", NULL },
-    { __LINE__, S_OK, TRUE, L"Notepad", L"notepad \"Test File.txt\"", L"." },
+    { __LINE__, TRUE, FALSE, L"notepad", NULL },
+    { __LINE__, TRUE, FALSE, L"notepad", L"." },
+    { __LINE__, TRUE, FALSE, L"notepad", L"system32" },
+    { __LINE__, TRUE, FALSE, L"notepad", L"C:\\Program Files" },
+    { __LINE__, TRUE, FALSE, L"notepad \"Test File.txt\"", NULL },
+    { __LINE__, TRUE, FALSE, L"notepad \"Test File.txt\"", L"." },
+    { __LINE__, TRUE, TRUE, L"notepad", NULL },
+    { __LINE__, TRUE, TRUE, L"notepad", L"." },
+    { __LINE__, TRUE, TRUE, L"notepad", L"system32" },
+    { __LINE__, TRUE, TRUE, L"notepad", L"C:\\Program Files" },
+    { __LINE__, TRUE, TRUE, L"notepad \"Test File.txt\"", NULL },
+    { __LINE__, TRUE, TRUE, L"notepad \"Test File.txt\"", L"." },
     // notepad.exe
-    { __LINE__, S_OK, FALSE, L"Notepad", L"notepad.exe", NULL },
-    { __LINE__, S_OK, FALSE, L"Notepad", L"notepad.exe", L"." },
-    { __LINE__, S_OK, FALSE, L"Notepad", L"notepad.exe", L"system32" },
-    { __LINE__, S_OK, FALSE, L"Notepad", L"notepad.exe", L"C:\\Program Files" },
-    { __LINE__, S_OK, FALSE, L"Notepad", L"notepad.exe \"Test File.txt\"", NULL },
-    { __LINE__, S_OK, FALSE, L"Notepad", L"notepad.exe \"Test File.txt\"", L"." },
-    { __LINE__, S_OK, TRUE, L"Notepad", L"notepad.exe", NULL },
-    { __LINE__, S_OK, TRUE, L"Notepad", L"notepad.exe", L"." },
-    { __LINE__, S_OK, TRUE, L"Notepad", L"notepad.exe", L"system32" },
-    { __LINE__, S_OK, TRUE, L"Notepad", L"notepad.exe", L"C:\\Program Files" },
-    { __LINE__, S_OK, TRUE, L"Notepad", L"notepad.exe \"Test File.txt\"", NULL },
-    { __LINE__, S_OK, TRUE, L"Notepad", L"notepad.exe \"Test File.txt\"", L"." },
+    { __LINE__, TRUE, FALSE, L"notepad.exe", NULL },
+    { __LINE__, TRUE, FALSE, L"notepad.exe", L"." },
+    { __LINE__, TRUE, FALSE, L"notepad.exe", L"system32" },
+    { __LINE__, TRUE, FALSE, L"notepad.exe", L"C:\\Program Files" },
+    { __LINE__, TRUE, FALSE, L"notepad.exe \"Test File.txt\"", NULL },
+    { __LINE__, TRUE, FALSE, L"notepad.exe \"Test File.txt\"", L"." },
+    { __LINE__, TRUE, TRUE, L"notepad.exe", NULL },
+    { __LINE__, TRUE, TRUE, L"notepad.exe", L"." },
+    { __LINE__, TRUE, TRUE, L"notepad.exe", L"system32" },
+    { __LINE__, TRUE, TRUE, L"notepad.exe", L"C:\\Program Files" },
+    { __LINE__, TRUE, TRUE, L"notepad.exe \"Test File.txt\"", NULL },
+    { __LINE__, TRUE, TRUE, L"notepad.exe \"Test File.txt\"", L"." },
     // C:\notepad.exe
-    { __LINE__, CO_E_APPNOTFOUND, FALSE, L"Notepad", L"C:\\notepad.exe", NULL },
-    { __LINE__, CO_E_APPNOTFOUND, FALSE, L"Notepad", L"C:\\notepad.exe", L"." },
-    { __LINE__, CO_E_APPNOTFOUND, FALSE, L"Notepad", L"C:\\notepad.exe", L"system32" },
-    { __LINE__, CO_E_APPNOTFOUND, FALSE, L"Notepad", L"C:\\notepad.exe", L"C:\\Program Files" },
-    { __LINE__, CO_E_APPNOTFOUND, FALSE, L"Notepad", L"C:\\notepad.exe \"Test File.txt\"", NULL },
-    { __LINE__, CO_E_APPNOTFOUND, FALSE, L"Notepad", L"C:\\notepad.exe \"Test File.txt\"", L"." },
-    { __LINE__, HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND), TRUE, L"Notepad", L"C:\\notepad.exe", NULL },
-    { __LINE__, HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND), TRUE, L"Notepad", L"C:\\notepad.exe", L"." },
-    { __LINE__, HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND), TRUE, L"Notepad", L"C:\\notepad.exe", L"system32" },
-    { __LINE__, HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND), TRUE, L"Notepad", L"C:\\notepad.exe", L"C:\\Program Files" },
-    { __LINE__, HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND), TRUE, L"Notepad", L"C:\\notepad.exe \"Test File.txt\"", NULL },
-    { __LINE__, HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND), TRUE, L"Notepad", L"C:\\notepad.exe \"Test File.txt\"", L"." },
+    { __LINE__, FALSE, FALSE, L"C:\\notepad.exe", NULL },
+    { __LINE__, FALSE, FALSE, L"C:\\notepad.exe", L"." },
+    { __LINE__, FALSE, FALSE, L"C:\\notepad.exe", L"system32" },
+    { __LINE__, FALSE, FALSE, L"C:\\notepad.exe", L"C:\\Program Files" },
+    { __LINE__, FALSE, FALSE, L"C:\\notepad.exe \"Test File.txt\"", NULL },
+    { __LINE__, FALSE, FALSE, L"C:\\notepad.exe \"Test File.txt\"", L"." },
+    { __LINE__, FALSE, TRUE, L"C:\\notepad.exe", NULL },
+    { __LINE__, FALSE, TRUE, L"C:\\notepad.exe", L"." },
+    { __LINE__, FALSE, TRUE, L"C:\\notepad.exe", L"system32" },
+    { __LINE__, FALSE, TRUE, L"C:\\notepad.exe", L"C:\\Program Files" },
+    { __LINE__, FALSE, TRUE, L"C:\\notepad.exe \"Test File.txt\"", NULL },
+    { __LINE__, FALSE, TRUE, L"C:\\notepad.exe \"Test File.txt\"", L"." },
     // "notepad"
-    { __LINE__, S_OK, FALSE, L"Notepad", L"\"notepad\"", NULL },
-    { __LINE__, S_OK, FALSE, L"Notepad", L"\"notepad\"", L"." },
-    { __LINE__, S_OK, FALSE, L"Notepad", L"\"notepad\"", L"system32" },
-    { __LINE__, S_OK, FALSE, L"Notepad", L"\"notepad\"", L"C:\\Program Files" },
-    { __LINE__, S_OK, FALSE, L"Notepad", L"\"notepad\" \"Test File.txt\"", NULL },
-    { __LINE__, S_OK, FALSE, L"Notepad", L"\"notepad\" \"Test File.txt\"", L"." },
-    { __LINE__, S_OK, TRUE, L"Notepad", L"\"notepad\"", NULL },
-    { __LINE__, S_OK, TRUE, L"Notepad", L"\"notepad\"", L"." },
-    { __LINE__, S_OK, TRUE, L"Notepad", L"\"notepad\"", L"system32" },
-    { __LINE__, S_OK, TRUE, L"Notepad", L"\"notepad\"", L"C:\\Program Files" },
-    { __LINE__, S_OK, TRUE, L"Notepad", L"\"notepad\" \"Test File.txt\"", NULL },
-    { __LINE__, S_OK, TRUE, L"Notepad", L"\"notepad\" \"Test File.txt\"", L"." },
+    { __LINE__, TRUE, FALSE, L"\"notepad\"", NULL },
+    { __LINE__, TRUE, FALSE, L"\"notepad\"", L"." },
+    { __LINE__, TRUE, FALSE, L"\"notepad\"", L"system32" },
+    { __LINE__, TRUE, FALSE, L"\"notepad\"", L"C:\\Program Files" },
+    { __LINE__, TRUE, FALSE, L"\"notepad\" \"Test File.txt\"", NULL },
+    { __LINE__, TRUE, FALSE, L"\"notepad\" \"Test File.txt\"", L"." },
+    { __LINE__, TRUE, TRUE, L"\"notepad\"", NULL },
+    { __LINE__, TRUE, TRUE, L"\"notepad\"", L"." },
+    { __LINE__, TRUE, TRUE, L"\"notepad\"", L"system32" },
+    { __LINE__, TRUE, TRUE, L"\"notepad\"", L"C:\\Program Files" },
+    { __LINE__, TRUE, TRUE, L"\"notepad\" \"Test File.txt\"", NULL },
+    { __LINE__, TRUE, TRUE, L"\"notepad\" \"Test File.txt\"", L"." },
     // "notepad.exe"
-    { __LINE__, S_OK, FALSE, L"Notepad", L"\"notepad.exe\"", NULL },
-    { __LINE__, S_OK, FALSE, L"Notepad", L"\"notepad.exe\"", L"." },
-    { __LINE__, S_OK, FALSE, L"Notepad", L"\"notepad.exe\"", L"system32" },
-    { __LINE__, S_OK, FALSE, L"Notepad", L"\"notepad.exe\"", L"C:\\Program Files" },
-    { __LINE__, S_OK, FALSE, L"Notepad", L"\"notepad.exe\" \"Test File.txt\"", NULL },
-    { __LINE__, S_OK, FALSE, L"Notepad", L"\"notepad.exe\" \"Test File.txt\"", L"." },
-    { __LINE__, S_OK, TRUE, L"Notepad", L"\"notepad.exe\"", NULL },
-    { __LINE__, S_OK, TRUE, L"Notepad", L"\"notepad.exe\"", L"." },
-    { __LINE__, S_OK, TRUE, L"Notepad", L"\"notepad.exe\"", L"system32" },
-    { __LINE__, S_OK, TRUE, L"Notepad", L"\"notepad.exe\"", L"C:\\Program Files" },
-    { __LINE__, S_OK, TRUE, L"Notepad", L"\"notepad.exe\" \"Test File.txt\"", NULL },
-    { __LINE__, S_OK, TRUE, L"Notepad", L"\"notepad.exe\" \"Test File.txt\"", L"." },
+    { __LINE__, TRUE, FALSE, L"\"notepad.exe\"", NULL },
+    { __LINE__, TRUE, FALSE, L"\"notepad.exe\"", L"." },
+    { __LINE__, TRUE, FALSE, L"\"notepad.exe\"", L"system32" },
+    { __LINE__, TRUE, FALSE, L"\"notepad.exe\"", L"C:\\Program Files" },
+    { __LINE__, TRUE, FALSE, L"\"notepad.exe\" \"Test File.txt\"", NULL },
+    { __LINE__, TRUE, FALSE, L"\"notepad.exe\" \"Test File.txt\"", L"." },
+    { __LINE__, TRUE, TRUE, L"\"notepad.exe\"", NULL },
+    { __LINE__, TRUE, TRUE, L"\"notepad.exe\"", L"." },
+    { __LINE__, TRUE, TRUE, L"\"notepad.exe\"", L"system32" },
+    { __LINE__, TRUE, TRUE, L"\"notepad.exe\"", L"C:\\Program Files" },
+    { __LINE__, TRUE, TRUE, L"\"notepad.exe\" \"Test File.txt\"", NULL },
+    { __LINE__, TRUE, TRUE, L"\"notepad.exe\" \"Test File.txt\"", L"." },
+    // test program
+    { __LINE__, FALSE, FALSE, L"test program", NULL },
+    { __LINE__, FALSE, FALSE, L"test program", L"." },
+    { __LINE__, FALSE, FALSE, L"test program", L"system32" },
+    { __LINE__, FALSE, FALSE, L"test program", L"C:\\Program Files" },
+    { __LINE__, FALSE, FALSE, L"test program \"Test File.txt\"", NULL },
+    { __LINE__, FALSE, FALSE, L"test program \"Test File.txt\"", L"." },
+    { __LINE__, FALSE, TRUE, L"test program", NULL },
+    { __LINE__, FALSE, TRUE, L"test program", L"." },
+    { __LINE__, FALSE, TRUE, L"test program", L"system32" },
+    { __LINE__, FALSE, TRUE, L"test program", L"C:\\Program Files" },
+    { __LINE__, FALSE, TRUE, L"test program \"Test File.txt\"", NULL },
+    { __LINE__, FALSE, TRUE, L"test program \"Test File.txt\"", L"." },
     // test program.exe
-    { __LINE__, CO_E_APPNOTFOUND, FALSE, L"Notepad", L"test program.exe", NULL },
-    { __LINE__, CO_E_APPNOTFOUND, FALSE, L"Notepad", L"test program.exe", L"." },
-    { __LINE__, CO_E_APPNOTFOUND, FALSE, L"Notepad", L"test program.exe", L"system32" },
-    { __LINE__, CO_E_APPNOTFOUND, FALSE, L"Notepad", L"test program.exe", L"C:\\Program Files" },
-    { __LINE__, CO_E_APPNOTFOUND, FALSE, L"Notepad", L"test program.exe \"Test File.txt\"", NULL },
-    { __LINE__, CO_E_APPNOTFOUND, FALSE, L"Notepad", L"test program.exe \"Test File.txt\"", L"." },
-    { __LINE__, HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND), TRUE, L"Notepad", L"test program.exe", NULL },
-    { __LINE__, HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND), TRUE, L"Notepad", L"test program.exe", L"." },
-    { __LINE__, HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND), TRUE, L"Notepad", L"test program.exe", L"system32" },
-    { __LINE__, HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND), TRUE, L"Notepad", L"test program.exe", L"C:\\Program Files" },
-    { __LINE__, HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND), TRUE, L"Notepad", L"test program.exe \"Test File.txt\"", NULL },
-    { __LINE__, HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND), TRUE, L"Notepad", L"test program.exe \"Test File.txt\"", L"." },
+    { __LINE__, FALSE, FALSE, L"test program.exe", NULL },
+    { __LINE__, FALSE, FALSE, L"test program.exe", L"." },
+    { __LINE__, FALSE, FALSE, L"test program.exe", L"system32" },
+    { __LINE__, FALSE, FALSE, L"test program.exe", L"C:\\Program Files" },
+    { __LINE__, FALSE, FALSE, L"test program.exe \"Test File.txt\"", NULL },
+    { __LINE__, FALSE, FALSE, L"test program.exe \"Test File.txt\"", L"." },
+    { __LINE__, FALSE, TRUE, L"test program.exe", NULL },
+    { __LINE__, FALSE, TRUE, L"test program.exe", L"." },
+    { __LINE__, FALSE, TRUE, L"test program.exe", L"system32" },
+    { __LINE__, FALSE, TRUE, L"test program.exe", L"C:\\Program Files" },
+    { __LINE__, FALSE, TRUE, L"test program.exe \"Test File.txt\"", NULL },
+    { __LINE__, FALSE, TRUE, L"test program.exe \"Test File.txt\"", L"." },
+    // test program.bat
+    { __LINE__, FALSE, FALSE, L"test program.bat", NULL },
+    { __LINE__, FALSE, FALSE, L"test program.bat", L"." },
+    { __LINE__, FALSE, FALSE, L"test program.bat", L"system32" },
+    { __LINE__, FALSE, FALSE, L"test program.bat", L"C:\\Program Files" },
+    { __LINE__, FALSE, FALSE, L"test program.bat \"Test File.txt\"", NULL },
+    { __LINE__, FALSE, FALSE, L"test program.bat \"Test File.txt\"", L"." },
+    { __LINE__, FALSE, TRUE, L"test program.bat", NULL },
+    { __LINE__, FALSE, TRUE, L"test program.bat", L"." },
+    { __LINE__, FALSE, TRUE, L"test program.bat", L"system32" },
+    { __LINE__, FALSE, TRUE, L"test program.bat", L"C:\\Program Files" },
+    { __LINE__, FALSE, TRUE, L"test program.bat \"Test File.txt\"", NULL },
+    { __LINE__, FALSE, TRUE, L"test program.bat \"Test File.txt\"", L"." },
     // "test program"
-    { __LINE__, CO_E_APPNOTFOUND, FALSE, L"Notepad", L"\"test program\"", NULL },
-    { __LINE__, CO_E_APPNOTFOUND, FALSE, L"Notepad", L"\"test program\"", L"." },
-    { __LINE__, CO_E_APPNOTFOUND, FALSE, L"Notepad", L"\"test program\"", L"system32" },
-    { __LINE__, CO_E_APPNOTFOUND, FALSE, L"Notepad", L"\"test program\"", L"C:\\Program Files" },
-    { __LINE__, CO_E_APPNOTFOUND, FALSE, L"Notepad", L"\"test program\" \"Test File.txt\"", NULL },
-    { __LINE__, CO_E_APPNOTFOUND, FALSE, L"Notepad", L"\"test program\" \"Test File.txt\"", L"." },
-    { __LINE__, HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND), TRUE, L"Notepad", L"\"test program\"", NULL },
-    { __LINE__, HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND), TRUE, L"Notepad", L"\"test program\"", L"." },
-    { __LINE__, HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND), TRUE, L"Notepad", L"\"test program\"", L"system32" },
-    { __LINE__, HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND), TRUE, L"Notepad", L"\"test program\"", L"C:\\Program Files" },
-    { __LINE__, HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND), TRUE, L"Notepad", L"\"test program\" \"Test File.txt\"", NULL },
-    { __LINE__, HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND), TRUE, L"Notepad", L"\"test program\" \"Test File.txt\"", L"." },
+    { __LINE__, FALSE, FALSE, L"\"test program\"", NULL },
+    { __LINE__, FALSE, FALSE, L"\"test program\"", L"." },
+    { __LINE__, FALSE, FALSE, L"\"test program\"", L"system32" },
+    { __LINE__, FALSE, FALSE, L"\"test program\"", L"C:\\Program Files" },
+    { __LINE__, FALSE, FALSE, L"\"test program\" \"Test File.txt\"", NULL },
+    { __LINE__, FALSE, FALSE, L"\"test program\" \"Test File.txt\"", L"." },
+    { __LINE__, FALSE, TRUE, L"\"test program\"", NULL },
+    { __LINE__, FALSE, TRUE, L"\"test program\"", L"." },
+    { __LINE__, FALSE, TRUE, L"\"test program\"", L"system32" },
+    { __LINE__, FALSE, TRUE, L"\"test program\"", L"C:\\Program Files" },
+    { __LINE__, FALSE, TRUE, L"\"test program\" \"Test File.txt\"", NULL },
+    { __LINE__, FALSE, TRUE, L"\"test program\" \"Test File.txt\"", L"." },
     // "test program.exe"
-    { __LINE__, CO_E_APPNOTFOUND, FALSE, L"Notepad", L"\"test program.exe\"", NULL },
-    { __LINE__, CO_E_APPNOTFOUND, FALSE, L"Notepad", L"\"test program.exe\"", L"." },
-    { __LINE__, CO_E_APPNOTFOUND, FALSE, L"Notepad", L"\"test program.exe\"", L"system32" },
-    { __LINE__, CO_E_APPNOTFOUND, FALSE, L"Notepad", L"\"test program.exe\"", L"C:\\Program Files" },
-    { __LINE__, CO_E_APPNOTFOUND, FALSE, L"Notepad", L"\"test program.exe\" \"Test File.txt\"", NULL },
-    { __LINE__, CO_E_APPNOTFOUND, FALSE, L"Notepad", L"\"test program.exe\" \"Test File.txt\"", L"." },
-    { __LINE__, HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND), TRUE, L"Notepad", L"\"test program.exe\"", NULL },
-    { __LINE__, HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND), TRUE, L"Notepad", L"\"test program.exe\"", L"." },
-    { __LINE__, HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND), TRUE, L"Notepad", L"\"test program.exe\"", L"system32" },
-    { __LINE__, HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND), TRUE, L"Notepad", L"\"test program.exe\"", L"C:\\Program Files" },
-    { __LINE__, HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND), TRUE, L"Notepad", L"\"test program.exe\" \"Test File.txt\"", NULL },
-    { __LINE__, HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND), TRUE, L"Notepad", L"\"test program.exe\" \"Test File.txt\"", L"." },
+    { __LINE__, TRUE, FALSE, L"\"test program.exe\"", NULL },
+    { __LINE__, TRUE, FALSE, L"\"test program.exe\"", L"." },
+    { __LINE__, TRUE, FALSE, L"\"test program.exe\"", L"system32" },
+    { __LINE__, TRUE, FALSE, L"\"test program.exe\"", L"C:\\Program Files" },
+    { __LINE__, TRUE, FALSE, L"\"test program.exe\" \"Test File.txt\"", NULL },
+    { __LINE__, TRUE, FALSE, L"\"test program.exe\" \"Test File.txt\"", L"." },
+    { __LINE__, TRUE, TRUE, L"\"test program.exe\"", NULL },
+    { __LINE__, TRUE, TRUE, L"\"test program.exe\"", L"." },
+    { __LINE__, TRUE, TRUE, L"\"test program.exe\"", L"system32" },
+    { __LINE__, TRUE, TRUE, L"\"test program.exe\"", L"C:\\Program Files" },
+    { __LINE__, TRUE, TRUE, L"\"test program.exe\" \"Test File.txt\"", NULL },
+    { __LINE__, TRUE, TRUE, L"\"test program.exe\" \"Test File.txt\"", L"." },
+    // "test program.bat"
+    { __LINE__, FALSE, FALSE, L"\"test program.bat\"", NULL },
+    { __LINE__, FALSE, FALSE, L"\"test program.bat\"", L"." },
+    { __LINE__, FALSE, FALSE, L"\"test program.bat\"", L"system32" },
+    { __LINE__, FALSE, FALSE, L"\"test program.bat\"", L"C:\\Program Files" },
+    { __LINE__, FALSE, FALSE, L"\"test program.bat\" \"Test File.txt\"", NULL },
+    { __LINE__, FALSE, FALSE, L"\"test program.bat\" \"Test File.txt\"", L"." },
+    { __LINE__, FALSE, TRUE, L"\"test program.bat\"", NULL },
+    { __LINE__, FALSE, TRUE, L"\"test program.bat\"", L"." },
+    { __LINE__, FALSE, TRUE, L"\"test program.bat\"", L"system32" },
+    { __LINE__, FALSE, TRUE, L"\"test program.bat\"", L"C:\\Program Files" },
+    { __LINE__, FALSE, TRUE, L"\"test program.bat\" \"Test File.txt\"", NULL },
+    { __LINE__, FALSE, TRUE, L"\"test program.bat\" \"Test File.txt\"", L"." },
     // invalid program
-    { __LINE__, CO_E_APPNOTFOUND, FALSE, L"Notepad", L"invalid program", NULL },
-    { __LINE__, CO_E_APPNOTFOUND, FALSE, L"Notepad", L"invalid program", L"." },
-    { __LINE__, CO_E_APPNOTFOUND, FALSE, L"Notepad", L"invalid program", L"system32" },
-    { __LINE__, CO_E_APPNOTFOUND, FALSE, L"Notepad", L"invalid program", L"C:\\Program Files" },
-    { __LINE__, CO_E_APPNOTFOUND, FALSE, L"Notepad", L"invalid program \"Test File.txt\"", NULL },
-    { __LINE__, CO_E_APPNOTFOUND, FALSE, L"Notepad", L"invalid program \"Test File.txt\"", L"." },
-    { __LINE__, HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND), TRUE, L"Notepad", L"invalid program", NULL },
-    { __LINE__, HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND), TRUE, L"Notepad", L"invalid program", L"." },
-    { __LINE__, HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND), TRUE, L"Notepad", L"invalid program", L"system32" },
-    { __LINE__, HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND), TRUE, L"Notepad", L"invalid program", L"C:\\Program Files" },
-    { __LINE__, HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND), TRUE, L"Notepad", L"invalid program \"Test File.txt\"", NULL },
-    { __LINE__, HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND), TRUE, L"Notepad", L"invalid program \"Test File.txt\"", L"." },
+    { __LINE__, FALSE, FALSE, L"invalid program", NULL },
+    { __LINE__, FALSE, FALSE, L"invalid program", L"." },
+    { __LINE__, FALSE, FALSE, L"invalid program", L"system32" },
+    { __LINE__, FALSE, FALSE, L"invalid program", L"C:\\Program Files" },
+    { __LINE__, FALSE, FALSE, L"invalid program \"Test File.txt\"", NULL },
+    { __LINE__, FALSE, FALSE, L"invalid program \"Test File.txt\"", L"." },
+    { __LINE__, FALSE, TRUE, L"invalid program", NULL },
+    { __LINE__, FALSE, TRUE, L"invalid program", L"." },
+    { __LINE__, FALSE, TRUE, L"invalid program", L"system32" },
+    { __LINE__, FALSE, TRUE, L"invalid program", L"C:\\Program Files" },
+    { __LINE__, FALSE, TRUE, L"invalid program \"Test File.txt\"", NULL },
+    { __LINE__, FALSE, TRUE, L"invalid program \"Test File.txt\"", L"." },
     // \"invalid program.exe\"
-    { __LINE__, CO_E_APPNOTFOUND, FALSE, L"Notepad", L"\"invalid program.exe\"", NULL },
-    { __LINE__, CO_E_APPNOTFOUND, FALSE, L"Notepad", L"\"invalid program.exe\"", L"." },
-    { __LINE__, CO_E_APPNOTFOUND, FALSE, L"Notepad", L"\"invalid program.exe\"", L"system32" },
-    { __LINE__, CO_E_APPNOTFOUND, FALSE, L"Notepad", L"\"invalid program.exe\"", L"C:\\Program Files" },
-    { __LINE__, CO_E_APPNOTFOUND, FALSE, L"Notepad", L"\"invalid program.exe\" \"Test File.txt\"", NULL },
-    { __LINE__, CO_E_APPNOTFOUND, FALSE, L"Notepad", L"\"invalid program.exe\" \"Test File.txt\"", L"." },
-    { __LINE__, HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND), TRUE, L"Notepad", L"\"invalid program.exe\"", NULL },
-    { __LINE__, HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND), TRUE, L"Notepad", L"\"invalid program.exe\"", L"." },
-    { __LINE__, HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND), TRUE, L"Notepad", L"\"invalid program.exe\"", L"system32" },
-    { __LINE__, HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND), TRUE, L"Notepad", L"\"invalid program.exe\"", L"C:\\Program Files" },
-    { __LINE__, HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND), TRUE, L"Notepad", L"\"invalid program.exe\" \"Test File.txt\"", NULL },
-    { __LINE__, HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND), TRUE, L"Notepad", L"\"invalid program.exe\" \"Test File.txt\"", L"." },
+    { __LINE__, FALSE, FALSE, L"\"invalid program.exe\"", NULL },
+    { __LINE__, FALSE, FALSE, L"\"invalid program.exe\"", L"." },
+    { __LINE__, FALSE, FALSE, L"\"invalid program.exe\"", L"system32" },
+    { __LINE__, FALSE, FALSE, L"\"invalid program.exe\"", L"C:\\Program Files" },
+    { __LINE__, FALSE, FALSE, L"\"invalid program.exe\" \"Test File.txt\"", NULL },
+    { __LINE__, FALSE, FALSE, L"\"invalid program.exe\" \"Test File.txt\"", L"." },
+    { __LINE__, FALSE, TRUE, L"\"invalid program.exe\"", NULL },
+    { __LINE__, FALSE, TRUE, L"\"invalid program.exe\"", L"." },
+    { __LINE__, FALSE, TRUE, L"\"invalid program.exe\"", L"system32" },
+    { __LINE__, FALSE, TRUE, L"\"invalid program.exe\"", L"C:\\Program Files" },
+    { __LINE__, FALSE, TRUE, L"\"invalid program.exe\" \"Test File.txt\"", NULL },
+    { __LINE__, FALSE, TRUE, L"\"invalid program.exe\" \"Test File.txt\"", L"." },
     // My Documents
-    { __LINE__, S_OK, TRUE, NULL, L"::{450d8fba-ad25-11d0-98a8-0800361b1103}", NULL },
-    { __LINE__, S_OK, TRUE, NULL, L"shell:::{450d8fba-ad25-11d0-98a8-0800361b1103}", NULL },
-    // Control Panel
-    { __LINE__, S_OK, TRUE, NULL, L"::{5399E694-6CE5-4D6C-8FCE-1D8870FDCBA0}", NULL },
-    { __LINE__, S_OK, TRUE, NULL, L"shell:::{5399E694-6CE5-4D6C-8FCE-1D8870FDCBA0}", NULL },
+    { __LINE__, TRUE, TRUE, L"::{450d8fba-ad25-11d0-98a8-0800361b1103}", NULL },
+    { __LINE__, TRUE, TRUE, L"shell:::{450d8fba-ad25-11d0-98a8-0800361b1103}", NULL },
     // shell:sendto
-    { __LINE__, S_OK, TRUE, NULL, L"shell:sendto", NULL },
+    { __LINE__, TRUE, TRUE, L"shell:sendto", NULL },
+    // iexplore.exe
+    { __LINE__, TRUE, FALSE, L"iexplore", NULL },
+    { __LINE__, TRUE, FALSE, L"iexplore.exe", NULL },
+    { __LINE__, TRUE, TRUE, L"iexplore", NULL },
+    { __LINE__, TRUE, TRUE, L"iexplore.exe", NULL },
+    // https://google.com
+    { __LINE__, TRUE, FALSE, L"https://google.com", NULL },
+    { __LINE__, TRUE, TRUE, L"https://google.com", NULL },
+    // Test File 1.txt
+    { __LINE__, FALSE, FALSE, L"Test File 1.txt", NULL },
+    { __LINE__, FALSE, FALSE, L"Test File 1.txt", L"." },
+    { __LINE__, FALSE, FALSE, L"Test File 1.txt", L"system32" },
+    { __LINE__, FALSE, FALSE, L"Test File 1.txt", s_cur_dir },
+    { __LINE__, FALSE, FALSE, L"\"Test File 1.txt\"", NULL },
+    { __LINE__, FALSE, FALSE, L"\"Test File 1.txt\"", L"." },
+    { __LINE__, FALSE, FALSE, L"\"Test File 1.txt\"", L"system32" },
+    { __LINE__, FALSE, FALSE, L"\"Test File 1.txt\"", s_cur_dir },
+    { __LINE__, FALSE, FALSE, L"\"Test File 1.txt\" \"Test File.txt\"", NULL },
+    { __LINE__, FALSE, FALSE, L"\"Test File 1.txt\" \"Test File.txt\"", L"." },
+    { __LINE__, FALSE, FALSE, L"\"Test File 1.txt\" \"Test File.txt\"", L"system32" },
+    { __LINE__, FALSE, TRUE, L"Test File 1.txt", NULL },
+    { __LINE__, TRUE, TRUE, L"Test File 1.txt", L"." },
+    { __LINE__, FALSE, TRUE, L"Test File 1.txt", L"system32" },
+    { __LINE__, TRUE, TRUE, L"Test File 1.txt", s_cur_dir },
+    { __LINE__, FALSE, TRUE, L"\"Test File 1.txt\"", NULL },
+    { __LINE__, TRUE, TRUE, L"\"Test File 1.txt\"", L"." },
+    { __LINE__, TRUE, TRUE, L"\"Test File 1.txt\"", L"system32" },
+    { __LINE__, TRUE, TRUE, L"\"Test File 1.txt\"", s_cur_dir },
+    { __LINE__, FALSE, TRUE, L"\"Test File 1.txt\" \"Test File.txt\"", NULL },
+    { __LINE__, TRUE, TRUE, L"\"Test File 1.txt\" \"Test File.txt\"", L"." },
+    { __LINE__, TRUE, TRUE, L"\"Test File 1.txt\" \"Test File.txt\"", L"system32" },
+    { __LINE__, TRUE, TRUE, L"\"Test File 1.txt\" \"Test File.txt\"", s_cur_dir },
+    // Test File 2.bat
+    { __LINE__, FALSE, FALSE, L"Test File 2.bat", NULL },
+    { __LINE__, FALSE, FALSE, L"Test File 2.bat", L"." },
+    { __LINE__, FALSE, FALSE, L"Test File 2.bat", L"system32" },
+    { __LINE__, FALSE, FALSE, L"Test File 2.bat", s_cur_dir },
+    { __LINE__, FALSE, FALSE, L"\"Test File 2.bat\"", NULL },
+    { __LINE__, FALSE, FALSE, L"\"Test File 2.bat\"", L"." },
+    { __LINE__, FALSE, FALSE, L"\"Test File 2.bat\"", L"system32" },
+    { __LINE__, FALSE, FALSE, L"\"Test File 2.bat\"", s_cur_dir },
+    { __LINE__, FALSE, FALSE, L"\"Test File 2.bat\" \"Test File.txt\"", NULL },
+    { __LINE__, FALSE, FALSE, L"\"Test File 2.bat\" \"Test File.txt\"", L"." },
+    { __LINE__, FALSE, FALSE, L"\"Test File 2.bat\" \"Test File.txt\"", L"system32" },
+    { __LINE__, FALSE, FALSE, L"\"Test File 2.bat\" \"Test File.txt\"", s_cur_dir },
+    { __LINE__, FALSE, TRUE, L"Test File 2.bat", NULL },
+    { __LINE__, FALSE, TRUE, L"Test File 2.bat", L"." },
+    { __LINE__, FALSE, TRUE, L"Test File 2.bat", L"system32" },
+    { __LINE__, FALSE, TRUE, L"Test File 2.bat", s_cur_dir },
+    { __LINE__, FALSE, TRUE, L"\"Test File 2.bat\"", NULL },
+    { __LINE__, FALSE, TRUE, L"\"Test File 2.bat\"", L"." },
+    { __LINE__, FALSE, TRUE, L"\"Test File 2.bat\"", L"system32" },
+    { __LINE__, FALSE, TRUE, L"\"Test File 2.bat\"", s_cur_dir },
+    { __LINE__, FALSE, TRUE, L"\"Test File 2.bat\" \"Test File.txt\"", NULL },
+    { __LINE__, FALSE, TRUE, L"\"Test File 2.bat\" \"Test File.txt\"", L"." },
+    { __LINE__, FALSE, TRUE, L"\"Test File 2.bat\" \"Test File.txt\"", L"system32" },
+    { __LINE__, FALSE, TRUE, L"\"Test File 2.bat\" \"Test File.txt\"", s_cur_dir },
 };
 
-static BOOL CloseAppWindows(LPCWSTR pwszWindowClass, BOOL bRetry, INT nCount = 10)
+static const TEST_ENTRY s_entries_2[] =
 {
-#define INTERVAL 100
-    BOOL bFound = FALSE;
-    for (INT i = 0; i < nCount; ++i)
-    {
-        HWND hwnd = FindWindowW(pwszWindowClass, NULL);
-        if (!hwnd)
-        {
-            if (!bRetry)
-                break;
-            Sleep(INTERVAL);
-            continue;
-        }
-        bFound = TRUE;
-        HWND hwndPopup = GetLastActivePopup(hwnd);
-        if (hwndPopup && hwnd != hwndPopup)
-        {
-            PostMessageW(hwndPopup, WM_COMMAND, IDCANCEL, 0);
-            PostMessageW(hwndPopup, WM_COMMAND, IDNO, 0);
-            PostMessageW(hwndPopup, WM_CLOSE, 0, 0);
-        }
-        PostMessageW(hwnd, WM_CLOSE, 0, 0);
-        Sleep(INTERVAL);
-    }
-    return bFound;
-#undef INTERVAL
+    // Test File 1.txt (with setting path)
+    { __LINE__, FALSE, FALSE, L"Test File 1.txt", NULL },
+    { __LINE__, FALSE, FALSE, L"Test File 1.txt", L"." },
+    { __LINE__, FALSE, FALSE, L"Test File 1.txt", L"system32" },
+    { __LINE__, FALSE, FALSE, L"Test File 1.txt", s_cur_dir },
+    { __LINE__, FALSE, FALSE, L"\"Test File 1.txt\"", NULL },
+    { __LINE__, FALSE, FALSE, L"\"Test File 1.txt\"", L"." },
+    { __LINE__, FALSE, FALSE, L"\"Test File 1.txt\"", L"system32" },
+    { __LINE__, FALSE, FALSE, L"\"Test File 1.txt\"", s_cur_dir },
+    { __LINE__, FALSE, FALSE, L"\"Test File 1.txt\" \"Test File.txt\"", NULL },
+    { __LINE__, FALSE, FALSE, L"\"Test File 1.txt\" \"Test File.txt\"", L"." },
+    { __LINE__, FALSE, FALSE, L"\"Test File 1.txt\" \"Test File.txt\"", L"system32" },
+    { __LINE__, FALSE, FALSE, L"\"Test File 1.txt\" \"Test File.txt\"", s_cur_dir },
+    { __LINE__, FALSE, TRUE, L"Test File 1.txt", NULL },
+    { __LINE__, TRUE, TRUE, L"Test File 1.txt", L"." },
+    { __LINE__, FALSE, TRUE, L"Test File 1.txt", L"system32" },
+    { __LINE__, TRUE, TRUE, L"Test File 1.txt", s_cur_dir },
+    { __LINE__, TRUE, TRUE, L"\"Test File 1.txt\"", NULL },
+    { __LINE__, TRUE, TRUE, L"\"Test File 1.txt\"", L"." },
+    { __LINE__, TRUE, TRUE, L"\"Test File 1.txt\"", L"system32" },
+    { __LINE__, TRUE, TRUE, L"\"Test File 1.txt\"", s_cur_dir },
+    { __LINE__, TRUE, TRUE, L"\"Test File 1.txt\" \"Test File.txt\"", NULL },
+    { __LINE__, TRUE, TRUE, L"\"Test File 1.txt\" \"Test File.txt\"", L"." },
+    { __LINE__, TRUE, TRUE, L"\"Test File 1.txt\" \"Test File.txt\"", L"system32" },
+    { __LINE__, TRUE, TRUE, L"\"Test File 1.txt\" \"Test File.txt\"", s_cur_dir },
+    // Test File 2.bat (with setting path)
+    { __LINE__, FALSE, FALSE, L"Test File 2.bat", NULL },
+    { __LINE__, FALSE, FALSE, L"Test File 2.bat", L"." },
+    { __LINE__, FALSE, FALSE, L"Test File 2.bat", L"system32" },
+    { __LINE__, FALSE, FALSE, L"Test File 2.bat", s_cur_dir },
+    { __LINE__, FALSE, FALSE, L"\"Test File 2.bat\"", NULL },
+    { __LINE__, FALSE, FALSE, L"\"Test File 2.bat\"", L"." },
+    { __LINE__, FALSE, FALSE, L"\"Test File 2.bat\"", L"system32" },
+    { __LINE__, FALSE, FALSE, L"\"Test File 2.bat\"", s_cur_dir },
+    { __LINE__, FALSE, FALSE, L"\"Test File 2.bat\" \"Test File.txt\"", NULL },
+    { __LINE__, FALSE, FALSE, L"\"Test File 2.bat\" \"Test File.txt\"", L"." },
+    { __LINE__, FALSE, FALSE, L"\"Test File 2.bat\" \"Test File.txt\"", L"system32" },
+    { __LINE__, FALSE, FALSE, L"\"Test File 2.bat\" \"Test File.txt\"", s_cur_dir },
+    { __LINE__, FALSE, TRUE, L"Test File 2.bat", NULL },
+    { __LINE__, FALSE, TRUE, L"Test File 2.bat", L"." },
+    { __LINE__, FALSE, TRUE, L"Test File 2.bat", L"system32" },
+    { __LINE__, FALSE, TRUE, L"Test File 2.bat", s_cur_dir },
+    { __LINE__, FALSE, TRUE, L"\"Test File 2.bat\"", NULL },
+    { __LINE__, FALSE, TRUE, L"\"Test File 2.bat\"", L"." },
+    { __LINE__, FALSE, TRUE, L"\"Test File 2.bat\"", L"system32" },
+    { __LINE__, FALSE, TRUE, L"\"Test File 2.bat\"", s_cur_dir },
+    { __LINE__, FALSE, TRUE, L"\"Test File 2.bat\" \"Test File.txt\"", NULL },
+    { __LINE__, FALSE, TRUE, L"\"Test File 2.bat\" \"Test File.txt\"", L"." },
+    { __LINE__, FALSE, TRUE, L"\"Test File 2.bat\" \"Test File.txt\"", L"system32" },
+    { __LINE__, FALSE, TRUE, L"\"Test File 2.bat\" \"Test File.txt\"", s_cur_dir },
+};
+
+typedef struct OPENWNDS
+{
+    UINT count;
+    HWND *phwnd;
+} OPENWNDS;
+
+static OPENWNDS s_wi0 = { 0 }, s_wi1 = { 0 };
+
+static BOOL CALLBACK EnumWindowsProc(HWND hwnd, LPARAM lParam)
+{
+    OPENWNDS *info = (OPENWNDS *)lParam;
+    info->phwnd = (HWND *)realloc(info->phwnd, (info->count + 1) * sizeof(HWND));
+    if (!info->phwnd)
+        return FALSE;
+    info->phwnd[info->count] = hwnd;
+    ++(info->count);
+    return TRUE;
 }
 
 static void DoEntry(const TEST_ENTRY *pEntry)
 {
     HRESULT hr;
     DWORD dwSeclFlags;
+    BOOL result;
 
     if (pEntry->bAllowNonExe)
         dwSeclFlags = SECL_NO_UI | SECL_ALLOW_NONEXE;
@@ -459,17 +619,36 @@ static void DoEntry(const TEST_ENTRY *pEntry)
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        hr = 0xDEADFACE;
+        hr = 0xBADFACE;
     }
     _SEH2_END;
 
-    ok(hr == pEntry->hr, "Line %d: hr expected 0x%lX, was 0x%lX\n", pEntry->lineno, pEntry->hr, hr);
+    if (hr == 0xBADFACE)
+        result = hr;
+    else
+        result = (hr == S_OK);
 
-    if (SUCCEEDED(hr) && pEntry->pwszWindowClass)
+    ok(result == pEntry->result, "Line %d: result expected %d, was %d\n",
+       pEntry->lineno, pEntry->result, result);
+
+    // close newly opened windows
+    EnumWindows(EnumWindowsProc, (LPARAM)&s_wi1);
+    for (UINT i1 = 0; i1 < s_wi1.count; ++i1)
     {
-        BOOL bFound = CloseAppWindows(pEntry->pwszWindowClass, TRUE);
-        ok(bFound, "Line %d: The window not found\n", pEntry->lineno);
+        BOOL bFound = FALSE;
+        for (UINT i0 = 0; i0 < s_wi0.count; ++i0)
+        {
+            if (s_wi1.phwnd[i1] == s_wi0.phwnd[i0])
+            {
+                bFound = TRUE;
+                break;
+            }
+        }
+        if (!bFound)
+            PostMessageW(s_wi1.phwnd[i1], WM_CLOSE, 0, 0);
     }
+    free(s_wi1.phwnd);
+    ZeroMemory(&s_wi1, sizeof(s_wi1));
 }
 
 START_TEST(ShellExecCmdLine)
@@ -493,92 +672,70 @@ START_TEST(ShellExecCmdLine)
         }
     }
 
-    CloseAppWindows(L"Notepad", FALSE);
+    if (!GetSubProgramPath())
+    {
+        skip("shell32_apitest_sub.exe is not found\n");
+        return;
+    }
 
-    // s_testfile1
-    FILE *fp = fopen(s_testfile1, "wb");
+    // record open windows
+    if (!EnumWindows(EnumWindowsProc, (LPARAM)&s_wi0))
+    {
+        skip("EnumWindows failed\n");
+        free(s_wi0.phwnd);
+        return;
+    }
+
+    // s_win_test_exe
+    GetWindowsDirectoryW(s_win_test_exe, _countof(s_win_test_exe));
+    PathAppendW(s_win_test_exe, L"test program.exe");
+    BOOL ret = CopyFileW(s_sub_program, s_win_test_exe, FALSE);
+    if (!ret)
+    {
+        skip("Please retry with admin rights\n");
+        free(s_wi0.phwnd);
+        return;
+    }
+
+    FILE *fp;
+
+    // s_sys_bat_file
+    GetSystemDirectoryW(s_sys_bat_file, _countof(s_sys_bat_file));
+    PathAppendW(s_sys_bat_file, L"test program.bat");
+    fp = _wfopen(s_sys_bat_file, L"wb");
+    fclose(fp);
+    ok_int(PathFileExistsW(s_sys_bat_file), TRUE);
+
+    // "Test File 1.txt"
+    fp = fopen("Test File 1.txt", "wb");
     ok(fp != NULL, "failed to create a test file\n");
     fclose(fp);
+    ok_int(PathFileExistsA("Test File 1.txt"), TRUE);
 
-    // s_testfile2
-    fp = fopen(s_testfile2, "wb");
+    // "Test File 2.bat"
+    fp = fopen("Test File 2.bat", "wb");
     ok(fp != NULL, "failed to create a test file\n");
-    if (fp)
-    {
-        fprintf(fp, "echo OK\n");
-    }
     fclose(fp);
+    ok_int(PathFileExistsA("Test File 2.bat"), TRUE);
 
-    for (size_t i = 0; i < _countof(s_entries); ++i)
+    // s_cur_dir
+    GetCurrentDirectoryW(_countof(s_cur_dir), s_cur_dir);
+
+    // do tests
+    for (size_t i = 0; i < _countof(s_entries_1); ++i)
     {
-        DoEntry(&s_entries[i]);
+        DoEntry(&s_entries_1[i]);
     }
-
-    WCHAR buf0[MAX_PATH];
-    WCHAR buf1[MAX_PATH];
-    WCHAR buf2[MAX_PATH];
-    TEST_ENTRY additionals[] =
+    SetEnvironmentVariableW(L"PATH", s_cur_dir);
+    for (size_t i = 0; i < _countof(s_entries_2); ++i)
     {
-        { __LINE__, CO_E_APPNOTFOUND, FALSE, L"Notepad", buf0, NULL },
-        { __LINE__, CO_E_APPNOTFOUND, FALSE, L"Notepad", buf0, L"." },
-        { __LINE__, CO_E_APPNOTFOUND, FALSE, L"Notepad", buf0, L"system32" },
-        { __LINE__, CO_E_APPNOTFOUND, FALSE, L"Notepad", buf1, NULL },
-        { __LINE__, CO_E_APPNOTFOUND, FALSE, L"Notepad", buf1, L"." },
-        { __LINE__, CO_E_APPNOTFOUND, FALSE, L"Notepad", buf1, L"system32" },
-        { __LINE__, CO_E_APPNOTFOUND, FALSE, L"Notepad", buf2, NULL },
-        { __LINE__, CO_E_APPNOTFOUND, FALSE, L"Notepad", buf2, L"." },
-        { __LINE__, CO_E_APPNOTFOUND, FALSE, L"Notepad", buf2, L"system32" },
-        { __LINE__, HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND), TRUE, L"Notepad", buf0, NULL }, // FIXME
-        { __LINE__, S_OK, TRUE, L"Notepad", buf0, L"." },
-        { __LINE__, HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND), TRUE, L"Notepad", buf0, L"system32" }, // FIXME
-        { __LINE__, HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND), TRUE, L"Notepad", buf1, NULL }, // FIXME
-        { __LINE__, S_OK, TRUE, L"Notepad", buf1, L"." },
-        { __LINE__, S_OK, TRUE, L"Notepad", buf1, L"system32" },
-        { __LINE__, HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND), TRUE, L"Notepad", buf2, NULL }, // FIXME
-        { __LINE__, S_OK, TRUE, L"Notepad", buf2, L"." },
-        { __LINE__, S_OK, TRUE, L"Notepad", buf2, L"system32" },
-    };
-
-    wsprintfW(buf0, L"%hs", s_testfile1);
-    wsprintfW(buf1, L"\"%hs\"", s_testfile1);
-    wsprintfW(buf2, L"\"%hs\" \"Test File.txt\"", s_testfile1);
-    for (size_t i = 0; i < _countof(additionals); ++i)
-    {
-        DoEntry(&additionals[i]);
-    }
-
-    TEST_ENTRY additionals2[] =
-    {
-        { __LINE__, CO_E_APPNOTFOUND, FALSE, NULL, buf0, NULL },
-        { __LINE__, CO_E_APPNOTFOUND, FALSE, NULL, buf0, L"." },
-        { __LINE__, CO_E_APPNOTFOUND, FALSE, NULL, buf0, L"system32" },
-        { __LINE__, CO_E_APPNOTFOUND, FALSE, NULL, buf1, NULL },
-        { __LINE__, CO_E_APPNOTFOUND, FALSE, NULL, buf1, L"." },
-        { __LINE__, CO_E_APPNOTFOUND, FALSE, NULL, buf1, L"system32" },
-        { __LINE__, CO_E_APPNOTFOUND, FALSE, NULL, buf2, NULL },
-        { __LINE__, CO_E_APPNOTFOUND, FALSE, NULL, buf2, L"." },
-        { __LINE__, CO_E_APPNOTFOUND, FALSE, NULL, buf2, L"system32" },
-        { __LINE__, HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND), TRUE, NULL, buf0, NULL }, // FIXME
-        { __LINE__, S_OK, TRUE, NULL, buf0, L"." },
-        { __LINE__, HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND), TRUE, NULL, buf0, L"system32" },  // FIXME
-        { __LINE__, HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND), TRUE, NULL, buf1, NULL }, // FIXME
-        { __LINE__, S_OK, TRUE, NULL, buf1, L"." },
-        { __LINE__, S_OK, TRUE, NULL, buf1, L"system32" },
-        { __LINE__, HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND), TRUE, NULL, buf2, NULL }, // FIXME
-        { __LINE__, S_OK, TRUE, NULL, buf2, L"." },
-        { __LINE__, S_OK, TRUE, NULL, buf2, L"system32" },
-    };
-
-    wsprintfW(buf0, L"%hs", s_testfile2);
-    wsprintfW(buf1, L"\"%hs\"", s_testfile2);
-    wsprintfW(buf2, L"\"%hs\" \"Test File.txt\"", s_testfile2);
-    for (size_t i = 0; i < _countof(additionals2); ++i)
-    {
-        DoEntry(&additionals2[i]);
+        DoEntry(&s_entries_2[i]);
     }
 
     // clean up
-    ok(DeleteFileA(s_testfile1), "failed to delete the test file\n");
-    ok(DeleteFileA(s_testfile2), "failed to delete the test file\n");
-    CloseAppWindows(L"Notepad", FALSE);
+    ok(DeleteFileW(s_win_test_exe), "failed to delete the test file\n");
+    ok(DeleteFileW(s_sys_bat_file), "failed to delete the test file\n");
+    ok(DeleteFileA("Test File 1.txt"), "failed to delete the test file\n");
+    ok(DeleteFileA("Test File 2.bat"), "failed to delete the test file\n");
+    free(s_wi0.phwnd);
 }
