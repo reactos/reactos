@@ -144,7 +144,7 @@ IopGetDriverNames(
             return STATUS_ILL_FORMED_SERVICE_ENTRY;
         }
 
-        driverName.Length = kvInfo->DataLength - sizeof(WCHAR);
+        driverName.Length = kvInfo->DataLength - sizeof(UNICODE_NULL);
         driverName.MaximumLength = kvInfo->DataLength;
         driverName.Buffer = ExAllocatePoolWithTag(NonPagedPool, driverName.MaximumLength, TAG_IO);
         if (!driverName.Buffer)
@@ -156,6 +156,7 @@ IopGetDriverNames(
         RtlMoveMemory(driverName.Buffer,
                       (PVOID)((ULONG_PTR)kvInfo + kvInfo->DataOffset),
                       driverName.Length);
+        driverName.Buffer[driverName.Length / sizeof(WCHAR)] = UNICODE_NULL;
         ExFreePool(kvInfo);
     }
 
@@ -204,7 +205,7 @@ IopGetDriverNames(
             ExFreePoolWithTag(basicInfo, TAG_IO);
             return status;
         }
-        if (kvInfo->Type != REG_DWORD)
+        if (kvInfo->Type != REG_DWORD || kvInfo->DataLength != sizeof(ULONG))
         {
             ExFreePool(kvInfo);
             ExFreePoolWithTag(basicInfo, TAG_IO); // container for serviceName
@@ -897,7 +898,7 @@ IopInitializeBuiltinDriver(IN PLDR_DATA_TABLE_ENTRY BootLdrEntry)
         {
             goto Cleanup;
         }
-        if (kvInfo->Type != REG_DWORD)
+        if (kvInfo->Type != REG_DWORD || kvInfo->DataLength != sizeof(ULONG))
         {
             ExFreePool(kvInfo);
             goto Cleanup;
@@ -924,7 +925,7 @@ IopInitializeBuiltinDriver(IN PLDR_DATA_TABLE_ENTRY BootLdrEntry)
                 continue;
             }
 
-            instancePath.Length = kvInfo->DataLength - sizeof(WCHAR);
+            instancePath.Length = kvInfo->DataLength - sizeof(UNICODE_NULL);
             instancePath.MaximumLength = kvInfo->DataLength;
             instancePath.Buffer = ExAllocatePoolWithTag(NonPagedPool,
                                                         instancePath.MaximumLength,
@@ -932,8 +933,9 @@ IopInitializeBuiltinDriver(IN PLDR_DATA_TABLE_ENTRY BootLdrEntry)
             if (instancePath.Buffer)
             {
                 RtlMoveMemory(instancePath.Buffer,
-                          (PVOID)((ULONG_PTR)kvInfo + kvInfo->DataOffset),
-                          instancePath.Length);
+                              (PVOID)((ULONG_PTR)kvInfo + kvInfo->DataOffset),
+                              instancePath.Length);
+                instancePath.Buffer[instancePath.Length / sizeof(WCHAR)] = UNICODE_NULL;
 
                 PDEVICE_OBJECT pdo = IopGetDeviceObjectFromDeviceInstance(&instancePath);
                 PiQueueDeviceAction(pdo, PiActionAddBootDevices, NULL, NULL);
@@ -1900,6 +1902,7 @@ IopLoadDriver(
         RtlMoveMemory(ImagePath.Buffer,
                       (PVOID)((ULONG_PTR)kvInfo + kvInfo->DataOffset),
                       ImagePath.Length);
+        ImagePath.Buffer[ImagePath.Length / sizeof(WCHAR)] = UNICODE_NULL;
         ExFreePool(kvInfo);
     }
     else
