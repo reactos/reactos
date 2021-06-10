@@ -447,6 +447,16 @@ IopInitializeDriverModule(
 
     DPRINT("Driver name: '%wZ'\n", &DriverName);
 
+    /*
+     * Retrieve the driver's PE image NT header and perform some sanity checks.
+     * NOTE: We suppose that since the driver has been successfully loaded,
+     * its NT and optional headers are all valid and have expected sizes.
+     */
+    PIMAGE_NT_HEADERS NtHeaders = RtlImageNtHeader(ModuleObject->DllBase);
+    ASSERT(NtHeaders);
+    ASSERT(ModuleObject->SizeOfImage == NtHeaders->OptionalHeader.SizeOfImage);
+    ASSERT(ModuleObject->EntryPoint == RVA(ModuleObject->DllBase, NtHeaders->OptionalHeader.AddressOfEntryPoint));
+
     /* Obtain the registry path for the DriverInit routine */
     PKEY_NAME_INFORMATION nameInfo;
     ULONG infoLength;
@@ -524,7 +534,11 @@ IopInitializeDriverModule(
     RtlZeroMemory(driverObject, ObjectSize);
     driverObject->Type = IO_TYPE_DRIVER;
     driverObject->Size = sizeof(DRIVER_OBJECT);
-    driverObject->Flags = DRVO_LEGACY_DRIVER; // TODO: check the WDM_DRIVER flag on the module
+
+    /* Set the legacy flag if this is not a WDM driver */
+    if (!(NtHeaders->OptionalHeader.DllCharacteristics & IMAGE_DLLCHARACTERISTICS_WDM_DRIVER))
+        driverObject->Flags |= DRVO_LEGACY_DRIVER;
+
     driverObject->DriverSection = ModuleObject;
     driverObject->DriverStart = ModuleObject->DllBase;
     driverObject->DriverSize = ModuleObject->SizeOfImage;
