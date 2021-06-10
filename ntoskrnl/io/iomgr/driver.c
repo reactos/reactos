@@ -163,7 +163,7 @@ IopGetDriverNames(
     /* Check whether we need to get ServiceName as well, either to construct
      * the driver name (because we could not use "ObjectName"), or because
      * it is requested by the caller. */
-    PKEY_BASIC_INFORMATION basicInfo;
+    PKEY_BASIC_INFORMATION basicInfo = NULL;
     if (!NT_SUCCESS(status) || ServiceName != NULL)
     {
         /* Retrieve the necessary buffer size */
@@ -197,19 +197,20 @@ IopGetDriverNames(
      * it will be either "\Driver\<ServiceName>" or "\FileSystem\<ServiceName>" */
     if (driverName.Buffer == NULL)
     {
+        ASSERT(basicInfo); // Container for serviceName
+
         /* Retrieve the driver type */
         ULONG driverType;
         status = IopGetRegistryValue(ServiceHandle, L"Type", &kvInfo);
         if (!NT_SUCCESS(status))
         {
-            ExFreePoolWithTag(basicInfo, TAG_IO);
-            return status;
+            goto Cleanup;
         }
         if (kvInfo->Type != REG_DWORD || kvInfo->DataLength != sizeof(ULONG))
         {
             ExFreePool(kvInfo);
-            ExFreePoolWithTag(basicInfo, TAG_IO); // container for serviceName
-            return STATUS_ILL_FORMED_SERVICE_ENTRY;
+            status = STATUS_ILL_FORMED_SERVICE_ENTRY;
+            goto Cleanup;
         }
         driverType = *(PULONG)((ULONG_PTR)kvInfo + kvInfo->DataOffset);
         ExFreePool(kvInfo);
@@ -227,8 +228,8 @@ IopGetDriverNames(
         driverName.Buffer = ExAllocatePoolWithTag(NonPagedPool, driverName.MaximumLength, TAG_IO);
         if (!driverName.Buffer)
         {
-            ExFreePoolWithTag(basicInfo, TAG_IO); // container for serviceName
-            return STATUS_INSUFFICIENT_RESOURCES;
+            status = STATUS_INSUFFICIENT_RESOURCES;
+            goto Cleanup;
         }
 
         if (driverType == SERVICE_RECOGNIZER_DRIVER || driverType == SERVICE_FILE_SYSTEM_DRIVER)
@@ -241,24 +242,30 @@ IopGetDriverNames(
 
     if (ServiceName != NULL)
     {
+        ASSERT(basicInfo); // Container for serviceName
+
         /* Allocate a copy for the caller */
         PWCHAR buf = ExAllocatePoolWithTag(PagedPool, serviceName.Length, TAG_IO);
         if (!buf)
         {
-            ExFreePoolWithTag(basicInfo, TAG_IO); // container for serviceName
             ExFreePoolWithTag(driverName.Buffer, TAG_IO);
-            return STATUS_INSUFFICIENT_RESOURCES;
+            status = STATUS_INSUFFICIENT_RESOURCES;
+            goto Cleanup;
         }
         RtlMoveMemory(buf, serviceName.Buffer, serviceName.Length);
         ServiceName->MaximumLength = serviceName.Length;
         ServiceName->Length = serviceName.Length;
         ServiceName->Buffer = buf;
     }
-    ExFreePoolWithTag(basicInfo, TAG_IO); // container for ServiceName
 
     *DriverName = driverName;
+    status = STATUS_SUCCESS;
 
-    return STATUS_SUCCESS;
+Cleanup:
+    if (basicInfo)
+        ExFreePoolWithTag(basicInfo, TAG_IO);
+
+    return status;
 }
 
 /*
