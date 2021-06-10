@@ -24,16 +24,14 @@ PCHAR IoLoaderArcBootDeviceName;
 CODE_SEG("INIT")
 NTSTATUS
 NTAPI
-IopCreateArcNamesCd(IN PLOADER_PARAMETER_BLOCK LoaderBlock
-);
+IopCreateArcNamesCd(IN PLOADER_PARAMETER_BLOCK LoaderBlock);
 
 CODE_SEG("INIT")
 NTSTATUS
 NTAPI
 IopCreateArcNamesDisk(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
                       IN BOOLEAN SingleDisk,
-                      IN PBOOLEAN FoundBoot
-);
+                      OUT PBOOLEAN FoundBoot);
 
 CODE_SEG("INIT")
 NTSTATUS
@@ -136,7 +134,7 @@ IopCreateArcNames(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 
     /* Loop every disk and try to find boot disk */
     Status = IopCreateArcNamesDisk(LoaderBlock, SingleDisk, &FoundBoot);
-    /* If it succeed but we didn't find boot device, try to browse Cds */
+    /* If it succeeded but we didn't find boot device, try to browse Cds */
     if (NT_SUCCESS(Status) && !FoundBoot)
     {
         Status = IopCreateArcNamesCd(LoaderBlock);
@@ -178,7 +176,7 @@ IopCreateArcNamesCd(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
      * that have been successfully handled by MountMgr driver
      * and that already own their device name. This is the "new" way
      * to handle them, that came with NT5.
-     * Currently, Windows 2003 provides an arc names creation based
+     * Currently, Windows 2003 provides an ARC names creation based
      * on both enabled drives and not enabled drives (lack from
      * the driver).
      * Given the current ReactOS state, that's good for us.
@@ -357,7 +355,7 @@ IopCreateArcNamesCd(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
                 Status = IoStatusBlock.Status;
             }
 
-            /* Reading succeed, compute checksum by adding data, 2048 bytes checksum */
+            /* If reading succeeded, compute checksum by adding data, 2048 bytes checksum */
             if (NT_SUCCESS(Status))
             {
                 for (i = 0; i < 2048 / sizeof(ULONG); i++)
@@ -413,7 +411,7 @@ NTSTATUS
 NTAPI
 IopCreateArcNamesDisk(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
                       IN BOOLEAN SingleDisk,
-                      IN PBOOLEAN FoundBoot)
+                      OUT PBOOLEAN FoundBoot)
 {
     PIRP Irp;
     PVOID Data;
@@ -644,7 +642,7 @@ IopCreateArcNamesDisk(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
             goto Cleanup;
         }
 
-        /* Read a sector for computing checksum */
+        /* Read the first sector for computing checksum */
         Irp = IoBuildSynchronousFsdRequest(IRP_MJ_READ,
                                            DeviceObject,
                                            PartitionBuffer,
@@ -677,7 +675,7 @@ IopCreateArcNamesDisk(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
 
         ObDereferenceObject(FileObject);
 
-        /* Calculate checksum, that's an easy computation, just adds read data */
+        /* Calculate checksum by adding data */
         for (i = 0, CheckSum = 0; i < 512 / sizeof(ULONG) ; i++)
         {
             CheckSum += PartitionBuffer[i];
@@ -692,7 +690,7 @@ IopCreateArcNamesDisk(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
                                                  ARC_DISK_SIGNATURE,
                                                  ListEntry);
 
-            /* If they matches, ie
+            /* If they match, i.e.
              * - There's only one disk for both BIOS and detected/enabled
              * - Signatures are matching
              * - Checksums are matching
@@ -789,15 +787,15 @@ IopCreateArcNamesDisk(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
             }
             else
             {
-                /* In case there's a valid partition, a matching signature,
-                   BUT a none matching checksum, or there's a duplicate
-                   signature, or even worse a virus played with partition
-                   table */
-                if (ArcDiskSignature->Signature == Signature &&
-                    (ArcDiskSignature->CheckSum + CheckSum != 0) &&
-                    ArcDiskSignature->ValidPartitionTable)
+                /* Debugging feedback: Warn in case there's a valid partition,
+                 * a matching signature, BUT a non-matching checksum: this can
+                 * be the sign of a duplicate signature, or even worse a virus
+                 * played with the partition table. */
+                if (ArcDiskSignature->ValidPartitionTable &&
+                    (ArcDiskSignature->Signature == Signature) &&
+                    (ArcDiskSignature->CheckSum + CheckSum != 0))
                  {
-                     DPRINT("Be careful, or you have a duplicate disk signature, or a virus altered your MBR!\n");
+                     DPRINT("Be careful, you have a duplicate disk signature, or a virus altered your MBR!\n");
                  }
             }
         }

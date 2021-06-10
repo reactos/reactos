@@ -1852,7 +1852,7 @@ IoGetBootDiskInformation(IN OUT PBOOTDISK_INFORMATION BootDiskInformation,
 
     PAGED_CODE();
 
-    /* Get loader block. If it's null, we come to late */
+    /* Get loader block. If it's null, we come too late */
     if (!IopLoaderBlock)
     {
         return STATUS_TOO_LATE;
@@ -1865,7 +1865,7 @@ IoGetBootDiskInformation(IN OUT PBOOTDISK_INFORMATION BootDiskInformation,
     }
 
     /* Init some useful stuff:
-     * Get arc disks information
+     * Get ARC disks information
      * Check whether we have a single disk
      * Check received structure size (extended or not?)
      * Init boot strings (system/boot)
@@ -1955,7 +1955,7 @@ IoGetBootDiskInformation(IN OUT PBOOTDISK_INFORMATION BootDiskInformation,
             DiskGeometry.BytesPerSector = 512;
         }
 
-        /* Now, for each arc disk, try to find the matching */
+        /* Now, for each ARC disk, try to find the matching */
         for (NextEntry = ArcDiskInformation->DiskSignatureListHead.Flink;
              NextEntry != &ArcDiskInformation->DiskSignatureListHead;
              NextEntry = NextEntry->Flink)
@@ -1963,7 +1963,7 @@ IoGetBootDiskInformation(IN OUT PBOOTDISK_INFORMATION BootDiskInformation,
             ArcDiskSignature = CONTAINING_RECORD(NextEntry,
                                                  ARC_DISK_SIGNATURE,
                                                  ListEntry);
-            /* If they matches, ie
+            /* If they match, i.e.
              * - There's only one disk for both BIOS and detected
              * - Signatures are matching
              * - This is MBR
@@ -1973,7 +1973,7 @@ IoGetBootDiskInformation(IN OUT PBOOTDISK_INFORMATION BootDiskInformation,
                 (IopVerifyDiskSignature(DriveLayout, ArcDiskSignature, &Signature))) &&
                 (DriveLayout->PartitionStyle == PARTITION_STYLE_MBR))
             {
-                /* Create arc name */
+                /* Create ARC name */
                 sprintf(ArcBuffer, "\\ArcName\\%s", ArcDiskSignature->ArcName);
                 RtlInitAnsiString(&ArcNameStringA, ArcBuffer);
 
@@ -1995,7 +1995,7 @@ IoGetBootDiskInformation(IN OUT PBOOTDISK_INFORMATION BootDiskInformation,
                         Signature = DriveLayout->Mbr.Signature;
                     }
 
-                    /* Create partial arc name */
+                    /* Create partial ARC name */
                     sprintf(ArcBuffer, "%spartition(%lu)", ArcDiskSignature->ArcName, PartitionNumber);
                     RtlInitAnsiString(&ArcNameStringA, ArcBuffer);
 
@@ -2524,7 +2524,7 @@ IoWritePartitionTableEx(IN PDEVICE_OBJECT DeviceObject,
                                                          FALSE,
                                                          DriveLayout->PartitionCount,
                                                          DriveLayout->PartitionEntry);
-                    /* If it succeed, also update backup table */
+                    /* If it succeeded, also update backup table */
                     if (NT_SUCCESS(Status))
                     {
                         Status = FstubWritePartitionTableEFI(Disk,
