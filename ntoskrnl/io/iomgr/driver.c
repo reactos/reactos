@@ -1050,8 +1050,14 @@ IopInitializeBootDrivers(VOID)
                                       BOOT_DRIVER_LIST_ENTRY,
                                       Link);
 
+        // FIXME: TODO: This LdrEntry is to be used in a special handling
+        // for SETUPLDR (a similar procedure is done on Windows), where
+        // the loader would, under certain conditions, be loaded in the
+        // SETUPLDR-specific code block below...
+#if 0
         /* Get the driver loader entry */
         LdrEntry = BootEntry->LdrEntry;
+#endif
 
         /* Allocate our internal accounting structure */
         DriverInfo = ExAllocatePoolWithTag(PagedPool,
