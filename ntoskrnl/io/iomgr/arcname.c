@@ -478,6 +478,8 @@ IopCreateArcNamesDisk(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
     /* Start browsing disks */
     for (DiskNumber = 0; DiskNumber < DiskCount; DiskNumber++)
     {
+        ASSERT(DriveLayout == NULL);
+
         /* Check if we have an enabled disk */
         if (lSymbolicLinkList && *lSymbolicLinkList != UNICODE_NULL)
         {
@@ -652,6 +654,7 @@ IopCreateArcNamesDisk(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
                                            &IoStatusBlock);
         if (!Irp)
         {
+            ExFreePoolWithTag(PartitionBuffer, TAG_IO);
             ObDereferenceObject(FileObject);
             Status = STATUS_INSUFFICIENT_RESOURCES;
             goto Cleanup;
@@ -665,20 +668,26 @@ IopCreateArcNamesDisk(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
             KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
             Status = IoStatusBlock.Status;
         }
+
+        /* If reading succeeded, calculate checksum by adding data */
+        if (NT_SUCCESS(Status))
+        {
+            for (i = 0, CheckSum = 0; i < 512 / sizeof(ULONG); i++)
+            {
+                CheckSum += PartitionBuffer[i];
+            }
+        }
+
+        /* Release now unnecessary resources */
+        ExFreePoolWithTag(PartitionBuffer, TAG_IO);
+        ObDereferenceObject(FileObject);
+
+        /* If we failed, release drive layout before going to next disk */
         if (!NT_SUCCESS(Status))
         {
             ExFreePool(DriveLayout);
-            ExFreePoolWithTag(PartitionBuffer, TAG_IO);
-            ObDereferenceObject(FileObject);
+            DriveLayout = NULL;
             continue;
-        }
-
-        ObDereferenceObject(FileObject);
-
-        /* Calculate checksum by adding data */
-        for (i = 0, CheckSum = 0; i < 512 / sizeof(ULONG) ; i++)
-        {
-            CheckSum += PartitionBuffer[i];
         }
 
         /* Browse each ARC disk */
@@ -800,29 +809,22 @@ IopCreateArcNamesDisk(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
             }
         }
 
-        /* Release memory before jumping to next item */
+        /* Finally, release drive layout */
         ExFreePool(DriveLayout);
         DriveLayout = NULL;
-        ExFreePoolWithTag(PartitionBuffer, TAG_IO);
-        PartitionBuffer = NULL;
     }
 
     Status = STATUS_SUCCESS;
 
 Cleanup:
-    if (SymbolicLinkList)
-    {
-        ExFreePool(SymbolicLinkList);
-    }
-
     if (DriveLayout)
     {
         ExFreePool(DriveLayout);
     }
 
-    if (PartitionBuffer)
+    if (SymbolicLinkList)
     {
-        ExFreePoolWithTag(PartitionBuffer, TAG_IO);
+        ExFreePool(SymbolicLinkList);
     }
 
     return Status;
