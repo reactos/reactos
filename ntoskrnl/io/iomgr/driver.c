@@ -171,21 +171,22 @@ IopGetDriverNames(
         status = ZwQueryKey(ServiceHandle, KeyBasicInformation, NULL, 0, &infoLength);
         if (status != STATUS_BUFFER_TOO_SMALL)
         {
-            return NT_SUCCESS(status) ? STATUS_UNSUCCESSFUL : status;
+            status = (NT_SUCCESS(status) ? STATUS_UNSUCCESSFUL : status);
+            goto Cleanup;
         }
 
         /* Allocate the buffer and retrieve the data */
         basicInfo = ExAllocatePoolWithTag(PagedPool, infoLength, TAG_IO);
         if (!basicInfo)
         {
-            return STATUS_INSUFFICIENT_RESOURCES;
+            status = STATUS_INSUFFICIENT_RESOURCES;
+            goto Cleanup;
         }
 
         status = ZwQueryKey(ServiceHandle, KeyBasicInformation, basicInfo, infoLength, &infoLength);
         if (!NT_SUCCESS(status))
         {
-            ExFreePoolWithTag(basicInfo, TAG_IO);
-            return status;
+            goto Cleanup;
         }
 
         serviceName.Length = basicInfo->NameLength;
@@ -248,7 +249,6 @@ IopGetDriverNames(
         PWCHAR buf = ExAllocatePoolWithTag(PagedPool, serviceName.Length, TAG_IO);
         if (!buf)
         {
-            ExFreePoolWithTag(driverName.Buffer, TAG_IO);
             status = STATUS_INSUFFICIENT_RESOURCES;
             goto Cleanup;
         }
@@ -264,6 +264,9 @@ IopGetDriverNames(
 Cleanup:
     if (basicInfo)
         ExFreePoolWithTag(basicInfo, TAG_IO);
+
+    if (!NT_SUCCESS(status) && driverName.Buffer)
+        ExFreePoolWithTag(driverName.Buffer, TAG_IO);
 
     return status;
 }
