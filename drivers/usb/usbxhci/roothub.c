@@ -45,8 +45,8 @@ XHCI_RH_GetStatus(IN PVOID xhciExtension,
                   IN PUSHORT Status)
 {
     DPRINT1("XHCI_RH_GetStatus: function initiated\n");
-    *Status = 1;
-    return 0;
+    *Status = USB_GETSTATUS_SELF_POWERED;
+    return MP_STATUS_SUCCESS;
 }
 
 MPSTATUS
@@ -97,7 +97,7 @@ XHCI_RH_GetHubStatus(IN PVOID xhciExtension,
 {
     DPRINT("XHCI_RH_GetHubStatus: function initiated\n"); //removed to reduce windbg output
     HubStatus->AsUlong32 = 0;
-    return 0;
+    return MP_STATUS_SUCCESS;
 }
 
 VOID
@@ -114,7 +114,7 @@ XHCI_RH_PortResetComplete(IN PVOID xhciExtension,
                           IN PUSHORT Port)
 {
     DPRINT1("XHCI_RH_PortResetComplete: function initiated\n");
-    return 0;
+    return MP_STATUS_SUCCESS;
 }
 
 MPSTATUS
@@ -169,7 +169,7 @@ XHCI_RH_SetFeaturePortEnable(IN PVOID xhciExtension,
                              IN USHORT Port)
 {
     DPRINT_RH("XHCI_RH_SetFeaturePortEnable: Not supported\n");
-    return 0;
+    return MP_STATUS_SUCCESS;
 }
 
 MPSTATUS
@@ -178,7 +178,7 @@ XHCI_RH_SetFeaturePortSuspend(IN PVOID xhciExtension,
                               IN USHORT Port)
 {
     DPRINT1("XHCI_RH_SetFeaturePortSuspend: function initiated\n");
-    return 0;
+    return MP_STATUS_SUCCESS;
 }
 
 MPSTATUS
@@ -213,7 +213,7 @@ XHCI_RH_ClearFeaturePortPower(IN PVOID xhciExtension,
                               IN USHORT Port)
 {
     DPRINT1("XHCI_RH_ClearFeaturePortPower: function initiated\n");
-    return 0;
+    return MP_STATUS_SUCCESS;
 }
 
 VOID
@@ -230,7 +230,7 @@ XHCI_RH_ClearFeaturePortSuspend(IN PVOID xhciExtension,
                                 IN USHORT Port)
 {
     DPRINT1("XHCI_RH_ClearFeaturePortSuspend: function initiated\n");
-    return 0;
+    return MP_STATUS_SUCCESS;
 }
 
 MPSTATUS
@@ -239,7 +239,7 @@ XHCI_RH_ClearFeaturePortEnableChange(IN PVOID xhciExtension,
                                      IN USHORT Port)
 {
     DPRINT1("XHCI_RH_ClearFeaturePortEnableChange: function initiated\n");
-    return 0;
+    return MP_STATUS_SUCCESS;
 }
 
 MPSTATUS
@@ -301,7 +301,7 @@ XHCI_RH_ClearFeaturePortSuspendChange(IN PVOID xhciExtension,
                                       IN USHORT Port)
 {
     DPRINT1("XHCI_RH_ClearFeaturePortSuspendChange: function initiated\n");
-    return 0;
+    return MP_STATUS_SUCCESS;
 }
 
 MPSTATUS
@@ -310,7 +310,7 @@ XHCI_RH_ClearFeaturePortOvercurrentChange(IN PVOID xhciExtension,
                                           IN USHORT Port)
 {
     DPRINT1("XHCI_RH_ClearFeaturePortOvercurrentChange: function initiated\n");
-    return 0;
+    return MP_STATUS_SUCCESS;
 }
 
 VOID

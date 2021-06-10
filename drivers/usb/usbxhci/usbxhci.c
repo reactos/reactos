@@ -1113,14 +1113,14 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
     RtlZeroMemory(&RegPacket, sizeof(USBPORT_REGISTRATION_PACKET));
     
     RegPacket.MiniPortVersion = USB_MINIPORT_VERSION_XHCI;
-
+    /* FIXE: USB_MINIPORT_FLAGS_USB2 on a USB3 driver? */
     RegPacket.MiniPortFlags = USB_MINIPORT_FLAGS_INTERRUPT |
                               USB_MINIPORT_FLAGS_MEMORY_IO |
                               USB_MINIPORT_FLAGS_USB2 |
                               USB_MINIPORT_FLAGS_POLLING |
                               USB_MINIPORT_FLAGS_WAKE_SUPPORT;
 
-    RegPacket.MiniPortBusBandwidth = 400000;
+    RegPacket.MiniPortBusBandwidth = TOTAL_USB30_BUS_BANDWIDTH;
 
     RegPacket.MiniPortExtensionSize = sizeof(XHCI_EXTENSION);
     RegPacket.MiniPortEndpointSize = sizeof(XHCI_ENDPOINT);
@@ -1183,6 +1183,6 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
     
     DPRINT1("XHCI_DriverEntry: after driver unload, before usbport_reg call. FIXME\n");
 
-    return USBPORT_RegisterUSBPortDriver(DriverObject, 200, &RegPacket); // 200- is version for usb 2... 
+    return USBPORT_RegisterUSBPortDriver(DriverObject, USB30_MINIPORT_INTERFACE_VERSION, &RegPacket);
 
 }
