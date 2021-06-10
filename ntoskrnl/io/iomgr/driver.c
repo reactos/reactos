@@ -133,19 +133,19 @@ IopGetDriverNames(
 
     PAGED_CODE();
 
-    // 1. Check the "ObjectName" field in the driver's registry key (it has the priority)
+    /* 1. Check the "ObjectName" field in the driver's registry key (it has priority) */
     status = IopGetRegistryValue(ServiceHandle, L"ObjectName", &kvInfo);
     if (NT_SUCCESS(status))
     {
-        // we're got the ObjectName. Use it to create the DRIVER_OBJECT
+        /* We've got the ObjectName, use it as the driver name */
         if (kvInfo->Type != REG_SZ || kvInfo->DataLength == 0)
         {
             ExFreePool(kvInfo);
             return STATUS_ILL_FORMED_SERVICE_ENTRY;
         }
 
-        driverName.Length = kvInfo->DataLength - sizeof(WCHAR),
-        driverName.MaximumLength = kvInfo->DataLength,
+        driverName.Length = kvInfo->DataLength - sizeof(WCHAR);
+        driverName.MaximumLength = kvInfo->DataLength;
         driverName.Buffer = ExAllocatePoolWithTag(NonPagedPool, driverName.MaximumLength, TAG_IO);
         if (!driverName.Buffer)
         {
@@ -159,41 +159,45 @@ IopGetDriverNames(
         ExFreePool(kvInfo);
     }
 
-    // check if we need to get ServiceName as well
+    /* Check whether we need to get ServiceName as well, either to construct
+     * the driver name (because we could not use "ObjectName"), or because
+     * it is requested by the caller. */
     PKEY_BASIC_INFORMATION basicInfo;
     if (!NT_SUCCESS(status) || ServiceName != NULL)
     {
+        /* Retrieve the necessary buffer size */
         ULONG infoLength;
         status = ZwQueryKey(ServiceHandle, KeyBasicInformation, NULL, 0, &infoLength);
-        if (status == STATUS_BUFFER_TOO_SMALL)
-        {
-            basicInfo = ExAllocatePoolWithTag(PagedPool, infoLength, TAG_IO);
-            if (!basicInfo)
-            {
-                return STATUS_INSUFFICIENT_RESOURCES;
-            }
-
-            status = ZwQueryKey(ServiceHandle, KeyBasicInformation, basicInfo, infoLength, &infoLength);
-            if (!NT_SUCCESS(status))
-            {
-                ExFreePoolWithTag(basicInfo, TAG_IO);
-                return status;
-            }
-
-            serviceName.Length = basicInfo->NameLength;
-            serviceName.MaximumLength = basicInfo->NameLength;
-            serviceName.Buffer = basicInfo->Name;
-        }
-        else
+        if (status != STATUS_BUFFER_TOO_SMALL)
         {
             return NT_SUCCESS(status) ? STATUS_UNSUCCESSFUL : status;
         }
+
+        /* Allocate the buffer and retrieve the data */
+        basicInfo = ExAllocatePoolWithTag(PagedPool, infoLength, TAG_IO);
+        if (!basicInfo)
+        {
+            return STATUS_INSUFFICIENT_RESOURCES;
+        }
+
+        status = ZwQueryKey(ServiceHandle, KeyBasicInformation, basicInfo, infoLength, &infoLength);
+        if (!NT_SUCCESS(status))
+        {
+            ExFreePoolWithTag(basicInfo, TAG_IO);
+            return status;
+        }
+
+        serviceName.Length = basicInfo->NameLength;
+        serviceName.MaximumLength = basicInfo->NameLength;
+        serviceName.Buffer = basicInfo->Name;
     }
 
-    // 2. there is no "ObjectName" - construct it ourselves. Depending on a driver type,
-    // it will be either "\Driver\<ServiceName>" or "\FileSystem\<ServiceName>"
+    /* 2. There is no "ObjectName" - construct it ourselves. Depending on the driver type,
+     * it will be either "\Driver\<ServiceName>" or "\FileSystem\<ServiceName>" */
     if (driverName.Buffer == NULL)
     {
+        /* Retrieve the driver type */
+        ULONG driverType;
         status = IopGetRegistryValue(ServiceHandle, L"Type", &kvInfo);
         if (!NT_SUCCESS(status))
         {
@@ -206,16 +210,19 @@ IopGetDriverNames(
             ExFreePoolWithTag(basicInfo, TAG_IO); // container for serviceName
             return STATUS_ILL_FORMED_SERVICE_ENTRY;
         }
-
-        UINT32 driverType;
-        RtlMoveMemory(&driverType, (PVOID)((ULONG_PTR)kvInfo + kvInfo->DataOffset), sizeof(UINT32));
+        driverType = *(PULONG)((ULONG_PTR)kvInfo + kvInfo->DataOffset);
         ExFreePool(kvInfo);
 
-        driverName.Length = 0;
+        /* Compute the necessary driver name string size */
         if (driverType == SERVICE_RECOGNIZER_DRIVER || driverType == SERVICE_FILE_SYSTEM_DRIVER)
-            driverName.MaximumLength = sizeof(FILESYSTEM_ROOT_NAME) + serviceName.Length;
+            driverName.MaximumLength = sizeof(FILESYSTEM_ROOT_NAME);
         else
-            driverName.MaximumLength = sizeof(DRIVER_ROOT_NAME) + serviceName.Length;
+            driverName.MaximumLength = sizeof(DRIVER_ROOT_NAME);
+
+        driverName.MaximumLength += serviceName.Length;
+        driverName.Length = 0;
+
+        /* Allocate and build it */
         driverName.Buffer = ExAllocatePoolWithTag(NonPagedPool, driverName.MaximumLength, TAG_IO);
         if (!driverName.Buffer)
         {
@@ -231,8 +238,9 @@ IopGetDriverNames(
         RtlAppendUnicodeStringToString(&driverName, &serviceName);
     }
 
-    if (ServiceName)
+    if (ServiceName != NULL)
     {
+        /* Allocate a copy for the caller */
         PWCHAR buf = ExAllocatePoolWithTag(PagedPool, serviceName.Length, TAG_IO);
         if (!buf)
         {
@@ -425,7 +433,7 @@ IopInitializeDriverModule(
 
     DPRINT("Driver name: '%wZ'\n", &DriverName);
 
-    // obtain the registry path for the DriverInit routine
+    /* Obtain the registry path for the DriverInit routine */
     PKEY_NAME_INFORMATION nameInfo;
     ULONG infoLength;
     Status = ZwQueryKey(ServiceHandle, KeyNameInformation, NULL, 0, &infoLength);
@@ -468,8 +476,8 @@ IopInitializeDriverModule(
         return Status;
     }
 
-    // create the driver object
-    UINT32 ObjectSize = sizeof(DRIVER_OBJECT) + sizeof(EXTENDED_DRIVER_EXTENSION);
+    /* Create the driver object */
+    ULONG ObjectSize = sizeof(DRIVER_OBJECT) + sizeof(EXTENDED_DRIVER_EXTENSION);
     OBJECT_ATTRIBUTES objAttrs;
     PDRIVER_OBJECT driverObject;
     InitializeObjectAttributes(&objAttrs,
@@ -551,7 +559,7 @@ IopInitializeDriverModule(
     /* Set up the service key name buffer */
     UNICODE_STRING serviceKeyName;
     serviceKeyName.Length = 0;
-    // put a NULL character at the end for Windows compatibility
+    // NULL-terminate for Windows compatibility
     serviceKeyName.MaximumLength = ServiceName.MaximumLength + sizeof(UNICODE_NULL);
     serviceKeyName.Buffer = ExAllocatePoolWithTag(NonPagedPool,
                                                   serviceKeyName.MaximumLength,
@@ -574,7 +582,7 @@ IopInitializeDriverModule(
     /* Make a copy of the driver name to store in the driver object */
     UNICODE_STRING driverNamePaged;
     driverNamePaged.Length = 0;
-    // put a NULL character at the end for Windows compatibility
+    // NULL-terminate for Windows compatibility
     driverNamePaged.MaximumLength = DriverName.MaximumLength + sizeof(UNICODE_NULL);
     driverNamePaged.Buffer = ExAllocatePoolWithTag(PagedPool,
                                                    driverNamePaged.MaximumLength,
@@ -836,8 +844,9 @@ IopInitializeBuiltinDriver(IN PLDR_DATA_TABLE_ENTRY BootLdrEntry)
     }
 
     /* Lookup the new Ldr entry in PsLoadedModuleList */
-    NextEntry = PsLoadedModuleList.Flink;
-    while (NextEntry != &PsLoadedModuleList)
+    for (NextEntry = PsLoadedModuleList.Flink;
+         NextEntry != &PsLoadedModuleList;
+         NextEntry = NextEntry->Flink)
     {
         LdrEntry = CONTAINING_RECORD(NextEntry,
                                      LDR_DATA_TABLE_ENTRY,
@@ -846,8 +855,6 @@ IopInitializeBuiltinDriver(IN PLDR_DATA_TABLE_ENTRY BootLdrEntry)
         {
             break;
         }
-
-        NextEntry = NextEntry->Flink;
     }
     ASSERT(NextEntry != &PsLoadedModuleList);
 
@@ -873,7 +880,7 @@ IopInitializeBuiltinDriver(IN PLDR_DATA_TABLE_ENTRY BootLdrEntry)
 
     // Legacy drivers may add devices inside DriverEntry.
     // We're lazy and always assume that they are doing so
-    BOOLEAN deviceAdded = (_Bool)(DriverObject->Flags & DRVO_LEGACY_DRIVER);
+    BOOLEAN deviceAdded = !!(DriverObject->Flags & DRVO_LEGACY_DRIVER);
 
     HANDLE enumServiceHandle;
     UNICODE_STRING enumName = RTL_CONSTANT_STRING(L"Enum");
@@ -883,7 +890,7 @@ IopInitializeBuiltinDriver(IN PLDR_DATA_TABLE_ENTRY BootLdrEntry)
 
     if (NT_SUCCESS(Status))
     {
-        UINT32 instanceCount = 0;
+        ULONG instanceCount = 0;
         PKEY_VALUE_FULL_INFORMATION kvInfo;
         Status = IopGetRegistryValue(enumServiceHandle, L"Count", &kvInfo);
         if (!NT_SUCCESS(Status))
@@ -895,15 +902,12 @@ IopInitializeBuiltinDriver(IN PLDR_DATA_TABLE_ENTRY BootLdrEntry)
             ExFreePool(kvInfo);
             goto Cleanup;
         }
-
-        RtlMoveMemory(&instanceCount,
-                      (PVOID)((ULONG_PTR)kvInfo + kvInfo->DataOffset),
-                      sizeof(UINT32));
+        instanceCount = *(PULONG)((ULONG_PTR)kvInfo + kvInfo->DataOffset);
         ExFreePool(kvInfo);
 
         DPRINT("Processing %u instances for %wZ module\n", instanceCount, ModuleName);
 
-        for (UINT32 i = 0; i < instanceCount; i++)
+        for (ULONG i = 0; i < instanceCount; i++)
         {
             WCHAR num[11];
             UNICODE_STRING instancePath;
@@ -920,8 +924,8 @@ IopInitializeBuiltinDriver(IN PLDR_DATA_TABLE_ENTRY BootLdrEntry)
                 continue;
             }
 
-            instancePath.Length = kvInfo->DataLength - sizeof(WCHAR),
-            instancePath.MaximumLength = kvInfo->DataLength,
+            instancePath.Length = kvInfo->DataLength - sizeof(WCHAR);
+            instancePath.MaximumLength = kvInfo->DataLength;
             instancePath.Buffer = ExAllocatePoolWithTag(NonPagedPool,
                                                         instancePath.MaximumLength,
                                                         TAG_IO);
@@ -1000,8 +1004,9 @@ IopInitializeBootDrivers(VOID)
 
     /* Loop the boot modules */
     ListHead = &KeLoaderBlock->LoadOrderListHead;
-    NextEntry = ListHead->Flink;
-    while (ListHead != NextEntry)
+    for (NextEntry = ListHead->Flink;
+         NextEntry != ListHead;
+         NextEntry = NextEntry->Flink)
     {
         /* Get the entry */
         LdrEntry = CONTAINING_RECORD(NextEntry,
@@ -1014,15 +1019,13 @@ IopInitializeBootDrivers(VOID)
             /* Call its entrypoint */
             MmCallDllInitialize(LdrEntry, NULL);
         }
-
-        /* Go to the next driver */
-        NextEntry = NextEntry->Flink;
     }
 
     /* Loop the boot drivers */
     ListHead = &KeLoaderBlock->BootDriverListHead;
-    NextEntry = ListHead->Flink;
-    while (ListHead != NextEntry)
+    for (NextEntry = ListHead->Flink;
+         NextEntry != ListHead;
+         NextEntry = NextEntry->Flink)
     {
         /* Get the entry */
         BootEntry = CONTAINING_RECORD(NextEntry,
@@ -1091,17 +1094,15 @@ IopInitializeBootDrivers(VOID)
                 InsertHeadList(NextEntry2, &DriverInfo->Link);
             }
         }
-
-        /* Go to the next driver */
-        NextEntry = NextEntry->Flink;
     }
 
     /* Loop each group index */
     for (i = 0; i < IopGroupIndex; i++)
     {
         /* Loop each group table */
-        NextEntry = IopGroupTable[i].Flink;
-        while (NextEntry != &IopGroupTable[i])
+        for (NextEntry = IopGroupTable[i].Flink;
+             NextEntry != &IopGroupTable[i];
+             NextEntry = NextEntry->Flink)
         {
             /* Get the entry */
             DriverInfo = CONTAINING_RECORD(NextEntry,
@@ -1120,9 +1121,6 @@ IopInitializeBootDrivers(VOID)
                                     NULL,
                                     NULL);
             }
-
-            /* Next entry */
-            NextEntry = NextEntry->Flink;
         }
     }
 
@@ -1650,7 +1648,7 @@ try_again:
 
     /* Finally, call its init function */
     DPRINT("Calling driver entrypoint at %p\n", InitializationFunction);
-    Status = (*InitializationFunction)(DriverObject, NULL);
+    Status = InitializationFunction(DriverObject, NULL);
     if (!NT_SUCCESS(Status))
     {
         /* If it didn't work, then kill the object */
@@ -1890,8 +1888,8 @@ IopLoadDriver(
             return STATUS_ILL_FORMED_SERVICE_ENTRY;
         }
 
-        ImagePath.Length = kvInfo->DataLength - sizeof(UNICODE_NULL),
-        ImagePath.MaximumLength = kvInfo->DataLength,
+        ImagePath.Length = kvInfo->DataLength - sizeof(UNICODE_NULL);
+        ImagePath.MaximumLength = kvInfo->DataLength;
         ImagePath.Buffer = ExAllocatePoolWithTag(PagedPool, ImagePath.MaximumLength, TAG_RTLREGISTRY);
         if (!ImagePath.Buffer)
         {
