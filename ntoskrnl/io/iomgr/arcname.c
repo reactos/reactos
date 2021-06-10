@@ -48,8 +48,8 @@ IopCreateArcNames(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     ANSI_STRING ArcSystemString, ArcString, LanmanRedirector, LoaderPathNameA;
 
     /* Check if we only have one disk on the machine */
-    SingleDisk = ArcDiskInfo->DiskSignatureListHead.Flink->Flink ==
-                 (&ArcDiskInfo->DiskSignatureListHead);
+    SingleDisk = (ArcDiskInfo->DiskSignatureListHead.Flink->Flink ==
+                 &ArcDiskInfo->DiskSignatureListHead);
 
     /* Create the global HAL partition name */
     sprintf(Buffer, "\\ArcName\\%s", LoaderBlock->ArcHalDeviceName);

@@ -1866,13 +1866,15 @@ IoGetBootDiskInformation(IN OUT PBOOTDISK_INFORMATION BootDiskInformation,
 
     /* Init some useful stuff:
      * Get ARC disks information
-     * Check whether we have a single disk
+     * Check whether we have a single disk on the machine
      * Check received structure size (extended or not?)
      * Init boot strings (system/boot)
      * Finaly, get disk count
      */
     ArcDiskInformation = IopLoaderBlock->ArcDiskInformation;
-    SingleDisk = IsListEmpty(&(ArcDiskInformation->DiskSignatureListHead));
+    SingleDisk = (ArcDiskInformation->DiskSignatureListHead.Flink->Flink ==
+                 &ArcDiskInformation->DiskSignatureListHead);
+
     IsBootDiskInfoEx = (Size >= sizeof(BOOTDISK_INFORMATION_EX));
     RtlInitAnsiString(&ArcBootString, IopLoaderBlock->ArcBootDeviceName);
     RtlInitAnsiString(&ArcSystemString, IopLoaderBlock->ArcHalDeviceName);
@@ -2147,7 +2149,7 @@ IoGetBootDiskInformation(IN OUT PBOOTDISK_INFORMATION BootDiskInformation,
             }
         }
 
-        /* Finally, release drive layout structure */
+        /* Finally, release drive layout */
         ExFreePool(DriveLayout);
     }
 
