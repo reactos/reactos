@@ -32,6 +32,7 @@
 #include <winuser.h>
 
 #include <conutils.h>
+#include <strsafe.h>
 
 #include "resource.h"
 
@@ -51,19 +52,26 @@ HANDLE hKeyboard;
 /* Enable/Disable extensions */
 BOOL bEnableExtensions = TRUE; // FIXME: By default, it should be FALSE.
 
-#define FLAG_HELP (1 << 0)
-#define FLAG_E (1 << 1)
-#define FLAG_C (1 << 2)
-#define FLAG_P (1 << 3)
-#define FLAG_S (1 << 4)
-#define FLAG_Tn (1 << 5)
-#define FLAG_PLUSn (1 << 6)
+/* Parser flags */
+#define FLAG_HELP   (1 << 0)
+#define FLAG_E      (1 << 1)
+#define FLAG_C      (1 << 2)
+#define FLAG_P      (1 << 3)
+#define FLAG_S      (1 << 4)
+#define FLAG_Tn     (1 << 5)
+#define FLAG_PLUSn  (1 << 6)
+
+/* Prompt flags */
+#define PROMPT_PERCENT  (1 << 0)
+#define PROMPT_LINE_AT  (1 << 1)
+#define PROMPT_OPTIONS  (1 << 2)
+#define PROMPT_LINES    (1 << 3)
 
 static DWORD s_dwFlags = 0;
 static LONG s_nTabWidth = 8;
 static DWORD s_nNextLineNo = 0;
 static BOOL s_bPrevLineIsBlank = FALSE;
-static UINT s_nPromptID = IDS_CONTINUE_PROGRESS;
+static WORD s_fPrompt = 0;
 static BOOL s_bDoNextFile = FALSE;
 
 static BOOL IsBlankLine(IN PCWCH line, IN DWORD cch)
@@ -143,49 +151,69 @@ PagePrompt(PCON_PAGER Pager, DWORD Done, DWORD Total)
     DWORD nLines;
     WCHAR chSubCommand = 0;
 
+    /* Prompt strings (small size since the prompt should
+     * hold ideally on one <= 80-character line) */
+    static WCHAR StrPercent[80] = L"";
+    static WCHAR StrLineAt[80]  = L"";
+    static WCHAR StrOptions[80] = L"";
+    static WCHAR StrLines[80]   = L"";
+
+    WCHAR szPercent[80] = L"";
+    WCHAR szLineAt[80]  = L"";
+
+    /* Load the prompt strings */
+    if (!*StrPercent)
+        K32LoadStringW(NULL, IDS_CONTINUE_PERCENT, StrPercent, ARRAYSIZE(StrPercent));
+    if (!*StrLineAt)
+        K32LoadStringW(NULL, IDS_CONTINUE_LINE_AT, StrLineAt, ARRAYSIZE(StrLineAt));
+    if (!*StrOptions)
+        K32LoadStringW(NULL, IDS_CONTINUE_OPTIONS, StrOptions, ARRAYSIZE(StrOptions));
+    if (!*StrLines)
+        K32LoadStringW(NULL, IDS_CONTINUE_LINES, StrLines, ARRAYSIZE(StrLines));
+
 Restart:
     nLines = 0;
 
-    /*
-     * Just use the simple prompt if the file being displayed is the STDIN,
-     * otherwise use the prompt with progress percentage.
-     *
-     * The progress percentage is evaluated as follows.
-     * So far we have read a total of 'dwSumReadBytes' bytes from the file.
-     * Amongst those is the latest read chunk of 'dwReadBytes' bytes, to which
-     * correspond a number of 'dwReadChars' characters with which we have called
-     * ConWritePaging who called PagePrompt. We then have: Total == dwReadChars.
-     * During this ConWritePaging call the PagePrompt was called after 'Done'
-     * number of characters over 'Total'.
-     * It should be noted that for 'dwSumReadBytes' number of bytes read it
-     * *roughly* corresponds 'dwSumReadChars' number of characters. This is
-     * because there may be some failures happening during the conversion of
-     * the bytes read to the character string for a given encoding.
-     * Therefore the number of characters displayed on screen is equal to:
-     *   dwSumReadChars - Total + Done ,
-     * but the best corresponding approximed number of bytes would be:
-     *   dwSumReadBytes - (Total - Done) * (dwSumReadBytes / dwSumReadChars) ,
-     * where the ratio is the average number of bytes per character.
-     * The percentage is then computed relative to the total file size.
-     */
-    if (hFile == hStdIn)
+    /* Do not show the progress percentage when STDIN is being displayed */
+    if (s_fPrompt & PROMPT_PERCENT) // && (hFile != hStdIn)
     {
-        ConResPuts(Pager->Screen->Stream, IDS_CONTINUE);
-    }
-    else
-    {
+        /*
+         * The progress percentage is evaluated as follows.
+         * So far we have read a total of 'dwSumReadBytes' bytes from the file.
+         * Amongst those is the latest read chunk of 'dwReadBytes' bytes, to which
+         * correspond a number of 'dwReadChars' characters with which we have called
+         * ConWritePaging who called PagePrompt. We then have: Total == dwReadChars.
+         * During this ConWritePaging call the PagePrompt was called after 'Done'
+         * number of characters over 'Total'.
+         * It should be noted that for 'dwSumReadBytes' number of bytes read it
+         * *roughly* corresponds 'dwSumReadChars' number of characters. This is
+         * because there may be some failures happening during the conversion of
+         * the bytes read to the character string for a given encoding.
+         * Therefore the number of characters displayed on screen is equal to:
+         *   dwSumReadChars - Total + Done ,
+         * but the best corresponding approximed number of bytes would be:
+         *   dwSumReadBytes - (Total - Done) * (dwSumReadBytes / dwSumReadChars) ,
+         * where the ratio is the average number of bytes per character.
+         * The percentage is then computed relative to the total file size.
+         */
         DWORD dwPercent = (dwSumReadBytes - (Total - Done) *
                            (dwSumReadBytes / dwSumReadChars)) * 100 / dwFileSize;
-        if (s_nPromptID == IDS_CONTINUE_LINE_AT)
-        {
-            ConResPrintf(Pager->Screen->Stream, s_nPromptID, dwPercent, Pager->lineno);
-        }
-        else
-        {
-            ConResPrintf(Pager->Screen->Stream, s_nPromptID, dwPercent);
-        }
+        StringCchPrintfW(szPercent, ARRAYSIZE(szPercent), StrPercent, dwPercent);
     }
-    s_nPromptID = IDS_CONTINUE_PROGRESS;
+    if (s_fPrompt & PROMPT_LINE_AT)
+    {
+        StringCchPrintfW(szLineAt, ARRAYSIZE(szLineAt), StrLineAt, Pager->lineno);
+    }
+
+    /* Suitably format and display the prompt */
+    ConResMsgPrintf(Pager->Screen->Stream, 0, IDS_CONTINUE_PROMPT,
+                    (s_fPrompt & PROMPT_PERCENT ? szPercent  : L""),
+                    (s_fPrompt & PROMPT_LINE_AT ? szLineAt   : L""),
+                    (s_fPrompt & PROMPT_OPTIONS ? StrOptions : L""),
+                    (s_fPrompt & PROMPT_LINES   ? StrLines   : L""));
+
+    /* Reset the prompt to a default state */
+    s_fPrompt &= ~(PROMPT_LINE_AT | PROMPT_OPTIONS | PROMPT_LINES);
 
     /* RemoveBreakHandler */
     SetConsoleCtrlHandler(NULL, TRUE);
@@ -364,7 +392,7 @@ Restart:
         /* '?': Show Options */
         if (KeyEvent.uChar.UnicodeChar == L'?')
         {
-            s_nPromptID = IDS_CONTINUE_OPTIONS;
+            s_fPrompt |= PROMPT_OPTIONS;
             goto Restart;
         }
 
@@ -389,7 +417,7 @@ Restart:
         /* 'P': Display n lines */
         if (KeyEvent.wVirtualKeyCode == L'P')
         {
-            s_nPromptID = IDS_CONTINUE_LINES;
+            s_fPrompt |= PROMPT_LINES;
             chSubCommand = L'P';
             goto Restart;
         }
@@ -397,7 +425,7 @@ Restart:
         /* 'S': Skip n lines */
         if (KeyEvent.wVirtualKeyCode == L'S')
         {
-            s_nPromptID = IDS_CONTINUE_LINES;
+            s_fPrompt |= PROMPT_LINES;
             chSubCommand = L'S';
             goto Restart;
         }
@@ -405,11 +433,10 @@ Restart:
         /* '=': Show current line number */
         if (KeyEvent.uChar.UnicodeChar == L'=')
         {
-            s_nPromptID = IDS_CONTINUE_LINE_AT;
+            s_fPrompt |= PROMPT_LINE_AT;
             goto Restart;
         }
 
-        s_nPromptID = IDS_CONTINUE_PROGRESS;
         chSubCommand = 0;
         goto Restart;
     }
@@ -1048,7 +1075,7 @@ int wmain(int argc, WCHAR* argv[])
 
         /* Reset state for paging */
         s_bPrevLineIsBlank = FALSE;
-        s_nPromptID = IDS_CONTINUE_PROGRESS;
+        s_fPrompt = PROMPT_PERCENT;
         s_bDoNextFile = FALSE;
 
         /* Update the statistics for PagePrompt */

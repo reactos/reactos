@@ -50,11 +50,11 @@ at the ""-- Continue --"" prompt:\n\
     <Space>  Display the next page.\n\
     <Enter>  Display the next line.\n"
 
-    IDS_CONTINUE "-- Kontynuuj --"
-    IDS_CONTINUE_PROGRESS "-- Kontynuuj (%d%%) --"
+    IDS_BAD_FLAG "Invalid argument - '%s'\n"
     IDS_FILE_ACCESS "Brak dostępu do pliku: %s.\n"
-    IDS_BAD_FLAG "Invalid argument - '%ls'\n"
-    IDS_CONTINUE_OPTIONS "-- Continue (%d%%) [Options: psfq=<Space><Enter>] --"
-    IDS_CONTINUE_LINES "-- Continue (%d%%) -- Lines: "
-    IDS_CONTINUE_LINE_AT "-- Continue (%d%%) [Line:%d] --"
+    IDS_CONTINUE_PROMPT  "-- Kontynuuj%1%2%3 --%4"
+    IDS_CONTINUE_PERCENT " (%d%%)"
+    IDS_CONTINUE_LINE_AT " [Line: %d]"
+    IDS_CONTINUE_OPTIONS " [Options: psfq=<Space><Enter>]"
+    IDS_CONTINUE_LINES   " Lines: "
 END
