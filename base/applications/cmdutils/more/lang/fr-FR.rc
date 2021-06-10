@@ -2,29 +2,47 @@ LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
 
 STRINGTABLE
 BEGIN
-    IDS_USAGE "Affiche les données page par page à l'écran.\n\n\
-  MORE [options] < [Drive:][Path]Filename\n\
-  Command | MORE [options]\n\
-  MORE [options] [Drive:][Path]Filename\n\n\
-Options:\n\
-  /E        Enable extended features.\n\
-  /C        Clear screen before displaying page.\n\
-  /P        Expand form-feed characters.\n\
-  /S        Shrink multiple blank lines to a single line.\n\
-  /Tn       Expand tabs to n spaces (default: 8).\n\
-  +n        Start displaying the first file at line n.\n\n\
-  [Drive:][Path]Filename     A file, whose content shall be displayed.\n\
-  Command                    A command, whose output shall be displayed.\n\n\
-If extended features are enabled, the following commands are available\n\
-at ""-- Continue --"" prompt:\n\
-   P n      Display n lines.\n\
-   S n      Skip n lines.\n\
-   F        Display next file.\n\
-   Q        Quit.\n\
-   ?        Show help line.\n\
-   =        Show line number.\n\
-   <Space>  Display next page.\n\
-   <Enter>  Display next line.\n"
+    IDS_USAGE "Affiche des données page par page à l'écran.\n\
+\n\
+MORE [/E [options]] < [lect:][chemin]fichier\n\
+commande | MORE [/E [options]]\n\
+\n\
+    [lect:][chemin]fichier  Un fichier dont le contenu sera affiché.\n\
+    commande                Une commande dont la sortie sera affichée.\n\
+\n\
+Lorsque les Fonctions Étendues sont activées, la forme suivante est reconnue :\n\
+MORE [/E] [options] [fichiers]\n\
+\n\
+Options :\n\
+    /E       Active les Fonctions Étendues.\n\
+    L'état par défaut des Fonctions Étendues est contrôlé par les paramètres\n\
+    de registre par défaut pour CMD.EXE. Pour plus de détails sur comment\n\
+    changer ces paramètres, consultez la section ""Extensions de Commandes""\n\
+    dans l'aide de CMD.EXE.\n\
+\n\
+    Lorsque les Fonctions Étendues sont activées, les options suivantes sont\n\
+    disponibles :\n\
+    /C       Efface l'écran avant d'afficher une page.\n\
+    /P       Développe les caractères de saut de page.\n\
+    /S       Groupe toutes lignes vides consécutives en une seule ligne.\n\
+    /Tn      Développe les tabulations en n espaces (défaut : 8).\n\
+\n\
+    Ces options peuvent être présentes dans la variable d'environnement MORE.\n\
+\n\
+    +n       Débute l'affichage du premier fichier à la ligne n.\n\
+    fichiers Liste de fichiers à afficher, séparés par des blancs.\n\
+\n\
+Lorsque les Fonctions Étendues sont activées, les commandes suivantes sont\n\
+disponibles à l'invite ""-- Continuer --"" :\n\
+\n\
+    P n      Affiche les n lignes suivantes.\n\
+    S n      Saute les n lignes suivantes.\n\
+    F        Affiche le fichier suivant.\n\
+    Q        Quitte.\n\
+    =        Montre le numéro de ligne.\n\
+    ?        Montre la ligne d'aide.\n\
+    <Espace> Affiche la page suivante.\n\
+    <Entrée> Affiche la ligne suivante.\n"
 
     IDS_CONTINUE "-- Continuer --"
     IDS_CONTINUE_PROGRESS "-- Continuer (%d %%) --"
