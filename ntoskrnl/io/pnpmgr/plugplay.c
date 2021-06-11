@@ -418,6 +418,9 @@ IopGetDeviceProperty(PPLUGPLAY_CONTROL_PROPERTY_DATA PropertyData)
     }
     else if (Property == PNP_PROPERTY_REMOVAL_POLICY_OVERRIDE)
     {
+        UNIMPLEMENTED;
+        BufferSize = 0;
+        Status = STATUS_NOT_IMPLEMENTED;
     }
     else if (Property == PNP_PROPERTY_REMOVAL_POLICY_HARDWARE_DEFAULT)
     {
@@ -476,6 +479,9 @@ IopGetDeviceProperty(PPLUGPLAY_CONTROL_PROPERTY_DATA PropertyData)
 
 #if (WINVER >= _WIN32_WINNT_WS03)
             case PNP_PROPERTY_LOCATION_PATHS:
+                UNIMPLEMENTED;
+                BufferSize = 0;
+                Status = STATUS_NOT_IMPLEMENTED;
                 break;
 #endif
 
