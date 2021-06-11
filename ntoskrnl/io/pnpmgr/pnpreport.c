@@ -223,6 +223,9 @@ IoReportDetectedDevice(
     if (DeviceObject && *DeviceObject)
     {
         Pdo = *DeviceObject;
+        // FIXME! What to do for initializing instancePath??
+        // Pdo->DeviceObjectExtension->DeviceNode->InstancePath;
+        RtlInitEmptyUnicodeString(&instancePath, NULL, 0);
     }
     else
     {
