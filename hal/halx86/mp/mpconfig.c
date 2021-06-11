@@ -2,8 +2,8 @@
  * COPYRIGHT:             See COPYING in the top level directory
  * PROJECT:               ReactOS kernel
  * FILE:                  hal/halx86/mp/mpconfig.c
- * PURPOSE:               
- * PROGRAMMER:            
+ * PURPOSE:
+ * PROGRAMMER:
  */
 
 /* INCLUDES *****************************************************************/
@@ -18,7 +18,7 @@ MP_FLOATING_POINTER* Mpf = NULL;
 
 /* FUNCTIONS ****************************************************************/
 
-static UCHAR 
+static UCHAR
 MPChecksum(PUCHAR Base,
 	   ULONG Size)
 /*
@@ -33,7 +33,7 @@ MPChecksum(PUCHAR Base,
    return Sum;
 }
 
-static VOID 
+static VOID
 HaliMPIntSrcInfo(PMP_CONFIGURATION_INTSRC m)
 {
   DPRINT("Int: type %d, pol %d, trig %d, bus %d,"
@@ -41,7 +41,7 @@ HaliMPIntSrcInfo(PMP_CONFIGURATION_INTSRC m)
          m->IrqType, m->IrqFlag & 3,
          (m->IrqFlag >> 2) & 3, m->SrcBusId,
          m->SrcBusIrq, m->DstApicId, m->DstApicInt);
-  if (IRQCount > MAX_IRQ_SOURCE) 
+  if (IRQCount > MAX_IRQ_SOURCE)
   {
     DPRINT1("Max # of irq sources exceeded!!\n");
     ASSERT(FALSE);
@@ -51,7 +51,7 @@ HaliMPIntSrcInfo(PMP_CONFIGURATION_INTSRC m)
   IRQCount++;
 }
 
-PCHAR 
+PCHAR
 HaliMPFamily(ULONG Family,
 	     ULONG Model)
 {
@@ -79,7 +79,7 @@ HaliMPFamily(ULONG Family,
 }
 
 
-static VOID 
+static VOID
 HaliMPProcessorInfo(PMP_CONFIGURATION_PROCESSOR m)
 {
   UCHAR ver;
@@ -143,14 +143,14 @@ HaliMPProcessorInfo(PMP_CONFIGURATION_PROCESSOR m)
 
   CPUMap[CPUCount].Flags = CPU_USABLE;
 
-  if (m->CpuFlags & CPU_FLAG_BSP) 
+  if (m->CpuFlags & CPU_FLAG_BSP)
   {
     DPRINT("    Bootup CPU\n");
     CPUMap[CPUCount].Flags |= CPU_BSP;
     BootCPU = m->ApicId;
   }
 
-  if (m->ApicId > MAX_CPU) 
+  if (m->ApicId > MAX_CPU)
   {
     DPRINT("Processor #%d INVALID. (Max ID: %d).\n", m->ApicId, MAX_CPU);
     return;
@@ -160,7 +160,7 @@ HaliMPProcessorInfo(PMP_CONFIGURATION_PROCESSOR m)
   /*
    * Validate version
    */
-  if (ver == 0x0) 
+  if (ver == 0x0)
   {
      DPRINT("BIOS bug, APIC version is 0 for CPU#%d! fixing up to 0x10. (tell your hw vendor)\n", m->ApicId);
      ver = 0x10;
@@ -168,42 +168,42 @@ HaliMPProcessorInfo(PMP_CONFIGURATION_PROCESSOR m)
 //  ApicVersion[m->ApicId] = Ver;
 //  BiosCpuApicId[CPUCount] = m->ApicId;
   CPUMap[CPUCount].APICVersion = ver;
-  
+
   CPUCount++;
 }
 
-static VOID 
+static VOID
 HaliMPBusInfo(PMP_CONFIGURATION_BUS m)
 {
   static UCHAR CurrentPCIBusId = 0;
 
   DPRINT("Bus #%d is %.*s\n", m->BusId, 6, m->BusType);
 
-  if (strncmp(m->BusType, BUSTYPE_ISA, sizeof(BUSTYPE_ISA)-1) == 0) 
+  if (strncmp(m->BusType, BUSTYPE_ISA, sizeof(BUSTYPE_ISA)-1) == 0)
   {
      BUSMap[m->BusId] = MP_BUS_ISA;
-  } 
-  else if (strncmp(m->BusType, BUSTYPE_EISA, sizeof(BUSTYPE_EISA)-1) == 0) 
+  }
+  else if (strncmp(m->BusType, BUSTYPE_EISA, sizeof(BUSTYPE_EISA)-1) == 0)
   {
      BUSMap[m->BusId] = MP_BUS_EISA;
-  } 
-  else if (strncmp(m->BusType, BUSTYPE_PCI, sizeof(BUSTYPE_PCI)-1) == 0) 
+  }
+  else if (strncmp(m->BusType, BUSTYPE_PCI, sizeof(BUSTYPE_PCI)-1) == 0)
   {
      BUSMap[m->BusId] = MP_BUS_PCI;
      PCIBUSMap[m->BusId] = CurrentPCIBusId;
      CurrentPCIBusId++;
-  } 
-  else if (strncmp(m->BusType, BUSTYPE_MCA, sizeof(BUSTYPE_MCA)-1) == 0) 
+  }
+  else if (strncmp(m->BusType, BUSTYPE_MCA, sizeof(BUSTYPE_MCA)-1) == 0)
   {
      BUSMap[m->BusId] = MP_BUS_MCA;
-  } 
-  else 
+  }
+  else
   {
      DPRINT("Unknown bustype %.*s - ignoring\n", 6, m->BusType);
   }
 }
 
-static VOID 
+static VOID
 HaliMPIOApicInfo(PMP_CONFIGURATION_IOAPIC m)
 {
   if (!(m->ApicFlags & CPU_FLAG_ENABLED))
@@ -211,7 +211,7 @@ HaliMPIOApicInfo(PMP_CONFIGURATION_IOAPIC m)
 
   DPRINT("I/O APIC #%d Version %d at 0x%lX.\n",
          m->ApicId, m->ApicVersion, m->ApicAddress);
-  if (IOAPICCount > MAX_IOAPIC) 
+  if (IOAPICCount > MAX_IOAPIC)
   {
     DPRINT("Max # of I/O APICs (%d) exceeded (found %d).\n",
            MAX_IOAPIC, IOAPICCount);
@@ -226,7 +226,7 @@ HaliMPIOApicInfo(PMP_CONFIGURATION_IOAPIC m)
 }
 
 
-static VOID 
+static VOID
 HaliMPIntLocalInfo(PMP_CONFIGURATION_INTLOCAL m)
 {
   DPRINT("Lint: type %d, pol %d, trig %d, bus %d,"
@@ -241,12 +241,12 @@ HaliMPIntLocalInfo(PMP_CONFIGURATION_INTLOCAL m)
    * will show us if this assumptions is false.
    * Until then we do not have to add baggage.
    */
-  if ((m->IrqType == INT_EXTINT) && (m->DstApicLInt != 0)) 
+  if ((m->IrqType == INT_EXTINT) && (m->DstApicLInt != 0))
   {
     DPRINT1("Invalid MP table!\n");
     ASSERT(FALSE);
   }
-  if ((m->IrqType == INT_NMI) && (m->DstApicLInt != 1)) 
+  if ((m->IrqType == INT_NMI) && (m->DstApicLInt != 1))
   {
     DPRINT1("Invalid MP table!\n");
     ASSERT(FALSE);
@@ -267,7 +267,7 @@ HaliReadMPConfigTable(PMP_CONFIGURATION_TABLE Table)
    if (Table->Signature != MPC_SIGNATURE)
      {
        PUCHAR pc = (PUCHAR)&Table->Signature;
-       
+
        DPRINT1("Bad MP configuration block signature: %c%c%c%c\n",
 		pc[0], pc[1], pc[2], pc[3]);
        KeBugCheckEx(HAL_INITIALIZATION_FAILED, pc[0], pc[1], pc[2], pc[3]);
@@ -291,7 +291,7 @@ HaliReadMPConfigTable(PMP_CONFIGURATION_TABLE Table)
 
    if (Table->LocalAPICAddress != APIC_DEFAULT_BASE)
      {
-       DPRINT1("APIC base address is at 0x%X. I cannot handle non-standard adresses\n", 
+       DPRINT1("APIC base address is at 0x%X. I cannot handle non-standard adresses\n",
 	       Table->LocalAPICAddress);
        ASSERT(FALSE);
        return FALSE;
@@ -352,7 +352,7 @@ HaliReadMPConfigTable(PMP_CONFIGURATION_TABLE Table)
    return TRUE;
 }
 
-static VOID 
+static VOID
 HaliConstructDefaultIOIrqMPTable(ULONG Type)
 {
 	MP_CONFIGURATION_INTSRC intsrc;
@@ -386,7 +386,7 @@ HaliConstructDefaultIOIrqMPTable(ULONG Type)
 	HaliMPIntSrcInfo(&intsrc);
 }
 
-static VOID 
+static VOID
 HaliConstructDefaultISAMPTable(ULONG Type)
 {
   MP_CONFIGURATION_PROCESSOR processor;
@@ -408,7 +408,7 @@ HaliConstructDefaultISAMPTable(ULONG Type)
   processor.FeatureFlags = 0;
   processor.Reserved[0] = 0;
   processor.Reserved[1] = 0;
-  for (i = 0; i < 2; i++) 
+  for (i = 0; i < 2; i++)
   {
     processor.ApicId = i;
     HaliMPProcessorInfo(&processor);
@@ -417,7 +417,7 @@ HaliConstructDefaultISAMPTable(ULONG Type)
 
   bus.Type = MPCTE_BUS;
   bus.BusId = 0;
-  switch (Type) 
+  switch (Type)
   {
     default:
     DPRINT("Unknown standard configuration %d\n", Type);
@@ -436,7 +436,7 @@ HaliConstructDefaultISAMPTable(ULONG Type)
       memcpy(bus.BusType, "MCA   ", 6);
   }
   HaliMPBusInfo(&bus);
-  if (Type > 4) 
+  if (Type > 4)
   {
     bus.Type = MPCTE_BUS;
     bus.BusId = 1;
@@ -462,7 +462,7 @@ HaliConstructDefaultISAMPTable(ULONG Type)
   lintsrc.SrcBusId = 0;
   lintsrc.SrcBusIrq = 0;
   lintsrc.DstApicId = MP_APIC_ALL;
-  for (i = 0; i < 2; i++) 
+  for (i = 0; i < 2; i++)
   {
     lintsrc.IrqType = linttypes[i];
     lintsrc.DstApicLInt = i;
@@ -500,15 +500,15 @@ HaliScanForMPConfigTable(ULONG Base,
             DPRINT("Intel MultiProcessor Specification v1.%d compliant system.\n",
                    mpf->Specification);
 
-            if (mpf->Feature2 & FEATURE2_IMCRP) 
+            if (mpf->Feature2 & FEATURE2_IMCRP)
 	    {
                DPRINT("Running in IMCR and PIC compatibility mode.\n");
-            } 
-	    else 
+            }
+	    else
 	    {
                DPRINT("Running in Virtual Wire compatibility mode.\n");
 	    }
-	
+
 
             switch (mpf->Feature1)
             {
@@ -540,7 +540,7 @@ HaliScanForMPConfigTable(ULONG Base,
                   DPRINT("Unknown standard configuration %d\n", mpf->Feature1);
                   return FALSE;
             }
-            Mpf = mpf; 
+            Mpf = mpf;
             return TRUE;
          }
       }
@@ -589,7 +589,7 @@ HaliGetSmpConfig(VOID)
 	 HaliConstructDefaultIOIrqMPTable(bus.BusId);
       }
 
-   } 
+   }
    else if(Mpf->Feature1 != 0)
    {
       HaliConstructDefaultISAMPTable(Mpf->Feature1);
@@ -599,9 +599,9 @@ HaliGetSmpConfig(VOID)
       ASSERT(FALSE);
    }
    return TRUE;
-}    
+}
 
-BOOLEAN 
+BOOLEAN
 HaliFindSmpConfig(VOID)
 {
    /*
@@ -612,13 +612,13 @@ HaliFindSmpConfig(VOID)
        4) Scan the first KB from the Extended BIOS Data Area
    */
 
-   if (!HaliScanForMPConfigTable(0x0, 0x400)) 
+   if (!HaliScanForMPConfigTable(0x0, 0x400))
    {
-      if (!HaliScanForMPConfigTable(0x9FC00, 0x400)) 
+      if (!HaliScanForMPConfigTable(0x9FC00, 0x400))
       {
-         if (!HaliScanForMPConfigTable(0xF0000, 0x10000)) 
+         if (!HaliScanForMPConfigTable(0xF0000, 0x10000))
          {
-            if (!HaliScanForMPConfigTable(*((PUSHORT)0x040E) << 4, 0x400)) 
+            if (!HaliScanForMPConfigTable(*((PUSHORT)0x040E) << 4, 0x400))
 	    {
                DPRINT("No multiprocessor compliant system found.\n");
                return FALSE;

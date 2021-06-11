@@ -207,7 +207,7 @@ KeTrapFrameToContext(IN PKTRAP_FRAME TrapFrame,
     }
 
     /* Handle floating point registers */
-    if ((ContextFlags & CONTEXT_FLOATING_POINT) && 
+    if ((ContextFlags & CONTEXT_FLOATING_POINT) &&
         ((TrapFrame->SegCs & MODE_MASK) != KernelMode))
     {
         Context->Xmm0 = TrapFrame->Xmm0;

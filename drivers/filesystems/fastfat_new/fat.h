@@ -38,7 +38,7 @@ typedef LBO *PLBO;
 typedef ULONG32 VBO;
 typedef VBO *PVBO;
 
-
+
 //
 //  The boot sector is the first physical sector (LBN == 0) on the volume.
 //  Part of the sector contains a BIOS Parameter Block.  The BIOS in the
@@ -295,7 +295,7 @@ typedef FAT_TIME_STAMP *PFAT_TIME_STAMP;
 typedef UCHAR FAT8DOT3[11];
 typedef FAT8DOT3 *PFAT8DOT3;
 
-
+
 //
 //  The directory entry record exists for every file/directory on the
 //  disk except for the root directory.
@@ -343,14 +343,14 @@ typedef DIRENT *PDIRENT;
 //
 // These two bits are used for EFS on FAT
 // 0x1 means the file contents are encrypted
-// 
-// 0x2 means the EFS metadata header is big. 
-// (this optimization means we don't have to read 
-// in the first sector of the file stream to get 
+//
+// 0x2 means the EFS metadata header is big.
+// (this optimization means we don't have to read
+// in the first sector of the file stream to get
 // the normal header size)
 //
 
-#define FAT_DIRENT_NT_BYTE_ENCRYPTED      0x01 
+#define FAT_DIRENT_NT_BYTE_ENCRYPTED      0x01
 #define FAT_DIRENT_NT_BYTE_BIG_HEADER     0x02
 
 //
@@ -385,7 +385,7 @@ typedef DIRENT *PDIRENT;
 #define FAT_EFS_EXTENSION_CHARCOUNT (6)
 #define FAT_EFS_EXTENSION_BYTECOUNT (12)
 
-
+
 //
 //  These macros convert a number of fields in the Bpb to bytes from sectors
 //
@@ -621,7 +621,7 @@ typedef DIRENT *PDIRENT;
     RtlEqualMemory((TIME1),(TIME2), sizeof(FAT_TIME_STAMP)) \
 )
 
-
+
 #define EA_FILE_SIGNATURE                (0x4445) // "ED"
 #define EA_SET_SIGNATURE                 (0x4145) // "EA"
 

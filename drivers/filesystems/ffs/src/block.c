@@ -1,4 +1,4 @@
-/* 
+/*
  * FFS File System Driver for Windows
  *
  * block.c
@@ -422,7 +422,7 @@ FFSReadSync(
 
 	if (bVerify)
 	{
-		SetFlag(IoGetNextIrpStackLocation(Irp)->Flags, 
+		SetFlag(IoGetNextIrpStackLocation(Irp)->Flags,
 				SL_OVERRIDE_VERIFY_VOLUME);
 	}
 
@@ -472,7 +472,7 @@ FFSReadDisk(
 		goto errorout;
 	}
 
-	Status = FFSReadSync(Vcb, 
+	Status = FFSReadSync(Vcb,
 			Lba,
 			Length,
 			Buf,
@@ -496,7 +496,7 @@ errorout:
 }
 
 
-NTSTATUS 
+NTSTATUS
 FFSDiskIoControl(
 	IN PDEVICE_OBJECT   DeviceObject,
 	IN ULONG            IoctlCode,

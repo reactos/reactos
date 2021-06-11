@@ -42,7 +42,7 @@ PADDRESS_FILE AddrSearchFirst(
     PAF_SEARCH SearchContext)
 {
     KIRQL OldIrql;
-    
+
     SearchContext->Address  = Address;
     SearchContext->Port     = Port;
     SearchContext->Protocol = Protocol;
@@ -115,7 +115,7 @@ LogActiveObjects(VOID)
     PCONNECTION_ENDPOINT Conn;
 
     DbgPrint("----------- TCP/IP Active Object Dump -------------\n");
-    
+
     TcpipAcquireSpinLock(&AddressFileListLock, &OldIrql);
 
     CurrentEntry = AddressFileListHead.Flink;
@@ -144,19 +144,19 @@ LogActiveObjects(VOID)
             }
             DbgPrint("\n");
         }
-        
+
         CurrentEntry = CurrentEntry->Flink;
     }
-    
+
     TcpipReleaseSpinLock(&AddressFileListLock, OldIrql);
-    
+
     TcpipAcquireSpinLock(&ConnectionEndpointListLock, &OldIrql);
-    
+
     CurrentEntry = ConnectionEndpointListHead.Flink;
     while (CurrentEntry != &ConnectionEndpointListHead)
     {
         Conn = CONTAINING_RECORD(CurrentEntry, CONNECTION_ENDPOINT, ListEntry);
-        
+
         DbgPrint("Connection @ 0x%p | Ref count: %d\n", Conn, Conn->RefCount);
         DbgPrint("\tPCB: ");
         if (Conn->SocketContext == NULL)
@@ -177,10 +177,10 @@ LogActiveObjects(VOID)
         DbgPrint("\tReceive shutdown: %s\n", Conn->ReceiveShutdown ? "Yes" : "No");
         if (Conn->ReceiveShutdown) DbgPrint("\tReceive shutdown status: 0x%x\n", Conn->ReceiveShutdownStatus);
         DbgPrint("\tClosing: %s\n", Conn->Closing ? "Yes" : "No");
-        
+
         CurrentEntry = CurrentEntry->Flink;
     }
-    
+
     TcpipReleaseSpinLock(&ConnectionEndpointListLock, OldIrql);
 
     DbgPrint("---------------------------------------------------\n");
@@ -237,7 +237,7 @@ PADDRESS_FILE AddrSearchNext(
     PADDRESS_FILE Current = NULL;
     BOOLEAN Found = FALSE;
     PADDRESS_FILE StartingAddrFile;
-    
+
     TcpipAcquireSpinLock(&AddressFileListLock, &OldIrql);
 
     if (SearchContext->Next == &AddressFileListHead)
@@ -465,14 +465,14 @@ NTSTATUS FileOpenAddress(
       {
           /* The client specified an explicit port so we force a bind to this */
           AddrFile->Port = TCPAllocatePort(Address->Address[0].Address[0].sin_port);
-          
+
           /* Check for bind success */
           if (AddrFile->Port == 0xffff)
           {
               ExFreePoolWithTag(AddrFile, ADDR_FILE_TAG);
               return STATUS_ADDRESS_ALREADY_EXISTS;
           }
-          
+
           /* Sanity check */
           ASSERT(Address->Address[0].Address[0].sin_port == AddrFile->Port);
       }
@@ -480,7 +480,7 @@ NTSTATUS FileOpenAddress(
       {
           /* The client is trying to bind to a local address so allocate a port now too */
           AddrFile->Port = TCPAllocatePort(0);
-          
+
           /* Check for bind success */
           if (AddrFile->Port == 0xffff)
           {

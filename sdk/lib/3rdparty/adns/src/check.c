@@ -101,7 +101,7 @@ static void checkc_notcpbuf(adns_state ads) {
 
 static void checkc_global(adns_state ads) {
   int i;
-  
+
   assert(ads->udpsocket >= 0);
 
   for (i=0; i<ads->nsortlist; i++)

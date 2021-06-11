@@ -384,17 +384,17 @@ Leave:
 /**
  * @brief
  * Deletes a logon session from the logon sessions database.
- * 
+ *
  * @param[in] LogonLuid
  * A logon ID represented as a LUID. This LUID is used to point
  * the exact logon session saved within the database.
- * 
+ *
  * @return
  * STATUS_SUCCESS is returned if the logon session has been deleted successfully.
  * STATUS_NO_SUCH_LOGON_SESSION is returned if the logon session with the submitted
  * LUID doesn't exist. STATUS_BAD_LOGON_SESSION_STATE is returned if the logon session
  * is still in use and we're not allowed to delete it, or if a system or anonymous session
- * is submitted and we're not allowed to delete them as they're internal parts of the system. 
+ * is submitted and we're not allowed to delete them as they're internal parts of the system.
  * Otherwise a failure NTSTATUS code is returned.
  */
 static
@@ -461,7 +461,7 @@ SepRmDeleteLogonSession(
         goto Leave;
     }
 
-    /* If we have a LUID device map, clean it */ 
+    /* If we have a LUID device map, clean it */
     if (SessionToDelete->pDeviceMap != NULL)
     {
         Status = SepCleanupLUIDDeviceMapDirectory(LogonLuid);

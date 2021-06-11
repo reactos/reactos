@@ -237,17 +237,17 @@ Routine Description:
 Arguments:
 
     Msf - on output, set to 0xMmSsFf representation of blocks.
-    
+
 --*/
 
 {
     PAGED_CODE();
 
     Blocks += 150;                  // Lbn 0 == 00:02:00, 1sec == 75 frames.
-    
+
     Msf[0] = (UCHAR)(Blocks % 75);  // Frames
     Blocks /= 75;                   // -> Seconds
-    Msf[1] = (UCHAR)(Blocks % 60);  // Seconds 
+    Msf[1] = (UCHAR)(Blocks % 60);  // Seconds
     Blocks /= 60;                   // -> Minutes
     Msf[2] = (UCHAR)Blocks;         // Minutes
 }
@@ -289,16 +289,16 @@ Return Value:
         return CDDA;
 
     }
-    
+
     //
     //  FCB_STATE_MODE2_FILE
     //
-        
+
     return YellowMode2;
 }
 
-
-_Requires_lock_held_(_Global_critical_region_)    
+
+_Requires_lock_held_(_Global_critical_region_)
 NTSTATUS
 CdNonCachedRead (
     _In_ PIRP_CONTEXT IrpContext,
@@ -388,7 +388,7 @@ Return Value:
     //  If we're going to use the sector cache for this request, then
     //  mark the request waitable.
     //
-    
+
     if ((SafeNodeType( Fcb) == CDFS_NTC_FCB_INDEX) &&
         (NULL != Fcb->Vcb->SectorCacheBuffer) &&
         (VcbMounted == IrpContext->Vcb->VcbCondition)) {
@@ -418,7 +418,7 @@ Return Value:
             //
             //  Call prepare buffers to set up the next entries
             //  in the IoRuns array.  Remember if there are any
-            //  unaligned entries.  This routine will raise CANT_WAIT 
+            //  unaligned entries.  This routine will raise CANT_WAIT
             //  if there are unaligned entries for an async request.
             //
 
@@ -529,7 +529,7 @@ Return Value:
 
                     FlushIoBuffers = TRUE;
                 }
-                
+
                 CleanupRunCount = 0;
 
                 //
@@ -583,9 +583,9 @@ Return Value:
     return Status;
 }
 
-
-    
-_Requires_lock_held_(_Global_critical_region_)    
+
+
+_Requires_lock_held_(_Global_critical_region_)
 NTSTATUS
 CdNonCachedXARead (
     _In_ PIRP_CONTEXT IrpContext,
@@ -726,14 +726,14 @@ Return Value:
                     //
                     //  Note: LBN 0 == 0:2:0 (MSF)
                     //
-                    
+
                     //
                     //  Fill in the address (both MSF and Lbn format) and length fields.
                     //
-                    
+
                     SwapCopyUchar4( &Address, TrackData->Address);
                     CdLbnToMmSsFf( Address, AudioPlayHeader->TrackAddress);
-                    
+
                     SwapCopyUchar4( &AudioPlayHeader->StartingSector, TrackData->Address);
 
                     //
@@ -809,9 +809,9 @@ Return Value:
             //
             //  CD-XA non-audio
             //
-            
-            } else { 
-    
+
+            } else {
+
                 NT_ASSERT( FlagOn( Fcb->FcbState, FCB_STATE_MODE2_FILE | FCB_STATE_MODE2FORM2_FILE ));
 
                 RiffHeader = &LocalRiffHeader;
@@ -869,7 +869,7 @@ Return Value:
             //
 
             if (!TryingYellowbookMode2)  {
-            
+
                 RtlZeroMemory( IoRuns, sizeof( IoRuns ));
                 RtlZeroMemory( RawReads, sizeof( RawReads ));
 
@@ -884,7 +884,7 @@ Return Value:
                                     &CleanupRunCount,
                                     &ThisByteCount );
             }
-            
+
             //
             //  Perform multiple Io to read in the data.  Note that
             //  there may be no Io to do if we were able to use an
@@ -914,7 +914,7 @@ Return Value:
 
                 if (!NT_SUCCESS( Status )) {
 
-                    if (!TryingYellowbookMode2 && 
+                    if (!TryingYellowbookMode2 &&
                         FlagOn( Fcb->FcbState, FCB_STATE_MODE2FORM2_FILE )) {
 
                         //
@@ -926,11 +926,11 @@ Return Value:
 
                         TryingYellowbookMode2 = TRUE;
                         TrackMode = YellowMode2;
-                        
+
                         //
                         //  Clear our 'cumulative' error status value
                         //
-                        
+
                         IrpContext->IoContext->Status = STATUS_SUCCESS;
 
                         continue;
@@ -938,9 +938,9 @@ Return Value:
 
                     try_return( NOTHING );
                 }
-                
+
                 CleanupRunCount = 0;
-                
+
                 if (TryingYellowbookMode2) {
 
                     //
@@ -1008,7 +1008,7 @@ CdVolumeDasdWrite (
 Routine Description:
 
     This routine performs the non-cached writes to 'cooked' sectors (2048 bytes
-    per sector).  This is done by filling the IoRun for the desired request 
+    per sector).  This is done by filling the IoRun for the desired request
     and send it down to the device.
 
 Arguments:
@@ -1075,7 +1075,7 @@ Return Value:
 }
 
 
-
+
 BOOLEAN
 CdReadSectors (
     _In_ PIRP_CONTEXT IrpContext,
@@ -1216,7 +1216,7 @@ Return Value:
     }
 }
 
-
+
 NTSTATUS
 CdCreateUserMdl (
     _In_ PIRP_CONTEXT IrpContext,
@@ -1324,7 +1324,7 @@ Return Value:
     return Status;
 }
 
-
+
 NTSTATUS
 CdPerformDevIoCtrlEx (
     _In_ PIRP_CONTEXT IrpContext,
@@ -1456,20 +1456,20 @@ CdPerformDevIoCtrl (
 {
     PAGED_CODE();
 
-    return CdPerformDevIoCtrlEx( IrpContext, 
-                                 IoControlCode, 
-                                 Device, 
-                                 NULL, 
-                                 0, 
-                                 OutputBuffer, 
-                                 OutputBufferLength, 
+    return CdPerformDevIoCtrlEx( IrpContext,
+                                 IoControlCode,
+                                 Device,
+                                 NULL,
+                                 0,
+                                 OutputBuffer,
+                                 OutputBufferLength,
                                  InternalDeviceIoControl,
                                  OverrideVerify,
                                  Iosb);
 }
 
 
-
+
 //
 //  Local support routine
 //
@@ -1628,7 +1628,7 @@ Return Value:
              (CurrentByteCount < SECTOR_SIZE))) {
 
             NT_ASSERT( SafeNodeType(Fcb) != CDFS_NTC_FCB_INDEX);
-            
+
             //
             //  If we can't wait then raise.
             //
@@ -1769,7 +1769,7 @@ Return Value:
     return FoundUnaligned;
 }
 
-
+
 //
 //  Local support routine
 //
@@ -1893,7 +1893,7 @@ Return Value:
         CurrentRawOffset = (LONGLONG) ((ULONG) CurrentRawOffset / RAW_SECTOR_SIZE);
 
 #ifdef _MSC_VER
-#pragma prefast( suppress: __WARNING_RESULTOFSHIFTCASTTOLARGERSIZE, "This is fine beacuse raw sector size > sector shift" )        
+#pragma prefast( suppress: __WARNING_RESULTOFSHIFTCASTTOLARGERSIZE, "This is fine beacuse raw sector size > sector shift" )
 #endif
         CurrentCookedOffset = (LONGLONG) ((ULONG) CurrentRawOffset << SECTOR_SHIFT );
 
@@ -1940,7 +1940,7 @@ Return Value:
         *RunCount += 1;
 
         //
-        //  Initialize the current position in the IoRuns array.  Find the 
+        //  Initialize the current position in the IoRuns array.  Find the
         //  eventual destination in the user's buffer for this portion of the transfer.
         //
 
@@ -2050,7 +2050,7 @@ Return Value:
             //  following are true:
             //
             //      If we are to store the beginning of the raw sector in the user's buffer.
-            //      The current scratch buffer precedes the destination in the user's buffer 
+            //      The current scratch buffer precedes the destination in the user's buffer
             //          (and hence also lies within it)
             //      There are enough bytes remaining in the buffer for at least one
             //          raw sector.
@@ -2068,7 +2068,7 @@ Return Value:
                 if (CurrentCookedByteCount <= Fcb->Vcb->MaximumTransferRawSectors * SECTOR_SIZE) {
 
                     CurrentRawByteCount = (SectorAlign( CurrentCookedByteCount) >> SECTOR_SHIFT) * RAW_SECTOR_SIZE;
-    
+
                 } else {
 
                     CurrentCookedByteCount = Fcb->Vcb->MaximumTransferRawSectors * SECTOR_SIZE;
@@ -2079,7 +2079,7 @@ Return Value:
                 //  Now make sure we are within the page transfer limit.
                 //
 
-                while (ADDRESS_AND_SIZE_TO_SPAN_PAGES(CurrentUserBuffer, RawSectorAlign( CurrentRawByteCount)) > 
+                while (ADDRESS_AND_SIZE_TO_SPAN_PAGES(CurrentUserBuffer, RawSectorAlign( CurrentRawByteCount)) >
                        Fcb->Vcb->MaximumPhysicalPages )  {
 
                     CurrentRawByteCount -= RAW_SECTOR_SIZE;
@@ -2105,7 +2105,7 @@ Return Value:
 
                     CurrentRawByteCount = RemainingRawByteCount;
                 }
-                
+
                 //
                 //  Update the IO run array.  We point to the scratch buffer as
                 //  well as the buffer and Mdl in the original Irp.
@@ -2119,7 +2119,7 @@ Return Value:
 
                 ThisIoRun->TransferBuffer = CurrentUserBuffer;
                 ThisIoRun->TransferMdl = Irp->MdlAddress;
-                ThisIoRun->TransferVirtualAddress = Add2Ptr( Irp->UserBuffer, 
+                ThisIoRun->TransferVirtualAddress = Add2Ptr( Irp->UserBuffer,
                                                              CurrentUserBufferOffset,
                                                              PVOID);
 
@@ -2210,7 +2210,7 @@ Return Value:
     return;
 }
 
-
+
 //
 //  Local support routine
 //
@@ -2423,7 +2423,7 @@ Return Value:
     //
     //  We don't want IO to get our IRP and free it.
     //
-    
+
     return STATUS_MORE_PROCESSING_REQUIRED;
 }
 
@@ -2452,7 +2452,7 @@ Return Value:
     PAGED_CODE();
 
     if (NULL != IrpContext->Vcb->SectorCacheBuffer) {
-        
+
         CdAcquireCacheForUpdate( IrpContext);
         CdFreePool( &IrpContext->Vcb->SectorCacheBuffer);
         CdReleaseCache( IrpContext);
@@ -2465,7 +2465,7 @@ CdReadDirDataThroughCache (
     _In_ PIRP_CONTEXT IrpContext,
     _In_ PIO_RUN Run
     )
-    
+
 /*++
 
 Routine Description:
@@ -2520,18 +2520,18 @@ Return Value:
     CdAcquireCacheForRead( IrpContext);
 
     _SEH2_TRY {
-        
+
         //
         //  Check the cache hasn't gone away due to volume verify failure (which
-        //  is the *only* reason it'll go away).  If this is the case we raise 
+        //  is the *only* reason it'll go away).  If this is the case we raise
         //  the same error any I/O would return if the cache weren't here.
         //
-        
+
         if (NULL == Vcb->SectorCacheBuffer) {
-        
+
             CdRaiseStatus( IrpContext, STATUS_VERIFY_REQUIRED);
         }
-        
+
         while (Remaining) {
 
             Buffer = NULL;
@@ -2539,7 +2539,7 @@ Return Value:
             //
             //  Look to see if any portion is currently cached.
             //
-            
+
             for (Index = 0; Index < CD_SEC_CACHE_CHUNKS; Index++) {
 
                 if ((Vcb->SecCacheChunks[ Index].BaseLbn != -1) &&
@@ -2560,8 +2560,8 @@ Return Value:
                 BufferSectorOffset = Lbn - Buffer->BaseLbn;
                 Found = Min( CD_SEC_CHUNK_BLOCKS - BufferSectorOffset, Remaining);
 
-                RtlCopyMemory( UserBuffer, 
-                               Buffer->Buffer + BytesFromSectors( BufferSectorOffset), 
+                RtlCopyMemory( UserBuffer,
+                               Buffer->Buffer + BytesFromSectors( BufferSectorOffset),
                                BytesFromSectors( Found));
 
                 Remaining -= Found;
@@ -2571,14 +2571,14 @@ Return Value:
                 //
                 //  Update stats.  Don't count a hit if we've just read the data in.
                 //
-                
+
                 if (!JustRead) {
-                    
+
                     InterlockedIncrement( (LONG*)&Vcb->SecCacheHits);
                 }
-                
+
                 JustRead = FALSE;
-#endif                
+#endif
                 continue;
             }
 
@@ -2589,18 +2589,18 @@ Return Value:
 
             CdReleaseCache( IrpContext);
             CdAcquireCacheForUpdate( IrpContext);
-#if DBG            
+#if DBG
             Vcb->SecCacheMisses += 1;
 #endif
             //
-            //  Select the chunk to replace and calculate the start block of the 
-            //  chunk to cache.  We cache blocks which start on Lbns aligned on 
+            //  Select the chunk to replace and calculate the start block of the
+            //  chunk to cache.  We cache blocks which start on Lbns aligned on
             //  multiples of chunk size, treating block 16 (VRS start) as block
             //  zero.
             //
 
             Buffer = &Vcb->SecCacheChunks[ Vcb->SecCacheLRUChunkIndex];
-            
+
             StartBlock = Lbn - ((Lbn - 16) % CD_SEC_CHUNK_BLOCKS);
 
             //
@@ -2635,58 +2635,58 @@ Return Value:
             //
             //  Now build / send the read request.
             //
-            
+
             IoReuseIrp( Vcb->SectorCacheIrp, STATUS_SUCCESS);
 
             KeClearEvent( &Vcb->SectorCacheEvent);
             Vcb->SectorCacheIrp->Tail.Overlay.Thread = PsGetCurrentThread();
-            
+
             //
             // Get a pointer to the stack location of the first driver which will be
             // invoked.  This is where the function codes and the parameters are set.
             //
-            
+
             IrpSp = IoGetNextIrpStackLocation( Vcb->SectorCacheIrp);
             IrpSp->MajorFunction = (UCHAR) IRP_MJ_READ;
 
             //
             //  Build an MDL to describe the buffer.
             //
-            
+
             IoAllocateMdl( Buffer->Buffer,
-                           BytesFromSectors( Blocks), 
-                           FALSE, 
-                           FALSE, 
+                           BytesFromSectors( Blocks),
+                           FALSE,
+                           FALSE,
                            Vcb->SectorCacheIrp);
-            
+
             if (NULL == Vcb->SectorCacheIrp->MdlAddress)  {
-            
+
                 IrpContext->Irp->IoStatus.Information = 0;
                 CdRaiseStatus( IrpContext, STATUS_INSUFFICIENT_RESOURCES);
             }
-            
+
             //
             //  We're reading/writing into the block cache (paged pool).  Lock the
             //  pages and update the MDL with physical page information.
             //
-        
+
             _SEH2_TRY {
-            
+
                 MmProbeAndLockPages( Vcb->SectorCacheIrp->MdlAddress,
                                      KernelMode,
                                      (LOCK_OPERATION) IoWriteAccess );
-            } 
+            }
 #ifdef _MSC_VER
 #pragma warning(suppress: 6320)
 #endif
             _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER) {
-        
+
                 IoFreeMdl( Vcb->SectorCacheIrp->MdlAddress );
                 Vcb->SectorCacheIrp->MdlAddress = NULL;
             } _SEH2_END;
-        
+
             if (NULL == Vcb->SectorCacheIrp->MdlAddress) {
-        
+
                 CdRaiseStatus( IrpContext, STATUS_INSUFFICIENT_RESOURCES );
             }
 
@@ -2706,11 +2706,11 @@ Return Value:
                                     TRUE,
                                     TRUE,
                                     TRUE );
-            
+
             Vcb->SectorCacheIrp->UserIosb = &Iosb;
 
             Status = IoCallDriver( Vcb->TargetDeviceObject, Vcb->SectorCacheIrp );
-            
+
             if (STATUS_PENDING == Status)  {
 
 
@@ -2719,7 +2719,7 @@ Return Value:
                                        KernelMode,
                                        FALSE,
                                        NULL );
-            
+
                 Status = Vcb->SectorCacheIrp->IoStatus.Status;
             }
 
@@ -2745,8 +2745,8 @@ Return Value:
 
             Buffer->BaseLbn = StartBlock;
             Vcb->SecCacheLRUChunkIndex = (Vcb->SecCacheLRUChunkIndex + 1) % CD_SEC_CACHE_CHUNKS;
-            
-            CdConvertCacheToShared( IrpContext);        
+
+            CdConvertCacheToShared( IrpContext);
 #if DBG
             JustRead = TRUE;
 #endif
@@ -2841,7 +2841,7 @@ Return Value:
     //
     //  For directories, use the sector cache.
     //
-    
+
     if ((SafeNodeType( Fcb) == CDFS_NTC_FCB_INDEX) &&
         (NULL != Fcb->Vcb->SectorCacheBuffer) &&
         (VcbMounted == IrpContext->Vcb->VcbCondition)) {
@@ -2974,7 +2974,7 @@ Return Value:
 
         return;
     }
-    
+
     //
     //  We only need to set the associated IRP count in the master irp to
     //  make it a master IRP.  But we set the count to one more than our
@@ -3023,7 +3023,7 @@ Return Value:
         IoRuns[UnwindRunCount].SavedIrp = NULL;
 
         if (NULL != Irp) {
-            
+
             //
             //  If IoCallDriver returns an error, it has completed the Irp
             //  and the error will be caught by our completion routines
@@ -3035,7 +3035,7 @@ Return Value:
     }
 }
 
-
+
 //
 //  Local support routine
 //
@@ -3134,12 +3134,12 @@ Return Value:
             IrpContext->Irp->IoStatus.Information = 0;
             CdRaiseStatus( IrpContext, STATUS_INSUFFICIENT_RESOURCES );
         }
-        
+
         //
-        //  Should have been passed a byte count of at least one sector, and 
+        //  Should have been passed a byte count of at least one sector, and
         //  must be a multiple of sector size
         //
-        
+
         NT_ASSERT( ThisIoRun->DiskByteCount && !SectorOffset(ThisIoRun->DiskByteCount));
 
         RawByteCount = SectorsFromBytes( ThisIoRun->DiskByteCount) * RAW_SECTOR_SIZE;
@@ -3261,7 +3261,7 @@ Return Value:
     return;
 }
 
-
+
 //
 //  Local support routine
 //
@@ -3305,7 +3305,7 @@ Return Value:
     //
     //  For directories, look in the sector cache,
     //
-    
+
     if ((SafeNodeType( Fcb) == CDFS_NTC_FCB_INDEX) &&
         (NULL != Fcb->Vcb->SectorCacheBuffer) &&
         (VcbMounted == IrpContext->Vcb->VcbCondition)) {
@@ -3313,7 +3313,7 @@ Return Value:
         if (CdReadDirDataThroughCache( IrpContext, Run )) {
 
             if (FlagOn( IrpContext->Flags, IRP_CONTEXT_FLAG_WAIT)) {
-                
+
                 IrpContext->Irp->IoStatus.Status = STATUS_SUCCESS;
                 KeSetEvent( &IrpContext->IoContext->SyncEvent, 0, FALSE );
             }
@@ -3341,11 +3341,11 @@ Return Value:
         //
 
         if (FlagOn( IrpContext->Flags, IRP_CONTEXT_FLAG_TOP_LEVEL )) {
-        
+
             NT_ASSERT( IrpContext->IoContext->ResourceThreadId == (ERESOURCE_THREAD)PsGetCurrentThread() );
-        
+
             IrpContext->IoContext->ResourceThreadId = ((ULONG_PTR)IrpContext->IoContext) | 3;
-        
+
             ExSetResourceOwnerPointer( IrpContext->IoContext->Resource,
                                        (PVOID)IrpContext->IoContext->ResourceThreadId );
         }
@@ -3390,7 +3390,7 @@ Return Value:
     (VOID)IoCallDriver( IrpContext->Vcb->TargetDeviceObject, IrpContext->Irp );
 }
 
-
+
 //
 //  Local support routine
 //
@@ -3428,7 +3428,7 @@ Return Value:
     KeClearEvent( &IrpContext->IoContext->SyncEvent );
 }
 
-
+
 //
 //  Local support routine
 //
@@ -3516,7 +3516,7 @@ Return Value:
     return STATUS_MORE_PROCESSING_REQUIRED;
 }
 
-
+
 //
 //  Local support routine
 //
@@ -3636,7 +3636,7 @@ Return Value:
 
 }
 
-
+
 //
 //  Local support routine
 //
@@ -3683,9 +3683,9 @@ Return Value:
     _Analysis_assume_(Context != NULL);
 
     UNREFERENCED_PARAMETER( DeviceObject );
-    
+
     AssertVerifyDeviceIrp( Irp );
-    
+
     //
     //  Store the correct information field into the Irp.
     //
@@ -3700,7 +3700,7 @@ Return Value:
     return STATUS_MORE_PROCESSING_REQUIRED;
 }
 
-
+
 //
 //  Local support routine
 //
@@ -3743,7 +3743,7 @@ Return Value:
 
     _Analysis_assume_(IoContext != NULL);
     AssertVerifyDeviceIrp( Irp );
-    
+
     //
     //  Update the information field with the correct value for bytes read.
     //
@@ -3777,7 +3777,7 @@ Return Value:
 
 }
 
-
+
 //
 //  Local support routine
 //
@@ -4139,7 +4139,7 @@ Return Value:
     PAGED_CODE();
 
     UNREFERENCED_PARAMETER( IrpContext );
-    
+
     //
     //  Get the next stack location, and copy over the stack location
     //

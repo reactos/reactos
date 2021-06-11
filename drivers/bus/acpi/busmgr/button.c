@@ -92,7 +92,7 @@ acpi_button_notify_fixed (
 	void			*data)
 {
 	struct acpi_button	*button = (struct acpi_button *) data;
-	
+
 	ACPI_FUNCTION_TRACE("acpi_button_notify_fixed");
 
 	if (!button)
@@ -134,35 +134,35 @@ acpi_button_add (
 		button->type = ACPI_BUTTON_TYPE_POWER;
 		sprintf(acpi_device_name(device), "%s",
 			ACPI_BUTTON_DEVICE_NAME_POWER);
-		sprintf(acpi_device_class(device), "%s/%s", 
+		sprintf(acpi_device_class(device), "%s/%s",
 			ACPI_BUTTON_CLASS, ACPI_BUTTON_SUBCLASS_POWER);
 	}
 	else if (!strcmp(acpi_device_hid(device), ACPI_BUTTON_HID_POWERF)) {
 		button->type = ACPI_BUTTON_TYPE_POWERF;
 		sprintf(acpi_device_name(device), "%s",
 			ACPI_BUTTON_DEVICE_NAME_POWERF);
-		sprintf(acpi_device_class(device), "%s/%s", 
+		sprintf(acpi_device_class(device), "%s/%s",
 			ACPI_BUTTON_CLASS, ACPI_BUTTON_SUBCLASS_POWER);
 	}
 	else if (!strcmp(acpi_device_hid(device), ACPI_BUTTON_HID_SLEEP)) {
 		button->type = ACPI_BUTTON_TYPE_SLEEP;
 		sprintf(acpi_device_name(device), "%s",
 			ACPI_BUTTON_DEVICE_NAME_SLEEP);
-		sprintf(acpi_device_class(device), "%s/%s", 
+		sprintf(acpi_device_class(device), "%s/%s",
 			ACPI_BUTTON_CLASS, ACPI_BUTTON_SUBCLASS_SLEEP);
 	}
 	else if (!strcmp(acpi_device_hid(device), ACPI_BUTTON_HID_SLEEPF)) {
 		button->type = ACPI_BUTTON_TYPE_SLEEPF;
 		sprintf(acpi_device_name(device), "%s",
 			ACPI_BUTTON_DEVICE_NAME_SLEEPF);
-		sprintf(acpi_device_class(device), "%s/%s", 
+		sprintf(acpi_device_class(device), "%s/%s",
 			ACPI_BUTTON_CLASS, ACPI_BUTTON_SUBCLASS_SLEEP);
 	}
 	else if (!strcmp(acpi_device_hid(device), ACPI_BUTTON_HID_LID)) {
 		button->type = ACPI_BUTTON_TYPE_LID;
 		sprintf(acpi_device_name(device), "%s",
 			ACPI_BUTTON_DEVICE_NAME_LID);
-		sprintf(acpi_device_class(device), "%s/%s", 
+		sprintf(acpi_device_class(device), "%s/%s",
 			ACPI_BUTTON_CLASS, ACPI_BUTTON_SUBCLASS_LID);
 	}
 	else {
@@ -239,7 +239,7 @@ acpi_button_add (
 		goto end;
 	}
 
-	DPRINT("%s [%s]\n", 
+	DPRINT("%s [%s]\n",
 		acpi_device_name(device), acpi_device_bid(device));
 
 end:
@@ -294,7 +294,7 @@ acpi_button_remove (struct acpi_device *device, int type)
 }
 
 
-int 
+int
 acpi_button_init (void)
 {
 	int			result = 0;
@@ -310,7 +310,7 @@ acpi_button_init (void)
 }
 
 
-void 
+void
 acpi_button_exit (void)
 {
 	ACPI_FUNCTION_TRACE("acpi_button_exit");

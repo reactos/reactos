@@ -85,7 +85,7 @@ void fi_add(struct frame_index *fi, off_t pos)
 	{ /* Index is full, we need to shrink... or grow. */
 		/* Store the current frame number to check later if we still want it. */
 		off_t framenum = fi->fill*fi->step;
-		/* If we want not / cannot grow, we shrink. */	
+		/* If we want not / cannot grow, we shrink. */
 		if( !(fi->grow_size && fi_resize(fi, fi->size+fi->grow_size)==0) )
 		fi_shrink(fi);
 

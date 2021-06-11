@@ -1955,7 +1955,7 @@ ext4_ext_rm_leaf(void *icb, handle_t *handle, struct inode *inode,
 		path[depth].p_ext = ex;
 
 		a = ex_ee_block > start ? ex_ee_block : start;
-		b = (unsigned long long)ex_ee_block + ex_ee_len - 1 < 
+		b = (unsigned long long)ex_ee_block + ex_ee_len - 1 <
 			EXT_MAX_BLOCKS ? ex_ee_block + ex_ee_len - 1 : EXT_MAX_BLOCKS;
 
 
@@ -2343,7 +2343,7 @@ static int ext4_ext_convert_to_initialized (
 
 	assert (le32_to_cpu(ex->ee_block) <= split);
 
-	if (split + blocks == le32_to_cpu(ex->ee_block) + 
+	if (split + blocks == le32_to_cpu(ex->ee_block) +
 						  ext4_ext_get_actual_len(ex)) {
 
 		/* split and initialize right part */
@@ -2477,7 +2477,7 @@ int ext4_ext_get_blocks(void *icb, handle_t *handle, struct inode *inode, ext4_f
 				le16_to_cpu(newex.ee_len), get_default_free_blocks_flags(inode));
 		goto out2;
 	}
-	
+
 	ext4_mark_inode_dirty(icb, handle, inode);
 
 	/* previous routine could use block we allocated */

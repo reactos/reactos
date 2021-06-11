@@ -1,4 +1,4 @@
-/* 
+/*
  * FFS File System Driver for Windows
  *
  * misc.c
@@ -86,7 +86,7 @@ FFSOEMToUnicode(
     PAGED_CODE();
 
 	Status = RtlOemStringToUnicodeString(
-			Unicode, 
+			Unicode,
 			Oem,
 			FALSE);
 

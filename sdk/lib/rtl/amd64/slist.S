@@ -373,7 +373,7 @@ ENDFUNC
  */
 ExpInterlockedFlushSList:
 FUNC RtlInterlockedFlushSList
-    
+
     mov [rsp + P3Home], rbx
     .SAVEREG rbx, P3Home
     .ENDPROLOG

@@ -167,7 +167,7 @@ RtlVerifyVersionInfo(IN PRTL_OSVERSIONINFOEXW VersionInfo,
         {
             if (Condition == VER_EQUAL)
             {
-                Condition = RtlpVerGetCondition(ConditionMask, VER_MINORVERSION); 
+                Condition = RtlpVerGetCondition(ConditionMask, VER_MINORVERSION);
             }
 
             DoNextCheck = (VersionInfo->dwMinorVersion == Version.dwMinorVersion);
@@ -185,7 +185,7 @@ RtlVerifyVersionInfo(IN PRTL_OSVERSIONINFOEXW VersionInfo,
         {
             if (Condition == VER_EQUAL)
             {
-                Condition = RtlpVerGetCondition(ConditionMask, VER_SERVICEPACKMAJOR); 
+                Condition = RtlpVerGetCondition(ConditionMask, VER_SERVICEPACKMAJOR);
             }
 
             DoNextCheck = (VersionInfo->wServicePackMajor == Version.wServicePackMajor);
@@ -202,7 +202,7 @@ RtlVerifyVersionInfo(IN PRTL_OSVERSIONINFOEXW VersionInfo,
             {
                 if (Condition == VER_EQUAL)
                 {
-                    Condition = RtlpVerGetCondition(ConditionMask, VER_SERVICEPACKMINOR); 
+                    Condition = RtlpVerGetCondition(ConditionMask, VER_SERVICEPACKMINOR);
                 }
 
                 Comparison = RtlpVerCompare(Version.wServicePackMinor,

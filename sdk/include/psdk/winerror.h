@@ -2926,7 +2926,7 @@
 #define SEC_E_NO_AUTHENTICATING_AUTHORITY                  _HRESULT_TYPEDEF_(0x80090311L)
 #define SEC_I_CONTINUE_NEEDED                              _HRESULT_TYPEDEF_(0x00090312L)
 #define SEC_I_COMPLETE_NEEDED                              _HRESULT_TYPEDEF_(0x00090313L)
-#define SEC_I_COMPLETE_AND_CONTINUE                        _HRESULT_TYPEDEF_(0x00090314L) 
+#define SEC_I_COMPLETE_AND_CONTINUE                        _HRESULT_TYPEDEF_(0x00090314L)
 #define SEC_I_LOCAL_LOGON                                  _HRESULT_TYPEDEF_(0x00090315L)
 #define SEC_E_BAD_PKGID                                    _HRESULT_TYPEDEF_(0x80090316L)
 #define SEC_E_CONTEXT_EXPIRED                              _HRESULT_TYPEDEF_(0x80090317L)

@@ -104,7 +104,7 @@ GUIDREGINFO wmiClassGuids[] =
 #define MSStorageDriver_ClassErrorLogGuid_Index     0
 #define NUM_CLASS_WMI_GUIDS     (sizeof(wmiClassGuids) / sizeof(GUIDREGINFO))
 
-
+
 /*++////////////////////////////////////////////////////////////////////////////
 
 ClassFindGuid()
@@ -193,7 +193,7 @@ ClassFindInternalGuid(
 
     return(FALSE);
 } // end ClassFindGuid()
-
+
 /*++////////////////////////////////////////////////////////////////////////////
 
 ClassSystemControl()
@@ -776,7 +776,7 @@ ClassSystemControl(
 
     return(status);
 } // end ClassSystemControl()
-
+
 
 NTSTATUS
 ClassQueryInternalDataBlock(
@@ -1135,7 +1135,7 @@ ClassWmiCompleteRequest(
     ClassCompleteRequest(DeviceObject, Irp, PriorityBoost);
     return(Status);
 } // end ClassWmiCompleteRequest()
-
+
 /*++////////////////////////////////////////////////////////////////////////////
 
 ClassWmiFireEvent()

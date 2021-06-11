@@ -2,7 +2,7 @@
  * @file
  * Abstract Syntax Notation One (ISO 8824, 8825) codec.
  */
- 
+
 /*
  * Copyright (c) 2006 Axon Digital Design B.V., The Netherlands.
  * All rights reserved.

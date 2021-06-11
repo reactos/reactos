@@ -36,13 +36,13 @@ PspGetOrSetContextKernelRoutine(
     GetSetContext = CONTAINING_RECORD(Apc, GET_SET_CTX_CONTEXT, Apc);
     Thread = Apc->SystemArgument2;
     NT_ASSERT(KeGetCurrentThread() == Thread);
-    
+
     /* If this is a kernel-mode request, grab the saved trap frame */
     if (GetSetContext->Mode == KernelMode)
     {
         TrapFrame = Thread->TrapFrame;
     }
-    
+
     /* If we don't have one, grab it from the stack */
     if (TrapFrame == NULL)
     {

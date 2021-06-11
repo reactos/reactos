@@ -1,4 +1,4 @@
-/* 
+/*
  * FFS File System Driver for Windows
  *
  * dipatch.c
@@ -165,7 +165,7 @@ FFSDispatchRequest(
 #if (_WIN32_WINNT >= 0x0500)
 		case IRP_MJ_PNP:
 			return FFSPnp(IrpContext);
-#endif //(_WIN32_WINNT >= 0x0500)        
+#endif //(_WIN32_WINNT >= 0x0500)
 		default:
 			FFSPrint((DBG_ERROR, "FFSDispatchRequest: Unexpected major function: %xh\n",
 						IrpContext->MajorFunction));
@@ -245,7 +245,7 @@ FFSBuildRequest(
 		if (AtIrqlPassiveLevel)
 		{
 			FsRtlExitFileSystem();
-		}       
+		}
 	} _SEH2_END;
 
 	return Status;

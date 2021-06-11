@@ -162,7 +162,7 @@ typedef struct fs {
 	INT32	 fs_sparecon32[26];	/* reserved for future constants */
 	INT32    fs_flags;		/* see FS_ flags below */
 /* back to stuff that has been around a while (again) */
-	INT32	 fs_contigsumsize;	/* size of cluster summary array */ 
+	INT32	 fs_contigsumsize;	/* size of cluster summary array */
 	INT32	 fs_maxsymlinklen;	/* max length of an internal symlink */
 	INT32	 fs_old_inodefmt;	/* format of on-disk inodes */
 	UINT64   fs_maxfilesize;	/* maximum representable file size */

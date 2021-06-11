@@ -215,7 +215,7 @@ struct ext2_dx_countlimit {
 #define EXT2_COMPRBLK_FL		0x00000200 /* One or more compressed clusters */
 #define EXT2_NOCOMPR_FL 		0x00000400 /* Access raw compressed data */
 #define EXT2_ECOMPR_FL			0x00000800 /* Compression error */
-/* End compression flags --- maybe not all used */	
+/* End compression flags --- maybe not all used */
 #define EXT2_BTREE_FL			0x00001000 /* btree format dir */
 #define EXT2_INDEX_FL			0x00001000 /* hash-indexed directory */
 #define EXT2_IMAGIC_FL			0x00002000
@@ -393,7 +393,7 @@ struct ext2_super_block {
 	 * the incompatible feature set is that if there is a bit set
 	 * in the incompatible feature set that the kernel doesn't
 	 * know about, it should refuse to mount the filesystem.
-	 * 
+	 *
 	 * e2fsck's requirements are more strict; if it doesn't know
 	 * about a feature in either the compatible or incompatible
 	 * feature set, it must abort and not try to meddle with
@@ -416,14 +416,14 @@ struct ext2_super_block {
 	__u8	s_prealloc_blocks;	/* Nr of blocks to try to preallocate*/
 	__u8	s_prealloc_dir_blocks;	/* Nr to preallocate for dirs */
 	__u16	s_padding1;
-	/* 
+	/*
 	 * Journaling support valid if EXT2_FEATURE_COMPAT_HAS_JOURNAL set.
 	 */
 	__u8	s_journal_uuid[16];	/* uuid of journal superblock */
 	__u32	s_journal_inum;		/* inode number of journal file */
 	__u32	s_journal_dev;		/* device number of journal file */
 	__u32	s_last_orphan;		/* start of list of inodes to delete */
-	
+
 	__u32	s_reserved[197];	/* Padding to the end of the block */
 };
 
@@ -444,7 +444,7 @@ struct ext2_super_block {
 #define EXT2_OS_MASIX		2
 #define EXT2_OS_FREEBSD		3
 #define EXT2_OS_LITES		4
-#define EXT2_OS_WINNT       5       
+#define EXT2_OS_WINNT       5
 
 /*
  * Revision levels

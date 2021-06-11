@@ -2,10 +2,10 @@
  * COPYRIGHT:        GNU GENERAL PUBLIC LICENSE VERSION 2
  * PROJECT:          ReiserFs file system driver for Windows NT/2000/XP/Vista.
  * FILE:             create.c
- * PURPOSE:          
+ * PURPOSE:
  * PROGRAMMER:       Mark Piper, Matt Wu, Bo Brantén.
- * HOMEPAGE:         
- * UPDATE HISTORY: 
+ * HOMEPAGE:
+ * UPDATE HISTORY:
  */
 
 /* INCLUDES *****************************************************************/
@@ -92,9 +92,9 @@ RfsdLookupFileName (IN PRFSD_VCB    Vcb,
     }
 
 	// Only if we're looking up *exactly* the root node, load it, and return it
-    if (FullFileName->Length == 2 && FullFileName->Buffer[0] == L'\\') {		
+    if (FullFileName->Length == 2 && FullFileName->Buffer[0] == L'\\') {
         if (!RfsdLoadInode(Vcb, &(ParentMcb->Key), Inode))  {
-            return Status;      
+            return Status;
         }
 
         *RfsdMcb = Vcb->McbTree;
@@ -125,7 +125,7 @@ RfsdLookupFileName (IN PRFSD_VCB    Vcb,
 		}
 		else {
 			// There remains a token between the path seperators...
-			
+
 			// FileName is a (non-null-terminated) view into the FullFileName structure
             FileName = *FullFileName;
             FileName.Buffer += Length;
@@ -148,9 +148,9 @@ RfsdLookupFileName (IN PRFSD_VCB    Vcb,
                 }
             } else {
 				// The parent has no child MCB, or there was no child MCB sibling named FileName.  Check the disk using ScanDir...
-				
+
                 // Load the parent directory's inode / stat data structure
-				// For ReiserFS, I'd need the parent's key.  This has to be a key leading to a directory... I'm just getting it to pass it to scan.				
+				// For ReiserFS, I'd need the parent's key.  This has to be a key leading to a directory... I'm just getting it to pass it to scan.
 				if (!RfsdLoadInode(Vcb, &(ParentMcb->Key), &in)) {
                     Status = STATUS_OBJECT_NAME_NOT_FOUND;
                     break;
@@ -184,13 +184,13 @@ RfsdLookupFileName (IN PRFSD_VCB    Vcb,
                 } else {
 					// We've found what we were looking for...
 #if 0			// disabled by ffs too
-                    if (IsFlagOn( SUPER_BLOCK->s_feature_incompat, 
+                    if (IsFlagOn( SUPER_BLOCK->s_feature_incompat,
                                   RFSD_FEATURE_INCOMPAT_FILETYPE)) {
                         if (rfsd_dir.file_type == RFSD_FT_DIR)
                             SetFlag(FileAttr, FILE_ATTRIBUTE_DIRECTORY);
-                    } else 
-#endif						  
-						{							
+                    } else
+#endif
+						{
 						RFSD_KEY_IN_MEMORY key;
 						key.k_dir_id = DirectoryEntry.deh_dir_id;
 						key.k_objectid = DirectoryEntry.deh_objectid;
@@ -214,10 +214,10 @@ RfsdLookupFileName (IN PRFSD_VCB    Vcb,
                     }
 
                     // NOTE: It should be OK to leave off the 3rd / 4th part of key, because (AFAIK) the only place this is used is ScanDir
-					Mcb->Key.k_dir_id = DirectoryEntry.deh_dir_id;  
+					Mcb->Key.k_dir_id = DirectoryEntry.deh_dir_id;
 					Mcb->Key.k_objectid = DirectoryEntry.deh_objectid;
 					Mcb->Key.k_offset = Mcb->Key.k_type = 0;
-					
+
                     Mcb->DeOffset = off;
                     RfsdAddMcbNode(Vcb, ParentMcb, Mcb);
                     ParentMcb = Mcb;
@@ -244,7 +244,7 @@ RfsdLookupFileName (IN PRFSD_VCB    Vcb,
 
 /** (This function is only called by LookupFileName.)
  NOTE: The offset and type of the key passed are irrelevant, as the function will always open a a directory for searching, and will search for the contents by file name -- not key.
- 
+
  STATUS_INSUFFICIENT_RESOURCES		if the filename or diskreading buffer could not be allocated
  STATUS_UNSUCCESSFUL				if the buffer could not be read from disk
  STATUS_NO_SUCH_FILE				if the FileName given was not found in the directory scanned
@@ -267,7 +267,7 @@ RfsdScanDir (IN PRFSD_VCB       Vcb,
 		DirectoryKey.k_type		= RFSD_KEY_TYPE_v2_DIRENTRY;
 
 		// Request that the filesystem tree be parsed, looking for FileName in directory spans belonging to DirectoryKey
-		{			
+		{
 			RFSD_SCANDIR_CALLBACK_CONTEXT	CallbackContext;
 
 			CallbackContext.Vcb					= Vcb;
@@ -275,7 +275,7 @@ RfsdScanDir (IN PRFSD_VCB       Vcb,
 			CallbackContext.pTargetFilename		= FileName;
 
 			CallbackContext.idxCurrentDentry	= 0;
-			
+
 			CallbackContext.pMatchingDentry		= rfsd_dir;
 			CallbackContext.pMatchingIndex		= Index;
 
@@ -349,7 +349,7 @@ RfsdCreateFile(PRFSD_IRP_CONTEXT IrpContext, PRFSD_VCB Vcb)
     IrpSp = IoGetCurrentIrpStackLocation(Irp);
 
     Options  = IrpSp->Parameters.Create.Options;
-    
+
     DirectoryFile = IsFlagOn(Options, FILE_DIRECTORY_FILE);
     OpenTargetDirectory = IsFlagOn(IrpSp->Flags, SL_OPEN_TARGET_DIRECTORY);
 
@@ -385,14 +385,14 @@ RfsdCreateFile(PRFSD_IRP_CONTEXT IrpContext, PRFSD_VCB Vcb)
 
         ExAcquireResourceExclusiveLite(
             &Vcb->MainResource, TRUE );
-        
+
         VcbResourceAcquired = TRUE;
 
         if (Irp->Overlay.AllocationSize.HighPart) {
             Status = STATUS_INVALID_PARAMETER;
             _SEH2_LEAVE;
         }
-        
+
         if (!(Inode = ExAllocatePoolWithTag(
               PagedPool, sizeof(RFSD_INODE), RFSD_POOL_TAG) )) {
             _SEH2_LEAVE;
@@ -404,7 +404,7 @@ RfsdCreateFile(PRFSD_IRP_CONTEXT IrpContext, PRFSD_VCB Vcb)
         FileName.Length = IrpSp->FileObject->FileName.Length;
 
         FileName.Buffer = ExAllocatePoolWithTag(PagedPool, FileName.MaximumLength, RFSD_POOL_TAG);
-        if (!FileName.Buffer) {   
+        if (!FileName.Buffer) {
             Status = STATUS_INSUFFICIENT_RESOURCES;
             _SEH2_LEAVE;
         }
@@ -419,21 +419,21 @@ RfsdCreateFile(PRFSD_IRP_CONTEXT IrpContext, PRFSD_VCB Vcb)
         if ((FileName.Length > sizeof(WCHAR)) &&
             (FileName.Buffer[1] == L'\\') &&
             (FileName.Buffer[0] == L'\\')) {
-            
+
             FileName.Length -= sizeof(WCHAR);
-            
+
             RtlMoveMemory( &FileName.Buffer[0],
                 &FileName.Buffer[1],
                 FileName.Length );
-            
+
             //
             //  Bad Name if there are still beginning backslashes.
             //
-            
+
             if ((FileName.Length > sizeof(WCHAR)) &&
                 (FileName.Buffer[1] == L'\\') &&
                 (FileName.Buffer[0] == L'\\')) {
-                                
+
                 Status = STATUS_OBJECT_NAME_INVALID;
 
                 _SEH2_LEAVE;
@@ -534,13 +534,13 @@ Dissecting:
 
             if (!ParentFcb) {
 
-                PRFSD_INODE pTmpInode = ExAllocatePoolWithTag(PagedPool, 
+                PRFSD_INODE pTmpInode = ExAllocatePoolWithTag(PagedPool,
                                                         sizeof(RFSD_INODE), RFSD_POOL_TAG);
                 if (!pTmpInode) {
                     Status = STATUS_INSUFFICIENT_RESOURCES;
                     _SEH2_LEAVE;
                 }
-				
+
 				if(!RfsdLoadInode(Vcb, &(ParentMcb->Key), pTmpInode)) {
 #ifdef __REACTOS__
                     ExFreePool(pTmpInode);
@@ -593,7 +593,7 @@ Dissecting:
 
                 if (DirectoryFile) {
                     if ( RFSD_IS_ROOT_KEY(ParentFcb->RfsdMcb->Key) ) {
-                        if ( (RealName.Length == 0x10) && 
+                        if ( (RealName.Length == 0x10) &&
                              memcmp(RealName.Buffer, L"Recycled\0", 0x10) == 0) {
                             SetFlag( IrpSp->Parameters.Create.FileAttributes,
                                      FILE_ATTRIBUTE_READONLY );
@@ -603,7 +603,7 @@ Dissecting:
 					Status = STATUS_UNSUCCESSFUL;
 #if DISABLED
                     Status = RfsdCreateInode( IrpContext,
-                                              Vcb, 
+                                              Vcb,
                                               ParentFcb,
                                               RFSD_FT_DIR,
                                               IrpSp->Parameters.Create.FileAttributes,
@@ -620,12 +620,12 @@ Dissecting:
                                               &RealName);
 #endif
                 }
-                
+
                 if (NT_SUCCESS(Status)) {
 
                     bCreated = TRUE;
 
-                    Irp->IoStatus.Information = FILE_CREATED;                    
+                    Irp->IoStatus.Information = FILE_CREATED;
                     Status = RfsdLookupFileName (
                                 Vcb,
                                 &RealName,
@@ -752,7 +752,7 @@ DbgBreak();
         }
 
 Openit:
-        
+
         if (RfsdMcb) {
 
             Fcb = RfsdMcb->RfsdFcb;
@@ -762,7 +762,7 @@ Openit:
                 bFcbAllocated = TRUE;
             }
         }
-        
+
         if (Fcb) {
 
             if (IsFlagOn(Fcb->Flags, FCB_FILE_DELETED)) {
@@ -815,7 +815,7 @@ DbgBreak();
                                    Fcb->RfsdMcb->Parent->Inode,
                                    ParentFcb->Inode );
                 } else {
-DbgBreak();		 
+DbgBreak();
 #if DISABLED
                     Status = RfsdExpandFile(
                                 IrpContext, Vcb, Fcb,
@@ -927,7 +927,7 @@ DbgBreak();
 
             Vcb->OpenFileHandleCount++;
             Vcb->ReferenceCount++;
-            
+
             IrpSp->FileObject->FsContext = (void*)Fcb;
             IrpSp->FileObject->FsContext2 = (void*) Ccb;
             IrpSp->FileObject->PrivateCacheMap = NULL;
@@ -944,8 +944,8 @@ DbgBreak();
             }
 
             if (!bCreated && !IsDirectory(Fcb)) {
-                if ( DeleteOnClose || 
-                    IsFlagOn(DesiredAccess, FILE_WRITE_DATA) || 
+                if ( DeleteOnClose ||
+                    IsFlagOn(DesiredAccess, FILE_WRITE_DATA) ||
                     (CreateDisposition == FILE_OVERWRITE) ||
                     (CreateDisposition == FILE_OVERWRITE_IF)) {
                     if (!MmFlushImageSection( &Fcb->SectionObject,
@@ -992,7 +992,7 @@ DbgBreak();
                     }
 
 DbgBreak();
-#if DISABLED   
+#if DISABLED
                     Status = RfsdExpandFile(
                                 IrpContext,
                                 Vcb,
@@ -1048,7 +1048,7 @@ DbgBreak();
                 ExFreePool(Inode);
         }
     } _SEH2_END;
-    
+
     return Status;
 }
 
@@ -1078,7 +1078,7 @@ RfsdCreateVolume(PRFSD_IRP_CONTEXT IrpContext, PRFSD_VCB Vcb)
     IrpSp = IoGetCurrentIrpStackLocation(Irp);
 
     Options  = IrpSp->Parameters.Create.Options;
-    
+
     DirectoryFile = IsFlagOn(Options, FILE_DIRECTORY_FILE);
     OpenTargetDirectory = IsFlagOn(IrpSp->Flags, SL_OPEN_TARGET_DIRECTORY);
 
@@ -1095,7 +1095,7 @@ RfsdCreateVolume(PRFSD_IRP_CONTEXT IrpContext, PRFSD_VCB Vcb)
         return STATUS_INVALID_PARAMETER;
     }
 
-    if ( (CreateDisposition != FILE_OPEN) && 
+    if ( (CreateDisposition != FILE_OPEN) &&
          (CreateDisposition != FILE_OPEN_IF) ) {
         return STATUS_ACCESS_DENIED;
     }
@@ -1166,27 +1166,27 @@ RfsdCreate (IN PRFSD_IRP_CONTEXT IrpContext)
     Vcb = (PRFSD_VCB) DeviceObject->DeviceExtension;
 
     ASSERT(IsMounted(Vcb));
-    
+
     Irp = IrpContext->Irp;
-    
+
     IrpSp = IoGetCurrentIrpStackLocation(Irp);
 
     Xcb = (PRFSD_FCBVCB) (IrpSp->FileObject->FsContext);
-    
+
     if (DeviceObject == RfsdGlobal->DeviceObject) {
         RfsdPrint((DBG_INFO, "RfsdCreate: Create on main device object.\n"));
 
         Status = STATUS_SUCCESS;
-        
+
         Irp->IoStatus.Information = FILE_OPENED;
 
         RfsdUnpinRepinnedBcbs(IrpContext);
 
-        RfsdCompleteIrpContext(IrpContext, Status);        
+        RfsdCompleteIrpContext(IrpContext, Status);
 
         return Status;
     }
-   
+
     _SEH2_TRY {
 
         if (IsFlagOn(Vcb->Flags, VCB_VOLUME_LOCKED)) {
@@ -1200,7 +1200,7 @@ RfsdCreate (IN PRFSD_IRP_CONTEXT IrpContext)
         }
 
         if ( ((IrpSp->FileObject->FileName.Length == 0) &&
-             (IrpSp->FileObject->RelatedFileObject == NULL)) || 
+             (IrpSp->FileObject->RelatedFileObject == NULL)) ||
              (Xcb && Xcb->Identifier.Type == RFSDVCB)  ) {
             Status = RfsdCreateVolume(IrpContext, Vcb);
         } else {
@@ -1211,7 +1211,7 @@ RfsdCreate (IN PRFSD_IRP_CONTEXT IrpContext)
 
         if (!IrpContext->ExceptionInProgress)  {
             RfsdUnpinRepinnedBcbs(IrpContext);
-     
+
             RfsdCompleteIrpContext(IrpContext, Status);
         }
     } _SEH2_END;
@@ -1246,8 +1246,8 @@ DbgBreak();
 
     RfsdPrint(( DBG_INFO,
                 "RfsdCreateInode: %S in %S(Key=%x,%xh)\n",
-                FileName->Buffer, 
-                ParentFcb->RfsdMcb->ShortName.Buffer, 
+                FileName->Buffer,
+                ParentFcb->RfsdMcb->ShortName.Buffer,
                 ParentFcb->RfsdMcb->Key.k_dir_id, ParentFcb->RfsdMcb->Key.k_objectid));
 
     Status = RfsdNewInode(IrpContext, Vcb, Group,Type, &Inode);
@@ -1297,7 +1297,7 @@ DbgBreak();
     RfsdSaveInode(IrpContext, Vcb, Inode, &RfsdIno);
 
     RfsdPrint((DBG_INFO, "RfsdCreateInode: New Inode = %xh (Type=%xh)\n", Inode, Type));
-            
+
 errorout:
 #endif // 0
     return 0;//Status;
@@ -1330,8 +1330,8 @@ DbgBreak();
     Status = RfsdTruncateFile(IrpContext, Vcb, Fcb, &AllocationSize);
 #endif
 
-    if (NT_SUCCESS(Status)) {			
-        Fcb->Header.AllocationSize.QuadPart = 
+    if (NT_SUCCESS(Status)) {
+        Fcb->Header.AllocationSize.QuadPart =
         Fcb->Header.FileSize.QuadPart =  (LONGLONG) 0;
 
         Fcb->Inode->i_size = 0;
@@ -1357,7 +1357,7 @@ DbgBreak();
 
         if (iSize.QuadPart > Fcb->Header.AllocationSize.QuadPart)
             iSize.QuadPart = Fcb->Header.AllocationSize.QuadPart;
-    
+
         Fcb->Header.FileSize.QuadPart =  iSize.QuadPart;
 
         Fcb->Inode->i_size = iSize.LowPart;
@@ -1405,7 +1405,7 @@ RfsdScanDirCallback(
 
 	// Load the block
 	pBlockBuffer = RfsdAllocateAndLoadBlock(pCallbackContext->Vcb, BlockNumber);
-    if (!pBlockBuffer) { Status = STATUS_INSUFFICIENT_RESOURCES; _SEH2_LEAVE; }	
+    if (!pBlockBuffer) { Status = STATUS_INSUFFICIENT_RESOURCES; _SEH2_LEAVE; }
 
 	// Construct the item key to search for
 	DirectoryKey = *(pCallbackContext->pDirectoryKey);
@@ -1414,19 +1414,19 @@ RfsdScanDirCallback(
 	// Get the item header and its information
 	Status = RfsdFindItemHeaderInBlock(
 		pCallbackContext->Vcb, &DirectoryKey, pBlockBuffer,
-		( &pDirectoryItemHeader ),			//< 
+		( &pDirectoryItemHeader ),			//<
 		&CompareKeysWithoutOffset
-	); 
+	);
 
 	// If this block doesn't happen to contain a directory item, skip it.
 	if ( (Status == STATUS_NO_SUCH_MEMBER) || !pDirectoryItemHeader )
-	{ 
+	{
 		KdPrint(("Block %i did not contain the appropriate diritem header\n", BlockNumber));
-		Status = STATUS_SUCCESS; _SEH2_LEAVE; 
+		Status = STATUS_SUCCESS; _SEH2_LEAVE;
 	}
 
 			// Setup the item buffer
-		pDirectoryItemBuffer = (PUCHAR) pBlockBuffer + pDirectoryItemHeader->ih_item_location;	
+		pDirectoryItemBuffer = (PUCHAR) pBlockBuffer + pDirectoryItemHeader->ih_item_location;
 
 
 
@@ -1436,12 +1436,12 @@ RfsdScanDirCallback(
 
 
 		while (!bFound && (idxDentryInSpan < pDirectoryItemHeader->u.ih_entry_count) ) {
-            OEM_STRING OemName;	
+            OEM_STRING OemName;
 
 			//
             // reading dir entries from Dcb
-            //		
-						
+            //
+
 			PRFSD_DENTRY_HEAD	pCurrentDentry = (PRFSD_DENTRY_HEAD)  (pDirectoryItemBuffer + (idxDentryInSpan * sizeof(RFSD_DENTRY_HEAD)));
 
 			// Skip the directory entry for the parent of the root directory (because it should not be shown, and has no stat data)
@@ -1449,7 +1449,7 @@ RfsdScanDirCallback(
 			if (pCurrentDentry->deh_dir_id == 0 /*&& pCurrentDentry->deh_objectid == 1*/)
 			    { goto ProcessNextEntry; }
 
-			// Retrieve the filename of the loaded directory entry from the buffer (encoded with the codepage)            	
+			// Retrieve the filename of the loaded directory entry from the buffer (encoded with the codepage)
 			// NOTE: The filename is not gauranteed to be null-terminated, and so the end may implicitly be the start of the previous entry.
 			OemName.Buffer			= (PUCHAR) pDirectoryItemBuffer + pCurrentDentry->deh_location;
 			OemName.MaximumLength	= (pPrevDentry ? pPrevDentry->deh_location :			// The end of this entry is the start of the previous
@@ -1462,7 +1462,7 @@ RfsdScanDirCallback(
 			// Convert that name to unicode
 			{
               InodeFileNameLength = (USHORT) RfsdOEMToUnicodeSize(&OemName) + 2;
-              
+
 			  // If the unicode InodeFileName.Buffer is not large enough, expand it
 			  if (InodeFileName.MaximumLength < InodeFileNameLength)
 			  {
@@ -1472,13 +1472,13 @@ RfsdScanDirCallback(
 				  // Allocate a new larger buffer
 				  InodeFileName.Buffer = ExAllocatePoolWithTag(PagedPool, InodeFileNameLength, RFSD_POOL_TAG);
 				  if (!InodeFileName.Buffer) { Status = STATUS_INSUFFICIENT_RESOURCES; _SEH2_LEAVE; }
-				  InodeFileName.MaximumLength = InodeFileNameLength;				  
+				  InodeFileName.MaximumLength = InodeFileNameLength;
 			  }
 
               InodeFileName.Length = 0;
-              
+
               RtlZeroMemory( InodeFileName.Buffer, InodeFileNameLength);
-              
+
               Status = RfsdOEMToUnicode(
                               &InodeFileName,
                               &OemName    );
@@ -1494,17 +1494,17 @@ RfsdScanDirCallback(
                     TRUE ))  {
 				// This entry MATCHED!  Copy the matching dentry into the output field on the context
                 bFound = TRUE;
-				
+
 				*(pCallbackContext->pMatchingIndex) = (pCallbackContext->idxCurrentDentry * sizeof(RFSD_DENTRY_HEAD));
-                RtlCopyMemory(pCallbackContext->pMatchingDentry, pCurrentDentry, sizeof(RFSD_DENTRY_HEAD));				
-                
+                RtlCopyMemory(pCallbackContext->pMatchingDentry, pCurrentDentry, sizeof(RFSD_DENTRY_HEAD));
+
                 RfsdPrint(( DBG_INFO, /*__FUNCTION__*/ ": Found: Name=%S Key=%xh,%xh\n",
                             InodeFileName.Buffer, pCurrentDentry->deh_dir_id, pCurrentDentry->deh_objectid ));
 
 				Status = STATUS_EVENT_DONE;
 				break;
             }
-            
+
 		  ProcessNextEntry:
 			// Advance to the next directory entry
 			pPrevDentry = pCurrentDentry;

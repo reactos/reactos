@@ -218,7 +218,7 @@ ClassAcquireRemoveLockEx(
 
     return (commonExtension->IsRemoved);
 }
-
+
 /*++////////////////////////////////////////////////////////////////////////////
 
 ClassReleaseRemoveLock()
@@ -371,7 +371,7 @@ ClassReleaseRemoveLock(
 
     return;
 }
-
+
 /*++////////////////////////////////////////////////////////////////////////////
 
 ClassCompleteRequest()

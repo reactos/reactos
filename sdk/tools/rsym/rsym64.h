@@ -122,7 +122,7 @@ typedef struct _UNWIND_INFO
         OPTIONAL ULONG ExceptionHandler;
         OPTIONAL ULONG FunctionEntry;
     };
-    OPTIONAL ULONG ExceptionData[]; 
+    OPTIONAL ULONG ExceptionData[];
 */
 } UNWIND_INFO, *PUNWIND_INFO;
 

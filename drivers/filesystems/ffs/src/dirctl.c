@@ -1,4 +1,4 @@
-/* 
+/*
  * FFS File System Driver for Windows
  *
  * dirctl.c
@@ -156,7 +156,7 @@ FFSProcessDirEntry(
 
 				FDI->FileNameLength = NameLength;
 				RtlCopyMemory(FDI->FileName, pName->Buffer, NameLength);
-				dwBytes = InfoLength + NameLength - sizeof(WCHAR); 
+				dwBytes = InfoLength + NameLength - sizeof(WCHAR);
 				break;
 			}
 			else
@@ -179,7 +179,7 @@ FFSProcessDirEntry(
 
 				FDI->FileNameLength = NameLength;
 				RtlCopyMemory(FDI->FileName, pName->Buffer, NameLength);
-				dwBytes = InfoLength + NameLength - sizeof(WCHAR); 
+				dwBytes = InfoLength + NameLength - sizeof(WCHAR);
 				break;
 			}
 
@@ -211,7 +211,7 @@ FFSProcessDirEntry(
 
 				FFI->FileNameLength = NameLength;
 				RtlCopyMemory(FFI->FileName, pName->Buffer, NameLength);
-				dwBytes = InfoLength + NameLength - sizeof(WCHAR); 
+				dwBytes = InfoLength + NameLength - sizeof(WCHAR);
 
 				break;
 			}
@@ -235,7 +235,7 @@ FFSProcessDirEntry(
 
 				FFI->FileNameLength = NameLength;
 				RtlCopyMemory(FFI->FileName, pName->Buffer, NameLength);
-				dwBytes = InfoLength + NameLength - sizeof(WCHAR); 
+				dwBytes = InfoLength + NameLength - sizeof(WCHAR);
 
 				break;
 			}
@@ -268,7 +268,7 @@ FFSProcessDirEntry(
 					FBI->FileAttributes |= FILE_ATTRIBUTE_DIRECTORY;
 				FBI->FileNameLength = NameLength;
 				RtlCopyMemory(FBI->FileName, pName->Buffer, NameLength);
-				dwBytes = InfoLength + NameLength - sizeof(WCHAR); 
+				dwBytes = InfoLength + NameLength - sizeof(WCHAR);
 
 				break;
 			}
@@ -293,7 +293,7 @@ FFSProcessDirEntry(
 					FBI->FileAttributes |= FILE_ATTRIBUTE_DIRECTORY;
 				FBI->FileNameLength = NameLength;
 				RtlCopyMemory(FBI->FileName, pName->Buffer, NameLength);
-				dwBytes = InfoLength + NameLength - sizeof(WCHAR); 
+				dwBytes = InfoLength + NameLength - sizeof(WCHAR);
 
 				break;
 			}
@@ -306,7 +306,7 @@ FFSProcessDirEntry(
 				FNI->NextEntryOffset = 0;
 			FNI->FileNameLength = NameLength;
 			RtlCopyMemory(FNI->FileName, pName->Buffer, NameLength);
-			dwBytes = InfoLength + NameLength - sizeof(WCHAR); 
+			dwBytes = InfoLength + NameLength - sizeof(WCHAR);
 
 			break;
 
@@ -687,7 +687,7 @@ FFSQueryDirectory(
 				}
 
 				RtlZeroMemory(
-						InodeFileName.Buffer, 
+						InodeFileName.Buffer,
 						InodeFileNameLength + 2);
 
 				Status = FFSOEMToUnicode(&InodeFileName,
@@ -714,7 +714,7 @@ FFSQueryDirectory(
 							Vcb, FileInformationClass,
 							pDir->d_ino,
 							Buffer,
-							UsedLength, 
+							UsedLength,
 							Length - UsedLength,
 							(FileIndex + dwBytes),
 							&InodeFileName,
@@ -839,7 +839,7 @@ ProcessNextEntryv1:
 				}
 
 				RtlZeroMemory(
-						InodeFileName.Buffer, 
+						InodeFileName.Buffer,
 						InodeFileNameLength + 2);
 
 				Status = FFSOEMToUnicode(&InodeFileName,
@@ -866,7 +866,7 @@ ProcessNextEntryv1:
 							Vcb, FileInformationClass,
 							pDir->d_ino,
 							Buffer,
-							UsedLength, 
+							UsedLength,
 							Length - UsedLength,
 							(FileIndex + dwBytes),
 							&InodeFileName,
@@ -1221,7 +1221,7 @@ FFSNotifyReportChange(
 		}
 	}
 
-	Offset = (USHORT)(FullName->Length - 
+	Offset = (USHORT)(FullName->Length -
 			Fcb->FFSMcb->ShortName.Length);
 
 	FsRtlNotifyFullReportChange(Vcb->NotifySync,
@@ -1341,7 +1341,7 @@ FFSIsDirectoryEmpty(
 				if (pTarget->d_namlen == 1 && pTarget->d_name[0] == '.')
 				{
 				}
-				else if (pTarget->d_namlen == 2 && pTarget->d_name[0] == '.' && 
+				else if (pTarget->d_namlen == 2 && pTarget->d_name[0] == '.' &&
 						pTarget->d_name[1] == '.')
 				{
 				}

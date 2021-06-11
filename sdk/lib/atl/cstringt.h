@@ -451,13 +451,13 @@ public:
     }
 
     CStringT(_In_reads_z_(nLength) const XCHAR* pch,
-             _In_ int nLength) : 
+             _In_ int nLength) :
         CThisSimpleString(pch, nLength, StringTraits::GetDefaultManager())
     {
     }
 
     CStringT(_In_reads_z_(nLength) const YCHAR* pch,
-             _In_ int nLength) : 
+             _In_ int nLength) :
         CThisSimpleString(pch, nLength, StringTraits::GetDefaultManager())
     {
     }

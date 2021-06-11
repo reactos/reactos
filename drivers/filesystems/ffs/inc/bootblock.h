@@ -367,9 +367,9 @@ int xlat_mbr_fstype(int);	/* in sys/lib/libkern/xlat_mbr_fstype.c */
 struct mbr_sector {
 					/* Jump instruction to boot code.  */
 					/* Usually 0xE9nnnn or 0xEBnn90 */
-	uint8_t			mbr_jmpboot[3];	
+	uint8_t			mbr_jmpboot[3];
 					/* OEM name and version */
-	uint8_t			mbr_oemname[8];	
+	uint8_t			mbr_oemname[8];
 	union {				/* BIOS Parameter Block */
 		struct mbr_bpbFAT12	bpb12;
 		struct mbr_bpbFAT16	bpb16;

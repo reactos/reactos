@@ -67,7 +67,7 @@ Ext2MapExtent(
         flags = EXT4_GET_BLOCKS_IO_CREATE_EXT;
 		max_blocks = EXT_UNWRITTEN_MAX_LEN;
     }
-    
+
     if (Alloc) {
         if (Number && !*Number) {
             if (max_blocks > *Number) {

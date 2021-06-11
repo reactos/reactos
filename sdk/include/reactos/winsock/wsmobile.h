@@ -50,7 +50,7 @@ WSM_NSPGetServiceClassInfo(
     IN OUT LPWSASERVICECLASSINFOW lpServiceClassInfo
 );
 
-INT 
+INT
 WINAPI
 WSM_NSPLookupServiceBegin(
     LPGUID lpProviderId,
@@ -73,7 +73,7 @@ INT
 WINAPI
 WSM_NSPLookupServiceEnd(IN HANDLE hLookup);
 
-INT 
+INT
 WINAPI
 WSM_NSPStartup(
     IN LPGUID lpProviderId,

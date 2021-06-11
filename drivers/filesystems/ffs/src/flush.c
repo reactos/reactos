@@ -1,4 +1,4 @@
-/* 
+/*
  * FFS File System Driver for Windows
  *
  * flush.c
@@ -125,7 +125,7 @@ FFSFlushVolume(
 
 	CcFlushCache(&(Vcb->SectionObject), NULL, 0, &IoStatus);
 
-	return IoStatus.Status;       
+	return IoStatus.Status;
 }
 
 
@@ -145,11 +145,11 @@ FFSFlushFile(
 	if (IsDirectory(Fcb))
 		return STATUS_SUCCESS;
 
-	FFSPrint((DBG_INFO, "FFSFlushFile: Flushing File Inode=%xh %S ...\n", 
+	FFSPrint((DBG_INFO, "FFSFlushFile: Flushing File Inode=%xh %S ...\n",
 				Fcb->FFSMcb->Inode, Fcb->FFSMcb->ShortName.Buffer));
 	/*
 	{
-		ULONG ResShCnt, ResExCnt; 
+		ULONG ResShCnt, ResExCnt;
 		ResShCnt = ExIsResourceAcquiredSharedLite(&Fcb->PagingIoResource);
 		ResExCnt = ExIsResourceAcquiredExclusiveLite(&Fcb->PagingIoResource);
 

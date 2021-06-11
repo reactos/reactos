@@ -2,10 +2,10 @@
  * COPYRIGHT:        GNU GENERAL PUBLIC LICENSE VERSION 2
  * PROJECT:          ReiserFs file system driver for Windows NT/2000/XP/Vista.
  * FILE:             devctl.c
- * PURPOSE:          
+ * PURPOSE:
  * PROGRAMMER:       Mark Piper, Matt Wu, Bo Brantén.
- * HOMEPAGE:         
- * UPDATE HISTORY: 
+ * HOMEPAGE:
+ * UPDATE HISTORY:
  */
 
 /* INCLUDES *****************************************************************/
@@ -68,19 +68,19 @@ RfsdDeviceControlNormal (IN PRFSD_IRP_CONTEXT IrpContext)
     _SEH2_TRY {
 
         ASSERT(IrpContext != NULL);
-        
+
         ASSERT((IrpContext->Identifier.Type == RFSDICX) &&
             (IrpContext->Identifier.Size == sizeof(RFSD_IRP_CONTEXT)));
-        
+
         CompleteRequest = TRUE;
 
         DeviceObject = IrpContext->DeviceObject;
-    
+
         if (DeviceObject == RfsdGlobal->DeviceObject)  {
             Status = STATUS_INVALID_DEVICE_REQUEST;
             _SEH2_LEAVE;
         }
-        
+
         Irp = IrpContext->Irp;
         IrpSp = IoGetCurrentIrpStackLocation(Irp);
 
@@ -91,13 +91,13 @@ RfsdDeviceControlNormal (IN PRFSD_IRP_CONTEXT IrpContext)
             Status = STATUS_INVALID_PARAMETER;
             _SEH2_LEAVE;
         }
-        
+
         TargetDeviceObject = Vcb->TargetDeviceObject;
-        
+
         //
         // Pass on the IOCTL to the driver below
         //
-        
+
         CompleteRequest = FALSE;
 
         NextIrpSp = IoGetNextIrpStackLocation( Irp );
@@ -110,7 +110,7 @@ RfsdDeviceControlNormal (IN PRFSD_IRP_CONTEXT IrpContext)
             FALSE,
             TRUE,
             TRUE );
-        
+
         Status = IoCallDriver(TargetDeviceObject, Irp);
 
     } _SEH2_FINALLY  {
@@ -125,7 +125,7 @@ RfsdDeviceControlNormal (IN PRFSD_IRP_CONTEXT IrpContext)
             }
         }
     } _SEH2_END;
-    
+
     return Status;
 }
 
@@ -144,31 +144,31 @@ RfsdPrepareToUnload (IN PRFSD_IRP_CONTEXT IrpContext)
     _SEH2_TRY {
 
         ASSERT(IrpContext != NULL);
-        
+
         ASSERT((IrpContext->Identifier.Type == RFSDICX) &&
             (IrpContext->Identifier.Size == sizeof(RFSD_IRP_CONTEXT)));
-        
+
         DeviceObject = IrpContext->DeviceObject;
-        
+
         if (DeviceObject != RfsdGlobal->DeviceObject) {
             Status = STATUS_INVALID_DEVICE_REQUEST;
             _SEH2_LEAVE;
         }
-        
+
         ExAcquireResourceExclusiveLite(
             &RfsdGlobal->Resource,
             TRUE );
-        
+
         GlobalDataResourceAcquired = TRUE;
-        
+
         if (FlagOn(RfsdGlobal->Flags, RFSD_UNLOAD_PENDING)) {
             RfsdPrint((DBG_ERROR, "RfsdPrepareUnload:  Already ready to unload.\n"));
-            
+
             Status = STATUS_ACCESS_DENIED;
-            
+
             _SEH2_LEAVE;
         }
-        
+
         {
             PRFSD_VCB               Vcb;
             PLIST_ENTRY             ListEntry;
@@ -193,23 +193,23 @@ RfsdPrepareToUnload (IN PRFSD_IRP_CONTEXT IrpContext)
         if (!IsListEmpty(&(RfsdGlobal->VcbList))) {
 
             RfsdPrint((DBG_ERROR, "RfsdPrepareUnload:  Mounted volumes exists.\n"));
-            
+
             Status = STATUS_ACCESS_DENIED;
-            
+
             _SEH2_LEAVE;
         }
-        
+
         IoUnregisterFileSystem(RfsdGlobal->DeviceObject);
 
 #ifdef _MSC_VER
 #pragma prefast( suppress: 28175, "allowed to unload" )
 #endif
         RfsdGlobal->DriverObject->DriverUnload = DriverUnload;
-        
+
         SetFlag(RfsdGlobal->Flags ,RFSD_UNLOAD_PENDING);
-        
+
         RfsdPrint((DBG_INFO, "RfsdPrepareToUnload: Driver is ready to unload.\n"));
-        
+
         Status = STATUS_SUCCESS;
 
     } _SEH2_FINALLY {
@@ -220,12 +220,12 @@ RfsdPrepareToUnload (IN PRFSD_IRP_CONTEXT IrpContext)
                 ExGetCurrentResourceThread()
                 );
         }
-        
+
         if (!IrpContext->ExceptionInProgress) {
             RfsdCompleteIrpContext(IrpContext, Status);
         }
     } _SEH2_END;
-    
+
     return Status;
 }
 
@@ -243,27 +243,27 @@ RfsdDeviceControl (IN PRFSD_IRP_CONTEXT IrpContext)
     PAGED_CODE();
 
     ASSERT(IrpContext);
-    
+
     ASSERT((IrpContext->Identifier.Type == RFSDICX) &&
         (IrpContext->Identifier.Size == sizeof(RFSD_IRP_CONTEXT)));
-    
+
     Irp = IrpContext->Irp;
-    
+
     IoStackLocation = IoGetCurrentIrpStackLocation(Irp);
-    
+
     IoControlCode =
         IoStackLocation->Parameters.DeviceIoControl.IoControlCode;
-    
+
     switch (IoControlCode) {
 
 #if RFSD_UNLOAD
     case IOCTL_PREPARE_TO_UNLOAD:
         Status = RfsdPrepareToUnload(IrpContext);
         break;
-#endif      
+#endif
     default:
         Status = RfsdDeviceControlNormal(IrpContext);
     }
-    
+
     return Status;
 }

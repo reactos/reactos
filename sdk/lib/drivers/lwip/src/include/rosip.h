@@ -25,7 +25,7 @@ struct lwip_callback_msg
 {
     /* Synchronization */
     KEVENT Event;
-    
+
     /* Input */
     union {
         struct {
@@ -60,7 +60,7 @@ struct lwip_callback_msg
             int Callback;
         } Close;
     } Input;
-    
+
     /* Output */
     union {
         struct {

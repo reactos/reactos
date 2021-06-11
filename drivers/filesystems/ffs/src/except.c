@@ -1,4 +1,4 @@
-/* 
+/*
  * FFS File System Driver for Windows
  *
  * except.c
@@ -123,7 +123,7 @@ FFSExceptionHandler(
 
 	if (IrpContext)
 	{
-		if ((IrpContext->Identifier.Type != FFSICX) || 
+		if ((IrpContext->Identifier.Type != FFSICX) ||
 				(IrpContext->Identifier.Size != sizeof(FFS_IRP_CONTEXT)))
 		{
 			FFSBreakPoint();

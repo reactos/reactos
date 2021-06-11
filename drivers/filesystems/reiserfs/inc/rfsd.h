@@ -4,8 +4,8 @@
  * FILE:             rfsd.h
  * PURPOSE:          Header file: rfsd structures.
  * PROGRAMMER:       Mark Piper, Matt Wu, Bo Brantén.
- * HOMEPAGE:         
- * UPDATE HISTORY: 
+ * HOMEPAGE:
+ * UPDATE HISTORY:
  */
 
 #ifndef _RFSD_HEADER_
@@ -39,8 +39,8 @@ typedef struct block_head					RFSD_BLOCK_HEAD, *PRFSD_BLOCK_HEAD;		// [mark]
 typedef struct reiserfs_de_head				RFSD_DENTRY_HEAD, *PRFSD_DENTRY_HEAD;	// [mark]
 typedef struct item_head					RFSD_ITEM_HEAD, *PRFSD_ITEM_HEAD;		// [mark]
 typedef struct reiserfs_key					RFSD_KEY_ON_DISK, *PRFSD_KEY_ON_DISK;
-typedef struct reiserfs_cpu_key				RFSD_KEY_IN_MEMORY, *PRFSD_KEY_IN_MEMORY;		
-typedef struct disk_child					RFSD_DISK_NODE_REF, *PRFSD_DISK_NODE_REF; 
+typedef struct reiserfs_cpu_key				RFSD_KEY_IN_MEMORY, *PRFSD_KEY_IN_MEMORY;
+typedef struct disk_child					RFSD_DISK_NODE_REF, *PRFSD_DISK_NODE_REF;
 
 #define RFSD_NAME_LEN				255			/// Default length of buffers for filenames (although filenames may be longer)
 
@@ -380,10 +380,10 @@ typedef struct _RFSD_REPINNED_BCBS {
 //
 
 typedef struct _RFSD_GLOBAL {
-    
+
     // Identifier for this structure
     RFSD_IDENTIFIER             Identifier;
-    
+
     // Syncronization primitive for this structure
     ERESOURCE                   Resource;
 
@@ -392,20 +392,20 @@ typedef struct _RFSD_GLOBAL {
 
     // Syncronization primitive for LookAside Lists
     ERESOURCE                   LAResource;
-    
+
     // Table of pointers to the fast I/O entry points
     FAST_IO_DISPATCH            FastIoDispatch;
-    
+
     // Table of pointers to the Cache Manager callbacks
     CACHE_MANAGER_CALLBACKS     CacheManagerCallbacks;
     CACHE_MANAGER_CALLBACKS     CacheManagerNoOpCallbacks;
-    
+
     // Pointer to the driver object
     PDRIVER_OBJECT              DriverObject;
-    
+
     // Pointer to the main device object
     PDEVICE_OBJECT              DeviceObject;
-    
+
     // List of mounted volumes
     LIST_ENTRY                  VcbList;
 
@@ -426,7 +426,7 @@ typedef struct _RFSD_GLOBAL {
     // IRP_MJ_CLOSE : FCB
     USHORT                      IRPCloseCount;
 #endif
-    
+
     // Global flags for the driver
     ULONG                       Flags;
 
@@ -436,7 +436,7 @@ typedef struct _RFSD_GLOBAL {
         UCHAR                   AnsiName[CODEPAGE_MAXLEN];
         struct nls_table *      PageTable;
     } CodePage;
-    
+
 } RFSD_GLOBAL, *PRFSD_GLOBAL;
 
 #define PAGE_TABLE RfsdGlobal->CodePage.PageTable
@@ -458,14 +458,14 @@ typedef struct {
 
 
 typedef struct _RFSD_FCBVCB {
-    
+
     // FCB header required by NT
     FSRTL_COMMON_FCB_HEADER         CommonFCBHeader;
     SECTION_OBJECT_POINTERS         SectionObject;
     ERESOURCE                       MainResource;
     ERESOURCE                       PagingIoResource;
     // end FCB header required by NT
-    
+
     // Identifier for this structure
     RFSD_IDENTIFIER                 Identifier;
 } RFSD_FCBVCB, *PRFSD_FCBVCB;
@@ -477,7 +477,7 @@ typedef struct _RFSD_FCBVCB {
 // It is allocated as the device extension of the volume device object
 //
 typedef struct _RFSD_VCB {
-    
+
     // FCB header required by NT
     // The VCB is also used as an FCB for file objects
     // that represents the volume itself
@@ -486,19 +486,19 @@ typedef struct _RFSD_VCB {
     ERESOURCE                   MainResource;
     ERESOURCE                   PagingIoResource;
     // end FCB header required by NT
-    
+
     // Identifier for this structure
     RFSD_IDENTIFIER             Identifier;
-    
+
     LIST_ENTRY                  Next;
-    
+
     // Share Access for the file object
     SHARE_ACCESS                ShareAccess;
 
     // Incremented on IRP_MJ_CREATE, decremented on IRP_MJ_CLEANUP
     // for files on this volume.
     ULONG                       OpenFileHandleCount;
-    
+
     // Incremented on IRP_MJ_CREATE, decremented on IRP_MJ_CLOSE
     // for both files on this volume and open instances of the
     // volume itself.
@@ -510,7 +510,7 @@ typedef struct _RFSD_VCB {
     //
 
     ULONG                       ChangeCount;
-    
+
     // Pointer to the VPB in the target device object
     PVPB                        Vpb;
 
@@ -525,20 +525,20 @@ typedef struct _RFSD_VCB {
 
     // Pointer to syncronization primitive for this list
     PNOTIFY_SYNC                NotifySync;
-    
+
     // This volumes device object
     PDEVICE_OBJECT              DeviceObject;
-    
+
     // The physical device object (the disk)
     PDEVICE_OBJECT              TargetDeviceObject;
 
     // The physical device object (the disk)
     PDEVICE_OBJECT              RealDevice;
-    
+
     // Information about the physical device object
     DISK_GEOMETRY               DiskGeometry;
     PARTITION_INFORMATION       PartitionInformation;
-    
+
     PRFSD_SUPER_BLOCK           SuperBlock;
     PVOID						GroupDesc;		// (NOTE: unused in ReiserFS, but preserved in order to minimize changes to existing code)
 //  PVOID                       GroupDescBcb;
@@ -555,7 +555,7 @@ typedef struct _RFSD_VCB {
 
     // Sector size in bits  (NOTE: unused in ReiserFS)
     //ULONG                       SectorBits;
-    
+
     ULONG                       dwData[RFSD_BLOCK_TYPES];
     ULONG                       dwMeta[RFSD_BLOCK_TYPES];
 
@@ -574,7 +574,7 @@ typedef struct _RFSD_VCB {
     // Entry of Mcb Tree (Root Node)
     PRFSD_MCB                   McbTree;
     LIST_ENTRY                  McbList;
-    
+
 } RFSD_VCB, *PRFSD_VCB;
 
 //
@@ -601,20 +601,20 @@ typedef struct _RFSD_VCB {
 // There is a single instance of the FCB for every open file
 //
 typedef struct _RFSD_FCB {
-    
+
     // FCB header required by NT
     FSRTL_COMMON_FCB_HEADER         Header;
     SECTION_OBJECT_POINTERS         SectionObject;
     ERESOURCE                       MainResource;
     ERESOURCE                       PagingIoResource;
     // end FCB header required by NT
-    
+
     // Identifier for this structure
     RFSD_IDENTIFIER                 Identifier;
-    
+
     // List of FCBs for this volume
     LIST_ENTRY                      Next;
-    
+
     // Share Access for the file object
     SHARE_ACCESS                    ShareAccess;
 
@@ -623,7 +623,7 @@ typedef struct _RFSD_FCB {
 
     // Incremented on IRP_MJ_CREATE, decremented on IRP_MJ_CLEANUP
     ULONG                           OpenHandleCount;
-    
+
     // Incremented on IRP_MJ_CREATE, decremented on IRP_MJ_CLOSE
     ULONG                           ReferenceCount;
 
@@ -633,13 +633,13 @@ typedef struct _RFSD_FCB {
 
     // Flags for the FCB
     ULONG                           Flags;
-    
+
     // Pointer to the inode  / stat data structure
     PRFSD_INODE                     Inode;
 
     // Hint block for next allocation
     ULONG                           BlkHint;
-    
+
     // Vcb
 
     PRFSD_VCB                       Vcb;
@@ -652,7 +652,7 @@ typedef struct _RFSD_FCB {
 
 #if DBG
     // The Ansi Filename for debugging
-    OEM_STRING                      AnsiFileName;   
+    OEM_STRING                      AnsiFileName;
 #endif
 
 
@@ -722,18 +722,18 @@ struct _RFSD_MCB {
 // There is one instance of the CCB for every instance of an open file
 //
 typedef struct _RFSD_CCB {
-    
+
     // Identifier for this structure
     RFSD_IDENTIFIER  Identifier;
 
     // Flags
     ULONG             Flags;
-    
+
     // State that may need to be maintained
     ULONG             CurrentByteOffset;
     USHORT            deh_location;
     UNICODE_STRING    DirectorySearchPattern;
-    
+
 } RFSD_CCB, *PRFSD_CCB;
 
 //
@@ -750,20 +750,20 @@ typedef struct _RFSD_CCB {
 // Used to pass information about a request between the drivers functions
 //
 typedef struct _RFSD_IRP_CONTEXT {
-    
+
     // Identifier for this structure
     RFSD_IDENTIFIER     Identifier;
-    
+
     // Pointer to the IRP this request describes
     PIRP                Irp;
 
     // Flags
     ULONG               Flags;
-    
+
     // The major and minor function code for the request
     UCHAR               MajorFunction;
     UCHAR               MinorFunction;
-    
+
     // The device object
     PDEVICE_OBJECT      DeviceObject;
 
@@ -775,25 +775,25 @@ typedef struct _RFSD_IRP_CONTEXT {
 
     PRFSD_FCB           Fcb;
     PRFSD_CCB           Ccb;
-    
+
     // If the request is synchronous (we are allowed to block)
     BOOLEAN             IsSynchronous;
-    
+
     // If the request is top level
     BOOLEAN             IsTopLevel;
-    
+
     // Used if the request needs to be queued for later processing
     WORK_QUEUE_ITEM     WorkQueueItem;
-    
+
     // If an exception is currently in progress
     BOOLEAN             ExceptionInProgress;
-    
+
     // The exception code when an exception is in progress
     NTSTATUS            ExceptionCode;
 
     // Repinned BCBs List
     RFSD_REPINNED_BCBS  Repinned;
-    
+
 } RFSD_IRP_CONTEXT, *PRFSD_IRP_CONTEXT;
 
 
@@ -876,7 +876,7 @@ RfsdLoadItem(
 	IN	  PRFSD_VCB				Vcb,
 	IN   PRFSD_KEY_IN_MEMORY	pItemKey,					// The key of the item to find
 	OUT  PRFSD_ITEM_HEAD*		ppMatchingItemHeader,
-	OUT  PUCHAR*				ppItemBuffer,				
+	OUT  PUCHAR*				ppItemBuffer,
 	OUT  PUCHAR*				ppBlockBuffer,				// Block buffer, which backs the other output data structures.  The caller must free this (even in the case of an error)!
 	OUT	 PULONG					pBlockNumber,				// The ordinal disk block number at which the item was found
 	IN	RFSD_KEY_COMPARISON (*fpComparisonFunction)(PRFSD_KEY_IN_MEMORY, PRFSD_KEY_IN_MEMORY)
@@ -924,7 +924,7 @@ RfsdReadDisk(
          IN PVOID           Buffer,
          IN BOOLEAN         bVerify  );
 
-NTSTATUS 
+NTSTATUS
 RfsdDiskIoControl (
         IN PDEVICE_OBJECT   DeviceOjbect,
         IN ULONG            IoctlCode,
@@ -1023,7 +1023,7 @@ RfsdCreateFile(
 
 NTSTATUS
 RfsdCreateVolume(
-        IN PRFSD_IRP_CONTEXT IrpContext, 
+        IN PRFSD_IRP_CONTEXT IrpContext,
         IN PRFSD_VCB Vcb );
 
 NTSTATUS
@@ -1096,7 +1096,7 @@ extern ULONG ProcessNameOffset;
     (PUCHAR) PsGetCurrentProcess() + ProcessNameOffset \
 )
 
-ULONG 
+ULONG
 RfsdGetProcessNameOffset (VOID);
 
 VOID
@@ -1327,7 +1327,7 @@ RfsdBlockMap(
     );
 
 NTSTATUS
-RfsdBuildBDL2(	
+RfsdBuildBDL2(
 	IN  PRFSD_VCB				Vcb,
 	IN  PRFSD_KEY_IN_MEMORY		pKey,
 	IN	PRFSD_INODE				pInode,
@@ -1335,13 +1335,13 @@ RfsdBuildBDL2(
 	OUT PRFSD_BDL*				out_ppBdl  );
 
 NTSTATUS
-RfsdBuildBDL( 
+RfsdBuildBDL(
     IN PRFSD_IRP_CONTEXT    IrpContext,
     IN PRFSD_VCB            Vcb,
     IN PRFSD_KEY_IN_MEMORY  InodeNo,
     IN PRFSD_INODE          Inode,
-    IN ULONGLONG            Offset, 
-    IN ULONG                Size, 
+    IN ULONGLONG            Offset,
+    IN ULONG                Size,
     IN BOOLEAN              bAlloc,
     OUT PRFSD_BDL *         Bdls,
     OUT PULONG              Count
@@ -1352,7 +1352,7 @@ RfsdNewBlock(
     PRFSD_IRP_CONTEXT IrpContext,
     PRFSD_VCB Vcb,
     ULONG     GroupHint,
-    ULONG     BlockHint,  
+    ULONG     BlockHint,
     PULONG    dwRet );
 
 NTSTATUS
@@ -1467,8 +1467,8 @@ ConvertKeyTypeUniqueness(__u32 k_uniqueness);
 
 void
 FillInMemoryKey(
-	IN		PRFSD_KEY_ON_DISK		pKeyOnDisk, 
-	IN		RFSD_KEY_VERSION		KeyVersion, 
+	IN		PRFSD_KEY_ON_DISK		pKeyOnDisk,
+	IN		RFSD_KEY_VERSION		KeyVersion,
 	IN OUT	PRFSD_KEY_IN_MEMORY		pKeyInMemory );
 
 RFSD_KEY_VERSION DetermineOnDiskKeyFormat(const PRFSD_KEY_ON_DISK key);
@@ -1491,15 +1491,15 @@ CompareKeys(
 NTSTATUS
 NavigateToLeafNode(
 	IN	PRFSD_VCB					Vcb,
-	IN	PRFSD_KEY_IN_MEMORY			Key,				
-	IN	ULONG						StartingBlockNumber,	
+	IN	PRFSD_KEY_IN_MEMORY			Key,
+	IN	ULONG						StartingBlockNumber,
 	OUT	PULONG						out_NextBlockNumber );
 
 NTSTATUS
 RfsdParseFilesystemTree(
 			IN	PRFSD_VCB					Vcb,
 			IN	PRFSD_KEY_IN_MEMORY			Key,						// Key to search for.
-			IN	ULONG						StartingBlockNumber,		// Block number of an internal or leaf node, to start the search from			
+			IN	ULONG						StartingBlockNumber,		// Block number of an internal or leaf node, to start the search from
 			IN	RFSD_CALLBACK(fpDirectoryCallback),					// A function ptr to trigger on hitting a matching leaf block
 			IN  PVOID						Context
 			);
@@ -1508,13 +1508,13 @@ RfsdParseFilesystemTree(
 NTSTATUS
 _NavigateToLeafNode(
 	IN	PRFSD_VCB					Vcb,
-	IN	PRFSD_KEY_IN_MEMORY			Key,				
-	IN	ULONG						StartingBlockNumber,	
+	IN	PRFSD_KEY_IN_MEMORY			Key,
+	IN	ULONG						StartingBlockNumber,
 	OUT	PULONG						out_NextBlockNumber,
 	IN	BOOLEAN						ReturnOnFirstMatch,
 	IN	RFSD_KEY_COMPARISON			(*fpComparisonFunction)(PRFSD_KEY_IN_MEMORY, PRFSD_KEY_IN_MEMORY),
 	RFSD_CALLBACK(fpDirectoryCallback),
-	IN	PVOID						pContext					
+	IN	PVOID						pContext
 	);
 
 
@@ -1869,7 +1869,7 @@ RfsdSearchMcb(  PRFSD_VCB Vcb, PRFSD_MCB Parent,
                 PUNICODE_STRING FileName);
 
 BOOLEAN
-RfsdGetFullFileName( PRFSD_MCB Mcb, 
+RfsdGetFullFileName( PRFSD_MCB Mcb,
                      PUNICODE_STRING FileName);
 
 VOID
@@ -1882,7 +1882,7 @@ RfsdAddMcbNode( PRFSD_VCB Vcb,
 
 BOOLEAN
 RfsdDeleteMcbNode(
-                PRFSD_VCB Vcb, 
+                PRFSD_VCB Vcb,
                 PRFSD_MCB McbTree,
                 PRFSD_MCB RfsdMcb);
 
@@ -1905,8 +1905,8 @@ RfsdRemoveVcb(PRFSD_VCB Vcb);
 
 NTSTATUS
 RfsdInitializeVcb(
-            PRFSD_IRP_CONTEXT IrpContext, 
-            PRFSD_VCB Vcb, 
+            PRFSD_IRP_CONTEXT IrpContext,
+            PRFSD_VCB Vcb,
             PRFSD_SUPER_BLOCK RfsdSb,
             PDEVICE_OBJECT TargetDevice,
             PDEVICE_OBJECT VolumeDevice,
@@ -2025,7 +2025,7 @@ RfsdPnpSurpriseRemove(
 // Read.c
 //
 
-BOOLEAN 
+BOOLEAN
 RfsdCopyRead(
     IN PFILE_OBJECT  FileObject,
     IN PLARGE_INTEGER  FileOffset,

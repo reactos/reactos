@@ -23,10 +23,10 @@
 #define FSRTLP_MAX_QUEUES 2
 
 typedef struct _STACK_OVERFLOW_WORK_ITEM
-{   
-   
+{
+
     WORK_QUEUE_ITEM WorkItem;
-    PFSRTL_STACK_OVERFLOW_ROUTINE Routine;   
+    PFSRTL_STACK_OVERFLOW_ROUTINE Routine;
     PVOID Context;
     PKEVENT Event;
 } STACK_OVERFLOW_WORK_ITEM, *PSTACK_OVERFLOW_WORK_ITEM;
@@ -134,7 +134,7 @@ FsRtlWorkerThread(IN PVOID StartContext)
         Irql = KeGetCurrentIrql();
         if (Irql != PASSIVE_LEVEL)
         {
-            KeBugCheckEx(IRQL_NOT_LESS_OR_EQUAL, (ULONG_PTR)WorkItem->WorkerRoutine,   
+            KeBugCheckEx(IRQL_NOT_LESS_OR_EQUAL, (ULONG_PTR)WorkItem->WorkerRoutine,
                          (ULONG_PTR)Irql, (ULONG_PTR)WorkItem->WorkerRoutine,
                          (ULONG_PTR)WorkItem);
         }

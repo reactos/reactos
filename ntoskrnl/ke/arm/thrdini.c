@@ -163,7 +163,7 @@ KiIdleLoop(VOID)
         YieldProcessor();
         YieldProcessor();
         _disable();
-    
+
         /* Check for pending timers, pending DPCs, or pending ready threads */
         if ((Prcb->DpcData[0].DpcQueueDepth) ||
             (Prcb->TimerRequest) ||

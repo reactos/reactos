@@ -30,7 +30,7 @@ PDIR_INDEX_HDR UDFDirIndexAlloc(IN uint_di i);
  Function: UDFFSControl()
 
  Description:
-    The I/O Manager will invoke this routine to handle a File System 
+    The I/O Manager will invoke this routine to handle a File System
     Control request (this is IRP_MJ_FILE_SYSTEM_CONTROL dispatch point)
 
 */
@@ -96,7 +96,7 @@ UDFFSControl(
     to be deferred to a worker thread context)
 
  Return Value: STATUS_SUCCESS/Error
-*/              
+*/
 
 NTSTATUS
 NTAPI
@@ -117,24 +117,24 @@ UDFCommonFSControl(
         IrpSp = IoGetCurrentIrpStackLocation(Irp);
         ASSERT(IrpSp);
 
-        switch ((IrpSp)->MinorFunction) 
+        switch ((IrpSp)->MinorFunction)
         {
         case IRP_MN_USER_FS_REQUEST:
             UDFPrint(("  UDFFSControl: UserFsReq request ....\n"));
-                
+
             RC = UDFUserFsCtrlRequest(PtrIrpContext,Irp);
             break;
         case IRP_MN_MOUNT_VOLUME:
 
             UDFPrint(("  UDFFSControl: MOUNT_VOLUME request ....\n"));
-                
+
             RC = UDFMountVolume(PtrIrpContext,Irp);
             break;
         case IRP_MN_VERIFY_VOLUME:
 
             UDFPrint(("  UDFFSControl: VERIFY_VOLUME request ....\n"));
 
-            RC = UDFVerifyVolume(Irp);                              
+            RC = UDFVerifyVolume(Irp);
             break;
         default:
             UDFPrintErr(("  UDFFSControl: STATUS_INVALID_DEVICE_REQUEST MinorFunction %x\n", (IrpSp)->MinorFunction));
@@ -146,7 +146,7 @@ UDFCommonFSControl(
             IoCompleteRequest(Irp, IO_DISK_INCREMENT);
             break;
         }
-    
+
 //try_exit:   NOTHING;
     } _SEH2_FINALLY {
         if (!_SEH2_AbnormalTermination()) {
@@ -295,7 +295,7 @@ UDFUserFsCtrlRequest(
 
     IoCompleteRequest(Irp,IO_DISK_INCREMENT);
     return RC;
-   
+
 } // end UDFUserFsCtrlRequest()
 
 
@@ -401,7 +401,7 @@ UDFMountVolume(
     _SEH2_TRY {
 
         UDFScanForDismountedVcb(PtrIrpContext);
-                        
+
         if(WrongMedia) try_return(RC = STATUS_UNRECOGNIZED_VOLUME);
 
         if(RemovableMedia) {
@@ -450,7 +450,7 @@ UDFMountVolume(
                     KeDelayExecutionThread(KernelMode, FALSE, &delay);
                 }
             }
-            
+
             // Now we can get device state via GET_EVENT (if supported)
             // or still one TEST_UNIT_READY command
             RC = UDFPhSendIOCTL( IOCTL_STORAGE_CHECK_VERIFY,
@@ -458,7 +458,7 @@ UDFMountVolume(
                                  NULL,0,
                                  &MediaChangeCount,sizeof(ULONG),
                                  FALSE,&Iosb );
-    
+
             if(RC == STATUS_IO_DEVICE_ERROR) {
                 UDFPrint(("UDFMountVolume: retry check verify\n"));
                 RC = UDFPhSendIOCTL( IOCTL_STORAGE_CHECK_VERIFY,
@@ -750,7 +750,7 @@ try_raw_mount:
             Vcb->IsVolumeJustMounted = TRUE;
             KeSetEvent(UDFGlobalData.MountEvent, 0, FALSE);
         }
-        
+
         //  The new mount is complete.
         UDFReleaseResource( &(Vcb->VCBResource) );
         VcbAcquired = FALSE;
@@ -1182,7 +1182,7 @@ unwind_3:
 /*
     Vcb->CDBurnerVolumeValid = true;
 
-    len = 
+    len =
     Vcb->CDBurnerVolume.Length = 256;
     Vcb->CDBurnerVolume.MaximumLength = 256;
     Vcb->CDBurnerVolume.Buffer = (PWCHAR)ExAllocatePool(NonPagedPool, 256);
@@ -1468,7 +1468,7 @@ UDFCleanupVCB(
         DbgFreePool(Vcb->FSBM_OldBitmap);
         Vcb->FSBM_OldBitmap = NULL;
     }
-    
+
     MyFreeMemoryAndPointer(Vcb->Statistics);
     MyFreeMemoryAndPointer(Vcb->NTRequiredFCB);
     MyFreeMemoryAndPointer(Vcb->VolIdent.Buffer);
@@ -1488,7 +1488,7 @@ UDFCleanupVCB(
     MyFreeMemoryAndPointer(Vcb->WParams);
     MyFreeMemoryAndPointer(Vcb->Error);
     MyFreeMemoryAndPointer(Vcb->TrackMap);
-    
+
 } // end UDFCleanupVCB()
 
 /*
@@ -1517,7 +1517,7 @@ UDFScanForDismountedVcb(
 
     // Walk through all of the Vcb's attached to the global data.
     Link = UDFGlobalData.VCBQueue.Flink;
-         
+
     while (Link != &(UDFGlobalData.VCBQueue)) {
 
         Vcb = CONTAINING_RECORD( Link, VCB, NextVCB );
@@ -1690,7 +1690,7 @@ UDFIsPathnameValid(
             CurName.Buffer = PathName.Buffer - CurName.Length;
             CurName.Length *= sizeof(WCHAR);
             CurName.MaximumLength -= CurName.Length;
-    
+
             if (CurName.Length) {
                 // check path fragment size
                 if (CurName.Length > UDF_NAME_LEN*sizeof(WCHAR)) {
@@ -1702,7 +1702,7 @@ UDFIsPathnameValid(
             } else {
                 try_return(RC = STATUS_SUCCESS);
             }
-        }    
+        }
 try_exit:   NOTHING;
     } _SEH2_FINALLY {
         Irp->IoStatus.Information = 0;
@@ -1840,7 +1840,7 @@ UDFLockVolume(
     if(!NT_SUCCESS(RC)) {
         UDFNotifyVolumeEvent(IrpSp->FileObject, FSRTL_VOLUME_LOCK_FAILED);
     }
-    
+
     //  Complete the request if there haven't been any exceptions.
     Irp->IoStatus.Information = 0;
     Irp->IoStatus.Status = RC;

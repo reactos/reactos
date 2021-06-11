@@ -1,4 +1,4 @@
-/* 
+/*
  * FFS File System Driver for Windows
  *
  * create.c
@@ -83,7 +83,7 @@ FFSv1LookupFileName(
 	{
 		if (!FFSv1LoadInode(Vcb, ParentMcb->Inode, dinode1))
 		{
-			return Status;      
+			return Status;
 		}
 
 		*FFSMcb = Vcb->McbTree;
@@ -171,7 +171,7 @@ FFSv1LookupFileName(
 				else
 				{
 #if 0
-					if (IsFlagOn(SUPER_BLOCK->s_feature_incompat, 
+					if (IsFlagOn(SUPER_BLOCK->s_feature_incompat,
 								FFS_FEATURE_INCOMPAT_FILETYPE))
 					{
 						if (ffs_dir.d_type == FFS_FT_DIR)
@@ -282,7 +282,7 @@ FFSv2LookupFileName(
 	{
 		if (!FFSv2LoadInode(Vcb, ParentMcb->Inode, dinode2))
 		{
-			return Status;      
+			return Status;
 		}
 
 		*FFSMcb = Vcb->McbTree;
@@ -370,7 +370,7 @@ FFSv2LookupFileName(
 				else
 				{
 #if 0
-					if (IsFlagOn(SUPER_BLOCK->s_feature_incompat, 
+					if (IsFlagOn(SUPER_BLOCK->s_feature_incompat,
 								FFS_FEATURE_INCOMPAT_FILETYPE))
 					{
 						if (ffs_dir.d_type == FFS_FT_DIR)
@@ -757,9 +757,9 @@ FFSSearchFcbList(
 		if (TmpFcb && TmpFcb->Identifier.Type == FCB)
 		{
 #if DBG
-			FFSPrint((DBG_INFO, "FFSSearchFcbList: [%s,%xh]\n", 
+			FFSPrint((DBG_INFO, "FFSSearchFcbList: [%s,%xh]\n",
 				TmpFcb->AnsiFileName.Buffer, TmpFcb->Inode));
-#endif          
+#endif
 			if (TmpFcb->Inode == inode)
 			{
 				FFSPrint((DBG_INFO, "FFSSearchMcb: Found FCB for %xh.\n", inode));
@@ -869,7 +869,7 @@ FFSCreateFile(
 
 		VcbResourceAcquired = TRUE;
 
-		if (Irp->Overlay.AllocationSize.HighPart) 
+		if (Irp->Overlay.AllocationSize.HighPart)
 		{
 			Status = STATUS_INVALID_PARAMETER;
 			_SEH2_LEAVE;
@@ -902,7 +902,7 @@ FFSCreateFile(
 
 		FileName.Buffer = ExAllocatePoolWithTag(PagedPool, FileName.MaximumLength, FFS_POOL_TAG);
 		if (!FileName.Buffer)
-		{   
+		{
 			Status = STATUS_INSUFFICIENT_RESOURCES;
 			_SEH2_LEAVE;
 		}
@@ -1073,7 +1073,7 @@ Dissecting:
 			{
 				if (FS_VERSION == 1)
 				{
-					PFFSv1_INODE pTmpInode = ExAllocatePoolWithTag(PagedPool, 
+					PFFSv1_INODE pTmpInode = ExAllocatePoolWithTag(PagedPool,
 							DINODE1_SIZE, FFS_POOL_TAG);
 					if (!pTmpInode)
 					{
@@ -1098,7 +1098,7 @@ Dissecting:
 				}
 				else
 				{
-					PFFSv2_INODE pTmpInode = ExAllocatePoolWithTag(PagedPool, 
+					PFFSv2_INODE pTmpInode = ExAllocatePoolWithTag(PagedPool,
 							DINODE2_SIZE, FFS_POOL_TAG);
 					if (!pTmpInode)
 					{
@@ -1167,9 +1167,9 @@ Dissecting:
 
 				if (DirectoryFile)
 				{
-					if (ParentFcb->FFSMcb->Inode == FFS_ROOT_INO) 
+					if (ParentFcb->FFSMcb->Inode == FFS_ROOT_INO)
 					{
-						if ((RealName.Length == 0x10) && 
+						if ((RealName.Length == 0x10) &&
 								memcmp(RealName.Buffer, L"Recycled\0", 0x10) == 0)
 						{
 							SetFlag(IrpSp->Parameters.Create.FileAttributes,
@@ -1179,7 +1179,7 @@ Dissecting:
 
 					Status = FFSCreateInode(
 								IrpContext,
-								Vcb, 
+								Vcb,
 								ParentFcb,
 								DT_DIR,
 								IrpSp->Parameters.Create.FileAttributes,
@@ -1331,7 +1331,7 @@ Dissecting:
 					_SEH2_LEAVE;
 				}
 
-				if (NonDirectoryFile) 
+				if (NonDirectoryFile)
 				{
 					Status = STATUS_FILE_IS_A_DIRECTORY;
 					_SEH2_LEAVE;
@@ -1540,7 +1540,7 @@ Openit:
 				}
 			}
 
-			if (Fcb->OpenHandleCount > 0) 
+			if (Fcb->OpenHandleCount > 0)
 			{
 				Status = IoCheckShareAccess(DesiredAccess,
 						ShareAccess,
@@ -1552,8 +1552,8 @@ Openit:
 				{
 					_SEH2_LEAVE;
 				}
-			} 
-			else 
+			}
+			else
 			{
 				IoSetShareAccess(DesiredAccess,
 						ShareAccess,
@@ -1592,8 +1592,8 @@ Openit:
 
 			if (!bCreated && !IsDirectory(Fcb))
 			{
-				if (DeleteOnClose || 
-						IsFlagOn(DesiredAccess, FILE_WRITE_DATA) || 
+				if (DeleteOnClose ||
+						IsFlagOn(DesiredAccess, FILE_WRITE_DATA) ||
 						(CreateDisposition == FILE_OVERWRITE) ||
 						(CreateDisposition == FILE_OVERWRITE_IF))
 				{
@@ -1771,26 +1771,26 @@ FFSCreateVolume(
 		return STATUS_INVALID_PARAMETER;
 	}
 
-	if ((CreateDisposition != FILE_OPEN) && 
-			(CreateDisposition != FILE_OPEN_IF)) 
+	if ((CreateDisposition != FILE_OPEN) &&
+			(CreateDisposition != FILE_OPEN_IF))
 	{
 		return STATUS_ACCESS_DENIED;
 	}
 
 	Status = STATUS_SUCCESS;
 
-	if (Vcb->OpenHandleCount > 0) 
+	if (Vcb->OpenHandleCount > 0)
 	{
 		Status = IoCheckShareAccess(DesiredAccess, ShareAccess,
 				IrpSp->FileObject,
 				&(Vcb->ShareAccess), TRUE);
 
-		if (!NT_SUCCESS(Status)) 
+		if (!NT_SUCCESS(Status))
 		{
 			goto errorout;
 		}
-	} 
-	else 
+	}
+	else
 	{
 		IoSetShareAccess(DesiredAccess, ShareAccess,
 				IrpSp->FileObject,
@@ -1852,7 +1852,7 @@ FFSCreate(
 	/* 드라이버가 로드 되었는지 검사할 때 마운트가 되어 있지 않은
 	   경우도 있기 때문에 멈추면 안됨. */
 	ASSERT(IsMounted(Vcb));
-#endif	
+#endif
 
 	Irp = IrpContext->Irp;
 
@@ -1870,7 +1870,7 @@ FFSCreate(
 
 		FFSUnpinRepinnedBcbs(IrpContext);
 
-		FFSCompleteIrpContext(IrpContext, Status);        
+		FFSCompleteIrpContext(IrpContext, Status);
 
 		return Status;
 
@@ -1891,7 +1891,7 @@ FFSCreate(
 		}
 
 		if (((IrpSp->FileObject->FileName.Length == 0) &&
-					(IrpSp->FileObject->RelatedFileObject == NULL)) || 
+					(IrpSp->FileObject->RelatedFileObject == NULL)) ||
 				(Xcb && Xcb->Identifier.Type == FFSVCB))
 		{
 			Status = FFSCreateVolume(IrpContext, Vcb);
@@ -1942,8 +1942,8 @@ FFSCreateInode(
 
 	FFSPrint((DBG_INFO,
 				"FFSCreateInode: %S in %S(Inode=%xh)\n",
-				FileName->Buffer, 
-				ParentFcb->FFSMcb->ShortName.Buffer, 
+				FileName->Buffer,
+				ParentFcb->FFSMcb->ShortName.Buffer,
 				ParentFcb->FFSMcb->Inode));
 
 	Status = FFSNewInode(IrpContext, Vcb, Group,Type, &Inode);
@@ -2015,7 +2015,7 @@ FFSSupersedeOrOverWriteFile(
 
 	AllocationSize.QuadPart = (LONGLONG)0;
 
-	if (!MmCanFileBeTruncated(&(Fcb->SectionObject), &(AllocationSize))) 
+	if (!MmCanFileBeTruncated(&(Fcb->SectionObject), &(AllocationSize)))
 	{
 		Status = STATUS_USER_MAPPED_FILE;
 
@@ -2026,7 +2026,7 @@ FFSSupersedeOrOverWriteFile(
 
 	if (bRet)
 	{
-		Fcb->Header.AllocationSize.QuadPart = 
+		Fcb->Header.AllocationSize.QuadPart =
 			Fcb->Header.FileSize.QuadPart = (LONGLONG)0;
 
 		Fcb->dinode1->di_size = 0;

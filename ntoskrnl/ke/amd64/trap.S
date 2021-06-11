@@ -1081,7 +1081,7 @@ EXTERN KiSetTrapContextInternal:PROC
  */
 PUBLIC KiSetTrapContext
 .PROC KiSetTrapContext
-    
+
     /* Generate a KEXCEPTION_FRAME on the stack */
     GENERATE_EXCEPTION_FRAME
 

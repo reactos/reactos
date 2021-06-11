@@ -143,9 +143,9 @@ typedef struct __GLOBAL_ITEM_STATE_
 }GLOBAL_ITEM_STATE, *PGLOBAL_ITEM_STATE;
 
 
-typedef struct usage_value 
+typedef struct usage_value
 {
-    union 
+    union
     {
         struct {
             USHORT UsageId;
@@ -213,7 +213,7 @@ typedef struct __HID_COLLECTION__
 
     struct __HID_COLLECTION__ ** Nodes;
     struct __HID_COLLECTION__ * Root;
-    struct _HID_REPORT ** Reports; 
+    struct _HID_REPORT ** Reports;
 
     ULONG Offsets[1];
 

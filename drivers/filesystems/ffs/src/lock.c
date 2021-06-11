@@ -1,4 +1,4 @@
-/* 
+/*
  * FFS File System Driver for Windows
  *
  * lock.c
@@ -111,7 +111,7 @@ FFSLockControl(
 
 		if (!NT_SUCCESS(Status))
 		{
-			FFSPrint((DBG_ERROR, 
+			FFSPrint((DBG_ERROR,
 						"FFSLockControl: %-16.16s %-31s *** Status: %s (%#x) ***\n",
 						FFSGetCurrentProcessName(),
 						"IRP_MJ_LOCK_CONTROL",

@@ -133,7 +133,7 @@ extern "C" {
 
     #define _RPTF0(rptno,msg)
     #define _RPTFN(rptno,msg,...)
-  
+
     #define _RPTFW0(rptno,msg)
     #define _RPTFWN(rptno,msg,...)
 
@@ -170,7 +170,7 @@ extern "C" {
 
     #define _RPTF0(rptno,msg)       _RPT_BASE(rptno, __FILE__, __LINE__, NULL, "%s", msg)
     #define _RPTFN(rptno,msg,...)   _RPT_BASE(rptno, __FILE__, __LINE__, NULL, msg, __VA_ARGS__)
-  
+
     #define _RPTFW0(rptno,msg)      _RPT_BASEW(rptno, _CRT_WIDE(__FILE__), __LINE__, NULL, L"%s", msg)
     #define _RPTFWN(rptno,msg,...)  _RPT_BASEW(rptno, _CRT_WIDE(__FILE__), __LINE__, NULL, msg, __VA_ARGS__)
 

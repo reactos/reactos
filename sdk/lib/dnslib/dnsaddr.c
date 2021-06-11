@@ -61,7 +61,7 @@ DnsAddrArray_AddAddr(IN PDNS_ARRAY DnsAddrArray,
 {
     /* Make sure we have an array */
     if (!DnsAddrArray) return FALSE;
-    
+
     /* Check if we should validate the Address Family */
     if (AddressFamily)
     {
@@ -83,7 +83,7 @@ DnsAddrArray_AddAddr(IN PDNS_ARRAY DnsAddrArray,
     /* Make sure we have space in the array */
     if (DnsAddrArray->AllocatedAddresses < DnsAddrArray->UsedAddresses)
     {
-        return FALSE; 
+        return FALSE;
     }
 
     /* Now add the address */

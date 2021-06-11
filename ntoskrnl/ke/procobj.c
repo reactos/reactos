@@ -265,7 +265,7 @@ NTAPI
 KeSetAffinityProcess(IN PKPROCESS Process,
                      IN KAFFINITY Affinity)
 {
-   
+
     KLOCK_QUEUE_HANDLE ProcessLock;
     PLIST_ENTRY NextEntry, ListHead;
     KAFFINITY OldAffinity;
@@ -273,10 +273,10 @@ KeSetAffinityProcess(IN PKPROCESS Process,
     ASSERT_PROCESS(Process);
     ASSERT(KeGetCurrentIrql() <= DISPATCH_LEVEL);
     ASSERT((Affinity & KeActiveProcessors) != 0);
-    
+
     /* Lock the process */
     KiAcquireProcessLockRaiseToSynch(Process, &ProcessLock);
-    
+
     /* Acquire the dispatcher lock */
     KiAcquireDispatcherLockAtSynchLevel();
 
@@ -291,19 +291,19 @@ KeSetAffinityProcess(IN PKPROCESS Process,
     {
         /* Get the thread */
         Thread = CONTAINING_RECORD(NextEntry, KTHREAD, ThreadListEntry);
-        
+
         /* Set affinity on it */
         KiSetAffinityThread(Thread, Affinity);
         NextEntry = NextEntry->Flink;
     }
-    
+
     /* Release Dispatcher Database */
     KiReleaseDispatcherLockFromSynchLevel();
-    
+
     /* Release the process lock */
     KiReleaseProcessLockFromSynchLevel(&ProcessLock);
     KiExitDispatcher(ProcessLock.OldIrql);
-    
+
     /* Return previous affinity */
     return OldAffinity;
 }

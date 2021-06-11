@@ -4,7 +4,7 @@
  * FILE:            drivers/wmi/wmilib.c
  * PURPOSE:         Windows Management Instrumentation
  * PROGRAMMERS:     Aleksey Bragin (aleksey@reactos.org)
- *                  
+ *
  */
 
 /* INCLUDES *****************************************************************/

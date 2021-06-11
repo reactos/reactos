@@ -51,7 +51,7 @@ InterlockedDecrement(
 }
 
 PSLIST_ENTRY
-WINAPI 
+WINAPI
 InterlockedPopEntrySList(
     PSLIST_HEADER ListHead)
 {

@@ -139,7 +139,7 @@ USBPORT_FindCompanionControllers(IN PDEVICE_OBJECT USB2FdoDevice,
 {
     PLIST_ENTRY USB1FdoList;
     PUSBPORT_DEVICE_EXTENSION USB1FdoExtension;
-    ULONG NumControllers = 0; 
+    ULONG NumControllers = 0;
     PDEVICE_OBJECT * Entry;
     PDEVICE_RELATIONS ControllersList = NULL;
     KIRQL OldIrql;
@@ -1476,7 +1476,7 @@ USBPORT_SynchronizeControllersStart(IN PDEVICE_OBJECT FdoDevice)
     PUSBPORT_RHDEVICE_EXTENSION PdoExtension;
     PDEVICE_OBJECT USB2FdoDevice = NULL;
     PUSBPORT_DEVICE_EXTENSION USB2FdoExtension;
-    BOOLEAN IsOn; 
+    BOOLEAN IsOn;
 
     DPRINT_TIMER("USBPORT_SynchronizeControllersStart: FdoDevice - %p\n",
                  FdoDevice);
@@ -1825,7 +1825,7 @@ USBPORT_FindMiniPort(IN PDRIVER_OBJECT DriverObject)
         return MiniPortInterface;
     else
         return NULL;
-    
+
 }
 
 NTSTATUS

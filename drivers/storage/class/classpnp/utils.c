@@ -666,7 +666,7 @@ VOID FreeDeviceInputMdl(PMDL Mdl)
     }
 #endif
 
-
+
 /*++
 
 ClasspDuidGetDeviceIdProperty
@@ -759,7 +759,7 @@ FnExit:
 }
 
 
-
+
 /*++
 
 ClasspDuidGetDeviceProperty
@@ -851,7 +851,7 @@ FnExit:
     return status;
 }
 
-
+
 /*++
 
 ClasspDuidGetDriveLayout
@@ -973,7 +973,7 @@ FnExit:
     return status;
 }
 
-
+
 /*++
 
 ClasspDuidQueryProperty
@@ -6187,7 +6187,7 @@ ValidPersistentReserveType(
     return FALSE;
 }
 
-
+
 /*++
 
 ClasspPersistentReserve

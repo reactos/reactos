@@ -344,7 +344,7 @@ KiSystemCallHandler(
             return (PVOID)NtSyscallFailure;
         }
 
-        /* Convert us to a GUI thread 
+        /* Convert us to a GUI thread
            To be entirely correct. we return KiConvertToGuiThread,
            which allocates a new stack, switches to it, calls
            PsConvertToGuiThread and resumes in the middle of

@@ -2,10 +2,10 @@
  * COPYRIGHT:        GNU GENERAL PUBLIC LICENSE VERSION 2
  * PROJECT:          ReiserFs file system driver for Windows NT/2000/XP/Vista.
  * FILE:             init.c
- * PURPOSE:          
+ * PURPOSE:
  * PROGRAMMER:       Mark Piper, Matt Wu, Bo Brantén.
- * HOMEPAGE:         
- * UPDATE HISTORY: 
+ * HOMEPAGE:
+ * UPDATE HISTORY:
  */
 
 /* INCLUDES *****************************************************************/
@@ -263,10 +263,10 @@ DriverEntry (
         " " __DATE__ " " __TIME__
         "\nCopyright (C) 1999-2015 Mark Piper, Matt Wu, Bo Branten.\n");
 
-    RfsdPrint((DBG_FUNC, "Rfsd DriverEntry ...\n"));	
+    RfsdPrint((DBG_FUNC, "Rfsd DriverEntry ...\n"));
 
     RtlInitUnicodeString(&DeviceName, DEVICE_NAME);
-    
+
     Status = IoCreateDevice(
         DriverObject,
         sizeof(RFSDFS_EXT),
@@ -275,7 +275,7 @@ DriverEntry (
         0,
         FALSE,
         &DeviceObject );
-    
+
     if (!NT_SUCCESS(Status)) {
         RfsdPrint((DBG_ERROR, "IoCreateDevice fs object error.\n"));
         return Status;
@@ -283,7 +283,7 @@ DriverEntry (
 
     DeviceExt = (PRFSDFS_EXT) DeviceObject->DeviceExtension;
     RtlZeroMemory(DeviceExt, sizeof(RFSDFS_EXT));
-    
+
     RfsdGlobal = &(DeviceExt->RfsdGlobal);
 
     RfsdGlobal->Identifier.Type = RFSDFGD;
@@ -332,7 +332,7 @@ DriverEntry (
     // Initialize the fast I/O entry points
     //
     FastIoDispatch = &(RfsdGlobal->FastIoDispatch);
-    
+
     FastIoDispatch->SizeOfFastIoDispatch        = sizeof(FAST_IO_DISPATCH);
     FastIoDispatch->FastIoCheckIfPossible       = RfsdFastIoCheckIfPossible;
 #if DBG

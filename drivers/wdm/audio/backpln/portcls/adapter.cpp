@@ -96,7 +96,7 @@ PcAddAdapterDevice(
     // check if the DeviceExtensionSize is provided
     if ( DeviceExtensionSize < PORT_CLASS_DEVICE_EXTENSION_SIZE )
     {
-        // driver does not need a device extension 
+        // driver does not need a device extension
         if ( DeviceExtensionSize != 0 )
         {
             // DeviceExtensionSize must be zero
@@ -278,7 +278,7 @@ PcRegisterSubdevice(
     {
         // FIXME
         // check if reference string with that name already exists
-        
+
         Status = IoRegisterDeviceInterface(DeviceExt->PhysicalDeviceObject,
                                            &SubDeviceDescriptor->Interfaces[Index],
                                            &RefName,

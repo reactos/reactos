@@ -220,7 +220,7 @@ UnwindOpSlots(
         2, // UWOP_SET_FPREG_LARGE
     };
 
-    if ((UnwindCode.UnwindOp == UWOP_ALLOC_LARGE) && 
+    if ((UnwindCode.UnwindOp == UWOP_ALLOC_LARGE) &&
         (UnwindCode.OpInfo != 0))
     {
         return 3;
@@ -228,7 +228,7 @@ UnwindOpSlots(
     else
     {
         return UnwindOpExtraSlotTable[UnwindCode.UnwindOp] + 1;
-    }    
+    }
 }
 
 static
@@ -471,7 +471,7 @@ GetEstablisherFrame(
     if ((CodeOffset >= UnwindInfo->SizeOfProlog) ||
         ((UnwindInfo->Flags & UNW_FLAG_CHAININFO) != 0))
     {
-        return GetReg(Context, UnwindInfo->FrameRegister) - 
+        return GetReg(Context, UnwindInfo->FrameRegister) -
                UnwindInfo->FrameOffset * 16;
     }
 
@@ -1104,7 +1104,7 @@ RtlSetUnwindContext(
     _In_ DWORD64 TargetFrame)
 {
     KNONVOLATILE_CONTEXT_POINTERS ContextPointers;
-    
+
     /* Capture pointers to the non-volatiles up to the target frame */
     RtlpCaptureNonVolatileContextPointers(&ContextPointers, TargetFrame);
 

@@ -80,28 +80,28 @@ MiniportQueryInformation (
     ULONG copyLength;
     PVOID copySource;
     NDIS_STATUS status;
-    
+
     status = NDIS_STATUS_SUCCESS;
     copySource = &genericUlong;
     copyLength = sizeof(ULONG);
 
     NdisAcquireSpinLock(&adapter->Lock);
-    
+
     switch (Oid)
     {
         case OID_GEN_SUPPORTED_LIST:
             copySource = (PVOID)&SupportedOidList;
             copyLength = sizeof(SupportedOidList);
             break;
-            
+
         case OID_GEN_CURRENT_PACKET_FILTER:
             genericUlong = adapter->PacketFilter;
             break;
-            
+
         case OID_GEN_HARDWARE_STATUS:
             genericUlong = (ULONG)NdisHardwareStatusReady; //FIXME
             break;
-            
+
         case OID_GEN_MEDIA_SUPPORTED:
         case OID_GEN_MEDIA_IN_USE:
         {
@@ -130,7 +130,7 @@ MiniportQueryInformation (
         case OID_GEN_RECEIVE_BUFFER_SPACE:
             genericUlong = RECEIVE_BUFFER_SIZE;
             break;
-            
+
         case OID_GEN_VENDOR_ID:
             //
             // The 3 bytes of the MAC address is the vendor ID
@@ -140,7 +140,7 @@ MiniportQueryInformation (
             genericUlong |= (adapter->PermanentMacAddress[1] << 8);
             genericUlong |= (adapter->PermanentMacAddress[2] & 0xFF);
             break;
-            
+
         case OID_GEN_VENDOR_DESCRIPTION:
         {
             static UCHAR vendorDesc[] = "ReactOS Team";
@@ -148,11 +148,11 @@ MiniportQueryInformation (
             copyLength = sizeof(vendorDesc);
             break;
         }
-            
+
         case OID_GEN_VENDOR_DRIVER_VERSION:
             genericUlong = DRIVER_VERSION;
             break;
-            
+
         case OID_GEN_DRIVER_VERSION:
         {
             static const USHORT driverVersion =
@@ -161,45 +161,45 @@ MiniportQueryInformation (
             copyLength = sizeof(driverVersion);
             break;
         }
-            
+
         case OID_GEN_MAXIMUM_TOTAL_SIZE:
             genericUlong = MAXIMUM_FRAME_SIZE;
             break;
-            
+
         case OID_GEN_PROTOCOL_OPTIONS:
             NDIS_DbgPrint(MIN_TRACE, ("OID_GEN_PROTOCOL_OPTIONS is unimplemented\n"));
             status = NDIS_STATUS_NOT_SUPPORTED;
             break;
-            
+
         case OID_GEN_MAC_OPTIONS:
             genericUlong = NDIS_MAC_OPTION_RECEIVE_SERIALIZED |
                            NDIS_MAC_OPTION_COPY_LOOKAHEAD_DATA |
                            NDIS_MAC_OPTION_TRANSFERS_NOT_PEND |
                            NDIS_MAC_OPTION_NO_LOOPBACK;
             break;
-            
+
         case OID_GEN_MEDIA_CONNECT_STATUS:
             genericUlong = adapter->MediaState;
             break;
-            
+
         case OID_GEN_MAXIMUM_SEND_PACKETS:
             genericUlong = 1;
             break;
-            
+
         case OID_802_3_CURRENT_ADDRESS:
             copySource = adapter->CurrentMacAddress;
             copyLength = IEEE_802_ADDR_LENGTH;
             break;
-            
+
         case OID_802_3_PERMANENT_ADDRESS:
             copySource = adapter->PermanentMacAddress;
             copyLength = IEEE_802_ADDR_LENGTH;
             break;
-            
+
         case OID_802_3_MAXIMUM_LIST_SIZE:
             genericUlong = MAXIMUM_MULTICAST_ADDRESSES;
             break;
-            
+
         case OID_GEN_XMIT_OK:
             genericUlong = adapter->TransmitOk;
             break;
@@ -235,13 +235,13 @@ MiniportQueryInformation (
         case OID_802_3_XMIT_MORE_COLLISIONS:
             genericUlong = adapter->TransmitMoreCollisions;
             break;
-            
+
         default:
             NDIS_DbgPrint(MIN_TRACE, ("Unknown OID\n"));
             status = NDIS_STATUS_NOT_SUPPORTED;
             break;
     }
-    
+
     if (status == NDIS_STATUS_SUCCESS)
     {
         if (copyLength > InformationBufferLength)
@@ -262,7 +262,7 @@ MiniportQueryInformation (
         *BytesWritten = 0;
         *BytesNeeded = 0;
     }
-    
+
     NdisReleaseSpinLock(&adapter->Lock);
 
     NDIS_DbgPrint(MAX_TRACE, ("Query OID 0x%x: Completed with status 0x%x (%d, %d)\n",
@@ -285,9 +285,9 @@ MiniportSetInformation (
     PRTL_ADAPTER adapter = (PRTL_ADAPTER)MiniportAdapterContext;
     ULONG genericUlong;
     NDIS_STATUS status;
-    
+
     status = NDIS_STATUS_SUCCESS;
-    
+
     NdisAcquireSpinLock(&adapter->Lock);
 
     switch (Oid)
@@ -300,10 +300,10 @@ MiniportSetInformation (
                 status = NDIS_STATUS_INVALID_LENGTH;
                 break;
             }
-            
+
             NdisMoveMemory(&genericUlong, InformationBuffer, sizeof(ULONG));
-            
-            if (genericUlong & 
+
+            if (genericUlong &
                 (NDIS_PACKET_TYPE_ALL_FUNCTIONAL |
                  NDIS_PACKET_TYPE_FUNCTIONAL |
                  NDIS_PACKET_TYPE_GROUP |
@@ -316,18 +316,18 @@ MiniportSetInformation (
                 status = NDIS_STATUS_NOT_SUPPORTED;
                 break;
             }
-            
+
             adapter->PacketFilter = genericUlong;
-            
+
             status = NICApplyPacketFilter(adapter);
             if (status != NDIS_STATUS_SUCCESS)
             {
                 NDIS_DbgPrint(MIN_TRACE, ("Failed to apply new packet filter\n"));
                 break;
             }
-            
+
             break;
-            
+
         case OID_GEN_CURRENT_LOOKAHEAD:
             if (InformationBufferLength < sizeof(ULONG))
             {
@@ -336,7 +336,7 @@ MiniportSetInformation (
                 status = NDIS_STATUS_INVALID_LENGTH;
                 break;
             }
-            
+
             NdisMoveMemory(&genericUlong, InformationBuffer, sizeof(ULONG));
 
             if (genericUlong > MAXIMUM_FRAME_SIZE - sizeof(ETH_HEADER))
@@ -347,9 +347,9 @@ MiniportSetInformation (
             {
                 // Ignore this...
             }
-            
+
             break;
-            
+
         case OID_802_3_MULTICAST_LIST:
             if (InformationBufferLength % IEEE_802_ADDR_LENGTH)
             {
@@ -358,7 +358,7 @@ MiniportSetInformation (
                 status = NDIS_STATUS_INVALID_LENGTH;
                 break;
             }
-            
+
             if (InformationBufferLength / 6 > MAXIMUM_MULTICAST_ADDRESSES)
             {
                 *BytesNeeded = MAXIMUM_MULTICAST_ADDRESSES * IEEE_802_ADDR_LENGTH;
@@ -366,13 +366,13 @@ MiniportSetInformation (
                 status = NDIS_STATUS_INVALID_LENGTH;
                 break;
             }
-            
+
             NdisMoveMemory(adapter->MulticastList, InformationBuffer, InformationBufferLength);
-            
+
             // FIXME: Write to device
-            
+
             break;
-            
+
         default:
             NDIS_DbgPrint(MIN_TRACE, ("Unknown OID\n"));
             status = NDIS_STATUS_NOT_SUPPORTED;
@@ -380,13 +380,13 @@ MiniportSetInformation (
             *BytesNeeded = 0;
             break;
     }
-    
+
     if (status == NDIS_STATUS_SUCCESS)
     {
         *BytesRead = InformationBufferLength;
         *BytesNeeded = 0;
     }
-    
+
     NdisReleaseSpinLock(&adapter->Lock);
 
     return status;

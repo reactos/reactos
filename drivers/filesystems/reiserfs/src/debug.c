@@ -2,10 +2,10 @@
  * COPYRIGHT:        GNU GENERAL PUBLIC LICENSE VERSION 2
  * PROJECT:          ReiserFs file system driver for Windows NT/2000/XP/Vista.
  * FILE:             debug.c
- * PURPOSE:          
+ * PURPOSE:
  * PROGRAMMER:       Mark Piper, Matt Wu, Bo Brantén.
- * HOMEPAGE:         
- * UPDATE HISTORY: 
+ * HOMEPAGE:
+ * UPDATE HISTORY:
  */
 
 #if DBG
@@ -137,7 +137,7 @@ static PUCHAR FsInformationClassStrings[] = {
  * Return Value:
  *   N/A
  *
- * NOTES: 
+ * NOTES:
  *   N/A
  */
 
@@ -157,7 +157,7 @@ RfsdPrintf(
     if (DebugPrintLevel <= DebugLevel) {
         CHAR Buffer[0x100];
         va_start(ap, DebugMessage);
-       
+
         KeQuerySystemTime( &CurrentTime);
         RtlTimeToTimeFields(&CurrentTime, &TimeFields);
 
@@ -193,7 +193,7 @@ RfsdPrintf(
  * Return Value:
  *   N/A
  *
- * NOTES: 
+ * NOTES:
  *   N/A
  */
 
@@ -213,7 +213,7 @@ RfsdNIPrintf(
     if (DebugPrintLevel <= DebugLevel) {
         CHAR Buffer[0x100];
         va_start(ap, DebugMessage);
-       
+
         KeQuerySystemTime( &CurrentTime);
         RtlTimeToTimeFields(&CurrentTime, &TimeFields);
 
@@ -232,7 +232,7 @@ RfsdNIPrintf(
 
 } // RfsdNIPrintf()
 
-ULONG 
+ULONG
 RfsdGetProcessNameOffset ( VOID )
 {
     PEPROCESS   Process;
@@ -433,7 +433,7 @@ RfsdDbgPrintCall (IN PDEVICE_OBJECT   DeviceObject,
                 ));
         } else {
             RfsdPrintNoIndent((
-                DBG_TRACE, 
+                DBG_TRACE,
                 "%s %s %s Unknown FileInformationClass %u\n",
                 RfsdGetCurrentProcessName(),
                 IrpMjStrings[IoStackLocation->MajorFunction],
@@ -459,7 +459,7 @@ RfsdDbgPrintCall (IN PDEVICE_OBJECT   DeviceObject,
                 ));
         } else {
             RfsdPrintNoIndent((
-                DBG_TRACE, 
+                DBG_TRACE,
                 "%s %s %s Unknown FsInformationClass %u\n",
                 RfsdGetCurrentProcessName(),
                 IrpMjStrings[IoStackLocation->MajorFunction],
@@ -552,7 +552,7 @@ RfsdDbgPrintCall (IN PDEVICE_OBJECT   DeviceObject,
                 }
             } else {
                 RfsdPrintNoIndent((
-                    DBG_TRACE, 
+                    DBG_TRACE,
                     "%s %s %s Unknown FileInformationClass %u\n",
                     RfsdGetCurrentProcessName(),
                     IrpMjStrings[IoStackLocation->MajorFunction],
@@ -584,7 +584,7 @@ RfsdDbgPrintCall (IN PDEVICE_OBJECT   DeviceObject,
         if (IoStackLocation->MinorFunction == IRP_MN_USER_FS_REQUEST) {
 #ifndef _GNU_NTIFS_
             RfsdPrintNoIndent((
-                DBG_TRACE, 
+                DBG_TRACE,
                 "%s %s %s IRP_MN_USER_FS_REQUEST FsControlCode: %#x\n",
                 RfsdGetCurrentProcessName(),
                 IrpMjStrings[IoStackLocation->MajorFunction],
@@ -593,7 +593,7 @@ RfsdDbgPrintCall (IN PDEVICE_OBJECT   DeviceObject,
                 ));
 #else
             RfsdPrintNoIndent((
-                DBG_TRACE, 
+                DBG_TRACE,
                 "%s %s %s IRP_MN_USER_FS_REQUEST FsControlCode: %#x\n",
                 RfsdGetCurrentProcessName(),
                 IrpMjStrings[IoStackLocation->MajorFunction],
@@ -604,7 +604,7 @@ RfsdDbgPrintCall (IN PDEVICE_OBJECT   DeviceObject,
 #endif
         } else if (IoStackLocation->MinorFunction == IRP_MN_MOUNT_VOLUME) {
             RfsdPrintNoIndent((
-                DBG_TRACE, 
+                DBG_TRACE,
                 "%s %s %s IRP_MN_MOUNT_VOLUME DeviceObject: %#x\n",
                 RfsdGetCurrentProcessName(),
                 IrpMjStrings[IoStackLocation->MajorFunction],
@@ -613,7 +613,7 @@ RfsdDbgPrintCall (IN PDEVICE_OBJECT   DeviceObject,
                 ));
         } else if (IoStackLocation->MinorFunction == IRP_MN_VERIFY_VOLUME) {
             RfsdPrintNoIndent((
-                DBG_TRACE, 
+                DBG_TRACE,
                 "%s %s %s IRP_MN_VERIFY_VOLUME DeviceObject: %#x\n",
                 RfsdGetCurrentProcessName(),
                 IrpMjStrings[IoStackLocation->MajorFunction],
@@ -661,9 +661,9 @@ RfsdDbgPrintCall (IN PDEVICE_OBJECT   DeviceObject,
             ));
 
         break;
-    
+
     case IRP_MJ_LOCK_CONTROL:
-        
+
         if (IoStackLocation->MinorFunction & IRP_MN_LOCK) {
 #ifndef _GNU_NTIFS_
             RfsdPrintNoIndent((
@@ -753,9 +753,9 @@ RfsdDbgPrintCall (IN PDEVICE_OBJECT   DeviceObject,
                 IoStackLocation->MinorFunction
                 ));
         }
-        
+
         break;
-        
+
     case IRP_MJ_CLEANUP:
 
         RfsdPrintNoIndent((

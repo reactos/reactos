@@ -1381,7 +1381,7 @@ typedef struct _SYSTEM_CPU_INFORMATION {
 #define CPU_FEATURE_VME    0x00000005   /* Virtual 86 Mode Extensions */
 #define CPU_FEATURE_TSC    0x00000002   /* Time Stamp Counter available */
 #define CPU_FEATURE_CMOV   0x00000008   /* Conditional Move instruction*/
-#define CPU_FEATURE_PGE    0x00000014   /* Page table Entry Global bit */ 
+#define CPU_FEATURE_PGE    0x00000014   /* Page table Entry Global bit */
 #define CPU_FEATURE_PSE    0x00000024   /* Page Size Extension */
 #define CPU_FEATURE_MTRR   0x00000040   /* Memory Type Range Registers */
 #define CPU_FEATURE_CX8    0x00000080   /* Compare and eXchange 8 byte instr. */

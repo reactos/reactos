@@ -35,7 +35,7 @@
 #if ((__HP_aCC > 60000) && (__HP_aCC < 61200))
 #  define __EDG__
 #  define __EDG_VERSION__ 306
-#endif 
+#endif
 
 #if (__HP_aCC >= 32500 )
 #  define _STLP_USE_NEW_C_HEADERS

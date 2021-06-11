@@ -483,7 +483,7 @@ typedef struct _VFATFCB
     /* List of FCB's for this volume */
     LIST_ENTRY FcbListEntry;
 
-    /* List of FCB's for the parent */ 
+    /* List of FCB's for the parent */
     LIST_ENTRY ParentListEntry;
 
     /* pointer to the parent fcb */

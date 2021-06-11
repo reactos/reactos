@@ -52,7 +52,7 @@ find_thread(
 
     if (
 #if !MONOPROCESS
-    (Pid == 0) && 
+    (Pid == 0) &&
 #endif
     (Tid == 0))
     {

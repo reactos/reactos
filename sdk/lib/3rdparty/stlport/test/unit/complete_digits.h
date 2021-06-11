@@ -3,7 +3,7 @@
 
 #include <string>
 
-inline void 
+inline void
 #if !defined (STLPORT) || defined (_STLP_USE_NAMESPACES)
 complete_digits(std::string &digits)
 #else

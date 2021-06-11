@@ -77,12 +77,12 @@ _STLP_mutex_spin<__inst>::_S_nsec_sleep(int __log_nsec, unsigned int& __iteratio
 #  if defined (_STLP_WIN32THREADS)
 #    if defined (_WIN32_WINNT) && (_WIN32_WINNT >= 0x0400)
   if (__iteration <= 4000) {
-    // Use SwitchToThread because 
+    // Use SwitchToThread because
     // 1) Sleep(1) often takes ~15 ms
     // 2) SwitchToThread yields to lower-priority threads
     // 4000 is enough to avoid Sleep and is used just to prevent infinite looping
     // This number is advised spin count for Heap management by Microsoft
-     SwitchToThread(); 
+     SwitchToThread();
   } else {
 #    endif
     if (__log_nsec <= 21) {

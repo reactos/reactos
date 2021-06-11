@@ -2,8 +2,8 @@
  * COPYRIGHT:             See COPYING in the top level directory
  * PROJECT:               ReactOS kernel
  * FILE:                  hal/halx86/mp/ioapic.c
- * PURPOSE:               
- * PROGRAMMER:            
+ * PURPOSE:
+ * PROGRAMMER:
  */
 
 /* INCLUDES *****************************************************************/
@@ -65,7 +65,7 @@ VOID IOAPICWrite(ULONG Apic, ULONG Offset, ULONG Value);
  */
 static ULONG EISA_ELCR_Read(ULONG irq)
 {
-   if (irq < 16) 
+   if (irq < 16)
    {
       PUCHAR port = (PUCHAR)(0x4d0 + (irq >> 3));
       return (READ_PORT_UCHAR(port) >> (irq & 7)) & 1;
@@ -74,7 +74,7 @@ static ULONG EISA_ELCR_Read(ULONG irq)
    return 0;
 }
 
-static ULONG 
+static ULONG
 IRQPolarity(ULONG idx)
 {
    ULONG bus = IRQMap[idx].SrcBusId;
@@ -92,11 +92,11 @@ IRQPolarity(ULONG idx)
 	       case MP_BUS_ISA: /* ISA pin */
 		  polarity = default_ISA_polarity(idx);
 		  break;
-		  
+
 	       case MP_BUS_EISA: /* EISA pin */
 		  polarity = default_EISA_polarity(idx);
 		  break;
-		
+
 	       case MP_BUS_PCI: /* PCI pin */
 		  polarity = default_PCI_polarity(idx);
 		  break;
@@ -104,7 +104,7 @@ IRQPolarity(ULONG idx)
 	       case MP_BUS_MCA: /* MCA pin */
                   polarity = default_MCA_polarity(idx);
 		  break;
-		
+
 	       default:
 		  DPRINT("Broken BIOS!!\n");
 		  polarity = 1;
@@ -132,7 +132,7 @@ IRQPolarity(ULONG idx)
    return polarity;
 }
 
-static ULONG 
+static ULONG
 IRQTrigger(ULONG idx)
 {
    ULONG bus = IRQMap[idx].SrcBusId;
@@ -154,7 +154,7 @@ IRQTrigger(ULONG idx)
 	       case MP_BUS_EISA: /* EISA pin */
 		  trigger = default_EISA_trigger(idx);
 		  break;
-		
+
 	       case MP_BUS_PCI: /* PCI pin */
 		  trigger = default_PCI_trigger(idx);
 		  break;
@@ -162,7 +162,7 @@ IRQTrigger(ULONG idx)
                case MP_BUS_MCA: /* MCA pin */
 		  trigger = default_MCA_trigger(idx);
 		  break;
-		
+
                default:
                   DPRINT("Broken BIOS!!\n");
 		  trigger = 1;
@@ -182,15 +182,15 @@ IRQTrigger(ULONG idx)
       case 3: /* level */
  	 trigger = 1;
 	 break;
-	
+
       default: /* invalid */
 	 DPRINT("Broken BIOS!!\n");
-	 trigger = 0;					
+	 trigger = 0;
    }
    return trigger;
 }
 
-static ULONG 
+static ULONG
 Pin2Irq(ULONG idx,
 	ULONG apic,
 	ULONG pin)
@@ -201,7 +201,7 @@ Pin2Irq(ULONG idx,
    /*
     * Debugging check, we are in big trouble if this message pops up!
     */
-   if (IRQMap[idx].DstApicInt != pin) 
+   if (IRQMap[idx].DstApicInt != pin)
    {
       DPRINT("broken BIOS or MPTABLE parser, ayiee!!\n");
    }
@@ -225,7 +225,7 @@ Pin2Irq(ULONG idx,
 	 }
 	 irq += pin;
 	 break;
-	
+
       default:
 	 DPRINT("Unknown bus type %d.\n",bus);
 	 irq = 0;
@@ -233,7 +233,7 @@ Pin2Irq(ULONG idx,
    return irq;
 }
 
-static ULONG 
+static ULONG
 AssignIrqVector(ULONG irq)
 {
 #if 0
@@ -247,12 +247,12 @@ AssignIrqVector(ULONG irq)
       return vector;
    }
 #if 0
-   if (current_vector > FIRST_SYSTEM_VECTOR) 
+   if (current_vector > FIRST_SYSTEM_VECTOR)
    {
       vector_offset++;
       current_vector = FIRST_DEVICE_VECTOR + vector_offset;
-   } 
-   else if (current_vector == FIRST_SYSTEM_VECTOR) 
+   }
+   else if (current_vector == FIRST_SYSTEM_VECTOR)
    {
       DPRINT1("Ran out of interrupt sources!");
       ASSERT(FALSE);
@@ -272,7 +272,7 @@ AssignIrqVector(ULONG irq)
 /*
  * Find the IRQ entry number of a certain pin.
  */
-static ULONG 
+static ULONG
 IOAPICGetIrqEntry(ULONG apic,
 		  ULONG pin,
 		  ULONG type)
@@ -292,7 +292,7 @@ IOAPICGetIrqEntry(ULONG apic,
 }
 
 
-VOID 
+VOID
 IOAPICSetupIrqs(VOID)
 {
    IOAPIC_ROUTE_ENTRY entry;
@@ -303,9 +303,9 @@ IOAPICSetupIrqs(VOID)
    /* Setup IRQ to vector translation map */
    memset(&IRQVectorMap, 0, sizeof(IRQVectorMap));
 
-   for (apic = 0; apic < IOAPICCount; apic++) 
+   for (apic = 0; apic < IOAPICCount; apic++)
    {
-      for (pin = 0; pin < IOAPICMap[apic].EntryCount; pin++) 
+      for (pin = 0; pin < IOAPICMap[apic].EntryCount; pin++)
       {
          /*
 	  * add it to the IO-APIC irq-routing table
@@ -320,12 +320,12 @@ IOAPICSetupIrqs(VOID)
 	 idx = IOAPICGetIrqEntry(apic,pin,INT_VECTORED);
 	 if (idx == (ULONG)-1)
 	 {
-	    if (first_notcon) 
+	    if (first_notcon)
 	    {
 	       DPRINT(" IO-APIC (apicid-pin) %d-%d\n", IOAPICMap[apic].ApicId, pin);
 	       first_notcon = 0;
-	    } 
-	    else 
+	    }
+	    else
 	    {
 	       DPRINT(", %d-%d\n", IOAPICMap[apic].ApicId, pin);
             }
@@ -335,7 +335,7 @@ IOAPICSetupIrqs(VOID)
          trigger = IRQTrigger(idx);
 	 entry.polarity = IRQPolarity(idx);
 
-	 if (trigger) 
+	 if (trigger)
 	 {
 	    entry.trigger = 1;
 	 }
@@ -367,7 +367,7 @@ IOAPICSetupIrqs(VOID)
    }
 }
 
-static VOID 
+static VOID
 IOAPICClearPin(ULONG Apic, ULONG Pin)
 {
    IOAPIC_ROUTE_ENTRY Entry;
@@ -383,7 +383,7 @@ IOAPICClearPin(ULONG Apic, ULONG Pin)
    IOAPICWrite(Apic, IOAPIC_REDTBL + 1 + 2 * Pin, *(((PULONG)&Entry) + 1));
 }
 
-static VOID 
+static VOID
 IOAPICClear(ULONG Apic)
 {
    ULONG Pin;
@@ -394,7 +394,7 @@ IOAPICClear(ULONG Apic)
    }
 }
 
-static VOID 
+static VOID
 IOAPICClearAll(VOID)
 {
    ULONG Apic;
@@ -405,7 +405,7 @@ IOAPICClearAll(VOID)
    }
 }
 
-VOID 
+VOID
 IOAPICEnable(VOID)
 {
    ULONG i, tmp;
@@ -416,7 +416,7 @@ IOAPICEnable(VOID)
    /*
     * The number of IO-APIC IRQ registers (== #pins):
     */
-   for (i = 0; i < IOAPICCount; i++) 
+   for (i = 0; i < IOAPICCount; i++)
    {
       tmp = IOAPICRead(i, IOAPIC_VER);
       IOAPICMap[i].EntryCount = GET_IOAPIC_MRE(tmp) + 1;
@@ -428,32 +428,32 @@ IOAPICEnable(VOID)
    IOAPICClearAll();
 }
 
-VOID 
+VOID
 IOAPICSetupIds(VOID)
 {
   ULONG tmp, apic, i;
   UCHAR old_id;
-  
+
   /*
    * Set the IOAPIC ID to the value stored in the MPC table.
    */
-  for (apic = 0; apic < IOAPICCount; apic++) 
+  for (apic = 0; apic < IOAPICCount; apic++)
   {
-    
+
     /* Read the register 0 value */
     tmp = IOAPICRead(apic, IOAPIC_ID);
-    
+
     old_id = IOAPICMap[apic].ApicId;
-    
-    if (IOAPICMap[apic].ApicId >= 0xf) 
+
+    if (IOAPICMap[apic].ApicId >= 0xf)
     {
       DPRINT1("BIOS bug, IO-APIC#%d ID is %d in the MPC table!...\n",
 	      apic, IOAPICMap[apic].ApicId);
-      DPRINT1("... fixing up to %d. (tell your hw vendor)\n", 
+      DPRINT1("... fixing up to %d. (tell your hw vendor)\n",
 	      GET_IOAPIC_ID(tmp));
       IOAPICMap[apic].ApicId = GET_IOAPIC_ID(tmp);
     }
-    
+
     /*
      * We need to adjust the IRQ routing table
      * if the ID changed.
@@ -468,24 +468,24 @@ IOAPICSetupIds(VOID)
 	}
       }
     }
-    
+
     /*
      * Read the right value from the MPC table and
      * write it into the ID register.
      */
     DPRINT("Changing IO-APIC physical APIC ID to %d\n",
 	   IOAPICMap[apic].ApicId);
-    
+
     tmp &= ~IOAPIC_ID_MASK;
     tmp |= SET_IOAPIC_ID(IOAPICMap[apic].ApicId);
 
     IOAPICWrite(apic, IOAPIC_ID, tmp);
-    
+
     /*
      * Sanity check
      */
     tmp = IOAPICRead(apic, 0);
-    if (GET_IOAPIC_ID(tmp) != IOAPICMap[apic].ApicId) 
+    if (GET_IOAPIC_ID(tmp) != IOAPICMap[apic].ApicId)
     {
       DPRINT1("Could not set I/O APIC ID!\n");
       ASSERT(FALSE);
@@ -530,7 +530,7 @@ VOID IOAPICDump(VOID)
    ULONG reg0, reg1, reg2=0;
 
    DbgPrint("Number of MP IRQ sources: %d.\n", IRQCount);
-   for (i = 0; i < IOAPICCount; i++) 
+   for (i = 0; i < IOAPICCount; i++)
    {
       DbgPrint("Number of IO-APIC #%d registers: %d.\n",
 	       IOAPICMap[i].ApicId,
@@ -543,11 +543,11 @@ VOID IOAPICDump(VOID)
     */
    DbgPrint("Testing the IO APIC.......................\n");
 
-   for (apic = 0; apic < IOAPICCount; apic++) 
+   for (apic = 0; apic < IOAPICCount; apic++)
    {
       reg0 = IOAPICRead(apic, IOAPIC_ID);
       reg1 = IOAPICRead(apic, IOAPIC_VER);
-      if (GET_IOAPIC_VERSION(reg1) >= 0x10) 
+      if (GET_IOAPIC_VERSION(reg1) >= 0x10)
       {
          reg2 = IOAPICRead(apic, IOAPIC_ARB);
       }
@@ -556,7 +556,7 @@ VOID IOAPICDump(VOID)
       DbgPrint("IO APIC #%d......\n", IOAPICMap[apic].ApicId);
       DbgPrint(".... register #00: %08X\n", reg0);
       DbgPrint(".......    : physical APIC id: %02X\n", GET_IOAPIC_ID(reg0));
-      if (reg0 & 0xF0FFFFFF) 
+      if (reg0 & 0xF0FFFFFF)
       {
          DbgPrint("  WARNING: Unexpected IO-APIC\n");
       }
@@ -571,7 +571,7 @@ VOID IOAPICDump(VOID)
 	  (i != 0x1f) &&    /* dual Xeon boards */
           (i != 0x22) &&   /* bigger Xeon boards */
 	  (i != 0x2E) &&
-	  (i != 0x3F)) 
+	  (i != 0x3F))
       {
          DbgPrint("  WARNING: Unexpected IO-APIC\n");
       }
@@ -586,17 +586,17 @@ VOID IOAPICDump(VOID)
          DbgPrint("  WARNING: Unexpected IO-APIC\n");
       }
 
-      if (reg1 & 0xFF00FF00) 
+      if (reg1 & 0xFF00FF00)
       {
          DbgPrint("  WARNING: Unexpected IO-APIC\n");
       }
 
-      if (GET_IOAPIC_VERSION(reg1) >= 0x10) 
+      if (GET_IOAPIC_VERSION(reg1) >= 0x10)
       {
 	 DbgPrint(".... register #02: %08X\n", reg2);
 	 DbgPrint(".......     : arbitration: %02X\n",
 	          GET_IOAPIC_ARB(reg2));
-  	 if (reg2 & 0xF0FFFFFF) 
+  	 if (reg2 & 0xF0FFFFFF)
 	 {
             DbgPrint("  WARNING: Unexpected IO-APIC\n");
          }
@@ -606,7 +606,7 @@ VOID IOAPICDump(VOID)
       DbgPrint(" NR Log Phy Mask Trig IRR Pol"
 	       " Stat Dest Deli Vect:   \n");
 
-      for (i = 0; i <= GET_IOAPIC_MRE(reg1); i++) 
+      for (i = 0; i <= GET_IOAPIC_MRE(reg1); i++)
       {
          IOAPIC_ROUTE_ENTRY entry;
 
@@ -644,14 +644,14 @@ HaliReconfigurePciInterrupts(VOID)
       {
          DPRINT("%02x: IrqType %02x, IrqFlag %02x, SrcBusId %02x, SrcBusIrq %02x"
 	        ", DstApicId %02x, DstApicInt %02x\n",
-	        i, IRQMap[i].IrqType, IRQMap[i].IrqFlag, IRQMap[i].SrcBusId, 
+	        i, IRQMap[i].IrqType, IRQMap[i].IrqFlag, IRQMap[i].SrcBusId,
 	        IRQMap[i].SrcBusIrq, IRQMap[i].DstApicId, IRQMap[i].DstApicInt);
 
-	 HalSetBusDataByOffset(PCIConfiguration, 
-	                               IRQMap[i].SrcBusId, 
-				       (IRQMap[i].SrcBusIrq >> 2) & 0x1f, 
-				       &IRQMap[i].DstApicInt, 
-				       0x3c /*PCI_INTERRUPT_LINE*/, 
+	 HalSetBusDataByOffset(PCIConfiguration,
+	                               IRQMap[i].SrcBusId,
+				       (IRQMap[i].SrcBusIrq >> 2) & 0x1f,
+				       &IRQMap[i].DstApicInt,
+				       0x3c /*PCI_INTERRUPT_LINE*/,
 				       1);
 
       }
@@ -662,13 +662,13 @@ VOID Disable8259AIrq(ULONG irq)
 {
     UCHAR tmp;
 
-    if (irq >= 8) 
+    if (irq >= 8)
     {
        tmp = READ_PORT_UCHAR((PUCHAR)0xA1);
        tmp |= (1 << (irq - 8));
        WRITE_PORT_UCHAR((PUCHAR)0xA1, tmp);
-    } 
-    else 
+    }
+    else
     {
        tmp = READ_PORT_UCHAR((PUCHAR)0x21);
        tmp |= (1 << irq);

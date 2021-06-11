@@ -28,7 +28,7 @@ Abstract:
 
 
 _Function_class_(IRP_MJ_SHUTDOWN)
-_Function_class_(DRIVER_DISPATCH)	
+_Function_class_(DRIVER_DISPATCH)
 NTSTATUS
 NTAPI
 FatFsdShutdown (
@@ -112,8 +112,8 @@ Return Value:
     return Status;
 }
 
-
-_Requires_lock_held_(_Global_critical_region_)    
+
+_Requires_lock_held_(_Global_critical_region_)
 NTSTATUS
 FatCommonShutdown (
     IN PIRP_CONTEXT IrpContext,
@@ -165,12 +165,12 @@ Return Value:
     //  Indicate that shutdown has started.  This is used in FatFspClose.
     //
 
-    FatData.ShutdownStarted = TRUE;    
+    FatData.ShutdownStarted = TRUE;
 
     //
     //  Get everyone else out of the way
     //
-    
+
     NT_ASSERT( FlagOn(IrpContext->Flags, IRP_CONTEXT_FLAG_WAIT) );
 
 #ifdef _MSC_VER
@@ -285,7 +285,7 @@ Return Value:
                                               FALSE );
 
             if (!VcbDeleted) {
-                
+
                 FatReleaseVolume( IrpContext, Vcb );
             }
         }
@@ -298,7 +298,7 @@ Return Value:
         //
         //  Unregister the file system.
         //
-        
+
         IoUnregisterFileSystem( FatDiskFileSystemDeviceObject);
         IoUnregisterFileSystem( FatCdromFileSystemDeviceObject);
         IoDeleteDevice( FatDiskFileSystemDeviceObject);

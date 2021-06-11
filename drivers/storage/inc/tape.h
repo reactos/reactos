@@ -180,7 +180,7 @@ typedef struct _MODE_DATA_COMPRESS_PAGE {
 } MODE_DATA_COMPRESS_PAGE, *PMODE_DATA_COMPRESS_PAGE;
 
 
-
+
 //
 // The following routines are the exported entry points for
 // all tape class drivers. Note all these routines name start
@@ -217,7 +217,7 @@ ScsiTapeDeviceControl(
     );
 
 
-
+
 //
 // The following routines are provided by the tape
 // device-specific module. Each routine name is

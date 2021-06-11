@@ -305,15 +305,15 @@ void FstreamTest::tellp()
    */
   {
     #ifdef WIN32
-    //In Windows, stlport and fopen use kernel32.CreateFile for open. 
+    //In Windows, stlport and fopen use kernel32.CreateFile for open.
     //File position is at BOF after open, unless we open with ios_base::ate
-    long expected_pos = 0; 
+    long expected_pos = 0;
     #else
     //On UNIX flavours, stlport and fopen use unix's open
     //File position is at EOF after open
     //
     //3rd possible scenario, "other platforms" - _STLP_USE_STDIO_IO
-    //stlport uses fopen here. This case may fail this test, since the file position after 
+    //stlport uses fopen here. This case may fail this test, since the file position after
     //fopen is implementation-dependent
     long expected_pos = 9;
     #endif
@@ -332,8 +332,8 @@ void FstreamTest::tellp()
     fclose( f );
   }
   {
-    //In append mode, file is positioned at EOF just before a write. 
-    // After a write, file is at EOF. This is implementation-independent.  
+    //In append mode, file is positioned at EOF just before a write.
+    // After a write, file is at EOF. This is implementation-independent.
     ofstream o( "test_file.txt", ios_base::app | ios_base::out );
     o << "X";
     CPPUNIT_CHECK( o.rdbuf()->pubseekoff( 0, ios_base::cur, ios_base::out ) == ofstream::pos_type(10) );
@@ -855,7 +855,7 @@ void FstreamTest::null_buf()
 
   testcase for bug #1830513:
   in _istream.c
- 
+
   template < class _CharT, class _Traits, class _Is_Delim>
   streamsize _STLP_CALL __read_unbuffered(basic_istream<_CharT, _Traits>* __that,
                                           basic_streambuf<_CharT, _Traits>* __buf,

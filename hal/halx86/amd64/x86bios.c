@@ -2,7 +2,7 @@
  * PROJECT:         ReactOS HAL
  * LICENSE:         GPL, See COPYING in the top level directory
  * FILE:            hal/halx86/amd64/x86bios.c
- * PURPOSE:         
+ * PURPOSE:
  * PROGRAMMERS:     Timo Kreuzer (timo.kreuzer@reactos.org)
  */
 
@@ -256,7 +256,7 @@ x86BiosWriteMemory(
 
 static
 VOID
-FASTCALL 
+FASTCALL
 x86MemRead(
     PFAST486_STATE State,
     ULONG Address,

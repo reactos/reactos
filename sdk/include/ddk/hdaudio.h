@@ -311,7 +311,7 @@ _Must_inspect_result_
 NTSTATUS
 (NTAPI *PALLOCATE_DMA_BUFFER_WITH_NOTIFICATION)(
   _In_ PVOID _context,
-  _In_ HANDLE Handle, 
+  _In_ HANDLE Handle,
   _In_ ULONG NotificationCount,
   _In_ SIZE_T RequestedBufferSize,
   _Out_ PMDL *BufferMdl,

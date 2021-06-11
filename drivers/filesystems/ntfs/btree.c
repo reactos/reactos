@@ -107,7 +107,7 @@ PrintAllVCNs(PDEVICE_EXTENSION Vcb,
 * @returns
 * STATUS_SUCCESS in case of success.
 * STATUS_NOT_IMPLEMENTED if there's no $I30 bitmap attribute in the file record.
-* 
+*
 * @remarks
 * AllocateIndexNode() doesn't write any data to the index record it creates. Called by UpdateIndexNode().
 * Don't call PrintAllVCNs() or NtfsDumpFileRecord() after calling AllocateIndexNode() before UpdateIndexNode() finishes.
@@ -173,7 +173,7 @@ AllocateIndexNode(PDEVICE_EXTENSION DeviceExt,
     // Windows seems to allocate the bitmap in 8-byte chunks to keep any bytes from being wasted on padding
     BytesNeeded = ALIGN_UP(BytesNeeded, ATTR_RECORD_ALIGNMENT);
 
-    // Allocate memory for the bitmap, including some padding; RtlInitializeBitmap() wants a pointer 
+    // Allocate memory for the bitmap, including some padding; RtlInitializeBitmap() wants a pointer
     // that's ULONG-aligned, and it wants the size of the memory allocated for it to be a ULONG-multiple.
     BitmapMem = ExAllocatePoolWithTag(NonPagedPool, BytesNeeded + sizeof(ULONG), TAG_NTFS);
     if (!BitmapMem)
@@ -248,7 +248,7 @@ AllocateIndexNode(PDEVICE_EXTENSION DeviceExt,
 
     // Set the bit for the new index record
     RtlSetBits(&Bitmap, NextNodeNumber, 1);
-  
+
     // Write the new bitmap attribute
     Status = WriteAttribute(DeviceExt,
                             BitmapCtx,
@@ -304,7 +304,7 @@ CreateDummyKey(BOOLEAN HasChildNode)
     }
 
     RtlZeroMemory(NewIndexEntry, EntrySize);
-    
+
     if (HasChildNode)
     {
         NewIndexEntry->Flags = NTFS_INDEX_ENTRY_NODE | NTFS_INDEX_ENTRY_END;
@@ -443,7 +443,7 @@ CompareTreeKeys(PB_TREE_KEY Key1, PB_TREE_KEY Key2, BOOLEAN CaseSensitive)
     {
         // Truncate KeyName2 to be the same length as KeyName1
         Key2Name.Length = Key1Name.Length;
-        
+
         // Compare the names of the same length
         Comparison = RtlCompareUnicodeString(&Key1Name, &Key2Name, !CaseSensitive);
 
@@ -471,12 +471,12 @@ CompareTreeKeys(PB_TREE_KEY Key1, PB_TREE_KEY Key2, BOOLEAN CaseSensitive)
 /**
 * @name CountBTreeKeys
 * @implemented
-* 
+*
 * Counts the number of linked B-Tree keys, starting with FirstKey.
 *
 * @param FirstKey
 * Pointer to a B_TREE_KEY that will be the first key to be counted.
-* 
+*
 * @return
 * The number of keys in a linked-list, including FirstKey and the final dummy key.
 */
@@ -485,7 +485,7 @@ CountBTreeKeys(PB_TREE_KEY FirstKey)
 {
     ULONG Count = 0;
     PB_TREE_KEY Current = FirstKey;
-    
+
     while (Current != NULL)
     {
         Count++;
@@ -674,7 +674,7 @@ CreateBTreeNodeFromIndexNode(PDEVICE_EXTENSION Vcb,
 * @returns
 * STATUS_SUCCESS on success.
 * STATUS_INSUFFICIENT_RESOURCES if an allocation fails.
-* 
+*
 * @remarks
 * Allocates memory for the entire tree. Caller is responsible for destroying the tree with DestroyBTree().
 */
@@ -861,7 +861,7 @@ GetSizeOfIndexEntries(PB_TREE_FILENAME_NODE Node)
     PB_TREE_KEY CurrentKey = Node->FirstKey;
     ULONG i;
     for (i = 0; i < Node->KeyCount; i++)
-    {        
+    {
         ASSERT(CurrentKey->IndexEntry->Length != 0);
 
         // Add the length of the current node
@@ -902,7 +902,7 @@ GetSizeOfIndexEntries(PB_TREE_FILENAME_NODE Node)
 * STATUS_SUCCESS on success.
 * STATUS_INSUFFICIENT_RESOURCES if an allocation fails.
 * STATUS_NOT_IMPLEMENTED if the new index can't fit within MaxIndexSize.
-* 
+*
 * @remarks
 * If the function succeeds, it's the caller's responsibility to free IndexRoot with ExFreePoolWithTag().
 */
@@ -953,7 +953,7 @@ CreateIndexRootFromBTree(PDEVICE_EXTENSION DeviceExt,
 
     // Setup each Node Entry
     CurrentKey = Tree->RootNode->FirstKey;
-    CurrentNodeEntry = (PINDEX_ENTRY_ATTRIBUTE)((ULONG_PTR)NewIndexRoot 
+    CurrentNodeEntry = (PINDEX_ENTRY_ATTRIBUTE)((ULONG_PTR)NewIndexRoot
                                                 + FIELD_OFFSET(INDEX_ROOT_ATTRIBUTE, Header)
                                                 + NewIndexRoot->Header.FirstEntryOffset);
     for (i = 0; i < Tree->RootNode->KeyCount; i++)
@@ -1021,7 +1021,7 @@ CreateIndexBufferFromBTreeNode(PDEVICE_EXTENSION DeviceExt,
 
     // Windows seems to alternate between using 0x28 and 0x40 for the first entry offset of each index buffer.
     // Interestingly, neither Windows nor chkdsk seem to mind if we just use 0x28 for every index record.
-    IndexBuffer->Header.FirstEntryOffset = 0x28; 
+    IndexBuffer->Header.FirstEntryOffset = 0x28;
     IndexBuffer->Header.AllocatedSize = BufferSize - FIELD_OFFSET(INDEX_BUFFER, Header);
 
     // Start summing the total size of this node's entries
@@ -1237,7 +1237,7 @@ UpdateIndexAllocation(PDEVICE_EXTENSION DeviceExt,
                     return Status;
                 }
 
-                // Advance end marker 
+                // Advance end marker
                 EndMarker = (PNTFS_ATTR_RECORD)((ULONG_PTR)EndMarker + EndMarker->Length);
 
                 // Add index bitmap to the very end of the file record
@@ -1355,7 +1355,7 @@ UpdateIndexNode(PDEVICE_EXTENSION DeviceExt,
                 DPRINT1("ERROR: Failed to update child node!\n");
                 return Status;
             }
-            
+
             // Is the Index Entry large enough to store the VCN?
             if (!BooleanFlagOn(CurrentKey->IndexEntry->Flags, NTFS_INDEX_ENTRY_NODE))
             {
@@ -1756,7 +1756,7 @@ NtfsInsertKey(PB_TREE Tree,
                                        CaseSensitive,
                                        MaxIndexRootSize,
                                        IndexRecordSize,
-                                       &NewLeftKey, 
+                                       &NewLeftKey,
                                        &NewChild);
                 if (!NT_SUCCESS(Status))
                 {
@@ -1821,9 +1821,9 @@ NtfsInsertKey(PB_TREE Tree,
         // Calculate maximum size of index entries without any headers
         AllocatedNodeSize = IndexRecordSize - FIELD_OFFSET(INDEX_BUFFER, Header);
 
-        // TODO: Replace magic with math 
+        // TODO: Replace magic with math
         MaxNodeSizeWithoutHeader = AllocatedNodeSize - 0x28;
-        
+
         // Has the node grown larger than its allocated size?
         if (NodeSize > MaxNodeSizeWithoutHeader)
         {
@@ -1870,7 +1870,7 @@ NtfsInsertKey(PB_TREE Tree,
 * @param CaseSensitive
 * Boolean indicating if the function should operate in case-sensitive mode. This will be TRUE
 * if an application created the file with the FILE_FLAG_POSIX_SEMANTICS flag.
-* 
+*
 * @return
 * STATUS_SUCCESS on success.
 * STATUS_INSUFFICIENT_RESOURCES if an allocation fails.

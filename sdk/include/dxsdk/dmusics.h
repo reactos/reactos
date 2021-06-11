@@ -66,7 +66,7 @@ typedef struct _DMUS_VOICE_STATE DMUS_VOICE_STATE, *LPDMUS_VOICE_STATE;
 struct _DMUS_VOICE_STATE {
 	BOOL            bExists;
 	SAMPLE_POSITION spPosition;
-}; 
+};
 #endif /* _DMUS_VOICE_STATE_DEFINED */
 
 

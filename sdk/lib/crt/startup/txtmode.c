@@ -10,4 +10,4 @@
 
 /* Is this correct?  Default value of  _fmode in msvcrt.dll is 0. */
 
-int _fmode = _O_TEXT; 
+int _fmode = _O_TEXT;

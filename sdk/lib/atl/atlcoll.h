@@ -865,7 +865,7 @@ typename CAtlList<E, ETraits>::CNode* CAtlList< E, ETraits>::GetFreeNode()
     {
         AtlThrowImp(E_OUTOFMEMORY);
     }
-    
+
     CNode* Node = (CNode*)Block->GetData();
     Node += (m_BlockSize - 1);
     for (int i = m_BlockSize - 1; i >= 0; i--)

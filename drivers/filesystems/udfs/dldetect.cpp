@@ -25,12 +25,12 @@
 #define         UDF_BUG_CHECK_ID                UDF_FILE_DLD
 
 
-/// Resource event (ExclusiveWaiters) 
-#define RESOURCE_EVENT_TAG      'vEeR' 
+/// Resource event (ExclusiveWaiters)
+#define RESOURCE_EVENT_TAG      'vEeR'
 /// Resource semaphore (SharedWaiters)
-#define RESOURCE_SEMAFORE_TAG   'eSeR' 
+#define RESOURCE_SEMAFORE_TAG   'eSeR'
 /// Resource owner table (OwnerTable)
-#define RESOURCE_TABLE_TAG      'aTeR' 
+#define RESOURCE_TABLE_TAG      'aTeR'
 
 /// Maxmum recurse level  while exploring thread-resource aquisition graf
 #define DLD_MAX_REC_LEVEL       40
@@ -39,11 +39,11 @@
 ULONG MaxThreadCount = 0;
 
 /// Waiters table
-PTHREAD_STRUCT      DLDThreadTable;            
+PTHREAD_STRUCT      DLDThreadTable;
 /// 4 sec
-LARGE_INTEGER DLDpTimeout;                  
+LARGE_INTEGER DLDpTimeout;
 /// 8 sec
-ULONG DLDpResourceTimeoutCount = 0x2;       
+ULONG DLDpResourceTimeoutCount = 0x2;
 
 THREAD_REC_BLOCK DLDThreadAcquireChain[DLD_MAX_REC_LEVEL];
 
@@ -102,11 +102,11 @@ PTHREAD_STRUCT DLDFindThread(ULONG ThreadId) {
     PTHREAD_STRUCT Temp = DLDThreadTable;
     ULONG FirstEmpty = -1;
 
-    
+
     while (i<MaxThreadCount) {
         if (Temp->ThreadId == ThreadId) {
             return Temp;
-        } 
+        }
         Temp++;
         i++;
     }
@@ -114,7 +114,7 @@ PTHREAD_STRUCT DLDFindThread(ULONG ThreadId) {
     return NULL;
 }
 
-BOOLEAN DLDProcessResource(PERESOURCE Resource,       
+BOOLEAN DLDProcessResource(PERESOURCE Resource,
                         PTHREAD_STRUCT ThrdStruct,
                         ULONG RecLevel);
 
@@ -140,7 +140,7 @@ BOOLEAN DLDProcessThread(PTHREAD_STRUCT ThrdOwner,
             for (int j=RecLevel+1;j<=i;j++) {
                 UDFPrint((" awaited by thread %x at (BugCheckId:%x:Line:%d) holding resource %x\n",
                 DLDThreadAcquireChain[i].Thread->ThreadId,
-                DLDThreadAcquireChain[i].Thread->BugCheckId, 
+                DLDThreadAcquireChain[i].Thread->BugCheckId,
                 DLDThreadAcquireChain[i].Thread->Line,
                 Resource));
             }
@@ -155,9 +155,9 @@ BOOLEAN DLDProcessThread(PTHREAD_STRUCT ThrdOwner,
     if (ThrdOwner->WaitingResource) {
         if (DLDProcessResource(ThrdOwner->WaitingResource, ThrdStruct,RecLevel)) {
             UDFPrint((" awaited by thread %x at (BugCheckId:%x:Line:%d) holding resource %x\n",
-            ThrdOwner->ThreadId, 
-            ThrdOwner->BugCheckId, 
-            ThrdOwner->Line, 
+            ThrdOwner->ThreadId,
+            ThrdOwner->BugCheckId,
+            ThrdOwner->Line,
             Resource));
             return TRUE;
         }
@@ -190,7 +190,7 @@ BOOLEAN DLDProcessResource( PERESOURCE Resource,        // resource to process
 
         // If only one owner
 
-        // Find thread owning this resource 
+        // Find thread owning this resource
         if (Resource->Flag & ResourceOwnedExclusive) {
             ThreadOwner = DLDFindThread(Resource->OwnerThreads[0].OwnerThread);
         } else {
@@ -198,7 +198,7 @@ BOOLEAN DLDProcessResource( PERESOURCE Resource,        // resource to process
         }
 
         BOOLEAN Result = FALSE;
-        if (ThreadOwner) { 
+        if (ThreadOwner) {
             Result = DLDProcessThread(ThreadOwner, ThrdStruct, Resource,RecLevel-1);
         }
         return Result;
@@ -223,7 +223,7 @@ BOOLEAN DLDProcessResource( PERESOURCE Resource,        // resource to process
 
 
 VOID DLDpWaitForResource(
-    IN PERESOURCE Resource, 
+    IN PERESOURCE Resource,
     IN DISPATCHER_HEADER *DispatcherObject,
     IN PTHREAD_STRUCT ThrdStruct
     ) {
@@ -242,24 +242,24 @@ VOID DLDpWaitForResource(
                 UDFPrint((" which thread %x has tried to acquire at (BugCheckId:%x:Line:%d)\n",
                 ThrdStruct->ThreadId,
                 ThrdStruct->BugCheckId,
-                ThrdStruct->Line      
+                ThrdStruct->Line
                 ));
                 BrutePoint();
             }
-        } 
+        }
         // Priority boosts
         // .....
         // End of priority boosts
         KeReleaseSpinLock(&Resource->SpinLock, oldIrql);
     }
 
-}        
+}
 
 
 
 
 VOID DLDpAcquireResourceExclusiveLite(
-    IN PERESOURCE Resource, 
+    IN PERESOURCE Resource,
     IN ERESOURCE_THREAD Thread,
     IN KIRQL oldIrql,
     IN ULONG BugCheckId,
@@ -268,7 +268,7 @@ VOID DLDpAcquireResourceExclusiveLite(
     KIRQL oldIrql2;
 
     if (!(Resource->ExclusiveWaiters)) {
-        
+
         KeReleaseSpinLock(&Resource->SpinLock, oldIrql);
         KeAcquireSpinLock(&Resource->SpinLock, &oldIrql2);
 
@@ -276,7 +276,7 @@ VOID DLDpAcquireResourceExclusiveLite(
         if (!(Resource->ExclusiveWaiters)) {
             Resource->ExclusiveWaiters = (PKEVENT)ExAllocatePoolWithTag(NonPagedPool, sizeof(KEVENT),RESOURCE_EVENT_TAG);
             KeInitializeEvent(Resource->ExclusiveWaiters,SynchronizationEvent,FALSE);
-        } 
+        }
         KeReleaseSpinLock(&Resource->SpinLock, oldIrql2);
         DLDAcquireExclusive(Resource,BugCheckId,Line);
 
@@ -285,7 +285,7 @@ VOID DLDpAcquireResourceExclusiveLite(
 
         PTHREAD_STRUCT ThrdStruct = DLDAllocFindThread(Thread);
 
-        
+
         // Set WaitingResource for current thread
         ThrdStruct->WaitingResource = Resource;
         ThrdStruct->BugCheckId = BugCheckId;
@@ -310,7 +310,7 @@ VOID DLDpAcquireResourceExclusiveLite(
 
 
 
-VOID DLDAcquireExclusive(PERESOURCE Resource,       
+VOID DLDAcquireExclusive(PERESOURCE Resource,
                          ULONG BugCheckId,
                          ULONG Line
 ) {
@@ -318,7 +318,7 @@ VOID DLDAcquireExclusive(PERESOURCE Resource,
     KIRQL oldIrql;
 
     KeAcquireSpinLock(&Resource->SpinLock, &oldIrql);
-            
+
     ERESOURCE_THREAD Thread = (ERESOURCE_THREAD)PsGetCurrentThread();
 
     if (!Resource->ActiveCount) goto SimpleAcquire;
@@ -328,7 +328,7 @@ VOID DLDAcquireExclusive(PERESOURCE Resource,
         return;
     }
 
-    DLDpAcquireResourceExclusiveLite(Resource, Thread, oldIrql,BugCheckId,Line); 
+    DLDpAcquireResourceExclusiveLite(Resource, Thread, oldIrql,BugCheckId,Line);
     return;
 
 SimpleAcquire:
@@ -346,7 +346,7 @@ POWNER_ENTRY DLDpFindCurrentThread(
     IN PERESOURCE Resource,
     IN ERESOURCE_THREAD Thread
     ) {
-        
+
     if (Resource->OwnerThreads[0].OwnerThread == Thread) return &(Resource->OwnerThreads[0]);
     if (Resource->OwnerThreads[1].OwnerThread == Thread) return &(Resource->OwnerThreads[1]);
 
@@ -374,7 +374,7 @@ POWNER_ENTRY DLDpFindCurrentThread(
     } else {
         // Grow OwnerTable
 
-        
+
         USHORT OldSize = Resource->OwnerThreads[0].TableSize;
         USHORT NewSize = 3;
         if (OldSize) NewSize = OldSize + 4;
@@ -395,7 +395,7 @@ POWNER_ENTRY DLDpFindCurrentThread(
 }
 
 
-VOID DLDAcquireShared(PERESOURCE Resource,       
+VOID DLDAcquireShared(PERESOURCE Resource,
                       ULONG BugCheckId,
                       ULONG Line,
                       BOOLEAN WaitForExclusive)
@@ -415,7 +415,7 @@ VOID DLDAcquireShared(PERESOURCE Resource,
         Resource->OwnerThreads[1].OwnerCount = 1;
         KeReleaseSpinLock(&Resource->SpinLock, oldIrql);
         return;
-    }    
+    }
 
     if (Resource->Flag & ResourceOwnedExclusive ) {
         if (Resource->OwnerThreads[0].OwnerThread == Thread) {
@@ -441,7 +441,7 @@ VOID DLDAcquireShared(PERESOURCE Resource,
 
             pOwnerEntry->OwnerThread = Thread;
             pOwnerEntry->OwnerCount  = 1;
-            Resource->ActiveCount++;        
+            Resource->ActiveCount++;
             KeReleaseSpinLock(&Resource->SpinLock, oldIrql);
 
             return;
@@ -462,7 +462,7 @@ VOID DLDAcquireShared(PERESOURCE Resource,
     ThrdStruct->WaitingResource = Resource;
     ThrdStruct->BugCheckId = BugCheckId;
     ThrdStruct->Line = Line;
-    
+
     KeReleaseSpinLock(&Resource->SpinLock, oldIrql);
 
     DLDpWaitForResource(Resource,&(Resource->SharedWaiters->Header),ThrdStruct);

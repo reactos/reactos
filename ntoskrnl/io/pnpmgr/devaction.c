@@ -427,7 +427,7 @@ PiAttachFilterDriversCallback(
                           (PVOID)((ULONG_PTR)kvInfo + kvInfo->DataOffset),
                           sizeof(startType));
         }
-        
+
         ExFreePool(kvInfo);
     }
 
@@ -674,7 +674,7 @@ PiCallDriverAddDevice(
                 }
             }
         }
-        
+
         ExFreePool(kvInfo);
     }
 
@@ -2542,7 +2542,7 @@ PipDeviceActionWorker(
         {
             case PiActionAddBootDevices:
             {
-                if (deviceNode->State == DeviceNodeInitialized && 
+                if (deviceNode->State == DeviceNodeInitialized &&
                     !(deviceNode->Flags & DNF_HAS_PROBLEM))
                 {
                     status = PiCallDriverAddDevice(deviceNode, PnPBootDriversInitialized);
@@ -2564,7 +2564,7 @@ PipDeviceActionWorker(
             case PiActionStartDevice:
                 // This action is triggered from usermode, when a driver is installed
                 // for a non-critical PDO
-                if (deviceNode->State == DeviceNodeInitialized && 
+                if (deviceNode->State == DeviceNodeInitialized &&
                     !(deviceNode->Flags & DNF_HAS_PROBLEM))
                 {
                     PiDevNodeStateMachine(deviceNode);

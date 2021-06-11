@@ -256,7 +256,7 @@ MiniportSetInformation(
 
         NdisMoveMemory(&genericUlong, InformationBuffer, sizeof(ULONG));
 
-        if (genericUlong & 
+        if (genericUlong &
             (NDIS_PACKET_TYPE_SOURCE_ROUTING |
              NDIS_PACKET_TYPE_SMT |
              NDIS_PACKET_TYPE_ALL_LOCAL |
@@ -311,7 +311,7 @@ MiniportSetInformation(
             status = NDIS_STATUS_INVALID_LENGTH;
             break;
         }
-        
+
         if (InformationBufferLength / 6 > MAXIMUM_MULTICAST_ADDRESSES)
         {
             *BytesNeeded = MAXIMUM_MULTICAST_ADDRESSES * IEEE_802_ADDR_LENGTH;

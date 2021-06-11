@@ -962,7 +962,7 @@ USBPORT_SetEndpointState(
   IN PUSBPORT_ENDPOINT Endpoint,
   IN ULONG State);
 
-ULONG 
+ULONG
 NTAPI
 USBPORT_GetEndpointState(
   IN PUSBPORT_ENDPOINT Endpoint);
