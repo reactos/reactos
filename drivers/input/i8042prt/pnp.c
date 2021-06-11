@@ -695,12 +695,20 @@ i8042Pnp(
             /* Call lower driver (if any) */
             if (DeviceType != PhysicalDeviceObject)
             {
-                Status = ForwardIrpAndWait(DeviceObject, Irp);
-                if (NT_SUCCESS(Status))
-                    Status = i8042PnpStartDevice(
-                        DeviceObject,
-                        Stack->Parameters.StartDevice.AllocatedResources,
-                        Stack->Parameters.StartDevice.AllocatedResourcesTranslated);
+                Status = STATUS_UNSUCCESSFUL;
+
+                if (IoForwardIrpSynchronously(
+                    ((PFDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension)->LowerDevice, Irp))
+                {
+                    Status = Irp->IoStatus.Status;
+                    if (NT_SUCCESS(Status))
+                    {
+                        Status = i8042PnpStartDevice(
+                            DeviceObject,
+                            Stack->Parameters.StartDevice.AllocatedResources,
+                            Stack->Parameters.StartDevice.AllocatedResourcesTranslated);
+                    }
+                }
             }
             else
                 Status = STATUS_SUCCESS;

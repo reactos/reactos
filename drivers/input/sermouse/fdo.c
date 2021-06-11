@@ -173,10 +173,18 @@ SermousePnp(
 		case IRP_MN_START_DEVICE: /* 0x0 */
 		{
 			TRACE_(SERMOUSE, "IRP_MJ_PNP / IRP_MN_START_DEVICE\n");
+			Status = STATUS_UNSUCCESSFUL;
+
 			/* Call lower driver */
-			Status = ForwardIrpAndWait(DeviceObject, Irp);
-			if (NT_SUCCESS(Status))
-				Status = SermouseStartDevice(DeviceObject, Irp);
+			if (IoForwardIrpSynchronously(
+				((PSERMOUSE_DEVICE_EXTENSION)DeviceObject->DeviceExtension)->LowerDevice, Irp))
+            {
+            	Status = Irp->IoStatus.Status;
+            	if (NT_SUCCESS(Status))
+            	{
+            		Status = SermouseStartDevice(DeviceObject, Irp);
+            	}
+            }
 			break;
 		}
 		case IRP_MN_QUERY_DEVICE_RELATIONS: /* 0x7 */

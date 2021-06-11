@@ -277,12 +277,18 @@ ProcessorPnp(
             DPRINT("  IRP_MN_START_DEVICE received\n");
 
             /* Call lower driver */
-            Status = ForwardIrpAndWait(DeviceObject, Irp);
-            if (NT_SUCCESS(Status))
+            Status = STATUS_UNSUCCESSFUL;
+
+            if (IoForwardIrpSynchronously(
+                ((PDEVICE_EXTENSION)DeviceObject->DeviceExtension)->LowerDevice, Irp))
             {
-                Status = ProcessorStartDevice(DeviceObject,
-                                              IrpSp->Parameters.StartDevice.AllocatedResources,
-                                              IrpSp->Parameters.StartDevice.AllocatedResourcesTranslated);
+                Status = Irp->IoStatus.Status;
+                if (NT_SUCCESS(Status))
+                {
+                    Status = ProcessorStartDevice(DeviceObject,
+                        IrpSp->Parameters.StartDevice.AllocatedResources,
+                        IrpSp->Parameters.StartDevice.AllocatedResourcesTranslated);
+                }
             }
             break;
 

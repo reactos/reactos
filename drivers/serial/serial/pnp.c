@@ -370,12 +370,21 @@ SerialPnp(
 			ASSERT(((PSERIAL_DEVICE_EXTENSION)DeviceObject->DeviceExtension)->PnpState == dsStopped);
 
 			/* Call lower driver */
-			Status = ForwardIrpAndWait(DeviceObject, Irp);
-			if (NT_SUCCESS(Status))
-				Status = SerialPnpStartDevice(
-					DeviceObject,
-					Stack->Parameters.StartDevice.AllocatedResources,
-					Stack->Parameters.StartDevice.AllocatedResourcesTranslated);
+			Status = STATUS_UNSUCCESSFUL;
+
+            if (IoForwardIrpSynchronously(
+                ((PSERIAL_DEVICE_EXTENSION)DeviceObject->DeviceExtension)->LowerDevice, Irp))
+            {
+                Status = Irp->IoStatus.Status;
+                if (NT_SUCCESS(Status))
+                {
+                    Status = SerialPnpStartDevice(
+						DeviceObject,
+						Stack->Parameters.StartDevice.AllocatedResources,
+						Stack->Parameters.StartDevice.AllocatedResourcesTranslated);
+                }
+            }
+
 			break;
 		}
 		case IRP_MN_QUERY_DEVICE_RELATIONS: /* (optional) 0x7 */

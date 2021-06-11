@@ -242,11 +242,6 @@ SerialDetectUartType(
 
 /************************************ misc.c */
 
-NTSTATUS
-ForwardIrpAndWait(
-	IN PDEVICE_OBJECT DeviceObject,
-	IN PIRP Irp);
-
 DRIVER_DISPATCH ForwardIrpAndForget;
 
 VOID NTAPI

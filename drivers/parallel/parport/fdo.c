@@ -548,12 +548,18 @@ FdoPnp(IN PDEVICE_OBJECT DeviceObject,
             ASSERT(((PFDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension)->Common.PnpState == dsStopped);
 
             /* Call lower driver */
-            Status = ForwardIrpAndWait(DeviceObject, Irp);
-            if (NT_SUCCESS(Status))
+            Status = STATUS_UNSUCCESSFUL;
+
+            if (IoForwardIrpSynchronously(
+                ((PFDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension)->LowerDevice, Irp))
             {
-                Status = FdoStartDevice(DeviceObject,
-                                        Stack->Parameters.StartDevice.AllocatedResources,
-                                        Stack->Parameters.StartDevice.AllocatedResourcesTranslated);
+                Status = Irp->IoStatus.Status;
+                if (NT_SUCCESS(Status))
+                {
+                    Status = FdoStartDevice(DeviceObject,
+                        Stack->Parameters.StartDevice.AllocatedResources,
+                        Stack->Parameters.StartDevice.AllocatedResourcesTranslated);
+                }
             }
             break;
 

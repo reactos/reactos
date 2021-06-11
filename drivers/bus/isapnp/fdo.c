@@ -51,10 +51,18 @@ IsaFdoPnp(
     switch (IrpSp->MinorFunction)
     {
         case IRP_MN_START_DEVICE:
-            Status = IsaForwardIrpSynchronous(FdoExt, Irp);
-
-            if (NT_SUCCESS(Status))
-                Status = IsaFdoStartDevice(FdoExt, Irp, IrpSp);
+            if (!IoForwardIrpSynchronously(FdoExt->Ldo, Irp))
+            {
+                Status = STATUS_UNSUCCESSFUL;
+            }
+            else
+            {
+                Status = Irp->IoStatus.Status;
+                if (NT_SUCCESS(Status))
+                {
+                    Status = IsaFdoStartDevice(FdoExt, Irp, IrpSp);
+                }
+            }
 
             Irp->IoStatus.Status = Status;
 

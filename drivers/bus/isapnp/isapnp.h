@@ -104,12 +104,6 @@ DriverEntry(
     IN PDRIVER_OBJECT DriverObject,
     IN PUNICODE_STRING RegistryPath);
 
-NTSTATUS
-NTAPI
-IsaForwardIrpSynchronous(
-    IN PISAPNP_FDO_EXTENSION FdoExt,
-    IN PIRP Irp);
-
 /* fdo.c */
 NTSTATUS
 NTAPI

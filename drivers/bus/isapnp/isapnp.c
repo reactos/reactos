@@ -495,50 +495,6 @@ IsaPnpFillDeviceRelations(
     return Status;
 }
 
-
-static IO_COMPLETION_ROUTINE ForwardIrpCompletion;
-
-static
-NTSTATUS
-NTAPI
-ForwardIrpCompletion(
-    IN PDEVICE_OBJECT DeviceObject,
-    IN PIRP Irp,
-    IN PVOID Context)
-{
-    UNREFERENCED_PARAMETER(DeviceObject);
-
-    if (Irp->PendingReturned)
-        KeSetEvent((PKEVENT)Context, IO_NO_INCREMENT, FALSE);
-
-    return STATUS_MORE_PROCESSING_REQUIRED;
-}
-
-NTSTATUS
-NTAPI
-IsaForwardIrpSynchronous(
-    IN PISAPNP_FDO_EXTENSION FdoExt,
-    IN PIRP Irp)
-{
-    KEVENT Event;
-    NTSTATUS Status;
-
-    KeInitializeEvent(&Event, NotificationEvent, FALSE);
-    IoCopyCurrentIrpStackLocationToNext(Irp);
-
-    IoSetCompletionRoutine(Irp, ForwardIrpCompletion, &Event, TRUE, TRUE, TRUE);
-
-    Status = IoCallDriver(FdoExt->Ldo, Irp);
-    if (Status == STATUS_PENDING)
-    {
-        Status = KeWaitForSingleObject(&Event, Suspended, KernelMode, FALSE, NULL);
-        if (NT_SUCCESS(Status))
-            Status = Irp->IoStatus.Status;
-    }
-
-    return Status;
-}
-
 static DRIVER_DISPATCH IsaCreateClose;
 
 static

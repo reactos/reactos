@@ -99,12 +99,6 @@ AllocateInterfaceDescriptorsArray(
 /* misc.c */
 
 NTSTATUS
-NTAPI
-USBCCGP_SyncForwardIrp(
-    PDEVICE_OBJECT DeviceObject,
-    PIRP Irp);
-
-NTSTATUS
 USBCCGP_SyncUrbRequest(
     IN PDEVICE_OBJECT DeviceObject,
     OUT PURB UrbRequest);

@@ -160,7 +160,12 @@ USBSTOR_FdoHandleStartDevice(
     PIO_WORKITEM WorkItem;
 
     // forward irp to lower device
-    Status = USBSTOR_SyncForwardIrp(DeviceExtension->LowerDeviceObject, Irp);
+    if (!IoForwardIrpSynchronously(DeviceExtension->LowerDeviceObject, Irp))
+    {
+        return STATUS_UNSUCCESSFUL;
+    }
+
+    Status = Irp->IoStatus.Status;
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("USBSTOR_FdoHandleStartDevice Lower device failed to start %x\n", Status);

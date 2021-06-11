@@ -231,7 +231,15 @@ USBCCGP_PdoHandleQueryId(
         //
         // handle query device id
         //
-        Status = USBCCGP_SyncForwardIrp(PDODeviceExtension->NextDeviceObject, Irp);
+        if (IoForwardIrpSynchronously(PDODeviceExtension->NextDeviceObject, Irp))
+        {
+            Status = Irp->IoStatus.Status;
+        }
+        else
+        {
+            Status = STATUS_UNSUCCESSFUL;
+        }
+
         if (NT_SUCCESS(Status))
         {
             //

@@ -98,11 +98,6 @@ DRIVER_DISPATCH SermouseInternalDeviceControl;
 
 /************************************ misc.c */
 
-NTSTATUS
-ForwardIrpAndWait(
-	IN PDEVICE_OBJECT DeviceObject,
-	IN PIRP Irp);
-
 NTSTATUS NTAPI
 ForwardIrpAndForget(
 	IN PDEVICE_OBJECT DeviceObject,

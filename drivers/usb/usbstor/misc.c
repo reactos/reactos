@@ -13,45 +13,6 @@
 #include <debug.h>
 
 
-IO_COMPLETION_ROUTINE SyncForwardIrpCompletionRoutine;
-
-NTSTATUS
-NTAPI
-USBSTOR_SyncForwardIrpCompletionRoutine(
-    PDEVICE_OBJECT DeviceObject,
-    PIRP Irp,
-    PVOID Context)
-{
-    if (Irp->PendingReturned)
-    {
-        KeSetEvent((PKEVENT)Context, IO_NO_INCREMENT, FALSE);
-    }
-    return STATUS_MORE_PROCESSING_REQUIRED;
-}
-
-NTSTATUS
-NTAPI
-USBSTOR_SyncForwardIrp(PDEVICE_OBJECT DeviceObject, PIRP Irp)
-{
-    KEVENT Event;
-    NTSTATUS Status;
-
-    KeInitializeEvent(&Event, NotificationEvent, FALSE);
-    IoCopyCurrentIrpStackLocationToNext(Irp);
-    IoSetCompletionRoutine(Irp, USBSTOR_SyncForwardIrpCompletionRoutine, &Event, TRUE, TRUE, TRUE);
-
-    Status = IoCallDriver(DeviceObject, Irp);
-
-    if (Status == STATUS_PENDING)
-    {
-        // wait for the request to finish
-        KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
-        Status = Irp->IoStatus.Status;
-    }
-
-    return Status;
-}
-
 NTSTATUS
 NTAPI
 USBSTOR_GetBusInterface(
@@ -130,14 +91,13 @@ USBSTOR_SyncUrbRequest(
     IoStack->Parameters.DeviceIoControl.InputBufferLength = UrbRequest->UrbHeader.Length;
     Irp->IoStatus.Status = STATUS_SUCCESS;
 
-    IoSetCompletionRoutine(Irp, USBSTOR_SyncForwardIrpCompletionRoutine, &Event, TRUE, TRUE, TRUE);
-
-    Status = IoCallDriver(DeviceObject, Irp);
-
-    if (Status == STATUS_PENDING)
+    if (IoForwardIrpSynchronously(DeviceObject, Irp))
     {
-        KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
         Status = Irp->IoStatus.Status;
+    }
+    else
+    {
+        Status = STATUS_UNSUCCESSFUL;
     }
 
     IoFreeIrp(Irp);

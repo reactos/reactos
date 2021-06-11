@@ -14,62 +14,6 @@
 #define NDEBUG
 #include <debug.h>
 
-/* Driver verifier */
-IO_COMPLETION_ROUTINE SyncForwardIrpCompletionRoutine;
-
-NTSTATUS
-NTAPI
-USBSTOR_SyncForwardIrpCompletionRoutine(
-    PDEVICE_OBJECT DeviceObject,
-    PIRP Irp,
-    PVOID Context)
-{
-    if (Irp->PendingReturned)
-    {
-        KeSetEvent((PKEVENT)Context, IO_NO_INCREMENT, FALSE);
-    }
-    return STATUS_MORE_PROCESSING_REQUIRED;
-}
-
-NTSTATUS
-NTAPI
-USBCCGP_SyncForwardIrp(
-    PDEVICE_OBJECT DeviceObject,
-    PIRP Irp)
-{
-    KEVENT Event;
-    NTSTATUS Status;
-
-    /* Initialize event */
-    KeInitializeEvent(&Event, NotificationEvent, FALSE);
-
-    /* Copy irp stack location */
-    IoCopyCurrentIrpStackLocationToNext(Irp);
-
-    /* Set completion routine */
-    IoSetCompletionRoutine(Irp,
-                           USBSTOR_SyncForwardIrpCompletionRoutine,
-                           &Event,
-                           TRUE,
-                           TRUE,
-                           TRUE);
-
-    /* Call driver */
-    Status = IoCallDriver(DeviceObject, Irp);
-
-    /* Check if pending */
-    if (Status == STATUS_PENDING)
-    {
-        /* Wait for the request to finish */
-        KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
-
-        /* Copy status code */
-        Status = Irp->IoStatus.Status;
-    }
-
-    /* Done */
-    return Status;
-}
 
 NTSTATUS
 USBCCGP_SyncUrbRequest(
@@ -102,25 +46,13 @@ USBCCGP_SyncUrbRequest(
     IoStack->Parameters.DeviceIoControl.InputBufferLength = UrbRequest->UrbHeader.Length;
     Irp->IoStatus.Status = STATUS_SUCCESS;
 
-    /* Setup completion routine */
-    IoSetCompletionRoutine(Irp,
-                           USBSTOR_SyncForwardIrpCompletionRoutine,
-                           &Event,
-                           TRUE,
-                           TRUE,
-                           TRUE);
-
-    /* Call driver */
-    Status = IoCallDriver(DeviceObject, Irp);
-
-    /* Check if request is pending */
-    if (Status == STATUS_PENDING)
+    if (IoForwardIrpSynchronously(DeviceObject, Irp))
     {
-        /* Wait for completion */
-        KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
-
-        /* Update status */
         Status = Irp->IoStatus.Status;
+    }
+    else
+    {
+        Status = STATUS_UNSUCCESSFUL;
     }
 
     /* Free irp */

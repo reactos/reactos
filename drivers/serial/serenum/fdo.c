@@ -181,9 +181,18 @@ SerenumFdoPnp(
 		{
 			TRACE_(SERENUM, "IRP_MJ_PNP / IRP_MN_START_DEVICE\n");
 			/* Call lower driver */
-			Status = ForwardIrpAndWait(DeviceObject, Irp);
-			if (NT_SUCCESS(Status))
-				Status = SerenumFdoStartDevice(DeviceObject, Irp);
+			Status = STATUS_UNSUCCESSFUL;
+
+            if (IoForwardIrpSynchronously(
+                ((PFDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension)->LowerDevice, Irp))
+            {
+                Status = Irp->IoStatus.Status;
+                if (NT_SUCCESS(Status))
+                {
+                    Status = SerenumFdoStartDevice(DeviceObject, Irp);
+                }
+            }
+				
 			break;
 		}
 		case IRP_MN_QUERY_DEVICE_RELATIONS: /* 0x7 */

@@ -191,7 +191,15 @@ PortFdoStartDevice(
     /* Start the lower device if the FDO is in 'stopped' state */
     if (DeviceExtension->PnpState == dsStopped)
     {
-        Status = ForwardIrpAndWait(DeviceExtension->LowerDevice, Irp);
+        if (IoForwardIrpSynchronously(DeviceExtension->LowerDevice, Irp))
+        {
+            Status = Irp->IoStatus.Status;
+        }
+        else
+        {
+            Status = STATUS_UNSUCCESSFUL;
+        }
+
         if (!NT_SUCCESS(Status))
         {
             DPRINT1("ForwardIrpAndWait() failed (Status 0x%08lx)\n", Status);
