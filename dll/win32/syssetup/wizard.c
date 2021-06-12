@@ -463,7 +463,7 @@ DoWriteSoundEvents(HKEY hKey,
     DWORD cbData;
 
 
-    /* Open sound events key */
+    /* Open the sound events key */
     error = RegOpenKeyExW(hKey, lpSubkey, 0, KEY_READ, &hRootKey);
     if (error)
     {
