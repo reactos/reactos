@@ -474,8 +474,32 @@ DoWriteSoundEvents(HKEY hKey,
     /* Set each sound event */
     for (i = 0; i < dwSize; i++)
     {
-        /* Open all sound event subkeys */
-        error = RegOpenKeyExW(hRootKey, &lpValue[i][0], 0, KEY_READ, &hEventKey);
+        /*
+         * Verify that the sound file exists and is an actual file.
+         */
+
+        /* Expand the sound file path */
+        if (!ExpandEnvironmentStringsW(lpEventsArray[i][1], szDest, _countof(szDest)))
+        {
+            /* Failed to expand, continue with the next sound event */
+            continue;
+        }
+
+        /* Check if the sound file exists and isn't a directory */
+        dwAttribs = GetFileAttributesW(szDest);
+        if ((dwAttribs == INVALID_FILE_ATTRIBUTES) ||
+            (dwAttribs & FILE_ATTRIBUTE_DIRECTORY))
+        {
+            /* It does not, just continue with the next sound event */
+            continue;
+        }
+
+        /*
+         * Create the sound event entry.
+         */
+
+        /* Open the sound event subkey */
+        error = RegOpenKeyExW(hRootKey, lpEventsArray[i][0], 0, KEY_READ, &hEventKey);
         if (error)
         {
             DPRINT1("RegOpenKeyExW failed\n");
