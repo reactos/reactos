@@ -463,7 +463,6 @@ DoWriteSoundEvents(HKEY hKey,
     DWORD dwAttribs;
     DWORD cbData;
 
-
     /* Open the sound events key */
     error = RegOpenKeyExW(hKey, lpSubkey, 0, KEY_READ, &hRootKey);
     if (error)
@@ -503,8 +502,8 @@ DoWriteSoundEvents(HKEY hKey,
         error = RegOpenKeyExW(hRootKey, lpEventsArray[i][0], 0, KEY_READ, &hEventKey);
         if (error)
         {
-            DPRINT1("RegOpenKeyExW failed\n");
-            goto Error;
+            /* Failed to open, continue with next sound event */
+            continue;
         }
 
         /* Open .Default subkey */
@@ -512,18 +511,18 @@ DoWriteSoundEvents(HKEY hKey,
         RegCloseKey(hEventKey);
         if (error)
         {
-            DPRINT1("RegOpenKeyExW failed\n");
-            goto Error;
+            /* Failed to open, continue with next sound event */
+            continue;
         }
 
         /* Associate the sound file to this sound event */
-        cbData = (lstrlenW(lpValue[i][1]) + 1) * sizeof(WCHAR);
-        error = RegSetValueExW(hDefaultKey, NULL, 0, REG_EXPAND_SZ, (const BYTE *)lpValue[i][1], cbData);
+        cbData = (lstrlenW(lpEventsArray[i][1]) + 1) * sizeof(WCHAR);
+        error = RegSetValueExW(hDefaultKey, NULL, 0, REG_EXPAND_SZ, (const BYTE *)lpEventsArray[i][1], cbData);
         RegCloseKey(hDefaultKey);
         if (error)
         {
-            DPRINT1("RegSetValueExW failed\n");
-            goto Error;
+            /* Failed to set the value, continue with next sound event */
+            continue;
         }
     }
 
