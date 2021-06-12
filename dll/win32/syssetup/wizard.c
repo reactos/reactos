@@ -515,7 +515,6 @@ DoWriteSoundEvents(HKEY hKey,
             DPRINT1("RegSetValueExW failed\n");
             goto Error;
         }
-        
     }
 
 Error:
