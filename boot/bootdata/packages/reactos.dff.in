@@ -93,18 +93,17 @@ Signature = "$Windows NT$"
 69 = winsxs\amd64_microsoft.windows.gdiplus_6595b64144ccf1df_1.1.7601.23038_none_deadbeef
 70 = winsxs\amd64_reactos.apisets_6595b64144ccf1df_1.0.0.0_none_deadbeef
 71 = winsxs\amd64_microsoft.windows.gdiplus_6595b64144ccf1df_1.0.14393.0_none_deadbeef
-
 72 = winsxs\arm_microsoft.windows.common-controls_6595b64144ccf1df_5.82.2600.2982_none_deadbeef
 73 = winsxs\arm_microsoft.windows.common-controls_6595b64144ccf1df_6.0.2600.2982_none_deadbeef
 74 = winsxs\arm_microsoft.windows.gdiplus_6595b64144ccf1df_1.1.7601.23038_none_deadbeef
 75 = winsxs\arm_reactos.apisets_6595b64144ccf1df_1.0.0.0_none_deadbeef
 76 = winsxs\arm_microsoft.windows.gdiplus_6595b64144ccf1df_1.0.14393.0_none_deadbeef
-
 77 = winsxs\arm64_microsoft.windows.common-controls_6595b64144ccf1df_5.82.2600.2982_none_deadbeef
 78 = winsxs\arm64_microsoft.windows.common-controls_6595b64144ccf1df_6.0.2600.2982_none_deadbeef
 79 = winsxs\arm64_microsoft.windows.gdiplus_6595b64144ccf1df_1.1.7601.23038_none_deadbeef
 80 = winsxs\arm64_reactos.apisets_6595b64144ccf1df_1.0.0.0_none_deadbeef
 81 = winsxs\arm64_microsoft.windows.gdiplus_6595b64144ccf1df_1.0.14393.0_none_deadbeef
+82 = Resources\Themes\Reactive
 
 .InfEnd
 

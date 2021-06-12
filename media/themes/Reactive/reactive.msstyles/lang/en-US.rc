@@ -1,0 +1,37 @@
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+
+STRINGTABLE
+{
+1000, "Reactive"
+}
+
+STRINGTABLE
+{
+2000, "Reactive"
+}
+
+STRINGTABLE
+{
+3000, "Normal"
+3001, "Large Fonts"
+3002, "Extra Large Fonts"
+}
+
+STRINGTABLE
+{
+4000, "Normal"
+4001, "Large Fonts"
+4002, "Extra Large Fonts"
+}
+
+STRINGTABLE
+{
+5000, "Reactive"
+5001, "Visual Style"
+5002, "ReactOS Foundation"
+5003, "Reactive"
+5004, "Released under GNU/GPL 2.0, 2021"
+5005, "https://reactos.org/"
+5006, "1.0"
+5007, "Visual Style for ReactOS"
+}
