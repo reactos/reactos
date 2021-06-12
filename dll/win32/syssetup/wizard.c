@@ -632,8 +632,8 @@ DoWriteProductOption(PRODUCT_OPTION nOption)
     if (nOption == PRODUCT_OPTION_WORKSTATION)
     {
         /* Write system sound events values for Workstation */
-        DoWriteSoundEvents(HKEY_CURRENT_USER, s_szDefaultSoundEvents, (LPCWSTR *)s_DefaultSoundEvents[_countof(s_DefaultSoundEvents)][2], _countof(s_DefaultSoundEvents));
-        DoWriteSoundEvents(HKEY_CURRENT_USER, s_szExplorerSoundEvents, (LPCWSTR *)s_ExplorerSoundEvents[_countof(s_ExplorerSoundEvents)][2], _countof(s_ExplorerSoundEvents));
+        DoWriteSoundEvents(HKEY_CURRENT_USER, s_szDefaultSoundEvents, s_DefaultSoundEvents, _countof(s_DefaultSoundEvents));
+        DoWriteSoundEvents(HKEY_CURRENT_USER, s_szExplorerSoundEvents, s_ExplorerSoundEvents, _countof(s_ExplorerSoundEvents));
     }
 
 Error:
