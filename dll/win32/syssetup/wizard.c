@@ -514,10 +514,10 @@ DoWriteSoundEvents(HKEY hKey,
             goto Error;
         }
 
-        /* Write appropriate values for them */
-        pszData = &lpValue[i][1];
-        cbData = (lstrlenW(pszData) + 1) * sizeof(WCHAR);
-        error = RegSetValueExW(hDefaultKey, NULL, 0, REG_EXPAND_SZ, (const BYTE *)pszData, cbData);
+        /* Associate the sound file to this sound event */
+        cbData = (lstrlenW(lpValue[i][1]) + 1) * sizeof(WCHAR);
+        error = RegSetValueExW(hDefaultKey, NULL, 0, REG_EXPAND_SZ, (const BYTE *)lpValue[i][1], cbData);
+        RegCloseKey(hDefaultKey);
         if (error)
         {
             DPRINT1("RegSetValueExW failed\n");
