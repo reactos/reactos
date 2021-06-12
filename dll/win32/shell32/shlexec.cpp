@@ -3,7 +3,7 @@
  *
  * Copyright 1998 Marcus Meissner
  * Copyright 2002 Eric Pouech
- * Copyright 2018-2019 Katayama Hirofumi MZ
+ * Copyright 2018-2021 Katayama Hirofumi MZ
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -2452,9 +2452,14 @@ HRESULT WINAPI ShellExecCmdLine(
         }
     }
 
-    if (PathIsURLW(lpCommand) || UrlIsW(lpCommand, URLIS_APPLIABLE))
+    dwSize = _countof(szFile);
+    if (UrlIsW(lpCommand, URLIS_URL))
     {
         StringCchCopyW(szFile, _countof(szFile), lpCommand);
+        pchParams = NULL;
+    }
+    else if (UrlApplySchemeW(lpCommand, szFile, &dwSize, URL_APPLY_GUESSSCHEME) == S_OK)
+    {
         pchParams = NULL;
     }
     else
