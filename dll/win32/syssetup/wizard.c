@@ -509,6 +509,7 @@ DoWriteSoundEvents(HKEY hKey,
 
         /* Open .Default subkey */
         error = RegOpenKeyExW(hEventKey, L".Default", 0, KEY_WRITE, &hDefaultKey);
+        RegCloseKey(hEventKey);
         if (error)
         {
             DPRINT1("RegOpenKeyExW failed\n");
