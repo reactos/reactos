@@ -459,7 +459,8 @@ DoWriteSoundEvents(HKEY hKey,
     HKEY hRootKey, hEventKey, hDefaultKey;
     LONG error;
     ULONG i;
-    LPCWSTR pszData, pszDest[MAX_PATH][2];
+    WCHAR szDest[MAX_PATH];
+    DWORD dwAttribs;
     DWORD cbData;
 
 
