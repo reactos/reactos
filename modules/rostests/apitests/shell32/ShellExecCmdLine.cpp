@@ -124,9 +124,14 @@ HRESULT WINAPI ShellExecCmdLine(
         }
     }
 
-    if (UrlIsFileUrlW(lpCommand))
+    dwSize = _countof(szFile);
+    if (UrlIsW(lpCommand, URLIS_URL))
     {
         StringCchCopyW(szFile, _countof(szFile), lpCommand);
+        pchParams = NULL;
+    }
+    else if (UrlApplySchemeW(lpCommand, szFile, &dwSize, URL_APPLY_GUESSSCHEME) == S_OK)
+    {
         pchParams = NULL;
     }
     else
