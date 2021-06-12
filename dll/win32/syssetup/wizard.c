@@ -453,7 +453,7 @@ static const WCHAR* s_ExplorerSoundEvents[][2] =
 static BOOL
 DoWriteSoundEvents(HKEY hKey,
                    LPCWSTR lpSubkey,
-                   LPCWSTR lpValue[],
+                   LPCWSTR lpEventsArray[][2],
                    DWORD dwSize)
 {
     HKEY hRootKey, hEventKey, hDefaultKey;
