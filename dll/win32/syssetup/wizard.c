@@ -462,23 +462,6 @@ DoWriteSoundEvents(HKEY hKey,
     LPCWSTR pszData, pszDest[MAX_PATH][2];
     DWORD cbData;
 
-    for (i = 0; i < dwSize; i++)
-    {
-        /* Expand environment variable from string */
-        if (!ExpandEnvironmentStringsW(&lpValue[i][1], (LPWSTR)pszDest, _countof(pszDest)))
-        {
-            /* Failed to expand, continue with the other files */
-            continue;
-        }
-
-        /* Check if the sound file exists and isn't a directory */
-        if (GetFileAttributesW(pszDest[i][1]) == INVALID_FILE_ATTRIBUTES ||
-            GetFileAttributesW(pszDest[i][1]) == FILE_ATTRIBUTE_DIRECTORY)
-        {
-            /* It does not, just continue with the other files */
-            continue;
-        }
-    }
 
     /* Open sound events key */
     error = RegOpenKeyExW(hKey, lpSubkey, 0, KEY_READ, &hRootKey);
