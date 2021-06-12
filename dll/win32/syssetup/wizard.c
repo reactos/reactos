@@ -528,12 +528,6 @@ DoWriteSoundEvents(HKEY hKey,
     }
 
 Error:
-    if (hDefaultKey)
-        RegCloseKey(hDefaultKey);
-
-    if (hEventKey)
-        RegCloseKey(hEventKey);
-
     if (hRootKey)
         RegCloseKey(hRootKey);
 
