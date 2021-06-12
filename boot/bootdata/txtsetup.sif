@@ -236,6 +236,7 @@ pc98_up = "NEC PC-98 Uniprocessor"
 
 [Computer.NTamd64]
 x64_up = "Standard x64 Uniprocessor"
+x64_mp = "Standard x64 Multiprocessor"
 
 [Map.Computer.NTx86]
 ;<id> = <pnp id string>
@@ -249,7 +250,8 @@ xbox = "Xbox"
 pc98_up = "NEC PC-98 UP"
 
 [Map.Computer.NTamd64]
-x64_up = "ACPI UP"
+x64_up = "X64 UP"
+x64_mp = "X64 MP"
 
 [Files.pci_up]
 ntoskrnl.exe = 1,,,,,,,2,,,,1,2
@@ -286,6 +288,10 @@ halpc98.dll  = 1,,,,,,,2,,,hal.dll,1,2
 [Files.x64_up]
 ntoskrnl.exe = 1,,,,,,,2,,,,1,2
 hal.dll      = 1,,,,,,,2,,,,1,2
+
+[Files.x64_mp]
+ntkrnlmp.exe = 1,,,,,,,2,,,ntoskrnl.exe,1,2
+halmp.dll    = 1,,,,,,,2,,,hal.dll,1,2
 
 [Display]
 ;<id> = <user friendly name>,<spare>,<service key name>,<width>,<height>,<bpp>

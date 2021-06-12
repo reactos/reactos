@@ -54,7 +54,7 @@ add_pch(ntoskrnl ${REACTOS_SOURCE_DIR}/ntoskrnl/include/ntoskrnl.h "${PCH_SKIP_S
 add_dependencies(ntoskrnl psdk asm)
 add_cd_file(TARGET ntoskrnl DESTINATION reactos/system32 NO_CAB FOR all)
 
-if(BUILD_MP)
+if(BUILD_MP OR (ARCH STREQUAL "amd64"))
     add_subdirectory(ntkrnlmp)
 endif()
 
