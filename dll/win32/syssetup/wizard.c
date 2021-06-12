@@ -471,6 +471,7 @@ DoWriteSoundEvents(HKEY hKey,
         goto Error;
     }
 
+    /* Set each sound event */
     for (i = 0; i < dwSize; i++)
     {
         /* Open all sound event subkeys */
