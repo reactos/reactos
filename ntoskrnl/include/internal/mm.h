@@ -159,11 +159,19 @@ typedef ULONG_PTR SWAPENTRY;
 #error Unsupported architecture!
 #endif
 
+#ifdef _M_AMD64
+#define InterlockedCompareExchangePte(PointerPte, Exchange, Comperand) \
+    InterlockedCompareExchange64((PLONG64)(PointerPte), Exchange, Comperand)
+
+#define InterlockedExchangePte(PointerPte, Value) \
+    InterlockedExchange64((PLONG64)(PointerPte), Value)
+#else
 #define InterlockedCompareExchangePte(PointerPte, Exchange, Comperand) \
     InterlockedCompareExchange((PLONG)(PointerPte), Exchange, Comperand)
 
 #define InterlockedExchangePte(PointerPte, Value) \
     InterlockedExchange((PLONG)(PointerPte), Value)
+#endif
 
 typedef struct _MM_SECTION_SEGMENT
 {
@@ -1282,7 +1290,11 @@ MmFindRegion(
 #define IS_DIRTY_SSE(E)          ((E) & 2)
 #define WRITE_SSE(E)             ((E) | 4)
 #define IS_WRITE_SSE(E)          ((E) & 4)
+#ifdef _WIN64
+#define PAGE_FROM_SSE(E)         ((E) & 0xFFFFFFF000ULL)
+#else
 #define PAGE_FROM_SSE(E)         ((E) & 0xFFFFF000)
+#endif
 #define SHARE_COUNT_FROM_SSE(E)  (((E) & 0x00000FFC) >> 3)
 #define MAX_SHARE_COUNT          0x1FF
 #define MAKE_SSE(P, C)           ((ULONG_PTR)((P) | ((C) << 3)))
