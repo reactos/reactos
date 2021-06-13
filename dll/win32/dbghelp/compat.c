@@ -174,7 +174,7 @@ BOOL __ReadFile(HANDLE file, PVOID buffer, DWORD len, PDWORD outlen, PVOID overl
 
     read = fread(buffer, 1, len, file);
 
-    if (ferror(file) != 0)
+    if (ferror((FILE*)file) != 0)
         return FALSE;
 
     *outlen = (DWORD)read;
