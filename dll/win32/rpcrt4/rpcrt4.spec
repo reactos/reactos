@@ -71,7 +71,7 @@
 # I_RpcRecordCalloutFailure
 # I_RpcReplyToClientWithStatus
 73 stub I_RpcRequestMutex
-# I_RpcSNCHOption
+74 stub I_RpcSNCHOption
 75 stdcall I_RpcSend(ptr)
 76 stdcall I_RpcSendReceive(ptr)
 77 stub I_RpcServerAllocateIpPort
