@@ -3238,7 +3238,7 @@ static void msi_dialog_vcl_add_drives( msi_dialog *dialog, msi_control *control 
     while (*ptr)
     {
 #ifdef __REACTOS__
-        if (GetDriveTypeW(ptr) == DRIVE_CDROM)
+        if (GetDriveTypeW(ptr) != DRIVE_FIXED)
         {
             ptr += lstrlenW(ptr) + 1;
             continue;
