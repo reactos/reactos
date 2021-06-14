@@ -680,8 +680,7 @@ MiAllocatePoolPages(IN POOL_TYPE PoolType,
     //
     // Allocations of less than 4 pages go into their individual buckets
     //
-    i = SizeInPages - 1;
-    if (i >= MI_MAX_FREE_PAGE_LISTS) i = MI_MAX_FREE_PAGE_LISTS - 1;
+    i = min(SizeInPages, MI_MAX_FREE_PAGE_LISTS) - 1;
 
     //
     // Loop through all the free page lists based on the page index
@@ -738,8 +737,7 @@ MiAllocatePoolPages(IN POOL_TYPE PoolType,
                 if (FreeEntry->Size != 0)
                 {
                     /* Check which list to insert this entry into */
-                    i = FreeEntry->Size - 1;
-                    if (i >= MI_MAX_FREE_PAGE_LISTS) i = MI_MAX_FREE_PAGE_LISTS - 1;
+                    i = min(FreeEntry->Size, MI_MAX_FREE_PAGE_LISTS) - 1;
 
                     /* Insert the entry into the free list head, check for prot. pool */
                     if (MmProtectFreedNonPagedPool)
@@ -1176,11 +1174,11 @@ MiFreePoolPages(IN PVOID StartingVa)
         }
 
         //
-        // Check if the entry is small enough to be indexed on a free list
+        // Check if the entry is small enough (1-3 pages) to be indexed on a free list
         // If it is, we'll want to re-insert it, since we're about to
         // collapse our pages on top of it, which will change its count
         //
-        if (FreeEntry->Size < (MI_MAX_FREE_PAGE_LISTS - 1))
+        if (FreeEntry->Size < MI_MAX_FREE_PAGE_LISTS)
         {
             /* Remove the item from the list, depending if pool is protected */
             if (MmProtectFreedNonPagedPool)
@@ -1196,8 +1194,7 @@ MiFreePoolPages(IN PVOID StartingVa)
             //
             // And now find the new appropriate list to place it in
             //
-            i = (ULONG)(FreeEntry->Size - 1);
-            if (i >= MI_MAX_FREE_PAGE_LISTS) i = MI_MAX_FREE_PAGE_LISTS - 1;
+            i = min(FreeEntry->Size, MI_MAX_FREE_PAGE_LISTS) - 1;
 
             /* Insert the entry into the free list head, check for prot. pool */
             if (MmProtectFreedNonPagedPool)
@@ -1228,8 +1225,7 @@ MiFreePoolPages(IN PVOID StartingVa)
         //
         // Find the appropriate list we should be on
         //
-        i = FreeEntry->Size - 1;
-        if (i >= MI_MAX_FREE_PAGE_LISTS) i = MI_MAX_FREE_PAGE_LISTS - 1;
+        i = min(FreeEntry->Size, MI_MAX_FREE_PAGE_LISTS) - 1;
 
         /* Insert the entry into the free list head, check for prot. pool */
         if (MmProtectFreedNonPagedPool)
