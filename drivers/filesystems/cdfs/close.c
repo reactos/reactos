@@ -229,7 +229,7 @@ Return Value:
         //  to do here is prevent this routine starving other threads which
         //  may need this Vcb exclusively.
         //
-        //  Note that the check for potential teardown below is unsafe.  We'll 
+        //  Note that the check for potential teardown below is unsafe.  We'll
         //  repeat later within the cddata lock.
         //
 
@@ -260,7 +260,7 @@ Return Value:
                                        (Fcb->Vcb->VcbCondition != VcbMounted) &&
                                        (Fcb->Vcb->VcbCondition != VcbMountInProgress) &&
                                        (Fcb->Vcb->VcbCleanup == 0);
-                                
+
                 if (!PotentialVcbTeardown)  {
 
                     CdReleaseCdData( IrpContext);
@@ -270,7 +270,7 @@ Return Value:
             CurrentVcb = Fcb->Vcb;
 
             _Analysis_assume_( CurrentVcb != NULL );
-            
+
             CdAcquireVcbShared( IrpContext, CurrentVcb, FALSE );
 
             VcbHoldCount = 0;
@@ -404,7 +404,7 @@ Return Value:
     //
     //  Clean up any CCB associated with this open.
     //
-    
+
     if (Ccb != NULL) {
 
         UserReference = 1;
@@ -417,7 +417,7 @@ Return Value:
     }
 
     //
-    //  If this is the last reference to a user file or directory on a 
+    //  If this is the last reference to a user file or directory on a
     //  currently mounted volume, then post it to the delayed close queue.  Note
     //  that the VcbCondition check is unsafe,  but it doesn't really matter -
     //  we just might delay the volume teardown a little by posting this close.
@@ -436,7 +436,7 @@ Return Value:
     //  if we can't acquire all of the resources.
     //
 
-    } 
+    }
     else {
 
         //
@@ -449,7 +449,7 @@ Return Value:
         //  a number of other Fcbs (and thus their references), a simple check
         //  on reference count is not appropriate.
         //
-        //  Do an unsafe check first to avoid taking the (global) cddata lock in the 
+        //  Do an unsafe check first to avoid taking the (global) cddata lock in the
         //  common case.
         //
 
@@ -487,7 +487,7 @@ Return Value:
                 CdReleaseCdData( IrpContext );
             }
         }
-        
+
         //
         //  Call the worker routine to perform the actual work.  This routine
         //  should never raise except for a fatal error.
@@ -507,7 +507,7 @@ Return Value:
         //  the request.
         //
 
-        } 
+        }
         else if (PotentialVcbTeardown) {
 
             CdCheckForDismount( IrpContext, Vcb, FALSE );
@@ -532,7 +532,7 @@ Return Value:
     return STATUS_SUCCESS;
 }
 
-
+
 //
 //  Local support routine
 //
@@ -685,7 +685,7 @@ Return Value:
     CdFspClose (NULL);
 }
 
-
+
 VOID
 CdQueueClose (
     _In_ PIRP_CONTEXT IrpContext,
@@ -868,7 +868,7 @@ Return Value:
     return;
 }
 
-
+
 //
 //  Local support routine
 //

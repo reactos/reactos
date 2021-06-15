@@ -33,7 +33,7 @@ Abstract:
 #pragma alloc_text(PAGE, CdPurgeVolume)
 #endif
 
-
+
 VOID
 CdCreateInternalStream (
     _In_ PIRP_CONTEXT IrpContext,
@@ -128,9 +128,9 @@ Return Value:
                          StreamFileOpen,
                          Fcb,
                          NULL );
-        
+
         //
-        //  We'll give stream file objects a name to aid IO profiling etc. We 
+        //  We'll give stream file objects a name to aid IO profiling etc. We
         //  NULL this in CdDeleteInternalStream before OB deletes the file object,
         //  and before CdRemovePrefix is called (which frees Fcb names).
         //
@@ -328,7 +328,7 @@ Return Value:
     return;
 }
 
-
+
 VOID
 CdDeleteInternalStream (
     _In_ PIRP_CONTEXT IrpContext,
@@ -398,7 +398,7 @@ Return Value:
         //  Null the name pointer, since the stream file object never actually
         //  'owns' the names, we just point it to existing ones.
         //
-        
+
         FileObject->FileName.Buffer = NULL;
         FileObject->FileName.MaximumLength = FileObject->FileName.Length = 0;
 
@@ -406,7 +406,7 @@ Return Value:
     }
 }
 
-
+
 NTSTATUS
 CdCompleteMdl (
     _In_ PIRP_CONTEXT IrpContext,
@@ -458,7 +458,7 @@ Return Value:
     return STATUS_SUCCESS;
 }
 
-
+
 
 _Requires_lock_held_(_Global_critical_region_)
 NTSTATUS

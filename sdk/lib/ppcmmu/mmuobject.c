@@ -101,9 +101,9 @@ int _mmumain(int action, void *arg1, void *arg2, void *arg3, void *tf)
 
     case 5:
         /* EE -- Try to get a serial interrupt if debugging enabled, then fall
-         * back to primary handler 
+         * back to primary handler
          */
-        if (!SerialInterrupt(action, trap_frame) && callback[action]) 
+        if (!SerialInterrupt(action, trap_frame) && callback[action])
         {
             trapcallback(action, trap_frame);
         }
@@ -163,7 +163,7 @@ int _mmumain(int action, void *arg1, void *arg2, void *arg3, void *tf)
         break;
     case 0x10d:
         copy(trap_frame, (void *)0xf040, sizeof(*trap_frame));
-        __asm__("mr 1,%0\n\tb trap_finish_start" : : "r" 
+        __asm__("mr 1,%0\n\tb trap_finish_start" : : "r"
                 (((int)trap_frame) - 16));
         break;
     case 0x10e:
@@ -194,7 +194,7 @@ int _mmumain(int action, void *arg1, void *arg2, void *arg3, void *tf)
         __asm__("mfmsr %0" : "=r" (tmp));
         tmp &= ~0x30;
         __asm__("mtmsr %0" : : "r" (tmp));
-        
+
         for(i = 0; i < 4; i++) {
             SetBat(i, 0, GetPhys(0xf000 + i * 16), GetPhys(0xf004 + i * 16));
             SetBat(i, 1, GetPhys(0xf008 + i * 16), GetPhys(0xf00c + i * 16));
@@ -244,7 +244,7 @@ void outdig(int dig)
 void outnum(unsigned long num)
 {
     int i;
-    for( i = 0; i < 8; i++ ) 
+    for( i = 0; i < 8; i++ )
     {
 	outdig(num >> 28);
 	num <<= 4;
@@ -383,7 +383,7 @@ ppc_map_t *allocpage()
                 fmtout("Problem! NextPage is low (%x)\n", NextPage);
                 while(1);
             }
-            
+
             PpcPageTable[NextPage].addr = MMU_ADDR_RESERVED;
             return &PpcPageTable[NextPage++];
         }
@@ -475,7 +475,7 @@ void freevsid(int vsid)
     ppc_map_t *map = &PpcPageTable[PPC_PAGE_NUMBER((paddr_t)info)];
     for(i = 0; i < 256; i++)
     {
-	if(info->tree[i]) 
+	if(info->tree[i])
 	    freevsidtree(info->tree[i]);
     }
     freepage(map);
@@ -488,7 +488,7 @@ void mmufreevsid(int vsid, int mask)
     {
 	if(mask & (1 << i))
 	    freevsid((vsid << 4) + i);
-    }    
+    }
 }
 
 int mmuaddpage(ppc_map_info_t *info, int count)
@@ -512,7 +512,7 @@ int mmuaddpage(ppc_map_info_t *info, int count)
 	if(!VsidInfo) return -1;
 
 	ptehi = (1 << 31) | (vsid << 7) | ((virt >> 22) & 0x3f);
-	
+
 	if(info[i].phys) {
 	    PagePtr = &PpcPageTable[PPC_PAGE_NUMBER(info[i].phys)];
 	} else {
@@ -525,7 +525,7 @@ int mmuaddpage(ppc_map_info_t *info, int count)
 
 	phys = PPC_PAGE_ADDR((PagePtr - PpcPageTable));
 	ptelo = phys & ~PPC_PAGE_MASK;
-	
+
         if (phys < 0x30000)
         {
             /* Should not be allocating physical */
@@ -571,7 +571,7 @@ ppc_pteg_t *PtegFromPage(ppc_map_t *map, int hfun)
 int PageMatch(vaddr_t addr, ppc_pte_t pte)
 {
     int vsid_pte = (pte.pteh >> 7) & 15, api_pte = pte.pteh & 63;
-    return 
+    return
 	(((addr >> 28) & 15) == vsid_pte) &&
 	(((addr >> 22) & 63) == api_pte);
 }
@@ -631,7 +631,7 @@ void mmugetpage(ppc_map_info_t *info, int count)
 {
     int i;
     ppc_map_t *PagePtr;
-    
+
     for( i = 0; i < count; i++ )
     {
 	if(!info[i].addr && !info[i].proc)
@@ -695,8 +695,8 @@ int ptegreload(ppc_trap_frame_t *frame, vaddr_t addr)
 
 void printmap(vaddr_t vaddr, ppc_map_t *map)
 {
-    fmtout("%x: proc %x addr %x\n", 
-           PPC_PAGE_ADDR(map - PpcPageTable), 
+    fmtout("%x: proc %x addr %x\n",
+           PPC_PAGE_ADDR(map - PpcPageTable),
            map->proc, vaddr);
 }
 
@@ -756,7 +756,7 @@ void callkernel(void *fun_ptr, void *arg)
     __asm__("mfmsr 3\n\t"
             "ori 3,3,0x30\n\t"
             "mtmsr 3\n\t"
-            "mtsdr1 %0\n\t" 
+            "mtsdr1 %0\n\t"
             "mr 0,%2\n\t"
             "mtctr 0\n\t"
             "mr 3,%1\n\t"

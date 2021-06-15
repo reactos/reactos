@@ -211,7 +211,7 @@ USBHI_QueryDeviceInformation(IN PVOID BusContext,
         }
     }
 
-    ActualLength = FIELD_OFFSET(USB_DEVICE_INFORMATION_0, PipeList) + 
+    ActualLength = FIELD_OFFSET(USB_DEVICE_INFORMATION_0, PipeList) +
                    NumberOfOpenPipes * sizeof(USB_PIPE_INFORMATION_0);
 
     if (DeviceInfoBufferLen < ActualLength)
@@ -254,7 +254,7 @@ USBHI_QueryDeviceInformation(IN PVOID BusContext,
         return STATUS_SUCCESS;
     }
 
-    DeviceInfo->CurrentConfigurationValue = 
+    DeviceInfo->CurrentConfigurationValue =
         ConfigHandle->ConfigurationDescriptor->bConfigurationValue;
 
     InterfaceEntry = ConfigHandle->InterfaceHandleList.Flink;
@@ -281,7 +281,7 @@ USBHI_QueryDeviceInformation(IN PVOID BusContext,
                 }
                 else
                 {
-                    PipeInfo->ScheduleOffset = 
+                    PipeInfo->ScheduleOffset =
                         PipeHandle->Endpoint->EndpointProperties.ScheduleOffset;
                 }
 
@@ -346,8 +346,8 @@ USBHI_GetControllerInformation(IN PVOID BusContext,
 
     if (ControllerInfoBufferLen >= sizeof(USB_CONTROLLER_INFORMATION_0))
     {
-        InfoBuffer->SelectiveSuspendEnabled = 
-            (FdoExtension->Flags & USBPORT_FLAG_SELECTIVE_SUSPEND) == 
+        InfoBuffer->SelectiveSuspendEnabled =
+            (FdoExtension->Flags & USBPORT_FLAG_SELECTIVE_SUSPEND) ==
             USBPORT_FLAG_SELECTIVE_SUSPEND;
     }
 
@@ -403,7 +403,7 @@ USBHI_ControllerSelectiveSuspend(IN PVOID BusContext,
 
     if (NT_SUCCESS(Status))
     {
-        if (Enable) 
+        if (Enable)
             FdoExtension->Flags |= USBPORT_FLAG_SELECTIVE_SUSPEND;
         else
             FdoExtension->Flags &= ~USBPORT_FLAG_SELECTIVE_SUSPEND;
@@ -715,7 +715,7 @@ USBDI_QueryBusInformation(IN PVOID BusContext,
 
     if (Level == 1)
     {
-        Length = sizeof(USB_BUS_INFORMATION_LEVEL_1) + 
+        Length = sizeof(USB_BUS_INFORMATION_LEVEL_1) +
                  FdoExtension->CommonExtension.SymbolicLinkName.Length;
 
         if (BusInfoActualLen)
@@ -899,7 +899,7 @@ USBPORT_PdoQueryInterface(IN PDEVICE_OBJECT FdoDevice,
             DPRINT1("HandleQueryInterface UNKNOWN INTERFACE GUID: %wZ Version %x\n",
                     &GuidBuffer,
                     IoStack->Parameters.QueryInterface.Version);
-            
+
             RtlFreeUnicodeString(&GuidBuffer); // Free GUID buffer
         }
     }

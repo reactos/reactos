@@ -607,7 +607,7 @@ USBSTOR_HandleDeviceControl(
         {
             Status = STATUS_INSUFFICIENT_RESOURCES;
         }
-    } 
+    }
     else if (IoStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_SCSI_GET_INQUIRY_DATA)
     {
         //
@@ -623,7 +623,7 @@ USBSTOR_HandleDeviceControl(
         BusInfo = Irp->AssociatedIrp.SystemBuffer;
         InquiryData = (PSCSI_INQUIRY_DATA)(BusInfo + 1);
         ScsiInquiryData = (PINQUIRYDATA)InquiryData->InquiryData;
-        
+
 
         //
         // get inquiry data

@@ -5,7 +5,7 @@
  * PURPOSE:         Bus Support Routines
  * PROGRAMMERS:     ReactOS Portable Systems Group
  */
- 
+
 /* INCLUDES *******************************************************************/
 
 #include <hal.h>

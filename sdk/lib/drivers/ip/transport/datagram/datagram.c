@@ -24,7 +24,7 @@ BOOLEAN DGRemoveIRP(
 
     LockObject(AddrFile, &OldIrql);
 
-    for( ListEntry = AddrFile->ReceiveQueue.Flink; 
+    for( ListEntry = AddrFile->ReceiveQueue.Flink;
          ListEntry != &AddrFile->ReceiveQueue;
          ListEntry = ListEntry->Flink )
     {
@@ -88,7 +88,7 @@ DGDeliverData(
     {
         DataBuffer = IPPacket->Data;
     }
-    else if (AddrFile->HeaderIncl)       
+    else if (AddrFile->HeaderIncl)
     {
         DataBuffer = IPPacket->Header;
     }

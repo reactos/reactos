@@ -182,7 +182,7 @@ typedef unsigned int wint_t;
 
 /* strict ANSI prohibits "long long" ( gcc) */
 #if defined ( __STRICT_ANSI__ )
-#  undef _STLP_LONG_LONG 
+#  undef _STLP_LONG_LONG
 #endif
 
 #ifndef __EXCEPTIONS

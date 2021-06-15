@@ -2,10 +2,10 @@
  * COPYRIGHT:        GNU GENERAL PUBLIC LICENSE VERSION 2
  * PROJECT:          ReiserFs file system driver for Windows NT/2000/XP/Vista.
  * FILE:             rfsd.c
- * PURPOSE:          
+ * PURPOSE:
  * PROGRAMMER:       Mark Piper, Matt Wu, Bo Brantén.
- * HOMEPAGE:         
- * UPDATE HISTORY: 
+ * HOMEPAGE:
+ * UPDATE HISTORY:
  */
 
 /* INCLUDES *****************************************************************/
@@ -85,7 +85,7 @@ RfsdLoadSuper(IN PRFSD_VCB      Vcb,
 
     PAGED_CODE();
 
-    RfsdSb = (PRFSD_SUPER_BLOCK) ExAllocatePoolWithTag(PagedPool, 
+    RfsdSb = (PRFSD_SUPER_BLOCK) ExAllocatePoolWithTag(PagedPool,
                                                  SUPER_BLOCK_SIZE, RFSD_POOL_TAG);
     if (!RfsdSb) {
         return NULL;
@@ -194,7 +194,7 @@ RfsdLoadGroup(IN PRFSD_VCB Vcb)
 /*
     bPinned = CcPinRead(
                 Vcb->StreamObj,
-                Lba, 
+                Lba,
                 Size,
                 PIN_WAIT,
                 &(Vcb->GroupDescBcb),
@@ -243,7 +243,7 @@ RfsdSaveGroup(  IN PRFSD_IRP_CONTEXT    IrpContext,
     }
 
     return bRet;
-}     
+}
 #endif
 
 #endif // 0
@@ -255,11 +255,11 @@ RfsdLoadInode (IN PRFSD_VCB Vcb,
 			   IN OUT PRFSD_INODE Inode)
 {
 	NTSTATUS Status;
-	
+
 	PRFSD_ITEM_HEAD pItemHeader = NULL;
 	PUCHAR	pItemBuffer  = NULL;
 	PUCHAR	pBlockBuffer = NULL;
-	
+
 	// Crate the target key for the stat item (stat items always have an offset of 0)
 	RFSD_KEY_IN_MEMORY		TargetKey;
 
@@ -267,7 +267,7 @@ RfsdLoadInode (IN PRFSD_VCB Vcb,
 
 	TargetKey = *pKey;
 	TargetKey.k_offset		= 0x0;
-	TargetKey.k_type		= RFSD_KEY_TYPE_v2_STAT_DATA;	
+	TargetKey.k_type		= RFSD_KEY_TYPE_v2_STAT_DATA;
 
 	RfsdPrint((DBG_FUNC, /*__FUNCTION__*/ "on %i, %i\n", TargetKey.k_dir_id, TargetKey.k_objectid));
 
@@ -278,9 +278,9 @@ RfsdLoadInode (IN PRFSD_VCB Vcb,
 	);
 	if (!NT_SUCCESS(Status))
 		{ if (pBlockBuffer) {ExFreePool(pBlockBuffer);} return FALSE; }
-	
+
 	// Copy the item into the inode / stat data structure
-	RtlCopyMemory(Inode, pItemBuffer, sizeof(RFSD_INODE));	
+	RtlCopyMemory(Inode, pItemBuffer, sizeof(RFSD_INODE));
 
 	// Cleanup
 	if (pBlockBuffer)
@@ -304,7 +304,7 @@ DbgBreak();
     BOOLEAN         bRet;
 
     KeQuerySystemTime(&CurrentTime);
-    RfsdInode->i_mtime = RfsdInode->i_atime = 
+    RfsdInode->i_mtime = RfsdInode->i_atime =
                       (ULONG)(RfsdInodeTime(CurrentTime));
 
     RfsdPrint((DBG_INFO, "RfsdSaveInode: Saving Inode %xh: Mode=%xh Size=%xh\n",
@@ -476,7 +476,7 @@ DbgBreak();
         }
 
         temp = 1 << ((BLOCK_BITS - 2) * (Layer - 1));
-        
+
         i = Index / temp;
         j = Index % temp;
 
@@ -519,7 +519,7 @@ DbgBreak();
 
                     /* free the memory of pData */
                     ExFreePool(pData);
-                
+
                     goto errorout;
                 }
 
@@ -527,7 +527,7 @@ DbgBreak();
 
                 /* free the memory of pData */
                 ExFreePool(pData);
-                
+
                 goto errorout;
             }
         }
@@ -646,7 +646,7 @@ RfsdBlockMap(
                         Index,
                         i,
                         bAlloc,
-                        &dwRet			//< 
+                        &dwRet			//<
                         );
 
             RfsdPrint((DBG_INFO, "RfsdBlockMap: i=%xh index=%xh dwBlk=%xh (%xh)\n",
@@ -672,7 +672,7 @@ errorout:
 
 // NOTE:  ReiserFS starts it byte offsets at 1, as opposed to 0 (which is used for the buffer -- and therefore, the BDL is also 0-based).
 NTSTATUS
-RfsdBuildBDL2(	
+RfsdBuildBDL2(
 	IN  PRFSD_VCB				Vcb,
 	IN  PRFSD_KEY_IN_MEMORY		pKey,
 	IN	PRFSD_INODE				pInode,
@@ -684,7 +684,7 @@ RfsdBuildBDL2(
 
 	RFSD_KEY_IN_MEMORY	CurrentTargetKey	= *pKey;
 	ULONGLONG			CurrentOffset		= 0;
-	
+
 	PRFSD_ITEM_HEAD		pItemHeader			= NULL;			// The temporary storage for retrieving items from disk
 	PUCHAR				pItemBuffer			= NULL;
 	PUCHAR				pBlockBuffer		= NULL;
@@ -702,7 +702,7 @@ RfsdBuildBDL2(
 	if (!pBdl) { Status = STATUS_INSUFFICIENT_RESOURCES;	goto errorout; }
 	//RtlZeroMemory(pBdl, sizeof(RFSD_BDL) * (pInode->sd_blocks + 1));
 	RtlZeroMemory(pBdl, sizeof(RFSD_BDL) * (SIZE_T) (pInode->i_size / Vcb->BlockSize + 3));
-		  
+
 
 	// Build descriptors for all of the indirect items associated with the file
 	while (!done)
@@ -715,11 +715,11 @@ RfsdBuildBDL2(
 
 		// Perform the search
 		Status = RfsdLoadItem(
-			Vcb, &CurrentTargetKey, 
+			Vcb, &CurrentTargetKey,
 			&(pItemHeader), &(pItemBuffer), &(pBlockBuffer), NULL,
 			&CompareKeys
 			);
-		
+
 		// If there was no such indirect item...
 		if (Status == STATUS_NO_SUCH_MEMBER)	{ Status = STATUS_SUCCESS; break; }
 		if (!NT_SUCCESS(Status))				{ goto errorout; }
@@ -732,7 +732,7 @@ RfsdBuildBDL2(
 		  for (idxBlockRef = 0; idxBlockRef < countBlockRefs; idxBlockRef++)
 		  {
 			  PULONG BlockRef = (PULONG) ((PUCHAR) pItemBuffer + sizeof(ULONG) * idxBlockRef);
-              
+
 			  // Build a block descriptor for this block reference
 			  pBdl[idxCurrentBD].Lba		= (LONGLONG) *BlockRef * (LONGLONG) Vcb->BlockSize;
 			  pBdl[idxCurrentBD].Length		= Vcb->BlockSize;
@@ -747,13 +747,13 @@ RfsdBuildBDL2(
 			  CurrentOffset += Vcb->BlockSize;
 			  idxCurrentBD++;
 		  }
-		  
+
 		  if (countBlockRefs <= 0)		{ done = TRUE; }
 		}
-		
+
 		if (pBlockBuffer)				{ ExFreePool(pBlockBuffer);  pBlockBuffer = NULL; }
 	}
-	
+
 	// Cleanup the last remaining block buffer, from the indirect items
 	if (pBlockBuffer) { ExFreePool(pBlockBuffer);  pBlockBuffer = NULL; }
 
@@ -771,8 +771,8 @@ RfsdBuildBDL2(
 		  &(pItemHeader), &(pItemBuffer), &(pBlockBuffer), &(BlockNumber),
 		  &CompareKeys
 		  );
-	  
-	  if (Status == STATUS_SUCCESS) 
+
+	  if (Status == STATUS_SUCCESS)
 	  {
 		  // If there was a tail, then build a block descriptor for it
 		  pBdl[idxCurrentBD].Lba		= (LONGLONG) BlockNumber * (LONGLONG) Vcb->BlockSize + pItemHeader->ih_item_location;
@@ -782,12 +782,12 @@ RfsdBuildBDL2(
 		  // Advance to the next block reference
 		  CurrentOffset += pItemHeader->ih_item_len;
 		  idxCurrentBD++;
-	  }  
+	  }
 	  else
 	  {
 		  if (Status == STATUS_NO_SUCH_MEMBER) { Status = STATUS_SUCCESS; goto errorout; }		// If there wasn't a tail, it's fine
 		  else								   { goto errorout; }				// But if there was some other problem, let's report it.
-	  }		
+	  }
 	}
 
 	if (pBlockBuffer) { ExFreePool(pBlockBuffer);  pBlockBuffer = NULL; }
@@ -806,8 +806,8 @@ RfsdBuildBDL2(
 		  &(pItemHeader), &(pItemBuffer), &(pBlockBuffer), &(BlockNumber),
 		  &CompareKeys
 		  );
-	  
-	  if (Status == STATUS_SUCCESS) 
+
+	  if (Status == STATUS_SUCCESS)
 	  {
 		  // If there was a second part of the tail, then build a block descriptor for it
 		  pBdl[idxCurrentBD].Lba		= (LONGLONG) BlockNumber * (LONGLONG) Vcb->BlockSize + pItemHeader->ih_item_location;
@@ -815,15 +815,15 @@ RfsdBuildBDL2(
 		  pBdl[idxCurrentBD].Offset		= CurrentOffset;
 
 		  idxCurrentBD++;
-	  }  
+	  }
 	  else
 	  {
 		  if (Status == STATUS_NO_SUCH_MEMBER) { Status = STATUS_SUCCESS; }		// If there wasn't a second part of the tail, it's fine
 		  else								   { goto errorout; }				// But if there was some other problem, let's report it.
-	  }		
+	  }
 	}
 
-errorout:	
+errorout:
 	if (pBlockBuffer) { ExFreePool(pBlockBuffer);  pBlockBuffer = NULL; }
 
 	*out_ppBdl	= pBdl;
@@ -838,7 +838,7 @@ RfsdNewBlock(
     PRFSD_IRP_CONTEXT IrpContext,
     PRFSD_VCB Vcb,
     ULONG     GroupHint,
-    ULONG     BlockHint,  
+    ULONG     BlockHint,
     PULONG    dwRet )
 {
 DbgBreak();
@@ -862,14 +862,14 @@ DbgBreak();
         GroupHint = (BlockHint - RFSD_FIRST_DATA_BLOCK) / BLOCKS_PER_GROUP;
         dwHint = (BlockHint - RFSD_FIRST_DATA_BLOCK) % BLOCKS_PER_GROUP;
     }
-  
+
 ScanBitmap:
-  
+
     // Perform Prefered Group
     if (Vcb->GroupDesc[GroupHint].bg_free_blocks_count) {
 
         Offset.QuadPart = (LONGLONG) Vcb->BlockSize;
-        Offset.QuadPart = Offset.QuadPart * 
+        Offset.QuadPart = Offset.QuadPart *
                           Vcb->GroupDesc[GroupHint].bg_block_bitmap;
 
         if (GroupHint == Vcb->NumOfGroups - 1) {
@@ -973,7 +973,7 @@ ScanBitmap:
             }
         }
     }
-        
+
     if (dwBlk < Length) {
 
         RtlSetBits(&BlockBitmap, dwBlk, 1);
@@ -1035,7 +1035,7 @@ DbgBreak();
     ULONG           Group, dwBlk;
     BOOLEAN         bModified = FALSE;
 
-    if ( Block < RFSD_FIRST_DATA_BLOCK || 
+    if ( Block < RFSD_FIRST_DATA_BLOCK ||
          (Block / BLOCKS_PER_GROUP) >= Vcb->NumOfGroups) {
 
         DbgBreak();
@@ -1047,7 +1047,7 @@ DbgBreak();
     Group = (Block - RFSD_FIRST_DATA_BLOCK) / BLOCKS_PER_GROUP;
 
     dwBlk = (Block - RFSD_FIRST_DATA_BLOCK) % BLOCKS_PER_GROUP;
-    
+
     {
         Offset.QuadPart = (LONGLONG) Vcb->BlockSize;
         Offset.QuadPart = Offset.QuadPart * Vcb->GroupDesc[Group].bg_block_bitmap;
@@ -1081,7 +1081,7 @@ DbgBreak();
                              Length );
 
         if (RtlCheckBit(&BlockBitmap, dwBlk) == 0) {
-            
+
         } else {
             RtlClearBits(&BlockBitmap, dwBlk, 1);
             bModified = TRUE;
@@ -1096,7 +1096,7 @@ DbgBreak();
             RtlZeroMemory(&BlockBitmap, sizeof(RTL_BITMAP));
         }
     }
-        
+
     if (bModified) {
 
         CcSetDirtyPinnedData(BitmapBcb, NULL );
@@ -1172,7 +1172,7 @@ DbgBreak();
             } else {
 
                 LARGE_INTEGER   Offset;
-            
+
                 Offset.QuadPart  = (LONGLONG) dwContent;
                 Offset.QuadPart = Offset.QuadPart * Vcb->BlockSize;
 
@@ -1243,7 +1243,7 @@ DbgBreak();
             RfsdPrint((DBG_ERROR, "RfsdExpandBlockk: ... error recuise...\n"));
             goto errorout;
         }
-        
+
         if (bDirty)
         {
             RfsdSaveBlock( IrpContext,
@@ -1330,7 +1330,7 @@ DbgBreak();
                             Vcb, Fcb,
                             dwBlk, Index,
                             i, bNewBlock,
-                            &dwNewBlk  ); 
+                            &dwNewBlk  );
 
             if (NT_SUCCESS(Status)) {
                 Fcb->Header.AllocationSize.QuadPart += Vcb->BlockSize;
@@ -1381,7 +1381,7 @@ DbgBreak();
     ULONG           Group, i, j;
     ULONG           Average, Length;
     LARGE_INTEGER   Offset;
-    
+
     ULONG           dwInode;
 
     *Inode = dwInode = 0XFFFFFFFF;
@@ -1389,7 +1389,7 @@ DbgBreak();
 repeat:
 
     Group = i = 0;
-    
+
     if (Type == RFSD_FT_DIR) {
 
         Average = Vcb->SuperBlock->s_free_inodes_count / Vcb->NumOfGroups;
@@ -1398,7 +1398,7 @@ repeat:
 
             i = (j + GroupHint) % (Vcb->NumOfGroups);
 
-            if ((Vcb->GroupDesc[i].bg_used_dirs_count << 8) < 
+            if ((Vcb->GroupDesc[i].bg_used_dirs_count << 8) <
                  Vcb->GroupDesc[i].bg_free_inodes_count ) {
                 Group = i + 1;
                 break;
@@ -1439,7 +1439,7 @@ repeat:
             for (j = 1; j < Vcb->NumOfGroups; j <<= 1) {
 
                 i += j;
-                if (i > Vcb->NumOfGroups) 
+                if (i > Vcb->NumOfGroups)
                     i -= Vcb->NumOfGroups;
 
                 if (Vcb->GroupDesc[i].bg_free_inodes_count) {
@@ -1490,7 +1490,7 @@ repeat:
                 Length = INODES_PER_GROUP;
             }
         }
-        
+
         if (!CcPinRead( Vcb->StreamObj,
                         &Offset,
                         Vcb->BlockSize,
@@ -1553,8 +1553,8 @@ repeat:
 
         Vcb->SuperBlock->s_free_inodes_count--;
         RfsdSaveSuper(IrpContext, Vcb);
-        
-        return STATUS_SUCCESS;        
+
+        return STATUS_SUCCESS;
     }
 
     return STATUS_DISK_FULL;
@@ -1582,14 +1582,14 @@ DbgBreak();
 
     ULONG           dwIno;
     BOOLEAN         bModified = FALSE;
-    
+
 
     Group = (Inode - 1) / INODES_PER_GROUP;
     dwIno = (Inode - 1) % INODES_PER_GROUP;
 
     RfsdPrint((DBG_INFO, "RfsdFreeInode: Inode: %xh (Group/Off = %xh/%xh)\n",
                          Inode, Group, dwIno));
-    
+
     {
         Offset.QuadPart = (LONGLONG) Vcb->BlockSize;
         Offset.QuadPart = Offset.QuadPart * Vcb->GroupDesc[Group].bg_inode_bitmap;
@@ -1634,7 +1634,7 @@ DbgBreak();
             RtlZeroMemory(&InodeBitmap, sizeof(RTL_BITMAP));
         }
     }
-        
+
     if (bModified) {
 
         CcSetDirtyPinnedData(BitmapBcb, NULL );
@@ -1718,10 +1718,10 @@ DbgBreak();
         }
 
 #if DISABLED			// disabled in FFS too
-        if (IsFlagOn( SUPER_BLOCK->s_feature_incompat, 
+        if (IsFlagOn( SUPER_BLOCK->s_feature_incompat,
                       RFSD_FEATURE_INCOMPAT_FILETYPE)) {
             pDir->file_type = (UCHAR) FileType;
-        } else 
+        } else
 #endif
 		  {
             pDir->file_type = 0;
@@ -1769,7 +1769,7 @@ Repeat:
                 _SEH2_LEAVE;
             }
 
-            if (((pTarget->inode == 0) && pTarget->rec_len >= pDir->rec_len) || 
+            if (((pTarget->inode == 0) && pTarget->rec_len >= pDir->rec_len) ||
                 (pTarget->rec_len >= RFSD_DIR_REC_LEN(pTarget->name_len) + pDir->rec_len)) {
 
                 if (pTarget->inode) {
@@ -1793,7 +1793,7 @@ Repeat:
                     }
 
                     Length = RFSD_DIR_REC_LEN(pTarget->name_len);
-                    
+
                     pNewDir = (PRFSD_DIR_ENTRY2) ((PUCHAR)pTarget + RFSD_DIR_REC_LEN(pTarget->name_len));
 
                     pNewDir->rec_len = pTarget->rec_len - RFSD_DIR_REC_LEN(pTarget->name_len);
@@ -1815,7 +1815,7 @@ Repeat:
                 bFound = TRUE;
                 break;
             }
-            
+
             dwBytes += pTarget->rec_len;
         }
 
@@ -1844,7 +1844,7 @@ Repeat:
                         &dwRet );
         } else {
 
-            // We should expand the size of the dir inode 
+            // We should expand the size of the dir inode
             if (!bAdding) {
 
                 ULONG dwRet;
@@ -1889,7 +1889,7 @@ Repeat:
             ExFreePool(pDir);
         }
     } _SEH2_END;
-    
+
     return Status;
 #endif
 }
@@ -1922,7 +1922,7 @@ DbgBreak();
         return STATUS_NOT_A_DIRECTORY;
     }
 
-    MainResourceAcquired = 
+    MainResourceAcquired =
             ExAcquireResourceExclusiveLite(&Dcb->MainResource, TRUE);
 
     _SEH2_TRY {
@@ -1936,7 +1936,7 @@ DbgBreak();
             Status = STATUS_INSUFFICIENT_RESOURCES;
             _SEH2_LEAVE;
         }
-        
+
         pPrevDir = (PRFSD_DIR_ENTRY2) ExAllocatePoolWithTag(PagedPool,
                                      RFSD_DIR_REC_LEN(RFSD_NAME_LEN), RFSD_POOL_TAG);
         if (!pPrevDir) {
@@ -2094,7 +2094,7 @@ DbgBreak();
                        ) ) {
                     Status = STATUS_UNSUCCESSFUL;
                 }
-              
+
                 break;
 
             } else {
@@ -2123,7 +2123,7 @@ DbgBreak();
             ExFreePool(pPrevDir);
         }
     } _SEH2_END;
-    
+
     return Status;
 #endif
 }
@@ -2153,7 +2153,7 @@ DbgBreak();
         return STATUS_NOT_A_DIRECTORY;
     }
 
-    MainResourceAcquired = 
+    MainResourceAcquired =
         ExAcquireResourceExclusiveLite(&Dcb->MainResource, TRUE);
 
     _SEH2_TRY {
@@ -2200,7 +2200,7 @@ DbgBreak();
 
         Status = RfsdWriteInode(
                         IrpContext,
-                        Vcb, 
+                        Vcb,
                         Dcb->RfsdMcb->Inode,
                         Dcb->Inode,
                         Offset,
@@ -2223,7 +2223,7 @@ DbgBreak();
             ExFreePool(pSelf);
         }
     } _SEH2_END;
-    
+
     return Status;
 #endif
 	 { return 1; }
@@ -2266,7 +2266,7 @@ DbgBreak();
             if (NT_SUCCESS(Status)) {
 
                 ASSERT(Inode->i_blocks >= (Vcb->BlockSize / SECTOR_SIZE));
-                Inode->i_blocks -= (Vcb->BlockSize / SECTOR_SIZE);            
+                Inode->i_blocks -= (Vcb->BlockSize / SECTOR_SIZE);
                 *bFreed = TRUE;
             }
 
@@ -2404,13 +2404,13 @@ DbgBreak();
 
             if (dwBlk) {
 
-                Status = RfsdTruncateBlock(IrpContext, Vcb, Fcb, dwBlk, Index , i, &bFreed); 
+                Status = RfsdTruncateBlock(IrpContext, Vcb, Fcb, dwBlk, Index , i, &bFreed);
             }
 
             if (NT_SUCCESS(Status)) {
 
                 Fcb->Header.AllocationSize.QuadPart -= Vcb->BlockSize;
-            
+
                 if (bFreed) {
                     Inode->i_block[i==0 ? (Index):(i + RFSD_NDIR_BLOCKS - 1)] = 0;
                 }
@@ -2524,12 +2524,12 @@ DbgBreak();
 
             DbgBreak();
 
-            for ( Index = 0; 
+            for ( Index = 0;
                   FsRtlGetNextLargeMcbEntry( &(Vcb->DirtyMcbs),
                                              Index,
                                              &DirtyVba,
                                              &DirtyLba,
-                                             &DirtyLength); 
+                                             &DirtyLength);
                   Index++ ) {
 
                 RfsdPrint((DBG_INFO, "Index = %xh\n", Index));
@@ -2692,13 +2692,13 @@ DbgBreak();
 ///////////////////////////////////////////////////
 ///////////////////////////////////////////////////
 
-/** 
+/**
  Invoked by FSCTL.c on mount volume
 */
 BOOLEAN SuperblockContainsMagicKey(PRFSD_SUPER_BLOCK sb)
-{	
+{
 #define  MAGIC_KEY_LENGTH							9
-	
+
 	UCHAR				sz_MagicKey[]	= REISER2FS_SUPER_MAGIC_STRING;
 #ifndef __REACTOS__
 	BOOLEAN			b_KeyMatches	= TRUE;
@@ -2708,9 +2708,9 @@ BOOLEAN SuperblockContainsMagicKey(PRFSD_SUPER_BLOCK sb)
 
     PAGED_CODE();
 
-	// If any characters read from disk don't match the expected magic key, we don't have a ReiserFS volume.	
-	for (i = 0; i < MAGIC_KEY_LENGTH; i++) 
-	{ 
+	// If any characters read from disk don't match the expected magic key, we don't have a ReiserFS volume.
+	for (i = 0; i < MAGIC_KEY_LENGTH; i++)
+	{
 		currentChar = sb->s_magic[i];
 		if (currentChar != sz_MagicKey[i])
 			{ return FALSE; }
@@ -2723,20 +2723,20 @@ BOOLEAN SuperblockContainsMagicKey(PRFSD_SUPER_BLOCK sb)
 
 /*
 ______________________________________________________________________________
- _  __             _   _ _   _ _     
-| |/ /___ _   _   | | | | |_(_) |___ 
+ _  __             _   _ _   _ _
+| |/ /___ _   _   | | | | |_(_) |___
 | ' // _ \ | | |  | | | | __| | / __|
 | . \  __/ |_| |  | |_| | |_| | \__ \
 |_|\_\___|\__, |   \___/ \__|_|_|___/
-          |___/                      
+          |___/
 ______________________________________________________________________________
 */
 
 
-/** 
+/**
  Guess whether a key is v1, or v2, by investigating its type field.
  NOTE: I based this off Florian Buchholz's code snippet, which is from reisefs lib.
- 
+
  Old keys (on i386) have k_offset_v2.k_type == 15 (direct and indirect) or == 0 (dir items and stat data).
 */
 
@@ -2763,7 +2763,7 @@ ConvertKeyTypeUniqueness(__u32 k_uniqueness)
 	case RFSD_KEY_TYPE_v1_INDIRECT:			return RFSD_KEY_TYPE_v2_INDIRECT;
 	case RFSD_KEY_TYPE_v1_DIRECT:			return RFSD_KEY_TYPE_v2_DIRECT;
 	case RFSD_KEY_TYPE_v1_DIRENTRY:			return RFSD_KEY_TYPE_v2_DIRENTRY;
-	
+
 	default:
 		RfsdPrint((DBG_ERROR, "Unexpected uniqueness value %i", k_uniqueness));
 		// NOTE: If above value is 555, it's the 'any' value, which I'd be surprised to see on disk.
@@ -2775,8 +2775,8 @@ ConvertKeyTypeUniqueness(__u32 k_uniqueness)
 /** Fills an in-memory key structure with equivalent data as that given by an on-disk key, converting any older v1 information ito the new v2 formats. */
 void
 FillInMemoryKey(
-	IN		PRFSD_KEY_ON_DISK		pKeyOnDisk, 
-	IN		RFSD_KEY_VERSION		KeyVersion, 
+	IN		PRFSD_KEY_ON_DISK		pKeyOnDisk,
+	IN		RFSD_KEY_VERSION		KeyVersion,
 	IN OUT	PRFSD_KEY_IN_MEMORY		pKeyInMemory		)
 {
     PAGED_CODE();
@@ -2786,24 +2786,24 @@ FillInMemoryKey(
 
 	// Copy over the fields that are compatible between keys
 	pKeyInMemory->k_dir_id		= pKeyOnDisk->k_dir_id;
-	pKeyInMemory->k_objectid	= pKeyOnDisk->k_objectid;	
+	pKeyInMemory->k_objectid	= pKeyOnDisk->k_objectid;
 
-	if (KeyVersion == RFSD_KEY_VERSION_UNKNOWN)	
+	if (KeyVersion == RFSD_KEY_VERSION_UNKNOWN)
 		{ KeyVersion = DetermineOnDiskKeyFormat(pKeyOnDisk); }
-	
+
 	// Copy over the fields that are incompatible between keys, converting older type fields to the v2 format
 	switch (KeyVersion)
 	{
-	case RFSD_KEY_VERSION_1: 
+	case RFSD_KEY_VERSION_1:
 		pKeyInMemory->k_offset	= pKeyOnDisk->u.k_offset_v1.k_offset;
 		pKeyInMemory->k_type	= ConvertKeyTypeUniqueness( pKeyOnDisk->u.k_offset_v1.k_uniqueness );
 		break;
 
-	case RFSD_KEY_VERSION_2: 
+	case RFSD_KEY_VERSION_2:
 		pKeyInMemory->k_offset	= pKeyOnDisk->u.k_offset_v2.k_offset;
 		pKeyInMemory->k_type	= (__u32) pKeyOnDisk->u.k_offset_v2.k_type;
 		break;
-	}	
+	}
 }
 
 /** Compares two in memory keys, returning KEY_SMALLER, KEY_LARGER, or KEYS_MATCH relative to the first key given. */
@@ -2814,10 +2814,10 @@ CompareShortKeys(
 {
     PAGED_CODE();
 
-    // compare 1. integer	
+    // compare 1. integer
     if( a->k_dir_id < b->k_dir_id )        return RFSD_KEY_SMALLER;
     if( a->k_dir_id > b->k_dir_id )        return RFSD_KEY_LARGER;
-    
+
     // compare 2. integer
     if( a->k_objectid < b->k_objectid )    return RFSD_KEY_SMALLER;
     if( a->k_objectid > b->k_objectid )    return RFSD_KEY_LARGER;
@@ -2834,14 +2834,14 @@ CompareKeysWithoutOffset(
 {
     PAGED_CODE();
 
-    // compare 1. integer	
+    // compare 1. integer
     if( a->k_dir_id < b->k_dir_id )        return RFSD_KEY_SMALLER;
     if( a->k_dir_id > b->k_dir_id )        return RFSD_KEY_LARGER;
-    
+
     // compare 2. integer
     if( a->k_objectid < b->k_objectid )    return RFSD_KEY_SMALLER;
     if( a->k_objectid > b->k_objectid )    return RFSD_KEY_LARGER;
-    
+
 	// compare 4. integer
 	// NOTE: Buchholz says that if we get to here in navigating the file tree, something has gone wrong...
     if( a->k_type < b->k_type )		       return RFSD_KEY_SMALLER;
@@ -2859,17 +2859,17 @@ CompareKeys(
 {
     PAGED_CODE();
 
-    // compare 1. integer	
+    // compare 1. integer
     if( a->k_dir_id < b->k_dir_id )        return RFSD_KEY_SMALLER;
     if( a->k_dir_id > b->k_dir_id )        return RFSD_KEY_LARGER;
-    
+
     // compare 2. integer
     if( a->k_objectid < b->k_objectid )    return RFSD_KEY_SMALLER;
     if( a->k_objectid > b->k_objectid )    return RFSD_KEY_LARGER;
-    
+
     // compare 3. integer
     if( a->k_offset < b->k_offset )        return RFSD_KEY_SMALLER;
-    if( a->k_offset > b->k_offset )        return RFSD_KEY_LARGER;   
+    if( a->k_offset > b->k_offset )        return RFSD_KEY_LARGER;
 
     // compare 4. integer
 	// NOTE: Buchholz says that if we get to here in navigating the file tree, something has gone wrong...
@@ -2883,12 +2883,12 @@ CompareKeys(
 
 /*
 ______________________________________________________________________________
- _____                 _   _             _             _   _             
-|_   _| __ ___  ___   | \ | | __ ___   _(_) __ _  __ _| |_(_) ___  _ __  
-  | || '__/ _ \/ _ \  |  \| |/ _` \ \ / / |/ _` |/ _` | __| |/ _ \| '_ \ 
+ _____                 _   _             _             _   _
+|_   _| __ ___  ___   | \ | | __ ___   _(_) __ _  __ _| |_(_) ___  _ __
+  | || '__/ _ \/ _ \  |  \| |/ _` \ \ / / |/ _` |/ _` | __| |/ _ \| '_ \
   | || | |  __/  __/  | |\  | (_| |\ V /| | (_| | (_| | |_| | (_) | | | |
   |_||_|  \___|\___|  |_| \_|\__,_| \_/ |_|\__, |\__,_|\__|_|\___/|_| |_|
-                                           |___/                         
+                                           |___/
 ______________________________________________________________________________
 */
 
@@ -2909,7 +2909,7 @@ NTSTATUS
 RfsdParseFilesystemTree(
 			IN	PRFSD_VCB					Vcb,
 			IN	PRFSD_KEY_IN_MEMORY			Key,						// Key to search for.
-			IN	ULONG						StartingBlockNumber,		// Block number of an internal or leaf node, to start the search from			
+			IN	ULONG						StartingBlockNumber,		// Block number of an internal or leaf node, to start the search from
 			IN	RFSD_CALLBACK(fpDirectoryCallback),						// A function ptr to trigger on hitting a matching leaf block
 			IN  PVOID						pContext					// This context item will simply be passed through to the callback when invoked
 			)
@@ -2940,16 +2940,16 @@ _NavigateToLeafNode(
 			IN	RFSD_KEY_COMPARISON (*fpComparisonFunction)(PRFSD_KEY_IN_MEMORY, PRFSD_KEY_IN_MEMORY),
 			RFSD_CALLBACK(fpDirectoryCallback),							// A function ptr to trigger on hitting a matching leaf block
 			IN	PVOID						pContext					// This context item will simply be passed through to the callback when invoked
-									
+
 
 			)
-{	
+{
 	NTSTATUS				Status = STATUS_SUCCESS;
 	ULONG					leafNodeBlockNumber;					// The result to be calculated
-	PRFSD_DISK_NODE_REF		pTargetDiskNodeReference = NULL;		// 
+	PRFSD_DISK_NODE_REF		pTargetDiskNodeReference = NULL;		//
 
 	// Read in this disk node's data
-	PUCHAR pBlockBuffer = RfsdAllocateAndLoadBlock(Vcb, StartingBlockNumber);	
+	PUCHAR pBlockBuffer = RfsdAllocateAndLoadBlock(Vcb, StartingBlockNumber);
 
 	// Read the block header
 	PRFSD_BLOCK_HEAD pBlockHeader = (PRFSD_BLOCK_HEAD) pBlockBuffer;
@@ -2959,17 +2959,17 @@ _NavigateToLeafNode(
 	// Sanity check that we could read the block and the header is there
 	if (!pBlockBuffer) { return STATUS_INVALID_HANDLE; }
 
-	// If this block is a leaf, just return it (or invoke the given callback on the leaf block)	
+	// If this block is a leaf, just return it (or invoke the given callback on the leaf block)
 	if (pBlockHeader->blk_level == RFSD_LEAF_BLOCK_LEVEL)
 	{
 		NTSTATUS	CallbackStatus;
 
 		ExFreePool(pBlockBuffer);
-		
+
 		*out_NextBlockNumber = StartingBlockNumber;
 
 		// If a callback should be invoked on finding a matching leaf node, do so...
-		if (fpDirectoryCallback) 	return (*fpDirectoryCallback)(StartingBlockNumber, pContext);	
+		if (fpDirectoryCallback) 	return (*fpDirectoryCallback)(StartingBlockNumber, pContext);
 		else						return STATUS_SUCCESS;
 	}
 
@@ -2987,12 +2987,12 @@ _NavigateToLeafNode(
 		// Search (within the increasing list of target Keys), for the target key that Key is <= to.
 		for (idxRightKey = 0; idxRightKey <= pBlockHeader->blk_nr_item; idxRightKey++)
 		{
-			// Advance the left key to become what was the right key, and the right key to become the next key 
+			// Advance the left key to become what was the right key, and the right key to become the next key
 			pLeftKeyOnDisk		= pRightKeyOnDisk;
-			pRightKeyOnDisk		= (idxRightKey == pBlockHeader->blk_nr_item) ? 
+			pRightKeyOnDisk		= (idxRightKey == pBlockHeader->blk_nr_item) ?
 				(PRFSD_KEY_ON_DISK) NULL :
 				(PRFSD_KEY_ON_DISK) (pBlockBuffer + sizeof(RFSD_BLOCK_HEAD) + (idxRightKey * sizeof(RFSD_KEY_ON_DISK)));
-			
+
 			LeftKeyInMemory = RightKeyInMemory;
 			if (pRightKeyOnDisk)
 				FillInMemoryKey(pRightKeyOnDisk, RFSD_KEY_VERSION_UNKNOWN, &(RightKeyInMemory));
@@ -3004,7 +3004,7 @@ _NavigateToLeafNode(
 			  rightComparison = pRightKeyOnDisk ? ((*fpComparisonFunction)(Key, &RightKeyInMemory)) : RFSD_KEY_SMALLER;
 			  if (fpComparisonFunction == &CompareShortKeys)
 				{ if (rightComparison == RFSD_KEY_LARGER)	 continue; }
-			  else 
+			  else
 			    { if (rightComparison != RFSD_KEY_SMALLER)   continue; }
 
 			  // And larger than or equal to the left key.
@@ -3015,10 +3015,10 @@ _NavigateToLeafNode(
 				  // This returns the pointer preceding the righthand key.
 				  pTargetDiskNodeReference = (PRFSD_DISK_NODE_REF) (pBlockBuffer
 					  + sizeof(RFSD_BLOCK_HEAD) + (pBlockHeader->blk_nr_item * sizeof(RFSD_KEY_ON_DISK)) + (idxRightKey *	sizeof(RFSD_DISK_NODE_REF)));
-				  
+
 				  // Continue recursion downwards; eventually a leaf node will be returned.
 				  Status = _NavigateToLeafNode(
-					  Vcb, Key, pTargetDiskNodeReference->dc_block_number, 
+					  Vcb, Key, pTargetDiskNodeReference->dc_block_number,
 					  &(leafNodeBlockNumber),
 					  ReturnOnFirstMatch, fpComparisonFunction, fpDirectoryCallback, pContext);	// <
 

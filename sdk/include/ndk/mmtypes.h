@@ -879,8 +879,19 @@ typedef struct _MMWSL
     PVOID HighestPermittedHashAddress;
     ULONG NumberOfImageWaiters;
     ULONG VadBitMapHint;
+#ifndef _M_AMD64
     USHORT UsedPageTableEntries[768];
     ULONG CommittedPageTables[24];
+#else
+    VOID* HighestUserAddress;
+    ULONG MaximumUserPageTablePages;
+    ULONG MaximumUserPageDirectoryPages;
+    ULONG* CommittedPageTables;
+    ULONG NumberOfCommittedPageDirectories;
+    ULONG* CommittedPageDirectories;
+    ULONG NumberOfCommittedPageDirectoryParents;
+    ULONGLONG CommittedPageDirectoryParents[1];
+#endif
 } MMWSL, *PMMWSL;
 
 //

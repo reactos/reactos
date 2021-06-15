@@ -44,7 +44,7 @@ MouHid_GetButtonMove(
     *LastX = 0;
     *LastY = 0;
 
-    if (!DeviceExtension->MouseAbsolute) 
+    if (!DeviceExtension->MouseAbsolute)
     {
         /* get scaled usage value x */
         Status =  HidP_GetScaledUsageValue(HidP_Input,

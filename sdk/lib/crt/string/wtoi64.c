@@ -104,7 +104,7 @@ __int64 CDECL _wcstoi64_l(const wchar_t *nptr,
             ret = _I64_MIN;
 #ifndef _LIBCNT_
             *_errno() = ERANGE;
-#endif            
+#endif
         } else
             ret = ret*base + v;
     }

@@ -184,7 +184,7 @@ typedef enum
     Stopped,                // Device has received the STOP_DEVICE IRP
     RemovePending,          // Device has received the QUERY_REMOVE IRP
     SurpriseRemovePending,  // Device has received the SURPRISE_REMOVE IRP
-    Deleted 
+    Deleted
 }DEVICE_STATE;
 
 

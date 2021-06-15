@@ -2,10 +2,10 @@
  * COPYRIGHT:        GNU GENERAL PUBLIC LICENSE VERSION 2
  * PROJECT:          ReiserFs file system driver for Windows NT/2000/XP/Vista.
  * FILE:             fsctl.c
- * PURPOSE:          
+ * PURPOSE:
  * PROGRAMMER:       Mark Piper, Matt Wu, Bo Brantén.
- * HOMEPAGE:         
- * UPDATE HISTORY: 
+ * HOMEPAGE:
+ * UPDATE HISTORY:
  */
 
 /* INCLUDES *****************************************************************/
@@ -50,11 +50,11 @@ RfsdSetVpbFlag (
         IN USHORT   Flag )
 {
     KIRQL OldIrql;
-    
+
     IoAcquireVpbSpinLock(&OldIrql);
-    
+
     Vpb->Flags |= Flag;
-    
+
     IoReleaseVpbSpinLock(OldIrql);
 }
 
@@ -64,11 +64,11 @@ RfsdClearVpbFlag (
           IN USHORT   Flag )
 {
     KIRQL OldIrql;
-    
+
     IoAcquireVpbSpinLock(&OldIrql);
-    
+
     Vpb->Flags &= ~Flag;
-    
+
     IoReleaseVpbSpinLock(OldIrql);
 }
 
@@ -112,42 +112,42 @@ RfsdLockVcb (IN PRFSD_VCB    Vcb,
 
         if (FlagOn(Vcb->Flags, VCB_VOLUME_LOCKED)) {
             RfsdPrint((DBG_INFO, "RfsdLockVolume: Volume is already locked.\n"));
-            
+
             Status = STATUS_ACCESS_DENIED;
-            
+
             _SEH2_LEAVE;
         }
-        
+
         if (Vcb->OpenFileHandleCount > (ULONG)(FileObject ? 1 : 0)) {
             RfsdPrint((DBG_INFO, "RfsdLockVcb: There are still opened files.\n"));
-            
+
             Status = STATUS_ACCESS_DENIED;
-            
+
             _SEH2_LEAVE;
         }
-        
+
         if (!RfsdIsHandleCountZero(Vcb)) {
             RfsdPrint((DBG_INFO, "RfsdLockVcb: Thare are still opened files.\n"));
-            
+
             Status = STATUS_ACCESS_DENIED;
-            
+
             _SEH2_LEAVE;
         }
-        
+
         SetFlag(Vcb->Flags, VCB_VOLUME_LOCKED);
-        
+
         RfsdSetVpbFlag(Vcb->Vpb, VPB_LOCKED);
 
         Vcb->LockFile = FileObject;
-        
+
         RfsdPrint((DBG_INFO, "RfsdLockVcb: Volume locked.\n"));
-        
+
         Status = STATUS_SUCCESS;
 
     } _SEH2_FINALLY {
         // Nothing
     } _SEH2_END;
-    
+
     return Status;
 }
 
@@ -166,12 +166,12 @@ RfsdLockVolume (IN PRFSD_IRP_CONTEXT IrpContext)
     _SEH2_TRY {
 
         ASSERT(IrpContext != NULL);
-        
+
         ASSERT((IrpContext->Identifier.Type == RFSDICX) &&
             (IrpContext->Identifier.Size == sizeof(RFSD_IRP_CONTEXT)));
-        
+
         DeviceObject = IrpContext->DeviceObject;
-        
+
         Status = STATUS_UNSUCCESSFUL;
 
         //
@@ -181,9 +181,9 @@ RfsdLockVolume (IN PRFSD_IRP_CONTEXT IrpContext)
             Status = STATUS_INVALID_PARAMETER;
             _SEH2_LEAVE;
         }
-        
+
         Vcb = (PRFSD_VCB) DeviceObject->DeviceExtension;
-        
+
         ASSERT(Vcb != NULL);
 
         ASSERT((Vcb->Identifier.Type == RFSDVCB) &&
@@ -199,10 +199,10 @@ RfsdLockVolume (IN PRFSD_IRP_CONTEXT IrpContext)
         ExAcquireResourceExclusiveLite(
             &Vcb->MainResource,
             TRUE            );
-        
+
         VcbResourceAcquired = TRUE;
 
-        Status = RfsdLockVcb(Vcb, IrpSp->FileObject);        
+        Status = RfsdLockVcb(Vcb, IrpSp->FileObject);
 
     } _SEH2_FINALLY {
 
@@ -212,12 +212,12 @@ RfsdLockVolume (IN PRFSD_IRP_CONTEXT IrpContext)
                 ExGetCurrentResourceThread()
                 );
         }
-        
+
         if (!IrpContext->ExceptionInProgress) {
             RfsdCompleteIrpContext(IrpContext,  Status);
         }
     } _SEH2_END;
-    
+
     return Status;
 }
 
@@ -236,7 +236,7 @@ RfsdUnlockVcb ( IN PRFSD_VCB    Vcb,
             Status = STATUS_NOT_LOCKED;
             _SEH2_LEAVE;
         }
-       
+
         if (!FlagOn(Vcb->Flags, VCB_VOLUME_LOCKED)) {
             RfsdPrint((DBG_ERROR, ": RfsdUnlockVcb: Volume is not locked.\n"));
             Status = STATUS_NOT_LOCKED;
@@ -246,11 +246,11 @@ RfsdUnlockVcb ( IN PRFSD_VCB    Vcb,
         if (Vcb->LockFile == FileObject) {
 
             ClearFlag(Vcb->Flags, VCB_VOLUME_LOCKED);
-        
+
             RfsdClearVpbFlag(Vcb->Vpb, VPB_LOCKED);
-        
+
             RfsdPrint((DBG_INFO, "RfsdUnlockVcb: Volume unlocked.\n"));
-        
+
             Status = STATUS_SUCCESS;
         } else {
             Status = STATUS_NOT_LOCKED;
@@ -280,12 +280,12 @@ RfsdUnlockVolume (
     _SEH2_TRY {
 
         ASSERT(IrpContext != NULL);
-        
+
         ASSERT((IrpContext->Identifier.Type == RFSDICX) &&
             (IrpContext->Identifier.Size == sizeof(RFSD_IRP_CONTEXT)));
-        
+
         DeviceObject = IrpContext->DeviceObject;
-        
+
         //
         // This request is not allowed on the main device object
         //
@@ -293,11 +293,11 @@ RfsdUnlockVolume (
             Status = STATUS_INVALID_PARAMETER;
             _SEH2_LEAVE;
         }
-        
+
         Vcb = (PRFSD_VCB) DeviceObject->DeviceExtension;
-        
+
         ASSERT(Vcb != NULL);
-        
+
         ASSERT((Vcb->Identifier.Type == RFSDVCB) &&
             (Vcb->Identifier.Size == sizeof(RFSD_VCB)));
 
@@ -308,7 +308,7 @@ RfsdUnlockVolume (
         ExAcquireResourceExclusiveLite(
             &Vcb->MainResource,
             TRUE );
-        
+
         VcbResourceAcquired = TRUE;
 
         Status = RfsdUnlockVcb(Vcb, IrpSp->FileObject);
@@ -321,12 +321,12 @@ RfsdUnlockVolume (
                 ExGetCurrentResourceThread()
                 );
         }
-        
+
         if (!IrpContext->ExceptionInProgress) {
             RfsdCompleteIrpContext(IrpContext,  Status);
         }
     } _SEH2_END;
-    
+
     return Status;
 }
 
@@ -414,7 +414,7 @@ RfsdInvalidateVolumes ( IN PRFSD_IRP_CONTEXT IrpContext )
                 RfsdPurgeVolume(Vcb, FALSE);
                 ClearFlag(Vcb->Flags, VCB_MOUNTED);
                 ExReleaseResourceLite(&Vcb->MainResource);
-        
+
                 //
                 // Vcb is still attached on the list ......
                 //
@@ -456,7 +456,7 @@ RfsdAllowExtendedDasdIo(IN PRFSD_IRP_CONTEXT IrpContext)
     Ccb = (PRFSD_CCB) IrpSp->FileObject->FsContext2;
 
     ASSERT(Vcb != NULL);
-        
+
     ASSERT((Vcb->Identifier.Type == RFSDVCB) &&
            (Vcb->Identifier.Size == sizeof(RFSD_VCB)));
 
@@ -485,14 +485,14 @@ RfsdUserFsRequest (IN PRFSD_IRP_CONTEXT IrpContext)
     PAGED_CODE();
 
     ASSERT(IrpContext);
-    
+
     ASSERT((IrpContext->Identifier.Type == RFSDICX) &&
         (IrpContext->Identifier.Size == sizeof(RFSD_IRP_CONTEXT)));
-    
+
     Irp = IrpContext->Irp;
-    
+
     IoStackLocation = IoGetCurrentIrpStackLocation(Irp);
-    
+
 #ifndef _GNU_NTIFS_
     FsControlCode =
         IoStackLocation->Parameters.FileSystemControl.FsControlCode;
@@ -500,21 +500,21 @@ RfsdUserFsRequest (IN PRFSD_IRP_CONTEXT IrpContext)
     FsControlCode = ((PEXTENDED_IO_STACK_LOCATION)
         IoStackLocation)->Parameters.FileSystemControl.FsControlCode;
 #endif
-    
+
     switch (FsControlCode) {
 
     case FSCTL_LOCK_VOLUME:
         Status = RfsdLockVolume(IrpContext);
         break;
-        
+
     case FSCTL_UNLOCK_VOLUME:
         Status = RfsdUnlockVolume(IrpContext);
         break;
-        
+
     case FSCTL_DISMOUNT_VOLUME:
         Status = RfsdDismountVolume(IrpContext);
         break;
-        
+
     case FSCTL_IS_VOLUME_MOUNTED:
         Status = RfsdIsVolumeMounted(IrpContext);
         break;
@@ -528,7 +528,7 @@ RfsdUserFsRequest (IN PRFSD_IRP_CONTEXT IrpContext)
         Status = RfsdAllowExtendedDasdIo(IrpContext);
         break;
 #endif //(_WIN32_WINNT >= 0x0500)
-        
+
     default:
 
         RfsdPrint((DBG_ERROR, "RfsdUserFsRequest: Invalid User Request: %xh.\n", FsControlCode));
@@ -536,7 +536,7 @@ RfsdUserFsRequest (IN PRFSD_IRP_CONTEXT IrpContext)
 
         RfsdCompleteIrpContext(IrpContext,  Status);
     }
-    
+
     return Status;
 }
 
@@ -609,10 +609,10 @@ RfsdMountVolume (IN PRFSD_IRP_CONTEXT IrpContext)
 
 
         ASSERT(IrpContext != NULL);
-        
+
         ASSERT((IrpContext->Identifier.Type == RFSDICX) &&
             (IrpContext->Identifier.Size == sizeof(RFSD_IRP_CONTEXT)));
-        
+
         MainDeviceObject = IrpContext->DeviceObject;
 
         //
@@ -628,22 +628,22 @@ RfsdMountVolume (IN PRFSD_IRP_CONTEXT IrpContext)
             Status = STATUS_INVALID_DEVICE_REQUEST;
             _SEH2_LEAVE;
         }
-        
+
         ExAcquireResourceExclusiveLite(
             &(RfsdGlobal->Resource),
             TRUE );
-        
+
         GlobalDataResourceAcquired = TRUE;
-        
+
         if (FlagOn(RfsdGlobal->Flags, RFSD_UNLOAD_PENDING)) {
             Status = STATUS_UNRECOGNIZED_VOLUME;
             _SEH2_LEAVE;
         }
-        
+
         Irp = IrpContext->Irp;
-        
+
         IoStackLocation = IoGetCurrentIrpStackLocation(Irp);
-        
+
         TargetDeviceObject =
             IoStackLocation->Parameters.MountVolume.DeviceObject;
 
@@ -655,11 +655,11 @@ RfsdMountVolume (IN PRFSD_IRP_CONTEXT IrpContext)
             0,
             &DiskGeometry,
             &dwBytes );
-        
+
         if (!NT_SUCCESS(Status)) {
             _SEH2_LEAVE;
         }
-        
+
         Status = IoCreateDevice(
             MainDeviceObject->DriverObject,
             sizeof(RFSD_VCB),
@@ -668,27 +668,27 @@ RfsdMountVolume (IN PRFSD_IRP_CONTEXT IrpContext)
             0,
             FALSE,
             &VolumeDeviceObject );
-        
+
         if (!NT_SUCCESS(Status)) {
             _SEH2_LEAVE;
         }
 
         VolumeDeviceObject->StackSize = (CCHAR)(TargetDeviceObject->StackSize + 1);
 
-        if (TargetDeviceObject->AlignmentRequirement > 
+        if (TargetDeviceObject->AlignmentRequirement >
             VolumeDeviceObject->AlignmentRequirement) {
 
-            VolumeDeviceObject->AlignmentRequirement = 
+            VolumeDeviceObject->AlignmentRequirement =
                 TargetDeviceObject->AlignmentRequirement;
         }
 
         (IoStackLocation->Parameters.MountVolume.Vpb)->DeviceObject =
             VolumeDeviceObject;
-        
+
         Vcb = (PRFSD_VCB) VolumeDeviceObject->DeviceExtension;
 
         RtlZeroMemory(Vcb, sizeof(RFSD_VCB));
-        
+
         Vcb->Identifier.Type = RFSDVCB;
         Vcb->Identifier.Size = sizeof(RFSD_VCB);
 
@@ -709,12 +709,12 @@ RfsdMountVolume (IN PRFSD_IRP_CONTEXT IrpContext)
         if (!NT_SUCCESS(Status)) {
             _SEH2_LEAVE;
         }
-		
+
 		Vcb->BlockSize = RfsdSb->s_blocksize;		// NOTE: FFS also does this here, since LoadGroup is not called in the non-ext2 drivers
 		Vcb->GroupDesc = NULL;						// NOTE: GroupDesc is not used for ReiserFS.  Setting it to NULL will keep other code from barfing.
 		// Vcb->SectorBits = RFSDLog(SECTOR_SIZE);	// NOTE: SectorBits are unused for ReiserFS
-        
-		Status = RfsdInitializeVcb(IrpContext, Vcb, RfsdSb, TargetDeviceObject, 
+
+		Status = RfsdInitializeVcb(IrpContext, Vcb, RfsdSb, TargetDeviceObject,
                     VolumeDeviceObject, IoStackLocation->Parameters.MountVolume.Vpb);
 
         if (NT_SUCCESS(Status))  {
@@ -749,7 +749,7 @@ RfsdMountVolume (IN PRFSD_IRP_CONTEXT IrpContext)
                 IoDeleteDevice(VolumeDeviceObject);
             }
         }
-        
+
         if (!IrpContext->ExceptionInProgress) {
             if (NT_SUCCESS(Status)) {
                 ClearFlag(VolumeDeviceObject->Flags, DO_DEVICE_INITIALIZING);
@@ -757,7 +757,7 @@ RfsdMountVolume (IN PRFSD_IRP_CONTEXT IrpContext)
             RfsdCompleteIrpContext(IrpContext,  Status);
         }
     } _SEH2_END;
-    
+
     return Status;
 }
 
@@ -782,10 +782,10 @@ RfsdVerifyVolume (IN PRFSD_IRP_CONTEXT IrpContext)
     _SEH2_TRY {
 
         ASSERT(IrpContext != NULL);
-        
+
         ASSERT((IrpContext->Identifier.Type == RFSDICX) &&
             (IrpContext->Identifier.Size == sizeof(RFSD_IRP_CONTEXT)));
-        
+
         DeviceObject = IrpContext->DeviceObject;
         //
         // This request is not allowed on the main device object
@@ -798,22 +798,22 @@ RfsdVerifyVolume (IN PRFSD_IRP_CONTEXT IrpContext)
         ExAcquireResourceExclusiveLite(
             &RfsdGlobal->Resource,
             TRUE );
-        
+
         GlobalResourceAcquired = TRUE;
-        
+
         Vcb = (PRFSD_VCB) DeviceObject->DeviceExtension;
-        
+
         ASSERT(Vcb != NULL);
-        
+
         ASSERT((Vcb->Identifier.Type == RFSDVCB) &&
             (Vcb->Identifier.Size == sizeof(RFSD_VCB)));
 
         ExAcquireResourceExclusiveLite(
             &Vcb->MainResource,
             TRUE );
-        
+
         VcbResourceAcquired = TRUE;
-        
+
         if (!FlagOn(Vcb->TargetDeviceObject->Flags, DO_VERIFY_VOLUME)) {
             Status = STATUS_SUCCESS;
             _SEH2_LEAVE;
@@ -837,11 +837,11 @@ RfsdVerifyVolume (IN PRFSD_IRP_CONTEXT IrpContext)
             Status = STATUS_WRONG_VOLUME;
             _SEH2_LEAVE;
         }
-        
+
         Irp = IrpContext->Irp;
 
         IoStackLocation = IoGetCurrentIrpStackLocation(Irp);
-        
+
         rfsd_sb = RfsdLoadSuper(Vcb, TRUE);
 
 		// FUTURE: use the volume name and uuid from the extended superblock to make this happen.
@@ -856,7 +856,7 @@ RfsdVerifyVolume (IN PRFSD_IRP_CONTEXT IrpContext)
             } else {
                 ClearFlag(Vcb->Flags, VCB_WRITE_PROTECTED);
             }
-                
+
             RfsdPrint((DBG_INFO, "RfsdVerifyVolume: Volume verify succeeded.\n"));
 
             Status = STATUS_SUCCESS;
@@ -864,11 +864,11 @@ RfsdVerifyVolume (IN PRFSD_IRP_CONTEXT IrpContext)
             Status = STATUS_WRONG_VOLUME;
 
             RfsdPurgeVolume(Vcb, FALSE);
-             
+
             SetFlag(Vcb->Flags, VCB_DISMOUNT_PENDING);
-            
+
             ClearFlag(Vcb->TargetDeviceObject->Flags, DO_VERIFY_VOLUME);
-            
+
             RfsdPrint((DBG_INFO, "RfsdVerifyVolume: Volume verify failed.\n"));
         }
 
@@ -889,12 +889,12 @@ RfsdVerifyVolume (IN PRFSD_IRP_CONTEXT IrpContext)
                 &RfsdGlobal->Resource,
                 ExGetCurrentResourceThread() );
         }
-        
+
         if (!IrpContext->ExceptionInProgress) {
             RfsdCompleteIrpContext(IrpContext,  Status);
         }
     } _SEH2_END;
-    
+
     return Status;
 }
 
@@ -926,10 +926,10 @@ RfsdDismountVolume (IN PRFSD_IRP_CONTEXT IrpContext)
     _SEH2_TRY {
 
         ASSERT(IrpContext != NULL);
-        
+
         ASSERT((IrpContext->Identifier.Type == RFSDICX) &&
             (IrpContext->Identifier.Size == sizeof(RFSD_IRP_CONTEXT)));
-        
+
         DeviceObject = IrpContext->DeviceObject;
 
         //
@@ -939,11 +939,11 @@ RfsdDismountVolume (IN PRFSD_IRP_CONTEXT IrpContext)
             Status = STATUS_INVALID_DEVICE_REQUEST;
             _SEH2_LEAVE;
         }
-        
+
         Vcb = (PRFSD_VCB) DeviceObject->DeviceExtension;
-        
+
         ASSERT(Vcb != NULL);
-        
+
         ASSERT((Vcb->Identifier.Type == RFSDVCB) &&
             (Vcb->Identifier.Size == sizeof(RFSD_VCB)));
 
@@ -952,7 +952,7 @@ RfsdDismountVolume (IN PRFSD_IRP_CONTEXT IrpContext)
         ExAcquireResourceExclusiveLite(
             &Vcb->MainResource,
             TRUE );
-        
+
         VcbResourceAcquired = TRUE;
 
         if ( IsFlagOn(Vcb->Flags, VCB_DISMOUNT_PENDING)) {
@@ -960,12 +960,12 @@ RfsdDismountVolume (IN PRFSD_IRP_CONTEXT IrpContext)
             _SEH2_LEAVE;
         }
 
-/*        
+/*
         if (!FlagOn(Vcb->Flags, VCB_VOLUME_LOCKED)) {
             RfsdPrint((DBG_ERROR, "RfsdDismount: Volume is not locked.\n"));
-            
+
             Status = STATUS_ACCESS_DENIED;
-           
+
             _SEH2_LEAVE;
         }
 */
@@ -996,12 +996,12 @@ RfsdDismountVolume (IN PRFSD_IRP_CONTEXT IrpContext)
                 ExGetCurrentResourceThread()
                 );
         }
-        
+
         if (!IrpContext->ExceptionInProgress) {
             RfsdCompleteIrpContext(IrpContext,  Status);
         }
     } _SEH2_END;
-    
+
     return Status;
 }
 
@@ -1095,10 +1095,10 @@ RfsdPurgeVolume (IN PRFSD_VCB Vcb,
     _SEH2_TRY {
 
         ASSERT(Vcb != NULL);
-        
+
         ASSERT((Vcb->Identifier.Type == RFSDVCB) &&
             (Vcb->Identifier.Size == sizeof(RFSD_VCB)));
-        
+
         if ( IsFlagOn(Vcb->Flags, VCB_READ_ONLY) ||
              IsFlagOn(Vcb->Flags, VCB_WRITE_PROTECTED)) {
             FlushBeforePurge = FALSE;
@@ -1106,7 +1106,7 @@ RfsdPurgeVolume (IN PRFSD_VCB Vcb,
 
         FcbListEntry= NULL;
         InitializeListHead(&FcbList);
-        
+
         for (ListEntry = Vcb->FcbList.Flink;
              ListEntry != &Vcb->FcbList;
              ListEntry = ListEntry->Flink  ) {
@@ -1116,25 +1116,25 @@ RfsdPurgeVolume (IN PRFSD_VCB Vcb,
             Fcb->ReferenceCount++;
 
             RfsdPrint((DBG_INFO, "RfsdPurgeVolume: %s refercount=%xh\n", Fcb->AnsiFileName.Buffer, Fcb->ReferenceCount));
-            
+
             FcbListEntry = ExAllocatePoolWithTag(PagedPool, sizeof(FCB_LIST_ENTRY), RFSD_POOL_TAG);
 
             if (FcbListEntry) {
 
                 FcbListEntry->Fcb = Fcb;
-            
+
                 InsertTailList(&FcbList, &FcbListEntry->Next);
             } else {
                 RfsdPrint((DBG_ERROR, "RfsdPurgeVolume: Error allocating FcbListEntry ...\n"));
             }
         }
-        
+
         while (!IsListEmpty(&FcbList)) {
 
             ListEntry = RemoveHeadList(&FcbList);
-            
+
             FcbListEntry = CONTAINING_RECORD(ListEntry, FCB_LIST_ENTRY, Next);
-            
+
             Fcb = FcbListEntry->Fcb;
 
             if (ExAcquireResourceExclusiveLite(
@@ -1152,7 +1152,7 @@ RfsdPurgeVolume (IN PRFSD_VCB Vcb,
                         ExGetCurrentResourceThread());
                 }
             }
-           
+
             ExFreePool(FcbListEntry);
         }
 
@@ -1166,11 +1166,11 @@ RfsdPurgeVolume (IN PRFSD_VCB Vcb,
         if (Vcb->SectionObject.ImageSectionObject) {
             MmFlushImageSection(&Vcb->SectionObject, MmFlushForWrite);
         }
-    
+
         if (Vcb->SectionObject.DataSectionObject) {
             CcPurgeCacheSection(&Vcb->SectionObject, NULL, 0, FALSE);
         }
-        
+
         RfsdPrint((DBG_INFO, "RfsdPurgeVolume: Volume flushed and purged.\n"));
 
     } _SEH2_FINALLY {
@@ -1190,15 +1190,15 @@ RfsdPurgeFile ( IN PRFSD_FCB Fcb,
     PAGED_CODE();
 
     ASSERT(Fcb != NULL);
-        
+
     ASSERT((Fcb->Identifier.Type == RFSDFCB) &&
         (Fcb->Identifier.Size == sizeof(RFSD_FCB)));
 
-    
+
     if( !IsFlagOn(Fcb->Vcb->Flags, VCB_READ_ONLY) && FlushBeforePurge &&
         !IsFlagOn(Fcb->Vcb->Flags, VCB_WRITE_PROTECTED)) {
 
-        RfsdPrint((DBG_INFO, "RfsdPurgeFile: CcFlushCache on %s.\n", 
+        RfsdPrint((DBG_INFO, "RfsdPurgeFile: CcFlushCache on %s.\n",
                              Fcb->AnsiFileName.Buffer));
 
         ExAcquireSharedStarveExclusive(&Fcb->PagingIoResource, TRUE);
@@ -1208,15 +1208,15 @@ RfsdPurgeFile ( IN PRFSD_FCB Fcb,
 
         ClearFlag(Fcb->Flags, FCB_FILE_MODIFIED);
     }
-    
+
     if (Fcb->SectionObject.ImageSectionObject) {
 
-        RfsdPrint((DBG_INFO, "RfsdPurgeFile: MmFlushImageSection on %s.\n", 
+        RfsdPrint((DBG_INFO, "RfsdPurgeFile: MmFlushImageSection on %s.\n",
                              Fcb->AnsiFileName.Buffer));
-    
+
         MmFlushImageSection(&Fcb->SectionObject, MmFlushForWrite);
     }
-    
+
     if (Fcb->SectionObject.DataSectionObject) {
 
         RfsdPrint((DBG_INFO, "RfsdPurgeFile: CcPurgeCacheSection on %s.\n",
@@ -1237,30 +1237,30 @@ RfsdFileSystemControl (IN PRFSD_IRP_CONTEXT IrpContext)
     PAGED_CODE();
 
     ASSERT(IrpContext);
-    
+
     ASSERT((IrpContext->Identifier.Type == RFSDICX) &&
         (IrpContext->Identifier.Size == sizeof(RFSD_IRP_CONTEXT)));
-    
+
     switch (IrpContext->MinorFunction) {
 
         case IRP_MN_USER_FS_REQUEST:
             Status = RfsdUserFsRequest(IrpContext);
             break;
-        
+
         case IRP_MN_MOUNT_VOLUME:
             Status = RfsdMountVolume(IrpContext);
             break;
-        
+
         case IRP_MN_VERIFY_VOLUME:
             Status = RfsdVerifyVolume(IrpContext);
             break;
-        
+
         default:
 
             RfsdPrint((DBG_ERROR, "RfsdFilsSystemControl: Invalid Device Request.\n"));
             Status = STATUS_INVALID_DEVICE_REQUEST;
             RfsdCompleteIrpContext(IrpContext,  Status);
     }
-    
+
     return Status;
 }

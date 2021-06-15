@@ -3,7 +3,7 @@
  *    https://sourceforge.net/projects/reactospl
  *    UTF-8 conversion by Caemyr (May, 2011)
  *    Updated by Marcin Mikołajczak <me@m4sk.in> (September, 2017)
- *    Updated by Piotr Hetnarowicz <piotrhwz@gmail.com> (February, 2020)
+ *    Updated by Piotr Hetnarowicz <piotrhwz@gmail.com> (May, 2021)
  */
  
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
@@ -52,8 +52,8 @@ BEGIN
     IDS_RUNNINGLOGONSCRIPTS "Trwa uruchamianie skryptów logowania..."
     IDS_LOADINGYOURPERSONALSETTINGS "Trwa ładowanie ustawień osobistych..."
     IDS_CLOSINGNETWORKCONNECTIONS "Trwa zamykanie połączeń sieciowych..."
-    IDS_REACTOSISRESTARTING "Restarting..."
-    IDS_REACTOSISSHUTTINGDOWN "Shutting down..."
+    IDS_REACTOSISRESTARTING "Trwa ponowne uruchamianie..."
+    IDS_REACTOSISSHUTTINGDOWN "Trwa zamykanie..."
     IDS_PREPARETOSTANDBY "Trwa przygotowywanie do przejścia w stan wstrzymania..."
     IDS_PREPARETOHIBERNATE "Trwa przygotowywanie do hibernacji..."
     IDS_SAVEYOURSETTINGS "Trwa zapisywanie ustawień..."

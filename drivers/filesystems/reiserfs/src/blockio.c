@@ -2,10 +2,10 @@
  * COPYRIGHT:        GNU GENERAL PUBLIC LICENSE VERSION 2
  * PROJECT:          ReiserFs file system driver for Windows NT/2000/XP/Vista.
  * FILE:             blockio.c
- * PURPOSE:          
+ * PURPOSE:
  * PROGRAMMER:       Mark Piper, Matt Wu, Bo Brantén.
- * HOMEPAGE:         
- * UPDATE HISTORY: 
+ * HOMEPAGE:
+ * UPDATE HISTORY:
  */
 
 /* INCLUDES *****************************************************************/
@@ -73,35 +73,35 @@ RfsdLockUserBuffer (IN PIRP     Irp,
     PAGED_CODE();
 
     ASSERT(Irp != NULL);
-    
+
     if (Irp->MdlAddress != NULL) {
 
         return STATUS_SUCCESS;
     }
-    
+
     IoAllocateMdl(Irp->UserBuffer, Length, FALSE, FALSE, Irp);
-    
+
     if (Irp->MdlAddress == NULL) {
 
         return STATUS_INSUFFICIENT_RESOURCES;
     }
-    
+
     _SEH2_TRY {
 
         MmProbeAndLockPages(Irp->MdlAddress, Irp->RequestorMode, Operation);
-        
+
         Status = STATUS_SUCCESS;
     } _SEH2_EXCEPT (EXCEPTION_EXECUTE_HANDLER) {
 
         IoFreeMdl(Irp->MdlAddress);
-        
+
         Irp->MdlAddress = NULL;
 
         DbgBreak();
-        
+
         Status = STATUS_INVALID_USER_BUFFER;
     } _SEH2_END;
-    
+
     return Status;
 }
 
@@ -111,7 +111,7 @@ RfsdGetUserBuffer (IN PIRP Irp )
     PAGED_CODE();
 
     ASSERT(Irp != NULL);
-    
+
     if (Irp->MdlAddress) {
 
 #if (_WIN32_WINNT >= 0x0500)
@@ -240,7 +240,7 @@ RfsdReadWriteBlocks(
 
         for (i = 0; i < Count; i++) {
 
-            Irp = IoMakeAssociatedIrp( 
+            Irp = IoMakeAssociatedIrp(
                         MasterIrp,
                         (CCHAR)(Vcb->TargetDeviceObject->StackSize + 1) );
 
@@ -268,16 +268,16 @@ RfsdReadWriteBlocks(
 #endif
                 _SEH2_LEAVE;
             }
-            
+
             IoBuildPartialMdl( MasterIrp->MdlAddress,
                         Mdl,
                         (PCHAR)MasterIrp->UserBuffer + RfsdBDL[i].Offset,
                         RfsdBDL[i].Length );
-                
+
             IoSetNextIrpStackLocation( Irp );
             IrpSp = IoGetCurrentIrpStackLocation( Irp );
-                
-            
+
+
             IrpSp->MajorFunction = IrpContext->MajorFunction;
             IrpSp->Parameters.Read.Length = RfsdBDL[i].Length;
             IrpSp->Parameters.Read.ByteOffset.QuadPart = RfsdBDL[i].Lba;
@@ -382,7 +382,7 @@ RfsdReadSync(
     ASSERT(Buffer != NULL);
 
     _SEH2_TRY {
-    
+
         Event = ExAllocatePoolWithTag(NonPagedPool, sizeof(KEVENT), RFSD_POOL_TAG);
 
         if (NULL == Event) {
@@ -401,13 +401,13 @@ RfsdReadSync(
             &IoStatus
             );
 
-        if (!Irp) {            
+        if (!Irp) {
 			Status = STATUS_INSUFFICIENT_RESOURCES;
 			_SEH2_LEAVE;
         }
 
         if (bVerify) {
-            SetFlag( IoGetNextIrpStackLocation(Irp)->Flags, 
+            SetFlag( IoGetNextIrpStackLocation(Irp)->Flags,
                      SL_OVERRIDE_VERIFY_VOLUME );
         }
 
@@ -440,7 +440,7 @@ RfsdReadDisk(
          IN PRFSD_VCB   Vcb,
          IN ULONGLONG   Offset,			// Byte offset (relative to disk) to read from (need not be sector-aligned!)
          IN ULONG       Size,
-         IN OUT	PVOID   Buffer,			
+         IN OUT	PVOID   Buffer,
          IN BOOLEAN     bVerify )		// True if the volume should be verified before reading
 {
     NTSTATUS    Status;
@@ -465,7 +465,7 @@ RfsdReadDisk(
     }
 
 	// Read the data
-    Status = RfsdReadSync(  Vcb, 
+    Status = RfsdReadSync(  Vcb,
                             Lba,
                             Length,
                             Buf,
@@ -488,7 +488,7 @@ errorout:
     return Status;
 }
 
-NTSTATUS 
+NTSTATUS
 RfsdDiskIoControl (
            IN PDEVICE_OBJECT   DeviceObject,
            IN ULONG            IoctlCode,
@@ -506,14 +506,14 @@ RfsdDiskIoControl (
     PAGED_CODE();
 
     ASSERT(DeviceObject != NULL);
-    
+
     if (OutputBufferSize)
     {
         OutBufferSize = *OutputBufferSize;
     }
-    
+
     KeInitializeEvent(&Event, NotificationEvent, FALSE);
-    
+
     Irp = IoBuildDeviceIoControlRequest(
         IoctlCode,
         DeviceObject,
@@ -525,23 +525,23 @@ RfsdDiskIoControl (
         &Event,
         &IoStatus
         );
-    
+
     if (Irp == NULL) {
         RfsdPrint((DBG_ERROR, "RfsdDiskIoControl: Building IRQ error!\n"));
         return STATUS_INSUFFICIENT_RESOURCES;
     }
-    
+
     Status = IoCallDriver(DeviceObject, Irp);
-    
+
     if (Status == STATUS_PENDING)  {
         KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
         Status = IoStatus.Status;
     }
-    
+
     if (OutputBufferSize) {
         *OutputBufferSize = (ULONG) IoStatus.Information;
     }
-    
+
     return Status;
 }
 

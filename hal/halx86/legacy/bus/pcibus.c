@@ -322,13 +322,6 @@ HalpXboxBlacklistedPCISlot(IN PBUS_HANDLER BusHandler,
         return TRUE;
     }
 
-    /* Temporary hack to avoid stack overflow in kernel, see CORE-16319 */
-    if (BusHandler->BusNumber == 0 && Slot.u.bits.DeviceNumber == 8 && Slot.u.bits.FunctionNumber == 0)
-    {
-        DPRINT("Blacklisted PCI-to-PCI bridge (00:08.0 - PCI\\VEN_10DE&DEV_01B8, see CORE-16319)\n");
-        return TRUE;
-    }
-
     return FALSE;
 }
 #endif

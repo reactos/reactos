@@ -8,11 +8,11 @@ Module Name:
 
 Abstract:
 
-    Include all funtions relate to MMC 
+    Include all funtions relate to MMC
 
 Environment:
 
-    kernel mode only 
+    kernel mode only
 
 Notes:
 
@@ -80,22 +80,22 @@ Return Value:
 
     PAGED_CODE();
 
-    if (mmcData->CapabilitiesIrp) 
+    if (mmcData->CapabilitiesIrp)
     {
         IoFreeIrp(mmcData->CapabilitiesIrp);
         mmcData->CapabilitiesIrp = NULL;
     }
-    if (mmcData->CapabilitiesMdl) 
+    if (mmcData->CapabilitiesMdl)
     {
         IoFreeMdl(mmcData->CapabilitiesMdl);
         mmcData->CapabilitiesMdl = NULL;
     }
-    if (mmcData->CapabilitiesBuffer) 
+    if (mmcData->CapabilitiesBuffer)
     {
         ExFreePool(mmcData->CapabilitiesBuffer);
         mmcData->CapabilitiesBuffer = NULL;
     }
-    if (mmcData->CapabilitiesRequest) 
+    if (mmcData->CapabilitiesRequest)
     {
         WdfObjectDelete(mmcData->CapabilitiesRequest);
         mmcData->CapabilitiesRequest = NULL;
@@ -140,14 +140,14 @@ Return Value:
     NT_ASSERT(mmcData->CapabilitiesBuffer == NULL);
     NT_ASSERT(mmcData->CapabilitiesBufferSize == 0);
 
-    // allocate the buffer and set the buffer size. 
+    // allocate the buffer and set the buffer size.
     // retrieve drive configuration information.
     status = DeviceGetConfigurationWithAlloc(Device,
                                              &mmcData->CapabilitiesBuffer,
                                              &mmcData->CapabilitiesBufferSize,
                                              FeatureProfileList,
                                              SCSI_GET_CONFIGURATION_REQUEST_TYPE_ALL);
-    if (!NT_SUCCESS(status)) 
+    if (!NT_SUCCESS(status))
     {
         NT_ASSERT(mmcData->CapabilitiesBuffer     == NULL);
         NT_ASSERT(mmcData->CapabilitiesBufferSize == 0);
@@ -156,12 +156,12 @@ Return Value:
 
     NT_ASSERT(mmcData->CapabilitiesBuffer     != NULL);
     NT_ASSERT(mmcData->CapabilitiesBufferSize != 0);
- 
+
     // Create an MDL over the new Buffer (allocated by DeviceGetConfiguration)
     mmcData->CapabilitiesMdl = IoAllocateMdl(mmcData->CapabilitiesBuffer,
                                              mmcData->CapabilitiesBufferSize,
                                              FALSE, FALSE, NULL);
-    if (mmcData->CapabilitiesMdl == NULL) 
+    if (mmcData->CapabilitiesMdl == NULL)
     {
         ExFreePool(mmcData->CapabilitiesBuffer);
         mmcData->CapabilitiesBuffer = NULL;
@@ -171,7 +171,7 @@ Return Value:
 
     // Create an IRP from which we will create a WDFREQUEST
     mmcData->CapabilitiesIrp = IoAllocateIrp(deviceExtension->DeviceObject->StackSize + 1, FALSE);
-    if (mmcData->CapabilitiesIrp == NULL) 
+    if (mmcData->CapabilitiesIrp == NULL)
     {
         IoFreeMdl(mmcData->CapabilitiesMdl);
         mmcData->CapabilitiesMdl = NULL;
@@ -182,7 +182,7 @@ Return Value:
     }
 
     // create WDF request object
-    WDF_OBJECT_ATTRIBUTES_INIT_CONTEXT_TYPE(&attributes, 
+    WDF_OBJECT_ATTRIBUTES_INIT_CONTEXT_TYPE(&attributes,
                                             CDROM_REQUEST_CONTEXT);
     status = WdfRequestCreateFromIrp(&attributes,
                                      mmcData->CapabilitiesIrp,
@@ -238,7 +238,7 @@ Return Value:
     }
 
     // default to read-only, no Streaming, non-blank
-    mmcData->WriteAllowed = FALSE; 
+    mmcData->WriteAllowed = FALSE;
     mmcData->StreamingReadSupported = FALSE;
     mmcData->StreamingWriteSupported = FALSE;
 
@@ -287,7 +287,7 @@ Return Value:
                                             returnedBytes,
                                             FeatureRealTimeStreaming);
 
-            if ((header != NULL) && 
+            if ((header != NULL) &&
                 (header->Current) &&
                 (header->AdditionalLength >= minAdditionalLength))
             {
@@ -306,7 +306,7 @@ Return Value:
             PFEATURE_HEADER header;
 
             header = DeviceFindFeaturePage(mmcData->CapabilitiesBuffer,
-                                           returnedBytes, 
+                                           returnedBytes,
                                            FeatureDvdCSS);
 
             mmcData->IsCssDvd = (header != NULL) && (header->Current);
@@ -393,7 +393,7 @@ _IRQL_requires_max_(PASSIVE_LEVEL)
 NTSTATUS
 DeviceGetConfigurationWithAlloc(
     _In_ WDFDEVICE               Device,
-    _Outptr_result_bytebuffer_all_(*BytesReturned) 
+    _Outptr_result_bytebuffer_all_(*BytesReturned)
      PGET_CONFIGURATION_HEADER*  Buffer,  // this routine allocates this memory
     _Out_ PULONG                 BytesReturned,
     FEATURE_NUMBER const         StartingFeature,
@@ -411,7 +411,7 @@ Arguments:
     Buffer - to be allocated by this function
     BytesReturned - size of the buffer
     StartingFeature - the starting point of the feature list
-    RequestedType - 
+    RequestedType -
 
 Return Value:
 
@@ -436,15 +436,15 @@ NOTE: does not handle case where more than 65000 bytes are returned,
     *BytesReturned = 0;
 
     // send the first request down to just get the header
-    status = DeviceGetConfiguration(Device, 
-                                    &header, 
+    status = DeviceGetConfiguration(Device,
+                                    &header,
                                     sizeof(header),
-                                    &returned, 
-                                    StartingFeature, 
+                                    &returned,
+                                    StartingFeature,
                                     RequestedType);
 
     // now send command again, using information returned to allocate just enough memory
-    if (NT_SUCCESS(status)) 
+    if (NT_SUCCESS(status))
     {
         size = header.DataLength[0] << 24 |
                header.DataLength[1] << 16 |
@@ -452,13 +452,13 @@ NOTE: does not handle case where more than 65000 bytes are returned,
                header.DataLength[3] <<  0 ;
 
         // the loop is in case that the retrieved data length is bigger than last time reported.
-        for (i = 0; (i < 4) && NT_SUCCESS(status); i++) 
+        for (i = 0; (i < 4) && NT_SUCCESS(status); i++)
         {
             // the datalength field is the size *following* itself, so adjust accordingly
             size += 4*sizeof(UCHAR);
 
             // make sure the size is reasonable
-            if (size <= sizeof(FEATURE_HEADER)) 
+            if (size <= sizeof(FEATURE_HEADER))
             {
                 TracePrint((TRACE_LEVEL_ERROR, TRACE_FLAG_IOCTL,
                            "DeviceGetConfigurationWithAlloc: drive reports only %x bytes?\n",
@@ -473,7 +473,7 @@ NOTE: does not handle case where more than 65000 bytes are returned,
                                                                           size,
                                                                           CDROM_TAG_FEATURE);
 
-                if (buffer == NULL) 
+                if (buffer == NULL)
                 {
                     status = STATUS_INSUFFICIENT_RESOURCES;
                 }
@@ -482,11 +482,11 @@ NOTE: does not handle case where more than 65000 bytes are returned,
             if (NT_SUCCESS(status))
             {
                 // send the first request down to just get the header
-                status = DeviceGetConfiguration(Device, 
-                                                buffer, 
-                                                size, 
+                status = DeviceGetConfiguration(Device,
+                                                buffer,
+                                                size,
                                                 &returned,
-                                                StartingFeature, 
+                                                StartingFeature,
                                                 RequestedType);
 
                 if (!NT_SUCCESS(status))
@@ -509,13 +509,13 @@ NOTE: does not handle case where more than 65000 bytes are returned,
                            buffer->DataLength[3] <<  0 ;
                 returned += 4*sizeof(UCHAR);
 
-                if (returned <= size) 
+                if (returned <= size)
                 {
                     *Buffer = buffer;
                     *BytesReturned = returned;  // amount of 'safe' memory
                     // succes, get out of loop.
                     status = STATUS_SUCCESS;
-                    break;  
+                    break;
                 }
                 else
                 {
@@ -563,7 +563,7 @@ Arguments:
     BufferSize - size of the buffer
     ValidBytes - valid data size in buffer
     StartingFeature - the starting point of the feature list
-    RequestedType - 
+    RequestedType -
 
 Return Value:
 
@@ -595,7 +595,7 @@ NOTE: does not handle case where more than 64k bytes are returned,
     RtlZeroMemory(&srb, sizeof(SCSI_REQUEST_BLOCK));
     RtlZeroMemory(Buffer, BufferSize);
 
-    if (TEST_FLAG(deviceExtension->DeviceAdditionalData.HackFlags, CDROM_HACK_BAD_GET_CONFIG_SUPPORT)) 
+    if (TEST_FLAG(deviceExtension->DeviceAdditionalData.HackFlags, CDROM_HACK_BAD_GET_CONFIG_SUPPORT))
     {
         return STATUS_INVALID_DEVICE_REQUEST;
     }
@@ -609,11 +609,11 @@ NOTE: does not handle case where more than 64k bytes are returned,
         // cannot request more than 0xFFFC bytes in one request
         // Eventually will "stitch" together multiple requests if needed
         // Today, no drive has anywhere close to 4k.....
-        return DeviceGetConfiguration(Device, 
-                                      Buffer, 
-                                      0xFFFC, 
-                                      ValidBytes, 
-                                      StartingFeature, 
+        return DeviceGetConfiguration(Device,
+                                      Buffer,
+                                      0xFFFC,
+                                      ValidBytes,
+                                      StartingFeature,
                                       RequestedType);
     }
 #pragma warning(pop)
@@ -629,8 +629,8 @@ NOTE: does not handle case where more than 64k bytes are returned,
     cdb->GET_CONFIGURATION.AllocationLength[0] = (UCHAR)(BufferSize >> 8);
     cdb->GET_CONFIGURATION.AllocationLength[1] = (UCHAR)(BufferSize & 0xff);
 
-    status = DeviceSendSrbSynchronously(Device,  
-                                        &srb,  
+    status = DeviceSendSrbSynchronously(Device,
+                                        &srb,
                                         Buffer,
                                         BufferSize,
                                         FALSE,
@@ -639,9 +639,9 @@ NOTE: does not handle case where more than 64k bytes are returned,
     TracePrint((TRACE_LEVEL_INFORMATION, TRACE_FLAG_IOCTL,
                "DeviceGetConfiguration: Status was %x\n", status));
 
-    if (NT_SUCCESS(status) || 
-        (status == STATUS_BUFFER_OVERFLOW) || 
-        (status == STATUS_DATA_OVERRUN)) 
+    if (NT_SUCCESS(status) ||
+        (status == STATUS_BUFFER_OVERFLOW) ||
+        (status == STATUS_DATA_OVERRUN))
     {
         ULONG                       returned = srb.DataTransferLength;
         PGET_CONFIGURATION_HEADER   header = (PGET_CONFIGURATION_HEADER)Buffer;
@@ -683,7 +683,7 @@ NOTE: does not handle case where more than 64k bytes are returned,
 _IRQL_requires_max_(APC_LEVEL)
 VOID
 DeviceUpdateMmcWriteCapability(
-    _In_reads_bytes_(BufferSize) 
+    _In_reads_bytes_(BufferSize)
         PGET_CONFIGURATION_HEADER   Buffer,
     ULONG const                     BufferSize,
     BOOLEAN const                   CurrentOnly, // TRUE == can drive write now, FALSE == can drive ever write
@@ -699,12 +699,12 @@ Routine Description:
 
 Arguments:
 
-    Buffer - 
+    Buffer -
     BufferSize - size of the buffer
     CurrentOnly - valid data size in buffer
     Writable - the buffer is allocationed in non-paged pool.
     validationSchema - the starting point of the feature list
-    BlockingFactor - 
+    BlockingFactor -
 
 Return Value:
 
@@ -783,7 +783,7 @@ NOTE: does not handle case where more than 64k bytes are returned,
                                         BufferSize,
                                         FeatureRandomReadable);
 
-        if ((header != NULL) && 
+        if ((header != NULL) &&
             (header->Current) &&
             (header->AdditionalLength >= additionalLength))
         {
@@ -982,7 +982,7 @@ NOTE: does not handle case where more than 64k bytes are returned,
 _IRQL_requires_max_(APC_LEVEL)
 PVOID
 MmcDataFindFeaturePage(
-    _In_reads_bytes_(Length) 
+    _In_reads_bytes_(Length)
         PGET_CONFIGURATION_HEADER   FeatureBuffer,
     ULONG const                     Length,
     FEATURE_NUMBER const            Feature
@@ -1031,7 +1031,7 @@ Return Value:
     // loop through each page until we find the requested one, or
     // until it's not safe to access the entire feature header
     // (if equal, have exactly enough for the feature header)
-    while (buffer + sizeof(FEATURE_HEADER) <= limit) 
+    while (buffer + sizeof(FEATURE_HEADER) <= limit)
     {
         PFEATURE_HEADER header = (PFEATURE_HEADER)buffer;
         FEATURE_NUMBER  thisFeature;
@@ -1039,7 +1039,7 @@ Return Value:
         thisFeature  = (header->FeatureCode[0] << 8) |
                        (header->FeatureCode[1]);
 
-        if (thisFeature == Feature) 
+        if (thisFeature == Feature)
         {
             PUCHAR temp;
 
@@ -1049,7 +1049,7 @@ Return Value:
             temp += sizeof(FEATURE_HEADER);
             temp += header->AdditionalLength;
 
-            if (temp > limit) 
+            if (temp > limit)
             {
                 // this means the transfer was cut-off, an insufficiently
                 // small buffer was given, or other arbitrary error.  since
@@ -1060,8 +1060,8 @@ Return Value:
                            "Feature %x exists, but not safe to access all its "
                            "data.  returning NULL\n", Feature));
                 return NULL;
-            } 
-            else 
+            }
+            else
             {
                 return buffer;
             }
@@ -1098,7 +1098,7 @@ Arguments:
 
     ProfileHeader - buffer of profile list
     ProfileToFind - profile to be found
-    CurrentOnly - 
+    CurrentOnly -
 
 Return Value:
 
@@ -1116,7 +1116,7 @@ Return Value:
     *Found = FALSE;
 
     // sanity check
-    if (ProfileHeader->Header.AdditionalLength % 2 != 0) 
+    if (ProfileHeader->Header.AdditionalLength % 2 != 0)
     {
         TracePrint((TRACE_LEVEL_WARNING, TRACE_FLAG_GENERAL,
                    "Profile total length %x is not integral multiple of 4\n",
@@ -1130,7 +1130,7 @@ Return Value:
     profile = ProfileHeader->Profiles; // zero-sized array
 
     // loop through profiles
-    for (i = 0; i < numberOfProfiles; i++) 
+    for (i = 0; i < numberOfProfiles; i++)
     {
         FEATURE_PROFILE_TYPE currentProfile;
 
@@ -1165,7 +1165,7 @@ Routine Description:
 
 Arguments:
 
-    Profile - 
+    Profile -
 
 Return Value:
 
@@ -1433,7 +1433,7 @@ Routine Description:
 Arguments:
 
     DeviceExtension - device context
-    UseLegacyNominalPerformance - 
+    UseLegacyNominalPerformance -
 
 Return Value:
 
@@ -1622,7 +1622,7 @@ Return Value:
     }
 
     ScratchBuffer_EndUse(DeviceExtension);
-    
+
     return result;
 }
 

@@ -38,13 +38,13 @@ unsigned char * _mbslwr(unsigned char *x)
         return NULL;
     }
 
-    while (*y) 
+    while (*y)
     {
-        if (!_ismbblead(*y)) 
+        if (!_ismbblead(*y))
         {
             *y = tolower(*y);
             y++;
-        } 
+        }
         else
         {
             *y = _mbctolower(*(unsigned short *)y);

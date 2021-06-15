@@ -137,6 +137,7 @@ elseif(ARCH STREQUAL "arm")
     list(APPEND LIBCNTPR_SOURCE
         except/arm/chkstk_asm.s
         except/arm/__jump_unwind.s
+        math/sqrt.c
         math/arm/__rt_sdiv.c
         math/arm/__rt_sdiv64_worker.c
         math/arm/__rt_udiv.c
@@ -210,7 +211,6 @@ else()
     list(APPEND LIBCNTPR_SOURCE
         math/cos.c
         math/sin.c
-        math/sqrt.c
         mem/memchr.c
         mem/memcpy.c
         mem/memmove.c

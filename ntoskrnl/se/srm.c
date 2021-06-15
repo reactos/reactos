@@ -35,6 +35,11 @@ SepRmCommandServerThread(
 
 static
 NTSTATUS
+SepCleanupLUIDDeviceMapDirectory(
+    _In_ PLUID LogonLuid);
+
+static
+NTSTATUS
 SepRmCreateLogonSession(
     PLUID LogonLuid);
 
@@ -376,17 +381,113 @@ Leave:
     return Status;
 }
 
+/**
+ * @brief
+ * Deletes a logon session from the logon sessions database.
+ *
+ * @param[in] LogonLuid
+ * A logon ID represented as a LUID. This LUID is used to point
+ * the exact logon session saved within the database.
+ *
+ * @return
+ * STATUS_SUCCESS is returned if the logon session has been deleted successfully.
+ * STATUS_NO_SUCH_LOGON_SESSION is returned if the logon session with the submitted
+ * LUID doesn't exist. STATUS_BAD_LOGON_SESSION_STATE is returned if the logon session
+ * is still in use and we're not allowed to delete it, or if a system or anonymous session
+ * is submitted and we're not allowed to delete them as they're internal parts of the system.
+ * Otherwise a failure NTSTATUS code is returned.
+ */
 static
 NTSTATUS
 SepRmDeleteLogonSession(
-    PLUID LogonLuid)
+    _In_ PLUID LogonLuid)
 {
+    PSEP_LOGON_SESSION_REFERENCES SessionToDelete;
+    NTSTATUS Status;
+    PAGED_CODE();
+
     DPRINT("SepRmDeleteLogonSession(%08lx:%08lx)\n",
            LogonLuid->HighPart, LogonLuid->LowPart);
 
-    UNIMPLEMENTED;
-    NT_ASSERT(FALSE);
-    return STATUS_NOT_IMPLEMENTED;
+    /* Acquire the database lock */
+    KeAcquireGuardedMutex(&SepRmDbLock);
+
+    /* Loop over the existing logon sessions */
+    for (SessionToDelete = SepLogonSessions;
+         SessionToDelete != NULL;
+         SessionToDelete = SessionToDelete->Next)
+    {
+        /*
+         * Does the actual logon session exist in the
+         * saved logon sessions database with the LUID
+         * provided?
+         */
+        if (RtlEqualLuid(&SessionToDelete->LogonId, LogonLuid))
+        {
+            /* Did the caller supply one of these internal sessions? */
+            if (RtlEqualLuid(&SessionToDelete->LogonId, &SeSystemAuthenticationId) ||
+                RtlEqualLuid(&SessionToDelete->LogonId, &SeAnonymousAuthenticationId))
+            {
+                /* These logons are critical stuff, we can't delete them */
+                DPRINT1("SepRmDeleteLogonSession(): We're not allowed to delete anonymous/system sessions!\n");
+                Status = STATUS_BAD_LOGON_SESSION_STATE;
+                goto Leave;
+            }
+            else
+            {
+                /* We found the logon as exactly as we wanted, break the loop */
+                break;
+            }
+        }
+    }
+
+    /*
+     * If we reach this then that means we've exhausted all the logon
+     * sessions and couldn't find one with the desired LUID.
+     */
+    if (SessionToDelete == NULL)
+    {
+        DPRINT1("SepRmDeleteLogonSession(): The logon session with this LUID doesn't exist!\n");
+        Status = STATUS_NO_SUCH_LOGON_SESSION;
+        goto Leave;
+    }
+
+    /* Is somebody still using this logon session? */
+    if (SessionToDelete->ReferenceCount != 0)
+    {
+        /* The logon session is still in use, we cannot delete it... */
+        DPRINT1("SepRmDeleteLogonSession(): The logon session is still in use!\n");
+        Status = STATUS_BAD_LOGON_SESSION_STATE;
+        goto Leave;
+    }
+
+    /* If we have a LUID device map, clean it */
+    if (SessionToDelete->pDeviceMap != NULL)
+    {
+        Status = SepCleanupLUIDDeviceMapDirectory(LogonLuid);
+        if (!NT_SUCCESS(Status))
+        {
+            /*
+             * We had one job on cleaning the device map directory
+             * of the logon session but we failed, quit...
+             */
+            DPRINT1("SepRmDeleteLogonSession(): Failed to clean the LUID device map directory of the logon (Status: 0x%lx)\n", Status);
+            goto Leave;
+        }
+
+        /* And dereference the device map of the logon */
+        ObfDereferenceDeviceMap(SessionToDelete->pDeviceMap);
+    }
+
+    /* If we're here then we've deleted the logon session successfully */
+    DPRINT("SepRmDeleteLogonSession(): Logon session deleted with success!\n");
+    Status = STATUS_SUCCESS;
+    ExFreePoolWithTag(SessionToDelete, SEP_LOGON_SESSION_TAG);
+
+Leave:
+    /* Release the database lock */
+    KeReleaseGuardedMutex(&SepRmDbLock);
+    return Status;
 }
 
 
@@ -429,10 +530,10 @@ SepRmReferenceLogonSession(
     return STATUS_NO_SUCH_LOGON_SESSION;
 }
 
-
+static
 NTSTATUS
 SepCleanupLUIDDeviceMapDirectory(
-    PLUID LogonLuid)
+    _In_ PLUID LogonLuid)
 {
     BOOLEAN UseCurrentProc;
     KAPC_STATE ApcState;

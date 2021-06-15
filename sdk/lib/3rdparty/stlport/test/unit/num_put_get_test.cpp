@@ -408,7 +408,7 @@ void NumPutGetTest::num_put_float()
       complete_digits(digits);
       CPPUNIT_CHECK(output == string("1.23457e+") + digits );
     }
-    
+
     {
       ostringstream ostr;
       ostr << setprecision(200) << 1.23457e+17f;
@@ -416,7 +416,7 @@ void NumPutGetTest::num_put_float()
       output = reset_stream(ostr);
       CPPUNIT_CHECK( output.size() < 200 );
     }
-    
+
     {
       ostringstream ostr;
       ostr << setprecision(200) << numeric_limits<float>::min();
@@ -424,7 +424,7 @@ void NumPutGetTest::num_put_float()
       output = reset_stream(ostr);
       CPPUNIT_CHECK( output.size() < 200 );
     }
-    
+
     {
       ostringstream ostr;
       ostr << fixed << 1.23457e+17f;
@@ -1065,7 +1065,7 @@ void NumPutGetTest::pointer()
     void *p = (void *)0xff00;
     sprintf( buf, "%p", p );
     // cerr << buf << endl;
-    // Hmmm, I see 0xff00 on box with 32-bits address; pointer like 'unsigned hex'? 
+    // Hmmm, I see 0xff00 on box with 32-bits address; pointer like 'unsigned hex'?
     if ( sizeof( p ) == 2 ) {
       CPPUNIT_ASSERT( strcmp( buf, "0xff00" ) == 0 );
     } else if ( sizeof( p ) == 4 ) {

@@ -275,8 +275,8 @@ YES  :  10    |  NO      :  11\n\
 OK   :  10    |  CANCEL  :  12\n"
     STRING_PATH_HELP1 "顯示或設定可執行檔案的搜尋路徑。\n\n\
 PATH [[磁碟機:]路徑[;...]]\nPATH ;\n\n\
-執行 PATH ; 以清除所有的搜尋路徑設定並指示命令列外殼僅在目前的目錄搜尋。\n\
-不帶參數執行 PATH 將會顯示目前的路徑。\n"
+執行 PATH ; 可以清除所有的搜尋路徑設定，並指示命令列殼層 \n\
+只在目前的目錄搜尋。不帶參數執行 PATH 將會顯示目前的路徑。\n"
     STRING_PAUSE_HELP1 "停止一個批次檔案的執行並顯示以下資訊：\n\
 '按任意鍵繼續...' 或者一條使用者定義的訊息。\n\n\
 PAUSE [訊息]"
@@ -397,7 +397,7 @@ VERIFY [ON | OFF]\n\n\
 執行不帶參數的 VERIFY 將會顯示目前的 VERIFY 的設定。\n"
     STRING_VERIFY_HELP2 "VERIFY 的狀態是 %s。\n"
     STRING_VERIFY_HELP3 "必須設定為 ON 或 OFF。"
-    STRING_VERSION_HELP1 "顯示外殼版本資訊\n\n\
+    STRING_VERSION_HELP1 "顯示殼層版本資訊\n\n\
 VER [/C][/R][/W]\n\n\
   /C  顯示作者。\n\
   /R  顯示再發布資訊。\n\
@@ -406,14 +406,12 @@ VER [/C][/R][/W]\n\n\
 type: `ver /w'. This is free software, and you are welcome to redistribute\n\
 it under certain conditions; type `ver /r' for details. Type `ver /c' for a\n\
 listing of credits."
-    STRING_VERSION_HELP3 "\n This program is distributed in the hope that it will be useful,\n\
- but WITHOUT ANY WARRANTY; without even the implied warranty of\n\
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\n\
- GNU General Public License for more details."
-    STRING_VERSION_HELP4 "\n This program is free software; you can redistribute it and/or modify\n\
- it under the terms of the GNU General Public License as published by\n\
- the Free Software Foundation; either version 2 of the License, or\n\
- (at your option) any later version.\n"
+    STRING_VERSION_HELP3 "\n 我們希望發佈的這款程式有用，\n\
+ 但不保證，甚至不保證它有經濟價值和適合特定用途。\n\
+ 詳情參見 GNU 通用公共授權合約。"
+    STRING_VERSION_HELP4 "\n 本程式為自由軟體，在自由軟體聯盟發佈的 \n\
+ GNU 通用公共授權合約的約束下，你可以對其進行再發佈及修改，\n\
+ 協議版本為第二版或（隨你）更新的版本。\n"
     STRING_VERSION_HELP5 "\nBug 報告發送到 <ros-dev@reactos.org>。\n\
 更新可在 http://www.reactos.org 檢視。"
     STRING_VERSION_HELP6 "\nFreeDOS 版本作者：\n"
@@ -501,7 +499,7 @@ RESTORE       恢復視窗\n\
     STRING_REPLACE_ERROR5 "存取被拒 - %s\n"
     STRING_REPLACE_ERROR6 "找不到檔案 - %s\n"
     STRING_REPLACE_ERROR7 "擴展錯誤 32\n"
-    STRING_CMD_INFOLINE "  ReactOS 命令列直譯器                                       輸入 HELP = 幫助  "
+    STRING_CMD_INFOLINE "  ReactOS 命令提示字符                                       輸入 HELP = 說明  "
     STRING_REACTOS_VERSION "ReactOS [版本 %s %s]\n"
     STRING_CMD_SHELLINFO "\nReactOS 命令列直譯器\n版本 %s %s"
     STRING_VERSION_RUNNING_ON "在 上運行"

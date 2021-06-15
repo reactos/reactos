@@ -16,7 +16,7 @@ char* _strtime(char* time)
 {
    static const char format[] = "HH':'mm':'ss";
 
-   GetTimeFormatA(LOCALE_NEUTRAL, 0, NULL, format, time, 9); 
+   GetTimeFormatA(LOCALE_NEUTRAL, 0, NULL, format, time, 9);
 
    return time;
 }

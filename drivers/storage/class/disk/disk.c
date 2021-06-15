@@ -166,7 +166,7 @@ BAD_CONTROLLER_INFORMATION const ScsiDiskBadControllers[] = {
 #define SCSI_DISK_TIMEOUT    10
 #define PARTITION0_LIST_SIZE  4
 
-
+
 NTSTATUS
 NTAPI
 DriverEntry(
@@ -336,7 +336,7 @@ ScsiDiskFileSystemControl(PDEVICE_OBJECT DeviceObject,
 #pragma alloc_text(PAGE, ScsiDiskModeSelect)
 #endif
 
-
+
 NTSTATUS
 NTAPI
 DriverEntry(
@@ -402,7 +402,7 @@ Return Value:
 } // end DriverEntry()
 
 
-
+
 BOOLEAN
 NTAPI
 ScsiDiskDeviceVerification(
@@ -437,7 +437,7 @@ Return Value:
     }
 }
 
-
+
 BOOLEAN
 NTAPI
 FindScsiDisks(
@@ -615,7 +615,7 @@ Return Value:
 
 } // end FindScsiDisks()
 
-
+
 NTSTATUS
 NTAPI
 CreateDiskDeviceObject(
@@ -1067,7 +1067,7 @@ CreateDiskDeviceObjectsExit:
 
 } // end CreateDiskDeviceObjects()
 
-
+
 VOID
 NTAPI
 ReportToMountMgr(
@@ -1190,7 +1190,7 @@ Return Value:
     return;
 }
 
-
+
 NTSTATUS
 NTAPI
 CreatePartitionDeviceObjects(
@@ -1632,7 +1632,7 @@ CreatePartitionDeviceObjectsExit:
 
 } // end CreatePartitionDeviceObjects()
 
-
+
 NTSTATUS
 NTAPI
 ScsiDiskReadWriteVerification(
@@ -1727,7 +1727,7 @@ Return Value:
 
 } // end ScsiDiskReadWrite()
 
-
+
 NTSTATUS
 NTAPI
 ScsiDiskDeviceControl(
@@ -3092,7 +3092,7 @@ Return Value:
     return(status);
 
 } // end ScsiDiskDeviceControl()
-
+
 NTSTATUS
 NTAPI
 ScsiDiskShutdownFlush (
@@ -3270,7 +3270,7 @@ Return Value:
 
 } // end ScsiDiskShutdown()
 
-
+
 BOOLEAN
 NTAPI
 IsFloppyDevice(
@@ -3410,7 +3410,7 @@ Return Value:
 
 } // end IsFloppyDevice()
 
-
+
 BOOLEAN
 NTAPI
 ScsiDiskModeSelect(
@@ -3546,7 +3546,7 @@ Retry:
 
 } // end SciDiskModeSelect()
 
-
+
 VOID
 NTAPI
 DisableWriteCache(
@@ -3753,7 +3753,7 @@ DisableWriteCache(
     return;
 }
 
-
+
 BOOLEAN
 NTAPI
 CalculateMbrCheckSum(
@@ -3875,7 +3875,7 @@ Return Value:
     return TRUE;
 }
 
-
+
 BOOLEAN
 NTAPI
 EnumerateBusKey(
@@ -4203,7 +4203,7 @@ Return Value:
 
 } // end EnumerateBusKey()
 
-
+
 VOID
 NTAPI
 UpdateGeometry(
@@ -4543,7 +4543,7 @@ diskMatched:
 } // end UpdateGeometry()
 
 
-
+
 NTSTATUS
 NTAPI
 UpdateRemovableGeometry (
@@ -4700,7 +4700,7 @@ Return Value:
     return(STATUS_SUCCESS);
 }
 
-
+
 VOID
 NTAPI
 ScsiDiskProcessError(
@@ -4764,7 +4764,7 @@ Return Value:
         deviceExtension->ErrorCount++;
     }
 }
-
+
 VOID
 NTAPI
 ScanForSpecial(
@@ -4866,7 +4866,7 @@ Return Value:
 
     return;
 }
-
+
 VOID
 NTAPI
 ResetScsiBus(
@@ -4972,7 +4972,7 @@ Return Value:
 
 } // end ResetScsiBus()
 
-
+
 VOID
 NTAPI
 UpdateDeviceObjects(

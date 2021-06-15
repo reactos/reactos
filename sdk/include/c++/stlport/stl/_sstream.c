@@ -84,7 +84,7 @@ basic_stringbuf<_CharT, _Traits, _Alloc>::_M_set_ptrs()
       this->setp( __data_end, __data_end );
     } else {
       this->setp( __data_ptr, __data_end );
-      this->pbump((int)_M_str.size()); // initial write position, if we initialized with string 
+      this->pbump((int)_M_str.size()); // initial write position, if we initialized with string
     }
     // this->setp((_M_mode & (ios_base::app | ios_base::ate))? __data_end : __data_ptr, __data_end);
   }

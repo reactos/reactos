@@ -1,4 +1,4 @@
-/* 
+/*
  * FFS File System Driver for Windows
  *
  * init.c
@@ -224,7 +224,7 @@ DriverEntry(
 
 	DbgPrint(
 			"ffsdrv --"
-			" Version " 
+			" Version "
 			FFSDRV_VERSION
 #if FFS_READ_ONLY
 			" (ReadOnly)"
@@ -232,7 +232,7 @@ DriverEntry(
 #if DBG
 			" Checked"
 #else
-			" Free" 
+			" Free"
 #endif
 			" - Built at "
 			__DATE__" "

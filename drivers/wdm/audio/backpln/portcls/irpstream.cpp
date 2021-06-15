@@ -640,7 +640,7 @@ CIrpQueue::ReleaseMappingWithTag(
             for(Index = 0; Index < StreamData->StreamHeaderIndex; Index++)
             {
                 // check if it is the same tag
-                if ((StreamData->Tags[Index].Tag == Tag) && 
+                if ((StreamData->Tags[Index].Tag == Tag) &&
                     (StreamData->Tags[Index].Used != FALSE))
                 {
                     // mark mapping as released

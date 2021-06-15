@@ -40,10 +40,12 @@ IntVideoPortGetMonitorId(
 
     /* 3 letters 5-bit ANSI manufacturer code (big endian) */
     /* Letters encoded as A=1 to Z=26 */
-    Manufacturer = *(PUSHORT)(&ChildExtension->ChildDescriptor[8]);
+    Manufacturer = ((USHORT)ChildExtension->ChildDescriptor[8] << 8) +
+                   (USHORT)ChildExtension->ChildDescriptor[9];
 
     /* Model number (16-bit little endian) */
-    Model = *(PUSHORT)(&ChildExtension->ChildDescriptor[10]);
+    Model = ((USHORT)ChildExtension->ChildDescriptor[11] << 8) +
+             (USHORT)ChildExtension->ChildDescriptor[10];
 
     /* Convert the Monitor ID to a readable form */
     swprintf(Buffer,
@@ -54,6 +56,60 @@ IntVideoPortGetMonitorId(
              Model);
 
     /* And we're done */
+    return TRUE;
+}
+
+BOOLEAN
+NTAPI
+IntVideoPortSearchDescriptor(
+    IN PUCHAR Descriptor,
+    IN UCHAR DescriptorID,
+    OUT PUCHAR* pDescriptorData)
+{
+    if (Descriptor[0] != 0 || Descriptor[1] != 0 || Descriptor[2] != 0)
+        return FALSE;
+    if (Descriptor[3] != DescriptorID)
+        return FALSE;
+
+    *pDescriptorData = Descriptor + 4;
+    return TRUE;
+}
+
+BOOLEAN
+NTAPI
+IntVideoPortSearchDescriptors(
+    IN PVIDEO_PORT_CHILD_EXTENSION ChildExtension,
+    IN UCHAR DescriptorID,
+    OUT PUCHAR* pDescriptorData)
+{
+    if (!ChildExtension->EdidValid)
+        return FALSE;
+
+    if (IntVideoPortSearchDescriptor(ChildExtension->ChildDescriptor + 0x36, DescriptorID, pDescriptorData))
+        return TRUE;
+    if (IntVideoPortSearchDescriptor(ChildExtension->ChildDescriptor + 0x48, DescriptorID, pDescriptorData))
+        return TRUE;
+    if (IntVideoPortSearchDescriptor(ChildExtension->ChildDescriptor + 0x5A, DescriptorID, pDescriptorData))
+        return TRUE;
+    if (IntVideoPortSearchDescriptor(ChildExtension->ChildDescriptor + 0x6C, DescriptorID, pDescriptorData))
+        return TRUE;
+
+    /* FIXME: search in extension? */
+    return FALSE;
+}
+
+BOOLEAN
+NTAPI
+IntVideoPortGetMonitorDescription(
+    IN PVIDEO_PORT_CHILD_EXTENSION ChildExtension,
+    OUT PCHAR* pMonitorDescription)
+{
+    PUCHAR MonitorDescription;
+
+    if (!IntVideoPortSearchDescriptors(ChildExtension, 0xFC, &MonitorDescription))
+        return FALSE;
+
+    *pMonitorDescription = (PCHAR)MonitorDescription;
     return TRUE;
 }
 
@@ -188,7 +244,9 @@ IntVideoPortChildQueryText(
     IN PIRP Irp,
     IN PIO_STACK_LOCATION IrpSp)
 {
-    PWCHAR Buffer, StaticBuffer;
+    ANSI_STRING StringA;
+    UNICODE_STRING StringU;
+    NTSTATUS Status;
 
     if (IrpSp->Parameters.QueryDeviceText.DeviceTextType != DeviceTextDescription)
         return Irp->IoStatus.Status;
@@ -196,27 +254,36 @@ IntVideoPortChildQueryText(
     switch (ChildExtension->ChildType)
     {
         case Monitor:
-            /* FIXME: We can return a better description I think */
-            StaticBuffer = L"Monitor";
+            if (IntVideoPortGetMonitorDescription(ChildExtension,
+                                                  &StringA.Buffer))
+            {
+                StringA.Buffer++; /* Skip reserved byte */
+                StringA.MaximumLength = 13;
+                for (StringA.Length = 0;
+                     StringA.Length < StringA.MaximumLength && StringA.Buffer[StringA.Length] != '\n';
+                     StringA.Length++)
+                    ;
+            }
+            else
+                RtlInitAnsiString(&StringA, "Monitor");
             break;
 
         case VideoChip:
             /* FIXME: No idea what we return here */
-            StaticBuffer = L"Video chip";
+            RtlInitAnsiString(&StringA, "Video chip");
             break;
 
         default: /* Other */
-            StaticBuffer = L"Other device";
+            RtlInitAnsiString(&StringA, "Other device");
             break;
     }
 
-    Buffer = ExAllocatePool(PagedPool, (wcslen(StaticBuffer) + 1) * sizeof(WCHAR));
-    if (!Buffer) return STATUS_NO_MEMORY;
+    Status = RtlAnsiStringToUnicodeString(&StringU, &StringA, TRUE);
+    if (!NT_SUCCESS(Status))
+        return Status;
 
-    RtlCopyMemory(Buffer, StaticBuffer, (wcslen(StaticBuffer) + 1) * sizeof(WCHAR));
-
-    INFO_(VIDEOPRT, "Reporting description: %S\n", Buffer);
-    Irp->IoStatus.Information = (ULONG_PTR)Buffer;
+    INFO_(VIDEOPRT, "Reporting description: %S\n", StringU.Buffer);
+    Irp->IoStatus.Information = (ULONG_PTR)StringU.Buffer;
 
     return STATUS_SUCCESS;
 }

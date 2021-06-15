@@ -1424,7 +1424,7 @@ DbgkClearProcessDebugObject(IN PEPROCESS Process,
     /* Get the Process Debug Object */
     DebugObject = Process->DebugPort;
 
-    /* 
+    /*
      * Check if the process had an object and it matches,
      * or if the process had an object but none was specified
      * (in which we are called from NtTerminateProcess)

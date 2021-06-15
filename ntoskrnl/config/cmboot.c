@@ -144,7 +144,7 @@ CmpFindTagIndex(IN PHHIVE Hive,
     PCM_KEY_NODE Node;
     BOOLEAN BufferAllocated;
     ASSERT(Hive->ReleaseCellRoutine == NULL);
-    
+
     /* Get the tag */
     Value = HvGetCell(Hive, TagCell);
     ASSERT(Value);
@@ -156,12 +156,12 @@ CmpFindTagIndex(IN PHHIVE Hive,
     ASSERT(Node);
     OrderCell = CmpFindValueByName(Hive, Node, GroupName);
     if (OrderCell == HCELL_NIL) return -2;
-    
+
     /* And read it */
     TagValue = HvGetCell(Hive, OrderCell);
     CmpGetValueData(Hive, TagValue, &Length, (PVOID*)&TagOrder, &BufferAllocated, &OrderCell);
     ASSERT(TagOrder);
-    
+
     /* Parse each tag */
     for (CurrentTag = 1; CurrentTag <= TagOrder[0]; CurrentTag++)
     {
@@ -173,7 +173,7 @@ CmpFindTagIndex(IN PHHIVE Hive,
             return CurrentTag;
         }
     }
-    
+
     /* No matches, so assume next to last ordering */
     if (BufferAllocated) ExFreePool(TagOrder);
     return -2;
@@ -199,25 +199,25 @@ CmpAddDriverToList(IN PHHIVE Hive,
     PULONG ErrorControl;
     PWCHAR Buffer;
     ASSERT(Hive->ReleaseCellRoutine == NULL);
-    
+
     /* Allocate a driver node and initialize it */
     DriverNode = CmpAllocate(sizeof(BOOT_DRIVER_NODE), FALSE, TAG_CM);
     if (!DriverNode) return FALSE;
     DriverEntry = &DriverNode->ListEntry;
     DriverEntry->RegistryPath.Buffer = NULL;
     DriverEntry->FilePath.Buffer = NULL;
-    
+
     /* Get the driver cell */
     Node = HvGetCell(Hive, DriverCell);
     ASSERT(Node);
-    
+
     /* Get the name from the cell */
     DriverNode->Name.Length = Node->Flags & KEY_COMP_NAME ?
                               CmpCompressedNameSize(Node->Name, Node->NameLength) :
                               Node->NameLength;
     DriverNode->Name.MaximumLength = DriverNode->Name.Length;
     NameLength = DriverNode->Name.Length;
-    
+
     /* Now allocate the buffer for it and copy the name */
     DriverNode->Name.Buffer = CmpAllocate(NameLength, FALSE, TAG_CM);
     if (!DriverNode->Name.Buffer) return FALSE;
@@ -234,7 +234,7 @@ CmpAddDriverToList(IN PHHIVE Hive,
         /* Normal name */
         RtlCopyMemory(DriverNode->Name.Buffer, Node->Name, Node->NameLength);
     }
-    
+
     /* Now find the image path */
     RtlInitUnicodeString(&UnicodeString, L"ImagePath");
     ValueCell = CmpFindValueByName(Hive, Node, &UnicodeString);
@@ -242,7 +242,7 @@ CmpAddDriverToList(IN PHHIVE Hive,
     {
         /* Couldn't find it, so assume the drivers path */
         Length = sizeof(L"System32\\Drivers\\") + NameLength + sizeof(L".sys");
-        
+
         /* Allocate the path name */
         FileName = &DriverEntry->FilePath;
         FileName->Length = 0;
@@ -266,26 +266,26 @@ CmpAddDriverToList(IN PHHIVE Hive,
         Buffer = (PWCHAR)CmpValueToData(Hive, Value, &Length);
         FileName->MaximumLength = FileName->Length = (USHORT)Length;
         FileName->Buffer = CmpAllocate(Length, FALSE, TAG_CM);
-        
+
         /* Transfer the data */
         if (!(FileName->Buffer) || !(Buffer)) return FALSE;
         RtlCopyMemory(FileName->Buffer, Buffer, Length);
     }
-    
+
     /* Now build the registry path */
     RegistryString = &DriverEntry->RegistryPath;
     RegistryString->Length = 0;
     RegistryString->MaximumLength = RegistryPath->Length + NameLength;
     RegistryString->Buffer = CmpAllocate(RegistryString->MaximumLength, FALSE, TAG_CM);
     if (!RegistryString->Buffer) return FALSE;
-    
+
     /* Add the driver name to it */
     RtlAppendUnicodeStringToString(RegistryString, RegistryPath);
     RtlAppendUnicodeStringToString(RegistryString, &DriverNode->Name);
-    
+
     /* The entry is done, add it */
     InsertHeadList(BootDriverListHead, &DriverEntry->Link);
-    
+
     /* Now find error control settings */
     RtlInitUnicodeString(&UnicodeString, L"ErrorControl");
     ValueCell = CmpFindValueByName(Hive, Node, &UnicodeString);
@@ -303,7 +303,7 @@ CmpAddDriverToList(IN PHHIVE Hive,
         ASSERT(ErrorControl);
         DriverNode->ErrorControl = *ErrorControl;
     }
-    
+
     /* Next, get the group cell */
     RtlInitUnicodeString(&UnicodeString, L"group");
     ValueCell = CmpFindValueByName(Hive, Node, &UnicodeString);
@@ -317,14 +317,14 @@ CmpAddDriverToList(IN PHHIVE Hive,
         /* Found it, read the group value */
         Value = HvGetCell(Hive, ValueCell);
         ASSERT(Value);
-        
+
         /* Copy it into the node */
         DriverNode->Group.Buffer = (PWCHAR)CmpValueToData(Hive, Value, &Length);
         if (!DriverNode->Group.Buffer) return FALSE;
         DriverNode->Group.Length = (USHORT)Length - sizeof(UNICODE_NULL);
         DriverNode->Group.MaximumLength = DriverNode->Group.Length;
     }
-    
+
     /* Finally, find the tag */
     RtlInitUnicodeString(&UnicodeString, L"Tag");
     TagCell = CmpFindValueByName(Hive, Node, &UnicodeString);
@@ -341,7 +341,7 @@ CmpAddDriverToList(IN PHHIVE Hive,
                                           GroupOrderCell,
                                           &DriverNode->Group);
     }
-    
+
     /* All done! */
     return TRUE;
 }
@@ -366,13 +366,13 @@ CmpIsLoadType(IN PHHIVE Hive,
     ASSERT(Node);
     ValueCell = CmpFindValueByName(Hive, Node, &ValueString);
     if (ValueCell == HCELL_NIL) return FALSE;
-    
+
     /* Read the start value */
     Value = HvGetCell(Hive, ValueCell);
     ASSERT(Value);
     Data = (PLONG)CmpValueToData(Hive, Value, &Length);
     ASSERT(Data);
-    
+
     /* Return if the type matches */
     return (*Data == LoadType);
 }
@@ -395,11 +395,11 @@ CmpFindDrivers(IN PHHIVE Hive,
     PBOOT_DRIVER_NODE FsNode;
     PCM_KEY_NODE ControlNode, ServicesNode, Node;
     ASSERT(Hive->ReleaseCellRoutine == NULL);
-    
+
     /* Open the control set key */
     ControlNode = HvGetCell(Hive, ControlSet);
     ASSERT(ControlNode);
-    
+
     /* Get services cell */
     RtlInitUnicodeString(&Name, L"Services");
     ServicesCell = CmpFindSubKeyByName(Hive, ControlNode, &Name);
@@ -408,12 +408,12 @@ CmpFindDrivers(IN PHHIVE Hive,
     /* Open services key */
     ServicesNode = HvGetCell(Hive, ServicesCell);
     ASSERT(ServicesNode);
-    
+
     /* Get control cell */
     RtlInitUnicodeString(&Name, L"Control");
     ControlCell = CmpFindSubKeyByName(Hive, ControlNode, &Name);
     if (ControlCell == HCELL_NIL) return FALSE;
-    
+
     /* Get the group order cell and read it */
     RtlInitUnicodeString(&Name, L"GroupOrderList");
     Node = HvGetCell(Hive, ControlCell);
@@ -449,7 +449,7 @@ CmpFindDrivers(IN PHHIVE Hive,
     /* Build the root registry path */
     RtlInitEmptyUnicodeString(&KeyPath, Buffer, sizeof(Buffer));
     RtlAppendUnicodeToString(&KeyPath, L"\\Registry\\Machine\\System\\CurrentControlSet\\Services\\");
-    
+
     /* Find the first subkey (ie: the first driver or service) */
     i = 0;
     DriverCell = CmpFindSubKeyByNumber(Hive, ServicesNode, i);
@@ -465,13 +465,13 @@ CmpFindDrivers(IN PHHIVE Hive,
                                GroupOrderCell,
                                &KeyPath,
                                DriverListHead);
-            
+
         }
-        
+
         /* Try the next subkey */
         DriverCell = CmpFindSubKeyByNumber(Hive, ServicesNode, ++i);
     }
-    
+
     /* Check if we have a boot file system */
     if (BootFileSystem)
     {
@@ -486,7 +486,7 @@ CmpFindDrivers(IN PHHIVE Hive,
                                GroupOrderCell,
                                &KeyPath,
                                DriverListHead);
-            
+
             /* Mark it as critical so it always loads */
             FsNode = CONTAINING_RECORD(DriverListHead->Flink,
                                        BOOT_DRIVER_NODE,
@@ -494,7 +494,7 @@ CmpFindDrivers(IN PHHIVE Hive,
             FsNode->ErrorControl = SERVICE_ERROR_CRITICAL;
         }
     }
-    
+
     /* We're done! */
     return TRUE;
 }
@@ -509,7 +509,7 @@ CmpDoSort(IN PLIST_ENTRY DriverListHead,
     PLIST_ENTRY NextEntry;
     UNICODE_STRING GroupName;
     PBOOT_DRIVER_NODE CurrentNode;
-    
+
     /* We're going from end to start, so get to the last group and keep going */
     Current = &OrderList->Buffer[OrderList->Length / sizeof(WCHAR)];
     while (Current > OrderList->Buffer)
@@ -534,10 +534,10 @@ CmpDoSort(IN PLIST_ENTRY DriverListHead,
             CurrentNode = CONTAINING_RECORD(NextEntry,
                                             BOOT_DRIVER_NODE,
                                             ListEntry.Link);
-                                            
+
             /* Get the next entry now since we'll do a relink */
             NextEntry = CurrentNode->ListEntry.Link.Flink;
-            
+
             /* Is there a group name and does it match the current group? */
             if ((CurrentNode->Group.Buffer) &&
                 (RtlEqualUnicodeString(&GroupName, &CurrentNode->Group, TRUE)))
@@ -547,11 +547,11 @@ CmpDoSort(IN PLIST_ENTRY DriverListHead,
                 InsertHeadList(DriverListHead, &CurrentNode->ListEntry.Link);
             }
         }
-        
+
         /* Move on */
         Current--;
     }
-    
+
     /* All done */
     return TRUE;
 }
@@ -590,17 +590,17 @@ CmpSortDriverList(IN PHHIVE Hive,
     RtlInitUnicodeString(&Name, L"list");
     ListCell = CmpFindValueByName(Hive, Node, &Name);
     if (ListCell == HCELL_NIL) return FALSE;
-    
+
     /* Now read the actual list */
     ListNode = HvGetCell(Hive, ListCell);
     ASSERT(ListNode);
     if (ListNode->Type != REG_MULTI_SZ) return FALSE;
-    
+
     /* Copy it into a buffer */
     DependList.Buffer = (PWCHAR)CmpValueToData(Hive, ListNode, &Length);
     if (!DependList.Buffer) return FALSE;
     DependList.Length = DependList.MaximumLength = (USHORT)Length - sizeof(UNICODE_NULL);
-    
+
     /* And start the recurive sort algorithm */
     return CmpDoSort(DriverListHead, &DependList);
 }
@@ -613,23 +613,23 @@ CmpOrderGroup(IN PBOOT_DRIVER_NODE StartNode,
 {
     PBOOT_DRIVER_NODE CurrentNode, PreviousNode;
     PLIST_ENTRY ListEntry;
-    
+
     /* Base case, nothing to do */
     if (StartNode == EndNode) return TRUE;
-    
+
     /* Loop the nodes */
     CurrentNode = StartNode;
     do
     {
         /* Save this as the previous node */
         PreviousNode = CurrentNode;
-        
+
         /* And move to the next one */
         ListEntry = CurrentNode->ListEntry.Link.Flink;
         CurrentNode = CONTAINING_RECORD(ListEntry,
                                         BOOT_DRIVER_NODE,
                                         ListEntry.Link);
-        
+
         /* Check if the previous driver had a bigger tag */
         if (PreviousNode->Tag > CurrentNode->Tag)
         {
@@ -642,10 +642,10 @@ CmpOrderGroup(IN PBOOT_DRIVER_NODE StartNode,
                                             BOOT_DRIVER_NODE,
                                             ListEntry.Link);
             }
-            
+
             /* Remove this driver since we need to move it */
             RemoveEntryList(&CurrentNode->ListEntry.Link);
-            
+
             /* Keep looping until we find a driver with a lower tag than ours */
             while ((PreviousNode->Tag > CurrentNode->Tag) && (PreviousNode != StartNode))
             {
@@ -655,15 +655,15 @@ CmpOrderGroup(IN PBOOT_DRIVER_NODE StartNode,
                                                  BOOT_DRIVER_NODE,
                                                  ListEntry.Link);
             }
-            
+
             /* Do the insert in the new location */
             InsertTailList(&PreviousNode->ListEntry.Link, &CurrentNode->ListEntry.Link);
-            
+
             /* Update the head, if needed */
             if (PreviousNode == StartNode) StartNode = CurrentNode;
         }
     } while (CurrentNode != EndNode);
-    
+
     /* All done */
     return TRUE;
 }
@@ -675,7 +675,7 @@ CmpResolveDriverDependencies(IN PLIST_ENTRY DriverListHead)
 {
     PLIST_ENTRY NextEntry;
     PBOOT_DRIVER_NODE StartNode, EndNode, CurrentNode;
-    
+
     /* Loop the list */
     NextEntry = DriverListHead->Flink;
     while (NextEntry != DriverListHead)
@@ -690,16 +690,16 @@ CmpResolveDriverDependencies(IN PLIST_ENTRY DriverListHead)
             EndNode = CONTAINING_RECORD(NextEntry,
                                         BOOT_DRIVER_NODE,
                                         ListEntry.Link);
-            
+
             /* Get the next entry */
             NextEntry = NextEntry->Flink;
             CurrentNode = CONTAINING_RECORD(NextEntry,
                                             BOOT_DRIVER_NODE,
                                             ListEntry.Link);
-            
+
             /* If the next entry is back to the top, break out */
             if (NextEntry == DriverListHead) break;
-            
+
             /* Otherwise, check if this entry is equal */
             if (!RtlEqualUnicodeString(&StartNode->Group,
                                        &CurrentNode->Group,
@@ -709,11 +709,11 @@ CmpResolveDriverDependencies(IN PLIST_ENTRY DriverListHead)
                 break;
             }
         } while (NextEntry != DriverListHead);
-        
+
         /* Now we have the correct start and end pointers, so do the sort */
         CmpOrderGroup(StartNode, EndNode);
     }
-    
+
     /* We're done */
     return TRUE;
 }

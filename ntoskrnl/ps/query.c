@@ -86,26 +86,20 @@ NtQueryInformationProcess(
     ULONG Flags;
     PAGED_CODE();
 
-    /* Check for user-mode caller */
-    if (PreviousMode != KernelMode)
+    /* Verify Information Class validity */
+    Status = DefaultQueryInfoBufferCheck(ProcessInformationClass,
+                                         PsProcessInfoClass,
+                                         RTL_NUMBER_OF(PsProcessInfoClass),
+                                         ProcessInformation,
+                                         ProcessInformationLength,
+                                         ReturnLength,
+                                         NULL,
+                                         PreviousMode,
+                                         FALSE);
+    if (!NT_SUCCESS(Status))
     {
-        /* Prepare to probe parameters */
-        _SEH2_TRY
-        {
-            /* Probe the buffer */
-            ProbeForRead(ProcessInformation,
-                         ProcessInformationLength,
-                         sizeof(ULONG));
-
-            /* Probe the return length if required */
-            if (ReturnLength) ProbeForWriteUlong(ReturnLength);
-        }
-        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-        {
-            /* Return the exception code */
-            _SEH2_YIELD(return _SEH2_GetExceptionCode());
-        }
-        _SEH2_END;
+        DPRINT1("NtQueryInformationProcess(): Information verification class failed! (Status -> 0x%lx, ProcessInformationClass -> %lx)\n", Status, ProcessInformationClass);
+        return Status;
     }
 
     if (((ProcessInformationClass == ProcessCookie) ||
@@ -794,6 +788,13 @@ NtQueryInformationProcess(
         /* Per-process security cookie */
         case ProcessCookie:
 
+            if (ProcessInformationLength != sizeof(ULONG))
+            {
+                /* Length size wrong, bail out */
+                Status = STATUS_INFO_LENGTH_MISMATCH;
+                break;
+            }
+
             /* Get the current process and cookie */
             Process = PsGetCurrentProcess();
             Cookie = Process->Cookie;
@@ -1131,15 +1132,17 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
     PAGED_CODE();
 
     /* Verify Information Class validity */
-#if 0
     Status = DefaultSetInfoBufferCheck(ProcessInformationClass,
                                        PsProcessInfoClass,
                                        RTL_NUMBER_OF(PsProcessInfoClass),
                                        ProcessInformation,
                                        ProcessInformationLength,
                                        PreviousMode);
-    if (!NT_SUCCESS(Status)) return Status;
-#endif
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("NtSetInformationProcess(): Information verification class failed! (Status -> 0x%lx, ProcessInformationClass -> %lx)\n", Status, ProcessInformationClass);
+        return Status;
+    }
 
     /* Check what class this is */
     Access = PROCESS_SET_INFORMATION;
@@ -1846,7 +1849,7 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
         case ProcessEnableAlignmentFaultFixup:
 
             /* Check buffer length */
-            if (ProcessInformationLength != sizeof(ULONG))
+            if (ProcessInformationLength != sizeof(BOOLEAN))
             {
                 Status = STATUS_INFO_LENGTH_MISMATCH;
                 break;
@@ -2036,15 +2039,17 @@ NtSetInformationThread(IN HANDLE ThreadHandle,
     PAGED_CODE();
 
     /* Verify Information Class validity */
-#if 0
     Status = DefaultSetInfoBufferCheck(ThreadInformationClass,
                                        PsThreadInfoClass,
                                        RTL_NUMBER_OF(PsThreadInfoClass),
                                        ThreadInformation,
                                        ThreadInformationLength,
                                        PreviousMode);
-    if (!NT_SUCCESS(Status)) return Status;
-#endif
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("NtSetInformationThread(): Information verification class failed! (Status -> 0x%lx, ThreadInformationClass -> %lx)\n", Status, ThreadInformationClass);
+        return Status;
+    }
 
     /* Check what kind of information class this is */
     switch (ThreadInformationClass)
@@ -2634,26 +2639,20 @@ NtQueryInformationThread(IN HANDLE ThreadHandle,
     ULONG ThreadTerminated;
     PAGED_CODE();
 
-    /* Check if we were called from user mode */
-    if (PreviousMode != KernelMode)
+    /* Verify Information Class validity */
+    Status = DefaultQueryInfoBufferCheck(ThreadInformationClass,
+                                         PsThreadInfoClass,
+                                         RTL_NUMBER_OF(PsThreadInfoClass),
+                                         ThreadInformation,
+                                         ThreadInformationLength,
+                                         ReturnLength,
+                                         NULL,
+                                         PreviousMode,
+                                         FALSE);
+    if (!NT_SUCCESS(Status))
     {
-        /* Enter SEH */
-        _SEH2_TRY
-        {
-            /* Probe the buffer */
-            ProbeForWrite(ThreadInformation,
-                          ThreadInformationLength,
-                          sizeof(ULONG));
-
-            /* Probe the return length if required */
-            if (ReturnLength) ProbeForWriteUlong(ReturnLength);
-        }
-        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-        {
-            /* Return the exception code */
-            _SEH2_YIELD(return _SEH2_GetExceptionCode());
-        }
-        _SEH2_END;
+        DPRINT1("NtQueryInformationThread(): Information verification class failed! (Status -> 0x%lx , ThreadInformationClass -> %lx)\n", Status, ThreadInformationClass);
+        return Status;
     }
 
     /* Check what class this is */

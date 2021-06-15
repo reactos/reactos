@@ -44,8 +44,8 @@ __rt_div_worker(
     UINT3264 mask;
     UINT3264 quotient;
 #ifdef _SIGNED_DIV_
-    int dividend_sign;
-    int divisor_sign;
+    int dividend_sign = 0;
+    int divisor_sign = 0;
 #endif // _SIGNED_DIV_
 
     if (divisor == 0)

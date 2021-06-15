@@ -112,7 +112,7 @@ FatOverflowPagingFileRead (
 #pragma alloc_text(PAGE, FatCommonRead)
 #endif
 
-
+
 _Function_class_(IRP_MJ_READ)
 _Function_class_(DRIVER_DISPATCH)
 NTSTATUS
@@ -275,7 +275,7 @@ Return Value:
     return Status;
 }
 
-
+
 //
 //  Internal support routine
 //
@@ -327,7 +327,7 @@ Return Value:
     //  Preacquire the resource the read path will require so we know the
     //  worker thread can proceed without waiting.
     //
-    
+
     if (FlagOn(Irp->Flags, IRP_PAGING_IO) && (Fcb->Header.PagingIoResource != NULL)) {
 
         Resource = Fcb->Header.PagingIoResource;
@@ -336,7 +336,7 @@ Return Value:
 
         Resource = Fcb->Header.Resource;
     }
-    
+
     //
     //  If there are no resources assodicated with the file (case: the virtual
     //  volume file), it is OK.  No resources will be acquired on the other side
@@ -344,21 +344,21 @@ Return Value:
     //
 
     if (Resource) {
-        
+
         ExAcquireResourceSharedLite( Resource, TRUE );
     }
 
     if (NodeType( Fcb ) == FAT_NTC_VCB) {
 
         Vcb = (PVCB) Fcb;
-    
+
     } else {
 
         Vcb = Fcb->Vcb;
     }
-    
+
     _SEH2_TRY {
-        
+
         //
         //  Make the Irp just like a regular post request and
         //  then send the Irp to the special overflow thread.
@@ -400,7 +400,7 @@ Return Value:
     return STATUS_PENDING;
 }
 
-
+
 //
 //  Internal support routine
 //
@@ -457,11 +457,11 @@ Return Value:
                     FileObject->FsContext;
 
         if (NodeType( Fcb ) == FAT_NTC_VCB) {
-    
+
             Vcb = (PVCB) Fcb;
-        
+
         } else {
-    
+
             Vcb = Fcb->Vcb;
         }
 
@@ -518,8 +518,8 @@ Return Value:
     KeSetEvent( Event, 0, FALSE );
 }
 
-
-_Requires_lock_held_(_Global_critical_region_)    
+
+_Requires_lock_held_(_Global_critical_region_)
 NTSTATUS
 FatCommonRead (
     IN PIRP_CONTEXT IrpContext,
@@ -726,7 +726,7 @@ Return Value:
 
     }
 
-
+
     //
     // These two cases correspond to either a general opened volume, ie.
     // open ("a:"), or a read of the volume file (boot sector + fat(s))
@@ -761,7 +761,7 @@ Return Value:
             //
             //  If the caller previously sent a format unit command, then we will allow
             //  their read/write requests to ignore the verify flag on the device, since some
-            //  devices send a media change event after format unit, but we don't want to 
+            //  devices send a media change event after format unit, but we don't want to
             //  process it yet since we're probably in the process of formatting the
             //  media.
             //
@@ -918,7 +918,7 @@ Return Value:
         FatCompleteRequest( IrpContext, Irp, Status );
         return Status;
     }
-
+
     //
     //  At this point we know there is an Fcb/Dcb.
     //
@@ -1066,11 +1066,11 @@ Return Value:
 
             //
             //  We now check whether we can proceed based on the state of
-            //  the file oplocks.  
+            //  the file oplocks.
             //
 
             if (!PagingIo) {
-                
+
                 Status = FsRtlCheckOplock( FatGetFcbOplock(FcbOrDcb),
                                            Irp,
                                            IrpContext,
@@ -1137,7 +1137,7 @@ Return Value:
 
                 }
             }
-
+
             //
             // HANDLE THE NON-CACHED CASE
             //
@@ -1172,7 +1172,7 @@ Return Value:
                     if (StartingVbo < ValidDataLength) {
 
                         ULONG ZeroingOffset;
-                        
+
                         //
                         //  Now zero out the user's request sector aligned beyond
                         //  vdl.  We will handle the straddling sector at completion
@@ -1193,13 +1193,13 @@ Return Value:
                         //  that the read ends in the last sector and the zeroing will be
                         //  done at completion.
                         //
-                        
+
                         if (ByteCount > ZeroingOffset) {
-                            
+
                             SafeZeroMemory( (PUCHAR) SystemBuffer + ZeroingOffset,
                                             ByteCount - ZeroingOffset);
 
-                        } 
+                        }
 
                     } else {
 
@@ -1280,7 +1280,7 @@ Return Value:
                     //
                     //  Set BytesToRead to ByteCount to satify the following ASSERT.
                     //
-                    
+
 #ifdef _MSC_VER
 #pragma prefast( suppress:28931, "needed for debug build" )
 #endif
@@ -1292,7 +1292,7 @@ Return Value:
                     //  Perform the actual IO
                     //
 
-                    
+
                     if (FatNonCachedIo( IrpContext,
                                         Irp,
                                         FcbOrDcb,
@@ -1339,7 +1339,7 @@ Return Value:
 
             }   // if No Intermediate Buffering
 
-
+
             //
             // HANDLE CACHED CASE
             //
@@ -1386,7 +1386,7 @@ Return Value:
                     CcSetReadAheadGranularity( FileObject, READ_AHEAD_GRANULARITY );
                 }
 
-
+
                 //
                 // DO A NORMAL CACHED READ, if the MDL bit is not set,
                 //
@@ -1434,7 +1434,7 @@ Return Value:
                     try_return( Status );
                 }
 
-
+
                 //
                 //  HANDLE A MDL READ
                 //
@@ -1459,7 +1459,7 @@ Return Value:
                 }
             }
         }
-
+
         //
         //  These cases correspond to a system read directory file or
         //  ea file.
@@ -1473,7 +1473,7 @@ Return Value:
 
 #if FASTFATDBG
             if ( TypeOfOpen == DirectoryFile ) {
-                DebugTrace(0, Dbg, "Type of read is directoryfile\n", 0);                            
+                DebugTrace(0, Dbg, "Type of read is directoryfile\n", 0);
             } else if ( TypeOfOpen == EaFile) {
                 DebugTrace(0, Dbg, "Type of read is eafile\n", 0);
             }
@@ -1498,7 +1498,7 @@ Return Value:
             NT_ASSERT( NonCachedIo && PagingIo );
             NT_ASSERT( ((StartingVbo | ByteCount) & (SectorSize - 1)) == 0 );
 
-            
+
                 //
                 //  These calls must allways be within the allocation size
                 //
@@ -1518,7 +1518,7 @@ Return Value:
                     ByteCount = FcbOrDcb->Header.AllocationSize.LowPart - StartingVbo;
                 }
 
-            
+
             //
             //  Perform the actual IO
             //
@@ -1662,7 +1662,7 @@ Return Value:
         //
 
         if (!PostIrp) {
-             
+
             //
             //  If we had a stack io context, we have to make sure the contents
             //  are cleaned up before we leave.
@@ -1696,7 +1696,7 @@ Return Value:
 
     return Status;
 }
-
+
 //
 //  Local support routine
 //

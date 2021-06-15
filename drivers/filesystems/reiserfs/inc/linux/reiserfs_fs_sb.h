@@ -14,7 +14,7 @@ typedef enum {
 } reiserfs_super_block_flags;
 
 /* struct reiserfs_super_block accessors/mutators
- * since this is a disk structure, it will always be in 
+ * since this is a disk structure, it will always be in
  * little endian format. */
 #define sb_block_count(sbp)         (le32_to_cpu((sbp)->s_v1.s_block_count))
 #define set_sb_block_count(sbp,v)   ((sbp)->s_v1.s_block_count = cpu_to_le32(v))
@@ -61,7 +61,7 @@ typedef enum {
 #define sb_umount_state(sbp)       (le16_to_cpu((sbp)->s_v1.s_umount_state))
 #define set_sb_umount_state(sbp,v) ((sbp)->s_v1.s_umount_state = cpu_to_le16(v))
 #define sb_fs_state(sbp)           (le16_to_cpu((sbp)->s_v1.s_fs_state))
-#define set_sb_fs_state(sbp,v)     ((sbp)->s_v1.s_fs_state = cpu_to_le16(v)) 
+#define set_sb_fs_state(sbp,v)     ((sbp)->s_v1.s_fs_state = cpu_to_le16(v))
 #define sb_hash_function_code(sbp) \
               (le32_to_cpu((sbp)->s_v1.s_hash_function_code))
 #define set_sb_hash_function_code(sbp,v) \
@@ -80,16 +80,16 @@ typedef enum {
 
 /* LOGGING -- */
 
-/* These all interelate for performance.  
+/* These all interelate for performance.
 **
-** If the journal block count is smaller than n transactions, you lose speed. 
+** If the journal block count is smaller than n transactions, you lose speed.
 ** I don't know what n is yet, I'm guessing 8-16.
 **
 ** typical transaction size depends on the application, how often fsync is
-** called, and how many metadata blocks you dirty in a 30 second period.  
+** called, and how many metadata blocks you dirty in a 30 second period.
 ** The more small files (<16k) you use, the larger your transactions will
 ** be.
-** 
+**
 ** If your journal fills faster than dirty buffers get flushed to disk, it must flush them before allowing the journal
 ** to wrap, which slows things down.  If you need high speed meta data updates, the journal should be big enough
 ** to prevent wrapping before dirty meta blocks get to disk.
@@ -105,7 +105,7 @@ typedef enum {
 				/* we have a node size define somewhere in reiserfs_fs.h. -Hans */
 #define JOURNAL_BLOCK_SIZE  4096 /* BUG gotta get rid of this */
 #define JOURNAL_MAX_CNODE   1500 /* max cnodes to allocate. */
-#define JOURNAL_HASH_SIZE 8192   
+#define JOURNAL_HASH_SIZE 8192
 #define JOURNAL_NUM_BITMAPS 5 /* number of copies of the bitmaps to have floating.  Must be >= 2 */
 
 /* One of these for every block in every transaction
@@ -178,10 +178,10 @@ struct reiserfs_journal {
   struct reiserfs_journal_cnode *j_first ; /*  oldest journal block.  start here for traverse */
 
   struct file         *j_dev_file;
-  struct block_device *j_dev_bd;  
-  int j_1st_reserved_block;     /* first block on s_dev of reserved area journal */        
-	
-  long j_state ;			
+  struct block_device *j_dev_bd;
+  int j_1st_reserved_block;     /* first block on s_dev of reserved area journal */
+
+  long j_state ;
   unsigned long j_trans_id ;
   unsigned long j_mount_id ;
   unsigned long j_start ;             /* start of current waiting commit (index into j_ap_blocks) */
@@ -191,7 +191,7 @@ struct reiserfs_journal {
   unsigned long j_bcount ;            /* batch count. allows turning X transactions into 1 */
   unsigned long j_first_unflushed_offset ;  /* first unflushed transactions offset */
   unsigned long j_last_flush_trans_id ;    /* last fully flushed journal timestamp */
-  struct buffer_head *j_header_bh ;   
+  struct buffer_head *j_header_bh ;
 
   time_t j_trans_start_time ;         /* time this transaction started */
   struct semaphore j_lock;
@@ -238,8 +238,8 @@ struct reiserfs_journal {
   struct list_head j_working_list;
 
   struct reiserfs_list_bitmap j_list_bitmap[JOURNAL_NUM_BITMAPS] ;	/* array of bitmaps to record the deleted blocks */
-  struct reiserfs_journal_cnode *j_hash_table[JOURNAL_HASH_SIZE] ; 	    /* hash table for real buffer heads in current trans */ 
-  struct reiserfs_journal_cnode *j_list_hash_table[JOURNAL_HASH_SIZE] ; /* hash table for all the real buffer heads in all 
+  struct reiserfs_journal_cnode *j_hash_table[JOURNAL_HASH_SIZE] ; 	    /* hash table for real buffer heads in current trans */
+  struct reiserfs_journal_cnode *j_list_hash_table[JOURNAL_HASH_SIZE] ; /* hash table for all the real buffer heads in all
   										the transactions */
   struct list_head j_prealloc_list;     /* list of inodes which have preallocated blocks */
   int j_persistent_trans;
@@ -357,7 +357,7 @@ struct reiserfs_sb_info
     struct reiserfs_bitmap_info * s_ap_bitmap;
     struct reiserfs_journal *s_journal ;		/* pointer to journal information */
     unsigned short s_mount_state;                 /* reiserfs state (valid, invalid) */
-  
+
 				/* Comment? -Hans */
     void (*end_io_handler)(struct buffer_head *, int);
     hashf_t s_hash_function;	/* pointer to function which is used
@@ -384,7 +384,7 @@ struct reiserfs_sb_info
     // tree gets re-balanced
     unsigned long s_properties;    /* File system properties. Currently holds
 				     on-disk FS format */
-    
+
     /* session statistics */
     int s_kmallocs;
     int s_disk_reads;
@@ -431,7 +431,7 @@ enum reiserfs_mount_options {
                                  partition will be dealt with in a
                                  manner of 3.5.x */
 
-/* -o hash={tea, rupasov, r5, detect} is meant for properly mounting 
+/* -o hash={tea, rupasov, r5, detect} is meant for properly mounting
 ** reiserfs disks from 3.5.19 or earlier.  99% of the time, this option
 ** is not required.  If the normal autodection code can't determine which
 ** hash to use (because both hases had the same value for a file)
@@ -513,7 +513,7 @@ int reiserfs_resize(struct super_block *, unsigned long) ;
 #define SB_BUFFER_WITH_SB(s) (REISERFS_SB(s)->s_sbh)
 #define SB_JOURNAL(s) (REISERFS_SB(s)->s_journal)
 #define SB_JOURNAL_1st_RESERVED_BLOCK(s) (SB_JOURNAL(s)->j_1st_reserved_block)
-#define SB_JOURNAL_LEN_FREE(s) (SB_JOURNAL(s)->j_journal_len_free) 
+#define SB_JOURNAL_LEN_FREE(s) (SB_JOURNAL(s)->j_journal_len_free)
 #define SB_AP_BITMAP(s) (REISERFS_SB(s)->s_ap_bitmap)
 
 #define SB_DISK_JOURNAL_HEAD(s) (SB_JOURNAL(s)->j_header_bh->)

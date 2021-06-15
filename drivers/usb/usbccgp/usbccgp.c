@@ -77,7 +77,7 @@ USBCCGP_AddDevice(
 NTSTATUS
 NTAPI
 USBCCGP_CreateClose(
-    PDEVICE_OBJECT DeviceObject, 
+    PDEVICE_OBJECT DeviceObject,
     PIRP Irp)
 {
     PCOMMON_DEVICE_EXTENSION DeviceExtension;
@@ -110,7 +110,7 @@ USBCCGP_CreateClose(
 NTSTATUS
 NTAPI
 USBCCGP_Dispatch(
-    PDEVICE_OBJECT DeviceObject, 
+    PDEVICE_OBJECT DeviceObject,
     PIRP Irp)
 {
     PCOMMON_DEVICE_EXTENSION DeviceExtension;

@@ -32,7 +32,7 @@ typedef struct _WSH_SEARCH_TABLE
     CRITICAL_SECTION Lock;
 } WSH_SEARCH_TABLE, *PWAH_SEARCH_TABLE;
 
-typedef struct _WSH_HANDLE_TABLE 
+typedef struct _WSH_HANDLE_TABLE
 {
     DWORD Mask;
     WSH_SEARCH_TABLE SearchTables[1];
@@ -113,7 +113,7 @@ WahCreateNotificationHandle(
 );
 
 INT
-WINAPI 
+WINAPI
 WahWaitForNotification(
     IN HANDLE NotificationHelperHandle,
     IN HANDLE lpNotificationHandle,

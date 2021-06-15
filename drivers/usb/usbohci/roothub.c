@@ -11,7 +11,7 @@
 #include <debug.h>
 
 OHCI_REG_RH_DESCRIPTORA
-NTAPI 
+NTAPI
 OHCI_ReadRhDescriptorA(IN POHCI_EXTENSION OhciExtension)
 {
     POHCI_OPERATIONAL_REGISTERS OperationalRegs;

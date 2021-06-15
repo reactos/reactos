@@ -18,7 +18,7 @@
 
 _kernel_stack:
 .fill 3*4096, 1, 0
-P0BootStack:	
+P0BootStack:
 _kernel_stack_top:
 
 /* guard page for the trap stack */
@@ -29,18 +29,18 @@ _kernel_trap_stack:
 _kernel_trap_stack_top:
 
 .fill 3*4096, 1, 0
-KiDoubleFaultStack:	
-	
+KiDoubleFaultStack:
+
 	.text
 	.globl KiSystemStartup
 	.globl KiRosPrepareForSystemStartup
 	.globl DrawNumber
-	
+
 KiSystemStartup:
     /*
      * Set a normal MSR value
      */
-    xor		0,0,0     
+    xor		0,0,0
     ori		30,0,0x3030
     mtmsr	30
 
@@ -51,23 +51,23 @@ KiSystemStartup:
 
     /* Bye bye asm land! */
     mr		4,3
-		
+
     /* Load the initial kernel stack */
     lis		1,_kernel_stack_top@ha
     ori		1,1,_kernel_stack_top@l
     addi	1,1,-SIZEOF_FX_SAVE_AREA
-    
+
     /* Call the main kernel initialization */
     bl		KiRosPrepareForSystemStartup
 
 	.global NtCurrentTeb
 NtCurrentTeb:
 	mr 3,12
-	blr	
+	blr
 
         .globl KeSynchronizeExecution
 
-KeSynchronizeExecution: 
+KeSynchronizeExecution:
         blr
 
         .globl PearPCDebug

@@ -57,46 +57,46 @@ typedef struct tagTHEMENAMES
 /* Declarations for undocumented functions for use internally */
 DWORD WINAPI QueryThemeServices(void);
 
-HRESULT WINAPI OpenThemeFile(LPCWSTR pszThemeFileName, 
+HRESULT WINAPI OpenThemeFile(LPCWSTR pszThemeFileName,
                              LPCWSTR pszColorName,
-                             LPCWSTR pszSizeName, 
+                             LPCWSTR pszSizeName,
                              HTHEMEFILE *hThemeFile,
                              DWORD unknown);
 
 HRESULT WINAPI CloseThemeFile(HTHEMEFILE hThemeFile);
 
-HRESULT WINAPI ApplyTheme(HTHEMEFILE hThemeFile, 
-                          char *unknown, 
+HRESULT WINAPI ApplyTheme(HTHEMEFILE hThemeFile,
+                          char *unknown,
                           HWND hWnd);
 
-HRESULT WINAPI GetThemeDefaults(LPCWSTR pszThemeFileName, 
+HRESULT WINAPI GetThemeDefaults(LPCWSTR pszThemeFileName,
                                 LPWSTR pszColorName,
-                                DWORD dwColorNameLen, 
+                                DWORD dwColorNameLen,
                                 LPWSTR pszSizeName,
                                 DWORD dwSizeNameLen);
 
-HRESULT WINAPI EnumThemes(LPCWSTR pszThemePath, 
+HRESULT WINAPI EnumThemes(LPCWSTR pszThemePath,
                           ENUMTHEMEPROC callback,
                           LPVOID lpData);
 
-HRESULT WINAPI EnumThemeColors(LPWSTR pszThemeFileName, 
+HRESULT WINAPI EnumThemeColors(LPWSTR pszThemeFileName,
                                LPWSTR pszSizeName,
-                               DWORD dwColorNum, 
+                               DWORD dwColorNum,
                                PTHEMENAMES pszColorNames);
 
-HRESULT WINAPI EnumThemeSizes(LPWSTR pszThemeFileName, 
+HRESULT WINAPI EnumThemeSizes(LPWSTR pszThemeFileName,
                               LPWSTR pszColorName,
-                              DWORD dwSizeNum, 
+                              DWORD dwSizeNum,
                               PTHEMENAMES pszColorNames);
 
-HRESULT WINAPI ParseThemeIniFile(LPCWSTR pszIniFileName, 
+HRESULT WINAPI ParseThemeIniFile(LPCWSTR pszIniFileName,
                                  LPWSTR pszUnknown,
-                                 PARSETHEMEINIFILEPROC callback, 
+                                 PARSETHEMEINIFILEPROC callback,
                                  LPVOID lpData);
 
-HTHEME WINAPI OpenThemeDataFromFile(HTHEMEFILE hThemeFile, 
-                                    HWND hwnd, 
-                                    LPCWSTR pszClassList, 
+HTHEME WINAPI OpenThemeDataFromFile(HTHEMEFILE hThemeFile,
+                                    HWND hwnd,
+                                    LPCWSTR pszClassList,
                                     DWORD flags);
 
 /* The DNCP_* flags let the caller decide what should be painted */
@@ -105,10 +105,10 @@ HTHEME WINAPI OpenThemeDataFromFile(HTHEMEFILE hThemeFile,
 #define DNCP_DIALOGWINDOW   0x4
 #define DNCP_DRAW_ALL       DNCP_ACTIVEWINDOW | DNCP_INACTIVEWINDOW | DNCP_DIALOGWINDOW
 
-HRESULT WINAPI DrawNCPreview(HDC hDC, 
+HRESULT WINAPI DrawNCPreview(HDC hDC,
                              DWORD DNCP_Flag,
-                             LPRECT prcPreview, 
-                             LPCWSTR pszThemeFileName, 
+                             LPRECT prcPreview,
+                             LPCWSTR pszThemeFileName,
                              LPCWSTR pszColorName,
                              LPCWSTR pszSizeName,
                              PNONCLIENTMETRICSW pncMetrics,

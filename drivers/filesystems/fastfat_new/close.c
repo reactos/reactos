@@ -76,7 +76,7 @@ FatCloseWorker (
 #pragma alloc_text(PAGE, FatCloseWorker)
 #endif
 
-
+
 _Function_class_(IRP_MJ_CLOSE)
 _Function_class_(DRIVER_DISPATCH)
 NTSTATUS
@@ -183,17 +183,17 @@ Return Value:
         //  call the oplock package to get rid of any oplock state.  This can only
         //  be safely done in the FSD path.
         //
-        
+
         if ((Fcb != NULL) &&
             !FlagOn( FileObject->Flags, FO_CLEANUP_COMPLETE ) &&
             FatIsFileOplockable( Fcb )) {
-        
+
             //
             //  This is equivalent to handling cleanup, and it always cleans up any
             //  oplock immediately.  Also, we don't need any locking of the FCB here;
             //  the oplock's own lock will be sufficient for this purpose.
             //
-        
+
             FsRtlCheckOplockEx( FatGetFcbOplock(Fcb),
                                 Irp,
                                 0,
@@ -204,7 +204,7 @@ Return Value:
 #endif
 
         //
-        //  Metadata streams have had close contexts preallocated. Pull one out now, while we're 
+        //  Metadata streams have had close contexts preallocated. Pull one out now, while we're
         //  guaranteed the VCB exists.
         //
 
@@ -221,7 +221,7 @@ Return Value:
         //  Call the common Close routine if we are not delaying this close.
         //
 
-        if ((((TypeOfOpen == UserFileOpen) || 
+        if ((((TypeOfOpen == UserFileOpen) ||
                 (TypeOfOpen == UserDirectoryOpen)) &&
                  FlagOn(Fcb->FcbState, FCB_STATE_DELAY_CLOSE) &&
                  !FatData.ShutdownStarted) ||
@@ -238,7 +238,7 @@ Return Value:
             //
 
             if( CloseContext == NULL ) {
-            
+
                 //
                 //  Free up any query template strings before using the close context fields,
                 //  which overlap (union)
@@ -248,7 +248,7 @@ Return Value:
 
                 CloseContext = &Ccb->CloseContext;
                 CloseContext->Free = FALSE;
-                
+
                 SetFlag( Ccb->Flags, CCB_FLAG_CLOSE_CONTEXT );
             }
 
@@ -272,12 +272,12 @@ Return Value:
                            (BOOLEAN)(Fcb && FlagOn(Fcb->FcbState, FCB_STATE_DELAY_CLOSE)));
 
         } else {
-            
+
             //
             //  The close proceeded synchronously, so for the metadata objects we
             //  can now drop the close context we preallocated.
             //
-            
+
             if ((TypeOfOpen == VirtualVolumeFile) ||
                 (TypeOfOpen == DirectoryFile) ||
                 (TypeOfOpen == EaFile)
@@ -286,19 +286,19 @@ Return Value:
                 if (CloseContext != NULL) {
 
                     ExFreePool( CloseContext );
-                    
+
                 }
             }
         }
 
         FatCompleteRequest( FatNull, Irp, Status );
 
-    } 
+    }
     _SEH2_EXCEPT(FatExceptionFilter( NULL, _SEH2_GetExceptionInformation() )) {
 
         //
         //  We had some trouble trying to perform the requested
-        //  operation, so we'll abort the I/O request with the 
+        //  operation, so we'll abort the I/O request with the
         //  error status that we get back from the exception code.
         //
 
@@ -346,15 +346,15 @@ Return Value:
     PAGED_CODE();
 
     UNREFERENCED_PARAMETER( DeviceObject );
-    
+
     FsRtlEnterFileSystem();
-    
+
     FatFspClose (Context);
-    
+
     FsRtlExitFileSystem();
 }
 
-
+
 _Requires_lock_held_(_Global_critical_region_)
 VOID
 FatFspClose (
@@ -394,9 +394,9 @@ Return Value:
     //
     //  Set the top level IRP for the true FSP operation.
     //
-    
+
     if (!ARGUMENT_PRESENT( Vcb )) {
-        
+
         IoSetTopLevelIrp( (PIRP)FSRTL_FSP_TOP_LEVEL_IRP );
         TopLevel = TRUE;
     }
@@ -413,7 +413,7 @@ Return Value:
         //
 
         if (!ARGUMENT_PRESENT(Vcb)) {
-             
+
             if (!FatData.ShutdownStarted) {
 
                 if (CloseContext->Vcb != CurrentVcb) {
@@ -520,7 +520,7 @@ Return Value:
         //
         //  Drop the context if it came from pool.
         //
-        
+
         if (FreeContext) {
 
             ExFreePool( CloseContext );
@@ -539,12 +539,12 @@ Return Value:
     //
     //  Clean up the top level IRP hint if we owned it.
     //
-    
+
     if (!ARGUMENT_PRESENT( Vcb )) {
-        
+
         IoSetTopLevelIrp( NULL );
     }
-    
+
     //
     //  And return to our caller
     //
@@ -552,8 +552,8 @@ Return Value:
     DebugTrace(-1, Dbg, "FatFspClose -> NULL\n", 0);
 }
 
-
-_Requires_lock_held_(_Global_critical_region_)    
+
+_Requires_lock_held_(_Global_critical_region_)
 VOID
 FatQueueClose (
     IN PCLOSE_CONTEXT CloseContext,
@@ -569,7 +569,7 @@ Routine Description:
 Arguments:
 
     CloseContext - a close context to enqueue for the delayed close thread.
-    
+
     DelayClose - whether this should go on the delayed close queue (unreferenced
         objects).
 
@@ -624,8 +624,8 @@ Return Value:
     }
 }
 
-
-_Requires_lock_held_(_Global_critical_region_)    
+
+_Requires_lock_held_(_Global_critical_region_)
 PCLOSE_CONTEXT
 FatRemoveClose (
     PVCB Vcb OPTIONAL,
@@ -641,7 +641,7 @@ Routine Description:
 Arguments:
 
     Vcb - if specified, only returns close for this volume.
-    
+
     LastVcbHint - if specified and other starvation avoidance is required by
         the system condition, will attempt to return closes for this volume.
 
@@ -664,7 +664,7 @@ Return Value:
     //  Remember if this is the worker thread, so we can pull down the active
     //  flag should we run everything out.
     //
-    
+
     WorkerThread = (Vcb == NULL);
 
     //
@@ -685,20 +685,20 @@ Return Value:
         //  Flip over to aggressive at twice the legal limit, and flip it
         //  off at the legal limit.
         //
-        
+
         if (!FatData.HighAsync && FatData.AsyncCloseCount > FatMaxDelayedCloseCount*2) {
 
             FatData.HighAsync = TRUE;
-        
+
         } else if (FatData.HighAsync && FatData.AsyncCloseCount < FatMaxDelayedCloseCount) {
 
             FatData.HighAsync = FALSE;
         }
-            
+
         if (!FatData.HighDelayed && FatData.DelayedCloseCount > FatMaxDelayedCloseCount*2) {
 
             FatData.HighDelayed = TRUE;
-        
+
         } else if (FatData.HighDelayed && FatData.DelayedCloseCount < FatMaxDelayedCloseCount) {
 
             FatData.HighDelayed = FALSE;
@@ -709,7 +709,7 @@ Return Value:
             Vcb = LastVcbHint;
         }
     }
-        
+
     //
     //  Do the case when we don't care about which Vcb the close is on.
     //  This is the case when we are in an ExWorkerThread and aren't
@@ -762,7 +762,7 @@ Return Value:
             CloseContext = NULL;
 
             if (WorkerThread) {
-                
+
                 FatData.AsyncCloseActive = FALSE;
             }
         }
@@ -770,7 +770,7 @@ Return Value:
     //
     //  We're running down a specific volume.
     //
-    
+
     } else {
 
 
@@ -801,9 +801,9 @@ Return Value:
             CloseContext = CONTAINING_RECORD( Entry,
                                               CLOSE_CONTEXT,
                                               VcbLinks );
-        
+
             RemoveEntryList( &CloseContext->GlobalLinks );
-        
+
         //
         //  If we were trying to run down the queues but didn't find anything for this
         //  volume, flip over to accept anything and try again.
@@ -812,7 +812,7 @@ Return Value:
         } else if (LastVcbHint) {
 
             goto AnyClose;
-        
+
         //
         //  There are no more closes to perform; show that we are done.
         //
@@ -828,8 +828,8 @@ Return Value:
     return CloseContext;
 }
 
-
-_Requires_lock_held_(_Global_critical_region_)    
+
+_Requires_lock_held_(_Global_critical_region_)
 NTSTATUS
 FatCommonClose (
     IN PVCB Vcb,
@@ -918,7 +918,7 @@ Return Value:
     IrpContext.NodeByteSize = sizeof( IrpContext );
     IrpContext.MajorFunction = IRP_MJ_CLOSE;
     IrpContext.Vcb = Vcb;
-    
+
     if (Wait) {
 
         SetFlag( IrpContext.Flags, IRP_CONTEXT_FLAG_WAIT );
@@ -1090,10 +1090,10 @@ Return Value:
                 ObDereferenceObject( DirectoryFileObject );
             }
 
-            Fcb->OpenCount -= 1;            
+            Fcb->OpenCount -= 1;
             Vcb->OpenFileCount -= 1;
             if (FlagOn(Ccb->Flags, CCB_FLAG_READ_ONLY)) { Vcb->ReadOnlyCount -= 1; }
-           
+
             FatDeleteCcb( &IrpContext, &Ccb );
 
             break;
@@ -1195,7 +1195,7 @@ Return Value:
             //
             //  See if there is only one open left.  If so, it is ours.  We only want
             //  to check for a dismount if a dismount is not already in progress.
-            //  We also only do this if the Vcb condition is not VcbGood and the 
+            //  We also only do this if the Vcb condition is not VcbGood and the
             //  caller can handle the VCB going away. This is determined by whether
             //  they passed in the VcbDeleted argument. This request also needs
             //  to be top level.

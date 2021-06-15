@@ -4,7 +4,7 @@
  *    http://www.reactos.org
  *    IRC: irc.freenode.net #reactos-pl;
  *    UTF-8 conversion by Caemyr (May, 2011)
- *    Polish translation updated by pithwz - Piotr Hetnarowicz (piotrhwz@gmail.com) (August, 2020) 
+ *    Polish translation updated by pithwz - Piotr Hetnarowicz (piotrhwz@gmail.com) (May, 2021) 
  */
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
@@ -33,7 +33,7 @@ BEGIN
         MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "&Zamknij", IDM_FILE_CLOSE
     END
-    POPUP "&Edytuj", FCIDM_MENU_EDIT
+    POPUP "&Edycja", FCIDM_MENU_EDIT
     BEGIN
         MENUITEM "", -1, MFT_SEPARATOR
     END
@@ -50,7 +50,7 @@ BEGIN
             MENUITEM "&Ulubione\tCtrl+I", IDM_EXPLORERBAR_FAVORITES
             MENUITEM "&Multimedia", IDM_EXPLORERBAR_MEDIA
             MENUITEM "&Historia\tCtrl+H", IDM_EXPLORERBAR_HISTORY
-            MENUITEM "&Katalogi", IDM_EXPLORERBAR_FOLDERS
+            MENUITEM "&Foldery", IDM_EXPLORERBAR_FOLDERS
             MENUITEM "", IDM_EXPLORERBAR_SEPARATOR
         END
         MENUITEM "", FCIDM_MENU_VIEW_SEP_OPTIONS, MFT_SEPARATOR
@@ -271,7 +271,7 @@ BEGIN
     9553 "Pokazuje pasek Wyszukiwania."
     9554 "Pokazuje pasek Ulubionych."
     9555 "Pokazuje pasek Historii."
-    9557 "Pokazuje pasek Katalogów."
+    9557 "Pokazuje pasek folderów."
     9559 "Pokazuje pasek Multimediów."
 END
 

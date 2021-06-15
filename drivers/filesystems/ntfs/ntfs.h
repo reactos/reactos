@@ -179,7 +179,7 @@ typedef enum
 
 // FILE_RECORD_END seems to follow AttributeEnd in every file record starting with $Quota.
 // No clue what data is being represented here.
-#define FILE_RECORD_END              0x11477982 
+#define FILE_RECORD_END              0x11477982
 
 #define NTFS_FILE_MFT                0
 #define NTFS_FILE_MFTMIRR            1
@@ -975,7 +975,7 @@ NtfsGetFCBForFile(PNTFS_VCB Vcb,
 NTSTATUS
 NtfsReadFCBAttribute(PNTFS_VCB Vcb,
                      PNTFS_FCB pFCB,
-                     ULONG Type, 
+                     ULONG Type,
                      PCWSTR Name,
                      ULONG NameLength,
                      PVOID * Data);
@@ -1157,7 +1157,7 @@ ReadVCN(PDEVICE_EXTENSION Vcb,
         ULONG count,
         PVOID buffer);
 
-NTSTATUS 
+NTSTATUS
 FixupUpdateSequenceArray(PDEVICE_EXTENSION Vcb,
                          PNTFS_RECORD_HEADER Record);
 

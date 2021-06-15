@@ -43,29 +43,29 @@ DisconnectTimeoutDpc(PKDPC Dpc,
     while (!IsListEmpty(&Connection->SendRequest))
     {
         Entry = RemoveHeadList(&Connection->SendRequest);
-        
+
         Bucket = CONTAINING_RECORD(Entry, TDI_BUCKET, Entry);
-        
+
         Bucket->Information = 0;
         Bucket->Status = STATUS_FILE_CLOSED;
-        
+
         CompleteBucket(Connection, Bucket, FALSE);
     }
-    
+
     while (!IsListEmpty(&Connection->ShutdownRequest))
     {
         Entry = RemoveHeadList( &Connection->ShutdownRequest );
-        
+
         Bucket = CONTAINING_RECORD( Entry, TDI_BUCKET, Entry );
-        
+
         Bucket->Status = STATUS_TIMEOUT;
         Bucket->Information = 0;
-        
+
         CompleteBucket(Connection, Bucket, FALSE);
     }
-    
+
     UnlockObjectFromDpcLevel(Connection);
-    
+
     DereferenceObject(Connection);
 }
 
@@ -176,7 +176,7 @@ VOID TCPReceive(PIP_INTERFACE Interface, PIP_PACKET IPPacket)
     TI_DbgPrint(DEBUG_TCP,("Sending packet %d (%d) to lwIP\n",
                            IPPacket->TotalSize,
                            IPPacket->HeaderSize));
-    
+
     LibIPInsertPacket(Interface->TCPContext, IPPacket->Header, IPPacket->TotalSize);
 }
 
@@ -202,13 +202,13 @@ NTSTATUS TCPStartup(VOID)
                                     sizeof(TDI_BUCKET),
                                     TDI_BUCKET_TAG,
                                     0);
-    
+
     /* Initialize our IP library */
     LibIPInitialize();
-    
+
     /* Register this protocol with IP layer */
     IPRegisterProtocol(IPPROTO_TCP, TCPReceive);
-    
+
     TCPInitialized = TRUE;
 
     return STATUS_SUCCESS;
@@ -226,7 +226,7 @@ NTSTATUS TCPShutdown(VOID)
         return STATUS_SUCCESS;
 
     ExDeleteNPagedLookasideList(&TdiBucketLookasideList);
-    
+
     LibIPShutdown();
 
     /* Deregister this protocol with IP layer */
@@ -334,7 +334,7 @@ NTSTATUS TCPConnect
     Status = TCPTranslateError(LibTCPBind(Connection,
                                           &bindaddr,
                                           Connection->AddressFile->Port));
-    
+
     if (NT_SUCCESS(Status))
     {
         /* Copy bind address into connection */
@@ -348,7 +348,7 @@ NTSTATUS TCPConnect
             {
                 /* Allocate the port in the port bitmap */
                 Connection->AddressFile->Port = TCPAllocatePort(LocalAddress.Address[0].Address[0].sin_port);
-                    
+
                 /* This should never fail */
                 ASSERT(Connection->AddressFile->Port != 0xFFFF);
             }
@@ -364,12 +364,12 @@ NTSTATUS TCPConnect
                 UnlockObject(Connection, OldIrql);
                 return STATUS_NO_MEMORY;
             }
-            
+
             Bucket->Request.RequestNotifyObject = (PVOID)Complete;
             Bucket->Request.RequestContext = Context;
 
             InsertTailList( &Connection->ConnectRequest, &Bucket->Entry );
-        
+
             Status = TCPTranslateError(LibTCPConnect(Connection,
                                                      &connaddr,
                                                      RemotePort));
@@ -415,7 +415,7 @@ NTSTATUS TCPDisconnect
                 TCPTranslateError(LibTCPShutdown(Connection, 0, 1));
                 Status = STATUS_TIMEOUT;
             }
-            else 
+            else
             {
                 /* Use the timeout specified or 1 second if none was specified */
                 if (Timeout)
@@ -502,7 +502,7 @@ NTSTATUS TCPReceiveData
 
             return STATUS_NO_MEMORY;
         }
-    
+
         Bucket->Request.RequestNotifyObject = Complete;
         Bucket->Request.RequestContext = Context;
 
@@ -548,7 +548,7 @@ NTSTATUS TCPSendData
                                           SendLength,
                                           BytesSent,
                                           FALSE));
-    
+
     TI_DbgPrint(DEBUG_TCP,("[IP, TCPSendData] Send: %x, %d\n", Status, SendLength));
 
     /* Keep this request around ... there was no data yet */
@@ -562,10 +562,10 @@ NTSTATUS TCPSendData
             TI_DbgPrint(DEBUG_TCP,("[IP, TCPSendData] Failed to allocate bucket\n"));
             return STATUS_NO_MEMORY;
         }
-        
+
         Bucket->Request.RequestNotifyObject = Complete;
         Bucket->Request.RequestContext = Context;
-        
+
         InsertTailList( &Connection->SendRequest, &Bucket->Entry );
         TI_DbgPrint(DEBUG_TCP,("[IP, TCPSendData] Queued write irp\n"));
     }
@@ -607,7 +607,7 @@ NTSTATUS TCPGetSockAddress
     struct ip_addr ipaddr;
     NTSTATUS Status;
     KIRQL OldIrql;
-    
+
     AddressIP->TAAddressCount = 1;
     AddressIP->Address[0].AddressLength = TDI_ADDRESS_LENGTH_IP;
     AddressIP->Address[0].AddressType = TDI_ADDRESS_TYPE_IP;
@@ -628,9 +628,9 @@ NTSTATUS TCPGetSockAddress
     }
 
     UnlockObject(Connection, OldIrql);
-    
+
     AddressIP->Address[0].Address[0].in_addr = ipaddr.addr;
-    
+
     RtlZeroMemory(&AddressIP->Address[0].Address[0].sin_zero,
                   sizeof(AddressIP->Address[0].Address[0].sin_zero));
 

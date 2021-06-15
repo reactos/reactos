@@ -10,7 +10,7 @@
  #define __PACKED		__attribute__((packed))
 #endif
 #else
- #define __PACKED		
+ #define __PACKED
 #endif
 
 /***************************************************************************/
@@ -38,7 +38,7 @@ struct journal_params {
 
 	// Original journal size.  (Needed when using partition on systems w/ different default journal sizes).
     __u32 jp_journal_size;	      /* size of the journal */
-	
+
     __u32 jp_journal_trans_max;	      /* max number of blocks in a transaction. */
     __u32 jp_journal_magic; 	      /* random value made on fs creation (this was sb_journal_block_count) */
     __u32 jp_journal_max_batch;	      /* max number of blocks to batch into a trans */
@@ -70,11 +70,11 @@ struct reiserfs_super_block_v1
 
     __u16 s_oid_maxsize;	   /* max size of object id array, see get_objectid() commentary  */
     __u16 s_oid_cursize;	   /* current size of object id array */
-    __u16 s_umount_state;          /* this is set to 1 when filesystem was umounted, to 2 - when not */    
+    __u16 s_umount_state;          /* this is set to 1 when filesystem was umounted, to 2 - when not */
     char s_magic[10];              /* reiserfs magic string indicates that
 				    * file system is reiserfs:
 				    * "ReIsErFs" or "ReIsEr2Fs" or "ReIsEr3Fs" */
-    
+
 	// State of the partition: valid(1), error (2)
 	__u16 s_fs_state;	           /* it is set to used by fsck to mark which phase of rebuilding is done */
 
@@ -83,13 +83,13 @@ struct reiserfs_super_block_v1
     __u16 s_tree_height;           /* height of disk tree */
     __u16 s_bmap_nr;               /* amount of bitmap blocks needed to address
 				    * each block of file system */
-    
+
 	// The reiserfs version number
 	__u16 s_version;               /* this field is only reliable on filesystem
 				    * with non-standard journal */
     __u16 s_reserved_for_journal;  /* size in blocks of journal area on main
 				    * device, we need to keep after
-				    * making fs with non-standard journal */	
+				    * making fs with non-standard journal */
 } __PACKED;
 #ifndef __GCC__
  #pragma pack(pop)
@@ -106,7 +106,7 @@ struct reiserfs_super_block_v1
 struct reiserfs_super_block
 {
     struct reiserfs_super_block_v1 s_v1;
-    
+
 	// Number of the current inode generation (a counter that is increased every time the tree gets re-balanced).
 	__u32 s_inode_generation;
 
@@ -239,7 +239,7 @@ struct stat_data {
     union {
 	__u32 sd_rdev;
 	__u32  i_generation;
-      //__u32 sd_first_direct_byte; 
+      //__u32 sd_first_direct_byte;
       /* first byte of file which is stored in a
 				       direct item: except that if it equals 1
 				       it is a symlink and if it equals
@@ -282,7 +282,7 @@ struct stat_data {
 #define RFSD_KEY_TYPE_v2_STAT_DATA		0
 #define RFSD_KEY_TYPE_v2_INDIRECT		1
 #define RFSD_KEY_TYPE_v2_DIRECT			2
-#define RFSD_KEY_TYPE_v2_DIRENTRY		3 
+#define RFSD_KEY_TYPE_v2_DIRENTRY		3
 
 
 
@@ -383,10 +383,10 @@ struct item_head
 		   item. Note that the key, not this field, is used to
 		   determine the item type, and thus which field this
 		   union contains. */
-		__u16 ih_free_space_reserved; 
+		__u16 ih_free_space_reserved;
 		/* Iff this is a directory item, this field equals the
 		   number of directory entries in the directory item. */
-		__u16 ih_entry_count; 
+		__u16 ih_entry_count;
 	} u;
 	__u16 ih_item_len;           /* total size of the item body */
 	__u16 ih_item_location;      /* an offset to the item body within the block */
@@ -409,7 +409,7 @@ struct item_head
 /// ...
 
 
-/* 
+/*
  * Picture represents a leaf of the S+tree
  *  ______________________________________________________
  * |      |  Array of     |                   |           |
@@ -425,7 +425,7 @@ struct item_head
  #pragma pack(push, 1)
 #endif
 
-struct block_head {       
+struct block_head {
   __u16 blk_level;        /* Level of a block in the tree. */
   __u16 blk_nr_item;      /* Number of keys/items in a block. */
   __u16 blk_free_space;   /* Block free space in bytes. */
@@ -447,7 +447,7 @@ struct block_head {
 /***************************************************************************/
 /*                      DIRECTORY STRUCTURE                                */
 /***************************************************************************/
-/* 
+/*
    Picture represents the structure of directory items
    ________________________________________________
    |  Array of     |   |     |        |       |   |
@@ -464,12 +464,12 @@ struct block_head {
 // ...
 
 /*
-   Q: How to get key of object pointed to by entry from entry?  
+   Q: How to get key of object pointed to by entry from entry?
 
    A: Each directory entry has its header. This header has deh_dir_id and deh_objectid fields, those are key
       of object, entry points to */
 
-/* NOT IMPLEMENTED:   
+/* NOT IMPLEMENTED:
    Directory will someday contain stat data of object */
 
 

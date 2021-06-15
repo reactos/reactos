@@ -240,10 +240,10 @@ CheckCdrwFilter(
 
 } // end CheckCdrwFilter()
 
-BOOL 
+BOOL
 RegisterString(
-    LPSTR pszKey, 
-    LPSTR pszValue, 
+    LPSTR pszKey,
+    LPSTR pszValue,
     LPSTR pszData,
     BOOLEAN MultiSz,
     DWORD size
@@ -254,45 +254,45 @@ RegisterString(
     DWORD dwDisposition;
 
     // Create the key, if it exists it will be opened
-    if (ERROR_SUCCESS != 
+    if (ERROR_SUCCESS !=
         RegCreateKeyEx(
-          HKEY_LOCAL_MACHINE,      // handle of an open key 
-          pszKey,                  // address of subkey name 
-          0,                       // reserved 
-          NULL,                    // address of class string 
-          REG_OPTION_NON_VOLATILE, // special options flag 
-          KEY_ALL_ACCESS,          // desired security access 
-          NULL,                    // address of key security structure 
-          &hKey,                   // address of buffer for opened handle  
-          &dwDisposition))         // address of disposition value buffer 
+          HKEY_LOCAL_MACHINE,      // handle of an open key
+          pszKey,                  // address of subkey name
+          0,                       // reserved
+          NULL,                    // address of class string
+          REG_OPTION_NON_VOLATILE, // special options flag
+          KEY_ALL_ACCESS,          // desired security access
+          NULL,                    // address of key security structure
+          &hKey,                   // address of buffer for opened handle
+          &dwDisposition))         // address of disposition value buffer
     {
         return FALSE;
     }
 
     // Write the value and it's data to the key
-    if (ERROR_SUCCESS != 
+    if (ERROR_SUCCESS !=
         RegSetValueEx(
-            hKey,                                   // handle of key to set value for  
-            pszValue,                               // address of value to set 
-            0,                                      // reserved 
-            MultiSz ? REG_MULTI_SZ : REG_SZ,        // flag for value type 
-            (CONST BYTE *)pszData,                  // address of value data 
-            MultiSz ? size : strlen(pszData) ))     // size of value data 
+            hKey,                                   // handle of key to set value for
+            pszValue,                               // address of value to set
+            0,                                      // reserved
+            MultiSz ? REG_MULTI_SZ : REG_SZ,        // flag for value type
+            (CONST BYTE *)pszData,                  // address of value data
+            MultiSz ? size : strlen(pszData) ))     // size of value data
     {
-        
+
         RegCloseKey(hKey);
         return FALSE;
     }
 
     // Close the key
     RegCloseKey(hKey);
-    
+
     return TRUE;
 } // end RegisterString()
 
-BOOL 
+BOOL
 RegDelString(
-    LPSTR pszKey, 
+    LPSTR pszKey,
     LPSTR pszValue
     )
 {
@@ -301,35 +301,35 @@ RegDelString(
     DWORD dwDisposition;
 
     // Create the key, if it exists it will be opened
-    if (ERROR_SUCCESS != 
+    if (ERROR_SUCCESS !=
         RegCreateKeyEx(
-          HKEY_LOCAL_MACHINE,      // handle of an open key 
-          pszKey,                  // address of subkey name 
-          0,                       // reserved 
-          NULL,                    // address of class string 
-          REG_OPTION_NON_VOLATILE, // special options flag 
-          KEY_ALL_ACCESS,          // desired security access 
-          NULL,                    // address of key security structure 
-          &hKey,                   // address of buffer for opened handle  
-          &dwDisposition))         // address of disposition value buffer 
+          HKEY_LOCAL_MACHINE,      // handle of an open key
+          pszKey,                  // address of subkey name
+          0,                       // reserved
+          NULL,                    // address of class string
+          REG_OPTION_NON_VOLATILE, // special options flag
+          KEY_ALL_ACCESS,          // desired security access
+          NULL,                    // address of key security structure
+          &hKey,                   // address of buffer for opened handle
+          &dwDisposition))         // address of disposition value buffer
     {
         return FALSE;
     }
 
     // Write the value and it's data to the key
-    if (ERROR_SUCCESS != 
+    if (ERROR_SUCCESS !=
         RegDeleteValue(
-            hKey,                 // handle of key to set value for  
-            pszValue))     
+            hKey,                 // handle of key to set value for
+            pszValue))
     {
-        
+
         RegCloseKey(hKey);
         return FALSE;
     }
 
     // Close the key
     RegCloseKey(hKey);
-    
+
     return TRUE;
 } // end RegDelString()
 
@@ -351,20 +351,20 @@ GetRegString(
         return FALSE;
 
     RegOpenKeyEx(
-       HKEY_LOCAL_MACHINE,    // handle of open key 
-       pszKey,                // address of name of subkey to open 
-       0,                     // reserved 
-       KEY_QUERY_VALUE,       // security access mask 
-       &hKey                  // address of handle of open key 
+       HKEY_LOCAL_MACHINE,    // handle of open key
+       pszKey,                // address of name of subkey to open
+       0,                     // reserved
+       KEY_QUERY_VALUE,       // security access mask
+       &hKey                  // address of handle of open key
        );
 
     if (ERROR_SUCCESS != RegQueryValueEx(
-        hKey,               // handle of key to query 
-        pszValue,           // address of name of value to query 
-        0,                  // reserved 
-        &dwValueType,       // address of buffer for value type 
-        (BYTE *)pszData,    // address of data buffer 
-        &dwDataSize         // address of data buffer size 
+        hKey,               // handle of key to query
+        pszValue,           // address of name of value to query
+        0,                  // reserved
+        &dwValueType,       // address of buffer for value type
+        (BYTE *)pszData,    // address of data buffer
+        &dwDataSize         // address of data buffer size
         )) return FALSE;
 
     if (pszData[dwDataSize-1] != '\0')
@@ -373,10 +373,10 @@ GetRegString(
     return TRUE;
 } // end GetRegString()
 
-BOOL 
+BOOL
 RegisterDword(
-   LPSTR pszKey, 
-   LPSTR pszValue, 
+   LPSTR pszKey,
+   LPSTR pszValue,
    DWORD dwData
    )
 {
@@ -385,39 +385,39 @@ RegisterDword(
     DWORD dwDisposition;
 
     // Create the key, if it exists it will be opened
-    if (ERROR_SUCCESS != 
+    if (ERROR_SUCCESS !=
         RegCreateKeyEx(
-          HKEY_LOCAL_MACHINE,      // handle of an open key 
-          pszKey,                  // address of subkey name 
-          0,                       // reserved 
-          NULL,                    // address of class string 
-          REG_OPTION_NON_VOLATILE, // special options flag 
-          KEY_ALL_ACCESS,          // desired security access 
-          NULL,                    // address of key security structure 
-          &hKey,                   // address of buffer for opened handle  
-          &dwDisposition))         // address of disposition value buffer 
+          HKEY_LOCAL_MACHINE,      // handle of an open key
+          pszKey,                  // address of subkey name
+          0,                       // reserved
+          NULL,                    // address of class string
+          REG_OPTION_NON_VOLATILE, // special options flag
+          KEY_ALL_ACCESS,          // desired security access
+          NULL,                    // address of key security structure
+          &hKey,                   // address of buffer for opened handle
+          &dwDisposition))         // address of disposition value buffer
     {
         return FALSE;
     }
 
     // Write the value and it's data to the key
-    if (ERROR_SUCCESS != 
+    if (ERROR_SUCCESS !=
         RegSetValueEx(
-            hKey,                   // handle of key to set value for  
-            pszValue,               // address of value to set 
-            0,                      // reserved 
-            REG_DWORD,              // flag for value type 
-            (CONST BYTE *)&dwData,  // address of value data 
-            4 ))                    // size of value data 
+            hKey,                   // handle of key to set value for
+            pszValue,               // address of value to set
+            0,                      // reserved
+            REG_DWORD,              // flag for value type
+            (CONST BYTE *)&dwData,  // address of value data
+            4 ))                    // size of value data
     {
-        
+
         RegCloseKey(hKey);
         return FALSE;
     }
 
     // Close the key
     RegCloseKey(hKey);
-    
+
     return TRUE;
 } // end RegisterDword()
 
@@ -507,7 +507,7 @@ SetRegUlong(
         (BYTE *)pszData,     // address of data buffer
         sizeof(ULONG)  // data buffer size
         )))) {
-        FormatMessage( 
+        FormatMessage(
             FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
             NULL,
             RC,
@@ -533,7 +533,7 @@ Privilege(
     BOOL bEnable
     )
 {
-   
+
     HANDLE           hToken;
     TOKEN_PRIVILEGES tp;
 
@@ -575,12 +575,12 @@ Privilege(
 
 typedef BOOL (WINAPI *LPFN_ISWOW64PROCESS) (HANDLE, PBOOL);
 
- 
+
 BOOL IsWow64(VOID)
 {
     BOOL bIsWow64 = FALSE;
     LPFN_ISWOW64PROCESS fnIsWow64Process = (LPFN_ISWOW64PROCESS)GetProcAddress(GetModuleHandle("kernel32"),"IsWow64Process");
- 
+
     if (NULL != fnIsWow64Process)
     {
         if (!fnIsWow64Process(GetCurrentProcess(),&bIsWow64))
@@ -667,7 +667,7 @@ UDFGetDeviceName(
                          NULL,
                          OPEN_EXISTING,
                          FILE_ATTRIBUTE_NORMAL,  NULL);
-    
+
     if (hDevice == ((HANDLE)-1)) {
         strcpy(RealDeviceName,"");
         return (PCHAR)&RealDeviceName;
@@ -699,7 +699,7 @@ GetOptUlong(
     if(!Path) {
         return FALSE;
     }
-    if(Path[0] && Path[1] == ':') { 
+    if(Path[0] && Path[1] == ':') {
         CHAR SettingFile[MAX_PATH];
         CHAR Setting[16];
 
@@ -729,7 +729,7 @@ SetOptUlong(
     if(!Path) {
         return FALSE;
     }
-    if(Path[0] && Path[1] == ':') { 
+    if(Path[0] && Path[1] == ':') {
         CHAR SettingFile[MAX_PATH];
         CHAR Setting[16];
         if(Path[2] != '\\') {
@@ -787,14 +787,14 @@ OpenOurVolume(
     hDevice = CreateFile(szDeviceName, GENERIC_READ ,
                              FILE_SHARE_READ,
                              NULL,
-                             OPEN_EXISTING, 
+                             OPEN_EXISTING,
                              FILE_ATTRIBUTE_NORMAL,  NULL);
 
-    if (hDevice == ((HANDLE)-1)) {   
+    if (hDevice == ((HANDLE)-1)) {
         hDevice = CreateFile(szDeviceName, GENERIC_READ ,
                                  FILE_SHARE_READ | FILE_SHARE_WRITE,
                                  NULL,
-                                 OPEN_EXISTING, 
+                                 OPEN_EXISTING,
                                  FILE_ATTRIBUTE_NORMAL,  NULL);
 
     }
@@ -863,10 +863,10 @@ LauncherRoutine2(
         while (mkudf_err_msg[index].err_code != 0xffffffff){
           if (mkudf_err_msg[index].err_code == MkUdfRetCode) break;
           index++;
-        } 
+        }
 */
         //strcpy(MkUdfStatus,mkudf_err_msg[index].err_msg);
-        
+
         CloseHandle(proc_info.hThread);
         CloseHandle(proc_info.hProcess);
     } else {
@@ -888,7 +888,7 @@ LauncherRoutine2(
         while (mkudf_err_msg[index].err_code != 0xffffffff){
           if (mkudf_err_msg[index].err_code == MkUdfRetCode) break;
           index++;
-        } 
+        }
         //strcpy(MkUdfStatus,mkudf_err_msg[index].err_msg);
 
 #endif

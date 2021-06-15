@@ -92,6 +92,41 @@ endif()
 find_package(BISON REQUIRED)
 find_package(FLEX REQUIRED)
 
+if(MSVC_IDE)
+    # Bison needs M4 and BISON_PKGDATADIR set at build time,
+    # but visual studio is hardly ever opened from the configure-time environment.
+    # Since cmake does not support setting env variables for a custom command,
+    # we have to write a wrapper that sets the variables and then executes bison.
+    # Idea taken from https://stackoverflow.com/a/35032051/4928207
+    if(DEFINED ENV{M4})
+        # Store this environment variable for configure re-runs from withing visual studio.
+        SET(ROS_SAVED_M4 "$ENV{M4}" CACHE INTERNAL "")
+    endif()
+    if(DEFINED ENV{BISON_PKGDATADIR})
+        SET(ROS_SAVED_BISON_PKGDATADIR "$ENV{BISON_PKGDATADIR}" CACHE INTERNAL "")
+    endif()
+
+    # Tell the user about a misconfigured environment
+    if("x${ROS_SAVED_M4}x" STREQUAL "xx" OR "x${ROS_SAVED_BISON_PKGDATADIR}x" STREQUAL "xx")
+        message(FATAL_ERROR "\nM4 or BISON_PKGDATADIR environment variables not set, cannot continue!\n"
+            "See https://reactos.org/wiki/Visual_Studio for more information!")
+    endif()
+
+    file(WRITE "${CMAKE_BINARY_DIR}/bison_wrapper.cmd"
+                "@ECHO OFF\n"
+                "set M4=${ROS_SAVED_M4}\n"
+                "set BISON_PKGDATADIR=${ROS_SAVED_BISON_PKGDATADIR}\n"
+                "${BISON_EXECUTABLE} %*\n")
+    set(BISON_EXECUTABLE "${CMAKE_BINARY_DIR}/bison_wrapper.cmd")
+    # And the same hacks for FLEX
+    file(WRITE "${CMAKE_BINARY_DIR}/flex_wrapper.cmd"
+                "@ECHO OFF\n"
+                "set M4=${ROS_SAVED_M4}\n"
+                "set BISON_PKGDATADIR=${ROS_SAVED_BISON_PKGDATADIR}\n"
+                "${FLEX_EXECUTABLE} %*\n")
+    set(FLEX_EXECUTABLE "${CMAKE_BINARY_DIR}/flex_wrapper.cmd")
+endif()
+
 if(NOT CMAKE_CROSSCOMPILING)
     set(TOOLS_FOLDER ${CMAKE_CURRENT_BINARY_DIR})
     add_definitions(-DTARGET_${ARCH})
@@ -229,7 +264,7 @@ Enable this if the module uses typeid or dynamic_cast. You will probably need to
     elseif(ARCH STREQUAL "arm")
         # _M_ARM is already defined by toolchain
         add_definitions(-D_ARM_ -D__arm__ -DWIN32)
-        if(SARCH STREQUAL "omap-zoom2")
+        if(SARCH STREQUAL "omap3-zoom2")
             add_definitions(-D_ZOOM2_)
         endif()
     endif()
@@ -239,9 +274,9 @@ Enable this if the module uses typeid or dynamic_cast. You will probably need to
     if(ARCH STREQUAL "i386")
         add_definitions(-DUSE_COMPILER_EXCEPTIONS -D_USE_32BIT_TIME_T)
     elseif(ARCH STREQUAL "amd64")
-        add_definitions(-DUSE_COMPILER_EXCEPTIONS -DNO_UNDERSCORE_PREFIX)
+        add_compile_definitions(USE_COMPILER_EXCEPTIONS)
     elseif(ARCH STREQUAL "arm")
-        add_definitions(-DUSE_COMPILER_EXCEPTIONS -DNO_UNDERSCORE_PREFIX)
+        add_compile_definitions(USE_COMPILER_EXCEPTIONS)
     endif()
 
     # Activate support for assembly source files

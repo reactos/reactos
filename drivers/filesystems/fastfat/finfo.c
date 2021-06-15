@@ -728,7 +728,7 @@ VfatSetRenameInformation(
 
         if (RenameInfo->RootDirectory != NULL)
         {
-            /* Here, copy first absolute and then append relative */ 
+            /* Here, copy first absolute and then append relative */
             RtlCopyUnicodeString(&NewName, &RootFCB->PathNameU);
             NewName.Buffer[NewName.Length / sizeof(WCHAR)] = L'\\';
             NewName.Length += sizeof(WCHAR);

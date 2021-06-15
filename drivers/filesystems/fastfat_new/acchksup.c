@@ -34,7 +34,7 @@ FatCreateRestrictEveryoneToken(
 #pragma alloc_text(PAGE, FatExplicitDeviceAccessGranted)
 #endif
 
-
+
 BOOLEAN
 FatCheckFileAccess (
     PIRP_CONTEXT IrpContext,
@@ -144,12 +144,12 @@ Return Value:
             //
             //  If this is a subdirectory also allow add file/directory and delete.
             //
-            
+
             if (FlagOn(DirentAttributes, FAT_DIRENT_ATTR_DIRECTORY)) {
 
                 AccessMask |= FILE_ADD_SUBDIRECTORY | FILE_ADD_FILE | FILE_DELETE_CHILD;
             }
-            
+
             if (FlagOn(*DesiredAccess, ~AccessMask)) {
 
                 DebugTrace(0, Dbg, "Cannot open readonly\n", 0);
@@ -189,7 +189,7 @@ Routine Description:
 Arguments:
 
     AccessState - the access state describing the security context to be checked
-    
+
     ProcessorMode - the mode this check should occur against
 
 Return Value:
@@ -220,7 +220,7 @@ Return Value:
     return FALSE;
 }
 
-
+
 NTSTATUS
 FatExplicitDeviceAccessGranted (
     IN PIRP_CONTEXT IrpContext,
@@ -241,9 +241,9 @@ Routine Description:
 Arguments:
 
     DeviceObject - the device whose ACL will be checked
-    
+
     AccessState - the access state describing the security context to be checked
-    
+
     ProcessorMode - the mode this check should occur against
 
 Return Value:
@@ -257,9 +257,9 @@ Return Value:
 
     PACCESS_TOKEN OriginalAccessToken;
     PACCESS_TOKEN RestrictedAccessToken;
-    
+
     PACCESS_TOKEN *EffectiveToken;
-    
+
     ACCESS_MASK GrantedAccess;
 
     PAGED_CODE();
@@ -295,7 +295,7 @@ Return Value:
     //
 
     SeLockSubjectContext( &AccessState->SubjectSecurityContext );
-    
+
     //
     //  Convert the token in the subject context into one which does not
     //  acquire access through the Everyone SID.
@@ -304,7 +304,7 @@ Return Value:
     //  SeQuerySubjectContextToken; since there is no natural way
     //  of getting a pointer to it, do it by hand.
     //
-    
+
     if (ARGUMENT_PRESENT( AccessState->SubjectSecurityContext.ClientToken )) {
         EffectiveToken = &AccessState->SubjectSecurityContext.ClientToken;
     } else {
@@ -315,7 +315,7 @@ Return Value:
     Status = FatCreateRestrictEveryoneToken( OriginalAccessToken, &RestrictedAccessToken );
 
     if (!NT_SUCCESS(Status)) {
-        
+
         SeReleaseSubjectContext( &AccessState->SubjectSecurityContext );
         return Status;
     }
@@ -327,7 +327,7 @@ Return Value:
     //
 
     *EffectiveToken = RestrictedAccessToken;
-    
+
 #ifdef _MSC_VER
 #pragma prefast( suppress: 28175, "we're a file system, this is ok to touch" )
 #endif
@@ -341,9 +341,9 @@ Return Value:
                    ProcessorMode,
                    &GrantedAccess,
                    &Status );
-    
+
     *EffectiveToken = OriginalAccessToken;
-    
+
     //
     //  Cleanup and return.
     //
@@ -354,7 +354,7 @@ Return Value:
     return Status;
 }
 
-
+
 NTSTATUS
 FatCreateRestrictEveryoneToken (
     IN PACCESS_TOKEN Token,

@@ -7580,7 +7580,7 @@ xmlParseEntityRef(xmlParserCtxtPtr ctxt) {
      * not contain a <.
      */
     else if ((ctxt->instate == XML_PARSER_ATTRIBUTE_VALUE) &&
-	     (ent != NULL) && 
+	     (ent != NULL) &&
 	     (ent->etype != XML_INTERNAL_PREDEFINED_ENTITY)) {
 	if (((ent->checked & 1) || (ent->checked == 0)) &&
 	     (ent->content != NULL) && (xmlStrchr(ent->content, '<'))) {

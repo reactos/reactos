@@ -57,7 +57,7 @@ typedef __u32 blk_t;
 #define EXT2_COMPRBLK_FL		0x00000200 /* One or more compressed clusters */
 #define EXT2_NOCOMP_FL			0x00000400 /* Don't compress */
 #define EXT2_ECOMPR_FL			0x00000800 /* Compression error */
-/* End compression flags --- maybe not all used */	
+/* End compression flags --- maybe not all used */
 #define EXT2_BTREE_FL			0x00001000 /* btree format dir */
 #define EXT2_RESERVED_FL		0x80000000 /* reserved for ext2 lib */
 

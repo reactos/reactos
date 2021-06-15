@@ -45,7 +45,7 @@ CdAddToWorkque (
 #pragma alloc_text(PAGE, CdPrePostIrp)
 #endif
 
-
+
 _Requires_lock_held_(_Global_critical_region_)
 NTSTATUS
 CdFsdPostRequest (
@@ -96,8 +96,8 @@ Return Value:
     return STATUS_PENDING;
 }
 
-
-    
+
+
 _Requires_lock_held_(_Global_critical_region_)
 VOID
 NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
@@ -221,7 +221,7 @@ Return Value:
     return;
 }
 
-
+
 
 _Requires_lock_held_(_Global_critical_region_)
 VOID
@@ -316,7 +316,7 @@ Return Value:
     return;
 }
 
-
+
 //
 //  Local support routine
 //

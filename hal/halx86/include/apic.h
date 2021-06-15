@@ -11,7 +11,7 @@
 #ifdef _M_AMD64
     #define LOCAL_APIC_BASE 0xFFFFFFFFFFFE0000ULL
     #define IOAPIC_BASE 0xFFFFFFFFFFFE1000ULL
-    #define APIC_SPURIOUS_VECTOR 0x3f 
+    #define APIC_SPURIOUS_VECTOR 0x3f
     #define IrqlToTpr(Irql) (Irql << 4)
     #define IrqlToSoftVector(Irql) ((Irql << 4)|0xf)
     #define TprToIrql(Tpr) ((KIRQL)(Tpr >> 4))
@@ -304,6 +304,6 @@ HalInitializeProfiling(VOID);
 
 VOID
 NTAPI
-HalpInitApicInfo(IN PLOADER_PARAMETER_BLOCK KeLoaderBlock); 
+HalpInitApicInfo(IN PLOADER_PARAMETER_BLOCK KeLoaderBlock);
 
 VOID __cdecl ApicSpuriousService(VOID);

@@ -140,7 +140,7 @@ static unsigned char page06[256] = {
 };
 
 static unsigned char *page_uni2charset[256] = {
-	page00, NULL,   NULL,   NULL,   NULL,   NULL,   page06, NULL,   
+	page00, NULL,   NULL,   NULL,   NULL,   NULL,   page06, NULL,
 };
 
 static unsigned char charset2lower[256] = {

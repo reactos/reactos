@@ -262,7 +262,7 @@ static inline int fls64(__u64 x)
 static __inline int get_bitmask_order(unsigned int count)
 {
 	int order;
-	
+
 	order = fls(count);
 	return order;	/* We could be slightly more clever with -1 here... */
 }
@@ -270,7 +270,7 @@ static __inline int get_bitmask_order(unsigned int count)
 static __inline int get_count_order(unsigned int count)
 {
 	int order;
-	
+
 	order = fls(count) - 1;
 	if (count & (count - 1))
 		order++;

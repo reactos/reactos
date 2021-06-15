@@ -931,7 +931,7 @@ struct _EXT2_MCB {
     // List Link to Vcb->McbList
     LIST_ENTRY                      Link;
 
-	
+
 
     struct inode                    Inode;
     struct dentry                  *de;

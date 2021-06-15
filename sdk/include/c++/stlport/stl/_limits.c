@@ -160,7 +160,7 @@ struct float_helper {
   static _Number get_word_higher() _STLP_NOTHROW {
     _WordsNumber __tmp = { _STLP_ADDITIONAL_OPEN_BRACKET _Word, 0, 0, 0, 0, 0, 0, 0 _STLP_ADDITIONAL_CLOSE_BRACKET };
     return __tmp._num;
-  } 
+  }
   static _Number get_word_lower() _STLP_NOTHROW {
     _WordsNumber __tmp = { _STLP_ADDITIONAL_OPEN_BRACKET 0, 0, 0, 0, 0, 0, 0, 0 _STLP_ADDITIONAL_CLOSE_BRACKET };
     __tmp._Words[(sizeof(_Number) >= 12 ? 10 : sizeof(_Number)) / sizeof(unsigned short) - 1] = _Word;
@@ -192,7 +192,7 @@ struct float_helper2 {
   //static _Number get_word_higher() _STLP_NOTHROW {
   //  _WordsNumber __tmp = { _STLP_ADDITIONAL_OPEN_BRACKET _Word1, _Word2, 0, 0, 0, 0, 0, 0 _STLP_ADDITIONAL_CLOSE_BRACKET };
   //  return __tmp._num;
-  //} 
+  //}
   static _Number get_word_lower() _STLP_NOTHROW {
     _WordsNumber __tmp = { _STLP_ADDITIONAL_OPEN_BRACKET 0, 0, 0, 0, 0, 0, 0, 0 _STLP_ADDITIONAL_CLOSE_BRACKET };
     __tmp._Words[(sizeof(_Number) >= 12 ? 10 : sizeof(_Number)) / sizeof(unsigned short) - 2] = _Word1;

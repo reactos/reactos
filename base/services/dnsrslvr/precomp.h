@@ -53,6 +53,11 @@ DnsIntCacheFlush(
     _In_ ULONG ulFlags);
 
 DNS_STATUS
+DnsIntFlushCacheEntry(
+    _In_ LPCWSTR pszName,
+    _In_ WORD wType);
+
+DNS_STATUS
 DnsIntCacheGetEntryByName(
     LPCWSTR Name,
     WORD wType,

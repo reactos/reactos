@@ -42,7 +42,7 @@ UDFDriverUnload(
 
     // Delete the link from our device name to a name in the Win32 namespace.
 
-    
+
 //    IoDeleteSymbolicLink( &uniWin32NameString );
 
 

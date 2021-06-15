@@ -33,10 +33,11 @@ jobs:
     - name: Install LLVM
       if: ${{ matrix.compiler == 'clang' }}
       run: |
-        echo "LLVM_VERSION=12" >> $GITHUB_ENV
+        export LLVM_VERSION=12
         wget https://apt.llvm.org/llvm.sh
         chmod +x llvm.sh
         sudo ./llvm.sh $LLVM_VERSION
+        echo "D_CLANG_VERSION=-DCLANG_VERSION=$LLVM_VERSION" >> $GITHUB_ENV
     - name: Source checkout
       uses: actions/checkout@v2
       with:
@@ -58,7 +59,7 @@ jobs:
       if: ${{ matrix.compiler == 'gcc' }}
       run: echo "CCACHE_COMPILERCHECK=string:${{steps.get_rosbe_spec.outputs.git-sha}}-${{hashfiles('./build_rosbe_ci.sh')}}" >> $GITHUB_ENV
     - name: Configure
-      run: echo 'cmake -S ${{github.workspace}}/src -B ${{github.workspace}}/build -G Ninja -DCMAKE_TOOLCHAIN_FILE:FILEPATH=toolchain-${{matrix.compiler}}.cmake -DARCH:STRING=${{matrix.arch}} -DENABLE_CCACHE=1 -DENABLE_ROSTESTS=1 -DENABLE_ROSAPPS=1 -DCLANG_VERSION=${{env.LLVM_VERSION}}' | ${{github.workspace}}/RosBE-CI/RosBE.sh . 0 ${{matrix.arch}}
+      run: echo 'cmake -S ${{github.workspace}}/src -B ${{github.workspace}}/build -G Ninja -DCMAKE_TOOLCHAIN_FILE:FILEPATH=toolchain-${{matrix.compiler}}.cmake -DARCH:STRING=${{matrix.arch}} -DENABLE_CCACHE=1 -DENABLE_ROSTESTS=1 -DENABLE_ROSAPPS=1 ${{env.D_CLANG_VERSION}}' | ${{github.workspace}}/RosBE-CI/RosBE.sh . 0 ${{matrix.arch}}
     - name: Build
       run: echo 'cmake --build ${{github.workspace}}/build -- -k0' | ${{github.workspace}}/RosBE-CI/RosBE.sh . 0 ${{matrix.arch}}
     - name: Generate ISOs
@@ -127,6 +128,37 @@ jobs:
       with:
         name: reactos-syms-msvc${{matrix.toolset}}-${{matrix.arch}}-${{github.sha}}
         path: build/msvc_pdb
+
+  build-msvc-arm:
+    strategy:
+      matrix:
+        arch: [arm]
+        toolset: ['14.2', '14.1'] # VS 2019, 2017
+      fail-fast: false
+    runs-on: windows-latest
+    steps:
+    - name: Install ninja
+      run: choco install -y ninja
+    - name: Install Flex & Bison
+      run: |
+        curl -O https://svn.reactos.org/storage/vperevertkin/flexbison.7z
+        7z x flexbison.7z -O${{github.workspace}}\bin
+        echo "${{github.workspace}}\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+        echo "BISON_PKGDATADIR=${{github.workspace}}\bin\share\bison" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+        echo "M4=${{github.workspace}}\bin\m4.exe" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+    - name: Activate VS cmd (arm)
+      uses: ilammy/msvc-dev-cmd@v1
+      with:
+        arch: x86_arm
+        toolset: ${{matrix.toolset}}
+    - name: Source checkout
+      uses: actions/checkout@v2
+      with:
+        path: src
+    - name: Configure
+      run: cmake -S src -B build -G Ninja -DCMAKE_TOOLCHAIN_FILE:FILEPATH=toolchain-msvc.cmake -DARCH:STRING=${{matrix.arch}} -DENABLE_ROSTESTS=1 -DENABLE_ROSAPPS=1
+    - name: Build rapps
+      run: cmake --build build --target rapps
 
   build-clang-cl:
     strategy:

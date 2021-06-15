@@ -254,11 +254,11 @@ static unsigned char page21[256] = {
 };
 
 static unsigned char *page_uni2charset[256] = {
-	page00, page01, page02, NULL,   NULL,   page05, NULL,   NULL,   
-	NULL,   NULL,   NULL,   NULL,   NULL,   NULL,   NULL,   NULL,   
-	NULL,   NULL,   NULL,   NULL,   NULL,   NULL,   NULL,   NULL,   
-	NULL,   NULL,   NULL,   NULL,   NULL,   NULL,   NULL,   NULL,   
-	page20, page21, NULL,   NULL,   NULL,   NULL,   NULL,   NULL,   
+	page00, page01, page02, NULL,   NULL,   page05, NULL,   NULL,
+	NULL,   NULL,   NULL,   NULL,   NULL,   NULL,   NULL,   NULL,
+	NULL,   NULL,   NULL,   NULL,   NULL,   NULL,   NULL,   NULL,
+	NULL,   NULL,   NULL,   NULL,   NULL,   NULL,   NULL,   NULL,
+	page20, page21, NULL,   NULL,   NULL,   NULL,   NULL,   NULL,
 };
 
 static unsigned char charset2lower[256] = {

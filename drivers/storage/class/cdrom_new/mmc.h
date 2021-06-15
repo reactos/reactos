@@ -48,7 +48,7 @@ _IRQL_requires_max_(PASSIVE_LEVEL)
 NTSTATUS
 DeviceGetConfigurationWithAlloc(
     _In_ WDFDEVICE                  Device,
-    _Outptr_result_bytebuffer_all_(*BytesReturned) 
+    _Outptr_result_bytebuffer_all_(*BytesReturned)
     PGET_CONFIGURATION_HEADER *     Buffer,
     _Out_ PULONG                    BytesReturned,
     FEATURE_NUMBER const            StartingFeature,
@@ -70,7 +70,7 @@ DeviceGetConfiguration(
 _IRQL_requires_max_(APC_LEVEL)
 VOID
 DeviceUpdateMmcWriteCapability(
-    _In_reads_bytes_(BufferSize) 
+    _In_reads_bytes_(BufferSize)
         PGET_CONFIGURATION_HEADER   Buffer,
     ULONG const                     BufferSize,
     BOOLEAN const                   CurrentOnly, // TRUE == can drive write now, FALSE == can drive ever write
@@ -82,7 +82,7 @@ DeviceUpdateMmcWriteCapability(
 _IRQL_requires_max_(APC_LEVEL)
 PVOID
 MmcDataFindFeaturePage(
-    _In_reads_bytes_(Length) 
+    _In_reads_bytes_(Length)
        PGET_CONFIGURATION_HEADER    FeatureBuffer,
     ULONG const                     Length,
     FEATURE_NUMBER const            Feature

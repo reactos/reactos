@@ -3,7 +3,7 @@
 
 #ifdef USE_REACTOS_DDK
 
-/* The definitions look so crappy, because the code doesn't care 
+/* The definitions look so crappy, because the code doesn't care
    whether the source is an array or an integer */
 #define MOV_DD_SWP(a,b) ( ((PULONG)&(a))[0] = RtlUlongByteSwap(*(PULONG)&(b)))
 #define MOV_DW_SWP(a,b) ( ((PUSHORT)&(a))[0] = RtlUshortByteSwap(*(PUSHORT)&(b)))

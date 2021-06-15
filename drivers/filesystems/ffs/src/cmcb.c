@@ -1,4 +1,4 @@
-/* 
+/*
  * FFS File System Driver for Windows
  *
  * cmcb.c
@@ -59,7 +59,7 @@ FFSAcquireForLazyWrite(
 
 	if (!IsFlagOn(Fcb->Vcb->Flags, VCB_READ_ONLY))
 	{
-		FFSPrint((DBG_INFO, "FFSAcquireForLazyWrite: Inode=%xh %S\n", 
+		FFSPrint((DBG_INFO, "FFSAcquireForLazyWrite: Inode=%xh %S\n",
 					Fcb->FFSMcb->Inode, Fcb->FFSMcb->ShortName.Buffer));
 
 		if(!ExAcquireResourceSharedLite(
@@ -103,7 +103,7 @@ FFSReleaseFromLazyWrite(
 
 	if (!IsFlagOn(Fcb->Vcb->Flags, VCB_READ_ONLY))
 	{
-		FFSPrint((DBG_INFO, "FFSReleaseFromLazyWrite: Inode=%xh %S\n", 
+		FFSPrint((DBG_INFO, "FFSReleaseFromLazyWrite: Inode=%xh %S\n",
 					Fcb->FFSMcb->Inode, Fcb->FFSMcb->ShortName.Buffer));
 
 		ExReleaseResourceLite(&Fcb->PagingIoResource);
@@ -133,7 +133,7 @@ FFSAcquireForReadAhead(
 	ASSERT((Fcb->Identifier.Type == FFSFCB) &&
 			(Fcb->Identifier.Size == sizeof(FFS_FCB)));
 
-	FFSPrint((DBG_INFO, "FFSAcquireForReadAhead: Inode=%xh %S\n", 
+	FFSPrint((DBG_INFO, "FFSAcquireForReadAhead: Inode=%xh %S\n",
 				Fcb->FFSMcb->Inode, Fcb->FFSMcb->ShortName.Buffer));
 
 	if (!ExAcquireResourceSharedLite(
@@ -164,7 +164,7 @@ FFSReleaseFromReadAhead(
 	ASSERT((Fcb->Identifier.Type == FFSFCB) &&
 			(Fcb->Identifier.Size == sizeof(FFS_FCB)));
 
-	FFSPrint((DBG_INFO, "FFSReleaseFromReadAhead: Inode=%xh %S\n", 
+	FFSPrint((DBG_INFO, "FFSReleaseFromReadAhead: Inode=%xh %S\n",
 				Fcb->FFSMcb->Inode, Fcb->FFSMcb->ShortName.Buffer));
 
 	IoSetTopLevelIrp(NULL);

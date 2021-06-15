@@ -27,7 +27,7 @@
 
 // include appropriate header(s)
 #ifdef NT_KERNEL_MODE
-  
+
   #ifdef NT_DEV_DRV_ENV
     #include <ntddk.h>
   #endif //NT_DEV_DRV_ENV
@@ -44,7 +44,7 @@
 #endif //NT_KERNEL_MODE
 
 #ifdef NT_NATIVE_MODE
-  
+
   #include "Include/nt_native.h"
   #ifdef NT_DEV_DRV_ENV
     #include "LibCdrw/env_spec_cdrw_w32.h"
@@ -90,7 +90,7 @@
 //#warning !!!! Execution mode defaulted to WIN_32 !!!!
 //#define USER_MODE
 #define WIN_32_MODE
-#endif 
+#endif
 
 // check mode
 #ifdef NT_KERNEL_MODE

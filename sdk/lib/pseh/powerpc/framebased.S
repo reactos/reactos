@@ -53,7 +53,7 @@ _SEHGlobalUnwind:
         lwz 3,4(1)
         stwu 1,-132(1)
         stmw 2,-128(1)
-        
+
         xor 6,6,6
         xor 5,5,5
         lis 4,.RestoreRegisters@ha

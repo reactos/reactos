@@ -69,7 +69,7 @@ Abstract:
                                         +--------+    | Child  |
                                                       |  File  |
                                                       +--------+
-
+
         Attached to each Directory Fcb is a prefix table containing the names
         of children of this directory for which there is an Fcb.  Not all Fcb's
         will necessarily have an entry in this table.
@@ -112,7 +112,7 @@ Abstract:
                            |  Object|
                            +--------+
 
-
+
     Synchronization:
 
         1. A resource in the CdData synchronizes access to the Vcb queue.  This
@@ -170,7 +170,7 @@ typedef PVOID PBCB;     //**** Bcb's are now part of the cache module
 
 #define BYTE_COUNT_EMBEDDED_NAME        (32)
 
-
+
 //
 //  The CD_MCB is used to store the mapping of logical file offset to
 //  logical disk offset.  NOTE - This package only deals with the
@@ -226,7 +226,7 @@ typedef struct _CD_MCB_ENTRY {
 } CD_MCB_ENTRY;
 typedef CD_MCB_ENTRY *PCD_MCB_ENTRY;
 
-
+
 //
 //  Cd name structure.  The following structure is used to represent the
 //  full Cdrom name.  This name can be stored in either Unicode or ANSI
@@ -265,7 +265,7 @@ typedef struct _NAME_LINK {
 } NAME_LINK;
 typedef NAME_LINK *PNAME_LINK;
 
-
+
 //
 //  Prefix entry.  There is one of these for each name in the prefix table.
 //  An Fcb will have one of these embedded for the long name and an optional
@@ -306,7 +306,7 @@ typedef PREFIX_ENTRY *PPREFIX_ENTRY;
 #define PREFIX_FLAG_EXACT_CASE_IN_TREE              (0x00000001)
 #define PREFIX_FLAG_IGNORE_CASE_IN_TREE             (0x00000002)
 
-
+
 //
 //  The CD_DATA record is the top record in the CDROM file system in-memory
 //  data structure.  This structure must be allocated from non-paged pool.
@@ -426,7 +426,7 @@ typedef CD_DATA *PCD_DATA;
 //  Since DVD drives allow > 100 "sessions", we need to use a larger TOC
 //  than the legacy CD definition.  The maximum is theoretically 0xaa-16 (max
 //  number of open tracks in a session), but it's quite possible that some
-//  drive does not enforce this, so we'll go with 169 (track 0xaa is always the 
+//  drive does not enforce this, so we'll go with 169 (track 0xaa is always the
 //  leadout).
 //
 
@@ -447,14 +447,14 @@ typedef struct _CDROM_TOC_LARGE {
     //
 
     TRACK_DATA TrackData[ MAXIMUM_NUMBER_TRACKS_LARGE];
-    
+
 } CDROM_TOC_LARGE, *PCDROM_TOC_LARGE;
 
 typedef struct _CD_SECTOR_CACHE_CHUNK {
 
     ULONG BaseLbn;
     PUCHAR Buffer;
-    
+
 } CD_SECTOR_CACHE_CHUNK, *PCD_SECTOR_CACHE_CHUNK;
 
 #define CD_SEC_CACHE_CHUNKS  4
@@ -670,7 +670,7 @@ typedef struct _VCB {
     //  Directory block cache. Read large numbers of blocks on directory
     //  reads, hoping to benefit from the fact that most mastered/pressed
     //  discs clump metadata in one place thus allowing us to crudely
-    //  pre-cache and reduce seeks back to directory data during app install, 
+    //  pre-cache and reduce seeks back to directory data during app install,
     //  file copy etc.
     //
     //  Note that the purpose of this is to PRE cache unread data,
@@ -681,7 +681,7 @@ typedef struct _VCB {
     PUCHAR SectorCacheBuffer;
     CD_SECTOR_CACHE_CHUNK SecCacheChunks[ CD_SEC_CACHE_CHUNKS];
     ULONG SecCacheLRUChunkIndex;
-    
+
     PIRP SectorCacheIrp;
     KEVENT SectorCacheEvent;
     ERESOURCE SectorCacheResource;
@@ -715,7 +715,7 @@ typedef struct _VCB {
 #define VCB_STATE_SHUTDOWN                          (0x00000400)
 #define VCB_STATE_DISMOUNTED                        (0x00000800)
 
-
+
 //
 //  The Volume Device Object is an I/O system device object with a
 //  workqueue and an VCB record appended to the end.  There are multiple
@@ -768,7 +768,7 @@ typedef struct _VOLUME_DEVICE_OBJECT {
 } VOLUME_DEVICE_OBJECT;
 typedef VOLUME_DEVICE_OBJECT *PVOLUME_DEVICE_OBJECT;
 
-
+
 //
 //  The following two structures are the separate union structures for
 //  data and index Fcb's.  The path table is actually the same structure
@@ -1059,7 +1059,7 @@ typedef FCB *PFCB;
 #define SIZEOF_FCB_INDEX    \
     (FIELD_OFFSET( FCB, FcbType ) + sizeof( FCB_INDEX ))
 
-
+
 //
 //  The Ccb record is allocated for every file object
 //
@@ -1119,7 +1119,7 @@ typedef CCB *PCCB;
 #define CCB_FLAG_ENUM_INITIALIZED               (0x00200000)
 #define CCB_FLAG_ENUM_NOMATCH_CONSTANT_ENTRY    (0x00400000)
 
-
+
 //
 //  The Irp Context record is allocated for every orginating Irp.  It is
 //  created by the Fsd dispatch routines, and deallocated by the CdComplete
@@ -1265,7 +1265,7 @@ typedef IRP_CONTEXT *PIRP_CONTEXT;
     IRP_CONTEXT_FLAG_IN_FSP                 \
 )
 
-
+
 //
 //  Following structure is used to queue a request to the delayed close queue.
 //  This structure should be the minimum block allocation size.
@@ -1307,7 +1307,7 @@ typedef struct _IRP_CONTEXT_LITE {
 } IRP_CONTEXT_LITE;
 typedef IRP_CONTEXT_LITE *PIRP_CONTEXT_LITE;
 
-
+
 //
 //  Context structure for asynchronous I/O calls.  Most of these fields
 //  are actually only required for the ReadMultiple routines, but
@@ -1350,7 +1350,7 @@ typedef struct _CD_IO_CONTEXT {
 } CD_IO_CONTEXT;
 typedef CD_IO_CONTEXT *PCD_IO_CONTEXT;
 
-
+
 //
 //  Following structure is used to track the top level request.  Each Cdfs
 //  Fsd and Fsp entry point will examine the top level irp location in the
@@ -1385,7 +1385,7 @@ typedef struct _THREAD_CONTEXT {
 } THREAD_CONTEXT;
 typedef THREAD_CONTEXT *PTHREAD_CONTEXT;
 
-
+
 //
 //  The following structure is used for enumerating the entries in the
 //  path table.  We will always map this two sectors at a time so we don't
@@ -1452,7 +1452,7 @@ typedef PATH_ENUM_CONTEXT *PPATH_ENUM_CONTEXT;
 #define VACB_MAPPING_MASK               (VACB_MAPPING_GRANULARITY - 1)
 #define LAST_VACB_SECTOR_OFFSET         (VACB_MAPPING_GRANULARITY - SECTOR_SIZE)
 
-
+
 //
 //  Path Entry.  This is our representation of the on disk data.
 //
@@ -1516,7 +1516,7 @@ typedef PATH_ENTRY *PPATH_ENTRY;
 
 #define PATH_ENTRY_FLAG_ALLOC_BUFFER            (0x00000001)
 
-
+
 //
 //  Compound path entry.  This structure combines the on-disk entries
 //  with the in-memory structures.
@@ -1530,7 +1530,7 @@ typedef struct _COMPOUND_PATH_ENTRY {
 } COMPOUND_PATH_ENTRY;
 typedef COMPOUND_PATH_ENTRY *PCOMPOUND_PATH_ENTRY;
 
-
+
 //
 //  The following is used for enumerating through a directory via the
 //  dirents.
@@ -1568,7 +1568,7 @@ typedef struct _DIRENT_ENUM_CONTEXT {
 } DIRENT_ENUM_CONTEXT;
 typedef DIRENT_ENUM_CONTEXT *PDIRENT_ENUM_CONTEXT;
 
-
+
 //
 //  Following structure is used to smooth out the differences in the HSG, ISO
 //  and Joliett directory entries.
@@ -1672,7 +1672,7 @@ typedef DIRENT *PDIRENT;
 
 #define DIRENT_FLAG_NOT_PERSISTENT              (0)
 
-
+
 //
 //  Following structure combines the on-disk information with the normalized
 //  structure.
@@ -1686,7 +1686,7 @@ typedef struct _COMPOUND_DIRENT {
 } COMPOUND_DIRENT;
 typedef COMPOUND_DIRENT *PCOMPOUND_DIRENT;
 
-
+
 //
 //  The following structure is used to enumerate the files in a directory.
 //  It contains three DirContext/Dirent pairs and then self pointers to
@@ -1738,7 +1738,7 @@ typedef FILE_ENUM_CONTEXT *PFILE_ENUM_CONTEXT;
 
 #define FILE_CONTEXT_MULTIPLE_DIRENTS       (0x00000001)
 
-
+
 //
 //  RIFF header.  Prepended to the data of a file containing XA sectors.
 //  This is a hard-coded structure except that we bias the 'ChunkSize' and
@@ -1787,7 +1787,7 @@ typedef struct _AUDIO_PLAY_HEADER {
 } AUDIO_PLAY_HEADER;
 typedef AUDIO_PLAY_HEADER *PAUDIO_PLAY_HEADER;
 
-
+
 //
 //  Some macros for supporting the use of a Generic Table
 //  containing all the FCB/DCBs and indexed by their FileId.

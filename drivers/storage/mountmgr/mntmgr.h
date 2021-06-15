@@ -302,7 +302,7 @@ OpenRemoteDatabase(
 PDATABASE_ENTRY
 GetRemoteDatabaseEntry(
     IN HANDLE Database,
-    IN LONG StartingOffset 
+    IN LONG StartingOffset
 );
 
 NTSTATUS
@@ -408,13 +408,13 @@ HasNoDriveLetterEntry(
 VOID
 UpdateReplicatedUniqueIds(
     IN PDEVICE_INFORMATION DeviceInformation,
-    IN PDATABASE_ENTRY DatabaseEntry 
+    IN PDATABASE_ENTRY DatabaseEntry
 );
 
 BOOLEAN
 IsUniqueIdPresent(
     IN PDEVICE_EXTENSION DeviceExtension,
-    IN PDATABASE_ENTRY DatabaseEntry 
+    IN PDATABASE_ENTRY DatabaseEntry
 );
 
 /* point.c */

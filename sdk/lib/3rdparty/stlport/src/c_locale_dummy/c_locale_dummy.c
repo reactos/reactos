@@ -207,14 +207,14 @@ _Locale_mask_t _WLocale_ctype(struct _Locale_ctype *lctype, wint_t wc, _Locale_m
   _Locale_mask_t ret = 0;
   if ((mask & _Locale_ALPHA) != 0 && iswalpha(wc))
     ret |= _Locale_ALPHA;
-  
+
   if ((mask & _Locale_CNTRL) != 0 && iswcntrl(wc))
     ret |= _Locale_CNTRL;
 
   if ((mask & _Locale_DIGIT) != 0 && iswdigit(wc))
     ret |= _Locale_DIGIT;
 
-  if ((mask & _Locale_PRINT) != 0 && iswprint(wc)) 
+  if ((mask & _Locale_PRINT) != 0 && iswprint(wc))
     ret |= _Locale_PRINT;
 
   if ((mask & _Locale_PUNCT) != 0 && iswpunct(wc))

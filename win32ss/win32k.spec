@@ -193,13 +193,24 @@
 @ stdcall PATHOBJ_vEnumStartClipLines(ptr ptr ptr ptr)
 @ stdcall PATHOBJ_vGetBounds(ptr ptr)
 @ stdcall RtlAnsiCharToUnicodeChar(ptr) NTOSKRNL.RtlAnsiCharToUnicodeChar
+@ stdcall -arch=x86_64,arm RtlCaptureContext(ptr) NTOSKRNL.RtlCaptureContext
+@ stdcall -arch=x86_64,arm RtlCopyMemory(ptr ptr int64) NTOSKRNL.RtlCopyMemory
+@ stdcall -arch=x86_64,arm RtlCopyMemoryNonTemporal(ptr ptr int64) NTOSKRNL.RtlCopyMemoryNonTemporal
+@ stdcall -arch=x86_64,arm RtlFillMemory(ptr long long) NTOSKRNL.RtlFillMemory
+@ cdecl -arch=x86_64,arm RtlLookupFunctionEntry(double ptr ptr) NTOSKRNL.RtlLookupFunctionEntry
+@ stdcall -arch=x86_64,arm RtlMoveMemory(ptr ptr long) NTOSKRNL.RtlMoveMemory
 @ stdcall RtlMultiByteToUnicodeN(ptr long ptr ptr long) NTOSKRNL.RtlMultiByteToUnicodeN
+@ cdecl -arch=x86_64,arm RtlPcToFileHeader(ptr ptr) NTOSKRNL.RtlPcToFileHeader
 @ stdcall RtlRaiseException(ptr) NTOSKRNL.RtlRaiseException
+@ cdecl -arch=x86_64,arm RtlRestoreContext(ptr ptr) NTOSKRNL.RtlRestoreContext
 @ stdcall RtlUnicodeToMultiByteN(ptr long ptr ptr long) NTOSKRNL.RtlUnicodeToMultiByteN
 @ stdcall RtlUnicodeToMultiByteSize(ptr ptr long) NTOSKRNL.RtlUnicodeToMultiByteSize
 @ stdcall RtlUnwind(ptr ptr ptr ptr) NTOSKRNL.RtlUnwind
+@ cdecl -arch=x86_64,arm RtlUnwindEx(double double ptr ptr ptr ptr) NTOSKRNL.RtlUnwindEx
 @ stdcall RtlUpcaseUnicodeChar(long) NTOSKRNL.RtlUpcaseUnicodeChar
 @ stdcall RtlUpcaseUnicodeToMultiByteN(ptr long ptr ptr long) NTOSKRNL.RtlUpcaseUnicodeToMultiByteN
+@ cdecl -arch=x86_64,arm RtlVirtualUnwind(long double double ptr ptr ptr ptr ptr) NTOSKRNL.RtlVirtualUnwind
+@ stdcall -arch=x86_64,arm RtlZeroMemory(ptr long) NTOSKRNL.RtlZeroMemory
 @ stdcall STROBJ_bEnum(ptr ptr ptr)
 @ stdcall STROBJ_bEnumPositionsOnly(ptr ptr ptr)
 @ stdcall STROBJ_bGetAdvanceWidths(ptr long long ptr)
@@ -218,9 +229,20 @@
 @ stdcall XLATEOBJ_hGetColorTransform(ptr)
 @ stdcall XLATEOBJ_iXlate(ptr long)
 @ stdcall XLATEOBJ_piVector(ptr)
-@ cdecl _abnormal_termination() NTOSKRNL._abnormal_termination
-@ cdecl _except_handler2() NTOSKRNL._except_handler2
-@ cdecl _global_unwind2() NTOSKRNL._global_unwind2
+@ cdecl -arch=x86_64,arm __C_specific_handler(ptr long ptr ptr) NTOSKRNL.__C_specific_handler
+@ cdecl -arch=x86_64,arm __chkstk(ptr long ptr ptr) NTOSKRNL.__chkstk
+@ cdecl -arch=arm __jump_unwind() NTOSKRNL.__jump_unwind
+@ cdecl -arch=i386 _abnormal_termination() NTOSKRNL._abnormal_termination
+@ cdecl -arch=i386 _except_handler2() NTOSKRNL._except_handler2
+@ cdecl -arch=i386 _global_unwind2() NTOSKRNL._global_unwind2
 @ cdecl _itoa() NTOSKRNL._itoa
 @ cdecl _itow() NTOSKRNL._itow
-@ cdecl _local_unwind2() NTOSKRNL._local_unwind2
+@ cdecl -arch=i386 _local_unwind2() NTOSKRNL._local_unwind2
+@ cdecl -arch=x86_64 _local_unwind() NTOSKRNL._local_unwind
+@ cdecl -arch=x86_64,arm _setjmp(ptr ptr) NTOSKRNL._setjmp
+@ cdecl -arch=x86_64,arm _setjmpex(ptr ptr) NTOSKRNL._setjmpex
+@ cdecl -arch=x86_64,arm longjmp(ptr long) NTOSKRNL.longjmp
+@ cdecl -arch=x86_64,arm memcmp() NTOSKRNL.memcmp
+@ cdecl -arch=x86_64,arm memcpy() NTOSKRNL.memcpy
+@ cdecl -arch=x86_64,arm memmove() NTOSKRNL.memmove
+@ cdecl -arch=x86_64,arm memset() NTOSKRNL.memset

@@ -154,7 +154,7 @@ ScsiClassPlugPlay(
 }
 
 
-
+
 ULONG
 NTAPI
 ScsiClassInitialize(
@@ -291,7 +291,7 @@ Return Value:
     return deviceFound ? STATUS_SUCCESS : STATUS_NO_SUCH_DEVICE;
 }
 
-
+
 NTSTATUS
 NTAPI
 ScsiClassCreateClose(
@@ -341,7 +341,7 @@ Return Value:
 }
 
 
-
+
 NTSTATUS
 NTAPI
 ScsiClassReadWrite(
@@ -525,7 +525,7 @@ Return Value:
 
 } // end ScsiClassReadWrite()
 
-
+
 NTSTATUS
 NTAPI
 ScsiClassGetCapabilities(
@@ -606,7 +606,7 @@ Notes:
 
 } // end ScsiClassGetCapabilities()
 
-
+
 NTSTATUS
 NTAPI
 ScsiClassGetInquiryData(
@@ -708,7 +708,7 @@ Notes:
 
 } // end ScsiClassGetInquiryData()
 
-
+
 NTSTATUS
 NTAPI
 ScsiClassReadDriveCapacity(
@@ -933,7 +933,7 @@ Retry:
 
 } // end ScsiClassReadDriveCapacity()
 
-
+
 VOID
 NTAPI
 ScsiClassReleaseQueue(
@@ -1076,7 +1076,7 @@ Return Value:
 
 } // end ScsiClassReleaseQueue()
 
-
+
 VOID
 NTAPI
 StartUnit(
@@ -1211,7 +1211,7 @@ Return Value:
 
 } // end StartUnit()
 
-
+
 NTSTATUS
 NTAPI
 ScsiClassAsynchronousCompletion(
@@ -1292,7 +1292,7 @@ Return Value:
 
 } // ScsiClassAsynchronousCompletion()
 
-
+
 VOID
 NTAPI
 ScsiClassSplitRequest(
@@ -1486,7 +1486,7 @@ Return Value:
 
 } // end ScsiClassSplitRequest()
 
-
+
 NTSTATUS
 NTAPI
 ScsiClassIoComplete(
@@ -1635,7 +1635,7 @@ Return Value:
 
 } // end ScsiClassIoComplete()
 
-
+
 NTSTATUS
 NTAPI
 ScsiClassIoCompleteAssociated(
@@ -1850,7 +1850,7 @@ Return Value:
 
 } // end ScsiClassIoCompleteAssociated()
 
-
+
 NTSTATUS
 NTAPI
 ScsiClassSendSrbSynchronous(
@@ -2142,7 +2142,7 @@ retry:
 
 } // end ScsiClassSendSrbSynchronous()
 
-
+
 BOOLEAN
 NTAPI
 ScsiClassInterpretSenseInfo(
@@ -2839,7 +2839,7 @@ Return Value:
 
 } // end ScsiClassInterpretSenseInfo()
 
-
+
 VOID
 NTAPI
 RetryRequest(
@@ -2964,7 +2964,7 @@ Return Value:
     (VOID)IoCallDriver(deviceExtension->PortDeviceObject, Irp);
 
 } // end RetryRequest()
-
+
 VOID
 NTAPI
 ScsiClassBuildRequest(
@@ -3193,7 +3193,7 @@ Return Value:
     return;
 
 } // end ScsiClassBuildRequest()
-
+
 ULONG
 NTAPI
 ScsiClassModeSense(
@@ -3290,7 +3290,7 @@ Retry:
 
 } // end ScsiClassModeSense()
 
-
+
 PVOID
 NTAPI
 ScsiClassFindModePage(
@@ -3364,7 +3364,7 @@ Return Value:
 
     return(NULL);
 }
-
+
 NTSTATUS
 NTAPI
 ScsiClassSendSrbAsynchronous(
@@ -3553,7 +3553,7 @@ Return Value:
 
 }
 
-
+
 NTSTATUS
 NTAPI
 ScsiClassDeviceControlDispatch(
@@ -3597,7 +3597,7 @@ Return Value:
     return deviceExtension->ClassDeviceControl(DeviceObject,Irp);
 }
 
-
+
 NTSTATUS
 NTAPI
 ScsiClassDeviceControl(
@@ -4258,7 +4258,7 @@ SetStatusAndReturn:
     return status;
 }
 
-
+
 NTSTATUS
 NTAPI
 ScsiClassShutdownFlush(
@@ -4311,7 +4311,7 @@ Return Value:
     return STATUS_INVALID_DEVICE_REQUEST;
 }
 
-
+
 ULONG
 NTAPI
 ScsiClassFindUnclaimedDevices(
@@ -4359,7 +4359,7 @@ ScsiClassFindUnclaimedDevices(
 }
 
 
-
+
 NTSTATUS
 NTAPI
 ScsiClassCreateDeviceObject(
@@ -4483,7 +4483,7 @@ Return Value:
     return status;
 }
 
-
+
 NTSTATUS
 NTAPI
 ScsiClassClaimDevice(
@@ -4650,7 +4650,7 @@ Return Value:
     return status;
 }
 
-
+
 NTSTATUS
 NTAPI
 ScsiClassInternalIoControl (
@@ -4725,7 +4725,7 @@ Return Value:
     IoSetCompletionRoutine(Irp, ClassIoCompletion, NULL, TRUE, TRUE, TRUE);
     return IoCallDriver(deviceExtension->PortDeviceObject, Irp);
 }
-
+
 NTSTATUS
 NTAPI
 ClassIoCompletion(
@@ -4773,7 +4773,7 @@ Return Value:
     return Irp->IoStatus.Status;
 }
 
-
+
 VOID
 NTAPI
 ScsiClassInitializeSrbLookasideList(
@@ -4811,7 +4811,7 @@ Return Value:
 
 }
 
-
+
 ULONG
 NTAPI
 ScsiClassQueryTimeOutRegistryValue(
@@ -4904,7 +4904,7 @@ Return Value:
     return timeOut;
 
 }
-
+
 NTSTATUS
 NTAPI
 ScsiClassCheckVerifyComplete(

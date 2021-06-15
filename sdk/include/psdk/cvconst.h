@@ -41,13 +41,13 @@ enum SymTagEnum
    SymTagPointerType,
    SymTagArrayType,
    SymTagBaseType,
-   SymTagTypedef, 
+   SymTagTypedef,
    SymTagBaseClass,
    SymTagFriend,
-   SymTagFunctionArgType, 
-   SymTagFuncDebugStart, 
+   SymTagFunctionArgType,
+   SymTagFuncDebugStart,
    SymTagFuncDebugEnd,
-   SymTagUsingNamespace, 
+   SymTagUsingNamespace,
    SymTagVTableShape,
    SymTagVTable,
    SymTagCustom,
@@ -693,7 +693,7 @@ typedef enum
    THUNK_ORDINAL_ADJUSTOR,
    THUNK_ORDINAL_VCALL,
    THUNK_ORDINAL_PCODE,
-   THUNK_ORDINAL_LOAD 
+   THUNK_ORDINAL_LOAD
 } THUNK_ORDINAL;
 
 typedef enum CV_call_e

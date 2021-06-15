@@ -97,15 +97,15 @@ NtfsGetFreeClusters(PDEVICE_EXTENSION DeviceExt)
     return FreeClusters;
 }
 
-/** 
-* NtfsAllocateClusters 
+/**
+* NtfsAllocateClusters
 * Allocates a run of clusters. The run allocated might be smaller than DesiredClusters.
 */
 NTSTATUS
 NtfsAllocateClusters(PDEVICE_EXTENSION DeviceExt,
                      ULONG FirstDesiredCluster,
-                     ULONG DesiredClusters, 
-                     PULONG FirstAssignedCluster, 
+                     ULONG DesiredClusters,
+                     PULONG FirstAssignedCluster,
                      PULONG AssignedClusters)
 {
     NTSTATUS Status;
@@ -168,7 +168,7 @@ NtfsAllocateClusters(PDEVICE_EXTENSION DeviceExt,
         ExFreeToNPagedLookasideList(&DeviceExt->FileRecLookasideList, BitmapRecord);
         return STATUS_DISK_FULL;
     }
-    
+
     // TODO: Observe MFT reservation zone
 
     // Can we get one contiguous run?
@@ -183,17 +183,17 @@ NtfsAllocateClusters(PDEVICE_EXTENSION DeviceExt,
     {
         // we can't get one contiguous run
         *AssignedClusters = RtlFindNextForwardRunClear(&Bitmap, FirstDesiredCluster, FirstAssignedCluster);
-        
+
         if (*AssignedClusters == 0)
         {
             // we couldn't find any runs starting at DesiredFirstCluster
             *AssignedClusters = RtlFindLongestRunClear(&Bitmap, FirstAssignedCluster);
         }
-            
+
     }
-                
+
     Status = WriteAttribute(DeviceExt, DataContext, 0, BitmapData, (ULONG)BitmapDataSize, &LengthWritten, BitmapRecord);
-    
+
     ReleaseAttributeContext(DataContext);
 
     ExFreePoolWithTag(BitmapData, TAG_NTFS);

@@ -15,7 +15,7 @@
  *
  *
  * TODO: write an optimized version for the down-sampling modes
- *       (in these modes the bands 16-31 (2:1) or 8-31 (4:1) are zero 
+ *       (in these modes the bands 16-31 (2:1) or 8-31 (4:1) are zero
  */
 
 #include "mpg123lib_intern.h"
@@ -30,7 +30,7 @@ void dct64_altivec(real *out0,real *out1,real *samples)
 
 	{
 		register real *b1,*costab;
-		
+
 		vector unsigned char vinvert,vperm1,vperm2,vperm3,vperm4;
 		vector float v1,v2,v3,v4,v5,v6,v7,v8;
 		vector float vbs1,vbs2,vbs3,vbs4,vbs5,vbs6,vbs7,vbs8;
@@ -38,7 +38,7 @@ void dct64_altivec(real *out0,real *out1,real *samples)
 		vector float vzero;
 		b1 = samples;
 		costab = pnts[0];
-		
+
 		vzero = vec_xor(vzero,vzero);
 #ifdef __APPLE__
 		vinvert = (vector unsigned char)(12,13,14,15,8,9,10,11,4,5,6,7,0,1,2,3);
@@ -47,40 +47,40 @@ void dct64_altivec(real *out0,real *out1,real *samples)
 #endif
 		vperm1 = vec_lvsl(0,b1);
 		vperm2 = vec_perm(vperm1,vperm1,vinvert);
-		
+
 		v1 = vec_ld(0,b1);
 		v2 = vec_ld(16,b1);
 		v3 = vec_ld(112,b1);
 		v4 = vec_ld(127,b1);
 		v5 = vec_perm(v1,v2,vperm1); /* b1[0,1,2,3] */
 		v6 = vec_perm(v3,v4,vperm2); /* b1[31,30,29,28] */
-		
+
 		vbs1 = vec_add(v5,v6);
 		vbs8 = vec_sub(v5,v6);
-		
+
 		v1 = vec_ld(32,b1);
 		v4 = vec_ld(96,b1);
 		v5 = vec_perm(v2,v1,vperm1); /* b1[4,5,6,7] */
 		v6 = vec_perm(v4,v3,vperm2); /* b1[27,26,25,24] */
-		
+
 		vbs2 = vec_add(v5,v6);
 		vbs7 = vec_sub(v5,v6);
-		
+
 		v2 = vec_ld(48,b1);
 		v3 = vec_ld(80,b1);
 		v5 = vec_perm(v1,v2,vperm1); /* b1[8,9,10,11] */
 		v6 = vec_perm(v3,v4,vperm2); /* b1[23,22,21,20] */
-		
+
 		vbs3 = vec_add(v5,v6);
 		vbs6 = vec_sub(v5,v6);
-		
+
 		v1 = vec_ld(64,b1);
 		v5 = vec_perm(v2,v1,vperm1); /* b1[12,13,14,15] */
 		v6 = vec_perm(v1,v3,vperm2); /* b1[19,18,17,16] */
-		
+
 		vbs4 = vec_add(v5,v6);
 		vbs5 = vec_sub(v5,v6);
-		
+
 		v1 = vec_ld(0,costab);
 		vbs8 = vec_madd(vbs8,v1,vzero);
 		v2 = vec_ld(16,costab);
@@ -91,10 +91,10 @@ void dct64_altivec(real *out0,real *out1,real *samples)
 		vbs5 = vec_madd(vbs5,v4,vzero);
 		vbs6 = vec_perm(vbs6,vbs6,vinvert);
 		vbs5 = vec_perm(vbs5,vbs5,vinvert);
-		
-		
+
+
 		costab = pnts[1];
-		
+
 		v1 = vec_perm(vbs4,vbs4,vinvert);
 		vbs9 = vec_add(vbs1,v1);
 		v3 = vec_sub(vbs1,v1);
@@ -105,17 +105,17 @@ void dct64_altivec(real *out0,real *out1,real *samples)
 		v6 = vec_ld(16,costab);
 		vbs12 = vec_madd(v3,v5,vzero);
 		vbs11 = vec_madd(v4,v6,vzero);
-		
+
 		v7 = vec_sub(vbs7,vbs6);
 		v8 = vec_sub(vbs8,vbs5);
 		vbs13 = vec_add(vbs5,vbs8);
 		vbs14 = vec_add(vbs6,vbs7);
 		vbs15 = vec_madd(v7,v6,vzero);
 		vbs16 = vec_madd(v8,v5,vzero);
-		
-		
+
+
 		costab = pnts[2];
-		
+
 		v1 = vec_perm(vbs10,vbs10,vinvert);
 		v5 = vec_perm(vbs14,vbs14,vinvert);
 		vbs1 = vec_add(v1,vbs9);
@@ -133,15 +133,15 @@ void dct64_altivec(real *out0,real *out1,real *samples)
 		vbs4 = vec_madd(v4,v3,vzero);
 		vbs6 = vec_madd(v6,v3,vzero);
 		vbs8 = vec_madd(v7,v3,vzero);
-		
+
 		vbs2 = vec_perm(vbs2,vbs2,vinvert);
 		vbs4 = vec_perm(vbs4,vbs4,vinvert);
 		vbs6 = vec_perm(vbs6,vbs6,vinvert);
 		vbs8 = vec_perm(vbs8,vbs8,vinvert);
-		
-		
+
+
 		costab = pnts[3];
-		
+
 #ifdef __APPLE__
 		vperm1 = (vector unsigned char)(0,1,2,3,4,5,6,7,16,17,18,19,20,21,22,23);
 		vperm2 = (vector unsigned char)(12,13,14,15,8,9,10,11,28,29,30,31,24,25,26,27);
@@ -152,12 +152,12 @@ void dct64_altivec(real *out0,real *out1,real *samples)
 		vperm3 = (vector unsigned char){0,1,2,3,4,5,6,7,20,21,22,23,16,17,18,19};
 #endif
 		vperm4 = vec_add(vperm3,vec_splat_u8(8));
-		
+
 		v1 = vec_ld(0,costab);
 		v2 = vec_splat(v1,0);
 		v3 = vec_splat(v1,1);
 		v1 = vec_mergeh(v2,v3);
-		
+
 		v2 = vec_perm(vbs1,vbs3,vperm1);
 		v3 = vec_perm(vbs2,vbs4,vperm1);
 		v4 = vec_perm(vbs1,vbs3,vperm2);
@@ -172,7 +172,7 @@ void dct64_altivec(real *out0,real *out1,real *samples)
 		vbs11 = vec_perm(v2,v4,vperm4);
 		vbs10 = vec_perm(v3,v5,vperm3);
 		vbs12 = vec_perm(v3,v5,vperm4);
-		
+
 		v2 = vec_perm(vbs5,vbs7,vperm1);
 		v3 = vec_perm(vbs6,vbs8,vperm1);
 		v4 = vec_perm(vbs5,vbs7,vperm2);
@@ -187,10 +187,10 @@ void dct64_altivec(real *out0,real *out1,real *samples)
 		vbs15 = vec_perm(v2,v4,vperm4);
 		vbs14 = vec_perm(v3,v5,vperm3);
 		vbs16 = vec_perm(v3,v5,vperm4);
-		
-		
+
+
 		costab = pnts[4];
-		
+
 		v1 = vec_lde(0,costab);
 #ifdef __APPLE__
 		v2 = (vector float)(1.0f,-1.0f,1.0f,-1.0f);
@@ -199,7 +199,7 @@ void dct64_altivec(real *out0,real *out1,real *samples)
 #endif
 		v3 = vec_splat(v1,0);
 		v1 = vec_madd(v2,v3,vzero);
-		
+
 		v2 = vec_mergeh(vbs9,vbs10);
 		v3 = vec_mergel(vbs9,vbs10);
 		v4 = vec_mergeh(vbs11,vbs12);
@@ -207,7 +207,7 @@ void dct64_altivec(real *out0,real *out1,real *samples)
 		v6 = vec_mergeh(v2,v3);
 		v7 = vec_mergel(v2,v3);
 		v2 = vec_mergeh(v4,v5);
-		v3 = vec_mergel(v4,v5); 
+		v3 = vec_mergel(v4,v5);
 		v4 = vec_sub(v6,v7);
 		v5 = vec_sub(v2,v3);
 		v6 = vec_add(v6,v7);
@@ -218,7 +218,7 @@ void dct64_altivec(real *out0,real *out1,real *samples)
 		vbs2 = vec_mergel(v6,v2);
 		vbs3 = vec_mergeh(v7,v3);
 		vbs4 = vec_mergel(v7,v3);
-		
+
 		v2 = vec_mergeh(vbs13,vbs14);
 		v3 = vec_mergel(vbs13,vbs14);
 		v4 = vec_mergeh(vbs15,vbs16);
@@ -226,7 +226,7 @@ void dct64_altivec(real *out0,real *out1,real *samples)
 		v6 = vec_mergeh(v2,v3);
 		v7 = vec_mergel(v2,v3);
 		v2 = vec_mergeh(v4,v5);
-		v3 = vec_mergel(v4,v5); 
+		v3 = vec_mergel(v4,v5);
 		v4 = vec_sub(v6,v7);
 		v5 = vec_sub(v2,v3);
 		v6 = vec_add(v6,v7);
@@ -237,7 +237,7 @@ void dct64_altivec(real *out0,real *out1,real *samples)
 		vbs6 = vec_mergel(v6,v2);
 		vbs7 = vec_mergeh(v7,v3);
 		vbs8 = vec_mergel(v7,v3);
-		
+
 		vec_st(vbs1,0,bufs);
 		vec_st(vbs2,16,bufs);
 		vec_st(vbs3,32,bufs);

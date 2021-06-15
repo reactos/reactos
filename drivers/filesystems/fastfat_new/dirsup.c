@@ -194,7 +194,7 @@ FatDefragDirectory (
 
 #endif
 
-
+
 _Requires_lock_held_(_Global_critical_region_)
 ULONG
 FatCreateNewDirent (
@@ -213,7 +213,7 @@ Routine Description:
     because the disk is full or the root directory is full) then
     it raises the appropriate status.  The dirent itself is
     neither initialized nor pinned by this procedure.
-    
+
 Arguments:
 
     ParentDirectory - Supplies the DCB for the directory in which
@@ -373,7 +373,7 @@ Return Value:
             //
 
             if (ParentDirectory->Header.AllocationSize.LowPart >= (64 * 1024 * sizeof(DIRENT)) ||
-                
+
                 //
                 //  Make sure we are not trying to expand the root directory on non
                 //  FAT32.  FAT16 and FAT12 have fixed size allocations.
@@ -381,7 +381,7 @@ Return Value:
 
                 (!FatIsFat32(ParentDirectory->Vcb) &&
                  NodeType(ParentDirectory) == FAT_NTC_ROOT_DCB)) {
-                    
+
                 DebugTrace(0, Dbg, "Full root directory or too big on FAT32.  Raise Status.\n", 0);
 
                 FatRaiseStatus( IrpContext, STATUS_CANNOT_MAKE );
@@ -545,7 +545,7 @@ Return Value:
     return ByteOffset;
 }
 
-
+
 
 _Requires_lock_held_(_Global_critical_region_)
 VOID
@@ -647,7 +647,7 @@ Return Value:
     return;
 }
 
-
+
 VOID
 FatTunnelFcbOrDcb (
     IN PFCB FcbOrDcb,
@@ -755,7 +755,7 @@ Return Value:
                 if ((i*sizeof(WCHAR)) < ShortNameWithCase.Length) {
                     DownCaseSeg.Buffer = &ShortNameWithCase.Buffer[i];
                     DownCaseSeg.MaximumLength = DownCaseSeg.Length = ShortNameWithCase.Length - i*sizeof(WCHAR);
-    
+
                     RtlDowncaseUnicodeString(&DownCaseSeg, &DownCaseSeg, FALSE);
                 }
             }
@@ -779,9 +779,9 @@ Return Value:
     return;
 }
 
-
-    
-_Requires_lock_held_(_Global_critical_region_)    
+
+
+_Requires_lock_held_(_Global_critical_region_)
 VOID
 FatDeleteDirent (
     IN PIRP_CONTEXT IrpContext,
@@ -838,7 +838,7 @@ Return Value:
     //  Among other reasons, it'd be unfortunate if this raced with the
     //  rename path.
     //
-    
+
     NT_ASSERT( ExIsResourceAcquiredExclusiveLite( &FcbOrDcb->Vcb->Resource ));
 
     //
@@ -857,9 +857,9 @@ Return Value:
           (FcbOrDcb->Header.FileSize.LowPart != 0)))) {
 
         DebugTrace( 0, Dbg, "Called with non zero allocation/file size.\n", 0);
-        
+
 #ifdef _MSC_VER
-#pragma prefast( suppress:28159, "things are seriously wrong if we get here" )        
+#pragma prefast( suppress:28159, "things are seriously wrong if we get here" )
 #endif
         FatBugCheck( 0, 0, 0 );
     }
@@ -879,9 +879,9 @@ Return Value:
         //
         //  This relies on our bottom up lockorder.
         //
-    
+
         ExAcquireResourceExclusiveLite( FcbOrDcb->ParentDcb->Header.Resource, TRUE );
-    
+
         for ( Offset = FcbOrDcb->LfnOffsetWithinDirectory;
               Offset <= FcbOrDcb->DirentOffsetWithinDirectory;
               Offset += sizeof(DIRENT), Dirent += 1 ) {
@@ -966,7 +966,7 @@ Return Value:
 
             Dirent->FileSize = DeleteContext->FileSize;
 
-            
+
             Dirent->FirstClusterOfFile = (USHORT)DeleteContext->FirstClusterOfFile;
         }
 
@@ -985,11 +985,11 @@ Return Value:
     } _SEH2_FINALLY {
 
         FatUnpinBcb( IrpContext, Bcb );
-        
+
         //
         //  Release our parent.
         //
-    
+
         ExReleaseResourceLite( FcbOrDcb->ParentDcb->Header.Resource );
     } _SEH2_END;
 
@@ -1017,7 +1017,7 @@ Arguments:
 
     Lfn - The Lfn to look for
 
-    Lfn - Temporary buffer to use to search for Lfn with (if < MAX_LFN then this 
+    Lfn - Temporary buffer to use to search for Lfn with (if < MAX_LFN then this
         function may cause it to be allocated from pool if not large enough.
 
 Retrn Value:
@@ -1045,7 +1045,7 @@ Retrn Value:
     Ccb.Flags = CCB_FLAG_SKIP_SHORT_NAME_COMPARE | CCB_FLAG_QUERY_TEMPLATE_MIXED;
 
     _SEH2_TRY {
-        
+
         FatLocateDirent( IrpContext,
                          Dcb,
                          &Ccb,
@@ -1057,20 +1057,20 @@ Retrn Value:
                          NULL,
                          LfnTmp,
                          NULL );
-        
+
     } _SEH2_FINALLY {
 
         if (DirentBcb) {
 
             Result = TRUE;
         }
-        
+
         FatUnpinBcb(IrpContext, DirentBcb);
     } _SEH2_END;
 
     return Result;
 }
-
+
 
 _Requires_lock_held_(_Global_critical_region_)
 VOID
@@ -1085,7 +1085,7 @@ FatLocateDirent (
     OUT PVBO ByteOffset,
     OUT PBOOLEAN FileNameDos OPTIONAL,
     IN OUT PUNICODE_STRING LongFileName OPTIONAL,
-    IN OUT PUNICODE_STRING OrigLongFileName OPTIONAL    
+    IN OUT PUNICODE_STRING OrigLongFileName OPTIONAL
     )
 
 /*++
@@ -1138,7 +1138,7 @@ Return Value:
     UNICODE_STRING UpcasedLfn = {0};
     WCHAR LocalLfnBuffer[32];
 
-        
+
     BOOLEAN LfnInProgress = FALSE;
     UCHAR LfnChecksum = 0;
     ULONG LfnSize = 0;
@@ -1162,7 +1162,7 @@ Return Value:
     //  We must have acquired the parent or the vcb to synchronize with deletion.  This
     //  is important since we can't survive racing a thread marking a series of lfn
     //  dirents deleted - we'd get a bogus ordinal, and otherwise get really messed up.
-    //  
+    //
     //  This routine cannot do the acquire since it would be out-of-order with respect
     //  to the Bcb resources on iterative calls.  Our order has Bcbs as the inferior resource.
     //
@@ -1176,7 +1176,7 @@ Return Value:
             ExIsResourceAcquiredExclusiveLite( ParentDirectory->Header.Resource ) ||
             ExIsResourceAcquiredSharedLite( &ParentDirectory->Vcb->Resource ) ||
             ExIsResourceAcquiredExclusiveLite( &ParentDirectory->Vcb->Resource ));
-    
+
     //
     //  The algorithm here is pretty simple.  We just walk through the
     //  parent directory until we:
@@ -1188,7 +1188,7 @@ Return Value:
     //
     //  In the first case we found it, in the latter three cases we did not.
     //
- 
+
     UNREFERENCED_PARAMETER( Flags ); // future use
 
 
@@ -1297,7 +1297,7 @@ Return Value:
             //  If the entry is marked deleted, skip.  If there was an Lfn in
             //  progress we throw it out at this point.
             //
-            
+
             if ((*Dirent)->FileName[0] == FAT_DIRENT_DELETED) {
 
                 LfnInProgress = FALSE;
@@ -1392,7 +1392,7 @@ Return Value:
 
                     LfnIndex = (Ordinal - 1) * 13;
 
-                    FatEnsureStringBufferEnough( LongFileName, 
+                    FatEnsureStringBufferEnough( LongFileName,
                                                  (USHORT)((LfnIndex + 13) << 1));
 
                     RtlCopyMemory( &LongFileName->Buffer[LfnIndex+0],
@@ -1475,7 +1475,7 @@ Return Value:
                 //  If we actually were asked to hand back volume labels,
                 //  do it.
                 //
-                
+
                 if (FlagOn(Ccb->Flags, CCB_FLAG_MATCH_VOLUME_ID)) {
 
                     break;
@@ -1510,7 +1510,7 @@ Return Value:
             }
 
 
-            
+
             //
             //  If we are supposed to match all entries, then match this entry.
             //
@@ -1630,7 +1630,7 @@ Return Value:
                     //  We need a buffer.  Try to avoid doing an allocation.
                     //
 
-                    FatEnsureStringBufferEnough( &UpcasedLfn, 
+                    FatEnsureStringBufferEnough( &UpcasedLfn,
                                                  LongFileName->Length);
 
                     Status = RtlUpcaseUnicodeString( &UpcasedLfn,
@@ -1644,7 +1644,7 @@ Return Value:
 
 
                     UpcasedLfnValid = TRUE;
-                    
+
                 }
 
                 //
@@ -1671,7 +1671,7 @@ Return Value:
                         break;
                     }
 
-                    
+
                 }
 
             }
@@ -1705,7 +1705,7 @@ GetNextDirent:
 
         FatFreeStringBuffer( &UpcasedLfn );
 
-        
+
     } _SEH2_END;
 
     DebugTrace(-1, Dbg, "FatLocateDirent -> (VOID)\n", 0);
@@ -1715,8 +1715,8 @@ GetNextDirent:
     return;
 }
 
-
-_Requires_lock_held_(_Global_critical_region_)    
+
+_Requires_lock_held_(_Global_critical_region_)
 VOID
 FatLocateSimpleOemDirent (
     IN PIRP_CONTEXT IrpContext,
@@ -1793,7 +1793,7 @@ Return Value:
     return;
 }
 
-
+
 
 _Requires_lock_held_(_Global_critical_region_)
 VOID
@@ -1935,7 +1935,7 @@ Return Value:
     return;
 }
 
-
+
 
 _Requires_lock_held_(_Global_critical_region_)
 VOID
@@ -2029,17 +2029,17 @@ Return Value:
     //  verify) but we'll handle and raise here to save all callers checking the
     //  pointers.
     //
-    
+
     if ((NULL == *Dirent) && !ReturnOnFailure) {
 
         NT_ASSERT( FALSE);
         FatRaiseStatus( IrpContext, STATUS_FILE_CORRUPT_ERROR);
     }
-    
+
     DebugTrace(-1, Dbg, "FatGetDirentFromFcbOrDcb -> (VOID)\n", 0);
 }
 
-
+
 
 _Requires_lock_held_(_Global_critical_region_)
 BOOLEAN
@@ -2139,10 +2139,10 @@ Return Value:
             if ((Dirent->FileName[0] != FAT_DIRENT_DELETED) &&
                 (Dirent->Attributes != FAT_DIRENT_ATTR_LFN)) {
 
-                
+
                     break;
 
-                
+
             }
 
             //
@@ -2163,10 +2163,10 @@ Return Value:
     return IsDirectoryEmpty;
 }
 
-
 
 
-
+
+
 VOID
 FatConstructDirent (
     IN PIRP_CONTEXT IrpContext,
@@ -2248,7 +2248,7 @@ Return Value:
                                                          FALSE,
                                                          &Dirent->CreationTime,
                                                          &Dirent->CreationMSec )) {
-        
+
                 //
                 //  No tunneled time or the tunneled time was bogus. Since we aren't
                 //  responsible for initializing the to-be-created Fcb with creation
@@ -2435,7 +2435,7 @@ Return Value:
     return;
 }
 
-
+
 VOID
 FatConstructLabelDirent (
     IN PIRP_CONTEXT IrpContext,
@@ -2494,8 +2494,8 @@ Return Value:
     return;
 }
 
-
-_Requires_lock_held_(_Global_critical_region_)    
+
+_Requires_lock_held_(_Global_critical_region_)
 VOID
 FatSetFileSizeInDirent (
     IN PIRP_CONTEXT IrpContext,
@@ -2549,7 +2549,7 @@ Return Value:
     } _SEH2_END;
 }
 
-_Requires_lock_held_(_Global_critical_region_)    
+_Requires_lock_held_(_Global_critical_region_)
 VOID
 FatSetFileSizeInDirentNoRaise (
     IN PIRP_CONTEXT IrpContext,
@@ -2580,9 +2580,9 @@ Return Value:
 
 {
     _SEH2_TRY {
-    
+
         FatSetFileSizeInDirent( IrpContext, Fcb, AlternativeFileSize );
-        
+
     } _SEH2_EXCEPT(FatExceptionFilter( IrpContext, _SEH2_GetExceptionInformation() )) {
 
         NOTHING;
@@ -2590,7 +2590,7 @@ Return Value:
 }
 
 
-_Requires_lock_held_(_Global_critical_region_)    
+_Requires_lock_held_(_Global_critical_region_)
 VOID
 FatUpdateDirentFromFcb (
    IN PIRP_CONTEXT IrpContext,
@@ -2611,9 +2611,9 @@ Routine Description:
 Arguments:
 
     FileObject - Fileobject representing the handle involved
-    
+
     FcbOrDcb - File/Dir involved
-    
+
     Ccb - User context involved
 
 Return Value:
@@ -2645,7 +2645,7 @@ Return Value:
     //  Nothing to do if the fcb is bad, volume is readonly or we got the
     //  root dir.
     //
-    
+
     if (FcbOrDcb->FcbCondition != FcbGood ||
         NodeType(FcbOrDcb) == FAT_NTC_ROOT_DCB ||
         FlagOn(FcbOrDcb->Vcb->VcbState, VCB_STATE_FLAG_WRITE_PROTECTED)) {
@@ -2722,7 +2722,7 @@ Return Value:
                 //  Break parent directory oplock.  Directory oplock breaks are
                 //  always advisory, so we will never block/get STATUS_PENDING here.
                 //
-                
+
                 if (FcbOrDcb->ParentDcb != NULL) {
 
                     FsRtlCheckOplockEx( FatGetFcbOplock(FcbOrDcb->ParentDcb),
@@ -2733,7 +2733,7 @@ Return Value:
                                         NULL );
                 }
 #endif
-                
+
                 //
                 //  Get the dirent
                 //
@@ -2757,7 +2757,7 @@ Return Value:
 
                     Dirent->Attributes |= FILE_ATTRIBUTE_ARCHIVE;
                     FcbOrDcb->DirentFatFlags |= FILE_ATTRIBUTE_ARCHIVE;
-                    
+
                     NotifyFilter |= FILE_NOTIFY_CHANGE_ATTRIBUTES;
                     UpdateDirent = TRUE;
                 }
@@ -2813,15 +2813,15 @@ Return Value:
                     //
 
                     NT_ASSERT( NodeType(FcbOrDcb) == FAT_NTC_FCB );
-                    
+
                     if (Dirent->FileSize != FcbOrDcb->Header.FileSize.LowPart) {
-                    
+
                         //
                         //  Update the dirent file size
                         //
-                        
+
                         Dirent->FileSize = FcbOrDcb->Header.FileSize.LowPart;
-                        
+
                         //
                         //  We call the notify package to report that the
                         //  size has changed.
@@ -2829,9 +2829,9 @@ Return Value:
 
                         NotifyFilter |= FILE_NOTIFY_CHANGE_SIZE;
                         UpdateDirent = TRUE;
-                    }                  
+                    }
 
-            
+
                 }
 
 
@@ -2869,7 +2869,7 @@ Return Value:
 
 }
 
-
+
 //
 //  Internal support routine
 //
@@ -2913,7 +2913,7 @@ Return Value:
     return Checksum;
 }
 
-
+
 
 #if 0 // It turns out Win95 is still creating short names without a ~
 
@@ -3078,7 +3078,7 @@ Return Value:
     return TRUE;
 }
 #endif //0
-
+
 //
 //  Internal support routine
 //
@@ -3294,7 +3294,7 @@ Return Value:
     return;
 }
 
-
+
 //
 //  Internal support routine
 //
@@ -3444,7 +3444,7 @@ Return Value:
         McbInitialized = TRUE;
 
         do {
-            
+
             FatLocateDirent( IrpContext,
                              Dcb,
                              &Ccb,
@@ -3668,7 +3668,7 @@ Return Value:
         //
 
         _SEH2_TRY {
-            
+
             FatUnpinRepinnedBcbs( IrpContext );
 
         } _SEH2_EXCEPT(FsRtlIsNtstatusExpected(_SEH2_GetExceptionCode()) ?
@@ -3705,18 +3705,18 @@ Return Value:
             //  to update the Fcb.  If this raises, we have to give up and blow
             //  evenyone else away too.
             //
-            
+
             if (!InvalidateFcbs) {
-                
+
                 _SEH2_TRY {
-                    
+
                     FatLocateSimpleOemDirent( IrpContext,
                                               Dcb,
                                               &Fcb->ShortName.Name.Oem,
                                               &TmpDirent,
                                               &TmpBcb,
                                               (PVBO)&TmpOffset );
-                
+
                 } _SEH2_EXCEPT(FsRtlIsNtstatusExpected(_SEH2_GetExceptionCode()) ?
                          EXCEPTION_EXECUTE_HANDLER : EXCEPTION_CONTINUE_SEARCH) {
 

@@ -24,6 +24,16 @@ typedef struct _KNOWN_COMPOUND_ACE
     ULONG SidStart;
 } KNOWN_COMPOUND_ACE, *PKNOWN_COMPOUND_ACE;
 
+typedef struct _TOKEN_AUDIT_POLICY_INFORMATION
+{
+    ULONG PolicyCount;
+    struct
+    {
+        ULONG Category;
+        UCHAR Value;
+    } Policies[1];
+} TOKEN_AUDIT_POLICY_INFORMATION, *PTOKEN_AUDIT_POLICY_INFORMATION;
+
 FORCEINLINE
 PSID
 SepGetGroupFromDescriptor(PVOID _Descriptor)

@@ -16,7 +16,7 @@ MyRtlCompareMemory(
 
     for(i=0; i<len; i++) {
         if( ((char*)s1)[i] != ((char*)s2)[i] )
-            break; 
+            break;
     }
     return i;
 }

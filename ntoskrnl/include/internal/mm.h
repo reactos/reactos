@@ -744,7 +744,7 @@ VOID
 NTAPI
 MmCleanProcessAddressSpace(IN PEPROCESS Process);
 
-NTSTATUS
+VOID
 NTAPI
 MmDeleteProcessAddressSpace(IN PEPROCESS Process);
 

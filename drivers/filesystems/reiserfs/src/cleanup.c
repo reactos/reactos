@@ -2,10 +2,10 @@
  * COPYRIGHT:        GNU GENERAL PUBLIC LICENSE VERSION 2
  * PROJECT:          ReiserFs file system driver for Windows NT/2000/XP/Vista.
  * FILE:             cleanup.c
- * PURPOSE:          
+ * PURPOSE:
  * PROGRAMMER:       Mark Piper, Matt Wu, Bo Brantén.
- * HOMEPAGE:         
- * UPDATE HISTORY: 
+ * HOMEPAGE:
+ * UPDATE HISTORY:
  */
 
 /* INCLUDES *****************************************************************/
@@ -42,21 +42,21 @@ RfsdCleanup (IN PRFSD_IRP_CONTEXT IrpContext)
     _SEH2_TRY {
 
         ASSERT(IrpContext != NULL);
-        
+
         ASSERT((IrpContext->Identifier.Type == RFSDICX) &&
             (IrpContext->Identifier.Size == sizeof(RFSD_IRP_CONTEXT)));
-        
+
         DeviceObject = IrpContext->DeviceObject;
-        
+
         if (DeviceObject == RfsdGlobal->DeviceObject) {
             Status = STATUS_SUCCESS;
             _SEH2_LEAVE;
         }
-        
+
         Vcb = (PRFSD_VCB) DeviceObject->DeviceExtension;
-        
+
         ASSERT(Vcb != NULL);
-        
+
         ASSERT((Vcb->Identifier.Type == RFSDVCB) &&
             (Vcb->Identifier.Size == sizeof(RFSD_VCB)));
 
@@ -77,16 +77,16 @@ RfsdCleanup (IN PRFSD_IRP_CONTEXT IrpContext)
         }
 
         VcbResourceAcquired = TRUE;
-        
+
         FileObject = IrpContext->FileObject;
-        
+
         Fcb = (PRFSD_FCB) FileObject->FsContext;
-        
+
         if (!Fcb) {
             Status = STATUS_SUCCESS;
             _SEH2_LEAVE;
         }
-        
+
         if (Fcb->Identifier.Type == RFSDVCB) {
             if (IsFlagOn(Vcb->Flags, VCB_VOLUME_LOCKED) &&
                 (Vcb->LockFile == FileObject) ) {
@@ -105,7 +105,7 @@ RfsdCleanup (IN PRFSD_IRP_CONTEXT IrpContext)
             Status = STATUS_SUCCESS;
             _SEH2_LEAVE;
         }
-        
+
         ASSERT((Fcb->Identifier.Type == RFSDFCB) &&
             (Fcb->Identifier.Size == sizeof(RFSD_FCB)));
 
@@ -128,7 +128,7 @@ RfsdCleanup (IN PRFSD_IRP_CONTEXT IrpContext)
 
             FcbResourceAcquired = TRUE;
         }
-        
+
         Ccb = (PRFSD_CCB) FileObject->FsContext2;
 
         if (!Ccb) {
@@ -144,9 +144,9 @@ RfsdCleanup (IN PRFSD_IRP_CONTEXT IrpContext)
             }
             _SEH2_LEAVE;
         }
-        
+
         ASSERT((Ccb->Identifier.Type == RFSDCCB) &&
-            (Ccb->Identifier.Size == sizeof(RFSD_CCB)));        
+            (Ccb->Identifier.Size == sizeof(RFSD_CCB)));
         Irp = IrpContext->Irp;
 
         Fcb->OpenHandleCount--;
@@ -269,7 +269,7 @@ DbgBreak();
 #endif
                 if (CcIsFileCached(FileObject)) {
 
-                    CcSetFileSizes(FileObject, 
+                    CcSetFileSizes(FileObject,
                             (PCC_FILE_SIZES)(&(Fcb->Header.AllocationSize)));
                     SetFlag(FileObject->Flags, FO_FILE_MODIFIED);
                 }
@@ -308,7 +308,7 @@ DbgBreak();
         }
 
     } _SEH2_FINALLY {
-       
+
         if (FcbPagingIoAcquired) {
             ExReleaseResourceForThreadLite(
                 &Fcb->PagingIoResource,
@@ -320,13 +320,13 @@ DbgBreak();
                 &Fcb->MainResource,
                 ExGetCurrentResourceThread() );
         }
-        
+
         if (VcbResourceAcquired) {
             ExReleaseResourceForThreadLite(
                 &Vcb->MainResource,
                 ExGetCurrentResourceThread());
         }
-        
+
         if (!IrpContext->ExceptionInProgress) {
             if (Status == STATUS_PENDING) {
                 RfsdQueueRequest(IrpContext);
@@ -336,6 +336,6 @@ DbgBreak();
             }
         }
     } _SEH2_END;
-    
+
     return Status;
 }

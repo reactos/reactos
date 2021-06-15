@@ -4,7 +4,7 @@
 
 /*
  * extents_bread: This function is a wrapper of CcPinRead routine.
- * 
+ *
  * @sb:    the device we need to undergo buffered IO on.
  * @block: the block we want to read from.
  *
@@ -19,7 +19,7 @@ extents_bread(struct super_block *sb, sector_t block)
 
 /*
  * extents_bwrite: This function is a wrapper of CcPreparePinWrite routine.
- * 
+ *
  * @sb:    the device we need to undergo buffered IO on.
  * @block: the block we want to write to.
  */
@@ -33,7 +33,7 @@ extents_bwrite(struct super_block *sb, sector_t block)
 /*
  * extents_mark_buffer_dirty: Mark the buffer dirtied and so
  *                            that changes will be written back.
- * 
+ *
  * @bh: The corresponding buffer header that is modified.
  */
 void extents_mark_buffer_dirty(struct buffer_head *bh)

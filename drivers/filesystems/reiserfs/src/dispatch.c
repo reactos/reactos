@@ -2,10 +2,10 @@
  * COPYRIGHT:        GNU GENERAL PUBLIC LICENSE VERSION 2
  * PROJECT:          ReiserFs file system driver for Windows NT/2000/XP/Vista.
  * FILE:             dispatch.c
- * PURPOSE:          
+ * PURPOSE:
  * PROGRAMMER:       Mark Piper, Matt Wu, Bo Brantén.
- * HOMEPAGE:         
- * UPDATE HISTORY: 
+ * HOMEPAGE:
+ * UPDATE HISTORY:
  */
 
 /* INCLUDES *****************************************************************/
@@ -31,24 +31,24 @@ RfsdQueueRequest (IN PRFSD_IRP_CONTEXT IrpContext)
     PAGED_CODE();
 
     ASSERT(IrpContext);
-    
+
     ASSERT((IrpContext->Identifier.Type == RFSDICX) &&
         (IrpContext->Identifier.Size == sizeof(RFSD_IRP_CONTEXT)));
-    
+
     // IsSynchronous means we can block (so we don't requeue it)
     IrpContext->IsSynchronous = TRUE;
 
     SetFlag(IrpContext->Flags, IRP_CONTEXT_FLAG_REQUEUED);
-    
+
     IoMarkIrpPending(IrpContext->Irp);
-    
+
     ExInitializeWorkItem(
         &IrpContext->WorkQueueItem,
         RfsdDeQueueRequest,
         IrpContext );
-    
+
     ExQueueWorkItem(&IrpContext->WorkQueueItem, CriticalWorkQueue);
-    
+
     return STATUS_PENDING;
 }
 
@@ -99,18 +99,18 @@ RfsdDispatchRequest (IN PRFSD_IRP_CONTEXT IrpContext)
     PAGED_CODE();
 
     ASSERT(IrpContext);
-    
+
     ASSERT((IrpContext->Identifier.Type == RFSDICX) &&
         (IrpContext->Identifier.Size == sizeof(RFSD_IRP_CONTEXT)));
-    
+
     switch (IrpContext->MajorFunction) {
 
         case IRP_MJ_CREATE:
             return RfsdCreate(IrpContext);
-        
+
         case IRP_MJ_CLOSE:
             return RfsdClose(IrpContext);
-        
+
         case IRP_MJ_READ:
             return RfsdRead(IrpContext);
 
@@ -138,16 +138,16 @@ RfsdDispatchRequest (IN PRFSD_IRP_CONTEXT IrpContext)
 
         case IRP_MJ_DIRECTORY_CONTROL:
             return RfsdDirectoryControl(IrpContext);
-        
+
         case IRP_MJ_FILE_SYSTEM_CONTROL:
             return RfsdFileSystemControl(IrpContext);
 
         case IRP_MJ_DEVICE_CONTROL:
             return RfsdDeviceControl(IrpContext);
-        
+
         case IRP_MJ_LOCK_CONTROL:
             return RfsdLockControl(IrpContext);
-        
+
         case IRP_MJ_CLEANUP:
             return RfsdCleanup(IrpContext);
 
@@ -157,7 +157,7 @@ RfsdDispatchRequest (IN PRFSD_IRP_CONTEXT IrpContext)
 #if (_WIN32_WINNT >= 0x0500)
         case IRP_MJ_PNP:
             return RfsdPnp(IrpContext);
-#endif //(_WIN32_WINNT >= 0x0500)        
+#endif //(_WIN32_WINNT >= 0x0500)
         default:
 			{
 				NTSTATUS DefaultRC = STATUS_INVALID_DEVICE_REQUEST;
@@ -189,22 +189,22 @@ RfsdBuildRequest (PDEVICE_OBJECT   DeviceObject, PIRP Irp)
 #if DBG
             RfsdDbgPrintCall(DeviceObject, Irp);
 #endif
-            
+
             AtIrqlPassiveLevel = (KeGetCurrentIrql() == PASSIVE_LEVEL);
-            
+
             if (AtIrqlPassiveLevel) {
 
                 FsRtlEnterFileSystem();
             }
-            
+
             if (!IoGetTopLevelIrp()) {
 
                 IsTopLevelIrp = TRUE;
                 IoSetTopLevelIrp(Irp);
             }
-            
+
             IrpContext = RfsdAllocateIrpContext(DeviceObject, Irp);
-            
+
             if (!IrpContext) {
 
                 Status = STATUS_INSUFFICIENT_RESOURCES;
@@ -232,11 +232,11 @@ RfsdBuildRequest (PDEVICE_OBJECT   DeviceObject, PIRP Irp)
         if (IsTopLevelIrp) {
             IoSetTopLevelIrp(NULL);
         }
-        
+
         if (AtIrqlPassiveLevel) {
             FsRtlExitFileSystem();
-        }       
+        }
     } _SEH2_END;
-    
+
     return Status;
 }

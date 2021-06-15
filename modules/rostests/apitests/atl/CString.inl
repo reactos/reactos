@@ -122,10 +122,27 @@ TEST_NAMEX(compare)
     ok(s2[0] == _X('s'), "Expected s2[0] to be s, was: %c\n", (char)s2[0]);
 
     ok(s1 == _X("SOME TEXT 1!"), "Expected s1 to be 'SOME TEXT 1!', was: %s\n", dbgstrx(s1));
+    ok(s1 != _X("SOME TEXT 2!"), "Expected s2 not to match 'SOME TEXT 2!', was: %s\n", dbgstrx(s1));
+    ok(!(s1 != _X("SOME TEXT 1!")), "Expected s1 to be 'SOME TEXT 1!', was: %s\n", dbgstrx(s1));
 
     CStringX s3 = s1.MakeLower();
     ok(s1 == _X("some text 1!"), "Expected s1 to be 'some text 1!', was: %s\n", dbgstrx(s1));
     ok(s1 == s3, "Expected s1 and s3 to be equal: '%s' == '%s'\n", dbgstrx(s1), dbgstrx(s3));
+    ok(!(s1 != s3), "Expected s1 and s3 to be equal: !('%s' == '%s')\n", dbgstrx(s1), dbgstrx(s3));
+
+    // Compare as chars
+    s1 = _X("Q");
+    ok(s1 == 'Q', "Expected s1 to be 'Q', was: %s\n", dbgstrx(s1));
+    ok(!(s1 != 'Q'), "Expected s1 to be 'Q' (!=), was: %s\n", dbgstrx(s1));
+    ok(s1 != 'S', "Expected s1 to be different from 'S', was: %s\n", dbgstrx(s1));
+
+    s1.Empty();
+    ok(s1 != 'S', "Expected s1 to be different from 'S', was: %s\n", dbgstrx(s1));
+    ok(s1 != 'Q', "Expected s1 to be different from 'S', was: %s\n", dbgstrx(s1));
+
+    s1 = _X("QQ");
+    ok(s1 != 'S', "Expected s1 to be different from 'S', was: %s\n", dbgstrx(s1));
+    ok(s1 != 'Q', "Expected s1 to be different from 'S', was: %s\n", dbgstrx(s1));
 }
 
 
@@ -522,7 +539,6 @@ TEST_NAMEX(tokenize)
 
     // Calling with an empty pszTokens behaves exactly the same
     res = str.Tokenize(_X(""), nCurPos);
-    ok(res == _X(""), "Expected str to be 'st', was: %s\n", dbgstrx(res));
     ok(res == _X(""), "Expected str to be '', was: %s\n", dbgstrx(res));
     ok_dec(nCurPos, -1);
 }

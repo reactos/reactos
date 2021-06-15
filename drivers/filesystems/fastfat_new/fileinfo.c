@@ -276,7 +276,7 @@ Return Value:
     return Status;
 }
 
-
+
 _Function_class_(IRP_MJ_SET_INFORMATION)
 _Function_class_(DRIVER_DISPATCH)
 NTSTATUS
@@ -357,8 +357,8 @@ Return Value:
     return Status;
 }
 
-
-_Requires_lock_held_(_Global_critical_region_)    
+
+_Requires_lock_held_(_Global_critical_region_)
 NTSTATUS
 FatCommonQueryInformation (
     IN PIRP_CONTEXT IrpContext,
@@ -494,8 +494,8 @@ Return Value:
             //  relies on the file system to validate its mapping information after a
             //  power transition.
             //
-            
-            if (!FlagOn( Fcb->FcbState, FCB_STATE_PAGING_FILE ) || 
+
+            if (!FlagOn( Fcb->FcbState, FCB_STATE_PAGING_FILE ) ||
                 FlagOn(Fcb->Vcb->VcbState, VCB_STATE_FLAG_REMOVABLE_MEDIA)) {
 
                 if (!FatAcquireSharedFcb( IrpContext, Fcb )) {
@@ -657,8 +657,8 @@ Return Value:
     return Status;
 }
 
-
-_Requires_lock_held_(_Global_critical_region_)    
+
+_Requires_lock_held_(_Global_critical_region_)
 NTSTATUS
 FatCommonSetInformation (
     IN PIRP_CONTEXT IrpContext,
@@ -826,7 +826,7 @@ Return Value:
             //
 
             if (FlagOn( Vcb->VcbState, VCB_STATE_FLAG_CREATE_IN_PROGRESS)) {
-                
+
 #ifdef _MSC_VER
 #pragma prefast( suppress:28159, "things are seriously wrong if we get here" )
 #endif
@@ -850,7 +850,7 @@ Return Value:
         //  power transition.
         //
 
-        if (!FlagOn( Fcb->FcbState, FCB_STATE_PAGING_FILE ) || 
+        if (!FlagOn( Fcb->FcbState, FCB_STATE_PAGING_FILE ) ||
             FlagOn(Fcb->Vcb->VcbState, VCB_STATE_FLAG_REMOVABLE_MEDIA)) {
 
             if (!FatAcquireExclusiveFcb( IrpContext, Fcb )) {
@@ -908,14 +908,14 @@ Return Value:
                 Irp = NULL;
                 IrpContext = NULL;
             }
-                
+
             if (!NT_SUCCESS( Status ) ||
                 (Status == STATUS_PENDING)) {
 
                 try_return( Status );
             }
         }
-        
+
         //
         //  Based on the information class we'll do different
         //  actions.  Each of the procedures that we're calling will either
@@ -1021,7 +1021,7 @@ Return Value:
         DebugUnwind( FatCommonSetInformation );
 
         if (FcbAcquired) { FatReleaseFcb( IrpContext, Fcb ); }
-        
+
         if (VcbAcquired) { FatReleaseVcb( IrpContext, Vcb ); }
 
         if (!_SEH2_AbnormalTermination()) {
@@ -1035,7 +1035,7 @@ Return Value:
     return Status;
 }
 
-
+
 //
 //  Internal Support Routine
 //
@@ -1077,7 +1077,7 @@ Return Value:
 
     UNREFERENCED_PARAMETER( FileObject );
     UNREFERENCED_PARAMETER( IrpContext );
-    
+
     DebugTrace(+1, Dbg, "FatQueryBasicInfo...\n", 0);
 
     //
@@ -1114,7 +1114,7 @@ Return Value:
 
     Buffer->FileAttributes = Fcb->DirentFatFlags;
 
-    
+
     //
     //  If the temporary flag is set, then set it in the buffer.
     //
@@ -1146,7 +1146,7 @@ Return Value:
     return;
 }
 
-
+
 //
 //  Internal Support Routine
 //
@@ -1233,7 +1233,7 @@ Return Value:
     return;
 }
 
-
+
 //
 //  Internal Support Routine
 //
@@ -1272,7 +1272,7 @@ Return Value:
     PAGED_CODE();
 
     UNREFERENCED_PARAMETER( IrpContext );
-    
+
     DebugTrace(+1, Dbg, "FatQueryInternalInfo...\n", 0);
 
     _SEH2_TRY {
@@ -1297,7 +1297,7 @@ Return Value:
     return;
 }
 
-
+
 //
 //  Internal Support Routine
 //
@@ -1339,7 +1339,7 @@ Return Value:
 
     UNREFERENCED_PARAMETER( Fcb );
     UNREFERENCED_PARAMETER( IrpContext );
-    
+
     DebugTrace(+1, Dbg, "FatQueryEaInfo...\n", 0);
 
     Bcb = NULL;
@@ -1408,7 +1408,7 @@ Return Value:
     } _SEH2_END;
 }
 
-
+
 //
 //  Internal Support Routine
 //
@@ -1469,7 +1469,7 @@ Return Value:
     return;
 }
 
-
+
 //
 //  Internal Support Routine
 //
@@ -1677,7 +1677,7 @@ Return Value:
     return;
 }
 
-
+
 //
 //  Internal Support Routine
 //
@@ -1776,7 +1776,7 @@ Return Value:
     return;
 }
 
-
+
 //
 //  Internal Support Routine
 //
@@ -1816,8 +1816,8 @@ Return Value:
 
 {
     PAGED_CODE();
-    
-    UNREFERENCED_PARAMETER( FileObject );   
+
+    UNREFERENCED_PARAMETER( FileObject );
 
     DebugTrace(+1, Dbg, "FatQueryNetworkInfo...\n", 0);
 
@@ -1855,7 +1855,7 @@ Return Value:
 
     Buffer->FileAttributes = Fcb->DirentFatFlags;
 
-    
+
     //
     //  If the temporary flag is set, then set it in the buffer.
     //
@@ -1903,7 +1903,7 @@ Return Value:
     return;
 }
 
-
+
 //
 //  Internal Support routine
 //
@@ -2423,7 +2423,7 @@ Return Value:
 
     return Status;
 }
-
+
 //
 //  Internal Support Routine
 //
@@ -2685,7 +2685,7 @@ Return Value:
     return STATUS_SUCCESS;
 }
 
-
+
 //
 //  Internal Support Routine
 //
@@ -2784,11 +2784,11 @@ Return Value:
     ULONG TargetDirentOffset = 0;
     ULONG TargetLfnOffset = 0;
 
-    // NewName comes from the IRP buffer or the TargetFileObject, so we can't 
+    // NewName comes from the IRP buffer or the TargetFileObject, so we can't
     // go around modifying it. Instead we modify NewNameCopy.
     UNICODE_STRING NewName;
 
-    // NB: these five UNICODE_STRINGS are allocated 
+    // NB: these five UNICODE_STRINGS are allocated
     // from one chopped up pool allocation called UnicodeBuffer.
     UNICODE_STRING NewNameCopy;
     UNICODE_STRING NewUpcasedName;
@@ -2803,7 +2803,7 @@ Return Value:
     WCHAR UniTunneledShortNameBuffer[12];
     UNICODE_STRING UniTunneledLongName;
     WCHAR UniTunneledLongNameBuffer[26];
-    
+
     LARGE_INTEGER TunneledCreationTime;
     ULONG TunneledDataSize;
     BOOLEAN HaveTunneledInformation = FALSE;
@@ -2874,7 +2874,7 @@ Return Value:
     UniTunneledLongName.Length = 0;
     UniTunneledLongName.MaximumLength = sizeof(UniTunneledLongNameBuffer);
     UniTunneledLongName.Buffer = &UniTunneledLongNameBuffer[0];
-    
+
     //
     //  Remember the name in case we have to modify the name
     //  value in the ea.
@@ -2960,7 +2960,7 @@ Return Value:
                          if (FatIsFileOplockable( TempFcb ) &&
                              (FsRtlCurrentBatchOplock( FatGetFcbOplock(TempFcb) )
 #if (NTDDI_VERSION >= NTDDI_WIN7)
-                              || 
+                              ||
                               FsRtlCurrentOplockH( FatGetFcbOplock(TempFcb) )
 #endif
                               )) {
@@ -3114,9 +3114,9 @@ Return Value:
             NewName = *((PUNICODE_STRING)&TargetFileObject->FileName);
 
             RtlCopyUnicodeString(&NewNameCopy,&NewName);
-            
+
         }
-        
+
         //
         //  We will need an upcased version of the unicode name and the
         //  old name as well.
@@ -3175,7 +3175,7 @@ Return Value:
 
             RenamedAcrossDirectories = TRUE;
         }
-        
+
         //
         //  Upcase the name and convert it to the Oem code page.
         //
@@ -3254,7 +3254,7 @@ Return Value:
 
                 DirentsRequired = 1;
 
-                
+
             }
         }
 
@@ -3451,7 +3451,7 @@ Return Value:
 
             ExFreePool( UnicodeBuffer );
             FatUnpinBcb( IrpContext, TargetDirentBcb );
-            
+
         }
     } _SEH2_END;
 
@@ -3757,7 +3757,7 @@ Return Value:
         //  breaks are always advisory, so we will never block/get STATUS_PENDING
         //  here.
         //
-        
+
         FsRtlCheckOplockEx( FatGetFcbOplock(OldParentDcb),
                             IrpContext->OriginatingIrp,
                             OPLOCK_FLAG_PARENT_OBJECT,
@@ -3778,7 +3778,7 @@ Return Value:
             //  breaks are always advisory, so we will never block/get STATUS_PENDING
             //  here.
             //
-            
+
             FsRtlCheckOplockEx( FatGetFcbOplock(TargetDcb),
                                 IrpContext->OriginatingIrp,
                                 OPLOCK_FLAG_PARENT_OBJECT,
@@ -3980,7 +3980,7 @@ Return Value:
             DebugTrace(0, Dbg, "Uninitialize our parent Stream Cache Map\n", 0);
 
             CcUninitializeCacheMap( DirectoryFileObject, NULL, NULL );
-            
+
             ObDereferenceObject( DirectoryFileObject );
         }
 
@@ -4001,7 +4001,7 @@ Return Value:
     return Status;
 }
 
-
+
 //
 //  Internal Support Routine
 //
@@ -4079,7 +4079,7 @@ Return Value:
     return STATUS_SUCCESS;
 }
 
-
+
 //
 //  Internal Support Routine
 //
@@ -4377,7 +4377,7 @@ Return Value:
     return Status;
 }
 
-
+
 //
 //  Internal Support Routine
 //
@@ -4563,9 +4563,9 @@ Return Value:
                 _SEH2_TRY {
 
 
-                    if ( NewFileSize > Dirent->FileSize ) {   
+                    if ( NewFileSize > Dirent->FileSize ) {
                         Dirent->FileSize = NewFileSize;
-                        
+
                         FatSetDirtyBcb( IrpContext, DirentBcb, Fcb->Vcb, TRUE );
 
                         //
@@ -4739,7 +4739,7 @@ Return Value:
 
                 *CcGetFileSizePointer(FileObject) = Fcb->Header.FileSize;
             }
-            
+
             //
             //  WinSE bug #307418 "Occasional data corruption when
             //  standby/resume while copying files to removable FAT
@@ -4753,7 +4753,7 @@ Return Value:
             //  we'll also try to un-roll the change to Dirent to keep
             //  in-memory and on-disk metadata in sync.
             //
-            
+
             FatSetFileSizeInDirentNoRaise( IrpContext, Fcb, NULL );
 
         }
@@ -4836,7 +4836,7 @@ Return Value:
         //
         //  User must have manage volume privilege to explicitly tweak the VDL
         //
-        
+
         if ((Ccb == NULL) || !FlagOn( Ccb->Flags, CCB_FLAG_MANAGE_VOLUME_ACCESS )) {
 
             try_return( Status = STATUS_INVALID_PARAMETER );
@@ -4874,7 +4874,7 @@ Return Value:
 
         if ((NewValidDataLength < Fcb->Header.ValidDataLength.LowPart) ||
             (NewValidDataLength > Fcb->Header.FileSize.LowPart)) {
-        
+
             try_return( Status = STATUS_INVALID_PARAMETER );
         }
 
@@ -4962,7 +4962,7 @@ Return Value:
     return Status;
 }
 
-
+
 
 //
 //  Internal Support Routine
@@ -5117,7 +5117,7 @@ FatDeleteFile (
             NT_ASSERT( Fcb->LfnOffsetWithinDirectory == LfnOffset );
 
             if ( Fcb->UncleanCount != 0 ) {
-                
+
 #ifdef _MSC_VER
 #pragma prefast( suppress:28159, "things are seriously wrong if we get here" )
 #endif

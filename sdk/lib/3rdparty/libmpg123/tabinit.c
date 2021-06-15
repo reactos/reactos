@@ -17,7 +17,7 @@ static ALIGNED(16) real cos16[4];
 static ALIGNED(16) real cos8[2];
 static ALIGNED(16) real cos4[1];
 #elif defined(REAL_IS_FIXED) && defined(PRECALC_TABLES)
-static real cos64[16] = 
+static real cos64[16] =
 {
 	8398725,8480395,8647771,8909416,9279544,9780026,10443886,11321405,
 	12491246,14081950,16316987,19619946,24900150,34523836,57170182,170959967
@@ -120,24 +120,24 @@ void make_decode_tables_mmx(mpg123_handle *fr)
 	{
 		if(idx < 512+16)
 		fr->decwin_mmx[idx+16] = fr->decwin_mmx[idx] = DOUBLE_TO_REAL((double) intwinbase[j] * scaleval);
-		
+
 		if(i % 32 == 31)
 		idx -= 1023;
 		if(i % 64 == 63)
 		scaleval = - scaleval;
 	}
-	
+
 	for( /* i=256 */ ;i<512;i++,j--,idx+=32)
 	{
 		if(idx < 512+16)
 		fr->decwin_mmx[idx+16] = fr->decwin_mmx[idx] = DOUBLE_TO_REAL((double) intwinbase[j] * scaleval);
-		
+
 		if(i % 32 == 31)
 		idx -= 1023;
 		if(i % 64 == 63)
 		scaleval = - scaleval;
 	}
-	
+
 	for(i=0; i<512; i++) {
 		if(i&1) val = rounded(fr->decwin_mmx[i]*0.5);
 		else val = rounded(fr->decwin_mmx[i]*-0.5);

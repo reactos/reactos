@@ -2738,7 +2738,7 @@ typedef struct timeval FAR *LPTIMEVAL;
 #include <poppack.h>
 #endif
 
-/* FIXME : 
+/* FIXME :
 #if(_WIN32_WINNT >= 0x0501)
 #ifdef IPV6STRICT
 #include <wsipv6ok.h>

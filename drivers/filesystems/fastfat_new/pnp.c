@@ -76,7 +76,7 @@ FatPnpCompletionRoutine (
 #pragma alloc_text(PAGE, FatPnpSurpriseRemove)
 #endif
 
-
+
 _Function_class_(IRP_MJ_PNP)
 _Function_class_(DRIVER_DISPATCH)
 NTSTATUS
@@ -127,7 +127,7 @@ Return Value:
         //  wait.  Since at the moment we don't have any concept of pending Pnp
         //  operations, this is a bit nitpicky.
         //
-        
+
         if (IoGetCurrentIrpStackLocation( Irp )->FileObject == NULL) {
 
             Wait = TRUE;
@@ -168,8 +168,8 @@ Return Value:
     return Status;
 }
 
-
-_Requires_lock_held_(_Global_critical_region_)    
+
+_Requires_lock_held_(_Global_critical_region_)
 NTSTATUS
 FatCommonPnp (
     IN PIRP_CONTEXT IrpContext,
@@ -195,7 +195,7 @@ Return Value:
 
 {
     NTSTATUS Status;
-    
+
     PIO_STACK_LOCATION IrpSp;
 
     PVOLUME_DEVICE_OBJECT OurDeviceObject;
@@ -206,9 +206,9 @@ Return Value:
     //
     //  Force everything to wait.
     //
-    
+
     SetFlag( IrpContext->Flags, IRP_CONTEXT_FLAG_WAIT);
-    
+
     //
     //  Get the current Irp stack location.
     //
@@ -231,12 +231,12 @@ Return Value:
 #pragma prefast( disable: 28193, "this will always wait" )
 #endif
 
-    FatAcquireExclusiveGlobal( IrpContext );    
+    FatAcquireExclusiveGlobal( IrpContext );
 
 #ifdef _MSC_VER
 #pragma prefast( pop )
 #endif
-    
+
     //
     //  Make sure this device object really is big enough to be a volume device
     //  object.  If it isn't, we need to get out before we try to reference some
@@ -244,17 +244,17 @@ Return Value:
     //
 
 #ifdef _MSC_VER
-#pragma prefast( suppress: 28175, "touching Size is ok for a filesystem" )    
+#pragma prefast( suppress: 28175, "touching Size is ok for a filesystem" )
 #endif
     if (OurDeviceObject->DeviceObject.Size != sizeof(VOLUME_DEVICE_OBJECT) ||
         NodeType( &OurDeviceObject->Vcb ) != FAT_NTC_VCB) {
-        
+
         //
         //  We were called with something we don't understand.
         //
 
         FatReleaseGlobal( IrpContext );
-        
+
         Status = STATUS_INVALID_PARAMETER;
         FatCompleteRequest( IrpContext, Irp, Status );
         return Status;
@@ -265,16 +265,16 @@ Return Value:
     //
     //  Case on the minor code.
     //
-    
+
     switch ( IrpSp->MinorFunction ) {
 
         case IRP_MN_QUERY_REMOVE_DEVICE:
-            
+
             Status = FatPnpQueryRemove( IrpContext, Irp, Vcb );
             break;
-        
+
         case IRP_MN_SURPRISE_REMOVAL:
-        
+
             Status = FatPnpSurpriseRemove( IrpContext, Irp, Vcb );
             break;
 
@@ -284,44 +284,44 @@ Return Value:
             break;
 
         case IRP_MN_CANCEL_REMOVE_DEVICE:
-    
+
             Status = FatPnpCancelRemove( IrpContext, Irp, Vcb );
             break;
 
         default:
 
             FatReleaseGlobal( IrpContext );
-            
+
             //
             //  Just pass the IRP on.  As we do not need to be in the
             //  way on return, ellide ourselves out of the stack.
             //
-            
+
             IoSkipCurrentIrpStackLocation( Irp );
-    
+
             Status = IoCallDriver(Vcb->TargetDeviceObject, Irp);
-            
+
             //
             //  Cleanup our Irp Context.  The driver has completed the Irp.
             //
-        
+
             FatCompleteRequest( IrpContext, NULL, STATUS_SUCCESS );
-            
+
             break;
     }
-        
+
     return Status;
 }
 
 
 VOID
-FatPnpAdjustVpbRefCount( 
+FatPnpAdjustVpbRefCount(
     IN PVCB Vcb,
     IN ULONG Delta
     )
 {
     KIRQL OldIrql;
-    
+
     IoAcquireVpbSpinLock( &OldIrql);
     Vcb->Vpb->ReferenceCount += Delta;
     IoReleaseVpbSpinLock( OldIrql);
@@ -344,13 +344,13 @@ Routine Description:
     is responsible for answering whether there are any reasons it sees
     that the volume can not go away (and the device removed).  Initiation
     of the dismount begins when we answer yes to this question.
-    
+
     Query will be followed by a Cancel or Remove.
 
 Arguments:
 
     Irp - Supplies the Irp to process
-    
+
     Vcb - Supplies the volume being queried.
 
 Return Value:
@@ -379,16 +379,16 @@ Return Value:
     GlobalHeld = FALSE;
 
     _SEH2_TRY {
-        
+
         Status = FatLockVolumeInternal( IrpContext, Vcb, NULL );
 
         //
         //  Drop an additional reference on the Vpb so that the volume cannot be
         //  torn down when we drop all the locks below.
         //
-        
+
         FatPnpAdjustVpbRefCount( Vcb, 1);
-        
+
         //
         //  Drop and reacquire the resources in the right order.
         //
@@ -405,7 +405,7 @@ Return Value:
 
         FatAcquireExclusiveGlobal( IrpContext );
         GlobalHeld = TRUE;
-        
+
 #ifdef _MSC_VER
 #pragma prefast( pop )
 #endif
@@ -415,7 +415,7 @@ Return Value:
         //
         //  Drop the reference we added above.
         //
-        
+
         FatPnpAdjustVpbRefCount( Vcb, (ULONG)-1);
 
         if (NT_SUCCESS( Status )) {
@@ -493,7 +493,7 @@ Return Value:
         }
 
     } _SEH2_FINALLY {
-        
+
         //
         //  Release the Vcb if it could still remain.
         //
@@ -504,11 +504,11 @@ Return Value:
         }
 
         if (GlobalHeld) {
-            
+
             FatReleaseGlobal( IrpContext );
         }
     } _SEH2_END;
-    
+
     //
     //  Cleanup our IrpContext and complete the IRP if neccesary.
     //
@@ -518,7 +518,7 @@ Return Value:
     return Status;
 }
 
-
+
 
 _Requires_lock_held_(_Global_critical_region_)
 NTSTATUS
@@ -536,11 +536,11 @@ Routine Description:
     that the underlying storage device for the volume we have is gone, and
     an excellent indication that the volume will never reappear. The filesystem
     is responsible for initiation or completion of the dismount.
-    
+
 Arguments:
 
     Irp - Supplies the Irp to process
-    
+
     Vcb - Supplies the volume being removed.
 
 Return Value:
@@ -566,7 +566,7 @@ Return Value:
     //  for a REMOVE in the first two cases, as we try to intiate
     //  dismount.
     //
-    
+
     //
     //  Acquire the global resource so that we can try to vaporize
     //  the volume, and the vcb resource itself.
@@ -580,12 +580,12 @@ Return Value:
     //
 
     (VOID) FatUnlockVolumeInternal( IrpContext, Vcb, NULL );
-    
+
     //
     //  We need to pass this down before starting the dismount, which
     //  could disconnect us immediately from the stack.
     //
-    
+
     //
     //  Get the next stack location, and copy over the stack location
     //
@@ -622,7 +622,7 @@ Return Value:
     }
 
     _SEH2_TRY {
-        
+
         //
         //  Knock as many files down for this volume as we can.
         //
@@ -641,7 +641,7 @@ Return Value:
         VcbDeleted = FatCheckForDismount( IrpContext, Vcb, TRUE );
 
     } _SEH2_FINALLY {
-        
+
         //
         //  Release the Vcb if it could still remain.
         //
@@ -663,8 +663,8 @@ Return Value:
     return Status;
 }
 
-
-_Requires_lock_held_(_Global_critical_region_)    
+
+_Requires_lock_held_(_Global_critical_region_)
 NTSTATUS
 FatPnpSurpriseRemove (
     PIRP_CONTEXT IrpContext,
@@ -680,17 +680,17 @@ Routine Description:
     type of notification that the underlying storage device for the volume we
     have is gone, and is excellent indication that the volume will never reappear.
     The filesystem is responsible for initiation or completion the dismount.
-    
+
     For the most part, only "real" drivers care about the distinction of a
     surprise remove, which is a result of our noticing that a user (usually)
     physically reached into the machine and pulled something out.
-    
+
     Surprise will be followed by a Remove when all references have been shut down.
 
 Arguments:
 
     Irp - Supplies the Irp to process
-    
+
     Vcb - Supplies the volume being removed.
 
 Return Value:
@@ -710,14 +710,14 @@ Return Value:
     //  SURPRISE - a device was physically yanked away without
     //  any warning.  This means external forces.
     //
-    
+
     FatAcquireExclusiveVcb( IrpContext, Vcb );
-        
+
     //
     //  We need to pass this down before starting the dismount, which
     //  could disconnect us immediately from the stack.
     //
-    
+
     //
     //  Get the next stack location, and copy over the stack location
     //
@@ -752,9 +752,9 @@ Return Value:
 
         Status = Irp->IoStatus.Status;
     }
-    
+
     _SEH2_TRY {
-        
+
         //
         //  Knock as many files down for this volume as we can.
         //
@@ -770,7 +770,7 @@ Return Value:
         VcbDeleted = FatCheckForDismount( IrpContext, Vcb, TRUE );
 
     } _SEH2_FINALLY {
-        
+
         //
         //  Release the Vcb if it could still remain.
         //
@@ -782,7 +782,7 @@ Return Value:
 
         FatReleaseGlobal( IrpContext );
     } _SEH2_END;
-    
+
     //
     //  Cleanup our IrpContext and complete the IRP.
     //
@@ -792,8 +792,8 @@ Return Value:
     return Status;
 }
 
-
-_Requires_lock_held_(_Global_critical_region_)    
+
+_Requires_lock_held_(_Global_critical_region_)
 NTSTATUS
 FatPnpCancelRemove (
     PIRP_CONTEXT IrpContext,
@@ -809,11 +809,11 @@ Routine Description:
     notification that a previously proposed remove (query) was eventually
     vetoed by a component.  The filesystem is responsible for cleaning up
     and getting ready for more IO.
-    
+
 Arguments:
 
     Irp - Supplies the Irp to process
-    
+
     Vcb - Supplies the volume being removed.
 
 Return Value:
@@ -842,10 +842,10 @@ Return Value:
     //  with respect to the Vcb getting torn apart - merely referencing
     //  the volume device object is insufficient to keep us intact.
     //
-    
+
     FatAcquireExclusiveVcb( IrpContext, Vcb );
     FatReleaseGlobal( IrpContext);
-    
+
     //
     //  Unlock the volume.  This is benign if we never had seen
     //  a QUERY.
@@ -854,7 +854,7 @@ Return Value:
     (VOID)FatUnlockVolumeInternal( IrpContext, Vcb, NULL );
 
     _SEH2_TRY {
-        
+
         //
         //  Send the request.  The underlying driver will complete the
         //  IRP.  Since we don't need to be in the way, simply ellide
@@ -864,9 +864,9 @@ Return Value:
         IoSkipCurrentIrpStackLocation( Irp );
 
         Status = IoCallDriver(Vcb->TargetDeviceObject, Irp);
-    } 
+    }
     _SEH2_FINALLY {
-        
+
         FatReleaseVcb( IrpContext, Vcb );
     } _SEH2_END;
 
@@ -875,7 +875,7 @@ Return Value:
     return Status;
 }
 
-
+
 //
 //  Local support routine
 //
@@ -896,7 +896,7 @@ FatPnpCompletionRoutine (
 
     UNREFERENCED_PARAMETER( DeviceObject );
     UNREFERENCED_PARAMETER( Contxt );
-    UNREFERENCED_PARAMETER( Irp );    
+    UNREFERENCED_PARAMETER( Irp );
 }
 
 

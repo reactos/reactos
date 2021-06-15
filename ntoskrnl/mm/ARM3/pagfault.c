@@ -2145,6 +2145,7 @@ UserFault:
 
         /* We should come back with a valid PPE */
         ASSERT(PointerPpe->u.Hard.Valid == 1);
+        MiIncrementPageTableReferences(PointerPde);
     }
 #endif
 
@@ -2184,6 +2185,10 @@ UserFault:
                                  MM_EXECUTE_READWRITE,
                                  CurrentProcess,
                                  MM_NOIRQL);
+#if _MI_PAGING_LEVELS >= 3
+        MiIncrementPageTableReferences(PointerPte);
+#endif
+
 #if MI_TRACE_PFNS
         UserPdeFault = FALSE;
 #endif
@@ -2309,7 +2314,14 @@ UserFault:
          * Check if this is a real user-mode address or actually a kernel-mode
          * page table for a user mode address
          */
-        if (Address <= MM_HIGHEST_USER_ADDRESS)
+        if (Address <= MM_HIGHEST_USER_ADDRESS
+#if _MI_PAGING_LEVELS >= 3
+            || MiIsUserPte(Address)
+#if _MI_PAGING_LEVELS == 4
+            || MiIsUserPde(Address)
+#endif
+#endif
+        )
         {
             /* Add an additional page table reference */
             MiIncrementPageTableReferences(Address);

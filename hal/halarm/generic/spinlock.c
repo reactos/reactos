@@ -5,7 +5,7 @@
  * PURPOSE:         SpinLock Routines
  * PROGRAMMERS:     ReactOS Portable Systems Group
  */
- 
+
 /* INCLUDES ******************************************************************/
 
 #include <hal.h>

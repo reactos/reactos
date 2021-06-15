@@ -154,7 +154,7 @@ CPortFilterWaveRT::DeviceIoControl(
     if (IoStack->Parameters.DeviceIoControl.IoControlCode != IOCTL_KS_PROPERTY)
     {
         DPRINT("Unhandled function %lx Length %x\n", IoStack->Parameters.DeviceIoControl.IoControlCode, IoStack->Parameters.DeviceIoControl.InputBufferLength);
-        
+
         Irp->IoStatus.Status = STATUS_SUCCESS;
 
         IoCompleteRequest(Irp, IO_NO_INCREMENT);
@@ -316,7 +316,7 @@ CPortFilterWaveRT::Init(
     return STATUS_SUCCESS;
 }
 
-NTSTATUS 
+NTSTATUS
 NewPortFilterWaveRT(
     OUT IPortFilterWaveRT ** OutFilter)
 {

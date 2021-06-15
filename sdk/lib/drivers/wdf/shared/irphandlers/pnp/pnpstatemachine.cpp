@@ -781,7 +781,7 @@ Return Value:
                (sizeof(m_PnpMachine.m_States.History)/
                 sizeof(m_PnpMachine.m_States.History[0])));
 }
-
+
 /*++
 
 The locking model for the PnP state machine requires that events be enqueued
@@ -1151,7 +1151,7 @@ Routine Description:
         }
     }
 }
-
+
 VOID
 FxPkgPnp::PnpEnterNewState(
     __in WDF_DEVICE_PNP_STATE State
@@ -1258,7 +1258,7 @@ Return Value:
         }
     }
 }
-
+
 WDF_DEVICE_PNP_STATE
 FxPkgPnp::PnpEventCheckForDevicePresence(
     __inout FxPkgPnp*   This

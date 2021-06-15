@@ -203,7 +203,7 @@ MMixerGetControlTypeFromTopologyNode(
     else if (IsEqualGUIDAligned(NodeType, (LPGUID)&KSNODETYPE_SUPERMIX))
     {
         /* supermix control
-         * MIXERCONTROL_CONTROLTYPE_MUTE if KSPROPERTY_AUDIO_MUTE is supported 
+         * MIXERCONTROL_CONTROLTYPE_MUTE if KSPROPERTY_AUDIO_MUTE is supported
          */
         UNIMPLEMENTED;
         return MIXERCONTROL_CONTROLTYPE_VOLUME;

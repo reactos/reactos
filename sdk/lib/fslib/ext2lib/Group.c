@@ -35,7 +35,7 @@ bool ext2_bg_has_super(PEXT2_SUPER_BLOCK pExt2Sb, int group_block)
     if (test_root(group_block, 3) || (test_root(group_block, 5)) ||
         test_root(group_block, 7))
         return true;
-    
+
     return false;
 }
 

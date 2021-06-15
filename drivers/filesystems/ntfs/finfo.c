@@ -554,8 +554,8 @@ NtfsQueryInformation(PNTFS_IRP_CONTEXT IrpContext)
 * STATUS_INSUFFICIENT_RESOURCES if an allocation failed,
 * STATUS_ACCESS_DENIED if target file is a volume or if paging is involved.
 *
-* @remarks As this function sets the size of a file at the file-level 
-* (and not at the attribute level) it's not recommended to use this 
+* @remarks As this function sets the size of a file at the file-level
+* (and not at the attribute level) it's not recommended to use this
 * function alongside functions that operate on the data attribute directly.
 *
 */
@@ -711,7 +711,7 @@ NtfsSetEndOfFile(PNTFS_FCB Fcb,
 *
 * @remarks Called by NtfsDispatch() in response to an IRP_MJ_SET_INFORMATION request.
 * Only the FileEndOfFileInformation InformationClass is fully implemented. FileAllocationInformation
-* is a hack and not a true implementation, but it's enough to make SetEndOfFile() work. 
+* is a hack and not a true implementation, but it's enough to make SetEndOfFile() work.
 * All other information classes are TODO.
 *
 */
@@ -752,9 +752,9 @@ NtfsSetInformation(PNTFS_IRP_CONTEXT IrpContext)
     {
         PFILE_END_OF_FILE_INFORMATION EndOfFileInfo;
 
-        /* TODO: Allocation size is not actually the same as file end for NTFS, 
+        /* TODO: Allocation size is not actually the same as file end for NTFS,
            however, few applications are likely to make the distinction. */
-        case FileAllocationInformation: 
+        case FileAllocationInformation:
             DPRINT1("FIXME: Using hacky method of setting FileAllocationInformation.\n");
         case FileEndOfFileInformation:
             EndOfFileInfo = (PFILE_END_OF_FILE_INFORMATION)SystemBuffer;
@@ -765,7 +765,7 @@ NtfsSetInformation(PNTFS_IRP_CONTEXT IrpContext)
                                       BooleanFlagOn(Stack->Flags, SL_CASE_SENSITIVE),
                                       &EndOfFileInfo->EndOfFile);
             break;
-            
+
         // TODO: all other information classes
 
         default:

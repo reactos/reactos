@@ -17,6 +17,7 @@ list(APPEND SOURCE
     CSimpleArray.cpp
     CSimpleMap.cpp
     CString.cpp
+    CString.inl
     SubclassWindow.cpp)
 
 list(APPEND PCH_SKIP_SOURCE

@@ -69,7 +69,7 @@ _matherr (struct _exception *pexcept)
 	break;
     }
 
-  __mingw_fprintf (stderr, "_matherr(): %s in %s(%g, %g)  (retval=%g)\n", 
+  __mingw_fprintf (stderr, "_matherr(): %s in %s(%g, %g)  (retval=%g)\n",
 	  type, pexcept->name, pexcept->arg1, pexcept->arg2, pexcept->retval);
   return 0;
 }

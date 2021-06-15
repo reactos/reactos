@@ -572,7 +572,7 @@ UDFCommonRead(
                 }
             }
         }
-    
+
         // Acquire the appropriate FCB resource shared
         if (PagingIo) {
             // Try to acquire the FCB PagingIoResource shared
@@ -946,7 +946,7 @@ UDFLockCallersBuffer(
     UDFPrint(("UDFLockCallersBuffer: \n"));
 
     ASSERT(Irp);
-    
+
     _SEH2_TRY {
         // Is a MDL already present in the IRP
         if (!(Irp->MdlAddress)) {

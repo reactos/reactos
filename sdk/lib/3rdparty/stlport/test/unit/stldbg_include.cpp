@@ -18,14 +18,14 @@
  * template <class _Dummy>
  * class __stl_debug_engine {
  *
- * 
+ *
  * This lead to compile-time error.
  * [This due to sys/types.h contains
  *
  *  __BEGIN_DECLS
  *  #include <bits/types.h>
  *
- * 
+ *
  * i.e. include other headers within extern "C" { scope. Bad, but this is fact.]
  *
  * Origin of problem: STLport provide proxy-headers as for C++ headers, as for C

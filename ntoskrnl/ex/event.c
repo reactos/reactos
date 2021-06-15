@@ -333,7 +333,8 @@ NtQueryEvent(IN HANDLE EventHandle,
                                          EventInformationLength,
                                          ReturnLength,
                                          NULL,
-                                         PreviousMode);
+                                         PreviousMode,
+                                         TRUE);
     if(!NT_SUCCESS(Status))
     {
         /* Invalid buffers */

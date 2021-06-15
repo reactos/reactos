@@ -201,7 +201,7 @@ NTSTATUS NTAPI FreeBT_AddDevice(IN PDRIVER_OBJECT DriverObject, IN PDEVICE_OBJEC
     deviceExtension->OutStandingIO = 1;
     KeInitializeSpinLock(&deviceExtension->IOCountLock);
 
-#ifdef ENABLE_WMI 
+#ifdef ENABLE_WMI
     // Delegating to WMILIB
     ntStatus = FreeBT_WmiRegistration(deviceExtension);
     if (!NT_SUCCESS(ntStatus))

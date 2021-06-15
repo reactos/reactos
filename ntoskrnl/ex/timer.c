@@ -536,7 +536,8 @@ NtQueryTimer(IN HANDLE TimerHandle,
                                          TimerInformationLength,
                                          ReturnLength,
                                          NULL,
-                                         PreviousMode);
+                                         PreviousMode,
+                                         TRUE);
     if (!NT_SUCCESS(Status)) return Status;
 
     /* Get the Timer Object */

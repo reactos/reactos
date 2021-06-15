@@ -252,7 +252,7 @@ try_exit: NOTHING;
 #else
     UDFPrint(("UDFPhReadSynchronous() exit: %08X\n", RC));
 #endif //MEASURE_IO_PERFORMANCE
-    
+
     return(RC);
 } // end UDFPhReadSynchronous()
 
@@ -413,7 +413,7 @@ try_exit: NOTHING;
 #else
     UDFPrint(("nUDFPhWriteSynchronous() exit: %08X\n", RC));
 #endif //MEASURE_IO_PERFORMANCE
-    
+
     return(RC);
 } // end UDFPhWriteSynchronous()
 
@@ -500,7 +500,7 @@ UDFTSendIOCTL(
  Function: UDFPhSendIOCTL()
 
  Description:
-    UDF FSD will invoke this rotine to send IOCTL's to physical 
+    UDF FSD will invoke this rotine to send IOCTL's to physical
     device
 
  Return Value: STATUS_SUCCESS/Error

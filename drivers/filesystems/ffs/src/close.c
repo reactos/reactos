@@ -1,4 +1,4 @@
-/* 
+/*
  * FFS File System Driver for Windows
  *
  * close.c
@@ -146,8 +146,8 @@ FFSClose(
 		ASSERT((Fcb->Identifier.Type == FFSFCB) &&
 				(Fcb->Identifier.Size == sizeof(FFS_FCB)));
 
-		/*        
-			  if ((!IsFlagOn(Vcb->Flags, VCB_READ_ONLY)) && 
+		/*
+			  if ((!IsFlagOn(Vcb->Flags, VCB_READ_ONLY)) &&
 			  (!IsFlagOn(Fcb->Flags, FCB_PAGE_FILE)))
 			  */
 		{

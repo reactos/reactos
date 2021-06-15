@@ -2,10 +2,10 @@
  * COPYRIGHT:        GNU GENERAL PUBLIC LICENSE VERSION 2
  * PROJECT:          ReiserFs file system driver for Windows NT/2000/XP/Vista.
  * FILE:             misc.c
- * PURPOSE:          
+ * PURPOSE:
  * PROGRAMMER:       Mark Piper, Matt Wu, Bo Brantén.
- * HOMEPAGE:         
- * UPDATE HISTORY: 
+ * HOMEPAGE:
+ * UPDATE HISTORY:
  */
 
 /* INCLUDES *****************************************************************/
@@ -214,7 +214,7 @@ RfsdOEMToUnicode(
 
 
     Status = RtlOemStringToUnicodeString(
-                    Unicode, 
+                    Unicode,
                     Oem,
                     FALSE );
 
@@ -274,7 +274,7 @@ RfsdUnicodeToOEM (
         DbgBreak();
         goto errorout;
     }
-    
+
 errorout:
 
     return Status;

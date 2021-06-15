@@ -1,4 +1,4 @@
-/* 
+/*
  * FFS File System Driver for Windows
  *
  * misc.c
@@ -221,7 +221,7 @@ FFSPnpQueryRemove(
 				TRUE);
 
 		FFSPrint((DBG_PNP, "FFSPnpQueryRemove: Call lower level driver...\n"));
-		Status = IoCallDriver(Vcb->TargetDeviceObject, 
+		Status = IoCallDriver(Vcb->TargetDeviceObject,
 				IrpContext->Irp);
 
 		if (Status == STATUS_PENDING)
@@ -307,7 +307,7 @@ FFSPnpRemove(
 				TRUE,
 				TRUE);
 
-		Status = IoCallDriver(Vcb->TargetDeviceObject, 
+		Status = IoCallDriver(Vcb->TargetDeviceObject,
 				IrpContext->Irp);
 
 		if (Status == STATUS_PENDING)
@@ -389,7 +389,7 @@ FFSPnpSurpriseRemove(
 				TRUE,
 				TRUE);
 
-		Status = IoCallDriver(Vcb->TargetDeviceObject, 
+		Status = IoCallDriver(Vcb->TargetDeviceObject,
 					IrpContext->Irp);
 
 		if (Status == STATUS_PENDING)

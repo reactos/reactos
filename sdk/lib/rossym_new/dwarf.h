@@ -385,7 +385,7 @@ struct DwarfExpr
 struct DwarfSym
 {
     DwarfAttrs attrs;
-    
+
 /* not for consumer use... */
     uint num;
     DwarfBuf b;

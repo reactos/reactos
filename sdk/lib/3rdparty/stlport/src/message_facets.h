@@ -40,7 +40,7 @@ struct _Catalog_locale_map {
   locale lookup(nl_catd_type key) const;
   void erase(nl_catd_type key);
 
-  typedef hash_map<nl_catd_type, locale, hash<nl_catd_type>, equal_to<nl_catd_type>, 
+  typedef hash_map<nl_catd_type, locale, hash<nl_catd_type>, equal_to<nl_catd_type>,
                    allocator<pair<_STLP_CONST nl_catd_type, locale> > > map_type;
   map_type *M;
 
@@ -128,8 +128,8 @@ public:
   wstring do_get(catalog __c, int __set, int __msgid,
                  const wstring& __dfault) const;
 #endif
-  void do_close(catalog __c) const; 
-  ~_Messages(); 
+  void do_close(catalog __c) const;
+  ~_Messages();
 
 private:
   _Locale_messages* _M_message_obj;

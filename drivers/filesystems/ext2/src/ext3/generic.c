@@ -686,7 +686,7 @@ Ext2LoadBlock (IN PEXT2_VCB Vcb,
             fini_bh(&bh);
     } _SEH2_END;
 
-    return rc; 
+    return rc;
 }
 
 
@@ -1352,7 +1352,7 @@ repeat:
             }
 
             if ((gd->bg_flags & cpu_to_le16(EXT4_BG_INODE_UNINIT)) ||
-                (ext4_used_dirs_count(sb, gd) << 8 < 
+                (ext4_used_dirs_count(sb, gd) << 8 <
                  ext4_free_inodes_count(sb, gd)) ) {
                 Group = i + 1;
                 break;
@@ -1437,7 +1437,7 @@ repeat:
 
             /* this group is 100% cocucpied */
             fini_bh(&gb);
- 
+
             i = GroupHint;
 
             /*
@@ -1461,7 +1461,7 @@ repeat:
                     break;
                 }
 
-                fini_bh(&gb);                
+                fini_bh(&gb);
             }
         }
 

@@ -1,4 +1,4 @@
-/* 
+/*
  * FFS File System Driver for Windows
  *
  * write.c
@@ -380,7 +380,7 @@ FFSWriteVolume(
 
 				_SEH2_LEAVE;
 			}
-		}                    
+		}
 
 		if (Nocache &&
 				(ByteOffset.LowPart & (SECTOR_SIZE - 1) ||
@@ -440,7 +440,7 @@ FFSWriteVolume(
 
 #endif
 
-		if (Nocache && !PagingIo && (Vcb->SectionObject.DataSectionObject != NULL)) 
+		if (Nocache && !PagingIo && (Vcb->SectionObject.DataSectionObject != NULL))
 		{
 			ExAcquireResourceExclusiveLite(&Vcb->MainResource, TRUE);
 			MainResourceAcquired = TRUE;
@@ -453,7 +453,7 @@ FFSWriteVolume(
 					Length,
 					&(Irp->IoStatus));
 
-			if (!NT_SUCCESS(Irp->IoStatus.Status)) 
+			if (!NT_SUCCESS(Irp->IoStatus.Status))
 			{
 				Status = Irp->IoStatus.Status;
 				_SEH2_LEAVE;
@@ -487,7 +487,7 @@ FFSWriteVolume(
 		else
 		{
 			/*
-			ULONG ResShCnt, ResExCnt; 
+			ULONG ResShCnt, ResExCnt;
 			ResShCnt = ExIsResourceAcquiredSharedLite(&Vcb->PagingIoResource);
 			ResExCnt = ExIsResourceAcquiredExclusiveLite(&Vcb->PagingIoResource);
 
@@ -594,7 +594,7 @@ FFSWriteVolume(
 				_SEH2_LEAVE;
 			}
 
-			ffs_bdl = ExAllocatePoolWithTag(PagedPool, 
+			ffs_bdl = ExAllocatePoolWithTag(PagedPool,
 					(Length / Vcb->BlockSize) *
 					sizeof(FFS_BDL), FFS_POOL_TAG);
 
@@ -611,7 +611,7 @@ FFSWriteVolume(
 			{
 				DirtyStart = DirtyLba;
 
-				if (FFSLookupMcbEntry(Vcb, 
+				if (FFSLookupMcbEntry(Vcb,
 							DirtyStart,
 							&DirtyLba,
 							&DirtyLength,
@@ -624,7 +624,7 @@ FFSWriteVolume(
 					{
 						DirtyLba = DirtyStart + DirtyLength;
 
-						RemainLength = ByteOffset.QuadPart + 
+						RemainLength = ByteOffset.QuadPart +
 							(LONGLONG)Length -
 							DirtyLba;
 						continue;
@@ -634,7 +634,7 @@ FFSWriteVolume(
 					ffs_bdl[Blocks].Lba = DirtyLba;
 					ffs_bdl[Blocks].Offset = (ULONG)((LONGLONG)Length +
 							DirtyStart -
-							RemainLength - 
+							RemainLength -
 							DirtyLba);
 
 					if (DirtyLba + DirtyLength > DirtyStart + RemainLength)
@@ -662,7 +662,7 @@ FFSWriteVolume(
 							ExFreePool(ffs_bdl);
 
 						//
-						// Lookup fails at the first time, ie. 
+						// Lookup fails at the first time, ie.
 						// no dirty blocks in the run
 						//
 
@@ -1099,10 +1099,10 @@ FFSWriteFile(
 		//
 		//  Do flushing for such cases
 		//
-		if (Nocache && !PagingIo && (Fcb->SectionObject.DataSectionObject != NULL)) 
+		if (Nocache && !PagingIo && (Fcb->SectionObject.DataSectionObject != NULL))
 		{
 #pragma prefast( suppress: 28137, "by design" )
-			ExAcquireResourceExclusiveLite(&Fcb->MainResource, 
+			ExAcquireResourceExclusiveLite(&Fcb->MainResource,
 					IsFlagOn(IrpContext->Flags, IRP_CONTEXT_FLAG_WAIT));
 
 			MainResourceAcquired = TRUE;
@@ -1116,7 +1116,7 @@ FFSWriteFile(
 					&(Irp->IoStatus));
 			ClearFlag(Fcb->Flags, FCB_FILE_MODIFIED);
 
-			if (!NT_SUCCESS(Irp->IoStatus.Status)) 
+			if (!NT_SUCCESS(Irp->IoStatus.Status))
 			{
 				Status = Irp->IoStatus.Status;
 				_SEH2_LEAVE;
@@ -1150,7 +1150,7 @@ FFSWriteFile(
 		else
 		{
 			/*
-			ULONG ResShCnt, ResExCnt; 
+			ULONG ResShCnt, ResExCnt;
 			ResShCnt = ExIsResourceAcquiredSharedLite(&Fcb->PagingIoResource);
 			ResExCnt = ExIsResourceAcquiredExclusiveLite(&Fcb->PagingIoResource);
 
@@ -1184,7 +1184,7 @@ FFSWriteFile(
 			if ((ByteOffset.QuadPart + Length) >
 					Fcb->Header.AllocationSize.QuadPart)
 			{
-				if (ByteOffset.QuadPart >= 
+				if (ByteOffset.QuadPart >=
 						Fcb->Header.AllocationSize.QuadPart)
 				{
 					Status = STATUS_SUCCESS;
@@ -1224,7 +1224,7 @@ FFSWriteFile(
 						READ_AHEAD_GRANULARITY);
 
 				CcSetFileSizes(
-						FileObject, 
+						FileObject,
 						(PCC_FILE_SIZES)(&(Fcb->Header.AllocationSize)));
 			}
 
@@ -1264,13 +1264,13 @@ FFSWriteFile(
 
 					if (ByteOffset.QuadPart > FileSize.QuadPart)
 					{
-						FFSZeroHoles(IrpContext, Vcb, FileObject, FileSize.QuadPart, 
+						FFSZeroHoles(IrpContext, Vcb, FileObject, FileSize.QuadPart,
 								ByteOffset.QuadPart - FileSize.QuadPart);
 					}
 
 					if (Fcb->Header.AllocationSize.QuadPart > ExtendSize.QuadPart)
 					{
-						FFSZeroHoles(IrpContext, Vcb, FileObject, ExtendSize.QuadPart, 
+						FFSZeroHoles(IrpContext, Vcb, FileObject, ExtendSize.QuadPart,
 								Fcb->Header.AllocationSize.QuadPart - ExtendSize.QuadPart);
 					}
 				}
@@ -1352,7 +1352,7 @@ FFSWriteFile(
 			Irp->IoStatus.Status = STATUS_SUCCESS;
 			Irp->IoStatus.Information = Length;
 
-			Status = 
+			Status =
 				FFSv1WriteInode(
 						IrpContext,
 						Vcb,

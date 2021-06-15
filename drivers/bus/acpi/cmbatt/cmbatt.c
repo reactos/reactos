@@ -22,7 +22,7 @@ KTIMER CmBattWakeDpcTimerObject;
 KDPC CmBattWakeDpcObject;
 PDEVICE_OBJECT AcAdapterPdo;
 LARGE_INTEGER CmBattWakeDpcDelay;
- 
+
 /* FUNCTIONS ******************************************************************/
 
 VOID
@@ -35,7 +35,7 @@ CmBattPowerCallBack(IN PCMBATT_DEVICE_EXTENSION DeviceExtension,
     PDEVICE_OBJECT DeviceObject;
     if (CmBattDebug & 0x10)
         DbgPrint("CmBattPowerCallBack: action: %d, value: %d \n", Action, Value);
-    
+
     /* Check if a transition is going to happen */
     if (Action == PO_CB_SYSTEM_STATE_LOCK)
     {
@@ -82,7 +82,7 @@ CmBattWakeDpc(IN PKDPC Dpc,
     PCMBATT_DEVICE_EXTENSION DeviceExtension;
     ULONG ArFlag;
     if (CmBattDebug & 2) DbgPrint("CmBattWakeDpc: Entered.\n");
-    
+
     /* Loop all device objects */
     for (CurrentObject = FdoExtension->DeviceObject;
          CurrentObject;
@@ -91,7 +91,7 @@ CmBattWakeDpc(IN PKDPC Dpc,
         /* Turn delay flag off, we're back in S0 */
         DeviceExtension = CurrentObject->DeviceExtension;
         DeviceExtension->DelayNotification = 0;
-        
+
         /* Check if this is an AC adapter */
         if (DeviceExtension->FdoType == CmBattAcAdapter)
         {
@@ -145,20 +145,20 @@ CmBattNotifyHandler(IN PCMBATT_DEVICE_EXTENSION DeviceExtension,
     ULONG ArFlag;
     PCMBATT_DEVICE_EXTENSION FdoExtension;
     PDEVICE_OBJECT DeviceObject;
-    
+
     if (CmBattDebug & (CMBATT_ACPI_ASSERT | CMBATT_PNP_INFO))
         DbgPrint("CmBattNotifyHandler: CmBatt 0x%08x Type %d Number %d Notify Value: %x\n",
                  DeviceExtension,
                  DeviceExtension->FdoType,
                  DeviceExtension->DeviceId,
                  NotifyValue);
-    
+
     /* Check what kind of notification was received */
     switch (NotifyValue)
     {
         /* ACPI Specification says is sends a "Bus Check" when power source changes */
         case ACPI_BUS_CHECK:
-        
+
             /* We treat it as possible physical change */
             DeviceExtension->ArFlag |= (CMBATT_AR_NOTIFY | CMBATT_AR_INSERT);
             if ((DeviceExtension->Tag) &&
@@ -166,26 +166,26 @@ CmBattNotifyHandler(IN PCMBATT_DEVICE_EXTENSION DeviceExtension,
                 DbgPrint("CmBattNotifyHandler: Received battery #%x insertion, but tag was not invalid.\n",
                          DeviceExtension->DeviceId);
             break;
-        
+
         /* Status of the battery has changed */
         case ACPI_BATT_NOTIFY_STATUS:
-        
+
             /* All we'll do is notify the class driver */
             DeviceExtension->ArFlag |= CMBATT_AR_NOTIFY;
             break;
-        
+
         /* Information on the battery has changed, such as physical presence */
         case ACPI_DEVICE_CHECK:
         case ACPI_BATT_NOTIFY_INFO:
-        
+
             /* Reset all state and let the class driver re-evaluate it all */
             DeviceExtension->ArFlag |= (CMBATT_AR_NOTIFY |
                                         CMBATT_AR_INSERT |
                                         CMBATT_AR_REMOVE);
             break;
-            
+
         default:
-        
+
             if (CmBattDebug & CMBATT_PNP_INFO)
                 DbgPrint("CmBattNotifyHandler: Unknown Notify Value: %x\n", NotifyValue);
     }
@@ -201,7 +201,7 @@ CmBattNotifyHandler(IN PCMBATT_DEVICE_EXTENSION DeviceExtension,
     }
 
     /* We're going to handle this now */
-    if (CmBattDebug & CMBATT_PNP_INFO) 
+    if (CmBattDebug & CMBATT_PNP_INFO)
         DbgPrint("CmBattNotifyHandler: Performing ARs: %01x\n", DeviceExtension->ArFlag);
 
     /* Check if this is a battery or AC adapter notification */
@@ -209,16 +209,16 @@ CmBattNotifyHandler(IN PCMBATT_DEVICE_EXTENSION DeviceExtension,
     {
         /* Reset the current trip point */
         DeviceExtension->TripPointValue = BATTERY_UNKNOWN_CAPACITY;
-        
+
         /* Check what ARs have to be done */
         ArFlag = DeviceExtension->ArFlag;
-        
+
         /* New battery inserted, reset lock value */
         if (ArFlag & CMBATT_AR_INSERT) InterlockedExchange(&DeviceExtension->ArLockValue, 0);
 
         /* Check if the battery may have been removed */
         if (ArFlag & CMBATT_AR_REMOVE) DeviceExtension->Tag = 0;
-        
+
         /* Check if there's been any sort of change to the battery */
         if (ArFlag & CMBATT_AR_NOTIFY)
         {
@@ -244,7 +244,7 @@ CmBattNotifyHandler(IN PCMBATT_DEVICE_EXTENSION DeviceExtension,
             }
         }
     }
-    
+
     /* ARs have been processed */
     DeviceExtension->ArFlag = 0;
 }
@@ -254,7 +254,7 @@ NTAPI
 CmBattUnload(IN PDRIVER_OBJECT DriverObject)
 {
     if (CmBattDebug & CMBATT_GENERIC_INFO) DPRINT("CmBattUnload: \n");
-    
+
     /* Check if we have a registered power callback */
     if (CmBattPowerCallBackObject)
     {
@@ -262,7 +262,7 @@ CmBattUnload(IN PDRIVER_OBJECT DriverObject)
         ExUnregisterCallback(CmBattPowerCallBackRegistration);
         ObDereferenceObject(CmBattPowerCallBackObject);
     }
-    
+
     /* Free the registry buffer if it exists */
     if (GlobalRegistryPath.Buffer) ExFreePool(GlobalRegistryPath.Buffer);
 
@@ -279,7 +279,7 @@ CmBattVerifyStaticInfo(PCMBATT_DEVICE_EXTENSION DeviceExtension,
                        ULONG BatteryTag)
 {
     UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;   
+    return STATUS_NOT_IMPLEMENTED;
 }
 
 NTSTATUS
@@ -298,7 +298,7 @@ CmBattOpenClose(IN PDEVICE_OBJECT DeviceObject,
     /* Grab the device extension and lock it */
     DeviceExtension = DeviceObject->DeviceExtension;
     ExAcquireFastMutex(&DeviceExtension->FastMutex);
-    
+
     /* Check if someone is trying to open a device that doesn't exist yet */
     Count = DeviceExtension->HandleCount;
     if (Count == 0xFFFFFFFF)
@@ -312,14 +312,14 @@ CmBattOpenClose(IN PDEVICE_OBJECT DeviceObject,
         }
         goto Complete;
     }
-    
+
     /* Check if this is an open or close */
     IoStackLocation = IoGetCurrentIrpStackLocation(Irp);
     Major = IoStackLocation->MajorFunction;
     if (Major == IRP_MJ_CREATE)
     {
         /* Increment the open count */
-        DeviceExtension->HandleCount = Count + 1;  
+        DeviceExtension->HandleCount = Count + 1;
         if (CmBattDebug & CMBATT_PNP_INFO)
         {
             DbgPrint("CmBattOpenClose: Open (DeviceNumber = %x)(count = %x).\n",
@@ -342,7 +342,7 @@ Complete:
     ExReleaseFastMutex(&DeviceExtension->FastMutex);
     Irp->IoStatus.Status = Status;
     IoCompleteRequest(Irp, IO_NO_INCREMENT);
-    return Status;  
+    return Status;
 }
 
 NTSTATUS
@@ -366,7 +366,7 @@ CmBattIoctl(IN PDEVICE_OBJECT DeviceObject,
         IoCompleteRequest(Irp, IO_NO_INCREMENT);
         return STATUS_DEVICE_REMOVED;
     }
-    
+
     /* There's nothing to do for an AC adapter */
     if (DeviceExtension->FdoType == CmBattAcAdapter)
     {
@@ -376,7 +376,7 @@ CmBattIoctl(IN PDEVICE_OBJECT DeviceObject,
         IoReleaseRemoveLock(&DeviceExtension->RemoveLock, Irp);
         return Status;
     }
-    
+
     /* Send to class driver */
     Status = BatteryClassIoctl(DeviceExtension->ClassData, Irp);
     if (Status == STATUS_NOT_SUPPORTED)
@@ -388,12 +388,12 @@ CmBattIoctl(IN PDEVICE_OBJECT DeviceObject,
         InputBufferLength = IoStackLocation->Parameters.DeviceIoControl.InputBufferLength;
         if (CmBattDebug & 4)
             DbgPrint("CmBattIoctl: Received  Direct Access IOCTL %x\n", IoControlCode);
-    
+
         /* Handle internal IOCTLs */
         switch (IoControlCode)
         {
             case IOCTL_BATTERY_QUERY_UNIQUE_ID:
-            
+
                 /* Data is 4 bytes long */
                 if (OutputBufferLength == sizeof(ULONG))
                 {
@@ -408,9 +408,9 @@ CmBattIoctl(IN PDEVICE_OBJECT DeviceObject,
                     Status = STATUS_INVALID_BUFFER_SIZE;
                 }
                 break;
-            
+
             case IOCTL_BATTERY_QUERY_STA:
-            
+
                 /* Data is 4 bytes long */
                 if (OutputBufferLength == sizeof(ULONG))
                 {
@@ -425,9 +425,9 @@ CmBattIoctl(IN PDEVICE_OBJECT DeviceObject,
                     Status = STATUS_INVALID_BUFFER_SIZE;
                 }
                 break;
-            
+
             case IOCTL_BATTERY_QUERY_PSR:
-            
+
                 /* Data is 4 bytes long */
                 if (OutputBufferLength == sizeof(ULONG))
                 {
@@ -451,9 +451,9 @@ CmBattIoctl(IN PDEVICE_OBJECT DeviceObject,
                     Status = STATUS_INVALID_BUFFER_SIZE;
                 }
                 break;
-                
+
             case IOCTL_BATTERY_SET_TRIP_POINT:
-            
+
                 /* Data is 4 bytes long */
                 if (InputBufferLength == sizeof(ULONG))
                 {
@@ -468,9 +468,9 @@ CmBattIoctl(IN PDEVICE_OBJECT DeviceObject,
                     Status = STATUS_INVALID_BUFFER_SIZE;
                 }
                 break;
-    
+
             case IOCTL_BATTERY_QUERY_BIF:
-            
+
                 /* Data is 1060 bytes long */
                 if (OutputBufferLength == sizeof(ACPI_BIF_DATA))
                 {
@@ -485,9 +485,9 @@ CmBattIoctl(IN PDEVICE_OBJECT DeviceObject,
                     Status = STATUS_INVALID_BUFFER_SIZE;
                 }
                 break;
-            
+
             case IOCTL_BATTERY_QUERY_BST:
-            
+
                 /* Data is 16 bytes long */
                 if (OutputBufferLength == sizeof(ACPI_BST_DATA))
                 {
@@ -502,15 +502,15 @@ CmBattIoctl(IN PDEVICE_OBJECT DeviceObject,
                     Status = STATUS_INVALID_BUFFER_SIZE;
                 }
                 break;
-            
+
             default:
-            
+
                 /* Unknown, let us pass it on to ACPI */
                 if (CmBattDebug & 0xC)
                     DbgPrint("CmBattIoctl: Unknown IOCTL %x\n", IoControlCode);
                 break;
         }
-        
+
         /* Did someone pick it up? */
         if (Status != STATUS_NOT_SUPPORTED)
         {
@@ -544,11 +544,11 @@ CmBattQueryTag(IN PCMBATT_DEVICE_EXTENSION DeviceExtension,
     if (CmBattDebug & (CMBATT_ACPI_WARNING | CMBATT_GENERIC_INFO))
       DbgPrint("CmBattQueryTag - Tag (%d), Battery %x, Device %d\n",
                 *Tag, DeviceExtension, DeviceExtension->DeviceId);
-    
-    /* Get PDO and clear notification flag */  
+
+    /* Get PDO and clear notification flag */
     PdoDevice = DeviceExtension->PdoDeviceObject;
     DeviceExtension->NotifySent = 0;
-    
+
     /* Get _STA from PDO (we need the machine status, not the battery status) */
     Status = CmBattGetStaData(PdoDevice, &StaData);
     if (NT_SUCCESS(Status))
@@ -565,11 +565,11 @@ CmBattQueryTag(IN PCMBATT_DEVICE_EXTENSION DeviceExtension,
                 DeviceExtension->Tag = NewTag;
                 if (CmBattDebug & CMBATT_GENERIC_INFO)
                     DbgPrint("CmBattQueryTag - New Tag: (%d)\n", DeviceExtension->Tag);
-                
+
                 /* Reset trip point data */
                 DeviceExtension->TripPointOld = 0;
                 DeviceExtension->TripPointValue = BATTERY_UNKNOWN_CAPACITY;
-                                
+
                 /* Clear AR lock and set new interrupt time */
                 InterlockedExchange(&DeviceExtension->ArLockValue, 0);
                 DeviceExtension->InterruptTime = KeQueryInterruptTime();
@@ -582,7 +582,7 @@ CmBattQueryTag(IN PCMBATT_DEVICE_EXTENSION DeviceExtension,
             Status = STATUS_NO_SUCH_DEVICE;
         }
     }
-    
+
     /* Return the tag and status result */
     *Tag = DeviceExtension->Tag;
     if (CmBattDebug & CMBATT_ACPI_WARNING)
@@ -626,7 +626,7 @@ CmBattDisableStatusNotify(IN PCMBATT_DEVICE_EXTENSION DeviceExtension)
         /* Nothing we can do */
         Status = STATUS_OBJECT_NAME_NOT_FOUND;
     }
-    
+
     /* Return status */
     return Status;
 }
@@ -645,14 +645,14 @@ CmBattSetStatusNotify(IN PCMBATT_DEVICE_EXTENSION DeviceExtension,
     if (CmBattDebug & (CMBATT_ACPI_WARNING | CMBATT_GENERIC_INFO))
         DbgPrint("CmBattSetStatusNotify: Tag (%d) Target(0x%x)\n",
                  BatteryTag, BatteryNotify->LowCapacity);
-    
-    /* Update any ACPI evaluations */    
+
+    /* Update any ACPI evaluations */
     Status = CmBattVerifyStaticInfo(DeviceExtension, BatteryTag);
     if (!NT_SUCCESS(Status)) return Status;
-    
+
     /* Trip point not supported, fail */
     if (!DeviceExtension->TripPointSet) return STATUS_OBJECT_NAME_NOT_FOUND;
-    
+
     /* Are both capacities known? */
     if ((BatteryNotify->HighCapacity == BATTERY_UNKNOWN_CAPACITY) ||
         (BatteryNotify->LowCapacity == BATTERY_UNKNOWN_CAPACITY))
@@ -662,7 +662,7 @@ CmBattSetStatusNotify(IN PCMBATT_DEVICE_EXTENSION DeviceExtension,
             DbgPrint("CmBattSetStatusNotify: Failing request because of BATTERY_UNKNOWN_CAPACITY.\n");
         return STATUS_NOT_SUPPORTED;
     }
-    
+
     /* Is the battery charging? */
     Charging = DeviceExtension->BstData.State & ACPI_BATT_STAT_CHARGING;
     if (Charging)
@@ -704,7 +704,7 @@ CmBattSetStatusNotify(IN PCMBATT_DEVICE_EXTENSION DeviceExtension,
             Status = STATUS_NOT_SUPPORTED;
             if (CmBattDebug & CMBATT_ACPI_WARNING)
                 DbgPrint("CmBattSetStatusNotify: Can't calculate BTP, DesignVoltage = 0x%08x\n",
-                        DesignVoltage);  
+                        DesignVoltage);
         }
     }
     else if (Charging)
@@ -726,7 +726,7 @@ CmBattSetStatusNotify(IN PCMBATT_DEVICE_EXTENSION DeviceExtension,
             DbgPrint("CmBattSetStatusNotify: Keeping original setting: %X\n", DeviceExtension->TripPointValue);
         return STATUS_SUCCESS;
     }
-    
+
     /* Set the trip point with ACPI and check for success */
     DeviceExtension->TripPointValue = NewTripPoint;
     Status = CmBattSetTripPpoint(DeviceExtension, NewTripPoint);
@@ -739,7 +739,7 @@ CmBattSetStatusNotify(IN PCMBATT_DEVICE_EXTENSION DeviceExtension,
             DbgPrint("CmBattSetStatusNotify: SetTripPoint failed - %x\n", Status);
         return Status;
     }
-    
+
     /* Read the new BST data to see the latest state */
     Status = CmBattGetBstData(DeviceExtension, &BstData);
     if (!NT_SUCCESS(Status))
@@ -762,7 +762,7 @@ CmBattSetStatusNotify(IN PCMBATT_DEVICE_EXTENSION DeviceExtension,
         if (CmBattDebug & CMBATT_GENERIC_WARNING)
             DbgPrint("CmBattSetStatusNotify: Trip point already crossed (1): TP = %08x, remaining capacity = %08x\n",
                      NewTripPoint, BstData.RemainingCapacity);
-        CmBattNotifyHandler(DeviceExtension, ACPI_BATT_NOTIFY_STATUS);        
+        CmBattNotifyHandler(DeviceExtension, ACPI_BATT_NOTIFY_STATUS);
     }
 
     /* All should've went well if we got here, unless BST failed... return! */
@@ -789,8 +789,8 @@ CmBattGetBatteryStatus(IN PCMBATT_DEVICE_EXTENSION DeviceExtension,
     PAGED_CODE();
     if (CmBattDebug & CMBATT_GENERIC_INFO)
         DbgPrint("CmBattGetBatteryStatus - CmBatt (%08x) Tag (%d)\n", DeviceExtension, Tag);
-    
-    /* Validate ACPI data */    
+
+    /* Validate ACPI data */
     Status = CmBattVerifyStaticInfo(DeviceExtension, Tag);
     if (!NT_SUCCESS(Status)) return Status;
 
@@ -810,8 +810,8 @@ CmBattGetBatteryStatus(IN PCMBATT_DEVICE_EXTENSION DeviceExtension,
         InterlockedExchange(&DeviceExtension->ArLockValue, 0);
         return Status;
     }
-    
-    /* Clear current BST information */ 
+
+    /* Clear current BST information */
     DeviceExtension->State = 0;
     DeviceExtension->RemainingCapacity = 0;
     DeviceExtension->PresentVoltage = 0;
@@ -819,7 +819,7 @@ CmBattGetBatteryStatus(IN PCMBATT_DEVICE_EXTENSION DeviceExtension,
 
     /* Get battery state */
     BstState = DeviceExtension->BstData.State;
-    
+
     /* Is the battery both charging and discharging? */
     if ((BstState & ACPI_BATT_STAT_DISCHARG) && (BstState & ACPI_BATT_STAT_CHARGING) &&
         (CmBattDebug & (CMBATT_ACPI_WARNING | CMBATT_GENERIC_WARNING)))
@@ -827,8 +827,8 @@ CmBattGetBatteryStatus(IN PCMBATT_DEVICE_EXTENSION DeviceExtension,
                      "CmBattGetBatteryStatus: Invalid state: _BST method returned 0x%08x for Battery State.\n"
                      "* One battery cannot be charging and discharging at the same time.\n",
                      BstState);
-    
-    /* Is the battery discharging? */   
+
+    /* Is the battery discharging? */
     if (BstState & ACPI_BATT_STAT_DISCHARG)
     {
         /* Set power state and check if it just started discharging now */
@@ -844,13 +844,13 @@ CmBattGetBatteryStatus(IN PCMBATT_DEVICE_EXTENSION DeviceExtension,
         /* Battery is charging, update power state */
         DeviceExtension->State |= (BATTERY_CHARGING | BATTERY_POWER_ON_LINE);
     }
-    
+
     /* Is the battery in a critical state? */
     if (BstState & ACPI_BATT_STAT_CRITICAL) DeviceExtension->State |= BATTERY_CRITICAL;
-    
-    /* Read the voltage data */  
+
+    /* Read the voltage data */
     DeviceExtension->PresentVoltage = DeviceExtension->BstData.PresentVoltage;
-    
+
     /* Check if we have an A/C adapter */
     if (AcAdapterPdo)
     {
@@ -868,10 +868,10 @@ CmBattGetBatteryStatus(IN PCMBATT_DEVICE_EXTENSION DeviceExtension,
         else
         {
             /* Assume no charger */
-            PsrData = 0;        
+            PsrData = 0;
         }
     }
-    
+
     /* Is there a charger? */
     if (PsrData)
     {
@@ -882,21 +882,21 @@ CmBattGetBatteryStatus(IN PCMBATT_DEVICE_EXTENSION DeviceExtension,
     }
     else if (CmBattDebug & (CMBATT_GENERIC_INFO | CMBATT_GENERIC_STATUS))
     {
-        DbgPrint("CmBattGetBatteryStatus: AC adapter is NOT connected\n");        
+        DbgPrint("CmBattGetBatteryStatus: AC adapter is NOT connected\n");
     }
-    
+
     /* Get some data we'll need */
     DesignVoltage = DeviceExtension->BifData.DesignVoltage;
     PresentRate = DeviceExtension->BstData.PresentRate;
     RemainingCapacity = DeviceExtension->BstData.RemainingCapacity;
-    
+
     /* Check if we have battery data in Watts instead of Amps */
     if (DeviceExtension->BifData.PowerUnit == ACPI_BATT_POWER_UNIT_WATTS)
     {
         /* Get the data from the BST */
         DeviceExtension->RemainingCapacity = RemainingCapacity;
         DeviceExtension->Rate = PresentRate;
-        
+
         /* Check if the rate is invalid */
         if (PresentRate > CM_MAX_VALUE)
         {
@@ -927,7 +927,7 @@ CmBattGetBatteryStatus(IN PCMBATT_DEVICE_EXTENSION DeviceExtension,
             /* Compute the capacity with the information we have */
             DeviceExtension->RemainingCapacity = (DesignVoltage * RemainingCapacity + 500) / 1000;
         }
-        
+
         /* Check if we have a rate */
         if (PresentRate != CM_UNKNOWN_VALUE)
         {
@@ -942,14 +942,14 @@ CmBattGetBatteryStatus(IN PCMBATT_DEVICE_EXTENSION DeviceExtension,
                     DbgPrint("----------------------   Overflow: PresentRate = 0x%08x\n", PresentRate);
                 }
             }
-            
+
             /* Compute the rate */
             DeviceExtension->Rate = (PresentRate * DesignVoltage + 500) / 1000;
         }
         else
         {
             /* We don't have a rate, so set unknown value */
-            DeviceExtension->Rate = BATTERY_UNKNOWN_RATE;        
+            DeviceExtension->Rate = BATTERY_UNKNOWN_RATE;
             if (CmBattDebug & CMBATT_ACPI_WARNING)
             {
                 DbgPrint("CmBattGetBatteryStatus - Can't calculate Rate \n");
@@ -968,7 +968,7 @@ CmBattGetBatteryStatus(IN PCMBATT_DEVICE_EXTENSION DeviceExtension,
             DbgPrint("----------------------   DesignVoltage = 0x%08x\n", DesignVoltage);
         }
     }
-    
+
     /* Check if we have an unknown rate */
     if (DeviceExtension->Rate == BATTERY_UNKNOWN_RATE)
     {
@@ -990,7 +990,7 @@ CmBattGetBatteryStatus(IN PCMBATT_DEVICE_EXTENSION DeviceExtension,
                      DeviceExtension->Rate);
         DeviceExtension->Rate = 0;
     }
-     
+
     /* Done */
     return STATUS_SUCCESS;
 }
@@ -1036,9 +1036,9 @@ CmBattQueryInformation(IN PCMBATT_DEVICE_EXTENSION FdoExtension,
             QueryData = &FdoExtension->BatteryInformation;
             QueryLength = sizeof(BATTERY_INFORMATION);
             break;
-        
+
         case BatteryGranularityInformation:
-        
+
             /* Return our static information, we have two scales */
             BatteryReportingScale[0].Granularity = FdoExtension->BatteryCapacityGranularity1;
             BatteryReportingScale[0].Capacity = FdoExtension->BatteryInformation.DefaultAlert1;
@@ -1047,25 +1047,25 @@ CmBattQueryInformation(IN PCMBATT_DEVICE_EXTENSION FdoExtension,
             QueryData = BatteryReportingScale;
             QueryLength = sizeof(BATTERY_REPORTING_SCALE) * 2;
             break;
-            
+
         case BatteryEstimatedTime:
-        
+
             /* Check if it's been more than 2 1/2 minutes since the last change */
             if ((KeQueryInterruptTime() - 150000000) > (FdoExtension->InterruptTime))
             {
                 /* Get new battery status */
                 CmBattGetBatteryStatus(FdoExtension, FdoExtension->Tag);
-                
+
                 /* If the caller didn't specify a rate, use our static one */
                 Rate = AtRate;
                 if (!Rate) Rate = FdoExtension->Rate;
-                
+
                 /* If we don't have a valid negative rate, use unknown value */
                 if (Rate >= 0) Rate = BATTERY_UNKNOWN_RATE;
-                
+
                 /* Grab the remaining capacity */
                 RemainingCapacity = FdoExtension->RemainingCapacity;
-                
+
                 /* See if we don't know one or the other */
                 if ((Rate == BATTERY_UNKNOWN_RATE) ||
                     (RemainingCapacity == BATTERY_UNKNOWN_CAPACITY))
@@ -1074,7 +1074,7 @@ CmBattQueryInformation(IN PCMBATT_DEVICE_EXTENSION FdoExtension,
                     if ((FdoExtension->BstData.State & ACPI_BATT_STAT_DISCHARG) &&
                         (CmBattDebug & CMBATT_GENERIC_WARNING))
                             DbgPrint("CmBattQueryInformation: Can't calculate EstimatedTime.\n");
-                    
+
                     /* Check if we don't have a rate and capacity is going down */
                     if ((FdoExtension->Rate == BATTERY_UNKNOWN_RATE) &&
                         (FdoExtension->BstData.State & ACPI_BATT_STAT_DISCHARG))
@@ -1084,7 +1084,7 @@ CmBattQueryInformation(IN PCMBATT_DEVICE_EXTENSION FdoExtension,
                         if (CmBattDebug & CMBATT_GENERIC_WARNING)
                             DbgPrint("----------------------   PresentRate = BATTERY_UNKNOWN_RATE\n");
                     }
-                    
+
                     /* If we don't have capacity, the rate is useless */
                     if (RemainingCapacity == BATTERY_UNKNOWN_CAPACITY)
                     {
@@ -1110,49 +1110,49 @@ CmBattQueryInformation(IN PCMBATT_DEVICE_EXTENSION FdoExtension,
                     }
                 }
             }
-            
+
             /* Return the remaining time */
             QueryData = &RemainingTime;
             QueryLength = sizeof(ULONG);
             break;
-            
+
         case BatteryDeviceName:
-        
+
             /* Build the model number string */
             RtlInitAnsiString(&TempString, FdoExtension->ModelNumber);
 
             /* Convert it to Unicode */
             InfoString.Buffer = InfoBuffer;
-            InfoString.MaximumLength = sizeof(InfoBuffer);            
+            InfoString.MaximumLength = sizeof(InfoBuffer);
             Status = RtlAnsiStringToUnicodeString(&InfoString, &TempString, 0);
-            
+
             /* Return the unicode buffer */
             QueryData = InfoString.Buffer;
             QueryLength = InfoString.Length;
             break;
-            
+
         case BatteryTemperature:
         case BatteryManufactureDate:
-        
+
             /* We don't support these */
             Status = STATUS_INVALID_DEVICE_REQUEST;
             break;
-            
+
         case BatteryManufactureName:
-            
+
             /* Build the OEM info string */
             RtlInitAnsiString(&TempString, FdoExtension->OemInfo);
-            
+
             /* Convert it to Unicode */
             InfoString.Buffer = InfoBuffer;
             InfoString.MaximumLength = sizeof(InfoBuffer);
             Status = RtlAnsiStringToUnicodeString(&InfoString, &TempString, 0);
-            
+
             /* Return the unicode buffer */
             QueryData = InfoString.Buffer;
             QueryLength = InfoString.Length;
             break;
-            
+
         case BatteryUniqueID:
 
             /* Build the serial number string */
@@ -1166,32 +1166,32 @@ CmBattQueryInformation(IN PCMBATT_DEVICE_EXTENSION FdoExtension,
             /* Setup a temporary string for concatenation */
             TempString2.Buffer = TempBuffer;
             TempString2.MaximumLength = sizeof(TempBuffer);
-            
+
             /* Check if there's an OEM string */
             if (FdoExtension->OemInfo[0])
             {
                 /* Build the OEM info string */
                 RtlInitAnsiString(&TempString, FdoExtension->OemInfo);
-              
+
                 /* Convert it to Unicode and append it */
                 RtlAnsiStringToUnicodeString(&TempString2, &TempString, 0);
                 RtlAppendUnicodeStringToString(&InfoString, &TempString2);
             }
-            
+
             /* Build the model number string */
             RtlInitAnsiString(&TempString, FdoExtension->ModelNumber);
-            
+
             /* Convert it to Unicode and append it */
             RtlAnsiStringToUnicodeString(&TempString2, &TempString, 0);
             RtlAppendUnicodeStringToString(&InfoString, &TempString2);
-            
+
             /* Return the final appended string */
             QueryData = InfoString.Buffer;
             QueryLength = InfoString.Length;
             break;
-            
+
         default:
-        
+
             /* Everything else is unknown */
             Status = STATUS_INVALID_PARAMETER;
             break;
@@ -1203,7 +1203,7 @@ CmBattQueryInformation(IN PCMBATT_DEVICE_EXTENSION FdoExtension,
 
     /* Copy the data if there's enough space and it exists */
     if ((NT_SUCCESS(Status)) && (QueryData)) RtlCopyMemory(Buffer, QueryData, QueryLength);
-      
+
     /* Return function result */
     return Status;
 }
@@ -1218,7 +1218,7 @@ CmBattQueryStatus(IN PCMBATT_DEVICE_EXTENSION DeviceExtension,
     PAGED_CODE();
     if (CmBattDebug & (CMBATT_ACPI_WARNING | CMBATT_GENERIC_INFO))
         DbgPrint("CmBattQueryStatus - Tag (%d) Device %x\n", Tag, DeviceExtension->DeviceId);
-    
+
     /* Query ACPI information */
     Status = CmBattGetBatteryStatus(DeviceExtension, Tag);
     if (NT_SUCCESS(Status))
@@ -1228,7 +1228,7 @@ CmBattQueryStatus(IN PCMBATT_DEVICE_EXTENSION DeviceExtension,
         BatteryStatus->Voltage = DeviceExtension->PresentVoltage;
         BatteryStatus->Rate = DeviceExtension->Rate;
     }
-    
+
     /* Return status */
     if (CmBattDebug & (CMBATT_GENERIC_INFO))
         DbgPrint("CmBattQueryStatus: Returning [%#08lx][%#08lx][%#08lx][%#08lx]\n",
@@ -1262,14 +1262,14 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
             DbgPrint("CmBatt: Couldn't allocate pool for registry path.");
         return STATUS_INSUFFICIENT_RESOURCES;
     }
-    
+
     /* Buffer allocated, copy the string */
     RtlCopyUnicodeString(&GlobalRegistryPath, RegistryPath);
     if (CmBattDebug & CMBATT_GENERIC_INFO)
         DbgPrint("CmBatt DriverEntry - Obj (%08x) Path \"%ws\"\n",
                  DriverObject,
                  RegistryPath->Buffer);
-    
+
     /* Setup the major dispatchers */
     DriverObject->MajorFunction[IRP_MJ_CREATE] = CmBattOpenClose;
     DriverObject->MajorFunction[IRP_MJ_CLOSE] = CmBattOpenClose;
@@ -1280,12 +1280,12 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
 
     /* And the unload routine */
     DriverObject->DriverUnload = CmBattUnload;
-    
+
     /* And the add device routine */
     DriverExtension = DriverObject->DriverExtension;
     DriverExtension->AddDevice = CmBattAddDevice;
 
-    /* Create a power callback */    
+    /* Create a power callback */
     RtlInitUnicodeString(&CallbackName, L"\\Callback\\PowerState");
     InitializeObjectAttributes(&ObjectAttributes,
                                &CallbackName,
@@ -1318,7 +1318,7 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
             if (CmBattDebug & CMBATT_GENERIC_WARNING)
                 DbgPrint("CmBattRegisterPowerCallBack: ExRegisterCallback failed.\n");
         }
-        
+
         /* All good */
         Status = STATUS_SUCCESS;
     }

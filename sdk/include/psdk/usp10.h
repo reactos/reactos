@@ -49,8 +49,8 @@ extern "C" {
 #define  SSA_LPKANSIFALLBACK  0x08000000
 #define  SSA_PIDX             0x10000000
 #define  SSA_LAYOUTRTL        0x20000000
-#define  SSA_DONTGLYPH        0x40000000 
-#define  SSA_NOKASHIDA        0x80000000 
+#define  SSA_DONTGLYPH        0x40000000
+#define  SSA_NOKASHIDA        0x80000000
 
 /** StringIsComplex */
 #define  SIC_COMPLEX     1
@@ -106,8 +106,8 @@ typedef struct tag_SCRIPT_CONTROL {
 typedef struct {
   DWORD langid			:16;
   DWORD fNumeric		:1;
-  DWORD fComplex		:1;     
-  DWORD fNeedsWordBreaking	:1;     
+  DWORD fComplex		:1;
+  DWORD fNeedsWordBreaking	:1;
   DWORD fNeedsCaretInfo		:1;
   DWORD bCharSet		:8;
   DWORD fControl		:1;
@@ -193,7 +193,7 @@ typedef struct tag_SCRIPT_LOGATTR {
 } SCRIPT_LOGATTR;
 
 typedef void *SCRIPT_CACHE;
-typedef void *SCRIPT_STRING_ANALYSIS; 
+typedef void *SCRIPT_STRING_ANALYSIS;
 
 #ifndef LSDEFS_DEFINED
 typedef struct tagGOFFSET {

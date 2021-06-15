@@ -187,7 +187,7 @@
     #define uid_t int
     #define gid_t int
     #define nlink_t unsigned long
-    
+
     #ifdef _MSC_VER
         #define mode_t int
     #endif
