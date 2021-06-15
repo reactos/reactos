@@ -327,6 +327,7 @@ NetGetJoinInformation(
     if (lpNameBuffer == NULL || BufferType == NULL)
         return ERROR_INVALID_PARAMETER;
 
+    *lpNameBuffer = NULL;
     RpcTryExcept
     {
         status = NetrGetJoinInformation((LPWSTR)lpServer,
