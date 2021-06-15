@@ -448,10 +448,14 @@ BdaCreatePin(
             /* store result */
             *pulPinId = PinId;
         }
+        DPRINT("BdaCreatePin Result %x PinId %u\n", Status, PinId);
+    }
+    else
+    {
+        DPRINT("BdaCreatePin Result %x\n", Status);
     }
 
 
-    DPRINT("BdaCreatePin Result %x PinId %u\n", Status, PinId);
     return Status;
 }
 
