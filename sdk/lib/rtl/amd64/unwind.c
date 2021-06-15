@@ -523,16 +523,6 @@ RtlVirtualUnwind(
     /* Get a pointer to the unwind info */
     UnwindInfo = RVA(ImageBase, FunctionEntry->UnwindData);
 
-    /* Check for chained info */
-    if (UnwindInfo->Flags & UNW_FLAG_CHAININFO)
-    {
-        UNIMPLEMENTED_DBGBREAK();
-
-        /* See https://docs.microsoft.com/en-us/cpp/build/chained-unwind-info-structures */
-        FunctionEntry = (PRUNTIME_FUNCTION)&(UnwindInfo->UnwindCode[(UnwindInfo->CountOfCodes + 1) & ~1]);
-        UnwindInfo = RVA(ImageBase, FunctionEntry->UnwindData);
-    }
-
     /* The language specific handler data follows the unwind info */
     LanguageHandler = ALIGN_UP_POINTER_BY(&UnwindInfo->UnwindCode[UnwindInfo->CountOfCodes], sizeof(ULONG));
     *HandlerData = (LanguageHandler + 1);
@@ -559,6 +549,8 @@ RtlVirtualUnwind(
     {
         i += UnwindOpSlots(UnwindInfo->UnwindCode[i]);
     }
+
+RepeatChainedInfo:
 
     /* Process the remaining unwind ops */
     while (i < UnwindInfo->CountOfCodes)
@@ -648,6 +640,16 @@ RtlVirtualUnwind(
                 ASSERT((i + 1) == UnwindInfo->CountOfCodes);
                 goto Exit;
         }
+    }
+
+    /* Check for chained info */
+    if (UnwindInfo->Flags & UNW_FLAG_CHAININFO)
+    {
+        /* See https://docs.microsoft.com/en-us/cpp/build/exception-handling-x64?view=msvc-160#chained-unwind-info-structures */
+        FunctionEntry = (PRUNTIME_FUNCTION)&(UnwindInfo->UnwindCode[(UnwindInfo->CountOfCodes + 1) & ~1]);
+        UnwindInfo = RVA(ImageBase, FunctionEntry->UnwindData);
+        i = 0;
+        goto RepeatChainedInfo;
     }
 
     /* Unwind is finished, pop new Rip from Stack */
