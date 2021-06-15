@@ -52,6 +52,13 @@
 #define HV_HBIN_SIGNATURE               0x6e696268  // "hbin"
 
 //
+// Log identifiers
+//
+#define DIRTY_BLOCK 0xFF
+#define DIRTY_ID 0x54524944  // DIRT
+#define DIRTY_ID_SIZE 4
+
+//
 // Hive versions
 //
 #define HSYS_MAJOR                      1
