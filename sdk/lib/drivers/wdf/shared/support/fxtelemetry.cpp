@@ -93,7 +93,7 @@ Return Value:
 
     //
     // Initialize Name to point to the last WCHAR of the buffer and we will work
-    // our way backwards to the beginning of the string or a \
+    // our way backwards to the beginning of the string or a '\'
     //
 
     Name->Buffer = WDF_PTR_ADD_OFFSET_TYPE(Path->Buffer,

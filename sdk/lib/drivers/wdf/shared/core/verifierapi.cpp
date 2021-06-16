@@ -263,7 +263,13 @@ Return Value:
     DDI_ENTRY();
 
     UNREFERENCED_PARAMETER(DriverGlobals);
+
+#ifndef __REACTOS__
     return &g_WdfTriageInfo;
+#else
+    __debugbreak();
+    return NULL;
+#endif // __REACTOS__
 }
 
 } // extern "C"

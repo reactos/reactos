@@ -31,13 +31,15 @@ extern "C" {
 
 #include <fxldr.h>
 #include "fxbugcheck.h"
-#include "wdfversionlog.h"
+// #include "wdfversionlog.h"
+#include "reactos_special.h"
 
 #define DRIVER_OBJECT_EXTENSION_IDENTIFIER      DriverEntry
 #define DRIVER_PARAMETERS L"Parameters"
 #define REGISTRY_KMDF_MAJOR_VERSION L"MajorVersion"
 #define REGISTRY_KMDF_MINOR_VERSION L"MinorVersion"
 #define REGISTRY_KMDF_BUILD_NUMBER L"BuildNumber"
+
 
 //-----------------------------------------------------------------------------
 // These header files are referenced in order to make internal structures
@@ -82,8 +84,8 @@ extern "C" {
 
 #include "fxlibrarycommon.h"
 
-#define  KMDF_DEFAULT_NAME   "Wdf" ## \
-                             LITERAL(__WDF_MAJOR_VERSION_STRING)   ## \
+#define  KMDF_DEFAULT_NAME   "Wdf"  \
+                             LITERAL(__WDF_MAJOR_VERSION_STRING)    \
                              "000" //minor version
 
 //-----------------------------------------------------------------------------
@@ -116,6 +118,7 @@ PCHAR WdfLdrType = KMDF_DEFAULT_NAME;
 extern "C"
 _Must_inspect_result_
 NTSTATUS
+STDCALL
 WDF_LIBRARY_COMMISSION(
     VOID
     );
@@ -123,6 +126,7 @@ WDF_LIBRARY_COMMISSION(
 extern "C"
 _Must_inspect_result_
 NTSTATUS
+STDCALL
 WDF_LIBRARY_DECOMMISSION(
     VOID
     );
@@ -130,6 +134,7 @@ WDF_LIBRARY_DECOMMISSION(
 extern "C"
 _Must_inspect_result_
 NTSTATUS
+STDCALL
 WDF_LIBRARY_REGISTER_CLIENT(
     __inout  PWDF_BIND_INFO             Info,
     __deref_out   PWDF_DRIVER_GLOBALS * WdfDriverGlobals,
@@ -139,6 +144,7 @@ WDF_LIBRARY_REGISTER_CLIENT(
 extern "C"
 _Must_inspect_result_
 NTSTATUS
+STDCALL
 WDF_LIBRARY_UNREGISTER_CLIENT(
     __in PWDF_BIND_INFO        Info,
     __in PWDF_DRIVER_GLOBALS   WdfDriverGlobals
@@ -188,6 +194,7 @@ WDF_LIBRARY_INFO  WdfLibraryInfo = {
 
 extern "C"
 NTSTATUS
+STDCALL
 FxLibraryDispatch (
     __in struct _DEVICE_OBJECT * DeviceObject,
     __in PIRP Irp
@@ -302,6 +309,7 @@ FxLibraryCleanup(
 
 extern "C"
 NTSTATUS
+STDCALL
 DriverEntry(
     __in PDRIVER_OBJECT   DriverObject,
     __in PUNICODE_STRING  RegistryPath
@@ -328,7 +336,7 @@ DriverEntry(
     // Initialize global to make NonPagedPool be treated as NxPool on Win8
     // and NonPagedPool on down-level
     //
-    ExInitializeDriverRuntime(DrvRtPoolNxOptIn);
+    // ExInitializeDriverRuntime(DrvRtPoolNxOptIn);
 
     RtlInitUnicodeString(&string, WDF_REGISTRY_DBGPRINT_ON);
 
@@ -391,6 +399,7 @@ DriverEntry(
 //-----------------------------------------------------------------------------
 extern "C"
 VOID
+STDCALL
 DriverUnload(
     __in PDRIVER_OBJECT   DriverObject
     )
@@ -415,6 +424,7 @@ DriverUnload(
 extern "C"
 _Must_inspect_result_
 NTSTATUS
+STDCALL
 WDF_LIBRARY_COMMISSION(
     VOID
     )
@@ -428,6 +438,7 @@ WDF_LIBRARY_COMMISSION(
 extern "C"
 _Must_inspect_result_
 NTSTATUS
+STDCALL
 WDF_LIBRARY_DECOMMISSION(
     VOID
     )
@@ -441,6 +452,7 @@ WDF_LIBRARY_DECOMMISSION(
 extern "C"
 _Must_inspect_result_
 NTSTATUS
+STDCALL
 WDF_LIBRARY_REGISTER_CLIENT(
     __in  PWDF_BIND_INFO        Info,
     __deref_out   PWDF_DRIVER_GLOBALS * WdfDriverGlobals,
@@ -524,6 +536,7 @@ WDF_LIBRARY_REGISTER_CLIENT(
 extern "C"
 _Must_inspect_result_
 NTSTATUS
+STDCALL
 WDF_LIBRARY_UNREGISTER_CLIENT(
     __in PWDF_BIND_INFO        Info,
     __in PWDF_DRIVER_GLOBALS   WdfDriverGlobals
@@ -696,7 +709,7 @@ WdfDeleteKmdfVersionFromRegistry(
     parametersKey = NULL;
 
     driverExtension = (PDRV_EXTENSION)IoGetDriverObjectExtension(DriverObject,
-                                                                 DRIVER_OBJECT_EXTENSION_IDENTIFIER);
+                                                                 (PVOID)DRIVER_OBJECT_EXTENSION_IDENTIFIER);
 
     if (driverExtension == NULL || driverExtension->ParametersRegistryPath.Buffer == NULL) {
         return;
@@ -757,4 +770,3 @@ out:
 
     return;
 }
-

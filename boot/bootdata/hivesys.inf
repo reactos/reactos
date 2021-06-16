@@ -1411,6 +1411,7 @@ HKLM,"SYSTEM\CurrentControlSet\Control\SecurityProviders\SaslProfiles",,0x000000
 HKLM,"SYSTEM\CurrentControlSet\Control\ServiceGroupOrder","List",0x00010000, \
  "System Reserved", \
  "EMS", \
+ "WdfLoadGroup", \
  "Boot Bus Extender", \
  "System Bus Extender", \
  "SCSI Miniport", \
