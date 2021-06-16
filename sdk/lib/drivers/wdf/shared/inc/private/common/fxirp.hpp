@@ -27,6 +27,7 @@ Revision History:
 
 class FxIrp {
 
+    friend VOID GetTriageInfo(VOID);
     friend struct FxAutoIrp;
 
 private:

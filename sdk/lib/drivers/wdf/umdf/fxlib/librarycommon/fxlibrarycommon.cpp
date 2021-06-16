@@ -18,7 +18,7 @@ extern "C" {
 //
 // This will cause inclusion of VfWdfFunctions table implementation from header
 //
-#define  VF_FX_DYNAMICS_GENERATE_TABLE   1
+//#define  VF_FX_DYNAMICS_GENERATE_TABLE   1
 
 
 

@@ -18,8 +18,10 @@ extern RTL_OSVERSIONINFOW  gOsVersion;
 #define _LIT_(a)    # a
 #define LITERAL(a) _LIT_(a)
 
+#ifndef __PrintUnfiltered
 #define __PrintUnfiltered(...)          \
     DbgPrintEx(DPFLTR_DEFAULT_ID, DPFLTR_ERROR_LEVEL, __VA_ARGS__);
+#endif
 
 #define __Print(_x_)                                                           \
 {                                                                              \
@@ -33,24 +35,27 @@ extern RTL_OSVERSIONINFOW  gOsVersion;
 
 typedef
 NTSTATUS
-(*PFN_RTL_GET_VERSION)(
+(STDCALL *PFN_RTL_GET_VERSION)(
     __out PRTL_OSVERSIONINFOW VersionInformation
     );
 
 _Must_inspect_result_
 NTSTATUS
+STDCALL
 FxLibraryCommonCommission(
     VOID
     );
 
 _Must_inspect_result_
 NTSTATUS
+STDCALL
 FxLibraryCommonDecommission(
     VOID
     );
 
 _Must_inspect_result_
 NTSTATUS
+STDCALL
 FxLibraryCommonRegisterClient(
     __inout PWDF_BIND_INFO        Info,
     __deref_out PWDF_DRIVER_GLOBALS * WdfDriverGlobals,
@@ -59,6 +64,7 @@ FxLibraryCommonRegisterClient(
 
 _Must_inspect_result_
 NTSTATUS
+STDCALL
 FxLibraryCommonUnregisterClient(
     __in PWDF_BIND_INFO        Info,
     __in PWDF_DRIVER_GLOBALS   WdfDriverGlobals

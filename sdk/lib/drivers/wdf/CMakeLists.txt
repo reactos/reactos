@@ -1,4 +1,7 @@
 
+add_subdirectory(wdfldr)
+add_subdirectory(wdfdriverentry)
+
 remove_definitions(-D_WIN32_WINNT=0x502)
 
 list(APPEND SOURCE_SHARED
@@ -91,7 +94,7 @@ list(APPEND SOURCE_SHARED
     shared/support/fxspinlockapi.cpp
     shared/support/fxstring.cpp
     shared/support/fxstringapi.cpp
-    # shared/support/fxtelemetry.cpp
+    shared/support/fxtelemetry.cpp
     shared/support/fxtransactionedlist.cpp
     shared/support/fxwaitlock.cpp
     shared/support/fxwaitlockapi.cpp
@@ -118,20 +121,20 @@ list(APPEND SOURCE_KM
     kmdf/src/core/fxdpc.cpp
     kmdf/src/core/fxdpcapi.cpp
     kmdf/src/core/fxsystemthread.cpp
-    # kmdf/src/core/tracing.cpp
+    kmdf/src/core/tracing.cpp
     # kmdf/src/dma/base/fxcommonbuffer.cpp # requires DMA stuff
     # kmdf/src/dma/base/fxcommonbufferapi.cpp # requires DMA stuff
     # kmdf/src/dma/base/fxdmaenabler.cpp
     # kmdf/src/dma/base/fxdmaenablerapi.cpp
     # kmdf/src/dma/base/fxdmatransaction.cpp
     # kmdf/src/dma/base/fxdmatransactionapi.cpp
-    # kmdf/src/dynamic/version/version.cpp
+    kmdf/src/dynamic/version/version.cpp
     kmdf/src/fxtosharedinterface/fxobject/fxobjectinfokm.cpp
     # kmdf/src/irphandlers/wmi/fxwmiapi.cpp
     # kmdf/src/irphandlers/wmi/fxwmiinstance.cpp
     # kmdf/src/irphandlers/wmi/fxwmiirphandler.cpp
     # kmdf/src/irphandlers/wmi/fxwmiprovider.cpp
-    # kmdf/src/librarycommon/fxlibrarycommon.cpp
+    kmdf/src/librarycommon/fxlibrarycommon.cpp
     kmdf/src/support/fxqueryinterface.cpp
     kmdf/src/support/fxqueryinterfaceapi.cpp
     kmdf/src/support/fxrelateddevice.cpp
@@ -178,23 +181,23 @@ list(APPEND SOURCE_KM
     reactos_special.cpp
     )
 
-# add_library(wdf01000 MODULE ${SOURCE})
+add_library(wdf01000 SHARED ${SOURCE_SHARED} ${SOURCE_KM})
 
-# set_module_type(wdf01000 kernelmodedriver ENTRYPOINT 0)
-# add_importlibs(wdf01000 ntoskrnl hal wdfldr)
-# add_cd_file(TARGET wdf01000 DESTINATION reactos/system32/drivers FOR all)
-# add_registry_inf(wdf01000_reg.inf)
+set_module_type(wdf01000 kernelmodedriver)
 
-add_library(wdf01000 ${SOURCE_SHARED} ${SOURCE_KM})
+add_cd_file(TARGET wdf01000 DESTINATION reactos/system32/drivers NO_CAB FOR all)
+add_registry_inf(wdf01000_reg.inf)
 
 target_compile_definitions(wdf01000
     PUBLIC WDF_DEVICE_NO_WDMSEC_H _WIN32_WINNT=0x603 NTDDI_VERSION=0x06030000 # NTDDI_WINBLUE
     PRIVATE FX_CORE_MODE=1 FX_CORE_KERNEL_MODE=1
-    PRIVATE __WDF_MAJOR_VERSION=1 __WDF_MINOR_VERSION=17 __WDF_BUILD_NUMBER=7600)
+    PRIVATE __WDF_MAJOR_VERSION=1 __WDF_MINOR_VERSION=17 __WDF_BUILD_NUMBER=7600
+    PRIVATE __WDF_MAJOR_VERSION_STRING=01)
 
 target_include_directories(wdf01000
     PUBLIC ${REACTOS_SOURCE_DIR}/sdk/include/wdf/kmdf/1.17
     PRIVATE
+        ${REACTOS_SOURCE_DIR}/sdk/lib/drivers/wdf/wdfldr
         shared/inc/primitives/common
         shared/inc/primitives/km
         shared/inc/private/common
@@ -209,6 +212,7 @@ target_include_directories(wdf01000
     )
 
 target_link_libraries(wdf01000 aux_klib ntoskrnl_vista ${PSEH_LIB})
+add_importlibs(wdf01000 wdfldr ntoskrnl hal)
 
 if(GCC)
     target_compile_options(wdf01000
