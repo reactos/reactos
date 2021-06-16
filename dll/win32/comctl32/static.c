@@ -94,11 +94,24 @@ static BOOL get_icon_size( HICON handle, SIZE *size )
     if (!GetIconInfo(handle, &info))
         return FALSE;
 
+#ifdef __REACTOS__
+    ret = GetObjectW(info.hbmMask, sizeof(bmp), &bmp);
+#else
     ret = GetObjectW(info.hbmColor, sizeof(bmp), &bmp);
+#endif
     if (ret)
     {
         size->cx = bmp.bmWidth;
         size->cy = bmp.bmHeight;
+#ifdef __REACTOS__
+        /*
+            If this structure defines a black and white icon, this bitmask is formatted
+            so that the upper half is the icon AND bitmask and the lower half is
+            the icon XOR bitmask.
+        */
+        if (!info.hbmColor)
+            size->cy /= 2;
+#endif
     }
 
     DeleteObject(info.hbmMask);
