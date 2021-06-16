@@ -399,13 +399,13 @@ FxVerifyObjectTableIsSorted(
 
 typedef
 NTSTATUS
-(*PFN_RTL_GET_VERSION)(
+(STDCALL *PFN_RTL_GET_VERSION)(
     __out PRTL_OSVERSIONINFOW VersionInformation
     );
 
 typedef
 NTSTATUS
-(*PFN_RTL_VERIFY_VERSION_INFO)(
+(STDCALL *PFN_RTL_VERIFY_VERSION_INFO)(
     __in PRTL_OSVERSIONINFOEXW VersionInfo,
     __in ULONG TypeMask,
     __in ULONGLONG  ConditionMask
@@ -413,7 +413,7 @@ NTSTATUS
 
 typedef
 ULONGLONG
-(*PFN_VER_SET_CONDITION_MASK)(
+(STDCALL *PFN_VER_SET_CONDITION_MASK)(
     __in  ULONGLONG   ConditionMask,
     __in  ULONG   TypeMask,
     __in  UCHAR   Condition
@@ -1054,7 +1054,7 @@ FxAllocateDriverGlobals(
     )
 {
     PFX_DRIVER_GLOBALS  pFxDriverGlobals;
-    // KIRQL               irql;
+    KIRQL               irql;
     NTSTATUS            status;
 
     pFxDriverGlobals = (PFX_DRIVER_GLOBALS)
@@ -1081,12 +1081,10 @@ FxAllocateDriverGlobals(
     //
     // Initialize this new FxDriverGlobals structure.
     //
-#ifndef __REACTOS__
     FxLibraryGlobals.FxDriverGlobalsListLock.Acquire(&irql);
     InsertHeadList(&FxLibraryGlobals.FxDriverGlobalsList,
                    &pFxDriverGlobals->Linkage);
     FxLibraryGlobals.FxDriverGlobalsListLock.Release(irql);
-#endif
 
     pFxDriverGlobals->WdfHandleMask                  = FxHandleValueMask;
     pFxDriverGlobals->WdfVerifierAllocateFailCount   = (ULONG) -1;

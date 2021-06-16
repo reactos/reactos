@@ -507,17 +507,11 @@ typedef struct _WDFFUNCTIONS {
     PFN_WDFREQUESTMARKCANCELABLEEX                            pfnWdfRequestMarkCancelableEx;
     PFN_WDFREQUESTISRESERVED                                  pfnWdfRequestIsReserved;
     PFN_WDFREQUESTFORWARDTOPARENTDEVICEIOQUEUE                pfnWdfRequestForwardToParentDeviceIoQueue;
-    // PFN_WDFCXDEVICEINITALLOCATE                               pfnWdfCxDeviceInitAllocate;
-    // PFN_WDFCXDEVICEINITASSIGNWDMIRPPREPROCESSCALLBACK         pfnWdfCxDeviceInitAssignWdmIrpPreprocessCallback;
-    // PFN_WDFCXDEVICEINITSETIOINCALLERCONTEXTCALLBACK           pfnWdfCxDeviceInitSetIoInCallerContextCallback;
-    // PFN_WDFCXDEVICEINITSETREQUESTATTRIBUTES                   pfnWdfCxDeviceInitSetRequestAttributes;
-    // PFN_WDFCXDEVICEINITSETFILEOBJECTCONFIG                    pfnWdfCxDeviceInitSetFileObjectConfig;
-    PFN_ROSWDFUNIMPLEMENTED                               pfnWdfCxDeviceInitAllocate;
-    PFN_ROSWDFUNIMPLEMENTED         pfnWdfCxDeviceInitAssignWdmIrpPreprocessCallback;
-    PFN_ROSWDFUNIMPLEMENTED           pfnWdfCxDeviceInitSetIoInCallerContextCallback;
-    PFN_ROSWDFUNIMPLEMENTED                   pfnWdfCxDeviceInitSetRequestAttributes;
-    PFN_ROSWDFUNIMPLEMENTED                    pfnWdfCxDeviceInitSetFileObjectConfig;
-
+    PFN_WDFCXDEVICEINITALLOCATE                               pfnWdfCxDeviceInitAllocate;
+    PFN_WDFCXDEVICEINITASSIGNWDMIRPPREPROCESSCALLBACK         pfnWdfCxDeviceInitAssignWdmIrpPreprocessCallback;
+    PFN_WDFCXDEVICEINITSETIOINCALLERCONTEXTCALLBACK           pfnWdfCxDeviceInitSetIoInCallerContextCallback;
+    PFN_WDFCXDEVICEINITSETREQUESTATTRIBUTES                   pfnWdfCxDeviceInitSetRequestAttributes;
+    PFN_WDFCXDEVICEINITSETFILEOBJECTCONFIG                    pfnWdfCxDeviceInitSetFileObjectConfig;
     PFN_WDFDEVICEWDMDISPATCHIRP                               pfnWdfDeviceWdmDispatchIrp;
     PFN_WDFDEVICEWDMDISPATCHIRPTOIOQUEUE                      pfnWdfDeviceWdmDispatchIrpToIoQueue;
     PFN_WDFDEVICEINITSETREMOVELOCKOPTIONS                     pfnWdfDeviceInitSetRemoveLockOptions;
@@ -7047,6 +7041,9 @@ WDFEXPORT(WdfWorkItemFlush)(
     WDFWORKITEM WorkItem
     );
 
+//#ifndef __GNUC__
+//extern WDFVERSION WdfVersion;
+//#endif
 
 #ifdef FX_DYNAMICS_GENERATE_TABLE
 
@@ -7536,17 +7533,11 @@ WDFVERSION WdfVersion = {
         WDFEXPORT(WdfRequestMarkCancelableEx),
         WDFEXPORT(WdfRequestIsReserved),
         WDFEXPORT(WdfRequestForwardToParentDeviceIoQueue),
-        // WDFEXPORT(WdfCxDeviceInitAllocate),
-        // WDFEXPORT(WdfCxDeviceInitAssignWdmIrpPreprocessCallback),
-        // WDFEXPORT(WdfCxDeviceInitSetIoInCallerContextCallback),
-        // WDFEXPORT(WdfCxDeviceInitSetRequestAttributes),
-        // WDFEXPORT(WdfCxDeviceInitSetFileObjectConfig),
-        WdfApiNotImplemented,
-        WdfApiNotImplemented,
-        WdfApiNotImplemented,
-        WdfApiNotImplemented,
-        WdfApiNotImplemented,
-
+        WDFEXPORT(WdfCxDeviceInitAllocate),
+        WDFEXPORT(WdfCxDeviceInitAssignWdmIrpPreprocessCallback),
+        WDFEXPORT(WdfCxDeviceInitSetIoInCallerContextCallback),
+        WDFEXPORT(WdfCxDeviceInitSetRequestAttributes),
+        WDFEXPORT(WdfCxDeviceInitSetFileObjectConfig),
         WDFEXPORT(WdfDeviceWdmDispatchIrp),
         WDFEXPORT(WdfDeviceWdmDispatchIrpToIoQueue),
         WDFEXPORT(WdfDeviceInitSetRemoveLockOptions),
