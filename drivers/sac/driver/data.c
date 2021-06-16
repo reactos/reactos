@@ -153,10 +153,10 @@ FreeDeviceData(IN PDEVICE_OBJECT DeviceObject)
 
     /* Get the device extension and see how far we had gotten */
     DeviceExtension = (PSAC_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+    /* Attempt to rundown while holding the lock */
+    KeAcquireSpinLock(&DeviceExtension->Lock, &OldIrql);
     if ((GlobalDataInitialized) && (DeviceExtension->Initialized))
     {
-        /* Attempt to rundown while holding the lock */
-        KeAcquireSpinLock(&DeviceExtension->Lock, &OldIrql);
         while (DeviceExtension->RundownInProgress)
         {
             SAC_DBG(SAC_DBG_ENTRY_EXIT, "SAC FreeDeviceData: Waiting....\n");

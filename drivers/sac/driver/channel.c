@@ -458,7 +458,8 @@ ChannelCreate(IN PSAC_CHANNEL Channel,
               IN PSAC_CHANNEL_ATTRIBUTES Attributes,
               IN SAC_CHANNEL_ID ChannelId)
 {
-    NTSTATUS Status;
+    /* Probably not a proper value. Used to prevent usage of uninitialized "Status". */
+    NTSTATUS Status = STATUS_UNSUCCESSFUL;
     CHECK_PARAMETER1(Channel);
     CHECK_PARAMETER2(Attributes);
 
