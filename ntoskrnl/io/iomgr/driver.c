@@ -213,7 +213,10 @@ IopGetDriverNames(
             status = STATUS_ILL_FORMED_SERVICE_ENTRY;
             goto Cleanup;
         }
-        driverType = *(PULONG)((ULONG_PTR)kvInfo + kvInfo->DataOffset);
+
+        RtlMoveMemory(&driverType,
+                      (PVOID)((ULONG_PTR)kvInfo + kvInfo->DataOffset),
+                      sizeof(ULONG));
         ExFreePool(kvInfo);
 
         /* Compute the necessary driver name string size */
@@ -913,7 +916,10 @@ IopInitializeBuiltinDriver(IN PLDR_DATA_TABLE_ENTRY BootLdrEntry)
             ExFreePool(kvInfo);
             goto Cleanup;
         }
-        instanceCount = *(PULONG)((ULONG_PTR)kvInfo + kvInfo->DataOffset);
+
+        RtlMoveMemory(&instanceCount,
+                      (PVOID)((ULONG_PTR)kvInfo + kvInfo->DataOffset),
+                      sizeof(ULONG));
         ExFreePool(kvInfo);
 
         DPRINT("Processing %u instances for %wZ module\n", instanceCount, ModuleName);
