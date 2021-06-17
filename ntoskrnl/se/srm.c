@@ -814,6 +814,8 @@ SepRmDereferenceLogonSession(
                     SepCleanupLUIDDeviceMapDirectory(LogonLuid);
                     ObfDereferenceDeviceMap(DeviceMap);
                 }
+
+                /* FIXME: Alert LSA and filesystems that a logon is about to be deleted */
             }
 
             return STATUS_SUCCESS;
@@ -1226,16 +1228,64 @@ SeGetLogonIdDeviceMap(
     return Status;
 }
 
-/*
- * @unimplemented
+/**
+ * @brief
+ * Marks a logon session for future termination, given its logon ID. This triggers
+ * a callout (the registered callback) when the logon is no longer used by anyone,
+ * that is, no token is still referencing the speciffied logon session.
+ *
+ * @param[in] LogonId
+ * The ID of the logon session.
+ *
+ * @return
+ * STATUS_SUCCESS if the logon session is marked for termination notification successfully,
+ * STATUS_NOT_FOUND if the logon session couldn't be found otherwise.
  */
 NTSTATUS
 NTAPI
 SeMarkLogonSessionForTerminationNotification(
-    IN PLUID LogonId)
+    _In_ PLUID LogonId)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    PSEP_LOGON_SESSION_REFERENCES SessionToMark;
+    PAGED_CODE();
+
+    DPRINT("SeMarkLogonSessionForTerminationNotification(%08lx:%08lx)\n",
+           LogonId->HighPart, LogonId->LowPart);
+
+    /* Acquire the database lock */
+    KeAcquireGuardedMutex(&SepRmDbLock);
+
+    /* Loop over the existing logon sessions */
+    for (SessionToMark = SepLogonSessions;
+         SessionToMark != NULL;
+         SessionToMark = SessionToMark->Next)
+    {
+        /* Does the logon with the given ID exist? */
+        if (RtlEqualLuid(&SessionToMark->LogonId, LogonId))
+        {
+            /* We found it */
+            break;
+        }
+    }
+
+    /*
+     * We've exhausted all the remaining logon sessions and
+     * couldn't find one with the provided ID.
+     */
+    if (SessionToMark == NULL)
+    {
+        DPRINT1("SeMarkLogonSessionForTerminationNotification(): Logon session couldn't be found!\n");
+        KeReleaseGuardedMutex(&SepRmDbLock);
+        return STATUS_NOT_FOUND;
+    }
+
+    /* Mark the logon session for termination */
+    SessionToMark->Flags |= SEP_LOGON_SESSION_TERMINATION_NOTIFY;
+    DPRINT("SeMarkLogonSessionForTerminationNotification(): Logon session marked for termination with success!\n");
+
+    /* Release the database lock */
+    KeReleaseGuardedMutex(&SepRmDbLock);
+    return STATUS_SUCCESS;
 }
 
 
