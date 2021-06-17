@@ -80,6 +80,10 @@
 // Unable to create symbolic link pointing to the RAM disk device
 //
 #define RD_SYMLINK_CREATE_FAILED 5
+//
+// Unable to create system root path when creating the RAM disk
+//
+#define RD_SYSROOT_INIT_FAILED 6
 
 //
 // Max traversal of reparse points for a single open in IoParseDevice
