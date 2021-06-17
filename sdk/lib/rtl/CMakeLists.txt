@@ -5,6 +5,11 @@ add_definitions(
     -D_NTSYSTEM_
     -D_NTDLLBUILD_)
 
+if (GCC)
+    # Enable this again. CORE-17637
+    add_compile_options(-Wunused-result)
+endif()
+
 list(APPEND SOURCE
     access.c
     acl.c

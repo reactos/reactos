@@ -1,6 +1,11 @@
 
 PROJECT(NTOS)
 
+if (GCC)
+    # Enable this again. CORE-17637
+    add_compile_options(-Wunused-result)
+endif()
+
 include(ntos.cmake)
 
 if (CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
