@@ -412,7 +412,9 @@ Cleanup:
     return Status;
 }
 
-static NTSTATUS
+_Must_inspect_result_
+static
+NTSTATUS
 RtlpSysVolTakeOwnership(IN PUNICODE_STRING DirectoryPath,
                         IN PSECURITY_DESCRIPTOR SecurityDescriptor)
 {
@@ -511,12 +513,16 @@ RtlpSysVolTakeOwnership(IN PUNICODE_STRING DirectoryPath,
 Cleanup:
     if (TokenEnabled)
     {
-        ZwAdjustPrivilegesToken(hToken,
-                                FALSE,
-                                &TokenPrivileges,
-                                0,
-                                NULL,
-                                NULL);
+        /* Disable privileges that we had to enable, whetever the result was. */
+        NTSTATUS Status2 = ZwAdjustPrivilegesToken(hToken,
+                                                   FALSE,
+                                                   &TokenPrivileges,
+                                                   0,
+                                                   NULL,
+                                                   NULL);
+        /* This must succeed */
+        ASSERT(NT_SUCCESS(Status2));
+        (void)Status2;
     }
 
     if (AdminSid != NULL)
