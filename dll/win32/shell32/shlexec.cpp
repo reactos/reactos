@@ -2423,7 +2423,7 @@ HRESULT WINAPI ShellExecCmdLine(
     SHELLEXECUTEINFOW info;
     DWORD dwSize, dwError, dwType, dwFlags = SEE_MASK_DOENVSUBST | SEE_MASK_NOASYNC;
     LPCWSTR pszVerb = NULL;
-    WCHAR szFile[INTERNET_MAX_URL_LENGTH], szFile2[MAX_PATH];
+    WCHAR szFile[L_MAX_URL_LENGTH], szFile2[MAX_PATH];
     HRESULT hr;
     LPCWSTR pchParams;
     LPWSTR lpCommand = NULL;
