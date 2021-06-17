@@ -102,6 +102,7 @@ add_compile_options(-Wno-char-subscripts -Wno-multichar -Wno-unused-value)
 add_compile_options(-Wno-unused-const-variable)
 add_compile_options(-Wno-unused-local-typedefs)
 add_compile_options(-Wno-deprecated)
+add_compile_options(-Wno-unused-result) # FIXME To be removed when CORE-17637 is resolved
 
 if(NOT CMAKE_C_COMPILER_ID STREQUAL "Clang")
     add_compile_options(-Wno-maybe-uninitialized)
