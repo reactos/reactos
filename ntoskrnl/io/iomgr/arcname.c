@@ -54,12 +54,16 @@ IopCreateArcNames(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     /* Create the global HAL partition name */
     sprintf(Buffer, "\\ArcName\\%s", LoaderBlock->ArcHalDeviceName);
     RtlInitAnsiString(&ArcString, Buffer);
-    RtlAnsiStringToUnicodeString(&IoArcHalDeviceName, &ArcString, TRUE);
+    Status = RtlAnsiStringToUnicodeString(&IoArcHalDeviceName, &ArcString, TRUE);
+    if (!NT_SUCCESS(Status))
+        return Status;
 
     /* Create the global system partition name */
     sprintf(Buffer, "\\ArcName\\%s", LoaderBlock->ArcBootDeviceName);
     RtlInitAnsiString(&ArcString, Buffer);
-    RtlAnsiStringToUnicodeString(&IoArcBootDeviceName, &ArcString, TRUE);
+    Status = RtlAnsiStringToUnicodeString(&IoArcBootDeviceName, &ArcString, TRUE);
+    if (!NT_SUCCESS(Status))
+        return Status;
 
     /* Allocate memory for the string */
     Length = strlen(LoaderBlock->ArcBootDeviceName) + sizeof(ANSI_NULL);
