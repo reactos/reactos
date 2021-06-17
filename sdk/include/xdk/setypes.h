@@ -675,6 +675,10 @@ typedef struct _SID_AND_ATTRIBUTES_HASH {
 #define NETWORKSERVICE_LUID  {0x3e4, 0x0}
 #define IUSER_LUID           {0x3e3, 0x0}
 
+/* Logon session reference flags */
+
+#define SEP_LOGON_SESSION_TERMINATION_NOTIFY   0x0001
+
 typedef struct _ACE_HEADER {
   $UCHAR AceType;
   $UCHAR AceFlags;
