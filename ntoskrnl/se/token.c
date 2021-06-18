@@ -4233,7 +4233,7 @@ NtOpenThreadTokenEx(IN HANDLE ThreadHandle,
                     IN ULONG HandleAttributes,
                     OUT PHANDLE TokenHandle)
 {
-    PETHREAD Thread, NewThread;
+    PETHREAD Thread;
     HANDLE hToken;
     PTOKEN Token, NewToken = NULL, PrimaryToken;
     BOOLEAN CopyOnOpen, EffectiveOnly;
@@ -4307,40 +4307,53 @@ NtOpenThreadTokenEx(IN HANDLE ThreadHandle,
 
     if (CopyOnOpen)
     {
-        Status = ObReferenceObjectByHandle(ThreadHandle, THREAD_ALL_ACCESS,
-                                           PsThreadType, KernelMode,
-                                           (PVOID*)&NewThread, NULL);
+        PrimaryToken = PsReferencePrimaryToken(Thread->ThreadsProcess);
+
+        Status = SepCreateImpersonationTokenDacl(Token, PrimaryToken, &Dacl);
+
+        ObFastDereferenceObject(&Thread->ThreadsProcess->Token, PrimaryToken);
+
         if (NT_SUCCESS(Status))
         {
-            PrimaryToken = PsReferencePrimaryToken(NewThread->ThreadsProcess);
-
-            Status = SepCreateImpersonationTokenDacl(Token, PrimaryToken, &Dacl);
-
-            ObFastDereferenceObject(&NewThread->ThreadsProcess->Token, PrimaryToken);
-
-            if (NT_SUCCESS(Status))
+            if (Dacl)
             {
-                if (Dacl)
+                Status = RtlCreateSecurityDescriptor(&SecurityDescriptor,
+                                                     SECURITY_DESCRIPTOR_REVISION);
+                if (!NT_SUCCESS(Status))
                 {
-                    RtlCreateSecurityDescriptor(&SecurityDescriptor,
-                                                SECURITY_DESCRIPTOR_REVISION);
-                    RtlSetDaclSecurityDescriptor(&SecurityDescriptor, TRUE, Dacl,
-                                                 FALSE);
+                    DPRINT1("NtOpenThreadTokenEx(): Failed to create a security descriptor (Status 0x%lx)\n", Status);
                 }
 
-                InitializeObjectAttributes(&ObjectAttributes, NULL, HandleAttributes,
-                                           NULL, Dacl ? &SecurityDescriptor : NULL);
-
-                Status = SepDuplicateToken(Token, &ObjectAttributes, EffectiveOnly,
-                                           TokenImpersonation, ImpersonationLevel,
-                                           KernelMode, &NewToken);
-                if (NT_SUCCESS(Status))
+                Status = RtlSetDaclSecurityDescriptor(&SecurityDescriptor, TRUE, Dacl,
+                                                      FALSE);
+                if (!NT_SUCCESS(Status))
                 {
-                    ObReferenceObject(NewToken);
-                    Status = ObInsertObject(NewToken, NULL, DesiredAccess, 0, NULL,
-                                            &hToken);
+                    DPRINT1("NtOpenThreadTokenEx(): Failed to set a DACL to the security descriptor (Status 0x%lx)\n", Status);
                 }
             }
+
+            InitializeObjectAttributes(&ObjectAttributes, NULL, HandleAttributes,
+                                       NULL, Dacl ? &SecurityDescriptor : NULL);
+
+            Status = SepDuplicateToken(Token, &ObjectAttributes, EffectiveOnly,
+                                       TokenImpersonation, ImpersonationLevel,
+                                       KernelMode, &NewToken);
+            if (!NT_SUCCESS(Status))
+            {
+                DPRINT1("NtOpenThreadTokenEx(): Failed to duplicate the token (Status 0x%lx)\n");
+            }
+
+            ObReferenceObject(NewToken);
+            Status = ObInsertObject(NewToken, NULL, DesiredAccess, 0, NULL,
+                                    &hToken);
+            if (!NT_SUCCESS(Status))
+            {
+                DPRINT1("NtOpenThreadTokenEx(): Failed to insert the token object (Status 0x%lx)\n", Status);
+            }
+        }
+        else
+        {
+            DPRINT1("NtOpenThreadTokenEx(): Failed to impersonate token from DACL (Status 0x%lx)\n", Status);
         }
     }
     else
@@ -4348,6 +4361,10 @@ NtOpenThreadTokenEx(IN HANDLE ThreadHandle,
         Status = ObOpenObjectByPointer(Token, HandleAttributes,
                                        NULL, DesiredAccess, SeTokenObjectType,
                                        PreviousMode, &hToken);
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("NtOpenThreadTokenEx(): Failed to open the object (Status 0x%lx)\n", Status);
+        }
     }
 
     if (Dacl) ExFreePoolWithTag(Dacl, TAG_ACL);
@@ -4361,12 +4378,14 @@ NtOpenThreadTokenEx(IN HANDLE ThreadHandle,
 
     if (NT_SUCCESS(Status) && CopyOnOpen)
     {
-        PsImpersonateClient(Thread, NewToken, FALSE, EffectiveOnly, ImpersonationLevel);
+        Status = PsImpersonateClient(Thread, NewToken, FALSE, EffectiveOnly, ImpersonationLevel);
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("NtOpenThreadTokenEx(): Failed to impersonate the client (Status 0x%lx)\n");
+        }
     }
 
     if (NewToken) ObDereferenceObject(NewToken);
-
-    if (CopyOnOpen && NewThread) ObDereferenceObject(NewThread);
 
     ObDereferenceObject(Thread);
 
