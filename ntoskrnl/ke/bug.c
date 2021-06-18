@@ -36,6 +36,18 @@ UNICODE_STRING KeRosVideoBiosDate, KeRosVideoBiosVersion;
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
+/*
+ * @brief brief discription.
+ *
+ * Full discription here.
+ *
+ * @param[in] Pc
+ * @param[out] *LdrEntry
+       The entry point of freeldr.
+ * @param[in] DriversOnly
+ * @param[out] InKernel
+       Used to determine if the kernel was loaded or not.
+*/
 PVOID
 NTAPI
 KiPcToFileHeader(IN PVOID Pc,
@@ -101,6 +113,15 @@ KiPcToFileHeader(IN PVOID Pc,
     return PcBase;
 }
 
+/*
+ * @brief Brief discription here
+ *
+ * Full discription here.
+ *
+ * @param[in] Pc
+ *
+ * @param[out] *LdrEntry
+*/
 PVOID
 NTAPI
 KiRosPcToUserFileHeader(IN PVOID Pc,
@@ -150,6 +171,21 @@ KiRosPcToUserFileHeader(IN PVOID Pc,
     return PcBase;
 }
 
+/*
+ * @brief Brief discription here.
+ *
+ *Full discription here.
+ *
+ * @param[in] FramesToSkip
+ *
+ * @param[in] FramesToCapture
+ *
+ * @param[out] *BackTrace
+ *      BackTrace used for debugging.
+ * @param[out] BackTraceHash
+ *      OPTIONAL
+        Hash of BackTrace for verifiction.
+*/
 USHORT
 NTAPI
 KeRosCaptureUserStackBackTrace(IN ULONG FramesToSkip,
@@ -192,7 +228,15 @@ KeRosCaptureUserStackBackTrace(IN ULONG FramesToSkip,
     return (USHORT)i;
 }
 
-
+/*
+ *@brief brief discription here.
+ *
+ * Full discription here.
+ *
+ * @param[in] Frames
+ *
+ * @param[out] FrameCount
+*/
 VOID
 FASTCALL
 KeRosDumpStackFrameArray(IN PULONG_PTR Frames,
@@ -254,6 +298,17 @@ KeRosDumpStackFrameArray(IN PULONG_PTR Frames,
     }
 }
 
+/*
+ * @brief Brief discription here.
+ *
+ * Full discription here.
+ *
+ * @param[in] frame
+ *      OPTIONAL
+ * @param[out] FrameCount
+ *      OPTIONAL
+        Defaults to 32 frames
+*/
 VOID
 NTAPI
 KeRosDumpStackFrames(IN PULONG_PTR Frame OPTIONAL,
@@ -291,6 +346,12 @@ KeRosDumpStackFrames(IN PULONG_PTR Frame OPTIONAL,
     }
 }
 
+/*
+ * @brief brief discription here.
+ *
+ * Full discription here.
+*/
+INIT_FUNCTION
 CODE_SEG("INIT")
 VOID
 NTAPI
@@ -330,6 +391,16 @@ KiInitializeBugCheck(VOID)
     }
 }
 
+/*
+ * @brief Get bugcheck message.
+ *
+ * Full discription here.
+ *
+ * @Param[in] BugCheckCode
+ *
+ *@param [out] OutputString
+ *      OPTIONAL
+*/
 BOOLEAN
 NTAPI
 KeGetBugMessageText(IN ULONG BugCheckCode,
@@ -428,6 +499,11 @@ KeGetBugMessageText(IN ULONG BugCheckCode,
     return Result;
 }
 
+/*
+ * @brief Brief discription here.
+ *
+ * Full discription here.
+*/
 VOID
 NTAPI
 KiDoBugCheckCallbacks(VOID)
@@ -485,6 +561,13 @@ KiDoBugCheckCallbacks(VOID)
     }
 }
 
+/*
+ * @brief Brief discription here.
+ *
+ * Full discription here.
+ *
+ * @param[in] StatusCode
+*/
 VOID
 NTAPI
 KiBugCheckDebugBreak(IN ULONG StatusCode)
@@ -510,6 +593,15 @@ DoBreak:
     if (StatusCode != DBG_STATUS_BUGCHECK_FIRST) goto DoBreak;
 }
 
+/*
+ * @brief Bried description here.
+ *
+ * @param[in]
+ *
+ * @param[out]
+ *
+ * @param[in]
+*/
 PCHAR
 NTAPI
 KeBugCheckUnicodeToAnsi(IN PUNICODE_STRING Unicode,
@@ -534,6 +626,19 @@ KeBugCheckUnicodeToAnsi(IN PUNICODE_STRING Unicode,
     return Ansi;
 }
 
+/*
+ * @brief Brief description here.
+ *
+ * Full discription here.
+ *
+ * @param[in]
+ *
+ * @param[in]
+ *
+ * @param[in]
+ *
+ *@patam[in]
+*/
 VOID
 NTAPI
 KiDumpParameterImages(IN PCHAR Message,
@@ -604,6 +709,21 @@ KiDumpParameterImages(IN PCHAR Message,
     }
 }
 
+/*
+ * @brief Brief discription here.
+ *
+ *Full discription here.
+ *
+ * @param[in]
+ *
+ * @param[in]
+ *
+ * @param[in]
+ *
+ * @param[in]
+ *
+ * @param[in]
+*/
 VOID
 NTAPI
 KiDisplayBlueScreen(IN ULONG MessageId,
@@ -622,7 +742,7 @@ KiDisplayBlueScreen(IN ULONG MessageId,
         InbvResetDisplay();
 
         /* Display blue screen */
-        InbvSolidColorFill(0, 0, SCREEN_WIDTH - 1, SCREEN_HEIGHT - 1, BV_COLOR_BLUE);
+        InbvSolidColorFill(0, 0, SCREEN_WIDTH - 1, SCREEN_HEIGHT - 1, BV_COLOR_GREEN);
         InbvSetTextColor(BV_COLOR_WHITE);
         InbvInstallDisplayStringFilter(NULL);
         InbvEnableDisplayString(TRUE);
@@ -702,6 +822,23 @@ KiDisplayBlueScreen(IN ULONG MessageId,
     }
 }
 
+/*
+ * @brief Brief discription here.
+ *
+ * Full discription here.
+ *
+ * @param[in]
+ *
+ * @param[in]
+ *
+ * @param[in]
+ *
+ * @param[in]
+ *
+ * @param[in]
+ *
+ * @praam[in]
+*/
 DECLSPEC_NORETURN
 VOID
 NTAPI
@@ -1157,6 +1294,11 @@ KeBugCheckWithTf(IN ULONG BugCheckCode,
     while (TRUE);
 }
 
+/*
+ * @brief Brief discription here.
+ *
+ * Full discription here.
+*/
 BOOLEAN
 NTAPI
 KiHandleNmi(VOID)
