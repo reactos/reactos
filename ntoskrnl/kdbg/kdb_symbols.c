@@ -180,12 +180,12 @@ KdbSymPrintAddress(
                                          FunctionName);
     if (NT_SUCCESS(Status))
     {
-        DbgPrint("<%s:%x (%s:%d (%s))>",
+        KdpDprintf("<%s:%x (%s:%d (%s))>",
             ModuleNameAnsi, RelativeAddress, FileName, LineNumber, FunctionName);
     }
     else
     {
-        DbgPrint("<%s:%x>", ModuleNameAnsi, RelativeAddress);
+        KdpDprintf("<%s:%x>", ModuleNameAnsi, RelativeAddress);
     }
 
     return TRUE;
