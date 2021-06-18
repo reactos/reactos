@@ -90,12 +90,6 @@ VBEFindAdapter(
 static int
 VBESortModesCallback(PVBE_MODEINFO VbeModeInfoA, PVBE_MODEINFO VbeModeInfoB)
 {
-   VideoPortDebugPrint(Info, "VBESortModesCallback: %dx%dx%d / %dx%dx%d\n",
-      VbeModeInfoA->XResolution, VbeModeInfoA->YResolution,
-      VbeModeInfoA->BitsPerPixel,
-      VbeModeInfoB->XResolution, VbeModeInfoB->YResolution,
-      VbeModeInfoB->BitsPerPixel);
-
    /*
     * FIXME: Until some reasonable method for changing video modes will
     * be available we favor more bits per pixel. It should be changed
