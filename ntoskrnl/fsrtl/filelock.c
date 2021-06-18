@@ -994,6 +994,7 @@ FsRtlFastUnlockSingle(IN PFILE_LOCK FileLock,
     InternalInfo->Generation++;
     while ((NextMatchingLockIrp = IoCsqRemoveNextIrp(&InternalInfo->Csq, &Find)))
     {
+        NTSTATUS Status;
         if (NextMatchingLockIrp->IoStatus.Information == InternalInfo->Generation)
         {
             // We've already looked at this one, meaning that we looped.
@@ -1011,7 +1012,9 @@ FsRtlFastUnlockSingle(IN PFILE_LOCK FileLock,
         // because somebody else snatched part of the range in a new thread.
         DPRINT("Locking another IRP %p for %p %wZ\n",
                NextMatchingLockIrp, FileLock, &FileObject->FileName);
-        FsRtlProcessFileLock(InternalInfo->BelongsTo, NextMatchingLockIrp, NULL);
+        Status = FsRtlProcessFileLock(InternalInfo->BelongsTo, NextMatchingLockIrp, NULL);
+        if (!NT_SUCCESS(Status))
+            return Status;
     }
 
     DPRINT("Success %wZ\n", &FileObject->FileName);
@@ -1173,23 +1176,25 @@ FsRtlProcessFileLock(IN PFILE_LOCK FileLock,
     {
         /* A lock */
     case IRP_MN_LOCK:
-
+    {
         /* Call the private lock routine */
-        FsRtlPrivateLock(FileLock,
-                         IoStackLocation->FileObject,
-                         &IoStackLocation->
-                         Parameters.LockControl.ByteOffset,
-                         IoStackLocation->Parameters.LockControl.Length,
-                         IoGetRequestorProcess(Irp),
-                         IoStackLocation->Parameters.LockControl.Key,
-                         IoStackLocation->Flags & SL_FAIL_IMMEDIATELY,
-                         IoStackLocation->Flags & SL_EXCLUSIVE_LOCK,
-                         &IoStatusBlock,
-                         Irp,
-                         Context,
-                         FALSE);
+        BOOLEAN Result = FsRtlPrivateLock(FileLock,
+                                          IoStackLocation->FileObject,
+                                          &IoStackLocation->Parameters.LockControl.ByteOffset,
+                                          IoStackLocation->Parameters.LockControl.Length,
+                                          IoGetRequestorProcess(Irp),
+                                          IoStackLocation->Parameters.LockControl.Key,
+                                          IoStackLocation->Flags & SL_FAIL_IMMEDIATELY,
+                                          IoStackLocation->Flags & SL_EXCLUSIVE_LOCK,
+                                          &IoStatusBlock,
+                                          Irp,
+                                          Context,
+                                          FALSE);
+        /* FsRtlPrivateLock has _Must_inspect_result_. Just check this is consistent on debug builds */
+        NT_ASSERT(Result == NT_SUCCESS(IoStatusBlock.Status));
+        (void)Result;
         return IoStatusBlock.Status;
-
+    }
         /* A single unlock */
     case IRP_MN_UNLOCK_SINGLE:
 
@@ -1299,7 +1304,10 @@ FsRtlUninitializeFileLock(IN PFILE_LOCK FileLock)
         }
         while ((Irp = IoCsqRemoveNextIrp(&InternalInfo->Csq, NULL)) != NULL)
         {
-            FsRtlProcessFileLock(FileLock, Irp, NULL);
+            NTSTATUS Status = FsRtlProcessFileLock(FileLock, Irp, NULL);
+            /* FsRtlProcessFileLock has _Must_inspect_result_ */
+            NT_ASSERT(NT_SUCCESS(Status));
+            (void)Status;
         }
         ExFreePoolWithTag(InternalInfo, TAG_FLOCK);
         FileLock->LockInformation = NULL;
