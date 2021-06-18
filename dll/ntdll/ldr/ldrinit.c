@@ -1421,7 +1421,7 @@ LdrpInitializeExecutionOptions(PUNICODE_STRING ImagePathName, PPEB Peb, PHANDLE 
 {
     NTSTATUS Status;
     HANDLE KeyHandle;
-    ULONG ExecuteOptions, MinimumStackCommit = 0, GlobalFlag;
+    ULONG ExecuteOptions, MinimumStackCommit, GlobalFlag;
 
     /* Return error if we were not provided a pointer where to save the options key handle */
     if (!OptionsKey) return STATUS_INVALID_HANDLE;
@@ -1435,6 +1435,8 @@ LdrpInitializeExecutionOptions(PUNICODE_STRING ImagePathName, PPEB Peb, PHANDLE 
     /* Save it if it was opened successfully */
     if (NT_SUCCESS(Status))
         *OptionsKey = KeyHandle;
+    else
+        KeyHandle = NULL;
 
     if (KeyHandle)
     {
@@ -1483,15 +1485,15 @@ LdrpInitializeExecutionOptions(PUNICODE_STRING ImagePathName, PPEB Peb, PHANDLE 
                                    sizeof(RtlpShutdownProcessFlags),
                                    NULL);
 
-        LdrQueryImageFileKeyOption(KeyHandle,
-                                   L"MinimumStackCommitInBytes",
-                                   REG_DWORD,
-                                   &MinimumStackCommit,
-                                   sizeof(MinimumStackCommit),
-                                   NULL);
+        Status = LdrQueryImageFileKeyOption(KeyHandle,
+                                            L"MinimumStackCommitInBytes",
+                                            REG_DWORD,
+                                            &MinimumStackCommit,
+                                            sizeof(MinimumStackCommit),
+                                            NULL);
 
         /* Update PEB's minimum stack commit if it's lower */
-        if (Peb->MinimumStackCommit < MinimumStackCommit)
+        if (NT_SUCCESS(Status) && Peb->MinimumStackCommit < MinimumStackCommit)
             Peb->MinimumStackCommit = MinimumStackCommit;
 
         /* Set the global flag */
@@ -1504,8 +1506,6 @@ LdrpInitializeExecutionOptions(PUNICODE_STRING ImagePathName, PPEB Peb, PHANDLE 
 
         if (NT_SUCCESS(Status))
             Peb->NtGlobalFlag = GlobalFlag;
-        else
-            GlobalFlag = 0;
 
         /* Call AVRF if necessary */
         if (Peb->NtGlobalFlag & (FLG_APPLICATION_VERIFIER | FLG_HEAP_PAGE_ALLOCS))
@@ -1523,6 +1523,7 @@ LdrpInitializeExecutionOptions(PUNICODE_STRING ImagePathName, PPEB Peb, PHANDLE 
         if (Peb->NtGlobalFlag & (FLG_APPLICATION_VERIFIER | FLG_HEAP_PAGE_ALLOCS))
         {
             /* Initialize app verifier package */
+            // FIXME: LdrpInitializeApplicationVerifierPackage() does not expect KeyHandle == NULL...
             Status = LdrpInitializeApplicationVerifierPackage(KeyHandle, Peb, TRUE, FALSE);
             if (!NT_SUCCESS(Status))
             {
@@ -1816,6 +1817,11 @@ LdrpInitializeProcess(IN PCONTEXT Context,
 
     /* Get the execution options */
     Status = LdrpInitializeExecutionOptions(&ImagePathName, Peb, &OptionsKey);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("LdrpInitializeExecutionOptions() failed. Status 0x%lX\n", Status);
+        return Status;
+    }
 
     /* Check if this is a .NET executable */
     if (RtlImageDirectoryEntryToData(Peb->ImageBaseAddress,
