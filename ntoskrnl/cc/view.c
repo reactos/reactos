@@ -155,6 +155,7 @@ CcRosTraceCacheMap (
 #endif
 }
 
+static
 NTSTATUS
 CcRosFlushVacb (
     _In_ PROS_VACB Vacb,
@@ -411,10 +412,9 @@ CcRosFlushDirtyPages (
         if (--SharedCacheMap->OpenCount == 0)
             CcRosDeleteFileCache(SharedCacheMap->FileObject, SharedCacheMap, &OldIrql);
 
-        if (!NT_SUCCESS(Status) && (Status != STATUS_END_OF_FILE) &&
-            (Status != STATUS_MEDIA_WRITE_PROTECTED))
+        if (!NT_SUCCESS(Status))
         {
-            DPRINT1("CC: Failed to flush VACB.\n");
+            DPRINT1("CcRosFlushVacb() failed. Status 0x%08x\n", Status);
         }
         else
         {
@@ -1045,7 +1045,7 @@ CcFlushCache (
         {
             if (vacb->Dirty)
             {
-                IO_STATUS_BLOCK VacbIosb = { 0 };
+                IO_STATUS_BLOCK VacbIosb;
                 Status = CcRosFlushVacb(vacb, &VacbIosb);
                 if (!NT_SUCCESS(Status))
                 {
