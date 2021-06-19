@@ -155,12 +155,7 @@ NTSTATUS
 NTAPI
 InitVideo(VOID)
 {
-    ULONG iDevNum, iVGACompatible = -1, ulMaxObjectNumber = 0;
-    WCHAR awcDeviceName[20];
-    WCHAR awcBuffer[256];
     NTSTATUS Status;
-    PGRAPHICS_DEVICE pGraphicsDevice;
-    ULONG cbValue;
     HKEY hkey;
 
     TRACE("----------------------------- InitVideo() -------------------------------\n");
@@ -173,85 +168,10 @@ InitVideo(VOID)
     if (gbBaseVideo)
         ERR("VGA mode requested.\n");
 
-    /* Open the key for the adapters */
-    Status = RegOpenKey(KEY_VIDEO, &hkey);
+    /* Initialize all display devices */
+    Status = EngpUpdateGraphicsDeviceList();
     if (!NT_SUCCESS(Status))
-    {
-        ERR("Could not open HARDWARE\\DEVICEMAP\\VIDEO registry key:0x%lx\n", Status);
         return Status;
-    }
-
-    /* Read the name of the VGA adapter */
-    cbValue = sizeof(awcDeviceName);
-    Status = RegQueryValue(hkey, L"VgaCompatible", REG_SZ, awcDeviceName, &cbValue);
-    if (NT_SUCCESS(Status))
-    {
-        iVGACompatible = _wtoi(&awcDeviceName[sizeof("\\Device\\Video")-1]);
-        ERR("VGA adapter = %lu\n", iVGACompatible);
-    }
-
-    /* Get the maximum mumber of adapters */
-    if (!RegReadDWORD(hkey, L"MaxObjectNumber", &ulMaxObjectNumber))
-    {
-        ERR("Could not read MaxObjectNumber, defaulting to 0.\n");
-    }
-
-    TRACE("Found %lu devices\n", ulMaxObjectNumber + 1);
-
-    /* Loop through all adapters */
-    for (iDevNum = 0; iDevNum <= ulMaxObjectNumber; iDevNum++)
-    {
-        /* Create the adapter's key name */
-        swprintf(awcDeviceName, L"\\Device\\Video%lu", iDevNum);
-
-        /* Read the reg key name */
-        cbValue = sizeof(awcBuffer);
-        Status = RegQueryValue(hkey, awcDeviceName, REG_SZ, awcBuffer, &cbValue);
-        if (!NT_SUCCESS(Status))
-        {
-            ERR("failed to query the registry path:0x%lx\n", Status);
-            continue;
-        }
-
-        /* Initialize the driver for this device */
-        pGraphicsDevice = InitDisplayDriver(awcDeviceName, awcBuffer);
-        if (!pGraphicsDevice) continue;
-
-        /* Check if this is a VGA compatible adapter */
-        if (pGraphicsDevice->StateFlags & DISPLAY_DEVICE_VGA_COMPATIBLE)
-        {
-            /* Save this as the VGA adapter */
-            if (!gpVgaGraphicsDevice)
-                gpVgaGraphicsDevice = pGraphicsDevice;
-            TRACE("gpVgaGraphicsDevice = %p\n", gpVgaGraphicsDevice);
-        }
-        else
-        {
-            /* Set the first one as primary device */
-            if (!gpPrimaryGraphicsDevice)
-                gpPrimaryGraphicsDevice = pGraphicsDevice;
-            TRACE("gpPrimaryGraphicsDevice = %p\n", gpPrimaryGraphicsDevice);
-        }
-    }
-
-    /* Close the device map registry key */
-    ZwClose(hkey);
-
-    /* Was VGA mode requested? */
-    if (gbBaseVideo)
-    {
-        /* Check if we found a VGA compatible device */
-        if (gpVgaGraphicsDevice)
-        {
-            /* Set the VgaAdapter as primary */
-            gpPrimaryGraphicsDevice = gpVgaGraphicsDevice;
-            // FIXME: DEVMODE
-        }
-        else
-        {
-            ERR("Could not find VGA compatible driver. Trying normal.\n");
-        }
-    }
 
     /* Check if we had any success */
     if (!gpPrimaryGraphicsDevice)
@@ -325,6 +245,12 @@ UserEnumDisplayDevices(
     ULONG cbSize;
     HKEY hkey;
     NTSTATUS Status;
+
+    if (!pustrDevice)
+    {
+        /* Check if some devices have been added since last time */
+        EngpUpdateGraphicsDeviceList();
+    }
 
     /* Ask gdi for the GRAPHICS_DEVICE */
     pGraphicsDevice = EngpFindGraphicsDevice(pustrDevice, iDevNum, 0);

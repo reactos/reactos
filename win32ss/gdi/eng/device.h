@@ -39,6 +39,9 @@ EngpPopulateDeviceModeList(
     _Inout_ PGRAPHICS_DEVICE pGraphicsDevice,
     _In_ PDEVMODEW pdmDefault);
 
+NTSTATUS
+EngpUpdateGraphicsDeviceList(VOID);
+
 CODE_SEG("INIT")
 NTSTATUS
 NTAPI
