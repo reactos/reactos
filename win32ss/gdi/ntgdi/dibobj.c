@@ -45,6 +45,8 @@ CreateDIBPalette(
 {
     PPALETTE ppal;
     ULONG i, cBitsPixel, cColors;
+    RGBQUAD rgb;
+    NTSTATUS Status;
 
     if (pbmi->bmiHeader.biSize < sizeof(BITMAPINFOHEADER))
     {
@@ -133,12 +135,28 @@ CreateDIBPalette(
             /* Loop all color indices in the DIB */
             for (i = 0; i < cColors; i++)
             {
-                /* Get the color value and translate it to a COLORREF */
-                RGBQUAD rgb = prgb[i];
-                COLORREF crColor = RGB(rgb.rgbRed, rgb.rgbGreen, rgb.rgbBlue);
+                /* User SEH to verify READ success */
+                Status = STATUS_SUCCESS;
+                _SEH2_TRY
+                {
+                    rgb = prgb[i];
+                }
+                _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+                {
+                    Status = _SEH2_GetExceptionCode();
+                    /* On Read Failure, put zero in Palette */
+                    PALETTE_vSetRGBColorForIndex(ppal, i, 0);
+                }
+                _SEH2_END
 
-                /* Set the RGB value in the palette */
-                PALETTE_vSetRGBColorForIndex(ppal, i, crColor);
+                if(NT_SUCCESS(Status))
+                {
+                    /* Get the color value and translate it to a COLORREF */
+                    COLORREF crColor = RGB(rgb.rgbRed, rgb.rgbGreen, rgb.rgbBlue);
+
+                    /* Set the RGB value in the palette */
+                    PALETTE_vSetRGBColorForIndex(ppal, i, crColor);
+                }
             }
         }
         else
