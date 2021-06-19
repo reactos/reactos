@@ -77,6 +77,27 @@ PSAMPR_SERVER_NAME_bind(PSAMPR_SERVER_NAME pszSystemName)
 
     TRACE("PSAMPR_SERVER_NAME_bind(%S)\n", pszSystemName);
 
+    /* Check the server name prefix and server name length */
+    if (pszSystemName != NULL)
+    {
+        int nLength = wcslen(pszSystemName);
+        int nNameLength = nLength;
+
+        if (nLength >= 1 && pszSystemName[0] == L'\\')
+            nNameLength--;
+
+        if (nLength >= 2 && pszSystemName[1] == L'\\')
+            nNameLength--;
+
+        if (((nLength - nNameLength != 0) &&
+             (nLength - nNameLength != 2)) ||
+            (nNameLength == 0))
+        {
+            WARN("Invalid server name %S", pszSystemName);
+            RpcRaiseException(STATUS_OBJECT_NAME_INVALID);
+        }
+    }
+
     status = RpcStringBindingComposeW(NULL,
                                       L"ncacn_np",
                                       pszSystemName,
