@@ -75,7 +75,7 @@ PSAMPR_SERVER_NAME_bind(PSAMPR_SERVER_NAME pszSystemName)
     LPWSTR pszStringBinding;
     RPC_STATUS status;
 
-    TRACE("PSAMPR_SERVER_NAME_bind() called\n");
+    TRACE("PSAMPR_SERVER_NAME_bind(%S)\n", pszSystemName);
 
     status = RpcStringBindingComposeW(NULL,
                                       L"ncacn_np",
@@ -113,7 +113,7 @@ PSAMPR_SERVER_NAME_unbind(PSAMPR_SERVER_NAME pszSystemName,
 {
     RPC_STATUS status;
 
-    TRACE("PSAMPR_SERVER_NAME_unbind() called\n");
+    TRACE("PSAMPR_SERVER_NAME_unbind(%S)\n", pszSystemName);
 
     status = RpcBindingFree(&hBinding);
     if (status)
@@ -500,14 +500,26 @@ SamConnect(IN OUT PUNICODE_STRING ServerName OPTIONAL,
            IN ACCESS_MASK DesiredAccess,
            IN POBJECT_ATTRIBUTES ObjectAttributes)
 {
+    PSAMPR_SERVER_NAME pServerName = NULL;
     NTSTATUS Status;
 
     TRACE("SamConnect(%p %p 0x%08x %p)\n",
           ServerName, ServerHandle, DesiredAccess, ObjectAttributes);
 
+    if (ServerName != NULL && ServerName->Length > 0 && ServerName->Buffer != NULL)
+    {
+        /* Create a zero-terminated server name */
+        pServerName = midl_user_allocate(ServerName->Length + sizeof(WCHAR));
+        if (pServerName == NULL)
+            return STATUS_INSUFFICIENT_RESOURCES;
+
+        CopyMemory(pServerName, ServerName->Buffer, ServerName->Length);
+        pServerName[ServerName->Length / sizeof(WCHAR)] = UNICODE_NULL;
+    }
+
     RpcTryExcept
     {
-        Status = SamrConnect((PSAMPR_SERVER_NAME)ServerName,
+        Status = SamrConnect(pServerName,
                              (SAMPR_HANDLE *)ServerHandle,
                              DesiredAccess);
     }
@@ -516,6 +528,9 @@ SamConnect(IN OUT PUNICODE_STRING ServerName OPTIONAL,
         Status = I_RpcMapWin32Status(RpcExceptionCode());
     }
     RpcEndExcept;
+
+    if (pServerName)
+        midl_user_free(pServerName);
 
     return Status;
 }
