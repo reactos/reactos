@@ -439,6 +439,17 @@ EngpRegisterGraphicsDevice(
     EngReleaseSemaphore(ghsemGraphicsDeviceList);
     TRACE("Prepared %lu modes for %ls\n", pGraphicsDevice->cDevModes, pGraphicsDevice->pwszDescription);
 
+    /* HACK: already in graphic mode; display wallpaper on this new display */
+    if (ScreenDeviceContext)
+    {
+        UNICODE_STRING DriverName = RTL_CONSTANT_STRING(L"DISPLAY");
+        UNICODE_STRING DisplayName;
+        HDC hdc;
+        RtlInitUnicodeString(&DisplayName, pGraphicsDevice->szWinDeviceName);
+        hdc = IntGdiCreateDC(&DriverName, &DisplayName, NULL, NULL, FALSE);
+        IntPaintDesktop(hdc);
+    }
+
     return pGraphicsDevice;
 }
 
