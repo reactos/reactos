@@ -149,7 +149,7 @@ CreateDIBPalette(
                 /* Set all palette entries to zero */
                 for (i = 0; i < cColors; i++)
                 {
-                        PALETTE_vSetRGBColorForIndex(ppal, i, 0);
+                    PALETTE_vSetRGBColorForIndex(ppal, i, 0);
                 }
             }
             _SEH2_END
