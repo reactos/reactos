@@ -152,7 +152,7 @@ CreateDIBPalette(
                     PALETTE_vSetRGBColorForIndex(ppal, i, 0);
                 }
             }
-            _SEH2_END
+            _SEH2_END;
 
         }
         else
