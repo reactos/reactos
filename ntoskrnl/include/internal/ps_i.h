@@ -142,13 +142,16 @@ static const INFORMATION_CLASS_INFO PsProcessInfoClass[] =
         ICIF_QUERY | ICIF_SET | ICIF_SET_SIZE_VARIABLE
     ),
 
-    /* ProcessUserModeIOPL */
-    IQS_SAME
+    /* ProcessUserModeIOPL is only implemented in x86 */
+#if defined (_X86_)
+    IQS_NO_TYPE_LENGTH
     (
-        UCHAR,
         ULONG,
         ICIF_SET
     ),
+#else
+    IQS_NONE,
+#endif
 
     /* ProcessEnableAlignmentFaultFixup */
     IQS
@@ -233,7 +236,7 @@ static const INFORMATION_CLASS_INFO PsProcessInfoClass[] =
     /* ProcessWow64Information */
     IQS_SAME
     (
-        ULONG,
+        ULONG_PTR,
         ULONG,
         ICIF_QUERY
     ),
@@ -443,7 +446,7 @@ static const INFORMATION_CLASS_INFO PsThreadInfoClass[] =
     /* ThreadZeroTlsCell */
     IQS_SAME
     (
-        ULONG_PTR,
+        ULONG,
         ULONG,
         ICIF_SET
     ),

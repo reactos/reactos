@@ -1172,7 +1172,7 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
         case ProcessWx86Information:
 
             /* Check buffer length */
-            if (ProcessInformationLength != sizeof(HANDLE))
+            if (ProcessInformationLength != sizeof(ULONG))
             {
                 Status = STATUS_INFO_LENGTH_MISMATCH;
                 break;
@@ -2439,7 +2439,7 @@ NtSetInformationThread(IN HANDLE ThreadHandle,
         case ThreadZeroTlsCell:
 
             /* Check buffer length */
-            if (ThreadInformationLength != sizeof(ULONG_PTR))
+            if (ThreadInformationLength != sizeof(ULONG))
             {
                 Status = STATUS_INFO_LENGTH_MISMATCH;
                 break;
@@ -2449,7 +2449,7 @@ NtSetInformationThread(IN HANDLE ThreadHandle,
             _SEH2_TRY
             {
                 /* Get the priority */
-                TlsIndex = *(PULONG_PTR)ThreadInformation;
+                TlsIndex = *(PULONG)ThreadInformation;
             }
             _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
