@@ -2199,7 +2199,7 @@ KdSystemDebugControl(
                     break;
 
             }
-            break;
+            return STATUS_SUCCESS;
         }
 #endif
 
@@ -2207,7 +2207,7 @@ KdSystemDebugControl(
         case 'DsoR':
         {
             KeRosDumpStackFrames((PULONG_PTR)InputBuffer, InputBufferLength);
-            break;
+            return STATUS_SUCCESS;
         }
 #if defined(KDBG)
         /* Register KDBG CLI callback */
