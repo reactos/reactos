@@ -52,6 +52,7 @@ _main(int argc,
                             &BasePriority,
                             sizeof(KPRIORITY));
 
+#if defined (_X86_)
     /* Give us IOPL so that we can access the VGA registers */
     Status = NtSetInformationProcess(NtCurrentProcess(),
                                      ProcessUserModeIOPL,
@@ -70,6 +71,7 @@ _main(int argc,
                                   &Response);
 #endif
     }
+#endif
 
     /* Initialize CSR through CSRSRV */
     Status = CsrServerInitialization(argc, argv);
