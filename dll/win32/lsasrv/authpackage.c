@@ -1779,7 +1779,7 @@ done:
     /* Free the authentication authority */
     if (AuthenticatingAuthority != NULL)
     {
-        if (AuthenticatingAuthority != NULL)
+        if (AuthenticatingAuthority->Buffer != NULL)
             LsapFreeHeap(AuthenticatingAuthority->Buffer);
 
         LsapFreeHeap(AuthenticatingAuthority);
