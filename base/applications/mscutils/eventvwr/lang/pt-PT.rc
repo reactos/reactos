@@ -1,0 +1,216 @@
+/* Portuguese Portugal translation by Jose Jesus */
+
+LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
+
+IDM_EVENTVWR MENU
+BEGIN
+    POPUP "&Registo"
+    BEGIN
+        MENUITEM "&Abrir o ficheiro de registo...", IDM_OPEN_EVENTLOG
+        MENUITEM "&Guardar ficheiro de registo como...", IDM_SAVE_EVENTLOG
+        MENUITEM "&Fechar", IDM_CLOSE_EVENTLOG
+        MENUITEM SEPARATOR
+        MENUITEM "&Limpar todos os Eventos", IDM_CLEAR_EVENTS
+        MENUITEM "&Alterar o nome\tF2", IDM_RENAME_EVENTLOG
+        MENUITEM "&Definições...", IDM_EVENTLOG_SETTINGS
+        MENUITEM SEPARATOR
+        MENUITEM "&Sair", IDM_EXIT
+    END
+    POPUP "&Visualizar"
+    BEGIN
+        MENUITEM "Mais &recente primeiro", IDM_LIST_NEWEST
+        MENUITEM "Mais &antigo primeiro", IDM_LIST_OLDEST
+        MENUITEM SEPARATOR
+        MENUITEM "&Detalhes...\tEnter", IDM_EVENT_DETAILS
+        MENUITEM SEPARATOR
+        MENUITEM "&Actualizar\tF5", IDM_REFRESH
+    END
+    POPUP "&Opções"
+    BEGIN
+        MENUITEM "Visualizar &detalhes", IDM_EVENT_DETAILS_VIEW
+        MENUITEM "&Linhas de grelha", IDM_LIST_GRID_LINES
+        MENUITEM SEPARATOR
+        MENUITEM "&Guardar definições ao sair", IDM_SAVE_SETTINGS
+    END
+    POPUP "&Ajuda"
+    BEGIN
+        MENUITEM "&Ajuda", IDM_HELP
+        MENUITEM SEPARATOR
+        MENUITEM "&Sobre", IDM_ABOUT
+    END
+END
+
+IDA_EVENTVWR ACCELERATORS
+BEGIN
+    "?", IDM_ABOUT, ASCII, ALT
+    "/", IDM_ABOUT, ASCII, ALT
+    VK_F2, IDM_RENAME_EVENTLOG, VIRTKEY
+    VK_F5, IDM_REFRESH, VIRTKEY
+END
+
+IDD_EVENTDETAILS_DLG DIALOGEX 0, 0, 266, 240
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_THICKFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_CONTEXTHELP
+CAPTION "Detalhes do Evento"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "EvtDetailsCtrl", IDC_STATIC, 0, 0, 266, 215
+    PUSHBUTTON "A&juda", IDHELP, 8, 220, 50, 14
+    DEFPUSHBUTTON "&Fechar", IDOK, 208, 220, 50, 14
+END
+
+IDD_EVENTDETAILS_CTRL DIALOGEX 0, 0, 266, 215
+STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Data:", IDC_STATIC, 8, 5, 31, 8
+    EDITTEXT IDC_EVENTDATESTATIC, 50, 5, 47, 8, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
+    LTEXT "Origem:", IDC_STATIC, 103, 5, 36, 8
+    EDITTEXT IDC_EVENTSOURCESTATIC, 140, 5, 82, 8, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
+    LTEXT "Hora:", IDC_STATIC, 8, 15, 31, 8
+    EDITTEXT IDC_EVENTTIMESTATIC, 50, 15, 47, 8, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
+    LTEXT "Categoria:", IDC_STATIC, 103, 15, 36, 8
+    EDITTEXT IDC_EVENTCATEGORYSTATIC, 140, 15, 82, 8, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
+    LTEXT "Tipo:", IDC_STATIC, 8, 25, 31, 8
+    EDITTEXT IDC_EVENTTYPESTATIC, 50, 25, 47, 8, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
+    LTEXT "EventID:", IDC_STATIC, 103, 25, 36, 8
+    EDITTEXT IDC_EVENTIDSTATIC, 140, 25, 82, 8, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
+    LTEXT "&Utilizador:", IDC_STATIC, 8, 35, 36, 8
+    EDITTEXT IDC_EVENTUSERSTATIC, 50, 35, 152, 8, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
+    LTEXT "&Computador:", IDC_STATIC, 8, 45, 40, 8
+    EDITTEXT IDC_EVENTCOMPUTERSTATIC, 50, 45, 152, 8, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
+
+    PUSHBUTTON "", IDC_PREVIOUS, 230, 5, 28, 14, BS_ICON
+    PUSHBUTTON "", IDC_NEXT, 230, 21, 28, 14, BS_ICON
+    PUSHBUTTON "", IDC_COPY, 230, 37, 28, 14, BS_ICON
+
+    LTEXT "&Descrição:", IDC_STATIC, 8, 65, 39, 8
+    CONTROL "", IDC_EVENTTEXTEDIT, RICHEDIT_CLASS, ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY | WS_VSCROLL | WS_BORDER, 8, 76, 250, 60
+
+    LTEXT "Dad&os:", IDC_DETAILS_STATIC, 8, 140, 20, 8
+    CONTROL "&Bytes", IDC_BYTESRADIO, "Button", BS_AUTORADIOBUTTON, 39, 140, 34, 8
+    CONTROL "&Word", IDC_WORDRADIO, "Button", BS_AUTORADIOBUTTON, 77, 140, 34, 8
+    EDITTEXT IDC_EVENTDATAEDIT, 8, 150, 250, 60, ES_MULTILINE | ES_AUTOHSCROLL | ES_AUTOVSCROLL | ES_READONLY | WS_VSCROLL | WS_BORDER
+END
+
+IDD_LOGPROPERTIES_GENERAL DIALOGEX 0, 0, 252, 234
+STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
+CAPTION "Geral"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "&Mostrar nome:", IDC_STATIC, 7, 9, 60, 8
+    EDITTEXT IDC_DISPLAYNAME, 67, 7, 178, 12, ES_LEFT | ES_AUTOHSCROLL | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP
+    LTEXT "&Nome do registo:", IDC_STATIC, 7, 25, 60, 8
+    EDITTEXT IDC_LOGNAME, 67, 23, 178, 12, ES_LEFT | ES_AUTOHSCROLL | ES_READONLY | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP
+    LTEXT "&Ficheiro:", IDC_STATIC, 7, 41, 60, 8
+    EDITTEXT IDC_LOGFILE, 67, 39, 178, 12, ES_LEFT | ES_AUTOHSCROLL | ES_READONLY | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP
+    LTEXT "Tamanho:", IDC_STATIC, 7, 57, 60, 8
+    EDITTEXT IDC_SIZE_LABEL, 67, 57, 178, 12, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
+    LTEXT "Criado:", IDC_STATIC, 7, 69, 60, 8
+    EDITTEXT IDC_CREATED_LABEL, 67, 69, 178, 12, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
+    LTEXT "Modificado:", IDC_STATIC, 7, 81, 60, 8
+    EDITTEXT IDC_MODIFIED_LABEL, 67, 81, 178, 12, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
+    LTEXT "Acedido:", IDC_STATIC, 7, 93, 60, 8
+    EDITTEXT IDC_ACCESSED_LABEL, 67, 93, 178, 12, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
+    GROUPBOX "Tamanho do registo", IDC_STATIC, 7, 106, 238, 99
+    LTEXT "&Tamanho máx. do registo:", IDC_STATIC, 17, 122, 108, 8
+    EDITTEXT IDC_EDIT_MAXLOGSIZE, 103, 119, 40, 14, ES_LEFT | ES_NUMBER | WS_GROUP
+    CONTROL "", IDC_UPDOWN_MAXLOGSIZE, UPDOWN_CLASS, UDS_SETBUDDYINT | UDS_NOTHOUSANDS | UDS_ALIGNRIGHT |
+            UDS_AUTOBUDDY | UDS_ARROWKEYS | WS_GROUP, 253, 119, 10, 14
+    LTEXT "KB", IDC_STATIC, 152, 122, 20, 8
+    LTEXT "Quando for alcançado o tamanho máximo do registo:", IDC_STATIC, 17, 140, 219, 8
+    CONTROL "Substituir eventos conforme o &necessário", IDC_OVERWRITE_AS_NEEDED, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 17, 155, 219, 10
+    CONTROL "Substituir eventos &anteriores a:", IDC_OVERWRITE_OLDER_THAN, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 17, 168, 127, 10
+    EDITTEXT IDC_EDIT_EVENTS_AGE, 132, 165, 35, 14, ES_LEFT | ES_NUMBER | WS_GROUP
+    CONTROL "", IDC_UPDOWN_EVENTS_AGE, UPDOWN_CLASS, UDS_SETBUDDYINT | UDS_ALIGNRIGHT |
+            UDS_AUTOBUDDY | UDS_ARROWKEYS | WS_GROUP, 195, 165, 10, 14
+    LTEXT "dias", IDC_STATIC, 170, 168, 20, 8
+    CONTROL "&Não substituir eventos\n(limpar registo manualmente)", IDC_NO_OVERWRITE, "Button", BS_AUTORADIOBUTTON | BS_MULTILINE | WS_GROUP | WS_TABSTOP, 17, 180, 103, 20
+    PUSHBUTTON "&Restaurar predefinições", IDC_RESTOREDEFAULTS, 150, 183, 85, 14
+    AUTOCHECKBOX "Utilizar uma ligação de baixa &velocidade", IDC_LOW_SPEED_CONNECTION, 7, 217, 167, 10
+    PUSHBUTTON "&Limpar o registo", ID_CLEARLOG, 185, 213, 60, 14
+END
+
+STRINGTABLE
+BEGIN
+    IDS_COPYRIGHT "Copyright (C) 2007 Marc Piulachs (marc.piulachs@codexchange.net)"
+    IDS_APP_TITLE "Visualizador de Eventos"
+    IDS_APP_TITLE_EX "%s - Registo de %s em \\\\"
+    IDS_STATUS_MSG "%s tem %lu evento(s) (listados: %lu)"
+    IDS_LOADING_WAIT "A carregar registos de eventos. Por favor aguarde..."
+    IDS_NO_ITEMS "Não existem items para mostrar neste quadro." // "No events in this log."
+    IDS_EVENTLOG_SYSTEM "Registo de sistema"
+    IDS_EVENTLOG_APP "Registos de aplicações"
+    IDS_EVENTLOG_USER "Registos de utilizador"
+    IDS_SAVE_FILTER "Registo de Eventos(*.evt)\0*.evt\0"
+    IDS_CLEAREVENTS_MSG "Deseja guardar este registo de eventos antes de limpar?"
+    IDS_RESTOREDEFAULTS "Tem a certeza de que pretende repor todas definições deste registo para os valores predefinidos?"
+    IDS_EVENTSTRINGIDNOTFOUND "A descrição do ID de Evento ( %lu ) na Origem ( %s ) não foi encontrado. O computador local talvez não possua a informação de registo necessária ou os ficheiros DLL necessárias para apresentar mensagens de um computador remoto.\n\nA informação seguinte é parte do evento:\n\n"
+END
+
+STRINGTABLE
+BEGIN
+/* Please note that explicit TAB characters '\t' are used to fix the alignment of the message in the MessageBox */
+    IDS_USAGE "Visualizador de eventos ReactOS\n\
+\n\
+EventVwr [nome do computador] [/l:<event log file>] [/?]\n\
+\n\
+""nome do computador"" : Especifica o computador remoto a ligar\n\
+\tpara obter os eventos a exibir. Se nenhum nome for especificado, será\n\
+\tutilizado o computador local.\n\
+\n\
+/l:<event log file> : Especifica o ficheiro de eventos a abrir.\n\
+\tSómente ficheiros no formato .evt (NT ≤ 5.2) é suportado.\n\
+\n\
+/? : Mostra esta mensagem de ajuda.\n\
+"
+    IDS_EVENTLOGFILE "Arquivo de registo de eventos"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_EVENTLOG_ERROR_TYPE "Erro"
+    IDS_EVENTLOG_WARNING_TYPE "Aviso"
+    IDS_EVENTLOG_INFORMATION_TYPE "Informação"
+    IDS_EVENTLOG_AUDIT_SUCCESS "Sucesso na Auditoria"
+    IDS_EVENTLOG_AUDIT_FAILURE "Falha na Auditoria"
+    IDS_EVENTLOG_SUCCESS "Sucesso"
+    IDS_EVENTLOG_UNKNOWN_TYPE "Evento Desconhecido"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_BYTES_FORMAT "bytes" // "%s bytes"
+    // "%1!ls! (%2!ls! bytes)"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_COLUMNTYPE "Tipo"
+    IDS_COLUMNDATE "Data"
+    IDS_COLUMNTIME "Hora"
+    IDS_COLUMNSOURCE "Origem"
+    IDS_COLUMNCATEGORY "Categoria"
+    IDS_COLUMNEVENT "Evento"
+    IDS_COLUMNUSER "Utilizador"
+    IDS_COLUMNCOMPUTER "Computador"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_COPY "Tipo de evento:     %s\r\n\
+Origem do evento   %s\r\n\
+Categoria:         %s\r\n\
+ID do Evento:      %s\r\n\
+Data:              %s\r\n\
+Hora:              %s\r\n\
+Utilizador:        %s\r\n\
+Computador:        %s\r\n\
+Descrição:\r\n%s"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_NONE "Nenhum"
+    IDS_NOT_AVAILABLE "N/A"
+END
