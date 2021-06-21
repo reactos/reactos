@@ -3193,6 +3193,10 @@ PNP_GetDeviceStatus(
     DWORD *pulProblem,
     DWORD ulFlags)
 {
+    DWORD ulDataType, ulTransferLength, ulLength;
+    DWORD ulCapabilities, ulConfigFlags;
+    CONFIGRET ret;
+
     UNREFERENCED_PARAMETER(hBinding);
     UNREFERENCED_PARAMETER(ulFlags);
 
@@ -3208,7 +3212,52 @@ PNP_GetDeviceStatus(
     if (!IsValidDeviceInstanceID(pDeviceID))
         return CR_INVALID_DEVINST;
 
-    return GetDeviceStatus(pDeviceID, pulStatus, pulProblem);
+    ret = GetDeviceStatus(pDeviceID, pulStatus, pulProblem);
+    if (ret != CR_SUCCESS)
+        return ret;
+
+    /* Check for DN_REMOVABLE */
+    ulTransferLength = sizeof(ulCapabilities);
+    ulLength = sizeof(ulCapabilities);
+    ret = PNP_GetDeviceRegProp(NULL,
+                               pDeviceID,
+                               CM_DRP_CAPABILITIES,
+                               &ulDataType,
+                               (PBYTE)&ulCapabilities,
+                               &ulTransferLength,
+                               &ulLength,
+                               0);
+    if (ret != CR_SUCCESS)
+        ulCapabilities = 0;
+    
+    if (ulCapabilities & CM_DEVCAP_REMOVABLE)
+        *pulStatus |= DN_REMOVABLE;
+
+    /* Check for DN_MANUAL */
+    ulTransferLength = sizeof(ulConfigFlags);
+    ulLength = sizeof(ulConfigFlags);
+    ret = PNP_GetDeviceRegProp(NULL,
+                               pDeviceID,
+                               CM_DRP_CONFIGFLAGS,
+                               &ulDataType,
+                               (PBYTE)&ulConfigFlags,
+                               &ulTransferLength,
+                               &ulLength,
+                               0);
+    if (ret != CR_SUCCESS)
+        ulConfigFlags = 0;
+
+    if (ulConfigFlags & CONFIGFLAG_MANUAL_INSTALL)
+        *pulStatus |= DN_MANUAL;
+
+    /* Check for failed install */
+    if (((*pulStatus & DN_HAS_PROBLEM) == 0) && (ulConfigFlags & CONFIGFLAG_FAILEDINSTALL))
+    {
+        *pulStatus |= DN_HAS_PROBLEM;
+        *pulProblem = CM_PROB_FAILED_INSTALL;
+    }
+
+    return CR_SUCCESS;
 }
 
 
