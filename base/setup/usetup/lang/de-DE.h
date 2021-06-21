@@ -1537,7 +1537,7 @@ static MUI_ENTRY deDEBootLoaderInstallPageEntries[] =
     {
         0,
         0,
-        "Installing the bootloader onto the media, please wait...",
+        "Bootloader wird installiert. Bitte warten...",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
         TEXT_ID_STATIC
     },
