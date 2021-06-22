@@ -277,14 +277,11 @@ if(MSVC)
 else()
     target_link_options(freeldr_pe PRIVATE -Wl,--exclude-all-symbols,--file-alignment,0x200,--section-alignment,0x200)
     add_linker_script(freeldr_pe freeldr_gcc.lds)
-    if (NOT SEPARATE_DBG)
-        target_link_options(freeldr_pe PRIVATE -Wl,--strip-all)
-    else()
-        # Strip everything (more than objcopy --strip-debug does)
-        add_custom_command(TARGET freeldr_pe
-                        POST_BUILD
-                        COMMAND ${CMAKE_STRIP} --strip-all $<TARGET_FILE:freeldr_pe>)
-    endif()
+    # Strip everything, including rossym data
+    add_custom_command(TARGET freeldr_pe
+                    POST_BUILD
+                    COMMAND ${CMAKE_STRIP} --remove-section=.rossym $<TARGET_FILE:freeldr_pe>
+                    COMMAND ${CMAKE_STRIP} --strip-all $<TARGET_FILE:freeldr_pe>)
 endif()
 
 set_image_base(freeldr_pe 0x10000)
