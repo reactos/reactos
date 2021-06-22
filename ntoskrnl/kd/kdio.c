@@ -580,13 +580,10 @@ KdSendPacket(
         {
 #ifdef KDBG
             PLDR_DATA_TABLE_ENTRY LdrEntry;
-            if (!WaitStateChange->u.LoadSymbols.UnloadSymbols)
+            /* Load symbols. Currently implemented only for KDBG! */
+            if (KdbpSymFindModule((PVOID)(ULONG_PTR)WaitStateChange->u.LoadSymbols.BaseOfDll, -1, &LdrEntry))
             {
-                /* Load symbols. Currently implemented only for KDBG! */
-                if (KdbpSymFindModule((PVOID)(ULONG_PTR)WaitStateChange->u.LoadSymbols.BaseOfDll, NULL, -1, &LdrEntry))
-                {
-                    KdbSymProcessSymbols(LdrEntry);
-                }
+                KdbSymProcessSymbols(LdrEntry, !WaitStateChange->u.LoadSymbols.UnloadSymbols);
             }
 #endif
             return;

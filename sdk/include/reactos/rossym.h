@@ -119,7 +119,12 @@ typedef struct _ROSSYM_OWN_FILECONTEXT {
 struct Dwarf;
 typedef struct Dwarf *PROSSYM_INFO;
 #else
-typedef struct _ROSSYM_INFO *PROSSYM_INFO;
+typedef struct _ROSSYM_INFO {
+  PROSSYM_ENTRY Symbols;
+  ULONG SymbolsCount;
+  PCHAR Strings;
+  ULONG StringsLength;
+} ROSSYM_INFO, *PROSSYM_INFO;
 #endif
 
 VOID RosSymInit(PROSSYM_CALLBACKS Callbacks);
