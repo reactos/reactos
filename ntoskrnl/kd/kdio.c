@@ -772,6 +772,9 @@ KdReceivePacket(
         OldIrql = KdpAcquireLock(&KdpSerialSpinLock);
     }
 
+    /* Release the spinlock */
+    KdpReleaseLock(&KdpSerialSpinLock, OldIrql);
+
     /* Print a new line */
     *StringChar.Buffer = '\n';
     KdpPrintString(&StringChar);
@@ -782,9 +785,6 @@ KdReceivePacket(
 
     if (!(KdbDebugState & KD_DEBUG_KDSERIAL))
         KbdEnableMouse();
-
-    /* Release the spinlock */
-    KdpReleaseLock(&KdpSerialSpinLock, OldIrql);
 
 #endif
     return KdPacketReceived;
