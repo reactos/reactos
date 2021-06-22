@@ -1223,8 +1223,13 @@ NtGdiStretchDIBitsInternal(
     HDC hdcMem;
     HPALETTE hPal = NULL;
     PDC pdc;
-    BOOL Hit = FALSE;
+    PBYTE safeBits;
+    LONG height;
+    LONG width;
+    WORD planes, bpp;
+    DWORD compr, size;
     INT LinesCopied = 0;
+
     if (!(pdc = DC_LockDc(hdc)))
     {
         EngSetLastError(ERROR_INVALID_HANDLE);
@@ -1239,6 +1244,13 @@ NtGdiStretchDIBitsInternal(
         return TRUE;
     }
 
+    safeBits = ExAllocatePoolWithTag(PagedPool, cjMaxBits, TAG_DIB);
+    if(!safeBits)
+    {
+        EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        return 0;
+    }
+
     DC_UnlockDc(pdc);
 
     if (!pjInit || !pbmi)
@@ -1251,19 +1263,20 @@ NtGdiStretchDIBitsInternal(
     {
         ProbeForRead(pbmi, cjMaxInfo, 1);
         ProbeForRead(pjInit, cjMaxBits, 1);
+        if (DIB_GetBitmapInfo(&pbmi->bmiHeader, &width, &height, &planes, &bpp, &compr, &size) == -1)
+        {
+            DPRINT1("Invalid bitmap\n");
+            _SEH2_YIELD(goto cleanup;)
+        }
+        RtlCopyMemory(safeBits, pjInit, cjMaxBits);
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        Hit = TRUE;
+        DPRINT1("Error, failed to read the DIB bits\n");
+        EngSetLastError(ERROR_INVALID_PARAMETER);
+        _SEH2_YIELD(goto cleanup;)
     }
     _SEH2_END
-
-    if (Hit)
-    {
-        DPRINT1("NtGdiStretchDIBitsInternal failed to read the BitMapInfo: %x or pjInit: %x.\n",pbmi,pjInit);
-        EngSetLastError(ERROR_INVALID_PARAMETER);
-        return 0;
-    }
 
     hdcMem = NtGdiCreateCompatibleDC(hdc);
     if (hdcMem == NULL)
@@ -1295,10 +1308,23 @@ NtGdiStretchDIBitsInternal(
         hPal = GdiSelectPalette(hdcMem, hPal, FALSE);
     }
 
+    if (pbmi->bmiHeader.biCompression == BI_RLE4 ||
+            pbmi->bmiHeader.biCompression == BI_RLE8)
+    {
+        /* copy existing bitmap from destination dc */
+        if (cxSrc == cyDst && cySrc == cyDst)
+            NtGdiBitBlt(hdcMem, xSrc, abs(pbmi->bmiHeader.biHeight) - cySrc - ySrc,
+                        cxSrc, cySrc, hdc, xDst, yDst,  dwRop, 0, 0);
+        else
+            NtGdiStretchBlt(hdcMem, xSrc, abs(pbmi->bmiHeader.biHeight) - cySrc - ySrc,
+                            cxSrc, cySrc, hdc, xDst, yDst, cxDst, cyDst,
+                            dwRop, 0);
+    }
+
     pdc = DC_LockDc(hdcMem);
     if (pdc != NULL)
     {
-        IntSetDIBits(pdc, hBitmap, 0, abs(pbmi->bmiHeader.biHeight), pjInit,
+        IntSetDIBits(pdc, hBitmap, 0, abs(pbmi->bmiHeader.biHeight), safeBits,
                      cjMaxBits, pbmi, dwUsage);
 
         DC_UnlockDc(pdc);
@@ -1332,6 +1358,10 @@ NtGdiStretchDIBitsInternal(
         LinesCopied = abs(pbmi->bmiHeader.biHeight);
     else
         LinesCopied = pbmi->bmiHeader.biHeight;
+
+cleanup:
+
+    ExFreePoolWithTag(safeBits, TAG_DIB);
 
     return LinesCopied;
 }
