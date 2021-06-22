@@ -134,10 +134,7 @@ CreateDIBPalette(
             /* Use SEH to verify we can READ prgb[] succesfully */
             _SEH2_TRY
             {
-                for(i = 0; i < cColors; ++i)
-                {
-                    colors[i] = prgb[i];
-                }
+                RtlCopyMemory(colors, prgb, cColors * sizeof(colors[0]));
             }
             _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
