@@ -391,8 +391,8 @@ extern "C" {
     _In_ __int64 _Offset,
     _In_ int _Origin);
 
-  _Check_return_
   __MINGW_EXTENSION
+  _Check_return_
   _CRTIMP
   __int64
   __cdecl
@@ -1186,8 +1186,8 @@ extern "C" {
     _In_ __int64 _Offset,
     _In_ int _Origin);
 
-  _Check_return_
   __MINGW_EXTENSION
+  _Check_return_
   _CRTIMP
   __int64
   __cdecl
