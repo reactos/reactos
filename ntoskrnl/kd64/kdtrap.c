@@ -144,6 +144,10 @@ KdpTrap(IN PKTRAP_FRAME TrapFrame,
     BOOLEAN Handled;
     NTSTATUS ReturnStatus;
     USHORT ReturnLength;
+    KIRQL OldIrql;
+
+    /* Raise as high as we can. */
+    KeRaiseIrql(HIGH_LEVEL, &OldIrql);
 
     /*
      * Check if we got a STATUS_BREAKPOINT with a SubID for Print, Prompt or
@@ -256,6 +260,8 @@ KdpTrap(IN PKTRAP_FRAME TrapFrame,
                             PreviousMode,
                             SecondChanceException);
     }
+
+    KeLowerIrql(OldIrql);
 
     /* Return TRUE or FALSE to caller */
     return Handled;
