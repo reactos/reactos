@@ -365,7 +365,7 @@ MmDeletePageFileMapping(
     {
         /* We can let it go */
         KIRQL OldIrql = MiAcquirePfnLock();
-        MiDeletePte(MiAddressToPte(PointerPte), PointerPte, Process, NULL);
+        MiDeletePde(MiPteToPde(PointerPte), Process);
         MiReleasePfnLock(OldIrql);
     }
 
