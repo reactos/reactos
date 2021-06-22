@@ -1977,7 +1977,7 @@ KdbpCmdMod(
 
         Address = (ULONG_PTR)Result;
 
-        if (!KdbpSymFindModule((PVOID)Address, NULL, -1, &LdrEntry))
+        if (!KdbpSymFindModule((PVOID)Address, -1, &LdrEntry))
         {
             KdbpPrint("No module containing address 0x%p found!\n", Address);
             return TRUE;
@@ -1987,7 +1987,7 @@ KdbpCmdMod(
     }
     else
     {
-        if (!KdbpSymFindModule(NULL, NULL, 0, &LdrEntry))
+        if (!KdbpSymFindModule(NULL, 0, &LdrEntry))
         {
             ULONG_PTR ntoskrnlBase = ((ULONG_PTR)KdbpCmdMod) & 0xfff00000;
             KdbpPrint("  Base      Size      Name\n");
@@ -2003,7 +2003,7 @@ KdbpCmdMod(
     {
         KdbpPrint("  %08x  %08x  %wZ\n", LdrEntry->DllBase, LdrEntry->SizeOfImage, &LdrEntry->BaseDllName);
 
-        if(DisplayOnlyOneModule || !KdbpSymFindModule(NULL, NULL, i++, &LdrEntry))
+        if(DisplayOnlyOneModule || !KdbpSymFindModule(NULL, i++, &LdrEntry))
             break;
     }
 
