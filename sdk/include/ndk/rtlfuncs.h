@@ -4575,8 +4575,7 @@ NTAPI
 RtlSetTimeZoneInformation(
     _In_ PRTL_TIME_ZONE_INFORMATION TimeZoneInformation);
 
-_Success_(return!=FALSE)
-_Must_inspect_result_
+_Success_(return != FALSE)
 NTSYSAPI
 BOOLEAN
 NTAPI
@@ -4585,8 +4584,7 @@ RtlTimeFieldsToTime(
     _Out_ PLARGE_INTEGER Time
 );
 
-_Success_(return != 0)
-_Must_inspect_result_
+_Success_(return != FALSE)
 NTSYSAPI
 BOOLEAN
 NTAPI
