@@ -136,19 +136,19 @@ ApicReadIORedirectionEntry(
 
 FORCEINLINE
 VOID
-ApicRequestInterrupt(IN UCHAR Vector, UCHAR TriggerMode)
+ApicRequestSelfInterrupt(IN UCHAR Vector, UCHAR TriggerMode)
 {
-    APIC_COMMAND_REGISTER CommandRegister;
+    APIC_INTERRUPT_COMMAND_REGISTER Icr;
 
     /* Setup the command register */
-    CommandRegister.Long0 = 0;
-    CommandRegister.Vector = Vector;
-    CommandRegister.MessageType = APIC_MT_Fixed;
-    CommandRegister.TriggerMode = TriggerMode;
-    CommandRegister.DestinationShortHand = APIC_DSH_Self;
+    Icr.Long0 = 0;
+    Icr.Vector = Vector;
+    Icr.MessageType = APIC_MT_Fixed;
+    Icr.TriggerMode = TriggerMode;
+    Icr.DestinationShortHand = APIC_DSH_Self;
 
     /* Write the low dword to send the interrupt */
-    ApicWrite(APIC_ICR0, CommandRegister.Long0);
+    ApicWrite(APIC_ICR0, Icr.Long0);
 }
 
 FORCEINLINE
@@ -615,7 +615,7 @@ FASTCALL
 HalRequestSoftwareInterrupt(IN KIRQL Irql)
 {
     /* Convert irql to vector and request an interrupt */
-    ApicRequestInterrupt(IrqlToSoftVector(Irql), APIC_TGM_Edge);
+    ApicRequestSelfInterrupt(IrqlToSoftVector(Irql), APIC_TGM_Edge);
 }
 
 VOID
@@ -745,7 +745,7 @@ HalBeginSystemInterrupt(
             RedirReg = ApicReadIORedirectionEntry(Index);
 
             /* Re-request the interrupt to be handled later */
-            ApicRequestInterrupt(Vector, (UCHAR)RedirReg.TriggerMode);
+            ApicRequestSelfInterrupt(Vector, (UCHAR)RedirReg.TriggerMode);
        }
        else
        {
@@ -753,7 +753,7 @@ HalBeginSystemInterrupt(
             ASSERT(Index == APIC_RESERVED_VECTOR);
 
             /* Re-request the interrupt to be handled later */
-            ApicRequestInterrupt(Vector, APIC_TGM_Edge);
+            ApicRequestSelfInterrupt(Vector, APIC_TGM_Edge);
        }
 
         /* Pretend it was a spurious interrupt */
