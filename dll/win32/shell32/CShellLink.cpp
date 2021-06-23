@@ -2178,8 +2178,6 @@ HRESULT CShellLink::SetAdvertiseInfo(LPCWSTR str)
     return S_OK;
 }
 
-BOOL PathResolveW(LPWSTR path, LPCWSTR *dirs, DWORD flags);
-
 HRESULT CShellLink::SetTargetFromPIDLOrPath(LPCITEMIDLIST pidl, LPCWSTR pszFile)
 {
     HRESULT hr = S_OK;
