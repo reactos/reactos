@@ -119,28 +119,6 @@ PathSearchOnExtensionsW(LPWSTR pszPath, LPCWSTR *ppszDirs, BOOL bDoSearch, DWORD
         return PathFileExistsDefExtW(pszPath, dwWhich);
 }
 
-#if (_WIN32_WINNT >= _WIN32_WINNT_VISTA)
-/* @implemented */
-static BOOL WINAPI PathIsAbsoluteW(LPCWSTR path)
-{
-    return PathIsUNCW(path) || (PathGetDriveNumberW(path) != -1 && path[2] == L'\\');
-}
-
-/* @implemented */
-static BOOL WINAPI PathMakeAbsoluteW(LPWSTR path)
-{
-    WCHAR path1[MAX_PATH];
-    DWORD cch;
-
-    if (path == NULL)
-        return FALSE;
-    cch = GetCurrentDirectoryW(_countof(path1), path1);
-    if (!cch || cch > _countof(path1))
-        return FALSE;
-    return (PathCombineW(path, path1, path) != NULL);
-}
-#endif
-
 /* NOTE: GetShortPathName fails if the pathname didn't exist.
          GetShortPathNameAbsentW should set the short path name that even doesn't exist. */
 static DWORD GetShortPathNameAbsentW(LPCWSTR pszLong, LPWSTR pszShort, DWORD cchShort)
@@ -667,17 +645,7 @@ BOOL WINAPI PathResolveW(LPWSTR path, LPCWSTR *dirs, DWORD flags)
             return TRUE;
 
         if (PathFindOnPathW(path, dirs))
-        {
-#if (_WIN32_WINNT >= _WIN32_WINNT_VISTA)
-            if (!(flags & PRF_REQUIREABSOLUTE))
-                return TRUE;
-
-            if (!PathIsAbsoluteW(path))
-                return PathMakeAbsoluteW(path) && PathFileExistsAndAttributesW(path, NULL);
-#else
             return TRUE;
-#endif
-        }
     }
     else if (!PathIsURLW(path))
     {
@@ -699,13 +667,6 @@ BOOL WINAPI PathResolveW(LPWSTR path, LPCWSTR *dirs, DWORD flags)
             }
         }
 
-#if (_WIN32_WINNT >= _WIN32_WINNT_VISTA)
-        if (flags & PRF_REQUIREABSOLUTE)
-        {
-            if (!PathIsAbsoluteW(path))
-                return PathMakeAbsoluteW(path) && PathFileExistsAndAttributesW(path, NULL);
-        }
-#endif
         return TRUE;
     }
 
