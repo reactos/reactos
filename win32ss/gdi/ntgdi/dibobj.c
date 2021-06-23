@@ -140,7 +140,7 @@ CreateDIBPalette(
             {
               /* Do Nothing */
             }
-            _SEH2_END
+            _SEH2_END;
 
             for (i = 0; i < cColors; ++i)
             {
