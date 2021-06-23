@@ -3,7 +3,7 @@
  *
  * Copyright 1998, 1999, 2000 Juergen Schmied
  * Copyright 2004 Juan Lang
- * Copyright 2018-2020 Katayama Hirofumi MZ
+ * Copyright 2018-2021 Katayama Hirofumi MZ
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -105,6 +105,111 @@ DoGetProductType(PNT_PRODUCT_TYPE ProductType)
 /*
 	########## Combining and Constructing paths ##########
 */
+
+/* @implemented */
+static BOOL WINAPI
+PathSearchOnExtensionsW(LPWSTR path, LPCWSTR *dirs, BOOL flag, DWORD dwWhich)
+{
+    if (*PathFindExtensionW(path) != 0)
+        return FALSE;
+
+    if (flag)
+        return PathFindOnPathExW(path, dirs, dwWhich);
+    else
+        return PathFileExistsDefExtW(path, dwWhich);
+}
+
+/* #define REQUIREABSOLUTE */
+
+#ifdef REQUIREABSOLUTE
+/* @implemented */
+static BOOL WINAPI PathIsAbsoluteW(LPCWSTR path)
+{
+    return PathIsUNCW(path) || (PathGetDriveNumberW(path) != -1 && path[2] == L'\\');
+}
+
+/* @implemented */
+static BOOL WINAPI PathMakeAbsoluteW(LPWSTR path)
+{
+    WCHAR path1[MAX_PATH];
+    DWORD cch;
+
+    if (path == NULL)
+        return FALSE;
+    cch = GetCurrentDirectoryW(MAX_PATH, path1);
+    if (!cch || cch > MAX_PATH)
+        return FALSE;
+    return (PathCombineW(path, path1, path) != NULL);
+}
+#endif /* def REQUIREABSOLUTE */
+
+BOOL WINAPI IsLFNDriveW(LPCWSTR lpszPath);
+
+/* @unconfirmed */
+static VOID WINAPI PathQualifyExW(LPWSTR pszPath, LPCWSTR pszDir, DWORD dwFlags)
+{
+    WCHAR szRoot[MAX_PATH], szCopy[MAX_PATH], szCurDir[MAX_PATH];
+    LPWSTR pch;
+    LONG cch;
+
+    if (FAILED(StringCchCopyW(szCopy, _countof(szCopy), pszPath)))
+        return;
+
+    FixSlashesAndColonW(szCopy);
+
+    if (pszDir)
+    {
+        cch = GetCurrentDirectoryW(_countof(szCurDir), szCurDir);
+        if (cch <= 0 || cch >= MAX_PATH || !SetCurrentDirectoryW(pszDir))
+            pszDir = NULL;
+    }
+
+    if (!GetFullPathNameW(szCopy, _countof(szRoot), szRoot, NULL))
+        goto Quit;
+
+    if (PathIsUNCW(szRoot)) /* it begins with double backslash */
+    {
+        pch = StrChrW(&szRoot[2], L'\\');
+        if (pch)
+        {
+            pch = StrChrW(&pch[1], L'\\');
+            if (pch)
+            {
+                *pch = 0;
+                PathAddBackslashW(szRoot); /* \\MyServer\MyShare\ */
+
+                if (!IsLFNDriveW(szRoot))
+                    GetShortPathNameW(szCopy, szCopy, _countof(szCopy));
+            }
+        }
+    }
+    else
+    {
+        PathStripToRootW(szRoot);
+        PathAddBackslashW(szRoot); /* X:\ */
+
+        if (!IsLFNDriveW(szRoot))
+        {
+            if (!GetFullPathNameW(szCopy, _countof(szRoot), szRoot, NULL))
+                goto Quit;
+            GetShortPathNameW(szRoot, szCopy, _countof(szCopy));
+        }
+    }
+
+    PathRemoveBackslashW(szCopy);
+    StringCchCopyW(pszPath, MAX_PATH, szCopy);
+
+    if ((dwFlags & 1) == 0)
+    {
+        cch = lstrlenW(pszPath);
+        if (cch > 0 && pszPath[cch - 1] == L'.')
+            pszPath[cch - 1] = 0;
+    }
+
+Quit:
+    if (pszDir)
+        SetCurrentDirectoryW(szCurDir);
+}
 
 /*************************************************************************
  * PathAppend		[SHELL32.36]
@@ -474,42 +579,118 @@ int WINAPI PathCleanupSpec( LPCWSTR lpszPathW, LPWSTR lpszFileW )
 }
 
 /*************************************************************************
- * PathQualifyA		[SHELL32]
+ * PathQualifyW		[SHELL32]
  */
-static BOOL PathQualifyA(LPCSTR pszPath)
+static VOID PathQualifyW(LPWSTR pszPath)
 {
-	FIXME("%s\n",pszPath);
-	return FALSE;
+	TRACE("%s\n",debugstr_w(pszPath));
+    PathQualifyExW(pszPath, NULL, 0);
 }
 
 /*************************************************************************
- * PathQualifyW		[SHELL32]
+ * PathQualifyA		[SHELL32]
  */
-static BOOL PathQualifyW(LPCWSTR pszPath)
+static VOID PathQualifyA(LPSTR pszPath)
 {
-	FIXME("%s\n",debugstr_w(pszPath));
-	return FALSE;
+    WCHAR szPath[MAX_PATH];
+    TRACE("%s\n",pszPath);
+    SHAnsiToUnicode(pszPath, szPath, _countof(szPath));
+    PathQualifyW(szPath);
+    SHUnicodeToAnsi(szPath, pszPath, MAX_PATH);
 }
 
 /*************************************************************************
  * PathQualify	[SHELL32.49]
  */
-BOOL WINAPI PathQualifyAW(LPCVOID pszPath)
+VOID WINAPI PathQualifyAW(LPVOID pszPath)
 {
-	if (SHELL_OsIsUnicode())
-	  return PathQualifyW(pszPath);
-	return PathQualifyA(pszPath);
+    if (SHELL_OsIsUnicode())
+        PathQualifyW(pszPath);
+    else
+        PathQualifyA(pszPath);
 }
 
-static BOOL PathResolveA(LPSTR path, LPCSTR *paths, DWORD flags)
+static BOOL PathResolveA(LPSTR path, LPCSTR *dirs, DWORD flags)
 {
-    FIXME("(%s,%p,0x%08x),stub!\n", debugstr_a(path), paths, flags);
+    FIXME("(%s,%p,0x%08x)\n", debugstr_a(path), dirs, flags);
     return FALSE;
 }
 
-static BOOL PathResolveW(LPWSTR path, LPCWSTR *paths, DWORD flags)
+static BOOL PathResolveW(LPWSTR path, LPCWSTR *dirs, DWORD flags)
 {
-    FIXME("(%s,%p,0x%08x),stub!\n", debugstr_w(path), paths, flags);
+    DWORD dwWhich;
+    TRACE("PathResolveW(%s,%p,0x%08x)\n", debugstr_w(path), dirs, flags);
+
+    dwWhich = ((flags & PRF_DONTFINDLNK) ? 0xF : 0x3F);
+
+    if (flags & PRF_VERIFYEXISTS)
+        SetLastError(ERROR_FILE_NOT_FOUND);
+
+    PathUnquoteSpacesW(path);
+
+    if (PathIsRootW(path))
+    {
+        if ((path[0] == L'\\' && path[1] == 0) ||
+            PathIsUNCServerW(path) || PathIsUNCServerShareW(path))
+        {
+            if ((flags & PRF_FIRSTDIRDEF) == 0)
+                PathQualifyExW(path, dirs[0], 0);
+            else
+                PathQualifyExW(path, NULL, 0);
+        }
+
+        if (flags & PRF_VERIFYEXISTS)
+            return PathFileExistsAndAttributesW(path, NULL);
+        return TRUE;
+    }
+    else if (PathIsFileSpecW(path))
+    {
+        if ((flags & PRF_TRYPROGRAMEXTENSIONS) && PathSearchOnExtensionsW(path, dirs, TRUE, dwWhich))
+            return TRUE;
+
+        if (PathFindOnPathW(path, dirs))
+        {
+#ifdef REQUIREABSOLUTE
+            if (!(flags & PRF_REQUIREABSOLUTE))
+                return TRUE;
+
+            if (!PathIsAbsoluteW(path))
+                return PathMakeAbsoluteW(path) && PathFileExistsAndAttributesW(path, NULL);
+#else
+            return TRUE;
+#endif
+        }
+    }
+    else if (!PathIsURLW(path))
+    {
+        if (flags & PRF_FIRSTDIRDEF)
+            PathQualifyExW(path, *dirs, 1);
+        else
+            PathQualifyExW(path, NULL, 1);
+
+        if (flags & PRF_VERIFYEXISTS)
+        {
+            if ((flags & PRF_TRYPROGRAMEXTENSIONS) &&
+                PathSearchOnExtensionsW(path, dirs, FALSE, dwWhich))
+            {
+                return TRUE;
+            }
+            else if (!PathFileExistsAndAttributesW(path, NULL))
+            {
+                return FALSE;
+            }
+        }
+
+#ifdef REQUIREABSOLUTE
+        if (flags & PRF_REQUIREABSOLUTE)
+        {
+            if (!PathIsAbsoluteW(path))
+                return PathMakeAbsoluteW(path) && PathFileExistsAndAttributesW(path, NULL);
+        }
+#endif
+        return TRUE;
+    }
+
     return FALSE;
 }
 

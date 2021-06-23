@@ -150,6 +150,10 @@ ShellMessageBoxWrapW(
   _In_ UINT fuStyle,
   ...);
 
+BOOL WINAPI PathFileExistsDefExtW(LPWSTR, DWORD);
+BOOL WINAPI PathFindOnPathExW(LPWSTR, LPCWSTR*, DWORD);
+VOID WINAPI FixSlashesAndColonW(LPWSTR);
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif /* defined(__cplusplus) */

@@ -440,8 +440,7 @@ BOOL WINAPI PathYetAnotherMakeUniqueName(
     LPCWSTR lpszShortName,
     LPCWSTR lpszLongName);
 
-BOOL  WINAPI PathQualifyAW(LPCVOID path);
-
+VOID WINAPI PathQualifyAW(LPVOID path);
 
 /* PathResolve flags */
 #define PRF_CHECKEXISTANCE  0x01
