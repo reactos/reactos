@@ -119,7 +119,7 @@ PathSearchOnExtensionsW(LPWSTR pszPath, LPCWSTR *ppszDirs, BOOL bDoSearch, DWORD
         return PathFileExistsDefExtW(pszPath, dwWhich);
 }
 
-#if (NTDDI_VERSION >= NTDDI_VISTA) /* Vista+ */
+#ifdef REQUIREABSOLUTE /* Vista+ */
 /* @implemented */
 static BOOL WINAPI PathIsAbsoluteW(LPCWSTR path)
 {
@@ -668,7 +668,7 @@ BOOL WINAPI PathResolveW(LPWSTR path, LPCWSTR *dirs, DWORD flags)
 
         if (PathFindOnPathW(path, dirs))
         {
-#if (NTDDI_VERSION >= NTDDI_VISTA) /* Vista+ */
+#ifdef REQUIREABSOLUTE /* Vista+ */
             if (!(flags & PRF_REQUIREABSOLUTE))
                 return TRUE;
 
@@ -699,7 +699,7 @@ BOOL WINAPI PathResolveW(LPWSTR path, LPCWSTR *dirs, DWORD flags)
             }
         }
 
-#if (NTDDI_VERSION >= NTDDI_VISTA) /* Vista+ */
+#ifdef REQUIREABSOLUTE /* Vista+ */
         if (flags & PRF_REQUIREABSOLUTE)
         {
             if (!PathIsAbsoluteW(path))
