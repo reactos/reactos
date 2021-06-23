@@ -198,19 +198,16 @@ static VOID WINAPI PathQualifyExW(LPWSTR pszPath, LPCWSTR pszDir, DWORD dwFlags)
         bCheckLFN = TRUE;
     }
 
-    if (bCheckLFN)
+    if (bCheckLFN && !IsLFNDriveW(szRoot))
     {
-        if (!IsLFNDriveW(szRoot))
+        if (!GetFullPathNameW(szCopy, _countof(szRoot), szRoot, NULL))
+            goto Quit;
+        cch = GetShortPathNameW(szRoot, szCopy, _countof(szCopy));
+        if (!cch)
         {
-            if (!GetFullPathNameW(szCopy, _countof(szRoot), szRoot, NULL))
-                goto Quit;
-            cch = GetShortPathNameW(szRoot, szCopy, _countof(szCopy));
+            cch = GetShortPathNameAbsentW(szRoot, szCopy, _countof(szCopy));
             if (!cch)
-            {
-                cch = GetShortPathNameAbsentW(szRoot, szCopy, _countof(szCopy));
-                if (!cch)
-                    goto Quit;
-            }
+                goto Quit;
         }
     }
 
