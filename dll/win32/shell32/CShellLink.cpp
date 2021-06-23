@@ -2209,7 +2209,6 @@ HRESULT CShellLink::SetTargetFromPIDLOrPath(LPCITEMIDLIST pidl, LPCWSTR pszFile)
             /* This failed, try to resolve the path, then create a simple PIDL */
 
             StringCchCopyW(szPath, _countof(szPath), pszFile);
-
             PathResolveW(szPath, NULL, PRF_TRYPROGRAMEXTENSIONS);
 
             pidlNew = SHSimpleIDListFromPathW(szPath);
