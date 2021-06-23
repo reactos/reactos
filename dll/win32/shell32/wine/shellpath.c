@@ -151,6 +151,7 @@ static VOID WINAPI PathQualifyExW(LPWSTR pszPath, LPCWSTR pszDir, DWORD dwFlags)
     WCHAR szRoot[MAX_PATH], szCopy[MAX_PATH], szCurDir[MAX_PATH];
     LPWSTR pch;
     LONG cch;
+    BOOL bCheckLFN;
 
     if (FAILED(StringCchCopyW(szCopy, _countof(szCopy), pszPath)))
         return;
@@ -176,16 +177,22 @@ static VOID WINAPI PathQualifyExW(LPWSTR pszPath, LPCWSTR pszDir, DWORD dwFlags)
             if (pch)
                 *pch = 0;
             PathAddBackslashW(szRoot); /* \\MyServer\MyShare\ */
-
-            if (!IsLFNDriveW(szRoot))
-                GetShortPathNameW(szCopy, szCopy, _countof(szCopy));
+            bCheckLFN = TRUE;
+        }
+        else
+        {
+            bCheckLFN = FALSE;
         }
     }
     else
     {
         PathStripToRootW(szRoot);
         PathAddBackslashW(szRoot); /* X:\ */
+        bCheckLFN = TRUE;
+    }
 
+    if (bCheckLFN)
+    {
         if (!IsLFNDriveW(szRoot))
         {
             if (!GetFullPathNameW(szCopy, _countof(szRoot), szRoot, NULL))
