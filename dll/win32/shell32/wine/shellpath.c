@@ -119,9 +119,7 @@ PathSearchOnExtensionsW(LPWSTR path, LPCWSTR *dirs, BOOL flag, DWORD dwWhich)
         return PathFileExistsDefExtW(path, dwWhich);
 }
 
-/* #define REQUIREABSOLUTE */
-
-#ifdef REQUIREABSOLUTE
+#if (NTDDI_VERSION >= NTDDI_VISTA) /* Vista+ */
 /* @implemented */
 static BOOL WINAPI PathIsAbsoluteW(LPCWSTR path)
 {
@@ -141,7 +139,7 @@ static BOOL WINAPI PathMakeAbsoluteW(LPWSTR path)
         return FALSE;
     return (PathCombineW(path, path1, path) != NULL);
 }
-#endif /* def REQUIREABSOLUTE */
+#endif
 
 static DWORD GetShortPathNameAbsentW(LPCWSTR pszLong, LPWSTR pszShort, DWORD cchShort)
 {
@@ -668,7 +666,7 @@ BOOL WINAPI PathResolveW(LPWSTR path, LPCWSTR *dirs, DWORD flags)
 
         if (PathFindOnPathW(path, dirs))
         {
-#ifdef REQUIREABSOLUTE
+#if (NTDDI_VERSION >= NTDDI_VISTA) /* Vista+ */
             if (!(flags & PRF_REQUIREABSOLUTE))
                 return TRUE;
 
@@ -699,7 +697,7 @@ BOOL WINAPI PathResolveW(LPWSTR path, LPCWSTR *dirs, DWORD flags)
             }
         }
 
-#ifdef REQUIREABSOLUTE
+#if (NTDDI_VERSION >= NTDDI_VISTA) /* Vista+ */
         if (flags & PRF_REQUIREABSOLUTE)
         {
             if (!PathIsAbsoluteW(path))
