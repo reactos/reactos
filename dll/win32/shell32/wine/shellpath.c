@@ -583,7 +583,7 @@ int WINAPI PathCleanupSpec( LPCWSTR lpszPathW, LPWSTR lpszFileW )
  */
 static VOID PathQualifyW(LPWSTR pszPath)
 {
-	TRACE("%s\n",debugstr_w(pszPath));
+    TRACE("%s\n",debugstr_w(pszPath));
     PathQualifyExW(pszPath, NULL, 0);
 }
 
@@ -612,7 +612,7 @@ VOID WINAPI PathQualifyAW(LPVOID pszPath)
 
 static BOOL PathResolveA(LPSTR path, LPCSTR *dirs, DWORD flags)
 {
-    FIXME("(%s,%p,0x%08x)\n", debugstr_a(path), dirs, flags);
+    FIXME("(%s,%p,0x%08x),stub!\n", debugstr_a(path), dirs, flags);
     return FALSE;
 }
 
