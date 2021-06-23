@@ -108,15 +108,15 @@ DoGetProductType(PNT_PRODUCT_TYPE ProductType)
 
 /* @implemented */
 static BOOL WINAPI
-PathSearchOnExtensionsW(LPWSTR path, LPCWSTR *dirs, BOOL flag, DWORD dwWhich)
+PathSearchOnExtensionsW(LPWSTR pszPath, LPCWSTR *ppszDirs, BOOL bDoSearch, DWORD dwWhich)
 {
-    if (*PathFindExtensionW(path) != 0)
+    if (*PathFindExtensionW(pszPath) != 0)
         return FALSE;
 
-    if (flag)
-        return PathFindOnPathExW(path, dirs, dwWhich);
+    if (bDoSearch)
+        return PathFindOnPathExW(pszPath, ppszDirs, dwWhich);
     else
-        return PathFileExistsDefExtW(path, dwWhich);
+        return PathFileExistsDefExtW(pszPath, dwWhich);
 }
 
 #if (NTDDI_VERSION >= NTDDI_VISTA) /* Vista+ */
