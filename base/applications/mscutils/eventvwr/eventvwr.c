@@ -3985,7 +3985,7 @@ Quit:
 
     if (EventLog->Permanent)
     {
-        SendDlgItemMessageW(hDlg, IDC_UPDOWN_MAXLOGSIZE, UDM_SETRANGE32, (WPARAM)1, (LPARAM)0x3FFFC0);
+        SendDlgItemMessageW(hDlg, IDC_UPDOWN_MAXLOGSIZE, UDM_SETRANGE32, (WPARAM)64, (LPARAM)0x3FFFC0);
         SendDlgItemMessageW(hDlg, IDC_UPDOWN_EVENTS_AGE, UDM_SETRANGE, 0, (LPARAM)MAKELONG(365, 1));
 
         SetDlgItemInt(hDlg, IDC_EDIT_MAXLOGSIZE, dwMaxSize, FALSE);
@@ -4107,6 +4107,18 @@ EventLogPropProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
                     PropSheet_UnChanged(GetParent(hDlg), hDlg);
                     SavePropertiesDlg(hDlg, EventLog);
                     return (INT_PTR)TRUE;
+
+                 case UDN_DELTAPOS:
+                 {
+                     if (((LPNMHDR)lParam)->idFrom == IDC_UPDOWN_MAXLOGSIZE)
+                     {
+                         LPNMUPDOWN lpnmud = (NMUPDOWN*)lParam;
+                         if (lpnmud->iDelta > 0)
+                             lpnmud->iDelta = 64;
+                         else if (lpnmud->iDelta < 0)
+                             lpnmud->iDelta = -64;
+                     }
+                 }
             }
             break;
 
