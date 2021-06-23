@@ -448,6 +448,8 @@ VOID WINAPI PathQualifyAW(LPVOID path);
 #define PRF_QUALIFYONPATH   0x04
 #define PRF_WINDOWS31       0x08
 
+BOOL WINAPI PathResolveA(LPSTR path, LPCSTR *dirs, DWORD flags);
+BOOL WINAPI PathResolveW(LPWSTR path, LPCWSTR *dirs, DWORD flags);
 BOOL WINAPI PathResolveAW(LPVOID lpszPath, LPCVOID *alpszPaths, DWORD dwFlags);
 
 VOID WINAPI PathSetDlgItemPathAW(HWND hDlg, int nIDDlgItem, LPCVOID lpszPath);

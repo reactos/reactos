@@ -626,13 +626,13 @@ VOID WINAPI PathQualifyAW(LPVOID pszPath)
         PathQualifyA(pszPath);
 }
 
-static BOOL PathResolveA(LPSTR path, LPCSTR *dirs, DWORD flags)
+BOOL WINAPI PathResolveA(LPSTR path, LPCSTR *dirs, DWORD flags)
 {
     FIXME("(%s,%p,0x%08x),stub!\n", debugstr_a(path), dirs, flags);
     return FALSE;
 }
 
-static BOOL PathResolveW(LPWSTR path, LPCWSTR *dirs, DWORD flags)
+BOOL WINAPI PathResolveW(LPWSTR path, LPCWSTR *dirs, DWORD flags)
 {
     DWORD dwWhich;
     TRACE("PathResolveW(%s,%p,0x%08x)\n", debugstr_w(path), dirs, flags);

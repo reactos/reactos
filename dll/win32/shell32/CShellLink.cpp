@@ -2178,107 +2178,7 @@ HRESULT CShellLink::SetAdvertiseInfo(LPCWSTR str)
     return S_OK;
 }
 
-/*
- * Since the real PathResolve (from Wine) is unimplemented at the moment,
- * we use this local implementation, until a better one is written (using
- * code parts of the SHELL_xxx helpers in Wine's shellpath.c).
- */
-static BOOL HACKISH_PathResolve(
-    IN OUT PWSTR pszPath,
-    IN PZPCWSTR dirs OPTIONAL,
-    IN UINT fFlags)
-{
-    // FIXME: This is unimplemented!!!
-#if 0
-    return PathResolve(pszPath, dirs, fFlags);
-#else
-    BOOL Success = FALSE;
-    USHORT i;
-    LPWSTR fname = NULL;
-    WCHAR szPath[MAX_PATH];
-
-    /* First, search for a valid existing path */
-
-    // NOTE: See also: SHELL_FindExecutable()
-
-    /*
-     * List of extensions searched for, by PathResolve with the flag
-     * PRF_TRYPROGRAMEXTENSIONS == PRF_EXECUTABLE | PRF_VERIFYEXISTS set,
-     * according to MSDN: https://msdn.microsoft.com/en-us/library/windows/desktop/bb776478(v=vs.85).aspx
-     */
-    static PCWSTR Extensions[] = {L".pif", L".com", L".bat", L".cmd", L".lnk", L".exe", NULL};
-    #define LNK_EXT_INDEX   4   // ".lnk" has index 4 in the array above
-
-    /*
-     * Start at the beginning of the list if PRF_EXECUTABLE is set, otherwise
-     * just use the last element 'NULL' (no extension checking).
-     */
-    i = ((fFlags & PRF_EXECUTABLE) ? 0 : _countof(Extensions) - 1);
-    for (; i < _countof(Extensions); ++i)
-    {
-        /* Ignore shell links ".lnk" if needed */
-        if ((fFlags & PRF_DONTFINDLNK) && (i == LNK_EXT_INDEX))
-            continue;
-
-        Success = (SearchPathW(NULL, pszPath, Extensions[i],
-                               _countof(szPath), szPath, NULL) != 0);
-        if (!Success)
-        {
-            ERR("SearchPathW(pszPath = '%S') failed. Error code: %lu\n", pszPath, GetLastError());
-        }
-        else
-        {
-            ERR("SearchPathW(pszPath = '%S', szPath = '%S') succeeded\n", pszPath, szPath);
-            break;
-        }
-    }
-
-    if (!Success)
-    {
-        ERR("SearchPathW(pszPath = '%S') failed. Error code: %lu\n", pszPath, GetLastError());
-
-        /* We failed, try with PathFindOnPath, as explained by MSDN */
-        // Success = PathFindOnPathW(pszPath, dirs);
-        StringCchCopyW(szPath, _countof(szPath), pszPath);
-        Success = PathFindOnPathW(szPath, dirs);
-        if (!Success)
-        {
-            ERR("PathFindOnPathW(pszPath = '%S') failed\n", pszPath);
-
-            /* We failed again, fall back to building a possible non-existing path */
-            if (!GetFullPathNameW(pszPath, _countof(szPath), szPath, &fname))
-            {
-                ERR("GetFullPathNameW(pszPath = '%S') failed. Error code: %lu\n", pszPath, GetLastError());
-                return FALSE;
-            }
-
-            Success = PathFileExistsW(szPath);
-            if (!Success)
-                ERR("PathFileExistsW(szPath = '%S') failed. Error code: %lu\n", szPath, GetLastError());
-
-            /******************************************************/
-            /* Question: Why this line is needed only for files?? */
-            if (fname && (_wcsicmp(pszPath, fname) == 0))
-                *szPath = L'\0';
-            /******************************************************/
-        }
-        else
-        {
-            ERR("PathFindOnPathW(pszPath = '%S' ==> '%S') succeeded\n", pszPath, szPath);
-        }
-    }
-
-    /* Copy back the results to the caller */
-    StringCchCopyW(pszPath, MAX_PATH, szPath);
-
-    /*
-     * Since the called functions always checked whether the file path existed,
-     * we do not need to redo a final check: we can use instead the cached
-     * result in 'Success'.
-     */
-    return ((fFlags & PRF_VERIFYEXISTS) ? Success : TRUE);
-#endif
-}
+BOOL PathResolveW(LPWSTR path, LPCWSTR *dirs, DWORD flags);
 
 HRESULT CShellLink::SetTargetFromPIDLOrPath(LPCITEMIDLIST pidl, LPCWSTR pszFile)
 {
@@ -2309,8 +2209,8 @@ HRESULT CShellLink::SetTargetFromPIDLOrPath(LPCITEMIDLIST pidl, LPCWSTR pszFile)
             /* This failed, try to resolve the path, then create a simple PIDL */
 
             StringCchCopyW(szPath, _countof(szPath), pszFile);
-            // FIXME: Because PathResolve is unimplemented, we use our hackish implementation!
-            HACKISH_PathResolve(szPath, NULL, PRF_TRYPROGRAMEXTENSIONS);
+
+            PathResolveW(szPath, NULL, PRF_TRYPROGRAMEXTENSIONS);
 
             pidlNew = SHSimpleIDListFromPathW(szPath);
             /******************************************************/
