@@ -134,8 +134,8 @@ static BOOL WINAPI PathMakeAbsoluteW(LPWSTR path)
 
     if (path == NULL)
         return FALSE;
-    cch = GetCurrentDirectoryW(MAX_PATH, path1);
-    if (!cch || cch > MAX_PATH)
+    cch = GetCurrentDirectoryW(_countof(path1), path1);
+    if (!cch || cch > _countof(path1))
         return FALSE;
     return (PathCombineW(path, path1, path) != NULL);
 }
