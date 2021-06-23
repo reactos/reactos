@@ -206,7 +206,11 @@ static VOID WINAPI PathQualifyExW(LPWSTR pszPath, LPCWSTR pszDir, DWORD dwFlags)
                 goto Quit;
             cch = GetShortPathNameW(szRoot, szCopy, _countof(szCopy));
             if (!cch)
-                GetShortPathNameAbsentW(szRoot, szCopy, _countof(szCopy));
+            {
+                cch = GetShortPathNameAbsentW(szRoot, szCopy, _countof(szCopy));
+                if (!cch)
+                    goto Quit;
+            }
         }
     }
 
