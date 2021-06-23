@@ -127,7 +127,7 @@ CreateDIBPalette(
         {
             /* The colors are an array of RGBQUAD values */
             RGBQUAD *prgb = (RGBQUAD*)((PCHAR)pbmi + pbmi->bmiHeader.biSize);
-            RGBQUAD colors[256] = {0};
+            RGBQUAD colors[256] = {{0}};
 
             // FIXME: do we need to handle PALETTEINDEX / PALETTERGB macro?
 
