@@ -632,12 +632,14 @@ BOOL WINAPI PathResolveA(LPSTR path, LPCSTR *dirs, DWORD flags)
     return FALSE;
 }
 
+#define WHICH_DONTFINDLNK (WHICH_PIF | WHICH_COM | WHICH_EXE | WHICH_BAT)
+#define WHICH_DEFAULT (WHICH_PIF | WHICH_COM | WHICH_EXE | WHICH_BAT | WHICH_LNK | WHICH_CMD)
+
 BOOL WINAPI PathResolveW(LPWSTR path, LPCWSTR *dirs, DWORD flags)
 {
     DWORD dwWhich;
     TRACE("PathResolveW(%s,%p,0x%08x)\n", debugstr_w(path), dirs, flags);
-
-    dwWhich = ((flags & PRF_DONTFINDLNK) ? 0xF : 0x3F);
+    dwWhich = ((flags & PRF_DONTFINDLNK) ? WHICH_DONTFINDLNK : WHICH_DEFAULT);
 
     if (flags & PRF_VERIFYEXISTS)
         SetLastError(ERROR_FILE_NOT_FOUND);
