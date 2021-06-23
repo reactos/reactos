@@ -1350,8 +1350,44 @@ VideoPortCreateSecondaryDisplay(
     IN OUT PVOID *SecondaryDeviceExtension,
     IN ULONG Flag)
 {
-    UNIMPLEMENTED;
-    return ERROR_DEV_NOT_EXIST;
+    PDEVICE_OBJECT DeviceObject;
+    PVIDEO_PORT_DEVICE_EXTENSION FirstDeviceExtension, DeviceExtension;
+    NTSTATUS Status;
+
+    ASSERT(SecondaryDeviceExtension);
+
+    if (Flag != 0)
+    {
+        UNIMPLEMENTED;
+    }
+
+    FirstDeviceExtension = VIDEO_PORT_GET_DEVICE_EXTENSION(HwDeviceExtension);
+
+    if (FirstDeviceExtension->DisplayNumber != 0)
+    {
+        DPRINT1("Calling VideoPortCreateSecondaryDisplay for InstanceId %lu\n",
+                FirstDeviceExtension->DisplayNumber);
+    }
+
+    Status = IntVideoPortCreateAdapterDeviceObject(FirstDeviceExtension->DriverObject,
+                                                   FirstDeviceExtension->DriverExtension,
+                                                   FirstDeviceExtension->PhysicalDeviceObject,
+                                                   FirstDeviceExtension->AdapterNumber,
+                                                   FirstDeviceExtension->NumberOfSecondaryDisplays + 1,
+                                                   &DeviceObject);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("IntVideoPortCreateAdapterDeviceObject() failed with status 0x%08x\n", Status);
+        return ERROR_DEV_NOT_EXIST;
+    }
+
+    DeviceExtension = DeviceObject->DeviceExtension;
+
+    /* Increment secondary display count */
+    FirstDeviceExtension->NumberOfSecondaryDisplays++;
+
+    *SecondaryDeviceExtension = DeviceExtension->MiniPortDeviceExtension;
+    return NO_ERROR;
 }
 
 /*
