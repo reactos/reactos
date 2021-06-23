@@ -183,7 +183,9 @@ static VOID WINAPI PathQualifyExW(LPWSTR pszPath, LPCWSTR pszDir, DWORD dwFlags)
             pch = StrChrW(&pch[1], L'\\');
             if (pch)
                 *pch = 0;
-            PathAddBackslashW(szRoot); /* \\MyServer\MyShare\ */
+            if (!PathAddBackslashW(szRoot))
+                goto Quit;
+            /* szRoot is like \\MyServer\MyShare\ */
             bCheckLFN = TRUE;
         }
         else
@@ -193,21 +195,20 @@ static VOID WINAPI PathQualifyExW(LPWSTR pszPath, LPCWSTR pszDir, DWORD dwFlags)
     }
     else
     {
-        PathStripToRootW(szRoot);
-        PathAddBackslashW(szRoot); /* X:\ */
+        if (!PathStripToRootW(szRoot) || !PathAddBackslashW(szRoot))
+            goto Quit;
+        /* szRoot is like X:\ */
         bCheckLFN = TRUE;
     }
 
-    if (bCheckLFN && !IsLFNDriveW(szRoot))
+    if (bCheckLFN && !IsLFNDriveW(szRoot)) /* not a long filename drive */
     {
         if (!GetFullPathNameW(szCopy, _countof(szRoot), szRoot, NULL))
             goto Quit;
-        cch = GetShortPathNameW(szRoot, szCopy, _countof(szCopy));
-        if (!cch)
+        if (!GetShortPathNameW(szRoot, szCopy, _countof(szCopy)) &&
+            !GetShortPathNameAbsentW(szRoot, szCopy, _countof(szCopy)))
         {
-            cch = GetShortPathNameAbsentW(szRoot, szCopy, _countof(szCopy));
-            if (!cch)
-                goto Quit;
+            goto Quit;
         }
     }
 
