@@ -633,7 +633,7 @@ static BOOL PathResolveW(LPWSTR path, LPCWSTR *dirs, DWORD flags)
         if ((path[0] == L'\\' && path[1] == 0) ||
             PathIsUNCServerW(path) || PathIsUNCServerShareW(path))
         {
-            if ((flags & PRF_FIRSTDIRDEF) == 0)
+            if (flags & PRF_FIRSTDIRDEF)
                 PathQualifyExW(path, dirs[0], 0);
             else
                 PathQualifyExW(path, NULL, 0);
