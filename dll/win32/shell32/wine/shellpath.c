@@ -141,6 +141,8 @@ static BOOL WINAPI PathMakeAbsoluteW(LPWSTR path)
 }
 #endif
 
+/* NOTE: GetShortPathName fails if the pathname didn't exist.
+         GetShortPathNameAbsentW should set the short path name that even doesn't exist. */
 static DWORD GetShortPathNameAbsentW(LPCWSTR pszLong, LPWSTR pszShort, DWORD cchShort)
 {
     FIXME("GetShortPathNameAbsentW(%ls, %p, %ld): stub\n", pszLong, pszShort, cchShort);
@@ -631,7 +633,7 @@ BOOL WINAPI PathResolveA(LPSTR path, LPCSTR *dirs, DWORD flags)
 }
 
 #define WHICH_DONTFINDLNK (WHICH_PIF | WHICH_COM | WHICH_EXE | WHICH_BAT)
-#define WHICH_DEFAULT (WHICH_PIF | WHICH_COM | WHICH_EXE | WHICH_BAT | WHICH_LNK | WHICH_CMD)
+#define WHICH_DEFAULT (WHICH_DONTFINDLNK | WHICH_LNK | WHICH_CMD)
 
 BOOL WINAPI PathResolveW(LPWSTR path, LPCWSTR *dirs, DWORD flags)
 {
