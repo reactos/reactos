@@ -117,3 +117,4 @@ add_importlibs(shell32 advapi32 gdi32 user32 comctl32 comdlg32 shlwapi msvcrt ke
 add_dependencies(shell32 stdole2) # shell32_shldisp.tlb needs stdole2.tlb
 add_pch(shell32 precomp.h "${PCH_SKIP_SOURCE}")
 add_cd_file(TARGET shell32 DESTINATION reactos/system32 FOR all)
+target_compile_definitions(shell32 PRIVATE NTDDI_VERSION=NTDDI_WS03SP1)
