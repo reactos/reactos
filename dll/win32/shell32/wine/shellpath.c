@@ -166,7 +166,7 @@ static VOID WINAPI PathQualifyExW(LPWSTR pszPath, LPCWSTR pszDir, DWORD dwFlags)
     if (pszDir)
     {
         cch = GetCurrentDirectoryW(_countof(szCurDir), szCurDir);
-        if (cch <= 0 || cch >= MAX_PATH || !SetCurrentDirectoryW(pszDir))
+        if (cch <= 0 || cch >= _countof(szCurDir) || !SetCurrentDirectoryW(pszDir))
             pszDir = NULL;
     }
 
