@@ -143,6 +143,13 @@ static BOOL WINAPI PathMakeAbsoluteW(LPWSTR path)
 }
 #endif /* def REQUIREABSOLUTE */
 
+static DWORD GetShortPathNameAbsentW(LPCWSTR pszLong, LPWSTR pszShort, DWORD cchShort)
+{
+    FIXME("GetShortPathNameAbsentW(%ls, %p, %ld): stub\n", pszLong, pszShort, cchShort);
+    StringCchCopyW(pszShort, cchShort, pszLong);
+    return lstrlenW(pszShort);
+}
+
 BOOL WINAPI IsLFNDriveW(LPCWSTR lpszPath);
 
 /* @unconfirmed */
@@ -197,7 +204,9 @@ static VOID WINAPI PathQualifyExW(LPWSTR pszPath, LPCWSTR pszDir, DWORD dwFlags)
         {
             if (!GetFullPathNameW(szCopy, _countof(szRoot), szRoot, NULL))
                 goto Quit;
-            GetShortPathNameW(szRoot, szCopy, _countof(szCopy));
+            cch = GetShortPathNameW(szRoot, szCopy, _countof(szCopy));
+            if (!cch)
+                GetShortPathNameAbsentW(szRoot, szCopy, _countof(szCopy));
         }
     }
 
