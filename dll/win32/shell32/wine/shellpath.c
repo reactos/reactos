@@ -174,13 +174,11 @@ static VOID WINAPI PathQualifyExW(LPWSTR pszPath, LPCWSTR pszDir, DWORD dwFlags)
         {
             pch = StrChrW(&pch[1], L'\\');
             if (pch)
-            {
                 *pch = 0;
-                PathAddBackslashW(szRoot); /* \\MyServer\MyShare\ */
+            PathAddBackslashW(szRoot); /* \\MyServer\MyShare\ */
 
-                if (!IsLFNDriveW(szRoot))
-                    GetShortPathNameW(szCopy, szCopy, _countof(szCopy));
-            }
+            if (!IsLFNDriveW(szRoot))
+                GetShortPathNameW(szCopy, szCopy, _countof(szCopy));
         }
     }
     else
