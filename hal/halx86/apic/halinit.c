@@ -9,6 +9,7 @@
 
 #include <hal.h>
 #include "apicp.h"
+#include <smp.h>
 #define NDEBUG
 #include <debug.h>
 
@@ -24,6 +25,16 @@ HalpInitProcessor(
     IN ULONG ProcessorNumber,
     IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
+    if (ProcessorNumber == 0)
+    {
+        /* APIC tables should always be parsed once before touching APIC */
+        HalpParseApicTables(LoaderBlock);
+    }
+
+#ifdef CONFIG_SMP
+    HalpSetupProcessorsTable(ProcessorNumber);
+#endif
+
     /* Initialize the local APIC for this cpu */
     ApicInitializeLocalApic(ProcessorNumber);
 
