@@ -2218,6 +2218,9 @@ HRESULT CShellLink::SetTargetFromPIDLOrPath(LPCITEMIDLIST pidl, LPCWSTR pszFile)
             {
                 hr = S_OK;
                 pidlNew = SHSimpleIDListFromPathW(szPath);
+                // NOTE: Don't make it failed here even if pidlNew was NULL.
+                // We don't fail on purpose even if SHSimpleIDListFromPathW returns NULL.
+                // This behaviour has been verified with tests.
             }
         }
     }
