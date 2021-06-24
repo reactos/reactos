@@ -3674,10 +3674,36 @@ WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             lParam = lParam;
             break;
 
-        case WM_CONTEXTMENU:
-            lParam = lParam;
-            break;
 #endif
+        case WM_CONTEXTMENU:
+        {
+            RECT rc;
+            HTREEITEM hItem;
+            TVHITTESTINFO hInfo = {0};
+
+            INT xPos = GET_X_LPARAM(lParam);
+            INT yPos = GET_Y_LPARAM(lParam);
+
+            GetWindowRect(hwndTreeView, &rc);
+            hInfo.pt.x = xPos - rc.left;
+            hInfo.pt.y = yPos - rc.top;
+
+            if ((hItem = TreeView_HitTest(hwndTreeView, &hInfo)))
+            {
+                TreeView_SelectItem(hwndTreeView, hItem);
+
+                if (TreeView_GetParent(hwndTreeView, hItem))
+                {
+                    HMENU hCtxMenu = GetSubMenu(LoadMenuW(hInst, MAKEINTRESOURCEW(IDM_EVENTWR_CTX)), 0);
+
+                    DWORD dwCmdID = TrackPopupMenuEx(hCtxMenu,
+                                                     TPM_LEFTALIGN | TPM_TOPALIGN | TPM_NONOTIFY | TPM_RETURNCMD,
+                                                     xPos, yPos, hWnd, NULL);
+                    SendMessage(hWnd, WM_COMMAND, (WPARAM)dwCmdID, (LPARAM)hwndTreeView);
+                }
+            }
+            break;
+        }
 
         case WM_SETCURSOR:
         {
@@ -3985,7 +4011,7 @@ Quit:
 
     if (EventLog->Permanent)
     {
-        SendDlgItemMessageW(hDlg, IDC_UPDOWN_MAXLOGSIZE, UDM_SETRANGE32, (WPARAM)64, (LPARAM)0x3FFFC0);
+        SendDlgItemMessageW(hDlg, IDC_UPDOWN_MAXLOGSIZE, UDM_SETRANGE32, (WPARAM)1, (LPARAM)0x3FFFC0);
         SendDlgItemMessageW(hDlg, IDC_UPDOWN_EVENTS_AGE, UDM_SETRANGE, 0, (LPARAM)MAKELONG(365, 1));
 
         SetDlgItemInt(hDlg, IDC_EDIT_MAXLOGSIZE, dwMaxSize, FALSE);
@@ -4107,18 +4133,6 @@ EventLogPropProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
                     PropSheet_UnChanged(GetParent(hDlg), hDlg);
                     SavePropertiesDlg(hDlg, EventLog);
                     return (INT_PTR)TRUE;
-
-                 case UDN_DELTAPOS:
-                 {
-                     if (((LPNMHDR)lParam)->idFrom == IDC_UPDOWN_MAXLOGSIZE)
-                     {
-                         LPNMUPDOWN lpnmud = (NMUPDOWN*)lParam;
-                         if (lpnmud->iDelta > 0)
-                             lpnmud->iDelta = 64;
-                         else if (lpnmud->iDelta < 0)
-                             lpnmud->iDelta = -64;
-                     }
-                 }
             }
             break;
 

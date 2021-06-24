@@ -40,6 +40,19 @@ BEGIN
     END
 END
 
+IDM_EVENTWR_CTX MENU
+BEGIN
+    POPUP "popup"
+    BEGIN
+        MENUITEM "&Abrir o ficheiro de registo...", IDM_OPEN_EVENTLOG
+        MENUITEM "&Guardar ficheiro de registo como...", IDM_SAVE_EVENTLOG
+        MENUITEM SEPARATOR
+        MENUITEM "&Limpar todos os Eventos", IDM_CLEAR_EVENTS
+        MENUITEM "&Alterar o nome\tF2", IDM_RENAME_EVENTLOG
+        MENUITEM "&Definições...", IDM_EVENTLOG_SETTINGS
+    END
+END
+
 IDA_EVENTVWR ACCELERATORS
 BEGIN
     "?", IDM_ABOUT, ASCII, ALT
