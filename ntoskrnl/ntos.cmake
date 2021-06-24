@@ -298,6 +298,7 @@ if(ARCH STREQUAL "i386")
         ${REACTOS_SOURCE_DIR}/ntoskrnl/ke/i386/ctxswitch.S
         ${REACTOS_SOURCE_DIR}/ntoskrnl/ke/i386/trap.s
         ${REACTOS_SOURCE_DIR}/ntoskrnl/ke/i386/usercall_asm.S
+        ${REACTOS_SOURCE_DIR}/ntoskrnl/ke/i386/zeropage.S
         ${REACTOS_SOURCE_DIR}/ntoskrnl/rtl/i386/stack.S)
     list(APPEND SOURCE
         ${REACTOS_SOURCE_DIR}/ntoskrnl/config/i386/cmhardwr.c
