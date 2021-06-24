@@ -2209,11 +2209,16 @@ HRESULT CShellLink::SetTargetFromPIDLOrPath(LPCITEMIDLIST pidl, LPCWSTR pszFile)
             StringCchCopyW(szPath, _countof(szPath), pszFile);
             PathResolveW(szPath, NULL, PRF_TRYPROGRAMEXTENSIONS);
 
-            pidlNew = SHSimpleIDListFromPathW(szPath);
-            /******************************************************/
-            /* Question: Why this line is needed only for files?? */
-            hr = (*szPath ? S_OK : E_INVALIDARG); // S_FALSE
-            /******************************************************/
+            if (PathIsFileSpecW(szPath))
+            {
+                hr = E_INVALIDARG;
+                szPath[0] = 0;
+            }
+            else
+            {
+                hr = S_OK;
+                pidlNew = SHSimpleIDListFromPathW(szPath);
+            }
         }
     }
     // else if (!pidl && !pszFile) { pidlNew = NULL; hr = S_OK; }
