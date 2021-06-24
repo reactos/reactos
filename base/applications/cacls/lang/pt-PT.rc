@@ -1,39 +1,39 @@
-LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE_BRAZILIAN
+LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
 
 STRINGTABLE
 BEGIN
-    IDS_HELP "Exibe ou modifica as listas de controle de acesso (ACLs) de arquivos\n\n\
-CACLS nome-arquivo [/T] [/E] [/C] [/G usuário:perm] [/R usuário [...]]\n\
-                   [/P usuário:perm [...]] [/D usuário [...]]\n\
-   nome-arquivo     Exibe ACLs.\n\
-   /T               Altera ACLs de arquivos especificados\n\
-                    na pasta atual e em todas as subpastas.\n\
+    IDS_HELP "Mostra ou modifica as listas de controle de acesso (ACLs) de ficheiros\n\n\
+CACLS nome-ficheiro [/T] [/E] [/C] [/G utilizador:perm] [/R utilizador [...]]\n\
+                   [/P utilizador:perm [...]] [/D utilizador [...]]\n\
+   nome-ficheiro     Mostra ACLs.\n\
+   /T               Altera ACLs de ficheiros especificados\n\
+                    na pasta actual e em todas as subpastas.\n\
    /E               Edita ACL em vez de substituí-la.\n\
    /C               Continua ao encontrar erros de acesso negado.\n\
-   /G usuário:perm  Concede os direitos de acesso ao usuário especificado.\n\
+   /G utilizador:perm  Concede os direitos de acesso ao utilizador especificado.\n\
                     Perm pode ser: R  Ler\n\
                               W  Gravar\n\
                               C  Alterar (gravar)\n\
                               F  Controle total\n\
-   /R usuário       Revoga os direitos de acesso do usuário especificado\n\
+   /R utilizador       Revoga os direitos de acesso do utilizador especificado\n\
                     (válido somente com /E).\n\
-   /P usuário:perm  Substitui os direitos de acesso do usuário especificado.\n\
+   /P utilizador:perm  Substitui os direitos de acesso do utilizador especificado.\n\
                     Perm pode ser: N  Nenhum\n\
                               R  Ler\n\
                               W  Gravar\n\
                               C  Alterar (gravar)\n\
                               F  Controle total\n\
-   /D usuário       Nega o acesso ao usuário especificado.\n\
-Caracteres curinga podem ser usados para especificar mais de um arquivo\n\
-em um comando.\n\
-Você pode especificar mais de um usuário em um comando.\n\n\
+   /D utilizador       Nega o acesso ao utilizador especificado.\n\
+Caracteres curinga podem ser usados para especificar mais de um ficheiro\n\
+num comando.\n\
+Pode especificar mais de um utilizador num comando.\n\n\
 Abreviaçäes:\n\
    CI - Herança de recipiente.\n\
         O ACE será herdado pelas pastas.\n\
    OI - Herança de objeto.\n\
-        O ACE será herdado pelos arquivos.\n\
+        O ACE será herdado pelos ficheiros.\n\
    IO - Somente herança.\n\
-        O ACE não se aplica ao arquivo/pasta atual.\n"
+        O ACE não se aplica ao ficheiro/pasta actual.\n"
     IDS_ABBR_CI "(CI)"
     IDS_ABBR_OI "(OI)"
     IDS_ABBR_IO "(IO)"
