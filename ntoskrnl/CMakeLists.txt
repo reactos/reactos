@@ -3,6 +3,11 @@ PROJECT(NTOS)
 
 include(ntos.cmake)
 
+if (CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
+    # Make sure we don't duplicate some symbols
+    add_compile_options(-fno-common)
+endif()
+
 set(NTOSKRNL_SOURCE ${SOURCE})
 set(NTOSKRNL_ASM_SOURCE ${ASM_SOURCE})
 
