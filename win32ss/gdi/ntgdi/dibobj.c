@@ -45,8 +45,6 @@ CreateDIBPalette(
 {
     PPALETTE ppal;
     ULONG i, cBitsPixel, cColors;
-    RGBQUAD rgb;
-    NTSTATUS Status;
 
     if (pbmi->bmiHeader.biSize < sizeof(BITMAPINFOHEADER))
     {
@@ -129,34 +127,29 @@ CreateDIBPalette(
         {
             /* The colors are an array of RGBQUAD values */
             RGBQUAD *prgb = (RGBQUAD*)((PCHAR)pbmi + pbmi->bmiHeader.biSize);
+            RGBQUAD colors[256] = {{0}};
 
             // FIXME: do we need to handle PALETTEINDEX / PALETTERGB macro?
 
-            /* Loop all color indices in the DIB */
-            for (i = 0; i < cColors; i++)
+            /* Use SEH to verify we can READ prgb[] succesfully */
+            _SEH2_TRY
             {
-                /* User SEH to verify READ success */
-                Status = STATUS_SUCCESS;
-                _SEH2_TRY
-                {
-                    rgb = prgb[i];
-                }
-                _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-                {
-                    Status = _SEH2_GetExceptionCode();
-                    /* On Read Failure, put zero in Palette */
-                    PALETTE_vSetRGBColorForIndex(ppal, i, 0);
-                }
-                _SEH2_END
+                RtlCopyMemory(colors, prgb, cColors * sizeof(colors[0]));
+            }
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+            {
+              /* Do Nothing */
+            }
+            _SEH2_END;
 
-                if(NT_SUCCESS(Status))
-                {
-                    /* Get the color value and translate it to a COLORREF */
-                    COLORREF crColor = RGB(rgb.rgbRed, rgb.rgbGreen, rgb.rgbBlue);
+            for (i = 0; i < cColors; ++i)
+            {
+                /* Get the color value and translate it to a COLORREF */
+                COLORREF crColor = RGB(colors[i].rgbRed, colors[i].rgbGreen, colors[i].rgbBlue);
 
-                    /* Set the RGB value in the palette */
-                    PALETTE_vSetRGBColorForIndex(ppal, i, crColor);
-                }
+                /* Set the RGB value in the palette */
+                PALETTE_vSetRGBColorForIndex(ppal, i, crColor);
+
             }
         }
         else
@@ -1219,10 +1212,17 @@ NtGdiStretchDIBitsInternal(
     IN UINT cjMaxBits,
     IN HANDLE hcmXform)
 {
+    SIZEL sizel;
+    RECTL rcSrc, rcDst;
+    PDC pdc;
+    HBITMAP hbmTmp = 0;
+    PSURFACE psurfTmp = 0, psurfDst = 0;
+    PPALETTE ppalDIB = 0;
+    EXLATEOBJ exlo;
+
     HBITMAP hBitmap, hOldBitmap = NULL;
     HDC hdcMem;
     HPALETTE hPal = NULL;
-    PDC pdc;
     PBYTE safeBits;
     LONG height;
     LONG width;
@@ -1244,31 +1244,22 @@ NtGdiStretchDIBitsInternal(
         return TRUE;
     }
 
-    safeBits = ExAllocatePoolWithTag(PagedPool, cjMaxBits, TAG_DIB);
-    if(!safeBits)
-    {
-        EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
-        return 0;
-    }
-
-    DC_UnlockDc(pdc);
-
-    if (!pjInit || !pbmi)
+     if (!pbmi)
     {
         EngSetLastError(ERROR_INVALID_PARAMETER);
         return 0;
     }
 
+    /* Check for ability to READ pbmi */
     _SEH2_TRY
     {
         ProbeForRead(pbmi, cjMaxInfo, 1);
-        ProbeForRead(pjInit, cjMaxBits, 1);
-        if (DIB_GetBitmapInfo(&pbmi->bmiHeader, &width, &height, &planes, &bpp, &compr, &size) == -1)
+        if (DIB_GetBitmapInfo(&pbmi->bmiHeader, &width, &height, &planes, 
+&bpp, &compr, &size) == -1)
         {
             DPRINT1("Invalid bitmap\n");
             _SEH2_YIELD(goto cleanup;)
         }
-        RtlCopyMemory(safeBits, pjInit, cjMaxBits);
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
@@ -1278,79 +1269,212 @@ NtGdiStretchDIBitsInternal(
     }
     _SEH2_END
 
-    hdcMem = NtGdiCreateCompatibleDC(hdc);
-    if (hdcMem == NULL)
+    /* Transform dest size */
+    sizel.cx = cxDst;
+    sizel.cy = cyDst;
+    IntLPtoDP(pdc, (POINTL*)&sizel, 1);
+    DC_UnlockDc(pdc);
+
+    /* Handle pjInit as Optional parameter */
+    if (pjInit && (cjMaxBits > 0))
     {
-        DPRINT1("NtGdiCreateCompatibleDC failed to create hdc.\n");
-        EngSetLastError(ERROR_NO_SYSTEM_RESOURCES);
-        return 0;
+        safeBits = ExAllocatePoolWithTag(PagedPool, cjMaxBits, TAG_DIB);
+        if(!safeBits)
+        {
+            EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
+            return 0;
+        }
+
+        _SEH2_TRY
+        {
+            RtlCopyMemory(safeBits, pjInit, cjMaxBits);
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            ExFreePoolWithTag(safeBits, TAG_DIB);
+            _SEH2_YIELD(return 0);
+        }
+        _SEH2_END
     }
-
-    hBitmap = NtGdiCreateCompatibleBitmap(hdc,
-                                          abs(pbmi->bmiHeader.biWidth),
-                                          abs(pbmi->bmiHeader.biHeight));
-    if (hBitmap == NULL)
-    {
-        DPRINT1("NtGdiCreateCompatibleBitmap failed to create bitmap.\n");
-        DPRINT1("hdc : 0x%08x \n", hdc);
-        DPRINT1("pbmi->bmiHeader.biWidth : 0x%08x \n", pbmi->bmiHeader.biWidth);
-        DPRINT1("pbmi->bmiHeader.biHeight : 0x%08x \n", pbmi->bmiHeader.biHeight);
-        EngSetLastError(ERROR_NO_SYSTEM_RESOURCES);
-        return 0;
-    }
-
-    /* Select the bitmap into hdcMem, and save a handle to the old bitmap */
-    hOldBitmap = NtGdiSelectBitmap(hdcMem, hBitmap);
-
-    if (dwUsage == DIB_PAL_COLORS)
-    {
-        hPal = NtGdiGetDCObject(hdc, GDI_OBJECT_TYPE_PALETTE);
-        hPal = GdiSelectPalette(hdcMem, hPal, FALSE);
-    }
-
-    if (pbmi->bmiHeader.biCompression == BI_RLE4 ||
-            pbmi->bmiHeader.biCompression == BI_RLE8)
-    {
-        /* copy existing bitmap from destination dc */
-        if (cxSrc == cyDst && cySrc == cyDst)
-            NtGdiBitBlt(hdcMem, xSrc, abs(pbmi->bmiHeader.biHeight) - cySrc - ySrc,
-                        cxSrc, cySrc, hdc, xDst, yDst,  dwRop, 0, 0);
-        else
-            NtGdiStretchBlt(hdcMem, xSrc, abs(pbmi->bmiHeader.biHeight) - cySrc - ySrc,
-                            cxSrc, cySrc, hdc, xDst, yDst, cxDst, cyDst,
-                            dwRop, 0);
-    }
-
-    pdc = DC_LockDc(hdcMem);
-    if (pdc != NULL)
-    {
-        IntSetDIBits(pdc, hBitmap, 0, abs(pbmi->bmiHeader.biHeight), safeBits,
-                     cjMaxBits, pbmi, dwUsage);
-
-        DC_UnlockDc(pdc);
-    }
-
-    /* Origin for DIBitmap may be bottom left (positive biHeight) or top
-       left (negative biHeight) */
-    if (cxSrc == cxDst && cySrc == cyDst)
-        NtGdiBitBlt(hdc, xDst, yDst, cxDst, cyDst,
-                    hdcMem, xSrc, abs(pbmi->bmiHeader.biHeight) - cySrc - ySrc,
-                    dwRop, 0, 0);
     else
-        NtGdiStretchBlt(hdc, xDst, yDst, cxDst, cyDst,
+    {
+        safeBits = NULL;
+    }
+
+
+    /* Here we have the old patch with SIMS good versus gdi32:bitmap good */
+    if (dwRop == SRCCOPY)
+    {
+        hdcMem = NtGdiCreateCompatibleDC(hdc);
+        if (hdcMem == NULL)
+        {
+            DPRINT1("NtGdiCreateCompatibleDC failed to create hdc.\n");
+            EngSetLastError(ERROR_NO_SYSTEM_RESOURCES);
+            return 0;
+        }
+
+        hBitmap = NtGdiCreateCompatibleBitmap(hdc,
+                                              abs(pbmi->bmiHeader.biWidth),
+                                              abs(pbmi->bmiHeader.biHeight));
+        if (hBitmap == NULL)
+        {
+            DPRINT1("NtGdiCreateCompatibleBitmap failed to create bitmap.\n");
+            DPRINT1("hdc : 0x%08x \n", hdc);
+            DPRINT1("pbmi->bmiHeader.biWidth : 0x%08x \n", pbmi->bmiHeader.biWidth);
+            DPRINT1("pbmi->bmiHeader.biHeight : 0x%08x \n", pbmi->bmiHeader.biHeight);
+            EngSetLastError(ERROR_NO_SYSTEM_RESOURCES);
+            return 0;
+        }
+
+            /* Select the bitmap into hdcMem, and save a handle to the old bitmap */
+        hOldBitmap = NtGdiSelectBitmap(hdcMem, hBitmap);
+
+        if (dwUsage == DIB_PAL_COLORS)
+        {
+            hPal = NtGdiGetDCObject(hdc, GDI_OBJECT_TYPE_PALETTE);
+            hPal = GdiSelectPalette(hdcMem, hPal, FALSE);
+        }
+
+        if (pbmi->bmiHeader.biCompression == BI_RLE4 ||
+                pbmi->bmiHeader.biCompression == BI_RLE8)
+        {
+            /* copy existing bitmap from destination dc */
+            if (cxSrc == cyDst && cySrc == cyDst)
+                NtGdiBitBlt(hdcMem, xSrc, abs(pbmi->bmiHeader.biHeight) - cySrc - ySrc,
+                            cxSrc, cySrc, hdc, xDst, yDst,  dwRop, 0, 0);
+            else
+                NtGdiStretchBlt(hdcMem, xSrc, abs(pbmi->bmiHeader.biHeight) -     cySrc - ySrc,
+                                cxSrc, cySrc, hdc, xDst, yDst, cxDst, cyDst,
+                                dwRop, 0);
+        }
+
+        pdc = DC_LockDc(hdcMem);
+        if (pdc != NULL)
+        {
+            IntSetDIBits(pdc, hBitmap, 0, abs(pbmi->bmiHeader.biHeight), safeBits,
+                         cjMaxBits, pbmi, dwUsage);
+
+            DC_UnlockDc(pdc);
+        }
+
+        /* Origin for DIBitmap may be bottom left (positive biHeight) or top
+           left (negative biHeight) */
+        if (cxSrc == cxDst && cySrc == cyDst)
+            NtGdiBitBlt(hdc, xDst, yDst, cxDst, cyDst,
                         hdcMem, xSrc, abs(pbmi->bmiHeader.biHeight) - cySrc - ySrc,
-                        cxSrc, cySrc, dwRop, 0);
+                        dwRop, 0, 0);
+        else
+                NtGdiStretchBlt(hdc, xDst, yDst, cxDst, cyDst,
+                                hdcMem, xSrc, abs(pbmi->bmiHeader.biHeight) - cySrc - ySrc,
+                                 cxSrc, cySrc, dwRop, 0);
 
-    /* cleanup */
-    if (hPal)
-        GdiSelectPalette(hdcMem, hPal, FALSE);
+        /* cleanup */
+        if (hPal)
+            GdiSelectPalette(hdcMem, hPal, FALSE);
 
-    if (hOldBitmap)
-        NtGdiSelectBitmap(hdcMem, hOldBitmap);
+        if (hOldBitmap)
+            NtGdiSelectBitmap(hdcMem, hOldBitmap);
 
-    NtGdiDeleteObjectApp(hdcMem);
+        NtGdiDeleteObjectApp(hdcMem);
 
-    GreDeleteObject(hBitmap);
+        GreDeleteObject(hBitmap);
+
+    } /* End of dwRop == SRCCOPY */
+    else
+    { /* Start of dwRop != SRCCOPY */
+
+        /* FIXME: Locking twice is cheesy, coord tranlation in UM will fix it */
+        if (!(pdc = DC_LockDc(hdc)))
+        {
+            DPRINT1("Could not lock dc\n");
+            EngSetLastError(ERROR_INVALID_HANDLE);
+            goto cleanup;
+        }
+
+        /* Calculate source and destination rect */
+        rcSrc.left = xSrc;
+        rcSrc.top = ySrc;
+        rcSrc.right = xSrc + abs(cxSrc);
+        rcSrc.bottom = ySrc + abs(cySrc);
+        rcDst.left = xDst;
+        rcDst.top = yDst;
+        rcDst.right = rcDst.left + cxDst;
+        rcDst.bottom = rcDst.top + cyDst;
+        IntLPtoDP(pdc, (POINTL*)&rcDst, 2);
+        RECTL_vOffsetRect(&rcDst, pdc->ptlDCOrig.x, pdc->ptlDCOrig.y);
+
+        if (pdc->fs & (DC_ACCUM_APP|DC_ACCUM_WMGR))
+        {
+           IntUpdateBoundsRect(pdc, &rcDst);
+        }
+
+        hbmTmp = GreCreateBitmapEx(pbmi->bmiHeader.biWidth,
+                                   abs(pbmi->bmiHeader.biHeight),
+                                   0,
+                                   BitmapFormat(pbmi->bmiHeader.biBitCount,
+                                                pbmi->bmiHeader.biCompression),
+                                   pbmi->bmiHeader.biHeight < 0 ? BMF_TOPDOWN : 0,
+                                   cjMaxBits,
+                                   safeBits,
+                                   0);
+
+        if (!hbmTmp)
+        {
+            goto cleanup;
+        }
+
+        psurfTmp = SURFACE_ShareLockSurface(hbmTmp);
+        if (!psurfTmp)
+        {
+
+            goto cleanup;
+        }
+
+        /* Create a palette for the DIB */
+        ppalDIB = CreateDIBPalette(pbmi, pdc, dwUsage);
+        if (!ppalDIB)
+        {
+            goto cleanup;
+        }
+
+        /* Prepare DC for blit */
+        DC_vPrepareDCsForBlit(pdc, &rcDst, NULL, NULL);
+
+        psurfDst = pdc->dclevel.pSurface;
+
+        /* Initialize XLATEOBJ */
+        EXLATEOBJ_vInitialize(&exlo,
+                              ppalDIB,
+                              psurfDst->ppal,
+                              RGB(0xff, 0xff, 0xff),
+                              pdc->pdcattr->crBackgroundClr,
+                              pdc->pdcattr->crForegroundClr);
+
+        /* Perform the stretch operation */
+        IntEngStretchBlt(&psurfDst->SurfObj,
+                                   &psurfTmp->SurfObj,
+                                   NULL,
+                                   (CLIPOBJ *)&pdc->co,
+                                   &exlo.xlo,
+                                   &pdc->dclevel.ca,
+                                   &rcDst,
+                                   &rcSrc,
+                                   NULL,
+                                   &pdc->eboFill.BrushObject,
+                                   NULL,
+                                   WIN32_ROP3_TO_ENG_ROP4(dwRop));
+
+        /* Cleanup */
+        DC_vFinishBlit(pdc, NULL);
+        EXLATEOBJ_vCleanup(&exlo);
+    cleanup:
+        if (ppalDIB) PALETTE_ShareUnlockPalette(ppalDIB);
+        if (psurfTmp) SURFACE_ShareUnlockSurface(psurfTmp);
+        if (hbmTmp) GreDeleteObject(hbmTmp);
+        if (pdc) DC_UnlockDc(pdc);
+        if (safeBits) ExFreePoolWithTag(safeBits, TAG_DIB);
+
+    }
 
     /* This is not what MSDN says is returned from this function, but it
      * follows Wine's dlls/gdi32/dib.c function nulldrv_StretchDIBits */
@@ -1359,9 +1483,14 @@ NtGdiStretchDIBitsInternal(
     else
         LinesCopied = pbmi->bmiHeader.biHeight;
 
-cleanup:
-
-    ExFreePoolWithTag(safeBits, TAG_DIB);
+    /* Exception for LinesCopied of Zero */
+    if ((pbmi->bmiHeader.biHeight < 0) && ((cxSrc != cxDst) || (cySrc != cyDst)))
+    {
+        if (cySrc < 0)
+        {
+            LinesCopied = 0;
+        }
+    }
 
     return LinesCopied;
 }
