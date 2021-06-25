@@ -43,7 +43,9 @@ _main(int argc,
 {
     KPRIORITY BasePriority = (8 + 1) + 4;
     NTSTATUS Status;
+#if defined (_X86_)
     ULONG Response;
+#endif
     UNREFERENCED_PARAMETER(envp);
     UNREFERENCED_PARAMETER(DebugFlag);
 
