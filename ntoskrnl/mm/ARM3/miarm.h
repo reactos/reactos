@@ -1917,25 +1917,6 @@ MiSyncARM3WithROS(
 );
 
 NTSTATUS
-NTAPI
-MiRosProtectVirtualMemory(
-    IN PEPROCESS Process,
-    IN OUT PVOID *BaseAddress,
-    IN OUT PSIZE_T NumberOfBytesToProtect,
-    IN ULONG NewAccessProtection,
-    OUT PULONG OldAccessProtection OPTIONAL
-);
-
-NTSTATUS
-NTAPI
-MmArmAccessFault(
-    IN ULONG FaultCode,
-    IN PVOID Address,
-    IN KPROCESSOR_MODE Mode,
-    IN PVOID TrapInformation
-);
-
-NTSTATUS
 FASTCALL
 MiCheckPdeForPagedPool(
     IN PVOID Address

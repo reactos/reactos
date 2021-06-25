@@ -306,6 +306,11 @@ MmFreeMemoryArea(
             KeAttachProcess(&Process->Pcb);
         }
 
+        if (Process != NULL)
+            MiLockProcessWorkingSetUnsafe(Process, PsGetCurrentThread());
+        else
+            MiLockWorkingSet(PsGetCurrentThread(), &MmSystemCacheWs);
+
         EndAddress = MM_ROUND_UP(MA_GetEndingAddress(MemoryArea), PAGE_SIZE);
         for (Address = MA_GetStartingAddress(MemoryArea);
                 Address < (ULONG_PTR)EndAddress;
@@ -317,11 +322,27 @@ MmFreeMemoryArea(
 
             if (MmIsPageSwapEntry(Process, (PVOID)Address))
             {
+                ASSERT(Process != NULL);
                 MmDeletePageFileMapping(Process, (PVOID)Address, &SwapEntry);
+                /* Remove PDE reference */
+                if (MiDecrementPageTableReferences((PVOID)Address) == 0)
+                {
+                    KIRQL OldIrql = MiAcquirePfnLock();
+                    MiDeletePde(MiAddressToPde(Address), Process);
+                    MiReleasePfnLock(OldIrql);
+                }
             }
             else
             {
-                MmDeleteVirtualMapping(Process, (PVOID)Address, &Dirty, &Page);
+                if (MmDeleteVirtualMapping(Process, (PVOID)Address, &Dirty, &Page) && Process)
+                {
+                    if (MiDecrementPageTableReferences((PVOID)Address) == 0)
+                    {
+                        KIRQL OldIrql = MiAcquirePfnLock();
+                        MiDeletePde(MiAddressToPde(Address), Process);
+                        MiReleasePfnLock(OldIrql);
+                    }
+                }
             }
             if (FreePage != NULL)
             {
@@ -329,6 +350,11 @@ MmFreeMemoryArea(
                          Page, SwapEntry, (BOOLEAN)Dirty);
             }
         }
+
+        if (Process != NULL)
+            MiUnlockProcessWorkingSetUnsafe(Process, PsGetCurrentThread());
+        else
+            MiUnlockWorkingSet(PsGetCurrentThread(), &MmSystemCacheWs);
 
         if (Process != NULL &&
                 Process != CurrentProcess)

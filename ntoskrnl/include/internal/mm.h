@@ -822,16 +822,26 @@ NTAPI
 MmFreeSpecialPool(
     IN PVOID P);
 
-/* mm.c **********************************************************************/
+/* mmfault.c **********************************************************************/
 
 NTSTATUS
-NTAPI
-MmAccessFault(
+MmRosAccessFault(
     IN ULONG FaultCode,
+    IN PMMSUPPORT AddressSpace,
+    IN PMEMORY_AREA MemoryArea,
     IN PVOID Address,
     IN KPROCESSOR_MODE Mode,
     IN PVOID TrapInformation
 );
+
+/* pagfault.c *********************************************************************/
+NTSTATUS
+NTAPI
+MmAccessFault(
+    _In_ ULONG FaultCode,
+    _In_ PVOID Address,
+    _In_ KPROCESSOR_MODE Mode,
+    _In_ PVOID TrapInformation);
 
 /* process.c *****************************************************************/
 
@@ -1226,8 +1236,7 @@ NTSTATUS
 NTAPI
 MmGetExecuteOptions(IN PULONG ExecuteOptions);
 
-VOID
-NTAPI
+BOOLEAN
 MmDeleteVirtualMapping(
     struct _EPROCESS *Process,
     PVOID Address,
@@ -1380,8 +1389,7 @@ NTAPI
 MmNotPresentFaultSectionView(
     PMMSUPPORT AddressSpace,
     MEMORY_AREA* MemoryArea,
-    PVOID Address,
-    BOOLEAN Locked
+    PVOID Address
 );
 
 NTSTATUS
@@ -1403,8 +1411,7 @@ NTAPI
 MmAccessFaultSectionView(
     PMMSUPPORT AddressSpace,
     MEMORY_AREA* MemoryArea,
-    PVOID Address,
-    BOOLEAN Locked
+    PVOID Address
 );
 
 VOID
