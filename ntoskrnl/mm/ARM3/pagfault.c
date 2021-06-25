@@ -291,16 +291,25 @@ MiCheckVirtualAddress(IN PVOID VirtualAddress,
         else
         {
             /* ReactOS does not supoprt these VADs yet */
-            ASSERT(Vad->u.VadFlags.VadType != VadImageMap);
             ASSERT(Vad->u2.VadFlags2.ExtendableFile == 0);
 
             /* Return the proto VAD */
             *ProtoVad = Vad;
 
-            /* Get the prototype PTE for this page */
-            PointerPte = (((ULONG_PTR)VirtualAddress >> PAGE_SHIFT) - Vad->StartingVpn) + Vad->FirstPrototypePte;
-            ASSERT(PointerPte != NULL);
-            ASSERT(PointerPte <= Vad->LastContiguousPte);
+            /* Check for MEMORY_AREA thingie */
+            if (Vad->u.VadFlags.Spare)
+            {
+                PointerPte = NULL;
+            }
+            else
+            {
+                /* ARM3 doesn't support this yet */
+                ASSERT(Vad->u.VadFlags.VadType != VadImageMap);
+                /* Get the prototype PTE for this page */
+                PointerPte = (((ULONG_PTR)VirtualAddress >> PAGE_SHIFT) - Vad->StartingVpn) + Vad->FirstPrototypePte;
+                ASSERT(PointerPte != NULL);
+                ASSERT(PointerPte <= Vad->LastContiguousPte);
+            }
 
             /* Return the Prototype PTE and the protection for the page mapping */
             *ProtectCode = (ULONG)Vad->u.VadFlags.Protection;
@@ -1293,7 +1302,7 @@ MiResolveProtoPteFault(IN BOOLEAN StoreInstruction,
         else
             MiGetPfnEntry(PointerProtoPte->u.Hard.PageFrameNumber)->CallSite = _ReturnAddress();
 #endif
-                                      
+
         ASSERT(NT_SUCCESS(Status));
     }
 
@@ -1669,10 +1678,11 @@ MiDispatchFault(IN ULONG FaultCode,
 
 NTSTATUS
 NTAPI
-MmArmAccessFault(IN ULONG FaultCode,
-                 IN PVOID Address,
-                 IN KPROCESSOR_MODE Mode,
-                 IN PVOID TrapInformation)
+MmAccessFault(
+    _In_ ULONG FaultCode,
+    _In_ PVOID Address,
+    _In_ KPROCESSOR_MODE Mode,
+    _In_ PVOID TrapInformation)
 {
     KIRQL OldIrql = KeGetCurrentIrql(), LockIrql;
     PMMPTE ProtoPte = NULL;
@@ -1922,6 +1932,26 @@ _WARN("Session space stuff is not implemented yet!")
         /* Acquire the working set lock */
         KeRaiseIrql(APC_LEVEL, &LockIrql);
         MiLockWorkingSet(CurrentThread, WorkingSet);
+
+        /* Check for legacy Mm fault */
+        {
+            PMEMORY_AREA MemoryArea;
+            if (MmGetKernelAddressSpace() &&
+                ((MemoryArea = MmLocateMemoryAreaByAddress(MmGetKernelAddressSpace(), Address))) &&
+                (MemoryArea->Type != MEMORY_AREA_OWNED_BY_ARM3))
+            {
+                Status = MmRosAccessFault(FaultCode,
+                                          MmGetKernelAddressSpace(),
+                                          MemoryArea,
+                                          Address,
+                                          KernelMode,
+                                          TrapInformation);
+                ASSERT(KeGetCurrentIrql() == APC_LEVEL);
+                MiUnlockWorkingSet(CurrentThread, WorkingSet);
+                KeLowerIrql(LockIrql);
+                return Status;
+            }
+        }
 
         /* Re-read PTE now that we own the lock */
         TempPte = *PointerPte;
@@ -2225,6 +2255,46 @@ UserFault:
 
     /* Now capture the PTE. */
     TempPte = *PointerPte;
+
+    /* Check if we have a VAD, unless we did this already */
+    if (ProtectionCode == MM_INVALID_PROTECTION)
+    {
+        MiCheckVirtualAddress(Address, &ProtectionCode, &Vad);
+    }
+
+    /* Does this come from old Mm */
+    if (Vad && Vad->u.VadFlags.Spare)
+    {
+        /* Increment before. Ros Mm relies on this. */
+        if (TempPte.u.Long == 0)
+        {
+            MiIncrementPageTableReferences(Address);
+        }
+
+        /* Let it handle this */
+        Status = MmRosAccessFault(FaultCode,
+                                  &CurrentProcess->Vm,
+                                  (PMEMORY_AREA)Vad,
+                                  Address,
+                                  Mode,
+                                  TrapInformation);
+
+        /* Rollback if needed */
+        if ((TempPte.u.Long == 0) && !NT_SUCCESS(Status))
+        {
+            /* Make sure old Mm cleaned up */
+            NT_ASSERT(PointerPte->u.Long == 0);
+            if (MiDecrementPageTableReferences(Address) == 0)
+            {
+                OldIrql = MiAcquirePfnLock();
+                MiDeletePde(PointerPde, CurrentProcess);
+                MiReleasePfnLock(OldIrql);
+            }
+        }
+
+        MiUnlockProcessWorkingSet(CurrentProcess, CurrentThread);
+        return Status;
+    }
 
     /* Check if the PTE is valid */
     if (TempPte.u.Hard.Valid)

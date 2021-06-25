@@ -11,8 +11,11 @@
 
 #include <ntoskrnl.h>
 #include <cache/section/newmm.h>
+
 #define NDEBUG
 #include <debug.h>
+
+#include "ARM3/miarm.h"
 
 /* TYPES ********************************************************************/
 
@@ -100,29 +103,32 @@ GetEntry:
     }
     AddressSpace = &Process->Vm;
 
-    MmLockAddressSpace(AddressSpace);
-
-    MemoryArea = MmLocateMemoryAreaByAddress(AddressSpace, Address);
-    if (MemoryArea == NULL || MemoryArea->DeleteInProgress)
-    {
-        MmUnlockAddressSpace(AddressSpace);
-        ExReleaseRundownProtection(&Process->RundownProtect);
-        ObDereferenceObject(Process);
-        goto GetEntry;
-    }
-
-
     /* Attach to it, if needed */
     ASSERT(PsGetCurrentProcess() == PsInitialSystemProcess);
     if (Process != PsInitialSystemProcess)
         KeAttachProcess(&Process->Pcb);
 
+    ASSERT(MmGetAddressSpaceOwner(AddressSpace) != NULL);
+
+    MiLockProcessWorkingSet(Process, PsGetCurrentThread());
+
+    MemoryArea = MmLocateMemoryAreaByAddress(AddressSpace, Address);
+    if (MemoryArea == NULL || MemoryArea->DeleteInProgress)
+    {
+        MiUnlockProcessWorkingSet(Process, PsGetCurrentThread());
+        if (Process != PsInitialSystemProcess)
+            KeDetachProcess();
+        ExReleaseRundownProtection(&Process->RundownProtect);
+        ObDereferenceObject(Process);
+        goto GetEntry;
+    }
+
     if (MmGetPfnForProcess(Process, Address) != Page)
     {
         /* This changed in the short window where we didn't have any locks */
+        MiUnlockProcessWorkingSet(Process, PsGetCurrentThread());
         if (Process != PsInitialSystemProcess)
             KeDetachProcess();
-        MmUnlockAddressSpace(AddressSpace);
         ExReleaseRundownProtection(&Process->RundownProtect);
         ObDereferenceObject(Process);
         goto GetEntry;
@@ -148,9 +154,9 @@ GetEntry:
         {
             /* The segment is being read or something. Give up */
             MmUnlockSectionSegment(Segment);
+            MiUnlockProcessWorkingSet(Process, PsGetCurrentThread());
             if (Process != PsInitialSystemProcess)
                 KeDetachProcess();
-            MmUnlockAddressSpace(AddressSpace);
             ExReleaseRundownProtection(&Process->RundownProtect);
             ObDereferenceObject(Process);
             return(STATUS_UNSUCCESSFUL);
@@ -188,7 +194,7 @@ GetEntry:
                     MmInsertRmap(Page, Process, Address);
                     MmSetDirtyPage(Process, Address);
 
-                    MmUnlockAddressSpace(AddressSpace);
+                    MiUnlockProcessWorkingSet(Process, PsGetCurrentThread());
                     if (Process != PsInitialSystemProcess)
                         KeDetachProcess();
                     ExReleaseRundownProtection(&Process->RundownProtect);
@@ -200,17 +206,7 @@ GetEntry:
 
             if (Dirty)
             {
-                SWAPENTRY Dummy;
-
-                /* Put a wait entry into the process and unlock */
-                MmCreatePageFileMapping(Process, Address, MM_WAIT_ENTRY);
-                MmUnlockAddressSpace(AddressSpace);
-
                 Status = MmWriteToSwapPage(SwapEntry, Page);
-
-                MmLockAddressSpace(AddressSpace);
-                MmDeletePageFileMapping(Process, Address, &Dummy);
-                ASSERT(Dummy == MM_WAIT_ENTRY);
 
                 if (!NT_SUCCESS(Status))
                 {
@@ -228,7 +224,7 @@ GetEntry:
                     MmInsertRmap(Page, Process, Address);
                     MmSetDirtyPage(Process, Address);
 
-                    MmUnlockAddressSpace(AddressSpace);
+                    MiUnlockProcessWorkingSet(Process, PsGetCurrentThread());
                     if (Process != PsInitialSystemProcess)
                         KeDetachProcess();
                     ExReleaseRundownProtection(&Process->RundownProtect);
@@ -244,9 +240,19 @@ GetEntry:
                 MmCreatePageFileMapping(Process, Address, SwapEntry);
                 MmSetSavedSwapEntryPage(Page, 0);
             }
+            else
+            {
+                /* We just removed an empty page */
+                if (MiDecrementPageTableReferences(Address) == 0)
+                {
+                    KIRQL OldIrql = MiAcquirePfnLock();
+                    MiDeletePde(MiAddressToPde(Address), Process);
+                    MiReleasePfnLock(OldIrql);
+                }
+            }
 
             /* We can finally let this page go */
-            MmUnlockAddressSpace(AddressSpace);
+            MiUnlockProcessWorkingSet(Process, PsGetCurrentThread());
             if (Process != PsInitialSystemProcess)
                 KeDetachProcess();
 #if DBG
@@ -266,9 +272,9 @@ GetEntry:
         Released = MmUnsharePageEntrySectionSegment(MemoryArea, Segment, &Offset, Dirty, TRUE, NULL);
 
         MmUnlockSectionSegment(Segment);
+        MiUnlockProcessWorkingSet(Process, PsGetCurrentThread());
         if (Process != PsInitialSystemProcess)
             KeDetachProcess();
-        MmUnlockAddressSpace(AddressSpace);
 
         ExReleaseRundownProtection(&Process->RundownProtect);
         ObDereferenceObject(Process);

@@ -2148,53 +2148,12 @@ MiIsEntireRangeCommitted(IN ULONG_PTR StartingAddress,
 
 NTSTATUS
 NTAPI
-MiRosProtectVirtualMemory(IN PEPROCESS Process,
-                          IN OUT PVOID *BaseAddress,
-                          IN OUT PSIZE_T NumberOfBytesToProtect,
-                          IN ULONG NewAccessProtection,
-                          OUT PULONG OldAccessProtection OPTIONAL)
-{
-    PMEMORY_AREA MemoryArea;
-    PMMSUPPORT AddressSpace;
-    ULONG OldAccessProtection_;
-    NTSTATUS Status;
-
-    *NumberOfBytesToProtect = PAGE_ROUND_UP((ULONG_PTR)(*BaseAddress) + (*NumberOfBytesToProtect)) - PAGE_ROUND_DOWN(*BaseAddress);
-    *BaseAddress = (PVOID)PAGE_ROUND_DOWN(*BaseAddress);
-
-    AddressSpace = &Process->Vm;
-    MmLockAddressSpace(AddressSpace);
-    MemoryArea = MmLocateMemoryAreaByAddress(AddressSpace, *BaseAddress);
-    if (MemoryArea == NULL || MemoryArea->DeleteInProgress)
-    {
-        MmUnlockAddressSpace(AddressSpace);
-        return STATUS_UNSUCCESSFUL;
-    }
-
-    if (OldAccessProtection == NULL) OldAccessProtection = &OldAccessProtection_;
-
-    ASSERT(MemoryArea->Type == MEMORY_AREA_SECTION_VIEW);
-    Status = MmProtectSectionView(AddressSpace,
-                                  MemoryArea,
-                                  *BaseAddress,
-                                  *NumberOfBytesToProtect,
-                                  NewAccessProtection,
-                                  OldAccessProtection);
-
-    MmUnlockAddressSpace(AddressSpace);
-
-    return Status;
-}
-
-NTSTATUS
-NTAPI
 MiProtectVirtualMemory(IN PEPROCESS Process,
                        IN OUT PVOID *BaseAddress,
                        IN OUT PSIZE_T NumberOfBytesToProtect,
                        IN ULONG NewAccessProtection,
                        OUT PULONG OldAccessProtection OPTIONAL)
 {
-    PMEMORY_AREA MemoryArea;
     PMMVAD Vad;
     PMMSUPPORT AddressSpace;
     ULONG_PTR StartingAddress, EndingAddress;
@@ -2218,18 +2177,6 @@ MiProtectVirtualMemory(IN PEPROCESS Process,
     {
         DPRINT1("Invalid protection mask\n");
         return STATUS_INVALID_PAGE_PROTECTION;
-    }
-
-    /* Check for ROS specific memory area */
-    MemoryArea = MmLocateMemoryAreaByAddress(&Process->Vm, *BaseAddress);
-    if ((MemoryArea) && (MemoryArea->Type != MEMORY_AREA_OWNED_BY_ARM3))
-    {
-        /* Evil hack */
-        return MiRosProtectVirtualMemory(Process,
-                                         BaseAddress,
-                                         NumberOfBytesToProtect,
-                                         NewAccessProtection,
-                                         OldAccessProtection);
     }
 
     /* Lock the address space and make sure the process isn't already dead */
@@ -2308,16 +2255,43 @@ MiProtectVirtualMemory(IN PEPROCESS Process,
             goto FailPath;
         }
 
-        /* Check if data or page file mapping protection PTE is compatible */
-        if (!Vad->ControlArea->u.Flags.Image)
+        /* Handle legacy MM case */
+        if (Vad->u.VadFlags.Spare)
         {
-            /* Not yet */
-            DPRINT1("Fixme: Not checking for valid protection\n");
-        }
+            PMEMORY_AREA MemoryArea = (PMEMORY_AREA)Vad;
 
-        /* This is a section, and this is not yet supported */
-        DPRINT1("Section protection not yet supported\n");
-        OldProtect = 0;
+            if (MemoryArea->DeleteInProgress)
+            {
+                DPRINT1("Memory area is being deleted.\n");
+                Status = STATUS_CONFLICTING_ADDRESSES;
+                goto FailPath;
+            }
+
+            /* Lock the working set */
+            MiLockProcessWorkingSetUnsafe(Process, Thread);
+
+            Status = MmProtectSectionView(AddressSpace,
+                                          (PMEMORY_AREA)Vad,
+                                          (PVOID)StartingAddress,
+                                          EndingAddress - StartingAddress + 1,
+                                          NewAccessProtection,
+                                          OldAccessProtection);
+
+            MiUnlockProcessWorkingSetUnsafe(Process, Thread);
+        }
+        else
+        {
+            /* Check if data or page file mapping protection PTE is compatible */
+            if (!Vad->ControlArea->u.Flags.Image)
+            {
+                /* Not yet */
+                DPRINT1("Fixme: Not checking for valid protection\n");
+            }
+
+            /* This is a section, and this is not yet supported */
+            DPRINT1("Section protection not yet supported\n");
+            OldProtect = 0;
+        }
     }
     else
     {

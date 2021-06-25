@@ -1521,8 +1521,7 @@ NTSTATUS
 NTAPI
 MmNotPresentFaultSectionView(PMMSUPPORT AddressSpace,
                              MEMORY_AREA* MemoryArea,
-                             PVOID Address,
-                             BOOLEAN Locked)
+                             PVOID Address)
 {
     LARGE_INTEGER Offset;
     PFN_NUMBER Page;
@@ -1536,8 +1535,6 @@ MmNotPresentFaultSectionView(PMMSUPPORT AddressSpace,
     PVOID PAddress;
     PEPROCESS Process = MmGetAddressSpaceOwner(AddressSpace);
     SWAPENTRY SwapEntry;
-
-    ASSERT(Locked);
 
     /*
      * There is a window between taking the page fault and locking the
@@ -1599,31 +1596,34 @@ MmNotPresentFaultSectionView(PMMSUPPORT AddressSpace,
     /* See if we should use a private page */
     if (HasSwapEntry)
     {
-        SWAPENTRY DummyEntry;
-
-        MmGetPageFileMapping(Process, Address, &SwapEntry);
+        MmDeletePageFileMapping(Process, Address, &SwapEntry);
         if (SwapEntry == MM_WAIT_ENTRY)
         {
-            MmUnlockAddressSpace(AddressSpace);
-            YieldProcessor();
-            MmLockAddressSpace(AddressSpace);
+            /* Someone else is handling this page fault.
+             * Restore this. */
+            MmCreatePageFileMapping(Process, Address, MM_WAIT_ENTRY);
+            /* Let the other one a chance to finish */
+            if (Address < MmSystemRangeStart)
+            {
+                BOOLEAN Safe, Shared;
+                MiUnlockProcessWorkingSetForFault(Process, PsGetCurrentThread(), &Safe, &Shared);
+                YieldProcessor();
+                MiLockProcessWorkingSetForFault(Process, PsGetCurrentThread(), Safe, Shared);
+            }
+            else
+            {
+                MiUnlockWorkingSet(PsGetCurrentThread(), &MmSystemCacheWs);
+                YieldProcessor();
+                MiLockWorkingSet(PsGetCurrentThread(), &MmSystemCacheWs);
+            }
             return STATUS_MM_RESTART_OPERATION;
         }
 
         /*
          * Must be private page we have swapped out.
          */
+        ASSERT(Process != NULL);
 
-        /*
-        * Sanity check
-        */
-        MmDeletePageFileMapping(Process, Address, &DummyEntry);
-        ASSERT(DummyEntry == SwapEntry);
-
-        /* Tell everyone else we are serving the fault. */
-        MmCreatePageFileMapping(Process, Address, MM_WAIT_ENTRY);
-
-        MmUnlockAddressSpace(AddressSpace);
         MI_SET_USAGE(MI_USAGE_SECTION);
         if (Process) MI_SET_PROCESS2(Process->ImageFileName);
         if (!Process) MI_SET_PROCESS2("Kernel Section");
@@ -1639,10 +1639,6 @@ MmNotPresentFaultSectionView(PMMSUPPORT AddressSpace,
             DPRINT1("MmReadFromSwapPage failed, status = %x\n", Status);
             KeBugCheck(MEMORY_MANAGEMENT);
         }
-
-        MmLockAddressSpace(AddressSpace);
-        MmDeletePageFileMapping(Process, PAddress, &DummyEntry);
-        ASSERT(DummyEntry == MM_WAIT_ENTRY);
 
         Status = MmCreateVirtualMapping(Process,
                                         PAddress,
@@ -1663,7 +1659,8 @@ MmNotPresentFaultSectionView(PMMSUPPORT AddressSpace,
         /*
          * Add the page to the process's working set
          */
-        if (Process) MmInsertRmap(Page, Process, Address);
+        MmInsertRmap(Page, Process, Address);
+
         /*
          * Finish the operation
          */
@@ -1724,6 +1721,8 @@ MmNotPresentFaultSectionView(PMMSUPPORT AddressSpace,
     Entry = MmGetPageEntrySectionSegment(Segment, &Offset);
     if (Entry == 0)
     {
+        BOOLEAN Safe, Shared;
+
         /*
          * If the entry is zero, then we need to load the page.
          */
@@ -1752,7 +1751,17 @@ MmNotPresentFaultSectionView(PMMSUPPORT AddressSpace,
         }
 
         MmUnlockSectionSegment(Segment);
-        MmUnlockAddressSpace(AddressSpace);
+
+        /* Temporarily unlock the WS */
+        if (Process != NULL)
+        {
+            MmCreatePageFileMapping(Process, Address, MM_WAIT_ENTRY);
+            MiUnlockProcessWorkingSetForFault(Process, PsGetCurrentThread(), &Safe, &Shared);
+        }
+        else
+        {
+            MiUnlockWorkingSet(PsGetCurrentThread(), &MmSystemCacheWs);
+        }
 
         /* The data must be paged in. Lock the file, so that the VDL doesn't get updated behind us. */
         FsRtlAcquireFileExclusive(Segment->FileObject);
@@ -1763,8 +1772,18 @@ MmNotPresentFaultSectionView(PMMSUPPORT AddressSpace,
 
         FsRtlReleaseFile(Segment->FileObject);
 
-        /* Lock address space again */
-        MmLockAddressSpace(AddressSpace);
+        /* Lock again */
+        if (Process != NULL)
+        {
+            MiLockProcessWorkingSetForFault(Process, PsGetCurrentThread(), Safe, Shared);
+            MmDeletePageFileMapping(Process, Address, &SwapEntry);
+            NT_ASSERT(SwapEntry == MM_WAIT_ENTRY);
+        }
+        else
+        {
+            MiLockWorkingSet(PsGetCurrentThread(), &MmSystemCacheWs);
+        }
+
         if (!NT_SUCCESS(Status))
         {
             /* Damn */
@@ -1785,9 +1804,7 @@ MmNotPresentFaultSectionView(PMMSUPPORT AddressSpace,
         if (SwapEntry == MM_WAIT_ENTRY)
         {
             MmUnlockSectionSegment(Segment);
-            MmUnlockAddressSpace(AddressSpace);
             YieldProcessor();
-            MmLockAddressSpace(AddressSpace);
             return STATUS_MM_RESTART_OPERATION;
         }
 
@@ -1797,7 +1814,6 @@ MmNotPresentFaultSectionView(PMMSUPPORT AddressSpace,
         MmSetPageEntrySectionSegment(Segment, &Offset, MAKE_SWAP_SSE(MM_WAIT_ENTRY));
         MmUnlockSectionSegment(Segment);
 
-        MmUnlockAddressSpace(AddressSpace);
         Status = MmRequestPageMemoryConsumer(MC_USER, TRUE, &Page);
         if (!NT_SUCCESS(Status))
         {
@@ -1811,9 +1827,8 @@ MmNotPresentFaultSectionView(PMMSUPPORT AddressSpace,
         }
 
         /*
-         * Relock the address space and segment
+         * Relock the segment
          */
-        MmLockAddressSpace(AddressSpace);
         MmLockSectionSegment(Segment);
 
         /*
@@ -1887,8 +1902,7 @@ NTSTATUS
 NTAPI
 MmAccessFaultSectionView(PMMSUPPORT AddressSpace,
                          MEMORY_AREA* MemoryArea,
-                         PVOID Address,
-                         BOOLEAN Locked)
+                         PVOID Address)
 {
     PMM_SECTION_SEGMENT Segment;
     PFN_NUMBER OldPage;
@@ -1914,7 +1928,7 @@ MmAccessFaultSectionView(PMMSUPPORT AddressSpace,
     /* Make sure we have a page mapping for this address.  */
     if (!MmIsPagePresent(Process, Address))
     {
-        NTSTATUS Status = MmNotPresentFaultSectionView(AddressSpace, MemoryArea, Address, Locked);
+        NTSTATUS Status = MmNotPresentFaultSectionView(AddressSpace, MemoryArea, Address);
         if (!NT_SUCCESS(Status))
         {
             /* This is invalid access ! */
@@ -1999,6 +2013,7 @@ MmAccessFaultSectionView(PMMSUPPORT AddressSpace,
      * Unshare the old page.
      */
     DPRINT("Swapping page (Old %x New %x)\n", OldPage, NewPage);
+
     MmDeleteVirtualMapping(Process, PAddress, NULL, NULL);
     if (Process)
         MmDeleteRmap(OldPage, Process, PAddress);
@@ -4314,6 +4329,12 @@ MmMapViewInSystemSpace (IN PVOID SectionObject,
     return MmMapViewInSystemSpaceEx(SectionObject, MappedBase, ViewSize, &SectionOffset, 0);
 }
 
+extern
+VOID
+NTAPI
+MiFillSystemPageDirectory(IN PVOID Base,
+                          IN SIZE_T NumberOfBytes);
+
 NTSTATUS
 NTAPI
 MmMapViewInSystemSpaceEx (
@@ -4406,6 +4427,12 @@ MmMapViewInSystemSpaceEx (
 
     MmUnlockSectionSegment(Segment);
     MmUnlockAddressSpace(AddressSpace);
+
+    if (NT_SUCCESS(Status))
+    {
+        /* Map PDEs */
+        MiFillSystemPageDirectory(*MappedBase, *ViewSize);
+    }
 
     return Status;
 }
