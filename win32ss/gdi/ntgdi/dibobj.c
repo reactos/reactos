@@ -127,19 +127,29 @@ CreateDIBPalette(
         {
             /* The colors are an array of RGBQUAD values */
             RGBQUAD *prgb = (RGBQUAD*)((PCHAR)pbmi + pbmi->bmiHeader.biSize);
+            RGBQUAD colors[256] = {{0}};
 
             // FIXME: do we need to handle PALETTEINDEX / PALETTERGB macro?
 
-            /* Loop all color indices in the DIB */
-            for (i = 0; i < cColors; i++)
+            /* Use SEH to verify we can READ prgb[] succesfully */
+            _SEH2_TRY
+            {
+                RtlCopyMemory(colors, prgb, cColors * sizeof(colors[0]));
+            }
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+            {
+              /* Do Nothing */
+            }
+            _SEH2_END;
+
+            for (i = 0; i < cColors; ++i)
             {
                 /* Get the color value and translate it to a COLORREF */
-                RGBQUAD rgb = prgb[i];
-                COLORREF crColor = RGB(rgb.rgbRed, rgb.rgbGreen, rgb.rgbBlue);
+                COLORREF crColor = RGB(colors[i].rgbRed, colors[i].rgbGreen, colors[i].rgbBlue);
 
                 /* Set the RGB value in the palette */
                 PALETTE_vSetRGBColorForIndex(ppal, i, crColor);
-            }
+            }
         }
         else
         {
