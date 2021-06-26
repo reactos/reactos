@@ -1418,6 +1418,10 @@ RtlCreateHeap(ULONG Flags,
     NTSTATUS Status;
     ULONG MaxBlockSize;
 
+#ifdef ENABLE_SYSTEMWIDE_DPH
+    RtlpPageHeapEnabled = TRUE;
+#endif
+
     /* Check for a special heap */
     if (RtlpPageHeapEnabled && !Addr && !Lock)
     {
@@ -1437,6 +1441,13 @@ RtlCreateHeap(ULONG Flags,
         DPRINT1("Invalid flags 0x%08x, fixing...\n", Flags);
         Flags &= HEAP_CREATE_VALID_MASK;
     }
+
+#ifdef ENABLE_SYSTEMWIDE_DPH
+    if (!Addr)
+    {
+        Flags |= HEAP_FLAG_PAGE_ALLOCS;
+    }
+#endif
 
     /* Capture parameters */
     if (Parameters)
