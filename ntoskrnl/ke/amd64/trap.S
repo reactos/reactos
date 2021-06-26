@@ -285,7 +285,7 @@ KiInvalidOpcodeKernel:
     /* Kernel mode fault */
 
     /* Dispatch the exception */
-    DispatchException STATUS_ILLEGAL_INSTRUCTION, 3, 0, 0, 0
+    DispatchException STATUS_ILLEGAL_INSTRUCTION, 0, 0, 0, 0
 
     /* Return */
     ExitTrap TF_SAVE_ALL
@@ -385,8 +385,18 @@ FUNC KiGeneralProtectionFault
     test eax, eax
     jge KiGpfExit
 
-    /* Dispatch the exception */
-    DispatchException eax, 3, 0, 0, 0
+    /* Check for access violation */
+    cmp eax, STATUS_ACCESS_VIOLATION
+    je DispatchAccessViolation
+
+    /* Dispatch privileged instruction fault */
+    DispatchException eax, 0, 0, 0, 0
+    jmp KiGpfFatal
+
+DispatchAccessViolation:
+
+    /* Dispatch access violation */
+    DispatchException eax, 2, 0, -1, 0
 
 KiGpfFatal:
 

@@ -701,8 +701,14 @@ RtlpUnwindInternal(
                Note: this can happen after the first frame as the result of an exception */
             UnwindContext.Rip = *(DWORD64*)UnwindContext.Rsp;
             UnwindContext.Rsp += sizeof(DWORD64);
+
+            /* Copy the context back for the next iteration */
+            *ContextRecord = UnwindContext;
             continue;
         }
+
+        /* Save Rip before the virtual unwind */
+        DispatcherContext.ControlPc = UnwindContext.Rip;
 
         /* Do a virtual unwind to get the next frame */
         ExceptionRoutine = RtlVirtualUnwind(HandlerType,
@@ -749,7 +755,6 @@ RtlpUnwindInternal(
                                   sizeof(DispatcherContext));
 
             /* Set up the variable fields of the dispatcher context */
-            DispatcherContext.ControlPc = ContextRecord->Rip;
             DispatcherContext.ImageBase = ImageBase;
             DispatcherContext.FunctionEntry = FunctionEntry;
             DispatcherContext.LanguageHandler = ExceptionRoutine;
