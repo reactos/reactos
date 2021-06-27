@@ -124,12 +124,15 @@ PopPresentIrp(
     return Status;
 }
 
+static IO_COMPLETION_ROUTINE PopRequestPowerIrpCompletion;
+
 static
 NTSTATUS
 NTAPI
-PopRequestPowerIrpCompletion(IN PDEVICE_OBJECT DeviceObject,
-                             IN PIRP Irp,
-                             IN PVOID Context)
+PopRequestPowerIrpCompletion(
+    _In_ PDEVICE_OBJECT DeviceObject,
+    _In_ PIRP Irp,
+    _In_reads_opt_(_Inexpressible_("varies")) PVOID Context)
 {
     PIO_STACK_LOCATION Stack;
     PREQUEST_POWER_COMPLETE CompletionRoutine;
@@ -139,11 +142,15 @@ PopRequestPowerIrpCompletion(IN PDEVICE_OBJECT DeviceObject,
     CompletionRoutine = Context;
 
     PowerState.DeviceState = (ULONG_PTR)Stack->Parameters.Others.Argument3;
-    CompletionRoutine(Stack->Parameters.Others.Argument1,
-                      (UCHAR)(ULONG_PTR)Stack->Parameters.Others.Argument2,
-                      PowerState,
-                      Stack->Parameters.Others.Argument4,
-                      &Irp->IoStatus);
+
+    if (CompletionRoutine)
+    {
+        CompletionRoutine(Stack->Parameters.Others.Argument1,
+                          (UCHAR)(ULONG_PTR)Stack->Parameters.Others.Argument2,
+                          PowerState,
+                          Stack->Parameters.Others.Argument4,
+                          &Irp->IoStatus);
+    }
 
     IoSkipCurrentIrpStackLocation(Irp);
     IoFreeIrp(Irp);
@@ -636,12 +643,13 @@ PoRegisterSystemState(IN PVOID StateHandle,
  */
 NTSTATUS
 NTAPI
-PoRequestPowerIrp(IN PDEVICE_OBJECT DeviceObject,
-                  IN UCHAR MinorFunction,
-                  IN POWER_STATE PowerState,
-                  IN PREQUEST_POWER_COMPLETE CompletionFunction,
-                  IN PVOID Context,
-                  OUT PIRP *pIrp OPTIONAL)
+PoRequestPowerIrp(
+    _In_ PDEVICE_OBJECT DeviceObject,
+    _In_ UCHAR MinorFunction,
+    _In_ POWER_STATE PowerState,
+    _In_opt_ PREQUEST_POWER_COMPLETE CompletionFunction,
+    _In_opt_ __drv_aliasesMem PVOID Context,
+    _Outptr_opt_ PIRP *pIrp)
 {
     PDEVICE_OBJECT TopDeviceObject;
     PIO_STACK_LOCATION Stack;

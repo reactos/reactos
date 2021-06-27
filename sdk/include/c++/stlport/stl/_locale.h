@@ -224,7 +224,7 @@ public:
     : _Locale(__loc, __str, __cat) {}
 
   template <class _Facet>
-  locale(const locale& __loc, _Facet* __f) 
+  locale(const locale& __loc, _Facet* __f)
     : _Locale(__f != 0 ? _copy_Nameless_Locale_impl(__loc._M_impl) : __loc._M_impl) {
     if ( __f != 0 ) {
       _STLP_PRIV _InsertFacet(*this, __f);

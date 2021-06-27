@@ -743,7 +743,7 @@ NtGdiGetBoundsRect(
           DPRINT("    r %d b %d\n",rc.right,rc.bottom);
           ret = DCB_SET;
        }
-       IntDPtoLP( pdc, &rc, 2 );
+       IntDPtoLP(pdc, (PPOINTL)&rc, 2);
        DPRINT("rc1 l %d t %d\n",rc.left,rc.top);
        DPRINT("    r %d b %d\n",rc.right,rc.bottom);
     }
@@ -838,7 +838,7 @@ NtGdiSetBoundsRect(
         RECTL_vMakeWellOrdered(&rcl);
 
         if (!(flags & DCB_WINDOWMGR))
-        {           
+        {
            IntLPtoDP( pdc, (POINT *)&rcl, 2 );
            RECTL_bUnionRect(&pdc->erclBoundsApp, &pdc->erclBoundsApp, &rcl);
         }

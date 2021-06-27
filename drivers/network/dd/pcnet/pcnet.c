@@ -811,7 +811,7 @@ MiTestCard(
   NdisRawWritePortUshort(Adapter->PortOffset + RAP, CSR3);
   NdisRawReadPortUshort(Adapter->PortOffset + RDP, &Data);
   DPRINT("CSR3: 0x%x\n", Data);
-  
+
   /* Read status flags from CSR4 */
   NdisRawWritePortUshort(Adapter->PortOffset + RAP, CSR4);
   NdisRawReadPortUshort(Adapter->PortOffset + RDP, &Data);
@@ -826,11 +826,11 @@ MiTestCard(
   NdisRawWritePortUshort(Adapter->PortOffset + RAP, CSR6);
   NdisRawReadPortUshort(Adapter->PortOffset + RDP, &Data);
   DPRINT("CSR6: 0x%x\n", Data);
-  
+
   /* Read status flags from BCR4 */
   NdisRawWritePortUshort(Adapter->PortOffset + RAP, BCR4);
   NdisRawReadPortUshort(Adapter->PortOffset + BDP, &Data);
-  DPRINT("BCR4: 0x%x\n", Data);  
+  DPRINT("BCR4: 0x%x\n", Data);
 
   return TRUE;
 }

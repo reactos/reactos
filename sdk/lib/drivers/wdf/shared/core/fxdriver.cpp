@@ -559,7 +559,7 @@ FxDriver::GetRegistryPath(
     return pString;
 }
 
-
+
 VOID
 FxDriver::ConfigureConstraints(
     __in_opt PWDF_OBJECT_ATTRIBUTES DriverAttributes

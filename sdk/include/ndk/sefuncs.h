@@ -239,7 +239,7 @@ NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtImpersonateAnonymousToken(
-    _In_ HANDLE Thread
+    _In_ HANDLE ThreadHandle
 );
 
 __kernel_entry

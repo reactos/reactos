@@ -35,7 +35,7 @@ bool ext2_get_inode_lba(PEXT2_FILESYS Ext2Sys, ULONG no, LONGLONG *offset)
 
     *offset = loc;
 
-    return true;    
+    return true;
 }
 
 bool ext2_load_inode(PEXT2_FILESYS Ext2Sys, ULONG no, PEXT2_INODE pInode)
@@ -65,7 +65,7 @@ bool ext2_save_inode(PEXT2_FILESYS Ext2Sys, ULONG no, PEXT2_INODE pInode)
     {
         bRet = NT_SUCCESS(Ext2WriteDisk(
                         Ext2Sys,
-                        offset, 
+                        offset,
                         sizeof(EXT2_INODE),
                         (unsigned char *)pInode));
     }
@@ -93,12 +93,12 @@ bool ext2_new_inode(PEXT2_FILESYS fs, ULONG dir, int mode,
 
     if (!map)
         return false;
-    
-    if (dir > 0) 
+
+    if (dir > 0)
         dir_group = (dir - 1) / EXT2_INODES_PER_GROUP(fs->ext2_sb);
 
     start_inode = (dir_group * EXT2_INODES_PER_GROUP(fs->ext2_sb)) + 1;
-    
+
     if (start_inode < EXT2_FIRST_INODE(fs->ext2_sb))
         start_inode = EXT2_FIRST_INODE(fs->ext2_sb);
 
@@ -115,7 +115,7 @@ bool ext2_new_inode(PEXT2_FILESYS fs, ULONG dir, int mode,
             i = EXT2_FIRST_INODE(fs->ext2_sb);
 
     } while (i != start_inode);
-    
+
     if (ext2_test_inode_bitmap(map, i))
         return false;
 
@@ -138,21 +138,21 @@ bool ext2_expand_block( PEXT2_FILESYS Ext2Sys, PEXT2_INODE Inode,
     ULONG       Offset = 0;
 
     PEXT2_SUPER_BLOCK pExt2Sb = Ext2Sys->ext2_sb;
- 
+
     pData = (ULONG *)RtlAllocateHeap(RtlGetProcessHeap(), 0, Ext2Sys->blocksize);
-    
+
     if (!pData)
     {
         bRet = false;
         goto errorout;
     }
-    
+
     if (!ext2_read_block(Ext2Sys, dwContent, (void *)pData))
     {
         bRet = false;
         goto errorout;
     }
-    
+
     if (layer == 1)
     {
         *dwRet = dwContent;
@@ -169,7 +169,7 @@ bool ext2_expand_block( PEXT2_FILESYS Ext2Sys, PEXT2_INODE Inode,
         j = Index % temp;
 
         dwBlk = pData[i];
-        
+
         if (dwBlk == 0)
         {
             if (ext2_alloc_block(Ext2Sys, 0, &dwBlk) )
@@ -179,11 +179,11 @@ bool ext2_expand_block( PEXT2_FILESYS Ext2Sys, PEXT2_INODE Inode,
 
                 Inode->i_blocks += (Ext2Sys->blocksize / SECTOR_SIZE);
             }
-            
+
             if (!bDirty)
                 goto errorout;
         }
-        
+
         if (!ext2_expand_block(Ext2Sys, Inode, dwBlk, j, layer - 1, bDirty, &dwNewBlk, &Offset))
         {
             bRet = false;
@@ -274,7 +274,7 @@ bool ext2_expand_inode( PEXT2_FILESYS Ext2Sys,
                              &dwNewBlk,
                              &Offset   );
             }
-            
+
             break;
         }
 
@@ -371,7 +371,7 @@ bool ext2_block_map(PEXT2_FILESYS Ext2Sys, PEXT2_INODE inode, ULONG block, ULONG
         {
             dwBlk = inode->i_block[i==0 ? (Index):(i + 12 - 1)];
 
-            bRet = ext2_get_block(Ext2Sys, dwBlk, Index , i, &dwBlk); 
+            bRet = ext2_get_block(Ext2Sys, dwBlk, Index , i, &dwBlk);
 
             break;
         }
@@ -391,8 +391,8 @@ bool ext2_block_map(PEXT2_FILESYS Ext2Sys, PEXT2_INODE inode, ULONG block, ULONG
 
 ULONG ext2_build_bdl(PEXT2_FILESYS Ext2Sys,
                     PEXT2_INODE ext2_inode,
-                    IN ULONG offset, 
-                    IN ULONG size, 
+                    IN ULONG offset,
+                    IN ULONG size,
                     OUT PEXT2_BDL *ext2_bdl )
 {
     ULONG   nBeg, nEnd, nBlocks;
@@ -432,17 +432,17 @@ ULONG ext2_build_bdl(PEXT2_FILESYS Ext2Sys,
         {
 
             memset(ext2bdl, 0, sizeof(EXT2_BDL) * nBlocks);
-            
+
             for (i = nBeg; i < nEnd; i++)
             {
                 if (!ext2_block_map(Ext2Sys, ext2_inode, i, &dwBlk))
                 {
                     goto fail;
                 }
-                
+
                 lba = (LONGLONG) dwBlk;
                 lba = lba * Ext2Sys->blocksize;
-                
+
                 if (nBlocks == 1) // ie. (nBeg == nEnd - 1)
                 {
                     dwBytes = size;
@@ -513,13 +513,13 @@ bool ext2_read_inode(PEXT2_FILESYS Ext2Sys,
 
     if (blocks <= 0)
         return  false;
-    
-   
+
+
     for(i = 0; i < blocks; i++)
     {
         bRet = NT_SUCCESS(Ext2ReadDisk(
                 Ext2Sys,
-                ext2_bdl[i].Lba, 
+                ext2_bdl[i].Lba,
                 ext2_bdl[i].Length,
                 (PUCHAR)Buffer + ext2_bdl[i].Offset
                ));
@@ -579,12 +579,12 @@ bool ext2_write_inode (PEXT2_FILESYS Ext2Sys,
 
     if (blocks <= 0)
         return  false;
-    
+
     for(i = 0; i < blocks; i++)
     {
         bRet = NT_SUCCESS(Ext2WriteDisk(
                 Ext2Sys,
-                ext2_bdl[i].Lba, 
+                ext2_bdl[i].Lba,
                 ext2_bdl[i].Length,
                 (PUCHAR)Buffer + ext2_bdl[i].Offset
                ));
@@ -608,7 +608,7 @@ bool ext2_write_inode (PEXT2_FILESYS Ext2Sys,
 
 
 errorout:
-   
+
     if (ext2_bdl)
         RtlFreeHeap(RtlGetProcessHeap(), 0, ext2_bdl);
 
@@ -645,7 +645,7 @@ ext2_add_entry( PEXT2_FILESYS Ext2Sys,
 
     while ((char *)dir < buf + parent_inode.i_size)
     {
-        if ((dir->inode == 0 && dir->rec_len >= rec_len) || 
+        if ((dir->inode == 0 && dir->rec_len >= rec_len) ||
                (dir->rec_len >= dir->name_len + rec_len) )
         {
             if (dir->inode)
@@ -662,7 +662,7 @@ ext2_add_entry( PEXT2_FILESYS Ext2Sys,
             dir->inode = inode;
             dir->name_len = strlen(name);
             memcpy(dir->name, name, strlen(name));
-    
+
             bRet = true;
             break;
         }

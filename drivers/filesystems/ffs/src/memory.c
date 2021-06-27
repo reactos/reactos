@@ -1,4 +1,4 @@
-/* 
+/*
  * FFS File System Driver for Windows
  *
  * memory.c
@@ -121,7 +121,7 @@ FFSAllocateIrpContext(
 	{
 		if (IoStackLocation->Parameters.MountVolume.Vpb)
 		{
-			IrpContext->RealDevice = 
+			IrpContext->RealDevice =
 				IoStackLocation->Parameters.MountVolume.Vpb->RealDevice;
 		}
 	}
@@ -155,7 +155,7 @@ FFSAllocateIrpContext(
 		IrpContext->IsSynchronous = IoIsOperationSynchronous(Irp);
 	}
 
-#if 0    
+#if 0
 	//
 	// Temporary workaround for a bug in close that makes it reference a
 	// fileobject when it is no longer valid.
@@ -430,12 +430,12 @@ FFSv1AllocateFcb(
 
 	Fcb->Vcb = Vcb;
 
-#if DBG    
+#if DBG
 
 	Fcb->AnsiFileName.MaximumLength = (USHORT)
 		RtlxUnicodeStringToOemSize(&(FFSMcb->ShortName)) + 1;
 
-	Fcb->AnsiFileName.Buffer = (PUCHAR) 
+	Fcb->AnsiFileName.Buffer = (PUCHAR)
 		ExAllocatePoolWithTag(PagedPool, Fcb->AnsiFileName.MaximumLength, FFS_POOL_TAG);
 
 	if (!Fcb->AnsiFileName.Buffer)
@@ -457,7 +457,7 @@ FFSv1AllocateFcb(
 		SetFlag(FFSMcb->FileAttr, FILE_ATTRIBUTE_DIRECTORY);
 	}
 
-	if (IsFlagOn(Vcb->Flags, VCB_READ_ONLY) || 
+	if (IsFlagOn(Vcb->Flags, VCB_READ_ONLY) ||
 			FFSIsReadOnly(dinode1->di_mode))
 	{
 		SetFlag(FFSMcb->FileAttr, FILE_ATTRIBUTE_READONLY);
@@ -478,7 +478,7 @@ FFSv1AllocateFcb(
 
 	{
 		ULONG Totalblocks = (Fcb->dinode1->di_blocks);
-		Fcb->Header.AllocationSize.QuadPart = 
+		Fcb->Header.AllocationSize.QuadPart =
 			(((LONGLONG)FFSDataBlocks(Vcb, Totalblocks)) << BLOCK_BITS);
 	}
 
@@ -596,12 +596,12 @@ FFSv2AllocateFcb(
 
 	Fcb->Vcb = Vcb;
 
-#if DBG    
+#if DBG
 
 	Fcb->AnsiFileName.MaximumLength = (USHORT)
 		RtlxUnicodeStringToOemSize(&(FFSMcb->ShortName)) + 1;
 
-	Fcb->AnsiFileName.Buffer = (PUCHAR) 
+	Fcb->AnsiFileName.Buffer = (PUCHAR)
 		ExAllocatePoolWithTag(PagedPool, Fcb->AnsiFileName.MaximumLength, FFS_POOL_TAG);
 
 	if (!Fcb->AnsiFileName.Buffer)
@@ -623,7 +623,7 @@ FFSv2AllocateFcb(
 		SetFlag(FFSMcb->FileAttr, FILE_ATTRIBUTE_DIRECTORY);
 	}
 
-	if (IsFlagOn(Vcb->Flags, VCB_READ_ONLY) || 
+	if (IsFlagOn(Vcb->Flags, VCB_READ_ONLY) ||
 			FFSIsReadOnly(dinode2->di_mode))
 	{
 		SetFlag(FFSMcb->FileAttr, FILE_ATTRIBUTE_READONLY);
@@ -644,7 +644,7 @@ FFSv2AllocateFcb(
 
 	{
 		ULONG Totalblocks = (ULONG)(Fcb->dinode2->di_blocks);
-		Fcb->Header.AllocationSize.QuadPart = 
+		Fcb->Header.AllocationSize.QuadPart =
 			(((LONGLONG)FFSDataBlocks(Vcb, Totalblocks)) << BLOCK_BITS);
 	}
 
@@ -749,7 +749,7 @@ FFSFreeFcb(
 		Fcb->LongName.Buffer = NULL;
 	}
 
-#if DBG    
+#if DBG
 	ExFreePool(Fcb->AnsiFileName.Buffer);
 #endif
 
@@ -901,12 +901,12 @@ FFSAllocateMcb(
 #define MCB_NUM_SHIFT   0x04
 
 	if (FFSGlobal->McbAllocated > (FFSGlobal->MaxDepth << MCB_NUM_SHIFT))
-		Extra = FFSGlobal->McbAllocated - 
+		Extra = FFSGlobal->McbAllocated -
 			(FFSGlobal->MaxDepth << MCB_NUM_SHIFT) +
 			FFSGlobal->MaxDepth;
 
 	FFSPrint((DBG_INFO,
-				"FFSAllocateMcb: CurrDepth=%xh/%xh/%xh FileName=%S\n", 
+				"FFSAllocateMcb: CurrDepth=%xh/%xh/%xh FileName=%S\n",
 				FFSGlobal->McbAllocated,
 				FFSGlobal->MaxDepth << MCB_NUM_SHIFT,
 				FFSGlobal->FcbAllocated,
@@ -978,7 +978,7 @@ FFSAllocateMcb(
 
 		RtlZeroMemory(Mcb->ShortName.Buffer, Mcb->ShortName.MaximumLength);
 		RtlCopyMemory(Mcb->ShortName.Buffer, FileName->Buffer, Mcb->ShortName.Length);
-	} 
+	}
 
 	Mcb->FileAttr = FileAttr;
 
@@ -1549,8 +1549,8 @@ FFSRemoveVcb(
 __drv_mustHoldCriticalRegion
 NTSTATUS
 FFSInitializeVcb(
-	IN PFFS_IRP_CONTEXT IrpContext, 
-	IN PFFS_VCB         Vcb, 
+	IN PFFS_IRP_CONTEXT IrpContext,
+	IN PFFS_VCB         Vcb,
 	IN PFFS_SUPER_BLOCK FFSSb,
 	IN PDEVICE_OBJECT   TargetDevice,
 	IN PDEVICE_OBJECT   VolumeDevice,
@@ -1775,7 +1775,7 @@ FFSInitializeVcb(
 		Vcb->Header.AllocationSize.QuadPart =
 			Vcb->Header.FileSize.QuadPart = PartSize;
 
-		Vcb->Header.ValidDataLength.QuadPart = 
+		Vcb->Header.ValidDataLength.QuadPart =
 			(LONGLONG)(0x7fffffffffffffff);
 		/*
 		Vcb->Header.AllocationSize.QuadPart = (LONGLONG)(ffs_super_block->s_blocks_count - ffs_super_block->s_free_blocks_count)

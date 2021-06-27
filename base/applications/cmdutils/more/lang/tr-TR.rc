@@ -4,14 +4,52 @@ LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-    IDS_USAGE "Ekranda veriyi sayfa sayfa görüntüler.\n\n\
-  MORE < [Sürücü:][Yol]Dosya adı\n\
-  Komut | MORE\n\
-  MORE [Sürücü:][Yol]Dosya adı\n\n\
-  [Sürücü:][Yol]Dosya adı    İçeriği görüntülenecek bir dosya.\n\
-  Komut\t\t     Çıkışı görüntülenecek bir komut.\n\n\
-  İstemde ""-- Sürdür --"" ile bir sonraki sayfayı göstermek için rastgele bir tuşa basabilirsiniz.\n"
-    IDS_CONTINUE "-- Devam Et --"
-    IDS_CONTINUE_PROGRESS "-- Devam Et (%%%d) --"
+    IDS_USAGE "Ekranda veriyi sayfa sayfa görüntüler.\n\
+\n\
+MORE [/E [options]] < [Sürücü:][Yol]Dosya adı\n\
+komut | MORE [/E [seçenekler]]\n\
+\n\
+    [Sürücü:][Yol]Dosya adı   İçeriği görüntülenecek bir dosya.\n\
+    komut                     Çıktısı görüntülenecek bir komut.\n\
+\n\
+Genişletilmiş Özellikler etkinleştirildiğinde, aşağıdaki form desteklenir:\n\
+MORE [/E] [seçenekler] [dosyalar]\n\
+\n\
+Seçenekler:\n\
+    /E       Genişletilmiş Özellikleri Etkinleştir. \n\
+    Genişletilmiş Özelliklerin varsayılan durumu, CMD.EXE için varsayılan \n\
+    kayıt defteri ayarları tarafından denetlenir. Bu ayarların nasıl \n\
+    değiştirileceği hakkında daha fazla ayrıntı için, CMD.EXE yardımındaki \n\
+    ""Komut Uzantıları"" bölümüne bakın.\n\
+\n\
+    Genişletilmiş Özellikler etkinleştirildiğinde, aşağıdaki seçenekler kullanılabilir:\n\
+    /C       Bir sayfayı görüntülemeden önce ekranı temizleyin.\n\
+    /P       Form-Feed karakterlerini genişletin.\n\
+    /S       Ardışık boş satırları tek bir satıra küçültün.\n\
+    /Tn      Sekmeleri n tane boşlukla değiştir (öntanımlı: 8).\n\
+\n\
+    Bu argumanlar, MORE ortam değişkeninde belirtilebilir.\n\
+\n\
+    +n          İlk dosyayı n satırında görüntülemeye başlayın.\n\
+    dosyalar    Boşluklarla ayrılmış olarak görüntülenecek dosyaların listesi.\n\
+\n\
+Genişletilmiş Özellikler etkinleştirildiğinde, \n\
+""-- Sürdür --"" komutunda aşağıdaki argümanlar kullanılabilir:n\
+\n\
+    P n      n satır sonrasını görüntüle.\n\
+    S n      n satır sonrasına git.\n\
+    F        Diğer dosyayı görüntüle.\n\
+    Q        Çık.\n\
+    =        Satır sayısını görüntüle.\n\
+    ?        Yardım sayfasını görüntüle.\n\
+    <Boşluk> Sonraki sayfayı görüntüle.\n\
+    <Enter>  Sonraki satırı görüntüle.\n"
+
+    IDS_BAD_FLAG "Hatalı argüman - '%s'\n"
     IDS_FILE_ACCESS "%s dosyasına erişilemiyor.\n"
+    IDS_CONTINUE_PROMPT  "-- Sürdür%1%2%3 --%4"
+    IDS_CONTINUE_PERCENT " (%%%d)"
+    IDS_CONTINUE_LINE_AT " [Satır: %d]"
+    IDS_CONTINUE_OPTIONS " [Seçenekler: psfq=<Boşluk><Enter>]"
+    IDS_CONTINUE_LINES   " Satır: "
 END

@@ -19,7 +19,7 @@ bool create_bad_block_inode( PEXT2_FILESYS Ext2Sys,
     bool            retval;
     EXT2_INODE      inode;
     LARGE_INTEGER   SysTime;
-    
+
     NtQuerySystemTime(&SysTime);
 
     ext2_mark_inode_bitmap(Ext2Sys->inode_map, EXT2_BAD_INO);

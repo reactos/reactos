@@ -726,6 +726,8 @@ typedef struct _WND
     PSBINFOEX pSBInfoex; // convert to PSBINFO
     /* Entry in the list of thread windows. */
     LIST_ENTRY ThreadListEntry;
+
+    PVOID DialogPointer;
 } WND, *PWND;
 
 #define PWND_BOTTOM ((PWND)1)

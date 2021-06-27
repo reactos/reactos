@@ -1,4 +1,4 @@
-/* 
+/*
  * FFS File System Driver for Windows
  *
  * cleanup.c
@@ -51,13 +51,13 @@ FFSCleanup(
 			(IrpContext->Identifier.Size == sizeof(FFS_IRP_CONTEXT)));
 
 		DeviceObject = IrpContext->DeviceObject;
-		
+
 		if (DeviceObject == FFSGlobal->DeviceObject)
 		{
 			Status = STATUS_SUCCESS;
 			_SEH2_LEAVE;
 		}
-		
+
 		Vcb = (PFFS_VCB)DeviceObject->DeviceExtension;
 
 		ASSERT(Vcb != NULL);
@@ -137,7 +137,7 @@ FFSCleanup(
 
 			FcbResourceAcquired = TRUE;
 		}
-		
+
 		Ccb = (PFFS_CCB)FileObject->FsContext2;
 
 		if (!Ccb)
@@ -157,9 +157,9 @@ FFSCleanup(
 
 			_SEH2_LEAVE;
 		}
-		
+
 		ASSERT((Ccb->Identifier.Type == FFSCCB) &&
-			(Ccb->Identifier.Size == sizeof(FFS_CCB)));		
+			(Ccb->Identifier.Size == sizeof(FFS_CCB)));
 		Irp = IrpContext->Irp;
 
 		Fcb->OpenHandleCount--;
@@ -339,7 +339,7 @@ FFSCleanup(
 
 	_SEH2_FINALLY
 	{
-	   
+
 		if (FcbPagingIoAcquired)
 		{
 			ExReleaseResourceForThreadLite(

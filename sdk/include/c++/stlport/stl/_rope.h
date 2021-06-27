@@ -834,7 +834,7 @@ private:
   }
 
 public:
-  _Rope_iterator_base(const _Self& __x) : 
+  _Rope_iterator_base(const _Self& __x) :
       _M_current_pos(__x._M_current_pos),
       _M_root(__x._M_root),
       _M_leaf_pos( __x._M_leaf_pos ),

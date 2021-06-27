@@ -25,9 +25,11 @@ if(USE_CLANG_CL OR (NOT MSVC))
     target_compile_options(uniata PRIVATE "-Wno-narrowing")
     if(USE_CLANG_CL)
         target_compile_options(uniata PRIVATE "-Wno-unused-const-variable")
-    else()
-        target_compile_options(uniata PRIVATE "-Wno-unused-but-set-variable")
     endif()
+endif()
+
+if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
+    target_compile_options(uniata PRIVATE -Wno-unused-but-set-variable)
 endif()
 
 add_pch(uniata stdafx.h SOURCE)

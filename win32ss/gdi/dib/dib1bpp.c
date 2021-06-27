@@ -55,7 +55,7 @@ DIB_1BPP_VLine(SURFOBJ *SurfObj, LONG x, LONG y1, LONG y2, ULONG c)
 }
 
 static
-void
+BOOLEAN
 DIB_1BPP_BitBltSrcCopy_From1BPP (
                                  SURFOBJ* DestSurf,
                                  SURFOBJ* SourceSurf,
@@ -66,34 +66,93 @@ DIB_1BPP_BitBltSrcCopy_From1BPP (
                                  BOOLEAN bLeftToRight )
 {
     LONG Height = RECTL_lGetHeight(DestRect);
+    LONG Width = RECTL_lGetWidth(DestRect);
     BOOLEAN XorBit = !!XLATEOBJ_iXlate(pxlo, 0);
+    BOOLEAN Overlap = FALSE;
+    BYTE *DstStart, *DstEnd, *SrcStart, *SrcEnd;
 
     /* Make sure this is as expected */
     ASSERT(DestRect->left >= 0);
     ASSERT(DestRect->top >= 0);
     ASSERT(Height > 0);
-    ASSERT(RECTL_lGetWidth(DestRect) > 0);
+    ASSERT(Width > 0);
 
-    while (Height--)
+    /*
+     * Check if we need to allocate a buffer for our operation.
+     */
+    DstStart = (BYTE*)DestSurf->pvScan0 + DestRect->top * DestSurf->lDelta + DestRect->left / 8;
+    DstEnd = (BYTE*)DestSurf->pvScan0 + (DestRect->bottom - 1) * DestSurf->lDelta + (DestRect->right) / 8;
+    SrcStart = (BYTE*)SourceSurf->pvScan0 + SourcePoint->y * SourceSurf->lDelta + SourcePoint->x / 8;
+    SrcEnd = (BYTE*)SourceSurf->pvScan0 + (SourcePoint->y + Height - 1) * SourceSurf->lDelta + (SourcePoint->x + Width) / 8;
+
+    /* Beware of bitmaps with negative pitch! */
+    if (DstStart > DstEnd)
     {
-        LONG yDst = DestRect->top + Height;
-        LONG ySrc = bTopToBottom ?
-            SourcePoint->y + RECTL_lGetHeight(DestRect) - Height
-            : SourcePoint->y + Height;
-        LONG Width = RECTL_lGetWidth(DestRect);
+        BYTE* tmp = DstStart;
+        DstStart = DstEnd;
+        DstEnd = tmp;
+    }
 
-        while (Width--)
+    if (SrcStart > SrcEnd)
+    {
+        BYTE* tmp = SrcStart;
+        SrcStart = SrcEnd;
+        SrcEnd = tmp;
+    }
+
+    /* We allocate a new buffer when the two buffers overlap */
+    Overlap = ((SrcStart >= DstStart) && (SrcStart < DstEnd)) || ((SrcEnd >= DstStart) && (SrcEnd < DstEnd));
+
+    if (!Overlap)
+    {
+        LONG y;
+        for (y = 0; y < Height; y++)
         {
-            LONG xDst = DestRect->left + Width;
-            LONG xSrc = bLeftToRight ?
-                SourcePoint->x + RECTL_lGetWidth(DestRect) - Width
-                : SourcePoint->x + Width;
-            ULONG PixelPut = DIB_1BPP_GetPixel(SourceSurf, xSrc, ySrc);
-            if (XorBit)
-                PixelPut = !PixelPut;
-            DIB_1BPP_PutPixel(DestSurf, xDst, yDst, PixelPut);
+            LONG ySrc = bTopToBottom ? SourcePoint->y + Height - y - 1 : SourcePoint->y + y;
+            LONG x;
+
+            for(x = 0; x < Width; x++)
+            {
+                LONG xSrc = bLeftToRight ? SourcePoint->x + Width - x - 1 : SourcePoint->x + x;
+                ULONG Pixel = DIB_1BPP_GetPixel(SourceSurf, xSrc, ySrc);
+                if (XorBit)
+                    Pixel = !Pixel;
+                DIB_1BPP_PutPixel(DestSurf, DestRect->left + x, DestRect->top + y, Pixel);
+            }
         }
     }
+    else
+    {
+        LONG y;
+        BYTE* PixBuf = ExAllocatePoolZero(PagedPool, Height * (ALIGN_UP_BY(Width, 8) / 8), TAG_DIB);
+        if (!PixBuf)
+            return FALSE;
+        for (y = 0; y < Height; y++)
+        {
+            BYTE* Row = PixBuf + y * ALIGN_UP_BY(Width, 8) / 8;
+            LONG ySrc = bTopToBottom ? SourcePoint->y + Height - y - 1 : SourcePoint->y + y;
+            LONG x;
+
+            for (x = 0; x < Width; x++)
+            {
+                LONG xSrc = bLeftToRight ? SourcePoint->x + Width - x - 1 : SourcePoint->x + x;
+                if ((!DIB_1BPP_GetPixel(SourceSurf, xSrc, ySrc)) == XorBit)
+                    Row[x / 8] |= 1 << (x & 7);
+            }
+        }
+
+        for (y = 0; y < Height; y++)
+        {
+            BYTE* Row = PixBuf + y * ALIGN_UP_BY(Width, 8) / 8;
+            LONG x;
+            for (x = 0; x < Width; x++)
+                DIB_1BPP_PutPixel(DestSurf, DestRect->left + x, DestRect->top + y, !!(Row[x/8] & (1 << (x&7))));
+        }
+
+        ExFreePoolWithTag(PixBuf, TAG_DIB);
+    }
+
+    return TRUE;
 }
 
 BOOLEAN
@@ -129,10 +188,9 @@ DIB_1BPP_BitBltSrcCopy(PBLTINFO BltInfo)
     DPRINT("1BPP Case Selected with DestRect Width of '%d'.\n",
            BltInfo->DestRect.right - BltInfo->DestRect.left);
 
-    DIB_1BPP_BitBltSrcCopy_From1BPP ( BltInfo->DestSurface, BltInfo->SourceSurface,
+    return DIB_1BPP_BitBltSrcCopy_From1BPP ( BltInfo->DestSurface, BltInfo->SourceSurface,
       BltInfo->XlateSourceToDest, &BltInfo->DestRect, &BltInfo->SourcePoint,
       bTopToBottom, bLeftToRight );
-    break;
 
   case BMF_4BPP:
     DPRINT("4BPP Case Selected with DestRect Width of '%d'.\n",

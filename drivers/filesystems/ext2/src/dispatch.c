@@ -276,7 +276,7 @@ Ext2DispatchRequest (IN PEXT2_IRP_CONTEXT IrpContext)
 #if (_WIN32_WINNT >= 0x0500)
     case IRP_MJ_PNP:
         return Ext2Pnp(IrpContext);
-#endif //(_WIN32_WINNT >= 0x0500)        
+#endif //(_WIN32_WINNT >= 0x0500)
     default:
         DEBUG(DL_ERR, ( "Ext2DispatchRequest: Unexpected major function: %xh\n",
                         IrpContext->MajorFunction));

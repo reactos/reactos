@@ -31,7 +31,7 @@ Abstract:
 #pragma alloc_text(PAGE, CdReleaseFromCache)
 #endif
 
-
+
 
 _Requires_lock_held_(_Global_critical_region_)
 _When_(Type == AcquireExclusive && return != FALSE, _Acquires_exclusive_lock_(*Resource))
@@ -130,7 +130,7 @@ Return Value:
     return Acquired;
 }
 
-
+
 
 _Requires_lock_held_(_Global_critical_region_)
 _When_(return!=0, _Acquires_shared_lock_(*Fcb->Resource))
@@ -175,7 +175,7 @@ Return Value:
     return TRUE;
 }
 
-
+
 _Requires_lock_held_(_Global_critical_region_)
 _Releases_lock_(*Fcb->Resource)
 VOID
@@ -208,11 +208,11 @@ Return Value:
 
     NT_ASSERT(IoGetTopLevelIrp() == (PIRP)FSRTL_CACHE_TOP_LEVEL_IRP);
     IoSetTopLevelIrp( NULL );
-    
+
     ExReleaseResourceLite( Fcb->Resource );
 }
 
-
+
 BOOLEAN
 NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 CdNoopAcquire (
@@ -244,11 +244,11 @@ Return Value:
 
     UNREFERENCED_PARAMETER( Fcb );
     UNREFERENCED_PARAMETER( Wait );
-    
+
     return TRUE;
 }
 
-
+
 VOID
 NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 CdNoopRelease (
@@ -314,7 +314,7 @@ Return Value:
 
 
     PAGED_CODE();
-    
+
     NT_ASSERT( CallbackData->Operation == FS_FILTER_ACQUIRE_FOR_SECTION_SYNCHRONIZATION );
     NT_ASSERT( CallbackData->SizeOfFsFilterCallbackData == sizeof(FS_FILTER_CALLBACK_DATA) );
 
@@ -330,14 +330,14 @@ Return Value:
 
     ExAcquireResourceExclusiveLite( &((PFCB) FileObject->FsContext)->FcbNonpaged->FcbResource,
                                     TRUE );
-                                
+
     //
-    //  Take the File resource shared.  We need this later on when MM calls 
-    //  QueryStandardInfo to get the file size.  
+    //  Take the File resource shared.  We need this later on when MM calls
+    //  QueryStandardInfo to get the file size.
     //
-    //  If we don't use StarveExclusive,  then we can get wedged behind an 
-    //  exclusive waiter who is waiting on someone else holding it shared in the 
-    //  read->initializecachemap path (which calls createsection) who is in turn 
+    //  If we don't use StarveExclusive,  then we can get wedged behind an
+    //  exclusive waiter who is waiting on someone else holding it shared in the
+    //  read->initializecachemap path (which calls createsection) who is in turn
     //  waiting on us to finish the create section.
     //
 
@@ -362,7 +362,7 @@ Return Value:
     UNREFERENCED_PARAMETER( CompletionContext );
 }
 
-
+
 _Function_class_(FAST_IO_RELEASE_FILE)
 _Requires_lock_held_(_Global_critical_region_)
 VOID

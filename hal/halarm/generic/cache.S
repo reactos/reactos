@@ -12,7 +12,7 @@
 
     NESTED_ENTRY v7_flush_dcache_all
     PROLOG_END v7_flush_dcache_all
-    
+
 	mrc	p15, 1, r0, c0, c0, 1		// read clidr
 	ands	r3, r0, #0x7000000		// extract loc from clidr
 	mov	r3, r3, lsr #23             // left align loc bit field
@@ -53,5 +53,5 @@ finished:
 	mcr	p15, 2, r10, c0, c0, 0		// select current cache level in cssr
 	isb
 	mov	pc, lr
-    
+
     ENTRY_END v7_flush_dcache_all

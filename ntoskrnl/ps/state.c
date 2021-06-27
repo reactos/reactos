@@ -479,7 +479,7 @@ NtTestAlert(VOID)
  * @param ThreadHandle
  *        Handle to the Thread.
  *        This handle must have THREAD_SET_CONTEXT privileges.
- *        
+ *
  * @param UserApcReserveHandle
  *        Optional handle to reserve object (introduced in Windows 7), providing ability to
  *        reserve memory before performing stability-critical parts of code.

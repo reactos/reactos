@@ -316,7 +316,7 @@ static VOID
 RemoveGroupFromUser(HWND hwndDlg,
                     PMEMBERSHIP_USER_DATA pUserData)
 {
-    TCHAR szGroupName[UNLEN];
+    TCHAR szGroupName[UNLEN + 1];
     TCHAR szText[256];
     LOCALGROUP_MEMBERS_INFO_3 memberInfo;
     HWND hwndLV;
@@ -332,7 +332,7 @@ RemoveGroupFromUser(HWND hwndDlg,
     ListView_GetItemText(hwndLV,
                          nItem, 0,
                          szGroupName,
-                         UNLEN);
+                         UNLEN + 1);
 
     /* Display a warning message because the remove operation cannot be reverted */
     wsprintf(szText, TEXT("Do you really want to remove the user \"%s\" from the group \"%s\"?"),
@@ -441,7 +441,7 @@ AddSelectedGroupsToUser(HWND hwndDlg,
 {
     HWND hwndLV;
     INT nItem;
-    TCHAR szGroupName[UNLEN];
+    TCHAR szGroupName[UNLEN + 1];
     BOOL bResult = FALSE;
     BOOL bFound;
     DWORD i;
@@ -459,7 +459,7 @@ AddSelectedGroupsToUser(HWND hwndDlg,
             ListView_GetItemText(hwndLV,
                                  nItem, 0,
                                  szGroupName,
-                                 UNLEN);
+                                 UNLEN + 1);
 
             bFound = FALSE;
             for (i = 0; i < pUserData->dwGroupCount; i++)
@@ -902,7 +902,7 @@ UserProperties(HWND hwndDlg)
 {
     PROPSHEETPAGE psp[3];
     PROPSHEETHEADER psh;
-    TCHAR szUserName[UNLEN];
+    TCHAR szUserName[UNLEN + 1];
     INT nItem;
     HWND hwndLV;
 
@@ -915,7 +915,7 @@ UserProperties(HWND hwndDlg)
     ListView_GetItemText(hwndLV,
                          nItem, 0,
                          szUserName,
-                         UNLEN);
+                         UNLEN + 1);
 
     ZeroMemory(&psh, sizeof(PROPSHEETHEADER));
     psh.dwSize = sizeof(PROPSHEETHEADER);

@@ -427,7 +427,7 @@ PiAttachFilterDriversCallback(
                           (PVOID)((ULONG_PTR)kvInfo + kvInfo->DataOffset),
                           sizeof(startType));
         }
-        
+
         ExFreePool(kvInfo);
     }
 
@@ -674,7 +674,7 @@ PiCallDriverAddDevice(
                 }
             }
         }
-        
+
         ExFreePool(kvInfo);
     }
 
@@ -1101,13 +1101,13 @@ PiSetDevNodeText(
         return;
     }
 
-    // Step 1: write DeviceDesc key if not exists
+    // Step 1: Write the DeviceDesc value if does not exist
 
     UNICODE_STRING valDeviceDesc = RTL_CONSTANT_STRING(L"DeviceDesc");
     ULONG len;
 
     status = ZwQueryValueKey(InstanceKey, &valDeviceDesc, KeyValueBasicInformation, NULL, 0, &len);
-    if (!NT_SUCCESS(status))
+    if (status == STATUS_OBJECT_NAME_NOT_FOUND)
     {
         PWSTR deviceDesc = NULL;
         status = PiIrpQueryDeviceText(DeviceNode, localeId, DeviceTextDescription, &deviceDesc);
@@ -2542,7 +2542,7 @@ PipDeviceActionWorker(
         {
             case PiActionAddBootDevices:
             {
-                if (deviceNode->State == DeviceNodeInitialized && 
+                if (deviceNode->State == DeviceNodeInitialized &&
                     !(deviceNode->Flags & DNF_HAS_PROBLEM))
                 {
                     status = PiCallDriverAddDevice(deviceNode, PnPBootDriversInitialized);
@@ -2564,7 +2564,7 @@ PipDeviceActionWorker(
             case PiActionStartDevice:
                 // This action is triggered from usermode, when a driver is installed
                 // for a non-critical PDO
-                if (deviceNode->State == DeviceNodeInitialized && 
+                if (deviceNode->State == DeviceNodeInitialized &&
                     !(deviceNode->Flags & DNF_HAS_PROBLEM))
                 {
                     PiDevNodeStateMachine(deviceNode);

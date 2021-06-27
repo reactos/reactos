@@ -97,7 +97,11 @@ KxReleaseSpinLock(IN PKSPIN_LOCK SpinLock)
     }
 #endif
     /* Clear the lock */
+#ifdef _WIN64
+    InterlockedAnd64((PLONG64)SpinLock, 0);
+#else
     InterlockedAnd((PLONG)SpinLock, 0);
+#endif
 }
 
 #endif

@@ -833,11 +833,15 @@ BEGIN
     IDS_RESTART_PROMPT "Ви бажаєте перезавантажити систему?"
     IDS_SHUTDOWN_TITLE "Вимкнути"
     IDS_SHUTDOWN_PROMPT "Ви бажаєте вимкнути комп'ютер?"
-    
+
     /* Format Dialog Strings */
     IDS_FORMAT_TITLE "Форматування локального диску"
     IDS_FORMAT_WARNING "УВАГА: Форматування видалить ВСЮ інформацію на диску.\nЩоб розпочати форматування, натисніть OK. Щоб вийти, натисніть СКАСУВАТИ."
     IDS_FORMAT_COMPLETE "Форматування завершено."
+
+    /* Warning format system drive dialog strings */
+    IDS_NO_FORMAT_TITLE "Cannot format this volume"
+    IDS_NO_FORMAT "This volume cannot be formatted! It contains important system files in order for ReactOS to run."
 
     /* Run File dialog */
     IDS_RUNDLG_ERROR "Неможливо відобразити діалог запуску файлу (внутрішня помилка)"

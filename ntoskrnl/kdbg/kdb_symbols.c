@@ -167,7 +167,7 @@ KdbSymPrintAddress(
 
     if (!KdbpSymbolsInitialized || !KdbpSymFindModule(Address, NULL, -1, &LdrEntry))
         return FALSE;
-        
+
     KdbpSymUnicodeToAnsi(&LdrEntry->BaseDllName,
                          ModuleNameAnsi,
                          sizeof(ModuleNameAnsi));
@@ -415,7 +415,7 @@ KdbpSymLoadModuleSymbols(
 
     Result = RosSymCreateFromFile(&FileHandle, RosSymInfo);
     ZwClose(FileHandle);
-    
+
     if (!Result)
     {
         DPRINT("Failed to load symbols from %wZ\n", FileName);

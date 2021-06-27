@@ -50,11 +50,13 @@ typedef struct _KBUGCHECK_DATA {
     ULONG_PTR Parameter4;
 } KBUGCHECK_DATA, *PKBUGCHECK_DATA;
 
+CODE_SEG("PAGE")
 NTSTATUS
 NTAPI
 AuxKlibInitialize(VOID);
 
 _IRQL_requires_max_(PASSIVE_LEVEL)
+CODE_SEG("PAGE")
 NTSTATUS
 NTAPI
 AuxKlibQueryModuleInformation(
@@ -71,6 +73,7 @@ AuxKlibGetImageExportDirectory(
     _In_ PVOID ImageBase);
 
 _IRQL_requires_max_(PASSIVE_LEVEL)
+CODE_SEG("PAGE")
 NTSTATUS
 NTAPI
 AuxKlibEnumerateSystemFirmwareTables (
@@ -80,6 +83,7 @@ AuxKlibEnumerateSystemFirmwareTables (
     _Out_opt_ PULONG ReturnLength);
 
 _IRQL_requires_max_(PASSIVE_LEVEL)
+CODE_SEG("PAGE")
 NTSTATUS
 NTAPI
 AuxKlibGetSystemFirmwareTable (

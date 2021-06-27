@@ -81,7 +81,7 @@ typedef struct
      *  check. */
     unsigned char HasNotify : 1; /* 0x08 - should call MIDL [notify]
      *  routine @ NotifyIndex. */
-    unsigned char HasNotify2 : 1; /* 0x10 - should call MIDL [notify_flag] routine @ 
+    unsigned char HasNotify2 : 1; /* 0x10 - should call MIDL [notify_flag] routine @
      *  NotifyIndex. */
 
     /* The following bits are in fact used by midl but haven't yet been

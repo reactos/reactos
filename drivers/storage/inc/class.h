@@ -233,7 +233,7 @@ typedef struct _COMPLETION_CONTEXT {
     SCSI_REQUEST_BLOCK Srb;
 }COMPLETION_CONTEXT, *PCOMPLETION_CONTEXT;
 
-
+
 NTSTATUS
 ScsiClassGetCapabilities(
     IN PDEVICE_OBJECT PortDeviceObject,

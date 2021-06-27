@@ -130,7 +130,71 @@ TestStackWalk1(VOID)
     TestStackWalk2();
 }
 
+#ifdef _M_AMD64
+NTSYSAPI
+PVOID
+NTAPI
+RtlPcToFileHeader(
+    _In_  PVOID PcValue,
+    _Out_ PVOID *BaseOfImage);
+
+extern char __ImageBase;
+
+DECLSPEC_NOINLINE
+static
+VOID
+TestRtlPcToFileHeader(VOID)
+{
+    PVOID ImageBase, Result;
+    PTEB Teb;
+    PPEB Peb;
+
+    /* First test a function from this image */
+    Result = RtlPcToFileHeader(&TestRtlPcToFileHeader, &ImageBase);
+    ok_eq_pointer(Result, ImageBase);
+    ok_eq_pointer(ImageBase, &__ImageBase);
+
+#ifdef NTOS_MODE_USER
+    Teb = NtCurrentTeb();
+#else
+    Teb = KeGetCurrentThread()->Teb;
+#endif
+    ok(Teb != NULL, "Teb is NULL!\n");
+    if (Teb == NULL)
+    {
+        return;
+    }
+
+    _SEH2_TRY
+    {
+        Peb = Teb->ProcessEnvironmentBlock;
+        ok(Peb != NULL, "Peb is NULL!\n");
+        if (Peb == NULL)
+        {
+            return;
+        }
+
+        /* Test an address somewhere within the main image of the current process */
+        Result = RtlPcToFileHeader((PUCHAR)Peb->ImageBaseAddress + 0x1000, &ImageBase);
+        ok_eq_pointer(Result, ImageBase);
+#ifdef NTOS_MODE_USER
+        ok_eq_pointer(ImageBase, Peb->ImageBaseAddress);
+#else
+        ok_eq_pointer(ImageBase, NULL);
+#endif
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        ok(FALSE, "Got an exception!\n");
+    }
+    _SEH2_END
+}
+#endif // _M_AMD64
+
 START_TEST(RtlStack)
 {
     TestStackWalk1();
+#ifdef _M_AMD64
+    TestRtlPcToFileHeader();
+#endif // _M_AMD64
 }

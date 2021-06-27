@@ -432,7 +432,7 @@ typedef PIMAGE_NT_HEADERS32                 PIMAGE_NT_HEADERS;
 //
 // Subsystems
 //
-#define IMAGE_SUBSYSTEM_UNKNOWN                         0 
+#define IMAGE_SUBSYSTEM_UNKNOWN                         0
 #define IMAGE_SUBSYSTEM_NATIVE                          1
 #define IMAGE_SUBSYSTEM_WINDOWS_GUI                     2
 #define IMAGE_SUBSYSTEM_WINDOWS_CUI                     3

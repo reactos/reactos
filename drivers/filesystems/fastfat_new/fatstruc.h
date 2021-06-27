@@ -22,7 +22,7 @@ typedef PVOID PBCB;     //**** Bcb's are now part of the cache module
 #ifdef __REACTOS__
 #define __volatile volatile
 #endif
-
+
 //
 //  The FAT_DATA record is the top record in the Fat file system in-memory
 //  data structure.  This structure must be allocated from non-paged pool.
@@ -610,7 +610,7 @@ typedef struct _FILE_SYSTEM_STATISTICS {
 
 typedef FILE_SYSTEM_STATISTICS *PFILE_SYSTEM_STATISTICS;
 
-
+
 //
 //  The Volume Device Object is an I/O system device object with a workqueue
 //  and an VCB record appended to the end.  There are multiple of these
@@ -670,7 +670,7 @@ typedef struct _VOLUME_DEVICE_OBJECT {
 
 typedef VOLUME_DEVICE_OBJECT *PVOLUME_DEVICE_OBJECT;
 
-
+
 //
 //  This is the structure used to contains the short name for a file
 //
@@ -1239,7 +1239,7 @@ typedef DCB *PDCB;
 
 #define FCB_LOOKUP_ALLOCATIONSIZE_HINT   ((LONGLONG) -1)
 
-
+
 //
 //  The Ccb record is allocated for every file object.  Note that this
 //  record is exactly 0x34 long on x86 so that it will fit into a 0x40
@@ -1372,7 +1372,7 @@ typedef struct _CCB {
 
     ULONG Flags:24;
     BOOLEAN ContainsWildCards;
-    
+
     //
     //  Pointer to EDP context.
     //
@@ -1447,7 +1447,7 @@ typedef struct _CCB {
 
 } CCB;
 typedef CCB *PCCB;
-
+
 //
 //  The Irp Context record is allocated for every orginating Irp.  It is
 //  created by the Fsd dispatch routines, and deallocated by the FatComplete
@@ -1576,7 +1576,7 @@ typedef IRP_CONTEXT *PIRP_CONTEXT;
 
 #define IRP_CONTEXT_FLAG_PARENT_BY_CHILD            (0x80000000)
 
-
+
 //
 //  Context structure for non-cached I/O calls.  Most of these fields
 //  are actually only required for the Read/Write Multiple routines, but
@@ -1591,7 +1591,7 @@ typedef struct _FAT_IO_CONTEXT {
     //  A copy of the IrpContext flags preserved for use in
     //  async I/O completion.
     //
-    
+
     ULONG IrpContextFlags;
 
     //

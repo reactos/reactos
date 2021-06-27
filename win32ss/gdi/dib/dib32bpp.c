@@ -58,7 +58,8 @@ DIB_32BPP_BitBltSrcCopy(PBLTINFO BltInfo)
   PBYTE    SourceBitsT, SourceBitsB, DestBitsT, DestBitsB;
   PBYTE    SourceBits_4BPP, SourceLine_4BPP;
   PDWORD   Source32, Dest32;
-  DWORD    Index, DestWidth, DestHeight;
+  DWORD    Index;
+  LONG     DestWidth, DestHeight;
   BOOLEAN  bTopToBottom, bLeftToRight;
   BOOLEAN  blDeltaSrcNeg, blDeltaDestNeg;
   BOOLEAN  blDeltaAdjustDone = FALSE;
@@ -365,10 +366,9 @@ DIB_32BPP_BitBltSrcCopy(PBLTINFO BltInfo)
       {
         /* SourceBits points to bottom-left pixel for lDelta < 0 and top-left for lDelta > 0 */
         SourceBits = (PBYTE)BltInfo->SourceSurface->pvScan0
-          + ((BltInfo->SourcePoint.y
-          + DestHeight - 1) * BltInfo->SourceSurface->lDelta)
+          + ((BltInfo->SourcePoint.y + DestHeight - 1) * BltInfo->SourceSurface->lDelta)
           + 4 * BltInfo->SourcePoint.x;
-        /* SourceBits points to bottom-left pixel for lDelta < 0 and top-left for lDelta > 0 */
+        /* DestBits points to bottom-left pixel for lDelta < 0 and top-left for lDelta > 0 */
         DestBits = (PBYTE)BltInfo->DestSurface->pvScan0
           + ((BltInfo->DestRect.bottom - 1) * BltInfo->DestSurface->lDelta)
           + 4 * BltInfo->DestRect.left;

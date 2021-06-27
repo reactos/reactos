@@ -65,6 +65,7 @@ BOOL OSK_DlgCommand(WPARAM wCommand, HWND hWndControl);
 BOOL OSK_ReleaseKey(WORD ScanCode);
 INT_PTR APIENTRY OSK_DlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam);
 LRESULT APIENTRY OSK_ThemeHandler(HWND hDlg, NMCUSTOMDRAW *pNmDraw);
+DWORD WINAPI OSK_WarningDlgThread(LPVOID lpParameter);
 int WINAPI wWinMain(HINSTANCE, HINSTANCE, LPWSTR, int);
 VOID OSK_RestoreDlgPlacement(HWND hDlg);
 VOID OSK_RefreshLEDKeys(VOID);

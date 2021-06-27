@@ -254,8 +254,9 @@ MiUnlinkFreeOrZeroedPage(IN PMMPFN Entry)
     ASSERT(MI_PFN_CURRENT_USAGE != MI_USAGE_NOT_SET);
     Entry->PfnUsage = MI_PFN_CURRENT_USAGE;
     memcpy(Entry->ProcessName, MI_PFN_CURRENT_PROCESS_NAME, 16);
-//    MI_PFN_CURRENT_USAGE = MI_USAGE_NOT_SET;
-//    memcpy(MI_PFN_CURRENT_PROCESS_NAME, "Not Set", 16);
+    Entry->CallSite = _ReturnAddress();
+    MI_PFN_CURRENT_USAGE = MI_USAGE_NOT_SET;
+    MI_SET_PROCESS2("Not Set");
 #endif
 }
 
@@ -459,11 +460,12 @@ MiRemovePageByColor(IN PFN_NUMBER PageIndex,
     MiDecrementAvailablePages();
 
 #if MI_TRACE_PFNS
-    //ASSERT(MI_PFN_CURRENT_USAGE != MI_USAGE_NOT_SET);
+    ASSERT(MI_PFN_CURRENT_USAGE != MI_USAGE_NOT_SET);
     Pfn1->PfnUsage = MI_PFN_CURRENT_USAGE;
     memcpy(Pfn1->ProcessName, MI_PFN_CURRENT_PROCESS_NAME, 16);
-    //MI_PFN_CURRENT_USAGE = MI_USAGE_NOT_SET;
-    //memcpy(MI_PFN_CURRENT_PROCESS_NAME, "Not Set", 16);
+    Pfn1->CallSite = _ReturnAddress();
+    MI_PFN_CURRENT_USAGE = MI_USAGE_NOT_SET;
+    MI_SET_PROCESS2("Not Set");
 #endif
 
     /* Return the page */
@@ -710,6 +712,7 @@ MiInsertPageInFreeList(IN PFN_NUMBER PageFrameIndex)
 #if MI_TRACE_PFNS
     Pfn1->PfnUsage = MI_USAGE_FREE_PAGE;
     RtlZeroMemory(Pfn1->ProcessName, 16);
+    Pfn1->CallSite = NULL;
 #endif
 }
 
@@ -937,10 +940,10 @@ MiInsertPageInList(IN PMMPFNLIST ListHead,
         ColorHead->Count++;
 
 #if MI_TRACE_PFNS
-            //ASSERT(MI_PFN_CURRENT_USAGE == MI_USAGE_NOT_SET);
+            ASSERT(MI_PFN_CURRENT_USAGE == MI_USAGE_NOT_SET);
             Pfn1->PfnUsage = MI_USAGE_FREE_PAGE;
-            MI_PFN_CURRENT_USAGE = MI_USAGE_NOT_SET;
             RtlZeroMemory(Pfn1->ProcessName, 16);
+            Pfn1->CallSite = NULL;
 #endif
     }
     else if (ListName == ModifiedPageList)
@@ -978,6 +981,8 @@ MiInitializePfn(IN PFN_NUMBER PageFrameIndex,
     /* Setup the PTE */
     Pfn1 = MI_PFN_ELEMENT(PageFrameIndex);
     Pfn1->PteAddress = PointerPte;
+
+    DPRINT("Called for %p from %p\n", Pfn1, _ReturnAddress());
 
     /* Check if this PFN is part of a valid address space */
     if (PointerPte->u.Hard.Valid == 1)
@@ -1026,6 +1031,8 @@ MiInitializePfn(IN PFN_NUMBER PageFrameIndex,
     ASSERT(PageFrameIndex != 0);
     Pfn1->u4.PteFrame = PageFrameIndex;
 
+    DPRINT("Incrementing share count of %lp from %p\n", PageFrameIndex, _ReturnAddress());
+
     /* Increase its share count so we don't get rid of it */
     Pfn1 = MI_PFN_ELEMENT(PageFrameIndex);
     Pfn1->u2.ShareCount++;
@@ -1049,6 +1056,8 @@ MiInitializePfnAndMakePteValid(IN PFN_NUMBER PageFrameIndex,
     Pfn1 = MI_PFN_ELEMENT(PageFrameIndex);
     Pfn1->PteAddress = PointerPte;
     Pfn1->OriginalPte = DemandZeroPte;
+
+    DPRINT("Incrementing %p from %p\n", Pfn1, _ReturnAddress());
 
     /* Otherwise this is a fresh page -- set it up */
     ASSERT(Pfn1->u3.e2.ReferenceCount == 0);
@@ -1083,6 +1092,7 @@ MiInitializePfnAndMakePteValid(IN PFN_NUMBER PageFrameIndex,
     /* Increase its share count so we don't get rid of it */
     Pfn1 = MI_PFN_ELEMENT(PageFrameIndex);
     Pfn1->u2.ShareCount++;
+    DPRINT("Incrementing %p from %p\n", Pfn1, _ReturnAddress());
 
     /* Write valid PTE */
     MI_WRITE_VALID_PTE(PointerPte, TempPte);
@@ -1140,6 +1150,8 @@ MiDecrementShareCount(IN PMMPFN Pfn1,
     ASSERT(MI_PFN_ELEMENT(PageFrameIndex) != NULL);
     ASSERT(Pfn1 == MI_PFN_ELEMENT(PageFrameIndex));
     ASSERT(MI_IS_ROS_PFN(Pfn1) == FALSE);
+
+    DPRINT("Decrementing %p from %p\n", Pfn1, _ReturnAddress());
 
     /* Page must be in-use */
     if ((Pfn1->u3.e1.PageLocation != ActiveAndValid) &&
@@ -1290,6 +1302,8 @@ MiInitializePfnForOtherProcess(IN PFN_NUMBER PageFrameIndex,
     /* Make this a software PTE */
     MI_MAKE_SOFTWARE_PTE(&Pfn1->OriginalPte, MM_READWRITE);
 
+    DPRINT("Called for %p from %p\n", Pfn1, _ReturnAddress());
+
     /* Setup the page */
     ASSERT(Pfn1->u3.e2.ReferenceCount == 0);
     Pfn1->u3.e2.ReferenceCount = 1;
@@ -1306,6 +1320,8 @@ MiInitializePfnForOtherProcess(IN PFN_NUMBER PageFrameIndex,
 
         /* Increase its share count so we don't get rid of it */
         Pfn1 = MI_PFN_ELEMENT(PteFrame);
+
+        DPRINT("Incrementing %p from %p\n", Pfn1, _ReturnAddress());
         Pfn1->u2.ShareCount++;
     }
 }

@@ -168,7 +168,7 @@ FatGetBootAreaInfo (
     _In_ PIRP Irp
     );
 
-_Requires_lock_held_(_Global_critical_region_)    
+_Requires_lock_held_(_Global_critical_region_)
 NTSTATUS
 FatGetRetrievalPointerBase (
     _In_ PIRP_CONTEXT IrpContext,
@@ -353,13 +353,13 @@ FatNonSparseMcb(
 
         Index++;
     }
-    
+
     *Vbo = (VBO)llVbo;
-    
+
     return TRUE;
 }
 
-
+
 BOOLEAN
 FatAddMcbEntry (
     IN PVCB Vcb,
@@ -413,7 +413,7 @@ FatAddMcbEntry (
     return Result;
 }
 
-
+
 BOOLEAN
 FatLookupMcbEntry (
     IN PVCB Vcb,
@@ -536,7 +536,7 @@ FatLookupLastMcbEntry (
     return Results;
 }
 
-
+
 BOOLEAN
 FatGetNextMcbEntry (
     IN PVCB Vcb,
@@ -594,7 +594,7 @@ FatGetNextMcbEntry (
     return Results;
 }
 
-
+
 VOID
 FatRemoveMcbEntry (
     IN PVCB Vcb,
@@ -631,7 +631,7 @@ FatRemoveMcbEntry (
 
 }
 
-
+
 _Function_class_(IRP_MJ_FILE_SYSTEM_CONTROL)
 _Function_class_(DRIVER_DISPATCH)
 NTSTATUS
@@ -745,8 +745,8 @@ Return Value:
     return Status;
 }
 
-
-_Requires_lock_held_(_Global_critical_region_)    
+
+_Requires_lock_held_(_Global_critical_region_)
 NTSTATUS
 FatCommonFileSystemControl (
     IN PIRP_CONTEXT IrpContext,
@@ -838,7 +838,7 @@ Return Value:
     return Status;
 }
 
-
+
 //
 //  Local Support Routine
 //
@@ -979,9 +979,9 @@ Return Value:
 
             return Status;
         }
-        
+
     }
-    
+
     if (Iosb.Information != sizeof(ULONG)) {
 
         //
@@ -992,7 +992,7 @@ Return Value:
     }
 
     //
-    //  If this is a CD class device,  then check to see if there is a 
+    //  If this is a CD class device,  then check to see if there is a
     //  'data track' or not.  This is to avoid issuing paging reads which will
     //  fail later in the mount process (e.g. CD-DA or blank CD media)
     //
@@ -1109,10 +1109,10 @@ Return Value:
         VolDo->DeviceObject.StackSize = (CCHAR)(TargetDeviceObject->StackSize + 1);
 
         //
-        //  We must also set the sector size correctly in our device object 
+        //  We must also set the sector size correctly in our device object
         //  before clearing the device initializing flag.
         //
-        
+
         Status = FatPerformDevIoCtrl( IrpContext,
                                       IOCTL_DISK_GET_DRIVE_GEOMETRY,
                                       TargetDeviceObject,
@@ -1167,10 +1167,10 @@ Return Value:
         //  Initialize the new vcb
         //
 
-        FatInitializeVcb( IrpContext, 
-                          &VolDo->Vcb, 
-                          TargetDeviceObject, 
-                          Vpb, 
+        FatInitializeVcb( IrpContext,
+                          &VolDo->Vcb,
+                          TargetDeviceObject,
+                          Vpb,
                           FsDeviceObject);
         //
         //  Get a reference to the Vcb hanging off the end of the device object
@@ -1185,18 +1185,18 @@ Return Value:
 
         //
         //  We need to commute errors on CD so that CDFS will get its crack.  Audio
-        //  and even data media may not be universally readable on sector zero.        
+        //  and even data media may not be universally readable on sector zero.
         //
-        
+
         _SEH2_TRY {
-        
+
             FatReadVolumeFile( IrpContext,
                                Vcb,
                                0,                          // Starting Byte
                                sizeof(PACKED_BOOT_SECTOR),
                                &BootBcb,
                                (PVOID *)&BootSector );
-        
+
         } _SEH2_EXCEPT( Vpb->RealDevice->DeviceType == FILE_DEVICE_CD_ROM ?
                   EXCEPTION_EXECUTE_HANDLER : EXCEPTION_CONTINUE_SEARCH ) {
 
@@ -1210,7 +1210,7 @@ Return Value:
         if (BootBcb == NULL || !FatIsBootSectorFat( BootSector)) {
 
             DebugTrace(0, Dbg, "Not a Fat Volume\n", 0);
-        
+
             //
             //  Complete the request and return to our caller
             //
@@ -1229,7 +1229,7 @@ Return Value:
             //
             // Stash a copy away in the VCB.
             //
-            
+
             RtlCopyMemory( &Vcb->VolumeGuid, &VolumeGuid, sizeof(GUID));
 
         }
@@ -1285,11 +1285,11 @@ Return Value:
              Vcb->Bpb.Sectors < 0x80)) {
 
             DebugTrace( 0, Dbg, "OS/2 Boot Manager volume detected, volume not mounted. \n", 0 );
-            
+
             //
             //  Complete the request and return to our caller
             //
-            
+
             try_return( Status = STATUS_UNRECOGNIZED_VOLUME );
         }
 
@@ -1298,7 +1298,7 @@ Return Value:
         //  device currently reports it's sector size to be.
         //
 
-        if ( !NT_SUCCESS( Status) || 
+        if ( !NT_SUCCESS( Status) ||
              (Geometry.BytesPerSector != Vcb->Bpb.BytesPerSector))  {
 
             try_return( Status = STATUS_UNRECOGNIZED_VOLUME );
@@ -1393,15 +1393,15 @@ Return Value:
             //  enough of the Vcb to pull this off.
             //
 
-	    FatCheckDirtyBit( IrpContext, 
+	    FatCheckDirtyBit( IrpContext,
 		              Vcb );
-			
+
             //
             // Set the dirty bit if it is not set already
             //
 
             if ( !FlagOn(Vcb->VcbState, VCB_STATE_FLAG_MOUNTED_DIRTY)) {
-				
+
                 SetFlag( Vcb->VcbState, VCB_STATE_FLAG_MOUNT_IN_PROGRESS );
                 FatMarkVolume( IrpContext, Vcb, VolumeDirty );
                 ClearFlag( Vcb->VcbState, VCB_STATE_FLAG_MOUNT_IN_PROGRESS );
@@ -1831,7 +1831,7 @@ Return Value:
     return Status;
 }
 
-
+
 //
 //  Local Support Routine
 //
@@ -2024,7 +2024,7 @@ Return Value:
         //
         // Only send down IOCTL_DISK_CHECK_VERIFY if it is removable media.
         //
-        
+
         if (FlagOn(Vcb->TargetDeviceObject->Characteristics, FILE_REMOVABLE_MEDIA)) {
 
             //
@@ -2056,9 +2056,9 @@ Return Value:
 
                 FatNormalizeAndRaiseStatus( IrpContext, Status );
             }
-            
+
         }
-        
+
         if (Iosb.Information != sizeof(ULONG)) {
 
             //
@@ -2076,7 +2076,7 @@ Return Value:
         Vcb->ChangeCount = ChangeCount;
 
         //
-        //  If this is a CD class device,  then check to see if there is a 
+        //  If this is a CD class device,  then check to see if there is a
         //  'data track' or not.  This is to avoid issuing paging reads which will
         //  fail later in the mount process (e.g. CD-DA or blank CD media)
         //
@@ -2214,7 +2214,7 @@ Return Value:
         if (FatRootDirectorySize(&Bpb) > 0) {
 
             RootDirectorySize = FatRootDirectorySize(&Bpb);
-        
+
         } else {
 
             RootDirectorySize = FatBytesPerCluster(&Bpb);
@@ -2384,7 +2384,7 @@ Return Value:
                 FatAcquireExclusiveVolume( IrpContext, Vcb );
                 ReleaseEntireVolume = TRUE;
             }
-            
+
             //
             //  Get rid of any cached data, without flushing
             //
@@ -2419,7 +2419,7 @@ Return Value:
                 FatAcquireExclusiveVolume( IrpContext, Vcb );
                 ReleaseEntireVolume = TRUE;
             }
-            
+
             //
             //  Get rid of any cached data, flushing first.
             //
@@ -2513,7 +2513,7 @@ Return Value:
     return Status;
 }
 
-
+
 //
 //  Local Support Routine
 //
@@ -2669,7 +2669,7 @@ Return Value:
     return Result;
 }
 
-
+
 //
 //  Local Support Routine
 //
@@ -2704,7 +2704,7 @@ Return Value:
 
     PAGED_CODE();
     UNREFERENCED_PARAMETER( IrpContext );
-    
+
     //
     //  Query the partition table
     //
@@ -2754,7 +2754,7 @@ Return Value:
     return (BOOLEAN)(Status == STATUS_MEDIA_WRITE_PROTECTED);
 }
 
-
+
 //
 //  Local Support Routine
 //
@@ -2912,7 +2912,7 @@ Return Value:
 
     case FSCTL_SET_PURGE_FAILURE_MODE:
         Status = FatSetPurgeFailureMode( IrpContext, Irp );
-        break;       
+        break;
 
 #endif
 
@@ -2937,7 +2937,7 @@ Return Value:
 }
 
 
-
+
 //
 //  Local support routine
 //
@@ -3185,7 +3185,7 @@ Return Value:
         //
         //  Once we call FsRtlOplockFsctrl, we no longer own the IRP and we should not complete it.
         //
-        
+
         Irp = NULL;
 
         //
@@ -3203,7 +3203,7 @@ Return Value:
         //
 
         if (AcquiredVcb) {
-            
+
             FatReleaseVcb( IrpContext, Fcb->Vcb );
         }
 
@@ -3220,7 +3220,7 @@ Return Value:
     return Status;
 }
 
-
+
 //
 //  Local Support Routine
 //
@@ -3324,7 +3324,7 @@ Return Value:
         //
 
         if (!_SEH2_AbnormalTermination() || ExIsResourceAcquiredExclusiveLite( &Vcb->Resource )) {
-            
+
             FatReleaseVcb( IrpContext, Vcb );
         }
 
@@ -3345,7 +3345,7 @@ Return Value:
     return Status;
 }
 
-
+
 //
 //  Local Support Routine
 //
@@ -3427,8 +3427,8 @@ Return Value:
     return Status;
 }
 
-
-_Requires_lock_held_(_Global_critical_region_)    
+
+_Requires_lock_held_(_Global_critical_region_)
 NTSTATUS
 FatLockVolumeInternal (
     IN PIRP_CONTEXT IrpContext,
@@ -3523,7 +3523,7 @@ Return Value:
     }
 
     //
-    //  The act of closing and purging may have touched pages in various 
+    //  The act of closing and purging may have touched pages in various
     //  parent DCBs. We handle this by purging a second time.
     //
 
@@ -3596,7 +3596,7 @@ Return Value:
     return Status;
 }
 
-
+
 NTSTATUS
 FatUnlockVolumeInternal (
     IN PIRP_CONTEXT IrpContext,
@@ -3653,7 +3653,7 @@ Return Value:
     return Status;
 }
 
-
+
 //
 //  Local Support Routine
 //
@@ -3816,7 +3816,7 @@ Return Value:
         //
 
         FatSetVcbCondition( Vcb, VcbBad);
-        
+
         SetFlag( Vcb->VcbState, VCB_STATE_FLAG_VOLUME_DISMOUNTED );
 
         //
@@ -3840,7 +3840,7 @@ Return Value:
 #endif
 
         if (VcbHeld) {
-            
+
             FatReleaseVolume( IrpContext, Vcb );
         }
 
@@ -3869,7 +3869,7 @@ Return Value:
     return Status;
 }
 
-
+
 //
 //  Local Support Routine
 //
@@ -3956,7 +3956,7 @@ Return Value:
     return STATUS_SUCCESS;
 }
 
-
+
 //
 //  Local Support Routine
 //
@@ -4087,7 +4087,7 @@ Return Value:
     return STATUS_SUCCESS;
 }
 
-
+
 //
 //  Local Support Routine
 //
@@ -4159,7 +4159,7 @@ Return Value:
     return Status;
 }
 
-
+
 //
 //  Local Support Routine
 //
@@ -4204,7 +4204,7 @@ Return Value:
     return STATUS_SUCCESS;
 }
 
-
+
 //
 //  Local Support Routine
 //
@@ -4290,7 +4290,7 @@ Return Value:
     return STATUS_SUCCESS;
 }
 
-
+
 //
 //  Local Support Routine
 //
@@ -4358,7 +4358,7 @@ Return Value:
     if (IoIs32bitProcess( Irp )) {
 
         if (IrpSp->Parameters.FileSystemControl.InputBufferLength != sizeof(UINT32)) {
-            
+
             FatCompleteRequest( FatNull, Irp, STATUS_INVALID_PARAMETER );
 
             DebugTrace(-1, Dbg, "FatInvalidateVolumes -> %08lx\n", STATUS_INVALID_PARAMETER);
@@ -4477,7 +4477,7 @@ Return Value:
             if (ExistingVcb->Vpb == DeviceToMarkBad->Vpb) {
 
                 KIRQL OldIrql;
-                    
+
                 IoAcquireVpbSpinLock( &OldIrql );
 
                 if (FlagOn( DeviceToMarkBad->Vpb->Flags, VPB_MOUNTED )) {
@@ -4487,13 +4487,13 @@ Return Value:
                     NewVpb = ExistingVcb->SwapVpb;
                     ExistingVcb->SwapVpb = NULL;
                     SetFlag( ExistingVcb->VcbState, VCB_STATE_FLAG_VPB_MUST_BE_FREED );
-                    
+
                     RtlZeroMemory( NewVpb, sizeof( VPB ) );
                     NewVpb->Type = IO_TYPE_VPB;
                     NewVpb->Size = sizeof( VPB );
                     NewVpb->RealDevice = DeviceToMarkBad;
                     NewVpb->Flags = FlagOn( DeviceToMarkBad->Vpb->Flags, VPB_REMOVE_PENDING );
-                    
+
                     DeviceToMarkBad->Vpb = NewVpb;
                 }
 
@@ -4545,7 +4545,7 @@ Return Value:
             //
 
             if (!VcbDeleted) {
-                
+
                 FatReleaseVcb( &IrpContext, ExistingVcb );
             }
         }
@@ -4560,7 +4560,7 @@ Return Value:
     return STATUS_SUCCESS;
 }
 
-
+
 //
 //  Local Support routine
 //
@@ -4690,7 +4690,7 @@ Return Value:
     return TRUE;
 }
 
-
+
 //
 //  Local Support Routine
 //
@@ -4752,7 +4752,7 @@ Return Value:
     //
     //  Make this a synchronous IRP because we need access to the input buffer and
     //  this Irp is marked METHOD_NEITHER.
-    //  
+    //
 
     SetFlag( IrpContext->Flags, IRP_CONTEXT_FLAG_WAIT );
 
@@ -4766,7 +4766,7 @@ Return Value:
     (VOID)FatDecodeFileObject( IrpSp->FileObject, &Vcb, &Fcb, &Ccb );
 
     if (Irp->RequestorMode != KernelMode ||
-        Fcb == NULL || 
+        Fcb == NULL ||
         !FlagOn(Fcb->FcbState, FCB_STATE_PAGING_FILE) ) {
 
         FatCompleteRequest( IrpContext, Irp, STATUS_INVALID_PARAMETER );
@@ -4816,11 +4816,11 @@ Return Value:
         //  the case where it isn't.
         //
 
-        Result = FatLookupMcbEntry( Fcb->Vcb, 
-                                    &Fcb->Mcb, 
-                                    RequestedMapSize->LowPart - 1, 
-                                    &Lbo, 
-                                    NULL, 
+        Result = FatLookupMcbEntry( Fcb->Vcb,
+                                    &Fcb->Mcb,
+                                    RequestedMapSize->LowPart - 1,
+                                    &Lbo,
+                                    NULL,
                                     &Index );
 
         if (!Result) {
@@ -4828,7 +4828,7 @@ Return Value:
             NT_ASSERT(FALSE);
             try_leave( Status = STATUS_FILE_CORRUPT_ERROR);
         }
-        
+
         *MappingPairs = FsRtlAllocatePoolWithTag( NonPagedPoolNx,
                                                   (Index + 2) * (2 * sizeof(LARGE_INTEGER)),
                                                   TAG_OUTPUT_MAPPINGPAIRS );
@@ -4858,8 +4858,8 @@ Return Value:
         (*MappingPairs)[ i*2 + 0 ].QuadPart = 0;
 
         Status = STATUS_SUCCESS;
-    } 
-    _SEH2_FINALLY {    
+    }
+    _SEH2_FINALLY {
 
         DebugUnwind( FatQueryRetrievalPointers );
 
@@ -4883,7 +4883,7 @@ Return Value:
     return Status;
 }
 
-
+
 //
 //  Local Support Routine
 //
@@ -4989,7 +4989,7 @@ Return Value:
 
     return Status;
 }
-
+
 //
 //  Local Support Routine
 //
@@ -5056,7 +5056,7 @@ Return Value:
     //
     //  Make this a synchronous IRP because we need access to the input buffer and
     //  this Irp is marked METHOD_NEITHER.
-    //  
+    //
 
     SetFlag( IrpContext->Flags, IRP_CONTEXT_FLAG_WAIT );
 
@@ -5246,7 +5246,7 @@ Return Value:
     return Status;
 }
 
-
+
 //
 //  Local Support Routine
 //
@@ -5321,10 +5321,10 @@ Return Value:
     //
     //  Make this a synchronous IRP because we need access to the input buffer and
     //  this Irp is marked METHOD_NEITHER.
-    //  
+    //
 
     SetFlag( IrpContext->Flags, IRP_CONTEXT_FLAG_WAIT );
-    
+
     //
     //  Extract and decode the file object and check for type of open.
     //
@@ -5364,7 +5364,7 @@ Return Value:
     //  recursive, as well as recognizing this is safe anyway.
     //
     if( (TypeOfOpen == UserFileOpen) || (TypeOfOpen == UserDirectoryOpen) ) {
-        
+
         if (FlagOn( FcbOrDcb->Vcb->VcbState, VCB_STATE_FLAG_WRITE_PROTECTED )) {
 
             (VOID)FatAcquireSharedFcb( IrpContext, FcbOrDcb );
@@ -5382,7 +5382,7 @@ Return Value:
             DebugTrace(-1, Dbg, "FatMoveFile -> 0x%x\n", STATUS_ACCESS_DENIED);
             return STATUS_ACCESS_DENIED;
         }
-    
+
         (VOID)FatAcquireExclusiveVcb(IrpContext, Vcb);
     }
 
@@ -5393,9 +5393,9 @@ Return Value:
         //
 
         if( (TypeOfOpen == UserFileOpen) || (TypeOfOpen == UserDirectoryOpen) ) {
-            
+
             FatVerifyFcb( IrpContext, FcbOrDcb );
-                
+
             //
             //  If we haven't yet set the correct AllocationSize, do so.
             //
@@ -5421,13 +5421,13 @@ Return Value:
             ClusterShift = Vcb->AllocationSupport.LogOfBytesPerCluster;
 
 #ifdef _MSC_VER
-#pragma prefast( suppress:28931, "calculate it anyway, in case someone adds code that uses this in the future" )    
-#endif        
+#pragma prefast( suppress:28931, "calculate it anyway, in case someone adds code that uses this in the future" )
+#endif
             ClusterSize = 1 << ClusterShift;
-            
+
             AllocationSize = FcbOrDcb->Header.AllocationSize.LowPart;
             McbToUse = &FcbOrDcb->Mcb;
-            
+
         } else if ((TypeOfOpen == UserVolumeOpen )) {
 
             FatQuickVerifyVcb( IrpContext, Vcb );
@@ -5441,29 +5441,29 @@ Return Value:
 
                 FatRaiseStatus(IrpContext, STATUS_FILE_CORRUPT_ERROR );
             }
-            
-            ClusterShift = Vcb->AllocationSupport.LogOfBytesPerCluster;                        
+
+            ClusterShift = Vcb->AllocationSupport.LogOfBytesPerCluster;
             ClusterSize = 1 << ClusterShift;
-            
+
             if (!FatLookupLastMcbEntry(Vcb, &Vcb->BadBlockMcb, &LastVbo, &LastLbo, &LastIndex)) {
                 AllocationSize = 0;
             } else {
-            
+
                 //
                 //  Round the allocation size to a multiple of of the cluster size.
                 //
-                
+
                 AllocationSize = (LastVbo + ((LONGLONG)ClusterSize-1)) & ~((LONGLONG)ClusterSize-1);
             }
-               
+
             McbToUse = &Vcb->BadBlockMcb;
-            
+
         }
 
         //
         //  Check if a starting cluster was specified.
         //
-        
+
         _SEH2_TRY {
 
             if (Irp->RequestorMode != KernelMode) {
@@ -5561,8 +5561,8 @@ Return Value:
             if (!FatGetNextMcbEntry(Vcb, McbToUse, Run, (PVBO)&Vcn, &Lbo, &ByteLength)) {
 
 #ifdef _MSC_VER
-#pragma prefast( suppress:28159, "things are seriously wrong if we get here" )    
-#endif            
+#pragma prefast( suppress:28159, "things are seriously wrong if we get here" )
+#endif
                 FatBugCheck( (ULONG_PTR)FcbOrDcb, (ULONG_PTR)McbToUse, Run );
             }
 
@@ -5610,15 +5610,15 @@ Return Value:
         //
         //  Release resources
         //
-        
+
         if( (TypeOfOpen == UserFileOpen) || (TypeOfOpen == UserDirectoryOpen) ) {
-            
+
             FatReleaseFcb( IrpContext, FcbOrDcb );
         } else if ((TypeOfOpen == UserVolumeOpen )) {
-        
+
             FatReleaseVcb(IrpContext, Vcb);
         }
-        
+
         //
         //  If nothing raised then complete the irp.
         //
@@ -5634,7 +5634,7 @@ Return Value:
     return Status;
 }
 
-
+
 //
 //  Local Support Routine
 //
@@ -5648,7 +5648,7 @@ FatMoveFileNeedsWriteThrough (
     )
 {
     PAGED_CODE();
-    
+
     if (NodeType(FcbOrDcb) == FAT_NTC_FCB) {
 
 
@@ -5656,15 +5656,15 @@ FatMoveFileNeedsWriteThrough (
 
 
             ClearFlag( IrpContext->Flags, IRP_CONTEXT_FLAG_WRITE_THROUGH );
-            SetFlag( IrpContext->Flags, IRP_CONTEXT_FLAG_DISABLE_WRITE_THROUGH );        
+            SetFlag( IrpContext->Flags, IRP_CONTEXT_FLAG_DISABLE_WRITE_THROUGH );
 
-        } else {    
+        } else {
 
             IrpContext->Flags &= ~(IRP_CONTEXT_FLAG_WRITE_THROUGH|IRP_CONTEXT_FLAG_DISABLE_WRITE_THROUGH);
-            IrpContext->Flags |= OldWriteThroughFlags;            
+            IrpContext->Flags |= OldWriteThroughFlags;
 
-        }        
-    }    
+        }
+    }
 }
 
 _Requires_lock_held_(_Global_critical_region_)
@@ -5798,7 +5798,7 @@ Return Value:
     //
     //  Do a quick check on the input buffer.
     //
-    
+
 #if defined(_WIN64) && defined(BUILD_WOW64_ENABLED)
     if (IoIs32bitProcess( Irp )) {
 
@@ -5837,7 +5837,7 @@ Return Value:
         (TargetCluster + InputBuffer->ClusterCount < TargetCluster) ||
         (TargetCluster + InputBuffer->ClusterCount > MaxClusters + 2) ||
         (InputBuffer->StartingVcn.LowPart >= MaxClusters) ||
-        InputBuffer->ClusterCount == 0 
+        InputBuffer->ClusterCount == 0
         ) {
 
         FatCompleteRequest( IrpContext, Irp, STATUS_INVALID_PARAMETER );
@@ -5916,17 +5916,17 @@ Return Value:
     //
     //  If the VDL of the file is zero, it has no valid data in it anyway.
     //  So it should be safe to avoid flushing the FAT entries and let them be
-    //  lazily written out. 
+    //  lazily written out.
     //
-    //  This is  done so that bitlocker's cover file doesn't cause 
-    //  unnecessary FAT table I/O when it's moved around. 
+    //  This is  done so that bitlocker's cover file doesn't cause
+    //  unnecessary FAT table I/O when it's moved around.
     //  (See Win8 bug 106505)
     //
 
     //
     //  If this is a file, and the VDL is zero, clear write through.
     //
-    
+
     FatMoveFileNeedsWriteThrough(IrpContext, FcbOrDcb, OldWriteThroughFlags);
 
 
@@ -6060,7 +6060,7 @@ Return Value:
 
                 (VOID)FatAcquireExclusiveFcb( IrpContext, FcbOrDcb );
                 FcbAcquired = TRUE;
-                
+
                 FatVerifyFcb( IrpContext, FcbOrDcb );
             }
 
@@ -6180,21 +6180,21 @@ Return Value:
             //
             //  If the VDL of the file is zero, it has no valid data in it anyway.
             //  So it should be safe to avoid flushing the FAT entries and let them be
-            //  lazily written out. 
+            //  lazily written out.
             //
-            //  This is  done so that bitlocker's cover file doesn't cause 
-            //  unnecessary FAT table I/O when it's moved around. 
+            //  This is  done so that bitlocker's cover file doesn't cause
+            //  unnecessary FAT table I/O when it's moved around.
             //  (See Win8 bug 106505)
             //
 
             if ((FcbOrDcb->Header.ValidDataLength.QuadPart != 0) || (NodeType(FcbOrDcb) != FAT_NTC_FCB)) {
-                
+
                 FatFlushFatEntries( IrpContext,
                                     Vcb,
                                     TargetCluster,
                                     BytesToReallocate >> ClusterShift );
             }
-            
+
             //
             //  Aqcuire both resources exclusive now, guaranteeing that NOBODY
             //  is in either the read or write paths.
@@ -6339,7 +6339,7 @@ Return Value:
 
                 FatFlushFatEntries( IrpContext, Vcb, SecondSpliceSourceCluster, 1 );
             }
-            
+
             //
             //  Now do the first splice OR update the dirent in the parent
             //  and flush the respective object.  After this flush the file
@@ -6355,12 +6355,12 @@ Return Value:
                 //  to update our parent directory.
                 //
 
-                FatGetDirentFromFcbOrDcb( IrpContext, 
-                                          FcbOrDcb, 
-                                          FALSE, 
-                                          &Dirent, 
+                FatGetDirentFromFcbOrDcb( IrpContext,
+                                          FcbOrDcb,
+                                          FALSE,
+                                          &Dirent,
                                           &DirentBcb );
-                
+
                 Dirent->FirstClusterOfFile = (USHORT)FirstSpliceTargetCluster;
 
                 if (FatIsFat32(Vcb)) {
@@ -6387,7 +6387,7 @@ Return Value:
                                 (FAT_ENTRY)FirstSpliceTargetCluster );
 
                 if ((FcbOrDcb->Header.ValidDataLength.QuadPart != 0) || (NodeType(FcbOrDcb) != FAT_NTC_FCB)) {
-    
+
                     FatFlushFatEntries( IrpContext, Vcb, FirstSpliceSourceCluster, 1 );
                 }
             }
@@ -6606,7 +6606,7 @@ Return Value:
             //
 
             if (FcbAcquired) {
-                
+
                 FatReleaseFcb( IrpContext, FcbOrDcb );
             }
 
@@ -6631,7 +6631,7 @@ Return Value:
     return Status;
 }
 
-
+
 //
 //  Local Support Routine
 //
@@ -6741,7 +6741,7 @@ Return Value:
 
     //
     //  If there is more than our max, then reduce the byte count for this
-    //  pass to our maximum. We must also align the file offset to a 
+    //  pass to our maximum. We must also align the file offset to a
     //  buffer size byte boundary.
     //
 
@@ -6813,7 +6813,7 @@ Return Value:
     }
 }
 
-
+
 //
 //  Local Support Routine
 //
@@ -6933,13 +6933,13 @@ Return Value:
     //
     //  Run should always be present, but don't bugcheck in the case where it's not.
     //
-    
+
     if (!Result) {
 
         NT_ASSERT( FALSE);
         FatRaiseStatus( IrpContext, STATUS_FILE_CORRUPT_ERROR);
     }
-    
+
     //
     //  At this point the variables:
     //
@@ -6964,10 +6964,10 @@ Return Value:
          SourceBytesRemaining -= SourceMcbBytesInRun,
          SourceMcbVbo += SourceMcbBytesInRun) {
 
-        if (SourceMcbVbo != 0) {      
-#ifdef _MSC_VER      
-#pragma prefast( suppress:28931, "needed for debug build" )          
-#endif  
+        if (SourceMcbVbo != 0) {
+#ifdef _MSC_VER
+#pragma prefast( suppress:28931, "needed for debug build" )
+#endif
             Result = FatGetNextMcbEntry( Vcb, &FcbOrDcb->Mcb,
                                          SourceIndex,
                                          &SourceVbo,
@@ -7017,7 +7017,7 @@ Return Value:
     }
 }
 
-
+
 NTSTATUS
 FatAllowExtendedDasdIo(
     IN PIRP_CONTEXT IrpContext,
@@ -7079,8 +7079,8 @@ Return Value:
 }
 
 #if (NTDDI_VERSION >= NTDDI_WIN7)
-
-_Requires_lock_held_(_Global_critical_region_)    
+
+_Requires_lock_held_(_Global_critical_region_)
 NTSTATUS
 FatGetRetrievalPointerBase (
     _In_ PIRP_CONTEXT IrpContext,
@@ -7139,11 +7139,11 @@ Return Value:
 
     //
     // Verify the handle has manage volume access.
-    // 
-    
+    //
+
     if ((Ccb == NULL) || !FlagOn( Ccb->Flags, CCB_FLAG_MANAGE_VOLUME_ACCESS )) {
 
-        FatCompleteRequest( IrpContext, Irp, STATUS_INVALID_PARAMETER );        
+        FatCompleteRequest( IrpContext, Irp, STATUS_INVALID_PARAMETER );
         return STATUS_INVALID_PARAMETER;
     }
 
@@ -7155,7 +7155,7 @@ Return Value:
 
     if (BufferLength < sizeof(RETRIEVAL_POINTER_BASE)) {
 
-        FatCompleteRequest( IrpContext, Irp, STATUS_BUFFER_TOO_SMALL );        
+        FatCompleteRequest( IrpContext, Irp, STATUS_BUFFER_TOO_SMALL );
         return STATUS_BUFFER_TOO_SMALL;
     }
 
@@ -7166,27 +7166,27 @@ Return Value:
     RtlZeroMemory( RetrievalPointerBase, BufferLength );
 
     try {
-        
+
         FatAcquireSharedVcb(IrpContext, Vcb);
         FatQuickVerifyVcb(IrpContext, Vcb);
-           
+
         RetrievalPointerBase->FileAreaOffset.QuadPart = Vcb->AllocationSupport.FileAreaLbo >> Vcb->AllocationSupport.LogOfBytesPerSector;
         Irp->IoStatus.Information = sizeof( RETRIEVAL_POINTER_BASE );
-        
+
     } finally {
 
         FatReleaseVcb(IrpContext, Vcb);
-        
+
     }
-    
+
     FatCompleteRequest( IrpContext, Irp, STATUS_SUCCESS );
-    
+
     return STATUS_SUCCESS;
-    
+
 }
 
-
-_Requires_lock_held_(_Global_critical_region_)    
+
+_Requires_lock_held_(_Global_critical_region_)
 NTSTATUS
 FatGetBootAreaInfo (
     _In_ PIRP_CONTEXT IrpContext,
@@ -7245,11 +7245,11 @@ Return Value:
 
     //
     // Verify the handle has manage volume access.
-    // 
-    
+    //
+
     if ((Ccb == NULL) || !FlagOn( Ccb->Flags, CCB_FLAG_MANAGE_VOLUME_ACCESS )) {
 
-        FatCompleteRequest( IrpContext, Irp, STATUS_INVALID_PARAMETER );        
+        FatCompleteRequest( IrpContext, Irp, STATUS_INVALID_PARAMETER );
         return STATUS_INVALID_PARAMETER;
     }
 
@@ -7261,7 +7261,7 @@ Return Value:
 
     if (BufferLength < sizeof(BOOT_AREA_INFO)) {
 
-        FatCompleteRequest( IrpContext, Irp, STATUS_BUFFER_TOO_SMALL );        
+        FatCompleteRequest( IrpContext, Irp, STATUS_BUFFER_TOO_SMALL );
         return STATUS_BUFFER_TOO_SMALL;
     }
 
@@ -7272,36 +7272,36 @@ Return Value:
     RtlZeroMemory( BootAreaInfo, BufferLength );
 
     try {
-        
+
         FatAcquireSharedVcb(IrpContext, Vcb);
         FatQuickVerifyVcb(IrpContext, Vcb);
 
         if (FatIsFat32( Vcb )) {
-            
-            BootAreaInfo->BootSectorCount = 2;    
+
+            BootAreaInfo->BootSectorCount = 2;
             BootAreaInfo->BootSectors[0].Offset.QuadPart = 0;
             BootAreaInfo->BootSectors[1].Offset.QuadPart = 6;
         } else {
-    
+
             BootAreaInfo->BootSectorCount = 1;
-            BootAreaInfo->BootSectors[0].Offset.QuadPart = 0;    
+            BootAreaInfo->BootSectors[0].Offset.QuadPart = 0;
         }
-        
+
         Irp->IoStatus.Information = sizeof( BOOT_AREA_INFO );
-        
+
     } finally {
 
         FatReleaseVcb(IrpContext, Vcb);
     }
-    
+
     FatCompleteRequest( IrpContext, Irp, STATUS_SUCCESS );
     return STATUS_SUCCESS;
 }
 
 #endif
 
-
-_Requires_lock_held_(_Global_critical_region_)    
+
+_Requires_lock_held_(_Global_critical_region_)
 NTSTATUS
 FatMarkHandle (
     _In_ PIRP_CONTEXT IrpContext,
@@ -7333,9 +7333,9 @@ Return Value:
     PCCB                            DasdCcb = NULL;
     TYPE_OF_OPEN                    TypeOfOpen;
     PMARK_HANDLE_INFO               HandleInfo = NULL;
-    PFILE_OBJECT                    DasdFileObject = NULL;    
+    PFILE_OBJECT                    DasdFileObject = NULL;
     BOOLEAN                         ReleaseFcb = FALSE;
-    
+
 #if defined(_WIN64) && defined(BUILD_WOW64_ENABLED)
     MARK_HANDLE_INFO                LocalMarkHandleInfo = {0};
 #endif
@@ -7346,7 +7346,7 @@ Return Value:
 
     //
     //  Always make this a synchronous IRP.
-    //  
+    //
 
     SetFlag( IrpContext->Flags, IRP_CONTEXT_FLAG_WAIT );
 
@@ -7411,13 +7411,13 @@ Return Value:
 #endif
 
     //
-    //  Check that only legal bits are being set.  
+    //  Check that only legal bits are being set.
     //  We currently only support two bits: protect clusters and unprotect clusters.
     //
     //  Note that we don't actually support the USN journal, but we must ignore the flags in order
     //  to preserve compatibility.
     //
-    
+
     if (FlagOn( HandleInfo->HandleInfo,
                 ~(MARK_HANDLE_PROTECT_CLUSTERS)) ||
         (FlagOn( HandleInfo->HandleInfo,
@@ -7498,49 +7498,49 @@ Return Value:
             FatCompleteRequest( IrpContext, Irp, STATUS_ACCESS_DENIED );
             return STATUS_ACCESS_DENIED;
         }
-        
+
     }
 
     _SEH2_TRY {
-            
+
         FatAcquireExclusiveFcb(IrpContext, Fcb);
         ReleaseFcb = TRUE;
 
         FatVerifyFcb( IrpContext, Fcb );
 
         if (HandleInfo->HandleInfo & MARK_HANDLE_PROTECT_CLUSTERS) {
-            
+
             if (Fcb->FcbState & FCB_STATE_DENY_DEFRAG) {
 
                 //
                 //  It's already set, bail out.
                 //
-                
+
                 try_return( Status = STATUS_ACCESS_DENIED );
-            } 
-            
+            }
+
             Ccb->Flags |= CCB_FLAG_DENY_DEFRAG;
             Fcb->FcbState|= FCB_STATE_DENY_DEFRAG;
-            
+
         }
 
         try_exit: NOTHING;
-    
+
     } _SEH2_FINALLY {
-    
+
         if (ReleaseFcb) {
-            
+
             FatReleaseFcb(IrpContext, Fcb);
         }
 
     } _SEH2_END;
-    
+
     FatCompleteRequest( IrpContext, Irp, Status );
     return Status;
 }
 
-
-_Requires_lock_held_(_Global_critical_region_)    
+
+_Requires_lock_held_(_Global_critical_region_)
 VOID
 FatFlushAndCleanVolume(
     IN PIRP_CONTEXT IrpContext,
@@ -7663,7 +7663,7 @@ Return Value:
 
 #if (NTDDI_VERSION >= NTDDI_WIN8)
 
-
+
 _Requires_lock_held_(_Global_critical_region_)
 NTSTATUS
 FatSetPurgeFailureMode (
@@ -7680,8 +7680,8 @@ FatSetPurgeFailureMode (
     force error propagation, particulary when a filter has mapped a
     section for the purposes of scanning the file in the background.
 
-    The purge failure mode is a reference count because it is set 
-    per mapped section and there may be multiple sections backed by 
+    The purge failure mode is a reference count because it is set
+    per mapped section and there may be multiple sections backed by
     the file.
 
 Arguments:
@@ -7705,7 +7705,7 @@ Return Value:
     BOOLEAN FcbAcquired = FALSE;
 
     PAGED_CODE();
-    
+
     IrpSp = IoGetCurrentIrpStackLocation( Irp );
 
     //
@@ -7767,7 +7767,7 @@ Return Value:
         //  Acquire the FCB exclusively to synchronize with coherency flush
         //  and purge.
         //
-        
+
         FatAcquireExclusiveFcb( IrpContext, Fcb );
         FcbAcquired = TRUE;
 
@@ -7781,7 +7781,7 @@ Return Value:
             }
 
             Fcb->PurgeFailureModeEnableCount += 1;
-            
+
         } else {
 
             ASSERT( FlagOn( SetPurgeInput->Flags, SET_PURGE_FAILURE_MODE_DISABLED ));
@@ -7802,7 +7802,7 @@ Return Value:
             FatReleaseFcb( IrpContext, Fcb );
         }
     }
-    
+
     //
     //  Complete the irp if we terminated normally.
     //
@@ -7814,7 +7814,7 @@ Return Value:
 
 #endif
 
-
+
 NTSTATUS
 FatSearchBufferForLabel(
     IN  PIRP_CONTEXT IrpContext,
@@ -7964,7 +7964,7 @@ Return Value:
     return STATUS_SUCCESS;
 }
 
-
+
 VOID
 FatVerifyLookupFatEntry (
     IN PIRP_CONTEXT IrpContext,
@@ -8086,7 +8086,7 @@ Return Value:
 
             continue;
         }
-        
+
 #ifdef _MSC_VER
 #pragma prefast( pop )
 #endif
@@ -8149,7 +8149,7 @@ FatSetZeroOnDeallocate (
 
     if ((TypeOfOpen != UserFileOpen) ||
         (!IrpSp->FileObject->WriteAccess) ) {
-        
+
         FatCompleteRequest( IrpContext, Irp, STATUS_ACCESS_DENIED );
         return STATUS_ACCESS_DENIED;
     }
@@ -8174,17 +8174,17 @@ FatSetZeroOnDeallocate (
     _SEH2_TRY {
 
         SetFlag( FcbOrDcb->FcbState, FCB_STATE_ZERO_ON_DEALLOCATION );
-        
-    } _SEH2_FINALLY {    
-        
+
+    } _SEH2_FINALLY {
+
         if (ReleaseFcb) {
             FatReleaseFcb(IrpContext, FcbOrDcb);
         }
-        
+
     } _SEH2_END;
-        
-    FatCompleteRequest( IrpContext, Irp, Status );        
-    return Status;    
+
+    FatCompleteRequest( IrpContext, Irp, Status );
+    return Status;
 }
 #endif
 

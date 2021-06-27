@@ -35,7 +35,7 @@ sqrt:
     ja short x_is_nan
 
     /* All is well, calculate the sqrt */
-    sqrtpd xmm0, xmm0
+    sqrtsd xmm0, xmm0
     ret
 
 x_is_negative:

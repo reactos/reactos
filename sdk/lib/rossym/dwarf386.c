@@ -7,7 +7,7 @@
 #include "dwarf.h"
 
 char*
-dwarf386regs[] = 
+dwarf386regs[] =
 {
 	"AX",
 	"CX",

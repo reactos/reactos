@@ -36,19 +36,19 @@
 typedef struct _RTL_ADAPTER {
     NDIS_HANDLE MiniportAdapterHandle;
     NDIS_SPIN_LOCK Lock;
-    
+
     ULONG IoRangeStart;
     ULONG IoRangeLength;
-    
+
     ULONG InterruptVector;
     ULONG InterruptLevel;
     BOOLEAN InterruptShared;
     ULONG InterruptFlags;
-    
+
     PUCHAR IoBase;
     NDIS_MINIPORT_INTERRUPT Interrupt;
     BOOLEAN InterruptRegistered;
-    
+
     UCHAR PermanentMacAddress[IEEE_802_ADDR_LENGTH];
     UCHAR CurrentMacAddress[IEEE_802_ADDR_LENGTH];
     struct {
@@ -59,22 +59,22 @@ typedef struct _RTL_ADAPTER {
     PUCHAR ReceiveBuffer;
     NDIS_PHYSICAL_ADDRESS ReceiveBufferPa;
     USHORT ReceiveOffset;
-    
+
     ULONG LinkSpeedMbps;
     ULONG MediaState;
     BOOLEAN LinkChange;
-    
+
     ULONG PacketFilter;
-    
+
     USHORT InterruptMask;
     USHORT InterruptPending;
-    
+
     UCHAR DirtyTxDesc;
     UCHAR CurrentTxDesc;
     BOOLEAN TxFull;
     PUCHAR RuntTxBuffers;
     NDIS_PHYSICAL_ADDRESS RuntTxBuffersPa;
-    
+
     ULONG ReceiveOk;
     ULONG TransmitOk;
     ULONG ReceiveError;
@@ -84,7 +84,7 @@ typedef struct _RTL_ADAPTER {
     ULONG ReceiveAlignmentError;
     ULONG TransmitOneCollision;
     ULONG TransmitMoreCollisions;
-    
+
 } RTL_ADAPTER, *PRTL_ADAPTER;
 
 NDIS_STATUS
@@ -98,38 +98,38 @@ NTAPI
 NICSoftReset (
     IN PRTL_ADAPTER Adapter
     );
-    
+
 NDIS_STATUS
 NTAPI
 NICRegisterReceiveBuffer (
     IN PRTL_ADAPTER Adapter
     );
-    
+
 NDIS_STATUS
 NTAPI
 NICRemoveReceiveBuffer (
     IN PRTL_ADAPTER Adapter
     );
-    
+
 NDIS_STATUS
 NTAPI
 NICEnableTxRx (
     IN PRTL_ADAPTER Adapter
     );
-    
+
 NDIS_STATUS
 NTAPI
 NICGetPermanentMacAddress (
     IN PRTL_ADAPTER Adapter,
     OUT PUCHAR MacAddress
     );
-    
+
 NDIS_STATUS
 NTAPI
 NICApplyPacketFilter (
     IN PRTL_ADAPTER Adapter
     );
-    
+
 NDIS_STATUS
 NTAPI
 NICApplyInterruptMask (
@@ -141,14 +141,14 @@ NTAPI
 NICDisableInterrupts (
     IN PRTL_ADAPTER Adapter
     );
-    
+
 USHORT
 NTAPI
 NICInterruptRecognized (
     IN PRTL_ADAPTER Adapter,
     OUT PBOOLEAN InterruptRecognized
     );
-    
+
 VOID
 NTAPI
 NICAcknowledgeInterrupts (
@@ -169,7 +169,7 @@ NICTransmitPacket (
     IN ULONG PhysicalAddress,
     IN ULONG Length
     );
-    
+
 NDIS_STATUS
 NTAPI
 MiniportSetInformation (
@@ -180,7 +180,7 @@ MiniportSetInformation (
     OUT PULONG BytesRead,
     OUT PULONG BytesNeeded
     );
-    
+
 NDIS_STATUS
 NTAPI
 MiniportQueryInformation (
@@ -191,7 +191,7 @@ MiniportQueryInformation (
     OUT PULONG BytesWritten,
     OUT PULONG BytesNeeded
     );
-    
+
 VOID
 NTAPI
 MiniportISR (
@@ -199,7 +199,7 @@ MiniportISR (
     OUT PBOOLEAN QueueMiniportHandleInterrupt,
     IN NDIS_HANDLE MiniportAdapterContext
     );
-    
+
 VOID
 NTAPI
 MiniportHandleInterrupt (

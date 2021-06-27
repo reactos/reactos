@@ -169,10 +169,10 @@ UDFCommonClose(
             // First, get a pointer to the current I/O stack location
             IrpSp = IoGetCurrentIrpStackLocation(Irp);
             ASSERT(IrpSp);
-    
+
             FileObject = IrpSp->FileObject;
             ASSERT(FileObject);
-    
+
             // Get the FCB and CCB pointers
             Ccb = (PtrUDFCCB)(FileObject->FsContext2);
             ASSERT(Ccb);
@@ -205,7 +205,7 @@ UDFCommonClose(
         // Therefore, be extremely careful in implementing this close dispatch entry point.
         // Also note that we do not have the option of returning a failure code from the
         // close dispatch entry point; the system expects that the close will always succeed.
-        
+
         UDFAcquireResourceShared(&(Vcb->VCBResource), TRUE);
         AcquiredVcb = TRUE;
 
@@ -278,7 +278,7 @@ UDFCommonClose(
 
                 try_return(RC = STATUS_SUCCESS);
             }
-    
+
             UDFInterlockedIncrement((PLONG)&(Vcb->VCBOpenCount));
 
             if(AcquiredVcb) {
@@ -380,7 +380,7 @@ try_exit: NOTHING;
                 Irp->IoStatus.Status = STATUS_SUCCESS;
                 Irp->IoStatus.Information = 0;
                 IoCompleteRequest(Irp, IO_DISK_INCREMENT);
-            } 
+            }
             // Free up the Irp Context
             if(!PostRequest)
                 UDFReleaseIrpContext(PtrIrpContext);
@@ -967,7 +967,7 @@ UDFCloseAllXXXDelayedInDir(
         for(i=0;i<FoundListSize;i++) {
 
             _SEH2_TRY {
-                
+
                 CurFileInfo = FoundList[i];
                 if(!CurFileInfo->ListPtr) {
                     CurFileInfo->ListPtr = (PFE_LIST_ENTRY)(MyAllocatePool__(NonPagedPool, sizeof(FE_LIST_ENTRY)));
@@ -1084,7 +1084,7 @@ try_exit: NOTHING;
         // Release DelayedCloseResource
         if(ResAcq)
             UDFReleaseResource(&(UDFGlobalData.DelayedCloseResource));
-        
+
         if(ListPtrArray)
             MyFreePool__(ListPtrArray);
         if(PassedList)
@@ -1095,7 +1095,7 @@ try_exit: NOTHING;
 
     return RC;
 } // end UDFCloseAllXXXDelayedInDir(
-    
+
 
 /*
     This routine adds request to Delayed Close queue.

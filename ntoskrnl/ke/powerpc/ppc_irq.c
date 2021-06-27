@@ -778,13 +778,13 @@ KiSystemService(ppc_trap_frame_t *trap_frame)
     case 0xf0000: /* Thread startup */
         /* XXX how to use UserThread (gpr[6]) */
         SystemRoutine = (PKSYSTEM_ROUTINE)trap_frame->gpr[3];
-        SystemRoutine((PKSTART_ROUTINE)trap_frame->gpr[4], 
+        SystemRoutine((PKSTART_ROUTINE)trap_frame->gpr[4],
                       (PVOID)trap_frame->gpr[5]);
         break;
 
         /* Handle a normal system call */
     default:
-        SyscallFunction = 
+        SyscallFunction =
             ((PSYSCALL_FUN*)KeServiceDescriptorTable
              [trap_frame->gpr[0] >> 12].Base)[trap_frame->gpr[0] & 0xfff];
         trap_frame->gpr[3] = SyscallFunction

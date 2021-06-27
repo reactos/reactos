@@ -2,10 +2,10 @@
  * COPYRIGHT:        GNU GENERAL PUBLIC LICENSE VERSION 2
  * PROJECT:          ReiserFs file system driver for Windows NT/2000/XP/Vista.
  * FILE:             fileinfo.c
- * PURPOSE:          
+ * PURPOSE:
  * PROGRAMMER:       Mark Piper, Matt Wu, Bo Brantén.
- * HOMEPAGE:         
- * UPDATE HISTORY: 
+ * HOMEPAGE:
+ * UPDATE HISTORY:
  */
 
 /* INCLUDES *****************************************************************/
@@ -54,12 +54,12 @@ RfsdQueryInformation (IN PRFSD_IRP_CONTEXT IrpContext)
     _SEH2_TRY {
 
         ASSERT(IrpContext != NULL);
-        
+
         ASSERT((IrpContext->Identifier.Type == RFSDICX) &&
             (IrpContext->Identifier.Size == sizeof(RFSD_IRP_CONTEXT)));
-        
+
         DeviceObject = IrpContext->DeviceObject;
-        
+
         //
         // This request is not allowed on the main device object
         //
@@ -67,13 +67,13 @@ RfsdQueryInformation (IN PRFSD_IRP_CONTEXT IrpContext)
             Status = STATUS_INVALID_DEVICE_REQUEST;
             _SEH2_LEAVE;
         }
-        
+
         FileObject = IrpContext->FileObject;
-        
+
         Fcb = (PRFSD_FCB) FileObject->FsContext;
-        
+
         ASSERT(Fcb != NULL);
-        
+
         //
         // This request is not allowed on volumes
         //
@@ -81,13 +81,13 @@ RfsdQueryInformation (IN PRFSD_IRP_CONTEXT IrpContext)
             Status = STATUS_INVALID_PARAMETER;
             _SEH2_LEAVE;
         }
-        
+
         ASSERT((Fcb->Identifier.Type == RFSDFCB) &&
             (Fcb->Identifier.Size == sizeof(RFSD_FCB)));
 
         Vcb = Fcb->Vcb;
 
-/*        
+/*
         if ( !IsFlagOn(Fcb->Vcb->Flags, VCB_READ_ONLY) &&
              !FlagOn(Fcb->Flags, FCB_PAGE_FILE))
 */
@@ -100,59 +100,59 @@ RfsdQueryInformation (IN PRFSD_IRP_CONTEXT IrpContext)
                 Status = STATUS_PENDING;
                 _SEH2_LEAVE;
             }
-            
+
             FcbResourceAcquired = TRUE;
         }
-        
+
         Ccb = (PRFSD_CCB) FileObject->FsContext2;
-        
+
         ASSERT(Ccb != NULL);
-        
+
         ASSERT((Ccb->Identifier.Type == RFSDCCB) &&
             (Ccb->Identifier.Size == sizeof(RFSD_CCB)));
-        
+
         Irp = IrpContext->Irp;
-        
+
         IoStackLocation = IoGetCurrentIrpStackLocation(Irp);
-        
+
         FileInformationClass =
             IoStackLocation->Parameters.QueryFile.FileInformationClass;
-        
+
         Length = IoStackLocation->Parameters.QueryFile.Length;
-        
+
         Buffer = Irp->AssociatedIrp.SystemBuffer;
-        
+
         RtlZeroMemory(Buffer, Length);
 
         FileSize  = (LONGLONG) Fcb->Inode->i_size;
 
         AllocationSize = CEILING_ALIGNED(FileSize, (ULONGLONG)Vcb->BlockSize);
-       
+
         switch (FileInformationClass) {
 
         case FileBasicInformation:
             {
                 PFILE_BASIC_INFORMATION FileBasicInformation;
-                
+
                 if (Length < sizeof(FILE_BASIC_INFORMATION)) {
                     Status = STATUS_INFO_LENGTH_MISMATCH;
                     _SEH2_LEAVE;
                 }
-                
+
                 FileBasicInformation = (PFILE_BASIC_INFORMATION) Buffer;
 
                 RtlZeroMemory(FileBasicInformation, sizeof(FILE_BASIC_INFORMATION));
-                
+
                 FileBasicInformation->CreationTime = RfsdSysTime(Fcb->Inode->i_ctime);
-                
+
                 FileBasicInformation->LastAccessTime = RfsdSysTime(Fcb->Inode->i_atime);
-                
+
                 FileBasicInformation->LastWriteTime = RfsdSysTime(Fcb->Inode->i_mtime);
-                
+
                 FileBasicInformation->ChangeTime = RfsdSysTime(Fcb->Inode->i_mtime);
-                
+
                 FileBasicInformation->FileAttributes = Fcb->RfsdMcb->FileAttr;
-                
+
                 Irp->IoStatus.Information = sizeof(FILE_BASIC_INFORMATION);
                 Status = STATUS_SUCCESS;
                 _SEH2_LEAVE;
@@ -163,17 +163,17 @@ RfsdQueryInformation (IN PRFSD_IRP_CONTEXT IrpContext)
         case FileAttributeTagInformation:
             {
                 PFILE_ATTRIBUTE_TAG_INFORMATION FATI;
-                
+
                 if (Length < sizeof(FILE_ATTRIBUTE_TAG_INFORMATION)) {
                     Status = STATUS_INFO_LENGTH_MISMATCH;
                     _SEH2_LEAVE;
                 }
-                
+
                 FATI = (PFILE_ATTRIBUTE_TAG_INFORMATION) Buffer;
-                
+
                 FATI->FileAttributes = Fcb->RfsdMcb->FileAttr;
                 FATI->ReparseTag = 0;
-                
+
                 Irp->IoStatus.Information = sizeof(FILE_ATTRIBUTE_TAG_INFORMATION);
                 Status = STATUS_SUCCESS;
                 _SEH2_LEAVE;
@@ -183,118 +183,118 @@ RfsdQueryInformation (IN PRFSD_IRP_CONTEXT IrpContext)
         case FileStandardInformation:
             {
                 PFILE_STANDARD_INFORMATION FileStandardInformation;
-                
+
                 if (Length < sizeof(FILE_STANDARD_INFORMATION)) {
                     Status = STATUS_INFO_LENGTH_MISMATCH;
                     _SEH2_LEAVE;
                 }
-                
+
                 FileStandardInformation = (PFILE_STANDARD_INFORMATION) Buffer;
-                
+
                 FileStandardInformation->AllocationSize.QuadPart = AllocationSize;
                 FileStandardInformation->EndOfFile.QuadPart = FileSize;
-                
+
                 FileStandardInformation->NumberOfLinks = Fcb->Inode->i_links_count;
-                
+
                 if (IsFlagOn(Fcb->Vcb->Flags, VCB_READ_ONLY))
                     FileStandardInformation->DeletePending = FALSE;
                 else
-                    FileStandardInformation->DeletePending = IsFlagOn(Fcb->Flags, FCB_DELETE_PENDING);                
-                
+                    FileStandardInformation->DeletePending = IsFlagOn(Fcb->Flags, FCB_DELETE_PENDING);
+
                 if (Fcb->RfsdMcb->FileAttr & FILE_ATTRIBUTE_DIRECTORY) {
                     FileStandardInformation->Directory = TRUE;
                 } else {
                     FileStandardInformation->Directory = FALSE;
                 }
-                
+
                 Irp->IoStatus.Information = sizeof(FILE_STANDARD_INFORMATION);
                 Status = STATUS_SUCCESS;
                 _SEH2_LEAVE;
             }
-            
+
         case FileInternalInformation:
             {
                 PFILE_INTERNAL_INFORMATION FileInternalInformation;
-                
+
                 if (Length < sizeof(FILE_INTERNAL_INFORMATION)) {
                     Status = STATUS_INFO_LENGTH_MISMATCH;
                     _SEH2_LEAVE;
                 }
-                
+
                 FileInternalInformation = (PFILE_INTERNAL_INFORMATION) Buffer;
-                
+
                 // The "inode number"
 				FileInternalInformation->IndexNumber.LowPart = Fcb->RfsdMcb->Key.k_dir_id;
 				FileInternalInformation->IndexNumber.HighPart = Fcb->RfsdMcb->Key.k_objectid;
-                
+
                 Irp->IoStatus.Information = sizeof(FILE_INTERNAL_INFORMATION);
                 Status = STATUS_SUCCESS;
                 _SEH2_LEAVE;
             }
-            
+
         case FileEaInformation:
             {
                 PFILE_EA_INFORMATION FileEaInformation;
-                
+
                 if (Length < sizeof(FILE_EA_INFORMATION)) {
                     Status = STATUS_INFO_LENGTH_MISMATCH;
                     _SEH2_LEAVE;
                 }
-                
+
                 FileEaInformation = (PFILE_EA_INFORMATION) Buffer;
-                
+
                 // Romfs doesn't have any extended attributes
                 FileEaInformation->EaSize = 0;
-                
+
                 Irp->IoStatus.Information = sizeof(FILE_EA_INFORMATION);
                 Status = STATUS_SUCCESS;
                 _SEH2_LEAVE;
             }
-            
+
         case FileNameInformation:
             {
                 PFILE_NAME_INFORMATION FileNameInformation;
-                
+
                 if (Length < sizeof(FILE_NAME_INFORMATION) +
                     Fcb->RfsdMcb->ShortName.Length - sizeof(WCHAR)) {
                     Status = STATUS_INFO_LENGTH_MISMATCH;
                     _SEH2_LEAVE;
                 }
-                
+
                 FileNameInformation = (PFILE_NAME_INFORMATION) Buffer;
-                
+
                 FileNameInformation->FileNameLength = Fcb->RfsdMcb->ShortName.Length;
-                
+
                 RtlCopyMemory(
                     FileNameInformation->FileName,
                     Fcb->RfsdMcb->ShortName.Buffer,
                     Fcb->RfsdMcb->ShortName.Length );
-                
+
                 Irp->IoStatus.Information = sizeof(FILE_NAME_INFORMATION) +
                     Fcb->RfsdMcb->ShortName.Length - sizeof(WCHAR);
                 Status = STATUS_SUCCESS;
                 _SEH2_LEAVE;
             }
-            
+
         case FilePositionInformation:
             {
                 PFILE_POSITION_INFORMATION FilePositionInformation;
-                
+
                 if (Length < sizeof(FILE_POSITION_INFORMATION)) {
                     Status = STATUS_INFO_LENGTH_MISMATCH;
                     _SEH2_LEAVE;
                 }
-                
+
                 FilePositionInformation = (PFILE_POSITION_INFORMATION) Buffer;
-                
+
                 FilePositionInformation->CurrentByteOffset =
                     FileObject->CurrentByteOffset;
-                
+
                 Irp->IoStatus.Information = sizeof(FILE_POSITION_INFORMATION);
                 Status = STATUS_SUCCESS;
                 _SEH2_LEAVE;
             }
-            
+
         case FileAllInformation:
             {
                 PFILE_ALL_INFORMATION       FileAllInformation;
@@ -304,132 +304,132 @@ RfsdQueryInformation (IN PRFSD_IRP_CONTEXT IrpContext)
                 PFILE_EA_INFORMATION        FileEaInformation;
                 PFILE_POSITION_INFORMATION  FilePositionInformation;
                 PFILE_NAME_INFORMATION      FileNameInformation;
-                
+
                 if (Length < sizeof(FILE_ALL_INFORMATION)) {
                     Status = STATUS_INFO_LENGTH_MISMATCH;
                     _SEH2_LEAVE;
                 }
-                
+
                 FileAllInformation = (PFILE_ALL_INFORMATION) Buffer;
-                
+
                 FileBasicInformation =
                     &FileAllInformation->BasicInformation;
-                
+
                 FileStandardInformation =
                     &FileAllInformation->StandardInformation;
-                
+
                 FileInternalInformation =
                     &FileAllInformation->InternalInformation;
-                
+
                 FileEaInformation =
                     &FileAllInformation->EaInformation;
-                
+
                 FilePositionInformation =
                     &FileAllInformation->PositionInformation;
-                
+
                 FileNameInformation =
                     &FileAllInformation->NameInformation;
-                
+
                 FileBasicInformation->CreationTime = RfsdSysTime(Fcb->Inode->i_ctime);
-                
+
                 FileBasicInformation->LastAccessTime = RfsdSysTime(Fcb->Inode->i_atime);
-                
+
                 FileBasicInformation->LastWriteTime = RfsdSysTime(Fcb->Inode->i_mtime);
-                
+
                 FileBasicInformation->ChangeTime = RfsdSysTime(Fcb->Inode->i_mtime);
-                
+
                 FileBasicInformation->FileAttributes = Fcb->RfsdMcb->FileAttr;
-                
+
                 FileStandardInformation->AllocationSize.QuadPart = AllocationSize;
-                
+
                 FileStandardInformation->EndOfFile.QuadPart = FileSize;
-                
+
                 FileStandardInformation->NumberOfLinks = Fcb->Inode->i_links_count;
 
                 if (IsFlagOn(Fcb->Vcb->Flags, VCB_READ_ONLY))
                     FileStandardInformation->DeletePending = FALSE;
                 else
                     FileStandardInformation->DeletePending = IsFlagOn(Fcb->Flags, FCB_DELETE_PENDING);
-                
+
                 if (FlagOn(Fcb->RfsdMcb->FileAttr, FILE_ATTRIBUTE_DIRECTORY)) {
                     FileStandardInformation->Directory = TRUE;
                 } else {
                     FileStandardInformation->Directory = FALSE;
                 }
-                
+
                 // The "inode number"
 				FileInternalInformation->IndexNumber.LowPart = Fcb->RfsdMcb->Key.k_dir_id;
 				FileInternalInformation->IndexNumber.HighPart = Fcb->RfsdMcb->Key.k_objectid;
-                
+
                 // Romfs doesn't have any extended attributes
                 FileEaInformation->EaSize = 0;
-                
+
                 FilePositionInformation->CurrentByteOffset =
                     FileObject->CurrentByteOffset;
-                
+
                 if (Length < sizeof(FILE_ALL_INFORMATION) +
                     Fcb->RfsdMcb->ShortName.Length - sizeof(WCHAR)) {
                     Irp->IoStatus.Information = sizeof(FILE_ALL_INFORMATION);
                     Status = STATUS_BUFFER_OVERFLOW;
                     _SEH2_LEAVE;
                 }
-                
+
                 FileNameInformation->FileNameLength = Fcb->RfsdMcb->ShortName.Length;
-                
+
                 RtlCopyMemory(
                     FileNameInformation->FileName,
                     Fcb->RfsdMcb->ShortName.Buffer,
                     Fcb->RfsdMcb->ShortName.Length
                     );
-                
+
                 Irp->IoStatus.Information = sizeof(FILE_ALL_INFORMATION) +
                     Fcb->RfsdMcb->ShortName.Length - sizeof(WCHAR);
                 Status = STATUS_SUCCESS;
                 _SEH2_LEAVE;
             }
-        
+
         /*
         case FileAlternateNameInformation:
             {
         // TODO: [ext2fsd] Handle FileAlternateNameInformation
-        
+
           // Here we would like to use RtlGenerate8dot3Name but I don't
           // know how to use the argument PGENERATE_NAME_CONTEXT
           }
           */
-          
+
         case FileNetworkOpenInformation:
         {
             PFILE_NETWORK_OPEN_INFORMATION FileNetworkOpenInformation;
-            
+
             if (Length < sizeof(FILE_NETWORK_OPEN_INFORMATION)) {
                 Status = STATUS_INFO_LENGTH_MISMATCH;
                 _SEH2_LEAVE;
             }
-            
+
             FileNetworkOpenInformation =
                 (PFILE_NETWORK_OPEN_INFORMATION) Buffer;
-            
+
             FileNetworkOpenInformation->CreationTime = RfsdSysTime(Fcb->Inode->i_ctime);
-            
+
             FileNetworkOpenInformation->LastAccessTime = RfsdSysTime(Fcb->Inode->i_atime);
-            
+
             FileNetworkOpenInformation->LastWriteTime = RfsdSysTime(Fcb->Inode->i_mtime);
-            
+
             FileNetworkOpenInformation->ChangeTime = RfsdSysTime(Fcb->Inode->i_mtime);
-            
+
             FileNetworkOpenInformation->AllocationSize.QuadPart = AllocationSize;
-            
+
             FileNetworkOpenInformation->EndOfFile.QuadPart = FileSize;
-            
+
             FileNetworkOpenInformation->FileAttributes = Fcb->RfsdMcb->FileAttr;
-            
+
             Irp->IoStatus.Information =
                 sizeof(FILE_NETWORK_OPEN_INFORMATION);
             Status = STATUS_SUCCESS;
             _SEH2_LEAVE;
         }
-        
+
         default:
         Status = STATUS_INVALID_INFO_CLASS;
         }
@@ -441,7 +441,7 @@ RfsdQueryInformation (IN PRFSD_IRP_CONTEXT IrpContext)
                 &Fcb->MainResource,
                 ExGetCurrentResourceThread());
         }
-        
+
         if (!IrpContext->ExceptionInProgress) {
             if (Status == STATUS_PENDING) {
                 RfsdQueueRequest(IrpContext);
@@ -450,7 +450,7 @@ RfsdQueryInformation (IN PRFSD_IRP_CONTEXT IrpContext)
             }
         }
     } _SEH2_END;
-    
+
     return Status;
 }
 
@@ -482,10 +482,10 @@ RfsdSetInformation (IN PRFSD_IRP_CONTEXT IrpContext)
     _SEH2_TRY {
 
         ASSERT(IrpContext != NULL);
-        
+
         ASSERT((IrpContext->Identifier.Type == RFSDICX) &&
             (IrpContext->Identifier.Size == sizeof(RFSD_IRP_CONTEXT)));
-        
+
         DeviceObject = IrpContext->DeviceObject;
 
         //
@@ -495,22 +495,22 @@ RfsdSetInformation (IN PRFSD_IRP_CONTEXT IrpContext)
             Status = STATUS_INVALID_DEVICE_REQUEST;
             _SEH2_LEAVE;
         }
-        
+
         Vcb = (PRFSD_VCB) DeviceObject->DeviceExtension;
-        
+
         ASSERT(Vcb != NULL);
-        
+
         ASSERT((Vcb->Identifier.Type == RFSDVCB) &&
             (Vcb->Identifier.Size == sizeof(RFSD_VCB)));
 
         ASSERT(IsMounted(Vcb));
 
         FileObject = IrpContext->FileObject;
-        
+
         Fcb = (PRFSD_FCB) FileObject->FsContext;
-        
+
         ASSERT(Fcb != NULL);
-        
+
         //
         // This request is not allowed on volumes
         //
@@ -520,7 +520,7 @@ RfsdSetInformation (IN PRFSD_IRP_CONTEXT IrpContext)
             Status = STATUS_INVALID_PARAMETER;
             _SEH2_LEAVE;
         }
-        
+
         ASSERT((Fcb->Identifier.Type == RFSDFCB) &&
             (Fcb->Identifier.Size == sizeof(RFSD_FCB)));
 
@@ -530,21 +530,21 @@ RfsdSetInformation (IN PRFSD_IRP_CONTEXT IrpContext)
         }
 
         Ccb = (PRFSD_CCB) FileObject->FsContext2;
-        
+
         ASSERT(Ccb != NULL);
-        
+
         ASSERT((Ccb->Identifier.Type == RFSDCCB) &&
             (Ccb->Identifier.Size == sizeof(RFSD_CCB)));
-        
+
         Irp = IrpContext->Irp;
-        
+
         IoStackLocation = IoGetCurrentIrpStackLocation(Irp);
-        
+
         FileInformationClass =
             IoStackLocation->Parameters.SetFile.FileInformationClass;
-        
+
         Length = IoStackLocation->Parameters.SetFile.Length;
-        
+
         Buffer = Irp->AssociatedIrp.SystemBuffer;
 
         if (IsFlagOn(Vcb->Flags, VCB_READ_ONLY)) {
@@ -563,7 +563,7 @@ RfsdSetInformation (IN PRFSD_IRP_CONTEXT IrpContext)
                     Status = STATUS_PENDING;
                     _SEH2_LEAVE;
                 }
-            
+
                 VcbResourceAcquired = TRUE;
             }
 
@@ -578,10 +578,10 @@ RfsdSetInformation (IN PRFSD_IRP_CONTEXT IrpContext)
                 Status = STATUS_PENDING;
                 _SEH2_LEAVE;
             }
-            
+
             FcbMainResourceAcquired = TRUE;
         }
-        
+
         if (IsFlagOn(Vcb->Flags, VCB_READ_ONLY)) {
 
             if (FileInformationClass != FilePositionInformation) {
@@ -605,12 +605,12 @@ RfsdSetInformation (IN PRFSD_IRP_CONTEXT IrpContext)
                 Status = STATUS_PENDING;
                 _SEH2_LEAVE;
             }
-            
+
             FcbPagingIoResourceAcquired = TRUE;
         }
-       
-/*        
-        if (FileInformationClass != FileDispositionInformation 
+
+/*
+        if (FileInformationClass != FileDispositionInformation
             && FlagOn(Fcb->Flags, FCB_DELETE_PENDING))
         {
             Status = STATUS_DELETE_PENDING;
@@ -623,7 +623,7 @@ RfsdSetInformation (IN PRFSD_IRP_CONTEXT IrpContext)
 #if 0
         case FileBasicInformation:
             {
-                PFILE_BASIC_INFORMATION FBI = (PFILE_BASIC_INFORMATION) Buffer;               
+                PFILE_BASIC_INFORMATION FBI = (PFILE_BASIC_INFORMATION) Buffer;
                 PRFSD_INODE RfsdInode = Fcb->Inode;
 
                 if (FBI->CreationTime.QuadPart) {
@@ -675,7 +675,7 @@ RfsdSetInformation (IN PRFSD_IRP_CONTEXT IrpContext)
                     _SEH2_LEAVE;
                 }
 
-                if ( FAI->AllocationSize.QuadPart == 
+                if ( FAI->AllocationSize.QuadPart ==
                      Fcb->Header.AllocationSize.QuadPart) {
 
                     Status = STATUS_SUCCESS;
@@ -709,9 +709,9 @@ RfsdSetInformation (IN PRFSD_IRP_CONTEXT IrpContext)
 
                         if (NT_SUCCESS(Status)) {
 
-                            if ( FAI->AllocationSize.QuadPart < 
+                            if ( FAI->AllocationSize.QuadPart <
                                  Fcb->Header.FileSize.QuadPart) {
-                                Fcb->Header.FileSize.QuadPart = 
+                                Fcb->Header.FileSize.QuadPart =
                                                 FAI->AllocationSize.QuadPart;
                             }
 
@@ -730,7 +730,7 @@ RfsdSetInformation (IN PRFSD_IRP_CONTEXT IrpContext)
 
                 if (NT_SUCCESS(Status)) {
 
-                    CcSetFileSizes(FileObject, 
+                    CcSetFileSizes(FileObject,
                             (PCC_FILE_SIZES)(&(Fcb->Header.AllocationSize)));
                     SetFlag(FileObject->Flags, FO_FILE_MODIFIED);
 
@@ -738,7 +738,7 @@ RfsdSetInformation (IN PRFSD_IRP_CONTEXT IrpContext)
                                    FILE_NOTIFY_CHANGE_LAST_WRITE ;
 
                 }
-                
+
             }
 
             break;
@@ -771,7 +771,7 @@ RfsdSetInformation (IN PRFSD_IRP_CONTEXT IrpContext)
 
                     ASSERT( !FlagOn( FileObject->Flags, FO_CLEANUP_COMPLETE ) );
 
-                    CcInitializeCacheMap( 
+                    CcInitializeCacheMap(
                             FileObject,
                             (PCC_FILE_SIZES)&(Fcb->Header.AllocationSize),
                             FALSE,
@@ -781,12 +781,12 @@ RfsdSetInformation (IN PRFSD_IRP_CONTEXT IrpContext)
                     CacheInitialized = TRUE;
                 }
 
-                if ( FEOFI->EndOfFile.QuadPart == 
+                if ( FEOFI->EndOfFile.QuadPart ==
                      Fcb->Header.AllocationSize.QuadPart) {
 
                     Status = STATUS_SUCCESS;
 
-                } else if ( FEOFI->EndOfFile.QuadPart > 
+                } else if ( FEOFI->EndOfFile.QuadPart >
                           Fcb->Header.AllocationSize.QuadPart) {
 
                     LARGE_INTEGER   FileSize = Fcb->Header.FileSize;
@@ -797,9 +797,9 @@ RfsdSetInformation (IN PRFSD_IRP_CONTEXT IrpContext)
 
                         Fcb->Header.FileSize.QuadPart = FEOFI->EndOfFile.QuadPart;
 
-                        Fcb->Inode->i_size = FEOFI->EndOfFile.QuadPart;                        
+                        Fcb->Inode->i_size = FEOFI->EndOfFile.QuadPart;
 
-                        Fcb->Header.ValidDataLength.QuadPart = 
+                        Fcb->Header.ValidDataLength.QuadPart =
                                         (LONGLONG)(0x7fffffffffffffff);
 
                         RfsdSaveInode( IrpContext,
@@ -808,15 +808,15 @@ RfsdSetInformation (IN PRFSD_IRP_CONTEXT IrpContext)
                                        Fcb->Inode);
 
 
-                        CcSetFileSizes(FileObject, 
+                        CcSetFileSizes(FileObject,
                             (PCC_FILE_SIZES)(&(Fcb->Header.AllocationSize)));
 
                         SetFlag(FileObject->Flags, FO_FILE_MODIFIED);
 
-                        RfsdZeroHoles( IrpContext, 
-                                       Vcb, FileObject, 
+                        RfsdZeroHoles( IrpContext,
+                                       Vcb, FileObject,
                                        FileSize.QuadPart,
-                                       Fcb->Header.AllocationSize.QuadPart - 
+                                       Fcb->Header.AllocationSize.QuadPart -
                                             FileSize.QuadPart );
 
                         NotifyFilter = FILE_NOTIFY_CHANGE_SIZE |
@@ -829,7 +829,7 @@ RfsdSetInformation (IN PRFSD_IRP_CONTEXT IrpContext)
 
                         LARGE_INTEGER EndOfFile = FEOFI->EndOfFile;
 
-                        EndOfFile.QuadPart = EndOfFile.QuadPart + 
+                        EndOfFile.QuadPart = EndOfFile.QuadPart +
                                              (LONGLONG)(Vcb->BlockSize - 1);
 
                         Status = RfsdTruncateFile(IrpContext, Vcb, Fcb, &(EndOfFile));
@@ -837,14 +837,14 @@ RfsdSetInformation (IN PRFSD_IRP_CONTEXT IrpContext)
                         if (NT_SUCCESS(Status)) {
 
                             Fcb->Header.FileSize.QuadPart = FEOFI->EndOfFile.QuadPart;
-                            Fcb->Inode->i_size = FEOFI->EndOfFile.QuadPart;                            
+                            Fcb->Inode->i_size = FEOFI->EndOfFile.QuadPart;
 
                             RfsdSaveInode( IrpContext,
                                            Vcb,
                                            Fcb->RfsdMcb->Inode,
                                            Fcb->Inode);
 
-                            CcSetFileSizes(FileObject, 
+                            CcSetFileSizes(FileObject,
                                     (PCC_FILE_SIZES)(&(Fcb->Header.AllocationSize)));
 
                             SetFlag(FileObject->Flags, FO_FILE_MODIFIED);
@@ -866,7 +866,7 @@ RfsdSetInformation (IN PRFSD_IRP_CONTEXT IrpContext)
         case FileDispositionInformation:
             {
                 PFILE_DISPOSITION_INFORMATION FDI = (PFILE_DISPOSITION_INFORMATION)Buffer;
-                
+
                 Status = RfsdSetDispositionInfo(IrpContext, Vcb, Fcb, FDI->DeleteFile);
             }
 
@@ -888,42 +888,42 @@ RfsdSetInformation (IN PRFSD_IRP_CONTEXT IrpContext)
         case FilePositionInformation:
             {
                 PFILE_POSITION_INFORMATION FilePositionInformation;
-                
+
                 if (Length < sizeof(FILE_POSITION_INFORMATION)) {
                     Status = STATUS_INVALID_PARAMETER;
                     _SEH2_LEAVE;
                 }
-                
+
                 FilePositionInformation = (PFILE_POSITION_INFORMATION) Buffer;
-                
+
                 if ((FlagOn(FileObject->Flags, FO_NO_INTERMEDIATE_BUFFERING)) &&
                     (FilePositionInformation->CurrentByteOffset.LowPart &
                     DeviceObject->AlignmentRequirement) ) {
                     Status = STATUS_INVALID_PARAMETER;
                     _SEH2_LEAVE;
                 }
-                
+
                 FileObject->CurrentByteOffset =
                     FilePositionInformation->CurrentByteOffset;
-                
+
                 Status = STATUS_SUCCESS;
                 _SEH2_LEAVE;
             }
 
             break;
-            
+
         default:
             Status = STATUS_INVALID_INFO_CLASS;
         }
 
     } _SEH2_FINALLY {
-        
+
         if (FcbPagingIoResourceAcquired) {
             ExReleaseResourceForThreadLite(
                 &Fcb->PagingIoResource,
                 ExGetCurrentResourceThread() );
         }
-        
+
         if (NT_SUCCESS(Status) && (NotifyFilter != 0)) {
             RfsdNotifyReportChange(
                         IrpContext,
@@ -939,13 +939,13 @@ RfsdSetInformation (IN PRFSD_IRP_CONTEXT IrpContext)
                 &Fcb->MainResource,
                 ExGetCurrentResourceThread() );
         }
-        
+
         if (VcbResourceAcquired) {
             ExReleaseResourceForThreadLite(
                 &Vcb->MainResource,
                 ExGetCurrentResourceThread() );
         }
-        
+
         if (!IrpContext->ExceptionInProgress) {
             if (Status == STATUS_PENDING) {
                 RfsdQueueRequest(IrpContext);
@@ -954,14 +954,14 @@ RfsdSetInformation (IN PRFSD_IRP_CONTEXT IrpContext)
             }
         }
     } _SEH2_END;
-    
+
     return Status;
 }
 
 #if !RFSD_READ_ONLY
 
 NTSTATUS
-RfsdExpandFile( PRFSD_IRP_CONTEXT IrpContext, 
+RfsdExpandFile( PRFSD_IRP_CONTEXT IrpContext,
                 PRFSD_VCB Vcb, PRFSD_FCB Fcb,
                 PLARGE_INTEGER AllocationSize)
 {
@@ -983,7 +983,7 @@ RfsdExpandFile( PRFSD_IRP_CONTEXT IrpContext,
     while (NT_SUCCESS(Status) && (AllocationSize->QuadPart > Fcb->Header.AllocationSize.QuadPart)) {
         Status = RfsdExpandInode(IrpContext, Vcb, Fcb, &dwRet);
     }
-    
+
     return Status;
 }
 
@@ -1019,10 +1019,10 @@ RfsdSetDispositionInfo(
     IrpSp = IoGetCurrentIrpStackLocation(Irp);
 
     RfsdPrint((DBG_INFO, "RfsdSetDispositionInfo: bDelete=%x\n", bDelete));
-    
+
     if (bDelete) {
 
-        RfsdPrint((DBG_INFO, "RfsdSetDispositionInformation: MmFlushImageSection on %s.\n", 
+        RfsdPrint((DBG_INFO, "RfsdSetDispositionInformation: MmFlushImageSection on %s.\n",
                              Fcb->AnsiFileName.Buffer));
 
         if (!MmFlushImageSection( &Fcb->SectionObject,
@@ -1078,7 +1078,7 @@ RfsdSetRenameInfo(
     RFSD_INODE              Inode;
 
     UNICODE_STRING          FileName;
-    
+
     NTSTATUS                Status;
 
     PIRP                    Irp;
@@ -1131,7 +1131,7 @@ RfsdSetRenameInfo(
 
         TargetDcb = NULL;
         TargetMcb = Fcb->RfsdMcb->Parent;
-        
+
         if (FileName.Length >= RFSD_NAME_LEN*sizeof(USHORT)) {
             Status = STATUS_OBJECT_NAME_INVALID;
             goto errorout;
@@ -1193,7 +1193,7 @@ RfsdSetRenameInfo(
                 &FileName,
                 TargetMcb,
                 &Mcb,
-                &Inode ); 
+                &Inode );
 
     if (NT_SUCCESS(Status)) {
 
@@ -1212,7 +1212,7 @@ RfsdSetRenameInfo(
 
     if (IsDirectory(Fcb)) {
 
-        Status = RfsdRemoveEntry( IrpContext, Vcb, 
+        Status = RfsdRemoveEntry( IrpContext, Vcb,
                                   Fcb->RfsdMcb->Parent->RfsdFcb,
                                   RFSD_FT_DIR,
                                   Fcb->RfsdMcb->Inode );
@@ -1223,7 +1223,7 @@ RfsdSetRenameInfo(
             goto errorout;
         }
 
-        Status = RfsdAddEntry( IrpContext, Vcb, 
+        Status = RfsdAddEntry( IrpContext, Vcb,
                                TargetDcb,
                                RFSD_FT_DIR,
                                Fcb->RfsdMcb->Inode,
@@ -1233,7 +1233,7 @@ RfsdSetRenameInfo(
 
             DbgBreak();
 
-            RfsdAddEntry(  IrpContext, Vcb, 
+            RfsdAddEntry(  IrpContext, Vcb,
                            Fcb->RfsdMcb->Parent->RfsdFcb,
                            RFSD_FT_DIR,
                            Fcb->RfsdMcb->Inode,
@@ -1243,7 +1243,7 @@ RfsdSetRenameInfo(
         }
 
         if( !RfsdSaveInode( IrpContext,
-                            Vcb, 
+                            Vcb,
                             TargetMcb->Inode,
                             TargetDcb->Inode)) {
             Status = STATUS_UNSUCCESSFUL;
@@ -1254,7 +1254,7 @@ RfsdSetRenameInfo(
         }
 
         if( !RfsdSaveInode( IrpContext,
-                            Vcb, 
+                            Vcb,
                             Fcb->RfsdMcb->Parent->Inode,
                             Fcb->RfsdMcb->Parent->RfsdFcb->Inode)) {
 
@@ -1296,7 +1296,7 @@ RfsdSetRenameInfo(
 
             DbgBreak();
 
-            RfsdAddEntry(  IrpContext, Vcb, 
+            RfsdAddEntry(  IrpContext, Vcb,
                            Fcb->RfsdMcb->Parent->RfsdFcb,
                            RFSD_FT_REG_FILE,
                            Fcb->RfsdMcb->Inode,
@@ -1311,7 +1311,7 @@ RfsdSetRenameInfo(
         if (Fcb->RfsdMcb->ShortName.MaximumLength < (FileName.Length + 2)) {
 
             ExFreePool(Fcb->RfsdMcb->ShortName.Buffer);
-            Fcb->RfsdMcb->ShortName.Buffer = 
+            Fcb->RfsdMcb->ShortName.Buffer =
                 ExAllocatePoolWithTag(PagedPool, FileName.Length + 2, RFSD_POOL_TAG);
 
             if (!Fcb->RfsdMcb->ShortName.Buffer) {
@@ -1331,8 +1331,8 @@ RfsdSetRenameInfo(
 
             Fcb->RfsdMcb->ShortName.Length = FileName.Length;
         }
-    
-#if DBG    
+
+#if DBG
 
         Fcb->AnsiFileName.Length = (USHORT)
             RfsdUnicodeToOEMSize(&FileName) + 1;
@@ -1340,7 +1340,7 @@ RfsdSetRenameInfo(
         if (Fcb->AnsiFileName.MaximumLength < FileName.Length) {
             ExFreePool(Fcb->AnsiFileName.Buffer);
 
-            Fcb->AnsiFileName.Buffer = 
+            Fcb->AnsiFileName.Buffer =
                 ExAllocatePoolWithTag(PagedPool, Fcb->AnsiFileName.Length + 1, RFSD_POOL_TAG);
 
             if (!Fcb->AnsiFileName.Buffer)  {
@@ -1348,9 +1348,9 @@ RfsdSetRenameInfo(
                 goto errorout;
             }
 
-            RtlZeroMemory( Fcb->AnsiFileName.Buffer, 
+            RtlZeroMemory( Fcb->AnsiFileName.Buffer,
                            Fcb->AnsiFileName.Length + 1);
-            Fcb->AnsiFileName.MaximumLength = 
+            Fcb->AnsiFileName.MaximumLength =
                            Fcb->AnsiFileName.Length + 1;
         }
 
@@ -1438,7 +1438,7 @@ RfsdDeleteFile(
     if (FlagOn(Fcb->RfsdMcb->FileAttr, FILE_ATTRIBUTE_DIRECTORY)) {
         if (!RfsdIsDirectoryEmpty(Vcb, Fcb)) {
             ClearFlag(Fcb->Flags, FCB_DELETE_PENDING);
-            
+
             return STATUS_DIRECTORY_NOT_EMPTY;
         }
     }
@@ -1466,7 +1466,7 @@ RfsdDeleteFile(
     if (Fcb->RfsdMcb->Parent->RfsdFcb) {
 
         Status = RfsdRemoveEntry(
-                    IrpContext, Vcb, 
+                    IrpContext, Vcb,
                     Fcb->RfsdMcb->Parent->RfsdFcb,
                     (FlagOn(Fcb->RfsdMcb->FileAttr, FILE_ATTRIBUTE_DIRECTORY) ?
                      RFSD_FT_DIR : RFSD_FT_REG_FILE),
@@ -1501,8 +1501,8 @@ RfsdDeleteFile(
             Fcb->Header.FileSize.QuadPart = Fcb->Header.AllocationSize.QuadPart;
             Fcb->Inode->i_size = Fcb->Header.AllocationSize.QuadPart;
         }
-    
-        Fcb->Inode->i_links_count = 0;        
+
+        Fcb->Inode->i_links_count = 0;
 
         RfsdSaveInode(IrpContext, Vcb, Fcb->RfsdMcb->Inode, Fcb->Inode);
 

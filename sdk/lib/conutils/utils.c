@@ -3,8 +3,8 @@
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Base set of functions for loading string resources
  *              and message strings, and handle type identification.
- * COPYRIGHT:   Copyright 2017-2018 ReactOS Team
- *              Copyright 2017-2018 Hermes Belusca-Maito
+ * COPYRIGHT:   Copyright 2017-2021 ReactOS Team
+ *              Copyright 2017-2021 Hermes Belusca-Maito
  */
 
 /**
@@ -247,7 +247,7 @@ K32LoadStringW(
  *     crash if a malformed source string is retrieved and then being used
  *     for formatting. It basically wraps calls to FormatMessage() within SEH.
  *
- * @see <a href="https://msdn.microsoft.com/en-us/library/windows/desktop/ms679351(v=vs.85).aspx">FormatMessage() (on MSDN)</a>
+ * @see <a href="https://docs.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-formatmessage">FormatMessage() (on MSDN)</a>
  **/
 DWORD
 WINAPI
@@ -290,7 +290,7 @@ FormatMessageSafeW(
              * and we did not pass the flag FORMAT_MESSAGE_IGNORE_INSERTS, and the
              * message string expected too many inserts.
              * In this last case only, we can call again FormatMessage but ignore
-             * explicitely the inserts. The string that we will return to the user
+             * explicitly the inserts. The string that we will return to the user
              * will not be pre-formatted.
              */
             if (((dwFlags & FORMAT_MESSAGE_ALLOCATE_BUFFER) || lpBuffer) &&
@@ -318,6 +318,57 @@ FormatMessageSafeW(
     _SEH2_END;
 
     return dwLength;
+}
+
+/**
+ * @name ConSetThreadUILanguage
+ *     Sets the current thread's user interface language.
+ *     Mostly used by console applications for selecting a
+ *     language identifier that best supports the NT Console.
+ *     This function dynamically loads and calls kernel32!SetThreadUILanguage()
+ *     so as to be able to work on older environments where this
+ *     API is not supported.
+ *     The FormatMessage() API also bases itself on the thread's
+ *     current language for its default behaviour (unless an explicit
+ *     language identifier has been provided).
+ *
+ * @param[in,opt]   LangId
+ *     (Vista+) A non-zero language identifier that specifies the
+ *     current thread's user interface language to set.
+ *     (XP/2003) Set the language identifier to 0 for selecting a
+ *     language identifier that best supports the NT Console.
+ *
+ * @return
+ *     Returns LangId in case of success, or 0 in case of failure.
+ *     If LangId was set to 0, the function always succeeds and returns
+ *     the language identifier that best supports the NT Console.
+ *
+ * @remark
+ *     This function is thread-safe.
+ *
+ * @see <a href="https://docs.microsoft.com/en-us/windows/win32/api/winnls/nf-winnls-setthreaduilanguage">SetThreadUILanguage() (on MSDN)</a>
+ **/
+LANGID
+ConSetThreadUILanguage(
+    IN LANGID LangId OPTIONAL)
+{
+    /* The function pointer is shared amongst all threads */
+    static volatile LANGID (WINAPI *pfnSetThreadUILanguage)(LANGID) = NULL;
+
+    if (!pfnSetThreadUILanguage)
+    {
+        /* Load the API from kernel32 */
+        PVOID pFunc = (PVOID)GetProcAddress(GetModuleHandleW(L"kernel32.dll"), "SetThreadUILanguage");
+        if (!pFunc)
+        {
+            /* Fail since the API is not available */
+            return 0;
+        }
+        /* Set the function pointer in case it hasn't been already set by another thread */
+        InterlockedCompareExchangePointer((PVOID*)&pfnSetThreadUILanguage, pFunc, NULL);
+        // ASSERT(pfnSetThreadUILanguage);
+    }
+    return pfnSetThreadUILanguage(LangId);
 }
 
 /**

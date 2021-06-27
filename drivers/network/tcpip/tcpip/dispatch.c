@@ -284,7 +284,6 @@ NTSTATUS DispTdiAssociateAddress(
   PFILE_OBJECT FileObject;
   PADDRESS_FILE AddrFile = NULL;
   NTSTATUS Status;
-  KIRQL OldIrql;
 
   TI_DbgPrint(DEBUG_IRP, ("Called.\n"));
 
@@ -319,18 +318,18 @@ NTSTATUS DispTdiAssociateAddress(
     return STATUS_INVALID_PARAMETER;
   }
 
-  LockObject(Connection, &OldIrql);
+  LockObject(Connection);
 
   if (Connection->AddressFile) {
     ObDereferenceObject(FileObject);
-    UnlockObject(Connection, OldIrql);
+    UnlockObject(Connection);
     TI_DbgPrint(MID_TRACE, ("An address file is already associated.\n"));
     return STATUS_INVALID_PARAMETER;
   }
 
   if (FileObject->FsContext2 != (PVOID)TDI_TRANSPORT_ADDRESS_FILE) {
     ObDereferenceObject(FileObject);
-    UnlockObject(Connection, OldIrql);
+    UnlockObject(Connection);
     TI_DbgPrint(MID_TRACE, ("Bad address file object. Magic (0x%X).\n",
       FileObject->FsContext2));
     return STATUS_INVALID_PARAMETER;
@@ -341,20 +340,20 @@ NTSTATUS DispTdiAssociateAddress(
   TranContext = FileObject->FsContext;
   if (!TranContext) {
     ObDereferenceObject(FileObject);
-    UnlockObject(Connection, OldIrql);
+    UnlockObject(Connection);
     TI_DbgPrint(MID_TRACE, ("Bad transport context.\n"));
     return STATUS_INVALID_PARAMETER;
   }
 
   AddrFile = (PADDRESS_FILE)TranContext->Handle.AddressHandle;
   if (!AddrFile) {
-      UnlockObject(Connection, OldIrql);
+      UnlockObject(Connection);
       ObDereferenceObject(FileObject);
       TI_DbgPrint(MID_TRACE, ("No address file object.\n"));
       return STATUS_INVALID_PARAMETER;
   }
 
-  LockObjectAtDpcLevel(AddrFile);
+  LockObject(AddrFile);
 
   ReferenceObject(AddrFile);
   Connection->AddressFile = AddrFile;
@@ -373,8 +372,8 @@ NTSTATUS DispTdiAssociateAddress(
 
   ObDereferenceObject(FileObject);
 
-  UnlockObjectFromDpcLevel(AddrFile);
-  UnlockObject(Connection, OldIrql);
+  UnlockObject(AddrFile);
+  UnlockObject(Connection);
 
   return STATUS_SUCCESS;
 }
@@ -563,7 +562,6 @@ NTSTATUS DispTdiListen(
   PTRANSPORT_CONTEXT TranContext;
   PIO_STACK_LOCATION IrpSp;
   NTSTATUS Status = STATUS_SUCCESS;
-  KIRQL OldIrql;
 
   TI_DbgPrint(DEBUG_IRP, ("Called.\n"));
 
@@ -596,17 +594,17 @@ NTSTATUS DispTdiListen(
        Irp,
        (PDRIVER_CANCEL)DispCancelListenRequest);
 
-  LockObject(Connection, &OldIrql);
+  LockObject(Connection);
 
   if (Connection->AddressFile == NULL)
   {
      TI_DbgPrint(MID_TRACE, ("No associated address file\n"));
-     UnlockObject(Connection, OldIrql);
+     UnlockObject(Connection);
      Status = STATUS_INVALID_PARAMETER;
      goto done;
   }
 
-  LockObjectAtDpcLevel(Connection->AddressFile);
+  LockObject(Connection->AddressFile);
 
   /* Listening will require us to create a listening socket and store it in
    * the address file.  It will be signalled, and attempt to complete an irp
@@ -647,8 +645,8 @@ NTSTATUS DispTdiListen(
 	    Irp );
   }
 
-  UnlockObjectFromDpcLevel(Connection->AddressFile);
-  UnlockObject(Connection, OldIrql);
+  UnlockObject(Connection->AddressFile);
+  UnlockObject(Connection);
 
 done:
   if (Status != STATUS_PENDING) {
@@ -1116,7 +1114,6 @@ NTSTATUS DispTdiSetEventHandler(PIRP Irp)
   PIO_STACK_LOCATION IrpSp;
   PADDRESS_FILE AddrFile;
   NTSTATUS Status;
-  KIRQL OldIrql;
 
   TI_DbgPrint(DEBUG_IRP, ("Called.\n"));
 
@@ -1139,7 +1136,7 @@ NTSTATUS DispTdiSetEventHandler(PIRP Irp)
   Parameters = (PTDI_REQUEST_KERNEL_SET_EVENT)&IrpSp->Parameters;
   Status     = STATUS_SUCCESS;
 
-  LockObject(AddrFile, &OldIrql);
+  LockObject(AddrFile);
 
   /* Set the event handler. if an event handler is associated with
      a specific event, it's flag (RegisteredXxxHandler) is TRUE.
@@ -1260,7 +1257,7 @@ NTSTATUS DispTdiSetEventHandler(PIRP Irp)
     Status = STATUS_INVALID_PARAMETER;
   }
 
-  UnlockObject(AddrFile, OldIrql);
+  UnlockObject(AddrFile);
 
   return Status;
 }

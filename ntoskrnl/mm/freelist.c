@@ -566,10 +566,9 @@ NTAPI
 MmDereferencePage(PFN_NUMBER Pfn)
 {
     PMMPFN Pfn1;
-    KIRQL OldIrql;
     DPRINT("MmDereferencePage(PhysicalAddress %x)\n", Pfn << PAGE_SHIFT);
 
-    OldIrql = MiAcquirePfnLock();
+    MI_ASSERT_PFN_LOCK_HELD();
 
     Pfn1 = MiGetPfnEntry(Pfn);
     ASSERT(Pfn1);
@@ -596,8 +595,6 @@ MmDereferencePage(PFN_NUMBER Pfn)
         DPRINT("Legacy free: %lx\n", Pfn);
         MiInsertPageInFreeList(Pfn);
     }
-
-    MiReleasePfnLock(OldIrql);
 }
 
 PFN_NUMBER
@@ -609,6 +606,20 @@ MmAllocPage(ULONG Type)
     KIRQL OldIrql;
 
     OldIrql = MiAcquirePfnLock();
+
+#if MI_TRACE_PFNS
+    switch(Type)
+    {
+    case MC_SYSTEM:
+        MI_SET_USAGE(MI_USAGE_CACHE);
+        break;
+    case MC_USER:
+        MI_SET_USAGE(MI_USAGE_SECTION);
+        break;
+    default:
+        ASSERT(FALSE);
+    }
+#endif
 
     PfnOffset = MiRemoveZeroPage(MI_GET_NEXT_COLOR());
     if (!PfnOffset)

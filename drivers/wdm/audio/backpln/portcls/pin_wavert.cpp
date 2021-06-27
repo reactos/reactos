@@ -96,7 +96,7 @@ CPortPinWaveRT::QueryInterface(
 {
     DPRINT("IServiceSink_fnQueryInterface entered\n");
 
-    if (IsEqualGUIDAligned(refiid, IID_IIrpTarget) || 
+    if (IsEqualGUIDAligned(refiid, IID_IIrpTarget) ||
         IsEqualGUIDAligned(refiid, IID_IUnknown))
     {
         *Output = PVOID(PUNKNOWN((IIrpTarget*)this));
@@ -309,7 +309,7 @@ CPortPinWaveRT::DeviceIoControl(
     {
         case IOCTL_KS_PROPERTY:
             return HandleKsProperty(Irp);
-		
+
         case IOCTL_KS_ENABLE_EVENT:
             /* FIXME UNIMPLEMENTED */
             UNIMPLEMENTED_ONCE;
@@ -334,11 +334,11 @@ CPortPinWaveRT::DeviceIoControl(
             /* FIXME UNIMPLEMENTED */
             UNIMPLEMENTED_ONCE;
             break;
-			
+
         case IOCTL_KS_WRITE_STREAM:
         case IOCTL_KS_READ_STREAM:
             return HandleKsStream(Irp);
-			
+
         default:
             return KsDefaultDeviceIoCompletion(DeviceObject, Irp);
     }

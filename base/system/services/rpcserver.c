@@ -15,6 +15,8 @@
 #include <winnls.h>
 #include <strsafe.h>
 
+#include <pseh/pseh2.h>
+
 #define NDEBUG
 #include <debug.h>
 

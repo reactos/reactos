@@ -59,7 +59,7 @@ Dns_PtrArrayToOffsetArray(PCHAR *List,
                           ULONG_PTR Base)
 {
     /* Loop every pointer in the list */
-    do 
+    do
     {
         /* Update the pointer */
         *List = (PCHAR)((ULONG_PTR)*List - Base);

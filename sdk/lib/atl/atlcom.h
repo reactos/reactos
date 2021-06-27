@@ -22,6 +22,7 @@
 #pragma once
 
 #include <cguid.h>          // for GUID_NULL
+#include <pseh/pseh2.h>
 
 namespace ATL
 {

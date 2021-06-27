@@ -1245,7 +1245,7 @@ StorPortPauseDevice(
 /*
  * @implemented
  */
-/* KeQuerySystemTime is an inline function, 
+/* KeQuerySystemTime is an inline function,
    so we cannot forward the export to ntoskrnl */
 STORPORT_API
 VOID

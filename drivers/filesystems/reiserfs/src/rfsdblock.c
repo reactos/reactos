@@ -4,8 +4,8 @@
  * FILE:             rfsdblock.c
  * PURPOSE:          Disk block operations that are specific to ReiserFS.
  * PROGRAMMER:       Mark Piper, Matt Wu, Bo Brantén.
- * HOMEPAGE:         
- * UPDATE HISTORY: 
+ * HOMEPAGE:
+ * UPDATE HISTORY:
  */
 
 /* INCLUDES *****************************************************************/
@@ -26,7 +26,7 @@ extern PRFSD_GLOBAL RfsdGlobal;
 
 /* FUNCTIONS *************************************************************/
 
-/** 
+/**
  Returns the address of an allocated buffer (WHICH THE CALLER WILL BE RESPONSIBLE FOR FREEING!), filled with the contents of the given block number on disk.
  (This is really just an alternative interface to LoadBlock)
 */
@@ -40,12 +40,12 @@ RfsdAllocateAndLoadBlock(
 
     PAGED_CODE();
 
-    if (!pReturnBuffer) 
+    if (!pReturnBuffer)
 		{ DbgBreak(); return NULL; }
 
 	// Read the block in from disk, or from cache.
 	if (!RfsdLoadBlock(Vcb, BlockIndex, pReturnBuffer))
-		{ DbgBreak(); ExFreePool(pReturnBuffer);  return NULL;  }	
+		{ DbgBreak(); ExFreePool(pReturnBuffer);  return NULL;  }
 
 	// Return the result to the caller.
 	return pReturnBuffer;
@@ -77,7 +77,7 @@ RfsdFindItemHeaderInBlock(
 	// Sanity check that the block (and therefore its header) is there
 	if (!pBlockHeader) { return STATUS_INVALID_HANDLE; }
 	ASSERT(pBlockHeader->blk_level == 1);
-	
+
 	// Search through the item headers to find one with a key matching pTargetKey
 	{
 		ULONG					idxCurrentItemHeader	= 0;
@@ -88,11 +88,11 @@ RfsdFindItemHeaderInBlock(
 		{
 			// Grab the item header, and its key
 			pCurrentItemHeader = (PRFSD_ITEM_HEAD) (pItemHeaderListBuffer + idxCurrentItemHeader * sizeof(RFSD_ITEM_HEAD));
-					
+
 			FillInMemoryKey(
-				&( pCurrentItemHeader->ih_key ), pCurrentItemHeader->ih_version, 
+				&( pCurrentItemHeader->ih_key ), pCurrentItemHeader->ih_version,
 				&( CurrentItemKey )	);											// <
-			
+
 			// Check if this item is the one being searched for
 			if ( RFSD_KEYS_MATCH == (*fpComparisonFunction)( pTargetKey , &CurrentItemKey ) )
 			{
@@ -103,11 +103,11 @@ RfsdFindItemHeaderInBlock(
 
 		// If a matching key was never found, simply return
 		return STATUS_NO_SUCH_MEMBER;
-	}	
+	}
 }
 
-/** 
-Given an item's key, load the block, the item header, and the item buffer associated with the key. 
+/**
+Given an item's key, load the block, the item header, and the item buffer associated with the key.
 
 STATUS_INTERNAL_ERROR				if leaf node could not be reached
 STATUS_NO_SUCH_MEMBER				if the item header could not be located
@@ -119,7 +119,7 @@ RfsdLoadItem(
 	IN	 PRFSD_VCB				Vcb,
 	IN   PRFSD_KEY_IN_MEMORY	pItemKey,					// The key of the item to find
 	OUT  PRFSD_ITEM_HEAD*		ppMatchingItemHeader,
-	OUT  PUCHAR*				ppItemBuffer,				
+	OUT  PUCHAR*				ppItemBuffer,
 	OUT  PUCHAR*				ppBlockBuffer,				// Block buffer, which backs the other output data structures.  The caller must free this (even in the case of an error)!
 	OPTIONAL OUT PULONG			pBlockNumber,				// The ordinal disk block number at which the item was found
 	IN	RFSD_KEY_COMPARISON (*fpComparisonFunction)(PRFSD_KEY_IN_MEMORY, PRFSD_KEY_IN_MEMORY)
@@ -136,29 +136,29 @@ RfsdLoadItem(
 	if (pBlockNumber) *pBlockNumber = 0;
 
 
-	// Find the block number of the leaf node bock (on disk), that should contain the item w/ pItemKey	
+	// Find the block number of the leaf node bock (on disk), that should contain the item w/ pItemKey
 	Status = NavigateToLeafNode(
-		Vcb, pItemKey, Vcb->SuperBlock->s_root_block, 
-		&(LeafNodeBlockNumber) 
-	);	
+		Vcb, pItemKey, Vcb->SuperBlock->s_root_block,
+		&(LeafNodeBlockNumber)
+	);
 	if (!NT_SUCCESS(Status)){ DbgBreak(); return STATUS_INTERNAL_ERROR; }
 	if (pBlockNumber) *pBlockNumber = LeafNodeBlockNumber;
 
 
 	// Load the block (which the caller must later free)
 	*ppBlockBuffer = RfsdAllocateAndLoadBlock(Vcb, LeafNodeBlockNumber);
-    if (!*ppBlockBuffer) { return STATUS_INSUFFICIENT_RESOURCES; }	
+    if (!*ppBlockBuffer) { return STATUS_INSUFFICIENT_RESOURCES; }
 
 
 	// Get the item header and its information
 	Status = RfsdFindItemHeaderInBlock(
 		Vcb, pItemKey, *ppBlockBuffer,
-		( ppMatchingItemHeader ),			//< 
+		( ppMatchingItemHeader ),			//<
 		fpComparisonFunction
-	); 
+	);
 	if (Status == STATUS_NO_SUCH_MEMBER)		{ return STATUS_NO_SUCH_MEMBER; }
 	if (!*ppMatchingItemHeader)					{ return STATUS_INTERNAL_ERROR; }
-	
+
 	// Setup the item buffer
 	*ppItemBuffer = (PUCHAR) *ppBlockBuffer + (*ppMatchingItemHeader)->ih_item_location;
 

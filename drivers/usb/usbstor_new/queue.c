@@ -60,7 +60,7 @@ USBSTOR_CancelIo(
 
     //
     // this IRP isn't in our list here
-    //  
+    //
 
     //
     // now release the cancel lock
@@ -116,7 +116,7 @@ USBSTOR_Cancel(
     //
     // release irp list lock
     //
-    KeReleaseSpinLockFromDpcLevel(&FDODeviceExtension->IrpListLock);    
+    KeReleaseSpinLockFromDpcLevel(&FDODeviceExtension->IrpListLock);
 
     //
     // now release the cancel lock
@@ -532,7 +532,7 @@ USBSTOR_QueueRelease(
     //
     IoStartPacket(DeviceObject,
                   Irp,
-                  &Request->QueueSortKey, 
+                  &Request->QueueSortKey,
                   USBSTOR_CancelIo);
 }
 

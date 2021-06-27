@@ -229,18 +229,18 @@ RtlInitializeSid (
 
 #if 0
 
-typedef struct _TOKEN_OWNER { // to 
-    PSID Owner; 
-} TOKEN_OWNER; 
- 
-typedef struct _TOKEN_PRIMARY_GROUP { // tpg 
-    PSID PrimaryGroup; 
-} TOKEN_PRIMARY_GROUP; 
+typedef struct _TOKEN_OWNER { // to
+    PSID Owner;
+} TOKEN_OWNER;
+
+typedef struct _TOKEN_PRIMARY_GROUP { // tpg
+    PSID PrimaryGroup;
+} TOKEN_PRIMARY_GROUP;
 
 #endif
 
 #endif //WIN64
- 
+
 //  The following macro is used to detemine if the file object is opened
 //  for read only access (i.e., it is not also opened for write access or
 //  delete access).
@@ -252,7 +252,7 @@ typedef struct _TOKEN_PRIMARY_GROUP { // tpg
 
 #define IsFileObjectReadOnly(FO) (!((FO)->WriteAccess | (FO)->DeleteAccess))
 
-// 
+//
 #ifndef FSCTL_GET_COMPRESSION
 
 #define FSCTL_GET_COMPRESSION           CTL_CODE(FILE_DEVICE_FILE_SYSTEM, 15, METHOD_BUFFERED, FILE_ANY_ACCESS)
@@ -335,12 +335,12 @@ NTSTATUS
 NTAPI
 ZwFsControlFile(
     IN HANDLE DeviceHandle,
-    IN HANDLE Event OPTIONAL, 
-    IN PIO_APC_ROUTINE ApcRoutine OPTIONAL, 
-    IN PVOID ApcContext OPTIONAL, 
-    OUT PIO_STATUS_BLOCK IoStatusBlock, 
+    IN HANDLE Event OPTIONAL,
+    IN PIO_APC_ROUTINE ApcRoutine OPTIONAL,
+    IN PVOID ApcContext OPTIONAL,
+    OUT PIO_STATUS_BLOCK IoStatusBlock,
     IN ULONG IoControlCode,
-    IN PVOID InputBuffer, 
+    IN PVOID InputBuffer,
     IN ULONG InputBufferSize,
     OUT PVOID OutputBuffer,
     IN ULONG OutputBufferSize
@@ -351,12 +351,12 @@ NTSTATUS
 NTAPI
 ZwDeviceIoControlFile(
     IN HANDLE DeviceHandle,
-    IN HANDLE Event OPTIONAL, 
-    IN PIO_APC_ROUTINE UserApcRoutine OPTIONAL, 
-    IN PVOID UserApcContext OPTIONAL, 
-    OUT PIO_STATUS_BLOCK IoStatusBlock, 
+    IN HANDLE Event OPTIONAL,
+    IN PIO_APC_ROUTINE UserApcRoutine OPTIONAL,
+    IN PVOID UserApcContext OPTIONAL,
+    OUT PIO_STATUS_BLOCK IoStatusBlock,
     IN ULONG IoControlCode,
-    IN PVOID InputBuffer, 
+    IN PVOID InputBuffer,
     IN ULONG InputBufferSize,
     OUT PVOID OutputBuffer,
     IN ULONG OutputBufferSize
@@ -377,12 +377,12 @@ ZwQueryVolumeInformationFile(
 
 #ifndef FILE_ATTRIBUTE_SPARSE_FILE
 
-#define FILE_ATTRIBUTE_SPARSE_FILE          0x00000200  
-#define FILE_ATTRIBUTE_REPARSE_POINT        0x00000400  
-#define FILE_ATTRIBUTE_COMPRESSED           0x00000800  
-#define FILE_ATTRIBUTE_OFFLINE              0x00001000  
-#define FILE_ATTRIBUTE_NOT_CONTENT_INDEXED  0x00002000  
-#define FILE_ATTRIBUTE_ENCRYPTED            0x00004000  
+#define FILE_ATTRIBUTE_SPARSE_FILE          0x00000200
+#define FILE_ATTRIBUTE_REPARSE_POINT        0x00000400
+#define FILE_ATTRIBUTE_COMPRESSED           0x00000800
+#define FILE_ATTRIBUTE_OFFLINE              0x00001000
+#define FILE_ATTRIBUTE_NOT_CONTENT_INDEXED  0x00002000
+#define FILE_ATTRIBUTE_ENCRYPTED            0x00004000
 
 #endif //FILE_ATTRIBUTE_SPARSE_FILE
 

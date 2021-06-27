@@ -4,21 +4,58 @@
 #define MIN_COORD (INT_MIN / 16)
 #define MAX_COORD (INT_MAX / 16)
 
-#define IntLPtoDP(pdc, ppt, count) do { \
-        DC_vUpdateWorldToDevice(pdc); \
-        DC_vXformWorldToDevice(pdc, count, (PPOINTL)(ppt), (PPOINTL)(ppt)); \
-    } while (0)
-#define CoordLPtoDP(pdc, ppt) \
-        DC_vXformWorldToDevice(pdc, 1,  (PPOINTL)(ppt), (PPOINTL)(ppt));
-#define IntDPtoLP(pdc, ppt, count) do { \
-        DC_vUpdateDeviceToWorld(pdc); \
-        DC_vXformDeviceToWorld(pdc, count, (PPOINTL)(ppt), (PPOINTL)(ppt)); \
-    } while (0)
-#define CoordDPtoLP(pdc, ppt) \
-        DC_vXformDeviceToWorld(pdc, 1, (PPOINTL)(ppt), (PPOINTL)(ppt));
+/*
+ * Applies matrix (which is made of FLOATOBJs) to the points array, which are made of integers.
+ */
+static
+inline
+BOOLEAN
+INTERNAL_APPLY_MATRIX(PMATRIX matrix, LPPOINT points, UINT count)
+{
+    while (count--)
+    {
+        FLOATOBJ x, y;
+        FLOATOBJ tmp;
 
-#define XForm2MatrixS(m, x) XFormToMatrix(m, (XFORML*)x)
-#define MatrixS2XForm(x, m) MatrixToXForm((XFORML*)x, m)
+        /* x = x * matrix->efM11 + y * matrix->efM21 + matrix->efDx; */
+        FLOATOBJ_SetLong(&x, points[count].x);
+        FLOATOBJ_Mul(&x, &matrix->efM11);
+        tmp = matrix->efM21;
+        FLOATOBJ_MulLong(&tmp, points[count].y);
+        FLOATOBJ_Add(&x, &tmp);
+        FLOATOBJ_Add(&x, &matrix->efDx);
+
+        /* y = x * matrix->efM12 + y * matrix->efM22 + matrix->efDy; */
+        FLOATOBJ_SetLong(&y, points[count].y);
+        FLOATOBJ_Mul(&y, &matrix->efM22);
+        tmp = matrix->efM12;
+        FLOATOBJ_MulLong(&tmp, points[count].x);
+        FLOATOBJ_Add(&y, &tmp);
+        FLOATOBJ_Add(&y, &matrix->efDy);
+
+        if (!FLOATOBJ_bConvertToLong(&x, &points[count].x))
+            return FALSE;
+        if (!FLOATOBJ_bConvertToLong(&y, &points[count].y))
+            return FALSE;
+    }
+    return TRUE;
+}
+
+static
+inline
+BOOLEAN
+INTERNAL_LPTODP(DC *dc, LPPOINT points, UINT count)
+{
+    return INTERNAL_APPLY_MATRIX(&dc->pdcattr->mxWorldToDevice, points, count);
+}
+
+static
+inline
+BOOLEAN
+INTERNAL_DPTOLP(DC *dc, LPPOINT points, UINT count)
+{
+    return INTERNAL_APPLY_MATRIX(&dc->pdcattr->mxDeviceToWorld, points, count);
+}
 
 FORCEINLINE
 void
@@ -121,41 +158,6 @@ DC_pmxDeviceToWorld(PDC pdc)
     return &pdc->pdcattr->mxDeviceToWorld;
 }
 
-FORCEINLINE
-VOID
-DC_vXformDeviceToWorld(
-    IN PDC pdc,
-    IN ULONG cNumPoints,
-    OUT PPOINTL pptlDest,
-    IN PPOINTL pptlSource)
-{
-    XFORMOBJ xo;
-    PMATRIX pmx;
-
-    pmx = DC_pmxDeviceToWorld(pdc);
-    if (!MX_IsInvertible(pmx))
-        return;
-
-    XFORMOBJ_vInit(&xo, pmx);
-    XFORMOBJ_bApplyXform(&xo, XF_LTOL, cNumPoints, pptlDest, pptlSource);
-}
-
-FORCEINLINE
-VOID
-DC_vXformWorldToDevice(
-    IN PDC pdc,
-    IN ULONG cNumPoints,
-    OUT PPOINTL pptlDest,
-    IN PPOINTL pptlSource)
-{
-    XFORMOBJ xo;
-    PMATRIX pmx;
-
-    pmx = DC_pmxWorldToDevice(pdc);
-    XFORMOBJ_vInit(&xo, pmx);
-    XFORMOBJ_bApplyXform(&xo, XF_LTOL, cNumPoints, pptlDest, pptlSource);
-}
-
 BOOL
 NTAPI
 GreModifyWorldTransform(
@@ -173,3 +175,26 @@ BOOL WINAPI GreGetViewportExtEx( _In_ HDC hdc, _Out_ LPSIZE lpSize);
 BOOL FASTCALL GreSetViewportOrgEx(HDC,int,int,LPPOINT);
 BOOL WINAPI GreGetDCOrgEx(_In_ HDC, _Out_ PPOINTL, _Out_ PRECTL);
 BOOL WINAPI GreSetDCOrg(_In_  HDC, _In_ LONG, _In_ LONG, _In_opt_ PRECTL);
+
+static
+inline
+BOOLEAN
+IntLPtoDP(DC* pdc, PPOINTL ppt, UINT count)
+{
+    DC_vUpdateWorldToDevice(pdc);
+    return INTERNAL_LPTODP(pdc, (LPPOINT)ppt, count);
+}
+#define CoordLPtoDP(pdc, ppt) INTERNAL_LPTODP(pdc, ppt, 1)
+
+static
+inline
+BOOLEAN
+IntDPtoLP(DC* pdc, PPOINTL ppt, UINT count)
+{
+    DC_vUpdateDeviceToWorld(pdc);
+    return INTERNAL_DPTOLP(pdc, (LPPOINT)ppt, count);
+}
+#define CoordDPtoLP(pdc, ppt) INTERNAL_DPTOLP(pdc, ppt, 1)
+
+#define XForm2MatrixS(m, x) XFormToMatrix(m, (XFORML*)x)
+#define MatrixS2XForm(x, m) MatrixToXForm((XFORML*)x, m)

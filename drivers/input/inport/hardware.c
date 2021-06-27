@@ -16,10 +16,6 @@
 
 /* GLOBALS ********************************************************************/
 
-#ifdef ALLOC_PRAGMA
-#pragma alloc_text(PAGE, InPortInitializeMouse)
-#endif
-
 #define READ_MOUSE(DeviceExtension, Port) \
     READ_PORT_UCHAR((DeviceExtension)->IoBase + (Port))
 
@@ -338,6 +334,7 @@ InPortIsr(
     }
 }
 
+CODE_SEG("PAGE")
 VOID
 NTAPI
 InPortInitializeMouse(

@@ -105,7 +105,7 @@ DECLARE_INTERFACE_(IKsPin, IUnknown)
         IN KSSTATE NewState,
         IN IKsTransport * *OutTransport) PURE;
 
-    STDMETHOD_(VOID, SetResetState)(THIS_ 
+    STDMETHOD_(VOID, SetResetState)(THIS_
         IN KSRESET ResetState,
         OUT IKsTransport * * OutTransportOut) PURE;
 

@@ -6,6 +6,19 @@
 #define EPOCH_DIFF 116444736000000000 //FILETIME starts from 1601-01-01 UTC, UnixTime starts from 1970-01-01
 #define RATE_DIFF 10000000
 
+#ifdef _M_IX86
+#define CurrentArchitecture L"x86"
+#elif defined(_M_AMD64)
+#define CurrentArchitecture L"amd64"
+#elif defined(_M_ARM)
+#define CurrentArchitecture L"arm"
+#elif defined(_M_ARM64)
+#define CurrentArchitecture L"arm64"
+#elif defined(_M_IA64)
+#define CurrentArchitecture L"ia64"
+#elif defined(_M_PPC)
+#define CurrentArchitecture L"ppc"
+#endif
 
 INT GetWindowWidth(HWND hwnd);
 INT GetWindowHeight(HWND hwnd);
@@ -41,6 +54,7 @@ class CConfigParser
 
     ATL::CStringW GetINIFullPath(const ATL::CStringW& FileName);
     VOID CacheINILocale();
+    BOOL GetStringWorker(const ATL::CStringW& KeyName, PCWSTR Suffix, ATL::CStringW& ResultString);
 
 public:
     CConfigParser(const ATL::CStringW& FileName = "");

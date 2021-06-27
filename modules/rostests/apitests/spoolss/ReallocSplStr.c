@@ -12,6 +12,8 @@
 #include <winbase.h>
 #include <spoolss.h>
 
+#include <pseh/pseh2.h>
+
 START_TEST(ReallocSplStr)
 {
     const WCHAR wszTestString1[] = L"Test";

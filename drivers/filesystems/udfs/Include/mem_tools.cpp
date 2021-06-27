@@ -33,7 +33,7 @@ KSPIN_LOCK FrameLock;
 KIRQL oldIrql;
 #define LockMemoryManager()        KeAcquireSpinLock(&FrameLock, &oldIrql)
 #define UnlockMemoryManager()      KeReleaseSpinLock(&FrameLock, oldIrql)
-__inline 
+__inline
 NTSTATUS
 InitLockMemoryManager() {
     KeInitializeSpinLock(&FrameLock);
@@ -474,7 +474,7 @@ MyResizePoolInFrame(
         }
     }
 #endif //MY_HEAP_CHECK_BOUNDS
-    
+
     if(new_len > len ) {
         if(Allocs[i+1].Len & MY_HEAP_FLAG_USED)
             return FALSE;
@@ -489,7 +489,7 @@ MyResizePoolInFrame(
             *((PULONG)(addr+new_len+(j*sizeof(ULONG))-MY_HEAP_CHECK_BOUNDS_BSZ)) = 0xBAADF00D;
         }
 #endif //MY_HEAP_CHECK_BOUNDS
-        
+
         if(!Allocs[i+1].Len) {
             i++;
             RtlMoveMemory(&(Allocs[i]), &(Allocs[i+1]), (MY_HEAP_MAX_BLOCKS-1-i)*sizeof(MEM_ALLOC_DESC) );

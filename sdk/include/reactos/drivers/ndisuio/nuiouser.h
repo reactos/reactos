@@ -54,6 +54,6 @@ typedef struct _NDISUIO_QUERY_BINDING
 	ULONG			DeviceDescrOffset;
 	ULONG			DeviceDescrLength;
 } NDISUIO_QUERY_BINDING, *PNDISUIO_QUERY_BINDING;
- 
+
 #endif
 

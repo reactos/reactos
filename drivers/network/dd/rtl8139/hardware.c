@@ -54,19 +54,19 @@ NICSoftReset (
     // If the RST bit is high (1), then the reset is still in operation.
     // -- OSDev Wiki
     NdisRawWritePortUchar(Adapter->IoBase + R_CMD, B_CMD_RST);
-    
+
     for (resetAttempts = 0; resetAttempts < MAX_RESET_ATTEMPTS; resetAttempts++)
     {
         NdisRawReadPortUchar(Adapter->IoBase + R_CMD, &commandReg);
-        
+
         if (!(commandReg & B_CMD_RST))
         {
             return NDIS_STATUS_SUCCESS;
         }
-        
+
         NdisMSleep(100);
     }
-    
+
     return NDIS_STATUS_FAILURE;
 }
 
@@ -79,7 +79,7 @@ NICRegisterReceiveBuffer (
     ASSERT(NdisGetPhysicalAddressHigh(Adapter->ReceiveBufferPa) == 0);
 
     NdisRawWritePortUlong(Adapter->IoBase + R_RXSA, Adapter->ReceiveBufferPa.LowPart);
-    
+
     return NDIS_STATUS_SUCCESS;
 }
 
@@ -100,7 +100,7 @@ NICEnableTxRx (
     )
 {
     NdisRawWritePortUchar(Adapter->IoBase + R_CMD, B_CMD_TXE | B_CMD_RXE);
-    
+
     //
     // TX and RX must be enabled before setting these
     //
@@ -117,7 +117,7 @@ NICGetPermanentMacAddress (
     )
 {
     UINT i;
-    
+
     for (i = 0; i < IEEE_802_ADDR_LENGTH; i++)
     {
         NdisRawReadPortUchar(Adapter->IoBase + R_MAC + i, &MacAddress[i]);
@@ -154,11 +154,11 @@ NICInterruptRecognized (
     )
 {
     USHORT interruptStatus;
-    
+
     NdisRawReadPortUshort(Adapter->IoBase + R_IS, &interruptStatus);
-    
+
     *InterruptRecognized = (interruptStatus & Adapter->InterruptMask) != 0;
-    
+
     return (interruptStatus & Adapter->InterruptMask);
 }
 
@@ -194,29 +194,29 @@ NICApplyPacketFilter (
     ULONG filterMask;
 
     filterMask = RC_VAL;
-    
+
     if (Adapter->PacketFilter & NDIS_PACKET_TYPE_DIRECTED)
     {
         filterMask |= B_RC_APM;
     }
-    
+
     if (Adapter->PacketFilter & NDIS_PACKET_TYPE_MULTICAST)
     {
         filterMask |= B_RC_AM;
     }
-    
+
     if (Adapter->PacketFilter & NDIS_PACKET_TYPE_BROADCAST)
     {
         filterMask |= B_RC_AB;
     }
-    
+
     if (Adapter->PacketFilter & NDIS_PACKET_TYPE_PROMISCUOUS)
     {
         filterMask |= B_RC_AAP;
     }
-    
+
     NdisRawWritePortUlong(Adapter->IoBase + R_RC, filterMask);
-    
+
     return NDIS_STATUS_SUCCESS;
 }
 

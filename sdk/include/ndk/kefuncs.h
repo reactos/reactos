@@ -26,6 +26,11 @@ Author:
 #include <ketypes.h>
 #include <section_attribs.h>
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 #ifndef NTOS_MODE_USER
 
 //
@@ -245,7 +250,6 @@ KeSignalCallDpcSynchronize(
 // ARC Configuration Functions. Only enabled if you have ARC Support
 //
 #ifdef _ARC_
-CODE_SEG("INIT")
 PCONFIGURATION_COMPONENT_DATA
 NTAPI
 KeFindConfigurationNextEntry(
@@ -256,7 +260,6 @@ KeFindConfigurationNextEntry(
     _In_ PCONFIGURATION_COMPONENT_DATA *NextLink
 );
 
-CODE_SEG("INIT")
 PCONFIGURATION_COMPONENT_DATA
 NTAPI
 KeFindConfigurationEntry(
@@ -783,4 +786,8 @@ NTAPI
 ZwYieldExecution(
     VOID
 );
+#endif
+
+#ifdef __cplusplus
+} // extern "C"
 #endif

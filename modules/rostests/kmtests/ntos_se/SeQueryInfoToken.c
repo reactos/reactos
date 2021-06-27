@@ -104,26 +104,13 @@ void TestsSeQueryInformationToken(PACCESS_TOKEN Token)
 
     //----------------------------------------------------------------//
 
-    // Call SQIT with TokenImpersonationLevel argument
-    //
-    // What's up? Why SQIT fails with right arg?
-    // Because your token has Token->TokenType != TokenImpersonation. -hbelusca
+    // Call SQIT with TokenImpersonationLevel argument. Although our token
+    // is not an impersonation token, the call will outright fail.
 
     Buffer = NULL;
     Status = SeQueryInformationToken(Token, TokenImpersonationLevel, &Buffer);
-    ok(Status == STATUS_SUCCESS, "SQIT with TokenImpersonationLevel fails with status 0x%08X\n", Status);
-    if (Buffer) ExFreePool(Buffer);
-
-    Buffer = NULL;
-    Status = SeQueryInformationToken(Token, TokenImpersonationLevel, &Buffer);
-    ok(Status == STATUS_SUCCESS, "and again: SQIT with TokenImpersonationLevel fails with status 0x%08X\n", Status);
-    if (Status == STATUS_SUCCESS)
-    {
-        ok(Buffer != NULL, "Wrong. SQIT call was successful with TokenImpersonationLevel arg. But Buffer == NULL\n");
-    } else {
-        ok(Buffer == NULL, "Wrong. SQIT call failed. But Buffer != NULL\n");
-    }
-    if (Buffer) ExFreePool(Buffer);
+    ok(Status == STATUS_INVALID_INFO_CLASS, "SQIT with TokenImpersonationLevel must return STATUS_INVALID_INFO_CLASS but got 0x%08X\n", Status);
+    ok(Buffer == NULL, "SQIT has failed to query the impersonation level but buffer is not NULL!\n");
 
     //----------------------------------------------------------------//
 

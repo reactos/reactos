@@ -258,7 +258,7 @@
  * _STLP_USE_STDIO_IO, _STLP_USE_UNIX_IO: force selection of stdio calls
  * (fopen/flose/fread/fwrite) under fstream buffers or unistd calls
  * (open/close/read/write + mmap). On systems that have both (i.e. most Unixes)
- * _STLP_USE_UNIX_IO is used. 
+ * _STLP_USE_UNIX_IO is used.
  *
  * There is a third variant for Windows: _STLP_USE_WIN32_IO, that based
  * on Windows calls (CreateFile/CloseHandle/ReadFile/WriteFile + CreateFileMapping,

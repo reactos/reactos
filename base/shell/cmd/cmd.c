@@ -506,14 +506,14 @@ Execute(LPTSTR Full, LPTSTR First, LPTSTR Rest, PARSED_COMMAND *Cmd)
             dwExitCode = 1;
         }
 
-        /* Restore our default console mode */
+        /* Restore the default console mode */
         SetConsoleMode(ConStreamGetOSHandle(StdIn),
                        ENABLE_PROCESSED_INPUT | ENABLE_LINE_INPUT | ENABLE_ECHO_INPUT);
         SetConsoleMode(ConStreamGetOSHandle(StdOut),
                        ENABLE_PROCESSED_OUTPUT | ENABLE_WRAP_AT_EOL_OUTPUT);
     }
 
-    /* Update our local codepage cache */
+    /* Update the local code page cache */
     {
         UINT uNewInputCodePage  = GetConsoleCP();
         UINT uNewOutputCodePage = GetConsoleOutputCP();
@@ -521,17 +521,21 @@ Execute(LPTSTR Full, LPTSTR First, LPTSTR Rest, PARSED_COMMAND *Cmd)
         if ((InputCodePage  != uNewInputCodePage) ||
             (OutputCodePage != uNewOutputCodePage))
         {
+            InputCodePage  = uNewInputCodePage;
+            OutputCodePage = uNewOutputCodePage;
+
+            /* Reset the current thread UI language */
+            if (IsConsoleHandle(ConStreamGetOSHandle(StdOut)) ||
+                IsConsoleHandle(ConStreamGetOSHandle(StdErr)))
+            {
+                ConSetThreadUILanguage(0);
+            }
+            /* Update the streams cached code page */
+            ConStdStreamsSetCacheCodePage(InputCodePage, OutputCodePage);
+
             /* Update the locale as well */
             InitLocale();
         }
-
-        InputCodePage  = uNewInputCodePage;
-        OutputCodePage = uNewOutputCodePage;
-
-        /* Update the streams codepage cache as well */
-        ConStreamSetCacheCodePage(StdIn , InputCodePage );
-        ConStreamSetCacheCodePage(StdOut, OutputCodePage);
-        ConStreamSetCacheCodePage(StdErr, OutputCodePage);
     }
 
     /* Restore the original console title */
@@ -2180,7 +2184,7 @@ Initialize(VOID)
     /* Add ctrl break handler */
     AddBreakHandler();
 
-    /* Set our default console mode */
+    /* Set the default console mode */
     hOut = ConStreamGetOSHandle(StdOut);
     hIn  = ConStreamGetOSHandle(StdIn);
     SetConsoleMode(hOut, 0); // Reinitialize the console output mode
@@ -2289,7 +2293,7 @@ Initialize(VOID)
         ConSetScreenColor(ConStreamGetOSHandle(StdOut), wDefColor, TRUE);
 #endif
 
-    /* Reset the output Standard Streams translation modes and codepage caches */
+    /* Reset the output Standard Streams translation modes and code page caches */
     // ConStreamSetMode(StdIn , OutputStreamMode, InputCodePage );
     ConStreamSetMode(StdOut, OutputStreamMode, OutputCodePage);
     ConStreamSetMode(StdErr, OutputStreamMode, OutputCodePage);
@@ -2329,6 +2333,17 @@ static VOID Cleanup(VOID)
         ParseCommandLine(_T("\\cmdexit.bat"));
     }
 
+    /* Remove ctrl break handler */
+    RemoveBreakHandler();
+
+    /* Restore the default console mode */
+    SetConsoleMode(ConStreamGetOSHandle(StdIn),
+                   ENABLE_PROCESSED_INPUT | ENABLE_LINE_INPUT | ENABLE_ECHO_INPUT);
+    SetConsoleMode(ConStreamGetOSHandle(StdOut),
+                   ENABLE_PROCESSED_OUTPUT | ENABLE_WRAP_AT_EOL_OUTPUT);
+
+
+#ifdef _DEBUG_MEM
 #ifdef FEATURE_DIRECTORY_STACK
     /* Destroy directory stack */
     DestroyDirectoryStack();
@@ -2340,15 +2355,7 @@ static VOID Cleanup(VOID)
 
     /* Free GetEnvVar's buffer */
     GetEnvVar(NULL);
-
-    /* Remove ctrl break handler */
-    RemoveBreakHandler();
-
-    /* Restore the default console mode */
-    SetConsoleMode(ConStreamGetOSHandle(StdIn),
-                   ENABLE_PROCESSED_INPUT | ENABLE_LINE_INPUT | ENABLE_ECHO_INPUT);
-    SetConsoleMode(ConStreamGetOSHandle(StdOut),
-                   ENABLE_PROCESSED_OUTPUT | ENABLE_WRAP_AT_EOL_OUTPUT);
+#endif /* _DEBUG_MEM */
 
     DeleteCriticalSection(&ChildProcessRunningLock);
 }
@@ -2376,6 +2383,12 @@ int _tmain(int argc, const TCHAR *argv[])
     ConStreamInit(StdIn , GetStdHandle(STD_INPUT_HANDLE) , /*OutputStreamMode*/ AnsiText, InputCodePage);
     ConStreamInit(StdOut, GetStdHandle(STD_OUTPUT_HANDLE), OutputStreamMode, OutputCodePage);
     ConStreamInit(StdErr, GetStdHandle(STD_ERROR_HANDLE) , OutputStreamMode, OutputCodePage);
+    /* Reset the current thread UI language */
+    if (IsConsoleHandle(ConStreamGetOSHandle(StdOut)) ||
+        IsConsoleHandle(ConStreamGetOSHandle(StdErr)))
+    {
+        ConSetThreadUILanguage(0);
+    }
 
     CMD_ModuleHandle = GetModuleHandle(NULL);
 

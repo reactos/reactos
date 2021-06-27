@@ -3,7 +3,7 @@
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/powerpc/ctxswitch.c
  * PURPOSE:         Thread Context Switching
- * 
+ *
  * PROGRAMMERS:     arty
                     (i386 implementation by Alex Ionescu)
  */
@@ -21,7 +21,7 @@
  *     The KiThreadStartup routine is the beginning of any thread.
  *
  * Params:
- *     SystemRoutine - Pointer to the System Startup Routine. Either 
+ *     SystemRoutine - Pointer to the System Startup Routine. Either
  *                     PspUserThreadStartup or PspSystemThreadStartup
  *
  *     StartRoutine - For Kernel Threads only, specifies the starting execution
@@ -59,7 +59,7 @@ KiThreadStartup(PKSYSTEM_ROUTINE SystemRoutine,
             "mr 4,%2\n\t"
             "mr 5,%3\n\t"
             "mr 6,%4\n\t"
-            "sc" : : 
+            "sc" : :
             "r" (0xf0000), /* Thread start function */
             "r" (SystemRoutine),
             "r" (StartRoutine),
@@ -68,7 +68,7 @@ KiThreadStartup(PKSYSTEM_ROUTINE SystemRoutine,
     PspTerminateThreadByPointer(PsGetCurrentThread(), STATUS_THREAD_IS_TERMINATING, TRUE);
 }
 
-/* Take a decrementer trap, and prepare the given trap frame, swapping 
+/* Take a decrementer trap, and prepare the given trap frame, swapping
  * process and thread context as appropriate. */
 VOID KiDecrementerTrapFinish(PKTRAP_FRAME TrapFrame);
 

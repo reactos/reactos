@@ -57,7 +57,7 @@ CdInitializeGlobalData (
 #pragma alloc_text(INIT, CdInitializeGlobalData)
 #endif
 
-
+
 //
 //  Local support routine
 //
@@ -174,7 +174,7 @@ Return Value:
     DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL]          =
     DriverObject->MajorFunction[IRP_MJ_LOCK_CONTROL]            =
     DriverObject->MajorFunction[IRP_MJ_CLEANUP]                 =
-    DriverObject->MajorFunction[IRP_MJ_PNP]                     = 
+    DriverObject->MajorFunction[IRP_MJ_PNP]                     =
     DriverObject->MajorFunction[IRP_MJ_SHUTDOWN]                = (PDRIVER_DISPATCH) CdFsdDispatch;
 #ifdef _MSC_VER
 #pragma prefast(pop)
@@ -302,7 +302,7 @@ Return Value:
     ObDereferenceObject (CdData.HddFileSystemDeviceObject);
 #endif
 }
-
+
 //
 //  Local support routine
 //
@@ -364,7 +364,7 @@ Return Value:
     CdFastIoDispatch.AcquireFileForNtCreateSection =  NULL;
     CdFastIoDispatch.ReleaseFileForNtCreateSection =  CdReleaseForCreateSection;
     CdFastIoDispatch.FastIoQueryNetworkOpenInfo =     CdFastQueryNetworkInfo;   //  QueryNetworkInfo
-    
+
     CdFastIoDispatch.MdlRead = FsRtlMdlReadDev;
     CdFastIoDispatch.MdlReadComplete = FsRtlMdlReadCompleteDev;
     CdFastIoDispatch.PrepareMdlWrite = FsRtlPrepareMdlWriteDev;
@@ -417,7 +417,7 @@ Return Value:
 
     CdData.CloseItem = IoAllocateWorkItem (FileSystemDeviceObject);
     if (CdData.CloseItem == NULL) {
-        
+
         ExDeleteResourceLite( &CdData.DataResource );
         return STATUS_INSUFFICIENT_RESOURCES;
     }

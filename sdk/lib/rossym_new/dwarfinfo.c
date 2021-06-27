@@ -640,7 +640,7 @@ void stackpush(DwarfStack *stack, ulong value)
     stack->data[stack->length++] = value;
 }
 
-ulong stackpop(DwarfStack *stack) 
+ulong stackpop(DwarfStack *stack)
 {
     ASSERT(stack->length > 0);
     ulong val = stack->data[--stack->length];
@@ -874,8 +874,8 @@ int dwarfgetarg(Dwarf *d, const char *name, DwarfBuf *buf, ulong cfa, PROSSYM_RE
                 werrstr("REG[%d] value %x", reg, (ulong)registers->Registers[reg]);
                 stackpush(&stack, registers->Registers[reg]);
             } else if (opcode >= OpBreg0 && opcode < OpRegx) {
-                ulong val, 
-                    reg = opcode - OpBreg0, 
+                ulong val,
+                    reg = opcode - OpBreg0,
                     offset = dwarfget128s(buf);
                 void* addr = (void*)(ULONG_PTR)registers->Registers[reg];
                 werrstr("BREG[%d] reg %x offset %x", reg, addr, offset);
@@ -916,13 +916,13 @@ int dwarfargvalue(Dwarf *d, DwarfSym *proc, ulong pc, ulong cfa, PROSSYM_REGISTE
 
     werrstr("lookup in unit %x-%x, pc %x", unit.attrs.lowpc, unit.attrs.highpc, pc);
     pc -= unit.attrs.lowpc;
-    
-    werrstr("paramblock %s -> unit %x type %x fde %x len %d registers %x", 
-            parameter->name, 
-            parameter->unit, 
-            parameter->type, 
-            parameter->fde, 
-            parameter->len, 
+
+    werrstr("paramblock %s -> unit %x type %x fde %x len %d registers %x",
+            parameter->name,
+            parameter->unit,
+            parameter->type,
+            parameter->fde,
+            parameter->len,
             registers);
 
     // Seek our range in loc
@@ -931,7 +931,7 @@ int dwarfargvalue(Dwarf *d, DwarfSym *proc, ulong pc, ulong cfa, PROSSYM_REGISTE
 
     locbuf.d = d;
     locbuf.addrsize = d->addrsize;
-    
+
     if (parameter->loctype == TConstant) {
         locbuf.p = d->loc.data + parameter->fde;
         locbuf.ep = d->loc.data + d->loc.len;
@@ -960,7 +960,7 @@ int dwarfargvalue(Dwarf *d, DwarfSym *proc, ulong pc, ulong cfa, PROSSYM_REGISTE
     gotarg = dwarfgetarg(d, parameter->name, &instream, cfa, registers, &parameter->value);
     if (gotarg == -1)
         return -1;
-    
+
     return 0;
 }
 
@@ -991,7 +991,7 @@ dwarfgetparams(Dwarf *d, DwarfSym *s, ulong pc, int pnum, DwarfParam *paramblock
 	int res = dwarfnextsymat(d, s, &param);
 	while (res == 0 && ip < pnum) {
 		if (param.attrs.tag == TagFormalParameter &&
-			param.attrs.have.name && 
+			param.attrs.have.name &&
 			param.attrs.have.location) {
 			paramblocks[ip].name = malloc(strlen(param.attrs.name)+1);
 			strcpy(paramblocks[ip].name, param.attrs.name);
@@ -1000,11 +1000,11 @@ dwarfgetparams(Dwarf *d, DwarfSym *s, ulong pc, int pnum, DwarfParam *paramblock
             paramblocks[ip].loctype = param.attrs.have.location;
             paramblocks[ip].len = param.attrs.location.b.len;
 			paramblocks[ip].fde = (ulong)param.attrs.location.b.data;
-            werrstr("param[%d] block %s -> type %x loctype %x fde %x len %x", 
-                   ip, 
-                   paramblocks[ip].name, 
+            werrstr("param[%d] block %s -> type %x loctype %x fde %x len %x",
+                   ip,
+                   paramblocks[ip].name,
                    paramblocks[ip].type,
-                   paramblocks[ip].loctype, 
+                   paramblocks[ip].loctype,
                    paramblocks[ip].fde,
                    paramblocks[ip].len);
             ip++;

@@ -53,7 +53,7 @@ typedef struct _HID_DESCRIPTOR
 
 
 
-typedef 
+typedef
 VOID
 (NTAPI *HID_SEND_IDLE_CALLBACK)(
     IN PVOID Context

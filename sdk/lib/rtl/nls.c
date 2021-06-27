@@ -634,9 +634,10 @@ RtlUnicodeToMultiByteSize(OUT PULONG MbSize,
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
-NTSTATUS NTAPI
+NTSTATUS
+NTAPI
 RtlUnicodeToOemN(OUT PCHAR OemString,
                  IN ULONG OemSize,
                  OUT PULONG ResultSize OPTIONAL,
@@ -644,68 +645,45 @@ RtlUnicodeToOemN(OUT PCHAR OemString,
                  IN ULONG UnicodeSize)
 {
     ULONG Size = 0;
-    ULONG i;
 
     PAGED_CODE_RTL();
 
+    /* Bytes -> chars */
+    UnicodeSize /= sizeof(WCHAR);
+
     if (!NlsMbOemCodePageTag)
     {
-        /* single-byte code page */
-        if (UnicodeSize > (OemSize * sizeof(WCHAR)))
-            Size = OemSize;
-        else
-            Size = UnicodeSize / sizeof(WCHAR);
-
-        if (ResultSize)
-            *ResultSize = Size;
-
-        for (i = 0; i < Size; i++)
+        while (OemSize && UnicodeSize)
         {
-            *OemString = NlsUnicodeToOemTable[*UnicodeString];
-            OemString++;
-            UnicodeString++;
+            OemString[Size] = NlsUnicodeToOemTable[*UnicodeString++];
+            Size++;
+            OemSize--;
+            UnicodeSize--;
         }
     }
     else
     {
-        /* multi-byte code page */
-        /* FIXME */
-
-        USHORT WideChar;
-        USHORT OemChar;
-
-        for (i = OemSize, Size = UnicodeSize / sizeof(WCHAR); i && Size; i--, Size--)
+        while (OemSize && UnicodeSize)
         {
-            WideChar = *UnicodeString++;
+            USHORT OemChar = NlsUnicodeToMbOemTable[*UnicodeString++];
 
-            if (WideChar < 0x80)
+            if (HIBYTE(OemChar))
             {
-                *OemString++ = LOBYTE(WideChar);
-                continue;
+                if (OemSize < 2)
+                    break;
+                OemString[Size++] = HIBYTE(OemChar);
+                OemSize--;
             }
-
-            OemChar = NlsUnicodeToMbOemTable[WideChar];
-
-            if (!HIBYTE(OemChar))
-            {
-                *OemString++ = LOBYTE(OemChar);
-                continue;
-            }
-
-            if (i >= 2)
-            {
-                *OemString++ = HIBYTE(OemChar);
-                *OemString++ = LOBYTE(OemChar);
-                i--;
-            }
-            else break;
+            OemString[Size++] = LOBYTE(OemChar);
+            OemSize--;
+            UnicodeSize--;
         }
-
-        if (ResultSize)
-            *ResultSize = OemSize - i;
     }
 
-    return STATUS_SUCCESS;
+    if (ResultSize)
+        *ResultSize = Size;
+
+    return UnicodeSize ? STATUS_BUFFER_OVERFLOW : STATUS_SUCCESS;
 }
 
 /*

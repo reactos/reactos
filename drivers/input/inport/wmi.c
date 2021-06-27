@@ -14,14 +14,6 @@
 
 /* GLOBALS ********************************************************************/
 
-#ifdef ALLOC_PRAGMA
-#pragma alloc_text(PAGE, InPortWmi)
-#pragma alloc_text(PAGE, InPortWmiRegistration)
-#pragma alloc_text(PAGE, InPortWmiDeRegistration)
-#pragma alloc_text(PAGE, InPortQueryWmiRegInfo)
-#pragma alloc_text(PAGE, InPortQueryWmiDataBlock)
-#endif
-
 GUID GuidWmiPortData = POINTER_PORT_WMI_STD_DATA_GUID;
 
 WMIGUIDREGINFO InPortWmiGuidList[] =
@@ -30,7 +22,7 @@ WMIGUIDREGINFO InPortWmiGuidList[] =
 };
 
 /* FUNCTIONS ******************************************************************/
-
+CODE_SEG("PAGE")
 NTSTATUS
 NTAPI
 InPortQueryWmiRegInfo(
@@ -57,6 +49,7 @@ InPortQueryWmiRegInfo(
     return STATUS_SUCCESS;
 }
 
+CODE_SEG("PAGE")
 NTSTATUS
 NTAPI
 InPortQueryWmiDataBlock(
@@ -119,6 +112,7 @@ Complete:
                               IO_NO_INCREMENT);
 }
 
+CODE_SEG("PAGE")
 NTSTATUS
 NTAPI
 InPortWmiRegistration(
@@ -140,6 +134,7 @@ InPortWmiRegistration(
                                     WMIREG_ACTION_REGISTER);
 }
 
+CODE_SEG("PAGE")
 NTSTATUS
 NTAPI
 InPortWmiDeRegistration(
@@ -151,6 +146,7 @@ InPortWmiDeRegistration(
                                     WMIREG_ACTION_DEREGISTER);
 }
 
+CODE_SEG("PAGE")
 NTSTATUS
 NTAPI
 InPortWmi(

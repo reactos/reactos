@@ -16,6 +16,7 @@
 
 #include "ARM3/miarm.h"
 
+
 /* TYPES ********************************************************************/
 typedef struct _MM_ALLOCATION_REQUEST
 {
@@ -76,6 +77,8 @@ NTSTATUS
 NTAPI
 MmReleasePageMemoryConsumer(ULONG Consumer, PFN_NUMBER Page)
 {
+    KIRQL OldIrql;
+
     if (Page == 0)
     {
         DPRINT1("Tried to release page zero.\n");
@@ -84,7 +87,11 @@ MmReleasePageMemoryConsumer(ULONG Consumer, PFN_NUMBER Page)
 
     (void)InterlockedDecrementUL(&MiMemoryConsumers[Consumer].PagesUsed);
 
+    OldIrql = MiAcquirePfnLock();
+
     MmDereferencePage(Page);
+
+    MiReleasePfnLock(OldIrql);
 
     return(STATUS_SUCCESS);
 }
@@ -253,13 +260,6 @@ MmTrimUserMemory(ULONG Target, ULONG Priority, PULONG NrFreedPages)
     return STATUS_SUCCESS;
 }
 
-static BOOLEAN
-MiIsBalancerThread(VOID)
-{
-    return (MiBalancerThreadHandle != NULL) &&
-           (PsGetCurrentThreadId() == MiBalancerThreadId.UniqueThread);
-}
-
 VOID
 NTAPI
 MmRebalanceMemoryConsumers(VOID)
@@ -319,32 +319,6 @@ MiBalancerThread(PVOID Unused)
         {
             ULONG InitialTarget = 0;
 
-#if (_MI_PAGING_LEVELS == 2)
-            if (!MiIsBalancerThread())
-            {
-                /* Clean up the unused PDEs */
-                ULONG_PTR Address;
-                PEPROCESS Process = PsGetCurrentProcess();
-
-                /* Acquire PFN lock */
-                KIRQL OldIrql = MiAcquirePfnLock();
-                PMMPDE pointerPde;
-                for (Address = (ULONG_PTR)MI_LOWEST_VAD_ADDRESS;
-                     Address < (ULONG_PTR)MM_HIGHEST_VAD_ADDRESS;
-                     Address += PTE_PER_PAGE * PAGE_SIZE)
-                {
-                    if (MiQueryPageTableReferences((PVOID)Address) == 0)
-                    {
-                        pointerPde = MiAddressToPde(Address);
-                        if (pointerPde->u.Hard.Valid)
-                            MiDeletePte(pointerPde, MiPdeToPte(pointerPde), Process, NULL);
-                        ASSERT(pointerPde->u.Hard.Valid == 0);
-                    }
-                }
-                /* Release lock */
-                MiReleasePfnLock(OldIrql);
-            }
-#endif
             do
             {
                 ULONG OldTarget = InitialTarget;

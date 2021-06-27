@@ -23,9 +23,9 @@ localtime_s(struct tm* _tm, const time_t *ptime)
     {
         if(_tm) memset(_tm, 0xFF, sizeof(struct tm));
         _invalid_parameter(NULL,
-                           0,//__FUNCTION__, 
-                           _CRT_WIDE(__FILE__), 
-                           __LINE__, 
+                           0,//__FUNCTION__,
+                           _CRT_WIDE(__FILE__),
+                           __LINE__,
                            0);
         _set_errno(EINVAL);
         return EINVAL;

@@ -28,6 +28,8 @@
 
 /* Bitmaps */
 #define IDB_REACTOS                 131
+#define IDB_REACTOS_WORKSTATION     400
+#define IDB_REACTOS_SERVER          401
 #define IDB_LINEBAR                 138
 #define IDB_SHELL_IEXPLORE_LG       204
 #define IDB_SHELL_IEXPLORE_LG_HOT   205
@@ -196,6 +198,10 @@
 #define IDS_FORMAT_TITLE          184
 #define IDS_FORMAT_WARNING        185
 #define IDS_FORMAT_COMPLETE       186
+
+/* Warning format system drive dialog strings */
+#define IDS_NO_FORMAT_TITLE       188
+#define IDS_NO_FORMAT             189
 
 #define IDS_UNKNOWN_APP     190
 #define IDS_EXE_DESCRIPTION 191

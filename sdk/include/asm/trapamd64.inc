@@ -116,6 +116,14 @@ MACRO(EnterTrap, Flags)
     mov es, ax
     swapgs
 
+#if DBG
+    /* Check IRQL */
+    mov rax, cr8
+    test rax, rax
+    jz kernel_mode_entry
+    int HEX(2c)
+#endif
+
 kernel_mode_entry:
 
 //    if (Flags AND TF_IRQL)
@@ -151,6 +159,7 @@ MACRO(ExitTrap, Flags)
     LOCAL kernel_mode_return
     LOCAL IntsEnabled
     LOCAL NoUserApc
+    LOCAL IrqlPassive
 
 #if DBG
         /* Check previous irql */
@@ -201,7 +210,17 @@ MACRO(ExitTrap, Flags)
     jnz IntsEnabled
     int HEX(2c)
 IntsEnabled:
+
+    /* Make sure we are at passive level */
+    mov rax, cr8
+    test rax, rax
+    jz IrqlPassive
+    int HEX(2C)
+
+IrqlPassive:
 #endif
+
+    cli
 
     /* Swap gs to user mode */
     swapgs

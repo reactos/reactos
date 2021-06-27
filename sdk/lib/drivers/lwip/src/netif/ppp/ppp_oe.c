@@ -6,13 +6,13 @@
 * The authors hereby grant permission to use, copy, modify, distribute,
 * and license this software and its documentation for any purpose, provided
 * that existing copyright notices are retained in all copies and that this
-* notice and the following disclaimer are included verbatim in any 
+* notice and the following disclaimer are included verbatim in any
 * distributions. No written agreement, license, or royalty fee is required
 * for any of the authorized uses.
 *
 * THIS SOFTWARE IS PROVIDED BY THE CONTRIBUTORS *AS IS* AND ANY EXPRESS OR
 * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
-* OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. 
+* OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
 * IN NO EVENT SHALL THE CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
 * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
 * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
@@ -575,7 +575,7 @@ pppoe_data_input(struct netif *netif, struct pbuf *pb)
     PPPDEBUG(LOG_ERR, ("pppoe_data_input: pbuf_header failed\n"));
     LINK_STATS_INC(link.lenerr);
     goto drop;
-  } 
+  }
 
   pb = pppSingleBuf (pb);
 
@@ -615,7 +615,7 @@ pppoe_data_input(struct netif *netif, struct pbuf *pb)
     PPPDEBUG(LOG_ERR, ("pppoe_data_input: pbuf_header PPPOE_HEADERLEN failed\n"));
     LINK_STATS_INC(link.lenerr);
     goto drop;
-  } 
+  }
 
   PPPDEBUG(LOG_DEBUG, ("pppoe_data_input: %c%c%"U16_F": pkthdr.len=%d, pppoe.len=%d\n",
         sc->sc_ethif->name[0], sc->sc_ethif->name[1], sc->sc_ethif->num,
@@ -1071,7 +1071,7 @@ pppoe_xmit(struct pppoe_softc *sc, struct pbuf *pb)
     LINK_STATS_INC(link.lenerr);
     pbuf_free(pb);
     return ERR_BUF;
-  } 
+  }
 
   p = (u8_t*)pb->payload + sizeof(struct eth_hdr);
   PPPOE_ADD_HEADER(p, 0, sc->sc_session, len);

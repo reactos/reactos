@@ -14,6 +14,7 @@ extern void func_CShellLink(void);
 extern void func_CUserNotification(void);
 extern void func_DragDrop(void);
 extern void func_ExtractIconEx(void);
+extern void func_FindExecutable(void);
 extern void func_IShellFolderViewCB(void);
 extern void func_menu(void);
 extern void func_OpenAs_RunDLL(void);
@@ -43,6 +44,7 @@ const struct test winetest_testlist[] =
     { "CUserNotification", func_CUserNotification },
     { "DragDrop", func_DragDrop },
     { "ExtractIconEx", func_ExtractIconEx },
+    { "FindExecutable", func_FindExecutable },
     { "IShellFolderViewCB", func_IShellFolderViewCB },
     { "menu", func_menu },
     { "OpenAs_RunDLL", func_OpenAs_RunDLL },

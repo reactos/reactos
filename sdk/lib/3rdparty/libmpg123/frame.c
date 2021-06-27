@@ -61,7 +61,7 @@ static void frame_default_pars(mpg123_pars *mp)
 	mpg123_fmt_all(mp);
 	/* Default of keeping some 4K buffers at hand, should cover the "usual" use case (using 16K pipe buffers as role model). */
 #ifndef NO_FEEDER
-	mp->feedpool = 5; 
+	mp->feedpool = 5;
 	mp->feedbuffer = 4096;
 #endif
 	mp->freeformat_framesize = -1;
@@ -350,7 +350,7 @@ int frame_buffers(mpg123_handle *fr)
 		}
 #endif
 #endif
-#if defined(OPT_ALTIVEC) || defined(OPT_ARM) 
+#if defined(OPT_ALTIVEC) || defined(OPT_ARM)
 		/* sizeof(real) >= 4 ... yes, it could be 8, for example.
 		   We got it intialized to at least (512+32)*sizeof(real).*/
 		decwin_size += 512*sizeof(real);
@@ -526,7 +526,7 @@ static void frame_fixed_reset(mpg123_handle *fr)
 	fr->abr_rate = 0;
 	fr->track_frames = 0;
 	fr->track_samples = -1;
-	fr->framesize=0; 
+	fr->framesize=0;
 	fr->mean_frames = 0;
 	fr->mean_framesize = 0;
 	fr->freesize = 0;
@@ -699,7 +699,7 @@ static off_t frame_fuzzy_find(mpg123_handle *fr, off_t want_frame, off_t* get_fr
 	then step to just before wanted one with read_frame
 	do not care tabout the stuff that was in buffer but not played back
 	everything that left the decoder is counted as played
-	
+
 	Decide if you want low latency reaction and accurate timing info or stable long-time playback with buffer!
 */
 
@@ -749,7 +749,7 @@ off_t frame_index_find(mpg123_handle *fr, off_t want_frame, off_t* get_frame)
 }
 
 off_t frame_ins2outs(mpg123_handle *fr, off_t ins)
-{	
+{
 	off_t outs = 0;
 	switch(fr->down_sample)
 	{

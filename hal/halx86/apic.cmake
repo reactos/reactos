@@ -6,6 +6,7 @@ list(APPEND HAL_APIC_ASM_SOURCE
 list(APPEND HAL_APIC_SOURCE
     apic/apic.c
     apic/apictimer.c
+    apic/apicsmp.c
     apic/halinit.c
     apic/processor.c
     apic/rtctimer.c

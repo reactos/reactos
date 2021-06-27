@@ -247,8 +247,7 @@ InitImageList(UINT StartResource,
                             LR_LOADTRANSPARENT);
         if (hImage == NULL)
         {
-            ImageList_Destroy(himl);
-            himl = NULL;
+            ret = -1;
             break;
         }
 

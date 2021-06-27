@@ -77,4 +77,5 @@ BEGIN
     IDS_ERROR_INVALID_STOP_BITS "EROARE: Valoare eronată pentru biții delimitori %d:\n"
     IDS_ERROR_NO_MEMORY "ERAORE: Nu există suficientă memorie.\n"
     IDS_ERROR_SCREEN_LINES_COL "Ecranul nu poate fi stabilit cu numărul de linii sau coloane specificate.\n"
+    IDS_ERROR_INVALID_CODEPAGE "The code page specified is not valid.\n"
 END

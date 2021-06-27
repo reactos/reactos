@@ -833,11 +833,15 @@ BEGIN
     IDS_RESTART_PROMPT "Haluatko simuloida ReactOS:n uudelleenkäynnistämistä?"
     IDS_SHUTDOWN_TITLE "Sammuta"
     IDS_SHUTDOWN_PROMPT "Haluatko lopettaa ReactOS:n istunnon?"
-    
+
     /* Format Dialog Strings */
     IDS_FORMAT_TITLE "Format Local Disk"
     IDS_FORMAT_WARNING "WARNING: Formatting will erase ALL data on this disk.\nTo format the disk, click OK. To quit, click CANCEL."
     IDS_FORMAT_COMPLETE "Format Complete."
+
+    /* Warning format system drive dialog strings */
+    IDS_NO_FORMAT_TITLE "Cannot format this volume"
+    IDS_NO_FORMAT "This volume cannot be formatted! It contains important system files in order for ReactOS to run."
 
     /* Run File dialog */
     IDS_RUNDLG_ERROR "Unable to display Run File dialog box (internal error)"

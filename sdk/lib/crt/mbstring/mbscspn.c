@@ -3,7 +3,7 @@
  * PROJECT:     ReactOS system libraries
  * FILE:        lib/sdk/crt/mbstring/mbscspn.c
  * PURPOSE:
- * PROGRAMER:   
+ * PROGRAMER:
  * UPDATE HISTORY:
  *              05/30/08: Samuel Serapion adapted from PROJECT C Library
  *

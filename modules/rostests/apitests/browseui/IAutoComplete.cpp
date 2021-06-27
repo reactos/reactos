@@ -872,4 +872,33 @@ START_TEST(IAutoComplete)
         { __LINE__, WM_KEYDOWN, VK_DELETE, 0, L"te", TRUE, 2, 2, -1, TRUE },
     };
     DoTestCaseB(rcWork.right - 100, rcWork.bottom - 30, 80, 40, pList, nCount, testcase8_entries, _countof(testcase8_entries));
+
+    // Test case #9 (B)
+    trace("Testcase #9 ------------------------------\n");
+    nCount = 32;
+    pList = (LPWSTR *)CoTaskMemAlloc(nCount * sizeof(LPWSTR));
+    for (UINT i = 0; i < nCount; ++i)
+    {
+        StringCbPrintfW(szText, sizeof(szText), L"a%u\\b%u\\c%u", i % 2, (i / 2) % 2, i % 4);
+        SHStrDupW(szText, &pList[i]);
+    }
+    static const TEST_B_ENTRY testcase9_entries[] =
+    {
+        { __LINE__, WM_CHAR, L'a', 0, L"a", TRUE, 1, 1, -1, TRUE },
+        { __LINE__, WM_CHAR, L'0', 0, L"a0", TRUE, 2, 2, -1 },
+        { __LINE__, WM_CHAR, L'\\', 0, L"a0\\", TRUE, 3, 3, -1, TRUE, TRUE, L"a0\\" },
+        { __LINE__, WM_CHAR, L'b', 0, L"a0\\b", TRUE, 4, 4, -1 },
+        { __LINE__, WM_CHAR, L'1', 0, L"a0\\b1", TRUE, 5, 5, -1 },
+        { __LINE__, WM_CHAR, L'\\', 0, L"a0\\b1\\", TRUE, 6, 6, -1, TRUE, TRUE, L"a0\\b1\\" },
+        { __LINE__, WM_CHAR, L'c', 0, L"a0\\b1\\c", TRUE, 7, 7, -1 },
+        { __LINE__, WM_KEYDOWN, VK_BACK, 0, L"a0\\b1\\", TRUE, 6, 6, -1 },
+        { __LINE__, WM_KEYDOWN, VK_BACK, 0, L"a0\\b1", TRUE, 5, 5, -1, TRUE, TRUE, L"a0\\" },
+        { __LINE__, WM_KEYDOWN, VK_BACK, 0, L"a0\\b", TRUE, 4, 4, -1 },
+        { __LINE__, WM_KEYDOWN, VK_BACK, 0, L"a0\\", TRUE, 3, 3, -1 },
+        { __LINE__, WM_KEYDOWN, VK_BACK, 0, L"a0", TRUE, 2, 2, -1, TRUE },
+        { __LINE__, WM_KEYDOWN, VK_BACK, 0, L"a", TRUE, 1, 1, -1 },
+        { __LINE__, WM_KEYDOWN, VK_DOWN, 0, L"a0\\b0\\c0", TRUE, 8, 8, 0 },
+        { __LINE__, WM_KEYDOWN, VK_UP, 0, L"a", TRUE, 1, 1, -1 },
+    };
+    DoTestCaseB(0, 0, 100, 30, pList, nCount, testcase9_entries, _countof(testcase9_entries));
 }

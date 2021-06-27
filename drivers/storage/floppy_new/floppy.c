@@ -493,7 +493,7 @@ USBFlopFormatTracks(
 
 #endif
 
-
+
 NTSTATUS
 #ifdef __REACTOS__
 NTAPI
@@ -566,7 +566,7 @@ Return Value:
 
 
 } // end DriverEntry()
-
+
 VOID
 #ifdef __REACTOS__
 NTAPI
@@ -595,7 +595,7 @@ ScsiFlopUnload(
 #pragma warning(push)
 #pragma warning(disable:28152)
 #endif
-
+
 NTSTATUS
 #ifdef __REACTOS__
 NTAPI
@@ -1079,7 +1079,7 @@ NTSTATUS ScsiFlopStartDevice(
     return STATUS_SUCCESS;
 }
 
-
+
 NTSTATUS
 #ifdef __REACTOS__
 NTAPI
@@ -1623,7 +1623,7 @@ Return Value:
 } // end ScsiFlopDeviceControl()
 
 #if 0
-
+
 BOOLEAN
 IsFloppyDevice(
     PDEVICE_OBJECT DeviceObject
@@ -1734,7 +1734,7 @@ Return Value:
 }
 #endif
 
-
+
 NTSTATUS
 DetermineMediaType(
     PDEVICE_OBJECT DeviceObject
@@ -1894,7 +1894,7 @@ Return Value:
     }
     return status;
 }
-
+
 ULONG
 DetermineDriveType(
     PDEVICE_OBJECT DeviceObject
@@ -2051,7 +2051,7 @@ Return Value:
     return(DRIVE_TYPE_NONE);
 }
 
-
+
 BOOLEAN
 FlCheckFormatParameters(
     IN PDEVICE_OBJECT DeviceObject,
@@ -2162,7 +2162,7 @@ Return Value:
 #pragma warning(pop)
 #endif
 }
-
+
 NTSTATUS
 FormatMedia(
     PDEVICE_OBJECT DeviceObject,
@@ -2389,7 +2389,7 @@ Return Value:
     return(status);
 
 }
-
+
 VOID
 #ifdef __REACTOS__
 NTAPI
@@ -2677,7 +2677,7 @@ Return Value:
 
     return;
 }
-
+
 NTSTATUS
 FlopticalFormatMedia(
     PDEVICE_OBJECT DeviceObject,
@@ -2788,7 +2788,7 @@ Return Value:
 
 }
 
-
+
 NTSTATUS
 #ifdef __REACTOS__
 NTAPI
@@ -2854,7 +2854,7 @@ Return Value:
     }
 
     if(diskData->FloppyInterfaceString.Buffer != NULL) {
-        
+
         status = IoSetDeviceInterfaceState(
                    &(diskData->FloppyInterfaceString),
                    FALSE);
@@ -2878,7 +2878,7 @@ Return Value:
     return STATUS_SUCCESS;
 }
 
-
+
 NTSTATUS
 #ifdef __REACTOS__
 NTAPI
@@ -2894,7 +2894,7 @@ ScsiFlopStopDevice(
     return STATUS_SUCCESS;
 }
 
-
+
 NTSTATUS
 USBFlopGetMediaTypes(
     IN PDEVICE_OBJECT DeviceObject,
@@ -3264,7 +3264,7 @@ Return Value:
     return status;
 }
 
-
+
 NTSTATUS
 USBFlopFormatTracks(
     IN PDEVICE_OBJECT DeviceObject,

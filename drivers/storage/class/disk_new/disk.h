@@ -469,6 +469,10 @@ extern CLASSPNP_SCAN_FOR_SPECIAL_INFO DiskBadControllers[];
 extern const DISK_MEDIA_TYPES_LIST DiskMediaTypes[];
 extern const DISK_MEDIA_TYPES_LIST DiskMediaTypesExclude[];
 
+#if defined(__REACTOS__) && defined(_MSC_VER)
+# pragma section("PAGECONS", read)
+# pragma section("PAGEDATA", read,write)
+#endif
 //
 // Macros
 //
@@ -477,7 +481,7 @@ extern const DISK_MEDIA_TYPES_LIST DiskMediaTypesExclude[];
 // Routine prototypes.
 //
 
-
+
 DRIVER_INITIALIZE DriverEntry;
 
 VOID

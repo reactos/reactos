@@ -1,5 +1,5 @@
-/* Traditional Chinese translation by Henry Tang Ih 2016 (henrytang2@hotmail.com) */
-/* translation improved by Aobi Chan CL 2020 (eason066@gmail.com) */
+/* Traditional Chinese translation by Henry Tang Ih 2016 (henrytang2@hotmail.com)
+ * translation improved by Chan Chilung 2020 - 2021 (eason066@gmail.com) */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
 
@@ -30,7 +30,7 @@ BEGIN
     IDS_NODRIVERS "沒有驅動程式檔案要求或都已載入此裝置。"
     IDS_RESOURCE_COLUMN "資源類型"
     IDS_SETTING_COLUMN "設定"
-    IDS_RESOURCE_MEMORY_RANGE "內存範圍"
+    IDS_RESOURCE_MEMORY_RANGE "記憶體範圍"
     IDS_RESOURCE_INTERRUPT "IRQ"
     IDS_RESOURCE_DMA "DMA"
     IDS_RESOURCE_PORT "I/O 範圍"
@@ -92,7 +92,7 @@ BEGIN
     IDS_DEV_HALTED "有應用程式或服務關閉了這個硬體裝置。"
     IDS_DEV_PHANTOM "這個硬體裝置目前未連接到電腦。"
     IDS_DEV_SYSTEM_SHUTDOWN "ReactOS 無法存取這個硬體裝置，因為作業系統正在關閉。"
-    IDS_DEV_HELD_FOR_EJECT "ReactOS 無法使用這個硬體裝置，因為它已準備安全刪除，但尚未從電腦刪除。"
+    IDS_DEV_HELD_FOR_EJECT "ReactOS 無法使用這個硬體裝置，因為它已準備安全移除，但尚未從電腦拔除。"
     IDS_DEV_DRIVER_BLOCKED "此裝置的軟體已經被阻止啟動，因為它已知會在 ReactOS 出現問題。 請與硬體供應商聯繫並取得新的驅動程式。"
     IDS_DEV_REGISTRY_TOO_LARGE "ReactOS 無法啟動新的硬體裝置，因為系統保存檔太大 (超過了登錄大小限制)。"
     IDS_DEV_SETPROPERTIES_FAILED "ReactOS 無法更改此裝置的設定。"
@@ -180,8 +180,8 @@ BEGIN
     LTEXT "檢視有關驅動程式檔案的詳細資訊。", -1, 91, 110, 154, 17, SS_NOPREFIX
     PUSHBUTTON "更新驅動程式(&U)...", IDC_UPDATEDRIVER, 7, 134, 75, 15
     LTEXT "更新此裝置的驅動程式。", -1, 91, 138, 154, 17, SS_NOPREFIX
-    PUSHBUTTON "&Roll Back Driver", IDC_ROLLBACKDRIVER, 7, 162, 75, 15
-    LTEXT "If the device fails after updating the driver, roll back to the previously installed driver.", -1, 91, 162, 154, 25, SS_NOPREFIX
+    PUSHBUTTON "復原驅動程式(&R)", IDC_ROLLBACKDRIVER, 7, 162, 75, 15
+    LTEXT "如果裝置在更新驅動程式後無法運作，則可以還原至先前安裝的驅動程式。", -1, 91, 162, 154, 25, SS_NOPREFIX
     PUSHBUTTON "解除安裝(&U)", IDC_UNINSTALLDRIVER, 7, 190, 75, 15
     LTEXT "解除驅動程式的安裝 (進階)。", -1, 91, 194, 154, 17, SS_NOPREFIX
 END
@@ -325,9 +325,9 @@ BEGIN
   IDS_HINT_DISABLE      " 停用所選的裝置。"
   IDS_HINT_UPDATE       " 啟動所選裝置的更新驅動程式軟體精靈。"
   IDS_HINT_UNINSTALL    " 解除安裝所選裝置的驅動程式。"
-  IDS_HINT_ADD          " 新增一個舊的 (非即插) 裝置到電腦。" 
+  IDS_HINT_ADD          " 新增一個舊的 (非隨插即用) 裝置到電腦。" 
   IDS_HINT_ABOUT        " 關於 ReactOS 裝置管理員。"
-  IDS_HINT_EXIT         " 退出程式。"
+  IDS_HINT_EXIT         " 結束程式。"
 
   IDS_HINT_DEV_BY_TYPE  " 按硬體類型顯示裝置。"
   IDS_HINT_DEV_BY_CONN  " 按連線顯示裝置。"

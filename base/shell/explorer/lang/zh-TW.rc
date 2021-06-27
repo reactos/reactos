@@ -5,7 +5,7 @@
  * PURPOSE:    Traditional Chinese Language File for ReactOS Explorer
  * TRANSLATOR: 2015-04-27 Alvin Wong <alvinhochun [at] gmail [dot] com>
  *             2018-12-25 Luo Yufan <njlyf2011 [at] hotmail [dot] com>
- *             2020-08-19 Aobi Chan CL <eason066 [at] gmail [dot] com>
+ *             2021-03-07 Chan Chilung <eason066 [at] gmail [dot] com>
  */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
@@ -126,8 +126,8 @@ FONT 9, "新細明體"
 BEGIN
     GROUPBOX         "開始功能表", IDC_STATIC, 8, 7, 218, 114
     ICON             IDI_STARTMENU2, IDC_STATIC, 19, 17, 20, 20
-    LTEXT            "你可以通過添加或移除項自訂開始功能表。", IDC_STATIC, 48, 17, 108, 39
-    PUSHBUTTON       "添加...(&D)", IDC_CLASSICSTART_ADD, 162, 18, 53, 14
+    LTEXT            "你可以通過新增或移除項自訂開始功能表。", IDC_STATIC, 48, 17, 108, 39
+    PUSHBUTTON       "新增...(&D)", IDC_CLASSICSTART_ADD, 162, 18, 53, 14
     PUSHBUTTON       "刪除...(&R)", IDC_CLASSICSTART_REMOVE, 162, 33, 53, 14
     PUSHBUTTON       "進階(&V)", IDC_CLASSICSTART_ADVANCED, 162, 49, 53, 14
     PUSHBUTTON       "排序(&S)", IDC_CLASSICSTART_SORT, 162, 65, 53, 14
@@ -164,7 +164,7 @@ BEGIN
     LTEXT            "開始功能表項:(&M)", IDC_STATIC, 7, 53, 238, 8
     CONTROL          "開始功能表設定(&T)", IDC_ITEMS, "SysTreeView32", WS_BORDER | 0x00000001, 7, 63, 238, 67, WS_EX_CLIENTEDGE
     GROUPBOX         "最近使用的檔案 ", IDC_STATIC, 7, 133, 238, 56
-    LTEXT            "選擇此選項來提供對您最近開啟的檔案的快速訪問。清除此列表並不會刪除檔案。", IDC_STATIC, 14, 144, 224, 21
+    LTEXT            "選擇此選項來供您快速存取最近開啟的檔案。清除此列表並不會刪除檔案。", IDC_STATIC, 14, 144, 224, 21
     AUTOCHECKBOX     "列出我最近開啟的檔案(&R)", IDC_RECENTLY, 14, 168, 147, 10
     PUSHBUTTON       "清除列表(&C)", IDC_CLEAR, 182, 168, 55, 14
 END
@@ -180,7 +180,7 @@ BEGIN
     AUTORADIOBUTTON  "大圖示(&L)", IDC_CHOOSELARGE, 43, 25, 53, 10
     AUTORADIOBUTTON  "小圖示(&S)", IDC_CHOOSESMALL, 177, 25, 51, 10, NOT WS_TABSTOP
     GROUPBOX         "程式 ", IDC_STATIC, 7, 49, 238, 70
-    LTEXT            "開始功能表包含您最常使用的程式的快捷方式。清除快捷方式的列表並不會刪除程式。", IDC_STATIC, 14, 63, 224, 20
+    LTEXT            "開始功能表包含您最常使用的程式的捷徑。清除捷徑列表並不會刪除程式。", IDC_STATIC, 14, 63, 224, 20
     LTEXT            "開始功能表上的程式的數目:(&N)", IDC_STATIC, 14, 86, 112, 8
     EDITTEXT         IDC_NUMBEROFPROGRAMS, 133, 84, 27, 12, ES_LEFT | ES_RIGHT | ES_NUMBER
     CONTROL          "", IDC_NUMBERUPDOWN, "msctls_updown32", WS_BORDER | 0x000000B6, 160, 84, 11, 12

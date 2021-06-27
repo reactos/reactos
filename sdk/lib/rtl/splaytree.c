@@ -158,7 +158,7 @@ SwapSplayLinks(PRTL_SPLAY_LINKS LinkA,
                 ASSERT(RtlRightChild(LinkA) == RtlRightChild(&Tb));
                 ASSERT(RtlParent(LinkB) == RtlParent(&Ta));
                 ASSERT(RtlLeftChild(LinkB) == (LeftB ? LinkA : RtlLeftChild(&Ta)));
-                ASSERT(RtlRightChild(LinkB) == (LeftB ? RtlRightChild(&Ta) : LinkA));            
+                ASSERT(RtlRightChild(LinkB) == (LeftB ? RtlRightChild(&Ta) : LinkA));
             }
             else
             {

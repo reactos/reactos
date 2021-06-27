@@ -120,7 +120,7 @@ ReleaseAttributeContext(PNTFS_ATTR_CONTEXT Context)
 /**
 * @name FindAttribute
 * @implemented
-* 
+*
 * Searches a file record for an attribute matching the given type and name.
 *
 * @param Offset
@@ -400,7 +400,7 @@ IncreaseMftSize(PDEVICE_EXTENSION Vcb, BOOLEAN CanWait)
         ReleaseAttributeContext(BitmapContext);
         return Status;
     }
-    
+
     // We'll need to find the bitmap again, because its offset will have changed after resizing the data attribute
     ReleaseAttributeContext(BitmapContext);
     Status = FindAttribute(Vcb, Vcb->MasterFileTable, AttributeBitmap, L"", 0, &BitmapContext, &BitmapOffset);
@@ -421,7 +421,7 @@ IncreaseMftSize(PDEVICE_EXTENSION Vcb, BOOLEAN CanWait)
             Status = SetNonResidentAttributeDataLength(Vcb, BitmapContext, BitmapOffset, Vcb->MasterFileTable, &BitmapSize);
         else
             Status = SetResidentAttributeDataLength(Vcb, BitmapContext, BitmapOffset, Vcb->MasterFileTable, &BitmapSize);
-    
+
         if (!NT_SUCCESS(Status))
         {
             DPRINT1("ERROR: Failed to set size of bitmap attribute!\n");
@@ -608,7 +608,7 @@ InternalSetResidentAttributeLength(PDEVICE_EXTENSION DeviceExt,
 
 /**
 *   @parameter FileRecord
-*   Pointer to a file record. Must be a full record at least 
+*   Pointer to a file record. Must be a full record at least
 *   Fcb->Vcb->NtfsInfo.BytesPerFileRecord bytes large, not just the header.
 */
 NTSTATUS
@@ -697,10 +697,10 @@ SetAttributeDataLength(PFILE_OBJECT FileObject,
 * to memory allocated for the FileRecord. Must be aligned to an 8-byte boundary (relative to FileRecord).
 *
 * @param EndMarker
-* This value will be written after AttributeEnd but isn't critical at all. When Windows resizes 
-* a file record, it preserves the final ULONG that previously ended the record, even though this 
+* This value will be written after AttributeEnd but isn't critical at all. When Windows resizes
+* a file record, it preserves the final ULONG that previously ended the record, even though this
 * value is (to my knowledge) never used. We emulate this behavior.
-* 
+*
 */
 VOID
 SetFileRecordEnd(PFILE_RECORD_HEADER FileRecord,
@@ -748,7 +748,7 @@ SetFileRecordEnd(PFILE_RECORD_HEADER FileRecord,
 * STATUS_INVALID_PARAMETER if we can't find the last cluster in the data run.
 *
 * @remarks
-* Called by SetAttributeDataLength() and IncreaseMftSize(). Use SetAttributeDataLength() unless you have a good 
+* Called by SetAttributeDataLength() and IncreaseMftSize(). Use SetAttributeDataLength() unless you have a good
 * reason to use this. Doesn't update the file record on disk. Doesn't inform the cache controller of changes with
 * any associated files. Synchronization is the callers responsibility.
 */
@@ -842,8 +842,8 @@ SetNonResidentAttributeDataLength(PDEVICE_EXTENSION Vcb,
     DestinationAttribute->NonResident.AllocatedSize = AllocationSize;
     DestinationAttribute->NonResident.DataSize = DataSize->QuadPart;
     DestinationAttribute->NonResident.InitializedSize = DataSize->QuadPart;
-    
-    // HighestVCN seems to be set incorrectly somewhere. Apply a hack-fix to reset it. 
+
+    // HighestVCN seems to be set incorrectly somewhere. Apply a hack-fix to reset it.
     // HACKHACK FIXME: Fix for sparse files; this math won't work in that case.
     AttrContext->pRecord->NonResident.HighestVCN = ((ULONGLONG)AllocationSize / Vcb->NtfsInfo.BytesPerCluster) - 1;
     DestinationAttribute->NonResident.HighestVCN = AttrContext->pRecord->NonResident.HighestVCN;
@@ -999,7 +999,7 @@ SetResidentAttributeDataLength(PDEVICE_EXTENSION Vcb,
                 {
                     FsRtlInitializeLargeMcb(&AttrContext->DataRunsMCB, NonPagedPool);
                 }
-                _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER) 
+                _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
                 {
                     DPRINT1("Unable to create LargeMcb!\n");
                     if (AttribDataSize.QuadPart > 0)
@@ -1077,7 +1077,7 @@ ReadAttribute(PDEVICE_EXTENSION Vcb,
     ULONG ReadLength;
     ULONG AlreadyRead;
     NTSTATUS Status;
-    
+
     //TEMPTEMP
     PUCHAR TempBuffer;
 
@@ -1331,10 +1331,10 @@ WriteAttribute(PDEVICE_EXTENSION Vcb,
     PUCHAR SourceBuffer = Buffer;
     LONGLONG StartingOffset;
     BOOLEAN FileRecordAllocated = FALSE;
-    
+
     //TEMPTEMP
     PUCHAR TempBuffer;
-        
+
 
     DPRINT("WriteAttribute(%p, %p, %I64u, %p, %lu, %p, %p)\n", Vcb, Context, Offset, Buffer, Length, RealLengthWritten, FileRecord);
 
@@ -1423,7 +1423,7 @@ WriteAttribute(PDEVICE_EXTENSION Vcb,
 
     // This is a non-resident attribute.
 
-    // I. Find the corresponding start data run.	
+    // I. Find the corresponding start data run.
 
     // FIXME: Cache seems to be non-working. Disable it for now
     //if(Context->CacheRunOffset <= Offset && Offset < Context->CacheRunOffset + Context->CacheRunLength * Volume->ClusterSize)
@@ -1439,7 +1439,7 @@ WriteAttribute(PDEVICE_EXTENSION Vcb,
     {
         ULONG UsedBufferSize;
         LastLCN = 0;
-        CurrentOffset = 0;  
+        CurrentOffset = 0;
 
         // This will be rewritten in the next iteration to just use the DataRuns MCB directly
         TempBuffer = ExAllocatePoolWithTag(NonPagedPool, Vcb->NtfsInfo.BytesPerFileRecord, TAG_NTFS);
@@ -1460,14 +1460,14 @@ WriteAttribute(PDEVICE_EXTENSION Vcb,
             DataRun = DecodeRun(DataRun, &DataRunOffset, &DataRunLength);
             if (DataRunOffset != -1)
             {
-                // Normal data run. 
+                // Normal data run.
                 // DPRINT1("Writing to normal data run, LastLCN %I64u DataRunOffset %I64d\n", LastLCN, DataRunOffset);
                 DataRunStartLCN = LastLCN + DataRunOffset;
                 LastLCN = DataRunStartLCN;
             }
             else
             {
-                // Sparse data run. We can't support writing to sparse files yet 
+                // Sparse data run. We can't support writing to sparse files yet
                 // (it may require increasing the allocation size).
                 DataRunStartLCN = -1;
                 DPRINT1("FIXME: Writing to sparse files is not supported yet!\n");
@@ -1485,7 +1485,7 @@ WriteAttribute(PDEVICE_EXTENSION Vcb,
             if (*DataRun == 0)
             {
                 // We reached the last assigned cluster
-                // TODO: assign new clusters to the end of the file. 
+                // TODO: assign new clusters to the end of the file.
                 // (Presently, this code will rarely be reached, the write will usually have already failed by now)
                 // [We can reach here by creating a new file record when the MFT isn't large enough]
                 DPRINT1("FIXME: Master File Table needs to be enlarged.\n");
@@ -1552,7 +1552,7 @@ WriteAttribute(PDEVICE_EXTENSION Vcb,
     {
         // Make sure we don't write past the end of the current data run
         WriteLength = (ULONG)min(DataRunLength * Vcb->NtfsInfo.BytesPerCluster, Length);
-        
+
         // Are we dealing with a sparse data run?
         if (DataRunStartLCN == -1)
         {
@@ -1576,7 +1576,7 @@ WriteAttribute(PDEVICE_EXTENSION Vcb,
         SourceBuffer += WriteLength;
         *RealLengthWritten += WriteLength;
 
-        // We finished this request, but there's still data in this data run. 
+        // We finished this request, but there's still data in this data run.
         if (Length == 0 && WriteLength != DataRunLength * Vcb->NtfsInfo.BytesPerCluster)
             break;
 
@@ -1607,7 +1607,7 @@ WriteAttribute(PDEVICE_EXTENSION Vcb,
         }
         else
         {
-            // Sparse data run. 
+            // Sparse data run.
             DataRunStartLCN = -1;
         }
     } // end while (Length > 0) [more data to write]
@@ -1653,7 +1653,7 @@ ReadFileRecord(PDEVICE_EXTENSION Vcb,
 * Searches a file's parent directory (given the parent's index in the mft)
 * for the given file. Upon finding an index entry for that file, updates
 * Data Size and Allocated Size values in the $FILE_NAME attribute of that entry.
-* 
+*
 * (Most of this code was copied from NtfsFindMftRecord)
 */
 NTSTATUS
@@ -1723,17 +1723,17 @@ UpdateFileNameRecord(PDEVICE_EXTENSION Vcb,
 
     IndexRoot = (PINDEX_ROOT_ATTRIBUTE)IndexRecord;
     IndexEntry = (PINDEX_ENTRY_ATTRIBUTE)((PCHAR)&IndexRoot->Header + IndexRoot->Header.FirstEntryOffset);
-    // Index root is always resident. 
+    // Index root is always resident.
     IndexEntryEnd = (PINDEX_ENTRY_ATTRIBUTE)(IndexRecord + IndexRoot->Header.TotalSizeOfEntries);
 
     DPRINT("IndexRecordSize: %x IndexBlockSize: %x\n", Vcb->NtfsInfo.BytesPerIndexRecord, IndexRoot->SizeOfEntry);
 
-    Status = UpdateIndexEntryFileNameSize(Vcb, 
-                                          MftRecord, 
-                                          IndexRecord, 
-                                          IndexRoot->SizeOfEntry, 
-                                          IndexEntry, 
-                                          IndexEntryEnd, 
+    Status = UpdateIndexEntryFileNameSize(Vcb,
+                                          MftRecord,
+                                          IndexRecord,
+                                          IndexRoot->SizeOfEntry,
+                                          IndexEntry,
+                                          IndexEntryEnd,
                                           FileName,
                                           &CurrentEntry,
                                           &CurrentEntry,
@@ -1922,8 +1922,8 @@ UpdateIndexEntryFileNameSize(PDEVICE_EXTENSION Vcb,
 *
 * @param FileRecord
 * Pointer to the complete file record which will be written to the master file table.
-* 
-* @return 
+*
+* @return
 * STATUS_SUCCESSFUL on success. An error passed from WriteAttribute() otherwise.
 *
 */
@@ -1941,7 +1941,7 @@ UpdateFileRecord(PDEVICE_EXTENSION Vcb,
     AddFixupArray(Vcb, &FileRecord->Ntfs);
 
     // write the file record to the master file table
-    Status = WriteAttribute(Vcb, 
+    Status = WriteAttribute(Vcb,
                             Vcb->MFTContext,
                             MftIndex * Vcb->NtfsInfo.BytesPerFileRecord,
                             (const PUCHAR)FileRecord,
@@ -2013,7 +2013,7 @@ FixupUpdateSequenceArray(PDEVICE_EXTENSION Vcb,
 *
 * @return
 * STATUS_SUCCESS on success.
-* STATUS_OBJECT_NAME_NOT_FOUND if we can't find the MFT's $Bitmap or if we weren't able 
+* STATUS_OBJECT_NAME_NOT_FOUND if we can't find the MFT's $Bitmap or if we weren't able
 * to read the attribute.
 * STATUS_INSUFFICIENT_RESOURCES if we can't allocate enough memory for a copy of $Bitmap.
 * STATUS_CANT_WAIT if CanWait was FALSE and the function could not get immediate, exclusive access to the MFT.
@@ -2368,7 +2368,7 @@ NtfsAddFilenameToDirectory(PDEVICE_EXTENSION DeviceExt,
     AttributeLength = MinIndexRootSize.LowPart;
     AttributeLength += sizeof(INDEX_ROOT_ATTRIBUTE);
 
-    
+
     // FIXME: IndexRoot will probably be invalid until we're finished. If we fail before we finish, the directory will probably be toast.
     // The potential for catastrophic data-loss exists!!! :)
 
@@ -2432,7 +2432,7 @@ NtfsAddFilenameToDirectory(PDEVICE_EXTENSION DeviceExt,
     }
 
     // The index allocation and index bitmap may have grown, leaving less room for the index root,
-    // so now we need to double-check that index root isn't too large 
+    // so now we need to double-check that index root isn't too large
     NodeSize = GetSizeOfIndexEntries(NewTree->RootNode);
     if (NodeSize > NewMaxIndexRootSize)
     {
@@ -2488,7 +2488,7 @@ NtfsAddFilenameToDirectory(PDEVICE_EXTENSION DeviceExt,
             NewMaxIndexRootSize -= LengthOfAttributes;
         }
 
-        
+
     }
 
     // Create the Index Root from the B*Tree
@@ -2512,7 +2512,7 @@ NtfsAddFilenameToDirectory(PDEVICE_EXTENSION DeviceExt,
     // CreateIndexRootFromBTree() should have verified that the index root fits within MaxIndexSize.
     // We can't set the size as we normally would, because $INDEX_ROOT must always be resident.
     AttributeLength = NewIndexRoot->Header.AllocatedSize + FIELD_OFFSET(INDEX_ROOT_ATTRIBUTE, Header);
-    
+
     if (AttributeLength != IndexRootContext->pRecord->Resident.ValueLength)
     {
         // Update the length of the attribute in the file record of the parent directory
@@ -2656,7 +2656,7 @@ CompareFileName(PUNICODE_STRING FileName,
     UNICODE_STRING EntryName;
 
     EntryName.Buffer = IndexEntry->FileName.Name;
-    EntryName.Length = 
+    EntryName.Length =
     EntryName.MaximumLength = IndexEntry->FileName.NameLength * sizeof(WCHAR);
 
     if (DirSearch)
@@ -2704,7 +2704,7 @@ CompareFileName(PUNICODE_STRING FileName,
 *
 * @remarks
 * NTFS maintains up-to-date copies of the first several mft entries in the $MFTMirr file. Usually, the first 4 file
-* records from the mft are stored. The exact number of entries is determined by the size of $MFTMirr's $DATA. 
+* records from the mft are stored. The exact number of entries is determined by the size of $MFTMirr's $DATA.
 * If $MFTMirr is not up-to-date, chkdsk will reject every change it can find prior to when $MFTMirr was last updated.
 * Therefore, it's recommended to call this function if the volume changes considerably. For instance, IncreaseMftSize()
 * relies on this function to keep chkdsk from deleting the mft entries it creates. Note that under most instances, creating
@@ -3033,7 +3033,7 @@ BrowseIndexEntries(PDEVICE_EXTENSION Vcb,
         // Get the length of the bitmap attribute
         BitmapLength = AttributeDataLength(BitmapContext->pRecord);
 
-        // Allocate memory for the bitmap, including some padding; RtlInitializeBitmap() wants a pointer 
+        // Allocate memory for the bitmap, including some padding; RtlInitializeBitmap() wants a pointer
         // that's ULONG-aligned, and it wants the size of the memory allocated for it to be a ULONG-multiple.
         BitmapMem = ExAllocatePoolWithTag(NonPagedPool, BitmapLength + sizeof(ULONG), TAG_NTFS);
         if (!BitmapMem)
@@ -3068,7 +3068,7 @@ BrowseIndexEntries(PDEVICE_EXTENSION Vcb,
         // Couldn't find an index allocation
         IndexAllocationContext = NULL;
     }
-    
+
 
     // Loop through all Index Entries of index, starting with FirstEntry
     IndexEntry = FirstEntry;

@@ -834,7 +834,7 @@ ActionDlg_OnBrowse(HWND hwndDlg, PACTION_DIALOG pNewAct, BOOL bEdit = FALSE)
     ofn.lpstrFile = szFile;
     ofn.nMaxFile = _countof(szFile);
     ofn.lpstrTitle = strTitle;
-    ofn.Flags = OFN_ENABLESIZING | OFN_FILEMUSTEXIST | OFN_PATHMUSTEXIST | OFN_HIDEREADONLY;
+    ofn.Flags = OFN_EXPLORER | OFN_ENABLESIZING | OFN_FILEMUSTEXIST | OFN_PATHMUSTEXIST | OFN_HIDEREADONLY;
     ofn.lpstrDefExt = L"exe";
     if (GetOpenFileNameW(&ofn))
     {

@@ -6,7 +6,7 @@
  *      Copyright 2009  Andrew Hill
  *      Copyright 2013  Dominik Hornung
  *      Copyright 2017  Hermes Belusca-Maito
- *      Copyright 2018  Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
+ *      Copyright 2018-2021 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -2886,6 +2886,10 @@ BOOL CShellLink::OnInitDialog(HWND hwndDlg, HWND hwndFocus, LPARAM lParam)
     /* Description */
     if (m_sDescription)
         SetDlgItemTextW(hwndDlg, IDC_SHORTCUT_COMMENT_EDIT, m_sDescription);
+
+    /* auto-completion */
+    SHAutoComplete(GetDlgItem(hwndDlg, IDC_SHORTCUT_TARGET_TEXT), SHACF_DEFAULT);
+    SHAutoComplete(GetDlgItem(hwndDlg, IDC_SHORTCUT_START_IN_EDIT), SHACF_DEFAULT);
 
     m_bInInit = FALSE;
 

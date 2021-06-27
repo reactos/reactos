@@ -2,10 +2,10 @@
  * COPYRIGHT:        GNU GENERAL PUBLIC LICENSE VERSION 2
  * PROJECT:          ReiserFs file system driver for Windows NT/2000/XP/Vista.
  * FILE:             flush.c
- * PURPOSE:          
+ * PURPOSE:
  * PROGRAMMER:       Mark Piper, Matt Wu, Bo Brantén.
- * HOMEPAGE:         
- * UPDATE HISTORY: 
+ * HOMEPAGE:
+ * UPDATE HISTORY:
  */
 
 /* INCLUDES *****************************************************************/
@@ -123,18 +123,18 @@ RfsdFlushFile (IN PRFSD_FCB Fcb)
     PAGED_CODE();
 
     ASSERT(Fcb != NULL);
-        
+
     ASSERT((Fcb->Identifier.Type == RFSDFCB) &&
         (Fcb->Identifier.Size == sizeof(RFSD_FCB)));
 
     if (IsDirectory(Fcb))
         return STATUS_SUCCESS;
 
-    RfsdPrint((DBG_INFO, "RfsdFlushFile: Flushing File Key=%x,%xh %S ...\n", 
+    RfsdPrint((DBG_INFO, "RfsdFlushFile: Flushing File Key=%x,%xh %S ...\n",
 		Fcb->RfsdMcb->Key.k_dir_id, Fcb->RfsdMcb->Key.k_objectid, Fcb->RfsdMcb->ShortName.Buffer));
 /*
     {
-        ULONG ResShCnt, ResExCnt; 
+        ULONG ResShCnt, ResExCnt;
         ResShCnt = ExIsResourceAcquiredSharedLite(&Fcb->PagingIoResource);
         ResExCnt = ExIsResourceAcquiredExclusiveLite(&Fcb->PagingIoResource);
 
@@ -170,12 +170,12 @@ RfsdFlush (IN PRFSD_IRP_CONTEXT IrpContext)
     _SEH2_TRY {
 
         ASSERT(IrpContext);
-    
+
         ASSERT((IrpContext->Identifier.Type == RFSDICX) &&
             (IrpContext->Identifier.Size == sizeof(RFSD_IRP_CONTEXT)));
 
         DeviceObject = IrpContext->DeviceObject;
-        
+
         //
         // This request is not allowed on the main device object
         //
@@ -183,9 +183,9 @@ RfsdFlush (IN PRFSD_IRP_CONTEXT IrpContext)
             Status = STATUS_INVALID_DEVICE_REQUEST;
             _SEH2_LEAVE;
         }
-        
+
         Vcb = (PRFSD_VCB) DeviceObject->DeviceExtension;
-       
+
         ASSERT(Vcb != NULL);
 
         ASSERT((Vcb->Identifier.Type == RFSDVCB) &&
@@ -200,13 +200,13 @@ RfsdFlush (IN PRFSD_IRP_CONTEXT IrpContext)
         }
 
         Irp = IrpContext->Irp;
-    
+
         IrpSp = IoGetCurrentIrpStackLocation(Irp);
 
         FileObject = IrpContext->FileObject;
-        
+
         FcbOrVcb = (PRFSD_FCBVCB) FileObject->FsContext;
-        
+
         ASSERT(FcbOrVcb != NULL);
 
 #ifdef _MSC_VER
@@ -218,7 +218,7 @@ RfsdFlush (IN PRFSD_IRP_CONTEXT IrpContext)
             Status = STATUS_PENDING;
             _SEH2_LEAVE;
         }
-            
+
         MainResourceAcquired = TRUE;
 
         if (FcbOrVcb->Identifier.Type == RFSDVCB) {

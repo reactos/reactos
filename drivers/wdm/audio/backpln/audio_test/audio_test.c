@@ -39,7 +39,7 @@ TestKs()
     PKSPROPERTY Property;
     KSSTATE State;
     DWORD Length;
-    HANDLE FilterHandle; 
+    HANDLE FilterHandle;
     HANDLE PinHandle;
     PSHORT SoundBuffer;
     UINT i = 0;
@@ -364,7 +364,7 @@ main(int argc, char* argv[])
              return -1;
          }
     }
-    
+
     //
     // Play our 1-second buffer
     //

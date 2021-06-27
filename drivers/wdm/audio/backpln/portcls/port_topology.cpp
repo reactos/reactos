@@ -61,7 +61,7 @@ protected:
 
 };
 
-static GUID InterfaceGuids[2] = 
+static GUID InterfaceGuids[2] =
 {
     {
         /// KS_CATEGORY_AUDIO
@@ -263,9 +263,9 @@ CPortTopology::Init(
     Status = PcCreateSubdeviceDescriptor(&m_SubDeviceDescriptor,
                                          2,
                                          InterfaceGuids,
-                                         0, 
+                                         0,
                                          NULL,
-                                         2, 
+                                         2,
                                          TopologyPropertySet,
                                          0,
                                          0,
@@ -305,7 +305,7 @@ CPortTopology::NewRegistryKey(
         DPRINT("IPortTopology_fnNewRegistryKey called w/o initialized\n");
         return STATUS_UNSUCCESSFUL;
     }
-    return PcNewRegistryKey(OutRegistryKey, 
+    return PcNewRegistryKey(OutRegistryKey,
                             OuterUnknown,
                             RegistryKeyType,
                             DesiredAccess,
@@ -328,7 +328,7 @@ CPortTopology::NewIrpTarget(
     IN PUNKNOWN Unknown,
     IN POOL_TYPE PoolType,
     IN PDEVICE_OBJECT DeviceObject,
-    IN PIRP Irp, 
+    IN PIRP Irp,
     IN KSOBJECT_CREATE *CreateObject)
 {
     NTSTATUS Status;
@@ -446,8 +446,8 @@ CPortTopology::PinCount(
     }
 
     // FIXME
-     // scan filter descriptor 
-    
+     // scan filter descriptor
+
     return STATUS_UNSUCCESSFUL;
 }
 
@@ -549,7 +549,7 @@ PcCreateItemDispatch(
     }
 #endif
 
-    // get filter object 
+    // get filter object
     Status = SubDevice->NewIrpTarget(&Filter,
                                      NULL,
                                      NULL,

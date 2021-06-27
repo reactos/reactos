@@ -184,7 +184,7 @@ Bus_PDO_PnP (
             PoSetPowerState(DeviceData->Common.Self, DevicePowerState, state);
             DeviceData->Common.DevicePowerState = PowerDeviceD3;
         }
-        
+
         SET_NEW_PNP_STATE(DeviceData->Common, Stopped);
         status = STATUS_SUCCESS;
         break;
@@ -541,7 +541,7 @@ Bus_PDO_QueryDeviceId(
         if (DeviceData->AcpiHandle)
         {
             acpi_bus_get_device(DeviceData->AcpiHandle, &Device);
-            
+
             if (!Device->flags.hardware_id)
             {
                 /* We don't have the ID to satisfy this request */
@@ -615,10 +615,10 @@ Bus_PDO_QueryDeviceId(
                 /* We don't have the ID to satisfy this request */
                 break;
             }
-            
+
             DPRINT("Device name: %s\n", Device->pnp.device_name);
             DPRINT("Hardware ID: %s\n", Device->pnp.hardware_id);
-            
+
             if (strcmp(Device->pnp.hardware_id, "Processor") == 0)
             {
                 length += swprintf(&temp[length],
@@ -640,13 +640,13 @@ Bus_PDO_QueryDeviceId(
                                    L"ACPI\\%hs",
                                    Device->pnp.cid_list->Ids[i].String);
                     temp[length++] = UNICODE_NULL;
-                    
+
                     length += swprintf(&temp[length],
                                    L"*%hs",
                                    Device->pnp.cid_list->Ids[i].String);
                     temp[length++] = UNICODE_NULL;
                 }
-                
+
                 temp[length++] = UNICODE_NULL;
             }
             else
@@ -654,7 +654,7 @@ Bus_PDO_QueryDeviceId(
                 /* No compatible IDs */
                 break;
             }
-            
+
             NT_ASSERT(length * sizeof(WCHAR) <= sizeof(temp));
 
             buffer = ExAllocatePoolWithTag(PagedPool, length * sizeof(WCHAR), 'IpcA');

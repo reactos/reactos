@@ -35,6 +35,35 @@ typedef struct
 EXTERN_C HPSXA WINAPI SHCreatePropSheetExtArrayEx(HKEY hKey, LPCWSTR pszSubKey, UINT max_iface, IDataObject *pDataObj);
 HPROPSHEETPAGE SH_CreatePropertySheetPage(LPCSTR resname, DLGPROC dlgproc, LPARAM lParam, LPWSTR szTitle);
 
+/*
+ * TODO: In Windows the Shell doesn't know by itself if a drive is
+ * a system one or not but rather a packet message is being sent by
+ * FMIFS library code and further translated into specific packet
+ * status codes in the Shell, the packet being _FMIFS_PACKET_TYPE.
+ *
+ * With that being said, most of this code as well as FMIFS library code
+ * have to be refactored in order to comply with the way Windows works.
+ *
+ * See the enum definition for more details:
+ * https://github.com/microsoft/winfile/blob/master/src/fmifs.h#L23
+ */
+static BOOL
+IsSystemDrive(PFORMAT_DRIVE_CONTEXT pContext)
+{
+    WCHAR wszDriveLetter[6], wszSystemDrv[6];
+
+    wszDriveLetter[0] = pContext->Drive + L'A';
+    StringCchCatW(wszDriveLetter, _countof(wszDriveLetter), L":");
+
+    if (!GetEnvironmentVariableW(L"SystemDrive", wszSystemDrv, _countof(wszSystemDrv)))
+        return FALSE;
+
+    if (!wcsicmp(wszDriveLetter, wszSystemDrv))
+        return TRUE;
+
+    return FALSE;
+}
+
 static BOOL
 GetDefaultClusterSize(LPWSTR szFs, PDWORD pClusterSize, PULARGE_INTEGER TotalNumberOfBytes)
 {
@@ -678,7 +707,16 @@ SHFormatDrive(HWND hwnd, UINT drive, UINT fmtID, UINT options)
     Context.Result = FALSE;
     Context.bFormattingNow = FALSE;
 
-    result = DialogBoxParamW(shell32_hInstance, MAKEINTRESOURCEW(IDD_FORMAT_DRIVE), hwnd, FormatDriveDlg, (LPARAM)&Context);
+    if (!IsSystemDrive(&Context))
+    {
+        result = DialogBoxParamW(shell32_hInstance, MAKEINTRESOURCEW(IDD_FORMAT_DRIVE), hwnd, FormatDriveDlg, (LPARAM)&Context);
+    }
+    else
+    {
+        result = SHFMT_ERROR;
+        ShellMessageBoxW(shell32_hInstance, hwnd, MAKEINTRESOURCEW(IDS_NO_FORMAT), MAKEINTRESOURCEW(IDS_NO_FORMAT_TITLE), MB_OK | MB_ICONWARNING);
+        TRACE("SHFormatDrive(): The provided drive for format is a system volume! Aborting...\n");
+    }
 
     return result;
 }

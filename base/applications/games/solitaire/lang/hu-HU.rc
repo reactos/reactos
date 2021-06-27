@@ -56,7 +56,7 @@ STRINGTABLE
 BEGIN
     IDS_SOL_NAME "Pasziánsz"
     IDS_SOL_ABOUT "Pasziánsz, készítette J Brown\n\nCardLib verzió 1.0."
-    IDS_SOL_QUIT "Kilépés ebbõl a játékból?"
+    IDS_SOL_QUIT "Kilépés ebből a játékból?"
     IDS_SOL_WIN "Gratulálok, Ön nyert!"
     IDS_SOL_DEAL "Új leosztás?"
     IDS_SOL_SCORE "Pont: %d"

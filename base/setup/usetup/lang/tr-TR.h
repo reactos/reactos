@@ -1500,6 +1500,30 @@ static MUI_ENTRY trTRBootLoaderEntries[] =
     }
 };
 
+static MUI_ENTRY trTRBootLoaderInstallPageEntries[] =
+{
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        "Installing the bootloader onto the media, please wait...",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
 static MUI_ENTRY trTRKeyboardSettingsEntries[] =
 {
     {
@@ -2147,6 +2171,10 @@ MUI_PAGE trTRPages[] =
     {
         SUCCESS_PAGE,
         trTRSuccessPageEntries
+    },
+    {
+        BOOT_LOADER_INSTALLATION_PAGE,
+        trTRBootLoaderInstallPageEntries
     },
     {
         BOOT_LOADER_FLOPPY_PAGE,

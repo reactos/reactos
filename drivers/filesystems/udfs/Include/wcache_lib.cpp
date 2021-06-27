@@ -127,9 +127,9 @@ WCacheInit__(
     IN ULONG BlocksPerFrameSh,// number of blocks in Frame (bit shift)
                               //   Frame size = 2^BlocksPerFrameSh
     IN lba_t FirstLba,        // Logical Block Address (LBA) of the 1st block
-                              //   in cacheable area 
+                              //   in cacheable area
     IN lba_t LastLba,         // Logical Block Address (LBA) of the last block
-                              //   in cacheable area 
+                              //   in cacheable area
     IN ULONG Mode,            // media mode:
                               //   WCACHE_MODE_ROM
                               //   WCACHE_MODE_RW
@@ -140,7 +140,7 @@ WCacheInit__(
     IN ULONG Flags,           // cache mode flags:
                               //   WCACHE_CACHE_WHOLE_PACKET
                               //     read long (Packet-sized) blocks of
-                              //     data from media 
+                              //     data from media
     IN ULONG FramesToKeepFree,
                               // number of Frames to be flushed & purged from cache
                               //   when Frame counter reaches top-limit and allocation
@@ -440,7 +440,7 @@ WCacheFindFrameToRelease(
  */
 
 #ifdef _MSC_VER
-#pragma warning(push)               
+#pragma warning(push)
 #pragma warning(disable:4035)               // re-enable below
 #endif
 
@@ -596,7 +596,7 @@ WCacheInsertRangeToList(
         return;
 
     ASSERT(!(BCount & 0x80000000));
-    
+
     ULONG firstPos = WCacheGetSortedListIndex(*BlockCount, List, Lba);
     ULONG lastPos = WCacheGetSortedListIndex(*BlockCount, List, Lba+BCount);
     ULONG offs = firstPos + BCount - lastPos;
@@ -673,8 +673,8 @@ WCacheInsertItemToList(
 VOID
 __fastcall
 WCacheRemoveRangeFromList(
-    IN lba_t* List,           // pointer to sorted (ASC) array of ULONGs                 
-    IN PULONG BlockCount,     // pointer to number of items in array (pointed by List)   
+    IN lba_t* List,           // pointer to sorted (ASC) array of ULONGs
+    IN PULONG BlockCount,     // pointer to number of items in array (pointed by List)
     IN lba_t Lba,             // initial value for removal
     IN ULONG BCount           // number of sequentially incremented values to be removed
     )
@@ -702,9 +702,9 @@ WCacheRemoveRangeFromList(
 VOID
 __fastcall
 WCacheRemoveItemFromList(
-    IN lba_t* List,           // pointer to sorted (ASC) array of ULONGs              
+    IN lba_t* List,           // pointer to sorted (ASC) array of ULONGs
     IN PULONG BlockCount,     // pointer to number of items in array (pointed by List)
-    IN lba_t Lba              // value to be removed                                 
+    IN lba_t Lba              // value to be removed
     )
 {
     if(!(*BlockCount)) return;
@@ -1042,7 +1042,7 @@ WCacheUpdatePacket(
                 read = TRUE;
             }
         }
-    } 
+    }
     // check if we are allowed to write to media
     if(mod && !PrefereWrite) {
         return STATUS_RETRY;
@@ -1289,7 +1289,7 @@ WCacheUpdatePacketComplete(
   requested Blocks.
   If there is not enough entries, WCache initiates flush & purge
   process to satisfy request.
-  This is dispatch routine, which calls 
+  This is dispatch routine, which calls
   WCacheCheckLimitsR() or WCacheCheckLimitsRW() depending on
   media type.
   Internal routine
@@ -1329,7 +1329,7 @@ WCacheCheckLimits(
             }
         }
     }
-    
+
     if(!Cache->BlockCount) {
         return STATUS_SUCCESS;
     }
@@ -1753,7 +1753,7 @@ Try_Another_Frame:
 } // end WCacheCheckLimitsRAM()
 
 /*
-  WCachePurgeAllRAM() 
+  WCachePurgeAllRAM()
   Internal routine
  */
 OSSTATUS
@@ -1893,7 +1893,7 @@ WCachePreReadPacket__(
     n=0;
     while((n < BCount) &&
           (n < Cache->BlocksPerFrame)) {
-          
+
         addr = (PCHAR)WCacheSectorAddr(block_array, i+n);
         block_type = Cache->CheckUsedProc(Context, Lba+n);
         if(/*WCacheGetBadFlag(block_array,i+n)*/
@@ -2009,8 +2009,8 @@ WCachePreReadPacket__(
  */
 OSSTATUS
 WCacheReadBlocks__(
-    IN PW_CACHE Cache,        // pointer to the Cache Control structure 
-    IN PVOID Context,         // user-supplied context for IO callbacks 
+    IN PW_CACHE Cache,        // pointer to the Cache Control structure
+    IN PVOID Context,         // user-supplied context for IO callbacks
     IN PCHAR Buffer,          // user-supplied buffer for read blocks
     IN lba_t Lba,             // LBA to start read from
     IN ULONG BCount,          // number of blocks to be read
@@ -2232,7 +2232,7 @@ WCacheReadBlocks__(
 store_read_data_1:
             // and now we'll copy them to cache
 
-            // 
+            //
             Buffer -= (to_read - saved_to_read);
             i = saved_i;
             while(to_read - saved_to_read) {
@@ -2280,7 +2280,7 @@ OSSTATUS
 WCacheWriteBlocks__(
     IN PW_CACHE Cache,        // pointer to the Cache Control structure
     IN PVOID Context,         // user-supplied context for IO callbacks
-    IN PCHAR Buffer,          // user-supplied buffer containing data to be written    
+    IN PCHAR Buffer,          // user-supplied buffer containing data to be written
     IN lba_t Lba,             // LBA to start write from
     IN ULONG BCount,          // number of blocks to be written
     OUT PSIZE_T WrittenBytes,  // user-supplied pointer to ULONG that will
@@ -2349,7 +2349,7 @@ WCacheWriteBlocks__(
     // assume successful operation
     block_array = Cache->FrameList[frame].Frame;
     if(!block_array) {
-        
+
         if(BCount && !(BCount & (PS-1)) && !(Lba & (PS-1)) &&
            (Cache->Mode != WCACHE_MODE_R) &&
            (i+BCount <= Cache->BlocksPerFrame) &&
@@ -2557,8 +2557,8 @@ EO_WCache_W2:
  */
 VOID
 WCacheFlushAll__(
-    IN PW_CACHE Cache,        // pointer to the Cache Control structure  
-    IN PVOID Context)         // user-supplied context for IO callbacks  
+    IN PW_CACHE Cache,        // pointer to the Cache Control structure
+    IN PVOID Context)         // user-supplied context for IO callbacks
 {
     if(!(Cache->ReadProc)) return;
     ExAcquireResourceExclusiveLite(&(Cache->WCacheLock), TRUE);
@@ -2587,8 +2587,8 @@ WCacheFlushAll__(
  */
 VOID
 WCachePurgeAll__(
-    IN PW_CACHE Cache,        // pointer to the Cache Control structure  
-    IN PVOID Context)         // user-supplied context for IO callbacks  
+    IN PW_CACHE Cache,        // pointer to the Cache Control structure
+    IN PVOID Context)         // user-supplied context for IO callbacks
 {
     if(!(Cache->ReadProc)) return;
     ExAcquireResourceExclusiveLite(&(Cache->WCacheLock), TRUE);
@@ -2649,7 +2649,7 @@ WCachePurgeAllRW(
 //        lastPos = WCacheGetSortedListIndex(Cache->BlockCount, List, Lba+PSs);
         block_array = Cache->FrameList[frame].Frame;
         if(!block_array) {
-            BrutePoint();   
+            BrutePoint();
             return;
         }
 
@@ -2658,7 +2658,7 @@ WCachePurgeAllRW(
 
         // free memory
         WCacheFreePacket(Cache, frame, block_array, Lba-firstLba, PSs);
-        
+
         WCacheRemoveRangeFromList(List, &(Cache->BlockCount), Lba, PSs);
         WCacheRemoveRangeFromList(Cache->CachedModifiedBlocksList, &(Cache->WriteCount), Lba, PSs);
         // check if frame is empty
@@ -2719,7 +2719,7 @@ WCacheFlushAllRW(
 //        lastPos = WCacheGetSortedListIndex(Cache->WriteCount, List, Lba+PSs);
         block_array = Cache->FrameList[frame].Frame;
         if(!block_array) {
-            BrutePoint();   
+            BrutePoint();
             continue;;
         }
         // queue modify request
@@ -2824,7 +2824,7 @@ OSSTATUS
 WCacheFlushBlocksRW(
     IN PW_CACHE Cache,        // pointer to the Cache Control structure
     IN PVOID Context,         // user-supplied context for IO callbacks
-    IN lba_t _Lba,             // LBA to start flush from    
+    IN lba_t _Lba,             // LBA to start flush from
     IN ULONG BCount           // number of blocks to be flushed
     )
 {
@@ -2885,7 +2885,7 @@ WCacheFlushBlocksRW(
     if(Cache->Mode != WCACHE_MODE_RAM)
         return STATUS_SUCCESS;
 */
-    
+
     return STATUS_SUCCESS;
 } // end WCacheFlushBlocksRW()
 
@@ -2898,7 +2898,7 @@ OSSTATUS
 WCacheFlushBlocks__(
     IN PW_CACHE Cache,        // pointer to the Cache Control structure
     IN PVOID Context,         // user-supplied context for IO callbacks
-    IN lba_t Lba,             // LBA to start flush from    
+    IN lba_t Lba,             // LBA to start flush from
     IN ULONG BCount           // number of blocks to be flushed
     )
 {
@@ -2932,7 +2932,7 @@ EO_WCache_F:
     ExReleaseResourceForThreadLite(&(Cache->WCacheLock), ExGetCurrentResourceThread());
     return status;
 } // end WCacheFlushBlocks__()
-    
+
 /*
   WCacheDirect__() returns pointer to memory block where
   requested block is stored in.
@@ -3188,8 +3188,8 @@ __fastcall
 WCacheCheckLimitsR(
     IN PW_CACHE Cache,        // pointer to the Cache Control structure
     IN PVOID Context,         // user-supplied context for IO callbacks
-    IN lba_t ReqLba,          // first LBA to access/cache             
-    IN ULONG BCount           // number of Blocks to access/cache      
+    IN lba_t ReqLba,          // first LBA to access/cache
+    IN ULONG BCount           // number of Blocks to access/cache
     )
 {
     ULONG frame;
@@ -3542,7 +3542,7 @@ WCacheDiscardBlocks__(
     }
     i = WCacheGetSortedListIndex(Cache->BlockCount, List, ReqLba);
 
-    // enumerate requested blocks 
+    // enumerate requested blocks
     while((List[i] < (ReqLba+BCount)) && (i < Cache->BlockCount)) {
 
         Lba = List[i];

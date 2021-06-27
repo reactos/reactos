@@ -74,7 +74,7 @@ Return Value:
         //
         //   Add almost two seconds to round up to the nearest double second.
         //
-    
+
         NtTime->QuadPart = NtTime->QuadPart + AlmostTwoSeconds;
     }
 
@@ -166,7 +166,7 @@ Return Value:
     return TRUE;
 }
 
-
+
 LARGE_INTEGER
 FatFatDateToNtTime (
     _In_ PIRP_CONTEXT IrpContext,
@@ -228,7 +228,7 @@ Return Value:
     UNREFERENCED_PARAMETER( IrpContext );
 }
 
-
+
 LARGE_INTEGER
 FatFatTimeToNtTime (
     _In_ PIRP_CONTEXT IrpContext,
@@ -312,7 +312,7 @@ Return Value:
     UNREFERENCED_PARAMETER( IrpContext );
 }
 
-
+
 FAT_TIME_STAMP
 FatGetCurrentFatTime (
     _In_ PIRP_CONTEXT IrpContext

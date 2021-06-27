@@ -45,6 +45,7 @@
 #include <reactos/version.h>
 #include <reactos/buildno.h>
 
+#include <versionhelpers.h>
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
 const char * const SHELL_Authors[] = { "Copyright 1993-"COPYRIGHT_YEAR" WINE team", "Copyright 1998-"COPYRIGHT_YEAR" ReactOS Team", 0 };
@@ -1158,7 +1159,16 @@ static INT_PTR CALLBACK AboutDlgProc( HWND hWnd, UINT msg, WPARAM wParam, LPARAM
                 WCHAR szAuthorsText[20];
 
                 // Preload the ROS bitmap
-                hLogoBmp = (HBITMAP)LoadImage(shell32_hInstance, MAKEINTRESOURCE(IDB_REACTOS), IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR);
+                if (IsWindowsServer())
+                {
+                   // Load Server Bitmap
+                   hLogoBmp = (HBITMAP)LoadImage(shell32_hInstance, MAKEINTRESOURCE(IDB_REACTOS_SERVER), IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR);
+                }
+                else
+                {
+                   // Load Workstation Bitmap
+                   hLogoBmp = (HBITMAP)LoadImage(shell32_hInstance, MAKEINTRESOURCE(IDB_REACTOS_WORKSTATION), IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR);
+                }
                 hLineBmp = (HBITMAP)LoadImage(shell32_hInstance, MAKEINTRESOURCE(IDB_LINEBAR), IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR);
 
                 if(hLogoBmp && hLineBmp)

@@ -63,15 +63,15 @@ typedef struct {
 typedef struct {
 	FF_T_UINT32 Filesize;
 	FF_T_UINT32	ObjectCluster;
-	
+
 	// Book Keeping
 	FF_T_UINT32	CurrentCluster;
 	FF_T_UINT32 AddrCurrentCluster;
 	FF_T_UINT32	DirCluster;
 	FF_T_UINT16	CurrentItem;
 	// End Book Keeping
-		
-#ifdef FF_TIME_SUPPORT	
+
+#ifdef FF_TIME_SUPPORT
 	FF_SYSTEMTIME	CreateTime;		///< Date and Time Created.
 	FF_SYSTEMTIME	ModifiedTime;	///< Date and Time Modified.
 	FF_SYSTEMTIME	AccessedTime;	///< Date of Last Access.
@@ -119,12 +119,12 @@ FF_T_SINT8	FF_FindEntry		(FF_IOMAN *pIoman, FF_T_UINT32 DirCluster, FF_T_INT8 *N
 
 void		FF_PopulateShortDirent		(FF_IOMAN *pIoman, FF_DIRENT *pDirent, FF_T_UINT8 *EntryBuffer);
 FF_ERROR	FF_PopulateLongDirent		(FF_IOMAN *pIoman, FF_DIRENT *pDirent, FF_T_UINT16 nEntry, FF_FETCH_CONTEXT *pFetchContext);
-		
+
 FF_ERROR	FF_InitEntryFetch			(FF_IOMAN *pIoman, FF_T_UINT32 ulDirCluster, FF_FETCH_CONTEXT *pContext);
 FF_ERROR	FF_FetchEntryWithContext	(FF_IOMAN *pIoman, FF_T_UINT32 ulEntry, FF_FETCH_CONTEXT *pContext, FF_T_UINT8 *pEntryBuffer);
 FF_ERROR	FF_PushEntryWithContext		(FF_IOMAN *pIoman, FF_T_UINT32 ulEntry, FF_FETCH_CONTEXT *pContext, FF_T_UINT8 *pEntryBuffer);
 void		FF_CleanupEntryFetch		(FF_IOMAN *pIoman, FF_FETCH_CONTEXT *pContext);
-		
+
 FF_T_SINT8	FF_PushEntry				(FF_IOMAN *pIoman, FF_T_UINT32 DirCluster, FF_T_UINT16 nEntry, FF_T_UINT8 *buffer, void *pParam);
 FF_T_BOOL	FF_isEndOfDir				(FF_T_UINT8 *EntryBuffer);
 FF_ERROR	FF_FindNextInDir			(FF_IOMAN *pIoman, FF_DIRENT *pDirent, FF_FETCH_CONTEXT *pFetchContext);

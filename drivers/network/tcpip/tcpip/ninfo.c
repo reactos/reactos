@@ -25,7 +25,7 @@ TDI_STATUS InfoTdiQueryGetRouteTable( PIP_INTERFACE IF, PNDIS_BUFFER Buffer, PUI
 
     TI_DbgPrint(DEBUG_INFO, ("Called, routes = %d\n",
 			    RtCount));
-    
+
     if (RtCount == 0)
         return InfoCopyOut(NULL, 0, NULL, BufferSize);
 

@@ -1,8 +1,6 @@
 /*
  * oledlg (Simplified and Traditional Chinese Resources)
  *
- * Copyright 2008 Hongbo Ni <hongbo.at.njstar.com>
- *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
@@ -16,6 +14,10 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ * 
+ * Translator:
+ * 2008 Hongbo Ni <hongbo.at.njstar.com>
+ * Sync with Wine: Traditional Chinese on 2021
  */
 
 /* Chinese text is encoded in UTF-8 */
@@ -107,26 +109,26 @@ LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
 
 STRINGTABLE
 {
-  IDS_RESULTOBJDESC	"在你的檔案中插入一個新的 %s 對象"
-  IDS_RESULTFILEOBJDESC	"將檔案的內容以對象的方式插入到你的檔案以便你可以用創建本檔案的程式來激活它."
+  IDS_RESULTOBJDESC	"在你的檔案中插入一個新的 %s 物件"
+  IDS_RESULTFILEOBJDESC	"將檔案的內容以物件的方式插入到您的文件以便您可以用程式來啟動它。"
   IDS_BROWSE            "瀏覽"
-  IDS_NOTOLEMOD         "本檔案不像是一個有效的 OLE 模型. 不能註冊 OLE 控件."
-  IDS_NOTOLEMODCAPTION  "添加控件"
-  IDS_VERBMENU_OBJECT   "對象 (&O)"
-  IDS_VERBMENU_OBJECT_WITH_NAME "%1 &Object"
-  IDS_VERBMENU_CONVERT  "轉換... (&C)"
-  IDS_VERBMENU_SINGLEVERB_OBJECT "%1 %2 &Object"
+  IDS_NOTOLEMOD         "該檔案不像是一個有效的 OLE 模組。無法註冊 OLE 元件。"
+  IDS_NOTOLEMODCAPTION  "加入控制項"
+  IDS_VERBMENU_OBJECT   "物件(&O)"
+  IDS_VERBMENU_OBJECT_WITH_NAME "%1 物件(&O)"
+  IDS_VERBMENU_CONVERT  "轉換(&C)..."
+  IDS_VERBMENU_SINGLEVERB_OBJECT "%1 %2 物件(&O)"
 }
 
 STRINGTABLE
 {
-    IDS_PS_PASTE_DATA                     "將剪貼板的內容以 %s 插入到你的檔案."
-    IDS_PS_PASTE_OBJECT                   "將剪貼板的內容插入到你的檔案以便你可以使用 %s."
-    IDS_PS_PASTE_OBJECT_AS_ICON           "將剪貼板的內容插入到你的檔案以便你可以用 %s 激活它, 一般顯示為圖標."
-    IDS_PS_PASTE_LINK_DATA                "將剪貼板的內容以 %s 插入到你的檔案. 數據是鏈接到源檔案的, 對源檔案的任何改動都會反應到你的檔案."
-    IDS_PS_PASTE_LINK_OBJECT              "將剪貼板的圖像插入到你的檔案. 圖像是鏈接到源檔案的, 對源檔案的任何改動都會反應到你的檔案."
-    IDS_PS_PASTE_LINK_OBJECT_AS_ICON      "將剪貼板的捷徑插入到你的檔案. 捷徑是鏈接到源檔案的, 對源檔案的任何改動都會反應到你的檔案."
-    IDS_PS_NON_OLE                        "將剪貼板的內容插入到你的檔案."
+    IDS_PS_PASTE_DATA                     "將剪貼簿的內容以 %s 插入至您的檔案。"
+    IDS_PS_PASTE_OBJECT                   "將剪貼簿的內容插入到您的檔案以便您可以使用 %s。"
+    IDS_PS_PASTE_OBJECT_AS_ICON           "將剪貼簿的內容插入到您的文件以便您可以用 %s 啟動它, 一般顯示為圖示。"
+    IDS_PS_PASTE_LINK_DATA                "將剪貼簿的內容以 %s 插入到您的文件。資料是連結到來源檔案的, 對來源檔案的任何變更都會影響到您的文件。"
+    IDS_PS_PASTE_LINK_OBJECT              "將剪貼簿的圖片插入到您的文件。圖片是連結到來源檔案的, 對來源檔案的任何變更都會影響到您的文件。"
+    IDS_PS_PASTE_LINK_OBJECT_AS_ICON      "將剪貼簿的捷徑插入到您的檔案。捷徑是連結到來源檔案的, 對來源檔案的任何變更都會影響到您的文件。"
+    IDS_PS_NON_OLE                        "將剪貼簿的內容插入到您的文件。"
     IDS_PS_UNKNOWN_TYPE                   "不明類型"
     IDS_PS_UNKNOWN_SRC                    "不明來源"
     IDS_PS_UNKNOWN_APP                    "不明應用程式"
@@ -134,25 +136,25 @@ STRINGTABLE
 
 UIINSERTOBJECT DIALOGEX  0, 0, 304, 151
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "插入對象"
-FONT 9, "宋体"
+CAPTION "插入物件"
+FONT 9, "新細明體"
 BEGIN
     LISTBOX         IDC_OBJTYPELIST,92,19,131,66,LBS_SORT |
                     LBS_NOINTEGRALHEIGHT | WS_VISIBLE | WS_VSCROLL |
                     WS_TABSTOP
-    LTEXT           "對象類型:",IDC_OBJTYPELBL,92,7,53,8,WS_VISIBLE
+    LTEXT           "物件類型:",IDC_OBJTYPELBL,92,7,53,8,WS_VISIBLE
     DEFPUSHBUTTON   "確定",IDOK,231,7,66,14
     PUSHBUTTON      "取消",IDCANCEL,231,24,66,14
     GROUPBOX        "結果",IDC_RESULT,7,103,218,41
-    CONTROL         "新建",IDC_CREATENEW,"Button",BS_AUTORADIOBUTTON |
+    CONTROL         "新增",IDC_CREATENEW,"Button",BS_AUTORADIOBUTTON |
                     WS_GROUP,7,20,84,10
-    CONTROL         "建立控件",IDC_CREATECONTROL,"Button",
+    CONTROL         "建立控制項",IDC_CREATECONTROL,"Button",
                     BS_AUTORADIOBUTTON | NOT WS_VISIBLE,7,54,84,10
     CONTROL         "建立於檔案",IDC_CREATEFROMFILE,"Button",
                     BS_AUTORADIOBUTTON,7,37,84,10
     LTEXT           "",IDC_RESULTDESC,49,112,169,26
-    PUSHBUTTON      "添加控件(&A)...",IDC_ADDCONTROL,92,88,80,14,NOT WS_VISIBLE
-    CONTROL         "顯示為圖標",IDC_ASICON,"Button",BS_AUTOCHECKBOX |
+    PUSHBUTTON      "新增控制項(&A)...",IDC_ADDCONTROL,92,88,80,14,NOT WS_VISIBLE
+    CONTROL         "顯示為圖示",IDC_ASICON,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP | NOT WS_VISIBLE,92,88,120,10
     PUSHBUTTON      "瀏覽...",IDC_BROWSE,92,53,50,14,NOT WS_VISIBLE
     LTEXT           "檔案:",IDC_FILELBL,92,27,20,8, NOT WS_VISIBLE
@@ -162,12 +164,12 @@ END
 IDD_PASTESPECIAL4 DIALOGEX 3, 15, 304, 160
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "特殊貼上"
-FONT 9, "宋体"
+FONT 9, "新細明體"
 BEGIN
-    LTEXT         "源:", -1, 6, 9, 150, 8, WS_VISIBLE | WS_GROUP
+    LTEXT         "原始檔案:", -1, 6, 9, 150, 8, WS_VISIBLE | WS_GROUP
     CONTROL       "貼上(&P)", IDC_PS_PASTE, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP | WS_GROUP | WS_VISIBLE,
                   6, 38, 73, 10
-    CONTROL       "貼上鏈接(&L)", IDC_PS_PASTELINK, "Button", BS_AUTORADIOBUTTON | WS_VISIBLE,
+    CONTROL       "貼上連結(&L)", IDC_PS_PASTELINK, "Button", BS_AUTORADIOBUTTON | WS_VISIBLE,
                   6, 63, 73, 10
     LTEXT         "為(&A):", -1, 75, 25, 150, 8, WS_VISIBLE | WS_GROUP
     LISTBOX       IDC_PS_PASTELIST,     80, 36, 148, 57, LBS_NOTIFY | LBS_USETABSTOPS | WS_VSCROLL | WS_BORDER | NOT WS_VISIBLE
@@ -176,9 +178,9 @@ BEGIN
     CONTROL       "確定", IDOK, "Button", BS_DEFPUSHBUTTON | WS_TABSTOP | WS_GROUP | WS_VISIBLE, 234, 6, 66, 14
     CONTROL       "取消", IDCANCEL, "Button", BS_PUSHBUTTON | WS_TABSTOP | WS_VISIBLE, 234, 23, 66, 14
     CONTROL       "說明(&H)", IDC_OLEUIHELP, "Button", BS_PUSHBUTTON | WS_TABSTOP | WS_VISIBLE, 234, 42, 66, 14
-    CONTROL       "顯示為圖標(&D)", IDC_PS_DISPLAYASICON, "Button", BS_AUTOCHECKBOX | WS_TABSTOP | WS_VISIBLE, 80, 94, 150, 14
+    CONTROL       "顯示為圖示(&D)", IDC_PS_DISPLAYASICON, "Button", BS_AUTOCHECKBOX | WS_TABSTOP | WS_VISIBLE, 80, 94, 150, 14
     CONTROL       "", IDC_PS_ICONDISPLAY, "Static", SS_ICON | WS_VISIBLE, 234, 75, 66, 44
-    CONTROL       "改變圖標(&I)...", IDC_PS_CHANGEICON, "Button", BS_PUSHBUTTON | WS_TABSTOP | WS_VISIBLE, 234, 143, 66, 14
+    CONTROL       "變更圖示(&I)...", IDC_PS_CHANGEICON, "Button", BS_PUSHBUTTON | WS_TABSTOP | WS_VISIBLE, 234, 143, 66, 14
     CONTROL       "", IDC_PS_RESULTIMAGE, "Static", SS_ICON | WS_VISIBLE, 8, 121, 42, 34
     CONTROL       "", IDC_PS_RESULTTEXT, "Static", SS_NOPREFIX | WS_VISIBLE, 54, 120, 159, 35
     CONTROL       "結果", -1, "Button", BS_GROUPBOX | WS_GROUP | WS_VISIBLE, 6, 110, 212, 48

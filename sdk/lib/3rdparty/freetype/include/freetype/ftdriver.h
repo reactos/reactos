@@ -428,7 +428,7 @@ FT_BEGIN_HEADER
    *   at smaller sizes.
    *
    *   By default, the Adobe engines for CFF, Type~1, and CID fonts darken
-   *   stems at smaller sizes, regardless of hinting, to enhance contrast. 
+   *   stems at smaller sizes, regardless of hinting, to enhance contrast.
    *   Setting this property, stem darkening gets switched off.
    *
    *   For the auto-hinter, stem-darkening is experimental currently and

@@ -36,8 +36,8 @@ END
 STRINGTABLE
 BEGIN
     IDS_SHELL_FAIL "Userinit falhou ao iniciar o shell!"
-    IDS_INSTALLER_FAIL "Userinit falhou ao iniciar o installer!"
-    IDS_CANCEL_CONFIRM "Tem a certeze que deseja fechar o ReactOS LiveCD?\nSe a sua escolha é sim, o seu computador irá reiniciar."
+    IDS_INSTALLER_FAIL "Userinit falhou ao iniciar o instalador!"
+    IDS_CANCEL_CONFIRM "Tem a certeza que deseja fechar o ReactOS LiveCD?\nSe a sua escolha for sim, o seu computador irá reiniciar."
 END
 
 STRINGTABLE

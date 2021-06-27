@@ -10,6 +10,7 @@ list(APPEND USERSRV_SOURCE
     usersrv/usersrv.h)
 
 add_library(usersrv ${USERSRV_SOURCE})
+target_link_libraries(usersrv pseh)
 add_dependencies(usersrv xdk)
 add_pch(usersrv usersrv/usersrv.h USERSRV_SOURCE)
 #add_object_library(usersrv ${USERSRV_SOURCE})

@@ -2,10 +2,10 @@
  * COPYRIGHT:        GNU GENERAL PUBLIC LICENSE VERSION 2
  * PROJECT:          ReiserFs file system driver for Windows NT/2000/XP/Vista.
  * FILE:             shutdown.c
- * PURPOSE:          
+ * PURPOSE:
  * PROGRAMMER:       Mark Piper, Matt Wu, Bo Brantén.
- * HOMEPAGE:         
- * UPDATE HISTORY: 
+ * HOMEPAGE:
+ * UPDATE HISTORY:
  */
 
 /* INCLUDES *****************************************************************/
@@ -41,14 +41,14 @@ RfsdShutDown (IN PRFSD_IRP_CONTEXT IrpContext)
     _SEH2_TRY {
 
         ASSERT(IrpContext);
-    
+
         ASSERT((IrpContext->Identifier.Type == RFSDICX) &&
             (IrpContext->Identifier.Size == sizeof(RFSD_IRP_CONTEXT)));
 
         Status = STATUS_SUCCESS;
 
         Irp = IrpContext->Irp;
-    
+
         IrpSp = IoGetCurrentIrpStackLocation(Irp);
 
 #ifdef _MSC_VER
@@ -60,7 +60,7 @@ RfsdShutDown (IN PRFSD_IRP_CONTEXT IrpContext)
             Status = STATUS_PENDING;
             _SEH2_LEAVE;
         }
-            
+
         GlobalResourceAcquired = TRUE;
 
 #ifndef __REACTOS__

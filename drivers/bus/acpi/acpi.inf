@@ -68,6 +68,7 @@ GenericMfg = "(標準システム デバイス)"
 
 [Strings.0415]
 ReactOS = "Zespół ReactOS"
+
 GenericMfg = "(Standardowe urządzenia systemowe)"
 *PNP0C08.DeviceDesc = "Sprzęt ACPI"
 
@@ -77,6 +78,7 @@ GenericMfg = "(Dispositivos de sistema padrão)"
 
 [Strings.0418]
 ReactOS = "Echipa ReactOS"
+
 GenericMfg = "(dispozitiv de sistem generic)"
 *PNP0C08.DeviceDesc = "Dispozitive ACPI"
 
@@ -84,7 +86,7 @@ GenericMfg = "(dispozitiv de sistem generic)"
 ReactOS = "Команда ReactOS"
 
 GenericMfg = "(Стандартные системные устройства)"
-*PNP0C08.DeviceDesc = "ACPI устройства"
+*PNP0C08.DeviceDesc = "Устройства ACPI"
 
 [Strings.041B]
 GenericMfg = "(Generické systémové zariadenia)"
@@ -97,6 +99,8 @@ GenericMfg = "(Umûmî Dizge Aygıtları)"
 *PNP0C08.DeviceDesc = "ACPI Donanım"
 
 [Strings.0422]
+ReactOS = "Команда ReactOS"
+
 GenericMfg = "(Стандартні системні пристрої)"
 *PNP0C08.DeviceDesc = "Пристрої ACPI"
 

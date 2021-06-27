@@ -53,6 +53,6 @@ add_importlibs(d3dwine user32 opengl32 gdi32 advapi32 msvcrt kernel32 ntdll)
 add_pch(d3dwine precomp.h SOURCE)
 add_cd_file(TARGET d3dwine DESTINATION reactos/system32 FOR all)
 
-if(NOT MSVC)
+if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
     target_compile_options(d3dwine PRIVATE -Wno-format-overflow)
 endif()

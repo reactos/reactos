@@ -2,10 +2,10 @@
  * COPYRIGHT:        GNU GENERAL PUBLIC LICENSE VERSION 2
  * PROJECT:          ReiserFs file system driver for Windows NT/2000/XP/Vista.
  * FILE:             pnp.c
- * PURPOSE:          
+ * PURPOSE:
  * PROGRAMMER:       Mark Piper, Matt Wu, Bo Brantén.
- * HOMEPAGE:         
- * UPDATE HISTORY: 
+ * HOMEPAGE:
+ * UPDATE HISTORY:
  */
 
 /* INCLUDES *****************************************************************/
@@ -74,26 +74,26 @@ RfsdPnp (IN PRFSD_IRP_CONTEXT IrpContext)
     _SEH2_TRY {
 
         ASSERT(IrpContext);
-        
+
         ASSERT((IrpContext->Identifier.Type == RFSDICX) &&
             (IrpContext->Identifier.Size == sizeof(RFSD_IRP_CONTEXT)));
 
         DeviceObject = IrpContext->DeviceObject;
-    
+
         Vcb = (PRFSD_VCB) DeviceObject->DeviceExtension;
-        
+
         ASSERT(Vcb != NULL);
 
         if ( !((Vcb->Identifier.Type == RFSDVCB) &&
                (Vcb->Identifier.Size == sizeof(RFSD_VCB)))) {
             _SEH2_LEAVE; // Status = STATUS_INVALID_PARAMETER
         }
-        
+
         Irp = IrpContext->Irp;
         IrpSp = IoGetCurrentIrpStackLocation(Irp);
 
         SetFlag(IrpContext->Flags, IRP_CONTEXT_FLAG_WAIT);
-   
+
         switch ( IrpSp->MinorFunction ) {
 
             case IRP_MN_QUERY_REMOVE_DEVICE:
@@ -102,7 +102,7 @@ RfsdPnp (IN PRFSD_IRP_CONTEXT IrpContext)
                 Status = RfsdPnpQueryRemove(IrpContext, Vcb);
 
                 break;
-        
+
             case IRP_MN_REMOVE_DEVICE:
 
                 RfsdPrint((DBG_PNP, "RfsdPnp: RfsdPnpRemove...\n"));
@@ -110,13 +110,13 @@ RfsdPnp (IN PRFSD_IRP_CONTEXT IrpContext)
                 break;
 
             case IRP_MN_CANCEL_REMOVE_DEVICE:
-    
+
                 RfsdPrint((DBG_PNP, "RfsdPnp: RfsdPnpCancelRemove...\n"));
                 Status = RfsdPnpCancelRemove(IrpContext, Vcb);
                 break;
 
             case IRP_MN_SURPRISE_REMOVAL:
-        
+
                 RfsdPrint((DBG_PNP, "RfsdPnp: RfsdPnpSupriseRemove...\n"));
                 Status = RfsdPnpSurpriseRemove(IrpContext, Vcb);
                 break;
@@ -137,7 +137,7 @@ RfsdPnp (IN PRFSD_IRP_CONTEXT IrpContext)
                 //
 
                 IoSkipCurrentIrpStackLocation( Irp );
-    
+
                 Status = IoCallDriver(Vcb->TargetDeviceObject, Irp);
 
                 IrpContext->Irp = NULL;
@@ -146,7 +146,7 @@ RfsdPnp (IN PRFSD_IRP_CONTEXT IrpContext)
             RfsdCompleteIrpContext(IrpContext, Status);
         }
     } _SEH2_END;
-        
+
     return Status;
 }
 
@@ -210,7 +210,7 @@ RfsdPnpQueryRemove (
                                 TRUE );
 
         RfsdPrint((DBG_PNP, "RfsdPnpQueryRemove: Call lower level driver...\n"));
-        Status = IoCallDriver( Vcb->TargetDeviceObject, 
+        Status = IoCallDriver( Vcb->TargetDeviceObject,
                                    IrpContext->Irp);
 
         if (Status == STATUS_PENDING) {
@@ -246,7 +246,7 @@ RfsdPnpQueryRemove (
 
         IrpContext->Irp = NULL;
     } _SEH2_END;
-    
+
     return Status;
 }
 
@@ -291,7 +291,7 @@ RfsdPnpRemove (
                                 TRUE,
                                 TRUE );
 
-        Status = IoCallDriver( Vcb->TargetDeviceObject, 
+        Status = IoCallDriver( Vcb->TargetDeviceObject,
                                IrpContext->Irp);
 
        if (Status == STATUS_PENDING) {
@@ -368,7 +368,7 @@ RfsdPnpSurpriseRemove (
                                 TRUE,
                                 TRUE );
 
-        Status = IoCallDriver( Vcb->TargetDeviceObject, 
+        Status = IoCallDriver( Vcb->TargetDeviceObject,
                                IrpContext->Irp);
 
        if (Status == STATUS_PENDING) {

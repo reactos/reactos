@@ -1417,6 +1417,30 @@ static MUI_ENTRY huHUBootLoaderEntries[] =
     }
 };
 
+static MUI_ENTRY huHUBootLoaderInstallPageEntries[] =
+{
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " telep\241t\213 ",
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        "Bootloader telep\241t\202se az eszk\224zre, k\202rem v\240rjon...",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
 static MUI_ENTRY huHUKeyboardSettingsEntries[] =
 {
     {
@@ -2063,6 +2087,10 @@ MUI_PAGE huHUPages[] =
         huHUSuccessPageEntries
     },
     {
+        BOOT_LOADER_INSTALLATION_PAGE,
+        huHUBootLoaderInstallPageEntries
+    },
+    {
         BOOT_LOADER_FLOPPY_PAGE,
         huHUBootPageEntries
     },
@@ -2153,7 +2181,7 @@ MUI_STRING huHUStrings[] =
     {STRING_FORMATTINGDISK,
     "A telep\241t\213 form\240zza a merevlemezt"},
     {STRING_CHECKINGDISK,
-    "A telep\241t\213 ellen\213rzni a merevlemezt"},
+    "A telep\241t\213 ellen\213rzi a merevlemezt"},
     {STRING_FORMATDISK1,
     " Part\241ci\242 form\240z\240sa %S f\240jlrendszerrel (gyorsform\240z\240s) "},
     {STRING_FORMATDISK2,
@@ -2165,7 +2193,7 @@ MUI_STRING huHUStrings[] =
     {STRING_HDINFOPARTDELETE_1,
     "itt: %s."},
     {STRING_PARTTYPE,
-    "Type 0x%02x"},
+    "T\241pus 0x%02x"},
     {STRING_HDDINFO_1,
     // "%lu. merevlemez (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ) [%s]"
     "%I64u %s %lu. merevlemez (Port=%hu, Bus=%hu, Id=%hu) itt: %wZ [%s]"},

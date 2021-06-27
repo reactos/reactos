@@ -1,4 +1,4 @@
-/* 
+/*
  * FFS File System Driver for Windows
  *
  * fileinfo.c
@@ -91,7 +91,7 @@ FFSQueryInformation(
 
 		ASSERT((Fcb->Identifier.Type == FFSFCB) &&
 				(Fcb->Identifier.Size == sizeof(FFS_FCB)));
-		/*        
+		/*
 		if (!IsFlagOn(Fcb->Vcb->Flags, VCB_READ_ONLY) &&
 			!FlagOn(Fcb->Flags, FCB_PAGE_FILE))
 		*/
@@ -228,7 +228,7 @@ FFSQueryInformation(
 					if (IsFlagOn(Fcb->Vcb->Flags, VCB_READ_ONLY))
 						FileStandardInformation->DeletePending = FALSE;
 					else
-						FileStandardInformation->DeletePending = IsFlagOn(Fcb->Flags, FCB_DELETE_PENDING);                
+						FileStandardInformation->DeletePending = IsFlagOn(Fcb->Flags, FCB_DELETE_PENDING);
 
 					if (Fcb->FFSMcb->FileAttr & FILE_ATTRIBUTE_DIRECTORY)
 					{
@@ -708,8 +708,8 @@ FFSSetInformation(
 			FcbPagingIoResourceAcquired = TRUE;
 		}
 
-		/*        
-		if (FileInformationClass != FileDispositionInformation 
+		/*
+		if (FileInformationClass != FileDispositionInformation
 			 && FlagOn(Fcb->Flags, FCB_DELETE_PENDING))
 		{
 			Status = STATUS_DELETE_PENDING;
@@ -745,7 +745,7 @@ FFSSetInformation(
 							dinode1->di_mtime = (ULONG)(FFSInodeTime(FBI->LastWriteTime));
 						}
 
-						if (IsFlagOn(FBI->FileAttributes, FILE_ATTRIBUTE_READONLY)) 
+						if (IsFlagOn(FBI->FileAttributes, FILE_ATTRIBUTE_READONLY))
 						{
 							FFSSetReadOnly(Fcb->dinode1->di_mode);
 							SetFlag(Fcb->FFSMcb->FileAttr, FILE_ATTRIBUTE_READONLY);
@@ -761,11 +761,11 @@ FFSSetInformation(
 							Status = STATUS_SUCCESS;
 						}
 
-						if (FBI->FileAttributes & FILE_ATTRIBUTE_TEMPORARY) 
+						if (FBI->FileAttributes & FILE_ATTRIBUTE_TEMPORARY)
 						{
 							SetFlag(FileObject->Flags, FO_TEMPORARY_FILE);
-						} 
-						else 
+						}
+						else
 						{
 							ClearFlag(FileObject->Flags, FO_TEMPORARY_FILE);
 						}
@@ -789,7 +789,7 @@ FFSSetInformation(
 							dinode2->di_mtime = (ULONG)(FFSInodeTime(FBI->LastWriteTime));
 						}
 
-						if (IsFlagOn(FBI->FileAttributes, FILE_ATTRIBUTE_READONLY)) 
+						if (IsFlagOn(FBI->FileAttributes, FILE_ATTRIBUTE_READONLY))
 						{
 							FFSSetReadOnly(Fcb->dinode2->di_mode);
 							SetFlag(Fcb->FFSMcb->FileAttr, FILE_ATTRIBUTE_READONLY);
@@ -805,11 +805,11 @@ FFSSetInformation(
 							Status = STATUS_SUCCESS;
 						}
 
-						if (FBI->FileAttributes & FILE_ATTRIBUTE_TEMPORARY) 
+						if (FBI->FileAttributes & FILE_ATTRIBUTE_TEMPORARY)
 						{
 							SetFlag(FileObject->Flags, FO_TEMPORARY_FILE);
-						} 
-						else 
+						}
+						else
 						{
 							ClearFlag(FileObject->Flags, FO_TEMPORARY_FILE);
 						}
@@ -834,7 +834,7 @@ FFSSetInformation(
 						_SEH2_LEAVE;
 					}
 
-					if (FAI->AllocationSize.QuadPart == 
+					if (FAI->AllocationSize.QuadPart ==
 							Fcb->Header.AllocationSize.QuadPart)
 					{
 						Status = STATUS_SUCCESS;
@@ -861,7 +861,7 @@ FFSSetInformation(
 					}
 					else
 					{
-						if (MmCanFileBeTruncated(&(Fcb->SectionObject), &(FAI->AllocationSize))) 
+						if (MmCanFileBeTruncated(&(Fcb->SectionObject), &(FAI->AllocationSize)))
 						{
 							LARGE_INTEGER EndOfFile;
 
@@ -870,10 +870,10 @@ FFSSetInformation(
 
 							if(FFSTruncateFile(IrpContext, Vcb, Fcb, &(EndOfFile)))
 							{
-								if (FAI->AllocationSize.QuadPart < 
+								if (FAI->AllocationSize.QuadPart <
 										Fcb->Header.FileSize.QuadPart)
 								{
-									Fcb->Header.FileSize.QuadPart = 
+									Fcb->Header.FileSize.QuadPart =
 										FAI->AllocationSize.QuadPart;
 								}
 
@@ -894,7 +894,7 @@ FFSSetInformation(
 
 					if (NT_SUCCESS(Status))
 					{
-						CcSetFileSizes(FileObject, 
+						CcSetFileSizes(FileObject,
 								(PCC_FILE_SIZES)(&(Fcb->Header.AllocationSize)));
 						SetFlag(FileObject->Flags, FO_FILE_MODIFIED);
 
@@ -947,12 +947,12 @@ FFSSetInformation(
 						CacheInitialized = TRUE;
 					}
 
-					if (FEOFI->EndOfFile.QuadPart == 
+					if (FEOFI->EndOfFile.QuadPart ==
 							Fcb->Header.AllocationSize.QuadPart)
 					{
 						Status = STATUS_SUCCESS;
 					}
-					else if (FEOFI->EndOfFile.QuadPart > 
+					else if (FEOFI->EndOfFile.QuadPart >
 							Fcb->Header.AllocationSize.QuadPart)
 					{
 						LARGE_INTEGER FileSize = Fcb->Header.FileSize;
@@ -960,10 +960,10 @@ FFSSetInformation(
 						if(FFSExpandFile(IrpContext, Vcb, Fcb, &(FEOFI->EndOfFile)))
 						{
 							{
-								Fcb->Header.FileSize.QuadPart = 
+								Fcb->Header.FileSize.QuadPart =
 									FEOFI->EndOfFile.QuadPart;
 								Fcb->dinode1->di_size = (ULONG)FEOFI->EndOfFile.QuadPart;
-								Fcb->Header.ValidDataLength.QuadPart = 
+								Fcb->Header.ValidDataLength.QuadPart =
 									(LONGLONG)(0x7fffffffffffffff);
 							}
 
@@ -983,15 +983,15 @@ FFSSetInformation(
 
 						if (NT_SUCCESS(Status))
 						{
-							CcSetFileSizes(FileObject, 
+							CcSetFileSizes(FileObject,
 									(PCC_FILE_SIZES)(&(Fcb->Header.AllocationSize)));
 
 							SetFlag(FileObject->Flags, FO_FILE_MODIFIED);
 
-							FFSZeroHoles(IrpContext, 
-									Vcb, FileObject, 
+							FFSZeroHoles(IrpContext,
+									Vcb, FileObject,
 									FileSize.QuadPart,
-									Fcb->Header.AllocationSize.QuadPart - 
+									Fcb->Header.AllocationSize.QuadPart -
 									FileSize.QuadPart);
 
 							NotifyFilter = FILE_NOTIFY_CHANGE_SIZE |
@@ -1001,16 +1001,16 @@ FFSSetInformation(
 					}
 					else
 					{
-						if (MmCanFileBeTruncated(&(Fcb->SectionObject), &(FEOFI->EndOfFile))) 
+						if (MmCanFileBeTruncated(&(Fcb->SectionObject), &(FEOFI->EndOfFile)))
 						{
 							LARGE_INTEGER EndOfFile = FEOFI->EndOfFile;
 
-							EndOfFile.QuadPart = EndOfFile.QuadPart + 
+							EndOfFile.QuadPart = EndOfFile.QuadPart +
 								(LONGLONG)(Vcb->BlockSize - 1);
 
 							if(FFSTruncateFile(IrpContext, Vcb, Fcb, &(EndOfFile)))
 							{
-								Fcb->Header.FileSize.QuadPart = 
+								Fcb->Header.FileSize.QuadPart =
 									FEOFI->EndOfFile.QuadPart;
 								Fcb->dinode1->di_size = (ULONG)FEOFI->EndOfFile.QuadPart;
 
@@ -1030,7 +1030,7 @@ FFSSetInformation(
 
 						if (NT_SUCCESS(Status))
 						{
-							CcSetFileSizes(FileObject, 
+							CcSetFileSizes(FileObject,
 									(PCC_FILE_SIZES)(&(Fcb->Header.AllocationSize)));
 
 							SetFlag(FileObject->Flags, FO_FILE_MODIFIED);
@@ -1154,7 +1154,7 @@ FFSSetInformation(
 
 BOOLEAN
 FFSExpandFile(
-	PFFS_IRP_CONTEXT IrpContext, 
+	PFFS_IRP_CONTEXT IrpContext,
 	PFFS_VCB         Vcb,
 	PFFS_FCB         Fcb,
 	PLARGE_INTEGER   AllocationSize)
@@ -1224,7 +1224,7 @@ FFSSetDispositionInfo(
 
 	if (bDelete)
 	{
-		FFSPrint((DBG_INFO, "FFSSetDispositionInformation: MmFlushImageSection on %s.\n", 
+		FFSPrint((DBG_INFO, "FFSSetDispositionInformation: MmFlushImageSection on %s.\n",
 					Fcb->AnsiFileName.Buffer));
 
 		if (!MmFlushImageSection(&Fcb->SectionObject,
@@ -1270,7 +1270,7 @@ FFSSetDispositionInfo(
 	}
 
 	return STATUS_SUCCESS;
-}  
+}
 
 
 __drv_mustHoldCriticalRegion
@@ -1413,9 +1413,9 @@ FFSSetRenameInfo(
 				&FileName,
 				TargetMcb,
 				&Mcb,
-				&dinode1); 
+				&dinode1);
 
-	if (NT_SUCCESS(Status))   
+	if (NT_SUCCESS(Status))
 	{
 		if ((!ReplaceIfExists) ||
 				(IsFlagOn(Mcb->FileAttr, FILE_ATTRIBUTE_DIRECTORY)) ||
@@ -1435,7 +1435,7 @@ FFSSetRenameInfo(
 	if (IsDirectory(Fcb))
 	{
 
-		Status = FFSRemoveEntry(IrpContext, Vcb, 
+		Status = FFSRemoveEntry(IrpContext, Vcb,
 					Fcb->FFSMcb->Parent->FFSFcb,
 					DT_DIR,
 					Fcb->FFSMcb->Inode);
@@ -1447,7 +1447,7 @@ FFSSetRenameInfo(
 			goto errorout;
 		}
 
-		Status = FFSAddEntry(IrpContext, Vcb, 
+		Status = FFSAddEntry(IrpContext, Vcb,
 					TargetDcb,
 					DT_DIR,
 					Fcb->FFSMcb->Inode,
@@ -1457,7 +1457,7 @@ FFSSetRenameInfo(
 		{
 			FFSBreakPoint();
 
-			FFSAddEntry(IrpContext, Vcb, 
+			FFSAddEntry(IrpContext, Vcb,
 					Fcb->FFSMcb->Parent->FFSFcb,
 					DT_DIR,
 					Fcb->FFSMcb->Inode,
@@ -1467,7 +1467,7 @@ FFSSetRenameInfo(
 		}
 
 		if(!FFSv1SaveInode(IrpContext,
-					Vcb, 
+					Vcb,
 					TargetMcb->Inode,
 					TargetDcb->dinode1))
 		{
@@ -1479,7 +1479,7 @@ FFSSetRenameInfo(
 		}
 
 		if(!FFSv1SaveInode(IrpContext,
-					Vcb, 
+					Vcb,
 					Fcb->FFSMcb->Parent->Inode,
 					Fcb->FFSMcb->Parent->FFSFcb->dinode1))
 		{
@@ -1523,7 +1523,7 @@ FFSSetRenameInfo(
 		{
 			FFSBreakPoint();
 
-			FFSAddEntry(IrpContext, Vcb, 
+			FFSAddEntry(IrpContext, Vcb,
 					Fcb->FFSMcb->Parent->FFSFcb,
 					DT_REG,
 					Fcb->FFSMcb->Inode,
@@ -1538,7 +1538,7 @@ FFSSetRenameInfo(
 		if (Fcb->FFSMcb->ShortName.MaximumLength < (FileName.Length + 2))
 		{
 			ExFreePool(Fcb->FFSMcb->ShortName.Buffer);
-			Fcb->FFSMcb->ShortName.Buffer = 
+			Fcb->FFSMcb->ShortName.Buffer =
 				ExAllocatePoolWithTag(PagedPool, FileName.Length + 2, FFS_POOL_TAG);
 
 			if (!Fcb->FFSMcb->ShortName.Buffer)
@@ -1560,7 +1560,7 @@ FFSSetRenameInfo(
 			Fcb->FFSMcb->ShortName.Length = FileName.Length;
 		}
 
-#if DBG    
+#if DBG
 
 		Fcb->AnsiFileName.Length = (USHORT)
 			RtlxUnicodeStringToOemSize(&FileName);
@@ -1569,7 +1569,7 @@ FFSSetRenameInfo(
 		{
 			ExFreePool(Fcb->AnsiFileName.Buffer);
 
-			Fcb->AnsiFileName.Buffer = 
+			Fcb->AnsiFileName.Buffer =
 				ExAllocatePoolWithTag(PagedPool, Fcb->AnsiFileName.Length + 1, FFS_POOL_TAG);
 
 			if (!Fcb->AnsiFileName.Buffer)
@@ -1578,9 +1578,9 @@ FFSSetRenameInfo(
 				goto errorout;
 			}
 
-			RtlZeroMemory(Fcb->AnsiFileName.Buffer, 
+			RtlZeroMemory(Fcb->AnsiFileName.Buffer,
 					Fcb->AnsiFileName.Length + 1);
-			Fcb->AnsiFileName.MaximumLength = 
+			Fcb->AnsiFileName.MaximumLength =
 				Fcb->AnsiFileName.Length + 1;
 		}
 
@@ -1690,7 +1690,7 @@ FFSDeleteFile(
 		if (Fcb->FFSMcb->Parent->FFSFcb)
 		{
 			Status = FFSRemoveEntry(
-					IrpContext, Vcb, 
+					IrpContext, Vcb,
 					Fcb->FFSMcb->Parent->FFSFcb,
 					(FlagOn(Fcb->FFSMcb->FileAttr, FILE_ATTRIBUTE_DIRECTORY) ?
 						DT_DIR : DT_REG),

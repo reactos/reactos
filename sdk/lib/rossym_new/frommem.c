@@ -29,7 +29,7 @@ RosSymCreateFromMem(PVOID ImageStart, ULONG_PTR ImageSize, PROSSYM_INFO *RosSymI
 	PIMAGE_SECTION_HEADER SectionHeaders;
 	ULONG SectionIndex;
 	unsigned SymbolTable, NumSymbols;
-	
+
 	/* Check if MZ header is valid */
 	DosHeader = (PIMAGE_DOS_HEADER) ImageStart;
 	if (ImageSize < sizeof(IMAGE_DOS_HEADER)
@@ -38,7 +38,7 @@ RosSymCreateFromMem(PVOID ImageStart, ULONG_PTR ImageSize, PROSSYM_INFO *RosSymI
 		DPRINT1("Image doesn't have a valid DOS header\n");
 		return FALSE;
     }
-	
+
 	/* Locate NT header  */
 	NtHeaders = (PIMAGE_NT_HEADERS)((char *) ImageStart + DosHeader->e_lfanew);
 	if (ImageSize < DosHeader->e_lfanew + sizeof(IMAGE_NT_HEADERS)
@@ -47,18 +47,18 @@ RosSymCreateFromMem(PVOID ImageStart, ULONG_PTR ImageSize, PROSSYM_INFO *RosSymI
 		DPRINT1("Image doesn't have a valid PE header\n");
 		return FALSE;
     }
-	
+
 	SymbolTable = NtHeaders->FileHeader.PointerToSymbolTable;
 	NumSymbols = NtHeaders->FileHeader.NumberOfSymbols;
-	
+
 	/* Search for the section header */
 	ULONG SectionHeaderSize = NtHeaders->FileHeader.NumberOfSections * sizeof(IMAGE_SECTION_HEADER);
 	SectionHeaders = RosSymAllocMem(SectionHeaderSize);
 	RtlCopyMemory(SectionHeaders, IMAGE_FIRST_SECTION(NtHeaders), SectionHeaderSize);
-	
+
 	// Convert names to ANSI_STRINGs
 	for (SectionIndex = 0; SectionIndex < NtHeaders->FileHeader.NumberOfSections;
-		 SectionIndex++) 
+		 SectionIndex++)
 	{
 		if (SectionHeaders[SectionIndex].Name[0] != '/') {
 			AnsiNameString.Buffer = RosSymAllocMem(IMAGE_SIZEOF_SHORT_NAME);
@@ -69,7 +69,7 @@ RosSymCreateFromMem(PVOID ImageStart, ULONG_PTR ImageSize, PROSSYM_INFO *RosSymI
 			UNICODE_STRING intConv;
 			NTSTATUS Status;
 			ULONG StringOffset;
-			
+
 			if (!RtlCreateUnicodeStringFromAsciiz(&intConv, (PCSZ)SectionHeaders[SectionIndex].Name + 1))
 				goto freeall;
 			Status = RtlUnicodeStringToInteger(&intConv, 10, &StringOffset);
@@ -87,14 +87,14 @@ RosSymCreateFromMem(PVOID ImageStart, ULONG_PTR ImageSize, PROSSYM_INFO *RosSymI
 				PossibleStringLength = MAXIMUM_DWARF_NAME_SIZE;
 			RtlCopyMemory(AnsiNameString.Buffer, StringTarget, PossibleStringLength);
 			AnsiNameString.Length = strlen(AnsiNameString.Buffer);
-			AnsiNameString.MaximumLength = MAXIMUM_DWARF_NAME_SIZE;		  
+			AnsiNameString.MaximumLength = MAXIMUM_DWARF_NAME_SIZE;
 		}
 		memcpy
 			(&SectionHeaders[SectionIndex],
 			 &AnsiNameString,
 			 sizeof(AnsiNameString));
 	}
-	
+
 	Pe *pe = RosSymAllocMem(sizeof(*pe));
 	pe->fd = ImageStart;
 	pe->e2 = peget2;
@@ -108,14 +108,14 @@ RosSymCreateFromMem(PVOID ImageStart, ULONG_PTR ImageSize, PROSSYM_INFO *RosSymI
 	pe->nsymbols = NtHeaders->FileHeader.NumberOfSymbols;
 	pe->symtab = malloc(pe->nsymbols * sizeof(CoffSymbol));
 	PSYMENT SymbolData = (PSYMENT)
-		(((PCHAR)ImageStart) + 
+		(((PCHAR)ImageStart) +
 		 pefindrva
-		 (pe->sect, 
-		  pe->nsections, 
+		 (pe->sect,
+		  pe->nsections,
 		  NtHeaders->FileHeader.PointerToSymbolTable));
 	int i, j;
 	for (i = 0, j = 0; i < pe->nsymbols; i++) {
-		if ((SymbolData[i].e_scnum < 1) || 
+		if ((SymbolData[i].e_scnum < 1) ||
 			(SymbolData[i].e_sclass != C_EXT &&
 			 SymbolData[i].e_sclass != C_STAT))
 			continue;
@@ -124,12 +124,12 @@ RosSymCreateFromMem(PVOID ImageStart, ULONG_PTR ImageSize, PROSSYM_INFO *RosSymI
 			pe->symtab[j].name = malloc(sizeof(SymbolData[i].e.e_name)+1);
 			strcpy(pe->symtab[j].name, SymbolData[i].e.e_name);
 		} else {
-			PCHAR SymbolName = ((PCHAR)ImageStart) + 
+			PCHAR SymbolName = ((PCHAR)ImageStart) +
 				pefindrva
-				(pe->sect, 
-				 pe->nsections, 
-				 NtHeaders->FileHeader.PointerToSymbolTable + 
-				 (NtHeaders->FileHeader.NumberOfSymbols * 18) + 
+				(pe->sect,
+				 pe->nsections,
+				 NtHeaders->FileHeader.PointerToSymbolTable +
+				 (NtHeaders->FileHeader.NumberOfSymbols * 18) +
 				 SymbolData[i].e.e.e_offset);
 			pe->symtab[j].name = malloc(strlen(SymbolName)+1);
 			strcpy(pe->symtab[j].name, SymbolName);
@@ -143,17 +143,17 @@ RosSymCreateFromMem(PVOID ImageStart, ULONG_PTR ImageSize, PROSSYM_INFO *RosSymI
 	}
 	pe->nsymbols = j;
 	pe->loadsection = loadmemsection;
-	*RosSymInfo = dwarfopen(pe);  
+	*RosSymInfo = dwarfopen(pe);
 
 	return !!*RosSymInfo;
-	
+
 freeall:
 	if (AnsiNameString.Buffer) RosSymFreeMem(AnsiNameString.Buffer);
 	for (SectionIndex = 0; SectionIndex < NtHeaders->FileHeader.NumberOfSections;
 		 SectionIndex++)
 		RtlFreeAnsiString(ANSI_NAME_STRING(&SectionHeaders[SectionIndex]));
 	RosSymFreeMem(SectionHeaders);
-	
+
 	return FALSE;
 }
 

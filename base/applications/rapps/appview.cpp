@@ -1113,10 +1113,16 @@ CAppInfoDisplay::~CAppInfoDisplay()
 
 // **** CAppsListView ****
 
-CAppsListView::CAppsListView() :
-    bHasCheckboxes(FALSE),
-    nLastHeaderID(-1)
+CAppsListView::CAppsListView()
 {
+}
+
+CAppsListView::~CAppsListView()
+{
+    if (m_hImageListView)
+    {
+        ImageList_Destroy(m_hImageListView);
+    }
 }
 
 VOID CAppsListView::SetCheckboxesVisible(BOOL bIsVisible)
@@ -1253,7 +1259,7 @@ INT CAppsListView::CompareFunc(LPARAM lParam1, LPARAM lParam2, INT iSubItem)
 HWND CAppsListView::Create(HWND hwndParent)
 {
     RECT r = { 205, 28, 465, 250 };
-    DWORD style = WS_CHILD | WS_VISIBLE | LVS_SORTASCENDING | LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_AUTOARRANGE;
+    DWORD style = WS_CHILD | WS_VISIBLE | LVS_SORTASCENDING | LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_AUTOARRANGE | LVS_SHAREIMAGELISTS;
 
     HWND hwnd = CListView::Create(hwndParent, r, NULL, style, WS_EX_CLIENTEDGE);
 

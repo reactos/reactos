@@ -111,8 +111,14 @@ static const struct
 }
 RegisterToTrapFrame[] =
 {
+    /* FIXME: X86 only */
+#ifdef _M_IX86
     {"eip",     FIELD_OFFSET(KDB_KTRAP_FRAME, Eip),     RTL_FIELD_SIZE(KDB_KTRAP_FRAME, Eip)},
+#else
+    {"rip",     FIELD_OFFSET(KDB_KTRAP_FRAME, Rip),     RTL_FIELD_SIZE(KDB_KTRAP_FRAME, Rip)},
+#endif
     {"eflags",  FIELD_OFFSET(KDB_KTRAP_FRAME, EFlags),  RTL_FIELD_SIZE(KDB_KTRAP_FRAME, EFlags)},
+#ifdef _M_IX86
     {"eax",     FIELD_OFFSET(KDB_KTRAP_FRAME, Eax),     RTL_FIELD_SIZE(KDB_KTRAP_FRAME, Eax)},
     {"ebx",     FIELD_OFFSET(KDB_KTRAP_FRAME, Ebx),     RTL_FIELD_SIZE(KDB_KTRAP_FRAME, Ebx)},
     {"ecx",     FIELD_OFFSET(KDB_KTRAP_FRAME, Ecx),     RTL_FIELD_SIZE(KDB_KTRAP_FRAME, Ecx)},
@@ -121,6 +127,16 @@ RegisterToTrapFrame[] =
     {"edi",     FIELD_OFFSET(KDB_KTRAP_FRAME, Edi),     RTL_FIELD_SIZE(KDB_KTRAP_FRAME, Edi)},
     {"esp",     FIELD_OFFSET(KDB_KTRAP_FRAME, Esp),     RTL_FIELD_SIZE(KDB_KTRAP_FRAME, Esp)},
     {"ebp",     FIELD_OFFSET(KDB_KTRAP_FRAME, Ebp),     RTL_FIELD_SIZE(KDB_KTRAP_FRAME, Ebp)},
+#else
+    {"rax",     FIELD_OFFSET(KDB_KTRAP_FRAME, Rax),     RTL_FIELD_SIZE(KDB_KTRAP_FRAME, Rax)},
+    {"rbx",     FIELD_OFFSET(KDB_KTRAP_FRAME, Rbx),     RTL_FIELD_SIZE(KDB_KTRAP_FRAME, Rbx)},
+    {"rcx",     FIELD_OFFSET(KDB_KTRAP_FRAME, Rcx),     RTL_FIELD_SIZE(KDB_KTRAP_FRAME, Rcx)},
+    {"rdx",     FIELD_OFFSET(KDB_KTRAP_FRAME, Rdx),     RTL_FIELD_SIZE(KDB_KTRAP_FRAME, Rdx)},
+    {"rsi",     FIELD_OFFSET(KDB_KTRAP_FRAME, Rsi),     RTL_FIELD_SIZE(KDB_KTRAP_FRAME, Rsi)},
+    {"rdi",     FIELD_OFFSET(KDB_KTRAP_FRAME, Rdi),     RTL_FIELD_SIZE(KDB_KTRAP_FRAME, Rdi)},
+    {"rsp",     FIELD_OFFSET(KDB_KTRAP_FRAME, Rsp),     RTL_FIELD_SIZE(KDB_KTRAP_FRAME, Rsp)},
+    {"rbp",     FIELD_OFFSET(KDB_KTRAP_FRAME, Rbp),     RTL_FIELD_SIZE(KDB_KTRAP_FRAME, Rbp)},
+#endif
     {"cs",      FIELD_OFFSET(KDB_KTRAP_FRAME, SegCs),      2 }, /* Use only the lower 2 bytes */
     {"ds",      FIELD_OFFSET(KDB_KTRAP_FRAME, SegDs),      RTL_FIELD_SIZE(KDB_KTRAP_FRAME, SegDs)},
     {"es",      FIELD_OFFSET(KDB_KTRAP_FRAME, SegEs),      RTL_FIELD_SIZE(KDB_KTRAP_FRAME, SegEs)},
@@ -1009,7 +1025,7 @@ RpnpEvaluateStack(
 
                 if (!Ok)
                 {
-                    _snprintf(ErrMsg, 128, "Couldn't access memory at 0x%lx", (ULONG)p);
+                    _snprintf(ErrMsg, 128, "Couldn't access memory at 0x%p", p);
 
                     if (ErrOffset)
                         *ErrOffset = Op->CharacterOffset;

@@ -149,7 +149,7 @@ PPC_QUAL char _InterlockedCompareExchange8(volatile char * const Destination, co
         volatile long retval __asm__("r8") = 0;
 	__asm__ __volatile__ (
 	    "sync\n"
-	    "1: lbarx   %0,0,%1\n" 
+	    "1: lbarx   %0,0,%1\n"
             : "=r" (retval) : "r" (Destination));
         __asm__ __volatile__ (
 	    "   cmpw    %3,%1\n"
@@ -157,7 +157,7 @@ PPC_QUAL char _InterlockedCompareExchange8(volatile char * const Destination, co
 	    "   stbcx.  %2,0,%0\n"
 	    "   bne-    1b\n"
 	    "2: isync"
-	    : 
+	    :
 	    : "r" (Destination), "r" (Comperand), "r" (Exchange), "r" (retval));
 	return retval;
 }
@@ -167,7 +167,7 @@ PPC_QUAL short _InterlockedCompareExchange16(volatile short * const Destination,
         volatile long retval __asm__("r8") = 0;
 	__asm__ __volatile__ (
 	    "sync\n"
-	    "1: lharx   %0,0,%1\n" 
+	    "1: lharx   %0,0,%1\n"
             : "=&r" (retval) : "r" (Destination));
         __asm__ __volatile__ (
 	    "   cmpw    %3,%1\n"
@@ -175,7 +175,7 @@ PPC_QUAL short _InterlockedCompareExchange16(volatile short * const Destination,
 	    "   sthcx.  %2,0,%0\n"
 	    "   bne-    1b\n"
 	    "2: isync"
-	    : 
+	    :
 	    : "r" (Destination), "r" (Comperand), "r" (Exchange), "r" (retval));
 	return retval;
 }
@@ -185,7 +185,7 @@ PPC_QUAL long _InterlockedCompareExchange(volatile long * const Destination, con
         volatile long retval __asm__("r8") = 0;
 	__asm__ __volatile__ (
 	    "sync\n"
-	    "1: lwarx   %0,0,%1\n" 
+	    "1: lwarx   %0,0,%1\n"
             : "=&r" (retval) : "r" (Destination));
         __asm__ __volatile__ (
 	    "   cmpw    %3,%1\n"
@@ -193,7 +193,7 @@ PPC_QUAL long _InterlockedCompareExchange(volatile long * const Destination, con
 	    "   stwcx.  %2,0,%0\n"
 	    "   bne-    1b\n"
 	    "2: isync"
-	    : 
+	    :
 	    : "r" (Destination), "r" (Comperand), "r" (Exchange), "r" (retval));
 	return retval;
 }

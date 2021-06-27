@@ -63,7 +63,8 @@ DefaultQueryInfoBufferCheck(ULONG Class,
                             ULONG BufferLength,
                             PULONG ReturnLength,
                             PULONG_PTR ReturnLengthPtr,
-                            KPROCESSOR_MODE PreviousMode)
+                            KPROCESSOR_MODE PreviousMode,
+                            BOOLEAN CompleteProbing)
 {
     NTSTATUS Status = STATUS_SUCCESS;
 
@@ -90,9 +91,18 @@ DefaultQueryInfoBufferCheck(ULONG Class,
                 {
                     if (Buffer != NULL)
                     {
-                        ProbeForWrite(Buffer,
-                                      BufferLength,
-                                      ClassList[Class].AlignmentQUERY);
+                        if (!CompleteProbing)
+                        {
+                            ProbeForRead(Buffer,
+                                         BufferLength,
+                                         ClassList[Class].AlignmentQUERY);
+                        }
+                        else
+                        {
+                            ProbeForWrite(Buffer,
+                                          BufferLength,
+                                          ClassList[Class].AlignmentQUERY);
+                        }
                     }
 
                     if (ReturnLength != NULL)

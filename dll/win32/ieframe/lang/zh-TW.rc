@@ -10,11 +10,11 @@ IDR_BROWSE_MAIN_MENU MENU
         {
             MENUITEM "視窗(&W)",                 ID_BROWSE_NEW_WINDOW
         }
-        MENUITEM "開啟...(&O)",                    ID_BROWSE_OPEN
+        MENUITEM "開啟(&O)...",                    ID_BROWSE_OPEN
         MENUITEM "儲存(&S)",                       ID_BROWSE_SAVE
         MENUITEM "另存新檔(&A)...",                 ID_BROWSE_SAVE_AS
         MENUITEM SEPARATOR
-        MENUITEM "列印格式...(&F)",            ID_BROWSE_PRINT_FORMAT
+        MENUITEM "列印格式(&F)...",            ID_BROWSE_PRINT_FORMAT
         MENUITEM "列印(&I)...",                   ID_BROWSE_PRINT
         MENUITEM "列印預覽(&W)",              ID_BROWSE_PRINT_PREVIEW
         MENUITEM SEPARATOR

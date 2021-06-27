@@ -721,7 +721,7 @@ EnumerateDevices(
                 Status = STATUS_NO_MEMORY;
                 goto cleanup;
             }
-            
+
             RtlAppendUnicodeToString(&DevicePath, REGSTR_KEY_ROOTENUM L"\\");
             RtlAppendUnicodeStringToString(&DevicePath, &SubKeyName);
             DPRINT("Found device %wZ\\%S!\n", &DevicePath, SubKeyInfo->Name);

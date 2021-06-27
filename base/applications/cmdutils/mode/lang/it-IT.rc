@@ -68,4 +68,5 @@ BEGIN
     IDS_ERROR_INVALID_STOP_BITS "ERRORE: valore non valido per i bit di stop %d:\n"
     IDS_ERROR_NO_MEMORY "ERRORE: memoria insufficiente.\n"
     IDS_ERROR_SCREEN_LINES_COL "Lo schermo non può essere impostato con il numero di righe e colonne specificato.\n"
+    IDS_ERROR_INVALID_CODEPAGE "The code page specified is not valid.\n"
 END

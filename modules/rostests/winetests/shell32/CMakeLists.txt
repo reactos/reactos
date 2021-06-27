@@ -38,7 +38,9 @@ add_importlibs(shell32_winetest shell32 shlwapi ole32 oleaut32 user32 gdi32 adva
 
 if(MSVC)
     add_importlibs(shell32_winetest ntdll)
-else()
+endif()
+
+if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
     target_compile_options(shell32_winetest PRIVATE -Wno-format-overflow)
 endif()
 

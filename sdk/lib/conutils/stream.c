@@ -280,7 +280,7 @@ ConStreamSetOSHandle(
     int fdOut = _open_osfhandle((intptr_t)Handle, _O_TEXT /* FIXME! */);
     FILE* fpOut = _fdopen(fdOut, "w");
     *Stream->fStream = *fpOut;
-    /// setvbuf(Stream->fStream, NULL, _IONBF, 0); 
+    /// setvbuf(Stream->fStream, NULL, _IONBF, 0);
 
     return TRUE;
 #else

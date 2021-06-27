@@ -61,7 +61,7 @@ UDFReadExtentLocation(IN PVCB Vcb,
 // calculate total length of extent
 int64 UDFGetExtentLength(IN PEXTENT_MAP Extent);  // Extent array
 // convert compressed Unicode to standard
-void 
+void
 __fastcall UDFDecompressUnicode(IN OUT PUNICODE_STRING UName,
                               IN uint8* CS0,
                               IN SIZE_T Length,
@@ -176,7 +176,7 @@ __fastcall UDFExtentToMapping_(IN PEXTENT_AD Extent
                               );
 
 #ifdef UDF_TRACK_EXTENT_TO_MAPPING
-  #define UDFExtentToMapping(e)  UDFExtentToMapping_(e, UDF_BUG_CHECK_ID, __LINE__) 
+  #define UDFExtentToMapping(e)  UDFExtentToMapping_(e, UDF_BUG_CHECK_ID, __LINE__)
 #else //UDF_TRACK_EXTENT_TO_MAPPING
   #define UDFExtentToMapping(e)  UDFExtentToMapping_(e)
 #endif //UDF_TRACK_EXTENT_TO_MAPPING
@@ -211,30 +211,30 @@ __fastcall UDFRelocateSectors(IN PVCB Vcb,
 BOOLEAN  UDFUnicodeInString(IN uint8* string,
                             IN WCHAR ch);     // Unicode char to search for.
 // validate char
-BOOLEAN 
+BOOLEAN
 __fastcall UDFIsIllegalChar(IN WCHAR ch);
 // translate udfName to dosName using OSTA compliant.
 #define  UDFDOSName__(Vcb, DosName, UdfName, FileInfo) \
     UDFDOSName(Vcb, DosName, UdfName, (FileInfo) && ((FileInfo)->Index < 2));
 
-void 
+void
 __fastcall UDFDOSName(IN PVCB Vcb,
                     IN OUT PUNICODE_STRING DosName,
                     IN PUNICODE_STRING UdfName,
                     IN BOOLEAN KeepIntact);
 
-void 
+void
 __fastcall UDFDOSName201(IN OUT PUNICODE_STRING DosName,
                        IN PUNICODE_STRING UdfName,
                        IN BOOLEAN KeepIntact);
 
-void 
+void
 __fastcall UDFDOSName200(IN OUT PUNICODE_STRING DosName,
                        IN PUNICODE_STRING UdfName,
                        IN BOOLEAN KeepIntact,
                        IN BOOLEAN Mode150);
 
-void 
+void
 __fastcall UDFDOSName100(IN OUT PUNICODE_STRING DosName,
                        IN PUNICODE_STRING UdfName,
                        IN BOOLEAN KeepIntact);
@@ -465,7 +465,7 @@ OSSTATUS UDFLoadExtInfo(IN PVCB Vcb,
                         IN OUT PEXTENT_INFO FExtInfo,
                         IN OUT PEXTENT_INFO AExtInfo);
 // convert standard Unicode to compressed
-void 
+void
 __fastcall UDFCompressUnicode(IN PUNICODE_STRING UName,
                             IN OUT uint8** _CS0,
                             IN OUT PSIZE_T Length);
@@ -542,7 +542,7 @@ OSSTATUS UDFZeroExtent(IN PVCB Vcb,
 #define UDFSparseExtent__(Vcb, Ext, Off, Len, Dir, WB) \
   UDFZeroExtent(Vcb, Ext, Off, Len, TRUE, Dir, WB)
 
-uint32 
+uint32
 __fastcall UDFPartStart(PVCB Vcb,
                         uint32 PartNum);
 uint32
@@ -846,28 +846,28 @@ OSSTATUS UDFUpdateVolIdent(IN PVCB Vcb,
                            IN UDF_VDS_RECORD Lba,
                            IN PUNICODE_STRING VolIdent);
 // calculate checksum for unicode string (for DOS-names)
-uint16 
+uint16
 __fastcall UDFUnicodeCksum(PWCHAR s,
                          uint32 n);
 //#define UDFUnicodeCksum(s,n)  UDFCrc((uint8*)(s), (n)*sizeof(WCHAR))
 //
-uint16 
+uint16
 __fastcall
 UDFUnicodeCksum150(PWCHAR s,
                 uint32 n);
 
-uint32 
+uint32
 __fastcall crc32(IN uint8* s,
             IN uint32 len);
 // calculate a 16-bit CRC checksum using ITU-T V.41 polynomial
-uint16 
+uint16
 __fastcall UDFCrc(IN uint8* Data,
                 IN SIZE_T Size);
 // read the first block of a tagged descriptor & check it
 OSSTATUS UDFReadTagged(IN PVCB Vcb,
                        IN int8* Buf,
-                       IN uint32 Block, 
-                       IN uint32 Location, 
+                       IN uint32 Block,
+                       IN uint32 Location,
                        OUT uint16 *Ident);
 // get physycal Lba for partition-relative addr
 uint32

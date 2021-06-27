@@ -149,6 +149,14 @@ PUBLIC KiThreadStartup
     .allocstack (6 * 8)
     .endprolog
 
+    /* Wait for SwapBusy */
+.SwapBusySet:
+    cmp byte ptr [r8 + ThSwapBusy], 0
+    je .SwapBusyClear
+    pause
+    jmp .SwapBusySet
+.SwapBusyClear:
+
     /* Save WaitIrql as KSWITCH_FRAME::ApcBypass */
     mov [rsp + SwApcBypass], cl
 

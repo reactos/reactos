@@ -19,7 +19,7 @@ NTAPI
 PspGetContext(IN PKTRAP_FRAME TrapFrame,
               IN PVOID NonVolatileContext,
               IN OUT PCONTEXT Context)
-{   
+{
     PAGED_CODE();
 }
 
@@ -29,7 +29,7 @@ PspSetContext(OUT PKTRAP_FRAME TrapFrame,
               OUT PVOID NonVolatileContext,
               IN PCONTEXT Context,
               IN KPROCESSOR_MODE Mode)
-{   
+{
     PAGED_CODE();
 }
 

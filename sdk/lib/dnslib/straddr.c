@@ -189,7 +189,7 @@ Dns_StringToAddressEx(OUT PVOID Address,
         AddressName = AnsiName;
     }
 
-    /* 
+    /*
      * If the caller doesn't know what the family is, we'll assume IPv4 and
      * check if we failed or not. If the caller told us it's IPv4, then just
      * do IPv4...
@@ -343,7 +343,7 @@ Dns_StringToDnsAddrEx(OUT PDNS_ADDRESS DnsAddr,
         AddressName = AnsiName;
     }
 
-    /* 
+    /*
      * If the caller doesn't know what the family is, we'll assume IPv4 and
      * check if we failed or not. If the caller told us it's IPv4, then just
      * do IPv4...

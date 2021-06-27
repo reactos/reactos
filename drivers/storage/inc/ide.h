@@ -29,7 +29,7 @@ Revision History:
 // Some miniports need this structure.
 // IdentifyData is passed to the miniport in
 // the XfermodeSelect structure
-// 
+//
 
 //
 // IDENTIFY data
@@ -175,18 +175,18 @@ typedef struct _PCIIDE_TRANSFER_MODE_SELECT {
 
     //
     // Input Parameters
-    //          
-          
+    //
+
     //
     // IDE Channel Number.  0 or 1
-    //                                       
+    //
     ULONG   Channel;
 
     //
     // Indicate whether devices are present
-    //                                  
+    //
     BOOLEAN DevicePresent[MAX_IDE_DEVICE * MAX_IDE_LINE];
-    
+
     //
     // Indicate whether devices are ATA harddisk
     //
@@ -194,12 +194,12 @@ typedef struct _PCIIDE_TRANSFER_MODE_SELECT {
 
     //
     // Indicate whether devices support IO Ready Line
-    //                                                
+    //
     BOOLEAN IoReadySupported[MAX_IDE_DEVICE * MAX_IDE_LINE];
 
     //
     // Indicate the data transfer modes devices support
-    //               
+    //
     ULONG DeviceTransferModeSupported[MAX_IDE_DEVICE * MAX_IDE_LINE];
 
     //
@@ -236,8 +236,8 @@ typedef struct _PCIIDE_TRANSFER_MODE_SELECT {
 
     //
     // Output Parameters
-    //          
-                      
+    //
+
     //
     // Indicate devices' data transfer modes chosen by
     // the pcii ide mini drive
@@ -254,26 +254,26 @@ typedef struct _PCIIDE_TRANSFER_MODE_SELECT {
 
 //
 // possible ide channel state
-//         
-        
+//
+
 typedef enum {
     ChannelDisabled = 0,
     ChannelEnabled,
     ChannelStateUnknown
 } IDE_CHANNEL_STATE;
-                         
-   
+
+
 //
 // Prototype for different PCI IDE mini driver
 // callbacks
-//   
+//
 typedef IDE_CHANNEL_STATE
     (*PCIIDE_CHANNEL_ENABLED) (
         IN PVOID DeviceExtension,
         IN ULONG Channel
         );
 
-typedef BOOLEAN 
+typedef BOOLEAN
     (*PCIIDE_SYNC_ACCESS_REQUIRED) (
         IN PVOID DeviceExtension
         );
@@ -284,12 +284,12 @@ typedef NTSTATUS
         IN OUT PPCIIDE_TRANSFER_MODE_SELECT TransferModeSelect
         );
 
-typedef    ULONG  
+typedef    ULONG
     (*PCIIDE_USEDMA_FUNC)(
-        IN PVOID deviceExtension, 
+        IN PVOID deviceExtension,
         IN PVOID cdbCmd,
         IN UCHAR targetID
-        ); 
+        );
 
 typedef    NTSTATUS
     (*PCIIDE_UDMA_MODES_SUPPORTED) (
@@ -297,17 +297,17 @@ typedef    NTSTATUS
         PULONG          BestXferMode,
         PULONG          CurrentMode
         );
-// 
-// This structure is for the PCI IDE mini driver to 
+//
+// This structure is for the PCI IDE mini driver to
 // return its properties
-// 
+//
 typedef struct _IDE_CONTROLLER_PROPERTIES {
 
     //
     // sizeof (IDE_CONTROLLER_PROPERTIES)
     //
-    ULONG Size;      
-    
+    ULONG Size;
+
     //
     // Indicate the amount of memory PCI IDE mini driver
     // needs for its private data
@@ -317,20 +317,20 @@ typedef struct _IDE_CONTROLLER_PROPERTIES {
     //
     // Indicate all the data transfer modes the PCI IDE
     // controller supports
-    //                                 
+    //
     ULONG SupportedTransferMode[MAX_IDE_CHANNEL][MAX_IDE_DEVICE];
 
     //
     // callback to query whether a IDE channel is enabled
-    //                          
+    //
     PCIIDE_CHANNEL_ENABLED      PciIdeChannelEnabled;
-    
+
     //
     // callback to query whether both IDE channels requires
     // synchronized access.  (one channel at a time)
-    //                                                              
+    //
     PCIIDE_SYNC_ACCESS_REQUIRED PciIdeSyncAccessRequired;
-    
+
     //
     // callback to select proper transfer modes for the
     // given devices
@@ -338,9 +338,9 @@ typedef struct _IDE_CONTROLLER_PROPERTIES {
     PCIIDE_TRANSFER_MODE_SELECT_FUNC PciIdeTransferModeSelect;
 
     //
-    // at the end of a ATA data transfer, ignores busmaster 
+    // at the end of a ATA data transfer, ignores busmaster
     // status active bit.  Normally, it should be FALSE
-    //                    
+    //
     BOOLEAN IgnoreActiveBitForAtaDevice;
 
     //
@@ -372,17 +372,17 @@ typedef struct _IDE_CONTROLLER_PROPERTIES {
 
 //
 // callback to query PCI IDE controller properties
-//                            
+//
 typedef
 NTSTATUS (*PCONTROLLER_PROPERTIES) (
     IN PVOID                      DeviceExtension,
     IN PIDE_CONTROLLER_PROPERTIES ControllerProperties
     );
 
-                     
+
 //
 // To initialize PCI IDE mini driver
-//                     
+//
 NTSTATUS
 PciIdeXInitialize(
     IN PDRIVER_OBJECT           DriverObject,
@@ -393,7 +393,7 @@ PciIdeXInitialize(
 
 //
 // To query PCI IDE config space data
-//                                    
+//
 NTSTATUS
 PciIdeXGetBusData(
     IN PVOID DeviceExtension,
@@ -404,7 +404,7 @@ PciIdeXGetBusData(
 
 //
 // To save PCI IDE config space data
-//                                    
+//
 NTSTATUS
 PciIdeXSetBusData(
     IN PVOID DeviceExtension,
@@ -414,7 +414,7 @@ PciIdeXSetBusData(
     IN ULONG BufferLength
     );
 
-                     
+
 #pragma pack(1)
 typedef struct _PCIIDE_CONFIG_HEADER {
 
@@ -470,10 +470,10 @@ typedef struct _PCIIDE_CONFIG_HEADER {
 
 } PCIIDE_CONFIG_HEADER, *PPCIIDE_CONFIG_HEADER;
 #pragma pack()
-                     
+
 //
 // Debug Print
-//                        
+//
 #if DBG
 
 VOID
@@ -484,12 +484,12 @@ PciIdeXDebugPrint(
     );
 
 #define PciIdeXDebugPrint(x)    PciIdeXDebugPrint x
-    
+
 #else
-    
-#define PciIdeXDebugPrint(x)    
+
+#define PciIdeXDebugPrint(x)
 
 #endif // DBG
-                     
+
 #endif // ___ide_h___
 

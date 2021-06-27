@@ -101,6 +101,51 @@ DnsIntCacheFlush(
     return ERROR_SUCCESS;
 }
 
+
+DNS_STATUS
+DnsIntFlushCacheEntry(
+    _In_ LPCWSTR pszName,
+    _In_ WORD wType)
+{
+    PLIST_ENTRY Entry, NextEntry;
+    PRESOLVER_CACHE_ENTRY CacheEntry;
+
+    DPRINT("DnsIntFlushCacheEntry(%S %x)\n", pszName, wType);
+
+    /* Lock the cache */
+    DnsCacheLock();
+
+    /* Loop every entry */
+    Entry = DnsCache.RecordList.Flink;
+    while (Entry != &DnsCache.RecordList)
+    {
+        NextEntry = Entry->Flink;
+
+        /* Get this entry */
+        CacheEntry = CONTAINING_RECORD(Entry, RESOLVER_CACHE_ENTRY, CacheLink);
+
+        /* Remove it from the list */
+        if ((_wcsicmp(CacheEntry->Record->pName, pszName) == 0) &&
+            (CacheEntry->bHostsFileEntry == FALSE))
+        {
+            if ((wType == DNS_TYPE_ANY) ||
+                (CacheEntry->Record->wType == wType))
+            {
+                DnsIntCacheRemoveEntryItem(CacheEntry);
+            }
+        }
+
+        /* Move to the next entry */
+        Entry = NextEntry;
+    }
+
+    /* Unlock the cache */
+    DnsCacheUnlock();
+
+    return ERROR_SUCCESS;
+}
+
+
 DNS_STATUS
 DnsIntCacheGetEntryByName(
     LPCWSTR Name,

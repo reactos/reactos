@@ -30,7 +30,9 @@ add_importlibs(ole32_winetest oleaut32 ole32 user32 gdi32 advapi32 msvcrt kernel
 
 if(MSVC)
     add_importlibs(ole32_winetest ntdll)
-else()
+endif()
+
+if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
 	target_compile_options(ole32_winetest PRIVATE -Wno-format-overflow)
 endif()
 

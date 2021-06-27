@@ -1,0 +1,55 @@
+// Chinese Traditional (zh-TW) resources by Chan Chilung <eason066@gmail.com> 2021
+
+#include "resource.h"
+
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
+
+IDD_CONFIG DIALOGEX DISCARDABLE  0, 0, 340, 183
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "矩陣螢幕保護程式設定"
+FONT 9, "新細明體"
+BEGIN
+    GROUPBOX        "解碼速度(&S)",IDC_STATIC,7,7,128,36
+    LTEXT           "較慢",IDC_STATIC,13,24,22,8
+    CONTROL         "Slider1",IDC_SLIDER1,"msctls_trackbar32",TBS_AUTOTICKS |
+                    TBS_BOTH | WS_TABSTOP,38,17,62,22
+    LTEXT           "較快",IDC_STATIC,104,24,20,8
+    GROUPBOX        "Cypher 密度(&D)",IDC_STATIC,7,50,128,36
+    LTEXT           "較少",IDC_STATIC,13,67,19,8
+    CONTROL         "Slider1",IDC_SLIDER2,"msctls_trackbar32",TBS_AUTOTICKS |
+                    TBS_BOTH | WS_TABSTOP,38,60,62,22
+    LTEXT           "較多",IDC_STATIC,104,67,23,8
+    GROUPBOX        "訊息顯示速度(&M)",IDC_MSGSPEEDGRP,7,93,127,36
+    LTEXT           "較慢",IDC_STATIC,13,110,22,8
+    CONTROL         "Slider3",IDC_SLIDER3,"msctls_trackbar32",TBS_AUTOTICKS |
+                    TBS_BOTH | WS_TABSTOP,38,103,62,22
+    LTEXT           "較快",IDC_STATIC,104,110,22,8
+    GROUPBOX        "字體大小(&F)",IDC_STATIC,7,137,127,36
+    LTEXT           "較小",IDC_STATIC,13,153,24,8
+    CONTROL         "Slider3",IDC_SLIDER4,"msctls_trackbar32",TBS_AUTOTICKS |
+                    TBS_BOTH | WS_TABSTOP,38,146,62,22
+    LTEXT           "較大",IDC_STATIC,104,153,25,8
+    GROUPBOX        "編碼訊息(&C)",IDC_STATIC,145,7,188,142
+    COMBOBOX        IDC_COMBO1,153,22,172,62,CBS_DROPDOWN | WS_VSCROLL |
+                    WS_TABSTOP
+    CONTROL         "",IDC_PREVIEW,"Static",SS_LEFTNOWORDWRAP |
+                    SS_CENTERIMAGE | WS_GROUP,154,39,116,72
+    PUSHBUTTON      "新增(&A)",IDC_ADD,280,41,44,18
+    PUSHBUTTON      "刪除(&R)",IDC_REMOVE,280,66,44,18
+    CONTROL         "隨機訊息(&N)",IDC_RANDOM,"Button",BS_AUTOCHECKBOX |
+                    WS_TABSTOP,151,134,85,10
+    DEFPUSHBUTTON   "確定",IDOK,222,162,50,14
+    PUSHBUTTON      "取消",IDCANCEL,283,162,50,14
+    LTEXT           "字體名稱(&F):",IDC_STATIC,151,118,38,8
+    COMBOBOX        IDC_COMBO2,195,116,130,71,CBS_DROPDOWNLIST | CBS_SORT |
+                    WS_VSCROLL | WS_TABSTOP
+    CONTROL         "粗體(&B)",IDC_BOLD,"Button",BS_AUTOCHECKBOX |
+                    BS_MULTILINE | WS_TABSTOP,247,134,46,10
+    CTEXT           "矩陣螢幕保護程式 www.catch22.org.uk",IDC_ABOUT,140,
+                    158,75,18
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_DESCRIPTION         "矩陣螢幕保護程式"
+END

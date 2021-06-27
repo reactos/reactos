@@ -93,7 +93,7 @@ _RtlpInterlockedPushEntrySListResume:
 
     /* If [ebp] equals edx:eax, exchange it with ecx:ebx */
     LOCK cmpxchg8b qword ptr [ebp]
- 
+
     /* If not equal, retry with edx:eax, being the content of [ebp] now */
     jnz _RtlpInterlockedPushEntrySListResume
 
@@ -140,7 +140,7 @@ _RtlpInterlockedFlushSListResume:
 
     /* If [ebp] equals edx:eax, exchange it with ecx:ebx */
     LOCK cmpxchg8b qword ptr [ebp]
- 
+
     /* If not equal, retry with edx:eax, being the content of [ebp] now */
     jnz _RtlpInterlockedFlushSListResume
 
@@ -149,5 +149,5 @@ _RtlpInterlockedFlushSListEnd:
     pop ebp
     pop ebx
     ret 4
-    
+
 END

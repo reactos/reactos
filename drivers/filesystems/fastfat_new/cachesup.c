@@ -97,7 +97,7 @@ Routine Description:
     }
 #endif
 }
-
+
 VOID
 FatReadVolumeFile (
     IN PIRP_CONTEXT IrpContext,
@@ -183,8 +183,8 @@ Arguments:
     return;
 }
 
-
-_Requires_lock_held_(_Global_critical_region_)    
+
+_Requires_lock_held_(_Global_critical_region_)
 VOID
 FatPrepareWriteVolumeFile (
     IN PIRP_CONTEXT IrpContext,
@@ -228,7 +228,7 @@ Arguments:
     Reversible - Supplies TRUE if the specified range of modification should
         be repinned so that the operation can be reversed in a controlled
         fashion if errors are encountered.
-    
+
     Zero - Supplies TRUE if the specified range of bytes should be zeroed
 
 --*/
@@ -237,7 +237,7 @@ Arguments:
     LARGE_INTEGER Vbo;
 
     PAGED_CODE();
-    
+
     //
     //  Check to see that all references are within the Bios Parameter Block
     //  or the fat(s).
@@ -284,7 +284,7 @@ Arguments:
     _SEH2_TRY {
 
         if (Zero) {
-            
+
             RtlZeroMemory( *Buffer, ByteCount );
         }
 
@@ -303,7 +303,7 @@ Arguments:
     return;
 }
 
-
+
 _Requires_lock_held_(_Global_critical_region_)
 VOID
 FatReadDirectoryFile (
@@ -349,7 +349,7 @@ Arguments:
     LARGE_INTEGER Vbo;
 
     PAGED_CODE();
-    
+
     DebugTrace(+1, Dbg, "FatReadDirectoryFile\n", 0);
     DebugTrace( 0, Dbg, "Dcb         = %p\n", Dcb);
     DebugTrace( 0, Dbg, "StartingVbo = %08lx\n", StartingVbo);
@@ -445,7 +445,7 @@ Arguments:
     return;
 }
 
-
+
 _Requires_lock_held_(_Global_critical_region_)
 VOID
 FatPrepareWriteDirectoryFile (
@@ -484,11 +484,11 @@ Arguments:
     Buffer - Returns a pointer to the sectors, which is valid until unpinned
 
     Zero - Supplies TRUE if the specified range of bytes should be zeroed
-    
+
     Reversible - Supplies TRUE if the specified range of modification should
         be repinned so that the operation can be reversed in a controlled
         fashion if errors are encountered.
-    
+
     Status - Returns the status of the operation.
 
 --*/
@@ -503,7 +503,7 @@ Arguments:
     ULONG   MappingGranularity = PAGE_SIZE;
 
     PAGED_CODE();
-    
+
     DebugTrace(+1, Dbg, "FatPrepareWriteDirectoryFile\n", 0);
     DebugTrace( 0, Dbg, "Dcb         = %p\n", Dcb);
     DebugTrace( 0, Dbg, "StartingVbo = %08lx\n", (ULONG)StartingVbo);
@@ -586,22 +586,22 @@ Arguments:
             //
             //  We must pin in terms of pages below the boundary of the initial request.
             //  Once we pass the end of the request, we are free to expand the pin size to
-            //  VACB_MAPPING_GRANULARITY. This will prevent Cc from returning OBCBs 
-            //  and hence will prevent bugchecks when we then attempt to repin one, yet 
+            //  VACB_MAPPING_GRANULARITY. This will prevent Cc from returning OBCBs
+            //  and hence will prevent bugchecks when we then attempt to repin one, yet
             //  allow us to be more efficient by pinning in 256KB chunks instead of 4KB pages.
             //
 
             if (Vbo.QuadPart > StartingVbo + InitialRequest) {
-                
+
                 MappingGranularity = VACB_MAPPING_GRANULARITY;
             }
 
             //
-            //  If the first and final byte are both described by the same page, pin 
+            //  If the first and final byte are both described by the same page, pin
             //  the entire range. Note we pin in pages to prevent cache manager from
             //  returning OBCBs, which would result in a bugcheck on CcRepinBcb.
             //
-            
+
             if ((Vbo.QuadPart / MappingGranularity) ==
                 ((Vbo.QuadPart + ByteCount - 1) / MappingGranularity)) {
 
@@ -619,7 +619,7 @@ Arguments:
                             BooleanFlagOn(IrpContext->Flags, IRP_CONTEXT_FLAG_WAIT),
                             &LocalBcb,
                             &LocalBuffer )) {
-    
+
                 //
                 // Could not read the data without waiting (cache miss).
                 //
@@ -630,7 +630,7 @@ Arguments:
             //
             //  Update our caller with the beginning of their request.
             //
-            
+
             if (*Buffer == NULL) {
 
                 *Buffer = LocalBuffer;
@@ -640,13 +640,13 @@ Arguments:
             DbgDoit( IrpContext->PinCount += 1 )
 
             if (Zero) {
-                
+
                 //
                 //  We set this guy dirty right now so that we can raise CANT_WAIT when
                 //  it needs to be done.  It'd be beautiful if we could noop the read IO
                 //  since we know we don't care about it.
                 //
-                
+
                 RtlZeroMemory( LocalBuffer, BytesToPin );
                 CcSetDirtyPinnedData( LocalBcb, NULL );
             }
@@ -655,7 +655,7 @@ Arguments:
             Vbo.QuadPart += BytesToPin;
 
             if (*Bcb != LocalBcb) {
-                
+
                 FatRepinBcb( IrpContext, LocalBcb );
                 FatUnpinBcb( IrpContext, LocalBcb );
             }
@@ -684,14 +684,14 @@ Arguments:
 
                 FatUnpinBcb( IrpContext, LocalBcb );
             }
-            
+
             FatUnpinBcb(IrpContext, *Bcb);
 
             //
             //  These steps are carefully arranged - FatTruncateFileAllocation can raise.
             //  Make sure we unpin the buffer.  If FTFA raises, the effect should be benign.
             //
-            
+
             if (UnwindWeAllocatedDiskSpace == TRUE) {
 
                 //
@@ -714,7 +714,7 @@ Arguments:
     return;
 }
 
-
+
 #if DBG
 BOOLEAN FatDisableParentCheck = 0;
 
@@ -734,32 +734,32 @@ FatIsCurrentOperationSynchedForDcbTeardown (
     ULONG Index = 0;
 
     PAGED_CODE();
-    
+
     //
     //  While mounting, we're OK without having to own anything.
     //
-    
+
     if (Stack->MajorFunction == IRP_MJ_FILE_SYSTEM_CONTROL &&
         Stack->MinorFunction == IRP_MN_MOUNT_VOLUME) {
 
         return TRUE;
     }
-    
+
     //
     //  With the Vcb held, the close path is blocked out.
     //
-    
+
     if (ExIsResourceAcquiredSharedLite( &Dcb->Vcb->Resource ) ||
         ExIsResourceAcquiredExclusiveLite( &Dcb->Vcb->Resource )) {
 
         return TRUE;
     }
-    
+
     //
     //  Accept this assertion at face value.  It comes from GetDirentForFcbOrDcb,
     //  and is reliable.
     //
-    
+
     if (FlagOn( IrpContext->Flags, IRP_CONTEXT_FLAG_PARENT_BY_CHILD )) {
 
         return TRUE;
@@ -776,29 +776,29 @@ FatIsCurrentOperationSynchedForDcbTeardown (
     }
 
     if (Stack->FileObject) {
-        
+
         ToCheck[Index++] = Stack->FileObject;
     }
 
     ToCheck[Index] = NULL;
-    
+
     //
     //  If the fileobjects we have are for this dcb or a child of it, we are
     //  also guaranteed that this dcb isn't going anywhere (even without
     //  the Vcb).
     //
-    
+
     for (Index = 0; ToCheck[Index] != NULL; Index++) {
-    
+
         (VOID) FatDecodeFileObject( ToCheck[Index], &Vcb, &Fcb, &Ccb );
 
         while ( Fcb ) {
-    
+
             if (Fcb == Dcb) {
-    
+
                 return TRUE;
             }
-    
+
             Fcb = Fcb->ParentDcb;
         }
     }
@@ -832,7 +832,7 @@ Return Value:
 
 {
     PAGED_CODE();
-    
+
     DebugTrace(+1, Dbg, "FatOpenDirectoryFile\n", 0);
     DebugTrace( 0, Dbg, "Dcb = %p\n", Dcb);
 
@@ -843,7 +843,7 @@ Return Value:
     //
     //  I really wish we had a proper Fcb synchronization model (like CDFS/UDFS/NTFS).
     //
-    
+
     NT_ASSERT( FatIsCurrentOperationSynchedForDcbTeardown( IrpContext, Dcb ));
 
     //
@@ -925,7 +925,7 @@ Return Value:
                 InterlockedIncrement( (LONG*)&Dcb->Specific.Dcb.DirectoryFileOpenCount );
 
                 Dcb->Specific.Dcb.DirectoryFile = DirectoryFileObject;
-                
+
                 //
                 //  Indicate we're happy with the fileobject now.
                 //
@@ -940,9 +940,9 @@ Return Value:
             //
             //  Rip the object up if we couldn't get the close context.
             //
-            
+
             if (DirectoryFileObject) {
-                
+
                 ObDereferenceObject( DirectoryFileObject );
             }
         } _SEH2_END;
@@ -974,7 +974,7 @@ Return Value:
 
 
 
-
+
 PFILE_OBJECT
 FatOpenEaFile (
     IN PIRP_CONTEXT IrpContext,
@@ -1002,7 +1002,7 @@ Return Value:
     PDEVICE_OBJECT RealDevice;
 
     PAGED_CODE();
-    
+
     DebugTrace(+1, Dbg, "FatOpenEaFile\n", 0);
     DebugTrace( 0, Dbg, "EaFcb = %p\n", EaFcb);
 
@@ -1051,7 +1051,7 @@ Return Value:
                                EaFcb );
 
         CcSetAdditionalCacheAttributes( EaFileObject, TRUE, TRUE );
-    
+
     } _SEH2_FINALLY {
 
         //
@@ -1060,9 +1060,9 @@ Return Value:
         //  we lost trying to build the cache map - in which case we're
         //  OK for the close context if we have to.
         //
-        
+
         if (_SEH2_AbnormalTermination()) {
-            
+
             ObDereferenceObject( EaFileObject );
         }
     } _SEH2_END;
@@ -1074,7 +1074,7 @@ Return Value:
     return EaFileObject;
 }
 
-
+
 VOID
 FatCloseEaFile (
     IN PIRP_CONTEXT IrpContext,
@@ -1088,26 +1088,26 @@ Routine Description:
 
     This routine shuts down the ea file.  Usually this is required when the volume
     begins to leave the system: after verify, dismount, deletion, pnp.
-    
+
 Arguments:
 
     Vcb - the volume to close the ea file on
-    
+
     FlushFirst - whether the file should be flushed
-    
+
 Return Value:
 
     None. As a side effect, the EA fileobject in the Vcb is cleared.
-    
+
     Caller must have the Vcb exclusive.
-    
+
 --*/
 
 {
     PFILE_OBJECT EaFileObject = Vcb->VirtualEaFile;
 
     PAGED_CODE();
-    
+
     DebugTrace(+1, Dbg, "FatCloseEaFile\n", 0);
     DebugTrace( 0, Dbg, "Vcb = %p\n", Vcb);
 
@@ -1138,12 +1138,12 @@ Return Value:
 
         ObDereferenceObject( EaFileObject );
     }
-    
+
     DebugTrace(-1, Dbg, "FatCloseEaFile -> %p\n", EaFileObject);
 }
 
-
-_Requires_lock_held_(_Global_critical_region_)    
+
+_Requires_lock_held_(_Global_critical_region_)
 VOID
 FatSetDirtyBcb (
     IN PIRP_CONTEXT IrpContext,
@@ -1166,13 +1166,13 @@ Routine Description:
 Arguments:
 
     Bcb - Supplies the Bcb being set dirty
-    
+
     Vcb - Supplies the volume being marked dirty
-    
+
     Reversible - Supplies TRUE if the specified range of bcb should be repinned
         so that the changes can be reversed in a controlled fashion if errors
         are encountered.
-    
+
 Return Value:
 
     None.
@@ -1190,7 +1190,7 @@ Return Value:
     //
 
     if (Reversible) {
-    
+
         FatRepinBcb( IrpContext, Bcb );
     }
 
@@ -1260,7 +1260,7 @@ Return Value:
             //
             //  We use a shorter volume clean timer for hot plug volumes.
             //
-            
+
             CleanVolumeTimer.QuadPart = FlagOn( Vcb->VcbState, VCB_STATE_FLAG_DEFERRED_FLUSH)
                                            ? (LONG)-1500*1000*10
                                            : (LONG)-8*1000*1000*10;
@@ -1312,7 +1312,7 @@ Return Value:
     DebugTrace(-1, Dbg, "FatSetDirtyBcb -> VOID\n", 0 );
 }
 
-
+
 VOID
 FatRepinBcb (
     IN PIRP_CONTEXT IrpContext,
@@ -1342,7 +1342,7 @@ Return Value:
     ULONG i;
 
     PAGED_CODE();
-    
+
     DebugTrace(+1, Dbg, "FatRepinBcb\n", 0 );
     DebugTrace( 0, Dbg, "IrpContext = %p\n", IrpContext );
     DebugTrace( 0, Dbg, "Bcb        = %p\n", Bcb );
@@ -1402,7 +1402,7 @@ Return Value:
     }
 }
 
-
+
 VOID
 FatUnpinRepinnedBcbs (
     IN PIRP_CONTEXT IrpContext
@@ -1432,7 +1432,7 @@ Return Value:
     PFCB FcbOrDcb = NULL;
 
     PAGED_CODE();
-    
+
     DebugTrace(+1, Dbg, "FatUnpinRepinnedBcbs\n", 0 );
     DebugTrace( 0, Dbg, "IrpContext = %p\n", IrpContext );
 
@@ -1453,21 +1453,21 @@ Return Value:
     //  Extract main FCB pointer from the irp context - we
     //  will need it later to detect new file creation operation.
     //
-    
+
     if (IrpContext->MajorFunction == IRP_MJ_CREATE &&
         IrpContext->OriginatingIrp != NULL) {
         PIO_STACK_LOCATION IrpSp;
-    
+
         IrpSp = IoGetCurrentIrpStackLocation( IrpContext->OriginatingIrp );
-        
+
         if (IrpSp != NULL &&
             IrpSp->FileObject != NULL &&
             IrpSp->FileObject->FsContext != NULL) {
-            
+
             FcbOrDcb = IrpSp->FileObject->FsContext;
         }
     }
-    
+
     //
     //  If the request is write through or the media is deferred flush,
     //  unpin the bcb's write through.
@@ -1496,7 +1496,7 @@ Return Value:
 
                 IO_STATUS_BLOCK Iosb;
 
-                if (WriteThroughToDisk && 
+                if (WriteThroughToDisk &&
                     FlagOn(IrpContext->Vcb->VcbState, VCB_STATE_FLAG_DEFERRED_FLUSH)) {
 
                     FileObject = CcGetFileObjectFromBcb( Repinned->Bcb[i] );
@@ -1524,9 +1524,9 @@ Return Value:
                         (IrpContext->MajorFunction != IRP_MJ_CLEANUP) &&
                         (IrpContext->MajorFunction != IRP_MJ_FLUSH_BUFFERS) &&
                         (IrpContext->MajorFunction != IRP_MJ_SET_INFORMATION)
-                         
+
                                         &&
-                        
+
                             //
                             //  WinSE bug #307418 "Occasional data corruption when
                             //  standby/resume while copying files to removable FAT
@@ -1540,7 +1540,7 @@ Return Value:
                             //  Instead FatCommonCreate() will unroll the file creation
                             //  changes for these pages.
                             //
-                        
+
                         !(IrpContext->MajorFunction == IRP_MJ_CREATE &&
                           Iosb.Status == STATUS_VERIFY_REQUIRED &&
                           FcbOrDcb != NULL &&
@@ -1567,26 +1567,26 @@ Return Value:
                         PREPINNED_BCBS RepinnedToPurge = Repinned;
 
                         while( RepinnedToPurge != NULL ) {
-                            
+
                             for (j = k; j < REPINNED_BCBS_ARRAY_SIZE; j++) {
 
                                 if (RepinnedToPurge->Bcb[j] != NULL) {
-                                    
+
                                     if (CcGetFileObjectFromBcb( RepinnedToPurge->Bcb[j] ) == FileObject) {
 
                                         CcUnpinRepinnedBcb( RepinnedToPurge->Bcb[j],
                                                             FALSE,
                                                             &Iosb );
-                        
+
                                         RepinnedToPurge->Bcb[j] = NULL;
                                     }
                                 }
                             }
-                            
+
                             RepinnedToPurge = RepinnedToPurge->Next;
                             k = 0;
                         }
-                        
+
                         CcPurgeCacheSection( FileObject->SectionObjectPointer,
                                              NULL,
                                              0,
@@ -1644,7 +1644,7 @@ Return Value:
         if (!FlagOn( IrpContext->Flags, IRP_CONTEXT_FLAG_DISABLE_RAISE )) {
             if (IrpContext->OriginatingIrp) {
                 IrpContext->OriginatingIrp->IoStatus = RaiseIosb;
-            }            
+            }
             FatNormalizeAndRaiseStatus( IrpContext, RaiseIosb.Status );
         }
     }
@@ -1654,7 +1654,7 @@ Return Value:
     return;
 }
 
-
+
 FINISHED
 FatZeroData (
     IN PIRP_CONTEXT IrpContext,
@@ -1684,7 +1684,7 @@ FatZeroData (
     BOOLEAN Finished;
 
     PAGED_CODE();
-    
+
     SectorSize = (ULONG)Vcb->Bpb.BytesPerSector;
 
     ZeroStart.LowPart = (StartingZero + (SectorSize - 1)) & ~(SectorSize - 1);
@@ -1693,23 +1693,23 @@ FatZeroData (
     //  Detect overflow if we were asked to zero in the last sector of the file,
     //  which must be "zeroed" already (or we're in trouble).
     //
-    
+
     if (StartingZero != 0 && ZeroStart.LowPart == 0) {
-        
+
         return TRUE;
     }
 
     //
     //  Note that BeyondZeroEnd can take the value 4gb.
     //
-    
+
     BeyondZeroEnd.QuadPart = ((ULONGLONG) StartingZero + ByteCount + (SectorSize - 1))
                              & (~((LONGLONG) SectorSize - 1));
 
     //
     //  If we were called to just zero part of a sector we are in trouble.
     //
-    
+
     if ( ZeroStart.QuadPart == BeyondZeroEnd.QuadPart ) {
 
         return TRUE;
@@ -1723,7 +1723,7 @@ FatZeroData (
     return Finished;
 }
 
-
+
 NTSTATUS
 FatCompleteMdl (
     IN PIRP_CONTEXT IrpContext,
@@ -1752,7 +1752,7 @@ Return Value:
     PIO_STACK_LOCATION IrpSp;
 
     PAGED_CODE();
-    
+
     DebugTrace(+1, Dbg, "FatCompleteMdl\n", 0 );
     DebugTrace( 0, Dbg, "IrpContext = %p\n", IrpContext );
     DebugTrace( 0, Dbg, "Irp        = %p\n", Irp );
@@ -1807,7 +1807,7 @@ Return Value:
 
     return STATUS_SUCCESS;
 }
-
+
 VOID
 FatSyncUninitializeCacheMap (
     IN PIRP_CONTEXT IrpContext,
@@ -1835,7 +1835,7 @@ Return Value:
     UNREFERENCED_PARAMETER( IrpContext );
 
     PAGED_CODE();
-    
+
     KeInitializeEvent( &UninitializeCompleteEvent.Event,
                        SynchronizationEvent,
                        FALSE);
@@ -1861,7 +1861,7 @@ Return Value:
 
     NT_ASSERT(WaitStatus == STATUS_SUCCESS);
 }
-
+
 VOID
 FatPinMappedData (
     IN PIRP_CONTEXT IrpContext,
@@ -1893,7 +1893,7 @@ Arguments:
     LARGE_INTEGER Vbo;
 
     PAGED_CODE();
-    
+
     DebugTrace(+1, Dbg, "FatPinMappedData\n", 0);
     DebugTrace( 0, Dbg, "Dcb         = %p\n", Dcb);
     DebugTrace( 0, Dbg, "StartingVbo = %08lx\n", StartingVbo);
@@ -1924,7 +1924,7 @@ Arguments:
 }
 
 #if (NTDDI_VERSION >= NTDDI_WIN8)
-
+
 NTSTATUS
 FatPrefetchPages (
     IN PIRP_CONTEXT IrpContext,

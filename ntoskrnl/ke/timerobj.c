@@ -49,7 +49,7 @@ KiInsertTreeTimer(IN PKTIMER Timer,
             /* Otherwise, we're now inserted */
             Inserted = TRUE;
         }
-        
+
         /* Release the lock */
         KiReleaseTimerLock(LockQueue);
     }
@@ -319,20 +319,20 @@ KeSetTimerEx(IN OUT PKTIMER Timer,
     {
         /* Signal the timer */
         RequestInterrupt = KiSignalTimer(Timer);
-        
+
         /* Release the dispatcher lock */
         KiReleaseDispatcherLockFromSynchLevel();
-        
+
         /* Check if we need to do an interrupt */
-        if (RequestInterrupt) HalRequestSoftwareInterrupt(DISPATCH_LEVEL);        
+        if (RequestInterrupt) HalRequestSoftwareInterrupt(DISPATCH_LEVEL);
     }
     else
     {
         /* Insert the timer */
         Timer->Header.SignalState = FALSE;
-        KxInsertTimer(Timer, Hand);        
+        KxInsertTimer(Timer, Hand);
     }
-    
+
     /* Exit the dispatcher */
     KiExitDispatcher(OldIrql);
 

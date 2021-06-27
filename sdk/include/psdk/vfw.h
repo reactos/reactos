@@ -2004,15 +2004,15 @@ MCIWndCreateW(
  */
 
 typedef struct
-{ 
-    LONG    timeCount; 
-    LONG    timeDraw; 
-    LONG    timeDecompress; 
-    LONG    timeDither; 
-    LONG    timeStretch; 
-    LONG    timeBlt; 
-    LONG    timeSetDIBits; 
-} DRAWDIBTIME, *LPDRAWDIBTIME; 
+{
+    LONG    timeCount;
+    LONG    timeDraw;
+    LONG    timeDecompress;
+    LONG    timeDither;
+    LONG    timeStretch;
+    LONG    timeBlt;
+    LONG    timeSetDIBits;
+} DRAWDIBTIME, *LPDRAWDIBTIME;
 
 HDRAWDIB VFWAPI DrawDibOpen( void );
 

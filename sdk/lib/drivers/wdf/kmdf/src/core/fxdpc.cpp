@@ -36,7 +36,7 @@ extern "C" {
 //
 // Public constructors
 //
-
+
 FxDpc::FxDpc(
     __in PFX_DRIVER_GLOBALS FxDriverGlobals
     ) :
@@ -57,7 +57,7 @@ FxDpc::FxDpc(
    MarkDisposeOverride(ObjectDoNotLock);
 }
 
-
+
 FxDpc::~FxDpc()
 {
     //

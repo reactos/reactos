@@ -380,7 +380,7 @@ retry_DB_IO:
         }
         dma_count0 = dma_count;
         dma_base0 = dma_base;
-        i++; 
+        i++;
         if (i >= max_entries) {
             KdPrint2((PRINT_PREFIX "too many segments in DMA table\n" ));
             //AtaReq->dma_base = NULL;
@@ -806,7 +806,7 @@ limit_pio:
             if(/*LunExt->TransferMode >= ATA_DMA*/
                (LunExt->TransferMode > ATA_PIO5) && (LunExt->TransferMode != ATA_PIO0+apiomode)
                ) {
-                KdPrint2((PRINT_PREFIX 
+                KdPrint2((PRINT_PREFIX
                             "AtapiDmaReinit: set PIO mode on Device %d (%x -> %x)\n", LunExt->Lun, LunExt->TransferMode, ATA_PIO0+apiomode));
                 AtapiDmaInit(deviceExtension, LunExt->Lun, LunExt->chan->lChannel,
                              apiomode,
@@ -814,10 +814,10 @@ limit_pio:
                              -1 );
             } else
             if(LunExt->LimitedTransferMode < LunExt->TransferMode) {
-                KdPrint2((PRINT_PREFIX 
+                KdPrint2((PRINT_PREFIX
                             "AtapiDmaReinit: set PIO mode on Device %d (%x -> %x) (2)\n", LunExt->Lun, LunExt->TransferMode, LunExt->LimitedTransferMode));
                 AtapiDmaInit(deviceExtension, LunExt->Lun, LunExt->chan->lChannel,
-                             LunExt->LimitedTransferMode-ATA_PIO0, 
+                             LunExt->LimitedTransferMode-ATA_PIO0,
                              -1,
                              -1 );
             }
@@ -897,7 +897,7 @@ AtaSetTransferMode(
     IN ULONG mode
     )
 {
-    KdPrint3((PRINT_PREFIX 
+    KdPrint3((PRINT_PREFIX
                 "AtaSetTransferMode: Set %#x on Device %d/%d\n", mode, lChannel, DeviceNumber));
     LONG statusByte = 0;
     CHAR apiomode;
@@ -955,7 +955,7 @@ AtaSetTransferMode(
     // On the other hand, we may turn SATA device in PIO mode
     LunExt->TransferMode = (UCHAR)mode;
     if(deviceExtension->HwFlags & UNIATA_SATA) {
-        if(mode < ATA_SA150) { 
+        if(mode < ATA_SA150) {
             LunExt->PhyTransferMode = max(LunExt->PhyTransferMode, LunExt->TransferMode);
         } else {
             LunExt->PhyTransferMode = LunExt->TransferMode;
@@ -2219,7 +2219,7 @@ setup_drive_ite:
                     break;
                 }
             }
-             
+
             for(i=wdmamode; !ok && i>=0; i--) {
                 if(AtaSetTransferMode(deviceExtension, DeviceNumber, lChannel, LunExt, ATA_WDMA0 + i)) {
 
@@ -2503,7 +2503,7 @@ promise_timing(
             i = mode - ATA_WDMA0;
             r_bp |= mdma_timing[i][0];
             r_cp |= mdma_timing[i][1];
-        } 
+        }
         SetPciConfig1(port+1, r_bp);
         SetPciConfig1(port+2, r_cp);
     } else

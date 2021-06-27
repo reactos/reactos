@@ -124,10 +124,10 @@ PinWavePciAllocatorFraming(
     CPortPinWavePci *Pin;
     PSUBDEVICE_DESCRIPTOR Descriptor;
 
-    // get sub device descriptor 
+    // get sub device descriptor
     Descriptor = (PSUBDEVICE_DESCRIPTOR)KSPROPERTY_ITEM_IRP_STORAGE(Irp);
 
-    // sanity check 
+    // sanity check
     PC_ASSERT(Descriptor);
     PC_ASSERT(Descriptor->PortPin);
     PC_ASSERT_IRQL(DISPATCH_LEVEL);
@@ -159,10 +159,10 @@ PinWavePciAudioPosition(
     CPortPinWavePci *Pin;
     PSUBDEVICE_DESCRIPTOR Descriptor;
 
-    // get sub device descriptor 
+    // get sub device descriptor
     Descriptor = (PSUBDEVICE_DESCRIPTOR)KSPROPERTY_ITEM_IRP_STORAGE(Irp);
 
-    // sanity check 
+    // sanity check
     PC_ASSERT(Descriptor);
     PC_ASSERT(Descriptor->PortPin);
     PC_ASSERT_IRQL(DISPATCH_LEVEL);
@@ -203,10 +203,10 @@ PinWavePciState(
     ULONG MappingsRevoked;
     PKSSTATE State = (PKSSTATE)Data;
 
-    // get sub device descriptor 
+    // get sub device descriptor
     Descriptor = (PSUBDEVICE_DESCRIPTOR)KSPROPERTY_ITEM_IRP_STORAGE(Irp);
 
-    // sanity check 
+    // sanity check
     PC_ASSERT(Descriptor);
     PC_ASSERT(Descriptor->PortPin);
     PC_ASSERT_IRQL(DISPATCH_LEVEL);
@@ -290,10 +290,10 @@ PinWavePciDataFormat(
     // get current irp stack location
     IoStack = IoGetCurrentIrpStackLocation(Irp);
 
-    // get sub device descriptor 
+    // get sub device descriptor
     Descriptor = (PSUBDEVICE_DESCRIPTOR)KSPROPERTY_ITEM_IRP_STORAGE(Irp);
 
-    // sanity check 
+    // sanity check
     PC_ASSERT(Descriptor);
     PC_ASSERT(Descriptor->PortPin);
 
@@ -401,7 +401,7 @@ CPortPinWavePci::QueryInterface(
 {
     //DPRINT("CPortPinWavePci::QueryInterface entered\n");
 
-    if (IsEqualGUIDAligned(refiid, IID_IIrpTarget) || 
+    if (IsEqualGUIDAligned(refiid, IID_IIrpTarget) ||
         IsEqualGUIDAligned(refiid, IID_IUnknown))
     {
         *Output = PVOID(PUNKNOWN((IIrpTarget*)this));
@@ -514,7 +514,7 @@ CPortPinWavePci::HandleKsProperty(
     if (IoStack->Parameters.DeviceIoControl.IoControlCode != IOCTL_KS_PROPERTY)
     {
         //DPRINT("Unhandled function %lx Length %x\n", IoStack->Parameters.DeviceIoControl.IoControlCode, IoStack->Parameters.DeviceIoControl.InputBufferLength);
-        
+
         Irp->IoStatus.Status = STATUS_SUCCESS;
 
         IoCompleteRequest(Irp, IO_NO_INCREMENT);

@@ -1,8 +1,6 @@
 /*
  * HTML Help (Simplified and Traditional Chinese Resources)
  *
- * Copyright 2008 Hongbo Ni <hongbo.at.njstar.com>
- *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
@@ -16,38 +14,14 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ *
+ * TRANSLATOR:
+ * 2008 Hongbo Ni <hongbo.at.njstar.com>
+ * Sync with Wine: Traditional Chinese on 2021; Simplified Chinese on 2021
  */
 
 /* Chinese text is encoded in UTF-8 */
 #pragma code_page(65001)
-
-LANGUAGE LANG_CHINESE, SUBLANG_NEUTRAL
-
-MENU_WEBBROWSER MENU
-{
-    POPUP ""
-    {
-        MENUITEM "&Back", IDTB_BACK
-        MENUITEM "&Forward", IDTB_FORWARD
-        MENUITEM SEPARATOR
-        MENUITEM "Select &All", MIID_SELECTALL
-        MENUITEM SEPARATOR
-        MENUITEM "&View Source", MIID_VIEWSOURCE
-        MENUITEM SEPARATOR
-        MENUITEM "&Print...", IDTB_PRINT
-        MENUITEM "&Refresh", IDTB_REFRESH
-        MENUITEM SEPARATOR
-        MENUITEM "Proper&ties", MIID_PROPERTIES
-    }
-    POPUP ""
-    {
-        MENUITEM "Cu&t", MIID_CUT
-        MENUITEM "&Copy", MIID_COPY
-        MENUITEM "Paste", MIID_PASTE
-        MENUITEM "Select &All", MIID_SELECTALL
-        MENUITEM "&Print", IDTB_PRINT
-    }
-}
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
@@ -82,12 +56,38 @@ MENU_POPUP MENU
     {
         MENUITEM "", IDTB_EXPAND
         MENUITEM "同步(&Y)", IDTB_SYNC
-        MENUITEM "返回(&B)", IDTB_BACK
+        MENUITEM "向后(&B)", IDTB_BACK
         MENUITEM "向前(&F)", IDTB_FORWARD
         MENUITEM "首页(&H)", IDTB_HOME
         MENUITEM "停止(&S)", IDTB_STOP
         MENUITEM "刷新(&R)", IDTB_REFRESH
         MENUITEM "打印...(&P)", IDTB_PRINT
+    }
+}
+
+MENU_WEBBROWSER MENU
+{
+    POPUP ""
+    {
+        MENUITEM "向后(&B)", IDTB_BACK
+        MENUITEM "向前(&F)", IDTB_FORWARD
+        MENUITEM SEPARATOR
+        MENUITEM "全选(&A)", MIID_SELECTALL
+        MENUITEM SEPARATOR
+        MENUITEM "查看源代码(&V)", MIID_VIEWSOURCE
+        MENUITEM SEPARATOR
+        MENUITEM "打印...(&P)", IDTB_PRINT
+        MENUITEM "刷新(&R)", IDTB_REFRESH
+        MENUITEM SEPARATOR
+        MENUITEM "属性(&T)", MIID_PROPERTIES
+    }
+    POPUP ""
+    {
+        MENUITEM "剪切(&T)", MIID_CUT
+        MENUITEM "复制(&C)", MIID_COPY
+        MENUITEM "粘贴", MIID_PASTE
+        MENUITEM "全选(&A)", MIID_SELECTALL
+        MENUITEM "打印(&P)", IDTB_PRINT
     }
 }
 
@@ -98,7 +98,10 @@ BEGIN
     IDS_CONTENTS     "內容(&C)"
     IDS_INDEX        "目錄(&N)"
     IDS_SEARCH       "搜尋(&S)"
-    IDS_FAVORITES    "最愛(&I)"
+    IDS_FAVORITES    "我的最愛(&I)"
+	
+    IDS_HIDETABS     "隱藏分頁(&T)"
+    IDS_SHOWTABS     "顯示分頁(&T)"
 END
 
 STRINGTABLE
@@ -106,7 +109,7 @@ BEGIN
     IDTB_EXPAND      "顯示"
     IDTB_CONTRACT    "隱藏"
     IDTB_STOP        "停止"
-    IDTB_REFRESH     "刷新"
+    IDTB_REFRESH     "重新整理"
     IDTB_BACK        "向後"
     IDTB_HOME        "首頁"
     IDTB_SYNC        "同步"
@@ -125,7 +128,33 @@ MENU_POPUP MENU
         MENUITEM "向前(&F)", IDTB_FORWARD
         MENUITEM "首頁(&H)", IDTB_HOME
         MENUITEM "停止(&S)", IDTB_STOP
-        MENUITEM "刷新(&R)", IDTB_REFRESH
+        MENUITEM "重新整理(&R)", IDTB_REFRESH
         MENUITEM "列印...(&P)", IDTB_PRINT
+    }
+}
+
+MENU_WEBBROWSER MENU
+{
+    POPUP ""
+    {
+        MENUITEM "返回(&B)", IDTB_BACK
+        MENUITEM "向前(&F)", IDTB_FORWARD
+        MENUITEM SEPARATOR
+        MENUITEM "全選(&A)", MIID_SELECTALL
+        MENUITEM SEPARATOR
+        MENUITEM "檢視原始碼(&V)", MIID_VIEWSOURCE
+        MENUITEM SEPARATOR
+        MENUITEM "列印(&P)...", IDTB_PRINT
+        MENUITEM "重新整理(&R)", IDTB_REFRESH
+        MENUITEM SEPARATOR
+        MENUITEM "內容(&T)", MIID_PROPERTIES
+    }
+    POPUP ""
+    {
+        MENUITEM "剪下(&T)", MIID_CUT
+        MENUITEM "複製(&C)", MIID_COPY
+        MENUITEM "貼上", MIID_PASTE
+        MENUITEM "全選(&A)", MIID_SELECTALL
+        MENUITEM "列印(&P)", IDTB_PRINT
     }
 }

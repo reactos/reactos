@@ -117,139 +117,6 @@ SetupDiDestroyClassImageList(
     return ret;
 }
 
-/***********************************************************************
- *		SETUP_CreateDevicesListFromEnumerator
- *
- * PARAMS
- *   list [IO] Device info set to fill with discovered devices.
- *   pClassGuid [I] If specified, only devices which belong to this class will be added.
- *   Enumerator [I] Location to search devices to add.
- *   hEnumeratorKey [I] Registry key corresponding to Enumerator key. Must have KEY_ENUMERATE_SUB_KEYS right.
- *
- * RETURNS
- *   Success: ERROR_SUCCESS.
- *   Failure: an error code.
- */
-static LONG
-SETUP_CreateDevicesListFromEnumerator(
-    IN OUT struct DeviceInfoSet *list,
-    IN CONST GUID *pClassGuid OPTIONAL,
-    IN LPCWSTR Enumerator,
-    IN HKEY hEnumeratorKey) /* handle to Enumerator registry key */
-{
-    HKEY hDeviceIdKey = NULL, hInstanceIdKey;
-    WCHAR KeyBuffer[MAX_PATH];
-    WCHAR InstancePath[MAX_PATH];
-    LPWSTR pEndOfInstancePath; /* Pointer into InstancePath buffer */
-    struct DeviceInfo *deviceInfo;
-    DWORD i = 0, j;
-    DWORD dwLength, dwRegType;
-    DWORD rc;
-
-    /* Enumerate device IDs (subkeys of hEnumeratorKey) */
-    while (TRUE)
-    {
-        dwLength = sizeof(KeyBuffer) / sizeof(KeyBuffer[0]);
-        rc = RegEnumKeyExW(hEnumeratorKey, i, KeyBuffer, &dwLength, NULL, NULL, NULL, NULL);
-        if (rc == ERROR_NO_MORE_ITEMS)
-            break;
-        if (rc != ERROR_SUCCESS)
-            goto cleanup;
-        i++;
-
-        /* Open device id sub key */
-        if (hDeviceIdKey != NULL)
-            RegCloseKey(hDeviceIdKey);
-        rc = RegOpenKeyExW(hEnumeratorKey, KeyBuffer, 0, KEY_ENUMERATE_SUB_KEYS, &hDeviceIdKey);
-        if (rc != ERROR_SUCCESS)
-            goto cleanup;
-
-        if (FAILED(StringCchCopyW(InstancePath, _countof(InstancePath), Enumerator)) ||
-            FAILED(StringCchCatW(InstancePath, _countof(InstancePath), BackSlash))  ||
-            FAILED(StringCchCatW(InstancePath, _countof(InstancePath), KeyBuffer))  ||
-            FAILED(StringCchCatW(InstancePath, _countof(InstancePath), BackSlash)))
-        {
-            rc = ERROR_GEN_FAILURE;
-            goto cleanup;
-        }
-
-        pEndOfInstancePath = &InstancePath[strlenW(InstancePath)];
-
-        /* Enumerate instance IDs (subkeys of hDeviceIdKey) */
-        j = 0;
-        while (TRUE)
-        {
-            GUID KeyGuid;
-
-            dwLength = sizeof(KeyBuffer) / sizeof(KeyBuffer[0]);
-            rc = RegEnumKeyExW(hDeviceIdKey, j, KeyBuffer, &dwLength, NULL, NULL, NULL, NULL);
-            if (rc == ERROR_NO_MORE_ITEMS)
-                break;
-            if (rc != ERROR_SUCCESS)
-                goto cleanup;
-            j++;
-
-            /* Open instance id sub key */
-            rc = RegOpenKeyExW(hDeviceIdKey, KeyBuffer, 0, KEY_QUERY_VALUE, &hInstanceIdKey);
-            if (rc != ERROR_SUCCESS)
-                goto cleanup;
-            *pEndOfInstancePath = '\0';
-            strcatW(InstancePath, KeyBuffer);
-
-            /* Read ClassGUID value */
-            dwLength = sizeof(KeyBuffer) - sizeof(WCHAR);
-            rc = RegQueryValueExW(hInstanceIdKey, ClassGUID, NULL, &dwRegType, (LPBYTE)KeyBuffer, &dwLength);
-            RegCloseKey(hInstanceIdKey);
-            if (rc == ERROR_FILE_NOT_FOUND)
-            {
-                if (pClassGuid)
-                    /* Skip this bad entry as we can't verify it */
-                    continue;
-                /* Set a default GUID for this device */
-                memcpy(&KeyGuid, &GUID_NULL, sizeof(GUID));
-            }
-            else if (rc != ERROR_SUCCESS)
-            {
-                goto cleanup;
-            }
-            else if (dwRegType != REG_SZ || dwLength < MAX_GUID_STRING_LEN * sizeof(WCHAR))
-            {
-                rc = ERROR_GEN_FAILURE;
-                goto cleanup;
-            }
-            else
-            {
-                KeyBuffer[MAX_GUID_STRING_LEN - 2] = '\0'; /* Replace the } by a NULL character */
-                if (UuidFromStringW(&KeyBuffer[1], &KeyGuid) != RPC_S_OK)
-                    /* Bad GUID, skip the entry */
-                    continue;
-            }
-
-            if (pClassGuid && !IsEqualIID(&KeyGuid, pClassGuid))
-            {
-                /* Skip this entry as it is not the right device class */
-                continue;
-            }
-
-            /* Add the entry to the list */
-            if (!CreateDeviceInfo(list, InstancePath, &KeyGuid, &deviceInfo))
-            {
-                rc = GetLastError();
-                goto cleanup;
-            }
-            TRACE("Adding '%s' to device info set %p\n", debugstr_w(InstancePath), list);
-            InsertTailList(&list->ListHead, &deviceInfo->ListEntry);
-        }
-    }
-
-    rc = ERROR_SUCCESS;
-
-cleanup:
-    if (hDeviceIdKey != NULL)
-        RegCloseKey(hDeviceIdKey);
-    return rc;
-}
-
 LONG
 SETUP_CreateDevicesList(
     IN OUT struct DeviceInfoSet *list,
@@ -257,91 +124,105 @@ SETUP_CreateDevicesList(
     IN CONST GUID *Class OPTIONAL,
     IN PCWSTR Enumerator OPTIONAL)
 {
-    HKEY HKLM = HKEY_LOCAL_MACHINE;
-    HKEY hEnumKey = NULL;
-    HKEY hEnumeratorKey = NULL;
-    WCHAR KeyBuffer[MAX_PATH];
-    DWORD i;
-    DWORD dwLength;
-    DWORD rc;
+    PWCHAR Buffer = NULL;
+    DWORD BufferLength = 4096;
+    PCWSTR InstancePath;
+    struct DeviceInfo *deviceInfo;
+    WCHAR ClassGuidBuffer[MAX_GUID_STRING_LEN];
+    DWORD ClassGuidBufferSize;
+    GUID ClassGuid;
+    DEVINST dnDevInst;
+    CONFIGRET cr;
 
-    if (Class && IsEqualIID(Class, &GUID_NULL))
-        Class = NULL;
+    Buffer = HeapAlloc(GetProcessHeap(), 0, BufferLength);
+    if (!Buffer)
+       return ERROR_NOT_ENOUGH_MEMORY;
 
-    /* Open Enum key (if applicable) */
-    if (MachineName != NULL)
+    do
     {
-        rc = RegConnectRegistryW(MachineName, HKEY_LOCAL_MACHINE, &HKLM);
-        if (rc != ERROR_SUCCESS)
-            goto cleanup;
-    }
-
-    rc = RegOpenKeyExW(
-        HKLM,
-        REGSTR_PATH_SYSTEMENUM,
-        0,
-        KEY_ENUMERATE_SUB_KEYS,
-        &hEnumKey);
-    if (rc != ERROR_SUCCESS)
-        goto cleanup;
-
-    /* If enumerator is provided, call directly SETUP_CreateDevicesListFromEnumerator.
-     * Else, enumerate all enumerators and call SETUP_CreateDevicesListFromEnumerator
-     * for each one.
-     */
-    if (Enumerator)
-    {
-        rc = RegOpenKeyExW(
-            hEnumKey,
-            Enumerator,
-            0,
-            KEY_ENUMERATE_SUB_KEYS,
-            &hEnumeratorKey);
-        if (rc != ERROR_SUCCESS)
+        cr = CM_Get_Device_ID_List_ExW(Enumerator,
+                                       Buffer,
+                                       BufferLength / sizeof(WCHAR),
+                                       Enumerator ? CM_GETIDLIST_FILTER_ENUMERATOR : CM_GETIDLIST_FILTER_NONE,
+                                       list->hMachine);
+        if (cr == CR_BUFFER_SMALL)
         {
-            if (rc == ERROR_FILE_NOT_FOUND)
-                rc = ERROR_INVALID_DATA;
-            goto cleanup;
+            if (Buffer)
+                HeapFree(GetProcessHeap(), 0, Buffer);
+            BufferLength *= 2;
+            Buffer = HeapAlloc(GetProcessHeap(), 0, BufferLength);
+            if (!Buffer)
+                return ERROR_NOT_ENOUGH_MEMORY;
         }
-        rc = SETUP_CreateDevicesListFromEnumerator(list, Class, Enumerator, hEnumeratorKey);
-    }
-    else
-    {
-        /* Enumerate enumerators */
-        i = 0;
-        while (TRUE)
+        else if (cr != CR_SUCCESS)
         {
-            dwLength = sizeof(KeyBuffer) / sizeof(KeyBuffer[0]);
-            rc = RegEnumKeyExW(hEnumKey, i, KeyBuffer, &dwLength, NULL, NULL, NULL, NULL);
-            if (rc == ERROR_NO_MORE_ITEMS)
-                break;
-            else if (rc != ERROR_SUCCESS)
-                goto cleanup;
-            i++;
-
-            /* Open sub key */
-            if (hEnumeratorKey != NULL)
-                RegCloseKey(hEnumeratorKey);
-            rc = RegOpenKeyExW(hEnumKey, KeyBuffer, 0, KEY_ENUMERATE_SUB_KEYS, &hEnumeratorKey);
-            if (rc != ERROR_SUCCESS)
-                goto cleanup;
-
-            /* Call SETUP_CreateDevicesListFromEnumerator */
-            rc = SETUP_CreateDevicesListFromEnumerator(list, Class, KeyBuffer, hEnumeratorKey);
-            if (rc != ERROR_SUCCESS)
-                goto cleanup;
+            TRACE("CM_Get_Device_ID_List_ExW() failed with status 0x%x\n", cr);
+            if (Buffer)
+                HeapFree(GetProcessHeap(), 0, Buffer);
+            return GetErrorCodeFromCrCode(cr);
         }
-        rc = ERROR_SUCCESS;
+    }
+    while (cr != CR_SUCCESS);
+
+    for (InstancePath = Buffer; *InstancePath != UNICODE_NULL; InstancePath += wcslen(InstancePath) + 1)
+    {
+        /* Check that device really exists */
+        TRACE("Checking %S\n", InstancePath);
+        cr = CM_Locate_DevNode_Ex(&dnDevInst,
+                                  (DEVINSTID_W)InstancePath,
+                                  CM_LOCATE_DEVNODE_NORMAL,
+                                  list->hMachine);
+        if (cr != CR_SUCCESS)
+        {
+            ERR("CM_Locate_DevNode_ExW('%S') failed with status 0x%x\n", InstancePath, cr);
+            continue;
+        }
+
+        /* Retrieve GUID of this device */
+        ClassGuidBufferSize = sizeof(ClassGuidBuffer);
+        cr = CM_Get_DevNode_Registry_Property_ExW(dnDevInst,
+                                                  CM_DRP_CLASSGUID,
+                                                  NULL,
+                                                  ClassGuidBuffer,
+                                                  &ClassGuidBufferSize,
+                                                  0,
+                                                  list->hMachine);
+        if (cr == CR_SUCCESS)
+        {
+            ClassGuidBuffer[MAX_GUID_STRING_LEN - 2] = '\0'; /* Replace the } by a NULL character */
+            if (UuidFromStringW(&ClassGuidBuffer[1], &ClassGuid) != RPC_S_OK)
+            {
+                /* Bad GUID, skip the entry */
+                ERR("Invalid ClassGUID '%S' for device %S\n", ClassGuidBuffer, InstancePath);
+                continue;
+            }
+        }
+        else
+        {
+            TRACE("Using default class GUID_NULL for device %S\n", InstancePath);
+            memcpy(&ClassGuid, &GUID_NULL, sizeof(GUID));
+        }
+
+        if (Class && !IsEqualIID(&ClassGuid, Class))
+        {
+            TRACE("Skipping %S due to wrong class GUID\n", InstancePath);
+            continue;
+        }
+
+        /* Good! Create a device info element */
+        if (!CreateDeviceInfo(list, InstancePath, &ClassGuid, &deviceInfo))
+        {
+            ERR("Failed to create info for %S\n", InstancePath);
+            HeapFree(GetProcessHeap(), 0, Buffer);
+            return GetLastError();
+        }
+
+        TRACE("Adding device %s to list\n", debugstr_w(InstancePath));
+        InsertTailList(&list->ListHead, &deviceInfo->ListEntry);
     }
 
-cleanup:
-    if (HKLM != HKEY_LOCAL_MACHINE)
-        RegCloseKey(HKLM);
-    if (hEnumKey != NULL)
-        RegCloseKey(hEnumKey);
-    if (hEnumeratorKey != NULL)
-        RegCloseKey(hEnumeratorKey);
-    return rc;
+    HeapFree(GetProcessHeap(), 0, Buffer);
+    return ERROR_SUCCESS;
 }
 
 static BOOL

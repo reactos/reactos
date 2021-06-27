@@ -1452,12 +1452,12 @@ WINBOOL WINAPI EnumPrintersW(DWORD Flags,LPWSTR Name,DWORD Level,LPBYTE pPrinter
 typedef enum tagPRINTER_OPTION_FLAGS {
   PRINTER_OPTION_NO_CACHE,
   PRINTER_OPTION_CACHE,
-  PRINTER_OPTION_CLIENT_CHANGE 
+  PRINTER_OPTION_CLIENT_CHANGE
 } PRINTER_OPTION_FLAGS;
 
 typedef enum tagEPrintXPSJobOperation {
   kJobProduction,
-  kJobConsumption 
+  kJobConsumption
 } EPrintXPSJobOperation;
 
 typedef enum tagEPrintXPSJobProgress {
@@ -1470,7 +1470,7 @@ typedef enum tagEPrintXPSJobProgress {
   kResourceAdded,
   kFontAdded,
   kImageAdded,
-  kXpsDocumentCommitted 
+  kXpsDocumentCommitted
 } EPrintXPSJobProgress;
 
 typedef struct _PRINTER_CONNECTION_INFO_1 {

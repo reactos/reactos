@@ -808,7 +808,7 @@ ClassPnp(
 	OBJECT_ATTRIBUTES ObjectAttributes;
 	IO_STATUS_BLOCK Iosb;
 	NTSTATUS Status;
-	
+
 	switch (IrpSp->MinorFunction)
 	{
 		case IRP_MN_START_DEVICE:
@@ -835,7 +835,7 @@ ClassPnp(
 			Irp->IoStatus.Status = Status;
 			IoCompleteRequest(Irp, IO_NO_INCREMENT);
 			return Status;
-			
+
 		case IRP_MN_STOP_DEVICE:
 			if (DeviceExtension->FileHandle)
 			{
@@ -844,7 +844,7 @@ ClassPnp(
 			}
 			Status = STATUS_SUCCESS;
 			break;
-            
+
         case IRP_MN_REMOVE_DEVICE:
             if (DeviceExtension->FileHandle)
 			{

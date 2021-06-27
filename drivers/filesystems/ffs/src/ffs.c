@@ -1,4 +1,4 @@
-/* 
+/*
  * FFS File System Driver for Windows
  *
  * ffs.c
@@ -259,7 +259,7 @@ FFSv1GetInodeLba(
 	}
 #endif
 
-	loc = cgimin(Vcb->ffs_super_block, ino_to_cg(Vcb->ffs_super_block, inode)) 
+	loc = cgimin(Vcb->ffs_super_block, ino_to_cg(Vcb->ffs_super_block, inode))
 		* Vcb->ffs_super_block->fs_fsize + ((inode % Vcb->ffs_super_block->fs_ipg) * 128);
 
 	*offset = loc;
@@ -288,7 +288,7 @@ FFSv2GetInodeLba(
 	}
 #endif
 
-	loc = cgimin(Vcb->ffs_super_block, ino_to_cg(Vcb->ffs_super_block, inode)) 
+	loc = cgimin(Vcb->ffs_super_block, ino_to_cg(Vcb->ffs_super_block, inode))
 		* Vcb->ffs_super_block->fs_fsize + ((inode % Vcb->ffs_super_block->fs_ipg) * 256);
 
 	*offset = loc;
@@ -417,7 +417,7 @@ FFSv1SaveInode(
     PAGED_CODE();
 
 	KeQuerySystemTime(&CurrentTime);
-	dinode1->di_mtime = dinode1->di_atime = 
+	dinode1->di_mtime = dinode1->di_atime =
 		(ULONG)(FFSInodeTime(CurrentTime));
 
 	FFSPrint((DBG_INFO, "FFSv1SaveInode: Saving Inode %xh: Mode=%xh Size=%xh\n",
@@ -724,7 +724,7 @@ FFSv1BlockMap(
 		FFSBreakPoint();
 
 		return 0;
-	}	
+	}
 
 	/* 流立, 埃立, 2吝 埃立 贸府 */
 	for (i = 0; i < FFS_BLOCK_TYPES; i++)
@@ -736,7 +736,7 @@ FFSv1BlockMap(
 			else
 				dwBlk = dinode1->di_ib[i - 1]; /* 埃立 */
 #if DBG
-			{   
+			{
 				ULONG dwRet = FFSv1GetBlock(Vcb, dwBlk, Index , i);
 
 				KdPrint(("FFSv1BlockMap: i : %d, Index : %d, dwBlk : %x, Data Block : %X\n", i, Index, dwRet, (dwRet * 0x400)));
@@ -782,7 +782,7 @@ FFSv2BlockMap(
 		FFSBreakPoint();
 
 		return 0;
-	}	
+	}
 
 	/* 流立, 埃立, 2吝 埃立 贸府 */
 	for (i = 0; i < FFS_BLOCK_TYPES; i++)
@@ -794,7 +794,7 @@ FFSv2BlockMap(
 			else
 				dwBlk = (ULONGLONG)dinode2->di_ib[i - 1]; /* 埃立 */
 #if 0
-			{   
+			{
 				ULONGLONG dwRet = FFSv2GetBlock(Vcb, dwBlk, Index , i);
 
 				KdPrint(("FFSv2BlockMap: i : %d, Index : %d, dwBlk : %x, Data Block : %X\n", i, Index, dwRet, (dwRet * 0x400)));
@@ -818,8 +818,8 @@ FFSv1BuildBDL(
 	IN PFFS_IRP_CONTEXT IrpContext,
 	IN PFFS_VCB         Vcb,
 	IN PFFSv1_INODE     dinode1,
-	IN ULONGLONG        Offset, 
-	IN ULONG            Size, 
+	IN ULONGLONG        Offset,
+	IN ULONG            Size,
 	OUT PFFS_BDL        *ffs_bdl)
 {
 	ULONG    nBeg, nEnd, nBlocks;
@@ -955,8 +955,8 @@ FFSv2BuildBDL(
 	IN PFFS_IRP_CONTEXT IrpContext,
 	IN PFFS_VCB         Vcb,
 	IN PFFSv2_INODE     dinode2,
-	IN ULONGLONG        Offset, 
-	IN ULONG            Size, 
+	IN ULONGLONG        Offset,
+	IN ULONG            Size,
 	OUT PFFS_BDL        *ffs_bdl)
 {
 	ULONG     nBeg, nEnd, nBlocks;
@@ -1095,7 +1095,7 @@ FFSNewBlock(
 	PFFS_IRP_CONTEXT IrpContext,
 	PFFS_VCB         Vcb,
 	ULONG            GroupHint,
-	ULONG            BlockHint,  
+	ULONG            BlockHint,
 	PULONG           dwRet)
 {
 	RTL_BITMAP      BlockBitmap;
@@ -1128,7 +1128,7 @@ ScanBitmap:
 	if (Vcb->ffs_group_desc[GroupHint].bg_free_blocks_count)
 	{
 		Offset.QuadPart = (LONGLONG) Vcb->BlockSize;
-		Offset.QuadPart = Offset.QuadPart * 
+		Offset.QuadPart = Offset.QuadPart *
 			Vcb->ffs_group_desc[GroupHint].bg_block_bitmap;
 
 		if (GroupHint == Vcb->ffs_groups - 1)
@@ -1600,7 +1600,7 @@ FFSExpandInode(
 					Vcb, Fcb,
 					dwBlk, Index,
 					i, bNewBlock,
-					&dwNewBlk); 
+					&dwNewBlk);
 
 			if (bRet)
 			{
@@ -1676,7 +1676,7 @@ repeat:
 		{
 			i = (j + GroupHint) % (Vcb->ffs_groups);
 
-			if ((Vcb->ffs_group_desc[i].bg_used_dirs_count << 8) < 
+			if ((Vcb->ffs_group_desc[i].bg_used_dirs_count << 8) <
 					Vcb->ffs_group_desc[i].bg_free_inodes_count)
 			{
 				Group = i + 1;
@@ -1696,7 +1696,7 @@ repeat:
 			}
 		}
 	}
-	else 
+	else
 	{
 		/*
 		 * Try to place the inode in its parent directory (GroupHint)
@@ -1717,7 +1717,7 @@ repeat:
 			{
 
 				i += j;
-				if (i > Vcb->ffs_groups) 
+				if (i > Vcb->ffs_groups)
 					i -= Vcb->ffs_groups;
 
 				if (Vcb->ffs_group_desc[i].bg_free_inodes_count)
@@ -1767,7 +1767,7 @@ repeat:
 			if (Group == Vcb->ffs_groups - 1)
 			{
 				Length = INODES_COUNT % INODES_PER_GROUP;
-				if (!Length) 
+				if (!Length)
 				{
 					/* INODES_COUNT is integer multiple of INODES_PER_GROUP */
 					Length = INODES_PER_GROUP;
@@ -1813,7 +1813,7 @@ repeat:
 		{
 			Vcb->ffs_group_desc[Group].bg_free_inodes_count = 0;
 
-			FFSSaveGroup(IrpContext, Vcb);            
+			FFSSaveGroup(IrpContext, Vcb);
 		}
 
 		goto repeat;
@@ -1844,7 +1844,7 @@ repeat:
 		Vcb->ffs_super_block->s_free_inodes_count--;
 		FFSSaveSuper(IrpContext, Vcb);
 
-		return STATUS_SUCCESS;        
+		return STATUS_SUCCESS;
 	}
 
 	return STATUS_DISK_FULL;
@@ -2018,7 +2018,7 @@ FFSAddEntry(
 		}
 
 #if 0
-		if (IsFlagOn(SUPER_BLOCK->s_feature_incompat, 
+		if (IsFlagOn(SUPER_BLOCK->s_feature_incompat,
 					FFS_FEATURE_INCOMPAT_FILETYPE))
 		{
 			pDir->d_type = (UCHAR)FileType;
@@ -2072,7 +2072,7 @@ Repeat:
 				_SEH2_LEAVE;
 			}
 
-			if (((pTarget->d_ino == 0) && pTarget->d_reclen >= pDir->d_reclen) || 
+			if (((pTarget->d_ino == 0) && pTarget->d_reclen >= pDir->d_reclen) ||
 					(pTarget->d_reclen >= FFS_DIR_REC_LEN(pTarget->d_namlen) + pDir->d_reclen))
 			{
 				if (pTarget->d_ino)
@@ -2142,7 +2142,7 @@ Repeat:
 		}
 		else
 		{
-			// We should expand the size of the dir inode 
+			// We should expand the size of the dir inode
 			if (!bAdding)
 			{
 				ULONG dwRet;
@@ -2229,7 +2229,7 @@ FFSRemoveEntry(
 		return FALSE;
 	}
 
-	MainResourceAcquired = 
+	MainResourceAcquired =
 		ExAcquireResourceExclusiveLite(&Dcb->MainResource, TRUE);
 
 	_SEH2_TRY
@@ -2387,7 +2387,7 @@ FFSSetParentEntry(
 		return Status;
 	}
 
-	MainResourceAcquired = 
+	MainResourceAcquired =
 		ExAcquireResourceExclusiveLite(&Dcb->MainResource, TRUE);
 
 	_SEH2_TRY
@@ -2432,7 +2432,7 @@ FFSSetParentEntry(
 		pParent->d_ino = NewParent;
 
 		Status = FFSv1WriteInode(IrpContext,
-					Vcb, 
+					Vcb,
 					Dcb->dinode1,
 					Offset,
 					pSelf,
@@ -2499,7 +2499,7 @@ FFSTruncateBlock(
 			if (bRet)
 			{
 				ASSERT(dinode1->di_blocks >= (Vcb->BlockSize / SECTOR_SIZE));
-				dinode1->di_blocks -= (Vcb->BlockSize / SECTOR_SIZE);            
+				dinode1->di_blocks -= (Vcb->BlockSize / SECTOR_SIZE);
 			}
 		}
 		else
@@ -2601,7 +2601,7 @@ FFSTruncateInode(
 
 	Index = (ULONG)(Fcb->Header.AllocationSize.QuadPart >> BLOCK_BITS);
 
-	if (Index > 0) 
+	if (Index > 0)
 	{
 		Index--;
 	}
@@ -2629,7 +2629,7 @@ FFSTruncateInode(
 		{
 			dwBlk = Inode->i_block[i == 0 ? (Index) : (i + NDADDR - 1)];
 
-			bRet = FFSTruncateBlock(IrpContext, Vcb, Fcb, dwBlk, Index , i, &bFreed); 
+			bRet = FFSTruncateBlock(IrpContext, Vcb, Fcb, dwBlk, Index , i, &bFreed);
 
 			if (bRet)
 			{
@@ -2760,12 +2760,12 @@ FFSAddMcbEntry(
 
 			FFSBreakPoint();
 
-			for (Index = 0; 
+			for (Index = 0;
 					FsRtlGetNextLargeMcbEntry(&(Vcb->DirtyMcbs),
 						Index,
 						&DirtyVba,
 						&DirtyLba,
-						&DirtyLength); 
+						&DirtyLength);
 					Index++)
 			{
 				FFSPrint((DBG_INFO, "Index = %xh\n", Index));

@@ -26,8 +26,8 @@ END
 /* Accelerators */
 IDC_FDEBUG ACCELERATORS
 BEGIN
-    63, IDM_ABOUT, ASCII, ALT // "?"
-    47, IDM_ABOUT, ASCII, ALT // "/"
+    VK_OEM_2, IDM_ABOUT, VIRTKEY, ALT //FIXME: ?/ US keyboard only
+    VK_DIVIDE, IDM_ABOUT, VIRTKEY, ALT
 END
 
 /* Dialogs */

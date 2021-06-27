@@ -606,7 +606,7 @@ USBD_UnRegisterRootHubCallBack(
 VOID
 NTAPI
 USBH_HubCancelIdleIrp(
-  IN PUSBHUB_FDO_EXTENSION HubExtension, 
+  IN PUSBHUB_FDO_EXTENSION HubExtension,
   IN PIRP IdleIrp);
 
 BOOLEAN

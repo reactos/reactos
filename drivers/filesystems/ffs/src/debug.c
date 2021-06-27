@@ -1,4 +1,4 @@
-/* 
+/*
  * FFS File System Driver for Windows
  *
  * debug.c
@@ -141,7 +141,7 @@ static PCHAR FsInformationClassStrings[] = {
  * Return Value:
  *   N/A
  *
- * NOTES: 
+ * NOTES:
  *   N/A
  */
 
@@ -195,7 +195,7 @@ FFSPrintf(
  * Return Value:
  *   N/A
  *
- * NOTES: 
+ * NOTES:
  *   N/A
  */
 
@@ -234,7 +234,7 @@ FFSNIPrintf(
 
 } // FFSNIPrintf()
 
-ULONG 
+ULONG
 FFSGetProcessNameOffset(
 	VOID)
 {
@@ -452,7 +452,7 @@ FFSDbgPrintCall(
 			else
 			{
 				FFSPrintNoIndent((
-							DBG_TRACE, 
+							DBG_TRACE,
 							"%s %s %s Unknown FileInformationClass %u\n",
 							FFSGetCurrentProcessName(),
 							IrpMjStrings[IoStackLocation->MajorFunction],
@@ -479,7 +479,7 @@ FFSDbgPrintCall(
 			else
 			{
 				FFSPrintNoIndent((
-							DBG_TRACE, 
+							DBG_TRACE,
 							"%s %s %s Unknown FsInformationClass %u\n",
 							FFSGetCurrentProcessName(),
 							IrpMjStrings[IoStackLocation->MajorFunction],
@@ -572,7 +572,7 @@ FFSDbgPrintCall(
 				else
 				{
 					FFSPrintNoIndent((
-								DBG_TRACE, 
+								DBG_TRACE,
 								"%s %s %s Unknown FileInformationClass %u\n",
 								FFSGetCurrentProcessName(),
 								IrpMjStrings[IoStackLocation->MajorFunction],
@@ -606,7 +606,7 @@ FFSDbgPrintCall(
 			{
 #if !defined(_GNU_NTIFS_) || defined(__REACTOS__)
 				FFSPrintNoIndent((
-							DBG_TRACE, 
+							DBG_TRACE,
 							"%s %s %s IRP_MN_USER_FS_REQUEST FsControlCode: %#x\n",
 							FFSGetCurrentProcessName(),
 							IrpMjStrings[IoStackLocation->MajorFunction],
@@ -614,7 +614,7 @@ FFSDbgPrintCall(
 							IoStackLocation->Parameters.FileSystemControl.FsControlCode));
 #else
 				FFSPrintNoIndent((
-							DBG_TRACE, 
+							DBG_TRACE,
 							"%s %s %s IRP_MN_USER_FS_REQUEST FsControlCode: %#x\n",
 							FFSGetCurrentProcessName(),
 							IrpMjStrings[IoStackLocation->MajorFunction],
@@ -626,7 +626,7 @@ FFSDbgPrintCall(
 			else if (IoStackLocation->MinorFunction == IRP_MN_MOUNT_VOLUME)
 			{
 				FFSPrintNoIndent((
-							DBG_TRACE, 
+							DBG_TRACE,
 							"%s %s %s IRP_MN_MOUNT_VOLUME DeviceObject: %#x\n",
 							FFSGetCurrentProcessName(),
 							IrpMjStrings[IoStackLocation->MajorFunction],
@@ -636,7 +636,7 @@ FFSDbgPrintCall(
 			else if (IoStackLocation->MinorFunction == IRP_MN_VERIFY_VOLUME)
 			{
 				FFSPrintNoIndent((
-							DBG_TRACE, 
+							DBG_TRACE,
 							"%s %s %s IRP_MN_VERIFY_VOLUME DeviceObject: %#x\n",
 							FFSGetCurrentProcessName(),
 							IrpMjStrings[IoStackLocation->MajorFunction],

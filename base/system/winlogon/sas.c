@@ -5,6 +5,7 @@
  * PURPOSE:         Secure Attention Sequence
  * PROGRAMMERS:     Thomas Weidenmueller (w3seek@users.sourceforge.net)
  *                  Hervé Poussineau (hpoussin@reactos.org)
+ *                  Arnav Bhatt (arnavbhatt288@gmail.com)
  * UPDATE HISTORY:
  *                  Created 28/03/2004
  */
@@ -725,7 +726,7 @@ LogoffShutdownThread(
     }
 
     /* Cancel all the user connections */
-    WNetClearConnections(0);
+    WNetClearConnections(NULL);
 
     if (LSData->Session->UserToken)
         RevertToSelf();
@@ -1046,7 +1047,12 @@ HandleShutdown(
     BOOLEAN Old;
 
     // SwitchDesktop(Session->WinlogonDesktop);
-    DisplayStatusMessage(Session, Session->WinlogonDesktop, IDS_REACTOSISSHUTTINGDOWN);
+    
+    /* If the system is rebooting, show the appropriate string */
+    if (wlxAction == WLX_SAS_ACTION_SHUTDOWN_REBOOT) 
+        DisplayStatusMessage(Session, Session->WinlogonDesktop, IDS_REACTOSISRESTARTING);
+    else
+        DisplayStatusMessage(Session, Session->WinlogonDesktop, IDS_REACTOSISSHUTTINGDOWN);
 
     /* Prepare data for shutdown thread */
     LSData = HeapAlloc(GetProcessHeap(), 0, sizeof(LOGOFF_SHUTDOWN_DATA));

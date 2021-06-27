@@ -229,6 +229,7 @@ list(APPEND SOURCE
     ${REACTOS_SOURCE_DIR}/ntoskrnl/mm/ARM3/syspte.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/mm/ARM3/vadnode.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/mm/ARM3/virtual.c
+    ${REACTOS_SOURCE_DIR}/ntoskrnl/mm/ARM3/wslist.cpp
     ${REACTOS_SOURCE_DIR}/ntoskrnl/mm/ARM3/zeropage.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/mm/balance.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/mm/freelist.c
@@ -314,6 +315,7 @@ if(ARCH STREQUAL "i386")
         ${REACTOS_SOURCE_DIR}/ntoskrnl/ke/i386/usercall.c
         ${REACTOS_SOURCE_DIR}/ntoskrnl/ke/i386/v86vdm.c
         ${REACTOS_SOURCE_DIR}/ntoskrnl/mm/i386/page.c
+        ${REACTOS_SOURCE_DIR}/ntoskrnl/mm/i386/procsup.c
         ${REACTOS_SOURCE_DIR}/ntoskrnl/mm/ARM3/i386/init.c
         ${REACTOS_SOURCE_DIR}/ntoskrnl/ps/i386/psctx.c
         ${REACTOS_SOURCE_DIR}/ntoskrnl/ps/i386/psldt.c
@@ -327,6 +329,7 @@ elseif(ARCH STREQUAL "amd64")
         ${REACTOS_SOURCE_DIR}/ntoskrnl/ke/amd64/usercall_asm.S)
     list(APPEND SOURCE
         ${REACTOS_SOURCE_DIR}/ntoskrnl/config/i386/cmhardwr.c
+        ${REACTOS_SOURCE_DIR}/ntoskrnl/mm/i386/page.c
         ${REACTOS_SOURCE_DIR}/ntoskrnl/kd64/amd64/kdx64.c
         ${REACTOS_SOURCE_DIR}/ntoskrnl/ke/amd64/context.c
         ${REACTOS_SOURCE_DIR}/ntoskrnl/ke/amd64/cpu.c
@@ -338,7 +341,7 @@ elseif(ARCH STREQUAL "amd64")
         ${REACTOS_SOURCE_DIR}/ntoskrnl/ke/amd64/spinlock.c
         ${REACTOS_SOURCE_DIR}/ntoskrnl/ke/amd64/thrdini.c
         ${REACTOS_SOURCE_DIR}/ntoskrnl/mm/amd64/init.c
-        ${REACTOS_SOURCE_DIR}/ntoskrnl/mm/amd64/page.c
+        ${REACTOS_SOURCE_DIR}/ntoskrnl/mm/amd64/procsup.c
         ${REACTOS_SOURCE_DIR}/ntoskrnl/ps/amd64/psctx.c
         ${REACTOS_SOURCE_DIR}/ntoskrnl/ke/amd64/stubs.c
         ${REACTOS_SOURCE_DIR}/ntoskrnl/ke/amd64/usercall.c)
@@ -393,6 +396,10 @@ if(NOT _WINKD_)
     elseif(ARCH STREQUAL "amd64")
         list(APPEND SOURCE
             ${REACTOS_SOURCE_DIR}/ntoskrnl/kd/i386/kdbg.c)
+        if(KDBG)
+            list(APPEND ASM_SOURCE ${REACTOS_SOURCE_DIR}/ntoskrnl/kdbg/amd64/kdb_help.S)
+            list(APPEND SOURCE ${REACTOS_SOURCE_DIR}/ntoskrnl/kdbg/i386/i386-dis.c)
+        endif()
     elseif(ARCH STREQUAL "arm")
         list(APPEND SOURCE ${REACTOS_SOURCE_DIR}/ntoskrnl/kd/arm/kdbg.c)
     endif()

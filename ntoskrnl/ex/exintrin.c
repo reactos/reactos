@@ -35,7 +35,7 @@ InterlockedIncrement(IN LONG volatile *Addend)
     //
     // Call the intrinsic
     //
-    return _InterlockedIncrement(Addend);    
+    return _InterlockedIncrement(Addend);
 }
 
 /*
@@ -122,7 +122,7 @@ ProbeForRead(IN CONST VOID *Address,
             /* Incorrect alignment */
             ExRaiseDatatypeMisalignment();
         }
-        
+
         /* Get the end address */
         Last = Current + Length - 1;
         if ((Last < Current) || (Last >= (ULONG_PTR)MmUserProbeAddress))

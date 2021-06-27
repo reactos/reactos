@@ -3,7 +3,7 @@
  * Public domain.
  *
  * Changes for long double by Ulrich Drepper <drepper@cygnus.com>
- * 
+ *
  * Removed header file dependency for use in libmingwex.a by
  *   Danny Smith <dannysmith@users.sourceforge.net>
  */

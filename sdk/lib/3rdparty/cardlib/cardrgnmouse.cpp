@@ -281,7 +281,7 @@ void CardRegion::ClickRelease(int x, int y)
     iNumDragCards = GetNumDragCards(x, y);
 
     if (ClickReleaseCallback)
-        ClickReleaseCallback(*this, iNumDragCards); 
+        ClickReleaseCallback(*this, iNumDragCards);
 }
 
 bool CardRegion::OnLButtonUp(int x, int y)

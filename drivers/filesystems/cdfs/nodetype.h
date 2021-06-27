@@ -53,7 +53,7 @@ typedef CSHORT NODE_BYTE_SIZE;
 #ifndef SafeNodeType
 #define SafeNodeType(Ptr) (*((PNODE_TYPE_CODE)(Ptr)))
 #endif
-
+
 //
 //  The following definitions are used to generate meaningful blue bugcheck
 //  screens.  On a bugcheck the file system can output 4 ulongs of useful

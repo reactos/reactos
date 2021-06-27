@@ -8,7 +8,7 @@
 
 /*
  * Discrete Cosine Tansform (DCT) for subband synthesis
- * optimized for machines with no auto-increment. 
+ * optimized for machines with no auto-increment.
  * The performance is highly compiler dependend. Maybe
  * the dct64.c version for 'normal' processor may be faster
  * even for Intel processors.
@@ -67,23 +67,23 @@ static void dct64_1(real *out0,real *out1,real *b1,real *b2,real *samples)
  {
   register real *costab = pnts[1];
 
-  b2[0x00] = b1[0x00] + b1[0x0F]; 
-  b2[0x01] = b1[0x01] + b1[0x0E]; 
+  b2[0x00] = b1[0x00] + b1[0x0F];
+  b2[0x01] = b1[0x01] + b1[0x0E];
   b2[0x0F] = REAL_MUL(b1[0x00] - b1[0x0F], costab[0]);
   b2[0x0E] = REAL_MUL(b1[0x01] - b1[0x0E], costab[1]);
 
-  b2[0x02] = b1[0x02] + b1[0x0D]; 
-  b2[0x03] = b1[0x03] + b1[0x0C]; 
+  b2[0x02] = b1[0x02] + b1[0x0D];
+  b2[0x03] = b1[0x03] + b1[0x0C];
   b2[0x0D] = REAL_MUL(b1[0x02] - b1[0x0D], costab[2]);
   b2[0x0C] = REAL_MUL(b1[0x03] - b1[0x0C], costab[3]);
 
-  b2[0x04] = b1[0x04] + b1[0x0B]; 
-  b2[0x05] = b1[0x05] + b1[0x0A]; 
+  b2[0x04] = b1[0x04] + b1[0x0B];
+  b2[0x05] = b1[0x05] + b1[0x0A];
   b2[0x0B] = REAL_MUL(b1[0x04] - b1[0x0B], costab[4]);
   b2[0x0A] = REAL_MUL(b1[0x05] - b1[0x0A], costab[5]);
 
-  b2[0x06] = b1[0x06] + b1[0x09]; 
-  b2[0x07] = b1[0x07] + b1[0x08]; 
+  b2[0x06] = b1[0x06] + b1[0x09];
+  b2[0x07] = b1[0x07] + b1[0x08];
   b2[0x09] = REAL_MUL(b1[0x06] - b1[0x09], costab[6]);
   b2[0x08] = REAL_MUL(b1[0x07] - b1[0x08], costab[7]);
 
@@ -168,7 +168,7 @@ static void dct64_1(real *out0,real *out1,real *b1,real *b2,real *samples)
   b2[0x0B] = REAL_MUL(b1[0x08] - b1[0x0B], cos0);
   b2[0x09] = b1[0x09] + b1[0x0A];
   b2[0x0A] = REAL_MUL(b1[0x09] - b1[0x0A], cos1);
-  
+
   b2[0x0C] = b1[0x0C] + b1[0x0F];
   b2[0x0F] = REAL_MUL(b1[0x0F] - b1[0x0C], cos0);
   b2[0x0D] = b1[0x0D] + b1[0x0E];
@@ -296,7 +296,7 @@ static void dct64_1(real *out0,real *out1,real *b1,real *b2,real *samples)
  out1[0x10*14] = REAL_SCALE_DCT64(b1[0x0F]);
 #endif
 
- { 
+ {
  real tmp;
  tmp = b1[0x18] + b1[0x1C];
  out0[0x10*15] = REAL_SCALE_DCT64(tmp + b1[0x10]);
@@ -312,7 +312,7 @@ static void dct64_1(real *out0,real *out1,real *b1,real *b2,real *samples)
  out0[0x10* 1] = REAL_SCALE_DCT64(tmp + b1[0x11]);
  tmp = b1[0x19] + b1[0x1D];
  out1[0x10* 1] = REAL_SCALE_DCT64(tmp + b1[0x11]);
- out1[0x10* 3] = REAL_SCALE_DCT64(tmp + b1[0x15]); 
+ out1[0x10* 3] = REAL_SCALE_DCT64(tmp + b1[0x15]);
  tmp = b1[0x1D] + b1[0x1B];
  out1[0x10* 5] = REAL_SCALE_DCT64(tmp + b1[0x15]);
  out1[0x10* 7] = REAL_SCALE_DCT64(tmp + b1[0x13]);

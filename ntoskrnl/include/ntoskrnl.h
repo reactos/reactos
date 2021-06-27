@@ -124,4 +124,11 @@ C_ASSERT(MAX_WIN32_PATH == MAX_PATH);
 #include "internal/probe.h"
 #include "resource.h"
 
+/* Internal Ps alignment probing header */
+#include "internal/ps_i.h"
+
+#ifdef _MSC_VER
+# pragma section("INITDATA", read,write,discard)
+#endif
+
 #endif /* _NTOSKRNL_PCH */

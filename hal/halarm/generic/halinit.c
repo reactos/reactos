@@ -82,7 +82,7 @@ HalInitSystem(IN ULONG BootPhase,
             /* Validation failed, bugcheck */
             KeBugCheckEx(MISMATCHED_HAL, 1, Prcb->MajorVersion, 1, 0);
         }
-        
+
         /* Initialize interrupts */
         HalpInitializeInterrupts();
 
@@ -164,7 +164,7 @@ DbgPrintEarly(const char *fmt, ...)
     va_start(args, fmt);
     i = vsprintf(Buffer, fmt, args);
     va_end(args);
-    
+
     /* Output the message */
     while (*String != 0)
     {
@@ -175,7 +175,7 @@ DbgPrintEarly(const char *fmt, ...)
         KdPortPutByteEx(NULL, *String);
         String++;
     }
-    
+
     return STATUS_SUCCESS;
 }
 

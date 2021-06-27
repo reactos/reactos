@@ -40,10 +40,12 @@ extern void func_ScrollWindowEx(void);
 extern void func_SendMessageTimeout(void);
 extern void func_SetActiveWindow(void);
 extern void func_SetCursorPos(void);
+extern void func_SetFocus(void);
 extern void func_SetParent(void);
 extern void func_SetProp(void);
 extern void func_SetScrollInfo(void);
 extern void func_SetScrollRange(void);
+extern void func_ShowWindow(void);
 extern void func_SwitchToThisWindow(void);
 extern void func_SystemParametersInfo(void);
 extern void func_TrackMouseEvent(void);
@@ -89,10 +91,12 @@ const struct test winetest_testlist[] =
     { "SendMessageTimeout", func_SendMessageTimeout },
     { "SetActiveWindow", func_SetActiveWindow },
     { "SetCursorPos", func_SetCursorPos },
+    { "SetFocus", func_SetFocus },
     { "SetParent", func_SetParent },
     { "SetProp", func_SetProp },
     { "SetScrollInfo", func_SetScrollInfo },
     { "SetScrollRange", func_SetScrollRange },
+    { "ShowWindow", func_ShowWindow },
     { "SwitchToThisWindow", func_SwitchToThisWindow },
     { "SystemParametersInfo", func_SystemParametersInfo },
     { "TrackMouseEvent", func_TrackMouseEvent },

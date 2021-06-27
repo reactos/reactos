@@ -14,7 +14,7 @@ namespace ATL
         {
             return &m_psp;
         }
-        
+
         CPropertyPageImpl(LPCTSTR lpszTitle = NULL)
         {
             T* pT = static_cast<T*>(this);
@@ -32,7 +32,7 @@ namespace ATL
             if (lpszTitle)
                 m_psp.dwFlags |= PSP_USETITLE;
         }
-        
+
         static UINT CALLBACK PropPageCallback(HWND hwnd, UINT uMsg, LPPROPSHEETPAGE ppsp)
         {
             T* pT = reinterpret_cast<T*>(ppsp->lParam);
@@ -53,7 +53,7 @@ namespace ATL
 
             return 0;
         }
-        
+
         HPROPSHEETPAGE Create()
         {
             return ::CreatePropertySheetPage(&m_psp);
@@ -107,14 +107,14 @@ namespace ATL
         }
 
         void OnHelp()
-        {          
+        {
         }
 
         int OnWizardBack()
         {
             return 0;
         }
-        
+
         int OnWizardNext()
         {
             return 0;
@@ -134,12 +134,12 @@ namespace ATL
         {
             return FALSE;
         }
-        
+
         int OnTranslateAccelerator(LPMSG lpMsg)
         {
             return 0;
         }
-        
+
         HWND OnQueryInitialFocus(HWND hwnd)
         {
             return NULL;

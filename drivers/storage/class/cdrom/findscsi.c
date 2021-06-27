@@ -34,7 +34,7 @@ FindScsiAdapter (
                         &objectAttributes                  \
                         );
 
-
+
 NTSTATUS
 NTAPI
 FindScsiAdapter (

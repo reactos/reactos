@@ -57,7 +57,6 @@ RDMSR(IN ULONG Register)
 
 /* FUNCTIONS *****************************************************************/
 
-CODE_SEG("INIT")
 VOID
 NTAPI
 KiSetProcessorType(VOID)
@@ -71,7 +70,6 @@ KiGetCpuVendor(VOID)
     return 0;
 }
 
-CODE_SEG("INIT")
 ULONG
 NTAPI
 KiGetFeatureBits(VOID)
@@ -81,7 +79,6 @@ KiGetFeatureBits(VOID)
     return FeatureBits;
 }
 
-CODE_SEG("INIT")
 VOID
 NTAPI
 KiGetCacheInformation(VOID)
@@ -127,7 +124,6 @@ KiSaveProcessorControlState(OUT PKPROCESSOR_STATE ProcessorState)
 {
 }
 
-CODE_SEG("INIT")
 VOID
 NTAPI
 KiInitializeMachineType(VOID)
@@ -141,14 +137,12 @@ KiLoadFastSyscallMachineSpecificRegisters(IN ULONG_PTR Context)
     return 0;
 }
 
-CODE_SEG("INIT")
 VOID
 NTAPI
 KiRestoreFastSyscallReturnState(VOID)
 {
 }
 
-CODE_SEG("INIT")
 ULONG_PTR
 NTAPI
 Ki386EnableDE(IN ULONG_PTR Context)
@@ -156,7 +150,6 @@ Ki386EnableDE(IN ULONG_PTR Context)
     return 0;
 }
 
-CODE_SEG("INIT")
 ULONG_PTR
 NTAPI
 Ki386EnableFxsr(IN ULONG_PTR Context)

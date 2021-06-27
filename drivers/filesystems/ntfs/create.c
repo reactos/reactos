@@ -499,7 +499,7 @@ NtfsCreateFile(PDEVICE_OBJECT DeviceObject,
             }
 
             // TODO: check for appropriate access
-           
+
             ExAcquireResourceExclusiveLite(&(Fcb->MainResource), TRUE);
 
             fileRecord = ExAllocateFromNPagedLookasideList(&Fcb->Vcb->FileRecLookasideList);
@@ -522,8 +522,8 @@ NtfsCreateFile(PDEVICE_OBJECT DeviceObject,
             else
             {
                 Status = STATUS_NO_MEMORY;
-            }            
-           
+            }
+
         DoneOverwriting:
             if (fileRecord)
                 ExFreeToNPagedLookasideList(&Fcb->Vcb->FileRecLookasideList, fileRecord);
@@ -536,7 +536,7 @@ NtfsCreateFile(PDEVICE_OBJECT DeviceObject,
             {
                 NtfsCloseFile(DeviceExt, FileObject);
                 return Status;
-            }            
+            }
 
             if (RequestedDisposition == FILE_SUPERSEDE)
             {
@@ -740,7 +740,7 @@ NtfsCreateDirectory(PDEVICE_EXTENSION DeviceExt,
     }
 
     // Calculate maximum size of index root
-    MaxIndexRootSize = DeviceExt->NtfsInfo.BytesPerFileRecord 
+    MaxIndexRootSize = DeviceExt->NtfsInfo.BytesPerFileRecord
                        - ((ULONG_PTR)NextAttribute - (ULONG_PTR)FileRecord)
                        - sizeof(ULONG) * 2;
 
@@ -810,7 +810,7 @@ NtfsCreateDirectory(PDEVICE_EXTENSION DeviceExt,
 *
 * @param DeviceExt
 * Pointer to the DEVICE_EXTENSION of the target volume the file record will be stored on.
-* 
+*
 * @return
 * A pointer to the newly-created FILE_RECORD_HEADER if the function succeeds, NULL otherwise.
 */
@@ -875,11 +875,11 @@ NtfsCreateEmptyFileRecord(PDEVICE_EXTENSION DeviceExt)
 * @param CanWait
 * Boolean indicating if the function is allowed to wait for exclusive access to the master file table.
 * This will only be relevant if the MFT doesn't have any free file records and needs to be enlarged.
-* 
+*
 * @return
-* STATUS_SUCCESS on success. 
+* STATUS_SUCCESS on success.
 * STATUS_INSUFFICIENT_RESOURCES if unable to allocate memory for the file record.
-* STATUS_CANT_WAIT if CanWait was FALSE and the function needed to resize the MFT but 
+* STATUS_CANT_WAIT if CanWait was FALSE and the function needed to resize the MFT but
 * couldn't get immediate, exclusive access to it.
 */
 NTSTATUS

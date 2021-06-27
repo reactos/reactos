@@ -32,7 +32,7 @@
 /* static int chans[NUM_CHANNELS] = { 1 , 2 }; */
 static const long my_rates[MPG123_RATES] = /* only the standard rates */
 {
-	 8000, 11025, 12000, 
+	 8000, 11025, 12000,
 	16000, 22050, 24000,
 	32000, 44100, 48000,
 };
@@ -270,7 +270,7 @@ int frame_output_format(mpg123_handle *fr)
 		if(enc_chan_fit(p, p->force_rate, &nf, f0, f2, try_float))
 			goto end;
 		// Keep the order consistent if float is considered fallback only.
-		if(!try_float && 
+		if(!try_float &&
 			enc_chan_fit(p, p->force_rate, &nf, f0, f2, TRUE))
 				goto end;
 
@@ -503,7 +503,7 @@ int attribute_align_arg mpg123_fmt2(mpg123_pars *mp, long rate, int channels, in
 		r1 = 0;
 		r2 = MPG123_RATES+1; /* including forced rate */
 	}
-	
+
 	if(r1 < 0) return MPG123_BAD_RATE;
 
 	/* now match the encodings */

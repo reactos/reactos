@@ -433,11 +433,11 @@ ExpFindFreeEntry(IN PERESOURCE Resource,
         {
             /* Move to the next one */
             Owner++;
-            
+
             /* Check if the entry is free */
             if (Owner == Limit) goto Expand;
         }
-        
+
         /* Update the resource entry */
         KeGetCurrentThread()->ResourceIndex = (UCHAR)(Owner - Resource->OwnerTable);
     }
@@ -521,21 +521,21 @@ ExpFindEntryForThread(IN PERESOURCE Resource,
 
             /* Move to the next one */
             Owner++;
-            
+
             /* Check if the entry is free */
             if (Owner == Limit) goto Expand;
         }
-        
+
         /* Update the resource entry */
         KeGetCurrentThread()->ResourceIndex = (UCHAR)(Owner - Resource->OwnerTable);
         return Owner;
-    }    
+    }
     else
     {
 Expand:
         /* Check if it's OK to do an expansion */
         if (!LockHandle) return NULL;
-        
+
         /* If we found a free entry by now, return it */
         if (FreeEntry)
         {
@@ -543,7 +543,7 @@ Expand:
             KeGetCurrentThread()->ResourceIndex = (UCHAR)(FreeEntry - Resource->OwnerTable);
             return FreeEntry;
         }
-        
+
         /* No free entry, expand the table */
         ExpExpandResourceOwnerTable(Resource, LockHandle);
         return NULL;
@@ -792,7 +792,7 @@ ExAcquireResourceExclusiveLite(IN PERESOURCE Resource,
 TryAcquire:
     if (Resource->ActiveEntries)
     {
-        /* Check if it's exclusively owned, and we own it */   
+        /* Check if it's exclusively owned, and we own it */
         if ((IsOwnedExclusive(Resource)) &&
             (Resource->OwnerEntry.OwnerThread == Thread))
         {
@@ -912,12 +912,12 @@ ExAcquireResourceSharedLite(IN PERESOURCE Resource,
             {
                 /* Increase the owning count */
                 Resource->OwnerEntry.OwnerCount++;
-                
+
                 /* Release the lock and return */
                 ExReleaseResourceLock(Resource, &LockHandle);
                 return TRUE;
             }
-            
+
             /* Find a free entry */
             Owner = ExpFindFreeEntry(Resource, &LockHandle);
             if (!Owner) continue;
@@ -931,26 +931,26 @@ ExAcquireResourceSharedLite(IN PERESOURCE Resource,
                                           &LockHandle,
                                           FirstEntryBusy);
             if (!Owner) continue;
-            
+
             /* Is it us? */
             if (Owner->OwnerThread == Thread)
             {
                 /* Increase acquire count and return */
                 Owner->OwnerCount++;
                 ASSERT(Owner->OwnerCount != 0);
-                
+
                 /* Release the lock and return */
                 ExReleaseResourceLock(Resource, &LockHandle);
                 return TRUE;
             }
-            
+
             /* Try to find if there are exclusive waiters */
             if (!FirstEntryBusy)
             {
                 /* There are none, so acquire it */
                 Owner->OwnerThread = Thread;
                 Owner->OwnerCount = 1;
-                
+
                 /* Check how many active entries we had */
                 if (Resource->ActiveEntries == 0)
                 {
@@ -963,15 +963,15 @@ ExAcquireResourceSharedLite(IN PERESOURCE Resource,
                 {
                     /* Increase active entries */
                     ASSERT(Resource->ActiveCount == 1);
-                    Resource->ActiveEntries++;   
+                    Resource->ActiveEntries++;
                 }
-                
+
                 /* Release the lock and return */
                 ExReleaseResourceLock(Resource, &LockHandle);
                 return TRUE;
             }
         }
-        
+
         /* If we got here, then we need to wait. Are we allowed? */
         if (!Wait)
         {
@@ -979,7 +979,7 @@ ExAcquireResourceSharedLite(IN PERESOURCE Resource,
             ExReleaseResourceLock(Resource, &LockHandle);
             return FALSE;
         }
-        
+
         /* Check if we have a shared waiters semaphore */
         if (!Resource->SharedWaiters)
         {
@@ -992,7 +992,7 @@ ExAcquireResourceSharedLite(IN PERESOURCE Resource,
             break;
         }
     }
-    
+
     /* Did we get here because we don't have active entries? */
     if (Resource->ActiveEntries == 0)
     {
@@ -1003,7 +1003,7 @@ ExAcquireResourceSharedLite(IN PERESOURCE Resource,
         Resource->ActiveCount = 1;
         Resource->OwnerEntry.OwnerThread = Thread;
         Resource->OwnerEntry.OwnerCount = 1;
-        
+
         /* Release the lock and return */
         ExReleaseResourceLock(Resource, &LockHandle);
         return TRUE;
@@ -1088,7 +1088,7 @@ TryAcquire:
         Resource->ActiveEntries = 1;
         Resource->OwnerEntry.OwnerThread = Thread;
         Resource->OwnerEntry.OwnerCount = 1;
-        
+
         /* Release the lock and return */
         ExReleaseResourceLock(Resource, &LockHandle);
         return TRUE;
@@ -1146,7 +1146,7 @@ TryAcquire:
         {
             /* Increase active entries */
             ASSERT(Resource->ActiveCount == 1);
-            Resource->ActiveEntries++;   
+            Resource->ActiveEntries++;
         }
 
         /* Release the lock and return */
@@ -1345,9 +1345,9 @@ TryAcquire:
             {
                 /* Increase active entries */
                 ASSERT(Resource->ActiveCount == 1);
-                Resource->ActiveEntries++;   
+                Resource->ActiveEntries++;
             }
-            
+
             /* Release the lock and return */
             ExReleaseResourceLock(Resource, &LockHandle);
             return TRUE;
@@ -1409,7 +1409,7 @@ ExConvertExclusiveToSharedLite(IN PERESOURCE Resource)
     ExpVerifyResource(Resource);
     ASSERT(IsOwnedExclusive(Resource));
     ASSERT(Resource->OwnerEntry.OwnerThread == (ERESOURCE_THREAD)PsGetCurrentThread());
-    
+
     /* Lock the resource */
     ExAcquireResourceLock(Resource, &LockHandle);
 
@@ -1685,7 +1685,7 @@ ExIsResourceAcquiredSharedLite(IN PERESOURCE Resource)
 
         /* Lock the resource */
         ExAcquireResourceLock(Resource, &LockHandle);
-        
+
         /* Not in the list, do a full table look up */
         Owner = Resource->OwnerTable;
         if (Owner)
@@ -1693,7 +1693,7 @@ ExIsResourceAcquiredSharedLite(IN PERESOURCE Resource)
             /* Get the resource index */
             i = ((PKTHREAD)Thread)->ResourceIndex;
             Size = Owner->TableSize;
-            
+
             /* Check if the index is valid and check if we don't match */
             if ((i >= Size) || (Owner[i].OwnerThread != Thread))
             {
@@ -1702,7 +1702,7 @@ ExIsResourceAcquiredSharedLite(IN PERESOURCE Resource)
                 {
                     /* Move to next owner */
                     Owner++;
-                    
+
                     /* Try to find a match */
                     if (Owner->OwnerThread == Thread)
                     {
@@ -1718,7 +1718,7 @@ ExIsResourceAcquiredSharedLite(IN PERESOURCE Resource)
                 Count = Owner[i].OwnerCount;
             }
         }
-        
+
         /* Release the lock */
         ExReleaseResourceLock(Resource, &LockHandle);
     }
@@ -1875,18 +1875,18 @@ ExReleaseResourceForThreadLite(IN PERESOURCE Resource,
         /* Decrement the number of active entries */
         ASSERT(Resource->ActiveEntries == 1);
         Resource->ActiveEntries--;
-        
+
         /* Check if there are shared waiters */
         if (IsSharedWaiting(Resource))
         {
             /* Remove the exclusive flag */
             Resource->Flag &= ~ResourceOwnedExclusive;
-            
+
             /* Give ownage to another thread */
             Count = Resource->NumberOfSharedWaiters;
             Resource->ActiveEntries = Count;
             Resource->NumberOfSharedWaiters = 0;
-            
+
             /* Release lock and let someone else have it */
             ASSERT(Resource->ActiveCount == 1);
             ExReleaseResourceLock(Resource, &LockHandle);
@@ -1900,7 +1900,7 @@ ExReleaseResourceForThreadLite(IN PERESOURCE Resource,
             Resource->OwnerEntry.OwnerCount = 1;
             Resource->ActiveEntries = 1;
             Resource->NumberOfExclusiveWaiters--;
-            
+
             /* Release the lock and give it away */
             ASSERT(Resource->ActiveCount == 1);
             ExReleaseResourceLock(Resource, &LockHandle);
@@ -1908,7 +1908,7 @@ ExReleaseResourceForThreadLite(IN PERESOURCE Resource,
                                     (PKTHREAD*)&Resource->OwnerEntry.OwnerThread);
             return;
         }
-        
+
         /* Remove the exclusive flag */
         Resource->Flag &= ~ResourceOwnedExclusive;
         Resource->ActiveCount = 0;
@@ -2001,7 +2001,7 @@ ExReleaseResourceForThreadLite(IN PERESOURCE Resource,
                                         (PKTHREAD*)&Resource->OwnerEntry.OwnerThread);
                 return;
             }
-            
+
             /* Clear the active count */
             Resource->ActiveCount = 0;
         }

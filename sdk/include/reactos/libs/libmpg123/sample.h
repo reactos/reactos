@@ -94,7 +94,7 @@ static inline int16_t ftoi16(float x)
 
 /* This is the old new mpg123 WRITE_SAMPLE, fixed for newer GCC by MPlayer folks.
    Makes a huge difference on old machines. */
-#if WORDS_BIGENDIAN 
+#if WORDS_BIGENDIAN
 #define MANTISSA_OFFSET 1
 #else
 #define MANTISSA_OFFSET 0
@@ -124,10 +124,10 @@ static inline int16_t ftoi16(float x)
   else { *(samples) = REAL_TO_SHORT_ACCURATE(sum); }
 
 /*
-	32bit signed 
+	32bit signed
 	We do clipping with the same old borders... but different conversion.
 	We see here that we need extra work for non-16bit output... we optimized for 16bit.
-	-0x7fffffff-1 is the minimum 32 bit signed integer value expressed so that MSVC 
+	-0x7fffffff-1 is the minimum 32 bit signed integer value expressed so that MSVC
 	does not give a compile time warning.
 */
 #define WRITE_S32_SAMPLE(samples,sum,clip) \

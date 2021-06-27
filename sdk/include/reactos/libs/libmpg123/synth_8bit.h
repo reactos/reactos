@@ -40,7 +40,7 @@ int MONO_NAME(real *bandPtr, mpg123_handle *fr)
 	short samples_tmp[BLOCK];
 	short *tmp1 = samples_tmp;
 	int i,ret;
- 
+
 	unsigned char *samples = fr->buffer.data;
 	int pnt = fr->buffer.fill;
 	fr->buffer.data = (unsigned char*) samples_tmp;

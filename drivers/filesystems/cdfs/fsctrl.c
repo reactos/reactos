@@ -172,7 +172,7 @@ CdFindActiveVolDescriptor (
 #pragma alloc_text(PAGE, CdVerifyVolume)
 #endif
 
-
+
 //
 //  Local support routine
 //
@@ -193,13 +193,13 @@ Routine Description:
     This routine performs the actual lock volume operation.  It will be called
     by anyone wishing to try to protect the volume for a long duration.  PNP
     operations are such a user.
-    
+
     The volume must be held exclusive by the caller.
 
 Arguments:
 
     Vcb - The volume being locked.
-    
+
     FileObject - File corresponding to the handle locking the volume.  If this
         is not specified, a system lock is assumed.
 
@@ -223,7 +223,7 @@ Return Value:
     //  to get rid of all of the other user references.  If there is only one
     //  remaining after the purge then we can allow the volume to be locked.
     //
-    
+
     CdPurgeVolume( IrpContext, Vcb, FALSE );
 
     //
@@ -253,7 +253,7 @@ Return Value:
 
     SetFlag( IrpContext->Flags, IRP_CONTEXT_FLAG_WAIT );
     CdAcquireVcbExclusive( IrpContext, Vcb, FALSE );
-    
+
     if (!NT_SUCCESS( Status )) {
 
         return Status;
@@ -266,9 +266,9 @@ Return Value:
     //  Vpb locked flag as an 'explicit lock' flag in the same way as Fat.
     //
 
-    IoAcquireVpbSpinLock( &SavedIrql ); 
-        
-    if (!FlagOn( Vcb->Vpb->Flags, VPB_LOCKED ) && 
+    IoAcquireVpbSpinLock( &SavedIrql );
+
+    if (!FlagOn( Vcb->Vpb->Flags, VPB_LOCKED ) &&
         (Vcb->VcbCleanup == RemainingUserReferences) &&
         (Vcb->VcbUserReference == CDFS_RESIDUAL_USER_REFERENCE + RemainingUserReferences))  {
 
@@ -277,13 +277,13 @@ Return Value:
         Vcb->VolumeLockFileObject = FileObject;
         FinalStatus = STATUS_SUCCESS;
     }
-    
-    IoReleaseVpbSpinLock( SavedIrql );  
-    
+
+    IoReleaseVpbSpinLock( SavedIrql );
+
     return FinalStatus;
 }
 
-
+
 NTSTATUS
 CdUnlockVolumeInternal (
     _In_ PIRP_CONTEXT IrpContext,
@@ -295,21 +295,21 @@ CdUnlockVolumeInternal (
 
 Routine Description:
 
-    This routine performs the actual unlock volume operation. 
-    
+    This routine performs the actual unlock volume operation.
+
     The volume must be held exclusive by the caller.
 
 Arguments:
 
     Vcb - The volume being locked.
-    
+
     FileObject - File corresponding to the handle locking the volume.  If this
         is not specified, a system lock is assumed.
 
 Return Value:
 
     NTSTATUS - The return status for the operation
-    
+
     Attempting to remove a system lock that did not exist is OK.
 
 --*/
@@ -325,10 +325,10 @@ Return Value:
     //  lock flag.  The Vpb flag is only set for an explicit lock request,  not
     //  for the implicit lock obtained on a volume open with zero share mode.
     //
-    
-    IoAcquireVpbSpinLock( &SavedIrql ); 
- 
-    if (FlagOn(Vcb->Vpb->Flags, VPB_LOCKED) && 
+
+    IoAcquireVpbSpinLock( &SavedIrql );
+
+    if (FlagOn(Vcb->Vpb->Flags, VPB_LOCKED) &&
         (FileObject == Vcb->VolumeLockFileObject))  {
 
         ClearFlag( Vcb->VcbState, VCB_STATE_LOCKED );
@@ -336,13 +336,13 @@ Return Value:
         Vcb->VolumeLockFileObject = NULL;
         Status = STATUS_SUCCESS;
     }
-    
-    IoReleaseVpbSpinLock( SavedIrql );  
+
+    IoReleaseVpbSpinLock( SavedIrql );
 
     return Status;
 }
 
-
+
 
 _Requires_lock_held_(_Global_critical_region_)
 NTSTATUS
@@ -407,7 +407,7 @@ Return Value:
     return Status;
 }
 
-
+
 //
 //  Local support routine
 //
@@ -527,7 +527,7 @@ CdReMountOldVcb (
     PUCHAR Buffer;
 
     UNREFERENCED_PARAMETER( IrpContext );
-    
+
     ObDereferenceObject( OldVcb->TargetDeviceObject );
 
     IoAcquireVpbSpinLock( &SavedIrql );
@@ -536,10 +536,10 @@ CdReMountOldVcb (
 #pragma prefast(suppress: 28175, "this is a filesystem driver, touching the vpb is allowed")
 #endif
     NewVcb->Vpb->RealDevice->Vpb = OldVcb->Vpb;
-    
+
     OldVcb->Vpb->RealDevice = NewVcb->Vpb->RealDevice;
     OldVcb->TargetDeviceObject = DeviceObjectWeTalkTo;
-    
+
     CdUpdateVcbCondition( OldVcb, VcbMounted);
     CdUpdateMediaChangeCount( OldVcb, NewVcb->MediaChangeCount);
 
@@ -549,12 +549,12 @@ CdReMountOldVcb (
     NewVcb->SectorCacheBuffer = NULL;
 
     if (NULL != Buffer) {
-        
+
         for (Index = 0; Index < CD_SEC_CACHE_CHUNKS; Index++) {
-        
+
             OldVcb->SecCacheChunks[ Index].Buffer = Buffer;
             OldVcb->SecCacheChunks[ Index].BaseLbn = (ULONG)-1;
-        
+
             Buffer += CD_SEC_CHUNK_BLOCKS * SECTOR_SIZE;
         }
     }
@@ -616,7 +616,7 @@ Return Value:
     PVCB Vcb = NULL;
     PVCB OldVcb;
     UCHAR StackSize;
-    
+
     BOOLEAN FoundPvd = FALSE;
     BOOLEAN SetDoVerifyOnFail;
 
@@ -725,11 +725,11 @@ Return Value:
                                  &Iosb );
 
     if (!NT_SUCCESS( Status )) {
-        
+
         CdCompleteRequest( IrpContext, Irp, Status );
         return Status;
     }
-    
+
     if (Iosb.Information != sizeof(ULONG)) {
 
         //
@@ -873,7 +873,7 @@ Return Value:
         //  If we failed to read the TOC, then bail out.  Probably blank media.
         //
 
-        if (Status != STATUS_SUCCESS)  { 
+        if (Status != STATUS_SUCCESS)  {
 
 #ifdef __REACTOS__
 
@@ -886,7 +886,7 @@ Return Value:
                 Status = STATUS_SUCCESS;
             } else {
 #endif
-            try_leave( Status ); 
+            try_leave( Status );
 #ifdef __REACTOS__
             }
 #endif
@@ -957,7 +957,7 @@ Return Value:
 
         // Lock object is acquired and released using internal state
         _Analysis_suppress_lock_checking_(Vcb->VcbResource);
-        
+
         //
         //  Store the Vcb in the IrpContext as we didn't have one before.
         //
@@ -980,7 +980,7 @@ Return Value:
         CdMarkRealDevVerifyOk( Vcb->Vpb->RealDevice);
 
         if (!FlagOn( Vcb->VcbState, VCB_STATE_AUDIO_DISK))  {
-            
+
             //
             //  Allocate a buffer to read in the volume descriptors.  We allocate a full
             //  page to make sure we don't hit any alignment problems.
@@ -1007,7 +1007,7 @@ Return Value:
                 //  We failed to find a valid VD in the data track,  but there were also
                 //  audio tracks on this disc,  so we'll try to mount it as an audio CD.
                 //  Since we're always last in the mount order,  we won't be preventing
-                //  any other FS from trying to mount the data track.  However if the 
+                //  any other FS from trying to mount the data track.  However if the
                 //  data track was at the start of the disc,  then we abort,  to avoid
                 //  having to filter it from our synthesised directory listing later.  We
                 //  already filtered off any data track at the end.
@@ -1015,7 +1015,7 @@ Return Value:
 
                 if (!(TocDiskFlags & CDROM_DISK_AUDIO_TRACK) ||
                      BooleanFlagOn( Vcb->CdromToc->TrackData[0].Control, TOC_DATA_TRACK))  {
-                
+
                     try_leave( Status = STATUS_UNRECOGNIZED_VOLUME);
                 }
 
@@ -1025,7 +1025,7 @@ Return Value:
                 RawIsoVd = NULL;
             }
         }
-        
+
         //
         //  Look and see if there is a secondary volume descriptor we want to
         //  use.
@@ -1058,7 +1058,7 @@ Return Value:
         //  Allocate a block cache to speed directory operations. We can't
         //  use the cache if there is any chance the volume has link blocks
         //  in the data area (i.e. was packet written and then finalized to
-        //  Joliet/9660). So we simply only allow the cache to operate on 
+        //  Joliet/9660). So we simply only allow the cache to operate on
         //  media with a single track - since we're really targetting pressed
         //  installation media here. We can't be more precise, since D/CD-ROM
         //  drives don't support READ_TRACK_INFO, which is the only way for
@@ -1076,10 +1076,10 @@ Return Value:
             ULONG Index;
             PUCHAR Buffer;
 
-            Buffer = 
-            Vcb->SectorCacheBuffer = FsRtlAllocatePool( CdPagedPool, 
+            Buffer =
+            Vcb->SectorCacheBuffer = FsRtlAllocatePool( CdPagedPool,
                                                         CD_SEC_CACHE_CHUNKS *
-                                                        CD_SEC_CHUNK_BLOCKS * 
+                                                        CD_SEC_CHUNK_BLOCKS *
                                                         SECTOR_SIZE);
 
             for (Index = 0; Index < (ULONG)CD_SEC_CACHE_CHUNKS; Index++) {
@@ -1096,11 +1096,11 @@ Return Value:
 
                 try_leave( Status = STATUS_INSUFFICIENT_RESOURCES );
             }
-            
-            IoInitializeIrp( Vcb->SectorCacheIrp, 
-                             IoSizeOfIrp( StackSize), 
+
+            IoInitializeIrp( Vcb->SectorCacheIrp,
+                             IoSizeOfIrp( StackSize),
                              (CCHAR)StackSize);
-            
+
             KeInitializeEvent( &Vcb->SectorCacheEvent, SynchronizationEvent, FALSE);
             ExInitializeResourceLite( &Vcb->SectorCacheResource);
         }
@@ -1116,13 +1116,13 @@ Return Value:
 
             //
             //  Link the old Vcb to point to the new device object that we
-            //  should be talking to, dereferencing the previous.  Call a 
+            //  should be talking to, dereferencing the previous.  Call a
             //  nonpaged routine to do this since we take the Vpb spinlock.
             //
 
-            CdReMountOldVcb( IrpContext, 
-                             OldVcb, 
-                             Vcb, 
+            CdReMountOldVcb( IrpContext,
+                             OldVcb,
+                             Vcb,
                              DeviceObjectWeTalkTo);
 
             //
@@ -1132,15 +1132,15 @@ Return Value:
             //  Note that we do not send mount on normal remounts - that would duplicate the media
             //  arrival notification of the device driver.
             //
-    
+
             if (FlagOn( OldVcb->VcbState, VCB_STATE_NOTIFY_REMOUNT )) {
-    
+
                 ClearFlag( OldVcb->VcbState, VCB_STATE_NOTIFY_REMOUNT );
-                
+
                 FileObjectToNotify = OldVcb->RootIndexFcb->FileObject;
                 ObReferenceObject( FileObjectToNotify );
             }
-            
+
             try_leave( Status = STATUS_SUCCESS );
         }
 
@@ -1233,8 +1233,8 @@ Return Value:
         //
         //  If we are not mounting the device,  then set the verify bit again.
         //
-        
-        if ((_SEH2_AbnormalTermination() || (Status != STATUS_SUCCESS)) && 
+
+        if ((_SEH2_AbnormalTermination() || (Status != STATUS_SUCCESS)) &&
             SetDoVerifyOnFail)  {
 
             CdMarkRealDevForVerify( IrpContext->RealDevice);
@@ -1276,7 +1276,7 @@ Return Value:
     //
     //  Now send mount notification.
     //
-    
+
     if (FileObjectToNotify) {
 
         FsRtlNotifyVolumeEvent( FileObjectToNotify, FSRTL_VOLUME_MOUNT );
@@ -1301,7 +1301,7 @@ Return Value:
     return Status;
 }
 
-
+
 //
 //  Local support routine
 //
@@ -1426,7 +1426,7 @@ Return Value:
 
             try_return( Status );
         }
-        
+
         if (Iosb.Information != sizeof(ULONG)) {
 
             //
@@ -1543,7 +1543,7 @@ Return Value:
 
                     try_return( Status = STATUS_WRONG_VOLUME );
 
-                } 
+                }
                 else {
 
                     //
@@ -1674,11 +1674,11 @@ Return Value:
         if (FlagOn( Vcb->VcbState, VCB_STATE_NOTIFY_REMOUNT )) {
 
             ClearFlag( Vcb->VcbState, VCB_STATE_NOTIFY_REMOUNT );
-            
+
             FileObjectToNotify = Vcb->RootIndexFcb->FileObject;
             ObReferenceObject( FileObjectToNotify );
         }
-        
+
     try_exit: NOTHING;
 
         //
@@ -1691,9 +1691,9 @@ Return Value:
         //
         //  If the volume was already unmounted, nothing more to do.
         //
-        
+
         if (Vcb->VcbCondition == VcbNotMounted) {
-        
+
             Status = STATUS_WRONG_VOLUME;
 
         //
@@ -1722,7 +1722,7 @@ Return Value:
             if (Vcb->VcbCleanup == 0) {
 
                 if (NT_SUCCESS( CdPurgeVolume( IrpContext, Vcb, FALSE ))) {
-                    
+
                     ReleaseVcb = CdCheckForDismount( IrpContext, Vcb, FALSE );
                 }
             }
@@ -1758,13 +1758,13 @@ Return Value:
     //
     //  Now send mount notification.
     //
-    
+
     if (FileObjectToNotify) {
 
         FsRtlNotifyVolumeEvent( FileObjectToNotify, FSRTL_VOLUME_MOUNT );
         ObDereferenceObject( FileObjectToNotify );
     }
-    
+
     //
     //  Complete the request if no exception.
     //
@@ -1773,7 +1773,7 @@ Return Value:
     return Status;
 }
 
-
+
 //
 //  Local support routine
 //
@@ -1930,7 +1930,7 @@ Return Value:
     return Status;
 }
 
-
+
 //
 //  Local support routine
 //
@@ -2013,7 +2013,7 @@ Return Value:
         //
 
         CdReleaseVcb( IrpContext, Vcb );
-        
+
         if (_SEH2_AbnormalTermination() || !NT_SUCCESS( Status )) {
 
             FsRtlNotifyVolumeEvent( IrpSp->FileObject, FSRTL_VOLUME_LOCK_FAILED );
@@ -2028,7 +2028,7 @@ Return Value:
     return Status;
 }
 
-
+
 //
 //  Local support routine
 //
@@ -2118,7 +2118,7 @@ Return Value:
 }
 
 
-
+
 //
 //  Local support routine
 //
@@ -2179,7 +2179,7 @@ Return Value:
     //
 
     SetFlag( IrpContext->Flags, IRP_CONTEXT_FLAG_WAIT);
-    
+
     //
     //  Acquire exclusive access to the Vcb,  and take the global resource to
     //  sync. against mounts,  verifies etc.
@@ -2206,26 +2206,26 @@ Return Value:
         //  on the volume fail and grease the rails toward dismount.
         //  By definition there is no going back from a SURPRISE.
         //
-            
+
         CdLockVcb( IrpContext, Vcb );
-        
+
         if (Vcb->VcbCondition != VcbDismountInProgress) {
-        
+
             CdUpdateVcbCondition( Vcb, VcbInvalid );
         }
 
         SetFlag( Vcb->VcbState, VCB_STATE_DISMOUNTED );
-        
+
         CdUnlockVcb( IrpContext, Vcb );
 
-        
+
         //
         //  Set flag to tell the close path that we want to force dismount
         //  the volume when this handle is closed.
         //
-        
+
         SetFlag( Ccb->Flags, CCB_FLAG_DISMOUNT_ON_CLOSE);
-        
+
         Status = STATUS_SUCCESS;
     }
 
@@ -2250,7 +2250,7 @@ Return Value:
     return Status;
 }
 
-
+
 //
 //  Local support routine
 //
@@ -2344,14 +2344,14 @@ Return Value:
     //  Now set up to return the clean state.  CDs obviously can never be dirty
     //  but we want to make sure we have enforced the full semantics of this call.
     //
-    
+
     Irp->IoStatus.Information = sizeof( ULONG );
 
     CdCompleteRequest( IrpContext, Irp, STATUS_SUCCESS );
     return STATUS_SUCCESS;
 }
 
-
+
 //
 //  Local support routine
 //
@@ -2412,7 +2412,7 @@ Return Value:
     return STATUS_SUCCESS;
 }
 
-
+
 //
 //  Local support routine
 //
@@ -2447,7 +2447,7 @@ Return Value:
     return STATUS_SUCCESS;
 }
 
-
+
 //
 //  Local support routine
 //
@@ -2481,9 +2481,9 @@ Return Value:
     NTSTATUS Status;
     PIO_STACK_LOCATION IrpSp = IoGetCurrentIrpStackLocation( Irp );
     KIRQL SavedIrql;
-    
+
     BOOLEAN UnlockVcb = FALSE;
-    
+
     LUID TcbPrivilege = {SE_TCB_PRIVILEGE, 0};
 
     HANDLE Handle;
@@ -2498,7 +2498,7 @@ Return Value:
     //
     //  We only allow the invalidate call to come in on our file system devices.
     //
-    
+
 #ifndef __REACTOS__
     if (IrpSp->DeviceObject != CdData.FileSystemDeviceObject)  {
 #else
@@ -2530,7 +2530,7 @@ Return Value:
 #if defined(_WIN64) && BUILD_WOW64_ENABLED
 
     if (IoIs32bitProcess( Irp )) {
-        
+
         if (IrpSp->Parameters.FileSystemControl.InputBufferLength != sizeof( UINT32 )) {
 
             CdCompleteRequest( IrpContext, Irp, STATUS_INVALID_PARAMETER );
@@ -2538,7 +2538,7 @@ Return Value:
         }
 
         Handle = (HANDLE) LongToHandle( *((PUINT32) Irp->AssociatedIrp.SystemBuffer) );
-    
+
     } else
 
 #endif
@@ -2588,7 +2588,7 @@ Return Value:
     //
     //  Synchronise with pnp/mount/verify paths.
     //
-    
+
     CdAcquireCdData( IrpContext );
 
     //
@@ -2621,18 +2621,18 @@ Return Value:
         if (Vcb->Vpb->RealDevice == DeviceToMarkBad) {
 
             //
-            //  Take the VPB spinlock,  and look to see if this volume is the 
-            //  one currently mounted on the actual device.  If it is,  pull it 
+            //  Take the VPB spinlock,  and look to see if this volume is the
+            //  one currently mounted on the actual device.  If it is,  pull it
             //  off immediately.
             //
-            
+
             IoAcquireVpbSpinLock( &SavedIrql );
 
 #ifdef _MSC_VER
 #pragma prefast(suppress: 28175, "this is a filesystem driver, touching the vpb is allowed")
 #endif
             if (DeviceToMarkBad->Vpb == Vcb->Vpb)  {
-            
+
                 PVPB NewVpb = Vcb->SwapVpb;
 
                 NT_ASSERT( FlagOn( Vcb->Vpb->Flags, VPB_MOUNTED));
@@ -2660,14 +2660,14 @@ Return Value:
             IoReleaseVpbSpinLock( SavedIrql );
 
             if (Vcb->VcbCondition != VcbDismountInProgress) {
-                
+
                 CdUpdateVcbCondition( Vcb, VcbInvalid);
             }
 
             CdUnlockVcb( IrpContext, Vcb );
 
             CdAcquireVcbExclusive( IrpContext, Vcb, FALSE);
-            
+
             CdPurgeVolume( IrpContext, Vcb, FALSE );
 
             UnlockVcb = CdCheckForDismount( IrpContext, Vcb, FALSE );
@@ -2675,9 +2675,9 @@ Return Value:
             //
             //  prefast: if UnlockVcb is false, then the VCB was already deleted, so we better not touch the Vcb.
             //           tell Prefast something nice so it stops complaining about us leaking it.
-            // 
-            
-            __analysis_assert( UnlockVcb == TRUE );            
+            //
+
+            __analysis_assert( UnlockVcb == TRUE );
 
             if (UnlockVcb)  {
 
@@ -2818,7 +2818,7 @@ Return Value:
     return;
 }
 
-
+
 //
 //  Local support routine
 //
@@ -2898,7 +2898,7 @@ Return Value:
 
         return FALSE;
     }
-    
+
     //
     //  We will make at most two passes through the volume descriptor sequence.
     //
@@ -3131,7 +3131,7 @@ Return Value:
     return FoundVd;
 }
 
-
+
 //
 //  Local support routine
 //
@@ -3256,7 +3256,7 @@ Return Value:
             //  serial numbers, volume label and TOC.
             //
 
-            } 
+            }
             else if ((OldVpb->SerialNumber == Vpb->SerialNumber) &&
                      (Vcb->TocLength == (*OldVcb)->TocLength) &&
                      ((Vcb->TocLength == 0) || RtlEqualMemory( Vcb->CdromToc,
@@ -3280,7 +3280,7 @@ Return Value:
     return Remount;
 }
 
-
+
 //
 //  Local support routine
 //
@@ -3388,7 +3388,7 @@ Return Value:
                                  ESC_SEQ_LEN ))) {
 
                 if (!VerifyVolume)  {
-                        
+
                     //
                     //  Update the Vcb with the new volume descriptor.
                     //
@@ -3398,7 +3398,7 @@ Return Value:
 
                     Vcb->VdSectorOffset = SectorOffset;
                 }
-                
+
                 FoundSecondaryVd = TRUE;
                 break;
             }
@@ -3427,12 +3427,12 @@ Return Value:
     //  If we're in the verify path,  our work is done,  since we don't want
     //  to update any Vcb/Vpb values.
     //
-    
+
     if (VerifyVolume)  {
 
         return;
     }
-        
+
     //
     //  Compute the serial number and volume label from the volume descriptor.
     //

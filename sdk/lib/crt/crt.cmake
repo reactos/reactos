@@ -483,6 +483,10 @@ elseif(ARCH STREQUAL "amd64")
     if(MSVC)
         list(APPEND CRT_ASM_SOURCE
             except/amd64/cpp.s)
+        if (CMAKE_C_COMPILER_ID STREQUAL "Clang")
+            list(APPEND CRT_ASM_SOURCE
+                stdlib/clang-alias.s)
+        endif()
     endif()
 elseif(ARCH STREQUAL "arm")
     list(APPEND CRT_SOURCE
@@ -559,7 +563,6 @@ if(NOT ARCH STREQUAL "i386")
         math/modff.c
         math/sin.c
         math/sinhf.c
-        math/sqrt.c
         math/sqrtf.c
         math/tanf.c
         math/tanhf.c
@@ -603,7 +606,7 @@ if(USE_CLANG_CL)
 endif()
 
 add_library(crt ${CRT_SOURCE} ${CRT_WINE_SOURCE} ${crt_asm})
-target_link_libraries(crt chkstk)
+target_link_libraries(crt chkstk ${PSEH_LIB})
 target_compile_definitions(crt
  PRIVATE    __MINGW_IMPORT=extern
     USE_MSVCRT_PREFIX

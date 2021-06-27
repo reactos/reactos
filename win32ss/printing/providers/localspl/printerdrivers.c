@@ -94,7 +94,7 @@ InitializePrinterDrivers(VOID)
     StringCbCopyW(wszPrintUiFile, sizeof(wszPrintUiFile), szSysDir);
     StringCbCatW(wszPrintUiFile, sizeof(wszPrintUiFile), L"\\printui.dll");
 
-    if (!LocalGetPrinterDriverDirectory( NULL, (PWSTR)wszCurrentEnvironment, 1, (PBYTE)szSysDir, cbBuf, &cbBuf ) )
+    if (!LocalGetPrinterDriverDirectory(NULL, (PWSTR)wszCurrentEnvironment, 1, (PBYTE)szSysDir, (DWORD)sizeof(szSysDir), &cbBuf))
     {
         ERR("LocalGetPrinterDriverDirectory failed\n");
         return FALSE;

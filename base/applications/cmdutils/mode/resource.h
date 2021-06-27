@@ -47,5 +47,6 @@
 #define IDS_ERROR_INVALID_STOP_BITS     35
 #define IDS_ERROR_NO_MEMORY             36
 #define IDS_ERROR_SCREEN_LINES_COL      37
+#define IDS_ERROR_INVALID_CODEPAGE      38
 
 #endif /* RESOURCE_H */

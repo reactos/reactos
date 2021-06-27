@@ -265,7 +265,7 @@ NTAPI
 MmCreateMirror(VOID)
 {
     UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;    
+    return STATUS_NOT_IMPLEMENTED;
 }
 
 /* EOF */

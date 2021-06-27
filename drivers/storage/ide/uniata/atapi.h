@@ -248,13 +248,13 @@ typedef union _IDE_REGISTERS_2 {
 #define DFLAGS_DWORDIO_ENABLED       0x0400    // Indicates that we should use 32-bit IO
 #define DFLAGS_WCACHE_ENABLED        0x0800    // Indicates that we use write cache
 #define DFLAGS_RCACHE_ENABLED        0x1000    // Indicates that we use read cache
-#define DFLAGS_ORIG_GEOMETRY         0x2000    // 
-#define DFLAGS_REINIT_DMA            0x4000    // 
+#define DFLAGS_ORIG_GEOMETRY         0x2000    //
+#define DFLAGS_REINIT_DMA            0x4000    //
 #define DFLAGS_HIDDEN                0x8000    // Hidden device, available only with special IOCTLs
                                                // via communication virtual device
 #define DFLAGS_MANUAL_CHS            0x10000   // For devices those have no IDENTIFY commands
 #define DFLAGS_LBA32plus             0x20000   // Device is larger than LBA32
-//#define DFLAGS_            0x10000    // 
+//#define DFLAGS_            0x10000    //
 //
 // Used to disable 'advanced' features.
 //
@@ -404,12 +404,12 @@ typedef struct _MODE_PARAMETER_HEADER_10 {
 #define IDE_COMMAND_MEDIA_EJECT      0xED
 #define IDE_COMMAND_FLUSH_CACHE48    0xEA
 #define IDE_COMMAND_ENABLE_MEDIA_STATUS  0xEF
-#define	IDE_COMMAND_SET_FEATURES     0xEF      /* features command, 
+#define	IDE_COMMAND_SET_FEATURES     0xEF      /* features command,
                                                  IDE_COMMAND_ENABLE_MEDIA_STATUS */
 #define IDE_COMMAND_READ_NATIVE_SIZE 0xF8
 #define IDE_COMMAND_SET_NATIVE_SIZE  0xF9
 
-#define SCSIOP_ATA_PASSTHROUGH       0xCC // 
+#define SCSIOP_ATA_PASSTHROUGH       0xCC //
 
 //
 // IDE status definitions
@@ -653,7 +653,7 @@ typedef struct _IDENTIFY_DATA {
     USHORT DoubleWordIo;                    // 60  48
 
     USHORT Reserved62_0:8;                  // 62  49
-    USHORT SupportDma:1;                    
+    USHORT SupportDma:1;
     USHORT SupportLba:1;
     USHORT DisableIordy:1;
     USHORT SupportIordy:1;
@@ -672,11 +672,11 @@ typedef struct _IDENTIFY_DATA {
 #define IDENTIFY_CAPABILITIES_SUPPORT_QTAG  0x4000
 #define IDENTIFY_CAPABILITIES_SUPPORT_IDMA  0x8000*/
 
-    USHORT DeviceStandbyMin:1;              // 64  50      
+    USHORT DeviceStandbyMin:1;              // 64  50
     USHORT Reserved50_1:13;
     USHORT DeviceCapability1:1;
     USHORT DeviceCapability0:1;
-//    USHORT Reserved2;                       
+//    USHORT Reserved2;
 
     UCHAR  Vendor51;                        // 66  51
     UCHAR  PioCycleTimingMode;              // 67
@@ -712,9 +712,9 @@ typedef struct _IDENTIFY_DATA {
         struct {
             USHORT UDMASupport : 7;        //     62  ATAPI
             USHORT MultiWordDMASupport : 3;
-            USHORT DMASupport : 1;         
-            USHORT Reseved62_11_14 : 4;         
-            USHORT DMADirRequired : 1;         
+            USHORT DMASupport : 1;
+            USHORT Reseved62_11_14 : 4;
+            USHORT DMADirRequired : 1;
         } AtapiDMA;
     };
 
@@ -801,12 +801,12 @@ typedef struct _IDENTIFY_DATA {
         USHORT Reserved_82_15:1;
 
         USHORT Microcode:1;                  //     83/86
-        USHORT Queued:1;                     //     
-        USHORT CFA:1;                        //     
-        USHORT APM:1;                        //     
-        USHORT Notify:1;                     //     
-        USHORT Standby:1;                    //     
-        USHORT Spinup:1;                     //     
+        USHORT Queued:1;                     //
+        USHORT CFA:1;                        //
+        USHORT APM:1;                        //
+        USHORT Notify:1;                     //
+        USHORT Standby:1;                    //
+        USHORT Spinup:1;                     //
         USHORT Reserver_83_7:1;
         USHORT MaxSecurity:1;                //
         USHORT AutoAcoustic:1;               //
@@ -830,7 +830,7 @@ typedef struct _IDENTIFY_DATA {
 
     USHORT UltraDMASupport : 8;             //     88
     USHORT UltraDMAActive : 8;
-    
+
     USHORT EraseTime;                       //     89
     USHORT EnhancedEraseTime;               //     90
     USHORT CurentAPMLevel;                  //     91
@@ -871,14 +871,14 @@ typedef struct _IDENTIFY_DATA {
     USHORT Reserved112[5];                 //     112-116
 
     ULONG  LargeSectorSize;                 //     117-118
-    
+
     struct {
         USHORT Reserved;
     } CommandFeatureSetSupport, CommandFeatureSetEnabled; // 119-120
     USHORT Reserved121[4];                  //     121-124
     USHORT AtapiByteCount0;                 //     125
     USHORT Reserved126;                     //     126
-    
+
     USHORT RemovableStatus;                 //     127
     union {
         USHORT SecurityStatus;                  //     128
@@ -1000,7 +1000,7 @@ typedef struct _IDENTIFY_DATA {
     UCHAR  :1;
     UCHAR  CmdProtocol:2;                      // 00 00
 //    USHORT GeneralConfiguration;            // 00
-  
+
     USHORT NumberOfCylinders;               // 02
     USHORT Reserved1;                       // 04
     USHORT NumberOfHeads;                   // 06
@@ -1423,7 +1423,7 @@ AtaCommand(
     IN UCHAR command,
     IN USHORT cylinder,
     IN UCHAR head,
-    IN UCHAR sector, 
+    IN UCHAR sector,
     IN UCHAR count,
     IN UCHAR feature,
     IN ULONG flags
@@ -1450,7 +1450,7 @@ AtapiDpcDispatch(
     IN PVOID SystemArgument2
     );
 
-//#define AtaCommand(de, devn, chan, cmd, cyl, hd, sec, cnt, feat, flg) 
+//#define AtaCommand(de, devn, chan, cmd, cyl, hd, sec, cnt, feat, flg)
 
 extern LONG
 NTAPI
@@ -1706,7 +1706,7 @@ ata_cur_mode_from_ident(
             return ATA_PIO0+5;
         if (mode & AdvancedPIOModes_4)
             return ATA_PIO0+4;
-        if (mode & AdvancedPIOModes_3) 
+        if (mode & AdvancedPIOModes_3)
             return ATA_PIO0+3;
     }
     mode = ident->PioCycleTimingMode;

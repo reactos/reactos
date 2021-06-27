@@ -20,8 +20,8 @@
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS kernel
  * FILE:        hal/halx86/mp/apic.c
- * PURPOSE:     
- * PROGRAMMER:  
+ * PURPOSE:
+ * PROGRAMMER:
  */
 
 /* INCLUDE ***********************************************************************/
@@ -119,7 +119,7 @@ VOID APICClear(VOID)
    * any level-triggered sources.
    */
 
-  if (maxlvt >= 3) 
+  if (maxlvt >= 3)
   {
     tmp = ERROR_VECTOR;
     APICWrite(APIC_LVT3, tmp | APIC_LVT3_MASKED);
@@ -134,7 +134,7 @@ VOID APICClear(VOID)
   tmp = APICRead(APIC_LINT1);
   APICWrite(APIC_LINT1, tmp | APIC_LVT_MASKED);
 
-  if (maxlvt >= 4) 
+  if (maxlvt >= 4)
   {
     tmp = APICRead(APIC_LVTPC);
     APICWrite(APIC_LVTPC, tmp | APIC_LVT_MASKED);
@@ -153,17 +153,17 @@ VOID APICClear(VOID)
   APICWrite(APIC_LINT0, APIC_LVT_MASKED);
   APICWrite(APIC_LINT1, APIC_LVT_MASKED);
 
-  if (maxlvt >= 3) 
+  if (maxlvt >= 3)
   {
     APICWrite(APIC_LVT3, APIC_LVT3_MASKED);
   }
 
-  if (maxlvt >= 4) 
+  if (maxlvt >= 4)
   {
     APICWrite(APIC_LVTPC, APIC_LVT_MASKED);
   }
 #if 0
-  if (maxlvt >= 5) 
+  if (maxlvt >= 5)
   {
     APICWrite(APIC_LVTTHMR, APIC_LVT_MASKED);
   }
@@ -227,10 +227,10 @@ static VOID APICDumpBit(ULONG base)
 	ULONG v, i, j;
 
 	DbgPrint("0123456789abcdef0123456789abcdef\n");
-	for (i = 0; i < 8; i++) 
+	for (i = 0; i < 8; i++)
 	{
 		v = APICRead(base + i*0x10);
-		for (j = 0; j < 32; j++) 
+		for (j = 0; j < 32; j++)
 		{
 			if (v & (1<<j))
 				DbgPrint("1");
@@ -268,7 +268,7 @@ VOID APICDump(VOID)
   v = APICRead(APIC_TPR);
   DbgPrint("... TPR    : %08x (%02x)", v, v & ~0);
 
-  if (APIC_INTEGRATED(ver)) 
+  if (APIC_INTEGRATED(ver))
   {
      /* !82489DX */
      v = APICRead(APIC_APR);
@@ -296,10 +296,10 @@ VOID APICDump(VOID)
   	APICDumpBit(APIC_IRR);
   }
 
-  if (APIC_INTEGRATED(ver)) 
+  if (APIC_INTEGRATED(ver))
   {
      /* !82489DX */
-     if (maxlvt > 3)		
+     if (maxlvt > 3)
      {
 	/* Due to the Pentium erratum 3AP. */
 	APICWrite(APIC_ESR, 0);
@@ -307,7 +307,7 @@ VOID APICDump(VOID)
      v = APICRead(APIC_ESR);
      DbgPrint("... ESR    : %08x\n", v);
   }
- 
+
   v = APICRead(APIC_ICR0);
   DbgPrint("... ICR0   : %08x  !  ", v);
   v = APICRead(APIC_ICR1);
@@ -316,7 +316,7 @@ VOID APICDump(VOID)
   v = APICRead(APIC_LVTT);
   DbgPrint("... LVTT   : %08x\n", v);
 
-  if (maxlvt > 3) 
+  if (maxlvt > 3)
   {
      /* PC is LVT#4. */
      v = APICRead(APIC_LVTPC);
@@ -327,7 +327,7 @@ VOID APICDump(VOID)
   v = APICRead(APIC_LINT1);
   DbgPrint("... LINT1  : %08x\n", v);
 
-  if (maxlvt > 2) 
+  if (maxlvt > 2)
   {
      v = APICRead(APIC_LVT3);
      DbgPrint("... LVT3   : %08x\n", v);
@@ -400,7 +400,7 @@ BOOLEAN VerifyLocalAPIC(VOID)
 
    MsrValue.QuadPart = __readmsr(0x1B /*MSR_IA32_APICBASE*/);
 
-   if (!(MsrValue.LowPart & /*MSR_IA32_APICBASE_ENABLE*/(1<<11))) 
+   if (!(MsrValue.LowPart & /*MSR_IA32_APICBASE_ENABLE*/(1<<11)))
    {
       DPRINT1("Local APIC disabled by BIOS -- reenabling.\n");
       MsrValue.LowPart &= ~/*MSR_IA32_APICBASE_BASE*/(1<<11);
@@ -408,7 +408,7 @@ BOOLEAN VerifyLocalAPIC(VOID)
       __writemsr(0x1B /*MSR_IA32_APICBASE*/, MsrValue.HighPart);
    }
 
-    
+
 
    return TRUE;
 }
@@ -423,7 +423,7 @@ VOID APICSendIPI(ULONG Target, ULONG Mode)
    _disable();
 
    /* Wait up to 100ms for the APIC to become ready */
-   for (i = 0; i < 10000; i++) 
+   for (i = 0; i < 10000; i++)
    {
       tmp = APICRead(APIC_ICR0);
       /* Check Delivery Status */
@@ -432,7 +432,7 @@ VOID APICSendIPI(ULONG Target, ULONG Mode)
       KeStallExecutionProcessor(10);
    }
 
-   if (i == 10000) 
+   if (i == 10000)
    {
       DPRINT1("CPU(%d) Previous IPI was not delivered after 100ms.\n", ThisCPU());
    }
@@ -441,19 +441,19 @@ VOID APICSendIPI(ULONG Target, ULONG Mode)
    DPRINT("%08x %x\n", SET_APIC_DEST_FIELD(Target), Target);
    APICWrite(APIC_ICR1, SET_APIC_DEST_FIELD(Target));
 
-   if (Target == APIC_TARGET_SELF) 
+   if (Target == APIC_TARGET_SELF)
    {
       Mode |= APIC_ICR0_DESTS_SELF;
-   } 
-   else if (Target == APIC_TARGET_ALL) 
+   }
+   else if (Target == APIC_TARGET_ALL)
    {
       Mode |= APIC_ICR0_DESTS_ALL;
-   } 
-   else if (Target == APIC_TARGET_ALL_BUT_SELF) 
+   }
+   else if (Target == APIC_TARGET_ALL_BUT_SELF)
    {
       Mode |= APIC_ICR0_DESTS_ALL_BUT_SELF;
-   } 
-   else 
+   }
+   else
    {
       Mode |= APIC_ICR0_DESTS_FIELD;
    }
@@ -462,7 +462,7 @@ VOID APICSendIPI(ULONG Target, ULONG Mode)
    APICWrite(APIC_ICR0, Mode);
 
    /* Wait up to 100ms for the APIC to become ready */
-   for (i = 0; i < 10000; i++) 
+   for (i = 0; i < 10000; i++)
    {
       tmp = APICRead(APIC_ICR0);
       /* Check Delivery Status */
@@ -471,7 +471,7 @@ VOID APICSendIPI(ULONG Target, ULONG Mode)
       KeStallExecutionProcessor(10);
    }
 
-   if (i == 10000) 
+   if (i == 10000)
    {
       DPRINT1("CPU(%d) Current IPI was not delivered after 100ms.\n", ThisCPU());
    }
@@ -486,7 +486,7 @@ VOID APICSetup(VOID)
    CPU = ThisCPU();
 
 //   APICDump();
-  
+
    DPRINT1("CPU%d:\n", CPU);
    DPRINT1("  Physical APIC id: %d\n", GET_APIC_ID(APICRead(APIC_ID)));
    DPRINT1("  Logical APIC id:  %d\n", GET_APIC_LOGICAL_ID(APICRead(APIC_LDR)));
@@ -509,7 +509,7 @@ VOID APICSetup(VOID)
     */
    tmp = APICRead(APIC_LDR);
    tmp &= ~APIC_LDR_MASK;
-   /* 
+   /*
     * FIXME:
     *   This works only up to 8 CPU's
     */
@@ -549,12 +549,12 @@ VOID APICSetup(VOID)
    * we delegate interrupts to the 8259A.
    */
   tmp = APICRead(APIC_LINT0) & APIC_LVT_MASKED;
-  if (CPU == BootCPU && (APICMode == amPIC || !tmp)) 
+  if (CPU == BootCPU && (APICMode == amPIC || !tmp))
   {
      tmp = APIC_DM_EXTINT;
      DPRINT1("enabled ExtINT on CPU#%d\n", CPU);
-  } 
-  else 
+  }
+  else
   {
      tmp = APIC_DM_EXTINT | APIC_LVT_MASKED;
      DPRINT1("masked ExtINT on CPU#%d\n", CPU);
@@ -572,17 +572,17 @@ VOID APICSetup(VOID)
   {
      tmp = APIC_DM_NMI | APIC_LVT_MASKED;
   }
-  if (!APIC_INTEGRATED(CPUMap[CPU].APICVersion)) 
+  if (!APIC_INTEGRATED(CPUMap[CPU].APICVersion))
   {
      /* 82489DX */
      tmp |= APIC_LVT_LEVEL_TRIGGER;
   }
   APICWrite(APIC_LINT1, tmp);
 
-  if (APIC_INTEGRATED(CPUMap[CPU].APICVersion)) 
-  {	
+  if (APIC_INTEGRATED(CPUMap[CPU].APICVersion))
+  {
      /* !82489DX */
-     if (APICGetMaxLVT() > 3) 
+     if (APICGetMaxLVT() > 3)
      {
 	/* Due to the Pentium erratum 3AP */
 	APICWrite(APIC_ESR, 0);
@@ -612,7 +612,7 @@ VOID APICSyncArbIDs(VOID)
    ULONG i, tmp;
 
    /* Wait up to 100ms for the APIC to become ready */
-   for (i = 0; i < 10000; i++) 
+   for (i = 0; i < 10000; i++)
    {
       tmp = APICRead(APIC_ICR0);
       /* Check Delivery Status */
@@ -621,7 +621,7 @@ VOID APICSyncArbIDs(VOID)
       KeStallExecutionProcessor(10);
    }
 
-   if (i == 10000) 
+   if (i == 10000)
    {
       DPRINT("CPU(%d) APIC busy for 100ms.\n", ThisCPU());
    }
@@ -666,7 +666,7 @@ VOID MpsSpuriousHandler(VOID)
   ULONG tmp;
 
   DPRINT("Spurious interrupt on CPU(%d)\n", ThisCPU());
-  
+
   tmp = APICRead(APIC_ISR + ((SPURIOUS_VECTOR & ~0x1f) >> 1));
   if (tmp & (1 << (SPURIOUS_VECTOR & 0x1f)))
   {
@@ -685,13 +685,13 @@ VOID MpsIpiHandler(VOID)
    KIRQL oldIrql;
 
    HalBeginSystemInterrupt(IPI_LEVEL,
-                           IPI_VECTOR, 
+                           IPI_VECTOR,
 			   &oldIrql);
    _enable();
 #if 0
-   DbgPrint("(%s:%d) MpsIpiHandler on CPU%d, current irql is %d\n", 
+   DbgPrint("(%s:%d) MpsIpiHandler on CPU%d, current irql is %d\n",
             __FILE__,__LINE__, KeGetCurrentProcessorNumber(), KeGetCurrentIrql());
-#endif   
+#endif
 
    KiIpiServiceRoutine(NULL, NULL);
 
@@ -738,8 +738,8 @@ MpsTimerHandler(ULONG Vector, PKIRQ_TRAPFRAME Trapframe)
    ULONG CPU;
    static ULONG Count[MAX_CPU] = {0,};
 #endif
-   HalBeginSystemInterrupt(LOCAL_TIMER_VECTOR, 
-                           PROFILE_LEVEL, 
+   HalBeginSystemInterrupt(LOCAL_TIMER_VECTOR,
+                           PROFILE_LEVEL,
 			   &oldIrql);
    _enable();
 
@@ -790,7 +790,7 @@ VOID APICSetupLVTT(ULONG ClockTicks)
    APICWrite(APIC_ICRT, ClockTicks / APIC_DIVISOR);
 }
 
-VOID 
+VOID
 APICCalibrateTimer(ULONG CPU)
 {
    ULARGE_INTEGER t1, t2;
@@ -845,7 +845,7 @@ APICCalibrateTimer(ULONG CPU)
 	  CPUMap[CPU].BusSpeed%1000000);
 }
 
-VOID 
+VOID
 SetInterruptGate(ULONG index, ULONG_PTR address)
 {
 #ifdef _M_AMD64
@@ -874,7 +874,7 @@ SetInterruptGate(ULONG index, ULONG_PTR address)
   Access.Dpl = 0; /* Kernel-Mode */
   Access.SystemSegmentFlag = 0;
   Access.SegmentType = I386_INTERRUPT_GATE;
-  
+
   idt = (KIDTENTRY*)((ULONG)KeGetPcr()->IDT + index * sizeof(KIDTENTRY));
   idt->Offset = (USHORT)(address & 0xffff);
   idt->Selector = KGDT_R0_CODE;
@@ -909,17 +909,17 @@ VOID HaliInitBSP(VOID)
 #endif
    DPRINT("APIC is mapped at 0x%X\n", APICBase);
 
-   if (VerifyLocalAPIC()) 
+   if (VerifyLocalAPIC())
    {
       DPRINT("APIC found\n");
-   } 
-   else 
+   }
+   else
    {
       DPRINT("No APIC found\n");
       ASSERT(FALSE);
    }
 
-   if (APICMode == amPIC) 
+   if (APICMode == amPIC)
    {
       EnableApicMode();
    }
@@ -929,10 +929,10 @@ VOID HaliInitBSP(VOID)
 #ifdef CONFIG_SMP
    /* BIOS data segment */
    BIOSBase = (PULONG)BIOS_AREA;
-   
+
    /* Area for communicating with the APs */
    CommonBase = (PULONG)COMMON_AREA;
- 
+
    /* Copy bootstrap code to common area */
    memcpy((PVOID)((ULONG_PTR)CommonBase + PAGE_SIZE),
 	  &APstart,
@@ -944,7 +944,7 @@ VOID HaliInitBSP(VOID)
    /* Set warm reset vector */
    ps = (PUSHORT)((ULONG_PTR)BIOSBase + 0x467);
    *ps = (COMMON_AREA + PAGE_SIZE) & 0xF;
- 
+
    ps = (PUSHORT)((ULONG_PTR)BIOSBase + 0x469);
    *ps = (COMMON_AREA + PAGE_SIZE) >> 4;
 #endif
@@ -975,14 +975,14 @@ HaliStartApplicationProcessor(ULONG Cpu, ULONG Stack)
    /* Send INIT IPI */
 
    APICSendIPI(Cpu, APIC_DM_INIT|APIC_ICR0_LEVEL_ASSERT);
- 
+
    KeStallExecutionProcessor(200);
 
    /* Deassert INIT */
 
    APICSendIPI(Cpu, APIC_DM_INIT|APIC_ICR0_LEVEL_DEASSERT);
 
-   if (APIC_INTEGRATED(CPUMap[Cpu].APICVersion)) 
+   if (APIC_INTEGRATED(CPUMap[Cpu].APICVersion))
    {
       /* Clear APIC errors */
       APICWrite(APIC_ESR, 0);
@@ -1004,7 +1004,7 @@ HaliStartApplicationProcessor(ULONG Cpu, ULONG Stack)
 
    DPRINT("Cpu %d got stack at 0x%X\n", Cpu, Common->Stack);
 #if 0
-   for (j = 0; j < 16; j++) 
+   for (j = 0; j < 16; j++)
    {
       Common->Debug[j] = 0;
    }
@@ -1027,7 +1027,7 @@ HaliStartApplicationProcessor(ULONG Cpu, ULONG Stack)
 
       /* Wait up to 10ms for IPI to be delivered */
       j = 0;
-      do 
+      do
       {
          KeStallExecutionProcessor(10);
 
@@ -1042,7 +1042,7 @@ HaliStartApplicationProcessor(ULONG Cpu, ULONG Stack)
       /*
        * Due to the Pentium erratum 3AP.
        */
-      if (maxlvt > 3) 
+      if (maxlvt > 3)
       {
         APICRead(APIC_SIVR);
         APICWrite(APIC_ESR, 0);
@@ -1050,30 +1050,30 @@ HaliStartApplicationProcessor(ULONG Cpu, ULONG Stack)
 
       AcceptStatus = APICRead(APIC_ESR) & APIC_ESR_MASK;
 
-      if (DeliveryStatus || AcceptStatus) 
+      if (DeliveryStatus || AcceptStatus)
       {
          break;
       }
    }
 
-   if (DeliveryStatus) 
+   if (DeliveryStatus)
    {
       DPRINT("STARTUP IPI for CPU %d was never delivered.\n", Cpu);
    }
 
-   if (AcceptStatus) 
+   if (AcceptStatus)
    {
       DPRINT("STARTUP IPI for CPU %d was never accepted.\n", Cpu);
    }
 
-   if (!(DeliveryStatus || AcceptStatus)) 
+   if (!(DeliveryStatus || AcceptStatus))
    {
 
       /* Wait no more than 5 seconds for processor to boot */
       DPRINT("Waiting for 5 seconds for CPU %d to boot\n", Cpu);
 
       /* Wait no more than 5 seconds */
-      for (j = 0; j < 50000; j++) 
+      for (j = 0; j < 50000; j++)
       {
          if (CPUMap[Cpu].Flags & CPU_ENABLED)
 	 {
@@ -1083,11 +1083,11 @@ HaliStartApplicationProcessor(ULONG Cpu, ULONG Stack)
       }
    }
 
-   if (CPUMap[Cpu].Flags & CPU_ENABLED) 
+   if (CPUMap[Cpu].Flags & CPU_ENABLED)
    {
       DbgPrint("CPU %d is now running\n", Cpu);
-   } 
-   else 
+   }
+   else
    {
       DbgPrint("Initialization of CPU %d failed\n", Cpu);
    }
@@ -1095,7 +1095,7 @@ HaliStartApplicationProcessor(ULONG Cpu, ULONG Stack)
 #if 0
    DPRINT("Debug bytes are:\n");
 
-   for (j = 0; j < 4; j++) 
+   for (j = 0; j < 4; j++)
    {
       DPRINT("0x%08X 0x%08X 0x%08X 0x%08X.\n",
              Common->Debug[j*4+0],
@@ -1118,15 +1118,15 @@ HalpApcInterruptHandler(IN PKTRAP_FRAME TrapFrame)
     TrapFrame->EFlags = __readeflags();
     TrapFrame->SegCs = KGDT_R0_CODE;
     TrapFrame->Eip = TrapFrame->Eax;
-    
+
     /* Build the trap frame */
     KiEnterInterruptTrap(TrapFrame);
-    
+
     /* unimplemented */
     UNIMPLEMENTED;
-    
+
     /* Exit the interrupt */
-    KiEoiHelper(TrapFrame); 
+    KiEoiHelper(TrapFrame);
 
 }
 

@@ -203,7 +203,7 @@ struct acpi_device_power_flags {
 
 struct acpi_device_power_state {
 	struct {
-		UINT8			valid:1;	
+		UINT8			valid:1;
 		UINT8			explicit_set:1;	     /* _PSx present? */
 		UINT8			reserved:6;
 	}			flags;
@@ -227,7 +227,7 @@ struct acpi_device_perf_flags {
 
 struct acpi_device_perf_state {
 	struct {
-		UINT8			valid:1;	
+		UINT8			valid:1;
 		UINT8			reserved:7;
 	}			flags;
 	UINT8			power;		  /* % Power (compared to P0) */

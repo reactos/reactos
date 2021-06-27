@@ -1,11 +1,10 @@
 
-if(NOT ARCH)
-    set(ARCH i386)
-endif()
-
 if(DEFINED ENV{_ROSBE_ROSSCRIPTDIR})
     set(CMAKE_SYSROOT $ENV{_ROSBE_ROSSCRIPTDIR}/$ENV{ROS_ARCH})
 endif()
+
+# pass variables necessary for the toolchain (needed for try_compile)
+set(CMAKE_TRY_COMPILE_PLATFORM_VARIABLES ARCH CLANG_VERSION)
 
 # The name of the target operating system
 set(CMAKE_SYSTEM_NAME Windows)
@@ -17,7 +16,7 @@ elseif (ARCH STREQUAL "amd64")
 elseif(ARCH STREQUAL "arm")
     set(CMAKE_SYSTEM_PROCESSOR arm)
 else()
-    message(ERROR "Unsupported ARCH: ${ARCH}")
+    message(FATAL_ERROR "Unsupported ARCH: ${ARCH}")
 endif()
 
 if (DEFINED CLANG_VERSION)
@@ -55,10 +54,9 @@ set(CMAKE_ASM_CREATE_STATIC_LIBRARY ${CMAKE_C_CREATE_STATIC_LIBRARY})
 set(CMAKE_C_STANDARD_LIBRARIES "-lgcc" CACHE STRING "Standard C Libraries")
 set(CMAKE_CXX_STANDARD_LIBRARIES "-lgcc" CACHE STRING "Standard C++ Libraries")
 
-set(CMAKE_SHARED_LINKER_FLAGS_INIT "-nostdlib -Wl,--enable-auto-image-base,--disable-auto-import -fuse-ld=${CMAKE_SYSROOT}/bin/${triplet}-ld")
-set(CMAKE_MODULE_LINKER_FLAGS_INIT "-nostdlib -Wl,--enable-auto-image-base,--disable-auto-import -fuse-ld=${CMAKE_SYSROOT}/bin/${triplet}-ld")
-if (DEFINED CMAKE_SYSROOT)
-    set(CMAKE_EXE_LINKER_FLAGS_INIT "-nostdlib -fuse-ld=${CMAKE_SYSROOT}/bin/${GCC_TOOLCHAIN_PREFIX}ld")
-else()
-    set(CMAKE_EXE_LINKER_FLAGS_INIT "-nostdlib -fuse-ld=${GCC_TOOLCHAIN_PREFIX}ld")
-endif()
+find_program (LD_EXECUTABLE ${GCC_TOOLCHAIN_PREFIX}ld)
+message(STATUS "Using linker ${LD_EXECUTABLE}")
+
+set(CMAKE_SHARED_LINKER_FLAGS_INIT "-nostdlib -Wl,--enable-auto-image-base,--disable-auto-import -fuse-ld=${LD_EXECUTABLE}")
+set(CMAKE_MODULE_LINKER_FLAGS_INIT "-nostdlib -Wl,--enable-auto-image-base,--disable-auto-import -fuse-ld=${LD_EXECUTABLE}")
+set(CMAKE_EXE_LINKER_FLAGS_INIT "-nostdlib -Wl,--enable-auto-image-base,--disable-auto-import -fuse-ld=${LD_EXECUTABLE}")

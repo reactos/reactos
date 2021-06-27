@@ -1,4 +1,4 @@
-/* 
+/*
  * FFS File System Driver for Windows
  *
  * fastio.c
@@ -127,7 +127,7 @@ FFSFastIoCheckIfPossible(
 						"FASTIO_CHECK_IF_POSSIBLE",
 						Fcb->AnsiFileName.Buffer));
 
-			FFSPrint((DBG_INFO, 
+			FFSPrint((DBG_INFO,
 						"FFSFastIIOCheckPossible: Offset: %I64xg Length: %xh Key: %u %s %s\n",
 						FileOffset->QuadPart,
 						Length,
@@ -294,7 +294,7 @@ FFSFastIoQueryBasicInfo(
 			ASSERT((Fcb->Identifier.Type == FFSFCB) &&
 					(Fcb->Identifier.Size == sizeof(FFS_FCB)));
 
-			FFSPrint((DBG_INFO, 
+			FFSPrint((DBG_INFO,
 						"FFSFastIoQueryBasicInfo: %s %s %s\n",
 						FFSGetCurrentProcessName(),
 						"FASTIO_QUERY_BASIC_INFO",
@@ -368,14 +368,14 @@ FFSFastIoQueryBasicInfo(
 
 	if (Status == FALSE)
 	{
-		FFSPrint((DBG_ERROR, 
+		FFSPrint((DBG_ERROR,
 					"FFSFastIoQueryBasicInfo: %s %s *** Status: FALSE ***\n",
 					FFSGetCurrentProcessName(),
 					"FASTIO_QUERY_BASIC_INFO"));
 	}
 	else if (IoStatus->Status != STATUS_SUCCESS)
 	{
-		FFSPrint((DBG_ERROR, 
+		FFSPrint((DBG_ERROR,
 					"FFSFastIoQueryBasicInfo: %s %s *** Status: %s (%#x) ***\n",
 					FFSFastIoQueryBasicInfo,
 					"FASTIO_QUERY_BASIC_INFO",
@@ -599,7 +599,7 @@ FFSFastIoQueryNetworkOpenInfo(
 			ASSERT((Fcb->Identifier.Type == FFSFCB) &&
 					(Fcb->Identifier.Size == sizeof(FFS_FCB)));
 
-			FFSPrint((DBG_INFO, 
+			FFSPrint((DBG_INFO,
 						"%-16.16s %-31s %s\n",
 						FFSGetCurrentProcessName(),
 						"FASTIO_QUERY_NETWORK_OPEN_INFO",
@@ -808,10 +808,10 @@ FFSFastIoLock(
 		FsRtlExitFileSystem();
 	} _SEH2_END;
 
-#if DBG 
+#if DBG
 	if (Status == FALSE)
 	{
-		FFSPrint((DBG_ERROR, 
+		FFSPrint((DBG_ERROR,
 					"FFSFastIoLock: %s %s *** Status: FALSE ***\n",
 					(PUCHAR) Process + ProcessNameOffset,
 					"FASTIO_LOCK"));
@@ -902,7 +902,7 @@ FFSFastIoUnlockSingle(
 									Process,
 									Key,
 									NULL,
-									FALSE);                      
+									FALSE);
 
 			IoStatus->Information = 0;
 
@@ -919,7 +919,7 @@ FFSFastIoUnlockSingle(
 		FsRtlExitFileSystem();
 	} _SEH2_END;
 
-#if DBG 
+#if DBG
 	if (Status == FALSE)
 	{
 		FFSPrint((DBG_ERROR,
@@ -936,7 +936,7 @@ FFSFastIoUnlockSingle(
 					FFSNtStatusToString(IoStatus->Status),
 					IoStatus->Status));
 	}
-#endif  
+#endif
 	return Status;
 }
 
@@ -1016,7 +1016,7 @@ FFSFastIoUnlockAll(
 		FsRtlExitFileSystem();
 	} _SEH2_END;
 
-#if DBG 
+#if DBG
 	if (Status == FALSE)
 	{
 		FFSPrint((DBG_ERROR,
@@ -1033,7 +1033,7 @@ FFSFastIoUnlockAll(
 					FFSNtStatusToString(IoStatus->Status),
 					IoStatus->Status));
 	}
-#endif  
+#endif
 	return Status;
 }
 
@@ -1106,7 +1106,7 @@ FFSFastIoUnlockAllByKey(
 									FileObject,
 									Process,
 									Key,
-									NULL);  
+									NULL);
 
 			IoStatus->Information = 0;
 
@@ -1124,7 +1124,7 @@ FFSFastIoUnlockAllByKey(
 	{
 		FsRtlExitFileSystem();
 	} _SEH2_END;
-#if DBG 
+#if DBG
 	if (Status == FALSE)
 	{
 		FFSPrint((DBG_ERROR,
@@ -1141,6 +1141,6 @@ FFSFastIoUnlockAllByKey(
 					FFSNtStatusToString(IoStatus->Status),
 					IoStatus->Status));
 	}
-#endif  
+#endif
 	return Status;
 }

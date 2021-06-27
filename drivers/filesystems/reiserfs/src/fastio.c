@@ -2,10 +2,10 @@
  * COPYRIGHT:        GNU GENERAL PUBLIC LICENSE VERSION 2
  * PROJECT:          ReiserFs file system driver for Windows NT/2000/XP/Vista.
  * FILE:             fastio.c
- * PURPOSE:          
+ * PURPOSE:
  * PROGRAMMER:       Mark Piper, Matt Wu, Bo Brantén.
- * HOMEPAGE:         
- * UPDATE HISTORY: 
+ * HOMEPAGE:
+ * UPDATE HISTORY:
  */
 
 /* INCLUDES *****************************************************************/
@@ -54,7 +54,7 @@ RfsdFastIoCheckIfPossible (
     PAGED_CODE();
 
     lLength.QuadPart = Length;
-    
+
     _SEH2_TRY {
 
         _SEH2_TRY {
@@ -64,22 +64,22 @@ RfsdFastIoCheckIfPossible (
             if (DeviceObject == RfsdGlobal->DeviceObject) {
                 _SEH2_LEAVE;
             }
-            
+
             Fcb = (PRFSD_FCB) FileObject->FsContext;
-            
+
             ASSERT(Fcb != NULL);
-            
+
             if (Fcb->Identifier.Type == RFSDVCB) {
                 _SEH2_LEAVE;
             }
-            
+
             ASSERT((Fcb->Identifier.Type == RFSDFCB) &&
                 (Fcb->Identifier.Size == sizeof(RFSD_FCB)));
-            
+
             if (IsDirectory(Fcb)) {
                 _SEH2_LEAVE;
             }
-            
+
             if (CheckForReadOperation) {
 
                 bPossible = FsRtlFastCheckLockForRead(
@@ -112,7 +112,7 @@ RfsdFastIoCheckIfPossible (
                 Fcb->AnsiFileName.Buffer
                 ));
 
-            RfsdPrint((DBG_INFO, 
+            RfsdPrint((DBG_INFO,
                 "RfsdFastIoCheckIfPossible: Offset: %I64xg Length: %xh Key: %u %s %s\n",
                 FileOffset->QuadPart,
                 Length,
@@ -128,7 +128,7 @@ RfsdFastIoCheckIfPossible (
 
         FsRtlExitFileSystem();
     } _SEH2_END;
-    
+
     return bPossible;
 }
 
@@ -150,9 +150,9 @@ RfsdFastIoRead (IN PFILE_OBJECT         FileObject,
     PAGED_CODE();
 
     Fcb = (PRFSD_FCB) FileObject->FsContext;
-    
+
     ASSERT(Fcb != NULL);
-    
+
     ASSERT((Fcb->Identifier.Type == RFSDFCB) &&
         (Fcb->Identifier.Size == sizeof(RFSD_FCB)));
 
@@ -169,7 +169,7 @@ RfsdFastIoRead (IN PFILE_OBJECT         FileObject,
     Status = FsRtlCopyRead (
         FileObject, FileOffset, Length, Wait,
         LockKey, Buffer, IoStatus, DeviceObject);
-    
+
     return Status;
 }
 
@@ -192,9 +192,9 @@ RfsdFastIoWrite (
     PAGED_CODE();
 
     Fcb = (PRFSD_FCB) FileObject->FsContext;
-    
+
     ASSERT(Fcb != NULL);
-    
+
     ASSERT((Fcb->Identifier.Type == RFSDFCB) &&
         (Fcb->Identifier.Size == sizeof(RFSD_FCB)));
 
@@ -218,7 +218,7 @@ RfsdFastIoWrite (
     bRet = FsRtlCopyWrite (
         FileObject, FileOffset, Length, Wait,
         LockKey, Buffer, IoStatus, DeviceObject);
-    
+
     return bRet;
 }
 
@@ -250,38 +250,38 @@ RfsdFastIoQueryBasicInfo (IN PFILE_OBJECT             FileObject,
                 Status = TRUE;
                 _SEH2_LEAVE;
             }
-            
+
             Fcb = (PRFSD_FCB) FileObject->FsContext;
-            
+
             ASSERT(Fcb != NULL);
-            
+
             if (Fcb->Identifier.Type == RFSDVCB) {
                 IoStatus->Status = STATUS_INVALID_PARAMETER;
                 Status = TRUE;
                 _SEH2_LEAVE;
             }
-            
+
             ASSERT((Fcb->Identifier.Type == RFSDFCB) &&
                 (Fcb->Identifier.Size == sizeof(RFSD_FCB)));
 
-            RfsdPrint((DBG_INFO, 
+            RfsdPrint((DBG_INFO,
                 "RfsdFastIoQueryBasicInfo: %s %s %s\n",
                 RfsdGetCurrentProcessName(),
                 "FASTIO_QUERY_BASIC_INFO",
                 Fcb->AnsiFileName.Buffer
                 ));
-            
+
             if (!ExAcquireResourceSharedLite(
                 &Fcb->MainResource,
                 Wait)) {
                 Status = FALSE;
                 _SEH2_LEAVE;
             }
-            
+
             FcbMainResourceAcquired = TRUE;
-            
+
             RtlZeroMemory(Buffer, sizeof(FILE_BASIC_INFORMATION));
-            
+
             /*
             typedef struct _FILE_BASIC_INFORMATION {
             LARGE_INTEGER   CreationTime;
@@ -296,14 +296,14 @@ RfsdFastIoQueryBasicInfo (IN PFILE_OBJECT             FileObject,
             Buffer->LastAccessTime = RfsdSysTime(Fcb->Inode->i_atime);
             Buffer->LastWriteTime = RfsdSysTime(Fcb->Inode->i_mtime);
             Buffer->ChangeTime = RfsdSysTime(Fcb->Inode->i_mtime);
-            
-            
+
+
             Buffer->FileAttributes = Fcb->RfsdMcb->FileAttr;
-            
+
             IoStatus->Information = sizeof(FILE_BASIC_INFORMATION);
-            
+
             IoStatus->Status = STATUS_SUCCESS;
-            
+
             Status =  TRUE;
         } _SEH2_EXCEPT (EXCEPTION_EXECUTE_HANDLER) {
 
@@ -320,21 +320,21 @@ RfsdFastIoQueryBasicInfo (IN PFILE_OBJECT             FileObject,
                 ExGetCurrentResourceThread()
                 );
         }
-        
+
         FsRtlExitFileSystem();
     } _SEH2_END;
-    
-    
+
+
     if (Status == FALSE) {
 
-        RfsdPrint((DBG_ERROR, 
+        RfsdPrint((DBG_ERROR,
             "RfsdFastIoQueryBasicInfo: %s %s *** Status: FALSE ***\n",
             RfsdGetCurrentProcessName(),
             "FASTIO_QUERY_BASIC_INFO"
             ));
     } else if (IoStatus->Status != STATUS_SUCCESS) {
 
-        RfsdPrint((DBG_ERROR, 
+        RfsdPrint((DBG_ERROR,
             "RfsdFastIoQueryBasicInfo: %s %s *** Status: %s (%#x) ***\n",
             RfsdGetCurrentProcessName(),
             "FASTIO_QUERY_BASIC_INFO",
@@ -342,7 +342,7 @@ RfsdFastIoQueryBasicInfo (IN PFILE_OBJECT             FileObject,
             IoStatus->Status
             ));
     }
-    
+
     return Status;
 }
 
@@ -376,17 +376,17 @@ RfsdFastIoQueryStandardInfo (
                 Status = TRUE;
                 _SEH2_LEAVE;
             }
-            
+
             Fcb = (PRFSD_FCB) FileObject->FsContext;
-            
+
             ASSERT(Fcb != NULL);
-            
+
             if (Fcb->Identifier.Type == RFSDVCB)  {
                 IoStatus->Status = STATUS_INVALID_PARAMETER;
                 Status = TRUE;
                 _SEH2_LEAVE;
             }
-            
+
             ASSERT((Fcb->Identifier.Type == RFSDFCB) &&
                 (Fcb->Identifier.Size == sizeof(RFSD_FCB)));
 
@@ -397,18 +397,18 @@ RfsdFastIoQueryStandardInfo (
                 Fcb->AnsiFileName.Buffer ));
 
             Vcb = Fcb->Vcb;
-            
+
             if (!ExAcquireResourceSharedLite(
                 &Fcb->MainResource,
                 Wait        )) {
                 Status = FALSE;
                 _SEH2_LEAVE;
             }
-            
+
             FcbMainResourceAcquired = TRUE;
-            
+
             RtlZeroMemory(Buffer, sizeof(FILE_STANDARD_INFORMATION));
-            
+
             /*
             typedef struct _FILE_STANDARD_INFORMATION {
             LARGE_INTEGER   AllocationSize;
@@ -431,23 +431,23 @@ RfsdFastIoQueryStandardInfo (
             Buffer->AllocationSize.QuadPart = AllocationSize;
             Buffer->EndOfFile.QuadPart = FileSize;
             Buffer->NumberOfLinks = Fcb->Inode->i_links_count;
-            
+
             if (IsFlagOn(Fcb->Vcb->Flags, VCB_READ_ONLY)) {
                 Buffer->DeletePending = FALSE;
             } else {
                 Buffer->DeletePending = IsFlagOn(Fcb->Flags, FCB_DELETE_PENDING);
             }
-            
+
             if (FlagOn(Fcb->RfsdMcb->FileAttr, FILE_ATTRIBUTE_DIRECTORY)) {
                 Buffer->Directory = TRUE;
             } else {
                 Buffer->Directory = FALSE;
             }
-            
+
             IoStatus->Information = sizeof(FILE_STANDARD_INFORMATION);
-            
+
             IoStatus->Status = STATUS_SUCCESS;
-            
+
             Status =  TRUE;
 
         } _SEH2_EXCEPT (EXCEPTION_EXECUTE_HANDLER) {
@@ -463,7 +463,7 @@ RfsdFastIoQueryStandardInfo (
                 ExGetCurrentResourceThread()
                 );
         }
-        
+
         FsRtlExitFileSystem();
     } _SEH2_END;
 
@@ -482,7 +482,7 @@ RfsdFastIoQueryStandardInfo (
             IoStatus->Status            ));
     }
 #endif
-    
+
     return Status;
 }
 
@@ -515,21 +515,21 @@ RfsdFastIoLock (
                 Status = TRUE;
                 _SEH2_LEAVE;
             }
-            
+
             Fcb = (PRFSD_FCB) FileObject->FsContext;
-            
+
             ASSERT(Fcb != NULL);
-            
+
             if (Fcb->Identifier.Type == RFSDVCB) {
 
                 IoStatus->Status = STATUS_INVALID_PARAMETER;
                 Status = TRUE;
                 _SEH2_LEAVE;
             }
-            
+
             ASSERT((Fcb->Identifier.Type == RFSDFCB) &&
                 (Fcb->Identifier.Size == sizeof(RFSD_FCB)));
-            
+
             if (IsDirectory(Fcb)) {
                 DbgBreak();
                 IoStatus->Status = STATUS_INVALID_PARAMETER;
@@ -550,7 +550,7 @@ RfsdFastIoLock (
                 Key,
                 (FailImmediately ? "FailImmediately " : ""),
                 (ExclusiveLock ? "ExclusiveLock " : "") ));
-            
+
             if (Fcb->Header.IsFastIoPossible != FastIoIsQuestionable) {
                 RfsdPrint((DBG_INFO,
                     "RfsdFastIoLock: %s %s %s\n",
@@ -560,7 +560,7 @@ RfsdFastIoLock (
 
                 Fcb->Header.IsFastIoPossible = FastIoIsQuestionable;
             }
-            
+
 #ifdef _MSC_VER
 #pragma prefast( suppress: 28159, "bug in prefast" )
 #endif
@@ -585,9 +585,9 @@ RfsdFastIoLock (
         FsRtlExitFileSystem();
     } _SEH2_END;
 
-#if DBG 
+#if DBG
     if (Status == FALSE) {
-        RfsdPrint((DBG_ERROR, 
+        RfsdPrint((DBG_ERROR,
             "RfsdFastIoLock: %s %s *** Status: FALSE ***\n",
             RfsdGetCurrentProcessName(),
             "FASTIO_LOCK"
@@ -602,7 +602,7 @@ RfsdFastIoLock (
             ));
     }
 #endif
-    
+
     return Status;
 }
 
@@ -633,21 +633,21 @@ RfsdFastIoUnlockSingle (
                 Status = TRUE;
                 _SEH2_LEAVE;
             }
-            
+
             Fcb = (PRFSD_FCB) FileObject->FsContext;
-            
+
             ASSERT(Fcb != NULL);
-            
+
             if (Fcb->Identifier.Type == RFSDVCB) {
                 DbgBreak();
                 IoStatus->Status = STATUS_INVALID_PARAMETER;
                 Status = TRUE;
                 _SEH2_LEAVE;
             }
-            
+
             ASSERT((Fcb->Identifier.Type == RFSDFCB) &&
                 (Fcb->Identifier.Size == sizeof(RFSD_FCB)));
-            
+
             if (IsDirectory(Fcb)) {
 
                 DbgBreak();
@@ -667,7 +667,7 @@ RfsdFastIoUnlockSingle (
                 FileOffset->QuadPart,
                 Length->QuadPart,
                 Key     ));
-            
+
             IoStatus->Status = FsRtlFastUnlockSingle(
                 &Fcb->FileLockAnchor,
                 FileObject,
@@ -676,10 +676,10 @@ RfsdFastIoUnlockSingle (
                 Process,
                 Key,
                 NULL,
-                FALSE);                      
-            
+                FALSE);
+
             IoStatus->Information = 0;
-            
+
             Status =  TRUE;
         } _SEH2_EXCEPT (EXCEPTION_EXECUTE_HANDLER) {
             IoStatus->Status = _SEH2_GetExceptionCode();
@@ -691,7 +691,7 @@ RfsdFastIoUnlockSingle (
         FsRtlExitFileSystem();
     } _SEH2_END;
 
-#if DBG 
+#if DBG
     if (Status == FALSE) {
 
         RfsdPrint((DBG_ERROR,
@@ -706,7 +706,7 @@ RfsdFastIoUnlockSingle (
             RfsdNtStatusToString(IoStatus->Status),
             IoStatus->Status            ));
     }
-#endif  
+#endif
 
     return Status;
 }
@@ -734,21 +734,21 @@ RfsdFastIoUnlockAll (
                 Status = TRUE;
                 _SEH2_LEAVE;
             }
-            
+
             Fcb = (PRFSD_FCB) FileObject->FsContext;
-            
+
             ASSERT(Fcb != NULL);
-            
+
             if (Fcb->Identifier.Type == RFSDVCB) {
                 DbgBreak();
                 IoStatus->Status = STATUS_INVALID_PARAMETER;
                 Status = TRUE;
                 _SEH2_LEAVE;
             }
-            
+
             ASSERT((Fcb->Identifier.Type == RFSDFCB) &&
                 (Fcb->Identifier.Size == sizeof(RFSD_FCB)));
-            
+
             if (IsDirectory(Fcb)) {
                 DbgBreak();
                 IoStatus->Status = STATUS_INVALID_PARAMETER;
@@ -762,15 +762,15 @@ RfsdFastIoUnlockAll (
                 "FASTIO_UNLOCK_ALL",
                 Fcb->AnsiFileName.Buffer
                 ));
-            
+
             IoStatus->Status = FsRtlFastUnlockAll(
                 &Fcb->FileLockAnchor,
                 FileObject,
                 Process,
                 NULL        );
-            
+
             IoStatus->Information = 0;
-            
+
             Status =  TRUE;
         } _SEH2_EXCEPT (EXCEPTION_EXECUTE_HANDLER) {
             IoStatus->Status = _SEH2_GetExceptionCode();
@@ -782,7 +782,7 @@ RfsdFastIoUnlockAll (
         FsRtlExitFileSystem();
     } _SEH2_END;
 
-#if DBG 
+#if DBG
     if (Status == FALSE) {
 
         RfsdPrint((DBG_ERROR,
@@ -799,7 +799,7 @@ RfsdFastIoUnlockAll (
             IoStatus->Status
             ));
     }
-#endif  
+#endif
 
     return Status;
 }
@@ -833,21 +833,21 @@ RfsdFastIoUnlockAllByKey (
                 Status = TRUE;
                 _SEH2_LEAVE;
             }
-            
+
             Fcb = (PRFSD_FCB) FileObject->FsContext;
-            
+
             ASSERT(Fcb != NULL);
-            
+
             if (Fcb->Identifier.Type == RFSDVCB) {
                 DbgBreak();
                 IoStatus->Status = STATUS_INVALID_PARAMETER;
                 Status = TRUE;
                 _SEH2_LEAVE;
             }
-            
+
             ASSERT((Fcb->Identifier.Type == RFSDFCB) &&
                 (Fcb->Identifier.Size == sizeof(RFSD_FCB)));
-            
+
             if (IsDirectory(Fcb)) {
 
                 DbgBreak();
@@ -867,17 +867,17 @@ RfsdFastIoUnlockAllByKey (
                 "RfsdFastIoUnlockAllByKey: Key: %u\n",
                 Key
                 ));
-            
+
             IoStatus->Status = FsRtlFastUnlockAllByKey(
                 &Fcb->FileLockAnchor,
                 FileObject,
                 Process,
                 Key,
                 NULL
-                );  
-            
+                );
+
             IoStatus->Information = 0;
-            
+
             Status =  TRUE;
 
         } _SEH2_EXCEPT (EXCEPTION_EXECUTE_HANDLER) {
@@ -890,7 +890,7 @@ RfsdFastIoUnlockAllByKey (
         FsRtlExitFileSystem();
     } _SEH2_END;
 
-#if DBG 
+#if DBG
     if (Status == FALSE) {
 
         RfsdPrint((DBG_ERROR,
@@ -908,7 +908,7 @@ RfsdFastIoUnlockAllByKey (
             IoStatus->Status
             ));
     }
-#endif  
+#endif
 
     return Status;
 }
@@ -936,21 +936,21 @@ RfsdFastIoQueryNetworkOpenInfo (
             IoStatus->Status = STATUS_INVALID_DEVICE_REQUEST;
             _SEH2_LEAVE;
         }
-            
+
         Fcb = (PRFSD_FCB) FileObject->FsContext;
-            
+
         ASSERT(Fcb != NULL);
-            
+
         if (Fcb->Identifier.Type == RFSDVCB) {
             DbgBreak();
             IoStatus->Status = STATUS_INVALID_PARAMETER;
             _SEH2_LEAVE;
         }
-            
+
         ASSERT((Fcb->Identifier.Type == RFSDFCB) &&
                (Fcb->Identifier.Size == sizeof(RFSD_FCB)));
 
-        RfsdPrint((DBG_INFO, 
+        RfsdPrint((DBG_INFO,
                 "%-16.16s %-31s %s\n",
                 RfsdGetCurrentProcessName(),
                 "FASTIO_QUERY_NETWORK_OPEN_INFO",
@@ -969,7 +969,7 @@ RfsdFastIoQueryNetworkOpenInfo (
                 )) {
                 _SEH2_LEAVE;
             }
-            
+
             FcbResourceAcquired = TRUE;
         }
 
@@ -999,7 +999,7 @@ RfsdFastIoQueryNetworkOpenInfo (
     } _SEH2_FINALLY {
 
         if (FcbResourceAcquired) {
-            ExReleaseResourceLite(&Fcb->MainResource); 
+            ExReleaseResourceLite(&Fcb->MainResource);
         }
 
         FsRtlExitFileSystem();

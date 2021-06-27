@@ -798,9 +798,10 @@ NtUserCallHwndParam(
             UserRefObjectCo(pWnd, &Ref);
 
             if (pWnd->head.pti->ppi == PsGetCurrentProcessWin32Process() &&
-                pWnd->cbwndExtra == DLGWINDOWEXTRA &&
+                pWnd->cbwndExtra >= DLGWINDOWEXTRA &&
                 !(pWnd->state & WNDS_SERVERSIDEWINDOWPROC))
             {
+                pWnd->DialogPointer = (PVOID)Param;
                 if (Param)
                 {
                     if (!pWnd->fnid) pWnd->fnid = FNID_DIALOG;

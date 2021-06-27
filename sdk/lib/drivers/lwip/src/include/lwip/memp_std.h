@@ -15,7 +15,7 @@
 #define LWIP_MALLOC_MEMPOOL(num, size) LWIP_MEMPOOL(POOL_##size, num, (size + sizeof(struct memp_malloc_helper)), "MALLOC_"#size)
 #define LWIP_MALLOC_MEMPOOL_START
 #define LWIP_MALLOC_MEMPOOL_END
-#endif /* LWIP_MALLOC_MEMPOOL */ 
+#endif /* LWIP_MALLOC_MEMPOOL */
 
 #ifndef LWIP_PBUF_MEMPOOL
 /* This treats "pbuf pools" just like any other pool.

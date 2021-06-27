@@ -2,10 +2,10 @@
  * COPYRIGHT:        GNU GENERAL PUBLIC LICENSE VERSION 2
  * PROJECT:          ReiserFs file system driver for Windows NT/2000/XP/Vista.
  * FILE:             write.c
- * PURPOSE:          
+ * PURPOSE:
  * PROGRAMMER:       Mark Piper, Matt Wu, Bo Brantén.
- * HOMEPAGE:         
- * UPDATE HISTORY: 
+ * HOMEPAGE:
+ * UPDATE HISTORY:
  */
 
 /* INCLUDES *****************************************************************/
@@ -271,25 +271,25 @@ RfsdWriteVolume (IN PRFSD_IRP_CONTEXT IrpContext)
     _SEH2_TRY {
 
         ASSERT(IrpContext);
-        
+
         ASSERT((IrpContext->Identifier.Type == RFSDICX) &&
             (IrpContext->Identifier.Size == sizeof(RFSD_IRP_CONTEXT)));
-        
+
         DeviceObject = IrpContext->DeviceObject;
-    
+
         Vcb = (PRFSD_VCB) DeviceObject->DeviceExtension;
-        
+
         ASSERT(Vcb != NULL);
-        
+
         ASSERT((Vcb->Identifier.Type == RFSDVCB) &&
             (Vcb->Identifier.Size == sizeof(RFSD_VCB)));
-        
+
         FileObject = IrpContext->FileObject;
 
         FcbOrVcb = (PRFSD_FCBVCB) FileObject->FsContext;
-        
+
         ASSERT(FcbOrVcb);
-        
+
         if (!(FcbOrVcb->Identifier.Type == RFSDVCB && (PVOID)FcbOrVcb == (PVOID)Vcb)) {
             Status = STATUS_INVALID_DEVICE_REQUEST;
             _SEH2_LEAVE;
@@ -298,12 +298,12 @@ RfsdWriteVolume (IN PRFSD_IRP_CONTEXT IrpContext)
         Ccb = (PRFSD_CCB) FileObject->FsContext2;
 
         Irp = IrpContext->Irp;
-            
+
         IoStackLocation = IoGetCurrentIrpStackLocation(Irp);
-            
+
         Length = IoStackLocation->Parameters.Write.Length;
         ByteOffset = IoStackLocation->Parameters.Write.ByteOffset;
-            
+
         PagingIo = (Irp->Flags & IRP_PAGING_IO ? TRUE : FALSE);
         Nocache = (Irp->Flags & IRP_NOCACHE ? TRUE : FALSE);
         SynchronousIo = (FileObject->Flags & FO_SYNCHRONOUS_IO ? TRUE : FALSE);
@@ -316,10 +316,10 @@ RfsdWriteVolume (IN PRFSD_IRP_CONTEXT IrpContext)
             Status = STATUS_SUCCESS;
             _SEH2_LEAVE;
         }
-      
+
         // For the case of "Direct Access Storage Device", we
         // need flush/purge the cache
-    
+
         if (Ccb != NULL) {
 
             ExAcquireResourceExclusiveLite(&Vcb->MainResource, TRUE);
@@ -349,7 +349,7 @@ RfsdWriteVolume (IN PRFSD_IRP_CONTEXT IrpContext)
                     IrpContext->Irp,
                     Length,
                     IoReadAccess );
-                
+
                 if (!NT_SUCCESS(Status)) {
                     _SEH2_LEAVE;
                 }
@@ -369,7 +369,7 @@ RfsdWriteVolume (IN PRFSD_IRP_CONTEXT IrpContext)
 
                 _SEH2_LEAVE;
             }
-        }                    
+        }
 
         if (Nocache &&
            (ByteOffset.LowPart & (SECTOR_SIZE - 1) ||
@@ -383,7 +383,7 @@ RfsdWriteVolume (IN PRFSD_IRP_CONTEXT IrpContext)
             Status = STATUS_PENDING;
             _SEH2_LEAVE;
         }
-        
+
         if (ByteOffset.QuadPart >=
             Vcb->PartitionInformation.PartitionLength.QuadPart  ) {
             Irp->IoStatus.Information = 0;
@@ -399,7 +399,7 @@ RfsdWriteVolume (IN PRFSD_IRP_CONTEXT IrpContext)
             BOOLEAN bWait  = IsFlagOn(IrpContext->Flags, IRP_CONTEXT_FLAG_WAIT);
             BOOLEAN bQueue = IsFlagOn(IrpContext->Flags, IRP_CONTEXT_FLAG_REQUEUED);
 
-            if ( !CcCanIWrite( 
+            if ( !CcCanIWrite(
                       FileObject,
                       Length,
                       (bWait && bQueue),
@@ -465,13 +465,13 @@ RfsdWriteVolume (IN PRFSD_IRP_CONTEXT IrpContext)
                 Status = STATUS_PENDING;
                 _SEH2_LEAVE;
             }
-            
+
             MainResourceAcquired = TRUE;
 
         } else {
 
 /*
-            ULONG ResShCnt, ResExCnt; 
+            ULONG ResShCnt, ResExCnt;
             ResShCnt = ExIsResourceAcquiredSharedLite(&Vcb->PagingIoResource);
             ResExCnt = ExIsResourceAcquiredExclusiveLite(&Vcb->PagingIoResource);
 
@@ -486,11 +486,11 @@ RfsdWriteVolume (IN PRFSD_IRP_CONTEXT IrpContext)
                     Status = STATUS_PENDING;
                     _SEH2_LEAVE;
                 }
-            
+
                 PagingIoResourceAcquired = TRUE;
             }
         }
-        
+
         if (!Nocache) {
 
             if ( (ByteOffset.QuadPart + Length) >
@@ -510,13 +510,13 @@ RfsdWriteVolume (IN PRFSD_IRP_CONTEXT IrpContext)
                     Length,
                     &Irp->MdlAddress,
                     &Irp->IoStatus );
-                
+
                 Status = Irp->IoStatus.Status;
 
             } else {
 
                 Buffer = RfsdGetUserBuffer(Irp);
-                    
+
                 if (Buffer == NULL) {
                     DbgBreak();
 
@@ -564,12 +564,12 @@ RfsdWriteVolume (IN PRFSD_IRP_CONTEXT IrpContext)
                 IrpContext->Irp,
                 Length,
                 IoReadAccess );
-                
+
             if (!NT_SUCCESS(Status)) {
                 _SEH2_LEAVE;
             }
 
-            rfsd_bdl = ExAllocatePoolWithTag(PagedPool, 
+            rfsd_bdl = ExAllocatePoolWithTag(PagedPool,
                                        (Length / Vcb->BlockSize) *
                                        sizeof(RFSD_BDL), RFSD_POOL_TAG);
 
@@ -585,7 +585,7 @@ RfsdWriteVolume (IN PRFSD_IRP_CONTEXT IrpContext)
 
                 DirtyStart = DirtyLba;
 
-                if (RfsdLookupMcbEntry( Vcb, 
+                if (RfsdLookupMcbEntry( Vcb,
                                         DirtyStart,
                                         &DirtyLba,
                                         &DirtyLength,
@@ -596,17 +596,17 @@ RfsdWriteVolume (IN PRFSD_IRP_CONTEXT IrpContext)
                     if (DirtyLba == -1) {
                         DirtyLba = DirtyStart + DirtyLength;
 
-                        RemainLength = ByteOffset.QuadPart + 
+                        RemainLength = ByteOffset.QuadPart +
                                        (LONGLONG)Length -
                                        DirtyLba;
                         continue;
                     }
-            
+
                     rfsd_bdl[Blocks].Irp = NULL;
                     rfsd_bdl[Blocks].Lba = DirtyLba;
                     rfsd_bdl[Blocks].Offset = (ULONG)( (LONGLONG)Length +
                                                        DirtyStart -
-                                                       RemainLength - 
+                                                       RemainLength -
                                                        DirtyLba );
 
                     if (DirtyLba + DirtyLength > DirtyStart + RemainLength) {
@@ -631,7 +631,7 @@ RfsdWriteVolume (IN PRFSD_IRP_CONTEXT IrpContext)
                             ExFreePool(rfsd_bdl);
 
                         //
-                        // Lookup fails at the first time, ie. 
+                        // Lookup fails at the first time, ie.
                         // no dirty blocks in the run
                         //
 
@@ -682,7 +682,7 @@ RfsdWriteVolume (IN PRFSD_IRP_CONTEXT IrpContext)
                     ExFreePool(rfsd_bdl);
 
                 Irp->IoStatus.Information = Length;
-    
+
                 Status = STATUS_SUCCESS;
                 _SEH2_LEAVE;
             }
@@ -694,7 +694,7 @@ RfsdWriteVolume (IN PRFSD_IRP_CONTEXT IrpContext)
                 &Vcb->PagingIoResource,
                 ExGetCurrentResourceThread());
         }
-        
+
         if (MainResourceAcquired) {
             ExReleaseResourceForThreadLite(
                 &Vcb->MainResource,
@@ -709,7 +709,7 @@ RfsdWriteVolume (IN PRFSD_IRP_CONTEXT IrpContext)
                             IrpContext->Irp,
                             Length,
                             IoReadAccess );
-                    
+
                         if (NT_SUCCESS(Status)) {
                             Status = RfsdQueueRequest(IrpContext);
                         } else {
@@ -912,37 +912,37 @@ RfsdWriteFile(IN PRFSD_IRP_CONTEXT IrpContext)
     _SEH2_TRY {
 
         ASSERT(IrpContext);
-        
+
         ASSERT((IrpContext->Identifier.Type == RFSDICX) &&
             (IrpContext->Identifier.Size == sizeof(RFSD_IRP_CONTEXT)));
-        
+
         DeviceObject = IrpContext->DeviceObject;
-    
+
         Vcb = (PRFSD_VCB) DeviceObject->DeviceExtension;
-        
+
         ASSERT(Vcb != NULL);
-        
+
         ASSERT((Vcb->Identifier.Type == RFSDVCB) &&
             (Vcb->Identifier.Size == sizeof(RFSD_VCB)));
-        
+
         FileObject = IrpContext->FileObject;
-        
+
         Fcb = (PRFSD_FCB) FileObject->FsContext;
-        
+
         ASSERT(Fcb);
-    
+
         ASSERT((Fcb->Identifier.Type == RFSDFCB) &&
             (Fcb->Identifier.Size == sizeof(RFSD_FCB)));
 
         Ccb = (PRFSD_CCB) FileObject->FsContext2;
 
         Irp = IrpContext->Irp;
-        
+
         IoStackLocation = IoGetCurrentIrpStackLocation(Irp);
-        
+
         Length = IoStackLocation->Parameters.Write.Length;
         ByteOffset = IoStackLocation->Parameters.Write.ByteOffset;
-        
+
         PagingIo = (Irp->Flags & IRP_PAGING_IO ? TRUE : FALSE);
         Nocache = (Irp->Flags & IRP_NOCACHE ? TRUE : FALSE);
         SynchronousIo = (FileObject->Flags & FO_SYNCHRONOUS_IO ? TRUE : FALSE);
@@ -989,7 +989,7 @@ RfsdWriteFile(IN PRFSD_IRP_CONTEXT IrpContext)
             BOOLEAN bWait  = IsFlagOn(IrpContext->Flags, IRP_CONTEXT_FLAG_WAIT);
             BOOLEAN bQueue = IsFlagOn(IrpContext->Flags, IRP_CONTEXT_FLAG_REQUEUED);
 
-            if ( !CcCanIWrite( 
+            if ( !CcCanIWrite(
                       FileObject,
                       Length,
                       (bWait && bQueue),
@@ -1029,7 +1029,7 @@ RfsdWriteFile(IN PRFSD_IRP_CONTEXT IrpContext)
         //
         if (Nocache && !PagingIo && (Fcb->SectionObject.DataSectionObject != NULL))  {
 
-            ExAcquireResourceExclusiveLite( &Fcb->MainResource, 
+            ExAcquireResourceExclusiveLite( &Fcb->MainResource,
                     IsFlagOn(IrpContext->Flags, IRP_CONTEXT_FLAG_WAIT));
 
             MainResourceAcquired = TRUE;
@@ -1043,7 +1043,7 @@ RfsdWriteFile(IN PRFSD_IRP_CONTEXT IrpContext)
                           &(Irp->IoStatus));
             ClearFlag(Fcb->Flags, FCB_FILE_MODIFIED);
 
-            if (!NT_SUCCESS(Irp->IoStatus.Status)) 
+            if (!NT_SUCCESS(Irp->IoStatus.Status))
             {
                 Status = Irp->IoStatus.Status;
                 _SEH2_LEAVE;
@@ -1060,7 +1060,7 @@ RfsdWriteFile(IN PRFSD_IRP_CONTEXT IrpContext)
             ExReleaseResourceLite(&Fcb->MainResource);
             MainResourceAcquired = FALSE;
         }
-        
+
         if (!PagingIo) {
 
             if (!ExAcquireResourceExclusiveLite(
@@ -1069,13 +1069,13 @@ RfsdWriteFile(IN PRFSD_IRP_CONTEXT IrpContext)
                 Status = STATUS_PENDING;
                 _SEH2_LEAVE;
             }
-            
+
             MainResourceAcquired = TRUE;
 
         } else {
 
 /*
-            ULONG ResShCnt, ResExCnt; 
+            ULONG ResShCnt, ResExCnt;
             ResShCnt = ExIsResourceAcquiredSharedLite(&Fcb->PagingIoResource);
             ResExCnt = ExIsResourceAcquiredExclusiveLite(&Fcb->PagingIoResource);
 
@@ -1091,7 +1091,7 @@ RfsdWriteFile(IN PRFSD_IRP_CONTEXT IrpContext)
 
             PagingIoResourceAcquired = TRUE;
         }
-        
+
         if (!PagingIo) {
             if (!FsRtlCheckLockForWriteAccess(
                 &Fcb->FileLockAnchor,
@@ -1106,7 +1106,7 @@ RfsdWriteFile(IN PRFSD_IRP_CONTEXT IrpContext)
             if ( (ByteOffset.QuadPart + Length) >
                  Fcb->Header.AllocationSize.QuadPart) {
 
-                if ( ByteOffset.QuadPart >= 
+                if ( ByteOffset.QuadPart >=
                      Fcb->Header.AllocationSize.QuadPart) {
 
                     Status = STATUS_SUCCESS;
@@ -1144,7 +1144,7 @@ RfsdWriteFile(IN PRFSD_IRP_CONTEXT IrpContext)
                          READ_AHEAD_GRANULARITY );
 
                 CcSetFileSizes(
-                        FileObject, 
+                        FileObject,
                         (PCC_FILE_SIZES)(&(Fcb->Header.AllocationSize)));
             }
 
@@ -1181,12 +1181,12 @@ RfsdWriteFile(IN PRFSD_IRP_CONTEXT IrpContext)
                     CcSetFileSizes(FileObject, (PCC_FILE_SIZES)(&(Fcb->Header.AllocationSize)));
 
                     if (ByteOffset.QuadPart > FileSize.QuadPart) {
-                        RfsdZeroHoles( IrpContext, Vcb, FileObject, FileSize.QuadPart, 
+                        RfsdZeroHoles( IrpContext, Vcb, FileObject, FileSize.QuadPart,
                                        ByteOffset.QuadPart - FileSize.QuadPart);
                     }
 
                     if (Fcb->Header.AllocationSize.QuadPart > ExtendSize.QuadPart) {
-                        RfsdZeroHoles(IrpContext, Vcb, FileObject, ExtendSize.QuadPart, 
+                        RfsdZeroHoles(IrpContext, Vcb, FileObject, ExtendSize.QuadPart,
                         Fcb->Header.AllocationSize.QuadPart - ExtendSize.QuadPart);
                     }
                 }
@@ -1210,19 +1210,19 @@ RfsdWriteFile(IN PRFSD_IRP_CONTEXT IrpContext)
                     Length,
                     &Irp->MdlAddress,
                     &Irp->IoStatus );
-                
+
                 Status = Irp->IoStatus.Status;
 
             } else {
 
                 Buffer = RfsdGetUserBuffer(Irp);
-                
+
                 if (Buffer == NULL) {
                     DbgBreak();
                     Status = STATUS_INVALID_USER_BUFFER;
                     _SEH2_LEAVE;
                 }
-                
+
                 if (!CcCopyWrite(
                         CacheObject,
                         (PLARGE_INTEGER)&ByteOffset,
@@ -1232,7 +1232,7 @@ RfsdWriteFile(IN PRFSD_IRP_CONTEXT IrpContext)
                     Status = STATUS_PENDING;
                     _SEH2_LEAVE;
                 }
-                
+
                 Status = Irp->IoStatus.Status;
             }
 
@@ -1254,14 +1254,14 @@ RfsdWriteFile(IN PRFSD_IRP_CONTEXT IrpContext)
                 IrpContext->Irp,
                 Length,
                 IoReadAccess );
-                
+
             if (!NT_SUCCESS(Status)) {
                 _SEH2_LEAVE;
             }
 
             Irp->IoStatus.Status = STATUS_SUCCESS;
             Irp->IoStatus.Information = Length;
-            
+
             Status = RfsdWriteInode(
                         IrpContext,
                         Vcb,
@@ -1285,13 +1285,13 @@ RfsdWriteFile(IN PRFSD_IRP_CONTEXT IrpContext)
                 &Fcb->PagingIoResource,
                 ExGetCurrentResourceThread());
         }
-        
+
         if (MainResourceAcquired) {
             ExReleaseResourceForThreadLite(
                 &Fcb->MainResource,
                 ExGetCurrentResourceThread());
         }
-        
+
         if (!IrpContext->ExceptionInProgress) {
             if (Irp) {
                 if (Status == STATUS_PENDING) {
@@ -1300,7 +1300,7 @@ RfsdWriteFile(IN PRFSD_IRP_CONTEXT IrpContext)
                             IrpContext->Irp,
                             Length,
                             IoReadAccess );
-                    
+
                         if (NT_SUCCESS(Status)) {
                             Status = RfsdQueueRequest(IrpContext);
                         } else {
@@ -1313,7 +1313,7 @@ RfsdWriteFile(IN PRFSD_IRP_CONTEXT IrpContext)
                             FileObject->CurrentByteOffset.QuadPart =
                                 ByteOffset.QuadPart + Irp->IoStatus.Information;
                         }
-                    
+
                         if (!PagingIo)
                         {
                             SetFlag(FileObject->Flags, FO_FILE_MODIFIED);
@@ -1345,19 +1345,19 @@ RfsdWriteComplete (IN PRFSD_IRP_CONTEXT IrpContext)
     _SEH2_TRY {
 
         ASSERT(IrpContext);
-        
+
         ASSERT((IrpContext->Identifier.Type == RFSDICX) &&
             (IrpContext->Identifier.Size == sizeof(RFSD_IRP_CONTEXT)));
-        
+
         FileObject = IrpContext->FileObject;
-        
+
         Irp = IrpContext->Irp;
         IrpSp = IoGetCurrentIrpStackLocation(Irp);
-        
+
         CcMdlWriteComplete(FileObject, &(IrpSp->Parameters.Write.ByteOffset), Irp->MdlAddress);
-        
+
         Irp->MdlAddress = NULL;
-        
+
         Status = STATUS_SUCCESS;
 
     } _SEH2_FINALLY {
@@ -1366,7 +1366,7 @@ RfsdWriteComplete (IN PRFSD_IRP_CONTEXT IrpContext)
             RfsdCompleteIrpContext(IrpContext, Status);
         }
     } _SEH2_END;
-    
+
     return Status;
 }
 
@@ -1383,7 +1383,7 @@ RfsdWrite (IN PRFSD_IRP_CONTEXT IrpContext)
     PAGED_CODE();
 
     ASSERT(IrpContext);
-    
+
     ASSERT((IrpContext->Identifier.Type == RFSDICX) &&
         (IrpContext->Identifier.Size == sizeof(RFSD_IRP_CONTEXT)));
 
@@ -1424,7 +1424,7 @@ RfsdWrite (IN PRFSD_IRP_CONTEXT IrpContext)
             }
 
             FileObject = IrpContext->FileObject;
-            
+
             FcbOrVcb = (PRFSD_FCBVCB) FileObject->FsContext;
 
             if (FcbOrVcb->Identifier.Type == RFSDVCB) {
@@ -1455,7 +1455,7 @@ RfsdWrite (IN PRFSD_IRP_CONTEXT IrpContext)
             RfsdCompleteIrpContext(IrpContext, Status);
         }
     } _SEH2_END;
-    
+
     return Status;
 }
 

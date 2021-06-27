@@ -211,20 +211,21 @@ class CAppsListView :
     };
 
     BOOL bIsAscending = TRUE;
-    BOOL bHasCheckboxes;
+    BOOL bHasCheckboxes = FALSE;
 
     INT ItemCount = 0;
     INT CheckedItemCount = 0;
     INT ColumnCount = 0;
 
-    INT nLastHeaderID;
+    INT nLastHeaderID = -1;
 
     APPLICATION_VIEW_TYPE ApplicationViewType = AppViewTypeEmpty;
 
-    HIMAGELIST m_hImageListView;
+    HIMAGELIST m_hImageListView = NULL;
 
 public:
     CAppsListView();
+    ~CAppsListView();
 
     VOID SetCheckboxesVisible(BOOL bIsVisible);
 

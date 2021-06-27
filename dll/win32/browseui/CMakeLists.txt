@@ -8,6 +8,7 @@ spec2def(browseui.dll browseui.spec ADD_IMPORTLIB)
 list(APPEND SOURCE
     ACLCustomMRU.cpp
     ACLCustomMRU.h
+    aclhistory.cpp
     aclistisf.cpp
     aclmulti.cpp
     addressband.cpp
@@ -52,8 +53,11 @@ add_importlibs(browseui uxtheme shlwapi shell32 comctl32 gdi32 ole32 oleaut32 us
 add_pch(browseui precomp.h "${PCH_SKIP_SOURCE}")
 add_cd_file(TARGET browseui DESTINATION reactos/system32 FOR all)
 
+if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
+    target_compile_options(browseui PRIVATE -Wno-unused-but-set-variable)
+endif()
+
 if(NOT MSVC)
-    target_compile_options(browseui PRIVATE "-Wno-unused-but-set-variable")
     # Binutils linker bug
     if(LTCG)
         add_target_link_flags(browseui "-Wl,--allow-multiple-definition")

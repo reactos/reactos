@@ -250,6 +250,6 @@ Bus_PDO_EvalMethod(PPDO_DEVICE_DATA DeviceData,
   else
   {
       DPRINT1("Query method %4s failed on %p\n", EvalInputBuff->MethodName, DeviceData->AcpiHandle);
-      return STATUS_UNSUCCESSFUL; 
+      return STATUS_UNSUCCESSFUL;
   }
 }

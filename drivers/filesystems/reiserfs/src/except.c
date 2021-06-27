@@ -2,10 +2,10 @@
  * COPYRIGHT:        GNU GENERAL PUBLIC LICENSE VERSION 2
  * PROJECT:          ReiserFs file system driver for Windows NT/2000/XP/Vista.
  * FILE:             except.c
- * PURPOSE:          
+ * PURPOSE:
  * PROGRAMMER:       Mark Piper, Matt Wu, Bo Brantén.
- * HOMEPAGE:         
- * UPDATE HISTORY: 
+ * HOMEPAGE:
+ * UPDATE HISTORY:
  */
 
 /* INCLUDES *****************************************************************/
@@ -72,9 +72,9 @@ RfsdExceptionFilter (
 
         RfsdPrint((DBG_ERROR, "RfsdExceptionFilter: Catching exception %xh\n",
             ExceptionCode));
-        
+
         Status = EXCEPTION_EXECUTE_HANDLER;
-        
+
         if (IrpContext) {
             IrpContext->ExceptionInProgress = TRUE;
             IrpContext->ExceptionCode = ExceptionCode;
@@ -88,14 +88,14 @@ RfsdExceptionFilter (
 
         RfsdPrint((DBG_ERROR, "RfsdExceptionFilter: Passing on exception %#x\n",
             ExceptionCode));
-        
+
         Status = EXCEPTION_CONTINUE_SEARCH;
-        
+
         if (IrpContext) {
             RfsdFreeIrpContext(IrpContext);
         }
     }
-    
+
     return Status;
 }
 
@@ -103,9 +103,9 @@ NTSTATUS
 RfsdExceptionHandler (IN PRFSD_IRP_CONTEXT IrpContext)
 {
     NTSTATUS Status;
-    
+
     if (IrpContext) {
-        if ( (IrpContext->Identifier.Type != RFSDICX) || 
+        if ( (IrpContext->Identifier.Type != RFSDICX) ||
              (IrpContext->Identifier.Size != sizeof(RFSD_IRP_CONTEXT))) {
             DbgBreak();
             return STATUS_UNSUCCESSFUL;
@@ -120,7 +120,7 @@ RfsdExceptionHandler (IN PRFSD_IRP_CONTEXT IrpContext)
             //
 
             PIRP Irp = IrpContext->Irp;
-        
+
 
             if (IoIsErrorUserInduced(Status)) {
 
@@ -171,18 +171,18 @@ RfsdExceptionHandler (IN PRFSD_IRP_CONTEXT IrpContext)
             }
 
             IrpContext->Irp->IoStatus.Status = Status;
-            
+
             RfsdCompleteRequest(IrpContext->Irp, FALSE, IO_NO_INCREMENT);
         }
 
 errorout:
-        
+
         RfsdFreeIrpContext(IrpContext);
 
     } else {
 
         Status = STATUS_INSUFFICIENT_RESOURCES;
     }
-    
+
     return Status;
 }

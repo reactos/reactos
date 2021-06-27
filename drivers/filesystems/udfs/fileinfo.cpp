@@ -204,7 +204,7 @@ UDFCommonFileInfo(
         // buffer for query and set file information calls.
         // Copying information to/from the user buffer and the system
         // buffer is performed by the I/O Manager and the FSD need not worry about it.
-        PtrSystemBuffer = Irp->AssociatedIrp.SystemBuffer;   
+        PtrSystemBuffer = Irp->AssociatedIrp.SystemBuffer;
 
         UDFFlushTryBreak(Vcb);
         if(!UDFAcquireResourceShared(&(Vcb->VCBResource), CanWait)) {
@@ -292,7 +292,7 @@ UDFCommonFileInfo(
                        !NT_SUCCESS(RC = UDFGetStandardInformation(Fcb, &(PtrAllInfo->StandardInformation), &BufferLength)) ||
                        !NT_SUCCESS(RC = UDFGetInternalInformation(PtrIrpContext, Fcb, Ccb, &(PtrAllInfo->InternalInformation), &BufferLength)) ||
                        !NT_SUCCESS(RC = UDFGetEaInformation(PtrIrpContext, Fcb, &(PtrAllInfo->EaInformation), &BufferLength)) ||
-                       !NT_SUCCESS(RC = UDFGetPositionInformation(FileObject, &(PtrAllInfo->PositionInformation), &BufferLength)) || 
+                       !NT_SUCCESS(RC = UDFGetPositionInformation(FileObject, &(PtrAllInfo->PositionInformation), &BufferLength)) ||
                        !NT_SUCCESS(RC = UDFGetFullNameInformation(FileObject, &(PtrAllInfo->NameInformation), &BufferLength))
                         )
                         try_return(RC);
@@ -559,7 +559,7 @@ UDFGetBasicInformation(
             AdPrint(("!!!! GetBasicInfo to unopened file !!!!\n"));
             try_return(RC = STATUS_INVALID_PARAMETER);
         }
-        
+
         DirNdx = UDFDirIndex(UDFGetDirIndexByFileInfo(FileInfo), FileInfo->Index);
 
         PtrBuffer->CreationTime = Fcb->NTRequiredFCB->CreationTime;
@@ -1018,7 +1018,7 @@ UDFSetBasicInformation(
 {
     NTSTATUS        RC = STATUS_SUCCESS;
     ULONG           NotifyFilter = 0;
-    
+
     AdPrint(("UDFSetBasicInformation\n"));
 
     _SEH2_TRY {
@@ -1159,7 +1159,7 @@ UDFMarkStreamsForDeletion(
            UDFIsSDirDeleted(Fcb->FileInfo->Dloc->SDirInfo) ||
            (UDFGetFileLinkCount(Fcb->FileInfo) > 1) )
             try_return (RC /*=STATUS_SUCCESS*/);
-        
+
         // We shall mark Streams for deletion if there is no
         // Links to the file. Otherwise we'll delete only the file.
         // If we are asked to unmark Streams, we'll precess the whole Tree
@@ -1185,7 +1185,7 @@ UDFMarkStreamsForDeletion(
                 // scan DirIndex
                 UDFDirIndexInitScan(SDirInfo, &ScanContext, 2)) {
 
-                // Check if we can delete Streams 
+                // Check if we can delete Streams
                 while((DirNdx = UDFDirIndexScan(&ScanContext, &FileInfo))) {
                     if(!FileInfo)
                         continue;
@@ -1701,7 +1701,7 @@ UDFSetEOF(
                     NtReqFcb->CommonFCBHeader.FileSize.QuadPart);
             //  Only advance the file size, never reduce it with this call
             RC = STATUS_SUCCESS;
-            if(UDFGetFileSizeFromDirNdx(Vcb, Fcb->FileInfo) >= 
+            if(UDFGetFileSizeFromDirNdx(Vcb, Fcb->FileInfo) >=
                PtrBuffer->EndOfFile.QuadPart)
                 try_return(RC);
 
@@ -1770,7 +1770,7 @@ UDFSetEOF(
             UDFCloseFile__(Vcb, Fcb->FileInfo);
             UDFInterlockedDecrement((PLONG)&(Fcb->ReferenceCount));
             UDFInterlockedDecrement((PLONG)&(NtReqFcb->CommonRefCount));
-            
+
             ModifiedAllocSize = TRUE;
             TruncatedFile = TRUE;
         }
@@ -2000,7 +2000,7 @@ UDFRename(
     PDIR_INDEX_ITEM DirNdx;
 
     AdPrint(("UDFRename %8.8x\n", DirObject2));
-    
+
     LocalPath.Buffer = NULL;
 
     _SEH2_TRY {
@@ -2093,9 +2093,9 @@ post_rename:
             //  This name is by definition legal.
             NewName = *((PUNICODE_STRING)&DirObject2->FileName);
         }
-    
+
         ic = (Ccb1->CCBFlags & UDF_CCB_CASE_SENSETIVE) ? FALSE : TRUE;
-    
+
         AdPrint(("  %ws ->\n    %ws\n",
             Fcb1->FCBName->ObjectName.Buffer,
             NewName.Buffer));
@@ -2130,8 +2130,8 @@ post_rename:
 
         ASSERT(UDFDirIndex(File1->ParentFile->Dloc->DirIndex, File1->Index)->FileInfo == File1);
 
-        RC = MyCloneUnicodeString(&LocalPath, (Dir2->Fcb->FCBFlags & UDF_FCB_ROOT_DIRECTORY) ? 
-                                                    &UDFGlobalData.UnicodeStrRoot : 
+        RC = MyCloneUnicodeString(&LocalPath, (Dir2->Fcb->FCBFlags & UDF_FCB_ROOT_DIRECTORY) ?
+                                                    &UDFGlobalData.UnicodeStrRoot :
                                                     &(Dir2->Fcb->FCBName->ObjectName) );
         if(!NT_SUCCESS(RC)) try_return (RC);
 //        RC = MyAppendUnicodeStringToString(&LocalPath, (Dir2->Fcb->FCBFlags & UDF_FCB_ROOT_DIRECTORY) ? &(UDFGlobalData.UnicodeStrRoot) : &(Dir2->Fcb->FCBName->ObjectName));
@@ -2595,7 +2595,7 @@ UDFHardLink(
             //  This name is by definition legal.
             NewName = *((PUNICODE_STRING)&DirObject2->FileName);
         }
-    
+
         ic = (Ccb1->CCBFlags & UDF_CCB_CASE_SENSETIVE) ? FALSE : TRUE;
 
         AdPrint(("  %ws ->\n    %ws\n",

@@ -176,7 +176,7 @@ typedef struct disassemble_info {
 
 } disassemble_info;
 
-
+
 /* Standard disassemblers.  Disassemble one instruction at the given
    target address.  Return number of octets processed.  */
 typedef int (*disassembler_ftype)
@@ -261,7 +261,7 @@ extern disassembler_ftype disassembler	PARAMS ((bfd *));
 /* Document any target specific options available from the disassembler.  */
 extern void disassembler_usage          PARAMS ((FILE *));
 
-
+
 /* This block of definitions is for particular callers who read instructions
    into a buffer before calling the instruction decoder.  */
 

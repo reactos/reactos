@@ -675,7 +675,7 @@ MiFindEmptyAddressRangeDownTree(IN SIZE_T Length,
                    with, thus we already have an OldNode! */
                 ASSERT(OldNode != NULL);
 
-                /* The node we had before is the most left grandchild of 
+                /* The node we had before is the most left grandchild of
                    that right child, use it as parent. */
                 ASSERT(RtlLeftChildAvl(OldNode) == NULL);
                 *Parent = OldNode;

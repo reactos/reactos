@@ -541,6 +541,25 @@ LsapLookupAuthenticationPackage(PLSA_API_MSG RequestMsg,
 }
 
 
+VOID
+LsapTerminateLogon(
+    _In_ PLUID LogonId)
+{
+    PLIST_ENTRY ListEntry;
+    PAUTH_PACKAGE Package;
+
+    ListEntry = PackageListHead.Flink;
+    while (ListEntry != &PackageListHead)
+    {
+        Package = CONTAINING_RECORD(ListEntry, AUTH_PACKAGE, Entry);
+
+        Package->LsaApLogonTerminated(LogonId);
+
+        ListEntry = ListEntry->Flink;
+    }
+}
+
+
 NTSTATUS
 LsapCallAuthenticationPackage(PLSA_API_MSG RequestMsg,
                               PLSAP_LOGON_CONTEXT LogonContext)

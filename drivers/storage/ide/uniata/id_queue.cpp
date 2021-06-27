@@ -231,7 +231,11 @@ UniataQueueRequest(
         AtaReq->next_req = NULL;
         LunExt->first_req =
         LunExt->last_req = AtaReq;
+#ifdef __REACTOS__
+        // Do nothing here, workaround for CORE-12441 and CORE-17371
+#else
         chan->cur_cdev = GET_CDEV(Srb);
+#endif
     }
     LunExt->queue_depth++;
     chan->queue_depth++;

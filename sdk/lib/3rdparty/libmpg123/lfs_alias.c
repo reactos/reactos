@@ -16,7 +16,7 @@
 
 	Depending on use case, the aliases map to 32 (small) or 64 bit (large) offset
 	functions, to the ones from libmpg123 or the ones from lfs_wrap.
-	
+
 	So, two basic cases:
 	1. mpg123_bla_32 alias for mpg123_bla (native)
 	2. mpg123_bla    alias for mpg123_bla_32 (wrapper)

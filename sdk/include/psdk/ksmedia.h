@@ -549,7 +549,7 @@ typedef struct {
 
 #if !defined(WAVE_FORMAT_EXTENSIBLE)
 #define  WAVE_FORMAT_EXTENSIBLE                 0xFFFE
-#endif 
+#endif
 
 typedef struct {
     ULONG               Flags;
@@ -806,7 +806,7 @@ typedef struct tagKS_DATARANGE_VIDEO2 {
 
 typedef struct tagKS_VBIINFOHEADER {
     ULONG StartLine;
-    ULONG EndLine; 
+    ULONG EndLine;
     ULONG SamplingFrequency;
     ULONG MinLineStartTime;
     ULONG MaxLineStartTime;
@@ -993,8 +993,8 @@ typedef enum {
     , KSPROPERTY_AUDIO_ALGORITHM_INSTANCE
     , KSPROPERTY_AUDIO_FILTER_STATE
     , KSPROPERTY_AUDIO_PREFERRED_STATUS
-    
-#endif 
+
+#endif
 #if (NTDDI_VERSION >= NTDDI_LONGHORN)
     , KSPROPERTY_AUDIO_PEQ_MAX_BANDS
     , KSPROPERTY_AUDIO_PEQ_NUM_BANDS
@@ -1126,7 +1126,7 @@ typedef enum {
                                          SPEAKER_SIDE_LEFT | SPEAKER_SIDE_RIGHT)
 #define KSAUDIO_SPEAKER_5POINT1_BACK     KSAUDIO_SPEAKER_5POINT1
 #define KSAUDIO_SPEAKER_7POINT1_WIDE     KSAUDIO_SPEAKER_7POINT1
-#endif 
+#endif
 
 typedef struct
 {
@@ -1169,7 +1169,7 @@ typedef struct {
 #define KSNODEPIN_STANDARD_IN       1
 #define KSNODEPIN_STANDARD_OUT      0
 
-#define KSNODEPIN_SUM_MUX_IN        1 
+#define KSNODEPIN_SUM_MUX_IN        1
 #define KSNODEPIN_SUM_MUX_OUT       0
 
 #define KSNODEPIN_DEMUX_IN          0
@@ -1205,7 +1205,7 @@ DEFINE_GUIDSTRUCT("185FEDF8-9905-11D1-95A9-00C04FB925D3", KSAUDFNAME_MIDI);
 DEFINE_GUIDSTRUCT("DFF220F3-F70F-11D0-B917-00A0C9223196", KSNODETYPE_SYNTHESIZER);
 #define KSNODETYPE_SYNTHESIZER DEFINE_GUIDNAMED(KSNODETYPE_SYNTHESIZER)
 
-typedef struct 
+typedef struct
 {
    KSDATARANGE              DataRange;
    GUID                     Technology;

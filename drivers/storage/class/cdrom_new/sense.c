@@ -110,15 +110,15 @@ Arguments:
 Return Value:
 
     NTSTATUS
-    Status - 
-    Retry - 
+    Status -
+    Retry -
 
 --*/
 {
     BOOLEAN mediaChange = FALSE;
     PCDB    cdb = (PCDB)Srb->Cdb;
 
-    if (TEST_FLAG(Srb->SrbStatus, SRB_STATUS_AUTOSENSE_VALID)) 
+    if (TEST_FLAG(Srb->SrbStatus, SRB_STATUS_AUTOSENSE_VALID))
     {
         PSENSE_DATA senseBuffer = Srb->SenseInfoBuffer;
 
@@ -128,14 +128,14 @@ Return Value:
         // own routine. we now allow some requests to continue during our
         // processing of the capabilities update in order to allow
         // IoReadPartitionTable() to succeed.
-        switch (senseBuffer->SenseKey & 0xf) 
+        switch (senseBuffer->SenseKey & 0xf)
         {
 
-        case SCSI_SENSE_NOT_READY: 
+        case SCSI_SENSE_NOT_READY:
         {
-            if (senseBuffer->AdditionalSenseCode == SCSI_ADSENSE_NO_MEDIA_IN_DEVICE) 
+            if (senseBuffer->AdditionalSenseCode == SCSI_ADSENSE_NO_MEDIA_IN_DEVICE)
             {
-                if (DeviceExtension->DeviceAdditionalData.Mmc.WriteAllowed) 
+                if (DeviceExtension->DeviceAdditionalData.Mmc.WriteAllowed)
                 {
                     TracePrint((TRACE_LEVEL_INFORMATION, TRACE_FLAG_GENERAL,
                                "DeviceErrorHandlerForMmc: media removed, writes will be "
@@ -144,16 +144,16 @@ Return Value:
 
                 // NOTE - REF #0002
                 DeviceExtension->DeviceAdditionalData.Mmc.WriteAllowed = FALSE;
-            } 
-            else if (senseBuffer->AdditionalSenseCode == SCSI_ADSENSE_LUN_NOT_READY) 
+            }
+            else if (senseBuffer->AdditionalSenseCode == SCSI_ADSENSE_LUN_NOT_READY)
             {
-                if (senseBuffer->AdditionalSenseCodeQualifier == SCSI_SENSEQ_BECOMING_READY) 
+                if (senseBuffer->AdditionalSenseCodeQualifier == SCSI_SENSEQ_BECOMING_READY)
                 {
                     TracePrint((TRACE_LEVEL_INFORMATION, TRACE_FLAG_GENERAL,
                                "DeviceErrorHandlerForMmc: media becoming ready, "
                                "SHOULD notify shell of change time by sending "
                                "GESN request immediately!\n"));
-                } 
+                }
                 else if (((senseBuffer->AdditionalSenseCodeQualifier == SCSI_SENSEQ_OPERATION_IN_PROGRESS) ||
                             (senseBuffer->AdditionalSenseCodeQualifier == SCSI_SENSEQ_LONG_WRITE_IN_PROGRESS)
                             ) &&
@@ -168,7 +168,7 @@ Return Value:
                             (Srb->Cdb[0] == SCSIOP_READ_TRACK_INFORMATION) ||
                             (Srb->Cdb[0] == SCSIOP_READ_DISK_INFORMATION)
                             )
-                           ) 
+                           )
                 {
                     TracePrint((TRACE_LEVEL_WARNING, TRACE_FLAG_GENERAL,
                                "DeviceErrorHandlerForMmc: LONG_WRITE or "
@@ -181,11 +181,11 @@ Return Value:
             break;
         } // end SCSI_SENSE_NOT_READY
 
-        case SCSI_SENSE_UNIT_ATTENTION: 
+        case SCSI_SENSE_UNIT_ATTENTION:
         {
-            switch (senseBuffer->AdditionalSenseCode) 
+            switch (senseBuffer->AdditionalSenseCode)
             {
-            case SCSI_ADSENSE_MEDIUM_CHANGED: 
+            case SCSI_ADSENSE_MEDIUM_CHANGED:
             {
                 // always update if the medium may have changed
 
@@ -214,14 +214,14 @@ Return Value:
 
             } // end SCSI_ADSENSE_BUS_RESET
 
-            case SCSI_ADSENSE_OPERATOR_REQUEST: 
+            case SCSI_ADSENSE_OPERATOR_REQUEST:
             {
 
                 BOOLEAN b = FALSE;
 
                 switch (senseBuffer->AdditionalSenseCodeQualifier)
                 {
-                case SCSI_SENSEQ_MEDIUM_REMOVAL: 
+                case SCSI_SENSEQ_MEDIUM_REMOVAL:
                 {
                     // eject notification currently handled by classpnp
                     TracePrint((TRACE_LEVEL_INFORMATION, TRACE_FLAG_GENERAL,
@@ -233,7 +233,7 @@ Return Value:
 
                 case SCSI_SENSEQ_WRITE_PROTECT_DISABLE:
                     b = TRUE;
-                case SCSI_SENSEQ_WRITE_PROTECT_ENABLE: 
+                case SCSI_SENSEQ_WRITE_PROTECT_ENABLE:
                 {
                     TracePrint((TRACE_LEVEL_INFORMATION, TRACE_FLAG_GENERAL,
                                "DeviceErrorHandlerForMmc: Write protect %s requested "
@@ -255,7 +255,7 @@ Return Value:
 
             } // end SCSI_ADSENSE_OPERATOR_REQUEST
 
-            default: 
+            default:
             {
                 TracePrint((TRACE_LEVEL_WARNING, TRACE_FLAG_GENERAL,
                            "DeviceErrorHandlerForMmc: Unit attention %02x/%02x\n",
@@ -269,9 +269,9 @@ Return Value:
 
         } // end SCSI_SENSE_UNIT_ATTENTION
 
-        case SCSI_SENSE_ILLEGAL_REQUEST: 
+        case SCSI_SENSE_ILLEGAL_REQUEST:
         {
-            if (senseBuffer->AdditionalSenseCode == SCSI_ADSENSE_WRITE_PROTECT) 
+            if (senseBuffer->AdditionalSenseCode == SCSI_ADSENSE_WRITE_PROTECT)
             {
                 if (DeviceExtension->DeviceAdditionalData.Mmc.WriteAllowed)
                 {
@@ -290,27 +290,27 @@ Return Value:
         } // end of SenseKey switch
 
         // Check if we failed to set the DVD region key and send appropriate error
-        if (cdb->CDB16.OperationCode == SCSIOP_SEND_KEY) 
+        if (cdb->CDB16.OperationCode == SCSIOP_SEND_KEY)
         {
-            if (cdb->SEND_KEY.KeyFormat == DvdSetRpcKey) 
+            if (cdb->SEND_KEY.KeyFormat == DvdSetRpcKey)
             {
-                if (senseBuffer->AdditionalSenseCode == SCSI_ADSENSE_NO_MEDIA_IN_DEVICE) 
+                if (senseBuffer->AdditionalSenseCode == SCSI_ADSENSE_NO_MEDIA_IN_DEVICE)
                 {
                     // media of appropriate region required
                     *Status = STATUS_NO_MEDIA_IN_DEVICE;
                     *Retry = FALSE;
-                } 
+                }
                 else if ((senseBuffer->SenseKey == SCSI_SENSE_ILLEGAL_REQUEST) &&
                            (senseBuffer->AdditionalSenseCode == SCSI_ADSENSE_COPY_PROTECTION_FAILURE) &&
-                           (senseBuffer->AdditionalSenseCodeQualifier == SCSI_SENSEQ_MEDIA_CODE_MISMATCHED_TO_LOGICAL_UNIT)) 
+                           (senseBuffer->AdditionalSenseCodeQualifier == SCSI_SENSEQ_MEDIA_CODE_MISMATCHED_TO_LOGICAL_UNIT))
                 {
                     // media of appropriate region required
                     *Status = STATUS_CSS_REGION_MISMATCH;
                     *Retry = FALSE;
-                } 
+                }
                 else if ((senseBuffer->SenseKey == SCSI_SENSE_ILLEGAL_REQUEST) &&
                            (senseBuffer->AdditionalSenseCode == SCSI_ADSENSE_INVALID_MEDIA) &&
-                           (senseBuffer->AdditionalSenseCodeQualifier == SCSI_SENSEQ_INCOMPATIBLE_FORMAT)) 
+                           (senseBuffer->AdditionalSenseCodeQualifier == SCSI_SENSEQ_INCOMPATIBLE_FORMAT))
                 {
                     // media of appropriate region required
                     *Status = STATUS_CSS_REGION_MISMATCH;
@@ -324,9 +324,9 @@ Return Value:
     // queue a workitem to send the commands to the device. Do this on
     // media arrival as some device will fail this command if no media
     // is present. Ignore the fake media change from classpnp driver.
-    if ((mediaChange == TRUE) && (*Status != STATUS_MEDIA_CHANGED)) 
+    if ((mediaChange == TRUE) && (*Status != STATUS_MEDIA_CHANGED))
     {
-        if (DeviceExtension->DeviceAdditionalData.RestoreDefaults == TRUE) 
+        if (DeviceExtension->DeviceAdditionalData.RestoreDefaults == TRUE)
         {
             NTSTATUS                status = STATUS_SUCCESS;
             WDF_OBJECT_ATTRIBUTES   attributes;
@@ -349,7 +349,7 @@ Return Value:
 
             WdfWorkItemEnqueue(workItem);
 
-            TracePrint((TRACE_LEVEL_INFORMATION, TRACE_FLAG_GENERAL, 
+            TracePrint((TRACE_LEVEL_INFORMATION, TRACE_FLAG_GENERAL,
                         "DeviceErrorHandlerForMmc: Restore device default speed for %p\n",
                         DeviceExtension->DeviceObject));
         }
@@ -394,13 +394,13 @@ Return Value:
 {
     PSENSE_DATA senseBuffer = Srb->SenseInfoBuffer;
 
-    if (!TEST_FLAG(Srb->SrbStatus, SRB_STATUS_AUTOSENSE_VALID)) 
+    if (!TEST_FLAG(Srb->SrbStatus, SRB_STATUS_AUTOSENSE_VALID))
     {
         return STATUS_SUCCESS; //nobody cares about this return value yet.
     }
 
     if (((senseBuffer->SenseKey & 0xf) == SCSI_SENSE_HARDWARE_ERROR) &&
-        (senseBuffer->AdditionalSenseCode == 0x44)) 
+        (senseBuffer->AdditionalSenseCode == 0x44))
     {
         TracePrint((TRACE_LEVEL_ERROR, TRACE_FLAG_GENERAL,
                     "DeviceErrorHandlerForHitachiGD2000 (%p) => Internal Target "
@@ -441,7 +441,7 @@ SenseInfoRequestGetInformation(
     if (requestContext->OriginalRequest != NULL)
     {
         PIO_STACK_LOCATION originalIrpStack = NULL;
-        
+
         PIRP originalIrp = WdfRequestWdmGetIrp(requestContext->OriginalRequest);
 
         if (originalIrp != NULL)
@@ -488,13 +488,13 @@ SenseInfoInterpretByAdditionalSenseCode(
     _In_      UCHAR                     AdditionalSenseCodeQual,
     _Inout_   NTSTATUS*                 Status,
     _Inout_   BOOLEAN*                  Retry,
-    _Out_ _Deref_out_range_(0,100) ULONG*         RetryIntervalInSeconds,  
+    _Out_ _Deref_out_range_(0,100) ULONG*         RetryIntervalInSeconds,
     _Inout_   PERROR_LOG_CONTEXT        LogContext
     )
 /*
-    This function will interpret error based on ASC/ASCQ. 
+    This function will interpret error based on ASC/ASCQ.
 
-    If the error code is not processed in this function, e.g. return value is TRUE, 
+    If the error code is not processed in this function, e.g. return value is TRUE,
     caller needs to call SenseInfoInterpretBySenseKey() for further interpret.
 */
 {
@@ -506,11 +506,11 @@ SenseInfoInterpretByAdditionalSenseCode(
     *Retry = TRUE;
     *RetryIntervalInSeconds = 0;
 
-    switch (AdditionalSenseCode) 
+    switch (AdditionalSenseCode)
     {
-    case SCSI_ADSENSE_LUN_NOT_READY: 
+    case SCSI_ADSENSE_LUN_NOT_READY:
         {
-            TracePrint((TRACE_LEVEL_WARNING, TRACE_FLAG_GENERAL, 
+            TracePrint((TRACE_LEVEL_WARNING, TRACE_FLAG_GENERAL,
                         "SenseInfoInterpretByAdditionalSenseCode: Lun not ready\n"));
 
             //
@@ -521,7 +521,7 @@ SenseInfoInterpretByAdditionalSenseCode(
             //
             //  These drives should not pass WHQL certification due to this discrepency.
             //
-            //  However, we have to retry on 2/4/0 (Not ready, LUN not ready, no info) 
+            //  However, we have to retry on 2/4/0 (Not ready, LUN not ready, no info)
             //  and also 3/2/0 (no seek complete).
             //
             //  These conditions occur when the shell tries to examine an
@@ -533,18 +533,18 @@ SenseInfoInterpretByAdditionalSenseCode(
             //  The default retry timeout of one second is acceptable to balance
             //  these discrepencies.  don't modify the status, though....
             //
-            
-            switch (AdditionalSenseCodeQual) 
+
+            switch (AdditionalSenseCodeQual)
             {
-            case SCSI_SENSEQ_OPERATION_IN_PROGRESS: 
+            case SCSI_SENSEQ_OPERATION_IN_PROGRESS:
                 {
                     DEVICE_EVENT_BECOMING_READY notReady = {0};
 
-                    TracePrint((TRACE_LEVEL_INFORMATION, TRACE_FLAG_GENERAL, 
+                    TracePrint((TRACE_LEVEL_INFORMATION, TRACE_FLAG_GENERAL,
                                 "SenseInfoInterpretByAdditionalSenseCode: Operation In Progress\n"));
 
                     needFurtherInterpret = FALSE;
-            
+
                     *Retry = TRUE;
                     *RetryIntervalInSeconds = NOT_READY_RETRY_INTERVAL;
                     *Status = STATUS_DEVICE_NOT_READY;
@@ -560,7 +560,7 @@ SenseInfoInterpretByAdditionalSenseCode(
                     break;
                 }
 
-            case SCSI_SENSEQ_BECOMING_READY: 
+            case SCSI_SENSEQ_BECOMING_READY:
                 {
                     DEVICE_EVENT_BECOMING_READY notReady = {0};
 
@@ -568,7 +568,7 @@ SenseInfoInterpretByAdditionalSenseCode(
                                 "SenseInfoInterpretByAdditionalSenseCode: In process of becoming ready\n"));
 
                     needFurtherInterpret = FALSE;
-            
+
                     *Retry = TRUE;
                     *RetryIntervalInSeconds = NOT_READY_RETRY_INTERVAL;
                     *Status = STATUS_DEVICE_NOT_READY;
@@ -584,13 +584,13 @@ SenseInfoInterpretByAdditionalSenseCode(
                     break;
                 }
 
-            case SCSI_SENSEQ_LONG_WRITE_IN_PROGRESS: 
+            case SCSI_SENSEQ_LONG_WRITE_IN_PROGRESS:
                 {
-                    TracePrint((TRACE_LEVEL_INFORMATION, TRACE_FLAG_GENERAL, 
+                    TracePrint((TRACE_LEVEL_INFORMATION, TRACE_FLAG_GENERAL,
                                 "SenseInfoInterpretByAdditionalSenseCode: Long write in progress\n"));
 
                     needFurtherInterpret = FALSE;
-            
+
                     // This has been seen as a transcient failure on some drives
                     *Status = STATUS_DEVICE_NOT_READY;
                     *Retry = TRUE;
@@ -600,9 +600,9 @@ SenseInfoInterpretByAdditionalSenseCode(
                     break;
                 }
 
-            case SCSI_SENSEQ_MANUAL_INTERVENTION_REQUIRED: 
+            case SCSI_SENSEQ_MANUAL_INTERVENTION_REQUIRED:
                 {
-                    TracePrint((TRACE_LEVEL_INFORMATION, TRACE_FLAG_GENERAL, 
+                    TracePrint((TRACE_LEVEL_INFORMATION, TRACE_FLAG_GENERAL,
                                 "SenseInfoInterpretByAdditionalSenseCode: Manual intervention required\n"));
 
                     needFurtherInterpret = FALSE;
@@ -614,11 +614,11 @@ SenseInfoInterpretByAdditionalSenseCode(
                     break;
                 }
 
-            case SCSI_SENSEQ_FORMAT_IN_PROGRESS: 
+            case SCSI_SENSEQ_FORMAT_IN_PROGRESS:
                 {
                     TracePrint((TRACE_LEVEL_INFORMATION, TRACE_FLAG_GENERAL,
                                 "SenseInfoInterpretByAdditionalSenseCode: Format in progress\n"));
-            
+
                     needFurtherInterpret = FALSE;
 
                     *Status = STATUS_DEVICE_NOT_READY;
@@ -628,11 +628,11 @@ SenseInfoInterpretByAdditionalSenseCode(
                     break;
                 }
 
-            case SCSI_SENSEQ_CAUSE_NOT_REPORTABLE: 
+            case SCSI_SENSEQ_CAUSE_NOT_REPORTABLE:
             case SCSI_SENSEQ_INIT_COMMAND_REQUIRED:
             default:
                 {
-                    TracePrint((TRACE_LEVEL_INFORMATION, TRACE_FLAG_GENERAL, 
+                    TracePrint((TRACE_LEVEL_INFORMATION, TRACE_FLAG_GENERAL,
                                 "SenseInfoInterpretByAdditionalSenseCode: Initializing command required\n"));
 
                     needFurtherInterpret = FALSE;
@@ -641,8 +641,8 @@ SenseInfoInterpretByAdditionalSenseCode(
                     *Retry = TRUE;
                     *RetryIntervalInSeconds = 0;
 
-                    // This sense code/additional sense code combination may indicate 
-                    // that the device needs to be started. 
+                    // This sense code/additional sense code combination may indicate
+                    // that the device needs to be started.
                     if (TEST_FLAG(DeviceExtension->DeviceFlags, DEV_SAFE_START_UNIT) &&
                         !TEST_FLAG(Srb->SrbFlags, SRB_CLASS_FLAGS_LOW_PRIORITY))
                     {
@@ -656,9 +656,9 @@ SenseInfoInterpretByAdditionalSenseCode(
 
         } // end case (SCSI_ADSENSE_LUN_NOT_READY)
 
-    case SCSI_ADSENSE_NO_MEDIA_IN_DEVICE: 
+    case SCSI_ADSENSE_NO_MEDIA_IN_DEVICE:
         {
-            TracePrint((TRACE_LEVEL_VERBOSE, TRACE_FLAG_GENERAL, 
+            TracePrint((TRACE_LEVEL_VERBOSE, TRACE_FLAG_GENERAL,
                         "SenseInfoInterpretByAdditionalSenseCode: No Media in device.\n"));
 
             needFurtherInterpret = FALSE;
@@ -674,7 +674,7 @@ SenseInfoInterpretByAdditionalSenseCode(
                 //  but RSM has to know that the media is still in the drive (i.e. the drive is not free).
                 DeviceSetMediaChangeStateEx(DeviceExtension, MediaUnavailable, NULL);
             }
-            else 
+            else
             {
                 DeviceSetMediaChangeStateEx(DeviceExtension, MediaNotPresent, NULL);
             }
@@ -682,15 +682,15 @@ SenseInfoInterpretByAdditionalSenseCode(
             break;
         } // end case SCSI_ADSENSE_NO_MEDIA_IN_DEVICE
 
-    case SCSI_ADSENSE_INVALID_MEDIA: 
+    case SCSI_ADSENSE_INVALID_MEDIA:
         {
-        switch (AdditionalSenseCodeQual) 
+        switch (AdditionalSenseCodeQual)
         {
 
-        case SCSI_SENSEQ_UNKNOWN_FORMAT: 
+        case SCSI_SENSEQ_UNKNOWN_FORMAT:
             {
                 needFurtherInterpret = FALSE;
-            
+
                 // Log error only if this is a paging request
                 *Status = STATUS_UNRECOGNIZED_MEDIA;
                 *Retry = FALSE;
@@ -702,22 +702,22 @@ SenseInfoInterpretByAdditionalSenseCode(
                 break;
             }
 
-        case SCSI_SENSEQ_INCOMPATIBLE_FORMAT: 
+        case SCSI_SENSEQ_INCOMPATIBLE_FORMAT:
             {
                 needFurtherInterpret = FALSE;
-            
+
                 *Status = STATUS_UNRECOGNIZED_MEDIA;
                 *Retry = FALSE;
 
                 LogContext->LogError = FALSE;
 
                 break;
-            }   
+            }
 
         case SCSI_SENSEQ_CLEANING_CARTRIDGE_INSTALLED:
             {
                 needFurtherInterpret = FALSE;
-            
+
                 *Status = STATUS_CLEANER_CARTRIDGE_INSTALLED;
                 *Retry = FALSE;
 
@@ -737,15 +737,15 @@ SenseInfoInterpretByAdditionalSenseCode(
         break;
         } // end case SCSI_ADSENSE_NO_MEDIA_IN_DEVICE
 
-    case SCSI_ADSENSE_NO_SEEK_COMPLETE: 
+    case SCSI_ADSENSE_NO_SEEK_COMPLETE:
         {
-        switch (AdditionalSenseCodeQual) 
+        switch (AdditionalSenseCodeQual)
         {
 
-        case 0x00: 
+        case 0x00:
             {
                 needFurtherInterpret = FALSE;
-            
+
                 *Status = STATUS_DEVICE_DATA_ERROR;
                 *Retry = TRUE;
                 *RetryIntervalInSeconds = 0;
@@ -765,15 +765,15 @@ SenseInfoInterpretByAdditionalSenseCode(
         break;
         } // end case SCSI_ADSENSE_NO_SEEK_COMPLETE
 
-    case SCSI_ADSENSE_LUN_COMMUNICATION: 
+    case SCSI_ADSENSE_LUN_COMMUNICATION:
         {
-        switch (AdditionalSenseCodeQual) 
+        switch (AdditionalSenseCodeQual)
         {
 
-        case SCSI_SESNEQ_COMM_CRC_ERROR: 
+        case SCSI_SESNEQ_COMM_CRC_ERROR:
             {
                 needFurtherInterpret = FALSE;
-            
+
                 *Status = STATUS_IO_DEVICE_ERROR;
                 *Retry = TRUE;
                 *RetryIntervalInSeconds = 1;
@@ -793,38 +793,38 @@ SenseInfoInterpretByAdditionalSenseCode(
         break;
         } // end case SCSI_ADSENSE_LUN_COMMUNICATION
 
-    case SCSI_ADSENSE_ILLEGAL_BLOCK: 
+    case SCSI_ADSENSE_ILLEGAL_BLOCK:
         {
             needFurtherInterpret = FALSE;
 
-            TracePrint((TRACE_LEVEL_ERROR, TRACE_FLAG_GENERAL, 
+            TracePrint((TRACE_LEVEL_ERROR, TRACE_FLAG_GENERAL,
                         "SenseInfoInterpretByAdditionalSenseCode: Illegal block address\n"));
             *Status = STATUS_NONEXISTENT_SECTOR;
             *Retry = FALSE;
             break;
         }
 
-    case SCSI_ADSENSE_INVALID_LUN: 
+    case SCSI_ADSENSE_INVALID_LUN:
         {
             needFurtherInterpret = FALSE;
 
-            TracePrint((TRACE_LEVEL_ERROR, TRACE_FLAG_GENERAL,  
+            TracePrint((TRACE_LEVEL_ERROR, TRACE_FLAG_GENERAL,
                         "SenseInfoInterpretByAdditionalSenseCode: Invalid LUN\n"));
             *Status = STATUS_NO_SUCH_DEVICE;
             *Retry = FALSE;
             break;
         }
 
-    case SCSI_ADSENSE_COPY_PROTECTION_FAILURE: 
+    case SCSI_ADSENSE_COPY_PROTECTION_FAILURE:
         {
             needFurtherInterpret = FALSE;
 
             *Retry = FALSE;
 
-            TracePrint((TRACE_LEVEL_ERROR, TRACE_FLAG_GENERAL, 
+            TracePrint((TRACE_LEVEL_ERROR, TRACE_FLAG_GENERAL,
                         "SenseInfoInterpretByAdditionalSenseCode: Key - Copy protection failure\n"));
 
-            switch (AdditionalSenseCodeQual) 
+            switch (AdditionalSenseCodeQual)
             {
             case SCSI_SENSEQ_AUTHENTICATION_FAILURE:
                 TracePrint((TRACE_LEVEL_ERROR, TRACE_FLAG_GENERAL,
@@ -865,11 +865,11 @@ SenseInfoInterpretByAdditionalSenseCode(
             break;
         }
 
-    case SCSI_ADSENSE_INVALID_CDB: 
+    case SCSI_ADSENSE_INVALID_CDB:
         {
             needFurtherInterpret = FALSE;
 
-            TracePrint((TRACE_LEVEL_ERROR, TRACE_FLAG_GENERAL,  
+            TracePrint((TRACE_LEVEL_ERROR, TRACE_FLAG_GENERAL,
                         "SenseInfoInterpretByAdditionalSenseCode: Key - Invalid CDB\n"));
 
             *Status = STATUS_INVALID_DEVICE_REQUEST;
@@ -888,12 +888,12 @@ SenseInfoInterpretByAdditionalSenseCode(
             break;
         }
 
-    case SCSI_ADSENSE_MEDIUM_CHANGED: 
+    case SCSI_ADSENSE_MEDIUM_CHANGED:
         {
             needFurtherInterpret = FALSE;
             *RetryIntervalInSeconds = 0;
 
-            TracePrint((TRACE_LEVEL_INFORMATION, TRACE_FLAG_MCN,  
+            TracePrint((TRACE_LEVEL_INFORMATION, TRACE_FLAG_MCN,
                         "SenseInfoInterpretByAdditionalSenseCode: Media changed\n"));
 
             DeviceSetMediaChangeStateEx(DeviceExtension, MediaPresent, NULL);
@@ -907,7 +907,7 @@ SenseInfoInterpretByAdditionalSenseCode(
                 *Status = STATUS_VERIFY_REQUIRED;
                 *Retry = FALSE;
             }
-            else 
+            else
             {
                 *Status = STATUS_IO_DEVICE_ERROR;
                 *Retry = TRUE;
@@ -915,18 +915,18 @@ SenseInfoInterpretByAdditionalSenseCode(
             break;
         }
 
-    case SCSI_ADSENSE_OPERATOR_REQUEST: 
+    case SCSI_ADSENSE_OPERATOR_REQUEST:
         {
-            switch (AdditionalSenseCodeQual) 
+            switch (AdditionalSenseCodeQual)
             {
-            case SCSI_SENSEQ_MEDIUM_REMOVAL: 
+            case SCSI_SENSEQ_MEDIUM_REMOVAL:
                 {
                     needFurtherInterpret = FALSE;
                     *RetryIntervalInSeconds = 0;
-            
+
                     InterlockedIncrement((PLONG)&DeviceExtension->MediaChangeCount);
-                    
-                    TracePrint((TRACE_LEVEL_INFORMATION, TRACE_FLAG_GENERAL,  
+
+                    TracePrint((TRACE_LEVEL_INFORMATION, TRACE_FLAG_GENERAL,
                         "SenseInfoInterpretByAdditionalSenseCode: Ejection request received!\n"));
                     //Send eject notification.
                     DeviceSendNotification(DeviceExtension,
@@ -942,7 +942,7 @@ SenseInfoInterpretByAdditionalSenseCode(
                         *Status = STATUS_VERIFY_REQUIRED;
                         *Retry = FALSE;
                     }
-                    else 
+                    else
                     {
                         *Status = STATUS_IO_DEVICE_ERROR;
                         *Retry = TRUE;
@@ -958,16 +958,16 @@ SenseInfoInterpretByAdditionalSenseCode(
             break;
         }
 
-    case SCSI_ADSENSE_OPERATING_CONDITIONS_CHANGED: 
+    case SCSI_ADSENSE_OPERATING_CONDITIONS_CHANGED:
         {
             needFurtherInterpret = FALSE;
             *RetryIntervalInSeconds = 5;
 
             InterlockedIncrement((PLONG)&DeviceExtension->MediaChangeCount);
-                    
+
             // Device information has changed, we need to rescan the
             // bus for changed information such as the capacity.
-            TracePrint((TRACE_LEVEL_INFORMATION, TRACE_FLAG_GENERAL,  
+            TracePrint((TRACE_LEVEL_INFORMATION, TRACE_FLAG_GENERAL,
                         "SenseInfoInterpretByAdditionalSenseCode: Device information changed. Invalidate the bus\n"));
 
             IoInvalidateDeviceRelations(DeviceExtension->LowerPdo, BusRelations);
@@ -981,7 +981,7 @@ SenseInfoInterpretByAdditionalSenseCode(
                 *Status = STATUS_VERIFY_REQUIRED;
                 *Retry = FALSE;
             }
-            else 
+            else
             {
                 *Status = STATUS_IO_DEVICE_ERROR;
                 *Retry = TRUE;
@@ -991,7 +991,7 @@ SenseInfoInterpretByAdditionalSenseCode(
 
 
     case SCSI_ADSENSE_REC_DATA_NOECC:
-    case SCSI_ADSENSE_REC_DATA_ECC: 
+    case SCSI_ADSENSE_REC_DATA_ECC:
         {
             needFurtherInterpret = FALSE;
 
@@ -1001,16 +1001,16 @@ SenseInfoInterpretByAdditionalSenseCode(
             LogContext->UniqueErrorValue = 258;
             LogContext->ErrorCode = IO_RECOVERED_VIA_ECC;
 
-            if (senseBuffer->IncorrectLength) 
+            if (senseBuffer->IncorrectLength)
             {
-                TracePrint((TRACE_LEVEL_INFORMATION, TRACE_FLAG_GENERAL, 
+                TracePrint((TRACE_LEVEL_INFORMATION, TRACE_FLAG_GENERAL,
                             "SenseInfoInterpretByAdditionalSenseCode: Incorrect length detected.\n"));
                 *Status = STATUS_INVALID_BLOCK_LENGTH ;
             }
             break;
         }
 
-    case SCSI_ADSENSE_FAILURE_PREDICTION_THRESHOLD_EXCEEDED: 
+    case SCSI_ADSENSE_FAILURE_PREDICTION_THRESHOLD_EXCEEDED:
         {
             UCHAR wmiEventData[sizeof(ULONG)+sizeof(UCHAR)] = {0};
 
@@ -1032,24 +1032,24 @@ SenseInfoInterpretByAdditionalSenseCode(
             LogContext->LogError = TRUE;
             LogContext->ErrorCode = IO_WRN_FAILURE_PREDICTED;
 
-            if (senseBuffer->IncorrectLength) 
+            if (senseBuffer->IncorrectLength)
             {
-                TracePrint((TRACE_LEVEL_INFORMATION, TRACE_FLAG_GENERAL, 
+                TracePrint((TRACE_LEVEL_INFORMATION, TRACE_FLAG_GENERAL,
                             "SenseInfoInterpretByAdditionalSenseCode: Incorrect length detected.\n"));
                 *Status = STATUS_INVALID_BLOCK_LENGTH ;
             }
             break;
         }
 
-    case 0x57: 
+    case 0x57:
         {
             // UNABLE_TO_RECOVER_TABLE_OF_CONTENTS
             // the Matshita CR-585 returns this for all read commands
             // on blank CD-R and CD-RW media, and we need to handle
             // this for READ_CD detection ability.
-            switch (AdditionalSenseCodeQual) 
+            switch (AdditionalSenseCodeQual)
             {
-            case 0x00: 
+            case 0x00:
                 {
                     needFurtherInterpret = FALSE;
 
@@ -1114,7 +1114,7 @@ SenseInfoInterpretBySenseKey(
             *Status = STATUS_MEDIA_WRITE_PROTECTED;
             *Retry = FALSE;
             break;
-        } 
+        }
 
     case SCSI_SENSE_MEDIUM_ERROR:
         {
@@ -1276,13 +1276,13 @@ SenseInfoInterpretBySrbStatus(
     *Retry = TRUE;
     *RetryIntervalInSeconds = 0;
 
-    switch (SRB_STATUS(Srb->SrbStatus)) 
+    switch (SRB_STATUS(Srb->SrbStatus))
     {
     case SRB_STATUS_INVALID_LUN:
     case SRB_STATUS_INVALID_TARGET_ID:
     case SRB_STATUS_NO_DEVICE:
     case SRB_STATUS_NO_HBA:
-    case SRB_STATUS_INVALID_PATH_ID: 
+    case SRB_STATUS_INVALID_PATH_ID:
     {
         *Status = STATUS_NO_SUCH_DEVICE;
         *Retry = FALSE;
@@ -1290,7 +1290,7 @@ SenseInfoInterpretBySrbStatus(
     }
 
     case SRB_STATUS_COMMAND_TIMEOUT:
-    case SRB_STATUS_TIMEOUT: 
+    case SRB_STATUS_TIMEOUT:
     {
         // Update the error count for the device.
         *Status = STATUS_IO_TIMEOUT;
@@ -1310,7 +1310,7 @@ SenseInfoInterpretBySrbStatus(
         break;
     }
 
-    case SRB_STATUS_SELECTION_TIMEOUT: 
+    case SRB_STATUS_SELECTION_TIMEOUT:
     {
         *Status = STATUS_DEVICE_NOT_CONNECTED;
         *Retry = FALSE;
@@ -1328,7 +1328,7 @@ SenseInfoInterpretBySrbStatus(
         break;
     }
 
-    case SRB_STATUS_PHASE_SEQUENCE_FAILURE: 
+    case SRB_STATUS_PHASE_SEQUENCE_FAILURE:
     {
         // Update the error count for the device.
         incrementErrorCount = TRUE;
@@ -1340,17 +1340,17 @@ SenseInfoInterpretBySrbStatus(
         break;
     }
 
-    case SRB_STATUS_REQUEST_FLUSHED: 
+    case SRB_STATUS_REQUEST_FLUSHED:
     {
         // If the status needs verification bit is set.  Then set
         // the status to need verification and no retry; otherwise,
         // just retry the request.
-        if (TEST_FLAG(DeviceExtension->DeviceObject->Flags, DO_VERIFY_VOLUME)) 
+        if (TEST_FLAG(DeviceExtension->DeviceObject->Flags, DO_VERIFY_VOLUME))
         {
             *Status = STATUS_VERIFY_REQUIRED;
             *Retry = FALSE;
-        } 
-        else 
+        }
+        else
         {
             *Status = STATUS_IO_DEVICE_ERROR;
             *Retry = TRUE;
@@ -1359,7 +1359,7 @@ SenseInfoInterpretBySrbStatus(
         break;
     }
 
-    case SRB_STATUS_INVALID_REQUEST: 
+    case SRB_STATUS_INVALID_REQUEST:
     {
         *Status = STATUS_INVALID_DEVICE_REQUEST;
         *Retry = FALSE;
@@ -1378,19 +1378,19 @@ SenseInfoInterpretBySrbStatus(
         break;
     }
 
-    case SRB_STATUS_ERROR: 
+    case SRB_STATUS_ERROR:
     {
         *Status = STATUS_IO_DEVICE_ERROR;
         *Retry = TRUE;
 
-        if (Srb->ScsiStatus == 0) 
+        if (Srb->ScsiStatus == 0)
         {
             // This is some strange return code.  Update the error
             // count for the device.
             incrementErrorCount = TRUE;
-        } 
+        }
 
-        if (Srb->ScsiStatus == SCSISTAT_BUSY) 
+        if (Srb->ScsiStatus == SCSISTAT_BUSY)
         {
             *Status = STATUS_DEVICE_NOT_READY;
         }
@@ -1398,7 +1398,7 @@ SenseInfoInterpretBySrbStatus(
         break;
     }
 
-    default: 
+    default:
     {
         *Status = STATUS_IO_DEVICE_ERROR;
         *Retry = TRUE;
@@ -1409,20 +1409,20 @@ SenseInfoInterpretBySrbStatus(
         break;
     }
 
-    } //end of (SRB_STATUS(Srb->SrbStatus))  
-    
-    if (incrementErrorCount) 
+    } //end of (SRB_STATUS(Srb->SrbStatus))
+
+    if (incrementErrorCount)
     {
         // if any error count occurred, delay the retry of this io by
         // at least one second, if caller supports it.
-        if (*RetryIntervalInSeconds == 0) 
+        if (*RetryIntervalInSeconds == 0)
         {
             *RetryIntervalInSeconds = 1;
         }
 
         DevicePerfIncrementErrorCount(DeviceExtension);
     }
- 
+
     return;
 }
 
@@ -1466,7 +1466,7 @@ SenseInfoLogError(
         validSense = RTL_CONTAINS_FIELD(senseBuffer,
                                         Srb->SenseInfoBufferLength,
                                         AdditionalSenseLength);
-        if (validSense) 
+        if (validSense)
         {
             // if extra info exists, copy the maximum amount of available
             // sense data that is safe into the the errlog.
@@ -1482,7 +1482,7 @@ SenseInfoLogError(
             senseBufferSize = max(validSenseBytes, sizeof(SENSE_DATA));
             senseBufferSize = min(senseBufferSize, Srb->SenseInfoBufferLength);
         }
-        else 
+        else
         {
             // it's smaller than required to read the total number of
             // valid bytes, so just use the SenseInfoBufferLength field.
@@ -1515,8 +1515,8 @@ SenseInfoLogError(
     {
         staticErrLogEntry.FinalStatus = STATUS_SUCCESS;
         staticErrLogData.ErrorRetried = TRUE;
-    } 
-    else 
+    }
+    else
     {
         staticErrLogEntry.FinalStatus = *Status;
     }
@@ -1524,12 +1524,12 @@ SenseInfoLogError(
     // Don't log generic IO_WARNING_PAGING_FAILURE message if either the
     // I/O is retried, or it completed successfully.
     if ((LogContext->ErrorCode == IO_WARNING_PAGING_FAILURE) &&
-        (*Retry || NT_SUCCESS(*Status)) ) 
+        (*Retry || NT_SUCCESS(*Status)) )
     {
         LogContext->LogError = FALSE;
     }
 
-    if (TEST_FLAG(Srb->SrbFlags, SRB_CLASS_FLAGS_PAGING)) 
+    if (TEST_FLAG(Srb->SrbFlags, SRB_CLASS_FLAGS_PAGING))
     {
         staticErrLogData.ErrorPaging = TRUE;
     }
@@ -1544,7 +1544,7 @@ SenseInfoLogError(
     {
         staticErrLogEntry.ErrorCode = STATUS_IO_DEVICE_ERROR;
     }
-    else 
+    else
     {
         staticErrLogEntry.ErrorCode = LogContext->ErrorCode;
     }
@@ -1646,7 +1646,7 @@ SenseInfoLogError(
             *errlogData = staticErrLogData;
 
             //  For the system log, copy as much of the sense buffer as possible.
-            if (senseBufferSize != 0) 
+            if (senseBufferSize != 0)
             {
                 RtlCopyMemory(&errlogData->SenseData, senseBuffer, senseBufferSize);
             }
@@ -1791,15 +1791,15 @@ Return Value:
     }
     else if ((opCode == SCSIOP_RESERVE_UNIT) || (opCode == SCSIOP_RELEASE_UNIT))
     {
-        // The RESERVE(6) / RELEASE(6) commands are optional. 
+        // The RESERVE(6) / RELEASE(6) commands are optional.
         // So if they aren't supported, try the 10-byte equivalents
         if (*Status == STATUS_INVALID_DEVICE_REQUEST)
         {
             PCDB tempCdb = (PCDB)Srb->Cdb;
 
             Srb->CdbLength = 10;
-            tempCdb->CDB10.OperationCode = (tempCdb->CDB6GENERIC.OperationCode == SCSIOP_RESERVE_UNIT) 
-                                            ? SCSIOP_RESERVE_UNIT10 
+            tempCdb->CDB10.OperationCode = (tempCdb->CDB6GENERIC.OperationCode == SCSIOP_RESERVE_UNIT)
+                                            ? SCSIOP_RESERVE_UNIT10
                                             : SCSIOP_RELEASE_UNIT10;
 
             SET_FLAG(DeviceExtension->PrivateFdoData->HackFlags, FDO_HACK_NO_RESERVE6);
@@ -1830,7 +1830,7 @@ Return Value:
 
             BOOLEAN     disableStreaming = FALSE;
 
-            if (SRB_STATUS(Srb->SrbStatus) == SRB_STATUS_TIMEOUT || 
+            if (SRB_STATUS(Srb->SrbStatus) == SRB_STATUS_TIMEOUT ||
                 SRB_STATUS(Srb->SrbStatus) == SRB_STATUS_COMMAND_TIMEOUT ||
                 SRB_STATUS(Srb->SrbStatus) == SRB_STATUS_SELECTION_TIMEOUT ||
                 SRB_STATUS(Srb->SrbStatus) == SRB_STATUS_BUS_RESET)
@@ -1847,7 +1847,7 @@ Return Value:
             }
             else if ((senseBuffer->SenseKey &0xf) == SCSI_SENSE_ILLEGAL_REQUEST)
             {
-                // LBA Out of Range is an exception, as it's more likely to be caused by 
+                // LBA Out of Range is an exception, as it's more likely to be caused by
                 // upper layers attempting to read/write a wrong LBA.
                 if (senseBuffer->AdditionalSenseCode != SCSI_ADSENSE_ILLEGAL_BLOCK)
                 {
@@ -1871,11 +1871,11 @@ Return Value:
             }
         }
 
-        // Special-case handling of READ/WRITE commands.  These commands now have a 120 second timeout, 
-        // but the preferred behavior (and that taken by many drives) is to immediately report 2/4/x 
-        // on OPC and similar commands.  Thus, retries must occur for at least 160 seconds 
+        // Special-case handling of READ/WRITE commands.  These commands now have a 120 second timeout,
+        // but the preferred behavior (and that taken by many drives) is to immediately report 2/4/x
+        // on OPC and similar commands.  Thus, retries must occur for at least 160 seconds
         // (120 seconds + four 10 second retries) as a conservative guess.
-        // Note: 160s retry time is also a result of discussion with OEMs for case of 2/4/7 and 2/4/8. 
+        // Note: 160s retry time is also a result of discussion with OEMs for case of 2/4/7 and 2/4/8.
         if (*Retry)
         {
             if ((Total100nsSinceFirstSend < 0) ||
@@ -1890,7 +1890,7 @@ Return Value:
                 *Retry = FALSE;
             }
 
-            // How long should we request a delay for during writing?  This depends entirely on 
+            // How long should we request a delay for during writing?  This depends entirely on
             // the current write speed of the drive.  If we request retries too quickly,
             // we can overload the processor on the drive (resulting in garbage being written),
             // but too slowly results in lesser performance.
@@ -1914,14 +1914,14 @@ Return Value:
         }
 
         if ((Srb->SenseInfoBufferLength < RTL_SIZEOF_THROUGH_FIELD(SENSE_DATA,AdditionalSenseCodeQualifier)) ||
-            !TEST_FLAG(Srb->SrbStatus, SRB_STATUS_AUTOSENSE_VALID)) 
+            !TEST_FLAG(Srb->SrbStatus, SRB_STATUS_AUTOSENSE_VALID))
         {
             // If get configuration command is failing and if the request type is TYPE ONE
             // then most likely the device does not support this request type. Set the
             // flag so that the TYPE ONE requests will be tried as TYPE ALL requets.
             if ((SRB_STATUS(Srb->SrbStatus) != SRB_STATUS_SUCCESS) &&
                 (SRB_STATUS(Srb->SrbStatus) != SRB_STATUS_DATA_OVERRUN) &&
-                (((PCDB)Srb->Cdb)->GET_CONFIGURATION.RequestType == SCSI_GET_CONFIGURATION_REQUEST_TYPE_ONE)) 
+                (((PCDB)Srb->Cdb)->GET_CONFIGURATION.RequestType == SCSI_GET_CONFIGURATION_REQUEST_TYPE_ONE))
             {
 
                 TracePrint((TRACE_LEVEL_WARNING, TRACE_FLAG_GENERAL,
@@ -1989,23 +1989,23 @@ Return Value:
         (IoControlCode == IOCTL_CDROM_READ_TOC)         ||
         (IoControlCode == IOCTL_CDROM_READ_TOC_EX)      ||
         (IoControlCode == IOCTL_CDROM_GET_CONFIGURATION)||
-        (IoControlCode == IOCTL_CDROM_GET_VOLUME)) 
+        (IoControlCode == IOCTL_CDROM_GET_VOLUME))
     {
-        if (*Status == STATUS_DATA_OVERRUN) 
+        if (*Status == STATUS_DATA_OVERRUN)
         {
             *Status = STATUS_SUCCESS;
             *Retry = FALSE;
         }
     }
 
-    if (IoControlCode == IOCTL_CDROM_READ_Q_CHANNEL) 
+    if (IoControlCode == IOCTL_CDROM_READ_Q_CHANNEL)
     {
         PLAY_ACTIVE(DeviceExtension) = FALSE;
     }
 
     // If the status is verified required and the this request
     // should bypass verify required then retry the request.
-    if (OverrideVerifyVolume && (*Status == STATUS_VERIFY_REQUIRED)) 
+    if (OverrideVerifyVolume && (*Status == STATUS_VERIFY_REQUIRED))
     {
         // note: status gets overwritten here
         *Status = STATUS_IO_DEVICE_ERROR;
@@ -2015,7 +2015,7 @@ Return Value:
             (IoControlCode == IOCTL_STORAGE_CHECK_VERIFY) ||
             (IoControlCode == IOCTL_STORAGE_CHECK_VERIFY2) ||
             (IoControlCode == IOCTL_DISK_CHECK_VERIFY)
-           ) 
+           )
         {
             // Update the geometry information, as the media could have changed.
             (VOID) MediaReadCapacity(DeviceExtension->Device);
@@ -2037,7 +2037,7 @@ Return Value:
 BOOLEAN
 SenseInfoInterpret(
     _In_    PCDROM_DEVICE_EXTENSION DeviceExtension,
-    _In_    WDFREQUEST              Request, 
+    _In_    WDFREQUEST              Request,
     _In_    PSCSI_REQUEST_BLOCK     Srb,
     _In_    ULONG                   RetriedCount,
     _Out_   NTSTATUS*               Status,
@@ -2050,8 +2050,8 @@ SenseInfoInterpret()
 
 Routine Description:
 
-    This routine interprets the data returned from the SCSI request sense. 
-    It determines the status to return in the IRP 
+    This routine interprets the data returned from the SCSI request sense.
+    It determines the status to return in the IRP
     and whether this request can be retried.
 
 Arguments:
@@ -2096,7 +2096,7 @@ Return Value:
                                    &overrideVerifyVolume,
                                    &total100nsSinceFirstSend);
 
-    if(TEST_FLAG(Srb->SrbFlags, SRB_CLASS_FLAGS_PAGING)) 
+    if(TEST_FLAG(Srb->SrbFlags, SRB_CLASS_FLAGS_PAGING))
     {
         // Log anything remotely incorrect about paging i/o
         logContext.LogError = TRUE;
@@ -2114,15 +2114,15 @@ Return Value:
 
         retry = FALSE;
         *Status = Srb->InternalStatus;
-    } 
-    else if (Srb->ScsiStatus == SCSISTAT_RESERVATION_CONFLICT) 
+    }
+    else if (Srb->ScsiStatus == SCSISTAT_RESERVATION_CONFLICT)
     {
         retry = FALSE;
         *Status = STATUS_DEVICE_BUSY;
         logContext.LogError = FALSE;
-    } 
+    }
     else if ((Srb->SrbStatus & SRB_STATUS_AUTOSENSE_VALID) &&
-             (Srb->SenseInfoBufferLength >= RTL_SIZEOF_THROUGH_FIELD(SENSE_DATA, AdditionalSenseLength))) 
+             (Srb->SenseInfoBufferLength >= RTL_SIZEOF_THROUGH_FIELD(SENSE_DATA, AdditionalSenseLength)))
     {
         UCHAR   senseKey = (UCHAR)(senseBuffer->SenseKey & 0x0f);
         UCHAR   additionalSenseCode = 0;
@@ -2131,7 +2131,7 @@ Return Value:
         // Zero the additional sense code and additional sense code qualifier
         // if they were not returned by the device.
         readSector = senseBuffer->AdditionalSenseLength + offsetof(SENSE_DATA, AdditionalSenseLength);
-        if (readSector > Srb->SenseInfoBufferLength) 
+        if (readSector > Srb->SenseInfoBufferLength)
         {
             readSector = Srb->SenseInfoBufferLength;
         }
@@ -2141,16 +2141,16 @@ Return Value:
         additionalSenseCodeQual = (readSector >= RTL_SIZEOF_THROUGH_FIELD(SENSE_DATA, AdditionalSenseCodeQualifier)) ?
                                    senseBuffer->AdditionalSenseCodeQualifier : 0;
 
-        TracePrint((TRACE_LEVEL_WARNING, TRACE_FLAG_GENERAL, 
+        TracePrint((TRACE_LEVEL_WARNING, TRACE_FLAG_GENERAL,
                     "SCSI Error - \n"
                     "\tcdb: %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X\n"
                     "\tsrb status: %X; sense: %02X/%02X/%02X; Retried count: %d\n\n",
-                    Srb->Cdb[0], Srb->Cdb[1], Srb->Cdb[2], Srb->Cdb[3], Srb->Cdb[4], Srb->Cdb[5], 
-                    Srb->Cdb[6], Srb->Cdb[7], Srb->Cdb[8], Srb->Cdb[9], Srb->Cdb[10], Srb->Cdb[11], 
-                    Srb->Cdb[12], Srb->Cdb[13], Srb->Cdb[14], Srb->Cdb[15], 
-                    SRB_STATUS(Srb->SrbStatus), 
-                    senseKey, 
-                    additionalSenseCode, 
+                    Srb->Cdb[0], Srb->Cdb[1], Srb->Cdb[2], Srb->Cdb[3], Srb->Cdb[4], Srb->Cdb[5],
+                    Srb->Cdb[6], Srb->Cdb[7], Srb->Cdb[8], Srb->Cdb[9], Srb->Cdb[10], Srb->Cdb[11],
+                    Srb->Cdb[12], Srb->Cdb[13], Srb->Cdb[14], Srb->Cdb[15],
+                    SRB_STATUS(Srb->SrbStatus),
+                    senseKey,
+                    additionalSenseCode,
                     additionalSenseCodeQual,
                     RetriedCount));
 
@@ -2160,7 +2160,7 @@ Return Value:
 
             // A media change may have occured so increment the change count for the physical device
             mediaChangeCount = InterlockedIncrement((PLONG)&DeviceExtension->MediaChangeCount);
-            TracePrint((TRACE_LEVEL_INFORMATION, TRACE_FLAG_MCN,  
+            TracePrint((TRACE_LEVEL_INFORMATION, TRACE_FLAG_MCN,
                        "SenseInfoInterpret: Media change count for device %d incremented to %#lx\n",
                        DeviceExtension->DeviceNumber, mediaChangeCount));
         }
@@ -2181,13 +2181,13 @@ Return Value:
             BOOLEAN notHandled = FALSE;
             notHandled = SenseInfoInterpretByAdditionalSenseCode(DeviceExtension,
                                                                  Srb,
-                                                                 additionalSenseCode, 
+                                                                 additionalSenseCode,
                                                                  additionalSenseCodeQual,
                                                                  Status,
                                                                  &retry,
                                                                  &retryIntervalInSeconds,
                                                                  &logContext);
-            
+
             if (notHandled)
             {
                 SenseInfoInterpretBySenseKey(DeviceExtension,
@@ -2203,17 +2203,17 @@ Return Value:
         // Try to determine the bad sector from the inquiry data.
         if ((IS_SCSIOP_READWRITE(((PCDB)Srb->Cdb)->CDB10.OperationCode)) ||
             (((PCDB)Srb->Cdb)->CDB10.OperationCode == SCSIOP_VERIFY)     ||
-            (((PCDB)Srb->Cdb)->CDB10.OperationCode == SCSIOP_VERIFY16)) 
+            (((PCDB)Srb->Cdb)->CDB10.OperationCode == SCSIOP_VERIFY16))
         {
             ULONG index;
             readSector = 0;
 
-            for (index = 0; index < 4; index++) 
+            for (index = 0; index < 4; index++)
             {
                 logContext.BadSector = (logContext.BadSector << 8) | senseBuffer->Information[index];
             }
 
-            for (index = 0; index < 4; index++) 
+            for (index = 0; index < 4; index++)
             {
                 readSector = (readSector << 8) | Srb->Cdb[index+2];
             }
@@ -2227,23 +2227,23 @@ Return Value:
                 logContext.BadSector = readSector;
             }
         }
-    } 
-    else 
+    }
+    else
     {
         // Request sense buffer not valid. No sense information
         // to pinpoint the error. Return general request fail.
-        TracePrint((TRACE_LEVEL_WARNING, TRACE_FLAG_GENERAL,  
+        TracePrint((TRACE_LEVEL_WARNING, TRACE_FLAG_GENERAL,
                     "SCSI Error - \n"
                     "\tcdb: %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X\n"
                     "\tsrb status: %X; sense info not valid; Retried count: %d\n\n",
-                    Srb->Cdb[0], Srb->Cdb[1], Srb->Cdb[2], Srb->Cdb[3], Srb->Cdb[4], Srb->Cdb[5], 
-                    Srb->Cdb[6], Srb->Cdb[7], Srb->Cdb[8], Srb->Cdb[9], Srb->Cdb[10], Srb->Cdb[11], 
-                    Srb->Cdb[12], Srb->Cdb[13], Srb->Cdb[14], Srb->Cdb[15], 
+                    Srb->Cdb[0], Srb->Cdb[1], Srb->Cdb[2], Srb->Cdb[3], Srb->Cdb[4], Srb->Cdb[5],
+                    Srb->Cdb[6], Srb->Cdb[7], Srb->Cdb[8], Srb->Cdb[9], Srb->Cdb[10], Srb->Cdb[11],
+                    Srb->Cdb[12], Srb->Cdb[13], Srb->Cdb[14], Srb->Cdb[15],
                     SRB_STATUS(Srb->SrbStatus),
                     RetriedCount));
 
         SenseInfoInterpretBySrbStatus(DeviceExtension,
-                                      Srb, 
+                                      Srb,
                                       RetriedCount,
                                       Status,
                                       &retry,
@@ -2257,7 +2257,7 @@ Return Value:
     // call the device specific error handler if it has one.
     // DeviceErrorHandlerForMmmc() for all MMC devices
     // or DeviceErrorHandlerForHitachiGD2000() for HITACHI GD-2000, HITACHI DVD-ROM GD-2000
-    if (DeviceExtension->DeviceAdditionalData.ErrorHandler) 
+    if (DeviceExtension->DeviceAdditionalData.ErrorHandler)
     {
         DeviceExtension->DeviceAdditionalData.ErrorHandler(DeviceExtension, Srb, Status, &retry);
     }
@@ -2272,16 +2272,16 @@ Return Value:
                                           Status,
                                           RetryIntervalIn100ns);
 
-    // Refine retry based on IOCTL code. 
+    // Refine retry based on IOCTL code.
     if (majorFunctionCode == IRP_MJ_DEVICE_CONTROL)
     {
         SenseInfoInterpretRefineByIoControl(DeviceExtension,
-                                            ioControlCode, 
+                                            ioControlCode,
                                             overrideVerifyVolume,
                                             &retry,
                                             Status);
     }
-    
+
     // LOG the error:
     //  Always log the error in our internal log.
     //  If logError is set, also log the error in the system log.
@@ -2303,10 +2303,10 @@ Return Value:
             WdfRequestIsCanceled(requestContext->OriginalRequest)
             )
         {
-            TracePrint((TRACE_LEVEL_WARNING, TRACE_FLAG_GENERAL,  
+            TracePrint((TRACE_LEVEL_WARNING, TRACE_FLAG_GENERAL,
                        "Request %p was cancelled when it would have been retried\n",
                        requestContext->OriginalRequest));
-            
+
             *Status = STATUS_CANCELLED;
             retry = FALSE;
             *RetryIntervalIn100ns = 0;
@@ -2316,7 +2316,7 @@ Return Value:
     // now, all decisions are made. display trace information.
     if (retry)
     {
-        TracePrint((TRACE_LEVEL_INFORMATION, TRACE_FLAG_GENERAL,  
+        TracePrint((TRACE_LEVEL_INFORMATION, TRACE_FLAG_GENERAL,
                    "Command shall be retried in %2I64d.%03I64d seconds\n",
                    (*RetryIntervalIn100ns / UNIT_100NS_PER_SECOND),
                    (*RetryIntervalIn100ns / 10000) % 1000
@@ -2324,7 +2324,7 @@ Return Value:
     }
     else
     {
-        TracePrint((TRACE_LEVEL_WARNING, TRACE_FLAG_GENERAL,  
+        TracePrint((TRACE_LEVEL_WARNING, TRACE_FLAG_GENERAL,
                    "Will not retry; Sense/ASC/ASCQ of %02x/%02x/%02x\n",
                    senseBuffer->SenseKey,
                    senseBuffer->AdditionalSenseCode,
@@ -2351,8 +2351,8 @@ SenseInfoInterpretForZPODD()
 
 Routine Description:
 
-    This routine interprets the data returned from the SCSI request sense. 
-    It determines the status to return in the IRP 
+    This routine interprets the data returned from the SCSI request sense.
+    It determines the status to return in the IRP
     and whether this request can be retried.
 
 Arguments:
@@ -2390,7 +2390,7 @@ Return Value:
         retry = TRUE;
     }
     else if ((Srb->SrbStatus & SRB_STATUS_AUTOSENSE_VALID) &&
-             (Srb->SenseInfoBufferLength >= RTL_SIZEOF_THROUGH_FIELD(SENSE_DATA, AdditionalSenseLength))) 
+             (Srb->SenseInfoBufferLength >= RTL_SIZEOF_THROUGH_FIELD(SENSE_DATA, AdditionalSenseLength)))
     {
         UCHAR   senseKey = (UCHAR)(senseBuffer->SenseKey & 0x0f);
         UCHAR   additionalSenseCode = 0;
@@ -2399,7 +2399,7 @@ Return Value:
         // Zero the additional sense code and additional sense code qualifier
         // if they were not returned by the device.
         readSector = senseBuffer->AdditionalSenseLength + offsetof(SENSE_DATA, AdditionalSenseLength);
-        if (readSector > Srb->SenseInfoBufferLength) 
+        if (readSector > Srb->SenseInfoBufferLength)
         {
             readSector = Srb->SenseInfoBufferLength;
         }
@@ -2442,7 +2442,7 @@ Return Value:
     // now, all decisions are made. display trace information.
     if (retry)
     {
-        TracePrint((TRACE_LEVEL_INFORMATION, TRACE_FLAG_GENERAL,  
+        TracePrint((TRACE_LEVEL_INFORMATION, TRACE_FLAG_GENERAL,
                    "Command shall be retried in %2I64d.%03I64d seconds\n",
                    (*RetryIntervalIn100ns / UNIT_100NS_PER_SECOND),
                    (*RetryIntervalIn100ns / 10000) % 1000
@@ -2450,7 +2450,7 @@ Return Value:
     }
     else
     {
-        TracePrint((TRACE_LEVEL_WARNING, TRACE_FLAG_GENERAL,  
+        TracePrint((TRACE_LEVEL_WARNING, TRACE_FLAG_GENERAL,
                    "Will not retry; Sense/ASC/ASCQ of %02x/%02x/%02x\n",
                    senseBuffer->SenseKey,
                    senseBuffer->AdditionalSenseCode,
@@ -2466,7 +2466,7 @@ Return Value:
 BOOLEAN
 RequestSenseInfoInterpret(
     _In_      PCDROM_DEVICE_EXTENSION   DeviceExtension,
-    _In_      WDFREQUEST                Request, 
+    _In_      WDFREQUEST                Request,
     _In_      PSCSI_REQUEST_BLOCK       Srb,
     _In_      ULONG                     RetriedCount,
     _Out_     NTSTATUS*                 Status,
@@ -2504,7 +2504,7 @@ Return Value:
 
     if (SRB_STATUS(Srb->SrbStatus) == SRB_STATUS_SUCCESS)
     {
-        // request succeeded. 
+        // request succeeded.
         if ((zpoddInfo != NULL) &&
             (zpoddInfo->BecomingReadyRetryCount > 0))
         {
@@ -2517,9 +2517,9 @@ Return Value:
     else
     {
         // request failed. We need to process the error.
-        
+
         // 1. Release the queue if it is frozen.
-        if (Srb->SrbStatus & SRB_STATUS_QUEUE_FROZEN) 
+        if (Srb->SrbStatus & SRB_STATUS_QUEUE_FROZEN)
         {
             DeviceReleaseQueue(DeviceExtension->Device);
         }

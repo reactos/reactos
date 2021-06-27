@@ -55,7 +55,7 @@ Output(POUTPUTBUFFER OutBuf, PCWSTR Text)
           OutBuf->Status = INF_STATUS_NO_MEMORY;
           return;
         }
-      
+
       /* Need to copy old contents? */
       if (NULL != OutBuf->Buffer)
         {

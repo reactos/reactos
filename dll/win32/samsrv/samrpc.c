@@ -9571,7 +9571,7 @@ done:
         SampCloseDbObject(DomainObject);
 
     if (ServerHandle != NULL)
-        SamrCloseHandle(ServerHandle);
+        SamrCloseHandle(&ServerHandle);
 
     return Status;
 }

@@ -78,7 +78,7 @@ Bus_FDO_PnP (
 {
     NTSTATUS            status;
     ULONG               length, prevcount, numPdosPresent;
-    PLIST_ENTRY         entry; 
+    PLIST_ENTRY         entry;
     PPDO_DEVICE_DATA    pdoData;
     PDEVICE_RELATIONS   relations, oldRelations;
 
@@ -105,7 +105,7 @@ Bus_FDO_PnP (
 
         //
         // The PnP manager is trying to stop the device
-        // for resource rebalancing. 
+        // for resource rebalancing.
         //
         SET_NEW_PNP_STATE(DeviceData->Common, StopPending);
         Irp->IoStatus.Status = STATUS_SUCCESS;

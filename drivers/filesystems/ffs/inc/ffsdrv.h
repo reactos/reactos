@@ -1,4 +1,4 @@
-/* 
+/*
  * FFS File System Driver for Windows
  *
  * ffsdrv.h
@@ -618,7 +618,7 @@ typedef struct _FFS_FCB {
 
 #if DBG
 	// The Ansi Filename for debugging
-	OEM_STRING                      AnsiFileName;   
+	OEM_STRING                      AnsiFileName;
 #endif
 
 
@@ -854,7 +854,7 @@ FFSReadDisk(
 	IN PVOID           Buffer,
 	IN BOOLEAN         bVerify);
 
-NTSTATUS 
+NTSTATUS
 FFSDiskIoControl(
 	IN PDEVICE_OBJECT   DeviceOjbect,
 	IN ULONG            IoctlCode,
@@ -996,7 +996,7 @@ FFSCreateFile(
 __drv_mustHoldCriticalRegion
 NTSTATUS
 FFSCreateVolume(
-	IN PFFS_IRP_CONTEXT IrpContext, 
+	IN PFFS_IRP_CONTEXT IrpContext,
 	IN PFFS_VCB         Vcb);
 
 __drv_mustHoldCriticalRegion
@@ -1071,7 +1071,7 @@ extern ULONG ProcessNameOffset;
     (PCHAR) PsGetCurrentProcess() + ProcessNameOffset \
 )
 
-ULONG 
+ULONG
 FFSGetProcessNameOffset(
 	VOID);
 
@@ -1344,8 +1344,8 @@ FFSv1BuildBDL(
 	IN PFFS_IRP_CONTEXT IrpContext,
 	IN PFFS_VCB         Vcb,
 	IN PFFSv1_INODE     dinode1,
-	IN ULONGLONG        Offset, 
-	IN ULONG            Size, 
+	IN ULONGLONG        Offset,
+	IN ULONG            Size,
 	OUT PFFS_BDL        *ffs_bdl);
 
 ULONG
@@ -1353,8 +1353,8 @@ FFSv2BuildBDL(
 	IN PFFS_IRP_CONTEXT IrpContext,
 	IN PFFS_VCB         Vcb,
 	IN PFFSv2_INODE     dinode2,
-	IN ULONGLONG        Offset, 
-	IN ULONG            Size, 
+	IN ULONGLONG        Offset,
+	IN ULONG            Size,
 	OUT PFFS_BDL        *ffs_bdl);
 
 BOOLEAN
@@ -1362,7 +1362,7 @@ FFSNewBlock(
 	PFFS_IRP_CONTEXT IrpContext,
 	PFFS_VCB         Vcb,
 	ULONG            GroupHint,
-	ULONG            BlockHint,  
+	ULONG            BlockHint,
 	PULONG           dwRet);
 
 BOOLEAN
@@ -1647,7 +1647,7 @@ FFSSetInformation(
 
 BOOLEAN
 FFSExpandFile(
-	PFFS_IRP_CONTEXT IrpContext, 
+	PFFS_IRP_CONTEXT IrpContext,
 	PFFS_VCB         Vcb,
 	PFFS_FCB         Fcb,
 	PLARGE_INTEGER   AllocationSize);
@@ -1821,7 +1821,7 @@ FFSFileSystemControl(
 
 BOOLEAN
 FFSQueryParameters(
-	IN PUNICODE_STRING  RegistryPath); 
+	IN PUNICODE_STRING  RegistryPath);
 
 #ifdef _PREFAST_
 DRIVER_INITIALIZE DriverEntry;
@@ -1967,8 +1967,8 @@ FFSRemoveVcb(
 __drv_mustHoldCriticalRegion
 NTSTATUS
 FFSInitializeVcb(
-	IN PFFS_IRP_CONTEXT IrpContext, 
-	IN PFFS_VCB         Vcb, 
+	IN PFFS_IRP_CONTEXT IrpContext,
+	IN PFFS_VCB         Vcb,
 	IN PFFS_SUPER_BLOCK FFSSb,
 	IN PDEVICE_OBJECT   TargetDevice,
 	IN PDEVICE_OBJECT   VolumeDevice,
@@ -2065,7 +2065,7 @@ FFSPnpSurpriseRemove(
 // Read.c
 //
 
-BOOLEAN 
+BOOLEAN
 FFSCopyRead(
 	IN PFILE_OBJECT       FileObject,
 	IN PLARGE_INTEGER     FileOffset,

@@ -4,11 +4,11 @@
 #define RX_REQUEST_PREPARED_FOR_HANDLING 0x10000000
 
 typedef struct _CHANGE_BUFFERING_STATE_REQUEST_
-{   
+{
     LIST_ENTRY ListEntry;
     ULONG Flags;
 #if (_WIN32_WINNT < 0x0600)
-    PSRV_CALL pSrvCall; 
+    PSRV_CALL pSrvCall;
 #endif
     PSRV_OPEN SrvOpen;
     PVOID SrvOpenKey;
@@ -45,7 +45,7 @@ typedef struct _RX_BUFFERING_MANAGER_
         {                                               \
             ExAcquireFastMutex(&(BufMan)->Mutex);       \
         }                                               \
-    } 
+    }
 #endif
 #define RxReleaseBufferingManagerMutex(BufMan) ExReleaseFastMutex(&(BufMan)->Mutex)
 

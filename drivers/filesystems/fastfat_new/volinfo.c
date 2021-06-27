@@ -95,7 +95,7 @@ FatQueryFsSectorSizeInfo (
 #endif
 #endif
 
-
+
 _Function_class_(IRP_MJ_QUERY_VOLUME_INFORMATION)
 _Function_class_(DRIVER_DISPATCH)
 NTSTATUS
@@ -176,7 +176,7 @@ Return Value:
     return Status;
 }
 
-
+
 _Function_class_(IRP_MJ_SET_VOLUME_INFORMATION)
 _Function_class_(DRIVER_DISPATCH)
 NTSTATUS
@@ -257,7 +257,7 @@ Return Value:
     return Status;
 }
 
-
+
 _Requires_lock_held_(_Global_critical_region_)
 NTSTATUS
 FatCommonQueryVolumeInfo (
@@ -434,7 +434,7 @@ Return Value:
     return Status;
 }
 
-
+
 _Requires_lock_held_(_Global_critical_region_)
 NTSTATUS
 FatCommonSetVolumeInfo (
@@ -572,7 +572,7 @@ Return Value:
     return Status;
 }
 
-
+
 //
 //  Internal support routine
 //
@@ -666,7 +666,7 @@ Return Value:
     return Status;
 }
 
-
+
 //
 //  Internal support routine
 //
@@ -735,7 +735,7 @@ Return Value:
     return STATUS_SUCCESS;
 }
 
-
+
 //
 //  Internal support routine
 //
@@ -800,7 +800,7 @@ Return Value:
     return STATUS_SUCCESS;
 }
 
-
+
 //
 //  Internal support routine
 //
@@ -856,7 +856,7 @@ Return Value:
         SetFlag( Buffer->FileSystemAttributes, FILE_READ_ONLY_VOLUME );
     }
 
-    
+
     Buffer->MaximumComponentNameLength = FatData.ChicagoMode ? 255 : 12;
 
     if (FatIsFat32(Vcb)) {
@@ -923,7 +923,7 @@ Return Value:
     return Status;
 }
 
-
+
 //
 //  Internal support routine
 //
@@ -989,7 +989,7 @@ Return Value:
     return STATUS_SUCCESS;
 }
 
-
+
 //
 //  Internal support routine
 //

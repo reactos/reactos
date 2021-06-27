@@ -717,7 +717,7 @@ _Locale_time_t* _Locale_time_create(const char * name, _Locale_lcid_t* lc_hint, 
   wchar_t wbuf80[80];
 
   _Locale_time_t *ltime = (_Locale_time_t*)malloc(sizeof(_Locale_time_t));
-  
+
   if (!ltime) { *__err_code = _STLP_LOC_NO_MEMORY; return ltime; }
   memset(ltime, 0, sizeof(_Locale_time_t));
 

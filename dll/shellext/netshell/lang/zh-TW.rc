@@ -4,7 +4,7 @@
  * FILE:       dll/shellext/netshell/lang/zh-TW.rc
  * PURPOSE:    Chinese (Traditional) Language File
  * TRANSLATOR: 2011 Elton Chung aka MfldElton <elton328@gmail.com>
- *             2020 Aobi Chan CL <eason066@gmail.com>
+ *             2020 - 2021 Chan Chilung <eason066@gmail.com>
  */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
@@ -60,7 +60,7 @@ END
 
 IDD_LAN_NETSTATUSADVANCED DIALOGEX 0, 0, 200, 180
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "維持"
+CAPTION "支援"
 FONT 9, "新細明體"
 BEGIN
     GROUPBOX "連接狀態", -1, 9, 8, 190, 88, BS_GROUPBOX
@@ -93,9 +93,9 @@ BEGIN
     ICON IDI_NET_SETUP, IDC_STATIC, 21, 10, 20, 20
     LTEXT "請問您想使用一般或自訂設定:", IDC_STATIC, 53, 7, 240, 20
     AUTORADIOBUTTON "一般設定", IDC_NETWORK_TYPICAL, 53, 27, 253, 20, WS_TABSTOP | WS_GROUP
-    AUTORADIOBUTTON "自訂設定", IDC_NETWORK_CUSTOM, 53, 72, 253, 20, WS_TABSTOP
-    LTEXT "Creates network connections using the Client for ReactOS Networks, File and Print Sharing for ReactOS Networks, and the TCP/IP transport protocol with automatic addressing.", IDC_STATIC, 65, 45, 240, 30
-    LTEXT "Allows you to manually configure network components.", IDC_STATIC, 65, 90, 243, 20
+    AUTORADIOBUTTON "自訂設定", IDC_NETWORK_CUSTOM, 53, 72, 253, 20, WS_TABSTOP 
+	LTEXT "使用 ReactOS 網路用戶端、ReactOS 網絡檔案和列印共享及具有自動指派位址功能的 TCP/IP 傳輸協議來建立網路連接。", IDC_STATIC, 65, 45, 240, 30
+    LTEXT "可讓您手動更改網路元件。", IDC_STATIC, 65, 90, 243, 20
 END
 
 IDD_NETWORKCOMPONENTPAGE DIALOGEX 0, 0, 317, 143
@@ -104,7 +104,7 @@ CAPTION "ReactOS 安裝程式"
 FONT 9, "新細明體"
 BEGIN
     LTEXT "For Device:", IDC_STATIC, 33, 2, 100, 20
-    LTEXT "n/a", IDC_NETWORK_DEVICE, 75, 2, 253, 20
+    LTEXT "N/A", IDC_NETWORK_DEVICE, 75, 2, 253, 20
     LTEXT "Components checked are used by this connection:", IDC_STATIC, 33, 12, 253, 20
     CONTROL "", IDC_COMPONENT_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOCOLUMNHEADER | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 33, 22, 250, 50
     PUSHBUTTON "安裝(&I)...", IDC_NETWORK_INSTALL, 122, 75, 50, 14, WS_DISABLED | WS_TABSTOP
@@ -175,11 +175,11 @@ END
 STRINGTABLE
 BEGIN
     IDS_NETWORKSETTINGSTITLE "網路設定"
-    IDS_NETWORKSETTINGSSUBTITLE "Installs network software used to connect to other networks, computers, and the Internet."
+    IDS_NETWORKSETTINGSSUBTITLE "安裝用於連接到其他網路、電腦和互聯網的網路軟體。"
     IDS_NETWORKCOMPONENTTITLE "網路元件"
     IDS_NETWORKCOMPONENTSUBTITLE "Determine which networking components are used on your computer. To add new components, click on Install."
-    IDS_NETWORKDOMAINTITLE "Workgroup or Computer Domain"
+    IDS_NETWORKDOMAINTITLE "工作群組或電腦網域"
     IDS_NETWORKDOMAINSUBTITLE "A domain is a group of computers defined by a network administrator. A workgroup is a group of computers sharing the same workgroup name."
     IDS_REACTOS_SETUP "ReactOS 安裝程式"
-    IDS_WZD_DOMAIN_NAME "Setup cannot continue until you\nenter the name of your domain\nor workgroup."
+    IDS_WZD_DOMAIN_NAME "除非您輸入網域或工作群組名稱，\n否則安裝程式無法繼續。"
 END

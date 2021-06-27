@@ -28,17 +28,17 @@ HalpAllocateArray(IN ULONG ArraySize)
 {
     PARRAY Array;
     ULONG Size;
-    
+
     /* Compute array size */
     if (ArraySize == MAXULONG) ArraySize = 0;
     Size = ArraySize * sizeof(PARRAY) + sizeof(ARRAY);
-    
+
     /* Allocate the array */
     Array = ExAllocatePoolWithTag(NonPagedPool,
                                   Size,
                                   TAG_BUS_HANDLER);
     if (!Array) KeBugCheckEx(HAL_MEMORY_ALLOCATION, Size, 0, (ULONG_PTR)__FILE__, __LINE__);
-    
+
     /* Initialize it */
     Array->ArraySize = ArraySize;
     RtlZeroMemory(Array->Element, sizeof(PVOID) * (ArraySize + 1));
@@ -51,7 +51,7 @@ HalpGrowArray(IN PARRAY *CurrentArray,
               IN PARRAY *NewArray)
 {
     PVOID Tmp;
-    
+
     /* Check if the current array doesn't exist yet, or if it's smaller than the new one */
     if (!(*CurrentArray) || ((*NewArray)->ArraySize > (*CurrentArray)->ArraySize))
     {
@@ -63,7 +63,7 @@ HalpGrowArray(IN PARRAY *CurrentArray,
                           &(*CurrentArray)->Element,
                           sizeof(PVOID) * ((*CurrentArray)->ArraySize + 1));
         }
-        
+
         /* Swap the pointers (XOR swap would be more l33t) */
         Tmp = *CurrentArray;
         *CurrentArray = *NewArray;
@@ -80,25 +80,25 @@ HalpLookupHandler(IN PARRAY Array,
 {
     PHAL_BUS_HANDLER Bus;
     PBUS_HANDLER Handler = NULL;
-    
+
     /* Make sure the entry exists */
     if (Array->ArraySize >= Type)
     {
         /* Retrieve it */
         Array = Array->Element[Type];
-        
+
         /* Make sure the entry array exists */
         if ((Array) && (Array->ArraySize >= Number))
         {
             /* Retrieve the bus and its handler */
             Bus = Array->Element[Number];
             Handler = &Bus->Handler;
-            
+
             /* Reference the handler if needed */
             if (AddReference) Bus->ReferenceCount++;
         }
     }
-    
+
     /* Return the handler */
     return Handler;
 }
@@ -116,7 +116,7 @@ HalpNoBusData(IN PBUS_HANDLER BusHandler,
     DPRINT1("STUB GetSetBusData\n");
     return 0;
 }
-              
+
 NTSTATUS
 NTAPI
 HalpNoAdjustResourceList(IN PBUS_HANDLER BusHandler,
@@ -147,7 +147,7 @@ FASTCALL
 HaliReferenceBusHandler(IN PBUS_HANDLER Handler)
 {
     PHAL_BUS_HANDLER Bus;
-    
+
     /* Find and reference the bus handler */
     Bus = CONTAINING_RECORD(Handler, HAL_BUS_HANDLER, Handler);
     Bus->ReferenceCount++;
@@ -158,7 +158,7 @@ FASTCALL
 HaliDereferenceBusHandler(IN PBUS_HANDLER Handler)
 {
     PHAL_BUS_HANDLER Bus;
-    
+
     /* Find and dereference the bus handler */
     Bus = CONTAINING_RECORD(Handler, HAL_BUS_HANDLER, Handler);
     Bus->ReferenceCount--;
@@ -207,7 +207,7 @@ HalpContextToBusHandler(IN ULONG_PTR ContextValue)
 {
     PLIST_ENTRY NextEntry;
     PHAL_BUS_HANDLER BusHandler, ThisHandler;
-    
+
     /* Start lookup */
     NextEntry = HalpAllBusHandlers.Flink;
     ThisHandler = CONTAINING_RECORD(NextEntry, HAL_BUS_HANDLER, AllHandlers);
@@ -223,15 +223,15 @@ HalpContextToBusHandler(IN ULONG_PTR ContextValue)
             /* Check if we've reached the right one */
             ThisHandler = CONTAINING_RECORD(NextEntry, HAL_BUS_HANDLER, AllHandlers);
             if (ThisHandler == BusHandler) break;
-            
+
             /* Try the next one */
             NextEntry = NextEntry->Flink;
         } while (NextEntry != &HalpAllBusHandlers);
     }
-    
+
     /* If we looped back to the end, we didn't find anything */
     if (NextEntry == &HalpAllBusHandlers) return NULL;
-    
+
     /* Otherwise return the handler */
     return &ThisHandler->Handler;
 }
@@ -255,20 +255,20 @@ HaliRegisterBusHandler(IN INTERFACE_TYPE InterfaceType,
     PBUS_HANDLER ParentHandler;
     KIRQL OldIrql;
     NTSTATUS Status;
-    
+
     /* Make sure we have a valid handler */
     ASSERT((InterfaceType != InterfaceTypeUndefined) ||
            (ConfigType != ConfigurationSpaceUndefined));
-    
+
     /* Allocate the bus handler */
     Bus = ExAllocatePoolWithTag(NonPagedPool,
                                 sizeof(HAL_BUS_HANDLER) + ExtraData,
                                 TAG_BUS_HANDLER);
     if (!Bus) return STATUS_INSUFFICIENT_RESOURCES;
-    
+
     /* Return the handler */
     *ReturnedBusHandler = &Bus->Handler;
-    
+
     /* FIXME: Fix the kernel first. Don't page us out */
     //CodeHandle = MmLockPagableDataSection(&HaliRegisterBusHandler);
 
@@ -278,34 +278,34 @@ HaliRegisterBusHandler(IN INTERFACE_TYPE InterfaceType,
                           KernelMode,
                           FALSE,
                           NULL);
-    
+
     /* Check for unknown/root bus */
     if (BusNumber == -1)
     {
         /* We must have an interface */
         ASSERT(InterfaceType != InterfaceTypeUndefined);
-        
+
         /* Find the right bus */
         BusNumber = 0;
         while (HaliHandlerForBus(InterfaceType, BusNumber)) BusNumber++;
     }
-    
+
     /* Allocate arrays for the handler */
     InterfaceArray = HalpAllocateArray(InterfaceType);
     InterfaceBusNumberArray = HalpAllocateArray(BusNumber);
     ConfigArray = HalpAllocateArray(ConfigType);
     ConfigBusNumberArray = HalpAllocateArray(BusNumber);
-    
+
     /* Only proceed if all allocations succeeded */
     if ((InterfaceArray) && (InterfaceBusNumberArray) && (ConfigArray) && (ConfigBusNumberArray))
     {
         /* Find the parent handler if any */
         ParentHandler = HaliReferenceHandlerForBus(ParentBusType, ParentBusNumber);
-        
+
         /* Initialize the handler */
         RtlZeroMemory(Bus, sizeof(HAL_BUS_HANDLER) + ExtraData);
         Bus->ReferenceCount = 1;
-        
+
         /* Fill out bus data */
         Bus->Handler.BusNumber = BusNumber;
         Bus->Handler.InterfaceType = InterfaceType;
@@ -317,7 +317,7 @@ HaliRegisterBusHandler(IN INTERFACE_TYPE InterfaceType,
         Bus->Handler.SetBusData = HalpNoBusData;
         Bus->Handler.AdjustResourceList = HalpNoAdjustResourceList;
         Bus->Handler.AssignSlotResources = HalpNoAssignSlotResources;
-        
+
         /* Make space for extra data */
         if (ExtraData) Bus->Handler.BusData = Bus + 1;
 
@@ -332,41 +332,41 @@ HaliRegisterBusHandler(IN INTERFACE_TYPE InterfaceType,
             Bus->Handler.TranslateBusAddress = ParentHandler->TranslateBusAddress;
             Bus->Handler.GetInterruptVector = ParentHandler->GetInterruptVector;
         }
-        
+
         /* We don't support this yet */
         ASSERT(!InstallCallback);
-        
+
         /* Lock the buses */
         KeAcquireSpinLock(&HalpBusDatabaseSpinLock, &OldIrql);
 
         /* Make space for the interface */
         HalpGrowArray(&HalpBusTable, &InterfaceArray);
-        
+
         /* Check if we really have an interface */
         if (InterfaceType != InterfaceTypeUndefined)
         {
             /* Make space for the association */
             HalpGrowArray((PARRAY*)&HalpBusTable->Element[InterfaceType],
                           &InterfaceBusNumberArray);
-            
+
             /* Get the bus handler pointer */
             BusEntry = (PHAL_BUS_HANDLER*)&((PARRAY)HalpBusTable->Element[InterfaceType])->Element[BusNumber];
-            
+
             /* Check if there was already a handler there, and set the new one */
             if (*BusEntry) OldHandler = *BusEntry;
             *BusEntry = Bus;
         }
-        
+
         /* Now add a space for the configuration space */
         HalpGrowArray(&HalpConfigTable, &ConfigArray);
-        
+
         /* Check if we really have one */
         if (ConfigType != ConfigurationSpaceUndefined)
         {
             /* Make space for this association */
             HalpGrowArray((PARRAY*)&HalpConfigTable->Element[ConfigType],
                           &ConfigBusNumberArray);
-            
+
             /* Get the bus handler pointer */
             BusEntry = (PHAL_BUS_HANDLER*)&((PARRAY)HalpConfigTable->Element[ConfigType])->Element[BusNumber];
             if (*BusEntry)
@@ -375,14 +375,14 @@ HaliRegisterBusHandler(IN INTERFACE_TYPE InterfaceType,
                 ASSERT((OldHandler == NULL) || (OldHandler == *BusEntry));
                 OldHandler = *BusEntry;
             }
-            
+
             /* Set the new entry */
             *BusEntry = Bus;
         }
 
         /* Link the adapter */
         InsertTailList(&HalpAllBusHandlers, &Bus->AllHandlers);
-        
+
         /* Remove the old linkage */
         Bus = OldHandler;
         if (Bus) RemoveEntryList(&Bus->AllHandlers);
@@ -399,7 +399,7 @@ HaliRegisterBusHandler(IN INTERFACE_TYPE InterfaceType,
 
     /* Signal the event */
     KeSetEvent(&HalpBusDatabaseEvent, 0, FALSE);
-    
+
     /* FIXME: Fix the kernel first. Re-page the function */
     //MmUnlockPagableImageSection(CodeHandle);
 
@@ -421,14 +421,14 @@ HalpInitBusHandler(VOID)
 {
     /* Setup the bus lock */
     KeInitializeSpinLock(&HalpBusDatabaseSpinLock);
-    
+
     /* Setup the bus event */
     KeInitializeEvent(&HalpBusDatabaseEvent, SynchronizationEvent, TRUE);
-    
+
     /* Setup the bus configuration and bus table */
     HalpBusTable = HalpAllocateArray(0);
     HalpConfigTable = HalpAllocateArray(0);
-    
+
     /* Setup the bus list */
     InitializeListHead(&HalpAllBusHandlers);
 

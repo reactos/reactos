@@ -1,4 +1,4 @@
-/* 
+/*
  * FFS File System Driver for Windows
  *
  * volinfo.c
@@ -437,7 +437,7 @@ FFSSetVolumeInformation(
 					FFSUnicodeToOEM(&OemName,
 							&LabelName);
 
-					Vcb->Vpb->VolumeLabelLength = 
+					Vcb->Vpb->VolumeLabelLength =
 						(USHORT)VolLabelLen;
 
 					if (FFSSaveSuper(IrpContext, Vcb))

@@ -33,7 +33,7 @@ VOID IPSendComplete
 	(MAX_TRACE,
 	 ("Called. Context (0x%X)  NdisPacket (0x%X)  NdisStatus (0x%X)\n",
 	  Context, NdisPacket, NdisStatus));
-	  
+
 	IFC->Status = NdisStatus;
 	KeSetEvent(&IFC->Event, 0, FALSE);
 }

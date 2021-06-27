@@ -7,6 +7,8 @@
 
 #include "precomp.h"
 
+#include <pseh/pseh2.h>
+
 PVOID Buffers[0x100];
 
 START_TEST(RtlAllocateHeap)

@@ -16,7 +16,7 @@
    You should have received a copy of the GNU Lesser General Public
    License along with the GNU C Library; if not, see
    <http://www.gnu.org/licenses/>.  */
-
+
 #include "getopt.h"
 
 #include <stdio.h>
@@ -114,7 +114,7 @@ int optopt = '?';
 /* Keep a global copy of all internal members of getopt_data.  */
 
 static struct _getopt_data getopt_data;
-
+
 /* Exchange two adjacent subsequences of ARGV.
    One subsequence is elements [first_nonopt,last_nonopt)
    which contains all the non-options that have been skipped so far.
@@ -407,7 +407,7 @@ _getopt_initialize (int argc,
   d->__initialized = 1;
   return optstring;
 }
-
+
 /* Scan elements of ARGV (whose length is ARGC) for option characters
    given in OPTSTRING.
 
@@ -736,7 +736,7 @@ GETOPT_ENTRY(__posix_getopt, 1)
 GETOPT_ENTRY(getopt, 1)
 #endif
 
-
+
 #ifdef TEST
 
 /* Compile with -DTEST to make an executable for use in testing

@@ -47,16 +47,23 @@ add_compile_options("$<$<NOT:$<COMPILE_LANGUAGE:CXX>>:-nostdinc>")
 
 add_compile_options(-mstackrealign)
 
-if(NOT CMAKE_C_COMPILER_ID STREQUAL "Clang")
+if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
     add_compile_options(-fno-aggressive-loop-optimizations)
     if (DBG)
         add_compile_options("$<$<COMPILE_LANGUAGE:C>:-Wold-style-declaration>")
     endif()
-else()
+elseif(CMAKE_C_COMPILER_ID STREQUAL "Clang")
     add_compile_options("$<$<COMPILE_LANGUAGE:C>:-Wno-microsoft>")
     add_compile_options(-Wno-pragma-pack)
     add_compile_options(-fno-associative-math)
     add_compile_options(-fcommon)
+
+    if(CMAKE_C_COMPILER_VERSION VERSION_GREATER_EQUAL 12.0)
+        # disable "libcall optimization"
+        # see https://mudongliang.github.io/2020/12/02/undefined-reference-to-stpcpy.html
+        add_compile_options(-fno-builtin-stpcpy)
+    endif()
+
     set(CMAKE_LINK_DEF_FILE_FLAG "")
     set(CMAKE_STATIC_LIBRARY_SUFFIX ".a")
     set(CMAKE_LINK_LIBRARY_SUFFIX "")
@@ -83,11 +90,7 @@ if(NOT CMAKE_BUILD_TYPE STREQUAL "Release")
 endif()
 
 # Tuning
-if(ARCH STREQUAL "i386")
-    add_compile_options(-march=${OARCH} -mtune=${TUNE})
-else()
-    add_compile_options(-march=${OARCH})
-endif()
+add_compile_options(-march=${OARCH} -mtune=${TUNE})
 
 # Warnings, errors
 if((NOT CMAKE_BUILD_TYPE STREQUAL "Release") AND (NOT CMAKE_C_COMPILER_ID STREQUAL Clang))
@@ -116,7 +119,10 @@ if(CMAKE_BUILD_TYPE STREQUAL "Release")
     add_compile_options(-O2 -DNDEBUG)
 else()
     if(OPTIMIZE STREQUAL "1")
-        add_compile_options(-Os -ftracer)
+        add_compile_options(-Os)
+        if (CMAKE_C_COMPILER_ID STREQUAL "GNU")
+            add_compile_options(-ftracer)
+        endif()
     elseif(OPTIMIZE STREQUAL "2")
         add_compile_options(-Os)
     elseif(OPTIMIZE STREQUAL "3")
@@ -147,7 +153,9 @@ if(ARCH STREQUAL "i386")
         add_compile_options(-momit-leaf-frame-pointer)
     endif()
 elseif(ARCH STREQUAL "amd64")
-    add_compile_options(-mpreferred-stack-boundary=4)
+    if (CMAKE_C_COMPILER_ID STREQUAL "GNU")
+        add_compile_options(-mpreferred-stack-boundary=4)
+    endif()
     add_compile_options(-Wno-error)
 endif()
 
@@ -238,7 +246,7 @@ set(CMAKE_C_CREATE_SHARED_MODULE ${CMAKE_C_CREATE_SHARED_LIBRARY})
 set(CMAKE_CXX_CREATE_SHARED_MODULE ${CMAKE_CXX_CREATE_SHARED_LIBRARY})
 set(CMAKE_RC_CREATE_SHARED_MODULE ${CMAKE_RC_CREATE_SHARED_LIBRARY})
 
-set(CMAKE_EXE_LINKER_FLAGS "-nostdlib -Wl,--enable-auto-image-base,--disable-auto-import,--disable-stdcall-fixup,--gc-sections")
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS_INIT} -Wl,--disable-stdcall-fixup,--gc-sections")
 set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS_INIT} -Wl,--disable-stdcall-fixup")
 set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS_INIT} -Wl,--disable-stdcall-fixup")
 
@@ -248,13 +256,15 @@ set(CMAKE_CXX_COMPILE_OBJECT "<CMAKE_CXX_COMPILER> <DEFINES> <INCLUDES> <FLAGS> 
 set(CMAKE_ASM_COMPILE_OBJECT "<CMAKE_ASM_COMPILER> ${_compress_debug_sections_flag} -x assembler-with-cpp -o <OBJECT> -I${REACTOS_SOURCE_DIR}/sdk/include/asm -I${REACTOS_BINARY_DIR}/sdk/include/asm <INCLUDES> <FLAGS> <DEFINES> -D__ASM__ -c <SOURCE>")
 
 set(CMAKE_RC_COMPILE_OBJECT "<CMAKE_RC_COMPILER> -O coff <INCLUDES> <FLAGS> -DRC_INVOKED -D__WIN32__=1 -D__FLAT__=1 ${I18N_DEFS} <DEFINES> <SOURCE> <OBJECT>")
-if (CLANG)
-    set(GCC_EXECUTABLE ${CMAKE_C_COMPILER_TARGET}-gcc)
+
+if (CMAKE_C_COMPILER_ID STREQUAL "Clang")
+    set(RC_PREPROCESSOR_TARGET "--preprocessor-arg=--target=${CMAKE_C_COMPILER_TARGET}")
 else()
-    set(GCC_EXECUTABLE ${CMAKE_C_COMPILER})
+    set(RC_PREPROCESSOR_TARGET "")
 endif()
 
-set(CMAKE_DEPFILE_FLAGS_RC "--preprocessor \"${GCC_EXECUTABLE} -E -xc-header -MMD -MF <DEPFILE> -MT <OBJECT>\" ")
+# We have to pass args to windres. one... by... one...
+set(CMAKE_DEPFILE_FLAGS_RC "--preprocessor=\"${CMAKE_C_COMPILER}\" ${RC_PREPROCESSOR_TARGET} --preprocessor-arg=-E --preprocessor-arg=-nostdinc --preprocessor-arg=-xc-header --preprocessor-arg=-MMD --preprocessor-arg=-MF --preprocessor-arg=<DEPFILE> --preprocessor-arg=-MT --preprocessor-arg=<OBJECT>")
 
 # Optional 3rd parameter: stdcall stack bytes
 function(set_entrypoint MODULE ENTRYPOINT)
@@ -297,7 +307,7 @@ function(set_module_type_toolchain MODULE TYPE)
         # Fixup section characteristics
         #  - Remove flags that LD overzealously puts (alignment flag, Initialized flags for code sections)
         #  - INIT section is made discardable
-        #  - .rsrc is made read-only
+        #  - .rsrc is made read-only and discardable
         #  - PAGE & .edata sections are made pageable.
         add_custom_command(TARGET ${MODULE} POST_BUILD
             COMMAND native-pefixup --${TYPE} $<TARGET_FILE:${MODULE}>)
@@ -470,8 +480,8 @@ add_compile_options("$<$<COMPILE_LANGUAGE:CXX>:$<IF:$<BOOL:$<TARGET_PROPERTY:WIT
 # We disable exceptions, unless said so
 add_compile_options("$<$<COMPILE_LANGUAGE:CXX>:$<IF:$<BOOL:$<TARGET_PROPERTY:WITH_CXX_EXCEPTIONS>>,-fexceptions,-fno-exceptions>>")
 
-# G++ shipped with ROSBE uses sjlj exceptions. Tell Clang it is so
-if (CLANG)
+# G++ shipped with ROSBE uses sjlj exceptions on i386. Tell Clang it is so
+if (CLANG AND (ARCH STREQUAL "i386"))
     add_compile_options("$<$<AND:$<COMPILE_LANGUAGE:CXX>,$<BOOL:$<TARGET_PROPERTY:WITH_CXX_EXCEPTIONS>>>:-fsjlj-exceptions>")
 endif()
 

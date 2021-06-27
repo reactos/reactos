@@ -1,4 +1,5 @@
-/* Traditional Chinese translation by Henry Tang Ih 2016 (henrytang2@hotmail.com) */
+/* Traditional Chinese translation by Henry Tang Ih 2016 (henrytang2@hotmail.com) 
+ * translation improved by Chan Chilung 2021 (eason066@gmail.com) */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
 
@@ -30,7 +31,7 @@ FONT 9, "新細明體", 400, 0, 1
 BEGIN
     CONTROL IDI_ROSLOGO, IDC_ROSLOGO, "Static", SS_BITMAP, 0, 0, 275, 54
     CONTROL IDI_BAR, IDC_BAR, "Static", SS_BITMAP, 0, 44, 275, 4
-    LTEXT "使用者名:", IDC_STATIC, 6, 60, 52, 8
+    LTEXT "使用者名稱:", IDC_STATIC, 6, 60, 52, 8
     EDITTEXT IDC_LOGON_USERNAME, 60, 57, 155, 14, ES_AUTOHSCROLL
     LTEXT "密碼:", IDC_STATIC, 6, 78, 52, 8
     EDITTEXT IDC_LOGON_PASSWORD, 60, 76, 155, 14, ES_AUTOHSCROLL | ES_PASSWORD
@@ -66,7 +67,7 @@ FONT 9, "新細明體", 400, 0, 1
 BEGIN
     CONTROL IDI_ROSLOGO, IDC_ROSLOGO, "Static", SS_BITMAP, 0, 0, 275, 54
     ICON IDI_LOCKICON, IDC_STATIC, 7, 59, 20, 20
-    LTEXT "此電腦正在使用中，已被鎖定。", IDC_STATIC, 36, 61, 232, 8
+    LTEXT "此電腦正在使用中，並已被鎖定。", IDC_STATIC, 36, 61, 232, 8
     LTEXT "<Message>", IDC_LOCKED_MESSAGE, 37, 75, 231, 26
     LTEXT "按 Ctrl-Alt-Del 鍵解鎖此電腦。", IDC_STATIC, 36, 106, 232, 8
 END
@@ -78,7 +79,7 @@ FONT 9, "新細明體", 400, 0, 1
 BEGIN
     CONTROL IDI_ROSLOGO, IDC_ROSLOGO, "Static", SS_BITMAP, 0, 0, 275, 54
     ICON IDI_LOCKICON, IDC_STATIC, 7, 59, 20, 20
-    LTEXT "此電腦正在使用中，已被鎖定。", IDC_STATIC, 36, 61, 232, 8
+    LTEXT "此電腦正在使用中，並已被鎖定。", IDC_STATIC, 36, 61, 232, 8
     LTEXT "<Message>", IDC_UNLOCK_MESSAGE, 36, 75, 232, 26
     LTEXT "使用者名稱:", IDC_STATIC, 36, 107, 40, 8
     EDITTEXT IDC_UNLOCK_USERNAME, 84, 104, 119, 14, ES_AUTOHSCROLL
@@ -149,13 +150,13 @@ BEGIN
     LTEXT "你想讓電腦做什麼?(&W)", IDC_STATIC, 39, 57, 167, 10
     COMBOBOX IDC_SHUTDOWN_ACTION, 39, 70, 190, 210, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     LTEXT "", IDC_SHUTDOWN_DESCRIPTION, 39, 93, 190, 27
-    GROUPBOX "Shutdown Event Tracker", IDC_STATIC, 9, 122, 257, 146
-    LTEXT "Select the option that best describes why you want to shut down your computer.", IDC_STATIC, 39, 134, 190, 17
-    LTEXT "&Option:", IDC_STATIC, 39, 154, 80, 8
-    AUTOCHECKBOX "&Planned", IDC_REASON_PLANNED, 182, 154, 47, 10
+    GROUPBOX "關機事件追蹤器", IDC_STATIC, 9, 122, 257, 146
+    LTEXT "選擇一項最能表達您為何要關閉電腦的選項。", IDC_STATIC, 39, 134, 190, 17
+    LTEXT "選項(&O):", IDC_STATIC, 39, 154, 80, 8
+    AUTOCHECKBOX "已計劃(&P)", IDC_REASON_PLANNED, 182, 154, 47, 10
     COMBOBOX IDC_REASON_LIST, 39, 165, 190, 210, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     LTEXT "", IDC_REASON_DESCRIPTION, 39, 184, 190, 27
-    LTEXT "&Comment:", IDC_STATIC, 39, 214, 80, 8
+    LTEXT "備註(&C):", IDC_STATIC, 39, 214, 80, 8
     EDITTEXT IDC_REASON_COMMENT, 39, 224, 190, 35, ES_MULTILINE | WS_VISIBLE | WS_TABSTOP
     DEFPUSHBUTTON "確定", IDOK, 150, 276, 55, 14, WS_GROUP
     PUSHBUTTON "取消", IDCANCEL, 211, 276, 55, 14
@@ -176,7 +177,7 @@ END
 
 IDD_SHUTDOWN_FANCY DIALOGEX 0, 0, 208, 122
 STYLE NOT WS_VISIBLE | DS_CENTER | DS_SHELLFONT | WS_BORDER | WS_POPUP
-FONT 9, "宋体"
+FONT 9, "新細明體"
 BEGIN
     CONTROL IDI_DLG_BG, IDC_DLG_BG, "STATIC", SS_BITMAP | SS_REALSIZECONTROL, 0, 0, 208, 122
     CONTROL IDI_ROSLOGO_FLAG, IDC_ROSLOGO_WHITE, "STATIC", SS_BITMAP, 180, 2, 32, 26
@@ -193,7 +194,7 @@ END
 
 IDD_SHUTDOWN_FANCY_LONG DIALOGEX 0, 0, 264, 122
 STYLE NOT WS_VISIBLE | DS_CENTER | DS_SHELLFONT | WS_BORDER | WS_POPUP
-FONT 9, "宋体"
+FONT 9, "新細明體"
 BEGIN
     CONTROL IDI_DLG_BG, IDC_DLG_BG, "STATIC", SS_BITMAP | SS_REALSIZECONTROL, 0, 0, 264, 122
     CONTROL IDI_ROSLOGO_FLAG, IDC_ROSLOGO_WHITE, "STATIC", SS_BITMAP, 236, 2, 32, 26
@@ -204,7 +205,7 @@ BEGIN
     PUSHBUTTON "取消", IDCANCEL, 218, 103, 40, 12, BS_FLAT | WS_GROUP
     LTEXT "關閉 ReactOS", IDC_TURN_OFF_STATIC, 4, 9, 130, 20
     CTEXT "休眠狀態", IDC_HIBERNATE_STATIC, 22, 70, 51, 11
-    CTEXT "睡眠状态", IDC_SLEEP_STATIC, 79, 70, 51, 11
+    CTEXT "睡眠狀態", IDC_SLEEP_STATIC, 79, 70, 51, 11
     CTEXT "關閉", IDC_SHUTDOWN_STATIC, 136, 70, 51, 11
     CTEXT "重新開機", IDC_RESTART_STATIC, 193, 70, 51, 11
 END
@@ -212,26 +213,26 @@ END
 STRINGTABLE
 BEGIN
     IDS_LOGGEDOUTSAS "歡迎!"
-    IDS_LOCKEDSAS "電腦當前已鎖定。"
+    IDS_LOCKEDSAS "電腦目前已鎖定。"
     IDS_PRESSCTRLALTDELETE "按 Control+Alt+Delete 登入。"
     IDS_ASKFORUSER "使用者名稱: "
     IDS_ASKFORPASSWORD "密碼: "
-    IDS_FORCELOGOFF "這將登出當前使用者，並丟失未儲存的所有資料。要繼續嗎?"
+    IDS_FORCELOGOFF "這將登出目前的使用者，並丟失未儲存的所有資料。要繼續嗎?"
     IDS_LOCKMSG "只有 %s 或系統管理員可以解除電腦鎖定。"
     IDS_LOGONMSG "您登入為 %s。"
     IDS_LOGONDATE "登入日期: %s %s"
     IDS_COMPUTERLOCKED "鎖定電腦"
-    IDS_LOCKEDWRONGPASSWORD "密碼是錯誤的。請再次輸入您的密碼。在密碼中的字母必須使用正確的大小寫。"
+    IDS_LOCKEDWRONGPASSWORD "密碼錯誤。請再次輸入您的密碼。在密碼中的字母必須使用正確的大小寫。"
     IDS_LOCKEDWRONGUSER "這部電腦被鎖定。只有 %s\\%s 或者管理員可以解除電腦鎖定。"
     IDS_CHANGEPWDTITLE "更改密碼"
-    IDS_NONMATCHINGPASSWORDS "您鍵入的密碼不匹配。在這兩個文字框中鍵入相同的密碼。"
+    IDS_NONMATCHINGPASSWORDS "您輸入的密碼不匹配。在這兩個文字框中輸入相同的密碼。"
     IDS_PASSWORDCHANGED "您的密碼已更改。"
     IDS_LOGONTITLE "登入訊息"
-    IDS_LOGONWRONGUSERORPWD "該系統可以不讓您登入。請確保您的使用者名及域無誤，然後再次鍵入您的密碼。在密碼中的字母必須使用正確的大小寫。"
-    IDS_LOGONUSERDISABLED "您的帳戶已被禁用。請參閱您的系統管理員。"
-    IDS_PASSWORDMUSTCHANGE "您需要更改您在首次登入的密碼。"
+    IDS_LOGONWRONGUSERORPWD "系統無法讓您登入。請確保您的使用者名稱及網域無誤，然後再次輸入您的密碼。在密碼中的字母必須使用正確的大小寫。"
+    IDS_LOGONUSERDISABLED "您的帳戶已被停用。請聯絡您的系統管理員。"
+    IDS_PASSWORDMUSTCHANGE "您在首次登入時需要更改您的密碼。"
     IDS_PASSWORDEXPIRED "您的密碼已過期，必須更改。"
-    IDS_ACCOUNTEXPIRED "Your account has expired. Please see your system administrator."
+    IDS_ACCOUNTEXPIRED "您的帳戶已過期。請聯絡您的系統管理員。"
     IDS_ACCOUNTLOCKED "Unable to log you on beacuse your account has been locked out. Please see your system administrator."
     IDS_INVALIDLOGONHOURS "Your account has time restrictions that prevent you from logging on at this time. Please try again later."
     IDS_INVALIDWORKSTATION "Your account is configured to prevent you from using this computer. Please try another computer."
@@ -241,15 +242,15 @@ END
 /* Shutdown Dialog Strings */
 STRINGTABLE
 BEGIN
-    IDS_SHUTDOWN_LOGOFF "登出 ""%S"""
+    IDS_SHUTDOWN_LOGOFF "登出 ""%s"""
     IDS_SHUTDOWN_SHUTDOWN "關閉"
     IDS_SHUTDOWN_RESTART "重新開機"
     IDS_SHUTDOWN_SLEEP "睡眠狀態"
     IDS_SHUTDOWN_HIBERNATE "休眠狀態"
     /* Shut down descriptions */
-    IDS_SHUTDOWN_LOGOFF_DESC "結束當前會話，並允許其他使用者登入到系統上。"
-    IDS_SHUTDOWN_SHUTDOWN_DESC "結束當前會話並關閉系統，這樣您可以安全地關閉電源。"
-    IDS_SHUTDOWN_RESTART_DESC "結束當前會話並重新引導系統。"
-    IDS_SHUTDOWN_SLEEP_DESC "使系統處於睡眠模式。"
-    IDS_SHUTDOWN_HIBERNATE_DESC "儲存當前會話並關閉電腦。"
+    IDS_SHUTDOWN_LOGOFF_DESC "結束目前的工作階段，並允許其他使用者登入到系統上。"
+    IDS_SHUTDOWN_SHUTDOWN_DESC "結束目前的工作階段並關閉系統，這樣您可以安全地關閉電源。"
+    IDS_SHUTDOWN_RESTART_DESC "結束目前的工作階段並重新開啟電腦。"
+    IDS_SHUTDOWN_SLEEP_DESC "使系統進入睡眠模式。"
+    IDS_SHUTDOWN_HIBERNATE_DESC "儲存目前的工作階段並關閉電腦。"
 END

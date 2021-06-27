@@ -454,7 +454,7 @@ extern "C" IEThreadParamBlock *WINAPI SHCreateIETHREADPARAM(
 
     TRACE("SHCreateIETHREADPARAM\n");
 
-    result = (IEThreadParamBlock *) LocalAlloc(LMEM_ZEROINIT, 256);
+    result = (IEThreadParamBlock *) LocalAlloc(LMEM_ZEROINIT, sizeof(*result));
     if (result == NULL)
         return NULL;
     result->offset0 = param8;
@@ -477,10 +477,10 @@ extern "C" IEThreadParamBlock *WINAPI SHCloneIETHREADPARAM(IEThreadParamBlock *p
 
     TRACE("SHCloneIETHREADPARAM\n");
 
-    result = (IEThreadParamBlock *) LocalAlloc(LMEM_FIXED, 256);
+    result = (IEThreadParamBlock *) LocalAlloc(LMEM_FIXED, sizeof(*result));
     if (result == NULL)
         return NULL;
-    memcpy(result, param, 0x40 * 4);
+    *result = *param;
     if (result->directoryPIDL != NULL)
         result->directoryPIDL = ILClone(result->directoryPIDL);
     if (result->offset7C != NULL)

@@ -7,7 +7,7 @@
 **  int _STLP_atomic_exchange (__stl_atomic_t *pvalue, __stl_atomic_t value)
 */
 
-#  if defined(__sparc_v9__) || defined (__sparcv9) 
+#  if defined(__sparc_v9__) || defined (__sparcv9)
 
 #    ifdef __arch64__
 

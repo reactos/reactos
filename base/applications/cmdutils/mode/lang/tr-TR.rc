@@ -70,4 +70,5 @@ BEGIN
     IDS_ERROR_INVALID_STOP_BITS "HATA: %d Durma İkilleri için geçersiz değer:\n"
     IDS_ERROR_NO_MEMORY "HATA: Yeterli bellek yok.\n"
     IDS_ERROR_SCREEN_LINES_COL "Ekran, belirtilen satır ve sütun sayısına ayarlanamıyor.\n"
+    IDS_ERROR_INVALID_CODEPAGE "Geçersiz kod sayfası.\n"
 END

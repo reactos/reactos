@@ -861,7 +861,8 @@ BOOLEAN CDefView::LV_RenameItem(PCUITEMID_CHILD pidlOld, PCUITEMID_CHILD pidlNew
         lvItem.iSubItem = 0;
         m_ListView.GetItem(&lvItem);
 
-        SHFree(reinterpret_cast<LPVOID>(lvItem.lParam));
+        LPVOID oldPidl = reinterpret_cast<LPVOID>(lvItem.lParam);   /* Store the old pidl until the new item is replaced */
+
         lvItem.mask = LVIF_PARAM | LVIF_IMAGE | LVIF_TEXT;
         lvItem.iItem = nItem;
         lvItem.iSubItem = 0;
@@ -870,6 +871,9 @@ BOOLEAN CDefView::LV_RenameItem(PCUITEMID_CHILD pidlOld, PCUITEMID_CHILD pidlNew
         lvItem.iImage = SHMapPIDLToSystemImageListIndex(m_pSFParent, pidlNew, 0);
         m_ListView.SetItem(&lvItem);
         m_ListView.Update(nItem);
+
+        SHFree(oldPidl);                /* Now that the new item is in place, we can safely release the old pidl */
+
         return TRUE;                    /* FIXME: better handling */
     }
 

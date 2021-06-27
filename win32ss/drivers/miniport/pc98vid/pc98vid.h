@@ -22,6 +22,10 @@
 #define READ_PORT_UCHAR(p) VideoPortReadPortUchar(p)
 #include <drivers/pc98/video.h>
 
+#if defined(_MSC_VER)
+#pragma section("PAGECONS", read)
+#endif
+
 #define MONITOR_HW_ID 0x1033FACE /* Dummy */
 
 typedef struct _VIDEOMODE
@@ -54,23 +58,27 @@ NTAPI
 HasPegcController(
     _In_ PHW_DEVICE_EXTENSION DeviceExtension);
 
+CODE_SEG("PAGE")
 BOOLEAN
 NTAPI
 Pc98VidStartIO(
     _In_ PVOID HwDeviceExtension,
     _Inout_ PVIDEO_REQUEST_PACKET RequestPacket);
 
+CODE_SEG("PAGE")
 VP_STATUS
 FASTCALL
 Pc98VidSetCurrentMode(
     _In_ PHW_DEVICE_EXTENSION DeviceExtension,
     _In_ PVIDEO_MODE RequestedMode);
 
+CODE_SEG("PAGE")
 VP_STATUS
 FASTCALL
 Pc98VidSetColorRegisters(
     _In_ PVIDEO_CLUT ColorLookUpTable);
 
+CODE_SEG("PAGE")
 VP_STATUS
 NTAPI
 Pc98VidGetPowerState(
@@ -78,6 +86,7 @@ Pc98VidGetPowerState(
     _In_ ULONG HwId,
     _In_ PVIDEO_POWER_MANAGEMENT VideoPowerControl);
 
+CODE_SEG("PAGE")
 VP_STATUS
 NTAPI
 Pc98VidSetPowerState(
@@ -85,6 +94,7 @@ Pc98VidSetPowerState(
     _In_ ULONG HwId,
     _In_ PVIDEO_POWER_MANAGEMENT VideoPowerControl);
 
+DATA_SEG("PAGECONS")
 extern const VIDEOMODE VideoModes[];
 
 #endif /* _PC98VID_PCH_ */

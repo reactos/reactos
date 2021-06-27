@@ -288,7 +288,7 @@ static BOOL InitOpenFileName(HWND hWnd, OPENFILENAME* pofn)
     pofn->nMaxFile = _MAX_PATH;
     pofn->lpstrFileTitle = FileTitleBuffer;
     pofn->nMaxFileTitle = _MAX_PATH;
-    pofn->Flags = OFN_HIDEREADONLY;
+    pofn->Flags = OFN_EXPLORER | OFN_HIDEREADONLY;
     pofn->lpstrDefExt = L"reg";
     return TRUE;
 }

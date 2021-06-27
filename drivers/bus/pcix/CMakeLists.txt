@@ -48,6 +48,14 @@ add_library(pcix MODULE
 
 set_module_type(pcix kernelmodedriver)
 target_link_libraries(pcix arbiter)
+if(MSVC)
+    target_link_options(pcix PRIVATE /SECTION:.rsrc,!D)
+else()
+    add_custom_command(
+        TARGET pcix POST_BUILD
+        COMMAND native-pefixup --section:.rsrc,!D $<TARGET_FILE:pcix>
+        VERBATIM)
+endif()
 add_importlibs(pcix ntoskrnl hal)
 add_pch(pcix pci.h "${PCH_SKIP_SOURCE}")
 add_dependencies(pcix pciclass)

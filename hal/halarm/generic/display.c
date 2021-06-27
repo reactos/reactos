@@ -5,7 +5,7 @@
  * PURPOSE:         Screen Display Routines, now useless since NT 5.1+
  * PROGRAMMERS:     ReactOS Portable Systems Group
  */
- 
+
 #include <hal.h>
 #define NDEBUG
 #include <debug.h>

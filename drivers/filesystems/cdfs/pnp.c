@@ -104,7 +104,7 @@ Return Value:
 {
     NTSTATUS Status = STATUS_SUCCESS;
     BOOLEAN PassThrough = FALSE;
-    
+
     PIO_STACK_LOCATION IrpSp;
 
     PVOLUME_DEVICE_OBJECT OurDeviceObject;
@@ -128,19 +128,19 @@ Return Value:
     OurDeviceObject = (PVOLUME_DEVICE_OBJECT) IrpSp->DeviceObject;
 
     //
-    //  IO holds a handle reference on our VDO and holds the device lock, which 
-    //  syncs us against mounts/verifies.  However we hold no reference on the 
-    //  volume, which may already have been torn down (and the Vpb freed), for 
+    //  IO holds a handle reference on our VDO and holds the device lock, which
+    //  syncs us against mounts/verifies.  However we hold no reference on the
+    //  volume, which may already have been torn down (and the Vpb freed), for
     //  example by a force dismount. Check for this condition. We must hold this
     //  lock until the pnp worker functions take additional locks/refs on the Vcb.
     //
 
     CdAcquireCdData( IrpContext);
-    
+
     //
     //  Make sure this device object really is big enough to be a volume device
     //  object.  If it isn't, we need to get out before we try to reference some
-    //  field that takes us past the end of an ordinary device object.    
+    //  field that takes us past the end of an ordinary device object.
     //
 
 #ifdef _MSC_VER
@@ -148,11 +148,11 @@ Return Value:
 #endif
     if (OurDeviceObject->DeviceObject.Size != sizeof(VOLUME_DEVICE_OBJECT) ||
         NodeType( &OurDeviceObject->Vcb ) != CDFS_NTC_VCB) {
-        
+
         //
         //  We were called with something we don't understand.
         //
-        
+
         Status = STATUS_INVALID_PARAMETER;
         CdReleaseCdData( IrpContext);
         CdCompleteRequest( IrpContext, Irp, Status );
@@ -171,7 +171,7 @@ Return Value:
     //  Check that the Vcb hasn't already been deleted.  If so,  just pass the
     //  request through to the driver below,  we don't need to do anything.
     //
-    
+
     if (NULL == Vcb->Vpb) {
 
         PassThrough = TRUE;
@@ -181,16 +181,16 @@ Return Value:
         //
         //  Case on the minor code.
         //
-        
+
         switch ( IrpSp->MinorFunction ) {
 
             case IRP_MN_QUERY_REMOVE_DEVICE:
-                
+
                 Status = CdPnpQueryRemove( IrpContext, Irp, Vcb );
                 break;
-            
+
             case IRP_MN_SURPRISE_REMOVAL:
-            
+
                 Status = CdPnpSurpriseRemove( IrpContext, Irp, Vcb );
                 break;
 
@@ -200,7 +200,7 @@ Return Value:
                 break;
 
             case IRP_MN_CANCEL_REMOVE_DEVICE:
-        
+
                 Status = CdPnpCancelRemove( IrpContext, Irp, Vcb );
                 break;
 
@@ -219,18 +219,18 @@ Return Value:
         //  Just pass the IRP on.  As we do not need to be in the
         //  way on return, ellide ourselves out of the stack.
         //
-        
+
         IoSkipCurrentIrpStackLocation( Irp );
 
         Status = IoCallDriver(Vcb->TargetDeviceObject, Irp);
-        
+
         //
         //  Cleanup our Irp Context.  The driver has completed the Irp.
         //
-    
+
         CdCompleteRequest( IrpContext, NULL, STATUS_SUCCESS );
     }
-        
+
     return Status;
 }
 
@@ -251,13 +251,13 @@ Routine Description:
     is responsible for answering whether there are any reasons it sees
     that the volume can not go away (and the device removed).  Initiation
     of the dismount begins when we answer yes to this question.
-    
+
     Query will be followed by a Cancel or Remove.
 
 Arguments:
 
     Irp - Supplies the Irp to process
-    
+
     Vcb - Supplies the volume being queried.
 
 Return Value:
@@ -280,7 +280,7 @@ Return Value:
     //  underlying storage stack is undefined (and may block)
     //  until the bounding CANCEL or REMOVE is sent.
     //
-    //  Acquire the global resource so that we can try to vaporize the volume, 
+    //  Acquire the global resource so that we can try to vaporize the volume,
     //  and the vcb resource itself.
     //
 
@@ -289,11 +289,11 @@ Return Value:
     //
     //  Drop a reference on the Vcb to keep it around after we drop the locks.
     //
-    
+
     CdLockVcb( IrpContext, Vcb);
     Vcb->VcbReference += 1;
     CdUnlockVcb( IrpContext, Vcb);
-    
+
     CdReleaseCdData( IrpContext);
 
     Status = CdLockVolumeInternal( IrpContext, Vcb, NULL );
@@ -301,27 +301,27 @@ Return Value:
     //
     //  Reacquire the global lock,  which means dropping the Vcb resource.
     //
-    
+
     CdReleaseVcb( IrpContext, Vcb );
-    
+
     CdAcquireCdData( IrpContext );
     CdAcquireVcbExclusive( IrpContext, Vcb, FALSE );
 
     //
     //  Remove our extra reference.
     //
-    
+
     CdLockVcb( IrpContext, Vcb);
     Vcb->VcbReference -= 1;
     CdUnlockVcb( IrpContext, Vcb);
-    
+
     if (NT_SUCCESS( Status )) {
 
         //
         //  We need to pass this down before starting the dismount, which
         //  could disconnect us immediately from the stack.
         //
-        
+
         //
         //  Get the next stack location, and copy over the stack location
         //
@@ -331,7 +331,7 @@ Return Value:
         //
         //  Set up the completion routine
         //
-    
+
         KeInitializeEvent( &Event, NotificationEvent, FALSE );
         IoSetCompletionRoutine( Irp,
                                 CdPnpCompletionRoutine,
@@ -374,19 +374,19 @@ Return Value:
         //
 
         if (NT_SUCCESS( Status )) {
-            
+
             VcbPresent = CdCheckForDismount( IrpContext, Vcb, TRUE );
-    
+
             NT_ASSERT( !VcbPresent || Vcb->VcbCondition == VcbDismountInProgress );
         }
 
         //
-        //  Note: Normally everything will complete and the internal streams will 
+        //  Note: Normally everything will complete and the internal streams will
         //  vaporise.  However there is some code in the system which drops additional
         //  references on fileobjects,  including our internal stream file objects,
         //  for (WMI) tracing purposes.  If that happens to run concurrently with our
         //  teardown, our internal streams will not vaporise until those references
-        //  are removed.  So it's possible that the volume still remains at this 
+        //  are removed.  So it's possible that the volume still remains at this
         //  point.  The pnp query remove will fail due to our references on the device.
         //  To be cleaner we will return an error here.  We could pend the pnp
         //  IRP until the volume goes away, but since we don't know when that will
@@ -405,11 +405,11 @@ Return Value:
             Status = STATUS_DEVICE_BUSY;
         }
     }
-    
+
     //
     //  Release the Vcb if it could still remain.
     //
-    
+
     if (VcbPresent) {
 
         CdReleaseVcb( IrpContext, Vcb );
@@ -419,7 +419,7 @@ Return Value:
     }
 
     CdReleaseCdData( IrpContext );
-    
+
     //
     //  Cleanup our IrpContext and complete the IRP if neccesary.
     //
@@ -450,7 +450,7 @@ Routine Description:
 Arguments:
 
     Irp - Supplies the Irp to process
-    
+
     Vcb - Supplies the volume being removed.
 
 Return Value:
@@ -478,12 +478,12 @@ Return Value:
     //  for a REMOVE in the first two cases, as we try to intiate
     //  dismount.
     //
-    
+
     //
     //  Acquire the global resource so that we can try to vaporize
     //  the volume, and the vcb resource itself.
     //
-        
+
     CdAcquireVcbExclusive( IrpContext, Vcb, FALSE );
 
     //
@@ -502,22 +502,22 @@ Return Value:
     if (!NT_SUCCESS( Status )) {
 
         CdLockVcb( IrpContext, Vcb );
-        
+
         if (Vcb->VcbCondition != VcbDismountInProgress) {
-            
+
             CdUpdateVcbCondition( Vcb, VcbInvalid);
         }
-        
+
         CdUnlockVcb( IrpContext, Vcb );
-        
+
         Status = STATUS_SUCCESS;
     }
-    
+
     //
     //  We need to pass this down before starting the dismount, which
     //  could disconnect us immediately from the stack.
     //
-    
+
     //
     //  Get the next stack location, and copy over the stack location
     //
@@ -562,13 +562,13 @@ Return Value:
     //  couldn't get off of it immediately.
     //
 
- 
+
     VcbPresent = CdCheckForDismount( IrpContext, Vcb, TRUE );
 
     //
     //  Release the Vcb if it could still remain.
     //
-    
+
     if (VcbPresent) {
 
         CdReleaseVcb( IrpContext, Vcb );
@@ -578,7 +578,7 @@ Return Value:
     }
 
     CdReleaseCdData( IrpContext );
-    
+
     //
     //  Cleanup our IrpContext and complete the IRP.
     //
@@ -605,17 +605,17 @@ Routine Description:
     type of notification that the underlying storage device for the volume we
     have is gone, and is excellent indication that the volume will never reappear.
     The filesystem is responsible for initiation or completion the dismount.
-    
+
     For the most part, only "real" drivers care about the distinction of a
     surprise remove, which is a result of our noticing that a user (usually)
     physically reached into the machine and pulled something out.
-    
+
     Surprise will be followed by a Remove when all references have been shut down.
 
 Arguments:
 
     Irp - Supplies the Irp to process
-    
+
     Vcb - Supplies the volume being removed.
 
 Return Value:
@@ -632,14 +632,14 @@ Return Value:
     PAGED_CODE();
 
     ASSERT_EXCLUSIVE_CDDATA;
-    
+
     //
     //  SURPRISE - a device was physically yanked away without
     //  any warning.  This means external forces.
     //
-    
+
     CdAcquireVcbExclusive( IrpContext, Vcb, FALSE );
-        
+
     //
     //  Invalidate the volume right now.
     //
@@ -647,21 +647,21 @@ Return Value:
     //  on the volume fail and grease the rails toward dismount.
     //  By definition there is no going back from a SURPRISE.
     //
-        
+
     CdLockVcb( IrpContext, Vcb );
-    
+
     if (Vcb->VcbCondition != VcbDismountInProgress) {
-        
+
         CdUpdateVcbCondition( Vcb, VcbInvalid);
     }
-    
+
     CdUnlockVcb( IrpContext, Vcb );
-    
+
     //
     //  We need to pass this down before starting the dismount, which
     //  could disconnect us immediately from the stack.
     //
-    
+
     //
     //  Get the next stack location, and copy over the stack location
     //
@@ -696,20 +696,20 @@ Return Value:
 
         Status = Irp->IoStatus.Status;
     }
-    
+
     //
     //  Now make our dismount happen.  This may not vaporize the
     //  Vcb, of course, since there could be any number of handles
     //  outstanding since this is an out of band notification.
     //
 
-        
+
     VcbPresent = CdCheckForDismount( IrpContext, Vcb, TRUE );
-    
+
     //
     //  Release the Vcb if it could still remain.
     //
-    
+
     if (VcbPresent) {
 
         CdReleaseVcb( IrpContext, Vcb );
@@ -719,7 +719,7 @@ Return Value:
     }
 
     CdReleaseCdData( IrpContext );
-    
+
     //
     //  Cleanup our IrpContext and complete the IRP.
     //
@@ -746,11 +746,11 @@ Routine Description:
     notification that a previously proposed remove (query) was eventually
     vetoed by a component.  The filesystem is responsible for cleaning up
     and getting ready for more IO.
-    
+
 Arguments:
 
     Irp - Supplies the Irp to process
-    
+
     Vcb - Supplies the volume being removed.
 
 Return Value:
@@ -781,7 +781,7 @@ Return Value:
     //  with respect to the Vcb getting torn apart - merely referencing
     //  the volume device object is insufficient to keep us intact.
     //
-    
+
     CdAcquireVcbExclusive( IrpContext, Vcb, FALSE );
     CdReleaseCdData( IrpContext);
 

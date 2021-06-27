@@ -167,13 +167,6 @@ HalpClockInterruptHandler(IN PKTRAP_FRAME TrapFrame)
     KeUpdateSystemTime(TrapFrame, LastIncrement, Irql);
 }
 
-VOID
-FASTCALL
-HalpProfileInterruptHandler(IN PKTRAP_FRAME TrapFrame)
-{
-    __debugbreak();
-}
-
 ULONG
 NTAPI
 HalSetTimeIncrement(IN ULONG Increment)

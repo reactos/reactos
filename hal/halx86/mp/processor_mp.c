@@ -18,7 +18,7 @@
 #include <debug.h>
 
 KAFFINITY HalpActiveProcessors, HalpDefaultInterruptAffinity;
- 
+
 /* PRIVATE FUNCTIONS *********************************************************/
 
 VOID
@@ -55,7 +55,7 @@ HalInitializeProcessor(ULONG ProcessorNumber,
       APICSetup();
 
       DPRINT("CPU %d says it is now booted.\n", CPU);
- 
+
       APICCalibrateTimer(CPU);
    }
 

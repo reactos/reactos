@@ -351,7 +351,7 @@ BrowseFile(
     ZeroMemory(&ofn, sizeof(ofn));
 
     ofn.lStructSize = sizeof(ofn);
-    ofn.Flags = OFN_HIDEREADONLY | OFN_FILEMUSTEXIST | OFN_PATHMUSTEXIST | OFN_ENABLESIZING;
+    ofn.Flags = OFN_EXPLORER | OFN_HIDEREADONLY | OFN_FILEMUSTEXIST | OFN_PATHMUSTEXIST | OFN_ENABLESIZING;
     ofn.hwndOwner = hwndDlg;
     ofn.lpstrFilter = pszFilter;
     ofn.lpstrFile = szFile;

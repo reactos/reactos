@@ -273,6 +273,10 @@ GetComputerIdentifier(
         return FALSE;
     }
 
+#ifdef _M_AMD64
+    /* On x64 we are l33t and use the MP config by default */
+    ComputerIdentifier = L"X64 MP";
+#else
     if (IsAcpiComputer())
     {
         if (pFullInfo->SubKeys == 1)
@@ -299,6 +303,7 @@ GetComputerIdentifier(
             ComputerIdentifier = L"PC MP";
         }
     }
+#endif
 
     RtlFreeHeap(RtlGetProcessHeap(), 0, pFullInfo);
 

@@ -892,7 +892,7 @@ Ext2MapIndirect(
                 }
             }
 
-            if (Layer == 0) 
+            if (Layer == 0)
                 dwArray = Vcb->max_blocks_per_layer[Layer] - Index;
             else
                 dwArray = 1;

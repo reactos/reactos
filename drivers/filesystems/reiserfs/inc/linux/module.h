@@ -4,8 +4,8 @@
  * FILE:             module.h
  * PURPOSE:          Header file: nls structures & linux kernel ...
  * PROGRAMMER:       Mark Piper, Matt Wu, Bo Brantén.
- * HOMEPAGE:         
- * UPDATE HISTORY: 
+ * HOMEPAGE:
+ * UPDATE HISTORY:
  */
 
 #ifndef _RFSD_MODULE_HEADER_

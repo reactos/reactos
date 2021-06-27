@@ -58,12 +58,12 @@ ULONG __cdecl DbgP(IN PCCH fmt, ...)
         ExSystemTimeToLocalTime(&timestamp,&local_time);
         RtlTimeToTimeFields(&local_time, &time_fields);
 
-        DbgPrintEx(DPFLTR_IHVNETWORK_ID, DPFLTR_ERROR_LEVEL, 
-            "[%ld].[%02u:%02u:%02u.%u] %s", IoGetCurrentProcess(), 
-            time_fields.Hour, time_fields.Minute, time_fields.Second, 
+        DbgPrintEx(DPFLTR_IHVNETWORK_ID, DPFLTR_ERROR_LEVEL,
+            "[%ld].[%02u:%02u:%02u.%u] %s", IoGetCurrentProcess(),
+            time_fields.Hour, time_fields.Minute, time_fields.Second,
             time_fields.Milliseconds, msg);
 #else
-        DbgPrintEx(DPFLTR_IHVNETWORK_ID, DPFLTR_ERROR_LEVEL, 
+        DbgPrintEx(DPFLTR_IHVNETWORK_ID, DPFLTR_ERROR_LEVEL,
             "[%04x] %s", PsGetCurrentProcessId(), msg);
 #endif
     }
@@ -90,12 +90,12 @@ ULONG __cdecl print_error(IN PCCH fmt, ...)
         ExSystemTimeToLocalTime(&timestamp,&local_time);
         RtlTimeToTimeFields(&local_time, &time_fields);
 
-        DbgPrintEx(DPFLTR_IHVNETWORK_ID, DPFLTR_ERROR_LEVEL, 
-            "[%ld].[%02u:%02u:%02u.%u] %s", IoGetCurrentProcess(), 
-            time_fields.Hour, time_fields.Minute, time_fields.Second, 
+        DbgPrintEx(DPFLTR_IHVNETWORK_ID, DPFLTR_ERROR_LEVEL,
+            "[%ld].[%02u:%02u:%02u.%u] %s", IoGetCurrentProcess(),
+            time_fields.Hour, time_fields.Minute, time_fields.Second,
             time_fields.Milliseconds, msg);
 #else
-        DbgPrintEx(DPFLTR_IHVNETWORK_ID, DPFLTR_ERROR_LEVEL, 
+        DbgPrintEx(DPFLTR_IHVNETWORK_ID, DPFLTR_ERROR_LEVEL,
             "[%04x] %s", PsGetCurrentProcessId(), msg);
 #endif
     }
@@ -104,7 +104,7 @@ ULONG __cdecl print_error(IN PCCH fmt, ...)
     return 0;
 }
 
-void print_hexbuf(int on, unsigned char *title, unsigned char *buf, int len) 
+void print_hexbuf(int on, unsigned char *title, unsigned char *buf, int len)
 {
     int j, k;
     LARGE_INTEGER timestamp, local_time;
@@ -116,9 +116,9 @@ void print_hexbuf(int on, unsigned char *title, unsigned char *buf, int len)
     ExSystemTimeToLocalTime(&timestamp,&local_time);
     RtlTimeToTimeFields(&local_time, &time_fields);
 
-    DbgPrintEx(DPFLTR_IHVNETWORK_ID, DPFLTR_ERROR_LEVEL, 
-        "[%ld].[%02u:%02u:%02u.%u] %s\n", IoGetCurrentProcess(), 
-        time_fields.Hour, time_fields.Minute, time_fields.Second, 
+    DbgPrintEx(DPFLTR_IHVNETWORK_ID, DPFLTR_ERROR_LEVEL,
+        "[%ld].[%02u:%02u:%02u.%u] %s\n", IoGetCurrentProcess(),
+        time_fields.Hour, time_fields.Minute, time_fields.Second,
         time_fields.Milliseconds, title);
     for(j = 0, k = 0; j < len; j++, k++) {
         DbgPrintEx(DPFLTR_IHVNETWORK_ID, DPFLTR_ERROR_LEVEL,
@@ -206,15 +206,15 @@ void print_basic_info(int on, PFILE_BASIC_INFORMATION info)
     if (!on) return;
     DbgP("BASIC_INFO: Create=%lx Access=%lx Write=%lx Change=%lx Attr=%x\n",
         info->CreationTime.QuadPart, info->LastAccessTime.QuadPart,
-        info->LastWriteTime.QuadPart, info->ChangeTime.QuadPart, 
+        info->LastWriteTime.QuadPart, info->ChangeTime.QuadPart,
         info->FileAttributes);
 }
 void print_std_info(int on, PFILE_STANDARD_INFORMATION info)
 {
     if (!on) return;
     DbgP("STD_INFO: Type=%s #Links=%d Alloc=%lx EOF=%lx Delete=%d\n",
-        info->Directory?"DIR":"FILE", info->NumberOfLinks, 
-        info->AllocationSize.QuadPart, info->EndOfFile.QuadPart, 
+        info->Directory?"DIR":"FILE", info->NumberOfLinks,
+        info->AllocationSize.QuadPart, info->EndOfFile.QuadPart,
         info->DeletePending);
 }
 
@@ -224,16 +224,16 @@ void print_ea_info(int on, PFILE_FULL_EA_INFORMATION info)
     DbgP("FULL_EA_INFO: NextOffset=%d Flags=%x EaNameLength=%d "
         "ExValueLength=%x EaName=%s\n", info->NextEntryOffset, info->Flags,
         info->EaNameLength, info->EaValueLength, info->EaName);
-    if (info->EaValueLength) 
-        print_hexbuf(0, (unsigned char *)"eavalue", 
-            (unsigned char *)info->EaName + info->EaNameLength + 1, 
+    if (info->EaValueLength)
+        print_hexbuf(0, (unsigned char *)"eavalue",
+            (unsigned char *)info->EaName + info->EaNameLength + 1,
             info->EaValueLength);
 }
 
 void print_get_ea(int on, PFILE_GET_EA_INFORMATION info)
 {
     if (!on || !info) return;
-    DbgP("GET_EA_INFO: NextOffset=%d EaNameLength=%d EaName=%s\n", 
+    DbgP("GET_EA_INFO: NextOffset=%d EaNameLength=%d EaName=%s\n",
         info->NextEntryOffset, info->EaNameLength, info->EaName);
 }
 
@@ -301,7 +301,7 @@ VOID print_v_net_root(int on, IN PMRX_V_NET_ROOT p)
 
 void print_file_object(int on, PFILE_OBJECT file)
 {
-    if (!on) return;   
+    if (!on) return;
     DbgP("FsContext %p FsContext2 %p\n", file->FsContext, file->FsContext2);
     DbgP("DeletePending %d ReadAccess %d WriteAccess %d DeleteAccess %d\n",
         file->DeletePending, file->WriteAccess, file->DeleteAccess);
@@ -313,7 +313,7 @@ void print_fo_all(int on, PRX_CONTEXT c)
 {
     if (!on) return;
     if (c->pFcb && c->pRelevantSrvOpen)
-        DbgP("OpenCount %d FCB %p SRV %p FOBX %p VNET %p NET %p\n", 
+        DbgP("OpenCount %d FCB %p SRV %p FOBX %p VNET %p NET %p\n",
             c->pFcb->OpenCount, c->pFcb, c->pRelevantSrvOpen, c->pFobx,
             c->pRelevantSrvOpen->pVNetRoot, c->pFcb->pNetRoot);
 }
@@ -384,11 +384,11 @@ VOID print_fobx(int on, IN PMRX_FOBX p)
 #endif
 }
 
-VOID print_irp_flags(int on, PIRP irp) 
+VOID print_irp_flags(int on, PIRP irp)
 {
     if (!on) return;
     if (irp->Flags)
-        DbgP("IRP FLAGS: 0x%x %s %s %s %s %s %s %s %s %s %s %s %s %s %s\n", 
+        DbgP("IRP FLAGS: 0x%x %s %s %s %s %s %s %s %s %s %s %s %s %s %s\n",
             irp->Flags,
             (irp->Flags & IRP_NOCACHE)?"NOCACHE":"",
             (irp->Flags & IRP_PAGING_IO)?"PAGING_IO":"",
@@ -420,7 +420,7 @@ void print_nt_create_params(int on, NT_CREATE_PARAMETERS params)
 {
     if (!on) return;
     if (params.FileAttributes)
-        DbgP("File attributes %x: %s %s %s %s %s %s %s %s %s %s %s %s %s %s\n", 
+        DbgP("File attributes %x: %s %s %s %s %s %s %s %s %s %s %s %s %s %s\n",
             params.FileAttributes,
             (params.FileAttributes & FILE_ATTRIBUTE_TEMPORARY)?"TEMPFILE ":"",
             (params.FileAttributes & FILE_ATTRIBUTE_READONLY)?"READONLY ":"",
@@ -436,7 +436,7 @@ void print_nt_create_params(int on, NT_CREATE_PARAMETERS params)
             (params.FileAttributes & FILE_ATTRIBUTE_NOT_CONTENT_INDEXED)?"NOT INDEXED ":"",
             (params.FileAttributes & FILE_ATTRIBUTE_ENCRYPTED)?"ENCRYPTED ":"",
             (params.FileAttributes & FILE_ATTRIBUTE_VIRTUAL)?"VIRTUAL":"");
- 
+
     if (params.Disposition  == FILE_SUPERSEDE)
         DbgP("Create Dispositions: FILE_SUPERSEDE\n");
     if (params.Disposition == FILE_CREATE)
@@ -451,7 +451,7 @@ void print_nt_create_params(int on, NT_CREATE_PARAMETERS params)
         DbgP("Create Dispositions: FILE_OVERWRITE_IF\n");
 
     DbgP("Create Attributes: 0x%x %s %s %s %s %s %s %s %s %s %s %s %s %s %s "
-        "%s %s\n", params.CreateOptions, 
+        "%s %s\n", params.CreateOptions,
         (params.CreateOptions & FILE_DIRECTORY_FILE)?"DIRFILE":"",
         (params.CreateOptions & FILE_NON_DIRECTORY_FILE)?"FILE":"",
         (params.CreateOptions & FILE_DELETE_ON_CLOSE)?"DELETE_ON_CLOSE":"",
@@ -469,12 +469,12 @@ void print_nt_create_params(int on, NT_CREATE_PARAMETERS params)
         (params.CreateOptions & FILE_OPEN_FOR_BACKUP_INTENT)?"4_BACKUP":"",
         (params.CreateOptions & FILE_RESERVE_OPFILTER)?"OPFILTER":"");
 
-    DbgP("Share Access: %s %s %s\n", 
+    DbgP("Share Access: %s %s %s\n",
         (params.ShareAccess & FILE_SHARE_READ)?"READ":"",
         (params.ShareAccess & FILE_SHARE_WRITE)?"WRITE":"",
         (params.ShareAccess & FILE_SHARE_DELETE)?"DELETE":"");
 
-    DbgP("Desired Access: 0x%x %s %s %s %s %s %s %s %s %s %s %s\n", 
+    DbgP("Desired Access: 0x%x %s %s %s %s %s %s %s %s %s %s %s\n",
         params.DesiredAccess,
         (params.DesiredAccess & FILE_READ_DATA)?"READ":"",
         (params.DesiredAccess & STANDARD_RIGHTS_READ)?"READ_ACL":"",
@@ -495,7 +495,7 @@ void print_nt_create_params(int on, NT_CREATE_PARAMETERS params)
         (params.DesiredAccess & SYNCHRONIZE)?"SYNCHRONIZE":"");
 }
 
-unsigned char * print_file_information_class(int InfoClass) 
+unsigned char * print_file_information_class(int InfoClass)
 {
     switch(InfoClass) {
         case FileBothDirectoryInformation:
@@ -583,7 +583,7 @@ void print_caching_level(int on, ULONG flag, PUNICODE_STRING name)
 {
     if (!on) return;
     switch(flag) {
-        case 0: 
+        case 0:
             DbgP("enable_caching: DISABLE_CACHING %wZ\n", name);
             break;
         case 1:
@@ -594,7 +594,7 @@ void print_caching_level(int on, ULONG flag, PUNICODE_STRING name)
             break;
         case 3:
             DbgP("enable_caching: ENABLE_READWRITE_CACHING %wZ\n", name);
-            break;   
+            break;
     }
 }
 
@@ -685,14 +685,14 @@ void print_open_error(int on, int status)
     }
 }
 
-void print_wait_status(int on, const char *prefix, NTSTATUS status, 
+void print_wait_status(int on, const char *prefix, NTSTATUS status,
                        const char *opcode, PVOID entry, LONGLONG xid)
 {
     if (!on) return;
     switch (status) {
     case STATUS_SUCCESS:
         if (opcode)
-            DbgP("%s Got a wakeup call, finishing %s entry=%p xid=%lld\n", 
+            DbgP("%s Got a wakeup call, finishing %s entry=%p xid=%lld\n",
                 prefix, opcode, entry, xid);
         else
             DbgP("%s Got a wakeup call\n", prefix);

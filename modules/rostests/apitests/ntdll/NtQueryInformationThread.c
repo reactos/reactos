@@ -6,6 +6,7 @@
  */
 
 #include "precomp.h"
+#include <internal/ps_i.h>
 
 static
 void
@@ -100,7 +101,40 @@ Test_ThreadBasicInformationClass(void)
     HeapFree(GetProcessHeap(), 0, ThreadInfoBasic);
 }
 
+static
+void
+Test_ThreadQueryAlignmentProbe(void)
+{
+    ULONG InfoClass;
+
+    /* Iterate over the process info classes and begin the tests */
+    for (InfoClass = 0; InfoClass < _countof(PsThreadInfoClass); InfoClass++)
+    {
+        /* The buffer is misaligned */
+        QuerySetThreadValidator(QUERY,
+                                InfoClass,
+                                (PVOID)(ULONG_PTR)1,
+                                PsThreadInfoClass[InfoClass].RequiredSizeQUERY,
+                                STATUS_DATATYPE_MISALIGNMENT);
+
+        /* We query an invalid buffer address */
+        QuerySetThreadValidator(QUERY,
+                                InfoClass,
+                                (PVOID)(ULONG_PTR)PsThreadInfoClass[InfoClass].AlignmentQUERY,
+                                PsThreadInfoClass[InfoClass].RequiredSizeQUERY,
+                                STATUS_ACCESS_VIOLATION);
+
+        /* The information length is wrong */
+        QuerySetThreadValidator(QUERY,
+                                InfoClass,
+                                (PVOID)(ULONG_PTR)PsThreadInfoClass[InfoClass].AlignmentQUERY,
+                                PsThreadInfoClass[InfoClass].RequiredSizeQUERY - 1,
+                                STATUS_INFO_LENGTH_MISMATCH);
+    }
+}
+
 START_TEST(NtQueryInformationThread)
 {
     Test_ThreadBasicInformationClass();
+    Test_ThreadQueryAlignmentProbe();
 }

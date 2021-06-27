@@ -169,12 +169,12 @@ RegTGetDwordValue(
 #else //WIN_32_MODE
     len = sizeof(ULONG);
     if (ERROR_SUCCESS == RegQueryValueExW(
-        hKey,               // handle of key to query 
-        Name,            // address of name of value to query 
-        0,                  // reserved 
-        NULL,            // address of buffer for value type 
-        (BYTE *)pUlong,    // address of data buffer 
-        &len          // address of data buffer size 
+        hKey,               // handle of key to query
+        Name,            // address of name of value to query
+        0,                  // reserved
+        NULL,            // address of buffer for value type
+        (BYTE *)pUlong,    // address of data buffer
+        &len          // address of data buffer size
         ) && len == sizeof(ULONG)) {
         retval = TRUE;
     }
@@ -257,12 +257,12 @@ RegTGetStringValue(
 #else //WIN_32_MODE
     len = MaxLen;
     if (ERROR_SUCCESS == RegQueryValueExW(
-        hKey,               // handle of key to query 
-        Name,            // address of name of value to query 
-        0,                  // reserved 
-        NULL,            // address of buffer for value type 
-        (BYTE *)pStr,    // address of data buffer 
-        &len             // address of data buffer size 
+        hKey,               // handle of key to query
+        Name,            // address of name of value to query
+        0,                  // reserved
+        NULL,            // address of buffer for value type
+        (BYTE *)pStr,    // address of data buffer
+        &len             // address of data buffer size
         ) && len) {
         if(pStr[len-1]) {
             pStr[len-1] = 0;

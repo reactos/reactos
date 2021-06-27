@@ -13,6 +13,8 @@
 #include <wmistr.h>
 #include <kbdmou.h>
 
+#include <section_attribs.h>
+
 #define INPORT_TAG 'tPnI'
 
 typedef enum
@@ -74,14 +76,18 @@ typedef struct _INPORT_DEVICE_EXTENSION
     MOUSE_ATTRIBUTES MouseAttributes;
 } INPORT_DEVICE_EXTENSION, *PINPORT_DEVICE_EXTENSION;
 
+CODE_SEG("INIT")
 DRIVER_INITIALIZE DriverEntry;
 
+CODE_SEG("PAGE")
 DRIVER_UNLOAD InPortUnload;
 
+CODE_SEG("PAGE")
 DRIVER_ADD_DEVICE InPortAddDevice;
 
 _Dispatch_type_(IRP_MJ_CREATE)
 _Dispatch_type_(IRP_MJ_CLOSE)
+CODE_SEG("PAGE")
 DRIVER_DISPATCH_PAGED InPortCreateClose;
 
 _Dispatch_type_(IRP_MJ_INTERNAL_DEVICE_CONTROL)
@@ -91,9 +97,11 @@ _Dispatch_type_(IRP_MJ_POWER)
 DRIVER_DISPATCH_RAISED InPortPower;
 
 _Dispatch_type_(IRP_MJ_SYSTEM_CONTROL)
+CODE_SEG("PAGE")
 DRIVER_DISPATCH_PAGED InPortWmi;
 
 _Dispatch_type_(IRP_MJ_PNP)
+CODE_SEG("PAGE")
 DRIVER_DISPATCH_PAGED InPortPnp;
 
 KSERVICE_ROUTINE InPortIsr;
@@ -104,33 +112,39 @@ KSYNCHRONIZE_ROUTINE InPortStartMouse;
 
 KSYNCHRONIZE_ROUTINE InPortStopMouse;
 
+CODE_SEG("PAGE")
 NTSTATUS
 NTAPI
 InPortStartDevice(
     _In_ PDEVICE_OBJECT DeviceObject,
     _Inout_ PIRP Irp);
 
+CODE_SEG("PAGE")
 NTSTATUS
 NTAPI
 InPortRemoveDevice(
     _In_ PDEVICE_OBJECT DeviceObject,
     _Inout_ PIRP Irp);
 
+CODE_SEG("PAGE")
 VOID
 NTAPI
 InPortInitializeMouse(
     _In_ PINPORT_DEVICE_EXTENSION DeviceExtension);
 
+CODE_SEG("PAGE")
 NTSTATUS
 NTAPI
 InPortWmiRegistration(
     _Inout_ PINPORT_DEVICE_EXTENSION DeviceExtension);
 
+CODE_SEG("PAGE")
 NTSTATUS
 NTAPI
 InPortWmiDeRegistration(
     _Inout_ PINPORT_DEVICE_EXTENSION DeviceExtension);
 
+CODE_SEG("PAGE")
 NTSTATUS
 NTAPI
 InPortQueryWmiRegInfo(
@@ -141,6 +155,7 @@ InPortQueryWmiRegInfo(
     _Inout_ PUNICODE_STRING MofResourceName,
     _Out_opt_ PDEVICE_OBJECT *Pdo);
 
+CODE_SEG("PAGE")
 NTSTATUS
 NTAPI
 InPortQueryWmiDataBlock(

@@ -301,7 +301,6 @@ PartitionHandleQueryId(
                      ? STATUS_SUCCESS : STATUS_INSUFFICIENT_RESOURCES;
             break;
         case BusQueryHardwareIDs:
-        case BusQueryCompatibleIDs:
         {
             static WCHAR volumeID[] = L"STORAGE\\Volume\0";
 
@@ -376,7 +375,7 @@ PartitionHandleQueryCapabilities(
     devCaps->RawDeviceOK = TRUE;
     devCaps->NoDisplayInUI = TRUE;
     devCaps->Address = PartExt->OnDiskNumber;
-    devCaps->UniqueID = 1;
+    devCaps->UniqueID = FALSE;
 
     return STATUS_SUCCESS;
 }

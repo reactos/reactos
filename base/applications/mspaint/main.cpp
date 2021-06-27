@@ -282,7 +282,7 @@ _tWinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPTSTR lpszArgument
     ofn.nMaxFile       = SIZEOF(ofnFilename);
     ofn.lpstrFileTitle = ofnFiletitle;
     ofn.nMaxFileTitle  = SIZEOF(ofnFiletitle);
-    ofn.Flags          = OFN_HIDEREADONLY;
+    ofn.Flags          = OFN_EXPLORER | OFN_HIDEREADONLY;
     ofn.lpstrDefExt    = L"bmp";
 
     CopyMemory(sfnFilename, filepathname, sizeof(filepathname));
@@ -298,7 +298,7 @@ _tWinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPTSTR lpszArgument
     sfn.nMaxFile       = SIZEOF(sfnFilename);
     sfn.lpstrFileTitle = sfnFiletitle;
     sfn.nMaxFileTitle  = SIZEOF(sfnFiletitle);
-    sfn.Flags          = OFN_OVERWRITEPROMPT | OFN_HIDEREADONLY | OFN_EXPLORER | OFN_ENABLEHOOK;
+    sfn.Flags          = OFN_EXPLORER | OFN_OVERWRITEPROMPT | OFN_HIDEREADONLY | OFN_EXPLORER | OFN_ENABLEHOOK;
     sfn.lpfnHook       = OFNHookProc;
     sfn.lpstrDefExt    = L"bmp";
 

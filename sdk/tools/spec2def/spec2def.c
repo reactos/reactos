@@ -244,10 +244,10 @@ OutputLine_stub(FILE *file, EXPORT *pexp)
     int bRelay = 0;
     int bInPrototype = 0;
 
-    /* Workaround for forwarded externs. See here for an explanation: 
+    /* Workaround for forwarded externs. See here for an explanation:
      * https://stackoverflow.com/questions/4060143/forwarding-data-in-a-dll */
-    if (gbMSComp && 
-        (pexp->nCallingConvention == CC_EXTERN) && 
+    if (gbMSComp &&
+        (pexp->nCallingConvention == CC_EXTERN) &&
         (pexp->strTarget.buf != NULL) &&
         (!!ScanToken(pexp->strTarget.buf, '.')))
     {
@@ -576,6 +576,9 @@ PrintName(FILE *fileDest, EXPORT *pexp, PSTRING pstr, int fDeco)
         ((pexp->nCallingConvention == CC_STDCALL) ||
          (pexp->nCallingConvention == CC_FASTCALL)))
     {
+        /* Beware with C++ exports */
+        int is_cpp = pcName[0] == '?';
+
         /* Scan for a dll forwarding dot */
         pcDot = ScanToken(pcName, '.');
         if (pcDot)
@@ -593,8 +596,8 @@ PrintName(FILE *fileDest, EXPORT *pexp, PSTRING pstr, int fDeco)
         pcAt = ScanToken(pcName, '@');
         if (pcAt && (pcAt < (pcName + nNameLength)))
         {
-            /* On GCC, we need to remove the leading stdcall underscore */
-            if (!gbMSComp && (pexp->nCallingConvention == CC_STDCALL))
+            /* On GCC, we need to remove the leading stdcall underscore, but not for C++ exports */
+            if (!gbMSComp && !is_cpp && (pexp->nCallingConvention == CC_STDCALL))
             {
                 pcName++;
                 nNameLength--;
@@ -712,8 +715,9 @@ OutputLine_def_GCC(FILE *fileDest, EXPORT *pexp)
         bTracing = 1;
     }
 
-    /* Special handling for stdcall and fastcall */
+    /* Special handling for stdcall and fastcall, but not C++ exports*/
     if ((giArch == ARCH_X86) &&
+        (pexp->strName.buf[0] != '?') &&
         ((pexp->nCallingConvention == CC_STDCALL) ||
          (pexp->nCallingConvention == CC_FASTCALL)))
     {
@@ -748,9 +752,9 @@ OutputLine_def(FILE *fileDest, EXPORT *pexp)
         DbgPrint("OutputLine_def: skipping private export '%.*s'...\n", pexp->strName.len, pexp->strName.buf);
         return 1;
     }
-    
+
     /* For MS linker, forwarded externs are managed via #pragma comment(linker,"/export:_data=org.data,DATA") */
-    if (gbMSComp && !gbImportLib && (pexp->nCallingConvention == CC_EXTERN) && 
+    if (gbMSComp && !gbImportLib && (pexp->nCallingConvention == CC_EXTERN) &&
         (pexp->strTarget.buf != NULL) && !!ScanToken(pexp->strTarget.buf, '.'))
     {
         DbgPrint("OutputLine_def: skipping forwarded extern export '%.*s' ->'%.*s'...\n",

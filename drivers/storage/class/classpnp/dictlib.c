@@ -53,7 +53,7 @@ struct _DICTIONARY_HEADER {
 struct _DICTIONARY_HEADER;
 typedef struct _DICTIONARY_HEADER DICTIONARY_HEADER, *PDICTIONARY_HEADER;
 
-
+
 VOID
 InitializeDictionary(
     IN PDICTIONARY Dictionary
@@ -65,7 +65,7 @@ InitializeDictionary(
     return;
 }
 
-
+
 BOOLEAN
 TestDictionarySignature(
     IN PDICTIONARY Dictionary
@@ -152,7 +152,7 @@ AllocateDictionaryEntry(
     return status;
 }
 
-
+
 PVOID
 GetDictionaryEntry(
     IN PDICTIONARY Dictionary,
@@ -184,7 +184,7 @@ GetDictionaryEntry(
     return data;
 }
 
-
+
 VOID
 FreeDictionaryEntry(
     IN PDICTIONARY Dictionary,

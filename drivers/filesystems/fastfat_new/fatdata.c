@@ -161,7 +161,7 @@ NTSTATUS FatBreakOnInterestingIrpCompletion = 0;
 
 #endif
 
-
+
 #if DBG
 ULONG
 FatBugCheckExceptionFilter (
@@ -174,7 +174,7 @@ Routine Description:
 
     An exception filter which acts as an assert that the exception should
     never occur.
-    
+
     This is only valid on debug builds, we don't want the overhead on retail.
 
 Arguments:
@@ -190,7 +190,7 @@ Return Value:
 
 {
     PAGED_CODE();
-    
+
     FatBugCheck( (ULONG_PTR)ExceptionPointer->ExceptionRecord,
                  (ULONG_PTR)ExceptionPointer->ContextRecord,
                  (ULONG_PTR)ExceptionPointer->ExceptionRecord->ExceptionAddress );
@@ -199,7 +199,7 @@ Return Value:
 }
 #endif
 
-
+
 ULONG
 FatExceptionFilter (
     IN PIRP_CONTEXT IrpContext,
@@ -238,7 +238,7 @@ Return Value:
     if( FatBreakOnInterestingExceptionStatus != 0 && ExceptionCode == FatBreakOnInterestingExceptionStatus ) {
         DbgBreakPoint();
     }
-    
+
 #endif
 
     //
@@ -316,8 +316,8 @@ Return Value:
 
     return EXCEPTION_EXECUTE_HANDLER;
 }
-
-_Requires_lock_held_(_Global_critical_region_)    
+
+_Requires_lock_held_(_Global_critical_region_)
 NTSTATUS
 FatProcessException (
     IN PIRP_CONTEXT IrpContext,
@@ -373,7 +373,7 @@ Return Value:
 
     ExceptionCode = IrpContext->ExceptionStatus;
     FatResetExceptionState( IrpContext );
-    
+
     //
     //  If this is an Mdl write request, then take care of the Mdl
     //  here so that things get cleaned up properly.  Cc now leaves
@@ -472,7 +472,7 @@ Return Value:
 
             ExceptionCode = STATUS_FILE_LOCK_CONFLICT;
         }
-        
+
         FatCompleteRequest( IrpContext, Irp, ExceptionCode );
 
         return ExceptionCode;
@@ -511,10 +511,10 @@ Return Value:
             }
 
             //
-            //  It turns out some storage drivers really do set invalid non-NULL device 
+            //  It turns out some storage drivers really do set invalid non-NULL device
             //  objects to verify.
             //
-            //  To work around this, completely ignore the device to verify in the thread, 
+            //  To work around this, completely ignore the device to verify in the thread,
             //  and just use our real device object instead.
             //
 
@@ -527,7 +527,7 @@ Return Value:
                 //
                 // For FSCTLs, IrpContext->Vcb may not be populated, so get the IrpContext->RealDevice instead
                 //
-            
+
                 Device = IrpContext->RealDevice;
             }
 
@@ -597,10 +597,10 @@ Return Value:
             }
 
             //
-            //  It turns out some storage drivers really do set invalid non-NULL device 
+            //  It turns out some storage drivers really do set invalid non-NULL device
             //  objects to verify.
             //
-            //  To work around this, completely ignore the device to verify in the thread, 
+            //  To work around this, completely ignore the device to verify in the thread,
             //  and just use our real device object instead.
             //
 
@@ -613,7 +613,7 @@ Return Value:
                 //
                 // For FSCTLs, IrpContext->Vcb may not be populated, so get the IrpContext->RealDevice instead
                 //
-            
+
                 RealDevice = IrpContext->RealDevice;
             }
 
@@ -706,14 +706,14 @@ Return Value:
             //
 
             FatAcquireExclusiveVcbNoOpCheck( IrpContext, Vcb);
-            
+
             _SEH2_TRY {
 
                 if (VcbGood == Vcb->VcbCondition) {
 
                     FatMarkVolume( IrpContext, Vcb, TransitionState );
                 }
-            } 
+            }
             _SEH2_EXCEPT( FatExceptionFilter( IrpContext, _SEH2_GetExceptionInformation() ) ) {
 
                 NOTHING;
@@ -761,7 +761,7 @@ Return Value:
     if ( (FatBreakOnInterestingIrpCompletion != 0) && (Status == FatBreakOnInterestingIrpCompletion) ) {
         DbgBreakPoint();
     }
-    
+
 #endif
 
     //
@@ -854,7 +854,7 @@ Return Value:
 }
 
 
-_Function_class_(FAST_IO_CHECK_IF_POSSIBLE)
+_Function_class_(FAST_IO_CHECK_IF_POSSIBLE)
 BOOLEAN
 NTAPI
 FatFastIoCheckIfPossible (
@@ -963,7 +963,7 @@ Return Value:
 }
 
 
-_Function_class_(FAST_IO_QUERY_BASIC_INFO)	
+_Function_class_(FAST_IO_QUERY_BASIC_INFO)
 BOOLEAN
 NTAPI
 FatFastQueryBasicInfo (
@@ -1010,7 +1010,7 @@ Return Value:
 
     PAGED_CODE();
     UNREFERENCED_PARAMETER( DeviceObject );
-    
+
     //
     //  Prepare the dummy irp context
     //
@@ -1143,7 +1143,7 @@ Return Value:
 }
 
 
-_Function_class_(FAST_IO_QUERY_STANDARD_INFO)
+_Function_class_(FAST_IO_QUERY_STANDARD_INFO)
 BOOLEAN
 NTAPI
 FatFastQueryStdInfo (
@@ -1191,7 +1191,7 @@ Return Value:
     PAGED_CODE();
 
     UNREFERENCED_PARAMETER( DeviceObject );
-    
+
     //
     //  Prepare the dummy irp context
     //
@@ -1302,7 +1302,7 @@ Return Value:
 
     return Results;
 }
-
+
 
 _Function_class_(FAST_IO_QUERY_NETWORK_OPEN_INFO)
 BOOLEAN
@@ -1350,9 +1350,9 @@ Return Value:
     BOOLEAN FcbAcquired = FALSE;
 
     PAGED_CODE();
-    
+
     UNREFERENCED_PARAMETER( DeviceObject );
-    
+
     //
     //  Prepare the dummy irp context
     //
@@ -1502,8 +1502,8 @@ Return Value:
 
     return Results;
 }
-
-_Requires_lock_held_(_Global_critical_region_)    
+
+_Requires_lock_held_(_Global_critical_region_)
 VOID
 FatPopUpFileCorrupt (
     IN PIRP_CONTEXT IrpContext,

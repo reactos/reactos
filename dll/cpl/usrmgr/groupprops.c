@@ -155,7 +155,7 @@ AddSelectedUsersToGroup(HWND hwndDlg,
     HWND hwndLV;
     INT nSelectedItems;
     INT nItem;
-    TCHAR szUserName[UNLEN];
+    TCHAR szUserName[UNLEN + 1];
     BOOL bResult = FALSE;
     LOCALGROUP_MEMBERS_INFO_3 memberInfo;
     NET_API_STATUS status;
@@ -172,7 +172,7 @@ AddSelectedUsersToGroup(HWND hwndDlg,
             ListView_GetItemText(hwndLV,
                                  nItem, 0,
                                  szUserName,
-                                 UNLEN);
+                                 UNLEN + 1);
 
             DebugPrintf(_TEXT("Selected user: %s"), szUserName);
 
@@ -310,7 +310,7 @@ static VOID
 RemoveUserFromGroup(HWND hwndDlg,
                     PGENERAL_GROUP_DATA pGroupData)
 {
-    TCHAR szUserName[UNLEN];
+    TCHAR szUserName[UNLEN + 1];
     TCHAR szText[256];
     LOCALGROUP_MEMBERS_INFO_3 memberInfo;
     HWND hwndLV;
@@ -326,7 +326,7 @@ RemoveUserFromGroup(HWND hwndDlg,
     ListView_GetItemText(hwndLV,
                          nItem, 0,
                          szUserName,
-                         UNLEN);
+                         UNLEN + 1);
 
     /* Display a warning message because the remove operation cannot be reverted */
     wsprintf(szText, TEXT("Do you really want to remove the user \"%s\" from the group \"%s\"?"),
@@ -612,7 +612,7 @@ GroupProperties(HWND hwndDlg)
 {
     PROPSHEETPAGE psp[1];
     PROPSHEETHEADER psh;
-    TCHAR szGroupName[UNLEN];
+    TCHAR szGroupName[UNLEN + 1];
     INT nItem;
     HWND hwndLV;
 
@@ -625,7 +625,7 @@ GroupProperties(HWND hwndDlg)
     ListView_GetItemText(hwndLV,
                          nItem, 0,
                          szGroupName,
-                         UNLEN);
+                         UNLEN + 1);
 
     ZeroMemory(&psh, sizeof(PROPSHEETHEADER));
     psh.dwSize = sizeof(PROPSHEETHEADER);

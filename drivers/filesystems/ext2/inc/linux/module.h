@@ -765,7 +765,7 @@ static inline int test_clear_buffer_##name(struct buffer_head *bh)	\
 {									\
 	return test_and_clear_bit(BH_##bit, &(bh)->b_state);		\
 }									\
- 
+
 /*
  * Emit the buffer bitops functions.   Note that there are also functions
  * of the form "mark_buffer_foo()".  These are higher-level functions which

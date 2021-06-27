@@ -18,7 +18,7 @@ Revision History:
 #if !defined (___ideuser_h___)
 #define ___ideuser_h___
 
-  
+
 #define PIO_MODE0           (1 << 0)
 #define PIO_MODE1           (1 << 1)
 #define PIO_MODE2           (1 << 2)

@@ -1406,7 +1406,7 @@ Ext2GetReparsePoint (IN PEXT2_IRP_CONTEXT IrpContext)
 
     UNICODE_STRING  UniName;
     OEM_STRING      OemName;
-    
+
     PCHAR           OemNameBuffer = NULL;
     int             OemNameLength = 0, i;
 
@@ -1419,7 +1419,7 @@ Ext2GetReparsePoint (IN PEXT2_IRP_CONTEXT IrpContext)
     Mcb = IrpContext->Fcb->Mcb;
     Irp = IrpContext->Irp;
     IrpSp = IoGetCurrentIrpStackLocation(Irp);
-    
+
     _SEH2_TRY {
 
         if (!Mcb || !IsInodeSymLink(&Mcb->Inode) ||
@@ -1427,7 +1427,7 @@ Ext2GetReparsePoint (IN PEXT2_IRP_CONTEXT IrpContext)
             Status = STATUS_NOT_A_REPARSE_POINT;
             _SEH2_LEAVE;
         }
-        
+
         OutputBuffer  = (PVOID)Irp->AssociatedIrp.SystemBuffer;
         OutputBufferLength = IrpSp->Parameters.FileSystemControl.OutputBufferLength;
 
@@ -1493,11 +1493,11 @@ Ext2GetReparsePoint (IN PEXT2_IRP_CONTEXT IrpContext)
         RtlMoveMemory( (PUCHAR)RDB->SymbolicLinkReparseBuffer.PathBuffer +
                                RDB->SymbolicLinkReparseBuffer.SubstituteNameOffset,
                        UniName.Buffer, UniName.Length);
-        
+
         Status = STATUS_SUCCESS;
 
     } _SEH2_FINALLY {
-        
+
         if (OemNameBuffer) {
             Ext2FreePool(OemNameBuffer, 'NL2E');
         }
@@ -1510,7 +1510,7 @@ Ext2GetReparsePoint (IN PEXT2_IRP_CONTEXT IrpContext)
             }
         }
     } _SEH2_END;
-    
+
     return Status;
 }
 
@@ -1582,7 +1582,7 @@ Ext2SetReparsePoint (IN PEXT2_IRP_CONTEXT IrpContext)
     PEXT2_MCB           Mcb = NULL;
 
     NTSTATUS            Status = STATUS_UNSUCCESSFUL;
-    
+
     PVOID               InputBuffer;
     ULONG               InputBufferLength;
     ULONG               BytesWritten = 0;
@@ -1594,7 +1594,7 @@ Ext2SetReparsePoint (IN PEXT2_IRP_CONTEXT IrpContext)
 
     UNICODE_STRING      UniName;
     OEM_STRING          OemName;
-    
+
     PCHAR               OemNameBuffer = NULL;
     int                 OemNameLength = 0, i;
 
@@ -1641,7 +1641,7 @@ Ext2SetReparsePoint (IN PEXT2_IRP_CONTEXT IrpContext)
             _SEH2_LEAVE;
         }
         MainResourceAcquired = TRUE;
-        
+
         InputBuffer  = Irp->AssociatedIrp.SystemBuffer;
         InputBufferLength = IrpSp->Parameters.FileSystemControl.InputBufferLength;
 
@@ -1717,11 +1717,11 @@ Ext2SetReparsePoint (IN PEXT2_IRP_CONTEXT IrpContext)
         if (MainResourceAcquired) {
             ExReleaseResourceLite(&Fcb->MainResource);
         }
-        
+
         if (OemNameBuffer) {
             Ext2FreePool(OemNameBuffer, 'NL2E');
         }
-        
+
         if (NT_SUCCESS(Status)) {
             Ext2NotifyReportChange(
                 IrpContext,
@@ -1743,7 +1743,7 @@ Ext2SetReparsePoint (IN PEXT2_IRP_CONTEXT IrpContext)
             Ext2ReleaseFcb(ParentDcb);
         }
     } _SEH2_END;
-    
+
     return Status;
 }
 
@@ -1759,7 +1759,7 @@ Ext2TruncateSymlink(
     PUCHAR   data = (PUCHAR)&Mcb->Inode.i_block;
     ULONG    len = (ULONG)Mcb->Inode.i_size;
     LARGE_INTEGER NewSize;
-    
+
     if (len < EXT2_LINKLEN_IN_INODE && !Mcb->Inode.i_blocks) {
 
         RtlZeroMemory(data + Size, EXT2_LINKLEN_IN_INODE - Size);
@@ -1773,7 +1773,7 @@ Ext2TruncateSymlink(
             goto out;
         }
     }
-    
+
 out:
     return status;
 }
@@ -1799,7 +1799,7 @@ Ext2DeleteReparsePoint (IN PEXT2_IRP_CONTEXT IrpContext)
 
     BOOLEAN             FcbLockAcquired = FALSE;
     BOOLEAN             MainResourceAcquired = FALSE;
-    
+
 
     _SEH2_TRY {
 
@@ -1868,7 +1868,7 @@ Ext2DeleteReparsePoint (IN PEXT2_IRP_CONTEXT IrpContext)
         if (MainResourceAcquired) {
             ExReleaseResourceLite(&Fcb->MainResource);
         }
-        
+
         if (NT_SUCCESS(Status)) {
             Ext2NotifyReportChange(
                 IrpContext,
@@ -1878,7 +1878,7 @@ Ext2DeleteReparsePoint (IN PEXT2_IRP_CONTEXT IrpContext)
                 FILE_ACTION_MODIFIED );
 
         }
-        
+
         if (!_SEH2_AbnormalTermination()) {
             if (Status == STATUS_PENDING || Status == STATUS_CANT_WAIT) {
                 Status = Ext2QueueRequest(IrpContext);
@@ -1895,7 +1895,7 @@ Ext2DeleteReparsePoint (IN PEXT2_IRP_CONTEXT IrpContext)
             Ext2ReleaseFcb(Fcb);
         }
     } _SEH2_END;
-    
+
     return Status;
 }
 
@@ -1928,11 +1928,11 @@ Ext2UserFsRequest (IN PEXT2_IRP_CONTEXT IrpContext)
     case FSCTL_GET_REPARSE_POINT:
         Status = Ext2GetReparsePoint(IrpContext);
         break;
-        
+
     case FSCTL_SET_REPARSE_POINT:
         Status = Ext2SetReparsePoint(IrpContext);
         break;
-        
+
     case FSCTL_DELETE_REPARSE_POINT:
         Status = Ext2DeleteReparsePoint(IrpContext);
         break;
@@ -2615,7 +2615,7 @@ Ext2CheckDismount (
     ExAcquireResourceExclusiveLite(
         &Vcb->MainResource, TRUE );
 
-    if (IrpContext && 
+    if (IrpContext &&
         IrpContext->MajorFunction == IRP_MJ_CREATE &&
         IrpContext->RealDevice == Vcb->RealDevice) {
         UnCleanCount = 2;

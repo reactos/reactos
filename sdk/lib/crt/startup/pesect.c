@@ -205,7 +205,7 @@ __mingw_enum_import_library_names (int i)
     return NULL;
 
   pNTHeader = (PIMAGE_NT_HEADERS) (pImageBase + ((PIMAGE_DOS_HEADER) pImageBase)->e_lfanew);
-  
+
   importsStartRVA = pNTHeader->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_IMPORT].VirtualAddress;
   if (!importsStartRVA)
     return NULL;
@@ -217,7 +217,7 @@ __mingw_enum_import_library_names (int i)
   importDesc = (PIMAGE_IMPORT_DESCRIPTOR) (pImageBase + importsStartRVA);
   if (!importDesc)
     return NULL;
-            
+
   for (;;)
     {
       if (importDesc->TimeDateStamp == 0 && importDesc->Name == 0)

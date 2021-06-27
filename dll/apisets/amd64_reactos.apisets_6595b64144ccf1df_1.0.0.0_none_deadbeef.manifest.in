@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<assembly xmlns="urn:schemas-microsoft-com:asm.v1" manifestVersion="1.0">
+  <!-- Generated from %WINE_GIT_VERSION% -->
+  <assemblyIdentity type="win32" name="ReactOS.Apisets" version="1.0.0.0" publicKeyToken="6595b64144ccf1df"/>
+%MANIFEST_FILE_LIST%
+</assembly>

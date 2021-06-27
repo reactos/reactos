@@ -160,7 +160,6 @@ KiInitializePcr(IN PKIPCR Pcr,
     KeSetCurrentIrql(PASSIVE_LEVEL);
 }
 
-CODE_SEG("INIT")
 VOID
 NTAPI
 KiInitializeCpu(PKIPCR Pcr)

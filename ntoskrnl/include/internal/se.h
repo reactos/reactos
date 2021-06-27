@@ -24,6 +24,16 @@ typedef struct _KNOWN_COMPOUND_ACE
     ULONG SidStart;
 } KNOWN_COMPOUND_ACE, *PKNOWN_COMPOUND_ACE;
 
+typedef struct _TOKEN_AUDIT_POLICY_INFORMATION
+{
+    ULONG PolicyCount;
+    struct
+    {
+        ULONG Category;
+        UCHAR Value;
+    } Policies[1];
+} TOKEN_AUDIT_POLICY_INFORMATION, *PTOKEN_AUDIT_POLICY_INFORMATION;
+
 FORCEINLINE
 PSID
 SepGetGroupFromDescriptor(PVOID _Descriptor)
@@ -248,23 +258,35 @@ SepSidInTokenEx(
     IN BOOLEAN Restricted
 );
 
+BOOLEAN
+NTAPI
+SeTokenCanImpersonate(
+    _In_ PTOKEN ProcessToken,
+    _In_ PTOKEN TokenToImpersonate,
+    _In_ SECURITY_IMPERSONATION_LEVEL ImpersonationLevel);
+
 /* Functions */
+CODE_SEG("INIT")
 BOOLEAN
 NTAPI
 SeInitSystem(VOID);
 
+CODE_SEG("INIT")
 VOID
 NTAPI
 SepInitPrivileges(VOID);
 
+CODE_SEG("INIT")
 BOOLEAN
 NTAPI
 SepInitSecurityIDs(VOID);
 
+CODE_SEG("INIT")
 BOOLEAN
 NTAPI
 SepInitDACLs(VOID);
 
+CODE_SEG("INIT")
 BOOLEAN
 NTAPI
 SepInitSDs(VOID);
@@ -331,17 +353,21 @@ SepCreateImpersonationTokenDacl(
     _Out_ PACL* Dacl
 );
 
+CODE_SEG("INIT")
 VOID
 NTAPI
 SepInitializeTokenImplementation(VOID);
 
+CODE_SEG("INIT")
 PTOKEN
 NTAPI
 SepCreateSystemProcessToken(VOID);
 
+CODE_SEG("INIT")
 PTOKEN
 SepCreateSystemAnonymousLogonToken(VOID);
 
+CODE_SEG("INIT")
 PTOKEN
 SepCreateSystemAnonymousLogonTokenNoEveryone(VOID);
 
@@ -572,6 +598,15 @@ SeCopyClientToken(
     IN KPROCESSOR_MODE PreviousMode,
     OUT PACCESS_TOKEN* NewToken
 );
+
+NTSTATUS
+NTAPI
+SepRegQueryHelper(
+    _In_ PCWSTR KeyName,
+    _In_ PCWSTR ValueName,
+    _In_ ULONG ValueType,
+    _In_ ULONG DataLength,
+    _Out_ PVOID ValueData);
 
 VOID NTAPI
 SeQuerySecurityAccessMask(IN SECURITY_INFORMATION SecurityInformation,

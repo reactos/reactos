@@ -36,7 +36,7 @@ ObpProcessDosDeviceSymbolicLink(IN POBJECT_SYMBOLIC_LINK SymbolicLink,
     PVOID Object;
 
     /*
-     * To prevent endless reparsing, setting an upper limit on the 
+     * To prevent endless reparsing, setting an upper limit on the
      * number of reparses.
      */
     MaxReparse = 32;

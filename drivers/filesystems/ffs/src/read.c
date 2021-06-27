@@ -1,4 +1,4 @@
-/* 
+/*
  * FFS File System Driver for Windows
  *
  * read.c
@@ -75,7 +75,7 @@ FFSCompleteIrpContext(
 				Irp, bPrint, (CCHAR)(NT_SUCCESS(Status)?
 					IO_DISK_INCREMENT : IO_NO_INCREMENT));
 
-		IrpContext->Irp = NULL;               
+		IrpContext->Irp = NULL;
 	}
 
 	FFSFreeIrpContext(IrpContext);
@@ -84,7 +84,7 @@ FFSCompleteIrpContext(
 }
 
 
-BOOLEAN 
+BOOLEAN
 FFSCopyRead(
 	IN PFILE_OBJECT       FileObject,
 	IN PLARGE_INTEGER     FileOffset,
@@ -126,7 +126,7 @@ FFSCopyRead(
 			IoStatus->Information = Length;
 			CcUnpinData(Bcb);
 			return TRUE;
-		   
+
 	   }
 	   else
 	   {
@@ -551,16 +551,16 @@ FFSv1ReadInode(
 			IoStatus.Information = 0;
 
 #if DBG
-			KdPrint(("FFSv1ReadInode() i : %d, Lba : %x, Length : %x, Offset : %x\n", 
+			KdPrint(("FFSv1ReadInode() i : %d, Lba : %x, Length : %x, Offset : %x\n",
 				i, ffs_bdl[i].Lba, ffs_bdl[i].Length, ffs_bdl[i].Offset));
 #endif
 
 			FFSCopyRead(
-					Vcb->StreamObj, 
-					(PLARGE_INTEGER)(&(ffs_bdl[i].Lba)), 
+					Vcb->StreamObj,
+					(PLARGE_INTEGER)(&(ffs_bdl[i].Lba)),
 					ffs_bdl[i].Length,
 					PIN_WAIT,
-					(PVOID)((PUCHAR)Buffer + ffs_bdl[i].Offset), 
+					(PVOID)((PUCHAR)Buffer + ffs_bdl[i].Offset),
 					&IoStatus);
 
 			Status = IoStatus.Status;
@@ -640,16 +640,16 @@ FFSv2ReadInode(
 			IoStatus.Information = 0;
 
 #if 0
-			KdPrint(("FFSv2ReadInode() i : %d, Lba : %x, Length : %x, Offset : %x\n", 
+			KdPrint(("FFSv2ReadInode() i : %d, Lba : %x, Length : %x, Offset : %x\n",
 				i, ffs_bdl[i].Lba, ffs_bdl[i].Length, ffs_bdl[i].Offset));
 #endif
 
 			FFSCopyRead(
-					Vcb->StreamObj, 
-					(PLARGE_INTEGER)(&(ffs_bdl[i].Lba)), 
+					Vcb->StreamObj,
+					(PLARGE_INTEGER)(&(ffs_bdl[i].Lba)),
 					ffs_bdl[i].Length,
 					PIN_WAIT,
-					(PVOID)((PUCHAR)Buffer + ffs_bdl[i].Offset), 
+					(PVOID)((PUCHAR)Buffer + ffs_bdl[i].Offset),
 					&IoStatus);
 
 			Status = IoStatus.Status;
@@ -927,7 +927,7 @@ FFSReadFile(
 
 			if (FS_VERSION == 1)
 			{
-				Status = 
+				Status =
 					FFSv1ReadInode(
 							IrpContext,
 							Vcb,
@@ -939,7 +939,7 @@ FFSReadFile(
 			}
 			else
 			{
-				Status = 
+				Status =
 					FFSv2ReadInode(
 							IrpContext,
 							Vcb,

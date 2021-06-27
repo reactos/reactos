@@ -58,7 +58,7 @@ NtfsIsIrpTopLevel(PIRP Irp)
 /*
  * FUNCTION: Allocate and fill an NTFS_IRP_CONTEXT struct in order to use it for IRP
  * ARGUMENTS:
- *           DeviceObject = Used to fill in struct 
+ *           DeviceObject = Used to fill in struct
  *           Irp = The IRP that need IRP_CONTEXT struct
  * RETURNS: NULL or PNTFS_IRP_CONTEXT
  */
@@ -147,10 +147,10 @@ NtfsGetUserBuffer(PIRP Irp,
 * IoReadAccess, IoWriteAccess, or IoModifyAccess.
 *
 * @return
-* STATUS_SUCCESS in case of success, STATUS_INSUFFICIENT_RESOURCES 
+* STATUS_SUCCESS in case of success, STATUS_INSUFFICIENT_RESOURCES
 * or an exception code otherwise.
 *
-* @remarks Trevor Thompson shamelessly ripped this from 
+* @remarks Trevor Thompson shamelessly ripped this from
 * VfatLockUserBuffer(). Only the name was changed.
 *
 */

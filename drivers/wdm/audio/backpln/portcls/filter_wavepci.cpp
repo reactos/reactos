@@ -102,7 +102,7 @@ CPortFilterWavePci::NewIrpTarget(
         return STATUS_UNSUCCESSFUL;
     }
 
-    if (m_Pins[ConnectDetails->PinId] && 
+    if (m_Pins[ConnectDetails->PinId] &&
         (m_Descriptor->Factory.Instances[ConnectDetails->PinId].CurrentPinInstanceCount == m_Descriptor->Factory.Instances[ConnectDetails->PinId].MaxFilterInstanceCount))
     {
         // no available instance
@@ -151,7 +151,7 @@ CPortFilterWavePci::DeviceIoControl(
     if (IoStack->Parameters.DeviceIoControl.IoControlCode != IOCTL_KS_PROPERTY)
     {
         DPRINT("Unhandled function %lx Length %x\n", IoStack->Parameters.DeviceIoControl.IoControlCode, IoStack->Parameters.DeviceIoControl.InputBufferLength);
-        
+
         Irp->IoStatus.Status = STATUS_SUCCESS;
 
         IoCompleteRequest(Irp, IO_NO_INCREMENT);
@@ -332,7 +332,7 @@ CPortFilterWavePci::FreePin(
 }
 
 
-NTSTATUS 
+NTSTATUS
 NewPortFilterWavePci(
     OUT IPortFilterWavePci ** OutFilter)
 {

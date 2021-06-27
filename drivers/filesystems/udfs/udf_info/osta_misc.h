@@ -20,7 +20,7 @@
 #define UDF_ID_DEVELOPER    ("*WINNT " VER_STR_PRODUCT_NAME " UDF")
 
 #define UDF_ID_DEVELOPER_ADAPTEC  "*Adaptec DirectCD"
- 
+
 /* UDF 1.02 2.2.6.4 */
 struct LogicalVolIntegrityDescImpUse
 {
@@ -98,7 +98,7 @@ typedef struct _SPARABLE_PARTITION_MAP
 #ifndef PACKETSIZE_UDF
 #define PACKETSIZE_UDF              32
 #endif //PACKETSIZE_UDF
- 
+
 /* UDF 2.5 */
 typedef struct _METADATA_PARTITION_MAP
 {
@@ -149,8 +149,8 @@ struct FidADImpUse
 #define UDF_EXTENT_FLAG_MASK        0xc0000000
 #define UDF_EXTENT_FLAG_ERASED      0x40000000
 
-/* 
- * Important!  VirtualAllocationTables are 
+/*
+ * Important!  VirtualAllocationTables are
  * very different between 1.5 and 2.0!
  */
 
@@ -163,7 +163,7 @@ struct VirtualAllocationTable15 {
 /*  uint32 VirtualSector[0];*/
     EntityID    ident;
     uint32  previousVATICB;
-   };  
+   };
 /* where number of VirtualSector's is (VATSize-36)/4 */
 
 /* ----------- 2.0 ------------- */

@@ -2,6 +2,8 @@
 #include "precomp.h"
 #include <versionhelpers.h>
 
+#include <pseh/pseh2.h>
+
 static BOOL IsBroken = FALSE;
 
 void

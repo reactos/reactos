@@ -139,7 +139,7 @@ VOID NBTimeout(VOID)
                 if (NCE->EventTimer - NCE->EventCount == 0) {
                     /* Unlink and destroy the NCE */
                     *PrevNCE = NCE->Next;
-                    
+
                     /* Choose the proper failure status */
                     if (NCE->State & NUD_INCOMPLETE)
                     {
@@ -151,7 +151,7 @@ VOID NBTimeout(VOID)
                         /* This guy was stale for way too long */
                         Status = NDIS_STATUS_REQUEST_ABORTED;
                     }
-                    
+
                     NBFlushPacketQueue(NCE, Status);
 
                     ExFreePoolWithTag(NCE, NCE_TAG);
@@ -245,7 +245,7 @@ VOID NBDestroyNeighborsForInterface(PIP_INTERFACE Interface)
     for (i = 0; i <= NB_HASHMASK; i++)
     {
         TcpipAcquireSpinLockAtDpcLevel(&NeighborCache[i].Lock);
-        
+
         for (PrevNCE = &NeighborCache[i].Cache;
              (NCE = *PrevNCE) != NULL;)
         {
@@ -264,7 +264,7 @@ VOID NBDestroyNeighborsForInterface(PIP_INTERFACE Interface)
                 PrevNCE = &NCE->Next;
             }
         }
-        
+
         TcpipReleaseSpinLockFromDpcLevel(&NeighborCache[i].Lock);
     }
     KeLowerIrql(OldIrql);
@@ -466,10 +466,10 @@ PNEIGHBOR_CACHE_ENTRY NBLocateNeighbor(
          {
              break;
          }
- 
+
          NCE = NCE->Next;
       }
-      
+
       if (NCE != NULL)
           break;
   }
@@ -651,7 +651,7 @@ ULONG NBCopyNeighbors
 		  ArpTable[Size].Index = Interface->Index;
 		  ArpTable[Size].AddrSize = CurNCE->LinkAddressLength;
 		  RtlCopyMemory
-		      (ArpTable[Size].PhysAddr, 
+		      (ArpTable[Size].PhysAddr,
 		       CurNCE->LinkAddress,
 		       CurNCE->LinkAddressLength);
 		  ArpTable[Size].LogAddr = CurNCE->Address.Address.IPv4Address;
@@ -667,6 +667,6 @@ ULONG NBCopyNeighbors
       }
       TcpipReleaseSpinLock(&NeighborCache[i].Lock, OldIrql);
   }
-  
+
   return Size;
 }

@@ -84,7 +84,7 @@ UDFEjectReqWaiter(
                     continue;
                 ((PGET_EVENT_USER_IN)(&(WC->EjectReqBuffer)))->Immed = TRUE;
                 ((PGET_EVENT_USER_IN)(&(WC->EjectReqBuffer)))->EventClass = evt_type;
-                
+
                 RC = UDFPhSendIOCTL( IOCTL_CDRW_GET_EVENT,
                                      TargetDevObj,
                                      &(WC->EjectReqBuffer),sizeof(GET_EVENT_USER_IN),
@@ -222,7 +222,7 @@ wait_eject:
                      (Error->AdditionalSenseCodeQualifier == SCSI_SENSEQ_LONG_WRITE_IN_PROGRESS ||
                       Error->AdditionalSenseCodeQualifier == SCSI_SENSEQ_FORMAT_IN_PROGRESS)) ) {
                     if((!Vcb->Modified &&
-                        !(Vcb->VCBFlags & UDF_VCB_LAST_WRITE)) 
+                        !(Vcb->VCBFlags & UDF_VCB_LAST_WRITE))
                                 ||
                        (Vcb->VCBFlags & UDF_VCB_FLAGS_UNSAFE_IOCTL)) {
                           // we should forget about this disk...
@@ -481,14 +481,14 @@ skip_BM_flush2:
                         if( !(supported_evt_classes & evt_type) )
                             continue;
 /*
-                        if( evt_type == EventStat_Class_Media ) 
+                        if( evt_type == EventStat_Class_Media )
                             continue;
                         if( evt_type == EventStat_Class_ExternalReq )
                             continue;
 */
                         ((PGET_EVENT_USER_IN)(&(WC->EjectReqBuffer)))->Immed = TRUE;
                         ((PGET_EVENT_USER_IN)(&(WC->EjectReqBuffer)))->EventClass = evt_type;
-                        
+
                         RC = UDFTSendIOCTL( IOCTL_CDRW_GET_EVENT,
                                              Vcb,
                                              &(WC->EjectReqBuffer),sizeof(GET_EVENT_USER_IN),
@@ -575,7 +575,7 @@ media_loss:
                     UDFPrint(("    Reading Media Event...\n"));
                     ((PGET_EVENT_USER_IN)(&(WC->EjectReqBuffer)))->Immed = TRUE;
                     ((PGET_EVENT_USER_IN)(&(WC->EjectReqBuffer)))->EventClass = EventStat_Class_Media;
-                
+
                     RC = UDFTSendIOCTL( IOCTL_CDRW_GET_EVENT,
                                          Vcb,
                                          &(WC->EjectReqBuffer),sizeof(GET_EVENT_USER_IN),
@@ -587,7 +587,7 @@ media_loss:
                             goto device_failure;
                         ((PGET_EVENT_USER_IN)(&(WC->EjectReqBuffer)))->Immed = TRUE;
                         ((PGET_EVENT_USER_IN)(&(WC->EjectReqBuffer)))->EventClass = EventStat_Class_ExternalReq;
-                
+
                         RC = UDFTSendIOCTL( IOCTL_CDRW_GET_EVENT,
                                              Vcb,
                                              &(WC->EjectReqBuffer),sizeof(GET_EVENT_USER_IN),
@@ -647,15 +647,15 @@ device_failure:
 
             UDFPrint(("    UDFEjectReqWaiter: exit 1\n"));
             return;
-    
+
 try_exit:   NOTHING;
         } _SEH2_FINALLY {
-    
+
             if(VcbAcquired) {
                 VcbAcquired = FALSE;
                 UDFReleaseResource(&(Vcb->VCBResource));
             }
-            
+
 /*            if(WC) {
                 delay.QuadPart = -10000000; // 1.0 sec
                 WRC = KeWaitForSingleObject(&(Vcb->WaiterStopped), Executive, KernelMode, FALSE, &delay);

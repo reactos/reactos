@@ -100,11 +100,6 @@ add_library(mshtml MODULE
     rsrc.rc
     ${CMAKE_CURRENT_BINARY_DIR}/mshtml.def)
 
-if(MSVC)
-    # error C4028: formal parameter 3 different from declaration
-    remove_target_compile_option(mshtml "/we4028")
-endif()
-
 list(APPEND mshtml_rc_deps
     ${CMAKE_CURRENT_SOURCE_DIR}/blank.htm
     ${CMAKE_CURRENT_SOURCE_DIR}/mshtml.inf

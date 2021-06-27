@@ -254,6 +254,9 @@ Author:
 #define CR0_CD                                  HEX(40000000)
 #define CR0_PG                                  HEX(80000000)
 
+/* Number of bytes reserved for syscall parameters */
+#define MAX_SYSCALL_PARAM_SIZE (16 * 8)
+
 #ifdef _ASM_
 //
 // CR4

@@ -8,7 +8,7 @@
 namespace ATL
 {
 
-//__interface __declspec(uuid("654F7EF5-CFDF-4df9-A450-6C6A13C622C0")) 
+//__interface __declspec(uuid("654F7EF5-CFDF-4df9-A450-6C6A13C622C0"))
 class IAtlMemMgr
 {
 public:

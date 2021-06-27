@@ -24,6 +24,8 @@
 #include <shlguid.h>
 #include <shobjidl.h>
 
+#include <pseh/pseh2.h>
+
 #include "wine/test.h"
 
 #include "apphelp_apitest.h"
@@ -299,7 +301,7 @@ static struct
             "PROBLEMSEVERITY", "LANGID", "VER_LANGUAGE", "InvalidTag", "ENGINE", "HTMLHELPID", "INDEX_FLAGS", "FLAGS",
             "DATA_VALUETYPE", "DATA_DWORD", "LAYER_TAGID", "MSI_TRANSFORM_TAGID", "LINKER_VERSION", "LINK_DATE", "UPTO_LINK_DATE", "OS_SERVICE_PACK",
             "FLAG_TAGID", "RUNTIME_PLATFORM", "OS_SKU", "OS_PLATFORM", "APP_NAME_RC_ID", "VENDOR_NAME_RC_ID", "SUMMARY_MSG_RC_ID", "VISTA_SKU",
-            "DESCRIPTION_RC_ID", "PARAMETER1_RC_ID", "InvalidTag", "InvalidTag", "InvalidTag", "InvalidTag", "InvalidTag", "InvalidTag", 
+            "DESCRIPTION_RC_ID", "PARAMETER1_RC_ID", "InvalidTag", "InvalidTag", "InvalidTag", "InvalidTag", "InvalidTag", "InvalidTag",
             "CONTEXT_TAGID", "EXE_WRAPPER", "URL_ID", NULL
         }
     },

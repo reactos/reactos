@@ -14,7 +14,7 @@
 
 BOOLEAN CmpGlobalQuota;
 BOOLEAN CmpGlobalQuotaAllowed;
- 
+
 /* FUNCTIONS *****************************************************************/
 
 VOID

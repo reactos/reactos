@@ -97,7 +97,7 @@ bool ext2_allocate_group_table(PEXT2_FILESYS fs, ULONG group,
 
     group_blk = fs->ext2_sb->s_first_data_block +
         (group * fs->ext2_sb->s_blocks_per_group);
-    
+
     last_blk = group_blk + fs->ext2_sb->s_blocks_per_group;
     if (last_blk >= fs->ext2_sb->s_blocks_count)
         last_blk = fs->ext2_sb->s_blocks_count - 1;
@@ -108,7 +108,7 @@ bool ext2_allocate_group_table(PEXT2_FILESYS fs, ULONG group,
 
     if (!bmap)
         bmap = fs->block_map;
-    
+
     /*
      * Allocate the inode table
      */
@@ -150,7 +150,7 @@ bool ext2_allocate_group_table(PEXT2_FILESYS fs, ULONG group,
         retval = ext2_get_free_blocks(fs, start_blk, last_blk,
                         1, bmap, &new_blk);
 
-        if (!retval) 
+        if (!retval)
             retval = ext2_get_free_blocks(fs, group_blk,
                     last_blk, 1, bmap, &new_blk);
 
@@ -165,7 +165,7 @@ bool ext2_allocate_group_table(PEXT2_FILESYS fs, ULONG group,
     {
         retval = ext2_get_free_blocks(fs, start_blk, last_blk,
                         1, bmap, &new_blk);
-        if (!retval) 
+        if (!retval)
             retval = ext2_get_free_blocks(fs, group_blk,
                     last_blk, 1, bmap, &new_blk);
         if (!retval)
@@ -321,7 +321,7 @@ bool ext2_alloc_block(PEXT2_FILESYS fs, ULONG goal, ULONG *ret)
     {
         goto fail;
     }
-    
+
     ext2_block_alloc_stats(fs, block, +1);
     *ret = block;
 

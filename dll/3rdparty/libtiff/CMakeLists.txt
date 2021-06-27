@@ -67,6 +67,8 @@ if(MSVC)
     remove_target_compile_option(libtiff "/we4311")
     # error C4312: 'type cast': conversion from 'int' to 'thandle_t' of greater size
     remove_target_compile_option(libtiff "/we4312")
-else()
-    target_compile_options(libtiff PRIVATE "-Wno-unused-but-set-variable")
+endif()
+
+if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
+    target_compile_options(libtiff PRIVATE -Wno-unused-but-set-variable)
 endif()

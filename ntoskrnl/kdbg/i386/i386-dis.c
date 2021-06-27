@@ -2032,7 +2032,7 @@ static int two_source_ops;
 static bfd_vma op_address[3];
 static bfd_vma op_riprel[3];
 static bfd_vma start_pc;
-
+
 /*
  *   On the 386's of 1988, the maximum length of an instruction is 15 bytes.
  *   (see topic "Redundant prefixes" in the "Differences from 8086"

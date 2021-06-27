@@ -120,7 +120,7 @@ EngLockDriverObj(
     pedo = DRIVEROBJ_TryLockObject(hdo);
 
     /* Return pointer to the DRIVEROBJ structure */
-    return &pedo->drvobj;
+    return pedo ? &pedo->drvobj : NULL;
 }
 
 

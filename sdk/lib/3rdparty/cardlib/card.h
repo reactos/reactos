@@ -9,7 +9,7 @@
 #define _CARD_INCLUDED
 
 enum eSuit  { Clubs = 0, Diamonds = 1, Hearts = 2, Spades = 3 };
-enum eValue { Ace = 1, Two = 2, Three = 3, Four = 4, Five = 5, Six = 6, Seven = 7, 
+enum eValue { Ace = 1, Two = 2, Three = 3, Four = 4, Five = 5, Six = 6, Seven = 7,
               Eight = 8, Nine = 9, Ten = 10, Jack = 11, Queen = 12, King = 13 };
 
 inline int MAKE_CARD(int Value, int Suit)
@@ -30,40 +30,40 @@ class Card
 
 public:
 
-	Card() 
-	{ 
+	Card()
+	{
 		nValue = 0;		//ace of spades by default
-		fFaceUp = true; 
+		fFaceUp = true;
 	}
-	
+
 	Card(int value, int suit)	//specify a face value [1-13] and suit [0-3]
-	{ 
+	{
 		nValue = MAKE_CARD(value, suit);
-		fFaceUp = true; 
+		fFaceUp = true;
 	}
-	
+
 	Card(int index)				//specify a 0-51 index
-	{ 
+	{
 		if(index < 0)  index = 0;
 		if(index > 51) index = 51;
 
-		nValue = index; 
+		nValue = index;
 		fFaceUp = true;
 	}
-	
+
 	int Suit() const
-	{ 
-		return (nValue % 4); 
+	{
+		return (nValue % 4);
 	}
 
 	int LoVal() const
-	{ 
-		return (nValue / 4) + 1; 
+	{
+		return (nValue / 4) + 1;
 	}
 
 	int HiVal() const
-	{ 
-		return ((nValue < 4) ? 14 : (nValue / 4) + 1); 
+	{
+		return ((nValue < 4) ? 14 : (nValue / 4) + 1);
 	}
 
 	int Idx() const //unique value (0-51 etc)
@@ -75,7 +75,7 @@ public:
 	{
 		return fFaceUp;
 	}
-	
+
 	bool FaceDown() const
 	{
 		return !fFaceUp;

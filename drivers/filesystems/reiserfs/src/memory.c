@@ -2,10 +2,10 @@
  * COPYRIGHT:        GNU GENERAL PUBLIC LICENSE VERSION 2
  * PROJECT:          ReiserFs file system driver for Windows NT/2000/XP/Vista.
  * FILE:             memory.c
- * PURPOSE:          
+ * PURPOSE:
  * PROGRAMMER:       Mark Piper, Matt Wu, Bo Brantén.
- * HOMEPAGE:         
- * UPDATE HISTORY: 
+ * HOMEPAGE:
+ * UPDATE HISTORY:
  */
 
 /* INCLUDES *****************************************************************/
@@ -55,9 +55,9 @@ RfsdAllocateIrpContext (IN PDEVICE_OBJECT   DeviceObject,
 
     ASSERT(DeviceObject != NULL);
     ASSERT(Irp != NULL);
-    
+
     IoStackLocation = IoGetCurrentIrpStackLocation(Irp);
-    
+
     ExAcquireResourceExclusiveLite(
             &RfsdGlobal->LAResource,
             TRUE );
@@ -92,28 +92,28 @@ RfsdAllocateIrpContext (IN PDEVICE_OBJECT   DeviceObject,
 
         RtlZeroMemory(IrpContext, sizeof(RFSD_IRP_CONTEXT) );
     }
-    
+
     if (!IrpContext) {
         return NULL;
     }
-    
+
     IrpContext->Identifier.Type = RFSDICX;
     IrpContext->Identifier.Size = sizeof(RFSD_IRP_CONTEXT);
-    
+
     IrpContext->Irp = Irp;
-    
+
     IrpContext->MajorFunction = IoStackLocation->MajorFunction;
     IrpContext->MinorFunction = IoStackLocation->MinorFunction;
-    
+
     IrpContext->DeviceObject = DeviceObject;
-    
+
     IrpContext->FileObject = IoStackLocation->FileObject;
 
     if (IrpContext->FileObject != NULL) {
         IrpContext->RealDevice = IrpContext->FileObject->DeviceObject;
     } else if (IrpContext->MajorFunction == IRP_MJ_FILE_SYSTEM_CONTROL) {
         if (IoStackLocation->Parameters.MountVolume.Vpb) {
-            IrpContext->RealDevice = 
+            IrpContext->RealDevice =
                 IoStackLocation->Parameters.MountVolume.Vpb->RealDevice;
         }
     }
@@ -139,7 +139,7 @@ RfsdAllocateIrpContext (IN PDEVICE_OBJECT   DeviceObject,
         IrpContext->IsSynchronous = IoIsOperationSynchronous(Irp);
     }
 
-#if 0    
+#if 0
     //
     // Temporary workaround for a bug in close that makes it reference a
     // fileobject when it is no longer valid.
@@ -148,11 +148,11 @@ RfsdAllocateIrpContext (IN PDEVICE_OBJECT   DeviceObject,
         IrpContext->IsSynchronous = TRUE;
     }
 #endif
-    
+
     IrpContext->IsTopLevel = (IoGetTopLevelIrp() == Irp);
-    
+
     IrpContext->ExceptionInProgress = FALSE;
-    
+
     return IrpContext;
 }
 
@@ -163,7 +163,7 @@ RfsdCompleteIrpContext (
 {
     PIRP    Irp = NULL;
     BOOLEAN bPrint;
-    
+
     Irp = IrpContext->Irp;
 
     if (Irp != NULL) {
@@ -171,7 +171,7 @@ RfsdCompleteIrpContext (
         if (NT_ERROR(Status)) {
             Irp->IoStatus.Information = 0;
         }
-    
+
         Irp->IoStatus.Status = Status;
         bPrint = !IsFlagOn(IrpContext->Flags, IRP_CONTEXT_FLAG_REQUEUED);
 
@@ -179,7 +179,7 @@ RfsdCompleteIrpContext (
             Irp, bPrint, (CCHAR)(NT_SUCCESS(Status)?
             IO_DISK_INCREMENT : IO_NO_INCREMENT) );
 
-        IrpContext->Irp = NULL;               
+        IrpContext->Irp = NULL;
     }
 
     RfsdFreeIrpContext(IrpContext);
@@ -194,7 +194,7 @@ RfsdFreeIrpContext (IN PRFSD_IRP_CONTEXT IrpContext)
     PAGED_CODE();
 
     ASSERT(IrpContext != NULL);
-    
+
     ASSERT((IrpContext->Identifier.Type == RFSDICX) &&
         (IrpContext->Identifier.Size == sizeof(RFSD_IRP_CONTEXT)));
 
@@ -346,7 +346,7 @@ RfsdUnpinRepinnedBcbs (
             }
         }
 
-        if (Repinned != &IrpContext->Repinned) 
+        if (Repinned != &IrpContext->Repinned)
 {
             PRFSD_REPINNED_BCBS Saved;
 
@@ -412,7 +412,7 @@ RfsdAllocateFcb (IN PRFSD_VCB   Vcb,
     if (!Fcb) {
         return NULL;
     }
-    
+
     Fcb->Identifier.Type = RFSDFCB;
     Fcb->Identifier.Size = sizeof(RFSD_FCB);
 
@@ -420,18 +420,18 @@ RfsdAllocateFcb (IN PRFSD_VCB   Vcb,
         &Fcb->FileLockAnchor,
         NULL,
         NULL );
-    
+
     Fcb->OpenHandleCount = 0;
     Fcb->ReferenceCount = 0;
-    
+
     Fcb->Vcb = Vcb;
 
-#if DBG    
+#if DBG
 
     Fcb->AnsiFileName.MaximumLength = (USHORT)
         RfsdUnicodeToOEMSize(&(RfsdMcb->ShortName)) + 1;
 
-    Fcb->AnsiFileName.Buffer = (PUCHAR) 
+    Fcb->AnsiFileName.Buffer = (PUCHAR)
         ExAllocatePoolWithTag(PagedPool, Fcb->AnsiFileName.MaximumLength, RFSD_POOL_TAG);
 
     if (!Fcb->AnsiFileName.Buffer) {
@@ -446,23 +446,23 @@ RfsdAllocateFcb (IN PRFSD_VCB   Vcb,
 #endif
 
     RfsdMcb->FileAttr = FILE_ATTRIBUTE_NORMAL;
-    
+
     if (S_ISDIR(Inode->i_mode)) {
         SetFlag(RfsdMcb->FileAttr, FILE_ATTRIBUTE_DIRECTORY);
     }
 
-    if ( IsFlagOn(Vcb->Flags, VCB_READ_ONLY) || 
+    if ( IsFlagOn(Vcb->Flags, VCB_READ_ONLY) ||
          RfsdIsReadOnly(Inode->i_mode)) {
         SetFlag(RfsdMcb->FileAttr, FILE_ATTRIBUTE_READONLY);
     }
-    
+
     Fcb->Inode = Inode;
 
     Fcb->RfsdMcb = RfsdMcb;
     RfsdMcb->RfsdFcb = Fcb;
-    
+
     RtlZeroMemory(&Fcb->Header, sizeof(FSRTL_COMMON_FCB_HEADER));
-    
+
     Fcb->Header.NodeTypeCode = (USHORT) RFSDFCB;
     Fcb->Header.NodeByteSize = sizeof(RFSD_FCB);
     Fcb->Header.IsFastIoPossible = FastIoIsNotPossible;
@@ -472,13 +472,13 @@ RfsdAllocateFcb (IN PRFSD_VCB   Vcb,
     // NOTE: In EXT2, the low part was stored in i_size (a 32-bit value); the high part would be stored in the acl field...
 	// However, on ReiserFS, the i_size is a 64-bit value.
 	Fcb->Header.FileSize.QuadPart = Fcb->Inode->i_size;
-    
 
-    Fcb->Header.AllocationSize.QuadPart = 
+
+    Fcb->Header.AllocationSize.QuadPart =
         CEILING_ALIGNED(Fcb->Header.FileSize.QuadPart, (ULONGLONG)Vcb->BlockSize);
 
 	Fcb->Header.ValidDataLength.QuadPart = (LONGLONG)(0x7fffffffffffffff);
-    
+
     Fcb->SectionObject.DataSectionObject = NULL;
     Fcb->SectionObject.SharedCacheMap = NULL;
     Fcb->SectionObject.ImageSectionObject = NULL;
@@ -500,7 +500,7 @@ RfsdAllocateFcb (IN PRFSD_VCB   Vcb,
         &RfsdGlobal->CountResource,
         ExGetCurrentResourceThread() );
 #endif
-    
+
     return Fcb;
 
 #if DBG
@@ -513,11 +513,11 @@ errorout:
         if (Fcb->AnsiFileName.Buffer)
             ExFreePool(Fcb->AnsiFileName.Buffer);
 #endif
-        
+
         if (FlagOn(Fcb->Flags, FCB_FROM_POOL)) {
-            
+
             ExFreePool( Fcb );
-            
+
         } else {
 
             ExAcquireResourceExclusiveLite(
@@ -530,7 +530,7 @@ errorout:
                     &RfsdGlobal->LAResource,
                     ExGetCurrentResourceThread() );
         }
-        
+
     }
 
     return NULL;
@@ -545,7 +545,7 @@ RfsdFreeFcb (IN PRFSD_FCB Fcb)
     PAGED_CODE();
 
     ASSERT(Fcb != NULL);
-    
+
     ASSERT((Fcb->Identifier.Type == RFSDFCB) &&
         (Fcb->Identifier.Size == sizeof(RFSD_FCB)));
 
@@ -554,9 +554,9 @@ RfsdFreeFcb (IN PRFSD_FCB Fcb)
     FsRtlUninitializeFileLock(&Fcb->FileLockAnchor);
 
     ExDeleteResourceLite(&Fcb->MainResource);
-    
+
     ExDeleteResourceLite(&Fcb->PagingIoResource);
-    
+
     Fcb->RfsdMcb->RfsdFcb = NULL;
 
     if(IsFlagOn(Fcb->Flags, FCB_FILE_DELETED)) {
@@ -571,7 +571,7 @@ RfsdFreeFcb (IN PRFSD_FCB Fcb)
         Fcb->LongName.Buffer = NULL;
     }
 
-#if DBG    
+#if DBG
     ExFreePool(Fcb->AnsiFileName.Buffer);
 #endif
 
@@ -629,7 +629,7 @@ RfsdAllocateCcb (VOID)
     ExReleaseResourceForThreadLite(
             &RfsdGlobal->LAResource,
             ExGetCurrentResourceThread() );
-    
+
     if (Ccb == NULL) {
         Ccb = (PRFSD_CCB) ExAllocatePoolWithTag(NonPagedPool, sizeof(RFSD_CCB), RFSD_POOL_TAG);
 
@@ -643,16 +643,16 @@ RfsdAllocateCcb (VOID)
     if (!Ccb) {
         return NULL;
     }
-    
+
     Ccb->Identifier.Type = RFSDCCB;
     Ccb->Identifier.Size = sizeof(RFSD_CCB);
-    
+
     Ccb->CurrentByteOffset = 0;
-    
+
     Ccb->DirectorySearchPattern.Length = 0;
     Ccb->DirectorySearchPattern.MaximumLength = 0;
     Ccb->DirectorySearchPattern.Buffer = 0;
-    
+
     return Ccb;
 }
 
@@ -663,10 +663,10 @@ RfsdFreeCcb (IN PRFSD_CCB Ccb)
     PAGED_CODE();
 
     ASSERT(Ccb != NULL);
-    
+
     ASSERT((Ccb->Identifier.Type == RFSDCCB) &&
         (Ccb->Identifier.Size == sizeof(RFSD_CCB)));
-    
+
     if (Ccb->DirectorySearchPattern.Buffer != NULL) {
         ExFreePool(Ccb->DirectorySearchPattern.Buffer);
     }
@@ -702,12 +702,12 @@ RfsdAllocateMcb (PRFSD_VCB Vcb, PUNICODE_STRING FileName, ULONG FileAttr)
 #define MCB_NUM_SHIFT   0x04
 
     if (RfsdGlobal->McbAllocated > (RfsdGlobal->MaxDepth <<  MCB_NUM_SHIFT))
-        Extra = RfsdGlobal->McbAllocated - 
+        Extra = RfsdGlobal->McbAllocated -
                 (RfsdGlobal->MaxDepth << MCB_NUM_SHIFT) +
                 RfsdGlobal->MaxDepth;
 
     RfsdPrint((DBG_INFO,
-            "RfsdAllocateMcb: CurrDepth=%xh/%xh/%xh FileName=%S\n", 
+            "RfsdAllocateMcb: CurrDepth=%xh/%xh/%xh FileName=%S\n",
             RfsdGlobal->McbAllocated,
             RfsdGlobal->MaxDepth << MCB_NUM_SHIFT,
             RfsdGlobal->FcbAllocated,
@@ -738,21 +738,21 @@ RfsdAllocateMcb (PRFSD_VCB Vcb, PUNICODE_STRING FileName, ULONG FileAttr)
 
     Mcb = (PRFSD_MCB) (ExAllocateFromPagedLookasideList(
                          &(RfsdGlobal->RfsdMcbLookasideList)));
-  
+
     ExReleaseResourceForThreadLite(
             &RfsdGlobal->LAResource,
             ExGetCurrentResourceThread() );
-    
+
     if (Mcb == NULL) {
         Mcb = (PRFSD_MCB) ExAllocatePoolWithTag(PagedPool, sizeof(RFSD_MCB), RFSD_POOL_TAG);
-        
+
         RtlZeroMemory(Mcb, sizeof(RFSD_MCB));
-        
+
         SetFlag(Mcb->Flags, MCB_FROM_POOL);
     } else {
         RtlZeroMemory(Mcb, sizeof(RFSD_MCB));
     }
-    
+
     if (!Mcb) {
         return NULL;
     }
@@ -772,7 +772,7 @@ RfsdAllocateMcb (PRFSD_VCB Vcb, PUNICODE_STRING FileName, ULONG FileAttr)
 
         RtlZeroMemory(Mcb->ShortName.Buffer, Mcb->ShortName.MaximumLength);
         RtlCopyMemory(Mcb->ShortName.Buffer, FileName->Buffer, Mcb->ShortName.Length);
-    } 
+    }
 
     Mcb->FileAttr = FileAttr;
 
@@ -825,7 +825,7 @@ RfsdFreeMcb (IN PRFSD_MCB Mcb)
 #endif
 
     ASSERT(Mcb != NULL);
-    
+
     ASSERT((Mcb->Identifier.Type == RFSDMCB) &&
         (Mcb->Identifier.Size == sizeof(RFSD_MCB)));
 
@@ -833,7 +833,7 @@ RfsdFreeMcb (IN PRFSD_MCB Mcb)
 
     if (Mcb->ShortName.Buffer)
         ExFreePool(Mcb->ShortName.Buffer);
-    
+
     if (FlagOn(Mcb->Flags, MCB_FROM_POOL)) {
 
         ExFreePool( Mcb );
@@ -917,7 +917,7 @@ RfsdGetFullFileName(PRFSD_MCB Mcb, PUNICODE_STRING FileName)
 
     if (Count ==0)
         Length = 2;
-    
+
     FileName->Length = Length;
     FileName->MaximumLength = Length + 2;
     FileName->Buffer = ExAllocatePoolWithTag(PagedPool, Length + 2, RFSD_POOL_TAG);
@@ -942,7 +942,7 @@ RfsdGetFullFileName(PRFSD_MCB Mcb, PUNICODE_STRING FileName)
 
         j += FileNames[i]->Length / 2;
     }
-    
+
     return TRUE;
 }
 
@@ -979,7 +979,7 @@ RfsdSearchMcbTree(  PRFSD_VCB Vcb,
     return Mcb;
 }
 
-/** 
+/**
  Returns NULL is the parent has no child, or if we search through the child's brothers and hit a NULL
  Otherwise, returns the MCB of one of the the parent's children, which matches FileName.
 */
@@ -1162,7 +1162,7 @@ RfsdCheckSetBlock(PRFSD_IRP_CONTEXT IrpContext, PRFSD_VCB Vcb, ULONG Block)
 
     if (dwBlk >= Length)
         return FALSE;
-        
+
     if (!CcPinRead( Vcb->StreamObj,
                         &Offset,
                         Vcb->BlockSize,
@@ -1215,10 +1215,10 @@ RfsdCheckBitmapConsistency(PRFSD_IRP_CONTEXT IrpContext, PRFSD_VCB Vcb)
 
         RfsdCheckSetBlock(IrpContext, Vcb, Vcb->GroupDesc[i].bg_block_bitmap);
         RfsdCheckSetBlock(IrpContext, Vcb, Vcb->GroupDesc[i].bg_inode_bitmap);
-        
-        
+
+
         if (i == Vcb->NumOfGroups - 1) {
-            InodeBlocks = ((INODES_COUNT % INODES_PER_GROUP) * 
+            InodeBlocks = ((INODES_COUNT % INODES_PER_GROUP) *
                             sizeof(RFSD_INODE) + Vcb->BlockSize - 1) /
                             (Vcb->BlockSize);
         } else {
@@ -1248,8 +1248,8 @@ RfsdRemoveVcb(PRFSD_VCB Vcb)
 
 __drv_mustHoldCriticalRegion
 NTSTATUS
-RfsdInitializeVcb( IN PRFSD_IRP_CONTEXT IrpContext, 
-                   IN PRFSD_VCB Vcb, 
+RfsdInitializeVcb( IN PRFSD_IRP_CONTEXT IrpContext,
+                   IN PRFSD_VCB Vcb,
                    IN PRFSD_SUPER_BLOCK RfsdSb,
                    IN PDEVICE_OBJECT TargetDevice,
                    IN PDEVICE_OBJECT VolumeDevice,
@@ -1315,7 +1315,7 @@ RfsdInitializeVcb( IN PRFSD_IRP_CONTEXT IrpContext,
         ExInitializeResourceLite(&Vcb->PagingIoResource);
 
         ExInitializeResourceLite(&Vcb->McbResource);
-        
+
         VcbResourceInitialized = TRUE;
 
         Vcb->Vpb = Vpb;
@@ -1327,7 +1327,7 @@ RfsdInitializeVcb( IN PRFSD_IRP_CONTEXT IrpContext,
             UNICODE_STRING      LabelName;
             OEM_STRING          OemName;
 
-				
+
 
             LabelName.MaximumLength = 16 * 2;
             LabelName.Length    = 0;
@@ -1399,15 +1399,15 @@ RfsdInitializeVcb( IN PRFSD_IRP_CONTEXT IrpContext,
         NotifySyncInitialized = TRUE;
 
         Vcb->DeviceObject = VolumeDevice;
-        
+
         Vcb->TargetDeviceObject = TargetDevice;
-        
+
         Vcb->OpenFileHandleCount = 0;
-        
+
         Vcb->ReferenceCount = 0;
-        
+
         Vcb->SuperBlock = RfsdSb;
-        
+
         Vcb->Header.NodeTypeCode = (USHORT) RFSDVCB;
         Vcb->Header.NodeByteSize = sizeof(RFSD_VCB);
         Vcb->Header.IsFastIoPossible = FastIoIsNotPossible;
@@ -1423,7 +1423,7 @@ RfsdInitializeVcb( IN PRFSD_IRP_CONTEXT IrpContext,
             Vcb->DiskGeometry.BytesPerSector;
 
         IoctlSize = sizeof(PARTITION_INFORMATION);
-        
+
         Status = RfsdDiskIoControl(
             TargetDevice,
             IOCTL_DISK_GET_PARTITION_INFO,
@@ -1433,15 +1433,15 @@ RfsdInitializeVcb( IN PRFSD_IRP_CONTEXT IrpContext,
             &IoctlSize );
 
         PartSize = Vcb->PartitionInformation.PartitionLength.QuadPart;
-        
+
         if (!NT_SUCCESS(Status)) {
             Vcb->PartitionInformation.StartingOffset.QuadPart = 0;
-            
+
             Vcb->PartitionInformation.PartitionLength.QuadPart =
                 DiskSize;
 
             PartSize = DiskSize;
-            
+
             Status = STATUS_SUCCESS;
         }
 
@@ -1463,7 +1463,7 @@ RfsdInitializeVcb( IN PRFSD_IRP_CONTEXT IrpContext,
         Vcb->Header.AllocationSize.QuadPart =
         Vcb->Header.FileSize.QuadPart = PartSize;
 
-        Vcb->Header.ValidDataLength.QuadPart = 
+        Vcb->Header.ValidDataLength.QuadPart =
             (LONGLONG)(0x7fffffffffffffff);
 /*
         Vcb->Header.AllocationSize.QuadPart = (LONGLONG)(rfsd_super_block->s_blocks_count - rfsd_super_block->s_free_blocks_count)
@@ -1518,7 +1518,7 @@ RfsdInitializeVcb( IN PRFSD_IRP_CONTEXT IrpContext,
 		Vcb->McbTree->Key.k_dir_id = RFSD_ROOT_PARENT_ID;
 		Vcb->McbTree->Key.k_objectid = RFSD_ROOT_OBJECT_ID;
 		Vcb->McbTree->Key.k_offset = 0;
-		Vcb->McbTree->Key.k_type   = RFSD_KEY_TYPE_v1_STAT_DATA;		
+		Vcb->McbTree->Key.k_type   = RFSD_KEY_TYPE_v1_STAT_DATA;
 
 #ifdef DISABLED
         if (IsFlagOn(RfsdGlobal->Flags, RFSD_CHECKING_BITMAP)) {
@@ -1583,10 +1583,10 @@ RfsdFreeVcb (IN PRFSD_VCB Vcb )
     PAGED_CODE();
 
     ASSERT(Vcb != NULL);
-    
+
     ASSERT((Vcb->Identifier.Type == RFSDVCB) &&
         (Vcb->Identifier.Size == sizeof(RFSD_VCB)));
-    
+
     FsRtlNotifyUninitializeSync(&Vcb->NotifySync);
 
     if (Vcb->StreamObj) {
@@ -1631,7 +1631,7 @@ RfsdFreeVcb (IN PRFSD_VCB Vcb )
         // CcUnpinData(Vcb->GroupDescBcb);
         Vcb->GroupDesc = NULL;
     }
-    
+
     if (Vcb->SuperBlock) {
         ExFreePool(Vcb->SuperBlock);
         Vcb->SuperBlock = NULL;

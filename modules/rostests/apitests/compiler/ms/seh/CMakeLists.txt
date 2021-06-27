@@ -12,6 +12,7 @@ foreach(num RANGE 10 58)
 endforeach()
 
 add_library(ms_seh_test ${SOURCE})
+target_link_libraries(ms_seh_test pseh)
 add_dependencies(ms_seh_test psdk)
 
 if(MSVC)

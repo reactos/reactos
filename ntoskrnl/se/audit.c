@@ -731,7 +731,7 @@ SeAuditingFileEventsWithContext(IN BOOLEAN AccessGranted,
                                 IN PSECURITY_DESCRIPTOR SecurityDescriptor,
                                 IN PSECURITY_SUBJECT_CONTEXT SubjectSecurityContext OPTIONAL)
 {
-    UNIMPLEMENTED;
+    UNIMPLEMENTED_ONCE;
     return FALSE;
 }
 

@@ -60,7 +60,7 @@ USBSTOR_Cancel(
 
     KeAcquireSpinLockAtDpcLevel(&FDODeviceExtension->IrpListLock);
     RemoveEntryList(&Irp->Tail.Overlay.ListEntry);
-    KeReleaseSpinLockFromDpcLevel(&FDODeviceExtension->IrpListLock);    
+    KeReleaseSpinLockFromDpcLevel(&FDODeviceExtension->IrpListLock);
 
     IoReleaseCancelSpinLock(Irp->CancelIrql);
     Irp->IoStatus.Status = STATUS_CANCELLED;
@@ -291,7 +291,7 @@ USBSTOR_QueueRelease(
 
     IoStartPacket(DeviceObject,
                   Irp,
-                  &Request->QueueSortKey, 
+                  &Request->QueueSortKey,
                   USBSTOR_CancelIo);
 }
 

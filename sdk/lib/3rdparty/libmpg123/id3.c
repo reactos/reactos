@@ -45,19 +45,19 @@
    prepend/append combination. When deciding upon where an unembedded
    tag should be located, the following order of preference SHOULD be
    considered.
-   
+
      1. Prepend the tag.
 
-     2. Prepend a tag with all vital information and add a second tag at 
+     2. Prepend a tag with all vital information and add a second tag at
         the end of the file, before tags from other tagging systems. The
         first tag is required to have a SEEK frame.
-      
+
      3. Add a tag at the end of the file, before tags from other tagging
         systems.
-      
+
    In case 2 and 3 the tag can simply be appended if no other known tags
    are present. The suggested method to find ID3v2 tags are:
-   
+
      1. Look for a prepended tag using the pattern found in section 3.1.
 
      2. If a SEEK frame was found, use its values to guide further

@@ -1,4 +1,4 @@
-/* 
+/*
  * FFS File System Driver for Windows
  *
  * fsctl.c
@@ -154,7 +154,7 @@ FFSLoadDiskLabel(
     PAGED_CODE();
 
 	Disklabel = (PDISKLABEL)ExAllocatePoolWithTag(PagedPool, sizeof(DISKLABEL), FFS_POOL_TAG);
-	
+
 	FFSReadDisk(Vcb, (LABELSECTOR * SECTOR_SIZE + LABELOFFSET), sizeof(DISKLABEL), (PVOID)Disklabel, FALSE);
 
 	if (Disklabel->d_magic == DISKMAGIC)
@@ -262,7 +262,7 @@ FFSLoadDiskLabel(
 				}
 
 				FS_VERSION = 1;
-				
+
 				if (i == (int)Vcb->PartitionNumber)
 				{
 					Vcb->ffs_super_block = FFSSb;
@@ -465,7 +465,7 @@ FFSLockVolume(
 
 		VcbResourceAcquired = TRUE;
 
-		Status = FFSLockVcb(Vcb, IrpSp->FileObject);        
+		Status = FFSLockVcb(Vcb, IrpSp->FileObject);
 	}
 
 	_SEH2_FINALLY
@@ -972,11 +972,11 @@ FFSMountVolume(
 
 		VolumeDeviceObject->StackSize = (CCHAR)(TargetDeviceObject->StackSize + 1);
 
-		if (TargetDeviceObject->AlignmentRequirement > 
+		if (TargetDeviceObject->AlignmentRequirement >
 				VolumeDeviceObject->AlignmentRequirement)
 		{
 
-			VolumeDeviceObject->AlignmentRequirement = 
+			VolumeDeviceObject->AlignmentRequirement =
 				TargetDeviceObject->AlignmentRequirement;
 		}
 
@@ -1006,7 +1006,7 @@ FFSMountVolume(
 		Vcb->BlockSize = FFSSb->fs_bsize;
 		Vcb->SectorBits = FFSLog2(SECTOR_SIZE);
 
-		Status = FFSInitializeVcb(IrpContext, Vcb, FFSSb, TargetDeviceObject, 
+		Status = FFSInitializeVcb(IrpContext, Vcb, FFSSb, TargetDeviceObject,
 				VolumeDeviceObject, IoStackLocation->Parameters.MountVolume.Vpb);
 
 		if (NT_SUCCESS(Status))
@@ -1280,7 +1280,7 @@ FFSDismountVolume(
 			_SEH2_LEAVE;
 		}
 
-		/*        
+		/*
 		if (!FlagOn(Vcb->Flags, VCB_VOLUME_LOCKED))
 		{
 			FFSPrint((DBG_ERROR, "FFSDismount: Volume is not locked.\n"));
@@ -1398,7 +1398,7 @@ FFSCheckDismount(
 
 #define TAG_VPB                         ' bpV'
 
-		NewVpb = ExAllocatePoolWithTag(NonPagedPoolMustSucceed, 
+		NewVpb = ExAllocatePoolWithTag(NonPagedPoolMustSucceed,
 				sizeof(VPB), TAG_VPB);
 
 		NewVpb->Type = IO_TYPE_VPB;
@@ -1572,7 +1572,7 @@ FFSPurgeFile(
 			!IsFlagOn(Fcb->Vcb->Flags, VCB_WRITE_PROTECTED))
 	{
 
-		FFSPrint((DBG_INFO, "FFSPurgeFile: CcFlushCache on %s.\n", 
+		FFSPrint((DBG_INFO, "FFSPurgeFile: CcFlushCache on %s.\n",
 					Fcb->AnsiFileName.Buffer));
 
 		ExAcquireSharedStarveExclusive(&Fcb->PagingIoResource, TRUE);
@@ -1586,7 +1586,7 @@ FFSPurgeFile(
 	if (Fcb->SectionObject.ImageSectionObject)
 	{
 
-		FFSPrint((DBG_INFO, "FFSPurgeFile: MmFlushImageSection on %s.\n", 
+		FFSPrint((DBG_INFO, "FFSPurgeFile: MmFlushImageSection on %s.\n",
 					Fcb->AnsiFileName.Buffer));
 
 		MmFlushImageSection(&Fcb->SectionObject, MmFlushForWrite);

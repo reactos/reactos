@@ -231,10 +231,69 @@ MiPxeToAddress(PMMPTE PointerPxe)
     return (PVOID)(((LONG64)PointerPxe << 52) >> 16);
 }
 
-/* Translate between P*Es */
-#define MiPdeToPte(_Pde) ((PMMPTE)MiPteToAddress(_Pde))
-#define MiPteToPde(_Pte) ((PMMPDE)MiAddressToPte(_Pte))
-#define MiPdeToPpe(_Pde) ((PMMPPE)MiAddressToPte(_Pde))
+/* Convert a PDE into its lowest PTE */
+FORCEINLINE
+PMMPTE
+MiPdeToPte(PMMPDE PointerPde)
+{
+    return (PMMPTE)MiPteToAddress(PointerPde);
+}
+
+/* Convert a PPE into its lowest PTE */
+FORCEINLINE
+PMMPTE
+MiPpeToPte(PMMPPE PointerPpe)
+{
+    return (PMMPTE)MiPdeToAddress(PointerPpe);
+}
+
+/* Convert a PXE into its lowest PTE */
+FORCEINLINE
+PMMPTE
+MiPxeToPte(PMMPXE PointerPxe)
+{
+    return (PMMPTE)MiPpeToAddress(PointerPxe);
+}
+
+/* Convert a PTE to a corresponding PDE */
+FORCEINLINE
+PMMPDE
+MiPteToPde(PMMPTE PointerPte)
+{
+    return (PMMPDE)MiAddressToPte(PointerPte);
+}
+
+/* Convert a PTE to a corresponding PPE */
+FORCEINLINE
+PMMPPE
+MiPteToPpe(PMMPTE PointerPte)
+{
+    return (PMMPPE)MiAddressToPde(PointerPte);
+}
+
+/* Convert a PTE to a corresponding PXE */
+FORCEINLINE
+PMMPXE
+MiPteToPxe(PMMPTE PointerPte)
+{
+    return (PMMPXE)MiAddressToPpe(PointerPte);
+}
+
+/* Convert a PDE to a corresponding PPE */
+FORCEINLINE
+PMMPDE
+MiPdeToPpe(PMMPDE PointerPde)
+{
+    return (PMMPPE)MiAddressToPte(PointerPde);
+}
+
+/* Convert a PDE to a corresponding PXE */
+FORCEINLINE
+PMMPXE
+MiPdeToPxe(PMMPDE PointerPde)
+{
+    return (PMMPXE)MiAddressToPde(PointerPde);
+}
 
 /* Check P*E boundaries */
 #define MiIsPteOnPdeBoundary(PointerPte) \
@@ -293,13 +352,6 @@ MI_IS_MAPPED_PTE(PMMPTE PointerPte)
             (PointerPte->u.Proto.Prototype != 0) ||
             (PointerPte->u.Trans.Transition != 0) ||
             (PointerPte->u.Hard.PageFrameNumber != 0));
-}
-
-FORCEINLINE
-VOID
-MmInitGlobalKernelPageDirectory(VOID)
-{
-    /* Nothing to do */
 }
 
 FORCEINLINE

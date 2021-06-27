@@ -126,6 +126,11 @@ NTSTATUS
 LsapLogonUser(PLSA_API_MSG RequestMsg,
               PLSAP_LOGON_CONTEXT LogonContext);
 
+VOID
+LsapTerminateLogon(
+    _In_ PLUID LogonId);
+
+
 /* authport.c */
 NTSTATUS
 StartAuthenticationPort(VOID);

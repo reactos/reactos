@@ -66,7 +66,7 @@ KiInitializeUserApc(
     _SEH2_TRY
     {
         /* Probe the context */
-        ProbeForWrite(Context,  sizeof(CONTEXT), 16);
+        ProbeForWrite(Context, sizeof(CONTEXT), 16);
 
         /* Convert the current trap frame to a context */
         Context->ContextFlags = CONTEXT_FULL | CONTEXT_DEBUG_REGISTERS;
@@ -253,8 +253,11 @@ KeUserModeCallback(
     /* Enter a SEH Block */
     _SEH2_TRY
     {
-        /* Calculate and align the stack size */
-        UserArguments = (PUCHAR)ALIGN_DOWN_POINTER_BY(OldStack - ArgumentLength, sizeof(PVOID));
+        /* Calculate and align the stack. This is unaligned by 8 bytes, since the following
+           UCALLOUT_FRAME compensates for that and on entry we already have a full stack
+           frame with home space for the next call, i.e. we are already inside the function
+           body and the stack needs to be 16 byte aligned. */
+        UserArguments = (PUCHAR)ALIGN_DOWN_POINTER_BY(OldStack - ArgumentLength, 16) - 8;
 
         /* The callout frame is below the arguments */
         CalloutFrame = ((PUCALLOUT_FRAME)UserArguments) - 1;

@@ -181,13 +181,13 @@ bool zero_blocks(PEXT2_FILESYS fs, ULONG blk, ULONG num,
     }
 
     return true;
-}   
+}
 
 
 bool zap_sector(PEXT2_FILESYS Ext2Sys, int sect, int nsect)
 {
     unsigned char *buf;
-    ULONG         *magic;  
+    ULONG         *magic;
 
     buf = (unsigned char *)
         RtlAllocateHeap(RtlGetProcessHeap(), 0, SECTOR_SIZE*nsect);
@@ -197,7 +197,7 @@ bool zap_sector(PEXT2_FILESYS Ext2Sys, int sect, int nsect)
                 sect, sect + nsect - 1);
         return false;
     }
-    
+
 #define BSD_DISKMAGIC   (0x82564557UL)  /* The disk magic number */
 #define BSD_MAGICDISK   (0x57455682UL)  /* The disk magic number reversed */
 #define BSD_LABEL_OFFSET        64
@@ -205,7 +205,7 @@ bool zap_sector(PEXT2_FILESYS Ext2Sys, int sect, int nsect)
     if (sect == 0)
     {
         Ext2ReadDisk(
-                  Ext2Sys, 
+                  Ext2Sys,
                   (LONGLONG)(sect * SECTOR_SIZE),
                   SECTOR_SIZE, buf);
 
@@ -226,13 +226,13 @@ bool zap_sector(PEXT2_FILESYS Ext2Sys, int sect, int nsect)
 clean_up:
 
     RtlFreeHeap(RtlGetProcessHeap(), 0, buf);
-    
+
     return true;
 }
 
-bool ext2_mkdir( PEXT2_FILESYS fs, 
+bool ext2_mkdir( PEXT2_FILESYS fs,
                  ULONG parent,
-                 ULONG inum, 
+                 ULONG inum,
                  char *name,
                  ULONG *no,
                  PEXT2_INODE pid )
@@ -246,7 +246,7 @@ bool ext2_mkdir( PEXT2_FILESYS fs,
     int             filetype = 0;
 
     LARGE_INTEGER   SysTime;
-    
+
     NtQuerySystemTime(&SysTime);
 
     /*
@@ -310,7 +310,7 @@ bool ext2_mkdir( PEXT2_FILESYS fs,
     if (!retval)
         goto cleanup;
 
-    retval = ext2_save_inode(fs, ino, &inode); 
+    retval = ext2_save_inode(fs, ino, &inode);
     if (!retval)
         goto cleanup;
 
@@ -343,7 +343,7 @@ bool ext2_mkdir( PEXT2_FILESYS fs,
             goto cleanup;
 
     }
-    
+
     /*
      * Update accounting....
      */
@@ -367,7 +367,7 @@ bool create_root_dir(PEXT2_FILESYS fs)
     EXT2_INODE  inode;
 
     retval = ext2_mkdir(fs, EXT2_ROOT_INO, EXT2_ROOT_INO, 0, NULL, &inode);
-    
+
     if (!retval)
     {
         DPRINT1("Mke2fs: while creating root dir");
@@ -375,7 +375,7 @@ bool create_root_dir(PEXT2_FILESYS fs)
     }
 
     {
-        inode.i_uid = 0;    
+        inode.i_uid = 0;
         inode.i_gid = 0;
 
         retval = ext2_save_inode(fs, EXT2_ROOT_INO, &inode);
@@ -418,7 +418,7 @@ bool create_lost_and_found(PEXT2_FILESYS Ext2Sys)
 
     Ext2Sys->umask = 077;
     retval = ext2_mkdir(Ext2Sys, EXT2_ROOT_INO, 0, name, &ino, &inode);
-    
+
     if (!retval)
     {
         DPRINT1("Mke2fs: while creating /lost+found.\n");
@@ -434,7 +434,7 @@ bool create_lost_and_found(PEXT2_FILESYS Ext2Sys)
     {
         if (lpf_size >= 16*1024)
             break;
-        
+
         retval = ext2_alloc_block(Ext2Sys, 0, &dwBlk);
 
         if (! retval)
@@ -459,10 +459,10 @@ bool create_lost_and_found(PEXT2_FILESYS Ext2Sys)
     {
         inode.i_size = lpf_size;
 
-        ASSERT( (inode.i_size/Ext2Sys->blocksize) == 
+        ASSERT( (inode.i_size/Ext2Sys->blocksize) ==
                 Ext2DataBlocks(Ext2Sys, inode.i_blocks/(Ext2Sys->blocksize/SECTOR_SIZE)));
 
-        ASSERT( (inode.i_blocks/(Ext2Sys->blocksize/SECTOR_SIZE)) == 
+        ASSERT( (inode.i_blocks/(Ext2Sys->blocksize/SECTOR_SIZE)) ==
                 Ext2TotalBlocks(Ext2Sys, inode.i_size/Ext2Sys->blocksize));
 
     }
@@ -491,13 +491,13 @@ errorout:
 
 bool write_primary_superblock(PEXT2_FILESYS Ext2Sys, PEXT2_SUPER_BLOCK super)
 {
-    bool bRet;    
+    bool bRet;
 
     bRet = NT_SUCCESS(Ext2WriteDisk(
                            Ext2Sys,
                            ((LONGLONG)SUPERBLOCK_OFFSET),
                            SUPERBLOCK_SIZE, (PUCHAR)super));
-            
+
 
 
     return bRet;
@@ -533,9 +533,9 @@ bool ext2_flush(PEXT2_FILESYS fs)
     PEXT2_GROUP_DESC group_shadow = 0;
 
     LARGE_INTEGER   SysTime;
-    
+
     NtQuerySystemTime(&SysTime);
-    
+
     fs_state = fs->ext2_sb->s_state;
 
     RtlTimeToSecondsSince1970(&SysTime, &fs->ext2_sb->s_wtime);
@@ -543,7 +543,7 @@ bool ext2_flush(PEXT2_FILESYS fs)
 
     super_shadow = fs->ext2_sb;
     group_shadow = fs->group_desc;
-    
+
     /*
      * Write out master superblock.  This has to be done
      * separately, since it is located at a fixed location
@@ -875,7 +875,7 @@ Ext2Format(
 
     Status = STATUS_UNSUCCESSFUL;
 
-    // Initialize 
+    // Initialize
     if (!ext2_initialize_sb(&FileSys))
     {
         DPRINT1("Mke2fs: error...\n");

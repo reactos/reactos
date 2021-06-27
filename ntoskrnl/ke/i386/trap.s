@@ -220,4 +220,38 @@ _KiConvertToGuiThread@0:
     /* return to the caller */
     ret
 
+/*
+NTSTATUS
+NTAPI
+KiSystemCallTrampoline(IN PVOID Handler,
+                       IN PVOID Arguments,
+                       IN ULONG StackBytes);
+*/
+PUBLIC _KiSystemCallTrampoline@12
+_KiSystemCallTrampoline@12:
+    push ebp
+    mov ebp, esp
+    push esi
+    push edi
+
+    /* Get handler */
+    mov eax, [ebp + 8]
+    /* Get arguments */
+    mov esi, [ebp + 12]
+    /* Get stack bytes */
+    mov ecx, [ebp + 16]
+
+    /* Copy args to the stack */
+    sub esp, ecx
+    mov edi, esp
+    shr ecx, 2
+    rep movsd
+
+    call eax
+
+    pop edi
+    pop esi
+    leave
+
+    ret 12
 END

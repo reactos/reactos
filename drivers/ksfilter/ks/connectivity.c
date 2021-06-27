@@ -11,7 +11,7 @@
 #define NDEBUG
 #include <debug.h>
 
-KSPIN_INTERFACE StandardPinInterface = 
+KSPIN_INTERFACE StandardPinInterface =
 {
     {STATIC_KSINTERFACESETID_Standard},
     KSINTERFACE_STANDARD_STREAMING,

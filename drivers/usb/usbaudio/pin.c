@@ -198,7 +198,7 @@ USBAudioSelectAudioStreamingInterface(
     /* selects the interface which has an audio streaming interface descriptor associated to the input / output terminal at the given format index */
     while (InterfaceDescriptor != NULL)
     {
-        if (InterfaceDescriptor->bInterfaceSubClass == 0x02 /* AUDIO_STREAMING */ && InterfaceDescriptor->bNumEndpoints > 0) 
+        if (InterfaceDescriptor->bInterfaceSubClass == 0x02 /* AUDIO_STREAMING */ && InterfaceDescriptor->bNumEndpoints > 0)
         {
             StreamingInterfaceDescriptor = (PUSB_AUDIO_STREAMING_INTERFACE_DESCRIPTOR)USBD_ParseDescriptors(ConfigurationDescriptor, ConfigurationDescriptor->wTotalLength, InterfaceDescriptor, USB_AUDIO_CONTROL_TERMINAL_DESCRIPTOR_TYPE);
             if (StreamingInterfaceDescriptor != NULL)
@@ -572,12 +572,12 @@ InitCapturePin(
 
         /* initialize irp */
         IoInitializeIrp(Irp, IoSizeOfIrp(PinContext->DeviceExtension->LowerDevice->StackSize), PinContext->DeviceExtension->LowerDevice->StackSize);
-        
+
         Irp->IoStatus.Status = STATUS_NOT_SUPPORTED;
         Irp->IoStatus.Information = 0;
         Irp->Flags = 0;
         Irp->UserBuffer = NULL;
-        
+
         IoStack = IoGetNextIrpStackLocation(Irp);
         IoStack->DeviceObject = PinContext->DeviceExtension->LowerDevice;
         IoStack->Parameters.Others.Argument2 = NULL;
@@ -593,7 +593,7 @@ InitCapturePin(
         KsAddItemToObjectBag(Pin->Bag, Irp, ExFreePool);
 
         /* FIXME select correct pipe handle */
-        Status = UsbAudioAllocCaptureUrbIso(PinContext->DeviceExtension->InterfaceInfo->Pipes[0].PipeHandle, 
+        Status = UsbAudioAllocCaptureUrbIso(PinContext->DeviceExtension->InterfaceInfo->Pipes[0].PipeHandle,
                                             MaximumPacketSize,
                                             &PinContext->Buffer[MaximumPacketSize * PACKET_COUNT * Index],
                                             MaximumPacketSize * PACKET_COUNT,

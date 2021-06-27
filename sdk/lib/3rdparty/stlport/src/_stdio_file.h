@@ -54,7 +54,7 @@ inline int _FILE_fd(const FILE *__f) {
   }
 
   /* Normal files. */
-  return (int)::_fileno((FILE*)__f); 
+  return (int)::_fileno((FILE*)__f);
 }
 
 # elif defined (_STLP_SCO_OPENSERVER) || defined (__NCR_SVR)

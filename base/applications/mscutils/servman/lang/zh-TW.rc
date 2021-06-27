@@ -1,4 +1,5 @@
-/* Traditional Chinese translation by Henry Tang Ih 2016 (henrytang2@hotmail.com) */
+/* Traditional Chinese translation by Henry Tang Ih 2016 (henrytang2@hotmail.com) 
+ * Translation improved by Chan Chilung 2021 (eason066@gmail.com) */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
 
@@ -12,21 +13,21 @@ BEGIN
     END
     POPUP "行動"
     BEGIN
-        MENUITEM "連接到...", ID_CONNECT, GRAYED
+        MENUITEM "連接到(&C)...", ID_CONNECT, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "啟動", ID_START, GRAYED
-        MENUITEM "停止", ID_STOP, GRAYED
-        MENUITEM "暫停", ID_PAUSE, GRAYED
-        MENUITEM "恢復", ID_RESUME, GRAYED
-        MENUITEM "重新開機", ID_RESTART, GRAYED
+        MENUITEM "啟動(&S)", ID_START, GRAYED
+        MENUITEM "停止(&O)", ID_STOP, GRAYED
+        MENUITEM "暫停(&P)", ID_PAUSE, GRAYED
+        MENUITEM "恢復(&M)", ID_RESUME, GRAYED
+        MENUITEM "重新開機(&A)", ID_RESTART, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "刷新\tF5", ID_REFRESH
+        MENUITEM "重新整理(&F)\tF5", ID_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM "編輯...", ID_EDIT, GRAYED
-        MENUITEM "創建...", ID_CREATE, GRAYED
-        MENUITEM "刪除...", ID_DELETE, GRAYED
+        MENUITEM "編輯(&E)...", ID_EDIT, GRAYED
+        MENUITEM "建立(&T)...", ID_CREATE, GRAYED
+        MENUITEM "刪除(&D)...", ID_DELETE, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "屬性...", ID_PROP, GRAYED
+        MENUITEM "內容(&R)...", ID_PROP, GRAYED
     END
     POPUP "查看"
     BEGIN
@@ -48,18 +49,18 @@ IDR_POPUP MENU
 BEGIN
     POPUP "popup"
     BEGIN
-        MENUITEM "啟動", ID_START, GRAYED
-        MENUITEM "停止", ID_STOP, GRAYED
-        MENUITEM "暫停", ID_PAUSE, GRAYED
-        MENUITEM "恢復", ID_RESUME, GRAYED
-        MENUITEM "重新開機", ID_RESTART, GRAYED
+        MENUITEM "啟動(&S)", ID_START, GRAYED
+        MENUITEM "停止(&O)", ID_STOP, GRAYED
+        MENUITEM "暫停(&P)", ID_PAUSE, GRAYED
+        MENUITEM "恢復(&M)", ID_RESUME, GRAYED
+        MENUITEM "重新開機(&A)", ID_RESTART, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "刷新", ID_REFRESH
+        MENUITEM "重新整理(&F)", ID_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM "編輯...", ID_EDIT, GRAYED
-        MENUITEM "刪除...", ID_DELETE, GRAYED
+        MENUITEM "編輯(&E)...", ID_EDIT, GRAYED
+        MENUITEM "刪除(&D)...", ID_DELETE, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "屬性...", ID_PROP, GRAYED
+        MENUITEM "內容(&R)...", ID_PROP, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "説明...", ID_HELP
     END
@@ -71,7 +72,7 @@ BEGIN
 END
 
 IDD_DLG_GENERAL DIALOGEX 6, 6, 253, 232
-CAPTION "普通"
+CAPTION "一般"
 FONT 9, "新細明體", 0, 0
 STYLE DS_SHELLFONT | WS_BORDER | WS_VISIBLE | WS_DLGFRAME | WS_SYSMENU | WS_GROUP | WS_TABSTOP
 BEGIN
@@ -98,28 +99,28 @@ BEGIN
 END
 
 IDD_LOGON DIALOGEX 6, 6, 253, 232
-CAPTION "Log On"
+CAPTION "登入"
 FONT 9, "新細明體", 0, 0
 STYLE DS_SHELLFONT | WS_BORDER | WS_VISIBLE | WS_DLGFRAME | WS_SYSMENU | WS_GROUP | WS_TABSTOP
 BEGIN
-    LTEXT "Log on as:", IDC_STATIC, 7, 7, 238, 8
+    LTEXT "登入為:", IDC_STATIC, 7, 7, 238, 8
     AUTORADIOBUTTON "&Local System account", IDC_LOGON_SYSTEMACCOUNT, 7, 22, 238, 10, BS_TOP | BS_MULTILINE | WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP
     AUTORADIOBUTTON "&This account:", IDC_LOGON_THISACCOUNT, 7, 52, 60, 10, BS_TOP | BS_MULTILINE | WS_CHILD | WS_VISIBLE
     AUTOCHECKBOX "Allo&w service to interact with desktop", IDC_LOGON_INTERACTIVE, 18, 34, 227, 10, WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_TOP | BS_MULTILINE
     EDITTEXT IDC_LOGON_ACCOUNTNAME, 72, 50, 103, 14, ES_LEFT | ES_AUTOHSCROLL | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_GROUP | WS_TABSTOP
-    PUSHBUTTON "&Browse...", IDC_LOGON_SEARCH, 185, 50, 60, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
-    LTEXT "&Password:", IDC_LOGON_PW1TEXT, 18, 71, 33, 8, WS_CHILD | WS_VISIBLE | WS_DISABLED | WS_GROUP
+    PUSHBUTTON "瀏覽...(&B)", IDC_LOGON_SEARCH, 185, 50, 60, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+    LTEXT "密碼(&P):", IDC_LOGON_PW1TEXT, 18, 71, 33, 8, WS_CHILD | WS_VISIBLE | WS_DISABLED | WS_GROUP
     EDITTEXT IDC_LOGON_PASSWORD1, 72, 68, 104, 14, ES_LEFT | ES_PASSWORD | ES_AUTOHSCROLL | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP
-    LTEXT "&Confirm password:", IDC_LOGON_PW2TEXT, 18, 84, 47, 18, WS_CHILD | WS_VISIBLE | WS_DISABLED | WS_GROUP
+    LTEXT "確認密碼(&C):", IDC_LOGON_PW2TEXT, 18, 84, 47, 18, WS_CHILD | WS_VISIBLE | WS_DISABLED | WS_GROUP
     EDITTEXT IDC_LOGON_PASSWORD2, 72, 86, 104, 14, ES_LEFT | ES_PASSWORD | ES_AUTOHSCROLL | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP
     LTEXT "You can enable or disable this service for the hardware profiles listed below:", IDC_STATIC, 7, 114, 210, 8, WS_CHILD | WS_VISIBLE | WS_GROUP
     CONTROL "", IDC_LOGON_HWPROFILE, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOSORTHEADER | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_GROUP | WS_TABSTOP, 7, 124, 238, 65
-    PUSHBUTTON "&Enable", IDC_LOGON_HWENABLE, 116, 197, 60, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_DISABLED
-    PUSHBUTTON "&Disable", IDC_LOGON_HWDISABLE, 185, 197, 60, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_DISABLED
+    PUSHBUTTON "啟用(&E)", IDC_LOGON_HWENABLE, 116, 197, 60, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_DISABLED
+    PUSHBUTTON "停用(&D)", IDC_LOGON_HWDISABLE, 185, 197, 60, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_DISABLED
 END
 
 IDD_RECOVERY DIALOGEX 6, 6, 253, 232
-CAPTION "Recovery"
+CAPTION "還原"
 FONT 9, "新細明體", 0, 0
 STYLE DS_SHELLFONT | WS_BORDER | WS_VISIBLE | WS_DLGFRAME | WS_SYSMENU | WS_GROUP | WS_TABSTOP
 BEGIN
@@ -136,10 +137,10 @@ BEGIN
     LTEXT "Restart ser&vice after:", IDC_RESTART_TEXT1, 7, 92, 92, 8
     EDITTEXT IDC_RESTART_TIME, 104, 90, 40, 13, WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP | ES_LEFT | ES_AUTOHSCROLL | ES_NUMBER
     LTEXT "minutes", IDC_RESTART_TEXT2, 150, 92, 95, 8
-    GROUPBOX "Run program", IDC_RUN_GROUPBOX, 7, 108, 238, 80
+    GROUPBOX "執行程式", IDC_RUN_GROUPBOX, 7, 108, 238, 80
     LTEXT "&Program:", IDC_RUN_TEXT1, 14, 121, 168, 8
     EDITTEXT IDC_PROGRAM, 14, 131, 165, 14
-    PUSHBUTTON "&Browse...", IDC_BROWSE_PROGRAM, 180, 131, 58, 14
+    PUSHBUTTON "瀏覽...(&B)", IDC_BROWSE_PROGRAM, 180, 131, 58, 14
     LTEXT "&Command line parameters:", IDC_RUN_TEXT2, 14, 155, 108, 8
     EDITTEXT IDC_PARAMETERS, 128, 152, 110, 14
     AUTOCHECKBOX "Append fail count to &end of command line (/fail=%1%)", IDC_ADD_FAILCOUNT, 14, 171, 219, 10, WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_TOP | BS_MULTILINE
@@ -157,13 +158,13 @@ BEGIN
     CONTROL "", IDC_DEPEND_TREE2, "SysTreeView32", WS_BORDER | WS_CHILDWINDOW |
             WS_VISIBLE | WS_TABSTOP | TVS_HASBUTTONS | TVS_HASLINES |
             TVS_LINESATROOT | TVS_DISABLEDRAGDROP, 8, 151, 236, 68
-    LTEXT "一些服務依賴于其他服務，系統驅動程式和載入順序組。 如果一個系統元件被停止或者沒有正確運行，被其依賴的服務也會被影響。", IDC_STATIC, 8, 7, 238, 26
-    LTEXT "這個服務依賴于以下的元件：", IDC_STATIC, 8, 57, 236, 9
+    LTEXT "一些服務依賴於其他服務，系統驅動程式和載入順序組。如果一個系統元件被停止或者沒有正確運行，被其依賴的服務也會被影響。", IDC_STATIC, 8, 7, 238, 26
+    LTEXT "這個服務依賴於以下的元件：", IDC_STATIC, 8, 57, 236, 9
     LTEXT "", IDC_DEPEND_SERVICE, 8, 38, 236, 13
 END
 
 IDD_DLG_CREATE DIALOGEX 6, 6, 225, 209
-CAPTION "創建一個服務"
+CAPTION "建立一個服務"
 FONT 9, "新細明體", 0, 0
 STYLE DS_SHELLFONT | WS_BORDER | WS_VISIBLE | WS_DLGFRAME | WS_SYSMENU | WS_GROUP | WS_TABSTOP
 BEGIN
@@ -188,7 +189,7 @@ FONT 9, "新細明體", 0, 0
 STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | DS_MODALFRAME
 BEGIN
     ICON IDI_WARNING, IDC_STATIC, 10, 8, 24, 22
-    LTEXT "您確定要刪除以下的服務嗎？ 這個操作是不可撤銷的！", IDC_STATIC, 50, 6, 125, 25
+    LTEXT "您確定要刪除以下的服務嗎？這個操作是不可撤銷的！", IDC_STATIC, 50, 6, 125, 25
     LTEXT "服務名稱：", IDC_STATIC, 6, 40, 80, 9
     LTEXT "", IDC_DEL_NAME, 15, 53, 160, 15
     EDITTEXT IDC_DEL_DESC, 6, 73, 174, 48, WS_CHILD | WS_VISIBLE | WS_VSCROLL |
@@ -245,7 +246,7 @@ BEGIN
     IDS_SERVICES_STOPPED "已停止"
     IDS_SERVICES_AUTO "自動"
     IDS_SERVICES_MAN "手動"
-    IDS_SERVICES_DIS "已禁用"
+    IDS_SERVICES_DIS "已停用"
 END
 
 STRINGTABLE
@@ -257,10 +258,10 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_TOOLTIP_PROP "屬性"
-    IDS_TOOLTIP_REFRESH "刷新"
+    IDS_TOOLTIP_PROP "內容"
+    IDS_TOOLTIP_REFRESH "重新整理"
     IDS_TOOLTIP_EXPORT "匯出清單"
-    IDS_TOOLTIP_CREATE "創建一個新的服務"
+    IDS_TOOLTIP_CREATE "建立一個新的服務"
     IDS_TOOLTIP_DELETE "刪除一個已存在的服務"
     IDS_TOOLTIP_START "啟動服務"
     IDS_TOOLTIP_STOP "停止服務"
@@ -274,7 +275,7 @@ BEGIN
     IDS_PROGRESS_INFO_STOP "ReactOS 正在嘗試停止以下服務"
     IDS_PROGRESS_INFO_PAUSE "ReactOS 正在嘗試暫停以下服務"
     IDS_PROGRESS_INFO_RESUME "ReactOS 正在嘗試恢復以下服務"
-    IDS_CREATE_SUCCESS "成功創建服務"
+    IDS_CREATE_SUCCESS "成功建立服務"
     IDS_DELETE_SUCCESS "成功刪除服務"
     IDS_CREATE_REQ "標記有\n星號 (*) 的欄位是必需的"
     IDS_DELETE_STOP "您必須在刪除該服務前停止它！"
@@ -282,7 +283,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_HELP_OPTIONS "創建選項：\r\n注意：選項名包含了等號(=)。\r\n type= <own|share|interact|kernel|filesys|rec>\r\n       (default = own)\r\n start= <boot|system|auto|demand|disabled>\r\n       (default = demand) \r\n error= <normal|severe|critical|ignore>\r\n       (default = normal)\r\n group= <LoadOrderGroup>\r\n tag= <yes|no>\r\n depend= <Dependencies(separated by / (forward slash))>\r\n obj= <AccountName|ObjectName>\r\n       (default = LocalSystem)\r\n password= <password>\r\n"
+    IDS_HELP_OPTIONS "建立選項：\r\n注意：選項名包含了等號(=)。\r\n type= <own|share|interact|kernel|filesys|rec>\r\n       (default = own)\r\n start= <boot|system|auto|demand|disabled>\r\n       (default = demand) \r\n error= <normal|severe|critical|ignore>\r\n       (default = normal)\r\n group= <LoadOrderGroup>\r\n tag= <yes|no>\r\n depend= <Dependencies(separated by / (forward slash))>\r\n obj= <AccountName|ObjectName>\r\n       (default = LocalSystem)\r\n password= <password>\r\n"
 END
 
 /* Hints */
@@ -297,7 +298,7 @@ BEGIN
     IDS_HINT_PAUSE " 暫停選定的服務。"
     IDS_HINT_RESUME " 恢復選定的服務。"
     IDS_HINT_RESTART " 停止然後啟動選定的服務。"
-    IDS_HINT_REFRESH " 刷新服務清單。"
+    IDS_HINT_REFRESH " 重新整理服務清單。"
     IDS_HINT_EDIT " 編輯選定服務的屬性。"
     IDS_HINT_CREATE " 創建一個新的服務。"
     IDS_HINT_DELETE " 刪除選定的服務。"
@@ -327,9 +328,9 @@ END
 STRINGTABLE
 BEGIN
     IDS_NO_ACTION "Take no action"
-    IDS_RESTART_SERVICE "Restart the Service"
-    IDS_RUN_PROGRAM "Run a Program"
-    IDS_RESTART_COMPUTER "Restart the Computer"
+    IDS_RESTART_SERVICE "重新啟動服務"
+    IDS_RUN_PROGRAM "執行程式"
+    IDS_RESTART_COMPUTER "重新啟動電腦"
 END
 
 STRINGTABLE

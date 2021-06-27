@@ -29,11 +29,13 @@ add_driver_inf(netkvm netkvm.inf)
 if(NOT MSVC)
     target_compile_options(netkvm PRIVATE
         -Wno-unused-function
-        -Wno-old-style-declaration
         -Wno-unknown-pragmas
-        -Wno-unused-but-set-variable
         -Wno-pointer-sign
         -Wno-pointer-to-int-cast
         -Wno-int-to-pointer-cast
         -Wno-attributes)
+endif()
+
+if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
+    target_compile_options(netkvm PRIVATE -Wno-old-style-declaration -Wno-unused-but-set-variable)
 endif()

@@ -1043,6 +1043,7 @@ public:
 
     ~CRegKey() throw()
     {
+        Close();
     }
 
     void Attach(HKEY hKey) throw()
@@ -1359,7 +1360,11 @@ public:
 
     CRegKey& operator=(CRegKey& key) throw()
     {
-        Attach(key.Detach());
+        if (m_hKey != key.m_hKey)
+        {
+            Close();
+            Attach(key.Detach());
+        }
         return *this;
     }
 

@@ -68,4 +68,5 @@ BEGIN
     IDS_ERROR_INVALID_STOP_BITS "ОШИБКА: Неверное значение стоповых битов %d:\n"
     IDS_ERROR_NO_MEMORY "ОШИБКА: Недостаточно памяти.\n"
     IDS_ERROR_SCREEN_LINES_COL "The screen cannot be set to the number of lines and columns specified.\n"
+    IDS_ERROR_INVALID_CODEPAGE "The code page specified is not valid.\n"
 END

@@ -340,7 +340,7 @@ UDFCommonDeviceControl(
             } else {
                 Cdb = (PCDB)&(((PSCSI_PASS_THROUGH)(Irp->AssociatedIrp.SystemBuffer))->Cdb);
                 if(((PSCSI_PASS_THROUGH)(Irp->AssociatedIrp.SystemBuffer))->DataBufferOffset) {
-                    CdbData = ((PCHAR)Cdb) + 
+                    CdbData = ((PCHAR)Cdb) +
                               ((PSCSI_PASS_THROUGH)(Irp->AssociatedIrp.SystemBuffer))->DataBufferOffset;
                 } else {
                     CdbData = NULL;
@@ -544,7 +544,7 @@ notify_media_change:
                             UserMode,
                             (PVOID *) &UDFGlobalData.MountEvent,
                             NULL);
-                            
+
                         if (!NT_SUCCESS(RC))
                         {
                             UDFGlobalData.MountEvent = NULL;
@@ -585,7 +585,7 @@ notify_media_change:
                 *(PBOOLEAN)Irp->AssociatedIrp.SystemBuffer = Vcb->IsVolumeJustMounted;
                 Vcb->IsVolumeJustMounted = FALSE;
             }
-            
+
             CompleteIrp = TRUE;
             Irp->IoStatus.Information = 0;
             break;
@@ -682,7 +682,7 @@ notify_media_change:
             udf_ver->FSVersionMn = Vcb->CurrentUDFRev & 0xff;
             udf_ver->FSFlags     = Vcb->UserFSFlags;
             if( ((Vcb->origIntegrityType == INTEGRITY_TYPE_OPEN) &&
-                (Vcb->CompatFlags & UDF_VCB_IC_DIRTY_RO)) 
+                (Vcb->CompatFlags & UDF_VCB_IC_DIRTY_RO))
                     ||
                (Vcb->VCBFlags & UDF_VCB_FLAGS_VOLUME_READ_ONLY) ) {
                 UDFPrint(("  UDF_USER_FS_FLAGS_RO\n"));
@@ -1046,7 +1046,7 @@ try_exit: NOTHING;
 *
 * Description:
 *   Completion routine.
-*   
+*
 * Expected Interrupt Level (for execution) :
 *
 *  IRQL_PASSIVE_LEVEL
@@ -1093,7 +1093,7 @@ UDFDevIoctlCompletion(
 *
 * Description:
 *   Handle the MUP request.
-*   
+*
 * Expected Interrupt Level (for execution) :
 *
 *  IRQL_PASSIVE_LEVEL

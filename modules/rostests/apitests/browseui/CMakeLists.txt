@@ -5,7 +5,8 @@ include_directories(
 list(APPEND SOURCE
     ACListISF.cpp
     IACLCustomMRU.cpp
-	  IAutoComplete.cpp
+    IACLHistory.cpp
+    IAutoComplete.cpp
     SHEnumClassesOfCategories.cpp
     SHExplorerParseCmdLine.c
     testlist.c)

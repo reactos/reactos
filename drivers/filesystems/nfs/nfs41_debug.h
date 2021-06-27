@@ -50,14 +50,14 @@ void print_get_ea(int on, PFILE_GET_EA_INFORMATION info);
 void print_caching_level(int on, ULONG flag, PUNICODE_STRING s);
 const char *opcode2string(int opcode);
 void print_open_error(int on, int status);
-void print_wait_status(int on, const char *str, NTSTATUS status, 
+void print_wait_status(int on, const char *str, NTSTATUS status,
                        const char *opcode, PVOID entry, LONGLONG xid);
 void print_acl_args(SECURITY_INFORMATION info);
 
 #define DbgEn() DbgPrintEx(DPFLTR_IHVNETWORK_ID, DPFLTR_ERROR_LEVEL, \
         "--> [%s] [%04x] %s\n", _DRIVER_NAME_, PsGetCurrentProcessId(), \
         __FUNCTION__); _SEH2_TRY {
-        
+
 #define DbgEx() DbgPrintEx(DPFLTR_IHVNETWORK_ID, DPFLTR_ERROR_LEVEL, \
         "<-- [%s] [%04x] %s status = %08lx\n", _DRIVER_NAME_, PsGetCurrentProcessId(), \
         __FUNCTION__, status); \

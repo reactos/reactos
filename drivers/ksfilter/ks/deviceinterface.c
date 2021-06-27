@@ -78,7 +78,7 @@ KspRegisterDeviceInterfaces(
             return STATUS_INSUFFICIENT_RESOURCES;
 
         /* now register device interface */
-        Status = IoRegisterDeviceInterface(PhysicalDeviceObject, 
+        Status = IoRegisterDeviceInterface(PhysicalDeviceObject,
                                            &Categories[Index],
                                            ReferenceString,
                                            &SymEntry->SymbolicLink);

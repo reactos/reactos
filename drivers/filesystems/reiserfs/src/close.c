@@ -2,10 +2,10 @@
  * COPYRIGHT:        GNU GENERAL PUBLIC LICENSE VERSION 2
  * PROJECT:          ReiserFs file system driver for Windows NT/2000/XP/Vista.
  * FILE:             close.c
- * PURPOSE:          
+ * PURPOSE:
  * PROGRAMMER:       Mark Piper, Matt Wu, Bo Brantén.
- * HOMEPAGE:         
- * UPDATE HISTORY: 
+ * HOMEPAGE:
+ * UPDATE HISTORY:
  */
 
 /* INCLUDES *****************************************************************/
@@ -43,10 +43,10 @@ RfsdClose (IN PRFSD_IRP_CONTEXT IrpContext)
     _SEH2_TRY
     {
         ASSERT(IrpContext != NULL);
-        
+
         ASSERT((IrpContext->Identifier.Type == RFSDICX) &&
             (IrpContext->Identifier.Size == sizeof(RFSD_IRP_CONTEXT)));
-        
+
         DeviceObject = IrpContext->DeviceObject;
 
         if (DeviceObject == RfsdGlobal->DeviceObject)
@@ -54,11 +54,11 @@ RfsdClose (IN PRFSD_IRP_CONTEXT IrpContext)
             Status = STATUS_SUCCESS;
             _SEH2_LEAVE;
         }
-        
+
         Vcb = (PRFSD_VCB) DeviceObject->DeviceExtension;
-        
+
         ASSERT(Vcb != NULL);
-        
+
         ASSERT((Vcb->Identifier.Type == RFSDVCB) &&
             (Vcb->Identifier.Size == sizeof(RFSD_VCB)));
 
@@ -76,7 +76,7 @@ RfsdClose (IN PRFSD_IRP_CONTEXT IrpContext)
             Status = STATUS_PENDING;
             _SEH2_LEAVE;
         }
-        
+
         VcbResourceAcquired = TRUE;
 
         FileObject = IrpContext->FileObject;
@@ -86,7 +86,7 @@ RfsdClose (IN PRFSD_IRP_CONTEXT IrpContext)
             Ccb = IrpContext->Ccb;
         } else {
             Fcb = (PRFSD_FCB) FileObject->FsContext;
-        
+
             if (!Fcb)
             {
                 Status = STATUS_SUCCESS;
@@ -97,7 +97,7 @@ RfsdClose (IN PRFSD_IRP_CONTEXT IrpContext)
 
             Ccb = (PRFSD_CCB) FileObject->FsContext2;
         }
-        
+
         if (Fcb->Identifier.Type == RFSDVCB) {
 
             Vcb->ReferenceCount--;
@@ -114,12 +114,12 @@ RfsdClose (IN PRFSD_IRP_CONTEXT IrpContext)
                     FileObject->FsContext2 = Ccb = NULL;
                 }
             }
-            
+
             Status = STATUS_SUCCESS;
-            
+
             _SEH2_LEAVE;
         }
-        
+
         if (Fcb->Identifier.Type != RFSDFCB || Fcb->Identifier.Size != sizeof(RFSD_FCB)) {
 
 #if DBG
@@ -140,8 +140,8 @@ RfsdClose (IN PRFSD_IRP_CONTEXT IrpContext)
         ASSERT((Fcb->Identifier.Type == RFSDFCB) &&
             (Fcb->Identifier.Size == sizeof(RFSD_FCB)));
 
-/*        
-        if ( (!IsFlagOn(Vcb->Flags, VCB_READ_ONLY)) && 
+/*
+        if ( (!IsFlagOn(Vcb->Flags, VCB_READ_ONLY)) &&
              (!IsFlagOn(Fcb->Flags, FCB_PAGE_FILE))  )
 */
         {
@@ -154,10 +154,10 @@ RfsdClose (IN PRFSD_IRP_CONTEXT IrpContext)
                 Status = STATUS_PENDING;
                 _SEH2_LEAVE;
             }
-            
+
             FcbResourceAcquired = TRUE;
         }
-        
+
         if (!Ccb) {
             Status = STATUS_SUCCESS;
             _SEH2_LEAVE;
@@ -165,10 +165,10 @@ RfsdClose (IN PRFSD_IRP_CONTEXT IrpContext)
 
         ASSERT((Ccb->Identifier.Type == RFSDCCB) &&
             (Ccb->Identifier.Size == sizeof(RFSD_CCB)));
-        
+
         Fcb->ReferenceCount--;
         Vcb->ReferenceCount--;
-        
+
         if (!Vcb->ReferenceCount && IsFlagOn(Vcb->Flags, VCB_DISMOUNT_PENDING)) {
             FreeVcb = TRUE;
         }
@@ -196,7 +196,7 @@ RfsdClose (IN PRFSD_IRP_CONTEXT IrpContext)
 
             FcbResourceAcquired = FALSE;
         }
-        
+
         Status = STATUS_SUCCESS;
 
     } _SEH2_FINALLY {
@@ -212,26 +212,26 @@ RfsdClose (IN PRFSD_IRP_CONTEXT IrpContext)
                 &Vcb->MainResource,
                 ExGetCurrentResourceThread()  );
         }
-        
+
         if (!IrpContext->ExceptionInProgress) {
             if (Status == STATUS_PENDING) {
 
                 RfsdQueueCloseRequest(IrpContext);
-/*                
+/*
 
                 Status = STATUS_SUCCESS;
 
                 if (IrpContext->Irp != NULL)
                 {
                     IrpContext->Irp->IoStatus.Status = Status;
-                    
+
                     RfsdCompleteRequest(
                         IrpContext->Irp,
                         !IsFlagOn(IrpContext->Flags, IRP_CONTEXT_FLAG_REQUEUED),
                         (CCHAR)
                         (NT_SUCCESS(Status) ? IO_DISK_INCREMENT : IO_NO_INCREMENT)
                         );
-                    
+
                     IrpContext->Irp = NULL;
                 }
 */
@@ -257,7 +257,7 @@ RfsdClose (IN PRFSD_IRP_CONTEXT IrpContext)
             }
         }
     } _SEH2_END;
-    
+
     return Status;
 }
 
@@ -267,10 +267,10 @@ RfsdQueueCloseRequest (IN PRFSD_IRP_CONTEXT IrpContext)
     PAGED_CODE();
 
     ASSERT(IrpContext);
-    
+
     ASSERT((IrpContext->Identifier.Type == RFSDICX) &&
         (IrpContext->Identifier.Size == sizeof(RFSD_IRP_CONTEXT)));
-    
+
     if (!IsFlagOn(IrpContext->Flags, IRP_CONTEXT_FLAG_DELAY_CLOSE)) {
         SetFlag(IrpContext->Flags, IRP_CONTEXT_FLAG_DELAY_CLOSE);
 
@@ -282,12 +282,12 @@ RfsdQueueCloseRequest (IN PRFSD_IRP_CONTEXT IrpContext)
 
     // IsSynchronous means we can block (so we don't requeue it)
     IrpContext->IsSynchronous = TRUE;
-    
+
     ExInitializeWorkItem(
         &IrpContext->WorkQueueItem,
         RfsdDeQueueCloseRequest,
         IrpContext);
-    
+
     ExQueueWorkItem(&IrpContext->WorkQueueItem, CriticalWorkQueue);
 }
 
@@ -299,12 +299,12 @@ RfsdDeQueueCloseRequest (IN PVOID Context)
     PAGED_CODE();
 
     IrpContext = (PRFSD_IRP_CONTEXT) Context;
-    
+
     ASSERT(IrpContext);
-    
+
     ASSERT((IrpContext->Identifier.Type == RFSDICX) &&
         (IrpContext->Identifier.Size == sizeof(RFSD_IRP_CONTEXT)));
-    
+
     _SEH2_TRY {
 
         _SEH2_TRY {

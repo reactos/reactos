@@ -1131,7 +1131,7 @@ Ext2WriteFile(IN PEXT2_IRP_CONTEXT IrpContext)
                 }
 
                 if (!CcCopyWrite(FileObject, &ByteOffset, Length, Ext2CanIWait(), Buffer)) {
-                    if (Ext2CanIWait() || 
+                    if (Ext2CanIWait() ||
                         !CcCopyWrite(FileObject,  &ByteOffset, Length, TRUE, Buffer)) {
                         Status = STATUS_PENDING;
                         DbgBreak();

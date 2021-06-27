@@ -1546,6 +1546,30 @@ static MUI_ENTRY ruRUBootLoaderEntries[] =
     }
 };
 
+static MUI_ENTRY ruRUBootLoaderInstallPageEntries[] =
+{
+    {
+        4,
+        3,
+        " \223\341\342\240\255\256\242\252\240 ReactOS " KERNEL_VERSION_STR,
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        "\217\340\256\250\247\242\256\244\250\342\341\357 \343\341\342\240\255\256\242\252\240 \247\240\243\340\343\247\347\250\252\240 \255\240 \255\256\341\250\342\245\253\354. \217\256\246\240\253\343\251\341\342\240, \257\256\244\256\246\244\250\342\245...",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
 static MUI_ENTRY ruRUKeyboardSettingsEntries[] =
 {
     {
@@ -2193,6 +2217,10 @@ MUI_PAGE ruRUPages[] =
     {
         SUCCESS_PAGE,
         ruRUSuccessPageEntries
+    },
+    {
+        BOOT_LOADER_INSTALLATION_PAGE,
+        ruRUBootLoaderInstallPageEntries
     },
     {
         BOOT_LOADER_FLOPPY_PAGE,

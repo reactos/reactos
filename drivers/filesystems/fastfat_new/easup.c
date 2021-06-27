@@ -48,7 +48,7 @@ Abstract:
 
 #define EA_SECTION_SIZE             (0x00040000)
 
-
+
 _Requires_lock_held_(_Global_critical_region_)
 VOID
 FatGetEaLength (
@@ -202,8 +202,8 @@ Return Value:
     return;
 }
 
-
-_Requires_lock_held_(_Global_critical_region_)    
+
+_Requires_lock_held_(_Global_critical_region_)
 VOID
 FatGetNeedEaCount (
     IN PIRP_CONTEXT IrpContext,
@@ -349,8 +349,8 @@ Return Value:
     return;
 }
 
-
-_Requires_lock_held_(_Global_critical_region_)    
+
+_Requires_lock_held_(_Global_critical_region_)
 VOID
 FatCreateEa (
     IN PIRP_CONTEXT IrpContext,
@@ -779,7 +779,7 @@ Return Value:
     return;
 }
 
-
+
 _Requires_lock_held_(_Global_critical_region_)
 VOID
 FatGetEaFile (
@@ -1160,7 +1160,7 @@ Return Value:
                     //  The discerning reader will note that this doesn't take
                     //  FAT32 into account, which is of course intentional.
                     //
-                    
+
                     (*EaDirent)->FirstClusterOfFile =
                         (USHORT) FatGetIndexFromLbo( Vcb, FirstLboOfFile );
                 }
@@ -1268,7 +1268,7 @@ Return Value:
 
                 FatReleaseFcb( IrpContext, Vcb->EaFcb );
             }
-            
+
             //
             //  Dereference the Ea stream file if created.
             //
@@ -1283,7 +1283,7 @@ Return Value:
         //  Always release the root Dcb (our caller releases the EA Fcb if we
         //  do not raise).
         //
-        
+
         if (UnwindLockedRootDcb) {
 
             FatReleaseFcb( IrpContext, Vcb->RootDcb );
@@ -1301,7 +1301,7 @@ Return Value:
     return;
 }
 
-
+
 VOID
 FatReadEaSet (
     IN PIRP_CONTEXT IrpContext,
@@ -1531,8 +1531,8 @@ Return Value:
     return;
 }
 
-
-_Requires_lock_held_(_Global_critical_region_)    
+
+_Requires_lock_held_(_Global_critical_region_)
 VOID
 FatDeleteEaSet (
     IN PIRP_CONTEXT IrpContext,
@@ -2003,7 +2003,7 @@ Return Value:
             //
 
             if (UnwindPrevFileSize) {
-            
+
                 EaFcb->Header.FileSize.LowPart = UnwindPrevFileSize;
                 EaFcb->Header.AllocationSize.LowPart = UnwindPrevFileSize;
                 EaDirent->FileSize = UnwindPrevFileSize;
@@ -2014,7 +2014,7 @@ Return Value:
                                     (PCC_FILE_SIZES)&EaFcb->Header.AllocationSize );
                 }
             }
-            
+
             //
             //  If we merged the tail with the
             //  ea file header.  We split it out
@@ -2086,9 +2086,9 @@ Return Value:
     return;
 }
 
-
 
-_Requires_lock_held_(_Global_critical_region_)    
+
+_Requires_lock_held_(_Global_critical_region_)
 VOID
 FatAddEaSet (
     IN PIRP_CONTEXT IrpContext,
@@ -2390,7 +2390,7 @@ Return Value:
 
             FatRaiseStatus( IrpContext, STATUS_INSUFFICIENT_RESOURCES );
         }
-        
+
         FsRtlInitializeLargeMcb( &EaSetMcb, PagedPool );
 
         UnwindInitializedEaSetMcb = TRUE;
@@ -2809,7 +2809,7 @@ Return Value:
             //
 
             if (UnwindPrevFileSize) {
-            
+
                 EaFcb->Header.FileSize.LowPart = UnwindPrevFileSize;
                 EaFcb->Header.AllocationSize.LowPart = UnwindPrevFileSize;
                 EaDirent->FileSize = UnwindPrevFileSize;
@@ -2820,7 +2820,7 @@ Return Value:
                                     (PCC_FILE_SIZES)&EaFcb->Header.AllocationSize );
                 }
             }
-            
+
             //
             //  If we merged the tail then split it off.
             //
@@ -2962,7 +2962,7 @@ Return Value:
     return;
 }
 
-
+
 VOID
 FatAppendPackedEa (
     IN PIRP_CONTEXT IrpContext,
@@ -3143,7 +3143,7 @@ Return Value:
     return;
 }
 
-
+
 VOID
 FatDeletePackedEa (
     IN PIRP_CONTEXT IrpContext,
@@ -3252,7 +3252,7 @@ Return Value:
     return;
 }
 
-
+
 ULONG
 FatLocateNextEa (
     IN PIRP_CONTEXT IrpContext,
@@ -3339,7 +3339,7 @@ Return Value:
     return Offset;
 }
 
-
+
 BOOLEAN
 FatLocateEaByName (
     IN PIRP_CONTEXT IrpContext,
@@ -3424,7 +3424,7 @@ Return Value:
     return FALSE;
 }
 
-
+
 BOOLEAN
 FatIsEaNameValid (
     IN PIRP_CONTEXT IrpContext,
@@ -3507,7 +3507,7 @@ Return Value:
     return TRUE;
 }
 
-
+
 VOID
 FatPinEaRange (
     IN PIRP_CONTEXT IrpContext,
@@ -3584,7 +3584,7 @@ Return Value:
         EaRange->AuxilaryBuffer = TRUE;
 
         DestinationBuffer = EaRange->Data;
-    
+
     } else {
 
         //
@@ -3704,7 +3704,7 @@ Return Value:
     return;
 }
 
-
+
 VOID
 FatMarkEaRangeDirty (
     IN PIRP_CONTEXT IrpContext,
@@ -3739,7 +3739,7 @@ Return Value:
     PAGED_CODE();
 
     UNREFERENCED_PARAMETER( IrpContext );
-    
+
     //
     //  If there is an auxilary buffer we need to copy the data back into the cache.
     //
@@ -3777,7 +3777,7 @@ Return Value:
     return;
 }
 
-
+
 VOID
 FatUnpinEaRange (
     IN PIRP_CONTEXT IrpContext,

@@ -2,10 +2,10 @@
  * COPYRIGHT:        GNU GENERAL PUBLIC LICENSE VERSION 2
  * PROJECT:          ReiserFs file system driver for Windows NT/2000/XP/Vista.
  * FILE:             cmcb.c
- * PURPOSE:          
+ * PURPOSE:
  * PROGRAMMER:       Mark Piper, Matt Wu, Bo Brantén.
- * HOMEPAGE:         
- * UPDATE HISTORY: 
+ * HOMEPAGE:
+ * UPDATE HISTORY:
  */
 
 /* INCLUDES *****************************************************************/
@@ -38,9 +38,9 @@ RfsdAcquireForLazyWrite (
     PAGED_CODE();
 
     Fcb = (PRFSD_FCB) Context;
-    
+
     ASSERT(Fcb != NULL);
-    
+
     ASSERT((Fcb->Identifier.Type == RFSDFCB) &&
         (Fcb->Identifier.Size == sizeof(RFSD_FCB)));
 
@@ -50,7 +50,7 @@ RfsdAcquireForLazyWrite (
         Fcb->AnsiFileName.Buffer        ));
 
     if (!IsFlagOn(Fcb->Vcb->Flags, VCB_READ_ONLY)) {
-        RfsdPrint(( DBG_INFO, "RfsdAcquireForLazyWrite: Key=%x,%xh %S\n", 
+        RfsdPrint(( DBG_INFO, "RfsdAcquireForLazyWrite: Key=%x,%xh %S\n",
 			Fcb->RfsdMcb->Key.k_dir_id, Fcb->RfsdMcb->Key.k_objectid, Fcb->RfsdMcb->ShortName.Buffer ));
 
         if(!ExAcquireResourceSharedLite(
@@ -75,9 +75,9 @@ RfsdReleaseFromLazyWrite (IN PVOID Context)
     PAGED_CODE();
 
     Fcb = (PRFSD_FCB) Context;
-    
+
     ASSERT(Fcb != NULL);
-    
+
     ASSERT((Fcb->Identifier.Type == RFSDFCB) &&
         (Fcb->Identifier.Size == sizeof(RFSD_FCB)));
 
@@ -88,7 +88,7 @@ RfsdReleaseFromLazyWrite (IN PVOID Context)
         ));
 
     if (!IsFlagOn(Fcb->Vcb->Flags, VCB_READ_ONLY)) {
-        RfsdPrint(( DBG_INFO, "RfsdReleaseFromLazyWrite: Inode=%x%xh %S\n", 
+        RfsdPrint(( DBG_INFO, "RfsdReleaseFromLazyWrite: Inode=%x%xh %S\n",
 			Fcb->RfsdMcb->Key.k_dir_id, Fcb->RfsdMcb->Key.k_objectid, Fcb->RfsdMcb->ShortName.Buffer ));
 
         ExReleaseResourceLite(&Fcb->PagingIoResource);
@@ -109,13 +109,13 @@ RfsdAcquireForReadAhead (IN PVOID    Context,
     PAGED_CODE();
 
     Fcb = (PRFSD_FCB) Context;
-    
+
     ASSERT(Fcb != NULL);
-    
+
     ASSERT((Fcb->Identifier.Type == RFSDFCB) &&
         (Fcb->Identifier.Size == sizeof(RFSD_FCB)));
 
-    RfsdPrint(( DBG_INFO, "RfsdAcquireForReadAhead: Inode=%x,%xh %S\n", 
+    RfsdPrint(( DBG_INFO, "RfsdAcquireForReadAhead: Inode=%x,%xh %S\n",
 			Fcb->RfsdMcb->Key.k_dir_id, Fcb->RfsdMcb->Key.k_objectid, Fcb->RfsdMcb->ShortName.Buffer ));
 
     if (!ExAcquireResourceSharedLite(
@@ -138,13 +138,13 @@ RfsdReleaseFromReadAhead (IN PVOID Context)
     PAGED_CODE();
 
     Fcb = (PRFSD_FCB) Context;
-    
+
     ASSERT(Fcb != NULL);
-    
+
     ASSERT((Fcb->Identifier.Type == RFSDFCB) &&
         (Fcb->Identifier.Size == sizeof(RFSD_FCB)));
 
-    RfsdPrint(( DBG_INFO, "RfsdReleaseFromReadAhead: Inode=%x,%xh %S\n", 
+    RfsdPrint(( DBG_INFO, "RfsdReleaseFromReadAhead: Inode=%x,%xh %S\n",
 			Fcb->RfsdMcb->Key.k_dir_id, Fcb->RfsdMcb->Key.k_objectid, Fcb->RfsdMcb->ShortName.Buffer ));
 
     IoSetTopLevelIrp( NULL );

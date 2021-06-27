@@ -190,7 +190,7 @@ static int check_lame_tag(mpg123_handle *fr)
 
 	/* we have one of these headers... */
 	if(VERBOSE2) fprintf(stderr, "Note: Xing/Lame/Info header detected\n");
-	lame_offset += 4; 
+	lame_offset += 4;
 	xing_flags = bit_read_long(fr->bsbuf, &lame_offset);
 	debug1("Xing: flags 0x%08lx", xing_flags);
 
@@ -231,7 +231,7 @@ static int check_lame_tag(mpg123_handle *fr)
 		{
 			/* The Xing bitstream length, at least as interpreted by the Lame
 			   encoder, encompasses all data from the Xing header frame on,
-			   ignoring leading ID3v2 data. Trailing tags (ID3v1) seem to be 
+			   ignoring leading ID3v2 data. Trailing tags (ID3v1) seem to be
 			   included, though. */
 			if(fr->rdat.filelen < 1)
 			fr->rdat.filelen = (off_t) long_tmp + fr->audio_start; /* Overflow? */
@@ -274,7 +274,7 @@ static int check_lame_tag(mpg123_handle *fr)
 			10: lowpass
 			11-18: ReplayGain
 			19: encoder flags
-			20: ABR 
+			20: ABR
 			21-23: encoder delays
 	*/
 	check_bytes_left(24); /* I'm interested in 24 B of extra info. */
@@ -315,7 +315,7 @@ static int check_lame_tag(mpg123_handle *fr)
 			else if(VERBOSE3) fprintf(stderr
 			,	"Note: Info: Cannot determine LAME version.\n");
 		}
-		lame_offset += 9; /* 9 in */ 
+		lame_offset += 9; /* 9 in */
 
 		/* The 4 big bits are tag revision, the small bits vbr method. */
 		lame_vbr = fr->bsbuf[lame_offset] & 15;
@@ -377,7 +377,7 @@ static int check_lame_tag(mpg123_handle *fr)
 			/* Apply gain offset for automatic origin. */
 			if(origin == 3) replay_gain[gt] += gain_offset;
 		}
-		if(VERBOSE3) 
+		if(VERBOSE3)
 		{
 			fprintf(stderr, "Note: Info: Radio Gain = %03.1fdB\n"
 			,	replay_gain[0]);
@@ -404,7 +404,7 @@ static int check_lame_tag(mpg123_handle *fr)
 			,	fr->abr_rate);
 		}
 		lame_offset += 1; /* 21 in */
-	
+
 		/* Encoder delay and padding, two 12 bit values
 		   ... lame does write them from int. */
 		pad_in  = ( (((int) fr->bsbuf[lame_offset])   << 4)
@@ -460,7 +460,7 @@ static void halfspeed_prepare(mpg123_handle *fr)
 static int halfspeed_do(mpg123_handle *fr)
 {
 	/* Speed-down hack: Play it again, Sam (the frame, I mean). */
-	if (fr->p.halfspeed) 
+	if (fr->p.halfspeed)
 	{
 		if(fr->halfphase) /* repeat last frame */
 		{
@@ -480,9 +480,9 @@ static int halfspeed_do(mpg123_handle *fr)
 	return 0;
 }
 
-/* 
+/*
 	Temporary macro until we got this worked out.
-	Idea is to filter out special return values that shall trigger direct jumps to end / resync / read again. 
+	Idea is to filter out special return values that shall trigger direct jumps to end / resync / read again.
 	Particularily, the generic ret==PARSE_BAD==0 and ret==PARSE_GOOD==1 are not affected.
 */
 #define JUMP_CONCLUSION(ret) \
@@ -637,7 +637,7 @@ init_resync:
 		fr->mean_framesize = ((fr->mean_frames-1)*fr->mean_framesize+compute_bpf(fr)) / fr->mean_frames ;
 	}
 	++fr->num; /* 0 for first frame! */
-	debug4("Frame %"OFF_P" %08lx %i, next filepos=%"OFF_P, 
+	debug4("Frame %"OFF_P" %08lx %i, next filepos=%"OFF_P,
 	(off_p)fr->num, newhead, fr->framesize, (off_p)fr->rd->tell(fr));
 	if(!(fr->state_flags & FRAME_FRANKENSTEIN) && (
 		(fr->track_frames > 0 && fr->num >= fr->track_frames)
@@ -647,9 +647,9 @@ init_resync:
 	))
 	{
 		fr->state_flags |= FRAME_FRANKENSTEIN;
-		if(NOQUIET) fprintf(stderr, "\nWarning: Encountered more data after announced end of track (frame %"OFF_P"/%"OFF_P"). Frankenstein!\n", (off_p)fr->num, 
+		if(NOQUIET) fprintf(stderr, "\nWarning: Encountered more data after announced end of track (frame %"OFF_P"/%"OFF_P"). Frankenstein!\n", (off_p)fr->num,
 #ifdef GAPLESS
-		fr->gapless_frames > 0 ? (off_p)fr->gapless_frames : 
+		fr->gapless_frames > 0 ? (off_p)fr->gapless_frames :
 #endif
 		(off_p)fr->track_frames);
 	}
@@ -914,9 +914,9 @@ static int decode_header(mpg123_handle *fr,unsigned long newhead, int *freeforma
 				return PARSE_BAD;
 			}
 		break;
-#endif 
+#endif
 		default:
-			if(NOQUIET) error1("Layer type %i not supported in this build!", fr->lay); 
+			if(NOQUIET) error1("Layer type %i not supported in this build!", fr->lay);
 
 			return PARSE_BAD;
 	}
@@ -935,7 +935,7 @@ static int decode_header(mpg123_handle *fr,unsigned long newhead, int *freeforma
      This overwrites side info needed for stage 0.
 
   Continuing to read bits after layer 3 side info shall fail unless
-  set_pointer() is called to refresh things. 
+  set_pointer() is called to refresh things.
 */
 void set_pointer(mpg123_handle *fr, int part2, long backstep)
 {
@@ -1053,10 +1053,10 @@ int attribute_align_arg mpg123_position(mpg123_handle *fr, off_t no, off_t buffs
 int get_songlen(mpg123_handle *fr,int no)
 {
 	double tpf;
-	
+
 	if(!fr)
 		return 0;
-	
+
 	if(no < 0) {
 		if(!fr->rd || fr->rdat.filelen < 0)
 			return 0;
@@ -1153,7 +1153,7 @@ static int handle_apetag(mpg123_handle *fr, unsigned long newhead)
 	back_bytes += ret;
 	if(ret < 28)
 		goto apetag_bad;
-	
+
 	debug1("trying to parse APE header at %"OFF_P, (off_p)fr->rd->tell(fr));
 	/* Apetags start with "APETAGEX", "APET" is already tested. */
 	if(strncmp((char *)apebuf,"AGEX",4) != 0)
@@ -1185,7 +1185,7 @@ static int handle_apetag(mpg123_handle *fr, unsigned long newhead)
 
 	return PARSE_AGAIN;
 
-apetag_bad:	
+apetag_bad:
 	debug("no proper APE tag found, seeking back");
 	if(fr->rd->back_bytes(fr,back_bytes) < 0 && NOQUIET)
 		error1("Cannot seek %d bytes back!", back_bytes);
@@ -1193,7 +1193,7 @@ apetag_bad:
 	return PARSE_AGAIN; /* Give the resync code a chance to fix things */
 }
 
-/* Advance a byte in stream to get next possible header and forget 
+/* Advance a byte in stream to get next possible header and forget
    buffered data if possible (for feed reader). */
 #define FORGET_INTERVAL 1024 /* Used by callers to set forget flag each <n> bytes. */
 static int forget_head_shift(mpg123_handle *fr, unsigned long *newheadp, int forget)
@@ -1268,7 +1268,7 @@ static int skip_junk(mpg123_handle *fr, unsigned long *newheadp, long *headcount
 	do
 	{
 		++(*headcount);
-		if(limit >= 0 && *headcount >= limit) break;				
+		if(limit >= 0 && *headcount >= limit) break;
 
 		if(++forgetcount > FORGET_INTERVAL) forgetcount = 0;
 		if((ret=forget_head_shift(fr, &newhead, !forgetcount))<=0) return ret;
@@ -1348,7 +1348,7 @@ static int wetwork(mpg123_handle *fr, unsigned long *newheadp)
 		do /* ... shift the header with additional single bytes until be found something that could be a header. */
 		{
 			++try;
-			if(limit >= 0 && try >= limit) break;				
+			if(limit >= 0 && try >= limit) break;
 
 			if(++forgetcount > FORGET_INTERVAL) forgetcount = 0;
 			if((ret=forget_head_shift(fr,&newhead,!forgetcount)) <= 0)

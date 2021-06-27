@@ -273,7 +273,7 @@ void SstreamTest::init_out()
    */
 
   CPPUNIT_ASSERT( os.str() == "1234567" );
-  
+
 
   os.str( "89ab" );
   CPPUNIT_ASSERT( os.str() == "89ab" );
@@ -430,7 +430,7 @@ void SstreamTest::seek_gp()
 
   ss.seekg( 0, ios::beg );
   ss.seekp( 0, ios::end );
-  
+
   ss << "2";
 
   string str;

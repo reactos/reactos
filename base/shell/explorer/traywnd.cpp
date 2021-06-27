@@ -1373,7 +1373,7 @@ GetPrimaryScreenRect:
 
                 m_TrayRects[m_Position] = rcTray;
             }
-            else
+            else if (m_Position != (DWORD)-1)
             {
                 /* If the user isn't resizing the tray window we need to make sure the
                    new size or position is valid. this is to prevent changes to the window

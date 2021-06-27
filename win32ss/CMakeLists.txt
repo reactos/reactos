@@ -213,6 +213,7 @@ list(APPEND ASM_SOURCE
     gdi/dib/i386/dib32bpp_hline.s
     gdi/dib/i386/dib32bpp_colorfill.s
     gdi/eng/i386/floatobj.S)
+list(APPEND SOURCE gdi/eng/i386/floatobj.c)
 else()
 list(APPEND SOURCE
     gdi/dib/dib24bppc.c

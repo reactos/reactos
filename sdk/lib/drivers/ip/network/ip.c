@@ -125,7 +125,7 @@ VOID NTAPI IPTimeoutDpcFn(PKDPC Dpc,
  */
 {
     IpTimerExpirations++;
-    
+
     if ((IpTimerExpirations % 10) == 0)
     {
         LogActiveObjects();
@@ -232,7 +232,7 @@ PIP_INTERFACE IPCreateInterface(
         ExFreePoolWithTag(IF, IP_INTERFACE_TAG);
         return NULL;
     }
-    
+
     TCPRegisterInterface(IF);
 
 #ifdef __NTDRIVER__
@@ -256,7 +256,7 @@ VOID IPDestroyInterface(
 #ifdef __NTDRIVER__
     RemoveTDIInterfaceEntity( IF );
 #endif
-    
+
     TCPUnregisterInterface(IF);
 
     ExFreePool(IF->TCPContext);
@@ -286,7 +286,7 @@ VOID IPAddInterfaceRoute( PIP_INTERFACE IF ) {
      * other computers */
     if (IF != Loopback)
        ARPTransmit(NULL, NULL, IF);
-    
+
     TCPUpdateInterfaceIPInformation(IF);
 }
 

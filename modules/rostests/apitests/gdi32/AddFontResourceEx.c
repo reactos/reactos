@@ -7,6 +7,8 @@
 
 #include "precomp.h"
 
+#include <pseh/pseh2.h>
+
 void Test_AddFontResourceExW()
 {
 	WCHAR szFileName[MAX_PATH];

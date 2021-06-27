@@ -374,7 +374,7 @@ PciDebugPrintCmResList(IN PCM_RESOURCE_LIST PartialList)
     ListCount = PartialList->Count;
     FullDescriptor = PartialList->List;
     DPRINT1("  CM_RESOURCE_LIST (PCI Bus Driver) (List Count = %u)\n", PartialList->Count);
-    
+
     /* Loop full list */
     for (i = 0; i < ListCount; i++)
     {

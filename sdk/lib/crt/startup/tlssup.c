@@ -1,6 +1,6 @@
 /**
  * This file has no copyright assigned and is placed in the Public Domain.
- * This file is part of the w64 mingw-runtime package.
+ * This file is part of the mingw-w64 runtime package.
  * No warranty is given; refer to the file DISCLAIMER.PD within this package.
  *
  * Written by Kai Tietz  <kai.tietz@onevision.com>
@@ -12,27 +12,18 @@
 
 #include <sect_attribs.h>
 
-/*#ifndef WIN32_LEAN_AND_MEAN
+#ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
 #endif
-#include <windows.h>*/
-
-#include <stdarg.h>
-#include <windef.h>
-#include <winbase.h>
+#include <windows.h>
 
 #include <stdio.h>
 #include <memory.h>
 #include <malloc.h>
-#ifndef _WIN64
-#include <stdlib.h> /* for _winmajor */
-#endif
-
-#ifndef __INTERNAL_FUNC_DEFINED
-#define __INTERNAL_FUNC_DEFINED
-typedef void (__cdecl *_PVFV)(void);
-typedef int (__cdecl *_PIFV)(void);
-typedef void (__cdecl *_PVFI)(int);
+#ifndef __REACTOS__
+#include <corecrt_startup.h>
+#else
+#include <internal.h>
 #endif
 
 extern WINBOOL __mingw_TLScallback (HANDLE hDllHandle, DWORD reason, LPVOID reserved);
@@ -47,15 +38,18 @@ typedef struct TlsDtorNode {
 
 ULONG _tls_index = 0;
 
-/* TLS raw template data start and end. */
-_CRTALLOC(".tls") char _tls_start = 0;
-_CRTALLOC(".tls$ZZZ") char _tls_end = 0;
+/* TLS raw template data start and end.
+   We use here pointer-types for start/end so that tls-data remains
+   aligned on pointer-size-width.  This seems to be required for
+   pe-loader. */
+_CRTALLOC(".tls") char *_tls_start = NULL;
+_CRTALLOC(".tls$ZZZ") char *_tls_end = NULL;
 
 _CRTALLOC(".CRT$XLA") PIMAGE_TLS_CALLBACK __xl_a = 0;
 _CRTALLOC(".CRT$XLZ") PIMAGE_TLS_CALLBACK __xl_z = 0;
 
-_CRTALLOC(".rdata$T") const IMAGE_TLS_DIRECTORY _tls_used = {
-  (ULONG_PTR) &_tls_start+1, (ULONG_PTR) &_tls_end,
+const IMAGE_TLS_DIRECTORY _tls_used = {
+  (ULONG_PTR) &_tls_start, (ULONG_PTR) &_tls_end,
   (ULONG_PTR) &_tls_index, (ULONG_PTR) (&__xl_a+1),
   (ULONG) 0, (ULONG) 0
 };
@@ -79,10 +73,6 @@ static __CRT_THREAD TlsDtorNode dtor_list_head;
 #endif
 
 extern int _CRT_MT;
-
-#ifndef _WIN64
-int __mingw_usemthread_dll;
-#endif
 
 BOOL WINAPI __dyn_tls_init (HANDLE, DWORD, LPVOID);
 

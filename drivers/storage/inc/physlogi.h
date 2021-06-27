@@ -13,11 +13,11 @@ Abstract:
     function protypes, etc. for use in calling functions in
     physlogi.c that do physical to pseudo-logical and pseudo-
     logical to physical tape block address/position translation.
-    
+
 Author:
 
     Mike Colandreo       (Maynard)
-    
+
 Revision History:
 
 --*/

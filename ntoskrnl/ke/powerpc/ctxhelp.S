@@ -3,7 +3,7 @@
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/powerpc/ctxhelp.S
  * PURPOSE:         Thread Context Switching
- * 
+ *
  * PROGRAMMERS:     arty
                     (i386 implementation by Alex Ionescu)
  */
@@ -112,7 +112,7 @@ KiSystemService1:
         mtsrr1 0
         addi 1,1,0x100 - 16
         rfi
-        
+
         .globl KiDecrementerTrapHandler
         .globl KiDecrementerTrapHandlerEnd
         .globl KiDecrementerTrap
@@ -138,7 +138,7 @@ KiDecrementerTrapHandler:
 	rfi
 KiDecrementerTrapHandlerEnd:
         .long 0
-        
+
         /* Decrementer needs to restore the full CPU state */
         .globl KiDecrementerTrapUpper
         .align 8

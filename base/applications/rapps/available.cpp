@@ -516,6 +516,15 @@ BOOL CAvailableApps::Enum(INT EnumType, AVAILENUMPROC lpEnumProc, PVOID param)
 
             // set a timestamp for the next time
             Info->SetLastWriteTime(&FindFileData.ftLastWriteTime);
+
+            /* Check if we have the download URL */
+            if (Info->m_szUrlDownload.IsEmpty())
+            {
+                /* Can't use it, delete it */
+                delete Info;
+                continue;
+            }
+
             m_InfoList.AddTail(Info);
 
         skip_if_cached:

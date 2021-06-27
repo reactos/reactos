@@ -253,7 +253,7 @@ static LPWSTR dialog_print_to_file(HWND hMainWnd)
     ZeroMemory(&ofn, sizeof(ofn));
 
     ofn.lStructSize = sizeof(ofn);
-    ofn.Flags = OFN_PATHMUSTEXIST | OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT;
+    ofn.Flags = OFN_EXPLORER | OFN_PATHMUSTEXIST | OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT;
     ofn.hwndOwner = hMainWnd;
     ofn.lpstrFilter = file_filter;
     ofn.lpstrFile = file;

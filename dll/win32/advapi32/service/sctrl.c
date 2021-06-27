@@ -12,6 +12,8 @@
 /* INCLUDES ******************************************************************/
 
 #include <advapi32.h>
+#include <pseh/pseh2.h>
+
 WINE_DEFAULT_DEBUG_CHANNEL(advapi);
 
 

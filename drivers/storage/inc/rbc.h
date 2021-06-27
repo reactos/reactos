@@ -33,7 +33,7 @@ typedef union _CDB_RBC {
     //
     // format unit
     //
-    
+
     struct _FORMAT_RBC {
         UCHAR OperationCode;
         UCHAR VendorSpecific;
@@ -44,7 +44,7 @@ typedef union _CDB_RBC {
         UCHAR Reserved2[2];
         UCHAR Control;
     } FORMAT_RBC, *PFORMAT_RBC;
-    
+
     //
     // prevent/allow medium removal
     //

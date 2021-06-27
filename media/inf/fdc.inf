@@ -64,6 +64,12 @@ FDCClassName = "Floppy disk controllers"
 GenericMfg = "(Generic floppy disk controllers)"
 *PNP0700.DeviceDesc = "Generic floppy disk controller"
 
+[Strings.0404]
+FDCClassName = "軟碟控制器"
+
+GenericMfg = "(標準軟碟控制器)"
+*PNP0700.DeviceDesc = "標準軟碟控制器"
+
 [Strings.0405]
 FDCClassName = "Řadiče disketových jednotek"
 

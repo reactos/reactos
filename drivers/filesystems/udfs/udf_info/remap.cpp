@@ -64,7 +64,7 @@ UDFVInit(
         UDFPrint(("Already inited\n"));
         return STATUS_SUCCESS;
     }
-    
+
     _SEH2_TRY {
         RtlZeroMemory(VerifyCtx, sizeof(UDF_VERIFY_CTX));
         if(!Vcb->VerifyOnWrite) {
@@ -147,7 +147,7 @@ UDFVRelease(
     UDFAcquireResourceExclusive(&(VerifyCtx->VerifyLock), TRUE);
 
     Link = VerifyCtx->vrfList.Flink;
-    
+
     while(Link != &(VerifyCtx->vrfList)) {
         vItem = CONTAINING_RECORD( Link, UDF_VERIFY_ITEM, vrfList );
         Link = Link->Flink;
@@ -648,7 +648,7 @@ UDFVVerify(
     Link = VerifyCtx->vrfList.Flink;
     prev_lba = -2;
     len = 0;
-    
+
     while(i) {
         ASSERT(Link != &(VerifyCtx->vrfList));
 /*

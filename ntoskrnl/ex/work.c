@@ -609,7 +609,7 @@ ExpSetSwappingKernelApc(IN PKAPC Apc,
     PKEVENT Event = (PKEVENT)*SystemArgument1;
 
     /* Make sure it's an active worker */
-    if (PsGetCurrentThread()->ActiveExWorker) 
+    if (PsGetCurrentThread()->ActiveExWorker)
     {
         /* Read the setting from the context flag */
         AllowSwap = (PBOOLEAN)NormalContext;
@@ -670,7 +670,7 @@ ExSwapinWorkerThreads(IN BOOLEAN AllowSwap)
                 KeClearEvent(&Event);
             }
         }
-        
+
         /* Next thread */
 Next:
         Thread = PsGetNextProcessThread(Process, Thread);

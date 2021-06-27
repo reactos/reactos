@@ -32,7 +32,7 @@ static int _CrtModeOutputFormat[_CRT_ERRCNT] =
     _CRTDBG_MODE_WNDW,
 };
 // Caption per type
-static const wchar_t* _CrtModeMessages[_CRT_ERRCNT] = 
+static const wchar_t* _CrtModeMessages[_CRT_ERRCNT] =
 {
     L"Warning",
     L"Error",

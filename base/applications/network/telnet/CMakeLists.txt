@@ -24,10 +24,15 @@ list(APPEND SOURCE
 add_executable(telnet ${SOURCE} telnet.rc)
 target_link_libraries(telnet cppstl)
 set_target_cpp_properties(telnet WITH_EXCEPTIONS)
+
 if (NOT MSVC)
-    target_compile_options(telnet PRIVATE -Wno-restrict $<$<COMPILE_LANGUAGE:CXX>:-Wno-narrowing>)
     target_compile_definitions(telnet PRIVATE _CRT_NONSTDC_NO_DEPRECATE)
 endif()
+
+if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
+    target_compile_options(telnet PRIVATE -Wno-restrict $<$<COMPILE_LANGUAGE:CXX>:-Wno-narrowing>)
+endif()
+
 set_module_type(telnet win32cui)
 add_importlibs(telnet ws2_32 user32 msvcrt kernel32 ntdll)
 add_pch(telnet precomp.h SOURCE)

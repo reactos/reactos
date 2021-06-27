@@ -11,8 +11,8 @@ list(APPEND SOURCE
 add_library(shellfind OBJECT ${SOURCE})
 target_link_libraries(shellfind PRIVATE atl_classes)
 
-if(NOT MSVC)
-    target_compile_options(shellfind PRIVATE "-Wno-unused-but-set-variable")
+if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
+    target_compile_options(shellfind PRIVATE -Wno-unused-but-set-variable)
 endif()
 
 add_pch(shellfind shellfind.h SOURCE)

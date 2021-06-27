@@ -158,7 +158,7 @@ PIP_INTERFACE GetDefaultInterface(VOID)
    KIRQL OldIrql;
    ULONG Index = 0;
    ULONG IfStatus;
-   
+
    IF_LIST_ITER(CurrentIF);
 
    TcpipAcquireSpinLock(&InterfaceListLock, &OldIrql);
@@ -174,8 +174,8 @@ PIP_INTERFACE GetDefaultInterface(VOID)
 
           TcpipAcquireSpinLock(&InterfaceListLock, &OldIrql);
       }
-   } EndFor(CurrentIF);   
-   
+   } EndFor(CurrentIF);
+
    /* Try to continue from the next adapter */
    ForEachInterface(CurrentIF) {
       if (CurrentIF->Context && (Index++ == NextDefaultAdapter)) {
@@ -190,7 +190,7 @@ PIP_INTERFACE GetDefaultInterface(VOID)
           TcpipAcquireSpinLock(&InterfaceListLock, &OldIrql);
       }
    } EndFor(CurrentIF);
-   
+
    /* No luck, so we'll choose the first adapter this time */
    Index = 0;
    ForEachInterface(CurrentIF) {
@@ -207,7 +207,7 @@ PIP_INTERFACE GetDefaultInterface(VOID)
           TcpipAcquireSpinLock(&InterfaceListLock, &OldIrql);
       }
    } EndFor(CurrentIF);
-   
+
    /* Even that didn't work, so we'll just go with loopback */
    NextDefaultAdapter = 0;
    TcpipReleaseSpinLock(&InterfaceListLock, OldIrql);

@@ -2,7 +2,7 @@
  *  Shell AutoComplete list
  *
  *  Copyright 2015  Thomas Faber
- *  Copyright 2020  Katayama Hirofumi MZ
+ *  Copyright 2020-2021 Katayama Hirofumi MZ
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -174,7 +174,9 @@ HRESULT CACListISF::GetDisplayName(LPCITEMIDLIST pidlChild, CComHeapPtr<WCHAR>& 
     return hr;
 }
 
-HRESULT CACListISF::GetPathName(LPCITEMIDLIST pidlChild, CComHeapPtr<WCHAR>& pszPath)
+HRESULT
+CACListISF::GetPaths(LPCITEMIDLIST pidlChild, CComHeapPtr<WCHAR>& pszRaw,
+                     CComHeapPtr<WCHAR>& pszExpanded)
 {
     TRACE("(%p, %p)\n", this, pidlChild);
 
@@ -183,29 +185,24 @@ HRESULT CACListISF::GetPathName(LPCITEMIDLIST pidlChild, CComHeapPtr<WCHAR>& psz
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
-    CStringW szPath;
-    if (m_szExpand.GetLength() && m_iNextLocation == LT_DIRECTORY)
+    CStringW szRawPath, szExpanded;
+    if (m_szRawPath.GetLength() && m_iNextLocation == LT_DIRECTORY)
     {
-        INT cchExpand = m_szExpand.GetLength();
-        if (StrCmpNIW(pszChild, m_szExpand, cchExpand) != 0 ||
+        INT cchExpand = m_szRawPath.GetLength();
+        if (StrCmpNIW(pszChild, m_szRawPath, cchExpand) != 0 ||
             pszChild[0] != L'\\' || pszChild[1] != L'\\')
         {
-            szPath = m_szExpand;
+            szRawPath = m_szRawPath;
+            szExpanded = m_szExpanded;
         }
     }
-    szPath += pszChild;
+    szRawPath += pszChild;
+    szExpanded += pszChild;
 
-    INT cchMax = szPath.GetLength() + 1;
-    CComHeapPtr<WCHAR> pszFullPath;
-    if (!pszFullPath.Allocate(cchMax))
-    {
-        ERR("Out of memory\n");
-        return E_OUTOFMEMORY;
-    }
-
-    StringCchCopyW(pszFullPath, cchMax, szPath);
-    pszPath.Attach(pszFullPath.Detach());
-    TRACE("pszPath: '%S'\n", static_cast<LPCWSTR>(pszPath));
+    SHStrDupW(szRawPath, &pszRaw);
+    SHStrDupW(szExpanded, &pszExpanded);
+    TRACE("pszRaw: '%S'\n", static_cast<LPCWSTR>(pszRaw));
+    TRACE("pszExpanded: '%S'\n", static_cast<LPCWSTR>(pszExpanded));
     return S_OK;
 }
 
@@ -232,7 +229,7 @@ STDMETHODIMP CACListISF::Next(ULONG celt, LPOLESTR *rgelt, ULONG *pceltFetched)
 
     HRESULT hr;
     CComHeapPtr<ITEMIDLIST> pidlChild;
-    CComHeapPtr<WCHAR> pszPathName;
+    CComHeapPtr<WCHAR> pszRawPath, pszExpanded;
 
     do
     {
@@ -243,24 +240,15 @@ STDMETHODIMP CACListISF::Next(ULONG celt, LPOLESTR *rgelt, ULONG *pceltFetched)
             if (hr != S_OK)
                 break;
 
-            pszPathName.Free();
-            GetPathName(pidlChild, pszPathName);
-            if (!pszPathName)
+            pszRawPath.Free();
+            pszExpanded.Free();
+            GetPaths(pidlChild, pszRawPath, pszExpanded);
+            if (!pszRawPath || !pszExpanded)
                 continue;
 
-            if (m_dwOptions & (ACLO_FILESYSONLY | ACLO_FILESYSDIRS))
-            {
-                DWORD attrs = SFGAO_FILESYSANCESTOR | SFGAO_FILESYSTEM;
-                LPCITEMIDLIST pidlRef = pidlChild;
-                hr = m_pShellFolder->GetAttributesOf(1, &pidlRef, &attrs);
-                if (SUCCEEDED(hr))
-                {
-                   if (!(attrs & (SFGAO_FILESYSTEM | SFGAO_FILESYSANCESTOR)))
-                        continue;
-                }
-            }
-
-            if ((m_dwOptions & ACLO_FILESYSDIRS) && !PathIsDirectoryW(pszPathName))
+            if ((m_dwOptions & ACLO_FILESYSDIRS) && !PathIsDirectoryW(pszExpanded))
+                continue;
+            else if ((m_dwOptions & ACLO_FILESYSONLY) && !PathFileExistsW(pszExpanded))
                 continue;
 
             hr = S_OK;
@@ -270,7 +258,7 @@ STDMETHODIMP CACListISF::Next(ULONG celt, LPOLESTR *rgelt, ULONG *pceltFetched)
 
     if (hr == S_OK)
     {
-        *rgelt = pszPathName.Detach();
+        *rgelt = pszRawPath.Detach();
         if (pceltFetched)
             *pceltFetched = 1;
     }
@@ -288,7 +276,7 @@ STDMETHODIMP CACListISF::Reset()
     TRACE("(%p)\n", this);
 
     m_iNextLocation = LT_DIRECTORY;
-    m_szExpand = L"";
+    m_szRawPath = L"";
 
     SHELLSTATE ss = { 0 };
     SHGetSetSettings(&ss, SSF_SHOWALLOBJECTS, FALSE);
@@ -328,16 +316,48 @@ STDMETHODIMP CACListISF::Expand(LPCOLESTR pszExpand)
 {
     TRACE("(%p, %ls)\n", this, pszExpand);
 
-    m_szExpand = pszExpand;
-
+    m_szRawPath = pszExpand;
     m_iNextLocation = LT_DIRECTORY;
+
+    // skip left space
+    while (*pszExpand == L' ')
+        ++pszExpand;
+
+    // expand environment variables (%WINDIR% etc.)
+    WCHAR szExpanded[MAX_PATH], szPath1[MAX_PATH], szPath2[MAX_PATH];
+    ExpandEnvironmentStringsW(pszExpand, szExpanded, _countof(szExpanded));
+    pszExpand = szExpanded;
+
+    // get full path
+    if (szExpanded[0] && szExpanded[1] == L':' && szExpanded[2] == 0)
+    {
+        // 'C:' --> 'C:\'
+        szExpanded[2] = L'\\';
+        szExpanded[3] = 0;
+    }
+    else
+    {
+        if (PathIsRelativeW(pszExpand) &&
+            SHGetPathFromIDListW(m_pidlCurDir, szPath1) &&
+            PathCombineW(szPath2, szPath1, pszExpand))
+        {
+            pszExpand = szPath2;
+        }
+        GetFullPathNameW(pszExpand, _countof(szPath1), szPath1, NULL);
+        pszExpand = szPath1;
+    }
+
     CComHeapPtr<ITEMIDLIST> pidl;
-    HRESULT hr = SHParseDisplayName(m_szExpand, NULL, &pidl, NULL, NULL);
+    m_szExpanded = pszExpand;
+    HRESULT hr = SHParseDisplayName(m_szExpanded, NULL, &pidl, NULL, NULL);
     if (SUCCEEDED(hr))
     {
         hr = SetLocation(pidl.Detach());
         if (FAILED_UNEXPECTEDLY(hr))
-            m_szExpand = L"";
+        {
+            m_szRawPath = L"";
+            m_szExpanded = L"";
+        }
     }
     return hr;
 }
