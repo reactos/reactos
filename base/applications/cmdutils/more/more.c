@@ -172,6 +172,14 @@ PagePrompt(PCON_PAGER Pager, DWORD Done, DWORD Total)
     if (!*StrLines)
         K32LoadStringW(NULL, IDS_CONTINUE_LINES, StrLines, ARRAYSIZE(StrLines));
 
+    /*
+     * Check whether the pager is prompting, but we have actually finished
+     * to display a given file, or no data is present in STDIN anymore.
+     * In this case, skip the prompt altogether. The only exception is when
+     * we are displaying other files.
+     */
+    // TODO: Implement!
+
 Restart:
     nLines = 0;
 
@@ -323,6 +331,11 @@ Restart:
     dwMode |= ENABLE_PROCESSED_INPUT;
     SetConsoleMode(hInput, dwMode);
 
+    /* Refresh the screen information, as the console may have been
+     * redimensioned. Update also the default number of lines to scroll. */
+    ConGetScreenInfo(Pager->Screen, &csbi);
+    Pager->ScrollRows = csbi.srWindow.Bottom - csbi.srWindow.Top;
+
     /*
      * Erase the full line where the cursor is, and move
      * the cursor back to the beginning of the line.
@@ -357,6 +370,7 @@ Restart:
         {
             s_dwFlags |= FLAG_PLUSn;
             s_nNextLineNo = Pager->lineno + nLines;
+            /* Use the default Pager->ScrollRows value */
             return TRUE;
         }
         default:
@@ -412,6 +426,7 @@ Restart:
                 /* Clear the screen */
                 ConClearScreen(Pager->Screen);
             }
+            /* Use the default Pager->ScrollRows value */
             return TRUE;
         }
 
@@ -444,6 +459,7 @@ Restart:
     else
     {
         /* Extended features are unavailable: display one page */
+        /* Use the default Pager->ScrollRows value */
         return TRUE;
     }
 }
@@ -1075,6 +1091,7 @@ int wmain(int argc, WCHAR* argv[])
         SetFilePointer(hFile, SkipBytes, NULL, FILE_BEGIN);
 
         /* Reset state for paging */
+        s_nNextLineNo = 0;
         s_bPrevLineIsBlank = FALSE;
         s_fPrompt = PROMPT_PERCENT;
         s_bDoNextFile = FALSE;

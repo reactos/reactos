@@ -312,7 +312,7 @@ ConWritePaging(
     if (bIsConsole)
     {
         /* Calculate the console screen extent */
-        Pager->PageColumns = csbi.srWindow.Right - csbi.srWindow.Left + 1;
+        Pager->PageColumns = csbi.dwSize.X;
         Pager->PageRows = csbi.srWindow.Bottom - csbi.srWindow.Top + 1;
     }
     else
@@ -324,14 +324,14 @@ ConWritePaging(
 
     if (StartPaging)
     {
-        if (bIsConsole)
+        if (bIsConsole && (Pager->PageRows >= 2))
         {
             /* Reset to display one page by default */
             Pager->ScrollRows = Pager->PageRows - 1;
         }
         else
         {
-            /* File output: all lines are displayed at once; reset to a default value */
+            /* File output, or single line: all lines are displayed at once; reset to a default value */
             Pager->ScrollRows = 0;
         }
     }
@@ -371,7 +371,7 @@ ConWritePaging(
          * in case the user has redimensioned it during the prompt. */
         if (bIsConsole && ConGetScreenInfo(Pager->Screen, &csbi))
         {
-            Pager->PageColumns = csbi.srWindow.Right - csbi.srWindow.Left + 1;
+            Pager->PageColumns = csbi.dwSize.X;
             Pager->PageRows = csbi.srWindow.Bottom - csbi.srWindow.Top + 1;
         }
     }
