@@ -215,7 +215,7 @@ ReassembleDatagram(
   RtlCopyMemory(&IPPacket->DstAddr, &IPDR->DstAddr, sizeof(IP_ADDRESS));
 
   /* Allocate space for full IP datagram */
-  IPPacket->Header = ExAllocatePoolWithTag(PagedPool, IPPacket->TotalSize, PACKET_BUFFER_TAG);
+  IPPacket->Header = ExAllocatePoolWithTag(NonPagedPool, IPPacket->TotalSize, PACKET_BUFFER_TAG);
   if (!IPPacket->Header) {
     TI_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
     (*IPPacket->Free)(IPPacket);
