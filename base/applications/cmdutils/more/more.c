@@ -88,7 +88,8 @@ static BOOL IsBlankLine(IN PCWCH line, IN DWORD cch)
     return TRUE;
 }
 
-static BOOL __stdcall
+static BOOL
+__stdcall
 MorePagerLine(
     IN OUT PCON_PAGER Pager,
     IN PCWCH line,
@@ -100,7 +101,7 @@ MorePagerLine(
     {
         if (Pager->lineno < s_nNextLineNo)
         {
-            Pager->dwFlags |= CON_PAGER_FLAG_DONT_OUTPUT;
+            Pager->dwFlags |= CON_PAGER_DONT_OUTPUT;
             s_bPrevLineIsBlank = FALSE;
             return TRUE; /* Don't output */
         }
@@ -113,7 +114,7 @@ MorePagerLine(
         {
             if (s_bPrevLineIsBlank)
             {
-                Pager->dwFlags |= CON_PAGER_FLAG_DONT_OUTPUT;
+                Pager->dwFlags |= CON_PAGER_DONT_OUTPUT;
                 return TRUE; /* Don't output */
             }
 
@@ -981,9 +982,9 @@ int wmain(int argc, WCHAR* argv[])
     }
 
     Pager.PagerLine = MorePagerLine;
-    Pager.dwFlags |= CON_PAGER_FLAG_EXPAND_TABS;
+    Pager.dwFlags |= CON_PAGER_EXPAND_TABS;
     if (s_dwFlags & FLAG_P)
-        Pager.dwFlags |= CON_PAGER_FLAG_EXPAND_FF;
+        Pager.dwFlags |= CON_PAGER_EXPAND_FF;
     Pager.nTabWidth = s_nTabWidth;
 
     /* Special case where we run 'MORE' without any argument: we use STDIN */

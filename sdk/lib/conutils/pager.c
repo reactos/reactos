@@ -63,7 +63,7 @@ ConCallPagerLine(
     IN PCTCH line,
     IN DWORD cch)
 {
-    Pager->dwFlags &= ~CON_PAGER_FLAG_DONT_OUTPUT; /* Clear the flag */
+    Pager->dwFlags &= ~CON_PAGER_DONT_OUTPUT; /* Clear the flag */
 
     if (!Pager->PagerLine || !Pager->PagerLine(Pager, line, cch))
         CON_STREAM_WRITE(Pager->Screen->Stream, line, cch);
@@ -72,12 +72,12 @@ ConCallPagerLine(
 static BOOL
 ConPagerWorker(IN PCON_PAGER Pager)
 {
-    const DWORD ScreenColumns = Pager->ScreenColumns;
+    const DWORD PageColumns = Pager->PageColumns;
     const DWORD ScrollRows = Pager->ScrollRows;
     const PCTCH TextBuff = Pager->TextBuff;
     const DWORD cch = Pager->cch;
 
-    BOOL bFinitePaging = ((ScreenColumns > 0) && (Pager->ScreenRows > 0));
+    BOOL bFinitePaging = ((PageColumns > 0) && (Pager->PageRows > 0));
     LONG nTabWidth = Pager->nTabWidth;
 
     DWORD ich = Pager->ich;
@@ -99,12 +99,12 @@ ConPagerWorker(IN PCON_PAGER Pager)
 
     /* Normalize the tab width: if negative or too large,
      * cap it to the number of columns. */
-    if (ScreenColumns > 0) // if (bFinitePaging)
+    if (PageColumns > 0) // if (bFinitePaging)
     {
         if (nTabWidth < 0)
-            nTabWidth = ScreenColumns - 1;
+            nTabWidth = PageColumns - 1;
         else
-            nTabWidth = min(nTabWidth, ScreenColumns - 1);
+            nTabWidth = min(nTabWidth, PageColumns - 1);
     }
     else
     {
@@ -114,7 +114,7 @@ ConPagerWorker(IN PCON_PAGER Pager)
             nTabWidth = 8;
     }
 
-    if (Pager->dwFlags & CON_PAGER_FLAG_EXPAND_TABS)
+    if (Pager->dwFlags & CON_PAGER_EXPAND_TABS)
     {
 ExpandTab:
         while (Pager->nSpacePending > 0)
@@ -126,9 +126,9 @@ ExpandTab:
             ConCallPagerLine(Pager, L" ", 1);
             --(Pager->nSpacePending);
             ++iColumn;
-            if ((ScreenColumns > 0) && (iColumn % ScreenColumns == 0))
+            if ((PageColumns > 0) && (iColumn % PageColumns == 0))
             {
-                if (!(Pager->dwFlags & CON_PAGER_FLAG_DONT_OUTPUT))
+                if (!(Pager->dwFlags & CON_PAGER_DONT_OUTPUT))
                     ++iLine;
             }
         }
@@ -149,7 +149,7 @@ ExpandTab:
             /* Output the pending text, including the newline */
             ConCallPagerLine(Pager, &TextBuff[ichStart], ich - ichStart + 1);
             ichStart = ich + 1;
-            if (!(Pager->dwFlags & CON_PAGER_FLAG_DONT_OUTPUT))
+            if (!(Pager->dwFlags & CON_PAGER_DONT_OUTPUT))
                 ++iLine;
             iColumn = 0;
 
@@ -160,7 +160,7 @@ ExpandTab:
 
         /* TAB character */
         if (TextBuff[ich] == TEXT('\t') &&
-            (Pager->dwFlags & CON_PAGER_FLAG_EXPAND_TABS))
+            (Pager->dwFlags & CON_PAGER_EXPAND_TABS))
         {
             /* Output the pending text */
             ConCallPagerLine(Pager, &TextBuff[ichStart], ich - ichStart);
@@ -178,12 +178,12 @@ ExpandTab:
 
         /* FORM-FEED character */
         if (TextBuff[ich] == TEXT('\f') &&
-            (Pager->dwFlags & CON_PAGER_FLAG_EXPAND_FF))
+            (Pager->dwFlags & CON_PAGER_EXPAND_FF))
         {
             /* Output the pending text, skipping the form-feed */
             ConCallPagerLine(Pager, &TextBuff[ichStart], ich - ichStart);
             ichStart = ich + 1;
-            // FIXME: Should we handle CON_PAGER_FLAG_DONT_OUTPUT ?
+            // FIXME: Should we handle CON_PAGER_DONT_OUTPUT ?
 
             if (bFinitePaging)
             {
@@ -192,7 +192,7 @@ ExpandTab:
                 {
                     ConCallPagerLine(Pager, L"\n", 1);
                     // CON_STREAM_WRITE(Pager->Screen->Stream, TEXT("\n"), 1);
-                    // if (!(Pager->dwFlags & CON_PAGER_FLAG_DONT_OUTPUT))
+                    // if (!(Pager->dwFlags & CON_PAGER_DONT_OUTPUT))
                     ++iLine;
                 }
             }
@@ -212,23 +212,23 @@ ExpandTab:
         if (IsCJK)
         {
             nWidthOfChar = GetWidthOfCharCJK(nCodePage, TextBuff[ich]);
-            if (ScreenColumns > 0)
+            if (PageColumns > 0)
             {
                 IsDoubleWidthCharTrailing = (nWidthOfChar == 2) &&
-                                            ((iColumn + 1) % ScreenColumns == 0);
+                                            ((iColumn + 1) % PageColumns == 0);
             }
         }
 
         /* Care about CJK character presentation only when outputting
          * to a device where the number of columns is known. */
-        if (ScreenColumns > 0)
+        if (PageColumns > 0)
         {
-            if ((iColumn + nWidthOfChar) % ScreenColumns == 0)
+            if ((iColumn + nWidthOfChar) % PageColumns == 0)
             {
                 /* Output the pending text, including the last double-width character */
                 ConCallPagerLine(Pager, &TextBuff[ichStart], ich - ichStart + 1);
                 ichStart = ich + 1;
-                if (!(Pager->dwFlags & CON_PAGER_FLAG_DONT_OUTPUT))
+                if (!(Pager->dwFlags & CON_PAGER_DONT_OUTPUT))
                     ++iLine;
                 iColumn += nWidthOfChar;
                 continue;
@@ -239,10 +239,10 @@ ExpandTab:
                 /* Output the pending text, excluding the last double-width character */
                 ConCallPagerLine(Pager, &TextBuff[ichStart], ich - ichStart);
                 ichStart = ich;
-                if (!(Pager->dwFlags & CON_PAGER_FLAG_DONT_OUTPUT))
+                if (!(Pager->dwFlags & CON_PAGER_DONT_OUTPUT))
                     CON_STREAM_WRITE(Pager->Screen->Stream, TEXT(" "), 1);
                 --ich;
-                if (!(Pager->dwFlags & CON_PAGER_FLAG_DONT_OUTPUT))
+                if (!(Pager->dwFlags & CON_PAGER_DONT_OUTPUT))
                     ++iLine;
                 ++iColumn;
                 continue;
@@ -267,7 +267,31 @@ ExpandTab:
     return (ich < cch);
 }
 
-/* Returns TRUE when all the text is displayed, and FALSE if display is stopped */
+
+/**
+ * @name ConWritePaging
+ *     Pages the contents of a user-specified character buffer on the screen.
+ *
+ * @param[in]   Pager
+ *     Pager object that describes where the paged output is issued.
+ *
+ * @param[in]   PagePrompt
+ *     A user-specific callback, called when a page has been displayed.
+ *
+ * @param[in]   StartPaging
+ *     Set to TRUE for initializing the paging operation; FALSE during paging.
+ *
+ * @param[in]   szStr
+ *     Pointer to the character buffer whose contents are to be paged.
+ *
+ * @param[in]   len
+ *     Length of the character buffer pointed by @p szStr, specified
+ *     in number of characters.
+ *
+ * @return
+ *     TRUE when all the contents of the character buffer has been displayed;
+ *     FALSE if the paging operation has been stopped (controlled via @p PagePrompt).
+ **/
 BOOL
 ConWritePaging(
     IN PCON_PAGER Pager,
@@ -288,14 +312,14 @@ ConWritePaging(
     if (bIsConsole)
     {
         /* Calculate the console screen extent */
-        Pager->ScreenColumns = csbi.srWindow.Right - csbi.srWindow.Left + 1;
-        Pager->ScreenRows = csbi.srWindow.Bottom - csbi.srWindow.Top + 1;
+        Pager->PageColumns = csbi.srWindow.Right - csbi.srWindow.Left + 1;
+        Pager->PageRows = csbi.srWindow.Bottom - csbi.srWindow.Top + 1;
     }
     else
     {
         /* We assume it's a file handle */
-        Pager->ScreenColumns = 0;
-        Pager->ScreenRows = 0;
+        Pager->PageColumns = 0;
+        Pager->PageRows = 0;
     }
 
     if (StartPaging)
@@ -303,7 +327,7 @@ ConWritePaging(
         if (bIsConsole)
         {
             /* Reset to display one page by default */
-            Pager->ScrollRows = Pager->ScreenRows - 1;
+            Pager->ScrollRows = Pager->PageRows - 1;
         }
         else
         {
@@ -314,11 +338,11 @@ ConWritePaging(
 
     if (StartPaging)
     {
-        /* Reset the output line count, the column index and the line number */
-        Pager->iLine = 0;
-        Pager->iColumn = 0;
-        Pager->lineno = 1;
+        /* Reset the paging state */
         Pager->nSpacePending = 0;
+        Pager->iColumn = 0;
+        Pager->iLine = 0;
+        Pager->lineno = 1;
     }
 
     Pager->TextBuff = szStr;
@@ -333,10 +357,10 @@ ConWritePaging(
         /* Prompt the user only when we display to a console and the screen
          * is not too small: at least one line for the actual paged text and
          * one line for the prompt. */
-        if (bIsConsole && (Pager->ScreenRows >= 2))
+        if (bIsConsole && (Pager->PageRows >= 2))
         {
             /* Reset to display one page by default */
-            Pager->ScrollRows = Pager->ScreenRows - 1;
+            Pager->ScrollRows = Pager->PageRows - 1;
 
             /* Prompt the user; give him some values for statistics */
             if (!PagePrompt(Pager, Pager->ich, Pager->cch))
@@ -347,8 +371,8 @@ ConWritePaging(
          * in case the user has redimensioned it during the prompt. */
         if (bIsConsole && ConGetScreenInfo(Pager->Screen, &csbi))
         {
-            Pager->ScreenColumns = csbi.srWindow.Right - csbi.srWindow.Left + 1;
-            Pager->ScreenRows = csbi.srWindow.Bottom - csbi.srWindow.Top + 1;
+            Pager->PageColumns = csbi.srWindow.Right - csbi.srWindow.Left + 1;
+            Pager->PageRows = csbi.srWindow.Bottom - csbi.srWindow.Top + 1;
         }
     }
 

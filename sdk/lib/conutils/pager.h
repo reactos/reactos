@@ -29,25 +29,28 @@ extern "C" {
 // #include <wincon.h>
 
 struct _CON_PAGER;
-typedef BOOL (__stdcall *CON_PAGER_LINE_FN)(
+
+typedef BOOL
+(__stdcall *CON_PAGER_LINE_FN)(
     IN OUT struct _CON_PAGER *Pager,
     IN PCTCH line,
     IN DWORD cch);
 
 /* Flags for CON_PAGER */
-#define CON_PAGER_FLAG_DONT_OUTPUT (1 << 0)
-#define CON_PAGER_FLAG_EXPAND_TABS (1 << 1)
-#define CON_PAGER_FLAG_EXPAND_FF   (1 << 2)
+#define CON_PAGER_DONT_OUTPUT   (1 << 0)
+#define CON_PAGER_EXPAND_TABS   (1 << 1)
+#define CON_PAGER_EXPAND_FF     (1 << 2)
 
 typedef struct _CON_PAGER
 {
     /* Console screen properties */
     PCON_SCREEN Screen;
-    DWORD ScreenColumns;
-    DWORD ScreenRows;
+    DWORD PageColumns;
+    DWORD PageRows;
 
     /* Paging parameters */
     CON_PAGER_LINE_FN PagerLine; /* The line function */
+    DWORD dwFlags;  /* The CON_PAGER_... flags */
     LONG  nTabWidth;
     DWORD ScrollRows;
 
@@ -57,11 +60,10 @@ typedef struct _CON_PAGER
 
     /* Paging state */
     DWORD ich;      /* The current index of character */
+    DWORD nSpacePending; /* Pending spaces for TAB expansion */
     DWORD iColumn;  /* The current index of column */
     DWORD iLine;    /* The physical output line count of screen */
     DWORD lineno;   /* The logical line number */
-    DWORD dwFlags;  /* The CON_PAGER_FLAG_... flags */
-    DWORD nSpacePending;
 } CON_PAGER, *PCON_PAGER;
 
 #define INIT_CON_PAGER(pScreen)     {(pScreen), 0}
@@ -73,7 +75,8 @@ do { \
 } while (0)
 
 
-typedef BOOL (__stdcall *PAGE_PROMPT)(
+typedef BOOL
+(__stdcall *PAGE_PROMPT)(
     IN PCON_PAGER Pager,
     IN DWORD Done,
     IN DWORD Total);
