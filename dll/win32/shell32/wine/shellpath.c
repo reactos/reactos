@@ -709,7 +709,6 @@ BOOL WINAPI PathResolveW(LPWSTR path, LPCWSTR *dirs, DWORD flags)
                 return PathMakeAbsoluteW(path) && PathFileExistsAndAttributesW(path, NULL);
         }
 #endif
-
         return TRUE;
     }
 
