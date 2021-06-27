@@ -440,6 +440,8 @@ BOOL WINAPI PathYetAnotherMakeUniqueName(
     LPCWSTR lpszShortName,
     LPCWSTR lpszLongName);
 
+VOID WINAPI PathQualifyA(LPSTR pszPath);
+VOID WINAPI PathQualifyW(LPWSTR pszPath);
 VOID WINAPI PathQualifyAW(LPVOID path);
 
 /* PathResolve flags */

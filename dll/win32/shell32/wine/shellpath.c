@@ -598,24 +598,24 @@ int WINAPI PathCleanupSpec( LPCWSTR lpszPathW, LPWSTR lpszFileW )
 }
 
 /*************************************************************************
- * PathQualifyW		[SHELL32]
- */
-static VOID PathQualifyW(LPWSTR pszPath)
-{
-    TRACE("%s\n",debugstr_w(pszPath));
-    PathQualifyExW(pszPath, NULL, 0);
-}
-
-/*************************************************************************
  * PathQualifyA		[SHELL32]
  */
-static VOID PathQualifyA(LPSTR pszPath)
+VOID WINAPI PathQualifyA(LPSTR pszPath)
 {
     WCHAR szPath[MAX_PATH];
     TRACE("%s\n",pszPath);
     SHAnsiToUnicode(pszPath, szPath, _countof(szPath));
     PathQualifyW(szPath);
     SHUnicodeToAnsi(szPath, pszPath, MAX_PATH);
+}
+
+/*************************************************************************
+ * PathQualifyW		[SHELL32]
+ */
+VOID WINAPI PathQualifyW(LPWSTR pszPath)
+{
+    TRACE("%s\n",debugstr_w(pszPath));
+    PathQualifyExW(pszPath, NULL, 0);
 }
 
 /*************************************************************************
