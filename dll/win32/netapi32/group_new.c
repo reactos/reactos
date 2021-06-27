@@ -379,9 +379,11 @@ NetGroupAdd(
     if (ApiStatus == NERR_Success)
     {
         ERR("OpenGroupByName: Group %wZ already exists!\n", &GroupName);
+        ApiStatus = ERROR_GROUP_EXISTS;
 
         SamCloseHandle(GroupHandle);
-        ApiStatus = ERROR_GROUP_EXISTS;
+        GroupHandle = NULL;
+
         goto done;
     }
 
@@ -412,12 +414,8 @@ NetGroupAdd(
                                         &AdminComment);
         if (!NT_SUCCESS(Status))
         {
-            ERR("SamSetInformationAlias failed (Status %08lx)\n", Status);
+            ERR("SamSetInformationGroup() failed. Status 0x%lX\n", Status);
             ApiStatus = NetpNtStatusToApiStatus(Status);
-
-            /* Delete the Alias if the Comment could not be set */
-            SamDeleteGroup(GroupHandle);
-
             goto done;
         }
     }
@@ -432,12 +430,8 @@ NetGroupAdd(
                                         &AttributeInfo);
         if (!NT_SUCCESS(Status))
         {
-            ERR("SamSetInformationAlias failed (Status %08lx)\n", Status);
+            ERR("SamSetInformationGroup() failed. Status 0x%lX\n", Status);
             ApiStatus = NetpNtStatusToApiStatus(Status);
-
-            /* Delete the Alias if the Attributes could not be set */
-            SamDeleteGroup(GroupHandle);
-
             goto done;
         }
     }
@@ -645,6 +639,9 @@ NetGroupDel(
         ApiStatus = NetpNtStatusToApiStatus(Status);
         goto done;
     }
+
+    /* A successful delete invalidates the handle */
+    GroupHandle = NULL;
 
 done:
     if (GroupHandle != NULL)
@@ -876,7 +873,7 @@ NetGroupEnum(
             TRACE("SamEnumerateGroupsInDomain returned (Status %08lx)\n", Status);
             if (!NT_SUCCESS(Status))
             {
-                ERR("SamEnumerateAliasesInDomain failed (Status %08lx)\n", Status);
+                ERR("SamEnumerateGroupsInDomain() failed. Status 0x%lX\n", Status);
                 ApiStatus = NetpNtStatusToApiStatus(Status);
                 goto done;
             }
