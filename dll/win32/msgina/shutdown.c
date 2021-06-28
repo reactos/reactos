@@ -1030,12 +1030,24 @@ ShutdownDialogProc(
             ShutdownOnInit(hDlg, pContext);
 
             /* Draw the logo bitmap */
+            BITMAP bm;
+            
             if (IsWindowsServer())
             {
                 pContext->hBitmap =
                     LoadImageW(pContext->pgContext->hDllInstance,
                                MAKEINTRESOURCEW(IDI_ROSLOGO_SERVER), IMAGE_BITMAP,
                                0, 0, LR_DEFAULTCOLOR);
+                
+                GetObject(pContext->hBitmap, sizeof(BITMAP), &bm);
+                
+                if (bm.bmBitsPixel <= 4)
+                {
+                    pContext->hBitmap =
+                        LoadImageW(pContext->pgContext->hDllInstance,
+                                   MAKEINTRESOURCEW(IDI_ROSLOGO_SERVER_VGA), IMAGE_BITMAP,
+                                   0, 0, LR_DEFAULTCOLOR);
+                }
             }
             else
             {
@@ -1044,6 +1056,15 @@ ShutdownDialogProc(
                                MAKEINTRESOURCEW(IDI_ROSLOGO_WORKSTATION), IMAGE_BITMAP,
                                0, 0, LR_DEFAULTCOLOR);
 
+                GetObject(pContext->hBitmap, sizeof(BITMAP), &bm);
+                
+                if (bm.bmBitsPixel <= 4)
+                {
+                    pContext->hBitmap =
+                        LoadImageW(pContext->pgContext->hDllInstance,
+                                   MAKEINTRESOURCEW(IDI_ROSLOGO_WORKSTATION_VGA), IMAGE_BITMAP,
+                                   0, 0, LR_DEFAULTCOLOR);
+                }
             }
         return TRUE;
         }

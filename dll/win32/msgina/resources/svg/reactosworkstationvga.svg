@@ -1,0 +1,1855 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="413"
+   height="72"
+   viewBox="0 0 109 19"
+   version="1.1"
+   id="svg8"
+   inkscape:version="1.0.2-2 (e86c870879, 2021-01-15)"
+   sodipodi:docname="reactosworkstationvga.svg"
+   inkscape:export-filename="reactosworkstationvga.png"
+   inkscape:export-xdpi="96"
+   inkscape:export-ydpi="96">
+  <defs
+     id="defs2">
+    <radialGradient
+       id="radialGradient2677"
+       gradientUnits="userSpaceOnUse"
+       cy="775.88397"
+       cx="385.866"
+       gradientTransform="matrix(1,0,0,1.098684,0,-76.56746)"
+       r="161.42599">
+      <stop
+         stop-color="#000"
+         offset="0"
+         id="stop14005" />
+      <stop
+         stop-color="#000"
+         stop-opacity="0"
+         offset="1"
+         id="stop14007" />
+    </radialGradient>
+    <radialGradient
+       id="radialGradient2679"
+       gradientUnits="userSpaceOnUse"
+       cy="835.15997"
+       cx="292.94199"
+       gradientTransform="matrix(-1.2414154,0.7906519,0.7046472,1.1063777,17.23768,-980.81675)"
+       r="49.305698">
+      <stop
+         stop-color="#FFF"
+         offset="0"
+         id="stop14010" />
+      <stop
+         stop-color="#FFF"
+         stop-opacity="0"
+         offset="1"
+         id="stop14012" />
+    </radialGradient>
+    <linearGradient
+       id="linearGradient2681"
+       y2="352.73199"
+       gradientUnits="userSpaceOnUse"
+       x2="491.327"
+       gradientTransform="matrix(0.7446541,0,0,0.7446541,-3.2041063,0.7509507)"
+       y1="205.392"
+       x1="582.23602">
+      <stop
+         stop-color="#FFF"
+         offset="0"
+         id="stop14015" />
+      <stop
+         stop-color="#FFF"
+         stop-opacity="0"
+         offset="1"
+         id="stop14017" />
+    </linearGradient>
+    <linearGradient
+       id="linearGradient17671">
+      <stop
+         stop-color="#FFF"
+         stop-opacity="0.41618496"
+         offset="0"
+         id="stop13946" />
+      <stop
+         stop-color="#FFF"
+         stop-opacity="0"
+         offset="1"
+         id="stop13948" />
+    </linearGradient>
+    <linearGradient
+       id="linearGradient4522">
+      <stop
+         stop-color="#FFF"
+         offset="0"
+         id="stop13941" />
+      <stop
+         stop-color="#FFF"
+         stop-opacity="0"
+         offset="1"
+         id="stop13943" />
+    </linearGradient>
+    <linearGradient
+       id="linearGradient3800">
+      <stop
+         stop-color="#466886"
+         offset="0"
+         id="stop13936" />
+      <stop
+         stop-color="#617689"
+         stop-opacity="0"
+         offset="1"
+         id="stop13938" />
+    </linearGradient>
+    <filter
+       id="filter4546"
+       color-interpolation-filters="sRGB">
+      <feGaussianBlur
+         stdDeviation="0.58082045"
+         id="feGaussianBlur13969" />
+    </filter>
+    <filter
+       id="filter4640"
+       color-interpolation-filters="sRGB">
+      <feGaussianBlur
+         stdDeviation="0.11651621"
+         id="feGaussianBlur14084" />
+    </filter>
+    <filter
+       id="filter536"
+       color-interpolation-filters="sRGB">
+      <feGaussianBlur
+         stdDeviation="0.58082045"
+         id="feGaussianBlur534" />
+    </filter>
+    <linearGradient
+       id="linearGradient7995">
+      <stop
+         stop-color="#FFF"
+         stop-opacity="0"
+         offset="0"
+         id="stop13918" />
+      <stop
+         stop-color="#FFF"
+         stop-opacity="0"
+         offset="0.851163"
+         id="stop13920" />
+      <stop
+         stop-color="#FFF"
+         offset="0.851163"
+         id="stop13922" />
+      <stop
+         stop-color="#FFF"
+         stop-opacity="0"
+         offset="0.962791"
+         id="stop13924" />
+      <stop
+         stop-color="#FFF"
+         stop-opacity="0"
+         offset="1"
+         id="stop13926" />
+    </linearGradient>
+    <filter
+       id="filter4557"
+       color-interpolation-filters="sRGB">
+      <feGaussianBlur
+         stdDeviation="4.9633802"
+         id="feGaussianBlur14056" />
+    </filter>
+    <radialGradient
+       id="radialGradient3569"
+       gradientUnits="userSpaceOnUse"
+       cy="1040.22"
+       cx="392.07401"
+       gradientTransform="matrix(1.0896219,1.2704115,-1.9939809,2.0570205,1844.3831,-1657.6391)"
+       r="161.42599">
+      <stop
+         stop-color="#FFF"
+         stop-opacity="0"
+         offset="0"
+         id="stop14044" />
+      <stop
+         stop-color="#FFF"
+         stop-opacity="0"
+         offset="0.930233"
+         id="stop14046" />
+      <stop
+         stop-color="#FFF"
+         offset="1"
+         id="stop14048" />
+      <stop
+         stop-color="#FFF"
+         stop-opacity="0"
+         offset="1"
+         id="stop14050" />
+    </radialGradient>
+    <filter
+       id="filter3477"
+       height="1.6959413"
+       width="1.9205891"
+       y="-0.34797066"
+       x="-0.46029457"
+       color-interpolation-filters="sRGB">
+      <feGaussianBlur
+         stdDeviation="49.010201"
+         id="feGaussianBlur13981" />
+    </filter>
+    <filter
+       id="filter4565"
+       color-interpolation-filters="sRGB">
+      <feGaussianBlur
+         stdDeviation="4.9805913"
+         id="feGaussianBlur14062" />
+    </filter>
+    <filter
+       id="filter4561"
+       color-interpolation-filters="sRGB">
+      <feGaussianBlur
+         stdDeviation="4.9841362"
+         id="feGaussianBlur14059" />
+    </filter>
+    <filter
+       id="filter4553"
+       color-interpolation-filters="sRGB">
+      <feGaussianBlur
+         stdDeviation="5.1794966"
+         id="feGaussianBlur14053" />
+    </filter>
+    <filter
+       id="filter3597"
+       height="1.4965283"
+       width="1.3348944"
+       y="-0.24826413"
+       x="-0.16744719"
+       color-interpolation-filters="sRGB">
+      <feGaussianBlur
+         stdDeviation="4.5116686"
+         id="feGaussianBlur14002" />
+    </filter>
+    <filter
+       id="filter3553"
+       height="1.213006"
+       width="1.1931673"
+       y="-0.10650298"
+       x="-0.096583642"
+       color-interpolation-filters="sRGB">
+      <feGaussianBlur
+         stdDeviation="4.5608848"
+         id="feGaussianBlur13993" />
+    </filter>
+    <filter
+       id="filter3561"
+       height="1.213006"
+       width="1.1931673"
+       y="-0.10650298"
+       x="-0.096583642"
+       color-interpolation-filters="sRGB">
+      <feGaussianBlur
+         stdDeviation="4.5608848"
+         id="feGaussianBlur13999" />
+    </filter>
+    <filter
+       id="filter3541"
+       height="1.213006"
+       width="1.1931673"
+       y="-0.10650298"
+       x="-0.096583642"
+       color-interpolation-filters="sRGB">
+      <feGaussianBlur
+         stdDeviation="4.5608848"
+         id="feGaussianBlur13984" />
+    </filter>
+    <filter
+       id="filter3557"
+       height="1.213006"
+       width="1.1931673"
+       y="-0.10650298"
+       x="-0.096583642"
+       color-interpolation-filters="sRGB">
+      <feGaussianBlur
+         stdDeviation="4.5608848"
+         id="feGaussianBlur13996" />
+    </filter>
+    <filter
+       id="filter3549"
+       height="1.213006"
+       width="1.1931673"
+       y="-0.10650298"
+       x="-0.096583642"
+       color-interpolation-filters="sRGB">
+      <feGaussianBlur
+         stdDeviation="4.5608848"
+         id="feGaussianBlur13990" />
+    </filter>
+    <filter
+       id="filter3545"
+       height="1.213006"
+       width="1.1931673"
+       y="-0.10650298"
+       x="-0.096583642"
+       color-interpolation-filters="sRGB">
+      <feGaussianBlur
+         stdDeviation="4.5608848"
+         id="feGaussianBlur13987" />
+    </filter>
+    <radialGradient
+       id="radialGradient2759"
+       gradientUnits="userSpaceOnUse"
+       cy="1147.53"
+       cx="346.733"
+       gradientTransform="matrix(0.4652465,0,0,0.4650091,129.83888,-355.9606)"
+       r="254.041">
+      <stop
+         stop-color="#FFF"
+         stop-opacity="0"
+         offset="0"
+         id="stop14026" />
+      <stop
+         stop-color="#FFF"
+         stop-opacity="0"
+         offset="0.95"
+         id="stop14028" />
+      <stop
+         stop-color="#FFF"
+         offset="0.97"
+         id="stop14030" />
+      <stop
+         stop-color="#FFF"
+         stop-opacity="0"
+         offset="0.991163"
+         id="stop14032" />
+      <stop
+         stop-color="#FFF"
+         stop-opacity="0"
+         offset="1"
+         id="stop14034" />
+    </radialGradient>
+    <linearGradient
+       id="linearGradient4583">
+      <stop
+         stop-color="#e5f4ff"
+         offset="0"
+         id="stop13929" />
+      <stop
+         stop-color="#e5f4ff"
+         offset="0.232558"
+         id="stop13931" />
+      <stop
+         stop-color="#254863"
+         stop-opacity="0"
+         offset="1"
+         id="stop13933" />
+    </linearGradient>
+    <filter
+       id="filter4779"
+       height="1.194832"
+       width="1.2056783"
+       y="-0.097415976"
+       x="-0.1028392"
+       color-interpolation-filters="sRGB">
+      <feGaussianBlur
+         stdDeviation="12.155829"
+         id="feGaussianBlur14077" />
+    </filter>
+    <filter
+       id="filter4775"
+       height="1.2794765"
+       width="1.2952752"
+       y="-0.13973826"
+       x="-0.14763759"
+       color-interpolation-filters="sRGB">
+      <feGaussianBlur
+         stdDeviation="17.444351"
+         id="feGaussianBlur14074" />
+    </filter>
+    <radialGradient
+       id="radialGradient4589"
+       spreadMethod="reflect"
+       gradientUnits="userSpaceOnUse"
+       cy="258.39999"
+       cx="397.698"
+       gradientTransform="matrix(0.9752836,-0.1739102,0.1452743,1.218352,-31.791146,3.8357559)"
+       r="123.491">
+      <stop
+         stop-color="#e5f4ff"
+         offset="0"
+         id="stop14065" />
+      <stop
+         stop-color="#e5f4ff"
+         stop-opacity="0"
+         offset="1"
+         id="stop14067" />
+    </radialGradient>
+    <filter
+       id="filter4771"
+       height="1.3357642"
+       width="1.3744004"
+       y="-0.1678821"
+       x="-0.18720019"
+       color-interpolation-filters="sRGB">
+      <feGaussianBlur
+         stdDeviation="21.617094"
+         id="feGaussianBlur14071" />
+    </filter>
+    <radialGradient
+       id="radialGradient2765"
+       gradientUnits="userSpaceOnUse"
+       cy="118.281"
+       cx="389.16699"
+       r="11.6067">
+      <stop
+         stop-color="#000"
+         offset="0"
+         id="stop14037" />
+      <stop
+         stop-color="#000"
+         stop-opacity="0"
+         offset="1"
+         id="stop14039" />
+    </radialGradient>
+    <filter
+       id="filter867"
+       color-interpolation-filters="sRGB">
+      <feGaussianBlur
+         stdDeviation="0.58082045"
+         id="feGaussianBlur865" />
+    </filter>
+    <filter
+       id="filter5237"
+       height="1.3687129"
+       width="1.4370892"
+       y="-0.18435644"
+       x="-0.21854459"
+       color-interpolation-filters="sRGB">
+      <feGaussianBlur
+         stdDeviation="2.2711229"
+         id="feGaussianBlur13975" />
+    </filter>
+    <filter
+       id="filter7267"
+       height="1.5740881"
+       width="1.6214931"
+       y="-0.28704402"
+       x="-0.31074658"
+       color-interpolation-filters="sRGB">
+      <feGaussianBlur
+         stdDeviation="3.3946442"
+         id="feGaussianBlur13978" />
+    </filter>
+    <filter
+       id="filter10578"
+       height="1.3723973"
+       width="1.672163"
+       y="-0.18619864"
+       x="-0.33608148"
+       color-interpolation-filters="sRGB">
+      <feGaussianBlur
+         stdDeviation="2.7377865"
+         id="feGaussianBlur14087" />
+    </filter>
+    <filter
+       id="filter877"
+       height="1.5740881"
+       width="1.6214931"
+       y="-0.28704402"
+       x="-0.31074658"
+       color-interpolation-filters="sRGB">
+      <feGaussianBlur
+         stdDeviation="3.3946442"
+         id="feGaussianBlur875" />
+    </filter>
+    <filter
+       id="filter881"
+       height="1.5740881"
+       width="1.6214931"
+       y="-0.28704402"
+       x="-0.31074658"
+       color-interpolation-filters="sRGB">
+      <feGaussianBlur
+         stdDeviation="3.3946442"
+         id="feGaussianBlur879" />
+    </filter>
+    <filter
+       id="filter4518"
+       height="1.3981317"
+       width="1.4018859"
+       y="-0.19906585"
+       x="-0.20094295"
+       color-interpolation-filters="sRGB">
+      <feGaussianBlur
+         stdDeviation="10.125173"
+         id="feGaussianBlur13966" />
+    </filter>
+    <filter
+       id="filter4666"
+       color-interpolation-filters="sRGB">
+      <feGaussianBlur
+         stdDeviation="6.3816907"
+         id="feGaussianBlur13972" />
+    </filter>
+    <filter
+       id="filter924"
+       color-interpolation-filters="sRGB">
+      <feGaussianBlur
+         stdDeviation="0.58082045"
+         id="feGaussianBlur922" />
+    </filter>
+    <filter
+       id="filter4636"
+       color-interpolation-filters="sRGB">
+      <feGaussianBlur
+         stdDeviation="0.20104886"
+         id="feGaussianBlur14081" />
+    </filter>
+    <radialGradient
+       id="radialGradient2677-3"
+       gradientUnits="userSpaceOnUse"
+       cy="775.88397"
+       cx="385.866"
+       gradientTransform="matrix(1,0,0,1.098684,0,-76.56746)"
+       r="161.42599">
+      <stop
+         stop-color="#000"
+         offset="0"
+         id="stop14005-1" />
+      <stop
+         stop-color="#000"
+         stop-opacity="0"
+         offset="1"
+         id="stop14007-9" />
+    </radialGradient>
+    <radialGradient
+       id="radialGradient2679-8"
+       gradientUnits="userSpaceOnUse"
+       cy="835.15997"
+       cx="292.94199"
+       gradientTransform="matrix(-1.2414154,0.7906519,0.7046472,1.1063777,17.23768,-980.81675)"
+       r="49.305698">
+      <stop
+         stop-color="#FFF"
+         offset="0"
+         id="stop14010-7" />
+      <stop
+         stop-color="#FFF"
+         stop-opacity="0"
+         offset="1"
+         id="stop14012-7" />
+    </radialGradient>
+    <filter
+       id="filter4546-2"
+       color-interpolation-filters="sRGB">
+      <feGaussianBlur
+         stdDeviation="0.58082045"
+         id="feGaussianBlur13969-5" />
+    </filter>
+    <filter
+       id="filter4640-1"
+       color-interpolation-filters="sRGB">
+      <feGaussianBlur
+         stdDeviation="0.11651621"
+         id="feGaussianBlur14084-7" />
+    </filter>
+    <filter
+       id="filter2264"
+       color-interpolation-filters="sRGB">
+      <feGaussianBlur
+         stdDeviation="0.58082045"
+         id="feGaussianBlur2262" />
+    </filter>
+    <filter
+       id="filter4557-4"
+       color-interpolation-filters="sRGB">
+      <feGaussianBlur
+         stdDeviation="4.9633802"
+         id="feGaussianBlur14056-3" />
+    </filter>
+    <radialGradient
+       id="radialGradient3569-6"
+       gradientUnits="userSpaceOnUse"
+       cy="1040.22"
+       cx="392.07401"
+       gradientTransform="matrix(1.0896219,1.2704115,-1.9939809,2.0570205,1844.3831,-1657.6391)"
+       r="161.42599">
+      <stop
+         stop-color="#FFF"
+         stop-opacity="0"
+         offset="0"
+         id="stop14044-4" />
+      <stop
+         stop-color="#FFF"
+         stop-opacity="0"
+         offset="0.930233"
+         id="stop14046-0" />
+      <stop
+         stop-color="#FFF"
+         offset="1"
+         id="stop14048-6" />
+      <stop
+         stop-color="#FFF"
+         stop-opacity="0"
+         offset="1"
+         id="stop14050-0" />
+    </radialGradient>
+    <filter
+       id="filter3477-1"
+       height="1.6959413"
+       width="1.9205891"
+       y="-0.34797066"
+       x="-0.46029457"
+       color-interpolation-filters="sRGB">
+      <feGaussianBlur
+         stdDeviation="49.010201"
+         id="feGaussianBlur13981-4" />
+    </filter>
+    <filter
+       id="filter4565-3"
+       color-interpolation-filters="sRGB">
+      <feGaussianBlur
+         stdDeviation="4.9805913"
+         id="feGaussianBlur14062-0" />
+    </filter>
+    <filter
+       id="filter4561-6"
+       color-interpolation-filters="sRGB">
+      <feGaussianBlur
+         stdDeviation="4.9841362"
+         id="feGaussianBlur14059-1" />
+    </filter>
+    <filter
+       id="filter4553-3"
+       color-interpolation-filters="sRGB">
+      <feGaussianBlur
+         stdDeviation="5.1794966"
+         id="feGaussianBlur14053-7" />
+    </filter>
+    <filter
+       id="filter3597-4"
+       height="1.4965283"
+       width="1.3348944"
+       y="-0.24826413"
+       x="-0.16744719"
+       color-interpolation-filters="sRGB">
+      <feGaussianBlur
+         stdDeviation="4.5116686"
+         id="feGaussianBlur14002-5" />
+    </filter>
+    <filter
+       id="filter3553-4"
+       height="1.213006"
+       width="1.1931673"
+       y="-0.10650298"
+       x="-0.096583642"
+       color-interpolation-filters="sRGB">
+      <feGaussianBlur
+         stdDeviation="4.5608848"
+         id="feGaussianBlur13993-7" />
+    </filter>
+    <filter
+       id="filter3561-1"
+       height="1.213006"
+       width="1.1931673"
+       y="-0.10650298"
+       x="-0.096583642"
+       color-interpolation-filters="sRGB">
+      <feGaussianBlur
+         stdDeviation="4.5608848"
+         id="feGaussianBlur13999-4" />
+    </filter>
+    <filter
+       id="filter3541-4"
+       height="1.213006"
+       width="1.1931673"
+       y="-0.10650298"
+       x="-0.096583642"
+       color-interpolation-filters="sRGB">
+      <feGaussianBlur
+         stdDeviation="4.5608848"
+         id="feGaussianBlur13984-1" />
+    </filter>
+    <filter
+       id="filter3557-5"
+       height="1.213006"
+       width="1.1931673"
+       y="-0.10650298"
+       x="-0.096583642"
+       color-interpolation-filters="sRGB">
+      <feGaussianBlur
+         stdDeviation="4.5608848"
+         id="feGaussianBlur13996-1" />
+    </filter>
+    <filter
+       id="filter3549-4"
+       height="1.213006"
+       width="1.1931673"
+       y="-0.10650298"
+       x="-0.096583642"
+       color-interpolation-filters="sRGB">
+      <feGaussianBlur
+         stdDeviation="4.5608848"
+         id="feGaussianBlur13990-5" />
+    </filter>
+    <filter
+       id="filter3545-5"
+       height="1.213006"
+       width="1.1931673"
+       y="-0.10650298"
+       x="-0.096583642"
+       color-interpolation-filters="sRGB">
+      <feGaussianBlur
+         stdDeviation="4.5608848"
+         id="feGaussianBlur13987-4" />
+    </filter>
+    <radialGradient
+       id="radialGradient2759-1"
+       gradientUnits="userSpaceOnUse"
+       cy="1147.53"
+       cx="346.733"
+       gradientTransform="matrix(0.4652465,0,0,0.4650091,129.83888,-355.9606)"
+       r="254.041">
+      <stop
+         stop-color="#FFF"
+         stop-opacity="0"
+         offset="0"
+         id="stop14026-0" />
+      <stop
+         stop-color="#FFF"
+         stop-opacity="0"
+         offset="0.95"
+         id="stop14028-6" />
+      <stop
+         stop-color="#FFF"
+         offset="0.97"
+         id="stop14030-8" />
+      <stop
+         stop-color="#FFF"
+         stop-opacity="0"
+         offset="0.991163"
+         id="stop14032-6" />
+      <stop
+         stop-color="#FFF"
+         stop-opacity="0"
+         offset="1"
+         id="stop14034-0" />
+    </radialGradient>
+    <filter
+       id="filter4779-8"
+       height="1.194832"
+       width="1.2056783"
+       y="-0.097415976"
+       x="-0.1028392"
+       color-interpolation-filters="sRGB">
+      <feGaussianBlur
+         stdDeviation="12.155829"
+         id="feGaussianBlur14077-0" />
+    </filter>
+    <filter
+       id="filter4775-0"
+       height="1.2794765"
+       width="1.2952752"
+       y="-0.13973826"
+       x="-0.14763759"
+       color-interpolation-filters="sRGB">
+      <feGaussianBlur
+         stdDeviation="17.444351"
+         id="feGaussianBlur14074-4" />
+    </filter>
+    <radialGradient
+       id="radialGradient4589-3"
+       spreadMethod="reflect"
+       gradientUnits="userSpaceOnUse"
+       cy="258.39999"
+       cx="397.698"
+       gradientTransform="matrix(0.9752836,-0.1739102,0.1452743,1.218352,-31.791146,3.8357559)"
+       r="123.491">
+      <stop
+         stop-color="#e5f4ff"
+         offset="0"
+         id="stop14065-2" />
+      <stop
+         stop-color="#e5f4ff"
+         stop-opacity="0"
+         offset="1"
+         id="stop14067-0" />
+    </radialGradient>
+    <filter
+       id="filter4771-1"
+       height="1.3357642"
+       width="1.3744004"
+       y="-0.1678821"
+       x="-0.18720019"
+       color-interpolation-filters="sRGB">
+      <feGaussianBlur
+         stdDeviation="21.617094"
+         id="feGaussianBlur14071-1" />
+    </filter>
+    <radialGradient
+       id="radialGradient2765-3"
+       gradientUnits="userSpaceOnUse"
+       cy="118.281"
+       cx="389.16699"
+       r="11.6067">
+      <stop
+         stop-color="#000"
+         offset="0"
+         id="stop14037-4" />
+      <stop
+         stop-color="#000"
+         stop-opacity="0"
+         offset="1"
+         id="stop14039-8" />
+    </radialGradient>
+    <filter
+       id="filter2595"
+       color-interpolation-filters="sRGB">
+      <feGaussianBlur
+         stdDeviation="0.58082045"
+         id="feGaussianBlur2593" />
+    </filter>
+    <filter
+       id="filter5237-0"
+       height="1.3687129"
+       width="1.4370892"
+       y="-0.18435644"
+       x="-0.21854459"
+       color-interpolation-filters="sRGB">
+      <feGaussianBlur
+         stdDeviation="2.2711229"
+         id="feGaussianBlur13975-7" />
+    </filter>
+    <filter
+       id="filter7267-4"
+       height="1.5740881"
+       width="1.6214931"
+       y="-0.28704402"
+       x="-0.31074658"
+       color-interpolation-filters="sRGB">
+      <feGaussianBlur
+         stdDeviation="3.3946442"
+         id="feGaussianBlur13978-3" />
+    </filter>
+    <filter
+       id="filter10578-3"
+       height="1.3723973"
+       width="1.672163"
+       y="-0.18619864"
+       x="-0.33608148"
+       color-interpolation-filters="sRGB">
+      <feGaussianBlur
+         stdDeviation="2.7377865"
+         id="feGaussianBlur14087-3" />
+    </filter>
+    <filter
+       id="filter2605"
+       height="1.5740881"
+       width="1.6214931"
+       y="-0.28704402"
+       x="-0.31074658"
+       color-interpolation-filters="sRGB">
+      <feGaussianBlur
+         stdDeviation="3.3946442"
+         id="feGaussianBlur2603" />
+    </filter>
+    <filter
+       id="filter2609"
+       height="1.5740881"
+       width="1.6214931"
+       y="-0.28704402"
+       x="-0.31074658"
+       color-interpolation-filters="sRGB">
+      <feGaussianBlur
+         stdDeviation="3.3946442"
+         id="feGaussianBlur2607" />
+    </filter>
+    <filter
+       id="filter4518-2"
+       height="1.3981317"
+       width="1.4018859"
+       y="-0.19906585"
+       x="-0.20094295"
+       color-interpolation-filters="sRGB">
+      <feGaussianBlur
+         stdDeviation="10.125173"
+         id="feGaussianBlur13966-5" />
+    </filter>
+    <filter
+       id="filter4666-9"
+       color-interpolation-filters="sRGB">
+      <feGaussianBlur
+         stdDeviation="6.3816907"
+         id="feGaussianBlur13972-9" />
+    </filter>
+    <filter
+       id="filter2652"
+       color-interpolation-filters="sRGB">
+      <feGaussianBlur
+         stdDeviation="0.58082045"
+         id="feGaussianBlur2650" />
+    </filter>
+    <filter
+       id="filter4636-5"
+       color-interpolation-filters="sRGB">
+      <feGaussianBlur
+         stdDeviation="0.20104886"
+         id="feGaussianBlur14081-8" />
+    </filter>
+    <filter
+       style="color-interpolation-filters:sRGB;"
+       inkscape:label="Blur"
+       id="filter3981">
+      <feGaussianBlur
+         stdDeviation="0.8 0.8"
+         result="blur"
+         id="feGaussianBlur3979" />
+    </filter>
+    <radialGradient
+       id="radialGradient2677-0"
+       gradientUnits="userSpaceOnUse"
+       cy="775.88397"
+       cx="385.866"
+       gradientTransform="matrix(1,0,0,1.098684,0,-76.56746)"
+       r="161.42599">
+      <stop
+         stop-color="#000"
+         offset="0"
+         id="stop14005-3" />
+      <stop
+         stop-color="#000"
+         stop-opacity="0"
+         offset="1"
+         id="stop14007-94" />
+    </radialGradient>
+    <radialGradient
+       id="radialGradient2679-84"
+       gradientUnits="userSpaceOnUse"
+       cy="835.15997"
+       cx="292.94199"
+       gradientTransform="matrix(-1.2414154,0.7906519,0.7046472,1.1063777,17.23768,-980.81675)"
+       r="49.305698">
+      <stop
+         stop-color="#FFF"
+         offset="0"
+         id="stop14010-5" />
+      <stop
+         stop-color="#FFF"
+         stop-opacity="0"
+         offset="1"
+         id="stop14012-3" />
+    </radialGradient>
+    <filter
+       id="filter4546-6"
+       color-interpolation-filters="sRGB">
+      <feGaussianBlur
+         stdDeviation="0.58082045"
+         id="feGaussianBlur13969-53" />
+    </filter>
+    <filter
+       id="filter4640-3"
+       color-interpolation-filters="sRGB">
+      <feGaussianBlur
+         stdDeviation="0.11651621"
+         id="feGaussianBlur14084-4" />
+    </filter>
+    <filter
+       id="filter678"
+       color-interpolation-filters="sRGB">
+      <feGaussianBlur
+         stdDeviation="0.58082045"
+         id="feGaussianBlur676" />
+    </filter>
+    <filter
+       id="filter4557-0"
+       color-interpolation-filters="sRGB">
+      <feGaussianBlur
+         stdDeviation="4.9633802"
+         id="feGaussianBlur14056-34" />
+    </filter>
+    <radialGradient
+       id="radialGradient3569-9"
+       gradientUnits="userSpaceOnUse"
+       cy="1040.22"
+       cx="392.07401"
+       gradientTransform="matrix(1.0896219,1.2704115,-1.9939809,2.0570205,1844.3831,-1657.6391)"
+       r="161.42599">
+      <stop
+         stop-color="#FFF"
+         stop-opacity="0"
+         offset="0"
+         id="stop14044-7" />
+      <stop
+         stop-color="#FFF"
+         stop-opacity="0"
+         offset="0.930233"
+         id="stop14046-1" />
+      <stop
+         stop-color="#FFF"
+         offset="1"
+         id="stop14048-3" />
+      <stop
+         stop-color="#FFF"
+         stop-opacity="0"
+         offset="1"
+         id="stop14050-9" />
+    </radialGradient>
+    <filter
+       id="filter3477-4"
+       height="1.6959413"
+       width="1.9205891"
+       y="-0.34797066"
+       x="-0.46029457"
+       color-interpolation-filters="sRGB">
+      <feGaussianBlur
+         stdDeviation="49.010201"
+         id="feGaussianBlur13981-8" />
+    </filter>
+    <filter
+       id="filter4565-35"
+       color-interpolation-filters="sRGB">
+      <feGaussianBlur
+         stdDeviation="4.9805913"
+         id="feGaussianBlur14062-5" />
+    </filter>
+    <filter
+       id="filter4561-8"
+       color-interpolation-filters="sRGB">
+      <feGaussianBlur
+         stdDeviation="4.9841362"
+         id="feGaussianBlur14059-8" />
+    </filter>
+    <filter
+       id="filter4553-1"
+       color-interpolation-filters="sRGB">
+      <feGaussianBlur
+         stdDeviation="5.1794966"
+         id="feGaussianBlur14053-2" />
+    </filter>
+    <filter
+       id="filter3597-0"
+       height="1.4965283"
+       width="1.3348944"
+       y="-0.24826413"
+       x="-0.16744719"
+       color-interpolation-filters="sRGB">
+      <feGaussianBlur
+         stdDeviation="4.5116686"
+         id="feGaussianBlur14002-3" />
+    </filter>
+    <filter
+       id="filter3553-3"
+       height="1.213006"
+       width="1.1931673"
+       y="-0.10650298"
+       x="-0.096583642"
+       color-interpolation-filters="sRGB">
+      <feGaussianBlur
+         stdDeviation="4.5608848"
+         id="feGaussianBlur13993-3" />
+    </filter>
+    <filter
+       id="filter3561-2"
+       height="1.213006"
+       width="1.1931673"
+       y="-0.10650298"
+       x="-0.096583642"
+       color-interpolation-filters="sRGB">
+      <feGaussianBlur
+         stdDeviation="4.5608848"
+         id="feGaussianBlur13999-1" />
+    </filter>
+    <filter
+       id="filter3541-44"
+       height="1.213006"
+       width="1.1931673"
+       y="-0.10650298"
+       x="-0.096583642"
+       color-interpolation-filters="sRGB">
+      <feGaussianBlur
+         stdDeviation="4.5608848"
+         id="feGaussianBlur13984-6" />
+    </filter>
+    <filter
+       id="filter3557-0"
+       height="1.213006"
+       width="1.1931673"
+       y="-0.10650298"
+       x="-0.096583642"
+       color-interpolation-filters="sRGB">
+      <feGaussianBlur
+         stdDeviation="4.5608848"
+         id="feGaussianBlur13996-0" />
+    </filter>
+    <filter
+       id="filter3549-46"
+       height="1.213006"
+       width="1.1931673"
+       y="-0.10650298"
+       x="-0.096583642"
+       color-interpolation-filters="sRGB">
+      <feGaussianBlur
+         stdDeviation="4.5608848"
+         id="feGaussianBlur13990-7" />
+    </filter>
+    <filter
+       id="filter3545-2"
+       height="1.213006"
+       width="1.1931673"
+       y="-0.10650298"
+       x="-0.096583642"
+       color-interpolation-filters="sRGB">
+      <feGaussianBlur
+         stdDeviation="4.5608848"
+         id="feGaussianBlur13987-2" />
+    </filter>
+    <radialGradient
+       id="radialGradient2759-9"
+       gradientUnits="userSpaceOnUse"
+       cy="1147.53"
+       cx="346.733"
+       gradientTransform="matrix(0.4652465,0,0,0.4650091,129.83888,-355.9606)"
+       r="254.041">
+      <stop
+         stop-color="#FFF"
+         stop-opacity="0"
+         offset="0"
+         id="stop14026-7" />
+      <stop
+         stop-color="#FFF"
+         stop-opacity="0"
+         offset="0.95"
+         id="stop14028-1" />
+      <stop
+         stop-color="#FFF"
+         offset="0.97"
+         id="stop14030-5" />
+      <stop
+         stop-color="#FFF"
+         stop-opacity="0"
+         offset="0.991163"
+         id="stop14032-8" />
+      <stop
+         stop-color="#FFF"
+         stop-opacity="0"
+         offset="1"
+         id="stop14034-2" />
+    </radialGradient>
+    <filter
+       id="filter4779-6"
+       height="1.194832"
+       width="1.2056783"
+       y="-0.097415976"
+       x="-0.1028392"
+       color-interpolation-filters="sRGB">
+      <feGaussianBlur
+         stdDeviation="12.155829"
+         id="feGaussianBlur14077-5" />
+    </filter>
+    <filter
+       id="filter4775-2"
+       height="1.2794765"
+       width="1.2952752"
+       y="-0.13973826"
+       x="-0.14763759"
+       color-interpolation-filters="sRGB">
+      <feGaussianBlur
+         stdDeviation="17.444351"
+         id="feGaussianBlur14074-8" />
+    </filter>
+    <radialGradient
+       id="radialGradient4589-2"
+       spreadMethod="reflect"
+       gradientUnits="userSpaceOnUse"
+       cy="258.39999"
+       cx="397.698"
+       gradientTransform="matrix(0.9752836,-0.1739102,0.1452743,1.218352,-31.791146,3.8357559)"
+       r="123.491">
+      <stop
+         stop-color="#e5f4ff"
+         offset="0"
+         id="stop14065-0" />
+      <stop
+         stop-color="#e5f4ff"
+         stop-opacity="0"
+         offset="1"
+         id="stop14067-6" />
+    </radialGradient>
+    <filter
+       id="filter4771-8"
+       height="1.3357642"
+       width="1.3744004"
+       y="-0.1678821"
+       x="-0.18720019"
+       color-interpolation-filters="sRGB">
+      <feGaussianBlur
+         stdDeviation="21.617094"
+         id="feGaussianBlur14071-4" />
+    </filter>
+    <radialGradient
+       id="radialGradient2765-9"
+       gradientUnits="userSpaceOnUse"
+       cy="118.281"
+       cx="389.16699"
+       r="11.6067">
+      <stop
+         stop-color="#000"
+         offset="0"
+         id="stop14037-8" />
+      <stop
+         stop-color="#000"
+         stop-opacity="0"
+         offset="1"
+         id="stop14039-3" />
+    </radialGradient>
+    <filter
+       id="filter1009"
+       color-interpolation-filters="sRGB">
+      <feGaussianBlur
+         stdDeviation="0.58082045"
+         id="feGaussianBlur1007" />
+    </filter>
+    <filter
+       id="filter5237-9"
+       height="1.3687129"
+       width="1.4370892"
+       y="-0.18435644"
+       x="-0.21854459"
+       color-interpolation-filters="sRGB">
+      <feGaussianBlur
+         stdDeviation="2.2711229"
+         id="feGaussianBlur13975-0" />
+    </filter>
+    <filter
+       id="filter7267-1"
+       height="1.5740881"
+       width="1.6214931"
+       y="-0.28704402"
+       x="-0.31074658"
+       color-interpolation-filters="sRGB">
+      <feGaussianBlur
+         stdDeviation="3.3946442"
+         id="feGaussianBlur13978-0" />
+    </filter>
+    <filter
+       id="filter10578-2"
+       height="1.3723973"
+       width="1.672163"
+       y="-0.18619864"
+       x="-0.33608148"
+       color-interpolation-filters="sRGB">
+      <feGaussianBlur
+         stdDeviation="2.7377865"
+         id="feGaussianBlur14087-7" />
+    </filter>
+    <filter
+       id="filter1019"
+       height="1.5740881"
+       width="1.6214931"
+       y="-0.28704402"
+       x="-0.31074658"
+       color-interpolation-filters="sRGB">
+      <feGaussianBlur
+         stdDeviation="3.3946442"
+         id="feGaussianBlur1017" />
+    </filter>
+    <filter
+       id="filter1023"
+       height="1.5740881"
+       width="1.6214931"
+       y="-0.28704402"
+       x="-0.31074658"
+       color-interpolation-filters="sRGB">
+      <feGaussianBlur
+         stdDeviation="3.3946442"
+         id="feGaussianBlur1021" />
+    </filter>
+    <filter
+       id="filter4518-3"
+       height="1.3981317"
+       width="1.4018859"
+       y="-0.19906585"
+       x="-0.20094295"
+       color-interpolation-filters="sRGB">
+      <feGaussianBlur
+         stdDeviation="10.125173"
+         id="feGaussianBlur13966-7" />
+    </filter>
+    <filter
+       id="filter4666-7"
+       color-interpolation-filters="sRGB">
+      <feGaussianBlur
+         stdDeviation="6.3816907"
+         id="feGaussianBlur13972-5" />
+    </filter>
+    <filter
+       id="filter1066"
+       color-interpolation-filters="sRGB">
+      <feGaussianBlur
+         stdDeviation="0.58082045"
+         id="feGaussianBlur1064" />
+    </filter>
+    <filter
+       id="filter4636-4"
+       color-interpolation-filters="sRGB">
+      <feGaussianBlur
+         stdDeviation="0.20104886"
+         id="feGaussianBlur14081-1" />
+    </filter>
+    <filter
+       style="color-interpolation-filters:sRGB;"
+       inkscape:label="Blur"
+       id="filter1932">
+      <feGaussianBlur
+         stdDeviation="1 1"
+         result="blur"
+         id="feGaussianBlur1930" />
+    </filter>
+    <radialGradient
+       id="radialGradient2677-9"
+       gradientUnits="userSpaceOnUse"
+       cy="775.88397"
+       cx="385.866"
+       gradientTransform="matrix(1,0,0,1.098684,0,-76.56746)"
+       r="161.42599">
+      <stop
+         stop-color="#000"
+         offset="0"
+         id="stop14005-9" />
+      <stop
+         stop-color="#000"
+         stop-opacity="0"
+         offset="1"
+         id="stop14007-98" />
+    </radialGradient>
+    <radialGradient
+       id="radialGradient2679-2"
+       gradientUnits="userSpaceOnUse"
+       cy="835.15997"
+       cx="292.94199"
+       gradientTransform="matrix(-1.2414154,0.7906519,0.7046472,1.1063777,17.23768,-980.81675)"
+       r="49.305698">
+      <stop
+         stop-color="#FFF"
+         offset="0"
+         id="stop14010-0" />
+      <stop
+         stop-color="#FFF"
+         stop-opacity="0"
+         offset="1"
+         id="stop14012-5" />
+    </radialGradient>
+    <filter
+       id="filter4546-3"
+       color-interpolation-filters="sRGB">
+      <feGaussianBlur
+         stdDeviation="0.58082045"
+         id="feGaussianBlur13969-9" />
+    </filter>
+    <filter
+       id="filter4640-2"
+       color-interpolation-filters="sRGB">
+      <feGaussianBlur
+         stdDeviation="0.11651621"
+         id="feGaussianBlur14084-71" />
+    </filter>
+    <filter
+       id="filter2014"
+       color-interpolation-filters="sRGB">
+      <feGaussianBlur
+         stdDeviation="0.58082045"
+         id="feGaussianBlur2012" />
+    </filter>
+    <filter
+       id="filter4557-48"
+       color-interpolation-filters="sRGB">
+      <feGaussianBlur
+         stdDeviation="4.9633802"
+         id="feGaussianBlur14056-8" />
+    </filter>
+    <radialGradient
+       id="radialGradient3569-4"
+       gradientUnits="userSpaceOnUse"
+       cy="1040.22"
+       cx="392.07401"
+       gradientTransform="matrix(1.0896219,1.2704115,-1.9939809,2.0570205,1844.3831,-1657.6391)"
+       r="161.42599">
+      <stop
+         stop-color="#FFF"
+         stop-opacity="0"
+         offset="0"
+         id="stop14044-3" />
+      <stop
+         stop-color="#FFF"
+         stop-opacity="0"
+         offset="0.930233"
+         id="stop14046-9" />
+      <stop
+         stop-color="#FFF"
+         offset="1"
+         id="stop14048-0" />
+      <stop
+         stop-color="#FFF"
+         stop-opacity="0"
+         offset="1"
+         id="stop14050-4" />
+    </radialGradient>
+    <filter
+       id="filter3477-6"
+       height="1.6959413"
+       width="1.9205891"
+       y="-0.34797066"
+       x="-0.46029457"
+       color-interpolation-filters="sRGB">
+      <feGaussianBlur
+         stdDeviation="49.010201"
+         id="feGaussianBlur13981-0" />
+    </filter>
+    <filter
+       id="filter4565-5"
+       color-interpolation-filters="sRGB">
+      <feGaussianBlur
+         stdDeviation="4.9805913"
+         id="feGaussianBlur14062-8" />
+    </filter>
+    <filter
+       id="filter4561-88"
+       color-interpolation-filters="sRGB">
+      <feGaussianBlur
+         stdDeviation="4.9841362"
+         id="feGaussianBlur14059-3" />
+    </filter>
+    <filter
+       id="filter4553-8"
+       color-interpolation-filters="sRGB">
+      <feGaussianBlur
+         stdDeviation="5.1794966"
+         id="feGaussianBlur14053-1" />
+    </filter>
+    <filter
+       id="filter3597-1"
+       height="1.4965283"
+       width="1.3348944"
+       y="-0.24826413"
+       x="-0.16744719"
+       color-interpolation-filters="sRGB">
+      <feGaussianBlur
+         stdDeviation="4.5116686"
+         id="feGaussianBlur14002-0" />
+    </filter>
+    <filter
+       id="filter3553-1"
+       height="1.213006"
+       width="1.1931673"
+       y="-0.10650298"
+       x="-0.096583642"
+       color-interpolation-filters="sRGB">
+      <feGaussianBlur
+         stdDeviation="4.5608848"
+         id="feGaussianBlur13993-38" />
+    </filter>
+    <filter
+       id="filter3561-0"
+       height="1.213006"
+       width="1.1931673"
+       y="-0.10650298"
+       x="-0.096583642"
+       color-interpolation-filters="sRGB">
+      <feGaussianBlur
+         stdDeviation="4.5608848"
+         id="feGaussianBlur13999-5" />
+    </filter>
+    <filter
+       id="filter3541-7"
+       height="1.213006"
+       width="1.1931673"
+       y="-0.10650298"
+       x="-0.096583642"
+       color-interpolation-filters="sRGB">
+      <feGaussianBlur
+         stdDeviation="4.5608848"
+         id="feGaussianBlur13984-2" />
+    </filter>
+    <filter
+       id="filter3557-7"
+       height="1.213006"
+       width="1.1931673"
+       y="-0.10650298"
+       x="-0.096583642"
+       color-interpolation-filters="sRGB">
+      <feGaussianBlur
+         stdDeviation="4.5608848"
+         id="feGaussianBlur13996-3" />
+    </filter>
+    <filter
+       id="filter3549-7"
+       height="1.213006"
+       width="1.1931673"
+       y="-0.10650298"
+       x="-0.096583642"
+       color-interpolation-filters="sRGB">
+      <feGaussianBlur
+         stdDeviation="4.5608848"
+         id="feGaussianBlur13990-9" />
+    </filter>
+    <filter
+       id="filter3545-0"
+       height="1.213006"
+       width="1.1931673"
+       y="-0.10650298"
+       x="-0.096583642"
+       color-interpolation-filters="sRGB">
+      <feGaussianBlur
+         stdDeviation="4.5608848"
+         id="feGaussianBlur13987-5" />
+    </filter>
+    <radialGradient
+       id="radialGradient2759-4"
+       gradientUnits="userSpaceOnUse"
+       cy="1147.53"
+       cx="346.733"
+       gradientTransform="matrix(0.4652465,0,0,0.4650091,129.83888,-355.9606)"
+       r="254.041">
+      <stop
+         stop-color="#FFF"
+         stop-opacity="0"
+         offset="0"
+         id="stop14026-6" />
+      <stop
+         stop-color="#FFF"
+         stop-opacity="0"
+         offset="0.95"
+         id="stop14028-3" />
+      <stop
+         stop-color="#FFF"
+         offset="0.97"
+         id="stop14030-1" />
+      <stop
+         stop-color="#FFF"
+         stop-opacity="0"
+         offset="0.991163"
+         id="stop14032-1" />
+      <stop
+         stop-color="#FFF"
+         stop-opacity="0"
+         offset="1"
+         id="stop14034-8" />
+    </radialGradient>
+    <filter
+       id="filter4779-3"
+       height="1.194832"
+       width="1.2056783"
+       y="-0.097415976"
+       x="-0.1028392"
+       color-interpolation-filters="sRGB">
+      <feGaussianBlur
+         stdDeviation="12.155829"
+         id="feGaussianBlur14077-4" />
+    </filter>
+    <filter
+       id="filter4775-8"
+       height="1.2794765"
+       width="1.2952752"
+       y="-0.13973826"
+       x="-0.14763759"
+       color-interpolation-filters="sRGB">
+      <feGaussianBlur
+         stdDeviation="17.444351"
+         id="feGaussianBlur14074-3" />
+    </filter>
+    <radialGradient
+       id="radialGradient4589-5"
+       spreadMethod="reflect"
+       gradientUnits="userSpaceOnUse"
+       cy="258.39999"
+       cx="397.698"
+       gradientTransform="matrix(0.9752836,-0.1739102,0.1452743,1.218352,-31.791146,3.8357559)"
+       r="123.491">
+      <stop
+         stop-color="#e5f4ff"
+         offset="0"
+         id="stop14065-21" />
+      <stop
+         stop-color="#e5f4ff"
+         stop-opacity="0"
+         offset="1"
+         id="stop14067-4" />
+    </radialGradient>
+    <filter
+       id="filter4771-4"
+       height="1.3357642"
+       width="1.3744004"
+       y="-0.1678821"
+       x="-0.18720019"
+       color-interpolation-filters="sRGB">
+      <feGaussianBlur
+         stdDeviation="21.617094"
+         id="feGaussianBlur14071-12" />
+    </filter>
+    <radialGradient
+       id="radialGradient2765-32"
+       gradientUnits="userSpaceOnUse"
+       cy="118.281"
+       cx="389.16699"
+       r="11.6067">
+      <stop
+         stop-color="#000"
+         offset="0"
+         id="stop14037-7" />
+      <stop
+         stop-color="#000"
+         stop-opacity="0"
+         offset="1"
+         id="stop14039-0" />
+    </radialGradient>
+    <filter
+       id="filter2345"
+       color-interpolation-filters="sRGB">
+      <feGaussianBlur
+         stdDeviation="0.58082045"
+         id="feGaussianBlur2343" />
+    </filter>
+    <filter
+       id="filter5237-09"
+       height="1.3687129"
+       width="1.4370892"
+       y="-0.18435644"
+       x="-0.21854459"
+       color-interpolation-filters="sRGB">
+      <feGaussianBlur
+         stdDeviation="2.2711229"
+         id="feGaussianBlur13975-79" />
+    </filter>
+    <filter
+       id="filter7267-9"
+       height="1.5740881"
+       width="1.6214931"
+       y="-0.28704402"
+       x="-0.31074658"
+       color-interpolation-filters="sRGB">
+      <feGaussianBlur
+         stdDeviation="3.3946442"
+         id="feGaussianBlur13978-6" />
+    </filter>
+    <filter
+       id="filter10578-7"
+       height="1.3723973"
+       width="1.672163"
+       y="-0.18619864"
+       x="-0.33608148"
+       color-interpolation-filters="sRGB">
+      <feGaussianBlur
+         stdDeviation="2.7377865"
+         id="feGaussianBlur14087-79" />
+    </filter>
+    <filter
+       id="filter2355"
+       height="1.5740881"
+       width="1.6214931"
+       y="-0.28704402"
+       x="-0.31074658"
+       color-interpolation-filters="sRGB">
+      <feGaussianBlur
+         stdDeviation="3.3946442"
+         id="feGaussianBlur2353" />
+    </filter>
+    <filter
+       id="filter2359"
+       height="1.5740881"
+       width="1.6214931"
+       y="-0.28704402"
+       x="-0.31074658"
+       color-interpolation-filters="sRGB">
+      <feGaussianBlur
+         stdDeviation="3.3946442"
+         id="feGaussianBlur2357" />
+    </filter>
+    <filter
+       id="filter4518-38"
+       height="1.3981317"
+       width="1.4018859"
+       y="-0.19906585"
+       x="-0.20094295"
+       color-interpolation-filters="sRGB">
+      <feGaussianBlur
+         stdDeviation="10.125173"
+         id="feGaussianBlur13966-72" />
+    </filter>
+    <filter
+       id="filter4666-74"
+       color-interpolation-filters="sRGB">
+      <feGaussianBlur
+         stdDeviation="6.3816907"
+         id="feGaussianBlur13972-50" />
+    </filter>
+    <filter
+       id="filter2402"
+       color-interpolation-filters="sRGB">
+      <feGaussianBlur
+         stdDeviation="0.58082045"
+         id="feGaussianBlur2400" />
+    </filter>
+    <filter
+       id="filter4636-8"
+       color-interpolation-filters="sRGB">
+      <feGaussianBlur
+         stdDeviation="0.20104886"
+         id="feGaussianBlur14081-6" />
+    </filter>
+    <filter
+       style="color-interpolation-filters:sRGB;"
+       inkscape:label="Blur"
+       id="filter3259">
+      <feGaussianBlur
+         stdDeviation="1 1"
+         result="blur"
+         id="feGaussianBlur3257" />
+    </filter>
+  </defs>
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="2.0000001"
+     inkscape:cx="235.0941"
+     inkscape:cy="-48.732333"
+     inkscape:document-units="px"
+     inkscape:current-layer="svg8"
+     inkscape:document-rotation="0"
+     showgrid="false"
+     inkscape:snap-page="true"
+     units="px"
+     inkscape:snap-to-guides="true"
+     inkscape:snap-grids="true"
+     inkscape:window-width="1904"
+     inkscape:window-height="1017"
+     inkscape:window-x="0"
+     inkscape:window-y="0"
+     inkscape:window-maximized="0">
+    <inkscape:grid
+       type="xygrid"
+       id="grid777"
+       empspacing="4"
+       originx="0"
+       originy="0"
+       spacingx="0.26392252"
+       spacingy="0.26388889" />
+  </sodipodi:namedview>
+  <metadata
+     id="metadata5">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title />
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:label="Background"
+     inkscape:groupmode="layer"
+     id="layer1"
+     style="display:inline"
+     sodipodi:insensitive="true">
+    <rect
+       style="fill:#000080;stroke-width:0.263923"
+       id="rect1415"
+       width="109"
+       height="19.002422"
+       x="0"
+       y="-0.00121065" />
+  </g>
+  <g
+     inkscape:groupmode="layer"
+     id="layer2"
+     inkscape:label="Copyright">
+    <rect
+       style="display:none;fill:#ffffff;stroke-width:0.263923"
+       id="rect35"
+       width="109"
+       height="2.6392252"
+       x="0"
+       y="16.493946" />
+    <text
+       xml:space="preserve"
+       style="font-size:2.11138px;line-height:1.25;font-family:'Lucida Sans Unicode';-inkscape-font-specification:'Lucida Sans Unicode';stroke-width:0.263923"
+       x="0.95060277"
+       y="18.296236"
+       id="text39"><tspan
+         sodipodi:role="line"
+         id="tspan37"
+         x="0.95060277"
+         y="18.296236"
+         style="font-size:2.11138px;fill:#ffffff;stroke-width:0.263923">Copyright © 1996 - 2021 ReactOS Team &amp; Contributors</tspan></text>
+  </g>
+  <g
+     inkscape:groupmode="layer"
+     id="layer5"
+     inkscape:label="Shadow"
+     style="display:inline" />
+  <g
+     inkscape:groupmode="layer"
+     id="layer3"
+     inkscape:label="Logo"
+     style="display:inline" />
+  <g
+     id="g596"
+     transform="matrix(0.65974819,0,0,0.65974819,15.323507,4.4522796)">
+    <g
+       id="g219"
+       style="display:inline"
+       transform="matrix(1.5157298,0,0,1.5157298,-68.754681,-6.5519546)">
+      <text
+         xml:space="preserve"
+         style="font-size:9.50121px;line-height:1.25;font-family:'Lucida Sans Unicode';-inkscape-font-specification:'Lucida Sans Unicode';stroke-width:0.263923"
+         x="59.613503"
+         y="12.872744"
+         id="text786"><tspan
+           sodipodi:role="line"
+           id="tspan784"
+           x="59.613503"
+           y="12.872744"
+           style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:9.50121px;font-family:'AvantGarde Bk BT';-inkscape-font-specification:'AvantGarde Bk BT';fill:#ffffff;stroke-width:0.263923">ReactOS</tspan></text>
+      <g
+         id="g36"
+         style="display:inline"
+         transform="matrix(0.90398648,0,0,0.90398648,49.367953,4.5867682)">
+        <path
+           id="path916"
+           style="fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.264583;paint-order:markers fill stroke"
+           d="M 5.8747123,1.6960017 A 3.4348635,3.4348635 0 0 0 2.6608173,3.919103 C 3.079557,4.6605747 3.6905619,5.4649992 4.4541413,6.2285788 4.9024066,6.6768439 5.3648052,7.069623 5.8206234,7.4051201 6.2759985,7.0695997 6.7379527,6.6768926 7.1862664,6.2285788 7.9898239,5.4250211 8.6229577,4.5772361 9.0429039,3.804216 A 3.4348635,3.4348635 0 0 0 5.8747123,1.6960017 Z m 3.346392,2.6604257 C 8.7883275,5.0719442 8.2037155,5.8182687 7.4898361,6.5321484 7.0643456,6.9576384 6.627176,7.3360012 6.1916991,7.6659215 6.5594838,7.9123069 6.9181926,8.1164472 7.2575466,8.2751568 A 3.4348635,3.4348635 0 0 0 9.3095755,5.130865 3.4348635,3.4348635 0 0 0 9.2211043,4.3564274 Z M 2.5002275,4.4885052 A 3.4348635,3.4348635 0 0 0 2.4398488,5.130865 3.4348635,3.4348635 0 0 0 4.4382081,8.2508378 C 4.7615811,8.0956656 5.1018544,7.8993716 5.4499666,7.6659215 5.0140469,7.3361049 4.5762807,6.9578571 4.1505719,6.5321484 3.4809181,5.8624945 2.9237975,5.1635189 2.5002275,4.4885052 Z M 5.8210426,7.9351088 C 5.5402923,8.1297775 5.262606,8.3007096 4.9904194,8.450003 A 3.4348635,3.4348635 0 0 0 5.8747123,8.5657282 3.4348635,3.4348635 0 0 0 6.6873056,8.4680323 C 6.4038472,8.3145206 6.1141064,8.1380137 5.8210426,7.9351088 Z" />
+        <path
+           id="path1181"
+           style="color:#000000;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:medium;line-height:normal;font-family:sans-serif;font-variant-ligatures:normal;font-variant-position:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-alternates:normal;font-variant-east-asian:normal;font-feature-settings:normal;font-variation-settings:normal;text-indent:0;text-align:start;text-decoration:none;text-decoration-line:none;text-decoration-style:solid;text-decoration-color:#000000;letter-spacing:normal;word-spacing:normal;text-transform:none;writing-mode:lr-tb;direction:ltr;text-orientation:mixed;dominant-baseline:auto;baseline-shift:baseline;text-anchor:start;white-space:normal;shape-padding:0;shape-margin:0;inline-size:0;clip-rule:nonzero;display:inline;overflow:visible;visibility:visible;isolation:auto;mix-blend-mode:normal;color-interpolation:sRGB;color-interpolation-filters:linearRGB;solid-color:#000000;solid-opacity:1;vector-effect:none;fill:#ffffff;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:0.529167;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:markers fill stroke;color-rendering:auto;image-rendering:auto;shape-rendering:auto;text-rendering:auto;enable-background:accumulate;stop-color:#000000"
+           d="M 8.6529597,1.0586735 C 8.2440762,1.0659482 7.7855031,1.1846113 7.2940252,1.3911743 7.143637,1.4543807 6.9891614,1.5290509 6.8332203,1.6092077 a 3.6495423,3.6495423 0 0 1 0.5660479,0.2058738 c 0.020324,-0.00884 0.04148,-0.019621 0.061636,-0.028093 0.456257,-0.1917602 0.8680277,-0.2922289 1.1987636,-0.2981188 0.3307367,-0.00589 0.5693898,0.07588 0.7287346,0.2352245 0.1593448,0.1593442 0.2411146,0.3975791 0.2352247,0.7283152 -0.00592,0.3307359 -0.1051008,0.7441842 -0.2968613,1.200441 -0.018143,0.043169 -0.040119,0.08816 -0.059958,0.132078 a 3.6495423,3.6495423 0 0 1 0.1807157,0.601688 C 9.550408,4.1942106 9.6446472,4.0041629 9.7221617,3.81973 9.9287248,3.3282524 10.046543,2.8680022 10.053825,2.4591183 10.061127,2.0502344 9.9518158,1.6803675 9.6919728,1.420525 9.4321303,1.1606825 9.0618435,1.051392 8.6529597,1.0586735 Z M 2.988706,1.0595125 C 2.5798223,1.0522379 2.2095362,1.1619402 1.9496934,1.4217828 1.6898514,1.6816254 1.5818184,2.0502344 1.5890998,2.4591183 c 0.00731,0.4088839 0.1238412,0.867876 0.3304044,1.3593539 0.097865,0.2328521 0.2165234,0.4734796 0.3543041,0.7186712 A 3.6495423,3.6495423 0 0 1 2.4343982,3.9128135 C 2.392262,3.8250439 2.3518642,3.7378088 2.3161571,3.6528507 2.1243976,3.1965939 2.0239283,2.7823071 2.0180384,2.451571 2.0121153,2.120835 2.0943415,1.8846967 2.2536822,1.7253523 2.4130268,1.5660081 2.6500035,1.4829802 2.9807394,1.48887 3.3114753,1.49476 3.7257618,1.5952284 4.182019,1.7869888 c 0.03785,0.015908 0.077297,0.035627 0.1157255,0.052831 A 3.6495423,3.6495423 0 0 1 4.8466015,1.6289145 C 4.6775348,1.5407481 4.5103136,1.4587056 4.3476405,1.3903358 3.8561627,1.1837727 3.3975905,1.0667937 2.988706,1.0595125 Z M 2.3220272,5.965681 C 2.1645389,6.2389729 2.0281237,6.5072558 1.9195042,6.7656954 1.712941,7.2571732 1.5951234,7.714907 1.587842,8.1237914 1.5805395,8.5326751 1.6898514,8.9025425 1.9496934,9.1623849 2.2095362,9.4222277 2.5798223,9.5319375 2.988706,9.5246562 3.3975905,9.5173538 3.8561627,9.4003959 4.3476405,9.1938318 4.6396368,9.0711099 4.9444354,8.9120544 5.2545752,8.7271567 A 3.6495423,3.6495423 0 0 1 4.6545642,8.5703404 C 4.4933786,8.6550323 4.3347459,8.732989 4.182019,8.7971785 3.7257618,8.9889408 3.3114753,9.0894082 2.9807394,9.095298 2.6500035,9.1012211 2.4130268,9.0181595 2.2536822,8.8588154 2.0943383,8.6994709 2.01131,8.4624949 2.0171999,8.1317582 2.023123,7.801022 2.1243976,7.3875742 2.3161571,6.9313171 2.3706762,6.8015996 2.4355108,6.6673213 2.5048397,6.5313099 A 3.6495423,3.6495423 0 0 1 2.3220272,5.965681 Z M 9.3942731,6.0969203 A 3.6495423,3.6495423 0 0 1 9.1959467,6.6441 C 9.2433207,6.741443 9.2872897,6.8373881 9.3267665,6.9313171 9.5185279,7.3875742 9.6177376,7.801022 9.6236274,8.1317582 9.6295474,8.4624949 9.5477464,8.7007287 9.3884031,8.8600731 9.2290582,9.019418 8.9916633,9.0999302 8.6609265,9.0940404 8.3301904,9.0881172 7.9171619,8.9889391 7.4609047,8.7971785 7.3216523,8.7386525 7.1772015,8.668182 7.0307082,8.5925631 A 3.6495423,3.6495423 0 0 1 6.4114097,8.7405739 c 0.3018502,0.1785437 0.5982108,0.3328873 0.8826155,0.4524198 0.4914779,0.2065631 0.9500502,0.3231226 1.3589345,0.330404 0.4088838,0.0073 0.7791706,-0.099912 1.0390131,-0.3597551 C 9.9518158,8.9038002 10.059847,8.5326751 10.052566,8.1237914 10.045264,7.714907 9.9287248,7.2559146 9.7221617,6.7644376 9.6311229,6.5478276 9.520033,6.3242336 9.3942731,6.0969203 Z" />
+        <path
+           id="path1224"
+           style="color:#000000;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:medium;line-height:normal;font-family:sans-serif;font-variant-ligatures:normal;font-variant-position:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-alternates:normal;font-variant-east-asian:normal;font-feature-settings:normal;font-variation-settings:normal;text-indent:0;text-align:start;text-decoration:none;text-decoration-line:none;text-decoration-style:solid;text-decoration-color:#000000;letter-spacing:normal;word-spacing:normal;text-transform:none;writing-mode:lr-tb;direction:ltr;text-orientation:mixed;dominant-baseline:auto;baseline-shift:baseline;text-anchor:start;white-space:normal;shape-padding:0;shape-margin:0;inline-size:0;clip-rule:nonzero;display:inline;overflow:visible;visibility:visible;isolation:auto;mix-blend-mode:normal;color-interpolation:sRGB;color-interpolation-filters:linearRGB;solid-color:#000000;solid-opacity:1;vector-effect:none;fill:#ffffff;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:0.529167;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:markers fill stroke;color-rendering:auto;image-rendering:auto;shape-rendering:auto;text-rendering:auto;enable-background:accumulate;stop-color:#000000"
+           d="M 9.6919728,1.4213635 9.3875643,1.7240944 C 9.5469085,1.8834388 9.6295173,2.1220928 9.6236274,2.4528289 9.6177376,2.783565 9.5176881,3.1961746 9.325928,3.6524314 8.9424077,4.5649452 8.1982083,5.6485106 7.1879438,6.6587754 6.8352016,7.0115171 6.4734883,7.3296955 6.113291,7.6135096 6.2405937,7.7004977 6.3664965,7.7823246 6.491495,7.8592164 6.8273557,7.5872728 7.1626888,7.2894919 7.4906746,6.9615063 8.5344246,5.9177558 9.3086164,4.8018467 9.7217425,3.8188915 9.9283058,3.3274138 10.045704,2.8680022 10.052985,2.4591183 10.060268,2.0502344 9.9518148,1.6812061 9.6919728,1.4213635 Z M 5.7501817,7.8873092 C 5.2035374,8.2823956 4.6680659,8.5923027 4.1815996,8.7967599 3.7253428,8.9885204 3.3110562,9.0885692 2.9803201,9.0944598 2.6495839,9.1003489 2.412607,9.0194171 2.2532628,8.8600731 L 1.950532,9.1628044 C 2.2103744,9.4226464 2.5794028,9.5315181 2.9882867,9.5242368 3.3971706,9.5169554 3.856582,9.3995568 4.3480599,9.1929937 4.9108064,8.9564764 5.5174156,8.5979213 6.1288049,8.1418212 6.0031989,8.0615135 5.8770055,7.9767273 5.7501817,7.8873092 Z" />
+        <path
+           style="color:#000000;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:medium;line-height:normal;font-family:sans-serif;font-variant-ligatures:normal;font-variant-position:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-alternates:normal;font-variant-east-asian:normal;font-feature-settings:normal;font-variation-settings:normal;text-indent:0;text-align:start;text-decoration:none;text-decoration-line:none;text-decoration-style:solid;text-decoration-color:#000000;letter-spacing:normal;word-spacing:normal;text-transform:none;writing-mode:lr-tb;direction:ltr;text-orientation:mixed;dominant-baseline:auto;baseline-shift:baseline;text-anchor:start;white-space:normal;shape-padding:0;shape-margin:0;inline-size:0;clip-rule:nonzero;display:inline;overflow:visible;visibility:visible;isolation:auto;mix-blend-mode:normal;color-interpolation:sRGB;color-interpolation-filters:linearRGB;solid-color:#000000;solid-opacity:1;vector-effect:none;fill:#ffffff;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:0.529167;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:markers fill stroke;color-rendering:auto;image-rendering:auto;shape-rendering:auto;text-rendering:auto;enable-background:accumulate;stop-color:#000000"
+           d="M 1.9495636,1.4215593 C 1.6897212,1.6814018 1.5809621,2.0506776 1.5882437,2.4595615 c 0.00729,0.4088839 0.1246469,0.8682261 0.3312098,1.3597038 0.4131261,0.9829553 1.1875587,2.0987819 2.2313088,3.1425321 1.0437503,1.0437502 2.1611614,1.8181825 3.1441169,2.231309 0.4914776,0.2065624 0.9492349,0.3239277 1.358119,0.3312098 0.408884,0.00731 0.7797443,-0.1014773 1.0395872,-0.3613203 L 9.3883158,8.8587268 C 9.2289714,9.0180711 8.9916581,9.1007424 8.6609218,9.0948526 8.3301856,9.0889628 7.9175335,8.9886822 7.4612765,8.7969221 6.5487625,8.4134018 5.4652965,7.6677928 4.4550317,6.657528 3.4447671,5.6472633 2.6991578,4.5653817 2.3156377,3.6528679 2.1238776,3.1966111 2.023597,2.782374 2.0177072,2.4516379 2.0118173,2.1209016 2.0944887,1.8835881 2.2538329,1.7242439 Z"
+           id="path858" />
+      </g>
+    </g>
+    <text
+       xml:space="preserve"
+       style="font-size:7.46732px;line-height:1.25;font-family:sans-serif;stroke-width:0.263923"
+       x="79.176758"
+       y="12.930992"
+       id="text426"><tspan
+         sodipodi:role="line"
+         id="tspan424"
+         x="79.176758"
+         y="12.930992"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:7.46732px;font-family:'AvantGarde Bk BT';-inkscape-font-specification:'AvantGarde Bk BT';letter-spacing:-0.527845px;fill:#ffffff;stroke-width:0.263923">Workstation</tspan></text>
+  </g>
+</svg>

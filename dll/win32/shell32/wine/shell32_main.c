@@ -1151,18 +1151,31 @@ static INT_PTR CALLBACK AboutDlgProc( HWND hWnd, UINT msg, WPARAM wParam, LPARAM
                 WCHAR szAppTitle[512];
                 WCHAR szAppTitleTemplate[512];
                 WCHAR szAuthorsText[20];
-
+                BITMAP bmpLogoColor;
                 // Preload the ROS bitmap
                 if (IsWindowsServer())
                 {
-                   // Load Server Bitmap
-                   hLogoBmp = (HBITMAP)LoadImage(shell32_hInstance, MAKEINTRESOURCE(IDB_REACTOS_SERVER), IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR);
+                    // Load Server Bitmap
+                    hLogoBmp = (HBITMAP)LoadImage(shell32_hInstance, MAKEINTRESOURCE(IDB_REACTOS_SERVER), IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR);
+
+                    // Load Server VGA Bitmap
+                    GetObject( hLogoBmp, sizeof(BITMAP), &bmpLogoColor );
+
+                    if ( bmpLogoColor.bmBitsPixel <= 4 )
+                        hLogoBmp = (HBITMAP)LoadImage(shell32_hInstance, MAKEINTRESOURCE(IDB_REACTOS_SERVER_VGA), IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR);
                 }
                 else
                 {
-                   // Load Workstation Bitmap
-                   hLogoBmp = (HBITMAP)LoadImage(shell32_hInstance, MAKEINTRESOURCE(IDB_REACTOS_WORKSTATION), IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR);
+                    // Load Workstation Bitmap
+                    hLogoBmp = (HBITMAP)LoadImage(shell32_hInstance, MAKEINTRESOURCE(IDB_REACTOS_WORKSTATION), IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR);
+
+                    // Load Workstation VGA Bitmap
+                    GetObject( hLogoBmp, sizeof(BITMAP), &bmpLogoColor );
+
+                    if ( bmpLogoColor.bmBitsPixel <= 4 )
+                        hLogoBmp = (HBITMAP)LoadImage(shell32_hInstance, MAKEINTRESOURCE(IDB_REACTOS_WORKSTATION_VGA), IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR);
                 }
+
                 hLineBmp = (HBITMAP)LoadImage(shell32_hInstance, MAKEINTRESOURCE(IDB_LINEBAR), IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR);
 
                 if (hLogoBmp && hLineBmp)

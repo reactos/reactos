@@ -663,6 +663,15 @@ StatusMessageWindowProc(
                                                     MAKEINTRESOURCEW(IDB_REACTOS), IMAGE_BITMAP,
                                                     0, 0, LR_DEFAULTCOLOR);
 
+                GetObject(pDlgData->hLogoBitmap, sizeof(BITMAP), &bm);
+
+                if (bm.bmBitsPixel <= 4)
+                {
+                    pDlgData->hLogoBitmap = LoadImageW(hDllInstance,
+                                                        MAKEINTRESOURCEW(IDB_REACTOS_VGA), IMAGE_BITMAP,
+                                                        0, 0, LR_DEFAULTCOLOR);
+                }
+
                 pDlgData->hBarBitmap = LoadImageW(hDllInstance, MAKEINTRESOURCEW(IDB_LINE),
                                                 IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR);
                 GetObject(pDlgData->hBarBitmap, sizeof(bm), &bm);
@@ -743,6 +752,18 @@ StatusMessageWindowProc(
             DeleteObject(pDlgData->hLogoBitmap);
             DeleteObject(pDlgData->hBarBitmap);
             HeapFree(GetProcessHeap(), 0, pDlgData);
+            return TRUE;
+        }
+
+        case WM_PAINT:
+        {
+            PAINTSTRUCT ps;
+            if (pDlgData && pDlgData->hLogoBitmap)
+            {
+                BeginPaint(hwndDlg, &ps);
+                DrawStateW(ps.hdc, NULL, NULL, (LPARAM)pDlgData->hLogoBitmap, (WPARAM)0, 0, 0, 0, 0, DST_BITMAP);
+                EndPaint(hwndDlg, &ps);
+            }
             return TRUE;
         }
     }
