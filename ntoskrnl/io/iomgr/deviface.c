@@ -550,6 +550,7 @@ IoGetDeviceInterfaceAlias(IN PUNICODE_STRING SymbolicLinkName,
         DPRINT1("Failed to open interface key for '%wZ' with status 0x%08lx\n", &AliasGuidString, Status);
         goto Quit;
     }
+    ZwClose(InterfaceKey);
 
     /* Build up new symolic link with alias GUID */
     AliasSymbolicLink.Length = 0;
