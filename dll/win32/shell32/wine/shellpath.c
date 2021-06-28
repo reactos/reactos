@@ -634,7 +634,7 @@ BOOL WINAPI PathResolveA(LPSTR path, LPCSTR *dirs, DWORD flags)
     BOOL ret = FALSE;
     LPWSTR *dirsW = NULL;
     DWORD iDir, cDirs, cbDirs;
-    WCHAR pathW[MAX_PATH], tempW[MAX_PATH];
+    WCHAR pathW[MAX_PATH];
     TRACE("PathResolveA(%s,%p,0x%08x)\n", debugstr_a(path), dirs, flags);
 
     if (dirs)
@@ -643,15 +643,14 @@ BOOL WINAPI PathResolveA(LPSTR path, LPCSTR *dirs, DWORD flags)
             ;
 
         cbDirs = (cDirs + 1) * sizeof(LPWSTR);
-        dirsW = CoTaskMemAlloc(cbDirs);
+        dirsW = SHAlloc(cbDirs);
         if (!dirsW)
             goto Cleanup;
 
         ZeroMemory(dirsW, cbDirs);
         for (iDir = 0; iDir < cDirs; ++iDir)
         {
-            SHAnsiToUnicode(dirs[iDir], tempW, _countof(tempW));
-            SHStrDupW(tempW, &dirsW[iDir]);
+            __SHCloneStrAtoW(&dirsW[iDir], dirs[iDir]);
             if (dirsW[iDir] == NULL)
                 goto Cleanup;
         }
@@ -667,9 +666,10 @@ Cleanup:
     if (dirsW)
     {
         for (iDir = 0; iDir < cDirs; ++iDir)
-            CoTaskMemFree(dirsW[iDir]);
-
-        CoTaskMemFree(dirsW);
+        {
+            SHFree(dirsW[iDir]);
+        }
+        SHFree(dirsW);
     }
     return ret;
 }
