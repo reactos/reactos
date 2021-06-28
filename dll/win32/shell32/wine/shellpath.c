@@ -635,6 +635,7 @@ BOOL WINAPI PathResolveA(LPSTR path, LPCSTR *dirs, DWORD flags)
     LPWSTR *dirsW = NULL;
     DWORD iDir, cDirs, cbDirs;
     WCHAR pathW[MAX_PATH];
+
     TRACE("PathResolveA(%s,%p,0x%08x)\n", debugstr_a(path), dirs, flags);
 
     if (dirs)
