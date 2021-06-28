@@ -519,6 +519,7 @@ IoGetDeviceInterfaceAlias(IN PUNICODE_STRING SymbolicLinkName,
         DPRINT1("IoOpenDeviceInterfaceRegistryKey() : failed to open interface key for '%wZ' with status 0x%08lx\n", SymbolicLinkName, Status);
         return Status;
     }
+    ZwClose(InterfaceKey);
 
     /* Separate symbolic link onto 3 parts:
      * 1) device string (like ACPI#PNP0501#1#),
