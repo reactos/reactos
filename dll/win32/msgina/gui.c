@@ -73,7 +73,7 @@ DlgData_LoadBitmaps(_Inout_ PDLG_DATA pDlgData)
                                            MAKEINTRESOURCEW(IDI_ROSLOGO_SERVER), IMAGE_BITMAP,
                                            0, 0, LR_DEFAULTCOLOR);
 
-        GetObject(pDlgData->hLogoBitmap, sizeof(BITMAP), &bm);
+        GetObject(pDlgData->hLogoBitmap, sizeof(bm), &bm);
 
         if ( bm.bmBitsPixel <= 4 )
         {
@@ -88,7 +88,7 @@ DlgData_LoadBitmaps(_Inout_ PDLG_DATA pDlgData)
                                            MAKEINTRESOURCEW(IDI_ROSLOGO_WORKSTATION), IMAGE_BITMAP,
                                            0, 0, LR_DEFAULTCOLOR);
 
-        GetObject(pDlgData->hLogoBitmap, sizeof(BITMAP), &bm);
+        GetObject(pDlgData->hLogoBitmap, sizeof(bm), &bm);
 
         if ( bm.bmBitsPixel <= 4 )
         {

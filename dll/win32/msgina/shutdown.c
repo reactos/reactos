@@ -1068,7 +1068,7 @@ ShutdownDialogProc(
             }
         return TRUE;
         }
-        
+
         case WM_DESTROY:
             DeleteObject(pContext->hBitmap);
             DeleteObject(pContext->hBrush);

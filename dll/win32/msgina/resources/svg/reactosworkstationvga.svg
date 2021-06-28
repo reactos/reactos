@@ -1716,21 +1716,21 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="2.0000001"
-     inkscape:cx="235.0941"
-     inkscape:cy="-48.732333"
+     inkscape:zoom="2.8284271"
+     inkscape:cx="274.66236"
+     inkscape:cy="39.759664"
      inkscape:document-units="px"
      inkscape:current-layer="svg8"
      inkscape:document-rotation="0"
-     showgrid="false"
+     showgrid="true"
      inkscape:snap-page="true"
      units="px"
      inkscape:snap-to-guides="true"
      inkscape:snap-grids="true"
-     inkscape:window-width="1904"
+     inkscape:window-width="1920"
      inkscape:window-height="1017"
-     inkscape:window-x="0"
-     inkscape:window-y="0"
+     inkscape:window-x="-32000"
+     inkscape:window-y="-32000"
      inkscape:window-maximized="0">
     <inkscape:grid
        type="xygrid"
@@ -1802,11 +1802,14 @@
      style="display:inline" />
   <g
      id="g596"
-     transform="matrix(0.65974819,0,0,0.65974819,15.323507,4.4522796)">
+     transform="matrix(0.65974819,0,0,0.65974819,15.354978,4.4605272)"
+     inkscape:export-filename=".\g596.png"
+     inkscape:export-xdpi="96"
+     inkscape:export-ydpi="96">
     <g
        id="g219"
        style="display:inline"
-       transform="matrix(1.5157298,0,0,1.5157298,-68.754681,-6.5519546)">
+       transform="matrix(1.5157298,0,0,1.5157298,-68.74843,-6.5644557)">
       <text
          xml:space="preserve"
          style="font-size:9.50121px;line-height:1.25;font-family:'Lucida Sans Unicode';-inkscape-font-specification:'Lucida Sans Unicode';stroke-width:0.263923"
@@ -1843,13 +1846,13 @@
     <text
        xml:space="preserve"
        style="font-size:7.46732px;line-height:1.25;font-family:sans-serif;stroke-width:0.263923"
-       x="79.176758"
-       y="12.930992"
+       x="79.075104"
+       y="13.045907"
        id="text426"><tspan
          sodipodi:role="line"
          id="tspan424"
-         x="79.176758"
-         y="12.930992"
+         x="79.075104"
+         y="13.045907"
          style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:7.46732px;font-family:'AvantGarde Bk BT';-inkscape-font-specification:'AvantGarde Bk BT';letter-spacing:-0.527845px;fill:#ffffff;stroke-width:0.263923">Workstation</tspan></text>
   </g>
 </svg>

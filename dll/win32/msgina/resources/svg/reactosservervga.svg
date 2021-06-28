@@ -2116,13 +2116,13 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="2.0000001"
-     inkscape:cx="209.41869"
-     inkscape:cy="-16.778593"
+     inkscape:zoom="1.4142136"
+     inkscape:cx="158.64122"
+     inkscape:cy="0.9434351"
      inkscape:document-units="px"
      inkscape:current-layer="svg8"
      inkscape:document-rotation="0"
-     showgrid="false"
+     showgrid="true"
      inkscape:snap-page="true"
      units="px"
      inkscape:snap-to-guides="true"
@@ -2201,14 +2201,14 @@
      style="display:inline" />
   <g
      id="g596"
-     transform="matrix(0.65974819,0,0,0.65974819,20.328139,4.7909432)"
+     transform="matrix(0.65974819,0,0,0.65974819,20.809028,5.2666976)"
      inkscape:export-filename=".\g596.png"
      inkscape:export-xdpi="96"
      inkscape:export-ydpi="96">
     <g
        id="g219"
        style="display:inline"
-       transform="matrix(1.5157298,0,0,1.5157298,-71.394156,-7.0652771)">
+       transform="matrix(1.5157298,0,0,1.5157298,-71.30944,-7.7863922)">
       <text
          xml:space="preserve"
          style="font-size:9.50121px;line-height:1.25;font-family:'Lucida Sans Unicode';-inkscape-font-specification:'Lucida Sans Unicode';stroke-width:0.263923"
@@ -2245,13 +2245,13 @@
     <text
        xml:space="preserve"
        style="font-size:8.53409px;line-height:1.25;font-family:sans-serif;stroke-width:0.263923"
-       x="77.70163"
-       y="12.56846"
+       x="76.159119"
+       y="11.810463"
        id="text426"><tspan
          sodipodi:role="line"
          id="tspan424"
-         x="77.70163"
-         y="12.56846"
+         x="76.159119"
+         y="11.810463"
          style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:8.53409px;font-family:'AvantGarde Bk BT';-inkscape-font-specification:'AvantGarde Bk BT';letter-spacing:-0.527845px;fill:#ffffff;stroke-width:0.263923">Server</tspan></text>
   </g>
 </svg>
