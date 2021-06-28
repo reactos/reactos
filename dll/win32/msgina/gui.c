@@ -72,12 +72,30 @@ DlgData_LoadBitmaps(_Inout_ PDLG_DATA pDlgData)
         pDlgData->hLogoBitmap = LoadImageW(pDlgData->pgContext->hDllInstance,
                                            MAKEINTRESOURCEW(IDI_ROSLOGO_SERVER), IMAGE_BITMAP,
                                            0, 0, LR_DEFAULTCOLOR);
+
+        GetObject(pDlgData->hLogoBitmap, sizeof(BITMAP), &bm);
+
+        if ( bm.bmBitsPixel <= 4 )
+        {
+            pDlgData->hLogoBitmap = LoadImageW(pDlgData->pgContext->hDllInstance,
+                                               MAKEINTRESOURCEW(IDI_ROSLOGO_SERVER_VGA), IMAGE_BITMAP,
+                                               0, 0, LR_DEFAULTCOLOR);
+        }
     }
     else
     {
         pDlgData->hLogoBitmap = LoadImageW(pDlgData->pgContext->hDllInstance,
                                            MAKEINTRESOURCEW(IDI_ROSLOGO_WORKSTATION), IMAGE_BITMAP,
                                            0, 0, LR_DEFAULTCOLOR);
+
+        GetObject(pDlgData->hLogoBitmap, sizeof(BITMAP), &bm);
+
+        if ( bm.bmBitsPixel <= 4 )
+        {
+            pDlgData->hLogoBitmap = LoadImageW(pDlgData->pgContext->hDllInstance,
+                                               MAKEINTRESOURCEW(IDI_ROSLOGO_WORKSTATION_VGA), IMAGE_BITMAP,
+                                               0, 0, LR_DEFAULTCOLOR);
+        }
     }
     if (pDlgData->hLogoBitmap)
     {

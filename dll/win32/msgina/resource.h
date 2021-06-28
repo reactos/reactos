@@ -72,13 +72,16 @@
 #define IDC_ROSLOGO_WHITE        1010
 
 
-#define IDI_ROSLOGO              20000
-#define IDI_BAR                  20001
-#define IDI_ROSLOGO_FLAG         20002
-#define IDI_DLG_BG               20003
-#define IDB_IMAGE_STRIP          20004
-#define IDI_ROSLOGO_WORKSTATION  20005
-#define IDI_ROSLOGO_SERVER       20006
+#define IDI_ROSLOGO                  20000
+#define IDI_BAR                      20001
+#define IDI_ROSLOGO_FLAG             20002
+#define IDI_DLG_BG                   20003
+#define IDB_IMAGE_STRIP              20004
+#define IDI_ROSLOGO_WORKSTATION      20005
+#define IDI_ROSLOGO_SERVER           20006
+#define IDI_ROSLOGO_VGA              20007
+#define IDI_ROSLOGO_WORKSTATION_VGA  20008
+#define IDI_ROSLOGO_SERVER_VGA       20009
 
 #define IDI_NOT_CONNECTED            13
 #define IDI_LOGOFF                   21

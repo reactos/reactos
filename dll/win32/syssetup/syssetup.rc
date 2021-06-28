@@ -23,6 +23,7 @@ IDB_LAUTUS BITMAP "resources/thmlautus.bmp"
 IDB_LUNAR BITMAP "resources/thmlunar.bmp"
 IDB_MIZU BITMAP "resources/thmmizu.bmp"
 IDB_REACTOS BITMAP "resources/reactos.bmp"
+IDB_REACTOS_VGA BITMAP "resources/reactosvga.bmp"
 IDB_LINE BITMAP "resources/line.bmp"
 
 IDI_ICON1 ICON "resources/1.ico"
