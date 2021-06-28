@@ -586,7 +586,7 @@ IoGetDeviceInterfaceAlias(IN PUNICODE_STRING SymbolicLinkName,
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("RtlAppendUnicodeStringToString() failed with status 0x%08lx\n", Status);
-        return Status;
+        goto Quit;
     }
 
     DPRINT1("IoGetDeviceInterfaceAlias() : alias symbolic link '%wZ'\n", &AliasSymbolicLink);
