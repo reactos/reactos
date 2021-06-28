@@ -542,7 +542,7 @@ IoGetDeviceInterfaceAlias(IN PUNICODE_STRING SymbolicLinkName,
 
     DPRINT1("Alias GUID is '%wZ'\n", &AliasGuidString);
 
-    /* Check aviability of alias interface registry key */
+    /* Check the availability of the alias interface registry key */
     Status = IopOpenInterfaceKey(AliasInterfaceClassGuid, KEY_READ, &InterfaceKey);
     if (!NT_SUCCESS(Status))
     {
