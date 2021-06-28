@@ -512,7 +512,7 @@ IoGetDeviceInterfaceAlias(IN PUNICODE_STRING SymbolicLinkName,
         return STATUS_INVALID_HANDLE;
     }
 
-    /* Make sure symbolic link interface key exists in registry */
+    /* Make sure the symbolic link interface key exists in registry */
     Status = IoOpenDeviceInterfaceRegistryKey(SymbolicLinkName, KEY_READ, &InterfaceKey);
     if (!NT_SUCCESS(Status))
     {
