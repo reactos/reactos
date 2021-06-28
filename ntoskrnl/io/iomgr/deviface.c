@@ -547,7 +547,7 @@ IoGetDeviceInterfaceAlias(IN PUNICODE_STRING SymbolicLinkName,
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Failed to open interface key for '%wZ' with status 0x%08lx\n", &AliasGuidString, Status);
-        return Status;
+        goto Quit;
     }
 
     /* Build up new symolic link with alias GUID */
