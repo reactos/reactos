@@ -637,8 +637,6 @@ BOOL WINAPI PathResolveA(LPSTR path, LPCSTR *dirs, DWORD flags)
     WCHAR pathW[MAX_PATH], tempW[MAX_PATH];
     TRACE("PathResolveA(%s,%p,0x%08x)\n", debugstr_a(path), dirs, flags);
 
-    SHAnsiToUnicode(path, pathW, _countof(pathW));
-
     if (dirs)
     {
         for (cDirs = 0; dirs[cDirs]; ++cDirs)
@@ -658,6 +656,8 @@ BOOL WINAPI PathResolveA(LPSTR path, LPCSTR *dirs, DWORD flags)
                 goto Cleanup;
         }
     }
+
+    SHAnsiToUnicode(path, pathW, _countof(pathW));
 
     ret = PathResolveW(pathW, (LPCWSTR*)dirsW, flags);
     if (ret)
