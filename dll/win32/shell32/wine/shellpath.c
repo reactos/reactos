@@ -631,8 +631,47 @@ VOID WINAPI PathQualifyAW(LPVOID pszPath)
 
 BOOL WINAPI PathResolveA(LPSTR path, LPCSTR *dirs, DWORD flags)
 {
-    FIXME("(%s,%p,0x%08x),stub!\n", debugstr_a(path), dirs, flags);
-    return FALSE;
+    BOOL ret = FALSE;
+    LPWSTR *dirsW = NULL;
+    DWORD iDir, cDirs, cbDirs;
+    WCHAR pathW[MAX_PATH], tempW[MAX_PATH];
+    TRACE("PathResolveA(%s,%p,0x%08x)\n", debugstr_a(path), dirs, flags);
+
+    SHAnsiToUnicode(path, pathW, _countof(pathW));
+
+    if (dirs)
+    {
+        for (cDirs = 0; dirs[cDirs]; ++cDirs)
+            ;
+
+        cbDirs = (cDirs + 1) * sizeof(LPWSTR);
+        dirsW = CoTaskMemAlloc(cbDirs);
+        if (!dirsW)
+            goto Cleanup;
+
+        ZeroMemory(dirsW, cbDirs);
+        for (iDir = 0; iDir < cDirs; ++iDir)
+        {
+            SHAnsiToUnicode(dirs[iDir], tempW, _countof(tempW));
+            SHStrDupW(tempW, &dirsW[iDir]);
+            if (dirsW[iDir] == NULL)
+                goto Cleanup;
+        }
+    }
+
+    ret = PathResolveW(pathW, (LPCWSTR*)dirsW, flags);
+    if (ret)
+        SHUnicodeToAnsi(pathW, path, MAX_PATH);
+
+Cleanup:
+    if (dirsW)
+    {
+        for (iDir = 0; iDir < cDirs; ++iDir)
+            CoTaskMemFree(dirsW[iDir]);
+
+        CoTaskMemFree(dirsW);
+    }
+    return ret;
 }
 
 #define WHICH_DONTFINDLNK (WHICH_PIF | WHICH_COM | WHICH_EXE | WHICH_BAT)
