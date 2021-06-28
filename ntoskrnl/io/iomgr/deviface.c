@@ -557,8 +557,8 @@ IoGetDeviceInterfaceAlias(IN PUNICODE_STRING SymbolicLinkName,
     if (!AliasSymbolicLink.Buffer)
     {
         DPRINT1("ExAllocatePoolWithTag() failed\n");
-        RtlFreeUnicodeString(&AliasSymbolicLink);
-        return STATUS_INSUFFICIENT_RESOURCES;
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto Quit;
     }
 
     Status = RtlAppendUnicodeStringToString(&AliasSymbolicLink, &DosDevicesPrefix);
