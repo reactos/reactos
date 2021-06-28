@@ -595,7 +595,21 @@ IoGetDeviceInterfaceAlias(IN PUNICODE_STRING SymbolicLinkName,
 
     /* We're done */
     *AliasSymbolicLinkName = AliasSymbolicLink;
-    return STATUS_SUCCESS;
+    Status = STATUS_SUCCESS;
+
+Quit:
+    if (!NT_SUCCESS(Status))
+    {
+        if (AliasSymbolicLink.Buffer)
+            RtlFreeUnicodeString(&AliasSymbolicLink);
+    }
+
+    if (AliasGuidString.Buffer)
+        RtlFreeUnicodeString(&AliasGuidString);
+
+    RtlFreeUnicodeString(&DeviceString);
+
+    return Status;
 }
 
 /*++
