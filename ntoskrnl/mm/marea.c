@@ -300,11 +300,7 @@ MmFreeMemoryArea(
         PEPROCESS CurrentProcess = PsGetCurrentProcess();
         PEPROCESS Process = MmGetAddressSpaceOwner(AddressSpace);
 
-        if (Process != NULL &&
-                Process != CurrentProcess)
-        {
-            KeAttachProcess(&Process->Pcb);
-        }
+        ASSERT((Process == NULL) || (Process == CurrentProcess));
 
         if (Process != NULL)
             MiLockProcessWorkingSetUnsafe(Process, PsGetCurrentThread());
@@ -351,17 +347,6 @@ MmFreeMemoryArea(
             }
         }
 
-        if (Process != NULL)
-            MiUnlockProcessWorkingSetUnsafe(Process, PsGetCurrentThread());
-        else
-            MiUnlockWorkingSet(PsGetCurrentThread(), &MmSystemCacheWs);
-
-        if (Process != NULL &&
-                Process != CurrentProcess)
-        {
-            KeDetachProcess();
-        }
-
         //if (MemoryArea->VadNode.StartingVpn < (ULONG_PTR)MmSystemRangeStart >> PAGE_SHIFT
         if (MemoryArea->Vad)
         {
@@ -385,6 +370,11 @@ MmFreeMemoryArea(
         {
             MiRemoveNode((PMMADDRESS_NODE)&MemoryArea->VadNode, &MiRosKernelVadRoot);
         }
+
+        if (Process != NULL)
+            MiUnlockProcessWorkingSetUnsafe(Process, PsGetCurrentThread());
+        else
+            MiUnlockWorkingSet(PsGetCurrentThread(), &MmSystemCacheWs);
     }
 
 #if DBG

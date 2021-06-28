@@ -263,7 +263,7 @@ MmDeleteVirtualMapping(PEPROCESS Process, PVOID Address,
         }
 
         /* Only for current process !!! */
-        ASSERT(Process = PsGetCurrentProcess());
+        ASSERT(Process == PsGetCurrentProcess());
         ASSERT(PsGetCurrentThread()->OwnsProcessWorkingSetExclusive);
 
         /* No PDE --> No page */
@@ -586,7 +586,7 @@ MmCreateVirtualMappingUnsafe(PEPROCESS Process,
         }
 
         /* Only for current process !!! */
-        ASSERT(Process = PsGetCurrentProcess());
+        ASSERT(Process == PsGetCurrentProcess());
         NT_ASSERT(PsGetCurrentThread()->OwnsProcessWorkingSetExclusive);
 
         MiMakePdeExistAndMakeValid(MiAddressToPde(Address), Process, MM_NOIRQL);

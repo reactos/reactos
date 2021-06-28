@@ -3929,6 +3929,9 @@ MmMapViewOfSection(IN PVOID SectionObject,
     PMMSUPPORT AddressSpace;
     NTSTATUS Status = STATUS_SUCCESS;
     BOOLEAN NotAtBase = FALSE;
+    BOOLEAN Attached = FALSE;
+    KAPC_STATE ApcState;
+
 
     if (MiIsRosSectionObject(SectionObject) == FALSE)
     {
@@ -3960,6 +3963,12 @@ MmMapViewOfSection(IN PVOID SectionObject,
 
     if (Section->u.Flags.NoChange)
         AllocationType |= SEC_NO_CHANGE;
+
+    if (Process != PsGetCurrentProcess())
+    {
+        KeStackAttachProcess(&Process->Pcb, &ApcState);
+        Attached = TRUE;
+    }
 
     MmLockAddressSpace(AddressSpace);
 
@@ -4018,15 +4027,15 @@ MmMapViewOfSection(IN PVOID SectionObject,
             /* Fail if the user requested a fixed base address. */
             if ((*BaseAddress) != NULL)
             {
-                MmUnlockAddressSpace(AddressSpace);
-                return STATUS_CONFLICTING_ADDRESSES;
+                Status = STATUS_CONFLICTING_ADDRESSES;
+                goto Fail;
             }
             /* Otherwise find a gap to map the image. */
             ImageBase = (ULONG_PTR)MmFindGap(AddressSpace, PAGE_ROUND_UP(ImageSize), MM_VIRTMEM_GRANULARITY, FALSE);
             if (ImageBase == 0)
             {
-                MmUnlockAddressSpace(AddressSpace);
-                return STATUS_CONFLICTING_ADDRESSES;
+                Status = STATUS_CONFLICTING_ADDRESSES;
+                goto Fail;
             }
             /* Remember that we loaded image at a different base address */
             NotAtBase = TRUE;
@@ -4056,9 +4065,7 @@ MmMapViewOfSection(IN PVOID SectionObject,
                     MmUnmapViewOfSegment(AddressSpace, SBaseAddress);
                     MmUnlockSectionSegment(&SectionSegments[i]);
                 }
-
-                MmUnlockAddressSpace(AddressSpace);
-                return Status;
+                goto Fail;
             }
         }
 
@@ -4079,22 +4086,22 @@ MmMapViewOfSection(IN PVOID SectionObject,
         if ((Protect & (PAGE_READWRITE|PAGE_EXECUTE_READWRITE)) &&
                 !(Section->InitialPageProtection & (PAGE_READWRITE|PAGE_EXECUTE_READWRITE)))
         {
-            MmUnlockAddressSpace(AddressSpace);
-            return STATUS_SECTION_PROTECTION;
+            Status = STATUS_SECTION_PROTECTION;
+            goto Fail;
         }
         /* check for read access */
         if ((Protect & (PAGE_READONLY|PAGE_WRITECOPY|PAGE_EXECUTE_READ|PAGE_EXECUTE_WRITECOPY)) &&
                 !(Section->InitialPageProtection & (PAGE_READONLY|PAGE_READWRITE|PAGE_WRITECOPY|PAGE_EXECUTE_READ|PAGE_EXECUTE_READWRITE|PAGE_EXECUTE_WRITECOPY)))
         {
-            MmUnlockAddressSpace(AddressSpace);
-            return STATUS_SECTION_PROTECTION;
+            Status = STATUS_SECTION_PROTECTION;
+            goto Fail;
         }
         /* check for execute access */
         if ((Protect & (PAGE_EXECUTE|PAGE_EXECUTE_READ|PAGE_EXECUTE_READWRITE|PAGE_EXECUTE_WRITECOPY)) &&
                 !(Section->InitialPageProtection & (PAGE_EXECUTE|PAGE_EXECUTE_READ|PAGE_EXECUTE_READWRITE|PAGE_EXECUTE_WRITECOPY)))
         {
-            MmUnlockAddressSpace(AddressSpace);
-            return STATUS_SECTION_PROTECTION;
+            Status = STATUS_SECTION_PROTECTION;
+            goto Fail;
         }
 
         if (SectionOffset == NULL)
@@ -4108,8 +4115,8 @@ MmMapViewOfSection(IN PVOID SectionObject,
 
         if ((ViewOffset % PAGE_SIZE) != 0)
         {
-            MmUnlockAddressSpace(AddressSpace);
-            return STATUS_MAPPED_ALIGNMENT;
+            Status = STATUS_MAPPED_ALIGNMENT;
+            goto Fail;
         }
 
         if ((*ViewSize) == 0)
@@ -4138,11 +4145,12 @@ MmMapViewOfSection(IN PVOID SectionObject,
         MmUnlockSectionSegment(Segment);
         if (!NT_SUCCESS(Status))
         {
-            MmUnlockAddressSpace(AddressSpace);
-            return Status;
+            goto Fail;
         }
     }
 
+    if (Attached)
+        KeUnstackDetachProcess(&ApcState);
     MmUnlockAddressSpace(AddressSpace);
 
     if (NotAtBase)
@@ -4150,6 +4158,12 @@ MmMapViewOfSection(IN PVOID SectionObject,
     else
         Status = STATUS_SUCCESS;
 
+    return Status;
+
+Fail:
+    if (Attached)
+        KeUnstackDetachProcess(&ApcState);
+    MmUnlockAddressSpace(AddressSpace);
     return Status;
 }
 
