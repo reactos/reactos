@@ -37,9 +37,10 @@ typedef BOOL
     IN DWORD cch);
 
 /* Flags for CON_PAGER */
-#define CON_PAGER_DONT_OUTPUT   (1 << 0)
-#define CON_PAGER_EXPAND_TABS   (1 << 1)
-#define CON_PAGER_EXPAND_FF     (1 << 2)
+#define CON_PAGER_EXPAND_TABS   (1 << 0)
+#define CON_PAGER_EXPAND_FF     (1 << 1)
+// Whether or not the pager will cache the line if it's incomplete (not NEWLINE-terminated).
+#define CON_PAGER_CACHE_INCOMPLETE_LINE (1 << 2)
 
 typedef struct _CON_PAGER
 {
@@ -55,12 +56,15 @@ typedef struct _CON_PAGER
     DWORD ScrollRows;
 
     /* Data buffer */
-    PCTCH TextBuff; /* The text buffer */
-    DWORD cch;      /* The total number of characters */
+    PCTCH  CachedLine;    /* Cached line, HeapAlloc'ated */
+    SIZE_T cchCachedLine; /* Its length (number of characters) */
+    SIZE_T ich;           /* The current index of character in TextBuff (a user-provided source buffer) */
 
     /* Paging state */
-    DWORD ich;      /* The current index of character */
-    DWORD nSpacePending; /* Pending spaces for TAB expansion */
+    PCTCH  CurrentLine;   /* Pointer to the current line (either within a user-provided source buffer, or to CachedLine) */
+    SIZE_T ichCurr;       /* The current index of character in CurrentLine */
+    SIZE_T iEndLine;      /* End (length) of CurrentLine */
+    DWORD  nSpacePending; /* Pending spaces for TAB expansion */
     DWORD iColumn;  /* The current index of column */
     DWORD iLine;    /* The physical output line count of screen */
     DWORD lineno;   /* The logical line number */
