@@ -66,7 +66,7 @@ if(ARCH STREQUAL "i386")
     add_hal(halxbox SOURCES xbox/halxbox.rc COMPONENTS xbox up)
     add_hal(halpc98 SOURCES pc98/halpc98.rc COMPONENTS pc98 up)
 
-    #add_hal(halmacpi SOURCES acpi/halacpi.rc COMPONENTS generic acpi smp pic)
+    add_hal(halmacpi SOURCES smp/halmacpi.rc COMPONENTS generic acpi smp apic)
 
 elseif(ARCH STREQUAL "amd64")
 
@@ -76,7 +76,7 @@ elseif(ARCH STREQUAL "amd64")
     add_hal(hal SOURCES ${HAL_SOURCE} COMPONENTS generic acpi up apic)
     target_link_libraries(hal fast486)
 
-    add_hal(halmp SOURCES ${HAL_SOURCE} COMPONENTS generic acpi smp apic)
-    target_link_libraries(halmp fast486)
+    add_hal(halmacpi SOURCES ${HAL_SOURCE} COMPONENTS generic acpi smp apic)
+    target_link_libraries(halmacpi fast486)
 
 endif()

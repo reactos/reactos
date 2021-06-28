@@ -4,6 +4,7 @@
  * FILE:        hal/halx86/apic/apicsmp.c
  * PURPOSE:     SMP specific APIC code
  * PROGRAMMERS: Copyright 2021 Timo Kreuzer (timo.kreuzer@reactos.org)
+ *              Copyright 2021 Justin Miller (justinmiller100@gmail.com)
  */
 
 /* INCLUDES *******************************************************************/
@@ -84,13 +85,10 @@ ApicRequestGlobalInterrupt(
 
 /* SMP SUPPORT FUNCTIONS ******************************************************/
 
-// Should be called by SMP version of HalRequestIpi
 VOID
-NTAPI
+NTAPI /* HalRequestIpi (CONFIG_SMP) */
 HalpRequestIpi(KAFFINITY TargetProcessors)
 {
     UNIMPLEMENTED;
     __debugbreak();
 }
-
-// APIC specific SMP code here
