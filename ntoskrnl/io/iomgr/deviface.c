@@ -6,7 +6,7 @@
  *
  * PROGRAMMERS:     Filip Navara (xnavara@volny.cz)
  *                  Matthew Brace (ismarc@austin.rr.com)
- *                  Hervé Poussineau (hpoussin@reactos.org)
+ *                  HervÃ© Poussineau (hpoussin@reactos.org)
  *                  Oleg Dubinskiy (oleg.dubinskij2013@yandex.ua)
  */
 
@@ -343,7 +343,6 @@ IopSeparateSymbolicLink(IN PUNICODE_STRING SymbolicLinkName,
     if (!DeviceStringRealP.Buffer)
     {
         DPRINT1("ExAllocatePoolWithTag() failed\n");
-        RtlFreeUnicodeString(&DeviceStringRealP);
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
