@@ -23,8 +23,9 @@ add_library(winmm MODULE
 
 
 if(MSVC)
-    # error C4312: 'type cast': conversion from 'DWORD' to 'HTASK' of greater size
-    remove_target_compile_option(winmm "/we4312")
+    # Disable warning C4090: 'function': different 'const' qualifiers
+    # Disable warning C4312: 'type cast': conversion from 'DWORD' to 'HTASK' of greater size
+    target_compile_options(winmm PRIVATE /wd4090 /wd4312)
 endif()
 
 set_module_type(winmm win32dll)
