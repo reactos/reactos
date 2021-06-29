@@ -2230,16 +2230,9 @@ UserFault:
 
         if (ProtectionCode == MM_NOACCESS)
         {
-#if (_MI_PAGING_LEVELS == 2)
-            /* Could be a page table for paged pool */
-            MiCheckPdeForPagedPool(Address);
-#endif
-            /* Has the code above changed anything -- is this now a valid PTE? */
-            Status = (PointerPde->u.Hard.Valid == 1) ? STATUS_SUCCESS : STATUS_ACCESS_VIOLATION;
-
-            /* Either this was a bogus VA or we've fixed up a paged pool PDE */
+            /* This is a bogus VA. */
             MiUnlockProcessWorkingSet(CurrentProcess, CurrentThread);
-            return Status;
+            return STATUS_ACCESS_VIOLATION;
         }
 
         /* Resolve a demand zero fault */
@@ -2420,17 +2413,10 @@ UserFault:
         ProtoPte = MiCheckVirtualAddress(Address, &ProtectionCode, &Vad);
         if (ProtectionCode == MM_NOACCESS)
         {
-#if (_MI_PAGING_LEVELS == 2)
-            /* Could be a page table for paged pool */
-            MiCheckPdeForPagedPool(Address);
-#endif
-            /* Has the code above changed anything -- is this now a valid PTE? */
-            Status = (PointerPte->u.Hard.Valid == 1) ? STATUS_SUCCESS : STATUS_ACCESS_VIOLATION;
-
-            /* Either this was a bogus VA or we've fixed up a paged pool PDE */
+            /* This was a bogus VA */
             if (TrapInformation)
                 MiUnlockProcessWorkingSet(CurrentProcess, CurrentThread);
-            return Status;
+            return STATUS_ACCESS_VIOLATION;
         }
 
         /*
