@@ -57,7 +57,7 @@ MiCalculatePageCommitment(IN ULONG_PTR StartingAddress,
 #endif
 
     /* Make sure this all makes sense */
-    ASSERT(PsGetCurrentThread()->OwnsProcessWorkingSetExclusive || PsGetCurrentThread()->OwnsProcessWorkingSetShared);
+    ASSERT(PsGetCurrentThread()->OwnsProcessWorkingSetExclusive);
     ASSERT(EndingAddress >= StartingAddress);
     PointerPte = MiAddressToPte(StartingAddress);
     LastPte = MiAddressToPte(EndingAddress);
@@ -84,12 +84,17 @@ MiCalculatePageCommitment(IN ULONG_PTR StartingAddress,
             if (PointerPxe->u.Long == 0)
             {
                 PointerPxe++;
-                PointerPte = MiPxeToPte(PointerPde);
+                PointerPte = MiPxeToPte(PointerPxe);
                 continue;
             }
 
             if (PointerPxe->u.Hard.Valid == 0)
-                MiMakeSystemAddressValid(MiPteToPpe(PointerPte), Process);
+            {
+                BOOLEAN LockChange = MiMakeSystemAddressValid(MiPteToPpe(PointerPte), Process);
+                /* We're called with WS lock held exclusively, so there must be no lock change when making page table valid. */
+                ASSERT(!LockChange);
+                (void)LockChange;
+            }
         }
         ASSERT(PointerPxe->u.Hard.Valid == 1);
 #endif
@@ -114,7 +119,12 @@ MiCalculatePageCommitment(IN ULONG_PTR StartingAddress,
             }
 
             if (PointerPpe->u.Hard.Valid == 0)
-                MiMakeSystemAddressValid(MiPteToPde(PointerPte), Process);
+            {
+                BOOLEAN LockChange = MiMakeSystemAddressValid(MiPteToPde(PointerPte), Process);
+                /* We're called with WS lock held exclusively, so there must be no lock change when making page table valid. */
+                ASSERT(!LockChange);
+                (void)LockChange;
+            }
         }
         ASSERT(PointerPpe->u.Hard.Valid == 1);
 #endif
@@ -137,7 +147,12 @@ MiCalculatePageCommitment(IN ULONG_PTR StartingAddress,
             }
 
             if (PointerPde->u.Hard.Valid == 0)
-                MiMakeSystemAddressValid(PointerPte, Process);
+            {
+                BOOLEAN LockChange = MiMakeSystemAddressValid(PointerPte, Process);
+                /* We're called with WS lock held exclusively, so there must be no lock change when making page table valid. */
+                ASSERT(!LockChange);
+                (void)LockChange;
+            }
         }
         ASSERT(PointerPde->u.Hard.Valid == 1);
 
@@ -178,13 +193,14 @@ MiCalculatePageCommitment(IN ULONG_PTR StartingAddress,
     return CommittedPages;
 }
 
-ULONG
-NTAPI
-MiMakeSystemAddressValid(IN PVOID PageTableVirtualAddress,
-                         IN PEPROCESS CurrentProcess)
+_Must_inspect_result_
+BOOLEAN
+MiMakeSystemAddressValid(
+    _In_ PVOID PageTableVirtualAddress,
+    _In_ PEPROCESS CurrentProcess)
 {
     NTSTATUS Status;
-    BOOLEAN WsShared = FALSE, WsSafe = FALSE, LockChange = FALSE;
+    BOOLEAN LockChange = FALSE;
     PETHREAD CurrentThread = PsGetCurrentThread();
 
     /* Must be a non-pool page table, since those are double-mapped already */
@@ -198,14 +214,20 @@ MiMakeSystemAddressValid(IN PVOID PageTableVirtualAddress,
     /* Check if the page table is valid */
     while (!MmIsAddressValid(PageTableVirtualAddress))
     {
-        /* Release the working set lock */
-        MiUnlockProcessWorkingSetForFault(CurrentProcess,
-                                          CurrentThread,
-                                          &WsSafe,
-                                          &WsShared);
+        /* Check that we hold the lock */
+        if (!CurrentThread->OwnsProcessWorkingSetExclusive)
+        {
+            /* Then it can only be shared. */
+            MiUnlockProcessWorkingSetShared(CurrentProcess, CurrentThread);
+            MiLockProcessWorkingSet(CurrentProcess, CurrentThread);
+            LockChange = TRUE;
+            /* Maybe this was made valid in the small hole we just had */
+            if (MmIsAddressValid(PageTableVirtualAddress))
+                goto RestoreLock;
+        }
 
         /* Fault it in */
-        Status = MmAccessFault(FALSE, PageTableVirtualAddress, KernelMode, (PVOID)0xabcdef0123456789ull);
+        Status = MmAccessFault(FALSE, PageTableVirtualAddress, KernelMode, NULL);
         if (!NT_SUCCESS(Status))
         {
             /* This should not fail */
@@ -216,17 +238,16 @@ MiMakeSystemAddressValid(IN PVOID PageTableVirtualAddress,
                          (ULONG_PTR)PageTableVirtualAddress);
         }
 
-        /* Lock the working set again */
-        MiLockProcessWorkingSetForFault(CurrentProcess,
-                                        CurrentThread,
-                                        WsSafe,
-                                        WsShared);
-
-        /* This flag will be useful later when we do better locking */
-        LockChange = TRUE;
+RestoreLock:
+        /* Restore lock state */
+        if (LockChange)
+        {
+            MiUnlockProcessWorkingSet(CurrentProcess, CurrentThread);
+            MiLockProcessWorkingSetShared(CurrentProcess, CurrentThread);
+        }
     }
 
-    /* Let caller know what the lock state is */
+    /* Let caller know */
     return LockChange;
 }
 
@@ -625,9 +646,13 @@ MiDeleteVirtualAddresses(IN ULONG_PTR Va,
         /* Now check if the PDE is mapped in */
         if (!PointerPde->u.Hard.Valid)
         {
+            BOOLEAN LockChanged;
             /* It isn't, so map it in */
             PointerPte = MiPteToAddress(PointerPde);
-            MiMakeSystemAddressValid(PointerPte, CurrentProcess);
+            LockChanged = MiMakeSystemAddressValid(PointerPte, CurrentProcess);
+            /* Of course we must hold the WS lock exclusively in this function */
+            NT_ASSERT(!LockChanged);
+            (void)LockChanged;
         }
 
         /* Now we should have a valid PDE, mapped in, and still have some VA */
@@ -1512,7 +1537,12 @@ MiQueryAddressState(IN PVOID Va,
         if (PointerPxe->u.Hard.Valid == 0)
         {
             /* Is isn't, fault it in (make the PPE accessible) */
-            MiMakeSystemAddressValid(PointerPpe, TargetProcess);
+            BOOLEAN LockChange = MiMakeSystemAddressValid(PointerPpe, TargetProcess);
+            if (LockChange)
+            {
+                /* MiMakeSystemAddressValid had to change our lock to proceed. Restart. */
+                continue;
+            }
         }
 #endif
 #if (_MI_PAGING_LEVELS >= 3)
@@ -1528,7 +1558,12 @@ MiQueryAddressState(IN PVOID Va,
         if (PointerPpe->u.Hard.Valid == 0)
         {
             /* Is isn't, fault it in (make the PDE accessible) */
-            MiMakeSystemAddressValid(PointerPde, TargetProcess);
+            BOOLEAN LockChange = MiMakeSystemAddressValid(PointerPde, TargetProcess);
+            if (LockChange)
+            {
+                /* MiMakeSystemAddressValid had to change our lock to proceed. Restart. */
+                continue;
+            }
         }
 #endif
 
@@ -1544,13 +1579,18 @@ MiQueryAddressState(IN PVOID Va,
         if (PointerPde->u.Hard.Valid == 0)
         {
             /* Is isn't, fault it in (make the PTE accessible) */
-            MiMakeSystemAddressValid(PointerPte, TargetProcess);
+            BOOLEAN LockChange = MiMakeSystemAddressValid(PointerPte, TargetProcess);
+            if (LockChange)
+            {
+                /* MiMakeSystemAddressValid had to change our lock to proceed. Restart. */
+                continue;
+            }
         }
 
         /* We have a PTE that we can access now! */
         ValidPte = TRUE;
 
-    } while (FALSE);
+    } while (!ValidPte);
 
     /* Is it safe to try reading the PTE? */
     if (ValidPte)
@@ -2012,7 +2052,7 @@ MiIsEntireRangeCommitted(IN ULONG_PTR StartingAddress,
     PAGED_CODE();
 
     /* Check that we hols the right locks */
-    ASSERT(PsGetCurrentThread()->OwnsProcessWorkingSetExclusive || PsGetCurrentThread()->OwnsProcessWorkingSetShared);
+    ASSERT(PsGetCurrentThread()->OwnsProcessWorkingSetExclusive);
 
     /* Get the PTE addresses */
     PointerPte = MiAddressToPte(StartingAddress);
@@ -2035,7 +2075,12 @@ MiIsEntireRangeCommitted(IN ULONG_PTR StartingAddress,
             {
                 /* Make it valid if needed */
                 if (PointerPxe->u.Hard.Valid == 0)
-                    MiMakeSystemAddressValid(MiPteToPpe(PointerPte), Process);
+                {
+                    BOOLEAN LockChange = MiMakeSystemAddressValid(MiPteToPpe(PointerPte), Process);
+                    /* We own the Ws lock exclusively. No need to change in order to bring page tables in */
+                    NT_ASSERT(!LockChange);
+                    (void)LockChange;
+                }
             }
             else
             {
@@ -2062,7 +2107,12 @@ MiIsEntireRangeCommitted(IN ULONG_PTR StartingAddress,
             {
                 /* Make it valid if needed */
                 if (PointerPpe->u.Hard.Valid == 0)
-                    MiMakeSystemAddressValid(MiPteToPde(PointerPte), Process);
+                {
+                    BOOLEAN LockChange = MiMakeSystemAddressValid(MiPteToPde(PointerPte), Process);
+                    /* We own the Ws lock exclusively. MiMakeSystemAddressValid shouldn't have changed that. */
+                    NT_ASSERT(!LockChange);
+                    (void)LockChange;
+                }
             }
             else
             {
@@ -2089,7 +2139,10 @@ MiIsEntireRangeCommitted(IN ULONG_PTR StartingAddress,
                 if (PointerPde->u.Hard.Valid == 0)
                 {
                     /* Nope, fault it in */
-                    MiMakeSystemAddressValid(PointerPte, Process);
+                    BOOLEAN LockChange = MiMakeSystemAddressValid(PointerPte, Process);
+                    /* We own the Ws lock exclusively. MiMakeSystemAddressValid shouldn't have changed that. */
+                    NT_ASSERT(!LockChange);
+                    (void)LockChange;
                 }
             }
             else
@@ -2495,7 +2548,11 @@ MiMakePdeExistAndMakeValid(IN PMMPDE PointerPde,
        //
        if (!PointerPxe->u.Hard.Valid)
        {
-           MiMakeSystemAddressValid(PointerPpe, TargetProcess);
+           if (MiMakeSystemAddressValid(PointerPpe, TargetProcess))
+           {
+               /* Lock changed when bringing PXE in. Check again */
+               continue;
+           }
            ASSERT(PointerPxe->u.Hard.Valid == 1);
        }
 #endif
@@ -2506,7 +2563,11 @@ MiMakePdeExistAndMakeValid(IN PMMPDE PointerPde,
        //
        if (!PointerPpe->u.Hard.Valid)
        {
-           MiMakeSystemAddressValid(PointerPde, TargetProcess);
+           if (MiMakeSystemAddressValid(PointerPde, TargetProcess))
+           {
+               /* Lock changed when bringing PPE in. Check again */
+               continue;
+           }
            ASSERT(PointerPpe->u.Hard.Valid == 1);
        }
 #endif
@@ -2514,14 +2575,13 @@ MiMakePdeExistAndMakeValid(IN PMMPDE PointerPde,
        //
        // And finally, make the PDE itself valid.
        //
-       MiMakeSystemAddressValid(PointerPte, TargetProcess);
+       if (MiMakeSystemAddressValid(PointerPte, TargetProcess))
+       {
+           /* Lock changed when bringing PDE in. Check again */
+           continue;
+       }
 
        /* Do not increment Page table refcount here for the PDE, this must be managed by caller */
-
-       //
-       // This should've worked the first time so the loop is really just for
-       // show -- ASSERT that we're actually NOT going to be looping.
-       //
        ASSERT(PointerPde->u.Hard.Valid == 1);
    } while (
 #if _MI_PAGING_LEVELS == 4

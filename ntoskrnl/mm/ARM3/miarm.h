@@ -2336,11 +2336,11 @@ MiDeletePte(
     IN PMMPTE PrototypePte
 );
 
-ULONG
-NTAPI
+_Must_inspect_result_
+BOOLEAN
 MiMakeSystemAddressValid(
-    IN PVOID PageTableVirtualAddress,
-    IN PEPROCESS CurrentProcess
+    _In_ PVOID PageTableVirtualAddress,
+    _In_ PEPROCESS CurrentProcess
 );
 
 ULONG
