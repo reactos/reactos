@@ -65,6 +65,8 @@
 #define NTFS_FILE_NAME_DOS            2
 #define NTFS_FILE_NAME_WIN32_AND_DOS        3
 
+#define NTFS_MFT_MASK 0x0000FFFFFFFFFFFFULL
+
 #include <pshpack1.h>
 typedef struct
 {
@@ -115,6 +117,8 @@ typedef struct
     ULONG        BytesAllocated;
     ULONGLONG        BaseMFTRecord;
     USHORT        NextAttributeInstance;
+    USHORT        Padding;                     // Align to 4 UCHAR boundary (NTFS 3.1+ (Windows XP and above))
+    ULONG        MFTRecordNumber;             // Number of this MFT Record (NTFS 3.1+ (Windows XP and above))
 } NTFS_MFT_RECORD, *PNTFS_MFT_RECORD;
 
 typedef struct
@@ -185,7 +189,7 @@ typedef struct
     USHORT        Reserved;
     UCHAR        FileNameLength;
     UCHAR        FileNameType;
-    WCHAR        FileName[0];
+    WCHAR        FileName[1];
 } NTFS_FILE_NAME_ATTR, *PNTFS_FILE_NAME_ATTR;
 
 typedef struct
@@ -197,7 +201,7 @@ typedef struct
     ULONGLONG    StartingVCN;
     ULONGLONG    BaseFileRef;
     USHORT        AttrId;
-    PWCHAR        Name;
+    WCHAR        Name[1];
 } NTFS_ATTR_LIST_ATTR, *PNTFS_ATTR_LIST_ATTR;
 
 typedef struct
