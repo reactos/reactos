@@ -914,8 +914,8 @@ handle_gdb_c(
         ULONG_PTR ProgramCounter = KdpGetContextPc(&CurrentContext);
 
         /* See if we should update the program counter */
-        if (Exception && (Exception->ExceptionRecord.ExceptionCode == STATUS_BREAKPOINT)
-                && ((*(KD_BREAKPOINT_TYPE*)ProgramCounter) == KD_BREAKPOINT_VALUE))
+        if ((Exception->ExceptionRecord.ExceptionCode == STATUS_BREAKPOINT)
+            && ((*(KD_BREAKPOINT_TYPE*)ProgramCounter) == KD_BREAKPOINT_VALUE))
         {
             /* We must get past the breakpoint instruction */
             KdpSetContextPc(&CurrentContext, ProgramCounter + KD_BREAKPOINT_SIZE);
@@ -924,34 +924,21 @@ handle_gdb_c(
             KdpManipulateStateHandler = ContinueManipulateStateHandler;
             return KdPacketReceived;
         }
+#if defined(_M_IX86) || defined(_M_AMD64)
+        if ((Exception->ExceptionRecord.ExceptionCode == STATUS_ASSERTION_FAILURE)
+            && ((*(KD_BREAKPOINT_TYPE*)ProgramCounter) == 0xCD)
+            && (*((KD_BREAKPOINT_TYPE*)ProgramCounter + 1) == 0x2C))
+        {
+            /* INT 2C (a.k.a. runtime check failure) */
+            KdpSetContextPc(&CurrentContext, ProgramCounter + 2);
+
+            SetContextManipulateHandler(State, MessageData, MessageLength, KdContext);
+            KdpManipulateStateHandler = ContinueManipulateStateHandler;
+            return KdPacketReceived;
+        }
+#endif
     }
 
-    return ContinueManipulateStateHandler(State, MessageData, MessageLength, KdContext);
-}
-
-static
-KDSTATUS
-handle_gdb_C(
-    _Out_ DBGKD_MANIPULATE_STATE64* State,
-    _Out_ PSTRING MessageData,
-    _Out_ PULONG MessageLength,
-    _Inout_ PKD_CONTEXT KdContext)
-{
-    KDSTATUS Status;
-
-    /* Tell GDB everything is fine, we will handle it */
-    Status = send_gdb_packet("OK");
-    if (Status != KdPacketReceived)
-        return Status;
-
-    if (CurrentStateChange.NewState == DbgKdExceptionStateChange)
-    {
-        /* Debugger didn't handle the exception, report it back to the kernel */
-        State->u.Continue2.ContinueStatus = CurrentStateChange.u.Exception.ExceptionRecord.ExceptionCode;
-        State->ApiNumber = DbgKdContinueApi2;
-        return KdPacketReceived;
-    }
-    /* We should never reach this ? */
     return ContinueManipulateStateHandler(State, MessageData, MessageLength, KdContext);
 }
 
@@ -1033,10 +1020,8 @@ gdb_receive_and_interpret_packet(
             Status = LOOP_IF_SUCCESS(send_gdb_packet("OK"));
             break;
         case 'c':
-            Status = handle_gdb_c(State, MessageData, MessageLength, KdContext);
-            break;
         case 'C':
-            Status = handle_gdb_C(State, MessageData, MessageLength, KdContext);
+            Status = handle_gdb_c(State, MessageData, MessageLength, KdContext);
             break;
         case 'g':
             Status = LOOP_IF_SUCCESS(gdb_send_registers());
