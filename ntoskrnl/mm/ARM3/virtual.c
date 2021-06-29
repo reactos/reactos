@@ -205,7 +205,7 @@ MiMakeSystemAddressValid(IN PVOID PageTableVirtualAddress,
                                           &WsShared);
 
         /* Fault it in */
-        Status = MmAccessFault(FALSE, PageTableVirtualAddress, KernelMode, NULL);
+        Status = MmAccessFault(FALSE, PageTableVirtualAddress, KernelMode, (PVOID)0xabcdef0123456789ull);
         if (!NT_SUCCESS(Status))
         {
             /* This should not fail */

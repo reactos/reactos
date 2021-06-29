@@ -1905,8 +1905,6 @@ _WARN("Session space stuff is not implemented yet!")
             /* Make sure we don't have a recursive working set lock */
             if ((CurrentThread->OwnsProcessWorkingSetExclusive) ||
                 (CurrentThread->OwnsProcessWorkingSetShared) ||
-                (CurrentThread->OwnsSystemWorkingSetExclusive) ||
-                (CurrentThread->OwnsSystemWorkingSetShared) ||
                 (CurrentThread->OwnsSessionWorkingSetExclusive) ||
                 (CurrentThread->OwnsSessionWorkingSetShared))
             {
@@ -1919,19 +1917,22 @@ _WARN("Session space stuff is not implemented yet!")
             /* Use the session process and working set */
             CurrentProcess = HYDRA_PROCESS;
             WorkingSet = &MmSessionSpace->GlobalVirtualAddress->Vm;
-
-            /* Make sure we don't have a recursive working set lock */
-            if ((CurrentThread->OwnsSessionWorkingSetExclusive) ||
-                (CurrentThread->OwnsSessionWorkingSetShared))
-            {
-                /* Fail */
-                return STATUS_IN_PAGE_ERROR | 0x10000000;
-            }
         }
 
-        /* Acquire the working set lock */
-        KeRaiseIrql(APC_LEVEL, &LockIrql);
-        MiLockWorkingSet(CurrentThread, WorkingSet);
+        /* Acquire the working set lock.
+         * Callers forcing page-in operation (not a real page fault then)
+         * must already hold it*/
+        if (TrapInformation)
+        {
+
+            KeRaiseIrql(APC_LEVEL, &LockIrql);
+            MiLockWorkingSet(CurrentThread, WorkingSet);
+        }
+        else
+        {
+            /* IRQL was already checked above */
+            ASSERT(IsSessionAddress ? PsGetCurrentThread()->OwnsSessionWorkingSetExclusive : PsGetCurrentThread()->OwnsSystemWorkingSetExclusive);
+        }
 
         /* Check for legacy Mm fault */
         {
@@ -1947,8 +1948,11 @@ _WARN("Session space stuff is not implemented yet!")
                                           KernelMode,
                                           TrapInformation);
                 ASSERT(KeGetCurrentIrql() == APC_LEVEL);
-                MiUnlockWorkingSet(CurrentThread, WorkingSet);
-                KeLowerIrql(LockIrql);
+                if (TrapInformation)
+                {
+                    MiUnlockWorkingSet(CurrentThread, WorkingSet);
+                    KeLowerIrql(LockIrql);
+                }
                 return Status;
             }
         }
@@ -2013,8 +2017,11 @@ _WARN("Session space stuff is not implemented yet!")
             }
 
             /* Release the working set */
-            MiUnlockWorkingSet(CurrentThread, WorkingSet);
-            KeLowerIrql(LockIrql);
+            if (TrapInformation)
+            {
+                MiUnlockWorkingSet(CurrentThread, WorkingSet);
+                KeLowerIrql(LockIrql);
+            }
 
             /* Otherwise, the PDE was probably invalid, and all is good now */
             return STATUS_SUCCESS;
@@ -2112,8 +2119,11 @@ _WARN("Session space stuff is not implemented yet!")
 
         /* Release the working set */
         ASSERT(KeAreAllApcsDisabled() == TRUE);
-        MiUnlockWorkingSet(CurrentThread, WorkingSet);
-        KeLowerIrql(LockIrql);
+        if (TrapInformation)
+        {
+            MiUnlockWorkingSet(CurrentThread, WorkingSet);
+            KeLowerIrql(LockIrql);
+        }
 
         /* We are done! */
         DPRINT("Fault resolved with status: %lx\n", Status);
@@ -2126,7 +2136,14 @@ UserFault:
     CurrentProcess = (PEPROCESS)CurrentThread->Tcb.ApcState.Process;
 
     /* Lock the working set */
-    MiLockProcessWorkingSet(CurrentProcess, CurrentThread);
+    if (TrapInformation)
+    {
+        MiLockProcessWorkingSet(CurrentProcess, CurrentThread);
+    }
+    else
+    {
+        NT_ASSERT(CurrentThread->OwnsProcessWorkingSetExclusive);
+    }
 
     ProtectionCode = MM_INVALID_PROTECTION;
 
@@ -2292,7 +2309,8 @@ UserFault:
             }
         }
 
-        MiUnlockProcessWorkingSet(CurrentProcess, CurrentThread);
+        if (TrapInformation)
+            MiUnlockProcessWorkingSet(CurrentProcess, CurrentThread);
         return Status;
     }
 
@@ -2339,7 +2357,8 @@ UserFault:
                 MiReleasePfnLock(LockIrql);
 
                 /* Return the status */
-                MiUnlockProcessWorkingSet(CurrentProcess, CurrentThread);
+                if (TrapInformation)
+                    MiUnlockProcessWorkingSet(CurrentProcess, CurrentThread);
                 return STATUS_PAGE_FAULT_COPY_ON_WRITE;
             }
 
@@ -2347,7 +2366,8 @@ UserFault:
             if (!MI_IS_PAGE_WRITEABLE(&TempPte))
             {
                 /* Return the status */
-                MiUnlockProcessWorkingSet(CurrentProcess, CurrentThread);
+                if (TrapInformation)
+                    MiUnlockProcessWorkingSet(CurrentProcess, CurrentThread);
                 return STATUS_ACCESS_VIOLATION;
             }
         }
@@ -2357,12 +2377,14 @@ UserFault:
             !MI_IS_PAGE_EXECUTABLE(&TempPte))
         {
             /* Return the status */
-            MiUnlockProcessWorkingSet(CurrentProcess, CurrentThread);
+            if (TrapInformation)
+                MiUnlockProcessWorkingSet(CurrentProcess, CurrentThread);
             return STATUS_ACCESS_VIOLATION;
         }
 
         /* The fault has already been resolved by a different thread */
-        MiUnlockProcessWorkingSet(CurrentProcess, CurrentThread);
+        if (TrapInformation)
+            MiUnlockProcessWorkingSet(CurrentProcess, CurrentThread);
         return STATUS_SUCCESS;
     }
 
@@ -2386,7 +2408,8 @@ UserFault:
 #endif
 
         /* Return the status */
-        MiUnlockProcessWorkingSet(CurrentProcess, CurrentThread);
+        if (TrapInformation)
+            MiUnlockProcessWorkingSet(CurrentProcess, CurrentThread);
         return STATUS_PAGE_FAULT_DEMAND_ZERO;
     }
 
@@ -2405,7 +2428,8 @@ UserFault:
             Status = (PointerPte->u.Hard.Valid == 1) ? STATUS_SUCCESS : STATUS_ACCESS_VIOLATION;
 
             /* Either this was a bogus VA or we've fixed up a paged pool PDE */
-            MiUnlockProcessWorkingSet(CurrentProcess, CurrentThread);
+            if (TrapInformation)
+                MiUnlockProcessWorkingSet(CurrentProcess, CurrentThread);
             return Status;
         }
 
@@ -2441,7 +2465,8 @@ UserFault:
             ASSERT(CurrentThread->ApcNeeded == 0);
 
             /* Drop the working set lock */
-            MiUnlockProcessWorkingSet(CurrentProcess, CurrentThread);
+            if (TrapInformation)
+                MiUnlockProcessWorkingSet(CurrentProcess, CurrentThread);
             ASSERT(KeGetCurrentIrql() == OldIrql);
 
             /* Handle stack expansion */
@@ -2536,7 +2561,8 @@ UserFault:
 
             /* Demand zero */
             ASSERT(KeGetCurrentIrql() <= APC_LEVEL);
-            MiUnlockProcessWorkingSet(CurrentProcess, CurrentThread);
+            if (TrapInformation)
+                MiUnlockProcessWorkingSet(CurrentProcess, CurrentThread);
             return STATUS_PAGE_FAULT_DEMAND_ZERO;
         }
 
@@ -2565,7 +2591,8 @@ UserFault:
                 if (!ProtoPte)
                 {
                     ASSERT(KeGetCurrentIrql() <= APC_LEVEL);
-                    MiUnlockProcessWorkingSet(CurrentProcess, CurrentThread);
+                    if (TrapInformation)
+                        MiUnlockProcessWorkingSet(CurrentProcess, CurrentThread);
                     return STATUS_ACCESS_VIOLATION;
                 }
             }
@@ -2606,7 +2633,8 @@ UserFault:
             ASSERT(CurrentThread->ApcNeeded == 0);
 
             /* Drop the working set lock */
-            MiUnlockProcessWorkingSet(CurrentProcess, CurrentThread);
+            if (TrapInformation)
+                MiUnlockProcessWorkingSet(CurrentProcess, CurrentThread);
             ASSERT(KeGetCurrentIrql() == OldIrql);
 
             /* Did we hit a guard page? */
@@ -2633,7 +2661,8 @@ UserFault:
 
     /* Return the status */
     ASSERT(KeGetCurrentIrql() <= APC_LEVEL);
-    MiUnlockProcessWorkingSet(CurrentProcess, CurrentThread);
+    if (TrapInformation)
+        MiUnlockProcessWorkingSet(CurrentProcess, CurrentThread);
     return Status;
 }
 
