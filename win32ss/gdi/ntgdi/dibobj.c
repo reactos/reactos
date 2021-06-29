@@ -1244,49 +1244,51 @@ NtGdiStretchDIBitsInternal(
         return TRUE;
     }
 
-     if (!pbmi)
-    {
-        EngSetLastError(ERROR_INVALID_PARAMETER);
-        return 0;
-    }
-
-    /* Check for ability to READ pbmi */
-    _SEH2_TRY
-    {
-        ProbeForRead(pbmi, cjMaxInfo, 1);
-        if (DIB_GetBitmapInfo(&pbmi->bmiHeader, &width, &height, &planes, 
-&bpp, &compr, &size) == -1)
-        {
-            DPRINT1("Invalid bitmap\n");
-            _SEH2_YIELD(goto cleanup;)
-        }
-    }
-    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-    {
-        DPRINT1("Error, failed to read the DIB bits\n");
-        EngSetLastError(ERROR_INVALID_PARAMETER);
-        _SEH2_YIELD(goto cleanup;)
-    }
-    _SEH2_END
-
     /* Transform dest size */
     sizel.cx = cxDst;
     sizel.cy = cyDst;
     IntLPtoDP(pdc, (POINTL*)&sizel, 1);
     DC_UnlockDc(pdc);
 
-    /* Handle pjInit as Optional parameter */
+ /* We must have a LPBITMAPINFO */
+    if (!pbmi)
+    {
+        DPRINT1("Error, Invalid Parameter.\n");
+        EngSetLastError(ERROR_INVALID_PARAMETER);
+        return 0;
+    }
+
+    /* Test if we can READ the bitmap data */ 
+    _SEH2_TRY
+    {
+        ProbeForRead(pbmi, cjMaxInfo, 1);
+        if (DIB_GetBitmapInfo(&pbmi->bmiHeader, &width, &height, &planes, 
+            &bpp, &compr, &size) == -1)
+        {
+            DPRINT1("Invalid bitmap\n");
+            _SEH2_YIELD(goto cleanup1;)
+        }
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        DPRINT1("Error, failed to read the DIB bits\n");
+        EngSetLastError(ERROR_INVALID_PARAMETER);
+        _SEH2_YIELD(goto cleanup1;)
+    }
+    _SEH2_END
+
+    /* pjInit is an optional parameter, so treat it as such */
     if (pjInit && (cjMaxBits > 0))
     {
         safeBits = ExAllocatePoolWithTag(PagedPool, cjMaxBits, TAG_DIB);
-        if(!safeBits)
+        if (!safeBits)
         {
-            EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
             return 0;
         }
 
         _SEH2_TRY
         {
+            ProbeForRead(pjInit, cjMaxBits, 1);
             RtlCopyMemory(safeBits, pjInit, cjMaxBits);
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
@@ -1301,8 +1303,7 @@ NtGdiStretchDIBitsInternal(
         safeBits = NULL;
     }
 
-
-    /* Here we have the old patch with SIMS good versus gdi32:bitmap good */
+    /* Here we select between the dwRop with SRCCOPY or not. */
     if (dwRop == SRCCOPY)
     {
         hdcMem = NtGdiCreateCompatibleDC(hdc);
@@ -1379,10 +1380,13 @@ NtGdiStretchDIBitsInternal(
 
         GreDeleteObject(hBitmap);
 
+    cleanup1:
+
+        ExFreePoolWithTag(safeBits, TAG_DIB);
+
     } /* End of dwRop == SRCCOPY */
     else
     { /* Start of dwRop != SRCCOPY */
-
         /* FIXME: Locking twice is cheesy, coord tranlation in UM will fix it */
         if (!(pdc = DC_LockDc(hdc)))
         {
@@ -1482,15 +1486,6 @@ NtGdiStretchDIBitsInternal(
         LinesCopied = abs(pbmi->bmiHeader.biHeight);
     else
         LinesCopied = pbmi->bmiHeader.biHeight;
-
-    /* Exception for LinesCopied of Zero */
-    if ((pbmi->bmiHeader.biHeight < 0) && ((cxSrc != cxDst) || (cySrc != cyDst)))
-    {
-        if (cySrc < 0)
-        {
-            LinesCopied = 0;
-        }
-    }
 
     return LinesCopied;
 }
