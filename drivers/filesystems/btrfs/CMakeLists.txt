@@ -65,6 +65,11 @@ add_asm_files(btrfs_asm ${ASM_SOURCE})
 
 add_library(btrfs MODULE ${SOURCE} ${btrfs_asm} btrfs.rc)
 
+if(MSVC)
+    # Disable warning C4267: 'function': conversion from 'size_t' to 'uint16_t', possible loss of data
+    target_compile_options(btrfs PRIVATE /wd4267)
+endif()
+
 add_definitions(-D__KERNEL__)
 set_module_type(btrfs kernelmodedriver)
 target_link_libraries(btrfs rtlver zlib_solo chkstk wdmguid ${PSEH_LIB})

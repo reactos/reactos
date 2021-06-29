@@ -58,6 +58,11 @@ add_library(rpcrt4 MODULE
     rpcrt4.rc
     ${CMAKE_CURRENT_BINARY_DIR}/rpcrt4.def)
 
+if(MSVC)
+    # Disable warning C4267: '=': conversion from 'size_t' to 'short', possible loss of data
+    target_compile_options(rpcrt4 PRIVATE /wd4267)
+endif()
+
 set_module_type(rpcrt4 win32dll)
 target_link_libraries(rpcrt4 wine uuid ${PSEH_LIB})
 add_delay_importlibs(rpcrt4 iphlpapi wininet secur32 user32 oleaut32)

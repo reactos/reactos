@@ -30,6 +30,11 @@ add_library(avifil32 MODULE
     ${CMAKE_CURRENT_BINARY_DIR}/proxy.dlldata.c
     ${CMAKE_CURRENT_BINARY_DIR}/avifil32.def)
 
+if(MSVC)
+    # Disable warning C4146: unary minus operator applied to unsigned type, result still unsigned
+    target_compile_options(avifil32 PRIVATE /wd4146)
+endif()
+
 set_module_type(avifil32 win32dll)
 target_link_libraries(avifil32 wine ${PSEH_LIB})
 add_importlibs(avifil32 msacm32 msvfw32 winmm ole32 user32 advapi32 rpcrt4 msvcrt kernel32 ntdll)
