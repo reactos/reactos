@@ -163,27 +163,6 @@ extern const ULONG_PTR MmProtectToPteMask[32];
 extern const ULONG MmProtectToValue[32];
 
 //
-// Assertions for session images, addresses, and PTEs
-//
-#define MI_IS_SESSION_IMAGE_ADDRESS(Address) \
-    (((Address) >= MiSessionImageStart) && ((Address) < MiSessionImageEnd))
-
-#define MI_IS_SESSION_ADDRESS(Address) \
-    (((Address) >= MmSessionBase) && ((Address) < MiSessionSpaceEnd))
-
-#define MI_IS_SESSION_PTE(Pte) \
-    ((((PMMPTE)Pte) >= MiSessionBasePte) && (((PMMPTE)Pte) < MiSessionLastPte))
-
-#define MI_IS_PAGE_TABLE_ADDRESS(Address) \
-    (((PVOID)(Address) >= (PVOID)PTE_BASE) && ((PVOID)(Address) <= (PVOID)PTE_TOP))
-
-#define MI_IS_SYSTEM_PAGE_TABLE_ADDRESS(Address) \
-    (((Address) >= (PVOID)MiAddressToPte(MmSystemRangeStart)) && ((Address) <= (PVOID)PTE_TOP))
-
-#define MI_IS_PAGE_TABLE_OR_HYPER_ADDRESS(Address) \
-    (((PVOID)(Address) >= (PVOID)PTE_BASE) && ((PVOID)(Address) <= (PVOID)MmHyperSpaceEnd))
-
-//
 // Creates a software PTE with the given protection
 //
 #define MI_MAKE_SOFTWARE_PTE(p, x)          ((p)->u.Long = (x << MM_PTE_SOFTWARE_PROTECTION_BITS))
@@ -732,6 +711,37 @@ MiIsUserPte(PVOID Address)
     return (Address <= (PVOID)MiHighestUserPte);
 }
 #endif
+
+//
+// Assertions for session images, addresses, and PTEs
+//
+#define MI_IS_SESSION_IMAGE_ADDRESS(Address) \
+    (((Address) >= MiSessionImageStart) && ((Address) < MiSessionImageEnd))
+
+#define MI_IS_SESSION_ADDRESS(Address) \
+    (((Address) >= MmSessionBase) && ((Address) < MiSessionSpaceEnd))
+
+#define MI_IS_SESSION_PTE(Pte) \
+    ((((PMMPTE)Pte) >= MiSessionBasePte) && (((PMMPTE)Pte) < MiSessionLastPte))
+
+#define MI_IS_PAGE_TABLE_ADDRESS(Address) \
+    (((PVOID)(Address) >= (PVOID)PTE_BASE) && ((PVOID)(Address) <= (PVOID)PTE_TOP))
+
+#define MI_IS_SYSTEM_PAGE_TABLE_ADDRESS(Address) \
+    (((Address) >= (PVOID)MiAddressToPte(MmSystemRangeStart)) && ((Address) <= (PVOID)PTE_TOP))
+
+#define MI_IS_PAGE_TABLE_OR_HYPER_ADDRESS(Address) \
+    (((PVOID)(Address) >= (PVOID)PTE_BASE) && ((PVOID)(Address) <= (PVOID)MmHyperSpaceEnd))
+
+FORCEINLINE
+BOOLEAN
+MI_IS_NON_PAGED_POOL_ADDRESS(PVOID Address)
+{
+    return (((Address >= MmNonPagedPoolStart) &&
+            (Address < (PVOID)((ULONG_PTR)MmNonPagedPoolStart + MmSizeOfNonPagedPoolInBytes))) ||
+            ((Address >= MmNonPagedPoolExpansionStart) &&
+            (Address < MmNonPagedPoolEnd)));
+}
 
 //
 // Figures out the hardware bits for a PTE

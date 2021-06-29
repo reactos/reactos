@@ -938,9 +938,11 @@ MmProbeAndLockPages(IN PMDL Mdl,
     PMMPDE PointerPxe;
 #endif
     PFN_NUMBER PageFrameIndex;
-    BOOLEAN UsePfnLock;
-    KIRQL OldIrql;
+    PMMSUPPORT WorkingSet;
     PMMPFN Pfn1;
+    BOOLEAN UsePfnLock = FALSE;
+    KIRQL OldIrql;
+
     DPRINT("Probing MDL: %p\n", Mdl);
 
     //
@@ -1134,11 +1136,20 @@ MmProbeAndLockPages(IN PMDL Mdl,
         //
         Operation = IoReadAccess;
 
-        //
-        // Use the PFN lock
-        //
-        UsePfnLock = TRUE;
-        OldIrql = MiAcquirePfnLock();
+        /* Check how we should lock */
+        if (MI_IS_SESSION_ADDRESS(Base))
+        {
+            WorkingSet = &MmSessionSpace->GlobalVirtualAddress->Vm;
+        }
+        else if (MI_IS_NON_PAGED_POOL_ADDRESS(Base))
+        {
+            UsePfnLock = TRUE;
+            OldIrql = MiAcquirePfnLock();
+        }
+        else
+        {
+            WorkingSet = &MmSystemCacheWs;
+        }
     }
     else
     {
@@ -1159,11 +1170,13 @@ MmProbeAndLockPages(IN PMDL Mdl,
         //
         Mdl->Process = CurrentProcess;
 
-        /* Lock the process working set */
-        MiLockProcessWorkingSet(CurrentProcess, PsGetCurrentThread());
-        UsePfnLock = FALSE;
-        OldIrql = MM_NOIRQL;
+        /* Use the process working set */
+        WorkingSet = &CurrentProcess->Vm;
     }
+
+    /* Lock the chosen working set */
+    if (!UsePfnLock)
+        MiLockWorkingSet(PsGetCurrentThread(), WorkingSet);
 
     //
     // Get the last PTE
@@ -1179,39 +1192,22 @@ MmProbeAndLockPages(IN PMDL Mdl,
         // Assume failure and check for non-mapped pages
         //
         *MdlPages = LIST_HEAD;
+
+        /* Check this is actually present in the NonPagedPool case */
         while (
 #if (_MI_PAGING_LEVELS == 4)
-               (PointerPxe->u.Hard.Valid == 0) ||
+            (PointerPxe->u.Hard.Valid == 0) ||
 #endif
 #if (_MI_PAGING_LEVELS >= 3)
-               (PointerPpe->u.Hard.Valid == 0) ||
+            (PointerPpe->u.Hard.Valid == 0) ||
 #endif
-               (PointerPde->u.Hard.Valid == 0) ||
-               (PointerPte->u.Hard.Valid == 0))
+            (PointerPde->u.Hard.Valid == 0) ||
+            (PointerPte->u.Hard.Valid == 0))
         {
-            //
-            // What kind of lock were we using?
-            //
-            if (UsePfnLock)
-            {
-                //
-                // Release PFN lock
-                //
-                MiReleasePfnLock(OldIrql);
-            }
-            else
-            {
-                /* Release process working set */
-                MiUnlockProcessWorkingSet(CurrentProcess, PsGetCurrentThread());
-            }
-
-            //
-            // Access the page
-            //
+            /* Access the page if this not non-paged pool */
             Address = MiPteToAddress(PointerPte);
 
-            //HACK: Pass a placeholder TrapInformation so the fault handler knows we're unlocked
-            Status = MmAccessFault(FALSE, Address, KernelMode, (PVOID)(ULONG_PTR)0xBADBADA3BADBADA3ULL);
+            Status = MmAccessFault(0, Address, KernelMode, NULL);
             if (!NT_SUCCESS(Status))
             {
                 //
@@ -1219,22 +1215,6 @@ MmProbeAndLockPages(IN PMDL Mdl,
                 //
                 DPRINT1("Access fault failed\n");
                 goto Cleanup;
-            }
-
-            //
-            // What lock should we use?
-            //
-            if (UsePfnLock)
-            {
-                //
-                // Grab the PFN lock
-                //
-                OldIrql = MiAcquirePfnLock();
-            }
-            else
-            {
-                /* Lock the process working set */
-                MiLockProcessWorkingSet(CurrentProcess, PsGetCurrentThread());
             }
         }
 
@@ -1260,27 +1240,9 @@ MmProbeAndLockPages(IN PMDL Mdl,
                     if (Address <= MM_HIGHEST_USER_ADDRESS)
                     {
                         //
-                        // What kind of lock were we using?
-                        //
-                        if (UsePfnLock)
-                        {
-                            //
-                            // Release PFN lock
-                            //
-                            MiReleasePfnLock(OldIrql);
-                        }
-                        else
-                        {
-                            /* Release process working set */
-                            MiUnlockProcessWorkingSet(CurrentProcess, PsGetCurrentThread());
-                        }
-
-                        //
                         // Access the page
                         //
-
-                        //HACK: Pass a placeholder TrapInformation so the fault handler knows we're unlocked
-                        Status = MmAccessFault(TRUE, Address, KernelMode, (PVOID)(ULONG_PTR)0xBADBADA3BADBADA3ULL);
+                        Status = MmAccessFault(TRUE, Address, KernelMode, NULL);
                         if (!NT_SUCCESS(Status))
                         {
                             //
@@ -1288,22 +1250,6 @@ MmProbeAndLockPages(IN PMDL Mdl,
                             //
                             DPRINT1("Access fault failed\n");
                             goto Cleanup;
-                        }
-
-                        //
-                        // Re-acquire the lock
-                        //
-                        if (UsePfnLock)
-                        {
-                            //
-                            // Grab the PFN lock
-                            //
-                            OldIrql = MiAcquirePfnLock();
-                        }
-                        else
-                        {
-                            /* Lock the process working set */
-                            MiLockProcessWorkingSet(CurrentProcess, PsGetCurrentThread());
                         }
 
                         //
@@ -1328,9 +1274,6 @@ MmProbeAndLockPages(IN PMDL Mdl,
         Pfn1 = MiGetPfnEntry(PageFrameIndex);
         if (Pfn1)
         {
-            /* Either this is for kernel-mode, or the working set is held */
-            ASSERT((CurrentProcess == NULL) || (UsePfnLock == FALSE));
-
             /* No Physical VADs supported yet */
             if (CurrentProcess) ASSERT(CurrentProcess->PhysicalVadRoot == NULL);
 
@@ -1339,6 +1282,8 @@ MmProbeAndLockPages(IN PMDL Mdl,
         }
         else
         {
+            /* For kernel mode only */
+            ASSERT(CurrentProcess == NULL);
             //
             // For I/O addresses, just remember this
             //
@@ -1362,20 +1307,14 @@ MmProbeAndLockPages(IN PMDL Mdl,
 
     } while (PointerPte <= LastPte);
 
-    //
-    // What kind of lock were we using?
-    //
+    /* Release lock */
     if (UsePfnLock)
     {
-        //
-        // Release PFN lock
-        //
         MiReleasePfnLock(OldIrql);
     }
     else
     {
-        /* Release process working set */
-        MiUnlockProcessWorkingSet(CurrentProcess, PsGetCurrentThread());
+        MiUnlockWorkingSet(PsGetCurrentThread(), WorkingSet);
     }
 
     //
@@ -1390,20 +1329,13 @@ CleanupWithLock:
     //
     ASSERT(!NT_SUCCESS(Status));
 
-    //
-    // What kind of lock were we using?
-    //
     if (UsePfnLock)
     {
-        //
-        // Release PFN lock
-        //
         MiReleasePfnLock(OldIrql);
     }
     else
     {
-        /* Release process working set */
-        MiUnlockProcessWorkingSet(CurrentProcess, PsGetCurrentThread());
+        MiUnlockWorkingSet(PsGetCurrentThread(), WorkingSet);
     }
 Cleanup:
     //
