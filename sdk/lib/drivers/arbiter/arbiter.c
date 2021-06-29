@@ -241,10 +241,10 @@ ArbInitializeArbiterInstance(
            Arbiter->PossibleAllocation == NULL &&
            Arbiter->AllocationStack == NULL);
 
-    Arbiter->Signature = 'sbrA';
+    Arbiter->Signature = ARBITER_SIGNATURE;
     Arbiter->BusDeviceObject = BusDeviceObject;
 
-    Arbiter->MutexEvent = ExAllocatePoolWithTag(NonPagedPool, sizeof(KEVENT), 'MbrA');
+    Arbiter->MutexEvent = ExAllocatePoolWithTag(NonPagedPool, sizeof(KEVENT), TAG_ARBITER);
     if (!Arbiter->MutexEvent)
     {
         DPRINT1("ArbInitializeArbiterInstance: STATUS_INSUFFICIENT_RESOURCES\n");
@@ -253,32 +253,32 @@ ArbInitializeArbiterInstance(
 
     KeInitializeEvent(Arbiter->MutexEvent, SynchronizationEvent, TRUE);
 
-    Arbiter->AllocationStack = ExAllocatePoolWithTag(PagedPool, PAGE_SIZE, 'AbrA');
+    Arbiter->AllocationStack = ExAllocatePoolWithTag(PagedPool, PAGE_SIZE, TAG_ARB_ALLOCATION);
     if (!Arbiter->AllocationStack)
     {
         DPRINT1("ArbInitializeArbiterInstance: STATUS_INSUFFICIENT_RESOURCES\n");
-        ExFreePoolWithTag(Arbiter->MutexEvent, 'MbrA');
+        ExFreePoolWithTag(Arbiter->MutexEvent, TAG_ARBITER);
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
     Arbiter->AllocationStackMaxSize = PAGE_SIZE;
 
-    Arbiter->Allocation = ExAllocatePoolWithTag(PagedPool, sizeof(RTL_RANGE_LIST), 'RbrA');
+    Arbiter->Allocation = ExAllocatePoolWithTag(PagedPool, sizeof(RTL_RANGE_LIST), TAG_ARB_RANGE);
     if (!Arbiter->Allocation)
     {
         DPRINT1("ArbInitializeArbiterInstance: STATUS_INSUFFICIENT_RESOURCES\n");
-        ExFreePoolWithTag(Arbiter->AllocationStack, 'AbrA');
-        ExFreePoolWithTag(Arbiter->MutexEvent, 'MbrA');
+        ExFreePoolWithTag(Arbiter->AllocationStack, TAG_ARB_ALLOCATION);
+        ExFreePoolWithTag(Arbiter->MutexEvent, TAG_ARBITER);
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
-    Arbiter->PossibleAllocation = ExAllocatePoolWithTag(PagedPool, sizeof(RTL_RANGE_LIST), 'RbrA');
+    Arbiter->PossibleAllocation = ExAllocatePoolWithTag(PagedPool, sizeof(RTL_RANGE_LIST), TAG_ARB_RANGE);
     if (!Arbiter->PossibleAllocation)
     {
         DPRINT1("ArbInitializeArbiterInstance: STATUS_INSUFFICIENT_RESOURCES\n");
-        ExFreePoolWithTag(Arbiter->Allocation, 'RbrA');
-        ExFreePoolWithTag(Arbiter->AllocationStack, 'AbrA');
-        ExFreePoolWithTag(Arbiter->MutexEvent, 'MbrA');
+        ExFreePoolWithTag(Arbiter->Allocation, TAG_ARB_RANGE);
+        ExFreePoolWithTag(Arbiter->AllocationStack, TAG_ARB_ALLOCATION);
+        ExFreePoolWithTag(Arbiter->MutexEvent, TAG_ARBITER);
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
@@ -341,23 +341,6 @@ ArbInitializeArbiterInstance(
     }
 
     DPRINT1("ArbInitializeArbiterInstance: Status %X\n", Status);
-
-    if (Arbiter->MutexEvent)
-    {
-        ExFreePoolWithTag(Arbiter->MutexEvent, 'MbrA');
-    }
-    if (Arbiter->Allocation)
-    {
-        ExFreePoolWithTag(Arbiter->Allocation, 'RbrA');
-    }
-    if (Arbiter->PossibleAllocation)
-    {
-        ExFreePoolWithTag(Arbiter->PossibleAllocation, 'RbrA');
-    }
-    if (Arbiter->AllocationStack)
-    {
-        ExFreePoolWithTag(Arbiter->AllocationStack, 'AbrA');
-    }
 
     return Status;
 }

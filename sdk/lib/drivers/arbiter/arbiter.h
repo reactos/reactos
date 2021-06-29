@@ -9,6 +9,11 @@
 #ifndef _ARBITER_H
 #define _ARBITER_H
 
+#define ARBITER_SIGNATURE  'sbrA'
+#define TAG_ARBITER        'MbrA'
+#define TAG_ARB_ALLOCATION 'AbrA'
+#define TAG_ARB_RANGE      'RbrA'
+
 typedef struct _ARBITER_ORDERING
 {
     ULONGLONG Start;
