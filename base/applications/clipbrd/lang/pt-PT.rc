@@ -34,12 +34,12 @@ END
 
 STRINGTABLE
 BEGIN
-    STRING_CLIPBOARD "Visualizador da prancheta"
-    STRING_CLIPFILE  "Elemento da prancheta"
+    STRING_CLIPBOARD "Visualizador da área de transferência"
+    STRING_CLIPFILE  "Elemento da área de transferência"
     STRING_DELETE_MSG "Apagar conteúdos da prancheta?"
-    STRING_DELETE_TITLE "Limpar prancheta"
-    STRING_FORMAT_NT "Ficheiros da prancheta para reactOS (*.clp)"
-    STRING_FORMAT_GEN "Ficheiross da prancheta (*.clp)"
+    STRING_DELETE_TITLE "Limpar área de transferência"
+    STRING_FORMAT_NT "Ficheiros da área de transferência para reactOS (*.clp)"
+    STRING_FORMAT_GEN "Ficheiros da área de transferência (*.clp)"
 END
 
 STRINGTABLE
@@ -51,8 +51,8 @@ BEGIN
     STRING_CF_UNICODETEXT "Texto unicode"
     STRING_CF_DIB "DIB Bitmap"
     STRING_CF_LOCALE "Dados locais"
-    STRING_CF_ENHMETAFILE "Arquivo meta melhorado"
-    STRING_CF_METAFILEPICT "Arquivo meta"
+    STRING_CF_ENHMETAFILE "Ficheiro meta melhorado"
+    STRING_CF_METAFILEPICT "Ficheiro meta"
     STRING_CF_PALETTE "Palete de cores"
     STRING_CF_DIBV5 "DIB Bitmap (Version 5)"
     STRING_CF_SYLK "Formato de ligação simbólica"
@@ -62,6 +62,6 @@ END
 
 STRINGTABLE
 BEGIN
-    ERROR_UNSUPPORTED_FORMAT "A prancheta contém dados em um formato não suportado"
+    ERROR_UNSUPPORTED_FORMAT "A área de transferência contém dados num formato não suportado"
     ERROR_INVALID_FILE_FORMAT "O ficheiro selecionado nao é válido
 END
