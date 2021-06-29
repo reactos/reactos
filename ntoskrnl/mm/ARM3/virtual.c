@@ -3431,24 +3431,18 @@ MiLockVirtualMemory(
                (PointerPde->u.Hard.Valid == 0) ||
                (PointerPte->u.Hard.Valid == 0))
         {
-            /* Release process working set */
-            MiUnlockProcessWorkingSet(CurrentProcess, PsGetCurrentThread());
-
             /* Access the page */
             CurrentVa = MiPteToAddress(PointerPte);
 
-            //HACK: Pass a placeholder TrapInformation so the fault handler knows we're unlocked
-            TempStatus = MmAccessFault(TRUE, CurrentVa, KernelMode, (PVOID)(ULONG_PTR)0xBADBADA3BADBADA3ULL);
+            TempStatus = MmAccessFault(TRUE, CurrentVa, KernelMode, NULL);
             if (!NT_SUCCESS(TempStatus))
             {
                 // This should only happen, when remote backing storage is not accessible
                 ASSERT(FALSE);
                 Status = TempStatus;
+                MiUnlockProcessWorkingSet(CurrentProcess, PsGetCurrentThread());
                 goto Cleanup;
             }
-
-            /* Lock the process working set */
-            MiLockProcessWorkingSet(CurrentProcess, PsGetCurrentThread());
         }
 
         /* Get the PFN */
