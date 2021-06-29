@@ -531,33 +531,43 @@ SpiSenseCompletionRoutine(
     return STATUS_MORE_PROCESSING_REQUIRED;
 }
 
+static IO_WORKITEM_ROUTINE SpiSendRequestSenseWorker;
+
+_Use_decl_annotations_
 static
 VOID
-SpiSendRequestSense(
-    _In_ PSCSI_PORT_LUN_EXTENSION LunExtension,
-    _In_ PSCSI_REQUEST_BLOCK InitialSrb)
+NTAPI
+SpiSendRequestSenseWorker(
+    _In_ PDEVICE_OBJECT DeviceObject,
+    _In_ PVOID Context)
 {
-    PSCSI_REQUEST_BLOCK Srb;
+    PSCSI_REQUEST_BLOCK Srb = Context, InitialSrb;
     PCDB Cdb;
     PIRP Irp;
     PIO_STACK_LOCATION IrpStack;
     LARGE_INTEGER LargeInt;
-    PVOID *Ptr;
+    NTSTATUS Status;
 
-    DPRINT("SpiSendRequestSense() entered, InitialSrb %p\n", InitialSrb);
+    /* Get this one back */
+    InitialSrb = *((PSCSI_REQUEST_BLOCK*)(Srb + 1));
 
-    /* Allocate Srb */
-    Srb = ExAllocatePoolWithTag(NonPagedPool, sizeof(SCSI_REQUEST_BLOCK) + sizeof(PVOID), TAG_SCSIPORT);
-    RtlZeroMemory(Srb, sizeof(SCSI_REQUEST_BLOCK));
+    /* Free this one */
+    IoFreeWorkItem(Srb->OriginalRequest);
+    Srb->OriginalRequest = NULL;
 
     /* Allocate IRP */
-    LargeInt.QuadPart = (LONGLONG) 1;
+    LargeInt.QuadPart = 1;
     Irp = IoBuildAsynchronousFsdRequest(IRP_MJ_READ,
-                                        LunExtension->Common.DeviceObject,
+                                        DeviceObject,
                                         InitialSrb->SenseInfoBuffer,
                                         InitialSrb->SenseInfoBufferLength,
                                         &LargeInt,
                                         NULL);
+    if (!Irp)
+    {
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto Fail;
+    }
 
     IoSetCompletionRoutine(Irp,
                            SpiSenseCompletionRoutine,
@@ -565,12 +575,6 @@ SpiSendRequestSense(
                            TRUE,
                            TRUE,
                            TRUE);
-
-    if (!Srb)
-    {
-        DPRINT("SpiSendRequestSense() failed, Srb %p\n", Srb);
-        return;
-    }
 
     IrpStack = IoGetNextIrpStackLocation(Irp);
     IrpStack->MajorFunction = IRP_MJ_SCSI;
@@ -580,10 +584,6 @@ SpiSendRequestSense(
 
     /* ...and vice versa */
     Srb->OriginalRequest = Irp;
-
-    /* Save Srb */
-    Ptr = (PVOID *)(Srb+1);
-    *Ptr = InitialSrb;
 
     /* Build CDB for REQUEST SENSE */
     Srb->CdbLength = 6;
@@ -636,9 +636,67 @@ SpiSendRequestSense(
     Srb->NextSrb = 0;
 
     /* Call the driver */
-    (VOID)IoCallDriver(LunExtension->Common.DeviceObject, Irp);
+    Status = IoCallDriver(DeviceObject, Irp);
+    if (!NT_SUCCESS(Status))
+    {
+        goto Fail;
+    }
 
     DPRINT("SpiSendRequestSense() done\n");
+
+    return;
+
+Fail:
+    DPRINT1("Failure sending sense request, 0x%08x\n", Status);
+
+    ExFreePoolWithTag(Srb, TAG_SCSIPORT);
+
+    if (Irp)
+        IoFreeIrp(Irp);
+
+    /* Fail initial request */
+    Irp = InitialSrb->OriginalRequest;
+    Irp->IoStatus.Status = Status;
+    Irp->IoStatus.Information = 0;
+    IoCompleteRequest(Irp, IO_DISK_INCREMENT);
+}
+
+_Must_inspect_result_
+static
+NTSTATUS
+SpiSendRequestSense(
+    _In_ PSCSI_PORT_LUN_EXTENSION LunExtension,
+    _In_ PSCSI_REQUEST_BLOCK InitialSrb)
+{
+    PIO_WORKITEM WorkItem;
+    PSCSI_REQUEST_BLOCK Srb, *SavedSrb;
+
+    DPRINT("SpiSendRequestSense() entered, InitialSrb %p\n", InitialSrb);
+
+    /* Allocate Srb */
+    Srb = ExAllocatePoolWithTag(NonPagedPool, sizeof(SCSI_REQUEST_BLOCK) + sizeof(PVOID), TAG_SCSIPORT);
+    if (!Srb)
+    {
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+    RtlZeroMemory(Srb, sizeof(SCSI_REQUEST_BLOCK));
+
+    /* Allocate a work item */
+    WorkItem = IoAllocateWorkItem(LunExtension->Common.DeviceObject);
+    if (!WorkItem)
+    {
+        ExFreePoolWithTag(Srb, TAG_SCSIPORT);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    /* Remember this for processing in the worker */
+    Srb->OriginalRequest = WorkItem;
+    SavedSrb = (PSCSI_REQUEST_BLOCK*)(Srb + 1);
+    *SavedSrb = InitialSrb;
+
+    IoQueueWorkItem(WorkItem, SpiSendRequestSenseWorker, DelayedWorkQueue, Srb);
+
+    return STATUS_SUCCESS;
 }
 
 
@@ -945,7 +1003,13 @@ Error:
             KeReleaseSpinLockFromDpcLevel(&DeviceExtension->SpinLock);
 
             /* Send RequestSense */
-            SpiSendRequestSense(LunExtension, Srb);
+            NTSTATUS Status = SpiSendRequestSense(LunExtension, Srb);
+            if (!NT_SUCCESS(Status))
+            {
+                Irp->IoStatus.Status = Status;
+                Irp->IoStatus.Information = 0;
+                IoCompleteRequest(Irp, IO_DISK_INCREMENT);
+            }
 
             /* Exit */
             return;
