@@ -1907,7 +1907,7 @@ ShowPartitionSizeInputBox(SHORT Left,
     coPos.X = Left + 2;
     coPos.Y = Top + 2;
     strcpy(Buffer, MUIGetString(STRING_PARTITIONSIZE));
-    iLeft = coPos.X + strlen(Buffer) + 1;
+    iLeft = coPos.X + (USHORT)strlen(Buffer) + 1;
     iTop = coPos.Y;
 
     WriteConsoleOutputCharacterA(StdOutput,

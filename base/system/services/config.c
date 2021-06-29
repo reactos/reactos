@@ -476,8 +476,15 @@ ScmSetServicePassword(
     UNICODE_STRING Password;
     NTSTATUS Status;
     DWORD dwError = ERROR_SUCCESS;
+    SIZE_T ServiceNameLength;
 
     RtlZeroMemory(&ObjectAttributes, sizeof(OBJECT_ATTRIBUTES));
+
+    ServiceNameLength = wcslen(pszServiceName);
+    if (ServiceNameLength > (UNICODE_STRING_MAX_CHARS - 4))
+    {
+        return ERROR_INVALID_PARAMETER;
+    }
 
     Status = LsaOpenPolicy(NULL,
                            &ObjectAttributes,
@@ -486,7 +493,7 @@ ScmSetServicePassword(
     if (!NT_SUCCESS(Status))
         return RtlNtStatusToDosError(Status);
 
-    ServiceName.Length = (wcslen(pszServiceName) + 4) * sizeof(WCHAR);
+    ServiceName.Length = ((USHORT)ServiceNameLength + 4) * sizeof(WCHAR);
     ServiceName.MaximumLength = ServiceName.Length + sizeof(WCHAR);
     ServiceName.Buffer = HeapAlloc(GetProcessHeap(),
                                    HEAP_ZERO_MEMORY,

@@ -266,7 +266,7 @@ DeviceIoctlPassive(PDRIVE_INFO DriveInfo, PIRP Irp)
         }
 
         UniqueId = Irp->AssociatedIrp.SystemBuffer;
-        UniqueId->UniqueIdLength = wcslen(&DriveInfo->DeviceNameBuffer[0]) * sizeof(WCHAR);
+        UniqueId->UniqueIdLength = (USHORT)wcslen(&DriveInfo->DeviceNameBuffer[0]) * sizeof(WCHAR);
 
         if(OutputLength < FIELD_OFFSET(MOUNTDEV_UNIQUE_ID, UniqueId) + UniqueId->UniqueIdLength)
         {
@@ -291,7 +291,7 @@ DeviceIoctlPassive(PDRIVE_INFO DriveInfo, PIRP Irp)
         }
 
         Name = Irp->AssociatedIrp.SystemBuffer;
-        Name->NameLength = wcslen(&DriveInfo->DeviceNameBuffer[0]) * sizeof(WCHAR);
+        Name->NameLength = (USHORT)wcslen(&DriveInfo->DeviceNameBuffer[0]) * sizeof(WCHAR);
 
         if(OutputLength < FIELD_OFFSET(MOUNTDEV_NAME, Name) + Name->NameLength)
         {

@@ -784,16 +784,24 @@ HRESULT STDMETHODCALLTYPE CShellLink::Load(IStream *stm)
  */
 static HRESULT Stream_WriteString(IStream* stm, LPCWSTR str)
 {
-    USHORT len = wcslen(str) + 1; // FIXME: Possible overflows?
+    SIZE_T length;
+    USHORT len;
     DWORD count;
 
+    length = wcslen(str) + 1;
+    if (length > MAXUSHORT)
+    {
+        return E_INVALIDARG;
+    }
+
+    len = (USHORT)length;
     HRESULT hr = stm->Write(&len, sizeof(len), &count);
     if (FAILED(hr))
         return hr;
 
-    len *= sizeof(WCHAR);
+    length *= sizeof(WCHAR);
 
-    hr = stm->Write(str, len, &count);
+    hr = stm->Write(str, (ULONG)length, &count);
     if (FAILED(hr))
         return hr;
 
