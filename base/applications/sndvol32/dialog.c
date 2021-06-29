@@ -338,7 +338,7 @@ LoadDialog(
     LPWORD Offset;
     WORD FontSize;
     WCHAR FontName[100];
-    WORD Length;
+    SIZE_T Length;
     int width;
 
     DWORD units = GetDialogBaseUnits();

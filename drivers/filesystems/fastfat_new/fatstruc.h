@@ -20,6 +20,7 @@ Abstract:
 typedef PVOID PBCB;     //**** Bcb's are now part of the cache module
 
 #ifdef __REACTOS__
+#undef __volatile
 #define __volatile volatile
 #endif
 
