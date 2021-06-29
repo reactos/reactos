@@ -1026,7 +1026,7 @@ ReadCommand(
             {
                 /* If this character insertion will cause screen scrolling,
                  * adjust the saved origin of the command prompt. */
-                tempscreen = strlen(str + current) + curx;
+                tempscreen = (USHORT)strlen(str + current) + curx;
                 if ((tempscreen % State->maxx) == (State->maxx - 1) &&
                     (tempscreen / State->maxx) + cury == (State->maxy - 1))
                 {

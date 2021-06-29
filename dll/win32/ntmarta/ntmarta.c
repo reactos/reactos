@@ -403,12 +403,19 @@ AccpOpenLSAPolicyHandle(IN LPWSTR SystemName,
 {
     LSA_OBJECT_ATTRIBUTES LsaObjectAttributes = {0};
     LSA_UNICODE_STRING LsaSystemName, *psn;
+    SIZE_T SystemNameLength;
     NTSTATUS Status;
 
     if (SystemName != NULL && SystemName[0] != L'\0')
     {
+        SystemNameLength = wcslen(SystemName);
+        if (SystemNameLength > UNICODE_STRING_MAX_CHARS)
+        {
+            return ERROR_INVALID_PARAMETER;
+        }
+
         LsaSystemName.Buffer = SystemName;
-        LsaSystemName.Length = wcslen(SystemName) * sizeof(WCHAR);
+        LsaSystemName.Length = (USHORT)SystemNameLength * sizeof(WCHAR);
         LsaSystemName.MaximumLength = LsaSystemName.Length + sizeof(WCHAR);
         psn = &LsaSystemName;
     }
@@ -498,10 +505,17 @@ AccpLookupSidByName(IN LSA_HANDLE PolicyHandle,
     PLSA_REFERENCED_DOMAIN_LIST ReferencedDomains = NULL;
     PLSA_TRANSLATED_SID2 TranslatedSid = NULL;
     DWORD SidLen;
+    SIZE_T NameLength;
     DWORD Ret = ERROR_SUCCESS;
 
+    NameLength = wcslen(Name);
+    if (NameLength > UNICODE_STRING_MAX_CHARS)
+    {
+        return ERROR_INVALID_PARAMETER;
+    }
+
     LsaNames[0].Buffer = Name;
-    LsaNames[0].Length = wcslen(Name) * sizeof(WCHAR);
+    LsaNames[0].Length = (USHORT)NameLength * sizeof(WCHAR);
     LsaNames[0].MaximumLength = LsaNames[0].Length + sizeof(WCHAR);
 
     Status = LsaLookupNames2(PolicyHandle,
