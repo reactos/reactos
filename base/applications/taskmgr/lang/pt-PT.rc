@@ -6,14 +6,14 @@ BEGIN
     BEGIN
         MENUITEM "&Executar nova tarefa", ID_FILE_NEW
         MENUITEM SEPARATOR
-        MENUITEM "&Sair do gerenciador de tarefas", ID_FILE_EXIT
+        MENUITEM "&Sair do gestor de tarefas", ID_FILE_EXIT
     END
     POPUP "&Opções"
     BEGIN
         MENUITEM "&Sempre visível", ID_OPTIONS_ALWAYSONTOP, CHECKED
         MENUITEM "&Minimizar durante o uso", ID_OPTIONS_MINIMIZEONUSE, CHECKED
         MENUITEM "&Ocultar ao minimizar", ID_OPTIONS_HIDEWHENMINIMIZED, CHECKED
-        MENUITEM "&Exibir tarefas de 16-bit", ID_OPTIONS_SHOW16BITTASKS, CHECKED
+        MENUITEM "&Mostrar tarefas de 16-bit", ID_OPTIONS_SHOW16BITTASKS, CHECKED
     END
     POPUP "E&xibir"
     BEGIN
@@ -343,20 +343,20 @@ END
 
 STRINGTABLE
 BEGIN
-    ID_VIEW_UPDATESPEED_PAUSED "Não atualiza a tela automaticamente"
+    ID_VIEW_UPDATESPEED_PAUSED "Não atualiza o  ecrã automaticamente"
     ID_WINDOWS_TILEHORIZONTALLY "Organiza as janelas lado a lado horizontalmente na área de trabalho"
     ID_WINDOWS_TILEVERTICALLY "Organiza as janelas lado a lado verticalmente na área de trabalho"
     ID_WINDOWS_MINIMIZE "Minimiza as janelas"
     ID_WINDOWS_MAXIMIZE "Maximiza as janelas"
     ID_WINDOWS_CASCADE "Organiza as janelas em cascata diagonalmente na área de trabalho"
     ID_WINDOWS_BRINGTOFRONT "Coloca a janela em primeiro plano, mas não alterna o foco para ela"
-    ID_HELP_TOPICS "Exibe os tópicos da 'Ajuda' do 'Gerenciador de tarefas'"
-    ID_HELP_ABOUT "Exibe informações sobre o programa, o número da versão e os direitos autorais"
-    ID_FILE_EXIT "Sai do aplicativo 'Gerenciador de tarefas'"
-    ID_OPTIONS_SHOW16BITTASKS "Exibe as tarefas de 16 bits do Windows sob o arquivo ntvdm.exe associado"
+    ID_HELP_TOPICS "Mostra os tópicos da 'Ajuda' do 'Gestor de tarefas'"
+    ID_HELP_ABOUT "Mostra informações sobre o programa, o número da versão e os direitos autorais"
+    ID_FILE_EXIT "Sai do aplicativo 'Gestor de tarefas'"
+    ID_OPTIONS_SHOW16BITTASKS "Mostra as tarefas de 16 bits do Windows sob o arquivo ntvdm.exe associado"
     ID_VIEW_SELECTCOLUMNS "Seleciona quais colunas serão visíveis na tela Processo"
-    ID_VIEW_SHOWKERNELTIMES "Exibe o tempo do núcleo nos gráficos de desempenho"
-    ID_VIEW_CPUHISTORY_ONEGRAPHALL "Apenas um único gráfico exibe o uso total de CPU"
+    ID_VIEW_SHOWKERNELTIMES "Mostra o tempo do núcleo nos gráficos de desempenho"
+    ID_VIEW_CPUHISTORY_ONEGRAPHALL "Apenas um único gráfico mostra o uso total de CPU"
     ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU "Cada CPU possui o seu próprio gráfico"
     ID_APPLICATION_PAGE_SWITCHTO "Coloca a tarefa em primeiro plano e alterna o foco para ela"
 END

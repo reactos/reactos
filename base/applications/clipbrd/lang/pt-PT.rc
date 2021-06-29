@@ -1,8 +1,6 @@
 /* Translation and UTF-8 Conversion by Gabriel Aguiar(fgsoftware1) <fgygh5804@gmail.com,fgsoftwarestudio@gmail.com> (July, 2021) */
 
-LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE
-
-LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
 
 ID_ACCEL ACCELERATORS
 BEGIN
@@ -11,7 +9,7 @@ END
 
 MAIN_MENU MENU
 BEGIN
-    POPUP "&File"
+    POPUP "&Ficheiro"
     BEGIN
         MENUITEM "&Abrir...", CMD_OPEN
         MENUITEM "Salvar &como...", CMD_SAVE_AS
@@ -22,7 +20,7 @@ BEGIN
     BEGIN
         MENUITEM "&Apagar\tDel", CMD_DELETE
     END
-    POPUP "&Ecra"
+    POPUP "&Ecrã"
     BEGIN
         MENUITEM "&Automático", CMD_AUTOMATIC
     END
@@ -64,6 +62,6 @@ END
 
 STRINGTABLE
 BEGIN
-    ERROR_UNSUPPORTED_FORMAT "A prancheta contém dados em um formato nao suportado"
+    ERROR_UNSUPPORTED_FORMAT "A prancheta contém dados em um formato não suportado"
     ERROR_INVALID_FILE_FORMAT "O ficheiro selecionado nao é válido
 END
