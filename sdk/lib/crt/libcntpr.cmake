@@ -9,7 +9,6 @@ list(APPEND LIBCNTPR_SOURCE
     mem/memccpy.c
     mem/memcmp.c
     mem/memicmp.c
-    mem/memset.c
     misc/fltused.c
     printf/_snprintf.c
     printf/_snwprintf.c
@@ -187,7 +186,7 @@ if(ARCH STREQUAL "i386")
     list(APPEND LIBCNTPR_ASM_SOURCE
         mem/i386/memchr_asm.s
         mem/i386/memmove_asm.s
-        # mem/i386/memset_asm.s
+        mem/i386/memset_asm.s
         string/i386/strcat_asm.s
         string/i386/strchr_asm.s
         string/i386/strcmp_asm.s
