@@ -512,7 +512,7 @@ NtGdiSetDIBitsToDeviceInternal(
         ret = 0;
         goto Exit;
     }
-    _SEH2_END
+    _SEH2_END;
 
     ScanLines = min(ScanLines, abs(bmi->bmiHeader.biHeight) - StartScan);
     if (ScanLines == 0)
@@ -1250,7 +1250,7 @@ NtGdiStretchDIBitsInternal(
     IntLPtoDP(pdc, (POINTL*)&sizel, 1);
     DC_UnlockDc(pdc);
 
- /* We must have a LPBITMAPINFO */
+    /* We must have LPBITMAPINFO */
     if (!pbmi)
     {
         DPRINT1("Error, Invalid Parameter.\n");
@@ -1275,7 +1275,7 @@ NtGdiStretchDIBitsInternal(
         EngSetLastError(ERROR_INVALID_PARAMETER);
         _SEH2_YIELD(goto cleanup1;)
     }
-    _SEH2_END
+    _SEH2_END;
 
     if (pjInit && (cjMaxBits > 0))
     {
@@ -1295,7 +1295,7 @@ NtGdiStretchDIBitsInternal(
             ExFreePoolWithTag(safeBits, TAG_DIB);
             _SEH2_YIELD(return 0);
         }
-        _SEH2_END
+        _SEH2_END;
     }
     else
     {
@@ -1326,7 +1326,7 @@ NtGdiStretchDIBitsInternal(
             return 0;
         }
 
-            /* Select the bitmap into hdcMem, and save a handle to the old bitmap */
+        /* Select the bitmap into hdcMem, and save a handle to the old bitmap */
         hOldBitmap = NtGdiSelectBitmap(hdcMem, hBitmap);
 
         if (dwUsage == DIB_PAL_COLORS)
@@ -1340,12 +1340,16 @@ NtGdiStretchDIBitsInternal(
         {
             /* copy existing bitmap from destination dc */
             if (cxSrc == cyDst && cySrc == cyDst)
+            {
                 NtGdiBitBlt(hdcMem, xSrc, abs(pbmi->bmiHeader.biHeight) - cySrc - ySrc,
                             cxSrc, cySrc, hdc, xDst, yDst,  dwRop, 0, 0);
+            }
             else
+            {
                 NtGdiStretchBlt(hdcMem, xSrc, abs(pbmi->bmiHeader.biHeight) -     cySrc - ySrc,
                                 cxSrc, cySrc, hdc, xDst, yDst, cxDst, cyDst,
                                 dwRop, 0);
+            }
         }
 
         pdc = DC_LockDc(hdcMem);
@@ -1353,20 +1357,23 @@ NtGdiStretchDIBitsInternal(
         {
             IntSetDIBits(pdc, hBitmap, 0, abs(pbmi->bmiHeader.biHeight), safeBits,
                          cjMaxBits, pbmi, dwUsage);
-
             DC_UnlockDc(pdc);
         }
 
         /* Origin for DIBitmap may be bottom left (positive biHeight) or top
            left (negative biHeight) */
         if (cxSrc == cxDst && cySrc == cyDst)
+        {
             NtGdiBitBlt(hdc, xDst, yDst, cxDst, cyDst,
                         hdcMem, xSrc, abs(pbmi->bmiHeader.biHeight) - cySrc - ySrc,
                         dwRop, 0, 0);
+        }
         else
-                NtGdiStretchBlt(hdc, xDst, yDst, cxDst, cyDst,
-                                hdcMem, xSrc, abs(pbmi->bmiHeader.biHeight) - cySrc - ySrc,
-                                 cxSrc, cySrc, dwRop, 0);
+        {
+            NtGdiStretchBlt(hdc, xDst, yDst, cxDst, cyDst,
+                            hdcMem, xSrc, abs(pbmi->bmiHeader.biHeight) - cySrc - ySrc,
+                            cxSrc, cySrc, dwRop, 0);
+        }
 
         /* cleanup */
         if (hPal)
@@ -1429,7 +1436,6 @@ NtGdiStretchDIBitsInternal(
         psurfTmp = SURFACE_ShareLockSurface(hbmTmp);
         if (!psurfTmp)
         {
-
             goto cleanup;
         }
 
@@ -1455,21 +1461,22 @@ NtGdiStretchDIBitsInternal(
 
         /* Perform the stretch operation */
         IntEngStretchBlt(&psurfDst->SurfObj,
-                                   &psurfTmp->SurfObj,
-                                   NULL,
-                                   (CLIPOBJ *)&pdc->co,
-                                   &exlo.xlo,
-                                   &pdc->dclevel.ca,
-                                   &rcDst,
-                                   &rcSrc,
-                                   NULL,
-                                   &pdc->eboFill.BrushObject,
-                                   NULL,
-                                   WIN32_ROP3_TO_ENG_ROP4(dwRop));
+                         &psurfTmp->SurfObj,
+                         NULL,
+                         (CLIPOBJ *)&pdc->co,
+                         &exlo.xlo,
+                         &pdc->dclevel.ca,
+                         &rcDst,
+                         &rcSrc,
+                         NULL,
+                         &pdc->eboFill.BrushObject,
+                         NULL,
+                         WIN32_ROP3_TO_ENG_ROP4(dwRop));
 
         /* Cleanup */
         DC_vFinishBlit(pdc, NULL);
         EXLATEOBJ_vCleanup(&exlo);
+
     cleanup:
         if (ppalDIB) PALETTE_ShareUnlockPalette(ppalDIB);
         if (psurfTmp) SURFACE_ShareUnlockSurface(psurfTmp);
@@ -1480,11 +1487,16 @@ NtGdiStretchDIBitsInternal(
     }
 
     /* This is not what MSDN says is returned from this function, but it
-     * follows Wine's dlls/gdi32/dib.c function nulldrv_StretchDIBits */
+     * follows Wine's dlls/gdi32/dib.c function nulldrv_StretchDIBits
+     * and it fixes over 100 gdi32:dib regression tests. */
     if (dwRop == SRCCOPY)
+    {
         LinesCopied = abs(pbmi->bmiHeader.biHeight);
+    }
     else
+    {
         LinesCopied = pbmi->bmiHeader.biHeight;
+    }
 
     return LinesCopied;
 }
@@ -1637,7 +1649,7 @@ NtGdiCreateDIBitmapInternal(
     {
         Status = _SEH2_GetExceptionCode();
     }
-    _SEH2_END
+    _SEH2_END;
 
     if(!NT_SUCCESS(Status))
     {
@@ -1819,7 +1831,7 @@ NtGdiCreateDIBSection(
     {
         Status = _SEH2_GetExceptionCode();
     }
-    _SEH2_END
+    _SEH2_END;
 
     if(!NT_SUCCESS(Status))
     {
