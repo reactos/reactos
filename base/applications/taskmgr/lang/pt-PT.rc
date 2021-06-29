@@ -343,22 +343,22 @@ END
 
 STRINGTABLE
 BEGIN
-    ID_VIEW_UPDATESPEED_PAUSED "Não atualiza o  ecrã automaticamente"
+    ID_VIEW_UPDATESPEED_PAUSED "não atualizar o ecrã automaticamente"
     ID_WINDOWS_TILEHORIZONTALLY "Organiza as janelas lado a lado horizontalmente na área de trabalho"
     ID_WINDOWS_TILEVERTICALLY "Organiza as janelas lado a lado verticalmente na área de trabalho"
     ID_WINDOWS_MINIMIZE "Minimiza as janelas"
     ID_WINDOWS_MAXIMIZE "Maximiza as janelas"
     ID_WINDOWS_CASCADE "Organiza as janelas em cascata diagonalmente na área de trabalho"
     ID_WINDOWS_BRINGTOFRONT "Coloca a janela em primeiro plano, mas não alterna o foco para ela"
-    ID_HELP_TOPICS "Mostra os tópicos da 'Ajuda' do 'Gestor de tarefas'"
-    ID_HELP_ABOUT "Mostra informações sobre o programa, o número da versão e os direitos autorais"
-    ID_FILE_EXIT "Sai do aplicativo 'Gestor de tarefas'"
+    ID_HELP_TOPICS "Mostrar os tópicos da 'Ajuda' do 'Gestor de tarefas'"
+    ID_HELP_ABOUT "Mostrar informações sobre o programa, o número da versão e os direitos autorais"
+    ID_FILE_EXIT "Sair da aplicação 'Gestor de tarefas'"
     ID_OPTIONS_SHOW16BITTASKS "Mostra as tarefas de 16 bits do Windows sob o arquivo ntvdm.exe associado"
     ID_VIEW_SELECTCOLUMNS "Seleciona quais colunas serão visíveis na tela Processo"
-    ID_VIEW_SHOWKERNELTIMES "Mostra o tempo do núcleo nos gráficos de desempenho"
+    ID_VIEW_SHOWKERNELTIMES "Mostrar o tempo do núcleo nos gráficos de desempenho"
     ID_VIEW_CPUHISTORY_ONEGRAPHALL "Apenas um único gráfico mostra o uso total de CPU"
     ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU "Cada CPU possui o seu próprio gráfico"
-    ID_APPLICATION_PAGE_SWITCHTO "Coloca a tarefa em primeiro plano e alterna o foco para ela"
+    ID_APPLICATION_PAGE_SWITCHTO "Colocar a tarefa em primeiro plano e alternar o foco para si"
 END
 
 STRINGTABLE
