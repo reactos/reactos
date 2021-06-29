@@ -12,7 +12,7 @@ BEGIN
     POPUP "&Ficheiro"
     BEGIN
         MENUITEM "&Abrir...", CMD_OPEN
-        MENUITEM "Salvar &como...", CMD_SAVE_AS
+        MENUITEM "Guardar &como...", CMD_SAVE_AS
         MENUITEM SEPARATOR
         MENUITEM "S&air", CMD_EXIT
     END
