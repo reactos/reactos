@@ -170,17 +170,13 @@ std::wstring Settings_GetOutputPath(void)
 {
     WCHAR Buffer[MAX_PATH] = L"";
     ULONG BufferSize = _countof(Buffer);
-    BOOL UseDefaultPath = FALSE;
+    BOOL UseDefaultPath = TRUE;
 
     CRegKey key;
-    if (key.Open(HKEY_CURRENT_USER, L"SOFTWARE\\ReactOS\\Crash Reporter", KEY_READ) != ERROR_SUCCESS)
+    if (key.Open(HKEY_CURRENT_USER, L"SOFTWARE\\ReactOS\\Crash Reporter", KEY_READ) == ERROR_SUCCESS &&
+        key.QueryStringValue(L"Dump Directory", Buffer, &BufferSize) == ERROR_SUCCESS)
     {
-        UseDefaultPath = TRUE;
-    }
-
-    if (key.QueryStringValue(L"Dump Directory", Buffer, &BufferSize) != ERROR_SUCCESS)
-    {
-        UseDefaultPath = TRUE;
+        UseDefaultPath = FALSE;
     }
 
     if (UseDefaultPath)
