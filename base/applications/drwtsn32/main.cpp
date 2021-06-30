@@ -177,8 +177,7 @@ std::wstring Settings_GetOutputPath(void)
     {
         UseDefaultPath = TRUE;
     }
-
-    if (key.QueryStringValue(L"Dump Directory", Buffer, &BufferSize) != ERROR_SUCCESS)
+    else if (key.QueryStringValue(L"Dump Directory", Buffer, &BufferSize) != ERROR_SUCCESS)
     {
         UseDefaultPath = TRUE;
     }
