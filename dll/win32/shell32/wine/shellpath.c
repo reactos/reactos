@@ -631,8 +631,48 @@ VOID WINAPI PathQualifyAW(LPVOID pszPath)
 
 BOOL WINAPI PathResolveA(LPSTR path, LPCSTR *dirs, DWORD flags)
 {
-    FIXME("(%s,%p,0x%08x),stub!\n", debugstr_a(path), dirs, flags);
-    return FALSE;
+    BOOL ret = FALSE;
+    LPWSTR *dirsW = NULL;
+    DWORD iDir, cDirs, cbDirs;
+    WCHAR pathW[MAX_PATH];
+
+    TRACE("PathResolveA(%s,%p,0x%08x)\n", debugstr_a(path), dirs, flags);
+
+    if (dirs)
+    {
+        for (cDirs = 0; dirs[cDirs]; ++cDirs)
+            ;
+
+        cbDirs = (cDirs + 1) * sizeof(LPWSTR);
+        dirsW = SHAlloc(cbDirs);
+        if (!dirsW)
+            goto Cleanup;
+
+        ZeroMemory(dirsW, cbDirs);
+        for (iDir = 0; iDir < cDirs; ++iDir)
+        {
+            __SHCloneStrAtoW(&dirsW[iDir], dirs[iDir]);
+            if (dirsW[iDir] == NULL)
+                goto Cleanup;
+        }
+    }
+
+    SHAnsiToUnicode(path, pathW, _countof(pathW));
+
+    ret = PathResolveW(pathW, (LPCWSTR*)dirsW, flags);
+    if (ret)
+        SHUnicodeToAnsi(pathW, path, MAX_PATH);
+
+Cleanup:
+    if (dirsW)
+    {
+        for (iDir = 0; iDir < cDirs; ++iDir)
+        {
+            SHFree(dirsW[iDir]);
+        }
+        SHFree(dirsW);
+    }
+    return ret;
 }
 
 BOOL WINAPI PathResolveW(LPWSTR path, LPCWSTR *dirs, DWORD flags)
