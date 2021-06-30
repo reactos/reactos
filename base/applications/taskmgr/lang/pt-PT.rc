@@ -30,7 +30,7 @@ BEGIN
         MENUITEM "Ícones &pequenos", ID_VIEW_SMALL
         MENUITEM "Detal&hes", ID_VIEW_DETAILS, CHECKED
         MENUITEM "&Selecionar colunas...", ID_VIEW_SELECTCOLUMNS
-        POPUP "&Historico do CPU"
+        POPUP "&Histórico do CPU"
         BEGIN
             MENUITEM "Um gráfico para &todas as CPUs", ID_VIEW_CPUHISTORY_ONEGRAPHALL
             MENUITEM "Um gráfico &por CPU", ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU, CHECKED
