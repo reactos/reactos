@@ -36,7 +36,7 @@ STRINGTABLE
 BEGIN
     STRING_CLIPBOARD "Visualizador da área de transferência"
     STRING_CLIPFILE  "Elemento da área de transferência"
-    STRING_DELETE_MSG "Apagar conteúdos da prancheta?"
+    STRING_DELETE_MSG "Apagar conteúdos da área de transferência?"
     STRING_DELETE_TITLE "Limpar área de transferência"
     STRING_FORMAT_NT "Ficheiros da área de transferência para reactOS (*.clp)"
     STRING_FORMAT_GEN "Ficheiros da área de transferência (*.clp)"
