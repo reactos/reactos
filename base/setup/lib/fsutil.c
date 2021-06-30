@@ -111,6 +111,35 @@ typedef struct _BTRFS_BOOTSECTOR
 } BTRFS_BOOTSECTOR, *PBTRFS_BOOTSECTOR;
 C_ASSERT(sizeof(BTRFS_BOOTSECTOR) == BTRFS_BOOTSECTOR_SIZE);
 
+typedef struct _NTFS_BOOTSECTOR
+{
+    UCHAR Jump[3];
+    UCHAR OEMID[8];
+    USHORT BytesPerSector;
+    UCHAR SectorsPerCluster;
+    UCHAR Unused0[7];
+    UCHAR MediaId;
+    UCHAR Unused1[2];
+    USHORT SectorsPerTrack;
+    USHORT Heads;
+    UCHAR Unused2[4];
+    UCHAR Unused3[4];
+    USHORT Unknown[2];
+    ULONGLONG SectorCount;
+    ULONGLONG MftLocation;
+    ULONGLONG MftMirrLocation;
+    CHAR ClustersPerMftRecord;
+    UCHAR Unused4[3];
+    CHAR ClustersPerIndexRecord;
+    UCHAR Unused5[3];
+    ULONGLONG SerialNumber;
+    UCHAR Checksum[4];
+    UCHAR BootStrap[426];
+    USHORT EndSector;
+    UCHAR BootCodeAndData[7680]; // The remainder of the boot sector (8192 - 512)
+} NTFS_BOOTSECTOR, *PNTFS_BOOTSECTOR;
+C_ASSERT(sizeof(NTFS_BOOTSECTOR) == NTFS_BOOTSECTOR_SIZE);
+
 // TODO: Add more bootsector structures!
 
 #include <poppack.h>
@@ -655,6 +684,66 @@ Quit:
         DPRINT1("Failed to unlock BTRFS volume (Status 0x%lx)\n", LockStatus);
     }
 
+    /* Free the new bootsector */
+    FreeBootCode(&NewBootSector);
+
+    return Status;
+}
+
+NTSTATUS
+InstallNtfsBootCode(
+    IN PCWSTR SrcPath,          // NTFS bootsector source file (on the installation medium)
+    IN HANDLE DstPath,          // Where to save the bootsector built from the source + partition information
+    IN HANDLE RootPartition)    // Partition holding the (old) NTFS information
+{
+    NTSTATUS Status;
+    UNICODE_STRING Name;
+    IO_STATUS_BLOCK IoStatusBlock;
+    LARGE_INTEGER FileOffset;
+    BOOTCODE OrigBootSector = {0};
+    BOOTCODE NewBootSector  = {0};
+
+    /* Allocate and read the current original partition bootsector */
+    Status = ReadBootCodeByHandle(&OrigBootSector, RootPartition, NTFS_BOOTSECTOR_SIZE);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("InstallNtfsBootCode: Status %lx\n", Status);
+        return Status;
+    }
+
+    /* Allocate and read the new bootsector (16 sectors) from SrcPath */
+    RtlInitUnicodeString(&Name, SrcPath);
+    Status = ReadBootCodeFromFile(&NewBootSector, &Name, NTFS_BOOTSECTOR_SIZE);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("InstallNtfsBootCode: Status %lx\n", Status);
+        FreeBootCode(&OrigBootSector);
+        return Status;
+    }
+
+    /* Adjust the bootsector (copy a part of the NTFS BPB) */
+    RtlCopyMemory(&((PNTFS_BOOTSECTOR)NewBootSector.BootCode)->OEMID,
+                  &((PNTFS_BOOTSECTOR)OrigBootSector.BootCode)->OEMID,
+                  FIELD_OFFSET(NTFS_BOOTSECTOR, BootStrap) - FIELD_OFFSET(NTFS_BOOTSECTOR, OEMID));
+
+    /* Write sector 0 */
+    FileOffset.QuadPart = 0ULL;
+    Status = NtWriteFile(DstPath,
+                         NULL,
+                         NULL,
+                         NULL,
+                         &IoStatusBlock,
+                         NewBootSector.BootCode,
+                         NewBootSector.Length,
+                         &FileOffset,
+                         NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("NtWriteFile() failed (Status %lx)\n", Status);
+        goto Quit;
+    }
+
+Quit:
     /* Free the new bootsector */
     FreeBootCode(&NewBootSector);
 
