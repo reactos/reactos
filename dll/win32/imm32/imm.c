@@ -1795,11 +1795,39 @@ UINT WINAPI ImmGetDescriptionA(
   return len - 1;
 }
 
+#ifdef __REACTOS__ /* FIXME: Don't put on here */
+BOOL WINAPI
+ImmGetImeInfoEx(PIMEINFOEX pImeInfoEx, IMEINFOEXCLASS SearchType, PVOID pvSearchKey);
+#endif
 /***********************************************************************
  *		ImmGetDescriptionW (IMM32.@)
  */
 UINT WINAPI ImmGetDescriptionW(HKL hKL, LPWSTR lpszDescription, UINT uBufLen)
 {
+#ifdef __REACTOS__
+    IMEINFOEX info;
+    WORD w;
+    size_t cchClass;
+    if (!ImmGetImeInfoEx(&info, ImeInfoExKeyboardLayout, &hKL))
+        return 0;
+    w = HIWORD(hKL);
+    if ((w & 0xF000) != 0xE000)
+        return 0;
+    cchClass = wcslen(info.wszImeDescription);
+    if (uBufLen != 0)
+    {
+        if (uBufLen > cchClass)
+        {
+            wcscpy(lpszDescription, info.wszImeDescription);
+        }
+        else
+        {
+            wcsncpy(lpszDescription, info.wszImeDescription, uBufLen - 1);
+            lpszDescription[uBufLen - 1] = 0;
+        }
+    }
+    return cchClass;
+#else
   static const WCHAR name[] = { 'W','i','n','e',' ','X','I','M',0 };
 
   FIXME("(%p, %p, %d): semi stub\n", hKL, lpszDescription, uBufLen);
@@ -1808,6 +1836,7 @@ UINT WINAPI ImmGetDescriptionW(HKL hKL, LPWSTR lpszDescription, UINT uBufLen)
   if (!uBufLen) return lstrlenW( name );
   lstrcpynW( lpszDescription, name, uBufLen );
   return lstrlenW( lpszDescription );
+#endif
 }
 
 /***********************************************************************
