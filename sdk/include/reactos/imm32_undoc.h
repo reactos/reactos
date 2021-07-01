@@ -7,7 +7,9 @@
 
 #pragma once
 
-#define IS_IME_KBDLAYOUT(hKL) ((HIWORD(hKL) & 0xF000) == 0xE000)
+#define KBDLAYOUT_MASK 0xF000
+#define KBDLAYOUT_IME 0xE000
+#define IS_IME_KBDLAYOUT(hKL) ((HIWORD(hKL) & KBDLAYOUT_MASK) == KBDLAYOUT_IME)
 
 #ifdef __cplusplus
 extern "C" {
