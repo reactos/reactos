@@ -40,6 +40,7 @@
 #include <ndk/umtypes.h>
 #include <ndk/pstypes.h>
 #include "../../../win32ss/include/ntuser.h"
+#include <imm32_undoc.h>
 #include <strsafe.h>
 #endif
 
@@ -1796,10 +1797,6 @@ UINT WINAPI ImmGetDescriptionA(
   return len - 1;
 }
 
-#ifdef __REACTOS__ /* FIXME: Don't put on here */
-BOOL WINAPI
-ImmGetImeInfoEx(PIMEINFOEX pImeInfoEx, IMEINFOEXCLASS SearchType, PVOID pvSearchKey);
-#endif
 /***********************************************************************
  *		ImmGetDescriptionW (IMM32.@)
  */
@@ -1807,23 +1804,16 @@ UINT WINAPI ImmGetDescriptionW(HKL hKL, LPWSTR lpszDescription, UINT uBufLen)
 {
 #ifdef __REACTOS__
     IMEINFOEX info;
-    WORD w;
-    size_t cchDesc;
 
     TRACE("ImmGetDescriptionW(%p, %p, %d)\n", hKL, lpszDescription, uBufLen);
 
-    if (!ImmGetImeInfoEx(&info, ImeInfoExKeyboardLayout, &hKL))
+    if (!ImmGetImeInfoEx(&info, ImeInfoExKeyboardLayout, &hKL) || !IS_IME_KBDLAYOUT(hKL))
         return 0;
 
-    w = HIWORD(hKL);
-    if ((w & 0xF000) != 0xE000)
-        return 0;
-
-    cchDesc = wcslen(info.wszImeDescription);
     if (uBufLen != 0)
         StringCchCopyW(lpszDescription, uBufLen, info.wszImeDescription);
 
-    return (UINT)cchDesc;
+    return (UINT)wcslen(info.wszImeDescription);
 #else
   static const WCHAR name[] = { 'W','i','n','e',' ','X','I','M',0 };
 
