@@ -850,6 +850,9 @@ BOOL WINAPI ImmDestroyContext(HIMC hIMC)
  */
 BOOL WINAPI ImmDisableIME(DWORD idThread)
 {
+#ifdef __REACTOS__
+    return NtUserDisableThreadIme(idThread);
+#else
     if (idThread == (DWORD)-1)
         disable_ime = TRUE;
     else {
@@ -859,6 +862,7 @@ BOOL WINAPI ImmDisableIME(DWORD idThread)
         LeaveCriticalSection(&threaddata_cs);
     }
     return TRUE;
+#endif
 }
 
 /***********************************************************************
