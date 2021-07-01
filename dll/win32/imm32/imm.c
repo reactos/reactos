@@ -40,6 +40,7 @@
 #include <ndk/umtypes.h>
 #include <ndk/pstypes.h>
 #include "../../../win32ss/include/ntuser.h"
+#include <strsafe.h>
 #endif
 
 WINE_DEFAULT_DEBUG_CHANNEL(imm);
@@ -1813,22 +1814,15 @@ UINT WINAPI ImmGetDescriptionW(HKL hKL, LPWSTR lpszDescription, UINT uBufLen)
 
     if (!ImmGetImeInfoEx(&info, ImeInfoExKeyboardLayout, &hKL))
         return 0;
+
     w = HIWORD(hKL);
     if ((w & 0xF000) != 0xE000)
         return 0;
+
     cchDesc = wcslen(info.wszImeDescription);
     if (uBufLen != 0)
-    {
-        if (uBufLen > cchDesc)
-        {
-            wcscpy(lpszDescription, info.wszImeDescription);
-        }
-        else
-        {
-            wcsncpy(lpszDescription, info.wszImeDescription, uBufLen - 1);
-            lpszDescription[uBufLen - 1] = 0;
-        }
-    }
+        StringCchCopyW(lpszDescription, uBufLen, info.wszImeDescription);
+
     return (UINT)cchDesc;
 #else
   static const WCHAR name[] = { 'W','i','n','e',' ','X','I','M',0 };
