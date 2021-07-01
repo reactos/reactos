@@ -1808,7 +1808,9 @@ UINT WINAPI ImmGetDescriptionW(HKL hKL, LPWSTR lpszDescription, UINT uBufLen)
     IMEINFOEX info;
     WORD w;
     size_t cchDesc;
+
     TRACE("ImmGetDescriptionW(%p, %p, %d)\n", hKL, lpszDescription, uBufLen);
+
     if (!ImmGetImeInfoEx(&info, ImeInfoExKeyboardLayout, &hKL))
         return 0;
     w = HIWORD(hKL);
