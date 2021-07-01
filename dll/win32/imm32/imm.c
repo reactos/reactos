@@ -1767,6 +1767,20 @@ HWND WINAPI ImmGetDefaultIMEWnd(HWND hWnd)
 UINT WINAPI ImmGetDescriptionA(
   HKL hKL, LPSTR lpszDescription, UINT uBufLen)
 {
+#ifdef __REACTOS__
+    IMEINFOEX info;
+    UINT cch;
+
+    if (!ImmGetImeInfoEx(&info, ImeInfoExKeyboardLayout, &hKL) || !IS_IME_KBDLAYOUT(hKL))
+        return 0;
+
+    cch = (UINT)wcslen(info.wszImeDescription);
+    cch = WideCharToMultiByte(CP_ACP, 0, info.wszImeDescription, cch,
+                              lpszDescription, uBufLen, NULL, NULL);
+    if (uBufLen)
+        lpszDescription[cch] = 0;
+    return cch;
+#else
   WCHAR *buf;
   DWORD len;
 
@@ -1795,6 +1809,7 @@ UINT WINAPI ImmGetDescriptionA(
     return 0;
 
   return len - 1;
+#endif
 }
 
 /***********************************************************************
