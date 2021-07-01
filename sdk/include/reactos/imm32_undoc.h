@@ -9,5 +9,13 @@
 
 #define IS_IME_KBDLAYOUT(hKL) ((HIWORD(hKL) & 0xF000) == 0xE000)
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 BOOL WINAPI
 ImmGetImeInfoEx(PIMEINFOEX pImeInfoEx, IMEINFOEXCLASS SearchType, PVOID pvSearchKey);
+
+#ifdef __cplusplus
+} // extern "C"
+#endif
