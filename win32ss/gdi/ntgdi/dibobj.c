@@ -1364,7 +1364,7 @@ NtGdiStretchDIBitsInternal(
         pdc = DC_LockDc(hdcMem);
         if (pdc != NULL)
         {
-            IntSetDIBits(pdc, hBitmap, 0, abs(pbmi->bmiHeader.biHeight), pvBits,
+            IntSetDIBits(pdc, hBitmap, 0, abs(pbmiSafe->bmiHeader.biHeight), pvBits,
                          cjMaxBits, pbmiSafe, dwUsage);
             DC_UnlockDc(pdc);
         }
