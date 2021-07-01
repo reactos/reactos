@@ -1771,6 +1771,8 @@ UINT WINAPI ImmGetDescriptionA(
     IMEINFOEX info;
     UINT cch;
 
+    TRACE("ImmGetDescriptionA(%p,%p,%d)\n", hKL, lpszDescription, uBufLen);
+
     if (!ImmGetImeInfoEx(&info, ImeInfoExKeyboardLayout, &hKL) || !IS_IME_KBDLAYOUT(hKL))
         return 0;
 
