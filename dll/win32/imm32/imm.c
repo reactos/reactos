@@ -1807,17 +1807,17 @@ UINT WINAPI ImmGetDescriptionW(HKL hKL, LPWSTR lpszDescription, UINT uBufLen)
 #ifdef __REACTOS__
     IMEINFOEX info;
     WORD w;
-    size_t cchClass;
+    size_t cchDesc;
     TRACE("ImmGetDescriptionW(%p, %p, %d)\n", hKL, lpszDescription, uBufLen);
     if (!ImmGetImeInfoEx(&info, ImeInfoExKeyboardLayout, &hKL))
         return 0;
     w = HIWORD(hKL);
     if ((w & 0xF000) != 0xE000)
         return 0;
-    cchClass = wcslen(info.wszImeDescription);
+    cchDesc = wcslen(info.wszImeDescription);
     if (uBufLen != 0)
     {
-        if (uBufLen > cchClass)
+        if (uBufLen > cchDesc)
         {
             wcscpy(lpszDescription, info.wszImeDescription);
         }
@@ -1827,7 +1827,7 @@ UINT WINAPI ImmGetDescriptionW(HKL hKL, LPWSTR lpszDescription, UINT uBufLen)
             lpszDescription[uBufLen - 1] = 0;
         }
     }
-    return (UINT)cchClass;
+    return (UINT)cchDesc;
 #else
   static const WCHAR name[] = { 'W','i','n','e',' ','X','I','M',0 };
 
