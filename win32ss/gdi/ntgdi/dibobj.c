@@ -1131,7 +1131,7 @@ NtGdiGetDIBitsInternal(
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        _SEH2_YIELD(goto cleanup;)
+        goto cleanup;
     }
     _SEH2_END;
 
@@ -1229,7 +1229,6 @@ NtGdiStretchDIBitsInternal(
     ULONG BmpFormat = 0;
     INT LinesCopied = 0;
 
-  /* Following Code shamelessly copied from NtGdiGetDIBitsInternal */
     /* Check for bad iUsage */
     if (dwUsage > 2) return 0;
 
@@ -1283,7 +1282,6 @@ NtGdiStretchDIBitsInternal(
         ExFreePoolWithTag(pbmiSafe, 'imBG');
         return 0;
     }
-  /* End of Code shamelessly copied from NtGdiGetDIBitsInternal */
 
     if (!(pdc = DC_LockDc(hdc)))
     {
@@ -1321,7 +1319,7 @@ NtGdiStretchDIBitsInternal(
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
             ExFreePoolWithTag(pvBits, TAG_DIB);
-            _SEH2_YIELD(return 0);
+            return 0;
         }
         _SEH2_END;
     }
@@ -1361,23 +1359,6 @@ NtGdiStretchDIBitsInternal(
         {
             hPal = NtGdiGetDCObject(hdc, GDI_OBJECT_TYPE_PALETTE);
             hPal = GdiSelectPalette(hdcMem, hPal, FALSE);
-        }
-
-        if (pbmiSafe->bmiHeader.biCompression == BI_RLE4 ||
-                pbmiSafe->bmiHeader.biCompression == BI_RLE8)
-        {
-            /* copy existing bitmap from destination dc */
-            if (cxSrc == cyDst && cySrc == cyDst)
-            {
-                NtGdiBitBlt(hdcMem, xSrc, abs(pbmiSafe->bmiHeader.biHeight) - cySrc - ySrc,
-                            cxSrc, cySrc, hdc, xDst, yDst,  dwRop, 0, 0);
-            }
-            else
-            {
-                NtGdiStretchBlt(hdcMem, xSrc, abs(pbmiSafe->bmiHeader.biHeight) -     cySrc - ySrc,
-                                cxSrc, cySrc, hdc, xDst, yDst, cxDst, cyDst,
-                                dwRop, 0);
-            }
         }
 
         pdc = DC_LockDc(hdcMem);
