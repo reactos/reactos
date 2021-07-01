@@ -1826,7 +1826,7 @@ UINT WINAPI ImmGetDescriptionW(HKL hKL, LPWSTR lpszDescription, UINT uBufLen)
             lpszDescription[uBufLen - 1] = 0;
         }
     }
-    return cchClass;
+    return (UINT)cchClass;
 #else
   static const WCHAR name[] = { 'W','i','n','e',' ','X','I','M',0 };
 
