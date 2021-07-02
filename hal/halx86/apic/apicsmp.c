@@ -11,6 +11,7 @@
 
 #include <hal.h>
 #include "apicp.h"
+#include <smp.h>
 #define NDEBUG
 #include <debug.h>
 
@@ -91,4 +92,44 @@ HalpRequestIpi(KAFFINITY TargetProcessors)
 {
     UNIMPLEMENTED;
     __debugbreak();
+}
+
+BOOLEAN /* HalStartApplicationProcessor */
+ApicStartApplicationProcessor(ULONG NTProcessorNumber, PHYSICAL_ADDRESS StartupLoc)
+{
+    /* 
+     * There's a few cases this can fail:
+     * - APIC version not supporting anymore LAPICs
+     * - No Application Processors at the number given
+     * - Some failure in APIC read or writes
+     * - Hardware not accepting the command for some other reason
+     */
+
+    /* Init IPI */
+    ApicRequestGlobalInterrupt(NTProcessorNumber, 0, 
+        APIC_MT_INIT, APIC_TGM_Edge, APIC_DSH_Destination);
+
+    /* Stall execution for a bit to give APIC time */
+    KeStallExecutionProcessor(1000);
+
+    /* Startup IPI */
+    ApicRequestGlobalInterrupt(NTProcessorNumber, (StartupLoc.LowPart) >> 12, 
+        APIC_MT_Startup, APIC_TGM_Edge, APIC_DSH_Destination);
+
+    /* TODO: Test for IPI error */
+
+    /* Hurray an AP has started sucessfully! */
+    return TRUE;
+}
+
+VOID /* HalpStopAP */
+ApicSoftlyStopApplicationProcessor(ULONG NTProcessorNumber)
+{
+
+}
+
+VOID /* HalpStopAllAPs */
+ApicHarshlyStopAllApplicationProcessors(VOID)
+{
+
 }

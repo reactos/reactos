@@ -10,23 +10,48 @@
 
 #include <hal.h>
 #include <smp.h>
+#include "smpp.h"
 #define NDEBUG
 #include <debug.h>
 
-/* FUNCTIONS *****************************************************************/
+/* GLOBALS *******************************************************************/
 
-VOID
-NTAPI
-HalRequestIpi(KAFFINITY TargetProcessors)
-{
-    HalpRequestIpi(TargetProcessors);
-}
+extern PHYSICAL_ADDRESS HalpLowStubPhysicalAddress;
+extern PVOID HalpLowStub;
+
+/* TODO: MaxAPCount should be assigned by a Multi APIC table */
+ULONG MaxAPCount = 8;
+ULONG StartedProcessorCount = 1;
+
+/* FUNCTIONS *****************************************************************/
 
 BOOLEAN
 NTAPI
 HalStartNextProcessor(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
                       IN PKPROCESSOR_STATE ProcessorState)
 {
-    //@Unimplemented
-    return FALSE;
+    if(MaxAPCount > StartedProcessorCount)
+    {
+        /* We only a create a new pagetable once */
+        if(StartedProcessorCount == 1)
+        {
+            //HalpInitializeAPPageTables(HalpLowStub);
+        }
+        
+        /* Start an AP */
+        HalpInitializeAPStub(HalpLowStub);
+        if(ApicStartApplicationProcessor(StartedProcessorCount, HalpLowStubPhysicalAddress) == FALSE)
+        {
+            return FALSE;
+        }
+
+        StartedProcessorCount++;
+        return TRUE;
+    }
+    else
+    {
+        /* Started means the AP itself is online, this doesn't mean it's seen by the kernel */
+        DPRINT1("HalStartNextProcessor: Currently Started Processor Count: %X\n", StartedProcessorCount);
+        return FALSE;
+    }
 }
