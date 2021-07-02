@@ -10,6 +10,14 @@
 
 START_TEST(PoIrp)
 {
+#if defined(_M_AMD64)
+    if (TRUE)
+    {
+        skip(FALSE, "ROSTESTS-368: Skipping kmtest:PoIrp because it crashes on Windows Server 2003 x64-Testbot.\n");
+        return;
+    }
+#endif
+
     KmtLoadDriver(L"PoIrp", TRUE);
     KmtOpenDriver();
     KmtSendToDriver(IOCTL_RUN_TEST);

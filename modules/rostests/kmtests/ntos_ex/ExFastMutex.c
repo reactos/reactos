@@ -310,6 +310,14 @@ TestFastMutexConcurrent(
 
 START_TEST(ExFastMutex)
 {
+#if defined(_M_AMD64)
+    if (TRUE)
+    {
+        skip(FALSE, "ROSTESTS-367: Skipping kmtest:ExFastMutex because it hangs on Windows Server 2003 x64-Testbot.\n");
+        return;
+    }
+#endif
+
     FAST_MUTEX Mutex;
     KIRQL Irql;
 
