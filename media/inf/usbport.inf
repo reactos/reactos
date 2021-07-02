@@ -311,3 +311,15 @@ USB\ROOT_HUB.DeviceDesc = "根集线器"
 
 PCI\VEN_8086&DEV_7020&CC_0C0300.DeviceDesc = "Intel 82371SB PIIX3 USB 控制器"
 PCI\VEN_8086&DEV_7112&CC_0C0300.DeviceDesc = "Intel 82371AB/EB/MB PIIX4 USB 控制器"
+
+[Strings.0C04]
+USBClassName = "USB 控制器"
+
+GenericMfg = "(標準 USB 裝置)"
+PCI\CC_0C0300.DeviceDesc = "UHCI USB 控制器"
+PCI\CC_0C0310.DeviceDesc = "OHCI USB 控制器"
+PCI\CC_0C0320.DeviceDesc = "EHCI USB 控制器"
+USB\ROOT_HUB.DeviceDesc = "根集線器"
+
+PCI\VEN_8086&DEV_7020&CC_0C0300.DeviceDesc = "Intel 82371SB PIIX3 USB 控制器"
+PCI\VEN_8086&DEV_7112&CC_0C0300.DeviceDesc = "Intel 82371AB/EB/MB PIIX4 USB 控制器"

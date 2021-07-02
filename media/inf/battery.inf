@@ -159,3 +159,10 @@ ACPI\ACPI0003.DeviceDesc = "AC адаптер"
 GenericMfg = "(通用电池)"
 ACPI\PNP0C0A.DeviceDesc = "ACPI 兼容控制模式电池"
 ACPI\ACPI0003.DeviceDesc = "交流适配器"
+
+[Strings.0C04]
+BatteryClassName = "電池"
+
+GenericMfg = "(標準電池)"
+ACPI\PNP0C0A.DeviceDesc = "ACPI 相容控制模式電池"
+ACPI\ACPI0003.DeviceDesc = "交流配接器"

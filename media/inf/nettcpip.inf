@@ -347,3 +347,11 @@ ReactOS = "ReactOS Takımı"
 
 [Strings.0422]
 ReactOS = "Команда ReactOS"
+
+[Strings.0C04]
+MS_TCPIP.DisplayName = "互聯網通訊協定第四版 (TCP/IPv4)"
+DNSCLIENT_NAME = "DNS 用戶端" 
+DNSCLIENT_DESC = "快取本地 DNS 查詢嘅服務" 
+DHCPCLIENT_NAME = "DHCP 用戶端" 
+DHCPCLIENT_DESC = "嘗試從可用嘅 DHCP 伺服器中自動取得網絡設定"
+TCPIP_DEF = "傳輸控制協議 / 互聯網協議"

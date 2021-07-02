@@ -1,0 +1,19 @@
+/*
+ * PROJECT:    ReactOS KBSwitch
+ * LICENSE:    GPL - See COPYING in the top level directory
+ * FILE:       base/applications/kbswitch/lang/zh-HK.rc
+ * PURPOSE:    Chinese (Hong Kong) Language File for KBSwitch
+ * TRANSLATOR: Elton Chung aka MfldElton <elton328@gmail.com>
+ */
+
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_HONGKONG
+
+IDR_POPUP MENU
+BEGIN
+    POPUP "popup"
+    BEGIN
+        MENUITEM "選項(&P)...", ID_PREFERENCES
+        MENUITEM SEPARATOR
+        MENUITEM "結束(&E)", ID_EXIT
+    END
+END

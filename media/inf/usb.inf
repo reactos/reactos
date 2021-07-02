@@ -142,3 +142,8 @@ USB\CLASS_09.DeviceDesc = "Standartinis USB šakotuvas"
 GenericMfg = "(通用 USB 集线器)"
 USB\COMPOSITE.DeviceDesc = "USB 聚合设备"
 USB\CLASS_09.DeviceDesc = "通用 USB 集线器"
+
+[Strings.0C04]
+GenericMfg = "(標準 USB 集線器)"
+USB\COMPOSITE.DeviceDesc = "USB 複合裝置"
+USB\CLASS_09.DeviceDesc = "標準 USB 集線器"

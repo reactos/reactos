@@ -113,3 +113,8 @@ Floppy.DeviceDesc = "Umûmî Yumuşak Disk Sürücüsü"
 [Strings.0804]
 GenericMfg = "(通用软盘驱动器)"
 Floppy.DeviceDesc = "通用软盘驱动器"
+
+[Strings.0C04]
+FloppyClassName = "軟碟機"
+GenericMfg = "(標準軟碟機)"
+Floppy.DeviceDesc = "標準軟碟機"

@@ -70,3 +70,7 @@ GenericMfg = "(Umûmî Dizge Aygıtları)"
 [Strings.0804]
 GenericMfg = "(通用系统设备)"
 *PNP0C14.DeviceDesc = "ACPI 的 WMI"
+
+[Strings.0C04]
+GenericMfg = "(標準系統裝置)"
+*PNP0C14.DeviceDesc = "ACPI 的 WMI"
