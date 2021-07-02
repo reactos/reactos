@@ -586,7 +586,7 @@ DIALOG_SYMBOL_DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
             SetDlgItemTextW(hDlg, PM_ICON_FILE, pIconContext->szName);
             SendMessageA(pIconContext->hDlgCtrl, LB_SETITEMHEIGHT, 0, 32);
 
-            pIconContext->hLibrary = LoadLibraryExW(pIconContext->szName, NULL, LOAD_LIBRARY_AS_IMAGE_RESOURCE | LOAD_LIBRARY_AS_DATAFILE);
+            pIconContext->hLibrary = LoadLibraryExW(pIconContext->szName, NULL, /* NT6+: LOAD_LIBRARY_AS_IMAGE_RESOURCE | */ LOAD_LIBRARY_AS_DATAFILE);
             if (pIconContext->hLibrary)
             {
                 EnumResourceNamesW(pIconContext->hLibrary,
@@ -635,7 +635,7 @@ DIALOG_SYMBOL_DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
                     SetDlgItemTextW(hDlg, PM_ICON_FILE, filename);
                     DestroyIconList(pIconContext->hDlgCtrl);
-                    pIconContext->hLibrary = LoadLibraryExW(filename, NULL, LOAD_LIBRARY_AS_IMAGE_RESOURCE | LOAD_LIBRARY_AS_DATAFILE);
+                    pIconContext->hLibrary = LoadLibraryExW(filename, NULL, /* NT6+: LOAD_LIBRARY_AS_IMAGE_RESOURCE | */ LOAD_LIBRARY_AS_DATAFILE);
                     if (pIconContext->hLibrary)
                     {
                         EnumResourceNamesW(pIconContext->hLibrary,
