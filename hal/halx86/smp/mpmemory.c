@@ -17,24 +17,20 @@
 /* GLOBALS *******************************************************************/
 
 /* AP spinup stub specific */
-#if 0
 extern PVOID APEntry;
 extern PVOID APEntryEnd;
 extern PVOID APSpinup;
 extern PVOID APSpinupEnd;
-#endif
 
 /* FUNCTIONS *****************************************************************/
 
 VOID
 HalpInitializeAPStub(PVOID APStubLocation)
 {
-    #if 0
     PVOID APStubSecondPhaseLoc;
 
     /* Copy over the bootstub for specific AP */
     APStubSecondPhaseLoc = (PVOID)((ULONG_PTR)APStubLocation + ((ULONG_PTR)&APEntryEnd  - (ULONG_PTR)&APEntry));
     RtlCopyMemory(APStubLocation, &APEntry,  ((ULONG_PTR)&APEntryEnd - (ULONG_PTR)&APEntry));
     RtlCopyMemory(APStubSecondPhaseLoc, &APSpinup,  ((ULONG_PTR)&APSpinupEnd - (ULONG_PTR)&APSpinup));
-    #endif
 }
