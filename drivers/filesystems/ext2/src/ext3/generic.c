@@ -858,69 +858,62 @@ Ext2ZeroBuffer( IN PEXT2_IRP_CONTEXT    IrpContext,
 }
 
 
+#define SIZE_256K 0x40000
+
 BOOLEAN
 Ext2SaveBuffer( IN PEXT2_IRP_CONTEXT    IrpContext,
                 IN PEXT2_VCB            Vcb,
-                IN LONGLONG             offset,
-                IN ULONG                size,
-                IN PVOID                buf )
+                IN LONGLONG             Offset,
+                IN ULONG                Size,
+                IN PVOID                Buf )
 {
-    struct buffer_head *bh = NULL;
-    BOOLEAN             rc = 0;
+    BOOLEAN     rc;
 
-    _SEH2_TRY {
+    while (Size) {
 
-        while (size) {
+        PBCB        Bcb;
+        PVOID       Buffer;
+        ULONG       Length;
 
-            sector_t    block;
-            ULONG       len = 0, delta = 0;
+        Length = (ULONG)Offset & (SIZE_256K - 1);
+        Length = SIZE_256K - Length;
+        if (Size < Length)
+            Length = Size;
 
-            block = (sector_t) (offset >> BLOCK_BITS);
-            delta = (ULONG)offset & (BLOCK_SIZE - 1);
-            len = BLOCK_SIZE - delta;
-            if (size < len)
-                len = size;
+        if ( !CcPreparePinWrite(
+                    Vcb->Volume,
+                    (PLARGE_INTEGER) (&Offset),
+                    Length,
+                    FALSE,
+                    PIN_WAIT | PIN_EXCLUSIVE,
+                    &Bcb,
+                    &Buffer )) {
 
-            if (delta == 0 && len >= BLOCK_SIZE) {
-                bh = sb_getblk_zero(&Vcb->sb, block);
-            } else {
-                bh = sb_getblk(&Vcb->sb, block);
-            }
-
-            if (!bh) {
-                DEBUG(DL_ERR, ("Ext2SaveBuffer: can't load block %I64u\n", block));
-                DbgBreak();
-                _SEH2_LEAVE;
-            }
-
-            if (!buffer_uptodate(bh)) {
-	            int err = bh_submit_read(bh);
-	            if (err < 0) {
-		            DEBUG(DL_ERR, ("Ext2SaveBuffer: bh_submit_read failed: %d\n", err));
-		            _SEH2_LEAVE;
-	            }
-            }
-
-            _SEH2_TRY {
-                RtlCopyMemory(bh->b_data + delta, buf, len);
-                mark_buffer_dirty(bh);
-            } _SEH2_FINALLY {
-                fini_bh(&bh);
-            } _SEH2_END;
-
-            buf = (PUCHAR)buf + len;
-            offset = offset + len;
-            size = size - len;
+            DEBUG(DL_ERR, ( "Ext2SaveBuffer: failed to PinLock offset %I64xh ...\n", Offset));
+            return FALSE;
         }
 
-        rc = TRUE;
+        _SEH2_TRY {
 
-    } _SEH2_FINALLY {
+            RtlCopyMemory(Buffer, Buf, Length);
+            CcSetDirtyPinnedData(Bcb, NULL );
+            SetFlag(Vcb->Volume->Flags, FO_FILE_MODIFIED);
 
-        if (bh)
-            fini_bh(&bh);
+            rc = Ext2AddVcbExtent(Vcb, Offset, (LONGLONG)Length);
+            if (!rc) {
+                DbgBreak();
+                Ext2Sleep(100);
+                rc = Ext2AddVcbExtent(Vcb, Offset, (LONGLONG)Length);
+            }
 
-    } _SEH2_END;
+        } _SEH2_FINALLY {
+            CcUnpinData(Bcb);
+        } _SEH2_END;
+
+        Buf = (PUCHAR)Buf + Length;
+        Offset = Offset + Length;
+        Size = Size - Length;
+    }
 
     return rc;
 }
