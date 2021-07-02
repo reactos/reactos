@@ -1394,8 +1394,6 @@ NtGdiStretchDIBitsInternal(
         NtGdiDeleteObjectApp(hdcMem);
         GreDeleteObject(hBitmap);
 
-        if (pvBits) ExFreePoolWithTag(pvBits, TAG_DIB);
-
     } /* End of dwRop == SRCCOPY */
     else
     { /* Start of dwRop != SRCCOPY */
@@ -1490,10 +1488,10 @@ NtGdiStretchDIBitsInternal(
         if (psurfTmp) SURFACE_ShareUnlockSurface(psurfTmp);
         if (hbmTmp) GreDeleteObject(hbmTmp);
         if (pdc) DC_UnlockDc(pdc);
-        if (pvBits) ExFreePoolWithTag(pvBits, TAG_DIB);
     }
 
     if (pbmiSafe) ExFreePoolWithTag(pbmiSafe, 'imBG');
+    if (pvBits) ExFreePoolWithTag(pvBits, TAG_DIB);
 
     /* This is not what MSDN says is returned from this function, but it
      * follows Wine's dlls/gdi32/dib.c function nulldrv_StretchDIBits
