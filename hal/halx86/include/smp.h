@@ -14,6 +14,12 @@
 BOOLEAN /* HalStartApplicationProcessor */
 ApicStartApplicationProcessor(ULONG NTProcessorNumber, PHYSICAL_ADDRESS StartupLoc);
 
+VOID /* HalpStopAP */
+ApicSoftlyStopApplicationProcessor(ULONG NTProcessorNumber);
+
+VOID /* HalpStopAllAPs */
+ApicHarshlyStopAllApplicationProcessors(VOID);
+
 VOID
 NTAPI /* HalRequestIpi (CONFIG_SMP) */
 HalpRequestIpi(KAFFINITY TargetProcessors);
