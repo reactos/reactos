@@ -309,6 +309,7 @@ if(ARCH STREQUAL "i386")
         ${REACTOS_SOURCE_DIR}/ntoskrnl/ke/i386/irqobj.c
         ${REACTOS_SOURCE_DIR}/ntoskrnl/ke/i386/kiinit.c
         ${REACTOS_SOURCE_DIR}/ntoskrnl/ke/i386/ldt.c
+        ${REACTOS_SOURCE_DIR}/ntoskrnl/ke/i386/mp.c
         ${REACTOS_SOURCE_DIR}/ntoskrnl/ke/i386/mtrr.c
         ${REACTOS_SOURCE_DIR}/ntoskrnl/ke/i386/patpge.c
         ${REACTOS_SOURCE_DIR}/ntoskrnl/ke/i386/thrdini.c
@@ -339,6 +340,7 @@ elseif(ARCH STREQUAL "amd64")
         ${REACTOS_SOURCE_DIR}/ntoskrnl/ke/amd64/irql.c
         ${REACTOS_SOURCE_DIR}/ntoskrnl/ke/amd64/kiinit.c
         ${REACTOS_SOURCE_DIR}/ntoskrnl/ke/amd64/krnlinit.c
+        ${REACTOS_SOURCE_DIR}/ntoskrnl/ke/amd64/mp.c
         ${REACTOS_SOURCE_DIR}/ntoskrnl/ke/amd64/spinlock.c
         ${REACTOS_SOURCE_DIR}/ntoskrnl/ke/amd64/thrdini.c
         ${REACTOS_SOURCE_DIR}/ntoskrnl/mm/amd64/init.c

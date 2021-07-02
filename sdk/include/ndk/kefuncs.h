@@ -75,6 +75,12 @@ KiDeliverApc(
 //
 VOID
 NTAPI
+KeStartAllProcessors(
+    VOID
+);
+
+VOID
+NTAPI
 KeTerminateThread(
     _In_ KPRIORITY Increment
 );
