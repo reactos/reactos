@@ -37,6 +37,7 @@
 #include "winreg.h"
 #include "wine/list.h"
 #ifdef __REACTOS__
+#include <stdlib.h>
 #include <ndk/umtypes.h>
 #include <ndk/pstypes.h>
 #include "../../../win32ss/include/ntuser.h"
@@ -1769,15 +1770,15 @@ UINT WINAPI ImmGetDescriptionA(
 {
 #ifdef __REACTOS__
     IMEINFOEX info;
-    UINT cch;
+    size_t cch;
 
     TRACE("ImmGetDescriptionA(%p,%p,%d)\n", hKL, lpszDescription, uBufLen);
 
     if (!ImmGetImeInfoEx(&info, ImeInfoExKeyboardLayout, &hKL) || !IS_IME_KBDLAYOUT(hKL))
         return 0;
 
-    cch = (UINT)wcslen(info.wszImeDescription);
-    cch = WideCharToMultiByte(CP_ACP, 0, info.wszImeDescription, cch,
+    StringCchLengthW(info.wszImeDescription, _countof(info.wszImeDescription), &cch);
+    cch = WideCharToMultiByte(CP_ACP, 0, info.wszImeDescription, (INT)cch,
                               lpszDescription, uBufLen, NULL, NULL);
     if (uBufLen)
         lpszDescription[cch] = 0;
@@ -1821,6 +1822,7 @@ UINT WINAPI ImmGetDescriptionW(HKL hKL, LPWSTR lpszDescription, UINT uBufLen)
 {
 #ifdef __REACTOS__
     IMEINFOEX info;
+    size_t cch;
 
     TRACE("ImmGetDescriptionW(%p, %p, %d)\n", hKL, lpszDescription, uBufLen);
 
@@ -1830,7 +1832,8 @@ UINT WINAPI ImmGetDescriptionW(HKL hKL, LPWSTR lpszDescription, UINT uBufLen)
     if (uBufLen != 0)
         StringCchCopyW(lpszDescription, uBufLen, info.wszImeDescription);
 
-    return (UINT)wcslen(info.wszImeDescription);
+    StringCchLengthW(info.wszImeDescription, _countof(info.wszImeDescription), &cch);
+    return (UINT)cch;
 #else
   static const WCHAR name[] = { 'W','i','n','e',' ','X','I','M',0 };
 
