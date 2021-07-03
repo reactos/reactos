@@ -1,9 +1,8 @@
 /*
  * PROJECT:     ReactOS Kernel
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
- * FILE:        ntoskrnl/ke/amd64/mp.c
- * PURPOSE:     Source file to hold multiprocessor functions
- * PROGRAMMERS:  Copyright 2021 Justin Miller <justinmiller100@gmail.com>
+ * PURPOSE:     Architecture source file to hold multiprocessor functions
+ * COPYRIGHT:   Copyright 2021 Justin Miller <justinmiller100@gmail.com>
  */
 
 /* INCLUDES *****************************************************************/
@@ -17,6 +16,15 @@
 #define PHYSICAL_ADDRESS  LARGE_INTEGER
 PHYSICAL_ADDRESS HighestPhysicalAddress;
 ULONG ProcessorCount = 0;
+
+struct APInfo
+{
+    KPCR pcr;
+    KTSS tss;
+    ETHREAD thread;
+    KDESCRIPTOR GdtDesc;
+    KDESCRIPTOR IdtDesc;
+} APInfo;
 
 /* FUNCTIONS *****************************************************************/
 VOID
@@ -32,10 +40,10 @@ KeStartAllProcessors()
     {
         ProcessorCount++;
         /* Attempt to allocate memory for its new setup */
-        SIZE_T APInfo = sizeof(KPCR) + sizeof(KTSS) + sizeof(ETHREAD) + GdtDesc.Limit + 1 + IdtDesc.Limit + 1; 
+        SIZE_T APInfo = sizeof(struct APInfo) + 2; 
         PVOID PAPInfo = MmAllocateContiguousMemory(APInfo, HighestPhysicalAddress);
 
-        if(!PAPInfo)
+        if (!PAPInfo)
         {
             ASSERT("KeStartAllProcessors: Memory Allocation has failed");
         }
@@ -57,7 +65,7 @@ KeStartAllProcessors()
         KernelStack = MmCreateKernelStack(FALSE, 0);
         if (!KernelStack)
         {
-            ASSERT("KeStartAllProcessors: MmCreateKernelStack has failed for an AP");
+            ASSERT("KeStartAllProcessors: Could not create Kernel Stack for an AP");
         }
 
         DPCStack = MmCreateKernelStack(FALSE, 0);
@@ -73,7 +81,10 @@ KeStartAllProcessors()
 
         ApplicationProcessorsEnabled = HalStartNextProcessor(KeLoaderBlock, &ProcessorState);
 
-        if(ApplicationProcessorsEnabled == FALSE){
+        if (ApplicationProcessorsEnabled == FALSE){
+            ProcessorCount--;
+            /* Started means the AP itself is online, this doesn't mean it's seen by the kernel */
+            DPRINT1("HalStartNextProcessor: Sucessful AP startup count is %X\n", ProcessorCount);
             /* We have finished starting processors, Time to cleanup! */
             MmFreeContiguousMemory(PAPInfo);
             MmDeleteKernelStack(KernelStack, FALSE);

@@ -1,3 +1,10 @@
+/*
+ * PROJECT:     ReactOS Kernel
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Assembly file for real mode AP code
+ * COPYRIGHT:   Copyright 2021 Justin Miller <justinmiller100@gmail.com>
+ */
+
 #include <asm.inc>
 
 PUBLIC _APEntry
@@ -7,11 +14,11 @@ PUBLIC _APEntryEnd
 _APEntry:
     cli
 
-    xor     ax, ax
-	mov		ds, ax
-	mov		ss, ax
-    mov     fs, ax
-    mov     gs, ax
+    xor ax, ax
+	mov ds, ax
+	mov ss, ax
+    mov fs, ax
+    mov gs, ax
 
     /* Load the GDT and blank IDT */
 #ifdef _USE_ML
@@ -22,11 +29,12 @@ _APEntry:
     lidt cs:[idtdesc - _APEntry]
 #endif
 
-    mov   eax, cr0
-    or    eax, HEX(00000001)
-    mov   cr0, eax
+    mov eax, cr0
+    or  eax, HEX(00000001)
+    mov cr0, eax
 
-    ljmp16 HEX(08), [HEX(4000) + _APEntryEnd - _APEntry]
+    ljmp16 HEX(08), (HEX(4000) + _APEntryEnd - _APEntry)
+
     hlt
 
 gdtptr:
