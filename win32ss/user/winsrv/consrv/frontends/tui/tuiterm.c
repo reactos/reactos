@@ -881,6 +881,17 @@ TuiSetPalette(IN OUT PFRONTEND This,
     return TRUE;
 }
 
+static BOOL NTAPI
+TuiSetCodePage(IN OUT PFRONTEND This,
+               UINT CodePage)
+{
+    // TODO: Find a suitable console font for the given code page,
+    // and set it if found; otherwise fail the call, or fall back
+    // to some default font...
+
+    return TRUE;
+}
+
 static ULONG NTAPI
 TuiGetDisplayMode(IN OUT PFRONTEND This)
 {
@@ -945,6 +956,7 @@ static FRONTEND_VTBL TuiVtbl =
     TuiGetLargestConsoleWindowSize,
     TuiGetSelectionInfo,
     TuiSetPalette,
+    TuiSetCodePage,
     TuiGetDisplayMode,
     TuiSetDisplayMode,
     TuiShowMouseCursor,
