@@ -74,8 +74,8 @@ IntVideoPortAddDeviceMapLink(
                                    L"VIDEO",
                                    DeviceBuffer,
                                    REG_SZ,
-                                   DeviceExtension->RegistryPath.Buffer,
-                                   DeviceExtension->RegistryPath.Length + sizeof(UNICODE_NULL));
+                                   DeviceExtension->NewRegistryPath.Buffer,
+                                   DeviceExtension->NewRegistryPath.Length + sizeof(UNICODE_NULL));
     if (!NT_SUCCESS(Status))
     {
         ERR_(VIDEOPRT, "Failed to create DEViCEMAP registry entry: 0x%X\n", Status);
