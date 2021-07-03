@@ -692,8 +692,8 @@ WINAPI
 SetConsoleOutputCP(
     IN UINT wCodepage)
 {
-    WCHAR FontName[100];
-    WCHAR FontFile[] = L"\\SystemRoot\\vgafonts.cab";
+    static PCWSTR FontFile = L"\\SystemRoot\\vgafonts.cab";
+    WCHAR FontName[20];
     CONSOLE_CABINET_CONTEXT ConsoleCabinetContext;
     PCABINET_CONTEXT CabinetContext = &ConsoleCabinetContext.CabinetContext;
     CAB_SEARCH Search;
@@ -719,7 +719,8 @@ SetConsoleOutputCP(
         return FALSE;
     }
 
-    swprintf(FontName, L"%u-8x8.bin", wCodepage);
+    RtlStringCbPrintfW(FontName, sizeof(FontName),
+                       L"%u-8x8.bin", wCodepage);
     CabStatus = CabinetFindFirst(CabinetContext, FontName, &Search);
     if (CabStatus != CAB_STATUS_SUCCESS)
     {
@@ -732,7 +733,7 @@ SetConsoleOutputCP(
     CabinetClose(CabinetContext);
     if (CabStatus != CAB_STATUS_SUCCESS)
     {
-        DPRINT("CabinetLoadFile('%S', '%S') returned 0x%08x\n", FontFile, FontName, CabStatus);
+        DPRINT("CabinetExtractFile('%S', '%S') returned 0x%08x\n", FontFile, FontName, CabStatus);
         if (ConsoleCabinetContext.Data)
             RtlFreeHeap(ProcessHeap, 0, ConsoleCabinetContext.Data);
         return FALSE;
@@ -744,7 +745,7 @@ SetConsoleOutputCP(
                                    NULL,
                                    NULL,
                                    &IoStatusBlock,
-                                   IOCTL_CONSOLE_SETFONT,
+                                   IOCTL_CONSOLE_LOADFONT,
                                    ConsoleCabinetContext.Data,
                                    ConsoleCabinetContext.Size,
                                    NULL,
@@ -753,7 +754,7 @@ SetConsoleOutputCP(
     RtlFreeHeap(ProcessHeap, 0, ConsoleCabinetContext.Data);
 
     if (!NT_SUCCESS(Status))
-          return FALSE;
+        return FALSE;
 
     LastLoadedCodepage = wCodepage;
     return TRUE;
