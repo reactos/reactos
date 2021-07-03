@@ -347,9 +347,10 @@ IntVideoPortAddDevice(
                                                    DriverExtension,
                                                    PhysicalDeviceObject,
                                                    &DeviceObject);
-    if (NT_SUCCESS(Status))
-        VideoPortDeviceNumber++;
-
+    if (!NT_SUCCESS(Status))
+    {
+        ERR_(VIDEOPRT, "IntVideoPortCreateAdapterDeviceObject() failed with status 0x%lx\n", Status);
+    }
     return Status;
 }
 
