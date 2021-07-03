@@ -920,7 +920,7 @@ SeSetSecurityDescriptorInfoEx(
     }
     SaclLength = Sacl ? ROUND_UP((ULONG)Sacl->AclSize, 4) : 0;
 
-    NewSd = ExAllocatePoolWithTag(NonPagedPool,
+    NewSd = ExAllocatePoolWithTag(PoolType,
                                   sizeof(SECURITY_DESCRIPTOR_RELATIVE) +
                                   OwnerLength + GroupLength +
                                   DaclLength + SaclLength,
