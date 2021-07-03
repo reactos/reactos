@@ -1639,13 +1639,19 @@ BOOL WINAPI ImmGetConversionStatus(
   HIMC hIMC, LPDWORD lpfdwConversion, LPDWORD lpfdwSentence)
 {
 #ifdef __REACTOS__
-    LPINPUTCONTEXT pIC = ImmLockIMC(hIMC);
+    LPINPUTCONTEXT pIC;
+
+    TRACE("ImmGetConversionStatus(%p %p %p)\n", hIMC, lpfdwConversion, lpfdwSentence);
+
+    pIC = ImmLockIMC(hIMC);
     if (!pIC)
         return FALSE;
+
     if (lpfdwConversion)
         *lpfdwConversion = pIC->fdwConversion;
     if (lpfdwSentence)
         *lpfdwSentence = pIC->fdwSentence;
+
     ImmUnlockIMC(hIMC);
     return TRUE;
 #else
