@@ -2959,7 +2959,13 @@ DWORD WINAPI ImmGetIMCLockCount(HIMC hIMC)
 */
 HIMCC  WINAPI ImmCreateIMCC(DWORD size)
 {
+#ifdef __REACTOS__
+    if (size < 4)
+        size = 4;
+    return LocalAlloc(LHND, size);
+#else
     return GlobalAlloc(GMEM_ZEROINIT | GMEM_MOVEABLE, size);
+#endif
 }
 
 /***********************************************************************
@@ -2967,7 +2973,13 @@ HIMCC  WINAPI ImmCreateIMCC(DWORD size)
 */
 HIMCC WINAPI ImmDestroyIMCC(HIMCC block)
 {
+#ifdef __REACTOS__
+    if (block)
+        return LocalFree(block);
+    return NULL;
+#else
     return GlobalFree(block);
+#endif
 }
 
 /***********************************************************************
@@ -2975,7 +2987,13 @@ HIMCC WINAPI ImmDestroyIMCC(HIMCC block)
 */
 LPVOID WINAPI ImmLockIMCC(HIMCC imcc)
 {
+#ifdef __REACTOS__
+    if (imcc)
+        return LocalLock(imcc);
+    return NULL;
+#else
     return GlobalLock(imcc);
+#endif
 }
 
 /***********************************************************************
@@ -2983,7 +3001,13 @@ LPVOID WINAPI ImmLockIMCC(HIMCC imcc)
 */
 BOOL WINAPI ImmUnlockIMCC(HIMCC imcc)
 {
+#ifdef __REACTOS__
+    if (imcc)
+        return LocalUnlock(imcc);
+    return FALSE;
+#else
     return GlobalUnlock(imcc);
+#endif
 }
 
 /***********************************************************************
@@ -2991,7 +3015,11 @@ BOOL WINAPI ImmUnlockIMCC(HIMCC imcc)
 */
 DWORD WINAPI ImmGetIMCCLockCount(HIMCC imcc)
 {
+#ifdef __REACTOS__
+    return LocalFlags(imcc) & LMEM_LOCKCOUNT;
+#else
     return GlobalFlags(imcc) & GMEM_LOCKCOUNT;
+#endif
 }
 
 /***********************************************************************
@@ -2999,7 +3027,13 @@ DWORD WINAPI ImmGetIMCCLockCount(HIMCC imcc)
 */
 HIMCC  WINAPI ImmReSizeIMCC(HIMCC imcc, DWORD size)
 {
+#ifdef __REACTOS__
+    if (!imcc)
+        return NULL;
+    return LocalReAlloc(imcc, size, LHND);
+#else
     return GlobalReAlloc(imcc, size, GMEM_ZEROINIT | GMEM_MOVEABLE);
+#endif
 }
 
 /***********************************************************************
@@ -3007,7 +3041,13 @@ HIMCC  WINAPI ImmReSizeIMCC(HIMCC imcc, DWORD size)
 */
 DWORD WINAPI ImmGetIMCCSize(HIMCC imcc)
 {
+#ifdef __REACTOS__
+    if (imcc)
+        return LocalSize(imcc);
+    return 0;
+#else
     return GlobalSize(imcc);
+#endif
 }
 
 /***********************************************************************
