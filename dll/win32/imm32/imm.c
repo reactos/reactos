@@ -2146,10 +2146,16 @@ HKL WINAPI ImmInstallIMEW(
  */
 BOOL WINAPI ImmIsIME(HKL hKL)
 {
+#ifdef __REACTOS__
+    IMEINFOEX info;
+    TRACE("ImmIsIME(%p):\n", hKL);
+    return !!ImmGetImeInfoEx(&info, ImeInfoExImeFileName, &hKL);
+#else
     ImmHkl *ptr;
     TRACE("(%p):\n", hKL);
     ptr = IMM_GetImmHkl(hKL);
     return (ptr && ptr->hIME);
+#endif
 }
 
 /***********************************************************************
