@@ -1131,9 +1131,17 @@ static BOOL NTAPI
 TuiSetCodePage(IN OUT PFRONTEND This,
                UINT CodePage)
 {
-    // TODO: Find a suitable console font for the given code page,
-    // and set it if found; otherwise fail the call, or fall back
-    // to some default font...
+    // PTUI_CONSOLE_DATA TuiData = This->Context;
+
+    // TODO: Verify that the console is the visible one.
+    // Only then can we change the output code page font.
+
+    if (!TuiSetConsoleOutputCP(ConsoleDeviceHandle, CodePage))
+    {
+        DPRINT1("Failed to load the font for codepage %d\n", CodePage);
+        /* Let's suppose the font is good enough to continue */
+        return FALSE;
+    }
 
     return TRUE;
 }
