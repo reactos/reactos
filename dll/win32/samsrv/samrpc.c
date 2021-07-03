@@ -8724,9 +8724,21 @@ SamrQueryDisplayInformation(IN SAMPR_HANDLE DomainHandle,
                             OUT unsigned long *TotalReturned,
                             OUT PSAMPR_DISPLAY_INFO_BUFFER Buffer)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    TRACE("SamrQueryDisplayInformation(%p %lu %lu %lu %lu %p %p %p)\n",
+          DomainHandle, DisplayInformationClass, Index,
+          EntryCount, PreferredMaximumLength, TotalAvailable,
+          TotalReturned, Buffer);
+
+    return SamrQueryDisplayInformation3(DomainHandle,
+                                        DisplayInformationClass,
+                                        Index,
+                                        EntryCount,
+                                        PreferredMaximumLength,
+                                        TotalAvailable,
+                                        TotalReturned,
+                                        Buffer);
 }
+
 
 /* Function 41 */
 NTSTATUS
@@ -8736,9 +8748,15 @@ SamrGetDisplayEnumerationIndex(IN SAMPR_HANDLE DomainHandle,
                                IN PRPC_UNICODE_STRING Prefix,
                                OUT unsigned long *Index)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    TRACE("SamrGetDisplayEnumerationIndex(%p %lu %p %p)\n",
+          DomainHandle, DisplayInformationClass, Prefix, Index);
+
+    return SamrGetDisplayEnumerationIndex2(DomainHandle,
+                                           DisplayInformationClass,
+                                           Prefix,
+                                           Index);
 }
+
 
 /* Function 42 */
 NTSTATUS
@@ -8748,6 +8766,7 @@ SamrTestPrivateFunctionsDomain(IN SAMPR_HANDLE DomainHandle)
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
+
 
 /* Function 43 */
 NTSTATUS
@@ -8955,14 +8974,14 @@ SamrQueryDisplayInformation2(IN SAMPR_HANDLE DomainHandle,
           EntryCount, PreferredMaximumLength, TotalAvailable,
           TotalReturned, Buffer);
 
-    return SamrQueryDisplayInformation(DomainHandle,
-                                       DisplayInformationClass,
-                                       Index,
-                                       EntryCount,
-                                       PreferredMaximumLength,
-                                       TotalAvailable,
-                                       TotalReturned,
-                                       Buffer);
+    return SamrQueryDisplayInformation3(DomainHandle,
+                                        DisplayInformationClass,
+                                        Index,
+                                        EntryCount,
+                                        PreferredMaximumLength,
+                                        TotalAvailable,
+                                        TotalReturned,
+                                        Buffer);
 }
 
 
@@ -8977,10 +8996,8 @@ SamrGetDisplayEnumerationIndex2(IN SAMPR_HANDLE DomainHandle,
     TRACE("SamrGetDisplayEnumerationIndex2(%p %lu %p %p)\n",
           DomainHandle, DisplayInformationClass, Prefix, Index);
 
-    return SamrGetDisplayEnumerationIndex(DomainHandle,
-                                          DisplayInformationClass,
-                                          Prefix,
-                                          Index);
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
 }
 
 
@@ -9416,14 +9433,8 @@ SamrQueryDisplayInformation3(IN SAMPR_HANDLE DomainHandle,
           EntryCount, PreferredMaximumLength, TotalAvailable,
           TotalReturned, Buffer);
 
-    return SamrQueryDisplayInformation(DomainHandle,
-                                       DisplayInformationClass,
-                                       Index,
-                                       EntryCount,
-                                       PreferredMaximumLength,
-                                       TotalAvailable,
-                                       TotalReturned,
-                                       Buffer);
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
 }
 
 
