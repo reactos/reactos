@@ -139,6 +139,7 @@ public:
             UINT uiPercentage = ((ULONGLONG) ulProgress * 100) / ulProgressMax;
 
             /* send the current progress to the progress bar */
+            if (!IsWindow()) return;
             SendMessage(PBM_SETPOS, uiPercentage, 0);
 
             /* format total download size */
@@ -153,6 +154,7 @@ public:
         else
         {
             /* send the current progress to the progress bar */
+            if (!IsWindow()) return;
             SendMessage(PBM_SETPOS, 0, 0);
 
             /* total size is not known, display only current size */
@@ -160,6 +162,7 @@ public:
         }
 
         /* and finally display it */
+        if (!IsWindow()) return;
         SendMessage(WM_SETTEXT, 0, (LPARAM) ProgressText.GetString());
     }
 
@@ -482,8 +485,10 @@ VOID CDownloadManager::UpdateProgress(
 {
     HWND Item;
 
+    if (!IsWindow(hDlg)) return;
     ProgressBar.SetProgress(ulProgress, ulProgressMax);
 
+    if (!IsWindow(hDlg)) return;
     Item = GetDlgItem(hDlg, IDC_DOWNLOAD_STATUS);
     if (Item && szStatusText && wcslen(szStatusText) > 0 && UrlHasBeenCopied == FALSE)
     {
@@ -549,6 +554,7 @@ unsigned int WINAPI CDownloadManager::ThreadFunc(LPVOID param)
     for (iAppId = 0; iAppId < InfoArray.GetSize(); ++iAppId)
     {
         // Reset progress bar
+        if (!IsWindow(hDlg)) break;
         Item = GetDlgItem(hDlg, IDC_DOWNLOAD_PROGRESS);
         if (Item)
         {
@@ -580,6 +586,7 @@ unsigned int WINAPI CDownloadManager::ThreadFunc(LPVOID param)
             szNewCaption.LoadStringW(IDS_DL_DIALOG_DB_DOWNLOAD_DISP);
         }
 
+        if (!IsWindow(hDlg)) goto end;
         SetWindowTextW(hDlg, szNewCaption.GetString());
 
         // build the path for the download
@@ -617,6 +624,7 @@ unsigned int WINAPI CDownloadManager::ThreadFunc(LPVOID param)
         }
 
         // Add the download URL
+        if (!IsWindow(hDlg)) goto end;
         SetDlgItemTextW(hDlg, IDC_DOWNLOAD_STATUS, InfoArray[iAppId].szUrl.GetString());
 
         DownloadsListView.SetDownloadStatus(iAppId, DLSTATUS_DOWNLOADING);
@@ -770,6 +778,7 @@ unsigned int WINAPI CDownloadManager::ThreadFunc(LPVOID param)
             }
 
             dwCurrentBytesRead += dwBytesRead;
+            if (!IsWindow(hDlg)) goto end;
             UpdateProgress(hDlg, dwCurrentBytesRead, dwContentLen, 0, InfoArray[iAppId].szUrl.GetString());
         } while (dwBytesRead && !bCancelled);
 
@@ -785,6 +794,7 @@ unsigned int WINAPI CDownloadManager::ThreadFunc(LPVOID param)
             ProgressBar.SetMarquee(FALSE);
 
             dwContentLen = dwCurrentBytesRead;
+            if (!IsWindow(hDlg)) goto end;
             UpdateProgress(hDlg, dwCurrentBytesRead, dwContentLen, 0, InfoArray[iAppId].szUrl.GetString());
         }
 
@@ -798,6 +808,7 @@ unsigned int WINAPI CDownloadManager::ThreadFunc(LPVOID param)
             if (!szMsgText.LoadStringW(IDS_INTEG_CHECK_TITLE))
                 goto end;
 
+            if (!IsWindow(hDlg)) goto end;
             SetWindowTextW(hDlg, szMsgText.GetString());
             SendMessageW(GetDlgItem(hDlg, IDC_DOWNLOAD_STATUS), WM_SETTEXT, 0, (LPARAM) Path.GetString());
 
@@ -807,6 +818,7 @@ unsigned int WINAPI CDownloadManager::ThreadFunc(LPVOID param)
                 if (!szMsgText.LoadStringW(IDS_INTEG_CHECK_FAIL))
                     goto end;
 
+                if (!IsWindow(hDlg)) goto end;
                 MessageBoxW(hDlg, szMsgText.GetString(), NULL, MB_OK | MB_ICONERROR);
                 goto end;
             }
@@ -831,6 +843,7 @@ run:
                 //reflect installation progress in the titlebar
                 //TODO: make a separate string with a placeholder to include app name?
                 ATL::CStringW szMsgText = LoadStatusString(DLSTATUS_INSTALLING);
+                if (!IsWindow(hDlg)) goto end;
                 SetWindowTextW(hDlg, szMsgText.GetString());
 
                 DownloadsListView.SetDownloadStatus(iAppId, DLSTATUS_INSTALLING);
@@ -858,10 +871,12 @@ end:
                 DeleteFileW(Path.GetString());
         }
 
+        if (!IsWindow(hDlg)) return 0;
         DownloadsListView.SetDownloadStatus(iAppId, DLSTATUS_FINISHED);
     }
 
     delete static_cast<DownloadParam*>(param);
+    if (!IsWindow(hDlg)) return 0;
     SendMessageW(hDlg, WM_CLOSE, 0, 0);
     return 0;
 }
