@@ -37,7 +37,7 @@ BOOLEAN VpBaseVideo = FALSE;
 BOOLEAN VpNoVesa = FALSE;
 
 PKPROCESS CsrProcess = NULL;
-ULONG VideoPortDeviceNumber = 0;
+static ULONG VideoPortMaxObjectNumber = -1;
 KMUTEX VideoPortInt10Mutex;
 KSPIN_LOCK HwResetAdaptersLock;
 RTL_STATIC_LIST_HEAD(HwResetAdaptersList);
@@ -50,6 +50,64 @@ DriverEntry(
     IN PVOID Context1,
     IN PVOID Context2)
 {
+    return STATUS_SUCCESS;
+}
+
+static
+NTSTATUS
+IntVideoPortAddDeviceMapLink(
+    PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension)
+{
+    WCHAR DeviceBuffer[20];
+    UNICODE_STRING DeviceName;
+    WCHAR SymlinkBuffer[20];
+    UNICODE_STRING SymlinkName;
+    ULONG DeviceNumber;
+    NTSTATUS Status;
+
+    /* Create a unicode device name. */
+    DeviceNumber = DeviceExtension->DeviceNumber;
+    swprintf(DeviceBuffer, L"\\Device\\Video%lu", DeviceNumber);
+
+    /* Add entry to DEVICEMAP\VIDEO key in registry. */
+    Status = RtlWriteRegistryValue(RTL_REGISTRY_DEVICEMAP,
+                                   L"VIDEO",
+                                   DeviceBuffer,
+                                   REG_SZ,
+                                   DeviceExtension->RegistryPath.Buffer,
+                                   DeviceExtension->RegistryPath.Length + sizeof(UNICODE_NULL));
+    if (!NT_SUCCESS(Status))
+    {
+        ERR_(VIDEOPRT, "Failed to create DEViCEMAP registry entry: 0x%X\n", Status);
+        return Status;
+    }
+
+    Status = RtlWriteRegistryValue(RTL_REGISTRY_DEVICEMAP,
+                                   L"VIDEO",
+                                   L"MaxObjectNumber",
+                                   REG_DWORD,
+                                   &VideoPortMaxObjectNumber,
+                                   sizeof(VideoPortMaxObjectNumber));
+    if (!NT_SUCCESS(Status))
+    {
+        ERR_(VIDEOPRT, "Failed to write MaxObjectNumber: 0x%X\n", Status);
+        return Status;
+    }
+
+    /* Create symbolic link "\??\DISPLAYx" */
+    swprintf(SymlinkBuffer, L"\\??\\DISPLAY%lu", DeviceNumber + 1);
+    RtlInitUnicodeString(&SymlinkName, SymlinkBuffer);
+    RtlInitUnicodeString(&DeviceName, DeviceBuffer);
+    Status = IoCreateSymbolicLink(&SymlinkName, &DeviceName);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR_(VIDEOPRT, "Failed to write MaxObjectNumber: 0x%X\n", Status);
+        return Status;
+    }
+
+    /* Update MaxObjectNumber */
+    VideoPortMaxObjectNumber = DeviceNumber;
+
     return STATUS_SUCCESS;
 }
 
@@ -114,8 +172,8 @@ IntVideoPortCreateAdapterDeviceObject(
      * Find the first free device number that can be used for video device
      * object names and symlinks.
      */
-    DeviceNumber = VideoPortDeviceNumber;
-    if (DeviceNumber == 0xFFFFFFFF)
+    DeviceNumber = VideoPortMaxObjectNumber + 1;
+    if (DeviceNumber == (ULONG)-1)
     {
         WARN_(VIDEOPRT, "Can't find free device number\n");
         return STATUS_UNSUCCESSFUL;
@@ -247,6 +305,17 @@ IntVideoPortCreateAdapterDeviceObject(
 
     /* Remove the initailizing flag */
     (*DeviceObject)->Flags &= ~DO_DEVICE_INITIALIZING;
+
+    /* Set up the VIDEO/DEVICEMAP registry keys */
+    Status = IntVideoPortAddDeviceMapLink(DeviceExtension);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR_(VIDEOPRT, "IntVideoPortAddDeviceMapLink() failed with status 0x%08x\n", Status);
+        IoDeleteDevice(*DeviceObject);
+        *DeviceObject = NULL;
+        return Status;
+    }
+
     return STATUS_SUCCESS;
 }
 
@@ -258,21 +327,14 @@ IntVideoPortFindAdapter(
     IN PVIDEO_PORT_DRIVER_EXTENSION DriverExtension,
     IN PDEVICE_OBJECT DeviceObject)
 {
-    WCHAR DeviceVideoBuffer[20];
     PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension;
     NTSTATUS Status;
     VIDEO_PORT_CONFIG_INFO ConfigInfo;
     SYSTEM_BASIC_INFORMATION SystemBasicInfo;
     UCHAR Again = FALSE;
-    WCHAR DeviceBuffer[20];
-    UNICODE_STRING DeviceName;
-    WCHAR SymlinkBuffer[20];
-    UNICODE_STRING SymlinkName;
     BOOL LegacyDetection = FALSE;
-    ULONG DeviceNumber;
 
     DeviceExtension = (PVIDEO_PORT_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
-    DeviceNumber = DeviceExtension->DeviceNumber;
 
     /* Setup a ConfigInfo structure that we will pass to HwFindAdapter. */
     RtlZeroMemory(&ConfigInfo, sizeof(VIDEO_PORT_CONFIG_INFO));
@@ -370,33 +432,6 @@ IntVideoPortFindAdapter(
      * Now we know the device is present, so let's do all additional tasks
      * such as creating symlinks or setting up interrupts and timer.
      */
-
-    /* Create a unicode device name. */
-    swprintf(DeviceBuffer, L"\\Device\\Video%lu", DeviceNumber);
-    RtlInitUnicodeString(&DeviceName, DeviceBuffer);
-
-    /* Create symbolic link "\??\DISPLAYx" */
-    swprintf(SymlinkBuffer, L"\\??\\DISPLAY%lu", DeviceNumber + 1);
-    RtlInitUnicodeString(&SymlinkName, SymlinkBuffer);
-    IoCreateSymbolicLink(&SymlinkName, &DeviceName);
-
-    /* Add entry to DEVICEMAP\VIDEO key in registry. */
-    swprintf(DeviceVideoBuffer, L"\\Device\\Video%d", DeviceNumber);
-    RtlWriteRegistryValue(
-        RTL_REGISTRY_DEVICEMAP,
-        L"VIDEO",
-        DeviceVideoBuffer,
-        REG_SZ,
-        DeviceExtension->RegistryPath.Buffer,
-        DeviceExtension->RegistryPath.Length + sizeof(UNICODE_NULL));
-
-    RtlWriteRegistryValue(
-        RTL_REGISTRY_DEVICEMAP,
-        L"VIDEO",
-        L"MaxObjectNumber",
-        REG_DWORD,
-        &DeviceNumber,
-        sizeof(DeviceNumber));
 
     /* FIXME: Allocate hardware resources for device. */
 
@@ -771,9 +806,7 @@ VideoPortInitialize(
         }
 
         Status = IntVideoPortFindAdapter(DriverObject, DriverExtension, DeviceObject);
-        if (NT_SUCCESS(Status))
-            VideoPortDeviceNumber++;
-        else
+        if (!NT_SUCCESS(Status))
             ERR_(VIDEOPRT, "IntVideoPortFindAdapter returned 0x%x\n", Status);
 
         return Status;
