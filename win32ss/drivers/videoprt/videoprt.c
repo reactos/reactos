@@ -153,6 +153,8 @@ IntVideoPortCreateAdapterDeviceObject(
    _In_ PDRIVER_OBJECT DriverObject,
    _In_ PVIDEO_PORT_DRIVER_EXTENSION DriverExtension,
    _In_opt_ PDEVICE_OBJECT PhysicalDeviceObject,
+   _In_ USHORT AdapterNumber,
+   _In_ USHORT DisplayNumber,
    _Out_opt_ PDEVICE_OBJECT *DeviceObject)
 {
     PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension;
@@ -223,12 +225,14 @@ IntVideoPortCreateAdapterDeviceObject(
     DeviceExtension->FunctionalDeviceObject = *DeviceObject;
     DeviceExtension->DriverExtension = DriverExtension;
     DeviceExtension->SessionId = -1;
+    DeviceExtension->AdapterNumber = AdapterNumber;
+    DeviceExtension->DisplayNumber = DisplayNumber;
 
     InitializeListHead(&DeviceExtension->ChildDeviceList);
 
     /* Get the registry path associated with this device. */
     Status = IntCreateRegistryPath(&DriverExtension->RegistryPath,
-                                   DriverExtension->InitializationData.StartingDeviceNumber,
+                                   DeviceExtension->AdapterNumber,
                                    &DeviceExtension->RegistryPath);
     if (!NT_SUCCESS(Status))
     {
@@ -299,9 +303,16 @@ IntVideoPortCreateAdapterDeviceObject(
                                                 *DeviceObject,
                                                 PhysicalDeviceObject);
 
-    IntCreateNewRegistryPath(DeviceExtension);
+    Status = IntCreateNewRegistryPath(DeviceExtension);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR_(VIDEOPRT, "IntCreateNewRegistryPath() failed with status 0x%08x\n", Status);
+        IoDeleteDevice(*DeviceObject);
+        *DeviceObject = NULL;
+        return Status;
+    }
+
     IntSetupDeviceSettingsKey(DeviceExtension);
-    DriverExtension->InitializationData.StartingDeviceNumber++;
 
     /* Remove the initailizing flag */
     (*DeviceObject)->Flags &= ~DO_DEVICE_INITIALIZING;
@@ -314,6 +325,11 @@ IntVideoPortCreateAdapterDeviceObject(
         IoDeleteDevice(*DeviceObject);
         *DeviceObject = NULL;
         return Status;
+    }
+
+    if (DisplayNumber == 0)
+    {
+        DriverExtension->InitializationData.StartingDeviceNumber++;
     }
 
     return STATUS_SUCCESS;
@@ -798,6 +814,8 @@ VideoPortInitialize(
         Status = IntVideoPortCreateAdapterDeviceObject(DriverObject,
                                                        DriverExtension,
                                                        NULL,
+                                                       DriverExtension->InitializationData.StartingDeviceNumber,
+                                                       0,
                                                        &DeviceObject);
         if (!NT_SUCCESS(Status))
         {
