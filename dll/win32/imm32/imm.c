@@ -37,9 +37,12 @@
 #include "winreg.h"
 #include "wine/list.h"
 #ifdef __REACTOS__
+#include <stdlib.h>
 #include <ndk/umtypes.h>
 #include <ndk/pstypes.h>
 #include "../../../win32ss/include/ntuser.h"
+#include <imm32_undoc.h>
+#include <strsafe.h>
 #endif
 
 WINE_DEFAULT_DEBUG_CHANNEL(imm);
@@ -1765,6 +1768,22 @@ HWND WINAPI ImmGetDefaultIMEWnd(HWND hWnd)
 UINT WINAPI ImmGetDescriptionA(
   HKL hKL, LPSTR lpszDescription, UINT uBufLen)
 {
+#ifdef __REACTOS__
+    IMEINFOEX info;
+    size_t cch;
+
+    TRACE("ImmGetDescriptionA(%p,%p,%d)\n", hKL, lpszDescription, uBufLen);
+
+    if (!ImmGetImeInfoEx(&info, ImeInfoExKeyboardLayout, &hKL) || !IS_IME_KBDLAYOUT(hKL))
+        return 0;
+
+    StringCchLengthW(info.wszImeDescription, _countof(info.wszImeDescription), &cch);
+    cch = WideCharToMultiByte(CP_ACP, 0, info.wszImeDescription, (INT)cch,
+                              lpszDescription, uBufLen, NULL, NULL);
+    if (uBufLen)
+        lpszDescription[cch] = 0;
+    return cch;
+#else
   WCHAR *buf;
   DWORD len;
 
@@ -1793,6 +1812,7 @@ UINT WINAPI ImmGetDescriptionA(
     return 0;
 
   return len - 1;
+#endif
 }
 
 /***********************************************************************
@@ -1800,6 +1820,21 @@ UINT WINAPI ImmGetDescriptionA(
  */
 UINT WINAPI ImmGetDescriptionW(HKL hKL, LPWSTR lpszDescription, UINT uBufLen)
 {
+#ifdef __REACTOS__
+    IMEINFOEX info;
+    size_t cch;
+
+    TRACE("ImmGetDescriptionW(%p, %p, %d)\n", hKL, lpszDescription, uBufLen);
+
+    if (!ImmGetImeInfoEx(&info, ImeInfoExKeyboardLayout, &hKL) || !IS_IME_KBDLAYOUT(hKL))
+        return 0;
+
+    if (uBufLen != 0)
+        StringCchCopyW(lpszDescription, uBufLen, info.wszImeDescription);
+
+    StringCchLengthW(info.wszImeDescription, _countof(info.wszImeDescription), &cch);
+    return (UINT)cch;
+#else
   static const WCHAR name[] = { 'W','i','n','e',' ','X','I','M',0 };
 
   FIXME("(%p, %p, %d): semi stub\n", hKL, lpszDescription, uBufLen);
@@ -1808,6 +1843,7 @@ UINT WINAPI ImmGetDescriptionW(HKL hKL, LPWSTR lpszDescription, UINT uBufLen)
   if (!uBufLen) return lstrlenW( name );
   lstrcpynW( lpszDescription, name, uBufLen );
   return lstrlenW( lpszDescription );
+#endif
 }
 
 /***********************************************************************
