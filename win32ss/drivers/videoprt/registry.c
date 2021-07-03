@@ -21,6 +21,7 @@
 
 #include "videoprt.h"
 #include <ndk/obfuncs.h>
+#include <stdio.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -369,6 +370,7 @@ IntCreateNewRegistryPath(
     ULONG ResultLength;
     USHORT KeyMaxLength;
     OBJECT_ATTRIBUTES ObjectAttributes;
+    PWCHAR InstanceIdBuffer;
 
     /* Open the hardware key: HKLM\System\CurrentControlSet\Enum\... */
     Status = IoOpenDeviceRegistryKey(DeviceExtension->PhysicalDeviceObject,
@@ -476,9 +478,14 @@ IntCreateNewRegistryPath(
 
     /* Append a the instance path */ /// \todo HACK
     RtlAppendUnicodeToString(&DeviceExtension->NewRegistryPath, L"\\");
+    InstanceIdBuffer = DeviceExtension->NewRegistryPath.Buffer +
+        DeviceExtension->NewRegistryPath.Length / sizeof(WCHAR);
     RtlAppendUnicodeToString(&DeviceExtension->NewRegistryPath, L"0000");
 
-    /* Check this key again */
+    /* Write instance ID */
+    swprintf(InstanceIdBuffer, L"%04u", DeviceExtension->DisplayNumber);
+
+    /* Check if the name exists */
     Status = RtlCheckRegistryKey(RTL_REGISTRY_ABSOLUTE,
                                  DeviceExtension->NewRegistryPath.Buffer);
     if (Status != STATUS_SUCCESS)
@@ -521,8 +528,11 @@ IntCreateNewRegistryPath(
 
         /* Copy the registry data from the legacy key */
         Status = IntCopyRegistryKey(SettingsKey, NewKey);
-    }
 
+        /* Close the key handles */
+        ObCloseHandle(SettingsKey, KernelMode);
+        ObCloseHandle(NewKey, KernelMode);
+    }
 
     return Status;
 }

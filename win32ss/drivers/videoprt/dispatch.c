@@ -346,6 +346,8 @@ IntVideoPortAddDevice(
     Status = IntVideoPortCreateAdapterDeviceObject(DriverObject,
                                                    DriverExtension,
                                                    PhysicalDeviceObject,
+                                                   DriverExtension->InitializationData.StartingDeviceNumber,
+                                                   0,
                                                    &DeviceObject);
     if (!NT_SUCCESS(Status))
     {
