@@ -2022,15 +2022,17 @@ VOID CAutoComplete::AutoCompThreadProc()
 
 VOID CAutoComplete::DoThreadWork(PAC_THREAD pThread)
 {
-    if (pThread->m_bExpand || pThread->m_innerList.GetSize() == 0)
+    if (pThread->m_bExpand || m_innerList.GetSize() == 0)
     {
-        // reload the inner list
         ReLoadInnerList(pThread);
     }
-
-    if (pThread->m_innerList.GetSize() <= 0) // no items
+    else
     {
-        HideDropDown();
+        pThread->m_innerList = m_innerList;
+    }
+
+    if (m_pThread || !m_hThread)
+    {
         delete pThread;
         return;
     }
@@ -2056,7 +2058,7 @@ LRESULT CAutoComplete::OnAutoCompStart(UINT uMsg, WPARAM wParam, LPARAM lParam, 
         return 0;
     }
 
-    PAC_THREAD pThread = new AC_THREAD { this, bAppendOK, strText, m_innerList };
+    PAC_THREAD pThread = new AC_THREAD { this, bAppendOK, strText };
 
     // if previous text was empty
     if (m_strText.IsEmpty())
