@@ -32,10 +32,6 @@ HalStartNextProcessor(
 {
     if (MaxAPCount > StartedProcessorCount)
     {
-        /* We only a create a new pagetable once */
-        if (StartedProcessorCount == 1)
-            HalpInitializeAPPageTables(HalpLowStub);
-
         /* Start an AP */
         HalpInitializeAPStub(HalpLowStub);
         ApicStartApplicationProcessor(StartedProcessorCount, HalpLowStubPhysicalAddress);

@@ -10,9 +10,9 @@
 
 /* APIC specific functions inside apic/apicsmp.c */
 
-VOID /* HalStartApplicationProcessor */
+VOID
 ApicStartApplicationProcessor(ULONG NTProcessorNumber, PHYSICAL_ADDRESS StartupLoc);
 
 VOID
-NTAPI /* HalRequestIpi (CONFIG_SMP) */
+NTAPI
 HalpRequestIpi(KAFFINITY TargetProcessors);

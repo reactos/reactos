@@ -86,14 +86,14 @@ ApicRequestGlobalInterrupt(
 /* SMP SUPPORT FUNCTIONS ******************************************************/
 
 VOID
-NTAPI /* HalRequestIpi (CONFIG_SMP) */
+NTAPI
 HalpRequestIpi(KAFFINITY TargetProcessors)
 {
     UNIMPLEMENTED;
     __debugbreak();
 }
 
-VOID /* HalStartApplicationProcessor */
+VOID
 ApicStartApplicationProcessor(ULONG NTProcessorNumber, PHYSICAL_ADDRESS StartupLoc)
 {
     /* Init IPI */
