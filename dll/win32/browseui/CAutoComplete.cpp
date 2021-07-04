@@ -1569,7 +1569,7 @@ VOID CAutoComplete::StartCompletion(BOOL bAppendOK)
     if (!m_pEnum || (!CanAutoSuggest() && !CanAutoAppend()))
         return;
 
-    ::PostMessageW(m_hWnd, AUTOCOMP_START, bAppendOK, 0);
+    ::SendMessageW(m_hWnd, AUTOCOMP_START, bAppendOK, 0);
 }
 
 //////////////////////////////////////////////////////////////////////////////
