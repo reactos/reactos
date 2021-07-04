@@ -2039,6 +2039,15 @@ VOID CAutoComplete::DoThreadWork(PAC_THREAD pThread)
 
     ExtractInnerList(pThread->m_outerList, pThread->m_innerList, pThread->m_strText);
 
+    if (m_pThread || !m_hThread)
+    {
+        delete pThread;
+        return;
+    }
+
+    DoSort(pThread->m_outerList);
+    DoUniqueAndTrim(pThread->m_outerList);
+
     if (m_pThread || !m_hThread ||
         !::PostMessageW(m_hWnd, AUTOCOMP_FINISH, 0, (LPARAM)pThread))
     {
