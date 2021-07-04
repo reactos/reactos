@@ -125,6 +125,7 @@ void __RPC_USER midl_user_free(void __RPC_FAR * ptr)
 
 void __RPC_USER SAMPR_HANDLE_rundown(SAMPR_HANDLE hHandle)
 {
+    FIXME("SAMPR_HANDLE_rundown(%p)\n", hHandle);
 }
 
 
@@ -486,6 +487,12 @@ SamrShutdownSamServer(IN SAMPR_HANDLE ServerHandle)
 
     /* Shut the server down */
     RpcMgmtStopServerListening(0);
+
+    Status = SampShutdownDisplayCache();
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("SampShutdownDisplayCache() failed (Status 0x%08lx)\n", Status);
+    }
 
     return STATUS_SUCCESS;
 }
@@ -9428,12 +9435,42 @@ SamrQueryDisplayInformation3(IN SAMPR_HANDLE DomainHandle,
                              OUT unsigned long *TotalReturned,
                              OUT PSAMPR_DISPLAY_INFO_BUFFER Buffer)
 {
-    TRACE("SamrQueryDisplayInformation3(%p %lu %lu %lu %lu %p %p %p)\n",
+    PSAM_DB_OBJECT DomainObject;
+    NTSTATUS Status;
+
+    FIXME("SamrQueryDisplayInformation3(%p %lu %lu %lu %lu %p %p %p)\n",
           DomainHandle, DisplayInformationClass, Index,
           EntryCount, PreferredMaximumLength, TotalAvailable,
           TotalReturned, Buffer);
 
-    UNIMPLEMENTED;
+    RtlAcquireResourceShared(&SampResource,
+                             TRUE);
+
+    /* Validate the domain handle */
+    Status = SampValidateDbObject(DomainHandle,
+                                  SamDbDomainObject,
+                                  DOMAIN_LIST_ACCOUNTS,
+                                  &DomainObject);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("SampValidateDbObject() failed (Status 0x%08lx)\n", Status);
+        goto done;
+    }
+
+    Status = SampFillDisplayCache(DomainObject,
+                                  DisplayInformationClass);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("SampFillDisplayCache() failed (Status 0x%08lx)\n", Status);
+        goto done;
+    }
+
+done:
+    TRACE("returns with status 0x%08lx\n", Status);
+
+    RtlReleaseResource(&SampResource);
+
+//    return Status;
     return STATUS_NOT_IMPLEMENTED;
 }
 
