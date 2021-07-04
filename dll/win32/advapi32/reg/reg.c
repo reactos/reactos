@@ -3492,8 +3492,14 @@ ReadTokenSid:
                                      NULL,
                                      0,
                                      &RequiredLength);
-    if (!NT_SUCCESS(Status) && (Status != STATUS_BUFFER_TOO_SMALL))
+    if (Status != STATUS_BUFFER_TOO_SMALL)
     {
+        if (NT_SUCCESS(Status))
+        {
+            ERR("NtQueryInformationToken(0) succeeded unexpectedly (Status 0x%08lx)\n", Status);
+            return ERROR_NO_TOKEN;
+        }
+
         /* NOTE - as opposed to all other registry functions windows does indeed
                   change the last error code in case the caller supplied a invalid
                   handle for example! */
