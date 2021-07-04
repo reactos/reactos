@@ -124,10 +124,10 @@ typedef struct AC_THREAD
     CAutoComplete *m_pThis;
     BOOL m_bAppendOK;
     CStringW m_strText;
-    BOOL m_bReset;
-    BOOL m_bExpand;
     CSimpleArray<CStringW> m_innerList; // internal list
     CSimpleArray<CStringW> m_outerList; // outer list
+    BOOL m_bReset;
+    BOOL m_bExpand;
 
     VOID ReLoadInnerList(const CStringW& strText);
 } AC_THREAD, *PAC_THREAD;
@@ -229,6 +229,7 @@ protected:
     CACSizeBox m_hwndSizeBox; // the size grip
     CComPtr<IEnumString> m_pEnum; // used for enumeration
     CComPtr<IACList> m_pACList; // for IACList::Expand to update the list
+    CSimpleArray<CStringW> m_innerList; // inner list
     CSimpleArray<CStringW> m_outerList; // outer list
     // protected methods
     VOID UpdateDropDownState();
@@ -237,7 +238,6 @@ protected:
     CStringW GetQuickEdit(LPCWSTR pszText) const;
     VOID RepositionDropDown();
     VOID ReLoadInnerList(PAC_THREAD pThread);
-    BOOL UpdateInnerList(PAC_THREAD pThread);
     VOID ExtractInnerList(CSimpleArray<CStringW>& outerList,
                           const CSimpleArray<CStringW>& innerList,
                           const CString& strText);

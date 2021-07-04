@@ -1525,43 +1525,6 @@ VOID CAutoComplete::ReLoadInnerList(PAC_THREAD pThread)
     }
 }
 
-// update inner list
-BOOL CAutoComplete::UpdateInnerList(PAC_THREAD pThread)
-{
-    // if previous text was empty
-    if (m_strText.IsEmpty())
-    {
-        pThread->m_bReset = TRUE;
-    }
-
-    // do expand the items if the stem is changed
-    CStringW strStemText = GetStemText(pThread->m_strText);
-    if (m_strStemText.CompareNoCase(strStemText) != 0)
-    {
-        pThread->m_bReset = TRUE;
-        pThread->m_bExpand = !strStemText.IsEmpty();
-    }
-
-    // reset if necessary
-    if (pThread->m_bReset && m_pEnum)
-    {
-        HRESULT hr = m_pEnum->Reset(); // IEnumString::Reset
-        TRACE("m_pEnum->Reset(%p): 0x%08lx\n",
-              static_cast<IUnknown *>(m_pEnum), hr);
-    }
-
-    // update ac list if necessary
-    if (pThread->m_bExpand && m_pACList)
-    {
-        HRESULT hr = m_pACList->Expand(strStemText); // IACList::Expand
-        TRACE("m_pACList->Expand(%p, %S): 0x%08lx\n",
-              static_cast<IUnknown *>(m_pACList),
-              static_cast<LPCWSTR>(strStemText), hr);
-    }
-
-    return (pThread->m_bExpand || pThread->m_innerList.GetSize() == 0);
-}
-
 VOID CAutoComplete::StartCompletion(BOOL bAppendOK)
 {
     TRACE("CAutoComplete::StartCompletion(%p, %d)\n", this, bAppendOK);
@@ -2059,10 +2022,7 @@ VOID CAutoComplete::AutoCompThreadProc()
 
 VOID CAutoComplete::DoThreadWork(PAC_THREAD pThread)
 {
-    pThread->m_innerList = m_outerList;
-
-    // update inner list
-    if (UpdateInnerList(pThread))
+    if (pThread->m_bExpand || pThread->m_innerList.GetSize() == 0)
     {
         // reload the inner list
         ReLoadInnerList(pThread);
@@ -2096,7 +2056,41 @@ LRESULT CAutoComplete::OnAutoCompStart(UINT uMsg, WPARAM wParam, LPARAM lParam, 
         return 0;
     }
 
-    PAC_THREAD pThread = new AC_THREAD { this, bAppendOK, strText };
+    PAC_THREAD pThread = new AC_THREAD { this, bAppendOK, strText, m_innerList };
+
+    // if previous text was empty
+    if (m_strText.IsEmpty())
+    {
+        pThread->m_bReset = TRUE;
+    }
+    m_strText = strText;
+
+    // do expand the items if the stem is changed
+    CStringW strStemText = GetStemText(pThread->m_strText);
+    if (m_strStemText.CompareNoCase(strStemText) != 0)
+    {
+        pThread->m_bReset = TRUE;
+        pThread->m_bExpand = !strStemText.IsEmpty();
+        m_strStemText = strStemText;
+    }
+
+    // reset if necessary
+    if (pThread->m_bReset && m_pEnum)
+    {
+        HRESULT hr = m_pEnum->Reset(); // IEnumString::Reset
+        TRACE("m_pEnum->Reset(%p): 0x%08lx\n",
+              static_cast<IUnknown *>(m_pEnum), hr);
+    }
+
+    // update ac list if necessary
+    if (pThread->m_bExpand && m_pACList)
+    {
+        HRESULT hr = m_pACList->Expand(strStemText); // IACList::Expand
+        TRACE("m_pACList->Expand(%p, %S): 0x%08lx\n",
+              static_cast<IUnknown *>(m_pACList),
+              static_cast<LPCWSTR>(strStemText), hr);
+    }
+
     PAC_THREAD pOld = InterlockedExchangeThreadData(&m_pThread, pThread);
     if (pOld)
         delete pOld;
@@ -2140,6 +2134,12 @@ VOID CAutoComplete::FinishCompletion(PAC_THREAD pThread)
 
     if (!CanAutoSuggest() && !CanAutoAppend())
         return;
+
+    if (m_pThread || !m_hThread)
+        return;
+
+    // set inner list
+    m_innerList = pThread->m_innerList;
 
     if (m_pThread || !m_hThread)
         return;
