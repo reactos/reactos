@@ -1496,32 +1496,17 @@ VOID CAutoComplete::ReLoadInnerList(PAC_THREAD pThread)
     // reload the items
     LPWSTR pszItem;
     ULONG cGot;
-    CStringW strTarget;
     HRESULT hr;
     CSimpleArray<CStringW>& innerList = pThread->m_innerList;
-    const CStringW& strText = pThread->m_strText;
     while (!m_pThread && m_hThread)
     {
-        if (m_pThread || !m_hThread)
-            break;
-
         // get next item
         hr = m_pEnum->Next(1, &pszItem, &cGot);
         if (hr != S_OK)
             break;
 
-        strTarget = pszItem;
+        innerList.Add(pszItem); // append item to innerList
         ::CoTaskMemFree(pszItem); // free
-
-        if (m_pThread || !m_hThread)
-            break;
-
-        if (DoesMatch(strTarget, strText))
-        {
-            if (m_pThread || !m_hThread)
-                break;
-            innerList.Add(strTarget); // append item to innerList
-        }
     }
 }
 
