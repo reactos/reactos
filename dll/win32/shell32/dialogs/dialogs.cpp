@@ -685,10 +685,10 @@ static INT_PTR CALLBACK RunDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARA
                             break;
 
                         case RF_OK:
-                            if (SUCCEEDED(ShellExecCmdLine(hwnd, pszExpanded, pszStartDir, SW_SHOWNORMAL, NULL,
                             /* We use SECL_NO_UI because we don't want to see
                              * errors here, but we will try again below and
                              * there we will output our errors. */
+                            if (SUCCEEDED(ShellExecCmdLine(hwnd, pszExpanded, pszStartDir, SW_SHOWNORMAL, NULL,
                                                            SECL_ALLOW_NONEXE | SECL_NO_UI)))
                             {
                                 /* Call GetWindowText again in case the contents of the edit box have changed. */
