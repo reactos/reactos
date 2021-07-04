@@ -280,6 +280,7 @@ list(APPEND SOURCE
     ${REACTOS_SOURCE_DIR}/ntoskrnl/se/sd.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/se/semgr.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/se/sid.c
+    ${REACTOS_SOURCE_DIR}/ntoskrnl/se/sqos.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/se/srm.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/se/token.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/vf/driver.c
