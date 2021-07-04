@@ -117,9 +117,28 @@ protected:
 };
 
 //////////////////////////////////////////////////////////////////////////////
+// AC_THREAD --- Thread data for CAutoComplete
+
+typedef struct AC_THREAD
+{
+    CAutoComplete *m_pThis;
+    BOOL m_bAppendOK;
+    CStringW m_strText;
+    BOOL m_bReset;
+    BOOL m_bExpand;
+    CSimpleArray<CStringW> m_innerList; // internal list
+    CSimpleArray<CStringW> m_outerList; // outer list
+
+    VOID ReLoadInnerList(const CStringW& strText);
+} AC_THREAD, *PAC_THREAD;
+
+//////////////////////////////////////////////////////////////////////////////
 // CAutoComplete --- auto-completion drop-down window
 
 #define WC_DROPDOWNW L"Auto-Suggest Dropdown" // the window class name
+
+#define AUTOCOMP_START (WM_USER + 1)
+#define AUTOCOMP_FINISH (WM_USER + 2)
 
 class CAutoComplete
     : public CComCoClass<CAutoComplete, &CLSID_AutoComplete>
@@ -156,9 +175,14 @@ public:
     VOID ShowDropDown();
     VOID HideDropDown();
     VOID SelectItem(INT iItem);
-    VOID DoAutoAppend();
+    VOID DoAutoAppend(PAC_THREAD pThread);
+    VOID DoThreadWork(PAC_THREAD pThread);
     VOID DoBackWord();
     VOID UpdateScrollBar();
+
+    VOID StartCompletion(BOOL bAppendOK);
+    VOID AutoCompThreadProc();
+    VOID FinishCompletion(PAC_THREAD pThread);
 
     LRESULT EditWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
     LRESULT OnEditChar(WPARAM wParam, LPARAM lParam);
@@ -194,8 +218,8 @@ protected:
     HWND m_hwndEdit; // the textbox
     WNDPROC m_fnOldEditProc; // old textbox procedure
     EDITWORDBREAKPROCW m_fnOldWordBreakProc;
-    BOOL m_bPartialList; // is the list partial?
-    DWORD m_dwTick; // to check timeout
+    HANDLE m_hThread;
+    AC_THREAD *m_pThread;
     // The following variables are non-POD:
     CStringW m_strText; // internal text (used in selecting item and reverting text)
     CStringW m_strStemText; // dirname + '\\'
@@ -205,22 +229,22 @@ protected:
     CACSizeBox m_hwndSizeBox; // the size grip
     CComPtr<IEnumString> m_pEnum; // used for enumeration
     CComPtr<IACList> m_pACList; // for IACList::Expand to update the list
-    CSimpleArray<CStringW> m_innerList; // internal list
-    CSimpleArray<CStringW> m_outerList; // owner data for virtual listview
+    CSimpleArray<CStringW> m_outerList; // outer list
     // protected methods
     VOID UpdateDropDownState();
     VOID CalcRects(BOOL bDowner, RECT& rcListView, RECT& rcScrollBar, RECT& rcSizeBox) const;
     VOID LoadQuickComplete(LPCWSTR pwszRegKeyPath, LPCWSTR pwszQuickComplete);
     CStringW GetQuickEdit(LPCWSTR pszText) const;
     VOID RepositionDropDown();
-    VOID ReLoadInnerList(const CStringW& strText);
-    VOID UpdateInnerList(const CStringW& strText);
-    VOID UpdateOuterList(const CStringW& strText);
-    VOID UpdateCompletion(BOOL bAppendOK);
-    VOID ScrapeOffList(const CStringW& strText, CSimpleArray<CStringW>& array);
-    BOOL DoesMatch(const CStringW& strTarget, const CStringW& strText) const;
+    VOID ReLoadInnerList(PAC_THREAD pThread);
+    BOOL UpdateInnerList(PAC_THREAD pThread);
+    VOID ExtractInnerList(CSimpleArray<CStringW>& outerList,
+                          const CSimpleArray<CStringW>& innerList,
+                          const CString& strText);
     // message map
     BEGIN_MSG_MAP(CAutoComplete)
+        MESSAGE_HANDLER(AUTOCOMP_START, OnAutoCompStart)
+        MESSAGE_HANDLER(AUTOCOMP_FINISH, OnAutoCompFinish)
         MESSAGE_HANDLER(WM_CREATE, OnCreate)
         MESSAGE_HANDLER(WM_NCDESTROY, OnNCDestroy)
         MESSAGE_HANDLER(WM_DRAWITEM, OnDrawItem)
@@ -253,6 +277,8 @@ protected:
     LRESULT OnShowWindow(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT OnTimer(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT OnVScroll(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
+    LRESULT OnAutoCompStart(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
+    LRESULT OnAutoCompFinish(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
 
     DECLARE_REGISTRY_RESOURCEID(IDR_AUTOCOMPLETE)
     DECLARE_NOT_AGGREGATABLE(CAutoComplete)
