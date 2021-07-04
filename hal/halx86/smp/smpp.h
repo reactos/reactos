@@ -7,6 +7,3 @@
 
 VOID
 HalpInitializeAPStub(PVOID APStubLocation);
-
-VOID
-HalpInitializeAPPageTables(PVOID APStubLocation);

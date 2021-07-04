@@ -33,9 +33,3 @@ HalpInitializeAPStub(PVOID APStubLocation)
     RtlCopyMemory(APStubLocation, &APEntry,  ((ULONG_PTR)&APEntryEnd - (ULONG_PTR)&APEntry));
     RtlCopyMemory(APStubSecondPhaseLoc, &APSpinup,  ((ULONG_PTR)&APSpinupEnd - (ULONG_PTR)&APSpinup));
 }
-
-VOID
-HalpInitializeAPPageTables(PVOID APStubLocation)
-{
-    UNIMPLEMENTED;
-}
