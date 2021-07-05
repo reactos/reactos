@@ -1043,17 +1043,17 @@ CandidateListWideToAnsi(const CANDIDATELIST *lpWideCL, LPCANDIDATELIST lpAnsiCL,
 
     /* calculate total ansi size */
     if (lpWideCL->dwCount > 0)
-        dwSize = offsetof(CANDIDATELIST, dwOffset) + (lpWideCL->dwCount * sizeof(DWORD));
-    else
-        dwSize = sizeof(CANDIDATELIST);
-
-    if (lpWideCL->dwCount > 0)
     {
+        dwSize = offsetof(CANDIDATELIST, dwOffset) + (lpWideCL->dwCount * sizeof(DWORD));
         for (dwIndex = 0; dwIndex < lpWideCL->dwCount; ++dwIndex)
         {
             pbWide = (const BYTE *)lpWideCL + lpWideCL->dwOffset[dwIndex];
             dwSize += WideCharToMultiByte(uCodePage, 0, (LPCWSTR)pbWide, -1, NULL, 0, NULL, &bUsedDefault);
         }
+    }
+    else
+    {
+        dwSize = sizeof(CANDIDATELIST);
     }
 
     dwSize = ROUNDUP4(dwSize);
@@ -1100,18 +1100,18 @@ CandidateListAnsiToWide(const CANDIDATELIST *pAnsiCL, LPCANDIDATELIST pWideCL, D
     LPBYTE pbWide;
 
     if (pAnsiCL->dwCount > 0)
-        dwSize = offsetof(CANDIDATELIST, dwOffset) + (pAnsiCL->dwCount * sizeof(DWORD));
-    else
-        dwSize = sizeof(CANDIDATELIST);
-
-    if (pAnsiCL->dwCount > 0)
     {
+        dwSize = offsetof(CANDIDATELIST, dwOffset) + (pAnsiCL->dwCount * sizeof(DWORD));
         for (dwIndex = 0; dwIndex < pAnsiCL->dwCount; ++dwIndex)
         {
             pbAnsi = (const BYTE *)pAnsiCL + pAnsiCL->dwOffset[dwIndex];
             cchWide = MultiByteToWideChar(uCodePage, MB_PRECOMPOSED, (LPCSTR)pbAnsi, -1, NULL, 0);
             dwSize += cchWide * sizeof(WCHAR);
         }
+    }
+    else
+    {
+        dwSize = sizeof(CANDIDATELIST);
     }
 
     dwSize = ROUNDUP4(dwSize);
