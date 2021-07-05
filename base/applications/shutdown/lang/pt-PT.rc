@@ -14,7 +14,7 @@ BEGIN
     PUSHBUTTON "&Adicionar...", IDC_ADD_SYSTEM, 179, 19, 50, 14
     PUSHBUTTON "&Remover", IDC_REMOVE_SYSTEM, 179, 36, 50, 14, WS_DISABLED
     PUSHBUTTON "&Navegar...", IDC_BROWSE_SYSTEM, 179, 53, 50, 14
-    LTEXT "Ação", IDC_ACTION, 11, 81, 20, 14
+    LTEXT "Acção", IDC_ACTION, 11, 81, 20, 14
     COMBOBOX IDC_ACTION_TYPE, 37, 79, 129, 14, WS_TABSTOP | CBS_DROPDOWN
     CHECKBOX "Avisar utilizadores", IDC_WARN_USERS, 175, 79, 55, 14, BS_AUTOCHECKBOX | WS_TABSTOP
     LTEXT "Mostrar aviso para", IDC_SHOW_WARN_ONE, 11, 99, 65, 14
@@ -45,18 +45,18 @@ Usage: shutdown [/?] [/i | /l | /s | /r | /g | /a | /p | /h | /e] [/f]\n\
     /g      Reinicio do computador e todas as aplicações registadas.\n\
     /a      Cancelar um encerramento atrasado. Só pode ser usado durante o periodo de\n\
             atraso.\n\
-    /p      A encerrar computador local sem nenhum aviso de exceções. Pode ser\n\
+    /p      A encerrar computador local sem nenhum aviso de excepções. Pode ser\n\
             usado com /d ou /f.\n\
     /h      hibernar o computador local. Pode ser usado com /f.\n\
     /e      Documente o motivo do encerramento inesperado do computador.\n\
     /m \\\\computer  Especifique o computador alvo (UNC/IP address).\n\
-    /t xxx  Definit o periodo de tempo de limite para xxx segundos antes de encerrar.\n\
+    /t xxx  Defina o periodo de tempo de limite para xxx segundos antes de encerrar.\n\
             O intervalo válido é de 0 até 315360000 (10 anos),\n\
             30 é o valor padrao.\n\
     /c ""comment""  Diga o motivo do encerramento ou reinicialização.\n\
             512 caracteres máximo permitido.\n\
-    /f      Forçar o encerramento de aplicações abertas sem avisar. Se voce\n\
-            nao especificar outro parametro, esta operaçao tambem terminará a sessão.\n\
+    /f      Forçar o encerramento de aplicações abertas sem avisar. Se não\n
+especificar outro parâmetro, esta operação também terminará a sessão.\n\
     /d [p|u:]xx:yy  Forneça o código de razão para o encerramento ou reinicialização.\n\
             p indica que o encerramento ou uma reinicialização está planejada.\n\
             u indica o motivo definido pelo utilizador.\n\
@@ -69,7 +69,7 @@ Usage: shutdown [/?] [/i | /l | /s | /r | /g | /a | /p | /h | /e] [/f]\n\
     IDS_ERROR_ABORT "ERRO: Incapaz de abortar o encerramento do sistema.\n"
     IDS_ERROR_LOGOFF "ERRO: Incapaz de terminar sessão do sistema.\n"
     IDS_ERROR_SHUTDOWN "ERRO: Incapaz de encerrar o sistema.\n"
-    IDS_ERROR_RESTART "ERRO: Incaapz de reiniciar o sistema.\n"
+    IDS_ERROR_RESTART "ERRO: Incapz de reiniciar o sistema.\n"
     IDS_ERROR_MAX_COMMENT_LENGTH "ERRO: O comprimento do comentário excede o limite máximo de caracteres definido pelo sistema.\n"
     IDS_ERROR_HIBERNATE "ERRO: Incapaz de hibernar o sistema.\n"
     IDS_ERROR_HIBERNATE_LOCAL "ERRO: Modo de hibernaçao nao pode ser definido remotamente.\n"

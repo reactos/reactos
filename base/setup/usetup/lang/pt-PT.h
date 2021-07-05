@@ -126,7 +126,7 @@ static MUI_ENTRY ptPTWelcomePageEntries[] =
     {
         8,
         15,
-        "\x07  Pressione ENTER para instalar ou atualizar o ReactOS.",
+        "\x07  Pressione ENTER para instalar ou actualizar o ReactOS.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -536,7 +536,7 @@ static MUI_ENTRY ptPTRepairPageEntries[] =
     {
         8,
         15,
-        "\x07  Para atualizar o sistema operacional, pressione U.",
+        "\x07  Para actualizar o sistema operacional, pressione U.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -564,7 +564,7 @@ static MUI_ENTRY ptPTRepairPageEntries[] =
     {
         0,
         0,
-        "ESC=P\240gina principal  U=Atualizar  R=Recuperar  ENTER=Reiniciar",
+        "ESC=P\240gina principal  U=Actualizar  R=Recuperar  ENTER=Reiniciar",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
         TEXT_ID_STATIC
     },
@@ -588,7 +588,7 @@ static MUI_ENTRY ptPTUpgradePageEntries[] =
     {
         6,
         8,
-        "Com o Instalador do ReactOS pode atualizar uma das instala\207\344es",
+        "Com o Instalador do ReactOS pode actualizar uma das instala\207\344es",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -623,7 +623,7 @@ static MUI_ENTRY ptPTUpgradePageEntries[] =
     {
         8,
         17,
-        "\x07  Pressione U para atualizar  a instala\207\306o selecionada.",
+        "\x07  Pressione U para actualizar  a instala\207\306o selecionada.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -644,7 +644,7 @@ static MUI_ENTRY ptPTUpgradePageEntries[] =
     {
         0,
         0,
-        "U = Atualizar   ESC = N\343o atualizar   F3 = Terminar",
+        "U = Actualizar   ESC = N\343o actualizar   F3 = Terminar",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
         TEXT_ID_STATIC
     },
@@ -1848,7 +1848,7 @@ static MUI_ENTRY ptPTRegistryEntries[] =
     {
         6,
         8,
-        "O instalador est\240 a atualizar a configura\207\306o do sistema.",
+        "O instalador est\240 a actualizar a configura\207\306o do sistema.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1977,12 +1977,12 @@ MUI_ERROR ptPTErrorEntries[] =
     },
     {
         // ERROR_UPDATE_KBSETTINGS,
-        "N\306o foi poss\241vel atualizar a configura\207\306o de estilo de teclado.",
+        "N\306o foi poss\241vel actualizar a configura\207\306o de estilo de teclado.",
         "ENTER=Reiniciar"
     },
     {
         // ERROR_UPDATE_DISPLAY_SETTINGS,
-        "N\306o foi poss\241vel atualizar a configura\207\306o de v\241deo.",
+        "N\306o foi poss\241vel actualizar a configura\207\306o de v\241deo.",
         "ENTER=Reiniciar"
     },
     {
@@ -2288,15 +2288,15 @@ MUI_STRING ptPTStrings[] =
     {STRING_SETUPCOPYINGFILES,
     "O instalador est\240 a copiar os arquivos..."},
     {STRING_REGHIVEUPDATE,
-    "  A atualizar a estrutura do registo..."},
+    "  A actualizar a estrutura do registo..."},
     {STRING_IMPORTFILE,
     "  A importar %S..."},
     {STRING_DISPLAYSETTINGSUPDATE,
-    "   A atualizar a configura\207\344o de v\241deo..."},
+    "   A actualizar a configura\207\344o de v\241deo..."},
     {STRING_LOCALESETTINGSUPDATE,
-    "   A atualizar as configura\207\344es regionais..."},
+    "   A actualizar as configura\207\344es regionais..."},
     {STRING_KEYBOARDSETTINGSUPDATE,
-    "   A atualizar as configura\207\344es do teclado..."},
+    "   A actualizar as configura\207\344es do teclado..."},
     {STRING_CODEPAGEINFOUPDATE,
     "   A adicionar as informa\207\344es de localiza\207\306o no registo..."},
     {STRING_DONE,

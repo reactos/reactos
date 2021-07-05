@@ -72,7 +72,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Dividir", ID_VIEW_SPLIT
         MENUITEM SEPARATOR
-        MENUITEM "&Atualizar\tF5", ID_VIEW_REFRESH
+        MENUITEM "&Actualizar\tF5", ID_VIEW_REFRESH
     END
     POPUP "&Favoritos"
     BEGIN

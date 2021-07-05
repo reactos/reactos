@@ -50,7 +50,7 @@ BEGIN
         MENUITEM "Substituir...\tCtrl+H", CMD_REPLACE
         MENUITEM "Ir Para...\tCtrl+G", CMD_GOTO
         MENUITEM SEPARATOR
-        MENUITEM "Selecionar &tudo", CMD_SELECT_ALL
+        MENUITEM "Seleccionar &tudo", CMD_SELECT_ALL
         MENUITEM "&Data/Hora\tF5", CMD_TIME_DATE
     END
     POPUP "F&ormatar"

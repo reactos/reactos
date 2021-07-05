@@ -18,7 +18,7 @@ BEGIN
         MENUITEM "&Retomar", ID_RESUME, GRAYED
         MENUITEM "Re&iniciar", ID_RESTART, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "&Atualizar\tF5", ID_REFRESH
+        MENUITEM "&Actualizar\tF5", ID_REFRESH
         MENUITEM SEPARATOR
         MENUITEM "&Editar...", ID_EDIT, GRAYED
         MENUITEM "&Criar...", ID_CREATE, GRAYED
@@ -52,7 +52,7 @@ BEGIN
         MENUITEM "&Retomar", ID_RESUME, GRAYED
         MENUITEM "Rei&niciar", ID_RESTART, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "&Atualizar", ID_REFRESH
+        MENUITEM "&Actualizar", ID_REFRESH
         MENUITEM SEPARATOR
         MENUITEM "&Editar...", ID_EDIT, GRAYED
         MENUITEM "Apa&gar...", ID_DELETE, GRAYED
@@ -256,7 +256,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_TOOLTIP_PROP "Propriedades"
-    IDS_TOOLTIP_REFRESH "Atualizar"
+    IDS_TOOLTIP_REFRESH "Actualizar"
     IDS_TOOLTIP_EXPORT "Exportar lista"
     IDS_TOOLTIP_CREATE "Criar um novo serviço"
     IDS_TOOLTIP_DELETE "Apagar um serviço existente"

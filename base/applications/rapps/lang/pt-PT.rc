@@ -18,9 +18,9 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Remover do Registro", ID_REGREMOVE
         MENUITEM SEPARATOR
-        MENUITEM "&Atualizar\tF5", ID_REFRESH
+        MENUITEM "&Actualizar\tF5", ID_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM "atualizar Da&tabase\tCtrl+F5", ID_RESETDB
+        MENUITEM "actualizar Da&tabase\tCtrl+F5", ID_RESETDB
     END
     POPUP "Aj&uda"
     BEGIN
@@ -48,9 +48,9 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Remover do Registro", ID_REGREMOVE
         MENUITEM SEPARATOR
-        MENUITEM "&Atualizar\tF5", ID_REFRESH
+        MENUITEM "&Actualizar\tF5", ID_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM "Atualizar &Base de dados\tCtrl+F5", ID_RESETDB
+        MENUITEM "Actualizar &Base de dados\tCtrl+F5", ID_RESETDB
     END
 END
 
@@ -61,7 +61,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Geral", -1, 4, 2, 240, 61
     AUTOCHECKBOX "&Salvar posição da janela", IDC_SAVE_WINDOW_POS, 15, 12, 219, 12
-    AUTOCHECKBOX "&Atualizar esta lista de programas ao iniciar", IDC_UPDATE_AVLIST, 15, 29, 222, 12
+    AUTOCHECKBOX "&Actualizar esta lista de programas ao iniciar", IDC_UPDATE_AVLIST, 15, 29, 222, 12
     AUTOCHECKBOX "&Registo de instalação e remoção de programas", IDC_LOG_ENABLED, 15, 46, 219, 12
     GROUPBOX "A carregar", -1, 4, 65, 240, 51
     LTEXT "Pasta de download:", -1, 16, 75, 100, 9
@@ -112,8 +112,8 @@ BEGIN
     IDS_TOOLTIP_UNINSTALL "Desinstalar"
     IDS_TOOLTIP_MODIFY "Modificar"
     IDS_TOOLTIP_SETTINGS "Configurações"
-    IDS_TOOLTIP_REFRESH "Atualizar"
-    IDS_TOOLTIP_UPDATE_DB "Atualizar Base de dados"
+    IDS_TOOLTIP_REFRESH "Actualizar"
+    IDS_TOOLTIP_UPDATE_DB "Actualizar Base de dados"
     IDS_TOOLTIP_EXIT "Sair"
 END
 
@@ -250,8 +250,8 @@ END
 STRINGTABLE
 BEGIN
     IDS_DL_DIALOG_DB_DISP "Base de dados de aplicativos"
-    IDS_DL_DIALOG_DB_DOWNLOAD_DISP "Atualizar base de dados…"
-    IDS_DL_DIALOG_DB_UNOFFICIAL_DOWNLOAD_DISP "A atualizar Base de dados… (Fonte não oficial)"
+    IDS_DL_DIALOG_DB_DOWNLOAD_DISP "Actualizar base de dados…"
+    IDS_DL_DIALOG_DB_UNOFFICIAL_DOWNLOAD_DISP "A actualizar Base de dados… (Fonte não oficial)"
 END
 
 STRINGTABLE
