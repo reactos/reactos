@@ -15,7 +15,7 @@ BEGIN
         MENUITEM "&Ocultar ao minimizar", ID_OPTIONS_HIDEWHENMINIMIZED, CHECKED
         MENUITEM "&Mostrar tarefas de 16-bit", ID_OPTIONS_SHOW16BITTASKS, CHECKED
     END
-    POPUP "E&xibir"
+    POPUP "&Ver"
     BEGIN
         MENUITEM "&Atualizar agora", ID_VIEW_REFRESH
         POPUP "&Velocidade de atualização"
