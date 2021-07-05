@@ -12,7 +12,5 @@ modules/[Aa][Hh][Kk]_[Tt]ests
 .settings
 .vscode
 sdk/tools/winesync/winesync.cfg
-<<<<<<< HEAD
-=======
-build
->>>>>>> master
+/build
+/.dccache
