@@ -15,10 +15,12 @@
 typedef struct tagCLIENTIMC {
     HIMC   hImc;
     HANDLE hInputContext;
-    BOOL   bWide;
     DWORD  dwFlags;
-    RTL_CRITICAL_SECTION cs;
+    /* ... */
 } CLIENTIMC, *PCLIENTIMC;
+
+/* flags for CLIENTIMC */
+#define CLIENTIMC_WIDE (1 << 0)
 
 #ifdef __cplusplus
 extern "C" {

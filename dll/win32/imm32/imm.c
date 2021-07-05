@@ -1202,14 +1202,14 @@ ImmGetCandidateListAW(HIMC hIMC, DWORD dwIndex, LPCANDIDATELIST lpCandList, DWOR
     pCL = (LPCANDIDATELIST)((LPBYTE)pCI + pCI->dwOffset[dwIndex]);
     if (bAnsi)
     {
-        if ((pClientIMC->bWide & 1) == 0)
+        if ((pClientIMC->dwFlags & CLIENTIMC_WIDE) == 0)
             dwSize = pCL->dwSize;
         else
             dwSize = CandidateListAnsiToWide(pCL, NULL, 0, 0);
     }
     else
     {
-        if ((pClientIMC->bWide & 1) == 0)
+        if ((pClientIMC->dwFlags & CLIENTIMC_WIDE) == 0)
             dwSize = CandidateListWideToAnsi(pCL, NULL, 0, 0);
         else
             dwSize = pCL->dwSize;
@@ -1222,14 +1222,14 @@ ImmGetCandidateListAW(HIMC hIMC, DWORD dwIndex, LPCANDIDATELIST lpCandList, DWOR
 
         if (bAnsi)
         {
-            if ((pClientIMC->bWide & 1) == 0)
+            if ((pClientIMC->dwFlags & CLIENTIMC_WIDE) == 0)
                 CopyMemory(lpCandList, pCL, dwSize);
             else
                 CandidateListAnsiToWide(pCL, lpCandList, dwSize, 0);
         }
         else
         {
-            if ((pClientIMC->bWide & 1) == 0)
+            if ((pClientIMC->dwFlags & CLIENTIMC_WIDE) == 0)
                 CandidateListWideToAnsi(pCL, lpCandList, dwSize, 0);
             else
                 CopyMemory(lpCandList, pCL, dwSize);
