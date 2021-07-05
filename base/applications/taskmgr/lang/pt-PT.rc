@@ -19,7 +19,7 @@ BEGIN
     END
     POPUP "&Ver"
     BEGIN
-        MENUITEM "&Atualizar agora", ID_VIEW_REFRESH
+        MENUITEM "&Actualizar agora", ID_VIEW_REFRESH
         POPUP "&Velocidade de atualização"
         BEGIN
             MENUITEM "&Alta", ID_VIEW_UPDATESPEED_HIGH
@@ -334,7 +334,7 @@ BEGIN
     ID_OPTIONS_ALWAYSONTOP "O 'Gerenciador de tarefas' permanece na frente de todas as outras janelas, a menos que seja minimizado"
     ID_OPTIONS_MINIMIZEONUSE "O 'Gerenciador de tarefas' é minimizado toda vez que uma operação de alternância for executada"
     ID_OPTIONS_HIDEWHENMINIMIZED "Oculta o 'Gerenciador de tarefas' quando ele estiver minimizado"
-    ID_VIEW_REFRESH "Força o 'Gerenciador de tarefas' a atualizar a tela agora, independentemente do parâmetro 'Velocidade de atualização'"
+    ID_VIEW_REFRESH "Força o 'Gerenciador de tarefas' a actualizar a tela agora, independentemente do parâmetro 'Velocidade de atualização'"
     ID_VIEW_LARGE "Exibe as tarefas usando ícones grandes"
     ID_VIEW_SMALL "Exibe as tarefas usando ícones pequenos"
     ID_VIEW_DETAILS "Exibe as informações sobre cada tarefa"
@@ -345,7 +345,7 @@ END
 
 STRINGTABLE
 BEGIN
-    ID_VIEW_UPDATESPEED_PAUSED "não atualizar o ecrã automaticamente"
+    ID_VIEW_UPDATESPEED_PAUSED "não actualizar o ecrã automaticamente"
     ID_WINDOWS_TILEHORIZONTALLY "Organiza as janelas lado a lado horizontalmente na área de trabalho"
     ID_WINDOWS_TILEVERTICALLY "Organiza as janelas lado a lado verticalmente na área de trabalho"
     ID_WINDOWS_MINIMIZE "Minimiza as janelas"
