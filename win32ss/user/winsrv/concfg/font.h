@@ -59,9 +59,19 @@
 #define IsBoldFont(Weight)  \
     ((Weight) >= FW_SEMIBOLD) /* Sometimes, just > FW_MEDIUM */
 
+
+/*
+ * @struct  TrueType font list, cached from
+ * HKEY_LOCAL_MACHINE\Software\Microsoft\Windows NT\CurrentVersion\Console\TrueTypeFont
+ *
+ * See the definition of struct _TT_FONT_LIST
+ * in https://github.com/microsoft/terminal/blob/main/dep/Console/winconp.h
+ */
+#define BOLD_MARK   L'*'
+
 typedef struct _TT_FONT_ENTRY
 {
-    LIST_ENTRY Entry;
+    SINGLE_LIST_ENTRY Entry;
     UINT CodePage;
     BOOL DisableBold;
     WCHAR FaceName[LF_FACESIZE];
@@ -128,15 +138,7 @@ IsValidConsoleFont(
     _In_ PCWSTR FaceName,
     _In_ UINT CodePage);
 
-/*
- * To install additional TrueType fonts to be available for the console,
- * add entries of type REG_SZ named "0", "00" etc... in:
- * HKEY_LOCAL_MACHINE\Software\Microsoft\Windows NT\CurrentVersion\Console\TrueTypeFont
- * The names of the fonts listed there should match those in:
- * HKEY_LOCAL_MACHINE\Software\Microsoft\Windows NT\CurrentVersion\Fonts
- *
- * This function initializes the cache of the fonts listed there.
- */
+
 VOID
 InitTTFontCache(VOID);
 

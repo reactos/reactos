@@ -301,7 +301,7 @@ GuiInit(IN PCONSOLE_INIT_INFO ConsoleInitInfo,
         /* Initialize and register the console window class */
         if (!RegisterConWndClass(ConSrvDllInstance)) return FALSE;
 
-        /* Initialize the font support -- additional TrueType fonts cache */
+        /* Initialize the font support -- additional TrueType font cache */
         InitTTFontCache();
 
         ConsInitialized = TRUE;

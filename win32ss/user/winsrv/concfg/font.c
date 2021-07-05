@@ -26,8 +26,8 @@
 
 #define TERMINAL_FACENAME   L"Terminal"
 
-// RTL_STATIC_LIST_HEAD(TTFontCache);
-LIST_ENTRY TTFontCache = {&TTFontCache, &TTFontCache};
+/* TrueType font list cache */
+SINGLE_LIST_ENTRY TTFontCache = { NULL };
 
 // NOTE: Used to tag code that makes sense only with a font cache.
 // #define FONT_CACHE_PRESENT
@@ -952,15 +952,20 @@ IsValidConsoleFont(
     return Param.IsValidFont;
 }
 
-/*
+
+/**
+ * @brief
+ * Initializes the console TrueType font cache.
+ *
+ * @remark
  * To install additional TrueType fonts to be available for the console,
  * add entries of type REG_SZ named "0", "00" etc... in:
  * HKEY_LOCAL_MACHINE\Software\Microsoft\Windows NT\CurrentVersion\Console\TrueTypeFont
  * The names of the fonts listed there should match those in:
  * HKEY_LOCAL_MACHINE\Software\Microsoft\Windows NT\CurrentVersion\Fonts
  *
- * This function initializes the cache of the fonts listed there.
- */
+ * @return None.
+ **/
 VOID
 InitTTFontCache(VOID)
 {
@@ -975,9 +980,9 @@ InitTTFontCache(VOID)
     PTT_FONT_ENTRY FontEntry;
     PWCHAR pszNext;
 
-    if (!IsListEmpty(&TTFontCache))
+    if (TTFontCache.Next != NULL)
         return;
-    // InitializeListHead(&TTFontCache);
+    // TTFontCache.Next = NULL;
 
     /* Open the Console\TrueTypeFont key */
     // "\\Registry\\Machine\\Software\\Microsoft\\Windows NT\\CurrentVersion\\Console\\TrueTypeFont"
@@ -1034,7 +1039,7 @@ InitTTFontCache(VOID)
         pszNext = szValue;
 
         /* Check whether bold is disabled for this font */
-        if (*pszNext == L'*')
+        if (*pszNext == BOLD_MARK)
         {
             FontEntry->DisableBold = TRUE;
             ++pszNext;
@@ -1054,7 +1059,7 @@ InitTTFontCache(VOID)
             pszNext += wcslen(pszNext) + 1;
 
             /* Check whether bold is disabled for this font */
-            if (*pszNext == L'*')
+            if (*pszNext == BOLD_MARK)
             {
                 FontEntry->DisableBold = TRUE;
                 ++pszNext;
@@ -1066,28 +1071,41 @@ InitTTFontCache(VOID)
                             pszNext, wcslen(pszNext));
         }
 
-        InsertTailList(&TTFontCache, &FontEntry->Entry);
+        PushEntryList(&TTFontCache, &FontEntry->Entry);
     }
 
     /* Close the key and quit */
     RegCloseKey(hKey);
 }
 
+/**
+ * @brief
+ * Clears the console TrueType font cache.
+ *
+ * @return None.
+ **/
 VOID
 ClearTTFontCache(VOID)
 {
-    PLIST_ENTRY Entry;
+    PSINGLE_LIST_ENTRY Entry;
     PTT_FONT_ENTRY FontEntry;
 
-    while (!IsListEmpty(&TTFontCache))
+    while (TTFontCache.Next != NULL)
     {
-        Entry = RemoveHeadList(&TTFontCache);
+        Entry = PopEntryList(&TTFontCache);
         FontEntry = CONTAINING_RECORD(Entry, TT_FONT_ENTRY, Entry);
         RtlFreeHeap(RtlGetProcessHeap(), 0, FontEntry);
     }
-    InitializeListHead(&TTFontCache);
+    TTFontCache.Next = NULL;
 }
 
+/**
+ * @brief
+ * Refreshes the console TrueType font cache,
+ * by clearing and re-initializing it.
+ *
+ * @return None.
+ **/
 VOID
 RefreshTTFontCache(VOID)
 {
@@ -1101,13 +1119,13 @@ FindCachedTTFont(
     _In_ PCWSTR FaceName,
     _In_ UINT CodePage)
 {
-    PLIST_ENTRY Entry;
+    PSINGLE_LIST_ENTRY Entry;
     PTT_FONT_ENTRY FontEntry;
 
     /* Search for the font in the cache */
-    for (Entry = TTFontCache.Flink;
-         Entry != &TTFontCache;
-         Entry = Entry->Flink)
+    for (Entry = TTFontCache.Next;
+         Entry != NULL;
+         Entry = Entry->Next)
     {
         FontEntry = CONTAINING_RECORD(Entry, TT_FONT_ENTRY, Entry);
 
