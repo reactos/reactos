@@ -1063,7 +1063,7 @@ CandidateListWideToAnsi(const CANDIDATELIST *lpWideCL, LPCANDIDATELIST lpAnsiCL,
         return 0;
 
     /* store to ansi */
-    lpAnsiCL->dwSize = dwBufLen;
+    lpAnsiCL->dwSize = dwSize;
     lpAnsiCL->dwStyle = lpWideCL->dwStyle;
     lpAnsiCL->dwCount = lpWideCL->dwCount;
     lpAnsiCL->dwSelection = lpWideCL->dwSelection;
