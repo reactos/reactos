@@ -14,17 +14,17 @@ BEGIN
     PUSHBUTTON "&Adicionar...", IDC_ADD_SYSTEM, 179, 19, 50, 14
     PUSHBUTTON "&Remover", IDC_REMOVE_SYSTEM, 179, 36, 50, 14, WS_DISABLED
     PUSHBUTTON "&Navegar...", IDC_BROWSE_SYSTEM, 179, 53, 50, 14
-    LTEXT "Acao", IDC_ACTION, 11, 81, 20, 14
+    LTEXT "Ação", IDC_ACTION, 11, 81, 20, 14
     COMBOBOX IDC_ACTION_TYPE, 37, 79, 129, 14, WS_TABSTOP | CBS_DROPDOWN
     CHECKBOX "Avisar utilizadores", IDC_WARN_USERS, 175, 79, 55, 14, BS_AUTOCHECKBOX | WS_TABSTOP
-    LTEXT "Exibir aviso para", IDC_SHOW_WARN_ONE, 11, 99, 65, 14
+    LTEXT "Mostrar aviso para", IDC_SHOW_WARN_ONE, 11, 99, 65, 14
     EDITTEXT IDC_SHOW_WARN, 78, 97, 41, 14
     LTEXT "segundo(s)", IDC_SHOW_WARN_TWO, 124, 99, 32, 10
-    GROUPBOX "Encerrando o rastreador de eventos", IDC_STATIC, 5, 114, 224, 114
+    GROUPBOX "A encerrar o rastreador de eventos", IDC_STATIC, 5, 114, 224, 114
     LTEXT "Raz:", IDC_STATIC, 16, 130, 27, 8
     CHECKBOX "Planeado", IDC_PLANNED, 175, 130, 40, 12, BS_AUTOCHECKBOX | WS_TABSTOP
     COMBOBOX IDC_REASON_CODE, 17, 142, 198, 13, WS_TABSTOP | CBS_DROPDOWN
-    LTEXT "Come&entar:", IDC_COMMENT_CAPTION, 16, 159, 38, 8
+    LTEXT "Come&ntar:", IDC_COMMENT_CAPTION, 16, 159, 38, 8
     EDITTEXT IDC_COMMENT_TEXT, 17, 171, 198, 50, WS_VSCROLL
 END
 
@@ -39,10 +39,10 @@ Usage: shutdown [/?] [/i | /l | /s | /r | /g | /a | /p | /h | /e] [/f]\n\
     No arguments or /?    Display this help.\n\
     /i      Mostrar a interface de utilizador(UI). This option must be the\n\
             a primeira.\n\
-    /l      Terminar sessao apenas no sistema local. Nao pode ser usado com /m or /d.\n\
+    /l      Terminar sessão apenas no sistema local. Nao pode ser usado com /m or /d.\n\
     /s      Encerramento do computador.\n\
     /r      Reinicio do computador.\n\
-    /g      Reinicio do computador e todas as aplicaçoes registadas.\n\
+    /g      Reinicio do computador e todas as aplicações registadas.\n\
 //-------------------------------translated until here---------------------------------------------\\
     /a      Cancel a delayed shutdown. Can only be used during the delay\n\
             period.\n\
