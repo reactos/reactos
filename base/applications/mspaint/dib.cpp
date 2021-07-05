@@ -16,13 +16,26 @@ HBITMAP
 CreateDIBWithProperties(int width, int height)
 {
     BITMAPINFO bmi;
+
     ZeroMemory(&bmi, sizeof(BITMAPINFO));
     bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
     bmi.bmiHeader.biWidth = width;
     bmi.bmiHeader.biHeight = height;
     bmi.bmiHeader.biPlanes = 1;
-    bmi.bmiHeader.biBitCount = 24;
     bmi.bmiHeader.biCompression = BI_RGB;
+
+    if(paletteWindow.bk){
+        bmi.bmiHeader.biBitCount = 1;
+        bmi.bmiHeader.biClrUsed = 1;
+        bmi.bmiColors[0].rgbGreen=255;
+        bmi.bmiColors[0].rgbRed=255;
+        bmi.bmiColors[0].rgbBlue=255;
+    }
+    else{
+        bmi.bmiHeader.biBitCount = 24;
+        bmi.bmiHeader.biClrUsed = 0;
+    }
+
     return CreateDIBSection(NULL, &bmi, DIB_RGB_COLORS, NULL, NULL, 0);
 }
 

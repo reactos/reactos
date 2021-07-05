@@ -161,6 +161,8 @@ void ImageModel::Crop(int nWidth, int nHeight, int nOffsetX, int nOffsetY)
 
 void ImageModel::SaveImage(LPTSTR lpFileName)
 {
+    DeleteObject(hBms[(currInd + 1) % HISTORYSIZE]);
+    hBms[(currInd + 1) % HISTORYSIZE] = CreateDIBWithProperties(GetWidth(), GetHeight());
     SaveDIBToFile(hBms[currInd], lpFileName, hDrawingDC);
 }
 
@@ -206,6 +208,46 @@ void ImageModel::InvertColors()
     RECT rect = {0, 0, GetWidth(), GetHeight()};
     CopyPrevious();
     InvertRect(hDrawingDC, &rect);
+    NotifyImageChanged();
+}
+
+/* This function only converts image to Grayscale without modify color depth */ 
+void ImageModel::GSColors()
+{
+    int x, y;
+    COLORREF pixel_color;
+
+    CopyPrevious();
+
+    for (x = 0; x < GetWidth(); x++)
+    {
+        for (y = 0; y < GetHeight(); y++)
+        {
+            pixel_color = GetPixel(hDrawingDC, x, y);
+            pixel_color = (pixel_color & 0xFF) * 0x10101;
+            SetPixel(hDrawingDC, x, y, pixel_color);
+        }
+    }
+    NotifyImageChanged();
+}
+
+void ImageModel::BKColors()
+{
+    int x, y;
+    COLORREF pixel_color;
+
+    CopyPrevious();
+
+    for (x = 0; x < GetWidth(); x++)
+    {
+        for (y = 0; y < GetHeight(); y++)
+        {
+            pixel_color = GetPixel(hDrawingDC, x, y);
+            if ((pixel_color & 0x00FFFFFF) != 0x00FFFFFF)
+                pixel_color = 0x00;
+            SetPixel(hDrawingDC, x, y, pixel_color);
+        }
+    }
     NotifyImageChanged();
 }
 
