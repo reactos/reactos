@@ -43,21 +43,21 @@ Usage: shutdown [/?] [/i | /l | /s | /r | /g | /a | /p | /h | /e] [/f]\n\
     /s      Encerramento do computador.\n\
     /r      Reinicio do computador.\n\
     /g      Reinicio do computador e todas as aplicações registadas.\n\
+    /a      Cancelar um encerramento atrasado. Só pode ser usado durante o periodo de\n\
+            atraso.\n\
+    /p      A encerrar computador local sem nenhum aviso de exceções. Pode ser\n\
+            usado com /d ou /f.\n\
+    /h      hibernar o computador local. Pode ser usado com /f.\n\
+    /e      Documente o motivo do encerramento inesperado do computador.\n\
+    /m \\\\computer  Especifique o computador alvo (UNC/IP address).\n\
+    /t xxx  Definit o periodo de tempo de limite para xxx segundos antes de encerrar.\n\
+            O intervalo válido é de 0 até 315360000 (10 anos),\n\
+            30 é o valor padrao.\n\
+    /c ""comment""  Diga o motivo do encerramento ou reinicialização.\n\
+            512 caracteres máximo permitido.\n\
+    /f      Forçar o encerramento de aplicações abertas sem avisar. Se voce\n\
+            nao especificar outro parametro, esta operaçao tambem terminará a sessão.\n\
 //-------------------------------translated until here---------------------------------------------\\
-    /a      Cancel a delayed shutdown. Can only be used during the delay\n\
-            period.\n\
-    /p      Shutdown the local computer without any timeout or warning. Can be\n\
-            used with /d or /f.\n\
-    /h      Hibernate the local computer. Usable with /f.\n\
-    /e      Document the reason for the unexpected computer shutdown.\n\
-    /m \\\\computer  Specify the target computer (UNC/IP address).\n\
-    /t xxx  Set the timeout period to xxx seconds before shutting down.\n\
-            The valid range starts from 0 to 315360000 (10 years),\n\
-            30 being the default value.\n\
-    /c ""comment""  Comment on the reason for shutdown or restart.\n\
-            512 characters maximum allowed.\n\
-    /f      Force running applications to close without warning users. If you\n\
-            do not specify any other parameter, this option will also log off.\n\
     /d [p|u:]xx:yy  Give the reason code for the shutdown or the restart.\n\
             p indicates that the shutdown or the restart is planned.\n\
             u indicates that the reason is defined by the user.\n\
