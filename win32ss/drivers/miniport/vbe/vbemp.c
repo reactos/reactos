@@ -76,6 +76,8 @@ VBEFindAdapter(
    if (VideoPortIsNoVesa())
        return ERROR_DEV_NOT_EXIST;
 
+   ConfigInfo->VdmPhysicalVideoMemoryAddress.QuadPart = 0xa000;
+   ConfigInfo->VdmPhysicalVideoMemoryLength = 0x2000;
    return NO_ERROR;
 }
 
