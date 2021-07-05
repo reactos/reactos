@@ -11,6 +11,15 @@
 #define KBDLAYOUT_IME 0xE000
 #define IS_IME_KBDLAYOUT(hKL) ((HIWORD(hKL) & KBDLAYOUT_MASK) == KBDLAYOUT_IME)
 
+/* unconfirmed */
+typedef struct tagCLIENTIMC {
+    HIMC   hImc;
+    HANDLE hInputContext;
+    BOOL   bWide;
+    DWORD  dwFlags;
+    RTL_CRITICAL_SECTION cs;
+} CLIENTIMC, *PCLIENTIMC;
+
 #ifdef __cplusplus
 extern "C" {
 #endif

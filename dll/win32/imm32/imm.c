@@ -1021,15 +1021,6 @@ LRESULT WINAPI ImmEscapeW(
 
 #define ROUNDUP4(n) (((n) + 3) & ~3)
 
-/* FIXME: Move this to proper place */
-typedef struct tagCLIENTIMC {
-    HIMC   hImc;
-    HANDLE hInputContext;
-    BOOL   bWide;
-    DWORD  dwFlags;
-    RTL_CRITICAL_SECTION cs;
-} CLIENTIMC, *PCLIENTIMC;
-
 PCLIENTIMC WINAPI ImmLockClientImc(HIMC hIMC)
 {
     FIXME("ImmLockClientImc(%p)\n", hIMC);
