@@ -465,20 +465,20 @@ SepDuplicateToken(
 NTSTATUS
 NTAPI
 SepCaptureSecurityQualityOfService(
-    IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL,
-    IN KPROCESSOR_MODE AccessMode,
-    IN POOL_TYPE PoolType,
-    IN BOOLEAN CaptureIfKernel,
-    OUT PSECURITY_QUALITY_OF_SERVICE *CapturedSecurityQualityOfService,
-    OUT PBOOLEAN Present
+    _In_opt_ POBJECT_ATTRIBUTES ObjectAttributes,
+    _In_ KPROCESSOR_MODE AccessMode,
+    _In_ POOL_TYPE PoolType,
+    _In_ BOOLEAN CaptureIfKernel,
+    _Out_ PSECURITY_QUALITY_OF_SERVICE *CapturedSecurityQualityOfService,
+    _Out_ PBOOLEAN Present
 );
 
 VOID
 NTAPI
 SepReleaseSecurityQualityOfService(
-    IN PSECURITY_QUALITY_OF_SERVICE CapturedSecurityQualityOfService OPTIONAL,
-    IN KPROCESSOR_MODE AccessMode,
-    IN BOOLEAN CaptureIfKernel
+    _In_opt_ PSECURITY_QUALITY_OF_SERVICE CapturedSecurityQualityOfService,
+    _In_ KPROCESSOR_MODE AccessMode,
+    _In_ BOOLEAN CaptureIfKernel
 );
 
 NTSTATUS
