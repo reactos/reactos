@@ -1045,7 +1045,7 @@ CandidateListWideToAnsi(const CANDIDATELIST *lpWideCL, LPCANDIDATELIST lpAnsiCL,
     /* calculate total ansi size */
     if (lpWideCL->dwCount > 0)
     {
-        dwSize = offsetof(CANDIDATELIST, dwOffset) + (lpWideCL->dwCount * sizeof(DWORD));
+        dwSize = sizeof(CANDIDATELIST) + ((lpWideCL->dwCount - 1) * sizeof(DWORD));
         for (dwIndex = 0; dwIndex < lpWideCL->dwCount; ++dwIndex)
         {
             pbWide = (const BYTE *)lpWideCL + lpWideCL->dwOffset[dwIndex];
@@ -1074,8 +1074,8 @@ CandidateListWideToAnsi(const CANDIDATELIST *lpWideCL, LPCANDIDATELIST lpAnsiCL,
 
     if (lpWideCL->dwCount > 0)
     {
-        lpAnsiCL->dwOffset[0] = offsetof(CANDIDATELIST, dwOffset) +
-                                (lpWideCL->dwCount * sizeof(DWORD));
+        lpAnsiCL->dwOffset[0] = sizeof(CANDIDATELIST) +
+                                (lpWideCL->dwCount - 1) * sizeof(DWORD));
         cbLeft = dwBufLen - lpAnsiCL->dwOffset[0];
         for (dwIndex = 0; dwIndex < lpWideCL->dwCount; ++dwIndex)
         {
@@ -1107,7 +1107,7 @@ CandidateListAnsiToWide(const CANDIDATELIST *pAnsiCL, LPCANDIDATELIST pWideCL, D
     /* calculate total wide size */
     if (pAnsiCL->dwCount > 0)
     {
-        dwSize = offsetof(CANDIDATELIST, dwOffset) + (pAnsiCL->dwCount * sizeof(DWORD));
+        dwSize = sizeof(CANDIDATELIST) + ((pAnsiCL->dwCount - 1) * sizeof(DWORD));
         for (dwIndex = 0; dwIndex < pAnsiCL->dwCount; ++dwIndex)
         {
             pbAnsi = (const BYTE *)pAnsiCL + pAnsiCL->dwOffset[dwIndex];
@@ -1136,8 +1136,7 @@ CandidateListAnsiToWide(const CANDIDATELIST *pAnsiCL, LPCANDIDATELIST pWideCL, D
 
     if (pWideCL->dwCount > 0)
     {
-        pWideCL->dwOffset[0] = offsetof(CANDIDATELIST, dwOffset) +
-                               (pWideCL->dwCount * sizeof(DWORD));
+        pWideCL->dwOffset[0] = sizeof(CANDIDATELIST) + ((pWideCL->dwCount - 1) * sizeof(DWORD));
         cbLeft = dwBufLen;
         for (dwIndex = 0; dwIndex < pAnsiCL->dwCount; ++dwIndex)
         {
