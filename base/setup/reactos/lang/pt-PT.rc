@@ -17,8 +17,8 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     AUTORADIOBUTTON "Instalar ReactOS", IDC_INSTALL, 7, 7, 277, 10, WS_GROUP | WS_TABSTOP
     LTEXT "Instalar uma nova cópia do ReactOS. Esta opção não preserva os ficheiros, definições ou programas existentes. Pode fazer alterações nos discos ou partições.", IDC_INSTALLTEXT, 18, 18, 269, 25, NOT WS_GROUP
-    AUTORADIOBUTTON "Reparar ou atualizar uma instalação do ReactOS", IDC_UPDATE, 7, 50, 277, 10
-    LTEXT "Reparar ou atualizar uma instalação do ReactOS. Esta opção preserva os ficheiros, definições e programas existentes. Esta opção só está disponivel se o ReactOS já está instalado neste computador.", IDC_UPDATETEXT, 18, 61, 269, 30, NOT WS_GROUP
+    AUTORADIOBUTTON "Reparar ou actualizar uma instalação do ReactOS", IDC_UPDATE, 7, 50, 277, 10
+    LTEXT "Reparar ou actualizar uma instalação do ReactOS. Esta opção preserva os ficheiros, definições e programas existentes. Esta opção só está disponivel se o ReactOS já está instalado neste computador.", IDC_UPDATETEXT, 18, 61, 269, 30, NOT WS_GROUP
     LTEXT "Clique em Próximo para configurar os dispositivos.", IDC_STATIC, 7, 128, 297, 8
 END
 
@@ -27,10 +27,10 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Instalação do ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT       "O instalador pode atualizar uma das instalações disponíveis listadas abaixo, ou, reparar uma instalação danificada do ReactOS.", IDC_STATIC, 6, 6, 300, 18
+    LTEXT       "O instalador pode actualizar uma das instalações disponíveis listadas abaixo, ou, reparar uma instalação danificada do ReactOS.", IDC_STATIC, 6, 6, 300, 18
     CONTROL     "", IDC_NTOSLIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_ALIGNLEFT | WS_BORDER | WS_TABSTOP, 6, 30, 303, 90
     PUSHBUTTON  "&Nova inst.", IDC_SKIPUPGRADE, 230, 128, 80, 14
-    LTEXT       "Clique Avançar para atualizar a instalação seleccionada, ou 'Nova instalação' para uma nova instalação.", IDC_STATIC, 7, 124, 222, 16
+    LTEXT       "Clique Avançar para actualizar a instalação seleccionada, ou 'Nova instalação' para uma nova instalação.", IDC_STATIC, 7, 124, 222, 16
 END
 
 IDD_DEVICEPAGE DIALOGEX 0, 0, 317, 143
