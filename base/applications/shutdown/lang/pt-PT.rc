@@ -57,36 +57,34 @@ Usage: shutdown [/?] [/i | /l | /s | /r | /g | /a | /p | /h | /e] [/f]\n\
             512 caracteres máximo permitido.\n\
     /f      Forçar o encerramento de aplicações abertas sem avisar. Se voce\n\
             nao especificar outro parametro, esta operaçao tambem terminará a sessão.\n\
-//-------------------------------translated until here---------------------------------------------\\
-    /d [p|u:]xx:yy  Give the reason code for the shutdown or the restart.\n\
-            p indicates that the shutdown or the restart is planned.\n\
-            u indicates that the reason is defined by the user.\n\
-            If neither p nor u are specified, the shutdown or the restart are\n\
-            not planned.\n\
-            xx is the major reason code (positive integer smaller than 256).\n\
-            yy is the minor reason code (positive integer smaller than 65536).\n"
-
-    IDS_ERROR_SHUTDOWN_REBOOT "ERROR: Unable to shutdown and restart at the same time.\n"
-    IDS_ERROR_TIMEOUT "ERROR: Timeout value of %u is out of bounds (0-315360000).\n"
-    IDS_ERROR_ABORT "ERROR: Unable to abort the shutdown of the system.\n"
-    IDS_ERROR_LOGOFF "ERROR: Unable to logoff the system.\n"
-    IDS_ERROR_SHUTDOWN "ERROR: Unable to shutdown the system.\n"
-    IDS_ERROR_RESTART "ERROR: Unable to restart the system.\n"
-    IDS_ERROR_MAX_COMMENT_LENGTH "ERROR: Comment length exceeds maximum character limit set by the system.\n"
-    IDS_ERROR_HIBERNATE "ERROR: Unable to send system into hibernation mode.\n"
-    IDS_ERROR_HIBERNATE_LOCAL "ERROR: Hibernation mode cannot be started remotely.\n"
-    IDS_ERROR_HIBERNATE_ENABLED "ERROR: Hibernation mode is not enabled.\n"
-    IDS_ERROR_DIALOG_CAPTION "Remote Shutdown"
-    IDS_ERROR_DIALOG_INIT "Unable to display the graphical user interface."
+    /d [p|u:]xx:yy  Forneça o código de razão para o encerramento ou reinicialização.\n\
+            p indica que o encerramento ou uma reinicialização está planejada.\n\
+            u indica o motivo definido pelo utilizador.\n\
+            Se nenhum p nem você é especificado, o encerramento ou reinicialização é\n\
+            nao planejada.\n\
+            xx é o código de razão principal (inteiro positivo menor que 256).\n\
+            yy é o código de razão menor número inteiro positivo menor que 65536).\n"
+    IDS_ERROR_SHUTDOWN_REBOOT "ERRO: Incapaz de encerrar e reiniciar ao mesmo tempo.\n"
+    IDS_ERROR_TIMEOUT "ERRO: Tempo esgotado valor de %u está fora dos limites (0-315360000).\n"
+    IDS_ERROR_ABORT "ERRO: Incapaz de abortar o encerramento do sistema.\n"
+    IDS_ERROR_LOGOFF "ERRO: Incapaz de terminar sessão do sistema.\n"
+    IDS_ERROR_SHUTDOWN "ERRO: Incapaz de encerrar o sistema.\n"
+    IDS_ERROR_RESTART "ERRO: Incaapz de reiniciar o sistema.\n"
+    IDS_ERROR_MAX_COMMENT_LENGTH "ERRO: O comprimento do comentário excede o limite máximo de caracteres definido pelo sistema.\n"
+    IDS_ERROR_HIBERNATE "ERRO: Incapaz de hibernar o sistema.\n"
+    IDS_ERROR_HIBERNATE_LOCAL "ERRO: Modo de hibernaçao nao pode ser definido remotamente.\n"
+    IDS_ERROR_HIBERNATE_ENABLED "ERRO: O modo de hibernação não está habilitado.\n"
+    IDS_ERROR_DIALOG_CAPTION "Encerramento remoto"
+    IDS_ERROR_DIALOG_INIT "Incapaz de mostrar interface gráfica."
 END
-
 /* Remote shutdown action strings */
 STRINGTABLE
 BEGIN
-    IDS_ACTION_SHUTDOWN "Shutdown the system"
-    IDS_ACTION_RESTART "Restart the system"
-    IDS_ACTION_UNEXPECTED_SHUTDOWN "Annotate the unexpected shutdown"
+    IDS_ACTION_SHUTDOWN "Encerrar o sistema"
+    IDS_ACTION_RESTART "Reiniciar o sistema"
+    IDS_ACTION_UNEXPECTED_SHUTDOWN "Anote o encerramento inesperado"
 END
+/*-----------------------translated untill here-----------------------------------------*\
 
 /* Remote shutdown reason strings */
 STRINGTABLE
