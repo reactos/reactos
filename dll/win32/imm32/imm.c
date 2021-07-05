@@ -1017,6 +1017,227 @@ LRESULT WINAPI ImmEscapeW(
         return 0;
 }
 
+#ifdef __REACTOS__
+
+#define ROUNDUP4(n) (((n) + 3) & ~3)
+
+/* FIXME: Move this to proper place */
+typedef struct tagCLIENTIMC {
+    HIMC   hImc;
+    HANDLE hInputContext;
+    BOOL   bWide;
+    DWORD  dwFlags;
+    RTL_CRITICAL_SECTION cs;
+} CLIENTIMC, *PCLIENTIMC;
+
+PCLIENTIMC WINAPI ImmLockClientImc(HIMC hIMC)
+{
+    FIXME("ImmLockClientImc(%p)\n", hIMC);
+    return NULL;
+}
+
+BOOL WINAPI ImmUnlockClientImc(PCLIENTIMC pClientIMC)
+{
+    FIXME("ImmUnlockClientImc(%p)\n", pClientIMC);
+    return FALSE;
+}
+
+static DWORD APIENTRY
+CandidateListWideToAnsi(const CANDIDATELIST *lpWideCL, LPCANDIDATELIST lpAnsiCL, DWORD dwBufLen, UINT uCodePage)
+{
+    BOOL bUsedDefault;
+    DWORD dwSize, dwIndex, cbGot, cbLeft;
+    const BYTE *pbWide;
+    LPBYTE pbAnsi;
+
+    /* calculate total ansi size */
+    if (lpWideCL->dwCount > 0)
+        dwSize = offsetof(CANDIDATELIST, dwOffset) + (lpWideCL->dwCount * sizeof(DWORD));
+    else
+        dwSize = sizeof(CANDIDATELIST);
+
+    if (lpWideCL->dwCount > 0)
+    {
+        for (dwIndex = 0; dwIndex < lpWideCL->dwCount; ++dwIndex)
+        {
+            pbWide = (const BYTE *)lpWideCL + lpWideCL->dwOffset[dwIndex];
+            dwSize += WideCharToMultiByte(uCodePage, 0, (LPCWSTR)pbWide, -1, NULL, 0, NULL, &bUsedDefault);
+        }
+    }
+
+    dwSize = ROUNDUP4(dwSize);
+    if (dwBufLen == 0)
+        return dwSize;
+    if (dwBufLen < dwSize)
+        return 0;
+
+    /* store to ansi */
+    lpAnsiCL->dwSize = dwBufLen;
+    lpAnsiCL->dwStyle = lpWideCL->dwStyle;
+    lpAnsiCL->dwCount = lpWideCL->dwCount;
+    lpAnsiCL->dwSelection = lpWideCL->dwSelection;
+    lpAnsiCL->dwPageStart = lpWideCL->dwPageStart;
+    lpAnsiCL->dwPageSize = lpWideCL->dwPageSize;
+
+    if (lpWideCL->dwCount > 0)
+        lpAnsiCL->dwOffset[0] = offsetof(CANDIDATELIST, dwOffset) + (lpWideCL->dwCount * sizeof(DWORD));
+    else
+        lpAnsiCL->dwOffset[0] = sizeof(CANDIDATELIST);
+
+    if (lpWideCL->dwCount > 0)
+    {
+        cbLeft = dwBufLen - lpAnsiCL->dwOffset[0];
+        for (dwIndex = 0; dwIndex < lpWideCL->dwCount; ++dwIndex)
+        {
+            pbWide = (const BYTE *)lpWideCL + lpWideCL->dwOffset[dwIndex];
+            pbAnsi = (LPBYTE)lpAnsiCL + lpAnsiCL->dwOffset[dwIndex];
+            cbGot = WideCharToMultiByte(uCodePage, 0, (LPCWSTR)pbWide, -1, (LPSTR)pbAnsi, cbLeft, 0, &bUsedDefault);
+            cbLeft -= cbGot;
+            if (dwIndex < lpWideCL->dwCount - 1)
+                lpAnsiCL->dwOffset[dwIndex + 1] = lpAnsiCL->dwOffset[dwIndex] + cbGot;
+        }
+    }
+
+    return dwSize;
+}
+
+static DWORD APIENTRY
+CandidateListAnsiToWide(const CANDIDATELIST *pAnsiCL, LPCANDIDATELIST pWideCL, DWORD dwBufLen, UINT uCodePage)
+{
+    DWORD dwSize, cchWide, dwIndex, cchGot, cbGot, cbLeft, cchLeft;
+    const BYTE *pbAnsi;
+    LPBYTE pbWide;
+
+    if (pAnsiCL->dwCount > 0)
+        dwSize = offsetof(CANDIDATELIST, dwOffset) + (pAnsiCL->dwCount * sizeof(DWORD));
+    else
+        dwSize = sizeof(CANDIDATELIST);
+
+    if (pAnsiCL->dwCount > 0)
+    {
+        for (dwIndex = 0; dwIndex < pAnsiCL->dwCount; ++dwIndex)
+        {
+            pbAnsi = (const BYTE *)pAnsiCL + pAnsiCL->dwOffset[dwIndex];
+            cchWide = MultiByteToWideChar(uCodePage, MB_PRECOMPOSED, (LPCSTR)pbAnsi, -1, NULL, 0);
+            dwSize += cchWide * sizeof(WCHAR);
+        }
+    }
+
+    dwSize = ROUNDUP4(dwSize);
+    if (dwBufLen == 0)
+        return dwSize;
+    if (dwBufLen < dwSize)
+        return 0;
+
+    pWideCL->dwSize = dwSize;
+    pWideCL->dwStyle = pAnsiCL->dwStyle;
+    pWideCL->dwCount = pAnsiCL->dwCount;
+    pWideCL->dwSelection = pAnsiCL->dwSelection;
+    pWideCL->dwPageStart = pAnsiCL->dwPageStart;
+    pWideCL->dwPageSize = pAnsiCL->dwPageSize;
+
+    if (pWideCL->dwCount > 0)
+        pWideCL->dwOffset[0] = offsetof(CANDIDATELIST, dwOffset) + (pWideCL->dwCount * sizeof(DWORD));
+    else
+        pWideCL->dwOffset[0] = sizeof(CANDIDATELIST);
+
+    if (pWideCL->dwCount > 0)
+    {
+        cbLeft = dwBufLen;
+        for (dwIndex = 0; dwIndex < pAnsiCL->dwCount; ++dwIndex)
+        {
+            pbAnsi = (const BYTE *)pAnsiCL + pAnsiCL->dwOffset[dwIndex];
+            pbWide = (LPBYTE)pWideCL + pWideCL->dwOffset[dwIndex];
+            cchLeft = cbLeft / sizeof(WCHAR);
+            cchGot = MultiByteToWideChar(uCodePage, MB_PRECOMPOSED, (LPCSTR)pbAnsi, -1, (LPWSTR)pbWide, cchLeft);
+            cbGot = cchGot * sizeof(WCHAR);
+            cbLeft -= cbGot;
+            if (dwIndex + 1 < pWideCL->dwCount)
+                pWideCL->dwOffset[dwIndex + 1] = pWideCL->dwOffset[dwIndex] + cbGot;
+        }
+    }
+
+    return dwBufLen;
+}
+
+static DWORD APIENTRY
+ImmGetCandidateListAW(HIMC hIMC, DWORD dwIndex, LPCANDIDATELIST lpCandList, DWORD dwBufLen, BOOL bAnsi)
+{
+    DWORD ret = 0;
+    LPINPUTCONTEXT pIC;
+    PCLIENTIMC pClientIMC;
+    LPCANDIDATEINFO pCI;
+    LPCANDIDATELIST pCL;
+    DWORD dwSize;
+
+    pClientIMC = ImmLockClientImc(hIMC);
+    if (!pClientIMC)
+        return 0;
+
+    pIC = ImmLockIMC(hIMC);
+    if (pIC == NULL)
+    {
+        ImmUnlockClientImc(pClientIMC);
+        return 0;
+    }
+
+    pCI = ImmLockIMCC(pIC->hCandInfo);
+    if (pCI == NULL)
+    {
+        ImmUnlockIMC(hIMC);
+        ImmUnlockClientImc(pClientIMC);
+        return 0;
+    }
+
+    if (pCI->dwSize < sizeof(CANDIDATEINFO) || pCI->dwCount <= dwIndex)
+        goto Quit;
+
+    pCL = (LPCANDIDATELIST)((LPBYTE)pCI + pCI->dwOffset[dwIndex]);
+    if (bAnsi)
+    {
+        if ((pClientIMC->bWide & 1) == 0)
+            dwSize = pCL->dwSize;
+        else
+            dwSize = CandidateListAnsiToWide(pCL, NULL, 0, 0);
+    }
+    else
+    {
+        if ((pClientIMC->bWide & 1) == 0)
+            dwSize = CandidateListWideToAnsi(pCL, NULL, 0, 0);
+        else
+            dwSize = pCL->dwSize;
+    }
+
+    if (dwBufLen != 0 && dwSize != 0)
+    {
+        if (lpCandList == NULL || dwBufLen < dwSize)
+            goto Quit;
+
+        if (bAnsi)
+        {
+            if ((pClientIMC->bWide & 1) == 0)
+                CopyMemory(lpCandList, pCL, dwSize);
+            else
+                CandidateListAnsiToWide(pCL, lpCandList, dwSize, 0);
+        }
+        else
+        {
+            if ((pClientIMC->bWide & 1) == 0)
+                CandidateListWideToAnsi(pCL, lpCandList, dwSize, 0);
+            else
+                CopyMemory(lpCandList, pCL, dwSize);
+        }
+    }
+
+    ret = dwSize;
+
+Quit:
+    ImmUnlockIMCC(pIC->hCandInfo);
+    ImmUnlockIMC(hIMC);
+    ImmUnlockClientImc(pClientIMC);
+    return ret;
+}
+#endif
 /***********************************************************************
  *		ImmGetCandidateListA (IMM32.@)
  */
@@ -1024,6 +1245,9 @@ DWORD WINAPI ImmGetCandidateListA(
   HIMC hIMC, DWORD dwIndex,
   LPCANDIDATELIST lpCandList, DWORD dwBufLen)
 {
+#ifdef __REACTOS__
+    return ImmGetCandidateListAW(hIMC, dwIndex, lpCandList, dwBufLen, TRUE);
+#else
     InputContextData *data = get_imc_data(hIMC);
     LPCANDIDATEINFO candinfo;
     LPCANDIDATELIST candlist;
@@ -1054,6 +1278,7 @@ DWORD WINAPI ImmGetCandidateListA(
 done:
     ImmUnlockIMCC(data->IMC.hCandInfo);
     return ret;
+#endif
 }
 
 /***********************************************************************
@@ -1127,6 +1352,9 @@ DWORD WINAPI ImmGetCandidateListW(
   HIMC hIMC, DWORD dwIndex,
   LPCANDIDATELIST lpCandList, DWORD dwBufLen)
 {
+#ifdef __REACTOS__
+    return ImmGetCandidateListAW(hIMC, dwIndex, lpCandList, dwBufLen, FALSE);
+#else
     InputContextData *data = get_imc_data(hIMC);
     LPCANDIDATEINFO candinfo;
     LPCANDIDATELIST candlist;
@@ -1157,6 +1385,7 @@ DWORD WINAPI ImmGetCandidateListW(
 done:
     ImmUnlockIMCC(data->IMC.hCandInfo);
     return ret;
+#endif
 }
 
 /***********************************************************************
