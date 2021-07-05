@@ -1075,15 +1075,19 @@ CandidateListWideToAnsi(const CANDIDATELIST *lpWideCL, LPCANDIDATELIST lpAnsiCL,
     if (lpWideCL->dwCount > 0)
     {
         lpAnsiCL->dwOffset[0] = sizeof(CANDIDATELIST) +
-                                (lpWideCL->dwCount - 1) * sizeof(DWORD));
+                                ((lpWideCL->dwCount - 1) * sizeof(DWORD));
         cbLeft = dwBufLen - lpAnsiCL->dwOffset[0];
+
         for (dwIndex = 0; dwIndex < lpWideCL->dwCount; ++dwIndex)
         {
             pbWide = (const BYTE *)lpWideCL + lpWideCL->dwOffset[dwIndex];
             pbAnsi = (LPBYTE)lpAnsiCL + lpAnsiCL->dwOffset[dwIndex];
+
+            /* convert to ansi */
             cbGot = WideCharToMultiByte(uCodePage, 0, (LPCWSTR)pbWide, -1,
                                         (LPSTR)pbAnsi, cbLeft, 0, &bUsedDefault);
             cbLeft -= cbGot;
+
             if (dwIndex < lpWideCL->dwCount - 1)
                 lpAnsiCL->dwOffset[dwIndex + 1] = lpAnsiCL->dwOffset[dwIndex] + cbGot;
         }
@@ -1100,7 +1104,7 @@ static DWORD APIENTRY
 CandidateListAnsiToWide(const CANDIDATELIST *pAnsiCL, LPCANDIDATELIST pWideCL, DWORD dwBufLen,
                         UINT uCodePage)
 {
-    DWORD dwSize, cchWide, dwIndex, cchGot, cbGot, cbLeft, cchLeft;
+    DWORD dwSize, cchWide, dwIndex, cchGot, cbGot, cbLeft;
     const BYTE *pbAnsi;
     LPBYTE pbWide;
 
@@ -1137,16 +1141,19 @@ CandidateListAnsiToWide(const CANDIDATELIST *pAnsiCL, LPCANDIDATELIST pWideCL, D
     if (pWideCL->dwCount > 0)
     {
         pWideCL->dwOffset[0] = sizeof(CANDIDATELIST) + ((pWideCL->dwCount - 1) * sizeof(DWORD));
-        cbLeft = dwBufLen;
+        cbLeft = dwBufLen - pWideCL->dwOffset[0];
+
         for (dwIndex = 0; dwIndex < pAnsiCL->dwCount; ++dwIndex)
         {
             pbAnsi = (const BYTE *)pAnsiCL + pAnsiCL->dwOffset[dwIndex];
             pbWide = (LPBYTE)pWideCL + pWideCL->dwOffset[dwIndex];
-            cchLeft = cbLeft / sizeof(WCHAR);
+
+            /* convert to wide */
             cchGot = MultiByteToWideChar(uCodePage, MB_PRECOMPOSED, (LPCSTR)pbAnsi, -1,
-                                         (LPWSTR)pbWide, cchLeft);
+                                         (LPWSTR)pbWide, cbLeft / sizeof(WCHAR));
             cbGot = cchGot * sizeof(WCHAR);
             cbLeft -= cbGot;
+
             if (dwIndex + 1 < pWideCL->dwCount)
                 pWideCL->dwOffset[dwIndex + 1] = pWideCL->dwOffset[dwIndex] + cbGot;
         }
