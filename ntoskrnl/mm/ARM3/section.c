@@ -822,7 +822,6 @@ MiUnmapViewOfSection(IN PEPROCESS Process,
                      IN PVOID BaseAddress,
                      IN ULONG Flags)
 {
-    PMEMORY_AREA MemoryArea;
     BOOLEAN Attached = FALSE;
     KAPC_STATE ApcState;
     PMMVAD Vad;
@@ -836,16 +835,6 @@ MiUnmapViewOfSection(IN PEPROCESS Process,
     /* Check if we need to lock the address space */
     if (!Flags) MmLockAddressSpace(&Process->Vm);
 
-    /* Check for Mm Region */
-    MemoryArea = MmLocateMemoryAreaByAddress(&Process->Vm, BaseAddress);
-    if ((MemoryArea) && (MemoryArea->Type != MEMORY_AREA_OWNED_BY_ARM3))
-    {
-        /* Call Mm API */
-        NTSTATUS Status = MiRosUnmapViewOfSection(Process, BaseAddress, Process->ProcessExiting);
-        if (!Flags) MmUnlockAddressSpace(&Process->Vm);
-        return Status;
-    }
-
     /* Check if we should attach to the process */
     if (CurrentProcess != Process)
     {
@@ -853,7 +842,7 @@ MiUnmapViewOfSection(IN PEPROCESS Process,
         KeStackAttachProcess(&Process->Pcb, &ApcState);
         Attached = TRUE;
     }
-
+    
     /* Check if the process is already dead */
     if (Process->VmDeleted)
     {
@@ -864,14 +853,29 @@ MiUnmapViewOfSection(IN PEPROCESS Process,
         goto Quickie;
     }
 
+    /* Lock the working set before we play with the VAD tree */
+    MiLockProcessWorkingSetUnsafe(Process, CurrentThread);
+
     /* Find the VAD for the address and make sure it's a section VAD */
     Vad = MiLocateAddress(BaseAddress);
     if (!(Vad) || (Vad->u.VadFlags.PrivateMemory))
     {
         /* Couldn't find it, or invalid VAD, fail */
         DPRINT1("No VAD or invalid VAD\n");
+        MiUnlockProcessWorkingSetUnsafe(Process, CurrentThread);
         if (!Flags) MmUnlockAddressSpace(&Process->Vm);
         Status = STATUS_NOT_MAPPED_VIEW;
+        goto Quickie;
+    }
+
+    /* Check for legacy Mm Vad */
+    if (Vad->u.VadFlags.Spare)
+    {
+        Status = MiRosUnmapViewOfSection(Process,
+                                         CONTAINING_RECORD(Vad, MEMORY_AREA, VadNode),
+                                         BaseAddress, Process->ProcessExiting);
+        MiUnlockProcessWorkingSetUnsafe(Process, CurrentThread);
+        if (!Flags) MmUnlockAddressSpace(&Process->Vm);
         goto Quickie;
     }
 
@@ -899,6 +903,7 @@ MiUnmapViewOfSection(IN PEPROCESS Process,
         {
             /* We failed */
             DPRINT1("Trying to unmap protected VAD!\n");
+            MiUnlockProcessWorkingSetUnsafe(Process, CurrentThread);
             if (!Flags) MmUnlockAddressSpace(&Process->Vm);
             goto Quickie;
         }
@@ -908,9 +913,6 @@ MiUnmapViewOfSection(IN PEPROCESS Process,
     ASSERT(Vad->u.VadFlags.VadType != VadRotatePhysical);
 
     /* FIXME: Remove VAD charges */
-
-    /* Lock the working set */
-    MiLockProcessWorkingSetUnsafe(Process, CurrentThread);
 
     /* Remove the VAD */
     ASSERT(Process->VadRoot.NumberGenericTableElements >= 1);

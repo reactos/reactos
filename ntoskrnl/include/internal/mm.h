@@ -584,12 +584,6 @@ MmFreeMemoryArea(
     PVOID FreePageContext
 );
 
-VOID
-NTAPI
-MiRosCleanupMemoryArea(
-    PEPROCESS Process,
-    PMMVAD Vad);
-
 PMEMORY_AREA
 NTAPI
 MmLocateMemoryAreaByRegion(

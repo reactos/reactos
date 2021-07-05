@@ -300,16 +300,9 @@ MmFreeMemoryArea(
         PEPROCESS CurrentProcess = PsGetCurrentProcess();
         PEPROCESS Process = MmGetAddressSpaceOwner(AddressSpace);
 
-        if (Process != NULL &&
-                Process != CurrentProcess)
-        {
-            KeAttachProcess(&Process->Pcb);
-        }
-
-        if (Process != NULL)
-            MiLockProcessWorkingSetUnsafe(Process, PsGetCurrentThread());
-        else
-            MiLockWorkingSet(PsGetCurrentThread(), &MmSystemCacheWs);
+        ASSERT((Process == NULL) || (Process == CurrentProcess));
+        NT_ASSERT(((Process == NULL) && PsGetCurrentThread()->OwnsSystemWorkingSetExclusive) || 
+            ((Process != NULL) && PsGetCurrentThread()->OwnsProcessWorkingSetExclusive));
 
         EndAddress = MM_ROUND_UP(MA_GetEndingAddress(MemoryArea), PAGE_SIZE);
         for (Address = MA_GetStartingAddress(MemoryArea);
@@ -349,17 +342,6 @@ MmFreeMemoryArea(
                 FreePage(FreePageContext, MemoryArea, (PVOID)Address,
                          Page, SwapEntry, (BOOLEAN)Dirty);
             }
-        }
-
-        if (Process != NULL)
-            MiUnlockProcessWorkingSetUnsafe(Process, PsGetCurrentThread());
-        else
-            MiUnlockWorkingSet(PsGetCurrentThread(), &MmSystemCacheWs);
-
-        if (Process != NULL &&
-                Process != CurrentProcess)
-        {
-            KeDetachProcess();
         }
 
         //if (MemoryArea->VadNode.StartingVpn < (ULONG_PTR)MmSystemRangeStart >> PAGE_SHIFT
@@ -531,46 +513,5 @@ MmCreateMemoryArea(PMMSUPPORT AddressSpace,
 
     DPRINT("MmCreateMemoryArea() succeeded (%p)\n", *BaseAddress);
     return STATUS_SUCCESS;
-}
-
-VOID
-NTAPI
-MiRosCleanupMemoryArea(
-    PEPROCESS Process,
-    PMMVAD Vad)
-{
-    PMEMORY_AREA MemoryArea;
-    PVOID BaseAddress;
-    NTSTATUS Status;
-
-    /* We must be called from MmCleanupAddressSpace and nowhere else!
-       Make sure things are as expected... */
-    ASSERT(Process == PsGetCurrentProcess());
-    ASSERT(Process->VmDeleted == TRUE);
-    ASSERT(((PsGetCurrentThread()->ThreadsProcess == Process) &&
-            (Process->ActiveThreads == 1)) ||
-           (Process->ActiveThreads == 0));
-
-    MemoryArea = (PMEMORY_AREA)Vad;
-    BaseAddress = (PVOID)MA_GetStartingAddress(MemoryArea);
-
-    if (MemoryArea->Type == MEMORY_AREA_SECTION_VIEW)
-    {
-        Status = MiRosUnmapViewOfSection(Process, BaseAddress, Process->ProcessExiting);
-    }
-#ifdef NEWCC
-    else if (MemoryArea->Type == MEMORY_AREA_CACHE)
-    {
-        Status = MmUnmapViewOfCacheSegment(&Process->Vm, BaseAddress);
-    }
-#endif
-    else
-    {
-        /* There shouldn't be anything else! */
-        ASSERT(FALSE);
-    }
-
-    /* Make sure this worked! */
-    ASSERT(NT_SUCCESS(Status));
 }
 /* EOF */

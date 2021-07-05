@@ -3564,13 +3564,13 @@ MmUnmapViewOfSegment(PMMSUPPORT AddressSpace,
 /* This functions must be called with a locked address space */
 NTSTATUS
 NTAPI
-MiRosUnmapViewOfSection(IN PEPROCESS Process,
-                        IN PVOID BaseAddress,
-                        IN BOOLEAN SkipDebuggerNotify)
+MiRosUnmapViewOfSection(
+    _In_ PEPROCESS Process,
+    _In_ PMEMORY_AREA MemoryArea,
+    _In_ PVOID BaseAddress,
+    _In_ BOOLEAN SkipDebuggerNotify)
 {
     NTSTATUS Status;
-    PMEMORY_AREA MemoryArea;
-    PMMSUPPORT AddressSpace;
     PVOID ImageBaseAddress = 0;
 
     DPRINT("Opening memory area Process %p BaseAddress %p\n",
@@ -3578,22 +3578,10 @@ MiRosUnmapViewOfSection(IN PEPROCESS Process,
 
     ASSERT(Process);
 
-    AddressSpace = Process ? &Process->Vm : MmGetKernelAddressSpace();
-
-    MemoryArea = MmLocateMemoryAreaByAddress(AddressSpace,
-                 BaseAddress);
-    if (MemoryArea == NULL ||
-#ifdef NEWCC
-            ((MemoryArea->Type != MEMORY_AREA_SECTION_VIEW) && (MemoryArea->Type != MEMORY_AREA_CACHE)) ||
-#else
-            (MemoryArea->Type != MEMORY_AREA_SECTION_VIEW) ||
-#endif
-            MemoryArea->DeleteInProgress)
-
+    if ((MemoryArea->DeleteInProgress)
+        || (MemoryArea->Type != MEMORY_AREA_SECTION_VIEW))
     {
-        if (MemoryArea) ASSERT(MemoryArea->Type != MEMORY_AREA_OWNED_BY_ARM3);
-
-        DPRINT1("Unable to find memory area at address %p.\n", BaseAddress);
+        DPRINT1("Memory area at address %p is not for a section view.\n", BaseAddress);
         return STATUS_NOT_MAPPED_VIEW;
     }
 
@@ -3632,7 +3620,7 @@ MiRosUnmapViewOfSection(IN PEPROCESS Process,
             PVOID SBaseAddress = (PVOID)
                                  ((char*)ImageBaseAddress + (ULONG_PTR)SectionSegments[i].Image.VirtualAddress);
 
-            Status = MmUnmapViewOfSegment(AddressSpace, SBaseAddress);
+            Status = MmUnmapViewOfSegment(&Process->Vm, SBaseAddress);
             if (!NT_SUCCESS(Status))
             {
                 DPRINT1("MmUnmapViewOfSegment failed for %p (Process %p) with %lx\n",
@@ -3644,7 +3632,7 @@ MiRosUnmapViewOfSection(IN PEPROCESS Process,
     }
     else
     {
-        Status = MmUnmapViewOfSegment(AddressSpace, BaseAddress);
+        Status = MmUnmapViewOfSegment(&Process->Vm, BaseAddress);
         if (!NT_SUCCESS(Status))
         {
             DPRINT1("MmUnmapViewOfSegment failed for %p (Process %p) with %lx\n",
@@ -4442,9 +4430,15 @@ NTSTATUS
 NTAPI
 MiRosUnmapViewInSystemSpace(IN PVOID MappedBase)
 {
+    NTSTATUS Status;
     DPRINT("MmUnmapViewInSystemSpace() called\n");
 
-    return MmUnmapViewOfSegment(MmGetKernelAddressSpace(), MappedBase);
+    MiLockWorkingSet(PsGetCurrentThread(), &MmSystemCacheWs);
+
+    Status = MmUnmapViewOfSegment(MmGetKernelAddressSpace(), MappedBase);
+
+    MiUnlockWorkingSet(PsGetCurrentThread(), &MmSystemCacheWs);
+    return Status;
 }
 
 /**********************************************************************
