@@ -1,4 +1,4 @@
-//start translation
+//--------------------------start translation----------------\\
 LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
 
 IDD_GUI DIALOGEX 0, 0, 240, 255
@@ -42,7 +42,7 @@ Usage: shutdown [/?] [/i | /l | /s | /r | /g | /a | /p | /h | /e] [/f]\n\
     /s      Encerramento do computador.\n\
     /r      Reinicio do computador.\n\
     /g      Reinicio do computador e todas as aplicaçoes registadas.\n\
-//translated until here
+//-------------------------------translated until here---------------------------------------------\\
     /a      Cancel a delayed shutdown. Can only be used during the delay\n\
             period.\n\
     /p      Shutdown the local computer without any timeout or warning. Can be\n\
