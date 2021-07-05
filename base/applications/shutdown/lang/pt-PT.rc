@@ -1,4 +1,5 @@
-//--------------------------start translation----------------\\
+/* Translation and UTF-8 Conversion by Gabriel Aguiar(fgsoftware1) <fgygh5804@gmail.com,fgsoftwarestudio@gmail.com> (July, 2021) */
+
 LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
 
 IDD_GUI DIALOGEX 0, 0, 240, 255
