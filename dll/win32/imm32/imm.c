@@ -1099,6 +1099,7 @@ CandidateListAnsiToWide(const CANDIDATELIST *pAnsiCL, LPCANDIDATELIST pWideCL, D
     const BYTE *pbAnsi;
     LPBYTE pbWide;
 
+    /* calculate total wide size */
     if (pAnsiCL->dwCount > 0)
     {
         dwSize = offsetof(CANDIDATELIST, dwOffset) + (pAnsiCL->dwCount * sizeof(DWORD));
@@ -1120,6 +1121,7 @@ CandidateListAnsiToWide(const CANDIDATELIST *pAnsiCL, LPCANDIDATELIST pWideCL, D
     if (dwBufLen < dwSize)
         return 0;
 
+    /* store to wide */
     pWideCL->dwSize = dwSize;
     pWideCL->dwStyle = pAnsiCL->dwStyle;
     pWideCL->dwCount = pAnsiCL->dwCount;
