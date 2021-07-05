@@ -1034,7 +1034,8 @@ BOOL WINAPI ImmUnlockClientImc(PCLIENTIMC pClientIMC)
 }
 
 static DWORD APIENTRY
-CandidateListWideToAnsi(const CANDIDATELIST *lpWideCL, LPCANDIDATELIST lpAnsiCL, DWORD dwBufLen, UINT uCodePage)
+CandidateListWideToAnsi(const CANDIDATELIST *lpWideCL, LPCANDIDATELIST lpAnsiCL, DWORD dwBufLen,
+                        UINT uCodePage)
 {
     BOOL bUsedDefault;
     DWORD dwSize, dwIndex, cbGot, cbLeft;
@@ -1048,7 +1049,8 @@ CandidateListWideToAnsi(const CANDIDATELIST *lpWideCL, LPCANDIDATELIST lpAnsiCL,
         for (dwIndex = 0; dwIndex < lpWideCL->dwCount; ++dwIndex)
         {
             pbWide = (const BYTE *)lpWideCL + lpWideCL->dwOffset[dwIndex];
-            dwSize += WideCharToMultiByte(uCodePage, 0, (LPCWSTR)pbWide, -1, NULL, 0, NULL, &bUsedDefault);
+            dwSize += WideCharToMultiByte(uCodePage, 0, (LPCWSTR)pbWide, -1, NULL, 0,
+                                          NULL, &bUsedDefault);
         }
     }
     else
@@ -1071,29 +1073,32 @@ CandidateListWideToAnsi(const CANDIDATELIST *lpWideCL, LPCANDIDATELIST lpAnsiCL,
     lpAnsiCL->dwPageSize = lpWideCL->dwPageSize;
 
     if (lpWideCL->dwCount > 0)
-        lpAnsiCL->dwOffset[0] = offsetof(CANDIDATELIST, dwOffset) + (lpWideCL->dwCount * sizeof(DWORD));
-    else
-        lpAnsiCL->dwOffset[0] = sizeof(CANDIDATELIST);
-
-    if (lpWideCL->dwCount > 0)
     {
+        lpAnsiCL->dwOffset[0] = offsetof(CANDIDATELIST, dwOffset) +
+                                (lpWideCL->dwCount * sizeof(DWORD));
         cbLeft = dwBufLen - lpAnsiCL->dwOffset[0];
         for (dwIndex = 0; dwIndex < lpWideCL->dwCount; ++dwIndex)
         {
             pbWide = (const BYTE *)lpWideCL + lpWideCL->dwOffset[dwIndex];
             pbAnsi = (LPBYTE)lpAnsiCL + lpAnsiCL->dwOffset[dwIndex];
-            cbGot = WideCharToMultiByte(uCodePage, 0, (LPCWSTR)pbWide, -1, (LPSTR)pbAnsi, cbLeft, 0, &bUsedDefault);
+            cbGot = WideCharToMultiByte(uCodePage, 0, (LPCWSTR)pbWide, -1,
+                                        (LPSTR)pbAnsi, cbLeft, 0, &bUsedDefault);
             cbLeft -= cbGot;
             if (dwIndex < lpWideCL->dwCount - 1)
                 lpAnsiCL->dwOffset[dwIndex + 1] = lpAnsiCL->dwOffset[dwIndex] + cbGot;
         }
+    }
+    else
+    {
+        lpAnsiCL->dwOffset[0] = sizeof(CANDIDATELIST);
     }
 
     return dwSize;
 }
 
 static DWORD APIENTRY
-CandidateListAnsiToWide(const CANDIDATELIST *pAnsiCL, LPCANDIDATELIST pWideCL, DWORD dwBufLen, UINT uCodePage)
+CandidateListAnsiToWide(const CANDIDATELIST *pAnsiCL, LPCANDIDATELIST pWideCL, DWORD dwBufLen,
+                        UINT uCodePage)
 {
     DWORD dwSize, cchWide, dwIndex, cchGot, cbGot, cbLeft, cchLeft;
     const BYTE *pbAnsi;
@@ -1130,31 +1135,34 @@ CandidateListAnsiToWide(const CANDIDATELIST *pAnsiCL, LPCANDIDATELIST pWideCL, D
     pWideCL->dwPageSize = pAnsiCL->dwPageSize;
 
     if (pWideCL->dwCount > 0)
-        pWideCL->dwOffset[0] = offsetof(CANDIDATELIST, dwOffset) + (pWideCL->dwCount * sizeof(DWORD));
-    else
-        pWideCL->dwOffset[0] = sizeof(CANDIDATELIST);
-
-    if (pWideCL->dwCount > 0)
     {
+        pWideCL->dwOffset[0] = offsetof(CANDIDATELIST, dwOffset) +
+                               (pWideCL->dwCount * sizeof(DWORD));
         cbLeft = dwBufLen;
         for (dwIndex = 0; dwIndex < pAnsiCL->dwCount; ++dwIndex)
         {
             pbAnsi = (const BYTE *)pAnsiCL + pAnsiCL->dwOffset[dwIndex];
             pbWide = (LPBYTE)pWideCL + pWideCL->dwOffset[dwIndex];
             cchLeft = cbLeft / sizeof(WCHAR);
-            cchGot = MultiByteToWideChar(uCodePage, MB_PRECOMPOSED, (LPCSTR)pbAnsi, -1, (LPWSTR)pbWide, cchLeft);
+            cchGot = MultiByteToWideChar(uCodePage, MB_PRECOMPOSED, (LPCSTR)pbAnsi, -1,
+                                         (LPWSTR)pbWide, cchLeft);
             cbGot = cchGot * sizeof(WCHAR);
             cbLeft -= cbGot;
             if (dwIndex + 1 < pWideCL->dwCount)
                 pWideCL->dwOffset[dwIndex + 1] = pWideCL->dwOffset[dwIndex] + cbGot;
         }
     }
+    else
+    {
+        pWideCL->dwOffset[0] = sizeof(CANDIDATELIST);
+    }
 
     return dwBufLen;
 }
 
 static DWORD APIENTRY
-ImmGetCandidateListAW(HIMC hIMC, DWORD dwIndex, LPCANDIDATELIST lpCandList, DWORD dwBufLen, BOOL bAnsi)
+ImmGetCandidateListAW(HIMC hIMC, DWORD dwIndex, LPCANDIDATELIST lpCandList, DWORD dwBufLen,
+                      BOOL bAnsi)
 {
     DWORD ret = 0;
     LPINPUTCONTEXT pIC;
