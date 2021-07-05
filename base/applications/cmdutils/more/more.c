@@ -80,6 +80,19 @@ static BOOL IsBlankLine(IN PCWCH line, IN DWORD cch)
     WORD wType;
     for (ich = 0; ich < cch; ++ich)
     {
+        /*
+         * Explicitly exclude FORM-FEED from the check,
+         * so that the pager can handle it.
+         */
+        if (line[ich] == L'\f')
+            return FALSE;
+
+        /*
+         * Otherwise do the extended blanks check.
+         * Note that MS MORE.COM only checks for spaces (\x20) and TABs (\x09).
+         * See http://archives.miloush.net/michkap/archive/2007/06/11/3230072.html
+         * for more information.
+         */
         wType = 0;
         GetStringTypeW(CT_CTYPE1, &line[ich], 1, &wType);
         if (!(wType & (C1_BLANK | C1_SPACE)))
@@ -88,21 +101,19 @@ static BOOL IsBlankLine(IN PCWCH line, IN DWORD cch)
     return TRUE;
 }
 
-static BOOL __stdcall
+static BOOL
+__stdcall
 MorePagerLine(
     IN OUT PCON_PAGER Pager,
     IN PCWCH line,
     IN DWORD cch)
 {
-    DWORD ich;
-
     if (s_dwFlags & FLAG_PLUSn) /* Skip lines */
     {
         if (Pager->lineno < s_nNextLineNo)
         {
-            Pager->dwFlags |= CON_PAGER_FLAG_DONT_OUTPUT;
             s_bPrevLineIsBlank = FALSE;
-            return TRUE; /* Don't output */
+            return TRUE; /* Handled */
         }
         s_dwFlags &= ~FLAG_PLUSn;
     }
@@ -112,19 +123,26 @@ MorePagerLine(
         if (IsBlankLine(line, cch))
         {
             if (s_bPrevLineIsBlank)
-            {
-                Pager->dwFlags |= CON_PAGER_FLAG_DONT_OUTPUT;
-                return TRUE; /* Don't output */
-            }
+                return TRUE; /* Handled */
 
-            for (ich = 0; ich < cch; ++ich)
-            {
-                if (line[ich] == L'\n')
-                {
-                    s_bPrevLineIsBlank = TRUE;
-                    break;
-                }
-            }
+            /*
+             * Display a single blank line, independently of the actual size
+             * of the current line, by displaying just one space: this is
+             * especially needed in order to force line wrapping when the
+             * ENABLE_VIRTUAL_TERMINAL_PROCESSING or DISABLE_NEWLINE_AUTO_RETURN
+             * console modes are enabled.
+             * Then, reposition the cursor to the next line, first column.
+             */
+            if (Pager->PageColumns > 0)
+                ConStreamWrite(Pager->Screen->Stream, TEXT(" "), 1);
+            ConStreamWrite(Pager->Screen->Stream, TEXT("\n"), 1);
+            Pager->iLine++;
+            Pager->iColumn = 0;
+
+            s_bPrevLineIsBlank = TRUE;
+            s_nNextLineNo = 0;
+
+            return TRUE; /* Handled */
         }
         else
         {
@@ -133,7 +151,8 @@ MorePagerLine(
     }
 
     s_nNextLineNo = 0;
-    return FALSE; /* Do output */
+    /* Not handled, let the pager do the default action */
+    return FALSE;
 }
 
 static BOOL
@@ -170,6 +189,14 @@ PagePrompt(PCON_PAGER Pager, DWORD Done, DWORD Total)
         K32LoadStringW(NULL, IDS_CONTINUE_OPTIONS, StrOptions, ARRAYSIZE(StrOptions));
     if (!*StrLines)
         K32LoadStringW(NULL, IDS_CONTINUE_LINES, StrLines, ARRAYSIZE(StrLines));
+
+    /*
+     * Check whether the pager is prompting, but we have actually finished
+     * to display a given file, or no data is present in STDIN anymore.
+     * In this case, skip the prompt altogether. The only exception is when
+     * we are displaying other files.
+     */
+    // TODO: Implement!
 
 Restart:
     nLines = 0;
@@ -322,6 +349,11 @@ Restart:
     dwMode |= ENABLE_PROCESSED_INPUT;
     SetConsoleMode(hInput, dwMode);
 
+    /* Refresh the screen information, as the console may have been
+     * redimensioned. Update also the default number of lines to scroll. */
+    ConGetScreenInfo(Pager->Screen, &csbi);
+    Pager->ScrollRows = csbi.srWindow.Bottom - csbi.srWindow.Top;
+
     /*
      * Erase the full line where the cursor is, and move
      * the cursor back to the beginning of the line.
@@ -356,6 +388,7 @@ Restart:
         {
             s_dwFlags |= FLAG_PLUSn;
             s_nNextLineNo = Pager->lineno + nLines;
+            /* Use the default Pager->ScrollRows value */
             return TRUE;
         }
         default:
@@ -411,6 +444,7 @@ Restart:
                 /* Clear the screen */
                 ConClearScreen(Pager->Screen);
             }
+            /* Use the default Pager->ScrollRows value */
             return TRUE;
         }
 
@@ -443,6 +477,7 @@ Restart:
     else
     {
         /* Extended features are unavailable: display one page */
+        /* Use the default Pager->ScrollRows value */
         return TRUE;
     }
 }
@@ -981,9 +1016,9 @@ int wmain(int argc, WCHAR* argv[])
     }
 
     Pager.PagerLine = MorePagerLine;
-    Pager.dwFlags |= CON_PAGER_FLAG_EXPAND_TABS;
+    Pager.dwFlags |= CON_PAGER_EXPAND_TABS | CON_PAGER_CACHE_INCOMPLETE_LINE;
     if (s_dwFlags & FLAG_P)
-        Pager.dwFlags |= CON_PAGER_FLAG_EXPAND_FF;
+        Pager.dwFlags |= CON_PAGER_EXPAND_FF;
     Pager.nTabWidth = s_nTabWidth;
 
     /* Special case where we run 'MORE' without any argument: we use STDIN */
@@ -1006,7 +1041,7 @@ int wmain(int argc, WCHAR* argv[])
         Encoding = ENCODING_ANSI; // ENCODING_UTF8;
 
         /* Start paging */
-        bContinue = ConPutsPaging(&Pager, PagePrompt, TRUE, L"");
+        bContinue = ConWritePaging(&Pager, PagePrompt, TRUE, NULL, 0);
         if (!bContinue)
             goto Quit;
 
@@ -1033,6 +1068,11 @@ int wmain(int argc, WCHAR* argv[])
                 break;
         }
         while (bRet && dwReadBytes > 0);
+
+        /* Flush any cached pager buffers */
+        if (bContinue)
+            bContinue = ConWritePaging(&Pager, PagePrompt, FALSE, NULL, 0);
+
         goto Quit;
     }
 
@@ -1074,6 +1114,7 @@ int wmain(int argc, WCHAR* argv[])
         SetFilePointer(hFile, SkipBytes, NULL, FILE_BEGIN);
 
         /* Reset state for paging */
+        s_nNextLineNo = 0;
         s_bPrevLineIsBlank = FALSE;
         s_fPrompt = PROMPT_PERCENT;
         s_bDoNextFile = FALSE;
@@ -1082,7 +1123,7 @@ int wmain(int argc, WCHAR* argv[])
         dwSumReadBytes = dwSumReadChars = 0;
 
         /* Start paging */
-        bContinue = ConPutsPaging(&Pager, PagePrompt, TRUE, L"");
+        bContinue = ConWritePaging(&Pager, PagePrompt, TRUE, NULL, 0);
         if (!bContinue)
         {
             /* We stop displaying this file */
@@ -1133,6 +1174,10 @@ int wmain(int argc, WCHAR* argv[])
             }
         }
         while (bRet && dwReadBytes > 0);
+
+        /* Flush any cached pager buffers */
+        if (bContinue)
+            bContinue = ConWritePaging(&Pager, PagePrompt, FALSE, NULL, 0);
 
         CloseHandle(hFile);
 

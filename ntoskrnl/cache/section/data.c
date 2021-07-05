@@ -643,7 +643,7 @@ MiFreeSegmentPage(PMM_SECTION_SEGMENT Segment,
                 OldPage,
                 FileOffset->QuadPart,
                 Segment,
-                MmGetReferenceCountPage(OldPage),
+                MmGetReferenceCountPageWithoutLock(OldPage),
                 Entry,
                 IS_DIRTY_SSE(Entry) ? "true" : "false");
 

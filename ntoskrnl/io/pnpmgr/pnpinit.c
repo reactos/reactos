@@ -435,8 +435,11 @@ IopInitializePlugPlayServices(VOID)
                                 DNF_IDS_QUERIED | DNF_NO_RESOURCE_REQUIRED;
 
     /* Create instance path */
-    RtlCreateUnicodeString(&IopRootDeviceNode->InstancePath,
-                           REGSTR_VAL_ROOT_DEVNODE);
+    if (!RtlCreateUnicodeString(&IopRootDeviceNode->InstancePath, REGSTR_VAL_ROOT_DEVNODE))
+    {
+        DPRINT1("RtlCreateUnicodeString() failed\n");
+        KeBugCheckEx(PHASE1_INITIALIZATION_FAILED, Status, 0, 0, 0);
+    }
 
     /* Call the add device routine */
     IopRootDriverObject->DriverExtension->AddDevice(IopRootDriverObject,

@@ -298,6 +298,8 @@ CWineTest::RunTest(CTestInfo* TestInfo)
     ss << "Running Wine Test, Module: " << TestInfo->Module << ", Test: " << TestInfo->Test << endl;
     StringOut(ss.str());
 
+    SetCurrentDirectoryW(m_TestPath.c_str());
+
     StartTime = GetTickCount();
 
     try

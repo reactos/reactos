@@ -52,6 +52,11 @@ struct _MM_RMAP_ENTRY;
 typedef ULONG_PTR SWAPENTRY;
 
 //
+// Special IRQL value (found in assertions)
+//
+#define MM_NOIRQL ((KIRQL)0xFFFFFFFF)
+
+//
 // MmDbgCopyMemory Flags
 //
 #define MMDBG_COPY_WRITE            0x00000001
@@ -175,6 +180,7 @@ typedef ULONG_PTR SWAPENTRY;
 
 typedef struct _MM_SECTION_SEGMENT
 {
+    LONG64 RefCount;
     PFILE_OBJECT FileObject;
 
     FAST_MUTEX Lock;		/* lock which protects the page directory */
@@ -194,7 +200,6 @@ typedef struct _MM_SECTION_SEGMENT
 		ULONG Characteristics;
 	} Image;
 
-	LONG64 RefCount;
 	ULONG SegFlags;
 
     ULONGLONG LastPage;
@@ -204,9 +209,10 @@ typedef struct _MM_SECTION_SEGMENT
 
 typedef struct _MM_IMAGE_SECTION_OBJECT
 {
-    PFILE_OBJECT FileObject;
-
     LONG64 RefCount;
+    PFILE_OBJECT FileObject;
+    ULONG SectionCount;
+    LONG MapCount;
     ULONG SegFlags;
 
     SECTION_IMAGE_INFORMATION ImageInformation;
@@ -219,6 +225,7 @@ typedef struct _MM_IMAGE_SECTION_OBJECT
 #define MM_DATAFILE_SEGMENT                 (0x2)
 #define MM_SEGMENT_INDELETE                 (0x4)
 #define MM_SEGMENT_INCREATE                 (0x8)
+#define MM_IMAGE_SECTION_FLUSH_DELETE       (0x10)
 
 
 #define MA_GetStartingAddress(_MemoryArea) ((_MemoryArea)->VadNode.StartingVpn << PAGE_SHIFT)
@@ -275,7 +282,7 @@ void
 MI_SET_PROCESS_USTR(PUNICODE_STRING ustr)
 {
     PWSTR pos, strEnd;
-    int i;
+    ULONG i;
 
     if (!ustr->Buffer || ustr->Length == 0)
     {
@@ -407,6 +414,7 @@ typedef struct _MMPFN
     MI_PFN_USAGES PfnUsage;
     CHAR ProcessName[16];
 #define MI_SET_PFN_PROCESS_NAME(pfn, x) memcpy(pfn->ProcessName, x, min(sizeof(x), sizeof(pfn->ProcessName)))
+    PVOID CallSite;
 #endif
 
     // HACK until WS lists are supported
@@ -1470,7 +1478,14 @@ MmUnsharePageEntrySectionSegment(PMEMORY_AREA MemoryArea,
 
 VOID
 NTAPI
-MmDereferenceSegment(PMM_SECTION_SEGMENT Segment);
+MmDereferenceSegmentWithLock(PMM_SECTION_SEGMENT Segment, KIRQL OldIrql);
+
+FORCEINLINE
+VOID
+MmDereferenceSegment(PMM_SECTION_SEGMENT Segment)
+{
+    MmDereferenceSegmentWithLock(Segment, MM_NOIRQL);
+}
 
 NTSTATUS
 NTAPI

@@ -125,6 +125,7 @@ void __RPC_USER midl_user_free(void __RPC_FAR * ptr)
 
 void __RPC_USER SAMPR_HANDLE_rundown(SAMPR_HANDLE hHandle)
 {
+    FIXME("SAMPR_HANDLE_rundown(%p)\n", hHandle);
 }
 
 
@@ -486,6 +487,12 @@ SamrShutdownSamServer(IN SAMPR_HANDLE ServerHandle)
 
     /* Shut the server down */
     RpcMgmtStopServerListening(0);
+
+    Status = SampShutdownDisplayCache();
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("SampShutdownDisplayCache() failed (Status 0x%08lx)\n", Status);
+    }
 
     return STATUS_SUCCESS;
 }
@@ -8724,9 +8731,21 @@ SamrQueryDisplayInformation(IN SAMPR_HANDLE DomainHandle,
                             OUT unsigned long *TotalReturned,
                             OUT PSAMPR_DISPLAY_INFO_BUFFER Buffer)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    TRACE("SamrQueryDisplayInformation(%p %lu %lu %lu %lu %p %p %p)\n",
+          DomainHandle, DisplayInformationClass, Index,
+          EntryCount, PreferredMaximumLength, TotalAvailable,
+          TotalReturned, Buffer);
+
+    return SamrQueryDisplayInformation3(DomainHandle,
+                                        DisplayInformationClass,
+                                        Index,
+                                        EntryCount,
+                                        PreferredMaximumLength,
+                                        TotalAvailable,
+                                        TotalReturned,
+                                        Buffer);
 }
+
 
 /* Function 41 */
 NTSTATUS
@@ -8736,9 +8755,15 @@ SamrGetDisplayEnumerationIndex(IN SAMPR_HANDLE DomainHandle,
                                IN PRPC_UNICODE_STRING Prefix,
                                OUT unsigned long *Index)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    TRACE("SamrGetDisplayEnumerationIndex(%p %lu %p %p)\n",
+          DomainHandle, DisplayInformationClass, Prefix, Index);
+
+    return SamrGetDisplayEnumerationIndex2(DomainHandle,
+                                           DisplayInformationClass,
+                                           Prefix,
+                                           Index);
 }
+
 
 /* Function 42 */
 NTSTATUS
@@ -8748,6 +8773,7 @@ SamrTestPrivateFunctionsDomain(IN SAMPR_HANDLE DomainHandle)
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
+
 
 /* Function 43 */
 NTSTATUS
@@ -8955,14 +8981,14 @@ SamrQueryDisplayInformation2(IN SAMPR_HANDLE DomainHandle,
           EntryCount, PreferredMaximumLength, TotalAvailable,
           TotalReturned, Buffer);
 
-    return SamrQueryDisplayInformation(DomainHandle,
-                                       DisplayInformationClass,
-                                       Index,
-                                       EntryCount,
-                                       PreferredMaximumLength,
-                                       TotalAvailable,
-                                       TotalReturned,
-                                       Buffer);
+    return SamrQueryDisplayInformation3(DomainHandle,
+                                        DisplayInformationClass,
+                                        Index,
+                                        EntryCount,
+                                        PreferredMaximumLength,
+                                        TotalAvailable,
+                                        TotalReturned,
+                                        Buffer);
 }
 
 
@@ -8977,10 +9003,8 @@ SamrGetDisplayEnumerationIndex2(IN SAMPR_HANDLE DomainHandle,
     TRACE("SamrGetDisplayEnumerationIndex2(%p %lu %p %p)\n",
           DomainHandle, DisplayInformationClass, Prefix, Index);
 
-    return SamrGetDisplayEnumerationIndex(DomainHandle,
-                                          DisplayInformationClass,
-                                          Prefix,
-                                          Index);
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
 }
 
 
@@ -9411,19 +9435,43 @@ SamrQueryDisplayInformation3(IN SAMPR_HANDLE DomainHandle,
                              OUT unsigned long *TotalReturned,
                              OUT PSAMPR_DISPLAY_INFO_BUFFER Buffer)
 {
-    TRACE("SamrQueryDisplayInformation3(%p %lu %lu %lu %lu %p %p %p)\n",
+    PSAM_DB_OBJECT DomainObject;
+    NTSTATUS Status;
+
+    FIXME("SamrQueryDisplayInformation3(%p %lu %lu %lu %lu %p %p %p)\n",
           DomainHandle, DisplayInformationClass, Index,
           EntryCount, PreferredMaximumLength, TotalAvailable,
           TotalReturned, Buffer);
 
-    return SamrQueryDisplayInformation(DomainHandle,
-                                       DisplayInformationClass,
-                                       Index,
-                                       EntryCount,
-                                       PreferredMaximumLength,
-                                       TotalAvailable,
-                                       TotalReturned,
-                                       Buffer);
+    RtlAcquireResourceShared(&SampResource,
+                             TRUE);
+
+    /* Validate the domain handle */
+    Status = SampValidateDbObject(DomainHandle,
+                                  SamDbDomainObject,
+                                  DOMAIN_LIST_ACCOUNTS,
+                                  &DomainObject);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("SampValidateDbObject() failed (Status 0x%08lx)\n", Status);
+        goto done;
+    }
+
+    Status = SampFillDisplayCache(DomainObject,
+                                  DisplayInformationClass);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("SampFillDisplayCache() failed (Status 0x%08lx)\n", Status);
+        goto done;
+    }
+
+done:
+    TRACE("returns with status 0x%08lx\n", Status);
+
+    RtlReleaseResource(&SampResource);
+
+//    return Status;
+    return STATUS_NOT_IMPLEMENTED;
 }
 
 

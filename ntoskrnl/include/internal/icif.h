@@ -37,5 +37,8 @@ typedef struct _INFORMATION_CLASS_INFO
 #define IQS(TypeQuery, AlignmentQuery, TypeSet, AlignmentSet, Flags) \
   { sizeof(TypeQuery), sizeof(AlignmentQuery), sizeof(TypeSet), sizeof(AlignmentSet), Flags }
 
+#define IQS_NO_TYPE_LENGTH(Alignment, Flags) \
+  { 0, sizeof(Alignment), 0, sizeof(Alignment), Flags }
+
 #define IQS_NONE \
   { 0, sizeof(CHAR), 0, sizeof(CHAR), ICIF_NONE }

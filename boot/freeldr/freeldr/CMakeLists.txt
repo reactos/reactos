@@ -1,11 +1,4 @@
 
-if(SEPARATE_DBG)
-    # FIXME: http://sourceware.org/bugzilla/show_bug.cgi?id=11822
-    set(CMAKE_LDR_PE_HELPER_LINK_EXECUTABLE "<CMAKE_C_COMPILER> <CMAKE_C_LINK_FLAGS> <LINK_FLAGS> <OBJECTS> -o <TARGET> <LINK_LIBRARIES>")
-    set(CMAKE_LDR_PE_HELPER_STANDARD_LIBRARIES_INIT "")
-    set(CMAKE_LDR_PE_HELPER_STANDARD_LIBRARIES "-lgcc" CACHE STRING "Standard C Libraries")
-endif()
-
 if(MSVC)
     # Explicitly use string pooling
     add_compile_options("/GF")
@@ -265,69 +258,53 @@ if(ARCH STREQUAL "i386")
 endif()
 
 add_executable(freeldr_pe ${FREELDR_BASE_SOURCE})
-add_executable(freeldr_pe_dbg EXCLUDE_FROM_ALL ${FREELDR_BASE_SOURCE})
 
-set_target_properties(freeldr_pe freeldr_pe_dbg
+set_target_properties(freeldr_pe
     PROPERTIES
     ENABLE_EXPORTS TRUE
     DEFINE_SYMBOL "")
 
-if(NOT MSVC AND SEPARATE_DBG)
-    set_target_properties(freeldr_pe PROPERTIES LINKER_LANGUAGE LDR_PE_HELPER)
-    set_target_properties(freeldr_pe_dbg PROPERTIES LINKER_LANGUAGE LDR_PE_HELPER)
-endif()
-
 if(MSVC)
     if(ARCH STREQUAL "arm")
         add_target_link_flags(freeldr_pe "/ignore:4078 /ignore:4254 /DRIVER")
-        add_target_link_flags(freeldr_pe_dbg "/ignore:4078 /ignore:4254 /DRIVER")
     else()
         target_link_options(freeldr_pe PRIVATE /ignore:4078 /ignore:4254 /DYNAMICBASE:NO /FIXED /FILEALIGN:512 /ALIGN:512)
         add_linker_script(freeldr_pe freeldr_i386.msvc.lds)
-        target_link_options(freeldr_pe_dbg PRIVATE /ignore:4078 /ignore:4254 /DYNAMICBASE:NO /FIXED /FILEALIGN:512 /ALIGN:512)
-        add_linker_script(freeldr_pe_dbg freeldr_i386.msvc.lds)
     endif()
     # We don't need hotpatching
     remove_target_compile_option(freeldr_pe "/hotpatch")
-    remove_target_compile_option(freeldr_pe_dbg "/hotpatch")
     remove_target_compile_option(freeldr_common "/hotpatch")
 else()
-    add_target_link_flags(freeldr_pe "-Wl,--strip-all,--exclude-all-symbols,--file-alignment,0x200,--section-alignment,0x200")
+    target_link_options(freeldr_pe PRIVATE -Wl,--exclude-all-symbols,--file-alignment,0x200,--section-alignment,0x200)
     add_linker_script(freeldr_pe freeldr_gcc.lds)
-    add_target_link_flags(freeldr_pe_dbg "-Wl,--exclude-all-symbols,--file-alignment,0x200,--section-alignment,0x200")
-    add_linker_script(freeldr_pe_dbg freeldr_gcc.lds)
+    # Strip everything, including rossym data
+    add_custom_command(TARGET freeldr_pe
+                    POST_BUILD
+                    COMMAND ${CMAKE_STRIP} --remove-section=.rossym $<TARGET_FILE:freeldr_pe>
+                    COMMAND ${CMAKE_STRIP} --strip-all $<TARGET_FILE:freeldr_pe>)
 endif()
 
 set_image_base(freeldr_pe 0x10000)
 set_subsystem(freeldr_pe native)
 set_entrypoint(freeldr_pe RealEntryPoint)
 
-set_image_base(freeldr_pe_dbg 0x10000)
-set_subsystem(freeldr_pe_dbg native)
-set_entrypoint(freeldr_pe_dbg RealEntryPoint)
-
 if(ARCH STREQUAL "i386")
     target_link_libraries(freeldr_pe mini_hal)
-    target_link_libraries(freeldr_pe_dbg mini_hal)
 endif()
 
 target_link_libraries(freeldr_pe freeldr_common cportlib cmlib rtl libcntpr)
-target_link_libraries(freeldr_pe_dbg freeldr_common cportlib cmlib rtl libcntpr)
 
 # dynamic analysis switches
 if(STACK_PROTECTOR)
     target_sources(freeldr_pe PRIVATE $<TARGET_OBJECTS:gcc_ssp_nt>)
-    target_sources(freeldr_pe_dbg PRIVATE $<TARGET_OBJECTS:gcc_ssp_nt>)
 endif()
 
 if(RUNTIME_CHECKS)
     target_link_libraries(freeldr_pe runtmchk)
-    target_link_libraries(freeldr_pe_dbg runtmchk)
     add_target_link_flags(freeldr_pe "/MERGE:.rtc=.text")
 endif()
 
 add_dependencies(freeldr_pe asm)
-add_dependencies(freeldr_pe_dbg asm)
 
 if(SARCH STREQUAL "pc98")
     file(MAKE_DIRECTORY ${REACTOS_BINARY_DIR}/PC98)

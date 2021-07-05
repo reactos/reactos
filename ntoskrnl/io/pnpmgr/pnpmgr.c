@@ -18,7 +18,6 @@
 ERESOURCE PpRegistryDeviceResource;
 KGUARDED_MUTEX PpDeviceReferenceTableLock;
 RTL_AVL_TABLE PpDeviceReferenceTable;
-BOOLEAN PnPBootDriversLoaded;
 
 extern ULONG ExpInitializationPhase;
 

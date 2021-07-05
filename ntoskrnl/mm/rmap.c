@@ -300,7 +300,6 @@ WriteSegment:
         Released = MmCheckDirtySegment(Segment, &SegmentOffset, FALSE, TRUE);
 
         MmUnlockSectionSegment(Segment);
-
         MmDereferenceSegment(Segment);
 
         if (Released)
@@ -475,8 +474,6 @@ MmGetSegmentRmap(PFN_NUMBER Page, PULONG RawOffset)
                 MiReleasePfnLock(OldIrql);
                 return NULL;
             }
-
-            InterlockedIncrement64(Result->Segment->ReferenceCount);
             MiReleasePfnLock(OldIrql);
             return Result;
         }

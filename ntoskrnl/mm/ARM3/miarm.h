@@ -231,11 +231,6 @@ extern const ULONG MmProtectToValue[32];
 #endif
 
 //
-// Special IRQL value (found in assertions)
-//
-#define MM_NOIRQL (KIRQL)0xFFFFFFFF
-
-//
 // Returns the color of a page
 //
 #define MI_GET_PAGE_COLOR(x)                ((x) & MmSecondaryColorMask)

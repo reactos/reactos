@@ -580,13 +580,10 @@ KdSendPacket(
         {
 #ifdef KDBG
             PLDR_DATA_TABLE_ENTRY LdrEntry;
-            if (!WaitStateChange->u.LoadSymbols.UnloadSymbols)
+            /* Load symbols. Currently implemented only for KDBG! */
+            if (KdbpSymFindModule((PVOID)(ULONG_PTR)WaitStateChange->u.LoadSymbols.BaseOfDll, -1, &LdrEntry))
             {
-                /* Load symbols. Currently implemented only for KDBG! */
-                if (KdbpSymFindModule((PVOID)(ULONG_PTR)WaitStateChange->u.LoadSymbols.BaseOfDll, NULL, -1, &LdrEntry))
-                {
-                    KdbSymProcessSymbols(LdrEntry);
-                }
+                KdbSymProcessSymbols(LdrEntry, !WaitStateChange->u.LoadSymbols.UnloadSymbols);
             }
 #endif
             return;
@@ -772,6 +769,9 @@ KdReceivePacket(
         OldIrql = KdpAcquireLock(&KdpSerialSpinLock);
     }
 
+    /* Release the spinlock */
+    KdpReleaseLock(&KdpSerialSpinLock, OldIrql);
+
     /* Print a new line */
     *StringChar.Buffer = '\n';
     KdpPrintString(&StringChar);
@@ -782,9 +782,6 @@ KdReceivePacket(
 
     if (!(KdbDebugState & KD_DEBUG_KDSERIAL))
         KbdEnableMouse();
-
-    /* Release the spinlock */
-    KdpReleaseLock(&KdpSerialSpinLock, OldIrql);
 
 #endif
     return KdPacketReceived;

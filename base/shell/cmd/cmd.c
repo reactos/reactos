@@ -2333,6 +2333,17 @@ static VOID Cleanup(VOID)
         ParseCommandLine(_T("\\cmdexit.bat"));
     }
 
+    /* Remove ctrl break handler */
+    RemoveBreakHandler();
+
+    /* Restore the default console mode */
+    SetConsoleMode(ConStreamGetOSHandle(StdIn),
+                   ENABLE_PROCESSED_INPUT | ENABLE_LINE_INPUT | ENABLE_ECHO_INPUT);
+    SetConsoleMode(ConStreamGetOSHandle(StdOut),
+                   ENABLE_PROCESSED_OUTPUT | ENABLE_WRAP_AT_EOL_OUTPUT);
+
+
+#ifdef _DEBUG_MEM
 #ifdef FEATURE_DIRECTORY_STACK
     /* Destroy directory stack */
     DestroyDirectoryStack();
@@ -2344,15 +2355,7 @@ static VOID Cleanup(VOID)
 
     /* Free GetEnvVar's buffer */
     GetEnvVar(NULL);
-
-    /* Remove ctrl break handler */
-    RemoveBreakHandler();
-
-    /* Restore the default console mode */
-    SetConsoleMode(ConStreamGetOSHandle(StdIn),
-                   ENABLE_PROCESSED_INPUT | ENABLE_LINE_INPUT | ENABLE_ECHO_INPUT);
-    SetConsoleMode(ConStreamGetOSHandle(StdOut),
-                   ENABLE_PROCESSED_OUTPUT | ENABLE_WRAP_AT_EOL_OUTPUT);
+#endif /* _DEBUG_MEM */
 
     DeleteCriticalSection(&ChildProcessRunningLock);
 }

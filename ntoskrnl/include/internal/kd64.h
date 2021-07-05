@@ -514,6 +514,11 @@ KdpDprintf(
     ...
 );
 
+BOOLEAN
+NTAPI
+KdpPrintString(
+    _In_ PSTRING Output);
+
 //
 // Global KD Data
 //

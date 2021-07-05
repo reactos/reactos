@@ -1396,6 +1396,14 @@ IopSetServiceEnumData(
         goto done;
     }
 
+    Status = RtlDuplicateUnicodeString(RTL_DUPLICATE_UNICODE_STRING_ALLOCATE_NULL_STRING,
+                                       &ServiceName,
+                                       &DeviceNode->ServiceName);
+    if (!NT_SUCCESS(Status))
+    {
+        goto done;
+    }
+
     RtlInitUnicodeString(&EnumKeyName, L"Enum");
     Status = IopCreateRegistryKeyEx(&ServiceEnumKey,
                                     ServiceKey,
@@ -1479,10 +1487,6 @@ IopSetServiceEnumData(
                                &NextInstance,
                                sizeof(NextInstance));
     }
-
-    RtlDuplicateUnicodeString(RTL_DUPLICATE_UNICODE_STRING_ALLOCATE_NULL_STRING,
-                              &ServiceName,
-                              &DeviceNode->ServiceName);
 
 done:
     if (ServiceEnumKey != NULL)

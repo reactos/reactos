@@ -27,10 +27,6 @@ ULONG KeLargestCacheLine = 0x40;
 ULONG KiDmaIoCoherency = 0;
 BOOLEAN KiSMTProcessorsPresent;
 
-/* Freeze data */
-KIRQL KiOldIrql;
-ULONG KiFreezeFlag;
-
 /* Flush data */
 volatile LONG KiTbFlushTimeStamp;
 

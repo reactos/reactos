@@ -1545,14 +1545,14 @@ static MUI_ENTRY ptPTBootLoaderInstallPageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        " Instala\207\306o do ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
     {
         0,
         0,
-        "Installing the bootloader onto the media, please wait...",
+        "A instalar o programa de arranque no disco de instala\207\306o. Por favor aguarde...",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
         TEXT_ID_STATIC
     },
