@@ -68,7 +68,7 @@
 @ stdcall ImmIsUIMessageW(long long long long)
 @ stdcall -stub ImmLoadIME(long)
 @ stdcall -stub ImmLoadLayout(long ptr)
-@ stub ImmLockClientImc
+@ stdcall ImmLockClientImc(ptr)
 @ stdcall ImmLockIMC(ptr)
 @ stdcall ImmLockIMCC(ptr)
 @ stdcall -stub ImmLockImeDpi(long)
@@ -102,7 +102,7 @@
 @ stdcall ImmSimulateHotKey(ptr long)
 @ stdcall -stub ImmSystemHandler(ptr long long)
 @ stdcall ImmTranslateMessage(ptr long long long)
-@ stub ImmUnlockClientImc
+@ stdcall ImmUnlockClientImc(ptr)
 @ stdcall ImmUnlockIMC(ptr)
 @ stdcall ImmUnlockIMCC(ptr)
 @ stdcall -stub ImmUnlockImeDpi(ptr)
