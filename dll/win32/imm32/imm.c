@@ -1641,6 +1641,23 @@ DWORD WINAPI ImmGetConversionListW(
 BOOL WINAPI ImmGetConversionStatus(
   HIMC hIMC, LPDWORD lpfdwConversion, LPDWORD lpfdwSentence)
 {
+#ifdef __REACTOS__
+    LPINPUTCONTEXT pIC;
+
+    TRACE("ImmGetConversionStatus(%p %p %p)\n", hIMC, lpfdwConversion, lpfdwSentence);
+
+    pIC = ImmLockIMC(hIMC);
+    if (!pIC)
+        return FALSE;
+
+    if (lpfdwConversion)
+        *lpfdwConversion = pIC->fdwConversion;
+    if (lpfdwSentence)
+        *lpfdwSentence = pIC->fdwSentence;
+
+    ImmUnlockIMC(hIMC);
+    return TRUE;
+#else
     InputContextData *data = get_imc_data(hIMC);
 
     TRACE("%p %p %p\n", hIMC, lpfdwConversion, lpfdwSentence);
@@ -1654,6 +1671,7 @@ BOOL WINAPI ImmGetConversionStatus(
         *lpfdwSentence = data->IMC.fdwSentence;
 
     return TRUE;
+#endif
 }
 
 static BOOL needs_ime_window(HWND hwnd)
