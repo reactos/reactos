@@ -1019,7 +1019,7 @@ LRESULT WINAPI ImmEscapeW(
 
 #ifdef __REACTOS__
 
-#define ROUNDUP4(n) (((n) + 3) & ~3)
+#define ROUNDUP4(n) (((n) + 3) & ~3)  /* DWORD alignment */
 
 PCLIENTIMC WINAPI ImmLockClientImc(HIMC hIMC)
 {
