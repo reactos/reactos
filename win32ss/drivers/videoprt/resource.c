@@ -97,7 +97,7 @@ IntVideoPortFilterResourceRequirements(
     if (!AccessRangeCount)
     {
         /* No legacy resources to report */
-        return Irp->IoStatus.Information;
+        return Irp->IoStatus.Status;
     }
 
     /* OK, we've got the access ranges now. Let's set up the resource requirements list */
