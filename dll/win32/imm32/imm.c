@@ -1078,7 +1078,7 @@ CandidateListWideToAnsi(const CANDIDATELIST *lpWideCL, LPCANDIDATELIST lpAnsiCL,
     if (lpWideCL->dwCount > 0)
     {
         pibOffsets[0] = sizeof(CANDIDATELIST) + ((lpWideCL->dwCount - 1) * sizeof(DWORD));
-        cbLeft = dwBufLen - lpAnsiCL->dwOffset[0];
+        cbLeft = dwBufLen - pibOffsets[0];
 
         for (dwIndex = 0; dwIndex < lpWideCL->dwCount; ++dwIndex)
         {
