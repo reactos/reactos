@@ -1158,7 +1158,7 @@ CandidateListAnsiToWide(const CANDIDATELIST *pAnsiCL, LPCANDIDATELIST pWideCL, D
             cbGot = cchGot * sizeof(WCHAR);
             cbLeft -= cbGot;
 
-            if (dwIndex + 1 < pWideCL->dwCount)
+            if (dwIndex + 1 < pAnsiCL->dwCount)
                 pibOffsets[dwIndex + 1] = pibOffsets[dwIndex] + cbGot;
         }
     }
