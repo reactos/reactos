@@ -1087,7 +1087,7 @@ CandidateListWideToAnsi(const CANDIDATELIST *lpWideCL, LPCANDIDATELIST lpAnsiCL,
 
             /* convert to ansi */
             cbGot = WideCharToMultiByte(uCodePage, 0, (LPCWSTR)pbWide, -1,
-                                        (LPSTR)pbAnsi, cbLeft, 0, &bUsedDefault);
+                                        (LPSTR)pbAnsi, cbLeft, NULL, &bUsedDefault);
             cbLeft -= cbGot;
 
             if (dwIndex < lpWideCL->dwCount - 1)
