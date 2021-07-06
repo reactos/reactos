@@ -1203,6 +1203,7 @@ ImmGetCandidateListAW(HIMC hIMC, DWORD dwIndex, LPCANDIDATELIST lpCandList, DWOR
     if (pCI->dwSize < sizeof(CANDIDATEINFO) || pCI->dwCount <= dwIndex)
         goto Quit;
 
+    /* get required size */
     pCL = (LPCANDIDATELIST)((LPBYTE)pCI + pCI->dwOffset[dwIndex]);
     if (bAnsi)
     {
@@ -1224,6 +1225,7 @@ ImmGetCandidateListAW(HIMC hIMC, DWORD dwIndex, LPCANDIDATELIST lpCandList, DWOR
         if (lpCandList == NULL || dwBufLen < dwSize)
             goto Quit;
 
+        /* store */
         if (bAnsi)
         {
             if (pClientIMC->dwFlags & CLIENTIMC_WIDE)
