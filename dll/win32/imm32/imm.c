@@ -1034,7 +1034,7 @@ BOOL WINAPI ImmUnlockClientImc(PCLIENTIMC pClientIMC)
 }
 
 static DWORD APIENTRY
-CandidateListWideToAnsi(const CANDIDATELIST *pWideCL, LPCANDIDATELIST lpAnsiCL, DWORD dwBufLen,
+CandidateListWideToAnsi(const CANDIDATELIST *pWideCL, LPCANDIDATELIST pAnsiCL, DWORD dwBufLen,
                         UINT uCodePage)
 {
     BOOL bUsedDefault;
@@ -1067,14 +1067,14 @@ CandidateListWideToAnsi(const CANDIDATELIST *pWideCL, LPCANDIDATELIST lpAnsiCL, 
         return 0;
 
     /* store to ansi */
-    lpAnsiCL->dwSize = dwBufLen;
-    lpAnsiCL->dwStyle = pWideCL->dwStyle;
-    lpAnsiCL->dwCount = pWideCL->dwCount;
-    lpAnsiCL->dwSelection = pWideCL->dwSelection;
-    lpAnsiCL->dwPageStart = pWideCL->dwPageStart;
-    lpAnsiCL->dwPageSize = pWideCL->dwPageSize;
+    pAnsiCL->dwSize = dwBufLen;
+    pAnsiCL->dwStyle = pWideCL->dwStyle;
+    pAnsiCL->dwCount = pWideCL->dwCount;
+    pAnsiCL->dwSelection = pWideCL->dwSelection;
+    pAnsiCL->dwPageStart = pWideCL->dwPageStart;
+    pAnsiCL->dwPageSize = pWideCL->dwPageSize;
 
-    pibOffsets = lpAnsiCL->dwOffset;
+    pibOffsets = pAnsiCL->dwOffset;
     if (pWideCL->dwCount > 0)
     {
         pibOffsets[0] = sizeof(CANDIDATELIST) + ((pWideCL->dwCount - 1) * sizeof(DWORD));
@@ -1083,7 +1083,7 @@ CandidateListWideToAnsi(const CANDIDATELIST *pWideCL, LPCANDIDATELIST lpAnsiCL, 
         for (dwIndex = 0; dwIndex < pWideCL->dwCount; ++dwIndex)
         {
             pbWide = (const BYTE *)pWideCL + pWideCL->dwOffset[dwIndex];
-            pbAnsi = (LPBYTE)lpAnsiCL + pibOffsets[dwIndex];
+            pbAnsi = (LPBYTE)pAnsiCL + pibOffsets[dwIndex];
 
             /* convert to ansi */
             cbGot = WideCharToMultiByte(uCodePage, 0, (LPCWSTR)pbWide, -1,
