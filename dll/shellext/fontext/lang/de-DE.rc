@@ -1,0 +1,29 @@
+// Don't translate this file at current time
+
+LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
+
+STRINGTABLE
+BEGIN
+    IDS_REACTOS_FONTS_FOLDER "ReactOS Schriftartenordner"
+END
+
+
+STRINGTABLE
+BEGIN
+    IDS_COL_NAME "Name"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_COL_FILENAME "Dateiname"
+    IDS_COL_SIZE "Dateigröße"
+    IDS_COL_MODIFIED "Geändert"
+    IDS_COL_ATTR "Attribute"
+    IDS_COL_ATTR_LETTERS "RHSAC"
+END
+
+
+STRINGTABLE
+BEGIN
+    IDS_FONT_PREVIEW "Vorschau"
+END
