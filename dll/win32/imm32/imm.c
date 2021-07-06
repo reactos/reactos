@@ -1142,7 +1142,7 @@ CandidateListAnsiToWide(const CANDIDATELIST *pAnsiCL, LPCANDIDATELIST pWideCL, D
     pWideCL->dwPageSize = pAnsiCL->dwPageSize;
 
     pibOffsets = pWideCL->dwOffset;
-    if (pWideCL->dwCount > 0)
+    if (pAnsiCL->dwCount > 0)
     {
         pibOffsets[0] = sizeof(CANDIDATELIST) + ((pWideCL->dwCount - 1) * sizeof(DWORD));
         cbLeft = dwBufLen - pibOffsets[0];
