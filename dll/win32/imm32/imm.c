@@ -1229,12 +1229,12 @@ ImmGetCandidateListAW(HIMC hIMC, DWORD dwIndex, LPCANDIDATELIST lpCandList, DWOR
             if (pClientIMC->dwFlags & CLIENTIMC_WIDE)
                 CandidateListAnsiToWide(pCL, lpCandList, dwSize, CP_ACP);
             else
-                CopyMemory(lpCandList, pCL, dwSize);
+                RtlCopyMemory(lpCandList, pCL, dwSize);
         }
         else
         {
             if (pClientIMC->dwFlags & CLIENTIMC_WIDE)
-                CopyMemory(lpCandList, pCL, dwSize);
+                RtlCopyMemory(lpCandList, pCL, dwSize);
             else
                 CandidateListWideToAnsi(pCL, lpCandList, dwSize, CP_ACP);
         }
