@@ -586,6 +586,7 @@ static INT_PTR CALLBACK RunDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARA
                     INT ic;
                     WCHAR *psz, *pszExpanded, *parent = NULL;
                     DWORD cchExpand;
+                    SHELLEXECUTEINFOW sei;
                     NMRUNFILEDLGW nmrfd;
 
                     ic = GetWindowTextLengthW(htxt);
@@ -594,6 +595,9 @@ static INT_PTR CALLBACK RunDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARA
                         EndDialog(hwnd, IDCANCEL);
                         return TRUE;
                     }
+
+                    ZeroMemory(&sei, sizeof(sei));
+                    sei.cbSize = sizeof(sei);
 
                     /*
                      * Allocate a new MRU entry, we need to add two characters
@@ -607,6 +611,9 @@ static INT_PTR CALLBACK RunDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARA
                     }
 
                     GetWindowTextW(htxt, psz, ic + 1);
+                    sei.hwnd = hwnd;
+                    sei.nShow = SW_SHOWNORMAL;
+                    sei.lpFile = psz;
                     StrTrimW(psz, L" \t");
 
                     if (wcschr(psz, L'%') != NULL)
@@ -635,11 +642,20 @@ static INT_PTR CALLBACK RunDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARA
                      */
                     LPCWSTR pszStartDir;
                     if (prfdp->lpstrDirectory)
+                    {
+                        sei.lpDirectory = prfdp->lpstrDirectory;
                         pszStartDir = prfdp->lpstrDirectory;
+                    }
                     else if (prfdp->uFlags & RFF_CALCDIRECTORY)
+                    {
+                        sei.lpDirectory = parent = RunDlg_GetParentDir(sei.lpFile);
                         pszStartDir = parent = RunDlg_GetParentDir(pszExpanded);
+                    }
                     else
+                    {
+                        sei.lpDirectory = NULL;
                         pszStartDir = NULL;
+                    }
 
                     /* Hide the dialog for now on, we will show it up in case of retry */
                     ShowWindow(hwnd, SW_HIDE);
@@ -669,10 +685,21 @@ static INT_PTR CALLBACK RunDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARA
                             break;
 
                         case RF_OK:
+                            /* We use SECL_NO_UI because we don't want to see
+                             * errors here, but we will try again below and
+                             * there we will output our errors. */
                             if (SUCCEEDED(ShellExecCmdLine(hwnd, pszExpanded, pszStartDir, SW_SHOWNORMAL, NULL,
-                                                           SECL_ALLOW_NONEXE)))
+                                                           SECL_ALLOW_NONEXE | SECL_NO_UI)))
                             {
-                                /* Call again GetWindowText in case the contents of the edit box has changed? */
+                                /* Call GetWindowText again in case the contents of the edit box have changed. */
+                                GetWindowTextW(htxt, psz, ic + 1);
+                                FillList(htxt, psz, ic + 2 + 1, FALSE);
+                                EndDialog(hwnd, IDOK);
+                                break;
+                            }
+                            else if (SUCCEEDED(ShellExecuteExW(&sei)))
+                            {
+                                /* Call GetWindowText again in case the contents of the edit box have changed. */
                                 GetWindowTextW(htxt, psz, ic + 1);
                                 FillList(htxt, psz, ic + 2 + 1, FALSE);
                                 EndDialog(hwnd, IDOK);
