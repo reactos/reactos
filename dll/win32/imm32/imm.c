@@ -1099,7 +1099,7 @@ CandidateListWideToAnsi(const CANDIDATELIST *lpWideCL, LPCANDIDATELIST lpAnsiCL,
         pibOffsets[0] = sizeof(CANDIDATELIST);
     }
 
-    return dwSize;
+    return dwBufLen;
 }
 
 static DWORD APIENTRY
