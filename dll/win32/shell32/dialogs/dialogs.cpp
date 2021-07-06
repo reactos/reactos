@@ -1183,7 +1183,7 @@ BOOL DrawIconOnOwnerDrawnButtons(DRAWITEMSTRUCT* pdis, PLOGOFF_DLG_CONTEXT pCont
                         y = BUTTON_SWITCH_USER_FOCUSED;
                     }
 
-                    /* 
+                    /*
                      * Since switch user functionality isn't implemented yet therefore the button has been disabled
                      * temporarily hence show the disabled state
                      */
@@ -1412,7 +1412,6 @@ static VOID FancyLogoffOnInit(HWND hwnd, PLOGOFF_DLG_CONTEXT pContext)
  *
  * NOTES: Used to make the Log Off dialog work
  */
-
 INT_PTR CALLBACK LogOffDialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     DRAWITEMSTRUCT* pdis = (DRAWITEMSTRUCT*)lParam;
@@ -1533,12 +1532,11 @@ EXTERN_C int WINAPI LogoffWindowsDialog(HWND hWndOwner)
     WCHAR szBuffer[30];
     DWORD LogoffDialogID = IDD_LOG_OFF;
     LOGOFF_DLG_CONTEXT Context;
-    
+
     if (!CallShellDimScreen(&fadeHandler, &parent))
         parent = hWndOwner;
 
     Context.bFriendlyUI = IsFriendlyUIActive();
-    
     if (Context.bFriendlyUI)
     {
         LogoffDialogID = IDD_LOG_OFF_FANCY;
