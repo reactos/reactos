@@ -4,7 +4,9 @@ spec2def(msv1_0.dll msv1_0.spec)
 list(APPEND SOURCE
     lsa.c
     msv1_0.c
-    precomp.h
+    ntlm/global.c
+    user.c
+    usercontext.c
     ${CMAKE_CURRENT_BINARY_DIR}/msv1_0_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/msv1_0.def)
 
