@@ -1020,10 +1020,11 @@ UserSendKeyboardInput(KEYBDINPUT *pKbdInput, BOOL bInjected)
         }
         else
         {
-            wVk = pKbdInput->wVk & 0xFF;
+            wVk = pKbdInput->wVk;
         }
     }
 
+    wVk &= 0xFF;
     /* If time is given, use it */
     if (pKbdInput->time)
         dwTime = pKbdInput->time;
