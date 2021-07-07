@@ -195,6 +195,7 @@ typedef struct _I8042_MOUSE_EXTENSION
 	BOOLEAN MouseTimeoutActive;
 
 	UCHAR MouseLogiBuffer[3];
+	INT AckCount;
 	I8042_MOUSE_TYPE MouseType;
 } I8042_MOUSE_EXTENSION;
 
@@ -275,8 +276,14 @@ typedef struct _I8042_HOOK_WORKITEM
  * Mouse commands
  * --------------------------------------------------*/
 
-#define MOU_ENAB           0xF4
-#define MOU_CMD_RESET      0xFF
+#define MOU_READ_DEV_TYPE          0xF2
+#define MOU_DEF_SAMPLE_RATE        0xF3
+#define MOU_ENAB                   0xF4
+#define MOU_NO_ERROR_REPORT        0xF5 /* Apparently this should be sent before doing anything else when in stream mode */
+#define MOU_CMD_RESET_NO_TEST      0xF6 /* Reset to default settings */
+#define MOU_CMD_RESET              0xFF /* Reset with a self test */
+#define MOU_SET_STREAM_MODE        0xEA /* Configure for stream mode */
+#define MOU_ENAB_RESEND            0xEB /* Resend last movement data, used whenever an invalid response was received */
 
 /*-----------------------------------------------------
  * Mouse responses
@@ -449,13 +456,5 @@ VOID
 NTAPI
 i8042InitializeHwHacks(
     VOID);
-
-enum _FLAGS
-{
-    FL_NOLOOP = 0x01,
-    FL_INITHACK = 0x02,
-};
-
-extern ULONG i8042HwFlags;
 
 #endif /* _I8042PRT_PCH_ */

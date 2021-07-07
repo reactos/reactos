@@ -19,43 +19,6 @@
 
 const GUID MSSmBios_RawSMBiosTables_GUID = SMBIOS_DATA_GUID;
 PVOID i8042SMBiosTables;
-ULONG i8042HwFlags;
-
-typedef struct _MATCHENTRY
-{
-    ULONG Type;
-    PCHAR String;
-} MATCHENTRY;
-
-#define MAX_MATCH_ENTRIES 3
-typedef struct _HARDWARE_TABLE
-{
-    MATCHENTRY MatchEntries[MAX_MATCH_ENTRIES];
-    ULONG Flags;
-} HARDWARE_TABLE;
-
-const HARDWARE_TABLE i8042HardwareTable[] =
-{
-//    { {{BOARD_VENDOR, "RIOWORKS"}, {BOARD_NAME, "HDAMB"}, {BOARD_VERSION, "Rev E"}}, FL_NOLOOP },
-//    { {{BOARD_VENDOR, "ASUSTeK Computer Inc."}, {BOARD_NAME, "G1S"}, {BOARD_VERSION, "1.0"}}, FL_NOLOOP },
-
-    { {{SYS_VENDOR, "Microsoft Corporation"}, {SYS_PRODUCT, "Virtual Machine"}}, FL_INITHACK },
-    { {{SYS_VENDOR, "Dell Inc."}, {SYS_PRODUCT, "Inspiron 6000                   "}}, FL_INITHACK },
-    { {{SYS_VENDOR, "Dell Inc."}, {SYS_PRODUCT, "Latitude D430                   "}}, FL_INITHACK },
-    { {{SYS_VENDOR, "Dell Inc."}, {SYS_PRODUCT, "Latitude D530                   "}}, FL_INITHACK },
-    { {{SYS_VENDOR, "Dell Inc."}, {SYS_PRODUCT, "Latitude D531                   "}}, FL_INITHACK },
-    { {{SYS_VENDOR, "Dell Inc."}, {SYS_PRODUCT, "Latitude D600                   "}}, FL_INITHACK },
-    { {{SYS_VENDOR, "Dell Inc."}, {SYS_PRODUCT, "Latitude D610                   "}}, FL_INITHACK },
-    { {{SYS_VENDOR, "Dell Inc."}, {SYS_PRODUCT, "Latitude D620                   "}}, FL_INITHACK },
-    { {{SYS_VENDOR, "Dell Inc."}, {SYS_PRODUCT, "Latitude D630                   "}}, FL_INITHACK },
-    { {{SYS_VENDOR, "Dell Inc."}, {SYS_PRODUCT, "Latitude D810                   "}}, FL_INITHACK },
-    { {{SYS_VENDOR, "Dell Inc."}, {SYS_PRODUCT, "Latitude E4300                  "}}, FL_INITHACK },
-    { {{SYS_VENDOR, "Dell Inc."}, {SYS_PRODUCT, "Latitude E4310                  "}}, FL_INITHACK },
-    { {{SYS_VENDOR, "Dell Inc."}, {SYS_PRODUCT, "Latitude E6400                  "}}, FL_INITHACK },
-
-};
-
-
 
 static
 VOID
@@ -63,7 +26,6 @@ i8042ParseSMBiosTables(
     _In_reads_bytes_(TableSize) PVOID SMBiosTables,
     _In_ ULONG TableSize)
 {
-    ULONG i, j;
     PCHAR Strings[ID_STRINGS_MAX] = { 0 };
 
     ParseSMBiosTables(SMBiosTables, TableSize, Strings);
@@ -83,35 +45,6 @@ i8042ParseSMBiosTables(
     DbgPrint("BOARD_SERIAL: %s\n", Strings[BOARD_SERIAL]);
     DbgPrint("BOARD_ASSET_TAG: %s\n", Strings[BOARD_ASSET_TAG]);
 #endif
-
-    /* Now loop the hardware table to find a match */
-    for (i = 0; i < ARRAYSIZE(i8042HardwareTable); i++)
-    {
-        for (j = 0; j < MAX_MATCH_ENTRIES; j++)
-        {
-            ULONG Type = i8042HardwareTable[i].MatchEntries[j].Type;
-
-            if (Type != ID_NONE)
-            {
-                /* Check for a match */
-                if ((Strings[Type] == NULL) ||
-                    strcmp(i8042HardwareTable[i].MatchEntries[j].String,
-                           Strings[i8042HardwareTable[i].MatchEntries[j].Type]))
-                {
-                    /* Does not match, try next entry */
-                    break;
-                }
-            }
-        }
-
-        if (j == MAX_MATCH_ENTRIES)
-        {
-            /* All items matched! */
-            i8042HwFlags = i8042HardwareTable[i].Flags;
-            DPRINT("Found match for hw table index %u\n", i);
-            break;
-        }
-    }
 }
 
 static
