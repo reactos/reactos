@@ -67,7 +67,7 @@ BEGIN
     LTEXT "&Yazı Tipi Boyutu:", IDC_STATIC, 7, 184, 104, 9
     COMBOBOX IDC_APPEARANCE_SIZE, 7, 194, 134, 90, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON "&Etkiler...", IDC_APPEARANCE_EFFECTS, 182, 150, 56, 15
+    PUSHBUTTON "&Efektler...", IDC_APPEARANCE_EFFECTS, 182, 150, 56, 15
     PUSHBUTTON "&Gelişmiş...", IDC_APPEARANCE_ADVANCED, 182, 170, 56, 15
 END
 
@@ -78,7 +78,7 @@ CAPTION "Gelişmiş Görünüm"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "", IDC_APPEARANCE_PREVIEW, "PreviewWndClass", WS_VISIBLE | WS_BORDER, 7, 7, 232, 120
-    LTEXT "ReactOS Klasik'ten başka bir tema seçerseniz seçtiğiniz tema bazı eski programlardakiler dışında aşağıdaki ayarları hükümsüz kılacaktır.", IDC_ADVAPPEARANCE_DISCLAIMER, 7, 133, 232, 30, BS_MULTILINE
+    LTEXT "ReactOS Klasik'ten başka bir tema seçerseniz seçtiğiniz tema bazı eski programlardakiler dışında aşağıdaki ayarları geçersiz kılacaktır.", IDC_ADVAPPEARANCE_DISCLAIMER, 7, 133, 232, 30, BS_MULTILINE
     LTEXT "&Öge", 8, 5, 160, 50, 9
     COMBOBOX IDC_ADVAPPEARANCE_ELEMENT, 5, 170, 130, 90, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | CBS_SORT | WS_CHILD | WS_VSCROLL | WS_TABSTOP

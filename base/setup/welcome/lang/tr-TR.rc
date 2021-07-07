@@ -1,4 +1,8 @@
-/* TRANSLATOR: 2013-2014 Erdem Ersoy (eersoy93) (erdemersoy [at] erdemersoy [dot] net), 2018 Ercan Ersoy (ercanersoy) (ercanersoy [at] ercanersoy [dot] net) */
+/* TRANSLATOR: 
+2013-2014 Erdem Ersoy (eersoy93) (erdemersoy [at] erdemersoy [dot] net), 
+2018 Ercan Ersoy (ercanersoy) (ercanersoy [at] ercanersoy [dot] net) 
+2021 Süleyman Poyraz (zaryob [dot] dev [at] gmail [dot] com)
+*/
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
@@ -19,7 +23,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_TOPIC_BUTTON0 "&ReactOS'u Kur"
-    IDS_TOPIC_BUTTON1 "Bu &CD'yi Araştır"
+    IDS_TOPIC_BUTTON1 "&Bu CD'ye göz atın"
     IDS_TOPIC_BUTTON2 "&Çıkış"
 END
 
@@ -27,7 +31,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_TOPIC_TITLE0 "ReactOS'u Kur"
-    IDS_TOPIC_TITLE1 "Bu CD'yi Araştır"
+    IDS_TOPIC_TITLE1 "Bu CD'ye göz atın"
     IDS_TOPIC_TITLE2 "Çıkış"
 END
 
@@ -35,6 +39,6 @@ END
 STRINGTABLE
 BEGIN
     IDS_TOPIC_DESC0 "Bilgisayarınıza yeni bir ReactOS yükleyiniz ya da var olan bir yüklemeyi yükseltiniz."
-    IDS_TOPIC_DESC1 "CD'yi araştır."
+    IDS_TOPIC_DESC1 "Bu CD'ye göz atın."
     IDS_TOPIC_DESC2 "Bu uygulamadan çıkmak için tıklayınız."
 END

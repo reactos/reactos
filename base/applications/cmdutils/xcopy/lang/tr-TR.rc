@@ -6,54 +6,54 @@ STRINGTABLE
 {
     STRING_INVPARMS, "Geçersiz değişken sayısı - Yardım için xcopy /? kullanınız\n"
     STRING_INVPARM,  "Geçersiz değişken: ""%1"" - Yardım için xcopy /? kullanınız\n"
-    STRING_PAUSE,    "Çoğaltmaya başlamak için Giriş'e basınız\n"
-    STRING_SIMCOPY,  "%1!d! kütük çoğaltılacak\n"
-    STRING_COPY,     "%1!d! kütük çoğaltıldı\n"
-    STRING_QISDIR,   """%1"", bir kütük adı ya da varıştaki\n\
+    STRING_PAUSE,    "Kopyalamaya başlamak için Enter'e basınız\n"
+    STRING_SIMCOPY,  "%1!d! dosya kopyalanacak\n"
+    STRING_COPY,     "%1!d! dosya kopyalandı\n"
+    STRING_QISDIR,   """%1"", bir dosya adı ya da hedefteki\n\
                      dizin mi?\n\
-                     (K - Kütük, D - Dizin)\n"
+                     (O - Dosya, D - Dizin)\n"
     STRING_SRCPROMPT,"%1? (Evet|Hayır)\n"
     STRING_OVERWRITE,"Üzerine yaz: %1? (Evet|Hayır|Tümü)\n"
-    STRING_COPYFAIL, """%1"" kütüğünün ""%2"" varışına çoğaltılması r/c %3!d! ile başarısız oldu\n"
+    STRING_COPYFAIL, """%1"" dosyanın ""%2"" hedefine kopyalanması r/c %3!d! ile başarısız oldu\n"
     STRING_OPENFAIL, "Açma başarısız oldu: ""%1""\n"
-    STRING_READFAIL, """%1"" kütüğünün okunması esnâsında başarısız oldu\n"
+    STRING_READFAIL, """%1"" dosyanın okunması esnasında başarısız olundu\n"
     STRING_YES_CHAR, "E"
     STRING_NO_CHAR,  "H"
     STRING_ALL_CHAR, "T"
-    STRING_FILE_CHAR,"K"
+    STRING_FILE_CHAR,"O"
     STRING_DIR_CHAR, "D"
 
     STRING_HELP,
-"XCOPY - Kaynak kütüklerini veyâ dizin ağaçlarını bir varışa çoğaltır.\n\
+"XCOPY - Kaynak dosyalarını veya dizin ağaçlarını bir hedefe kopyalar.\n\
 \n\
 Yazım:\n\
-XCOPY kaynak [varış] [/I] [/S] [/Q] [/F] [/L] [/W] [/T] [/N] [/U]\n\
+XCOPY kaynak [hedef] [/I] [/S] [/Q] [/F] [/L] [/W] [/T] [/N] [/U]\n\
 \t     [/R] [/H] [/C] [/P] [/A] [/M] [/E] [/D] [/Y] [/-Y]\n\
 \n\
 Nereye:\n\
 \n\
-[/I]  Varış yoksa ve iki ya da daha çok kütük çoğaltmada\n\
-\tdizin varsay.\n\
-[/S]  Dizinleri ve alt dizinleri çoğalt.\n\
-[/E]  Tüm boş olanları kapsayarak dizinleri ve alt dizinleri çoğalt.\n\
-[/Q]  Çoğaltma esnâsında adları dizelgeleme, bu sessiz olmaktır.\n\
-[/F]  Çoğaltma esnâsında eksiksiz kaynak ve varış adlarını göster.\n\
-[/L]  Çoğaltılacak adları göstererek işlem taklidini et.\n\
-[/W]  Çoğaltma işlemine başlamadan önce sorar.\n\
-[/T]  Boş dizin yapısını oluşturur ama kütükleri çoğaltmaz.\n\
-[/Y]  Kütüklerin üzerine yazarken sorma.\n\
-[/-Y] Kütüklerin üzerine yazarken sormayı etkinleştir.\n\
-[/P]  Çoğlatmadan önce tüm kaynak kütükler için sorar.\n\
-[/N]  Kısa adlar kullanarak çoğalt.\n\
-[/U]  Yalnızca varışta önceden olan kütükleri çoğalt.\n\
-[/R]  Tüm yalnızca okunur kütüklerin üzerlerine yaz.\n\
-[/H]  Çoğaltmada gizli ve dizge kütüklerini kapsa.\n\
-[/C]  Çoğaltma esnâsında bir yanlışlık oluşsa bile sürdür.\n\
-[/A]  Yalnızca belgelik öz niteliği ayarlı kütükleri çoğalt.\n\
-[/M]  Yalnızca belgelik öz niteliği ayarlı kütükleri çoğalt,\n\
-\tbelgelik öz niteliğini siler.\n\
-[/K]  Copy file attributes, without this attributes are not preserved.\n\
-[/D | /D:m-d-y] Yeni kütükleri veyâ onların verilen târihten sonra değiştirilmişlerini çoğalt.\n\
-\t\tBir târih verilmemişse yalnızca varış kaynaktan eskiyse çoğalt.\n\n"
+[/I]  Hedef yoksa ve iki ya da daha çok dosyayı kopyalamada\n\
+\tdizin varsayar.\n\
+[/S]  Dizinleri ve alt dizinleri kopyalar.\n\
+[/E]  Tüm boş olanları kapsayarak dizinleri ve alt dizinleri kopyalar.\n\
+[/Q]  Kopyalama esnasında adları listelemez, bu sessiz çıktıdır.\n\
+[/F]  Kopyalama esnasında eksiksiz kaynak ve hedef adlarını gösterir.\n\
+[/L]  Kopyalanacak adları göstererek işlem taklidini eder.\n\
+[/W]  Kopyalama işlemine başlamadan önce sorar.\n\
+[/T]  Boş dizin yapısını oluşturur ama dosyaları kopyalamaz.\n\
+[/Y]  Dosyaların üzerine yazarken sormaz.\n\
+[/-Y] Dosyaların üzerine yazarken sormayı etkinleştirir.\n\
+[/P]  Çoğlatmadan önce tüm kaynak dosyalar için sorar.\n\
+[/N]  Kısa adlar kullanarak kopyalar.\n\
+[/U]  Yalnızca hedefte önceden olan dosyaları kopyalar.\n\
+[/R]  Tüm salt okunur dosyaların üzerlerine yazar.\n\
+[/H]  Kopyalamada gizli veya korunan sistem dosyalarınını kapsar.\n\
+[/C]  Kopyalama esnasında bir hata oluşsa bile sürdürür.\n\
+[/A]  Yalnızca arşiv öz niteliği ayarlı dosyaları kopyalar.\n\
+[/M]  Yalnızca arşiv öz niteliği ayarlı dosyaları kopyalayıp,\n\
+\tarşiv öz niteliğini siler.\n\
+[/K]  Bu öznitelikler olmadan kopyalanan dosya öznitelikleri korunmaz.\n\
+[/D | /D:m-d-y] Yeni dosyaları veya onların verilen tarihten sonra değiştirilmişlerini kopyalar.\n\
+\t\tBir tarih verilmemişse yalnızca hedef kaynaktan eskiyse kopyalar.\n\n"
 
 }

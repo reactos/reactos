@@ -12,15 +12,15 @@ BEGIN
     END
     POPUP "Y&azılım"
     BEGIN
-        MENUITEM "&Kur\tCtrl+Giriş", ID_INSTALL
-        MENUITEM "K&aldır\tCtrl+Sil", ID_UNINSTALL
+        MENUITEM "&Kur\tCtrl+Enter", ID_INSTALL
+        MENUITEM "K&aldır\tCtrl+Del", ID_UNINSTALL
         MENUITEM "&Değiştir", ID_MODIFY
         MENUITEM SEPARATOR
-        MENUITEM "&Girişi Kayıt Defteri'nden Kaldır", ID_REGREMOVE
+        MENUITEM "&Girdiyi Kayıt Defteri'nden Kaldır", ID_REGREMOVE
         MENUITEM SEPARATOR
         MENUITEM "&Yenile\tF5", ID_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM "Ya&zılım Veri Tabanını Yenile\tCtrl+F5", ID_RESETDB
+        MENUITEM "Uy&gulama Veri Tabanını Yenile\tCtrl+F5", ID_RESETDB
     END
     POPUP "&Yardım"
     BEGIN
@@ -42,15 +42,15 @@ IDR_APPLICATIONMENU MENU
 BEGIN
     POPUP "popup"
     BEGIN
-        MENUITEM "&Kur\tCtrl+Giriş", ID_INSTALL
-        MENUITEM "K&aldır\tCtrl+Sil", ID_UNINSTALL
+        MENUITEM "&Kur\tCtrl+Enter", ID_INSTALL
+        MENUITEM "K&aldır\tCtrl+Del", ID_UNINSTALL
         MENUITEM "&Değiştir", ID_MODIFY
         MENUITEM SEPARATOR
-        MENUITEM "&Girişi Kayıt Defteri'nden Kaldır", ID_REGREMOVE
+        MENUITEM "&Girdiyi Kayıt Defteri'nden Kaldır", ID_REGREMOVE
         MENUITEM SEPARATOR
         MENUITEM "&Yenile\tF5", ID_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM "Ya&zılım Veri Tabanını Yenile\tCtrl+F5", ID_RESETDB
+        MENUITEM "Uy&gulama Veri Tabanını Yenile\tCtrl+F5", ID_RESETDB
     END
 END
 
@@ -60,26 +60,26 @@ CAPTION "Ayarlar"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Genel", -1, 4, 2, 240, 61
-    AUTOCHECKBOX "&Pencere Konumunu Sakla", IDC_SAVE_WINDOW_POS, 15, 12, 219, 12
+    AUTOCHECKBOX "&Pencere Konumunu Kaydet", IDC_SAVE_WINDOW_POS, 15, 12, 219, 12
     AUTOCHECKBOX "&Başlangıçta Erişilebilir Programların Listesini Yenile", IDC_UPDATE_AVLIST, 15, 29, 222, 12
-    AUTOCHECKBOX "&Programların Kuruluşlarını ve Kaldırılışlarını Sakla", IDC_LOG_ENABLED, 15, 46, 219, 12
+    AUTOCHECKBOX "&Programların Kurulma ve Kaldırma Günlüğünü Sakla", IDC_LOG_ENABLED, 15, 46, 219, 12
     GROUPBOX "İndirme", -1, 4, 65, 240, 51
     LTEXT "İndirme Dizini:", -1, 16, 75, 100, 9
     EDITTEXT IDC_DOWNLOAD_DIR_EDIT, 15, 86, 166, 12, WS_CHILD | WS_VISIBLE | WS_GROUP | ES_AUTOHSCROLL
     PUSHBUTTON "&Seç", IDC_CHOOSE, 187, 85, 50, 14
     AUTOCHECKBOX "&Kurulumdan Sonra Programın Kurulum Dosyasını Sil", IDC_DEL_AFTER_INSTALL, 16, 100, 218, 12
-    GROUPBOX "Software source", -1, 4, 118, 240, 46
-    CONTROL "Use default", IDC_SOURCE_DEFAULT, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 15, 132, 74, 10
-    CONTROL "Specified source", IDC_USE_SOURCE, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 15, 147, 74, 10
+    GROUPBOX "Yazılım kaynağı", -1, 4, 118, 240, 46
+    CONTROL "Varsayılanı kullan", IDC_SOURCE_DEFAULT, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 15, 132, 74, 10
+    CONTROL "Belirtilen kaynağı kullan", IDC_USE_SOURCE, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 15, 147, 74, 10
     EDITTEXT IDC_SOURCE_URL, 97, 147, 140, 12, ES_AUTOHSCROLL | WS_DISABLED
     GROUPBOX "Vekil Sunucu", -1, 4, 166, 240, 76
     CONTROL "Sistem Vekil Sunucu Ayarları", IDC_PROXY_DEFAULT, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 15, 180, 210, 10
     CONTROL "Doğrudan (Vekil sunucu yok.)", IDC_NO_PROXY, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 15, 195, 210, 10
     CONTROL "Vekil Sunucu", IDC_USE_PROXY, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 15, 210, 74, 10
     EDITTEXT IDC_PROXY_SERVER, 90, 210, 147, 12, ES_AUTOHSCROLL | WS_DISABLED
-    LTEXT "Şunun İçin Vekil Sunucu Yok", -1, 27, 225, 64, 10
+    LTEXT "Şunun i̇çin vekil sunucu yok", -1, 27, 225, 64, 10
     EDITTEXT IDC_NO_PROXY_FOR, 90, 225, 147, 12, ES_AUTOHSCROLL | WS_DISABLED
-    PUSHBUTTON "Ön Tanımlılar", IDC_DEFAULT_SETTINGS, 8, 245, 60, 14
+    PUSHBUTTON "Varsayılanlar", IDC_DEFAULT_SETTINGS, 8, 245, 60, 14
     DEFPUSHBUTTON "Tamam", IDOK, 116, 245, 60, 14
     PUSHBUTTON "İptal", IDCANCEL, 181, 245, 60, 14
 END
@@ -135,21 +135,21 @@ BEGIN
     IDS_INFO_REGOWNER "\nKayıtlı Olduğu Kullanıcısı: "
     IDS_INFO_PRODUCTID "\nÜrün Kimliği: "
     IDS_INFO_CONTACT "\nİletişim: "
-    IDS_INFO_UPDATEINFO "\nYenileme Bilgisi: "
+    IDS_INFO_UPDATEINFO "\nGüncelleme Bilgisi: "
     IDS_INFO_INFOABOUT "\nHakkında Bilgisi: "
     IDS_INFO_COMMENTS "\nYorumlar: "
     IDS_INFO_INSTLOCATION "\nKurulum Konumu: "
     IDS_INFO_INSTALLSRC "\nKurulum Kaynağı: "
-    IDS_INFO_UNINSTALLSTR "\nKaldırma Sözcesi: "
+    IDS_INFO_UNINSTALLSTR "\nKaldırma Dizesi: "
     IDS_INFO_MODIFYPATH "\nDeğiştirme Yolu: "
     IDS_INFO_INSTALLDATE "\nKurulum Zamanı: "
-    IDS_AINFO_PACKAGE_NAME "\nPackage Name: "
+    IDS_AINFO_PACKAGE_NAME "\nPaket Adı: "
 END
 
 STRINGTABLE
 BEGIN
     IDS_AINFO_VERSION "\nSürümü: "
-    IDS_AINFO_AVAILABLEVERSION "\nMevcut Sürüm: "
+    IDS_AINFO_AVAILABLEVERSION "\nKullanılabilir Sürüm: "
     IDS_AINFO_DESCRIPTION "\nAçıklaması: "
     IDS_AINFO_SIZE "\nBüyüklüğü: "
     IDS_AINFO_URLSITE "\nAna Sayfası: "
@@ -165,23 +165,23 @@ BEGIN
     IDS_CAT_DRIVERS "Sürücüler"
     IDS_CAT_EDU "Eğitim"
     IDS_CAT_ENGINEER "Mühendislik"
-    IDS_CAT_FINANCE "Mali"
+    IDS_CAT_FINANCE "Finans"
     IDS_CAT_GAMES "Oyun ve Eğlence"
     IDS_CAT_GRAPHICS "Grafik"
     IDS_CAT_INTERNET "Ağ"
     IDS_CAT_LIBS "Kitaplıklar"
-    IDS_CAT_OFFICE "Büro"
+    IDS_CAT_OFFICE "Ofis"
     IDS_CAT_OTHER "Diğer"
     IDS_CAT_SCIENCE "Bilim"
     IDS_CAT_TOOLS "Araçlar"
     IDS_CAT_VIDEO "Video"
-    IDS_CAT_THEMES "Themes"
+    IDS_CAT_THEMES "Temalar"
 END
 
 STRINGTABLE
 BEGIN
     IDS_APPTITLE "ReactOS Uygulama Yöneticisi"
-    IDS_APP_AUTHORS "Copyright 2009 Dmitry Chapyshev"
+    IDS_APP_AUTHORS "Telif Hakkı: 2009 Dmitry Chapyshev"
     IDS_SEARCH_TEXT "Ara"
     IDS_INSTALL "Kur"
     IDS_UNINSTALL "Kaldır"
@@ -191,31 +191,31 @@ BEGIN
     IDS_WELCOME_TEXT "Solda bir kategori seçiniz, ardından kurmak ya da kaldırmak için bir uygulama seçiniz.\nReactOS'un İnternet sitesi: "
     IDS_WELCOME_URL "https://reactos.org/"
     IDS_INSTALLED "Kurulanlar"
-    IDS_AVAILABLEFORINST "Kurulum İçin Bulunanlar"
+    IDS_AVAILABLEFORINST "Kurulabilir Uygulamalar"
     IDS_UPDATES "Güncelleştirmeler"
     IDS_APPLICATIONS "Uygulamalar"
     IDS_CHOOSE_FOLDER_TEXT "İndirilenlerin saklanacağı bir dizin seçiniz:"
     IDS_CHOOSE_FOLDER_ERROR "Belirttiğiniz dizin yok. Belirttiğiniz dizin oluşturulsun mu?"
-    IDS_URL_INVALID "The URL you have specified is invalid or not supported. Please correct it!"
-    IDS_APP_REG_REMOVE "Kurulan programın girişini değer defterinden silmek istediğinizden emin misiniz?"
+    IDS_URL_INVALID "Belirttiğiniz URL geçersiz veya desteklenmiyor. Lütfen düzeltin!"
+    IDS_APP_REG_REMOVE "Kurulan programın girdiyi kayıt defterinden silmek istediğinizden emin misiniz?"
     IDS_INFORMATION "Bilgi"
-    IDS_UNABLE_TO_DOWNLOAD "Paket indirilemez! Adres bulunamadı!"
-    IDS_UNABLE_TO_DOWNLOAD2 "Paket indirilemez! İnternet bağlantınızı yoklayınız!"
-    IDS_UNABLE_TO_REMOVE "Programın girişi kayıt defterinden silinemiyor."
+    IDS_UNABLE_TO_DOWNLOAD "Paket indirilemiyor! Adres bulunamadı!"
+    IDS_UNABLE_TO_DOWNLOAD2 "Paket indirilemiyor! İnternet bağlantınızı denetleyiniz!"
+    IDS_UNABLE_TO_REMOVE "Programın girdisi kayıt defterinden silinemiyor."
     IDS_UNABLE_TO_INSTALL "Yükleyici açılamıyor!"
-    IDS_UNABLE_TO_QUERY_CERT "Sertifika bilgisi alınamıyor.\n\nYine de sürdürülsün mü?"
+    IDS_UNABLE_TO_QUERY_CERT "Sertifika bilgisi alınamıyor.\n\nYine de devam edilsin mi?"
     IDS_INTEG_CHECK_TITLE "Paket bütünlüğü doğrulanıyor…"
-    IDS_INTEG_CHECK_FAIL "Paket bütünlük denetimini geçmedi, bozulmuş veya indirme esnasında oynanmış olabilir. Yazılımı çalıştırmak önerilmez."
+    IDS_INTEG_CHECK_FAIL "Paket bütünlük denetimini geçmedi, bozulmuş veya indirme esnasında oynanmış olabilir. Yazılımı çalıştırmanız önerilmez."
     IDS_INTERRUPTED_DOWNLOAD "İndirme kesildi. İnternet bağlantınızı denetleyiniz."
     IDS_UNABLE_TO_WRITE "Diske yazılamıyor. Disk dolu olabilir."
     IDS_SELECT_ALL "Tümünü Seç/Seçileni Kaldır"
     IDS_INSTALL_SELECTED "Seçileni Kur"
     IDS_SELECTEDFORINST "Kurulum için seçildi"
-    IDS_MISMATCH_CERT_INFO "Kullanılan sertifika bilimmiyor:\nAçıklama: %s\nSertifikayı Veren: %s\nYine de sürdürmek istiyor musunuz?"
-    IDS_UNABLE_PATH "Incorrect path format."
-    IDS_APP_DISPLAY_DETAILS "details"
-    IDS_APP_DISPLAY_LIST "list"
-    IDS_APP_DISPLAY_TILE "tile"
+    IDS_MISMATCH_CERT_INFO "Kullanılan sertifika bilimmiyor:\nAçıklama: %s\nSertifikayı Veren: %s\nYine de devam etmek istiyor musunuz?"
+    IDS_UNABLE_PATH "Geçersiz dosya yolu biçimi."
+    IDS_APP_DISPLAY_DETAILS "detaylar"
+    IDS_APP_DISPLAY_LIST "liste"
+    IDS_APP_DISPLAY_TILE "karo"
 END
 
 STRINGTABLE
@@ -234,7 +234,7 @@ STRINGTABLE
 BEGIN
     IDS_LICENSE_OPENSOURCE "Açık Kaynak"
     IDS_LICENSE_FREEWARE "Ücretsiz"
-    IDS_LICENSE_TRIAL "Sınama/Tanıtım"
+    IDS_LICENSE_TRIAL "Deneme/Tanıtım"
 END
 
 STRINGTABLE
@@ -251,17 +251,17 @@ STRINGTABLE
 BEGIN
     IDS_DL_DIALOG_DB_DISP "Uygulamalar Veri Tabanı"
     IDS_DL_DIALOG_DB_DOWNLOAD_DISP "Veri Tabanı güncelleniyor…"
-    IDS_DL_DIALOG_DB_UNOFFICIAL_DOWNLOAD_DISP "Updating Database… (Unofficial source)"
+    IDS_DL_DIALOG_DB_UNOFFICIAL_DOWNLOAD_DISP "Veri Tabanı güncelleniyor… (Gayriresmi kaynak)"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_CMD_USAGE "Usage: "
-    IDS_CMD_NEED_PACKAGE_NAME "Error: option %1 expects one or more package name.\n"
-    IDS_CMD_NEED_FILE_NAME "Error: option %1 expects a file name.\n"
-    IDS_CMD_NEED_PARAMS "Error: option %1 expects one or more parameters.\n"
-    IDS_CMD_INVALID_OPTION "Error: Unknown or invalid command line option specified.\n"
-    IDS_CMD_FIND_RESULT_FOR "Find result for %1:\n"
-    IDS_CMD_PACKAGE_NOT_FOUND "Failed to find package %1.\n"
-    IDS_CMD_PACKAGE_INFO "Information about package %1:\n"
+    IDS_CMD_USAGE "Kullanım: "
+    IDS_CMD_NEED_PACKAGE_NAME "Hata: %1 seçeneği bir veya daha fazla paket adı içermeli.\n"
+    IDS_CMD_NEED_FILE_NAME "Hata: %1 seçeneği bir dosya adı içermeli.\n"
+    IDS_CMD_NEED_PARAMS "Hata: %1 seçeneği bir veya daha fazla parametre içermeli.\n"
+    IDS_CMD_INVALID_OPTION "Hata: Bilinmeyen veya geçersiz komut satırı seçeneği belirtildi.\n"
+    IDS_CMD_FIND_RESULT_FOR "%1 için sonuç bulundu:\n"
+    IDS_CMD_PACKAGE_NOT_FOUND "%1 paketi bulunmadı.\n"
+    IDS_CMD_PACKAGE_INFO "%1 paketi hakkındaki bilgi:\n"
 END

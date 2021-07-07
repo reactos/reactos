@@ -5,34 +5,34 @@ LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 STRINGTABLE
 BEGIN
     IDS_USAGE "AT komutu, belirlenen bir zamanda bilgisayarda çalıştırmak için komutları\n\
-ve izlenceleri zamanlar. AT komutunu çalıştırmak için Zamanlayıcı hizmeti\n\
+ve programları zamanlar. AT komutunu çalıştırmak için Zamanlayıcı hizmeti\n\
 çalıştırılmalıdır.\n\n\
 AT [\\\\bilgisayar adı] [ [kimlik] [/DELETE] | /DELETE [/YES]]\n\
 AT [\\\\bilgisayar adı] saat [/INTERACTIVE]\n\
-    [ /EVERY:târih[,...] | /NEXT:târih[,...]] ""komut""\n\n\
+    [ /EVERY:tarih[,...] | /NEXT:tarih[,...]] ""komut""\n\n\
 \\\\bilgisayar adı   Bir uzak bilgisayarı belirtir. Bu değişken yazılmazsa\n\
-                   komutlar yerli bilgisayarda zamanlanır.\n\
+                   komutlar yerel bilgisayarda zamanlanır.\n\
 kimlik             Zamanlanan bir komuta atanan bir kimlik numarasıdır.\n\
-/DELETE            Zamanlanan bir komutu iptâl eder. Kimlik yazılmadığında\n\
-                   bilgisayardaki tüm zamanlanan komutlar iptâl edilir.\n\
-/YES               Sonraki onaylamalar istenilmediğinde tüm işleri iptâl etme\n\
+/DELETE            Zamanlanan bir komutu iptal eder. Kimlik yazılmadığında\n\
+                   bilgisayardaki tüm zamanlanan komutlar iptal edilir.\n\
+/YES               Sonraki onaylamalar istenilmediğinde tüm işleri iptal etme\n\
                    komutuyla birlikte kullanılır.\n\
 saat               Komutun çalıştırılma saatini belirtir.\n\
 /INTERACTIVE       İşe, çalıştırılacağı saatte oturum açmış kullanıcının\n\
                    masaüstüyle etkileşmesine izin verir.\n\
-/EVERY:târih[,...] Haftanın ya da ayın belirtilen tüm günlerinde komutu çalıştırır.\n\
-                   month. Târih yazılmadığında ayın şimdiki gününü varsayar.\n\
-/NEXT:târih[,...]  Günün bir sonraki oluşunda (örneğin bir sonraki perşembede)\n\
-                   belirtilen komutu çalıştırır. Târih yazılmadığında ayın\n\
+/EVERY:tarih[,...] Haftanın ya da ayın belirtilen tüm günlerinde komutu çalıştırır.\n\
+                   month. Tarih yazılmadığında ayın şimdiki gününü varsayar.\n\
+/NEXT:tarih[,...]  Günün bir sonraki oluşunda (örneğin bir sonraki perşembede)\n\
+                   belirtilen komutu çalıştırır. Tarih yazılmadığında ayın\n\
                    şimdiki gününü varsayar.\n\
-""komut""            Çalıştırılacak komut ya da toplu iş kütüğü.\n"
+""komut""            Çalıştırılacak komut ya da toplu iş dosyası.\n"
 
     IDS_DELETE_ALL "Bu işlem tüm zamanlanan işleri silecek.\n"
     IDS_NEW_JOB "%lu iş kimliğiyle yeni bir iş eklendi.\n"
     IDS_JOBS_LIST "Durum  Km.  Gün                     Saat          Komut Yatacı\n"
-    IDS_NO_ENTRIES "Dizelgede bir giriş yok.\n"
+    IDS_NO_ENTRIES "Tabloda bir giriş yok.\n"
 
-    IDS_CONFIRM_QUESTION "Bu işlemi sürdürmek ister misiniz? (E/H) [H]: "
+    IDS_CONFIRM_QUESTION "Devam etmek ister misiniz? (E/H) [H]: "
     IDS_CONFIRM_INVALID  "\nBu geçersiz bir yanıttır.\n"
     IDS_CONFIRM_YES "E"
     IDS_CONFIRM_NO "H"

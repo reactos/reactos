@@ -4,51 +4,52 @@ LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-    IDS_USAGE "Görüntülükte veriyi sayfa sayfa görüntüler.\n\
+    IDS_USAGE "Ekranda veriyi sayfa sayfa görüntüler.\n\
 \n\
-MORE [/E [options]] < [drive:][path]filename\n\
-command | MORE [/E [options]]\n\
+MORE [/E [options]] < [Sürücü:][Yol]Dosya adı\n\
+komut | MORE [/E [seçenekler]]\n\
 \n\
-    [drive:][path]filename  A file whose contents are to be displayed.\n\
-    command                 A command whose output is to be displayed.\n\
+    [Sürücü:][Yol]Dosya adı   İçeriği görüntülenecek bir dosya.\n\
+    komut                     Çıktısı görüntülenecek bir komut.\n\
 \n\
-When Extended Features are enabled, the following form is supported:\n\
-MORE [/E] [options] [files]\n\
+Genişletilmiş Özellikler etkinleştirildiğinde, aşağıdaki form desteklenir:\n\
+MORE [/E] [seçenekler] [dosyalar]\n\
 \n\
-Options:\n\
-    /E       Enable Extended Features.\n\
-    The default state of the Extended Features is controlled by the default\n\
-    registry settings for CMD.EXE. For more details on how to change these\n\
-    settings, see the section ""Command Extensions"" in CMD.EXE help.\n\
+Seçenekler:\n\
+    /E       Genişletilmiş Özellikleri Etkinleştir. \n\
+    Genişletilmiş Özelliklerin varsayılan durumu, CMD.EXE için varsayılan \n\
+    kayıt defteri ayarları tarafından denetlenir. Bu ayarların nasıl \n\
+    değiştirileceği hakkında daha fazla ayrıntı için, CMD.EXE yardımındaki \n\
+    ""Komut Uzantıları"" bölümüne bakın.\n\
 \n\
-    When Extended Features are enabled, the following options are available:\n\
-    /C       Clear the screen before displaying a page.\n\
-    /P       Expand Form-Feed characters.\n\
-    /S       Shrink successive blank lines to a single line.\n\
-    /Tn      Expand tabs to n spaces (default: 8).\n\
+    Genişletilmiş Özellikler etkinleştirildiğinde, aşağıdaki seçenekler kullanılabilir:\n\
+    /C       Bir sayfayı görüntülemeden önce ekranı temizleyin.\n\
+    /P       Form-Feed karakterlerini genişletin.\n\
+    /S       Ardışık boş satırları tek bir satıra küçültün.\n\
+    /Tn      Sekmeleri n tane boşlukla değiştir (öntanımlı: 8).\n\
 \n\
-    These options can be specified in the MORE environment variable.\n\
+    Bu argumanlar, MORE ortam değişkeninde belirtilebilir.\n\
 \n\
-    +n       Start displaying the first file at line n.\n\
-    files    List of files to display, separated by blanks.\n\
+    +n          İlk dosyayı n satırında görüntülemeye başlayın.\n\
+    dosyalar    Boşluklarla ayrılmış olarak görüntülenecek dosyaların listesi.\n\
 \n\
-When Extended Features are enabled, the following commands are available\n\
-at the ""-- Continue --"" prompt:\n\
+Genişletilmiş Özellikler etkinleştirildiğinde, \n\
+""-- Sürdür --"" komutunda aşağıdaki argümanlar kullanılabilir:n\
 \n\
-    P n      Display the next n lines.\n\
-    S n      Skip the next n lines.\n\
-    F        Display the next file.\n\
-    Q        Quit.\n\
-    =        Show the line number.\n\
-    ?        Show the help line.\n\
-    <Space>  Display the next page.\n\
-    <Enter>  Display the next line.\n"
+    P n      n satır sonrasını görüntüle.\n\
+    S n      n satır sonrasına git.\n\
+    F        Diğer dosyayı görüntüle.\n\
+    Q        Çık.\n\
+    =        Satır sayısını görüntüle.\n\
+    ?        Yardım sayfasını görüntüle.\n\
+    <Boşluk> Sonraki sayfayı görüntüle.\n\
+    <Enter>  Sonraki satırı görüntüle.\n"
 
-    IDS_BAD_FLAG "Invalid argument - '%s'\n"
-    IDS_FILE_ACCESS "%s kütüğüne erişilemiyor.\n"
+    IDS_BAD_FLAG "Hatalı argüman - '%s'\n"
+    IDS_FILE_ACCESS "%s dosyasına erişilemiyor.\n"
     IDS_CONTINUE_PROMPT  "-- Sürdür%1%2%3 --%4"
     IDS_CONTINUE_PERCENT " (%%%d)"
-    IDS_CONTINUE_LINE_AT " [Line: %d]"
-    IDS_CONTINUE_OPTIONS " [Options: psfq=<Space><Enter>]"
-    IDS_CONTINUE_LINES   " Lines: "
+    IDS_CONTINUE_LINE_AT " [Satır: %d]"
+    IDS_CONTINUE_OPTIONS " [Seçenekler: psfq=<Boşluk><Enter>]"
+    IDS_CONTINUE_LINES   " Satır: "
 END

@@ -4,25 +4,25 @@ LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
 COPYFILEDLGORD DIALOGEX 20, 20, 208, 105
 STYLE DS_MODALFRAME | DS_SHELLFONT | WS_POPUP | WS_VISIBLE | WS_CAPTION
-CAPTION "Kütükler Çoğaltılıyor..."
+CAPTION "Dosyalar Çoğaltılıyor..."
 FONT 8, "MS Shell Dlg"
 BEGIN
     PUSHBUTTON "İptal", IDCANCEL, 79, 84, 50, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
     LTEXT "Kaynak:", -1, 7, 7, 77, 11, WS_CHILD | WS_VISIBLE | WS_GROUP
     LTEXT "", SOURCESTRORD, 7, 18, 194, 11, WS_CHILD | WS_VISIBLE | WS_GROUP
-    LTEXT "Varış:", -1, 7, 30, 77, 11, WS_CHILD | WS_VISIBLE | WS_GROUP
+    LTEXT "Hedef:", -1, 7, 30, 77, 11, WS_CHILD | WS_VISIBLE | WS_GROUP
     LTEXT "", DESTSTRORD, 7, 41, 194, 22, WS_CHILD | WS_VISIBLE | WS_GROUP
     CONTROL "", PROGRESSORD, "setupx_progress", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 7, 63, 194, 13
 END
 
 IDPROMPTFORDISK DIALOG 0, 0, 260, 120
 STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-CAPTION "Gerekli Kütükler"
+CAPTION "Gerekli Dosyalar"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Üreticinin kurulum diskini takınız, sonra aşağıda\ndoğru sürücünün seçildiğinden emin olunuz.", IDC_FILENEEDED, 10, 10, 175, 38, WS_CHILD | WS_VISIBLE | WS_GROUP
     LTEXT "", IDC_INFO, 10, 50, 175, 38, WS_CHILD | WS_VISIBLE | WS_GROUP
-    LTEXT "Üreticinin kütüklerini şuradan çoğalt:", IDC_COPYFROM, 10, 90, 175, 11, WS_CHILD | WS_VISIBLE | WS_GROUP
+    LTEXT "Üreticinin dosyalarını şuradan çoğalt:", IDC_COPYFROM, 10, 90, 175, 11, WS_CHILD | WS_VISIBLE | WS_GROUP
     CONTROL "", IDC_PATH, "COMBOBOX", WS_TABSTOP | WS_GROUP | WS_VSCROLL | WS_VISIBLE | CBS_DISABLENOSCROLL | CBS_AUTOHSCROLL | CBS_DROPDOWN, 10, 100, 175, 14
     DEFPUSHBUTTON "Tamam", IDOK, 195, 10, 60, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
     PUSHBUTTON "İptal", IDCANCEL, 195, 30, 60, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
@@ -31,10 +31,10 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_PROMPTDISK   "%2 üzerinde ""%1"" kütüğü gerekli."
+    IDS_PROMPTDISK   "%2 üzerinde ""%1"" dosyası gerekli."
     IDS_UNKNOWN      "Bilinmeyen"
-    IDS_COPYFROM     "Kütükleri şuradan çoğalt:"
-    IDS_INFO         "Kütüğün bulunduğu yolu yazınız, sonra Tamam'a tıklayınız."
+    IDS_COPYFROM     "Dosyaları şuradan çoğalt:"
+    IDS_INFO         "Dosyaların bulunduğu yolu yazınız, sonra Tamam'a tıklayınız."
 END
 
 STRINGTABLE

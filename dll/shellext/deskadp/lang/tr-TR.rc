@@ -18,21 +18,21 @@ BEGIN
     LTEXT "", IDC_DACTYPE, 71, 80, 160, 8, SS_NOPREFIX
     LTEXT "Bellek Büyüklüğü:", -1, 13, 92, 58, 8
     LTEXT "", IDC_MEMORYSIZE, 71, 92, 160, 8, SS_NOPREFIX
-    LTEXT "Bağdaştırıcı Dizgisi:", -1, 13, 104, 58, 8
+    LTEXT "Bağdaştırıcı Dizesi:", -1, 13, 104, 58, 8
     LTEXT "", IDC_ADAPTERSTRING, 71, 104, 160, 8, SS_NOPREFIX
     LTEXT "BIOS Bilgisi:", -1, 13, 116, 58, 8
     LTEXT "", IDC_BIOSINFORMATION, 71, 116, 160, 8, SS_NOPREFIX
-    PUSHBUTTON "&Tüm Kipleri Listele...", IDC_LISTALLMODES, 7, 139, 75, 14
+    PUSHBUTTON "&Tüm Biçimleri Listele...", IDC_LISTALLMODES, 7, 139, 75, 14
 END
 
 IDD_LISTALLMODES DIALOGEX 0, 0, 225, 135
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_DLGFRAME
-CAPTION "Tüm Kipleri Dizelgele"
+CAPTION "Tüm Biçimleri Düzenle"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     DEFPUSHBUTTON "Tamam", IDOK, 112, 115, 50, 15
     PUSHBUTTON "İptal", IDCANCEL, 167, 115, 50, 15
-    GROUPBOX "Geçerli Kiplerin Dizelgesi", -1, 6, 7, 212, 98
+    GROUPBOX "Geçerli Kiplerin Tablosu", -1, 6, 7, 212, 98
     LISTBOX IDC_ALLVALIDMODES, 10, 20, 204, 87, LBS_NOTIFY | WS_VSCROLL
 END
 
