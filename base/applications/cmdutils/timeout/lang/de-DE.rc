@@ -27,7 +27,7 @@ Parameter:\n\
     IDS_ERROR_NO_TIMER_VALUE "FEHLER: Es muss eine Zeit angegeben werden (-1 to 99999).\n"
     IDS_ERROR_ONE_TIME "FEHLER: Es wird nur ein Zeitwert benötigt.\n"
     IDS_NOBREAK_INPUT "Drücken Sie Strg+C zum Beenden..."
-    IDS_USER_INPUT "Taste drücken um fortzufahren..."
+    IDS_USER_INPUT "Beliebige Taste drücken um fortzufahren..."
     IDS_NOBREAK_INPUT_COUNT "Warte %d Sekunde(n), Drücken Sie Strg+C zum Beenden..."
-    IDS_USER_INPUT_COUNT "Warte %d Sekunde(n), Taste Drücken um fortzufahren..."
+    IDS_USER_INPUT_COUNT "Warte %d Sekunde(n), Beliebige Taste Drücken um fortzufahren..."
 END
