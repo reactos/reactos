@@ -12,12 +12,12 @@
 /* INCLUDES *******************************************************************/
 
 #include <hal.h>
+#include "apicp.h"
 #define NDEBUG
 #include <debug.h>
 
 /* GLOBALS ********************************************************************/
 
-const UCHAR HalpClockVector = 0xD1;
 BOOLEAN HalpClockSetMSRate;
 UCHAR HalpNextMSRate;
 UCHAR HalpCurrentRate = 9;  /* Initial rate  9: 128 Hz / 7.8 ms */
@@ -141,7 +141,7 @@ HalpClockInterruptHandler(IN PKTRAP_FRAME TrapFrame)
 #endif
 
     /* Start the interrupt */
-    if (!HalBeginSystemInterrupt(CLOCK_LEVEL, HalpClockVector, &Irql))
+    if (!HalBeginSystemInterrupt(CLOCK_LEVEL, APIC_CLOCK_VECTOR, &Irql))
     {
         /* Spurious, just end the interrupt */
         KiEoiHelper(TrapFrame);
