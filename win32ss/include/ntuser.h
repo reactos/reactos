@@ -3445,9 +3445,9 @@ NtUserUnregisterUserApiHook(VOID);
 DWORD
 NTAPI
 NtUserUpdateInputContext(
-    DWORD Unknown0,
+    HIMC hIMC,
     DWORD Unknown1,
-    DWORD Unknown2);
+    LPVOID pClientImc);
 
 DWORD
 NTAPI

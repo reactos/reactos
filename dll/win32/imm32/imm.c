@@ -1024,10 +1024,76 @@ LRESULT WINAPI ImmEscapeW(
 
 HANDLE g_hImm32Heap = NULL;
 
-PCLIENTIMC WINAPI ImmLockClientImc(HIMC hIMC)
+LPVOID APIENTRY Imm32HeapAlloc(DWORD dwFlags, DWORD dwBytes)
 {
-    FIXME("ImmLockClientImc(%p)\n", hIMC);
+    if (!g_hImm32Heap)
+    {
+        g_hImm32Heap = GetProcessHeap(); // FIXME: Use TEB
+        if (g_hImm32Heap == NULL)
+            return NULL;
+    }
+    return HeapAlloc(g_hImm32Heap, dwFlags, dwBytes);
+}
+
+static DWORD_PTR APIENTRY
+Imm32GetThreadState(DWORD Routine)
+{
+    return NtUserGetThreadState(Routine);
+}
+
+static DWORD APIENTRY
+Imm32UpdateInputContext(HIMC hIMC, DWORD Unknown1, PCLIENTIMC pClientImc)
+{
+    return NtUserUpdateInputContext(hIMC, Unknown1, pClientImc);
+}
+
+static PCLIENTIMC APIENTRY Imm32GetClientImcCache(void)
+{
+    // FIXME: Do something properly here
+    static BOOL s_b = FALSE;
+    if (!s_b)
+    {
+        s_b = TRUE;
+        FIXME("Imm32GetClientImcCache()\n");
+    }
     return NULL;
+}
+
+PCLIENTIMC WINAPI ImmLockClientImc(HIMC hImc)
+{
+    PCLIENTIMC pClientImc;
+
+    TRACE("ImmLockClientImc(%p)\n", hImc);
+
+    if (hImc == NULL)
+        return NULL;
+
+    pClientImc = Imm32GetClientImcCache();
+    if (!pClientImc)
+    {
+        pClientImc = Imm32HeapAlloc(HEAP_ZERO_MEMORY, sizeof(CLIENTIMC));
+        if (!pClientImc)
+            return NULL;
+
+        RtlInitializeCriticalSection(&pClientImc->cs);
+        pClientImc->unknown = Imm32GetThreadState(0xd);
+
+        if (!Imm32UpdateInputContext(hImc, 0, pClientImc))
+        {
+            HeapFree(g_hImm32Heap, 0, pClientImc);
+            return NULL;
+        }
+
+        pClientImc->dwFlags |= CLIENTIMC_UNKNOWN2;
+    }
+    else
+    {
+        if (pClientImc->dwFlags & CLIENTIMC_UNKNOWN)
+            return NULL;
+    }
+
+    InterlockedIncrement(&pClientImc->cLockObj);
+    return pClientImc;
 }
 
 VOID WINAPI ImmUnlockClientImc(PCLIENTIMC pClientImc)
