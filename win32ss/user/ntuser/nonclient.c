@@ -411,7 +411,7 @@ DefWndDoSizeMove(PWND pwnd, WORD wParam)
          TRACE("This %s the TaskBar.\n", IsTaskBar ? "is" : "is not");
 
          // check for snapping if was moved by caption
-         if (hittest == HTCAPTION && thickframe && (ExStyle & WS_EX_MDICHILD) == 0)
+         if (g_AllowSnappingWindows && hittest == HTCAPTION && thickframe && (ExStyle & WS_EX_MDICHILD) == 0)
          {
             RECT snapRect;
             BOOL doSideSnap = FALSE;
