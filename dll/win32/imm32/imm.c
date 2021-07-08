@@ -40,6 +40,7 @@
 #include <stdlib.h>
 #include <ndk/umtypes.h>
 #include <ndk/pstypes.h>
+#include <ndk/rtlfuncs.h>
 #include "../../../win32ss/include/ntuser.h"
 #include <imm32_undoc.h>
 #include <strsafe.h>
@@ -1021,16 +1022,31 @@ LRESULT WINAPI ImmEscapeW(
 
 #define ROUNDUP4(n) (((n) + 3) & ~3)  /* DWORD alignment */
 
+HANDLE g_hImm32Heap = NULL;
+
 PCLIENTIMC WINAPI ImmLockClientImc(HIMC hIMC)
 {
     FIXME("ImmLockClientImc(%p)\n", hIMC);
     return NULL;
 }
 
-BOOL WINAPI ImmUnlockClientImc(PCLIENTIMC pClientIMC)
+VOID WINAPI ImmUnlockClientImc(PCLIENTIMC pClientIMC)
 {
-    FIXME("ImmUnlockClientImc(%p)\n", pClientIMC);
-    return FALSE;
+    LONG cLocks;
+    HIMC hIMC;
+
+    TRACE("ImmUnlockClientImc(%p)\n", pClientIMC);
+
+    cLocks = InterlockedDecrement(&pClientIMC->cLocks);
+    if (cLocks != 0 || (pClientIMC->dwFlags & CLIENTIMC_UNKNOWN))
+        return;
+
+    hIMC = pClientIMC->hIMC;
+    if (hIMC)
+        LocalFree(hIMC);
+
+    RtlDeleteCriticalSection(&pClientIMC->cs);
+    HeapFree(g_hImm32Heap, 0, pClientIMC);
 }
 
 static DWORD APIENTRY
