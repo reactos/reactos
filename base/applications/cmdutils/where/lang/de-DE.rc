@@ -48,6 +48,6 @@ Beispiele:\n\
     IDS_BAD_ENVVAR "FEHLER: Umgebungsvariable ""%ls"" wurde nicht gefunden.\n"
     IDS_CANT_FOUND "FEHLER: Das System konnte die angegebene Datei nicht finden.\n"
     IDS_BAD_DIR "FEHLER: Ungültiges Verzeichnis angegeben.\n"
-    IDS_BAD_NAME "FEHLER: Die Syntax der Datei-/Verzeichnisname(n) oder Datenträgerbezichnung ist falsch.\n"
+    IDS_BAD_NAME "FEHLER: Die Syntax der Datei-/Verzeichnisname(n) oder Datenträgerbezeichnung ist falsch.\n"
     IDS_TOO_MANY "FEHLER: Die Option '%ls' ist nicht mehr als '%u' mal erlaubt.\n"
 END

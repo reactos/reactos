@@ -23,9 +23,9 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_VOLUME_IN_USE "Das Laufwerk ist in Benutzung und kann nicht gesperrt werden\n"
+    IDS_VOLUME_IN_USE "Das Laufwerk ist in Benutzung und kann nicht gesperrt werden.\n"
     IDS_CHKDSK_FAIL "Chkdsk konnte den Vorgang nicht erfolgreich ausführen.\n\n"
-    IDS_NO_ENTRY_POINT "FMIFS-Einstiegspunkte konnten nicht gefunden werden .\n\n"
+    IDS_NO_ENTRY_POINT "FMIFS-Einstiegspunkte konnten nicht gefunden werden.\n\n"
     IDS_BAD_ARGUMENT "Unbekannte Option: %s\n"
     IDS_NO_CURRENT_DIR "Das aktuelle Verzeichnis konnte nicht abgerufen werden. Fehlercode: "
     IDS_NO_QUERY_VOL "Das Laufwerk konnte nicht abgefragt werden. Fehlercode: "

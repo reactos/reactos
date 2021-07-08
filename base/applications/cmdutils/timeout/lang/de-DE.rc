@@ -7,7 +7,7 @@ BEGIN
 TIMEOUT [/?] [/T] Zeit [/NOBREAK]\n\
 \n\
 Beschreibung:\n\
-    Dieses Programm wartet, bis eine angegebene Zeit (in Sekunden) vergangen ist,\n\
+    Dieses Programm wartet, bis eine angegebene Zeit (in Sekunden) vergangen ist\n\
     oder eine Taste gedrückt wurde. Ein Parameter um den Tastendruck zu ignorieren\n\
     ist möglich.\n\
 \n\
@@ -29,5 +29,5 @@ Parameter:\n\
     IDS_NOBREAK_INPUT "Drücken Sie Strg+C zum Beenden..."
     IDS_USER_INPUT "Beliebige Taste drücken um fortzufahren..."
     IDS_NOBREAK_INPUT_COUNT "Warte %d Sekunde(n), Drücken Sie Strg+C zum Beenden..."
-    IDS_USER_INPUT_COUNT "Warte %d Sekunde(n), Beliebige Taste Drücken um fortzufahren..."
+    IDS_USER_INPUT_COUNT "Warte %d Sekunde(n), Beliebige Taste drücken um fortzufahren..."
 END
