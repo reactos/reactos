@@ -12,12 +12,13 @@
 #define IS_IME_KBDLAYOUT(hKL) ((HIWORD(hKL) & KBDLAYOUT_MASK) == KBDLAYOUT_IME)
 
 /* unconfirmed */
-typedef struct tagCLIENTIMC {
-    HIMC hIMC;
-    LONG cLocks;
-    DWORD dwFlags;
-    DWORD unknown;
-    RTL_CRITICAL_SECTION cs;
+typedef struct tagCLIENTIMC
+{
+    HIMC hImc;                  // offset 0x0
+    LONG cLocks;                // offset 0x4
+    DWORD dwFlags;              // offset 0x8
+    DWORD unknown;              // offset 0xc
+    RTL_CRITICAL_SECTION cs;    // offset 0x10
 } CLIENTIMC, *PCLIENTIMC;
 
 /* flags for CLIENTIMC */

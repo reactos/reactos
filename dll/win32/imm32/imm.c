@@ -1030,23 +1030,23 @@ PCLIENTIMC WINAPI ImmLockClientImc(HIMC hIMC)
     return NULL;
 }
 
-VOID WINAPI ImmUnlockClientImc(PCLIENTIMC pClientIMC)
+VOID WINAPI ImmUnlockClientImc(PCLIENTIMC pClientImc)
 {
     LONG cLocks;
-    HIMC hIMC;
+    HIMC hImc;
 
-    TRACE("ImmUnlockClientImc(%p)\n", pClientIMC);
+    TRACE("ImmUnlockClientImc(%p)\n", pClientImc);
 
-    cLocks = InterlockedDecrement(&pClientIMC->cLocks);
-    if (cLocks != 0 || (pClientIMC->dwFlags & CLIENTIMC_UNKNOWN))
+    cLocks = InterlockedDecrement(&pClientImc->cLocks);
+    if (cLocks != 0 || (pClientImc->dwFlags & CLIENTIMC_UNKNOWN))
         return;
 
-    hIMC = pClientIMC->hIMC;
-    if (hIMC)
-        LocalFree(hIMC);
+    hImc = pClientImc->hImc;
+    if (hImc)
+        LocalFree(hImc);
 
-    RtlDeleteCriticalSection(&pClientIMC->cs);
-    HeapFree(g_hImm32Heap, 0, pClientIMC);
+    RtlDeleteCriticalSection(&pClientImc->cs);
+    HeapFree(g_hImm32Heap, 0, pClientImc);
 }
 
 static DWORD APIENTRY
@@ -1192,19 +1192,19 @@ ImmGetCandidateListAW(HIMC hIMC, DWORD dwIndex, LPCANDIDATELIST lpCandList, DWOR
 {
     DWORD ret = 0;
     LPINPUTCONTEXT pIC;
-    PCLIENTIMC pClientIMC;
+    PCLIENTIMC pClientImc;
     LPCANDIDATEINFO pCI;
     LPCANDIDATELIST pCL;
     DWORD dwSize;
 
-    pClientIMC = ImmLockClientImc(hIMC);
-    if (!pClientIMC)
+    pClientImc = ImmLockClientImc(hIMC);
+    if (!pClientImc)
         return 0;
 
     pIC = ImmLockIMC(hIMC);
     if (pIC == NULL)
     {
-        ImmUnlockClientImc(pClientIMC);
+        ImmUnlockClientImc(pClientImc);
         return 0;
     }
 
@@ -1212,7 +1212,7 @@ ImmGetCandidateListAW(HIMC hIMC, DWORD dwIndex, LPCANDIDATELIST lpCandList, DWOR
     if (pCI == NULL)
     {
         ImmUnlockIMC(hIMC);
-        ImmUnlockClientImc(pClientIMC);
+        ImmUnlockClientImc(pClientImc);
         return 0;
     }
 
@@ -1223,14 +1223,14 @@ ImmGetCandidateListAW(HIMC hIMC, DWORD dwIndex, LPCANDIDATELIST lpCandList, DWOR
     pCL = (LPCANDIDATELIST)((LPBYTE)pCI + pCI->dwOffset[dwIndex]);
     if (bAnsi)
     {
-        if (pClientIMC->dwFlags & CLIENTIMC_WIDE)
+        if (pClientImc->dwFlags & CLIENTIMC_WIDE)
             dwSize = CandidateListAnsiToWide(pCL, NULL, 0, CP_ACP);
         else
             dwSize = pCL->dwSize;
     }
     else
     {
-        if (pClientIMC->dwFlags & CLIENTIMC_WIDE)
+        if (pClientImc->dwFlags & CLIENTIMC_WIDE)
             dwSize = pCL->dwSize;
         else
             dwSize = CandidateListWideToAnsi(pCL, NULL, 0, CP_ACP);
@@ -1244,14 +1244,14 @@ ImmGetCandidateListAW(HIMC hIMC, DWORD dwIndex, LPCANDIDATELIST lpCandList, DWOR
         /* store */
         if (bAnsi)
         {
-            if (pClientIMC->dwFlags & CLIENTIMC_WIDE)
+            if (pClientImc->dwFlags & CLIENTIMC_WIDE)
                 CandidateListAnsiToWide(pCL, lpCandList, dwSize, CP_ACP);
             else
                 RtlCopyMemory(lpCandList, pCL, dwSize);
         }
         else
         {
-            if (pClientIMC->dwFlags & CLIENTIMC_WIDE)
+            if (pClientImc->dwFlags & CLIENTIMC_WIDE)
                 RtlCopyMemory(lpCandList, pCL, dwSize);
             else
                 CandidateListWideToAnsi(pCL, lpCandList, dwSize, CP_ACP);
@@ -1263,7 +1263,7 @@ ImmGetCandidateListAW(HIMC hIMC, DWORD dwIndex, LPCANDIDATELIST lpCandList, DWOR
 Quit:
     ImmUnlockIMCC(pIC->hCandInfo);
     ImmUnlockIMC(hIMC);
-    ImmUnlockClientImc(pClientIMC);
+    ImmUnlockClientImc(pClientImc);
     return ret;
 }
 #endif
