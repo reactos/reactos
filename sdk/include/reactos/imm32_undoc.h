@@ -24,7 +24,7 @@ typedef struct tagCLIENTIMC
 
 /* flags for CLIENTIMC */
 #define CLIENTIMC_WIDE (1 << 0)
-#define CLIENTIMC_UNKNOWN (1 << 6)
+#define CLIENTIMC_DISABLED (1 << 6)
 #define CLIENTIMC_UNKNOWN2 (1 << 8)
 
 #ifdef __cplusplus

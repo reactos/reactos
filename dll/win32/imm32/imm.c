@@ -1088,7 +1088,7 @@ PCLIENTIMC WINAPI ImmLockClientImc(HIMC hImc)
     }
     else
     {
-        if (pClientImc->dwFlags & CLIENTIMC_UNKNOWN)
+        if (pClientImc->dwFlags & CLIENTIMC_DISABLED)
             return NULL;
     }
 
@@ -1104,7 +1104,7 @@ VOID WINAPI ImmUnlockClientImc(PCLIENTIMC pClientImc)
     TRACE("ImmUnlockClientImc(%p)\n", pClientImc);
 
     cLocks = InterlockedDecrement(&pClientImc->cLockObj);
-    if (cLocks != 0 || (pClientImc->dwFlags & CLIENTIMC_UNKNOWN))
+    if (cLocks != 0 || (pClientImc->dwFlags & CLIENTIMC_DISABLED))
         return;
 
     hImc = pClientImc->hImc;
