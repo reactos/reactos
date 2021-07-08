@@ -1973,6 +1973,24 @@ UINT WINAPI ImmGetIMEFileNameW(HKL hKL, LPWSTR lpszFileName, UINT uBufLen)
  */
 BOOL WINAPI ImmGetOpenStatus(HIMC hIMC)
 {
+#ifdef __REACTOS__
+    BOOL ret;
+    LPINPUTCONTEXT pIC;
+
+    TRACE("ImmGetOpenStatus(%p)\n", hIMC);
+
+    if (!hIMC)
+        return FALSE;
+
+    pIC = ImmLockIMC(hIMC);
+    if (!pIC)
+        return FALSE;
+
+    ret = pIC->fOpen;
+
+    ImmUnlockIMC(hIMC);
+    return ret;
+#else
   InputContextData *data = get_imc_data(hIMC);
   static int i;
 
@@ -1985,6 +2003,7 @@ BOOL WINAPI ImmGetOpenStatus(HIMC hIMC)
       FIXME("(%p): semi-stub\n", hIMC);
 
   return data->IMC.fOpen;
+#endif
 }
 
 /***********************************************************************
