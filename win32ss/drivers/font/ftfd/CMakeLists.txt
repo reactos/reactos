@@ -17,6 +17,10 @@ add_library(ftfd MODULE
     freetype.rc
     ${CMAKE_CURRENT_BINARY_DIR}/ftfd.def)
 
+if(SANITIZE_UB)
+    target_link_libraries(ftfd ksanitize_w32k)
+endif()
+
 set_module_type(ftfd kerneldll ENTRYPOINT FtfdEnableDriver 12)
 target_link_libraries(ftfd freetype libcntpr)
 add_pch(ftfd ftfd.h "${PCH_SKIP_SOURCE}")

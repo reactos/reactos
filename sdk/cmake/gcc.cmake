@@ -34,8 +34,13 @@ if(USE_DUMMY_PSEH)
     add_definitions(-D_USE_DUMMY_PSEH=1)
 endif()
 
+# Dynamic analysis
 if(STACK_PROTECTOR)
     add_compile_options(-fstack-protector-strong)
+endif()
+
+if(SANITIZE_UB)
+    add_compile_definitions(__SANITIZE_UB__)
 endif()
 
 # Compiler Core
@@ -137,6 +142,11 @@ else()
     elseif(OPTIMIZE STREQUAL "7")
         add_compile_options(-Ofast)
     endif()
+endif()
+
+# GCC optimizer bug. See https://gcc.gnu.org/bugzilla/show_bug.cgi?id=85175
+if((OPTIMIZE STREQUAL "3") AND (GCC_VERSION VERSION_GREATER 8))
+    add_compile_options(-Wno-format-overflow)
 endif()
 
 # Link-time code generation
@@ -322,6 +332,16 @@ function(set_module_type_toolchain MODULE TYPE)
 
         # Believe it or not, cmake doesn't do that
         set_property(TARGET ${MODULE} APPEND PROPERTY LINK_DEPENDS $<TARGET_PROPERTY:native-pefixup,IMPORTED_LOCATION>)
+
+        if(SANITIZE_UB)
+            # we have too many alignment warnings at the moment
+            target_compile_options(${MODULE} PRIVATE "-fsanitize=undefined;-fno-sanitize=alignment")
+
+            # win32k&dependencies require a special version of ksanitize
+            if(NOT ${TYPE} STREQUAL "kerneldll")
+                target_link_libraries(${MODULE} ksanitize)
+            endif()
+        endif()
     endif()
 endfunction()
 

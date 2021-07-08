@@ -14,7 +14,6 @@ add_subdirectory(cryptlib)
 
 if(MSVC)
     add_subdirectory(cpprt)
-    add_subdirectory(RunTmChk)
 endif()
 
 add_subdirectory(delayimp)
@@ -26,11 +25,6 @@ add_subdirectory(epsapi)
 add_subdirectory(evtlib)
 add_subdirectory(fast486)
 add_subdirectory(fslib)
-
-if(STACK_PROTECTOR)
-    add_subdirectory(gcc_ssp)
-endif()
-
 add_subdirectory(ioevent)
 add_subdirectory(lsalib)
 add_subdirectory(nt)
@@ -52,6 +46,17 @@ add_subdirectory(udmihelp)
 add_subdirectory(uuid)
 add_subdirectory(wdmguid)
 
+if(STACK_PROTECTOR)
+    add_subdirectory(gcc_ssp)
+endif()
+
+if(SANITIZE_UB)
+    add_subdirectory(ksanitize)
+endif()
+
+if(RUNTIME_CHECKS)
+    add_subdirectory(runtmchk)
+endif()
 else()
 
 add_subdirectory(3rdparty/zlib)
