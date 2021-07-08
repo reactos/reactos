@@ -16,7 +16,10 @@ add_subdirectory(kmtests)
 add_subdirectory(rosautotest)
 add_subdirectory(tests)
 add_subdirectory(win32)
+# HACK: Excluded for VSS amd64, due to lots of 'error C4312'.
+if(NOT (MSVC_IDE AND ARCH STREQUAL "amd64"))
 add_subdirectory(winetests)
+endif()
 
 
 ## Extra files needed for the various tests can be added into the "testdata" subdirectory.

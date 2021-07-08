@@ -111,7 +111,11 @@ add_compile_options(/wd4018)
 # - C4700: uninitialized variable usage
 # - C4715: 'function': not all control paths return a value
 # - C4716: function must return a value
-add_compile_options(/we4013 /we4020 /we4022 /we4028 /we4047 /we4098 /we4101 /we4113 /we4129 /we4133 /we4163 /we4229 /we4311 /we4312 /we4313 /we4477 /we4603 /we4700 /we4715 /we4716)
+add_compile_options(/we4013 /we4020 /we4022 /we4028 /we4047 /we4098 /we4101 /we4113 /we4129 /we4133 /we4163 /we4229 /we4311 /we4313 /we4477 /we4603 /we4700 /we4715 /we4716)
+# HACK: Excluded for VSS amd64, due to lots of occurrences in /modules/rostests/winetests/.
+if(NOT (MSVC_IDE AND ARCH STREQUAL "amd64"))
+    add_compile_options(/we4312)
+endif()
 
 # - C4189: local variable initialized but not referenced
 # Not in Release mode, msbuild generator doesn't like CMAKE_BUILD_TYPE
