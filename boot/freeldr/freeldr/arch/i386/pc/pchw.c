@@ -230,7 +230,8 @@ DetectBiosFloppyPeripheral(PCONFIGURATION_COMPONENT_DATA ControllerKey)
         PartialResourceList = FrLdrHeapAlloc(Size, TAG_HW_RESOURCE_LIST);
         if (PartialResourceList == NULL)
         {
-            ERR("Failed to allocate resource descriptor\n");
+            ERR("Failed to allocate resource descriptor! Ignoring remaining floppy peripherals. (FloppyNumber = %u)\n",
+                FloppyNumber);
             return;
         }
 
@@ -288,9 +289,9 @@ DetectBiosFloppyController(PCONFIGURATION_COMPONENT_DATA BusKey)
         ERR("Failed to allocate resource descriptor\n");
         return NULL;
     }
-    memset(PartialResourceList, 0, Size);
 
     /* Initialize resource descriptor */
+    RtlZeroMemory(PartialResourceList, Size);
     PartialResourceList->Version = 1;
     PartialResourceList->Revision = 1;
     PartialResourceList->Count = 3;
