@@ -575,6 +575,65 @@ HDA_ResetController(
 
 NTSTATUS
 NTAPI
+HDA_FDOQueryInterface(IN PDEVICE_OBJECT FdoDevice)
+{
+    PHDA_FDO_DEVICE_EXTENSION FdoExtension;
+    PBUS_INTERFACE_STANDARD BusInterface;
+    PIO_STACK_LOCATION IoStack;
+    IO_STATUS_BLOCK IoStatusBlock;
+    KEVENT Event;
+    PIRP Irp;
+    NTSTATUS Status;
+
+    FdoExtension = (PHDA_FDO_DEVICE_EXTENSION)FdoDevice->DeviceExtension;
+    BusInterface = &FdoExtension->BusInterface;
+
+    RtlZeroMemory(BusInterface, sizeof(BUS_INTERFACE_STANDARD));
+    KeInitializeEvent(&Event, SynchronizationEvent, FALSE);
+
+    Irp = IoBuildSynchronousFsdRequest(IRP_MJ_PNP,
+                                       FdoExtension->LowerDevice,
+                                       NULL,
+                                       0,
+                                       NULL,
+                                       &Event,
+                                       &IoStatusBlock);
+
+    if (Irp)
+    {
+        IoStack = IoGetNextIrpStackLocation(Irp);
+
+        Irp->IoStatus.Status = STATUS_NOT_SUPPORTED;
+        Irp->IoStatus.Information = 0;
+
+        IoStack->MinorFunction = IRP_MN_QUERY_INTERFACE;
+
+        IoStack->Parameters.QueryInterface.InterfaceType = &GUID_BUS_INTERFACE_STANDARD;
+        IoStack->Parameters.QueryInterface.Size = sizeof(BUS_INTERFACE_STANDARD);
+        IoStack->Parameters.QueryInterface.Version = 1;
+        IoStack->Parameters.QueryInterface.Interface = (PINTERFACE)BusInterface;
+        IoStack->Parameters.QueryInterface.InterfaceSpecificData = 0;
+
+        Status = IoCallDriver(FdoExtension->LowerDevice, Irp);
+
+        if (Status == STATUS_PENDING)
+        {
+            KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
+            Status = IoStatusBlock.Status;
+        }
+    }
+    else
+    {
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    DPRINT("HDA_FDOQueryInterface Status: %x\n", Status);
+
+    return Status;
+}
+
+NTSTATUS
+NTAPI
 HDA_FDOStartDevice(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp)
@@ -585,6 +644,7 @@ HDA_FDOStartDevice(
     PCM_RESOURCE_LIST Resources;
     ULONG Index;
     USHORT Value;
+    PCI_COMMON_CONFIG PciConfig;
 
     /* get device extension */
     DeviceExtension = (PHDA_FDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
@@ -603,6 +663,23 @@ HDA_FDOStartDevice(
         DPRINT1("HDA_StartDevice Lower device failed to start %x\n", Status);
         return Status;
     }
+
+    Status = HDA_FDOQueryInterface(DeviceObject);
+    if (!NT_SUCCESS(Status))
+    {
+        // failed to start
+        DPRINT1("HDA_StartDevice HDA_FDOQueryInterface failed with %x\n", Status);
+        return Status;
+    }
+
+    (*DeviceExtension->BusInterface.GetBusData)(DeviceExtension->BusInterface.Context,
+                                                         PCI_WHICHSPACE_CONFIG,
+                                                         &PciConfig,
+                                                         0,
+                                                         PCI_COMMON_HDR_LENGTH);
+
+    DeviceExtension->SubVendorID = PciConfig.u.type0.SubVendorID;
+    DeviceExtension->SubSystemID = PciConfig.u.type0.SubSystemID;
 
     /* get current irp stack location */
     IoStack = IoGetCurrentIrpStackLocation(Irp);

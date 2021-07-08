@@ -1,4 +1,4 @@
-; WDMAUDIO.INF
+﻿; WDMAUDIO.INF
 ;
 ; Installation of Core WDM Audio
 ;
@@ -51,7 +51,7 @@ portcls.sys,,,0x0100
 
 [DeviceRegistration]
 ; Kmixer swenum install
-HKLM,%RunOnce%,"WDM_KMIXER0",,"rundll32.exe streamci.dll,StreamingDeviceSetup %WDM_KMIXER.DeviceId%,%KSNAME_Filter%,%KSCATEGORY_MIXER%,%17%\WDMAUDIO.inf,WDM_KMIXER.Interface.Install"
+;HKLM,%RunOnce%,"WDM_KMIXER0",,"rundll32.exe streamci.dll,StreamingDeviceSetup %WDM_KMIXER.DeviceId%,%KSNAME_Filter%,%KSCATEGORY_MIXER%,%17%\WDMAUDIO.inf,WDM_KMIXER.Interface.Install"
 ;HKLM,%RunOnce%,"WDM_KMIXER1",,"rundll32.exe streamci.dll,StreamingDeviceSetup %WDM_KMIXER.DeviceId%,%KSNAME_Filter%,%KSCATEGORY_AUDIO%,%17%\WDMAUDIO.inf,WDM_KMIXER.Interface.Install"
 
 ; Sysaudio swenum install

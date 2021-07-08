@@ -80,11 +80,6 @@ StartSystemAudioServices(VOID)
         return FALSE;
     }
 
-    logmsg("Starting sysaudio service\n");
-    StartAudioService(hSCManager, L"sysaudio", 20);
-    logmsg("Starting wdmaud service\n");
-    StartAudioService(hSCManager, L"wdmaud", 20);
-
     CloseServiceHandle(hSCManager);
     return TRUE;
 }

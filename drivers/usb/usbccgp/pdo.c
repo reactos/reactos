@@ -761,7 +761,8 @@ USBCCGP_PDOSelectConfiguration(
     Entry = NULL;
     do
     {
-        DPRINT1("[USBCCGP] SelectConfiguration Function %x InterfaceNumber %x Alternative %x Length %lu InterfaceInformation->Length %lu\n", PDODeviceExtension->FunctionDescriptor->FunctionNumber, InterfaceInformation->InterfaceNumber, InterfaceInformation->AlternateSetting, Length, InterfaceInformation->Length);
+        DPRINT1("[USBCCGP] SelectConfiguration Function %x InterfaceNumber %x Alternative %x Length %lu InterfaceInformation->Length %lu\n", 
+                PDODeviceExtension->FunctionDescriptor->FunctionNumber, InterfaceInformation->InterfaceNumber, InterfaceInformation->AlternateSetting, Length, InterfaceInformation->Length);
         ASSERT(InterfaceInformation->Length);
         //
         // search for the interface in the local interface list
@@ -783,6 +784,7 @@ USBCCGP_PDOSelectConfiguration(
             // invalid parameter
             //
             DPRINT1("InterfaceInformation InterfaceNumber %x Alternative %x NumberOfPipes %x not found\n", InterfaceInformation->InterfaceNumber, InterfaceInformation->AlternateSetting, InterfaceInformation->NumberOfPipes);
+            DbgBreakPoint();
             return STATUS_INVALID_PARAMETER;
         }
 

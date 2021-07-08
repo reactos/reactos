@@ -4,6 +4,7 @@
 #include <ntddk.h>
 #include <debug.h>
 #include <initguid.h>
+#include <wdmguid.h>
 #include <hdaudio.h>
 #include <stdio.h>
 #include <ntstrsafe.h>
@@ -78,6 +79,9 @@ typedef struct
 	ULONG RirbReadPos;
 	ULONG CorbWritePos;
 	PVOID StreamPositions;
+	USHORT SubVendorID;
+	USHORT SubSystemID;
+	BUS_INTERFACE_STANDARD BusInterface;
 
 	PHDA_CODEC_ENTRY Codecs[HDA_MAX_CODECS + 1];
 

@@ -267,6 +267,43 @@ WdmAudGetDeviceInterface(
 
 NTSTATUS
 NTAPI
+WdmAudGetPosition(
+    IN  PDEVICE_OBJECT DeviceObject,
+    IN  PIRP Irp,
+    IN  PWDMAUD_DEVICE_INFO DeviceInfo)
+{
+    KSPROPERTY Request;
+    KSAUDIO_POSITION AudioPosition;
+    NTSTATUS Status;
+    ULONG BytesReturned;
+    PFILE_OBJECT FileObject;
+
+    DPRINT1("WdmAudGetPosition\n");
+
+    Status = ObReferenceObjectByHandle(DeviceInfo->hDevice, GENERIC_READ | GENERIC_WRITE, *IoFileObjectType, KernelMode, (PVOID*)&FileObject, NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Error: WdmAudGetPosition invalid device handle provided %p Type %x\n", DeviceInfo->hDevice, DeviceInfo->DeviceType);
+        return SetIrpIoStatus(Irp, STATUS_UNSUCCESSFUL, 0);
+    }
+
+    Request.Id = KSPROPERTY_AUDIO_POSITION;
+    Request.Set = KSPROPSETID_Audio;
+    Request.Flags = KSPROPERTY_TYPE_GET;
+
+    Status = KsSynchronousIoControlDevice(FileObject, KernelMode, IOCTL_KS_PROPERTY, (PVOID)&Request, sizeof(KSPROPERTY), (PVOID)&AudioPosition, sizeof(KSAUDIO_POSITION), &BytesReturned);
+
+    ObDereferenceObject(FileObject);
+
+    DeviceInfo->u.Position = AudioPosition.PlayOffset;
+
+    DPRINT1("WdmAudGetPosition Status %x\n", Status);
+    return SetIrpIoStatus(Irp, Status, sizeof(WDMAUD_DEVICE_INFO));
+}
+
+
+NTSTATUS
+NTAPI
 WdmAudResetStream(
     IN  PDEVICE_OBJECT DeviceObject,
     IN  PIRP Irp,
@@ -366,6 +403,7 @@ WdmAudDeviceControl(
         case IOCTL_RESET_STREAM:
             return WdmAudResetStream(DeviceObject, Irp, DeviceInfo);
         case IOCTL_GETPOS:
+            return WdmAudGetPosition(DeviceObject, Irp, DeviceInfo);
         case IOCTL_GETDEVID:
         case IOCTL_GETVOLUME:
         case IOCTL_SETVOLUME:

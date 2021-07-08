@@ -176,6 +176,16 @@ InstallSoftwareDeviceInterfaceInf(IN LPWSTR InfName,
     return ERROR_SUCCESS;
 }
 
+DWORD
+CALLBACK
+SwEnumCoInstaller(IN DI_FUNCTION  InstallFunction,
+                  IN HDEVINFO  DeviceInfoSet,
+                  IN PSP_DEVINFO_DATA  DeviceInfoData  OPTIONAL,
+                  IN OUT PCOINSTALLER_CONTEXT_DATA  Context)
+{
+   DPRINT1("SwEnumCoInstaller stub\n");
+   return ERROR_SUCCESS;
+}					  
 
 VOID
 WINAPI

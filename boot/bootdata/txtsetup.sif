@@ -109,6 +109,7 @@ i8042prt.sys = 1,,,,,,,4,,,,1,4
 hidclass.sys = 1,,,,,,,4,,,,1,4
 hidparse.sys = 1,,,,,,,4,,,,1,4
 hidusb.sys   = 1,,,,,,,4,,,,1,4
+usbaudio.sys = 1,,,,,,,4,,,,1,4
 usbccgp.sys  = 1,,,,,,x,4,,,,1,4
 usbd.sys     = 1,,,,,,,4,,,,1,4
 usbhub.sys   = 1,,,,,,x,4,,,,1,4

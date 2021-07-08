@@ -8,7 +8,7 @@
 
 #include "sysaudio.h"
 
-#define NDEBUG
+#define YDEBUG
 #include <debug.h>
 
 NTSTATUS
@@ -69,6 +69,7 @@ DispatchCreateSysAudio(
     NTSTATUS Status;
     KSOBJECT_HEADER ObjectHeader;
     PKSOBJECT_CREATE_ITEM CreateItem;
+    PIO_STACK_LOCATION IoStack;
 
     DPRINT("DispatchCreateSysAudio entered\n");
 
@@ -76,6 +77,16 @@ DispatchCreateSysAudio(
     CreateItem = AllocateItem(NonPagedPool, sizeof(KSOBJECT_CREATE_ITEM));
     if (!CreateItem)
     {
+        Irp->IoStatus.Information = 0;
+        Irp->IoStatus.Status = STATUS_INSUFFICIENT_RESOURCES;
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    ObjectHeader = AllocateItem(NonPagedPool, sizeof(KSOBJECT_HEADER));
+    if (!ObjectHeader)
+    {
+        FreeItem(CreateItem);
         Irp->IoStatus.Information = 0;
         Irp->IoStatus.Status = STATUS_INSUFFICIENT_RESOURCES;
         IoCompleteRequest(Irp, IO_NO_INCREMENT);
@@ -90,9 +101,11 @@ DispatchCreateSysAudio(
     RtlInitUnicodeString(&CreateItem->ObjectClass, KSSTRING_Pin);
 
     /* allocate object header */
-    Status = KsAllocateObjectHeader(&ObjectHeader, 1, CreateItem, Irp, &DispatchTable);
+    Status = KsAllocateObjectHeader(ObjectHeader, 1, CreateItem, Irp, &DispatchTable);
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+    IoStack->FileObject->FsContext = ObjectHeader;
 
-    DPRINT("KsAllocateObjectHeader result %x\n", Status);
+    DPRINT1("KsAllocateObjectHeader result %x ObjectHeader %p Dispatch %p\n", Status, ObjectHeader, &DispatchTable);
     /* complete the irp */
     Irp->IoStatus.Information = 0;
     Irp->IoStatus.Status = Status;

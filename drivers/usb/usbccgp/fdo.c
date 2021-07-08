@@ -191,6 +191,10 @@ FDO_CreateChildPdo(
     /* Create pdo for each function */
     for(Index = 0; Index < FDODeviceExtension->FunctionDescriptorCount; Index++)
     {
+		if (FDODeviceExtension->FunctionDescriptor[Index].NumberOfInterfaces == 0)
+		{
+			continue;
+		}
         /* Create the PDO */
         Status = IoCreateDevice(FDODeviceExtension->DriverObject,
                                 sizeof(PDO_DEVICE_EXTENSION),

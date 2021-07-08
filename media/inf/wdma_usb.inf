@@ -1,0 +1,145 @@
+[Version]
+Signature= "$Windows NT$"
+;Signature ="$ReactOS$"
+Class      = MEDIA
+ClassGUID={4d36e96c-e325-11ce-bfc1-08002be10318}
+Provider=%ReactOS%
+DriverVer=10/04/2013,6.1.7601.18276
+
+[Manufacturer]
+%MfgName%=ReactOS
+
+;--------------------------------------------------------------------------------
+[ControlFlags]
+ExcludeFromSelect = *
+
+[ReactOS]
+%USB\CLASS_01.DeviceDesc%=USBAudio, USB\CLASS_01
+
+[DestinationDirs]
+USBAudio.CopyList     = 10,system32\drivers ; %SystemRoot%\system32\drivers
+
+;--------------------------------------------------------------------------------
+
+[USBAudio]
+Include=ks.inf, wdmaudio.inf
+Needs=KS.Registration, WDMAUDIO.Registration
+CopyFiles=USBAudio.CopyList
+AddReg=USBAudio.AddReg
+KnownFiles = USBAudio.KnownFiles
+
+;--------------------------------------------------------------------------------
+
+[USBAudio.Interfaces]
+AddInterface=%KSCATEGORY_AUDIO%,"GLOBAL",USBAudio.Interface.Curve,
+AddInterface=%KSCATEGORY_RENDER%,"GLOBAL",USBAudio.Interface.Curve,
+AddInterface=%KSCATEGORY_CAPTURE%,"GLOBAL",USBAudio.Interface.Curve,
+
+;--------------------------------------------------------------------------------
+
+[USBAudio.Interface.Curve]
+AddReg=USBAudio.Interface.Addreg.Curve
+
+[USBAudio.Interface.AddReg.Curve]
+HKR,,FriendlyName,,%USBGenericDesc%
+HKR,,CurveType,1,01,00,00,00
+HKR,,CLSID,,%Proxy.CLSID%
+
+;--------------------------------------------------------------------------------
+
+[USBAudio.AddReg]
+HKR,,SetupPreferredAudioDevices,3,01,00,00,00
+HKR,,AssociatedFilters,,"wdmaud,redbook"
+HKR,,Driver,,USBAUDIO.sys
+HKR,,NTMPDriver,,"USBAUDIO.sys,sbemul.sys"
+
+HKR,,CLSID,,%Proxy.CLSID%
+
+HKR,Drivers,SubClasses,,"wave,midi,mixer,aux"
+
+HKR,Drivers\wave\wdmaud.drv, Driver,,wdmaud.drv
+HKR,Drivers\midi\wdmaud.drv, Driver,,wdmaud.drv
+HKR,Drivers\mixer\wdmaud.drv,Driver,,wdmaud.drv
+HKR,Drivers\aux\wdmaud.drv,Driver,,wdmaud.drv
+
+HKR,Drivers\wave\wdmaud.drv,Description,,%USBGenericDesc%
+HKR,Drivers\midi\wdmaud.drv,Description,,%WDM_MIDI%
+HKR,Drivers\mixer\wdmaud.drv,Description,,%USBGenericDesc%
+HKR,Drivers\aux\wdmaud.drv,Description,,%USBGenericDesc%
+
+[USBMic.AddReg]
+HKR,,SetupPreferredAudioDevices,3,01,00,00,00
+HKR,,AssociatedFilters,,"wdmaud"
+HKR,,Driver,,USBAUDIO.sys
+HKR,,NTMPDriver,,"USBAUDIO.sys"
+
+HKR,,CLSID,,%Proxy.CLSID%
+
+HKR,Drivers,SubClasses,,"wave,mixer"
+
+HKR,Drivers\wave\wdmaud.drv, Driver,,wdmaud.drv
+HKR,Drivers\mixer\wdmaud.drv,Driver,,wdmaud.drv
+
+HKR,Drivers\wave\wdmaud.drv,Description,,%USBGenericDesc%
+HKR,Drivers\mixer\wdmaud.drv,Description,,%USBGenericDesc%
+
+;--------------------------------------------------------------------------------
+
+[USBAudio.CopyList]
+USBAUDIO.sys
+
+;--------------------------------------------------------------------------------
+
+[USBAudio.NT]
+Include=ks.inf, wdmaudio.inf
+Needs=KS.Registration, WDMAUDIO.Registration
+CopyFiles=USBAudio.CopyList
+AddReg=USBAudio.AddReg
+KnownFiles = USBAudio.KnownFiles
+
+;--------------------------------------------------------------------------------
+
+[USBAudio.NT.Interfaces]
+AddInterface=%KSCATEGORY_AUDIO%,"GLOBAL",USBAudio.Interface.Curve,
+AddInterface=%KSCATEGORY_RENDER%,"GLOBAL",USBAudio.Interface.Curve,
+AddInterface=%KSCATEGORY_CAPTURE%,"GLOBAL",USBAudio.Interface.Curve,
+
+;--------------------------------------------------------------------------------
+
+[USBAudio.NT.Services]
+AddService = usbaudio,0x00000002, usbaudio_Service_Inst
+
+[USBAudio.NoCurve.NT.Services]
+AddService = usbaudio,0x00000002, usbaudio_Service_Inst
+
+[USBMic.NT.Services]
+AddService = usbaudio,0x00000002, usbaudio_Service_Inst
+
+[USBMIDI.NT.Services]
+AddService = usbaudio,0x00000002, usbaudio_Service_Inst
+
+[usbaudio_Service_Inst]
+DisplayName    = %USBAudio.SvcDesc%
+ServiceType    = 1                  
+StartType      = 3                  
+ErrorControl   = 1                  
+ServiceBinary  = %10%\system32\drivers\usbaudio.sys
+
+;--------------------------------------------------------------------------------
+
+
+[Strings]
+ReactOS="ReactOS"
+MfgName="(Generic USB Audio)"
+USBAudio.SvcDesc="USB Audio Driver (WDM)"
+
+USB\CLASS_01.DeviceDesc="USB Audio Device"
+USBGenericDesc="USB Audio Device"
+USBGenericMicDesc="USB Audio Microphone"
+WDM_MIDI="WDM MIDI Device"
+MediaCategories="SYSTEM\CurrentControlSet\Control\MediaCategories"
+
+Proxy.CLSID = "{17CCA71B-ECD7-11D0-B908-00A0C9223196}"
+KSCATEGORY_AUDIO="{6994ad04-93ef-11d0-a3cc-00a0c9223196}"
+KSCATEGORY_RENDER="{65E8773E-8F56-11D0-A3B9-00A0C9223196}"
+KSCATEGORY_CAPTURE="{65E8773D-8F56-11D0-A3B9-00A0C9223196}"

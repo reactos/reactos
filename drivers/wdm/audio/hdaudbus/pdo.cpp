@@ -66,6 +66,7 @@ HDA_PDOQueryId(
     PIO_STACK_LOCATION IoStack;
     WCHAR DeviceName[200];
     PHDA_PDO_DEVICE_EXTENSION DeviceExtension;
+    PHDA_FDO_DEVICE_EXTENSION FdoDeviceExtension;
     ULONG Length;
     LPWSTR Device;
     NTSTATUS Status;
@@ -73,6 +74,10 @@ HDA_PDOQueryId(
     /* get device extension */
     DeviceExtension = (PHDA_PDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
     ASSERT(DeviceExtension->IsFDO == FALSE);
+
+    /* get FDO device extension */
+    FdoDeviceExtension = (PHDA_FDO_DEVICE_EXTENSION)DeviceExtension->FDO->DeviceExtension;
+    ASSERT(FdoDeviceExtension->IsFDO);
 
     /* get current irp stack location */
     IoStack = IoGetCurrentIrpStackLocation(Irp);
@@ -107,7 +112,7 @@ HDA_PDOQueryId(
     {
 
         /* calculate size */
-        swprintf(DeviceName, L"HDAUDIO\\FUNC_%02X&VEN_%04X&DEV_%04X&SUBSYS_%08X", DeviceExtension->AudioGroup->FunctionGroup, DeviceExtension->Codec->VendorId, DeviceExtension->Codec->ProductId, DeviceExtension->Codec->VendorId << 16 | DeviceExtension->Codec->ProductId);
+        swprintf(DeviceName, L"HDAUDIO\\FUNC_%02X&VEN_%04X&DEV_%04X&SUBSYS_%08X", DeviceExtension->AudioGroup->FunctionGroup, DeviceExtension->Codec->VendorId, DeviceExtension->Codec->ProductId, FdoDeviceExtension->SubVendorID << 16 | FdoDeviceExtension->SubSystemID);
         Length = wcslen(DeviceName) + 20;
 
         /* allocate result buffer*/

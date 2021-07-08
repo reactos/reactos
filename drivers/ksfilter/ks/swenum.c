@@ -812,7 +812,7 @@ KspStartBusDevice(
     DPRINT1("KspStartBusDevice Name %S DeviceName %S Instance %S Started\n", Name, DeviceEntry->DeviceName, DeviceEntry->Instance);
 
     /* enable device classes */
-    //KspEnableBusDeviceInterface(DeviceEntry, TRUE);
+    KspEnableBusDeviceInterface(DeviceEntry, TRUE);
 
     /* done */
     return STATUS_SUCCESS;
@@ -1227,7 +1227,7 @@ KspBusWorkerRoutine(
                         Diff.QuadPart);
 
                      /* deactivate interfaces */
-                     //KspEnableBusDeviceInterface(DeviceEntry, FALSE);
+                     KspEnableBusDeviceInterface(DeviceEntry, FALSE);
 
                      /* re-acquire lock */
                      KeAcquireSpinLock(&BusDeviceExtension->Lock, &OldLevel);
@@ -1932,6 +1932,15 @@ KsServiceBusEnumCreateRequest(
 
     DPRINT1("KsServiceBusEnumCreateRequest IRP %p Name %wZ\n", Irp, &IoStack->FileObject->FileName);
 
+    /* scan the bus for new devices */
+    Status = KspScanBus(BusDeviceExtension);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT("KsServiceBusEnumCreateRequest failed to scan bus %x\n", Status);
+        Irp->IoStatus.Status = Status;
+        return Status;
+    }
+
     /* scan list and check if it is already present */
     Entry = BusDeviceExtension->Common.Entry.Flink;
 
@@ -2086,9 +2095,6 @@ KsServiceBusEnumPnpRequest(
             /* backup device entry */
             DeviceEntry = ChildDeviceExtension->DeviceEntry;
 
-            /* free device extension */
-            FreeItem(ChildDeviceExtension);
-
             /* clear PDO reference */
             DeviceEntry->PDO = NULL;
 
@@ -2110,6 +2116,14 @@ KsServiceBusEnumPnpRequest(
             /* complete pending irps */
             KspCompletePendingIrps(DeviceEntry, STATUS_DEVICE_REMOVED);
 
+            /* free device extension */
+            FreeItem(ChildDeviceExtension);
+
+            /* FIXME this should only be done while installing the drivers */
+            /* lets recreate the PDO */
+            Status = KspCreatePDO(BusDeviceExtension, DeviceEntry, &DeviceEntry->PDO);
+            /* restart enumeration */
+            IoInvalidateDeviceRelations(BusDeviceExtension->PhysicalDeviceObject, BusRelations);
             /* done */
             Status = STATUS_SUCCESS;
         }

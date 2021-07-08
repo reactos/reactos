@@ -19,8 +19,6 @@
 #include <debug.h>
 #include <mmebuddy_debug.h>
 
-#define KERNEL_DEVICE_NAME      L"\\\\.\\wdmaud"
-
 HANDLE KernelHandle = INVALID_HANDLE_VALUE;
 DWORD OpenCount = 0;
 
@@ -832,7 +830,7 @@ WdmAudGetWavePositionByLegacy(
     DeviceInfo.DeviceType = DeviceType;
 
     Result = SyncOverlappedDeviceIoControl(KernelHandle,
-                                           IOCTL_OPEN_WDMAUD,
+                                           IOCTL_GETPOS,
                                            (LPVOID) &DeviceInfo,
                                            sizeof(WDMAUD_DEVICE_INFO),
                                            (LPVOID) &DeviceInfo,
