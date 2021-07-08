@@ -15,7 +15,7 @@
 typedef struct tagCLIENTIMC
 {
     HIMC hImc;                  // offset 0x0
-    LONG cLocks;                // offset 0x4
+    LONG cLockObj;              // offset 0x4
     DWORD dwFlags;              // offset 0x8
     DWORD unknown;              // offset 0xc
     RTL_CRITICAL_SECTION cs;    // offset 0x10

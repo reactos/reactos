@@ -1037,7 +1037,7 @@ VOID WINAPI ImmUnlockClientImc(PCLIENTIMC pClientImc)
 
     TRACE("ImmUnlockClientImc(%p)\n", pClientImc);
 
-    cLocks = InterlockedDecrement(&pClientImc->cLocks);
+    cLocks = InterlockedDecrement(&pClientImc->cLockObj);
     if (cLocks != 0 || (pClientImc->dwFlags & CLIENTIMC_UNKNOWN))
         return;
 
