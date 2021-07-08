@@ -365,6 +365,8 @@ BEGIN
     IDS_FLT_REGFILES_FLT "*.reg"
     IDS_FLT_HIVFILES "Registry Hive Files (*.*)"
     IDS_FLT_HIVFILES_FLT "*.*"
+    IDS_FLT_TEXTFILES "Text Files (*.txt)"
+    IDS_FLT_TEXTFILES_FLT "*.txt"
     IDS_FLT_REGEDIT4 "Win9x/NT4 레지스트리 파일 (REGEDIT4) (*.reg)"
     IDS_FLT_REGEDIT4_FLT "*.reg"
     IDS_FLT_ALLFILES "모든 파일 (*.*)"
