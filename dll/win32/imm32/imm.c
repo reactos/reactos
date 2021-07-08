@@ -3337,6 +3337,22 @@ LPINPUTCONTEXT WINAPI ImmLockIMC(HIMC hIMC)
 */
 BOOL WINAPI ImmUnlockIMC(HIMC hIMC)
 {
+#ifdef __REACTOS__
+    PCLIENTIMC pClientIMC;
+    HIMC hClientImc;
+
+    pClientIMC = ImmLockClientImc(hIMC);
+    if (pClientIMC == NULL)
+        return FALSE;
+
+    hClientImc = pClientIMC->hImc;
+    if (hClientImc)
+        LocalUnlock(hClientImc);
+
+    InterlockedDecrement(&pClientIMC->cLockObj);
+    ImmUnlockClientImc(pClientIMC);
+    return TRUE;
+#else
     InputContextData *data = get_imc_data(hIMC);
 
     if (!data)
@@ -3344,6 +3360,7 @@ BOOL WINAPI ImmUnlockIMC(HIMC hIMC)
     if (data->dwLock)
         data->dwLock--;
     return TRUE;
+#endif
 }
 
 /***********************************************************************
