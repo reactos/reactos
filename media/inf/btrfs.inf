@@ -37,18 +37,22 @@ AddService  = %ServiceName%,0x802,Btrfs.Service
 [Standard.NTamd64]
 %VolumeName% = Btrfs_Install, BtrfsVolume
 %ControllerName% = Btrfs_Install, ROOT\btrfs
+%ControllerName% = Btrfs_Install, DETECTED\BTRFS
 
 [Standard.NTx86]
 %VolumeName% = Btrfs_Install, BtrfsVolume
 %ControllerName% = Btrfs_Install, ROOT\btrfs
+%ControllerName% = Btrfs_Install, DETECTED\BTRFS
 
 [Standard.NTarm]
 %VolumeName% = Btrfs_Install, BtrfsVolume
 %ControllerName% = Btrfs_Install, ROOT\btrfs
+%ControllerName% = Btrfs_Install, DETECTED\BTRFS
 
 [Standard.NTarm64]
 %VolumeName% = Btrfs_Install, BtrfsVolume
 %ControllerName% = Btrfs_Install, ROOT\btrfs
+%ControllerName% = Btrfs_Install, DETECTED\BTRFS
 
 [Btrfs_Install]
 OptionDesc   = %ServiceDescription%
