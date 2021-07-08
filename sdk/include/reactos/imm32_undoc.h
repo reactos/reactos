@@ -16,6 +16,7 @@ typedef struct tagCLIENTIMC {
     HIMC hIMC;
     LONG cLocks;
     DWORD dwFlags;
+    DWORD unknown;
     RTL_CRITICAL_SECTION cs;
 } CLIENTIMC, *PCLIENTIMC;
 
