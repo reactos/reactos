@@ -19,7 +19,9 @@ typedef struct tagCLIENTIMC
     DWORD dwFlags;              // offset 0x8
     DWORD unknown;              // offset 0xc
     RTL_CRITICAL_SECTION cs;    // offset 0x10
-    DWORD unknown2[3];          // offset 0x28
+    DWORD unknown2;             // offset 0x28
+    DWORD unknown3;             // offset 0x2c
+    BOOL bUnknown4;             // offset 0x30
 } CLIENTIMC, *PCLIENTIMC;       // size 0x34
 
 /* flags for CLIENTIMC */
