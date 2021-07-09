@@ -7,10 +7,6 @@
 
 #pragma once
 
-#define KBDLAYOUT_MASK 0xF000
-#define KBDLAYOUT_IME 0xE000
-#define IS_IME_KBDLAYOUT(hKL) ((HIWORD(hKL) & KBDLAYOUT_MASK) == KBDLAYOUT_IME)
-
 /* unconfirmed */
 typedef struct tagCLIENTIMC
 {
