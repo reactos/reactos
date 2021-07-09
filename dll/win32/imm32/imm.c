@@ -22,9 +22,7 @@
 #include <stdarg.h>
 #include <stdio.h>
 
-#ifdef __REACTOS__
 #define WIN32_NO_STATUS
-#endif
 #include "windef.h"
 #include "winbase.h"
 #include "wingdi.h"
@@ -36,7 +34,6 @@
 #include "winnls.h"
 #include "winreg.h"
 #include "wine/list.h"
-#ifdef __REACTOS__
 #include <stdlib.h>
 #include <ndk/umtypes.h>
 #include <ndk/pstypes.h>
@@ -44,7 +41,6 @@
 #include "../../../win32ss/include/ntuser.h"
 #include <imm32_undoc.h>
 #include <strsafe.h>
-#endif
 
 WINE_DEFAULT_DEBUG_CHANNEL(imm);
 
@@ -854,19 +850,7 @@ BOOL WINAPI ImmDestroyContext(HIMC hIMC)
  */
 BOOL WINAPI ImmDisableIME(DWORD idThread)
 {
-#ifdef __REACTOS__
     return NtUserDisableThreadIme(idThread);
-#else
-    if (idThread == (DWORD)-1)
-        disable_ime = TRUE;
-    else {
-        IMMThreadData *thread_data = IMM_GetThreadData(NULL, idThread);
-        if (!thread_data) return FALSE;
-        thread_data->disableIME = TRUE;
-        LeaveCriticalSection(&threaddata_cs);
-    }
-    return TRUE;
-#endif
 }
 
 /***********************************************************************
@@ -1017,8 +1001,6 @@ LRESULT WINAPI ImmEscapeW(
     else
         return 0;
 }
-
-#ifdef __REACTOS__
 
 #define ROUNDUP4(n) (((n) + 3) & ~3)  /* DWORD alignment */
 
@@ -1332,7 +1314,7 @@ Quit:
     ImmUnlockClientImc(pClientImc);
     return ret;
 }
-#endif
+
 /***********************************************************************
  *		ImmGetCandidateListA (IMM32.@)
  */
@@ -1340,40 +1322,7 @@ DWORD WINAPI ImmGetCandidateListA(
   HIMC hIMC, DWORD dwIndex,
   LPCANDIDATELIST lpCandList, DWORD dwBufLen)
 {
-#ifdef __REACTOS__
     return ImmGetCandidateListAW(hIMC, dwIndex, lpCandList, dwBufLen, TRUE);
-#else
-    InputContextData *data = get_imc_data(hIMC);
-    LPCANDIDATEINFO candinfo;
-    LPCANDIDATELIST candlist;
-    DWORD ret = 0;
-
-    TRACE("%p, %d, %p, %d\n", hIMC, dwIndex, lpCandList, dwBufLen);
-
-    if (!data || !data->IMC.hCandInfo)
-       return 0;
-
-    candinfo = ImmLockIMCC(data->IMC.hCandInfo);
-    if (dwIndex >= candinfo->dwCount || dwIndex >= ARRAY_SIZE(candinfo->dwOffset))
-        goto done;
-
-    candlist = (LPCANDIDATELIST)((LPBYTE)candinfo + candinfo->dwOffset[dwIndex]);
-    if ( !candlist->dwSize || !candlist->dwCount )
-        goto done;
-
-    if ( !is_himc_ime_unicode(data) )
-    {
-        ret = candlist->dwSize;
-        if ( lpCandList && dwBufLen >= ret )
-            memcpy(lpCandList, candlist, ret);
-    }
-    else
-        ret = convert_candidatelist_WtoA( candlist, lpCandList, dwBufLen);
-
-done:
-    ImmUnlockIMCC(data->IMC.hCandInfo);
-    return ret;
-#endif
 }
 
 /***********************************************************************
@@ -1447,40 +1396,7 @@ DWORD WINAPI ImmGetCandidateListW(
   HIMC hIMC, DWORD dwIndex,
   LPCANDIDATELIST lpCandList, DWORD dwBufLen)
 {
-#ifdef __REACTOS__
     return ImmGetCandidateListAW(hIMC, dwIndex, lpCandList, dwBufLen, FALSE);
-#else
-    InputContextData *data = get_imc_data(hIMC);
-    LPCANDIDATEINFO candinfo;
-    LPCANDIDATELIST candlist;
-    DWORD ret = 0;
-
-    TRACE("%p, %d, %p, %d\n", hIMC, dwIndex, lpCandList, dwBufLen);
-
-    if (!data || !data->IMC.hCandInfo)
-       return 0;
-
-    candinfo = ImmLockIMCC(data->IMC.hCandInfo);
-    if (dwIndex >= candinfo->dwCount || dwIndex >= ARRAY_SIZE(candinfo->dwOffset))
-        goto done;
-
-    candlist = (LPCANDIDATELIST)((LPBYTE)candinfo + candinfo->dwOffset[dwIndex]);
-    if ( !candlist->dwSize || !candlist->dwCount )
-        goto done;
-
-    if ( is_himc_ime_unicode(data) )
-    {
-        ret = candlist->dwSize;
-        if ( lpCandList && dwBufLen >= ret )
-            memcpy(lpCandList, candlist, ret);
-    }
-    else
-        ret = convert_candidatelist_AtoW( candlist, lpCandList, dwBufLen);
-
-done:
-    ImmUnlockIMCC(data->IMC.hCandInfo);
-    return ret;
-#endif
 }
 
 /***********************************************************************
@@ -1965,7 +1881,6 @@ DWORD WINAPI ImmGetConversionListW(
 BOOL WINAPI ImmGetConversionStatus(
   HIMC hIMC, LPDWORD lpfdwConversion, LPDWORD lpfdwSentence)
 {
-#ifdef __REACTOS__
     LPINPUTCONTEXT pIC;
 
     TRACE("ImmGetConversionStatus(%p %p %p)\n", hIMC, lpfdwConversion, lpfdwSentence);
@@ -1981,21 +1896,6 @@ BOOL WINAPI ImmGetConversionStatus(
 
     ImmUnlockIMC(hIMC);
     return TRUE;
-#else
-    InputContextData *data = get_imc_data(hIMC);
-
-    TRACE("%p %p %p\n", hIMC, lpfdwConversion, lpfdwSentence);
-
-    if (!data)
-        return FALSE;
-
-    if (lpfdwConversion)
-        *lpfdwConversion = data->IMC.fdwConversion;
-    if (lpfdwSentence)
-        *lpfdwSentence = data->IMC.fdwSentence;
-
-    return TRUE;
-#endif
 }
 
 static BOOL needs_ime_window(HWND hwnd)
@@ -2110,7 +2010,6 @@ HWND WINAPI ImmGetDefaultIMEWnd(HWND hWnd)
 UINT WINAPI ImmGetDescriptionA(
   HKL hKL, LPSTR lpszDescription, UINT uBufLen)
 {
-#ifdef __REACTOS__
     IMEINFOEX info;
     size_t cch;
 
@@ -2125,36 +2024,6 @@ UINT WINAPI ImmGetDescriptionA(
     if (uBufLen)
         lpszDescription[cch] = 0;
     return cch;
-#else
-  WCHAR *buf;
-  DWORD len;
-
-  TRACE("%p %p %d\n", hKL, lpszDescription, uBufLen);
-
-  /* find out how many characters in the unicode buffer */
-  len = ImmGetDescriptionW( hKL, NULL, 0 );
-  if (!len)
-    return 0;
-
-  /* allocate a buffer of that size */
-  buf = HeapAlloc( GetProcessHeap(), 0, (len + 1) * sizeof (WCHAR) );
-  if( !buf )
-  return 0;
-
-  /* fetch the unicode buffer */
-  len = ImmGetDescriptionW( hKL, buf, len + 1 );
-
-  /* convert it back to ASCII */
-  len = WideCharToMultiByte( CP_ACP, 0, buf, len + 1,
-                             lpszDescription, uBufLen, NULL, NULL );
-
-  HeapFree( GetProcessHeap(), 0, buf );
-
-  if (len == 0)
-    return 0;
-
-  return len - 1;
-#endif
 }
 
 /***********************************************************************
@@ -2162,7 +2031,6 @@ UINT WINAPI ImmGetDescriptionA(
  */
 UINT WINAPI ImmGetDescriptionW(HKL hKL, LPWSTR lpszDescription, UINT uBufLen)
 {
-#ifdef __REACTOS__
     IMEINFOEX info;
     size_t cch;
 
@@ -2176,16 +2044,6 @@ UINT WINAPI ImmGetDescriptionW(HKL hKL, LPWSTR lpszDescription, UINT uBufLen)
 
     StringCchLengthW(info.wszImeDescription, _countof(info.wszImeDescription), &cch);
     return (UINT)cch;
-#else
-  static const WCHAR name[] = { 'W','i','n','e',' ','X','I','M',0 };
-
-  FIXME("(%p, %p, %d): semi stub\n", hKL, lpszDescription, uBufLen);
-
-  if (!hKL) return 0;
-  if (!uBufLen) return lstrlenW( name );
-  lstrcpynW( lpszDescription, name, uBufLen );
-  return lstrlenW( lpszDescription );
-#endif
 }
 
 /***********************************************************************
@@ -2297,7 +2155,6 @@ UINT WINAPI ImmGetIMEFileNameW(HKL hKL, LPWSTR lpszFileName, UINT uBufLen)
  */
 BOOL WINAPI ImmGetOpenStatus(HIMC hIMC)
 {
-#ifdef __REACTOS__
     BOOL ret;
     LPINPUTCONTEXT pIC;
 
@@ -2314,20 +2171,6 @@ BOOL WINAPI ImmGetOpenStatus(HIMC hIMC)
 
     ImmUnlockIMC(hIMC);
     return ret;
-#else
-  InputContextData *data = get_imc_data(hIMC);
-  static int i;
-
-    if (!data)
-        return FALSE;
-
-    TRACE("(%p): semi-stub\n", hIMC);
-
-    if (!i++)
-      FIXME("(%p): semi-stub\n", hIMC);
-
-  return data->IMC.fOpen;
-#endif
 }
 
 /***********************************************************************
@@ -2543,16 +2386,9 @@ HKL WINAPI ImmInstallIMEW(
  */
 BOOL WINAPI ImmIsIME(HKL hKL)
 {
-#ifdef __REACTOS__
     IMEINFOEX info;
     TRACE("ImmIsIME(%p)\n", hKL);
     return !!ImmGetImeInfoEx(&info, ImeInfoExImeWindow, &hKL);
-#else
-    ImmHkl *ptr;
-    TRACE("(%p):\n", hKL);
-    ptr = IMM_GetImmHkl(hKL);
-    return (ptr && ptr->hIME);
-#endif
 }
 
 /***********************************************************************
@@ -3083,14 +2919,8 @@ HWND WINAPI ImmCreateSoftKeyboard(UINT uType, UINT hOwner, int x, int y)
  */
 BOOL WINAPI ImmDestroySoftKeyboard(HWND hSoftWnd)
 {
-#ifdef __REACTOS__
     TRACE("(%p)\n", hSoftWnd);
     return DestroyWindow(hSoftWnd);
-#else
-    FIXME("(%p): stub\n", hSoftWnd);
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return FALSE;
-#endif
 }
 
 /***********************************************************************
@@ -3098,14 +2928,9 @@ BOOL WINAPI ImmDestroySoftKeyboard(HWND hSoftWnd)
  */
 BOOL WINAPI ImmShowSoftKeyboard(HWND hSoftWnd, int nCmdShow)
 {
-#ifdef __REACTOS__
     TRACE("(%p, %d)\n", hSoftWnd, nCmdShow);
     if (hSoftWnd)
         return ShowWindow(hSoftWnd, nCmdShow);
-#else
-    FIXME("(%p, %d): stub\n", hSoftWnd, nCmdShow);
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-#endif
     return FALSE;
 }
 
@@ -3337,7 +3162,6 @@ LPINPUTCONTEXT WINAPI ImmLockIMC(HIMC hIMC)
 */
 BOOL WINAPI ImmUnlockIMC(HIMC hIMC)
 {
-#ifdef __REACTOS__
     PCLIENTIMC pClientIMC;
     HIMC hClientImc;
 
@@ -3352,15 +3176,6 @@ BOOL WINAPI ImmUnlockIMC(HIMC hIMC)
     InterlockedDecrement(&pClientIMC->cLockObj);
     ImmUnlockClientImc(pClientIMC);
     return TRUE;
-#else
-    InputContextData *data = get_imc_data(hIMC);
-
-    if (!data)
-        return FALSE;
-    if (data->dwLock)
-        data->dwLock--;
-    return TRUE;
-#endif
 }
 
 /***********************************************************************
@@ -3368,7 +3183,6 @@ BOOL WINAPI ImmUnlockIMC(HIMC hIMC)
 */
 DWORD WINAPI ImmGetIMCLockCount(HIMC hIMC)
 {
-#ifdef __REACTOS__
     DWORD ret;
     HIMC hClientImc;
     PCLIENTIMC pClientImc;
@@ -3384,12 +3198,6 @@ DWORD WINAPI ImmGetIMCLockCount(HIMC hIMC)
 
     ImmUnlockClientImc(pClientImc);
     return ret;
-#else
-    InputContextData *data = get_imc_data(hIMC);
-    if (!data)
-        return 0;
-    return data->dwLock;
-#endif
 }
 
 /***********************************************************************
@@ -3397,13 +3205,9 @@ DWORD WINAPI ImmGetIMCLockCount(HIMC hIMC)
 */
 HIMCC  WINAPI ImmCreateIMCC(DWORD size)
 {
-#ifdef __REACTOS__
     if (size < 4)
         size = 4;
     return LocalAlloc(LHND, size);
-#else
-    return GlobalAlloc(GMEM_ZEROINIT | GMEM_MOVEABLE, size);
-#endif
 }
 
 /***********************************************************************
@@ -3411,13 +3215,9 @@ HIMCC  WINAPI ImmCreateIMCC(DWORD size)
 */
 HIMCC WINAPI ImmDestroyIMCC(HIMCC block)
 {
-#ifdef __REACTOS__
     if (block)
         return LocalFree(block);
     return NULL;
-#else
-    return GlobalFree(block);
-#endif
 }
 
 /***********************************************************************
@@ -3425,13 +3225,9 @@ HIMCC WINAPI ImmDestroyIMCC(HIMCC block)
 */
 LPVOID WINAPI ImmLockIMCC(HIMCC imcc)
 {
-#ifdef __REACTOS__
     if (imcc)
         return LocalLock(imcc);
     return NULL;
-#else
-    return GlobalLock(imcc);
-#endif
 }
 
 /***********************************************************************
@@ -3439,13 +3235,9 @@ LPVOID WINAPI ImmLockIMCC(HIMCC imcc)
 */
 BOOL WINAPI ImmUnlockIMCC(HIMCC imcc)
 {
-#ifdef __REACTOS__
     if (imcc)
         return LocalUnlock(imcc);
     return FALSE;
-#else
-    return GlobalUnlock(imcc);
-#endif
 }
 
 /***********************************************************************
@@ -3453,11 +3245,7 @@ BOOL WINAPI ImmUnlockIMCC(HIMCC imcc)
 */
 DWORD WINAPI ImmGetIMCCLockCount(HIMCC imcc)
 {
-#ifdef __REACTOS__
     return LocalFlags(imcc) & LMEM_LOCKCOUNT;
-#else
-    return GlobalFlags(imcc) & GMEM_LOCKCOUNT;
-#endif
 }
 
 /***********************************************************************
@@ -3465,13 +3253,9 @@ DWORD WINAPI ImmGetIMCCLockCount(HIMCC imcc)
 */
 HIMCC  WINAPI ImmReSizeIMCC(HIMCC imcc, DWORD size)
 {
-#ifdef __REACTOS__
     if (!imcc)
         return NULL;
     return LocalReAlloc(imcc, size, LHND);
-#else
-    return GlobalReAlloc(imcc, size, GMEM_ZEROINIT | GMEM_MOVEABLE);
-#endif
 }
 
 /***********************************************************************
@@ -3479,13 +3263,9 @@ HIMCC  WINAPI ImmReSizeIMCC(HIMCC imcc, DWORD size)
 */
 DWORD WINAPI ImmGetIMCCSize(HIMCC imcc)
 {
-#ifdef __REACTOS__
     if (imcc)
         return LocalSize(imcc);
     return 0;
-#else
-    return GlobalSize(imcc);
-#endif
 }
 
 /***********************************************************************
@@ -3661,7 +3441,6 @@ BOOL WINAPI ImmEnumInputContext(DWORD idThread, IMCENUMPROC lpfn, LPARAM lParam)
  *              ImmGetHotKey(IMM32.@)
  */
 
-#ifdef __REACTOS__
 BOOL WINAPI
 ImmGetHotKey(IN DWORD dwHotKey,
              OUT LPUINT lpuModifiers,
@@ -3673,13 +3452,6 @@ ImmGetHotKey(IN DWORD dwHotKey,
         return NtUserGetImeHotKey(dwHotKey, lpuModifiers, lpuVKey, lphKL);
     return FALSE;
 }
-#else
-BOOL WINAPI ImmGetHotKey(DWORD hotkey, UINT *modifiers, UINT *key, HKL hkl)
-{
-    FIXME("%x, %p, %p, %p: stub\n", hotkey, modifiers, key, hkl);
-    return FALSE;
-}
-#endif
 
 /***********************************************************************
  *              ImmDisableLegacyIME(IMM32.@)
@@ -3690,7 +3462,6 @@ BOOL WINAPI ImmDisableLegacyIME(void)
     return TRUE;
 }
 
-#ifdef __REACTOS__
 /***********************************************************************
  *              ImmSetActiveContext(IMM32.@)
  */
@@ -3751,4 +3522,3 @@ ImmGetImeInfoEx(PIMEINFOEX pImeInfoEx,
     }
     return NtUserGetImeInfoEx(pImeInfoEx, SearchType);
 }
-#endif
