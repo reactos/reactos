@@ -2116,10 +2116,10 @@ LRESULT CAutoComplete::OnAutoCompFinish(UINT uMsg, WPARAM wParam, LPARAM lParam,
     if (m_pThread == NULL)
     {
         FinishCompletion(pThread);
-        delete pThread;
     }
     CloseHandle(m_hThread);
     m_hThread = NULL;
+    delete pThread;
     return 0;
 }
 
