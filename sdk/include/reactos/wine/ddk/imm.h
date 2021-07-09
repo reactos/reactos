@@ -25,27 +25,27 @@
 #include <psdk/imm.h>
 
 typedef struct _tagINPUTCONTEXT {
-    HWND                hWnd;
-    BOOL                fOpen;
-    POINT               ptStatusWndPos;
-    POINT               ptSoftKbdPos;
-    DWORD               fdwConversion;
-    DWORD               fdwSentence;
+    HWND                hWnd;               /* offset 0x0 */
+    BOOL                fOpen;              /* offset 0x4 */
+    POINT               ptStatusWndPos;     /* offset 0x8 */
+    POINT               ptSoftKbdPos;       /* offset 0x10 */
+    DWORD               fdwConversion;      /* offset 0x18 */
+    DWORD               fdwSentence;        /* offset 0x1c */
     union   {
         LOGFONTA        A;
         LOGFONTW        W;
-    } lfFont;
-    COMPOSITIONFORM     cfCompForm;
-    CANDIDATEFORM       cfCandForm[4];
-    HIMCC               hCompStr;
-    HIMCC               hCandInfo;
-    HIMCC               hGuideLine;
-    HIMCC               hPrivate;
-    DWORD               dwNumMsgBuf;
-    HIMCC               hMsgBuf;
-    DWORD               fdwInit;
-    DWORD               dwReserve[3];
-} INPUTCONTEXT, *LPINPUTCONTEXT;
+    } lfFont;                               /* offset 0x20 */
+    COMPOSITIONFORM     cfCompForm;         /* offset 0x7c */
+    CANDIDATEFORM       cfCandForm[4];      /* offset 0x98 */
+    HIMCC               hCompStr;           /* offset 0x118 */
+    HIMCC               hCandInfo;          /* offset 0x11c */
+    HIMCC               hGuideLine;         /* offset 0x120 */
+    HIMCC               hPrivate;           /* offset 0x124 */
+    DWORD               dwNumMsgBuf;        /* offset 0x128 */
+    HIMCC               hMsgBuf;            /* offset 0x12c */
+    DWORD               fdwInit;            /* offset 0x130 */
+    DWORD               dwReserve[3];       /* offset 0x134 */
+} INPUTCONTEXT, *LPINPUTCONTEXT;            /* size 0x140 */
 
 LPINPUTCONTEXT WINAPI ImmLockIMC(HIMC);
 
