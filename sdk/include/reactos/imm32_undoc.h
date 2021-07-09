@@ -10,15 +10,15 @@
 /* unconfirmed */
 typedef struct tagCLIENTIMC
 {
-    HIMC hImc;                  // offset 0x0
-    LONG cLockObj;              // offset 0x4
-    DWORD dwFlags;              // offset 0x8
-    DWORD unknown;              // offset 0xc
-    RTL_CRITICAL_SECTION cs;    // offset 0x10
-    DWORD unknown2;             // offset 0x28
-    DWORD unknown3;             // offset 0x2c
-    BOOL bUnknown4;             // offset 0x30
-} CLIENTIMC, *PCLIENTIMC;       // size 0x34
+    HIMC hImc;
+    LONG cLockObj;
+    DWORD dwFlags;
+    DWORD unknown;
+    RTL_CRITICAL_SECTION cs;
+    DWORD unknown2;
+    DWORD unknown3;
+    BOOL bUnknown4;
+} CLIENTIMC, *PCLIENTIMC;
 
 /* flags for CLIENTIMC */
 #define CLIENTIMC_WIDE (1 << 0)
