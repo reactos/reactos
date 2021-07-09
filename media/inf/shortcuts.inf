@@ -371,8 +371,8 @@ MSPAINT_TITLE=Paint
 MSPAINT_DESC=Starte Paint
 CHARMAP_TITLE=Zeichentabelle
 CHARMAP_DESC=Zeichentabelle
-CLIPBRD_TITLE=Clipboard Viewer
-CLIPBRD_DESC=Clipboard Viewer
+CLIPBRD_TITLE=Zwischenablagenanzeige
+CLIPBRD_DESC=Zwischenablagenanzeige
 KBSWITCH_TITLE=Tastaturlayout-Umschalter
 KBSWITCH_DESC=Tastaturlayout-Umschalter
 REGEDIT_TITLE=Registrierungseditor
@@ -393,8 +393,10 @@ SOL_TITLE=Solitär
 SOL_DESC=Solitär
 WINMINE_TITLE=WineMine
 WINMINE_DESC=WineMine
-SPIDER_TITLE=Spider Solitaire
-SPIDER_DESC=Spider Solitaire
+SPIDER_TITLE=Spider Solitär
+SPIDER_DESC=Spider Solitär
+UTILMAN_TITLE=Eingabehilfen-Manager
+UTILMAN_DESC=Eingabehilfen-Manager starten
 
 ; Greek
 [Strings.0408]
