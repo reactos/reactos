@@ -21,13 +21,13 @@ Parameter:\n\
 \n\
     /NOBREAK  Ignoriert sämtliche Tasteneingaben mit Ausnahme von Strg+C.\n\
 "
-    IDS_ERROR_OUT_OF_RANGE "FEHLER: Die Zeit muss innerhalb des Wertebereiches liegen (-1 to 99999).\n"
-    IDS_ERROR_INVALID_HANDLE_VALUE "FEHLER: Standard-Handle der Konsole nicht verfügbar (error %lu).\n"
-    IDS_ERROR_READ_INPUT "FEHLER: Abfragen der Konsoleneingabe nicht möglich (error %lu).\n"
-    IDS_ERROR_NO_TIMER_VALUE "FEHLER: Es muss eine Zeit angegeben werden (-1 to 99999).\n"
+    IDS_ERROR_OUT_OF_RANGE "FEHLER: Die Zeit muss innerhalb des Wertebereiches liegen (-1 bis 99999).\n"
+    IDS_ERROR_INVALID_HANDLE_VALUE "FEHLER: Standard-Handle der Konsole nicht verfügbar (Fehlercode %lu).\n"
+    IDS_ERROR_READ_INPUT "FEHLER: Abfragen der Konsoleneingabe nicht möglich (Fehlercode %lu).\n"
+    IDS_ERROR_NO_TIMER_VALUE "FEHLER: Es muss eine Zeit angegeben werden (-1 bis 99999).\n"
     IDS_ERROR_ONE_TIME "FEHLER: Es wird nur ein Zeitwert benötigt.\n"
     IDS_NOBREAK_INPUT "Drücken Sie Strg+C zum Beenden..."
     IDS_USER_INPUT "Beliebige Taste drücken um fortzufahren..."
     IDS_NOBREAK_INPUT_COUNT "Warte %d Sekunde(n), Drücken Sie Strg+C zum Beenden..."
-    IDS_USER_INPUT_COUNT "Warte %d Sekunde(n), Beliebige Taste drücken um fortzufahren..."
+    IDS_USER_INPUT_COUNT "Warte %d Sekunde(n), beliebige Taste drücken um fortzufahren..."
 END

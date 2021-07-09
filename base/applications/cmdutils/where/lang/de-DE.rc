@@ -21,7 +21,7 @@ Optionen:\n\
            Formate ""$env:pattern""  und ""path:pattern"" können\n\
            auch angegeben werden, wenn ""env"" eine Umgebungsvariable ist,\n\
            und die Suche in den angegebenen Pfaden der Umgebungsvariable\n\
-           ""env"" ausgeführt wird. Diese Formate sollten nicht mit\n\
+           ""env"" ausgeführt wird. Diese Formate können nicht mit\n\
            /R verwendet werden. Die Suche wird auch nach Anhängen der\n\
            PATHEXT-Variablenerweiterungen an das Muster durchgeführt.\n\
   /?       Zeigt diesen Hilfebildschirm.\n\

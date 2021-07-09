@@ -60,7 +60,7 @@ Parameter:\n\
     IDS_LOG_NOT_FOUND "Das Protokoll '%s' existiert nicht. Das Ereignis konnte nicht erstellt werden.\n"
     IDS_SOURCE_NOCREATE "Die neue Quelle kann nicht erstellt werden, da kein Protokollname angegebenen wurde.\nNutzen Sie die Option /L um einen Protokollnamen anzugeben.\n"
     IDS_SOURCE_EXISTS "Die Quelle existiert bereits im Protokoll '%s' und kann nicht dupliziert werden.\n"
-    IDS_SOURCE_NOT_CUSTOM "Der Quellparameter wird benutzt um benutzerdefinierte Scripte/Anwendungen zu identifizieren\n(keine installierten Anwendungen).\n"
+    IDS_SOURCE_NOT_CUSTOM "Der Quellparameter wird benutzt um benutzerdefinierte Skripte/Anwendungen zu identifizieren\n(keine installierten Anwendungen).\n"
 
     IDS_SUCCESS_1   "Operation erfolgreich: Ein Ereignis des Typs '%s' wurde im Protokoll '%s' erstellt.\n"
     IDS_SUCCESS_2   "Operation erfolgreich: Ein Ereignis des Typs '%s' wurde mit der Quelle '%s' erstellt.\n"
