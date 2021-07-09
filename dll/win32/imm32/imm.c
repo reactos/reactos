@@ -1052,7 +1052,7 @@ PCLIENTIMC WINAPI ImmLockClientImc(HIMC hImc)
             return NULL;
 
         RtlInitializeCriticalSection(&pClientImc->cs);
-        pClientImc->unknown = Imm32GetThreadState(0xd);
+        pClientImc->unknown = Imm32GetThreadState(THREADSTATE_UNKNOWN13);
 
         if (!Imm32UpdateInputContext(hImc, 0, pClientImc))
         {
