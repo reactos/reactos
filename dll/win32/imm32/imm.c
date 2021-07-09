@@ -1032,12 +1032,6 @@ Imm32UpdateInputContext(HIMC hIMC, DWORD Unknown1, PCLIENTIMC pClientImc)
 static PCLIENTIMC APIENTRY Imm32GetClientImcCache(void)
 {
     // FIXME: Do something properly here
-    static BOOL s_b = FALSE;
-    if (!s_b)
-    {
-        s_b = TRUE;
-        FIXME("Imm32GetClientImcCache()\n");
-    }
     return NULL;
 }
 
