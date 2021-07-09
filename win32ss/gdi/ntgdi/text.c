@@ -46,6 +46,7 @@ IntTMWFixUp(
         (wcsicmp(lf.lfFaceName, L"FixedSys") == 0) ||
         (wcsicmp(lf.lfFaceName, L"Helv") == 0) ||
         (wcsicmp(lf.lfFaceName, L"MS Sans Serif") == 0) ||
+        (wcsicmp(lf.lfFaceName, L"MS Serif") == 0) ||
         (wcsicmp(lf.lfFaceName, L"System") == 0) ||
         (wcsicmp(lf.lfFaceName, L"Terminal") == 0) ||
         (wcsicmp(lf.lfFaceName, L"Tms Rmn") == 0))
