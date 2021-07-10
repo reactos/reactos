@@ -2942,6 +2942,303 @@ static VOID VidBiosPrintCharacter(CHAR Character, BYTE Attribute, BOOLEAN UseAtt
     VidBiosSetCursorPosition(Row, Column, Page);
 }
 
+static BYTE VidBiosGetPageAmountForMode(BYTE VideoMode)
+{
+    if (VideoMode > BIOS_MAX_VIDEO_MODE)
+        return 0;
+    return 0x10000 / VideoModes[VideoMode].PageSize;
+}
+
+static VOID VidBiosSetPixel(WORD X, WORD Y, BYTE Page, BYTE Value)
+{
+    SHORT ScreenWidth = VgaGetDisplayResolution().X;
+
+    if (IS_TEXT_MODE(Bda->VideoMode))
+    {
+        DPRINT1("Note, trying to modify pixel (%d,%d) @ page %d to %d in text mode %X - returning 0.\n", X, Y, Page, Value, Bda->VideoMode);
+        return;
+    }
+
+    switch (Bda->VideoMode)
+    {
+        case 0x04: /* CGA 320x200 4c */
+        case 0x05: /* CGA 320x200 4c */
+        case 0x06: /* CGA 640x200 2c  */
+        {
+            WORD CgaSegment[] = { CGA_EVEN_VIDEO_SEG, CGA_ODD_VIDEO_SEG };
+            ULONG Address;
+            BYTE MemoryValue;
+            BOOL Xor;
+            BYTE MaxColor;
+            BYTE ValueShift;
+            BYTE PixelsPerByte;
+
+            if (Bda->VideoMode == 0x06)
+            {
+                MaxColor = 1;
+                ValueShift = ~X & 7;
+                PixelsPerByte = 8;
+            }
+            else
+            {
+                MaxColor = 3;
+                ValueShift = (~X & 3) * 2;
+                PixelsPerByte = 4;
+            }
+
+            Xor = (Value & 0x80) != 0;
+            Value &= MaxColor;
+            Address = TO_LINEAR(CgaSegment[Y & 1],
+                                Page * Bda->VideoPageSize + ((Y / 2) * ScreenWidth + X) / PixelsPerByte);
+
+            EmulatorReadMemory(&EmulatorContext, Address, &MemoryValue, sizeof(BYTE));
+            if (Xor)
+            {
+                MemoryValue ^= Value << ValueShift;
+            }
+            else
+            {
+                MemoryValue &= ~(MaxColor << ValueShift);
+                MemoryValue |= Value << ValueShift;
+            }
+            EmulatorWriteMemory(&EmulatorContext, Address, &MemoryValue, sizeof(BYTE));
+            break;
+        }
+
+        case 0x0D: /* EGA 320x200 16c */
+        case 0x0E: /* EGA 640x200 16c */
+        case 0x10: /* EGA 640x350 16c */
+        case 0x12: /* VGA 640x480 16c */
+        {
+            ULONG Address;
+            BOOL Xor;
+            BYTE OldMode;
+            BYTE OldRotation;
+            BYTE OldRead;
+            BYTE OldMask;
+            BYTE CurrentPlaneMask;
+            BYTE CurrentPlane;
+            BYTE Shift = ~X & 7;
+
+            Xor = (Value & 0x80) != 0;
+            Value &= 15;
+            Address = TO_LINEAR(GRAPHICS_VIDEO_SEG,
+                                Page * Bda->VideoPageSize + (Y * ScreenWidth + X) / 8);
+
+            /* Make sure we're in write mode 0 */
+            IOWriteB(VGA_GC_INDEX, VGA_GC_MODE_REG);
+            OldMode = IOReadB(VGA_GC_DATA);
+            IOWriteB(VGA_GC_DATA, 0x00);
+
+            /* Setup the rotation */
+            IOWriteB(VGA_GC_INDEX, VGA_GC_ROTATE_REG);
+            OldRotation = IOReadB(VGA_GC_DATA);
+            IOWriteB(VGA_GC_DATA, Xor ? 0x18 : 0x00);
+
+            /* Save old read */
+            IOWriteB(VGA_GC_INDEX, VGA_GC_READ_MAP_SEL_REG);
+            OldRead = IOReadB(VGA_GC_DATA);
+
+            /* Save old mask */
+            IOWriteB(VGA_SEQ_INDEX, VGA_SEQ_MASK_REG);
+            OldMask = IOReadB(VGA_SEQ_DATA);
+
+            /* Loop and write over all four color bitplanes */
+            CurrentPlaneMask = 1;
+            for (CurrentPlane = 0; CurrentPlane < 4; CurrentPlane++)
+            {
+                BYTE Dummy;
+                BYTE ActualValue;
+
+                IOWriteB(VGA_GC_INDEX, VGA_GC_READ_MAP_SEL_REG);
+                IOWriteB(VGA_GC_DATA, CurrentPlane);
+                IOWriteB(VGA_SEQ_DATA, CurrentPlaneMask);
+                EmulatorReadMemory(&EmulatorContext, Address, &Dummy, sizeof(BYTE));
+
+                /* There's probably a way to handle this logic on write, but I'll just leave it at that */
+                if (Xor)
+                {
+                    ActualValue = (Value & 1) << Shift;
+                }
+                else
+                {
+                    ActualValue = Dummy;
+                    ActualValue &= ~(1 << Shift);
+                    ActualValue |= (Value & 1) << Shift;
+                }
+
+                EmulatorWriteMemory(&EmulatorContext, Address, &ActualValue, sizeof(BYTE));
+
+                Value >>= 1;
+                CurrentPlaneMask <<= 1;
+            }
+
+            /* Restore old registers */
+            IOWriteB(VGA_GC_INDEX, VGA_GC_MODE_REG);
+            IOWriteB(VGA_GC_DATA, OldMode);
+            IOWriteB(VGA_GC_INDEX, VGA_GC_ROTATE_REG);
+            IOWriteB(VGA_GC_DATA, OldRotation);
+            IOWriteB(VGA_GC_INDEX, VGA_GC_READ_MAP_SEL_REG);
+            IOWriteB(VGA_GC_DATA, OldRead);
+            IOWriteB(VGA_SEQ_INDEX, VGA_SEQ_MASK_REG);
+            IOWriteB(VGA_SEQ_DATA, OldMask);
+            break;
+        }
+
+        case 0x11: /* 640x480 2c */
+        {
+            ULONG Address;
+            BYTE MemoryValue;
+            BOOL Xor;
+            BYTE Shift = ~X & 7;
+
+            Xor = Value & 0x80;
+            Value &= 1;
+            Address = TO_LINEAR(GRAPHICS_VIDEO_SEG,
+                                Page * Bda->VideoPageSize + (Y * ScreenWidth + X) / 8);
+
+            EmulatorReadMemory(&EmulatorContext, Address, &MemoryValue, sizeof(BYTE));
+            if (Xor)
+            {
+                MemoryValue ^= Value << Shift;
+            }
+            else
+            {
+                MemoryValue &= ~(1 << Shift);
+                MemoryValue |= Value << Shift;
+            }
+            EmulatorWriteMemory(&EmulatorContext, Address, &MemoryValue, sizeof(BYTE));
+            break;
+        }
+
+        case 0x13: /* 320x200 256c */
+        {
+            WORD Offset = Y * ScreenWidth + X;
+            EmulatorWriteMemory(&EmulatorContext,
+                                TO_LINEAR(GRAPHICS_VIDEO_SEG, Page * Bda->VideoPageSize + Offset),
+                                &Value,
+                                sizeof(BYTE));
+            break;
+        }
+
+        default:
+        {
+            DPRINT1("VidBiosSetPixel - unsupported video mode %X\n", Bda->VideoMode);
+            break;
+        }
+    }
+}
+
+static BYTE VidBiosGetPixel(WORD X, WORD Y, BYTE Page)
+{
+    SHORT ScreenWidth = VgaGetDisplayResolution().X;
+
+    if (IS_TEXT_MODE(Bda->VideoMode))
+    {
+        DPRINT1("Note, trying to access pixel (%d,%d) @ page %d in text mode %X - returning 0.\n", X, Y, Page, Bda->VideoMode);
+        return 0;
+    }
+
+    switch (Bda->VideoMode)
+    {
+        case 0x04: /* CGA 320x200 4c */
+        case 0x05: /* CGA 320x200 4c */
+        case 0x06: /* CGA 640x200 2c */
+        {
+            WORD CgaSegment[] = { CGA_EVEN_VIDEO_SEG, CGA_ODD_VIDEO_SEG };
+            ULONG Address;
+            BYTE MemoryValue;
+            BYTE MaxColor;
+            BYTE ValueShift;
+            BYTE PixelsPerByte;
+
+            if (Bda->VideoMode == 0x06)
+            {
+                MaxColor = 1;
+                ValueShift = ~X & 7;
+                PixelsPerByte = 8;
+            }
+            else
+            {
+                MaxColor = 3;
+                ValueShift = (~X & 3) * 2;
+                PixelsPerByte = 4;
+            }
+
+            Address = TO_LINEAR(CgaSegment[Y & 1],
+                                Page * Bda->VideoPageSize + ((Y / 2) * ScreenWidth + X) / PixelsPerByte);
+
+            EmulatorReadMemory(&EmulatorContext, Address, &MemoryValue, sizeof(BYTE));
+            return (MemoryValue >> ValueShift) & MaxColor;
+        }
+
+        case 0x0D: /* EGA 320x200 16c */
+        case 0x0E: /* EGA 640x200 16c */
+        case 0x10: /* EGA 640x350 16c */
+        case 0x12: /* VGA 640x480 16c */
+        {
+            ULONG Address;
+            BYTE OldRead;
+            BYTE Shift = ~X & 7;
+            BYTE Value = 0;
+            BYTE CurrentPlane;
+
+            Address = TO_LINEAR(GRAPHICS_VIDEO_SEG,
+                                Page * Bda->VideoPageSize + (Y * ScreenWidth + X) / 8);
+
+            /* Save old read register */
+            IOWriteB(VGA_GC_INDEX, VGA_GC_READ_MAP_SEL_REG);
+            OldRead = IOReadB(VGA_GC_DATA);
+
+            /* Loop and read from all four color bitplanes */
+            for (CurrentPlane = 0; CurrentPlane < 4; CurrentPlane++)
+            {
+                BYTE MemoryValue;
+
+                IOWriteB(VGA_GC_INDEX, VGA_GC_READ_MAP_SEL_REG);
+                IOWriteB(VGA_GC_DATA, CurrentPlane);
+
+                EmulatorReadMemory(&EmulatorContext, Address, &MemoryValue, sizeof(BYTE));
+                Value |= ((MemoryValue >> Shift) & 1) << CurrentPlane;
+            }
+
+            /* Restore old read register */
+            IOWriteB(VGA_GC_INDEX, VGA_GC_READ_MAP_SEL_REG);
+            IOWriteB(VGA_GC_DATA, OldRead);
+            return Value;
+        }
+
+        case 0x11: /* 640x480 2c */
+        {
+            BYTE MemoryValue;
+            BYTE ValueShift = ~X & 7;
+            ULONG Address = TO_LINEAR(GRAPHICS_VIDEO_SEG,
+                                      Page * Bda->VideoPageSize + (Y * ScreenWidth + X) / 8);
+            EmulatorReadMemory(&EmulatorContext, Address, &MemoryValue, sizeof(BYTE));
+            return (MemoryValue >> ValueShift) & 1;
+        }
+
+        case 0x13: /* 320x200 256c */
+        {
+            BYTE Value;
+            EmulatorReadMemory(&EmulatorContext,
+                               TO_LINEAR(GRAPHICS_VIDEO_SEG,
+                                         Page * Bda->VideoPageSize + Y * 320 + X),
+                               &Value,
+                               sizeof(BYTE));
+            return Value;
+        }
+
+        default:
+        {
+            DPRINT1("VidBiosGetPixel - unsupported video mode %X\n", Bda->VideoMode);
+            return 0;
+        }
+    }
+
+    return 0;
+}
+
 /* PUBLIC FUNCTIONS ***********************************************************/
 
 VOID WINAPI VidBiosVideoService(LPWORD Stack)
@@ -3175,6 +3472,56 @@ VOID WINAPI VidBiosVideoService(LPWORD Stack)
                     break;
             }
 
+            break;
+        }
+
+        /* Write Pixel At */
+        case 0x0C:
+        {
+            BYTE Page;
+
+            /* If current video mode supports only one page, BH is ignored */
+            if (VidBiosGetPageAmountForMode(Bda->VideoMode) == 1)
+            {
+                Page = 0;
+            }
+            else
+            {
+                Page = getBH();
+
+                /* Validate page (0xFF = current video page) */
+                if (Page == 0xFF)
+                    Page = Bda->VideoPage;
+                else if (Page >= BIOS_MAX_PAGES)
+                    break;
+            }
+
+            VidBiosSetPixel(getCX(), getDX(), Page, getAL());
+            break;
+        }
+
+        /* Read Pixel At */
+        case 0x0D:
+        {
+            BYTE Page;
+
+            /* If current video mode supports only one page, BH is ignored */
+            if (VidBiosGetPageAmountForMode(Bda->VideoMode) == 1)
+            {
+                Page = 0;
+            }
+            else
+            {
+                Page = getBH();
+
+                /* Validate page (0xFF = current video page) */
+                if (Page == 0xFF)
+                    Page = Bda->VideoPage;
+                else if (Page >= BIOS_MAX_PAGES)
+                    break;
+            }
+
+            setAL(VidBiosGetPixel(getCX(), getDX(), Page));
             break;
         }
 
