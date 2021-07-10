@@ -231,7 +231,7 @@ BOOL WINAPI SymSetSearchPath(HANDLE hProcess, PCSTR searchPath)
 {
     BOOL        ret = FALSE;
     unsigned    len;
-    WCHAR*      sp;
+    WCHAR*      sp = NULL;
 
     if (searchPath)
     {
