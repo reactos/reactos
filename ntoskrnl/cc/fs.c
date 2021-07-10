@@ -5,6 +5,7 @@
  * PURPOSE:         Implements cache managers functions useful for File Systems
  *
  * PROGRAMMERS:     Alex Ionescu
+ *                  Oleg Dubinskiy
  */
 
 /* INCLUDES ******************************************************************/
@@ -322,8 +323,20 @@ CcSetFileSizes (
     }
 }
 
-/*
- * @unimplemented
+/**
+ * @brief Sets a log handle for file.
+ * 
+ * @param [in] FileObject
+ * Pointer to the file object of file for which will be stored a log handle.
+ * 
+ * @param [in] LogHandle
+ * Pointer to the log handle which will be stored.
+ * 
+ * @param [in] FlushToLsnRoutine
+ * Pointer to a flush callback routine of the log file, which should be called
+ * before flushing buffers of the file.
+ * 
+ * @return None
  */
 VOID
 NTAPI
@@ -332,10 +345,15 @@ CcSetLogHandleForFile (
     IN PVOID LogHandle,
     IN PFLUSH_TO_LSN FlushToLsnRoutine)
 {
+    PROS_SHARED_CACHE_MAP Map = FileObject->SectionObjectPointer->SharedCacheMap;
+
     CCTRACE(CC_API_DEBUG, "FileObject=%p LogHandle=%p FlushToLsnRoutine=%p\n",
         FileObject, LogHandle, FlushToLsnRoutine);
 
-    UNIMPLEMENTED;
+    if (!Map) return;
+
+    Map->LogHandle = LogHandle;
+    Map->FlushToLsn = FlushToLsnRoutine;
 }
 
 /*
