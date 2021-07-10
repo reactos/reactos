@@ -97,7 +97,6 @@ add_compile_options(/wd4018)
 # - TODO: C4090: different 'modifier' qualifiers (for C programs only;
 #          for C++ programs, the compiler error C2440 is issued)
 # - C4098: void function returning a value
-# - C4101: unreferenced local variable
 # - C4113: parameter lists differ
 # - C4129: unrecognized escape sequence
 # - C4133: incompatible types - from '<x> *' to '<y> *'
@@ -111,12 +110,13 @@ add_compile_options(/wd4018)
 # - C4700: uninitialized variable usage
 # - C4715: 'function': not all control paths return a value
 # - C4716: function must return a value
-add_compile_options(/we4013 /we4020 /we4022 /we4028 /we4047 /we4098 /we4101 /we4113 /we4129 /we4133 /we4163 /we4229 /we4311 /we4312 /we4313 /we4477 /we4603 /we4700 /we4715 /we4716)
+add_compile_options(/we4013 /we4020 /we4022 /we4028 /we4047 /we4098 /we4113 /we4129 /we4133 /we4163 /we4229 /we4311 /we4312 /we4313 /we4477 /we4603 /we4700 /we4715 /we4716)
 
+# - C4101: unreferenced local variable
 # - C4189: local variable initialized but not referenced
 # Not in Release mode, msbuild generator doesn't like CMAKE_BUILD_TYPE
 if(MSVC_IDE OR CMAKE_BUILD_TYPE STREQUAL "Debug")
-    add_compile_options(/we4189)
+    add_compile_options(/we4101 /we4189)
 endif()
 
 # Enable warnings above the default level, but don't treat them as errors:
