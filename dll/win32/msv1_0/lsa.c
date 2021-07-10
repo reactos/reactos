@@ -12,7 +12,6 @@
 #include "wine/debug.h"
 WINE_DEFAULT_DEBUG_CHANNEL(msv1_0);
 
-SECPKG_FUNCTION_TABLE NtlmLsaFn[1];
 
 NTSTATUS
 NTAPI

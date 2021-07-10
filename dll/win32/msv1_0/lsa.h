@@ -9,9 +9,6 @@
 #ifndef _MSV1_0_LSA_H_
 #define _MSV1_0_LSA_H_
 
-// functions we provide to LSA in SpLsaModeInitialize
-extern SECPKG_FUNCTION_TABLE NtlmLsaFn[1];
-
 NTSTATUS
 NTAPI
 SpInitialize(

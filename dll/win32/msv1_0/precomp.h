@@ -31,6 +31,10 @@
 
 #include "lsa.h"
 #include "msv1_0.h"
+#include "ntlm/global.h"
+#include "ntlm/protocol.h"
+#include "ntlm/util.h"
+#include "sam.h"
 
 #include <wine/debug.h>
 
