@@ -86,8 +86,8 @@ IntVideoPortAddDeviceMapLink(
                                    L"VIDEO",
                                    L"MaxObjectNumber",
                                    REG_DWORD,
-                                   &VideoPortMaxObjectNumber,
-                                   sizeof(VideoPortMaxObjectNumber));
+                                   &DeviceNumber,
+                                   sizeof(DeviceNumber));
     if (!NT_SUCCESS(Status))
     {
         ERR_(VIDEOPRT, "Failed to write MaxObjectNumber: 0x%X\n", Status);
@@ -101,7 +101,7 @@ IntVideoPortAddDeviceMapLink(
     Status = IoCreateSymbolicLink(&SymlinkName, &DeviceName);
     if (!NT_SUCCESS(Status))
     {
-        ERR_(VIDEOPRT, "Failed to write MaxObjectNumber: 0x%X\n", Status);
+        ERR_(VIDEOPRT, "Failed to create symbolic link: 0x%X\n", Status);
         return Status;
     }
 
