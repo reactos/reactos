@@ -1440,6 +1440,10 @@ extern "C" {
 
   __MINGW_EXTENSION _Check_return_ lldiv_t __cdecl lldiv(_In_ long long, _In_ long long);
 
+#if defined(_MSC_VER)
+  _Check_return_ long long __cdecl llabs(_In_ long long _j);
+  #pragma function(llabs)
+#endif
   __MINGW_EXTENSION __CRT_INLINE long long __cdecl llabs(_In_ long long _j) { return (_j >= 0 ? _j : -_j); }
 
   __MINGW_EXTENSION long long  __cdecl strtoll(const char* __restrict__, char** __restrict, int);
