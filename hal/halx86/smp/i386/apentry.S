@@ -9,6 +9,8 @@
 
 PUBLIC _APEntry
 PUBLIC _APEntryEnd
+PUBLIC _APJumpOffset
+PUBLIC _PageTableLocation
 
 .code16
 _APEntry:
@@ -20,6 +22,13 @@ _APEntry:
     mov fs, ax
     mov gs, ax
 
+    /* bitshift 4 to get the address */
+    mov bx, cs
+    shl ebx, HEX(4)
+    add ebx, gdt
+    sub ebx, _APEntry
+    mov dword ptr cs:[gdtoffset - _APEntry], ebx
+
     /* Load the GDT and blank IDT */
 #ifdef _USE_ML
     lgdt fword ptr cs:[gdtptr - _APEntry]
@@ -28,35 +37,45 @@ _APEntry:
     lgdt cs:[gdtptr - _APEntry]
     lidt cs:[idtdesc - _APEntry]
 #endif
-
+    /* Enable Protected mode */
     mov eax, cr0
     or  eax, HEX(00000001)
     mov cr0, eax
 
-    ljmp16 HEX(08), (HEX(4000) + _APEntryEnd - _APEntry)
+    xor eax, eax
+    mov eax, cs:[_PageTableLocation - _APEntry]
+    mov cr3, eax
+
+/* Jump to APSpinup */
+    .byte HEX(EA)
+_APJumpOffset:
+    .word HEX(0)
+    .word HEX(08)
 
     hlt
 
+_PageTableLocation:
+    .word HEX(0)
 gdtptr:
-     .word (gdtend - gdt - 1)
-     .long HEX(4000) + gdt - _APEntry
+    .word (gdtend - gdt - 1)
+gdtoffset:
+    .long gdt - _APEntry
 idtdesc:
     .word HEX(0)
     .long HEX(0)
-gdt: 
-_NULLDesc:
+gdt:
       /* NULL Descriptor */
      .word HEX(0000)
      .word HEX(0000)
      .word HEX(0000)
      .word HEX(0000)
-_KernelCS:
+
       /* 32-bit flat CS */
      .word HEX(FFFF)
      .word HEX(0000)
      .word HEX(9A00)
      .word HEX(00CF)
-_KernelDS:
+
       /* 32-bit flat DS */
      .word HEX(FFFF)
      .word HEX(0000)

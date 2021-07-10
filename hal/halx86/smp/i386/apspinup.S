@@ -12,6 +12,18 @@ PUBLIC _APSpinupEnd
 
 .code32
 _APSpinup:
-    hlt  
+    mov   bx, HEX(10)
+    mov   ds, bx
+    mov   es, bx
+    mov   ss, bx
+    mov   fs, bx
+    
+    hlt
+
+    mov eax, cr0
+    or  eax, HEX(80000000)
+    mov cr0, eax
+
+    hlt
 _APSpinupEnd:
 END
