@@ -251,7 +251,7 @@ TypeDlgProc(
                          * Display the existing NT installations page only
                          * if we have more than one available NT installations.
                          */
-                        if (GetNumberOfListEntries(pSetupData->NtOsInstallsList) > 1)
+                        if (GetNumberOfListEntries(pSetupData->NtOsInstallsList) >= 1)
                         {
                             /* pSetupData->CurrentInstallation will be set from within IDD_UPDATEREPAIRPAGE */
 
@@ -691,8 +691,14 @@ UpgradeRepairDlgProc(
                     pSetupData->CurrentInstallation =
                         (PNTOS_INSTALLATION)GetListEntryData(GetCurrentListEntry(pSetupData->NtOsInstallsList));
 
+                    SetInstallPartition(pSetupData);
+
                     /* We perform an upgrade */
                     pSetupData->RepairUpdateFlag = TRUE;
+
+                    /* Go to the Summary page */
+                    SetWindowLongPtrW(hwndDlg, DWLP_MSGRESULT, IDD_SUMMARYPAGE);
+
                     return TRUE;
                 }
 
@@ -778,6 +784,12 @@ DeviceDlgProc(
                     return TRUE;
                 }
 
+                case PSN_WIZBACK:
+                {
+                    SetWindowLongPtrW(hwndDlg, DWLP_MSGRESULT, IDD_TYPEPAGE);
+                    return TRUE;
+                }
+
                 case PSN_WIZNEXT: /* Set the selected data */
                 {
                     hList = GetDlgItem(hwndDlg, IDC_COMPUTER);
@@ -858,6 +870,8 @@ SummaryDlgProc(
                 {
                     WCHAR CurrentItemText[256];
 
+                    ASSERT(pSetupData->CurrentInstallation != NULL);
+
                     /* Show the current selected settings */
 
                     // FIXME! Localize
@@ -875,7 +889,10 @@ SummaryDlgProc(
                     }
                     SetDlgItemTextW(hwndDlg, IDC_INSTALLTYPE, CurrentItemText);
 
-                    SetDlgItemTextW(hwndDlg, IDC_INSTALLSOURCE, L"n/a");
+                    /* FIXME: Use drive letter here instead */
+                    StringCchPrintfW(CurrentItemText, ARRAYSIZE(CurrentItemText), L"%wZ", &pSetupData->USetupData.SourcePath);
+                    SetDlgItemTextW(hwndDlg, IDC_INSTALLSOURCE, CurrentItemText);
+
                     SetDlgItemTextW(hwndDlg, IDC_ARCHITECTURE, L"n/a");
 
                     GetSettingDescription(GetCurrentListEntry(pSetupData->USetupData.ComputerList),
@@ -893,19 +910,10 @@ SummaryDlgProc(
                                           ARRAYSIZE(CurrentItemText));
                     SetDlgItemTextW(hwndDlg, IDC_KEYBOARD, CurrentItemText);
 
-                    if (L'C') // FIXME!
-                    {
-                        StringCchPrintfW(CurrentItemText, ARRAYSIZE(CurrentItemText),
-                                         L"%c: \x2014 %wZ",
-                                         L'C', // FIXME!
-                                         &pSetupData->USetupData.DestinationRootPath);
-                    }
-                    else
-                    {
-                        StringCchPrintfW(CurrentItemText, ARRAYSIZE(CurrentItemText),
-                                         L"%wZ",
-                                         &pSetupData->USetupData.DestinationRootPath);
-                    }
+                    StringCchPrintfW(CurrentItemText, ARRAYSIZE(CurrentItemText),
+                                     L"%s: (%wZ)",
+                                     &pSetupData->InstallPartition->DriveLetter,
+                                     &pSetupData->USetupData.DestinationRootPath);
                     SetDlgItemTextW(hwndDlg, IDC_DESTDRIVE, CurrentItemText);
 
                     SetDlgItemTextW(hwndDlg, IDC_PATH,
@@ -955,6 +963,17 @@ SummaryDlgProc(
 
                     /* Do not close the wizard too soon */
                     SetWindowLongPtrW(hwndDlg, DWLP_MSGRESULT, TRUE);
+                    return TRUE;
+                }
+
+                case PSN_WIZBACK:
+                {
+                    /* If it's upgrade, then go back to the upgrade page */
+                    if (pSetupData->RepairUpdateFlag)
+                    {
+                        SetWindowLongPtrW(hwndDlg, DWLP_MSGRESULT, IDD_UPDATEREPAIRPAGE);
+                    }
+
                     return TRUE;
                 }
 
@@ -1012,6 +1031,33 @@ FileCopyCallback(PVOID Context,
             break;
         }
 
+        case SPFILENOTIFY_DELETEERROR:
+        {
+            FilePathInfo = (PFILEPATHS_W)Param1;
+
+            StringCchPrintfW(Status, ARRAYSIZE(Status), L"Unable to delete %s: %d", FilePathInfo->Target, FilePathInfo->Win32Error);
+            MessageBoxW(0, Status, L"ReactOS Setup", 0);
+
+            break;
+        }
+        case SPFILENOTIFY_COPYERROR:
+        {
+            FilePathInfo = (PFILEPATHS_W)Param1;
+
+            // StringCchPrintfW(Status, ARRAYSIZE(Status), L"Unable to copy %s: %d", FilePathInfo->Target, FilePathInfo->Win32Error);
+            // MessageBoxW(0, Status, L"ReactOS Setup", 0);
+
+            return FILEOP_SKIP;
+        }
+        case SPFILENOTIFY_RENAMEERROR:
+        {
+            FilePathInfo = (PFILEPATHS_W)Param1;
+
+            StringCchPrintfW(Status, ARRAYSIZE(Status), L"Unable to rename %s: %d", FilePathInfo->Target, FilePathInfo->Win32Error);
+            MessageBoxW(0, Status, L"ReactOS Setup", 0);
+
+            break;
+        }
         case SPFILENOTIFY_STARTDELETE:
         case SPFILENOTIFY_STARTRENAME:
         case SPFILENOTIFY_STARTCOPY:

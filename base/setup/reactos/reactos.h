@@ -133,6 +133,8 @@ typedef struct _SETUPDATA
     PNTOS_INSTALLATION CurrentInstallation;
     PGENERIC_LIST NtOsInstallsList;
 
+    PPARTENTRY InstallPartition;
+    WCHAR DestinationDriveLetter;
 
     /* Settings */
     LONG DestPartSize; // if partition doesn't exist, size of partition
@@ -178,6 +180,9 @@ CreateListViewColumns(
     IN const INT* pColsWidth,
     IN const INT* pColsAlign,
     IN UINT nNumOfColumns);
+
+VOID
+SetInstallPartition(IN PSETUPDATA pSetupData);
 
 INT_PTR
 CALLBACK

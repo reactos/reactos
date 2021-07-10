@@ -221,11 +221,10 @@ ExpandInstallerPath(
     IN SIZE_T PathSize)
 {
     SYSTEM_INFO SystemInfo;
-    SIZE_T cchInstallerNameLen;
+    SIZE_T cchInstallerNameLen = _tcslen(lpInstallerName);
     PTSTR ptr;
     DWORD dwAttribs;
 
-    cchInstallerNameLen = _tcslen(lpInstallerName);
     if (PathSize < cchInstallerNameLen)
     {
         /* The buffer is not large enough to contain the installer file name */
@@ -307,11 +306,10 @@ ExpandInstallerPath(
     }
 
     /*
-     * We failed. Try to find the installer from either the current
-     * ReactOS installation directory, or from our current directory.
+     * We failed. Try to find the installer from our current directory.
      */
     *lpInstallerPath = 0;
-    if (GetWindowsDirectory(lpInstallerPath, PathSize - cchInstallerNameLen - 1))
+    if (GetCurrentDirectory(PathSize - cchInstallerNameLen - 1, lpInstallerPath))
         StringCchCat(lpInstallerPath, PathSize, TEXT("\\"));
     StringCchCat(lpInstallerPath, PathSize, lpInstallerName);
 
@@ -1120,7 +1118,6 @@ OnCreate(HWND hWnd, WPARAM wParam, LPARAM lParam)
 
             pTopics[i]->hWndButton = CreateWindow(TEXT("BUTTON"),
                                                   pTopics[i]->szText,
-                                                  (*pTopics[i]->szCommand ? 0 : WS_DISABLED) |
                                                       WS_CHILDWINDOW | WS_VISIBLE | WS_TABSTOP |
                                                       BS_MULTILINE | BS_OWNERDRAW,
                                                   rcLeftPanel.left,

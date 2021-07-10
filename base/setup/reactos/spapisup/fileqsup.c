@@ -147,6 +147,20 @@ SpFileQueueRename_NtToWin32(
                              TargetFileName);
 }
 
+BOOL
+WINAPI
+SetupCommitFileQueue_NtToWin32(
+    IN HWND Owner,
+    IN HSPFILEQ Handle,
+    IN PSP_FILE_CALLBACK_W Handler,
+    IN PVOID Context)
+{
+    return SetupCommitFileQueueW(Owner,
+                                 Handle,
+                                 Handler,
+                                 Context);
+}
+
 
 /* GLOBALS *******************************************************************/
 
@@ -155,6 +169,6 @@ pSpFileQueueClose  SpFileQueueClose  = SetupCloseFileQueue;
 pSpFileQueueCopy   SpFileQueueCopy   = SpFileQueueCopy_NtToWin32;
 pSpFileQueueDelete SpFileQueueDelete = SpFileQueueDelete_NtToWin32;
 pSpFileQueueRename SpFileQueueRename = SpFileQueueRename_NtToWin32;
-pSpFileQueueCommit SpFileQueueCommit = SetupCommitFileQueueW;
+pSpFileQueueCommit SpFileQueueCommit = SetupCommitFileQueue_NtToWin32;
 
 /* EOF */
