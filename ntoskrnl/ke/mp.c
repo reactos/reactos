@@ -34,6 +34,7 @@ KeStartAllProcessors()
      /* Prep some globals for the AP */
     PVOID KernelStack;
     PVOID DPCStack;
+    PVOID PAPInfo;
     KPROCESSOR_STATE ProcessorState;
     KDESCRIPTOR GdtDesc, IdtDesc;
 
@@ -43,11 +44,12 @@ KeStartAllProcessors()
 
     /* Attempt to allocate memory for the new setup */
     SIZE_T APInfoSize = sizeof(struct APInfo);
-    PVOID PAPInfo = MmAllocateContiguousMemory(APInfoSize, HighestPhysicalAddress);
-    ASSERT(PAPInfo);
 
     do
     {
+        PAPInfo = MmAllocateContiguousMemory(APInfoSize, HighestPhysicalAddress);
+        ASSERT(PAPInfo);
+
         ProcessorCount++;
 
         RtlCopyMemory((PVOID)((ULONG_PTR)PAPInfo + sizeof(KPCR) + sizeof(KTSS)), (PVOID)GdtDesc.Base, GdtDesc.Limit + 1);

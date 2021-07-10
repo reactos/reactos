@@ -6,6 +6,7 @@
  */
 
 #include <asm.inc>
+#include <ks386.inc>
 
 PUBLIC _APEntry
 PUBLIC _APEntryEnd
@@ -39,7 +40,7 @@ _APEntry:
 #endif
     /* Enable Protected mode */
     mov eax, cr0
-    or  eax, HEX(00000001)
+    or  eax, CR0_PE
     mov cr0, eax
 
     xor eax, eax
