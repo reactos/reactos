@@ -3,7 +3,8 @@
  * COPYRIGHT:       GPL - See COPYING in the top level directory
  * FILE:            win32ss/user/user32/windows/cursoricon.c
  * PURPOSE:         cursor and icons implementation
- * PROGRAMMER:      Jérôme Gardou (jerome.gardou@reactos.org)
+ * PROGRAMMERS:     Jérôme Gardou (jerome.gardou@reactos.org)
+ *                  Oleg Dubinskiy (oleg.dubinskij2013@yandex.ua)
  */
 
 #include <user32.h>
@@ -1354,7 +1355,7 @@ CURSORICON_LoadFromFileW(
     /* Check for .ani. */
     if (memcmp( bits, "RIFF", 4 ) == 0)
     {
-        UNIMPLEMENTED;
+        hCurIcon = (HANDLE)CURSORICON_GetCursorDataFromANI(&cursorData, bits, filesize, fuLoad);
         goto end;
     }
 
