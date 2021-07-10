@@ -1,5 +1,9 @@
 #include <string.h>
 
+#if defined(_MSC_VER)
+#pragma function(memmove)
+#endif /* _MSC_VER */
+
 /* NOTE: This code is duplicated in memcpy function */
 void * __cdecl memmove(void *dest,const void *src,size_t count)
 {
