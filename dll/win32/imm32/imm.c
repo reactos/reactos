@@ -1417,24 +1417,64 @@ BOOL WINAPI ImmGetCandidateWindow(
     return TRUE;
 }
 
+static VOID LogFontAnsiToWide(const LOGFONTA *plfA, LPLOGFONTW plfW)
+{
+    size_t cch;
+    RtlCopyMemory(plfW, plfA, offsetof(LOGFONTA, lfFaceName));
+    StringCchLengthA(plfA->lfFaceName, _countof(plfA->lfFaceName), &cch);
+    MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, plfA->lfFaceName, (INT)cch,
+                        plfW->lfFaceName, _countof(plfW->lfFaceName));
+}
+
+static VOID LogFontWideToAnsi(const LOGFONTW *plfW, LPLOGFONTA plfA)
+{
+    size_t cch;
+    RtlCopyMemory(plfA, plfW, offsetof(LOGFONTW, lfFaceName));
+    StringCchLengthW(plfW->lfFaceName, _countof(plfW->lfFaceName), &cch);
+    WideCharToMultiByte(CP_ACP, 0, plfW->lfFaceName, (INT)cch,
+                        plfA->lfFaceName, _countof(plfA->lfFaceName), NULL, NULL);
+}
+
 /***********************************************************************
  *		ImmGetCompositionFontA (IMM32.@)
  */
 BOOL WINAPI ImmGetCompositionFontA(HIMC hIMC, LPLOGFONTA lplf)
 {
     LOGFONTW lfW;
-    BOOL rc;
+    PCLIENTIMC pClientImc;
+    BOOL ret = FALSE, bWide;
+    LPINPUTCONTEXT pIC;
 
-    TRACE("(%p, %p):\n", hIMC, lplf);
+    TRACE("ImmGetCompositionFontA(%p, %p)\n", hIMC, lplf);
 
-    rc = ImmGetCompositionFontW(hIMC,&lfW);
-    if (!rc || !lplf)
+    pClientImc = ImmLockClientImc(hIMC);
+    if (pClientImc == NULL)
         return FALSE;
 
-    memcpy(lplf,&lfW,sizeof(LOGFONTA));
-    WideCharToMultiByte(CP_ACP, 0, lfW.lfFaceName, -1, lplf->lfFaceName,
-                        LF_FACESIZE, NULL, NULL);
-    return TRUE;
+    bWide = (pClientImc->dwFlags & CLIENTIMC_WIDE);
+    ImmUnlockClientImc(pClientImc);
+
+    pIC = ImmLockIMC(hIMC);
+    if (pIC == NULL)
+        return FALSE;
+
+    if (bWide)
+    {
+        ImmUnlockIMC(hIMC);
+        if (!ImmGetCompositionFontW(hIMC, &lfW))
+            return FALSE;
+        LogFontWideToAnsi(&lfW, lplf);
+        return TRUE;
+    }
+
+    if (pIC->fdwInit & INIT_LOGFONT)
+    {
+        *lplf = pIC->lfFont.A;
+        ret = TRUE;
+    }
+
+    ImmUnlockIMC(hIMC);
+    return ret;
 }
 
 /***********************************************************************
@@ -1442,16 +1482,43 @@ BOOL WINAPI ImmGetCompositionFontA(HIMC hIMC, LPLOGFONTA lplf)
  */
 BOOL WINAPI ImmGetCompositionFontW(HIMC hIMC, LPLOGFONTW lplf)
 {
-    InputContextData *data = get_imc_data(hIMC);
+    LOGFONTA lfA;
+    PCLIENTIMC pClientImc;
+    BOOL bWide;
+    LPINPUTCONTEXT pIC;
+    BOOL ret = FALSE;
 
-    TRACE("(%p, %p):\n", hIMC, lplf);
+    TRACE("ImmGetCompositionFontW(%p, %p)\n", hIMC, lplf);
 
-    if (!data || !lplf)
+    pClientImc = ImmLockClientImc(hIMC);
+    if (pClientImc == NULL)
         return FALSE;
 
-    *lplf = data->IMC.lfFont.W;
+    bWide = (pClientImc->dwFlags & CLIENTIMC_WIDE);
+    ImmUnlockClientImc(pClientImc);
 
-    return TRUE;
+    pIC = ImmLockIMC(hIMC);
+    if (pIC == NULL)
+        return FALSE;
+
+    if (!bWide)
+    {
+        ImmUnlockIMC(hIMC);
+        if (!ImmGetCompositionFontA(hIMC, &lfA))
+            return FALSE;
+        LogFontAnsiToWide(&lfA, lplf);
+        return TRUE;
+    }
+
+    if (pIC->fdwInit & INIT_LOGFONT)
+    {
+        *lplf = pIC->lfFont.W;
+        ret = TRUE;
+    }
+
+    ImmUnlockIMC(hIMC);
+
+    return ret;
 }
 
 
