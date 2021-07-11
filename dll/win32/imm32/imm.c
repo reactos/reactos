@@ -1350,8 +1350,9 @@ DWORD APIENTRY ImmGetCandidateListCountAW(HIMC hIMC, LPDWORD lpdwListCount, BOOL
         return 0;
     }
 
-    *lpdwListCount = pCI->dwCount;
+    *lpdwListCount = pCI->dwCount; /* the number of candidate lists */
 
+    /* calculate total size of candidate lists */
     if (bAnsi)
     {
         if (pClientIMC->dwFlags & CLIENTIMC_WIDE)
