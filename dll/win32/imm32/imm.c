@@ -1336,8 +1336,15 @@ DWORD APIENTRY ImmGetCandidateListCountAW(HIMC hIMC, LPDWORD lpdwListCount, BOOL
     }
 
     pCI = ImmLockIMCC(pIC->hCandInfo);
-    if (pCI == NULL || pCI->dwSize < sizeof(CANDIDATEINFO))
+    if (pCI == NULL)
     {
+        ImmUnlockIMC(hIMC);
+        ImmUnlockClientImc(pClientIMC);
+        return 0;
+    }
+    if (pCI->dwSize < sizeof(CANDIDATEINFO))
+    {
+        ImmUnlockIMCC(pIC->hCandInfo);
         ImmUnlockIMC(hIMC);
         ImmUnlockClientImc(pClientIMC);
         return 0;
