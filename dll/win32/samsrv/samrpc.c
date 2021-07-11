@@ -7345,190 +7345,12 @@ SamrQueryInformationUser(IN SAMPR_HANDLE UserHandle,
                          IN USER_INFORMATION_CLASS UserInformationClass,
                          OUT PSAMPR_USER_INFO_BUFFER *Buffer)
 {
-    PSAM_DB_OBJECT UserObject;
-    ACCESS_MASK DesiredAccess;
-    NTSTATUS Status;
-
     TRACE("SamrQueryInformationUser(%p %lu %p)\n",
           UserHandle, UserInformationClass, Buffer);
 
-    switch (UserInformationClass)
-    {
-        case UserGeneralInformation:
-        case UserNameInformation:
-        case UserAccountNameInformation:
-        case UserFullNameInformation:
-        case UserPrimaryGroupInformation:
-        case UserAdminCommentInformation:
-            DesiredAccess = USER_READ_GENERAL;
-            break;
-
-        case UserLogonHoursInformation:
-        case UserHomeInformation:
-        case UserScriptInformation:
-        case UserProfileInformation:
-        case UserWorkStationsInformation:
-            DesiredAccess = USER_READ_LOGON;
-            break;
-
-        case UserControlInformation:
-        case UserExpiresInformation:
-        case UserParametersInformation:
-            DesiredAccess = USER_READ_ACCOUNT;
-            break;
-
-        case UserPreferencesInformation:
-            DesiredAccess = USER_READ_GENERAL |
-                            USER_READ_PREFERENCES;
-            break;
-
-        case UserLogonInformation:
-        case UserAccountInformation:
-            DesiredAccess = USER_READ_GENERAL |
-                            USER_READ_PREFERENCES |
-                            USER_READ_LOGON |
-                            USER_READ_ACCOUNT;
-            break;
-
-        case UserInternal1Information:
-        case UserInternal2Information:
-        case UserAllInformation:
-            DesiredAccess = 0;
-            break;
-
-        default:
-            return STATUS_INVALID_INFO_CLASS;
-    }
-
-    RtlAcquireResourceShared(&SampResource,
-                             TRUE);
-
-    /* Validate the domain handle */
-    Status = SampValidateDbObject(UserHandle,
-                                  SamDbUserObject,
-                                  DesiredAccess,
-                                  &UserObject);
-    if (!NT_SUCCESS(Status))
-    {
-        TRACE("failed with status 0x%08lx\n", Status);
-        goto done;
-    }
-
-    switch (UserInformationClass)
-    {
-        case UserGeneralInformation:
-            Status = SampQueryUserGeneral(UserObject,
-                                          Buffer);
-            break;
-
-        case UserPreferencesInformation:
-            Status = SampQueryUserPreferences(UserObject,
-                                              Buffer);
-            break;
-
-        case UserLogonInformation:
-            Status = SampQueryUserLogon(UserObject,
-                                        Buffer);
-            break;
-
-        case UserLogonHoursInformation:
-            Status = SampQueryUserLogonHours(UserObject,
-                                             Buffer);
-            break;
-
-        case UserAccountInformation:
-            Status = SampQueryUserAccount(UserObject,
-                                          Buffer);
-            break;
-
-        case UserNameInformation:
-            Status = SampQueryUserName(UserObject,
-                                       Buffer);
-            break;
-
-        case UserAccountNameInformation:
-            Status = SampQueryUserAccountName(UserObject,
-                                              Buffer);
-            break;
-
-        case UserFullNameInformation:
-            Status = SampQueryUserFullName(UserObject,
-                                           Buffer);
-            break;
-
-        case UserPrimaryGroupInformation:
-            Status = SampQueryUserPrimaryGroup(UserObject,
-                                               Buffer);
-            break;
-
-        case UserHomeInformation:
-            Status = SampQueryUserHome(UserObject,
-                                       Buffer);
-            break;
-
-        case UserScriptInformation:
-            Status = SampQueryUserScript(UserObject,
-                                         Buffer);
-            break;
-
-        case UserProfileInformation:
-            Status = SampQueryUserProfile(UserObject,
-                                          Buffer);
-            break;
-
-        case UserAdminCommentInformation:
-            Status = SampQueryUserAdminComment(UserObject,
-                                               Buffer);
-            break;
-
-        case UserWorkStationsInformation:
-            Status = SampQueryUserWorkStations(UserObject,
-                                               Buffer);
-            break;
-
-        case UserControlInformation:
-            Status = SampQueryUserControl(UserObject,
-                                          Buffer);
-            break;
-
-        case UserExpiresInformation:
-            Status = SampQueryUserExpires(UserObject,
-                                          Buffer);
-            break;
-
-        case UserInternal1Information:
-            Status = SampQueryUserInternal1(UserObject,
-                                            Buffer);
-            break;
-
-        case UserInternal2Information:
-            Status = SampQueryUserInternal2(UserObject,
-                                            Buffer);
-            break;
-
-        case UserParametersInformation:
-            Status = SampQueryUserParameters(UserObject,
-                                             Buffer);
-            break;
-
-        case UserAllInformation:
-            Status = SampQueryUserAll(UserObject,
-                                      Buffer);
-            break;
-
-//        case UserInternal4Information:
-//        case UserInternal5Information:
-//        case UserInternal4InformationNew:
-//        case UserInternal5InformationNew:
-
-        default:
-            Status = STATUS_INVALID_INFO_CLASS;
-    }
-
-done:
-    RtlReleaseResource(&SampResource);
-
-    return Status;
+    return SamrQueryInformationUser2(UserHandle,
+                                     UserInformationClass,
+                                     Buffer);
 }
 
 
@@ -8137,201 +7959,12 @@ SamrSetInformationUser(IN SAMPR_HANDLE UserHandle,
                        IN USER_INFORMATION_CLASS UserInformationClass,
                        IN PSAMPR_USER_INFO_BUFFER Buffer)
 {
-    PSAM_DB_OBJECT UserObject;
-    ACCESS_MASK DesiredAccess;
-    NTSTATUS Status;
-
     TRACE("SamrSetInformationUser(%p %lu %p)\n",
           UserHandle, UserInformationClass, Buffer);
 
-    switch (UserInformationClass)
-    {
-        case UserLogonHoursInformation:
-        case UserNameInformation:
-        case UserAccountNameInformation:
-        case UserFullNameInformation:
-        case UserPrimaryGroupInformation:
-        case UserHomeInformation:
-        case UserScriptInformation:
-        case UserProfileInformation:
-        case UserAdminCommentInformation:
-        case UserWorkStationsInformation:
-        case UserControlInformation:
-        case UserExpiresInformation:
-        case UserParametersInformation:
-            DesiredAccess = USER_WRITE_ACCOUNT;
-            break;
-
-        case UserGeneralInformation:
-            DesiredAccess = USER_WRITE_ACCOUNT |
-                            USER_WRITE_PREFERENCES;
-            break;
-
-        case UserPreferencesInformation:
-            DesiredAccess = USER_WRITE_PREFERENCES;
-            break;
-
-        case UserSetPasswordInformation:
-        case UserInternal1Information:
-            DesiredAccess = USER_FORCE_PASSWORD_CHANGE;
-            break;
-
-        case UserAllInformation:
-        case UserInternal2Information:
-            DesiredAccess = 0; /* FIXME */
-            break;
-
-        default:
-            return STATUS_INVALID_INFO_CLASS;
-    }
-
-    RtlAcquireResourceExclusive(&SampResource,
-                                TRUE);
-
-    /* Validate the domain handle */
-    Status = SampValidateDbObject(UserHandle,
-                                  SamDbUserObject,
-                                  DesiredAccess,
-                                  &UserObject);
-    if (!NT_SUCCESS(Status))
-    {
-        TRACE("failed with status 0x%08lx\n", Status);
-        goto done;
-    }
-
-    switch (UserInformationClass)
-    {
-        case UserGeneralInformation:
-            Status = SampSetUserGeneral(UserObject,
-                                        Buffer);
-            break;
-
-        case UserPreferencesInformation:
-            Status = SampSetUserPreferences(UserObject,
-                                            Buffer);
-            break;
-
-        case UserLogonHoursInformation:
-            Status = SampSetLogonHoursAttribute(UserObject,
-                                               &Buffer->LogonHours.LogonHours);
-            break;
-
-        case UserNameInformation:
-            Status = SampSetUserName(UserObject,
-                                     &Buffer->Name.UserName);
-            if (!NT_SUCCESS(Status))
-                break;
-
-            Status = SampSetObjectAttributeString(UserObject,
-                                                  L"FullName",
-                                                  &Buffer->Name.FullName);
-            break;
-
-        case UserAccountNameInformation:
-            Status = SampSetUserName(UserObject,
-                                     &Buffer->AccountName.UserName);
-            break;
-
-        case UserFullNameInformation:
-            Status = SampSetObjectAttributeString(UserObject,
-                                                  L"FullName",
-                                                  &Buffer->FullName.FullName);
-            break;
-
-        case UserPrimaryGroupInformation:
-            Status = SampSetUserPrimaryGroup(UserObject,
-                                             Buffer);
-            break;
-
-        case UserHomeInformation:
-            Status = SampSetObjectAttributeString(UserObject,
-                                                  L"HomeDirectory",
-                                                  &Buffer->Home.HomeDirectory);
-            if (!NT_SUCCESS(Status))
-                break;
-
-            Status = SampSetObjectAttributeString(UserObject,
-                                                  L"HomeDirectoryDrive",
-                                                  &Buffer->Home.HomeDirectoryDrive);
-            break;
-
-        case UserScriptInformation:
-            Status = SampSetObjectAttributeString(UserObject,
-                                                  L"ScriptPath",
-                                                  &Buffer->Script.ScriptPath);
-            break;
-
-        case UserProfileInformation:
-            Status = SampSetObjectAttributeString(UserObject,
-                                                  L"ProfilePath",
-                                                  &Buffer->Profile.ProfilePath);
-            break;
-
-        case UserAdminCommentInformation:
-            Status = SampSetObjectAttributeString(UserObject,
-                                                  L"AdminComment",
-                                                  &Buffer->AdminComment.AdminComment);
-            break;
-
-        case UserWorkStationsInformation:
-            Status = SampSetObjectAttributeString(UserObject,
-                                                  L"WorkStations",
-                                                  &Buffer->WorkStations.WorkStations);
-            break;
-
-        case UserSetPasswordInformation:
-            TRACE("Password: %S\n", Buffer->SetPassword.Password.Buffer);
-            TRACE("PasswordExpired: %d\n", Buffer->SetPassword.PasswordExpired);
-
-            Status = SampSetObjectAttributeString(UserObject,
-                                                  L"Password",
-                                                  &Buffer->SetPassword.Password);
-            break;
-
-        case UserControlInformation:
-            Status = SampSetUserControl(UserObject,
-                                        Buffer);
-            break;
-
-        case UserExpiresInformation:
-            Status = SampSetUserExpires(UserObject,
-                                        Buffer);
-            break;
-
-        case UserInternal1Information:
-            Status = SampSetUserInternal1(UserObject,
-                                          Buffer);
-            break;
-
-        case UserInternal2Information:
-            Status = SampSetUserInternal2(UserObject,
-                                          Buffer);
-            break;
-
-        case UserParametersInformation:
-            Status = SampSetObjectAttributeString(UserObject,
-                                                  L"Parameters",
-                                                  &Buffer->Parameters.Parameters);
-            break;
-
-        case UserAllInformation:
-            Status = SampSetUserAll(UserObject,
-                                    Buffer);
-            break;
-
-//        case UserInternal4Information:
-//        case UserInternal5Information:
-//        case UserInternal4InformationNew:
-//        case UserInternal5InformationNew:
-
-        default:
-            Status = STATUS_INVALID_INFO_CLASS;
-    }
-
-done:
-    RtlReleaseResource(&SampResource);
-
-    return Status;
+    return SamrSetInformationUser2(UserHandle,
+                                   UserInformationClass,
+                                   Buffer);
 }
 
 
@@ -8955,12 +8588,190 @@ SamrQueryInformationUser2(IN SAMPR_HANDLE UserHandle,
                           IN USER_INFORMATION_CLASS UserInformationClass,
                           OUT PSAMPR_USER_INFO_BUFFER *Buffer)
 {
+    PSAM_DB_OBJECT UserObject;
+    ACCESS_MASK DesiredAccess;
+    NTSTATUS Status;
+
     TRACE("SamrQueryInformationUser2(%p %lu %p)\n",
           UserHandle, UserInformationClass, Buffer);
 
-    return SamrQueryInformationUser(UserHandle,
-                                    UserInformationClass,
-                                    Buffer);
+    switch (UserInformationClass)
+    {
+        case UserGeneralInformation:
+        case UserNameInformation:
+        case UserAccountNameInformation:
+        case UserFullNameInformation:
+        case UserPrimaryGroupInformation:
+        case UserAdminCommentInformation:
+            DesiredAccess = USER_READ_GENERAL;
+            break;
+
+        case UserLogonHoursInformation:
+        case UserHomeInformation:
+        case UserScriptInformation:
+        case UserProfileInformation:
+        case UserWorkStationsInformation:
+            DesiredAccess = USER_READ_LOGON;
+            break;
+
+        case UserControlInformation:
+        case UserExpiresInformation:
+        case UserParametersInformation:
+            DesiredAccess = USER_READ_ACCOUNT;
+            break;
+
+        case UserPreferencesInformation:
+            DesiredAccess = USER_READ_GENERAL |
+                            USER_READ_PREFERENCES;
+            break;
+
+        case UserLogonInformation:
+        case UserAccountInformation:
+            DesiredAccess = USER_READ_GENERAL |
+                            USER_READ_PREFERENCES |
+                            USER_READ_LOGON |
+                            USER_READ_ACCOUNT;
+            break;
+
+        case UserInternal1Information:
+        case UserInternal2Information:
+        case UserAllInformation:
+            DesiredAccess = 0;
+            break;
+
+        default:
+            return STATUS_INVALID_INFO_CLASS;
+    }
+
+    RtlAcquireResourceShared(&SampResource,
+                             TRUE);
+
+    /* Validate the domain handle */
+    Status = SampValidateDbObject(UserHandle,
+                                  SamDbUserObject,
+                                  DesiredAccess,
+                                  &UserObject);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("failed with status 0x%08lx\n", Status);
+        goto done;
+    }
+
+    switch (UserInformationClass)
+    {
+        case UserGeneralInformation:
+            Status = SampQueryUserGeneral(UserObject,
+                                          Buffer);
+            break;
+
+        case UserPreferencesInformation:
+            Status = SampQueryUserPreferences(UserObject,
+                                              Buffer);
+            break;
+
+        case UserLogonInformation:
+            Status = SampQueryUserLogon(UserObject,
+                                        Buffer);
+            break;
+
+        case UserLogonHoursInformation:
+            Status = SampQueryUserLogonHours(UserObject,
+                                             Buffer);
+            break;
+
+        case UserAccountInformation:
+            Status = SampQueryUserAccount(UserObject,
+                                          Buffer);
+            break;
+
+        case UserNameInformation:
+            Status = SampQueryUserName(UserObject,
+                                       Buffer);
+            break;
+
+        case UserAccountNameInformation:
+            Status = SampQueryUserAccountName(UserObject,
+                                              Buffer);
+            break;
+
+        case UserFullNameInformation:
+            Status = SampQueryUserFullName(UserObject,
+                                           Buffer);
+            break;
+
+        case UserPrimaryGroupInformation:
+            Status = SampQueryUserPrimaryGroup(UserObject,
+                                               Buffer);
+            break;
+
+        case UserHomeInformation:
+            Status = SampQueryUserHome(UserObject,
+                                       Buffer);
+            break;
+
+        case UserScriptInformation:
+            Status = SampQueryUserScript(UserObject,
+                                         Buffer);
+            break;
+
+        case UserProfileInformation:
+            Status = SampQueryUserProfile(UserObject,
+                                          Buffer);
+            break;
+
+        case UserAdminCommentInformation:
+            Status = SampQueryUserAdminComment(UserObject,
+                                               Buffer);
+            break;
+
+        case UserWorkStationsInformation:
+            Status = SampQueryUserWorkStations(UserObject,
+                                               Buffer);
+            break;
+
+        case UserControlInformation:
+            Status = SampQueryUserControl(UserObject,
+                                          Buffer);
+            break;
+
+        case UserExpiresInformation:
+            Status = SampQueryUserExpires(UserObject,
+                                          Buffer);
+            break;
+
+        case UserInternal1Information:
+            Status = SampQueryUserInternal1(UserObject,
+                                            Buffer);
+            break;
+
+        case UserInternal2Information:
+            Status = SampQueryUserInternal2(UserObject,
+                                            Buffer);
+            break;
+
+        case UserParametersInformation:
+            Status = SampQueryUserParameters(UserObject,
+                                             Buffer);
+            break;
+
+        case UserAllInformation:
+            Status = SampQueryUserAll(UserObject,
+                                      Buffer);
+            break;
+
+//        case UserInternal4Information:
+//        case UserInternal5Information:
+//        case UserInternal4InformationNew:
+//        case UserInternal5InformationNew:
+
+        default:
+            Status = STATUS_INVALID_INFO_CLASS;
+    }
+
+done:
+    RtlReleaseResource(&SampResource);
+
+    return Status;
 }
 
 
@@ -9658,12 +9469,201 @@ SamrSetInformationUser2(IN SAMPR_HANDLE UserHandle,
                         IN USER_INFORMATION_CLASS UserInformationClass,
                         IN PSAMPR_USER_INFO_BUFFER Buffer)
 {
+    PSAM_DB_OBJECT UserObject;
+    ACCESS_MASK DesiredAccess;
+    NTSTATUS Status;
+
     TRACE("SamrSetInformationUser2(%p %lu %p)\n",
           UserHandle, UserInformationClass, Buffer);
 
-    return SamrSetInformationUser(UserHandle,
-                                  UserInformationClass,
-                                  Buffer);
+    switch (UserInformationClass)
+    {
+        case UserLogonHoursInformation:
+        case UserNameInformation:
+        case UserAccountNameInformation:
+        case UserFullNameInformation:
+        case UserPrimaryGroupInformation:
+        case UserHomeInformation:
+        case UserScriptInformation:
+        case UserProfileInformation:
+        case UserAdminCommentInformation:
+        case UserWorkStationsInformation:
+        case UserControlInformation:
+        case UserExpiresInformation:
+        case UserParametersInformation:
+            DesiredAccess = USER_WRITE_ACCOUNT;
+            break;
+
+        case UserGeneralInformation:
+            DesiredAccess = USER_WRITE_ACCOUNT |
+                            USER_WRITE_PREFERENCES;
+            break;
+
+        case UserPreferencesInformation:
+            DesiredAccess = USER_WRITE_PREFERENCES;
+            break;
+
+        case UserSetPasswordInformation:
+        case UserInternal1Information:
+            DesiredAccess = USER_FORCE_PASSWORD_CHANGE;
+            break;
+
+        case UserAllInformation:
+        case UserInternal2Information:
+            DesiredAccess = 0; /* FIXME */
+            break;
+
+        default:
+            return STATUS_INVALID_INFO_CLASS;
+    }
+
+    RtlAcquireResourceExclusive(&SampResource,
+                                TRUE);
+
+    /* Validate the domain handle */
+    Status = SampValidateDbObject(UserHandle,
+                                  SamDbUserObject,
+                                  DesiredAccess,
+                                  &UserObject);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("failed with status 0x%08lx\n", Status);
+        goto done;
+    }
+
+    switch (UserInformationClass)
+    {
+        case UserGeneralInformation:
+            Status = SampSetUserGeneral(UserObject,
+                                        Buffer);
+            break;
+
+        case UserPreferencesInformation:
+            Status = SampSetUserPreferences(UserObject,
+                                            Buffer);
+            break;
+
+        case UserLogonHoursInformation:
+            Status = SampSetLogonHoursAttribute(UserObject,
+                                               &Buffer->LogonHours.LogonHours);
+            break;
+
+        case UserNameInformation:
+            Status = SampSetUserName(UserObject,
+                                     &Buffer->Name.UserName);
+            if (!NT_SUCCESS(Status))
+                break;
+
+            Status = SampSetObjectAttributeString(UserObject,
+                                                  L"FullName",
+                                                  &Buffer->Name.FullName);
+            break;
+
+        case UserAccountNameInformation:
+            Status = SampSetUserName(UserObject,
+                                     &Buffer->AccountName.UserName);
+            break;
+
+        case UserFullNameInformation:
+            Status = SampSetObjectAttributeString(UserObject,
+                                                  L"FullName",
+                                                  &Buffer->FullName.FullName);
+            break;
+
+        case UserPrimaryGroupInformation:
+            Status = SampSetUserPrimaryGroup(UserObject,
+                                             Buffer);
+            break;
+
+        case UserHomeInformation:
+            Status = SampSetObjectAttributeString(UserObject,
+                                                  L"HomeDirectory",
+                                                  &Buffer->Home.HomeDirectory);
+            if (!NT_SUCCESS(Status))
+                break;
+
+            Status = SampSetObjectAttributeString(UserObject,
+                                                  L"HomeDirectoryDrive",
+                                                  &Buffer->Home.HomeDirectoryDrive);
+            break;
+
+        case UserScriptInformation:
+            Status = SampSetObjectAttributeString(UserObject,
+                                                  L"ScriptPath",
+                                                  &Buffer->Script.ScriptPath);
+            break;
+
+        case UserProfileInformation:
+            Status = SampSetObjectAttributeString(UserObject,
+                                                  L"ProfilePath",
+                                                  &Buffer->Profile.ProfilePath);
+            break;
+
+        case UserAdminCommentInformation:
+            Status = SampSetObjectAttributeString(UserObject,
+                                                  L"AdminComment",
+                                                  &Buffer->AdminComment.AdminComment);
+            break;
+
+        case UserWorkStationsInformation:
+            Status = SampSetObjectAttributeString(UserObject,
+                                                  L"WorkStations",
+                                                  &Buffer->WorkStations.WorkStations);
+            break;
+
+        case UserSetPasswordInformation:
+            TRACE("Password: %S\n", Buffer->SetPassword.Password.Buffer);
+            TRACE("PasswordExpired: %d\n", Buffer->SetPassword.PasswordExpired);
+
+            Status = SampSetObjectAttributeString(UserObject,
+                                                  L"Password",
+                                                  &Buffer->SetPassword.Password);
+            break;
+
+        case UserControlInformation:
+            Status = SampSetUserControl(UserObject,
+                                        Buffer);
+            break;
+
+        case UserExpiresInformation:
+            Status = SampSetUserExpires(UserObject,
+                                        Buffer);
+            break;
+
+        case UserInternal1Information:
+            Status = SampSetUserInternal1(UserObject,
+                                          Buffer);
+            break;
+
+        case UserInternal2Information:
+            Status = SampSetUserInternal2(UserObject,
+                                          Buffer);
+            break;
+
+        case UserParametersInformation:
+            Status = SampSetObjectAttributeString(UserObject,
+                                                  L"Parameters",
+                                                  &Buffer->Parameters.Parameters);
+            break;
+
+        case UserAllInformation:
+            Status = SampSetUserAll(UserObject,
+                                    Buffer);
+            break;
+
+//        case UserInternal4Information:
+//        case UserInternal5Information:
+//        case UserInternal4InformationNew:
+//        case UserInternal5InformationNew:
+
+        default:
+            Status = STATUS_INVALID_INFO_CLASS;
+    }
+
+done:
+    RtlReleaseResource(&SampResource);
+
+    return Status;
 }
 
 
