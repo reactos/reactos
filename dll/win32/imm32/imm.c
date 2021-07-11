@@ -1311,7 +1311,7 @@ Quit:
 
 DWORD APIENTRY ImmGetCandidateListCountAW(HIMC hIMC, LPDWORD lpdwListCount, BOOL bAnsi)
 {
-    DWORD ret = 0, cbGot;
+    DWORD ret = 0, cbGot, dwIndex;
     PCLIENTIMC pClientIMC;
     LPINPUTCONTEXT pIC;
     const CANDIDATEINFO *pCI;
@@ -1355,7 +1355,7 @@ DWORD APIENTRY ImmGetCandidateListCountAW(HIMC hIMC, LPDWORD lpdwListCount, BOOL
         {
             ret = ROUNDUP4(pCI->dwPrivateSize);
             pdwOffsets = pCI->dwOffset;
-            for (DWORD dwIndex = 0; dwIndex < pCI->dwCount; ++dwIndex)
+            for (dwIndex = 0; dwIndex < pCI->dwCount; ++dwIndex)
             {
                 pb = (const BYTE *)pCI + pdwOffsets[dwIndex];
                 pCL = (const CANDIDATELIST *)pb;
@@ -1378,7 +1378,7 @@ DWORD APIENTRY ImmGetCandidateListCountAW(HIMC hIMC, LPDWORD lpdwListCount, BOOL
         {
             ret = ROUNDUP4(pCI->dwPrivateSize);
             pdwOffsets = pCI->dwOffset;
-            for (DWORD dwIndex = 0; dwIndex < pCI->dwCount; ++dwIndex)
+            for (dwIndex = 0; dwIndex < pCI->dwCount; ++dwIndex)
             {
                 pb = (const BYTE *)pCI + pdwOffsets[dwIndex];
                 pCL = (const CANDIDATELIST *)pb;
