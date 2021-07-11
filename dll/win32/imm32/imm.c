@@ -1440,7 +1440,6 @@ static VOID LogFontWideToAnsi(const LOGFONTW *plfW, LPLOGFONTA plfA)
  */
 BOOL WINAPI ImmGetCompositionFontA(HIMC hIMC, LPLOGFONTA lplf)
 {
-    LOGFONTW lfW;
     PCLIENTIMC pClientImc;
     BOOL ret = FALSE, bWide;
     LPINPUTCONTEXT pIC;
@@ -1458,18 +1457,13 @@ BOOL WINAPI ImmGetCompositionFontA(HIMC hIMC, LPLOGFONTA lplf)
     if (pIC == NULL)
         return FALSE;
 
-    if (bWide)
-    {
-        ImmUnlockIMC(hIMC);
-        if (!ImmGetCompositionFontW(hIMC, &lfW))
-            return FALSE;
-        LogFontWideToAnsi(&lfW, lplf);
-        return TRUE;
-    }
-
     if (pIC->fdwInit & INIT_LOGFONT)
     {
-        *lplf = pIC->lfFont.A;
+        if (bWide)
+            LogFontWideToAnsi(&pIC->lfFont.W, lplf);
+        else
+            *lplf = pIC->lfFont.A;
+
         ret = TRUE;
     }
 
@@ -1482,7 +1476,6 @@ BOOL WINAPI ImmGetCompositionFontA(HIMC hIMC, LPLOGFONTA lplf)
  */
 BOOL WINAPI ImmGetCompositionFontW(HIMC hIMC, LPLOGFONTW lplf)
 {
-    LOGFONTA lfA;
     PCLIENTIMC pClientImc;
     BOOL bWide;
     LPINPUTCONTEXT pIC;
@@ -1501,23 +1494,17 @@ BOOL WINAPI ImmGetCompositionFontW(HIMC hIMC, LPLOGFONTW lplf)
     if (pIC == NULL)
         return FALSE;
 
-    if (!bWide)
-    {
-        ImmUnlockIMC(hIMC);
-        if (!ImmGetCompositionFontA(hIMC, &lfA))
-            return FALSE;
-        LogFontAnsiToWide(&lfA, lplf);
-        return TRUE;
-    }
-
     if (pIC->fdwInit & INIT_LOGFONT)
     {
-        *lplf = pIC->lfFont.W;
+        if (!bWide)
+            LogFontAnsiToWide(&pIC->lfFont.A, lplf);
+        else
+            *lplf = pIC->lfFont.W;
+
         ret = TRUE;
     }
 
     ImmUnlockIMC(hIMC);
-
     return ret;
 }
 
