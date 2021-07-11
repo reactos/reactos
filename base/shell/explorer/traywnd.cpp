@@ -1807,6 +1807,8 @@ ChangePos:
                     break;
                 }
 
+                CfgCustomOptions(m_StartMenuPopup);
+
                 m_StartMenuPopup->Popup(&pt, &rcExclude, dwFlags);
 
                 m_StartButton.SendMessageW(BM_SETSTATE, TRUE, 0);

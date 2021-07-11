@@ -301,6 +301,8 @@ HRESULT CTrayBandSite_CreateInstance(IN ITrayWindow *tray, IN IDeskBand* pTaskBa
  * startmnu.cpp
  */
 
+HRESULT CfgCustomOptions(IMenuPopup* m_StartMenuPopup);
+
 HRESULT CStartMenuBtnCtxMenu_CreateInstance(ITrayWindow * TrayWnd, IN HWND hWndOwner, IContextMenu ** ppCtxMenu);
 
 IMenuPopup*
