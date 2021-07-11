@@ -1342,13 +1342,9 @@ DWORD APIENTRY ImmGetCandidateListCountAW(HIMC hIMC, LPDWORD lpdwListCount, BOOL
         ImmUnlockClientImc(pClientIMC);
         return 0;
     }
+
     if (pCI->dwSize < sizeof(CANDIDATEINFO))
-    {
-        ImmUnlockIMCC(pIC->hCandInfo);
-        ImmUnlockIMC(hIMC);
-        ImmUnlockClientImc(pClientIMC);
-        return 0;
-    }
+        goto Quit;
 
     *lpdwListCount = pCI->dwCount; /* the number of candidate lists */
 
@@ -1392,6 +1388,7 @@ DWORD APIENTRY ImmGetCandidateListCountAW(HIMC hIMC, LPDWORD lpdwListCount, BOOL
         }
     }
 
+Quit:
     ImmUnlockIMCC(pIC->hCandInfo);
     ImmUnlockIMC(hIMC);
     ImmUnlockClientImc(pClientIMC);
