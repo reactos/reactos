@@ -1422,8 +1422,9 @@ static VOID APIENTRY LogFontAnsiToWide(const LOGFONTA *plfA, LPLOGFONTW plfW)
     size_t cch;
     RtlCopyMemory(plfW, plfA, offsetof(LOGFONTA, lfFaceName));
     StringCchLengthA(plfA->lfFaceName, _countof(plfA->lfFaceName), &cch);
-    MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, plfA->lfFaceName, (INT)cch,
-                        plfW->lfFaceName, _countof(plfW->lfFaceName));
+    cch = MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, plfA->lfFaceName, (INT)cch,
+                              plfW->lfFaceName, _countof(plfW->lfFaceName));
+    plfW->lfFaceName[cch] = 0;
 }
 
 static VOID APIENTRY LogFontWideToAnsi(const LOGFONTW *plfW, LPLOGFONTA plfA)
@@ -1431,8 +1432,9 @@ static VOID APIENTRY LogFontWideToAnsi(const LOGFONTW *plfW, LPLOGFONTA plfA)
     size_t cch;
     RtlCopyMemory(plfA, plfW, offsetof(LOGFONTW, lfFaceName));
     StringCchLengthW(plfW->lfFaceName, _countof(plfW->lfFaceName), &cch);
-    WideCharToMultiByte(CP_ACP, 0, plfW->lfFaceName, (INT)cch,
-                        plfA->lfFaceName, _countof(plfA->lfFaceName), NULL, NULL);
+    cch = WideCharToMultiByte(CP_ACP, 0, plfW->lfFaceName, (INT)cch,
+                              plfA->lfFaceName, _countof(plfA->lfFaceName), NULL, NULL);
+    plfA->lfFaceName[cch] = 0;
 }
 
 /***********************************************************************
