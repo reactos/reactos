@@ -1417,7 +1417,7 @@ BOOL WINAPI ImmGetCandidateWindow(
     return TRUE;
 }
 
-static VOID LogFontAnsiToWide(const LOGFONTA *plfA, LPLOGFONTW plfW)
+static VOID APIENTRY LogFontAnsiToWide(const LOGFONTA *plfA, LPLOGFONTW plfW)
 {
     size_t cch;
     RtlCopyMemory(plfW, plfA, offsetof(LOGFONTA, lfFaceName));
@@ -1426,7 +1426,7 @@ static VOID LogFontAnsiToWide(const LOGFONTA *plfA, LPLOGFONTW plfW)
                         plfW->lfFaceName, _countof(plfW->lfFaceName));
 }
 
-static VOID LogFontWideToAnsi(const LOGFONTW *plfW, LPLOGFONTA plfA)
+static VOID APIENTRY LogFontWideToAnsi(const LOGFONTW *plfW, LPLOGFONTA plfA)
 {
     size_t cch;
     RtlCopyMemory(plfA, plfW, offsetof(LOGFONTW, lfFaceName));
