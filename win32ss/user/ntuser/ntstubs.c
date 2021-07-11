@@ -356,9 +356,9 @@ NtUserSetSysColors(
 DWORD
 APIENTRY
 NtUserUpdateInputContext(
-   DWORD Unknown0,
-   DWORD Unknown1,
-   DWORD Unknown2)
+    HIMC hIMC,
+    DWORD Unknown1,
+    LPVOID pClientImc)
 {
    STUB
 

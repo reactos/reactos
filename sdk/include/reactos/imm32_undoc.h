@@ -7,9 +7,23 @@
 
 #pragma once
 
-#define KBDLAYOUT_MASK 0xF000
-#define KBDLAYOUT_IME 0xE000
-#define IS_IME_KBDLAYOUT(hKL) ((HIWORD(hKL) & KBDLAYOUT_MASK) == KBDLAYOUT_IME)
+/* unconfirmed */
+typedef struct tagCLIENTIMC
+{
+    HIMC hImc;
+    LONG cLockObj;
+    DWORD dwFlags;
+    DWORD unknown;
+    RTL_CRITICAL_SECTION cs;
+    DWORD unknown2;
+    DWORD unknown3;
+    BOOL bUnknown4;
+} CLIENTIMC, *PCLIENTIMC;
+
+/* flags for CLIENTIMC */
+#define CLIENTIMC_WIDE (1 << 0)
+#define CLIENTIMC_DISABLED (1 << 6)
+#define CLIENTIMC_UNKNOWN2 (1 << 8)
 
 #ifdef __cplusplus
 extern "C" {
