@@ -1496,10 +1496,10 @@ BOOL WINAPI ImmGetCompositionFontW(HIMC hIMC, LPLOGFONTW lplf)
 
     if (pIC->fdwInit & INIT_LOGFONT)
     {
-        if (!bWide)
-            LogFontAnsiToWide(&pIC->lfFont.A, lplf);
-        else
+        if (bWide)
             *lplf = pIC->lfFont.W;
+        else
+            LogFontAnsiToWide(&pIC->lfFont.A, lplf);
 
         ret = TRUE;
     }
