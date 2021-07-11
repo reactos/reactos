@@ -1312,7 +1312,7 @@ Quit:
 DWORD APIENTRY ImmGetCandidateListCountAW(HIMC hIMC, LPDWORD lpdwListCount, BOOL bAnsi)
 {
     DWORD ret = 0, cbGot, dwIndex;
-    PCLIENTIMC pClientIMC;
+    PCLIENTIMC pClientImc;
     LPINPUTCONTEXT pIC;
     const CANDIDATEINFO *pCI;
     const BYTE *pb;
@@ -1324,14 +1324,14 @@ DWORD APIENTRY ImmGetCandidateListCountAW(HIMC hIMC, LPDWORD lpdwListCount, BOOL
 
     *lpdwListCount = 0;
 
-    pClientIMC = ImmLockClientImc(hIMC);
-    if (pClientIMC == NULL)
+    pClientImc = ImmLockClientImc(hIMC);
+    if (pClientImc == NULL)
         return 0;
 
     pIC = ImmLockIMC(hIMC);
     if (pIC == NULL)
     {
-        ImmUnlockClientImc(pClientIMC);
+        ImmUnlockClientImc(pClientImc);
         return 0;
     }
 
@@ -1339,7 +1339,7 @@ DWORD APIENTRY ImmGetCandidateListCountAW(HIMC hIMC, LPDWORD lpdwListCount, BOOL
     if (pCI == NULL)
     {
         ImmUnlockIMC(hIMC);
-        ImmUnlockClientImc(pClientIMC);
+        ImmUnlockClientImc(pClientImc);
         return 0;
     }
 
@@ -1351,7 +1351,7 @@ DWORD APIENTRY ImmGetCandidateListCountAW(HIMC hIMC, LPDWORD lpdwListCount, BOOL
     /* calculate total size of candidate lists */
     if (bAnsi)
     {
-        if (pClientIMC->dwFlags & CLIENTIMC_WIDE)
+        if (pClientImc->dwFlags & CLIENTIMC_WIDE)
         {
             ret = ROUNDUP4(pCI->dwPrivateSize);
             pdwOffsets = pCI->dwOffset;
@@ -1370,7 +1370,7 @@ DWORD APIENTRY ImmGetCandidateListCountAW(HIMC hIMC, LPDWORD lpdwListCount, BOOL
     }
     else
     {
-        if (pClientIMC->dwFlags & CLIENTIMC_WIDE)
+        if (pClientImc->dwFlags & CLIENTIMC_WIDE)
         {
             ret = pCI->dwSize;
         }
@@ -1391,7 +1391,7 @@ DWORD APIENTRY ImmGetCandidateListCountAW(HIMC hIMC, LPDWORD lpdwListCount, BOOL
 Quit:
     ImmUnlockIMCC(pIC->hCandInfo);
     ImmUnlockIMC(hIMC);
-    ImmUnlockClientImc(pClientIMC);
+    ImmUnlockClientImc(pClientImc);
     return ret;
 }
 
@@ -3196,19 +3196,19 @@ LPINPUTCONTEXT WINAPI ImmLockIMC(HIMC hIMC)
 */
 BOOL WINAPI ImmUnlockIMC(HIMC hIMC)
 {
-    PCLIENTIMC pClientIMC;
+    PCLIENTIMC pClientImc;
     HIMC hClientImc;
 
-    pClientIMC = ImmLockClientImc(hIMC);
-    if (pClientIMC == NULL)
+    pClientImc = ImmLockClientImc(hIMC);
+    if (pClientImc == NULL)
         return FALSE;
 
-    hClientImc = pClientIMC->hImc;
+    hClientImc = pClientImc->hImc;
     if (hClientImc)
         LocalUnlock(hClientImc);
 
-    InterlockedDecrement(&pClientIMC->cLockObj);
-    ImmUnlockClientImc(pClientIMC);
+    InterlockedDecrement(&pClientImc->cLockObj);
+    ImmUnlockClientImc(pClientImc);
     return TRUE;
 }
 
