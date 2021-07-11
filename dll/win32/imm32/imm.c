@@ -1424,6 +1424,8 @@ static VOID APIENTRY LogFontAnsiToWide(const LOGFONTA *plfA, LPLOGFONTW plfW)
     StringCchLengthA(plfA->lfFaceName, _countof(plfA->lfFaceName), &cch);
     cch = MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, plfA->lfFaceName, (INT)cch,
                               plfW->lfFaceName, _countof(plfW->lfFaceName));
+    if (cch >= _countof(plfW->lfFaceName))
+        cch = _countof(plfW->lfFaceName) - 1;
     plfW->lfFaceName[cch] = 0;
 }
 
@@ -1434,6 +1436,8 @@ static VOID APIENTRY LogFontWideToAnsi(const LOGFONTW *plfW, LPLOGFONTA plfA)
     StringCchLengthW(plfW->lfFaceName, _countof(plfW->lfFaceName), &cch);
     cch = WideCharToMultiByte(CP_ACP, 0, plfW->lfFaceName, (INT)cch,
                               plfA->lfFaceName, _countof(plfA->lfFaceName), NULL, NULL);
+    if (cch >= _countof(plfA->lfFaceName))
+        cch = _countof(plfA->lfFaceName) - 1;
     plfA->lfFaceName[cch] = 0;
 }
 
