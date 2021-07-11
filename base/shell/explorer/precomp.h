@@ -72,7 +72,7 @@ extern BOOL bExplorerIsShell;
  * explorer.c
  */
 
-static inline 
+static inline
 LONG
 SetWindowStyle(IN HWND hWnd,
                IN LONG dwStyleMask,
@@ -305,6 +305,8 @@ HRESULT CTrayBandSite_CreateInstance(IN ITrayWindow *tray, IN IDeskBand* pTaskBa
  * startmnu.cpp
  */
 
+HRESULT CfgCustomOptions(IMenuPopup* m_StartMenuPopup);
+
 HRESULT CStartMenuBtnCtxMenu_CreateInstance(ITrayWindow * TrayWnd, IN HWND hWndOwner, IContextMenu ** ppCtxMenu);
 
 IMenuPopup*
@@ -329,7 +331,7 @@ VOID ExecuteCustomOptions(DWORD dwItem, DWORD dwUserOptions, DWORD dwOptSize);
 * startmnusite.cpp
 */
 
-HRESULT 
+HRESULT
 CStartMenuSite_CreateInstance(IN OUT ITrayWindow *Tray, const IID & riid, PVOID * ppv);
 
 /*

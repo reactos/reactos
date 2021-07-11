@@ -110,20 +110,24 @@ DWORD LoadUserConfData(DWORD &dwLength)
         if (((IDS_DRAG_DROP + iItem) > IDS_SHOW_RUN) &&
             ((IDS_DRAG_DROP + iItem) < IDS_SHOW_SMALL_ICO) &&
             ((IDS_DRAG_DROP + iItem) != IDS_SHOW_FAVORITES))
+        {
             dwSize = (lstrlen(L"YES") + 1) * sizeof(WCHAR);
+        }
         else
+        {
             dwSize = sizeof(REG_DWORD);
+        }
 
         if (RegQueryValueExW(hKey,
                              ClassicOption[iItem].OptionName,
                              NULL,
                              &dwType,
-                             (LPBYTE) &chBuffer,
+                             (LPBYTE)&chBuffer,
                              &dwSize) == ERROR_SUCCESS)
         {
             if (dwType == REG_SZ)
             {
-                BOOL stat = (lstrcmpiW(chBuffer, L"YES") == 0) ? TRUE : FALSE;
+                BOOL stat = (lstrcmpiW(chBuffer, L"YES") == 0);
                 if (stat)
                     dwStatus |= (1 << iItem);
                 else

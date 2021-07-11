@@ -133,7 +133,7 @@ BEGIN
     ICON             IDI_RECYCLEBIN, IDC_STATIC, 20, 85, 20, 20
     LTEXT            "要刪除最近訪問過的檔案、程式和網站記錄，請按［清除］。", IDC_STATIC, 49, 85, 108, 33
     PUSHBUTTON       "清除(&C)", IDC_CLASSICSTART_CLEAR, 162, 94, 53, 14
-    LTEXT            "開始功能表中的高階的選項:(&T)", IDC_STATIC, 8, 129, 150, 8
+    LTEXT            "開始功能表中的進階選項(&T)：", IDC_STATIC, 8, 129, 150, 8
     CONTROL          "開始功能表設定(&T)", IDC_CLASSICSTART_SETTINGS, "SysListView32", WS_BORDER | 0x00000001, 8, 139, 218, 72, WS_EX_CLIENTEDGE
     DEFPUSHBUTTON    "確定", IDOK, 122, 220, 50, 14
     PUSHBUTTON       "取消", IDCANCEL, 176, 220, 50, 14
