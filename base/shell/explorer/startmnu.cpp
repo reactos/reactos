@@ -40,6 +40,43 @@ UpdateStartMenu(IN OUT IMenuPopup *pMenuPopup,
     return hRet;
 }
 
+HRESULT CfgCustomOptions(IMenuPopup* m_StartMenuPopup)
+{
+    HKEY hKey;
+    DWORD dwSize;
+    DWORD dwType;
+    WCHAR chBuffer[16];
+
+    if (RegOpenKeyExW(HKEY_CURRENT_USER,
+                      L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced",
+                      0, KEY_QUERY_VALUE,
+                      &hKey) != ERROR_SUCCESS)
+         return S_OK;
+
+    dwSize = sizeof(REG_DWORD);
+    if (RegQueryValueExW(hKey,
+                         L"ShowSmallIcons",
+                         NULL,
+                         &dwType,
+                         (LPBYTE) &chBuffer,
+                         &dwSize) == ERROR_SUCCESS)
+    {
+         CComPtr<IBanneredBar> pbb;
+
+         if (SUCCEEDED(m_StartMenuPopup->QueryInterface(IID_PPV_ARG(IBanneredBar, &pbb))))
+         {
+             /* Update the icon size */
+             BOOL bSmallIcons = *(DWORD*)chBuffer != 0;
+             pbb->SetIconSize(bSmallIcons ? BMICON_SMALL : BMICON_LARGE);
+         }   
+    }
+
+    RegCloseKey(hKey);
+    
+    return S_OK;
+
+}
+
 IMenuPopup*
 CreateStartMenu(IN ITrayWindow *Tray,
                 OUT IMenuBand **ppMenuBand,

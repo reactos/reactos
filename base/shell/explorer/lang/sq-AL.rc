@@ -129,7 +129,7 @@ BEGIN
     LTEXT            "To remove records of recently accessed documents, programs, and Web sites, click Clear.", IDC_STATIC, 49, 85, 108, 33
     PUSHBUTTON       "&Clear", IDC_CLASSICSTART_CLEAR, 162, 94, 53, 14
     LTEXT            "Advanced S&tart menu options:", IDC_STATIC, 8, 129, 150, 8
-    CONTROL          "StartMenuSe&ttings", IDC_CLASSICSTART_SETTINGS, "SysTreeView32", WS_BORDER | 0x00000001, 8, 139, 218, 72, WS_EX_CLIENTEDGE
+    CONTROL          "StartMenuSe&ttings", IDC_CLASSICSTART_SETTINGS, "SysListView32", WS_BORDER | 0x00000001, 8, 139, 218, 72, WS_EX_CLIENTEDGE
     DEFPUSHBUTTON    "OK", IDOK, 122, 220, 50, 14
     PUSHBUTTON       "Cancel", IDCANCEL, 176, 220, 50, 14
 END
@@ -199,4 +199,20 @@ STRINGTABLE
 BEGIN
     IDS_TASKBAR_STARTMENU_PROP_CAPTION "Taskbar dhe Start Menu"
     IDS_RESTORE_ALL "&Show Open Windows"
+END
+
+STRINGTABLE
+BEGIN
+     IDS_DRAG_DROP "Enable drag and drop"
+     IDS_SHOW_RUN  "Display ""Run"" command"
+     IDS_SCROOL_PROG_MENU "Scroll through the ""Programs"" menu"
+     IDS_EXP_MYIMAGES "Expand ""My pictures"""
+     IDS_EXP_PRINTERS "Expand ""Printers"""
+     IDS_EXP_WEB_CONNECT "Expand ""Network connections"""
+     IDS_EXP_MYDOCUMENTS "Expand ""My documents"""
+     IDS_EXP_CONTROL_PANEL "Expand ""Control panel"""
+     IDS_SHOW_FAVORITES    "Show favorites"
+     IDS_SHOW_TOOLS        "Show administrative tools"
+     IDS_SHOW_SMALL_ICO    "Show small icons in start menu"
+     IDS_CUST_MENUS        "Use custom menus"
 END

@@ -301,6 +301,8 @@ HRESULT CTrayBandSite_CreateInstance(IN ITrayWindow *tray, IN IDeskBand* pTaskBa
  * startmnu.cpp
  */
 
+HRESULT CfgCustomOptions(IMenuPopup* m_StartMenuPopup);
+
 HRESULT CStartMenuBtnCtxMenu_CreateInstance(ITrayWindow * TrayWnd, IN HWND hWndOwner, IContextMenu ** ppCtxMenu);
 
 IMenuPopup*
@@ -312,8 +314,13 @@ CreateStartMenu(IN ITrayWindow *Tray,
 /*
  * startmnucust.cpp
  */
-VOID 
-ShowCustomizeClassic(HINSTANCE, HWND);
+INT ShowCustomizeClassic(HINSTANCE, HWND);
+
+DWORD LoadUserConfData(DWORD &dwUserData);
+
+DWORD SaveUserConfData(DWORD &dwUserData);
+
+VOID ExecuteCustomOptions(DWORD dwItem, DWORD dwUserOptions, DWORD dwOptSize);
 
 /*
 * startmnusite.cpp

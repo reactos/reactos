@@ -190,6 +190,8 @@ class CStartMenuSettingsPage : public CPropertyPageImpl<CStartMenuSettingsPage>
 {
 private: 
     HBITMAP m_hbmpStartBitmap;
+    DWORD dwUserOptions;
+    DWORD dwOptSize;
 
     void UpdateDialog()
     {
@@ -238,14 +240,16 @@ public:
     END_MSG_MAP()
 
     CStartMenuSettingsPage():
-        m_hbmpStartBitmap(NULL)
+        m_hbmpStartBitmap(NULL), dwOptSize(0)
     {
+        dwUserOptions = LoadUserConfData(dwOptSize);
     }
 
     ~CStartMenuSettingsPage()
     {
         if (m_hbmpStartBitmap)
             DeleteObject(m_hbmpStartBitmap);
+        dwOptSize = 0;
     }
 
     LRESULT OnInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
@@ -259,13 +263,15 @@ public:
 
     LRESULT OnStartMenuCustomize(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled)
     {
-        ShowCustomizeClassic(hExplorerInstance, m_hWnd);
+        if (ShowCustomizeClassic(hExplorerInstance, m_hWnd) == IDOK)
+            SetModified(TRUE);
         return 0;
     }
 
     int OnApply()
     {
-        //TODO
+        dwUserOptions = SaveUserConfData(dwUserOptions);
+
         return PSNRET_NOERROR;
     }
 };
