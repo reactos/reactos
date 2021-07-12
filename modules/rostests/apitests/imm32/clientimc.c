@@ -32,15 +32,28 @@ static void DumpBinary(LPCVOID pv, size_t cb)
 
 START_TEST(clientimc)
 {
-    CLIENTIMC ClientImc;
-    ZeroMemory(&ClientImc, sizeof(ClientImc));
-    ClientImc.cLockObj = 2;
-    ClientImc.dwFlags = 0;
-    RtlInitializeCriticalSection(&ClientImc.cs);
+    CLIENTIMC *pClientImc = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(CLIENTIMC));
 
-    ImmUnlockClientImc(&ClientImc);
-    ok_long(ClientImc.cLockObj, 1);
+    pClientImc->hImc = (HIMC)ImmCreateIMCC(4);
+    pClientImc->cLockObj = 2;
+    pClientImc->dwFlags = 0x40;
+    RtlInitializeCriticalSection(&pClientImc->cs);
+    ok_long(ImmGetIMCCSize(pClientImc->hImc), 4);
 
-    ImmUnlockClientImc(&ClientImc);
-    ok_long(ClientImc.cLockObj, 0);
+    ImmUnlockClientImc(pClientImc);
+    ok_long(pClientImc->cLockObj, 1);
+    ok_long(ImmGetIMCCSize(pClientImc->hImc), 4);
+
+    _SEH2_TRY
+    {
+        ImmUnlockClientImc(pClientImc);
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        ;
+    }
+    _SEH2_END;
+
+    ok_long(pClientImc->cLockObj, 0);
+    ok_long(ImmGetIMCCSize(pClientImc->hImc), 0);
 }
