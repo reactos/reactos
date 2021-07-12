@@ -29,7 +29,7 @@ MUI_SUBFONT LatinFonts[] =
     { L"Times New Roman Greek,161",    L"Times New Roman,161" },
     { L"Times New Roman TUR,162",      L"Times New Roman,162" },
     { L"Tms Rmn",                L"Times New Roman" },
-    { L"ReactOS Sans Serif",     L"Microsoft Sans Serif" },
+    { L"Microsoft Sans Serif",   L"ReactOS Sans Serif" },
     { NULL, NULL }
 };
 
@@ -61,7 +61,7 @@ MUI_SUBFONT CyrillicFonts[] =
     { L"Times New Roman Greek,161",    L"Times New Roman,161" },
     { L"Times New Roman TUR,162",      L"Times New Roman,162" },
     { L"Tms Rmn",                L"Times New Roman" },
-    { L"ReactOS Sans Serif",     L"Microsoft Sans Serif" },
+    { L"Microsoft Sans Serif",   L"ReactOS Sans Serif" },
     { NULL, NULL }
 };
 
@@ -94,7 +94,7 @@ MUI_SUBFONT GreekFonts[] =
     { L"Times New Roman Greek,161",    L"Times New Roman,161" },
     { L"Times New Roman TUR,162",      L"Times New Roman,162" },
     { L"Tms Rmn",                L"Times New Roman" },
-    { L"ReactOS Sans Serif",     L"Microsoft Sans Serif" },
+    { L"Microsoft Sans Serif",   L"ReactOS Sans Serif" },
     { NULL, NULL }
 };
 
@@ -129,7 +129,7 @@ MUI_SUBFONT HebrewFonts[] =
     { L"Times New Roman TUR,162",      L"Times New Roman,162" },
     { L"Tms Rmn",                L"Times New Roman" },
     { L"Ubuntu",                 L"Tahoma" },
-    { L"ReactOS Sans Serif",     L"Microsoft Sans Serif" },
+    { L"Microsoft Sans Serif",   L"ReactOS Sans Serif" },
     { NULL, NULL }
 };
 
@@ -182,7 +182,7 @@ MUI_SUBFONT ChineseSimplifiedFonts[] =
     { CSF_LocalName2,            L"Droid Sans Fallback" },
     { CSF_LocalName3,            L"Droid Sans Fallback" },
     { CSF_LocalName4,            L"Droid Sans Fallback" },
-    { L"ReactOS Sans Serif",     L"Microsoft Sans Serif" },
+    { L"Microsoft Sans Serif",   L"ReactOS Sans Serif" },
     { NULL, NULL }
 };
 
@@ -234,7 +234,7 @@ MUI_SUBFONT ChineseTraditionalFonts[] =
     { CTF_LocalName1,     L"Droid Sans Fallback" },
     { CTF_LocalName2,     L"Droid Sans Fallback" },
     { CTF_LocalName3,     L"Droid Sans Fallback" },
-    { L"ReactOS Sans Serif",     L"Microsoft Sans Serif" },
+    { L"Microsoft Sans Serif",   L"ReactOS Sans Serif" },
     { NULL, NULL }
 };
 
@@ -285,7 +285,7 @@ MUI_SUBFONT JapaneseFonts[] =
     { JF_LocalName1,      L"Droid Sans Fallback" },
     { JF_LocalName2,      L"Droid Sans Fallback" },
     { JF_LocalName3,      L"Droid Sans Fallback" },
-    { L"ReactOS Sans Serif",     L"Microsoft Sans Serif" },
+    { L"Microsoft Sans Serif",   L"ReactOS Sans Serif" },
     { NULL, NULL }
 };
 
@@ -342,7 +342,7 @@ MUI_SUBFONT KoreanFonts[] =
     { KF_LocalName3,      L"Droid Sans Fallback" },
     { KF_LocalName4,      L"Droid Sans Fallback" },
     { KF_LocalName5,      L"Droid Sans Fallback" },
-    { L"ReactOS Sans Serif",     L"Microsoft Sans Serif" },
+    { L"Microsoft Sans Serif",   L"ReactOS Sans Serif" },
     { NULL, NULL }
 };
 
@@ -378,7 +378,7 @@ MUI_SUBFONT UnicodeFonts[] =
     { L"Times New Roman Greek,161",    L"Times New Roman,161" },
     { L"Times New Roman TUR,162",      L"Times New Roman,162" },
     { L"Tms Rmn",                L"Times New Roman" },
-    { L"ReactOS Sans Serif",     L"Microsoft Sans Serif" },
+    { L"Microsoft Sans Serif",   L"ReactOS Sans Serif" },
     { NULL, NULL }
 };
 
@@ -414,7 +414,7 @@ MUI_SUBFONT HindiFonts[] =
     { L"Times New Roman Greek,161",    L"Times New Roman,161" },
     { L"Times New Roman TUR,162",      L"Times New Roman,162" },
     { L"Tms Rmn",                L"Times New Roman" },
-    { L"ReactOS Sans Serif",     L"Microsoft Sans Serif" },
+    { L"Microsoft Sans Serif",   L"ReactOS Sans Serif" },
     { NULL, NULL }
 };
 
@@ -422,7 +422,7 @@ MUI_SUBFONT SimplifiedChineseFontFixup[] =
 {
     { L"MS Shell Dlg", L"SimSun" },
     { L"Tahoma", L"SimSun" },
-    { L"ReactOS Sans Serif",     L"Microsoft Sans Serif" },
+    { L"Microsoft Sans Serif",   L"ReactOS Sans Serif" },
     { NULL, NULL }
 };
 
@@ -430,7 +430,7 @@ MUI_SUBFONT TraditionalChineseFontFixup[] =
 {
     { L"MS Shell Dlg", L"PMingLiU" },
     { L"Tahoma", L"PMingLiU" },
-    { L"ReactOS Sans Serif",     L"Microsoft Sans Serif" },
+    { L"Microsoft Sans Serif",   L"ReactOS Sans Serif" },
     { NULL, NULL }
 };
 
@@ -438,7 +438,7 @@ MUI_SUBFONT JapaneseFontFixup[] =
 {
     { L"MS Shell Dlg", L"MS UI Gothic" },
     { L"Tahoma", L"MS UI Gothic" },
-    { L"ReactOS Sans Serif",     L"Microsoft Sans Serif" },
+    { L"Microsoft Sans Serif",   L"ReactOS Sans Serif" },
     { NULL, NULL }
 };
 
@@ -446,7 +446,7 @@ MUI_SUBFONT KoreanFontFixup[] =
 {
     { L"MS Shell Dlg", L"Batang" },
     { L"Tahoma", L"Batang" },
-    { L"ReactOS Sans Serif",     L"Microsoft Sans Serif" },
+    { L"Microsoft Sans Serif",   L"ReactOS Sans Serif" },
     { NULL, NULL }
 };
 
@@ -456,7 +456,7 @@ MUI_SUBFONT FontFixupMINGLIU[] =
     { L"PMingLiU", NULL },
     { CTF_LocalName0, NULL },
     { CTF_LocalName1, NULL },
-    { L"ReactOS Sans Serif",     L"Microsoft Sans Serif" },
+    { L"Microsoft Sans Serif",   L"ReactOS Sans Serif" },
     { NULL, NULL }
 };
 
@@ -467,7 +467,7 @@ MUI_SUBFONT FontFixupSIMSUN[] =
     { CSF_LocalName0, NULL },
     { CSF_LocalName1, NULL },
     { CSF_LocalName2, NULL },
-    { L"ReactOS Sans Serif",     L"Microsoft Sans Serif" },
+    { L"Microsoft Sans Serif",   L"ReactOS Sans Serif" },
     { NULL, NULL }
 };
 
@@ -475,7 +475,7 @@ MUI_SUBFONT FontFixupMSSONG[] =
 {
     { L"MS Song", NULL },
     { CSF_LocalName4, NULL },
-    { L"ReactOS Sans Serif",     L"Microsoft Sans Serif" },
+    { L"Microsoft Sans Serif",   L"ReactOS Sans Serif" },
     { NULL, NULL }
 };
 
@@ -486,7 +486,7 @@ MUI_SUBFONT FontFixupMSGOTHIC[] =
     { L"MS UI Gothic", NULL },
     { JF_LocalName2, NULL },
     { JF_LocalName3, NULL },
-    { L"ReactOS Sans Serif",     L"Microsoft Sans Serif" },
+    { L"Microsoft Sans Serif",   L"ReactOS Sans Serif" },
     { NULL, NULL }
 };
 
@@ -496,7 +496,7 @@ MUI_SUBFONT FontFixupMSMINCHO[] =
     { L"MS PMincho", NULL },
     { JF_LocalName0, NULL },
     { JF_LocalName1, NULL },
-    { L"ReactOS Sans Serif",     L"Microsoft Sans Serif" },
+    { L"Microsoft Sans Serif",   L"ReactOS Sans Serif" },
     { NULL, NULL }
 };
 
@@ -506,7 +506,7 @@ MUI_SUBFONT FontFixupGULIM[] =
     { L"GulimChe", NULL },
     { KF_LocalName4, NULL },
     { KF_LocalName5, NULL },
-    { L"ReactOS Sans Serif",     L"Microsoft Sans Serif" },
+    { L"Microsoft Sans Serif",   L"ReactOS Sans Serif" },
     { NULL, NULL }
 };
 
@@ -516,6 +516,6 @@ MUI_SUBFONT FontFixupBATANG[] =
     { L"BatangChe", NULL},
     { KF_LocalName0, NULL},
     { KF_LocalName1, NULL},
-    { L"ReactOS Sans Serif",     L"Microsoft Sans Serif" },
+    { L"Microsoft Sans Serif",   L"ReactOS Sans Serif" },
     { NULL, NULL }
 };
