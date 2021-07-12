@@ -5,11 +5,7 @@
  * COPYRIGHT:   Copyright 2021 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
 
-#include <ntstatus.h>
-#define WIN32_NO_STATUS
-#include <windows.h>
-#include <imm.h>
-#include "wine/test.h"
+#include "precomp.h"
 
 START_TEST(imcc)
 {
