@@ -422,7 +422,6 @@ MUI_SUBFONT SimplifiedChineseFontFixup[] =
 {
     { L"MS Shell Dlg", L"SimSun" },
     { L"Tahoma", L"SimSun" },
-    { L"Microsoft Sans Serif",   L"ReactOS Sans Serif" },
     { NULL, NULL }
 };
 
@@ -430,7 +429,6 @@ MUI_SUBFONT TraditionalChineseFontFixup[] =
 {
     { L"MS Shell Dlg", L"PMingLiU" },
     { L"Tahoma", L"PMingLiU" },
-    { L"Microsoft Sans Serif",   L"ReactOS Sans Serif" },
     { NULL, NULL }
 };
 
@@ -438,7 +436,6 @@ MUI_SUBFONT JapaneseFontFixup[] =
 {
     { L"MS Shell Dlg", L"MS UI Gothic" },
     { L"Tahoma", L"MS UI Gothic" },
-    { L"Microsoft Sans Serif",   L"ReactOS Sans Serif" },
     { NULL, NULL }
 };
 
@@ -446,7 +443,6 @@ MUI_SUBFONT KoreanFontFixup[] =
 {
     { L"MS Shell Dlg", L"Batang" },
     { L"Tahoma", L"Batang" },
-    { L"Microsoft Sans Serif",   L"ReactOS Sans Serif" },
     { NULL, NULL }
 };
 
@@ -456,7 +452,6 @@ MUI_SUBFONT FontFixupMINGLIU[] =
     { L"PMingLiU", NULL },
     { CTF_LocalName0, NULL },
     { CTF_LocalName1, NULL },
-    { L"Microsoft Sans Serif",   L"ReactOS Sans Serif" },
     { NULL, NULL }
 };
 
@@ -467,7 +462,6 @@ MUI_SUBFONT FontFixupSIMSUN[] =
     { CSF_LocalName0, NULL },
     { CSF_LocalName1, NULL },
     { CSF_LocalName2, NULL },
-    { L"Microsoft Sans Serif",   L"ReactOS Sans Serif" },
     { NULL, NULL }
 };
 
@@ -475,7 +469,6 @@ MUI_SUBFONT FontFixupMSSONG[] =
 {
     { L"MS Song", NULL },
     { CSF_LocalName4, NULL },
-    { L"Microsoft Sans Serif",   L"ReactOS Sans Serif" },
     { NULL, NULL }
 };
 
@@ -486,7 +479,6 @@ MUI_SUBFONT FontFixupMSGOTHIC[] =
     { L"MS UI Gothic", NULL },
     { JF_LocalName2, NULL },
     { JF_LocalName3, NULL },
-    { L"Microsoft Sans Serif",   L"ReactOS Sans Serif" },
     { NULL, NULL }
 };
 
@@ -496,7 +488,6 @@ MUI_SUBFONT FontFixupMSMINCHO[] =
     { L"MS PMincho", NULL },
     { JF_LocalName0, NULL },
     { JF_LocalName1, NULL },
-    { L"Microsoft Sans Serif",   L"ReactOS Sans Serif" },
     { NULL, NULL }
 };
 
@@ -506,7 +497,6 @@ MUI_SUBFONT FontFixupGULIM[] =
     { L"GulimChe", NULL },
     { KF_LocalName4, NULL },
     { KF_LocalName5, NULL },
-    { L"Microsoft Sans Serif",   L"ReactOS Sans Serif" },
     { NULL, NULL }
 };
 
@@ -516,6 +506,5 @@ MUI_SUBFONT FontFixupBATANG[] =
     { L"BatangChe", NULL},
     { KF_LocalName0, NULL},
     { KF_LocalName1, NULL},
-    { L"Microsoft Sans Serif",   L"ReactOS Sans Serif" },
     { NULL, NULL }
 };
