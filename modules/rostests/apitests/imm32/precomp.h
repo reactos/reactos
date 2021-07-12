@@ -5,6 +5,7 @@
 #include <windows.h>
 #include <imm.h>
 #include <ddk/imm.h>
+#include <pseh/pseh2.h>
 #include <ndk/umtypes.h>
 #include <ndk/pstypes.h>
 #include "../../../win32ss/include/ntuser.h"
