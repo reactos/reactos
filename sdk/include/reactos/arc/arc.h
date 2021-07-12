@@ -201,6 +201,15 @@ typedef struct _BOOT_DRIVER_LIST_ENTRY
     UNICODE_STRING FilePath;
     UNICODE_STRING RegistryPath;
     struct _LDR_DATA_TABLE_ENTRY *LdrEntry;
+    // Vista extensions
+    NTSTATUS Status;
+    ULONG unk1;
+    UNICODE_STRING GroupName;
+    UNICODE_STRING ServiceName;
+    ULONG Tag;
+    ULONG ErrorControl;
+    void* unk2;
+    void* unk3;
 } BOOT_DRIVER_LIST_ENTRY, *PBOOT_DRIVER_LIST_ENTRY;
 
 typedef struct _ARC_DISK_SIGNATURE

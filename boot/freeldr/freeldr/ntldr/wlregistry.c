@@ -106,7 +106,10 @@ WinLdrLoadSystemHive(
         Success = WinLdrAddDriverToList(&LoaderBlock->BootDriverListHead,
                                         L"\\Registry\\Machine\\System\\CurrentControlSet\\Services\\",
                                         NULL,
-                                        (PWSTR)FsService);
+                                        (PWSTR)FsService,
+                                        L"FileSystem",
+                                        1,
+                                        (ULONG)-1);
         if (!Success)
             TRACE(" Failed to add filesystem service\n");
     }
@@ -477,6 +480,16 @@ Failure:
     return FALSE;
 }
 
+typedef struct _DRIVER_REGISTRY_ENTRY {
+    LIST_ENTRY ListEntry;
+    ULONG Group;
+    ULONG Tag;
+    ULONG ErrorControl;
+    ULONG NameLength;
+    ULONG ImagePathLength;
+    BOOLEAN Processed;
+} DRIVER_REGISTRY_ENTRY, *PDRIVER_REGISTRY_ENTRY;
+
 static VOID
 WinLdrScanRegistry(IN OUT PLIST_ENTRY BootDriverListHead,
                    IN PCSTR SystemRoot)
@@ -490,11 +503,15 @@ WinLdrScanRegistry(IN OUT PLIST_ENTRY BootDriverListHead,
     ULONG Index;
     ULONG TagIndex;
     PWSTR GroupName;
+    LIST_ENTRY DriverListHead;
+    ULONG GroupIndex;
+    LIST_ENTRY* le;
 
     ULONG ValueSize;
     ULONG ValueType;
     ULONG StartValue;
     ULONG TagValue;
+    ULONG ErrorControl;
     WCHAR DriverGroup[256];
     ULONG DriverGroupSize;
 
@@ -543,7 +560,129 @@ WinLdrScanRegistry(IN OUT PLIST_ENTRY BootDriverListHead,
     TRACE_CH(REACTOS, "BufferSize: %d \n", (int)BufferSize);
     TRACE_CH(REACTOS, "GroupNameBuffer: '%S' \n", GroupNameBuffer);
 
+    InitializeListHead(&DriverListHead);
+
+    {
+        Index = 0;
+
+        while (TRUE)
+        {
+            /* Get the Driver's Name */
+            ValueSize = sizeof(ServiceName);
+            rc = RegEnumKey(hServiceKey, Index, ServiceName, &ValueSize, &hDriverKey);
+            TRACE("RegEnumKey(): rc %d\n", (int)rc);
+
+            /* Make sure it's valid, and check if we're done */
+            if (rc == ERROR_NO_MORE_ITEMS)
+                break;
+            if (rc != ERROR_SUCCESS)
+            {
+                FrLdrHeapFree(GroupNameBuffer, TAG_WLDR_NAME);
+
+                while (!IsListEmpty(&DriverListHead))
+                {
+                    PDRIVER_REGISTRY_ENTRY dre = CONTAINING_RECORD(RemoveHeadList(&DriverListHead), DRIVER_REGISTRY_ENTRY, ListEntry);
+
+                    FrLdrHeapFree(dre, TAG_WLDR_NAME);
+                }
+
+                return;
+            }
+
+            /* Read the Start Value */
+            ValueSize = sizeof(ULONG);
+            rc = RegQueryValue(hDriverKey, L"Start", &ValueType, (PUCHAR)&StartValue, &ValueSize);
+            if (rc == ERROR_SUCCESS && StartValue == 0)
+            {
+                PDRIVER_REGISTRY_ENTRY dre;
+                ULONG ServiceNameLength;
+                WCHAR* ServiceNameDest;
+
+                /* Read the Tag */
+                ValueSize = sizeof(ULONG);
+                rc = RegQueryValue(hDriverKey, L"Tag", &ValueType, (PUCHAR)&TagValue, &ValueSize);
+                if (rc != ERROR_SUCCESS) TagValue = (ULONG)-1;
+                //TRACE_CH(REACTOS, "  Tag:   %x  \n", (int)TagValue);
+
+                /* Read the driver's group */
+                DriverGroupSize = sizeof(DriverGroup);
+                rc = RegQueryValue(hDriverKey, L"Group", NULL, (PUCHAR)DriverGroup, &DriverGroupSize);
+                //TRACE_CH(REACTOS, "  Group: '%S'  \n", DriverGroup);
+
+                /* Read the error control value */
+                ValueSize = sizeof(ULONG);
+                rc = RegQueryValue(hDriverKey, L"ErrorControl", &ValueType, (PUCHAR)&ErrorControl, &ValueSize);
+                if (rc != ERROR_SUCCESS) ErrorControl = 0;
+
+                /* Get the Driver's Location */
+                ValueSize = sizeof(TempImagePath);
+                rc = RegQueryValue(hDriverKey, L"ImagePath", NULL, (PUCHAR)TempImagePath, &ValueSize);
+
+                if (rc != ERROR_SUCCESS)
+                {
+                    ValueSize = 0;
+                }
+
+                ServiceNameLength = (wcslen(ServiceName) * sizeof(WCHAR)) + sizeof(WCHAR); // include NULL
+
+                dre = FrLdrHeapAlloc(sizeof(DRIVER_REGISTRY_ENTRY) + ServiceNameLength + ValueSize, TAG_WLDR_NAME);
+                if (!dre)
+                {
+                    ERR("Error allocating %u bytes.\n", sizeof(DRIVER_REGISTRY_ENTRY) + ServiceNameLength + ValueSize);
+
+                    while (!IsListEmpty(&DriverListHead))
+                    {
+                        PDRIVER_REGISTRY_ENTRY dre = CONTAINING_RECORD(RemoveHeadList(&DriverListHead), DRIVER_REGISTRY_ENTRY, ListEntry);
+
+                        FrLdrHeapFree(dre, TAG_WLDR_NAME);
+                    }
+
+                    FrLdrHeapFree(GroupNameBuffer, TAG_WLDR_NAME);
+                    return;
+                }
+
+                dre->Group = (ULONG)-1;
+
+                GroupIndex = 0;
+                GroupName = GroupNameBuffer;
+                while (*GroupName)
+                {
+                    if (!_wcsicmp(DriverGroup, GroupName))
+                    {
+                        dre->Group = GroupIndex;
+                        break;
+                    }
+
+                    GroupIndex++;
+                    GroupName = GroupName + wcslen(GroupName) + 1;
+                }
+
+                dre->Tag = TagValue;
+                dre->ErrorControl = ErrorControl;
+                dre->NameLength = ServiceNameLength;
+                dre->ImagePathLength = ValueSize;
+                dre->Processed = FALSE;
+
+                ServiceNameDest = (WCHAR*)((UCHAR*)dre + sizeof(DRIVER_REGISTRY_ENTRY));
+
+                RtlCopyMemory(ServiceNameDest, ServiceName, dre->NameLength - sizeof(WCHAR));
+
+                ServiceNameDest[(dre->NameLength / sizeof(WCHAR)) - 1] = 0;
+
+                if (ValueSize != 0)
+                {
+                    RtlCopyMemory(&ServiceNameDest[dre->NameLength / sizeof(WCHAR)], TempImagePath, dre->ImagePathLength);
+                }
+
+                InsertTailList(&DriverListHead, &dre->ListEntry);
+            }
+
+            Index++;
+        }
+    }
+
     /* Loop through each group */
+    GroupIndex = 0;
     GroupName = GroupNameBuffer;
     while (*GroupName)
     {
@@ -557,57 +696,25 @@ WinLdrScanRegistry(IN OUT PLIST_ENTRY BootDriverListHead,
         /* enumerate all drivers */
         for (TagIndex = 1; TagIndex <= OrderList[0]; TagIndex++)
         {
+            le = DriverListHead.Flink;
             Index = 0;
 
-            while (TRUE)
+            while (le != &DriverListHead)
             {
-                /* Get the Driver's Name */
-                ValueSize = sizeof(ServiceName);
-                rc = RegEnumKey(hServiceKey, Index, ServiceName, &ValueSize, &hDriverKey);
-                TRACE("RegEnumKey(): rc %d\n", (int)rc);
+                PDRIVER_REGISTRY_ENTRY dre = CONTAINING_RECORD(le, DRIVER_REGISTRY_ENTRY, ListEntry);
 
-                /* Make sure it's valid, and check if we're done */
-                if (rc == ERROR_NO_MORE_ITEMS)
-                    break;
-                if (rc != ERROR_SUCCESS)
+                if (dre->Group == GroupIndex && dre->Tag == OrderList[TagIndex])
                 {
-                    FrLdrHeapFree(GroupNameBuffer, TAG_WLDR_NAME);
-                    return;
-                }
-                //TRACE_CH(REACTOS, "Service %d: '%S'\n", (int)Index, ServiceName);
+                    WCHAR* Name = (WCHAR*)((UCHAR*)dre + sizeof(DRIVER_REGISTRY_ENTRY));
+                    WCHAR* TempImagePath = (WCHAR*)((UCHAR*)dre + sizeof(DRIVER_REGISTRY_ENTRY) + dre->NameLength);
 
-                /* Read the Start Value */
-                ValueSize = sizeof(ULONG);
-                rc = RegQueryValue(hDriverKey, L"Start", &ValueType, (PUCHAR)&StartValue, &ValueSize);
-                if (rc != ERROR_SUCCESS) StartValue = (ULONG)-1;
-                //TRACE_CH(REACTOS, "  Start: %x  \n", (int)StartValue);
-
-                /* Read the Tag */
-                ValueSize = sizeof(ULONG);
-                rc = RegQueryValue(hDriverKey, L"Tag", &ValueType, (PUCHAR)&TagValue, &ValueSize);
-                if (rc != ERROR_SUCCESS) TagValue = (ULONG)-1;
-                //TRACE_CH(REACTOS, "  Tag:   %x  \n", (int)TagValue);
-
-                /* Read the driver's group */
-                DriverGroupSize = sizeof(DriverGroup);
-                rc = RegQueryValue(hDriverKey, L"Group", NULL, (PUCHAR)DriverGroup, &DriverGroupSize);
-                //TRACE_CH(REACTOS, "  Group: '%S'  \n", DriverGroup);
-
-                /* Make sure it should be started */
-                if ((StartValue == 0) &&
-                    (TagValue == OrderList[TagIndex]) &&
-                    (_wcsicmp(DriverGroup, GroupName) == 0))
-                {
-                    /* Get the Driver's Location */
-                    ValueSize = sizeof(TempImagePath);
-                    rc = RegQueryValue(hDriverKey, L"ImagePath", NULL, (PUCHAR)TempImagePath, &ValueSize);
-
-                    /* Write the whole path if it succeeded, else prepare to fail */
-                    if (rc != ERROR_SUCCESS)
+                    if (dre->ImagePathLength == 0)
                     {
                         TRACE_CH(REACTOS, "ImagePath: not found\n");
-                        TempImagePath[0] = 0;
-                        RtlStringCbPrintfA(ImagePath, sizeof(ImagePath), "%s\\system32\\drivers\\%S.sys", SystemRoot, ServiceName);
+                        RtlStringCbPrintfA(ImagePath, sizeof(ImagePath), "%s\\system32\\drivers\\%.*S.sys", SystemRoot,
+                                           dre->NameLength / sizeof(WCHAR), Name);
+
+                        TempImagePath = NULL;
                     }
                     else if (TempImagePath[0] != L'\\')
                     {
@@ -618,76 +725,42 @@ WinLdrScanRegistry(IN OUT PLIST_ENTRY BootDriverListHead,
                         RtlStringCbPrintfA(ImagePath, sizeof(ImagePath), "%S", TempImagePath);
                         TRACE_CH(REACTOS, "ImagePath: '%s'\n", ImagePath);
                     }
-
                     TRACE("Adding boot driver: '%s'\n", ImagePath);
 
                     Success = WinLdrAddDriverToList(BootDriverListHead,
                                                     L"\\Registry\\Machine\\System\\CurrentControlSet\\Services\\",
                                                     TempImagePath,
-                                                    ServiceName);
+                                                    Name,
+                                                    GroupName,
+                                                    dre->ErrorControl,
+                                                    dre->Tag);
                     if (!Success)
                         ERR("Failed to add boot driver\n");
-                }
-                else
-                {
-                    //TRACE("  Skipping driver '%S' with Start %d, Tag %d and Group '%S' (Current Tag %d, current group '%S')\n",
-                    //    ServiceName, StartValue, TagValue, DriverGroup, OrderList[TagIndex], GroupName);
+
+                    dre->Processed = TRUE;
                 }
 
-                Index++;
+                le = le->Flink;
             }
         }
 
-        Index = 0;
-        while (TRUE)
+        le = DriverListHead.Flink;
+        while (le != &DriverListHead)
         {
-            /* Get the Driver's Name */
-            ValueSize = sizeof(ServiceName);
-            rc = RegEnumKey(hServiceKey, Index, ServiceName, &ValueSize, &hDriverKey);
+            PDRIVER_REGISTRY_ENTRY dre = CONTAINING_RECORD(le, DRIVER_REGISTRY_ENTRY, ListEntry);
 
-            //TRACE_CH(REACTOS, "RegEnumKey(): rc %d\n", (int)rc);
-            if (rc == ERROR_NO_MORE_ITEMS)
-                break;
-            if (rc != ERROR_SUCCESS)
+            if (dre->Group == GroupIndex && !dre->Processed)
             {
-                FrLdrHeapFree(GroupNameBuffer, TAG_WLDR_NAME);
-                return;
-            }
-            TRACE("Service %d: '%S'\n", (int)Index, ServiceName);
+                WCHAR* Name = (WCHAR*)((UCHAR*)dre + sizeof(DRIVER_REGISTRY_ENTRY));
+                WCHAR* TempImagePath = (WCHAR*)((UCHAR*)dre + sizeof(DRIVER_REGISTRY_ENTRY) + dre->NameLength);
 
-            /* Read the Start Value */
-            ValueSize = sizeof(ULONG);
-            rc = RegQueryValue(hDriverKey, L"Start", &ValueType, (PUCHAR)&StartValue, &ValueSize);
-            if (rc != ERROR_SUCCESS) StartValue = (ULONG)-1;
-            //TRACE_CH(REACTOS, "  Start: %x  \n", (int)StartValue);
-
-            /* Read the Tag */
-            ValueSize = sizeof(ULONG);
-            rc = RegQueryValue(hDriverKey, L"Tag", &ValueType, (PUCHAR)&TagValue, &ValueSize);
-            if (rc != ERROR_SUCCESS) TagValue = (ULONG)-1;
-            //TRACE_CH(REACTOS, "  Tag:   %x  \n", (int)TagValue);
-
-            /* Read the driver's group */
-            DriverGroupSize = sizeof(DriverGroup);
-            rc = RegQueryValue(hDriverKey, L"Group", NULL, (PUCHAR)DriverGroup, &DriverGroupSize);
-            //TRACE_CH(REACTOS, "  Group: '%S'  \n", DriverGroup);
-
-            for (TagIndex = 1; TagIndex <= OrderList[0]; TagIndex++)
-            {
-                if (TagValue == OrderList[TagIndex]) break;
-            }
-
-            if ((StartValue == 0) &&
-                (TagIndex > OrderList[0]) &&
-                (_wcsicmp(DriverGroup, GroupName) == 0))
-            {
-                ValueSize = sizeof(TempImagePath);
-                rc = RegQueryValue(hDriverKey, L"ImagePath", NULL, (PUCHAR)TempImagePath, &ValueSize);
-                if (rc != ERROR_SUCCESS)
+                if (dre->ImagePathLength == 0)
                 {
                     TRACE_CH(REACTOS, "ImagePath: not found\n");
-                    TempImagePath[0] = 0;
-                    RtlStringCbPrintfA(ImagePath, sizeof(ImagePath), "%ssystem32\\drivers\\%S.sys", SystemRoot, ServiceName);
+                    RtlStringCbPrintfA(ImagePath, sizeof(ImagePath), "%s\\system32\\drivers\\%.*S.sys", SystemRoot,
+                                       dre->NameLength / sizeof(WCHAR), Name);
+
+                    TempImagePath = NULL;
                 }
                 else if (TempImagePath[0] != L'\\')
                 {
@@ -703,21 +776,83 @@ WinLdrScanRegistry(IN OUT PLIST_ENTRY BootDriverListHead,
                 Success = WinLdrAddDriverToList(BootDriverListHead,
                                                 L"\\Registry\\Machine\\System\\CurrentControlSet\\Services\\",
                                                 TempImagePath,
-                                                ServiceName);
+                                                Name,
+                                                GroupName,
+                                                dre->ErrorControl,
+                                                dre->Tag);
                 if (!Success)
                     ERR(" Failed to add boot driver\n");
-            }
-            else
-            {
-                //TRACE("  Skipping driver '%S' with Start %d, Tag %d and Group '%S' (Current group '%S')\n",
-                //    ServiceName, StartValue, TagValue, DriverGroup, GroupName);
+
+                dre->Processed = TRUE;
             }
 
-            Index++;
+            le = le->Flink;
         }
 
         /* Move to the next group name */
         GroupName = GroupName + wcslen(GroupName) + 1;
+        GroupIndex++;
+    }
+
+    /* Load any boot drivers that haven't been picked up above */
+    le = DriverListHead.Flink;
+    while (le != &DriverListHead)
+    {
+        PDRIVER_REGISTRY_ENTRY dre = CONTAINING_RECORD(le, DRIVER_REGISTRY_ENTRY, ListEntry);
+
+        if (!dre->Processed)
+        {
+            WCHAR* Name = (WCHAR*)((UCHAR*)dre + sizeof(DRIVER_REGISTRY_ENTRY));
+            WCHAR* TempImagePath = (WCHAR*)((UCHAR*)dre + sizeof(DRIVER_REGISTRY_ENTRY) + dre->NameLength);
+            ULONG DriverGroupSize = sizeof(DriverGroup);
+
+            rc = RegQueryValue(hDriverKey, L"Group", NULL, (PUCHAR)DriverGroup, &DriverGroupSize);
+            if (rc != ERROR_SUCCESS)
+            {
+                DriverGroup[0] = 0;
+            }
+
+            if (dre->ImagePathLength == 0)
+            {
+                TRACE_CH(REACTOS, "ImagePath: not found\n");
+                RtlStringCbPrintfA(ImagePath, sizeof(ImagePath), "%s\\system32\\drivers\\%.*S.sys", SystemRoot,
+                                dre->NameLength / sizeof(WCHAR), Name);
+
+                TempImagePath = NULL;
+            }
+            else if (TempImagePath[0] != L'\\')
+            {
+                RtlStringCbPrintfA(ImagePath, sizeof(ImagePath), "%s%S", SystemRoot, TempImagePath);
+            }
+            else
+            {
+                RtlStringCbPrintfA(ImagePath, sizeof(ImagePath), "%S", TempImagePath);
+                TRACE_CH(REACTOS, "ImagePath: '%s'\n", ImagePath);
+            }
+
+            TRACE("  Adding boot driver: '%s'\n", ImagePath);
+
+            Success = WinLdrAddDriverToList(BootDriverListHead,
+                                            L"\\Registry\\Machine\\System\\CurrentControlSet\\Services\\",
+                                            TempImagePath,
+                                            Name,
+                                            DriverGroup,
+                                            dre->ErrorControl,
+                                            dre->Tag);
+            if (!Success)
+                ERR(" Failed to add boot driver\n");
+
+            dre->Processed = TRUE;
+        }
+
+        le = le->Flink;
+    }
+
+    while (!IsListEmpty(&DriverListHead))
+    {
+        PDRIVER_REGISTRY_ENTRY dre = CONTAINING_RECORD(RemoveHeadList(&DriverListHead), DRIVER_REGISTRY_ENTRY, ListEntry);
+
+        FrLdrHeapFree(dre, TAG_WLDR_NAME);
     }
 
     /* Free allocated memory */
@@ -768,7 +903,10 @@ BOOLEAN
 WinLdrAddDriverToList(LIST_ENTRY *BootDriverListHead,
                       PWSTR RegistryPath,
                       PWSTR ImagePath,
-                      PWSTR ServiceName)
+                      PWSTR ServiceName,
+                      PWSTR GroupName,
+                      ULONG ErrorControl,
+                      ULONG Tag)
 {
     PBOOT_DRIVER_LIST_ENTRY BootDriverEntry;
     NTSTATUS Status;
@@ -861,6 +999,38 @@ WinLdrAddDriverToList(LIST_ENTRY *BootDriverListHead,
     Status = RtlAppendUnicodeToString(&BootDriverEntry->RegistryPath, ServiceName);
     if (!NT_SUCCESS(Status))
         return FALSE;
+
+    BootDriverEntry->ServiceName.Length = wcslen(ServiceName) * sizeof(WCHAR);
+    BootDriverEntry->ServiceName.MaximumLength = BootDriverEntry->ServiceName.Length;
+    BootDriverEntry->ServiceName.Buffer = FrLdrHeapAlloc(BootDriverEntry->ServiceName.Length, TAG_WLDR_NAME);
+    if (!BootDriverEntry->ServiceName.Buffer)
+        return FALSE;
+
+    RtlCopyMemory(BootDriverEntry->ServiceName.Buffer, ServiceName, BootDriverEntry->ServiceName.Length);
+
+    if (GroupName)
+    {
+        BootDriverEntry->GroupName.Length = wcslen(GroupName) * sizeof(WCHAR);
+        BootDriverEntry->GroupName.MaximumLength = BootDriverEntry->GroupName.Length;
+        BootDriverEntry->GroupName.Buffer = FrLdrHeapAlloc(BootDriverEntry->GroupName.Length, TAG_WLDR_NAME);
+        if (!BootDriverEntry->GroupName.Buffer)
+            return FALSE;
+
+        RtlCopyMemory(BootDriverEntry->GroupName.Buffer, GroupName, BootDriverEntry->GroupName.Length);
+    }
+    else
+    {
+        BootDriverEntry->GroupName.Length = 0;
+        BootDriverEntry->GroupName.MaximumLength = 0;
+        BootDriverEntry->GroupName.Buffer = NULL;
+    }
+
+    BootDriverEntry->Status = STATUS_SUCCESS;
+    BootDriverEntry->unk1 = 0;
+    BootDriverEntry->Tag = Tag;
+    BootDriverEntry->ErrorControl = ErrorControl;
+    BootDriverEntry->unk2 = NULL;
+    BootDriverEntry->unk3 = NULL;
 
     // Insert entry into the list
     if (!InsertInBootDriverList(BootDriverListHead, BootDriverEntry))
