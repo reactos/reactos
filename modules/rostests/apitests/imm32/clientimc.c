@@ -21,6 +21,7 @@ static void DumpBinary(LPCVOID pv, size_t cb)
 
 START_TEST(clientimc)
 {
+    DWORD dwCode;
     CLIENTIMC *pClientImc = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(CLIENTIMC));
 
     pClientImc->hImc = (HIMC)ImmCreateIMCC(4);
@@ -33,15 +34,17 @@ START_TEST(clientimc)
     ok_long(pClientImc->cLockObj, 1);
     ok_long(ImmGetIMCCSize(pClientImc->hImc), 4);
 
+    dwCode = 0;
     _SEH2_TRY
     {
         ImmUnlockClientImc(pClientImc);
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        ;
+        dwCode = _SEH2_GetExceptionCode();
     }
     _SEH2_END;
+    ok_long(dwCode, STATUS_ACCESS_VIOLATION);
 
     ok_long(pClientImc->cLockObj, 0);
     ok_long(ImmGetIMCCSize(pClientImc->hImc), 0);
