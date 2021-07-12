@@ -45,4 +45,6 @@ START_TEST(clientimc)
 
     ok_long(pClientImc->cLockObj, 0);
     ok_long(ImmGetIMCCSize(pClientImc->hImc), 0);
+
+    HeapFree(GetProcessHeap(), 0, pClientImc);
 }
