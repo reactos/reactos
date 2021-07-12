@@ -28,6 +28,8 @@ WINE_DEFAULT_DEBUG_CHANNEL(exec);
 static const WCHAR wszOpen[] = L"open";
 static const WCHAR wszExe[] = L".exe";
 static const WCHAR wszCom[] = L".com";
+static const WCHAR wszBat[] = L".bat";
+static const WCHAR wszCmd[] = L".cmd";
 
 #define SEE_MASK_CLASSALL (SEE_MASK_CLASSNAME | SEE_MASK_CLASSKEY)
 
@@ -2480,20 +2482,28 @@ HRESULT WINAPI ShellExecCmdLine(
             StringCchCopyW(szFile, _countof(szFile), szFile2);
         }
         else if (SearchPathW(NULL, szFile, NULL, _countof(szFile2), szFile2, NULL) ||
-                 SearchPathW(NULL, szFile, wszExe, _countof(szFile2), szFile2, NULL) ||
                  SearchPathW(NULL, szFile, wszCom, _countof(szFile2), szFile2, NULL) ||
+                 SearchPathW(NULL, szFile, wszExe, _countof(szFile2), szFile2, NULL) ||
+                 SearchPathW(NULL, szFile, wszBat, _countof(szFile2), szFile2, NULL) ||
+                 SearchPathW(NULL, szFile, wszCmd, _countof(szFile2), szFile2, NULL) ||
                  SearchPathW(pwszStartDir, szFile, NULL, _countof(szFile2), szFile2, NULL) ||
+                 SearchPathW(pwszStartDir, szFile, wszCom, _countof(szFile2), szFile2, NULL) ||
                  SearchPathW(pwszStartDir, szFile, wszExe, _countof(szFile2), szFile2, NULL) ||
-                 SearchPathW(pwszStartDir, szFile, wszCom, _countof(szFile2), szFile2, NULL))
+                 SearchPathW(pwszStartDir, szFile, wszBat, _countof(szFile2), szFile2, NULL) ||
+                 SearchPathW(pwszStartDir, szFile, wszCmd, _countof(szFile2), szFile2, NULL))
         {
             StringCchCopyW(szFile, _countof(szFile), szFile2);
         }
         else if (SearchPathW(NULL, lpCommand, NULL, _countof(szFile2), szFile2, NULL) ||
-                 SearchPathW(NULL, lpCommand, wszExe, _countof(szFile2), szFile2, NULL) ||
                  SearchPathW(NULL, lpCommand, wszCom, _countof(szFile2), szFile2, NULL) ||
+                 SearchPathW(NULL, lpCommand, wszExe, _countof(szFile2), szFile2, NULL) ||
+                 SearchPathW(NULL, lpCommand, wszBat, _countof(szFile2), szFile2, NULL) ||
+                 SearchPathW(NULL, lpCommand, wszCmd, _countof(szFile2), szFile2, NULL) ||
                  SearchPathW(pwszStartDir, lpCommand, NULL, _countof(szFile2), szFile2, NULL) ||
+                 SearchPathW(pwszStartDir, lpCommand, wszCom, _countof(szFile2), szFile2, NULL) ||
                  SearchPathW(pwszStartDir, lpCommand, wszExe, _countof(szFile2), szFile2, NULL) ||
-                 SearchPathW(pwszStartDir, lpCommand, wszCom, _countof(szFile2), szFile2, NULL))
+                 SearchPathW(pwszStartDir, lpCommand, wszBat, _countof(szFile2), szFile2, NULL) ||
+                 SearchPathW(pwszStartDir, lpCommand, wszCmd, _countof(szFile2), szFile2, NULL))
         {
             StringCchCopyW(szFile, _countof(szFile), szFile2);
             pchParams = NULL;
