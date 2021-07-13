@@ -45,6 +45,8 @@
 WINE_DEFAULT_DEBUG_CHANNEL(imm);
 
 #define IMM_INIT_MAGIC 0x19650412
+#define IMM_INVALID_CANDFORM ULONG_MAX
+
 BOOL WINAPI User32InitializeImmEntryTable(DWORD);
 
 typedef struct _tagImmHkl{
@@ -1450,7 +1452,7 @@ BOOL WINAPI ImmGetCandidateWindow(
         return FALSE;
 
     pCF = &pIC->cfCandForm[dwIndex];
-    if (pCF->dwIndex != 0xFFFFFFFF)
+    if (pCF->dwIndex != IMM_INVALID_CANDFORM)
     {
         *lpCandidate = *pCF;
         ret = TRUE;
