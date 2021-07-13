@@ -87,6 +87,14 @@ C_ASSERT(offsetof(INPUTCONTEXT, dwReserve) == 0x134);
 C_ASSERT(sizeof(INPUTCONTEXT) == 0x140);
 #endif
 
+// bits of fdwInit of INPUTCONTEXT
+#define INIT_STATUSWNDPOS               0x00000001
+#define INIT_CONVERSION                 0x00000002
+#define INIT_SENTENCE                   0x00000004
+#define INIT_LOGFONT                    0x00000008
+#define INIT_COMPFORM                   0x00000010
+#define INIT_SOFTKBDPOS                 0x00000020
+
 LPINPUTCONTEXT WINAPI ImmLockIMC(HIMC);
 
 #endif /* _WINE_IMM_H_ */
