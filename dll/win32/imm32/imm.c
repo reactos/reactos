@@ -1309,6 +1309,92 @@ Quit:
     return ret;
 }
 
+DWORD APIENTRY ImmGetCandidateListCountAW(HIMC hIMC, LPDWORD lpdwListCount, BOOL bAnsi)
+{
+    DWORD ret = 0, cbGot, dwIndex;
+    PCLIENTIMC pClientImc;
+    LPINPUTCONTEXT pIC;
+    const CANDIDATEINFO *pCI;
+    const BYTE *pb;
+    const CANDIDATELIST *pCL;
+    const DWORD *pdwOffsets;
+
+    if (lpdwListCount == NULL)
+        return 0;
+
+    *lpdwListCount = 0;
+
+    pClientImc = ImmLockClientImc(hIMC);
+    if (pClientImc == NULL)
+        return 0;
+
+    pIC = ImmLockIMC(hIMC);
+    if (pIC == NULL)
+    {
+        ImmUnlockClientImc(pClientImc);
+        return 0;
+    }
+
+    pCI = ImmLockIMCC(pIC->hCandInfo);
+    if (pCI == NULL)
+    {
+        ImmUnlockIMC(hIMC);
+        ImmUnlockClientImc(pClientImc);
+        return 0;
+    }
+
+    if (pCI->dwSize < sizeof(CANDIDATEINFO))
+        goto Quit;
+
+    *lpdwListCount = pCI->dwCount; /* the number of candidate lists */
+
+    /* calculate total size of candidate lists */
+    if (bAnsi)
+    {
+        if (pClientImc->dwFlags & CLIENTIMC_WIDE)
+        {
+            ret = ROUNDUP4(pCI->dwPrivateSize);
+            pdwOffsets = pCI->dwOffset;
+            for (dwIndex = 0; dwIndex < pCI->dwCount; ++dwIndex)
+            {
+                pb = (const BYTE *)pCI + pdwOffsets[dwIndex];
+                pCL = (const CANDIDATELIST *)pb;
+                cbGot = CandidateListWideToAnsi(pCL, NULL, 0, CP_ACP);
+                ret += cbGot;
+            }
+        }
+        else
+        {
+            ret = pCI->dwSize;
+        }
+    }
+    else
+    {
+        if (pClientImc->dwFlags & CLIENTIMC_WIDE)
+        {
+            ret = pCI->dwSize;
+        }
+        else
+        {
+            ret = ROUNDUP4(pCI->dwPrivateSize);
+            pdwOffsets = pCI->dwOffset;
+            for (dwIndex = 0; dwIndex < pCI->dwCount; ++dwIndex)
+            {
+                pb = (const BYTE *)pCI + pdwOffsets[dwIndex];
+                pCL = (const CANDIDATELIST *)pb;
+                cbGot = CandidateListAnsiToWide(pCL, NULL, 0, CP_ACP);
+                ret += cbGot;
+            }
+        }
+    }
+
+Quit:
+    ImmUnlockIMCC(pIC->hCandInfo);
+    ImmUnlockIMC(hIMC);
+    ImmUnlockClientImc(pClientImc);
+    return ret;
+}
+
 /***********************************************************************
  *		ImmGetCandidateListA (IMM32.@)
  */
@@ -1325,30 +1411,7 @@ DWORD WINAPI ImmGetCandidateListA(
 DWORD WINAPI ImmGetCandidateListCountA(
   HIMC hIMC, LPDWORD lpdwListCount)
 {
-    InputContextData *data = get_imc_data(hIMC);
-    LPCANDIDATEINFO candinfo;
-    DWORD ret, count;
-
-    TRACE("%p, %p\n", hIMC, lpdwListCount);
-
-    if (!data || !lpdwListCount || !data->IMC.hCandInfo)
-       return 0;
-
-    candinfo = ImmLockIMCC(data->IMC.hCandInfo);
-
-    *lpdwListCount = count = candinfo->dwCount;
-
-    if ( !is_himc_ime_unicode(data) )
-        ret = candinfo->dwSize;
-    else
-    {
-        ret = sizeof(CANDIDATEINFO);
-        while ( count-- )
-            ret += ImmGetCandidateListA(hIMC, count, NULL, 0);
-    }
-
-    ImmUnlockIMCC(data->IMC.hCandInfo);
-    return ret;
+    return ImmGetCandidateListCountAW(hIMC, lpdwListCount, TRUE);
 }
 
 /***********************************************************************
@@ -1357,30 +1420,7 @@ DWORD WINAPI ImmGetCandidateListCountA(
 DWORD WINAPI ImmGetCandidateListCountW(
   HIMC hIMC, LPDWORD lpdwListCount)
 {
-    InputContextData *data = get_imc_data(hIMC);
-    LPCANDIDATEINFO candinfo;
-    DWORD ret, count;
-
-    TRACE("%p, %p\n", hIMC, lpdwListCount);
-
-    if (!data || !lpdwListCount || !data->IMC.hCandInfo)
-       return 0;
-
-    candinfo = ImmLockIMCC(data->IMC.hCandInfo);
-
-    *lpdwListCount = count = candinfo->dwCount;
-
-    if ( is_himc_ime_unicode(data) )
-        ret = candinfo->dwSize;
-    else
-    {
-        ret = sizeof(CANDIDATEINFO);
-        while ( count-- )
-            ret += ImmGetCandidateListW(hIMC, count, NULL, 0);
-    }
-
-    ImmUnlockIMCC(data->IMC.hCandInfo);
-    return ret;
+    return ImmGetCandidateListCountAW(hIMC, lpdwListCount, FALSE);
 }
 
 /***********************************************************************
@@ -3156,19 +3196,19 @@ LPINPUTCONTEXT WINAPI ImmLockIMC(HIMC hIMC)
 */
 BOOL WINAPI ImmUnlockIMC(HIMC hIMC)
 {
-    PCLIENTIMC pClientIMC;
+    PCLIENTIMC pClientImc;
     HIMC hClientImc;
 
-    pClientIMC = ImmLockClientImc(hIMC);
-    if (pClientIMC == NULL)
+    pClientImc = ImmLockClientImc(hIMC);
+    if (pClientImc == NULL)
         return FALSE;
 
-    hClientImc = pClientIMC->hImc;
+    hClientImc = pClientImc->hImc;
     if (hClientImc)
         LocalUnlock(hClientImc);
 
-    InterlockedDecrement(&pClientIMC->cLockObj);
-    ImmUnlockClientImc(pClientIMC);
+    InterlockedDecrement(&pClientImc->cLockObj);
+    ImmUnlockClientImc(pClientImc);
     return TRUE;
 }
 
