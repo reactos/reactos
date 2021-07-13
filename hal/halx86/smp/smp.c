@@ -19,7 +19,7 @@ extern PHYSICAL_ADDRESS HalpLowStubPhysicalAddress;
 extern PVOID HalpLowStub;
 
 /* TODO: MaxAPCount should be assigned by a Multi APIC table */
-ULONG MaxAPCount = 2;
+ULONG MaxAPCount = 1;
 ULONG StartedProcessorCount = 1;
 
 /* FUNCTIONS *****************************************************************/
