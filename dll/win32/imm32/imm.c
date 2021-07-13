@@ -2365,7 +2365,7 @@ UINT WINAPI ImmGetRegisterWordStyleW(
 BOOL WINAPI ImmGetStatusWindowPos(HIMC hIMC, LPPOINT lpptPos)
 {
     LPINPUTCONTEXT pIC;
-    BOOL bInit;
+    BOOL ret;
 
     TRACE("ImmGetStatusWindowPos(%p, %p)\n", hIMC, lpptPos);
 
@@ -2373,12 +2373,12 @@ BOOL WINAPI ImmGetStatusWindowPos(HIMC hIMC, LPPOINT lpptPos)
     if (pIC == NULL)
         return FALSE;
 
-    bInit = !!(pIC->fdwInit & INIT_STATUSWNDPOS);
-    if (bInit)
+    ret = !!(pIC->fdwInit & INIT_STATUSWNDPOS);
+    if (ret)
         *lpptPos = pIC->ptStatusWndPos;
 
     ImmUnlockIMC(hIMC);
-    return bInit;
+    return ret;
 }
 
 /***********************************************************************
