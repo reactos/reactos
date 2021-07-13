@@ -2110,7 +2110,7 @@ HWND WINAPI ImmGetDefaultIMEWnd(HWND hWnd)
         return NULL;
 
     if (hWnd == NULL)
-        return Imm32GetThreadState(THREADSTATE_ACTIVEWINDOW);
+        return (HWND)Imm32GetThreadState(THREADSTATE_ACTIVEWINDOW);
 
     return Imm32QueryWindow(hWnd, QUERY_WINDOW_DEFAULT_IME);
 }
