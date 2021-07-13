@@ -1443,6 +1443,8 @@ BOOL WINAPI ImmGetCandidateWindow(
     LPINPUTCONTEXT pIC;
     LPCANDIDATEFORM pCF;
 
+    TRACE("ImmGetCandidateWindow(%p, %lu, %p)\n", hIMC, dwIndex, lpCandidate);
+
     pIC = ImmLockIMC(hIMC);
     if (pIC  == NULL)
         return FALSE;
