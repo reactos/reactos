@@ -1028,9 +1028,9 @@ Imm32GetThreadState(DWORD Routine)
     return NtUserGetThreadState(Routine);
 }
 
-static HWND APIENTRY Imm32QueryWindow(HWND hWnd, DWORD Index)
+static DWORD_PTR APIENTRY Imm32QueryWindow(HWND hWnd, DWORD Index)
 {
-    return (HWND)NtUserQueryWindow(hWnd, Index);
+    return NtUserQueryWindow(hWnd, Index);
 }
 
 static DWORD APIENTRY
@@ -2112,7 +2112,7 @@ HWND WINAPI ImmGetDefaultIMEWnd(HWND hWnd)
     if (hWnd == NULL)
         return (HWND)Imm32GetThreadState(THREADSTATE_ACTIVEWINDOW);
 
-    return Imm32QueryWindow(hWnd, QUERY_WINDOW_DEFAULT_IME);
+    return (HWND)Imm32QueryWindow(hWnd, QUERY_WINDOW_DEFAULT_IME);
 }
 
 /***********************************************************************
