@@ -364,6 +364,17 @@ KiRundownThread(IN PKTHREAD Thread)
 #endif
 }
 
+CODE_SEG("INIT")
+VOID
+NTAPI
+KiInitializePcr(IN ULONG ProcessorNumber,
+                IN PKIPCR Pcr,
+                IN PKIDTENTRY Idt,
+                IN PKGDTENTRY Gdt,
+                IN PKTSS Tss,
+                IN PKTHREAD IdleThread,
+                IN PVOID DpcStack);
+
 FORCEINLINE
 VOID
 Ke386SetGdtEntryBase(PKGDTENTRY GdtEntry, PVOID BaseAddress)
