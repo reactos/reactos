@@ -1,5 +1,8 @@
 
+include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
+
 list(APPEND SOURCE
+    clientimc.c
     imcc.c
     testlist.c)
 

@@ -32,6 +32,9 @@ extern "C" {
 BOOL WINAPI
 ImmGetImeInfoEx(PIMEINFOEX pImeInfoEx, IMEINFOEXCLASS SearchType, PVOID pvSearchKey);
 
+PCLIENTIMC WINAPI ImmLockClientImc(HIMC hImc);
+VOID WINAPI ImmUnlockClientImc(PCLIENTIMC pClientImc);
+
 #ifdef __cplusplus
 } // extern "C"
 #endif
