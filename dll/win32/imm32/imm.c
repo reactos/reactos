@@ -1452,7 +1452,7 @@ BOOL WINAPI ImmGetCandidateWindow(
     pCF = &pIC->cfCandForm[dwIndex];
     if (pCF->dwIndex != 0xFFFFFFFF)
     {
-        RtlCopyMemory(lpCandidate, pCF, sizeof(CANDIDATEFORM));
+        *lpCandidate = *pCF;
         ret = TRUE;
     }
 
