@@ -2374,13 +2374,11 @@ BOOL WINAPI ImmGetStatusWindowPos(HIMC hIMC, LPPOINT lpptPos)
         return FALSE;
 
     bInit = !!(pIC->fdwInit & INIT_STATUSWNDPOS);
+    if (bInit)
+        *lpptPos = pIC->ptStatusWndPos;
+
     ImmUnlockIMC(hIMC);
-
-    if (!bInit)
-        return FALSE;
-
-    *lpptPos = pIC->ptStatusWndPos;
-    return TRUE;
+    return bInit;
 }
 
 /***********************************************************************
