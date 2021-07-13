@@ -2178,32 +2178,27 @@ DWORD WINAPI ImmGetGuideLineW(HIMC hIMC, DWORD dwIndex, LPWSTR lpBuf, DWORD dwBu
  */
 UINT WINAPI ImmGetIMEFileNameA( HKL hKL, LPSTR lpszFileName, UINT uBufLen)
 {
-    LPWSTR bufW = NULL;
-    UINT wBufLen = uBufLen;
-    UINT rc;
+    BOOL bDefUsed;
+    IMEINFOEX info;
+    size_t cch;
 
-    if (uBufLen && lpszFileName)
-        bufW = HeapAlloc(GetProcessHeap(),0,uBufLen * sizeof(WCHAR));
-    else /* We need this to get the number of byte required */
-    {
-        bufW = HeapAlloc(GetProcessHeap(),0,MAX_PATH * sizeof(WCHAR));
-        wBufLen = MAX_PATH;
-    }
+    TRACE("ImmGetIMEFileNameA(%p, %p, %u)\n", hKL, lpszFileName, uBufLen);
 
-    rc = ImmGetIMEFileNameW(hKL,bufW,wBufLen);
+    if (uBufLen != 0)
+        lpszFileName[0] = 0;
 
-    if (rc > 0)
-    {
-        if (uBufLen && lpszFileName)
-            rc = WideCharToMultiByte(CP_ACP, 0, bufW, -1, lpszFileName,
-                                 uBufLen, NULL, NULL);
-        else /* get the length */
-            rc = WideCharToMultiByte(CP_ACP, 0, bufW, -1, NULL, 0, NULL,
-                                     NULL);
-    }
+    if (!ImmGetImeInfoEx(&info, ImeInfoExKeyboardLayout, &hKL) || !IS_IME_HKL(hKL))
+        return 0;
 
-    HeapFree(GetProcessHeap(),0,bufW);
-    return rc;
+    StringCchLengthW(info.wszImeFile, _countof(info.wszImeFile), &cch);
+
+    cch = WideCharToMultiByte(CP_ACP, 0, info.wszImeFile, (INT)cch,
+                              lpszFileName, uBufLen, NULL, &bDefUsed);
+    if (uBufLen == 0)
+        return (UINT)cch;
+
+    lpszFileName[cch] = 0;
+    return (UINT)cch;
 }
 
 /***********************************************************************
@@ -2211,45 +2206,25 @@ UINT WINAPI ImmGetIMEFileNameA( HKL hKL, LPSTR lpszFileName, UINT uBufLen)
  */
 UINT WINAPI ImmGetIMEFileNameW(HKL hKL, LPWSTR lpszFileName, UINT uBufLen)
 {
-    HKEY hkey;
-    DWORD length;
-    DWORD rc;
-    WCHAR regKey[ARRAY_SIZE(szImeRegFmt)+8];
+    IMEINFOEX info;
+    size_t cch;
 
-    wsprintfW( regKey, szImeRegFmt, (ULONG_PTR)hKL );
-    rc = RegOpenKeyW( HKEY_LOCAL_MACHINE, regKey, &hkey);
-    if (rc != ERROR_SUCCESS)
-    {
-        SetLastError(rc);
+    TRACE("ImmGetIMEFileNameW(%p, %p, %u)\n", hKL, lpszFileName, uBufLen);
+
+    if (uBufLen > 0)
+        lpszFileName[0] = 0;
+
+    if (!ImmGetImeInfoEx(&info, ImeInfoExKeyboardLayout, &hKL) || !IS_IME_HKL(hKL))
         return 0;
-    }
 
-    length = 0;
-    rc = RegGetValueW(hkey, NULL, szImeFileW, RRF_RT_REG_SZ, NULL, NULL, &length);
+    StringCchLengthW(info.wszImeFile, _countof(info.wszImeFile), &cch);
+    if (uBufLen == 0)
+        return (UINT)cch;
 
-    if (rc != ERROR_SUCCESS)
-    {
-        RegCloseKey(hkey);
-        SetLastError(rc);
-        return 0;
-    }
-    if (length > uBufLen * sizeof(WCHAR) || !lpszFileName)
-    {
-        RegCloseKey(hkey);
-        if (lpszFileName)
-        {
-            SetLastError(ERROR_INSUFFICIENT_BUFFER);
-            return 0;
-        }
-        else
-            return length / sizeof(WCHAR);
-    }
+    StringCchCopyNW(lpszFileName, uBufLen, info.wszImeFile, cch);
+    lpszFileName[cch] = 0;
 
-    RegGetValueW(hkey, NULL, szImeFileW, RRF_RT_REG_SZ, NULL, lpszFileName, &length);
-
-    RegCloseKey(hkey);
-
-    return length / sizeof(WCHAR);
+    return (UINT)cch;
 }
 
 /***********************************************************************
