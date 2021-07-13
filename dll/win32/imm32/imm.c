@@ -1028,9 +1028,9 @@ Imm32GetThreadState(DWORD Routine)
     return NtUserGetThreadState(Routine);
 }
 
-static DWORD_PTR APIENTRY Imm32QueryWindow(HWND hWnd, DWORD Index)
+static HWND APIENTRY Imm32QueryWindow(HWND hWnd, DWORD Index)
 {
-    return NtUserQueryWindow(hWnd, Index);
+    return (HWND)NtUserQueryWindow(hWnd, Index);
 }
 
 static DWORD APIENTRY
