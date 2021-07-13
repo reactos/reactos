@@ -92,14 +92,16 @@ EngpUpdateGraphicsDeviceList(VOID)
         {
             /* Save this as the VGA adapter */
             if (!gpVgaGraphicsDevice)
+            {
                 gpVgaGraphicsDevice = pGraphicsDevice;
-            TRACE("gpVgaGraphicsDevice = %p\n", gpVgaGraphicsDevice);
+                TRACE("gpVgaGraphicsDevice = %p\n", gpVgaGraphicsDevice);
+            }
         }
-        else
+
+        /* Set the first one as primary device */
+        if (!gpPrimaryGraphicsDevice)
         {
-            /* Set the first one as primary device */
-            if (!gpPrimaryGraphicsDevice)
-                gpPrimaryGraphicsDevice = pGraphicsDevice;
+            gpPrimaryGraphicsDevice = pGraphicsDevice;
             TRACE("gpPrimaryGraphicsDevice = %p\n", gpPrimaryGraphicsDevice);
         }
     }
