@@ -2197,7 +2197,7 @@ UINT WINAPI ImmGetIMEFileNameA( HKL hKL, LPSTR lpszFileName, UINT uBufLen)
     if (uBufLen == 0)
         return (UINT)cch;
 
-    lpszFileName[cch] = 0;
+    lpszFileName[(cch < uBufLen) ? cch : (uBufLen - 1)] = 0;
     return (UINT)cch;
 }
 
@@ -2222,8 +2222,8 @@ UINT WINAPI ImmGetIMEFileNameW(HKL hKL, LPWSTR lpszFileName, UINT uBufLen)
         return (UINT)cch;
 
     StringCchCopyNW(lpszFileName, uBufLen, info.wszImeFile, cch);
-    lpszFileName[cch] = 0;
 
+    lpszFileName[(cch < uBufLen) ? cch : (uBufLen - 1)] = 0;
     return (UINT)cch;
 }
 
