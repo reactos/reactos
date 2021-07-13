@@ -1439,22 +1439,23 @@ DWORD WINAPI ImmGetCandidateListW(
 BOOL WINAPI ImmGetCandidateWindow(
   HIMC hIMC, DWORD dwIndex, LPCANDIDATEFORM lpCandidate)
 {
-    InputContextData *data = get_imc_data(hIMC);
+    BOOL ret = FALSE;
+    LPINPUTCONTEXT pIC;
+    LPCANDIDATEFORM pCF;
 
-    TRACE("%p, %d, %p\n", hIMC, dwIndex, lpCandidate);
-
-    if (!data || !lpCandidate)
+    pIC = ImmLockIMC(hIMC);
+    if (pIC  == NULL)
         return FALSE;
 
-    if (dwIndex >= ARRAY_SIZE(data->IMC.cfCandForm))
-        return FALSE;
+    pCF = &pIC->cfCandForm[dwIndex];
+    if (pCF->dwIndex != 0xFFFFFFFF)
+    {
+        RtlCopyMemory(lpCandidate, pCF, sizeof(CANDIDATEFORM));
+        ret = TRUE;
+    }
 
-    if (data->IMC.cfCandForm[dwIndex].dwIndex != dwIndex)
-        return FALSE;
-
-    *lpCandidate = data->IMC.cfCandForm[dwIndex];
-
-    return TRUE;
+    ImmUnlockIMC(hIMC);
+    return ret;
 }
 
 static VOID APIENTRY LogFontAnsiToWide(const LOGFONTA *plfA, LPLOGFONTW plfW)
