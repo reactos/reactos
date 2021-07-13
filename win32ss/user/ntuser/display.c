@@ -257,7 +257,7 @@ UserEnumDisplayDevices(
     if (!pGraphicsDevice)
     {
         /* No device found */
-        ERR("No GRAPHICS_DEVICE found\n");
+        ERR("No GRAPHICS_DEVICE found for '%wZ', iDevNum %lu\n", pustrDevice, iDevNum);
         return STATUS_UNSUCCESSFUL;
     }
 
