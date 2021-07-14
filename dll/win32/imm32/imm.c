@@ -2106,7 +2106,7 @@ void WINAPI __wine_unregister_window(HWND hwnd)
  */
 HWND WINAPI ImmGetDefaultIMEWnd(HWND hWnd)
 {
-    if (!g_dwImm32Flags || !(g_dwImm32Flags & IMM32_FLAG_UNKNOWN))
+    if (!(g_dwImm32Flags & IMM32_FLAG_UNKNOWN))
         return NULL;
 
     if (hWnd == NULL)
@@ -2120,7 +2120,7 @@ HWND WINAPI ImmGetDefaultIMEWnd(HWND hWnd)
  */
 BOOL WINAPI CtfImmIsCiceroEnabled(VOID)
 {
-    return (!!g_dwImm32Flags && !!(g_dwImm32Flags & IMM32_FLAG_CICERO_ENABLED));
+    return !!(g_dwImm32Flags & IMM32_FLAG_CICERO_ENABLED);
 }
 
 /***********************************************************************
