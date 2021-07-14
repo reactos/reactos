@@ -2184,11 +2184,12 @@ UINT WINAPI ImmGetIMEFileNameA( HKL hKL, LPSTR lpszFileName, UINT uBufLen)
 
     TRACE("ImmGetIMEFileNameA(%p, %p, %u)\n", hKL, lpszFileName, uBufLen);
 
-    if (uBufLen > 0)
-        lpszFileName[0] = 0;
-
     if (!ImmGetImeInfoEx(&info, ImeInfoExKeyboardLayout, &hKL) || !IS_IME_HKL(hKL))
+    {
+        if (uBufLen > 0)
+            lpszFileName[0] = 0;
         return 0;
+    }
 
     StringCchLengthW(info.wszImeFile, _countof(info.wszImeFile), &cch);
 
@@ -2211,11 +2212,12 @@ UINT WINAPI ImmGetIMEFileNameW(HKL hKL, LPWSTR lpszFileName, UINT uBufLen)
 
     TRACE("ImmGetIMEFileNameW(%p, %p, %u)\n", hKL, lpszFileName, uBufLen);
 
-    if (uBufLen > 0)
-        lpszFileName[0] = 0;
-
     if (!ImmGetImeInfoEx(&info, ImeInfoExKeyboardLayout, &hKL) || !IS_IME_HKL(hKL))
+    {
+        if (uBufLen > 0)
+            lpszFileName[0] = 0;
         return 0;
+    }
 
     StringCchLengthW(info.wszImeFile, _countof(info.wszImeFile), &cch);
     if (uBufLen == 0)
