@@ -626,7 +626,7 @@ ZwWaitForSingleObject(
   _In_ BOOLEAN Alertable,
   _In_opt_ PLARGE_INTEGER Timeout);
 
-_IRQL_requires_max_(DISPATCH_LEVEL)
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSYSAPI
 NTSTATUS
 NTAPI

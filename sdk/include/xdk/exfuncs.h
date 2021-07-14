@@ -480,8 +480,9 @@ _When_((PoolType & (NonPagedPoolMustSucceed |
   _Post_maybenull_ _Must_inspect_result_)
 _When_((PoolType & (NonPagedPoolMustSucceed |
                     POOL_RAISE_IF_ALLOCATION_FAILURE)) != 0,
-  _Post_notnull_)
+  _Post_notnull_ _On_failure_(__analysis_noreturn))
 _Post_writable_byte_size_(NumberOfBytes)
+_Function_class_(ALLOCATE_FUNCTION)
 NTKERNELAPI
 PVOID
 NTAPI
@@ -499,8 +500,9 @@ _When_((PoolType & NonPagedPoolMustSucceed) != 0,
                     "Allocation failures cause a system crash"))
 _When_((PoolType & POOL_QUOTA_FAIL_INSTEAD_OF_RAISE) != 0,
   _Post_maybenull_ _Must_inspect_result_)
-_When_((PoolType & POOL_QUOTA_FAIL_INSTEAD_OF_RAISE) == 0, _Post_notnull_)
+_When_((PoolType & POOL_QUOTA_FAIL_INSTEAD_OF_RAISE) == 0, _Post_notnull_ _On_failure_(__analysis_noreturn))
 _Post_writable_byte_size_(NumberOfBytes)
+_Function_class_(ALLOCATE_FUNCTION)
 NTKERNELAPI
 PVOID
 NTAPI
@@ -516,8 +518,9 @@ _When_((PoolType & NonPagedPoolMustSucceed) != 0,
                     "Allocation failures cause a system crash"))
 _When_((PoolType & POOL_QUOTA_FAIL_INSTEAD_OF_RAISE) != 0,
   _Post_maybenull_ _Must_inspect_result_)
-_When_((PoolType & POOL_QUOTA_FAIL_INSTEAD_OF_RAISE) == 0, _Post_notnull_)
+_When_((PoolType & POOL_QUOTA_FAIL_INSTEAD_OF_RAISE) == 0, _Post_notnull_ _On_failure_(__analysis_noreturn))
 _Post_writable_byte_size_(NumberOfBytes)
+_Function_class_(ALLOCATE_FUNCTION)
 NTKERNELAPI
 PVOID
 NTAPI
@@ -539,7 +542,7 @@ _When_((PoolType & NonPagedPoolMustSucceed) != 0,
 _When_((PoolType & (NonPagedPoolMustSucceed | POOL_RAISE_IF_ALLOCATION_FAILURE)) == 0,
   _Post_maybenull_ _Must_inspect_result_)
 _When_((PoolType & (NonPagedPoolMustSucceed | POOL_RAISE_IF_ALLOCATION_FAILURE)) != 0,
-  _Post_notnull_)
+  _Post_notnull_ _On_failure_(__analysis_noreturn))
 _Post_writable_byte_size_(NumberOfBytes)
 _Function_class_(ALLOCATE_FUNCTION)
 NTKERNELAPI
@@ -563,8 +566,9 @@ _When_((PoolType & NonPagedPoolMustSucceed) != 0,
 _When_((PoolType & (NonPagedPoolMustSucceed | POOL_RAISE_IF_ALLOCATION_FAILURE)) == 0,
   _Post_maybenull_ _Must_inspect_result_)
 _When_((PoolType & (NonPagedPoolMustSucceed | POOL_RAISE_IF_ALLOCATION_FAILURE)) != 0,
-  _Post_notnull_)
+  _Post_notnull_ _On_failure_(__analysis_noreturn))
 _Post_writable_byte_size_(NumberOfBytes)
+_Function_class_(ALLOCATE_FUNCTION)
 NTKERNELAPI
 PVOID
 NTAPI
@@ -584,8 +588,9 @@ _When_((PoolType & NonPagedPoolMustSucceed) != 0,
 _When_((PoolType & (NonPagedPoolMustSucceed | POOL_RAISE_IF_ALLOCATION_FAILURE)) == 0,
   _Post_maybenull_ _Must_inspect_result_)
 _When_((PoolType & (NonPagedPoolMustSucceed | POOL_RAISE_IF_ALLOCATION_FAILURE)) != 0,
-  _Post_notnull_)
+  _Post_notnull_ _On_failure_(__analysis_noreturn))
 _Post_writable_byte_size_(NumberOfBytes)
+_Function_class_(ALLOCATE_FUNCTION)
 PVOID
 NTAPI
 ExAllocatePoolZero(
@@ -614,8 +619,9 @@ _When_((PoolType & NonPagedPoolMustSucceed) != 0,
 _When_((PoolType & (NonPagedPoolMustSucceed | POOL_RAISE_IF_ALLOCATION_FAILURE)) == 0,
   _Post_maybenull_ _Must_inspect_result_)
 _When_((PoolType & (NonPagedPoolMustSucceed | POOL_RAISE_IF_ALLOCATION_FAILURE)) != 0,
-  _Post_notnull_)
+  _Post_notnull_ _On_failure_(__analysis_noreturn))
 _Post_writable_byte_size_(NumberOfBytes)
+_Function_class_(ALLOCATE_FUNCTION)
 PVOID
 NTAPI
 ExAllocatePoolUninitialized(
@@ -636,8 +642,9 @@ _When_((PoolType & NonPagedPoolMustSucceed) != 0,
 _When_((PoolType & (NonPagedPoolMustSucceed | POOL_RAISE_IF_ALLOCATION_FAILURE)) == 0,
   _Post_maybenull_ _Must_inspect_result_)
 _When_((PoolType & (NonPagedPoolMustSucceed | POOL_RAISE_IF_ALLOCATION_FAILURE)) != 0,
-  _Post_notnull_)
+  _Post_notnull_ _On_failure_(__analysis_noreturn))
 _Post_writable_byte_size_(NumberOfBytes)
+_Function_class_(ALLOCATE_FUNCTION)
 PVOID
 NTAPI
 ExAllocatePoolQuotaZero (
@@ -666,8 +673,9 @@ _When_((PoolType & NonPagedPoolMustSucceed) != 0,
 _When_((PoolType & (NonPagedPoolMustSucceed | POOL_RAISE_IF_ALLOCATION_FAILURE)) == 0,
   _Post_maybenull_ _Must_inspect_result_)
 _When_((PoolType & (NonPagedPoolMustSucceed | POOL_RAISE_IF_ALLOCATION_FAILURE)) != 0,
-  _Post_notnull_)
+  _Post_notnull_ _On_failure_(__analysis_noreturn))
 _Post_writable_byte_size_(NumberOfBytes)
+_Function_class_(ALLOCATE_FUNCTION)
 PVOID
 NTAPI
 ExAllocatePoolQuotaUninitialized(
@@ -688,8 +696,9 @@ _When_((PoolType & NonPagedPoolMustSucceed) != 0,
 _When_((PoolType & (NonPagedPoolMustSucceed | POOL_RAISE_IF_ALLOCATION_FAILURE)) == 0,
   _Post_maybenull_ _Must_inspect_result_)
 _When_((PoolType & (NonPagedPoolMustSucceed | POOL_RAISE_IF_ALLOCATION_FAILURE)) != 0,
-  _Post_notnull_)
+  _Post_notnull_ _On_failure_(__analysis_noreturn))
 _Post_writable_byte_size_(NumberOfBytes)
+_Function_class_(ALLOCATE_FUNCTION)
 PVOID
 NTAPI
 ExAllocatePoolPriorityZero(
@@ -719,8 +728,9 @@ _When_((PoolType & NonPagedPoolMustSucceed) != 0,
 _When_((PoolType & (NonPagedPoolMustSucceed | POOL_RAISE_IF_ALLOCATION_FAILURE)) == 0,
   _Post_maybenull_ _Must_inspect_result_)
 _When_((PoolType & (NonPagedPoolMustSucceed | POOL_RAISE_IF_ALLOCATION_FAILURE)) != 0,
-  _Post_notnull_)
+  _Post_notnull_ _On_failure_(__analysis_noreturn))
 _Post_writable_byte_size_(NumberOfBytes)
+_Function_class_(ALLOCATE_FUNCTION)
 PVOID
 NTAPI
 ExAllocatePoolPriorityUninitialized(
