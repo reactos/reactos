@@ -43,7 +43,7 @@ ALIAS_DLL = {
     # These modules cannot be linked against in ROS, so forward it
     'cfgmgr32': 'setupapi', # Forward everything
     'wmi': 'advapi32',      # Forward everything
-	'gamingtcui' : 'setupapi', # Force everything as a stub
+    'gamingtcui' : 'setupapi', # Force everything as a stub
 }
 
 MANIFESTS = {
