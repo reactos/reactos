@@ -27,7 +27,7 @@ static const INFORMATION_CLASS_INFO PsProcessInfoClass[] =
     (
         QUOTA_LIMITS,
         ULONG,
-        ICIF_QUERY | ICIF_SET
+        ICIF_QUERY | ICIF_SET | ICIF_SET_SIZE_VARIABLE
     ),
 
     /* ProcessIoCounters */
