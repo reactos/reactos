@@ -45,6 +45,8 @@
 WINE_DEFAULT_DEBUG_CHANNEL(imm);
 
 #define IMM_INIT_MAGIC 0x19650412
+#define IMM_INVALID_CANDFORM ULONG_MAX
+
 BOOL WINAPI User32InitializeImmEntryTable(DWORD);
 
 typedef struct _tagImmHkl{
@@ -1449,22 +1451,25 @@ DWORD WINAPI ImmGetCandidateListW(
 BOOL WINAPI ImmGetCandidateWindow(
   HIMC hIMC, DWORD dwIndex, LPCANDIDATEFORM lpCandidate)
 {
-    InputContextData *data = get_imc_data(hIMC);
+    BOOL ret = FALSE;
+    LPINPUTCONTEXT pIC;
+    LPCANDIDATEFORM pCF;
 
-    TRACE("%p, %d, %p\n", hIMC, dwIndex, lpCandidate);
+    TRACE("ImmGetCandidateWindow(%p, %lu, %p)\n", hIMC, dwIndex, lpCandidate);
 
-    if (!data || !lpCandidate)
+    pIC = ImmLockIMC(hIMC);
+    if (pIC  == NULL)
         return FALSE;
 
-    if (dwIndex >= ARRAY_SIZE(data->IMC.cfCandForm))
-        return FALSE;
+    pCF = &pIC->cfCandForm[dwIndex];
+    if (pCF->dwIndex != IMM_INVALID_CANDFORM)
+    {
+        *lpCandidate = *pCF;
+        ret = TRUE;
+    }
 
-    if (data->IMC.cfCandForm[dwIndex].dwIndex != dwIndex)
-        return FALSE;
-
-    *lpCandidate = data->IMC.cfCandForm[dwIndex];
-
-    return TRUE;
+    ImmUnlockIMC(hIMC);
+    return ret;
 }
 
 static VOID APIENTRY LogFontAnsiToWide(const LOGFONTA *plfA, LPLOGFONTW plfW)
