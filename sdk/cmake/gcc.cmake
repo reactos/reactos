@@ -299,6 +299,11 @@ function(set_module_type_toolchain MODULE TYPE)
         -Wl,--major-image-version,5 -Wl,--minor-image-version,01 -Wl,--major-os-version,5 -Wl,--minor-os-version,01)
 
     if(TYPE IN_LIST KERNEL_MODULE_TYPES)
+        # "kmdfdriver" is treated the same way as "wdmdriver" in toolchain-specific set_module_type
+        if(${TYPE} STREQUAL "kmdfdriver")
+            set(TYPE "wdmdriver")
+        endif()
+
         target_link_options(${MODULE} PRIVATE -Wl,--exclude-all-symbols,-file-alignment=0x1000,-section-alignment=0x1000)
 
         if(${TYPE} STREQUAL "wdmdriver")
