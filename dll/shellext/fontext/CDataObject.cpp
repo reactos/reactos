@@ -58,7 +58,7 @@ HRESULT _CDataObject_CreateInstance(PCIDLIST_ABSOLUTE folder, UINT cidl, PCUITEM
         const FontPidlEntry* fontEntry = _FontFromIL(apidl[n]);
         if (fontEntry)
         {
-            CStringW File = g_FontCache->Filename(fontEntry, true);
+            CStringW File = g_FontCache->Filename(g_FontCache->Find(fontEntry), true);
             if (!File.IsEmpty())
             {
                 // Now append the path (+ nullterminator) to the buffer
