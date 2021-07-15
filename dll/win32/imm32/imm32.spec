@@ -1,3 +1,4 @@
+@ stdcall CtfImmIsCiceroEnabled()
 @ stdcall -stub ImmActivateLayout(long)
 @ stdcall ImmAssociateContext(ptr ptr)
 @ stdcall ImmAssociateContextEx(ptr ptr long)

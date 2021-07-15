@@ -1005,6 +1005,11 @@ LRESULT WINAPI ImmEscapeW(
 #define ROUNDUP4(n) (((n) + 3) & ~3)  /* DWORD alignment */
 
 HANDLE g_hImm32Heap = NULL;
+DWORD g_dwImm32Flags = 0;
+
+/* flags for g_dwImm32Flags */
+#define IMM32_FLAG_UNKNOWN 0x4
+#define IMM32_FLAG_CICERO_ENABLED 0x20
 
 LPVOID APIENTRY Imm32HeapAlloc(DWORD dwFlags, DWORD dwBytes)
 {
@@ -1021,6 +1026,11 @@ static DWORD_PTR APIENTRY
 Imm32GetThreadState(DWORD Routine)
 {
     return NtUserGetThreadState(Routine);
+}
+
+static DWORD_PTR APIENTRY Imm32QueryWindow(HWND hWnd, DWORD Index)
+{
+    return NtUserQueryWindow(hWnd, Index);
 }
 
 static DWORD APIENTRY
@@ -2096,14 +2106,21 @@ void WINAPI __wine_unregister_window(HWND hwnd)
  */
 HWND WINAPI ImmGetDefaultIMEWnd(HWND hWnd)
 {
-    HWND ret;
-    IMMThreadData* thread_data = IMM_GetThreadData(hWnd, 0);
-    if (!thread_data)
+    if (!(g_dwImm32Flags & IMM32_FLAG_UNKNOWN))
         return NULL;
-    ret = thread_data->hwndDefault;
-    LeaveCriticalSection(&threaddata_cs);
-    TRACE("Default is %p\n",ret);
-    return ret;
+
+    if (hWnd == NULL)
+        return (HWND)Imm32GetThreadState(THREADSTATE_ACTIVEWINDOW);
+
+    return (HWND)Imm32QueryWindow(hWnd, QUERY_WINDOW_DEFAULT_IME);
+}
+
+/***********************************************************************
+ *		CtfImmIsCiceroEnabled (IMM32.@)
+ */
+BOOL WINAPI CtfImmIsCiceroEnabled(VOID)
+{
+    return !!(g_dwImm32Flags & IMM32_FLAG_CICERO_ENABLED);
 }
 
 /***********************************************************************
