@@ -1616,122 +1616,12 @@ SamrQueryInformationDomain(IN SAMPR_HANDLE DomainHandle,
                            IN DOMAIN_INFORMATION_CLASS DomainInformationClass,
                            OUT PSAMPR_DOMAIN_INFO_BUFFER *Buffer)
 {
-    PSAM_DB_OBJECT DomainObject;
-    ACCESS_MASK DesiredAccess;
-    NTSTATUS Status;
-
     TRACE("SamrQueryInformationDomain(%p %lu %p)\n",
           DomainHandle, DomainInformationClass, Buffer);
 
-    switch (DomainInformationClass)
-    {
-        case DomainPasswordInformation:
-        case DomainLockoutInformation:
-            DesiredAccess = DOMAIN_READ_PASSWORD_PARAMETERS;
-            break;
-
-        case DomainGeneralInformation:
-        case DomainLogoffInformation:
-        case DomainOemInformation:
-        case DomainNameInformation:
-        case DomainReplicationInformation:
-        case DomainServerRoleInformation:
-        case DomainModifiedInformation:
-        case DomainStateInformation:
-        case DomainModifiedInformation2:
-            DesiredAccess = DOMAIN_READ_OTHER_PARAMETERS;
-            break;
-
-        case DomainGeneralInformation2:
-            DesiredAccess = DOMAIN_READ_PASSWORD_PARAMETERS |
-                            DOMAIN_READ_OTHER_PARAMETERS;
-            break;
-
-        default:
-            return STATUS_INVALID_INFO_CLASS;
-    }
-
-    RtlAcquireResourceShared(&SampResource,
-                             TRUE);
-
-    /* Validate the server handle */
-    Status = SampValidateDbObject(DomainHandle,
-                                  SamDbDomainObject,
-                                  DesiredAccess,
-                                  &DomainObject);
-    if (!NT_SUCCESS(Status))
-        goto done;
-
-    switch (DomainInformationClass)
-    {
-        case DomainPasswordInformation:
-            Status = SampQueryDomainPassword(DomainObject,
-                                             Buffer);
-            break;
-
-        case DomainGeneralInformation:
-            Status = SampQueryDomainGeneral(DomainObject,
-                                            Buffer);
-            break;
-
-        case DomainLogoffInformation:
-            Status = SampQueryDomainLogoff(DomainObject,
-                                           Buffer);
-            break;
-
-        case DomainOemInformation:
-            Status = SampQueryDomainOem(DomainObject,
-                                        Buffer);
-            break;
-
-        case DomainNameInformation:
-            Status = SampQueryDomainName(DomainObject,
-                                         Buffer);
-            break;
-
-        case DomainReplicationInformation:
-            Status = SampQueryDomainReplication(DomainObject,
-                                                Buffer);
-            break;
-
-        case DomainServerRoleInformation:
-            Status = SampQueryDomainServerRole(DomainObject,
-                                               Buffer);
-            break;
-
-        case DomainModifiedInformation:
-            Status = SampQueryDomainModified(DomainObject,
-                                             Buffer);
-            break;
-
-        case DomainStateInformation:
-            Status = SampQueryDomainState(DomainObject,
-                                          Buffer);
-            break;
-
-        case DomainGeneralInformation2:
-            Status = SampQueryDomainGeneral2(DomainObject,
-                                             Buffer);
-            break;
-
-        case DomainLockoutInformation:
-            Status = SampQueryDomainLockout(DomainObject,
-                                            Buffer);
-            break;
-
-        case DomainModifiedInformation2:
-            Status = SampQueryDomainModified2(DomainObject,
-                                              Buffer);
-            break;
-
-        default:
-            Status = STATUS_NOT_IMPLEMENTED;
-    }
-
-done:
-    RtlReleaseResource(&SampResource);
-
-    return Status;
+    return SamrQueryInformationDomain2(DomainHandle,
+                                       DomainInformationClass,
+                                       Buffer);
 }
 
 
@@ -8572,12 +8462,122 @@ SamrQueryInformationDomain2(IN SAMPR_HANDLE DomainHandle,
                             IN DOMAIN_INFORMATION_CLASS DomainInformationClass,
                             OUT PSAMPR_DOMAIN_INFO_BUFFER *Buffer)
 {
+    PSAM_DB_OBJECT DomainObject;
+    ACCESS_MASK DesiredAccess;
+    NTSTATUS Status;
+
     TRACE("SamrQueryInformationDomain2(%p %lu %p)\n",
           DomainHandle, DomainInformationClass, Buffer);
 
-    return SamrQueryInformationDomain(DomainHandle,
-                                      DomainInformationClass,
-                                      Buffer);
+    switch (DomainInformationClass)
+    {
+        case DomainPasswordInformation:
+        case DomainLockoutInformation:
+            DesiredAccess = DOMAIN_READ_PASSWORD_PARAMETERS;
+            break;
+
+        case DomainGeneralInformation:
+        case DomainLogoffInformation:
+        case DomainOemInformation:
+        case DomainNameInformation:
+        case DomainReplicationInformation:
+        case DomainServerRoleInformation:
+        case DomainModifiedInformation:
+        case DomainStateInformation:
+        case DomainModifiedInformation2:
+            DesiredAccess = DOMAIN_READ_OTHER_PARAMETERS;
+            break;
+
+        case DomainGeneralInformation2:
+            DesiredAccess = DOMAIN_READ_PASSWORD_PARAMETERS |
+                            DOMAIN_READ_OTHER_PARAMETERS;
+            break;
+
+        default:
+            return STATUS_INVALID_INFO_CLASS;
+    }
+
+    RtlAcquireResourceShared(&SampResource,
+                             TRUE);
+
+    /* Validate the server handle */
+    Status = SampValidateDbObject(DomainHandle,
+                                  SamDbDomainObject,
+                                  DesiredAccess,
+                                  &DomainObject);
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    switch (DomainInformationClass)
+    {
+        case DomainPasswordInformation:
+            Status = SampQueryDomainPassword(DomainObject,
+                                             Buffer);
+            break;
+
+        case DomainGeneralInformation:
+            Status = SampQueryDomainGeneral(DomainObject,
+                                            Buffer);
+            break;
+
+        case DomainLogoffInformation:
+            Status = SampQueryDomainLogoff(DomainObject,
+                                           Buffer);
+            break;
+
+        case DomainOemInformation:
+            Status = SampQueryDomainOem(DomainObject,
+                                        Buffer);
+            break;
+
+        case DomainNameInformation:
+            Status = SampQueryDomainName(DomainObject,
+                                         Buffer);
+            break;
+
+        case DomainReplicationInformation:
+            Status = SampQueryDomainReplication(DomainObject,
+                                                Buffer);
+            break;
+
+        case DomainServerRoleInformation:
+            Status = SampQueryDomainServerRole(DomainObject,
+                                               Buffer);
+            break;
+
+        case DomainModifiedInformation:
+            Status = SampQueryDomainModified(DomainObject,
+                                             Buffer);
+            break;
+
+        case DomainStateInformation:
+            Status = SampQueryDomainState(DomainObject,
+                                          Buffer);
+            break;
+
+        case DomainGeneralInformation2:
+            Status = SampQueryDomainGeneral2(DomainObject,
+                                             Buffer);
+            break;
+
+        case DomainLockoutInformation:
+            Status = SampQueryDomainLockout(DomainObject,
+                                            Buffer);
+            break;
+
+        case DomainModifiedInformation2:
+            Status = SampQueryDomainModified2(DomainObject,
+                                              Buffer);
+            break;
+
+        default:
+            Status = STATUS_NOT_IMPLEMENTED;
+    }
+
+done:
+    RtlReleaseResource(&SampResource);
+
+    return Status;
 }
 
 
