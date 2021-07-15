@@ -165,9 +165,9 @@
 @ stdcall LdrOpenImageFileOptionsKey(ptr long ptr) ; 5.2 SP1 and higher
 @ stub -version=0x600+ -arch=x86_64 LdrProcessInitializationComplete
 @ stdcall LdrProcessRelocationBlock(ptr long ptr long)
-@ stdcall LdrQueryImageFileExecutionOptions(ptr str long ptr long ptr)
-@ stdcall LdrQueryImageFileExecutionOptionsEx(ptr ptr long ptr long ptr long)
-@ stdcall LdrQueryImageFileKeyOption(ptr ptr long ptr long ptr)
+@ stdcall LdrQueryImageFileExecutionOptions(ptr wstr long ptr long ptr)
+@ stdcall LdrQueryImageFileExecutionOptionsEx(ptr wstr long ptr long ptr long)
+@ stdcall LdrQueryImageFileKeyOption(ptr wstr long ptr long ptr)
 @ stdcall -stub -version=0x600+ LdrQueryModuleServiceTags(ptr ptr ptr)
 @ stdcall LdrQueryProcessModuleInformation(ptr long ptr)
 @ stdcall -stub -version=0x600+ LdrRegisterDllNotification(long ptr ptr ptr)
@@ -186,7 +186,7 @@
 @ stdcall LdrUnloadDll(ptr)
 @ stdcall LdrUnlockLoaderLock(long long)
 @ stdcall -stub -version=0x600+ LdrUnregisterDllNotification(ptr)
-@ stdcall LdrVerifyImageMatchesChecksum(ptr long long long)
+@ stdcall LdrVerifyImageMatchesChecksum(ptr ptr ptr ptr)
 @ stdcall -stub -version=0x600+ LdrVerifyImageMatchesChecksumEx(ptr ptr)
 @ stub -version=0x600+ LdrpResGetMappingSize
 @ stub -version=0x600+ LdrpResGetRCConfig

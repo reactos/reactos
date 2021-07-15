@@ -3558,7 +3558,7 @@ StartScan:
         (NtCurrentPeb()->ReadImageFileExecOptions))
     {
         /* Let's do this! Attempt to open IFEO */
-        IFEOStatus = LdrOpenImageFileOptionsKey(&PathName, 0, &KeyHandle);
+        IFEOStatus = LdrOpenImageFileOptionsKey(&PathName, FALSE, &KeyHandle);
         if (!NT_SUCCESS(IFEOStatus))
         {
             /* We failed, set the flag so we store this in the parameters */

@@ -178,7 +178,7 @@ LdrQueryImageFileExecutionOptions(
     _In_ PUNICODE_STRING SubKey,
     _In_ PCWSTR ValueName,
     _In_ ULONG ValueSize,
-    _Out_ PVOID Buffer,
+    _Out_opt_ PVOID Buffer,
     _In_ ULONG BufferSize,
     _Out_opt_ PULONG RetunedLength
 );
@@ -238,7 +238,7 @@ LdrQueryImageFileKeyOption(
     _In_ HANDLE KeyHandle,
     _In_ PCWSTR ValueName,
     _In_ ULONG Type,
-    _Out_ PVOID Buffer,
+    _Out_opt_ PVOID Buffer,
     _In_ ULONG BufferSize,
     _Out_opt_ PULONG ReturnedLength
 );

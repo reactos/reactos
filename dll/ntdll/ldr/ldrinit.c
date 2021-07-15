@@ -109,9 +109,10 @@ extern BOOLEAN RtlpUse16ByteSLists;
  */
 NTSTATUS
 NTAPI
-LdrOpenImageFileOptionsKey(IN PUNICODE_STRING SubKey,
-                           IN BOOLEAN Wow64,
-                           OUT PHANDLE NewKeyHandle)
+LdrOpenImageFileOptionsKey(
+    _In_ PUNICODE_STRING SubKey,
+    _In_ BOOLEAN Wow64,
+    _Out_ PHANDLE NewKeyHandle)
 {
     PHANDLE RootKeyLocation;
     HANDLE RootKey;
@@ -169,7 +170,7 @@ LdrOpenImageFileOptionsKey(IN PUNICODE_STRING SubKey,
                                    NULL);
 
         /* Open the setting key */
-        Status = ZwOpenKey((PHANDLE)NewKeyHandle, GENERIC_READ, &ObjectAttributes);
+        Status = ZwOpenKey(NewKeyHandle, GENERIC_READ, &ObjectAttributes);
     }
 
     /* Return to caller */
@@ -181,12 +182,13 @@ LdrOpenImageFileOptionsKey(IN PUNICODE_STRING SubKey,
  */
 NTSTATUS
 NTAPI
-LdrQueryImageFileKeyOption(IN HANDLE KeyHandle,
-                           IN PCWSTR ValueName,
-                           IN ULONG Type,
-                           OUT PVOID Buffer,
-                           IN ULONG BufferSize,
-                           OUT PULONG ReturnedLength OPTIONAL)
+LdrQueryImageFileKeyOption(
+    _In_ HANDLE KeyHandle,
+    _In_ PCWSTR ValueName,
+    _In_ ULONG Type,
+    _Out_opt_ PVOID Buffer,
+    _In_ ULONG BufferSize,
+    _Out_opt_ PULONG ReturnedLength)
 {
     ULONG KeyInfo[256];
     UNICODE_STRING ValueNameString, IntegerString;
@@ -345,13 +347,14 @@ LdrQueryImageFileKeyOption(IN HANDLE KeyHandle,
  */
 NTSTATUS
 NTAPI
-LdrQueryImageFileExecutionOptionsEx(IN PUNICODE_STRING SubKey,
-                                    IN PCWSTR ValueName,
-                                    IN ULONG Type,
-                                    OUT PVOID Buffer,
-                                    IN ULONG BufferSize,
-                                    OUT PULONG ReturnedLength OPTIONAL,
-                                    IN BOOLEAN Wow64)
+LdrQueryImageFileExecutionOptionsEx(
+    _In_ PUNICODE_STRING SubKey,
+    _In_ PCWSTR ValueName,
+    _In_ ULONG Type,
+    _Out_opt_ PVOID Buffer,
+    _In_ ULONG BufferSize,
+    _Out_opt_ PULONG ReturnedLength,
+    _In_ BOOLEAN Wow64)
 {
     NTSTATUS Status;
     HANDLE KeyHandle;
@@ -383,12 +386,13 @@ LdrQueryImageFileExecutionOptionsEx(IN PUNICODE_STRING SubKey,
  */
 NTSTATUS
 NTAPI
-LdrQueryImageFileExecutionOptions(IN PUNICODE_STRING SubKey,
-                                  IN PCWSTR ValueName,
-                                  IN ULONG Type,
-                                  OUT PVOID Buffer,
-                                  IN ULONG BufferSize,
-                                  OUT PULONG ReturnedLength OPTIONAL)
+LdrQueryImageFileExecutionOptions(
+    _In_ PUNICODE_STRING SubKey,
+    _In_ PCWSTR ValueName,
+    _In_ ULONG Type,
+    _Out_opt_ PVOID Buffer,
+    _In_ ULONG BufferSize,
+    _Out_opt_ PULONG ReturnedLength)
 {
     /* Call the newer function */
     return LdrQueryImageFileExecutionOptionsEx(SubKey,
@@ -1417,7 +1421,7 @@ LdrpInitializeExecutionOptions(PUNICODE_STRING ImagePathName, PPEB Peb, PHANDLE 
 {
     NTSTATUS Status;
     HANDLE KeyHandle;
-    ULONG ExecuteOptions, MinimumStackCommit = 0, GlobalFlag;
+    ULONG ExecuteOptions, MinimumStackCommit, GlobalFlag;
 
     /* Return error if we were not provided a pointer where to save the options key handle */
     if (!OptionsKey) return STATUS_INVALID_HANDLE;
@@ -1426,11 +1430,13 @@ LdrpInitializeExecutionOptions(PUNICODE_STRING ImagePathName, PPEB Peb, PHANDLE 
     *OptionsKey = NULL;
 
     /* Open the options key */
-    Status = LdrOpenImageFileOptionsKey(ImagePathName, 0, &KeyHandle);
+    Status = LdrOpenImageFileOptionsKey(ImagePathName, FALSE, &KeyHandle);
 
     /* Save it if it was opened successfully */
     if (NT_SUCCESS(Status))
         *OptionsKey = KeyHandle;
+    else
+        KeyHandle = NULL;
 
     if (KeyHandle)
     {
@@ -1479,15 +1485,15 @@ LdrpInitializeExecutionOptions(PUNICODE_STRING ImagePathName, PPEB Peb, PHANDLE 
                                    sizeof(RtlpShutdownProcessFlags),
                                    NULL);
 
-        LdrQueryImageFileKeyOption(KeyHandle,
-                                   L"MinimumStackCommitInBytes",
-                                   REG_DWORD,
-                                   &MinimumStackCommit,
-                                   sizeof(MinimumStackCommit),
-                                   NULL);
+        Status = LdrQueryImageFileKeyOption(KeyHandle,
+                                            L"MinimumStackCommitInBytes",
+                                            REG_DWORD,
+                                            &MinimumStackCommit,
+                                            sizeof(MinimumStackCommit),
+                                            NULL);
 
         /* Update PEB's minimum stack commit if it's lower */
-        if (Peb->MinimumStackCommit < MinimumStackCommit)
+        if (NT_SUCCESS(Status) && Peb->MinimumStackCommit < MinimumStackCommit)
             Peb->MinimumStackCommit = MinimumStackCommit;
 
         /* Set the global flag */
@@ -1500,8 +1506,6 @@ LdrpInitializeExecutionOptions(PUNICODE_STRING ImagePathName, PPEB Peb, PHANDLE 
 
         if (NT_SUCCESS(Status))
             Peb->NtGlobalFlag = GlobalFlag;
-        else
-            GlobalFlag = 0;
 
         /* Call AVRF if necessary */
         if (Peb->NtGlobalFlag & (FLG_APPLICATION_VERIFIER | FLG_HEAP_PAGE_ALLOCS))
@@ -1519,6 +1523,7 @@ LdrpInitializeExecutionOptions(PUNICODE_STRING ImagePathName, PPEB Peb, PHANDLE 
         if (Peb->NtGlobalFlag & (FLG_APPLICATION_VERIFIER | FLG_HEAP_PAGE_ALLOCS))
         {
             /* Initialize app verifier package */
+            // FIXME: LdrpInitializeApplicationVerifierPackage() does not expect KeyHandle == NULL...
             Status = LdrpInitializeApplicationVerifierPackage(KeyHandle, Peb, TRUE, FALSE);
             if (!NT_SUCCESS(Status))
             {
@@ -1812,6 +1817,11 @@ LdrpInitializeProcess(IN PCONTEXT Context,
 
     /* Get the execution options */
     Status = LdrpInitializeExecutionOptions(&ImagePathName, Peb, &OptionsKey);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("LdrpInitializeExecutionOptions() failed. Status 0x%lX\n", Status);
+        return Status;
+    }
 
     /* Check if this is a .NET executable */
     if (RtlImageDirectoryEntryToData(Peb->ImageBaseAddress,
