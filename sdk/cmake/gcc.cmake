@@ -305,7 +305,7 @@ function(set_module_type_toolchain MODULE TYPE)
     if(TYPE IN_LIST KERNEL_MODULE_TYPES)
         target_link_options(${MODULE} PRIVATE -Wl,--exclude-all-symbols,-file-alignment=0x1000,-section-alignment=0x1000)
 
-        if(${TYPE} STREQUAL "wdmdriver")
+        if((${TYPE} STREQUAL "wdmdriver") OR (${TYPE} STREQUAL "kmdfdriver"))
             target_link_options(${MODULE} PRIVATE "-Wl,--wdmdriver")
         endif()
 
