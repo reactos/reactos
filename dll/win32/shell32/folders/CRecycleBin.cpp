@@ -1125,18 +1125,29 @@ HRESULT WINAPI SHEmptyRecycleBinW(HWND hwnd, LPCWSTR pszRootPath, DWORD dwFlags)
         ret = RegGetValueW(HKEY_CURRENT_USER,
                            L"AppEvents\\Schemes\\Apps\\Explorer\\EmptyRecycleBin\\.Current",
                            NULL,
-                           RRF_RT_REG_SZ,
+                           RRF_RT_REG_SZ | RRF_RT_REG_EXPAND_SZ | RRF_NOEXPAND,
                            &dwType,
-                           (PVOID)szPath,
+                           (PVOID)szBuffer,
                            &dwSize);
         if (ret != ERROR_SUCCESS)
             return S_OK;
 
-        if (dwType != REG_EXPAND_SZ) /* type dismatch */
+        if (dwType != REG_SZ && dwType != REG_EXPAND_SZ) /* Check whether the type is valid */
             return S_OK;
 
-        szPath[_countof(szPath)-1] = L'\0';
-        PlaySoundW(szPath, NULL, SND_FILENAME);
+        if (dwType == REG_EXPAND_SZ)
+        {
+            if (!ExpandEnvironmentStringsW(szBuffer, szPath, _countof(szPath)))
+                return S_OK;
+
+            szPath[_countof(szPath)-1] = L'\0';
+            PlaySoundW(szPath, NULL, SND_FILENAME);
+        }
+        else if (dwType == REG_SZ)
+        {
+            szBuffer[_countof(szBuffer)-1] = L'\0';
+            PlaySoundW(szBuffer, NULL, SND_FILENAME);
+        }
     }
     return S_OK;
 }
