@@ -3054,14 +3054,12 @@ VOID WINAPI ImmUnlockImeDpi(PIMEDPI pImeDpi)
         {
             pNext = pEntry->pNext;
             if (pNext == pImeDpi)
+            {
+                pEntry->pNext = pImeDpi->pNext;
                 break;
+            }
             pEntry = pNext;
         } while (pEntry);
-
-        if (pEntry)
-        {
-            pEntry->pNext = pImeDpi->pNext;
-        }
     }
 
     Imm32FreeImeDpi(pImeDpi, TRUE);
