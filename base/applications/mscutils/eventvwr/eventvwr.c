@@ -3271,7 +3271,7 @@ InitInstance(HINSTANCE hInstance)
     sfn.lpstrFilter     = szSaveFilter;
     sfn.lpstrInitialDir = NULL;
     sfn.Flags           = OFN_EXPLORER | OFN_HIDEREADONLY | OFN_SHAREAWARE;
-    sfn.lpstrDefExt     = NULL;
+    sfn.lpstrDefExt     = L"evt";
 
     ShowWindow(hwndMainWindow, Settings.wpPos.showCmd);
     UpdateWindow(hwndMainWindow);
