@@ -3700,7 +3700,7 @@ WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                     DWORD dwCmdID = TrackPopupMenuEx(hCtxMenu,
                                                      TPM_LEFTALIGN | TPM_TOPALIGN | TPM_NONOTIFY | TPM_RETURNCMD,
                                                      xPos, yPos, hWnd, NULL);
-                    SendMessage(hWnd, WM_COMMAND, (WPARAM)dwCmdID, (LPARAM)hwndTreeView);
+                    SendMessageW(hWnd, WM_COMMAND, (WPARAM)dwCmdID, (LPARAM)hwndTreeView);
                 }
             }
             break;
