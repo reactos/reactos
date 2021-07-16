@@ -2990,23 +2990,20 @@ PIMEDPI WINAPI ImmLockImeDpi(HKL hKL)
         pImeDpi = g_pImeDpiList;
         do
         {
-            if (pImeDpi->hKL == hKL)
+            if (pImeDpi->hKL == hKL) /* found */
+            {
+                /* lock if possible */
+                if (pImeDpi->dwFlags & IMEDPI_FLAG_UNKNOWN)
+                    pImeDpi = NULL;
+                else
+                    ++(pImeDpi->cLockObj);
                 break;
+            }
             pImeDpi = pImeDpi->pNext;
         } while (pImeDpi);
-
-        /* lock if possible */
-        if (pImeDpi)
-        {
-            if (pImeDpi->dwFlags & IMEDPI_FLAG_UNKNOWN)
-                pImeDpi = NULL;
-            else
-                ++(pImeDpi->cLockObj);
-        }
     }
 
     RtlLeaveCriticalSection(&g_cs);
-
     return pImeDpi;
 }
 
