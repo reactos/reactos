@@ -3050,7 +3050,7 @@ VOID WINAPI ImmUnlockImeDpi(PIMEDPI pImeDpi)
         do
         {
             pNext = pEntry->pNext;
-            if (pNext == pImeDpi)
+            if (pNext == pImeDpi) /* found */
             {
                 pEntry->pNext = pImeDpi->pNext;
                 break;
@@ -3083,7 +3083,7 @@ Imm32NotifyAction(HIMC hIMC, HWND hwnd, DWORD dwAction, DWORD_PTR dwIndex, DWORD
             pImeDpi = ImmLockImeDpi(hKL);
             if (pImeDpi)
             {
-                /* do notify action */
+                /* do notify */
                 pImeDpi->NotifyIME(hIMC, dwAction, dwIndex, dwValue);
 
                 /* unlock */
