@@ -3095,10 +3095,9 @@ Imm32NotifyAction(HIMC hIMC, HWND hwnd, DWORD dwAction, DWORD_PTR dwIndex, DWORD
         }
     }
 
-    if (hwnd == NULL || dwCommand == 0)
-        return TRUE;
+    if (hwnd && dwCommand != 0)
+        SendMessageW(hwnd, WM_IME_NOTIFY, dwCommand, dwData);
 
-    SendMessageW(hwnd, WM_IME_NOTIFY, dwCommand, dwData);
     return TRUE;
 }
 
