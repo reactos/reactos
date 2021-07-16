@@ -3673,8 +3673,8 @@ WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         case WM_INITMENUPOPUP:
             lParam = lParam;
             break;
-
 #endif
+
         case WM_CONTEXTMENU:
         {
             RECT rc;
