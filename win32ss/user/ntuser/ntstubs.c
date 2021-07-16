@@ -630,7 +630,7 @@ Quit:
 DWORD
 APIENTRY
 NtUserQueryInputContext(
-    DWORD dwUnknown1,
+    HIMC hIMC,
     DWORD dwUnknown2)
 {
     STUB;

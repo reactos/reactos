@@ -50,9 +50,9 @@ NtUserGetImeHotKey(IN DWORD dwHotKey,
 DWORD
 APIENTRY
 NtUserNotifyIMEStatus(
-   DWORD Unknown0,
-   DWORD Unknown1,
-   DWORD Unknown2)
+    HWND hwnd,
+    HIMC hIMC,
+    DWORD dwConversion)
 {
    STUB
 

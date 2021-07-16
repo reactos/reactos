@@ -72,7 +72,7 @@
 @ stdcall ImmLockClientImc(ptr)
 @ stdcall ImmLockIMC(ptr)
 @ stdcall ImmLockIMCC(ptr)
-@ stdcall -stub ImmLockImeDpi(long)
+@ stdcall ImmLockImeDpi(ptr)
 @ stdcall ImmNotifyIME(ptr long long long)
 @ stub ImmPenAuxInput
 @ stdcall ImmProcessKey(ptr long long long long)
@@ -106,7 +106,7 @@
 @ stdcall ImmUnlockClientImc(ptr)
 @ stdcall ImmUnlockIMC(ptr)
 @ stdcall ImmUnlockIMCC(ptr)
-@ stdcall -stub ImmUnlockImeDpi(ptr)
+@ stdcall ImmUnlockImeDpi(ptr)
 @ stdcall ImmUnregisterWordA(long str long str)
 @ stdcall ImmUnregisterWordW(long wstr long wstr)
 @ stdcall -stub ImmWINNLSEnableIME(ptr long)
