@@ -18,56 +18,62 @@
 
 /* GLOBALS ********************************************************************/
 
-BOOLEAN HalpClockSetMSRate;
-UCHAR HalpNextMSRate;
-UCHAR HalpCurrentRate = 9;  /* Initial rate  9: 128 Hz / 7.8 ms */
-ULONG HalpCurrentTimeIncrement;
-static UCHAR RtcMinimumClockRate = 8;  /* Minimum rate  8: 256 Hz / 3.9 ms */
-static UCHAR RtcMaximumClockRate = 12; /* Maximum rate 12: 16 Hz / 62.5 ms */
+static const UCHAR RtcMinimumClockRate = 6;  /* Minimum rate  6: 1024 Hz / 0.97 ms */
+static const UCHAR RtcMaximumClockRate = 10; /* Maximum rate 10: 64 Hz / 15.6 ms */
+static UCHAR HalpCurrentClockRate = 10;  /* Initial rate  10: 64 Hz / 15.6 ms */
+static ULONG HalpCurrentTimeIncrement;
+static ULONG HalpMinimumTimeIncrement;
+static ULONG HalpMaximumTimeIncrement;
+static ULONG HalpCurrentFractionalIncrement;
+static ULONG HalpRunningFraction;
+static BOOLEAN HalpSetClockRate;
+static UCHAR HalpNextClockRate;
 
 /*!
     \brief Converts the CMOS RTC rate into the time increment in 100ns intervals.
 
-    Rate Freqency Interval (ms)  Result
-    -------------------------------------
+    Rate Frequency Interval (ms) Precise increment (0.1ns)
+    ------------------------------------------------------
      0   disabled
-     1   32768      0.03052          305
-     2   16384      0.06103          610
-     3    8192      0.12207         1221
-     4    4096      0.24414         2441
-     5    2048      0.48828         4883
-     6    1024      0.97656         9766
-     7     512      1.95313        19531
-     8     256      3.90625        39063
-     9     128      7.8125         78125
-    10      64     15.6250        156250
-    11      32     31.25          312500
-    12      16     62.5           625000
-    13       8    125            1250000
-    14       4    250            2500000
-    15       2    500            5000000
+     1   32768      0.03052            305,175
+     2   16384      0.06103            610,351
+     3    8192      0.12207          1,220,703
+     4    4096      0.24414          2,441,406
+     5    2048      0.48828          4,882,812
+     6    1024      0.97656          9,765,625 <- minimum
+     7     512      1.95313         19,531,250
+     8     256      3.90625         39,062,500
+     9     128      7.8125          78,125,000
+    10      64     15.6250         156,250,000 <- maximum / default
+    11      32     31.25           312,500,000
+    12      16     62.5            625,000,000
+    13       8    125            1,250,000,000
+    14       4    250            2,500,000,000
+    15       2    500            5,000,000,000
 
 */
 FORCEINLINE
 ULONG
-RtcClockRateToIncrement(UCHAR Rate)
+RtcClockRateToPreciseIncrement(UCHAR Rate)
 {
     /* Calculate frequency */
-    ULONG Freqency = 32768 >> (Rate - 1);
+    ULONG Frequency = 32768 >> (Rate - 1);
 
-    /* Calculate interval in 100ns interval: Interval = (1 / Frequency) * 10000000
-       This formula will round properly, instead of truncating. */
-    return (10000000 + (Freqency/2)) / Freqency;
+    /* Calculate interval in 0.1ns interval: Interval = (1 / Frequency) * 10,000,000,000 */
+    return 10000000000ULL / Frequency;
 }
 
 VOID
 RtcSetClockRate(UCHAR ClockRate)
 {
     UCHAR RegisterA;
+    ULONG PreciseIncrement;
 
     /* Update the global values */
-    HalpCurrentRate = ClockRate;
-    HalpCurrentTimeIncrement = RtcClockRateToIncrement(ClockRate);
+    HalpCurrentClockRate = ClockRate;
+    PreciseIncrement = RtcClockRateToPreciseIncrement(ClockRate);
+    HalpCurrentTimeIncrement = PreciseIncrement / 1000;
+    HalpCurrentFractionalIncrement = PreciseIncrement % 1000;
 
     /* Acquire CMOS lock */
     HalpAcquireCmosSpinLock();
@@ -113,14 +119,17 @@ HalpInitializeClock(VOID)
     HalpReleaseCmosSpinLock();
 
     /* Set initial rate */
-    RtcSetClockRate(HalpCurrentRate);
+    RtcSetClockRate(HalpCurrentClockRate);
 
     /* Restore interrupt state */
     __writeeflags(EFlags);
 
+    /* Calculate minumum and maximum increment */
+    HalpMinimumTimeIncrement = RtcClockRateToPreciseIncrement(RtcMinimumClockRate) / 1000;
+    HalpMaximumTimeIncrement = RtcClockRateToPreciseIncrement(RtcMaximumClockRate) / 1000;
+
     /* Notify the kernel about the maximum and minimum increment */
-    KeSetTimeIncrement(RtcClockRateToIncrement(RtcMaximumClockRate),
-                       RtcClockRateToIncrement(RtcMinimumClockRate));
+    KeSetTimeIncrement(HalpMaximumTimeIncrement, HalpMinimumTimeIncrement);
 
     /* Enable the timer interrupt */
     HalEnableSystemInterrupt(APIC_CLOCK_VECTOR, CLOCK_LEVEL, Latched);
@@ -155,14 +164,22 @@ HalpClockInterruptHandler(IN PKTRAP_FRAME TrapFrame)
     /* Save increment */
     LastIncrement = HalpCurrentTimeIncrement;
 
+    /* Check if the running fraction has accounted for 100 ns */
+    HalpRunningFraction += HalpCurrentFractionalIncrement;
+    if (HalpRunningFraction >= 1000)
+    {
+        LastIncrement++;
+        HalpRunningFraction -= 1000;
+    }
+
     /* Check if someone changed the time rate */
-    if (HalpClockSetMSRate)
+    if (HalpSetClockRate)
     {
         /* Set new clock rate */
-        RtcSetClockRate(HalpNextMSRate);
+        RtcSetClockRate(HalpNextClockRate);
 
         /* We're done */
-        HalpClockSetMSRate = FALSE;
+        HalpSetClockRate = FALSE;
     }
 
     /* Update the system time -- on x86 the kernel will exit this trap  */
@@ -174,18 +191,20 @@ NTAPI
 HalSetTimeIncrement(IN ULONG Increment)
 {
     UCHAR Rate;
+    ULONG CurrentIncrement;
 
     /* Lookup largest value below given Increment */
     for (Rate = RtcMinimumClockRate; Rate <= RtcMaximumClockRate; Rate++)
     {
         /* Check if this is the largest rate possible */
-        if (RtcClockRateToIncrement(Rate + 1) > Increment) break;
+        CurrentIncrement = RtcClockRateToPreciseIncrement(Rate + 1) / 1000;
+        if (Increment > CurrentIncrement) break;
     }
 
     /* Set the rate and tell HAL we want to change it */
-    HalpNextMSRate = Rate;
-    HalpClockSetMSRate = TRUE;
+    HalpNextClockRate = Rate;
+    HalpSetClockRate = TRUE;
 
     /* Return the real increment */
-    return RtcClockRateToIncrement(Rate);
+    return RtcClockRateToPreciseIncrement(Rate) / 1000;
 }
