@@ -42,7 +42,7 @@ END
 
 IDM_EVENTWR_CTX MENU
 BEGIN
-    POPUP "popup"
+    POPUP ""
     BEGIN
         MENUITEM "&Abrir o ficheiro de registo...", IDM_OPEN_EVENTLOG
         MENUITEM "&Guardar ficheiro de registo como...", IDM_SAVE_EVENTLOG

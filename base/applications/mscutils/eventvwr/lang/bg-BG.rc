@@ -40,7 +40,7 @@ END
 
 IDM_EVENTWR_CTX MENU
 BEGIN
-    POPUP "popup"
+    POPUP ""
     BEGIN
         MENUITEM "&Open Event Log...", IDM_OPEN_EVENTLOG
         MENUITEM "&Save Event Log as...", IDM_SAVE_EVENTLOG
