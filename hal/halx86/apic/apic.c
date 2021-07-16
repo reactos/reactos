@@ -463,12 +463,12 @@ ApicInitializeIOApic(VOID)
         HalpVectorToIndex[Vector] = APIC_FREE_VECTOR;
     }
 
-    /* Enable the timer interrupt */
+    /* Enable the timer interrupt (but keep it masked) */
     ReDirReg.Vector = APIC_CLOCK_VECTOR;
     ReDirReg.DeliveryMode = APIC_MT_Fixed;
     ReDirReg.DestinationMode = APIC_DM_Physical;
     ReDirReg.TriggerMode = APIC_TGM_Edge;
-    ReDirReg.Mask = 0;
+    ReDirReg.Mask = 1;
     ReDirReg.Destination = ApicRead(APIC_ID);
     ApicWriteIORedirectionEntry(APIC_CLOCK_INDEX, ReDirReg);
 }

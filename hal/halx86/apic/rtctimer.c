@@ -122,6 +122,8 @@ HalpInitializeClock(VOID)
     KeSetTimeIncrement(RtcClockRateToIncrement(RtcMaximumClockRate),
                        RtcClockRateToIncrement(RtcMinimumClockRate));
 
+    /* Enable the timer interrupt */
+    HalEnableSystemInterrupt(APIC_CLOCK_VECTOR, CLOCK_LEVEL, Latched);
 
     DPRINT1("Clock initialized\n");
 }
