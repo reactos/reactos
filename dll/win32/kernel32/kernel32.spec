@@ -1060,6 +1060,7 @@
 @ stdcall SetProcessShutdownParameters(long long)
 @ stdcall SetProcessWorkingSetSize(long long long)
 @ stdcall SetProcessWorkingSetSizeEx(long long long long)
+@ stdcall SetSearchPathMode(long)
 @ stdcall SetStdHandle(long long)
 @ stub -version=0x600+ SetStdHandleEx
 @ stdcall SetSystemFileCacheSize(long long long)

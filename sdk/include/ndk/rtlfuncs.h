@@ -4836,6 +4836,16 @@ RtlStatMemoryStream(
     _In_ ULONG Flags
 );
 
+//
+// Search functions
+//
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlSetSearchPathMode(
+    _In_ ULONG Flags
+);
+
 // Dummy functions
 NTSYSAPI
 HRESULT

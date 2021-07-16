@@ -4,6 +4,7 @@
  * FILE:            dll/win32/kernel32/client/path.c
  * PURPOSE:         Handles path APIs
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
+ *                  Oleg Dubinskiy (oleg.dubinskij2013@yandex.ua)
  */
 
 /* INCLUDES *******************************************************************/
@@ -1112,6 +1113,26 @@ GetFullPathNameW(IN LPCWSTR lpFileName,
                                 nBufferLength * sizeof(WCHAR),
                                 lpBuffer,
                                 lpFilePart) / sizeof(WCHAR);
+}
+
+/*
+ * @implemented
+ */
+BOOL
+WINAPI
+SetSearchPathMode(_In_ DWORD dwFlags)
+{
+    NTSTATUS Status;
+
+    /* Call Rtl to do the work */
+    Status = RtlSetSearchPathMode(dwFlags);
+    if (!NT_SUCCESS(Status))
+    {
+        BaseSetLastNTError(Status);
+        return FALSE;
+    }
+
+    return TRUE;
 }
 
 /*
