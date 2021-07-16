@@ -2973,6 +2973,9 @@ BOOL WINAPI ImmSetConversionStatus(
     return TRUE;
 }
 
+/***********************************************************************
+ *		ImmLockImeDpi (IMM32.@)
+ */
 PIMEDPI WINAPI ImmLockImeDpi(HKL hKL)
 {
     PIMEDPI pImeDpi = NULL;
@@ -3007,6 +3010,9 @@ PIMEDPI WINAPI ImmLockImeDpi(HKL hKL)
     return pImeDpi;
 }
 
+/***********************************************************************
+ *		ImmUnlockImeDpi (IMM32.@)
+ */
 VOID WINAPI ImmUnlockImeDpi(PIMEDPI pImeDpi)
 {
     PIMEDPI pEntry, pNext;
