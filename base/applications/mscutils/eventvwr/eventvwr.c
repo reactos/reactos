@@ -3688,7 +3688,8 @@ WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             hInfo.pt.x = xPos - rc.left;
             hInfo.pt.y = yPos - rc.top;
 
-            if ((hItem = TreeView_HitTest(hwndTreeView, &hInfo)))
+            hItem = TreeView_HitTest(hwndTreeView, &hInfo);
+            if (hItem)
             {
                 TreeView_SelectItem(hwndTreeView, hItem);
 
