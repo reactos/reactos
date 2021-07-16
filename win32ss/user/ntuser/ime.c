@@ -54,9 +54,8 @@ NtUserNotifyIMEStatus(
     HIMC hIMC,
     DWORD dwConversion)
 {
-   STUB
-
-   return 0;
+    TRACE("NtUserNotifyIMEStatus(%p, %p, 0x%lX)\n", hwnd, hIMC, dwConversion);
+    return 0;
 }
 
 
