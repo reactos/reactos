@@ -1231,6 +1231,7 @@ typedef struct IMEDPI /* unconfirmed */
     /* ... */
 } IMEDPI, *PIMEDPI;
 
+#ifndef _WIN64
 C_ASSERT(offsetof(IMEDPI, pNext) == 0x0);
 C_ASSERT(offsetof(IMEDPI, hInst) == 0x4);
 C_ASSERT(offsetof(IMEDPI, hKL) == 0x8);
@@ -1238,6 +1239,7 @@ C_ASSERT(offsetof(IMEDPI, cLockObj) == 0x4c);
 C_ASSERT(offsetof(IMEDPI, dwFlags) == 0x50);
 C_ASSERT(offsetof(IMEDPI, ImeDestroy) == 0x70);
 C_ASSERT(offsetof(IMEDPI, NotifyIME) == 0x88);
+#endif
 
 /* flags for IMEDPI.dwFlags */
 #define IMEDPI_FLAG_UNKNOWN 1
