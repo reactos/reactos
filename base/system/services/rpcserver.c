@@ -4,7 +4,7 @@
  * FILE:        base/system/services/rpcserver.c
  * PURPOSE:     RPC server interface for the advapi32 calls
  * COPYRIGHT:   Copyright 2005-2006 Eric Kohl
- *              Copyright 2006-2007 Hervé Poussineau <hpoussin@reactos.org>
+ *              Copyright 2006-2007 HervÃ© Poussineau <hpoussin@reactos.org>
  *              Copyright 2007 Ged Murphy <gedmurphy@reactos.org>
  */
 
@@ -2208,7 +2208,8 @@ RChangeServiceConfigW(
             if (*(LPWSTR)lpPassword != 0)
             {
                 /* Decrypt the password */
-                dwError = ScmDecryptPassword(lpPassword,
+                dwError = ScmDecryptPassword(hService,
+                                             lpPassword,
                                              dwPwSize,
                                              &lpClearTextPassword);
                 if (dwError != ERROR_SUCCESS)
@@ -2609,7 +2610,8 @@ RCreateServiceW(
         if (lpPassword != NULL && *(LPWSTR)lpPassword != 0)
         {
             /* Decrypt the password */
-            dwError = ScmDecryptPassword(lpPassword,
+            dwError = ScmDecryptPassword(hSCManager,
+                                         lpPassword,
                                          dwPwSize,
                                          &lpClearTextPassword);
             if (dwError != ERROR_SUCCESS)

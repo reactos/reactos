@@ -699,6 +699,7 @@ done:
 
 DWORD
 ScmDecryptPassword(
+    _In_ PVOID ContextHandle,
     _In_ PBYTE pPassword,
     _In_ DWORD dwPasswordSize,
     _Out_ PWSTR *pClearTextPassword)
@@ -709,7 +710,7 @@ ScmDecryptPassword(
     NTSTATUS Status;
 
     /* Get the session key */
-    Status = SystemFunction028(NULL,
+    Status = SystemFunction028(ContextHandle,
                                SessionKey);
     if (!NT_SUCCESS(Status))
     {

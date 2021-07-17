@@ -171,6 +171,7 @@ ScmRpcStatusToWinError(RPC_STATUS Status)
 static
 DWORD
 ScmEncryptPassword(
+    _In_ PVOID ContextHandle,
     _In_ PCWSTR pClearTextPassword,
     _Out_ PBYTE *pEncryptedPassword,
     _Out_ PDWORD pEncryptedPasswordSize)
@@ -181,7 +182,7 @@ ScmEncryptPassword(
     NTSTATUS Status;
 
     /* Get the session key */
-    Status = SystemFunction028(NULL,
+    Status = SystemFunction028(ContextHandle,
                                SessionKey);
     if (!NT_SUCCESS(Status))
     {
@@ -417,7 +418,8 @@ ChangeServiceConfigA(SC_HANDLE hService,
                             (int)(strlen(lpPassword) + 1));
 
         /* Encrypt the unicode password */
-        dwError = ScmEncryptPassword(lpPasswordW,
+        dwError = ScmEncryptPassword(hService,
+                                     lpPasswordW,
                                      &lpEncryptedPassword,
                                      &dwPasswordSize);
         if (dwError != ERROR_SUCCESS)
@@ -517,7 +519,8 @@ ChangeServiceConfigW(SC_HANDLE hService,
 
     if (lpPassword != NULL)
     {
-        dwError = ScmEncryptPassword(lpPassword,
+        dwError = ScmEncryptPassword(hService,
+                                     lpPassword,
                                      &lpEncryptedPassword,
                                      &dwPasswordSize);
         if (dwError != ERROR_SUCCESS)
@@ -742,7 +745,8 @@ CreateServiceA(SC_HANDLE hSCManager,
                             (int)(strlen(lpPassword) + 1));
 
         /* Encrypt the password */
-        dwError = ScmEncryptPassword(lpPasswordW,
+        dwError = ScmEncryptPassword(hSCManager,
+                                     lpPasswordW,
                                      &lpEncryptedPassword,
                                      &dwPasswordSize);
         if (dwError != ERROR_SUCCESS)
@@ -856,7 +860,8 @@ CreateServiceW(SC_HANDLE hSCManager,
     if (lpPassword != NULL)
     {
         /* Encrypt the password */
-        dwError = ScmEncryptPassword(lpPassword,
+        dwError = ScmEncryptPassword(hSCManager,
+                                     lpPassword,
                                      &lpEncryptedPassword,
                                      &dwPasswordSize);
         if (dwError != ERROR_SUCCESS)
