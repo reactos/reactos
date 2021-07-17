@@ -3662,7 +3662,7 @@ ImmGetImeInfoEx(PIMEINFOEX pImeInfoEx,
         {
             pTeb = NtCurrentTeb();
             if (pTeb->Win32ClientInfo[5] & 2)
-                return 0;
+                return FALSE;
             if (!bDisabled)
                 goto Quit;
             return FALSE;
