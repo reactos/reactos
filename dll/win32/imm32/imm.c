@@ -72,6 +72,38 @@ static VOID APIENTRY Imm32FreeImeDpi(PIMEDPI pImeDpi, BOOL bDestroy)
     pImeDpi->hInst = NULL;
 }
 
+static BOOL APIENTRY
+Imm32NotifyAction(HIMC hIMC, HWND hwnd, DWORD dwAction, DWORD_PTR dwIndex, DWORD_PTR dwValue,
+                  DWORD_PTR dwCommand, DWORD_PTR dwData)
+{
+    DWORD dwLayout;
+    HKL hKL;
+    PIMEDPI pImeDpi;
+
+    if (dwAction)
+    {
+        dwLayout = Imm32QueryInputContext(hIMC, 1);
+        if (dwLayout)
+        {
+            /* find keyboard layout and lock it */
+            hKL = GetKeyboardLayout(dwLayout);
+            pImeDpi = ImmLockImeDpi(hKL);
+            if (pImeDpi)
+            {
+                /* do notify */
+                pImeDpi->NotifyIME(hIMC, dwAction, dwIndex, dwValue);
+
+                ImmUnlockImeDpi(pImeDpi); /* unlock */
+            }
+        }
+    }
+
+    if (hwnd && dwCommand)
+        SendMessageW(hwnd, WM_IME_NOTIFY, dwCommand, dwData);
+
+    return TRUE;
+}
+
 typedef struct _tagImmHkl{
     struct list entry;
     HKL         hkl;
@@ -3063,39 +3095,6 @@ VOID WINAPI ImmUnlockImeDpi(PIMEDPI pImeDpi)
     HeapFree(g_hImm32Heap, 0, pImeDpi);
 
     RtlLeaveCriticalSection(&g_csImeDpi);
-}
-
-static BOOL APIENTRY
-Imm32NotifyAction(HIMC hIMC, HWND hwnd, DWORD dwAction, DWORD_PTR dwIndex, DWORD_PTR dwValue,
-                  DWORD_PTR dwCommand, DWORD_PTR dwData)
-{
-    DWORD dwLayout;
-    HKL hKL;
-    PIMEDPI pImeDpi;
-
-    if (dwAction != 0)
-    {
-        dwLayout = Imm32QueryInputContext(hIMC, 1);
-        if (dwLayout != 0)
-        {
-            /* find keyboard layout and lock it */
-            hKL = GetKeyboardLayout(dwLayout);
-            pImeDpi = ImmLockImeDpi(hKL);
-            if (pImeDpi)
-            {
-                /* do notify */
-                pImeDpi->NotifyIME(hIMC, dwAction, dwIndex, dwValue);
-
-                /* unlock */
-                ImmUnlockImeDpi(pImeDpi);
-            }
-        }
-    }
-
-    if (hwnd && dwCommand != 0)
-        SendMessageW(hwnd, WM_IME_NOTIFY, dwCommand, dwData);
-
-    return TRUE;
 }
 
 /***********************************************************************

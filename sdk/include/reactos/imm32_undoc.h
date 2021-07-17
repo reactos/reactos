@@ -34,6 +34,8 @@ ImmGetImeInfoEx(PIMEINFOEX pImeInfoEx, IMEINFOEXCLASS SearchType, PVOID pvSearch
 
 PCLIENTIMC WINAPI ImmLockClientImc(HIMC hImc);
 VOID WINAPI ImmUnlockClientImc(PCLIENTIMC pClientImc);
+PIMEDPI WINAPI ImmLockImeDpi(HKL hKL);
+VOID WINAPI ImmUnlockImeDpi(PIMEDPI pImeDpi);
 
 #ifdef __cplusplus
 } // extern "C"
