@@ -47,7 +47,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(imm);
 #define IMM_INIT_MAGIC 0x19650412
 #define IMM_INVALID_CANDFORM ULONG_MAX
 
-RTL_CRITICAL_SECTION g_cs;
+RTL_CRITICAL_SECTION g_csImeDpi;
 PIMEDPI g_pImeDpiList = NULL;
 
 BOOL WINAPI User32InitializeImmEntryTable(DWORD);
@@ -2982,7 +2982,7 @@ PIMEDPI WINAPI ImmLockImeDpi(HKL hKL)
 
     TRACE("ImmLockImeDpi(%p)\n", hKL);
 
-    RtlEnterCriticalSection(&g_cs);
+    RtlEnterCriticalSection(&g_csImeDpi);
 
     if (g_pImeDpiList)
     {
@@ -3003,7 +3003,7 @@ PIMEDPI WINAPI ImmLockImeDpi(HKL hKL)
         } while (pImeDpi);
     }
 
-    RtlLeaveCriticalSection(&g_cs);
+    RtlLeaveCriticalSection(&g_csImeDpi);
     return pImeDpi;
 }
 
@@ -3019,13 +3019,13 @@ VOID WINAPI ImmUnlockImeDpi(PIMEDPI pImeDpi)
     if (pImeDpi == NULL)
         return;
 
-    RtlEnterCriticalSection(&g_cs);
+    RtlEnterCriticalSection(&g_csImeDpi);
 
     /* unlock */
     --(pImeDpi->cLockObj);
     if (pImeDpi->cLockObj != 0)
     {
-        RtlLeaveCriticalSection(&g_cs);
+        RtlLeaveCriticalSection(&g_csImeDpi);
         return;
     }
 
@@ -3034,7 +3034,7 @@ VOID WINAPI ImmUnlockImeDpi(PIMEDPI pImeDpi)
         if ((pImeDpi->dwFlags & IMEDPI_FLAG_UNKNOWN2) == 0 ||
             (pImeDpi->dwUnknown1 & 1) == 0)
         {
-            RtlLeaveCriticalSection(&g_cs);
+            RtlLeaveCriticalSection(&g_csImeDpi);
             return;
         }
     }
@@ -3062,7 +3062,7 @@ VOID WINAPI ImmUnlockImeDpi(PIMEDPI pImeDpi)
     Imm32FreeImeDpi(pImeDpi, TRUE);
     HeapFree(g_hImm32Heap, 0, pImeDpi);
 
-    RtlLeaveCriticalSection(&g_cs);
+    RtlLeaveCriticalSection(&g_csImeDpi);
 }
 
 static BOOL APIENTRY
