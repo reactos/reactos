@@ -3,10 +3,6 @@ if(ARCH STREQUAL "i386")
     list(APPEND LIBCNTPR_EXCEPT_ASM_SOURCE
         except/i386/chkstk_asm.s
     )
-    if(NOT MSVC)
-        list(APPEND LIBCNTPR_EXCEPT_ASM_SOURCE
-            except/i386/chkstk_ms.s)
-    endif()
     list(APPEND CRT_EXCEPT_ASM_SOURCE
         except/i386/chkesp.s
         except/i386/prolog.s
@@ -65,16 +61,10 @@ list(APPEND CRT_EXCEPT_SOURCE
 
 if(ARCH STREQUAL "i386")
     list(APPEND CHKSTK_ASM_SOURCE except/i386/chkstk_asm.s)
-    if(NOT MSVC)
-        list(APPEND CHKSTK_ASM_SOURCE except/i386/chkstk_ms.s)
-    endif()
 elseif(ARCH STREQUAL "amd64")
     list(APPEND CHKSTK_ASM_SOURCE except/amd64/chkstk_ms.s)
 elseif(ARCH STREQUAL "arm")
     list(APPEND CHKSTK_ASM_SOURCE except/arm/chkstk_asm.s)
-    if(NOT MSVC)
-        list(APPEND CHKSTK_ASM_SOURCE except/arm/chkstk_ms.s)
-    endif()
 elseif(ARCH STREQUAL "powerpc")
     list(APPEND CHKSTK_ASM_SOURCE except/powerpc/chkstk_asm.s)
 endif()
