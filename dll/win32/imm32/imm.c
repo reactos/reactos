@@ -3665,7 +3665,6 @@ ImmGetImeInfoEx(PIMEINFOEX pImeInfoEx,
                 return FALSE;
             if (!bDisabled)
                 goto Quit;
-            return FALSE;
         }
         return FALSE;
     }
