@@ -3609,28 +3609,67 @@ BOOL WINAPI ImmRegisterClient(PVOID ptr, /* FIXME: should point to SHAREDINFO st
 }
 
 /***********************************************************************
+ *		CtfImmIsTextFrameServiceDisabled(IMM32.@)
+ */
+BOOL WINAPI CtfImmIsTextFrameServiceDisabled(VOID)
+{
+    PTEB pTeb = NtCurrentTeb();
+    if (pTeb->Win32ClientInfo[0] & 0x400)
+        return TRUE;
+    return FALSE;
+}
+
+/***********************************************************************
  *              ImmGetImeInfoEx (IMM32.@)
  */
+
+static BOOL APIENTRY Imm32GetImeInfoEx(PIMEINFOEX pImeInfoEx, IMEINFOEXCLASS SearchType)
+{
+    return NtUserGetImeInfoEx(pImeInfoEx, SearchType);
+}
+
 BOOL WINAPI
 ImmGetImeInfoEx(PIMEINFOEX pImeInfoEx,
                 IMEINFOEXCLASS SearchType,
                 PVOID pvSearchKey)
 {
+    BOOL bDisabled = FALSE;
+    HKL hKL;
+    PTEB pTeb;
+
     switch (SearchType)
     {
         case ImeInfoExKeyboardLayout:
-            pImeInfoEx->hkl = *(LPHKL)pvSearchKey;
-            if (!IS_IME_HKL(pImeInfoEx->hkl))
-                return FALSE;
+            break;
+
+        case ImeInfoExImeWindow:
+            bDisabled = CtfImmIsTextFrameServiceDisabled();
+            SearchType = ImeInfoExKeyboardLayout;
             break;
 
         case ImeInfoExImeFileName:
-            lstrcpynW(pImeInfoEx->wszImeFile, (LPWSTR)pvSearchKey,
-                      ARRAY_SIZE(pImeInfoEx->wszImeFile));
-            break;
-
-        default:
-            return FALSE;
+            StringCchCopyW(pImeInfoEx->wszImeFile, _countof(pImeInfoEx->wszImeFile),
+                           pvSearchKey);
+            goto Quit;
     }
-    return NtUserGetImeInfoEx(pImeInfoEx, SearchType);
+
+    hKL = *(HKL*)pvSearchKey;
+    pImeInfoEx->hkl = hKL;
+
+    if (!IS_IME_HKL(hKL))
+    {
+        if (g_dwImm32Flags & IMM32_FLAG_CICERO_ENABLED)
+        {
+            pTeb = NtCurrentTeb();
+            if (pTeb->Win32ClientInfo[5] & 2)
+                return 0;
+            if (!bDisabled)
+                goto Quit;
+            return FALSE;
+        }
+        return FALSE;
+    }
+
+Quit:
+    return Imm32GetImeInfoEx(pImeInfoEx, SearchType);
 }
