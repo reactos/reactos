@@ -1017,9 +1017,7 @@ LPVOID APIENTRY Imm32HeapAlloc(DWORD dwFlags, DWORD dwBytes)
 {
     if (!g_hImm32Heap)
     {
-        PTEB pTeb = NtCurrentTeb();
-        PPEB pPeb = pTeb->NtTib.ArbitraryUserPointer;
-        g_hImm32Heap = pPeb->ProcessHeap;
+        g_hImm32Heap = RtlGetProcessHeap();
         if (g_hImm32Heap == NULL)
             return NULL;
     }
