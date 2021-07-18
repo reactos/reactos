@@ -3016,23 +3016,18 @@ PIMEDPI WINAPI ImmLockImeDpi(HKL hKL)
 
     RtlEnterCriticalSection(&g_csImeDpi);
 
-    if (g_pImeDpiList)
+    /* Find by hKL */
+    for (pImeDpi = g_pImeDpiList; pImeDpi; pImeDpi = pImeDpi->pNext)
     {
-        /* find by hKL */
-        pImeDpi = g_pImeDpiList;
-        do
+        if (pImeDpi->hKL == hKL) /* found */
         {
-            if (pImeDpi->hKL == hKL) /* found */
-            {
-                /* lock if possible */
-                if (pImeDpi->dwFlags & IMEDPI_FLAG_UNKNOWN)
-                    pImeDpi = NULL;
-                else
-                    ++(pImeDpi->cLockObj);
-                break;
-            }
-            pImeDpi = pImeDpi->pNext;
-        } while (pImeDpi);
+            /* lock if possible */
+            if (pImeDpi->dwFlags & IMEDPI_FLAG_UNKNOWN)
+                pImeDpi = NULL;
+            else
+                ++(pImeDpi->cLockObj);
+            break;
+        }
     }
 
     RtlLeaveCriticalSection(&g_csImeDpi);
