@@ -94,17 +94,23 @@ TestIrpHandler(
         {
             PREPARSE_DATA_BUFFER Reparse;
 
-            Irp->Tail.Overlay.AuxiliaryBuffer = ExAllocatePoolWithTag(NonPagedPool, MAXIMUM_REPARSE_DATA_BUFFER_SIZE, 'FwrI');
+            Irp->Tail.Overlay.AuxiliaryBuffer = ExAllocatePoolZero(NonPagedPool, MAXIMUM_REPARSE_DATA_BUFFER_SIZE, 'FwrI');
             Reparse = (PREPARSE_DATA_BUFFER)Irp->Tail.Overlay.AuxiliaryBuffer;
 
-            RtlZeroMemory(Reparse, MAXIMUM_REPARSE_DATA_BUFFER_SIZE);
-            Reparse->ReparseTag = IO_REPARSE_TAG_MOUNT_POINT;
-            Reparse->ReparseDataLength = 12 + sizeof(L"\\??\\C:\\Documents and Settings");
-            Reparse->MountPointReparseBuffer.SubstituteNameLength = sizeof(L"\\??\\C:\\Documents and Settings") - sizeof(UNICODE_NULL);
-            Reparse->MountPointReparseBuffer.PrintNameOffset = sizeof(L"\\??\\C:\\Documents and Settings");
-            RtlCopyMemory(Reparse->MountPointReparseBuffer.PathBuffer, L"\\??\\C:\\Documents and Settings", sizeof(L"\\??\\C:\\Documents and Settings"));
-            Irp->IoStatus.Information = IO_REPARSE_TAG_MOUNT_POINT;
-            Status = STATUS_REPARSE;
+            if (!Reparse)
+            {
+                Status = STATUS_INSUFFICIENT_RESOURCES;
+            }
+            else
+            {
+                Reparse->ReparseTag = IO_REPARSE_TAG_MOUNT_POINT;
+                Reparse->ReparseDataLength = 12 + sizeof(L"\\??\\C:\\Documents and Settings");
+                Reparse->MountPointReparseBuffer.SubstituteNameLength = sizeof(L"\\??\\C:\\Documents and Settings") - sizeof(UNICODE_NULL);
+                Reparse->MountPointReparseBuffer.PrintNameOffset = sizeof(L"\\??\\C:\\Documents and Settings");
+                RtlCopyMemory(Reparse->MountPointReparseBuffer.PathBuffer, L"\\??\\C:\\Documents and Settings", sizeof(L"\\??\\C:\\Documents and Settings"));
+                Irp->IoStatus.Information = IO_REPARSE_TAG_MOUNT_POINT;
+                Status = STATUS_REPARSE;
+            }
         }
         else if (IoStack->FileObject->FileName.Length >= 2 * sizeof(WCHAR) &&
             IoStack->FileObject->FileName.Buffer[1] == 'S')
@@ -117,33 +123,46 @@ TestIrpHandler(
             {
                 PREPARSE_DATA_BUFFER Reparse;
 
-                Irp->Tail.Overlay.AuxiliaryBuffer = ExAllocatePoolWithTag(NonPagedPool, MAXIMUM_REPARSE_DATA_BUFFER_SIZE, 'FwrI');
+                Irp->Tail.Overlay.AuxiliaryBuffer = ExAllocatePoolZero(NonPagedPool, MAXIMUM_REPARSE_DATA_BUFFER_SIZE, 'FwrI');
                 Reparse = (PREPARSE_DATA_BUFFER)Irp->Tail.Overlay.AuxiliaryBuffer;
 
-                RtlZeroMemory(Reparse, MAXIMUM_REPARSE_DATA_BUFFER_SIZE);
-                Reparse->ReparseTag = IO_REPARSE_TAG_SYMLINK;
-                Reparse->ReparseDataLength = 12 + sizeof(L"\\??\\C:\\Documents and Settings");
-                Reparse->SymbolicLinkReparseBuffer.SubstituteNameLength = sizeof(L"\\??\\C:\\Documents and Settings") - sizeof(UNICODE_NULL);
-                Reparse->SymbolicLinkReparseBuffer.PrintNameOffset = sizeof(L"\\??\\C:\\Documents and Settings");
-                RtlCopyMemory(Reparse->SymbolicLinkReparseBuffer.PathBuffer, L"\\??\\C:\\Documents and Settings", sizeof(L"\\??\\C:\\Documents and Settings"));
-                Irp->IoStatus.Information = IO_REPARSE_TAG_SYMLINK;
-                Status = STATUS_REPARSE;
+                if (!Reparse)
+                {
+                    Status = STATUS_INSUFFICIENT_RESOURCES;
+                }
+                else
+                {
+                    Reparse->ReparseTag = IO_REPARSE_TAG_SYMLINK;
+                    Reparse->ReparseDataLength = 12 + sizeof(L"\\??\\C:\\Documents and Settings");
+                    Reparse->SymbolicLinkReparseBuffer.SubstituteNameLength = sizeof(L"\\??\\C:\\Documents and Settings") - sizeof(UNICODE_NULL);
+                    Reparse->SymbolicLinkReparseBuffer.PrintNameOffset = sizeof(L"\\??\\C:\\Documents and Settings");
+                    RtlCopyMemory(Reparse->SymbolicLinkReparseBuffer.PathBuffer, L"\\??\\C:\\Documents and Settings", sizeof(L"\\??\\C:\\Documents and Settings"));
+                    Irp->IoStatus.Information = IO_REPARSE_TAG_SYMLINK;
+                    Status = STATUS_REPARSE;
+                }
             }
         }
         else
         {
-            Fcb = ExAllocatePoolWithTag(NonPagedPool, sizeof(*Fcb), 'FwrI');
-            RtlZeroMemory(Fcb, sizeof(*Fcb));
-            ExInitializeFastMutex(&Fcb->HeaderMutex);
-            FsRtlSetupAdvancedHeader(&Fcb->Header, &Fcb->HeaderMutex);
-            Fcb->Header.AllocationSize.QuadPart = 0;
-            Fcb->Header.FileSize.QuadPart = 0;
-            Fcb->Header.ValidDataLength.QuadPart = 0;
-            IoStack->FileObject->FsContext = Fcb;
-            IoStack->FileObject->SectionObjectPointer = &Fcb->SectionObjectPointers;
+            Fcb = ExAllocatePoolZero(NonPagedPool, sizeof(*Fcb), 'FwrI');
+            
+            if (!Fcb)
+            {
+                Status = STATUS_INSUFFICIENT_RESOURCES;
+            }
+            else
+            {
+                ExInitializeFastMutex(&Fcb->HeaderMutex);
+                FsRtlSetupAdvancedHeader(&Fcb->Header, &Fcb->HeaderMutex);
+                Fcb->Header.AllocationSize.QuadPart = 0;
+                Fcb->Header.FileSize.QuadPart = 0;
+                Fcb->Header.ValidDataLength.QuadPart = 0;
+                IoStack->FileObject->FsContext = Fcb;
+                IoStack->FileObject->SectionObjectPointer = &Fcb->SectionObjectPointers;
 
-            Irp->IoStatus.Information = FILE_OPENED;
-            Status = STATUS_SUCCESS;
+                Irp->IoStatus.Information = FILE_OPENED;
+                Status = STATUS_SUCCESS;
+            }
         }
     }
     else if (IoStack->MajorFunction == IRP_MJ_CLEANUP)
