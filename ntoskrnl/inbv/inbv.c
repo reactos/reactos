@@ -744,9 +744,6 @@ InbvSolidColorFill(IN ULONG Left,
     }
 }
 
-<<<<<<< HEAD
-CODE_SEG("INIT")
-=======
 static VOID
 DrawProgressBar(IN ULONG Left,
                 IN ULONG FillCount,
@@ -789,8 +786,7 @@ DrawProgressBar(IN ULONG Left,
     }
 }
 
-INIT_FUNCTION
->>>>>>> [NTOS:INBV] Implement progress bar rounding + background
+CODE_SEG("INIT")
 VOID
 NTAPI
 InbvUpdateProgressBar(IN ULONG Progress)
@@ -913,7 +909,7 @@ InbvSetProgressBarBackground(IN BOOLEAN Enable,
     ProgressBarShowBkg    = Enable;
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 VOID
 NTAPI
 InbvSetProgressBarRounding(IN BOOLEAN Enable)
@@ -921,7 +917,7 @@ InbvSetProgressBarRounding(IN BOOLEAN Enable)
     ProgressBarRounding = Enable;
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 VOID
 NTAPI
 InbvSetProgressBarSubset(IN ULONG Floor,
