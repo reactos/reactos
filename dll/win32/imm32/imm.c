@@ -3662,7 +3662,7 @@ ImmGetImeInfoEx(PIMEINFOEX pImeInfoEx,
         if (g_dwImm32Flags & IMM32_FLAG_CICERO_ENABLED)
         {
             pTeb = NtCurrentTeb();
-            if (pTeb->Win32ClientInfo[5] & 2)
+            if (((PW32CLIENTINFO)pTeb->Win32ClientInfo)->W32ClientInfo[0] & 2)
                 return FALSE;
             if (!bDisabled)
                 goto Quit;
