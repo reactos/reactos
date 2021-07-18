@@ -3615,7 +3615,7 @@ BOOL WINAPI ImmRegisterClient(PVOID ptr, /* FIXME: should point to SHAREDINFO st
 BOOL WINAPI CtfImmIsTextFrameServiceDisabled(VOID)
 {
     PTEB pTeb = NtCurrentTeb();
-    if (((PW32CLIENTINFO)pTeb->Win32ClientInfo)->CI_flags & CI_IMMTFSDISABLED)
+    if (((PW32CLIENTINFO)pTeb->Win32ClientInfo)->CI_flags & CI_TFSDISABLED)
         return TRUE;
     return FALSE;
 }
