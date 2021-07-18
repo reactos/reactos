@@ -95,7 +95,7 @@ OpenRegistryHandlesFromSymbolicLink(IN PUNICODE_STRING SymbolicLinkName,
 
     InitializeObjectAttributes(&ObjectAttributes,
                                &GuidString,
-                               OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
+                               OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE | OBJ_OPENIF,
                                ClassesKey,
                                NULL);
     Status = ZwCreateKey(GuidKeyRealP,
@@ -146,7 +146,7 @@ OpenRegistryHandlesFromSymbolicLink(IN PUNICODE_STRING SymbolicLinkName,
 
     InitializeObjectAttributes(&ObjectAttributes,
                                &SubKeyName,
-                               OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
+                               OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE | OBJ_OPENIF,
                                *GuidKeyRealP,
                                NULL);
     Status = ZwCreateKey(DeviceKeyRealP,
@@ -164,7 +164,7 @@ OpenRegistryHandlesFromSymbolicLink(IN PUNICODE_STRING SymbolicLinkName,
 
     InitializeObjectAttributes(&ObjectAttributes,
                                &ReferenceString,
-                               OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
+                               OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE | OBJ_OPENIF,
                                *DeviceKeyRealP,
                                NULL);
     Status = ZwCreateKey(InstanceKeyRealP,
