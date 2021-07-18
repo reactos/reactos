@@ -286,7 +286,7 @@ ApicInitializeLocalApic(ULONG Cpu)
 
     /* Create a template LVT */
     LvtEntry.Long = 0;
-    LvtEntry.Vector = 0xFF;
+    LvtEntry.Vector = APIC_FREE_VECTOR;
     LvtEntry.MessageType = APIC_MT_Fixed;
     LvtEntry.DeliveryStatus = 0;
     LvtEntry.RemoteIRR = 0;
@@ -336,7 +336,7 @@ HalpAllocateSystemInterrupt(
 {
     IOAPIC_REDIRECTION_REGISTER ReDirReg;
 
-    ASSERT(Irq < 24);
+    ASSERT(Irq < APIC_MAX_IRQ);
     ASSERT(HalpVectorToIndex[Vector] == APIC_FREE_VECTOR);
 
     /* Setup a redirection entry */
@@ -375,7 +375,7 @@ HalpGetRootInterruptVector(
     Vector = HalpIrqToVector(BusInterruptLevel);
 
     /* Check if it's used */
-    if (Vector != 0xFF)
+    if (Vector != APIC_FREE_VECTOR)
     {
         /* Calculate IRQL */
         NT_ASSERT(HalpVectorToIndex[Vector] == BusInterruptLevel);
@@ -439,7 +439,7 @@ ApicInitializeIOApic(VOID)
     _ReadWriteBarrier();
 
     /* Setup a redirection entry */
-    ReDirReg.Vector = 0xFF;
+    ReDirReg.Vector = APIC_FREE_VECTOR;
     ReDirReg.DeliveryMode = APIC_MT_Fixed;
     ReDirReg.DestinationMode = APIC_DM_Physical;
     ReDirReg.DeliveryStatus = 0;
@@ -646,7 +646,7 @@ HalEnableSystemInterrupt(
     Index = HalpVectorToIndex[Vector];
 
     /* Check if its valid */
-    if (Index == 0xff)
+    if (Index == APIC_FREE_VECTOR)
     {
         /* Interrupt is not in use */
         return FALSE;
