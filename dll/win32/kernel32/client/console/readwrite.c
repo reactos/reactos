@@ -682,7 +682,7 @@ IntWriteConsole(IN HANDLE hConsoleOutput,
     if (CaptureBuffer) CsrFreeCaptureBuffer(CaptureBuffer);
 
     /* Retrieve the results */
-    if (Success)
+    if (Success && lpNumberOfCharsWritten)
     {
         _SEH2_TRY
         {
@@ -695,7 +695,7 @@ IntWriteConsole(IN HANDLE hConsoleOutput,
         }
         _SEH2_END;
     }
-    else
+    else if (!Success)
     {
         BaseSetLastNTError(ApiMessage.Status);
     }
