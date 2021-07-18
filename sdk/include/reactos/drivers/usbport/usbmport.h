@@ -396,7 +396,7 @@ typedef MPSTATUS
 
 /* Port functions */
 typedef ULONG
-(NTAPI *PUSBPORT_DBG_PRINT)(
+(*PUSBPORT_DBG_PRINT)(
   PVOID,
   ULONG,
   PCH,

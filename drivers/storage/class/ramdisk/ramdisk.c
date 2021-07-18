@@ -358,7 +358,8 @@ RamdiskCreateDiskDevice(IN PRAMDISK_BUS_EXTENSION DeviceExtension,
     PRAMDISK_DRIVE_EXTENSION DriveExtension;
     PVOID Buffer;
     WCHAR LocalBuffer[16];
-    UNICODE_STRING SymbolicLinkName, DriveString, GuidString, DeviceName;
+    UNICODE_STRING SymbolicLinkName = {0, 0, NULL};
+    UNICODE_STRING DriveString, GuidString, DeviceName;
     PPACKED_BOOT_SECTOR BootSector;
     BIOS_PARAMETER_BLOCK BiosBlock;
     ULONG BytesPerSector, SectorsPerTrack, Heads, BytesRead;

@@ -935,7 +935,7 @@ ShowSoundScheme(PGLOBAL_DATA pGlobalData, HWND hwndDlg)
             tvItem.item.state = TVIS_EXPANDED;
             tvItem.item.stateMask = TVIS_EXPANDED;
             tvItem.item.pszText = pLabelMap->szDesc;
-            if (pLabelContext->szValue && _tcslen(pLabelContext->szValue) > 0)
+            if (_tcslen(pLabelContext->szValue) > 0)
             {
                 tvItem.item.iImage = IMAGE_SOUND_ASSIGNED;
                 tvItem.item.iSelectedImage = IMAGE_SOUND_ASSIGNED;

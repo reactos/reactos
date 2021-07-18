@@ -547,7 +547,7 @@ void TConfig::keyfile_init() {
 		// if there is no environment variable
 		GetPrivateProfileString("Keyboard", "Keyfile", "", keyfile,
 			sizeof(keyfile), inifile);
-		if(keyfile == 0 || *keyfile == 0) {
+		if(*keyfile == 0) {
 			// and there is no profile string
 			strcpy(keyfile, startdir);
 			if (sizeof(keyfile) >= strlen(keyfile)+strlen("telnet.cfg")) {

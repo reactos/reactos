@@ -5484,7 +5484,11 @@ static void extract332(int isSwap,
 {
    GLubyte ubyte= *(const GLubyte *)packedPixel;
 
+#ifdef __REACTOS__
+   UNREFERENCED_PARAMETER(isSwap);		/* turn off warnings */
+#else
    isSwap= isSwap;		/* turn off warnings */
+#endif
 
    /* 11100000 == 0xe0 */
    /* 00011100 == 0x1c */
@@ -5520,7 +5524,11 @@ static void extract233rev(int isSwap,
 {
    GLubyte ubyte= *(const GLubyte *)packedPixel;
 
+#ifdef __REACTOS__
+   UNREFERENCED_PARAMETER(isSwap);		/* turn off warnings */
+#else
    isSwap= isSwap;		/* turn off warnings */
+#endif
 
    /* 0000,0111 == 0x07 */
    /* 0011,1000 == 0x38 */
@@ -8518,7 +8526,11 @@ gluBuild3DMipmaps(GLenum target, GLint internalFormat,
 
 static GLdouble extractUbyte(int isSwap, const void *ubyte)
 {
+#ifdef __REACTOS__
+   UNREFERENCED_PARAMETER(isSwap);		/* turn off warnings */
+#else
    isSwap= isSwap;		/* turn off warnings */
+#endif
 
    assert(*((const GLubyte *)ubyte) <= 255);
 
@@ -8534,7 +8546,11 @@ static void shoveUbyte(GLdouble value, int index, void *data)
 
 static GLdouble extractSbyte(int isSwap, const void *sbyte)
 {
+#ifdef __REACTOS__
+   UNREFERENCED_PARAMETER(isSwap);		/* turn off warnings */
+#else
    isSwap= isSwap;		/* turn off warnings */
+#endif
 
    assert(*((const GLbyte *)sbyte) <= 127);
 

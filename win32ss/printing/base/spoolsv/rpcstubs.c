@@ -8,6 +8,7 @@
 #include "precomp.h"
 
 DWORD
+__stdcall
 _RpcCreatePrinterIC(WINSPOOL_PRINTER_HANDLE hPrinter, WINSPOOL_GDI_HANDLE* pHandle, WINSPOOL_DEVMODE_CONTAINER* pDevModeContainer)
 {
     UNIMPLEMENTED;
@@ -15,6 +16,7 @@ _RpcCreatePrinterIC(WINSPOOL_PRINTER_HANDLE hPrinter, WINSPOOL_GDI_HANDLE* pHand
 }
 
 DWORD
+__stdcall
 _RpcPlayGdiScriptOnPrinterIC(WINSPOOL_GDI_HANDLE hPrinterIC, BYTE* pIn, DWORD cIn, BYTE* pOut, DWORD cOut, DWORD ul)
 {
     UNIMPLEMENTED;
@@ -22,6 +24,7 @@ _RpcPlayGdiScriptOnPrinterIC(WINSPOOL_GDI_HANDLE hPrinterIC, BYTE* pIn, DWORD cI
 }
 
 DWORD
+__stdcall
 _RpcDeletePrinterIC(WINSPOOL_GDI_HANDLE* phPrinterIC)
 {
     UNIMPLEMENTED;
@@ -29,6 +32,7 @@ _RpcDeletePrinterIC(WINSPOOL_GDI_HANDLE* phPrinterIC)
 }
 
 DWORD
+__stdcall
 _RpcAddPrinterConnection(WINSPOOL_HANDLE pName)
 {
     UNIMPLEMENTED;
@@ -36,6 +40,7 @@ _RpcAddPrinterConnection(WINSPOOL_HANDLE pName)
 }
 
 DWORD
+__stdcall
 _RpcDeletePrinterConnection(WINSPOOL_HANDLE pName)
 {
     UNIMPLEMENTED;
@@ -46,6 +51,7 @@ _RpcDeletePrinterConnection(WINSPOOL_HANDLE pName)
 // Forward Dead API....
 //
 DWORD
+__stdcall
 _RpcPrinterMessageBox(WINSPOOL_PRINTER_HANDLE hPrinter, DWORD Error, ULONG_PTR hWnd, WCHAR* pText, WCHAR* pCaption, DWORD dwType)
 {
     DWORD dwErrorCode;
@@ -65,6 +71,7 @@ _RpcPrinterMessageBox(WINSPOOL_PRINTER_HANDLE hPrinter, DWORD Error, ULONG_PTR h
 }
 
 DWORD
+__stdcall
 _RpcSetAllocFailCount(VOID)
 {
     UNIMPLEMENTED;
@@ -72,6 +79,7 @@ _RpcSetAllocFailCount(VOID)
 }
 
 DWORD
+__stdcall
 _RpcClusterSplOpen(VOID)
 {
     UNIMPLEMENTED;
@@ -79,6 +87,7 @@ _RpcClusterSplOpen(VOID)
 }
 
 DWORD
+__stdcall
 _RpcClusterSplClose(VOID)
 {
     UNIMPLEMENTED;
@@ -86,6 +95,7 @@ _RpcClusterSplClose(VOID)
 }
 
 DWORD
+__stdcall
 _RpcClusterSplIsAlive(VOID)
 {
     UNIMPLEMENTED;
@@ -93,6 +103,7 @@ _RpcClusterSplIsAlive(VOID)
 }
 
 DWORD
+__stdcall
 _RpcAddPerMachineConnection(WINSPOOL_HANDLE pServer, const WCHAR* pPrinterName, const WCHAR* pPrintServer, const WCHAR* pProvider)
 {
     UNIMPLEMENTED;
@@ -100,6 +111,7 @@ _RpcAddPerMachineConnection(WINSPOOL_HANDLE pServer, const WCHAR* pPrinterName, 
 }
 
 DWORD
+__stdcall
 _RpcDeletePerMachineConnection(WINSPOOL_HANDLE pServer, const WCHAR* pPrinterName)
 {
     UNIMPLEMENTED;
@@ -107,6 +119,7 @@ _RpcDeletePerMachineConnection(WINSPOOL_HANDLE pServer, const WCHAR* pPrinterNam
 }
 
 DWORD
+__stdcall
 _RpcEnumPerMachineConnections(WINSPOOL_HANDLE pServer, BYTE* pPrinterEnum, DWORD cbBuf, DWORD* pcbNeeded, DWORD* pcReturned)
 {
     UNIMPLEMENTED;
@@ -114,6 +127,7 @@ _RpcEnumPerMachineConnections(WINSPOOL_HANDLE pServer, BYTE* pPrinterEnum, DWORD
 }
 
 DWORD
+__stdcall
 _RpcSplOpenPrinter(VOID)
 {
     UNIMPLEMENTED;
@@ -121,6 +135,7 @@ _RpcSplOpenPrinter(VOID)
 }
 
 DWORD
+__stdcall
 _RpcSendRecvBidiData(WINSPOOL_PRINTER_HANDLE hPrinter, const WCHAR* pAction, WINSPOOL_BIDI_REQUEST_CONTAINER* pReqData, WINSPOOL_BIDI_RESPONSE_CONTAINER** ppRespData)
 {
     UNIMPLEMENTED;
@@ -128,6 +143,7 @@ _RpcSendRecvBidiData(WINSPOOL_PRINTER_HANDLE hPrinter, const WCHAR* pAction, WIN
 }
 
 DWORD
+__stdcall
 _RpcAddDriverCatalog(VOID)
 {
     UNIMPLEMENTED;

@@ -335,9 +335,8 @@ extern "C" {
 #define	S_ISREG(m)	(((m) & S_IFMT) == S_IFREG)
 
 #if !defined (RC_INVOKED)
-  _CRTIMP int __cdecl stat(const char *_Filename,struct stat *_Stat);
-  _CRTIMP int __cdecl fstat(int _Desc,struct stat *_Stat);
-  _CRTIMP int __cdecl wstat(const wchar_t *_Filename,struct stat *_Stat);
+  int __cdecl stat(const char *_Filename,struct stat *_Stat);
+  int __cdecl wstat(const wchar_t *_Filename,struct stat *_Stat);
 __CRT_INLINE int __cdecl fstat(int _Desc,struct stat *_Stat) {
   return _fstat(_Desc,(struct _stat *)_Stat);
 }

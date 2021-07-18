@@ -843,7 +843,7 @@ BOOL WINAPI
 LocalmonReadPort(HANDLE hPort, PBYTE pBuffer, DWORD cbBuffer, PDWORD pcbRead)
 {
     BOOL bOpenedPort = FALSE;
-    DWORD dwErrorCode;
+    DWORD dwErrorCode = ERROR_SUCCESS;
     PLOCALMON_PORT pPort = (PLOCALMON_PORT)hPort;
 
     TRACE("LocalmonReadPort(%p, %p, %lu, %p)\n", hPort, pBuffer, cbBuffer, pcbRead);

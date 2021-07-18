@@ -64,7 +64,11 @@ PWLANSVCHANDLE WlanSvcGetHandleEntry(LPWLANSVC_RPC_HANDLE ClientHandle)
     return NULL;
 }
 
+#ifdef __REACTOS__
+DWORD RPC_ENTRY _RpcOpenHandle(
+#else
 DWORD _RpcOpenHandle(
+#endif
     wchar_t *arg_1,
     DWORD dwClientVersion,
     DWORD *pdwNegotiatedVersion,
@@ -94,7 +98,11 @@ DWORD _RpcOpenHandle(
     return ERROR_SUCCESS;
 }
 
+#ifdef __REACTOS__
+DWORD RPC_ENTRY _RpcCloseHandle(
+#else
 DWORD _RpcCloseHandle(
+#endif
     LPWLANSVC_RPC_HANDLE phClientHandle)
 {
     PWLANSVCHANDLE lpWlanSvcHandle;
@@ -111,7 +119,11 @@ DWORD _RpcCloseHandle(
     return ERROR_SUCCESS;
 }
 
+#ifdef __REACTOS__
+DWORD RPC_ENTRY _RpcEnumInterfaces(
+#else
 DWORD _RpcEnumInterfaces(
+#endif
     WLANSVC_RPC_HANDLE hClientHandle,
     PWLAN_INTERFACE_INFO_LIST *ppInterfaceList)
 {
@@ -176,7 +188,11 @@ DWORD _RpcEnumInterfaces(
 #endif
 }
 
+#ifdef __REACTOS__
+DWORD RPC_ENTRY _RpcSetAutoConfigParameter(
+#else
 DWORD _RpcSetAutoConfigParameter(
+#endif
     WLANSVC_RPC_HANDLE hClientHandle,
     long OpCode,
     DWORD dwDataSize,
@@ -186,7 +202,11 @@ DWORD _RpcSetAutoConfigParameter(
     return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
+#ifdef __REACTOS__
+DWORD RPC_ENTRY _RpcQueryAutoConfigParameter(
+#else
 DWORD _RpcQueryAutoConfigParameter(
+#endif
     WLANSVC_RPC_HANDLE hClientHandle,
     DWORD OpCode,
     LPDWORD pdwDataSize,
@@ -197,7 +217,11 @@ DWORD _RpcQueryAutoConfigParameter(
     return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
+#ifdef __REACTOS__
+DWORD RPC_ENTRY _RpcGetInterfaceCapability(
+#else
 DWORD _RpcGetInterfaceCapability(
+#endif
     WLANSVC_RPC_HANDLE hClientHandle,
     const GUID *pInterfaceGuid,
     PWLAN_INTERFACE_CAPABILITY *ppCapability)
@@ -214,7 +238,11 @@ DWORD _RpcGetInterfaceCapability(
     return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
+#ifdef __REACTOS__
+DWORD RPC_ENTRY _RpcSetInterface(
+#else
 DWORD _RpcSetInterface(
+#endif
     WLANSVC_RPC_HANDLE hClientHandle,
     const GUID *pInterfaceGuid,
     DWORD OpCode,
@@ -225,7 +253,11 @@ DWORD _RpcSetInterface(
     return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
+#ifdef __REACTOS__
+DWORD RPC_ENTRY _RpcQueryInterface(
+#else
 DWORD _RpcQueryInterface(
+#endif
     WLANSVC_RPC_HANDLE hClientHandle,
     const GUID *pInterfaceGuid,
     long OpCode,
@@ -237,7 +269,11 @@ DWORD _RpcQueryInterface(
     return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
+#ifdef __REACTOS__
+DWORD RPC_ENTRY _RpcIhvControl(
+#else
 DWORD _RpcIhvControl(
+#endif
     WLANSVC_RPC_HANDLE hClientHandle,
     const GUID *pInterfaceGuid,
     DWORD Type,
@@ -251,7 +287,11 @@ DWORD _RpcIhvControl(
     return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
+#ifdef __REACTOS__
+DWORD RPC_ENTRY _RpcScan(
+#else
 DWORD _RpcScan(
+#endif
     WLANSVC_RPC_HANDLE hClientHandle,
     const GUID *pInterfaceGuid,
     PDOT11_SSID pDot11Ssid,
@@ -284,7 +324,11 @@ DWORD _RpcScan(
     return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
+#ifdef __REACTOS__
+DWORD RPC_ENTRY _RpcGetAvailableNetworkList(
+#else
 DWORD _RpcGetAvailableNetworkList(
+#endif
     WLANSVC_RPC_HANDLE hClientHandle,
     const GUID *pInterfaceGuid,
     DWORD dwFlags,
@@ -294,7 +338,11 @@ DWORD _RpcGetAvailableNetworkList(
     return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
+#ifdef __REACTOS__
+DWORD RPC_ENTRY _RpcGetNetworkBssList(
+#else
 DWORD _RpcGetNetworkBssList(
+#endif
     WLANSVC_RPC_HANDLE hClientHandle,
     const GUID *pInterfaceGuid,
     PDOT11_SSID pDot11Ssid,
@@ -307,7 +355,11 @@ DWORD _RpcGetNetworkBssList(
     return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
+#ifdef __REACTOS__
+DWORD RPC_ENTRY _RpcConnect(
+#else
 DWORD _RpcConnect(
+#endif
     WLANSVC_RPC_HANDLE hClientHandle,
     const GUID *pInterfaceGuid,
     const PWLAN_CONNECTION_PARAMETERS *pConnectionParameters)
@@ -316,7 +368,11 @@ DWORD _RpcConnect(
     return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
+#ifdef __REACTOS__
+DWORD RPC_ENTRY _RpcDisconnect(
+#else
 DWORD _RpcDisconnect(
+#endif
     WLANSVC_RPC_HANDLE hClientHandle,
     const GUID *pInterfaceGUID)
 {
@@ -324,7 +380,11 @@ DWORD _RpcDisconnect(
     return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
+#ifdef __REACTOS__
+DWORD RPC_ENTRY _RpcRegisterNotification(
+#else
 DWORD _RpcRegisterNotification(
+#endif
     WLANSVC_RPC_HANDLE hClientHandle,
     DWORD arg_2,
     LPDWORD pdwPrevNotifSource)
@@ -333,7 +393,11 @@ DWORD _RpcRegisterNotification(
     return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
+#ifdef __REACTOS__
+DWORD RPC_ENTRY _RpcAsyncGetNotification(
+#else
 DWORD _RpcAsyncGetNotification(
+#endif
     WLANSVC_RPC_HANDLE hClientHandle,
     PWLAN_NOTIFICATION_DATA *NotificationData)
 {
@@ -341,7 +405,11 @@ DWORD _RpcAsyncGetNotification(
     return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
+#ifdef __REACTOS__
+DWORD RPC_ENTRY _RpcSetProfileEapUserData(
+#else
 DWORD _RpcSetProfileEapUserData(
+#endif
     WLANSVC_RPC_HANDLE hClientHandle,
     const GUID *pInterfaceGuid,
     wchar_t *strProfileName,
@@ -354,7 +422,11 @@ DWORD _RpcSetProfileEapUserData(
     return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
+#ifdef __REACTOS__
+DWORD RPC_ENTRY _RpcSetProfile(
+#else
 DWORD _RpcSetProfile(
+#endif
     WLANSVC_RPC_HANDLE hClientHandle,
     const GUID *pInterfaceGuid,
     DWORD dwFlags,
@@ -367,7 +439,11 @@ DWORD _RpcSetProfile(
     return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
+#ifdef __REACTOS__
+DWORD RPC_ENTRY _RpcGetProfile(
+#else
 DWORD _RpcGetProfile(
+#endif
     WLANSVC_RPC_HANDLE hClientHandle,
     const GUID *pInterfaceGuid,
     wchar_t *strProfileName,
@@ -379,7 +455,11 @@ DWORD _RpcGetProfile(
     return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
+#ifdef __REACTOS__
+DWORD RPC_ENTRY _RpcDeleteProfile(
+#else
 DWORD _RpcDeleteProfile(
+#endif
     WLANSVC_RPC_HANDLE hClientHandle,
     const GUID *pInterfaceGuid,
     const wchar_t *strProfileName)
@@ -388,7 +468,11 @@ DWORD _RpcDeleteProfile(
     return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
+#ifdef __REACTOS__
+DWORD RPC_ENTRY _RpcRenameProfile(
+#else
 DWORD _RpcRenameProfile(
+#endif
     WLANSVC_RPC_HANDLE hClientHandle,
     const GUID *pInterfaceGuid,
     const wchar_t *strOldProfileName,
@@ -398,7 +482,11 @@ DWORD _RpcRenameProfile(
     return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
+#ifdef __REACTOS__
+DWORD RPC_ENTRY _RpcSetProfileList(
+#else
 DWORD _RpcSetProfileList(
+#endif
     WLANSVC_RPC_HANDLE hClientHandle,
     const GUID *pInterfaceGuid,
     DWORD dwItems,
@@ -408,7 +496,11 @@ DWORD _RpcSetProfileList(
     return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
+#ifdef __REACTOS__
+DWORD RPC_ENTRY _RpcGetProfileList(
+#else
 DWORD _RpcGetProfileList(
+#endif
     WLANSVC_RPC_HANDLE hClientHandle,
     const GUID *pInterfaceGuid,
     PWLAN_PROFILE_INFO_LIST *ppProfileList)
@@ -417,7 +509,11 @@ DWORD _RpcGetProfileList(
     return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
+#ifdef __REACTOS__
+DWORD RPC_ENTRY _RpcSetProfilePosition(
+#else
 DWORD _RpcSetProfilePosition(
+#endif
     WLANSVC_RPC_HANDLE hClientHandle,
     const GUID *pInterfaceGuid,
     wchar_t *strProfileName,
@@ -427,7 +523,11 @@ DWORD _RpcSetProfilePosition(
     return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
+#ifdef __REACTOS__
+DWORD RPC_ENTRY _RpcSetProfileCustomUserData(
+#else
 DWORD _RpcSetProfileCustomUserData(
+#endif
     WLANSVC_RPC_HANDLE hClientHandle,
     const GUID *pInterfaceGuid,
     wchar_t *strProfileName,
@@ -438,7 +538,11 @@ DWORD _RpcSetProfileCustomUserData(
     return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
+#ifdef __REACTOS__
+DWORD RPC_ENTRY _RpcGetProfileCustomUserData(
+#else
 DWORD _RpcGetProfileCustomUserData(
+#endif
     WLANSVC_RPC_HANDLE hClientHandle,
     const GUID *pInterfaceGuid,
     wchar_t *strProfileName,
@@ -449,7 +553,7 @@ DWORD _RpcGetProfileCustomUserData(
     return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
-DWORD _RpcSetFilterList(
+DWORD _stdcall _RpcSetFilterList(
     WLANSVC_RPC_HANDLE hClientHandle,
     short wlanFilterListType,
     PDOT11_NETWORK_LIST pNetworkList)
@@ -458,7 +562,11 @@ DWORD _RpcSetFilterList(
     return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
+#ifdef __REACTOS__
+DWORD RPC_ENTRY _RpcGetFilterList(
+#else
 DWORD _RpcGetFilterList(
+#endif
     WLANSVC_RPC_HANDLE hClientHandle,
     short wlanFilterListType,
     PDOT11_NETWORK_LIST *pNetworkList)
@@ -467,7 +575,11 @@ DWORD _RpcGetFilterList(
     return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
+#ifdef __REACTOS__
+DWORD RPC_ENTRY _RpcSetPsdIEDataList(
+#else
 DWORD _RpcSetPsdIEDataList(
+#endif
     WLANSVC_RPC_HANDLE hClientHandle,
     wchar_t *strFormat,
     DWORD dwDataListSize,
@@ -477,7 +589,11 @@ DWORD _RpcSetPsdIEDataList(
     return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
+#ifdef __REACTOS__
+DWORD RPC_ENTRY _RpcSaveTemporaryProfile(
+#else
 DWORD _RpcSaveTemporaryProfile(
+#endif
     WLANSVC_RPC_HANDLE hClientHandle,
     const GUID *pInterfaceGuid,
     wchar_t *strProfileName,
@@ -489,7 +605,11 @@ DWORD _RpcSaveTemporaryProfile(
     return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
+#ifdef __REACTOS__
+DWORD RPC_ENTRY _RpcIsUIRequestPending(
+#else
 DWORD _RpcIsUIRequestPending(
+#endif
     wchar_t *arg_1,
     const GUID *pInterfaceGuid,
     struct_C *arg_3,
@@ -499,7 +619,11 @@ DWORD _RpcIsUIRequestPending(
     return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
+#ifdef __REACTOS__
+DWORD RPC_ENTRY _RpcSetUIForwardingNetworkList(
+#else
 DWORD _RpcSetUIForwardingNetworkList(
+#endif
     wchar_t *arg_1,
     GUID *arg_2,
     DWORD dwSize,
@@ -509,7 +633,11 @@ DWORD _RpcSetUIForwardingNetworkList(
     return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
+#ifdef __REACTOS__
+DWORD RPC_ENTRY _RpcIsNetworkSuppressed(
+#else
 DWORD _RpcIsNetworkSuppressed(
+#endif
     wchar_t *arg_1,
     DWORD arg_2,
     const GUID *pInterfaceGuid,
@@ -519,7 +647,11 @@ DWORD _RpcIsNetworkSuppressed(
     return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
+#ifdef __REACTOS__
+DWORD RPC_ENTRY _RpcRemoveUIForwardingNetworkList(
+#else
 DWORD _RpcRemoveUIForwardingNetworkList(
+#endif
     wchar_t *arg_1,
     const GUID *pInterfaceGuid)
 {
@@ -527,7 +659,11 @@ DWORD _RpcRemoveUIForwardingNetworkList(
     return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
+#ifdef __REACTOS__
+DWORD RPC_ENTRY _RpcQueryExtUIRequest(
+#else
 DWORD _RpcQueryExtUIRequest(
+#endif
     wchar_t *arg_1,
     GUID *arg_2,
     GUID *arg_3,
@@ -539,7 +675,11 @@ DWORD _RpcQueryExtUIRequest(
     return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
+#ifdef __REACTOS__
+DWORD RPC_ENTRY _RpcUIResponse(
+#else
 DWORD _RpcUIResponse(
+#endif
     wchar_t *arg_1,
     struct_C *arg_2,
     struct_D *arg_3)
@@ -548,7 +688,11 @@ DWORD _RpcUIResponse(
     return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
+#ifdef __REACTOS__
+DWORD RPC_ENTRY _RpcGetProfileKeyInfo(
+#else
 DWORD _RpcGetProfileKeyInfo(
+#endif
     wchar_t *arg_1,
     DWORD arg_2,
     const GUID *pInterfaceGuid,
@@ -562,7 +706,11 @@ DWORD _RpcGetProfileKeyInfo(
     return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
+#ifdef __REACTOS__
+DWORD RPC_ENTRY _RpcAsyncDoPlap(
+#else
 DWORD _RpcAsyncDoPlap(
+#endif
     wchar_t *arg_1,
     const GUID *pInterfaceGuid,
     wchar_t *arg_3,
@@ -573,7 +721,11 @@ DWORD _RpcAsyncDoPlap(
     return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
+#ifdef __REACTOS__
+DWORD RPC_ENTRY _RpcQueryPlapCredentials(
+#else
 DWORD _RpcQueryPlapCredentials(
+#endif
     wchar_t *arg_1,
     LPDWORD dwSize,
     struct_E **arg_3,
@@ -588,7 +740,11 @@ DWORD _RpcQueryPlapCredentials(
     return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
+#ifdef __REACTOS__
+DWORD RPC_ENTRY _RpcCancelPlap(
+#else
 DWORD _RpcCancelPlap(
+#endif
     wchar_t *arg_1,
     const GUID *pInterfaceGuid)
 {
@@ -596,7 +752,11 @@ DWORD _RpcCancelPlap(
     return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
+#ifdef __REACTOS__
+DWORD RPC_ENTRY _RpcSetSecuritySettings(
+#else
 DWORD _RpcSetSecuritySettings(
+#endif
     WLANSVC_RPC_HANDLE hClientHandle,
     WLAN_SECURABLE_OBJECT SecurableObject,
     const wchar_t *strModifiedSDDL)
@@ -605,7 +765,11 @@ DWORD _RpcSetSecuritySettings(
     return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
+#ifdef __REACTOS__
+DWORD RPC_ENTRY _RpcGetSecuritySettings(
+#else
 DWORD _RpcGetSecuritySettings(
+#endif
     WLANSVC_RPC_HANDLE hClientHandle,
     WLAN_SECURABLE_OBJECT SecurableObject,
     WLAN_OPCODE_VALUE_TYPE *pValueType,

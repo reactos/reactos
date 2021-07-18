@@ -487,7 +487,8 @@ DefWndGetIcon(PWND pWnd, WPARAM wParam, LPARAM lParam)
             hIconRet = UserGetProp(pWnd, gpsi->atomIconSmProp, TRUE);
             break;
         default:
-            break;
+            ASSERT(FALSE);
+            UNREACHABLE;
     }
     return (LRESULT)hIconRet;
 }
@@ -1032,7 +1033,7 @@ IntDefWindowProc(
       case WM_MOUSEACTIVATE:
          if (Wnd->style & WS_CHILD)
          {
-             LONG Ret;
+             LONG Ret = 0;
              HWND hwndParent;
              PWND pwndParent = IntGetParent(Wnd);
              hwndParent = pwndParent ? UserHMGetHandle(pwndParent) : NULL;

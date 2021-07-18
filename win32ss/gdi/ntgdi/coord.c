@@ -113,8 +113,8 @@ DC_vFixIsotropicMapping(PDC pdc)
         return;
     }
 
-    fx = abs((LONG64)szlWindowExt.cx * szlViewportExt.cy);
-    fy = abs((LONG64)szlWindowExt.cy * szlViewportExt.cx);
+    fx = llabs((LONG64)szlWindowExt.cx * szlViewportExt.cy);
+    fy = llabs((LONG64)szlWindowExt.cy * szlViewportExt.cx);
 
     if (fx < fy)
     {

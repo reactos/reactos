@@ -1236,7 +1236,7 @@ void processRequest(void *lpParam)
                             {
                                 req.serverError.opcode = htons(5);
                                 req.serverError.errorcode = htons(4);
-                                sprintf(req.serverError.errormessage, strerror(errno));
+                                sprintf(req.serverError.errormessage, "%s", strerror(errno));
                                 send(req.sock, (const char*)&req.serverError, strlen(req.serverError.errormessage) + 5, 0);
                                 logMess(&req, 1);
                                 req.attempt = UCHAR_MAX;
@@ -1276,7 +1276,7 @@ void processRequest(void *lpParam)
                             {
                                 req.serverError.opcode = htons(5);
                                 req.serverError.errorcode = htons(4);
-                                sprintf(req.serverError.errormessage, strerror(errno));
+                                sprintf(req.serverError.errormessage, "%s", strerror(errno));
                                 send(req.sock, (const char*)&req.serverError, strlen(req.serverError.errormessage) + 5, 0);
                                 logMess(&req, 1);
                                 req.attempt = UCHAR_MAX;
@@ -2628,7 +2628,7 @@ void logMess(request *req, MYBYTE logLevel)
     if (verbatim)
     {
         if (!req->serverError.errormessage[0])
-            sprintf(req->serverError.errormessage, strerror(errno));
+            sprintf(req->serverError.errormessage, "%s", strerror(errno));
 
         if (req->path[0])
             printf("Client %s:%u %s, %s\n", IP2String(tempbuff, req->client.sin_addr.s_addr), ntohs(req->client.sin_port), req->path, req->serverError.errormessage);

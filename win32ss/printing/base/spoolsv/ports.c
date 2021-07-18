@@ -9,6 +9,7 @@
 #include <marshalling/ports.h>
 
 DWORD
+__stdcall
 _RpcAddPort(WINSPOOL_HANDLE pName, ULONG_PTR hWnd, WCHAR* pMonitorName)
 {
     DWORD dwErrorCode;
@@ -30,6 +31,7 @@ _RpcAddPort(WINSPOOL_HANDLE pName, ULONG_PTR hWnd, WCHAR* pMonitorName)
 }
 
 DWORD
+__stdcall
 _RpcAddPortEx(WINSPOOL_HANDLE pName, WINSPOOL_PORT_CONTAINER* pPortContainer, WINSPOOL_PORT_VAR_CONTAINER* pPortVarContainer, WCHAR* pMonitorName)
 {
     DWORD dwErrorCode, Level = pPortContainer->Level;
@@ -71,6 +73,7 @@ _RpcAddPortEx(WINSPOOL_HANDLE pName, WINSPOOL_PORT_CONTAINER* pPortContainer, WI
 }
 
 DWORD
+__stdcall
 _RpcConfigurePort(WINSPOOL_HANDLE pName, ULONG_PTR hWnd, WCHAR* pPortName)
 {
     DWORD dwErrorCode;
@@ -90,6 +93,7 @@ _RpcConfigurePort(WINSPOOL_HANDLE pName, ULONG_PTR hWnd, WCHAR* pPortName)
 }
 
 DWORD
+__stdcall
 _RpcDeletePort(WINSPOOL_HANDLE pName, ULONG_PTR hWnd, WCHAR* pPortName)
 {
     DWORD dwErrorCode;
@@ -109,6 +113,7 @@ _RpcDeletePort(WINSPOOL_HANDLE pName, ULONG_PTR hWnd, WCHAR* pPortName)
 }
 
 DWORD
+__stdcall
 _RpcEnumPorts(WINSPOOL_HANDLE pName, DWORD Level, BYTE* pPort, DWORD cbBuf, DWORD* pcbNeeded, DWORD* pcReturned)
 {
     DWORD dwErrorCode;
@@ -141,6 +146,7 @@ _RpcEnumPorts(WINSPOOL_HANDLE pName, DWORD Level, BYTE* pPort, DWORD cbBuf, DWOR
 }
 
 DWORD
+__stdcall
 _RpcSetPort(WINSPOOL_HANDLE pName, WCHAR* pPortName, WINSPOOL_PORT_CONTAINER* pPortContainer)
 {
     DWORD dwErrorCode;

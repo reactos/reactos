@@ -846,7 +846,19 @@ MixerControlChangeCallback(PSND_MIXER Mixer, DWORD LineID, LPMIXERLINE Line, PVO
                                 balancePosition = (pVolumeDetails[1].dwValue - Control[Index].Bounds.dwMinimum) / balanceStep;
                                 balancePosition = BALANCE_LEFT + balancePosition;
                             }
+                            else
+                            {
+                                // Not implemented.
+                                assert(FALSE);
+                                UNREACHABLE;
+                            }
                         }
+                    }
+                    else
+                    {
+                        // Not implemented.
+                        assert(FALSE);
+                        UNREACHABLE;
                     }
 
                     /* Update the volume control slider */

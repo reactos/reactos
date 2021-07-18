@@ -8,6 +8,7 @@
 #include "precomp.h"
 
 DWORD
+__stdcall
 _RpcDeletePrinterData(WINSPOOL_PRINTER_HANDLE hPrinter, WCHAR* pValueName)
 {
     UNIMPLEMENTED;
@@ -15,6 +16,7 @@ _RpcDeletePrinterData(WINSPOOL_PRINTER_HANDLE hPrinter, WCHAR* pValueName)
 }
 
 DWORD
+__stdcall
 _RpcDeletePrinterDataEx(WINSPOOL_PRINTER_HANDLE hPrinter, const WCHAR* pKeyName, const WCHAR* pValueName)
 {
     UNIMPLEMENTED;
@@ -22,6 +24,7 @@ _RpcDeletePrinterDataEx(WINSPOOL_PRINTER_HANDLE hPrinter, const WCHAR* pKeyName,
 }
 
 DWORD
+__stdcall
 _RpcDeletePrinterKey(WINSPOOL_PRINTER_HANDLE hPrinter, const WCHAR* pKeyName)
 {
     UNIMPLEMENTED;
@@ -29,6 +32,7 @@ _RpcDeletePrinterKey(WINSPOOL_PRINTER_HANDLE hPrinter, const WCHAR* pKeyName)
 }
 
 DWORD
+__stdcall
 _RpcEnumPrinterData(WINSPOOL_PRINTER_HANDLE hPrinter, DWORD dwIndex, WCHAR* pValueName, DWORD cbValueName, DWORD* pcbValueName, DWORD* pType, BYTE* pData, DWORD cbData, DWORD* pcbData)
 {
     UNIMPLEMENTED;
@@ -36,6 +40,7 @@ _RpcEnumPrinterData(WINSPOOL_PRINTER_HANDLE hPrinter, DWORD dwIndex, WCHAR* pVal
 }
 
 DWORD
+__stdcall
 _RpcEnumPrinterKey(WINSPOOL_PRINTER_HANDLE hPrinter, const WCHAR* pKeyName, WCHAR* pSubkey, DWORD cbSubkey, DWORD* pcbSubkey)
 {
     UNIMPLEMENTED;
@@ -43,6 +48,7 @@ _RpcEnumPrinterKey(WINSPOOL_PRINTER_HANDLE hPrinter, const WCHAR* pKeyName, WCHA
 }
 
 DWORD
+__stdcall
 _RpcEnumPrinterDataEx(WINSPOOL_PRINTER_HANDLE hPrinter, const WCHAR* pKeyName, BYTE* pEnumValues, DWORD cbEnumValues, DWORD* pcbEnumValues, DWORD* pnEnumValues)
 {
     UNIMPLEMENTED;
@@ -50,12 +56,14 @@ _RpcEnumPrinterDataEx(WINSPOOL_PRINTER_HANDLE hPrinter, const WCHAR* pKeyName, B
 }
 
 DWORD
+__stdcall
 _RpcGetPrinterData(WINSPOOL_PRINTER_HANDLE hPrinter, WCHAR* pValueName, DWORD* pType, BYTE* pData, DWORD nSize, DWORD* pcbNeeded)
 {
     return _RpcGetPrinterDataEx(hPrinter, L"PrinterDriverData", pValueName, pType, pData, nSize, pcbNeeded);
 }
 
 DWORD
+__stdcall
 _RpcGetPrinterDataEx(WINSPOOL_PRINTER_HANDLE hPrinter, const WCHAR* pKeyName, const WCHAR* pValueName, DWORD* pType, BYTE* pData, DWORD nSize, DWORD* pcbNeeded)
 {
     DWORD dwErrorCode;
@@ -75,12 +83,14 @@ _RpcGetPrinterDataEx(WINSPOOL_PRINTER_HANDLE hPrinter, const WCHAR* pKeyName, co
 }
 
 DWORD
+__stdcall
 _RpcSetPrinterData(WINSPOOL_PRINTER_HANDLE hPrinter, WCHAR* pValueName, DWORD Type, BYTE* pData, DWORD cbData)
 {
     return _RpcSetPrinterDataEx(hPrinter, L"PrinterDriverData", pValueName, Type, pData, cbData);
 }
 
 DWORD
+__stdcall
 _RpcSetPrinterDataEx(WINSPOOL_PRINTER_HANDLE hPrinter, const WCHAR* pKeyName, const WCHAR* pValueName, DWORD Type, BYTE* pData, DWORD cbData)
 {
     DWORD dwErrorCode;

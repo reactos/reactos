@@ -9,6 +9,7 @@
 #include "marshalling/printerdrivers.h"
 
 DWORD
+__stdcall
 _RpcAddPrinterDriver(WINSPOOL_HANDLE pName, WINSPOOL_DRIVER_CONTAINER* pDriverContainer)
 {
     DWORD dwErrorCode;
@@ -136,6 +137,7 @@ _RpcAddPrinterDriver(WINSPOOL_HANDLE pName, WINSPOOL_DRIVER_CONTAINER* pDriverCo
 }
 
 DWORD
+__stdcall
 _RpcAddPrinterDriverEx(WINSPOOL_HANDLE pName, WINSPOOL_DRIVER_CONTAINER* pDriverContainer, DWORD dwFileCopyFlags)
 {
     DWORD dwErrorCode;
@@ -263,6 +265,7 @@ _RpcAddPrinterDriverEx(WINSPOOL_HANDLE pName, WINSPOOL_DRIVER_CONTAINER* pDriver
 }
 
 DWORD
+__stdcall
 _RpcDeletePrinterDriver(WINSPOOL_HANDLE pName, WCHAR* pEnvironment, WCHAR* pDriverName)
 {
     DWORD dwErrorCode;
@@ -282,6 +285,7 @@ _RpcDeletePrinterDriver(WINSPOOL_HANDLE pName, WCHAR* pEnvironment, WCHAR* pDriv
 }
 
 DWORD
+__stdcall
 _RpcDeletePrinterDriverEx(WINSPOOL_HANDLE pName, WCHAR* pEnvironment, WCHAR* pDriverName, DWORD dwDeleteFlag, DWORD dwVersionNum)
 {
     DWORD dwErrorCode;
@@ -301,6 +305,7 @@ _RpcDeletePrinterDriverEx(WINSPOOL_HANDLE pName, WCHAR* pEnvironment, WCHAR* pDr
 }
 
 DWORD
+__stdcall
 _RpcEnumPrinterDrivers(WINSPOOL_HANDLE pName, WCHAR* pEnvironment, DWORD Level, BYTE* pDrivers, DWORD cbBuf, DWORD* pcbNeeded, DWORD* pcReturned)
 {
     DWORD dwErrorCode;
@@ -333,6 +338,7 @@ _RpcEnumPrinterDrivers(WINSPOOL_HANDLE pName, WCHAR* pEnvironment, DWORD Level, 
 }
 
 DWORD
+__stdcall
 _RpcGetPrinterDriver(WINSPOOL_PRINTER_HANDLE hPrinter, WCHAR* pEnvironment, DWORD Level, BYTE* pDriver, DWORD cbBuf, DWORD* pcbNeeded)
 {
     DWORD dwErrorCode;
@@ -414,6 +420,7 @@ BOOL WINAPI YGetPrinterDriver2(
 }
 
 DWORD
+__stdcall
 _RpcGetPrinterDriver2(WINSPOOL_PRINTER_HANDLE hPrinter, WCHAR* pEnvironment, DWORD Level, BYTE* pDriver, DWORD cbBuf, DWORD* pcbNeeded, DWORD dwClientMajorVersion, DWORD dwClientMinorVersion, DWORD* pdwServerMaxVersion, DWORD* pdwServerMinVersion)
 {
     DWORD dwErrorCode;
@@ -448,6 +455,7 @@ _RpcGetPrinterDriver2(WINSPOOL_PRINTER_HANDLE hPrinter, WCHAR* pEnvironment, DWO
 }
 
 DWORD
+__stdcall
 _RpcGetPrinterDriverDirectory(WINSPOOL_HANDLE pName, WCHAR* pEnvironment, DWORD Level, BYTE* pDriverDirectory, DWORD cbBuf, DWORD* pcbNeeded)
 {
     DWORD dwErrorCode;

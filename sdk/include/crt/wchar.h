@@ -980,7 +980,6 @@ _CRTIMP int __cdecl iswblank(wint_t _C);
     _Inout_ FILE *_File);
 
   _Check_return_
-  _CRTIMP
   wint_t
   __cdecl
   getwchar(void);
@@ -994,7 +993,6 @@ _CRTIMP int __cdecl iswblank(wint_t _C);
     _Inout_ FILE *_File);
 
   _Check_return_opt_
-  _CRTIMP
   wint_t
   __cdecl
   putwchar(

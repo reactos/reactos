@@ -744,7 +744,6 @@ USBPORT_DoneTransfer(
 
 /* debug.c */
 ULONG
-NTAPI
 USBPORT_DbgPrint(
   IN PVOID MiniPortExtension,
   IN ULONG Level,

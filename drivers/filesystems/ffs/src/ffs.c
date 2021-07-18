@@ -321,7 +321,8 @@ FFSv1LoadInode(
 				DINODE1_SIZE,
 				PIN_WAIT,
 				(PVOID)dinode1,
-				&IoStatus));
+                &IoStatus))
+    ;
 
 	if (!NT_SUCCESS(IoStatus.Status))
 	{
@@ -357,7 +358,8 @@ FFSv2LoadInode(
 				DINODE2_SIZE,
 				PIN_WAIT,
 				(PVOID)dinode2,
-				&IoStatus));
+                &IoStatus))
+    ;
 
 	if (!NT_SUCCESS(IoStatus.Status))
 	{
@@ -475,7 +477,8 @@ FFSv1LoadBlock(
 				Vcb->BlockSize,
 				PIN_WAIT,
 				Buffer,
-				&IoStatus));
+                &IoStatus))
+    ;
 
 	if (!NT_SUCCESS(IoStatus.Status))
 	{
@@ -508,7 +511,8 @@ FFSv2LoadBlock(
 				Vcb->BlockSize,
 				PIN_WAIT,
 				Buffer,
-				&IoStatus));
+                &IoStatus))
+    ;
 
 	if (!NT_SUCCESS(IoStatus.Status))
 	{

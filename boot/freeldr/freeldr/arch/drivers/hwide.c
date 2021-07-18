@@ -898,6 +898,7 @@ IdentifyDevice(
             }
             else
             {
+                SectorSize = 0;
                 for (i = 1 << 15; i > 0; i >>= 1)
                 {
                     if ((Id.UnformattedBytesPerSector & i) != 0)

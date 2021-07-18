@@ -318,7 +318,7 @@ static BOOL CertGetSubjectAndIssuer(HINTERNET hFile, CLocalPtr<char>& subjectInf
         return FALSE;
     }
 
-    if (!flags & SECURITY_FLAG_SECURE)
+    if (!(flags & SECURITY_FLAG_SECURE))
     {
         return FALSE;
     }

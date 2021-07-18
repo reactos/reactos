@@ -9,6 +9,7 @@
 #include <marshalling/monitors.h>
 
 DWORD
+__stdcall
 _RpcAddMonitor(WINSPOOL_HANDLE pName, WINSPOOL_MONITOR_CONTAINER* pMonitorContainer)
 {
     DWORD dwErrorCode;
@@ -28,6 +29,7 @@ _RpcAddMonitor(WINSPOOL_HANDLE pName, WINSPOOL_MONITOR_CONTAINER* pMonitorContai
 }
 
 DWORD
+__stdcall
 _RpcDeleteMonitor(WINSPOOL_HANDLE pName, WCHAR* pEnvironment, WCHAR* pMonitorName)
 {
     DWORD dwErrorCode;
@@ -47,6 +49,7 @@ _RpcDeleteMonitor(WINSPOOL_HANDLE pName, WCHAR* pEnvironment, WCHAR* pMonitorNam
 }
 
 DWORD
+__stdcall
 _RpcEnumMonitors(WINSPOOL_HANDLE pName, DWORD Level, BYTE* pMonitor, DWORD cbBuf, DWORD* pcbNeeded, DWORD* pcReturned)
 {
     DWORD dwErrorCode;

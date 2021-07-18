@@ -2028,7 +2028,7 @@ NdisIPnPStartDevice(
       if (NdisStatus == NDIS_STATUS_SUCCESS)
         Adapter->NdisMiniportBlock.BusType = ConfigParam->ParameterData.IntegerData;
       else
-        Adapter->NdisMiniportBlock.BusType = Isa;
+        Adapter->NdisMiniportBlock.BusType = (NDIS_INTERFACE_TYPE) Isa;
     }
 
   Status = IoGetDeviceProperty(Adapter->NdisMiniportBlock.PhysicalDeviceObject,

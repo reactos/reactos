@@ -14,7 +14,7 @@ BOOL WINAPI
 ImpersonatePrinterClient(HANDLE hToken)
 {
     DWORD cbReturned;
-    DWORD dwErrorCode;
+    DWORD dwErrorCode = ERROR_SUCCESS;
     TOKEN_TYPE Type;
 
     // Sanity check

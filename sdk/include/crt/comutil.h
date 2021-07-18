@@ -420,7 +420,6 @@ public:
   operator IUnknown*() const;
   operator DECIMAL() const;
   operator BYTE() const;
-  operator VARIANT() const throw();
   operator char() const;
   operator unsigned short() const;
   operator unsigned long() const;
@@ -688,7 +687,6 @@ inline _variant_t::operator BYTE() const {
   varDest.ChangeType(VT_UI1,this);
   return V_UI1(&varDest);
 }
-inline _variant_t::operator VARIANT() const throw() { return *(VARIANT*) this; }
 inline _variant_t::operator char() const {
   if(V_VT(this)==VT_I1) return V_I1(this);
   _variant_t varDest;

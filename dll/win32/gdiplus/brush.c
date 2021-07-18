@@ -54,7 +54,11 @@ double erf(double x)
     sign = 1;
     if (x < 0)
         sign = -1;
+#ifdef __REACTOS__
+    x = fabs(x);
+#else
     x = abs(x);
+#endif
 
     /* A & S 7.1.26 */
     t = 1.0/(1.0 + p*x);

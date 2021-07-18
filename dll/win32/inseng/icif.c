@@ -1645,7 +1645,11 @@ error:
 
 static HRESULT process_section(struct ciffile *file, struct inf_section *section, const char *section_name)
 {
+#ifdef __REACTOS__
+    HRESULT hr = S_OK;
+#else
     HRESULT hr;
+#endif
     char *type;
 
     if (!section_get_str(section, "SectionType", &type, "Component"))

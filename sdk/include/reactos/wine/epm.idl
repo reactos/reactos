@@ -48,7 +48,11 @@ interface epm
     typedef [context_handle] void *ept_lookup_handle_t;
 
     /* Adds entries to an endpoint map */
+#ifdef __REACTOS__
+    void RPC_ENTRY ept_insert(
+#else
     void ept_insert(
+#endif
         [in]    handle_t            h,
         [in]    unsigned32          num_ents,
         [in, size_is(num_ents)]
@@ -58,7 +62,11 @@ interface epm
     );
 
     /* Removes entries from an endpoint map */
+#ifdef __REACTOS__
+    void RPC_ENTRY ept_delete(
+#else
     void ept_delete(
+#endif
         [in]    handle_t            h,
         [in]    unsigned32          num_ents,
         [in, size_is(num_ents)]
@@ -68,7 +76,11 @@ interface epm
 
     /* Lookup entries in an endpoint map */
     [idempotent]
+#ifdef __REACTOS__
+    void RPC_ENTRY ept_lookup(
+#else
     void ept_lookup(
+#endif
         [in]        handle_t            h,
         [in]        unsigned32          inquiry_type,
         [in]        uuid_p_t            object,
@@ -84,7 +96,11 @@ interface epm
 
     /* Lookup entries in an endpoint map using the given input pattern */
     [idempotent]
+#ifdef __REACTOS__
+    void RPC_ENTRY ept_map(
+#else
     void ept_map(
+#endif
         [in]        handle_t            h,
         [in]        uuid_p_t            object,
         [in]        twr_p_t             map_tower,
@@ -97,7 +113,11 @@ interface epm
     );
 
     /* Free the context handle returned by ept_lookup or ept_map */
+#ifdef __REACTOS__
+    void RPC_ENTRY ept_lookup_handle_free(
+#else
     void ept_lookup_handle_free(
+#endif
         [in]        handle_t            h,
         [in, out]   ept_lookup_handle_t *entry_handle,
         [out]       error_status_t      *status
@@ -105,14 +125,22 @@ interface epm
 
     /* Inquires as to the endpoint map's object identifier */
     [idempotent]
+#ifdef __REACTOS__
+    void RPC_ENTRY ept_inq_object(
+#else
     void ept_inq_object(
+#endif
         [in]        handle_t            h,
         [out]       GUID                *ept_object,
         [out]       error_status_t      *status
     );
 
     /* Deletes matching entries in the endpoint map */
+#ifdef __REACTOS__
+    void RPC_ENTRY ept_mgmt_delete(
+#else
     void ept_mgmt_delete(
+#endif
         [in]        handle_t            h,
         [in]        boolean32           object_speced,
         [in]        uuid_p_t            object,

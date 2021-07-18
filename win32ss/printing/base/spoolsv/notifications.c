@@ -8,6 +8,7 @@
 #include "precomp.h"
 
 DWORD
+__stdcall
 _RpcClientFindFirstPrinterChangeNotification(VOID)
 {
     UNIMPLEMENTED;
@@ -15,6 +16,7 @@ _RpcClientFindFirstPrinterChangeNotification(VOID)
 }
 
 DWORD
+__stdcall
 _RpcFindClosePrinterChangeNotification(VOID)
 {
     UNIMPLEMENTED;
@@ -22,6 +24,7 @@ _RpcFindClosePrinterChangeNotification(VOID)
 }
 
 DWORD
+__stdcall
 _RpcFindNextPrinterChangeNotification(VOID)
 {
     UNIMPLEMENTED;
@@ -29,6 +32,7 @@ _RpcFindNextPrinterChangeNotification(VOID)
 }
 
 DWORD
+__stdcall
 _RpcRemoteFindFirstPrinterChangeNotification(WINSPOOL_PRINTER_HANDLE hPrinter, DWORD fdwFlags, DWORD fdwOptions, WCHAR* pszLocalMachine, DWORD dwPrinterLocal, DWORD cbBuffer, BYTE* pBuffer)
 {
     UNIMPLEMENTED;
@@ -36,6 +40,7 @@ _RpcRemoteFindFirstPrinterChangeNotification(WINSPOOL_PRINTER_HANDLE hPrinter, D
 }
 
 DWORD
+__stdcall
 _RpcRemoteFindFirstPrinterChangeNotificationEx(WINSPOOL_PRINTER_HANDLE hPrinter, DWORD fdwFlags, DWORD fdwOptions, WCHAR* pszLocalMachine, DWORD dwPrinterLocal, WINSPOOL_V2_NOTIFY_OPTIONS* pOptions)
 {
     UNIMPLEMENTED;
@@ -43,6 +48,7 @@ _RpcRemoteFindFirstPrinterChangeNotificationEx(WINSPOOL_PRINTER_HANDLE hPrinter,
 }
 
 DWORD
+__stdcall
 _RpcReplyClosePrinter(WINSPOOL_PRINTER_HANDLE* phNotify)
 {
     UNIMPLEMENTED;
@@ -50,6 +56,7 @@ _RpcReplyClosePrinter(WINSPOOL_PRINTER_HANDLE* phNotify)
 }
 
 DWORD
+__stdcall
 _RpcReplyOpenPrinter(WINSPOOL_HANDLE pMachine, WINSPOOL_PRINTER_HANDLE* phPrinterNotify, DWORD dwPrinterRemote, DWORD dwType, DWORD cbBuffer, BYTE* pBuffer)
 {
     UNIMPLEMENTED;
@@ -57,6 +64,7 @@ _RpcReplyOpenPrinter(WINSPOOL_HANDLE pMachine, WINSPOOL_PRINTER_HANDLE* phPrinte
 }
 
 DWORD
+__stdcall
 _RpcRouterFindFirstPrinterChangeNotificationOld(VOID)
 {
     UNIMPLEMENTED;
@@ -64,6 +72,7 @@ _RpcRouterFindFirstPrinterChangeNotificationOld(VOID)
 }
 
 DWORD
+__stdcall
 _RpcRouterRefreshPrinterChangeNotification(WINSPOOL_PRINTER_HANDLE hPrinter, DWORD dwColor, WINSPOOL_V2_NOTIFY_OPTIONS* pOptions, WINSPOOL_V2_NOTIFY_INFO** ppInfo)
 {
     UNIMPLEMENTED;
@@ -71,6 +80,7 @@ _RpcRouterRefreshPrinterChangeNotification(WINSPOOL_PRINTER_HANDLE hPrinter, DWO
 }
 
 DWORD
+__stdcall
 _RpcRouterReplyPrinter(WINSPOOL_PRINTER_HANDLE hNotify, DWORD fdwFlags, DWORD cbBuffer, BYTE* pBuffer)
 {
     UNIMPLEMENTED;
@@ -78,6 +88,7 @@ _RpcRouterReplyPrinter(WINSPOOL_PRINTER_HANDLE hNotify, DWORD fdwFlags, DWORD cb
 }
 
 DWORD
+__stdcall
 _RpcRouterReplyPrinterEx(WINSPOOL_PRINTER_HANDLE hNotify, DWORD dwColor, DWORD fdwFlags, DWORD* pdwResult, DWORD dwReplyType, WINSPOOL_V2_UREPLY_PRINTER Reply)
 {
     UNIMPLEMENTED;
@@ -85,6 +96,7 @@ _RpcRouterReplyPrinterEx(WINSPOOL_PRINTER_HANDLE hNotify, DWORD dwColor, DWORD f
 }
 
 DWORD
+__stdcall
 _RpcWaitForPrinterChange(WINSPOOL_PRINTER_HANDLE hPrinter, DWORD Flags, DWORD* pFlags)
 {
     UNIMPLEMENTED;

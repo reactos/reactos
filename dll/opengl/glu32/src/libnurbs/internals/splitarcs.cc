@@ -253,8 +253,13 @@ Subdivider::join_t( Bin& bottom, Bin& top, Arc_ptr jarc1, Arc_ptr jarc2 )
 {
     assert( jarc1->check( ) != 0 );
     assert( jarc2->check( ) != 0 );
+#ifdef __REACTOS__
+    assert( jarc1->next == nullptr || jarc1->next->check( ) != 0 );
+    assert( jarc2->next == nullptr || jarc2->next->check( ) != 0 );
+#else
     assert( jarc1->next->check( ) != 0 );
     assert( jarc2->next->check( ) != 0 );
+#endif
     assert( jarc1 != jarc2 );
 
     if( ! jarc1->getitail() )

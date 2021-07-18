@@ -254,7 +254,7 @@ Cleanup:
 BOOL WINAPI
 PrintDocumentOnPrintProcessor(HANDLE hPrintProcessor, PWSTR pDocumentName)
 {
-    DWORD dwErrorCode;
+    DWORD dwErrorCode = ERROR_SUCCESS;
     PWINPRINT_HANDLE pHandle;
 
     TRACE("PrintDocumentOnPrintProcessor(%p, %S)\n", hPrintProcessor, pDocumentName);

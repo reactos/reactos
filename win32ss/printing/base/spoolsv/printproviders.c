@@ -8,6 +8,7 @@
 #include "precomp.h"
 
 DWORD
+__stdcall
 _RpcAddPrintProvidor(WINSPOOL_HANDLE pName, WINSPOOL_PROVIDOR_CONTAINER* pProvidorContainer)
 {
     DWORD dwErrorCode;
@@ -28,6 +29,7 @@ _RpcAddPrintProvidor(WINSPOOL_HANDLE pName, WINSPOOL_PROVIDOR_CONTAINER* pProvid
 }
 
 DWORD
+__stdcall
 _RpcDeletePrintProvidor(WINSPOOL_HANDLE pName, WCHAR* pEnvironment, WCHAR* pPrintProviderName)
 {
     DWORD dwErrorCode;

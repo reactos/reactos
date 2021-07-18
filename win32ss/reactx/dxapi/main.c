@@ -188,6 +188,7 @@ DxUpdateCapture (
 *
 *--*/
 VOID
+APIENTRY
 DxGetVersionNumber(PVOID lpvInBuffer, LPDDGETVERSIONNUMBER lpvOutBuffer)
 {
     lpvOutBuffer->ddRVal = DD_OK;
@@ -196,126 +197,147 @@ DxGetVersionNumber(PVOID lpvInBuffer, LPDDGETVERSIONNUMBER lpvOutBuffer)
 }
 
 VOID
+APIENTRY
 DxCloseHandle(PVOID lpvInBuffer, PVOID lpvOutBuffer)
 {
     /* FIXME Unimplement */
 }
 
 VOID
+APIENTRY
 DxOpenDirectDraw(PVOID lpvInBuffer, PVOID lpvOutBuffer)
 {
     /* FIXME Unimplement */
 }
 
 VOID
+APIENTRY
 DxOpenSurface(PVOID lpvInBuffer, PVOID lpvOutBuffer)
 {
     /* FIXME Unimplement */
 }
 
 VOID
+APIENTRY
 DxOpenVideoPort(PVOID lpvInBuffer, PVOID lpvOutBuffer)
 {
     /* FIXME Unimplement */
 }
 
 VOID
+APIENTRY
 DxGetKernelCaps(PVOID lpvInBuffer, PVOID lpvOutBuffer)
 {
     /* FIXME Unimplement */
 }
 
 VOID
+APIENTRY
 DxGetFieldNumber(PVOID lpvInBuffer, PVOID lpvOutBuffer)
 {
     /* FIXME Unimplement */
 }
 
 VOID
+APIENTRY
 DxSetFieldNumber(PVOID lpvInBuffer, PVOID lpvOutBuffer)
 {
     /* FIXME Unimplement */
 }
 
 VOID
+APIENTRY
 DxSetSkipPattern(PVOID lpvInBuffer, PVOID lpvOutBuffer)
 {
     /* FIXME Unimplement */
 }
 
 VOID
+APIENTRY
 DxGetSurfaceState(PVOID lpvInBuffer, PVOID lpvOutBuffer)
 {
     /* FIXME Unimplement */
 }
 
 VOID
+APIENTRY
 DxSetSurfaceState(PVOID lpvInBuffer, PVOID lpvOutBuffer)
 {
     /* FIXME Unimplement */
 }
 
 VOID
+APIENTRY
 DxLock(PVOID lpvInBuffer, PVOID lpvOutBuffer)
 {
     /* FIXME Unimplement */
 }
 
 VOID
+APIENTRY
 DxFlipOverlay(PVOID lpvInBuffer, PVOID lpvOutBuffer)
 {
     /* FIXME Unimplement */
 }
 
 VOID
+APIENTRY
 DxFlipVideoPort(PVOID lpvInBuffer, PVOID lpvOutBuffer)
 {
     /* FIXME Unimplement */
 }
 
 VOID
+APIENTRY
 DxGetCurrentAutoflip(PVOID lpvInBuffer, PVOID lpvOutBuffer)
 {
     /* FIXME Unimplement */
 }
 
 VOID
+APIENTRY
 DxGetPreviousAutoflip(PVOID lpvInBuffer, PVOID lpvOutBuffer)
 {
     /* FIXME Unimplement */
 }
 
 VOID
+APIENTRY
 DxRegisterEvent(PVOID lpvInBuffer, PVOID lpvOutBuffer)
 {
     /* FIXME Unimplement */
 }
 
 VOID
+APIENTRY
 DxUnregisterEvent(PVOID lpvInBuffer, PVOID lpvOutBuffer)
 {
     /* FIXME Unimplement */
 }
 
 VOID
+APIENTRY
 DxGetPolarity(PVOID lpvInBuffer, PVOID lpvOutBuffer)
 {
     /* FIXME Unimplement */
 }
 
 VOID
+APIENTRY
 DxOpenVpCatureDevice(PVOID lpvInBuffer, PVOID lpvOutBuffer)
 {
     /* FIXME Unimplement */
 }
 
 VOID
+APIENTRY
 DxAddVpCaptureBuffer(PVOID lpvInBuffer, PVOID lpvOutBuffer)
 {
     /* FIXME Unimplement */
 }
 
 VOID
+APIENTRY
 DxFlushVpCaptureBuffs(PVOID lpvInBuffer, PVOID lpvOutBuffer)
 {
     /* FIXME Unimplement */
