@@ -3039,7 +3039,7 @@ PIMEDPI WINAPI ImmLockImeDpi(HKL hKL)
  */
 VOID WINAPI ImmUnlockImeDpi(PIMEDPI pImeDpi)
 {
-    PIMEDPI pEntry, pNext;
+    PIMEDPI *ppEntry;
 
     TRACE("ImmUnlockImeDpi(%p)\n", pImeDpi);
 
@@ -3066,24 +3066,14 @@ VOID WINAPI ImmUnlockImeDpi(PIMEDPI pImeDpi)
         }
     }
 
-    /* remove from list */
-    pEntry = g_pImeDpiList;
-    if (pEntry == pImeDpi)
+    /* Remove from list */
+    for (ppEntry = &g_pImeDpiList; *ppEntry; ppEntry = &((*ppEntry)->pNext))
     {
-        g_pImeDpiList = pImeDpi->pNext;
-    }
-    else if (pEntry)
-    {
-        do
+        if (*ppEntry == pImeDpi) /* found */
         {
-            pNext = pEntry->pNext;
-            if (pNext == pImeDpi) /* found */
-            {
-                pEntry->pNext = pImeDpi->pNext;
-                break;
-            }
-            pEntry = pNext;
-        } while (pEntry);
+            *ppEntry = pImeDpi->pNext;
+            break;
+        }
     }
 
     Imm32FreeImeDpi(pImeDpi, TRUE);
