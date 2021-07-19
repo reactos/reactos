@@ -96,8 +96,17 @@ LsapCreateSid(PSID_IDENTIFIER_AUTHORITY IdentifierAuthority,
               PSID *SidPtr)
 {
     PWELL_KNOWN_SID SidEntry;
+    SIZE_T AccountNameLength, DomainNameLength;
     PULONG p;
     ULONG i;
+
+    AccountNameLength = wcslen(AccountName);
+    DomainNameLength = wcslen(DomainName);
+    if ((AccountNameLength > UNICODE_STRING_MAX_CHARS) ||
+        (DomainNameLength > UNICODE_STRING_MAX_CHARS))
+    {
+        return FALSE;
+    }
 
     SidEntry = RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(WELL_KNOWN_SID));
     if (SidEntry == NULL)
@@ -126,7 +135,7 @@ LsapCreateSid(PSID_IDENTIFIER_AUTHORITY IdentifierAuthority,
 
 //    RtlInitUnicodeString(&SidEntry->AccountName,
 //                         AccountName);
-    SidEntry->AccountName.Length = wcslen(AccountName) * sizeof(WCHAR);
+    SidEntry->AccountName.Length = (USHORT)AccountNameLength * sizeof(WCHAR);
     SidEntry->AccountName.MaximumLength = SidEntry->AccountName.Length + sizeof(WCHAR);
     SidEntry->AccountName.Buffer = RtlAllocateHeap(RtlGetProcessHeap(), 0,
                                                    SidEntry->AccountName.MaximumLength);
@@ -142,7 +151,7 @@ LsapCreateSid(PSID_IDENTIFIER_AUTHORITY IdentifierAuthority,
 
 //    RtlInitUnicodeString(&SidEntry->DomainName,
 //                         DomainName);
-    SidEntry->DomainName.Length = wcslen(DomainName) * sizeof(WCHAR);
+    SidEntry->DomainName.Length = (USHORT)DomainNameLength * sizeof(WCHAR);
     SidEntry->DomainName.MaximumLength = SidEntry->DomainName.Length + sizeof(WCHAR);
     SidEntry->DomainName.Buffer = RtlAllocateHeap(RtlGetProcessHeap(), 0,
                                                   SidEntry->DomainName.MaximumLength);

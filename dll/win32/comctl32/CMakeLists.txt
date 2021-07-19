@@ -65,8 +65,10 @@ add_library(comctl32 MODULE
     ${CMAKE_CURRENT_BINARY_DIR}/comctl32.def)
 
 if(MSVC)
+    # Disable warning C4146: unary minus operator applied to unsigned type, result still unsigned
+    # Disable warning C4267: '=': conversion from 'size_t' to 'WORD', possible loss of data
     # Disable warning C4477 (printf format warnings)
-    remove_target_compile_option(comctl32 "/we4477")
+    target_compile_options(comctl32 PRIVATE /wd4146 /wd4267 /wd4477)
 endif()
 
 set_module_type(comctl32 win32dll UNICODE)

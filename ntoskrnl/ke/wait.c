@@ -470,7 +470,7 @@ KeWaitForSingleObject(IN PVOID Object,
                     (Thread == CurrentObject->OwnerThread))
                 {
                     /* Just unwait this guy and exit */
-                    if (CurrentObject->Header.SignalState != (LONG)MINLONG)
+                    if (CurrentObject->Header.SignalState != MINLONG)
                     {
                         /* It has a normal signal state. Unwait and return */
                         KiSatisfyMutantWait(CurrentObject, Thread);

@@ -111,7 +111,7 @@ ClassNameToVersion(
             ERR("Couldn't get atom name for atom %x !\n", LOWORD((DWORD_PTR)lpszClass));
             return NULL;
         }
-        SectionName.Length = wcslen(SectionNameBuf) * sizeof(WCHAR);
+        SectionName.Length = (USHORT)wcslen(SectionNameBuf) * sizeof(WCHAR);
         TRACE("ClassNameToVersion got name %wZ from atom\n", &SectionName);
     }
     else

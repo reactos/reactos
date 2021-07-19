@@ -105,7 +105,7 @@ BaseCheckVDM(IN ULONG BinaryType,
     PWCHAR CurrentDir = NULL;
     PWCHAR ShortAppName = NULL;
     PWCHAR ShortCurrentDir = NULL;
-    ULONG Length;
+    SIZE_T Length;
     PCHAR AnsiCmdLine = NULL;
     PCHAR AnsiAppName = NULL;
     PCHAR AnsiCurDirectory = NULL;
@@ -283,16 +283,24 @@ BaseCheckVDM(IN ULONG BinaryType,
         goto Cleanup;
     }
 
+    /* Make sure that the command line isn't too long */
+    Length = wcslen(CommandLine);
+    if (Length > UNICODE_STRING_MAX_CHARS - 1)
+    {
+        Status = STATUS_INVALID_PARAMETER;
+        goto Cleanup;
+    }
+
     /* Setup the input parameters */
     CheckVdm->ConsoleHandle = NtCurrentPeb()->ProcessParameters->ConsoleHandle;
     CheckVdm->BinaryType = BinaryType;
     CheckVdm->CodePage = CP_ACP;
     CheckVdm->dwCreationFlags = CreationFlags;
     CheckVdm->CurDrive = CurrentDirectory[0] - L'A';
-    CheckVdm->CmdLen = wcslen(CommandLine) + 1;
-    CheckVdm->AppLen = wcslen(ShortAppName) + 1;
+    CheckVdm->CmdLen = (USHORT)Length + 1;
+    CheckVdm->AppLen = (USHORT)wcslen(ShortAppName) + 1;
     CheckVdm->PifLen = 0; // TODO: PIF file support!
-    CheckVdm->CurDirectoryLen = wcslen(ShortCurrentDir) + 1;
+    CheckVdm->CurDirectoryLen = (USHORT)wcslen(ShortCurrentDir) + 1;
     CheckVdm->EnvLen = AnsiEnvironment->Length;
     CheckVdm->DesktopLen = (StartupInfo->lpDesktop != NULL) ? (wcslen(StartupInfo->lpDesktop) + 1) : 0;
     CheckVdm->TitleLen = (StartupInfo->lpTitle != NULL) ? (wcslen(StartupInfo->lpTitle) + 1) : 0;

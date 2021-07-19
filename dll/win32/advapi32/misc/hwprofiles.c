@@ -42,8 +42,8 @@ GetCurrentHwProfileA(LPHW_PROFILE_INFOA lpHwProfileInfo)
     lpHwProfileInfo->dwDockInfo = ProfileInfo.dwDockInfo;
 
     /* Convert the profile GUID to ANSI */
-    StringU.Buffer = (PWCHAR)ProfileInfo.szHwProfileGuid;
-    StringU.Length = wcslen(ProfileInfo.szHwProfileGuid) * sizeof(WCHAR);
+    StringU.Buffer = ProfileInfo.szHwProfileGuid;
+    StringU.Length = (USHORT)wcslen(ProfileInfo.szHwProfileGuid) * sizeof(WCHAR);
     StringU.MaximumLength = HW_PROFILE_GUIDLEN * sizeof(WCHAR);
     StringA.Buffer = (PCHAR)&lpHwProfileInfo->szHwProfileGuid;
     StringA.Length = 0;
@@ -58,8 +58,8 @@ GetCurrentHwProfileA(LPHW_PROFILE_INFOA lpHwProfileInfo)
     }
 
     /* Convert the profile name to ANSI */
-    StringU.Buffer = (PWCHAR)ProfileInfo.szHwProfileName;
-    StringU.Length = wcslen(ProfileInfo.szHwProfileName) * sizeof(WCHAR);
+    StringU.Buffer = ProfileInfo.szHwProfileName;
+    StringU.Length = (USHORT)wcslen(ProfileInfo.szHwProfileName) * sizeof(WCHAR);
     StringU.MaximumLength = MAX_PROFILE_LEN * sizeof(WCHAR);
     StringA.Buffer = (PCHAR)&lpHwProfileInfo->szHwProfileName;
     StringA.Length = 0;

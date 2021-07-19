@@ -4,7 +4,7 @@
  * FILE:            drivers/kbdclass/kbdclass.c
  * PURPOSE:         Keyboard class driver
  *
- * PROGRAMMERS:     Hervé Poussineau (hpoussin@reactos.org)
+ * PROGRAMMERS:     HervÃ© Poussineau (hpoussin@reactos.org)
  */
 
 #include "kbdclass.h"
@@ -321,7 +321,7 @@ CreateClassDeviceObject(
 	DriverExtension = IoGetDriverObjectExtension(DriverObject, DriverObject);
 	DeviceNameU.Length = 0;
 	DeviceNameU.MaximumLength =
-		wcslen(L"\\Device\\") * sizeof(WCHAR)    /* "\Device\" */
+		(USHORT)wcslen(L"\\Device\\") * sizeof(WCHAR) /* "\Device\" */
 		+ DriverExtension->DeviceBaseName.Length /* "KeyboardClass" */
 		+ 4 * sizeof(WCHAR)                      /* Id between 0 and 9999 */
 		+ sizeof(UNICODE_NULL);                  /* Final NULL char */
