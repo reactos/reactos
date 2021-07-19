@@ -1341,7 +1341,7 @@ NtUserToUnicodeEx(
     PWCHAR pwszBuff = NULL;
     INT i, iRet = 0;
     PKL pKl = NULL;
-    NTSTATUS Status;
+    NTSTATUS Status = STATUS_SUCCESS;
 
     TRACE("Enter NtUserSetKeyboardState\n");
 
