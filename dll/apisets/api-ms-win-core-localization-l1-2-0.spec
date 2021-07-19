@@ -44,7 +44,7 @@
 @ stdcall -version=0x602+ IsValidCodePage() kernel32.IsValidCodePage
 @ stdcall -version=0x602+ IsValidLanguageGroup() kernel32.IsValidLanguageGroup
 @ stdcall -version=0x602+ IsValidLocale() kernel32.IsValidLocale
-@ stub -version=0x602+ IsValidLocaleName
+@ stdcall -version=0x602+ IsValidLocaleName() kernel32.IsValidLocaleName
 @ stub -version=0x602+ IsValidNLSVersion
 @ stdcall -version=0x602+ LCMapStringA() kernel32.LCMapStringA
 @ stdcall -version=0x602+ LCMapStringEx() kernel32.LCMapStringEx

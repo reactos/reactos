@@ -3,97 +3,97 @@
 
 @ stdcall __toascii() msvcrt.__toascii
 @ stdcall _atodbl() msvcrt._atodbl
-@ stub _atodbl_l
-@ stub _atof_l
+@ stdcall -version=0x600+ _atodbl_l() msvcrt._atodbl_l
+@ stdcall -version=0x600+ _atof_l() msvcrt._atof_l
 @ stub _atoflt
-@ stub _atoflt_l
+@ stdcall -version=0x600+ _atoflt_l() msvcrt._atoflt_l
 @ stdcall _atoi64() msvcrt._atoi64
-@ stub _atoi64_l
-@ stub _atoi_l
-@ stub _atol_l
+@ stdcall -version=0x600+ _atoi64_l() msvcrt._atoi64_l
+@ stdcall -version=0x600+ _atoi_l() msvcrt._atoi_l
+@ stdcall -version=0x600+ _atol_l() msvcrt._atol_l
 @ stdcall _atoldbl() msvcrt._atoldbl
-@ stub _atoldbl_l
+@ stdcall -version=0x600+ _atoldbl_l() msvcrt._atoldbl_l
 @ stub _atoll_l
 @ stdcall _ecvt() msvcrt._ecvt
-@ stub _ecvt_s
+@ stdcall -version=0x600+ _ecvt_s() msvcrt._ecvt_s
 @ stdcall _fcvt() msvcrt._fcvt
-@ stub _fcvt_s
+@ stdcall -version=0x600+ _fcvt_s() msvcrt._fcvt_s
 @ stdcall _gcvt() msvcrt._gcvt
-@ stub _gcvt_s
+@ stdcall -version=0x600+ _gcvt_s() msvcrt._gcvt_s
 @ stdcall _i64toa() msvcrt._i64toa
-@ stub _i64toa_s
+@ stdcall -version=0x600+ _i64toa_s() msvcrt._i64toa_s
 @ stdcall _i64tow() msvcrt._i64tow
-@ stub _i64tow_s
+@ stdcall -version=0x600+ _i64tow_s() msvcrt._i64tow_s
 @ stdcall _itoa() msvcrt._itoa
-@ stub _itoa_s
+@ stdcall -version=0x600+ _itoa_s() msvcrt._itoa_s
 @ stdcall _itow() msvcrt._itow
-@ stub _itow_s
+@ stdcall -version=0x600+ _itow_s() msvcrt._itow_s
 @ stdcall _ltoa() msvcrt._ltoa
-@ stub _ltoa_s
+@ stdcall -version=0x600+ _ltoa_s() msvcrt._ltoa_s
 @ stdcall _ltow() msvcrt._ltow
-@ stub _ltow_s
-@ stub _strtod_l
+@ stdcall -version=0x600+ _ltow_s() msvcrt._ltow_s
+@ stdcall -version=0x600+ _strtod_l() msvcrt._strtod_l
 @ stub _strtof_l
 @ stdcall _strtoi64() msvcrt._strtoi64
-@ stub _strtoi64_l
+@ stdcall -version=0x600+ _strtoi64_l() msvcrt._strtoi64_l
 @ stub _strtoimax_l
-@ stub _strtol_l
+@ stdcall -version=0x600+ _strtol_l() msvcrt._strtol_l
 @ stub _strtold_l
 @ stub _strtoll_l
 @ stdcall _strtoui64() msvcrt._strtoui64
-@ stub _strtoui64_l
-@ stub _strtoul_l
+@ stdcall -version=0x600+ _strtoui64_l() msvcrt._strtoui64_l
+@ stdcall -version=0x600+ _strtoul_l() msvcrt._strtoul_l
 @ stub _strtoull_l
 @ stub _strtoumax_l
 @ stdcall _ui64toa() msvcrt._ui64toa
-@ stub _ui64toa_s
+@ stdcall -version=0x600+ _ui64toa_s() msvcrt._ui64toa_s
 @ stdcall _ui64tow() msvcrt._ui64tow
-@ stub _ui64tow_s
+@ stdcall -version=0x600+ _ui64tow_s() msvcrt._ui64tow_s
 @ stdcall _ultoa() msvcrt._ultoa
-@ stub _ultoa_s
+@ stdcall -version=0x600+ _ultoa_s() msvcrt._ultoa_s
 @ stdcall _ultow() msvcrt._ultow
-@ stub _ultow_s
+@ stdcall -version=0x600+ _ultow_s() msvcrt._ultow_s
 @ stub _wcstod_l
 @ stub _wcstof_l
 @ stdcall _wcstoi64() msvcrt._wcstoi64
-@ stub _wcstoi64_l
+@ stdcall -version=0x600+ _wcstoi64_l() msvcrt._wcstoi64_l
 @ stub _wcstoimax_l
-@ stub _wcstol_l
+@ stdcall -version=0x600+ _wcstol_l() msvcrt._wcstol_l
 @ stub _wcstold_l
 @ stub _wcstoll_l
-@ stub _wcstombs_l
-@ stub _wcstombs_s_l
+@ stdcall -version=0x600+ _wcstombs_l() msvcrt._wcstombs_l
+@ stdcall -version=0x600+ _wcstombs_s_l() msvcrt._wcstombs_s_l
 @ stdcall _wcstoui64() msvcrt._wcstoui64
-@ stub _wcstoui64_l
-@ stub _wcstoul_l
+@ stdcall -version=0x600+ _wcstoui64_l() msvcrt._wcstoui64_l
+@ stdcall -version=0x600+ _wcstoul_l() msvcrt._wcstoul_l
 @ stub _wcstoull_l
 @ stub _wcstoumax_l
-@ stub _wctomb_l
-@ stub _wctomb_s_l
+@ stdcall -version=0x600+ _wctomb_l() msvcrt._wctomb_l
+@ stdcall -version=0x600+ _wctomb_s_l() msvcrt._wctomb_s_l
 @ stdcall _wtof() msvcrt._wtof
-@ stub _wtof_l
+@ stdcall -version=0x600+ _wtof_l() msvcrt._wtof_l
 @ stdcall _wtoi() msvcrt._wtoi
 @ stdcall _wtoi64() msvcrt._wtoi64
-@ stub _wtoi64_l
-@ stub _wtoi_l
+@ stdcall -version=0x600+ _wtoi64_l() msvcrt._wtoi64_l
+@ stdcall -version=0x600+ _wtoi_l() msvcrt._wtoi_l
 @ stdcall _wtol() msvcrt._wtol
-@ stub _wtol_l
+@ stdcall -version=0x600+ _wtol_l() msvcrt._wtol_l
 @ stub _wtoll
 @ stub _wtoll_l
 @ stdcall atof() msvcrt.atof
 @ stdcall atoi() msvcrt.atoi
 @ stdcall atol() msvcrt.atol
 @ stub atoll
-@ stub btowc
+@ stdcall -version=0x600+ btowc() msvcrt.btowc
 @ stub c16rtomb
 @ stub c32rtomb
 @ stub mbrtoc16
 @ stub mbrtoc32
-@ stub mbrtowc
-@ stub mbsrtowcs
-@ stub mbsrtowcs_s
+@ stdcall -version=0x600+ mbrtowc() msvcrt.mbrtowc
+@ stdcall -version=0x600+ mbsrtowcs() msvcrt.mbsrtowcs
+@ stdcall -version=0x600+ mbsrtowcs_s() msvcrt.mbsrtowcs_s
 @ stdcall mbstowcs() msvcrt.mbstowcs
-@ stub mbstowcs_s
+@ stdcall -version=0x600+ mbstowcs_s() msvcrt.mbstowcs_s
 @ stdcall mbtowc() msvcrt.mbtowc
 @ stdcall strtod() msvcrt.strtod
 @ stub strtof
@@ -104,10 +104,10 @@
 @ stdcall strtoul() msvcrt.strtoul
 @ stub strtoull
 @ stub strtoumax
-@ stub wcrtomb
-@ stub wcrtomb_s
-@ stub wcsrtombs
-@ stub wcsrtombs_s
+@ stdcall -version=0x600+ wcrtomb() msvcrt.wcrtomb
+@ stdcall -version=0x600+ wcrtomb_s() msvcrt.wcrtomb_s
+@ stdcall -version=0x600+ wcsrtombs() msvcrt.wcsrtombs
+@ stdcall -version=0x600+ wcsrtombs_s() msvcrt.wcsrtombs_s
 @ stdcall wcstod() msvcrt.wcstod
 @ stub wcstof
 @ stub wcstoimax
@@ -115,11 +115,11 @@
 @ stub wcstold
 @ stub wcstoll
 @ stdcall wcstombs() msvcrt.wcstombs
-@ stub wcstombs_s
+@ stdcall -version=0x600+ wcstombs_s() msvcrt.wcstombs_s
 @ stdcall wcstoul() msvcrt.wcstoul
 @ stub wcstoull
 @ stub wcstoumax
-@ stub wctob
+@ stdcall -version=0x600+ wctob() msvcrt.wctob
 @ stdcall wctomb() msvcrt.wctomb
-@ stub wctomb_s
+@ stdcall -version=0x600+ wctomb_s() msvcrt.wctomb_s
 @ stub wctrans

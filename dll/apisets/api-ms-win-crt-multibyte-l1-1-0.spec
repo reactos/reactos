@@ -4,200 +4,200 @@
 @ stdcall -arch=i386 __p__mbcasemap() msvcrt.__p__mbcasemap
 @ stdcall -arch=i386 __p__mbctype() msvcrt.__p__mbctype
 @ stdcall _ismbbalnum() msvcrt._ismbbalnum
-@ stub _ismbbalnum_l
+@ stdcall -version=0x600+ _ismbbalnum_l() msvcrt._ismbbalnum_l
 @ stdcall _ismbbalpha() msvcrt._ismbbalpha
-@ stub _ismbbalpha_l
+@ stdcall -version=0x600+ _ismbbalpha_l() msvcrt._ismbbalpha_l
 @ stub _ismbbblank
 @ stub _ismbbblank_l
 @ stdcall _ismbbgraph() msvcrt._ismbbgraph
-@ stub _ismbbgraph_l
+@ stdcall -version=0x600+ _ismbbgraph_l() msvcrt._ismbbgraph_l
 @ stdcall _ismbbkalnum() msvcrt._ismbbkalnum
-@ stub _ismbbkalnum_l
+@ stdcall -version=0x600+ _ismbbkalnum_l() msvcrt._ismbbkalnum_l
 @ stdcall _ismbbkana() msvcrt._ismbbkana
-@ stub _ismbbkana_l
+@ stdcall -version=0x600+ _ismbbkana_l() msvcrt._ismbbkana_l
 @ stdcall _ismbbkprint() msvcrt._ismbbkprint
-@ stub _ismbbkprint_l
+@ stdcall -version=0x600+ _ismbbkprint_l() msvcrt._ismbbkprint_l
 @ stdcall _ismbbkpunct() msvcrt._ismbbkpunct
-@ stub _ismbbkpunct_l
+@ stdcall -version=0x600+ _ismbbkpunct_l() msvcrt._ismbbkpunct_l
 @ stdcall _ismbblead() msvcrt._ismbblead
-@ stub _ismbblead_l
+@ stdcall -version=0x600+ _ismbblead_l() msvcrt._ismbblead_l
 @ stdcall _ismbbprint() msvcrt._ismbbprint
-@ stub _ismbbprint_l
+@ stdcall -version=0x600+ _ismbbprint_l() msvcrt._ismbbprint_l
 @ stdcall _ismbbpunct() msvcrt._ismbbpunct
-@ stub _ismbbpunct_l
+@ stdcall -version=0x600+ _ismbbpunct_l() msvcrt._ismbbpunct_l
 @ stdcall _ismbbtrail() msvcrt._ismbbtrail
-@ stub _ismbbtrail_l
+@ stdcall -version=0x600+ _ismbbtrail_l() msvcrt._ismbbtrail_l
 @ stdcall _ismbcalnum() msvcrt._ismbcalnum
-@ stub _ismbcalnum_l
+@ stdcall -version=0x600+ _ismbcalnum_l() msvcrt._ismbcalnum_l
 @ stdcall _ismbcalpha() msvcrt._ismbcalpha
-@ stub _ismbcalpha_l
+@ stdcall -version=0x600+ _ismbcalpha_l() msvcrt._ismbcalpha_l
 @ stub _ismbcblank
 @ stub _ismbcblank_l
 @ stdcall _ismbcdigit() msvcrt._ismbcdigit
-@ stub _ismbcdigit_l
+@ stdcall -version=0x600+ _ismbcdigit_l() msvcrt._ismbcdigit_l
 @ stdcall _ismbcgraph() msvcrt._ismbcgraph
-@ stub _ismbcgraph_l
+@ stdcall -version=0x600+ _ismbcgraph_l() msvcrt._ismbcgraph_l
 @ stdcall _ismbchira() msvcrt._ismbchira
-@ stub _ismbchira_l
+@ stdcall -version=0x600+ _ismbchira_l() msvcrt._ismbchira_l
 @ stdcall _ismbckata() msvcrt._ismbckata
-@ stub _ismbckata_l
+@ stdcall -version=0x600+ _ismbckata_l() msvcrt._ismbckata_l
 @ stdcall _ismbcl0() msvcrt._ismbcl0
-@ stub _ismbcl0_l
+@ stdcall -version=0x600+ _ismbcl0_l() msvcrt._ismbcl0_l
 @ stdcall _ismbcl1() msvcrt._ismbcl1
-@ stub _ismbcl1_l
+@ stdcall -version=0x600+ _ismbcl1_l() msvcrt._ismbcl1_l
 @ stdcall _ismbcl2() msvcrt._ismbcl2
-@ stub _ismbcl2_l
+@ stdcall -version=0x600+ _ismbcl2_l() msvcrt._ismbcl2_l
 @ stdcall _ismbclegal() msvcrt._ismbclegal
-@ stub _ismbclegal_l
+@ stdcall -version=0x600+ _ismbclegal_l() msvcrt._ismbclegal_l
 @ stdcall _ismbclower() msvcrt._ismbclower
-@ stub _ismbclower_l
+@ stdcall -version=0x600+ _ismbclower_l() msvcrt._ismbclower_l
 @ stdcall _ismbcprint() msvcrt._ismbcprint
-@ stub _ismbcprint_l
+@ stdcall -version=0x600+ _ismbcprint_l() msvcrt._ismbcprint_l
 @ stdcall _ismbcpunct() msvcrt._ismbcpunct
-@ stub _ismbcpunct_l
+@ stdcall -version=0x600+ _ismbcpunct_l() msvcrt._ismbcpunct_l
 @ stdcall _ismbcspace() msvcrt._ismbcspace
-@ stub _ismbcspace_l
+@ stdcall -version=0x600+ _ismbcspace_l() msvcrt._ismbcspace_l
 @ stdcall _ismbcsymbol() msvcrt._ismbcsymbol
-@ stub _ismbcsymbol_l
+@ stdcall -version=0x600+ _ismbcsymbol_l() msvcrt._ismbcsymbol_l
 @ stdcall _ismbcupper() msvcrt._ismbcupper
-@ stub _ismbcupper_l
+@ stdcall -version=0x600+ _ismbcupper_l() msvcrt._ismbcupper_l
 @ stdcall _ismbslead() msvcrt._ismbslead
-@ stub _ismbslead_l
+@ stdcall -version=0x600+ _ismbslead_l() msvcrt._ismbslead_l
 @ stdcall _ismbstrail() msvcrt._ismbstrail
-@ stub _ismbstrail_l
+@ stdcall -version=0x600+ _ismbstrail_l() msvcrt._ismbstrail_l
 @ stdcall _mbbtombc() msvcrt._mbbtombc
-@ stub _mbbtombc_l
+@ stdcall -version=0x600+ _mbbtombc_l() msvcrt._mbbtombc_l
 @ stdcall _mbbtype() msvcrt._mbbtype
 @ stub _mbbtype_l
 @ extern -stub _mbcasemap msvcrt._mbcasemap # the -stub is a HACK to fix VS < 2017 build!
 @ stdcall _mbccpy() msvcrt._mbccpy
-@ stub _mbccpy_l
-@ stub _mbccpy_s
-@ stub _mbccpy_s_l
+@ stdcall -version=0x600+ _mbccpy_l() msvcrt._mbccpy_l
+@ stdcall -version=0x600+ _mbccpy_s() msvcrt._mbccpy_s
+@ stdcall -version=0x600+ _mbccpy_s_l() msvcrt._mbccpy_s_l
 @ stdcall _mbcjistojms() msvcrt._mbcjistojms
-@ stub _mbcjistojms_l
+@ stdcall -version=0x600+ _mbcjistojms_l() msvcrt._mbcjistojms_l
 @ stdcall _mbcjmstojis() msvcrt._mbcjmstojis
-@ stub _mbcjmstojis_l
+@ stdcall -version=0x600+ _mbcjmstojis_l() msvcrt._mbcjmstojis_l
 @ stdcall _mbclen() msvcrt._mbclen
-@ stub _mbclen_l
+@ stdcall -version=0x600+ _mbclen_l() msvcrt._mbclen_l
 @ stdcall _mbctohira() msvcrt._mbctohira
-@ stub _mbctohira_l
+@ stdcall -version=0x600+ _mbctohira_l() msvcrt._mbctohira_l
 @ stdcall _mbctokata() msvcrt._mbctokata
-@ stub _mbctokata_l
+@ stdcall -version=0x600+ _mbctokata_l() msvcrt._mbctokata_l
 @ stdcall _mbctolower() msvcrt._mbctolower
-@ stub _mbctolower_l
+@ stdcall -version=0x600+ _mbctolower_l() msvcrt._mbctolower_l
 @ stdcall _mbctombb() msvcrt._mbctombb
-@ stub _mbctombb_l
+@ stdcall -version=0x600+ _mbctombb_l() msvcrt._mbctombb_l
 @ stdcall _mbctoupper() msvcrt._mbctoupper
-@ stub _mbctoupper_l
-@ stub _mblen_l
+@ stdcall -version=0x600+ _mbctoupper_l() msvcrt._mbctoupper_l
+@ stdcall -version=0x600+ _mblen_l() msvcrt._mblen_l
 @ stdcall _mbsbtype() msvcrt._mbsbtype
-@ stub _mbsbtype_l
-@ stub _mbscat_s
-@ stub _mbscat_s_l
+@ stdcall -version=0x600+ _mbsbtype_l() msvcrt._mbsbtype_l
+@ stdcall -version=0x600+ _mbscat_s() msvcrt._mbscat_s
+@ stdcall -version=0x600+ _mbscat_s_l() msvcrt._mbscat_s_l
 @ stdcall _mbschr() msvcrt._mbschr
-@ stub _mbschr_l
+@ stdcall -version=0x600+ _mbschr_l() msvcrt._mbschr_l
 @ stdcall _mbscmp() msvcrt._mbscmp
-@ stub _mbscmp_l
+@ stdcall -version=0x600+ _mbscmp_l() msvcrt._mbscmp_l
 @ stdcall _mbscoll() msvcrt._mbscoll
-@ stub _mbscoll_l
-@ stub _mbscpy_s
-@ stub _mbscpy_s_l
+@ stdcall -version=0x600+ _mbscoll_l() msvcrt._mbscoll_l
+@ stdcall -version=0x600+ _mbscpy_s() msvcrt._mbscpy_s
+@ stdcall -version=0x600+ _mbscpy_s_l() msvcrt._mbscpy_s_l
 @ stdcall _mbscspn() msvcrt._mbscspn
-@ stub _mbscspn_l
+@ stdcall -version=0x600+ _mbscspn_l() msvcrt._mbscspn_l
 @ stdcall _mbsdec() msvcrt._mbsdec
-@ stub _mbsdec_l
+@ stdcall -version=0x600+ _mbsdec_l() msvcrt._mbsdec_l
 @ stdcall _mbsdup() msvcrt._mbsdup
 @ stdcall _mbsicmp() msvcrt._mbsicmp
-@ stub _mbsicmp_l
+@ stdcall -version=0x600+ _mbsicmp_l() msvcrt._mbsicmp_l
 @ stdcall _mbsicoll() msvcrt._mbsicoll
-@ stub _mbsicoll_l
+@ stdcall -version=0x600+ _mbsicoll_l() msvcrt._mbsicoll_l
 @ stdcall _mbsinc() msvcrt._mbsinc
-@ stub _mbsinc_l
+@ stdcall -version=0x600+ _mbsinc_l() msvcrt._mbsinc_l
 @ stdcall _mbslen() msvcrt._mbslen
-@ stub _mbslen_l
+@ stdcall -version=0x600+ _mbslen_l() msvcrt._mbslen_l
 @ stdcall _mbslwr() msvcrt._mbslwr
-@ stub _mbslwr_l
-@ stub _mbslwr_s
-@ stub _mbslwr_s_l
+@ stdcall -version=0x600+ _mbslwr_l() msvcrt._mbslwr_l
+@ stdcall -version=0x600+ _mbslwr_s() msvcrt._mbslwr_s
+@ stdcall -version=0x600+ _mbslwr_s_l() msvcrt._mbslwr_s_l
 @ stdcall _mbsnbcat() msvcrt._mbsnbcat
-@ stub _mbsnbcat_l
-@ stub _mbsnbcat_s
-@ stub _mbsnbcat_s_l
+@ stdcall -version=0x600+ _mbsnbcat_l() msvcrt._mbsnbcat_l
+@ stdcall -version=0x600+ _mbsnbcat_s() msvcrt._mbsnbcat_s
+@ stdcall -version=0x600+ _mbsnbcat_s_l() msvcrt._mbsnbcat_s_l
 @ stdcall _mbsnbcmp() msvcrt._mbsnbcmp
-@ stub _mbsnbcmp_l
+@ stdcall -version=0x600+ _mbsnbcmp_l() msvcrt._mbsnbcmp_l
 @ stdcall _mbsnbcnt() msvcrt._mbsnbcnt
-@ stub _mbsnbcnt_l
+@ stdcall -version=0x600+ _mbsnbcnt_l() msvcrt._mbsnbcnt_l
 @ stdcall _mbsnbcoll() msvcrt._mbsnbcoll
-@ stub _mbsnbcoll_l
+@ stdcall -version=0x600+ _mbsnbcoll_l() msvcrt._mbsnbcoll_l
 @ stdcall _mbsnbcpy() msvcrt._mbsnbcpy
-@ stub _mbsnbcpy_l
-@ stub _mbsnbcpy_s
-@ stub _mbsnbcpy_s_l
+@ stdcall -version=0x600+ _mbsnbcpy_l() msvcrt._mbsnbcpy_l
+@ stdcall -version=0x600+ _mbsnbcpy_s() msvcrt._mbsnbcpy_s
+@ stdcall -version=0x600+ _mbsnbcpy_s_l() msvcrt._mbsnbcpy_s_l
 @ stdcall _mbsnbicmp() msvcrt._mbsnbicmp
-@ stub _mbsnbicmp_l
+@ stdcall -version=0x600+ _mbsnbicmp_l() msvcrt._mbsnbicmp_l
 @ stdcall _mbsnbicoll() msvcrt._mbsnbicoll
-@ stub _mbsnbicoll_l
+@ stdcall -version=0x600+ _mbsnbicoll_l() msvcrt._mbsnbicoll_l
 @ stdcall _mbsnbset() msvcrt._mbsnbset
-@ stub _mbsnbset_l
-@ stub _mbsnbset_s
-@ stub _mbsnbset_s_l
+@ stdcall -version=0x600+ _mbsnbset_l() msvcrt._mbsnbset_l
+@ stdcall -version=0x600+ _mbsnbset_s() msvcrt._mbsnbset_s
+@ stdcall -version=0x600+ _mbsnbset_s_l() msvcrt._mbsnbset_s_l
 @ stdcall _mbsncat() msvcrt._mbsncat
-@ stub _mbsncat_l
-@ stub _mbsncat_s
-@ stub _mbsncat_s_l
+@ stdcall -version=0x600+ _mbsncat_l() msvcrt._mbsncat_l
+@ stdcall -version=0x600+ _mbsncat_s() msvcrt._mbsncat_s
+@ stdcall -version=0x600+ _mbsncat_s_l() msvcrt._mbsncat_s_l
 @ stdcall _mbsnccnt() msvcrt._mbsnccnt
-@ stub _mbsnccnt_l
+@ stdcall -version=0x600+ _mbsnccnt_l() msvcrt._mbsnccnt_l
 @ stdcall _mbsncmp() msvcrt._mbsncmp
-@ stub _mbsncmp_l
+@ stdcall -version=0x600+ _mbsncmp_l() msvcrt._mbsncmp_l
 @ stdcall _mbsncoll() msvcrt._mbsncoll
-@ stub _mbsncoll_l
+@ stdcall -version=0x600+ _mbsncoll_l() msvcrt._mbsncoll_l
 @ stdcall _mbsncpy() msvcrt._mbsncpy
-@ stub _mbsncpy_l
-@ stub _mbsncpy_s
-@ stub _mbsncpy_s_l
+@ stdcall -version=0x600+ _mbsncpy_l() msvcrt._mbsncpy_l
+@ stdcall -version=0x600+ _mbsncpy_s() msvcrt._mbsncpy_s
+@ stdcall -version=0x600+ _mbsncpy_s_l() msvcrt._mbsncpy_s_l
 @ stdcall _mbsnextc() msvcrt._mbsnextc
-@ stub _mbsnextc_l
+@ stdcall -version=0x600+ _mbsnextc_l() msvcrt._mbsnextc_l
 @ stdcall _mbsnicmp() msvcrt._mbsnicmp
-@ stub _mbsnicmp_l
+@ stdcall -version=0x600+ _mbsnicmp_l() msvcrt._mbsnicmp_l
 @ stdcall _mbsnicoll() msvcrt._mbsnicoll
-@ stub _mbsnicoll_l
+@ stdcall -version=0x600+ _mbsnicoll_l() msvcrt._mbsnicoll_l
 @ stdcall _mbsninc() msvcrt._mbsninc
-@ stub _mbsninc_l
-@ stub _mbsnlen
-@ stub _mbsnlen_l
+@ stdcall -version=0x600+ _mbsninc_l() msvcrt._mbsninc_l
+@ stdcall -version=0x600+ _mbsnlen() msvcrt._mbsnlen
+@ stdcall -version=0x600+ _mbsnlen_l() msvcrt._mbsnlen_l
 @ stdcall _mbsnset() msvcrt._mbsnset
-@ stub _mbsnset_l
-@ stub _mbsnset_s
-@ stub _mbsnset_s_l
+@ stdcall -version=0x600+ _mbsnset_l() msvcrt._mbsnset_l
+@ stdcall -version=0x600+ _mbsnset_s() msvcrt._mbsnset_s
+@ stdcall -version=0x600+ _mbsnset_s_l() msvcrt._mbsnset_s_l
 @ stdcall _mbspbrk() msvcrt._mbspbrk
-@ stub _mbspbrk_l
+@ stdcall -version=0x600+ _mbspbrk_l() msvcrt._mbspbrk_l
 @ stdcall _mbsrchr() msvcrt._mbsrchr
-@ stub _mbsrchr_l
+@ stdcall -version=0x600+ _mbsrchr_l() msvcrt._mbsrchr_l
 @ stdcall _mbsrev() msvcrt._mbsrev
-@ stub _mbsrev_l
+@ stdcall -version=0x600+ _mbsrev_l() msvcrt._mbsrev_l
 @ stdcall _mbsset() msvcrt._mbsset
-@ stub _mbsset_l
-@ stub _mbsset_s
-@ stub _mbsset_s_l
+@ stdcall -version=0x600+ _mbsset_l() msvcrt._mbsset_l
+@ stdcall -version=0x600+ _mbsset_s() msvcrt._mbsset_s
+@ stdcall -version=0x600+ _mbsset_s_l() msvcrt._mbsset_s_l
 @ stdcall _mbsspn() msvcrt._mbsspn
-@ stub _mbsspn_l
+@ stdcall -version=0x600+ _mbsspn_l() msvcrt._mbsspn_l
 @ stdcall _mbsspnp() msvcrt._mbsspnp
-@ stub _mbsspnp_l
+@ stdcall -version=0x600+ _mbsspnp_l() msvcrt._mbsspnp_l
 @ stdcall _mbsstr() msvcrt._mbsstr
-@ stub _mbsstr_l
+@ stdcall -version=0x600+ _mbsstr_l() msvcrt._mbsstr_l
 @ stdcall _mbstok() msvcrt._mbstok
-@ stub _mbstok_l
-@ stub _mbstok_s
-@ stub _mbstok_s_l
-@ stub _mbstowcs_l
-@ stub _mbstowcs_s_l
+@ stdcall -version=0x600+ _mbstok_l() msvcrt._mbstok_l
+@ stdcall -version=0x600+ _mbstok_s() msvcrt._mbstok_s
+@ stdcall -version=0x600+ _mbstok_s_l() msvcrt._mbstok_s_l
+@ stdcall -version=0x600+ _mbstowcs_l() msvcrt._mbstowcs_l
+@ stdcall -version=0x600+ _mbstowcs_s_l() msvcrt._mbstowcs_s_l
 @ stdcall _mbstrlen() msvcrt._mbstrlen
-@ stub _mbstrlen_l
-@ stub _mbstrnlen
-@ stub _mbstrnlen_l
+@ stdcall -version=0x600+ _mbstrlen_l() msvcrt._mbstrlen_l
+@ stdcall -version=0x600+ _mbstrnlen() msvcrt._mbstrnlen
+@ stdcall -version=0x600+ _mbstrnlen_l() msvcrt._mbstrnlen_l
 @ stdcall _mbsupr() msvcrt._mbsupr
-@ stub _mbsupr_l
-@ stub _mbsupr_s
-@ stub _mbsupr_s_l
-@ stub _mbtowc_l
+@ stdcall -version=0x600+ _mbsupr_l() msvcrt._mbsupr_l
+@ stdcall -version=0x600+ _mbsupr_s() msvcrt._mbsupr_s
+@ stdcall -version=0x600+ _mbsupr_s_l() msvcrt._mbsupr_s_l
+@ stdcall -version=0x600+ _mbtowc_l() msvcrt._mbtowc_l

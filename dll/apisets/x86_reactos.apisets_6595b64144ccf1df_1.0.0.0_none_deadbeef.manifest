@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <assembly xmlns="urn:schemas-microsoft-com:asm.v1" manifestVersion="1.0">
-  <!-- Generated from wine-3.20-144-g2ef62f9085 -->
+  <!-- Generated from wine-6.8 -->
   <assemblyIdentity type="win32" name="ReactOS.Apisets" version="1.0.0.0" publicKeyToken="6595b64144ccf1df"/>
   <file name="api-ms-win-appmodel-identity-l1-1-0.dll"/>
   <file name="api-ms-win-appmodel-runtime-l1-1-1.dll"/>
@@ -15,6 +15,7 @@
   <file name="api-ms-win-core-com-private-l1-1-0.dll"/>
   <file name="api-ms-win-core-comm-l1-1-0.dll"/>
   <file name="api-ms-win-core-console-l1-1-0.dll"/>
+  <file name="api-ms-win-core-console-l1-2-0.dll"/>
   <file name="api-ms-win-core-console-l2-1-0.dll"/>
   <file name="api-ms-win-core-crt-l1-1-0.dll"/>
   <file name="api-ms-win-core-crt-l2-1-0.dll"/>
@@ -30,6 +31,8 @@
   <file name="api-ms-win-core-errorhandling-l1-1-3.dll"/>
   <file name="api-ms-win-core-fibers-l1-1-0.dll"/>
   <file name="api-ms-win-core-fibers-l1-1-1.dll"/>
+  <file name="api-ms-win-core-file-ansi-l2-1-0.dll"/>
+  <file name="api-ms-win-core-file-fromapp-l1-1-0.dll"/>
   <file name="api-ms-win-core-file-l1-1-0.dll"/>
   <file name="api-ms-win-core-file-l1-2-0.dll"/>
   <file name="api-ms-win-core-file-l1-2-1.dll"/>
@@ -50,6 +53,7 @@
   <file name="api-ms-win-core-job-l2-1-0.dll"/>
   <file name="api-ms-win-core-kernel32-legacy-l1-1-0.dll"/>
   <file name="api-ms-win-core-kernel32-legacy-l1-1-1.dll"/>
+  <file name="api-ms-win-core-kernel32-legacy-l1-1-2.dll"/>
   <file name="api-ms-win-core-kernel32-private-l1-1-1.dll"/>
   <file name="api-ms-win-core-largeinteger-l1-1-0.dll"/>
   <file name="api-ms-win-core-libraryloader-l1-1-0.dll"/>
@@ -57,9 +61,11 @@
   <file name="api-ms-win-core-libraryloader-l1-2-0.dll"/>
   <file name="api-ms-win-core-libraryloader-l1-2-1.dll"/>
   <file name="api-ms-win-core-libraryloader-l1-2-2.dll"/>
+  <file name="api-ms-win-core-libraryloader-l2-1-0.dll"/>
   <file name="api-ms-win-core-localization-l1-1-0.dll"/>
   <file name="api-ms-win-core-localization-l1-2-0.dll"/>
   <file name="api-ms-win-core-localization-l1-2-1.dll"/>
+  <file name="api-ms-win-core-localization-l1-2-2.dll"/>
   <file name="api-ms-win-core-localization-l2-1-0.dll"/>
   <file name="api-ms-win-core-localization-obsolete-l1-1-0.dll"/>
   <file name="api-ms-win-core-localization-obsolete-l1-2-0.dll"/>
@@ -69,7 +75,10 @@
   <file name="api-ms-win-core-memory-l1-1-0.dll"/>
   <file name="api-ms-win-core-memory-l1-1-1.dll"/>
   <file name="api-ms-win-core-memory-l1-1-2.dll"/>
+  <file name="api-ms-win-core-memory-l1-1-3.dll"/>
+  <file name="api-ms-win-core-memory-l1-1-4.dll"/>
   <file name="api-ms-win-core-misc-l1-1-0.dll"/>
+  <file name="api-ms-win-core-namedpipe-ansi-l1-1-0.dll"/>
   <file name="api-ms-win-core-namedpipe-l1-1-0.dll"/>
   <file name="api-ms-win-core-namedpipe-l1-2-0.dll"/>
   <file name="api-ms-win-core-namespace-l1-1-0.dll"/>
@@ -91,6 +100,7 @@
   <file name="api-ms-win-core-realtime-l1-1-0.dll"/>
   <file name="api-ms-win-core-registry-l1-1-0.dll"/>
   <file name="api-ms-win-core-registry-l2-1-0.dll"/>
+  <file name="api-ms-win-core-registry-l2-2-0.dll"/>
   <file name="api-ms-win-core-registryuserspecific-l1-1-0.dll"/>
   <file name="api-ms-win-core-rtlsupport-l1-1-0.dll"/>
   <file name="api-ms-win-core-rtlsupport-l1-2-0.dll"/>
@@ -111,6 +121,7 @@
   <file name="api-ms-win-core-sysinfo-l1-1-0.dll"/>
   <file name="api-ms-win-core-sysinfo-l1-2-0.dll"/>
   <file name="api-ms-win-core-sysinfo-l1-2-1.dll"/>
+  <file name="api-ms-win-core-systemtopology-l1-1-0.dll"/>
   <file name="api-ms-win-core-threadpool-l1-1-0.dll"/>
   <file name="api-ms-win-core-threadpool-l1-2-0.dll"/>
   <file name="api-ms-win-core-threadpool-legacy-l1-1-0.dll"/>
@@ -156,6 +167,7 @@
   <file name="api-ms-win-devices-query-l1-1-1.dll"/>
   <file name="api-ms-win-downlevel-advapi32-l1-1-0.dll"/>
   <file name="api-ms-win-downlevel-advapi32-l2-1-0.dll"/>
+  <file name="api-ms-win-downlevel-kernel32-l2-1-0.dll"/>
   <file name="api-ms-win-downlevel-normaliz-l1-1-0.dll"/>
   <file name="api-ms-win-downlevel-ole32-l1-1-0.dll"/>
   <file name="api-ms-win-downlevel-shell32-l1-1-0.dll"/>
@@ -170,6 +182,7 @@
   <file name="api-ms-win-eventing-legacy-l1-1-0.dll"/>
   <file name="api-ms-win-eventing-provider-l1-1-0.dll"/>
   <file name="api-ms-win-eventlog-legacy-l1-1-0.dll"/>
+  <file name="api-ms-win-gaming-tcui-l1-1-0.dll"/>
   <file name="api-ms-win-gdi-dpiinfo-l1-1-0.dll"/>
   <file name="api-ms-win-mm-joystick-l1-1-0.dll"/>
   <file name="api-ms-win-mm-misc-l1-1-1.dll"/>
@@ -212,8 +225,10 @@
   <file name="api-ms-win-service-winsvc-l1-1-0.dll"/>
   <file name="api-ms-win-service-winsvc-l1-2-0.dll"/>
   <file name="api-ms-win-shcore-obsolete-l1-1-0.dll"/>
+  <file name="api-ms-win-shcore-scaling-l1-1-0.dll"/>
   <file name="api-ms-win-shcore-scaling-l1-1-1.dll"/>
   <file name="api-ms-win-shcore-stream-l1-1-0.dll"/>
+  <file name="api-ms-win-shcore-stream-winrt-l1-1-0.dll"/>
   <file name="api-ms-win-shcore-thread-l1-1-0.dll"/>
   <file name="api-ms-win-shell-shellcom-l1-1-0.dll"/>
   <file name="api-ms-win-shell-shellfolders-l1-1-0.dll"/>

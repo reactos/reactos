@@ -5,17 +5,17 @@
 @ stdcall -arch=i386 __p__wenviron() msvcrt.__p__wenviron
 @ stub _dupenv_s
 @ stdcall _putenv() msvcrt._putenv
-@ stub _putenv_s
+@ stdcall -version=0x600+ _putenv_s() msvcrt._putenv_s
 @ stdcall _searchenv() msvcrt._searchenv
-@ stub _searchenv_s
+@ stdcall -version=0x600+ _searchenv_s() msvcrt._searchenv_s
 @ stub _wdupenv_s
 @ stdcall _wgetcwd() msvcrt._wgetcwd
 @ stdcall _wgetdcwd() msvcrt._wgetdcwd
 @ stdcall _wgetenv() msvcrt._wgetenv
-@ stub _wgetenv_s
+@ stdcall -version=0x600+ _wgetenv_s() msvcrt._wgetenv_s
 @ stdcall _wputenv() msvcrt._wputenv
-@ stub _wputenv_s
+@ stdcall -version=0x600+ _wputenv_s() msvcrt._wputenv_s
 @ stdcall _wsearchenv() msvcrt._wsearchenv
-@ stub _wsearchenv_s
+@ stdcall -version=0x600+ _wsearchenv_s() msvcrt._wsearchenv_s
 @ stdcall getenv() msvcrt.getenv
-@ stub getenv_s
+@ stdcall -version=0x600+ getenv_s() msvcrt.getenv_s
