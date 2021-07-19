@@ -109,12 +109,6 @@ Used Version: ??? (Imported on 2017.06.18.)
 License: LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later.html)
 URL: http://www.citi.umich.edu/projects/nfsv4/windows/readme.html
 
-Title: ReiserFS file system driver for Windows
-Path: drivers/filesystems/reiserfs
-Used Version: 0.26
-License: GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later.html)
-URL: http://www.acc.umu.se/~bosse/
-
 Title: Microsoft fastfat File System Driver
 Path: drivers/filesystems/fastfat_new
 Used Version: git commit 16022c5
