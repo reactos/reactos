@@ -364,6 +364,7 @@ print_usage(void)
            "  --loadconfig          Fix the LOAD_CONFIG directory entry;\n"
            "  --kernelmodedriver    Fix code, data and resource sections for driver images;\n"
            "  --wdmdriver           Fix code, data and resource sections for WDM drivers;\n"
+           "  --kmdfdriver          Fix code, data and resource sections for KMDF drivers (same as WDM);\n"
            "  --kerneldll           Fix code, data and resource sections for Kernel-Mode DLLs;\n"
            "  --kernel              Fix code, data and resource sections for kernels;\n"
            "\n"
@@ -409,6 +410,12 @@ int main(int argc, char **argv)
             mode = MODE_KERNELDRIVER;
         }
         else if (strcmp(&argv[i][2], "wdmdriver") == 0)
+        {
+            if (mode != MODE_NONE)
+                goto mode_error;
+            mode = MODE_WDMDRIVER;
+        }
+        else if (strcmp(&argv[i][2], "kmdfdriver") == 0)
         {
             if (mode != MODE_NONE)
                 goto mode_error;
