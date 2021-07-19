@@ -132,12 +132,45 @@ static void test_stack_walk(void)
 
 #endif /* __i386__ || __x86_64__ */
 
+static void test_search_path(void)
+{
+    char search_path[128];
+    BOOL ret;
+
+    /* The default symbol path is ".[;%_NT_SYMBOL_PATH%][;%_NT_ALTERATE_SYMBOL_PATH%]".
+     * We unset both variables earlier so should simply get "." */
+    ret = SymGetSearchPath(GetCurrentProcess(), search_path, ARRAY_SIZE(search_path));
+    ok(ret == TRUE, "ret = %d\n", ret);
+    ok(!strcmp(search_path, "."), "Got search path '%s', expected '.'\n", search_path);
+
+    /* Set an arbitrary search path */
+    ret = SymSetSearchPath(GetCurrentProcess(), "X:\\");
+    ok(ret == TRUE, "ret = %d\n", ret);
+    ret = SymGetSearchPath(GetCurrentProcess(), search_path, ARRAY_SIZE(search_path));
+    ok(ret == TRUE, "ret = %d\n", ret);
+    ok(!strcmp(search_path, "X:\\"), "Got search path '%s', expected 'X:\\'\n", search_path);
+
+    /* Setting to NULL resets to the default */
+    ret = SymSetSearchPath(GetCurrentProcess(), NULL);
+    ok(ret == TRUE, "ret = %d\n", ret);
+    ret = SymGetSearchPath(GetCurrentProcess(), search_path, ARRAY_SIZE(search_path));
+    ok(ret == TRUE, "ret = %d\n", ret);
+    ok(!strcmp(search_path, "."), "Got search path '%s', expected '.'\n", search_path);
+}
+
 START_TEST(dbghelp)
 {
-    BOOL ret = SymInitialize(GetCurrentProcess(), NULL, TRUE);
+    BOOL ret;
+
+    /* Don't let the user's environment influence our symbol path */
+    SetEnvironmentVariableA("_NT_SYMBOL_PATH", NULL);
+    SetEnvironmentVariableA("_NT_ALTERATE_SYMBOL_PATH", NULL);
+
+    ret = SymInitialize(GetCurrentProcess(), NULL, TRUE);
     ok(ret, "got error %u\n", GetLastError());
 
     test_stack_walk();
+    test_search_path();
 
     ret = SymCleanup(GetCurrentProcess());
     ok(ret, "got error %u\n", GetLastError());
