@@ -267,7 +267,6 @@
 /drivers/filesystems/cdfs/          @HeisSpiter
 /drivers/filesystems/ext2/          @HeisSpiter
 /drivers/filesystems/fastfat_new/   @HeisSpiter
-/drivers/filesystems/ffs/           @HeisSpiter
 /drivers/filesystems/nfs/           @HeisSpiter
 /media/doc/README.FSD               @HeisSpiter
 /sdk/lib/fslib/btrfslib/            @HeisSpiter

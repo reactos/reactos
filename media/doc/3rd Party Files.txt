@@ -94,12 +94,6 @@ Used Version: 0.69
 License: GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later.html)
 URL: http://www.ext2fsd.com
 
-Title: FFS/UFS file system driver for Windows
-Path: drivers/filesystems/ffs
-Used Version: 0.5.2
-License: GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later.html)
-URL: http://www.acc.umu.se/~bosse/
-
 Title: NFSv4.1 Client for Windows
 Path: base/services/nfsd
 Path: dll/3rdparty/libtirpc
