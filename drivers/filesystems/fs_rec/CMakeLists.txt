@@ -4,10 +4,8 @@ list(APPEND SOURCE
     cdfs.c
     ext2.c
     fat.c
-    ffs.c
     fs_rec.c
     ntfs.c
-    reiserfs.c
     udfs.c
     fs_rec.h)
 

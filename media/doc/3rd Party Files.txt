@@ -94,12 +94,6 @@ Used Version: 0.69
 License: GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later.html)
 URL: http://www.ext2fsd.com
 
-Title: FFS/UFS file system driver for Windows
-Path: drivers/filesystems/ffs
-Used Version: 0.5.2
-License: GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later.html)
-URL: http://www.acc.umu.se/~bosse/
-
 Title: NFSv4.1 Client for Windows
 Path: base/services/nfsd
 Path: dll/3rdparty/libtirpc
@@ -108,12 +102,6 @@ Path: drivers/filesystems/nfs
 Used Version: ??? (Imported on 2017.06.18.)
 License: LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later.html)
 URL: http://www.citi.umich.edu/projects/nfsv4/windows/readme.html
-
-Title: ReiserFS file system driver for Windows
-Path: drivers/filesystems/reiserfs
-Used Version: 0.26
-License: GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later.html)
-URL: http://www.acc.umu.se/~bosse/
 
 Title: Microsoft fastfat File System Driver
 Path: drivers/filesystems/fastfat_new
