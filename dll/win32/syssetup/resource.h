@@ -18,14 +18,15 @@
 
 #pragma once
 
-#define IDB_WATERMARK 100
-#define IDB_HEADER    101
-#define IDB_CLASSIC   102
-#define IDB_LAUTUS    103
-#define IDB_LUNAR     104
-#define IDB_MIZU      105
-#define IDB_REACTOS   106
-#define IDB_LINE      107
+#define IDB_WATERMARK   100
+#define IDB_HEADER      101
+#define IDB_CLASSIC     102
+#define IDB_LAUTUS      103
+#define IDB_LUNAR       104
+#define IDB_MIZU        105
+#define IDB_REACTOS     106
+#define IDB_LINE        107
+#define IDB_REACTOS_VGA 108
 
 #define IDI_ICON1 10
 #define IDI_ICON2 11
