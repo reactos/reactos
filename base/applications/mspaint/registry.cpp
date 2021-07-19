@@ -21,8 +21,7 @@ static DWORD ReadDWORD(CRegKey &key, LPCTSTR lpName, DWORD &dwValue, BOOL bCheck
 
     if (key.QueryDWORDValue(lpName, dwValue) != ERROR_SUCCESS)
         dwValue = dwPrev;
-
-    if (bCheckForDef && dwValue == 0)
+    else if (bCheckForDef && dwValue == 0)
         dwValue = dwPrev;
 
     return dwPrev;
