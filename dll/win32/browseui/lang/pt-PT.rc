@@ -317,7 +317,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_STANDARD_TOOLBAR, "|Voltar|Avançar|Acima|Pesquisar|Pastas|Mover para|Copiar para|Excluir|Desfazer|Modos de exibição|Parar|Actualizar|Página inicial|Mapear unidade|Desconectar|Favoritos|Histórico|Tela inteira|Propriedades|Recortar|Copiar|Colar|Opções de pasta||"
+    IDS_STANDARD_TOOLBAR, "|Voltar|Avançar|Acima|Pesquisar|Pastas|Mover para|Copiar para|Excluir|Desfazer|Modos de exibição|Parar|Atualizar|Página inicial|Mapear unidade|Desconectar|Favoritos|Histórico|Tela inteira|Propriedades|Recortar|Copiar|Colar|Opções de pasta||"
 END
 
 STRINGTABLE

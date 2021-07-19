@@ -47,7 +47,7 @@ BEGIN
         MENUITEM "C&opiar\tCtrl+C",             ID_EDIT_COPY
         MENUITEM "Col&ar\tCtrl+V",              ID_EDIT_PASTE
         MENUITEM "&Limpar\tDEL",                ID_EDIT_CLEAR
-        MENUITEM "&Seleccionar tudo\tCtrl+A",   ID_EDIT_SELECTALL
+        MENUITEM "&Selecionar tudo\tCtrl+A",   ID_EDIT_SELECTALL
         MENUITEM SEPARATOR
         MENUITEM "Local&izar...\tCtrl+F",       ID_FIND
         MENUITEM "&Encontrar Seguinte\tF3",     ID_FIND_NEXT

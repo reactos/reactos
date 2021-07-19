@@ -54,7 +54,7 @@ MENU_WEBBROWSER MENU
         MENUITEM "&Retroceder", IDTB_BACK
         MENUITEM "&Avançar", IDTB_FORWARD
         MENUITEM SEPARATOR
-        MENUITEM "Seleccionar &tudo", MIID_SELECTALL
+        MENUITEM "Selecionar &tudo", MIID_SELECTALL
         MENUITEM SEPARATOR
         MENUITEM "&Ver código fonte", MIID_VIEWSOURCE
         MENUITEM SEPARATOR
@@ -68,7 +68,7 @@ MENU_WEBBROWSER MENU
         MENUITEM "Cor&tar", MIID_CUT
         MENUITEM "&Copiar", MIID_COPY
         MENUITEM "Co&lar", MIID_PASTE
-        MENUITEM "Seleccionar &tudo", MIID_SELECTALL
+        MENUITEM "Selecionar &tudo", MIID_SELECTALL
         MENUITEM "&Imprimir", IDTB_PRINT
     }
 }
@@ -96,7 +96,7 @@ BEGIN
     IDTB_EXPAND      "Mostrar"
     IDTB_CONTRACT    "Esconder"
     IDTB_STOP        "Parar"
-    IDTB_REFRESH     "Actualizar"
+    IDTB_REFRESH     "Atualizar"
     IDTB_BACK        "Retroceder"
     IDTB_HOME        "Início"
     IDTB_SYNC        "Sincronizar"

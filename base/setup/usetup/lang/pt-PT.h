@@ -22,7 +22,7 @@ static MUI_ENTRY ptPTSetupInitPageEntries[] =
     {
         0,
         21,
-        "e detecta os seus dispositivos...",
+        "e deteta os seus dispositivos...",
         TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER,
         TEXT_ID_STATIC
     },
@@ -60,14 +60,14 @@ static MUI_ENTRY ptPTLanguagePageEntries[] =
     {
         8,
         10,
-        "\x07  Por favor, seleccione o idioma a ser utilizado durante a instala\207\306o.",
+        "\x07  Por favor, selecione o idioma a ser utilizado durante a instala\207\306o.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         8,
         11,
-        "\x07  O idioma seleccionado ser\240 o idioma padr\306o do sistema.",
+        "\x07  O idioma selecionado ser\240 o idioma padr\306o do sistema.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -616,14 +616,14 @@ static MUI_ENTRY ptPTUpgradePageEntries[] =
     {
         8,
         15,
-        "\x07  Use SETA A CIMA ou SETA A BAIXO para seleccionar uma instala\207\306o.",
+        "\x07  Use SETA A CIMA ou SETA A BAIXO para selecionar uma instala\207\306o.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         8,
         17,
-        "\x07  Pressione U para actualizar  a instala\207\306o seleccionada.",
+        "\x07  Pressione U para actualizar  a instala\207\306o selecionada.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -682,7 +682,7 @@ static MUI_ENTRY ptPTComputerPageEntries[] =
     {
         6,
         11,
-        "Use as teclas SETA PARA CIMA e SETA PARA BAIXO para seleccionar",
+        "Use as teclas SETA PARA CIMA e SETA PARA BAIXO para selecionar",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -696,7 +696,7 @@ static MUI_ENTRY ptPTComputerPageEntries[] =
     {
         8,
         14,
-        "\x07  Para escolher o item seleccionado, pressione ENTER.",
+        "\x07  Para escolher o item selecionado, pressione ENTER.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -741,7 +741,7 @@ static MUI_ENTRY ptPTFlushPageEntries[] =
     {
         10,
         7,
-        "armazenados correctamente no disco.",
+        "armazenados corretamente no disco.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -845,7 +845,7 @@ static MUI_ENTRY ptPTDisplayPageEntries[] =
     {
         6,
         10,
-         "Use as teclas SETA PARA CIMA e SETA PARA BAIXO para seleccionar",
+         "Use as teclas SETA PARA CIMA e SETA PARA BAIXO para selecionar",
          TEXT_STYLE_NORMAL,
          TEXT_ID_STATIC
     },
@@ -859,7 +859,7 @@ static MUI_ENTRY ptPTDisplayPageEntries[] =
     {
         8,
         13,
-        "\x07  Para escolher o item seleccionado, pressione ENTER.",
+        "\x07  Para escolher o item selecionado, pressione ENTER.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1016,7 +1016,7 @@ static MUI_ENTRY ptPTSelectPartitionEntries[] =
     {
         6,
         10,
-        "Use as teclas SETA PARA CIMA e SETA PARA BAIXO para seleccionar",
+        "Use as teclas SETA PARA CIMA e SETA PARA BAIXO para selecionar",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1030,7 +1030,7 @@ static MUI_ENTRY ptPTSelectPartitionEntries[] =
     {
         8,
         13,
-        "\x07  Para configurar o ReactOS no item seleccionado, pressione ENTER.",
+        "\x07  Para configurar o ReactOS no item selecionado, pressione ENTER.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1059,7 +1059,7 @@ static MUI_ENTRY ptPTSelectPartitionEntries[] =
     {
         8,
         21,
-        "\x07  Para excluir a parti\207\306o seleccionada, pressione D.",
+        "\x07  Para excluir a parti\207\306o selecionada, pressione D.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1090,7 +1090,7 @@ static MUI_ENTRY ptPTChangeSystemPartition[] =
     {
         6,
         8,
-        "A actual parti\207\306o do sistema no disco do seu",
+        "A atual parti\207\306o do sistema no disco do seu",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1146,7 +1146,7 @@ static MUI_ENTRY ptPTChangeSystemPartition[] =
     {
         8,
         28,
-        "   à lista de selec\207\306o de parti\207\306o e, em seguida, seleccione ou crie um novo tipo",
+        "   à lista de sele\207\306o de parti\207\306o e, em seguida, selecione ou crie um novo tipo",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1583,7 +1583,7 @@ static MUI_ENTRY ptPTKeyboardSettingsEntries[] =
     {
         6,
         10,
-        "Use as teclas SETA PARA CIMA e SETA PARA BAIXO para seleccionar",
+        "Use as teclas SETA PARA CIMA e SETA PARA BAIXO para selecionar",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1649,7 +1649,7 @@ static MUI_ENTRY ptPTLayoutSettingsEntries[] =
     {
         6,
         11,
-        "Use as teclas SETA PARA CIMA e SETA PARA BAIXO para seleccionar",
+        "Use as teclas SETA PARA CIMA e SETA PARA BAIXO para selecionar",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1747,7 +1747,7 @@ static MUI_ENTRY ptPTSelectFSEntries[] =
     {
         6,
         17,
-        "Use as teclas SETA PARA CIMA e SETA PARA BAIXO para seleccionar o",
+        "Use as teclas SETA PARA CIMA e SETA PARA BAIXO para selecionar o",
         0
     },
     {
@@ -1759,7 +1759,7 @@ static MUI_ENTRY ptPTSelectFSEntries[] =
     {
         8,
         20,
-        "Se desejar seleccionar uma parti\207\306o diferente, pressione ESC.",
+        "Se desejar selecionar uma parti\207\306o diferente, pressione ESC.",
         0
     },
     {

@@ -177,7 +177,7 @@ BEGIN
     EDITTEXT IDC_DIGITALSIGNER, 115, 81, 145, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
     PUSHBUTTON "&Detalhes do controlador...", IDC_DRIVERDETAILS, 7, 106, 90, 15
     LTEXT "Exibir detalhes sobre os arquivos de controlador.", -1, 105, 110, 154, 17, SS_NOPREFIX
-    PUSHBUTTON "&Actualizar controlador...", IDC_UPDATEDRIVER, 7, 134, 90, 15
+    PUSHBUTTON "&Atualizar controlador...", IDC_UPDATEDRIVER, 7, 134, 90, 15
     LTEXT "Actualiza o controlador deste dispositivo.", -1, 105, 138, 154, 17, SS_NOPREFIX
     PUSHBUTTON "&Repor Driver", IDC_ROLLBACKDRIVER, 7, 162, 90, 15
     LTEXT "Se o dispositivo falhar após actualização, reverta para o controlador instalado anteriormente.", -1, 105, 162, 154, 25, SS_NOPREFIX
@@ -294,7 +294,7 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-  IDS_MENU_UPDATE           "Actualizar software do controlador..."
+  IDS_MENU_UPDATE           "Atualizar software do controlador..."
   IDS_MENU_ENABLE           "Habilitar"
   IDS_MENU_DISABLE          "Desabilitar"
   IDS_MENU_UNINSTALL        "Desinstalar"
@@ -309,7 +309,7 @@ BEGIN
   IDS_TOOLTIP_SCAN          "Verificar alterações de hardware"
   IDS_TOOLTIP_ENABLE        "Habilitar"
   IDS_TOOLTIP_DISABLE       "Desabilitar"
-  IDS_TOOLTIP_UPDATE        "Actualizar software do Driver "
+  IDS_TOOLTIP_UPDATE        "Atualizar software do Driver "
   IDS_TOOLTIP_UNINSTALL     "Desinstalar"
 END
 
@@ -321,7 +321,7 @@ BEGIN
   IDS_HINT_SCAN         " Verificar se há novos dispositivos plug and play."
   IDS_HINT_ENABLE       " Habilita o dispositivo seleccionado."
   IDS_HINT_DISABLE      " Desabilita o dispositivo seleccionado."
-  IDS_HINT_UPDATE       " Inicia o assistente Actualizar software de controlador para o dispositivo seleccionado."
+  IDS_HINT_UPDATE       " Inicia o assistente Atualizar software de controlador para o dispositivo seleccionado."
   IDS_HINT_UNINSTALL    " Desinstala o controlador para o dispositivo seleccionado."
   IDS_HINT_ADD          " Adiciona um dispositivo legado (não Plug and Play) ao computador."
   IDS_HINT_ABOUT        " Acerca de ReactOS Gestor de dispositivos."

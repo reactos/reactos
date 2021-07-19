@@ -34,7 +34,7 @@ BEGIN
             MENUITEM "Alinhar icones &automaticamente", FCIDM_SHVIEW_AUTOARRANGE
             MENUITEM "Alinhar icones com a &grelha", FCIDM_SHVIEW_ALIGNTOGRID
         END
-        MENUITEM "&Actualizar", FCIDM_SHVIEW_REFRESH
+        MENUITEM "&Atualizar", FCIDM_SHVIEW_REFRESH
         MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "Co&lar", FCIDM_SHVIEW_INSERT
         MENUITEM "Colar a&talho", FCIDM_SHVIEW_INSERTLINK
@@ -54,7 +54,7 @@ BEGIN
     MENUITEM "Copiar &pasta...", FCIDM_SHVIEW_COPYTO
     MENUITEM "Mo&ver para pasta...", FCIDM_SHVIEW_MOVETO
     MENUITEM SEPARATOR
-    MENUITEM "Seleccionar &tudo\tCtrl+A", FCIDM_SHVIEW_SELECTALL
+    MENUITEM "Selecionar &tudo\tCtrl+A", FCIDM_SHVIEW_SELECTALL
     MENUITEM "&Inverter Selecção.", FCIDM_SHVIEW_INVERTSELECTION
 END
 
@@ -400,7 +400,7 @@ BEGIN
     GROUPBOX "&Programas", -1, 7, 42, 249, 187
     CONTROL "Programs", 14002, WC_TREEVIEW, WS_BORDER | WS_TABSTOP | TVS_SHOWSELALWAYS, 16 ,57, 230, 130
     AUTOCHECKBOX "&Utilizar sempre este programa para abrir este tipo de ficheiro", 14003, 16, 193, 232, 10
-    PUSHBUTTON "&Seleccionar...", 14004, 188, 207, 60, 14
+    PUSHBUTTON "&Selecionar...", 14004, 188, 207, 60, 14
     DEFPUSHBUTTON "OK", IDOK, 150, 236, 50, 14
     PUSHBUTTON "Cancelar", IDCANCEL, 206, 236, 50, 14
 END
@@ -421,7 +421,7 @@ BEGIN
     GROUPBOX "Seleccione a seguinte opção", -1, 7, 110, 259, 60
     CONTROL "", IDC_FOLDER_OPTIONS_CLICKICON, "Static", SS_ICON | WS_CHILD | WS_VISIBLE, 14, 120, 21, 20
     AUTORADIOBUTTON "&Clique simples para abrir um item", IDC_FOLDER_OPTIONS_SINGLECLICK, 40, 120, 170, 10, WS_TABSTOP | WS_GROUP
-    AUTORADIOBUTTON "&Duplo-clique para abrir um item (um clique para seleccionar)", IDC_FOLDER_OPTIONS_DOUBLECLICK, 40, 156, 225, 10
+    AUTORADIOBUTTON "&Duplo-clique para abrir um item (um clique para selecionar)", IDC_FOLDER_OPTIONS_DOUBLECLICK, 40, 156, 225, 10
     AUTORADIOBUTTON "Sublinhar os títulos dos ícones mantendo o aspecto do &browser", IDC_FOLDER_OPTIONS_ULBROWSER, 50, 132, 215, 10, WS_TABSTOP | WS_GROUP
     AUTORADIOBUTTON "Sublinhar os títulos dos ícones apenas quando &aponto para eles", IDC_FOLDER_OPTIONS_ULPOINT, 50, 144, 215, 10
     PUSHBUTTON "&Restaurar valores por defeito", IDC_FOLDER_OPTIONS_RESTORE, 167, 175, 90, 14, 14, WS_TABSTOP
@@ -782,7 +782,7 @@ BEGIN
     IDS_VIEW_SMALL "Ícones &pequenos"
     IDS_VIEW_LIST "&Lista"
     IDS_VIEW_DETAILS "&Detalhes"
-    IDS_SELECT "Seleccionar"
+    IDS_SELECT "Selecionar"
     IDS_OPEN "Abrir"
     IDS_CREATELINK "Criar &Atalho"
     IDS_COPY "Copiar"

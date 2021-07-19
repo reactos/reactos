@@ -43,7 +43,7 @@ STRINGTABLE
     IDS_TB_BACK             "Retroceder"
     IDS_TB_FORWARD          "Avançar"
     IDS_TB_STOP             "Parar"
-    IDS_TB_REFRESH          "Actualizar"
+    IDS_TB_REFRESH          "Atualizar"
     IDS_TB_HOME             "Home"
     IDS_TB_PRINT            "Imprimir..."
 }

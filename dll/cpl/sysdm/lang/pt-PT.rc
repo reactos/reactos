@@ -95,7 +95,7 @@ BEGIN
     GROUPBOX "Selecção de perfis de hardware", IDC_STATIC, 7, 130, 240, 75
     LTEXT "Quando o ReactOS inicia:", IDC_STATIC, 14, 142, 210, 8
     AUTORADIOBUTTON "&Aguarde que eu seleccione um perfil de hardware", IDC_HRDPROFWAIT, 14, 158, 200, 8, WS_GROUP
-    AUTORADIOBUTTON "&Seleccione o primeiro perfil listado se eu não seleccionar um perfil em:", IDC_HRDPROFSELECT, 14, 173, 230, 8
+    AUTORADIOBUTTON "&Seleccione o primeiro perfil listado se eu não selecionar um perfil em:", IDC_HRDPROFSELECT, 14, 173, 230, 8
     LTEXT "segundos", IDC_STATIC, 65, 187, 35, 8
     EDITTEXT IDC_HRDPROFEDIT, 25, 185, 35, 12
     CONTROL "", IDC_HRDPROFUPDWN, "msctls_updown32", UDS_SETBUDDYINT | UDS_ALIGNRIGHT |
@@ -156,7 +156,7 @@ CAPTION "Perfis de utilizador"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_USERPROF, IDC_STATIC, 6, 11, 16, 16, SS_ICON
-    LTEXT "Os perfis de utilizador contêm definições para o ambiente de trabalho e outras informações relacionadas ao inicio de sessão. Pode criar um perfil diferente em cada computador que utilizar, ou pode seleccionar o mesmo perfil guardado no servidor, em cada um dos computadores que utiliza.", IDC_STATIC, 40, 5, 211, 43
+    LTEXT "Os perfis de utilizador contêm definições para o ambiente de trabalho e outras informações relacionadas ao inicio de sessão. Pode criar um perfil diferente em cada computador que utilizar, ou pode selecionar o mesmo perfil guardado no servidor, em cada um dos computadores que utiliza.", IDC_STATIC, 40, 5, 211, 43
     LTEXT "Perfis armazenados neste computador:", IDC_STATIC, 16, 51, 204, 9
     CONTROL "", IDC_USERPROFILE_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL |
             LVS_SHOWSELALWAYS | LVS_SORTASCENDING | WS_BORDER | WS_TABSTOP, 6, 66, 244, 85, WS_EX_CLIENTEDGE

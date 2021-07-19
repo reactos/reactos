@@ -54,7 +54,7 @@ BEGIN
     GROUPBOX "Configuração dos botões", -1, 5, 5, 236, 70
     CHECKBOX "&Mudar os botões primário e secundário", IDC_SWAP_MOUSE_BUTTONS, 10, 18, 156, 10
     CONTROL "", IDC_IMAGE_SWAP_MOUSE, "Static", SS_ICON | SS_CENTERIMAGE | WS_VISIBLE, 171, 14, 65, 57, WS_EX_STATICEDGE
-    LTEXT "Seleccione esta caixa para tornar o botão direito do rato aquele que é utilizado para as principais funções, como seleccionar e arrastar.", -1, 10, 36, 156, 30
+    LTEXT "Seleccione esta caixa para tornar o botão direito do rato aquele que é utilizado para as principais funções, como selecionar e arrastar.", -1, 10, 36, 156, 30
     GROUPBOX "Velocidade do duplo clique", -1, 5, 78, 236, 70
     LTEXT "Faça duplo clique na pasta para testar a definição. Se a pasta não abrir nem fechar, tente utilizar uma definição mais lenta.", -1, 10, 90, 156, 28
     LTEXT "Velocidade: Lenta", -1, 10, 123, 50, 10
@@ -101,7 +101,7 @@ CAPTION "Opções do ponteiro"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Movimento", -1, 5, 5, 236, 60
-    LTEXT "Seleccionar a velocidade do ponteiro:", -1, 52, 15, 110, 10
+    LTEXT "Selecionar a velocidade do ponteiro:", -1, 52, 15, 110, 10
     LTEXT "Baixa", -1, 60, 30, 20, 10
     CONTROL "", IDC_SLIDER_MOUSE_SPEED, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 90, 30, 70, 17
     LTEXT "Alta", -1, 170, 30, 20, 10
@@ -158,7 +158,7 @@ BEGIN
     IDS_SIZENESW "Redimensionamento Diagonal 2"
     IDS_SIZEALL "Mover"
     IDS_UPARROW "Selecção alternativa"
-    IDS_HAND "Seleccionar hiperligação"
+    IDS_HAND "Selecionar hiperligação"
     IDS_NONE "(Nenhum)"
     IDS_SYSTEM_SCHEME "(esquema do sistema)"
     IDS_BROWSE_FILTER "Cursors (*.ani, *.cur)\0*.ani;*.cur\0Animated Cursors (*.ani)\0*.ani\0Static Cursors (*.cur)\0*.cur\0All Files\0*.*\0\0"
