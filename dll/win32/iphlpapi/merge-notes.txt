@@ -1,5 +1,5 @@
 GetAdaptersInfo --
-Wine uses: Software\\Wine\\Wine\\Config\\Network
+Wine uses: HKEY_CURRENT_USER, "Software\\Wine\\Network"
      -- Wins support is todo so this part isn't so important.
      -- Overall, workable
 Wine uses ansi functions
