@@ -159,7 +159,25 @@ KiInitMachineDependent(VOID)
             CpuCount = KeNumberProcessors;
             KeIpiGenericCall(Ki386EnableXMMIExceptions, (ULONG_PTR)&CpuCount);
 
-            /* FIXME: Implement and enable XMM Page Zeroing for Mm */
+            /* Patch the KeZeroPages function to enable fast zeroing */
+            PUCHAR Instr = (PUCHAR)KeZeroPages;
+            switch (*Instr)
+            {
+                case 0xE9:
+                    /* 32-bit jmp */
+                    Instr[4] = 0x90; //NOP
+                    Instr[3] = 0x90;
+                    Instr[2] = 0x90;
+                    /* Fall-through */
+                case 0xEB:
+                    Instr[1] = 0x90;
+                    Instr[0] = 0x90;
+                    break;
+                default:
+                    DPRINT1("Unexpected opcode at KeZeroPages intro: %02x\n", *Instr);
+                    /* Keep slow x86 version */
+                    break;
+            }
 
             /* Patch the RtlPrefetchMemoryNonTemporal routine to enable it */
             *(PCHAR)RtlPrefetchMemoryNonTemporal = 0x90; // NOP

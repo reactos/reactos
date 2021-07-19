@@ -1134,15 +1134,6 @@ KeInvalidateAllCaches(VOID)
 }
 
 VOID
-FASTCALL
-KeZeroPages(IN PVOID Address,
-            IN ULONG Size)
-{
-    /* Not using XMMI in this routine */
-    RtlZeroMemory(Address, Size);
-}
-
-VOID
 NTAPI
 KiSaveProcessorState(IN PKTRAP_FRAME TrapFrame,
                      IN PKEXCEPTION_FRAME ExceptionFrame)
