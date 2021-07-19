@@ -1205,11 +1205,10 @@ IntGdiLoadFontsFromMemory(PGDI_LOAD_FONT pLoadFont,
         PrivateEntry = ExAllocatePoolWithTag(PagedPool, sizeof(FONT_ENTRY_MEM), TAG_FONT);
         if (!PrivateEntry)
         {
-            if (FontGDI->Filename)
-                ExFreePoolWithTag(FontGDI->Filename, GDITAG_PFF);
             EngFreeMem(FontGDI);
             SharedFace_Release(SharedFace);
             ExFreePoolWithTag(Entry, TAG_FONT);
+            EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
             return 0;
         }
 
@@ -3538,7 +3537,8 @@ IntRequestFontSize(PDC dc, PFONTGDI FontGDI, LONG lfWidth, LONG lfHeight)
         error = FT_Get_WinFNT_Header(face, &WinFNT);
         if (error)
         {
-            DPRINT1("%s: Failed to request font size.\n", face->family_name);
+            DPRINT1("'%S', %s: Failed to request font size\n",
+                    FontGDI->Filename, face->family_name);
             ASSERT(FALSE);
             return error;
         }
