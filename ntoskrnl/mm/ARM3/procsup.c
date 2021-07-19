@@ -1245,12 +1245,13 @@ MmCleanProcessAddressSpace(IN PEPROCESS Process)
 
     /* VM is deleted now */
     Process->VmDeleted = TRUE;
-    MiUnlockProcessWorkingSetUnsafe(Process, Thread);
 
     /* Enumerate the VADs */
     VadTree = &Process->VadRoot;
     while (VadTree->NumberGenericTableElements)
     {
+        BOOLEAN LockAgain = FALSE;
+
         /* Grab the current VAD */
         Vad = (PMMVAD)VadTree->BalancedRoot.RightChild;
 
@@ -1258,12 +1259,12 @@ MmCleanProcessAddressSpace(IN PEPROCESS Process)
         if (Vad->u.VadFlags.Spare == 1)
         {
             /* Let RosMm handle this */
-            MiRosCleanupMemoryArea(Process, Vad);
+            MiRosUnmapViewOfSection(Process,
+                                    CONTAINING_RECORD(Vad, MEMORY_AREA, VadNode),
+                                    (PVOID)(Vad->StartingVpn << PAGE_SHIFT),
+                                    FALSE);
             continue;
         }
-
-        /* Lock the working set */
-        MiLockProcessWorkingSetUnsafe(Process, Thread);
 
         /* Remove this VAD from the tree */
         ASSERT(VadTree->NumberGenericTableElements >= 1);
@@ -1277,6 +1278,8 @@ MmCleanProcessAddressSpace(IN PEPROCESS Process)
         {
             /* Remove the view */
             MiRemoveMappedView(Process, Vad);
+            /* MiRemoveMappedView unlocks the process WS */
+            LockAgain = TRUE;
         }
         else
         {
@@ -1284,25 +1287,14 @@ MmCleanProcessAddressSpace(IN PEPROCESS Process)
             MiDeleteVirtualAddresses(Vad->StartingVpn << PAGE_SHIFT,
                                      (Vad->EndingVpn << PAGE_SHIFT) | (PAGE_SIZE - 1),
                                      Vad);
-
-            /* Release the working set */
-            MiUnlockProcessWorkingSetUnsafe(Process, Thread);
-        }
-
-         /* Skip ARM3 fake VADs, they'll be freed by MmDeleteProcessAddresSpace */
-        if (Vad->u.VadFlags.Spare == 1)
-        {
-            /* Set a flag so MmDeleteMemoryArea knows to free, but not to remove */
-            Vad->u.VadFlags.Spare = 2;
-            continue;
         }
 
         /* Free the VAD memory */
         ExFreePool(Vad);
-    }
 
-    /* Lock the working set */
-    MiLockProcessWorkingSetUnsafe(Process, Thread);
+        if (LockAgain)
+            MiLockProcessWorkingSetUnsafe(Process, Thread);
+    }
     ASSERT(Process->CloneRoot == NULL);
     ASSERT(Process->PhysicalVadRoot == NULL);
 

@@ -291,16 +291,25 @@ MiCheckVirtualAddress(IN PVOID VirtualAddress,
         else
         {
             /* ReactOS does not supoprt these VADs yet */
-            ASSERT(Vad->u.VadFlags.VadType != VadImageMap);
             ASSERT(Vad->u2.VadFlags2.ExtendableFile == 0);
 
             /* Return the proto VAD */
             *ProtoVad = Vad;
 
-            /* Get the prototype PTE for this page */
-            PointerPte = (((ULONG_PTR)VirtualAddress >> PAGE_SHIFT) - Vad->StartingVpn) + Vad->FirstPrototypePte;
-            ASSERT(PointerPte != NULL);
-            ASSERT(PointerPte <= Vad->LastContiguousPte);
+            /* Check for MEMORY_AREA thingie */
+            if (Vad->u.VadFlags.Spare)
+            {
+                PointerPte = NULL;
+            }
+            else
+            {
+                /* ARM3 doesn't support this yet */
+                ASSERT(Vad->u.VadFlags.VadType != VadImageMap);
+                /* Get the prototype PTE for this page */
+                PointerPte = (((ULONG_PTR)VirtualAddress >> PAGE_SHIFT) - Vad->StartingVpn) + Vad->FirstPrototypePte;
+                ASSERT(PointerPte != NULL);
+                ASSERT(PointerPte <= Vad->LastContiguousPte);
+            }
 
             /* Return the Prototype PTE and the protection for the page mapping */
             *ProtectCode = (ULONG)Vad->u.VadFlags.Protection;
@@ -1293,7 +1302,7 @@ MiResolveProtoPteFault(IN BOOLEAN StoreInstruction,
         else
             MiGetPfnEntry(PointerProtoPte->u.Hard.PageFrameNumber)->CallSite = _ReturnAddress();
 #endif
-                                      
+
         ASSERT(NT_SUCCESS(Status));
     }
 
@@ -1669,10 +1678,11 @@ MiDispatchFault(IN ULONG FaultCode,
 
 NTSTATUS
 NTAPI
-MmArmAccessFault(IN ULONG FaultCode,
-                 IN PVOID Address,
-                 IN KPROCESSOR_MODE Mode,
-                 IN PVOID TrapInformation)
+MmAccessFault(
+    _In_ ULONG FaultCode,
+    _In_ PVOID Address,
+    _In_ KPROCESSOR_MODE Mode,
+    _In_ PVOID TrapInformation)
 {
     KIRQL OldIrql = KeGetCurrentIrql(), LockIrql;
     PMMPTE ProtoPte = NULL;
@@ -1895,8 +1905,6 @@ _WARN("Session space stuff is not implemented yet!")
             /* Make sure we don't have a recursive working set lock */
             if ((CurrentThread->OwnsProcessWorkingSetExclusive) ||
                 (CurrentThread->OwnsProcessWorkingSetShared) ||
-                (CurrentThread->OwnsSystemWorkingSetExclusive) ||
-                (CurrentThread->OwnsSystemWorkingSetShared) ||
                 (CurrentThread->OwnsSessionWorkingSetExclusive) ||
                 (CurrentThread->OwnsSessionWorkingSetShared))
             {
@@ -1909,19 +1917,45 @@ _WARN("Session space stuff is not implemented yet!")
             /* Use the session process and working set */
             CurrentProcess = HYDRA_PROCESS;
             WorkingSet = &MmSessionSpace->GlobalVirtualAddress->Vm;
-
-            /* Make sure we don't have a recursive working set lock */
-            if ((CurrentThread->OwnsSessionWorkingSetExclusive) ||
-                (CurrentThread->OwnsSessionWorkingSetShared))
-            {
-                /* Fail */
-                return STATUS_IN_PAGE_ERROR | 0x10000000;
-            }
         }
 
-        /* Acquire the working set lock */
-        KeRaiseIrql(APC_LEVEL, &LockIrql);
-        MiLockWorkingSet(CurrentThread, WorkingSet);
+        /* Acquire the working set lock.
+         * Callers forcing page-in operation (not a real page fault then)
+         * must already hold it*/
+        if (TrapInformation)
+        {
+
+            KeRaiseIrql(APC_LEVEL, &LockIrql);
+            MiLockWorkingSet(CurrentThread, WorkingSet);
+        }
+        else
+        {
+            /* IRQL was already checked above */
+            ASSERT(IsSessionAddress ? PsGetCurrentThread()->OwnsSessionWorkingSetExclusive : PsGetCurrentThread()->OwnsSystemWorkingSetExclusive);
+        }
+
+        /* Check for legacy Mm fault */
+        {
+            PMEMORY_AREA MemoryArea;
+            if (MmGetKernelAddressSpace() &&
+                ((MemoryArea = MmLocateMemoryAreaByAddress(MmGetKernelAddressSpace(), Address))) &&
+                (MemoryArea->Type != MEMORY_AREA_OWNED_BY_ARM3))
+            {
+                Status = MmRosAccessFault(FaultCode,
+                                          MmGetKernelAddressSpace(),
+                                          MemoryArea,
+                                          Address,
+                                          KernelMode,
+                                          TrapInformation);
+                ASSERT(KeGetCurrentIrql() == APC_LEVEL);
+                if (TrapInformation)
+                {
+                    MiUnlockWorkingSet(CurrentThread, WorkingSet);
+                    KeLowerIrql(LockIrql);
+                }
+                return Status;
+            }
+        }
 
         /* Re-read PTE now that we own the lock */
         TempPte = *PointerPte;
@@ -1983,8 +2017,11 @@ _WARN("Session space stuff is not implemented yet!")
             }
 
             /* Release the working set */
-            MiUnlockWorkingSet(CurrentThread, WorkingSet);
-            KeLowerIrql(LockIrql);
+            if (TrapInformation)
+            {
+                MiUnlockWorkingSet(CurrentThread, WorkingSet);
+                KeLowerIrql(LockIrql);
+            }
 
             /* Otherwise, the PDE was probably invalid, and all is good now */
             return STATUS_SUCCESS;
@@ -2082,8 +2119,11 @@ _WARN("Session space stuff is not implemented yet!")
 
         /* Release the working set */
         ASSERT(KeAreAllApcsDisabled() == TRUE);
-        MiUnlockWorkingSet(CurrentThread, WorkingSet);
-        KeLowerIrql(LockIrql);
+        if (TrapInformation)
+        {
+            MiUnlockWorkingSet(CurrentThread, WorkingSet);
+            KeLowerIrql(LockIrql);
+        }
 
         /* We are done! */
         DPRINT("Fault resolved with status: %lx\n", Status);
@@ -2096,7 +2136,14 @@ UserFault:
     CurrentProcess = (PEPROCESS)CurrentThread->Tcb.ApcState.Process;
 
     /* Lock the working set */
-    MiLockProcessWorkingSet(CurrentProcess, CurrentThread);
+    if (TrapInformation)
+    {
+        MiLockProcessWorkingSet(CurrentProcess, CurrentThread);
+    }
+    else
+    {
+        NT_ASSERT(CurrentThread->OwnsProcessWorkingSetExclusive);
+    }
 
     ProtectionCode = MM_INVALID_PROTECTION;
 
@@ -2183,16 +2230,9 @@ UserFault:
 
         if (ProtectionCode == MM_NOACCESS)
         {
-#if (_MI_PAGING_LEVELS == 2)
-            /* Could be a page table for paged pool */
-            MiCheckPdeForPagedPool(Address);
-#endif
-            /* Has the code above changed anything -- is this now a valid PTE? */
-            Status = (PointerPde->u.Hard.Valid == 1) ? STATUS_SUCCESS : STATUS_ACCESS_VIOLATION;
-
-            /* Either this was a bogus VA or we've fixed up a paged pool PDE */
+            /* This is a bogus VA. */
             MiUnlockProcessWorkingSet(CurrentProcess, CurrentThread);
-            return Status;
+            return STATUS_ACCESS_VIOLATION;
         }
 
         /* Resolve a demand zero fault */
@@ -2225,6 +2265,47 @@ UserFault:
 
     /* Now capture the PTE. */
     TempPte = *PointerPte;
+
+    /* Check if we have a VAD, unless we did this already */
+    if (ProtectionCode == MM_INVALID_PROTECTION)
+    {
+        MiCheckVirtualAddress(Address, &ProtectionCode, &Vad);
+    }
+
+    /* Does this come from old Mm */
+    if (Vad && Vad->u.VadFlags.Spare)
+    {
+        /* Increment before. Ros Mm relies on this. */
+        if (TempPte.u.Long == 0)
+        {
+            MiIncrementPageTableReferences(Address);
+        }
+
+        /* Let it handle this */
+        Status = MmRosAccessFault(FaultCode,
+                                  &CurrentProcess->Vm,
+                                  (PMEMORY_AREA)Vad,
+                                  Address,
+                                  Mode,
+                                  TrapInformation);
+
+        /* Rollback if needed */
+        if ((TempPte.u.Long == 0) && !NT_SUCCESS(Status))
+        {
+            /* Make sure old Mm cleaned up */
+            NT_ASSERT(PointerPte->u.Long == 0);
+            if (MiDecrementPageTableReferences(Address) == 0)
+            {
+                OldIrql = MiAcquirePfnLock();
+                MiDeletePde(PointerPde, CurrentProcess);
+                MiReleasePfnLock(OldIrql);
+            }
+        }
+
+        if (TrapInformation)
+            MiUnlockProcessWorkingSet(CurrentProcess, CurrentThread);
+        return Status;
+    }
 
     /* Check if the PTE is valid */
     if (TempPte.u.Hard.Valid)
@@ -2269,7 +2350,8 @@ UserFault:
                 MiReleasePfnLock(LockIrql);
 
                 /* Return the status */
-                MiUnlockProcessWorkingSet(CurrentProcess, CurrentThread);
+                if (TrapInformation)
+                    MiUnlockProcessWorkingSet(CurrentProcess, CurrentThread);
                 return STATUS_PAGE_FAULT_COPY_ON_WRITE;
             }
 
@@ -2277,7 +2359,8 @@ UserFault:
             if (!MI_IS_PAGE_WRITEABLE(&TempPte))
             {
                 /* Return the status */
-                MiUnlockProcessWorkingSet(CurrentProcess, CurrentThread);
+                if (TrapInformation)
+                    MiUnlockProcessWorkingSet(CurrentProcess, CurrentThread);
                 return STATUS_ACCESS_VIOLATION;
             }
         }
@@ -2287,12 +2370,14 @@ UserFault:
             !MI_IS_PAGE_EXECUTABLE(&TempPte))
         {
             /* Return the status */
-            MiUnlockProcessWorkingSet(CurrentProcess, CurrentThread);
+            if (TrapInformation)
+                MiUnlockProcessWorkingSet(CurrentProcess, CurrentThread);
             return STATUS_ACCESS_VIOLATION;
         }
 
         /* The fault has already been resolved by a different thread */
-        MiUnlockProcessWorkingSet(CurrentProcess, CurrentThread);
+        if (TrapInformation)
+            MiUnlockProcessWorkingSet(CurrentProcess, CurrentThread);
         return STATUS_SUCCESS;
     }
 
@@ -2316,7 +2401,8 @@ UserFault:
 #endif
 
         /* Return the status */
-        MiUnlockProcessWorkingSet(CurrentProcess, CurrentThread);
+        if (TrapInformation)
+            MiUnlockProcessWorkingSet(CurrentProcess, CurrentThread);
         return STATUS_PAGE_FAULT_DEMAND_ZERO;
     }
 
@@ -2327,16 +2413,10 @@ UserFault:
         ProtoPte = MiCheckVirtualAddress(Address, &ProtectionCode, &Vad);
         if (ProtectionCode == MM_NOACCESS)
         {
-#if (_MI_PAGING_LEVELS == 2)
-            /* Could be a page table for paged pool */
-            MiCheckPdeForPagedPool(Address);
-#endif
-            /* Has the code above changed anything -- is this now a valid PTE? */
-            Status = (PointerPte->u.Hard.Valid == 1) ? STATUS_SUCCESS : STATUS_ACCESS_VIOLATION;
-
-            /* Either this was a bogus VA or we've fixed up a paged pool PDE */
-            MiUnlockProcessWorkingSet(CurrentProcess, CurrentThread);
-            return Status;
+            /* This was a bogus VA */
+            if (TrapInformation)
+                MiUnlockProcessWorkingSet(CurrentProcess, CurrentThread);
+            return STATUS_ACCESS_VIOLATION;
         }
 
         /*
@@ -2371,7 +2451,8 @@ UserFault:
             ASSERT(CurrentThread->ApcNeeded == 0);
 
             /* Drop the working set lock */
-            MiUnlockProcessWorkingSet(CurrentProcess, CurrentThread);
+            if (TrapInformation)
+                MiUnlockProcessWorkingSet(CurrentProcess, CurrentThread);
             ASSERT(KeGetCurrentIrql() == OldIrql);
 
             /* Handle stack expansion */
@@ -2466,7 +2547,8 @@ UserFault:
 
             /* Demand zero */
             ASSERT(KeGetCurrentIrql() <= APC_LEVEL);
-            MiUnlockProcessWorkingSet(CurrentProcess, CurrentThread);
+            if (TrapInformation)
+                MiUnlockProcessWorkingSet(CurrentProcess, CurrentThread);
             return STATUS_PAGE_FAULT_DEMAND_ZERO;
         }
 
@@ -2495,7 +2577,8 @@ UserFault:
                 if (!ProtoPte)
                 {
                     ASSERT(KeGetCurrentIrql() <= APC_LEVEL);
-                    MiUnlockProcessWorkingSet(CurrentProcess, CurrentThread);
+                    if (TrapInformation)
+                        MiUnlockProcessWorkingSet(CurrentProcess, CurrentThread);
                     return STATUS_ACCESS_VIOLATION;
                 }
             }
@@ -2536,7 +2619,8 @@ UserFault:
             ASSERT(CurrentThread->ApcNeeded == 0);
 
             /* Drop the working set lock */
-            MiUnlockProcessWorkingSet(CurrentProcess, CurrentThread);
+            if (TrapInformation)
+                MiUnlockProcessWorkingSet(CurrentProcess, CurrentThread);
             ASSERT(KeGetCurrentIrql() == OldIrql);
 
             /* Did we hit a guard page? */
@@ -2563,7 +2647,8 @@ UserFault:
 
     /* Return the status */
     ASSERT(KeGetCurrentIrql() <= APC_LEVEL);
-    MiUnlockProcessWorkingSet(CurrentProcess, CurrentThread);
+    if (TrapInformation)
+        MiUnlockProcessWorkingSet(CurrentProcess, CurrentThread);
     return Status;
 }
 

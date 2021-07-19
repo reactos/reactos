@@ -1521,8 +1521,7 @@ NTSTATUS
 NTAPI
 MmNotPresentFaultSectionView(PMMSUPPORT AddressSpace,
                              MEMORY_AREA* MemoryArea,
-                             PVOID Address,
-                             BOOLEAN Locked)
+                             PVOID Address)
 {
     LARGE_INTEGER Offset;
     PFN_NUMBER Page;
@@ -1536,8 +1535,6 @@ MmNotPresentFaultSectionView(PMMSUPPORT AddressSpace,
     PVOID PAddress;
     PEPROCESS Process = MmGetAddressSpaceOwner(AddressSpace);
     SWAPENTRY SwapEntry;
-
-    ASSERT(Locked);
 
     /*
      * There is a window between taking the page fault and locking the
@@ -1599,31 +1596,34 @@ MmNotPresentFaultSectionView(PMMSUPPORT AddressSpace,
     /* See if we should use a private page */
     if (HasSwapEntry)
     {
-        SWAPENTRY DummyEntry;
-
-        MmGetPageFileMapping(Process, Address, &SwapEntry);
+        MmDeletePageFileMapping(Process, Address, &SwapEntry);
         if (SwapEntry == MM_WAIT_ENTRY)
         {
-            MmUnlockAddressSpace(AddressSpace);
-            YieldProcessor();
-            MmLockAddressSpace(AddressSpace);
+            /* Someone else is handling this page fault.
+             * Restore this. */
+            MmCreatePageFileMapping(Process, Address, MM_WAIT_ENTRY);
+            /* Let the other one a chance to finish */
+            if (Address < MmSystemRangeStart)
+            {
+                BOOLEAN Safe, Shared;
+                MiUnlockProcessWorkingSetForFault(Process, PsGetCurrentThread(), &Safe, &Shared);
+                YieldProcessor();
+                MiLockProcessWorkingSetForFault(Process, PsGetCurrentThread(), Safe, Shared);
+            }
+            else
+            {
+                MiUnlockWorkingSet(PsGetCurrentThread(), &MmSystemCacheWs);
+                YieldProcessor();
+                MiLockWorkingSet(PsGetCurrentThread(), &MmSystemCacheWs);
+            }
             return STATUS_MM_RESTART_OPERATION;
         }
 
         /*
          * Must be private page we have swapped out.
          */
+        ASSERT(Process != NULL);
 
-        /*
-        * Sanity check
-        */
-        MmDeletePageFileMapping(Process, Address, &DummyEntry);
-        ASSERT(DummyEntry == SwapEntry);
-
-        /* Tell everyone else we are serving the fault. */
-        MmCreatePageFileMapping(Process, Address, MM_WAIT_ENTRY);
-
-        MmUnlockAddressSpace(AddressSpace);
         MI_SET_USAGE(MI_USAGE_SECTION);
         if (Process) MI_SET_PROCESS2(Process->ImageFileName);
         if (!Process) MI_SET_PROCESS2("Kernel Section");
@@ -1639,10 +1639,6 @@ MmNotPresentFaultSectionView(PMMSUPPORT AddressSpace,
             DPRINT1("MmReadFromSwapPage failed, status = %x\n", Status);
             KeBugCheck(MEMORY_MANAGEMENT);
         }
-
-        MmLockAddressSpace(AddressSpace);
-        MmDeletePageFileMapping(Process, PAddress, &DummyEntry);
-        ASSERT(DummyEntry == MM_WAIT_ENTRY);
 
         Status = MmCreateVirtualMapping(Process,
                                         PAddress,
@@ -1663,7 +1659,8 @@ MmNotPresentFaultSectionView(PMMSUPPORT AddressSpace,
         /*
          * Add the page to the process's working set
          */
-        if (Process) MmInsertRmap(Page, Process, Address);
+        MmInsertRmap(Page, Process, Address);
+
         /*
          * Finish the operation
          */
@@ -1724,6 +1721,8 @@ MmNotPresentFaultSectionView(PMMSUPPORT AddressSpace,
     Entry = MmGetPageEntrySectionSegment(Segment, &Offset);
     if (Entry == 0)
     {
+        BOOLEAN Safe, Shared;
+
         /*
          * If the entry is zero, then we need to load the page.
          */
@@ -1752,7 +1751,17 @@ MmNotPresentFaultSectionView(PMMSUPPORT AddressSpace,
         }
 
         MmUnlockSectionSegment(Segment);
-        MmUnlockAddressSpace(AddressSpace);
+
+        /* Temporarily unlock the WS */
+        if (Process != NULL)
+        {
+            MmCreatePageFileMapping(Process, Address, MM_WAIT_ENTRY);
+            MiUnlockProcessWorkingSetForFault(Process, PsGetCurrentThread(), &Safe, &Shared);
+        }
+        else
+        {
+            MiUnlockWorkingSet(PsGetCurrentThread(), &MmSystemCacheWs);
+        }
 
         /* The data must be paged in. Lock the file, so that the VDL doesn't get updated behind us. */
         FsRtlAcquireFileExclusive(Segment->FileObject);
@@ -1763,8 +1772,18 @@ MmNotPresentFaultSectionView(PMMSUPPORT AddressSpace,
 
         FsRtlReleaseFile(Segment->FileObject);
 
-        /* Lock address space again */
-        MmLockAddressSpace(AddressSpace);
+        /* Lock again */
+        if (Process != NULL)
+        {
+            MiLockProcessWorkingSetForFault(Process, PsGetCurrentThread(), Safe, Shared);
+            MmDeletePageFileMapping(Process, Address, &SwapEntry);
+            NT_ASSERT(SwapEntry == MM_WAIT_ENTRY);
+        }
+        else
+        {
+            MiLockWorkingSet(PsGetCurrentThread(), &MmSystemCacheWs);
+        }
+
         if (!NT_SUCCESS(Status))
         {
             /* Damn */
@@ -1785,9 +1804,7 @@ MmNotPresentFaultSectionView(PMMSUPPORT AddressSpace,
         if (SwapEntry == MM_WAIT_ENTRY)
         {
             MmUnlockSectionSegment(Segment);
-            MmUnlockAddressSpace(AddressSpace);
             YieldProcessor();
-            MmLockAddressSpace(AddressSpace);
             return STATUS_MM_RESTART_OPERATION;
         }
 
@@ -1797,7 +1814,6 @@ MmNotPresentFaultSectionView(PMMSUPPORT AddressSpace,
         MmSetPageEntrySectionSegment(Segment, &Offset, MAKE_SWAP_SSE(MM_WAIT_ENTRY));
         MmUnlockSectionSegment(Segment);
 
-        MmUnlockAddressSpace(AddressSpace);
         Status = MmRequestPageMemoryConsumer(MC_USER, TRUE, &Page);
         if (!NT_SUCCESS(Status))
         {
@@ -1811,9 +1827,8 @@ MmNotPresentFaultSectionView(PMMSUPPORT AddressSpace,
         }
 
         /*
-         * Relock the address space and segment
+         * Relock the segment
          */
-        MmLockAddressSpace(AddressSpace);
         MmLockSectionSegment(Segment);
 
         /*
@@ -1887,8 +1902,7 @@ NTSTATUS
 NTAPI
 MmAccessFaultSectionView(PMMSUPPORT AddressSpace,
                          MEMORY_AREA* MemoryArea,
-                         PVOID Address,
-                         BOOLEAN Locked)
+                         PVOID Address)
 {
     PMM_SECTION_SEGMENT Segment;
     PFN_NUMBER OldPage;
@@ -1914,7 +1928,7 @@ MmAccessFaultSectionView(PMMSUPPORT AddressSpace,
     /* Make sure we have a page mapping for this address.  */
     if (!MmIsPagePresent(Process, Address))
     {
-        NTSTATUS Status = MmNotPresentFaultSectionView(AddressSpace, MemoryArea, Address, Locked);
+        NTSTATUS Status = MmNotPresentFaultSectionView(AddressSpace, MemoryArea, Address);
         if (!NT_SUCCESS(Status))
         {
             /* This is invalid access ! */
@@ -1999,6 +2013,7 @@ MmAccessFaultSectionView(PMMSUPPORT AddressSpace,
      * Unshare the old page.
      */
     DPRINT("Swapping page (Old %x New %x)\n", OldPage, NewPage);
+
     MmDeleteVirtualMapping(Process, PAddress, NULL, NULL);
     if (Process)
         MmDeleteRmap(OldPage, Process, PAddress);
@@ -3549,13 +3564,13 @@ MmUnmapViewOfSegment(PMMSUPPORT AddressSpace,
 /* This functions must be called with a locked address space */
 NTSTATUS
 NTAPI
-MiRosUnmapViewOfSection(IN PEPROCESS Process,
-                        IN PVOID BaseAddress,
-                        IN BOOLEAN SkipDebuggerNotify)
+MiRosUnmapViewOfSection(
+    _In_ PEPROCESS Process,
+    _In_ PMEMORY_AREA MemoryArea,
+    _In_ PVOID BaseAddress,
+    _In_ BOOLEAN SkipDebuggerNotify)
 {
     NTSTATUS Status;
-    PMEMORY_AREA MemoryArea;
-    PMMSUPPORT AddressSpace;
     PVOID ImageBaseAddress = 0;
 
     DPRINT("Opening memory area Process %p BaseAddress %p\n",
@@ -3563,22 +3578,10 @@ MiRosUnmapViewOfSection(IN PEPROCESS Process,
 
     ASSERT(Process);
 
-    AddressSpace = Process ? &Process->Vm : MmGetKernelAddressSpace();
-
-    MemoryArea = MmLocateMemoryAreaByAddress(AddressSpace,
-                 BaseAddress);
-    if (MemoryArea == NULL ||
-#ifdef NEWCC
-            ((MemoryArea->Type != MEMORY_AREA_SECTION_VIEW) && (MemoryArea->Type != MEMORY_AREA_CACHE)) ||
-#else
-            (MemoryArea->Type != MEMORY_AREA_SECTION_VIEW) ||
-#endif
-            MemoryArea->DeleteInProgress)
-
+    if ((MemoryArea->DeleteInProgress)
+        || (MemoryArea->Type != MEMORY_AREA_SECTION_VIEW))
     {
-        if (MemoryArea) ASSERT(MemoryArea->Type != MEMORY_AREA_OWNED_BY_ARM3);
-
-        DPRINT1("Unable to find memory area at address %p.\n", BaseAddress);
+        DPRINT1("Memory area at address %p is not for a section view.\n", BaseAddress);
         return STATUS_NOT_MAPPED_VIEW;
     }
 
@@ -3617,7 +3620,7 @@ MiRosUnmapViewOfSection(IN PEPROCESS Process,
             PVOID SBaseAddress = (PVOID)
                                  ((char*)ImageBaseAddress + (ULONG_PTR)SectionSegments[i].Image.VirtualAddress);
 
-            Status = MmUnmapViewOfSegment(AddressSpace, SBaseAddress);
+            Status = MmUnmapViewOfSegment(&Process->Vm, SBaseAddress);
             if (!NT_SUCCESS(Status))
             {
                 DPRINT1("MmUnmapViewOfSegment failed for %p (Process %p) with %lx\n",
@@ -3629,7 +3632,7 @@ MiRosUnmapViewOfSection(IN PEPROCESS Process,
     }
     else
     {
-        Status = MmUnmapViewOfSegment(AddressSpace, BaseAddress);
+        Status = MmUnmapViewOfSegment(&Process->Vm, BaseAddress);
         if (!NT_SUCCESS(Status))
         {
             DPRINT1("MmUnmapViewOfSegment failed for %p (Process %p) with %lx\n",
@@ -3914,6 +3917,9 @@ MmMapViewOfSection(IN PVOID SectionObject,
     PMMSUPPORT AddressSpace;
     NTSTATUS Status = STATUS_SUCCESS;
     BOOLEAN NotAtBase = FALSE;
+    BOOLEAN Attached = FALSE;
+    KAPC_STATE ApcState;
+
 
     if (MiIsRosSectionObject(SectionObject) == FALSE)
     {
@@ -3945,6 +3951,12 @@ MmMapViewOfSection(IN PVOID SectionObject,
 
     if (Section->u.Flags.NoChange)
         AllocationType |= SEC_NO_CHANGE;
+
+    if (Process != PsGetCurrentProcess())
+    {
+        KeStackAttachProcess(&Process->Pcb, &ApcState);
+        Attached = TRUE;
+    }
 
     MmLockAddressSpace(AddressSpace);
 
@@ -4003,15 +4015,15 @@ MmMapViewOfSection(IN PVOID SectionObject,
             /* Fail if the user requested a fixed base address. */
             if ((*BaseAddress) != NULL)
             {
-                MmUnlockAddressSpace(AddressSpace);
-                return STATUS_CONFLICTING_ADDRESSES;
+                Status = STATUS_CONFLICTING_ADDRESSES;
+                goto Fail;
             }
             /* Otherwise find a gap to map the image. */
             ImageBase = (ULONG_PTR)MmFindGap(AddressSpace, PAGE_ROUND_UP(ImageSize), MM_VIRTMEM_GRANULARITY, FALSE);
             if (ImageBase == 0)
             {
-                MmUnlockAddressSpace(AddressSpace);
-                return STATUS_CONFLICTING_ADDRESSES;
+                Status = STATUS_CONFLICTING_ADDRESSES;
+                goto Fail;
             }
             /* Remember that we loaded image at a different base address */
             NotAtBase = TRUE;
@@ -4041,9 +4053,7 @@ MmMapViewOfSection(IN PVOID SectionObject,
                     MmUnmapViewOfSegment(AddressSpace, SBaseAddress);
                     MmUnlockSectionSegment(&SectionSegments[i]);
                 }
-
-                MmUnlockAddressSpace(AddressSpace);
-                return Status;
+                goto Fail;
             }
         }
 
@@ -4064,22 +4074,22 @@ MmMapViewOfSection(IN PVOID SectionObject,
         if ((Protect & (PAGE_READWRITE|PAGE_EXECUTE_READWRITE)) &&
                 !(Section->InitialPageProtection & (PAGE_READWRITE|PAGE_EXECUTE_READWRITE)))
         {
-            MmUnlockAddressSpace(AddressSpace);
-            return STATUS_SECTION_PROTECTION;
+            Status = STATUS_SECTION_PROTECTION;
+            goto Fail;
         }
         /* check for read access */
         if ((Protect & (PAGE_READONLY|PAGE_WRITECOPY|PAGE_EXECUTE_READ|PAGE_EXECUTE_WRITECOPY)) &&
                 !(Section->InitialPageProtection & (PAGE_READONLY|PAGE_READWRITE|PAGE_WRITECOPY|PAGE_EXECUTE_READ|PAGE_EXECUTE_READWRITE|PAGE_EXECUTE_WRITECOPY)))
         {
-            MmUnlockAddressSpace(AddressSpace);
-            return STATUS_SECTION_PROTECTION;
+            Status = STATUS_SECTION_PROTECTION;
+            goto Fail;
         }
         /* check for execute access */
         if ((Protect & (PAGE_EXECUTE|PAGE_EXECUTE_READ|PAGE_EXECUTE_READWRITE|PAGE_EXECUTE_WRITECOPY)) &&
                 !(Section->InitialPageProtection & (PAGE_EXECUTE|PAGE_EXECUTE_READ|PAGE_EXECUTE_READWRITE|PAGE_EXECUTE_WRITECOPY)))
         {
-            MmUnlockAddressSpace(AddressSpace);
-            return STATUS_SECTION_PROTECTION;
+            Status = STATUS_SECTION_PROTECTION;
+            goto Fail;
         }
 
         if (SectionOffset == NULL)
@@ -4093,8 +4103,8 @@ MmMapViewOfSection(IN PVOID SectionObject,
 
         if ((ViewOffset % PAGE_SIZE) != 0)
         {
-            MmUnlockAddressSpace(AddressSpace);
-            return STATUS_MAPPED_ALIGNMENT;
+            Status = STATUS_MAPPED_ALIGNMENT;
+            goto Fail;
         }
 
         if ((*ViewSize) == 0)
@@ -4123,11 +4133,12 @@ MmMapViewOfSection(IN PVOID SectionObject,
         MmUnlockSectionSegment(Segment);
         if (!NT_SUCCESS(Status))
         {
-            MmUnlockAddressSpace(AddressSpace);
-            return Status;
+            goto Fail;
         }
     }
 
+    if (Attached)
+        KeUnstackDetachProcess(&ApcState);
     MmUnlockAddressSpace(AddressSpace);
 
     if (NotAtBase)
@@ -4135,6 +4146,12 @@ MmMapViewOfSection(IN PVOID SectionObject,
     else
         Status = STATUS_SUCCESS;
 
+    return Status;
+
+Fail:
+    if (Attached)
+        KeUnstackDetachProcess(&ApcState);
+    MmUnlockAddressSpace(AddressSpace);
     return Status;
 }
 
@@ -4314,6 +4331,12 @@ MmMapViewInSystemSpace (IN PVOID SectionObject,
     return MmMapViewInSystemSpaceEx(SectionObject, MappedBase, ViewSize, &SectionOffset, 0);
 }
 
+extern
+VOID
+NTAPI
+MiFillSystemPageDirectory(IN PVOID Base,
+                          IN SIZE_T NumberOfBytes);
+
 NTSTATUS
 NTAPI
 MmMapViewInSystemSpaceEx (
@@ -4407,6 +4430,12 @@ MmMapViewInSystemSpaceEx (
     MmUnlockSectionSegment(Segment);
     MmUnlockAddressSpace(AddressSpace);
 
+    if (NT_SUCCESS(Status))
+    {
+        /* Map PDEs */
+        MiFillSystemPageDirectory(*MappedBase, *ViewSize);
+    }
+
     return Status;
 }
 
@@ -4415,9 +4444,15 @@ NTSTATUS
 NTAPI
 MiRosUnmapViewInSystemSpace(IN PVOID MappedBase)
 {
+    NTSTATUS Status;
     DPRINT("MmUnmapViewInSystemSpace() called\n");
 
-    return MmUnmapViewOfSegment(MmGetKernelAddressSpace(), MappedBase);
+    MiLockWorkingSet(PsGetCurrentThread(), &MmSystemCacheWs);
+
+    Status = MmUnmapViewOfSegment(MmGetKernelAddressSpace(), MappedBase);
+
+    MiUnlockWorkingSet(PsGetCurrentThread(), &MmSystemCacheWs);
+    return Status;
 }
 
 /**********************************************************************
