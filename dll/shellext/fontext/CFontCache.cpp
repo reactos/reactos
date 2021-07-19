@@ -14,7 +14,11 @@ CFontCache* g_FontCache = NULL;
 CFontInfo::CFontInfo(LPCWSTR name)
     : m_Name(name)
     , m_FileRead(false)
+    , m_AttrsRead(false)
+    , m_FileWriteTime({})
+    , m_dwFileAttributes(0)
 {
+    m_FileSize.QuadPart = 0;
 }
 
 const CStringW& CFontInfo::Name() const
@@ -62,7 +66,56 @@ const CStringW& CFontInfo::File()
     return m_File;
 }
 
+void CFontInfo::ReadAttrs()
+{
+    CStringW File = g_FontCache->Filename(this, true);
 
+    m_AttrsRead = true;
+
+    WIN32_FIND_DATAW findFileData;
+    HANDLE hFile = FindFirstFileW(File, &findFileData);
+    if (hFile != INVALID_HANDLE_VALUE)
+    {
+
+        // File write time
+        FileTimeToLocalFileTime(&findFileData.ftLastWriteTime, &m_FileWriteTime);
+        //FileTimeToSystemTime(&lft, &m_FileWriteTime);
+
+        // File size
+        m_FileSize.HighPart = findFileData.nFileSizeHigh;
+        m_FileSize.LowPart = findFileData.nFileSizeLow;
+
+        m_dwFileAttributes = findFileData.dwFileAttributes;
+
+//        m_LastDetailsFontName.Empty();
+        FindClose(hFile);
+    }
+
+}
+
+const LARGE_INTEGER& CFontInfo::FileSize()
+{
+    if (!m_AttrsRead)
+        ReadAttrs();
+
+    return m_FileSize;
+}
+
+const FILETIME& CFontInfo::FileWriteTime()
+{
+    if (!m_AttrsRead)
+        ReadAttrs();
+
+    return m_FileWriteTime;
+}
+
+DWORD CFontInfo::FileAttributes()
+{
+    if (!m_AttrsRead)
+        ReadAttrs();
+
+    return m_dwFileAttributes;
+}
 
 CFontCache::CFontCache()
 {
@@ -93,30 +146,39 @@ CStringW CFontCache::Name(size_t Index)
     return m_Fonts[Index].Name();
 }
 
-CStringW CFontCache::Filename(const FontPidlEntry* fontEntry, bool alwaysFullPath)
+CFontInfo* CFontCache::Find(const FontPidlEntry* fontEntry)
 {
-    CStringW File;
-
     if (fontEntry->Index < m_Fonts.GetCount())
     {
-        CFontInfo& info = m_Fonts[fontEntry->Index];
-
-        if (info.Name().CompareNoCase(fontEntry->Name) == 0)
-            File = info.File();
+        if (m_Fonts[fontEntry->Index].Name().CompareNoCase(fontEntry->Name) == 0)
+            return &m_Fonts[fontEntry->Index];
     }
 
-    for (UINT n = 0; File.IsEmpty() && n < Size(); ++n)
+    for (UINT n = 0; n < Size(); ++n)
     {
         if (m_Fonts[n].Name().CompareNoCase(fontEntry->Name) == 0)
-            File = m_Fonts[n].File();
-    }
-
-    if (!File.IsEmpty() && alwaysFullPath)
-    {
-        // Ensure this is a full path
-        if (PathIsRelativeW(File))
         {
-            File = m_FontFolderPath + File;
+            return &m_Fonts[n];
+        }
+    }
+    return nullptr;
+}
+
+
+CStringW CFontCache::Filename(CFontInfo* info, bool alwaysFullPath)
+{
+    CStringW File;
+    if (info)
+    {
+        File = info->File();
+
+        if (!File.IsEmpty() && alwaysFullPath)
+        {
+            // Ensure this is a full path
+            if (PathIsRelativeW(File))
+            {
+                File = m_FontFolderPath + File;
+            }
         }
     }
 

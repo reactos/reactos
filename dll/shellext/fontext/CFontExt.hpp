@@ -16,8 +16,6 @@ class CFontExt :
     public IDropTarget
 {
     CComHeapPtr<ITEMIDLIST> m_Folder;
-    CStringW m_LastDetailsFontName;
-    WIN32_FIND_DATAW m_LastDetailsFileData;
 
 public:
 
