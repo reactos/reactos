@@ -630,10 +630,10 @@ Quit:
 DWORD
 APIENTRY
 NtUserQueryInputContext(
-    DWORD dwUnknown1,
+    HIMC hIMC,
     DWORD dwUnknown2)
 {
-    STUB;
+    TRACE("NtUserQueryInputContext(%p, 0x%lX)\n", hIMC, dwUnknown2);
     return 0;
 }
 
