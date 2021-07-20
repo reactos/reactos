@@ -264,7 +264,7 @@ IDR_BROWSE_CONTEXT_MENU MENU
         MENUITEM "&Copiar fundo",                              IDM_COPYBACKGROUND
         MENUITEM "Definir como &item do Ambiente de Trabalho", IDM_SETDESKTOPITEM
         MENUITEM SEPARATOR
-        MENUITEM "&Seleccionar tudo",                          IDM_SELECTALL
+        MENUITEM "&Selecionar tudo",                          IDM_SELECTALL
         MENUITEM "C&olar",                                     IDM_PASTE
         MENUITEM SEPARATOR
         MENUITEM "Criar ata&lho",                              IDM_CREATESHORTCUT
@@ -313,12 +313,12 @@ IDR_BROWSE_CONTEXT_MENU MENU
         MENUITEM "Co&lar",            IDM_PASTE
         MENUITEM "&Apagar",           IDM_DELETE
         MENUITEM SEPARATOR
-        MENUITEM "&Seleccionar tudo", IDM_SELECTALL
+        MENUITEM "&Selecionar tudo", IDM_SELECTALL
     }
 
     POPUP "" /* Table */
     {
-        POPUP "&Seleccionar"
+        POPUP "&Selecionar"
         {
             MENUITEM "&Célula",             IDM_CELLSELECT
             MENUITEM "&Linha",              IDM_ROWSELECT
@@ -335,7 +335,7 @@ IDR_BROWSE_CONTEXT_MENU MENU
         MENUITEM "&Cortar",          IDM_CUT
         MENUITEM "C&opiar",          IDM_COPY
         MENUITEM "Co&lar",           IDM_PASTE
-        MENUITEM "Seleccionar tudo", IDM_SELECTALL
+        MENUITEM "Selecionar tudo", IDM_SELECTALL
         MENUITEM "&Imprimir",        IDM_PRINT
         MENUITEM SEPARATOR
     }

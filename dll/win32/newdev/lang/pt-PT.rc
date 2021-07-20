@@ -94,7 +94,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_INSTALLWIZARDTITLE "Assistente de novo hardware"
-    IDS_UPDATEWIZARDTITLE "Assistente para actualizar o controlador"
+    IDS_UPDATEWIZARDTITLE "Assistente para atualizar o controlador"
     IDS_CHSOURCE_TITLE "Escolha as opções de pesquisa e instalação"
     IDS_SEARCHDRV_TITLE "A procurar..."
     IDS_INSTALLDRV_TITLE "A instalar..."
