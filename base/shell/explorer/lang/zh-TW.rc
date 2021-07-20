@@ -2,7 +2,7 @@
  * PROJECT:    ReactOS Explorer
  * LICENSE:    GPL - See COPYING in the top level directory
  * FILE:       base/shell/explorer/lang/zh-TW.rc
- * PURPOSE:    Traditional Chinese Language File for ReactOS Explorer
+ * PURPOSE:    Chinese (Traditional) Language File for ReactOS Explorer
  * TRANSLATOR: 2015-04-27 Alvin Wong <alvinhochun [at] gmail [dot] com>
  *             2018-12-25 Luo Yufan <njlyf2011 [at] hotmail [dot] com>
  *             2021-03-07 Chan Chilung <eason066 [at] gmail [dot] com>
@@ -53,7 +53,7 @@ BEGIN
             MENUITEM "控制台(&C)", IDM_CONTROLPANEL, MFT_STRING, MFS_GRAYED
             MENUITEM "", -1, MFT_SEPARATOR
             MENUITEM "安全性(&S)...", IDM_SECURITY, MFT_STRING, MFS_ENABLED
-            MENUITEM "網絡連線(&N)", IDM_NETWORKCONNECTIONS, MFT_STRING, MFS_ENABLED
+            MENUITEM "網路連線(&N)", IDM_NETWORKCONNECTIONS, MFT_STRING, MFS_ENABLED
             MENUITEM "印表機和傳真(&P)", IDM_PRINTERSANDFAXES, MFT_STRING, MFS_ENABLED
             MENUITEM "工作列及「開始」功能表(&T)", IDM_TASKBARANDSTARTMENU, MFT_STRING, MFS_ENABLED
         END
@@ -159,7 +159,7 @@ CAPTION "進階"
 FONT 9, "新細明體"
 BEGIN
     GROUPBOX         "開始功能表設定 ", IDC_STATIC, 7, 7, 238, 42
-    AUTOCHECKBOX     "與我的滑鼠上他們暫停時開啟子選單(&O)", IDC_AUTOOPEN, 14, 21, 224, 10
+    AUTOCHECKBOX     "當滑鼠在子功能表上暫停時開啟子功能表(&O)", IDC_AUTOOPEN, 14, 21, 224, 10
     AUTOCHECKBOX     "突出顯示新安裝的程式(&N)", IDC_HIGHLIGHT, 14, 35, 224, 10
     LTEXT            "開始功能表項:(&M)", IDC_STATIC, 7, 53, 238, 8
     CONTROL          "開始功能表設定(&T)", IDC_ITEMS, "SysTreeView32", WS_BORDER | 0x00000001, 7, 63, 238, 67, WS_EX_CLIENTEDGE

@@ -1,7 +1,6 @@
-/* 
- * Traditional Chinese translation by Henry Tang Ih 2016 (henrytang2@hotmail.com) 
- * modified by Chan Chilung 2021 (eason066@gmail.com)
- */
+/* Traditional Chinese translation by: 
+ * Henry Tang Ih 2016 (henrytang2@hotmail.com) 
+ * Chan Chilung 2021 (eason066@gmail.com) */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
 
@@ -54,7 +53,7 @@ BEGIN
   whoami {[/user] [/groups] [/priv]} [/fo <格式>] [/nh]\n\
   whoami /all [/fo <格式>] [/nh]\n\
 \n\
-例子:\n\
+示例:\n\
   whoami /groups /priv /nh /fo csv\n\
   whoami /logonid\n\
   whoami\n"

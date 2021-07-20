@@ -1,5 +1,5 @@
-/* Chinese (Traditional) translation by Elton Chung aka MfldElton <elton328@gmail.com> */
-/* Translation improved by Aobi Chan CL <eason066@gmail.com> */
+/* Chinese (Traditional) translation by Elton Chung aka MfldElton <elton328@gmail.com>
+ * Translation improved by Chan Chilung <eason066@gmail.com> */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
 
@@ -147,7 +147,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "尋找"
 FONT 9, "新細明體"
 BEGIN
-    LTEXT           "查找內容:(&F)", IDC_STATIC, 4, 8, 42, 10, NOT WS_GROUP
+    LTEXT           "尋找內容:(&F)", IDC_STATIC, 4, 8, 42, 10, NOT WS_GROUP
     EDITTEXT        IDC_TXT_FIND_TEXT, 47, 7, 128, 12, ES_AUTOHSCROLL | WS_GROUP
     CONTROL         "必須全字相符(&W)", IDC_CBX_FIND_WHOLE_WORD_ONLY,
                     "Button", BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP, 4, 26, 100, 12
@@ -157,7 +157,7 @@ BEGIN
     CONTROL         "向下(&D)", IDC_RB_FIND_DOWN, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 143, 38, 28, 12
     DEFPUSHBUTTON   "查找下一個(&N)", IDOK, 182, 5, 50, 14, WS_GROUP
     PUSHBUTTON      "取消", IDCANCEL, 182, 23, 50, 14, WS_GROUP
-    CONTROL         "從頭 (方向: 向下) 或從結尾 (方向: 向上) 開始搜索(&S)", IDC_CBX_FIND_FROM_BEGINNING,
+    CONTROL         "從開頭 (方向: 向下) 或從結尾 (方向: 向上) 開始搜尋(&S)", IDC_CBX_FIND_FROM_BEGINNING,
                     "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 4, 58, 231, 12
 END
 
@@ -193,7 +193,7 @@ FONT 9, "新細明體"
 BEGIN
     DEFPUSHBUTTON   "確定", IDOK, 180, 41, 50, 14
     LTEXT           "不能停用基本服務。這樣做可能會阻止 %s 在您的電腦上運行。", IDC_STATIC_REQSVCSDIS_INFO, 7, 7, 223, 28
-    CONTROL         "在以後不顯示此消息(&D)", IDC_CBX_REQSVCSDIS_NO_MSG_ANYMORE,
+    CONTROL         "以後不再顯示此消息(&D)", IDC_CBX_REQSVCSDIS_NO_MSG_ANYMORE,
                     "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 42, 154, 13
 END
 

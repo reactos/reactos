@@ -31,7 +31,7 @@ CAPTION "ReactOS 安裝程式"
 FONT 9, "新細明體"
 BEGIN
     LTEXT "歡迎使用 ReactOS 安裝程式。", IDC_WELCOMETITLE, 115, 8, 195, 24
-    LTEXT "安裝程式將在電腦上安裝 ReactOS。它需要收集有關您和您的電腦的資訊以正確安裝 ReactOS。", IDC_STATIC, 115, 40, 195, 100
+    LTEXT "安裝程式將在電腦上安裝 ReactOS 作業系統。\n它需要收集有關您和您的電腦的資訊以正確安裝 ReactOS。", IDC_STATIC, 115, 40, 195, 100
     LTEXT "按 [下一步] 繼續安裝程式。", IDC_STATIC, 115, 169, 195, 17
 END
 
@@ -104,7 +104,7 @@ BEGIN
     PUSHBUTTON "自訂(&C)...", IDC_CUSTOMLOCALE, 250, 57, 50, 14
     LTEXT "鍵盤配置控制鍵入時出現的字元。", IDC_STATIC, 53, 86, 253, 8
     LTEXT "", IDC_LAYOUTTEXT, 53, 100, 250, 16
-    LTEXT "要查看或變更當前設定，請按 [自訂]。", IDC_STATIC, 53, 126, 184, 8
+    LTEXT "要查看或變更目前設定，請按 [自訂]。", IDC_STATIC, 53, 126, 184, 8
     PUSHBUTTON "自訂(&U)...", IDC_CUSTOMLAYOUT, 250, 122, 50, 14
 END
 
@@ -148,7 +148,7 @@ BEGIN
     LTEXT "正在完成 ReactOS 安裝程式。", IDC_FINISHTITLE, 115, 8, 195, 24
     LTEXT "ReactOS 安裝程式已順利完成。\n\n按下 [完成] 後，您的電腦將會重新啟動。", IDC_STATIC, 115, 40, 195, 100
     CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 115, 138, 188, 12
-    LTEXT "如果光碟機裡有光碟，請將其取出。然後按 [完成]，以重新啟動您的電腦。", IDC_STATIC, 115, 169, 195, 17
+    LTEXT "如果光碟機裡還有光碟，請將其取出。然後按 [完成]，重新啟動您的電腦。", IDC_STATIC, 115, 169, 195, 17
 END
 
 IDD_GPL DIALOGEX 0, 0, 333, 230
@@ -192,9 +192,9 @@ END
 STRINGTABLE
 BEGIN
     IDS_ACKTITLE "鳴謝"
-    IDS_ACKSUBTITLE "ReactOS 所依賴的開源項目及其許可證信息"
+    IDS_ACKSUBTITLE "ReactOS 所依賴的開源項目及其許可證資訊"
     IDS_OWNERTITLE "自訂您的軟體"
-    IDS_OWNERSUBTITLE "安裝程式將使用您提供的個人信息，自訂您的 ReactOS 軟體。"
+    IDS_OWNERSUBTITLE "安裝程式將使用您提供的個人資訊，自訂您的 ReactOS 軟體。"
     IDS_COMPUTERTITLE "電腦名稱和系統管理員密碼"
     IDS_COMPUTERSUBTITLE "您必須提供電腦名稱和管理員密碼。"
     IDS_LOCALETITLE "地區設定"
@@ -235,7 +235,7 @@ BEGIN
     IDS_WZD_SETCOMPUTERNAME "安裝程式無法設定電腦名稱。"
     IDS_WZD_COMPUTERNAME "安裝程式無法繼續，直到您輸入電腦名稱。"
     IDS_WZD_PASSWORDEMPTY "您必須輸入密碼！"
-    IDS_WZD_PASSWORDMATCH "您輸入的密碼不匹配。 請再次輸入所需的密碼。"
+    IDS_WZD_PASSWORDMATCH "您輸入的密碼不相符。 請再次輸入所需的密碼。"
     IDS_WZD_PASSWORDCHAR "您輸入的密碼包含無效字元。請輸入符合要求的密碼。"
     IDS_WZD_LOCALTIME "安裝程式無法設定本地時間。"
 END
@@ -274,10 +274,10 @@ END
 STRINGTABLE
 BEGIN
     IDS_PRODUCTTITLE "產品選擇"
-    IDS_PRODUCTSUBTITLE "You can choose a product option that affects the behaviour of the system."
+    IDS_PRODUCTSUBTITLE "您可以選擇要安裝的產品。這會對系統的一些特性造成影響。"
     IDS_PRODUCTSERVERNAME "ReactOS Server"
     IDS_PRODUCTWORKSTATIONNAME "ReactOS Workstation"
-    IDS_PRODUCTSERVERINFO "The system will be recognized as a server. Private folders ""My Pictures"", ""My Videos"" and ""My Music"" are independent from ""My Documents""."
-    IDS_PRODUCTWORKSTATIONINFO "The system will be recognized as a workstation. Private folders ""My Pictures"", ""My Videos"" and ""My Music"" are in ""My Documents""."
+    IDS_PRODUCTSERVERINFO "系統將識別為一個伺服器。私人資料夾 ""我的圖片""、""我的影片"" 和 ""我的音樂"" 會獨立於 ""我的文件""。"
+    IDS_PRODUCTWORKSTATIONINFO "系統將識別為一個工作站。私人資料夾 ""我的圖片""、""我的影片"" 和 ""我的音樂"" 會在 ""我的文件"" 資料夾內。"
     IDS_DEFAULT "(預設)"
 END

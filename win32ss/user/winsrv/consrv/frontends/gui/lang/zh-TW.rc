@@ -10,7 +10,7 @@ BEGIN
     IDS_SCROLL "滾動"
     IDS_FIND "尋找..."
     IDS_DEFAULTS "預設"
-    IDS_PROPERTIES "屬性"
+    IDS_PROPERTIES "內容"
 /*
     IDS_SCROLLHERE "滾動到此 "
     IDS_SCROLLTOP "滾動到頂置"
@@ -25,6 +25,6 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_MARK_TITLE "Mark"
-    IDS_SELECT_TITLE "Select"
+    IDS_MARK_TITLE "標記"
+    IDS_SELECT_TITLE "選取"
 END

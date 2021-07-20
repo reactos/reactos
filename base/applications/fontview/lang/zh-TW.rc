@@ -24,7 +24,7 @@ TrueType 字型 (*.ttf)\0*.ttf\0\
 TrueType 字型集合 (*.ttc)\0*.ttc\0\
 OpenType 字型 (*.otf)\0*.otf\0\
 OpenType 字型集合 (*.otc)\0*.otc\0\
-所有檔 (*.*)\0*.*\0"
+所有檔案 (*.*)\0*.*\0"
     IDS_PREVIOUS "< 上一步(&R)"
     IDS_NEXT "下一步(&N) >"
 END
