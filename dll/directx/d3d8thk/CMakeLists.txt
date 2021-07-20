@@ -1,5 +1,5 @@
 
-spec2def(d3d8thk.dll d3d8thk.spec)
+spec2def(d3d8thk.dll d3d8thk.spec ADD_IMPORTLIB)
 
 add_library(d3d8thk MODULE
     d3d8thk.rc

@@ -23,140 +23,140 @@
 /* IDirect3DDevice9 public interface */
 HRESULT WINAPI IDirect3DDevice9HAL_GetTransform(LPDIRECT3DDEVICE9 iface, D3DTRANSFORMSTATETYPE State, D3DMATRIX* pMatrix)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     return D3D_OK;
 }
 
 HRESULT WINAPI IDirect3DDevice9HAL_GetMaterial(LPDIRECT3DDEVICE9 iface, D3DMATERIAL9* pMaterial)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     return D3D_OK;
 }
 
 HRESULT WINAPI IDirect3DDevice9HAL_GetLight(LPDIRECT3DDEVICE9 iface, DWORD Index, D3DLIGHT9* pLight)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     return D3D_OK;
 }
 
 HRESULT WINAPI IDirect3DDevice9HAL_GetLightEnable(LPDIRECT3DDEVICE9 iface, DWORD Index, BOOL* pEnable)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     return D3D_OK;
 }
 
 HRESULT WINAPI IDirect3DDevice9HAL_GetClipPlane(LPDIRECT3DDEVICE9 iface, DWORD Index, float* pPlane)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     return D3D_OK;
 }
 
 HRESULT WINAPI IDirect3DDevice9HAL_SetRenderState(LPDIRECT3DDEVICE9 iface, D3DRENDERSTATETYPE State, DWORD Value)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     return D3D_OK;
 }
 
 HRESULT WINAPI IDirect3DDevice9HAL_GetRenderState(LPDIRECT3DDEVICE9 iface, D3DRENDERSTATETYPE State, DWORD* pValue)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     return D3D_OK;
 }
 
 HRESULT WINAPI IDirect3DDevice9HAL_SetClipStatus(LPDIRECT3DDEVICE9 iface, CONST D3DCLIPSTATUS9* pClipStatus)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     return D3D_OK;
 }
 
 HRESULT WINAPI IDirect3DDevice9HAL_GetClipStatus(LPDIRECT3DDEVICE9 iface, D3DCLIPSTATUS9* pClipStatus)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     return D3D_OK;
 }
 
 HRESULT WINAPI IDirect3DDevice9HAL_GetTextureStageState(LPDIRECT3DDEVICE9 iface, DWORD Stage, D3DTEXTURESTAGESTATETYPE Type, DWORD* pValue)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     return D3D_OK;
 }
 
 HRESULT WINAPI IDirect3DDevice9HAL_GetSamplerState(LPDIRECT3DDEVICE9 iface, DWORD Sampler, D3DSAMPLERSTATETYPE Type, DWORD* pValue)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     return D3D_OK;
 }
 
 HRESULT WINAPI IDirect3DDevice9HAL_ValidateDevice(LPDIRECT3DDEVICE9 iface, DWORD* pNumPasses)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     return D3D_OK;
 }
 
 HRESULT WINAPI IDirect3DDevice9HAL_SetSoftwareVertexProcessing(LPDIRECT3DDEVICE9 iface, BOOL bSoftware)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     return D3D_OK;
 }
 
 BOOL WINAPI IDirect3DDevice9HAL_GetSoftwareVertexProcessing(LPDIRECT3DDEVICE9 iface)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     return TRUE;
 }
 
 HRESULT WINAPI IDirect3DDevice9HAL_ProcessVertices(LPDIRECT3DDEVICE9 iface, UINT SrcStartIndex, UINT DestIndex, UINT VertexCount, IDirect3DVertexBuffer9* pDestBuffer, IDirect3DVertexDeclaration9* pVertexDecl, DWORD Flags)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     return D3D_OK;
 }
 
 HRESULT WINAPI IDirect3DDevice9HAL_GetVertexShader(LPDIRECT3DDEVICE9 iface, IDirect3DVertexShader9** ppShader)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     return D3D_OK;
 }
 
 HRESULT WINAPI IDirect3DDevice9HAL_GetPixelShader(LPDIRECT3DDEVICE9 iface, IDirect3DPixelShader9** ppShader)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     return D3D_OK;
 }
 
 HRESULT WINAPI IDirect3DDevice9HAL_GetPixelShaderConstantF(LPDIRECT3DDEVICE9 iface, UINT StartRegister, float* pConstantData, UINT Vector4fCount)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     return D3D_OK;
 }
 
 HRESULT WINAPI IDirect3DDevice9HAL_GetPixelShaderConstantI(LPDIRECT3DDEVICE9 iface, UINT StartRegister, int* pConstantData, UINT Vector4iCount)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     return D3D_OK;
 }
 
 HRESULT WINAPI IDirect3DDevice9HAL_GetPixelShaderConstantB(LPDIRECT3DDEVICE9 iface, UINT StartRegister, BOOL* pConstantData, UINT BoolCount)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     return D3D_OK;
 }
@@ -164,264 +164,264 @@ HRESULT WINAPI IDirect3DDevice9HAL_GetPixelShaderConstantB(LPDIRECT3DDEVICE9 ifa
 /* IDirect3DDevice9 private interface */
 HRESULT WINAPI IDirect3DDevice9HAL_SetRenderStateWorker(LPDIRECT3DDEVICE9 iface, D3DRENDERSTATETYPE State, DWORD Value)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     return D3D_OK;
 }
 
 HRESULT WINAPI IDirect3DDevice9HAL_SetTextureStageStateInt(LPDIRECT3DDEVICE9 iface, DWORD Stage, D3DTEXTURESTAGESTATETYPE Type, DWORD Value)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     return D3D_OK;
 }
 
 HRESULT WINAPI IDirect3DDevice9HAL_SetSamplerStateInt(LPDIRECT3DDEVICE9 iface, DWORD Sampler, D3DSAMPLERSTATETYPE Type, DWORD Value)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     return D3D_OK;
 }
 
 HRESULT WINAPI IDirect3DDevice9HAL_SetMaterialInt(LPDIRECT3DDEVICE9 iface, CONST D3DMATERIAL9* pMaterial)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     return D3D_OK;
 }
 
 HRESULT WINAPI IDirect3DDevice9HAL_SetVertexShaderInt(LPDIRECT3DDEVICE9 iface, IDirect3DVertexShader9* pShader)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     return D3D_OK;
 }
 
 HRESULT WINAPI IDirect3DDevice9HAL_SetVertexShaderConstantFInt(LPDIRECT3DDEVICE9 iface, UINT StartRegister,CONST float* pConstantData,UINT Vector4fCount)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     return D3D_OK;
 }
 
 HRESULT WINAPI IDirect3DDevice9HAL_SetVertexShaderConstantIInt(LPDIRECT3DDEVICE9 iface, UINT StartRegister,CONST int* pConstantData,UINT Vector4iCount)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     return D3D_OK;
 }
 
 HRESULT WINAPI IDirect3DDevice9HAL_SetVertexShaderConstantBInt(LPDIRECT3DDEVICE9 iface, UINT StartRegister,CONST BOOL* pConstantData,UINT  BoolCount)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     return D3D_OK;
 }
 
 HRESULT WINAPI IDirect3DDevice9HAL_SetPixelShaderInt(LPDIRECT3DDEVICE9 iface, IDirect3DPixelShader9* pShader)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     return D3D_OK;
 }
 
 HRESULT WINAPI IDirect3DDevice9HAL_SetPixelShaderConstantFInt(LPDIRECT3DDEVICE9 iface, UINT StartRegister,CONST float* pConstantData,UINT Vector4fCount)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     return D3D_OK;
 }
 
 HRESULT WINAPI IDirect3DDevice9HAL_SetPixelShaderConstantIInt(LPDIRECT3DDEVICE9 iface, UINT StartRegister,CONST int* pConstantData,UINT Vector4iCount)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     return D3D_OK;
 }
 
 HRESULT WINAPI IDirect3DDevice9HAL_SetPixelShaderConstantBInt(LPDIRECT3DDEVICE9 iface, UINT StartRegister,CONST BOOL* pConstantData,UINT  BoolCount)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     return D3D_OK;
 }
 
 HRESULT WINAPI IDirect3DDevice9HAL_SetFVFInt(LPDIRECT3DDEVICE9 iface, DWORD FVF)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     return D3D_OK;
 }
 
 HRESULT WINAPI IDirect3DDevice9HAL_SetTextureInt(LPDIRECT3DDEVICE9 iface, DWORD Stage,IDirect3DBaseTexture9* pTexture)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     return D3D_OK;
 }
 
 HRESULT WINAPI IDirect3DDevice9HAL_SetIndicesInt(LPDIRECT3DDEVICE9 iface, IDirect3DIndexBuffer9* pIndexData)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     return D3D_OK;
 }
 
 HRESULT WINAPI IDirect3DDevice9HAL_SetStreamSourceInt(LPDIRECT3DDEVICE9 iface, UINT StreamNumber,IDirect3DVertexBuffer9* pStreamData,UINT OffsetInBytes,UINT Stride)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     return D3D_OK;
 }
 
 HRESULT WINAPI IDirect3DDevice9HAL_SetStreamSourceFreqInt(LPDIRECT3DDEVICE9 iface, UINT StreamNumber,UINT Setting)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     return D3D_OK;
 }
 
 VOID WINAPI IDirect3DDevice9HAL_UpdateRenderState(LPDIRECT3DDEVICE9 iface, DWORD Unknown1, DWORD Unknown2)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 }
 
 HRESULT WINAPI IDirect3DDevice9HAL_SetTransformInt(LPDIRECT3DDEVICE9 iface, D3DTRANSFORMSTATETYPE State,CONST D3DMATRIX* pMatrix)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     return D3D_OK;
 }
 
 HRESULT WINAPI IDirect3DDevice9HAL_MultiplyTransformInt(LPDIRECT3DDEVICE9 iface, D3DTRANSFORMSTATETYPE State, CONST D3DMATRIX* pMatrix)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     return D3D_OK;
 }
 
 HRESULT WINAPI IDirect3DDevice9HAL_SetClipPlaneInt(LPDIRECT3DDEVICE9 iface, DWORD Index, CONST float* pPlane)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     return D3D_OK;
 }
 
 VOID WINAPI IDirect3DDevice9HAL_UpdateDriverState(LPDIRECT3DDEVICE9 iface)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 }
 
 HRESULT WINAPI IDirect3DDevice9HAL_SetViewportInt(LPDIRECT3DDEVICE9 iface, CONST D3DVIEWPORT9* pViewport)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     return D3D_OK;
 }
 
 VOID WINAPI IDirect3DDevice9HAL_SetStreamSourceWorker(LPDIRECT3DDEVICE9 iface, LPVOID UnknownStreamData)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 }
 
 HRESULT WINAPI IDirect3DDevice9HAL_SetPixelShaderConstantFWorker(LPDIRECT3DDEVICE9 iface, UINT StartRegister, CONST float* pConstantData, UINT Vector4fCount)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     return D3D_OK;
 }
 
 HRESULT WINAPI IDirect3DDevice9HAL_SetPixelShaderConstantIWorker(LPDIRECT3DDEVICE9 iface, UINT StartRegister, CONST int* pConstantData, UINT Vector4iCount)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     return D3D_OK;
 }
 
 HRESULT WINAPI IDirect3DDevice9HAL_SetPixelShaderConstantBWorker(LPDIRECT3DDEVICE9 iface, UINT StartRegister, CONST BOOL* pConstantData, UINT BoolCount)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     return D3D_OK;
 }
 
 VOID WINAPI IDirect3DDevice9HAL_DrawPrimitiveWorker(LPDIRECT3DDEVICE9 iface, D3DPRIMITIVETYPE PrimitiveType, UINT StartVertex, UINT PrimitiveCount)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 }
 
 HRESULT WINAPI IDirect3DDevice9HAL_SetLightInt(LPDIRECT3DDEVICE9 iface, DWORD Index, CONST D3DLIGHT9* pLight)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     return D3D_OK;
 }
 
 HRESULT WINAPI IDirect3DDevice9HAL_LightEnableInt(LPDIRECT3DDEVICE9 iface, DWORD Index, BOOL Enable)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     return D3D_OK;
 }
 
 HRESULT WINAPI IDirect3DDevice9HAL_SetRenderStateInt(LPDIRECT3DDEVICE9 iface, D3DRENDERSTATETYPE State, DWORD Value)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     return D3D_OK;
 }
 
 HRESULT WINAPI IDirect3DDevice9HAL_DrawPrimitiveUPInt(LPDIRECT3DDEVICE9 iface, D3DPRIMITIVETYPE PrimitiveType, UINT PrimitiveCount)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     return D3D_OK;
 }
 
 HRESULT WINAPI IDirect3DDevice9HAL_ClearInt(LPDIRECT3DDEVICE9 iface, DWORD Count, CONST D3DRECT* pRects, DWORD Flags, D3DCOLOR Color, float Z, DWORD Stencil)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     return D3D_OK;
 }
 
 VOID WINAPI IDirect3DDevice9HAL_DrawPrimitivesWorker(LPDIRECT3DDEVICE9 iface)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 }
 
 VOID WINAPI IDirect3DDevice9HAL_UpdateVertexShader(LPDIRECT3DDEVICE9 iface)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 }
 
 HRESULT WINAPI IDirect3DDevice9HAL_ValidateDrawCall(LPDIRECT3DDEVICE9 iface, D3DPRIMITIVETYPE PrimitiveType, UINT Unknown1, UINT Unknown2, UINT Unknown3, INT Unknown4, UINT Unknown5, INT Unknown6)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     return D3D_OK;
 }
 
 HRESULT WINAPI IDirect3DDevice9HAL_Init(LPDIRECT3DDEVICE9 iface)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     return D3D_OK;
 }
 
 VOID WINAPI IDirect3DDevice9HAL_InitState(LPDIRECT3DDEVICE9 iface, INT State)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 }
 
 VOID WINAPI IDirect3DDevice9HAL_Destroy(LPDIRECT3DDEVICE9 iface)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 }
 
 VOID WINAPI IDirect3DDevice9HAL_VirtualDestructor(LPDIRECT3DDEVICE9 iface)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 }
 
 IDirect3DDevice9Vtbl_INT Direct3DDevice9HAL_Vtbl =

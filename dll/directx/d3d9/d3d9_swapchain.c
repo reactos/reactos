@@ -57,31 +57,31 @@ static ULONG WINAPI Direct3DSwapChain9_Release(LPDIRECT3DSWAPCHAIN9 iface)
 /* IDirect3DSwapChain9 interface */
 static HRESULT WINAPI Direct3DSwapChain9_Present(LPDIRECT3DSWAPCHAIN9 iface, CONST RECT* pSourceRect,CONST RECT* pDestRect,HWND hDestWindowOverride,CONST RGNDATA* pDirtyRegion,DWORD dwFlags)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     return D3D_OK;
 }
 
 static HRESULT WINAPI Direct3DSwapChain9_GetFrontBufferData(LPDIRECT3DSWAPCHAIN9 iface, IDirect3DSurface9* pDestSurface)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     return D3D_OK;
 }
 
 static HRESULT WINAPI Direct3DSwapChain9_GetBackBuffer(LPDIRECT3DSWAPCHAIN9 iface, UINT iBackBuffer,D3DBACKBUFFER_TYPE Type,IDirect3DSurface9** ppBackBuffer)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     return D3D_OK;
 }
 
 static HRESULT WINAPI Direct3DSwapChain9_GetRasterStatus(LPDIRECT3DSWAPCHAIN9 iface, D3DRASTER_STATUS* pRasterStatus)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     return D3D_OK;
 }
 
 static HRESULT WINAPI Direct3DSwapChain9_GetDisplayMode(LPDIRECT3DSWAPCHAIN9 iface, D3DDISPLAYMODE* pMode)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     return D3D_OK;
 }
 
@@ -252,5 +252,5 @@ VOID Direct3DSwapChain9_GetGammaRamp(Direct3DSwapChain9_INT* pThisSwapChain, D3D
 
 VOID Direct3DSwapChain9_SetGammaRamp(Direct3DSwapChain9_INT* pThisSwapChain, DWORD Flags, CONST D3DGAMMARAMP* pRamp)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 }

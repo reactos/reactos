@@ -83,7 +83,7 @@ ULONG WINAPI IDirect3DDevice9Base_Release(LPDIRECT3DDEVICE9 iface)
 /* IDirect3DDevice9 public interface */
 HRESULT WINAPI IDirect3DDevice9Base_TestCooperativeLevel(LPDIRECT3DDEVICE9 iface)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     return D3D_OK;
 }
@@ -127,7 +127,7 @@ UINT WINAPI IDirect3DDevice9Base_GetAvailableTextureMem(LPDIRECT3DDEVICE9 iface)
 
 HRESULT WINAPI IDirect3DDevice9Base_EvictManagedResources(LPDIRECT3DDEVICE9 iface)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     return D3D_OK;
 }
@@ -299,19 +299,19 @@ HRESULT WINAPI IDirect3DDevice9Base_GetCreationParameters(LPDIRECT3DDEVICE9 ifac
 
 HRESULT WINAPI IDirect3DDevice9Base_SetCursorProperties(LPDIRECT3DDEVICE9 iface, UINT XHotSpot, UINT YHotSpot, IDirect3DSurface9* pCursorBitmap)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     return D3D_OK;
 }
 
 VOID WINAPI IDirect3DDevice9Base_SetCursorPosition(LPDIRECT3DDEVICE9 iface, int X, int Y, DWORD Flags)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 }
 
 BOOL WINAPI IDirect3DDevice9Base_ShowCursor(LPDIRECT3DDEVICE9 iface, BOOL bShow)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     return TRUE;
 }
@@ -467,7 +467,7 @@ UINT WINAPI IDirect3DDevice9Base_GetNumberOfSwapChains(LPDIRECT3DDEVICE9 iface)
 
 HRESULT WINAPI IDirect3DDevice9Base_Reset(LPDIRECT3DDEVICE9 iface, D3DPRESENT_PARAMETERS* pPresentationParameters)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     return D3D_OK;
 }
@@ -645,7 +645,7 @@ HRESULT WINAPI IDirect3DDevice9Base_GetRasterStatus(LPDIRECT3DDEVICE9 iface, UIN
 
 HRESULT WINAPI IDirect3DDevice9Base_SetDialogBoxMode(LPDIRECT3DDEVICE9 iface, BOOL bEnableDialogs)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     return D3D_OK;
 }
@@ -819,63 +819,63 @@ HRESULT WINAPI IDirect3DDevice9Base_CreateTexture(LPDIRECT3DDEVICE9 iface, UINT 
 
 HRESULT WINAPI IDirect3DDevice9Base_CreateVolumeTexture(LPDIRECT3DDEVICE9 iface, UINT Width, UINT Height, UINT Depth, UINT Levels, DWORD Usage, D3DFORMAT Format, D3DPOOL Pool, IDirect3DVolumeTexture9** ppVolumeTexture, HANDLE* pSharedHandle)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     return D3D_OK;
 }
 
 HRESULT WINAPI IDirect3DDevice9Base_CreateCubeTexture(LPDIRECT3DDEVICE9 iface, UINT EdgeLength, UINT Levels, DWORD Usage, D3DFORMAT Format, D3DPOOL Pool, IDirect3DCubeTexture9** ppCubeTexture, HANDLE* pSharedHandle)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     return D3D_OK;
 }
 
 HRESULT WINAPI IDirect3DDevice9Base_CreateVertexBuffer(LPDIRECT3DDEVICE9 iface, UINT Length, DWORD Usage, DWORD FVF, D3DPOOL Pool, IDirect3DVertexBuffer9** ppVertexBuffer, HANDLE* pSharedHandle)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     return D3D_OK;
 }
 
 HRESULT WINAPI IDirect3DDevice9Base_CreateIndexBuffer(LPDIRECT3DDEVICE9 iface, UINT Length, DWORD Usage, D3DFORMAT Format, D3DPOOL Pool, IDirect3DIndexBuffer9** ppIndexBuffer, HANDLE* pSharedHandle)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     return D3D_OK;
 }
 
 HRESULT WINAPI IDirect3DDevice9Base_CreateRenderTarget(LPDIRECT3DDEVICE9 iface, UINT Width, UINT Height, D3DFORMAT Format, D3DMULTISAMPLE_TYPE MultiSample, DWORD MultisampleQuality, BOOL Lockable, IDirect3DSurface9** ppSurface, HANDLE* pSharedHandle)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     return D3D_OK;
 }
 
 HRESULT WINAPI IDirect3DDevice9Base_CreateDepthStencilSurface(LPDIRECT3DDEVICE9 iface, UINT Width, UINT Height, D3DFORMAT Format, D3DMULTISAMPLE_TYPE MultiSample, DWORD MultisampleQuality, BOOL Discard, IDirect3DSurface9** ppSurface, HANDLE* pSharedHandle)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     return D3D_OK;
 }
 
 HRESULT WINAPI IDirect3DDevice9Base_UpdateSurface(LPDIRECT3DDEVICE9 iface, IDirect3DSurface9* pSourceSurface, CONST RECT* pSourceRect, IDirect3DSurface9* pDestinationSurface, CONST POINT* pDestPoint)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     return D3D_OK;
 }
 
 HRESULT WINAPI IDirect3DDevice9Base_UpdateTexture(LPDIRECT3DDEVICE9 iface, IDirect3DBaseTexture9* pSourceTexture, IDirect3DBaseTexture9* pDestinationTexture)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     return D3D_OK;
 }
 
 HRESULT WINAPI IDirect3DDevice9Base_GetRenderTargetData(LPDIRECT3DDEVICE9 iface, IDirect3DSurface9* pRenderTarget, IDirect3DSurface9* pDestSurface)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     return D3D_OK;
 }
@@ -932,21 +932,21 @@ HRESULT WINAPI IDirect3DDevice9Base_GetFrontBufferData(LPDIRECT3DDEVICE9 iface, 
 
 HRESULT WINAPI IDirect3DDevice9Base_StretchRect(LPDIRECT3DDEVICE9 iface, IDirect3DSurface9* pSourceSurface, CONST RECT* pSourceRect, IDirect3DSurface9* pDestSurface, CONST RECT* pDestRect, D3DTEXTUREFILTERTYPE Filter)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     return D3D_OK;
 }
 
 HRESULT WINAPI IDirect3DDevice9Base_ColorFill(LPDIRECT3DDEVICE9 iface, IDirect3DSurface9* pSurface, CONST RECT* pRect, D3DCOLOR color)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     return D3D_OK;
 }
 
 HRESULT WINAPI IDirect3DDevice9Base_CreateOffscreenPlainSurface(LPDIRECT3DDEVICE9 iface, UINT Width, UINT Height, D3DFORMAT Format, D3DPOOL Pool, IDirect3DSurface9** ppSurface, HANDLE* pSharedHandle)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     return D3D_OK;
 }
@@ -954,10 +954,10 @@ HRESULT WINAPI IDirect3DDevice9Base_CreateOffscreenPlainSurface(LPDIRECT3DDEVICE
 /* IDirect3DDevice9 private interface */
 VOID WINAPI IDirect3DDevice9Base_Destroy(LPDIRECT3DDEVICE9 iface)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 }
 
 VOID WINAPI IDirect3DDevice9Base_VirtualDestructor(LPDIRECT3DDEVICE9 iface)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 }

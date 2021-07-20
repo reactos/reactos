@@ -69,7 +69,7 @@ static ULONG WINAPI IDirect3D9Impl_Release(LPDIRECT3D9 iface)
 /* IDirect3D9 interface */
 static HRESULT WINAPI IDirect3D9Impl_RegisterSoftwareDevice(LPDIRECT3D9 iface, void* pInitializeFunction)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     return D3D_OK;
 }
@@ -639,7 +639,7 @@ static HRESULT WINAPI IDirect3D9Impl_CheckDeviceMultiSampleType(LPDIRECT3D9 ifac
                                                                 D3DFORMAT SurfaceFormat, BOOL Windowed,
                                                                 D3DMULTISAMPLE_TYPE MultiSampleType, DWORD* pQualityLevels)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     return D3D_OK;
 }
@@ -958,7 +958,7 @@ static HRESULT WINAPI IDirect3D9Impl_CreateDevice(LPDIRECT3D9 iface, UINT Adapte
 
     if (DeviceType != D3DDEVTYPE_HAL)
     {
-        UNIMPLEMENTED
+        UNIMPLEMENTED;
         DPRINT1("Sorry, only D3DDEVTYPE_HAL is implemented at this time...");
         return D3DERR_INVALIDCALL;
     }
