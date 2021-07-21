@@ -25,6 +25,8 @@ typedef struct _APINFO
 } APINFO, *PAPINFO;
 
 /* FUNCTIONS *****************************************************************/
+
+CODE_SEG("INIT")
 VOID
 NTAPI
 KeStartAllProcessors()
@@ -59,9 +61,7 @@ KeStartAllProcessors()
 
         DPCStack = MmCreateKernelStack(FALSE, 0);
         if (!DPCStack)
-        {
-            MmDeleteKernelStack(KernelStack, FALSE);
-        }
+            goto APCleanup;
 
 
         /* Initalize a new PCR for the specific AP */
@@ -91,6 +91,7 @@ KeStartAllProcessors()
 
     } while (HalStartNextProcessor(KeLoaderBlock, &ProcessorState));
 
+APCleanup:
     ProcessorCount--;
     /* Started means the AP itself is online, this doesn't mean it's seen by the kernel */
     DPRINT1("HalStartNextProcessor: Sucessful AP startup count is %X\n", ProcessorCount);
