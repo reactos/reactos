@@ -628,6 +628,7 @@ CabinetOpen(
     OBJECT_ATTRIBUTES ObjectAttributes;
     IO_STATUS_BLOCK IoStatusBlock;
     UNICODE_STRING FileName;
+    USHORT StringLength;
     NTSTATUS NtStatus;
 
     if (CabinetContext->FileOpen)
@@ -732,11 +733,14 @@ CabinetOpen(
            the same directory as the current */
         wcscpy(CabinetContext->CabinetPrev, CabinetContext->CabinetName);
         RemoveFileName(CabinetContext->CabinetPrev);
-        CabinetNormalizePath(CabinetContext->CabinetPrev, 256);
+        CabinetNormalizePath(CabinetContext->CabinetPrev, sizeof(CabinetContext->CabinetPrev));
         RtlInitAnsiString(&astring, (LPSTR)Buffer);
-        ustring.Length = wcslen(CabinetContext->CabinetPrev);
-        ustring.Buffer = CabinetContext->CabinetPrev + ustring.Length;
-        ustring.MaximumLength = sizeof(CabinetContext->CabinetPrev) - ustring.Length;
+
+        /* Initialize ustring with the remaining buffer */
+        StringLength = (USHORT)wcslen(CabinetContext->CabinetPrev) * sizeof(WCHAR);
+        ustring.Buffer = CabinetContext->CabinetPrev + StringLength;
+        ustring.MaximumLength = sizeof(CabinetContext->CabinetPrev) - StringLength;
+        ustring.Length = 0;
         RtlAnsiStringToUnicodeString(&ustring, &astring, FALSE);
         Buffer += astring.Length + 1;
 
@@ -762,9 +766,12 @@ CabinetOpen(
         RemoveFileName(CabinetContext->CabinetNext);
         CabinetNormalizePath(CabinetContext->CabinetNext, 256);
         RtlInitAnsiString(&astring, (LPSTR)Buffer);
-        ustring.Length = wcslen(CabinetContext->CabinetNext);
-        ustring.Buffer = CabinetContext->CabinetNext + ustring.Length;
-        ustring.MaximumLength = sizeof(CabinetContext->CabinetNext) - ustring.Length;
+
+        /* Initialize ustring with the remaining buffer */
+        StringLength = (USHORT)wcslen(CabinetContext->CabinetNext) * sizeof(WCHAR);
+        ustring.Buffer = CabinetContext->CabinetNext + StringLength;
+        ustring.MaximumLength = sizeof(CabinetContext->CabinetNext) - StringLength;
+        ustring.Length = 0;
         RtlAnsiStringToUnicodeString(&ustring, &astring, FALSE);
         Buffer += astring.Length + 1;
 
