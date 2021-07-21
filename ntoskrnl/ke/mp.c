@@ -47,12 +47,11 @@ KeStartAllProcessors()
     do
     {
         (PVOID)APInfo = ExAllocatePool(NonPagedPool, APInfoSize);
-        __debugbreak();
         ASSERT(APInfo);
 
         ProcessorCount++;
 
-      //  RtlCopyMemory(APInfo->Gdt, (PVOID)GdtDesc.Base, GdtDesc.Limit);
+        //RtlCopyMemory(APInfo->Gdt, (PVOID)GdtDesc.Base, GdtDesc.Limit);
         //RtlCopyMemory(APInfo->Idt, (PVOID)IdtDesc.Base, IdtDesc.Limit);
 
 
@@ -65,8 +64,8 @@ KeStartAllProcessors()
 
 
         /* Initalize a new PCR for the specific AP */
-
 #ifdef _M_IX86
+#if 0
         KiInitializePcr(ProcessorCount,
                         &APInfo->Pcr,
                         &APInfo->Idt, 
@@ -74,19 +73,20 @@ KeStartAllProcessors()
                         &APInfo->Tss,
                         &APInfo->Thread,
                         DPCStack);
+#endif
 #elif _M_AMD64
     /* Initalize a new PCR for the specific AP */
 #endif
 
         /* Prep a new loaderblock for AP */
         KeLoaderBlock->KernelStack = (ULONG_PTR)KernelStack;
-      //  KeLoaderBlock->Prcb = (ULONG_PTR)APInfo->Pcr.Prcb;
-       // KeLoaderBlock->Thread = (ULONG_PTR)&APInfo->Thread;
+        //KeLoaderBlock->Prcb = (ULONG_PTR)APInfo->Pcr.Prcb;
+        //KeLoaderBlock->Thread = (ULONG_PTR)&APInfo->Thread;
 
 
 #ifdef _M_IX86
         /* Fully initalize AP's TSS */
-       // Ki386InitializeTss(&APInfo->Tss, pIdt, pGdt);
+        // Ki386InitializeTss(&APInfo->Tss, pIdt, pGdt);
 #endif
 
     } while (HalStartNextProcessor(KeLoaderBlock, &ProcessorState));

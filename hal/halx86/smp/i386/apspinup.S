@@ -17,9 +17,7 @@ _APSpinup:
     mov   es, bx
     mov   ss, bx
     mov   fs, bx
-    
     hlt
-
     mov eax, cr0
     or  eax, HEX(80000000)
     mov cr0, eax

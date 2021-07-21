@@ -44,7 +44,7 @@ _APEntry:
     mov cr0, eax
 
     xor eax, eax
-    mov eax, cs:[_PageTableLocation - _APEntry]
+    mov eax, (HEX(4000) + _PageTableLocation - _APEntry)
     mov cr3, eax
 
 /* Jump to APSpinup */

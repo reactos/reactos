@@ -19,7 +19,7 @@ extern PHYSICAL_ADDRESS HalpLowStubPhysicalAddress;
 extern PVOID HalpLowStub;
 
 /* TODO: MaxAPCount should be assigned by a Multi APIC table */
-ULONG MaxAPCount = 1;
+ULONG MaxAPCount = 2;
 ULONG StartedProcessorCount = 1;
 
 /* FUNCTIONS *****************************************************************/
@@ -34,6 +34,7 @@ HalStartNextProcessor(
     {
         /* Start an AP */
         HalpInitializeAPStub(HalpLowStub);
+        HalpInitalizeAPPageTable(HalpLowStub);
         ApicStartApplicationProcessor(StartedProcessorCount, HalpLowStubPhysicalAddress);
         StartedProcessorCount++;
 
