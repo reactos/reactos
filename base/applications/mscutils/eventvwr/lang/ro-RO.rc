@@ -169,13 +169,13 @@ BEGIN
 /* Please note that explicit TAB characters '\t' are used to fix the alignment of the message in the MessageBox */
     IDS_USAGE "Inspector de Evenimente ReactOS\n\
 \n\
-EventVwr [nume calculator] [/l:<fișier jurnal de evenimente>] [/?]\n\
+EventVwr [nume calculator] [/L:<fișier jurnal de evenimente>] [/?]\n\
 \n\
 ""nume calculator"" : Specifică calculatorul la distanță de la care\n\
 \tvor fi preluate evenimentele afișate. Dacă nu e furnizat un\n\
 \tnume de calculator, va fi utilizat calculatorul local.\n\
 \n\
-/l:<fișier jurnal de evenimente> : Specifică deschiderea unui fișier.\n\
+/L:<fișier jurnal de evenimente> : Specifică deschiderea unui fișier.\n\
 \tSunt acceptate doar fișierele în format .evt (NT ≤ 5.2)\n\
 \n\
 /? : Afișează acest mesaj cu informații de utilizare.\n\
