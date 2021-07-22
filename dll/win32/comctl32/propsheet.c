@@ -2822,6 +2822,56 @@ static INT do_loop(const PropSheetInfo *psInfo)
     return ret;
 }
 
+#ifdef __REACTOS__
+static LPWSTR load_string( HINSTANCE instance, LPCWSTR str );
+
+VOID ExtractPropSheetStr(PropSheetInfo* psInfo)
+{
+    const DLGTEMPLATE* pTemplate;
+    const WORD*  p;
+
+    HRSRC hResource = FindResourceW(COMCTL32_hModule,
+                                    MAKEINTRESOURCEW(IDD_PROPSHEET),
+                                   (LPWSTR)RT_DIALOG);
+    HGLOBAL hTemplate = LoadResource(COMCTL32_hModule,
+                                     hResource);
+    pTemplate = LockResource(hTemplate);
+
+  /*
+   * Extract the size of the page and the caption.
+   */
+  if (!pTemplate)
+      return;
+
+  p = (const WORD *)pTemplate;
+
+  if (((const MyDLGTEMPLATEEX*)pTemplate)->signature == 0xFFFF)
+      p += 13;
+  else
+      p += 9;
+
+  /* menu */
+  if (*p == 0)
+      p++;
+  else if (*p == 0xffff)
+      p += 2;
+  else
+      p += lstrlenW(p) + 1;
+
+  /* class */
+  if (*p == 0)
+      p++;
+  else if (*p == 0xffff)
+      p += 2;
+  else
+      p += lstrlenW(p) + 1;
+
+  /* Extract the caption */
+  psInfo->strPropertiesFor = (LPWSTR)p;
+
+}
+#endif
+
 /******************************************************************************
  *            PROPSHEET_PropertySheet
  *
@@ -2842,7 +2892,34 @@ static INT_PTR PROPSHEET_PropertySheet(PropSheetInfo* psInfo, BOOL unicode)
       parent = psInfo->ppshheader.hwndParent;
       if (parent) EnableWindow(parent, FALSE);
   }
-  bRet = PROPSHEET_CreateDialog(psInfo);
+#ifdef __REACTOS__
+  WCHAR szTitle[MAX_PATH];
+  LPWSTR szCaption;
+
+  if (psInfo->ppshheader.dwFlags & PSH_PROPTITLE)
+  {
+      ExtractPropSheetStr(psInfo);
+      szCaption = load_string(psInfo->ppshheader.hInstance, psInfo->ppshheader.pszCaption);
+      sprintfW(szTitle, psInfo->strPropertiesFor, szCaption);
+  }
+  else
+  {
+      szCaption = load_string(psInfo->ppshheader.hInstance, psInfo->ppshheader.pszCaption);
+      lstrcpyW(szTitle, szCaption);
+  }
+  Free(szCaption);
+
+  HWND hndInst = FindWindowW(L"#32770", szTitle);
+
+  if (hndInst)
+  {
+      bRet = (INT_PTR)hndInst;
+      SetWindowPos(hndInst, HWND_TOP, 0, 0, 0, 0, SWP_SHOWWINDOW | SWP_NOSIZE | SWP_NOMOVE);  
+  }
+  else 
+#endif
+      bRet = PROPSHEET_CreateDialog(psInfo);
+
   if(!psInfo->isModeless)
       bRet = do_loop(psInfo);
   return bRet;
