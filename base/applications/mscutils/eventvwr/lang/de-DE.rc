@@ -1,4 +1,4 @@
-/* German translation by Daniel Reimer */
+/* German translation by Daniel Reimer and Joachim Henze */
 
 LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
 
@@ -6,20 +6,20 @@ IDM_EVENTVWR MENU
 BEGIN
     POPUP "&Protokoll"
     BEGIN
-        MENUITEM "&Open...", IDM_OPEN_EVENTLOG
-        MENUITEM "Save &Event Log as...", IDM_SAVE_EVENTLOG
-        MENUITEM "&Close", IDM_CLOSE_EVENTLOG
+        MENUITEM "Ö&ffnen...", IDM_OPEN_EVENTLOG
+        MENUITEM "&Speichern unter...", IDM_SAVE_EVENTLOG
+        MENUITEM "Sc&hließen", IDM_CLOSE_EVENTLOG
         MENUITEM SEPARATOR
         MENUITEM "&Alle Ereignisse löschen", IDM_CLEAR_EVENTS
-        MENUITEM "&Rename\tF2", IDM_RENAME_EVENTLOG
-        MENUITEM "Log Se&ttings...", IDM_EVENTLOG_SETTINGS
+        MENUITEM "&Umbenennen\tF2", IDM_RENAME_EVENTLOG
+        MENUITEM "Eigens&chaften...", IDM_EVENTLOG_SETTINGS
         MENUITEM SEPARATOR
         MENUITEM "B&eenden", IDM_EXIT
     END
     POPUP "&Ansicht"
     BEGIN
-        MENUITEM "&Newest first", IDM_LIST_NEWEST
-        MENUITEM "&Oldest first", IDM_LIST_OLDEST
+        MENUITEM "&Neuere zuerst", IDM_LIST_NEWEST
+        MENUITEM "Ä&ltere zuerst", IDM_LIST_OLDEST
         MENUITEM SEPARATOR
         MENUITEM "&Details...\tEnter", IDM_EVENT_DETAILS
         MENUITEM SEPARATOR
@@ -27,10 +27,10 @@ BEGIN
     END
     POPUP "&Optionen"
     BEGIN
-        MENUITEM "Event details &view", IDM_EVENT_DETAILS_VIEW
-        MENUITEM "&Grid lines", IDM_LIST_GRID_LINES
+        MENUITEM "Detail&vorschau", IDM_EVENT_DETAILS_VIEW
+        MENUITEM "&Gitternetzlinien", IDM_LIST_GRID_LINES
         MENUITEM SEPARATOR
-        MENUITEM "&Save settings on exit", IDM_SAVE_SETTINGS
+        MENUITEM "&Einstellungen beim Beenden speichern", IDM_SAVE_SETTINGS
     END
     POPUP "&Hilfe"
     BEGIN
@@ -44,12 +44,12 @@ IDM_EVENTWR_CTX MENU
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "&Open Event Log...", IDM_OPEN_EVENTLOG
-        MENUITEM "&Save Event Log as...", IDM_SAVE_EVENTLOG
+        MENUITEM "Ö&ffnen...", IDM_OPEN_EVENTLOG
+        MENUITEM "&Speichern unter...", IDM_SAVE_EVENTLOG
         MENUITEM SEPARATOR
-        MENUITEM "&Clear all Events", IDM_CLEAR_EVENTS
-        MENUITEM "&Rename\tF2", IDM_RENAME_EVENTLOG
-        MENUITEM "Log Se&ttings...", IDM_EVENTLOG_SETTINGS
+        MENUITEM "Sc&hließen", IDM_CLEAR_EVENTS
+        MENUITEM "&Umbenennen\tF2", IDM_RENAME_EVENTLOG
+        MENUITEM "Eigens&chaften...", IDM_EVENTLOG_SETTINGS
     END
 END
 
@@ -111,73 +111,73 @@ STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
 CAPTION "General"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "&Display name:", IDC_STATIC, 7, 9, 60, 8
+    LTEXT "&Anzeigename:", IDC_STATIC, 7, 9, 60, 8
     EDITTEXT IDC_DISPLAYNAME, 67, 7, 178, 12, ES_LEFT | ES_AUTOHSCROLL | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP
-    LTEXT "&Log name:", IDC_STATIC, 7, 25, 60, 8
+    LTEXT "&Protokollname:", IDC_STATIC, 7, 25, 60, 8
     EDITTEXT IDC_LOGNAME, 67, 23, 178, 12, ES_LEFT | ES_AUTOHSCROLL | ES_READONLY | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP
-    LTEXT "Log &file:", IDC_STATIC, 7, 41, 60, 8
+    LTEXT "&Dateiname:", IDC_STATIC, 7, 41, 60, 8
     EDITTEXT IDC_LOGFILE, 67, 39, 178, 12, ES_LEFT | ES_AUTOHSCROLL | ES_READONLY | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP
-    LTEXT "Size:", IDC_STATIC, 7, 57, 60, 8
+    LTEXT "Größe:", IDC_STATIC, 7, 57, 60, 8
     EDITTEXT IDC_SIZE_LABEL, 67, 57, 178, 12, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "Created:", IDC_STATIC, 7, 69, 60, 8
+    LTEXT "Erstellt:", IDC_STATIC, 7, 69, 60, 8
     EDITTEXT IDC_CREATED_LABEL, 67, 69, 178, 12, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "Modified:", IDC_STATIC, 7, 81, 60, 8
+    LTEXT "Geändert:", IDC_STATIC, 7, 81, 60, 8
     EDITTEXT IDC_MODIFIED_LABEL, 67, 81, 178, 12, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "Accessed:", IDC_STATIC, 7, 93, 60, 8
+    LTEXT "Letzter Zugriff:", IDC_STATIC, 7, 93, 60, 8
     EDITTEXT IDC_ACCESSED_LABEL, 67, 93, 178, 12, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    GROUPBOX "Log size", IDC_STATIC, 7, 106, 238, 99
-    LTEXT "&Maximum log size:", IDC_STATIC, 17, 122, 58, 8
+    GROUPBOX "Protokollgröße", IDC_STATIC, 7, 106, 238, 99
+    LTEXT "&Maximal:", IDC_STATIC, 17, 122, 58, 8
     EDITTEXT IDC_EDIT_MAXLOGSIZE, 80, 119, 40, 14, ES_LEFT | ES_NUMBER | WS_GROUP
     CONTROL "", IDC_UPDOWN_MAXLOGSIZE, UPDOWN_CLASS, UDS_SETBUDDYINT | UDS_NOTHOUSANDS | UDS_ALIGNRIGHT |
             UDS_AUTOBUDDY | UDS_ARROWKEYS | WS_GROUP, 120, 119, 10, 14
     LTEXT "KB", IDC_STATIC, 130, 122, 20, 8
-    LTEXT "When maximum log size is reached:", IDC_STATIC, 17, 140, 219, 8
-    CONTROL "&Overwrite events as needed", IDC_OVERWRITE_AS_NEEDED, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 17, 155, 219, 10
-    CONTROL "O&verwrite events older than", IDC_OVERWRITE_OLDER_THAN, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 17, 168, 102, 10
-    EDITTEXT IDC_EDIT_EVENTS_AGE, 122, 165, 35, 14, ES_LEFT | ES_NUMBER | WS_GROUP
+    LTEXT "Wenn die maximale Protokollgröße erreicht ist:", IDC_STATIC, 17, 140, 219, 8
+    CONTROL "&Ereignisse nach Bedarf überschreiben", IDC_OVERWRITE_AS_NEEDED, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 17, 155, 219, 10
+    CONTROL "E&reignisse überschreiben, die älter als", IDC_OVERWRITE_OLDER_THAN, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 17, 168, 142, 10
+    EDITTEXT IDC_EDIT_EVENTS_AGE, 166, 165, 35, 14, ES_LEFT | ES_NUMBER | WS_GROUP
     CONTROL "", IDC_UPDOWN_EVENTS_AGE, UPDOWN_CLASS, UDS_SETBUDDYINT | UDS_ALIGNRIGHT |
-            UDS_AUTOBUDDY | UDS_ARROWKEYS | WS_GROUP, 157, 165, 10, 14
-    LTEXT "days", IDC_STATIC, 162, 168, 20, 8
-    CONTROL "Do &not overwrite events\n(clear log manually)", IDC_NO_OVERWRITE, "Button", BS_AUTORADIOBUTTON | BS_MULTILINE | WS_GROUP | WS_TABSTOP, 17, 180, 143, 20
-    PUSHBUTTON "&Restore Defaults", IDC_RESTOREDEFAULTS, 166, 183, 70, 14
-    AUTOCHECKBOX "Using a lo&w-speed connection", IDC_LOW_SPEED_CONNECTION, 7, 217, 167, 10
-    PUSHBUTTON "&Clear Log", ID_CLEARLOG, 195, 213, 50, 14
+            UDS_AUTOBUDDY | UDS_ARROWKEYS | WS_GROUP, 197, 165, 10, 14
+    LTEXT "Tage sind", IDC_STATIC, 202, 168, 40, 8
+    CONTROL "Erei&gnisse nie überschreiben\n(Protokoll manuell löschen)", IDC_NO_OVERWRITE, "Button", BS_AUTORADIOBUTTON | BS_MULTILINE | WS_GROUP | WS_TABSTOP, 17, 180, 143, 20
+    PUSHBUTTON "Wie&derherstellen", IDC_RESTOREDEFAULTS, 166, 183, 70, 14
+    AUTOCHECKBOX "&Niedrige Übertragungsrate", IDC_LOW_SPEED_CONNECTION, 7, 217, 167, 10
+    PUSHBUTTON "Protokoll &löschen", ID_CLEARLOG, 180, 213, 65, 14
 END
 
 STRINGTABLE
 BEGIN
     IDS_COPYRIGHT "Copyright (C) 2007 Marc Piulachs (marc.piulachs@codexchange.net)"
     IDS_APP_TITLE "Ereignisanzeige"
-    IDS_APP_TITLE_EX "%s - %s Log on \\\\"
-    IDS_STATUS_MSG "%s has %lu event(s) (listed: %lu)"
+    IDS_APP_TITLE_EX "%s - %s auf \\\\"
+    IDS_STATUS_MSG "%s enthält %lu Ereignisse (angezeigt: %lu)"
     IDS_LOADING_WAIT "Ereignis-Protokolle werden geladen. Bitte warten..."
-    IDS_NO_ITEMS "There are no items to show in this view." // "No events in this log."
-    IDS_EVENTLOG_SYSTEM "System Logs"
-    IDS_EVENTLOG_APP "Application Logs"
-    IDS_EVENTLOG_USER "User Logs"
+    IDS_NO_ITEMS "In diesem Protokoll gibt es keine Treffer." // "No events in this log."
+    IDS_EVENTLOG_SYSTEM "Systemprotokolle"
+    IDS_EVENTLOG_APP "Anwendungsprotokolle"
+    IDS_EVENTLOG_USER "Benutzerprotokolle"
     IDS_SAVE_FILTER "Ereignisprotokoll (*.evt)\0*.evt\0"
     IDS_CLEAREVENTS_MSG "Möchten Sie dieses Protokoll vor dem Löschen speichern?"
-    IDS_RESTOREDEFAULTS "Do you want to restore all settings for this log to their default values?"
-    IDS_EVENTSTRINGIDNOTFOUND "Die Bezeichnung für die Ereignis-ID ( %lu ) in der Quelle ( %s ) kann nicht gefunden werden. Es könnte sein, dass der Lokale Computer die notwendigen Registry Einträge oder Nachrichten DLLs, um Nachrichten von Remoten Computern anzuzeigen, nicht besitzt.\n\nThe following information is part of the event:\n\n"
+    IDS_RESTOREDEFAULTS "Möchten Sie alle Einstellungen für dieses Protokoll wieder auf die Standardwerte zurücksetzen?"
+    IDS_EVENTSTRINGIDNOTFOUND "Die Bezeichnung für die Ereignis-ID ( %lu ) in der Quelle ( %s ) kann nicht gefunden werden. Es könnte sein, dass der lokale Computer die notwendigen Registry Einträge oder Nachrichten DLLs, um Nachrichten entfernter Computer anzuzeigen, nicht besitzt.\n\nDas Ereignis enthält folgende Informationen:\n\n"
 END
 
 STRINGTABLE
 BEGIN
 /* Please note that explicit TAB characters '\t' are used to fix the alignment of the message in the MessageBox */
-    IDS_USAGE "ReactOS Event Viewer\n\
+    IDS_USAGE "ReactOS Ereignisanzeige\n\
 \n\
-EventVwr [computer name] [/l:<event log file>] [/?]\n\
+EventVwr [Computername] [/L:<Protokolldateiname>] [/?]\n\
 \n\
-""computer name"" : Specifies the remote computer where to connect\n\
-\tto retrieve the events to display. If no name is specified, the\n\
-\tlocal computer is used.\n\
+""Computername"" : Wenn sie einen anderen Computernamen\n\
+\tangeben, werden die Ereignisse über das Netzwerk bezogen und angezeigt.\n\
+\tWird kein Name angegeben, wird der lokale Computer verwendet.\n\
 \n\
-/l:<event log file> : Specifies which event log file to open.\n\
-\tOnly files in the .evt format (NT ≤ 5.2) are supported.\n\
+/L:<Protokolldateiname> : Bestimmt das anzuzeigende Protokoll.\n\
+\tNur Dateien im .evt Format (NT ≤ 5.2) werden unterstützt.\n\
 \n\
-/? : Displays this help message.\n\
+/? : zeigt diesen Hilfetext an.\n\
 "
-    IDS_EVENTLOGFILE "Event Log File"
+    IDS_EVENTLOGFILE "Ereignisprotokoll"
 END
 
 STRINGTABLE
@@ -193,8 +193,8 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_BYTES_FORMAT "bytes" // "%s bytes"
-    // "%1!ls! (%2!ls! bytes)"
+    IDS_BYTES_FORMAT "Bytes" // "%s Bytes"
+    // "%1!ls! (%2!ls! Bytes)"
 END
 
 STRINGTABLE
@@ -211,15 +211,15 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_COPY "Event Type:     %s\r\n\
-Event Source:   %s\r\n\
-Event Category: %s\r\n\
-Event ID:       %s\r\n\
-Date:           %s\r\n\
-Time:           %s\r\n\
-User:           %s\r\n\
+    IDS_COPY "Typ:            %s\r\n\
+Quelle:         %s\r\n\
+Kategorie:      %s\r\n\
+Ereignis-ID:    %s\r\n\
+Datum:          %s\r\n\
+Zeit:           %s\r\n\
+Benutzer:       %s\r\n\
 Computer:       %s\r\n\
-Description:\r\n%s"
+Beschreibung:\r\n%s"
 END
 
 STRINGTABLE
