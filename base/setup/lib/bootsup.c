@@ -1260,8 +1260,7 @@ InstallVBRToPartition(
     /*
     else if (wcsicmp(FileSystemName, L"EXT2")  == 0 ||
              wcsicmp(FileSystemName, L"EXT3")  == 0 ||
-             wcsicmp(FileSystemName, L"EXT4")  == 0 ||
-             wcsicmp(FileSystemName, L"FFS")   == 0)
+             wcsicmp(FileSystemName, L"EXT4")  == 0)
     {
         return STATUS_NOT_SUPPORTED;
     }

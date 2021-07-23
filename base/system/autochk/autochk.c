@@ -31,7 +31,6 @@
 #include <fslib/ntfslib.h>
 #include <fslib/btrfslib.h>
 #include <fslib/ext2lib.h>
-#include <fslib/ffslib.h>
 #include <fslib/cdfslib.h>
 
 #define NDEBUG
@@ -55,7 +54,6 @@ FILESYSTEM_CHKDSK FileSystems[] =
     { L"EXT2", Ext2Chkdsk },
     { L"EXT3", Ext2Chkdsk },
     { L"EXT4", Ext2Chkdsk },
-    { L"FFS", FfsChkdsk },
     { L"CDFS", CdfsChkdsk },
 };
 

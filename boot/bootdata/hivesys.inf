@@ -2197,13 +2197,6 @@ HKLM,"SYSTEM\CurrentControlSet\Services\btrfs","ImagePath",0x00020000,"system32\
 HKLM,"SYSTEM\CurrentControlSet\Services\btrfs","Start",0x00010001,0x00000003
 HKLM,"SYSTEM\CurrentControlSet\Services\btrfs","Type",0x00010001,0x00000002
 
-; FFS Filesystem driver
-HKLM,"SYSTEM\CurrentControlSet\Services\ffs","ErrorControl",0x00010001,0x00000000
-HKLM,"SYSTEM\CurrentControlSet\Services\ffs","Group",0x00000000,"Boot File System"
-HKLM,"SYSTEM\CurrentControlSet\Services\ffs","ImagePath",0x00020000,"system32\drivers\ffs.sys"
-HKLM,"SYSTEM\CurrentControlSet\Services\ffs","Start",0x00010001,0x00000003
-HKLM,"SYSTEM\CurrentControlSet\Services\ffs","Type",0x00010001,0x00000002
-
 ; NFS Filesystem driver
 HKLM,"SYSTEM\CurrentControlSet\Services\nfs41_driver","ErrorControl",0x00010001,0x00000000
 HKLM,"SYSTEM\CurrentControlSet\Services\nfs41_driver","Group",0x00000000,"Network"
