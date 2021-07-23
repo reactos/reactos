@@ -46,6 +46,8 @@ extern SIZE_T MmtotalCommitLimitMaximum;
 extern PVOID MiDebugMapping; // internal
 extern PMMPTE MmDebugPte; // internal
 
+extern KSPIN_LOCK MmPfnLock;
+
 struct _KTRAP_FRAME;
 struct _EPROCESS;
 struct _MM_RMAP_ENTRY;
@@ -940,7 +942,11 @@ MmGetSectionAssociation(PFN_NUMBER Page,
                         PLARGE_INTEGER Offset);
 
 /* freelist.c **********************************************************/
-
+_IRQL_raises_(DISPATCH_LEVEL)
+_IRQL_requires_max_(DISPATCH_LEVEL)
+_Requires_lock_not_held_(MmPfnLock)
+_Acquires_lock_(MmPfnLock)
+_IRQL_saves_
 FORCEINLINE
 KIRQL
 MiAcquirePfnLock(VOID)
@@ -948,14 +954,20 @@ MiAcquirePfnLock(VOID)
     return KeAcquireQueuedSpinLock(LockQueuePfnLock);
 }
 
+_Requires_lock_held_(MmPfnLock)
+_Releases_lock_(MmPfnLock)
+_IRQL_requires_(DISPATCH_LEVEL)
 FORCEINLINE
 VOID
 MiReleasePfnLock(
-    _In_ KIRQL OldIrql)
+    _In_ _IRQL_restores_ KIRQL OldIrql)
 {
     KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
 }
 
+_IRQL_requires_min_(DISPATCH_LEVEL)
+_Requires_lock_not_held_(MmPfnLock)
+_Acquires_lock_(MmPfnLock)
 FORCEINLINE
 VOID
 MiAcquirePfnLockAtDpcLevel(VOID)
@@ -967,6 +979,9 @@ MiAcquirePfnLockAtDpcLevel(VOID)
     KeAcquireQueuedSpinLockAtDpcLevel(LockQueue);
 }
 
+_Requires_lock_held_(MmPfnLock)
+_Releases_lock_(MmPfnLock)
+_IRQL_requires_min_(DISPATCH_LEVEL)
 FORCEINLINE
 VOID
 MiReleasePfnLockFromDpcLevel(VOID)
@@ -978,7 +993,7 @@ MiReleasePfnLockFromDpcLevel(VOID)
     ASSERT(KeGetCurrentIrql() >= DISPATCH_LEVEL);
 }
 
-#define MI_ASSERT_PFN_LOCK_HELD() ASSERT(KeGetCurrentIrql() == DISPATCH_LEVEL)
+#define MI_ASSERT_PFN_LOCK_HELD() NT_ASSERT((KeGetCurrentIrql() >= DISPATCH_LEVEL) && (MmPfnLock != 0))
 
 FORCEINLINE
 PMMPFN
@@ -1476,10 +1491,18 @@ MmUnsharePageEntrySectionSegment(PMEMORY_AREA MemoryArea,
                                  BOOLEAN PageOut,
                                  ULONG_PTR *InEntry);
 
+_When_(OldIrql == MM_NOIRQL, _IRQL_requires_max_(DISPATCH_LEVEL))
+_When_(OldIrql == MM_NOIRQL, _Requires_lock_not_held_(MmPfnLock))
+_When_(OldIrql != MM_NOIRQL, _Requires_lock_held_(MmPfnLock))
+_When_(OldIrql != MM_NOIRQL, _Releases_lock_(MmPfnLock))
+_When_(OldIrql != MM_NOIRQL, _IRQL_restores_(OldIrql))
+_When_(OldIrql != MM_NOIRQL, _IRQL_requires_(DISPATCH_LEVEL))
 VOID
 NTAPI
 MmDereferenceSegmentWithLock(PMM_SECTION_SEGMENT Segment, KIRQL OldIrql);
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
+_Requires_lock_not_held_(MmPfnLock)
 FORCEINLINE
 VOID
 MmDereferenceSegment(PMM_SECTION_SEGMENT Segment)
