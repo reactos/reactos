@@ -27,6 +27,7 @@ list(APPEND SOURCE
     ShellExecuteW.cpp
     ShellHook.cpp
     ShellState.cpp
+    SHGetAttributesFromDataObject.cpp
     SHLimitInputEdit.cpp
     menu.cpp
     shelltest.cpp)

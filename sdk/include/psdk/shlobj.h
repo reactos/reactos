@@ -2477,6 +2477,18 @@ SHRunControlPanel(
   _In_opt_ HWND parent);
 
 /****************************************************************************
+ * SHGetAttributesFromDataObject
+ */
+
+HRESULT
+WINAPI
+SHGetAttributesFromDataObject(
+    _In_opt_ IDataObject* pdo,
+    DWORD dwAttributeMask,
+    _Out_opt_ DWORD* pdwAttributes,
+    _Out_opt_ UINT* pcItems);
+
+/****************************************************************************
  * SHOpenWithDialog
  */
 

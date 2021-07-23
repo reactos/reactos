@@ -28,6 +28,7 @@ extern void func_ShellExecuteEx(void);
 extern void func_ShellExecuteW(void);
 extern void func_ShellHook(void);
 extern void func_ShellState(void);
+extern void func_SHGetAttributesFromDataObject(void);
 extern void func_SHLimitInputEdit(void);
 extern void func_SHParseDisplayName(void);
 
@@ -58,6 +59,7 @@ const struct test winetest_testlist[] =
     { "ShellExecuteW", func_ShellExecuteW },
     { "ShellHook", func_ShellHook },
     { "ShellState", func_ShellState },
+    { "SHGetAttributesFromDataObject", func_SHGetAttributesFromDataObject },
     { "SHLimitInputEdit", func_SHLimitInputEdit },
     { "SHParseDisplayName", func_SHParseDisplayName },
     { 0, 0 }
