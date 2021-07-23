@@ -393,8 +393,7 @@ FileSystemToMBRPartitionType(
              wcsicmp(FileSystem, L"EXT2")  == 0 ||
              wcsicmp(FileSystem, L"EXT3")  == 0 ||
              wcsicmp(FileSystem, L"EXT4")  == 0 ||
-             wcsicmp(FileSystem, L"FFS")   == 0 ||
-             wcsicmp(FileSystem, L"REISERFS") == 0)
+             wcsicmp(FileSystem, L"FFS")   == 0)
     {
         return PARTITION_LINUX;
     }

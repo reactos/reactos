@@ -331,7 +331,6 @@ set(baseaddress_uffs                   0x7FE96500000)
 set(baseaddress_umpnpmgr               0x7FE95500000)
 set(baseaddress_untfs                  0x7FE94500000)
 set(baseaddress_updspapi               0x7FE93500000)
-set(baseaddress_ureiserfs              0x7FE92500000)
 set(baseaddress_url                    0x7FE91500000)
 set(baseaddress_usrmgr                 0x7FE91000000)
 set(baseaddress_vbscript               0x7FE90500000) # 00058000
