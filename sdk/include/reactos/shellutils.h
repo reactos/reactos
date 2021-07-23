@@ -23,7 +23,7 @@
 extern "C" {
 #endif /* defined(__cplusplus) */
 
-static inline ULONG
+inline ULONG
 Win32DbgPrint(const char *filename, int line, const char *lpFormat, ...)
 {
     char szMsg[512];
@@ -68,7 +68,18 @@ Win32DbgPrint(const char *filename, int line, const char *lpFormat, ...)
 #endif
 
 #if 1
-#define FAILED_UNEXPECTEDLY(hr) (FAILED(hr) && (Win32DbgPrint(__FILE__, __LINE__, "Unexpected failure %08x.\n", hr), TRUE))
+
+inline BOOL _ROS_FAILED_HELPER(HRESULT hr, const char* expr, const char* filename, int line)
+{
+    if (FAILED(hr))
+    {
+        Win32DbgPrint(filename, line, "Unexpected failure (%s)=%08x.\n", expr, hr);
+        return TRUE;
+    }
+    return FALSE;
+}
+
+#define FAILED_UNEXPECTEDLY(hr) _ROS_FAILED_HELPER((hr), #hr, __FILE__, __LINE__)
 #else
 #define FAILED_UNEXPECTEDLY(hr) FAILED(hr)
 #endif
