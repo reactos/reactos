@@ -18,19 +18,18 @@
     NESTED_ENTRY __rt_udiv64
 
     /* Allocate stack space and store parameters there */
-    stmdb sp!,{r0,r1,r2,r3,lr}
+    push {lr}
+    sub sp,sp,0x10
+    mov r12,sp
+    push {r12}
     PROLOG_END
 
-    /* Load pointer to stack structure into R0 */
-    mov r0, sp
-
     /* Call the C worker function */
-    adr lr, Return
-    b __rt_udiv64_worker
+    bl __rt_udiv64_worker
+    add sp,sp,0x04
 
-Return
     /* Move result data into the appropriate registers and return */
-    ldmia sp!,{r0,r1,r2,r3,pc}
+    pop {r0,r1,r2,r3,pc}
     NESTED_END __rt_udiv64
 
     END

@@ -25,10 +25,18 @@ __brkdiv0(void)
     __emit(0xDEF9);
 }
 
-typedef struct _ARM_DIVRESULT
+typedef union _ARM_DIVRESULT
 {
-    UINT3264 quotient; /* to be returned in R0 */
-    UINT3264 modulus;  /* to be returned in R1 */
+#ifdef _USE_64_BITS_
+    unsigned int raw_data[4];
+#else
+    unsigned long long raw_data;
+#endif
+    struct
+    {
+        UINT3264 quotient; /* to be returned in R0(R0,R1) */
+        UINT3264 modulus;  /* to be returned in R1(R2,R3) */
+    } data;
 } ARM_DIVRESULT;
 
 #ifndef _USE_64_BITS_
@@ -36,9 +44,9 @@ __forceinline
 #endif
 void
 __rt_div_worker(
-    ARM_DIVRESULT *result,
     UINT3264 divisor,
-    UINT3264 dividend)
+    UINT3264 dividend,
+    ARM_DIVRESULT* result)
 {
     UINT3264 shift;
     UINT3264 mask;
@@ -70,8 +78,8 @@ __rt_div_worker(
 
     if (divisor > dividend)
     {
-        result->quotient = 0;
-        result->modulus = divisor;
+        result->data.quotient = 0;
+        result->data.modulus = divisor;
         return;
     }
 
@@ -110,7 +118,6 @@ __rt_div_worker(
     }
 #endif // _SIGNED_DIV_
 
-    result->quotient = quotient;
-    result->modulus = dividend;
-    return;
+    result->data.quotient = quotient;
+    result->data.modulus = dividend;
 }
