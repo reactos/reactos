@@ -505,10 +505,9 @@ STDMETHODIMP CFontExt::DragEnter(IDataObject* pDataObj, DWORD grfKeyState, POINT
 {
     *pdwEffect = DROPEFFECT_NONE;
 
-    CComHeapPtr<CIDA> cida;
-    HRESULT hr = _GetCidlFromDataObject(pDataObj, &cida);
-    if (FAILED_UNEXPECTEDLY(hr))
-        return hr;
+    CDataObjectHIDA cida(pDataObj);
+    if (FAILED_UNEXPECTEDLY(cida.hr()))
+        return cida.hr();
 
     *pdwEffect = DROPEFFECT_COPY;
     return S_OK;
@@ -528,10 +527,9 @@ STDMETHODIMP CFontExt::Drop(IDataObject* pDataObj, DWORD grfKeyState, POINTL pt,
 {
     *pdwEffect = DROPEFFECT_NONE;
 
-    CComHeapPtr<CIDA> cida;
-    HRESULT hr = _GetCidlFromDataObject(pDataObj, &cida);
-    if (FAILED_UNEXPECTEDLY(hr))
-        return hr;
+    CDataObjectHIDA cida(pDataObj);
+    if (!cida)
+        return E_UNEXPECTED;
 
     PCUIDLIST_ABSOLUTE pidlParent = HIDA_GetPIDLFolder(cida);
     if (!pidlParent)
