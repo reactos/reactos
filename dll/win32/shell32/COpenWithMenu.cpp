@@ -1352,53 +1352,33 @@ COpenWithMenu::Initialize(PCIDLIST_ABSOLUTE pidlFolder,
                           IDataObject *pdtobj,
                           HKEY hkeyProgID)
 {
-    STGMEDIUM medium;
-    FORMATETC fmt;
-    HRESULT hr;
-    LPIDA pida;
     LPCITEMIDLIST pidlFolder2;
     LPCITEMIDLIST pidlChild;
-    LPCITEMIDLIST pidl;
-    LPCWSTR pwszExt;
 
     TRACE("This %p\n", this);
 
     if (pdtobj == NULL)
         return E_INVALIDARG;
 
-    fmt.cfFormat = RegisterClipboardFormatW(CFSTR_SHELLIDLIST);
-    fmt.ptd = NULL;
-    fmt.dwAspect = DVASPECT_CONTENT;
-    fmt.lindex = -1;
-    fmt.tymed = TYMED_HGLOBAL;
-
-    hr = pdtobj->GetData(&fmt, &medium);
-
-    if (FAILED(hr))
+    CDataObjectHIDA pida(pdtobj);
+    if (FAILED(pida.hr()))
     {
-        ERR("pdtobj->GetData failed with 0x%x\n", hr);
-        return hr;
+        ERR("pdtobj->GetData failed with 0x%x\n", pida.hr());
+        return pida.hr();
     }
 
-    pida = (LPIDA)GlobalLock(medium.hGlobal);
     ASSERT(pida->cidl >= 1);
 
-    pidlFolder2 = (LPCITEMIDLIST) ((LPBYTE)pida + pida->aoffset[0]);
-    pidlChild = (LPCITEMIDLIST) ((LPBYTE)pida + pida->aoffset[1]);
+    pidlFolder2 = HIDA_GetPIDLFolder(pida);
+    pidlChild = HIDA_GetPIDLItem(pida, 0);
 
     if (!_ILIsValue(pidlChild))
     {
         TRACE("pidl is not a file\n");
-        GlobalUnlock(medium.hGlobal);
-        ReleaseStgMedium(&medium);
         return E_FAIL;
     }
 
-    pidl = ILCombine(pidlFolder2, pidlChild);
-
-    GlobalUnlock(medium.hGlobal);
-    ReleaseStgMedium(&medium);
-
+    CComHeapPtr<ITEMIDLIST> pidl(ILCombine(pidlFolder2, pidlChild));
     if (!pidl)
     {
         ERR("no mem\n");
@@ -1407,15 +1387,13 @@ COpenWithMenu::Initialize(PCIDLIST_ABSOLUTE pidlFolder,
 
     if (!SHGetPathFromIDListW(pidl, m_wszPath))
     {
-        SHFree((void*)pidl);
         ERR("SHGetPathFromIDListW failed\n");
         return E_FAIL;
     }
 
-    SHFree((void*)pidl);
     TRACE("szPath %s\n", debugstr_w(m_wszPath));
 
-    pwszExt = PathFindExtensionW(m_wszPath);
+    LPCWSTR pwszExt = PathFindExtensionW(m_wszPath);
     if (PathIsExeW(pwszExt) || !_wcsicmp(pwszExt, L".lnk"))
     {
         TRACE("file is a executable or shortcut\n");

@@ -55,6 +55,8 @@ static WCHAR* BuildPathsList(LPCWSTR wszBasePath, int cidl, LPCITEMIDLIST *pidls
  * CFSDropTarget::_CopyItems
  *
  * copies items to this folder
+ * FIXME: We should not ask the parent folder: 'What is your path', and then manually build paths assuming everything is a simple pidl!
+ * We should be asking the parent folder: Give me a full name for this pidl (for each child!)
  */
 HRESULT CFSDropTarget::_CopyItems(IShellFolder * pSFFrom, UINT cidl,
                                   LPCITEMIDLIST * apidl, BOOL bCopy)
