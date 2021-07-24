@@ -1,5 +1,6 @@
 
 list(APPEND CRT_STARTUP_SOURCE
+    startup/_matherr.c
     startup/crtexe.c
     startup/wcrtexe.c
     startup/crt_handler.c
@@ -10,7 +11,6 @@ list(APPEND CRT_STARTUP_SOURCE
     startup/mingw_helpers.c
     startup/natstart.c
     startup/charmax.c
-    #startup/merr.c
     startup/atonexit.c
     #startup/txtmode.c
     startup/pesect.c

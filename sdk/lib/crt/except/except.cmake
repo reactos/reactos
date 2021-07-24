@@ -55,7 +55,6 @@ endif()
 
 list(APPEND CRT_EXCEPT_SOURCE
     ${LIBCNTPR_EXCEPT_SOURCE}
-    except/matherr.c
     except/stack.c
 )
 

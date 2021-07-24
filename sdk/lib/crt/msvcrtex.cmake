@@ -2,6 +2,7 @@
 include_directories(include/internal/mingw-w64)
 
 list(APPEND MSVCRTEX_SOURCE
+    startup/_matherr.c
     startup/crtexe.c
     startup/wcrtexe.c
     startup/crt_handler.c
@@ -12,7 +13,6 @@ list(APPEND MSVCRTEX_SOURCE
     startup/mingw_helpers.c
     startup/natstart.c
     startup/charmax.c
-    startup/merr.c
     startup/atonexit.c
     startup/dllmain.c
     startup/txtmode.c
