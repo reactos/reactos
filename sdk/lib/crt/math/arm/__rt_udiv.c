@@ -11,14 +11,15 @@
 
 #include "__rt_div_worker.h"
 
-ARM_DIVRESULT
+unsigned long long
 __rt_udiv(
     unsigned int divisor,
     unsigned int dividend)
 {
     ARM_DIVRESULT result;
 
-    __rt_udiv_worker(&result, divisor, dividend);
-    return result;
+    __rt_udiv_worker(divisor, dividend, &result);
+
+    return result.raw_data;
 }
 
