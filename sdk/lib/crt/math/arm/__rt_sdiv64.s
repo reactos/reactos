@@ -19,14 +19,14 @@
 
     /* Allocate stack space and store parameters there */
     push {lr}
-	sub sp,sp,0x10
+    sub sp,sp,0x10
     mov r12,sp
     push {r12}
     PROLOG_END
 
     /* Call the C worker function */
     bl __rt_sdiv64_worker
-	add sp,sp,0x04
+    add sp,sp,0x04
 
     /* Move result data into the appropriate registers and return */
     pop {r0,r1,r2,r3,pc}
