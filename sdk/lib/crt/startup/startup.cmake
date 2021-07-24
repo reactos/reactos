@@ -12,7 +12,6 @@ list(APPEND CRT_STARTUP_SOURCE
     startup/natstart.c
     startup/charmax.c
     startup/atonexit.c
-    #startup/txtmode.c
     startup/pesect.c
     startup/tlsmcrt.c
     startup/tlsthrd.c

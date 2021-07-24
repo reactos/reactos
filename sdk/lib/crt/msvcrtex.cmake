@@ -15,7 +15,6 @@ list(APPEND MSVCRTEX_SOURCE
     startup/charmax.c
     startup/atonexit.c
     startup/dllmain.c
-    startup/txtmode.c
     startup/pesect.c
     startup/tlsmcrt.c
     startup/tlsthrd.c
