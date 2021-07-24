@@ -1,8 +1,9 @@
 /*
- * COPYRIGHT:         BSD - See COPYING.ARM in the top level directory
- * PROJECT:           ReactOS CRT library
- * PURPOSE:           Implementation of __rt_udiv64
- * PROGRAMMER:        Timo Kreuzer (timo.kreuzer@reactos.org)
+ * PROJECT:     ReactOS CRT library
+ * LICENSE:     MIT (https://spdx.org/licenses/MIT)
+ * PURPOSE:     Implementation of __rt_udiv64
+ * COPYRIGHT:   Copyright 2015 Timo Kreuzer <timo.kreuzer@reactos.org>
+ *              Copyright 2021 Raman Masanin <36927roma@gmail.com>
  */
 
 /* INCLUDES ******************************************************************/
@@ -15,6 +16,12 @@
 
     TEXTAREA
 
+    /*
+        IN: r1:r0 = divisor
+        IN: r3:r2 = dividend
+        OUT: r1:r0 = quotient
+        OUT: r3:r2 = remainder
+    */
     NESTED_ENTRY __rt_udiv64
 
     /* Allocate stack space and store parameters there */
