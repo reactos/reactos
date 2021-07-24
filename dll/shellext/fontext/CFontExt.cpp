@@ -603,9 +603,14 @@ STDMETHODIMP CFontExt::Drop(IDataObject* pDataObj, DWORD grfKeyState, POINTL pt,
         }
     }
 
-    // TODO: update g_FontCache
+    // Invalidate our cache
+    g_FontCache->Read();
 
+    // Notify the system that a font was added
     SendMessageW(HWND_BROADCAST, WM_FONTCHANGE, 0, 0);
+
+    // Notify the shell that the folder contents are changed
+    SHChangeNotify(SHCNE_UPDATEDIR, SHCNF_PATHW, g_FontCache->FontPath().GetString(), NULL);
 
     // TODO: Show message
 
@@ -615,26 +620,34 @@ STDMETHODIMP CFontExt::Drop(IDataObject* pDataObj, DWORD grfKeyState, POINTL pt,
 HRESULT CFontExt::DoInstallFontFile(LPCWSTR pszFontPath, LPCWSTR pszFontsDir, HKEY hkeyFonts)
 {
     WCHAR szDestFile[MAX_PATH];
-    LPCWSTR pszFileTitle = PathFindFileName(pszFontPath);
+
+    // Add this font to the font list, so we can query the name
+    if (!AddFontResourceW(pszFontPath))
+    {
+        ERR("AddFontResourceW('%S') failed\n", pszFontPath);
+        DeleteFileW(szDestFile);
+        return E_FAIL;
+    }
 
     CStringW strFontName;
-    if (!DoGetFontTitle(pszFontPath, strFontName))
-        return E_FAIL;
+    HRESULT hr = DoGetFontTitle(pszFontPath, strFontName);
 
-    RemoveFontResourceW(pszFileTitle);
+    // We got the name, remove it again
+    RemoveFontResourceW(pszFontPath);
+
+    if (!SUCCEEDED(hr))
+    {
+        ERR("DoGetFontTitle failed (err=0x%x)!\n", hr);
+        return hr;
+    }
 
     StringCchCopyW(szDestFile, sizeof(szDestFile), pszFontsDir);
+
+    LPCWSTR pszFileTitle = PathFindFileName(pszFontPath);
     PathAppendW(szDestFile, pszFileTitle);
     if (!CopyFileW(pszFontPath, szDestFile, FALSE))
     {
         ERR("CopyFileW('%S', '%S') failed\n", pszFontPath, szDestFile);
-        return E_FAIL;
-    }
-
-    if (!AddFontResourceW(szDestFile))
-    {
-        ERR("AddFontResourceW('%S') failed\n", pszFileTitle);
-        DeleteFileW(szDestFile);
         return E_FAIL;
     }
 
@@ -644,10 +657,11 @@ HRESULT CFontExt::DoInstallFontFile(LPCWSTR pszFontPath, LPCWSTR pszFontsDir, HK
     if (nError)
     {
         ERR("RegSetValueExW failed with %ld\n", nError);
-        RemoveFontResourceW(pszFileTitle);
         DeleteFileW(szDestFile);
         return E_FAIL;
     }
+
+    AddFontResourceW(szDestFile);
 
     return S_OK;
 }
@@ -659,12 +673,13 @@ CFontExt::DoGetFontTitle(IN LPCWSTR pszFontPath, OUT CStringW& strFontName)
     BOOL ret = GetFontResourceInfoW(pszFontPath, &cbInfo, NULL, 1);
     if (!ret || !cbInfo)
     {
-        ERR("GetFontResourceInfoW failed\n");
+        ERR("GetFontResourceInfoW failed (err: %u)\n", GetLastError());
         return E_FAIL;
     }
 
     LPWSTR pszBuffer = strFontName.GetBuffer(cbInfo / sizeof(WCHAR));
     ret = GetFontResourceInfoW(pszFontPath, &cbInfo, pszBuffer, 1);
+    DWORD dwErr = GetLastError();;
     strFontName.ReleaseBuffer();
     if (ret)
     {
@@ -672,6 +687,6 @@ CFontExt::DoGetFontTitle(IN LPCWSTR pszFontPath, OUT CStringW& strFontName)
         return S_OK;
     }
 
-    ERR("GetFontResourceInfoW failed\n");
+    ERR("GetFontResourceInfoW failed (err: %u)\n", dwErr);
     return E_FAIL;
 }
