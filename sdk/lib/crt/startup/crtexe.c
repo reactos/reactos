@@ -52,13 +52,6 @@ extern void __cdecl _fpreset (void);
 #define SPACECHAR _T(' ')
 #define DQUOTECHAR _T('\"')
 
-extern int * __MINGW_IMP_SYMBOL(_fmode);
-extern int * __MINGW_IMP_SYMBOL(_commode);
-
-#undef _fmode
-extern int _fmode;
-extern int * __MINGW_IMP_SYMBOL(_commode);
-#define _commode (* __MINGW_IMP_SYMBOL(_commode))
 extern int _dowildcard;
 
 extern _CRTIMP void __cdecl _initterm(_PVFV *, _PVFV *);
@@ -128,9 +121,6 @@ pre_c_init (void)
   else
     __set_app_type (_CONSOLE_APP);
   __onexitbegin = __onexitend = (_PVFV *)(-1);
-
-  * __MINGW_IMP_SYMBOL(_fmode) = _fmode;
-  * __MINGW_IMP_SYMBOL(_commode) = _commode;
 
 #ifdef WPRFLAG
   _wsetargv();
