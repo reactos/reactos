@@ -19,9 +19,6 @@ extern LUID SeAnonymousAuthenticationId;
 
 /* PRIVATE DEFINITIONS ********************************************************/
 
-#define SEP_LOGON_SESSION_TAG 'sLeS'
-#define SEP_LOGON_NOTIFICATION_TAG 'nLeS'
-
 typedef struct _SEP_LOGON_SESSION_TERMINATED_NOTIFICATION
 {
     struct _SEP_LOGON_SESSION_TERMINATED_NOTIFICATION *Next;
@@ -334,7 +331,7 @@ SepRmCreateLogonSession(
     /* Allocate a new session structure */
     NewSession = ExAllocatePoolWithTag(PagedPool,
                                        sizeof(SEP_LOGON_SESSION_REFERENCES),
-                                       SEP_LOGON_SESSION_TAG);
+                                       TAG_LOGON_SESSION);
     if (NewSession == NULL)
     {
         return STATUS_INSUFFICIENT_RESOURCES;
@@ -375,7 +372,7 @@ Leave:
 
     if (!NT_SUCCESS(Status))
     {
-        ExFreePoolWithTag(NewSession, SEP_LOGON_SESSION_TAG);
+        ExFreePoolWithTag(NewSession, TAG_LOGON_SESSION);
     }
 
     return Status;
@@ -482,7 +479,7 @@ SepRmDeleteLogonSession(
     /* If we're here then we've deleted the logon session successfully */
     DPRINT("SepRmDeleteLogonSession(): Logon session deleted with success!\n");
     Status = STATUS_SUCCESS;
-    ExFreePoolWithTag(SessionToDelete, SEP_LOGON_SESSION_TAG);
+    ExFreePoolWithTag(SessionToDelete, TAG_LOGON_SESSION);
 
 Leave:
     /* Release the database lock */
@@ -1307,7 +1304,7 @@ SeRegisterLogonSessionTerminatedRoutine(
     /* Allocate a new notification item */
     Notification = ExAllocatePoolWithTag(PagedPool,
                                          sizeof(SEP_LOGON_SESSION_TERMINATED_NOTIFICATION),
-                                         SEP_LOGON_NOTIFICATION_TAG);
+                                         TAG_LOGON_NOTIFICATION);
     if (Notification == NULL)
         return STATUS_INSUFFICIENT_RESOURCES;
 
@@ -1373,7 +1370,7 @@ SeUnregisterLogonSessionTerminatedRoutine(
 
         /* Free the current notification item */
         ExFreePoolWithTag(Current,
-                          SEP_LOGON_NOTIFICATION_TAG);
+                          TAG_LOGON_NOTIFICATION);
 
         Status = STATUS_SUCCESS;
     }
