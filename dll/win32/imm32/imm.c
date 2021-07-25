@@ -39,6 +39,7 @@
 #include <ndk/pstypes.h>
 #include <ndk/rtlfuncs.h>
 #include "../../../win32ss/include/ntuser.h"
+#include "../../../win32ss/include/ntwin32.h"
 #include <imm32_undoc.h>
 #include <strsafe.h>
 
@@ -3609,28 +3610,66 @@ BOOL WINAPI ImmRegisterClient(PVOID ptr, /* FIXME: should point to SHAREDINFO st
 }
 
 /***********************************************************************
+ *		CtfImmIsTextFrameServiceDisabled(IMM32.@)
+ */
+BOOL WINAPI CtfImmIsTextFrameServiceDisabled(VOID)
+{
+    PTEB pTeb = NtCurrentTeb();
+    if (((PW32CLIENTINFO)pTeb->Win32ClientInfo)->CI_flags & CI_TFSDISABLED)
+        return TRUE;
+    return FALSE;
+}
+
+/***********************************************************************
  *              ImmGetImeInfoEx (IMM32.@)
  */
+
+static BOOL APIENTRY Imm32GetImeInfoEx(PIMEINFOEX pImeInfoEx, IMEINFOEXCLASS SearchType)
+{
+    return NtUserGetImeInfoEx(pImeInfoEx, SearchType);
+}
+
 BOOL WINAPI
 ImmGetImeInfoEx(PIMEINFOEX pImeInfoEx,
                 IMEINFOEXCLASS SearchType,
                 PVOID pvSearchKey)
 {
+    BOOL bDisabled = FALSE;
+    HKL hKL;
+    PTEB pTeb;
+
     switch (SearchType)
     {
         case ImeInfoExKeyboardLayout:
-            pImeInfoEx->hkl = *(LPHKL)pvSearchKey;
-            if (!IS_IME_HKL(pImeInfoEx->hkl))
-                return FALSE;
+            break;
+
+        case ImeInfoExImeWindow:
+            bDisabled = CtfImmIsTextFrameServiceDisabled();
+            SearchType = ImeInfoExKeyboardLayout;
             break;
 
         case ImeInfoExImeFileName:
-            lstrcpynW(pImeInfoEx->wszImeFile, (LPWSTR)pvSearchKey,
-                      ARRAY_SIZE(pImeInfoEx->wszImeFile));
-            break;
-
-        default:
-            return FALSE;
+            StringCchCopyW(pImeInfoEx->wszImeFile, _countof(pImeInfoEx->wszImeFile),
+                           pvSearchKey);
+            goto Quit;
     }
-    return NtUserGetImeInfoEx(pImeInfoEx, SearchType);
+
+    hKL = *(HKL*)pvSearchKey;
+    pImeInfoEx->hkl = hKL;
+
+    if (!IS_IME_HKL(hKL))
+    {
+        if (g_dwImm32Flags & IMM32_FLAG_CICERO_ENABLED)
+        {
+            pTeb = NtCurrentTeb();
+            if (((PW32CLIENTINFO)pTeb->Win32ClientInfo)->W32ClientInfo[0] & 2)
+                return FALSE;
+            if (!bDisabled)
+                goto Quit;
+        }
+        return FALSE;
+    }
+
+Quit:
+    return Imm32GetImeInfoEx(pImeInfoEx, SearchType);
 }
