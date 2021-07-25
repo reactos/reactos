@@ -353,6 +353,18 @@ SepCreateImpersonationTokenDacl(
     _Out_ PACL* Dacl
 );
 
+NTSTATUS
+NTAPI
+SepRmInsertLogonSessionIntoToken(
+    _Inout_ PTOKEN Token
+);
+
+NTSTATUS
+NTAPI
+SepRmRemoveLogonSessionFromToken(
+    _Inout_ PTOKEN Token
+);
+
 CODE_SEG("INIT")
 VOID
 NTAPI

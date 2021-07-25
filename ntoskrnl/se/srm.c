@@ -1,11 +1,10 @@
 /*
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS kernel
- * FILE:            ntoskrnl/se/srm.c
+ * PROJECT:         ReactOS Kernel
+ * LICENSE:         GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:         Security Reference Monitor Server
- *
- * PROGRAMMERS:     Timo Kreuzer (timo.kreuzer@reactos.org)
- *                  Pierre Schweitzer (pierre@reactos.org)
+ * COPYRIGHT:       Copyright Timo Kreuzer <timo.kreuzer@reactos.org>
+ *                  Copyright Pierre Schweitzer <pierre@reactos.org>
+ *                  Copyright 2021 George Bișoc <george.bisoc@reactos.org>
  */
 
 /* INCLUDES *******************************************************************/
@@ -315,6 +314,147 @@ SepRmSetAuditEvent(
     return STATUS_SUCCESS;
 }
 
+/**
+ * @brief
+ * Inserts a logon session into an access token specified by the
+ * caller. 
+ *
+ * @param[in,out] Token
+ * An access token where the logon session is about to be inserted
+ * in.
+ *
+ * @return
+ * STATUS_SUCCESS is returned if the logon session has been inserted into
+ * the token successfully. STATUS_NO_SUCH_LOGON_SESSION is returned when no logon
+ * session has been found with the matching ID of the token and as such
+ * we've failed to add the logon session to the token. STATUS_INSUFFICIENT_RESOURCES
+ * is returned if memory pool allocation for the new session has failed.
+ */
+NTSTATUS
+NTAPI
+SepRmInsertLogonSessionIntoToken(
+    _Inout_ PTOKEN Token)
+{
+    PSEP_LOGON_SESSION_REFERENCES LogonSession;
+    PAGED_CODE();
+
+    /* Ensure that our token is not some plain garbage */
+    ASSERT(Token);
+
+    /* Acquire the database lock */
+    KeAcquireGuardedMutex(&SepRmDbLock);
+
+    for (LogonSession = SepLogonSessions;
+         LogonSession != NULL;
+         LogonSession = LogonSession->Next)
+    {
+        /*
+         * The insertion of a logon session into the token has to be done
+         * only IF the authentication ID of the token matches with the ID
+         * of the logon itself.
+         */
+        if (RtlEqualLuid(&LogonSession->LogonId, &Token->AuthenticationId))
+        {
+            break;
+        }
+    }
+
+    /* If we reach this then we cannot proceed further */
+    if (LogonSession == NULL)
+    {
+        DPRINT1("SepRmInsertLogonSessionIntoToken(): Couldn't insert the logon session into the specific access token!\n");
+        KeReleaseGuardedMutex(&SepRmDbLock);
+        return STATUS_NO_SUCH_LOGON_SESSION;
+    }
+
+    /*
+     * Allocate the session that we are going
+     * to insert it to the token.
+     */
+    Token->LogonSession = ExAllocatePoolWithTag(PagedPool,
+                                                sizeof(SEP_LOGON_SESSION_REFERENCES),
+                                                TAG_LOGON_SESSION);
+    if (Token->LogonSession == NULL)
+    {
+        DPRINT1("SepRmInsertLogonSessionIntoToken(): Couldn't allocate new logon session into the memory pool!\n");
+        KeReleaseGuardedMutex(&SepRmDbLock);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    /*
+     * Begin copying the logon session references data from the
+     * session whose ID matches with the token authentication ID to
+     * the new session we've allocated blocks of pool memory for it.
+     */
+    Token->LogonSession->Next = LogonSession->Next;
+    Token->LogonSession->LogonId = LogonSession->LogonId;
+    Token->LogonSession->ReferenceCount = LogonSession->ReferenceCount;
+    Token->LogonSession->Flags = LogonSession->Flags;
+    Token->LogonSession->pDeviceMap = LogonSession->pDeviceMap;
+    InsertHeadList(&LogonSession->TokenList, &Token->LogonSession->TokenList);
+
+    /* Release the database lock and we're done */
+    KeReleaseGuardedMutex(&SepRmDbLock);
+    return STATUS_SUCCESS;
+}
+
+/**
+ * @brief
+ * Removes a logon session from an access token.
+ *
+ * @param[in,out] Token
+ * An access token whose logon session is to be removed from it.
+ *
+ * @return
+ * STATUS_SUCCESS is returned if the logon session has been removed from
+ * the token successfully. STATUS_NO_SUCH_LOGON_SESSION is returned when no logon
+ * session has been found with the matching ID of the token and as such
+ * we've failed to remove the logon session from the token.
+ */
+NTSTATUS
+NTAPI
+SepRmRemoveLogonSessionFromToken(
+    _Inout_ PTOKEN Token)
+{
+    PSEP_LOGON_SESSION_REFERENCES LogonSession;
+    PAGED_CODE();
+
+    /* Ensure that our token is not some plain garbage */
+    ASSERT(Token);
+
+    /* Acquire the database lock */
+    KeAcquireGuardedMutex(&SepRmDbLock);
+
+    for (LogonSession = SepLogonSessions;
+         LogonSession != NULL;
+         LogonSession = LogonSession->Next)
+    {
+        /*
+         * Remove the logon session only when the IDs of the token and the
+         * logon match.
+         */
+        if (RtlEqualLuid(&LogonSession->LogonId, &Token->AuthenticationId))
+        {
+            break;
+        }
+    }
+
+    /* They don't match */
+    if (LogonSession == NULL)
+    {
+        DPRINT1("SepRmRemoveLogonSessionFromToken(): Couldn't remove the logon session from the access token!\n");
+        KeReleaseGuardedMutex(&SepRmDbLock);
+        return STATUS_NO_SUCH_LOGON_SESSION;
+    }
+
+    /* Now it's time to delete the logon session from the token */
+    RemoveEntryList(&Token->LogonSession->TokenList);
+    ExFreePoolWithTag(Token->LogonSession, TAG_LOGON_SESSION);
+
+    /* Release the database lock and we're done */
+    KeReleaseGuardedMutex(&SepRmDbLock);
+    return STATUS_SUCCESS;
+}
 
 static
 NTSTATUS
