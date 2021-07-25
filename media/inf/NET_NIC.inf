@@ -78,3 +78,7 @@ DisplayClassName = "Мережеві адаптери"
 
 [Strings.0427]
 DisplayClassName = "Tinklo adapteriai"
+
+[Strings.0816]
+ReactOS = "Equipa ReactOS"
+DisplayClassName = "Adaptadores de rede"

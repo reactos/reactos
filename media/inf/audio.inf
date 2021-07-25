@@ -110,3 +110,7 @@ AUDIOClassName = "Garso, vaizdo ir žaidimu irenginiai"
 
 [Strings.0804]
 AUDIOClassName = "音视频控制器"
+
+[Strings.0816]
+ReactOS = "Equipa ReactOS"
+AUDIOClassName = "Controladores de som, vídeo e jogos"

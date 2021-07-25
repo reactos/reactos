@@ -170,3 +170,10 @@ VGA.DeviceDesc = "Su VGA suderinama vaizdo plokštė"
 [Strings.0804]
 StdMfg = "(标准显示适配器)"
 VGA.DeviceDesc = "VGA 兼容显示卡"
+
+[Strings.0816]
+ReactOS = "Equipa ReactOS"
+DisplayClassName = "Adaptadores de vídeo"
+
+StdMfg = "(Adaptador de vídeo padrão)"
+VGA.DeviceDesc = "Adaptador de vídeo compatível com VGA"

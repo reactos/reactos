@@ -161,3 +161,9 @@ GenericMfg = "(Standartiniai diskelių įrenginių valdikliai)"
 [Strings.0804]
 GenericMfg = "(通用软盘控制器)"
 *PNP0700.DeviceDesc = "通用软盘控制器"
+
+[Strings.0816]
+ReactOS = "Equipa ReactOS"
+FDCClassName = "Unidades de disquete"
+GenericMfg = "(Unidades de disquete padrão)"
+*PNP0700.DeviceDesc = "Controlador de disquete padrão"

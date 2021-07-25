@@ -113,3 +113,10 @@ Floppy.DeviceDesc = "Genel Disket Sürücüsü"
 [Strings.0804]
 GenericMfg = "(通用软盘驱动器)"
 Floppy.DeviceDesc = "通用软盘驱动器"
+
+[Strings.0816]
+ReactOS = "Equipa ReactOS"
+
+FloppyClassName = "Controlador disquete"
+GenericMfg = "(Controlador disquete Genérico)"
+Floppy.DeviceDesc = "Controlador disquete Genérico"
