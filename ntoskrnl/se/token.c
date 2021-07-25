@@ -865,6 +865,15 @@ SepDuplicateToken(
         goto Quit;
     }
 
+    /* Insert the referenced logon session into the token */
+    Status = SepRmInsertLogonSessionIntoToken(AccessToken);
+    if (!NT_SUCCESS(Status))
+    {
+        /* Failed to insert the logon session into the token, bail out */
+        DPRINT1("SepRmInsertLogonSessionIntoToken() failed (Status 0x%lx)\n", Status);
+        goto Quit;
+    }
+
     /* Assign the data that reside in the TOKEN's variable information area */
     AccessToken->VariableLength = VariableLength;
     EndMem = (PVOID)&AccessToken->VariablePart;
@@ -1164,9 +1173,22 @@ VOID
 NTAPI
 SepDeleteToken(PVOID ObjectBody)
 {
+    NTSTATUS Status;
     PTOKEN AccessToken = (PTOKEN)ObjectBody;
 
     DPRINT("SepDeleteToken()\n");
+
+    /* Remove the referenced logon session from token */
+    if (AccessToken->LogonSession)
+    {
+        Status = SepRmRemoveLogonSessionFromToken(AccessToken);
+        if (!NT_SUCCESS(Status))
+        {
+            /* Something seriously went wrong */
+            DPRINT1("SepDeleteToken(): Failed to remove the logon session from token (Status: 0x%lx)\n", Status);
+            return;
+        }
+    }
 
     /* Dereference the logon session */
     if ((AccessToken->TokenFlags & TOKEN_SESSION_NOT_REFERENCED) == 0)
@@ -1356,6 +1378,15 @@ SepCreateToken(
         DPRINT1("SepRmReferenceLogonSession() failed (Status 0x%lx)\n", Status);
         /* Set the flag for proper cleanup by the delete procedure */
         AccessToken->TokenFlags |= TOKEN_SESSION_NOT_REFERENCED;
+        goto Quit;
+    }
+
+    /* Insert the referenced logon session into the token */
+    Status = SepRmInsertLogonSessionIntoToken(AccessToken);
+    if (!NT_SUCCESS(Status))
+    {
+        /* Failed to insert the logon session into the token, bail out */
+        DPRINT1("SepRmInsertLogonSessionIntoToken() failed (Status 0x%lx)\n", Status);
         goto Quit;
     }
 
@@ -3299,14 +3330,20 @@ NtSetInformationToken(
                     if (OldTokenFlags == Token->TokenFlags)
                         SessionReference = ULONG_MAX;
 
+                    /*
+                     * Otherwise if the flag was never set but just for this first time then
+                     * remove the referenced logon session data from the token and dereference
+                     * the logon session when needed. 
+                     */
+                    if (SessionReference == 0)
+                    {
+                        SepRmRemoveLogonSessionFromToken(Token);
+                        SepRmDereferenceLogonSession(&Token->AuthenticationId);
+                    }
+
                     /* Unlock the token */
                     SepReleaseTokenLock(Token);
                 }
-
-                /* Dereference the logon session if needed */
-                if (SessionReference == 0)
-                    SepRmDereferenceLogonSession(&Token->AuthenticationId);
-
                 break;
             }
 
