@@ -1017,7 +1017,7 @@ LPVOID APIENTRY Imm32HeapAlloc(DWORD dwFlags, DWORD dwBytes)
 {
     if (!g_hImm32Heap)
     {
-        g_hImm32Heap = GetProcessHeap(); // FIXME: Use TEB
+        g_hImm32Heap = RtlGetProcessHeap();
         if (g_hImm32Heap == NULL)
             return NULL;
     }
@@ -1076,7 +1076,7 @@ PCLIENTIMC WINAPI ImmLockClientImc(HIMC hImc)
     }
     else
     {
-        if (pClientImc->dwFlags & CLIENTIMC_DISABLED)
+        if (pClientImc->dwFlags & CLIENTIMC_UNKNOWN1)
             return NULL;
     }
 
@@ -1092,7 +1092,7 @@ VOID WINAPI ImmUnlockClientImc(PCLIENTIMC pClientImc)
     TRACE("ImmUnlockClientImc(%p)\n", pClientImc);
 
     cLocks = InterlockedDecrement(&pClientImc->cLockObj);
-    if (cLocks != 0 || (pClientImc->dwFlags & CLIENTIMC_DISABLED))
+    if (cLocks != 0 || !(pClientImc->dwFlags & CLIENTIMC_UNKNOWN1))
         return;
 
     hImc = pClientImc->hImc;
