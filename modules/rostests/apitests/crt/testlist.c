@@ -34,6 +34,7 @@ extern void func___getmainargs(void);
 
 extern void func_static_construct(void);
 extern void func_static_init(void);
+extern void func_crtdata(void);
 
 const struct test winetest_testlist[] =
 {
@@ -59,6 +60,7 @@ const struct test winetest_testlist[] =
 #if defined(TEST_STATIC_CRT)
 #elif defined(TEST_MSVCRT)
     { "atexit", func_atexit },
+    { "crtdata", func_crtdata },
 #if defined(_M_IX86)
     { "__getmainargs", func___getmainargs },
 #elif defined(_M_ARM)

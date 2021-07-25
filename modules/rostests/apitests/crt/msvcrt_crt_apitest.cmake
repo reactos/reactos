@@ -1261,6 +1261,7 @@ list(APPEND SOURCE_MSVCRT
 #    wprintf_s.c
 #    wscanf.c
 #    wscanf_s.c
+    crtdata.c
     static_construct.cpp
     static_init.c
 )
