@@ -854,8 +854,7 @@ SepDuplicateToken(
 
     AccessToken->TokenFlags = Token->TokenFlags & ~TOKEN_SESSION_NOT_REFERENCED;
 
-    /* Copy and reference the logon session */
-    // RtlCopyLuid(&AccessToken->AuthenticationId, &Token->AuthenticationId);
+    /* Reference the logon session */
     Status = SepRmReferenceLogonSession(&AccessToken->AuthenticationId);
     if (!NT_SUCCESS(Status))
     {
