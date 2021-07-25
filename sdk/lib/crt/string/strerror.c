@@ -76,7 +76,7 @@ __syserr35, __syserr36, __syserr37, __syserr38, __syserr39,
 __syserr40, __syserr41, __syserr42
 };
 
-int _sys_nerr = sizeof(_sys_errlist) / sizeof(_sys_errlist[0]) - 1;
+int _sys_nerr = sizeof(_sys_errlist) / sizeof(_sys_errlist[0]);
 
 /*********************************************************************
  *		strerror (MSVCRT.@)
