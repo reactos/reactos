@@ -38,6 +38,7 @@ static const char* Exception2Str(DWORD code)
     case EXCEPTION_GUARD_PAGE: return "EXCEPTION_GUARD_PAGE";
     case EXCEPTION_INVALID_HANDLE: return "EXCEPTION_INVALID_HANDLE";
     case EXCEPTION_WINE_STUB: return "EXCEPTION_WINE_STUB";
+    case STATUS_ASSERTION_FAILURE: return "STATUS_ASSERTION_FAILURE";
     }
 
     return "--";
