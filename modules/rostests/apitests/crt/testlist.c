@@ -5,6 +5,7 @@
 
 #if defined(TEST_MSVCRT)
 extern void func___rt_div(void);
+extern void func___fto64(void);
 extern void func__vscprintf(void);
 extern void func__vscwprintf(void);
 extern void func_atexit(void);
@@ -62,6 +63,7 @@ const struct test winetest_testlist[] =
     { "__getmainargs", func___getmainargs },
 #elif defined(_M_ARM)
     { "__rt_div", func___rt_div },
+    { "__fto64", func___fto64 },
 #endif
     { "_vscprintf", func__vscprintf },
     { "_vscwprintf", func__vscwprintf },

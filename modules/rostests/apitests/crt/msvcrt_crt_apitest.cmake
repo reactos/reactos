@@ -1374,6 +1374,7 @@ elseif(ARCH STREQUAL "amd64")
 elseif(ARCH STREQUAL "arm")
     list(APPEND SOURCE_MSVCRT
         __rt_div.c
+        __fto64.c
     )
 endif()
 
