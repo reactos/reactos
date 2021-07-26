@@ -1315,14 +1315,3 @@ SHGetAttributesFromDataObject(IDataObject *pdo,
     FIXME("SHGetAttributesFromDataObject() stub\n");
     return E_NOTIMPL;
 }
-
-/*
- * Unimplemented
- */
-EXTERN_C HINSTANCE
-WINAPI
-SHGetShellStyleHInstance(VOID)
-{
-    FIXME("SHGetShellStyleHInstance() stub\n");
-    return NULL;
-}

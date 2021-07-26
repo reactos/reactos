@@ -3,6 +3,7 @@
  *
  * Copyright 1998 Marcus Meissner
  * Copyright 1998 Juergen Schmied (jsch)  *  <juergen.schmied@metronet.de>
+ * Copyright 2021 Oleg Dubinskiy (oleg-dubinskiy)  *  <oleg.dubinskij2013@yandex.ua>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -103,6 +104,106 @@ RegenerateUserEnvironment(LPVOID *lpEnvironment, BOOL bUpdateSelf)
     CloseHandle(hUserToken);
 
     return bResult;
+}
+
+/*
+ * Implemented
+ */
+EXTERN_C HINSTANCE
+WINAPI
+SHGetShellStyleHInstance(VOID)
+{
+    HINSTANCE hShellStyle = NULL;
+    WCHAR ThemePath[MAX_PATH] = {0}, *ShellStylePath = NULL, ExpandedShellStylePath[MAX_PATH] = {0}, ColorName[MAX_PATH] = {0};
+    HRESULT hr;
+
+    /* Get a path and a color scheme name of the current visual style */
+    hr = GetCurrentThemeName(ThemePath,
+                             MAX_PATH,
+                             ColorName,
+                             MAX_PATH,
+                             NULL,
+                             MAX_PATH);
+    if (FAILED(hr))
+    {
+        ERR("GetCurrentThemeName() failed with 0x%lx\n", hr);
+        goto next;
+    }
+
+    TRACE("Theme path is %ls\n", ThemePath);
+
+    TRACE("Color name is %ls\n", ColorName);
+
+    /* Remove a visual style filename from the string */
+    PathRemoveFileSpecW(ThemePath);
+
+    TRACE("Theme directory is %ls\n", ThemePath);
+
+    /* Add a path to shellstyle.dll */
+    lstrcatW(ThemePath, L"\\shell\\");
+    lstrcatW(ThemePath, ColorName);
+    lstrcatW(ThemePath, L"\\shellstyle.dll");
+
+    TRACE("Shellstyle path is %ls\n", ThemePath);
+
+    /* Create shellstyle path */
+    ShellStylePath = (LPWSTR)LocalAlloc(LPTR, sizeof(ThemePath));
+    hr = StringCchPrintfW(ShellStylePath,
+                          _countof(ThemePath),
+                          ThemePath);
+    if (FAILED(hr))
+    {
+        ERR("StringCchPrintfW() failed with 0x%lx\n", hr);
+        goto next;
+    }
+
+    /* Expand environment variable in the path, if any */
+    if (!ExpandEnvironmentStringsW(ShellStylePath,
+                                   ExpandedShellStylePath,
+                                   _countof(ExpandedShellStylePath)))
+    {
+        ERR("ExpandEnvironmentStringsW(%ls) failed\n", ShellStylePath);
+        goto next;
+    }
+
+next:
+
+    if (lstrlenW(ExpandedShellStylePath) != 0)
+    {
+        /* First, try expanded path, if it exists */
+        hShellStyle = LoadLibraryW(ExpandedShellStylePath);
+        if (hShellStyle == NULL)
+        {
+            ERR("LoadLibraryW(%ls) failed\n", ExpandedShellStylePath);
+            return NULL;
+        }
+    }
+    else if (ShellStylePath)
+    {
+        /* Next, try non-expanded path, if expanded was not created */
+        hShellStyle = LoadLibraryW(ShellStylePath);
+        if (hShellStyle == NULL)
+        {
+            ERR("LoadLibraryW(%ls) failed\n", ShellStylePath);
+            LocalFree(ShellStylePath);
+            return NULL;
+        }
+        LocalFree(ShellStylePath);
+    }
+    else if (lstrlenW(ExpandedShellStylePath) == 0 && !ShellStylePath)
+    {
+        /* Only if no any paths exist (assuming current visual style has no shellstyle.dll),
+         * then just try to load the one from system32 directory */
+        hShellStyle = LoadLibraryW(L"shellstyle.dll");
+        if (hShellStyle == NULL)
+        {
+            ERR("LoadLibraryW() failed\n");
+            return NULL;
+        }
+    }
+
+    /* we're done */
+    return hShellStyle;
 }
 
 /**************************************************************************
