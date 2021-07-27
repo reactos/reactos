@@ -111,7 +111,7 @@ Imm32NotifyAction(HIMC hIMC, HWND hwnd, DWORD dwAction, DWORD_PTR dwIndex, DWORD
     return TRUE;
 }
 
-HKL WINAPI ImmLoadLayout(DWORD dwLayout, PIMEINFOEX pImeInfoEx)
+HKL WINAPI ImmLoadLayout(HKL hKL, PIMEINFOEX pImeInfoEx)
 {
     DWORD cbData;
     UNICODE_STRING UnicodeString;
@@ -120,15 +120,15 @@ HKL WINAPI ImmLoadLayout(DWORD dwLayout, PIMEINFOEX pImeInfoEx)
     NTSTATUS Status;
     WCHAR szLayout[MAX_PATH];
 
-    TRACE("ImmLoadLayout(0x%08lX, %p)\n", dwLayout, pImeInfoEx);
+    TRACE("ImmLoadLayout(%p, %p)\n", hKL, pImeInfoEx);
 
-    if (IS_IME_HKL(dwLayout) ||
+    if (IS_IME_HKL(hKL) ||
         !g_psi || (g_psi->dwSRVIFlags & SRVINFO_METRICS) == 0 ||
         ((PW32CLIENTINFO)NtCurrentTeb()->Win32ClientInfo)->W32ClientInfo[0] & 2)
     {
         UnicodeString.Buffer = szLayout;
         UnicodeString.MaximumLength = sizeof(szLayout);
-        Status = RtlIntegerToUnicodeString(dwLayout, 16, &UnicodeString);
+        Status = RtlIntegerToUnicodeString((DWORD_PTR)hKL, 16, &UnicodeString);
         if (!NT_SUCCESS(Status))
             return NULL;
 
@@ -153,13 +153,13 @@ HKL WINAPI ImmLoadLayout(DWORD dwLayout, PIMEINFOEX pImeInfoEx)
         error = RegQueryValueExW(hLayoutKey, L"Ime File", 0, 0,
                                  (LPBYTE)pImeInfoEx->wszImeFile, &cbData);
         if (error)
-            dwLayout = 0;
+            hKL = NULL;
     }
 
     RegCloseKey(hLayoutKey);
     if (hLayoutsKey)
         RegCloseKey(hLayoutsKey);
-    return (HKL)(DWORD_PTR)dwLayout;
+    return hKL;
 }
 
 typedef struct _tagImmHkl{
