@@ -146,6 +146,7 @@ HKL WINAPI ImmLoadLayout(HKL hKL, PIMEINFOEX pImeInfoEx)
     if (error)
     {
         ERR("RegOpenKeyW error: 0x%08lX\n", error);
+        hKL = NULL;
     }
     else
     {
