@@ -15,18 +15,6 @@
 extern "C" {
 #endif
 
-#ifndef NULL
-#ifdef __cplusplus
-#ifndef _WIN64
-#define NULL 0
-#else
-#define NULL 0LL
-#endif  /* W64 */
-#else
-#define NULL ((void *)0)
-#endif
-#endif
-
 #ifndef MB_LEN_MAX
 #define MB_LEN_MAX 5
 #endif

@@ -66,14 +66,6 @@ extern "C" {
 #define _SYS_OPEN 20
 #define TMP_MAX 32767
 
-#ifndef NULL
-#ifdef __cplusplus
-#define NULL 0
-#else
-#define NULL ((void *)0)
-#endif
-#endif
-
 #ifndef _OFF_T_DEFINED
 #define _OFF_T_DEFINED
 #ifndef _OFF_T_

@@ -9,6 +9,14 @@
 #ifndef _INC_CRTDEFS
 #define _INC_CRTDEFS
 
+#ifndef NULL
+#ifdef __cplusplus
+#define NULL 0
+#else
+#define NULL ((void *)0)
+#endif
+#endif
+
 #ifdef _USE_32BIT_TIME_T
 #ifdef _WIN64
 #error You cannot use 32-bit time_t (_USE_32BIT_TIME_T) with _WIN64

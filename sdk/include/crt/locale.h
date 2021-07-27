@@ -14,14 +14,6 @@
 extern "C" {
 #endif
 
-#ifndef NULL
-#ifdef __cplusplus
-#define NULL 0
-#else
-#define NULL ((void *)0)
-#endif
-#endif
-
 #define LC_ALL 0
 #define LC_COLLATE 1
 #define LC_CTYPE 2

@@ -128,14 +128,6 @@ extern "C" {
 #define _WFINDDATA_T_DEFINED
 #endif /* !_WFINDDATA_T_DEFINED */
 
-#ifndef NULL
-#ifdef __cplusplus
-#define NULL 0
-#else
-#define NULL ((void *)0)
-#endif
-#endif
-
 #ifndef _CRT_CTYPEDATA_DEFINED
 # define _CRT_CTYPEDATA_DEFINED
 # ifndef _CTYPE_DISABLE_MACROS
