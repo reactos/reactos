@@ -3131,13 +3131,13 @@ BOOL WINAPI ImmSetStatusWindowPos(HIMC hIMC, LPPOINT lpptPos)
 {
     LPINPUTCONTEXT pIC;
     HWND hWnd;
-    DWORD idImeThread, idThread;
+    DWORD dwImeThreadId, dwThreadId;
 
     TRACE("ImmSetStatusWindowPos(%p, {%ld, %ld})\n", hIMC, lpptPos->x, lpptPos->y);
 
-    idImeThread = Imm32QueryInputContext(hIMC, 1);
-    idThread = GetCurrentThreadId();
-    if (idImeThread != idThread)
+    dwImeThreadId = Imm32QueryInputContext(hIMC, 1);
+    dwThreadId = GetCurrentThreadId();
+    if (dwImeThreadId != dwThreadId)
         return FALSE;
 
     pIC = ImmLockIMC(hIMC);
