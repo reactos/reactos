@@ -2609,23 +2609,29 @@ BOOL WINAPI ImmIsUIMessageW(
 BOOL WINAPI ImmNotifyIME(
   HIMC hIMC, DWORD dwAction, DWORD dwIndex, DWORD dwValue)
 {
-    InputContextData *data = get_imc_data(hIMC);
+    DWORD idImeThread, idThread;
+    HKL hKL;
+    PIMEDPI pImeDpi;
+    BOOL ret;
 
-    TRACE("(%p, %d, %d, %d)\n",
-        hIMC, dwAction, dwIndex, dwValue);
+    TRACE("ImmNotifyIME(%p, %d, %d, %d)\n", hIMC, dwAction, dwIndex, dwValue);
 
-    if (hIMC == NULL)
+    if (hIMC)
     {
-        SetLastError(ERROR_SUCCESS);
-        return FALSE;
+        idImeThread = Imm32QueryWindow(hIMC, 1);
+        idThread = GetCurrentThreadId();
+        if (idImeThread != idThread)
+            return FALSE;
     }
 
-    if (!data || ! data->immKbd->pNotifyIME)
-    {
+    hKL = GetKeyboardLayout(0);
+    pImeDpi = ImmLockImeDpi(hKL);
+    if (pImeDpi == NULL)
         return FALSE;
-    }
 
-    return data->immKbd->pNotifyIME(hIMC,dwAction,dwIndex,dwValue);
+    ret = pImeDpi->NotifyIME(hIMC, dwAction, dwIndex, dwValue);
+    ImmUnlockImeDpi(pImeDpi);
+    return ret;
 }
 
 /***********************************************************************
