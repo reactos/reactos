@@ -117,7 +117,7 @@ HKL WINAPI ImmLoadLayout(DWORD dwLayout, PIMEINFOEX pImeInfoEx)
     UNICODE_STRING UnicodeString;
     HKEY hLayoutKey = NULL, hLayoutsKey = NULL;
     LONG error;
-    HRESULT hr;
+    NTSTATUS Status;
     WCHAR szLayout[MAX_PATH];
 
     TRACE("ImmLoadLayout(0x%08lX, %p)\n", dwLayout, pImeInfoEx);
@@ -128,8 +128,8 @@ HKL WINAPI ImmLoadLayout(DWORD dwLayout, PIMEINFOEX pImeInfoEx)
     {
         UnicodeString.Buffer = szLayout;
         UnicodeString.MaximumLength = sizeof(szLayout);
-        hr = RtlIntegerToUnicodeString(dwLayout, 16, &UnicodeString);
-        if (FAILED(hr))
+        Status = RtlIntegerToUnicodeString(dwLayout, 16, &UnicodeString);
+        if (!NT_SUCCESS(Status))
             return NULL;
 
         error = RegOpenKeyW(HKEY_LOCAL_MACHINE, REGKEY_KEYBOARD_LAYOUTS, &hLayoutsKey);
