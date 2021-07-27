@@ -2933,13 +2933,13 @@ BOOL WINAPI ImmSetCompositionStringW(
 BOOL WINAPI ImmSetCompositionWindow(
   HIMC hIMC, LPCOMPOSITIONFORM lpCompForm)
 {
-    DWORD idImeThread, idThread;
+    DWORD dwImeThreadId, dwThreadId;
     LPINPUTCONTEXT pIC;
     HWND hWnd;
 
-    idImeThread = NtUserQueryInputContext(hIMC, 1);
-    idThread = GetCurrentThreadId();
-    if (idImeThread != idThread)
+    dwImeThreadId = NtUserQueryInputContext(hIMC, 1);
+    dwThreadId = GetCurrentThreadId();
+    if (dwImeThreadId != dwThreadId)
         return FALSE;
 
     pIC = ImmLockIMC(hIMC);
