@@ -2614,7 +2614,7 @@ BOOL WINAPI ImmNotifyIME(
     PIMEDPI pImeDpi;
     BOOL ret;
 
-    TRACE("ImmNotifyIME(%p, %d, %d, %d)\n", hIMC, dwAction, dwIndex, dwValue);
+    TRACE("ImmNotifyIME(%p, %lu, %lu, %lu)\n", hIMC, dwAction, dwIndex, dwValue);
 
     if (hIMC)
     {
