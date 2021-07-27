@@ -3129,25 +3129,27 @@ BOOL WINAPI ImmSetOpenStatus(HIMC hIMC, BOOL fOpen)
  */
 BOOL WINAPI ImmSetStatusWindowPos(HIMC hIMC, LPPOINT lpptPos)
 {
-    InputContextData *data = get_imc_data(hIMC);
+    LPINPUTCONTEXT pIC;
+    HWND hwnd;
+    DWORD idImeThread, idThread;
 
-    TRACE("(%p, %p)\n", hIMC, lpptPos);
-
-    if (!data || !lpptPos)
-    {
-        SetLastError(ERROR_INVALID_HANDLE);
-        return FALSE;
-    }
-
-    if (IMM_IsCrossThreadAccess(NULL, hIMC))
+    idImeThread = Imm32QueryInputContext(hIMC, 1);
+    idThread = GetCurrentThreadId();
+    if (idImeThread != idThread)
         return FALSE;
 
-    TRACE("\t%s\n", wine_dbgstr_point(lpptPos));
+    pIC = ImmLockIMC(hIMC);
+    if (!pIC)
+        return FALSE;
 
-    data->IMC.ptStatusWndPos = *lpptPos;
-    ImmNotifyIME( hIMC, NI_CONTEXTUPDATED, 0, IMC_SETSTATUSWINDOWPOS);
-    ImmInternalSendIMENotify(data, IMN_SETSTATUSWINDOWPOS, 0);
+    hwnd = pIC->hWnd;
+    pIC->ptStatusWndPos = *lpptPos;
+    pIC->fdwInit |= INIT_STATUSWNDPOS;
 
+    ImmUnlockIMC(hIMC);
+
+    Imm32NotifyAction(hIMC, hwnd, NI_CONTEXTUPDATED, 0,
+                      IMC_SETSTATUSWINDOWPOS, IMN_SETSTATUSWINDOWPOS, 0);
     return TRUE;
 }
 
