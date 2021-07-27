@@ -2618,7 +2618,7 @@ BOOL WINAPI ImmNotifyIME(
 
     if (hIMC)
     {
-        dwImeThreadId = Imm32QueryWindow(hIMC, 1);
+        dwImeThreadId = Imm32QueryWindow(hIMC, QUERY_WINDOW_UNIQUE_THREAD_ID);
         dwThreadId = GetCurrentThreadId();
         if (dwImeThreadId != dwThreadId)
             return FALSE;
