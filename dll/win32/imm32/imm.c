@@ -2609,7 +2609,7 @@ BOOL WINAPI ImmIsUIMessageW(
 BOOL WINAPI ImmNotifyIME(
   HIMC hIMC, DWORD dwAction, DWORD dwIndex, DWORD dwValue)
 {
-    DWORD idImeThread, idThread;
+    DWORD dwImeThreadId, dwThreadId;
     HKL hKL;
     PIMEDPI pImeDpi;
     BOOL ret;
@@ -2618,9 +2618,9 @@ BOOL WINAPI ImmNotifyIME(
 
     if (hIMC)
     {
-        idImeThread = Imm32QueryWindow(hIMC, 1);
-        idThread = GetCurrentThreadId();
-        if (idImeThread != idThread)
+        dwImeThreadId = Imm32QueryWindow(hIMC, 1);
+        dwThreadId = GetCurrentThreadId();
+        if (dwImeThreadId != dwThreadId)
             return FALSE;
     }
 
