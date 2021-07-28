@@ -4,6 +4,7 @@
 #include <apitest.h>
 
 #if defined(TEST_MSVCRT)
+extern void func___rt_div(void);
 extern void func__vscprintf(void);
 extern void func__vscwprintf(void);
 extern void func_atexit(void);
@@ -59,6 +60,8 @@ const struct test winetest_testlist[] =
     { "atexit", func_atexit },
 #if defined(_M_IX86)
     { "__getmainargs", func___getmainargs },
+#elif defined(_M_ARM)
+    { "__rt_div", func___rt_div },
 #endif
     { "_vscprintf", func__vscprintf },
     { "_vscwprintf", func__vscwprintf },
