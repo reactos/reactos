@@ -2997,38 +2997,28 @@ BOOL WINAPI ImmSetCompositionStringW(
 BOOL WINAPI ImmSetCompositionWindow(
   HIMC hIMC, LPCOMPOSITIONFORM lpCompForm)
 {
-    BOOL reshow = FALSE;
-    InputContextData *data = get_imc_data(hIMC);
+    DWORD dwImeThreadId, dwThreadId;
+    LPINPUTCONTEXT pIC;
+    HWND hWnd;
 
-    TRACE("(%p, %p)\n", hIMC, lpCompForm);
-    if (lpCompForm)
-        TRACE("\t%x, %s, %s\n", lpCompForm->dwStyle,
-              wine_dbgstr_point(&lpCompForm->ptCurrentPos),
-              wine_dbgstr_rect(&lpCompForm->rcArea));
-
-    if (!data)
-    {
-        SetLastError(ERROR_INVALID_HANDLE);
-        return FALSE;
-    }
-
-    if (IMM_IsCrossThreadAccess(NULL, hIMC))
+    dwImeThreadId = NtUserQueryInputContext(hIMC, 1);
+    dwThreadId = GetCurrentThreadId();
+    if (dwImeThreadId != dwThreadId)
         return FALSE;
 
-    data->IMC.cfCompForm = *lpCompForm;
+    pIC = ImmLockIMC(hIMC);
+    if (pIC == NULL)
+        return FALSE;
 
-    if (IsWindowVisible(data->immKbd->UIWnd))
-    {
-        reshow = TRUE;
-        ShowWindow(data->immKbd->UIWnd,SW_HIDE);
-    }
+    pIC->cfCompForm = *lpCompForm;
+    pIC->fdwInit |= INIT_COMPFORM;
 
-    /* FIXME: this is a partial stub */
+    hWnd = pIC->hWnd;
 
-    if (reshow)
-        ShowWindow(data->immKbd->UIWnd,SW_SHOWNOACTIVATE);
+    ImmUnlockIMC(hIMC);
 
-    ImmInternalSendIMENotify(data, IMN_SETCOMPOSITIONWINDOW, 0);
+    Imm32NotifyAction(hIMC, hWnd, NI_CONTEXTUPDATED, 0,
+                      IMC_SETCOMPOSITIONWINDOW, IMN_SETCOMPOSITIONWINDOW, 0);
     return TRUE;
 }
 
