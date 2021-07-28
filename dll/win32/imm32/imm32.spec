@@ -69,7 +69,7 @@
 @ stdcall ImmIsUIMessageA(long long long long)
 @ stdcall ImmIsUIMessageW(long long long long)
 @ stdcall -stub ImmLoadIME(long)
-@ stdcall -stub ImmLoadLayout(long ptr)
+@ stdcall ImmLoadLayout(ptr ptr)
 @ stdcall ImmLockClientImc(ptr)
 @ stdcall ImmLockIMC(ptr)
 @ stdcall ImmLockIMCC(ptr)

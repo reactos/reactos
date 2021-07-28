@@ -48,8 +48,14 @@ WINE_DEFAULT_DEBUG_CHANNEL(imm);
 #define IMM_INIT_MAGIC 0x19650412
 #define IMM_INVALID_CANDFORM ULONG_MAX
 
+#define REGKEY_KEYBOARD_LAYOUTS \
+    L"System\\CurrentControlSet\\Control\\Keyboard Layouts"
+#define REGKEY_IMM \
+    L"Software\\Microsoft\\Windows NT\\CurrentVersion\\IMM"
+
 RTL_CRITICAL_SECTION g_csImeDpi;
 PIMEDPI g_pImeDpiList = NULL;
+PSERVERINFO g_psi = NULL;
 
 BOOL WINAPI User32InitializeImmEntryTable(DWORD);
 
@@ -103,6 +109,58 @@ Imm32NotifyAction(HIMC hIMC, HWND hwnd, DWORD dwAction, DWORD_PTR dwIndex, DWORD
         SendMessageW(hwnd, WM_IME_NOTIFY, dwCommand, dwData);
 
     return TRUE;
+}
+
+HKL WINAPI ImmLoadLayout(HKL hKL, PIMEINFOEX pImeInfoEx)
+{
+    DWORD cbData;
+    UNICODE_STRING UnicodeString;
+    HKEY hLayoutKey = NULL, hLayoutsKey = NULL;
+    LONG error;
+    NTSTATUS Status;
+    WCHAR szLayout[MAX_PATH];
+
+    TRACE("ImmLoadLayout(%p, %p)\n", hKL, pImeInfoEx);
+
+    if (IS_IME_HKL(hKL) ||
+        !g_psi || (g_psi->dwSRVIFlags & SRVINFO_METRICS) == 0 ||
+        ((PW32CLIENTINFO)NtCurrentTeb()->Win32ClientInfo)->W32ClientInfo[0] & 2)
+    {
+        UnicodeString.Buffer = szLayout;
+        UnicodeString.MaximumLength = sizeof(szLayout);
+        Status = RtlIntegerToUnicodeString((DWORD_PTR)hKL, 16, &UnicodeString);
+        if (!NT_SUCCESS(Status))
+            return NULL;
+
+        error = RegOpenKeyW(HKEY_LOCAL_MACHINE, REGKEY_KEYBOARD_LAYOUTS, &hLayoutsKey);
+        if (error)
+            return NULL;
+
+        error = RegOpenKeyW(hLayoutsKey, szLayout, &hLayoutKey);
+    }
+    else
+    {
+        error = RegOpenKeyW(HKEY_LOCAL_MACHINE, REGKEY_IMM, &hLayoutKey);
+    }
+
+    if (error)
+    {
+        ERR("RegOpenKeyW error: 0x%08lX\n", error);
+        hKL = NULL;
+    }
+    else
+    {
+        cbData = sizeof(pImeInfoEx->wszImeFile);
+        error = RegQueryValueExW(hLayoutKey, L"Ime File", 0, 0,
+                                 (LPBYTE)pImeInfoEx->wszImeFile, &cbData);
+        if (error)
+            hKL = NULL;
+    }
+
+    RegCloseKey(hLayoutKey);
+    if (hLayoutsKey)
+        RegCloseKey(hLayoutsKey);
+    return hKL;
 }
 
 typedef struct _tagImmHkl{
