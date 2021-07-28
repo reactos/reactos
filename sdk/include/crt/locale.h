@@ -113,6 +113,16 @@ extern "C" {
   __free_locale(
     _In_opt_ _locale_t _Locale);
 
+_CRTIMP
+unsigned int
+__cdecl
+___lc_collate_cp_func(void);
+
+_CRTIMP
+unsigned int
+__cdecl
+___lc_codepage_func(void);
+
 #ifndef _WLOCALE_DEFINED
 #define _WLOCALE_DEFINED
   _Check_return_opt_

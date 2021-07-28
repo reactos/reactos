@@ -24,10 +24,6 @@ extern "C" {
 #define _HEAP_MAXREQ 0xFFFFFFE0
 #endif
 
-#ifndef _STATIC_ASSERT
-#define _STATIC_ASSERT(expr) extern char (*static_assert(void)) [(expr) ? 1 : -1]
-#endif
-
 /* Return codes for _heapwalk()  */
 #define _HEAPEMPTY (-1)
 #define _HEAPOK (-2)

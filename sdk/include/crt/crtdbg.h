@@ -81,11 +81,6 @@ extern "C" {
     size_t lTotalCount;
   } _CrtMemState;
 
-#ifndef _STATIC_ASSERT
-#define _STATIC_ASSERT(expr) extern char (*static_assert(void)) [(expr) ? 1 : -1]
-#endif
-
-
 // Debug reporting functions
 
 #ifdef _DEBUG

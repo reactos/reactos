@@ -114,6 +114,13 @@ extern "C" {
 
 #endif
 
+#if defined(_M_IX86) // newer Windows versions always have it
+_CRTIMP int* __cdecl __p__commode(void);
+#endif
+
+/* On newer Windows windows versions, (*__p__commode()) is used */
+extern _CRTIMP int _commode;
+
 #define _IOREAD 0x0001
 #define _IOWRT 0x0002
 
