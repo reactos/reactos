@@ -12,6 +12,7 @@ list(APPEND CRT_STARTUP_SOURCE
     startup/natstart.c
     startup/charmax.c
     startup/atonexit.c
+    startup/dllmain.c
     startup/pesect.c
     startup/tlsmcrt.c
     startup/tlsthrd.c
@@ -26,3 +27,16 @@ list(APPEND CRT_STARTUP_SOURCE
     startup/dllentry.c
     startup/reactos.c
 )
+
+if(MSVC)
+    list(APPEND CRT_STARTUP_SOURCE
+        startup/mscmain.c
+        startup/threadSafeInit.c
+    )
+else()
+    list(APPEND CRT_STARTUP_SOURCE
+        startup/gccmain.c
+        startup/pseudo-reloc.c
+        startup/pseudo-reloc-list.c
+    )
+endif()

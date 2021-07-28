@@ -73,6 +73,7 @@ elseif(ARCH STREQUAL "amd64")
 elseif(ARCH STREQUAL "arm")
     list(APPEND LIBCNTPR_MATH_SOURCE
         math/cos.c
+        math/floorf.c
         math/sin.c
         math/sqrt.c
         math/arm/__rt_sdiv.c
@@ -128,7 +129,6 @@ if(NOT ARCH STREQUAL "i386")
         math/cos.c
         math/coshf.c
         math/expf.c
-        math/floorf.c
         math/fmodf.c
         math/log10f.c
         math/modff.c
