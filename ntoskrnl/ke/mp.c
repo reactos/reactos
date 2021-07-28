@@ -35,9 +35,8 @@ KeStartAllProcessors()
     PVOID KernelStack;
     PVOID DPCStack;
     PAPINFO APInfo;
-    KPROCESSOR_STATE ProcessorState;
     KDESCRIPTOR GdtDesc, IdtDesc;
-
+    KPROCESSOR_STATE ProcessorState;
     __sgdt(&GdtDesc.Limit);
     __sidt(&IdtDesc.Limit);
 
@@ -48,7 +47,8 @@ KeStartAllProcessors()
     {
         (PVOID)APInfo = ExAllocatePool(NonPagedPool, APInfoSize);
         ASSERT(APInfo);
-
+        ProcessorState.SpecialRegisters.Cr3 = __readcr3();
+         ProcessorState.ContextFrame.Eip = (ULONG_PTR)KiSystemStartup;
         ProcessorCount++;
 
         //RtlCopyMemory(APInfo->Gdt, (PVOID)GdtDesc.Base, GdtDesc.Limit);
@@ -107,7 +107,7 @@ NTAPI
 KxInitAPProcessorState(
     _Out_ PKPROCESSOR_STATE ProcessorState)
     {
-
+        
     }
 #else
 VOID
@@ -115,6 +115,8 @@ NTAPI
 KxInitAPProcessorState(
     _Out_ PKPROCESSOR_STATE ProcessorState)
     {
+       /* Prep Cr Regsters */
+
 
     }
 #endif

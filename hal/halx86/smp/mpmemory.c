@@ -22,7 +22,7 @@ extern PVOID APSpinup;
 extern PVOID APSpinupEnd;
 extern UINT16 APJumpOffset;
 extern UINT16 PageTableLocation;
-
+extern PVOID BSPCr3;
 /* Pagetables specific */
 #define MM_PAGE_SIZE     4096
 #define MM_PAGE_SHIFT    12
@@ -55,6 +55,15 @@ HalpInitializeAPStub(PVOID APStubLocation)
     RtlCopyMemory(APJumppLoc, &APJumpOffset,  sizeof(APJumpOffset));
     RtlCopyMemory(APPageLoc, &PageTableLocation, sizeof(PageTableLocation));
 
+}
+
+VOID
+HalpCopyCR3(PVOID APStubLocation, UINT32 Cr3Value)
+{
+    PVOID BSPValueLoc;
+    DPRINT1("The Cr3 value in copy function is %X\n",Cr3Value);
+    BSPValueLoc = (PUSHORT)(((ULONG_PTR)APStubLocation) + ((ULONG_PTR)&BSPCr3 - (ULONG_PTR)&APEntry));
+    RtlCopyMemory(BSPValueLoc, &Cr3Value, sizeof(Cr3Value));
 }
 
 VOID
