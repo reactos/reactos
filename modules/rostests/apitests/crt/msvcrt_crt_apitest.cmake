@@ -1371,6 +1371,10 @@ elseif(ARCH STREQUAL "amd64")
     #    sinf.c
     #    sqrtf.c
     )
+elseif(ARCH STREQUAL "arm")
+    list(APPEND SOURCE_MSVCRT
+        __rt_div.c
+    )
 endif()
 
 # Startup code doesn't go together well with the static CRT... too much __imp_
