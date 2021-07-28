@@ -964,9 +964,9 @@ BOOL WINAPI ImmDestroyContext(HIMC hIMC)
 /***********************************************************************
  *		ImmDisableIME (IMM32.@)
  */
-BOOL WINAPI ImmDisableIME(DWORD idThread)
+BOOL WINAPI ImmDisableIME(DWORD dwThreadId)
 {
-    return NtUserDisableThreadIme(idThread);
+    return NtUserDisableThreadIme(dwThreadId);
 }
 
 /***********************************************************************
@@ -3142,16 +3142,16 @@ VOID WINAPI ImmUnlockImeDpi(PIMEDPI pImeDpi)
  */
 BOOL WINAPI ImmSetOpenStatus(HIMC hIMC, BOOL fOpen)
 {
-    DWORD idImeThread, idThread, dwConversion;
+    DWORD dwImeThreadId, dwThreadId, dwConversion;
     LPINPUTCONTEXT pIC;
     HWND hWnd;
     BOOL bHasChange = FALSE;
 
     TRACE("ImmSetOpenStatus(%p, %d)\n", hIMC, fOpen);
 
-    idImeThread = Imm32QueryInputContext(hIMC, 1);
-    idThread = GetCurrentThreadId();
-    if (idImeThread != idThread)
+    dwImeThreadId = Imm32QueryInputContext(hIMC, 1);
+    dwThreadId = GetCurrentThreadId();
+    if (dwImeThreadId != dwThreadId)
         return FALSE;
 
     pIC = ImmLockIMC(hIMC);
@@ -3726,7 +3726,7 @@ BOOL WINAPI ImmProcessKey(HWND hwnd, HKL hKL, UINT vKey, LPARAM lKeyData, DWORD 
 /***********************************************************************
 *		ImmDisableTextFrameService(IMM32.@)
 */
-BOOL WINAPI ImmDisableTextFrameService(DWORD idThread)
+BOOL WINAPI ImmDisableTextFrameService(DWORD dwThreadId)
 {
     FIXME("Stub\n");
     return FALSE;
@@ -3736,7 +3736,7 @@ BOOL WINAPI ImmDisableTextFrameService(DWORD idThread)
  *              ImmEnumInputContext(IMM32.@)
  */
 
-BOOL WINAPI ImmEnumInputContext(DWORD idThread, IMCENUMPROC lpfn, LPARAM lParam)
+BOOL WINAPI ImmEnumInputContext(DWORD dwThreadId, IMCENUMPROC lpfn, LPARAM lParam)
 {
     FIXME("Stub\n");
     return FALSE;
