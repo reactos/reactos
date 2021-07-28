@@ -182,6 +182,15 @@
 
 #define __crt_typefix(ctype)
 
+#ifndef _STATIC_ASSERT
+  #ifdef __cplusplus
+    #define _STATIC_ASSERT(expr) static_assert((expr), #expr)
+  #elif defined(__clang__) || defined(__GNUC__)
+    #define _STATIC_ASSERT(expr) _Static_assert((expr), #expr)
+  #else
+    #define _STATIC_ASSERT(expr) extern char (*__static_assert__(void)) [(expr) ? 1 : -1]
+  #endif
+#endif /* _STATIC_ASSERT */
 
 /** Deprecated ***************************************************************/
 
