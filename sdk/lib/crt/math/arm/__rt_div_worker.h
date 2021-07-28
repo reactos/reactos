@@ -87,7 +87,11 @@ __rt_div_worker(
     if (divisor > dividend)
     {
         result->data.quotient = 0;
-        result->data.modulus = divisor;
+#ifdef _SIGNED_DIV_
+        if (dividend_sign)
+            dividend = -(INT3264)dividend;
+#endif // _SIGNED_DIV_
+        result->data.modulus = dividend;
         return;
     }
 
