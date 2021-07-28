@@ -2,47 +2,13 @@
 include_directories(include/internal/mingw-w64)
 
 list(APPEND MSVCRTEX_SOURCE
-    startup/_matherr.c
-    startup/crtexe.c
-    startup/wcrtexe.c
-    startup/crt_handler.c
-    startup/crtdll.c
-    startup/_newmode.c
-    startup/wildcard.c
-    startup/tlssup.c
-    startup/mingw_helpers.c
-    startup/natstart.c
-    startup/charmax.c
-    startup/atonexit.c
-    startup/dllmain.c
-    startup/pesect.c
-    startup/tlsmcrt.c
-    startup/tlsthrd.c
-    startup/tlsmthread.c
-    startup/cinitexe.c
-    startup/gs_support.c
-    startup/dll_argv.c
-    startup/dllargv.c
-    startup/wdllargv.c
-    startup/crt0_c.c
-    startup/crt0_w.c
-    startup/dllentry.c
-    startup/reactos.c
+    ${CRT_STARTUP_SOURCE}
     misc/dbgrpt.cpp
     misc/fltused.c
     misc/isblank.c
     misc/iswblank.c
     misc/ofmt_stub.c
     stdio/acrt_iob_func.c)
-
-if(MSVC)
-    list(APPEND MSVCRTEX_SOURCE
-        startup/threadSafeInit.c)
-else()
-    list(APPEND MSVCRTEX_SOURCE
-        startup/pseudo-reloc.c
-        startup/pseudo-reloc-list.c)
-endif()
 
 if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
     # Clang performs some optimizations requiring those funtions
@@ -93,12 +59,6 @@ elseif(ARCH STREQUAL "arm")
         math/arm/__rt_srsh.s
         math/arm/__rt_udiv64.s
     )
-endif()
-
-if(MSVC)
-    list(APPEND MSVCRTEX_SOURCE startup/mscmain.c)
-else()
-    list(APPEND MSVCRTEX_SOURCE startup/gccmain.c)
 endif()
 
 set_source_files_properties(${MSVCRTEX_ASM_SOURCE} PROPERTIES COMPILE_DEFINITIONS "_DLL;_MSVCRTEX_")
