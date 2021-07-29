@@ -1326,15 +1326,14 @@ static BOOL APIENTRY Imm32KShapeToggle(HIMC hIMC)
 
     dwConversion = (pIC->fdwConversion ^ IME_CMODE_FULLSHAPE);
     dwSentence = pIC->fdwSentence;
-    ImmUnlockIMC(hIMC);
-
     ImmSetConversionStatus(hIMC, dwConversion, dwSentence);
 
-    if (dwConversion & (IME_CMODE_FULLSHAPE | IME_CMODE_NATIVE))
+    if (pIC->fdwConversion & (IME_CMODE_FULLSHAPE | IME_CMODE_NATIVE))
         ImmSetOpenStatus(hIMC, TRUE);
     else
         ImmSetOpenStatus(hIMC, FALSE);
 
+    ImmUnlockIMC(hIMC);
     return TRUE;
 }
 
@@ -1367,11 +1366,12 @@ static BOOL APIENTRY Imm32KEnglish(HIMC hIMC)
 
     dwConversion = (pIC->fdwConversion ^ IME_CMODE_NATIVE);
     dwSentence = pIC->fdwSentence;
-    fOpen = ((dwConversion & (IME_CMODE_FULLSHAPE | IME_CMODE_NATIVE)) != 0);
-    ImmUnlockIMC(hIMC);
-
     ImmSetConversionStatus(hIMC, dwConversion, dwSentence);
+
+    fOpen = ((pIC->fdwConversion & (IME_CMODE_FULLSHAPE | IME_CMODE_NATIVE)) != 0);
     ImmSetOpenStatus(hIMC, fOpen);
+
+    ImmUnlockIMC(hIMC);
     return TRUE;
 }
 
