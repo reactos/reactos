@@ -48,8 +48,8 @@ WINE_DEFAULT_DEBUG_CHANNEL(imm);
 #define IMM_INIT_MAGIC 0x19650412
 #define IMM_INVALID_CANDFORM ULONG_MAX
 
-#define LANGID_CHINESE 0x804
-#define LANGID_JAPANESE 0x411
+#define LANGID_CHINESE_SIMPLIFIED MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED)
+#define LANGID_JAPANESE MAKELANGID(LANG_JAPANESE, SUBLANG_DEFAULT)
 
 #define REGKEY_KEYBOARD_LAYOUTS \
     L"System\\CurrentControlSet\\Control\\Keyboard Layouts"
@@ -1371,7 +1371,7 @@ static BOOL APIENTRY Imm32ProcessHotKey(HWND hwnd, HIMC hIMC, HKL hKL, DWORD dwH
     switch (dwHotKeyID)
     {
         case IME_CHOTKEY_IME_NONIME_TOGGLE:
-            return Imm32ImeNonImeToggle(hIMC, hKL, hwnd, LANGID_CHINESE);
+            return Imm32ImeNonImeToggle(hIMC, hKL, hwnd, LANGID_CHINESE_SIMPLIFIED);
         case IME_CHOTKEY_SHAPE_TOGGLE:
             return Imm32CShapeToggle(hIMC, hKL, hwnd);
         case IME_CHOTKEY_SYMBOL_TOGGLE:
