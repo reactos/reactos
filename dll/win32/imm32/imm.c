@@ -1192,7 +1192,7 @@ static DWORD APIENTRY Imm32AllocAndBuildHimcList(DWORD dwThreadId, HIMC **pphLis
             return 0;
 
         phNewList = Imm32HeapAlloc(0, dwCount * sizeof(HIMC));
-        if (phNewList == 0)
+        if (phNewList == NULL)
             return 0;
 
         Status = Imm32BuildHimcList(dwThreadId, dwCount, phNewList, &dwCount);
