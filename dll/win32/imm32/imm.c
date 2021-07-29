@@ -1208,7 +1208,7 @@ static DWORD APIENTRY Imm32AllocAndBuildHimcList(DWORD dwThreadId, HIMC **pphLis
 #undef MAX_RETRY
 }
 
-static BOOL APIENTRY Imm32CImeNonImeToggle(HIMC hIMC, HKL hKL, HWND hwnd, LANGID langid)
+static BOOL APIENTRY Imm32ImeNonImeToggle(HIMC hIMC, HKL hKL, HWND hwnd, LANGID langid)
 {
     LPINPUTCONTEXT pIC;
     BOOL fOpen;
@@ -1371,7 +1371,7 @@ static BOOL APIENTRY Imm32DoHotKey(HWND hwnd, HIMC hIMC, HKL hKL, DWORD dwHotKey
     switch (dwHotKeyID)
     {
         case IME_CHOTKEY_IME_NONIME_TOGGLE:
-            return Imm32CImeNonImeToggle(hIMC, hKL, hwnd, LANGID_CHINESE);
+            return Imm32ImeNonImeToggle(hIMC, hKL, hwnd, LANGID_CHINESE);
         case IME_CHOTKEY_SHAPE_TOGGLE:
             return Imm32CShapeToggle(hIMC, hKL, hwnd);
         case IME_CHOTKEY_SYMBOL_TOGGLE:
