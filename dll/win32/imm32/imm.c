@@ -1198,7 +1198,7 @@ static DWORD APIENTRY Imm32AllocAndBuildHimcList(DWORD dwThreadId, HIMC **pphLis
         Status = Imm32BuildHimcList(dwThreadId, dwCount, phNewList, &dwCount);
     }
 
-    if (!NT_SUCCESS(Status) || !dwCount)
+    if (NT_ERROR(Status) || !dwCount)
     {
         HeapFree(g_hImm32Heap, 0, phNewList);
         return 0;
