@@ -1261,7 +1261,7 @@ static BOOL APIENTRY Imm32CShapeToggle(HIMC hIMC, HKL hKL, HWND hwnd)
 
     ImmUnlockIMC(hIMC);
 
-    if (pIC->fOpen)
+    if (fOpen)
         ImmSetConversionStatus(hIMC, dwConversion, dwSentence);
     else
         ImmSetOpenStatus(hIMC, TRUE);
