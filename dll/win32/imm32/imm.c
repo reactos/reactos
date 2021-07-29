@@ -1209,12 +1209,12 @@ static DWORD APIENTRY Imm32AllocAndBuildHimcList(DWORD dwThreadId, HIMC **pphLis
 #undef MAX_RETRY
 }
 
-static BOOL APIENTRY Imm32ImeNonImeToggle(HIMC hIMC, HKL hKL, HWND hwnd, LANGID LangID)
+static BOOL APIENTRY Imm32ImeNonImeToggle(HIMC hIMC, HKL hKL, HWND hWnd, LANGID LangID)
 {
     LPINPUTCONTEXT pIC;
     BOOL fOpen;
 
-    if (hwnd != NULL)
+    if (hWnd != NULL)
         return FALSE;
 
     if (!IS_IME_HKL(hKL) || LOWORD(hKL) != LangID)
@@ -1240,13 +1240,13 @@ static BOOL APIENTRY Imm32ImeNonImeToggle(HIMC hIMC, HKL hKL, HWND hwnd, LANGID 
     return TRUE;
 }
 
-static BOOL APIENTRY Imm32CShapeToggle(HIMC hIMC, HKL hKL, HWND hwnd)
+static BOOL APIENTRY Imm32CShapeToggle(HIMC hIMC, HKL hKL, HWND hWnd)
 {
     LPINPUTCONTEXT pIC;
     BOOL fOpen;
     DWORD dwConversion, dwSentence;
 
-    if (hwnd == NULL || !IS_IME_HKL(hKL))
+    if (hWnd == NULL || !IS_IME_HKL(hKL))
         return FALSE;
 
     pIC = ImmLockIMC(hIMC);
@@ -1270,13 +1270,13 @@ static BOOL APIENTRY Imm32CShapeToggle(HIMC hIMC, HKL hKL, HWND hwnd)
     return TRUE;
 }
 
-static BOOL APIENTRY Imm32CSymbolToggle(HIMC hIMC, HKL hKL, HWND hwnd)
+static BOOL APIENTRY Imm32CSymbolToggle(HIMC hIMC, HKL hKL, HWND hWnd)
 {
     LPINPUTCONTEXT pIC;
     BOOL fOpen;
     DWORD dwConversion, dwSentence;
 
-    if (hwnd == NULL || !IS_IME_HKL(hKL))
+    if (hWnd == NULL || !IS_IME_HKL(hKL))
         return FALSE;
 
     pIC = ImmLockIMC(hIMC);
@@ -1375,7 +1375,7 @@ static BOOL APIENTRY Imm32KEnglish(HIMC hIMC)
     return TRUE;
 }
 
-static BOOL APIENTRY Imm32ProcessHotKey(HWND hwnd, HIMC hIMC, HKL hKL, DWORD dwHotKeyID)
+static BOOL APIENTRY Imm32ProcessHotKey(HWND hWnd, HIMC hIMC, HKL hKL, DWORD dwHotKeyID)
 {
     DWORD dwImeThreadId, dwThreadId;
     PIMEDPI pImeDpi;
@@ -1392,16 +1392,16 @@ static BOOL APIENTRY Imm32ProcessHotKey(HWND hwnd, HIMC hIMC, HKL hKL, DWORD dwH
     switch (dwHotKeyID)
     {
         case IME_CHOTKEY_IME_NONIME_TOGGLE:
-            return Imm32ImeNonImeToggle(hIMC, hKL, hwnd, LANGID_CHINESE_SIMPLIFIED);
+            return Imm32ImeNonImeToggle(hIMC, hKL, hWnd, LANGID_CHINESE_SIMPLIFIED);
 
         case IME_CHOTKEY_SHAPE_TOGGLE:
-            return Imm32CShapeToggle(hIMC, hKL, hwnd);
+            return Imm32CShapeToggle(hIMC, hKL, hWnd);
 
         case IME_CHOTKEY_SYMBOL_TOGGLE:
-            return Imm32CSymbolToggle(hIMC, hKL, hwnd);
+            return Imm32CSymbolToggle(hIMC, hKL, hWnd);
 
         case IME_JHOTKEY_CLOSE_OPEN:
-            return Imm32JCloseOpen(hIMC, hKL, hwnd);
+            return Imm32JCloseOpen(hIMC, hKL, hWnd);
 
         case IME_KHOTKEY_SHAPE_TOGGLE:
             return Imm32KShapeToggle(hIMC);
@@ -1413,13 +1413,13 @@ static BOOL APIENTRY Imm32ProcessHotKey(HWND hwnd, HIMC hIMC, HKL hKL, DWORD dwH
             return Imm32KEnglish(hIMC);
 
         case IME_THOTKEY_IME_NONIME_TOGGLE:
-            return Imm32ImeNonImeToggle(hIMC, hKL, hwnd, LANGID_CHINESE_TRADITIONAL);
+            return Imm32ImeNonImeToggle(hIMC, hKL, hWnd, LANGID_CHINESE_TRADITIONAL);
 
         case IME_THOTKEY_SHAPE_TOGGLE:
-            return Imm32CShapeToggle(hIMC, hKL, hwnd);
+            return Imm32CShapeToggle(hIMC, hKL, hWnd);
 
         case IME_THOTKEY_SYMBOL_TOGGLE:
-            return Imm32CSymbolToggle(hIMC, hKL, hwnd);
+            return Imm32CSymbolToggle(hIMC, hKL, hWnd);
 
         default:
             break;
