@@ -1393,24 +1393,34 @@ static BOOL APIENTRY Imm32ProcessHotKey(HWND hwnd, HIMC hIMC, HKL hKL, DWORD dwH
     {
         case IME_CHOTKEY_IME_NONIME_TOGGLE:
             return Imm32ImeNonImeToggle(hIMC, hKL, hwnd, LANGID_CHINESE_SIMPLIFIED);
+
         case IME_CHOTKEY_SHAPE_TOGGLE:
             return Imm32CShapeToggle(hIMC, hKL, hwnd);
+
         case IME_CHOTKEY_SYMBOL_TOGGLE:
             return Imm32CSymbolToggle(hIMC, hKL, hwnd);
+
         case IME_JHOTKEY_CLOSE_OPEN:
             return Imm32JCloseOpen(hIMC, hKL, hwnd);
+
         case IME_KHOTKEY_SHAPE_TOGGLE:
             return Imm32KShapeToggle(hIMC);
+
         case IME_KHOTKEY_HANJACONVERT:
             return Imm32KHanjaConvert(hIMC);
+
         case IME_KHOTKEY_ENGLISH:
             return Imm32KEnglish(hIMC);
+
         case IME_THOTKEY_IME_NONIME_TOGGLE:
             return Imm32ImeNonImeToggle(hIMC, hKL, hwnd, LANGID_CHINESE_TRADITIONAL);
+
         case IME_THOTKEY_SHAPE_TOGGLE:
             return Imm32CShapeToggle(hIMC, hKL, hwnd);
+
         case IME_THOTKEY_SYMBOL_TOGGLE:
             return Imm32CSymbolToggle(hIMC, hKL, hwnd);
+
         default:
             break;
     }
