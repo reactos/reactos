@@ -3486,7 +3486,7 @@ BOOL WINAPI ImmSimulateHotKey(HWND hWnd, DWORD dwHotKeyID)
     HKL hKL;
     BOOL ret;
 
-    TRACE("ImmSimulateHotKey(%p, 0x%lX): stub\n", hWnd, dwHotKeyID);
+    TRACE("ImmSimulateHotKey(%p, 0x%lX)\n", hWnd, dwHotKeyID);
 
     hIMC = ImmGetContext(hWnd);
     dwThreadId = GetWindowThreadProcessId(hWnd, NULL);
