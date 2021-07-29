@@ -3791,7 +3791,7 @@ BOOL WINAPI ImmEnumInputContext(DWORD dwThreadId, IMCENUMPROC lpfn, LPARAM lPara
     BOOL ret = TRUE;
     HIMC hIMC;
 
-    TRACE("ImmEnumInputContext(0x%lX, %p, %p)\n", dwThreadId, lpfn, lParam);
+    TRACE("ImmEnumInputContext(%lu, %p, %p)\n", dwThreadId, lpfn, lParam);
 
     dwCount = Imm32AllocAndBuildHimcList(dwThreadId, &phList);
     if (!dwCount)
