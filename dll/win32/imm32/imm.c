@@ -1415,7 +1415,7 @@ static BOOL APIENTRY Imm32ProcessHotKey(HWND hwnd, HIMC hIMC, HKL hKL, DWORD dwH
             break;
     }
 
-    if (dwHotKeyID < IME_HOTKEY_PRIVATE_FIRST || dwHotKeyID > IME_HOTKEY_PRIVATE_LAST)
+    if (dwHotKeyID < IME_HOTKEY_PRIVATE_FIRST || IME_HOTKEY_PRIVATE_LAST < dwHotKeyID)
         return FALSE;
 
     pImeDpi = ImmLockImeDpi(hKL);
