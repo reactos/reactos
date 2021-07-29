@@ -1354,7 +1354,7 @@ static BOOL APIENTRY Imm32KHanjaConvert(HIMC hIMC)
     return TRUE;
 }
 
-static BOOL APIENTRY Imm32DoHotKey(HWND hwnd, HIMC hIMC, HKL hKL, DWORD dwHotKeyID)
+static BOOL APIENTRY Imm32ProcessHotKey(HWND hwnd, HIMC hIMC, HKL hKL, DWORD dwHotKeyID)
 {
     DWORD dwImeThreadId, dwThreadId;
     PIMEDPI pImeDpi;
@@ -3491,7 +3491,7 @@ BOOL WINAPI ImmSimulateHotKey(HWND hWnd, DWORD dwHotKeyID)
     hIMC = ImmGetContext(hWnd);
     dwThreadId = GetWindowThreadProcessId(hWnd, NULL);
     hKL = GetKeyboardLayout(dwThreadId);
-    ret = Imm32DoHotKey(hWnd, hIMC, hKL, dwHotKeyID);
+    ret = Imm32ProcessHotKey(hWnd, hIMC, hKL, dwHotKeyID);
     ImmReleaseContext(hWnd, hIMC);
     return ret;
 }
