@@ -1208,7 +1208,7 @@ static DWORD APIENTRY Imm32AllocAndBuildHimcList(DWORD dwThreadId, HIMC **pphLis
 #undef MAX_RETRY
 }
 
-static BOOL APIENTRY Imm32ImeNonImeToggle(HIMC hIMC, HKL hKL, HWND hwnd, LANGID langid)
+static BOOL APIENTRY Imm32ImeNonImeToggle(HIMC hIMC, HKL hKL, HWND hwnd, LANGID LangID)
 {
     LPINPUTCONTEXT pIC;
     BOOL fOpen;
@@ -1216,7 +1216,7 @@ static BOOL APIENTRY Imm32ImeNonImeToggle(HIMC hIMC, HKL hKL, HWND hwnd, LANGID 
     if (hwnd != NULL)
         return FALSE;
 
-    if (!IS_IME_HKL(hKL) || LOWORD(hKL) != langid)
+    if (!IS_IME_HKL(hKL) || LOWORD(hKL) != LangID)
     {
         FIXME("We have to do something here\n");
         return TRUE;
