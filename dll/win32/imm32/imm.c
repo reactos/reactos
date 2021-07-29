@@ -49,6 +49,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(imm);
 #define IMM_INVALID_CANDFORM ULONG_MAX
 
 #define LANGID_CHINESE_SIMPLIFIED MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED)
+#define LANGID_CHINESE_TRADITIONAL MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL)
 #define LANGID_JAPANESE MAKELANGID(LANG_JAPANESE, SUBLANG_DEFAULT)
 
 #define REGKEY_KEYBOARD_LAYOUTS \
@@ -1354,6 +1355,26 @@ static BOOL APIENTRY Imm32KHanjaConvert(HIMC hIMC)
     return TRUE;
 }
 
+static BOOL APIENTRY Imm32KEnglish(HIMC hIMC)
+{
+    LPINPUTCONTEXT pIC;
+    DWORD dwConversion, dwSentence;
+    BOOL fOpen;
+
+    pIC = ImmLockIMC(hIMC);
+    if (pIC == NULL)
+        return FALSE;
+
+    dwConversion = (pIC->fdwConversion ^ IME_CMODE_NATIVE);
+    dwSentence = pIC->fdwSentence;
+    fOpen = ((dwConversion & (IME_CMODE_FULLSHAPE | IME_CMODE_NATIVE)) != 0);
+    ImmUnlockIMC(hIMC);
+
+    ImmSetConversionStatus(hIMC, dwConversion, dwSentence);
+    ImmSetOpenStatus(hIMC, fOpen);
+    return TRUE;
+}
+
 static BOOL APIENTRY Imm32ProcessHotKey(HWND hwnd, HIMC hIMC, HKL hKL, DWORD dwHotKeyID)
 {
     DWORD dwImeThreadId, dwThreadId;
@@ -1382,6 +1403,14 @@ static BOOL APIENTRY Imm32ProcessHotKey(HWND hwnd, HIMC hIMC, HKL hKL, DWORD dwH
             return Imm32KShapeToggle(hIMC);
         case IME_KHOTKEY_HANJACONVERT:
             return Imm32KHanjaConvert(hIMC);
+        case IME_KHOTKEY_ENGLISH:
+            return Imm32KEnglish(hIMC);
+        case IME_THOTKEY_IME_NONIME_TOGGLE:
+            return Imm32ImeNonImeToggle(hIMC, hKL, hwnd, LANGID_CHINESE_TRADITIONAL);
+        case IME_THOTKEY_SHAPE_TOGGLE:
+            return Imm32CShapeToggle(hIMC, hKL, hwnd);
+        case IME_THOTKEY_SYMBOL_TOGGLE:
+            return Imm32CSymbolToggle(hIMC, hKL, hwnd);
         default:
             break;
     }
