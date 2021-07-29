@@ -1432,7 +1432,7 @@ static BOOL APIENTRY Imm32ProcessHotKey(HWND hWnd, HIMC hIMC, HKL hKL, DWORD dwH
     if (pImeDpi == NULL)
         return FALSE;
 
-    ret = pImeDpi->ImeEscape(hIMC, IME_ESC_PRIVATE_HOTKEY, &dwHotKeyID);
+    ret = (BOOL)pImeDpi->ImeEscape(hIMC, IME_ESC_PRIVATE_HOTKEY, &dwHotKeyID);
     ImmUnlockImeDpi(pImeDpi);
     return ret;
 }
