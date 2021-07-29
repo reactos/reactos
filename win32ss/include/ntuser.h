@@ -1255,11 +1255,7 @@ NtUserAssociateInputContext(
 
 DWORD
 NTAPI
-NtUserBuildHimcList(
-    DWORD dwUnknown1,
-    DWORD dwUnknown2,
-    DWORD dwUnknown3,
-    DWORD dwUnknown4);
+NtUserBuildHimcList(DWORD dwThreadId, DWORD dwCount, HIMC *phList, LPDWORD pdwCount);
 
 DWORD
 NTAPI

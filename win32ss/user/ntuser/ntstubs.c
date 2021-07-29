@@ -56,11 +56,7 @@ NtUserBitBltSysBmp(
 
 DWORD
 APIENTRY
-NtUserBuildHimcList(
-    DWORD dwUnknown1,
-    DWORD dwUnknown2,
-    DWORD dwUnknown3,
-    DWORD dwUnknown4)
+NtUserBuildHimcList(DWORD dwThreadId, DWORD dwCount, HIMC *phList, LPDWORD pdwCount)
 {
     STUB;
     return 0;
