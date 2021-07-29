@@ -1163,7 +1163,7 @@ static PCLIENTIMC APIENTRY Imm32GetClientImcCache(void)
 
 static BOOL Imm32IsValidHimc(HIMC hIMC)
 {
-    return (hIMC != NULL); // FIXME
+    return (hIMC != NULL) && RtlValidateHeap(g_hImm32Heap, 0, hIMC);
 }
 
 static NTSTATUS APIENTRY
