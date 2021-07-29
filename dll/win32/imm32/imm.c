@@ -1172,7 +1172,7 @@ Imm32BuildHimcList(DWORD dwThreadId, DWORD dwCount, HIMC *phList, LPDWORD pdwCou
     return NtUserBuildHimcList(dwThreadId, dwCount, phList, pdwCount);
 }
 
-static DWORD APIENTRY Imm32AllocAndBuildHimcList(DWORD dwThreadId, HIMC **phList)
+static DWORD APIENTRY Imm32AllocAndBuildHimcList(DWORD dwThreadId, HIMC **pphList)
 {
 #define INITIAL_COUNT 0x40
 #define MAX_RETRY 10
@@ -1204,7 +1204,7 @@ static DWORD APIENTRY Imm32AllocAndBuildHimcList(DWORD dwThreadId, HIMC **phList
         return 0;
     }
 
-    *phList = phNewList;
+    *pphList = phNewList;
     return dwCount;
 #undef INITIAL_COUNT
 #undef MAX_RETRY
