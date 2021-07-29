@@ -48,6 +48,9 @@ WINE_DEFAULT_DEBUG_CHANNEL(imm);
 #define IMM_INIT_MAGIC 0x19650412
 #define IMM_INVALID_CANDFORM ULONG_MAX
 
+#define LANGID_CHINESE 0x804
+#define LANGID_JAPANESE 0x411
+
 #define REGKEY_KEYBOARD_LAYOUTS \
     L"System\\CurrentControlSet\\Control\\Keyboard Layouts"
 #define REGKEY_IMM \
@@ -1203,6 +1206,196 @@ static DWORD APIENTRY Imm32AllocAndBuildHimcList(DWORD dwThreadId, HIMC **pphLis
     return dwCount;
 #undef INITIAL_COUNT
 #undef MAX_RETRY
+}
+
+static BOOL APIENTRY Imm32CImeNonImeToggle(HIMC hIMC, HKL hKL, HWND hwnd, LANGID langid)
+{
+    LPINPUTCONTEXT pIC;
+    BOOL fOpen;
+
+    if (hwnd != NULL)
+        return FALSE;
+
+    if (!IS_IME_HKL(hKL) || LOWORD(hKL) != langid)
+    {
+        FIXME("We have to do something here\n");
+        return TRUE;
+    }
+
+    pIC = ImmLockIMC(hIMC);
+    if (pIC == NULL)
+        return TRUE;
+
+    fOpen = pIC->fOpen;
+    ImmUnlockIMC(hIMC);
+
+    if (!fOpen)
+    {
+        ImmSetOpenStatus(hIMC, TRUE);
+        return TRUE;
+    }
+
+    FIXME("We have to do something here\n");
+    return TRUE;
+}
+
+static BOOL APIENTRY Imm32CShapeToggle(HIMC hIMC, HKL hKL, HWND hwnd)
+{
+    LPINPUTCONTEXT pIC;
+    BOOL fOpen;
+    DWORD dwConversion, dwSentence;
+
+    if (hwnd == NULL || !IS_IME_HKL(hKL))
+        return FALSE;
+
+    pIC = ImmLockIMC(hIMC);
+    if (pIC == NULL)
+        return TRUE;
+
+    fOpen = pIC->fOpen;
+    if (fOpen)
+    {
+        dwConversion = (pIC->fdwConversion ^ IME_CMODE_FULLSHAPE);
+        dwSentence = pIC->fdwSentence;
+    }
+
+    ImmUnlockIMC(hIMC);
+
+    if (pIC->fOpen)
+        ImmSetConversionStatus(hIMC, dwConversion, dwSentence);
+    else
+        ImmSetOpenStatus(hIMC, TRUE);
+
+    return TRUE;
+}
+
+static BOOL APIENTRY Imm32CSymbolToggle(HIMC hIMC, HKL hKL, HWND hwnd)
+{
+    LPINPUTCONTEXT pIC;
+    BOOL fOpen;
+    DWORD dwConversion, dwSentence;
+
+    if (hwnd == NULL || !IS_IME_HKL(hKL))
+        return FALSE;
+
+    pIC = ImmLockIMC(hIMC);
+    if (pIC == NULL)
+        return TRUE;
+
+    fOpen = pIC->fOpen;
+    if (pIC->fOpen)
+    {
+        dwConversion = (pIC->fdwConversion ^ IME_CMODE_SYMBOL);
+        dwSentence = pIC->fdwSentence;
+    }
+
+    ImmUnlockIMC(hIMC);
+
+    if (fOpen)
+        ImmSetConversionStatus(hIMC, dwConversion, dwSentence);
+    else
+        ImmSetOpenStatus(hIMC, TRUE);
+
+    return TRUE;
+}
+
+static BOOL APIENTRY Imm32JCloseOpen(HIMC hIMC, HKL hKL, HWND hWnd)
+{
+    BOOL fOpen;
+
+    if (ImmIsIME(hKL) && LOWORD(hKL) == LANGID_JAPANESE)
+    {
+        fOpen = ImmGetOpenStatus(hIMC);
+        ImmSetOpenStatus(hIMC, !fOpen);
+        return TRUE;
+    }
+
+    FIXME("We have to do something here\n");
+    return TRUE;
+}
+
+static BOOL APIENTRY Imm32KShapeToggle(HIMC hIMC)
+{
+    LPINPUTCONTEXT pIC;
+    DWORD dwConversion, dwSentence;
+
+    pIC = ImmLockIMC(hIMC);
+    if (pIC == NULL)
+        return FALSE;
+
+    dwConversion = (pIC->fdwConversion ^ IME_CMODE_FULLSHAPE);
+    dwSentence = pIC->fdwSentence;
+    ImmUnlockIMC(hIMC);
+
+    ImmSetConversionStatus(hIMC, dwConversion, dwSentence);
+
+    if (dwConversion & (IME_CMODE_FULLSHAPE | IME_CMODE_NATIVE))
+        ImmSetOpenStatus(hIMC, TRUE);
+    else
+        ImmSetOpenStatus(hIMC, FALSE);
+
+    return TRUE;
+}
+
+static BOOL APIENTRY Imm32KHanjaConvert(HIMC hIMC)
+{
+    LPINPUTCONTEXT pIC;
+    DWORD dwConversion, dwSentence;
+
+    pIC = ImmLockIMC(hIMC);
+    if (!pIC)
+        return FALSE;
+
+    dwConversion = (pIC->fdwConversion ^ IME_CMODE_HANJACONVERT);
+    dwSentence = pIC->fdwSentence;
+    ImmUnlockIMC(hIMC);
+
+    ImmSetConversionStatus(hIMC, dwConversion, dwSentence);
+    return TRUE;
+}
+
+static BOOL APIENTRY Imm32DoHotKey(HWND hwnd, HIMC hIMC, HKL hKL, DWORD dwHotKeyID)
+{
+    DWORD dwImeThreadId, dwThreadId;
+    PIMEDPI pImeDpi;
+    BOOL ret;
+
+    if (hIMC)
+    {
+        dwImeThreadId = Imm32QueryInputContext(hIMC, 1);
+        dwThreadId = GetCurrentThreadId();
+        if (dwImeThreadId != dwThreadId)
+            return FALSE;
+    }
+
+    switch (dwHotKeyID)
+    {
+        case IME_CHOTKEY_IME_NONIME_TOGGLE:
+            return Imm32CImeNonImeToggle(hIMC, hKL, hwnd, LANGID_CHINESE);
+        case IME_CHOTKEY_SHAPE_TOGGLE:
+            return Imm32CShapeToggle(hIMC, hKL, hwnd);
+        case IME_CHOTKEY_SYMBOL_TOGGLE:
+            return Imm32CSymbolToggle(hIMC, hKL, hwnd);
+        case IME_JHOTKEY_CLOSE_OPEN:
+            return Imm32JCloseOpen(hIMC, hKL, hwnd);
+        case IME_KHOTKEY_SHAPE_TOGGLE:
+            return Imm32KShapeToggle(hIMC);
+        case IME_KHOTKEY_HANJACONVERT:
+            return Imm32KHanjaConvert(hIMC);
+        default:
+            break;
+    }
+
+    if (dwHotKeyID < IME_HOTKEY_PRIVATE_FIRST || dwHotKeyID > IME_HOTKEY_PRIVATE_LAST)
+        return FALSE;
+
+    pImeDpi = ImmLockImeDpi(hKL);
+    if (pImeDpi == NULL)
+        return FALSE;
+
+    ret = pImeDpi->ImeEscape(hIMC, IME_ESC_PRIVATE_HOTKEY, &dwHotKeyID);
+    ImmUnlockImeDpi(pImeDpi);
+    return ret;
 }
 
 PCLIENTIMC WINAPI ImmLockClientImc(HIMC hImc)
@@ -3288,9 +3481,19 @@ BOOL WINAPI ImmShowSoftKeyboard(HWND hSoftWnd, int nCmdShow)
  */
 BOOL WINAPI ImmSimulateHotKey(HWND hWnd, DWORD dwHotKeyID)
 {
-  FIXME("(%p, %d): stub\n", hWnd, dwHotKeyID);
-  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-  return FALSE;
+    HIMC hIMC;
+    DWORD dwThreadId;
+    HKL hKL;
+    BOOL ret;
+
+    TRACE("ImmSimulateHotKey(%p, 0x%lX): stub\n", hWnd, dwHotKeyID);
+
+    hIMC = ImmGetContext(hWnd);
+    dwThreadId = GetWindowThreadProcessId(hWnd, NULL);
+    hKL = GetKeyboardLayout(dwThreadId);
+    ret = Imm32DoHotKey(hWnd, hIMC, hKL, dwHotKeyID);
+    ImmReleaseContext(hWnd, hIMC);
+    return ret;
 }
 
 /***********************************************************************
