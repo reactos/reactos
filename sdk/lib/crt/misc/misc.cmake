@@ -14,6 +14,7 @@ list(APPEND CRT_MISC_SOURCE
     misc/__crt_MessageBoxA.c
     misc/amsg.c
     misc/assert.c
+    misc/crt_init.c
     misc/environ.c
     misc/getargs.c
     misc/i10output.c
