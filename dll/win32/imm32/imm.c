@@ -1166,7 +1166,7 @@ static BOOL Imm32IsValidHimc(HIMC hIMC)
     return (hIMC != NULL); // FIXME
 }
 
-static DWORD APIENTRY
+static NTSTATUS APIENTRY
 Imm32BuildHimcList(DWORD dwThreadId, DWORD dwCount, HIMC *phList, LPDWORD pdwCount)
 {
     return NtUserBuildHimcList(dwThreadId, dwCount, phList, pdwCount);

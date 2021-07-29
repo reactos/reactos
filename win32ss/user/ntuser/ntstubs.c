@@ -54,7 +54,7 @@ NtUserBitBltSysBmp(
    return Ret;
 }
 
-DWORD
+NTSTATUS
 APIENTRY
 NtUserBuildHimcList(DWORD dwThreadId, DWORD dwCount, HIMC *phList, LPDWORD pdwCount)
 {

@@ -1253,7 +1253,7 @@ NtUserAssociateInputContext(
     DWORD dwUnknown2,
     DWORD dwUnknown3);
 
-DWORD
+NTSTATUS
 NTAPI
 NtUserBuildHimcList(DWORD dwThreadId, DWORD dwCount, HIMC *phList, LPDWORD pdwCount);
 
