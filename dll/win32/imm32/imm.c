@@ -1284,7 +1284,7 @@ static BOOL APIENTRY Imm32CSymbolToggle(HIMC hIMC, HKL hKL, HWND hwnd)
         return TRUE;
 
     fOpen = pIC->fOpen;
-    if (pIC->fOpen)
+    if (fOpen)
     {
         dwConversion = (pIC->fdwConversion ^ IME_CMODE_SYMBOL);
         dwSentence = pIC->fdwSentence;
