@@ -163,6 +163,7 @@ int __cdecl WinMainCRTStartup (void)
 }
 
 int __cdecl mainCRTStartup (void);
+BOOL crt_process_init(void);
 
 #ifdef _WIN64
 int __mingw_init_ehandler (void);
@@ -171,6 +172,12 @@ int __mingw_init_ehandler (void);
 int __cdecl mainCRTStartup (void)
 {
   int ret = 255;
+#ifndef _DLL
+  if (!crt_process_init())
+  {
+      return -1;
+  }
+#endif
 #ifdef __SEH__
   asm ("\t.l_start:\n"
     "\t.seh_handler __C_specific_handler, @except\n"
