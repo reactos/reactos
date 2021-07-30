@@ -1234,16 +1234,26 @@ MiResolveProtoPteFault(IN BOOLEAN StoreInstruction,
         /* Perform the copy */
         MiCopyPfn(PageFrameIndex, ProtoPageFrameIndex);
 
+        /* Temporarily release lock */
+        MiReleasePfnLock(OldIrql);
+
         /* This will drop everything MiResolveProtoPteFault referenced */
         MiDeletePte(PointerPte, Address, Process, PointerProtoPte);
-
-        /* Because now we use this */
-        Pfn1 = MI_PFN_ELEMENT(PageFrameIndex);
-        MiInitializePfn(PageFrameIndex, PointerPte, TRUE);
 
         /* Fix the protection */
         Protection &= ~MM_WRITECOPY;
         Protection |= MM_READWRITE;
+
+        /* Restore our PTE to a sensible value for our PFN */
+        PointerPte->u.Long = MmProtectToPteMask[Protection];
+
+        /* Lock again */
+        OldIrql = MiAcquirePfnLock();
+
+        /* Initialize like a private page */
+        Pfn1 = MI_PFN_ELEMENT(PageFrameIndex);
+        MiInitializePfn(PageFrameIndex, PointerPte, TRUE);
+
         if (Address < MmSystemRangeStart)
         {
             /* Build the user PTE */
@@ -1300,7 +1310,7 @@ MiResolveProtoPteFault(IN BOOLEAN StoreInstruction,
         else
             MiGetPfnEntry(PointerProtoPte->u.Hard.PageFrameNumber)->CallSite = _ReturnAddress();
 #endif
-                                      
+
         ASSERT(NT_SUCCESS(Status));
     }
 
@@ -2263,7 +2273,13 @@ UserFault:
                 ASSERT(Pfn1->u3.e1.PrototypePte == 1);
                 ASSERT(!MI_IS_PFN_DELETED(Pfn1));
                 ProtoPte = Pfn1->PteAddress;
+
+                /* Temporarily release PFN lock */
+                MiReleasePfnLock(LockIrql);
+
                 MiDeletePte(PointerPte, Address, CurrentProcess, ProtoPte);
+
+                LockIrql = MiAcquirePfnLock();
 
                 /* And make a new shiny one with our page */
                 MiInitializePfn(PageFrameIndex, PointerPte, TRUE);

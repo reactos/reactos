@@ -309,9 +309,7 @@ MmDeleteVirtualMapping(PEPROCESS Process, PVOID Address,
         /* Remove PDE reference */
         if (MiDecrementPageTableReferences(Address) == 0)
         {
-            KIRQL OldIrql = MiAcquirePfnLock();
             MiDeletePde(MiAddressToPde(Address), Process);
-            MiReleasePfnLock(OldIrql);
         }
 
         MiUnlockProcessWorkingSetUnsafe(Process, PsGetCurrentThread());
@@ -364,9 +362,7 @@ MmDeletePageFileMapping(
     if (MiDecrementPageTableReferences(Address) == 0)
     {
         /* We can let it go */
-        KIRQL OldIrql = MiAcquirePfnLock();
         MiDeletePde(MiPteToPde(PointerPte), Process);
-        MiReleasePfnLock(OldIrql);
     }
 
     MiUnlockProcessWorkingSetUnsafe(Process, PsGetCurrentThread());
