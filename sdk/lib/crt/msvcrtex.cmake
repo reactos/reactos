@@ -72,6 +72,10 @@ elseif(ARCH STREQUAL "arm")
         math/arm/__rt_sdiv64_worker.c
         math/arm/__rt_udiv.c
         math/arm/__rt_udiv64_worker.c
+        math/arm/__dtoi64_worker.c
+        math/arm/__dtou64_worker.c
+        math/arm/__stoi64_worker.c
+        math/arm/__stou64_worker.c
     )
     list(APPEND MSVCRTEX_ASM_SOURCE
         except/arm/chkstk_asm.s
