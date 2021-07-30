@@ -1,7 +1,7 @@
 /*
  * PROJECT:     ReactOS CRT library
  * LICENSE:     MIT (https://spdx.org/licenses/MIT)
- * PURPOSE:     Implementation of __dtoi64
+ * PURPOSE:     Float to integer conversion (__dtoi64/dtou64/stoi64/stou64)
  * COPYRIGHT:   Copyright 2021 Roman Masanin <36927roma@gmail.com>
  */
 
@@ -44,7 +44,7 @@ long long FTO64_RESULT;
 #define NEGATE(x) (~(x) + 1)
 
 FTO64_RESULT
-__fto64_worker(FLOAT_TYPE value)
+__fto64(FLOAT_TYPE value)
 {
     union {
         FLOAT_TYPE val_float;

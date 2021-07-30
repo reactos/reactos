@@ -79,10 +79,10 @@ elseif(ARCH STREQUAL "arm")
         math/arm/__rt_sdiv64_worker.c
         math/arm/__rt_udiv.c
         math/arm/__rt_udiv64_worker.c
-        math/arm/__dtoi64_worker.c
-        math/arm/__dtou64_worker.c
-        math/arm/__stoi64_worker.c
-        math/arm/__stou64_worker.c
+        math/arm/__dtoi64.c
+        math/arm/__dtou64.c
+        math/arm/__stoi64.c
+        math/arm/__stou64.c
     )
     list(APPEND CRT_MATH_SOURCE
         math/fabsf.c
@@ -100,12 +100,8 @@ elseif(ARCH STREQUAL "arm")
         math/arm/log10.s
         math/arm/pow.s
         math/arm/tan.s
-        math/arm/__dtoi64.s
-        math/arm/__dtou64.s
         math/arm/__i64tod.s
         math/arm/__i64tos.s
-        math/arm/__stoi64.s
-        math/arm/__stou64.s
         math/arm/__u64tod.s
         math/arm/__u64tos.s
         math/arm/__rt_sdiv64.s
