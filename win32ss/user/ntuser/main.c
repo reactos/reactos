@@ -968,16 +968,7 @@ DriverEntry(
         return STATUS_UNSUCCESSFUL;
     }
 
-    /* Allocate global server info structure */
-    gpsi = UserHeapAlloc(sizeof(*gpsi));
-    if (!gpsi)
-    {
-        DPRINT1("Failed allocate server info structure!\n");
-        return STATUS_UNSUCCESSFUL;
-    }
-
-    RtlZeroMemory(gpsi, sizeof(*gpsi));
-    DPRINT("Global Server Data -> %p\n", gpsi);
+    NT_ROF(InitUserImpl());
 
     NT_ROF(InitGdiHandleTable());
     NT_ROF(InitPaletteImpl());
@@ -992,7 +983,6 @@ DriverEntry(
     NT_ROF(InitLDEVImpl());
     NT_ROF(InitDeviceImpl());
     NT_ROF(InitDcImpl());
-    NT_ROF(InitUserImpl());
     NT_ROF(InitWindowStationImpl());
     NT_ROF(InitDesktopImpl());
     NT_ROF(InitInputImpl());
