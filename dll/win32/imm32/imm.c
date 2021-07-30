@@ -1161,11 +1161,6 @@ static PCLIENTIMC APIENTRY Imm32GetClientImcCache(void)
     return NULL;
 }
 
-static BOOL Imm32IsValidHimc(HIMC hIMC)
-{
-    return (hIMC != NULL) && RtlValidateHeap(g_hImm32Heap, 0, hIMC);
-}
-
 static NTSTATUS APIENTRY
 Imm32BuildHimcList(DWORD dwThreadId, DWORD dwCount, HIMC *phList, LPDWORD pdwCount)
 {
@@ -3800,8 +3795,6 @@ BOOL WINAPI ImmEnumInputContext(DWORD dwThreadId, IMCENUMPROC lpfn, LPARAM lPara
     for (dwIndex = 0; dwIndex < dwCount; ++dwIndex)
     {
         hIMC = phList[dwIndex];
-        if (!Imm32IsValidHimc(hIMC))
-            continue;
         ret = (*lpfn)(hIMC, lParam);
         if (!ret)
             break;
