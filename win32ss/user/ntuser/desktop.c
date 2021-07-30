@@ -215,6 +215,7 @@ NTAPI
 IntDesktopObjectClose(
     _In_ PVOID Parameters)
 {
+    NTSTATUS Ret;
     PWIN32_CLOSEMETHOD_PARAMETERS CloseParameters = Parameters;
     PPROCESSINFO ppi = PsGetProcessWin32Process(CloseParameters->Process);
     if (ppi == NULL)
@@ -224,7 +225,10 @@ IntDesktopObjectClose(
         return STATUS_SUCCESS;
     }
 
-    return IntUnmapDesktopView((PDESKTOP)CloseParameters->Object);
+    UserEnterExclusive();
+    Ret = IntUnmapDesktopView((PDESKTOP)CloseParameters->Object);
+    UserLeave();
+    return Ret;
 }
 
 
