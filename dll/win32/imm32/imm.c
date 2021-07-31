@@ -58,23 +58,20 @@ WINE_DEFAULT_DEBUG_CHANNEL(imm);
 #define REGKEY_IMM \
     L"Software\\Microsoft\\Windows NT\\CurrentVersion\\IMM"
 
+#define ROUNDUP4(n) (((n) + 3) & ~3)  /* DWORD alignment */
+
+/* flags for g_dwImm32Flags */
+#define IMM32_FLAG_UNKNOWN 0x4
+#define IMM32_FLAG_CICERO_ENABLED 0x20
+
 HMODULE g_hImm32Inst = NULL;
 RTL_CRITICAL_SECTION g_csImeDpi;
 PIMEDPI g_pImeDpiList = NULL;
 PSERVERINFO g_psi = NULL;
 BYTE g_bClientRegd = FALSE;
 ULONG g_MaximumUserModeAddress = 0;
-
-BOOL WINAPI User32InitializeImmEntryTable(DWORD);
-
-#define ROUNDUP4(n) (((n) + 3) & ~3)  /* DWORD alignment */
-
 HANDLE g_hImm32Heap = NULL;
 DWORD g_dwImm32Flags = 0;
-
-/* flags for g_dwImm32Flags */
-#define IMM32_FLAG_UNKNOWN 0x4
-#define IMM32_FLAG_CICERO_ENABLED 0x20
 
 LPVOID APIENTRY Imm32HeapAlloc(DWORD dwFlags, DWORD dwBytes)
 {
@@ -4110,6 +4107,8 @@ static BOOL APIENTRY Imm32InitInstance(HMODULE hMod)
     g_bClientRegd = TRUE;
     return TRUE;
 }
+
+BOOL WINAPI User32InitializeImmEntryTable(DWORD);
 
 BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpReserved)
 {
