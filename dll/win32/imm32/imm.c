@@ -309,7 +309,7 @@ BOOL WINAPI ImmLoadIME(HKL hKL)
 
     pImeDpi = Imm32FindImeDpi(hKL);
     if (pImeDpi == NULL)
-        pImeDpi = Ime32LoadImeDpi(hKL, 0);
+        pImeDpi = Ime32LoadImeDpi(hKL, FALSE);
     return (pImeDpi != NULL);
 }
 
