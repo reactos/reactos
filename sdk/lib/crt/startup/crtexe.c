@@ -4,11 +4,6 @@
  * No warranty is given; refer to the file DISCLAIMER.PD within this package.
  */
 
-#undef CRTDLL
-#ifndef _DLL
-#define _DLL
-#endif
-
 #define SPECIAL_CRTEXE
 
 #include <oscalls.h>
@@ -25,19 +20,9 @@
 #endif
 
 /* Special handling for ARM & ARM64, __winitenv & __initenv aren't present there. */
-
 #if !defined(__arm__) && !defined(__aarch64__)
-
-#ifndef __winitenv
-extern wchar_t *** __MINGW_IMP_SYMBOL(__winitenv);
-#define __winitenv (* __MINGW_IMP_SYMBOL(__winitenv))
-#endif
-
-#ifndef __initenv
-extern char *** __MINGW_IMP_SYMBOL(__initenv);
-#define __initenv (* __MINGW_IMP_SYMBOL(__initenv))
-#endif
-
+_CRTIMP extern wchar_t** __winitenv;
+_CRTIMP extern char** __initenv;
 #endif
 
 /* Hack, for bug in ld.  Will be removed soon.  */
