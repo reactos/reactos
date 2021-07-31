@@ -576,6 +576,29 @@ dodefault:
     return g_user32ApiHook.GetScrollInfo(hwnd, fnBar, lpsi);
 }
 
+INT WINAPI ThemeSetScrollInfo(HWND hWnd, int fnBar, LPCSCROLLINFO lpsi, BOOL bRedraw)
+{
+    PWND_DATA pwndData;
+    SCROLLINFO siout;
+    LPSCROLLINFO lpsiout = &siout;
+    BOOL IsThemed = FALSE;
+
+    pwndData = ThemeGetWndData(hWnd);
+
+    if (!pwndData)
+        goto dodefault;
+
+    if (pwndData->hthemeScrollbar)
+        IsThemed = TRUE;
+
+    memcpy(&siout, lpsi, sizeof(SCROLLINFO));
+    if (IsThemed)
+        siout.fMask |= SIF_THEMED;
+
+dodefault:
+    return g_user32ApiHook.SetScrollInfo(hWnd, fnBar, lpsiout, bRedraw);
+}
+
 /**********************************************************************
  *      Exports
  */
@@ -611,6 +634,7 @@ ThemeInitApiHook(UAPIHK State, PUSERAPIHOOK puah)
 
     puah->SetWindowRgn = ThemeSetWindowRgn;
     puah->GetScrollInfo = ThemeGetScrollInfo;
+    puah->SetScrollInfo = ThemeSetScrollInfo;
 
     UAH_HOOK_MESSAGE(puah->DefWndProcArray, WM_NCPAINT);
     UAH_HOOK_MESSAGE(puah->DefWndProcArray, WM_NCACTIVATE);

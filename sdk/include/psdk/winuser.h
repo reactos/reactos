@@ -1221,6 +1221,7 @@ extern "C" {
 #define SIF_RANGE 1
 #define SIF_DISABLENOSCROLL 8
 #define SIF_TRACKPOS   16
+#define SIF_THEMED 128      /* REACTOS Specific Only */
 #define SWP_DRAWFRAME 32
 #define SWP_FRAMECHANGED 32
 #define SWP_HIDEWINDOW 128
