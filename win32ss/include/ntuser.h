@@ -1213,6 +1213,7 @@ typedef struct _IMEWND
 } IMEWND, *PIMEWND;
 
 typedef BOOL (WINAPI *FN_ImeDestroy)(UINT uReserved);
+typedef LRESULT (WINAPI *FN_ImeEscape)(HIMC hIMC, UINT uEscape, LPVOID lpData);
 typedef BOOL (WINAPI *FN_NotifyIME)(HIMC hIMC, DWORD dwAction, DWORD dwIndex, DWORD dwValue);
 
 typedef struct IMEDPI /* unconfirmed */
@@ -1227,7 +1228,8 @@ typedef struct IMEDPI /* unconfirmed */
     DWORD          dwFlags;
     DWORD          dwUnknown3[7];
     FN_ImeDestroy  ImeDestroy;
-    DWORD          dwUnknown4[5];
+    FN_ImeEscape   ImeEscape;
+    DWORD          dwUnknown4[4];
     FN_NotifyIME   NotifyIME;
     /* ... */
 } IMEDPI, *PIMEDPI;
@@ -1239,6 +1241,7 @@ C_ASSERT(offsetof(IMEDPI, hKL) == 0x8);
 C_ASSERT(offsetof(IMEDPI, cLockObj) == 0x4c);
 C_ASSERT(offsetof(IMEDPI, dwFlags) == 0x50);
 C_ASSERT(offsetof(IMEDPI, ImeDestroy) == 0x70);
+C_ASSERT(offsetof(IMEDPI, ImeEscape) == 0x74);
 C_ASSERT(offsetof(IMEDPI, NotifyIME) == 0x88);
 #endif
 
