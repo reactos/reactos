@@ -69,7 +69,6 @@ RTL_CRITICAL_SECTION g_csImeDpi;
 PIMEDPI g_pImeDpiList = NULL;
 PSERVERINFO g_psi = NULL;
 BYTE g_bClientRegd = FALSE;
-ULONG g_MaximumUserModeAddress = 0;
 HANDLE g_hImm32Heap = NULL;
 DWORD g_dwImm32Flags = 0;
 
@@ -4246,7 +4245,6 @@ Quit:
 static BOOL APIENTRY Imm32InitInstance(HMODULE hMod)
 {
     NTSTATUS status;
-    SYSTEM_BASIC_INFORMATION info;
 
     if (hMod)
         g_hImm32Inst = hMod;
@@ -4258,11 +4256,6 @@ static BOOL APIENTRY Imm32InitInstance(HMODULE hMod)
     if (NT_ERROR(status))
         return FALSE;
 
-    status = NtQuerySystemInformation(SystemBasicInformation, &info, sizeof(info), NULL);
-    if (NT_ERROR(status))
-        return FALSE;
-
-    g_MaximumUserModeAddress = info.MaximumUserModeAddress;
     g_bClientRegd = TRUE;
     return TRUE;
 }
