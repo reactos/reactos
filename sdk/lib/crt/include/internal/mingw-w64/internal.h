@@ -21,7 +21,7 @@ extern "C" {
 #ifdef __REACTOS__
 #include "malloc.h"
 struct _exception;
-__declspec(dllimport) void __cdecl __setusermatherr(int (__cdecl *)(struct _exception *));
+_CRTIMP void __cdecl __setusermatherr(int (__cdecl *)(struct _exception *));
 #define __mingw_fprintf fprintf
 #define __mingw_vfprintf vfprintf
 #endif
@@ -82,13 +82,11 @@ __declspec(dllimport) void __cdecl __setusermatherr(int (__cdecl *)(struct _exce
 #define _tm_unicode_safe(i) (_pioinfo_safe(i)->unicode)
 
 #ifndef __badioinfo
-  extern ioinfo ** __MINGW_IMP_SYMBOL(__badioinfo)[];
-#define __badioinfo (* __MINGW_IMP_SYMBOL(__badioinfo))
+_CRTIMP  extern ioinfo * __badioinfo[];
 #endif
 
 #ifndef __pioinfo
-  extern ioinfo ** __MINGW_IMP_SYMBOL(__pioinfo)[];
-#define __pioinfo (* __MINGW_IMP_SYMBOL(__pioinfo))
+_CRTIMP  extern ioinfo ** __pioinfo[];
 #endif
 
 #define _NO_CONSOLE_FILENO (intptr_t)-2
@@ -119,27 +117,10 @@ __declspec(dllimport) void __cdecl __setusermatherr(int (__cdecl *)(struct _exce
   extern int _dowildcard;
   extern int _newmode;
 
-#ifndef __winitenv
-extern wchar_t *** __MINGW_IMP_SYMBOL(__winitenv);
-#define __winitenv (* __MINGW_IMP_SYMBOL(__winitenv))
-#endif
-
-#ifndef __initenv
-extern char *** __MINGW_IMP_SYMBOL(__initenv);
-#define __initenv (* __MINGW_IMP_SYMBOL(__initenv))
-#endif
-
-#ifndef _acmdln
-extern char ** __MINGW_IMP_SYMBOL(_acmdln);
-#define _acmdln (* __MINGW_IMP_SYMBOL(_acmdln))
-/*  _CRTIMP extern char *_acmdln; */
-#endif
-
-#ifndef _wcmdln
-extern char ** __MINGW_IMP_SYMBOL(_wcmdln);
-#define _wcmdln (* __MINGW_IMP_SYMBOL(_wcmdln))
-/*  __CRTIMP extern wchar_t *_wcmdln; */
-#endif
+_CRTIMP extern wchar_t ** __winitenv;
+_CRTIMP extern char ** __initenv;
+_CRTIMP extern char * _acmdln;
+_CRTIMP extern  char * _wcmdln;
 
   _CRTIMP __declspec(noreturn) void __cdecl _amsg_exit(int);
 
