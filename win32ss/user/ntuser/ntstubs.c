@@ -421,7 +421,7 @@ NtUserYieldTask(VOID)
 
 HIMC
 APIENTRY
-NtUserCreateInputContext(LPVOID pClientImc)
+NtUserCreateInputContext(PCLIENTIMC pClientImc)
 {
     STUB;
     return NULL;

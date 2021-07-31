@@ -1268,6 +1268,8 @@ C_ASSERT(sizeof(IMEDPI) == 0xa8);
 #define IMEDPI_FLAG_UNKNOWN 1
 #define IMEDPI_FLAG_UNKNOWN2 2
 
+#include "imm32_undoc.h"
+
 DWORD
 NTAPI
 NtUserAssociateInputContext(
@@ -1890,7 +1892,7 @@ NtUserCreateDesktop(
 
 HIMC
 NTAPI
-NtUserCreateInputContext(LPVOID pClientImc);
+NtUserCreateInputContext(PCLIENTIMC pClientImc);
 
 NTSTATUS
 NTAPI
