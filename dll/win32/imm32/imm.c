@@ -165,7 +165,7 @@ static PIMEDPI APIENTRY Imm32FindImeDpi(HKL hKL)
 {
     RtlEnterCriticalSection(&g_csImeDpi);
     PIMEDPI pImeDpi = g_pImeDpiList;
-    while (pImeDpi != 0)
+    while (pImeDpi)
     {
         if (pImeDpi->hKL == hKL)
             break;
@@ -235,6 +235,7 @@ static PIMEDPI APIENTRY Ime32LoadImeDpi(HKL hKL, BOOL bLock)
     CHARSETINFO ci;
     PIMEDPI pImeDpiNew, pImeDpiFound;
     UINT uCodePage;
+    LCID lcid;
 
     if (!ImmGetImeInfoEx(&imeinfo, ImeInfoExKeyboardLayout, &hKL) ||
         imeinfo.fLoadFlag == 1)
@@ -247,11 +248,12 @@ static PIMEDPI APIENTRY Ime32LoadImeDpi(HKL hKL, BOOL bLock)
         return NULL;
 
     pImeDpiNew->hKL = hKL;
-    if (TranslateCharsetInfo((LPDWORD)(DWORD_PTR)LOWORD(hKL), &ci, TCI_SRCLOCALE))
+
+    lcid = LOWORD(hKL);
+    if (TranslateCharsetInfo((LPDWORD)(DWORD_PTR)lcid, &ci, TCI_SRCLOCALE))
         uCodePage = ci.ciACP;
     else
         uCodePage = 0;
-
     pImeDpiNew->uCodePage = uCodePage;
 
     if (!Imm32LoadImeTable(&imeinfo, pImeDpiNew))
@@ -269,9 +271,9 @@ static PIMEDPI APIENTRY Ime32LoadImeDpi(HKL hKL, BOOL bLock)
             pImeDpiFound->dwFlags &= 0xfffffffd;
 
         RtlLeaveCriticalSection(&g_csImeDpi);
+
         Imm32FreeImeDpi(pImeDpiNew, FALSE);
         HeapFree(g_hImm32Heap, 0, pImeDpiNew);
-
         return pImeDpiFound;
     }
     else
