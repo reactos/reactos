@@ -243,7 +243,7 @@ static PIMEDPI APIENTRY Ime32LoadImeDpi(HKL hKL, BOOL bLock)
         return NULL;
     }
 
-    pImeDpiNew = Imm32HeapAlloc(HEAP_ZERO_MEMORY, 0xa8);
+    pImeDpiNew = Imm32HeapAlloc(HEAP_ZERO_MEMORY, sizeof(IMEDPI));
     if (pImeDpiNew == 0)
         return NULL;
 
