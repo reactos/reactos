@@ -79,10 +79,12 @@ elseif(ARCH STREQUAL "arm")
         math/arm/__rt_sdiv64_worker.c
         math/arm/__rt_udiv.c
         math/arm/__rt_udiv64_worker.c
+        math/arm/__rt_div_worker.h
         math/arm/__dtoi64.c
         math/arm/__dtou64.c
         math/arm/__stoi64.c
         math/arm/__stou64.c
+        math/arm/__fto64.h
     )
     list(APPEND CRT_MATH_SOURCE
         math/fabsf.c

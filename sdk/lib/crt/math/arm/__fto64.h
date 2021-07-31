@@ -23,6 +23,12 @@ unsigned
 #endif
 long long FTO64_RESULT;
 
+typedef union _FTO64_UNION
+{
+    FLOAT_TYPE value;
+    FINT_TYPE raw;
+} FTO64_UNION;
+
 #define SIGN_MASK (((FINT_TYPE)1) << (FRACTION_LEN + EXPONENT_LEN))
 
 #define FRACTION_ONE (((FINT_TYPE)1) << FRACTION_LEN)
@@ -44,18 +50,14 @@ long long FTO64_RESULT;
 #define NEGATE(x) (~(x) + 1)
 
 FTO64_RESULT
-__fto64(FLOAT_TYPE value)
+__fto64(FLOAT_TYPE fvalue)
 {
-    union {
-        FLOAT_TYPE val_float;
-        FINT_TYPE val_int;
-    } u;
+    FTO64_UNION u = { .value = fvalue };
+    FINT_TYPE value = u.raw;
     int exponent;
     FTO64_RESULT fraction;
 
-    u.val_float = value;
-
-    exponent = (int)(u.val_int >> FRACTION_LEN);
+    exponent = (int)(value >> FRACTION_LEN);
     exponent &= EXPONENT_MASK;
 
     /* infinity and other NaNs */
@@ -77,11 +79,11 @@ __fto64(FLOAT_TYPE value)
         return INTNAN;
 
 #ifndef _USE_SIGNED_
-    if (u.val_int & SIGN_MASK)
+    if (value & SIGN_MASK)
         return INTNAN;
 #endif
 
-    fraction = u.val_int & FRACTION_MASK;
+    fraction = value & FRACTION_MASK;
     fraction |= FRACTION_ONE;
 
     exponent -= FRACTION_LEN;
@@ -94,7 +96,7 @@ __fto64(FLOAT_TYPE value)
     }
 
 #ifdef _USE_SIGNED_
-    if (u.val_int & SIGN_MASK)
+    if (value & SIGN_MASK)
         fraction = NEGATE(fraction);
 #endif
 

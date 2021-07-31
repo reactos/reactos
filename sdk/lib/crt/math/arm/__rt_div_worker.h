@@ -3,7 +3,7 @@
  * LICENSE:     MIT (https://spdx.org/licenses/MIT)
  * PURPOSE:     Implementation of __rt_div_worker
  * COPYRIGHT:   Copyright 2015 Timo Kreuzer <timo.kreuzer@reactos.org>
- *              Copyright 2021 Raman Masanin <36927roma@gmail.com>
+ *              Copyright 2021 Roman Masanin <36927roma@gmail.com>
  */
 
 /*
@@ -20,10 +20,16 @@
 #ifdef _USE_64_BITS_
 typedef unsigned long long UINT3264;
 typedef long long INT3264;
+typedef struct
+{
+    unsigned long long quotient; /* to be returned in R0,R1 */
+    unsigned long long modulus;  /* to be returned in R2,R3 */
+} RETURN_TYPE;
 #define _CountLeadingZeros _CountLeadingZeros64
 #else
 typedef unsigned int UINT3264;
 typedef int INT3264;
+typedef unsigned long long RETURN_TYPE; /* to be returned in R0,R1 */
 #endif
 
 __forceinline
@@ -35,27 +41,20 @@ __brkdiv0(void)
 
 typedef union _ARM_DIVRESULT
 {
-#ifdef _USE_64_BITS_
-    unsigned int raw_data[4];
-#else
-    unsigned long long raw_data;
-#endif
+    RETURN_TYPE raw_data;
     struct
     {
-        UINT3264 quotient; /* to be returned in R0(R0,R1) */
-        UINT3264 modulus;  /* to be returned in R1(R2,R3) */
+        UINT3264 quotient;
+        UINT3264 modulus;
     } data;
 } ARM_DIVRESULT;
 
-#ifndef _USE_64_BITS_
-__forceinline
-#endif
-void
+RETURN_TYPE
 __rt_div_worker(
     UINT3264 divisor,
-    UINT3264 dividend,
-    ARM_DIVRESULT* result)
+    UINT3264 dividend)
 {
+    ARM_DIVRESULT result;
     UINT3264 shift;
     UINT3264 mask;
     UINT3264 quotient;
@@ -86,13 +85,13 @@ __rt_div_worker(
 
     if (divisor > dividend)
     {
-        result->data.quotient = 0;
+        result.data.quotient = 0;
 #ifdef _SIGNED_DIV_
         if (dividend_sign)
             dividend = -(INT3264)dividend;
 #endif // _SIGNED_DIV_
-        result->data.modulus = dividend;
-        return;
+        result.data.modulus = dividend;
+        return result.raw_data;
     }
 
     /* Get the difference in count of leading zeros between dividend and divisor */
@@ -130,6 +129,7 @@ __rt_div_worker(
     }
 #endif // _SIGNED_DIV_
 
-    result->data.quotient = quotient;
-    result->data.modulus = dividend;
+    result.data.quotient = quotient;
+    result.data.modulus = dividend;
+    return result.raw_data;
 }
