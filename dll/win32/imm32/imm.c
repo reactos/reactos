@@ -37,7 +37,6 @@
 #include <stdlib.h>
 #include <ndk/umtypes.h>
 #include <ndk/pstypes.h>
-#include <ndk/exfuncs.h>
 #include <ndk/rtlfuncs.h>
 #include "../../../win32ss/include/ntuser.h"
 #include "../../../win32ss/include/ntwin32.h"
@@ -287,7 +286,7 @@ static PIMEDPI APIENTRY Ime32LoadImeDpi(HKL hKL, BOOL bLock)
     if (pImeDpiFound)
     {
         if (!bLock)
-            pImeDpiFound->dwFlags &= 0xfffffffd;
+            pImeDpiFound->dwFlags &= ~IMEDPI_FLAG_UNKNOWN2;
 
         RtlLeaveCriticalSection(&g_csImeDpi);
 
