@@ -1161,6 +1161,50 @@ static PCLIENTIMC APIENTRY Imm32GetClientImcCache(void)
     return NULL;
 }
 
+static NTSTATUS APIENTRY
+Imm32BuildHimcList(DWORD dwThreadId, DWORD dwCount, HIMC *phList, LPDWORD pdwCount)
+{
+    return NtUserBuildHimcList(dwThreadId, dwCount, phList, pdwCount);
+}
+
+static DWORD APIENTRY Imm32AllocAndBuildHimcList(DWORD dwThreadId, HIMC **pphList)
+{
+#define INITIAL_COUNT 0x40
+#define MAX_RETRY 10
+    NTSTATUS Status;
+    DWORD dwCount = INITIAL_COUNT, cRetry = 0;
+    HIMC *phNewList;
+
+    phNewList = Imm32HeapAlloc(0, dwCount * sizeof(HIMC));
+    if (phNewList == NULL)
+        return 0;
+
+    Status = Imm32BuildHimcList(dwThreadId, dwCount, phNewList, &dwCount);
+    while (Status == STATUS_BUFFER_TOO_SMALL)
+    {
+        HeapFree(g_hImm32Heap, 0, phNewList);
+        if (cRetry++ >= MAX_RETRY)
+            return 0;
+
+        phNewList = Imm32HeapAlloc(0, dwCount * sizeof(HIMC));
+        if (phNewList == NULL)
+            return 0;
+
+        Status = Imm32BuildHimcList(dwThreadId, dwCount, phNewList, &dwCount);
+    }
+
+    if (NT_ERROR(Status) || !dwCount)
+    {
+        HeapFree(g_hImm32Heap, 0, phNewList);
+        return 0;
+    }
+
+    *pphList = phNewList;
+    return dwCount;
+#undef INITIAL_COUNT
+#undef MAX_RETRY
+}
+
 PCLIENTIMC WINAPI ImmLockClientImc(HIMC hImc)
 {
     PCLIENTIMC pClientImc;
@@ -3735,11 +3779,29 @@ BOOL WINAPI ImmDisableTextFrameService(DWORD dwThreadId)
 /***********************************************************************
  *              ImmEnumInputContext(IMM32.@)
  */
-
 BOOL WINAPI ImmEnumInputContext(DWORD dwThreadId, IMCENUMPROC lpfn, LPARAM lParam)
 {
-    FIXME("Stub\n");
-    return FALSE;
+    HIMC *phList;
+    DWORD dwIndex, dwCount;
+    BOOL ret = TRUE;
+    HIMC hIMC;
+
+    TRACE("ImmEnumInputContext(%lu, %p, %p)\n", dwThreadId, lpfn, lParam);
+
+    dwCount = Imm32AllocAndBuildHimcList(dwThreadId, &phList);
+    if (!dwCount)
+        return FALSE;
+
+    for (dwIndex = 0; dwIndex < dwCount; ++dwIndex)
+    {
+        hIMC = phList[dwIndex];
+        ret = (*lpfn)(hIMC, lParam);
+        if (!ret)
+            break;
+    }
+
+    HeapFree(g_hImm32Heap, 0, phList);
+    return ret;
 }
 
 /***********************************************************************

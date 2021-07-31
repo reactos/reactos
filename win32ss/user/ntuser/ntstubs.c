@@ -54,16 +54,12 @@ NtUserBitBltSysBmp(
    return Ret;
 }
 
-DWORD
+NTSTATUS
 APIENTRY
-NtUserBuildHimcList(
-    DWORD dwUnknown1,
-    DWORD dwUnknown2,
-    DWORD dwUnknown3,
-    DWORD dwUnknown4)
+NtUserBuildHimcList(DWORD dwThreadId, DWORD dwCount, HIMC *phList, LPDWORD pdwCount)
 {
     STUB;
-    return 0;
+    return STATUS_NOT_IMPLEMENTED;
 }
 
 DWORD
