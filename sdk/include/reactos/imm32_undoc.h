@@ -7,24 +7,6 @@
 
 #pragma once
 
-/* unconfirmed */
-typedef struct tagCLIENTIMC
-{
-    HIMC hImc;
-    LONG cLockObj;
-    DWORD dwFlags;
-    DWORD unknown;
-    RTL_CRITICAL_SECTION cs;
-    DWORD unknown2;
-    HKL hKL;
-    BOOL bUnknown4;
-} CLIENTIMC, *PCLIENTIMC;
-
-/* flags for CLIENTIMC */
-#define CLIENTIMC_WIDE 0x1
-#define CLIENTIMC_UNKNOWN1 0x40
-#define CLIENTIMC_UNKNOWN2 0x100
-
 #ifdef __cplusplus
 extern "C" {
 #endif
