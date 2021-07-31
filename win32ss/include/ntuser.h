@@ -1212,7 +1212,7 @@ typedef struct _IMEWND
     PIMEUI pimeui;
 } IMEWND, *PIMEWND;
 
-#define DEFINE_IME_ENTRY(type, name, params) typedef type (WINAPI *FN_##name) params;
+#define DEFINE_IME_ENTRY(type, name, params, extended) typedef type (WINAPI *FN_##name) params;
 #include "imetable.h"
 #undef DEFINE_IME_ENTRY
 
@@ -1226,7 +1226,7 @@ typedef struct IMEDPI /* unconfirmed */
     DWORD          dwUnknown2[14];
     DWORD          cLockObj;
     DWORD          dwFlags;
-#define DEFINE_IME_ENTRY(type, name, params) FN_##name name;
+#define DEFINE_IME_ENTRY(type, name, params, extended) FN_##name name;
 #include "imetable.h"
 #undef DEFINE_IME_ENTRY
 } IMEDPI, *PIMEDPI;
@@ -3144,9 +3144,7 @@ NtUserSetImeInfoEx(
 
 DWORD
 NTAPI
-NtUserSetImeOwnerWindow(
-    DWORD Unknown0,
-    DWORD Unknown1);
+NtUserSetImeOwnerWindow(PIMEINFOEX pImeInfoEx, BOOL fFlag);
 
 DWORD
 NTAPI

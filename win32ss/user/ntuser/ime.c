@@ -133,11 +133,9 @@ NtUserSetImeInfoEx(
 }
 
 DWORD APIENTRY
-NtUserSetImeOwnerWindow(DWORD Unknown0,
-                        DWORD Unknown1)
+NtUserSetImeOwnerWindow(PIMEINFOEX pImeInfoEx, BOOL fFlag)
 {
    STUB
-
    return 0;
 }
 

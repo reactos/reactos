@@ -207,10 +207,12 @@ static BOOL APIENTRY Imm32LoadImeTable(PIMEINFOEX pImeInfoEx, PIMEDPI pImeDpi)
     }
     pImeDpi->hInst = hIME;
 
-#define DEFINE_IME_ENTRY(type, name, params) \
-    fn = GetProcAddress(hIME, #name); \
-    if (!fn) goto Failed; \
-    pImeDpi->name = (FN_##name)fn;
+#define DEFINE_IME_ENTRY(type, name, params, extended) \
+    do { \
+        fn = GetProcAddress(hIME, #name); \
+        if (fn) pImeDpi->name = (FN_##name)fn; \
+        else if (!extended) goto Failed; \
+    } while (0);
 #include "../../../win32ss/include/imetable.h"
 #undef DEFINE_IME_ENTRY
 
@@ -223,6 +225,7 @@ static BOOL APIENTRY Imm32LoadImeTable(PIMEINFOEX pImeInfoEx, PIMEDPI pImeDpi)
     return TRUE;
 
 Failed:
+    FreeLibrary(pImeDpi->hInst);
     pImeDpi->hInst = NULL;
     return FALSE;
 }
