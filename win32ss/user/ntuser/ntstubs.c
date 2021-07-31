@@ -419,22 +419,20 @@ NtUserYieldTask(VOID)
    return 0;
 }
 
-DWORD
+HIMC
 APIENTRY
-NtUserCreateInputContext(
-    DWORD dwUnknown1)
+NtUserCreateInputContext(LPVOID pClientImc)
 {
     STUB;
-    return 0;
+    return NULL;
 }
 
-DWORD
+BOOL
 APIENTRY
-NtUserDestroyInputContext(
-    DWORD dwUnknown1)
+NtUserDestroyInputContext(HIMC hIMC)
 {
     STUB;
-    return 0;
+    return FALSE;
 }
 
 DWORD

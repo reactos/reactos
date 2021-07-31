@@ -16,7 +16,7 @@ typedef struct tagCLIENTIMC
     DWORD unknown;
     RTL_CRITICAL_SECTION cs;
     DWORD unknown2;
-    DWORD unknown3;
+    HKL hKL;
     BOOL bUnknown4;
 } CLIENTIMC, *PCLIENTIMC;
 
