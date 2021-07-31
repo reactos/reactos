@@ -1223,7 +1223,9 @@ typedef struct IMEDPI /* unconfirmed */
     HKL            hKL;
     DWORD          dwUnknown0;
     DWORD          dwUnknown1;
-    DWORD          dwUnknown2[14];
+    DWORD          dwUnknown2[5];
+    UINT           uCodePage;
+    DWORD          dwUnknown3[8];
     DWORD          cLockObj;
     DWORD          dwFlags;
 #define DEFINE_IME_ENTRY(type, name, params, extended) FN_##name name;

@@ -253,7 +253,7 @@ static PIMEDPI APIENTRY Ime32LoadImeDpi(HKL hKL, BOOL bLock)
     else
         uCodePage = 0;
 
-    pImeDpiNew->dwUnknown2[5] = uCodePage;
+    pImeDpiNew->uCodePage = uCodePage;
 
     if (!Imm32LoadImeTable(&imeinfo, pImeDpiNew))
     {
