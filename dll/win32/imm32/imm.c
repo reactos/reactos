@@ -162,6 +162,153 @@ Imm32NotifyAction(HIMC hIMC, HWND hwnd, DWORD dwAction, DWORD_PTR dwIndex, DWORD
     return TRUE;
 }
 
+static PIMEDPI APIENTRY Imm32FindImeDpi(HKL hKL)
+{
+    RtlEnterCriticalSection(&g_csImeDpi);
+    PIMEDPI pImeDpi = g_pImeDpiList;
+    while (pImeDpi != 0)
+    {
+        if (pImeDpi->hKL == hKL)
+            break;
+        pImeDpi = pImeDpi->pNext;
+    }
+    RtlLeaveCriticalSection(&g_csImeDpi);
+    return pImeDpi;
+}
+
+static VOID Imm32GetSystemLibraryPath(LPWSTR pszPath, DWORD cchPath, LPCWSTR pszFileName)
+{
+    GetSystemDirectoryW(pszPath, cchPath);
+    StringCchCatW(pszPath, cchPath, L"\\");
+    StringCchCatW(pszPath, cchPath, pszFileName);
+}
+
+DWORD APIENTRY Imm32SetImeOwnerWindow(PIMEINFOEX pImeInfoEx, BOOL fFlag)
+{
+    return NtUserSetImeOwnerWindow(pImeInfoEx, fFlag);
+}
+
+static BOOL APIENTRY Imm32LoadImeTable(PIMEINFOEX pImeInfoEx, PIMEDPI pImeDpi)
+{
+    WCHAR szPath[MAX_PATH];
+    HINSTANCE hIME;
+    FARPROC fn;
+
+    Imm32GetSystemLibraryPath(szPath, _countof(szPath), pImeInfoEx->wszImeFile);
+    hIME = GetModuleHandleW(szPath);
+    if (hIME == NULL)
+    {
+        hIME = LoadLibraryW(szPath);
+        if (hIME == NULL)
+        {
+            pImeDpi->hInst = NULL;
+            return FALSE;
+        }
+    }
+    pImeDpi->hInst = hIME;
+
+#define DEFINE_IME_ENTRY(type, name, params) \
+    fn = GetProcAddress(hIME, #name); \
+    if (!fn) goto Failed; \
+    pImeDpi->name = (FN_##name)fn;
+#include "../../../win32ss/include/imetable.h"
+#undef DEFINE_IME_ENTRY
+
+    FIXME("We have to do something here\n");
+
+    if (pImeInfoEx->fLoadFlag)
+        return TRUE;
+
+    Imm32SetImeOwnerWindow(pImeInfoEx, TRUE);
+    return TRUE;
+
+Failed:
+    pImeDpi->hInst = NULL;
+    return FALSE;
+}
+
+static PIMEDPI APIENTRY Ime32LoadImeDpi(HKL hKL, BOOL bLock)
+{
+    IMEINFOEX imeinfo;
+    CHARSETINFO ci;
+    PIMEDPI pImeDpiNew, pImeDpiFound;
+    UINT uCodePage;
+
+    if (!ImmGetImeInfoEx(&imeinfo, ImeInfoExKeyboardLayout, &hKL) ||
+        imeinfo.fLoadFlag == 1)
+    {
+        return NULL;
+    }
+
+    pImeDpiNew = Imm32HeapAlloc(HEAP_ZERO_MEMORY, 0xa8);
+    if (pImeDpiNew == 0)
+        return NULL;
+
+    pImeDpiNew->hKL = hKL;
+    if (TranslateCharsetInfo((LPDWORD)(DWORD_PTR)LOWORD(hKL), &ci, TCI_SRCLOCALE))
+        uCodePage = ci.ciACP;
+    else
+        uCodePage = 0;
+
+    pImeDpiNew->dwUnknown2[5] = uCodePage;
+
+    if (!Imm32LoadImeTable(&imeinfo, pImeDpiNew))
+    {
+        HeapFree(g_hImm32Heap, 0, pImeDpiNew);
+        return FALSE;
+    }
+
+    RtlEnterCriticalSection(&g_csImeDpi);
+
+    pImeDpiFound = Imm32FindImeDpi(hKL);
+    if (pImeDpiFound)
+    {
+        if (!bLock)
+            pImeDpiFound->dwFlags &= 0xfffffffd;
+
+        RtlLeaveCriticalSection(&g_csImeDpi);
+        Imm32FreeImeDpi(pImeDpiNew, FALSE);
+        HeapFree(g_hImm32Heap, 0, pImeDpiNew);
+
+        return pImeDpiFound;
+    }
+    else
+    {
+        if (bLock)
+        {
+            pImeDpiNew->dwFlags |= IMEDPI_FLAG_UNKNOWN2;
+            pImeDpiNew->cLockObj = 1;
+        }
+
+        pImeDpiNew->pNext = g_pImeDpiList;
+        g_pImeDpiList = pImeDpiNew;
+
+        RtlLeaveCriticalSection(&g_csImeDpi);
+        return pImeDpiNew;
+    }
+}
+
+BOOL WINAPI ImmLoadIME(HKL hKL)
+{
+    PW32CLIENTINFO pInfo;
+    PIMEDPI pImeDpi;
+
+    if (!IS_IME_HKL(hKL))
+    {
+        if (g_psi == NULL || (g_psi->dwSRVIFlags & SRVINFO_METRICS) == 0)
+            return FALSE;
+
+        pInfo = (PW32CLIENTINFO)(NtCurrentTeb()->Win32ClientInfo);
+        if ((pInfo->W32ClientInfo[0] & 2))
+            return FALSE;
+    }
+
+    pImeDpi = Imm32FindImeDpi(hKL);
+    if (pImeDpi == NULL)
+        pImeDpi = Ime32LoadImeDpi(hKL, 0);
+    return (pImeDpi != NULL);
+}
+
 HKL WINAPI ImmLoadLayout(HKL hKL, PIMEINFOEX pImeInfoEx)
 {
     DWORD cbData;
@@ -597,7 +744,7 @@ static InputContextData* get_imc_data(HIMC hIMC)
 
 static HIMC get_default_context( HWND hwnd )
 {
-    FIXME("Don't use this function");
+    FIXME("Don't use this function\n");
     return FALSE;
 }
 
