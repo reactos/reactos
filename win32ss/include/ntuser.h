@@ -1225,7 +1225,7 @@ typedef struct IMEDPI /* unconfirmed */
     DWORD          dwUnknown1;
     DWORD          dwUnknown2[5];
     UINT           uCodePage;
-    DWORD          dwUnknown3[8];
+    DWORD          dwUnknown5[8];
     DWORD          cLockObj;
     DWORD          dwFlags;
 #define DEFINE_IME_ENTRY(type, name, params, extended) FN_##name name;
@@ -1237,6 +1237,7 @@ typedef struct IMEDPI /* unconfirmed */
 C_ASSERT(offsetof(IMEDPI, pNext) == 0x0);
 C_ASSERT(offsetof(IMEDPI, hInst) == 0x4);
 C_ASSERT(offsetof(IMEDPI, hKL) == 0x8);
+C_ASSERT(offsetof(IMEDPI, uCodePage) == 0x28);
 C_ASSERT(offsetof(IMEDPI, cLockObj) == 0x4c);
 C_ASSERT(offsetof(IMEDPI, dwFlags) == 0x50);
 C_ASSERT(offsetof(IMEDPI, ImeInquire) == 0x54);
