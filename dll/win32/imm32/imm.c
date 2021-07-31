@@ -68,9 +68,28 @@ HMODULE g_hImm32Inst = NULL;
 RTL_CRITICAL_SECTION g_csImeDpi;
 PIMEDPI g_pImeDpiList = NULL;
 PSERVERINFO g_psi = NULL;
+SHAREDINFO g_SharedInfo = { NULL };
 BYTE g_bClientRegd = FALSE;
 HANDLE g_hImm32Heap = NULL;
 DWORD g_dwImm32Flags = 0;
+
+static BOOL APIENTRY Imm32InitInstance(HMODULE hMod)
+{
+    NTSTATUS status;
+
+    if (hMod)
+        g_hImm32Inst = hMod;
+
+    if (g_bClientRegd)
+        return TRUE;
+
+    status = RtlInitializeCriticalSection(&g_csImeDpi);
+    if (NT_ERROR(status))
+        return FALSE;
+
+    g_bClientRegd = TRUE;
+    return TRUE;
+}
 
 LPVOID APIENTRY Imm32HeapAlloc(DWORD dwFlags, DWORD dwBytes)
 {
@@ -4172,11 +4191,11 @@ BOOL WINAPI ImmSetActiveContextConsoleIME(HWND hwnd, BOOL fFlag)
 *		ImmRegisterClient(IMM32.@)
 *       ( Undocumented, called from user32.dll )
 */
-BOOL WINAPI ImmRegisterClient(PVOID ptr, /* FIXME: should point to SHAREDINFO structure */
-                              HINSTANCE hMod)
+BOOL WINAPI ImmRegisterClient(PSHAREDINFO ptr, HINSTANCE hMod)
 {
-    FIXME("Stub\n");
-    return TRUE;
+    g_SharedInfo = *ptr;
+    g_psi = g_SharedInfo.psi;
+    return Imm32InitInstance(hMod);
 }
 
 /***********************************************************************
@@ -4242,24 +4261,6 @@ ImmGetImeInfoEx(PIMEINFOEX pImeInfoEx,
 
 Quit:
     return Imm32GetImeInfoEx(pImeInfoEx, SearchType);
-}
-
-static BOOL APIENTRY Imm32InitInstance(HMODULE hMod)
-{
-    NTSTATUS status;
-
-    if (hMod)
-        g_hImm32Inst = hMod;
-
-    if (g_bClientRegd)
-        return TRUE;
-
-    status = RtlInitializeCriticalSection(&g_csImeDpi);
-    if (NT_ERROR(status))
-        return FALSE;
-
-    g_bClientRegd = TRUE;
-    return TRUE;
 }
 
 BOOL WINAPI User32InitializeImmEntryTable(DWORD);
