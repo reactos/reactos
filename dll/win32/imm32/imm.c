@@ -823,9 +823,15 @@ HIMC WINAPI ImmCreateContext(void)
     return hIMC;
 }
 
-static VOID Imm32CleanupContextExtra(LPINPUTCONTEXT pIC)
+static VOID APIENTRY Imm32CleanupContextExtra(LPINPUTCONTEXT pIC)
 {
     FIXME("We have to do something do here");
+}
+
+static PCLIENTIMC APIENTRY Imm32FindClientImc(HIMC hIMC)
+{
+    // FIXME
+    return NULL;
 }
 
 BOOL APIENTRY Imm32CleanupContext(HIMC hIMC, HKL hKL, BOOL bKeep)
@@ -838,6 +844,9 @@ BOOL APIENTRY Imm32CleanupContext(HIMC hIMC, HKL hKL, BOOL bKeep)
         return FALSE;
 
     FIXME("We have do something to do here\n");
+    pClientImc = Imm32FindClientImc(hIMC);
+    if (!pClientImc)
+        return FALSE;
 
     if (pClientImc->hImc == NULL)
     {
