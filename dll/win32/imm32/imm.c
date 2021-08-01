@@ -201,7 +201,7 @@ DWORD APIENTRY Imm32SetImeOwnerWindow(PIMEINFOEX pImeInfoEx, BOOL fFlag)
     return NtUserSetImeOwnerWindow(pImeInfoEx, fFlag);
 }
 
-static BOOL APIENTRY Imm32LoadImeUIInfo(PIMEDPI pImeDpi)
+static BOOL APIENTRY Imm32InquireIme(PIMEDPI pImeDpi)
 {
     WCHAR szUIClass[64];
     WNDCLASSW wcW;
@@ -274,7 +274,7 @@ static BOOL APIENTRY Imm32LoadImeInfo(PIMEINFOEX pImeInfoEx, PIMEDPI pImeDpi)
 #include "../../../win32ss/include/imetable.h"
 #undef DEFINE_IME_ENTRY
 
-    if (!Imm32LoadImeUIInfo(pImeDpi))
+    if (!Imm32InquireIme(pImeDpi))
         goto Failed;
 
     if (pImeInfoEx->fLoadFlag)
