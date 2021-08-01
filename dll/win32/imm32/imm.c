@@ -245,14 +245,14 @@ Failed:
 
 static PIMEDPI APIENTRY Ime32LoadImeDpi(HKL hKL, BOOL bLock)
 {
-    IMEINFOEX imeinfo;
+    IMEINFOEX ImeInfoEx;
     CHARSETINFO ci;
     PIMEDPI pImeDpiNew, pImeDpiFound;
     UINT uCodePage;
     LCID lcid;
 
-    if (!ImmGetImeInfoEx(&imeinfo, ImeInfoExKeyboardLayout, &hKL) ||
-        imeinfo.fLoadFlag == 1)
+    if (!ImmGetImeInfoEx(&ImeInfoEx, ImeInfoExKeyboardLayout, &hKL) ||
+        ImeInfoEx.fLoadFlag == 1)
     {
         return NULL;
     }
@@ -270,7 +270,7 @@ static PIMEDPI APIENTRY Ime32LoadImeDpi(HKL hKL, BOOL bLock)
         uCodePage = CP_ACP;
     pImeDpiNew->uCodePage = uCodePage;
 
-    if (!Imm32LoadImeTable(&imeinfo, pImeDpiNew))
+    if (!Imm32LoadImeTable(&ImeInfoEx, pImeDpiNew))
     {
         HeapFree(g_hImm32Heap, 0, pImeDpiNew);
         return FALSE;
