@@ -59,8 +59,6 @@ WINE_DEFAULT_DEBUG_CHANNEL(imm);
 
 #define ROUNDUP4(n) (((n) + 3) & ~3)  /* DWORD alignment */
 
-#define SRVINFO_CICERO_ENABLED SRVINFO_METRICS
-
 HMODULE g_hImm32Inst = NULL;
 RTL_CRITICAL_SECTION g_csImeDpi;
 PIMEDPI g_pImeDpiList = NULL;
