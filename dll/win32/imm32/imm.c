@@ -189,11 +189,13 @@ static PIMEDPI APIENTRY Imm32FindImeDpi(HKL hKL)
     return pImeDpi;
 }
 
-static VOID Imm32GetSystemLibraryPath(LPWSTR pszPath, DWORD cchPath, LPCWSTR pszFileName)
+static BOOL Imm32GetSystemLibraryPath(LPWSTR pszPath, DWORD cchPath, LPCWSTR pszFileName)
 {
-    GetSystemDirectoryW(pszPath, cchPath);
+    if (!pszFileName[0] || !GetSystemDirectoryW(pszPath, cchPath))
+        return FALSE;
     StringCchCatW(pszPath, cchPath, L"\\");
     StringCchCatW(pszPath, cchPath, pszFileName);
+    return TRUE;
 }
 
 DWORD APIENTRY Imm32SetImeOwnerWindow(PIMEINFOEX pImeInfoEx, BOOL fFlag)
@@ -309,7 +311,9 @@ static BOOL APIENTRY Imm32LoadImeInfo(PIMEINFOEX pImeInfoEx, PIMEDPI pImeDpi)
     HINSTANCE hIME;
     FARPROC fn;
 
-    Imm32GetSystemLibraryPath(szPath, _countof(szPath), pImeInfoEx->wszImeFile);
+    if (!Imm32GetSystemLibraryPath(szPath, _countof(szPath), pImeInfoEx->wszImeFile))
+        return FALSE;
+
     hIME = GetModuleHandleW(szPath);
     if (hIME == NULL)
     {
