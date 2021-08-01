@@ -259,7 +259,7 @@ static BOOL APIENTRY Imm32LoadImeInfo(PIMEINFOEX pImeInfoEx, PIMEDPI pImeDpi)
         hIME = LoadLibraryW(szPath);
         if (hIME == NULL)
         {
-            pImeDpi->hInst = NULL;
+            ERR("Imm32LoadImeInfo: LoadLibraryW(%S) failed\n", szPath);
             return FALSE;
         }
     }
@@ -275,7 +275,10 @@ static BOOL APIENTRY Imm32LoadImeInfo(PIMEINFOEX pImeInfoEx, PIMEDPI pImeDpi)
 #undef DEFINE_IME_ENTRY
 
     if (!Imm32InquireIme(pImeDpi))
+    {
+        ERR("Imm32LoadImeInfo: Imm32InquireIme failed\n");
         goto Failed;
+    }
 
     if (pImeInfoEx->fLoadFlag)
         return TRUE;
@@ -4319,9 +4322,15 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpReserved)
         case DLL_PROCESS_ATTACH:
             //Imm32GenerateRandomSeed(hinstDLL, 1, lpReserved); // Non-sense
             if (!Imm32InitInstance(hinstDLL))
+            {
+                ERR("Imm32InitInstance failed\n");
                 return FALSE;
+            }
             if (!User32InitializeImmEntryTable(IMM_INIT_MAGIC))
+            {
+                ERR("User32InitializeImmEntryTable failed\n");
                 return FALSE;
+            }
             break;
 
         case DLL_THREAD_ATTACH:
