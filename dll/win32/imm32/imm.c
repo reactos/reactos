@@ -59,10 +59,6 @@ WINE_DEFAULT_DEBUG_CHANNEL(imm);
 
 #define ROUNDUP4(n) (((n) + 3) & ~3)  /* DWORD alignment */
 
-/* flags for g_dwImm32Flags */
-#define IMM32_FLAG_UNKNOWN 0x4
-#define IMM32_FLAG_CICERO_ENABLED 0x20
-
 HMODULE g_hImm32Inst = NULL;
 RTL_CRITICAL_SECTION g_csImeDpi;
 PIMEDPI g_pImeDpiList = NULL;
@@ -70,7 +66,6 @@ PSERVERINFO g_psi = NULL;
 SHAREDINFO g_SharedInfo = { NULL };
 BYTE g_bClientRegd = FALSE;
 HANDLE g_hImm32Heap = NULL;
-DWORD g_dwImm32Flags = 0;
 
 static BOOL APIENTRY Imm32InitInstance(HMODULE hMod)
 {
@@ -2593,7 +2588,7 @@ void WINAPI __wine_unregister_window(HWND hwnd)
  */
 HWND WINAPI ImmGetDefaultIMEWnd(HWND hWnd)
 {
-    if (!(g_dwImm32Flags & IMM32_FLAG_UNKNOWN))
+    if (!g_psi || !(g_psi->dwSRVIFlags & SRVINFO_IMM32))
         return NULL;
 
     if (hWnd == NULL)
@@ -2607,7 +2602,7 @@ HWND WINAPI ImmGetDefaultIMEWnd(HWND hWnd)
  */
 BOOL WINAPI CtfImmIsCiceroEnabled(VOID)
 {
-    return !!(g_dwImm32Flags & IMM32_FLAG_CICERO_ENABLED);
+    return (g_psi != NULL) && ((g_psi->dwSRVIFlags & SRVINFO_METRICS) != 0);
 }
 
 /***********************************************************************
@@ -4247,7 +4242,7 @@ ImmGetImeInfoEx(PIMEINFOEX pImeInfoEx,
 
     if (!IS_IME_HKL(hKL))
     {
-        if (g_dwImm32Flags & IMM32_FLAG_CICERO_ENABLED)
+        if (g_psi && (g_psi->dwSRVIFlags & SRVINFO_METRICS))
         {
             pTeb = NtCurrentTeb();
             if (((PW32CLIENTINFO)pTeb->Win32ClientInfo)->W32ClientInfo[0] & 2)
