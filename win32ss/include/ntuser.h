@@ -1216,7 +1216,7 @@ typedef struct _IMEWND
 #include "imetable.h"
 #undef DEFINE_IME_ENTRY
 
-typedef struct IMEDPI /* unconfirmed */
+typedef struct IMEDPI
 {
     struct IMEDPI *pNext;
     HINSTANCE      hInst;
@@ -1235,7 +1235,9 @@ typedef struct IMEDPI /* unconfirmed */
 C_ASSERT(offsetof(IMEDPI, pNext) == 0x0);
 C_ASSERT(offsetof(IMEDPI, hInst) == 0x4);
 C_ASSERT(offsetof(IMEDPI, hKL) == 0x8);
+C_ASSERT(offsetof(IMEDPI, ImeInfo) == 0xc);
 C_ASSERT(offsetof(IMEDPI, uCodePage) == 0x28);
+C_ASSERT(offsetof(IMEDPI, szUIClass) == 0x2c);
 C_ASSERT(offsetof(IMEDPI, cLockObj) == 0x4c);
 C_ASSERT(offsetof(IMEDPI, dwFlags) == 0x50);
 C_ASSERT(offsetof(IMEDPI, ImeInquire) == 0x54);
