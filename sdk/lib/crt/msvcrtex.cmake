@@ -43,19 +43,24 @@ else()
     list(APPEND MSVCRTEX_SOURCE
         startup/pseudo-reloc.c
         startup/pseudo-reloc-list.c)
-    if (CLANG)
-        # CLang performs some optimisations requiring those funtions
-        list(APPEND MSVCRTEX_SOURCE
-            math/exp2.c
-            math/exp2f.c)
-    endif()
+endif()
+
+if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
+    # Clang performs some optimizations requiring those funtions
+    list(APPEND MSVCRTEX_SOURCE
+        math/exp2.c
+        math/exp2f.c
+        )
 endif()
 
 if(ARCH STREQUAL "i386")
+    # Clang wants __aulldiv for its optimizations
     list(APPEND MSVCRTEX_ASM_SOURCE
         except/i386/chkstk_asm.s
         except/i386/chkstk_ms.s
-        math/i386/alldiv_asm.s)
+        math/i386/alldiv_asm.s
+        math/i386/aulldiv_asm.s 
+        )
     if (GCC AND CLANG)
         list(APPEND MSVCRTEX_ASM_SOURCE
             math/i386/ceilf.S
