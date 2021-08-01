@@ -33,10 +33,14 @@ elseif(ARCH STREQUAL "amd64")
         float/amd64/logb.S
     )
 elseif(ARCH STREQUAL "arm")
+    list(APPEND CRT_FLOAT_SOURCE
+        float/arm/_clearfp.c
+        float/arm/_controlfp.c
+        float/arm/_fpreset.c
+        float/arm/_statusfp.c
+    )
     list(APPEND CRT_FLOAT_ASM_SOURCE
-        float/arm/_clearfp.s
-        float/arm/_controlfp.s
-        float/arm/_fpreset.s
-        float/arm/_statusfp.s
+        float/arm/__getfp.s
+        float/arm/__setfp.s
     )
 endif()
