@@ -176,15 +176,16 @@ Imm32NotifyAction(HIMC hIMC, HWND hwnd, DWORD dwAction, DWORD_PTR dwIndex, DWORD
 
 static PIMEDPI APIENTRY Imm32FindImeDpi(HKL hKL)
 {
+    PIMEDPI pImeDpi;
+
     RtlEnterCriticalSection(&g_csImeDpi);
-    PIMEDPI pImeDpi = g_pImeDpiList;
-    while (pImeDpi)
+    for (pImeDpi = g_pImeDpiList; pImeDpi != NULL; pImeDpi = pImeDpi->pNext)
     {
         if (pImeDpi->hKL == hKL)
             break;
-        pImeDpi = pImeDpi->pNext;
     }
     RtlLeaveCriticalSection(&g_csImeDpi);
+
     return pImeDpi;
 }
 
