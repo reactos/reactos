@@ -228,7 +228,64 @@ static BOOL APIENTRY Imm32InquireIme(PIMEDPI pImeDpi)
     if (pImeInfo->dwPrivateDataSize == 0)
         pImeInfo->dwPrivateDataSize = 4;
 
-    // TODO: Validate pImeInfo->fdw...;
+#define VALID_IME_PROP (IME_PROP_AT_CARET              | \
+                        IME_PROP_SPECIAL_UI            | \
+                        IME_PROP_CANDLIST_START_FROM_1 | \
+                        IME_PROP_UNICODE               | \
+                        IME_PROP_COMPLETE_ON_UNSELECT  | \
+                        IME_PROP_END_UNLOAD            | \
+                        IME_PROP_KBD_CHAR_FIRST        | \
+                        IME_PROP_IGNORE_UPKEYS         | \
+                        IME_PROP_NEED_ALTKEY           | \
+                        IME_PROP_NO_KEYS_ON_CLOSE      | \
+                        IME_PROP_ACCEPT_WIDE_VKEY)
+#define VALID_CMODE_CAPS (IME_CMODE_ALPHANUMERIC | \
+                          IME_CMODE_NATIVE       | \
+                          IME_CMODE_KATAKANA     | \
+                          IME_CMODE_LANGUAGE     | \
+                          IME_CMODE_FULLSHAPE    | \
+                          IME_CMODE_ROMAN        | \
+                          IME_CMODE_CHARCODE     | \
+                          IME_CMODE_HANJACONVERT | \
+                          IME_CMODE_SOFTKBD      | \
+                          IME_CMODE_NOCONVERSION | \
+                          IME_CMODE_EUDC         | \
+                          IME_CMODE_SYMBOL       | \
+                          IME_CMODE_FIXED)
+#define VALID_SMODE_CAPS (IME_SMODE_NONE          | \
+                          IME_SMODE_PLAURALCLAUSE | \
+                          IME_SMODE_SINGLECONVERT | \
+                          IME_SMODE_AUTOMATIC     | \
+                          IME_SMODE_PHRASEPREDICT | \
+                          IME_SMODE_CONVERSATION)
+#define VALID_UI_CAPS (UI_CAP_2700    | \
+                       UI_CAP_ROT90   | \
+                       UI_CAP_ROTANY  | \
+                       UI_CAP_SOFTKBD)
+#define VALID_SCS_CAPS (SCS_CAP_COMPSTR            | \
+                        SCS_CAP_MAKEREAD           | \
+                        SCS_CAP_SETRECONVERTSTRING)
+#define VALID_SELECT_CAPS (SELECT_CAP_CONVERSION | SELECT_CAP_SENTENCE)
+
+    if (pImeInfo->fdwProperty & ~VALID_IME_PROP)
+        return FALSE;
+    if (pImeInfo->fdwConversionCaps & ~VALID_CMODE_CAPS)
+        return FALSE;
+    if (pImeInfo->fdwSentenceCaps & ~VALID_SMODE_CAPS)
+        return FALSE;
+    if (pImeInfo->fdwUICaps & ~VALID_UI_CAPS)
+        return FALSE;
+    if (pImeInfo->fdwSCSCaps & ~VALID_SCS_CAPS)
+        return FALSE;
+    if (pImeInfo->fdwSelectCaps & ~VALID_SELECT_CAPS)
+        return FALSE;
+
+#undef VALID_IME_PROP
+#undef VALID_CMODE_CAPS
+#undef VALID_SMODE_CAPS
+#undef VALID_UI_CAPS
+#undef VALID_SCS_CAPS
+#undef VALID_SELECT_CAPS
 
     if (pImeInfo->fdwProperty & IME_PROP_UNICODE)
     {
