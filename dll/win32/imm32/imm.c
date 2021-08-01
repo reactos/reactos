@@ -259,7 +259,7 @@ static PIMEDPI APIENTRY Ime32LoadImeDpi(HKL hKL, BOOL bLock)
     }
 
     pImeDpiNew = Imm32HeapAlloc(HEAP_ZERO_MEMORY, sizeof(IMEDPI));
-    if (pImeDpiNew == 0)
+    if (pImeDpiNew == NULL)
         return NULL;
 
     pImeDpiNew->hKL = hKL;
@@ -268,7 +268,7 @@ static PIMEDPI APIENTRY Ime32LoadImeDpi(HKL hKL, BOOL bLock)
     if (TranslateCharsetInfo((LPDWORD)(DWORD_PTR)lcid, &ci, TCI_SRCLOCALE))
         uCodePage = ci.ciACP;
     else
-        uCodePage = 0;
+        uCodePage = CP_ACP;
     pImeDpiNew->uCodePage = uCodePage;
 
     if (!Imm32LoadImeTable(&imeinfo, pImeDpiNew))
