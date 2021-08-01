@@ -1281,6 +1281,15 @@ typedef struct tagCLIENTIMC
     BOOL bUnknown4;
 } CLIENTIMC, *PCLIENTIMC;
 
+#ifndef _WIN64
+C_ASSERT(offsetof(CLIENTIMC, hImc) == 0x0);
+C_ASSERT(offsetof(CLIENTIMC, cLockObj) == 0x4);
+C_ASSERT(offsetof(CLIENTIMC, dwFlags) == 0x8);
+C_ASSERT(offsetof(CLIENTIMC, cs) == 0x10);
+C_ASSERT(offsetof(CLIENTIMC, hKL) == 0x2c);
+C_ASSERT(sizeof(CLIENTIMC) == 0x34);
+#endif
+
 /* flags for CLIENTIMC */
 #define CLIENTIMC_WIDE 0x1
 #define CLIENTIMC_UNKNOWN1 0x40
