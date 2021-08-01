@@ -1221,11 +1221,9 @@ typedef struct IMEDPI /* unconfirmed */
     struct IMEDPI *pNext;
     HINSTANCE      hInst;
     HKL            hKL;
-    DWORD          dwUnknown0;
-    DWORD          dwUnknown1;
-    DWORD          dwUnknown2[5];
+    IMEINFO        ImeInfo;
     UINT           uCodePage;
-    DWORD          dwUnknown5[8];
+    WCHAR          szUIClass[16];
     DWORD          cLockObj;
     DWORD          dwFlags;
 #define DEFINE_IME_ENTRY(type, name, params, extended) FN_##name name;

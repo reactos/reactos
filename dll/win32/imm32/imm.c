@@ -201,7 +201,49 @@ DWORD APIENTRY Imm32SetImeOwnerWindow(PIMEINFOEX pImeInfoEx, BOOL fFlag)
     return NtUserSetImeOwnerWindow(pImeInfoEx, fFlag);
 }
 
-static BOOL APIENTRY Imm32LoadImeTable(PIMEINFOEX pImeInfoEx, PIMEDPI pImeDpi)
+static BOOL APIENTRY Imm32LoadImeUIInfo(PIMEDPI pImeDpi)
+{
+    WCHAR szUIClass[16];
+    WNDCLASSW wcW;
+    DWORD dwSysInfoFlags = 0; // TODO: ???
+    LPIMEINFO pImeInfo = &pImeDpi->ImeInfo;
+
+    // TODO: Imm32GetThreadState(THREADSTATE_UNKNOWN16);
+
+    if (!IS_IME_HKL(pImeDpi->hKL))
+    {
+        if (g_psi && (g_psi->dwSRVIFlags & SRVINFO_CICERO_ENABLED) &&
+            pImeDpi->CtfImeInquireExW)
+        {
+            // TODO:
+            return FALSE;
+        }
+    }
+
+    if (!pImeDpi->ImeInquire(pImeInfo, szUIClass, dwSysInfoFlags))
+        return FALSE;
+
+    if (pImeInfo->dwPrivateDataSize == 0)
+        pImeInfo->dwPrivateDataSize = 4;
+
+    // TODO: Validate pImeInfo->fdw...;
+
+    if (pImeInfo->fdwProperty & IME_PROP_UNICODE)
+    {
+        if (pImeDpi->uCodePage != GetACP() && pImeDpi->uCodePage != 0)
+            return FALSE;
+        MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, (LPSTR)szUIClass, -1,
+                            pImeDpi->szUIClass, _countof(pImeDpi->szUIClass));
+    }
+    else
+    {
+        StringCchCopyW(pImeDpi->szUIClass, _countof(pImeDpi->szUIClass), szUIClass);
+    }
+
+    return GetClassInfoW(pImeDpi->hInst, pImeDpi->szUIClass, &wcW);
+}
+
+static BOOL APIENTRY Imm32LoadImeInfo(PIMEINFOEX pImeInfoEx, PIMEDPI pImeDpi)
 {
     WCHAR szPath[MAX_PATH];
     HINSTANCE hIME;
@@ -229,7 +271,8 @@ static BOOL APIENTRY Imm32LoadImeTable(PIMEINFOEX pImeInfoEx, PIMEDPI pImeDpi)
 #include "../../../win32ss/include/imetable.h"
 #undef DEFINE_IME_ENTRY
 
-    FIXME("We have to do something here\n");
+    if (!Imm32LoadImeUIInfo(pImeDpi))
+        goto Failed;
 
     if (pImeInfoEx->fLoadFlag)
         return TRUE;
@@ -270,7 +313,7 @@ static PIMEDPI APIENTRY Ime32LoadImeDpi(HKL hKL, BOOL bLock)
         uCodePage = CP_ACP;
     pImeDpiNew->uCodePage = uCodePage;
 
-    if (!Imm32LoadImeTable(&ImeInfoEx, pImeDpiNew))
+    if (!Imm32LoadImeInfo(&ImeInfoEx, pImeDpiNew))
     {
         HeapFree(g_hImm32Heap, 0, pImeDpiNew);
         return FALSE;
@@ -3478,7 +3521,7 @@ VOID WINAPI ImmUnlockImeDpi(PIMEDPI pImeDpi)
     if ((pImeDpi->dwFlags & IMEDPI_FLAG_UNKNOWN) == 0)
     {
         if ((pImeDpi->dwFlags & IMEDPI_FLAG_LOCKED) == 0 ||
-            (pImeDpi->dwUnknown1 & 1) == 0)
+            (pImeDpi->ImeInfo.fdwProperty & IME_PROP_END_UNLOAD) == 0)
         {
             RtlLeaveCriticalSection(&g_csImeDpi);
             return;
