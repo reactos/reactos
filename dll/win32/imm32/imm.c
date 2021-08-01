@@ -281,7 +281,7 @@ static PIMEDPI APIENTRY Ime32LoadImeDpi(HKL hKL, BOOL bLock)
     if (pImeDpiFound)
     {
         if (!bLock)
-            pImeDpiFound->dwFlags &= ~IMEDPI_FLAG_UNKNOWN2;
+            pImeDpiFound->dwFlags &= ~IMEDPI_FLAG_LOCKED;
 
         RtlLeaveCriticalSection(&g_csImeDpi);
 
@@ -293,7 +293,7 @@ static PIMEDPI APIENTRY Ime32LoadImeDpi(HKL hKL, BOOL bLock)
     {
         if (bLock)
         {
-            pImeDpiNew->dwFlags |= IMEDPI_FLAG_UNKNOWN2;
+            pImeDpiNew->dwFlags |= IMEDPI_FLAG_LOCKED;
             pImeDpiNew->cLockObj = 1;
         }
 
@@ -3476,7 +3476,7 @@ VOID WINAPI ImmUnlockImeDpi(PIMEDPI pImeDpi)
 
     if ((pImeDpi->dwFlags & IMEDPI_FLAG_UNKNOWN) == 0)
     {
-        if ((pImeDpi->dwFlags & IMEDPI_FLAG_UNKNOWN2) == 0 ||
+        if ((pImeDpi->dwFlags & IMEDPI_FLAG_LOCKED) == 0 ||
             (pImeDpi->dwUnknown1 & 1) == 0)
         {
             RtlLeaveCriticalSection(&g_csImeDpi);
