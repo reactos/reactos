@@ -1,6 +1,10 @@
 
 if(CMAKE_BUILD_TYPE STREQUAL "Release")
-    add_compile_options(/Ox /Ob2 /Ot /Oy /GT)
+    add_compile_options(/Ox /Ob2 /Ot /Oy)
+    # Avoid spam in clang-cl as it doesn't support /GT
+    if(CMAKE_C_COMPILER_ID STREQUAL "MSVC")
+        add_compile_options(/GT)
+    endif()
 elseif(OPTIMIZE STREQUAL "1")
     add_compile_options(/O1)
 elseif(OPTIMIZE STREQUAL "2")
