@@ -7,6 +7,7 @@ jobs:
       matrix:
         compiler: [gcc, clang]
         arch: [i386, amd64]
+        config: [Debug, Release]
       fail-fast: false
     runs-on: ubuntu-latest
     steps:
@@ -46,7 +47,7 @@ jobs:
       uses: actions/cache@v2
       with:
         path: ccache
-        key: ccache-${{matrix.compiler}}-${{matrix.arch}}-${{github.sha}}
+        key: ccache-${{matrix.compiler}}-${{matrix.arch}}-${{matrix.config}}-${{github.sha}}
         restore-keys: |
           ccache-${{matrix.compiler}}-${{matrix.arch}}-
     - name: Set ccache settings
@@ -59,7 +60,7 @@ jobs:
       if: ${{ matrix.compiler == 'gcc' }}
       run: echo "CCACHE_COMPILERCHECK=string:${{steps.get_rosbe_spec.outputs.git-sha}}-${{hashfiles('./build_rosbe_ci.sh')}}" >> $GITHUB_ENV
     - name: Configure
-      run: echo 'cmake -S ${{github.workspace}}/src -B ${{github.workspace}}/build -G Ninja -DCMAKE_TOOLCHAIN_FILE:FILEPATH=toolchain-${{matrix.compiler}}.cmake -DARCH:STRING=${{matrix.arch}} -DENABLE_CCACHE=1 -DENABLE_ROSTESTS=1 -DENABLE_ROSAPPS=1 ${{env.D_CLANG_VERSION}}' | ${{github.workspace}}/RosBE-CI/RosBE.sh . 0 ${{matrix.arch}}
+      run: echo 'cmake -S ${{github.workspace}}/src -B ${{github.workspace}}/build -G Ninja -DCMAKE_TOOLCHAIN_FILE:FILEPATH=toolchain-${{matrix.compiler}}.cmake -DARCH:STRING=${{matrix.arch}} -DCMAKE_BUILD_TYPE=${{matrix.config}} -DENABLE_CCACHE=1 -DENABLE_ROSTESTS=1 -DENABLE_ROSAPPS=1 ${{env.D_CLANG_VERSION}}' | ${{github.workspace}}/RosBE-CI/RosBE.sh . 0 ${{matrix.arch}}
     - name: Build
       run: echo 'cmake --build ${{github.workspace}}/build -- -k0' | ${{github.workspace}}/RosBE-CI/RosBE.sh . 0 ${{matrix.arch}}
     - name: Generate ISOs
@@ -69,7 +70,7 @@ jobs:
     - name: Upload ISOs
       uses: actions/upload-artifact@v2
       with:
-        name: reactos-${{matrix.compiler}}-${{matrix.arch}}-${{github.sha}}
+        name: reactos-${{matrix.compiler}}-${{matrix.arch}}-${{matrix.config}}-${{github.sha}}
         path: |
           build/bootcd.iso
           build/livecd.iso
@@ -77,9 +78,9 @@ jobs:
   build-msvc:
     strategy:
       matrix:
-        arch: [i386, amd64]
-        buildtype: [Debug,Release]
         toolset: ['14.2', '14.1'] # VS 2019, 2017
+        arch: [i386, amd64]
+        config: [Debug, Release]
         include:
         - arch: i386 # Not compiling on amd64 prompt
           toolset: '14.0' # VS 2015
@@ -112,7 +113,7 @@ jobs:
       with:
         path: src
     - name: Configure
-      run: cmake -S src -B build -G Ninja -DCMAKE_TOOLCHAIN_FILE:FILEPATH=toolchain-msvc.cmake -DARCH:STRING=${{matrix.arch}} -DENABLE_ROSTESTS=1 -DENABLE_ROSAPPS=1 -DCMAKE_BUILD_TYPE=${{matrix.buildtype}}
+      run: cmake -S src -B build -G Ninja -DCMAKE_TOOLCHAIN_FILE:FILEPATH=toolchain-msvc.cmake -DARCH:STRING=${{matrix.arch}} -DCMAKE_BUILD_TYPE=${{matrix.config}} -DENABLE_ROSTESTS=1 -DENABLE_ROSAPPS=1
     - name: Build
       run: cmake --build build  -- -k0
     - name: Generate ISOs
@@ -120,21 +121,22 @@ jobs:
     - name: Upload ISOs
       uses: actions/upload-artifact@v2
       with:
-        name: reactos-msvc${{matrix.toolset}}-${{matrix.arch}}-${{github.sha}}
+        name: reactos-msvc${{matrix.toolset}}-${{matrix.arch}}-${{matrix.config}}-${{github.sha}}
         path: |
           build/bootcd.iso
           build/livecd.iso
     - name: Upload debug symbols
+      if: ${{ matrix.config == 'Debug' }}
       uses: actions/upload-artifact@v2
       with:
-        name: reactos-syms-msvc${{matrix.toolset}}-${{matrix.arch}}-${{github.sha}}
+        name: reactos-syms-msvc${{matrix.toolset}}-${{matrix.arch}}-${{matrix.config}}-${{github.sha}}
         path: build/msvc_pdb
 
   build-msvc-arm:
     strategy:
       matrix:
-        arch: [arm]
         toolset: ['14.2', '14.1'] # VS 2019, 2017
+        arch: [arm]
       fail-fast: false
     runs-on: windows-latest
     steps:
@@ -165,6 +167,7 @@ jobs:
     strategy:
       matrix:
         arch: [i386, amd64]
+        config: [Debug, Release]
       fail-fast: false
     runs-on: windows-latest
     steps:
@@ -206,7 +209,7 @@ jobs:
       with:
         path: src
     - name: Configure
-      run: cmake -S src -B build -G Ninja -DCMAKE_TOOLCHAIN_FILE:FILEPATH=toolchain-msvc.cmake -DARCH:STRING=${{matrix.arch}} -DENABLE_ROSTESTS=1 -DENABLE_ROSAPPS=1 -DUSE_CLANG_CL:BOOL=TRUE
+      run: cmake -S src -B build -G Ninja -DCMAKE_TOOLCHAIN_FILE:FILEPATH=toolchain-msvc.cmake -DARCH:STRING=${{matrix.arch}} -DCMAKE_BUILD_TYPE=${{matrix.config}} -DENABLE_ROSTESTS=1 -DENABLE_ROSAPPS=1 -DUSE_CLANG_CL:BOOL=TRUE
     - name: Build
       run: cmake --build build -- -k0
     - name: Generate ISOs
@@ -214,14 +217,15 @@ jobs:
     - name: Upload ISOs
       uses: actions/upload-artifact@v2
       with:
-        name: reactos-clang-cl-${{matrix.arch}}-${{github.sha}}
+        name: reactos-clang-cl-${{matrix.arch}}-${{matrix.config}}-${{github.sha}}
         path: |
           build/bootcd.iso
           build/livecd.iso
     - name: Upload debug symbols
+      if: ${{ matrix.config == 'Debug' }}
       uses: actions/upload-artifact@v2
       with:
-        name: reactos-syms-clang-cl-${{matrix.arch}}-${{github.sha}}
+        name: reactos-syms-clang-cl-${{matrix.arch}}-${{matrix.config}}-${{github.sha}}
         path: build/msvc_pdb
 
   build-msbuild-i386:
