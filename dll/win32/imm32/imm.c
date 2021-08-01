@@ -59,6 +59,8 @@ WINE_DEFAULT_DEBUG_CHANNEL(imm);
 
 #define ROUNDUP4(n) (((n) + 3) & ~3)  /* DWORD alignment */
 
+#define SRVINFO_CICERO_ENABLED SRVINFO_METRICS
+
 HMODULE g_hImm32Inst = NULL;
 RTL_CRITICAL_SECTION g_csImeDpi;
 PIMEDPI g_pImeDpiList = NULL;
@@ -312,7 +314,7 @@ BOOL WINAPI ImmLoadIME(HKL hKL)
 
     if (!IS_IME_HKL(hKL))
     {
-        if (g_psi == NULL || (g_psi->dwSRVIFlags & SRVINFO_METRICS) == 0)
+        if (!g_psi || !(g_psi->dwSRVIFlags & SRVINFO_CICERO_ENABLED))
             return FALSE;
 
         pInfo = (PW32CLIENTINFO)(NtCurrentTeb()->Win32ClientInfo);
@@ -338,7 +340,7 @@ HKL WINAPI ImmLoadLayout(HKL hKL, PIMEINFOEX pImeInfoEx)
     TRACE("ImmLoadLayout(%p, %p)\n", hKL, pImeInfoEx);
 
     if (IS_IME_HKL(hKL) ||
-        !g_psi || (g_psi->dwSRVIFlags & SRVINFO_METRICS) == 0 ||
+        !g_psi || !(g_psi->dwSRVIFlags & SRVINFO_CICERO_ENABLED) ||
         ((PW32CLIENTINFO)NtCurrentTeb()->Win32ClientInfo)->W32ClientInfo[0] & 2)
     {
         UnicodeString.Buffer = szLayout;
@@ -1039,7 +1041,7 @@ BOOL APIENTRY Imm32CleanupContext(HIMC hIMC, HKL hKL, BOOL bKeep)
             {
                 pImeDpi->ImeSelect(hIMC, FALSE);
             }
-            else if (g_psi && (g_psi->dwSRVIFlags & SRVINFO_METRICS))
+            else if (g_psi && (g_psi->dwSRVIFlags & SRVINFO_CICERO_ENABLED))
             {
                 FIXME("We have do something to do here\n");
             }
@@ -2602,7 +2604,7 @@ HWND WINAPI ImmGetDefaultIMEWnd(HWND hWnd)
  */
 BOOL WINAPI CtfImmIsCiceroEnabled(VOID)
 {
-    return (g_psi != NULL) && ((g_psi->dwSRVIFlags & SRVINFO_METRICS) != 0);
+    return (g_psi && (g_psi->dwSRVIFlags & SRVINFO_CICERO_ENABLED));
 }
 
 /***********************************************************************
@@ -4242,7 +4244,7 @@ ImmGetImeInfoEx(PIMEINFOEX pImeInfoEx,
 
     if (!IS_IME_HKL(hKL))
     {
-        if (g_psi && (g_psi->dwSRVIFlags & SRVINFO_METRICS))
+        if (g_psi && (g_psi->dwSRVIFlags & SRVINFO_CICERO_ENABLED))
         {
             pTeb = NtCurrentTeb();
             if (((PW32CLIENTINFO)pTeb->Win32ClientInfo)->W32ClientInfo[0] & 2)
