@@ -203,7 +203,7 @@ DWORD APIENTRY Imm32SetImeOwnerWindow(PIMEINFOEX pImeInfoEx, BOOL fFlag)
 
 static BOOL APIENTRY Imm32LoadImeUIInfo(PIMEDPI pImeDpi)
 {
-    WCHAR szUIClass[16];
+    WCHAR szUIClass[64];
     WNDCLASSW wcW;
     DWORD dwSysInfoFlags = 0; // TODO: ???
     LPIMEINFO pImeInfo = &pImeDpi->ImeInfo;
@@ -223,6 +223,8 @@ static BOOL APIENTRY Imm32LoadImeUIInfo(PIMEDPI pImeDpi)
     if (!pImeDpi->ImeInquire(pImeInfo, szUIClass, dwSysInfoFlags))
         return FALSE;
 
+    szUIClass[_countof(szUIClass) - 1] = 0;
+
     if (pImeInfo->dwPrivateDataSize == 0)
         pImeInfo->dwPrivateDataSize = 4;
 
@@ -230,14 +232,15 @@ static BOOL APIENTRY Imm32LoadImeUIInfo(PIMEDPI pImeDpi)
 
     if (pImeInfo->fdwProperty & IME_PROP_UNICODE)
     {
-        if (pImeDpi->uCodePage != GetACP() && pImeDpi->uCodePage != 0)
-            return FALSE;
-        MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, (LPSTR)szUIClass, -1,
-                            pImeDpi->szUIClass, _countof(pImeDpi->szUIClass));
+        StringCchCopyW(pImeDpi->szUIClass, _countof(pImeDpi->szUIClass), szUIClass);
     }
     else
     {
-        StringCchCopyW(pImeDpi->szUIClass, _countof(pImeDpi->szUIClass), szUIClass);
+        if (pImeDpi->uCodePage != GetACP() && pImeDpi->uCodePage)
+            return FALSE;
+
+        MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, (LPSTR)szUIClass, -1,
+                            pImeDpi->szUIClass, _countof(pImeDpi->szUIClass));
     }
 
     return GetClassInfoW(pImeDpi->hInst, pImeDpi->szUIClass, &wcW);
