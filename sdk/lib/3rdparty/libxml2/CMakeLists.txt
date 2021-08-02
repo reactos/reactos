@@ -64,13 +64,7 @@ list(APPEND SOURCE
 
 add_library(libxml2 ${SOURCE})
 
-if(MSVC AND (NOT USE_CLANG_CL))
-    # Unreferenced local variable
-    remove_target_compile_option(libxml2 "/we4101")
-    target_compile_options(libxml2 PRIVATE "/wd4101")
-    # Local variable initialized but not referenced
-    remove_target_compile_option(libxml2 "/we4189")
-else()
+if(CMAKE_C_COMPILER_ID MATCHES "Clang|GNU")
     target_compile_options(libxml2 PRIVATE "-w")
 endif()
 
