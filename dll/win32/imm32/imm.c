@@ -2808,21 +2808,33 @@ UINT WINAPI ImmGetVirtualKey(HWND hWnd)
 HKL WINAPI ImmInstallIMEA(
   LPCSTR lpszIMEFileName, LPCSTR lpszLayoutText)
 {
-    LPWSTR lpszwIMEFileName;
-    LPWSTR lpszwLayoutText;
-    HKL hkl;
+    INT cchFileName, cchLayoutText;
+    LPWSTR pszFileNameW, pszLayoutTextW;
+    HKL hKL;
 
-    TRACE ("(%s, %s)\n", debugstr_a(lpszIMEFileName),
-                         debugstr_a(lpszLayoutText));
+    TRACE("ImmInstallIMEA(%s, %s)\n", lpszIMEFileName, lpszLayoutText);
 
-    lpszwIMEFileName = strdupAtoW(lpszIMEFileName);
-    lpszwLayoutText = strdupAtoW(lpszLayoutText);
+    cchFileName = lstrlenA(lpszIMEFileName) + 1;
+    cchLayoutText = lstrlenA(lpszLayoutText) + 1;
 
-    hkl = ImmInstallIMEW(lpszwIMEFileName, lpszwLayoutText);
+    pszFileNameW = Imm32HeapAlloc(0, cchFileName * sizeof(WCHAR));
+    if (pszFileNameW == NULL)
+        return NULL;
 
-    HeapFree(GetProcessHeap(),0,lpszwIMEFileName);
-    HeapFree(GetProcessHeap(),0,lpszwLayoutText);
-    return hkl;
+    pszLayoutTextW = Imm32HeapAlloc(0, cchLayoutText * sizeof(WCHAR));
+    if (pszLayoutTextW == NULL)
+    {
+        HeapFree(g_hImm32Heap, 0, pszFileNameW);
+        return NULL;
+    }
+
+    MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, lpszIMEFileName, -1, pszFileNameW, cchFileName);
+    MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, lpszLayoutText, -1, pszLayoutTextW, cchLayoutText);
+
+    hKL = ImmInstallIMEW(pszFileNameW, pszLayoutTextW);
+    HeapFree(g_hImm32Heap, 0, pszFileNameW);
+    HeapFree(g_hImm32Heap, 0, pszLayoutTextW);
+    return hKL;
 }
 
 /***********************************************************************
