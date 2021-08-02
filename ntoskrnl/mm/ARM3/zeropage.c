@@ -99,7 +99,7 @@ MmZeroPageThread(VOID)
 
             ZeroAddress = MiMapPagesInZeroSpace(Pfn1, 1);
             ASSERT(ZeroAddress);
-            RtlZeroMemory(ZeroAddress, PAGE_SIZE);
+            KeZeroPages(ZeroAddress, PAGE_SIZE);
             MiUnmapPagesInZeroSpace(ZeroAddress, 1);
 
             OldIrql = MiAcquirePfnLock();
