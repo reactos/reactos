@@ -32,39 +32,21 @@ static
 NTSTATUS
 OpenRegistryHandlesFromSymbolicLink(IN PUNICODE_STRING SymbolicLinkName,
                                     IN ACCESS_MASK DesiredAccess,
-                                    IN OPTIONAL PHANDLE GuidKey,
-                                    IN OPTIONAL PHANDLE DeviceKey,
-                                    IN OPTIONAL PHANDLE InstanceKey)
+                                    IN BOOLEAN bCreate,
+                                    OUT OPTIONAL PHANDLE GuidKey,
+                                    OUT OPTIONAL PHANDLE DeviceKey,
+                                    OUT OPTIONAL PHANDLE InstanceKey)
 {
     OBJECT_ATTRIBUTES ObjectAttributes;
     UNICODE_STRING BaseKeyU;
     UNICODE_STRING GuidString, SubKeyName, ReferenceString;
     PWCHAR StartPosition, EndPosition;
     HANDLE ClassesKey;
-    PHANDLE GuidKeyRealP, DeviceKeyRealP, InstanceKeyRealP;
     HANDLE GuidKeyReal, DeviceKeyReal, InstanceKeyReal;
     NTSTATUS Status;
 
     SubKeyName.Buffer = NULL;
-
-    if (GuidKey != NULL)
-        GuidKeyRealP = GuidKey;
-    else
-        GuidKeyRealP = &GuidKeyReal;
-
-    if (DeviceKey != NULL)
-        DeviceKeyRealP = DeviceKey;
-    else
-        DeviceKeyRealP = &DeviceKeyReal;
-
-    if (InstanceKey != NULL)
-        InstanceKeyRealP = InstanceKey;
-    else
-        InstanceKeyRealP = &InstanceKeyReal;
-
-    *GuidKeyRealP = NULL;
-    *DeviceKeyRealP = NULL;
-    *InstanceKeyRealP = NULL;
+    GuidKeyReal = DeviceKeyReal = InstanceKeyReal = NULL;
 
     RtlInitUnicodeString(&BaseKeyU, BaseKeyString);
 
@@ -98,17 +80,26 @@ OpenRegistryHandlesFromSymbolicLink(IN PUNICODE_STRING SymbolicLinkName,
                                OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
                                ClassesKey,
                                NULL);
-    Status = ZwCreateKey(GuidKeyRealP,
-                         DesiredAccess | KEY_ENUMERATE_SUB_KEYS,
-                         &ObjectAttributes,
-                         0,
-                         NULL,
-                         REG_OPTION_NON_VOLATILE,
-                         NULL);
+    if (bCreate)
+    {
+        Status = ZwCreateKey(&GuidKeyReal,
+                             DesiredAccess | KEY_ENUMERATE_SUB_KEYS,
+                             &ObjectAttributes,
+                             0,
+                             NULL,
+                             REG_OPTION_NON_VOLATILE,
+                             NULL);
+    }
+    else
+    {
+        Status = ZwOpenKey(&GuidKeyReal,
+                           DesiredAccess | KEY_ENUMERATE_SUB_KEYS,
+                           &ObjectAttributes);
+    }
     ZwClose(ClassesKey);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("Failed to open %wZ%wZ (%x)\n", &BaseKeyU, &GuidString, Status);
+        DPRINT1("Failed to create or open %wZ%wZ (%x)\n", &BaseKeyU, &GuidString, Status);
         goto cleanup;
     }
 
@@ -147,36 +138,54 @@ OpenRegistryHandlesFromSymbolicLink(IN PUNICODE_STRING SymbolicLinkName,
     InitializeObjectAttributes(&ObjectAttributes,
                                &SubKeyName,
                                OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
-                               *GuidKeyRealP,
+                               GuidKeyReal,
                                NULL);
-    Status = ZwCreateKey(DeviceKeyRealP,
-                         DesiredAccess | KEY_ENUMERATE_SUB_KEYS,
-                         &ObjectAttributes,
-                         0,
-                         NULL,
-                         REG_OPTION_NON_VOLATILE,
-                         NULL);
+    if (bCreate)
+    {
+        Status = ZwCreateKey(&DeviceKeyReal,
+                             DesiredAccess | KEY_ENUMERATE_SUB_KEYS,
+                             &ObjectAttributes,
+                             0,
+                             NULL,
+                             REG_OPTION_NON_VOLATILE,
+                             NULL);
+    }
+    else
+    {
+        Status = ZwOpenKey(&DeviceKeyReal,
+                           DesiredAccess | KEY_ENUMERATE_SUB_KEYS,
+                           &ObjectAttributes);
+    }
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("Failed to open %wZ%wZ\\%wZ Status %x\n", &BaseKeyU, &GuidString, &SubKeyName, Status);
+        DPRINT1("Failed to  create or open %wZ%wZ\\%wZ Status %x\n", &BaseKeyU, &GuidString, &SubKeyName, Status);
         goto cleanup;
     }
 
     InitializeObjectAttributes(&ObjectAttributes,
                                &ReferenceString,
                                OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
-                               *DeviceKeyRealP,
+                               DeviceKeyReal,
                                NULL);
-    Status = ZwCreateKey(InstanceKeyRealP,
-                         DesiredAccess,
-                         &ObjectAttributes,
-                         0,
-                         NULL,
-                         REG_OPTION_NON_VOLATILE,
-                         NULL);
+    if (bCreate)
+    {
+        Status = ZwCreateKey(&InstanceKeyReal,
+                             DesiredAccess,
+                             &ObjectAttributes,
+                             0,
+                             NULL,
+                             REG_OPTION_NON_VOLATILE,
+                             NULL);
+    }
+    else
+    {
+        Status = ZwOpenKey(&InstanceKeyReal,
+                           DesiredAccess,
+                           &ObjectAttributes);
+    }
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("Failed to open %wZ%wZ\\%wZ%\\%wZ (%x)\n", &BaseKeyU, &GuidString, &SubKeyName, &ReferenceString, Status);
+        DPRINT1("Failed to create or open %wZ%wZ\\%wZ%\\%wZ (%x)\n", &BaseKeyU, &GuidString, &SubKeyName, &ReferenceString, Status);
         goto cleanup;
     }
 
@@ -189,24 +198,30 @@ cleanup:
     if (NT_SUCCESS(Status))
     {
         if (!GuidKey)
-            ZwClose(*GuidKeyRealP);
+            ZwClose(GuidKeyReal);
+        else
+            *GuidKey = GuidKeyReal;
 
         if (!DeviceKey)
-            ZwClose(*DeviceKeyRealP);
+            ZwClose(DeviceKeyReal);
+        else
+            *DeviceKey = DeviceKeyReal;
 
         if (!InstanceKey)
-            ZwClose(*InstanceKeyRealP);
+            ZwClose(InstanceKeyReal);
+        else
+            *InstanceKey = InstanceKeyReal;
     }
     else
     {
-        if (*GuidKeyRealP != NULL)
-            ZwClose(*GuidKeyRealP);
+        if (GuidKeyReal)
+            ZwClose(GuidKeyReal);
 
-        if (*DeviceKeyRealP != NULL)
-            ZwClose(*DeviceKeyRealP);
+        if (DeviceKeyReal)
+            ZwClose(DeviceKeyReal);
 
-        if (*InstanceKeyRealP != NULL)
-            ZwClose(*InstanceKeyRealP);
+        if (InstanceKeyReal)
+            ZwClose(InstanceKeyReal);
     }
 
     return Status;
@@ -249,6 +264,7 @@ IoOpenDeviceInterfaceRegistryKey(IN PUNICODE_STRING SymbolicLinkName,
 
     Status = OpenRegistryHandlesFromSymbolicLink(SymbolicLinkName,
                                                  KEY_CREATE_SUB_KEY,
+                                                 TRUE,
                                                  NULL,
                                                  NULL,
                                                  &InstanceKey);
@@ -1380,6 +1396,7 @@ IoSetDeviceInterfaceState(IN PUNICODE_STRING SymbolicLinkName,
     /* Open registry keys */
     Status = OpenRegistryHandlesFromSymbolicLink(SymbolicLinkName,
                                                  KEY_CREATE_SUB_KEY,
+                                                 TRUE,
                                                  NULL,
                                                  NULL,
                                                  &InstanceHandle);
