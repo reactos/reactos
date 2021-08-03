@@ -2812,7 +2812,7 @@ HKL WINAPI ImmInstallIMEA(
     LPWSTR pszFileNameW, pszLayoutTextW;
     HKL hKL;
 
-    TRACE("ImmInstallIMEA(%s, %s)\n", debugstr_a(lpszIMEFileName), debugstr_a(lpszLayoutText));
+    TRACE("(%s, %s)\n", debugstr_a(lpszIMEFileName), debugstr_a(lpszLayoutText));
 
     cchFileName = lstrlenA(lpszIMEFileName) + 1;
     cchLayoutText = lstrlenA(lpszLayoutText) + 1;
