@@ -337,6 +337,6 @@ BEGIN
   IDS_HINT_SYS_MOVE     " Move esta janela."
   IDS_HINT_SYS_SIZE     " Redimensiona esta janela."
   IDS_HINT_SYS_MINIMIZE " Minimiza esta janela para um ícone."
-  IDS_HINT_SYS_MAXIMIZE " Expande esta janela para preencher a tela."
+  IDS_HINT_SYS_MAXIMIZE " Expande esta janela para preencher o ecrã."
   IDS_HINT_SYS_CLOSE    " Fecha esta janela."
 END
