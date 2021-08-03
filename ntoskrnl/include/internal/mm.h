@@ -368,11 +368,14 @@ typedef struct _MMPFN
         PKEVENT Event;
         NTSTATUS ReadStatus;
         SINGLE_LIST_ENTRY NextStackPfn;
+    } u1;
+    union
+    {
+        PMMPTE PteAddress;
 
         // HACK for ROSPFN
-        SWAPENTRY SwapEntry;
-    } u1;
-    PMMPTE PteAddress;
+        PMM_RMAP_ENTRY RmapListHead;
+    };
     union
     {
         PFN_NUMBER Blink;
@@ -395,9 +398,8 @@ typedef struct _MMPFN
     {
         MMPTE OriginalPte;
         LONG AweReferenceCount;
-
         // HACK for ROSPFN
-        PMM_RMAP_ENTRY RmapListHead;
+        SWAPENTRY SwapEntry;
     };
     union
     {

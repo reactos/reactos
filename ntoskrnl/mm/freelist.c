@@ -490,7 +490,7 @@ MmSetSavedSwapEntryPage(PFN_NUMBER Pfn,  SWAPENTRY SwapEntry)
     ASSERT_IS_ROS_PFN(Pfn1);
 
     oldIrql = MiAcquirePfnLock();
-    Pfn1->u1.SwapEntry = SwapEntry;
+    Pfn1->SwapEntry = SwapEntry;
     MiReleasePfnLock(oldIrql);
 }
 
@@ -507,7 +507,7 @@ MmGetSavedSwapEntryPage(PFN_NUMBER Pfn)
     ASSERT_IS_ROS_PFN(Pfn1);
 
     oldIrql = MiAcquirePfnLock();
-    SwapEntry = Pfn1->u1.SwapEntry;
+    SwapEntry = Pfn1->SwapEntry;
     MiReleasePfnLock(oldIrql);
 
     return(SwapEntry);
@@ -635,7 +635,7 @@ MmAllocPage(ULONG Type)
     Pfn1->u4.AweAllocation = TRUE;
 
     /* Allocate the extra ReactOS Data and zero it out */
-    Pfn1->u1.SwapEntry = 0;
+    Pfn1->SwapEntry = 0;
     Pfn1->RmapListHead = NULL;
 
     Pfn1->NextLRU = NULL;
