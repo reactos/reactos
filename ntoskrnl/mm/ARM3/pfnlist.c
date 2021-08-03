@@ -598,9 +598,6 @@ MiRemoveZeroPage(IN ULONG Color)
     return PageIndex;
 }
 
-/* HACK for keeping legacy Mm alive */
-extern BOOLEAN MmRosNotifyAvailablePage(PFN_NUMBER PageFrameIndex);
-
 VOID
 NTAPI
 MiInsertPageInFreeList(IN PFN_NUMBER PageFrameIndex)
@@ -627,13 +624,6 @@ MiInsertPageInFreeList(IN PFN_NUMBER PageFrameIndex)
     ASSERT(Pfn1->u3.e1.RemovalRequested == 0);
     ASSERT(Pfn1->u4.VerifierAllocation == 0);
     ASSERT(Pfn1->u3.e2.ReferenceCount == 0);
-
-    /* HACK HACK HACK : Feed the page to legacy Mm */
-    if (MmRosNotifyAvailablePage(PageFrameIndex))
-    {
-        DPRINT1("Legacy Mm eating ARM3 page!.\n");
-        return;
-    }
 
     /* Get the free page list and increment its count */
     ListHead = &MmFreePageListHead;
