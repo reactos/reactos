@@ -53,7 +53,7 @@ KeStartAllProcessors()
         DPCStack = MmCreateKernelStack(FALSE, 0);
 
         /* Initalize Architecture specific segments */
-        #ifdef _M_AMD64
+    #ifdef _M_AMD64
         /* Initalize a new PCR for the specific AP */
         KiInitializePcr(&APInfo->Pcr,
                         ProcessorCount,
@@ -65,7 +65,10 @@ KeStartAllProcessors()
         KeLoaderBlock.KernelStack = (ULONG_PTR)KernelStack;
         KeLoaderBlock.Prcb = (ULONG_PTR)&APInfo->Pcr.Prcb;
         KeLoaderBlock.Thread = (ULONG_PTR)&APInfo->Pcr.Prcb.IdleThread;
-        #elif _M_IX86
+    #elif _M_IX86
+        /* Fully initalize AP's TSS */
+        Ki386InitializeTss(&APInfo->Tss, &APInfo->Idt, &APInfo->Gdt[0]);
+
         /* Initalize a new PCR for the specific AP */
         KiInitializePcr(ProcessorCount,
                         &APInfo->Pcr,
@@ -80,10 +83,7 @@ KeStartAllProcessors()
         KeLoaderBlock.KernelStack = (ULONG_PTR)KernelStack;
         KeLoaderBlock.Prcb = (ULONG_PTR)&APInfo->Pcr.Prcb;
         KeLoaderBlock.Thread = (ULONG_PTR)&APInfo->Pcr.Prcb->IdleThread;
-
-        /* Fully initalize AP's TSS */
-        Ki386InitializeTss(&APInfo->Tss, &APInfo->Idt, &APInfo->Gdt[0]);
-        #endif
+    #endif
 
         /* Prep ProcessorState then start the AP */
         KxInitAPProcessorState(&ProcessorState);

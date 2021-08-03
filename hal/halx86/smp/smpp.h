@@ -6,7 +6,8 @@
  */
 
 VOID
-HalpInitializeAPStub(PVOID APStubLocation);
+HalpInitializeAPStub(PVOID APStubLocation,
+                     PKPROCESSOR_STATE ProcessorState);
 
 VOID
 HalpCopyCR3(PVOID APStubLocation, UINT32 Cr3Value);

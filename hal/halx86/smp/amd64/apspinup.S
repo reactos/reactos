@@ -9,9 +9,11 @@
 
 PUBLIC APSpinup
 PUBLIC APSpinupEnd
-
+PUBLIC APCr3
 .code64
 APSpinup:
     hlt
+
+APCr3:
 APSpinupEnd:
 END

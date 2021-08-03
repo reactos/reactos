@@ -11,7 +11,7 @@
 PUBLIC _APEntry
 PUBLIC _APEntryEnd
 PUBLIC _APJumpOffset
-
+EXTERN _APSpinupEnd:DWORD
 .code16
 _APEntry:
     cli
@@ -36,7 +36,7 @@ _APEntry:
     lgdt cs:[gdtptr - _APEntry]
     lidt cs:[idtdesc - _APEntry]
 #endif
-    
+
     /* Clear high because virtualbox */
     xor eax, eax
     mov cr0, eax
@@ -46,7 +46,13 @@ _APEntry:
     or  eax, CR0_PE
     mov cr0, eax
 
-/* Jump to APSpinup */
+    /* Load offset of APStub for use later */
+    xor ebx, ebx
+    mov bx, cs
+    shl ebx, HEX(4)
+    add ebx, (_APEntryEnd - _APEntry)
+
+    /* Jump to APSpinup */
     .byte HEX(EA)
 _APJumpOffset:
     .word HEX(0)

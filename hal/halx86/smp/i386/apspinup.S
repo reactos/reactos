@@ -6,30 +6,76 @@
  */
 
 #include <asm.inc>
+#include <ks386.inc>
 
 PUBLIC _APSpinup
 PUBLIC _APSpinupEnd
-PUBLIC _BSPCr3
+PUBLIC _APCr0
+PUBLIC _APCr2
+PUBLIC _APCr3
+PUBLIC _APCr4
+PUBLIC _APSegCs
+PUBLIC _APSegSs
+PUBLIC _APSegDs
+PUBLIC _APSegEs
+PUBLIC _APSegGs
+PUBLIC _APSegFs
+PUBLIC _APTr
+PUBLIC _APEip
+
 EXTERN _APEntry:DWORD
 
 .code32
 _APSpinup:
 
+    /* At this point the value in ebx is the location of the bootstub + the size of the APEntry segment */
+    mov ecx, ebx
+    add ecx, [_APSpinupEnd - _APSpinup]
+    /* Load a 4kb stack for AP */
+    mov esp, [ecx + HEX(4096)] 
+
+    /* Load the GDT based on BSP */
+
     /* TODO: replace this with something that's going to actually work */
     xor eax, eax
-    mov eax, cs:[_BSPCr3 - _APSpinup]
+    mov eax, ([ebx] + [_APCr3 - _APSpinup])
     mov cr3, eax
 
-    hlt
+   // hlt 
 
+    /* Enable paging */
     mov eax, cr0
     or  eax, HEX(80000000)
     mov cr0, eax
 
+    /* Prep everything to get to acknowledged by the kernel */
     hlt
-_BSPCr3:
-    .long HEX(0)
 
+/* ProcessorState "Struct" */
+_APCr0:
+    .long HEX(0)
+_APCr2:
+    .long HEX(0)
+_APCr3:
+    .long HEX(0)
+_APCr4:
+    .long HEX(0)   
+_APSegCs:
+    .long HEX(0)
+_APSegSs:
+    .long HEX(0)
+_APSegDs:
+    .long HEX(0)
+_APSegEs:
+    .long HEX(0)
+_APSegGs:
+    .long HEX(0)
+_APSegFs:
+    .long HEX(0)
+_APTr:
+    .long HEX(0)
+_APEip:
+    .long HEX(0)
 _APSpinupEnd:
 END
  

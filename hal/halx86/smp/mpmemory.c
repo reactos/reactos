@@ -21,13 +21,13 @@ extern PVOID APEntryEnd;
 extern PVOID APSpinup;
 extern PVOID APSpinupEnd;
 extern UINT16 APJumpOffset;
-extern PVOID BSPCr3;
-
-
+extern PVOID APCr3;
+extern UINT32 APEip;
 /* FUNCTIONS *****************************************************************/
 
 VOID
-HalpInitializeAPStub(PVOID APStubLocation)
+HalpInitializeAPStub(PVOID APStubLocation,
+                     PKPROCESSOR_STATE ProcessorState)
 {
     PVOID APStubSecondPhaseLoc;
     PVOID APJumppLoc;
@@ -39,12 +39,14 @@ HalpInitializeAPStub(PVOID APStubLocation)
     RtlCopyMemory(APStubLocation, &APEntry,  ((ULONG_PTR)&APEntryEnd - (ULONG_PTR)&APEntry));
     RtlCopyMemory(APStubSecondPhaseLoc, &APSpinup,  ((ULONG_PTR)&APSpinupEnd - (ULONG_PTR)&APSpinup));
     RtlCopyMemory(APJumppLoc, &APJumpOffset,  sizeof(APJumpOffset));
+
+    /* ProcessorState */
 }
 
 VOID
 HalpCopyCR3(PVOID APStubLocation, UINT32 Cr3Value)
 {
     PVOID BSPValueLoc;
-    BSPValueLoc = (PUSHORT)(((ULONG_PTR)APStubLocation) + ((ULONG_PTR)&BSPCr3 - (ULONG_PTR)&APSpinup) + ((ULONG_PTR)&APEntryEnd  - (ULONG_PTR)&APEntry));
+    BSPValueLoc = (PUSHORT)(((ULONG_PTR)APStubLocation) + ((ULONG_PTR)&APCr3 - (ULONG_PTR)&APSpinup) + ((ULONG_PTR)&APEntryEnd  - (ULONG_PTR)&APEntry));
     RtlCopyMemory(BSPValueLoc, &Cr3Value, sizeof(Cr3Value));
 }

@@ -34,7 +34,7 @@ HalStartNextProcessor(
     if (MaxAPCount > StartedProcessorCount)
     {
         /* Start an AP */
-        HalpInitializeAPStub(HalpLowStub);
+        HalpInitializeAPStub(HalpLowStub, ProcessorState);
         Cr3Values = ProcessorState->SpecialRegisters.Cr3;
         HalpCopyCR3(HalpLowStub, (UINT32)Cr3Values);
         ApicStartApplicationProcessor(StartedProcessorCount, HalpLowStubPhysicalAddress);
