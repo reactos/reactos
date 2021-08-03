@@ -30,8 +30,7 @@ static LONG PageOutThreadActive;
 /* FUNCTIONS ****************************************************************/
 
 NTSTATUS
-NTAPI
-MmReleasePageMemoryConsumer(ULONG Consumer, PFN_NUMBER Page)
+MmReleasePage(PFN_NUMBER Page)
 {
     KIRQL OldIrql;
 
@@ -226,8 +225,7 @@ MmRebalanceMemoryConsumers(VOID)
 }
 
 NTSTATUS
-NTAPI
-MmRequestPageMemoryConsumer(ULONG Consumer, BOOLEAN Canwait, PPFN_NUMBER AllocatedPage)
+MmRequestPage(PPFN_NUMBER AllocatedPage)
 {
     PFN_NUMBER Page;
 
@@ -237,7 +235,7 @@ MmRequestPageMemoryConsumer(ULONG Consumer, BOOLEAN Canwait, PPFN_NUMBER Allocat
     /*
      * Actually allocate the page.
      */
-    Page = MmAllocPage(0);
+    Page = MmAllocPage();
     if (Page == 0)
     {
         KeBugCheck(NO_PAGES_AVAILABLE);

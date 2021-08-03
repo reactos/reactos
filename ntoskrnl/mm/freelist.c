@@ -580,11 +580,7 @@ MmDereferencePage(PFN_NUMBER Pfn)
     if (Pfn1->u3.e2.ReferenceCount == 0)
     {
         /* Apply LRU hack */
-        if (Pfn1->u4.MustBeCached)
-        {
-            MmRemoveLRUUserPage(Pfn);
-            Pfn1->u4.MustBeCached = 0;
-        }
+        MmRemoveLRUUserPage(Pfn);
 
         /* Mark the page temporarily as valid, we're going to make it free soon */
         Pfn1->u3.e1.PageLocation = ActiveAndValid;
@@ -599,8 +595,7 @@ MmDereferencePage(PFN_NUMBER Pfn)
 }
 
 PFN_NUMBER
-NTAPI
-MmAllocPage(ULONG Type)
+MmAllocPage(VOID)
 {
     PFN_NUMBER PfnOffset;
     PMMPFN Pfn1;
@@ -608,19 +603,7 @@ MmAllocPage(ULONG Type)
 
     OldIrql = MiAcquirePfnLock();
 
-#if MI_TRACE_PFNS
-    switch(Type)
-    {
-    case MC_SYSTEM:
-        MI_SET_USAGE(MI_USAGE_CACHE);
-        break;
-    case MC_USER:
-        MI_SET_USAGE(MI_USAGE_SECTION);
-        break;
-    default:
-        ASSERT(FALSE);
-    }
-#endif
+    MI_SET_USAGE(MI_USAGE_SECTION);
 
     PfnOffset = MiRemoveZeroPage(MI_GET_NEXT_COLOR());
     if (!PfnOffset)
@@ -643,11 +626,7 @@ MmAllocPage(ULONG Type)
     Pfn1->NextLRU = NULL;
     Pfn1->PreviousLRU = NULL;
 
-    if (Type == MC_USER)
-    {
-        Pfn1->u4.MustBeCached = 1; /* HACK again */
-        MmInsertLRULastUserPage(PfnOffset);
-    }
+    MmInsertLRULastUserPage(PfnOffset);
 
     MiReleasePfnLock(OldIrql);
     return PfnOffset;
