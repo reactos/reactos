@@ -58,7 +58,7 @@ BEGIN
     LTEXT "O assistente pode procurar outros itens de hardware e instalá-los automaticamente, ou, se souber exactamente o modelo de hardware que deseja instalar, poderá seleccioná-lo na lista.", -1, 21, 8, 280, 24
     LTEXT "O que deseja que o assistente faça?", -1, 23, 40, 275, 8
     AUTORADIOBUTTON "&Procurar e instalar automaticamente o hardware (recomendado)", IDC_AUTOINSTALL, 30, 55, 266, 8, WS_GROUP | NOT WS_TABSTOP
-    AUTORADIOBUTTON "&Instalar o hardware que eu seleccionar manualmente na lista (avançado)", IDC_MANUALLYINST, 30, 70, 266, 8, NOT WS_TABSTOP
+    AUTORADIOBUTTON "&Instalar o hardware que eu selecionar manualmente na lista (avançado)", IDC_MANUALLYINST, 30, 70, 266, 8, NOT WS_TABSTOP
 END
 
 IDD_DETECTEDHWPAGE DIALOGEX 0, 0, 317, 143

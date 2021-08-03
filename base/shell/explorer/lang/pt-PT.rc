@@ -16,7 +16,7 @@ BEGIN
         MENUITEM "&Exibir Área de Trabalho", ID_SHELL_CMD_SHOW_DESKTOP
         MENUITEM "&Retroceder", ID_SHELL_CMD_UNDO_ACTION
         MENUITEM SEPARATOR
-        MENUITEM "&Gerenciador de Tarefas", ID_SHELL_CMD_OPEN_TASKMGR
+        MENUITEM "&Gestor de Tarefas", ID_SHELL_CMD_OPEN_TASKMGR
         MENUITEM SEPARATOR
         MENUITEM "&Bloquear a barra de tarefas", ID_LOCKTASKBAR
         MENUITEM "P&ropriedades", ID_SHELL_CMD_PROPERTIES

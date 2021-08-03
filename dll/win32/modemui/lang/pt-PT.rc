@@ -26,7 +26,7 @@ BEGIN
     EDITTEXT 1008, 133, 52, 26, 12, ES_RIGHT | NOT WS_VISIBLE | WS_GROUP
     CONTROL "", 1009, "MSCTLS_UPDOWN32", NOT WS_VISIBLE | WS_BORDER | WS_GROUP | 0x00000036, 159, 52, 12, 12
     LTEXT "segundos", 1010, 173, 54, 40, 8, NOT WS_VISIBLE
-    GROUPBOX "&Seleccionar País/Região", 1012, 6, 80, 225, 75
+    GROUPBOX "&Selecionar País/Região", 1012, 6, 80, 225, 75
     COMBOBOX 1013, 18, 99, 203, 50, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | NOT WS_TABSTOP
     PUSHBUTTON "&Definição da porta avançadas...", 1100, 107, 170, 125, 14
     DEFPUSHBUTTON "Alterar definições predefinidas...", 3, 107, 188, 125, 14
@@ -385,7 +385,7 @@ BEGIN
     3215 "A porta que o modem pretende usar, está actualmente aberta por outro aplicativo. Encerre qualquer aplicativo que esteja a utilizar esta porta actualmente."
     3218 "OpenComm"
     3221 "115K Baud"
-    3222 "A actualizar"
+    3222 "A atualizar"
     3223 "Erro"
     3233 "Sucesso"
     3236 "O modem falhou ao responder. Verifique se está ligado correctamente. Se for um modem interno, verifique se a interrupção da porta está definida correctamente."

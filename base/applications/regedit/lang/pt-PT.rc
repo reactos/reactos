@@ -1,3 +1,5 @@
+/* Translation and UTF-8 Conversion by Gabriel Aguiar(fgsoftware1) <fgygh5804@gmail.com,fgsoftwarestudio@gmail.com> (August, 2021) */
+
 LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
 
 ID_ACCEL ACCELERATORS
@@ -72,7 +74,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Dividir", ID_VIEW_SPLIT
         MENUITEM SEPARATOR
-        MENUITEM "&Actualizar\tF5", ID_VIEW_REFRESH
+        MENUITEM "&Atualizar\tF5", ID_VIEW_REFRESH
     END
     POPUP "&Favoritos"
     BEGIN
@@ -148,7 +150,7 @@ BEGIN
         MENUITEM "&Colar", ID_HEXEDIT_PASTE
         MENUITEM "&Apagar", ID_HEXEDIT_DELETE
         MENUITEM SEPARATOR
-        MENUITEM "Seleccionar &Tudo", ID_HEXEDIT_SELECT_ALL
+        MENUITEM "Selecionar &Tudo", ID_HEXEDIT_SELECT_ALL
     END
 END
 
