@@ -15,7 +15,23 @@
 
 /* GLOBALS *******************************************************************/
 
+#ifdef _M_AMD64
+typedef struct _APSTUB
+{
+    UINT64 StructAPCr0;
+    UINT64 StructAPCr2;
+    UINT64 StructAPCr3;
+    UINT64 StructAPCr4;
+    UINT64 StructAPSegCs;
+    UINT64 StructAPSegSs;
+    UINT64 StructAPSegDs;
+    UINT64 StructAPSegEs;
+    UINT64 StructAPSegGs;
+    UINT64 StructAPSegFs;
+    UINT64 StructAPRip;
+} APSTUB, *PAPSTUB;
 
+#elif _M_IX86
 typedef struct _APSTUB
 {
     UINT32 StructAPCr0;
@@ -31,7 +47,7 @@ typedef struct _APSTUB
     UINT32 StructAPTr;
     UINT32 StructAPEip;
 } APSTUB, *PAPSTUB;
-
+#endif
 
 /* AP spinup stub universal */
 extern APSTUB APProcessorStateStruct;
