@@ -22,6 +22,7 @@ extern PVOID HalpLowStub;
 ULONG MaxAPCount = 2;
 ULONG StartedProcessorCount = 1;
 ULONG Cr3Values;
+
 /* FUNCTIONS *****************************************************************/
 
 BOOLEAN
@@ -35,11 +36,7 @@ HalStartNextProcessor(
         /* Start an AP */
         HalpInitializeAPStub(HalpLowStub);
         Cr3Values = ProcessorState->SpecialRegisters.Cr3;
-        HalpCopyCR3(HalpLowStub, (UINT32)Cr3Values);
-        DPRINT1("The cr3 is %X\n", Cr3Values);
-         DPRINT1("The kisystemstartuop is %X\n", ProcessorState->ContextFrame.Eip);
-        //HalpCopyCR3(HalpLowStub, Cr3Value);
-        //HalpInitalizeAPPageTable(HalpLowStub);
+        HalpCopyCR3(HalpLowStub, (UINT32)Cr3Values);;
         ApicStartApplicationProcessor(StartedProcessorCount, HalpLowStubPhysicalAddress);
         StartedProcessorCount++;
 

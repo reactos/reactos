@@ -9,10 +9,26 @@
 
 PUBLIC APEntry
 PUBLIC APEntryEnd
+PUBLIC APJumpOffset
+PUBLIC BSPCr3
 
 .code
 APEntry:
     cli
+
+    xor ax, ax
+	mov ds, ax
+	mov ss, ax
+    mov fs, ax
+    mov gs, ax
+
     hlt
+
+APJumpOffset:
+    .word HEX(0)
+
+BSPCr3:
+    .long HEX(0)
+
 APEntryEnd:
 END

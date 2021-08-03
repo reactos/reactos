@@ -11,7 +11,6 @@
 PUBLIC _APEntry
 PUBLIC _APEntryEnd
 PUBLIC _APJumpOffset
-PUBLIC _PageTableLocation
 PUBLIC _BSPCr3
 
 .code16
@@ -39,21 +38,21 @@ _APEntry:
     lgdt cs:[gdtptr - _APEntry]
     lidt cs:[idtdesc - _APEntry]
 #endif
-    /* Enable Protected mode */
+    
+    /* Clear high because virtualbox */
     xor eax, eax
     mov cr0, eax
 
+    /* Enable Protected mode */
     mov eax, cr0
     or  eax, CR0_PE
     mov cr0, eax
-    xor eax, eax
-    mov eax, (HEX(4000) + _BSPCr3 - _APEntry)
-    mov cr3, eax
+
     hlt
     ;xor eax, eax
-    ;mov eax, (HEX(4000) + _BSPCr3 - _APEntry)
+    ;mov eax, [(HEX(4000) + [_BSPCr3 - _APEntry])]
     ;mov cr3, eax
-    ;hlt
+
 /* Jump to APSpinup */
     .byte HEX(EA)
 _APJumpOffset:
@@ -61,11 +60,10 @@ _APJumpOffset:
     .word HEX(08)
 
     hlt
-_BSPCr3:
-    .word HEX(0)
 
-_PageTableLocation:
-    .word HEX(0)
+/* Varibles below this line */
+_BSPCr3:
+    .long HEX(0)
 gdtptr:
     .word (gdtend - gdt - 1)
 gdtoffset:

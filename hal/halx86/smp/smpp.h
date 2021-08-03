@@ -9,7 +9,4 @@ VOID
 HalpInitializeAPStub(PVOID APStubLocation);
 
 VOID
-HalpInitalizeAPPageTable(PVOID APStubLocation);
-
-VOID
 HalpCopyCR3(PVOID APStubLocation, UINT32 Cr3Value);
