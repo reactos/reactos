@@ -15,19 +15,37 @@
 
 /* GLOBALS *******************************************************************/
 
-/* AP spinup stub specific */
+
+typedef struct _APSTUB
+{
+    UINT32 StructAPCr0;
+    UINT32 StructAPCr2;
+    UINT32 StructAPCr3;
+    UINT32 StructAPCr4;
+    UINT32 StructAPSegCs;
+    UINT32 StructAPSegSs;
+    UINT32 StructAPSegDs;
+    UINT32 StructAPSegEs;
+    UINT32 StructAPSegGs;
+    UINT32 StructAPSegFs;
+    UINT32 StructAPTr;
+    UINT32 StructAPEip;
+} APSTUB, *PAPSTUB;
+
+
+/* AP spinup stub universal */
+extern APSTUB APProcessorStateStruct;
 extern PVOID APEntry;
 extern PVOID APEntryEnd;
 extern PVOID APSpinup;
 extern PVOID APSpinupEnd;
 extern UINT16 APJumpOffset;
-extern PVOID APCr3;
-extern UINT32 APEip;
+
+
 /* FUNCTIONS *****************************************************************/
 
 VOID
-HalpInitializeAPStub(PVOID APStubLocation,
-                     PKPROCESSOR_STATE ProcessorState)
+HalpInitializeAPStub(PVOID APStubLocation)
 {
     PVOID APStubSecondPhaseLoc;
     PVOID APJumppLoc;
@@ -43,10 +61,34 @@ HalpInitializeAPStub(PVOID APStubLocation,
     /* ProcessorState */
 }
 
+#ifdef _M_AMD64
 VOID
-HalpCopyCR3(PVOID APStubLocation, UINT32 Cr3Value)
+HalpWriteProcessorState(PVOID APStubLocation, 
+                        PKPROCESSOR_STATE ProcessorState)
 {
-    PVOID BSPValueLoc;
-    BSPValueLoc = (PUSHORT)(((ULONG_PTR)APStubLocation) + ((ULONG_PTR)&APCr3 - (ULONG_PTR)&APSpinup) + ((ULONG_PTR)&APEntryEnd  - (ULONG_PTR)&APEntry));
-    RtlCopyMemory(BSPValueLoc, &Cr3Value, sizeof(Cr3Value));
+
 }
+#elif _M_IX86
+VOID
+HalpWriteProcessorState(PVOID APStubLocation, 
+                        PKPROCESSOR_STATE ProcessorState)
+{
+    PVOID APProcessorStateLoc;
+    APSTUB APStub;
+    APProcessorStateLoc = (PUSHORT)(((ULONG_PTR)APStubLocation) + ((ULONG_PTR)&APProcessorStateStruct - (ULONG_PTR)&APSpinup) + ((ULONG_PTR)&APEntryEnd  - (ULONG_PTR)&APEntry));
+    APStub.StructAPCr0 = ProcessorState->SpecialRegisters.Cr0;
+    APStub.StructAPCr2 = ProcessorState->SpecialRegisters.Cr2;
+    APStub.StructAPCr3 = ProcessorState->SpecialRegisters.Cr3;
+    APStub.StructAPCr4 = ProcessorState->SpecialRegisters.Cr4;
+    APStub.StructAPSegCs = ProcessorState->ContextFrame.SegCs;
+    APStub.StructAPSegSs = ProcessorState->ContextFrame.SegSs;
+    APStub.StructAPSegDs = ProcessorState->ContextFrame.SegDs;
+    APStub.StructAPSegEs = ProcessorState->ContextFrame.SegDs;
+    APStub.StructAPSegGs = ProcessorState->ContextFrame.SegGs;
+    APStub.StructAPSegFs = ProcessorState->ContextFrame.SegFs;
+    APStub.StructAPTr = ProcessorState->SpecialRegisters.Tr;
+    APStub.StructAPEip = ProcessorState->ContextFrame.Eip;
+    /* Copy over ProcessorState struct */
+    RtlCopyMemory(APProcessorStateLoc, &APStub, sizeof(APSTUB));
+}
+#endif
