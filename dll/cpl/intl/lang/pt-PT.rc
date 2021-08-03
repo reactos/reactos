@@ -192,9 +192,9 @@ END
 STRINGTABLE
 BEGIN
     IDS_APPLY_DEFAULT_TITLE "Alterar configurações padrão"
-    IDS_APPLY_DEFAULT_TEXT "Você optou por aplicar estas configurações ao perfil de usuário padrão.\n\n\
-Essas alterações afetarão a tela de logon e todas as novas contas de usuário. \
-Alguns serviços do sistema podem exigir que você reinicie o computador para que as alterações entrem em vigor."
+    IDS_APPLY_DEFAULT_TEXT "Optou por aplicar estas configurações ao perfil de utilizador padrão.\n\n\
+Essas alterações afectarão o ecrã de início de sessão e todas as novas contas de utilizador. \
+Alguns serviços do sistema podem exigir que reinicie o computador para que as alterações entrem em vigor."
 END
 
 STRINGTABLE

@@ -1,6 +1,6 @@
-/* Translation and UTF-8 Conversion by mkbu95 <mkbu95@gmail.com> (August, 2011) */
+/* Translation and UTF-8 Conversion by Gabriel Aguiar <fgygh5804@gmail.com,fgsoftwarestudio@gmail.com> (July, 2021) */
 
-LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE_BRAZILIAN
+LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
 
 /* Dialogs */
 

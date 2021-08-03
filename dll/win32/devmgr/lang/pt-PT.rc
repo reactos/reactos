@@ -327,16 +327,16 @@ BEGIN
   IDS_HINT_ABOUT        " Acerca de ReactOS Gestor de dispositivos."
   IDS_HINT_EXIT         " Termina o programa."
 
-  IDS_HINT_DEV_BY_TYPE  " Exibe dispositivos por tipo."
-  IDS_HINT_DEV_BY_CONN  " Exibe dispositivos por ligação."
-  IDS_HINT_RES_BY_TYPE  " Exibe recursos por tipo."
-  IDS_HINT_RES_BY_CONN  " Exibe recursos por ligação."
-  IDS_HINT_SHOW_HIDDEN  " Exibe dispositivos herdados que não estão instalados."
+  IDS_HINT_DEV_BY_TYPE  " Mostra dispositivos por tipo."
+  IDS_HINT_DEV_BY_CONN  " Mostra dispositivos por ligação."
+  IDS_HINT_RES_BY_TYPE  " Mostra recursos por tipo."
+  IDS_HINT_RES_BY_CONN  " Mostra recursos por ligação."
+  IDS_HINT_SHOW_HIDDEN  " Mostra dispositivos herdados que não estão instalados."
 
   IDS_HINT_SYS_RESTORE  " Restaura esta janela para o tamanho normal."
   IDS_HINT_SYS_MOVE     " Move esta janela."
   IDS_HINT_SYS_SIZE     " Redimensiona esta janela."
   IDS_HINT_SYS_MINIMIZE " Minimiza esta janela para um ícone."
-  IDS_HINT_SYS_MAXIMIZE " Expande esta janela para preencher a tela."
+  IDS_HINT_SYS_MAXIMIZE " Expande esta janela para preencher o ecrã."
   IDS_HINT_SYS_CLOSE    " Fecha esta janela."
 END

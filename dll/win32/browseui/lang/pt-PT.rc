@@ -225,8 +225,8 @@ END
 
 STRINGTABLE
 BEGIN
-    9250 "Exibe informações sobre o programa, o número da versão e os direitos autorais."
-    9252 "Exibe infomrações para depuração."
+    9250 "Mostra informações sobre o programa, o número da versão e os direitos autorais."
+    9252 "Mostra infomrações para depuração."
 END
 
 STRINGTABLE
@@ -239,7 +239,7 @@ END
 
 STRINGTABLE
 BEGIN
-    9362 "Exibe o conteúdo da pasta 'Favoritos'."
+    9362 "Mostra o conteúdo da pasta 'Favoritos'."
     9363 "Adiciona a página actual à lista de favoritos."
 END
 
@@ -247,9 +247,9 @@ STRINGTABLE
 BEGIN
     9505 "Mostra ou oculta barras de ferramentas."
     9506 "Mostra ou oculta barra de status."
-    9508 "Exibe os botões padrão da barra de ferramentas."
-    9509 "Exibe a barra de endereços."
-    9510 "Exibe a barra de ferramentas 'Links rápidos'."
+    9508 "Mostra os botões padrão da barra de ferramentas."
+    9509 "Mostra a barra de endereços."
+    9510 "Mostra a barra de ferramentas 'Links rápidos'."
     9516 "Bloqueia tamanhos e posições de barras das ferramentas."
 END
 

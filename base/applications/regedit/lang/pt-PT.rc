@@ -299,7 +299,7 @@ BEGIN
     ID_REGISTRY_DISCONNECTNETWORKREGISTRY "Desliga um registo de um computador remoto."
     ID_REGISTRY_PRINT "Imprime todo ou parte do registo."
 /*    ID_HELP_HELPTOPICS "Abre a ajuda do Editor do Registro." */
-    ID_HELP_ABOUT "Exibe informações do programa, número da versão e copyright."
+    ID_HELP_ABOUT "Mostra informações do programa, número da versão e copyright."
 END
 
 STRINGTABLE

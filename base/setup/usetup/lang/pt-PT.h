@@ -1104,7 +1104,7 @@ static MUI_ENTRY ptPTChangeSystemPartition[] =
     {
         6,
         16,
-        "formato não suportado pelo ReactOS.",
+        "formato n\306o suportado pelo ReactOS.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1146,7 +1146,7 @@ static MUI_ENTRY ptPTChangeSystemPartition[] =
     {
         8,
         28,
-        "   à lista de selec\207\306o de parti\207\306o e, em seguida, seleccione ou crie um novo tipo",
+        "   \205 lista de sele\207\306o de parti\207\306o e, em seguida, seleccione ou crie um novo tipo",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1810,7 +1810,7 @@ static MUI_ENTRY ptPTDeletePartitionEntries[] =
     {
         8,
         21,
-        "\x07  Para retornar \205 tela anterior sem excluir",
+        "\x07  Para retornar \205 ecr\306 anterior sem excluir",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -2101,7 +2101,7 @@ MUI_ERROR ptPTErrorEntries[] =
     },
     {
         // ERROR_FORMATTING_PARTITION,
-        "A instalação n\306o consegue formatar a parti\207\306o:\n"
+        "A instala\207\306o n\306o consegue formatar a parti\207\306o:\n"
         " %S\n"
         "\n"
         "ENTER = Reiniciar o computador"

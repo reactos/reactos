@@ -24,7 +24,7 @@ END
 
 IDD_SOUNDS DIALOGEX 0, 0, 246, 228
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Sons" 
+CAPTION "Sons"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Um esquema de sons é um conjunto de sons aplicados a eventos no ReactOS e em programas. Pode seleccionar um esquema existente ou guardar um que tenha modificado.", -1, 8, 7, 230, 30
