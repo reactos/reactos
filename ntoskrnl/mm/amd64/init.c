@@ -757,9 +757,6 @@ MiInitMachineDependent(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
         return Status;
     }
 
-    /* Initialize the balancer */
-    MmInitializeBalancer((ULONG)MmAvailablePages, 0);
-
     /* Make sure we have everything we need */
     ASSERT(MmPfnDatabase);
     ASSERT(MmNonPagedSystemStart);

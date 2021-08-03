@@ -233,7 +233,6 @@ MmInitSystem(IN ULONG Phase,
     MiDbgDumpAddressSpace();
 
     MmInitGlobalKernelPageDirectory();
-    MmInitializeMemoryConsumer(MC_USER, MmTrimUserMemory);
     MmInitializeRmapList();
     MmInitSectionImplementation();
     MmInitPagingFile();

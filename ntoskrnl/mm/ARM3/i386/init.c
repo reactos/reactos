@@ -458,7 +458,6 @@ MiInitMachineDependent(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 
     /* Build the PFN Database */
     MiInitializePfnDatabase(LoaderBlock);
-    MmInitializeBalancer(MmAvailablePages, 0);
 
     //
     // Reset the descriptor back so we can create the correct memory blocks
