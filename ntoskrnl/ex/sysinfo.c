@@ -1557,30 +1557,9 @@ SSI_DEF(SystemDpcBehaviourInformation)
 /* Class 25 - Full Memory Information */
 QSI_DEF(SystemFullMemoryInformation)
 {
-    PULONG Spi = (PULONG) Buffer;
-
-    PEPROCESS TheIdleProcess;
-
-    *ReqSize = sizeof(ULONG);
-
-    if (sizeof(ULONG) != Size)
-    {
-        return STATUS_INFO_LENGTH_MISMATCH;
-    }
-
-    DPRINT("SystemFullMemoryInformation\n");
-
-    TheIdleProcess = PsIdleProcess;
-
-    DPRINT("PID: %p, KernelTime: %u PFFree: %lu PFUsed: %lu\n",
-           TheIdleProcess->UniqueProcessId,
-           TheIdleProcess->Pcb.KernelTime,
-           MiFreeSwapPages,
-           MiUsedSwapPages);
-
-    *Spi = MiMemoryConsumers[MC_USER].PagesUsed;
-
-    return STATUS_SUCCESS;
+    /* Unimplemented as per https://www.geoffchappell.com/studies/windows/km/ntoskrnl/api/ex/sysinfo/query.htm?tx=76&ts=0,1254 */
+    DPRINT1("NtSetSystemInformation - SystemFullMemoryInformation not implemented\n");
+    return STATUS_NOT_IMPLEMENTED;
 }
 
 /* Class 26 - Load Image */
