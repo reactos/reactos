@@ -1810,7 +1810,7 @@ static MUI_ENTRY ptPTDeletePartitionEntries[] =
     {
         8,
         21,
-        "\x07  Para retornar \205 tela anterior sem excluir",
+        "\x07  Para retornar \205 ecrã anterior sem excluir",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
