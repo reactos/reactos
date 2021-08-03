@@ -351,10 +351,6 @@ CcRosLookupVacb(
 );
 
 VOID
-NTAPI
-CcInitCacheZeroPage(VOID);
-
-VOID
 CcRosMarkDirtyVacb(
     PROS_VACB Vacb);
 

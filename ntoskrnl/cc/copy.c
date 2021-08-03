@@ -16,8 +16,6 @@
 
 /* GLOBALS *******************************************************************/
 
-static PFN_NUMBER CcZeroPage = 0;
-
 #define MAX_ZERO_LENGTH    (256 * 1024)
 
 typedef enum _CC_CAN_WRITE_RETRY
@@ -44,30 +42,6 @@ ULONG CcDataPages = 0;
 ULONG CcDataFlushes = 0;
 
 /* FUNCTIONS *****************************************************************/
-
-VOID
-NTAPI
-MiZeroPhysicalPage (
-    IN PFN_NUMBER PageFrameIndex
-);
-
-VOID
-NTAPI
-CcInitCacheZeroPage (
-    VOID)
-{
-    NTSTATUS Status;
-
-    MI_SET_USAGE(MI_USAGE_CACHE);
-    //MI_SET_PROCESS2(PsGetCurrentProcess()->ImageFileName);
-    Status = MmRequestPageMemoryConsumer(MC_SYSTEM, TRUE, &CcZeroPage);
-    if (!NT_SUCCESS(Status))
-    {
-        DbgPrint("Can't allocate CcZeroPage.\n");
-        KeBugCheck(CACHE_MANAGER);
-    }
-    MiZeroPhysicalPage(CcZeroPage);
-}
 
 VOID
 CcPostDeferredWrites(VOID)
@@ -809,48 +783,49 @@ CcZeroData (
         IO_STATUS_BLOCK Iosb;
         KEVENT Event;
         PMDL Mdl;
-        ULONG i;
         ULONG CurrentLength;
-        PPFN_NUMBER PfnArray;
+        PHYSICAL_ADDRESS ZeroAddress;
+        PHYSICAL_ADDRESS MaxAddress;
 
-        /* Setup our Mdl */
-        Mdl = IoAllocateMdl(NULL, min(Length, MAX_ZERO_LENGTH), FALSE, FALSE, NULL);
+        /* Get a zeroed MDL */
+        ZeroAddress.QuadPart = 0;
+        MaxAddress.QuadPart = MAXLONGLONG;
+        Mdl = MmAllocatePagesForMdlEx(ZeroAddress, MaxAddress, ZeroAddress, min(Length, MAX_ZERO_LENGTH), MmNonCached, 0);
         if (!Mdl)
             ExRaiseStatus(STATUS_INSUFFICIENT_RESOURCES);
 
-        PfnArray = MmGetMdlPfnArray(Mdl);
-        for (i = 0; i < BYTES_TO_PAGES(Mdl->ByteCount); i++)
-            PfnArray[i] = CcZeroPage;
-        Mdl->MdlFlags |= MDL_PAGES_LOCKED;
-
         /* Perform the write sequencially */
-        while (Length > 0)
+        _SEH2_TRY
         {
-            CurrentLength = min(Length, MAX_ZERO_LENGTH);
+            while (Length > 0)
+            {
+                CurrentLength = min(Length, Mdl->ByteCount);
 
-            Mdl->ByteCount = CurrentLength;
-
-            KeInitializeEvent(&Event, NotificationEvent, FALSE);
-            Status = IoSynchronousPageWrite(FileObject, Mdl, &WriteOffset, &Event, &Iosb);
-            if (Status == STATUS_PENDING)
-            {
-                KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
-                Status = Iosb.Status;
+                KeInitializeEvent(&Event, NotificationEvent, FALSE);
+                Status = IoSynchronousPageWrite(FileObject, Mdl, &WriteOffset, &Event, &Iosb);
+                if (Status == STATUS_PENDING)
+                {
+                    KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
+                    Status = Iosb.Status;
+                }
+                if (Mdl->MdlFlags & MDL_MAPPED_TO_SYSTEM_VA)
+                {
+                    MmUnmapLockedPages(Mdl->MappedSystemVa, Mdl);
+                }
+                if (!NT_SUCCESS(Status))
+                {
+                    ExRaiseStatus(Status);
+                }
+                WriteOffset.QuadPart += CurrentLength;
+                Length -= CurrentLength;
             }
-            if (Mdl->MdlFlags & MDL_MAPPED_TO_SYSTEM_VA)
-            {
-                MmUnmapLockedPages(Mdl->MappedSystemVa, Mdl);
-            }
-            if (!NT_SUCCESS(Status))
-            {
-                IoFreeMdl(Mdl);
-                ExRaiseStatus(Status);
-            }
-            WriteOffset.QuadPart += CurrentLength;
-            Length -= CurrentLength;
         }
-
-        IoFreeMdl(Mdl);
+        _SEH2_FINALLY
+        {
+            MmFreePagesFromMdl(Mdl);
+            ExFreePool(Mdl);
+        }
+        _SEH2_END;
 
         return TRUE;
     }

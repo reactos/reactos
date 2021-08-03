@@ -68,10 +68,6 @@ VOID
 NTAPI
 CcShutdownSystem(VOID);
 
-VOID
-NTAPI
-CcInitCacheZeroPage(VOID);
-
 /* Called by section.c */
 BOOLEAN
 NTAPI

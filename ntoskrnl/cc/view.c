@@ -1383,8 +1383,6 @@ CcInitView (
                                     sizeof(ROS_VACB),
                                     TAG_VACB,
                                     20);
-
-    CcInitCacheZeroPage();
 }
 
 #if DBG && defined(KDBG)
