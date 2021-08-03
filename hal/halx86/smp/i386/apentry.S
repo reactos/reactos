@@ -11,7 +11,6 @@
 PUBLIC _APEntry
 PUBLIC _APEntryEnd
 PUBLIC _APJumpOffset
-PUBLIC _BSPCr3
 
 .code16
 _APEntry:
@@ -26,8 +25,7 @@ _APEntry:
     /* bitshift 4 to get the address */
     mov bx, cs
     shl ebx, HEX(4)
-    add ebx, gdt
-    sub ebx, _APEntry
+    add ebx, (gdt - _APEntry)
     mov dword ptr cs:[gdtoffset - _APEntry], ebx
 
     /* Load the GDT and blank IDT */
@@ -48,11 +46,6 @@ _APEntry:
     or  eax, CR0_PE
     mov cr0, eax
 
-    hlt
-    ;xor eax, eax
-    ;mov eax, [(HEX(4000) + [_BSPCr3 - _APEntry])]
-    ;mov cr3, eax
-
 /* Jump to APSpinup */
     .byte HEX(EA)
 _APJumpOffset:
@@ -62,8 +55,6 @@ _APJumpOffset:
     hlt
 
 /* Varibles below this line */
-_BSPCr3:
-    .long HEX(0)
 gdtptr:
     .word (gdtend - gdt - 1)
 gdtoffset:

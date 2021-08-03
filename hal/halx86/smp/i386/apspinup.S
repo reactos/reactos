@@ -9,14 +9,27 @@
 
 PUBLIC _APSpinup
 PUBLIC _APSpinupEnd
+PUBLIC _BSPCr3
+EXTERN _APEntry:DWORD
 
 .code32
 _APSpinup:
+
+    /* TODO: replace this with something that's going to actually work */
+    xor eax, eax
+    mov eax, cs:[_BSPCr3 - _APSpinup]
+    mov cr3, eax
+
+    hlt
+
     mov eax, cr0
     or  eax, HEX(80000000)
     mov cr0, eax
 
     hlt
+_BSPCr3:
+    .long HEX(0)
+
 _APSpinupEnd:
 END
  

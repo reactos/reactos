@@ -45,7 +45,6 @@ VOID
 HalpCopyCR3(PVOID APStubLocation, UINT32 Cr3Value)
 {
     PVOID BSPValueLoc;
-    DPRINT1("The Cr3 value in copy function is %X\n",Cr3Value);
-    BSPValueLoc = (PUSHORT)(((ULONG_PTR)APStubLocation) + ((ULONG_PTR)&BSPCr3 - (ULONG_PTR)&APEntry));
+    BSPValueLoc = (PUSHORT)(((ULONG_PTR)APStubLocation) + ((ULONG_PTR)&BSPCr3 - (ULONG_PTR)&APSpinup) + ((ULONG_PTR)&APEntryEnd  - (ULONG_PTR)&APEntry));
     RtlCopyMemory(BSPValueLoc, &Cr3Value, sizeof(Cr3Value));
 }
