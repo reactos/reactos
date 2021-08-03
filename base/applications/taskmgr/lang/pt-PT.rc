@@ -334,13 +334,13 @@ BEGIN
     ID_OPTIONS_ALWAYSONTOP "O 'Gestor de tarefas' permanece na frente de todas as outras janelas, a menos que seja minimizado"
     ID_OPTIONS_MINIMIZEONUSE "O 'Gestor de tarefas' é minimizado toda vez que uma operação de alternância for executada"
     ID_OPTIONS_HIDEWHENMINIMIZED "Oculta o 'Gestor de tarefas' quando ele estiver minimizado"
-    ID_VIEW_REFRESH "Força o 'Gestor de tarefas' a atualizar a tela agora, independentemente do parâmetro 'Velocidade de atualização'"
+    ID_VIEW_REFRESH "Força o 'Gestor de tarefas' a atualizar a ecrã agora, independentemente do parâmetro 'Velocidade de atualização'"
     ID_VIEW_LARGE "Exibe as tarefas usando ícones grandes"
     ID_VIEW_SMALL "Exibe as tarefas usando ícones pequenos"
     ID_VIEW_DETAILS "Exibe as informações sobre cada tarefa"
-    ID_VIEW_UPDATESPEED_HIGH "Atualiza a tela duas vezes por segundo"
-    ID_VIEW_UPDATESPEED_NORMAL "Atualiza a tela a cada dois segundos"
-    ID_VIEW_UPDATESPEED_LOW "Atualiza a tela a cada quatro segundos"
+    ID_VIEW_UPDATESPEED_HIGH "Atualiza a ecrã duas vezes por segundo"
+    ID_VIEW_UPDATESPEED_NORMAL "Atualiza a ecrã a cada dois segundos"
+    ID_VIEW_UPDATESPEED_LOW "Atualiza a ecrã a cada quatro segundos"
 END
 
 STRINGTABLE
@@ -356,7 +356,7 @@ BEGIN
     ID_HELP_ABOUT "Mostrar informações sobre o programa, o número da versão e os direitos autorais"
     ID_FILE_EXIT "Sair da aplicação 'Gestor de tarefas'"
     ID_OPTIONS_SHOW16BITTASKS "Mostra as tarefas de 16 bits do Windows sob o arquivo ntvdm.exe associado"
-    ID_VIEW_SELECTCOLUMNS "Seleciona quais colunas serão visíveis na tela Processo"
+    ID_VIEW_SELECTCOLUMNS "Seleciona quais colunas serão visíveis na ecrã Processo"
     ID_VIEW_SHOWKERNELTIMES "Mostrar o tempo do núcleo nos gráficos de desempenho"
     ID_VIEW_CPUHISTORY_ONEGRAPHALL "Apenas um único gráfico mostra o uso total de CPU"
     ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU "Cada CPU possui o seu próprio gráfico"
