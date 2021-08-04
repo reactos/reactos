@@ -18,6 +18,7 @@ extern BOOL g_AlwaysDisplayVersion;
 extern ATOM gaGuiConsoleWndClass;
 extern ATOM AtomDDETrack;
 extern ATOM AtomQOS;
+extern ERESOURCE UserLock;
 
 CODE_SEG("INIT") NTSTATUS NTAPI InitUserImpl(VOID);
 VOID FASTCALL CleanupUserImpl(VOID);

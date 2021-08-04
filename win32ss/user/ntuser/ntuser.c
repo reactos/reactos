@@ -79,22 +79,6 @@ InitUserImpl(VOID)
     NTSTATUS Status;
     HKEY hKey;
 
-    ExInitializeResourceLite(&UserLock);
-
-    /* Hold global resource to make sanity checks happy. */
-    UserEnterExclusive();
-
-    /* Allocate global server info structure */
-    gpsi = UserHeapAlloc(sizeof(*gpsi));
-    if (!gpsi)
-    {
-        ERR("Failed allocate server info structure!\n");
-        return STATUS_UNSUCCESSFUL;
-    }
-
-    RtlZeroMemory(gpsi, sizeof(*gpsi));
-    TRACE("Global Server Data -> %p\n", gpsi);
-
     if (!UserCreateHandleTable())
     {
         ERR("Failed creating handle table\n");
@@ -121,8 +105,6 @@ InitUserImpl(VOID)
     }
 
     InitSysParams();
-
-    UserLeave();
 
     return STATUS_SUCCESS;
 }

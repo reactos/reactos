@@ -896,6 +896,21 @@ DriverUnload(IN PDRIVER_OBJECT DriverObject)
     } \
 }
 
+// Lock & return on failure
+#define USERLOCK_AND_ROF(x)         \
+{                                   \
+    UserEnterExclusive();           \
+    Status = (x);                   \
+    UserLeave();                    \
+    if (!NT_SUCCESS(Status))        \
+    { \
+        DPRINT1("Failed '%s' (0x%lx)\n", #x, Status); \
+        return Status; \
+    } \
+}
+
+
+
 /*
  * This definition doesn't work
  */
@@ -968,7 +983,24 @@ DriverEntry(
         return STATUS_UNSUCCESSFUL;
     }
 
-    NT_ROF(InitUserImpl());
+    /* Init the global user lock */
+    ExInitializeResourceLite(&UserLock);
+
+    /* Lock while we use the heap (UserHeapAlloc asserts on this) */
+    UserEnterExclusive();
+
+    /* Allocate global server info structure */
+    gpsi = UserHeapAlloc(sizeof(*gpsi));
+    UserLeave();
+    if (!gpsi)
+    {
+        DPRINT1("Failed allocate server info structure!\n");
+        UserLeave();
+        return STATUS_UNSUCCESSFUL;
+    }
+
+    RtlZeroMemory(gpsi, sizeof(*gpsi));
+    DPRINT("Global Server Data -> %p\n", gpsi);
 
     NT_ROF(InitGdiHandleTable());
     NT_ROF(InitPaletteImpl());
@@ -983,6 +1015,7 @@ DriverEntry(
     NT_ROF(InitLDEVImpl());
     NT_ROF(InitDeviceImpl());
     NT_ROF(InitDcImpl());
+    USERLOCK_AND_ROF(InitUserImpl());
     NT_ROF(InitWindowStationImpl());
     NT_ROF(InitDesktopImpl());
     NT_ROF(InitInputImpl());
