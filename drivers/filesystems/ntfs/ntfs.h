@@ -936,6 +936,9 @@ BOOLEAN
 NtfsFCBIsCompressed(PNTFS_FCB Fcb);
 
 BOOLEAN
+NtfsFCBIsEncrypted(PNTFS_FCB Fcb);
+
+BOOLEAN
 NtfsFCBIsRoot(PNTFS_FCB Fcb);
 
 VOID
