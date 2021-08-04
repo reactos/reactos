@@ -446,7 +446,7 @@ HKL WINAPI ImmLoadLayout(HKL hKL, PIMEINFOEX pImeInfoEx)
     NTSTATUS Status;
     WCHAR szLayout[MAX_PATH];
 
-    TRACE("ImmLoadLayout(%p, %p)\n", hKL, pImeInfoEx);
+    TRACE("(%p, %p)\n", hKL, pImeInfoEx);
 
     if (IS_IME_HKL(hKL) ||
         !g_psi || !(g_psi->dwSRVIFlags & SRVINFO_CICERO_ENABLED) ||
@@ -1077,7 +1077,7 @@ HIMC WINAPI ImmCreateContext(void)
     PCLIENTIMC pClientImc;
     HIMC hIMC;
 
-    TRACE("ImmCreateContext()\n");
+    TRACE("()\n");
 
     if (g_psi == NULL || !(g_psi->dwSRVIFlags & SRVINFO_IMM32))
         return NULL;
@@ -1186,7 +1186,7 @@ BOOL WINAPI ImmDestroyContext(HIMC hIMC)
     DWORD dwImeThreadId, dwThreadId;
     HKL hKL;
 
-    TRACE("ImmDestroyContext(%p)\n", hIMC);
+    TRACE("(%p)\n", hIMC);
 
     if (g_psi == NULL || !(g_psi->dwSRVIFlags & SRVINFO_IMM32))
         return FALSE;
@@ -1639,7 +1639,7 @@ PCLIENTIMC WINAPI ImmLockClientImc(HIMC hImc)
 {
     PCLIENTIMC pClientImc;
 
-    TRACE("ImmLockClientImc(%p)\n", hImc);
+    TRACE("(%p)\n", hImc);
 
     if (hImc == NULL)
         return NULL;
@@ -1677,7 +1677,7 @@ VOID WINAPI ImmUnlockClientImc(PCLIENTIMC pClientImc)
     LONG cLocks;
     HIMC hImc;
 
-    TRACE("ImmUnlockClientImc(%p)\n", pClientImc);
+    TRACE("(%p)\n", pClientImc);
 
     cLocks = InterlockedDecrement(&pClientImc->cLockObj);
     if (cLocks != 0 || !(pClientImc->dwFlags & CLIENTIMC_UNKNOWN1))
@@ -2043,7 +2043,7 @@ BOOL WINAPI ImmGetCandidateWindow(
     LPINPUTCONTEXT pIC;
     LPCANDIDATEFORM pCF;
 
-    TRACE("ImmGetCandidateWindow(%p, %lu, %p)\n", hIMC, dwIndex, lpCandidate);
+    TRACE("(%p, %lu, %p)\n", hIMC, dwIndex, lpCandidate);
 
     pIC = ImmLockIMC(hIMC);
     if (pIC  == NULL)
@@ -2093,7 +2093,7 @@ BOOL WINAPI ImmGetCompositionFontA(HIMC hIMC, LPLOGFONTA lplf)
     BOOL ret = FALSE, bWide;
     LPINPUTCONTEXT pIC;
 
-    TRACE("ImmGetCompositionFontA(%p, %p)\n", hIMC, lplf);
+    TRACE("(%p, %p)\n", hIMC, lplf);
 
     pClientImc = ImmLockClientImc(hIMC);
     if (pClientImc == NULL)
@@ -2130,7 +2130,7 @@ BOOL WINAPI ImmGetCompositionFontW(HIMC hIMC, LPLOGFONTW lplf)
     LPINPUTCONTEXT pIC;
     BOOL ret = FALSE;
 
-    TRACE("ImmGetCompositionFontW(%p, %p)\n", hIMC, lplf);
+    TRACE("(%p, %p)\n", hIMC, lplf);
 
     pClientImc = ImmLockClientImc(hIMC);
     if (pClientImc == NULL)
@@ -2455,7 +2455,7 @@ BOOL WINAPI ImmGetCompositionWindow(HIMC hIMC, LPCOMPOSITIONFORM lpCompForm)
     LPINPUTCONTEXT pIC;
     BOOL ret = FALSE;
 
-    TRACE("ImmGetCompositionWindow(%p, %p)\n", hIMC, lpCompForm);
+    TRACE("(%p, %p)\n", hIMC, lpCompForm);
 
     pIC = ImmLockIMC(hIMC);
     if (!pIC)
@@ -2588,7 +2588,7 @@ BOOL WINAPI ImmGetConversionStatus(
 {
     LPINPUTCONTEXT pIC;
 
-    TRACE("ImmGetConversionStatus(%p %p %p)\n", hIMC, lpfdwConversion, lpfdwSentence);
+    TRACE("(%p %p %p)\n", hIMC, lpfdwConversion, lpfdwSentence);
 
     pIC = ImmLockIMC(hIMC);
     if (!pIC)
@@ -2725,7 +2725,7 @@ UINT WINAPI ImmGetDescriptionA(
     IMEINFOEX info;
     size_t cch;
 
-    TRACE("ImmGetDescriptionA(%p,%p,%d)\n", hKL, lpszDescription, uBufLen);
+    TRACE("(%p,%p,%d)\n", hKL, lpszDescription, uBufLen);
 
     if (!ImmGetImeInfoEx(&info, ImeInfoExKeyboardLayout, &hKL) || !IS_IME_HKL(hKL))
         return 0;
@@ -2746,7 +2746,7 @@ UINT WINAPI ImmGetDescriptionW(HKL hKL, LPWSTR lpszDescription, UINT uBufLen)
     IMEINFOEX info;
     size_t cch;
 
-    TRACE("ImmGetDescriptionW(%p, %p, %d)\n", hKL, lpszDescription, uBufLen);
+    TRACE("(%p, %p, %d)\n", hKL, lpszDescription, uBufLen);
 
     if (!ImmGetImeInfoEx(&info, ImeInfoExKeyboardLayout, &hKL) || !IS_IME_HKL(hKL))
         return 0;
@@ -2792,7 +2792,7 @@ UINT WINAPI ImmGetIMEFileNameA( HKL hKL, LPSTR lpszFileName, UINT uBufLen)
     IMEINFOEX info;
     size_t cch;
 
-    TRACE("ImmGetIMEFileNameA(%p, %p, %u)\n", hKL, lpszFileName, uBufLen);
+    TRACE("(%p, %p, %u)\n", hKL, lpszFileName, uBufLen);
 
     if (!ImmGetImeInfoEx(&info, ImeInfoExKeyboardLayout, &hKL) || !IS_IME_HKL(hKL))
     {
@@ -2823,7 +2823,7 @@ UINT WINAPI ImmGetIMEFileNameW(HKL hKL, LPWSTR lpszFileName, UINT uBufLen)
     IMEINFOEX info;
     size_t cch;
 
-    TRACE("ImmGetIMEFileNameW(%p, %p, %u)\n", hKL, lpszFileName, uBufLen);
+    TRACE("(%p, %p, %u)\n", hKL, lpszFileName, uBufLen);
 
     if (!ImmGetImeInfoEx(&info, ImeInfoExKeyboardLayout, &hKL) || !IS_IME_HKL(hKL))
     {
@@ -2853,7 +2853,7 @@ BOOL WINAPI ImmGetOpenStatus(HIMC hIMC)
     BOOL ret;
     LPINPUTCONTEXT pIC;
 
-    TRACE("ImmGetOpenStatus(%p)\n", hIMC);
+    TRACE("(%p)\n", hIMC);
 
     if (!hIMC)
         return FALSE;
@@ -2960,7 +2960,7 @@ BOOL WINAPI ImmGetStatusWindowPos(HIMC hIMC, LPPOINT lpptPos)
     LPINPUTCONTEXT pIC;
     BOOL ret;
 
-    TRACE("ImmGetStatusWindowPos(%p, %p)\n", hIMC, lpptPos);
+    TRACE("(%p, %p)\n", hIMC, lpptPos);
 
     pIC = ImmLockIMC(hIMC);
     if (pIC == NULL)
@@ -3099,7 +3099,7 @@ HKL WINAPI ImmInstallIMEW(
 BOOL WINAPI ImmIsIME(HKL hKL)
 {
     IMEINFOEX info;
-    TRACE("ImmIsIME(%p)\n", hKL);
+    TRACE("(%p)\n", hKL);
     return !!ImmGetImeInfoEx(&info, ImeInfoExImeWindow, &hKL);
 }
 
@@ -3158,7 +3158,7 @@ BOOL WINAPI ImmNotifyIME(
     PIMEDPI pImeDpi;
     BOOL ret;
 
-    TRACE("ImmNotifyIME(%p, %lu, %lu, %lu)\n", hIMC, dwAction, dwIndex, dwValue);
+    TRACE("(%p, %lu, %lu, %lu)\n", hIMC, dwAction, dwIndex, dwValue);
 
     if (hIMC)
     {
@@ -3553,7 +3553,7 @@ PIMEDPI WINAPI ImmLockImeDpi(HKL hKL)
 {
     PIMEDPI pImeDpi = NULL;
 
-    TRACE("ImmLockImeDpi(%p)\n", hKL);
+    TRACE("(%p)\n", hKL);
 
     RtlEnterCriticalSection(&g_csImeDpi);
 
@@ -3582,7 +3582,7 @@ VOID WINAPI ImmUnlockImeDpi(PIMEDPI pImeDpi)
 {
     PIMEDPI *ppEntry;
 
-    TRACE("ImmUnlockImeDpi(%p)\n", pImeDpi);
+    TRACE("(%p)\n", pImeDpi);
 
     if (pImeDpi == NULL)
         return;
@@ -3633,7 +3633,7 @@ BOOL WINAPI ImmSetOpenStatus(HIMC hIMC, BOOL fOpen)
     HWND hWnd;
     BOOL bHasChange = FALSE;
 
-    TRACE("ImmSetOpenStatus(%p, %d)\n", hIMC, fOpen);
+    TRACE("(%p, %d)\n", hIMC, fOpen);
 
     dwImeThreadId = Imm32QueryInputContext(hIMC, 1);
     dwThreadId = GetCurrentThreadId();
@@ -3673,7 +3673,7 @@ BOOL WINAPI ImmSetStatusWindowPos(HIMC hIMC, LPPOINT lpptPos)
     HWND hWnd;
     DWORD dwImeThreadId, dwThreadId;
 
-    TRACE("ImmSetStatusWindowPos(%p, {%ld, %ld})\n", hIMC, lpptPos->x, lpptPos->y);
+    TRACE("(%p, {%ld, %ld})\n", hIMC, lpptPos->x, lpptPos->y);
 
     dwImeThreadId = Imm32QueryInputContext(hIMC, 1);
     dwThreadId = GetCurrentThreadId();
@@ -3735,7 +3735,7 @@ BOOL WINAPI ImmSimulateHotKey(HWND hWnd, DWORD dwHotKeyID)
     HKL hKL;
     BOOL ret;
 
-    TRACE("ImmSimulateHotKey(%p, 0x%lX)\n", hWnd, dwHotKeyID);
+    TRACE("(%p, 0x%lX)\n", hWnd, dwHotKeyID);
 
     hIMC = ImmGetContext(hWnd);
     dwThreadId = GetWindowThreadProcessId(hWnd, NULL);
@@ -4238,7 +4238,7 @@ BOOL WINAPI ImmEnumInputContext(DWORD dwThreadId, IMCENUMPROC lpfn, LPARAM lPara
     BOOL ret = TRUE;
     HIMC hIMC;
 
-    TRACE("ImmEnumInputContext(%lu, %p, %p)\n", dwThreadId, lpfn, lParam);
+    TRACE("(%lu, %p, %p)\n", dwThreadId, lpfn, lParam);
 
     dwCount = Imm32AllocAndBuildHimcList(dwThreadId, &phList);
     if (!dwCount)
@@ -4388,7 +4388,7 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpReserved)
     HWND hWnd;
     PTEB pTeb;
 
-    TRACE("DllMain(%p, 0x%X, %p)\n", hinstDLL, fdwReason, lpReserved);
+    TRACE("(%p, 0x%X, %p)\n", hinstDLL, fdwReason, lpReserved);
 
     switch (fdwReason)
     {
