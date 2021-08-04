@@ -2765,8 +2765,7 @@ ImmGetGuideLineAW(HIMC hIMC, DWORD dwIndex, LPVOID lpBuf, DWORD dwBufLen, BOOL b
     LPINPUTCONTEXT pIC;
     LPGUIDELINE pGuideLine;
     DWORD ret, cb;
-    LPBYTE pbPrivate;
-    LPVOID pvStr;
+    LPVOID pvStr, pvPrivate;
     BOOL bUsedDefault;
 
     pClientImc = ImmLockClientImc(hIMC);
@@ -2863,7 +2862,7 @@ ImmGetGuideLineAW(HIMC hIMC, DWORD dwIndex, LPVOID lpBuf, DWORD dwBufLen, BOOL b
 
     if (dwIndex == GGL_PRIVATE)
     {
-        pbPrivate = (LPBYTE)pGuideLine + pGuideLine->dwPrivateOffset;
+        pvPrivate = (LPBYTE)pGuideLine + pGuideLine->dwPrivateOffset;
 
         /* get size */
         if (bAnsi)
@@ -2871,7 +2870,7 @@ ImmGetGuideLineAW(HIMC hIMC, DWORD dwIndex, LPVOID lpBuf, DWORD dwBufLen, BOOL b
             if ((pClientImc->dwFlags & CLIENTIMC_WIDE) &&
                 pGuideLine->dwIndex == GL_ID_REVERSECONVERSION)
             {
-                cb = CandidateListWideToAnsi((LPCANDIDATELIST)pbPrivate, NULL, 0, CP_ACP);
+                cb = CandidateListWideToAnsi(pvPrivate, NULL, 0, CP_ACP);
             }
             else
             {
@@ -2883,7 +2882,7 @@ ImmGetGuideLineAW(HIMC hIMC, DWORD dwIndex, LPVOID lpBuf, DWORD dwBufLen, BOOL b
             if (!(pClientImc->dwFlags & CLIENTIMC_WIDE) &&
                 pGuideLine->dwIndex == GL_ID_REVERSECONVERSION)
             {
-                cb = CandidateListAnsiToWide((LPCANDIDATELIST)pbPrivate, NULL, 0, CP_ACP);
+                cb = CandidateListAnsiToWide(pvPrivate, NULL, 0, CP_ACP);
             }
             else
             {
@@ -2903,7 +2902,7 @@ ImmGetGuideLineAW(HIMC hIMC, DWORD dwIndex, LPVOID lpBuf, DWORD dwBufLen, BOOL b
             if ((pClientImc->dwFlags & CLIENTIMC_WIDE) &&
                 pGuideLine->dwIndex == GL_ID_REVERSECONVERSION)
             {
-                ret = CandidateListWideToAnsi((LPCANDIDATELIST)pbPrivate, lpBuf, cb, CP_ACP);
+                ret = CandidateListWideToAnsi(pvPrivate, lpBuf, cb, CP_ACP);
                 goto Quit;
             }
         }
@@ -2912,12 +2911,12 @@ ImmGetGuideLineAW(HIMC hIMC, DWORD dwIndex, LPVOID lpBuf, DWORD dwBufLen, BOOL b
             if (!(pClientImc->dwFlags & CLIENTIMC_WIDE) &&
                 pGuideLine->dwIndex == GL_ID_REVERSECONVERSION)
             {
-                ret = CandidateListAnsiToWide((LPCANDIDATELIST)pbPrivate, lpBuf, cb, CP_ACP);
+                ret = CandidateListAnsiToWide(pvPrivate, lpBuf, cb, CP_ACP);
                 goto Quit;
             }
         }
 
-        RtlCopyMemory(lpBuf, pbPrivate, cb);
+        RtlCopyMemory(lpBuf, pvPrivate, cb);
         ret = cb;
         goto Quit;
     }
