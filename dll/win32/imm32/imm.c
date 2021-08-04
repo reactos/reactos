@@ -2903,8 +2903,7 @@ ImmGetGuideLineAW(HIMC hIMC, DWORD dwIndex, LPVOID lpBuf, DWORD dwBufLen, BOOL b
             if ((pClientImc->dwFlags & CLIENTIMC_WIDE) &&
                 pGuideLine->dwIndex == GL_ID_REVERSECONVERSION)
             {
-                ret = CandidateListWideToAnsi(
-                    (LPCANDIDATELIST)pbPrivate, (LPCANDIDATELIST)lpBuf, cb, CP_ACP);
+                ret = CandidateListWideToAnsi((LPCANDIDATELIST)pbPrivate, lpBuf, cb, CP_ACP);
                 goto Quit;
             }
         }
@@ -2913,8 +2912,7 @@ ImmGetGuideLineAW(HIMC hIMC, DWORD dwIndex, LPVOID lpBuf, DWORD dwBufLen, BOOL b
             if (!(pClientImc->dwFlags & CLIENTIMC_WIDE) &&
                 pGuideLine->dwIndex == GL_ID_REVERSECONVERSION)
             {
-                ret = CandidateListAnsiToWide(
-                    (LPCANDIDATELIST)pbPrivate, (LPCANDIDATELIST)lpBuf, cb, CP_ACP);
+                ret = CandidateListAnsiToWide((LPCANDIDATELIST)pbPrivate, lpBuf, cb, CP_ACP);
                 goto Quit;
             }
         }
