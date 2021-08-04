@@ -213,15 +213,22 @@ MmTrimUserMemory(ULONG Target, ULONG Priority, PULONG NrFreedPages)
 
                 MmLockAddressSpace(&Process->Vm);
 
-                /* Be sure this is still valid. */
-                PMMPTE Pte = MiAddressToPte(Address);
-                if (Pte->u.Hard.Valid)
+                if (!Process->VmDeleted)
                 {
-                    Accessed = Accessed || Pte->u.Hard.Accessed;
-                    Pte->u.Hard.Accessed = 0;
+                    MiLockProcessWorkingSetUnsafe(Process, PsGetCurrentThread());
 
-                    /* There is no need to invalidate, the balancer thread is never on a user process */
-                    //KeInvalidateTlbEntry(Address);
+                    /* Be sure this is still valid. */
+                    if (MmIsAddressValid(Address))
+                    {
+                        PMMPTE Pte = MiAddressToPte(Address);
+                        Accessed = Accessed || Pte->u.Hard.Accessed;
+                        Pte->u.Hard.Accessed = 0;
+
+                        /* There is no need to invalidate, the balancer thread is never on a user process */
+                        //KeInvalidateTlbEntry(Address);
+                    }
+
+                    MiUnlockProcessWorkingSet(Process, PsGetCurrentThread());
                 }
 
                 MmUnlockAddressSpace(&Process->Vm);
