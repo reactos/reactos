@@ -2934,7 +2934,7 @@ Quit:
 DWORD WINAPI ImmGetGuideLineA(
   HIMC hIMC, DWORD dwIndex, LPSTR lpBuf, DWORD dwBufLen)
 {
-    TRACE("(%p, %d, %p, %d)\n", hIMC, dwIndex, lpBuf, dwBufLen);
+    TRACE("(%p, %lu, %p, %lu)\n", hIMC, dwIndex, lpBuf, dwBufLen);
     return ImmGetGuideLineAW(hIMC, dwIndex, lpBuf, dwBufLen, TRUE);
 }
 
@@ -2943,7 +2943,7 @@ DWORD WINAPI ImmGetGuideLineA(
  */
 DWORD WINAPI ImmGetGuideLineW(HIMC hIMC, DWORD dwIndex, LPWSTR lpBuf, DWORD dwBufLen)
 {
-    TRACE("(%p, %d, %p, %d)\n", hIMC, dwIndex, lpBuf, dwBufLen);
+    TRACE("(%p, %lu, %p, %lu)\n", hIMC, dwIndex, lpBuf, dwBufLen);
     return ImmGetGuideLineAW(hIMC, dwIndex, lpBuf, dwBufLen, FALSE);
 }
 
