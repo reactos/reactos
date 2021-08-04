@@ -18,6 +18,7 @@ extern void func___64tof(void);
 #if defined(TEST_NTDLL)
 extern void func__vscwprintf(void);
 #endif
+extern void func_fabs(void);
 extern void func_fputc(void);
 extern void func_fputwc(void);
 extern void func__snprintf(void);
@@ -60,6 +61,7 @@ const struct test winetest_testlist[] =
     // ...
 #endif
 #if defined(TEST_STATIC_CRT) || defined(TEST_MSVCRT)
+    { "fabs", func_fabs },
 #if defined(_M_ARM)
     { "__rt_div", func___rt_div },
     { "__fto64", func___fto64 },

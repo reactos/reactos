@@ -7,6 +7,7 @@ list(APPEND SOURCE_STATIC
     _vsnprintf.c
     _vsnwprintf.c
     atexit.c
+    fabs.c
     mbstowcs.c
     mbtowc.c
     sprintf.c
@@ -40,3 +41,7 @@ target_link_libraries(static_crt_apitest crt wine ${PSEH_LIB})
 set_module_type(static_crt_apitest win32cui)
 add_importlibs(static_crt_apitest kernel32 ntdll)
 add_rostests_file(TARGET static_crt_apitest)
+
+if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
+    target_compile_options(static_crt_apitest PRIVATE -Wno-format)
+endif()

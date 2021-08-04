@@ -169,7 +169,9 @@ _Check_return_ __CRT_INLINE float __CRTDECL ldexpf(_In_ float x, _In_ int y) { r
 _Check_return_ __CRT_INLINE long double __CRTDECL tanl(_In_ long double x) { return (tan((double)x)); }
 #endif
 
-#if defined(__ia64__) || defined(_M_IA64) || \
+#if defined(_CRTBLD)
+_Check_return_ float __cdecl fabsf(_In_ float x);
+#elif defined(__ia64__) || defined(_M_IA64) || \
     defined(__arm__) || defined(_M_ARM)  || \
     defined(__arm64__) || defined(_M_ARM64)
 _Check_return_ _CRT_JIT_INTRINSIC _CRTIMP float __cdecl fabsf(_In_ float x);
