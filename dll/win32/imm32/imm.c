@@ -452,7 +452,7 @@ PIMEDPI APIENTRY ImmLockOrLoadImeDpi(HKL hKL)
             return FALSE;
     }
 
-    pImeDpi = Imm32FindImeDpi(hKL);
+    pImeDpi = ImmLockImeDpi(hKL);
     if (pImeDpi == NULL)
         pImeDpi = Ime32LoadImeDpi(hKL, TRUE);
     return pImeDpi;
