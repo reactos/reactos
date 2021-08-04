@@ -445,11 +445,11 @@ PIMEDPI APIENTRY ImmLockOrLoadImeDpi(HKL hKL)
     if (!IS_IME_HKL(hKL))
     {
         if (!g_psi || !(g_psi->dwSRVIFlags & SRVINFO_CICERO_ENABLED))
-            return FALSE;
+            return NULL;
 
         pInfo = (PW32CLIENTINFO)(NtCurrentTeb()->Win32ClientInfo);
         if ((pInfo->W32ClientInfo[0] & 2))
-            return FALSE;
+            return NULL;
     }
 
     pImeDpi = ImmLockImeDpi(hKL);
