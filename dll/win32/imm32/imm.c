@@ -3514,33 +3514,61 @@ BOOL WINAPI ImmSetCompositionWindow(
 BOOL WINAPI ImmSetConversionStatus(
   HIMC hIMC, DWORD fdwConversion, DWORD fdwSentence)
 {
-    DWORD oldConversion, oldSentence;
-    InputContextData *data = get_imc_data(hIMC);
+    HKL hKL;
+    LPINPUTCONTEXT pIC;
+    DWORD dwImeThreadId, dwThreadId, dwOldConversion, dwOldSentence;
+    BOOL fConversionChange = FALSE, fSentenceChange = FALSE;
+    HWND hWnd;
 
-    TRACE("%p %d %d\n", hIMC, fdwConversion, fdwSentence);
+    TRACE("(%p, 0x%lX, 0x%lX)\n", hIMC, fdwConversion, fdwSentence);
 
-    if (!data)
+    hKL = GetKeyboardLayout(0);
+    if (!IS_IME_HKL(hKL))
     {
-        SetLastError(ERROR_INVALID_HANDLE);
-        return FALSE;
+        if (g_psi && (g_psi->dwSRVIFlags & SRVINFO_CICERO_ENABLED))
+        {
+            FIXME("Cicero\n");
+            return FALSE;
+        }
     }
 
-    if (IMM_IsCrossThreadAccess(NULL, hIMC))
+    dwImeThreadId = Imm32QueryInputContext(hIMC, 1);
+    dwThreadId = GetCurrentThreadId();
+    if (dwImeThreadId != dwThreadId)
         return FALSE;
 
-    if ( fdwConversion != data->IMC.fdwConversion )
+    pIC = ImmLockIMC(hIMC);
+    if (pIC == NULL)
+        return FALSE;
+
+    if (pIC->fdwConversion != fdwConversion)
     {
-        oldConversion = data->IMC.fdwConversion;
-        data->IMC.fdwConversion = fdwConversion;
-        ImmNotifyIME(hIMC, NI_CONTEXTUPDATED, oldConversion, IMC_SETCONVERSIONMODE);
-        ImmInternalSendIMENotify(data, IMN_SETCONVERSIONMODE, 0);
+        dwOldConversion = pIC->fdwConversion;
+        pIC->fdwConversion = fdwConversion;
+        fConversionChange = TRUE;
     }
-    if ( fdwSentence != data->IMC.fdwSentence )
+
+    if (pIC->fdwSentence != fdwSentence)
     {
-        oldSentence = data->IMC.fdwSentence;
-        data->IMC.fdwSentence = fdwSentence;
-        ImmNotifyIME(hIMC, NI_CONTEXTUPDATED, oldSentence, IMC_SETSENTENCEMODE);
-        ImmInternalSendIMENotify(data, IMN_SETSENTENCEMODE, 0);
+        dwOldSentence = pIC->fdwSentence;
+        pIC->fdwSentence = fdwSentence;
+        fSentenceChange = TRUE;
+    }
+
+    hWnd = pIC->hWnd;
+    ImmUnlockIMC(hIMC);
+
+    if (fConversionChange)
+    {
+        Imm32NotifyAction(hIMC, hWnd, NI_CONTEXTUPDATED, dwOldConversion,
+                          IMC_SETCONVERSIONMODE, IMN_SETCONVERSIONMODE, 0);
+        Imm32NotifyIMEStatus(hWnd, hIMC, fdwConversion);
+    }
+
+    if (fSentenceChange)
+    {
+        Imm32NotifyAction(hIMC, hWnd, NI_CONTEXTUPDATED, dwOldSentence,
+                          IMC_SETSENTENCEMODE, IMN_SETSENTENCEMODE, 0);
     }
 
     return TRUE;
