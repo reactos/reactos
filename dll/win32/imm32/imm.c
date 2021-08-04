@@ -2764,7 +2764,7 @@ ImmGetGuideLineAW(HIMC hIMC, DWORD dwIndex, LPVOID lpBuf, DWORD dwBufLen, BOOL b
     PCLIENTIMC pClientImc;
     LPINPUTCONTEXT pIC;
     LPGUIDELINE pGuideLine;
-    DWORD ret, cb;
+    DWORD cb, ret = 0;
     LPVOID pvStr, pvPrivate;
     BOOL bUsedDefault;
 
@@ -2920,8 +2920,6 @@ ImmGetGuideLineAW(HIMC hIMC, DWORD dwIndex, LPVOID lpBuf, DWORD dwBufLen, BOOL b
         ret = cb;
         goto Quit;
     }
-
-    ret = 0;
 
 Quit:
     ImmUnlockIMCC(pIC->hGuideLine);
