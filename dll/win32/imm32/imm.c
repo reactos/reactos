@@ -416,7 +416,7 @@ static PIMEDPI APIENTRY Ime32LoadImeDpi(HKL hKL, BOOL bLock)
     }
 }
 
-PIMEDPI WINAPI ImmLoadIME(HKL hKL)
+BOOL WINAPI ImmLoadIME(HKL hKL)
 {
     PW32CLIENTINFO pInfo;
     PIMEDPI pImeDpi;
@@ -434,6 +434,27 @@ PIMEDPI WINAPI ImmLoadIME(HKL hKL)
     pImeDpi = Imm32FindImeDpi(hKL);
     if (pImeDpi == NULL)
         pImeDpi = Ime32LoadImeDpi(hKL, FALSE);
+    return !!pImeDpi;
+}
+
+PIMEDPI APIENTRY ImmLockOrLoadImeDpi(HKL hKL)
+{
+    PW32CLIENTINFO pInfo;
+    PIMEDPI pImeDpi;
+
+    if (!IS_IME_HKL(hKL))
+    {
+        if (!g_psi || !(g_psi->dwSRVIFlags & SRVINFO_CICERO_ENABLED))
+            return FALSE;
+
+        pInfo = (PW32CLIENTINFO)(NtCurrentTeb()->Win32ClientInfo);
+        if ((pInfo->W32ClientInfo[0] & 2))
+            return FALSE;
+    }
+
+    pImeDpi = Imm32FindImeDpi(hKL);
+    if (pImeDpi == NULL)
+        pImeDpi = Ime32LoadImeDpi(hKL, TRUE);
     return pImeDpi;
 }
 
@@ -3192,7 +3213,7 @@ BOOL WINAPI ImmRegisterWordA(
     TRACE("(%p, %s, 0x%lX, %s)\n", hKL, debugstr_a(lpszReading), dwStyle,
           debugstr_a(lpszRegister));
 
-    pImeDpi = ImmLoadIME(hKL);
+    pImeDpi = ImmLockOrLoadImeDpi(hKL);
     if (!pImeDpi)
         return FALSE;
 
