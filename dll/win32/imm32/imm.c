@@ -2814,7 +2814,7 @@ ImmGetGuideLineAW(HIMC hIMC, DWORD dwIndex, LPVOID lpBuf, DWORD dwBufLen, BOOL b
             }
             else
             {
-                cb = pGuideLine->dwStrLen;
+                cb = pGuideLine->dwStrLen * sizeof(CHAR);
             }
         }
         else
@@ -2841,7 +2841,7 @@ ImmGetGuideLineAW(HIMC hIMC, DWORD dwIndex, LPVOID lpBuf, DWORD dwBufLen, BOOL b
         {
             if (pClientImc->dwFlags & CLIENTIMC_WIDE)
             {
-                ret = WideCharToMultiByte(CP_ACP, 0, (LPWSTR)pvStr, pGuideLine->dwStrLen,
+                ret = WideCharToMultiByte(CP_ACP, 0, pvStr, pGuideLine->dwStrLen,
                                           lpBuf, dwBufLen, NULL, &bUsedDefault);
                 goto Quit;
             }
@@ -2850,7 +2850,7 @@ ImmGetGuideLineAW(HIMC hIMC, DWORD dwIndex, LPVOID lpBuf, DWORD dwBufLen, BOOL b
         {
             if (!(pClientImc->dwFlags & CLIENTIMC_WIDE))
             {
-                ret = MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, (LPSTR)pvStr, pGuideLine->dwStrLen,
+                ret = MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, pvStr, pGuideLine->dwStrLen,
                                           lpBuf, dwBufLen) * sizeof(WCHAR);
                 goto Quit;
             }
