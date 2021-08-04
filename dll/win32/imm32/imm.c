@@ -416,7 +416,7 @@ static PIMEDPI APIENTRY Ime32LoadImeDpi(HKL hKL, BOOL bLock)
     }
 }
 
-BOOL WINAPI ImmLoadIME(HKL hKL)
+PIMEDPI WINAPI ImmLoadIME(HKL hKL)
 {
     PW32CLIENTINFO pInfo;
     PIMEDPI pImeDpi;
@@ -434,7 +434,7 @@ BOOL WINAPI ImmLoadIME(HKL hKL)
     pImeDpi = Imm32FindImeDpi(hKL);
     if (pImeDpi == NULL)
         pImeDpi = Ime32LoadImeDpi(hKL, FALSE);
-    return (pImeDpi != NULL);
+    return pImeDpi;
 }
 
 HKL WINAPI ImmLoadLayout(HKL hKL, PIMEINFOEX pImeInfoEx)
@@ -3184,28 +3184,56 @@ BOOL WINAPI ImmNotifyIME(
 BOOL WINAPI ImmRegisterWordA(
   HKL hKL, LPCSTR lpszReading, DWORD dwStyle, LPCSTR lpszRegister)
 {
-    ImmHkl *immHkl = IMM_GetImmHkl(hKL);
-    TRACE("(%p, %s, %d, %s):\n", hKL, debugstr_a(lpszReading), dwStyle,
-                    debugstr_a(lpszRegister));
-    if (immHkl->hIME && immHkl->pImeRegisterWord)
-    {
-        if (!is_kbd_ime_unicode(immHkl))
-            return immHkl->pImeRegisterWord((LPCWSTR)lpszReading,dwStyle,
-                                            (LPCWSTR)lpszRegister);
-        else
-        {
-            LPWSTR lpszwReading = strdupAtoW(lpszReading);
-            LPWSTR lpszwRegister = strdupAtoW(lpszRegister);
-            BOOL rc;
+    BOOL ret = FALSE;
+    PIMEDPI pImeDpi;
+    LPWSTR pszReadingW = NULL, pszRegisterW = NULL;
+    INT cch;
 
-            rc = immHkl->pImeRegisterWord(lpszwReading,dwStyle,lpszwRegister);
-            HeapFree(GetProcessHeap(),0,lpszwReading);
-            HeapFree(GetProcessHeap(),0,lpszwRegister);
-            return rc;
-        }
-    }
-    else
+    TRACE("(%p, %s, 0x%lX, %s)\n", hKL, debugstr_a(lpszReading), dwStyle,
+          debugstr_a(lpszRegister));
+
+    pImeDpi = ImmLoadIME(hKL);
+    if (!pImeDpi)
         return FALSE;
+
+    if (!(pImeDpi->ImeInfo.fdwProperty & IME_PROP_UNICODE))
+    {
+        ret = pImeDpi->ImeRegisterWord((LPWSTR)lpszReading, dwStyle, (LPWSTR)lpszRegister);
+        ImmUnlockImeDpi(pImeDpi);
+        return ret;
+    }
+
+    if (lpszReading)
+    {
+        cch = lstrlenA(lpszReading);
+        pszReadingW = Imm32HeapAlloc(0, (cch + 1) * sizeof(WCHAR));
+        if (pszReadingW == NULL)
+            goto Quit;
+        cch = MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, lpszReading, cch,
+                                  pszReadingW, cch + 1);
+        pszReadingW[cch] = 0;
+    }
+
+    if (lpszRegister)
+    {
+        cch = lstrlenA(lpszRegister);
+        pszRegisterW = Imm32HeapAlloc(0, (cch + 1) * sizeof(WCHAR));
+        if (pszRegisterW == NULL)
+            goto Quit;
+        cch = MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, lpszRegister, cch,
+                                  pszRegisterW, cch + 1);
+        pszRegisterW[cch] = 0;
+    }
+
+    ret = ImmRegisterWordW(hKL, pszReadingW, dwStyle, pszRegisterW);
+
+Quit:
+    if (pszReadingW)
+        HeapFree(g_hImm32Heap, 0, pszReadingW);
+    if (pszRegisterW)
+        HeapFree(g_hImm32Heap, 0, pszRegisterW);
+    ImmUnlockImeDpi(pImeDpi);
+    return ret;
 }
 
 /***********************************************************************
