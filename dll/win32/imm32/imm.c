@@ -3198,7 +3198,7 @@ BOOL WINAPI ImmRegisterWordA(
 
     if (!(pImeDpi->ImeInfo.fdwProperty & IME_PROP_UNICODE))
     {
-        ret = pImeDpi->ImeRegisterWord((LPWSTR)lpszReading, dwStyle, (LPWSTR)lpszRegister);
+        ret = pImeDpi->ImeRegisterWord(lpszReading, dwStyle, lpszRegister);
         ImmUnlockImeDpi(pImeDpi);
         return ret;
     }
