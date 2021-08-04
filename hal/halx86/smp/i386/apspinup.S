@@ -29,7 +29,14 @@ _APSpinup:
     mov eax, ([ebx] + [APCr3 - _APSpinup])
     mov cr3, eax
 
-    hlt 
+    /* Load some ProcessorState values into proper area */
+    xor eax, eax
+
+    /* Ss */
+    mov eax, ([ebx] + [APSegSs - _APSpinup])
+    mov ss, eax
+
+    hlt
 
     /* Enable paging */
     mov eax, cr0
