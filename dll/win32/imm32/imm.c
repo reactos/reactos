@@ -434,7 +434,7 @@ BOOL WINAPI ImmLoadIME(HKL hKL)
     pImeDpi = Imm32FindImeDpi(hKL);
     if (pImeDpi == NULL)
         pImeDpi = Ime32LoadImeDpi(hKL, FALSE);
-    return !!pImeDpi;
+    return (pImeDpi != NULL);
 }
 
 PIMEDPI APIENTRY ImmLockOrLoadImeDpi(HKL hKL)
