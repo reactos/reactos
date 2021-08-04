@@ -215,6 +215,7 @@ typedef struct tagCANDIDATEINFO {
 #define IME_PROP_IGNORE_UPKEYS          0x0004
 #define IME_PROP_NEED_ALTKEY            0x0008
 #define IME_PROP_NO_KEYS_ON_CLOSE       0x0010
+#define IME_PROP_ACCEPT_WIDE_VKEY       0x0020
 
 /* for NI_CONTEXTUPDATED */
 #define IMC_SETCONVERSIONMODE           0x0002
@@ -381,7 +382,6 @@ DWORD WINAPI ImeGetImeMenuItems(HIMC, DWORD, DWORD, LPIMEMENUITEMINFOW, LPIMEMEN
 #define IMEVER_0310                     0x0003000A
 #define IMEVER_0400                     0x00040000
 
-
 /* IME property bits */
 #define IME_PROP_AT_CARET               0x00010000
 #define IME_PROP_SPECIAL_UI             0x00020000
@@ -389,16 +389,16 @@ DWORD WINAPI ImeGetImeMenuItems(HIMC, DWORD, DWORD, LPIMEMENUITEMINFOW, LPIMEMEN
 #define IME_PROP_UNICODE                0x00080000
 #define IME_PROP_COMPLETE_ON_UNSELECT	0x00100000
 
-
 /* IME UICapability bits */
 #define UI_CAP_2700                     0x00000001
 #define UI_CAP_ROT90                    0x00000002
 #define UI_CAP_ROTANY                   0x00000004
+#define UI_CAP_SOFTKBD                  0x00010000
+
 /* ImmSetCompositionString Capability bits */
 #define SCS_CAP_COMPSTR                 0x00000001
 #define SCS_CAP_MAKEREAD                0x00000002
 #define SCS_CAP_SETRECONVERTSTRING	0x00000004
-
 
 /* IME WM_IME_SELECT inheritance Capability bits */
 #define SELECT_CAP_CONVERSION           0x00000001

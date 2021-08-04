@@ -912,7 +912,7 @@ typedef LONG_PTR
 #define SRVINFO_DBCSENABLED 0x0002
 #define SRVINFO_IMM32       0x0004
 #define SRVINFO_APIHOOK     0x0010
-#define SRVINFO_METRICS     0x0020
+#define SRVINFO_CICERO_ENABLED 0x0020
 #define SRVINFO_KBDPREF     0x0080
 
 #define NUM_SYSCOLORS 31
@@ -1212,42 +1212,88 @@ typedef struct _IMEWND
     PIMEUI pimeui;
 } IMEWND, *PIMEWND;
 
-typedef BOOL (WINAPI *FN_ImeDestroy)(UINT uReserved);
-typedef LRESULT (WINAPI *FN_ImeEscape)(HIMC hIMC, UINT uEscape, LPVOID lpData);
-typedef BOOL (WINAPI *FN_NotifyIME)(HIMC hIMC, DWORD dwAction, DWORD dwIndex, DWORD dwValue);
+#define DEFINE_IME_ENTRY(type, name, params, extended) typedef type (WINAPI *FN_##name) params;
+#include "imetable.h"
+#undef DEFINE_IME_ENTRY
 
-typedef struct IMEDPI /* unconfirmed */
+typedef struct IMEDPI
 {
     struct IMEDPI *pNext;
     HINSTANCE      hInst;
     HKL            hKL;
-    DWORD          dwUnknown0;
-    DWORD          dwUnknown1;
-    DWORD          dwUnknown2[14];
+    IMEINFO        ImeInfo;
+    UINT           uCodePage;
+    WCHAR          szUIClass[16];
     DWORD          cLockObj;
     DWORD          dwFlags;
-    DWORD          dwUnknown3[7];
-    FN_ImeDestroy  ImeDestroy;
-    FN_ImeEscape   ImeEscape;
-    DWORD          dwUnknown4[4];
-    FN_NotifyIME   NotifyIME;
-    /* ... */
+#define DEFINE_IME_ENTRY(type, name, params, extended) FN_##name name;
+#include "imetable.h"
+#undef DEFINE_IME_ENTRY
 } IMEDPI, *PIMEDPI;
 
 #ifndef _WIN64
 C_ASSERT(offsetof(IMEDPI, pNext) == 0x0);
 C_ASSERT(offsetof(IMEDPI, hInst) == 0x4);
 C_ASSERT(offsetof(IMEDPI, hKL) == 0x8);
+C_ASSERT(offsetof(IMEDPI, ImeInfo) == 0xc);
+C_ASSERT(offsetof(IMEDPI, uCodePage) == 0x28);
+C_ASSERT(offsetof(IMEDPI, szUIClass) == 0x2c);
 C_ASSERT(offsetof(IMEDPI, cLockObj) == 0x4c);
 C_ASSERT(offsetof(IMEDPI, dwFlags) == 0x50);
+C_ASSERT(offsetof(IMEDPI, ImeInquire) == 0x54);
+C_ASSERT(offsetof(IMEDPI, ImeConversionList) == 0x58);
+C_ASSERT(offsetof(IMEDPI, ImeRegisterWord) == 0x5c);
+C_ASSERT(offsetof(IMEDPI, ImeUnregisterWord) == 0x60);
+C_ASSERT(offsetof(IMEDPI, ImeGetRegisterWordStyle) == 0x64);
+C_ASSERT(offsetof(IMEDPI, ImeEnumRegisterWord) == 0x68);
+C_ASSERT(offsetof(IMEDPI, ImeConfigure) == 0x6c);
 C_ASSERT(offsetof(IMEDPI, ImeDestroy) == 0x70);
 C_ASSERT(offsetof(IMEDPI, ImeEscape) == 0x74);
+C_ASSERT(offsetof(IMEDPI, ImeSelect) == 0x78);
+C_ASSERT(offsetof(IMEDPI, ImeProcessKey) == 0x7c);
+C_ASSERT(offsetof(IMEDPI, ImeSetActiveContext) == 0x80);
+C_ASSERT(offsetof(IMEDPI, ImeToAsciiEx) == 0x84);
 C_ASSERT(offsetof(IMEDPI, NotifyIME) == 0x88);
+C_ASSERT(offsetof(IMEDPI, ImeSetCompositionString) == 0x8c);
+C_ASSERT(offsetof(IMEDPI, ImeGetImeMenuItems) == 0x90);
+C_ASSERT(offsetof(IMEDPI, CtfImeInquireExW) == 0x94);
+C_ASSERT(offsetof(IMEDPI, CtfImeSelectEx) == 0x98);
+C_ASSERT(offsetof(IMEDPI, CtfImeEscapeEx) == 0x9c);
+C_ASSERT(offsetof(IMEDPI, CtfImeGetGuidAtom) == 0xa0);
+C_ASSERT(offsetof(IMEDPI, CtfImeIsGuidMapEnable) == 0xa4);
+C_ASSERT(sizeof(IMEDPI) == 0xa8);
 #endif
 
 /* flags for IMEDPI.dwFlags */
-#define IMEDPI_FLAG_UNKNOWN 1
-#define IMEDPI_FLAG_UNKNOWN2 2
+#define IMEDPI_FLAG_UNKNOWN 0x1
+#define IMEDPI_FLAG_LOCKED 0x2
+
+/* unconfirmed */
+typedef struct tagCLIENTIMC
+{
+    HIMC hImc;
+    LONG cLockObj;
+    DWORD dwFlags;
+    DWORD unknown;
+    RTL_CRITICAL_SECTION cs;
+    DWORD unknown2;
+    HKL hKL;
+    BOOL bUnknown4;
+} CLIENTIMC, *PCLIENTIMC;
+
+#ifndef _WIN64
+C_ASSERT(offsetof(CLIENTIMC, hImc) == 0x0);
+C_ASSERT(offsetof(CLIENTIMC, cLockObj) == 0x4);
+C_ASSERT(offsetof(CLIENTIMC, dwFlags) == 0x8);
+C_ASSERT(offsetof(CLIENTIMC, cs) == 0x10);
+C_ASSERT(offsetof(CLIENTIMC, hKL) == 0x2c);
+C_ASSERT(sizeof(CLIENTIMC) == 0x34);
+#endif
+
+/* flags for CLIENTIMC */
+#define CLIENTIMC_WIDE 0x1
+#define CLIENTIMC_UNKNOWN1 0x40
+#define CLIENTIMC_UNKNOWN2 0x100
 
 DWORD
 NTAPI
@@ -1869,10 +1915,9 @@ NtUserCreateDesktop(
     DWORD dwFlags,
     ACCESS_MASK dwDesiredAccess);
 
-DWORD
+HIMC
 NTAPI
-NtUserCreateInputContext(
-    DWORD dwUnknown1);
+NtUserCreateInputContext(PCLIENTIMC pClientImc);
 
 NTSTATUS
 NTAPI
@@ -1964,10 +2009,9 @@ NtUserDestroyCursor(
   _In_ HANDLE Handle,
   _In_ BOOL bForce);
 
-DWORD
+BOOL
 NTAPI
-NtUserDestroyInputContext(
-    DWORD dwUnknown1);
+NtUserDestroyInputContext(HIMC hIMC);
 
 BOOLEAN
 NTAPI
@@ -3130,9 +3174,7 @@ NtUserSetImeInfoEx(
 
 DWORD
 NTAPI
-NtUserSetImeOwnerWindow(
-    DWORD Unknown0,
-    DWORD Unknown1);
+NtUserSetImeOwnerWindow(PIMEINFOEX pImeInfoEx, BOOL fFlag);
 
 DWORD
 NTAPI

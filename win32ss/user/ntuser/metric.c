@@ -169,7 +169,7 @@ InitMetrics(VOID)
     piSysMet[90] = 0;
 #endif
 
-    gpsi->dwSRVIFlags |= SRVINFO_METRICS;
+    gpsi->dwSRVIFlags |= SRVINFO_CICERO_ENABLED;
     Setup = TRUE;
 
     return TRUE;
