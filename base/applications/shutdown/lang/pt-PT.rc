@@ -55,8 +55,8 @@ Usage: shutdown [/?] [/i | /l | /s | /r | /g | /a | /p | /h | /e] [/f]\n\
             30 é o valor padrao.\n\
     /c ""comment""  Diga o motivo do encerramento ou reinicialização.\n\
             512 caracteres máximo permitido.\n\
-    /f      Forçar o encerramento de aplicações abertas sem avisar. Se não\n
-especificar outro parâmetro, esta operação também terminará a sessão.\n\
+    /f      Forçar o encerramento de aplicações abertas sem avisar. Se não\n\
+    especificar outro parâmetro, esta operação também terminará a sessão.\n\
     /d [p|u:]xx:yy  Forneça o código de razão para o encerramento ou reinicialização.\n\
             p indica que o encerramento ou uma reinicialização está planejada.\n\
             u indica o motivo definido pelo utilizador.\n\
