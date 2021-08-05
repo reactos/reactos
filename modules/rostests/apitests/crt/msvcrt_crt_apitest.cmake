@@ -1017,7 +1017,7 @@ list(APPEND SOURCE_MSVCRT
 #    bsearch_s
 #    btowc.c
 #    calloc.c
-#    ceil.c
+    ceil.c
 #    clearerr.c
 #    clearerr_s
 #    clock.c
@@ -1038,7 +1038,7 @@ list(APPEND SOURCE_MSVCRT
 #    fgets.c
 #    fgetwc.c
 #    fgetws.c
-#    floor.c
+    floor.c
 #    fmod.c
 #    fopen.c
 #    fopen_s.c
