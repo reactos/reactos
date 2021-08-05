@@ -116,7 +116,7 @@ static void value_free( struct value val )
 
 %lex-param { COND_input *info }
 %parse-param { COND_input *info }
-%define api.pure
+%pure-parser
 
 %union
 {
@@ -146,7 +146,7 @@ static void value_free( struct value val )
 %%
 
 condition:
-    expression
+    expression 
         {
             COND_input* cond = (COND_input*) info;
             cond->result = $1;
@@ -159,7 +159,7 @@ condition:
     ;
 
 expression:
-    boolean_term
+    boolean_term 
         {
             $$ = $1;
         }
@@ -320,7 +320,7 @@ value:
         {
             COND_input* cond = (COND_input*) info;
             INSTALLSTATE install = INSTALLSTATE_UNKNOWN, action = INSTALLSTATE_UNKNOWN;
-
+      
             if(MSI_GetComponentStateW(cond->package, $2, &install, &action ) != ERROR_SUCCESS)
             {
                 $$.type = VALUE_LITERAL;
@@ -337,7 +337,7 @@ value:
         {
             COND_input* cond = (COND_input*) info;
             INSTALLSTATE install = INSTALLSTATE_UNKNOWN, action = INSTALLSTATE_UNKNOWN;
-
+      
             if(MSI_GetComponentStateW(cond->package, $2, &install, &action ) != ERROR_SUCCESS)
             {
                 $$.type = VALUE_LITERAL;
@@ -354,7 +354,7 @@ value:
         {
             COND_input* cond = (COND_input*) info;
             INSTALLSTATE install, action;
-
+      
             if (MSI_GetFeatureStateW(cond->package, $2, &install, &action ) != ERROR_SUCCESS)
             {
                 $$.type = VALUE_LITERAL;
@@ -371,7 +371,7 @@ value:
         {
             COND_input* cond = (COND_input*) info;
             INSTALLSTATE install = INSTALLSTATE_UNKNOWN, action = INSTALLSTATE_UNKNOWN;
-
+      
             if(MSI_GetFeatureStateW(cond->package, $2, &install, &action ) != ERROR_SUCCESS)
             {
                 $$.type = VALUE_LITERAL;
@@ -583,7 +583,7 @@ static INT compare_int( INT a, INT operator, INT b )
 
 static int COND_IsIdent( WCHAR x )
 {
-    return( COND_IsAlpha( x ) || COND_IsNumber( x ) || ( x == '_' )
+    return( COND_IsAlpha( x ) || COND_IsNumber( x ) || ( x == '_' ) 
             || ( x == '#' ) || (x == '.') );
 }
 
@@ -727,7 +727,7 @@ static int cond_lex( void *COND_lval, COND_input *cond )
     do {
         rc = COND_GetOne( str, cond );
     } while (rc == COND_SPACE);
-
+    
     return rc;
 }
 

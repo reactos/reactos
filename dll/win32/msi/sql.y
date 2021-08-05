@@ -62,7 +62,7 @@ static struct expr * EXPR_wildcard( void *info );
 
 %lex-param { SQL_input *info }
 %parse-param { SQL_input *info }
-%define api.pure
+%pure-parser
 
 %union
 {
