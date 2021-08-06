@@ -3288,29 +3288,34 @@ LRESULT WINAPI ImmRequestMessageW(HIMC hIMC, WPARAM wParam, LPARAM lParam)
 BOOL WINAPI ImmSetCandidateWindow(
   HIMC hIMC, LPCANDIDATEFORM lpCandidate)
 {
-    InputContextData *data = get_imc_data(hIMC);
+#define MAX_CANDIDATEFORM 4
+    DWORD dwImeThreadId, dwThreadId;
+    HWND hWnd;
+    LPINPUTCONTEXT pIC;
 
     TRACE("(%p, %p)\n", hIMC, lpCandidate);
 
-    if (!data || !lpCandidate)
+    if (lpCandidate->dwIndex >= MAX_CANDIDATEFORM)
         return FALSE;
 
-    if (IMM_IsCrossThreadAccess(NULL, hIMC))
+    dwImeThreadId = Imm32QueryInputContext(hIMC, 1);
+    dwThreadId = GetCurrentThreadId();
+    if (dwImeThreadId != dwThreadId)
         return FALSE;
 
-    TRACE("\t%x, %x, %s, %s\n",
-          lpCandidate->dwIndex, lpCandidate->dwStyle,
-          wine_dbgstr_point(&lpCandidate->ptCurrentPos),
-          wine_dbgstr_rect(&lpCandidate->rcArea));
-
-    if (lpCandidate->dwIndex >= ARRAY_SIZE(data->IMC.cfCandForm))
+    pIC = ImmLockIMC(hIMC);
+    if (pIC == NULL)
         return FALSE;
 
-    data->IMC.cfCandForm[lpCandidate->dwIndex] = *lpCandidate;
-    ImmNotifyIME(hIMC, NI_CONTEXTUPDATED, 0, IMC_SETCANDIDATEPOS);
-    ImmInternalSendIMENotify(data, IMN_SETCANDIDATEPOS, 1 << lpCandidate->dwIndex);
+    hWnd = pIC->hWnd;
+    pIC->cfCandForm[lpCandidate->dwIndex] = *lpCandidate;
 
+    ImmUnlockIMC(hIMC);
+
+    Imm32NotifyAction(hIMC, hWnd, NI_CONTEXTUPDATED, 0, IMC_SETCANDIDATEPOS,
+                      IMN_SETCANDIDATEPOS, (1 << lpCandidate->dwIndex));
     return TRUE;
+#undef MAX_CANDIDATEFORM
 }
 
 /***********************************************************************
