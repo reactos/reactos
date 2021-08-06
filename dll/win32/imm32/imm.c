@@ -3480,24 +3480,26 @@ BOOL WINAPI ImmSetCandidateWindow(
 static VOID APIENTRY WideToAnsiLogFont(const LOGFONTW *plfW, LPLOGFONTA plfA)
 {
     BOOL bUsedDef;
-    size_t cchW;
-    const size_t cchA = _countof(plfA->lfFaceName);
+    size_t cchW, cchA = _countof(plfA->lfFaceName);
     RtlCopyMemory(plfA, plfW, offsetof(LOGFONTA, lfFaceName));
     StringCchLengthW(plfW->lfFaceName, _countof(plfW->lfFaceName), &cchW);
-    WideCharToMultiByte(CP_ACP, 0, plfW->lfFaceName, (INT)cchW,
-                        plfA->lfFaceName, (INT)cchA, NULL, &bUsedDef);
-    plfA->lfFaceName[cchA - 1] = 0;
+    cchA = WideCharToMultiByte(CP_ACP, 0, plfW->lfFaceName, (INT)cchW,
+                               plfA->lfFaceName, (INT)cchA, NULL, &bUsedDef);
+    if (cchA > _countof(plfA->lfFaceName) - 1)
+        cchA = _countof(plfA->lfFaceName) - 1;
+    plfA->lfFaceName[cchA] = 0;
 }
 
 static VOID APIENTRY AnsiToWideLogFont(const LOGFONTA *plfA, LPLOGFONTW plfW)
 {
-    size_t cchA;
-    const size_t cchW = _countof(plfW->lfFaceName);
-    RtlCopyMemory(plfW, plfA, offsetof(LOGFONTA, lfFaceName));
+    size_t cchA, cchW = _countof(plfW->lfFaceName);
+    RtlCopyMemory(plfW, plfA, offsetof(LOGFONTW, lfFaceName));
     StringCchLengthA(plfA->lfFaceName, _countof(plfA->lfFaceName), &cchA);
-    MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, plfA->lfFaceName, (INT)cchA,
-                        plfW->lfFaceName, cchW);
-    plfW->lfFaceName[cchW - 1] = 0;
+    cchW = MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, plfA->lfFaceName, (INT)cchA,
+                               plfW->lfFaceName, cchW);
+    if (cchW > _countof(plfW->lfFaceName) - 1)
+        cchW = _countof(plfW->lfFaceName) - 1;
+    plfW->lfFaceName[cchW] = 0;
 }
 
 /***********************************************************************
