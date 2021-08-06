@@ -1011,11 +1011,11 @@ MmDereferenceSegmentWithLock(PMM_SECTION_SEGMENT Segment, KIRQL OldIrql)
     }
 
     *Segment->Flags |= MM_SEGMENT_INDELETE;
-    MiReleasePfnLock(OldIrql);
 
     /* Flush the segment */
     if (*Segment->Flags & MM_DATAFILE_SEGMENT)
     {
+        MiReleasePfnLock(OldIrql);
         /* Free the page table. This will flush any remaining dirty data */
         MmFreePageTablesSectionSegment(Segment, FreeSegmentPage);
 
@@ -1036,7 +1036,6 @@ MmDereferenceSegmentWithLock(PMM_SECTION_SEGMENT Segment, KIRQL OldIrql)
         ULONG NrSegments;
         ULONG i;
 
-        OldIrql = MiAcquirePfnLock();
         /* Delete the pointer on the file */
         ASSERT(ImageSectionObject->FileObject->SectionObjectPointer->ImageSectionObject == ImageSectionObject);
         ImageSectionObject->FileObject->SectionObjectPointer->ImageSectionObject = NULL;
@@ -1098,6 +1097,7 @@ MmUnsharePageEntrySectionSegment(PMEMORY_AREA MemoryArea,
     ULONG_PTR Entry = InEntry ? *InEntry : MmGetPageEntrySectionSegment(Segment, Offset);
     PFN_NUMBER Page = PFN_FROM_SSE(Entry);
     BOOLEAN IsDataMap = BooleanFlagOn(*Segment->Flags, MM_DATAFILE_SEGMENT);
+    SWAPENTRY SwapEntry;
 
     if (Entry == 0)
     {
@@ -1134,12 +1134,12 @@ MmUnsharePageEntrySectionSegment(PMEMORY_AREA MemoryArea,
         return FALSE;
     }
 
-    if (!BooleanFlagOn(Segment->Image.Characteristics, IMAGE_SCN_MEM_SHARED))
+    if (!FlagOn(Segment->Image.Characteristics, IMAGE_SCN_MEM_SHARED))
     {
-        /* So this must have been a read-only page. Keep it ! */
         ASSERT(Segment->WriteCopy);
         ASSERT(!IS_DIRTY_SSE(Entry));
         ASSERT(MmGetSavedSwapEntryPage(Page) == 0);
+        /* So this must have been a read-only page. Keep it ! */
         MmSetPageEntrySectionSegment(Segment, Offset, Entry);
         return FALSE;
     }
@@ -1148,7 +1148,7 @@ MmUnsharePageEntrySectionSegment(PMEMORY_AREA MemoryArea,
      * So this is a page for a shared section of a DLL.
      * We can keep it if it is not dirty.
      */
-    SWAPENTRY SwapEntry = MmGetSavedSwapEntryPage(Page);
+    SwapEntry = MmGetSavedSwapEntryPage(Page);
     if ((SwapEntry == 0) && !IS_DIRTY_SSE(Entry))
     {
         MmSetPageEntrySectionSegment(Segment, Offset, Entry);
@@ -1194,7 +1194,8 @@ MmMakeSegmentResident(
     _In_ PMM_SECTION_SEGMENT Segment,
     _In_ LONGLONG Offset,
     _In_ ULONG Length,
-    _In_opt_ PLARGE_INTEGER ValidDataLength)
+    _In_opt_ PLARGE_INTEGER ValidDataLength,
+    _In_ BOOLEAN SetDirty)
 {
     /* Let's use a 64K granularity. */
     LONGLONG RangeStart, RangeEnd;
@@ -1261,7 +1262,9 @@ MmMakeSegmentResident(
 
             if (Entry != 0)
             {
-                /* There is a page here. Or a swap entry. Or whatever... */
+                /* Dirtify it if it's a resident page and we're asked to */
+                if (SetDirty && !IS_SWAP_FROM_SSE(Entry))
+                    MmSetPageEntrySectionSegment(Segment, &CurrentOffset, DIRTY_SSE(Entry));
                 continue;
             }
 
@@ -1409,12 +1412,16 @@ AssignPagesToSegment:
 
             for (UINT i = 0; i < BYTES_TO_PAGES(ReadLength); i++)
             {
+                ULONG_PTR Entry = MAKE_SSE(Pages[i] << PAGE_SHIFT, 0);
                 LARGE_INTEGER CurrentOffset;
                 CurrentOffset.QuadPart = ChunkOffset + (i * PAGE_SIZE);
 
                 ASSERT(MM_IS_WAIT_PTE(MmGetPageEntrySectionSegment(Segment, &CurrentOffset)));
 
-                MmSetPageEntrySectionSegment(Segment, &CurrentOffset, MAKE_SSE(Pages[i] << PAGE_SHIFT, 0));
+                if (SetDirty)
+                    Entry = DIRTY_SSE(Entry);
+
+                MmSetPageEntrySectionSegment(Segment, &CurrentOffset, Entry);
             }
 
             MmUnlockSectionSegment(Segment);
@@ -1755,7 +1762,7 @@ MmNotPresentFaultSectionView(PMMSUPPORT AddressSpace,
 
         PFSRTL_COMMON_FCB_HEADER FcbHeader = Segment->FileObject->FsContext;
 
-        Status = MmMakeSegmentResident(Segment, Offset.QuadPart, PAGE_SIZE, &FcbHeader->ValidDataLength);
+        Status = MmMakeSegmentResident(Segment, Offset.QuadPart, PAGE_SIZE, &FcbHeader->ValidDataLength, FALSE);
 
         FsRtlReleaseFile(Segment->FileObject);
 
@@ -3621,6 +3628,7 @@ MiRosUnmapViewOfSection(IN PEPROCESS Process,
                 ASSERT(NT_SUCCESS(Status));
             }
         }
+        DPRINT("One mapping less for %p\n", ImageSectionObject->FileObject->SectionObjectPointer);
         InterlockedDecrement(&ImageSectionObject->MapCount);
     }
     else
@@ -4046,6 +4054,8 @@ MmMapViewOfSection(IN PVOID SectionObject,
         *BaseAddress = (PVOID)ImageBase;
         *ViewSize = ImageSize;
 
+        DPRINT("Mapped %p for section pointer %p\n", ImageSectionObject, ImageSectionObject->FileObject->SectionObjectPointer);
+
         /* One more map */
         InterlockedIncrement(&ImageSectionObject->MapCount);
     }
@@ -4184,6 +4194,50 @@ MmCanFileBeTruncated (IN PSECTION_OBJECT_POINTERS SectionObjectPointer,
     return Ret;
 }
 
+static
+BOOLEAN
+MiPurgeImageSegment(PMM_SECTION_SEGMENT Segment)
+{
+    PCACHE_SECTION_PAGE_TABLE PageTable;
+
+    MmLockSectionSegment(Segment);
+
+    /* Loop over all entries */
+    for (PageTable = RtlEnumerateGenericTable(&Segment->PageTable, TRUE);
+         PageTable != NULL;
+         PageTable = RtlEnumerateGenericTable(&Segment->PageTable, FALSE))
+    {
+        for (ULONG i = 0; i < _countof(PageTable->PageEntries); i++)
+        {
+            ULONG_PTR Entry = PageTable->PageEntries[i];
+            LARGE_INTEGER Offset;
+
+            if (!Entry)
+                continue;
+
+            if (IS_SWAP_FROM_SSE(Entry) || (SHARE_COUNT_FROM_SSE(Entry) > 0))
+            {
+                /* I/O ongoing or swap entry. Someone mapped this file as we were not looking */
+                MmUnlockSectionSegment(Segment);
+                return FALSE;
+            }
+
+            /* Regular entry */
+            ASSERT(!IS_WRITE_SSE(Entry));
+            ASSERT(MmGetSavedSwapEntryPage(PFN_FROM_SSE(Entry)) == 0);
+
+            /* Properly remove using the used API */
+            Offset.QuadPart = PageTable->FileOffset.QuadPart + (i << PAGE_SHIFT);
+            MmSetPageEntrySectionSegment(Segment, &Offset, 0);
+            MmReleasePageMemoryConsumer(MC_USER, PFN_FROM_SSE(Entry));
+        }
+    }
+
+    MmUnlockSectionSegment(Segment);
+
+    return TRUE;
+}
+
 /*
  * @implemented
  */
@@ -4195,11 +4249,33 @@ MmFlushImageSection (IN PSECTION_OBJECT_POINTERS SectionObjectPointer,
     {
         case MmFlushForDelete:
         {
+            /*
+             * FIXME: Check for outstanding write probes on Data section.
+             * How do we do that ?
+             */
+        }
+        /* Fall-through */
+        case MmFlushForWrite:
+        {
             KIRQL OldIrql = MiAcquirePfnLock();
             PMM_IMAGE_SECTION_OBJECT ImageSectionObject = SectionObjectPointer->ImageSectionObject;
 
-            if (!ImageSectionObject || (ImageSectionObject->SegFlags & MM_SEGMENT_INDELETE))
+            DPRINT("Deleting or modifying %p\n", SectionObjectPointer);
+
+            /* Wait for concurrent creation or deletion of image to be done */
+            ImageSectionObject = SectionObjectPointer->ImageSectionObject;
+            while (ImageSectionObject && (ImageSectionObject->SegFlags & (MM_SEGMENT_INCREATE | MM_SEGMENT_INDELETE)))
             {
+                MiReleasePfnLock(OldIrql);
+                KeDelayExecutionThread(KernelMode, FALSE, &TinyTime);
+                OldIrql = MiAcquirePfnLock();
+                ImageSectionObject = SectionObjectPointer->ImageSectionObject;
+            }
+
+            if (!ImageSectionObject)
+            {
+                DPRINT("No image section object. Accepting\n");
+                /* Nothing to do */
                 MiReleasePfnLock(OldIrql);
                 return TRUE;
             }
@@ -4209,6 +4285,7 @@ MmFlushImageSection (IN PSECTION_OBJECT_POINTERS SectionObjectPointer,
             {
                 /* We do. No way to delete it */
                 MiReleasePfnLock(OldIrql);
+                DPRINT("Denying. There are mappings open\n");
                 return FALSE;
             }
 
@@ -4217,39 +4294,12 @@ MmFlushImageSection (IN PSECTION_OBJECT_POINTERS SectionObjectPointer,
             InterlockedIncrement64(&ImageSectionObject->RefCount);
             MiReleasePfnLock(OldIrql);
 
+            DPRINT("Purging\n");
+
             for (ULONG i = 0; i < ImageSectionObject->NrSegments; i++)
             {
-                PMM_SECTION_SEGMENT Segment = &ImageSectionObject->Segments[i];
-                LONGLONG Length;
-
-                MmLockSectionSegment(Segment);
-                /* Loop over all entries */
-                LARGE_INTEGER Offset;
-                Offset.QuadPart = 0;
-
-                Length = Segment->Length.QuadPart;
-                if (Length < Segment->RawLength.QuadPart)
-                    Length = Segment->RawLength.QuadPart;
-
-                while (Offset.QuadPart < Length)
-                {
-                    ULONG_PTR Entry = MmGetPageEntrySectionSegment(Segment, &Offset);
-
-                    /* Shared data must already be discarded, and nobody should be reading it. */
-                    ASSERT(!IS_SWAP_FROM_SSE(Entry));
-                    if (Entry != 0)
-                    {
-                        DPRINT1("Freeing page %lx for image section %p\n", PFN_FROM_SSE(Entry), ImageSectionObject);
-                        /* Release the page */
-                        ASSERT(SHARE_COUNT_FROM_SSE(Entry) == 0);
-                        ASSERT(!IS_WRITE_SSE(Entry));
-                        ASSERT(MmGetSavedSwapEntryPage(PFN_FROM_SSE(Entry)) == 0);
-                        MmSetPageEntrySectionSegment(Segment, &Offset, 0);
-                        MmReleasePageMemoryConsumer(MC_USER, PFN_FROM_SSE(Entry));
-                    }
-                    Offset.QuadPart += PAGE_SIZE;
-                }
-                MmUnlockSectionSegment(Segment);
+                if (!MiPurgeImageSegment(&ImageSectionObject->Segments[i]))
+                    break;
             }
 
             /* Grab lock again */
@@ -4273,21 +4323,6 @@ MmFlushImageSection (IN PSECTION_OBJECT_POINTERS SectionObjectPointer,
             /* Dereference the first segment, this will free everything & release the lock */
             MmDereferenceSegmentWithLock(&ImageSectionObject->Segments[0], OldIrql);
             return TRUE;
-        }
-        case MmFlushForWrite:
-        {
-            BOOLEAN Ret = TRUE;
-            KIRQL OldIrql = MiAcquirePfnLock();
-
-            if (SectionObjectPointer->ImageSectionObject)
-            {
-                PMM_IMAGE_SECTION_OBJECT ImageSectionObject = SectionObjectPointer->ImageSectionObject;
-                if (!(ImageSectionObject->SegFlags & MM_SEGMENT_INDELETE))
-                    Ret = FALSE;
-            }
-
-            MiReleasePfnLock(OldIrql);
-            return Ret;
         }
     }
     return FALSE;
@@ -4782,7 +4817,7 @@ MmMakeDataSectionResident(
     /* There must be a segment for this call */
     ASSERT(Segment);
 
-    NTSTATUS Status = MmMakeSegmentResident(Segment, Offset, Length, ValidDataLength);
+    NTSTATUS Status = MmMakeSegmentResident(Segment, Offset, Length, ValidDataLength, FALSE);
 
     MmDereferenceSegment(Segment);
 
@@ -4906,8 +4941,8 @@ MmCheckDirtySegment(
          * We got a dirty entry. This path is for the shared data,
          * be-it regular file maps or shared sections of DLLs
          */
-        ASSERT(!Segment->WriteCopy);
-        ASSERT(FlagOn(*Segment->Flags, MM_DATAFILE_SEGMENT) || FlagOn(Segment->Image.Characteristics, IMAGE_SCN_MEM_SHARED));
+        ASSERT(FlagOn(*Segment->Flags, MM_DATAFILE_SEGMENT) ||
+               FlagOn(Segment->Image.Characteristics, IMAGE_SCN_MEM_SHARED));
 
         /* Insert the cleaned entry back. Mark it as write in progress, and clear the dirty bit. */
         Entry = MAKE_SSE(PAGE_FROM_SSE(Entry), SHARE_COUNT_FROM_SSE(Entry) + 1);
@@ -4936,7 +4971,7 @@ MmCheckDirtySegment(
             ASSERT(PageOut);
 
             /* And this must be for a shared section in a DLL */
-            ASSERT(Segment->Image.Characteristics & IMAGE_SCN_MEM_SHARED);
+            ASSERT(FlagOn(Segment->Image.Characteristics, IMAGE_SCN_MEM_SHARED));
 
             SWAPENTRY SwapEntry = MmGetSavedSwapEntryPage(Page);
             if (!SwapEntry)
