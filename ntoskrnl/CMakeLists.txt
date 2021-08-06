@@ -46,13 +46,6 @@ set_module_type(ntoskrnl kernel)
 
 source_group(TREE ${REACTOS_SOURCE_DIR}/ntoskrnl PREFIX "Source Files" FILES ${NTOSKRNL_SOURCE})
 
-if(GDB AND NOT CLANG)
-    # Completely disable optimizations when debugging the kernel
-    # Not for CLang, which fails as following in _SEH2_EXCEPT macro:
-    # error: inline assembly requires more registers than available
-    target_compile_options(ntoskrnl PRIVATE -O0)
-endif()
-
 target_link_libraries(ntoskrnl cportlib csq ${PSEH_LIB} arbiter cmlib ntlsalib rtl ${ROSSYM_LIB} libcntpr wdmguid ioevent)
 
 if(STACK_PROTECTOR)
