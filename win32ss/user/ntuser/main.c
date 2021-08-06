@@ -995,7 +995,6 @@ DriverEntry(
     if (!gpsi)
     {
         DPRINT1("Failed allocate server info structure!\n");
-        UserLeave();
         return STATUS_UNSUCCESSFUL;
     }
 
