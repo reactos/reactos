@@ -87,6 +87,24 @@ C_ASSERT(offsetof(INPUTCONTEXT, dwReserve) == 0x134);
 C_ASSERT(sizeof(INPUTCONTEXT) == 0x140);
 #endif
 
+typedef struct INPUTCONTEXTDX /* unconfirmed */
+{
+    INPUTCONTEXT;
+    UINT nVKey;
+    BOOL bHasVKey;
+    DWORD dwUnknown148;
+    DWORD dwUIFlags;
+    DWORD dwUnknown150;
+    void *pUnknown154;
+    /* ... */
+} INPUTCONTEXTDX, *LPINPUTCONTEXTDX;
+
+#ifndef _WIN64
+C_ASSERT(offsetof(INPUTCONTEXTDX, nVKey) == 0x140);
+C_ASSERT(offsetof(INPUTCONTEXTDX, bHasVKey) == 0x144);
+C_ASSERT(offsetof(INPUTCONTEXTDX, dwUIFlags) == 0x14c);
+#endif
+
 // bits of fdwInit of INPUTCONTEXT
 #define INIT_STATUSWNDPOS               0x00000001
 #define INIT_CONVERSION                 0x00000002
@@ -94,6 +112,25 @@ C_ASSERT(sizeof(INPUTCONTEXT) == 0x140);
 #define INIT_LOGFONT                    0x00000008
 #define INIT_COMPFORM                   0x00000010
 #define INIT_SOFTKBDPOS                 0x00000020
+
+#ifndef WM_IME_REPORT
+    #define WM_IME_REPORT 0x280
+#endif
+
+// WM_IME_REPORT wParam
+#define IR_STRINGSTART   0x100
+#define IR_STRINGEND     0x101
+#define IR_OPENCONVERT   0x120
+#define IR_CHANGECONVERT 0x121
+#define IR_CLOSECONVERT  0x122
+#define IR_FULLCONVERT   0x123
+#define IR_IMESELECT     0x130
+#define IR_STRING        0x140
+#define IR_DBCSCHAR      0x160
+#define IR_UNDETERMINE   0x170
+#define IR_STRINGEX      0x180
+#define IR_MODEINFO      0x190
+
 
 LPINPUTCONTEXT WINAPI ImmLockIMC(HIMC);
 
