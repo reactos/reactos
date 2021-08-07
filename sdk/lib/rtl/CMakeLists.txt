@@ -104,16 +104,6 @@ elseif(ARCH STREQUAL "arm")
         arm/except.c
         byteswap.c
         mem.c)
-elseif(ARCH STREQUAL "powerpc")
-    list(APPEND ASM_SOURCE
-        powerpc/rtlmem.s
-        powerpc/rtlswap.s)
-    list(APPEND SOURCE
-        byteswap.c
-        powerpc/debug.c
-        powerpc/except.c
-        powerpc/interlocked.c
-        powerpc/thread.c)
 endif()
 
 add_asm_files(rtl_asm ${ASM_SOURCE})
