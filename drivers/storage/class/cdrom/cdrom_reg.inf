@@ -1,7 +1,0 @@
-; Cdrom class driver
-[AddReg]
-HKLM,"SYSTEM\CurrentControlSet\Services\Cdrom","ErrorControl",0x00010001,0x00000000
-HKLM,"SYSTEM\CurrentControlSet\Services\Cdrom","Group",0x00000000,"SCSI Class"
-HKLM,"SYSTEM\CurrentControlSet\Services\Cdrom","ImagePath",0x00020000,"system32\drivers\cdrom.sys"
-HKLM,"SYSTEM\CurrentControlSet\Services\Cdrom","Start",0x00010001,0x00000001
-HKLM,"SYSTEM\CurrentControlSet\Services\Cdrom","Type",0x00010001,0x00000001
