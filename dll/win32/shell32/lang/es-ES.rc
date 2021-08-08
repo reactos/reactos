@@ -332,7 +332,7 @@ BEGIN
     EDITTEXT 14008, 197, 103, 33, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     CONTROL "", 14015, "Static", SS_OWNERDRAW, 70, 116, 100, 30
     LTEXT "Unidad %c", 14009, 100, 150, 70, 10
-    PUSHBUTTON "&Liberar espacio en disco", 14010, 160, 154, 70, 15, WS_TABSTOP
+    PUSHBUTTON "&Liberar espacio en disco", 14010, 143, 152, 88, 15, WS_TABSTOP
     LTEXT "", -1, 8, 171, 223, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
     CHECKBOX "Comprimir contenido para ahorrar espacio en disco", 14011, 8, 191, 222, 10, WS_DISABLED
     CHECKBOX "Permitir al servidor de indexación indizar el disco para acelerar la búsqueda", 14012, 8, 205, 222, 10, WS_DISABLED
@@ -732,17 +732,17 @@ BEGIN
 END
 
 IDD_LINK_PROBLEM DIALOGEX 0, 0, 250, 140
-CAPTION "Problem with Shortcut"
+CAPTION "Problema con el acceso directo"
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON 0, IDC_LINK_PROBLEM_ICON, 5, 5, 0, 0
-    LTEXT "The item '%s' that this shortcut refers to has been changed or moved, so this shortcut will no longer work properly.", IDC_LINK_PROBLEM_LABEL1, 35, 5, 210, 35
-    LTEXT "Nearest match based on name, type, size, and date:", IDC_LINK_PROBLEM_LABEL2, 35, 45, 210, 35
-    LTEXT "Do you want to fix this shortcut to point to this target or do you just want to delete it?", -1, 35, 85, 210, 30
-    DEFPUSHBUTTON "&Fix it", IDOK, 55, 120, 60, 15, WS_DISABLED
-    PUSHBUTTON "&Delete it", IDYES, 120, 120, 60, 15
-    PUSHBUTTON "Cancel", IDCANCEL, 185, 120, 60, 15
+    LTEXT "El elemento '%s' al que este acceso directo se refiere ha sido cambiado, movido por lo  que no funcionará.", IDC_LINK_PROBLEM_LABEL1, 35, 5, 210, 35
+    LTEXT "El archivo que más se aproxima al perdido por nombre, tipo, tamaño y fecha:", IDC_LINK_PROBLEM_LABEL2, 35, 45, 210, 35
+    LTEXT "¿Quiere arreglar este acceso directo a este archivo similar, o quieres eliminarlo?", -1, 35, 85, 210, 30
+    DEFPUSHBUTTON "&Arreglar", IDOK, 55, 120, 60, 15, WS_DISABLED
+    PUSHBUTTON "&Eliminar", IDYES, 120, 120, 60, 15
+    PUSHBUTTON "Cancelar", IDCANCEL, 185, 120, 60, 15
 END
 
 STRINGTABLE
@@ -849,8 +849,8 @@ BEGIN
     IDS_FORMAT_COMPLETE "Formato completo."
 
     /* Warning format system drive dialog strings */
-    IDS_NO_FORMAT_TITLE "Cannot format this volume"
-    IDS_NO_FORMAT "This volume cannot be formatted! It contains important system files in order for ReactOS to run."
+    IDS_NO_FORMAT_TITLE "No se puede formatear este volumen"
+    IDS_NO_FORMAT "Este volumen no se puede formatear. Contiene archivos del sistema imprescindibles para que ReactOS funcione."
 
     /* Run File dialog */
     IDS_RUNDLG_ERROR "No se pudo mostrar el diálogo Ejecutar (error interno)"
@@ -1019,25 +1019,25 @@ BEGIN
     IDS_INVALID_PROGRAM "No se pudo encontrar el programa. Verifique que el nombre de archivo y la ruta son correctos."
     IDS_REMOVE_ACTION "¿Está seguro de eliminar esta acción?"
     IDS_ACTION_EXISTS "La acción '%s' ya está registrada para este tipo de archivo. Intente nuevamente con otro nombre."
-    IDS_EXE_FILTER "Programs\0*.exe\0All Files\0*.*\0"
+    IDS_EXE_FILTER "Programas\0*.exe\0Todos los archivos\0*.*\0"
     IDS_EDITING_ACTION "Editar acción: "
     IDS_NO_ICONS "El archivo '%s' no contiene íconos.\n\nEscoja un ícono de la lista o seleccione otro archivo."
     IDS_FILE_NOT_FOUND "El archivo '%s' no pudo ser encontrado."
-    IDS_LINK_INVALID "The item '%s' that this shortcut refers to has been changed or moved, so this shortcut will no longer work properly."
-    IDS_COPYTOMENU "Copy to &folder..."
-    IDS_COPYTOTITLE "Select the place where you want to copy '%s'. Then click the Copy button."
-    IDS_COPYITEMS "Copy Items"
-    IDS_COPYBUTTON "Copy"
-    IDS_MOVETOMENU "Mo&ve to folder..."
-    IDS_MOVETOTITLE "Select the place where you want to move '%s' to. Then click the Move button."
-    IDS_MOVEITEMS "Move Items"
-    IDS_MOVEBUTTON "Move"
+    IDS_LINK_INVALID "El elemento '%s' al que se refiere este acceso directo se ha movido o cambiado, por lo que no funcionará."
+    IDS_COPYTOMENU "Copar a la &carpeta..."
+    IDS_COPYTOTITLE "Selecciona el lugar al que quieres copiar '%s'. Luego pulsa en el botón Copiar."
+    IDS_COPYITEMS "Copiar archivos"
+    IDS_COPYBUTTON "Copiar"
+    IDS_MOVETOMENU "Mo&ver a la carpeta..."
+    IDS_MOVETOTITLE "Selecciona el lugar al que quieres mover '%s'. Luego pulsa en el botón Mover."
+    IDS_MOVEITEMS "Mover archivos"
+    IDS_MOVEBUTTON "Mover"
 
-    IDS_SYSTEMFOLDER "System Folder"
+    IDS_SYSTEMFOLDER "Carpeta del Sistema"
 
     /* For IDD_LOG_OFF_FANCY */
-    IDS_LOG_OFF_DESC "Closes your programs and ends your ReactOS session."
-    IDS_SWITCH_USER_DESC "Lets another user log on while your programs and files remain open.\r\n\r\n(You can also switch users by pressing the Windows logo key + L.)"
+    IDS_LOG_OFF_DESC "Cierra tus programas y finaliza la sesión de ReactOS."
+    IDS_SWITCH_USER_DESC "Permite a otro usuario iniciar sesión mientras tu sesión sigue abierta.\r\n\r\n(Puedes cambiar de usuarios presionando las teclas Windows + L.)"
     IDS_LOG_OFF_TITLE "Cerrar sesión"
-    IDS_SWITCH_USER_TITLE "Switch User"
+    IDS_SWITCH_USER_TITLE "Cambiar de usuario"
 END

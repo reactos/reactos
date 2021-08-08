@@ -97,10 +97,11 @@ GenericMfg = "(Standard SCSI und RAID Controller)"
 
 [Strings.0a]
 ReactOS = "Equipo de ReactOS"
-SCSIClassName = "Controladoras SCSI y RAID"
+SCSIClassName = "Controladores SCSI y RAID"
 
-GenericMfg = "(Controladoras estándar SCSI y RAID)"
-PCI\VEN_104B&CC_0100.DeviceDesc = "Controladora SCSI BusLogic"
+GenericMfg = "(Controladores estándar SCSI y RAID)"
+GEN_SCSIADAPTER.DeviceDesc = "Controlador Huésped de SCSI/RAID"
+PCI\VEN_104B&CC_0100.DeviceDesc = "Controlador SCSI BusLogic"
 
 [Strings.040C]
 SCSIClassName = "Contrôleurs SCSI et RAID"

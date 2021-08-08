@@ -2774,4 +2774,160 @@ WORKSTATION_SERVICE_DESCRIPTION="Обеспечивает поддержку с�
 WUAUSERV_SERVICE="Automatic Updates"
 WUAUSERV_SERVICE_DESCRIPTION="AutoUpdate Service stub."
 
+
+; LANG_SPANISH SUBLANG_NEUTRAL
+[Strings.000A]
+
+; Services names and descriptions
+AUDIO_SERVICE="Audio de ReactOS"
+AUDIO_SERVICE_DESCRIPTION="Proporciona facilidades de audio para las aplicaciones."
+
+BITS_SERVICE="Servicio de transferencia inteligente en segundo plano (BITS)"
+BITS_SERVICE_DESCRIPTION="Transfiere archivos en segundo plano usando el ancho de banda de red inactiva."
+
+BROWSER_SERVICE="Examinador de Equipos"
+BROWSER_SERVICE_DESCRIPTION="Mantiene una lista actualizada de los equipos en la red y proporciona esta lista a los equipos designados como exploradores."
+
+DCOMLAUNCH_SERVICE="Servicio iniciador del Dcom (stub)"
+DCOMLAUNCH_SERVICE_DESCRIPTION="Servicio simulado del iniciador Dcom."
+
+EVENTLOG_SERVICE="Registrador de Eventos"
+EVENTLOG_SERVICE_DESCRIPTION="Registro de eventos o mensajes enviados por el sistema operativo en una base de datos accesible desde el Visor de Eventos."
+
+MSISERVER_SERVICE="Instalador MSI de ReactOS"
+MSISERVER_SERVICE_DESCRIPTION="Controla la instalación, mantenimiento y desinstalado del software empaquetado en un MSI (Windows Installer)."
+
+NETLOGON_SERVICE="Net Logon"
+NETLOGON_SERVICE_DESCRIPTION="Inicia un canal seguro entre el equipo y el controlador de dominio para autenticar usuarios y servicios."
+
+PLUGPLAY_SERVICE="Plug and Play"
+PLUGPLAY_SERVICE_DESCRIPTION="Detecta cambios del hardware e instala el software necesario si es posible."
+
+RPCSS_SERVICE="Llamada al procedimiento remoto (RPC)"
+RPCSS_SERVICE_DESCRIPTION="Es el subsistema RPC, que es el responsable de las llamadas al procedimiento remoto (RPC) en el equipo local."
+
+SAMSS_SERVICE="Administrador de cuentas de seguridad"
+SAMSS_SERVICE_DESCRIPTION="El arranque de este servicio señala a otros servicios que el Administrador de cuentas de seguridad (SAM) está listo para aceptar solicitudes. Deshabilitar este servicio evitará que otros servicios en el sistema puedan ser notificados cuando el SAM esté preparado, lo que podría causar a dichos servicios que no iniciaran correctamente. Este servicio no puede ser deshabilitado."
+
+SCHEDULE_SERVICE="Programador de tareas"
+SCHEDULE_SERVICE_DESCRIPTION="Permite iniciar programas automáticamente en unas horas o instantes específicos."
+
+SERVER_SERVICE="Servidor"
+SERVER_SERVICE_DESCRIPTION="Ofrece compatibilidad para archivos, impresoras y recursos en la red."
+
+SPOOLER_SERVICE="Cola de impresión"
+SPOOLER_SERVICE_DESCRIPTION="Carga los archivos a la memoria para una posterior impresión."
+
+TCPSVCS_SERVICE="Servicios sencillos TCP/IP"
+TCPSVCS_SERVICE_DECRIPTION="Soporta los siguientes servicios de TCP/IP: Chargen, Daytime, Discard, Echo, QOTD."
+
+TELNETD_SERVICE="Servicio Telnet de ReactOS"
+TELNETD_SERVICE_DESCRIPTION="Servicio Telnet de ReactOS."
+
+THEMES_SERVICE="Temas"
+THEMES_SERVICE_DESCRIPTION="Soporte para los diferentes Temas."
+
+WINMGMT_SERVICE="Instrumental de administración de ReactOS"
+WINMGMT_SERVICE_DESCRIPTION="Proporciona una interfaz para la gestión de la información del sistema (winmgmt)."
+
+WLANSVC_SERVICE="Servicio de WLAN"
+WLANSVC_SERVICE_DESCRIPTION="Servicio de redes inalámbricas WLAN."
+
+W32TIME_SERVICE="Servicio de hora"
+W32TIME_SERVICE_DESCRIPTION="Servicio de hora para ReactOS"
+
+WORKSTATION_SERVICE="Estación de trabajo"
+WORKSTATION_SERVICE_DESCRIPTION="Es el responsable de crear y mantener las conexiones de redes LAN a los servidores."
+
+WUAUSERV_SERVICE="Actualizaciones automáticas (stub)"
+WUAUSERV_SERVICE_DESCRIPTION="Servicio simulado de Actualizaciones automáticas."
+
+; Keyboard layouts
+ALBANIAN = "Albanés"
+ARABIC_101 = "Árabe (101)"
+ARABIC_102 = "Árabe (102)"
+ARABIC_102_AZERTY = "Árabe (102) AZERTY"
+ARMENIAN_EASTERN = "Armenio oriental"
+ARMENIAN_WESTERN = "Armenio occidental"
+ASSAMESE = "Asamés"
+AZERI_CYRILLIC = "Azerí cirílico"
+AZERI_LATIN = "Azerí latino"
+BELARUSIAN = "Bielorruso"
+BELGIAN_DUTCH = "Belga (Holandés)"
+BELGIAN_FRENCH = "Belga (Francés)"
+BENGALI = "Bengalí"
+BULGARIAN_BDS = "Búlgaro BDS 5237-1978"
+BULGARIAN_PHONETIC = "Búlgaro fonético clásico"
+BULGARIAN_PHONETIC_BDS = "Búlgaro fonético BDS 5237-2006"
+BURMESE = "Birmano"
+CANADIAN_FRENCH = "Francés canadiense (Heredado)"
+CANADIAN_MULTILINGUAL = "Canadiense estándar multilingüe"
+CROATIAN = "Croata"
+CZECH = "Checo"
+CZECH_QWERTY = "Checo (QWERTY)"
+DANISH = "Danés"
+DEVANAGARI = "Devanagari - INSCRIPT"
+DUTCH = "Holandés"
+ESTONIAN = "Estonio"
+GERMAN_ERGO = "Alemán (de_ergo)"
+GERMAN_NEO = "Alemán (NEO-1.1)"
+GERMAN_RISTOME = "Alemán (RISTOME)"
+GERMAN = "Alemán"
+GREEK = "Griego"
+GUJARATI = "Gujarati"
+IRISH = "Irlandés"
+FAEROESE = "Faeroese"
+FINNISH = "Finés"
+FRENCH = "Francés"
+GEORGIAN = "Georgiano"
+HEBREW = "Hebreo"
+HUNGARIAN = "Húngaro"
+ICELANDIC = "Islandés"
+ITALIAN = "Italiano"
+JAPANESE = "Japonés"
+KAZAKH = "Kazajo"
+KOREAN = "Coreano"
+LATIN_AMERICAN = "Español (America Latina)"
+LATVIAN = "Letón"
+LATVIAN_QUERTY = "Letón (QUERTY)"
+LITHUANIAN = "Lituano"
+MACEDONIAN = "Macedonia (FYRO)"
+MALAYALAM = "Malabari"
+NORWEGIAN = "Noruego"
+POLISH_214 = "Polaco (214)"
+POLISH_PROGRAMMERS = "Polaco (Programmers)"
+PORTUGESE = "Portugués (Portugal)"
+PORTUGESE_BRAZILIAN% = "Portugués (Brasil ABNT2)"
+ROMANIAN_LEGACY = "Rumano (Legacy)"
+ROMANIAN_STANDARD = "Rumano (Standard)"
+RUSSIAN = "Ruso"
+RUSSIAN_TYPEWRITER = "Ruso (Máquina de escribir)"
+SERBIAN_CYRILLIC = "Serbio (Cirílico)"
+SERBIAN_LATIN = "Serbio (Latin)"
+SLOVAK = "Eslovaco"
+SLOVAK_QWERTY = "Eslovaco (QWERTY)"
+SPANISH = "Español"
+SWEDISH = "Sueco"
+SWISS_FRENCH = "Suizo (Francés)"
+SWISS_GERMAN = "Suizo (Alemán)"
+TATAR = "Tártaro"
+THAI_KEDMANEE = "Tailandés Kedmanee"
+THAI_KEDMANEE_NON_SHIFTLOCK = "Tailandés Kedmanee (sin-BloqMayus)"
+THAI_PATTACHOTE = "Tailandés Pattachote"
+THAI_PATTACHOTE_NON_SHIFTLOCK = "Tailandés Pattachote (sin-BloqMayus)"
+TURKISH_Q = "Turco Q"
+TURKISH_F = "Turco F"
+UK = "Reino Unido"
+UKRAINIAN = "Ucraniano"
+UKRAINIAN_STUDENT = "Ucraniano (Estudiantil)"
+US = "Estado Unidos"
+US_ARABIC = "Inglés EEUU (IBM Arabic 238_L)"
+US_DVORAK = "EEUU-Dvorak"
+US_DVORAK_LEFT = "EEUU Dvorak para zurdos"
+US_DVORAK_RIGHT = "EEUU Dvorak para diestros"
+US_INTERNATIONAL = "EEUU Internacional"
+UZBEK_CYRILLIC = "Uzbek (Cyrillic)"
+VIETNAMESE = "Vietnamita"
+
+
 ; EOF

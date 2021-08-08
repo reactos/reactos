@@ -104,3 +104,12 @@ AUDIOFG = "HDA 总线上的音频设备"
 MODEMFG = "HDA 总线上的 Modem 设备"
 UNKNOWNFG = "HDA 总线上的未知设备"
 HDAudioBUS = "内部 HDA 总线"
+
+[Strings.0a]
+DiskId1 = "Driver Bus UAA de ReactOS para Audio de Alta Fidelidad. Disco de instalación 1"
+HDAudio.DeviceDesc = "Controlador de Audio de Alta Fidelidad"
+HDAudBus.SVCDESC = "Driver Bus UAA de ReactOS para Audio de Alta Fidelidad"
+AUDIOFG = "Dispositivo de Audio en el Bus de Audio de Alta Fidelidad"
+MODEMFG = "Dispositivo Modem en el Bus de Audio de Alta Fidelidad"
+UNKNOWNFG = "Dispositivo desconocido en el Bus de Audio de Alta Fidelidad"
+HDAudioBUS = "Bus Interno de Audio de Alta Fidelidad"
