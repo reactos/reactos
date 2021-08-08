@@ -842,19 +842,6 @@ static void ImmInternalSendIMEMessage(InputContextData *data, UINT msg, WPARAM w
        SendMessageW(target, msg, wParam, lParam);
 }
 
-static LRESULT ImmInternalSendIMENotify(InputContextData *data, WPARAM notify, LPARAM lParam)
-{
-    HWND target;
-
-    target = data->IMC.hWnd;
-    if (!target) target = GetFocus();
-
-    if (target)
-       return SendMessageW(target, WM_IME_NOTIFY, notify, lParam);
-
-    return 0;
-}
-
 static InputContextData* get_imc_data(HIMC hIMC)
 {
     InputContextData *data = hIMC;
