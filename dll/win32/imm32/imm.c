@@ -3482,29 +3482,88 @@ BOOL WINAPI ImmSetCandidateWindow(
 #undef MAX_CANDIDATEFORM
 }
 
+static VOID APIENTRY WideToAnsiLogFont(const LOGFONTW *plfW, LPLOGFONTA plfA)
+{
+    BOOL bUsedDef;
+    size_t cchW, cchA = _countof(plfA->lfFaceName);
+    RtlCopyMemory(plfA, plfW, offsetof(LOGFONTA, lfFaceName));
+    StringCchLengthW(plfW->lfFaceName, _countof(plfW->lfFaceName), &cchW);
+    cchA = WideCharToMultiByte(CP_ACP, 0, plfW->lfFaceName, (INT)cchW,
+                               plfA->lfFaceName, (INT)cchA, NULL, &bUsedDef);
+    if (cchA > _countof(plfA->lfFaceName) - 1)
+        cchA = _countof(plfA->lfFaceName) - 1;
+    plfA->lfFaceName[cchA] = 0;
+}
+
+static VOID APIENTRY AnsiToWideLogFont(const LOGFONTA *plfA, LPLOGFONTW plfW)
+{
+    size_t cchA, cchW = _countof(plfW->lfFaceName);
+    RtlCopyMemory(plfW, plfA, offsetof(LOGFONTW, lfFaceName));
+    StringCchLengthA(plfA->lfFaceName, _countof(plfA->lfFaceName), &cchA);
+    cchW = MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, plfA->lfFaceName, (INT)cchA,
+                               plfW->lfFaceName, cchW);
+    if (cchW > _countof(plfW->lfFaceName) - 1)
+        cchW = _countof(plfW->lfFaceName) - 1;
+    plfW->lfFaceName[cchW] = 0;
+}
+
 /***********************************************************************
  *		ImmSetCompositionFontA (IMM32.@)
  */
 BOOL WINAPI ImmSetCompositionFontA(HIMC hIMC, LPLOGFONTA lplf)
 {
-    InputContextData *data = get_imc_data(hIMC);
+    LOGFONTW lfW;
+    DWORD dwImeThreadId, dwThreadId;
+    PCLIENTIMC pClientImc;
+    BOOL bWide;
+    LPINPUTCONTEXTDX pIC;
+    LCID lcid;
+    HWND hWnd;
+    PTEB pTeb;
+
     TRACE("(%p, %p)\n", hIMC, lplf);
 
-    if (!data || !lplf)
-    {
-        SetLastError(ERROR_INVALID_HANDLE);
+    dwImeThreadId = Imm32QueryInputContext(hIMC, 1);
+    dwThreadId = GetCurrentThreadId();
+    if (dwImeThreadId != dwThreadId)
         return FALSE;
+
+    pClientImc = ImmLockClientImc(hIMC);
+    if (pClientImc == NULL)
+        return FALSE;
+
+    bWide = (pClientImc->dwFlags & CLIENTIMC_WIDE);
+    ImmUnlockClientImc(pClientImc);
+
+    if (bWide)
+    {
+        AnsiToWideLogFont(lplf, &lfW);
+        return ImmSetCompositionFontW(hIMC, &lfW);
     }
 
-    if (IMM_IsCrossThreadAccess(NULL, hIMC))
+    pIC = (LPINPUTCONTEXTDX)ImmLockIMC(hIMC);
+    if (pIC == NULL)
         return FALSE;
 
-    memcpy(&data->IMC.lfFont.W,lplf,sizeof(LOGFONTA));
-    MultiByteToWideChar(CP_ACP, 0, lplf->lfFaceName, -1, data->IMC.lfFont.W.lfFaceName,
-                        LF_FACESIZE);
-    ImmNotifyIME(hIMC, NI_CONTEXTUPDATED, 0, IMC_SETCOMPOSITIONFONT);
-    ImmInternalSendIMENotify(data, IMN_SETCOMPOSITIONFONT, 0);
+    pTeb = NtCurrentTeb();
+    if (pTeb->Win32ClientInfo[2] < 0x400)
+    {
+        lcid = GetSystemDefaultLCID();
+        if (PRIMARYLANGID(lcid) == LANG_JAPANESE && !(pIC->dwUIFlags & 2) &&
+            pIC->cfCompForm.dwStyle != CFS_DEFAULT)
+        {
+            PostMessageA(pIC->hWnd, WM_IME_REPORT, IR_CHANGECONVERT, 0);
+        }
+    }
 
+    pIC->lfFont.A = *lplf;
+    pIC->fdwInit |= INIT_LOGFONT;
+    hWnd = pIC->hWnd;
+
+    ImmUnlockIMC(hIMC);
+
+    Imm32NotifyAction(hIMC, hWnd, NI_CONTEXTUPDATED, 0, IMC_SETCOMPOSITIONFONT,
+                      IMN_SETCOMPOSITIONFONT, 0);
     return TRUE;
 }
 
@@ -3513,22 +3572,59 @@ BOOL WINAPI ImmSetCompositionFontA(HIMC hIMC, LPLOGFONTA lplf)
  */
 BOOL WINAPI ImmSetCompositionFontW(HIMC hIMC, LPLOGFONTW lplf)
 {
-    InputContextData *data = get_imc_data(hIMC);
+    LOGFONTA lfA;
+    DWORD dwImeThreadId, dwThreadId;
+    PCLIENTIMC pClientImc;
+    BOOL bWide;
+    HWND hWnd;
+    LPINPUTCONTEXTDX pIC;
+    PTEB pTeb;
+    LCID lcid;
+
     TRACE("(%p, %p)\n", hIMC, lplf);
 
-    if (!data || !lplf)
-    {
-        SetLastError(ERROR_INVALID_HANDLE);
+    dwImeThreadId = Imm32QueryInputContext(hIMC, 1);
+    dwThreadId = GetCurrentThreadId();
+    if (dwImeThreadId != dwThreadId)
         return FALSE;
+
+    pClientImc = ImmLockClientImc(hIMC);
+    if (pClientImc == NULL)
+        return FALSE;
+
+    bWide = (pClientImc->dwFlags & CLIENTIMC_WIDE);
+    ImmUnlockClientImc(pClientImc);
+
+    if (!bWide)
+    {
+        WideToAnsiLogFont(lplf, &lfA);
+        return ImmSetCompositionFontA(hIMC, &lfA);
     }
 
-    if (IMM_IsCrossThreadAccess(NULL, hIMC))
+    pIC = (LPINPUTCONTEXTDX)ImmLockIMC(hIMC);
+    if (pIC == NULL)
         return FALSE;
 
-    data->IMC.lfFont.W = *lplf;
-    ImmNotifyIME(hIMC, NI_CONTEXTUPDATED, 0, IMC_SETCOMPOSITIONFONT);
-    ImmInternalSendIMENotify(data, IMN_SETCOMPOSITIONFONT, 0);
+    pTeb = NtCurrentTeb();
+    if (pTeb->Win32ClientInfo[2] < 0x400)
+    {
+        lcid = GetSystemDefaultLCID();
+        if (PRIMARYLANGID(lcid) == LANG_JAPANESE &&
+            !(pIC->dwUIFlags & 2) &&
+            pIC->cfCompForm.dwStyle != CFS_DEFAULT)
+        {
+            PostMessageW(pIC->hWnd, WM_IME_REPORT, IR_CHANGECONVERT, 0);
+        }
+    }
 
+    pIC->lfFont.W = *lplf;
+    pIC->fdwInit |= INIT_LOGFONT;
+    hWnd = pIC->hWnd;
+
+    ImmUnlockIMC(hIMC);
+
+    Imm32NotifyAction(hIMC, hWnd, NI_CONTEXTUPDATED, 0, IMC_SETCOMPOSITIONFONT,
+                      IMN_SETCOMPOSITIONFONT, 0);
     return TRUE;
 }
 
