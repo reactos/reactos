@@ -92,10 +92,10 @@ typedef struct INPUTCONTEXTDX /* unconfirmed */
     INPUTCONTEXT;
     UINT nVKey;
     BOOL bHasVKey;
-    DWORD dwUnknown148;
+    DWORD dwUnknownCat;
     DWORD dwUIFlags;
-    DWORD dwUnknown150;
-    void *pUnknown154;
+    DWORD dwUnknownDog;
+    void *pUnknownFox;
     /* ... */
 } INPUTCONTEXTDX, *LPINPUTCONTEXTDX;
 
