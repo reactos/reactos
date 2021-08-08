@@ -13,7 +13,7 @@
 
 static CRITICAL_SECTION ApiCriticalSection;
 
-extern HANDLE AdapterStateChangedEvent;
+extern HANDLE hAdapterStateChangedEvent;
 
 VOID ApiInit() {
     InitializeCriticalSection( &ApiCriticalSection );
@@ -33,7 +33,7 @@ VOID ApiFree() {
 
 /* This represents the service portion of the DHCP client API */
 
-DWORD DSLeaseIpAddress( PipeSendFunc Send, COMM_DHCP_REQ *Req ) {
+DWORD DSLeaseIpAddress( PipeSendFunc Send, HANDLE CommPipe, COMM_DHCP_REQ *Req ) {
     COMM_DHCP_REPLY Reply;
     PDHCP_ADAPTER Adapter;
     struct protocol* proto;
@@ -56,16 +56,16 @@ DWORD DSLeaseIpAddress( PipeSendFunc Send, COMM_DHCP_REQ *Req ) {
         Adapter->DhclientInfo.client->state = S_INIT;
         state_reboot(&Adapter->DhclientInfo);
 
-        if (AdapterStateChangedEvent != NULL)
-            SetEvent(AdapterStateChangedEvent);
+        if (hAdapterStateChangedEvent != NULL)
+            SetEvent(hAdapterStateChangedEvent);
     }
 
     ApiUnlock();
 
-    return Send( &Reply );
+    return Send(CommPipe, &Reply );
 }
 
-DWORD DSQueryHWInfo( PipeSendFunc Send, COMM_DHCP_REQ *Req ) {
+DWORD DSQueryHWInfo( PipeSendFunc Send, HANDLE CommPipe, COMM_DHCP_REQ *Req ) {
     COMM_DHCP_REPLY Reply;
     PDHCP_ADAPTER Adapter;
 
@@ -84,10 +84,10 @@ DWORD DSQueryHWInfo( PipeSendFunc Send, COMM_DHCP_REQ *Req ) {
 
     ApiUnlock();
 
-    return Send( &Reply );
+    return Send(CommPipe,  &Reply );
 }
 
-DWORD DSReleaseIpAddressLease( PipeSendFunc Send, COMM_DHCP_REQ *Req ) {
+DWORD DSReleaseIpAddressLease( PipeSendFunc Send, HANDLE CommPipe, COMM_DHCP_REQ *Req ) {
     COMM_DHCP_REPLY Reply;
     PDHCP_ADAPTER Adapter;
     struct protocol* proto;
@@ -117,16 +117,16 @@ DWORD DSReleaseIpAddressLease( PipeSendFunc Send, COMM_DHCP_REQ *Req ) {
         Adapter->DhclientInfo.client->active = NULL;
         Adapter->DhclientInfo.client->state = S_INIT;
 
-        if (AdapterStateChangedEvent != NULL)
-            SetEvent(AdapterStateChangedEvent);
+        if (hAdapterStateChangedEvent != NULL)
+            SetEvent(hAdapterStateChangedEvent);
     }
 
     ApiUnlock();
 
-    return Send( &Reply );
+    return Send(CommPipe,  &Reply );
 }
 
-DWORD DSRenewIpAddressLease( PipeSendFunc Send, COMM_DHCP_REQ *Req ) {
+DWORD DSRenewIpAddressLease( PipeSendFunc Send, HANDLE CommPipe, COMM_DHCP_REQ *Req ) {
     COMM_DHCP_REPLY Reply;
     PDHCP_ADAPTER Adapter;
     struct protocol* proto;
@@ -138,7 +138,7 @@ DWORD DSRenewIpAddressLease( PipeSendFunc Send, COMM_DHCP_REQ *Req ) {
     if( !Adapter || Adapter->DhclientState.state == S_STATIC ) {
         Reply.Reply = 0;
         ApiUnlock();
-        return Send( &Reply );
+        return Send(CommPipe,  &Reply );
     }
 
     Reply.Reply = 1;
@@ -154,15 +154,15 @@ DWORD DSRenewIpAddressLease( PipeSendFunc Send, COMM_DHCP_REQ *Req ) {
     Adapter->DhclientInfo.client->state = S_INIT;
     state_reboot(&Adapter->DhclientInfo);
 
-    if (AdapterStateChangedEvent != NULL)
-        SetEvent(AdapterStateChangedEvent);
+    if (hAdapterStateChangedEvent != NULL)
+        SetEvent(hAdapterStateChangedEvent);
 
     ApiUnlock();
 
-    return Send( &Reply );
+    return Send(CommPipe,  &Reply );
 }
 
-DWORD DSStaticRefreshParams( PipeSendFunc Send, COMM_DHCP_REQ *Req ) {
+DWORD DSStaticRefreshParams( PipeSendFunc Send, HANDLE CommPipe, COMM_DHCP_REQ *Req ) {
     NTSTATUS Status;
     COMM_DHCP_REPLY Reply;
     PDHCP_ADAPTER Adapter;
@@ -197,16 +197,16 @@ DWORD DSStaticRefreshParams( PipeSendFunc Send, COMM_DHCP_REQ *Req ) {
                                &Adapter->NteInstance );
         Reply.Reply = NT_SUCCESS(Status);
 
-        if (AdapterStateChangedEvent != NULL)
-            SetEvent(AdapterStateChangedEvent);
+        if (hAdapterStateChangedEvent != NULL)
+            SetEvent(hAdapterStateChangedEvent);
     }
 
     ApiUnlock();
 
-    return Send( &Reply );
+    return Send(CommPipe,  &Reply );
 }
 
-DWORD DSGetAdapterInfo( PipeSendFunc Send, COMM_DHCP_REQ *Req ) {
+DWORD DSGetAdapterInfo( PipeSendFunc Send, HANDLE CommPipe, COMM_DHCP_REQ *Req ) {
     COMM_DHCP_REPLY Reply;
     PDHCP_ADAPTER Adapter;
 
@@ -240,5 +240,5 @@ DWORD DSGetAdapterInfo( PipeSendFunc Send, COMM_DHCP_REQ *Req ) {
 
     ApiUnlock();
 
-    return Send( &Reply );
+    return Send(CommPipe,  &Reply );
 }
