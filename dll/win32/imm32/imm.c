@@ -2462,6 +2462,7 @@ DWORD WINAPI ImmGetConversionListA(
         ImmUnlockImeDpi(pImeDpi);
         return ret;
     }
+
     ImmUnlockImeDpi(pImeDpi);
 
     if (pSrc)
