@@ -136,3 +136,12 @@ DriverName              = "btrfs"
 DiskId1                 = "Dysk instalacyjny urządzenia Btrfs"
 VolumeName              = "Wolumin Btrfs"
 ControllerName          = "Kontroler Btrfs"
+
+[Strings.0816]
+Me                      = "Mark Harmstone"
+ServiceDescription      = "Controlador do sistema de arquivos Btrfs"
+ServiceName             = "btrfs"
+DriverName              = "btrfs"
+DiskId1                 = "Disco de instalação do dispositivo Btrfs"
+VolumeName              = "Volume btrfs"
+ControllerName          = "Controlador Btrfs"

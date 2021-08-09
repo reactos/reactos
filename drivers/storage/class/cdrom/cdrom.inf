@@ -201,3 +201,16 @@ Mitsumi_Generic_FriendlyName = "Mitsumi CD-ROM дисковод"
 ISO_Generic_FriendlyName = "Microsoft виртуальный DVD-ROM дисковод"
 
 cdrom_ServiceDesc   = "CD-ROM дисковод"
+
+[Strings.0816]
+CDROMClassName = "Unidade de DVD/CD-ROM"
+
+GenManufacturer = "(Unidade CD-ROM padrão)"
+
+Mitsumi_cdrom_devdesc    = "Unidade CD-ROM Mitsumi"
+gencdrom_devdesc         = "Unidade CD-ROM"
+
+Mitsumi_Generic_FriendlyName = "Unidade CD-ROM Mitsumi"
+ISO_Generic_FriendlyName = "DVD-ROM virtual da Microsoft"
+
+cdrom_ServiceDesc   = "Controlador da Unidade CD-ROM"
