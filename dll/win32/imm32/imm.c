@@ -2494,12 +2494,6 @@ DWORD WINAPI ImmGetConversionListA(
         goto Quit;
     }
 
-    if (dwBufLen < cb)
-    {
-        ret = 0;
-        goto Quit;
-    }
-
     ret = CandidateListWideToAnsi(pCL, lpDst, dwBufLen, CP_ACP);
 
 Quit:
