@@ -3411,28 +3411,56 @@ Quit:
 BOOL WINAPI ImmRegisterWordW(
   HKL hKL, LPCWSTR lpszReading, DWORD dwStyle, LPCWSTR lpszRegister)
 {
-    ImmHkl *immHkl = IMM_GetImmHkl(hKL);
-    TRACE("(%p, %s, %d, %s):\n", hKL, debugstr_w(lpszReading), dwStyle,
-                    debugstr_w(lpszRegister));
-    if (immHkl->hIME && immHkl->pImeRegisterWord)
-    {
-        if (is_kbd_ime_unicode(immHkl))
-            return immHkl->pImeRegisterWord(lpszReading,dwStyle,lpszRegister);
-        else
-        {
-            LPSTR lpszaReading = strdupWtoA(lpszReading);
-            LPSTR lpszaRegister = strdupWtoA(lpszRegister);
-            BOOL rc;
+    PIMEDPI pImeDpi;
+    LPSTR pszReadingA = NULL, pszRegisterA = NULL;
+    BOOL ret = FALSE;
+    INT cch1, cch2;
 
-            rc = immHkl->pImeRegisterWord((LPCWSTR)lpszaReading,dwStyle,
-                                          (LPCWSTR)lpszaRegister);
-            HeapFree(GetProcessHeap(),0,lpszaReading);
-            HeapFree(GetProcessHeap(),0,lpszaRegister);
-            return rc;
-        }
-    }
-    else
+    TRACE("(%p, %s, 0x%lX, %s)\n", hKL, debugstr_w(lpszReading), dwStyle,
+          debugstr_w(lpszRegister));
+
+    pImeDpi = ImmLockOrLoadImeDpi(hKL);
+    if (!pImeDpi)
         return FALSE;
+
+    if (pImeDpi->ImeInfo.fdwProperty & IME_PROP_UNICODE)
+    {
+        ret = pImeDpi->ImeRegisterWord(lpszReading, dwStyle, lpszRegister);
+        ImmUnlockImeDpi(pImeDpi);
+        return ret;
+    }
+
+    if (lpszReading)
+    {
+        cch1 = lstrlenW(lpszReading);
+        cch2 = (cch1 + 1) * 2;
+        pszReadingA = Imm32HeapAlloc(0, cch2);
+        if (!pszReadingA)
+            goto Quit;
+        cch1 = WideCharToMultiByte(CP_ACP, 0, lpszReading, cch1, pszReadingA, cch2, NULL, NULL);
+        pszReadingA[cch1] = 0;
+    }
+
+    if (lpszRegister)
+    {
+        cch1 = lstrlenW(lpszRegister);
+        cch2 = (cch1 + 1) * 2;
+        pszRegisterA = Imm32HeapAlloc(0, cch2);
+        if (!pszRegisterA)
+            goto Quit;
+        cch1 = WideCharToMultiByte(CP_ACP, 0, lpszRegister, cch1, pszRegisterA, cch2, NULL, NULL);
+        pszRegisterA[cch1] = 0;
+    }
+
+    ret = ImmRegisterWordA(hKL, pszReadingA, dwStyle, pszRegisterA);
+
+Quit:
+    if (pszReadingA)
+        HeapFree(g_hImm32Heap, 0, pszReadingA);
+    if (pszRegisterA)
+        HeapFree(g_hImm32Heap, 0, pszRegisterA);
+    ImmUnlockImeDpi(pImeDpi);
+    return ret;
 }
 
 /***********************************************************************
