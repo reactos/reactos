@@ -3130,25 +3130,22 @@ BOOL WINAPI ImmGetStatusWindowPos(HIMC hIMC, LPPOINT lpptPos)
  */
 UINT WINAPI ImmGetVirtualKey(HWND hWnd)
 {
-  OSVERSIONINFOA version;
-  InputContextData *data = ImmGetContext( hWnd );
-  TRACE("%p\n", hWnd);
+    HIMC hIMC;
+    LPINPUTCONTEXTDX pIC;
+    UINT ret = VK_PROCESSKEY;
 
-  if ( data )
-      return data->lastVK;
+    TRACE("(%p)\n", hWnd);
 
-  version.dwOSVersionInfoSize = sizeof(OSVERSIONINFOA);
-  GetVersionExA( &version );
-  switch(version.dwPlatformId)
-  {
-  case VER_PLATFORM_WIN32_WINDOWS:
-      return VK_PROCESSKEY;
-  case VER_PLATFORM_WIN32_NT:
-      return 0;
-  default:
-      FIXME("%d not supported\n",version.dwPlatformId);
-      return VK_PROCESSKEY;
-  }
+    hIMC = ImmGetContext(hWnd);
+    pIC = (LPINPUTCONTEXTDX)ImmLockIMC(hIMC);
+    if (!pIC)
+        return ret;
+
+    if (pIC->bHasVKey)
+        ret = pIC->nVKey;
+
+    ImmUnlockIMC(hIMC);
+    return ret;
 }
 
 /***********************************************************************
