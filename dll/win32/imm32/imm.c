@@ -3414,7 +3414,7 @@ BOOL WINAPI ImmRegisterWordW(
     PIMEDPI pImeDpi;
     LPSTR pszReadingA = NULL, pszRegisterA = NULL;
     BOOL ret = FALSE;
-    INT cch1, cch2;
+    INT cchW, cchA;
 
     TRACE("(%p, %s, 0x%lX, %s)\n", hKL, debugstr_w(lpszReading), dwStyle,
           debugstr_w(lpszRegister));
@@ -3432,24 +3432,24 @@ BOOL WINAPI ImmRegisterWordW(
 
     if (lpszReading)
     {
-        cch1 = lstrlenW(lpszReading);
-        cch2 = (cch1 + 1) * 2;
-        pszReadingA = Imm32HeapAlloc(0, cch2);
+        cchW = lstrlenW(lpszReading);
+        cchA = (cchW + 1) * 2;
+        pszReadingA = Imm32HeapAlloc(0, cchA);
         if (!pszReadingA)
             goto Quit;
-        cch1 = WideCharToMultiByte(CP_ACP, 0, lpszReading, cch1, pszReadingA, cch2, NULL, NULL);
-        pszReadingA[cch1] = 0;
+        cchA = WideCharToMultiByte(CP_ACP, 0, lpszReading, cchW, pszReadingA, cchA, NULL, NULL);
+        pszReadingA[cchA] = 0;
     }
 
     if (lpszRegister)
     {
-        cch1 = lstrlenW(lpszRegister);
-        cch2 = (cch1 + 1) * 2;
-        pszRegisterA = Imm32HeapAlloc(0, cch2);
+        cchW = lstrlenW(lpszRegister);
+        cchA = (cchW + 1) * 2;
+        pszRegisterA = Imm32HeapAlloc(0, cchA);
         if (!pszRegisterA)
             goto Quit;
-        cch1 = WideCharToMultiByte(CP_ACP, 0, lpszRegister, cch1, pszRegisterA, cch2, NULL, NULL);
-        pszRegisterA[cch1] = 0;
+        cchA = WideCharToMultiByte(CP_ACP, 0, lpszRegister, cchW, pszRegisterA, cchA, NULL, NULL);
+        pszRegisterA[cchA] = 0;
     }
 
     ret = ImmRegisterWordA(hKL, pszReadingA, dwStyle, pszRegisterA);
