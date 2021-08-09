@@ -2470,8 +2470,8 @@ DWORD WINAPI ImmGetConversionListA(
         cchA = lstrlenA(pSrc);
         cchW = cchA + 1;
         pszSrcW = Imm32HeapAlloc(0, cchW * sizeof(WCHAR));
-        if (pszSrcW == 0)
-            return 0;
+        if (pszSrcW == NULL)
+            goto Quit;
         cchW = MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, pSrc, cchA, pszSrcW, cchW);
         pszSrcW[cchW] = 0;
     }
