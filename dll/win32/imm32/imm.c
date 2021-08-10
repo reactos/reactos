@@ -2463,8 +2463,6 @@ DWORD WINAPI ImmGetConversionListA(
         return ret;
     }
 
-    ImmUnlockImeDpi(pImeDpi);
-
     if (pSrc)
     {
         cchA = lstrlenA(pSrc);
@@ -2476,7 +2474,7 @@ DWORD WINAPI ImmGetConversionListA(
         pszSrcW[cchW] = 0;
     }
 
-    cb = ImmGetConversionListW(hKL, hIMC, pszSrcW, NULL, 0, uFlag);
+    cb = pImeDpi->ImeConversionList(hIMC, pszSrcW, NULL, 0, uFlag);
     if (cb == 0)
         goto Quit;
 
@@ -2484,7 +2482,7 @@ DWORD WINAPI ImmGetConversionListA(
     if (pCL == NULL)
         goto Quit;
 
-    cb = ImmGetConversionListW(hKL, hIMC, pszSrcW, pCL, cb, uFlag);
+    cb = pImeDpi->ImeConversionList(hIMC, pszSrcW, pCL, cb, uFlag);
     if (cb == 0)
         goto Quit;
 
@@ -2495,6 +2493,7 @@ Quit:
         HeapFree(g_hImm32Heap, 0, pszSrcW);
     if (pCL)
         HeapFree(g_hImm32Heap, 0, pCL);
+    ImmUnlockImeDpi(pImeDpi);
     return ret;
 }
 
@@ -2527,8 +2526,6 @@ DWORD WINAPI ImmGetConversionListW(
         return ret;
     }
 
-    ImmUnlockImeDpi(pImeDpi);
-
     if (pSrc)
     {
         cchW = lstrlenW(pSrc);
@@ -2540,7 +2537,7 @@ DWORD WINAPI ImmGetConversionListW(
         pszSrcA[cb] = 0;
     }
 
-    cb = ImmGetConversionListA(hKL, hIMC, pszSrcA, NULL, 0, uFlag);
+    cb = pImeDpi->ImeConversionList(hIMC, pszSrcA, NULL, 0, uFlag);
     if (cb == 0)
         goto Quit;
 
@@ -2548,7 +2545,7 @@ DWORD WINAPI ImmGetConversionListW(
     if (!pCL)
         goto Quit;
 
-    cb = ImmGetConversionListA(hKL, hIMC, pszSrcA, pCL, cb, uFlag);
+    cb = pImeDpi->ImeConversionList(hIMC, pszSrcA, pCL, cb, uFlag);
     if (!cb)
         goto Quit;
 
@@ -2559,6 +2556,7 @@ Quit:
         HeapFree(g_hImm32Heap, 0, pszSrcA);
     if (pCL)
         HeapFree(g_hImm32Heap, 0, pCL);
+    ImmUnlockImeDpi(pImeDpi);
     return ret;
 }
 
