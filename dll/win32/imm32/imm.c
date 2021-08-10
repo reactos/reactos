@@ -2488,13 +2488,6 @@ DWORD WINAPI ImmGetConversionListA(
     if (cb == 0)
         goto Quit;
 
-    cb = CandidateListWideToAnsi(pCL, NULL, 0, CP_ACP);
-    if (dwBufLen == 0)
-    {
-        ret = cb;
-        goto Quit;
-    }
-
     ret = CandidateListWideToAnsi(pCL, lpDst, dwBufLen, CP_ACP);
 
 Quit:
@@ -2558,13 +2551,6 @@ DWORD WINAPI ImmGetConversionListW(
     cb = ImmGetConversionListA(hKL, hIMC, pszSrcA, pCL, cb, uFlag);
     if (!cb)
         goto Quit;
-
-    cb = CandidateListAnsiToWide(pCL, NULL, 0, CP_ACP);
-    if (dwBufLen == 0)
-    {
-        ret = cb;
-        goto Quit;
-    }
 
     ret = CandidateListAnsiToWide(pCL, lpDst, dwBufLen, CP_ACP);
 
