@@ -3411,9 +3411,9 @@ Quit:
 BOOL WINAPI ImmRegisterWordW(
   HKL hKL, LPCWSTR lpszReading, DWORD dwStyle, LPCWSTR lpszRegister)
 {
+    BOOL ret = FALSE;
     PIMEDPI pImeDpi;
     LPSTR pszReadingA = NULL, pszRegisterA = NULL;
-    BOOL ret = FALSE;
     INT cchW, cchA;
 
     TRACE("(%p, %s, 0x%lX, %s)\n", hKL, debugstr_w(lpszReading), dwStyle,
