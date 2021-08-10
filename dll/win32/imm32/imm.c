@@ -4129,7 +4129,7 @@ BOOL WINAPI ImmUnregisterWordW(
     if (lpszReading)
     {
         cchW = lstrlenW(lpszReading);
-        cchA = (cchW + 1) * 2;
+        cchA = (cchW + 1) * sizeof(WCHAR);
         pszReadingA = Imm32HeapAlloc(0, cchA);
         if (!pszReadingA)
             goto Quit;
@@ -4140,7 +4140,7 @@ BOOL WINAPI ImmUnregisterWordW(
     if (lpszUnregister)
     {
         cchW = lstrlenW(lpszUnregister);
-        cchA = (cchW + 1) * 2;
+        cchA = (cchW + 1) * sizeof(WCHAR);
         pszUnregisterA = Imm32HeapAlloc(0, cchA);
         if (!pszUnregisterA)
             goto Quit;
