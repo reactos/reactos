@@ -3433,7 +3433,7 @@ BOOL WINAPI ImmRegisterWordW(
     if (lpszReading)
     {
         cchW = lstrlenW(lpszReading);
-        cchA = (cchW + 1) * 2;
+        cchA = (cchW + 1) * sizeof(WCHAR);
         pszReadingA = Imm32HeapAlloc(0, cchA);
         if (!pszReadingA)
             goto Quit;
@@ -3444,7 +3444,7 @@ BOOL WINAPI ImmRegisterWordW(
     if (lpszRegister)
     {
         cchW = lstrlenW(lpszRegister);
-        cchA = (cchW + 1) * 2;
+        cchA = (cchW + 1) * sizeof(WCHAR);
         pszRegisterA = Imm32HeapAlloc(0, cchA);
         if (!pszRegisterA)
             goto Quit;
