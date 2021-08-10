@@ -4107,9 +4107,9 @@ BOOL WINAPI ImmUnregisterWordA(
 BOOL WINAPI ImmUnregisterWordW(
   HKL hKL, LPCWSTR lpszReading, DWORD dwStyle, LPCWSTR lpszUnregister)
 {
+    BOOL ret = FALSE;
     PIMEDPI pImeDpi;
     LPSTR pszReadingA = NULL, pszUnregisterA = NULL;
-    BOOL ret = FALSE;
     INT cchW, cchA;
 
     TRACE("(%p, %s, 0x%lX, %s)\n", hKL, debugstr_w(lpszReading), dwStyle,
