@@ -3045,27 +3045,46 @@ BOOL WINAPI ImmGetOpenStatus(HIMC hIMC)
  */
 DWORD WINAPI ImmGetProperty(HKL hKL, DWORD fdwIndex)
 {
-    DWORD rc = 0;
-    ImmHkl *kbd;
+    IMEINFOEX ImeInfoEx;
+    LPIMEINFO pImeInfo;
+    DWORD dwValue;
+    PIMEDPI pImeDpi = NULL;
 
-    TRACE("(%p, %d)\n", hKL, fdwIndex);
-    kbd = IMM_GetImmHkl(hKL);
+    TRACE("(%p, %lu)\n", hKL, fdwIndex);
 
-    if (kbd && kbd->hIME)
+    if (!ImmGetImeInfoEx(&ImeInfoEx, ImeInfoExKeyboardLayout, &hKL))
+        return FALSE;
+
+    if (fdwIndex == IGP_GETIMEVERSION)
+        return ImeInfoEx.dwImeWinVersion;
+
+    if (ImeInfoEx.fLoadFlag != 2)
     {
-        switch (fdwIndex)
-        {
-            case IGP_PROPERTY: rc = kbd->imeInfo.fdwProperty; break;
-            case IGP_CONVERSION: rc = kbd->imeInfo.fdwConversionCaps; break;
-            case IGP_SENTENCE: rc = kbd->imeInfo.fdwSentenceCaps; break;
-            case IGP_SETCOMPSTR: rc = kbd->imeInfo.fdwSCSCaps; break;
-            case IGP_SELECT: rc = kbd->imeInfo.fdwSelectCaps; break;
-            case IGP_GETIMEVERSION: rc = IMEVER_0400; break;
-            case IGP_UI: rc = 0; break;
-            default: rc = 0;
-        }
+        pImeDpi = ImmLockOrLoadImeDpi(hKL);
+        if (pImeDpi == NULL)
+            return FALSE;
+
+        pImeInfo = &pImeDpi->ImeInfo;
     }
-    return rc;
+    else
+    {
+        pImeInfo = &ImeInfoEx.ImeInfo;
+    }
+
+    switch (fdwIndex)
+    {
+        case IGP_PROPERTY:      dwValue = pImeInfo->fdwProperty; break;
+        case IGP_CONVERSION:    dwValue = pImeInfo->fdwConversionCaps; break;
+        case IGP_SENTENCE:      dwValue = pImeInfo->fdwSentenceCaps; break;
+        case IGP_UI:            dwValue = pImeInfo->fdwUICaps; break;
+        case IGP_SETCOMPSTR:    dwValue = pImeInfo->fdwSCSCaps; break;
+        case IGP_SELECT:        dwValue = pImeInfo->fdwSelectCaps; break;
+        default:                dwValue = 0; break;
+    }
+
+    if (pImeDpi)
+        ImmUnlockImeDpi(pImeDpi);
+    return dwValue;
 }
 
 /***********************************************************************
