@@ -4148,7 +4148,7 @@ BOOL WINAPI ImmUnregisterWordW(
         pszUnregisterA[cchA] = 0;
     }
 
-    ret = ImmUnregisterWordA(hKL, pszReadingA, dwStyle, pszUnregisterA);
+    ret = pImeDpi->ImeUnregisterWord(pszReadingA, dwStyle, pszUnregisterA);
 
 Quit:
     if (pszReadingA)
