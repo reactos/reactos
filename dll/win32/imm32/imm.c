@@ -4077,9 +4077,9 @@ BOOL WINAPI ImmSimulateHotKey(HWND hWnd, DWORD dwHotKeyID)
 BOOL WINAPI ImmUnregisterWordA(
   HKL hKL, LPCSTR lpszReading, DWORD dwStyle, LPCSTR lpszUnregister)
 {
-    LPWSTR pszReadingW = NULL, pszUnregisterW = NULL;
     BOOL ret = FALSE;
     PIMEDPI pImeDpi;
+    LPWSTR pszReadingW = NULL, pszUnregisterW = NULL;
     INT cch;
 
     TRACE("(%p, %s, 0x%lX, %s)\n", hKL, debugstr_a(lpszReading), dwStyle,
