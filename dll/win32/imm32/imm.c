@@ -3394,7 +3394,7 @@ BOOL WINAPI ImmRegisterWordA(
         pszRegisterW[cch] = 0;
     }
 
-    ret = ImmRegisterWordW(hKL, pszReadingW, dwStyle, pszRegisterW);
+    ret = pImeDpi->ImeRegisterWord(pszReadingW, dwStyle, pszRegisterW);
 
 Quit:
     if (pszReadingW)
@@ -3452,7 +3452,7 @@ BOOL WINAPI ImmRegisterWordW(
         pszRegisterA[cchA] = 0;
     }
 
-    ret = ImmRegisterWordA(hKL, pszReadingA, dwStyle, pszRegisterA);
+    ret = pImeDpi->ImeRegisterWord(pszReadingA, dwStyle, pszRegisterA);
 
 Quit:
     if (pszReadingA)
