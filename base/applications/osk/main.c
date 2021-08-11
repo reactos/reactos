@@ -4,6 +4,7 @@
  * PURPOSE:         On-screen keyboard.
  * COPYRIGHT:       Denis ROBERT
  *                  Copyright 2019-2020 George Bișoc (george.bisoc@reactos.org)
+ *                  Baruch Rutman (peterooch at gmail dot com)
  */
 
 /* INCLUDES *******************************************************************/
@@ -53,6 +54,26 @@ int OSK_SetImage(int IdDlgItem, int IdResource)
     return TRUE;
 }
 
+/***********************************************************************
+ *
+ *           OSK_SetText
+ *
+ *  Update the text of a button according to the relevant language resource
+ */
+void OSK_SetText(int IdDlgItem, int IdResource)
+{
+    WCHAR szText[MAX_PATH];
+    HWND hWndItem;
+
+    hWndItem = GetDlgItem(Globals.hMainWnd, IdDlgItem);
+
+    if (hWndItem == NULL)
+        return;
+
+    LoadStringW(Globals.hInstance, IdResource, szText, _countof(szText));
+
+    SetWindowTextW(hWndItem, szText);
+}
 /***********************************************************************
  *
  *          OSK_WarningProc
@@ -116,70 +137,275 @@ DWORD WINAPI OSK_WarningDlgThread(LPVOID lpParameter)
  */
 VOID OSK_About(VOID)
 {
-    WCHAR szTitle[MAX_BUFF];
-    WCHAR szAuthors[MAX_BUFF];
+    WCHAR szAuthors[MAX_PATH];
     HICON OSKIcon;
 
     /* Load the icon */
     OSKIcon = LoadImageW(Globals.hInstance, MAKEINTRESOURCEW(IDI_OSK), IMAGE_ICON, 0, 0, LR_DEFAULTSIZE);
 
     /* Load the strings into the "About" dialog */
-    LoadStringW(Globals.hInstance, STRING_OSK, szTitle, countof(szTitle));
-    LoadStringW(Globals.hInstance, STRING_AUTHORS, szAuthors, countof(szAuthors));
+    LoadStringW(Globals.hInstance, IDS_AUTHORS, szAuthors, _countof(szAuthors));
 
     /* Finally, execute the "About" dialog by using the Shell routine */
-    ShellAboutW(Globals.hMainWnd, szTitle, szAuthors, OSKIcon);
+    ShellAboutW(Globals.hMainWnd, Globals.szTitle, szAuthors, OSKIcon);
 
     /* Once done, destroy the icon */
     DestroyIcon(OSKIcon);
 }
 
+/***********************************************************************
+ *
+ *           OSK_DestroyKeys
+ *
+ *  Used in layout change or in shutdown
+ */
+VOID OSK_DestroyKeys(VOID)
+{
+    int i;
+    /* Hide before destroying child controls */
+    ShowWindow(Globals.hMainWnd, SW_HIDE);
+
+    for (i = 0; i < Globals.Keyboard->KeyCount; i++)
+    {
+        DestroyWindow(Globals.hKeys[i]);
+    }
+    for (i = 0; i < _countof(LedKey); i++)
+    {
+        DestroyWindow(GetDlgItem(Globals.hMainWnd, LedKey[i].DlgResource));
+    }
+
+    HeapFree(GetProcessHeap(), 0, Globals.hKeys);
+    Globals.hKeys = NULL;
+    Globals.Keyboard = NULL;
+}
 
 /***********************************************************************
  *
- *           OSK_DlgInitDialog
+ *           OSK_SetKeys
  *
- *  Handling of WM_INITDIALOG
+ *  Create/Update button controls with the relevant keyboard values
  */
-int OSK_DlgInitDialog(HWND hDlg)
+LRESULT OSK_SetKeys(int reason)
 {
-    HICON hIcon, hIconSm;
+    WCHAR wKey[2];
+    BYTE bKeyStates[256];
+    LPCWSTR szKey;
+    PKEY Keys;
+    UINT uVirtKey;
+    POINT LedPos;
+    SIZE LedSize;
+    int i, yPad;
+
+    /* Get key states before doing anything */
+    if (!GetKeyboardState(bKeyStates))
+    {
+        DPRINT("OSK_SetKeys(): GetKeyboardState() call failed.\n");
+        return -1;
+    }
+
+    switch (reason)
+    {
+        case SETKEYS_LANG:
+        {
+            /* Keyboard language/caps change, just update the button texts */
+            Keys = Globals.Keyboard->Keys;
+            for (i = 0; i < Globals.Keyboard->KeyCount; i++)
+            {
+                if (!Keys[i].translate)
+                    continue;
+
+                uVirtKey = MapVirtualKeyW(Keys[i].scancode & SCANCODE_MASK, MAPVK_VSC_TO_VK);
+
+                if (ToUnicode(uVirtKey, Keys[i].scancode & SCANCODE_MASK, bKeyStates, wKey, _countof(wKey), 0) >= 1)
+                {
+                    szKey = wKey;
+                }
+                else
+                {
+                    szKey = Keys[i].name;
+                }
+
+                /* Only one & the button will try to underline the next character... */
+                if (wcsncmp(szKey, L"&", 1) == 0)
+                    szKey = L"&&";
+
+                SetWindowTextW(Globals.hKeys[i], szKey);
+            }
+            return 0;
+        }
+        case SETKEYS_LAYOUT:
+        {
+            /* Clear up current layout before applying a different one */
+            OSK_DestroyKeys();
+        }
+        /* Fallthrough */
+        case SETKEYS_INIT:
+        {             
+            if (Globals.bIsEnhancedKeyboard)
+            {
+                Globals.Keyboard = &EnhancedKeyboard;
+            }
+            else
+            {
+                Globals.Keyboard = &StandardKeyboard;
+            }
+
+            Globals.hKeys = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(HWND) * Globals.Keyboard->KeyCount);
+
+            if (!Globals.hKeys)
+            {
+                DPRINT("OSK_SetKeys(): Failed to allocate memory for button handles.\n");
+                return -1;
+            }
+
+            Keys = Globals.Keyboard->Keys;
+
+            /* Create key buttons */
+            for (i = 0; i < Globals.Keyboard->KeyCount; i++)
+            {
+                uVirtKey = MapVirtualKeyW(Keys[i].scancode & SCANCODE_MASK, MAPVK_VSC_TO_VK);
+
+                if (Keys[i].translate && ToUnicode(uVirtKey, Keys[i].scancode & SCANCODE_MASK, bKeyStates, wKey, _countof(wKey), 0) >= 1)
+                {
+                    szKey = wKey;
+                }
+                else
+                {
+                    szKey = Keys[i].name;
+                }
+                
+                Globals.hKeys[i] = CreateWindowW(WC_BUTTONW,
+                                                 szKey,
+                                                 WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON | Keys[i].flags,
+                                                 Keys[i].x,
+                                                 Keys[i].y,
+                                                 Keys[i].cx,
+                                                 Keys[i].cy,
+                                                 Globals.hMainWnd,
+                                                 (HMENU)Keys[i].scancode,
+                                                 Globals.hInstance,
+                                                 NULL);
+                if (Globals.hFont)
+                    SendMessageW(Globals.hKeys[i], WM_SETFONT, (WPARAM)Globals.hFont, 0);
+            }
+
+            /* Add additional padding for caption and menu */
+            yPad = GetSystemMetrics(SM_CYSIZE) + GetSystemMetrics(SM_CYMENU);
+            /* Size window according to layout */
+            SetWindowPos(Globals.hMainWnd,
+                         (Globals.bAlwaysOnTop ? HWND_TOPMOST : HWND_NOTOPMOST),
+                         0,
+                         0,
+                         Globals.Keyboard->Size.cx,
+                         Globals.Keyboard->Size.cy + yPad,
+                         SWP_NOMOVE);
+            
+            /* Create LEDs */
+            LedPos  = Globals.Keyboard->LedStart;
+            LedSize = Globals.Keyboard->LedSize;
+
+            CreateWindowW(WC_STATICW, L"", WS_VISIBLE | WS_CHILD | SS_CENTER | SS_NOTIFY,
+                LedPos.x, LedPos.y, LedSize.cx, LedSize.cy, Globals.hMainWnd,
+                (HMENU)IDC_LED_NUM, Globals.hInstance, NULL);
+            
+            LedPos.x += Globals.Keyboard->LedGap;
+
+            CreateWindowW(WC_STATICW, L"", WS_VISIBLE | WS_CHILD | SS_CENTER | SS_NOTIFY,
+                LedPos.x, LedPos.y, LedSize.cx, LedSize.cy, Globals.hMainWnd,
+                (HMENU)IDC_LED_CAPS, Globals.hInstance, NULL);
+
+            LedPos.x += Globals.Keyboard->LedGap;
+
+            CreateWindowW(WC_STATICW, L"", WS_VISIBLE | WS_CHILD | SS_CENTER | SS_NOTIFY,
+                LedPos.x, LedPos.y, LedSize.cx, LedSize.cy, Globals.hMainWnd,
+                (HMENU)IDC_LED_SCROLL, Globals.hInstance, NULL);
+
+            /* Set system keys text */
+            OSK_SetText(SCAN_CODE_110, IDS_ESCAPE);
+            OSK_SetText(SCAN_CODE_124, IDS_PRN);
+            OSK_SetText(SCAN_CODE_125, IDS_STOP);
+            OSK_SetText(SCAN_CODE_126, IDS_ATTN);
+            OSK_SetText(SCAN_CODE_90, IDS_NUMLOCKKEY);
+            OSK_SetText(SCAN_CODE_75, IDS_INSERT);
+            OSK_SetText(SCAN_CODE_76, IDS_DELETE);
+            OSK_SetText(SCAN_CODE_81, IDS_END);
+            OSK_SetText(SCAN_CODE_58, IDS_CTRL);     /* Left ctrl */
+            OSK_SetText(SCAN_CODE_64, IDS_CTRL);     /* Right ctrl */
+            OSK_SetText(SCAN_CODE_60, IDS_LEFTALT);
+            OSK_SetText(SCAN_CODE_62, IDS_RIGHTALT);
+
+            /* Set icon on visual buttons */
+            OSK_SetImage(SCAN_CODE_15, IDI_BACK);
+            OSK_SetImage(SCAN_CODE_16, IDI_TAB);
+            OSK_SetImage(SCAN_CODE_30, IDI_CAPS_LOCK);
+            OSK_SetImage(SCAN_CODE_43, IDI_RETURN);
+            OSK_SetImage(SCAN_CODE_44, IDI_SHIFT);
+            OSK_SetImage(SCAN_CODE_57, IDI_SHIFT);
+            OSK_SetImage(SCAN_CODE_127, IDI_REACTOS);
+            OSK_SetImage(SCAN_CODE_128, IDI_REACTOS);
+            OSK_SetImage(SCAN_CODE_129, IDI_MENU);
+            OSK_SetImage(SCAN_CODE_80, IDI_HOME);
+            OSK_SetImage(SCAN_CODE_85, IDI_PG_UP);
+            OSK_SetImage(SCAN_CODE_86, IDI_PG_DOWN);
+            OSK_SetImage(SCAN_CODE_79, IDI_LEFT);
+            OSK_SetImage(SCAN_CODE_83, IDI_TOP);
+            OSK_SetImage(SCAN_CODE_84, IDI_BOTTOM);
+            OSK_SetImage(SCAN_CODE_89, IDI_RIGHT);
+        }
+    }
+
+    if (reason != SETKEYS_INIT)
+    {
+        ShowWindow(Globals.hMainWnd, SW_SHOW);
+        UpdateWindow(Globals.hMainWnd);
+    }
+
+    return 0;
+}
+
+/***********************************************************************
+ *
+ *           OSK_Create
+ *
+ *  Handling of WM_CREATE
+ */
+LRESULT OSK_Create(HWND hwnd)
+{
     HMONITOR monitor;
     MONITORINFO info;
     POINT Pt;
     RECT rcWindow, rcDlgIntersect;
+    LOGFONTW lf = {0};
 
     /* Save handle */
-    Globals.hMainWnd = hDlg;
+    Globals.hMainWnd = hwnd;
 
-    /* Check the checked menu item before displaying the modal box */
+    /* Init Font */
+    lf.lfHeight = Globals.FontHeight;
+    StringCchCopyW(lf.lfFaceName, _countof(Globals.FontFaceName), Globals.FontFaceName);
+    Globals.hFont = CreateFontIndirectW(&lf);
+
+    if (OSK_SetKeys(SETKEYS_INIT) == -1)
+        return -1;
+
+    /* Check the checked menu item before displaying the window */
     if (Globals.bIsEnhancedKeyboard)
     {
         /* Enhanced keyboard dialog chosen, set the respective menu item as checked */
-        CheckMenuItem(GetMenu(hDlg), IDM_ENHANCED_KB, MF_BYCOMMAND | MF_CHECKED);
-        CheckMenuItem(GetMenu(hDlg), IDM_STANDARD_KB, MF_BYCOMMAND | MF_UNCHECKED);
+        CheckMenuItem(GetMenu(hwnd), IDM_ENHANCED_KB, MF_BYCOMMAND | MF_CHECKED);
+        CheckMenuItem(GetMenu(hwnd), IDM_STANDARD_KB, MF_BYCOMMAND | MF_UNCHECKED);
     }
     else
     {
         /* Standard keyboard dialog chosen, set the respective menu item as checked */
-        CheckMenuItem(GetMenu(hDlg), IDM_STANDARD_KB, MF_BYCOMMAND | MF_CHECKED);
-        CheckMenuItem(GetMenu(hDlg), IDM_ENHANCED_KB, MF_BYCOMMAND | MF_UNCHECKED);
+        CheckMenuItem(GetMenu(hwnd), IDM_STANDARD_KB, MF_BYCOMMAND | MF_CHECKED);
+        CheckMenuItem(GetMenu(hwnd), IDM_ENHANCED_KB, MF_BYCOMMAND | MF_UNCHECKED);
     }
 
     /* Check if the "Click Sound" option was chosen before (and if so, then tick the menu item) */
     if (Globals.bSoundClick)
     {
-        CheckMenuItem(GetMenu(hDlg), IDM_CLICK_SOUND, MF_BYCOMMAND | MF_CHECKED);
-    }
-
-    /* Set the application's icon */
-    hIcon = LoadImageW(Globals.hInstance, MAKEINTRESOURCEW(IDI_OSK), IMAGE_ICON, 0, 0, LR_SHARED | LR_DEFAULTSIZE);
-    hIconSm = CopyImage(hIcon, IMAGE_ICON, GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CYSMICON), LR_COPYFROMRESOURCE);
-    if (hIcon || hIconSm)
-    {
-        /* Set the window icons (they are deleted when the process terminates) */
-        SendMessageW(Globals.hMainWnd, WM_SETICON, ICON_BIG, (LPARAM)hIcon);
-        SendMessageW(Globals.hMainWnd, WM_SETICON, ICON_SMALL, (LPARAM)hIconSm);
+        CheckMenuItem(GetMenu(hwnd), IDM_CLICK_SOUND, MF_BYCOMMAND | MF_CHECKED);
     }
 
     /* Get screen info */
@@ -187,7 +413,7 @@ int OSK_DlgInitDialog(HWND hDlg)
     monitor = MonitorFromPoint(Pt, MONITOR_DEFAULTTOPRIMARY);
     info.cbSize = sizeof(info);
     GetMonitorInfoW(monitor, &info);
-    GetWindowRect(hDlg, &rcWindow);
+    GetWindowRect(hwnd, &rcWindow);
 
     /*
         If the coordination values are default then re-initialize using the specific formulas
@@ -227,61 +453,41 @@ int OSK_DlgInitDialog(HWND hDlg)
     */
     if (Globals.bAlwaysOnTop)
     {
-        CheckMenuItem(GetMenu(hDlg), IDM_ON_TOP, MF_BYCOMMAND | MF_CHECKED);
-        SetWindowPos(hDlg, HWND_TOPMOST, Globals.PosX, Globals.PosY, 0, 0, SWP_NOSIZE);
+        CheckMenuItem(GetMenu(hwnd), IDM_ON_TOP, MF_BYCOMMAND | MF_CHECKED);
+        SetWindowPos(hwnd, HWND_TOPMOST, Globals.PosX, Globals.PosY, 0, 0, SWP_NOSIZE);
     }
     else
     {
-        CheckMenuItem(GetMenu(hDlg), IDM_ON_TOP, MF_BYCOMMAND | MF_UNCHECKED);
-        SetWindowPos(hDlg, HWND_NOTOPMOST, Globals.PosX, Globals.PosY, 0, 0, SWP_NOSIZE);
+        CheckMenuItem(GetMenu(hwnd), IDM_ON_TOP, MF_BYCOMMAND | MF_UNCHECKED);
+        SetWindowPos(hwnd, HWND_NOTOPMOST, Globals.PosX, Globals.PosY, 0, 0, SWP_NOSIZE);
     }
-
-    /* Set icon on visual buttons */
-    OSK_SetImage(SCAN_CODE_15, IDI_BACK);
-    OSK_SetImage(SCAN_CODE_16, IDI_TAB);
-    OSK_SetImage(SCAN_CODE_30, IDI_CAPS_LOCK);
-    OSK_SetImage(SCAN_CODE_43, IDI_RETURN);
-    OSK_SetImage(SCAN_CODE_44, IDI_SHIFT);
-    OSK_SetImage(SCAN_CODE_57, IDI_SHIFT);
-    OSK_SetImage(SCAN_CODE_127, IDI_REACTOS);
-    OSK_SetImage(SCAN_CODE_128, IDI_REACTOS);
-    OSK_SetImage(SCAN_CODE_129, IDI_MENU);
-    OSK_SetImage(SCAN_CODE_80, IDI_HOME);
-    OSK_SetImage(SCAN_CODE_85, IDI_PG_UP);
-    OSK_SetImage(SCAN_CODE_86, IDI_PG_DOWN);
-    OSK_SetImage(SCAN_CODE_79, IDI_LEFT);
-    OSK_SetImage(SCAN_CODE_83, IDI_TOP);
-    OSK_SetImage(SCAN_CODE_84, IDI_BOTTOM);
-    OSK_SetImage(SCAN_CODE_89, IDI_RIGHT);
 
     /* Create a green brush for leds */
     Globals.hBrushGreenLed = CreateSolidBrush(RGB(0, 255, 0));
 
-    /* Set a timer for periodics tasks */
-    Globals.iTimer = SetTimer(hDlg, 0, 50, NULL);
+    /* Set a timer for periodic tasks */
+    Globals.iTimer = SetTimer(hwnd, 0, 100, NULL);
 
-    return TRUE;
+    /* If the member of the struct (bShowWarning) is set then display the dialog box */
+    if (Globals.bShowWarning)
+    {
+        /* If for whatever reason the thread fails to be created then handle the dialog box in main thread... */
+        if (CreateThread(NULL, 0, OSK_WarningDlgThread, (PVOID)Globals.hInstance, 0, NULL) == NULL)
+        {
+            DialogBoxW(Globals.hInstance, MAKEINTRESOURCEW(IDD_WARNINGDIALOG_OSK), Globals.hMainWnd, OSK_WarningProc);
+        }
+    }
+
+    return 0;
 }
 
 /***********************************************************************
  *
- *           OSK_RestoreDlgPlacement
- *
- *  Restores the dialog placement
- */
-VOID OSK_RestoreDlgPlacement(HWND hDlg)
-{
-    LoadSettings();
-    SetWindowPos(hDlg, (Globals.bAlwaysOnTop ? HWND_TOPMOST : HWND_NOTOPMOST), Globals.PosX, Globals.PosY, 0, 0, SWP_NOSIZE);
-}
-
-/***********************************************************************
- *
- *           OSK_DlgClose
+ *           OSK_Close
  *
  *  Handling of WM_CLOSE
  */
-int OSK_DlgClose(void)
+int OSK_Close(void)
 {
     KillTimer(Globals.hMainWnd, Globals.iTimer);
 
@@ -293,8 +499,12 @@ int OSK_DlgClose(void)
     OSK_ReleaseKey(SCAN_CODE_62); // Right alt
     OSK_ReleaseKey(SCAN_CODE_64); // Right ctrl
 
+    /* Destroy child controls */
+    OSK_DestroyKeys();
+
     /* delete GDI objects */
     if (Globals.hBrushGreenLed) DeleteObject(Globals.hBrushGreenLed);
+    if (Globals.hFont) DeleteObject(Globals.hFont);
 
     /* Save the application's settings on registry */
     SaveSettings();
@@ -327,19 +537,27 @@ VOID OSK_RefreshLEDKeys(VOID)
 
 /***********************************************************************
  *
- *           OSK_DlgTimer
+ *           OSK_Timer
  *
  *  Handling of WM_TIMER
  */
-int OSK_DlgTimer(void)
+int OSK_Timer(void)
 {
-    /* FIXME: To be deleted when ReactOS will support WS_EX_NOACTIVATE */
     HWND hWndActiveWindow;
+    DWORD dwThread;
+    HKL hKeyboardLayout;
 
     hWndActiveWindow = GetForegroundWindow();
     if (hWndActiveWindow != NULL && hWndActiveWindow != Globals.hMainWnd)
     {
+        /* FIXME: To be deleted when ReactOS will support WS_EX_NOACTIVATE */
         Globals.hActiveWnd = hWndActiveWindow;
+
+        /* Grab the current keyboard layout from the foreground window */
+        dwThread = GetWindowThreadProcessId(hWndActiveWindow, NULL);
+        hKeyboardLayout = GetKeyboardLayout(dwThread);
+        /* Activate the layout */
+        ActivateKeyboardLayout(hKeyboardLayout, 0);
     }
 
     /*
@@ -347,17 +565,61 @@ int OSK_DlgTimer(void)
         of the specific keys is held down).
     */
     OSK_RefreshLEDKeys();
+    /* Update the buttons */
+    OSK_SetKeys(SETKEYS_LANG);
 
     return TRUE;
 }
 
 /***********************************************************************
  *
- *           OSK_DlgCommand
+ *           OSK_ChooseFont
  *
- *  All handling of dialog command
+ *  Change the font of which the keys are being displayed
  */
-BOOL OSK_DlgCommand(WPARAM wCommand, HWND hWndControl)
+VOID OSK_ChooseFont(VOID)
+{
+    LOGFONTW lf = {0};
+    CHOOSEFONTW cf = {0};
+    HFONT hFont, hOldFont;
+    int i;
+
+    StringCchCopyW(lf.lfFaceName, _countof(Globals.FontFaceName), Globals.FontFaceName);
+    lf.lfHeight = Globals.FontHeight;
+
+    cf.lStructSize = sizeof(cf);
+    cf.hwndOwner = Globals.hMainWnd;
+    cf.lpLogFont = &lf;
+    cf.Flags = CF_INITTOLOGFONTSTRUCT | CF_NOSTYLESEL;
+
+    if (!ChooseFontW(&cf))
+        return;
+
+    hFont = CreateFontIndirectW(&lf);
+
+    if (!hFont)
+        return;
+
+    /* Set font information */
+    StringCchCopyW(Globals.FontFaceName, _countof(Globals.FontFaceName), lf.lfFaceName);
+    Globals.FontHeight = lf.lfHeight;
+
+    hOldFont = Globals.hFont;
+    Globals.hFont = hFont;
+
+    for (i = 0; i < Globals.Keyboard->KeyCount; i++)
+        SendMessageW(Globals.hKeys[i], WM_SETFONT, (WPARAM)Globals.hFont, TRUE);
+
+    DeleteObject(hOldFont);
+}
+
+/***********************************************************************
+ *
+ *           OSK_Command
+ *
+ *  All handling of commands
+ */
+BOOL OSK_Command(WPARAM wCommand, HWND hWndControl)
 {
     WORD ScanCode;
     INPUT Input;
@@ -424,7 +686,7 @@ BOOL OSK_DlgCommand(WPARAM wCommand, HWND hWndControl)
         bExtendedKey = TRUE;
     else
         bExtendedKey = FALSE;
-    ScanCode &= 0xFF;
+    ScanCode &= SCANCODE_MASK;
 
     /* Press and release the key */
     if (bKeyDown)
@@ -486,7 +748,7 @@ BOOL OSK_ReleaseKey(WORD ScanCode)
         bExtendedKey = TRUE;
     else
         bExtendedKey = FALSE;
-    ScanCode &= 0xFF;
+    ScanCode &= SCANCODE_MASK;
 
     /* Release the key */
     Input.type = INPUT_KEYBOARD;
@@ -503,137 +765,94 @@ BOOL OSK_ReleaseKey(WORD ScanCode)
 
 /***********************************************************************
  *
- *           OSK_ThemeHandler
+ *           OSK_Paint
  *
- *  Function helper which handles theme drawing of controls
+ *  Handles WM_PAINT messages
  */
-LRESULT APIENTRY OSK_ThemeHandler(HWND hDlg, NMCUSTOMDRAW *pNmDraw)
+LRESULT OSK_Paint(HWND hwnd)
 {
-    HTHEME hTheme;
-    HWND hDlgButtonCtrl;
-    LRESULT Ret;
-    INT iState = PBS_NORMAL;
+    PAINTSTRUCT ps;
+    RECT rcText;
+    HFONT hOldFont = NULL;
+    WCHAR szTemp[MAX_PATH];
 
-    /* Retrieve the theme handle for the button controls */
-    hDlgButtonCtrl = pNmDraw->hdr.hwndFrom;
-    hTheme = GetWindowTheme(hDlgButtonCtrl);
+    HDC hdc = BeginPaint(hwnd, &ps);
 
-    /*
-        Begin the painting procedures if we retrieved
-        the theme for control buttons of the dialog.
-    */
-    if (hTheme)
-    {
-        /* Obtain CDDS drawing stages */
-        switch (pNmDraw->dwDrawStage)
-        {
-            case CDDS_PREPAINT:
-            {
-                /*
-                    The button could be either in normal state or pushed.
-                    Retrieve its state and save to a variable.
-                */
-                if (pNmDraw->uItemState & CDIS_DEFAULT)
-                {
-                    iState = PBS_DEFAULTED;
-                }
-                else if (pNmDraw->uItemState & CDIS_SELECTED)
-                {
-                    iState = PBS_PRESSED;
-                }
-                else if (pNmDraw->uItemState & CDIS_HOT)
-                {
-                    iState = PBS_HOT;
-                }
+    if (Globals.hFont)
+        hOldFont = SelectObject(hdc, Globals.hFont);
 
-                if (IsThemeBackgroundPartiallyTransparent(hTheme, BP_PUSHBUTTON, iState))
-                {
-                    /* Draw the application if the theme is transparent */
-                    DrawThemeParentBackground(hDlgButtonCtrl, pNmDraw->hdc, &pNmDraw->rc);
-                }
+    rcText.left   = Globals.Keyboard->LedTextStart.x;
+    rcText.top    = Globals.Keyboard->LedTextStart.y;
+    rcText.right  = rcText.left + Globals.Keyboard->LedTextSize.cx;
+    rcText.bottom = rcText.top + Globals.Keyboard->LedTextSize.cy;
 
-                /* Draw it */
-                DrawThemeBackground(hTheme, pNmDraw->hdc, BP_PUSHBUTTON, iState, &pNmDraw->rc, NULL);
+    LoadStringW(Globals.hInstance, IDS_NUMLOCK, szTemp, _countof(szTemp));
+    DrawTextW(hdc, szTemp, -1, &rcText, DT_NOCLIP);
 
-                Ret = CDRF_SKIPDEFAULT;
-                break;
-            }
+    OffsetRect(&rcText, Globals.Keyboard->LedTextOffset, 0);
+    
+    LoadStringW(Globals.hInstance, IDS_CAPSLOCK, szTemp, _countof(szTemp));
+    DrawTextW(hdc, szTemp, -1, &rcText, DT_NOCLIP);
 
-            case CDDS_PREERASE:
-            {
-                Ret = CDRF_DODEFAULT;
-                break;
-            }
+    OffsetRect(&rcText, Globals.Keyboard->LedTextOffset, 0);
+ 
+    LoadStringW(Globals.hInstance, IDS_SCROLLLOCK, szTemp, _countof(szTemp));
+    DrawTextW(hdc, szTemp, -1, &rcText, DT_NOCLIP);
 
-            default:
-                Ret = CDRF_SKIPDEFAULT;
-                break;
-        }
-    }
-    else
-    {
-        /* hTheme is NULL so bail right away */
-        Ret = CDRF_DODEFAULT;
-    }
+    if (hOldFont)
+        SelectObject(hdc, hOldFont);
 
-    return Ret;
+    EndPaint(hwnd, &ps);
+
+    return 0;
 }
-
 /***********************************************************************
  *
- *       OSK_DlgProc
+ *       OSK_WndProc
  */
-INT_PTR APIENTRY OSK_DlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
+LRESULT APIENTRY OSK_WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     switch (msg)
     {
-        case WM_INITDIALOG:
-            OSK_DlgInitDialog(hDlg);
-            return TRUE;
+        case WM_CREATE:
+            return OSK_Create(hwnd);
+
+        case WM_PAINT:
+            return OSK_Paint(hwnd);
 
         case WM_TIMER:
-            OSK_DlgTimer();
-            return TRUE;
-
-        case WM_NOTIFY:
-            return OSK_ThemeHandler(hDlg, (LPNMCUSTOMDRAW)lParam);
+            return OSK_Timer();
 
         case WM_CTLCOLORSTATIC:
-            if ((HWND)lParam == GetDlgItem(hDlg, IDC_LED_NUM))
+            if ((HWND)lParam == GetDlgItem(hwnd, IDC_LED_NUM))
             {
                 if (GetKeyState(VK_NUMLOCK) & 0x0001)
-                    return (INT_PTR)Globals.hBrushGreenLed;
+                    return (LRESULT)Globals.hBrushGreenLed;
                 else
-                    return (INT_PTR)GetStockObject(BLACK_BRUSH);
+                    return (LRESULT)GetStockObject(BLACK_BRUSH);
             }
-            if ((HWND)lParam == GetDlgItem(hDlg, IDC_LED_CAPS))
+            if ((HWND)lParam == GetDlgItem(hwnd, IDC_LED_CAPS))
             {
                 if (GetKeyState(VK_CAPITAL) & 0x0001)
-                    return (INT_PTR)Globals.hBrushGreenLed;
+                    return (LRESULT)Globals.hBrushGreenLed;
                 else
-                    return (INT_PTR)GetStockObject(BLACK_BRUSH);
+                    return (LRESULT)GetStockObject(BLACK_BRUSH);
             }
-            if ((HWND)lParam == GetDlgItem(hDlg, IDC_LED_SCROLL))
+            if ((HWND)lParam == GetDlgItem(hwnd, IDC_LED_SCROLL))
             {
                 if (GetKeyState(VK_SCROLL) & 0x0001)
-                    return (INT_PTR)Globals.hBrushGreenLed;
+                    return (LRESULT)Globals.hBrushGreenLed;
                 else
-                    return (INT_PTR)GetStockObject(BLACK_BRUSH);
+                    return (LRESULT)GetStockObject(BLACK_BRUSH);
             }
             break;
 
         case WM_COMMAND:
             switch (LOWORD(wParam))
             {
-                case IDCANCEL:
-                {
-                    EndDialog(hDlg, FALSE);
-                    break;
-                }
-
                 case IDM_EXIT:
                 {
-                    EndDialog(hDlg, FALSE);
+                    PostMessageW(hwnd, WM_CLOSE, 0, 0);
                     break;
                 }
 
@@ -646,25 +865,15 @@ INT_PTR APIENTRY OSK_DlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
                             Set the member value as TRUE, destroy the dialog and save the data configuration into the registry.
                         */
                         Globals.bIsEnhancedKeyboard = TRUE;
-                        EndDialog(hDlg, FALSE);
                         SaveSettings();
 
                         /* Change the condition of enhanced keyboard item menu to checked */
-                        CheckMenuItem(GetMenu(hDlg), IDM_ENHANCED_KB, MF_BYCOMMAND | MF_CHECKED);
-                        CheckMenuItem(GetMenu(hDlg), IDM_STANDARD_KB, MF_BYCOMMAND | MF_UNCHECKED);
+                        CheckMenuItem(GetMenu(hwnd), IDM_ENHANCED_KB, MF_BYCOMMAND | MF_CHECKED);
+                        CheckMenuItem(GetMenu(hwnd), IDM_STANDARD_KB, MF_BYCOMMAND | MF_UNCHECKED);
 
-                        /*
-                            Before creating the dialog box restore the coordinates. The user can
-                            move the dialog around before choosing a different dialog layout therefore
-                            we must create the dialog with the new coordinates.
-                        */
-                        OSK_RestoreDlgPlacement(hDlg);
-
-                        /* Finally, display the dialog modal box with the enhanced keyboard dialog */
-                        DialogBoxW(Globals.hInstance,
-                                   MAKEINTRESOURCEW(MAIN_DIALOG_ENHANCED_KB),
-                                   GetDesktopWindow(),
-                                   OSK_DlgProc);
+                        /* Finally, update the key layout */
+                        LoadSettings();
+                        OSK_SetKeys(SETKEYS_LAYOUT);
                     }
 
                     break;
@@ -679,25 +888,15 @@ INT_PTR APIENTRY OSK_DlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
                             Set the member value as FALSE, destroy the dialog and save the data configuration into the registry.
                         */
                         Globals.bIsEnhancedKeyboard = FALSE;
-                        EndDialog(hDlg, FALSE);
                         SaveSettings();
 
                         /* Change the condition of standard keyboard item menu to checked */
-                        CheckMenuItem(GetMenu(hDlg), IDM_ENHANCED_KB, MF_BYCOMMAND | MF_UNCHECKED);
-                        CheckMenuItem(GetMenu(hDlg), IDM_STANDARD_KB, MF_BYCOMMAND | MF_CHECKED);
+                        CheckMenuItem(GetMenu(hwnd), IDM_ENHANCED_KB, MF_BYCOMMAND | MF_UNCHECKED);
+                        CheckMenuItem(GetMenu(hwnd), IDM_STANDARD_KB, MF_BYCOMMAND | MF_CHECKED);
 
-                        /*
-                            Before creating the dialog box restore the coordinates. The user can
-                            move the dialog around before choosing a different dialog layout therefore
-                            we must create the dialog with the new coordinates.
-                        */
-                        OSK_RestoreDlgPlacement(hDlg);
-
-                        /* Finally, display the dialog modal box with the standard keyboard dialog */
-                        DialogBoxW(Globals.hInstance,
-                                   MAKEINTRESOURCEW(MAIN_DIALOG_STANDARD_KB),
-                                   GetDesktopWindow(),
-                                   OSK_DlgProc);
+                        /* Finally, update the key layout */
+                        LoadSettings();
+                        OSK_SetKeys(SETKEYS_LAYOUT);
                     }
 
                     break;
@@ -712,12 +911,12 @@ INT_PTR APIENTRY OSK_DlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
                     if (!Globals.bSoundClick)
                     {
                         Globals.bSoundClick = TRUE;
-                        CheckMenuItem(GetMenu(hDlg), IDM_CLICK_SOUND, MF_BYCOMMAND | MF_CHECKED);
+                        CheckMenuItem(GetMenu(hwnd), IDM_CLICK_SOUND, MF_BYCOMMAND | MF_CHECKED);
                     }
                     else
                     {
                         Globals.bSoundClick = FALSE;
-                        CheckMenuItem(GetMenu(hDlg), IDM_CLICK_SOUND, MF_BYCOMMAND | MF_UNCHECKED);
+                        CheckMenuItem(GetMenu(hwnd), IDM_CLICK_SOUND, MF_BYCOMMAND | MF_UNCHECKED);
                     }
 
                     break;
@@ -732,16 +931,22 @@ INT_PTR APIENTRY OSK_DlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
                     if (!Globals.bAlwaysOnTop)
                     {
                         Globals.bAlwaysOnTop = TRUE;
-                        CheckMenuItem(GetMenu(hDlg), IDM_ON_TOP, MF_BYCOMMAND | MF_CHECKED);
-                        SetWindowPos(hDlg, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE);
+                        CheckMenuItem(GetMenu(hwnd), IDM_ON_TOP, MF_BYCOMMAND | MF_CHECKED);
+                        SetWindowPos(hwnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE);
                     }
                     else
                     {
                         Globals.bAlwaysOnTop = FALSE;
-                        CheckMenuItem(GetMenu(hDlg), IDM_ON_TOP, MF_BYCOMMAND | MF_UNCHECKED);
-                        SetWindowPos(hDlg, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE);
+                        CheckMenuItem(GetMenu(hwnd), IDM_ON_TOP, MF_BYCOMMAND | MF_UNCHECKED);
+                        SetWindowPos(hwnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE);
                     }
 
+                    break;
+                }
+
+                case IDM_FONT:
+                {
+                    OSK_ChooseFont();
                     break;
                 }
 
@@ -752,22 +957,22 @@ INT_PTR APIENTRY OSK_DlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
                 }
 
                 default:
-                    OSK_DlgCommand(wParam, (HWND)lParam);
+                    OSK_Command(wParam, (HWND)lParam);
                     break;
             }
-            break;
+            return 0;
 
         case WM_THEMECHANGED:
             /* Redraw the dialog (and its control buttons) using the new theme */
-            InvalidateRect(hDlg, NULL, FALSE);
-            break;
+            InvalidateRect(hwnd, NULL, FALSE);
+            return 0;
 
         case WM_CLOSE:
-            OSK_DlgClose();
-            break;
+            OSK_Close();
+            PostQuitMessage(0);
+            return 0;
     }
-
-    return 0;
+    return DefWindowProcW(hwnd, msg, wParam, lParam);
 }
 
 /***********************************************************************
@@ -779,10 +984,12 @@ int WINAPI wWinMain(HINSTANCE hInstance,
                     LPWSTR cmdline,
                     int show)
 {
-    HANDLE hMutex;
     DWORD dwError;
-    INT LayoutResource;
+    HANDLE hMutex;
     INITCOMMONCONTROLSEX iccex;
+    WNDCLASSEXW wc = {0};
+    MSG msg;
+    HWND hwnd;
 
     UNREFERENCED_PARAMETER(prev);
     UNREFERENCED_PARAMETER(cmdline);
@@ -822,32 +1029,50 @@ int WINAPI wWinMain(HINSTANCE hInstance,
     /* Load the application's settings from the registry */
     LoadSettings();
 
-    /* If the member of the struct (bShowWarning) is set then display the dialog box */
-    if (Globals.bShowWarning)
+    /* Define the window class */
+    wc.cbSize        = sizeof(wc);
+    wc.hInstance     = Globals.hInstance;
+    wc.lpfnWndProc   = OSK_WndProc;
+    wc.lpszMenuName  = MAKEINTRESOURCEW(IDR_OSK_MENU);
+    wc.lpszClassName = OSK_CLASS;
+    wc.style         = CS_HREDRAW | CS_VREDRAW;
+    wc.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
+    /* Set the application's icon */
+    wc.hIcon = LoadImageW(Globals.hInstance, MAKEINTRESOURCEW(IDI_OSK), IMAGE_ICON, 0, 0, LR_SHARED | LR_DEFAULTSIZE);
+    wc.hIconSm = CopyImage(wc.hIcon, IMAGE_ICON, GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CYSMICON), LR_COPYFROMRESOURCE);
+
+    if (!RegisterClassExW(&wc))
+        goto quit;
+
+    /* Load window title */
+    LoadStringW(Globals.hInstance, IDS_OSK, Globals.szTitle, _countof(Globals.szTitle));
+
+    hwnd = CreateWindowExW(WS_EX_TOPMOST | WS_EX_APPWINDOW | WS_EX_NOACTIVATE,
+                           OSK_CLASS,
+                           Globals.szTitle,
+                           WS_SYSMENU | WS_MINIMIZEBOX,
+                           CW_USEDEFAULT,
+                           CW_USEDEFAULT,
+                           CW_USEDEFAULT,
+                           CW_USEDEFAULT,
+                           NULL,
+                           NULL,
+                           Globals.hInstance,
+                           NULL);
+
+    if (!hwnd)
+        goto quit;
+
+    ShowWindow(hwnd, SW_SHOW);
+    UpdateWindow(hwnd);
+    
+    while (GetMessageW(&msg, NULL, 0, 0))
     {
-        /* If for whatever reason the thread fails to be created then handle the dialog box in main thread... */
-        if (CreateThread(NULL, 0, OSK_WarningDlgThread, (PVOID)Globals.hInstance, 0, NULL) == NULL)
-        {
-            DialogBoxW(Globals.hInstance, MAKEINTRESOURCEW(IDD_WARNINGDIALOG_OSK), Globals.hMainWnd, OSK_WarningProc);
-        }
+        TranslateMessage(&msg);
+        DispatchMessageW(&msg);
     }
 
-    /* Before initializing the dialog execution, check if the chosen keyboard type is standard or enhanced */
-    if (Globals.bIsEnhancedKeyboard)
-    {
-        LayoutResource = MAIN_DIALOG_ENHANCED_KB;
-    }
-    else
-    {
-        LayoutResource = MAIN_DIALOG_STANDARD_KB;
-    }
-
-    /* Create the modal box based on the configuration registry */
-    DialogBoxW(hInstance,
-               MAKEINTRESOURCEW(LayoutResource),
-               GetDesktopWindow(),
-               OSK_DlgProc);
-
+quit:
     /* Delete the mutex */
     if (hMutex)
     {

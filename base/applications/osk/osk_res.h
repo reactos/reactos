@@ -5,9 +5,6 @@
  * COPYRIGHT:       Denis ROBERT
  */
 
-#define MAIN_DIALOG_ENHANCED_KB             2000
-#define MAIN_DIALOG_STANDARD_KB             2001
-
 #define IDI_SOUNDCLICK                      50
 
 #define IDC_LED_NUM                         100
@@ -49,8 +46,24 @@
 
 #define IDD_WARNINGDIALOG_OSK               215
 
-#define STRING_OSK                          500
-#define STRING_AUTHORS                      501
+#define IDS_OSK                             500
+#define IDS_AUTHORS                         501
+
+#define IDS_NUMLOCK                         502
+#define IDS_CAPSLOCK                        503
+#define IDS_SCROLLLOCK                      504
+
+#define IDS_ESCAPE                          505
+#define IDS_PRN                             506
+#define IDS_STOP                            507 /* SCROLL LOCK */
+#define IDS_ATTN                            508 /* PAUSE KEY */
+#define IDS_INSERT                          509
+#define IDS_NUMLOCKKEY                      510
+#define IDS_DELETE                          511
+#define IDS_END                             512
+#define IDS_CTRL                            513
+#define IDS_LEFTALT                         514
+#define IDS_RIGHTALT                        515
 
 #define IDC_STATIC                          -1
 
