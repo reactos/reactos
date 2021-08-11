@@ -44,7 +44,7 @@ LARGE_INTEGER                              liOldSystemTime = {{0,0}};
 SYSTEM_PERFORMANCE_INFORMATION             SystemPerfInfo;
 SYSTEM_BASIC_INFORMATION                   SystemBasicInfo;
 SYSTEM_FILECACHE_INFORMATION               SystemCacheInfo;
-SYSTEM_HANDLE_INFORMATION                  SystemHandleInfo;
+ULONG                                      SystemNumberOfHandles;
 PSYSTEM_PROCESSOR_PERFORMANCE_INFORMATION  SystemProcessorTimeInfo = NULL;
 PSID                                       SystemUserSid = NULL;
 
@@ -186,7 +186,7 @@ void PerfDataRefresh(void)
     SYSTEM_PERFORMANCE_INFORMATION             SysPerfInfo;
     SYSTEM_TIMEOFDAY_INFORMATION               SysTimeInfo;
     SYSTEM_FILECACHE_INFORMATION               SysCacheInfo;
-    LPBYTE                                     SysHandleInfoData;
+    SYSTEM_HANDLE_INFORMATION                  SysHandleInfoData;
     PSYSTEM_PROCESSOR_PERFORMANCE_INFORMATION  SysProcessorTimeInfo;
     double                                     CurrentKernelTime;
     PSECURITY_DESCRIPTOR                       ProcessSD;
@@ -221,22 +221,14 @@ void PerfDataRefresh(void)
     }
 
     /* Get handle information
-     * We don't know how much data there is so just keep
-     * increasing the buffer size until the call succeeds
+     * Number of handles is enough, no need for data array.
      */
-    BufferSize = 0;
-    do
-    {
-        BufferSize += 0x10000;
-        SysHandleInfoData = (LPBYTE)HeapAlloc(GetProcessHeap(), 0, BufferSize);
-
-        status = NtQuerySystemInformation(SystemHandleInformation, SysHandleInfoData, BufferSize, &ulSize);
-
-        if (status == STATUS_INFO_LENGTH_MISMATCH) {
-            HeapFree(GetProcessHeap(), 0, SysHandleInfoData);
-        }
-
-    } while (status == STATUS_INFO_LENGTH_MISMATCH);
+    status = NtQuerySystemInformation(SystemHandleInformation, &SysHandleInfoData, sizeof(SysHandleInfoData), NULL);
+    /* On unexpected error, reuse previous value.
+     * STATUS_SUCCESS (0-1 handle) should never happen.
+     */
+    if (status != STATUS_INFO_LENGTH_MISMATCH)
+        SysHandleInfoData.NumberOfHandles = SystemNumberOfHandles;
 
     /* Get process information
      * We don't know how much data there is so just keep
@@ -279,8 +271,7 @@ void PerfDataRefresh(void)
     /*
      * Save system handle info
      */
-    memcpy(&SystemHandleInfo, SysHandleInfoData, sizeof(SYSTEM_HANDLE_INFORMATION));
-    HeapFree(GetProcessHeap(), 0, SysHandleInfoData);
+    SystemNumberOfHandles = SysHandleInfoData.NumberOfHandles;
 
     for (CurrentKernelTime=0, Idx=0; Idx<(ULONG)SystemBasicInfo.NumberOfProcessors; Idx++) {
         CurrentKernelTime += Li2Double(SystemProcessorTimeInfo[Idx].KernelTime);
@@ -1106,7 +1097,7 @@ ULONG PerfDataGetSystemHandleCount(void)
 
     EnterCriticalSection(&PerfDataCriticalSection);
 
-    HandleCount = SystemHandleInfo.NumberOfHandles;
+    HandleCount = SystemNumberOfHandles;
 
     LeaveCriticalSection(&PerfDataCriticalSection);
 
