@@ -1331,9 +1331,6 @@ QSI_DEF(SystemHandleInformation)
     /* Set initial required buffer size */
     *ReqSize = FIELD_OFFSET(SYSTEM_HANDLE_INFORMATION, Handles);
 
-    /* Reset of count of handles */
-    HandleInformation->NumberOfHandles = 0;
-
     /* Enter a critical region */
     KeEnterCriticalRegion();
 
@@ -1356,9 +1353,6 @@ QSI_DEF(SystemHandleInformation)
             if ((HandleTableEntry->Object) &&
                 (HandleTableEntry->NextFreeTableEntry != -2))
             {
-                /* Increase of count of handles */
-                ++HandleInformation->NumberOfHandles;
-
                 /* Lock the entry */
                 if (ExpLockHandleTableEntry(HandleTable, HandleTableEntry))
                 {
@@ -1366,11 +1360,7 @@ QSI_DEF(SystemHandleInformation)
                     *ReqSize += sizeof(SYSTEM_HANDLE_TABLE_ENTRY_INFO);
 
                     /* Check user's buffer size */
-                    if (*ReqSize > Size)
-                    {
-                        Status = STATUS_INFO_LENGTH_MISMATCH;
-                    }
-                    else
+                    if (*ReqSize <= Size)
                     {
                         POBJECT_HEADER ObjectHeader = ObpGetHandleObject(HandleTableEntry);
 
@@ -1397,12 +1387,13 @@ QSI_DEF(SystemHandleInformation)
 
                         HandleInformation->Handles[Index].GrantedAccess =
                             HandleTableEntry->GrantedAccess;
-
-                        ++Index;
                     }
 
                     /* Unlock it */
                     ExUnlockHandleTableEntry(HandleTable, HandleTableEntry);
+
+                    /* Increase count of handles, always */
+                    ++Index;
                 }
             }
 
@@ -1417,8 +1408,17 @@ QSI_DEF(SystemHandleInformation)
     /* Leave the critical region */
     KeLeaveCriticalRegion();
 
+    /* Set number of handles */
+    HandleInformation->NumberOfHandles = Index;
+
     /* Release the locked user buffer */
     ExUnlockUserBuffer(Mdl);
+
+    /* Update status if user buffer is too small */
+    if (Size < *ReqSize)
+    {
+        Status = STATUS_INFO_LENGTH_MISMATCH;
+    }
 
     return Status;
 }
@@ -2537,9 +2537,6 @@ QSI_DEF(SystemExtendedHandleInformation)
     /* Set initial required buffer size */
     *ReqSize = FIELD_OFFSET(SYSTEM_HANDLE_INFORMATION_EX, Handle);
 
-    /* Reset of count of handles */
-    HandleInformation->Count = 0;
-
     /* Enter a critical region */
     KeEnterCriticalRegion();
 
@@ -2562,9 +2559,6 @@ QSI_DEF(SystemExtendedHandleInformation)
             if ((HandleTableEntry->Object) &&
                 (HandleTableEntry->NextFreeTableEntry != -2))
             {
-                /* Increase of count of handles */
-                ++HandleInformation->Count;
-
                 /* Lock the entry */
                 if (ExpLockHandleTableEntry(HandleTable, HandleTableEntry))
                 {
@@ -2572,11 +2566,7 @@ QSI_DEF(SystemExtendedHandleInformation)
                     *ReqSize += sizeof(SYSTEM_HANDLE_TABLE_ENTRY_INFO_EX);
 
                     /* Check user's buffer size */
-                    if (*ReqSize > Size)
-                    {
-                        Status = STATUS_INFO_LENGTH_MISMATCH;
-                    }
-                    else
+                    if (*ReqSize <= Size)
                     {
                         POBJECT_HEADER ObjectHeader = ObpGetHandleObject(HandleTableEntry);
 
@@ -2605,12 +2595,13 @@ QSI_DEF(SystemExtendedHandleInformation)
                             HandleTableEntry->GrantedAccess;
 
                         HandleInformation->Handle[Index].Reserved = 0;
-
-                        ++Index;
                     }
 
                     /* Unlock it */
                     ExUnlockHandleTableEntry(HandleTable, HandleTableEntry);
+
+                    /* Increase count of handles, always */
+                    ++Index;
                 }
             }
 
@@ -2625,8 +2616,17 @@ QSI_DEF(SystemExtendedHandleInformation)
     /* Leave the critical region */
     KeLeaveCriticalRegion();
 
+    /* Set number of handles */
+    HandleInformation->Count = Index;
+
     /* Release the locked user buffer */
     ExUnlockUserBuffer(Mdl);
+
+    /* Update status if user buffer is too small */
+    if (Size < *ReqSize)
+    {
+        Status = STATUS_INFO_LENGTH_MISMATCH;
+    }
 
     return Status;
 }
