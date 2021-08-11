@@ -1,10 +1,8 @@
 /*
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS kernel
- * FILE:            ntoskrnl/se/sid.c
- * PURPOSE:         Security manager
- *
- * PROGRAMMERS:     David Welch <welch@cwcom.net>
+ * PROJECT:         ReactOS Kernel
+ * LICENSE:         GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:         Security Identifier (SID) implementation support and handling
+ * COPYRIGHT:       Copyright David Welch <welch@cwcom.net>
  */
 
 /* INCLUDES *******************************************************************/
@@ -54,6 +52,13 @@ PSID SeNetworkServiceSid = NULL;
 
 /* FUNCTIONS ******************************************************************/
 
+/**
+ * @brief
+ * Frees all the known initialized SIDs in the system from the memory.
+ *
+ * @return
+ * Nothing.
+ */
 VOID
 NTAPI
 FreeInitializedSids(VOID)
@@ -88,6 +93,14 @@ FreeInitializedSids(VOID)
     if (SeAnonymousLogonSid) ExFreePoolWithTag(SeAnonymousLogonSid, TAG_SID);
 }
 
+/**
+ * @brief
+ * Initializes all the SIDs known in the system.
+ *
+ * @return
+ * Returns TRUE if all the SIDs have been initialized,
+ * FALSE otherwise.
+ */
 CODE_SEG("INIT")
 BOOLEAN
 NTAPI
@@ -263,6 +276,31 @@ SepInitSecurityIDs(VOID)
     return TRUE;
 }
 
+/**
+ * @brief
+ * Captures a SID.
+ * 
+ * @param[in] InputSid
+ * A valid security identifier to be captured.
+ * 
+ * @param[in] AccessMode
+ * Processor level access mode.
+ * 
+ * @param[in] PoolType
+ * Pool memory type for the captured SID to assign upon
+ * allocation.
+ * 
+ * @param[in] CaptureIfKernel
+ * If set to TRUE, the capturing is done within the kernel.
+ * Otherwise the capturing is done in a kernel mode driver.
+ * 
+ * @param[out] CapturedSid
+ * The captured security identifier, returned to the caller.
+ *
+ * @return
+ * Returns STATUS_SUCCESS if the SID was captured. STATUS_INSUFFICIENT_RESOURCES
+ * is returned if memory pool allocation for the captured SID has failed.
+ */
 NTSTATUS
 NTAPI
 SepCaptureSid(IN PSID InputSid,
@@ -331,6 +369,23 @@ SepCaptureSid(IN PSID InputSid,
     return STATUS_SUCCESS;
 }
 
+/**
+ * @brief
+ * Releases a captured SID.
+ * 
+ * @param[in] CapturedSid
+ * The captured SID to be released.
+ * 
+ * @param[in] AccessMode
+ * Processor level access mode.
+ * 
+ * @param[in] CaptureIfKernel
+ * If set to TRUE, the releasing is done within the kernel.
+ * Otherwise the releasing is done in a kernel mode driver.
+ *
+ * @return
+ * Nothing.
+ */
 VOID
 NTAPI
 SepReleaseSid(IN PSID CapturedSid,
@@ -347,6 +402,52 @@ SepReleaseSid(IN PSID CapturedSid,
     }
 }
 
+/**
+ * @brief
+ * Captures a SID with attributes.
+ * 
+ * @param[in] SrcSidAndAttributes
+ * Source of the SID with attributes to be captured.
+ * 
+ * @param[in] AttributeCount
+ * The number count of attributes, in total.
+ * 
+ * @param[in] PreviousMode
+ * Processor access level mode.
+ * 
+ * @param[in] AllocatedMem
+ * The allocated memory buffer for the captured SID. If the caller
+ * supplies no allocated block of memory then the function will
+ * allocate some buffer block of memory for the captured SID
+ * automatically.
+ * 
+ * @param[in] AllocatedLength
+ * The length of the buffer that points to the allocated memory,
+ * in bytes.
+ * 
+ * @param[in] PoolType
+ * The pool type for the captured SID and attributes to assign.
+ * 
+ * @param[in] CaptureIfKernel
+ * If set to TRUE, the capturing is done within the kernel.
+ * Otherwise the capturing is done in a kernel mode driver.
+ * 
+ * @param[out] CapturedSidAndAttributes
+ * The captured SID and attributes.
+ * 
+ * @param[out] ResultLength
+ * The length of the captured SID and attributes, in bytes.
+ *
+ * @return
+ * Returns STATUS_SUCCESS if SID and attributes capturing
+ * has been completed successfully. STATUS_INVALID_PARAMETER
+ * is returned if the count of attributes exceeds the maximum
+ * threshold that the kernel can permit. STATUS_INSUFFICIENT_RESOURCES
+ * is returned if memory pool allocation for the captured SID has failed.
+ * STATUS_BUFFER_TOO_SMALL is returned if the length of the allocated
+ * buffer is less than the required size. A failure NTSTATUS code is
+ * returned otherwise.
+ */
 NTSTATUS
 NTAPI
 SeCaptureSidAndAttributesArray(
@@ -548,6 +649,23 @@ SeCaptureSidAndAttributesArray(
     return Status;
 }
 
+/**
+ * @brief
+ * Releases a captured SID with attributes.
+ * 
+ * @param[in] CapturedSidAndAttributes
+ * The captured SID with attributes to be released.
+ * 
+ * @param[in] AccessMode
+ * Processor access level mode.
+ * 
+ * @param[in] CaptureIfKernel
+ * If set to TRUE, the releasing is done within the kernel.
+ * Otherwise the releasing is done in a kernel mode driver.
+ *
+ * @return
+ * Nothing.
+ */
 VOID
 NTAPI
 SeReleaseSidAndAttributesArray(
@@ -563,6 +681,5 @@ SeReleaseSidAndAttributesArray(
         ExFreePoolWithTag(CapturedSidAndAttributes, TAG_SID_AND_ATTRIBUTES);
     }
 }
-
 
 /* EOF */

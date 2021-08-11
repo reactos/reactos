@@ -1,11 +1,9 @@
 /*
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS kernel
- * FILE:            ntoskrnl/se/audit.c
- * PURPOSE:         Audit functions
- *
- * PROGRAMMERS:     Eric Kohl
- *                  Timo Kreuzer (timo.kreuzer@reactos.org)
+ * PROJECT:         ReactOS Kernel
+ * LICENSE:         GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:         Security auditing functions
+ * COPYRIGHT:       Copyright Eric Kohl
+ *                  Copyright Timo Kreuzer <timo.kreuzer@reactos.org>
  */
 
 /* INCLUDES *******************************************************************/
@@ -20,6 +18,17 @@ UNICODE_STRING SeSubsystemName = RTL_CONSTANT_STRING(L"Security");
 
 /* PRIVATE FUNCTIONS***********************************************************/
 
+/**
+ * @unimplemented
+ * @brief
+ * Peforms a detailed security auditing with an access token.
+ * 
+ * @param[in] Token
+ * A valid token object.
+ *
+ * @return
+ * To be added...
+ */
 BOOLEAN
 NTAPI
 SeDetailedAuditingWithToken(IN PTOKEN Token)
@@ -28,6 +37,19 @@ SeDetailedAuditingWithToken(IN PTOKEN Token)
     return FALSE;
 }
 
+/**
+ * @unimplemented
+ * @brief
+ * Peforms a security auditing against a process that is about to
+ * be created.
+ * 
+ * @param[in] Process
+ * An object that points to a process which is in process of
+ * creation.
+ *
+ * @return
+ * Nothing.
+ */
 VOID
 NTAPI
 SeAuditProcessCreate(IN PEPROCESS Process)
@@ -35,6 +57,19 @@ SeAuditProcessCreate(IN PEPROCESS Process)
     /* FIXME */
 }
 
+/**
+ * @unimplemented
+ * @brief
+ * Peforms a security auditing against a process that is about to
+ * be terminated.
+ * 
+ * @param[in] Process
+ * An object that points to a process which is in process of
+ * termination.
+ *
+ * @return
+ * Nothing.
+ */
 VOID
 NTAPI
 SeAuditProcessExit(IN PEPROCESS Process)
@@ -42,6 +77,26 @@ SeAuditProcessExit(IN PEPROCESS Process)
     /* FIXME */
 }
 
+/**
+ * @brief
+ * Initializes a process audit name and returns it to the caller.
+ * 
+ * @param[in] FileObject
+ * File object that points to a name to be queried.
+ * 
+ * @param[in] DoAudit
+ * If set to TRUE, the function will perform various security
+ * auditing onto the audit name. 
+ * 
+ * @param[out] AuditInfo
+ * The returned audit info data.
+ *
+ * @return
+ * Returns STATUS_SUCCESS if process audit name initialization
+ * has completed successfully. STATUS_NO_MEMORY is returned if
+ * pool allocation for object name info has failed. A failure
+ * NTSTATUS code is returned otherwise.
+ */
 NTSTATUS
 NTAPI
 SeInitializeProcessAuditName(IN PFILE_OBJECT FileObject,
@@ -117,6 +172,24 @@ SeInitializeProcessAuditName(IN PFILE_OBJECT FileObject,
     return Status;
 }
 
+/**
+ * @brief
+ * Finds the process image name of a specific process.
+ * 
+ * @param[in] Process
+ * Process object submitted by the caller, where the image name
+ * is to be located.
+ * 
+ * @param[out] ProcessImageName
+ * An output Unicode string structure with the located process
+ * image name.
+ *
+ * @return
+ * Returns STATUS_SUCCESS if process image name has been located
+ * successfully. STATUS_NO_MEMORY is returned if pool allocation
+ * for the image name has failed. A failure NTSTATUS code is
+ * returned otherwise.
+ */
 NTSTATUS
 NTAPI
 SeLocateProcessImageName(IN PEPROCESS Process,
@@ -185,6 +258,25 @@ SeLocateProcessImageName(IN PEPROCESS Process,
     return Status;
 }
 
+/**
+ * @brief
+ * Closes an audit alarm event of an object.
+ * 
+ * @param[in] SubsystemName
+ * A Unicode string pointing to the name of the subsystem where auditing
+ * alarm event has to be closed.
+ * 
+ * @param[in] HandleId
+ * A handle to an ID where such ID represents the identification of the
+ * object where audit alarm is to be closed.
+ *
+ * @param[in] Sid
+ * A SID that represents the user who attempted to close the audit
+ * alarm.
+ * 
+ * @return
+ * Nothing.
+ */
 VOID
 NTAPI
 SepAdtCloseObjectAuditAlarm(
@@ -195,6 +287,41 @@ SepAdtCloseObjectAuditAlarm(
     UNIMPLEMENTED;
 }
 
+/**
+ * @brief
+ * Performs an audit alarm to a privileged service request.
+ * This is a worker function.
+ * 
+ * @param[in] SubjectContext
+ * A security subject context used for the auditing process.
+ * 
+ * @param[in] SubsystemName
+ * A Unicode string that represents the name of a subsystem that
+ * actuated the procedure of alarm auditing of a privileged
+ * service.
+ *
+ * @param[in] ServiceName
+ * A Unicode string that represents the name of a privileged
+ * service request for auditing.
+ * 
+ * @param[in] Token
+ * An access token.
+ * 
+ * @param[in] PrimaryToken
+ * A primary access token. 
+ * 
+ * @param[in] Privileges
+ * An array set of privileges used to check if the privileged
+ * service does actually have all the required set of privileges
+ * for security access.
+ * 
+ * @param[in] AccessGranted
+ * When auditing is done, the function will return TRUE to the caller
+ * if access is granted, FALSE otherwise.
+ * 
+ * @return
+ * Nothing.
+ */
 VOID
 NTAPI
 SepAdtPrivilegedServiceAuditAlarm(
@@ -209,6 +336,29 @@ SepAdtPrivilegedServiceAuditAlarm(
     DPRINT("SepAdtPrivilegedServiceAuditAlarm is unimplemented\n");
 }
 
+/**
+ * @brief
+ * Performs an audit alarm to a privileged service request.
+ * 
+ * @param[in] ServiceName
+ * A Unicode string that represents the name of a privileged
+ * service request for auditing.
+ * 
+ * @param[in] SubjectContext
+ * A security subject context used for the auditing process.
+ * 
+ * @param[in] PrivilegeSet
+ * An array set of privileges used to check if the privileged
+ * service does actually have all the required set of privileges
+ * for security access.
+ * 
+ * @param[in] AccessGranted
+ * When auditing is done, the function will return TRUE to the caller
+ * if access is granted, FALSE otherwise.
+ * 
+ * @return
+ * Nothing.
+ */
 VOID
 NTAPI
 SePrivilegedServiceAuditAlarm(
@@ -256,7 +406,28 @@ SePrivilegedServiceAuditAlarm(
 
 }
 
-
+/**
+ * @brief
+ * Captures a list of object types.
+ * 
+ * @param[in] ObjectTypeList
+ * An existing list of object types.
+ * 
+ * @param[in] ObjectTypeListLength
+ * The length size of the list.
+ * 
+ * @param[in] PreviousMode
+ * Processor access level mode.
+ * 
+ * @param[out] CapturedObjectTypeList
+ * The captured list of object types.
+ * 
+ * @return
+ * Returns STATUS_SUCCESS if the list of object types has been captured
+ * successfully. STATUS_INVALID_PARAMETER is returned if the caller hasn't
+ * supplied a buffer list of object types. STATUS_INSUFFICIENT_RESOURCES
+ * is returned if pool memory allocation for the captured list has failed.
+ */
 static
 NTSTATUS
 SeCaptureObjectTypeList(
@@ -313,6 +484,19 @@ SeCaptureObjectTypeList(
     return STATUS_SUCCESS;
 }
 
+/**
+ * @brief
+ * Releases a buffer list of object types.
+ * 
+ * @param[in] CapturedObjectTypeList
+ * A list of object types to free.
+ * 
+ * @param[in] PreviousMode
+ * Processor access level mode.
+ * 
+ * @return
+ * Nothing.
+ */
 static
 VOID
 SeReleaseObjectTypeList(
@@ -323,6 +507,78 @@ SeReleaseObjectTypeList(
         ExFreePoolWithTag(CapturedObjectTypeList, TAG_SEPA);
 }
 
+/**
+ * @unimplemented
+ * @brief
+ * Worker function that serves as the main heart and brain of the whole
+ * concept and implementation of auditing in the kernel.
+ * 
+ * @param[in] SubsystemName
+ * A Unicode string that represents the name of a subsystem that
+ * actuates the auditing process.
+ * 
+ * @param[in] HandleId
+ * A handle to an ID used to identify an object where auditing
+ * is to be done.
+ * 
+ * @param[in] SubjectContext
+ * Security subject context.
+ * 
+ * @param[in] ObjectTypeName
+ * A Unicode string that represents the name of an object type.
+ * 
+ * @param[in] ObjectName
+ * The name of the object.
+ * 
+ * @param[in] SecurityDescriptor
+ * A security descriptor with internal security information details
+ * for audit.
+ * 
+ * @param[in] PrincipalSelfSid
+ * A principal self user SID.
+ * 
+ * @param[in] DesiredAccess
+ * The desired access rights masks requested by the caller.
+ * 
+ * @param[in] AuditType
+ * Type of audit to start. This parameter influences how an audit
+ * should be done.
+ * 
+ * @param[in] HaveAuditPrivilege
+ * If set to TRUE, the security subject context has the audit privilege thus
+ * it is allowed the ability to perform the audit. 
+ * 
+ * @param[in] ObjectTypeList
+ * A list of object types.
+ * 
+ * @param[in] ObjectTypeListLength
+ * The length size of the list.
+ * 
+ * @param[in] GenericMapping
+ * The generic mapping table of access rights used whilst performing auditing
+ * sequence procedure.
+ * 
+ * @param[out] GrantedAccessList
+ * This parameter is used to return to the caller a list of actual granted access
+ * rights masks that the audited object has.
+ * 
+ * @param[out] AccessStatusList
+ * This parameter is used to return to the caller a list of status return codes.
+ * The function may actually return a single NTSTATUS code if the calling thread
+ * sets UseResultList parameter to FALSE.
+ * 
+ * @param[out] GenerateOnClose
+ * Returns TRUE if the function has generated a list of granted access rights and
+ * status codes on termination, FALSE otherwise.
+ * 
+ * @param[in] UseResultList
+ * If set to TRUE, the caller wants that the function should only return a single
+ * NTSTATUS code.
+ * 
+ * @return
+ * Returns STATUS_SUCCESS if the function has completed the whole internal
+ * auditing procedure mechanism with success.
+ */
 _Must_inspect_result_
 static
 NTSTATUS
@@ -365,6 +621,89 @@ SepAccessCheckAndAuditAlarmWorker(
     return STATUS_SUCCESS;
 }
 
+/**
+ * @brief
+ * Performs security auditing, if the specific object can be granted
+ * security access or not.
+ * 
+ * @param[in] SubsystemName
+ * A Unicode string that represents the name of a subsystem that
+ * actuates the auditing process.
+ * 
+ * @param[in] HandleId
+ * A handle to an ID used to identify an object where auditing
+ * is to be done.
+ * 
+ * @param[in] SubjectContext
+ * Security subject context.
+ * 
+ * @param[in] ObjectTypeName
+ * A Unicode string that represents the name of an object type.
+ * 
+ * @param[in] ObjectName
+ * The name of the object.
+ * 
+ * @param[in] SecurityDescriptor
+ * A security descriptor with internal security information details
+ * for audit.
+ * 
+ * @param[in] PrincipalSelfSid
+ * A principal self user SID.
+ * 
+ * @param[in] DesiredAccess
+ * The desired access rights masks requested by the caller.
+ * 
+ * @param[in] AuditType
+ * Type of audit to start. This parameter influences how an audit
+ * should be done.
+ * 
+ * @param[in] Flags
+ * Flag bitmask parameter.
+ * 
+ * @param[in] HaveAuditPrivilege
+ * If set to TRUE, the security subject context has the audit privilege thus
+ * it is allowed the ability to perform the audit. 
+ * 
+ * @param[in] ObjectTypeList
+ * A list of object types.
+ * 
+ * @param[in] ObjectTypeListLength
+ * The length size of the list.
+ * 
+ * @param[in] GenericMapping
+ * The generic mapping table of access rights used whilst performing auditing
+ * sequence procedure.
+ * 
+ * @param[out] GrantedAccessList
+ * This parameter is used to return to the caller a list of actual granted access
+ * rights masks that the audited object has.
+ * 
+ * @param[out] AccessStatusList
+ * This parameter is used to return to the caller a list of status return codes.
+ * The function may actually return a single NTSTATUS code if the calling thread
+ * sets UseResultList parameter to FALSE.
+ * 
+ * @param[out] GenerateOnClose
+ * Returns TRUE if the function has generated a list of granted access rights and
+ * status codes on termination, FALSE otherwise.
+ * 
+ * @param[in] UseResultList
+ * If set to TRUE, the caller wants that the function should only return a single
+ * NTSTATUS code.
+ * 
+ * @return
+ * Returns STATUS_SUCCESS if the function has completed the whole internal
+ * auditing procedure mechanism with success. STATUS_INVALID_PARAMETER is
+ * returned if one of the parameters do not satisfy the general requirements
+ * by the function. STATUS_INSUFFICIENT_RESOURCES is returned if pool memory
+ * allocation has failed. STATUS_PRIVILEGE_NOT_HELD is returned if the current
+ * security subject context does not have the required audit privilege to actually
+ * perform auditing in the first place. STATUS_INVALID_SECURITY_DESCR is returned
+ * if the security descriptor provided by the caller is not valid, that is, such
+ * descriptor doesn't belong to the main user (owner) and current group.
+ * STATUS_GENERIC_NOT_MAPPED is returned if the access rights masks aren't actually
+ * mapped. A failure NTSTATUS code is returned otherwise.
+ */
 _Must_inspect_result_
 NTSTATUS
 NTAPI
@@ -700,8 +1039,24 @@ Cleanup:
 
 /* PUBLIC FUNCTIONS ***********************************************************/
 
-/*
+/**
  * @unimplemented
+ * @brief
+ * Performs an audit against a hard link creation.
+ * 
+ * @param[in] FileName
+ * A Unicode string that points to the name of the file.
+ * 
+ * @param[in] LinkName
+ * A Unicode string that points to a link.
+ * 
+ * @param[out] bSuccess
+ * If TRUE, the function has successfully audited
+ * the hard link and security access can be granted,
+ * FALSE otherwise.
+ * 
+ * @return
+ * Nothing.
  */
 VOID
 NTAPI
@@ -712,8 +1067,21 @@ SeAuditHardLinkCreation(IN PUNICODE_STRING FileName,
     UNIMPLEMENTED;
 }
 
-/*
+/**
  * @unimplemented
+ * @brief
+ * Determines whether auditing against file events is being
+ * done or not.
+ * 
+ * @param[in] AccessGranted
+ * If set to TRUE, the access attempt is deemed as successful
+ * otherwise set it to FALSE.
+ * 
+ * @param[in] SecurityDescriptor
+ * A security descriptor.
+ * 
+ * @return
+ * Returns TRUE if auditing is being currently done, FALSE otherwise.
  */
 BOOLEAN
 NTAPI
@@ -724,8 +1092,25 @@ SeAuditingFileEvents(IN BOOLEAN AccessGranted,
     return FALSE;
 }
 
-/*
+/**
  * @unimplemented
+ * @brief
+ * Determines whether auditing against file events with subject context
+ * is being done or not.
+ * 
+ * @param[in] AccessGranted
+ * If set to TRUE, the access attempt is deemed as successful
+ * otherwise set it to FALSE.
+ * 
+ * @param[in] SecurityDescriptor
+ * A security descriptor.
+ * 
+ * @param[in] SubjectSecurityContext
+ * If specified, the function will check if security auditing is currently
+ * being done with this context.
+ * 
+ * @return
+ * Returns TRUE if auditing is being currently done, FALSE otherwise.
  */
 BOOLEAN
 NTAPI
@@ -737,8 +1122,21 @@ SeAuditingFileEventsWithContext(IN BOOLEAN AccessGranted,
     return FALSE;
 }
 
-/*
+/**
  * @unimplemented
+ * @brief
+ * Determines whether auditing against hard links events is being
+ * done or not.
+ * 
+ * @param[in] AccessGranted
+ * If set to TRUE, the access attempt is deemed as successful
+ * otherwise set it to FALSE.
+ * 
+ * @param[in] SecurityDescriptor
+ * A security descriptor.
+ * 
+ * @return
+ * Returns TRUE if auditing is being currently done, FALSE otherwise.
  */
 BOOLEAN
 NTAPI
@@ -749,8 +1147,25 @@ SeAuditingHardLinkEvents(IN BOOLEAN AccessGranted,
     return FALSE;
 }
 
-/*
+/**
  * @unimplemented
+ * @brief
+ * Determines whether auditing against hard links events with subject context
+ * is being done or not.
+ * 
+ * @param[in] AccessGranted
+ * If set to TRUE, the access attempt is deemed as successful
+ * otherwise set it to FALSE.
+ * 
+ * @param[in] SecurityDescriptor
+ * A security descriptor.
+ * 
+ * @param[in] SubjectSecurityContext
+ * If specified, the function will check if security auditing is currently
+ * being done with this context.
+ * 
+ * @return
+ * Returns TRUE if auditing is being currently done, FALSE otherwise.
  */
 BOOLEAN
 NTAPI
@@ -762,8 +1177,25 @@ SeAuditingHardLinkEventsWithContext(IN BOOLEAN AccessGranted,
     return FALSE;
 }
 
-/*
+/**
  * @unimplemented
+ * @brief
+ * Determines whether auditing against files or global events with
+ * subject context is being done or not.
+ * 
+ * @param[in] AccessGranted
+ * If set to TRUE, the access attempt is deemed as successful
+ * otherwise set it to FALSE.
+ * 
+ * @param[in] SecurityDescriptor
+ * A security descriptor.
+ * 
+ * @param[in] SubjectSecurityContext
+ * If specified, the function will check if security auditing is currently
+ * being done with this context.
+ * 
+ * @return
+ * Returns TRUE if auditing is being currently done, FALSE otherwise.
  */
 BOOLEAN
 NTAPI
@@ -775,8 +1207,23 @@ SeAuditingFileOrGlobalEvents(IN BOOLEAN AccessGranted,
     return FALSE;
 }
 
-/*
+/**
  * @unimplemented
+ * @brief
+ * Closes an alarm audit of an object.
+ * 
+ * @param[in] Object
+ * An arbitrary pointer data that points to the object.
+ * 
+ * @param[in] Handle
+ * A handle of the said object.
+ * 
+ * @param[in] PerformAction
+ * Set this to TRUE to perform any auxiliary action, otherwise
+ * set to FALSE.
+ * 
+ * @return
+ * Nothing.
  */
 VOID
 NTAPI
@@ -787,8 +1234,19 @@ SeCloseObjectAuditAlarm(IN PVOID Object,
     UNIMPLEMENTED;
 }
 
-/*
+/**
  * @unimplemented
+ * @brief
+ * Deletes an alarm audit of an object.
+ * 
+ * @param[in] Object
+ * An arbitrary pointer data that points to the object.
+ * 
+ * @param[in] Handle
+ * A handle of the said object.
+ * 
+ * @return
+ * Nothing.
  */
 VOID NTAPI
 SeDeleteObjectAuditAlarm(IN PVOID Object,
@@ -797,8 +1255,46 @@ SeDeleteObjectAuditAlarm(IN PVOID Object,
     UNIMPLEMENTED;
 }
 
-/*
+/**
  * @unimplemented
+ * @brief
+ * Creates an audit with alarm notification of an object
+ * that is being opened.
+ * 
+ * @param[in] ObjectTypeName
+ * A Unicode string that points to the object type name.
+ * 
+ * @param[in] Object
+ * If specified, the function will use this parameter to
+ * directly open the object.
+ * 
+ * @param[in] AbsoluteObjectName
+ * If specified, the function will use this parameter to
+ * directly open the object through the absolute name
+ * of the object.
+ * 
+ * @param[in] SecurityDescriptor
+ * A security descriptor.
+ * 
+ * @param[in] AccessState
+ * An access state right mask when opening the object.
+ * 
+ * @param[in] ObjectCreated
+ * Set this to TRUE if the object has been fully created,
+ * FALSE otherwise.
+ * 
+ * @param[in] AccessGranted
+ * Set this to TRUE if access was deemed as granted.
+ * 
+ * @param[in] AccessMode
+ * Processor level access mode.
+ * 
+ * @param[out] GenerateOnClose
+ * A boolean flag returned to the caller once audit generation procedure
+ * finishes.
+ * 
+ * @return
+ * Nothing.
  */
 VOID
 NTAPI
@@ -822,8 +1318,46 @@ SeOpenObjectAuditAlarm(IN PUNICODE_STRING ObjectTypeName,
     return;
 }
 
-/*
+/**
  * @unimplemented
+ * @brief
+ * Creates an audit with alarm notification of an object
+ * that is being opened for deletion.
+ * 
+ * @param[in] ObjectTypeName
+ * A Unicode string that points to the object type name.
+ * 
+ * @param[in] Object
+ * If specified, the function will use this parameter to
+ * directly open the object.
+ * 
+ * @param[in] AbsoluteObjectName
+ * If specified, the function will use this parameter to
+ * directly open the object through the absolute name
+ * of the object.
+ * 
+ * @param[in] SecurityDescriptor
+ * A security descriptor.
+ * 
+ * @param[in] AccessState
+ * An access state right mask when opening the object.
+ * 
+ * @param[in] ObjectCreated
+ * Set this to TRUE if the object has been fully created,
+ * FALSE otherwise.
+ * 
+ * @param[in] AccessGranted
+ * Set this to TRUE if access was deemed as granted.
+ * 
+ * @param[in] AccessMode
+ * Processor level access mode.
+ * 
+ * @param[out] GenerateOnClose
+ * A boolean flag returned to the caller once audit generation procedure
+ * finishes.
+ * 
+ * @return
+ * Nothing.
  */
 VOID NTAPI
 SeOpenObjectForDeleteAuditAlarm(IN PUNICODE_STRING ObjectTypeName,
@@ -839,8 +1373,34 @@ SeOpenObjectForDeleteAuditAlarm(IN PUNICODE_STRING ObjectTypeName,
     UNIMPLEMENTED;
 }
 
-/*
+/**
  * @unimplemented
+ * @brief
+ * Raises an audit with alarm notification message
+ * when an object tries to acquire this privilege.
+ * 
+ * @param[in] Handle
+ * A handle to an object.
+ * 
+ * @param[in] SubjectContext
+ * The security subject context for auditing.
+ * 
+ * @param[in] DesiredAccess
+ * The desired right access masks requested by the caller.
+ * 
+ * @param[in] Privileges
+ * An array set of privileges for auditing.
+ * 
+ * @param[out] AccessGranted
+ * When the auditing procedure routine ends, it returns TRUE to the
+ * caller if the object has the required privileges for access,
+ * FALSE otherwise.
+ * 
+ * @param[in] CurrentMode
+ * Processor level access mode.
+ * 
+ * @return
+ * Nothing.
  */
 VOID
 NTAPI
@@ -856,6 +1416,28 @@ SePrivilegeObjectAuditAlarm(IN HANDLE Handle,
 
 /* SYSTEM CALLS ***************************************************************/
 
+/**
+ * @brief
+ * Raises an alarm audit message when an object is about
+ * to be closed.
+ * 
+ * @param[in] SubsystemName
+ * A Unicode string that points to the name of the subsystem.
+ * 
+ * @param[in] HandleId
+ * A handle of an ID used for identification instance for auditing.
+ * 
+ * @param[in] GenerateOnClose
+ * A boolean value previously created by the "open" equivalent of this
+ * function. If the caller explicitly sets this to FALSE, the function
+ * assumes that the object is not opened.
+ * 
+ * @return
+ * Returns STATUS_SUCCESS if all the operations have completed successfully.
+ * STATUS_PRIVILEGE_NOT_HELD is returned if the security subject context
+ * does not have the audit privilege to actually begin auditing procedures
+ * in the first place.
+ */
 NTSTATUS
 NTAPI
 NtCloseObjectAuditAlarm(
@@ -954,7 +1536,26 @@ Cleanup:
     return Status;
 }
 
-
+/**
+ * @unimplemented
+ * @brief
+ * Raises an alarm audit message when an object is about
+ * to be deleted.
+ * 
+ * @param[in] SubsystemName
+ * A Unicode string that points to the name of the subsystem.
+ * 
+ * @param[in] HandleId
+ * A handle of an ID used for identification instance for auditing.
+ * 
+ * @param[in] GenerateOnClose
+ * A boolean value previously created by the "open" equivalent of this
+ * function. If the caller explicitly sets this to FALSE, the function
+ * assumes that the object is not opened.
+ * 
+ * @return
+ * To be added...
+ */
 NTSTATUS NTAPI
 NtDeleteObjectAuditAlarm(IN PUNICODE_STRING SubsystemName,
                          IN PVOID HandleId,
@@ -964,6 +1565,55 @@ NtDeleteObjectAuditAlarm(IN PUNICODE_STRING SubsystemName,
     return STATUS_NOT_IMPLEMENTED;
 }
 
+/**
+ * @unimplemented
+ * @brief
+ * Raises an alarm audit message when an object is about
+ * to be opened.
+ * 
+ * @param[in] SubjectContext
+ * A security subject context for auditing.
+ * 
+ * @param[in] SubsystemName
+ * A Unicode string that points to a name of the subsystem.
+ * 
+ * @param[in] HandleId
+ * A handle to an ID used for identification instance for auditing.
+ * 
+ * @param[in] ObjectTypeName
+ * A Unicode string that points to an object type name.
+ * 
+ * @param[in] ObjectName
+ * The name of the object.
+ * 
+ * @param[in] SecurityDescriptor
+ * A security descriptor.
+ * 
+ * @param[in] ClientToken
+ * A client access token, representing the client we want to impersonate.
+ * 
+ * @param[in] DesiredAccess
+ * The desired access rights masks requested by the caller.
+ * 
+ * @param[in] GrantedAccess
+ * The granted access mask rights.
+ * 
+ * @param[in] Privileges
+ * If specified, the function will use this set of privileges to audit.
+ * 
+ * @param[in] ObjectCreation
+ * Set this to TRUE if the object has just been created.
+ * 
+ * @param[in] AccessGranted
+ * Set this to TRUE if the access attempt was deemed as granted.
+ * 
+ * @param[out] GenerateOnClose
+ * A boolean flag returned to the caller once audit generation procedure
+ * finishes.
+ * 
+ * @return
+ * Nothing.
+ */
 VOID
 NTAPI
 SepOpenObjectAuditAlarm(
@@ -997,6 +1647,59 @@ SepOpenObjectAuditAlarm(
     *GenerateOnClose = FALSE;
 }
 
+/**
+ * @brief
+ * Raises an alarm audit message when an object is about
+ * to be opened.
+ * 
+ * @param[in] SubsystemName
+ * A Unicode string that points to a name of the subsystem.
+ * 
+ * @param[in] HandleId
+ * A handle to an ID used for identification instance for auditing.
+ * 
+ * @param[in] ObjectTypeName
+ * A Unicode string that points to an object type name.
+ * 
+ * @param[in] ObjectName
+ * The name of the object.
+ * 
+ * @param[in] SecurityDescriptor
+ * A security descriptor.
+ * 
+ * @param[in] ClientTokenHandle
+ * A handle to a client access token.
+ * 
+ * @param[in] DesiredAccess
+ * The desired access rights masks requested by the caller.
+ * 
+ * @param[in] GrantedAccess
+ * The granted access mask rights.
+ * 
+ * @param[in] PrivilegeSet
+ * If specified, the function will use this set of privileges to audit.
+ * 
+ * @param[in] ObjectCreation
+ * Set this to TRUE if the object has just been created.
+ * 
+ * @param[in] AccessGranted
+ * Set this to TRUE if the access attempt was deemed as granted.
+ * 
+ * @param[out] GenerateOnClose
+ * A boolean flag returned to the caller once audit generation procedure
+ * finishes.
+ * 
+ * @return
+ * Returns STATUS_SUCCESS if all the operations have been completed successfully.
+ * STATUS_PRIVILEGE_NOT_HELD is returned if the given subject context does not
+ * hold the required audit privilege to actually begin auditing in the first place.
+ * STATUS_BAD_IMPERSONATION_LEVEL is returned if the security impersonation level
+ * of the client token is not on par with the impersonation level that alllows
+ * impersonation. STATUS_INVALID_PARAMETER is returned if the caller has
+ * submitted a bogus set of privileges as such array set exceeds the maximum
+ * count of privileges that the kernel can accept. A failure NTSTATUS code
+ * is returned otherwise.
+ */
 __kernel_entry
 NTSTATUS
 NTAPI
@@ -1227,7 +1930,37 @@ Cleanup:
     return Status;
 }
 
-
+/**
+ * @brief
+ * Raises an alarm audit message when a caller attempts to request
+ * a privileged service call.
+ * 
+ * @param[in] SubsystemName
+ * A Unicode string that points to a name of the subsystem.
+ * 
+ * @param[in] ServiceName
+ * A Unicode string that points to a name of the privileged service.
+ * 
+ * @param[in] ClientTokenHandle
+ * A handle to a client access token.
+ * 
+ * @param[in] Privileges
+ * An array set of privileges.
+ * 
+ * @param[in] AccessGranted
+ * Set this to TRUE if the access attempt was deemed as granted.
+ * 
+ * @return
+ * Returns STATUS_SUCCESS if all the operations have been completed successfully.
+ * STATUS_PRIVILEGE_NOT_HELD is returned if the given subject context does not
+ * hold the required audit privilege to actually begin auditing in the first place.
+ * STATUS_BAD_IMPERSONATION_LEVEL is returned if the security impersonation level
+ * of the client token is not on par with the impersonation level that alllows
+ * impersonation. STATUS_INVALID_PARAMETER is returned if the caller has
+ * submitted a bogus set of privileges as such array set exceeds the maximum
+ * count of privileges that the kernel can accept. A failure NTSTATUS code
+ * is returned otherwise.
+ */
 __kernel_entry
 NTSTATUS
 NTAPI
@@ -1387,7 +2120,32 @@ Cleanup:
     return Status;
 }
 
-
+/**
+ * @brief
+ * Raises an alarm audit message when a caller attempts to access a
+ * privileged object.
+ * 
+ * @param[in] SubsystemName
+ * A Unicode string that points to a name of the subsystem.
+ * 
+ * @param[in] HandleId
+ * A handle to an ID that is used as identification instance for auditing.
+ * 
+ * @param[in] ClientToken
+ * A handle to a client access token.
+ * 
+ * @param[in] DesiredAccess
+ * A handle to a client access token.
+ * 
+ * @param[in] Privileges
+ * An array set of privileges.
+ * 
+ * @param[in] AccessGranted
+ * Set this to TRUE if the access attempt was deemed as granted.
+ * 
+ * @return
+ * To be added...
+ */
 NTSTATUS NTAPI
 NtPrivilegeObjectAuditAlarm(IN PUNICODE_STRING SubsystemName,
                             IN PVOID HandleId,
@@ -1400,7 +2158,49 @@ NtPrivilegeObjectAuditAlarm(IN PUNICODE_STRING SubsystemName,
     return STATUS_NOT_IMPLEMENTED;
 }
 
-
+/**
+ * @brief
+ * Raises an alarm audit message when a caller attempts to access an
+ * object and determine if the access can be made.
+ * 
+ * @param[in] SubsystemName
+ * A Unicode string that points to a name of the subsystem.
+ * 
+ * @param[in] HandleId
+ * A handle to an ID that is used as identification instance for auditing.
+ * 
+ * @param[in] ObjectTypeName
+ * The name of the object type.
+ * 
+ * @param[in] ObjectName
+ * The object name.
+ * 
+ * @param[in] SecurityDescriptor
+ * A security descriptor.
+ * 
+ * @param[in] DesiredAccess
+ * The desired access rights masks requested by the caller.
+ * 
+ * @param[in] GenericMapping
+ * The generic mapping of access mask rights.
+ * 
+ * @param[in] ObjectCreation
+ * Set this to TRUE if the object has just been created.
+ * 
+ * @param[out] GrantedAccess
+ * Returns the granted access rights.
+ * 
+ * @param[out] AccessStatus
+ * Returns a NTSTATUS status code indicating whether access check
+ * can be granted or not.
+ * 
+ * @param[out] GenerateOnClose
+ * Returns TRUE if the function has generated a list of granted access rights and
+ * status codes on termination, FALSE otherwise.
+ * 
+ * @return
+ * See SepAccessCheckAndAuditAlarm.
+ */
 _Must_inspect_result_
 __kernel_entry
 NTSTATUS
@@ -1438,6 +2238,66 @@ NtAccessCheckAndAuditAlarm(
                                        FALSE);
 }
 
+/**
+ * @brief
+ * Raises an alarm audit message when a caller attempts to access an
+ * object and determine if the access can be made by type.
+ * 
+ * @param[in] SubsystemName
+ * A Unicode string that points to a name of the subsystem.
+ * 
+ * @param[in] HandleId
+ * A handle to an ID that is used as identification instance for auditing.
+ * 
+ * @param[in] ObjectTypeName
+ * The name of the object type.
+ * 
+ * @param[in] ObjectName
+ * The object name.
+ * 
+ * @param[in] SecurityDescriptor
+ * A security descriptor.
+ * 
+ * @param[in] PrincipalSelfSid
+ * A principal self user SID.
+ * 
+ * @param[in] DesiredAccess
+ * The desired access rights masks requested by the caller.
+ * 
+ * @param[in] AuditType
+ * Type of audit to start, influencing how the audit should
+ * be done.
+ * 
+ * @param[in] Flags
+ * Flag bitmask, used to check if auditing can be done
+ * without privileges.
+ * 
+ * @param[in] ObjectTypeList
+ * A list of object types.
+ * 
+ * @param[in] ObjectTypeLength
+ * The length size of the list.
+ * 
+ * @param[in] GenericMapping
+ * The generic mapping of access mask rights.
+ * 
+ * @param[in] ObjectCreation
+ * Set this to TRUE if the object has just been created.
+ * 
+ * @param[out] GrantedAccess
+ * Returns the granted access rights.
+ * 
+ * @param[out] AccessStatus
+ * Returns a NTSTATUS status code indicating whether access check
+ * can be granted or not.
+ * 
+ * @param[out] GenerateOnClose
+ * Returns TRUE if the function has generated a list of granted access rights and
+ * status codes on termination, FALSE otherwise.
+ * 
+ * @return
+ * See SepAccessCheckAndAuditAlarm.
+ */
 _Must_inspect_result_
 __kernel_entry
 NTSTATUS
@@ -1480,6 +2340,66 @@ NtAccessCheckByTypeAndAuditAlarm(
                                        FALSE);
 }
 
+/**
+ * @brief
+ * Raises an alarm audit message when a caller attempts to access an
+ * object and determine if the access can be made by given type result.
+ * 
+ * @param[in] SubsystemName
+ * A Unicode string that points to a name of the subsystem.
+ * 
+ * @param[in] HandleId
+ * A handle to an ID that is used as identification instance for auditing.
+ * 
+ * @param[in] ObjectTypeName
+ * The name of the object type.
+ * 
+ * @param[in] ObjectName
+ * The object name.
+ * 
+ * @param[in] SecurityDescriptor
+ * A security descriptor.
+ * 
+ * @param[in] PrincipalSelfSid
+ * A principal self user SID.
+ * 
+ * @param[in] DesiredAccess
+ * The desired access rights masks requested by the caller.
+ * 
+ * @param[in] AuditType
+ * Type of audit to start, influencing how the audit should
+ * be done.
+ * 
+ * @param[in] Flags
+ * Flag bitmask, used to check if auditing can be done
+ * without privileges.
+ * 
+ * @param[in] ObjectTypeList
+ * A list of object types.
+ * 
+ * @param[in] ObjectTypeLength
+ * The length size of the list.
+ * 
+ * @param[in] GenericMapping
+ * The generic mapping of access mask rights.
+ * 
+ * @param[in] ObjectCreation
+ * Set this to TRUE if the object has just been created.
+ * 
+ * @param[out] GrantedAccessList
+ * Returns the granted access rights.
+ * 
+ * @param[out] AccessStatusList
+ * Returns a NTSTATUS status code indicating whether access check
+ * can be granted or not.
+ * 
+ * @param[out] GenerateOnClose
+ * Returns TRUE if the function has generated a list of granted access rights and
+ * status codes on termination, FALSE otherwise.
+ * 
+ * @return
+ * See SepAccessCheckAndAuditAlarm.
+ */
 _Must_inspect_result_
 __kernel_entry
 NTSTATUS
@@ -1522,6 +2442,70 @@ NtAccessCheckByTypeResultListAndAuditAlarm(
                                        TRUE);
 }
 
+/**
+ * @brief
+ * Raises an alarm audit message when a caller attempts to access an
+ * object and determine if the access can be made by given type result
+ * and a token handle.
+ * 
+ * @param[in] SubsystemName
+ * A Unicode string that points to a name of the subsystem.
+ * 
+ * @param[in] HandleId
+ * A handle to an ID that is used as identification instance for auditing.
+ * 
+ * @param[in] ClientToken
+ * A handle to a client access token.
+ * 
+ * @param[in] ObjectTypeName
+ * The name of the object type.
+ * 
+ * @param[in] ObjectName
+ * The object name.
+ * 
+ * @param[in] SecurityDescriptor
+ * A security descriptor.
+ * 
+ * @param[in] PrincipalSelfSid
+ * A principal self user SID.
+ * 
+ * @param[in] DesiredAccess
+ * The desired access rights masks requested by the caller.
+ * 
+ * @param[in] AuditType
+ * Type of audit to start, influencing how the audit should
+ * be done.
+ * 
+ * @param[in] Flags
+ * Flag bitmask, used to check if auditing can be done
+ * without privileges.
+ * 
+ * @param[in] ObjectTypeList
+ * A list of object types.
+ * 
+ * @param[in] ObjectTypeLength
+ * The length size of the list.
+ * 
+ * @param[in] GenericMapping
+ * The generic mapping of access mask rights.
+ * 
+ * @param[in] ObjectCreation
+ * Set this to TRUE if the object has just been created.
+ * 
+ * @param[out] GrantedAccessList
+ * Returns the granted access rights.
+ * 
+ * @param[out] AccessStatusList
+ * Returns a NTSTATUS status code indicating whether access check
+ * can be granted or not.
+ * 
+ * @param[out] GenerateOnClose
+ * Returns TRUE if the function has generated a list of granted access rights and
+ * status codes on termination, FALSE otherwise.
+ * 
+ * @return
+ * See SepAccessCheckAndAuditAlarm.
+ */
 _Must_inspect_result_
 __kernel_entry
 NTSTATUS
