@@ -123,8 +123,6 @@
 #include <arch/pc/machpc.h>
 #include <arch/amd64/amd64.h>
 #include <internal/amd64/intrin_i.h>
-#elif defined(_M_PPC)
-#include <arch/powerpc/hardware.h>
 #elif defined(_M_ARM)
 #include <arch/arm/hardware.h>
 #elif defined(_M_MIPS)
