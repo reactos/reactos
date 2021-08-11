@@ -1303,12 +1303,15 @@ QSI_DEF(SystemHandleInformation)
 
     DPRINT("NtQuerySystemInformation - SystemHandleInformation\n");
 
-    /* Set initial required buffer size */
-    *ReqSize = FIELD_OFFSET(SYSTEM_HANDLE_INFORMATION, Handles);
+    /* Set minimal input buffer size */
+    *ReqSize = sizeof(SYSTEM_HANDLE_INFORMATION);
 
     /* Check user's buffer size */
     if (Size < *ReqSize)
     {
+#if (NTDDI_VERSION < NTDDI_VISTA)
+        *ReqSize = 0;
+#endif
         return STATUS_INFO_LENGTH_MISMATCH;
     }
 
@@ -1324,6 +1327,9 @@ QSI_DEF(SystemHandleInformation)
         DPRINT1("Failed to lock the user buffer: 0x%lx\n", Status);
         return Status;
     }
+
+    /* Set initial required buffer size */
+    *ReqSize = FIELD_OFFSET(SYSTEM_HANDLE_INFORMATION, Handles);
 
     /* Reset of count of handles */
     HandleInformation->NumberOfHandles = 0;
@@ -2503,12 +2509,15 @@ QSI_DEF(SystemExtendedHandleInformation)
 
     DPRINT("NtQuerySystemInformation - SystemExtendedHandleInformation\n");
 
-    /* Set initial required buffer size */
-    *ReqSize = FIELD_OFFSET(SYSTEM_HANDLE_INFORMATION_EX, Handle);
+    /* Set minimal input buffer size */
+    *ReqSize = sizeof(SYSTEM_HANDLE_INFORMATION_EX);
 
     /* Check user's buffer size */
     if (Size < *ReqSize)
     {
+#if (NTDDI_VERSION < NTDDI_VISTA)
+        *ReqSize = 0;
+#endif
         return STATUS_INFO_LENGTH_MISMATCH;
     }
 
@@ -2524,6 +2533,9 @@ QSI_DEF(SystemExtendedHandleInformation)
         DPRINT1("Failed to lock the user buffer: 0x%lx\n", Status);
         return Status;
     }
+
+    /* Set initial required buffer size */
+    *ReqSize = FIELD_OFFSET(SYSTEM_HANDLE_INFORMATION_EX, Handle);
 
     /* Reset of count of handles */
     HandleInformation->Count = 0;
