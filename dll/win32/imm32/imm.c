@@ -4163,28 +4163,56 @@ Quit:
 BOOL WINAPI ImmUnregisterWordW(
   HKL hKL, LPCWSTR lpszReading, DWORD dwStyle, LPCWSTR lpszUnregister)
 {
-    ImmHkl *immHkl = IMM_GetImmHkl(hKL);
-    TRACE("(%p, %s, %d, %s):\n", hKL, debugstr_w(lpszReading), dwStyle,
-            debugstr_w(lpszUnregister));
-    if (immHkl->hIME && immHkl->pImeUnregisterWord)
-    {
-        if (is_kbd_ime_unicode(immHkl))
-            return immHkl->pImeUnregisterWord(lpszReading,dwStyle,lpszUnregister);
-        else
-        {
-            LPSTR lpszaReading = strdupWtoA(lpszReading);
-            LPSTR lpszaUnregister = strdupWtoA(lpszUnregister);
-            BOOL rc;
+    BOOL ret = FALSE;
+    PIMEDPI pImeDpi;
+    LPSTR pszReadingA = NULL, pszUnregisterA = NULL;
+    INT cchW, cchA;
 
-            rc = immHkl->pImeUnregisterWord((LPCWSTR)lpszaReading,dwStyle,
-                                            (LPCWSTR)lpszaUnregister);
-            HeapFree(GetProcessHeap(),0,lpszaReading);
-            HeapFree(GetProcessHeap(),0,lpszaUnregister);
-            return rc;
-        }
-    }
-    else
+    TRACE("(%p, %s, 0x%lX, %s)\n", hKL, debugstr_w(lpszReading), dwStyle,
+          debugstr_w(lpszUnregister));
+
+    pImeDpi = ImmLockOrLoadImeDpi(hKL);
+    if (!pImeDpi)
         return FALSE;
+
+    if (pImeDpi->ImeInfo.fdwProperty & IME_PROP_UNICODE)
+    {
+        ret = pImeDpi->ImeUnregisterWord(lpszReading, dwStyle, lpszUnregister);
+        ImmUnlockImeDpi(pImeDpi);
+        return ret;
+    }
+
+    if (lpszReading)
+    {
+        cchW = lstrlenW(lpszReading);
+        cchA = (cchW + 1) * sizeof(WCHAR);
+        pszReadingA = Imm32HeapAlloc(0, cchA);
+        if (!pszReadingA)
+            goto Quit;
+        cchA = WideCharToMultiByte(CP_ACP, 0, lpszReading, cchW, pszReadingA, cchA, NULL, NULL);
+        pszReadingA[cchA] = 0;
+    }
+
+    if (lpszUnregister)
+    {
+        cchW = lstrlenW(lpszUnregister);
+        cchA = (cchW + 1) * sizeof(WCHAR);
+        pszUnregisterA = Imm32HeapAlloc(0, cchA);
+        if (!pszUnregisterA)
+            goto Quit;
+        cchA = WideCharToMultiByte(CP_ACP, 0, lpszUnregister, cchW, pszUnregisterA, cchA, NULL, NULL);
+        pszUnregisterA[cchA] = 0;
+    }
+
+    ret = pImeDpi->ImeUnregisterWord(pszReadingA, dwStyle, pszUnregisterA);
+
+Quit:
+    if (pszReadingA)
+        HeapFree(g_hImm32Heap, 0, pszReadingA);
+    if (pszUnregisterA)
+        HeapFree(g_hImm32Heap, 0, pszUnregisterA);
+    ImmUnlockImeDpi(pImeDpi);
+    return ret;
 }
 
 /***********************************************************************
