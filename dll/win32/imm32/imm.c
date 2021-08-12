@@ -3394,7 +3394,7 @@ BOOL WINAPI ImmRegisterWordA(
         pszRegisterW[cch] = 0;
     }
 
-    ret = ImmRegisterWordW(hKL, pszReadingW, dwStyle, pszRegisterW);
+    ret = pImeDpi->ImeRegisterWord(pszReadingW, dwStyle, pszRegisterW);
 
 Quit:
     if (pszReadingW)
@@ -3411,28 +3411,56 @@ Quit:
 BOOL WINAPI ImmRegisterWordW(
   HKL hKL, LPCWSTR lpszReading, DWORD dwStyle, LPCWSTR lpszRegister)
 {
-    ImmHkl *immHkl = IMM_GetImmHkl(hKL);
-    TRACE("(%p, %s, %d, %s):\n", hKL, debugstr_w(lpszReading), dwStyle,
-                    debugstr_w(lpszRegister));
-    if (immHkl->hIME && immHkl->pImeRegisterWord)
-    {
-        if (is_kbd_ime_unicode(immHkl))
-            return immHkl->pImeRegisterWord(lpszReading,dwStyle,lpszRegister);
-        else
-        {
-            LPSTR lpszaReading = strdupWtoA(lpszReading);
-            LPSTR lpszaRegister = strdupWtoA(lpszRegister);
-            BOOL rc;
+    BOOL ret = FALSE;
+    PIMEDPI pImeDpi;
+    LPSTR pszReadingA = NULL, pszRegisterA = NULL;
+    INT cchW, cchA;
 
-            rc = immHkl->pImeRegisterWord((LPCWSTR)lpszaReading,dwStyle,
-                                          (LPCWSTR)lpszaRegister);
-            HeapFree(GetProcessHeap(),0,lpszaReading);
-            HeapFree(GetProcessHeap(),0,lpszaRegister);
-            return rc;
-        }
-    }
-    else
+    TRACE("(%p, %s, 0x%lX, %s)\n", hKL, debugstr_w(lpszReading), dwStyle,
+          debugstr_w(lpszRegister));
+
+    pImeDpi = ImmLockOrLoadImeDpi(hKL);
+    if (!pImeDpi)
         return FALSE;
+
+    if (pImeDpi->ImeInfo.fdwProperty & IME_PROP_UNICODE)
+    {
+        ret = pImeDpi->ImeRegisterWord(lpszReading, dwStyle, lpszRegister);
+        ImmUnlockImeDpi(pImeDpi);
+        return ret;
+    }
+
+    if (lpszReading)
+    {
+        cchW = lstrlenW(lpszReading);
+        cchA = (cchW + 1) * sizeof(WCHAR);
+        pszReadingA = Imm32HeapAlloc(0, cchA);
+        if (!pszReadingA)
+            goto Quit;
+        cchA = WideCharToMultiByte(CP_ACP, 0, lpszReading, cchW, pszReadingA, cchA, NULL, NULL);
+        pszReadingA[cchA] = 0;
+    }
+
+    if (lpszRegister)
+    {
+        cchW = lstrlenW(lpszRegister);
+        cchA = (cchW + 1) * sizeof(WCHAR);
+        pszRegisterA = Imm32HeapAlloc(0, cchA);
+        if (!pszRegisterA)
+            goto Quit;
+        cchA = WideCharToMultiByte(CP_ACP, 0, lpszRegister, cchW, pszRegisterA, cchA, NULL, NULL);
+        pszRegisterA[cchA] = 0;
+    }
+
+    ret = pImeDpi->ImeRegisterWord(pszReadingA, dwStyle, pszRegisterA);
+
+Quit:
+    if (pszReadingA)
+        HeapFree(g_hImm32Heap, 0, pszReadingA);
+    if (pszRegisterA)
+        HeapFree(g_hImm32Heap, 0, pszRegisterA);
+    ImmUnlockImeDpi(pImeDpi);
+    return ret;
 }
 
 /***********************************************************************
