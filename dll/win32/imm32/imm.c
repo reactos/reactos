@@ -3177,8 +3177,8 @@ UINT WINAPI ImmGetVirtualKey(HWND hWnd)
 HKL WINAPI ImmInstallIMEA(
   LPCSTR lpszIMEFileName, LPCSTR lpszLayoutText)
 {
-    LPWSTR pszFileNameW, pszLayoutTextW;
     HKL hKL = NULL;
+    LPWSTR pszFileNameW = NULL, pszLayoutTextW = NULL;
 
     TRACE("(%s, %s)\n", debugstr_a(lpszIMEFileName), debugstr_a(lpszLayoutText));
 
