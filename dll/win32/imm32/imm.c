@@ -446,6 +446,9 @@ static PIMEDPI APIENTRY Ime32LoadImeDpi(HKL hKL, BOOL bLock)
     }
 }
 
+/***********************************************************************
+ *		ImmLoadIME (IMM32.@)
+ */
 BOOL WINAPI ImmLoadIME(HKL hKL)
 {
     PW32CLIENTINFO pInfo;
@@ -488,6 +491,9 @@ PIMEDPI APIENTRY ImmLockOrLoadImeDpi(HKL hKL)
     return pImeDpi;
 }
 
+/***********************************************************************
+ *		ImmLoadLayout (IMM32.@)
+ */
 HKL WINAPI ImmLoadLayout(HKL hKL, PIMEINFOEX pImeInfoEx)
 {
     DWORD cbData;
@@ -1586,6 +1592,9 @@ static BOOL APIENTRY Imm32ProcessHotKey(HWND hWnd, HIMC hIMC, HKL hKL, DWORD dwH
     return ret;
 }
 
+/***********************************************************************
+ *		ImmLockClientImc (IMM32.@)
+ */
 PCLIENTIMC WINAPI ImmLockClientImc(HIMC hImc)
 {
     PCLIENTIMC pClientImc;
@@ -1623,6 +1632,9 @@ PCLIENTIMC WINAPI ImmLockClientImc(HIMC hImc)
     return pClientImc;
 }
 
+/***********************************************************************
+ *		ImmUnlockClientImc (IMM32.@)
+ */
 VOID WINAPI ImmUnlockClientImc(PCLIENTIMC pClientImc)
 {
     LONG cLocks;
@@ -2424,7 +2436,6 @@ BOOL WINAPI ImmGetCompositionWindow(HIMC hIMC, LPCOMPOSITIONFORM lpCompForm)
 
 /***********************************************************************
  *		ImmGetContext (IMM32.@)
- *
  */
 HIMC WINAPI ImmGetContext(HWND hWnd)
 {
@@ -4604,7 +4615,6 @@ BOOL WINAPI ImmEnumInputContext(DWORD dwThreadId, IMCENUMPROC lpfn, LPARAM lPara
 /***********************************************************************
  *              ImmGetHotKey(IMM32.@)
  */
-
 BOOL WINAPI
 ImmGetHotKey(IN DWORD dwHotKey,
              OUT LPUINT lpuModifiers,
@@ -4671,15 +4681,14 @@ BOOL WINAPI CtfImmIsTextFrameServiceDisabled(VOID)
     return FALSE;
 }
 
-/***********************************************************************
- *              ImmGetImeInfoEx (IMM32.@)
- */
-
 static BOOL APIENTRY Imm32GetImeInfoEx(PIMEINFOEX pImeInfoEx, IMEINFOEXCLASS SearchType)
 {
     return NtUserGetImeInfoEx(pImeInfoEx, SearchType);
 }
 
+/***********************************************************************
+ *              ImmGetImeInfoEx (IMM32.@)
+ */
 BOOL WINAPI
 ImmGetImeInfoEx(PIMEINFOEX pImeInfoEx,
                 IMEINFOEXCLASS SearchType,
