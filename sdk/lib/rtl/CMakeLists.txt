@@ -5,6 +5,11 @@ add_definitions(
     -D_NTSYSTEM_
     -D_NTDLLBUILD_)
 
+if (GCC)
+    # Enable this again. CORE-17637
+    add_compile_options(-Wunused-result)
+endif()
+
 list(APPEND SOURCE
     access.c
     acl.c
@@ -89,6 +94,7 @@ elseif(ARCH STREQUAL "amd64")
     list(APPEND SOURCE
         bitmap64.c
         byteswap.c
+        amd64/except.c
         amd64/unwind.c
         amd64/stubs.c
         mem.c)

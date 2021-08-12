@@ -1388,7 +1388,6 @@ FltDeviceIoControlFile(
     _In_ ULONG OutputBufferLength,
     _Out_opt_ PULONG LengthReturned);
 
-_Must_inspect_result_
 _When_(FlagOn(CallbackData->Iopb->IrpFlags, IRP_PAGING_IO), _IRQL_requires_max_(APC_LEVEL))
 _When_(!FlagOn(CallbackData->Iopb->IrpFlags, IRP_PAGING_IO), _IRQL_requires_max_(PASSIVE_LEVEL))
 VOID

@@ -322,7 +322,7 @@ WspiapiLegacyGetAddrInfo(
       if (wPort == 0) return (iSocketType ? EAI_SERVICE : EAI_NONAME);
       if (iSocketType == 0) {
         iSocketType = (wTcpPort) ? SOCK_STREAM : SOCK_DGRAM;
-        bClone = (wTcpPort && wUdpPort); 
+        bClone = (wTcpPort && wUdpPort);
       }
     }
   }

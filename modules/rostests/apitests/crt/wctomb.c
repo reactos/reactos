@@ -14,8 +14,6 @@
 #include <errno.h>
 #include <locale.h>
 
-unsigned int cdecl ___lc_codepage_func(void);
-
 START_TEST(wctomb)
 {
     int Length;

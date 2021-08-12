@@ -3840,7 +3840,10 @@ static NTSTATUS find_window_class(ACTIVATION_CONTEXT* actctx, const UNICODE_STRI
     return STATUS_SUCCESS;
 }
 
-static NTSTATUS build_tlib_section(ACTIVATION_CONTEXT* actctx, struct guidsection_header **section)
+_Must_inspect_result_
+static
+NTSTATUS
+build_tlib_section(ACTIVATION_CONTEXT* actctx, struct guidsection_header **section)
 {
     unsigned int i, j, k, total_len = 0, tlib_count = 0, names_len = 0;
     struct guidsection_header *header;
@@ -3905,6 +3908,7 @@ static NTSTATUS build_tlib_section(ACTIVATION_CONTEXT* actctx, struct guidsectio
                     ULONG module_len, help_len;
                     UNICODE_STRING str;
                     WCHAR *ptrW;
+                    NTSTATUS Status;
 
                     if (*entity->u.typelib.helpdir)
                         help_len = strlenW(entity->u.typelib.helpdir)*sizeof(WCHAR);
@@ -3915,7 +3919,12 @@ static NTSTATUS build_tlib_section(ACTIVATION_CONTEXT* actctx, struct guidsectio
 
                     /* setup new index entry */
                     RtlInitUnicodeString(&str, entity->u.typelib.tlbid);
-                    RtlGUIDFromString(&str, &index->guid);
+                    Status = RtlGUIDFromString(&str, &index->guid);
+                    if (!NT_SUCCESS(Status))
+                    {
+                        RtlFreeHeap(RtlGetProcessHeap(), 0, header);
+                        return Status;
+                    }
                     index->data_offset = data_offset;
                     index->data_len = sizeof(*data) + aligned_string_len(help_len);
                     index->rosterindex = i + 1;
@@ -4071,11 +4080,15 @@ static void get_comserver_datalen(const struct entity_array *entities, const str
     }
 }
 
-static void add_comserver_record(const struct guidsection_header *section, const struct entity_array *entities,
+_Must_inspect_result_
+static
+NTSTATUS
+add_comserver_record(const struct guidsection_header *section, const struct entity_array *entities,
     const struct dll_redirect *dll, struct guid_index **index, ULONG *data_offset, ULONG *module_offset,
     ULONG *seed, ULONG rosterindex)
 {
     unsigned int i;
+    NTSTATUS Status;
 
     for (i = 0; i < entities->num; i++)
     {
@@ -4098,7 +4111,9 @@ static void add_comserver_record(const struct guidsection_header *section, const
 
             /* setup new index entry */
             RtlInitUnicodeString(&str, entity->u.comclass.clsid);
-            RtlGUIDFromString(&str, &(*index)->guid);
+            Status = RtlGUIDFromString(&str, &(*index)->guid);
+            if (!NT_SUCCESS(Status))
+                return Status;
 
             (*index)->data_offset = *data_offset;
             (*index)->data_len = sizeof(*data); /* additional length added later */
@@ -4126,7 +4141,9 @@ static void add_comserver_record(const struct guidsection_header *section, const
             if (entity->u.comclass.tlbid)
             {
                 RtlInitUnicodeString(&str, entity->u.comclass.tlbid);
-                RtlGUIDFromString(&str, &data->tlbid);
+                Status = RtlGUIDFromString(&str, &data->tlbid);
+                if (!NT_SUCCESS(Status))
+                    return Status;
             }
             else
                 memset(&data->tlbid, 0, sizeof(data->tlbid));
@@ -4245,15 +4262,21 @@ static void add_comserver_record(const struct guidsection_header *section, const
             (*index) += 1;
         }
     }
+
+    return STATUS_SUCCESS;
 }
 
-static NTSTATUS build_comserver_section(ACTIVATION_CONTEXT* actctx, struct guidsection_header **section)
+_Must_inspect_result_
+static
+NTSTATUS
+build_comserver_section(ACTIVATION_CONTEXT* actctx, struct guidsection_header **section)
 {
     unsigned int i, j, total_len = 0, class_count = 0, names_len = 0;
     struct guidsection_header *header;
     ULONG module_offset, data_offset;
     struct guid_index *index;
     ULONG seed;
+    NTSTATUS Status;
 
     /* compute section length */
     for (i = 0; i < actctx->num_assemblies; i++)
@@ -4286,11 +4309,21 @@ static NTSTATUS build_comserver_section(ACTIVATION_CONTEXT* actctx, struct guids
     for (i = 0; i < actctx->num_assemblies; i++)
     {
         struct assembly *assembly = &actctx->assemblies[i];
-        add_comserver_record(header, &assembly->entities, NULL, &index, &data_offset, &module_offset, &seed, i+1);
+        Status = add_comserver_record(header, &assembly->entities, NULL, &index, &data_offset, &module_offset, &seed, i+1);
+        if (!NT_SUCCESS(Status))
+        {
+            RtlFreeHeap(RtlGetProcessHeap(), 0, header);
+            return Status;
+        }
         for (j = 0; j < assembly->num_dlls; j++)
         {
             struct dll_redirect *dll = &assembly->dlls[j];
-            add_comserver_record(header, &dll->entities, dll, &index, &data_offset, &module_offset, &seed, i+1);
+            Status = add_comserver_record(header, &dll->entities, dll, &index, &data_offset, &module_offset, &seed, i+1);
+            if (!NT_SUCCESS(Status))
+            {
+                RtlFreeHeap(RtlGetProcessHeap(), 0, header);
+                return Status;
+            }
         }
     }
 
@@ -4304,7 +4337,10 @@ static inline struct comclassredirect_data *get_comclass_data(ACTIVATION_CONTEXT
     return (struct comclassredirect_data*)((BYTE*)actctx->comserver_section + index->data_offset);
 }
 
-static NTSTATUS find_comserver_redirection(ACTIVATION_CONTEXT* actctx, const GUID *guid, ACTCTX_SECTION_KEYED_DATA* data)
+_Must_inspect_result_
+static
+NTSTATUS
+find_comserver_redirection(ACTIVATION_CONTEXT* actctx, const GUID *guid, ACTCTX_SECTION_KEYED_DATA* data)
 {
     struct comclassredirect_data *comclass;
     struct guid_index *index = NULL;
@@ -4361,7 +4397,10 @@ static void get_ifaceps_datalen(const struct entity_array *entities, unsigned in
     }
 }
 
-static void add_ifaceps_record(struct guidsection_header *section, struct entity_array *entities,
+_Must_inspect_result_
+static
+NTSTATUS
+add_ifaceps_record(struct guidsection_header *section, struct entity_array *entities,
     struct guid_index **index, ULONG *data_offset, ULONG rosterindex)
 {
     unsigned int i;
@@ -4374,6 +4413,7 @@ static void add_ifaceps_record(struct guidsection_header *section, struct entity
             struct ifacepsredirect_data *data = (struct ifacepsredirect_data*)((BYTE*)section + *data_offset);
             UNICODE_STRING str;
             ULONG name_len;
+            NTSTATUS Status;
 
             if (entity->u.ifaceps.name)
                 name_len = strlenW(entity->u.ifaceps.name)*sizeof(WCHAR);
@@ -4382,7 +4422,9 @@ static void add_ifaceps_record(struct guidsection_header *section, struct entity
 
             /* setup index */
             RtlInitUnicodeString(&str, entity->u.ifaceps.iid);
-            RtlGUIDFromString(&str, &(*index)->guid);
+            Status = RtlGUIDFromString(&str, &(*index)->guid);
+            if (!NT_SUCCESS(Status))
+                return Status;
             (*index)->data_offset = *data_offset;
             (*index)->data_len = sizeof(*data) + name_len ? aligned_string_len(name_len + sizeof(WCHAR)) : 0;
             (*index)->rosterindex = rosterindex;
@@ -4396,7 +4438,9 @@ static void add_ifaceps_record(struct guidsection_header *section, struct entity
             if (entity->u.ifaceps.ps32)
             {
                 RtlInitUnicodeString(&str, entity->u.ifaceps.ps32);
-                RtlGUIDFromString(&str, &data->iid);
+                Status = RtlGUIDFromString(&str, &data->iid);
+                if (!NT_SUCCESS(Status))
+                    return Status;
             }
             else
                 data->iid = (*index)->guid;
@@ -4406,7 +4450,9 @@ static void add_ifaceps_record(struct guidsection_header *section, struct entity
             if (entity->u.ifaceps.tlib)
             {
                 RtlInitUnicodeString(&str, entity->u.ifaceps.tlib);
-                RtlGUIDFromString(&str, &data->tlbid);
+                Status = RtlGUIDFromString(&str, &data->tlbid);
+                if (!NT_SUCCESS(Status))
+                    return Status;
             }
             else
                 memset(&data->tlbid, 0, sizeof(data->tlbid));
@@ -4414,7 +4460,9 @@ static void add_ifaceps_record(struct guidsection_header *section, struct entity
             if (entity->u.ifaceps.base)
             {
                 RtlInitUnicodeString(&str, entity->u.ifaceps.base);
-                RtlGUIDFromString(&str, &data->base);
+                Status = RtlGUIDFromString(&str, &data->base);
+                if (!NT_SUCCESS(Status))
+                    return Status;
             }
             else
                 memset(&data->base, 0, sizeof(data->base));
@@ -4437,9 +4485,14 @@ static void add_ifaceps_record(struct guidsection_header *section, struct entity
                 *data_offset += aligned_string_len(data->name_len + sizeof(WCHAR));
         }
     }
+
+    return STATUS_SUCCESS;
 }
 
-static NTSTATUS build_ifaceps_section(ACTIVATION_CONTEXT* actctx, struct guidsection_header **section)
+_Must_inspect_result_
+static
+NTSTATUS
+build_ifaceps_section(ACTIVATION_CONTEXT* actctx, struct guidsection_header **section)
 {
     unsigned int i, j, total_len = 0, count = 0;
     struct guidsection_header *header;
@@ -4475,12 +4528,24 @@ static NTSTATUS build_ifaceps_section(ACTIVATION_CONTEXT* actctx, struct guidsec
     for (i = 0; i < actctx->num_assemblies; i++)
     {
         struct assembly *assembly = &actctx->assemblies[i];
+        NTSTATUS Status;
 
-        add_ifaceps_record(header, &assembly->entities, &index, &data_offset, i + 1);
+        Status = add_ifaceps_record(header, &assembly->entities, &index, &data_offset, i + 1);
+        if (!NT_SUCCESS(Status))
+        {
+            RtlFreeHeap(RtlGetProcessHeap(), 0, header);
+            return Status;
+        }
+
         for (j = 0; j < assembly->num_dlls; j++)
         {
             struct dll_redirect *dll = &assembly->dlls[j];
-            add_ifaceps_record(header, &dll->entities, &index, &data_offset, i + 1);
+            Status = add_ifaceps_record(header, &dll->entities, &index, &data_offset, i + 1);
+            if (!NT_SUCCESS(Status))
+            {
+                RtlFreeHeap(RtlGetProcessHeap(), 0, header);
+                return Status;
+            }
         }
     }
 
@@ -4494,7 +4559,10 @@ static inline struct ifacepsredirect_data *get_ifaceps_data(ACTIVATION_CONTEXT *
     return (struct ifacepsredirect_data*)((BYTE*)actctx->ifaceps_section + index->data_offset);
 }
 
-static NTSTATUS find_cominterface_redirection(ACTIVATION_CONTEXT* actctx, const GUID *guid, ACTCTX_SECTION_KEYED_DATA* data)
+_Must_inspect_result_
+static
+NTSTATUS
+find_cominterface_redirection(ACTIVATION_CONTEXT* actctx, const GUID *guid, ACTCTX_SECTION_KEYED_DATA* data)
 {
     struct ifacepsredirect_data *iface;
     struct guid_index *index = NULL;
@@ -4532,7 +4600,10 @@ static NTSTATUS find_cominterface_redirection(ACTIVATION_CONTEXT* actctx, const 
     return STATUS_SUCCESS;
 }
 
-static NTSTATUS build_clr_surrogate_section(ACTIVATION_CONTEXT* actctx, struct guidsection_header **section)
+_Must_inspect_result_
+static
+NTSTATUS
+build_clr_surrogate_section(ACTIVATION_CONTEXT* actctx, struct guidsection_header **section)
 {
     unsigned int i, j, total_len = 0, count = 0;
     struct guidsection_header *header;
@@ -4586,6 +4657,7 @@ static NTSTATUS build_clr_surrogate_section(ACTIVATION_CONTEXT* actctx, struct g
                 ULONG version_len, name_len;
                 UNICODE_STRING str;
                 WCHAR *ptrW;
+                NTSTATUS Status;
 
                 if (entity->u.clrsurrogate.version)
                     version_len = strlenW(entity->u.clrsurrogate.version)*sizeof(WCHAR);
@@ -4595,7 +4667,12 @@ static NTSTATUS build_clr_surrogate_section(ACTIVATION_CONTEXT* actctx, struct g
 
                 /* setup new index entry */
                 RtlInitUnicodeString(&str, entity->u.clrsurrogate.clsid);
-                RtlGUIDFromString(&str, &index->guid);
+                Status = RtlGUIDFromString(&str, &index->guid);
+                if (!NT_SUCCESS(Status))
+                {
+                    RtlFreeHeap(RtlGetProcessHeap(), 0, header);
+                    return Status;
+                }
 
                 index->data_offset = data_offset;
                 index->data_len = sizeof(*data) + aligned_string_len(name_len + sizeof(WCHAR) + (version_len ? version_len + sizeof(WCHAR) : 0));
@@ -4642,7 +4719,10 @@ static inline struct clrsurrogate_data *get_surrogate_data(ACTIVATION_CONTEXT *a
     return (struct clrsurrogate_data*)((BYTE*)actctx->clrsurrogate_section + index->data_offset);
 }
 
-static NTSTATUS find_clr_surrogate(ACTIVATION_CONTEXT* actctx, const GUID *guid, ACTCTX_SECTION_KEYED_DATA* data)
+_Must_inspect_result_
+static
+NTSTATUS
+find_clr_surrogate(ACTIVATION_CONTEXT* actctx, const GUID *guid, ACTCTX_SECTION_KEYED_DATA* data)
 {
     struct clrsurrogate_data *surrogate;
     struct guid_index *index = NULL;
@@ -4752,10 +4832,14 @@ static void write_progid_record(struct strsection_header *section, const WCHAR *
     (*index) += 1;
 }
 
-static void add_progid_record(ACTIVATION_CONTEXT* actctx, struct strsection_header *section, const struct entity_array *entities,
+_Must_inspect_result_
+static
+NTSTATUS
+add_progid_record(ACTIVATION_CONTEXT* actctx, struct strsection_header *section, const struct entity_array *entities,
     struct string_index **index, ULONG *data_offset, ULONG *global_offset, ULONG rosterindex)
 {
     unsigned int i, j;
+    NTSTATUS Status;
 
     for (i = 0; i < entities->num; i++)
     {
@@ -4769,7 +4853,9 @@ static void add_progid_record(ACTIVATION_CONTEXT* actctx, struct strsection_head
             GUID clsid;
 
             RtlInitUnicodeString(&str, entity->u.comclass.clsid);
-            RtlGUIDFromString(&str, &clsid);
+            Status = RtlGUIDFromString(&str, &clsid);
+            if (!NT_SUCCESS(Status))
+                return Status;
 
             guid_index = find_guid_index(actctx->comserver_section, &clsid);
             comclass = get_comclass_data(actctx, guid_index);
@@ -4783,14 +4869,19 @@ static void add_progid_record(ACTIVATION_CONTEXT* actctx, struct strsection_head
                      index, data_offset, global_offset, rosterindex);
         }
     }
+    return Status;
 }
 
-static NTSTATUS build_progid_section(ACTIVATION_CONTEXT* actctx, struct strsection_header **section)
+_Must_inspect_result_
+static
+NTSTATUS
+build_progid_section(ACTIVATION_CONTEXT* actctx, struct strsection_header **section)
 {
     unsigned int i, j, total_len = 0, count = 0;
     struct strsection_header *header;
     ULONG data_offset, global_offset;
     struct string_index *index;
+    NTSTATUS Status;
 
     /* compute section length */
     for (i = 0; i < actctx->num_assemblies; i++)
@@ -4826,11 +4917,22 @@ static NTSTATUS build_progid_section(ACTIVATION_CONTEXT* actctx, struct strsecti
     {
         struct assembly *assembly = &actctx->assemblies[i];
 
-        add_progid_record(actctx, header, &assembly->entities, &index, &data_offset, &global_offset, i + 1);
+        Status = add_progid_record(actctx, header, &assembly->entities, &index, &data_offset, &global_offset, i + 1);
+        if (!NT_SUCCESS(Status))
+        {
+            RtlFreeHeap(RtlGetProcessHeap(), 0, header);
+            return Status;
+        }
+
         for (j = 0; j < assembly->num_dlls; j++)
         {
             struct dll_redirect *dll = &assembly->dlls[j];
-            add_progid_record(actctx, header, &dll->entities, &index, &data_offset, &global_offset, i + 1);
+            Status = add_progid_record(actctx, header, &dll->entities, &index, &data_offset, &global_offset, i + 1);
+            if (!NT_SUCCESS(Status))
+            {
+                RtlFreeHeap(RtlGetProcessHeap(), 0, header);
+                return Status;
+            }
         }
     }
 

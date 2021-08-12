@@ -102,10 +102,16 @@ BuildInteractiveProfileBuffer(IN PLSA_CLIENT_REQUEST ClientRequest,
     PVOID ClientBaseAddress = NULL;
     LPWSTR Ptr;
     ULONG BufferLength;
+    USHORT ComputerNameLength;
     NTSTATUS Status = STATUS_SUCCESS;
 
     *ProfileBuffer = NULL;
     *ProfileBufferLength = 0;
+
+    if (UIntPtrToUShort(wcslen(ComputerName), &ComputerNameLength) != S_OK)
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
 
     BufferLength = sizeof(MSV1_0_INTERACTIVE_PROFILE) +
                    UserInfo->All.FullName.Length + sizeof(WCHAR) +
@@ -113,7 +119,7 @@ BuildInteractiveProfileBuffer(IN PLSA_CLIENT_REQUEST ClientRequest,
                    UserInfo->All.HomeDirectoryDrive.Length + sizeof(WCHAR) +
                    UserInfo->All.ScriptPath.Length + sizeof(WCHAR) +
                    UserInfo->All.ProfilePath.Length + sizeof(WCHAR) +
-                   ((wcslen(ComputerName) + 3) * sizeof(WCHAR));
+                   ((ComputerNameLength + 3) * sizeof(WCHAR));
 
     LocalBuffer = DispatchTable.AllocateLsaHeap(BufferLength);
     if (LocalBuffer == NULL)
@@ -204,7 +210,7 @@ BuildInteractiveProfileBuffer(IN PLSA_CLIENT_REQUEST ClientRequest,
 
     Ptr = (LPWSTR)((ULONG_PTR)Ptr + LocalBuffer->HomeDirectoryDrive.MaximumLength);
 
-    LocalBuffer->LogonServer.Length = (wcslen(ComputerName) + 2) * sizeof(WCHAR);
+    LocalBuffer->LogonServer.Length = (ComputerNameLength + 2) * sizeof(WCHAR);
     LocalBuffer->LogonServer.MaximumLength = LocalBuffer->LogonServer.Length + sizeof(WCHAR);
     LocalBuffer->LogonServer.Buffer = (LPWSTR)((ULONG_PTR)ClientBaseAddress + (ULONG_PTR)Ptr - (ULONG_PTR)LocalBuffer);
     wcscpy(Ptr, L"\\");

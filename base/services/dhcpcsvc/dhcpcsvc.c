@@ -17,8 +17,10 @@ static WCHAR ServiceName[] = L"DHCP";
 SERVICE_STATUS_HANDLE ServiceStatusHandle = 0;
 SERVICE_STATUS ServiceStatus;
 HANDLE hStopEvent = NULL;
+HANDLE hAdapterStateChangedEvent = NULL;
 
 static HANDLE PipeHandle = INVALID_HANDLE_VALUE;
+extern SOCKET DhcpSocket;
 
 DWORD APIENTRY
 DhcpCApiInitialize(LPDWORD Version)
@@ -391,6 +393,10 @@ ServiceControlHandler(DWORD dwControl,
 VOID WINAPI
 ServiceMain(DWORD argc, LPWSTR* argv)
 {
+    HANDLE hPipeThread = INVALID_HANDLE_VALUE;
+    HANDLE hDiscoveryThread = INVALID_HANDLE_VALUE;
+    DWORD ret;
+
     ServiceStatusHandle = RegisterServiceCtrlHandlerExW(ServiceName,
                                                         ServiceControlHandler,
                                                         NULL);
@@ -403,9 +409,17 @@ ServiceMain(DWORD argc, LPWSTR* argv)
     UpdateServiceStatus(SERVICE_START_PENDING);
 
     /* Create the stop event */
-    hStopEvent = CreateEventW(NULL, FALSE, FALSE, NULL);
+    hStopEvent = CreateEventW(NULL, TRUE, FALSE, NULL);
     if (hStopEvent == NULL)
     {
+        UpdateServiceStatus(SERVICE_STOPPED);
+        return;
+    }
+
+    hAdapterStateChangedEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
+    if (hAdapterStateChangedEvent == NULL)
+    {
+        CloseHandle(hStopEvent);
         UpdateServiceStatus(SERVICE_STOPPED);
         return;
     }
@@ -414,7 +428,33 @@ ServiceMain(DWORD argc, LPWSTR* argv)
 
     if (!init_client())
     {
-        DPRINT1("DHCPCSVC: init_client() failed!\n");
+        DbgPrint("DHCPCSVC: init_client() failed!\n");
+        CloseHandle(hAdapterStateChangedEvent);
+        CloseHandle(hStopEvent);
+        UpdateServiceStatus(SERVICE_STOPPED);
+        return;
+    }
+
+    UpdateServiceStatus(SERVICE_START_PENDING);
+
+    hPipeThread = PipeInit(hStopEvent);
+    if (hPipeThread == INVALID_HANDLE_VALUE)
+    {
+        DbgPrint("DHCPCSVC: PipeInit() failed!\n");
+        stop_client();
+        CloseHandle(hAdapterStateChangedEvent);
+        CloseHandle(hStopEvent);
+        UpdateServiceStatus(SERVICE_STOPPED);
+        return;
+    }
+
+    hDiscoveryThread = StartAdapterDiscovery(hStopEvent);
+    if (hDiscoveryThread == INVALID_HANDLE_VALUE)
+    {
+        DbgPrint("DHCPCSVC: StartAdapterDiscovery() failed!\n");
+        stop_client();
+        CloseHandle(hAdapterStateChangedEvent);
+        CloseHandle(hStopEvent);
         UpdateServiceStatus(SERVICE_STOPPED);
         return;
     }
@@ -429,7 +469,36 @@ ServiceMain(DWORD argc, LPWSTR* argv)
     dispatch(hStopEvent);
 
     DH_DbgPrint(MID_TRACE,("DHCPCSVC: DHCP service is shutting down\n"));
+
     stop_client();
+
+    DPRINT("Wait for pipe thread to close! %p\n", hPipeThread);
+    if (hPipeThread != INVALID_HANDLE_VALUE)
+    {
+        DPRINT("Waiting for pipe thread\n");
+        ret = WaitForSingleObject(hPipeThread, 5000);
+        DPRINT("Done %lx\n", ret);
+    }
+
+    DPRINT("Wait for discovery thread to close! %p\n", hDiscoveryThread);
+    if (hDiscoveryThread != INVALID_HANDLE_VALUE)
+    {
+        DPRINT("Waiting for discovery thread\n");
+        ret = WaitForSingleObject(hDiscoveryThread, 5000);
+        DPRINT("Done %lx\n", ret);
+    }
+
+    DPRINT("Closing events!\n");
+    CloseHandle(hAdapterStateChangedEvent);
+    CloseHandle(hStopEvent);
+
+    if (DhcpSocket != INVALID_SOCKET)
+        closesocket(DhcpSocket);
+
+    CloseHandle(hDiscoveryThread);
+    CloseHandle(hPipeThread);
+
+    DPRINT("Done!\n");
 
     UpdateServiceStatus(SERVICE_STOPPED);
 }

@@ -75,7 +75,7 @@ struct _Locale_numeric *_Locale_numeric_create(const char *nm, struct _Locale_na
   *__err_code = _STLP_LOC_UNKNOWN_NAME;
   return (struct _Locale_numeric*)newlocale(LC_NUMERIC_MASK, nm, NULL);
 }
-  
+
 struct _Locale_time *_Locale_time_create(const char *nm, struct _Locale_name_hint* hint,
                                          int *__err_code) {
   *__err_code = _STLP_LOC_UNKNOWN_NAME;
@@ -296,14 +296,14 @@ _Locale_mask_t _WLocale_ctype( struct _Locale_ctype *__loc, wint_t wc, _Locale_m
   _Locale_mask_t ret = 0;
   if ((__mask & _Locale_ALPHA) != 0 && iswalpha_l(wc, (locale_t)__loc))
     ret |= _Locale_ALPHA;
-  
+
   if ((__mask & _Locale_CNTRL) != 0 && iswcntrl_l(wc, (locale_t)__loc))
     ret |= _Locale_CNTRL;
 
   if ((__mask & _Locale_DIGIT) != 0 && iswdigit_l(wc, (locale_t)__loc))
     ret |= _Locale_DIGIT;
 
-  if ((__mask & _Locale_PRINT) != 0 && iswprint_l(wc, (locale_t)__loc)) 
+  if ((__mask & _Locale_PRINT) != 0 && iswprint_l(wc, (locale_t)__loc))
     ret |= _Locale_PRINT;
 
   if ((__mask & _Locale_PUNCT) != 0 && iswpunct_l(wc, (locale_t)__loc))

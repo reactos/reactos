@@ -121,9 +121,9 @@ CAPTION "Fertigstellung der Installation"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Fertigstellung des ReactOS Installationsassistenten", IDC_FINISHTITLE, 115, 9, 195, 37
-    LTEXT "Die Installation von ReactOS wurde erfolgreich fertiggestellt.\n\nWenn Sie auf Beenden klicken, wird der Computer neu gestartet.", IDC_STATIC, 115, 58, 195, 100
+    LTEXT "Die Installation von ReactOS wurde erfolgreich fertiggestellt.\n\nWenn Sie auf Fertig klicken, wird der Computer neu gestartet.", IDC_STATIC, 115, 58, 195, 100
     CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 115, 138, 188, 12
-    LTEXT "Entfernen Sie die CD und klicken Sie auf Beenden, um den Computer neuzustarten.", IDC_STATIC, 115, 160, 195, 31
+    LTEXT "Entfernen Sie die CD und klicken Sie auf Fertig, um den Computer neuzustarten.", IDC_STATIC, 115, 160, 195, 31
 END
 
 IDD_GPL DIALOGEX 0, 0, 333, 230

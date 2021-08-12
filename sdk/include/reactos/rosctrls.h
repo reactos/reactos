@@ -8,17 +8,17 @@ public:
     HWND Create(HWND hWndParent, _U_RECT rect, LPCTSTR szWindowName = NULL, DWORD dwStyle = 0,
                     DWORD dwExStyle = 0, _U_MENUorID MenuOrID = 0U, LPVOID lpCreateParam = NULL)
     {
-        m_hWnd = ::CreateWindowEx(dwExStyle, 
-                                  WC_LISTVIEW, 
-                                  szWindowName, 
+        m_hWnd = ::CreateWindowEx(dwExStyle,
+                                  WC_LISTVIEW,
+                                  szWindowName,
                                   dwStyle,
-                                  rect.m_lpRect->left, 
-                                  rect.m_lpRect->top, 
-                                  rect.m_lpRect->right - rect.m_lpRect->left, 
+                                  rect.m_lpRect->left,
+                                  rect.m_lpRect->top,
+                                  rect.m_lpRect->right - rect.m_lpRect->left,
                                   rect.m_lpRect->bottom - rect.m_lpRect->top,
-                                  hWndParent, 
-                                  MenuOrID.m_hMenu, 
-                                  _AtlBaseModule.GetModuleInstance(), 
+                                  hWndParent,
+                                  MenuOrID.m_hMenu,
+                                  _AtlBaseModule.GetModuleInstance(),
                                   lpCreateParam);
 
         return m_hWnd;
@@ -82,7 +82,7 @@ public:
         }
         return InsertColumn(iCol, &column);
     }
-    
+
     int GetColumnWidth(int iCol)
     {
         return (int)SendMessage(LVM_GETCOLUMNWIDTH, iCol);
@@ -102,7 +102,7 @@ public:
     {
         return (BOOL)SendMessage(LVM_DELETEITEM, i, 0);
     }
-        
+
     BOOL GetItem(LV_ITEM* pitem)
     {
         return (BOOL)SendMessage(LVM_GETITEM, 0, reinterpret_cast<LPARAM>(pitem));
@@ -122,7 +122,7 @@ public:
     {
         return SendMessage(LVM_GETITEMCOUNT);
     }
-    
+
     BOOL DeleteAllItems()
     {
         return (BOOL)SendMessage(LVM_DELETEALLITEMS);
@@ -178,7 +178,7 @@ public:
     void SetItemState(int i, UINT state, UINT mask)
     {
         LV_ITEM item;
-        item.stateMask = mask; 
+        item.stateMask = mask;
         item.state = state;
         SendMessage(LVM_SETITEMSTATE, i, reinterpret_cast<LPARAM>(&item));
     }

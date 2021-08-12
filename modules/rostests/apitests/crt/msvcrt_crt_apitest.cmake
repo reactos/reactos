@@ -1261,6 +1261,7 @@ list(APPEND SOURCE_MSVCRT
 #    wprintf_s.c
 #    wscanf.c
 #    wscanf_s.c
+    crtdata.c
     static_construct.cpp
     static_init.c
 )
@@ -1370,6 +1371,11 @@ elseif(ARCH STREQUAL "amd64")
     #    powf.c
     #    sinf.c
     #    sqrtf.c
+    )
+elseif(ARCH STREQUAL "arm")
+    list(APPEND SOURCE_MSVCRT
+        __rt_div.c
+        __fto64.c
     )
 endif()
 

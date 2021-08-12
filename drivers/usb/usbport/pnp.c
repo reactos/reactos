@@ -490,7 +490,6 @@ NTAPI
 USBPORT_StopDevice(IN PDEVICE_OBJECT FdoDevice)
 {
     DPRINT1("USBPORT_StopDevice: UNIMPLEMENTED. FIXME\n");
-    DbgBreakPoint();
     return STATUS_SUCCESS;
 }
 
@@ -901,6 +900,7 @@ USBPORT_StartDevice(IN PDEVICE_OBJECT FdoDevice,
     return Status;
 
 ExitWithError:
+    USBPORT_StopWorkerThread(FdoDevice);
     USBPORT_StopDevice(FdoDevice);
 
     DPRINT1("USBPORT_StartDevice: ExitWithError Status - %lx\n", Status);
@@ -1011,7 +1011,7 @@ USBPORT_ParseResources(IN PDEVICE_OBJECT FdoDevice,
             UsbPortResources->ShareVector = InterruptDescriptor->ShareDisposition ==
                                             CmResourceShareShared;
 
-            UsbPortResources->InterruptMode = InterruptDescriptor->Flags == 
+            UsbPortResources->InterruptMode = InterruptDescriptor->Flags ==
                                               CM_RESOURCE_INTERRUPT_LATCHED;
         }
     }

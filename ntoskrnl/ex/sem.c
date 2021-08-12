@@ -239,7 +239,8 @@ NtQuerySemaphore(IN HANDLE SemaphoreHandle,
                                          SemaphoreInformationLength,
                                          ReturnLength,
                                          NULL,
-                                         PreviousMode);
+                                         PreviousMode,
+                                         TRUE);
     if (!NT_SUCCESS(Status))
     {
         /* Invalid buffers */

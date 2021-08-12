@@ -20,6 +20,9 @@ HKLM,"SYSTEM\CurrentControlSet\Control\CriticalDeviceDatabase\*PNP0A08","ClassGU
 HKLM,"SYSTEM\CurrentControlSet\Control\CriticalDeviceDatabase\PCI#CC_0604","Service",0x00000000,"pci"
 HKLM,"SYSTEM\CurrentControlSet\Control\CriticalDeviceDatabase\PCI#CC_0604","ClassGUID",0x00000000,"{4D36E97D-E325-11CE-BFC1-08002BE10318}"
 
+HKLM,"SYSTEM\CurrentControlSet\Control\CriticalDeviceDatabase\PCI#CC_0601","Service",0x00000000,"isapnp"
+HKLM,"SYSTEM\CurrentControlSet\Control\CriticalDeviceDatabase\PCI#CC_0601","ClassGUID",0x00000000,"{4D36E97D-E325-11CE-BFC1-08002BE10318}"
+
 HKLM,"SYSTEM\CurrentControlSet\Control\CriticalDeviceDatabase\*PNP0C08","Service",0x00000000,"acpi"
 HKLM,"SYSTEM\CurrentControlSet\Control\CriticalDeviceDatabase\*PNP0C08","ClassGUID",0x00000000,"{4D36E97D-E325-11CE-BFC1-08002BE10318}"
 
@@ -130,7 +133,7 @@ HKLM,"SYSTEM\CurrentControlSet\Control\SafeBoot\Minimal\Netlogon","",0x00000000,
 HKLM,"SYSTEM\CurrentControlSet\Control\SafeBoot\Minimal\PCI Configuration","",0x00000000,"Driver Group"
 HKLM,"SYSTEM\CurrentControlSet\Control\SafeBoot\Minimal\PlugPlay","",0x00000000,"Service"
 HKLM,"SYSTEM\CurrentControlSet\Control\SafeBoot\Minimal\PNP Filter","",0x00000000,"Driver Group"
-HKLM,"SYSTEM\CurrentControlSet\Control\SafeBoot\Minimal\Primary disk","",0x00000000,"Driver Group"
+HKLM,"SYSTEM\CurrentControlSet\Control\SafeBoot\Minimal\Primary Disk","",0x00000000,"Driver Group"
 HKLM,"SYSTEM\CurrentControlSet\Control\SafeBoot\Minimal\RpcSs","",0x00000000,"Service"
 HKLM,"SYSTEM\CurrentControlSet\Control\SafeBoot\Minimal\SCSI Class","",0x00000000,"Driver Group"
 HKLM,"SYSTEM\CurrentControlSet\Control\SafeBoot\Minimal\sermouse.sys","",0x00000000,"Driver"
@@ -195,7 +198,7 @@ HKLM,"SYSTEM\CurrentControlSet\Control\SafeBoot\Network\PCI Configuration","",0x
 HKLM,"SYSTEM\CurrentControlSet\Control\SafeBoot\Network\PlugPlay","",0x00000000,"Service"
 HKLM,"SYSTEM\CurrentControlSet\Control\SafeBoot\Network\PNP Filter","",0x00000000,"Driver Group"
 HKLM,"SYSTEM\CurrentControlSet\Control\SafeBoot\Network\PNP_TDI","",0x00000000,"Driver Group"
-HKLM,"SYSTEM\CurrentControlSet\Control\SafeBoot\Network\Primary disk","",0x00000000,"Driver Group"
+HKLM,"SYSTEM\CurrentControlSet\Control\SafeBoot\Network\Primary Disk","",0x00000000,"Driver Group"
 HKLM,"SYSTEM\CurrentControlSet\Control\SafeBoot\Network\rdpcdd.sys","",0x00000000,"Driver"
 HKLM,"SYSTEM\CurrentControlSet\Control\SafeBoot\Network\rdpdd.sys","",0x00000000,"Driver"
 HKLM,"SYSTEM\CurrentControlSet\Control\SafeBoot\Network\rdpwd.sys","",0x00000000,"Driver"
@@ -2193,22 +2196,6 @@ HKLM,"SYSTEM\CurrentControlSet\Services\btrfs","Group",0x00000000,"Boot File Sys
 HKLM,"SYSTEM\CurrentControlSet\Services\btrfs","ImagePath",0x00020000,"system32\drivers\btrfs.sys"
 HKLM,"SYSTEM\CurrentControlSet\Services\btrfs","Start",0x00010001,0x00000003
 HKLM,"SYSTEM\CurrentControlSet\Services\btrfs","Type",0x00010001,0x00000002
-
-; REISER Filesystem driver
-HKLM,"SYSTEM\CurrentControlSet\Services\Reiserfs","ErrorControl",0x00010001,0x00000000
-HKLM,"SYSTEM\CurrentControlSet\Services\Reiserfs","Group",0x00000000,"Boot File System"
-HKLM,"SYSTEM\CurrentControlSet\Services\Reiserfs","ImagePath",0x00020000,"system32\drivers\reiserfs.sys"
-HKLM,"SYSTEM\CurrentControlSet\Services\Reiserfs","Start",0x00010001,0x00000003
-HKLM,"SYSTEM\CurrentControlSet\Services\Reiserfs","Type",0x00010001,0x00000002
-HKLM,"SYSTEM\CurrentControlSet\Services\Reiserfs\Parameters","CodePage",0x00000000,"default"
-HKLM,"SYSTEM\CurrentControlSet\Services\Reiserfs\Parameters","WritingSupport",0x00010001,0x00000001
-
-; FFS Filesystem driver
-HKLM,"SYSTEM\CurrentControlSet\Services\ffs","ErrorControl",0x00010001,0x00000000
-HKLM,"SYSTEM\CurrentControlSet\Services\ffs","Group",0x00000000,"Boot File System"
-HKLM,"SYSTEM\CurrentControlSet\Services\ffs","ImagePath",0x00020000,"system32\drivers\ffs.sys"
-HKLM,"SYSTEM\CurrentControlSet\Services\ffs","Start",0x00010001,0x00000003
-HKLM,"SYSTEM\CurrentControlSet\Services\ffs","Type",0x00010001,0x00000002
 
 ; NFS Filesystem driver
 HKLM,"SYSTEM\CurrentControlSet\Services\nfs41_driver","ErrorControl",0x00010001,0x00000000

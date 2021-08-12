@@ -1,10 +1,9 @@
 /*
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS Change CodePage Command
- * FILE:            base/applications/cmdutils/chcp/chcp.c
- * PURPOSE:         Displays or changes the active console input and output codepages.
- * PROGRAMMERS:     Eric Kohl
- *                  Hermes Belusca-Maito (hermes.belusca@sfr.fr)
+ * PROJECT:     ReactOS Change CodePage Command
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     Displays or changes the active console input and output code pages.
+ * COPYRIGHT:   Copyright 1999 Eric Kohl
+ *              Copyright 2017-2021 Hermes Belusca-Maito
  */
 /*
  * CHCP.C - chcp internal command.
@@ -64,27 +63,36 @@ int wmain(int argc, WCHAR* argv[])
         return 1;
     }
 
+/**
+ ** IMPORTANT NOTE: This code must be kept synchronized with MODE.COM!SetConsoleCPState()
+ **/
+
     /*
-     * Save the original console codepage to be restored in case
-     * SetConsoleCP() or SetConsoleOutputCP() fails.
+     * Save the original console code page to be restored
+     * in case SetConsoleCP() or SetConsoleOutputCP() fails.
      */
     uOldCodePage = GetConsoleCP();
 
     /*
-     * Try changing the console input codepage. If it works then also change
-     * the console output codepage, and refresh our local codepage cache.
+     * Try changing the console input and output code pages.
+     * If it succeeds, refresh the local code page information.
      */
     if (SetConsoleCP(uNewCodePage))
     {
         if (SetConsoleOutputCP(uNewCodePage))
         {
+            /* Success, reset the current thread UI language
+             * and update the streams cached code page. */
+            ConSetThreadUILanguage(0);
+            ConStdStreamsSetCacheCodePage(uNewCodePage, uNewCodePage);
+
             /* Display the active code page number */
             ConResPrintf(StdOut, STRING_CHCP_ERROR1, GetConsoleOutputCP());
             return 0;
         }
         else
         {
-            /* Failure, restore the original console codepage */
+            /* Failure, restore the original console code page */
             SetConsoleCP(uOldCodePage);
         }
     }

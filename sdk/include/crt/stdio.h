@@ -66,14 +66,6 @@ extern "C" {
 #define _SYS_OPEN 20
 #define TMP_MAX 32767
 
-#ifndef NULL
-#ifdef __cplusplus
-#define NULL 0
-#else
-#define NULL ((void *)0)
-#endif
-#endif
-
 #ifndef _OFF_T_DEFINED
 #define _OFF_T_DEFINED
 #ifndef _OFF_T_
@@ -121,6 +113,13 @@ extern "C" {
 #endif
 
 #endif
+
+#if defined(_M_IX86) // newer Windows versions always have it
+_CRTIMP int* __cdecl __p__commode(void);
+#endif
+
+/* On newer Windows windows versions, (*__p__commode()) is used */
+extern _CRTIMP int _commode;
 
 #define _IOREAD 0x0001
 #define _IOWRT 0x0002
@@ -391,8 +390,8 @@ extern "C" {
     _In_ __int64 _Offset,
     _In_ int _Origin);
 
-  _Check_return_
   __MINGW_EXTENSION
+  _Check_return_
   _CRTIMP
   __int64
   __cdecl
@@ -1186,8 +1185,8 @@ extern "C" {
     _In_ __int64 _Offset,
     _In_ int _Origin);
 
-  _Check_return_
   __MINGW_EXTENSION
+  _Check_return_
   _CRTIMP
   __int64
   __cdecl

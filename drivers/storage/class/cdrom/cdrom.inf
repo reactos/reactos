@@ -1,122 +1,203 @@
-; CDROM.INF
-
-; Installation of CDROMs
+;
+; Copyright (c) Microsoft Corporation.  All rights reserved.
+;
 
 [Version]
-Signature  = "$Windows NT$"
-;Signature  = "$ReactOS$"
+Signature  = "$WINDOWS NT$"
 LayoutFile = layout.inf
 Class      = CDROM
 ClassGUID  = {4D36E965-E325-11CE-BFC1-08002BE10318}
-Provider   = %ReactOS%
-DriverVer  = 10/19/1999,5.00.2157.1
+Provider   = %MSFT%
+; Git commit 96eb96d @ https://github.com/microsoft/Windows-driver-samples
+DriverVer  = 08/11/2016, 1.0
+
+;[SourceDisksNames]
+;3426=windows cd
+
+;[SourceDisksFiles]
+;cdrom.sys         = 3426
 
 [DestinationDirs]
-DefaultDestDir = 12
+cdrom_copyfiles   = 12
+storprop_CopyFiles.NT = 11
 
 [ClassInstall32.NT]
 AddReg = CDROMClass.NT.AddReg
+Copyfiles = storprop_CopyFiles.NT
 
 [CDROMClass.NT.AddReg]
-HKR, , ,               0, %CDROMClassName%
-HKR, , EnumPropPages32,0, "MmSys.Cpl,MediaPropPageProvider"
-HKR, , Icon,           0, "-51"
-HKR, , NoInstallClass, 0, 1
+HKR, , ,                0, %CDROMClassName%
+HKR, , Icon,            0, "-51"
+HKR, , Installer32,     0, "storprop.dll,DvdClassInstaller"
+HKR, , NoInstallClass,  0, 1
+HKR, , SilentInstall,   0, 1
+
+[cdrom_copyfiles]
+cdrom.sys,,,0x100
+
+[ControlFlags]
+BasicDriverOk=*
 
 [Manufacturer]
-%GenericMfg% = GenericMfg
+%MITSUMI%         = mitsumi_cdrom,NT
+%GenManufacturer% = cdrom_device,NT
+;%MITSUMI%         = mitsumi_cdrom,NT$ARCH$
+;%GenManufacturer% = cdrom_device,NT$ARCH$
 
-[GenericMfg]
-%GenCdRom.DeviceDesc% = CdRom_Install,GenCdRom
+;[mitsumi_cdrom.NT$ARCH$]
+[mitsumi_cdrom.NT]
+%Mitsumi_cdrom_devdesc%    = mitsumi_install,IDE\CdRomMITSUMI_CD-ROM________!A________________
 
-[CdRom_Install]
-CopyFiles=CdRom_CopyFiles
+;[cdrom_device.NT$ARCH$]
+[cdrom_device.NT]
+;;
+;; if none of the above matched, then only cdrom.sys is required for this drive
+;;
+%gencdrom_devdesc%         = cdrom_install,SCSI\WormPIONEER_CD-WO_DR-R504X__
+%gencdrom_devdesc%         = cdrom_install,SCSI\WormSONY____CD-R___CDU920S__
+%gencdrom_devdesc%         = cdrom_install,SCSI\WormSONY____CD-R___CDU948S__
+%gencdrom_devdesc%         = cdrom_install,GenCdRom
+%gencdrom_devdesc%         = cdrom_install_ISO_drive,SCSI\CdRomMsft____Virtual_DVD-ROM_
 
-[CdRom_Install.Services]
-AddService=cdrom,0x00000002,CdRom_Service_Inst
+;;
+;; Use to add filter drivers for the device
+;;
 
-[CdRom_Service_Inst]
+[mitsumi_addreg]
+HKR,,"FriendlyName",,%Mitsumi_Generic_FriendlyName%
+
+;;
+;; Give ISO drives a more friendly name
+;;
+
+[ISO_addreg]
+HKR,,"FriendlyName",,%ISO_Generic_FriendlyName%
+
+;;
+;; The AutoRunAlwaysDisable key is only for use when the hardware cannot
+;; accepts  TEST_UNIT_READY  commands.  Disabling 'AutoRun' or including
+;; devices in this list will prevent removable media services from being
+;; able to properly handle these devices.
+;;
+
+[autorun_addreg]
+HKR,,"AutoRun",0x00010003,1
+HKR,,"AutoRunAlwaysDisable", 0x00010008, "NEC     MBR-7   "
+HKR,,"AutoRunAlwaysDisable", 0x00010008, "NEC     MBR-7.4 "
+HKR,,"AutoRunAlwaysDisable", 0x00010008, "PIONEER CHANGR DRM-1804X"
+HKR,,"AutoRunAlwaysDisable", 0x00010008, "PIONEER CD-ROM DRM-6324X"
+HKR,,"AutoRunAlwaysDisable", 0x00010008, "PIONEER CD-ROM DRM-624X "
+HKR,,"AutoRunAlwaysDisable", 0x00010008, "TORiSAN CD-ROM CDR_C36"
+
+;;
+;; Use to disable synchronous transfers to this device.  Sync transfers will
+;; always be turned off by default in this INF for any cdrom-type device
+;;
+
+[nosync_addreg]
+HKR,,"DefaultRequestFlags",0x00010001,8
+HKR,"Storport","MinimumIdleTimeoutInMS",0x00010001,0
+
+;;
+;; Installation section for mitsumi.
+;;
+
+[mitsumi_install]
+CopyFiles=cdrom_copyfiles
+
+[mitsumi_install.HW]
+AddReg=nosync_addreg,mitsumi_addreg
+
+[mitsumi_install.Services]
+Needs=cdrom_install.Services
+
+;;
+;; Installation section for generic cdrom.
+;;
+
+[cdrom_install]
+CopyFiles=cdrom_copyfiles
+
+[cdrom_install.HW]
+AddReg=nosync_addreg
+
+[cdrom_install.Services]
+AddService=cdrom,0x00000002,cdrom_ServiceInstallSection,cdrom_EventLog_InstallSection
+
+[cdrom_install_ISO_drive]
+CopyFiles=cdrom_copyfiles
+
+[cdrom_install_ISO_drive.HW]
+AddReg=nosync_addreg,ISO_addreg
+
+[cdrom_install_ISO_drive.Services]
+AddService=cdrom,0x00000002,cdrom_ServiceInstallSection,cdrom_EventLog_InstallSection
+
+;;
+;; Service install sections
+;;
+
+[cdrom_ServiceInstallSection]
+DisplayName   = %cdrom_ServiceDesc%
 ServiceType   = 1
 StartType     = 1
 ErrorControl  = 1
 ServiceBinary = %12%\cdrom.sys
-LoadOrderGroup = SCSI CDROM Class
-AddReg = Autorun_AddReg
+LoadOrderGroup = "SCSI CDROM Class"
+AddReg=autorun_addreg
 
-[CdRom_CopyFiles]
-cdrom.sys
+[cdrom_EventLog_InstallSection]
+;AddReg=cdrom_EventLog_AddReg
 
-[Autorun_AddReg]
-HKLM,"System\CurrentControlSet\Services\cdrom","AutoRun",0x00010003,1
+[cdrom_EventLog_AddReg]
+HKR,,EventMessageFile,0x00020000,"%%SystemRoot%%\System32\IoLogMsg.dll"
+HKR,,TypesSupported,0x00010001,7
 
-;-------------------------------- STRINGS -------------------------------
+[storprop_CopyFiles.NT]
+storprop.dll
+
 
 [Strings]
-ReactOS = "ReactOS Team"
+MSFT           = "Microsoft"
 CDROMClassName = "DVD/CD-ROM drives"
-GenCdRom.DeviceDesc = "CD-ROM Drive"
-GenericMfg = "(Generic DVD/CD-ROM Drives)"
 
-[Strings.0405]
-CDROMClassName = "Jednotky DVD/CD-ROM"
-GenCdRom.DeviceDesc = "Jednotka CD-ROM"
-GenericMfg = "(Obecné jednotky DVD/CD-ROM)"
+;; Manufacturer specific strings
+MITSUMI         = "Mitsumi"
+GenManufacturer = "(Standard CD-ROM drives)"
 
-[Strings.0407]
-CDROMClassName = "DVD/CD-ROM Laufwerke"
+;; Descriptions for enumerated brands and models
+Mitsumi_cdrom_devdesc    = "Mitsumi CD-ROM Drive"
+gencdrom_devdesc         = "CD-ROM Drive"
 
-[Strings.0408]
-CDROMClassName = "Οδηγοί DVD/CD-ROM"
+;; Friendly names
+Mitsumi_Generic_FriendlyName = "Mitsumi CD-ROM Drive"
+ISO_Generic_FriendlyName = "Microsoft Virtual DVD-ROM"
 
-[Strings.0a]
-ReactOS = "Equipo de ReactOS"
-CDROMClassName = "Unidades de DVD/CD-ROM"
-GenCdRom.DeviceDesc = "Unidad CD-ROM"
-GenericMfg = "(Unidades de DVD/CD-ROM genéricas)"
-
-[Strings.040C]
-ReactOS = "Equipe ReactOS"
-CDROMClassName = "Lecteurs DVD/CD-ROM"
-GenCdRom.DeviceDesc = "Lecteur CD-ROM"
-GenericMfg = "(Lecteurs DVD/CD-ROM génériques)"
-
-[Strings.041B]
-CDROMClassName = "DVD/CD-ROM mechaniky"
+;; Service descriptions
+cdrom_ServiceDesc   = "CD-ROM Driver"
 
 [Strings.0415]
-ReactOS = "Zespół ReactOS"
-CDROMClassName = "Stacje dysków DVD/CD-ROM"
+CDROMClassName = "Stacje dysków CD-ROM/DVD"
 
-[Strings.0416]
-CDROMClassName = "Unidades de DVD/CD-ROM"
+GenManufacturer = "(Standardowe stacje dysków CD-ROM)"
 
-[Strings.0418]
-ReactOS = "Echipa ReactOS"
-CDROMClassName = "Dispozitive DVD/CD-ROM"
-GenCdRom.DeviceDesc = "Dispozitiv CD-ROM"
-GenericMfg = "(dispozitive DVD/CD-ROM generice)"
+Mitsumi_cdrom_devdesc    = "Stacja dysków CD-ROM Mitsumi"
+gencdrom_devdesc         = "Stacja dysków CD-ROM"
+
+Mitsumi_Generic_FriendlyName = "Stacja dysków CD-ROM Mitsumi"
+ISO_Generic_FriendlyName = "Wirtualna stacja dysków DVD-ROM firmy Microsoft"
+
+cdrom_ServiceDesc   = "Sterownik stacji dysków CD-ROM"
 
 [Strings.0419]
-ReactOS = "Команда ReactOS"
-CDROMClassName = "DVD/CD-ROM приводы"
-GenCdRom.DeviceDesc = "CD-ROM привод"
-GenericMfg = "(Стандартные DVD/CD-ROM приводы)"
+CDROMClassName = "DVD/CD-ROM дисководы"
 
-[Strings.041f]
-ReactOS = "ReactOS Takımı"
-CDROMClassName = "DVD/CD-ROM Aygıtları"
-GenCdRom.DeviceDesc = "CD-ROM Aygıtı"
-GenericMfg = "(Umûmî DVD/CD-ROM Aygıtları)"
+GenManufacturer = "(Стандартные CD-ROM устройства)"
 
-[Strings.0422]
-ReactOS = "Команда ReactOS"
-CDROMClassName = "Приводи DVD/CD-ROM"
-GenCdRom.DeviceDesc = "Привід CD-ROM"
-GenericMfg = "(Стандартні приводи DVD/CD-ROM)"
+Mitsumi_cdrom_devdesc    = "Mitsumi CD-ROM дисковод"
+gencdrom_devdesc         = "CD-ROM дисковод"
 
-[Strings.0427]
-CDROMClassName = "DVD/CD-ROM įrenginiai"
+Mitsumi_Generic_FriendlyName = "Mitsumi CD-ROM дисковод"
+ISO_Generic_FriendlyName = "Microsoft виртуальный DVD-ROM дисковод"
 
-[Strings.0804]
-GenCdRom.DeviceDesc = "CD-ROM 驱动器"
-GenericMfg = "(通用 DVD/CD-ROM 驱动器)"
+cdrom_ServiceDesc   = "CD-ROM дисковод"

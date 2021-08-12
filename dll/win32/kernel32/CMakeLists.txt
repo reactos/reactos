@@ -93,6 +93,11 @@ list(APPEND SOURCE
     winnls/string/sortkey.c
     k32.h)
 
+if(MSVC)
+    # Disable warning C4146: unary minus operator applied to unsigned type, result still unsigned
+    set_source_files_properties(wine/res.c PROPERTIES COMPILE_FLAGS /wd4146)
+endif()
+
 if(ARCH STREQUAL "i386")
     list(APPEND ASM_SOURCE
         client/i386/fiber.S

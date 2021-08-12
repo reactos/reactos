@@ -215,7 +215,7 @@ void __getmainargs(int* argc, char*** argv, char*** env, int expand_wildcards, i
       if (i >= len || ((_acmdln[i] == ' ' || _acmdln[i] == '\t') && !inQuotes))
       {
          // Handle the case when empty spaces are in the end of the cmdline
-         if (anyLetter) 
+         if (anyLetter)
          {
             aexpand(strndup(buffer, bufferIndex), doexpand);
          }

@@ -116,7 +116,7 @@ CdCompleteFcbOpen (
 #pragma alloc_text(PAGE, CdOpenFileFromFileContext)
 #endif
 
-
+
 _Requires_lock_held_(_Global_critical_region_)
 NTSTATUS
 #ifdef _MSC_VER
@@ -1018,7 +1018,7 @@ Return Value:
     return Status;
 }
 
-
+
 //
 //  Local support routine
 //
@@ -1106,7 +1106,7 @@ Return Value:
             //  This is here because the Win32 layer can't avoid sending me double
             //  beginning backslashes.
             //
-            
+
             if ((FileName->Length > sizeof( WCHAR )) &&
                 (FileName->Buffer[1] == L'\\') &&
                 (FileName->Buffer[0] == L'\\')) {
@@ -1246,12 +1246,12 @@ Return Value:
             //
             //  Check for an overflow of the maximum filename size.
             //
-            
+
             if (BufferLength > MAXUSHORT) {
 
                 return STATUS_INVALID_PARAMETER;
             }
-            
+
             //
             //  Now see if we need to allocate a new buffer.
             //
@@ -1469,7 +1469,7 @@ Return Value:
 #endif
 }
 
-
+
 //
 //  Local support routine
 //
@@ -1973,7 +1973,7 @@ Return Value:
     return Status;
 }
 
-
+
 //
 //  Local support routine
 //
@@ -2075,7 +2075,7 @@ Return Value:
     return Status;
 }
 
-
+
 //
 //  Local support routine
 //
@@ -2257,7 +2257,7 @@ Return Value:
 
         ParentFcb = *CurrentFcb;
         *CurrentFcb = NextFcb;
-        
+
         // Lock object is acquired using internal state
         _Analysis_suppress_lock_checking_(NextFcb->FcbNonpaged->FcbResource);
 
@@ -2358,7 +2358,7 @@ Return Value:
     return Status;
 }
 
-
+
 //
 //  Local support routine
 //
@@ -2648,7 +2648,7 @@ Return Value:
     return Status;
 }
 
-
+
 //
 //  Local support routine
 //
@@ -2714,12 +2714,12 @@ Return Value:
     //
 
     if (MAXIMUM_ALLOWED == DesiredAccess)  {
-    
+
         DesiredAccess = FILE_ALL_ACCESS & ~((TypeOfOpen != UserVolumeOpen ?
                                              (FILE_WRITE_ATTRIBUTES           |
                                               FILE_WRITE_DATA                 |
                                               FILE_WRITE_EA                   |
-                                              FILE_ADD_FILE                   |                     
+                                              FILE_ADD_FILE                   |
                                               FILE_ADD_SUBDIRECTORY           |
                                               FILE_APPEND_DATA) : 0)          |
                                             FILE_DELETE_CHILD                 |
@@ -2778,7 +2778,7 @@ Return Value:
             return STATUS_SHARING_VIOLATION;
         }
     }
-    
+
     //
     //  If the Fcb already existed then we need to check the oplocks and
     //  the share access.

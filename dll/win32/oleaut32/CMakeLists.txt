@@ -49,6 +49,12 @@ add_library(oleaut32 MODULE
     oleaut32.rc
     ${CMAKE_CURRENT_BINARY_DIR}/oleaut32.def)
 
+if(MSVC)
+    # Disable warning C4146: unary minus operator applied to unsigned type, result still unsigned
+    # Disable warning C4267: 'initializing': conversion from 'size_t' to 'BYTE', possible loss of data
+    target_compile_options(oleaut32 PRIVATE /wd4146 /wd4267)
+endif()
+
 add_idl_headers(oleaut32_idlheader oleaut32_oaidl.idl)
 add_dependencies(oleaut32 oleaut32_idlheader)
 set_module_type(oleaut32 win32dll)

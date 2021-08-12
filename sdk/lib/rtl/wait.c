@@ -129,7 +129,7 @@ Wait_thread_proc(LPVOID Arg)
  */
 NTSTATUS
 NTAPI
-RtlRegisterWait(PHANDLE NewWaitObject, 
+RtlRegisterWait(PHANDLE NewWaitObject,
                 HANDLE Object,
                 WAITORTIMERCALLBACKFUNC Callback,
                 PVOID Context,
@@ -154,8 +154,8 @@ RtlRegisterWait(PHANDLE NewWaitObject,
     Wait->DeleteCount = 0;
     Wait->CompletionEvent = NULL;
 
-    Status = NtCreateEvent( &Wait->CancelEvent, 
-                             EVENT_ALL_ACCESS, 
+    Status = NtCreateEvent( &Wait->CancelEvent,
+                             EVENT_ALL_ACCESS,
                              NULL,
                              NotificationEvent,
                              FALSE );

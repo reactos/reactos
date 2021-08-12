@@ -1,4 +1,11 @@
 /*
+ * PROJECT:     ReactOS Mode Utility
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     Provides fast mode setup for DOS devices.
+ * COPYRIGHT:   Copyright 2002 Robert Dickenson
+ *              Copyright 2016-2021 Hermes Belusca-Maito
+ */
+/*
  *  ReactOS mode console command
  *
  *  mode.c
@@ -18,14 +25,6 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- */
-/*
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS Mode Utility
- * FILE:            base/applications/cmdutils/mode/mode.c
- * PURPOSE:         Provides fast mode setup for DOS devices.
- * PROGRAMMERS:     Robert Dickenson
- *                  Hermes Belusca-Maito
  */
 
 #include <stdio.h>
@@ -453,22 +452,18 @@ invalid_parameter:
 int SetConsoleCPState(IN PCWSTR ArgStr)
 {
     PCWSTR argStr = ArgStr;
-    DWORD CodePage = 0;
+    DWORD value = 0;
+    UINT uOldCodePage, uNewCodePage;
 
     if ( (_wcsnicmp(argStr, L"SELECT=", 7) == 0 && (argStr += 7)) ||
          (_wcsnicmp(argStr, L"SEL=", 4) == 0 && (argStr += 4)) )
     {
-        argStr = ParseNumber(argStr, &CodePage);
+        argStr = ParseNumber(argStr, &value);
         if (!argStr) goto invalid_parameter;
 
         /* This should be the end of the string */
         while (*argStr == L' ') argStr++;
         if (*argStr) goto invalid_parameter;
-
-        SetConsoleCP(CodePage);
-        SetConsoleOutputCP(CodePage);
-        // "The code page specified is not valid."
-        ShowConsoleCPStatus();
     }
     else
     {
@@ -477,7 +472,45 @@ invalid_parameter:
         return 1;
     }
 
-    return 0;
+    uNewCodePage = value;
+
+/**
+ ** IMPORTANT NOTE: This code must be kept synchronized with CHCP.COM
+ **/
+
+    /*
+     * Save the original console code page to be restored
+     * in case SetConsoleCP() or SetConsoleOutputCP() fails.
+     */
+    uOldCodePage = GetConsoleCP();
+
+    /*
+     * Try changing the console input and output code pages.
+     * If it succeeds, refresh the local code page information.
+     */
+    if (SetConsoleCP(uNewCodePage))
+    {
+        if (SetConsoleOutputCP(uNewCodePage))
+        {
+            /* Success, reset the current thread UI language
+             * and update the streams cached code page. */
+            ConSetThreadUILanguage(0);
+            ConStdStreamsSetCacheCodePage(uNewCodePage, uNewCodePage);
+
+            /* Display the current console status */
+            ShowConsoleStatus();
+            return 0;
+        }
+        else
+        {
+            /* Failure, restore the original console code page */
+            SetConsoleCP(uOldCodePage);
+        }
+    }
+
+    /* An error happened, display an error and bail out */
+    ConResPuts(StdErr, IDS_ERROR_INVALID_CODEPAGE);
+    return 1;
 }
 
 

@@ -14,16 +14,6 @@
 
 #include <ntlsa.h>
 
-typedef struct _TOKEN_AUDIT_POLICY_INFORMATION
-{
-    ULONG PolicyCount;
-    struct
-    {
-        ULONG Category;
-        UCHAR Value;
-    } Policies[1];
-} TOKEN_AUDIT_POLICY_INFORMATION, *PTOKEN_AUDIT_POLICY_INFORMATION;
-
 /* GLOBALS ********************************************************************/
 
 POBJECT_TYPE SeTokenObjectType = NULL;
@@ -42,28 +32,28 @@ static GENERIC_MAPPING SepTokenMapping = {
 static const INFORMATION_CLASS_INFO SeTokenInformationClass[] = {
 
     /* Class 0 not used, blame MS! */
-    IQS_SAME(0, 0, 0),
+    IQS_NONE,
 
     /* TokenUser */
-    IQS_SAME(TOKEN_USER, ULONG, ICIF_QUERY | ICIF_QUERY_SIZE_VARIABLE | ICIF_SET_SIZE_VARIABLE),
+    IQS_SAME(TOKEN_USER, ULONG, ICIF_QUERY | ICIF_QUERY_SIZE_VARIABLE),
     /* TokenGroups */
-    IQS_SAME(TOKEN_GROUPS, ULONG, ICIF_QUERY | ICIF_QUERY_SIZE_VARIABLE | ICIF_SET_SIZE_VARIABLE),
+    IQS_SAME(TOKEN_GROUPS, ULONG, ICIF_QUERY | ICIF_QUERY_SIZE_VARIABLE),
     /* TokenPrivileges */
-    IQS_SAME(TOKEN_PRIVILEGES, ULONG, ICIF_QUERY | ICIF_QUERY_SIZE_VARIABLE | ICIF_SET_SIZE_VARIABLE),
+    IQS_SAME(TOKEN_PRIVILEGES, ULONG, ICIF_QUERY | ICIF_QUERY_SIZE_VARIABLE),
     /* TokenOwner */
-    IQS_SAME(TOKEN_OWNER, ULONG, ICIF_QUERY | ICIF_QUERY_SIZE_VARIABLE | ICIF_SET | ICIF_SET_SIZE_VARIABLE),
+    IQS_SAME(TOKEN_OWNER, ULONG, ICIF_QUERY | ICIF_SET | ICIF_SIZE_VARIABLE),
     /* TokenPrimaryGroup */
-    IQS_SAME(TOKEN_PRIMARY_GROUP, ULONG, ICIF_QUERY | ICIF_QUERY_SIZE_VARIABLE | ICIF_SET | ICIF_SET_SIZE_VARIABLE),
+    IQS_SAME(TOKEN_PRIMARY_GROUP, ULONG, ICIF_QUERY | ICIF_SET | ICIF_SIZE_VARIABLE),
     /* TokenDefaultDacl */
-    IQS_SAME(TOKEN_DEFAULT_DACL, ULONG, ICIF_QUERY | ICIF_QUERY_SIZE_VARIABLE | ICIF_SET | ICIF_SET_SIZE_VARIABLE),
+    IQS_SAME(TOKEN_DEFAULT_DACL, ULONG, ICIF_QUERY | ICIF_SET | ICIF_SIZE_VARIABLE),
     /* TokenSource */
-    IQS_SAME(TOKEN_SOURCE, ULONG, ICIF_QUERY | ICIF_QUERY_SIZE_VARIABLE | ICIF_SET_SIZE_VARIABLE),
+    IQS_SAME(TOKEN_SOURCE, ULONG, ICIF_QUERY | ICIF_QUERY_SIZE_VARIABLE),
     /* TokenType */
     IQS_SAME(TOKEN_TYPE, ULONG, ICIF_QUERY | ICIF_QUERY_SIZE_VARIABLE),
     /* TokenImpersonationLevel */
-    IQS_SAME(SECURITY_IMPERSONATION_LEVEL, ULONG, ICIF_QUERY | ICIF_QUERY_SIZE_VARIABLE),
+    IQS_SAME(SECURITY_IMPERSONATION_LEVEL, ULONG, ICIF_QUERY),
     /* TokenStatistics */
-    IQS_SAME(TOKEN_STATISTICS, ULONG, ICIF_QUERY | ICIF_QUERY_SIZE_VARIABLE | ICIF_SET_SIZE_VARIABLE),
+    IQS_SAME(TOKEN_STATISTICS, ULONG, ICIF_QUERY | ICIF_QUERY_SIZE_VARIABLE),
     /* TokenRestrictedSids */
     IQS_SAME(TOKEN_GROUPS, ULONG, ICIF_QUERY | ICIF_QUERY_SIZE_VARIABLE),
     /* TokenSessionId */
@@ -71,13 +61,13 @@ static const INFORMATION_CLASS_INFO SeTokenInformationClass[] = {
     /* TokenGroupsAndPrivileges */
     IQS_SAME(TOKEN_GROUPS_AND_PRIVILEGES, ULONG, ICIF_QUERY | ICIF_QUERY_SIZE_VARIABLE),
     /* TokenSessionReference */
-    IQS_SAME(ULONG, ULONG, ICIF_SET | ICIF_QUERY_SIZE_VARIABLE),
+    IQS_SAME(ULONG, ULONG, ICIF_SET),
     /* TokenSandBoxInert */
-    IQS_SAME(ULONG, ULONG, ICIF_QUERY | ICIF_QUERY_SIZE_VARIABLE),
+    IQS_SAME(ULONG, ULONG, ICIF_QUERY),
     /* TokenAuditPolicy */
-    IQS_SAME(/* FIXME */0, ULONG, ICIF_QUERY | ICIF_SET | ICIF_QUERY_SIZE_VARIABLE),
+    IQS_SAME(TOKEN_AUDIT_POLICY_INFORMATION, ULONG, ICIF_SET | ICIF_SET_SIZE_VARIABLE),
     /* TokenOrigin */
-    IQS_SAME(TOKEN_ORIGIN, ULONG, ICIF_QUERY | ICIF_SET | ICIF_QUERY_SIZE_VARIABLE),
+    IQS_SAME(TOKEN_ORIGIN, ULONG, ICIF_QUERY | ICIF_SET),
 };
 
 /* FUNCTIONS *****************************************************************/
@@ -864,8 +854,7 @@ SepDuplicateToken(
 
     AccessToken->TokenFlags = Token->TokenFlags & ~TOKEN_SESSION_NOT_REFERENCED;
 
-    /* Copy and reference the logon session */
-    // RtlCopyLuid(&AccessToken->AuthenticationId, &Token->AuthenticationId);
+    /* Reference the logon session */
     Status = SepRmReferenceLogonSession(&AccessToken->AuthenticationId);
     if (!NT_SUCCESS(Status))
     {
@@ -873,6 +862,15 @@ SepDuplicateToken(
         DPRINT1("SepRmReferenceLogonSession() failed (Status 0x%lx)\n", Status);
         /* Set the flag for proper cleanup by the delete procedure */
         AccessToken->TokenFlags |= TOKEN_SESSION_NOT_REFERENCED;
+        goto Quit;
+    }
+
+    /* Insert the referenced logon session into the token */
+    Status = SepRmInsertLogonSessionIntoToken(AccessToken);
+    if (!NT_SUCCESS(Status))
+    {
+        /* Failed to insert the logon session into the token, bail out */
+        DPRINT1("SepRmInsertLogonSessionIntoToken() failed (Status 0x%lx)\n", Status);
         goto Quit;
     }
 
@@ -1175,9 +1173,22 @@ VOID
 NTAPI
 SepDeleteToken(PVOID ObjectBody)
 {
+    NTSTATUS Status;
     PTOKEN AccessToken = (PTOKEN)ObjectBody;
 
     DPRINT("SepDeleteToken()\n");
+
+    /* Remove the referenced logon session from token */
+    if (AccessToken->LogonSession)
+    {
+        Status = SepRmRemoveLogonSessionFromToken(AccessToken);
+        if (!NT_SUCCESS(Status))
+        {
+            /* Something seriously went wrong */
+            DPRINT1("SepDeleteToken(): Failed to remove the logon session from token (Status: 0x%lx)\n", Status);
+            return;
+        }
+    }
 
     /* Dereference the logon session */
     if ((AccessToken->TokenFlags & TOKEN_SESSION_NOT_REFERENCED) == 0)
@@ -1367,6 +1378,15 @@ SepCreateToken(
         DPRINT1("SepRmReferenceLogonSession() failed (Status 0x%lx)\n", Status);
         /* Set the flag for proper cleanup by the delete procedure */
         AccessToken->TokenFlags |= TOKEN_SESSION_NOT_REFERENCED;
+        goto Quit;
+    }
+
+    /* Insert the referenced logon session into the token */
+    Status = SepRmInsertLogonSessionIntoToken(AccessToken);
+    if (!NT_SUCCESS(Status))
+    {
+        /* Failed to insert the logon session into the token, bail out */
+        DPRINT1("SepRmInsertLogonSessionIntoToken() failed (Status 0x%lx)\n", Status);
         goto Quit;
     }
 
@@ -2410,7 +2430,8 @@ NtQueryInformationToken(
                                          TokenInformationLength,
                                          ReturnLength,
                                          NULL,
-                                         PreviousMode);
+                                         PreviousMode,
+                                         TRUE);
     if (!NT_SUCCESS(Status))
     {
         DPRINT("NtQueryInformationToken() failed, Status: 0x%x\n", Status);
@@ -3309,14 +3330,20 @@ NtSetInformationToken(
                     if (OldTokenFlags == Token->TokenFlags)
                         SessionReference = ULONG_MAX;
 
+                    /*
+                     * Otherwise if the flag was never set but just for this first time then
+                     * remove the referenced logon session data from the token and dereference
+                     * the logon session when needed. 
+                     */
+                    if (SessionReference == 0)
+                    {
+                        SepRmRemoveLogonSessionFromToken(Token);
+                        SepRmDereferenceLogonSession(&Token->AuthenticationId);
+                    }
+
                     /* Unlock the token */
                     SepReleaseTokenLock(Token);
                 }
-
-                /* Dereference the logon session if needed */
-                if (SessionReference == 0)
-                    SepRmDereferenceLogonSession(&Token->AuthenticationId);
-
                 break;
             }
 
@@ -4242,7 +4269,7 @@ NtOpenThreadTokenEx(IN HANDLE ThreadHandle,
                     IN ULONG HandleAttributes,
                     OUT PHANDLE TokenHandle)
 {
-    PETHREAD Thread, NewThread;
+    PETHREAD Thread;
     HANDLE hToken;
     PTOKEN Token, NewToken = NULL, PrimaryToken;
     BOOLEAN CopyOnOpen, EffectiveOnly;
@@ -4316,40 +4343,53 @@ NtOpenThreadTokenEx(IN HANDLE ThreadHandle,
 
     if (CopyOnOpen)
     {
-        Status = ObReferenceObjectByHandle(ThreadHandle, THREAD_ALL_ACCESS,
-                                           PsThreadType, KernelMode,
-                                           (PVOID*)&NewThread, NULL);
+        PrimaryToken = PsReferencePrimaryToken(Thread->ThreadsProcess);
+
+        Status = SepCreateImpersonationTokenDacl(Token, PrimaryToken, &Dacl);
+
+        ObFastDereferenceObject(&Thread->ThreadsProcess->Token, PrimaryToken);
+
         if (NT_SUCCESS(Status))
         {
-            PrimaryToken = PsReferencePrimaryToken(NewThread->ThreadsProcess);
-
-            Status = SepCreateImpersonationTokenDacl(Token, PrimaryToken, &Dacl);
-
-            ObFastDereferenceObject(&NewThread->ThreadsProcess->Token, PrimaryToken);
-
-            if (NT_SUCCESS(Status))
+            if (Dacl)
             {
-                if (Dacl)
+                Status = RtlCreateSecurityDescriptor(&SecurityDescriptor,
+                                                     SECURITY_DESCRIPTOR_REVISION);
+                if (!NT_SUCCESS(Status))
                 {
-                    RtlCreateSecurityDescriptor(&SecurityDescriptor,
-                                                SECURITY_DESCRIPTOR_REVISION);
-                    RtlSetDaclSecurityDescriptor(&SecurityDescriptor, TRUE, Dacl,
-                                                 FALSE);
+                    DPRINT1("NtOpenThreadTokenEx(): Failed to create a security descriptor (Status 0x%lx)\n", Status);
                 }
 
-                InitializeObjectAttributes(&ObjectAttributes, NULL, HandleAttributes,
-                                           NULL, Dacl ? &SecurityDescriptor : NULL);
-
-                Status = SepDuplicateToken(Token, &ObjectAttributes, EffectiveOnly,
-                                           TokenImpersonation, ImpersonationLevel,
-                                           KernelMode, &NewToken);
-                if (NT_SUCCESS(Status))
+                Status = RtlSetDaclSecurityDescriptor(&SecurityDescriptor, TRUE, Dacl,
+                                                      FALSE);
+                if (!NT_SUCCESS(Status))
                 {
-                    ObReferenceObject(NewToken);
-                    Status = ObInsertObject(NewToken, NULL, DesiredAccess, 0, NULL,
-                                            &hToken);
+                    DPRINT1("NtOpenThreadTokenEx(): Failed to set a DACL to the security descriptor (Status 0x%lx)\n", Status);
                 }
             }
+
+            InitializeObjectAttributes(&ObjectAttributes, NULL, HandleAttributes,
+                                       NULL, Dacl ? &SecurityDescriptor : NULL);
+
+            Status = SepDuplicateToken(Token, &ObjectAttributes, EffectiveOnly,
+                                       TokenImpersonation, ImpersonationLevel,
+                                       KernelMode, &NewToken);
+            if (!NT_SUCCESS(Status))
+            {
+                DPRINT1("NtOpenThreadTokenEx(): Failed to duplicate the token (Status 0x%lx)\n");
+            }
+
+            ObReferenceObject(NewToken);
+            Status = ObInsertObject(NewToken, NULL, DesiredAccess, 0, NULL,
+                                    &hToken);
+            if (!NT_SUCCESS(Status))
+            {
+                DPRINT1("NtOpenThreadTokenEx(): Failed to insert the token object (Status 0x%lx)\n", Status);
+            }
+        }
+        else
+        {
+            DPRINT1("NtOpenThreadTokenEx(): Failed to impersonate token from DACL (Status 0x%lx)\n", Status);
         }
     }
     else
@@ -4357,6 +4397,10 @@ NtOpenThreadTokenEx(IN HANDLE ThreadHandle,
         Status = ObOpenObjectByPointer(Token, HandleAttributes,
                                        NULL, DesiredAccess, SeTokenObjectType,
                                        PreviousMode, &hToken);
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("NtOpenThreadTokenEx(): Failed to open the object (Status 0x%lx)\n", Status);
+        }
     }
 
     if (Dacl) ExFreePoolWithTag(Dacl, TAG_ACL);
@@ -4370,12 +4414,14 @@ NtOpenThreadTokenEx(IN HANDLE ThreadHandle,
 
     if (NT_SUCCESS(Status) && CopyOnOpen)
     {
-        PsImpersonateClient(Thread, NewToken, FALSE, EffectiveOnly, ImpersonationLevel);
+        Status = PsImpersonateClient(Thread, NewToken, FALSE, EffectiveOnly, ImpersonationLevel);
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("NtOpenThreadTokenEx(): Failed to impersonate the client (Status 0x%lx)\n");
+        }
     }
 
     if (NewToken) ObDereferenceObject(NewToken);
-
-    if (CopyOnOpen && NewThread) ObDereferenceObject(NewThread);
 
     ObDereferenceObject(Thread);
 

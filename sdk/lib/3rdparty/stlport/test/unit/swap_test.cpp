@@ -96,7 +96,7 @@ void SwapTest::swap_container_non_spec()
   v1.back().v = -2;
 
   v2.push( Obj() );
-  v2.back().v = 10;  
+  v2.back().v = 10;
   v2.push( Obj() );
   v2.back().v = 11;
   v2.push( Obj() );

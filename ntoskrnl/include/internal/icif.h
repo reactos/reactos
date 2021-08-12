@@ -3,7 +3,7 @@
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Internal header for information classes info interface
  * COPYRIGHT:   Copyright ???
- *              Copyright 2020 George Bișoc <george.bisoc@reactos.org>
+ *              Copyright 2020-2021 George Bișoc <george.bisoc@reactos.org>
  */
 
 #pragma once
@@ -37,5 +37,8 @@ typedef struct _INFORMATION_CLASS_INFO
 #define IQS(TypeQuery, AlignmentQuery, TypeSet, AlignmentSet, Flags) \
   { sizeof(TypeQuery), sizeof(AlignmentQuery), sizeof(TypeSet), sizeof(AlignmentSet), Flags }
 
+#define IQS_NO_TYPE_LENGTH(Alignment, Flags) \
+  { 0, sizeof(Alignment), 0, sizeof(Alignment), Flags }
+
 #define IQS_NONE \
-  { 0, 0, 0, 0, ICIF_NONE }
+  { 0, sizeof(CHAR), 0, sizeof(CHAR), ICIF_NONE }

@@ -24,16 +24,14 @@ PCHAR IoLoaderArcBootDeviceName;
 CODE_SEG("INIT")
 NTSTATUS
 NTAPI
-IopCreateArcNamesCd(IN PLOADER_PARAMETER_BLOCK LoaderBlock
-);
+IopCreateArcNamesCd(IN PLOADER_PARAMETER_BLOCK LoaderBlock);
 
 CODE_SEG("INIT")
 NTSTATUS
 NTAPI
 IopCreateArcNamesDisk(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
                       IN BOOLEAN SingleDisk,
-                      IN PBOOLEAN FoundBoot
-);
+                      OUT PBOOLEAN FoundBoot);
 
 CODE_SEG("INIT")
 NTSTATUS
@@ -50,18 +48,22 @@ IopCreateArcNames(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     ANSI_STRING ArcSystemString, ArcString, LanmanRedirector, LoaderPathNameA;
 
     /* Check if we only have one disk on the machine */
-    SingleDisk = ArcDiskInfo->DiskSignatureListHead.Flink->Flink ==
-                 (&ArcDiskInfo->DiskSignatureListHead);
+    SingleDisk = (ArcDiskInfo->DiskSignatureListHead.Flink->Flink ==
+                 &ArcDiskInfo->DiskSignatureListHead);
 
     /* Create the global HAL partition name */
     sprintf(Buffer, "\\ArcName\\%s", LoaderBlock->ArcHalDeviceName);
     RtlInitAnsiString(&ArcString, Buffer);
-    RtlAnsiStringToUnicodeString(&IoArcHalDeviceName, &ArcString, TRUE);
+    Status = RtlAnsiStringToUnicodeString(&IoArcHalDeviceName, &ArcString, TRUE);
+    if (!NT_SUCCESS(Status))
+        return Status;
 
     /* Create the global system partition name */
     sprintf(Buffer, "\\ArcName\\%s", LoaderBlock->ArcBootDeviceName);
     RtlInitAnsiString(&ArcString, Buffer);
-    RtlAnsiStringToUnicodeString(&IoArcBootDeviceName, &ArcString, TRUE);
+    Status = RtlAnsiStringToUnicodeString(&IoArcBootDeviceName, &ArcString, TRUE);
+    if (!NT_SUCCESS(Status))
+        return Status;
 
     /* Allocate memory for the string */
     Length = strlen(LoaderBlock->ArcBootDeviceName) + sizeof(ANSI_NULL);
@@ -136,7 +138,7 @@ IopCreateArcNames(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 
     /* Loop every disk and try to find boot disk */
     Status = IopCreateArcNamesDisk(LoaderBlock, SingleDisk, &FoundBoot);
-    /* If it succeed but we didn't find boot device, try to browse Cds */
+    /* If it succeeded but we didn't find boot device, try to browse Cds */
     if (NT_SUCCESS(Status) && !FoundBoot)
     {
         Status = IopCreateArcNamesCd(LoaderBlock);
@@ -178,7 +180,7 @@ IopCreateArcNamesCd(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
      * that have been successfully handled by MountMgr driver
      * and that already own their device name. This is the "new" way
      * to handle them, that came with NT5.
-     * Currently, Windows 2003 provides an arc names creation based
+     * Currently, Windows 2003 provides an ARC names creation based
      * on both enabled drives and not enabled drives (lack from
      * the driver).
      * Given the current ReactOS state, that's good for us.
@@ -276,7 +278,7 @@ IopCreateArcNamesCd(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
                                                 NULL,
                                                 0,
                                                 &DeviceNumber,
-                                                sizeof(STORAGE_DEVICE_NUMBER),
+                                                sizeof(DeviceNumber),
                                                 FALSE,
                                                 &Event,
                                                 &IoStatusBlock);
@@ -357,7 +359,7 @@ IopCreateArcNamesCd(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
                 Status = IoStatusBlock.Status;
             }
 
-            /* Reading succeed, compute checksum by adding data, 2048 bytes checksum */
+            /* If reading succeeded, compute checksum by adding data, 2048 bytes checksum */
             if (NT_SUCCESS(Status))
             {
                 for (i = 0; i < 2048 / sizeof(ULONG); i++)
@@ -413,7 +415,7 @@ NTSTATUS
 NTAPI
 IopCreateArcNamesDisk(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
                       IN BOOLEAN SingleDisk,
-                      IN PBOOLEAN FoundBoot)
+                      OUT PBOOLEAN FoundBoot)
 {
     PIRP Irp;
     PVOID Data;
@@ -480,6 +482,8 @@ IopCreateArcNamesDisk(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
     /* Start browsing disks */
     for (DiskNumber = 0; DiskNumber < DiskCount; DiskNumber++)
     {
+        ASSERT(DriveLayout == NULL);
+
         /* Check if we have an enabled disk */
         if (lSymbolicLinkList && *lSymbolicLinkList != UNICODE_NULL)
         {
@@ -501,7 +505,7 @@ IopCreateArcNamesDisk(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
                                                     NULL,
                                                     0,
                                                     &DeviceNumber,
-                                                    sizeof(STORAGE_DEVICE_NUMBER),
+                                                    sizeof(DeviceNumber),
                                                     FALSE,
                                                     &Event,
                                                     &IoStatusBlock);
@@ -583,7 +587,7 @@ IopCreateArcNamesDisk(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
                                             NULL,
                                             0,
                                             &DiskGeometry,
-                                            sizeof(DISK_GEOMETRY),
+                                            sizeof(DiskGeometry),
                                             FALSE,
                                             &Event,
                                             &IoStatusBlock);
@@ -644,7 +648,7 @@ IopCreateArcNamesDisk(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
             goto Cleanup;
         }
 
-        /* Read a sector for computing checksum */
+        /* Read the first sector for computing checksum */
         Irp = IoBuildSynchronousFsdRequest(IRP_MJ_READ,
                                            DeviceObject,
                                            PartitionBuffer,
@@ -654,6 +658,7 @@ IopCreateArcNamesDisk(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
                                            &IoStatusBlock);
         if (!Irp)
         {
+            ExFreePoolWithTag(PartitionBuffer, TAG_IO);
             ObDereferenceObject(FileObject);
             Status = STATUS_INSUFFICIENT_RESOURCES;
             goto Cleanup;
@@ -667,20 +672,26 @@ IopCreateArcNamesDisk(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
             KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
             Status = IoStatusBlock.Status;
         }
+
+        /* If reading succeeded, calculate checksum by adding data */
+        if (NT_SUCCESS(Status))
+        {
+            for (i = 0, CheckSum = 0; i < 512 / sizeof(ULONG); i++)
+            {
+                CheckSum += PartitionBuffer[i];
+            }
+        }
+
+        /* Release now unnecessary resources */
+        ExFreePoolWithTag(PartitionBuffer, TAG_IO);
+        ObDereferenceObject(FileObject);
+
+        /* If we failed, release drive layout before going to next disk */
         if (!NT_SUCCESS(Status))
         {
             ExFreePool(DriveLayout);
-            ExFreePoolWithTag(PartitionBuffer, TAG_IO);
-            ObDereferenceObject(FileObject);
+            DriveLayout = NULL;
             continue;
-        }
-
-        ObDereferenceObject(FileObject);
-
-        /* Calculate checksum, that's an easy computation, just adds read data */
-        for (i = 0, CheckSum = 0; i < 512 / sizeof(ULONG) ; i++)
-        {
-            CheckSum += PartitionBuffer[i];
         }
 
         /* Browse each ARC disk */
@@ -692,7 +703,7 @@ IopCreateArcNamesDisk(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
                                                  ARC_DISK_SIGNATURE,
                                                  ListEntry);
 
-            /* If they matches, ie
+            /* If they match, i.e.
              * - There's only one disk for both BIOS and detected/enabled
              * - Signatures are matching
              * - Checksums are matching
@@ -789,42 +800,35 @@ IopCreateArcNamesDisk(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
             }
             else
             {
-                /* In case there's a valid partition, a matching signature,
-                   BUT a none matching checksum, or there's a duplicate
-                   signature, or even worse a virus played with partition
-                   table */
-                if (ArcDiskSignature->Signature == Signature &&
-                    (ArcDiskSignature->CheckSum + CheckSum != 0) &&
-                    ArcDiskSignature->ValidPartitionTable)
+                /* Debugging feedback: Warn in case there's a valid partition,
+                 * a matching signature, BUT a non-matching checksum: this can
+                 * be the sign of a duplicate signature, or even worse a virus
+                 * played with the partition table. */
+                if (ArcDiskSignature->ValidPartitionTable &&
+                    (ArcDiskSignature->Signature == Signature) &&
+                    (ArcDiskSignature->CheckSum + CheckSum != 0))
                  {
-                     DPRINT("Be careful, or you have a duplicate disk signature, or a virus altered your MBR!\n");
+                     DPRINT("Be careful, you have a duplicate disk signature, or a virus altered your MBR!\n");
                  }
             }
         }
 
-        /* Release memory before jumping to next item */
+        /* Finally, release drive layout */
         ExFreePool(DriveLayout);
         DriveLayout = NULL;
-        ExFreePoolWithTag(PartitionBuffer, TAG_IO);
-        PartitionBuffer = NULL;
     }
 
     Status = STATUS_SUCCESS;
 
 Cleanup:
-    if (SymbolicLinkList)
-    {
-        ExFreePool(SymbolicLinkList);
-    }
-
     if (DriveLayout)
     {
         ExFreePool(DriveLayout);
     }
 
-    if (PartitionBuffer)
+    if (SymbolicLinkList)
     {
-        ExFreePoolWithTag(PartitionBuffer, TAG_IO);
+        ExFreePool(SymbolicLinkList);
     }
 
     return Status;

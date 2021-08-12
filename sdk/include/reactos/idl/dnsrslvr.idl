@@ -50,7 +50,12 @@ interface DnsResolver
         [in, unique, string] DNSRSLVR_HANDLE pwszServerName);
 
     /* Function: 0x05 */
-    /* R_ResolverFlushCacheEntry */
+    DWORD
+    __stdcall
+    R_ResolverFlushCacheEntry(
+        [in, unique, string] DNSRSLVR_HANDLE pwszServerName,
+        [in, string] LPCWSTR pszName,
+        [in] WORD wType);
 
     /* Function: 0x06 */
     /* R_ResolverRegisterCluster */

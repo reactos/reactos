@@ -1185,7 +1185,7 @@
 @ cdecl -version=0x600+ _wctime64_s(ptr long ptr)
 @ stub -version=0x600+ _wctomb_l
 @ stub -version=0x600+ _wctomb_s_l
-# stub _wctype
+@ extern _wctype
 @ extern _wenviron
 @ varargs _wexecl(wstr wstr)
 @ varargs _wexecle(wstr wstr)

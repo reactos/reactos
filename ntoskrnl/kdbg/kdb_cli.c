@@ -1977,7 +1977,7 @@ KdbpCmdMod(
 
         Address = (ULONG_PTR)Result;
 
-        if (!KdbpSymFindModule((PVOID)Address, NULL, -1, &LdrEntry))
+        if (!KdbpSymFindModule((PVOID)Address, -1, &LdrEntry))
         {
             KdbpPrint("No module containing address 0x%p found!\n", Address);
             return TRUE;
@@ -1987,7 +1987,7 @@ KdbpCmdMod(
     }
     else
     {
-        if (!KdbpSymFindModule(NULL, NULL, 0, &LdrEntry))
+        if (!KdbpSymFindModule(NULL, 0, &LdrEntry))
         {
             ULONG_PTR ntoskrnlBase = ((ULONG_PTR)KdbpCmdMod) & 0xfff00000;
             KdbpPrint("  Base      Size      Name\n");
@@ -2003,7 +2003,7 @@ KdbpCmdMod(
     {
         KdbpPrint("  %08x  %08x  %wZ\n", LdrEntry->DllBase, LdrEntry->SizeOfImage, &LdrEntry->BaseDllName);
 
-        if(DisplayOnlyOneModule || !KdbpSymFindModule(NULL, NULL, i++, &LdrEntry))
+        if(DisplayOnlyOneModule || !KdbpSymFindModule(NULL, i++, &LdrEntry))
             break;
     }
 
@@ -2710,6 +2710,7 @@ KdbpCmdHelp(
  * \note Doesn't correctly handle \\t and terminal escape sequences when calculating the
  *       number of lines required to print a single line from the Buffer in the terminal.
  *       Prints maximum 4096 chars, because of its buffer size.
+ *       Uses KdpDPrintf internally (NOT DbgPrint!). Callers must already hold the debugger lock.
  */
 VOID
 KdbpPrint(
@@ -2735,11 +2736,11 @@ KdbpPrint(
     /* Initialize the terminal */
     if (!TerminalInitialized)
     {
-        DbgPrint("\x1b[7h");      /* Enable linewrap */
+        KdpDprintf("\x1b[7h");      /* Enable linewrap */
 
         /* Query terminal type */
         /*DbgPrint("\x1b[Z");*/
-        DbgPrint("\x05");
+        KdpDprintf("\x05");
 
         TerminalInitialized = TRUE;
         Length = 0;
@@ -2770,7 +2771,7 @@ KdbpPrint(
             /* Try to query number of rows from terminal. A reply looks like "\x1b[8;24;80t" */
             TerminalReportsSize = FALSE;
             KeStallExecutionProcessor(100000);
-            DbgPrint("\x1b[18t");
+            KdpDprintf("\x1b[18t");
             c = KdbpTryGetCharSerial(5000);
 
             if (c == KEY_ESC)
@@ -2855,9 +2856,9 @@ KdbpPrint(
             KdbRepeatLastCommand = FALSE;
 
             if (KdbNumberOfColsPrinted > 0)
-                DbgPrint("\n");
+                KdpDprintf("\n");
 
-            DbgPrint("--- Press q to abort, any other key to continue ---");
+            KdpDprintf("--- Press q to abort, any other key to continue ---");
             RowsPrintedByTerminal++; /* added by Mna. */
 
             if (KdbDebugState & KD_DEBUG_KDSERIAL)
@@ -2876,7 +2877,7 @@ KdbpPrint(
                     c = KdbpTryGetCharKeyboard(&ScanCode, 5);
             }
 
-            DbgPrint("\n");
+            KdpDprintf("\n");
             if (c == 'q')
             {
                 KdbOutputAborted = TRUE;
@@ -2917,7 +2918,7 @@ KdbpPrint(
             }
         }
 
-        DbgPrint("%s", p);
+        KdpDprintf("%s", p);
 
         if (c != '\0')
             p[i + 1] = c;
@@ -3052,11 +3053,11 @@ KdbpPager(
     /* Initialize the terminal */
     if (!TerminalInitialized)
     {
-        DbgPrint("\x1b[7h");      /* Enable linewrap */
+        KdpDprintf("\x1b[7h");      /* Enable linewrap */
 
         /* Query terminal type */
         /*DbgPrint("\x1b[Z");*/
-        DbgPrint("\x05");
+        KdpDprintf("\x05");
 
         TerminalInitialized = TRUE;
         Length = 0;
@@ -3087,7 +3088,7 @@ KdbpPager(
             /* Try to query number of rows from terminal. A reply looks like "\x1b[8;24;80t" */
             TerminalReportsSize = FALSE;
             KeStallExecutionProcessor(100000);
-            DbgPrint("\x1b[18t");
+            KdpDprintf("\x1b[18t");
             c = KdbpTryGetCharSerial(5000);
 
             if (c == KEY_ESC)
@@ -3148,7 +3149,7 @@ KdbpPager(
     {
         if ( p > Buffer+BufLength)
         {
-          DbgPrint("Dmesg: error, p > Buffer+BufLength,d=%d", p - (Buffer+BufLength));
+          KdpDprintf("Dmesg: error, p > Buffer+BufLength,d=%d", p - (Buffer+BufLength));
           return;
         }
         i = strcspn(p, "\n");
@@ -3178,9 +3179,9 @@ KdbpPager(
             KdbRepeatLastCommand = FALSE;
 
             if (KdbNumberOfColsPrinted > 0)
-                DbgPrint("\n");
+                KdpDprintf("\n");
 
-            DbgPrint("--- Press q to abort, e/End,h/Home,u/PgUp, other key/PgDn ---");
+            KdpDprintf("--- Press q to abort, e/End,h/Home,u/PgUp, other key/PgDn ---");
             RowsPrintedByTerminal++;
 
             if (KdbDebugState & KD_DEBUG_KDSERIAL)
@@ -3200,7 +3201,7 @@ KdbpPager(
             }
 
             //DbgPrint("\n"); //Consize version: don't show pressed key
-            DbgPrint(" '%c'/scan=%04x\n", c, ScanCode); // Shows pressed key
+            KdpDprintf(" '%c'/scan=%04x\n", c, ScanCode); // Shows pressed key
 
             if (c == 'q')
             {
@@ -3264,7 +3265,7 @@ KdbpPager(
         }
 
         // The main printing of the current line:
-        DbgPrint(p);
+        KdpDprintf(p);
 
         // restore not null char with saved:
         if (c != '\0')

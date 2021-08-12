@@ -16,7 +16,6 @@
 
 /* GLOBALS ******************************************************************/
 
-const USHORT HalpBuildType = HAL_BUILD_TYPE;
 extern BOOLEAN HaliFindSmpConfig(VOID);
 ULONG_PTR KernelBase;
 

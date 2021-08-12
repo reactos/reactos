@@ -59,7 +59,7 @@ AuxKlibQueryModuleInformation(
 
     PAGED_CODE();
 
-    if (gKlibInitialized != 1) 
+    if (gKlibInitialized != 1)
     {
         return STATUS_UNSUCCESSFUL;
     }
@@ -86,7 +86,7 @@ AuxKlibQueryModuleInformation(
     PRTL_PROCESS_MODULES processModules = &processModulesMinimal;
     ULONG sysInfoLength = sizeof(processModulesMinimal);
     ULONG resultLength;
-    
+
     // loop until we have a large-enough buffer for all modules
     do
     {
@@ -142,7 +142,7 @@ AuxKlibQueryModuleInformation(
         goto Cleanup;
     }
 
-    if (*InformationLength < modulesSize) 
+    if (*InformationLength < modulesSize)
     {
         status = STATUS_BUFFER_TOO_SMALL;
         *InformationLength = modulesSize;
@@ -150,7 +150,7 @@ AuxKlibQueryModuleInformation(
     }
 
     // copy the information to the input array
-    for (UINT32 i = 0; i < processModules->NumberOfModules; i++) 
+    for (UINT32 i = 0; i < processModules->NumberOfModules; i++)
     {
         ModuleInfo[i].BasicInfo.ImageBase = processModules->Modules[i].ImageBase;
 

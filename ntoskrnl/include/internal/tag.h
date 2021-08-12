@@ -170,25 +170,26 @@
 #define TAG_HDTB  'BTDH'
 
 /* Security Manager Tags */
-#define TAG_SE                '  eS'
-#define TAG_ACL               'cAeS'
-#define TAG_SID               'iSeS'
-#define TAG_SD                'dSeS'
-#define TAG_QOS               'sQeS'
-#define TAG_LUID              'uLeS'
-#define TAG_PRIVILEGE_SET     'rPeS'
-#define TAG_TOKEN_DYNAMIC     'dTeS'
-#define TAG_SE_HANDLES_TAB    'aHeS'
-#define TAG_SE_DIR_BUFFER     'bDeS'
-#define TAG_SE_PROXY_DATA     'dPoT'
-#define TAG_SE_TOKEN_LOCK     'lTeS'
+#define TAG_SE                 '  eS'
+#define TAG_ACL                'cAeS'
+#define TAG_SID                'iSeS'
+#define TAG_SD                 'dSeS'
+#define TAG_QOS                'sQeS'
+#define TAG_LUID               'uLeS'
+#define TAG_SEPA               'aPeS'
+#define TAG_PRIVILEGE_SET      'rPeS'
+#define TAG_TOKEN_DYNAMIC      'dTeS'
+#define TAG_SE_HANDLES_TAB     'aHeS'
+#define TAG_SE_DIR_BUFFER      'bDeS'
+#define TAG_SE_PROXY_DATA      'dPoT'
+#define TAG_SE_TOKEN_LOCK      'lTeS'
+#define TAG_LOGON_SESSION      'sLeS'
+#define TAG_LOGON_NOTIFICATION 'nLeS'
+#define TAG_SID_AND_ATTRIBUTES 'aSeS'
 
 /* LPC Tags */
 #define TAG_LPC_MESSAGE   'McpL'
 #define TAG_LPC_ZONE      'ZcpL'
-
-/* Se Process Audit */
-#define TAG_SEPA          'aPeS'
 
 #define TAG_WAIT            'tiaW'
 #define TAG_SEC_QUERY       'qSbO'

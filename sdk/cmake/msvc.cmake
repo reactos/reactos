@@ -1,6 +1,10 @@
 
 if(CMAKE_BUILD_TYPE STREQUAL "Release")
-    add_compile_options(/Ox /Ob2 /Ot /Oy /GT)
+    add_compile_options(/Ox /Ob2 /Ot /Oy)
+    # Avoid spam in clang-cl as it doesn't support /GT
+    if(CMAKE_C_COMPILER_ID STREQUAL "MSVC")
+        add_compile_options(/GT)
+    endif()
 elseif(OPTIMIZE STREQUAL "1")
     add_compile_options(/O1)
 elseif(OPTIMIZE STREQUAL "2")
@@ -88,6 +92,22 @@ add_compile_options(/wd4244 /wd4290 /wd4800 /wd4200 /wd4214)
 # FIXME: Temporarily disable C4018 until we fix more of the others. CORE-10113
 add_compile_options(/wd4018)
 
+# Allow all warnings on msbuild/VS IDE
+if (MSVC_IDE)
+    set(ALLOW_WARNINGS TRUE)
+endif()
+
+# On x86 Debug builds, if it's not Clang-CL or msbuild, treat all warnings as errors
+if ((ARCH STREQUAL "i386") AND (CMAKE_BUILD_TYPE STREQUAL "Debug") AND (NOT USE_CLANG_CL) AND (NOT MSVC_IDE))
+    set(TREAT_ALL_WARNINGS_AS_ERRORS=TRUE)
+endif()
+
+# Define ALLOW_WARNINGS=TRUE on the cmake/configure command line to bypass errors
+if (ALLOW_WARNINGS)
+    # Nothing
+elseif (TREAT_ALL_WARNINGS_AS_ERRORS)
+    add_compile_options(/WX)
+else()
 # The following warnings are treated as errors:
 # - C4013: implicit function declaration
 # - C4020: too many actual parameters
@@ -97,7 +117,6 @@ add_compile_options(/wd4018)
 # - TODO: C4090: different 'modifier' qualifiers (for C programs only;
 #          for C++ programs, the compiler error C2440 is issued)
 # - C4098: void function returning a value
-# - C4101: unreferenced local variable
 # - C4113: parameter lists differ
 # - C4129: unrecognized escape sequence
 # - C4133: incompatible types - from '<x> *' to '<y> *'
@@ -111,12 +130,15 @@ add_compile_options(/wd4018)
 # - C4700: uninitialized variable usage
 # - C4715: 'function': not all control paths return a value
 # - C4716: function must return a value
-add_compile_options(/we4013 /we4020 /we4022 /we4028 /we4047 /we4098 /we4101 /we4113 /we4129 /we4133 /we4163 /we4229 /we4311 /we4312 /we4313 /we4477 /we4603 /we4700 /we4715 /we4716)
+add_compile_options(/we4013 /we4020 /we4022 /we4028 /we4047 /we4098 /we4113 /we4129 /we4133 /we4163 /we4229 /we4311 /we4312 /we4313 /we4477 /we4603 /we4700 /we4715 /we4716)
 
+# - C4101: unreferenced local variable
 # - C4189: local variable initialized but not referenced
 # Not in Release mode, msbuild generator doesn't like CMAKE_BUILD_TYPE
 if(MSVC_IDE OR CMAKE_BUILD_TYPE STREQUAL "Debug")
-    add_compile_options(/we4189)
+    add_compile_options(/we4101 /we4189)
+endif()
+
 endif()
 
 # Enable warnings above the default level, but don't treat them as errors:
@@ -194,8 +216,8 @@ if (NOT MSVC_IDE)
 endif()
 
 if(_VS_ANALYZE_)
-    message("VS static analysis enabled!")
-    add_compile_options(/analyze)
+    message("-- VS static analysis enabled!")
+    add_compile_options(/analyze:WX-)
 elseif(_PREFAST_)
     message("PREFAST enabled!")
     set(CMAKE_C_COMPILE_OBJECT "prefast <CMAKE_C_COMPILER> ${CMAKE_START_TEMP_FILE} ${CMAKE_CL_NOLOGO} <INCLUDES> <FLAGS> <DEFINES> /Fo<OBJECT> -c <SOURCE>${CMAKE_END_TEMP_FILE}"

@@ -63,7 +63,7 @@ ExInitPoolLookasidePointers(VOID)
     PGENERAL_LOOKASIDE Entry;
 
     /* Loop for all pool lists */
-    for (i = 0; i < MAXIMUM_PROCESSORS; i++)
+    for (i = 0; i < NUMBER_POOL_LOOKASIDE_LISTS; i++)
     {
         /* Initialize the non-paged list */
         Entry = &ExpSmallNPagedPoolLookasideLists[i];

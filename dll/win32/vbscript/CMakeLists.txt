@@ -39,6 +39,11 @@ add_library(vbscript MODULE
     vbscript.rc
     ${CMAKE_CURRENT_BINARY_DIR}/vbscript.def)
 
+if(MSVC)
+    # Disable warning C4267: '=': conversion from 'size_t' to 'WCHAR', possible loss of data
+    target_compile_options(vbscript PRIVATE /wd4267)
+endif()
+
 set_module_type(vbscript win32dll)
 target_link_libraries(vbscript uuid wine)
 add_importlibs(vbscript oleaut32 ole32 user32 msvcrt kernel32 ntdll)

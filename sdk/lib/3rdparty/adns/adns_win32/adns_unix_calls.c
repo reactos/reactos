@@ -58,7 +58,7 @@ int adns_inet_aton(const char *cp, struct in_addr *inp)
     if (!cp || !*cp || !inp)
     {
         errno = EINVAL;
-        return -1; 
+        return -1;
     }
 
     if (!strcmp(cp, "255.255.255.255"))
@@ -98,7 +98,7 @@ int gettimeofday(struct timeval *tv, struct timezone *tz)
 	now -= Adjustment;
 
 	tv->tv_sec = (long)(now / 10000000);
-	tv->tv_usec = (long)((now % 10000000) / 10); 
+	tv->tv_usec = (long)((now % 10000000) / 10);
 
     return 0;
 }

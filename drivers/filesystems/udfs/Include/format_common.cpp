@@ -34,11 +34,11 @@ CheckCDType(
     // Open device volume
     hDevice = OpenOurVolume(szDeviceName);
 
-    if (hDevice == ((HANDLE)-1)) {   
+    if (hDevice == ((HANDLE)-1)) {
         strcpy(VendorId,"");
         return BUSY;
-    } else {             
-         
+    } else {
+
         // Get our cdrw.sys signature
         RC = UDFPhSendIOCTL(IOCTL_CDRW_GET_SIGNATURE,hDevice,
                             &ioBuf,sizeof(GET_SIGNATURE_USER_OUT),
@@ -76,7 +76,7 @@ CheckCDType(
             // Check capabilities
             if(((PGET_CAPABILITIES_USER_OUT)&ioBuf)->WriteCap & (DevCap_write_cd_r | DevCap_write_cd_rw | DevCap_write_dvd_ram | DevCap_write_dvd_r) ||
               DvdRW || DvdpRW || DvdRAM) {
-                
+
                 if (DvdRAM || ((PGET_CAPABILITIES_USER_OUT)&ioBuf)->WriteCap & DevCap_write_dvd_ram) {
                     CloseHandle(hDevice);
                     return DVDRAM;
@@ -119,7 +119,7 @@ CheckCDType(
         }
         CloseHandle(hDevice);
     }
-                
+
     return OTHER;
 } // end CheckCDType()
 
@@ -164,11 +164,11 @@ InitDeviceList(
         add_drive = false;
         switch (GetDriveType(token)) {
 /*
-            case DRIVE_FIXED:   
+            case DRIVE_FIXED:
                 add_drive = true;
                 break;
 */
-            case DRIVE_CDROM:   
+            case DRIVE_CDROM:
                 // Determine CD/DVD-ROM type (R,RW,RAM,other)
                 drive_type = CheckCDType(token,&VendorId[0]);
                 add_drive = true;
@@ -184,9 +184,9 @@ InitDeviceList(
 
             BOOL bSelect = !strcmp(strupr(szDisc),strupr(token));
             if (drive_type != OTHER) {
-                CallBack(hwndControl,token,info,MediaTypeStrings[drive_type],bSelect); 
+                CallBack(hwndControl,token,info,MediaTypeStrings[drive_type],bSelect);
             } else {
-                CallBack(hwndControl,token,info,"[Unsupported]",FALSE); 
+                CallBack(hwndControl,token,info,"[Unsupported]",FALSE);
             }
 
         }

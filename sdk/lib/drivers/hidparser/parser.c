@@ -118,7 +118,7 @@ HidParser_AllocateCollection(
 
     //
     // done
-    // 
+    //
     return HIDP_STATUS_SUCCESS;
 }
 
@@ -436,7 +436,7 @@ HidParser_SignRange(
 
     for (Index = 0; Index < 4; Index++)
     {
-        if (Minimum & Mask) 
+        if (Minimum & Mask)
         {
             Minimum |= Mask;
             if (Maximum & Mask)
@@ -831,10 +831,10 @@ HidParser_ParseReportDescriptor(
             {
                 // preprocess the local state if relevant (usages for
                 // collections and report items)
-                if (CurrentItem->Tag != ITEM_TAG_MAIN_END_COLLECTION) 
+                if (CurrentItem->Tag != ITEM_TAG_MAIN_END_COLLECTION)
                 {
                     // make all usages extended for easier later processing
-                    for (Index = 0; Index < ParserContext->LocalItemState.UsageStackUsed; Index++) 
+                    for (Index = 0; Index < ParserContext->LocalItemState.UsageStackUsed; Index++)
                     {
                         //
                         // is it already extended
@@ -882,8 +882,8 @@ HidParser_ParseReportDescriptor(
                     // make new collection current
                     //
                     CurrentCollection = NewCollection;
-                } 
-                else if (CurrentItem->Tag == ITEM_TAG_MAIN_END_COLLECTION) 
+                }
+                else if (CurrentItem->Tag == ITEM_TAG_MAIN_END_COLLECTION)
                 {
                     //
                     // assert on ending the root collection
@@ -895,8 +895,8 @@ HidParser_ParseReportDescriptor(
                     //
                     CurrentCollection = CurrentCollection->Root;
                     ASSERT(CurrentCollection);
-                } 
-                else 
+                }
+                else
                 {
                     ReportType = HID_REPORT_TYPE_ANY;
 
@@ -1043,7 +1043,7 @@ HidParser_ParseReportDescriptor(
                     case ITEM_TAG_GLOBAL_POP:
                     {
                         DebugFunction("[HIDPARSE] ITEM_TAG_GLOBAL_POP\n");
-                        if (ParserContext->GlobalItemState.Next == NULL) 
+                        if (ParserContext->GlobalItemState.Next == NULL)
                         {
                             //
                             // pop without push
@@ -1081,7 +1081,7 @@ HidParser_ParseReportDescriptor(
             }
             case ITEM_TYPE_LOCAL:
             {
-                switch (CurrentItem->Tag) 
+                switch (CurrentItem->Tag)
                 {
                     case ITEM_TAG_LOCAL_USAGE:
                     {

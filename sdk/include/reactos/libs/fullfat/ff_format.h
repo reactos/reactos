@@ -33,7 +33,7 @@
  *	@file		ff_format.c
  *	@author		James Walmsley
  *	@ingroup	FORMAT
- *	
+ *
  **/
 
 

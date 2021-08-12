@@ -403,26 +403,27 @@ PoInitSystem(IN ULONG BootPhase)
     /* Check if this is phase 1 init */
     if (BootPhase == 1)
     {
+        NTSTATUS Status;
         /* Register power button notification */
-        IoRegisterPlugPlayNotification(EventCategoryDeviceInterfaceChange,
-                                       PNPNOTIFY_DEVICE_INTERFACE_INCLUDE_EXISTING_INTERFACES,
-                                       (PVOID)&GUID_DEVICE_SYS_BUTTON,
-                                       IopRootDeviceNode->
-                                       PhysicalDeviceObject->DriverObject,
-                                       PopAddRemoveSysCapsCallback,
-                                       NULL,
-                                       &NotificationEntry);
+        Status = IoRegisterPlugPlayNotification(EventCategoryDeviceInterfaceChange,
+                                                PNPNOTIFY_DEVICE_INTERFACE_INCLUDE_EXISTING_INTERFACES,
+                                                (PVOID)&GUID_DEVICE_SYS_BUTTON,
+                                                IopRootDeviceNode->PhysicalDeviceObject->DriverObject,
+                                                PopAddRemoveSysCapsCallback,
+                                                NULL,
+                                                &NotificationEntry);
+        if (!NT_SUCCESS(Status))
+            return FALSE;
 
         /* Register lid notification */
-        IoRegisterPlugPlayNotification(EventCategoryDeviceInterfaceChange,
-                                       PNPNOTIFY_DEVICE_INTERFACE_INCLUDE_EXISTING_INTERFACES,
-                                       (PVOID)&GUID_DEVICE_LID,
-                                       IopRootDeviceNode->
-                                       PhysicalDeviceObject->DriverObject,
-                                       PopAddRemoveSysCapsCallback,
-                                       NULL,
-                                       &NotificationEntry);
-        return TRUE;
+        Status = IoRegisterPlugPlayNotification(EventCategoryDeviceInterfaceChange,
+                                                PNPNOTIFY_DEVICE_INTERFACE_INCLUDE_EXISTING_INTERFACES,
+                                                (PVOID)&GUID_DEVICE_LID,
+                                                IopRootDeviceNode->PhysicalDeviceObject->DriverObject,
+                                                PopAddRemoveSysCapsCallback,
+                                                NULL,
+                                                &NotificationEntry);
+        return NT_SUCCESS(Status);
     }
 
     /* Initialize the power capabilities */

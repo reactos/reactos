@@ -8,6 +8,7 @@
  *      IRC: irc.freenode.net #reactos-pl;
  *      Updated by Wojo664 (July, 2014)
  *      Updated by Saibamen (July, 2015)
+ *      Updated by Piotr Hetnarowicz (June, 2021)
  */
 
 #pragma once
@@ -1546,7 +1547,7 @@ static MUI_ENTRY plPLBootLoaderInstallPageEntries[] =
     {
         0,
         0,
-        "Installing the bootloader onto the media, please wait...",
+        "Instalacja mened\276era rozruchu na no\230niku, prosz\251 czeka\206...",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
         TEXT_ID_STATIC
     },
@@ -1815,19 +1816,22 @@ static MUI_ENTRY plPLRegistryEntries[] =
         4,
         3,
         " Instalator ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         6,
         8,
         "Instalator uaktualnia w\210a\230nie konfiguracj\251 systemu.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         0,
         0,
         "Tworzenie ga\210\251zi rejestru...",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
     },
     {
         0,
@@ -1848,7 +1852,7 @@ MUI_ERROR plPLErrorEntries[] =
         // ERROR_NOT_INSTALLED
         "System ReactOS nie zosta\210 w pe\210ni zainstalowany na twoim\n"
         "komputerze. Je\230li wyjdziesz teraz, trzeba b\251dzie\n"
-        "ponownie uruchomi\206 instalator, by zainstalowa\206 system ReactOS.\n"
+        "ponownie uruchomi\206 instalatora, by zainstalowa\206 system ReactOS.\n"
         "\n"
         "  \x07  Naci\230nij ENTER, aby kontynuowa\206 instalacj\251.\n"
         "  \x07  Naci\230nij F3, aby wyj\230\206 z instalatora.",

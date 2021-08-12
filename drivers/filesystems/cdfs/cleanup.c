@@ -132,9 +132,9 @@ Return Value:
     //
 
     Vcb = Fcb->Vcb;
-    
+
     //
-    //  Synchronise with reads while we set the cleanup complete 
+    //  Synchronise with reads while we set the cleanup complete
     //  flag on this fileobject.  Once this flag is set,  any further
     //  reads will be rejected (CdVerifyFcbOperation)
     //
@@ -152,30 +152,30 @@ Return Value:
     if (TypeOfOpen == UserVolumeOpen) {
 
         //
-        //  For a force dismount, physically disconnect this Vcb from the device so 
-        //  a new mount can occur.  Vcb deletion cannot happen at this time since 
-        //  there is a reference on it associated with this very request,  but we'll 
+        //  For a force dismount, physically disconnect this Vcb from the device so
+        //  a new mount can occur.  Vcb deletion cannot happen at this time since
+        //  there is a reference on it associated with this very request,  but we'll
         //  call check for dismount again later after we process this close.
         //
-        
+
         if (FlagOn( Ccb->Flags, CCB_FLAG_DISMOUNT_ON_CLOSE )) {
-        
+
             CdAcquireCdData( IrpContext );
-        
+
             CdCheckForDismount( IrpContext, Vcb, TRUE );
-        
+
             CdReleaseCdData( IrpContext );
-        
+
         //
         //  If this handle actually wrote something, flush the device buffers,
         //  and then set the verify bit now just to be safe (in case there is no
         //  dismount).
         //
-        
+
         } else if (FlagOn( FileObject->Flags, FO_FILE_MODIFIED )) {
-        
+
             CdHijackIrpAndFlushDevice( IrpContext, Irp, Vcb->TargetDeviceObject );
-        
+
             CdMarkDevForVerifyIfVcbMounted( Vcb );
         }
     }
@@ -185,13 +185,13 @@ Return Value:
     //
 
     CdAcquireFcbExclusive( IrpContext, Fcb, FALSE );
-    
+
     //
     //  Use a try-finally to facilitate cleanup.
     //
 
     _SEH2_TRY {
-    
+
         //
         //  Case on the type of open that we are trying to cleanup.
         //
@@ -259,7 +259,7 @@ Return Value:
         default :
 
 #ifdef _MSC_VER
-#pragma prefast( suppress:__WARNING_USE_OTHER_FUNCTION, "argument bogus" )        
+#pragma prefast( suppress:__WARNING_USE_OTHER_FUNCTION, "argument bogus" )
 #endif
             CdBugCheck( TypeOfOpen, 0, 0 );
         }
@@ -293,14 +293,14 @@ Return Value:
 
             NT_ASSERT( FlagOn( Vcb->VcbState, VCB_STATE_LOCKED));
 
-            IoAcquireVpbSpinLock( &SavedIrql ); 
+            IoAcquireVpbSpinLock( &SavedIrql );
 
             ClearFlag( Vcb->Vpb->Flags, VPB_LOCKED);
             ClearFlag( Vcb->VcbState, VCB_STATE_LOCKED );
             Vcb->VolumeLockFileObject = NULL;
             SendUnlockNotification = TRUE;
 
-            IoReleaseVpbSpinLock( SavedIrql );  
+            IoReleaseVpbSpinLock( SavedIrql );
         }
 
         CdUnlockVcb( IrpContext, Vcb );
@@ -316,9 +316,9 @@ Return Value:
     } _SEH2_FINALLY {
 
         CdReleaseFcb( IrpContext, Fcb );
-        
+
         if (SendUnlockNotification) {
-            
+
             FsRtlNotifyVolumeEvent( FileObject, FSRTL_VOLUME_UNLOCK );
         }
     } _SEH2_END;
@@ -328,7 +328,7 @@ Return Value:
     //  this very fileobject we were cleaning up be the last reason for the
     //  volume to remain, teardown will commence on completion of this Irp.
     //
-    
+
     if (AttemptTeardown) {
 
         //
@@ -336,20 +336,20 @@ Return Value:
         //  may acquire CdData if there is a possibility of tearing the volume
         //  down.
         //
-        
+
         CdAcquireCdData( IrpContext);
 
         _SEH2_TRY {
-            
+
             CdAcquireVcbExclusive( IrpContext, Vcb, FALSE );
             VcbAcquired = TRUE;
-            
+
             CdPurgeVolume( IrpContext, Vcb, FALSE );
 
         } _SEH2_FINALLY {
 
             if (VcbAcquired) { CdReleaseVcb( IrpContext, Vcb ); }
-            
+
             CdReleaseCdData( IrpContext);
         } _SEH2_END;
     }

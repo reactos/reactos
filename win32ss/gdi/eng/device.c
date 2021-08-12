@@ -32,6 +32,95 @@ InitDeviceImpl(VOID)
     return STATUS_SUCCESS;
 }
 
+NTSTATUS
+EngpUpdateGraphicsDeviceList(VOID)
+{
+    ULONG iDevNum, iVGACompatible = -1, ulMaxObjectNumber = 0;
+    WCHAR awcDeviceName[20];
+    UNICODE_STRING ustrDeviceName;
+    WCHAR awcBuffer[256];
+    NTSTATUS Status;
+    PGRAPHICS_DEVICE pGraphicsDevice;
+    ULONG cbValue;
+    HKEY hkey;
+
+    /* Open the key for the adapters */
+    Status = RegOpenKey(L"\\Registry\\Machine\\HARDWARE\\DEVICEMAP\\VIDEO", &hkey);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("Could not open HARDWARE\\DEVICEMAP\\VIDEO registry key:0x%lx\n", Status);
+        return Status;
+    }
+
+    /* Read the name of the VGA adapter */
+    cbValue = sizeof(awcDeviceName);
+    Status = RegQueryValue(hkey, L"VgaCompatible", REG_SZ, awcDeviceName, &cbValue);
+    if (NT_SUCCESS(Status))
+    {
+        iVGACompatible = _wtoi(&awcDeviceName[sizeof("\\Device\\Video")-1]);
+        ERR("VGA adapter = %lu\n", iVGACompatible);
+    }
+
+    /* Get the maximum mumber of adapters */
+    if (!RegReadDWORD(hkey, L"MaxObjectNumber", &ulMaxObjectNumber))
+    {
+        ERR("Could not read MaxObjectNumber, defaulting to 0.\n");
+    }
+
+    TRACE("Found %lu devices\n", ulMaxObjectNumber + 1);
+
+    /* Loop through all adapters */
+    for (iDevNum = 0; iDevNum <= ulMaxObjectNumber; iDevNum++)
+    {
+        /* Create the adapter's key name */
+        swprintf(awcDeviceName, L"\\Device\\Video%lu", iDevNum);
+        RtlInitUnicodeString(&ustrDeviceName, awcDeviceName);
+
+        /* Check if the device exists already */
+        pGraphicsDevice = EngpFindGraphicsDevice(&ustrDeviceName, iDevNum, 0);
+        if (pGraphicsDevice != NULL)
+        {
+            continue;
+        }
+
+        /* Read the reg key name */
+        cbValue = sizeof(awcBuffer);
+        Status = RegQueryValue(hkey, awcDeviceName, REG_SZ, awcBuffer, &cbValue);
+        if (!NT_SUCCESS(Status))
+        {
+            ERR("failed to query the registry path:0x%lx\n", Status);
+            continue;
+        }
+
+        /* Initialize the driver for this device */
+        pGraphicsDevice = InitDisplayDriver(awcDeviceName, awcBuffer);
+        if (!pGraphicsDevice) continue;
+
+        /* Check if this is a VGA compatible adapter */
+        if (pGraphicsDevice->StateFlags & DISPLAY_DEVICE_VGA_COMPATIBLE)
+        {
+            /* Save this as the VGA adapter */
+            if (!gpVgaGraphicsDevice)
+            {
+                gpVgaGraphicsDevice = pGraphicsDevice;
+                TRACE("gpVgaGraphicsDevice = %p\n", gpVgaGraphicsDevice);
+            }
+        }
+
+        /* Set the first one as primary device */
+        if (!gpPrimaryGraphicsDevice)
+        {
+            gpPrimaryGraphicsDevice = pGraphicsDevice;
+            TRACE("gpPrimaryGraphicsDevice = %p\n", gpPrimaryGraphicsDevice);
+        }
+    }
+
+    /* Close the device map registry key */
+    ZwClose(hkey);
+
+    return STATUS_SUCCESS;
+}
+
 BOOLEAN
 EngpPopulateDeviceModeList(
     _Inout_ PGRAPHICS_DEVICE pGraphicsDevice,
@@ -360,6 +449,17 @@ EngpRegisterGraphicsDevice(
     /* Unlock loader */
     EngReleaseSemaphore(ghsemGraphicsDeviceList);
     TRACE("Prepared %lu modes for %ls\n", pGraphicsDevice->cDevModes, pGraphicsDevice->pwszDescription);
+
+    /* HACK: already in graphic mode; display wallpaper on this new display */
+    if (ScreenDeviceContext)
+    {
+        UNICODE_STRING DriverName = RTL_CONSTANT_STRING(L"DISPLAY");
+        UNICODE_STRING DisplayName;
+        HDC hdc;
+        RtlInitUnicodeString(&DisplayName, pGraphicsDevice->szWinDeviceName);
+        hdc = IntGdiCreateDC(&DriverName, &DisplayName, NULL, NULL, FALSE);
+        IntPaintDesktop(hdc);
+    }
 
     return pGraphicsDevice;
 }

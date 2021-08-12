@@ -427,7 +427,7 @@ PiAttachFilterDriversCallback(
                           (PVOID)((ULONG_PTR)kvInfo + kvInfo->DataOffset),
                           sizeof(startType));
         }
-        
+
         ExFreePool(kvInfo);
     }
 
@@ -674,7 +674,7 @@ PiCallDriverAddDevice(
                 }
             }
         }
-        
+
         ExFreePool(kvInfo);
     }
 
@@ -1396,6 +1396,14 @@ IopSetServiceEnumData(
         goto done;
     }
 
+    Status = RtlDuplicateUnicodeString(RTL_DUPLICATE_UNICODE_STRING_ALLOCATE_NULL_STRING,
+                                       &ServiceName,
+                                       &DeviceNode->ServiceName);
+    if (!NT_SUCCESS(Status))
+    {
+        goto done;
+    }
+
     RtlInitUnicodeString(&EnumKeyName, L"Enum");
     Status = IopCreateRegistryKeyEx(&ServiceEnumKey,
                                     ServiceKey,
@@ -1479,10 +1487,6 @@ IopSetServiceEnumData(
                                &NextInstance,
                                sizeof(NextInstance));
     }
-
-    RtlDuplicateUnicodeString(RTL_DUPLICATE_UNICODE_STRING_ALLOCATE_NULL_STRING,
-                              &ServiceName,
-                              &DeviceNode->ServiceName);
 
 done:
     if (ServiceEnumKey != NULL)
@@ -2542,7 +2546,7 @@ PipDeviceActionWorker(
         {
             case PiActionAddBootDevices:
             {
-                if (deviceNode->State == DeviceNodeInitialized && 
+                if (deviceNode->State == DeviceNodeInitialized &&
                     !(deviceNode->Flags & DNF_HAS_PROBLEM))
                 {
                     status = PiCallDriverAddDevice(deviceNode, PnPBootDriversInitialized);
@@ -2564,7 +2568,7 @@ PipDeviceActionWorker(
             case PiActionStartDevice:
                 // This action is triggered from usermode, when a driver is installed
                 // for a non-critical PDO
-                if (deviceNode->State == DeviceNodeInitialized && 
+                if (deviceNode->State == DeviceNodeInitialized &&
                     !(deviceNode->Flags & DNF_HAS_PROBLEM))
                 {
                     PiDevNodeStateMachine(deviceNode);

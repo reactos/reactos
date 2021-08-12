@@ -24,6 +24,16 @@ typedef struct _KNOWN_COMPOUND_ACE
     ULONG SidStart;
 } KNOWN_COMPOUND_ACE, *PKNOWN_COMPOUND_ACE;
 
+typedef struct _TOKEN_AUDIT_POLICY_INFORMATION
+{
+    ULONG PolicyCount;
+    struct
+    {
+        ULONG Category;
+        UCHAR Value;
+    } Policies[1];
+} TOKEN_AUDIT_POLICY_INFORMATION, *PTOKEN_AUDIT_POLICY_INFORMATION;
+
 FORCEINLINE
 PSID
 SepGetGroupFromDescriptor(PVOID _Descriptor)
@@ -343,6 +353,18 @@ SepCreateImpersonationTokenDacl(
     _Out_ PACL* Dacl
 );
 
+NTSTATUS
+NTAPI
+SepRmInsertLogonSessionIntoToken(
+    _Inout_ PTOKEN Token
+);
+
+NTSTATUS
+NTAPI
+SepRmRemoveLogonSessionFromToken(
+    _Inout_ PTOKEN Token
+);
+
 CODE_SEG("INIT")
 VOID
 NTAPI
@@ -455,20 +477,20 @@ SepDuplicateToken(
 NTSTATUS
 NTAPI
 SepCaptureSecurityQualityOfService(
-    IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL,
-    IN KPROCESSOR_MODE AccessMode,
-    IN POOL_TYPE PoolType,
-    IN BOOLEAN CaptureIfKernel,
-    OUT PSECURITY_QUALITY_OF_SERVICE *CapturedSecurityQualityOfService,
-    OUT PBOOLEAN Present
+    _In_opt_ POBJECT_ATTRIBUTES ObjectAttributes,
+    _In_ KPROCESSOR_MODE AccessMode,
+    _In_ POOL_TYPE PoolType,
+    _In_ BOOLEAN CaptureIfKernel,
+    _Out_ PSECURITY_QUALITY_OF_SERVICE *CapturedSecurityQualityOfService,
+    _Out_ PBOOLEAN Present
 );
 
 VOID
 NTAPI
 SepReleaseSecurityQualityOfService(
-    IN PSECURITY_QUALITY_OF_SERVICE CapturedSecurityQualityOfService OPTIONAL,
-    IN KPROCESSOR_MODE AccessMode,
-    IN BOOLEAN CaptureIfKernel
+    _In_opt_ PSECURITY_QUALITY_OF_SERVICE CapturedSecurityQualityOfService,
+    _In_ KPROCESSOR_MODE AccessMode,
+    _In_ BOOLEAN CaptureIfKernel
 );
 
 NTSTATUS

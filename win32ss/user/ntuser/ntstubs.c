@@ -54,16 +54,12 @@ NtUserBitBltSysBmp(
    return Ret;
 }
 
-DWORD
+NTSTATUS
 APIENTRY
-NtUserBuildHimcList(
-    DWORD dwUnknown1,
-    DWORD dwUnknown2,
-    DWORD dwUnknown3,
-    DWORD dwUnknown4)
+NtUserBuildHimcList(DWORD dwThreadId, DWORD dwCount, HIMC *phList, LPDWORD pdwCount)
 {
     STUB;
-    return 0;
+    return STATUS_NOT_IMPLEMENTED;
 }
 
 DWORD
@@ -356,9 +352,9 @@ NtUserSetSysColors(
 DWORD
 APIENTRY
 NtUserUpdateInputContext(
-   DWORD Unknown0,
-   DWORD Unknown1,
-   DWORD Unknown2)
+    HIMC hIMC,
+    DWORD Unknown1,
+    LPVOID pClientImc)
 {
    STUB
 
@@ -423,22 +419,20 @@ NtUserYieldTask(VOID)
    return 0;
 }
 
-DWORD
+HIMC
 APIENTRY
-NtUserCreateInputContext(
-    DWORD dwUnknown1)
+NtUserCreateInputContext(PCLIENTIMC pClientImc)
 {
     STUB;
-    return 0;
+    return NULL;
 }
 
-DWORD
+BOOL
 APIENTRY
-NtUserDestroyInputContext(
-    DWORD dwUnknown1)
+NtUserDestroyInputContext(HIMC hIMC)
 {
     STUB;
-    return 0;
+    return FALSE;
 }
 
 DWORD
@@ -630,10 +624,10 @@ Quit:
 DWORD
 APIENTRY
 NtUserQueryInputContext(
-    DWORD dwUnknown1,
+    HIMC hIMC,
     DWORD dwUnknown2)
 {
-    STUB;
+    TRACE("NtUserQueryInputContext(%p, 0x%lX)\n", hIMC, dwUnknown2);
     return 0;
 }
 

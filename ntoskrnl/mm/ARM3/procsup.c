@@ -18,7 +18,6 @@
 /* GLOBALS ********************************************************************/
 
 ULONG MmProcessColorSeed = 0x12345678;
-PMMWSL MmWorkingSetList;
 ULONG MmMaximumDeadKernelStacks = 5;
 SLIST_HEADER MmDeadStackSListHead;
 
@@ -943,10 +942,6 @@ MmInitializeProcessAddressSpace(IN PEPROCESS Process,
     ASSERT(Process->VadRoot.NumberGenericTableElements == 0);
     Process->VadRoot.BalancedRoot.u1.Parent = &Process->VadRoot.BalancedRoot;
 
-#ifdef _M_AMD64
-    /* On x64 the PFNs for the initial process are already set up */
-    if (Process != &KiInitialProcess) {
-#endif
     /* Lock our working set */
     MiLockProcessWorkingSet(Process, PsGetCurrentThread());
 
@@ -1014,9 +1009,6 @@ MmInitializeProcessAddressSpace(IN PEPROCESS Process,
 
     /* Release the process working set */
     MiUnlockProcessWorkingSet(Process, PsGetCurrentThread());
-#ifdef _M_AMD64
-   } /* On x64 the PFNs for the initial process are already set up */
-#endif
 
 #ifdef _M_AMD64
     /* On x64 we need a VAD for the shared user page */
@@ -1116,6 +1108,7 @@ MmInitializeHandBuiltProcess(IN PEPROCESS Process,
 
     /* Use idle process Working set */
     Process->Vm.VmWorkingSetList = PsGetCurrentProcess()->Vm.VmWorkingSetList;
+    Process->WorkingSetPage = PsGetCurrentProcess()->WorkingSetPage;
 
     /* Done */
     Process->HasAddressSpace = TRUE;//??
@@ -1326,11 +1319,17 @@ MmCleanProcessAddressSpace(IN PEPROCESS Process)
 
 VOID
 NTAPI
-MmDeleteProcessAddressSpace2(IN PEPROCESS Process)
+MmDeleteProcessAddressSpace(IN PEPROCESS Process)
 {
     PMMPFN Pfn1, Pfn2;
     KIRQL OldIrql;
     PFN_NUMBER PageFrameIndex;
+
+#ifndef _M_AMD64
+    OldIrql = MiAcquireExpansionLock();
+    RemoveEntryList(&Process->MmProcessLinks);
+    MiReleaseExpansionLock(OldIrql);
+#endif
 
     //ASSERT(Process->CommitCharge == 0);
 

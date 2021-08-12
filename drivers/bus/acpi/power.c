@@ -72,7 +72,7 @@ Bus_FDO_Power (
                DbgDevicePowerString(powerState.DeviceState)));
 
   if (powerType == SystemPowerState)
-  {     
+  {
     switch (powerState.SystemState) {
     case PowerSystemSleeping1:
       AcpiState = ACPI_STATE_S1;

@@ -400,13 +400,11 @@ HalpAssignPCISlotResources(
 
 ULONG
 NTAPI
-HalpGetSystemInterruptVector_Acpi(
-    ULONG BusNumber,
-    ULONG BusInterruptLevel,
-    ULONG BusInterruptVector,
-    PKIRQL Irql,
-    PKAFFINITY Affinity
-);
+HalpGetRootInterruptVector(
+    _In_ ULONG BusInterruptLevel,
+    _In_ ULONG BusInterruptVector,
+    _Out_ PKIRQL Irql,
+    _Out_ PKAFFINITY Affinity);
 
 ULONG
 NTAPI

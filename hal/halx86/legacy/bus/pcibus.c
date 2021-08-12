@@ -119,8 +119,8 @@ VOID
 NTAPI
 HalpPCISynchronizeType1(IN PBUS_HANDLER BusHandler,
                         IN PCI_SLOT_NUMBER Slot,
-                        IN PKIRQL Irql,
-                        IN PPCI_TYPE1_CFG_BITS PciCfg1)
+                        OUT PKIRQL OldIrql,
+                        OUT PPCI_TYPE1_CFG_BITS PciCfg1)
 {
     /* Setup the PCI Configuration Register */
     PciCfg1->u.AsULONG = 0;
@@ -130,14 +130,14 @@ HalpPCISynchronizeType1(IN PBUS_HANDLER BusHandler,
     PciCfg1->u.bits.Enable = TRUE;
 
     /* Acquire the lock */
-    KeRaiseIrql(HIGH_LEVEL, Irql);
-    KiAcquireSpinLock(&HalpPCIConfigLock);
+    KeRaiseIrql(HIGH_LEVEL, OldIrql);
+    KeAcquireSpinLockAtDpcLevel(&HalpPCIConfigLock);
 }
 
 VOID
 NTAPI
 HalpPCIReleaseSynchronzationType1(IN PBUS_HANDLER BusHandler,
-                                  IN KIRQL Irql)
+                                  IN KIRQL OldIrql)
 {
     PCI_TYPE1_CFG_BITS PciCfg1;
 
@@ -147,8 +147,7 @@ HalpPCIReleaseSynchronzationType1(IN PBUS_HANDLER BusHandler,
                      PciCfg1.u.AsULONG);
 
     /* Release the lock */
-    KiReleaseSpinLock(&HalpPCIConfigLock);
-    KeLowerIrql(Irql);
+    KeReleaseSpinLock(&HalpPCIConfigLock, OldIrql);
 }
 
 TYPE1_READ(HalpPCIReadUcharType1, UCHAR)
@@ -164,8 +163,8 @@ VOID
 NTAPI
 HalpPCISynchronizeType2(IN PBUS_HANDLER BusHandler,
                         IN PCI_SLOT_NUMBER Slot,
-                        IN PKIRQL Irql,
-                        IN PPCI_TYPE2_ADDRESS_BITS PciCfg)
+                        OUT PKIRQL OldIrql,
+                        OUT PPCI_TYPE2_ADDRESS_BITS PciCfg)
 {
     PCI_TYPE2_CSE_BITS PciCfg2Cse;
     PPCIPBUSDATA BusData = (PPCIPBUSDATA)BusHandler->BusData;
@@ -176,8 +175,8 @@ HalpPCISynchronizeType2(IN PBUS_HANDLER BusHandler,
     PciCfg->u.bits.AddressBase = (USHORT)BusData->Config.Type2.Base;
 
     /* Acquire the lock */
-    KeRaiseIrql(HIGH_LEVEL, Irql);
-    KiAcquireSpinLock(&HalpPCIConfigLock);
+    KeRaiseIrql(HIGH_LEVEL, OldIrql);
+    KeAcquireSpinLockAtDpcLevel(&HalpPCIConfigLock);
 
     /* Setup the CSE Register */
     PciCfg2Cse.u.AsUCHAR = 0;
@@ -194,7 +193,7 @@ HalpPCISynchronizeType2(IN PBUS_HANDLER BusHandler,
 VOID
 NTAPI
 HalpPCIReleaseSynchronizationType2(IN PBUS_HANDLER BusHandler,
-                                   IN KIRQL Irql)
+                                   IN KIRQL OldIrql)
 {
     PCI_TYPE2_CSE_BITS PciCfg2Cse;
     PPCIPBUSDATA BusData = (PPCIPBUSDATA)BusHandler->BusData;
@@ -205,8 +204,7 @@ HalpPCIReleaseSynchronizationType2(IN PBUS_HANDLER BusHandler,
     WRITE_PORT_UCHAR(BusData->Config.Type2.Forward, 0);
 
     /* Release the lock */
-    KiReleaseSpinLock(&HalpPCIConfigLock);
-    KeLowerIrql(Irql);
+    KeReleaseSpinLock(&HalpPCIConfigLock, OldIrql);
 }
 
 TYPE2_READ(HalpPCIReadUcharType2, UCHAR)
@@ -319,13 +317,6 @@ HalpXboxBlacklistedPCISlot(IN PBUS_HANDLER BusHandler,
         (BusHandler->BusNumber == 1 && Slot.u.bits.DeviceNumber != 0))
     {
         DPRINT("Blacklisted PCI slot (%d:%d:%d)\n", BusHandler->BusNumber, Slot.u.bits.DeviceNumber, Slot.u.bits.FunctionNumber);
-        return TRUE;
-    }
-
-    /* Temporary hack to avoid stack overflow in kernel, see CORE-16319 */
-    if (BusHandler->BusNumber == 0 && Slot.u.bits.DeviceNumber == 8 && Slot.u.bits.FunctionNumber == 0)
-    {
-        DPRINT("Blacklisted PCI-to-PCI bridge (00:08.0 - PCI\\VEN_10DE&DEV_01B8, see CORE-16319)\n");
         return TRUE;
     }
 
@@ -526,7 +517,7 @@ HalpSetPCIData(IN PBUS_HANDLER BusHandler,
     /* Update the total length read */
     return Len;
 }
-
+#ifndef _MINIHAL_
 ULONG
 NTAPI
 HalpGetPCIIntOnISABus(IN PBUS_HANDLER BusHandler,
@@ -547,6 +538,7 @@ HalpGetPCIIntOnISABus(IN PBUS_HANDLER BusHandler,
                                  Irql,
                                  Affinity);
 }
+#endif // _MINIHAL_
 
 VOID
 NTAPI
@@ -569,6 +561,7 @@ HalpPCIISALine2Pin(IN PBUS_HANDLER BusHandler,
     UNIMPLEMENTED_DBGBREAK();
 }
 
+#ifndef _MINIHAL_
 NTSTATUS
 NTAPI
 HalpGetISAFixedPCIIrq(IN PBUS_HANDLER BusHandler,
@@ -661,6 +654,7 @@ HalpRegisterPciDebuggingDeviceInfo(VOID)
     UNIMPLEMENTED_DBGBREAK("You have implemented the KD routines for searching PCI debugger"
                            "devices, but you have forgotten to implement this routine\n");
 }
+#endif // _MINIHAL_
 
 static ULONG NTAPI
 PciSize(ULONG Base, ULONG Mask)

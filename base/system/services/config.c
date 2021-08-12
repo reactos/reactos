@@ -476,8 +476,15 @@ ScmSetServicePassword(
     UNICODE_STRING Password;
     NTSTATUS Status;
     DWORD dwError = ERROR_SUCCESS;
+    SIZE_T ServiceNameLength;
 
     RtlZeroMemory(&ObjectAttributes, sizeof(OBJECT_ATTRIBUTES));
+
+    ServiceNameLength = wcslen(pszServiceName);
+    if (ServiceNameLength > (UNICODE_STRING_MAX_CHARS - 4))
+    {
+        return ERROR_INVALID_PARAMETER;
+    }
 
     Status = LsaOpenPolicy(NULL,
                            &ObjectAttributes,
@@ -486,7 +493,7 @@ ScmSetServicePassword(
     if (!NT_SUCCESS(Status))
         return RtlNtStatusToDosError(Status);
 
-    ServiceName.Length = (wcslen(pszServiceName) + 4) * sizeof(WCHAR);
+    ServiceName.Length = ((USHORT)ServiceNameLength + 4) * sizeof(WCHAR);
     ServiceName.MaximumLength = ServiceName.Length + sizeof(WCHAR);
     ServiceName.Buffer = HeapAlloc(GetProcessHeap(),
                                    HEAP_ZERO_MEMORY,
@@ -699,6 +706,7 @@ done:
 
 DWORD
 ScmDecryptPassword(
+    _In_ PVOID ContextHandle,
     _In_ PBYTE pPassword,
     _In_ DWORD dwPasswordSize,
     _Out_ PWSTR *pClearTextPassword)
@@ -709,7 +717,7 @@ ScmDecryptPassword(
     NTSTATUS Status;
 
     /* Get the session key */
-    Status = SystemFunction028(NULL,
+    Status = SystemFunction028(ContextHandle,
                                SessionKey);
     if (!NT_SUCCESS(Status))
     {

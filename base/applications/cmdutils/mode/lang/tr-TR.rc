@@ -70,4 +70,5 @@ BEGIN
     IDS_ERROR_INVALID_STOP_BITS "YANLIŞLIK: %d Durma İkilleri için geçersiz değer:\n"
     IDS_ERROR_NO_MEMORY "YANLIŞLIK: Yeterli bellek yok.\n"
     IDS_ERROR_SCREEN_LINES_COL "Görüntülük, belirtilen yataç ve dikeç sayısına ayarlanamıyor.\n"
+    IDS_ERROR_INVALID_CODEPAGE "The code page specified is not valid.\n"
 END

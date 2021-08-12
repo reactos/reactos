@@ -49,7 +49,7 @@ PinCreate(
     RtlZeroMemory(PinContext, sizeof(PIN_CONTEXT));
 
     /* FIXME
-     * check allocator framing and apply to all pins 
+     * check allocator framing and apply to all pins
      */
 
     return STATUS_SUCCESS;

@@ -37,16 +37,16 @@ Environment:
 VOID DLDInit(ULONG MaxThrdCount);
 
 
-VOID DLDAcquireExclusive(PERESOURCE Resource,       
+VOID DLDAcquireExclusive(PERESOURCE Resource,
                 ULONG BugCheckId,
                 ULONG Line);
 
-VOID DLDAcquireShared(PERESOURCE Resource,       
+VOID DLDAcquireShared(PERESOURCE Resource,
                       ULONG BugCheckId,
                       ULONG Line,
                       BOOLEAN WaitForExclusive);
 
-VOID DLDAcquireSharedStarveExclusive(PERESOURCE Resource,       
+VOID DLDAcquireSharedStarveExclusive(PERESOURCE Resource,
                       ULONG BugCheckId,
                       ULONG Line);
 

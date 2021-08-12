@@ -16,11 +16,11 @@
 
 static const _TCHAR wday_name[DAYSPERWEEK][5] =
 {
-    _T("Sun "), _T("Mon "), _T("Tue "), _T("Wed "), 
+    _T("Sun "), _T("Mon "), _T("Tue "), _T("Wed "),
     _T("Thu "), _T("Fri "), _T("Sat ")
 };
 
-static const _TCHAR mon_name[MONSPERYEAR][5] = 
+static const _TCHAR mon_name[MONSPERYEAR][5] =
 {
     _T("Jan "), _T("Feb "), _T("Mar "), _T("Apr "), _T("May "), _T("Jun "),
     _T("Jul "), _T("Aug "), _T("Sep "), _T("Oct "), _T("Nov "), _T("Dec ")
@@ -77,7 +77,7 @@ static __inline
 void
 FillBuf(timebuf_t *buf, const struct tm *ptm)
 {
-    /* Format looks like this: 
+    /* Format looks like this:
      * "Sun Mar 01 12:34:56 1902\n\0" */
     buf->WeekDay = *(_TCHAR4*)wday_name[ptm->tm_wday];
     buf->Month = *(_TCHAR4*)mon_name[ptm->tm_mon];
@@ -102,8 +102,8 @@ FillBuf(timebuf_t *buf, const struct tm *ptm)
  * \param numberOfElements Size of the buffer in characters.
  * \param time Pointer to the UTC time.
  */
-errno_t 
-_tasctime_s( 
+errno_t
+_tasctime_s(
     _TCHAR* buffer,
     size_t numberOfElements,
     const struct tm *ptm)

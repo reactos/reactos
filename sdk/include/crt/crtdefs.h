@@ -9,6 +9,14 @@
 #ifndef _INC_CRTDEFS
 #define _INC_CRTDEFS
 
+#ifndef NULL
+#ifdef __cplusplus
+#define NULL 0
+#else
+#define NULL ((void *)0)
+#endif
+#endif
+
 #ifdef _USE_32BIT_TIME_T
 #ifdef _WIN64
 #error You cannot use 32-bit time_t (_USE_32BIT_TIME_T) with _WIN64
@@ -174,6 +182,15 @@
 
 #define __crt_typefix(ctype)
 
+#ifndef _STATIC_ASSERT
+  #ifdef __cplusplus
+    #define _STATIC_ASSERT(expr) static_assert((expr), #expr)
+  #elif defined(__clang__) || defined(__GNUC__)
+    #define _STATIC_ASSERT(expr) _Static_assert((expr), #expr)
+  #else
+    #define _STATIC_ASSERT(expr) extern char (*__static_assert__(void)) [(expr) ? 1 : -1]
+  #endif
+#endif /* _STATIC_ASSERT */
 
 /** Deprecated ***************************************************************/
 

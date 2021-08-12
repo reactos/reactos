@@ -79,7 +79,7 @@ dll/win32/iccvid              # Synced to WineStaging-4.0
 dll/win32/ieframe             # Synced to WineStaging-4.18
 dll/win32/imaadp32.acm        # Synced to WineStaging-4.0
 dll/win32/imagehlp            # Synced to WineStaging-4.18
-dll/win32/imm32               # Synced to WineStaging-4.18
+dll/win32/imm32               # Forked at WineStaging-4.18
 dll/win32/inetcomm            # Synced to WineStaging-4.18
 dll/win32/inetmib1            # Synced to WineStaging-4.18
 dll/win32/initpki             # Synced to WineStaging-4.18

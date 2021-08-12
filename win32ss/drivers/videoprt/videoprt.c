@@ -37,7 +37,7 @@ BOOLEAN VpBaseVideo = FALSE;
 BOOLEAN VpNoVesa = FALSE;
 
 PKPROCESS CsrProcess = NULL;
-ULONG VideoPortDeviceNumber = 0;
+static ULONG VideoPortMaxObjectNumber = -1;
 KMUTEX VideoPortInt10Mutex;
 KSPIN_LOCK HwResetAdaptersLock;
 RTL_STATIC_LIST_HEAD(HwResetAdaptersList);
@@ -50,6 +50,64 @@ DriverEntry(
     IN PVOID Context1,
     IN PVOID Context2)
 {
+    return STATUS_SUCCESS;
+}
+
+static
+NTSTATUS
+IntVideoPortAddDeviceMapLink(
+    PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension)
+{
+    WCHAR DeviceBuffer[20];
+    UNICODE_STRING DeviceName;
+    WCHAR SymlinkBuffer[20];
+    UNICODE_STRING SymlinkName;
+    ULONG DeviceNumber;
+    NTSTATUS Status;
+
+    /* Create a unicode device name. */
+    DeviceNumber = DeviceExtension->DeviceNumber;
+    swprintf(DeviceBuffer, L"\\Device\\Video%lu", DeviceNumber);
+
+    /* Add entry to DEVICEMAP\VIDEO key in registry. */
+    Status = RtlWriteRegistryValue(RTL_REGISTRY_DEVICEMAP,
+                                   L"VIDEO",
+                                   DeviceBuffer,
+                                   REG_SZ,
+                                   DeviceExtension->NewRegistryPath.Buffer,
+                                   DeviceExtension->NewRegistryPath.Length + sizeof(UNICODE_NULL));
+    if (!NT_SUCCESS(Status))
+    {
+        ERR_(VIDEOPRT, "Failed to create DEViCEMAP registry entry: 0x%X\n", Status);
+        return Status;
+    }
+
+    Status = RtlWriteRegistryValue(RTL_REGISTRY_DEVICEMAP,
+                                   L"VIDEO",
+                                   L"MaxObjectNumber",
+                                   REG_DWORD,
+                                   &DeviceNumber,
+                                   sizeof(DeviceNumber));
+    if (!NT_SUCCESS(Status))
+    {
+        ERR_(VIDEOPRT, "Failed to write MaxObjectNumber: 0x%X\n", Status);
+        return Status;
+    }
+
+    /* Create symbolic link "\??\DISPLAYx" */
+    swprintf(SymlinkBuffer, L"\\??\\DISPLAY%lu", DeviceNumber + 1);
+    RtlInitUnicodeString(&SymlinkName, SymlinkBuffer);
+    RtlInitUnicodeString(&DeviceName, DeviceBuffer);
+    Status = IoCreateSymbolicLink(&SymlinkName, &DeviceName);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR_(VIDEOPRT, "Failed to create symbolic link: 0x%X\n", Status);
+        return Status;
+    }
+
+    /* Update MaxObjectNumber */
+    VideoPortMaxObjectNumber = DeviceNumber;
+
     return STATUS_SUCCESS;
 }
 
@@ -95,6 +153,8 @@ IntVideoPortCreateAdapterDeviceObject(
    _In_ PDRIVER_OBJECT DriverObject,
    _In_ PVIDEO_PORT_DRIVER_EXTENSION DriverExtension,
    _In_opt_ PDEVICE_OBJECT PhysicalDeviceObject,
+   _In_ USHORT AdapterNumber,
+   _In_ USHORT DisplayNumber,
    _Out_opt_ PDEVICE_OBJECT *DeviceObject)
 {
     PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension;
@@ -114,8 +174,8 @@ IntVideoPortCreateAdapterDeviceObject(
      * Find the first free device number that can be used for video device
      * object names and symlinks.
      */
-    DeviceNumber = VideoPortDeviceNumber;
-    if (DeviceNumber == 0xFFFFFFFF)
+    DeviceNumber = VideoPortMaxObjectNumber + 1;
+    if (DeviceNumber == (ULONG)-1)
     {
         WARN_(VIDEOPRT, "Can't find free device number\n");
         return STATUS_UNSUCCESSFUL;
@@ -165,11 +225,14 @@ IntVideoPortCreateAdapterDeviceObject(
     DeviceExtension->FunctionalDeviceObject = *DeviceObject;
     DeviceExtension->DriverExtension = DriverExtension;
     DeviceExtension->SessionId = -1;
+    DeviceExtension->AdapterNumber = AdapterNumber;
+    DeviceExtension->DisplayNumber = DisplayNumber;
 
     InitializeListHead(&DeviceExtension->ChildDeviceList);
 
     /* Get the registry path associated with this device. */
     Status = IntCreateRegistryPath(&DriverExtension->RegistryPath,
+                                   DeviceExtension->AdapterNumber,
                                    &DeviceExtension->RegistryPath);
     if (!NT_SUCCESS(Status))
     {
@@ -235,16 +298,40 @@ IntVideoPortCreateAdapterDeviceObject(
     KeInitializeMutex(&DeviceExtension->DeviceLock, 0);
 
     /* Attach the device. */
-    if (PhysicalDeviceObject != NULL)
+    if ((PhysicalDeviceObject != NULL) && (DisplayNumber == 0))
         DeviceExtension->NextDeviceObject = IoAttachDeviceToDeviceStack(
                                                 *DeviceObject,
                                                 PhysicalDeviceObject);
 
-    IntCreateNewRegistryPath(DeviceExtension);
+    Status = IntCreateNewRegistryPath(DeviceExtension);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR_(VIDEOPRT, "IntCreateNewRegistryPath() failed with status 0x%08x\n", Status);
+        IoDeleteDevice(*DeviceObject);
+        *DeviceObject = NULL;
+        return Status;
+    }
+
     IntSetupDeviceSettingsKey(DeviceExtension);
 
     /* Remove the initailizing flag */
     (*DeviceObject)->Flags &= ~DO_DEVICE_INITIALIZING;
+
+    /* Set up the VIDEO/DEVICEMAP registry keys */
+    Status = IntVideoPortAddDeviceMapLink(DeviceExtension);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR_(VIDEOPRT, "IntVideoPortAddDeviceMapLink() failed with status 0x%08x\n", Status);
+        IoDeleteDevice(*DeviceObject);
+        *DeviceObject = NULL;
+        return Status;
+    }
+
+    if (DisplayNumber == 0)
+    {
+        DriverExtension->InitializationData.StartingDeviceNumber++;
+    }
+
     return STATUS_SUCCESS;
 }
 
@@ -256,21 +343,14 @@ IntVideoPortFindAdapter(
     IN PVIDEO_PORT_DRIVER_EXTENSION DriverExtension,
     IN PDEVICE_OBJECT DeviceObject)
 {
-    WCHAR DeviceVideoBuffer[20];
     PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension;
     NTSTATUS Status;
     VIDEO_PORT_CONFIG_INFO ConfigInfo;
     SYSTEM_BASIC_INFORMATION SystemBasicInfo;
     UCHAR Again = FALSE;
-    WCHAR DeviceBuffer[20];
-    UNICODE_STRING DeviceName;
-    WCHAR SymlinkBuffer[20];
-    UNICODE_STRING SymlinkName;
     BOOL LegacyDetection = FALSE;
-    ULONG DeviceNumber;
 
     DeviceExtension = (PVIDEO_PORT_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
-    DeviceNumber = DeviceExtension->DeviceNumber;
 
     /* Setup a ConfigInfo structure that we will pass to HwFindAdapter. */
     RtlZeroMemory(&ConfigInfo, sizeof(VIDEO_PORT_CONFIG_INFO));
@@ -368,33 +448,6 @@ IntVideoPortFindAdapter(
      * Now we know the device is present, so let's do all additional tasks
      * such as creating symlinks or setting up interrupts and timer.
      */
-
-    /* Create a unicode device name. */
-    swprintf(DeviceBuffer, L"\\Device\\Video%lu", DeviceNumber);
-    RtlInitUnicodeString(&DeviceName, DeviceBuffer);
-
-    /* Create symbolic link "\??\DISPLAYx" */
-    swprintf(SymlinkBuffer, L"\\??\\DISPLAY%lu", DeviceNumber + 1);
-    RtlInitUnicodeString(&SymlinkName, SymlinkBuffer);
-    IoCreateSymbolicLink(&SymlinkName, &DeviceName);
-
-    /* Add entry to DEVICEMAP\VIDEO key in registry. */
-    swprintf(DeviceVideoBuffer, L"\\Device\\Video%d", DeviceNumber);
-    RtlWriteRegistryValue(
-        RTL_REGISTRY_DEVICEMAP,
-        L"VIDEO",
-        DeviceVideoBuffer,
-        REG_SZ,
-        DeviceExtension->RegistryPath.Buffer,
-        DeviceExtension->RegistryPath.Length + sizeof(UNICODE_NULL));
-
-    RtlWriteRegistryValue(
-        RTL_REGISTRY_DEVICEMAP,
-        L"VIDEO",
-        L"MaxObjectNumber",
-        REG_DWORD,
-        &DeviceNumber,
-        sizeof(DeviceNumber));
 
     /* FIXME: Allocate hardware resources for device. */
 
@@ -761,6 +814,8 @@ VideoPortInitialize(
         Status = IntVideoPortCreateAdapterDeviceObject(DriverObject,
                                                        DriverExtension,
                                                        NULL,
+                                                       DriverExtension->InitializationData.StartingDeviceNumber,
+                                                       0,
                                                        &DeviceObject);
         if (!NT_SUCCESS(Status))
         {
@@ -769,9 +824,7 @@ VideoPortInitialize(
         }
 
         Status = IntVideoPortFindAdapter(DriverObject, DriverExtension, DeviceObject);
-        if (NT_SUCCESS(Status))
-            VideoPortDeviceNumber++;
-        else
+        if (!NT_SUCCESS(Status))
             ERR_(VIDEOPRT, "IntVideoPortFindAdapter returned 0x%x\n", Status);
 
         return Status;
@@ -1231,10 +1284,6 @@ VideoPortEnumerateChildren(
                 {
                     /* Mark it invalid */
                     ChildExtension->EdidValid = FALSE;
-                    // FIXME: the following break workarounds CORE-16695
-                    // but prevents graphic cards to return an invalid
-                    // EDID as first child, and a valid one as second child.
-                    break;
                 }
             }
         }
@@ -1301,8 +1350,44 @@ VideoPortCreateSecondaryDisplay(
     IN OUT PVOID *SecondaryDeviceExtension,
     IN ULONG Flag)
 {
-    UNIMPLEMENTED;
-    return ERROR_DEV_NOT_EXIST;
+    PDEVICE_OBJECT DeviceObject;
+    PVIDEO_PORT_DEVICE_EXTENSION FirstDeviceExtension, DeviceExtension;
+    NTSTATUS Status;
+
+    ASSERT(SecondaryDeviceExtension);
+
+    if (Flag != 0)
+    {
+        UNIMPLEMENTED;
+    }
+
+    FirstDeviceExtension = VIDEO_PORT_GET_DEVICE_EXTENSION(HwDeviceExtension);
+
+    if (FirstDeviceExtension->DisplayNumber != 0)
+    {
+        DPRINT1("Calling VideoPortCreateSecondaryDisplay for InstanceId %lu\n",
+                FirstDeviceExtension->DisplayNumber);
+    }
+
+    Status = IntVideoPortCreateAdapterDeviceObject(FirstDeviceExtension->DriverObject,
+                                                   FirstDeviceExtension->DriverExtension,
+                                                   FirstDeviceExtension->PhysicalDeviceObject,
+                                                   FirstDeviceExtension->AdapterNumber,
+                                                   FirstDeviceExtension->NumberOfSecondaryDisplays + 1,
+                                                   &DeviceObject);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("IntVideoPortCreateAdapterDeviceObject() failed with status 0x%08x\n", Status);
+        return ERROR_DEV_NOT_EXIST;
+    }
+
+    DeviceExtension = DeviceObject->DeviceExtension;
+
+    /* Increment secondary display count */
+    FirstDeviceExtension->NumberOfSecondaryDisplays++;
+
+    *SecondaryDeviceExtension = DeviceExtension->MiniPortDeviceExtension;
+    return NO_ERROR;
 }
 
 /*

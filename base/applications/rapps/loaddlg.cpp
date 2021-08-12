@@ -529,7 +529,7 @@ BOOL ShowLastError(
     DWORD dwLastError)
 {
     CLocalPtr<WCHAR> lpMsg;
-    
+
     if (!FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER |
                         FORMAT_MESSAGE_IGNORE_INSERTS |
                         (bInetError ? FORMAT_MESSAGE_FROM_HMODULE : FORMAT_MESSAGE_FROM_SYSTEM),
@@ -622,7 +622,7 @@ unsigned int WINAPI CDownloadManager::ThreadFunc(LPVOID param)
             szNewCaption.LoadStringW(IDS_DL_DIALOG_DB_UNOFFICIAL_DOWNLOAD_DISP);
             break;
         }
-        
+
         if (!IsWindow(hDlg)) goto end;
         SetWindowTextW(hDlg, szNewCaption.GetString());
 

@@ -46,6 +46,9 @@ IDC_MONITORICO ICON "resources/monitor.ico"
 #ifdef LANGUAGE_HI_IN
     #include "lang/hi-IN.rc"
 #endif
+#ifdef LANGUAGE_HU_HU
+    #include "lang/hu-HU.rc"
+#endif
 #ifdef LANGUAGE_IT_IT
     #include "lang/it-IT.rc"
 #endif

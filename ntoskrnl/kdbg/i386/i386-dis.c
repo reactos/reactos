@@ -51,7 +51,7 @@ KdbpPrintDisasm(void* Ignored, const char* fmt, ...)
 
   va_start(ap, fmt);
   ret = vsprintf(buffer, fmt, ap);
-  DbgPrint("%s", buffer);
+  KdpDprintf("%s", buffer);
   va_end(ap);
   return(ret);
 }
@@ -80,7 +80,7 @@ KdbpPrintAddressInCode(unsigned int Addr, struct disassemble_info * Ignored)
 {
     if (!KdbSymPrintAddress((void*)Addr, NULL))
     {
-      DbgPrint("<%08x>", Addr);
+      KdpDprintf("<%08x>", Addr);
     }
 }
 
@@ -2032,7 +2032,7 @@ static int two_source_ops;
 static bfd_vma op_address[3];
 static bfd_vma op_riprel[3];
 static bfd_vma start_pc;
-
+
 /*
  *   On the 386's of 1988, the maximum length of an instruction is 15 bytes.
  *   (see topic "Redundant prefixes" in the "Differences from 8086"

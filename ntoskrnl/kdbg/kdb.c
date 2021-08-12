@@ -1531,10 +1531,10 @@ KdbEnterDebuggerException(
     OldEflags = __readeflags();
     _disable();
 
-    /* HACK: Save the current IRQL and pretend we are at passive level,
-     * although interrupts are off. Needed because KDBG calls pageable code. */
+    /* HACK: Save the current IRQL and pretend we are at dispatch level */
     OldIrql = KeGetCurrentIrql();
-    KeLowerIrql(PASSIVE_LEVEL);
+    if (OldIrql > DISPATCH_LEVEL)
+        KeLowerIrql(DISPATCH_LEVEL);
 
     /* Exception inside the debugger? Game over. */
     if (InterlockedIncrement(&KdbEntryCount) > 1)
@@ -1579,7 +1579,8 @@ KdbEnterDebuggerException(
     InterlockedDecrement(&KdbEntryCount);
 
     /* HACK: Raise back to old IRQL */
-    KeRaiseIrql(OldIrql, &OldIrql);
+    if (OldIrql > DISPATCH_LEVEL)
+        KeRaiseIrql(OldIrql, &OldIrql);
 
     /* Leave critical section */
     __writeeflags(OldEflags);

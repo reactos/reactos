@@ -231,11 +231,6 @@ extern const ULONG MmProtectToValue[32];
 #endif
 
 //
-// Special IRQL value (found in assertions)
-//
-#define MM_NOIRQL (KIRQL)0xFFFFFFFF
-
-//
 // Returns the color of a page
 //
 #define MI_GET_PAGE_COLOR(x)                ((x) & MmSecondaryColorMask)
@@ -734,7 +729,7 @@ FORCEINLINE
 BOOLEAN
 MiIsUserPte(PVOID Address)
 {
-    return (Address <= (PVOID)MiHighestUserPte);
+    return (Address >= (PVOID)PTE_BASE) && (Address <= (PVOID)MiHighestUserPte);
 }
 #endif
 
@@ -790,12 +785,23 @@ MI_MAKE_HARDWARE_PTE_KERNEL(IN PMMPTE NewPte,
     ASSERT(!MI_IS_SESSION_PTE(MappingPte));
     ASSERT((MappingPte < (PMMPTE)PDE_BASE) || (MappingPte > (PMMPTE)PDE_TOP));
 
+    /* Check that we are not setting valid a page that should not be */
+    ASSERT(ProtectionMask & MM_PROTECT_ACCESS);
+    ASSERT((ProtectionMask & MM_GUARDPAGE) == 0);
+
     /* Start fresh */
-    *NewPte = ValidKernelPte;
+    NewPte->u.Long = 0;
 
     /* Set the protection and page */
     NewPte->u.Hard.PageFrameNumber = PageFrameNumber;
     NewPte->u.Long |= MmProtectToPteMask[ProtectionMask];
+
+    /* Make this valid & global */
+#ifdef _GLOBAL_PAGES_ARE_AWESOME_
+    if (KeFeatureBits & KF_GLOBAL_PAGE)
+        NewPte->u.Hard.Global = 1;
+#endif
+    NewPte->u.Hard.Valid = 1;
 }
 
 //
@@ -808,6 +814,10 @@ MI_MAKE_HARDWARE_PTE(IN PMMPTE NewPte,
                      IN ULONG_PTR ProtectionMask,
                      IN PFN_NUMBER PageFrameNumber)
 {
+    /* Check that we are not setting valid a page that should not be */
+    ASSERT(ProtectionMask & MM_PROTECT_ACCESS);
+    ASSERT((ProtectionMask & MM_GUARDPAGE) == 0);
+
     /* Set the protection and page */
     NewPte->u.Long = MiDetermineUserGlobalPteMask(MappingPte);
     NewPte->u.Long |= MmProtectToPteMask[ProtectionMask];
@@ -830,7 +840,10 @@ MI_MAKE_HARDWARE_PTE_USER(IN PMMPTE NewPte,
     /* Start fresh */
     NewPte->u.Long = 0;
 
-    /* Set the protection and page */
+    /* Check that we are not setting valid a page that should not be */
+    ASSERT(ProtectionMask & MM_PROTECT_ACCESS);
+    ASSERT((ProtectionMask & MM_GUARDPAGE) == 0);
+
     NewPte->u.Hard.Valid = TRUE;
     NewPte->u.Hard.Owner = TRUE;
     NewPte->u.Hard.PageFrameNumber = PageFrameNumber;
@@ -1805,40 +1818,7 @@ MiReferenceUnusedPageAndBumpLockCount(IN PMMPFN Pfn1)
     }
 }
 
-FORCEINLINE
-VOID
-MiIncrementPageTableReferences(IN PVOID Address)
-{
-    PUSHORT RefCount;
 
-    RefCount = &MmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)];
-
-    *RefCount += 1;
-    ASSERT(*RefCount <= PTE_PER_PAGE);
-}
-
-FORCEINLINE
-VOID
-MiDecrementPageTableReferences(IN PVOID Address)
-{
-    PUSHORT RefCount;
-
-    RefCount = &MmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)];
-
-    *RefCount -= 1;
-    ASSERT(*RefCount < PTE_PER_PAGE);
-}
-
-FORCEINLINE
-USHORT
-MiQueryPageTableReferences(IN PVOID Address)
-{
-    PUSHORT RefCount;
-
-    RefCount = &MmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)];
-
-    return *RefCount;
-}
 
 CODE_SEG("INIT")
 BOOLEAN
@@ -2466,8 +2446,117 @@ MiSynchronizeSystemPde(PMMPDE PointerPde)
 }
 #endif
 
+#if _MI_PAGING_LEVELS == 2
+FORCEINLINE
+USHORT
+MiIncrementPageTableReferences(IN PVOID Address)
+{
+    PUSHORT RefCount;
+
+    RefCount = &MmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)];
+
+    *RefCount += 1;
+    ASSERT(*RefCount <= PTE_PER_PAGE);
+    return *RefCount;
+}
+
+FORCEINLINE
+USHORT
+MiDecrementPageTableReferences(IN PVOID Address)
+{
+    PUSHORT RefCount;
+
+    RefCount = &MmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)];
+
+    *RefCount -= 1;
+    ASSERT(*RefCount < PTE_PER_PAGE);
+    return *RefCount;
+}
+#else
+FORCEINLINE
+USHORT
+MiIncrementPageTableReferences(IN PVOID Address)
+{
+    PMMPDE PointerPde = MiAddressToPde(Address);
+    PMMPFN Pfn;
+
+    /* We should not tinker with this one. */
+    ASSERT(PointerPde != (PMMPDE)PXE_SELFMAP);
+    DPRINT("Incrementing %p from %p\n", Address, _ReturnAddress());
+
+    /* Make sure we're locked */
+    ASSERT(PsGetCurrentThread()->OwnsProcessWorkingSetExclusive);
+
+    /* If we're bumping refcount, then it must be valid! */
+    ASSERT(PointerPde->u.Hard.Valid == 1);
+
+    /* This lies on the PFN */
+    Pfn = MiGetPfnEntry(PFN_FROM_PDE(PointerPde));
+    Pfn->OriginalPte.u.Soft.UsedPageTableEntries++;
+
+    ASSERT(Pfn->OriginalPte.u.Soft.UsedPageTableEntries <= PTE_PER_PAGE);
+
+    return Pfn->OriginalPte.u.Soft.UsedPageTableEntries;
+}
+
+FORCEINLINE
+USHORT
+MiDecrementPageTableReferences(IN PVOID Address)
+{
+    PMMPDE PointerPde = MiAddressToPde(Address);
+    PMMPFN Pfn;
+
+    /* We should not tinker with this one. */
+    ASSERT(PointerPde != (PMMPDE)PXE_SELFMAP);
+
+    DPRINT("Decrementing %p from %p\n", PointerPde, _ReturnAddress());
+
+    /* Make sure we're locked */
+    ASSERT(PsGetCurrentThread()->OwnsProcessWorkingSetExclusive);
+
+    /* If we're decreasing refcount, then it must be valid! */
+    ASSERT(PointerPde->u.Hard.Valid == 1);
+
+    /* This lies on the PFN */
+    Pfn = MiGetPfnEntry(PFN_FROM_PDE(PointerPde));
+
+    ASSERT(Pfn->OriginalPte.u.Soft.UsedPageTableEntries != 0);
+    Pfn->OriginalPte.u.Soft.UsedPageTableEntries--;
+
+    ASSERT(Pfn->OriginalPte.u.Soft.UsedPageTableEntries < PTE_PER_PAGE);
+
+    return Pfn->OriginalPte.u.Soft.UsedPageTableEntries;
+}
+#endif
+
 #ifdef __cplusplus
 } // extern "C"
 #endif
+
+FORCEINLINE
+VOID
+MiDeletePde(
+    _In_ PMMPDE PointerPde,
+    _In_ PEPROCESS CurrentProcess)
+{
+    /* Only for user-mode ones */
+    ASSERT(MiIsUserPde(PointerPde));
+
+    /* Kill this one as a PTE */
+    MiDeletePte((PMMPTE)PointerPde, MiPdeToPte(PointerPde), CurrentProcess, NULL);
+#if _MI_PAGING_LEVELS >= 3
+    /* Cascade down */
+    if (MiDecrementPageTableReferences(MiPdeToPte(PointerPde)) == 0)
+    {
+        MiDeletePte(MiPdeToPpe(PointerPde), PointerPde, CurrentProcess, NULL);
+#if _MI_PAGING_LEVELS == 4
+        if (MiDecrementPageTableReferences(PointerPde) == 0)
+        {
+            MiDeletePte(MiPdeToPxe(PointerPde), MiPdeToPpe(PointerPde), CurrentProcess, NULL);
+        }
+#endif
+    }
+#endif
+}
 
 /* EOF */

@@ -192,7 +192,7 @@ Ext2FollowLink (
             SetLongFlag(Mcb->Flags, MCB_TYPE_SYMLINK);
             ClearLongFlag(Mcb->Flags, MCB_TYPE_SPECIAL);
             ASSERT(Mcb->Target->Refercount > 0);
-            
+
         } else {
 
             Mcb->Target = Target;

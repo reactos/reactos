@@ -126,7 +126,7 @@ CInterruptSync::CallSynchronizedRoutine(
     KIRQL OldIrql;
 
     DPRINT("CInterruptSync::CallSynchronizedRoutine this %p Routine %p DynamicContext %p Irql %x Interrupt %p\n", this, Routine, DynamicContext, KeGetCurrentIrql(), m_Interrupt);
-    
+
     if (!m_Interrupt)
     {
         DPRINT("CInterruptSync_CallSynchronizedRoutine %p no interrupt connected\n", this);
@@ -330,7 +330,7 @@ PcNewInterruptSync(
     CInterruptSync * This;
     NTSTATUS Status;
 
-    DPRINT("PcNewInterruptSync entered OutInterruptSync %p OuterUnknown %p ResourceList %p ResourceIndex %u Mode %d\n", 
+    DPRINT("PcNewInterruptSync entered OutInterruptSync %p OuterUnknown %p ResourceList %p ResourceIndex %u Mode %d\n",
             OutInterruptSync, OuterUnknown, ResourceList, ResourceIndex, Mode);
 
     if (!OutInterruptSync || !ResourceList || Mode < InterruptSyncModeNormal || Mode > InterruptSyncModeRepeat)

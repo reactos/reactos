@@ -2,33 +2,7 @@
 include_directories(include/internal/mingw-w64)
 
 list(APPEND MSVCRTEX_SOURCE
-    startup/crtexe.c
-    startup/wcrtexe.c
-    startup/crt_handler.c
-    startup/crtdll.c
-    startup/_newmode.c
-    startup/wildcard.c
-    startup/tlssup.c
-    startup/mingw_helpers.c
-    startup/natstart.c
-    startup/charmax.c
-    startup/merr.c
-    startup/atonexit.c
-    startup/dllmain.c
-    startup/txtmode.c
-    startup/pesect.c
-    startup/tlsmcrt.c
-    startup/tlsthrd.c
-    startup/tlsmthread.c
-    startup/cinitexe.c
-    startup/gs_support.c
-    startup/dll_argv.c
-    startup/dllargv.c
-    startup/wdllargv.c
-    startup/crt0_c.c
-    startup/crt0_w.c
-    startup/dllentry.c
-    startup/reactos.c
+    ${CRT_STARTUP_SOURCE}
     misc/dbgrpt.cpp
     misc/fltused.c
     misc/isblank.c
@@ -36,26 +10,22 @@ list(APPEND MSVCRTEX_SOURCE
     misc/ofmt_stub.c
     stdio/acrt_iob_func.c)
 
-if(MSVC)
+if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
+    # Clang performs some optimizations requiring those funtions
     list(APPEND MSVCRTEX_SOURCE
-        startup/threadSafeInit.c)
-else()
-    list(APPEND MSVCRTEX_SOURCE
-        startup/pseudo-reloc.c
-        startup/pseudo-reloc-list.c)
-    if (CLANG)
-        # CLang performs some optimisations requiring those funtions
-        list(APPEND MSVCRTEX_SOURCE
-            math/exp2.c
-            math/exp2f.c)
-    endif()
+        math/exp2.c
+        math/exp2f.c
+        )
 endif()
 
 if(ARCH STREQUAL "i386")
+    # Clang wants __aulldiv for its optimizations
     list(APPEND MSVCRTEX_ASM_SOURCE
         except/i386/chkstk_asm.s
         except/i386/chkstk_ms.s
-        math/i386/alldiv_asm.s)
+        math/i386/alldiv_asm.s
+        math/i386/aulldiv_asm.s 
+        )
     if (GCC AND CLANG)
         list(APPEND MSVCRTEX_ASM_SOURCE
             math/i386/ceilf.S
@@ -72,27 +42,23 @@ elseif(ARCH STREQUAL "arm")
         math/arm/__rt_sdiv64_worker.c
         math/arm/__rt_udiv.c
         math/arm/__rt_udiv64_worker.c
+        math/arm/__rt_div_worker.h
+        math/arm/__dtoi64.c
+        math/arm/__dtou64.c
+        math/arm/__stoi64.c
+        math/arm/__stou64.c
+        math/arm/__fto64.h
     )
     list(APPEND MSVCRTEX_ASM_SOURCE
         except/arm/chkstk_asm.s
-        math/arm/__dtoi64.s
-        math/arm/__dtou64.s
         math/arm/__i64tod.s
         math/arm/__i64tos.s
-        math/arm/__stoi64.s
-        math/arm/__stou64.s
         math/arm/__u64tod.s
         math/arm/__u64tos.s
         math/arm/__rt_sdiv64.s
         math/arm/__rt_srsh.s
         math/arm/__rt_udiv64.s
     )
-endif()
-
-if(MSVC)
-    list(APPEND MSVCRTEX_SOURCE startup/mscmain.c)
-else()
-    list(APPEND MSVCRTEX_SOURCE startup/gccmain.c)
 endif()
 
 set_source_files_properties(${MSVCRTEX_ASM_SOURCE} PROPERTIES COMPILE_DEFINITIONS "_DLL;_MSVCRTEX_")

@@ -73,7 +73,8 @@ static
 DWORD
 ServiceInit(VOID)
 {
-    LSA_STRING ProcessName, PackageName;
+    LSA_STRING ProcessName = RTL_CONSTANT_STRING("Workstation");
+    LSA_STRING PackageName = RTL_CONSTANT_STRING(MSV1_0_PACKAGE_NAME);
     LSA_OPERATIONAL_MODE Mode;
     HANDLE hThread;
     NTSTATUS Status;
@@ -84,10 +85,6 @@ ServiceInit(VOID)
     VersionInfo.dwOSVersionInfoSize = sizeof(VersionInfo);
     GetVersionExW(&VersionInfo);
 
-    ProcessName.Buffer = "Workstation";
-    ProcessName.Length = strlen(ProcessName.Buffer);
-    ProcessName.MaximumLength = ProcessName.Length + 1;
-
     Status = LsaRegisterLogonProcess(&ProcessName,
                                      &LsaHandle,
                                      &Mode);
@@ -96,10 +93,6 @@ ServiceInit(VOID)
         ERR("LsaRegisterLogonProcess() failed! (Status 0x%08lx)\n", Status);
         return 1;
     }
-
-    PackageName.Buffer = MSV1_0_PACKAGE_NAME;
-    PackageName.Length = strlen(PackageName.Buffer);
-    PackageName.MaximumLength = PackageName.Length + 1;
 
     Status = LsaLookupAuthenticationPackage(LsaHandle,
                                             &PackageName,

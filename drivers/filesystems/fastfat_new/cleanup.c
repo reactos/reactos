@@ -43,7 +43,7 @@ FatAutoUnlock (
 #pragma alloc_text(PAGE, FatFsdCleanup)
 #endif
 
-
+
 _Function_class_(IRP_MJ_CLEANUP)
 _Function_class_(DRIVER_DISPATCH)
 NTSTATUS
@@ -139,8 +139,8 @@ Return Value:
     return Status;
 }
 
-
-_Requires_lock_held_(_Global_critical_region_)    
+
+_Requires_lock_held_(_Global_critical_region_)
 NTSTATUS
 FatCommonCleanup (
     IN PIRP_CONTEXT IrpContext,
@@ -270,7 +270,7 @@ Return Value:
     if ((TypeOfOpen == UserFileOpen) || (TypeOfOpen == UserDirectoryOpen)) {
 
         NT_ASSERT( Fcb != NULL );
-    
+
         (VOID)FatAcquireExclusiveFcb( IrpContext, Fcb );
 
         AcquiredFcb = TRUE;
@@ -410,28 +410,28 @@ Return Value:
         //  If so we may need to break an oplock.  We do this in the try block
         //  so that resources will be properly released.
         //
-        
+
         if (ProcessingDeleteOnClose &&
             FatIsFileOplockable( Fcb ) &&
             ((NodeType( Fcb ) != FAT_NTC_DCB) ||
              FatIsDirectoryEmpty( IrpContext, Fcb ))) {
-        
+
             Status = FsRtlCheckOplockEx( FatGetFcbOplock(Fcb),
                                          Irp,
                                          OPLOCK_FLAG_CLOSING_DELETE_ON_CLOSE,
                                          IrpContext,
                                          FatOplockComplete,
                                          FatPrePostIrp );
-        
+
             if (Status != STATUS_SUCCESS) {
-        
+
                 if (Status == STATUS_PENDING) {
-        
+
                     SetFlag( IrpContext->Flags, IRP_CONTEXT_FLAG_CLEANUP_BREAKING_OPLOCK );
                     try_return( Status );
-                    
+
                 } else {
-        
+
                     FatNormalizeAndRaiseStatus( IrpContext, Status );
                 }
             }
@@ -466,7 +466,7 @@ Return Value:
             if (FlagOn( Ccb->Flags, CCB_FLAG_COMPLETE_DISMOUNT )) {
 
                 FatCheckForDismount( IrpContext, Vcb, TRUE );
-            
+
             //
             //  If this handle had write access, and actually wrote something,
             //  flush the device buffers, and then set the verify bit now
@@ -533,9 +533,9 @@ Return Value:
             //
             //  Clear the deny defrag bit, if the handle we're cleaning up was the one that set it.
             //
-            
+
             if( FlagOn(Fcb->FcbState, FCB_STATE_DENY_DEFRAG) && FlagOn(Ccb->Flags, CCB_FLAG_DENY_DEFRAG) ) {
-                
+
                 ClearFlag(Ccb->Flags, CCB_FLAG_DENY_DEFRAG);
                 ClearFlag(Fcb->FcbState, FCB_STATE_DENY_DEFRAG );
             }
@@ -575,9 +575,9 @@ Return Value:
                         //
                         //  Even if something goes wrong, we cannot turn back!
                         //
-            
+
                         _SEH2_TRY {
-            
+
                             DELETE_CONTEXT DeleteContext;
 
 
@@ -585,45 +585,45 @@ Return Value:
                             //  Before truncating file allocation remember this
                             //  info for FatDeleteDirent.
                             //
-            
+
                             DeleteContext.FileSize = Fcb->Header.FileSize.LowPart;
                             DeleteContext.FirstClusterOfFile = Fcb->FirstClusterOfFile;
-            
+
                             //
                             //  Synchronize here with paging IO
                             //
-            
+
                             (VOID)ExAcquireResourceExclusiveLite( Fcb->Header.PagingIoResource,
                                                               TRUE );
-            
+
                             Fcb->Header.FileSize.LowPart = 0;
-            
+
                             ExReleaseResourceLite( Fcb->Header.PagingIoResource );
-            
+
                             //
                             //  Truncate the file allocation down to zero
                             //
-        
+
                             DebugTrace(0, Dbg, "Delete File allocation\n", 0);
-        
+
                             FatTruncateFileAllocation( IrpContext, Fcb, 0 );
 
                             if (Fcb->Header.AllocationSize.LowPart == 0) {
-        
+
                                 //
                                 //  Tunnel and remove the dirent for the directory
                                 //
-            
+
                                 DebugTrace(0, Dbg, "Delete the directory dirent\n", 0);
-            
+
                                 FatTunnelFcbOrDcb( Fcb, NULL );
-    
+
                                 FatDeleteDirent( IrpContext, Fcb, &DeleteContext, TRUE );
-            
+
                                 //
                                 //  Report that we have removed an entry.
                                 //
-        
+
                                 FatNotifyReportChange( IrpContext,
                                                        Vcb,
                                                        Fcb,
@@ -633,7 +633,7 @@ Return Value:
 
                         } _SEH2_EXCEPT( FsRtlIsNtstatusExpected(_SEH2_GetExceptionCode()) ?
                                   EXCEPTION_EXECUTE_HANDLER : EXCEPTION_CONTINUE_SEARCH ) {
-        
+
                               FatResetExceptionState( IrpContext );
                         } _SEH2_END;
 
@@ -644,16 +644,16 @@ Return Value:
                         //  to recreate the same file over again before we
                         //  get a close irp.
                         //
-        
+
                         FatRemoveNames( IrpContext, Fcb );
 
-#if (NTDDI_VERSION >= NTDDI_WIN8)                    
+#if (NTDDI_VERSION >= NTDDI_WIN8)
                         //
-                        //  We've removed the names so break any parent directory oplock. 
+                        //  We've removed the names so break any parent directory oplock.
                         //  Directory oplock breaks are always advisory, so we will never
                         //  block/get STATUS_PENDING here.
                         //
-                        
+
                         BreakStatus = FsRtlCheckOplockEx( FatGetFcbOplock(Fcb->ParentDcb),
                                                           Irp,
                                                           (OPLOCK_FLAG_PARENT_OBJECT |
@@ -661,7 +661,7 @@ Return Value:
                                                           NULL,
                                                           NULL,
                                                           NULL );
-                        
+
                         ASSERT( BreakStatus != STATUS_PENDING );
 #endif
                     }
@@ -676,7 +676,7 @@ Return Value:
             Fcb->UncleanCount -= 1;
 
             break;
-            
+
         case UserFileOpen:
 
             DebugTrace(0, Dbg, "Cleanup UserFileOpen\n", 0);
@@ -705,9 +705,9 @@ Return Value:
             //
             //  Clear the deny defrag bit, if the handle we're cleaning up was the one that set it.
             //
-            
+
             if( FlagOn(Fcb->FcbState, FCB_STATE_DENY_DEFRAG) && FlagOn(Ccb->Flags, CCB_FLAG_DENY_DEFRAG) ) {
-                
+
                 ClearFlag(Ccb->Flags, CCB_FLAG_DENY_DEFRAG);
                 ClearFlag(Fcb->FcbState, FCB_STATE_DENY_DEFRAG );
             }
@@ -728,93 +728,93 @@ Return Value:
             //  and we can still write to it if it hasn't been shutdown. Remember that
             //  we toss all sections in the failed-verify and dismount cases.
             //
-            
+
             if ((Vcb->VcbCondition == VcbGood) &&
                 !FlagOn(Vcb->VcbState, VCB_STATE_FLAG_SHUTDOWN)) {
-                
+
                 if (Fcb->FcbCondition == FcbGood) {
 
 
                     FatUpdateDirentFromFcb( IrpContext, FileObject, Fcb, Ccb );
 
                 }
-    
+
                 //
                 //  If the file has a unclean count of 1 then we know
                 //  that this is the last handle for the file object.
                 //
-    
+
                 if ( (Fcb->UncleanCount == 1) && (Fcb->FcbCondition == FcbGood) ) {
-    
+
                     DELETE_CONTEXT DeleteContext;
-                    
+
                     //
                     //  Check if we should be deleting the file.  The
                     //  delete operation really deletes the file but
                     //  keeps the Fcb around for close to do away with.
                     //
-    
+
                     if (FlagOn(Fcb->FcbState, FCB_STATE_DELETE_ON_CLOSE) &&
                         !FlagOn(Vcb->VcbState, VCB_STATE_FLAG_WRITE_PROTECTED)) {
-    
+
                         //
                         //  Before truncating file allocation remember this
                         //  info for FatDeleteDirent.
                         //
-    
+
                         DeleteContext.FileSize = Fcb->Header.FileSize.LowPart;
                         DeleteContext.FirstClusterOfFile = Fcb->FirstClusterOfFile;
-    
+
                         DebugTrace(0, Dbg, "Delete File allocation\n", 0);
-    
+
                         //
                         //  Synchronize here with paging IO
                         //
-    
+
                         (VOID)ExAcquireResourceExclusiveLite( Fcb->Header.PagingIoResource,
                                                           TRUE );
-    
+
                         Fcb->Header.FileSize.LowPart = 0;
                         Fcb->Header.ValidDataLength.LowPart = 0;
                         Fcb->ValidDataToDisk = 0;
-    
+
                         ExReleaseResourceLite( Fcb->Header.PagingIoResource );
-    
+
                         _SEH2_TRY {
-    
+
                             FatSetFileSizeInDirent( IrpContext, Fcb, NULL );
-    
+
                         } _SEH2_EXCEPT( FsRtlIsNtstatusExpected(_SEH2_GetExceptionCode()) ?
                                   EXCEPTION_EXECUTE_HANDLER : EXCEPTION_CONTINUE_SEARCH ) {
-    
+
                               FatResetExceptionState( IrpContext );
                         } _SEH2_END;
-    
+
                         Fcb->FcbState |= FCB_STATE_TRUNCATE_ON_CLOSE;
-    
+
                     } else {
-    
+
                         //
                         //  We must zero between ValidDataLength and FileSize
                         //
-    
+
                         if (!FlagOn(Fcb->FcbState, FCB_STATE_PAGING_FILE) &&
                             (Fcb->Header.ValidDataLength.LowPart < Fcb->Header.FileSize.LowPart)) {
-    
+
                             ULONG ValidDataLength;
-    
+
                             ValidDataLength = Fcb->Header.ValidDataLength.LowPart;
-    
+
                             if (ValidDataLength < Fcb->ValidDataToDisk) {
                                 ValidDataLength = Fcb->ValidDataToDisk;
                             }
-    
+
                             //
                             //  Recheck, VDD can be >= FS
                             //
-                            
+
                             if (ValidDataLength < Fcb->Header.FileSize.LowPart) {
-                                
+
                                 _SEH2_TRY {
 
                                     (VOID)FatZeroData( IrpContext,
@@ -858,18 +858,18 @@ Return Value:
                             }
                         }
                     }
-    
+
                     //
                     //  See if we are supposed to truncate the file on the last
                     //  close.  If we cannot wait we'll ship this off to the fsp
                     //
-    
+
                     _SEH2_TRY {
-    
+
                         if (FlagOn(Fcb->FcbState, FCB_STATE_TRUNCATE_ON_CLOSE)) {
-    
+
                             DebugTrace(0, Dbg, "truncate file allocation\n", 0);
-    
+
                             if (Vcb->VcbCondition == VcbGood) {
 
 
@@ -879,61 +879,61 @@ Return Value:
 
 
                             }
-    
+
                             //
                             //  We also have to get rid of the Cache Map because
                             //  this is the only way we have of trashing the
                             //  truncated pages.
                             //
-    
+
                             LocalTruncateSize = Fcb->Header.FileSize;
                             TruncateSize = &LocalTruncateSize;
-    
+
                             //
                             //  Mark the Fcb as having now been truncated, just incase
                             //  we have to reship this off to the fsp.
                             //
-    
+
                             Fcb->FcbState &= ~FCB_STATE_TRUNCATE_ON_CLOSE;
                         }
-    
+
                         //
                         //  Now check again if we are to delete the file and if
                         //  so then we remove the file from the disk.
                         //
-    
+
                         if (FlagOn(Fcb->FcbState, FCB_STATE_DELETE_ON_CLOSE) &&
                             Fcb->Header.AllocationSize.LowPart == 0) {
-    
+
                             DebugTrace(0, Dbg, "Delete File\n", 0);
-    
+
                             //
                             //  Now tunnel and delete the dirent
                             //
-    
+
                             FatTunnelFcbOrDcb( Fcb, Ccb );
-    
+
                             FatDeleteDirent( IrpContext, Fcb, &DeleteContext, TRUE );
-    
+
                             //
                             //  Report that we have removed an entry.
                             //
-    
+
                             FatNotifyReportChange( IrpContext,
                                                    Vcb,
                                                    Fcb,
                                                    FILE_NOTIFY_CHANGE_FILE_NAME,
                                                    FILE_ACTION_REMOVED );
                         }
-    
+
                     } _SEH2_EXCEPT( FsRtlIsNtstatusExpected(_SEH2_GetExceptionCode()) ?
                               EXCEPTION_EXECUTE_HANDLER : EXCEPTION_CONTINUE_SEARCH ) {
-    
+
                           FatResetExceptionState( IrpContext );
                     } _SEH2_END;
-    
+
                     if (FlagOn(Fcb->FcbState, FCB_STATE_DELETE_ON_CLOSE)) {
-    
+
 #if (NTDDI_VERSION >= NTDDI_WIN8)
                         NTSTATUS BreakStatus;
 #endif
@@ -946,16 +946,16 @@ Return Value:
                         //  Note that we remove the name even if we couldn't
                         //  truncate the allocation and remove the dirent above.
                         //
-    
+
                         FatRemoveNames( IrpContext, Fcb );
 
 #if (NTDDI_VERSION >= NTDDI_WIN8)
                         //
-                        //  We've removed the names so break any parent directory oplock. 
+                        //  We've removed the names so break any parent directory oplock.
                         //  Directory oplock breaks are always advisory, so we will never
                         //  block/get STATUS_PENDING here.
                         //
-                        
+
                         BreakStatus = FsRtlCheckOplockEx( FatGetFcbOplock(Fcb->ParentDcb),
                                                           Irp,
                                                           (OPLOCK_FLAG_PARENT_OBJECT |
@@ -963,13 +963,13 @@ Return Value:
                                                           NULL,
                                                           NULL,
                                                           NULL );
-                        
+
                         ASSERT( BreakStatus != STATUS_PENDING );
 #endif
                     }
                 }
             }
-            
+
             //
             //  We've just finished everything associated with an unclean
             //  fcb so now decrement the unclean count before releasing
@@ -996,13 +996,13 @@ Return Value:
                 (Fcb->NonPaged->SectionObjectPointers.DataSectionObject != NULL)) {
 
                 CcFlushCache( &Fcb->NonPaged->SectionObjectPointers, NULL, 0, NULL );
-            
+
                 //
                 //  Grab and release PagingIo to serialize ourselves with the lazy writer.
                 //  This will work to ensure that all IO has completed on the cached
                 //  data and we will succesfully tear away the cache section.
                 //
-                
+
                 ExAcquireResourceExclusiveLite( Fcb->Header.PagingIoResource, TRUE);
                 ExReleaseResourceLite( Fcb->Header.PagingIoResource );
 
@@ -1015,7 +1015,7 @@ Return Value:
             //
             //  If the file is invalid, hint to the cache that we should throw everything out.
             //
-            
+
             if ( Fcb->FcbCondition == FcbBad ) {
 
                 TruncateSize = &FatLargeZero;
@@ -1097,7 +1097,7 @@ Return Value:
             //  Flush the file.
             //
 
-            if ((TypeOfOpen == UserFileOpen) && 
+            if ((TypeOfOpen == UserFileOpen) &&
                 FlagOn(FileObject->Flags, FO_FILE_MODIFIED)) {
 
                 Status = FatFlushFile( IrpContext, Fcb, Flush );
@@ -1107,7 +1107,7 @@ Return Value:
             //  If that worked ok,  then see if we should flush the FAT as well.
             //
 
-            if (NT_SUCCESS(Status) && Fcb && !FatIsFat12( Vcb) && 
+            if (NT_SUCCESS(Status) && Fcb && !FatIsFat12( Vcb) &&
                 FlagOn( Fcb->FcbState, FCB_STATE_FLUSH_FAT)) {
 
                 Status = FatFlushFat( IrpContext, Vcb);
@@ -1117,7 +1117,7 @@ Return Value:
                 //
 
                 if (NT_SUCCESS(Status) && (Fcb->ParentDcb != NULL)) {
-                    
+
                     Status = FatFlushFile( IrpContext, Fcb->ParentDcb, Flush );
                 }
             }
@@ -1142,7 +1142,7 @@ Return Value:
         if (AcquiredVcb) { FatReleaseVcb( IrpContext, Vcb ); }
 
         if (SendUnlockNotification) {
-            
+
             FsRtlNotifyVolumeEvent( FileObject, FSRTL_VOLUME_UNLOCK );
         }
 
@@ -1175,7 +1175,7 @@ FatAutoUnlock (
     //
 
     UNREFERENCED_PARAMETER( IrpContext );
-    
+
     IoAcquireVpbSpinLock( &SavedIrql );
 
     ClearFlag( Vcb->Vpb->Flags, (VPB_LOCKED | VPB_DIRECT_WRITES_ALLOWED) );

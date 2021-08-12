@@ -2090,7 +2090,7 @@ QISearch(
 #define OFFSETOFCLASS(base, derived) \
     ((DWORD)(DWORD_PTR)(static_cast<base*>((derived*)8))-8)
 
-#include <poppack.h> 
+#include <poppack.h>
 
 #ifdef __cplusplus
 } /* extern "C" */

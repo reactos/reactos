@@ -354,7 +354,7 @@ VfatHasFileSystem(
  *                 Set it to 0 if you wish to use the associated FCB with caching.
  *                 In that specific case, Device parameter is expected to be the VCB!
  * VolumeLabel parameter is expected to be a preallocated UNICODE_STRING (ie, with buffer)
- *                       Its buffer has to be able to contain MAXIMUM_VOLUME_LABEL_LENGTH bytes 
+ *                       Its buffer has to be able to contain MAXIMUM_VOLUME_LABEL_LENGTH bytes
  */
 static
 NTSTATUS

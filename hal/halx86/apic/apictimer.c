@@ -9,7 +9,7 @@
 /* INCLUDES ******************************************************************/
 
 #include <hal.h>
-#include <apic.h>
+#include "apicp.h"
 #define NDEBUG
 #include <debug.h>
 
@@ -59,6 +59,13 @@ ApicInitializeTimer(ULONG Cpu)
     ApicSetTimerInterval(1000);
 
 // KeSetTimeIncrement
+}
+
+VOID
+FASTCALL
+HalpProfileInterruptHandler(_In_ PKTRAP_FRAME TrapFrame)
+{
+    KeProfileInterruptWithSource(TrapFrame, ProfileTime);
 }
 
 

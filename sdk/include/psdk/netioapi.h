@@ -31,8 +31,8 @@ typedef struct _MIB_IF_ROW2 {
     ULONG Mtu;
     IFTYPE Type;
     TUNNEL_TYPE TunnelType;
-    NDIS_MEDIUM MediaType; 
-    NDIS_PHYSICAL_MEDIUM PhysicalMediumType; 
+    NDIS_MEDIUM MediaType;
+    NDIS_PHYSICAL_MEDIUM PhysicalMediumType;
     NET_IF_ACCESS_TYPE AccessType;
     NET_IF_DIRECTION_TYPE DirectionType;
     struct {

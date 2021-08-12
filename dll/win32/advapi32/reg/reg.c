@@ -961,7 +961,7 @@ CreateNestedKey(PHKEY KeyHandle,
         }
 
         *Ptr = (WCHAR)0;
-        LocalKeyName.Length = wcslen(LocalKeyName.Buffer) * sizeof(WCHAR);
+        LocalKeyName.Length = (USHORT)wcslen(LocalKeyName.Buffer) * sizeof(WCHAR);
 
         Status = NtCreateKey(&LocalKeyHandle,
                              KEY_CREATE_SUB_KEY,

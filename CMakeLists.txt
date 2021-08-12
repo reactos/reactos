@@ -264,7 +264,7 @@ Enable this if the module uses typeid or dynamic_cast. You will probably need to
     elseif(ARCH STREQUAL "arm")
         # _M_ARM is already defined by toolchain
         add_definitions(-D_ARM_ -D__arm__ -DWIN32)
-        if(SARCH STREQUAL "omap-zoom2")
+        if(SARCH STREQUAL "omap3-zoom2")
             add_definitions(-D_ZOOM2_)
         endif()
     endif()
@@ -274,9 +274,9 @@ Enable this if the module uses typeid or dynamic_cast. You will probably need to
     if(ARCH STREQUAL "i386")
         add_definitions(-DUSE_COMPILER_EXCEPTIONS -D_USE_32BIT_TIME_T)
     elseif(ARCH STREQUAL "amd64")
-        add_definitions(-DUSE_COMPILER_EXCEPTIONS -DNO_UNDERSCORE_PREFIX)
+        add_compile_definitions(USE_COMPILER_EXCEPTIONS)
     elseif(ARCH STREQUAL "arm")
-        add_definitions(-DUSE_COMPILER_EXCEPTIONS -DNO_UNDERSCORE_PREFIX)
+        add_compile_definitions(USE_COMPILER_EXCEPTIONS)
     endif()
 
     # Activate support for assembly source files

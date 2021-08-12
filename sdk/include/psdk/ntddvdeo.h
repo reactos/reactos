@@ -210,6 +210,7 @@ typedef struct _VIDEO_REGISTER_VDM {
 
 typedef struct tagVIDEO_MONITOR_DEVICE {
   ULONG flag;
+  HANDLE pdo;
   ULONG HwID;
   BOOLEAN Internal;
 } VIDEO_MONITOR_DEVICE, *PVIDEO_MONITOR_DEVICE;

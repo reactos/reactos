@@ -274,7 +274,7 @@ FatCheckShareAccess (
 #pragma alloc_text(PAGE, FatSetFullNameInFcb)
 #endif
 
-
+
 _Function_class_(IRP_MJ_CREATE)
 _Function_class_(DRIVER_DISPATCH)
 NTSTATUS
@@ -2576,7 +2576,7 @@ Return Value:
     return Iosb;
 }
 
-
+
 //
 //  Internal support routine
 //
@@ -2751,7 +2751,7 @@ Arguments:
     return Iosb;
 }
 
-
+
 //
 //  Internal support routine
 //
@@ -3171,7 +3171,7 @@ Return Value:
     return Iosb;
 }
 
-
+
 //
 //  Internal support routine
 //
@@ -3913,7 +3913,7 @@ Return Value:
 
     return Iosb;
 }
-
+
 //
 //  Internal support routine
 //
@@ -4122,7 +4122,7 @@ Return Value:
 }
 
 
-
+
 //
 //  Internal support routine
 //
@@ -4402,7 +4402,7 @@ Return Value:
     return Iosb;
 }
 
-
+
 //
 //  Internal support routine
 //
@@ -4882,7 +4882,7 @@ Return Value:
     return Iosb;
 }
 
-
+
 //
 //  Internal support routine
 //
@@ -5596,7 +5596,7 @@ Return Value:
     return Iosb;
 }
 
-
+
 //
 //  Internal support routine
 //
@@ -6344,7 +6344,7 @@ Return Value:
     return Iosb;
 }
 
-
+
 //
 //  Internal support routine
 //
@@ -6823,7 +6823,7 @@ Return Value:
     }
 }
 
-
+
 NTSTATUS
 FatCheckSystemSecurityAccess (
     _In_ PIRP_CONTEXT IrpContext
@@ -6865,7 +6865,7 @@ FatCheckSystemSecurityAccess (
     return STATUS_SUCCESS;
 }
 
-
+
 NTSTATUS
 FatCheckShareAccess (
     _In_ PIRP_CONTEXT IrpContext,

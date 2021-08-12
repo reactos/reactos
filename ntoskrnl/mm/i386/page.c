@@ -114,6 +114,75 @@ NTAPI
 MiFillSystemPageDirectory(IN PVOID Base,
                           IN SIZE_T NumberOfBytes);
 
+static
+BOOLEAN
+MiIsPageTablePresent(PVOID Address)
+{
+#if _MI_PAGING_LEVELS == 2
+    return MmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)] != 0;
+#else
+    PMMPDE PointerPde;
+    PMMPPE PointerPpe;
+#if _MI_PAGING_LEVELS == 4
+    PMMPXE PointerPxe;
+#endif
+    PMMPFN Pfn;
+
+    /* Make sure we're locked */
+    ASSERT((PsGetCurrentThread()->OwnsProcessWorkingSetExclusive) || (PsGetCurrentThread()->OwnsProcessWorkingSetShared));
+
+    /* Must not hold the PFN lock! */
+    ASSERT(KeGetCurrentIrql() < DISPATCH_LEVEL);
+
+        /* Check if PXE or PPE have references first. */
+#if _MI_PAGING_LEVELS == 4
+    PointerPxe = MiAddressToPxe(Address);
+    if ((PointerPxe->u.Hard.Valid == 1) || (PointerPxe->u.Soft.Transition == 1))
+    {
+        Pfn = MiGetPfnEntry(PFN_FROM_PXE(PointerPxe));
+        if (Pfn->OriginalPte.u.Soft.UsedPageTableEntries == 0)
+            return FALSE;
+    }
+    else if (PointerPxe->u.Soft.UsedPageTableEntries == 0)
+    {
+        return FALSE;
+    }
+
+    if (PointerPxe->u.Hard.Valid == 0)
+    {
+        MiMakeSystemAddressValid(MiPteToAddress(PointerPxe), PsGetCurrentProcess());
+    }
+#endif
+
+    PointerPpe = MiAddressToPpe(Address);
+    if ((PointerPpe->u.Hard.Valid == 1) || (PointerPpe->u.Soft.Transition == 1))
+    {
+        Pfn = MiGetPfnEntry(PFN_FROM_PPE(PointerPpe));
+        if (Pfn->OriginalPte.u.Soft.UsedPageTableEntries == 0)
+            return FALSE;
+    }
+    else if (PointerPpe->u.Soft.UsedPageTableEntries == 0)
+    {
+        return FALSE;
+    }
+
+    if (PointerPpe->u.Hard.Valid == 0)
+    {
+        MiMakeSystemAddressValid(MiPteToAddress(PointerPpe), PsGetCurrentProcess());
+    }
+
+    PointerPde = MiAddressToPde(Address);
+    if ((PointerPde->u.Hard.Valid == 0) && (PointerPde->u.Soft.Transition == 0))
+    {
+        return PointerPde->u.Soft.UsedPageTableEntries != 0;
+    }
+
+    /* This lies on the PFN */
+    Pfn = MiGetPfnEntry(PFN_FROM_PDE(PointerPde));
+    return Pfn->OriginalPte.u.Soft.UsedPageTableEntries != 0;
+#endif
+}
+
 PFN_NUMBER
 NTAPI
 MmGetPfnForProcess(PEPROCESS Process,
@@ -132,7 +201,7 @@ MmGetPfnForProcess(PEPROCESS Process,
     /* Lock for reading */
     MiLockProcessWorkingSetShared(Process, PsGetCurrentThread());
 
-    if (MiQueryPageTableReferences(Address) == 0)
+    if (!MiIsPageTablePresent(Address))
     {
         MiUnlockProcessWorkingSetShared(Process, PsGetCurrentThread());
         return 0;
@@ -201,7 +270,7 @@ MmDeleteVirtualMapping(PEPROCESS Process, PVOID Address,
         MiLockProcessWorkingSetUnsafe(Process, PsGetCurrentThread());
 
         /* No PDE --> No page */
-        if (MiQueryPageTableReferences(Address) == 0)
+        if (!MiIsPageTablePresent(Address))
         {
             MiUnlockProcessWorkingSetUnsafe(Process, PsGetCurrentThread());
             if (WasDirty)
@@ -238,11 +307,10 @@ MmDeleteVirtualMapping(PEPROCESS Process, PVOID Address,
     if (Address < MmSystemRangeStart)
     {
         /* Remove PDE reference */
-        MiDecrementPageTableReferences(Address);
-        if (MiQueryPageTableReferences(Address) == 0)
+        if (MiDecrementPageTableReferences(Address) == 0)
         {
             KIRQL OldIrql = MiAcquirePfnLock();
-            MiDeletePte(MiAddressToPte(PointerPte), PointerPte, Process, NULL);
+            MiDeletePde(MiAddressToPde(Address), Process);
             MiReleasePfnLock(OldIrql);
         }
 
@@ -293,12 +361,11 @@ MmDeletePageFileMapping(
     }
 
     /* This used to be a non-zero PTE, now we can let the PDE go. */
-    MiDecrementPageTableReferences(Address);
-    if (MiQueryPageTableReferences(Address) == 0)
+    if (MiDecrementPageTableReferences(Address) == 0)
     {
         /* We can let it go */
         KIRQL OldIrql = MiAcquirePfnLock();
-        MiDeletePte(MiAddressToPte(PointerPte), PointerPte, Process, NULL);
+        MiDeletePde(MiPteToPde(PointerPte), Process);
         MiReleasePfnLock(OldIrql);
     }
 
@@ -334,7 +401,7 @@ MmIsPagePresent(PEPROCESS Process, PVOID Address)
 
     MiLockProcessWorkingSetShared(Process, PsGetCurrentThread());
 
-    if (MiQueryPageTableReferences(Address) == 0)
+    if (!MiIsPageTablePresent(Address))
     {
         /* It can't be present if there is no PDE */
         MiUnlockProcessWorkingSetShared(Process, PsGetCurrentThread());
@@ -377,7 +444,7 @@ MmIsDisabledPage(PEPROCESS Process, PVOID Address)
 
         MiLockProcessWorkingSetShared(Process, PsGetCurrentThread());
 
-        if (MiQueryPageTableReferences(Address) == 0)
+        if (!MiIsPageTablePresent(Address))
         {
             /* It can't be disabled if there is no PDE */
             MiUnlockProcessWorkingSetShared(Process, PsGetCurrentThread());
@@ -417,7 +484,7 @@ MmIsPageSwapEntry(PEPROCESS Process, PVOID Address)
 
     MiLockProcessWorkingSetShared(Process, PsGetCurrentThread());
 
-    if (MiQueryPageTableReferences(Address) == 0)
+    if (!MiIsPageTablePresent(Address))
     {
         /* There can't be a swap entry if there is no PDE */
         MiUnlockProcessWorkingSetShared(Process, PsGetCurrentThread());
@@ -453,7 +520,7 @@ MmGetPageFileMapping(PEPROCESS Process, PVOID Address, SWAPENTRY* SwapEntry)
 
     MiLockProcessWorkingSetShared(Process, PsGetCurrentThread());
 
-    if (MiQueryPageTableReferences(Address) == 0)
+    if (!MiIsPageTablePresent(Address))
     {
         /* There can't be a swap entry if there is no PDE */
         MiUnlockProcessWorkingSetShared(Process, PsGetCurrentThread());
@@ -540,6 +607,10 @@ MmCreateVirtualMappingUnsafe(PEPROCESS Process,
     /* Make sure our PDE is valid, and that everything is going fine */
     if (Process == NULL)
     {
+        /* We don't support this in legacy Mm for kernel mappings */
+        ASSERT(ProtectionMask != MM_WRITECOPY);
+        ASSERT(ProtectionMask != MM_EXECUTE_WRITECOPY);
+
         if (Address < MmSystemRangeStart)
         {
             DPRINT1("NULL process given for user-mode mapping at %p\n", Address);
@@ -567,14 +638,7 @@ MmCreateVirtualMappingUnsafe(PEPROCESS Process,
 
     PointerPte = MiAddressToPte(Address);
 
-    if (Address >= MmSystemRangeStart)
-    {
-        MI_MAKE_HARDWARE_PTE_KERNEL(&TempPte, PointerPte, ProtectionMask, Page);
-    }
-    else
-    {
-        MI_MAKE_HARDWARE_PTE_USER(&TempPte, PointerPte, ProtectionMask, Page);
-    }
+    MI_MAKE_HARDWARE_PTE(&TempPte, PointerPte, ProtectionMask, Page);
 
     Pte = InterlockedExchangePte(PointerPte, TempPte.u.Long);
     /* There should not have been anything valid here */
@@ -643,7 +707,7 @@ MmGetPageProtect(PEPROCESS Process, PVOID Address)
 
         MiLockProcessWorkingSetShared(Process, PsGetCurrentThread());
 
-        if (MiQueryPageTableReferences(Address) == 0)
+        if (!MiIsPageTablePresent(Address))
         {
             /* It can't be present if there is no PDE */
             MiUnlockProcessWorkingSetShared(Process, PsGetCurrentThread());
@@ -710,7 +774,18 @@ MmSetPageProtect(PEPROCESS Process, PVOID Address, ULONG flProtect)
 
     PointerPte = MiAddressToPte(Address);
 
-    MI_MAKE_HARDWARE_PTE_USER(&TempPte, PointerPte, ProtectionMask, PFN_FROM_PTE(PointerPte));
+    /* Sanity check */
+    ASSERT(PointerPte->u.Hard.Owner == 1);
+
+    TempPte.u.Long = 0;
+    TempPte.u.Hard.PageFrameNumber = PointerPte->u.Hard.PageFrameNumber;
+    TempPte.u.Long |= MmProtectToPteMask[ProtectionMask];
+    TempPte.u.Hard.Owner = 1;
+
+    /* Only set valid bit if we have to */
+    if ((ProtectionMask != MM_NOACCESS) && !FlagOn(ProtectionMask, MM_GUARDPAGE))
+        TempPte.u.Hard.Valid = 1;
+
     /* Keep dirty & accessed bits */
     TempPte.u.Hard.Accessed = PointerPte->u.Hard.Accessed;
     TempPte.u.Hard.Dirty = PointerPte->u.Hard.Dirty;

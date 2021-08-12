@@ -38,9 +38,19 @@ SetAccountsDomainSid(
     SAM_HANDLE DomainHandle = NULL;
     DOMAIN_NAME_INFORMATION DomainNameInfo;
 
+    SIZE_T DomainNameLength = 0;
     NTSTATUS Status;
 
     DPRINT("SYSSETUP: SetAccountsDomainSid\n");
+
+    if (DomainName != NULL)
+    {
+        DomainNameLength = wcslen(DomainName);
+        if (DomainNameLength > UNICODE_STRING_MAX_CHARS)
+        {
+            return STATUS_INVALID_PARAMETER;
+        }
+    }
 
     memset(&ObjectAttributes, 0, sizeof(LSA_OBJECT_ATTRIBUTES));
     ObjectAttributes.Length = sizeof(LSA_OBJECT_ATTRIBUTES);
@@ -69,7 +79,7 @@ SetAccountsDomainSid(
         else
         {
             Info.DomainName.Buffer = (LPWSTR)DomainName;
-            Info.DomainName.Length = wcslen(DomainName) * sizeof(WCHAR);
+            Info.DomainName.Length = DomainNameLength * sizeof(WCHAR);
             Info.DomainName.MaximumLength = Info.DomainName.Length + sizeof(WCHAR);
         }
 
@@ -81,7 +91,7 @@ SetAccountsDomainSid(
     else
     {
         Info.DomainName.Buffer = (LPWSTR)DomainName;
-        Info.DomainName.Length = wcslen(DomainName) * sizeof(WCHAR);
+        Info.DomainName.Length = DomainNameLength * sizeof(WCHAR);
         Info.DomainName.MaximumLength = Info.DomainName.Length + sizeof(WCHAR);
         Info.DomainSid = DomainSid;
     }
@@ -99,7 +109,7 @@ SetAccountsDomainSid(
 
     LsaClose(PolicyHandle);
 
-    DomainNameInfo.DomainName.Length = wcslen(DomainName) * sizeof(WCHAR);
+    DomainNameInfo.DomainName.Length = DomainNameLength * sizeof(WCHAR);
     DomainNameInfo.DomainName.MaximumLength = DomainNameInfo.DomainName.Length + sizeof(WCHAR);
     DomainNameInfo.DomainName.Buffer = (LPWSTR)DomainName;
 
@@ -147,9 +157,19 @@ SetPrimaryDomain(LPCWSTR DomainName,
     POLICY_PRIMARY_DOMAIN_INFO Info;
     LSA_OBJECT_ATTRIBUTES ObjectAttributes;
     LSA_HANDLE PolicyHandle;
+    SIZE_T DomainNameLength = 0;
     NTSTATUS Status;
 
     DPRINT1("SYSSETUP: SetPrimaryDomain()\n");
+
+    if (DomainName != NULL)
+    {
+        DomainNameLength = wcslen(DomainName);
+        if (DomainNameLength > UNICODE_STRING_MAX_CHARS)
+        {
+            return STATUS_INVALID_PARAMETER;
+        }
+    }
 
     memset(&ObjectAttributes, 0, sizeof(LSA_OBJECT_ATTRIBUTES));
     ObjectAttributes.Length = sizeof(LSA_OBJECT_ATTRIBUTES);
@@ -178,7 +198,7 @@ SetPrimaryDomain(LPCWSTR DomainName,
         else
         {
             Info.Name.Buffer = (LPWSTR)DomainName;
-            Info.Name.Length = wcslen(DomainName) * sizeof(WCHAR);
+            Info.Name.Length = DomainNameLength * sizeof(WCHAR);
             Info.Name.MaximumLength = Info.Name.Length + sizeof(WCHAR);
         }
 
@@ -190,7 +210,7 @@ SetPrimaryDomain(LPCWSTR DomainName,
     else
     {
         Info.Name.Buffer = (LPWSTR)DomainName;
-        Info.Name.Length = wcslen(DomainName) * sizeof(WCHAR);
+        Info.Name.Length = DomainNameLength * sizeof(WCHAR);
         Info.Name.MaximumLength = Info.Name.Length + sizeof(WCHAR);
         Info.Sid = DomainSid;
     }
@@ -1251,6 +1271,8 @@ SetNewAccountName(
     if (dwLength == 0)
         return;
 
+    ASSERT(dwLength <= UNICODE_STRING_MAX_CHARS);
+
     pszName = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, dwLength * sizeof(WCHAR));
     if (pszName == NULL)
     {
@@ -1280,7 +1302,7 @@ SetNewAccountName(
         goto done;
     }
 
-    NameInfo.UserName.Length = wcslen(pszName) * sizeof(WCHAR);
+    NameInfo.UserName.Length = (USHORT)wcslen(pszName) * sizeof(WCHAR);
     NameInfo.UserName.MaximumLength = NameInfo.UserName.Length + sizeof(WCHAR);
     NameInfo.UserName.Buffer = pszName;
     NameInfo.FullName.Length = 0;

@@ -259,7 +259,7 @@ ObpCreateDosDevicesDirectory(VOID)
      * DosDevices directory \?? , for backward compatibility with
      * Windows NT-2000 systems.
      */
-    RtlCreateUnicodeString(&LinkName, L"\\DosDevices");
+    RtlInitUnicodeString(&LinkName, L"\\DosDevices");
     RtlInitUnicodeString(&RootName, (PCWSTR)&ObpDosDevicesShortNameRoot);
     InitializeObjectAttributes(&ObjectAttributes,
                                &LinkName,

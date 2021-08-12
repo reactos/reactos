@@ -340,7 +340,7 @@ FATGetNextDirEntry(
             *pContext = NULL;
             return STATUS_NO_MORE_ENTRIES;
         }
-    
+
         if (FAT_ENTRY_DELETED(fatDirEntry))
         {
             dirMap = 0;
@@ -365,7 +365,7 @@ FATGetNextDirEntry(
                     2, longNameEntry->name11_12);
 
                 index = longNameEntry->id & 0x3f; // Note: it can be 0 for corrupted FS
-                
+
                 /* Make sure index is valid and we have enough space in buffer
                   (we count one char for \0) */
                 if (index > 0 &&
@@ -462,7 +462,7 @@ FATGetNextDirEntry(
     DirContext->LongNameU.Buffer[DirContext->LongNameU.MaximumLength / sizeof(WCHAR) - 1]
         = UNICODE_NULL;
     DirContext->LongNameU.Length = wcslen(DirContext->LongNameU.Buffer) * sizeof(WCHAR);
-    
+
     /* Init short name */
     vfat8Dot3ToString(&DirContext->DirEntry.Fat, &DirContext->ShortNameU);
 

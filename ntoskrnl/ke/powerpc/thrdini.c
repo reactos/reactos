@@ -66,7 +66,7 @@ KiInitializeContextThread(IN PKTHREAD Thread,
     PETHREAD EThread = (PETHREAD)Thread;
     PEPROCESS Process = EThread->ThreadsProcess;
     ULONG ContextFlags, i, pmsize = sizeof(pagemap) / sizeof(pagemap[0]);
-    
+
     DPRINT("Thread: %08x ContextPointer: %08x SystemRoutine: %08x StartRoutine: %08x StartContext: %08x\n",
            Thread,
            ContextPointer,
@@ -192,15 +192,15 @@ KiInitializeContextThread(IN PKTHREAD Thread,
     {
         DPRINT("First Thread in Process %x\n", Process);
         MmuAllocVsid((ULONG)Process->UniqueProcessId, 0xff);
-        
+
         for (i = 0; i < pmsize; i++)
         {
             pagemap[i].proc = 0;
             pagemap[i].addr = 0x7fff0000 + (i * PAGE_SIZE);
         }
-        
+
         MmuInqPage(pagemap, pmsize);
-        
+
         for (i = 0; i < pmsize; i++)
         {
             if (pagemap[i].phys)
@@ -212,7 +212,7 @@ KiInitializeContextThread(IN PKTHREAD Thread,
                        pagemap[i].proc, pagemap[i].addr);
             }
         }
-        
+
         DPRINT("Did additional aspace setup in the new process\n");
     }
 }

@@ -42,6 +42,19 @@ BEGIN
     END
 END
 
+IDM_EVENTWR_CTX MENU
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "&Open Event Log...", IDM_OPEN_EVENTLOG
+        MENUITEM "&Save Event Log as...", IDM_SAVE_EVENTLOG
+        MENUITEM SEPARATOR
+        MENUITEM "&Clear all Events", IDM_CLEAR_EVENTS
+        MENUITEM "&Rename\tF2", IDM_RENAME_EVENTLOG
+        MENUITEM "Log Se&ttings...", IDM_EVENTLOG_SETTINGS
+    END
+END
+
 IDA_EVENTVWR ACCELERATORS
 BEGIN
     "?", IDM_ABOUT, ASCII, ALT
@@ -155,13 +168,13 @@ BEGIN
 /* Please note that explicit TAB characters '\t' are used to fix the alignment of the message in the MessageBox */
     IDS_USAGE "Podgląd zdarzeń ReactOS\n\
 \n\
-EventVwr [nazwa komputera] [/l:<plik dziennika>] [/?]\n\
+EventVwr [nazwa komputera] [/L:<plik dziennika>] [/?]\n\
 \n\
 ""nazwa kopmutera"" : Określa komputer zdalny, z którym należy się połączyć,\n\
 \taby otrzymać zdarzenia do wyświetlenia. Jeśli nazwa nie jest określona,\n\
 \tzostanie użyty komputer lokalny.\n\
 \n\
-/l:<plik dziennika> : Określa plik dziennika do otwarcia.\n\
+/L:<plik dziennika> : Określa plik dziennika do otwarcia.\n\
 \tObsługiwane są tylko pliki w formacie .evt (NT ≤ 5.2).\n\
 \n\
 /? : Wyświetla tę pomoc/sposób użycia.\n\

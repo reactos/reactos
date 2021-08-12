@@ -106,8 +106,8 @@ void DrawScene(HWND hwnd, HDC dc, int ticks)
     angle += ticks * 0.01;
     colorh += ticks * 0.003;
     if (colorh > 360.0) colorh -= 360.0;
-    HLStoRGB(colorh, 1.0, 0.7, &rval, &gval, &bval);
-    DrawCylinder(lvls, angle, 0.2);
+    HLStoRGB(colorh, 1.0f, 0.7f, &rval, &gval, &bval);
+    DrawCylinder(lvls, angle, 0.2f);
     SwapBuffers(dc);
     EndPaint(hwnd, &ps);
 }
@@ -134,7 +134,7 @@ void MyPixelFormat(HDC dc)
 
 void InitGL(HWND hwnd)
 {
-    GLfloat lightpos[4] = {2.0, 2.0, -2.0, 0.7};
+    GLfloat lightpos[4] = {2.0f, 2.0f, -2.0f, 0.7f};
     GLfloat ca = 1.0;
     dc = GetDC(hwnd);
     MyPixelFormat(dc);

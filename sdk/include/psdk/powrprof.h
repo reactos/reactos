@@ -2,7 +2,7 @@
 #define _POWRPROF_H
 
 #ifndef __WINE_WINTERNL_H
-/* FIXME: Include this, so NTSTATUS gets defined. 
+/* FIXME: Include this, so NTSTATUS gets defined.
    Not very clean, but I can't get the hacH^H^H^override used
    by official PSDK to work. */
 #include <ntsecapi.h>

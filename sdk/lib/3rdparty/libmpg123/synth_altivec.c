@@ -258,9 +258,9 @@
 int synth_1to1_altivec(real *bandPtr,int channel,mpg123_handle *fr, int final)
 {
 	short *samples = (short *) (fr->buffer.data+fr->buffer.fill);
-	
+
 	real *b0, **buf;
-	int clip; 
+	int clip;
 	int bo1;
 #ifndef NO_EQUALIZER
 	if(fr->have_eq_settings) do_equalizer(bandPtr,channel,fr->equalizer);
@@ -276,7 +276,7 @@ int synth_1to1_altivec(real *bandPtr,int channel,mpg123_handle *fr, int final)
 		samples++;
 		buf = fr->real_buffs[1];
 	}
-	
+
 	if(fr->bo & 0x1)
 	{
 		b0 = buf[0];
@@ -289,12 +289,12 @@ int synth_1to1_altivec(real *bandPtr,int channel,mpg123_handle *fr, int final)
 		bo1 = fr->bo+1;
 		dct64_altivec(buf[0]+fr->bo,buf[1]+fr->bo+1,bandPtr);
 	}
-	
-	
+
+
 	{
 		register int j;
 		real *window = fr->decwin + 16 - bo1;
-		
+
 		ALIGNED(16) int clip_tmp[4];
 		vector float v1,v2,v3,v4,v5,v6,v7,v8,v9;
 		vector unsigned char vperm1,vperm2,vperm3,vperm4;
@@ -314,18 +314,18 @@ int synth_1to1_altivec(real *bandPtr,int channel,mpg123_handle *fr, int final)
 		vmin = (vector float){-32768.0f,-32768.0f,-32768.0f,-32768.0f};
 		vperm4 = (vector unsigned char){0,1,18,19,2,3,22,23,4,5,26,27,6,7,30,31};
 #endif
-		
+
 		vperm1 = vec_lvsl(0,window);
 		vperm2 = vec_lvsl(0,samples);
 		vperm3 = vec_lvsr(0,samples);
 		for (j=4;j;j--)
 		{
 			SYNTH_ALTIVEC(16);
-			
+
 			vsum = vec_sub(v5,v6);
 			v9 = vec_sub(v7,v8);
 			vsum = vec_add(vsum,v9);
-			
+
 			v3 = vec_round(vsum);
 			v3 = (vector float)vec_cts(v3,0);
 			v1 = (vector float)vec_cmpgt(vsum,vmax);
@@ -341,21 +341,21 @@ int synth_1to1_altivec(real *bandPtr,int channel,mpg123_handle *fr, int final)
 			vec_st((vector signed short)v7,15,samples);
 			vec_st((vector signed short)v8,0,samples);
 			samples += 8;
-			
+
 			v1 = (vector float)vec_sr((vector unsigned int)v1, vshift);
 			v2 = (vector float)vec_sr((vector unsigned int)v2, vshift);
 			v1 = (vector float)vec_add((vector unsigned int)v1,(vector unsigned int)v2);
 			vclip = vec_sums((vector signed int)v1,vclip);
 		}
-		
+
 		for (j=4;j;j--)
 		{
 			SYNTH_ALTIVEC(-16);
-			
+
 			vsum = vec_add(v5,v6);
 			v9 = vec_add(v7,v8);
 			vsum = vec_add(vsum,v9);
-			
+
 			v3 = vec_round(vsum);
 			v3 = (vector float)vec_cts(v3,0);
 			v1 = (vector float)vec_cmpgt(vsum,vmax);
@@ -371,7 +371,7 @@ int synth_1to1_altivec(real *bandPtr,int channel,mpg123_handle *fr, int final)
 			vec_st((vector signed short)v7,15,samples);
 			vec_st((vector signed short)v8,0,samples);
 			samples += 8;
-			
+
 			v1 = (vector float)vec_sr((vector unsigned int)v1, vshift);
 			v2 = (vector float)vec_sr((vector unsigned int)v2, vshift);
 			v1 = (vector float)vec_add((vector unsigned int)v1,(vector unsigned int)v2);
@@ -382,16 +382,16 @@ int synth_1to1_altivec(real *bandPtr,int channel,mpg123_handle *fr, int final)
 		clip = clip_tmp[3];
 	}
 	if(final) fr->buffer.fill += 128;
-	
+
 	return clip;
 }
 
 int synth_1to1_stereo_altivec(real *bandPtr_l, real *bandPtr_r, mpg123_handle *fr)
 {
 	short *samples = (short *) (fr->buffer.data+fr->buffer.fill);
-	
+
 	real *b0l, *b0r, **bufl, **bufr;
-	int clip; 
+	int clip;
 	int bo1;
 #ifndef NO_EQUALIZER
 	if(fr->have_eq_settings)
@@ -404,7 +404,7 @@ int synth_1to1_stereo_altivec(real *bandPtr_l, real *bandPtr_r, mpg123_handle *f
 	fr->bo &= 0xf;
 	bufl = fr->real_buffs[0];
 	bufr = fr->real_buffs[1];
-	
+
 	if(fr->bo & 0x1)
 	{
 		b0l = bufl[0];
@@ -421,12 +421,12 @@ int synth_1to1_stereo_altivec(real *bandPtr_l, real *bandPtr_r, mpg123_handle *f
 		dct64_altivec(bufl[0]+fr->bo,bufl[1]+fr->bo+1,bandPtr_l);
 		dct64_altivec(bufr[0]+fr->bo,bufr[1]+fr->bo+1,bandPtr_r);
 	}
-	
-	
+
+
 	{
 		register int j;
 		real *window = fr->decwin + 16 - bo1;
-		
+
 		ALIGNED(16) int clip_tmp[4];
 		vector float v1,v2,v3,v4,v5,v6,v7,v8,v9,v10,v11,v12,v13;
 		vector unsigned char vperm1,vperm2;
@@ -444,21 +444,21 @@ int synth_1to1_stereo_altivec(real *bandPtr_l, real *bandPtr_r, mpg123_handle *f
 		vmax = (vector float){32767.0f,32767.0f,32767.0f,32767.0f};
 		vmin = (vector float){-32768.0f,-32768.0f,-32768.0f,-32768.0f};
 #endif
-		
+
 		vperm1 = vec_lvsl(0,window);
 		vperm2 = vec_lvsr(0,samples);
 		vprev = vec_perm(vec_ld(0,samples),vec_ld(0,samples),vec_lvsl(0,samples));
 		for (j=4;j;j--)
 		{
 			SYNTH_STEREO_ALTIVEC(16);
-			
+
 			vsum = vec_sub(vsum,vsum2);
 			vsum2 = vec_sub(vsum5,vsum6);
 			vsum3 = vec_sub(vsum3,vsum4);
 			vsum4 = vec_sub(vsum7,vsum8);
 			vsum = vec_add(vsum,vsum3);
 			vsum2 = vec_add(vsum2,vsum4);
-			
+
 			v1 = vec_round(vsum);
 			v2 = vec_round(vsum2);
 			v1 = (vector float)vec_cts(v1,0);
@@ -474,7 +474,7 @@ int synth_1to1_stereo_altivec(real *bandPtr_l, real *bandPtr_r, mpg123_handle *f
 			v4 = (vector float)vec_cmplt(vsum2,vmin);
 			vec_st((vector signed short)v6,0,samples);
 			samples += 8;
-			
+
 			v1 = (vector float)vec_sr((vector unsigned int)v1, vshift);
 			v2 = (vector float)vec_sr((vector unsigned int)v2, vshift);
 			v3 = (vector float)vec_sr((vector unsigned int)v3, vshift);
@@ -484,18 +484,18 @@ int synth_1to1_stereo_altivec(real *bandPtr_l, real *bandPtr_r, mpg123_handle *f
 			vclip = vec_sums((vector signed int)v1,vclip);
 			vclip = vec_sums((vector signed int)v2,vclip);
 		}
-		
+
 		for (j=4;j;j--)
 		{
 			SYNTH_STEREO_ALTIVEC(-16);
-			
+
 			vsum = vec_add(vsum,vsum2);
 			vsum2 = vec_add(vsum5,vsum6);
 			vsum3 = vec_add(vsum3,vsum4);
 			vsum4 = vec_add(vsum7,vsum8);
 			vsum = vec_add(vsum,vsum3);
 			vsum2 = vec_add(vsum2,vsum4);
-			
+
 			v1 = vec_round(vsum);
 			v2 = vec_round(vsum2);
 			v1 = (vector float)vec_cts(v1,0);
@@ -511,7 +511,7 @@ int synth_1to1_stereo_altivec(real *bandPtr_l, real *bandPtr_r, mpg123_handle *f
 			v4 = (vector float)vec_cmplt(vsum2,vmin);
 			vec_st((vector signed short)v6,0,samples);
 			samples += 8;
-			
+
 			v1 = (vector float)vec_sr((vector unsigned int)v1, vshift);
 			v2 = (vector float)vec_sr((vector unsigned int)v2, vshift);
 			v3 = (vector float)vec_sr((vector unsigned int)v3, vshift);
@@ -521,7 +521,7 @@ int synth_1to1_stereo_altivec(real *bandPtr_l, real *bandPtr_r, mpg123_handle *f
 			vclip = vec_sums((vector signed int)v1,vclip);
 			vclip = vec_sums((vector signed int)v2,vclip);
 		}
-		
+
 		if((size_t)samples & 0xf)
 		{
 			v1 = (vector float)vec_perm(vec_ld(0,samples),vec_ld(0,samples),vec_lvsl(0,samples));
@@ -533,14 +533,14 @@ int synth_1to1_stereo_altivec(real *bandPtr_l, real *bandPtr_r, mpg123_handle *f
 		clip = clip_tmp[3];
 	}
 	fr->buffer.fill += 128;
-	
+
 	return clip;
 }
 
 int synth_1to1_real_altivec(real *bandPtr,int channel,mpg123_handle *fr, int final)
 {
 	real *samples = (real *) (fr->buffer.data+fr->buffer.fill);
-	
+
 	real *b0, **buf;
 	int bo1;
 #ifndef NO_EQUALIZER
@@ -557,7 +557,7 @@ int synth_1to1_real_altivec(real *bandPtr,int channel,mpg123_handle *fr, int fin
 		samples++;
 		buf = fr->real_buffs[1];
 	}
-	
+
 	if(fr->bo & 0x1)
 	{
 		b0 = buf[0];
@@ -570,12 +570,12 @@ int synth_1to1_real_altivec(real *bandPtr,int channel,mpg123_handle *fr, int fin
 		bo1 = fr->bo+1;
 		dct64_altivec(buf[0]+fr->bo,buf[1]+fr->bo+1,bandPtr);
 	}
-	
-	
+
+
 	{
 		register int j;
 		real *window = fr->decwin + 16 - bo1;
-		
+
 		vector float v1,v2,v3,v4,v5,v6,v7,v8,v9;
 		vector unsigned char vperm1,vperm2,vperm3,vperm4, vperm5;
 		vector float vsum,vsum2,vsum3,vsum4,vscale,vzero;
@@ -590,19 +590,19 @@ int synth_1to1_real_altivec(real *bandPtr,int channel,mpg123_handle *fr, int fin
 		vperm4 = (vector unsigned char){0,1,2,3,20,21,22,23,4,5,6,7,28,29,30,31};
 		vperm5 = (vector unsigned char){8,9,10,11,20,21,22,23,12,13,14,15,28,29,30,31};
 #endif
-		
+
 		vperm1 = vec_lvsl(0,window);
 		vperm2 = vec_lvsl(0,samples);
 		vperm3 = vec_lvsr(0,samples);
 		for (j=4;j;j--)
 		{
 			SYNTH_ALTIVEC(16);
-			
+
 			vsum = vec_sub(v5,v6);
 			v9 = vec_sub(v7,v8);
 			vsum = vec_add(vsum,v9);
 			vsum = vec_madd(vsum, vscale, vzero);
-			
+
 			vsample1 = vec_ld(0,samples);
 			vsample2 = vec_ld(16,samples);
 			vsample3 = vec_ld(31,samples);
@@ -620,16 +620,16 @@ int synth_1to1_real_altivec(real *bandPtr,int channel,mpg123_handle *fr, int fin
 			vec_st(v7,0,samples);
 			samples += 8;
 		}
-		
+
 		for (j=4;j;j--)
 		{
 			SYNTH_ALTIVEC(-16);
-			
+
 			vsum = vec_add(v5,v6);
 			v9 = vec_add(v7,v8);
 			vsum = vec_add(vsum,v9);
 			vsum = vec_madd(vsum, vscale, vzero);
-			
+
 			vsample1 = vec_ld(0,samples);
 			vsample2 = vec_ld(16,samples);
 			vsample3 = vec_ld(31,samples);
@@ -649,14 +649,14 @@ int synth_1to1_real_altivec(real *bandPtr,int channel,mpg123_handle *fr, int fin
 		}
 	}
 	if(final) fr->buffer.fill += 256;
-	
+
 	return 0;
 }
 
 int synth_1to1_fltst_altivec(real *bandPtr_l, real *bandPtr_r, mpg123_handle *fr)
 {
 	real *samples = (real *) (fr->buffer.data+fr->buffer.fill);
-	
+
 	real *b0l, *b0r, **bufl, **bufr;
 	int bo1;
 #ifndef NO_EQUALIZER
@@ -670,7 +670,7 @@ int synth_1to1_fltst_altivec(real *bandPtr_l, real *bandPtr_r, mpg123_handle *fr
 	fr->bo &= 0xf;
 	bufl = fr->real_buffs[0];
 	bufr = fr->real_buffs[1];
-	
+
 	if(fr->bo & 0x1)
 	{
 		b0l = bufl[0];
@@ -687,12 +687,12 @@ int synth_1to1_fltst_altivec(real *bandPtr_l, real *bandPtr_r, mpg123_handle *fr
 		dct64_altivec(bufl[0]+fr->bo,bufl[1]+fr->bo+1,bandPtr_l);
 		dct64_altivec(bufr[0]+fr->bo,bufr[1]+fr->bo+1,bandPtr_r);
 	}
-	
-	
+
+
 	{
 		register int j;
 		real *window = fr->decwin + 16 - bo1;
-		
+
 		vector float v1,v2,v3,v4,v5,v6,v7,v8,v9,v10,v11,v12,v13;
 		vector unsigned char vperm1,vperm2;
 		vector float vsum,vsum2,vsum3,vsum4,vsum5,vsum6,vsum7,vsum8,vscale,vzero;
@@ -703,14 +703,14 @@ int synth_1to1_fltst_altivec(real *bandPtr_l, real *bandPtr_r, mpg123_handle *fr
 #else
 		vscale = (vector float){1.0f/32768.0f,1.0f/32768.0f,1.0f/32768.0f,1.0f/32768.0f};
 #endif
-		
+
 		vperm1 = vec_lvsl(0,window);
 		vperm2 = vec_lvsr(0,samples);
 		vprev = vec_perm(vec_ld(0,samples),vec_ld(0,samples),vec_lvsl(0,samples));
 		for (j=4;j;j--)
 		{
 			SYNTH_STEREO_ALTIVEC(16);
-			
+
 			vsum = vec_sub(vsum,vsum2);
 			vsum2 = vec_sub(vsum5,vsum6);
 			vsum3 = vec_sub(vsum3,vsum4);
@@ -719,7 +719,7 @@ int synth_1to1_fltst_altivec(real *bandPtr_l, real *bandPtr_r, mpg123_handle *fr
 			vsum2 = vec_add(vsum2,vsum4);
 			vsum = vec_madd(vsum, vscale, vzero);
 			vsum2 = vec_madd(vsum2, vscale, vzero);
-			
+
 			v1 = vec_mergeh(vsum, vsum2);
 			v2 = vec_mergel(vsum, vsum2);
 			v3 = vec_perm(vprev,v1,vperm2);
@@ -729,11 +729,11 @@ int synth_1to1_fltst_altivec(real *bandPtr_l, real *bandPtr_r, mpg123_handle *fr
 			vec_st(v4,16,samples);
 			samples += 8;
 		}
-		
+
 		for (j=4;j;j--)
 		{
 			SYNTH_STEREO_ALTIVEC(-16);
-			
+
 			vsum = vec_add(vsum,vsum2);
 			vsum2 = vec_add(vsum5,vsum6);
 			vsum3 = vec_add(vsum3,vsum4);
@@ -742,7 +742,7 @@ int synth_1to1_fltst_altivec(real *bandPtr_l, real *bandPtr_r, mpg123_handle *fr
 			vsum2 = vec_add(vsum2,vsum4);
 			vsum = vec_madd(vsum, vscale, vzero);
 			vsum2 = vec_madd(vsum2, vscale, vzero);
-			
+
 			v1 = vec_mergeh(vsum, vsum2);
 			v2 = vec_mergel(vsum, vsum2);
 			v3 = vec_perm(vprev,v1,vperm2);
@@ -752,7 +752,7 @@ int synth_1to1_fltst_altivec(real *bandPtr_l, real *bandPtr_r, mpg123_handle *fr
 			vec_st(v4,16,samples);
 			samples += 8;
 		}
-		
+
 		if((size_t)samples & 0xf)
 		{
 			v1 = (vector float)vec_perm(vec_ld(0,samples),vec_ld(0,samples),vec_lvsl(0,samples));
@@ -761,14 +761,14 @@ int synth_1to1_fltst_altivec(real *bandPtr_l, real *bandPtr_r, mpg123_handle *fr
 		}
 	}
 	fr->buffer.fill += 256;
-	
+
 	return 0;
 }
 
 int synth_1to1_s32_altivec(real *bandPtr,int channel,mpg123_handle *fr, int final)
 {
 	int32_t *samples = (int32_t *) (fr->buffer.data+fr->buffer.fill);
-	
+
 	real *b0, **buf;
 	int clip;
 	int bo1;
@@ -786,7 +786,7 @@ int synth_1to1_s32_altivec(real *bandPtr,int channel,mpg123_handle *fr, int fina
 		samples++;
 		buf = fr->real_buffs[1];
 	}
-	
+
 	if(fr->bo & 0x1)
 	{
 		b0 = buf[0];
@@ -799,12 +799,12 @@ int synth_1to1_s32_altivec(real *bandPtr,int channel,mpg123_handle *fr, int fina
 		bo1 = fr->bo+1;
 		dct64_altivec(buf[0]+fr->bo,buf[1]+fr->bo+1,bandPtr);
 	}
-	
-	
+
+
 	{
 		register int j;
 		real *window = fr->decwin + 16 - bo1;
-		
+
 		ALIGNED(16) int clip_tmp[4];
 		vector float v1,v2,v3,v4,v5,v6,v7,v8,v9;
 		vector unsigned char vperm1,vperm2,vperm3,vperm4,vperm5;
@@ -826,21 +826,21 @@ int synth_1to1_s32_altivec(real *bandPtr,int channel,mpg123_handle *fr, int fina
 		vperm4 = (vector unsigned char){0,1,2,3,20,21,22,23,4,5,6,7,28,29,30,31};
 		vperm5 = (vector unsigned char){8,9,10,11,20,21,22,23,12,13,14,15,28,29,30,31};
 #endif
-		
+
 		vperm1 = vec_lvsl(0,window);
 		vperm2 = vec_lvsl(0,samples);
 		vperm3 = vec_lvsr(0,samples);
 		for (j=4;j;j--)
 		{
 			SYNTH_ALTIVEC(16);
-			
+
 			vsum = vec_sub(v5,v6);
 			v9 = vec_sub(v7,v8);
 			v1 = vec_add(vsum,v9);
 			vsum = (vector float)vec_cts(v1,16);
 			v8 = (vector float)vec_cmpgt(v1,vmax);
 			v9 = (vector float)vec_cmplt(v1,vmin);
-			
+
 			vsample1 = vec_ld(0,samples);
 			vsample2 = vec_ld(16,samples);
 			vsample3 = vec_ld(31,samples);
@@ -857,24 +857,24 @@ int synth_1to1_s32_altivec(real *bandPtr,int channel,mpg123_handle *fr, int fina
 			vec_st((vector signed int)v6,16,samples);
 			vec_st((vector signed int)v7,0,samples);
 			samples += 8;
-			
+
 			v1 = (vector float)vec_sr((vector unsigned int)v8, vshift);
 			v2 = (vector float)vec_sr((vector unsigned int)v9, vshift);
 			v1 = (vector float)vec_add((vector unsigned int)v1,(vector unsigned int)v2);
 			vclip = vec_sums((vector signed int)v1,vclip);
 		}
-		
+
 		for (j=4;j;j--)
 		{
 			SYNTH_ALTIVEC(-16);
-			
+
 			vsum = vec_add(v5,v6);
 			v9 = vec_add(v7,v8);
 			v1 = vec_add(vsum,v9);
 			vsum = (vector float)vec_cts(v1,16);
 			v8 = (vector float)vec_cmpgt(v1,vmax);
 			v9 = (vector float)vec_cmplt(v1,vmin);
-			
+
 			vsample1 = vec_ld(0,samples);
 			vsample2 = vec_ld(16,samples);
 			vsample3 = vec_ld(31,samples);
@@ -891,18 +891,18 @@ int synth_1to1_s32_altivec(real *bandPtr,int channel,mpg123_handle *fr, int fina
 			vec_st((vector signed int)v6,16,samples);
 			vec_st((vector signed int)v7,0,samples);
 			samples += 8;
-			
+
 			v1 = (vector float)vec_sr((vector unsigned int)v8, vshift);
 			v2 = (vector float)vec_sr((vector unsigned int)v9, vshift);
 			v1 = (vector float)vec_add((vector unsigned int)v1,(vector unsigned int)v2);
 			vclip = vec_sums((vector signed int)v1,vclip);
 		}
-		
+
 		vec_st(vclip,0,clip_tmp);
 		clip = clip_tmp[3];
 	}
 	if(final) fr->buffer.fill += 256;
-	
+
 	return clip;
 }
 
@@ -910,7 +910,7 @@ int synth_1to1_s32_altivec(real *bandPtr,int channel,mpg123_handle *fr, int fina
 int synth_1to1_s32_stereo_altivec(real *bandPtr_l, real *bandPtr_r, mpg123_handle *fr)
 {
 	int32_t *samples = (int32_t *) (fr->buffer.data+fr->buffer.fill);
-	
+
 	real *b0l, *b0r, **bufl, **bufr;
 	int clip;
 	int bo1;
@@ -925,7 +925,7 @@ int synth_1to1_s32_stereo_altivec(real *bandPtr_l, real *bandPtr_r, mpg123_handl
 	fr->bo &= 0xf;
 	bufl = fr->real_buffs[0];
 	bufr = fr->real_buffs[1];
-	
+
 	if(fr->bo & 0x1)
 	{
 		b0l = bufl[0];
@@ -942,12 +942,12 @@ int synth_1to1_s32_stereo_altivec(real *bandPtr_l, real *bandPtr_r, mpg123_handl
 		dct64_altivec(bufl[0]+fr->bo,bufl[1]+fr->bo+1,bandPtr_l);
 		dct64_altivec(bufr[0]+fr->bo,bufr[1]+fr->bo+1,bandPtr_r);
 	}
-	
-	
+
+
 	{
 		register int j;
 		real *window = fr->decwin + 16 - bo1;
-		
+
 		ALIGNED(16) int clip_tmp[4];
 		vector float v1,v2,v3,v4,v5,v6,v7,v8,v9,v10,v11,v12,v13;
 		vector unsigned char vperm1,vperm2;
@@ -965,14 +965,14 @@ int synth_1to1_s32_stereo_altivec(real *bandPtr_l, real *bandPtr_r, mpg123_handl
 		vmax = (vector float){32767.999f,32767.999f,32767.999f,32767.999f};
 		vmin = (vector float){-32768.0f,-32768.0f,-32768.0f,-32768.0f};
 #endif
-		
+
 		vperm1 = vec_lvsl(0,window);
 		vperm2 = vec_lvsr(0,samples);
 		vprev = (vector float)vec_perm(vec_ld(0,samples),vec_ld(0,samples),vec_lvsl(0,samples));
 		for (j=4;j;j--)
 		{
 			SYNTH_STEREO_ALTIVEC(16);
-			
+
 			vsum = vec_sub(vsum,vsum2);
 			vsum2 = vec_sub(vsum5,vsum6);
 			vsum3 = vec_sub(vsum3,vsum4);
@@ -985,7 +985,7 @@ int synth_1to1_s32_stereo_altivec(real *bandPtr_l, real *bandPtr_r, mpg123_handl
 			v6 = (vector float)vec_cmplt(v1,vmin);
 			v7 = (vector float)vec_cmpgt(v2,vmax);
 			v8 = (vector float)vec_cmplt(v2,vmin);
-			
+
 			v1 = vec_mergeh(vsum, vsum2);
 			v2 = vec_mergel(vsum, vsum2);
 			v3 = vec_perm(vprev,v1,vperm2);
@@ -994,7 +994,7 @@ int synth_1to1_s32_stereo_altivec(real *bandPtr_l, real *bandPtr_r, mpg123_handl
 			vec_st((vector signed int)v3,0,samples);
 			vec_st((vector signed int)v4,16,samples);
 			samples += 8;
-			
+
 			v1 = (vector float)vec_sr((vector unsigned int)v5, vshift);
 			v2 = (vector float)vec_sr((vector unsigned int)v6, vshift);
 			v3 = (vector float)vec_sr((vector unsigned int)v7, vshift);
@@ -1004,11 +1004,11 @@ int synth_1to1_s32_stereo_altivec(real *bandPtr_l, real *bandPtr_r, mpg123_handl
 			vclip = vec_sums((vector signed int)v1,vclip);
 			vclip = vec_sums((vector signed int)v2,vclip);
 		}
-		
+
 		for (j=4;j;j--)
 		{
 			SYNTH_STEREO_ALTIVEC(-16);
-			
+
 			vsum = vec_add(vsum,vsum2);
 			vsum2 = vec_add(vsum5,vsum6);
 			vsum3 = vec_add(vsum3,vsum4);
@@ -1021,7 +1021,7 @@ int synth_1to1_s32_stereo_altivec(real *bandPtr_l, real *bandPtr_r, mpg123_handl
 			v6 = (vector float)vec_cmplt(v1,vmin);
 			v7 = (vector float)vec_cmpgt(v2,vmax);
 			v8 = (vector float)vec_cmplt(v2,vmin);
-			
+
 			v1 = vec_mergeh(vsum, vsum2);
 			v2 = vec_mergel(vsum, vsum2);
 			v3 = vec_perm(vprev,v1,vperm2);
@@ -1030,7 +1030,7 @@ int synth_1to1_s32_stereo_altivec(real *bandPtr_l, real *bandPtr_r, mpg123_handl
 			vec_st((vector signed int)v3,0,samples);
 			vec_st((vector signed int)v4,16,samples);
 			samples += 8;
-			
+
 			v1 = (vector float)vec_sr((vector unsigned int)v5, vshift);
 			v2 = (vector float)vec_sr((vector unsigned int)v6, vshift);
 			v3 = (vector float)vec_sr((vector unsigned int)v7, vshift);
@@ -1040,18 +1040,18 @@ int synth_1to1_s32_stereo_altivec(real *bandPtr_l, real *bandPtr_r, mpg123_handl
 			vclip = vec_sums((vector signed int)v1,vclip);
 			vclip = vec_sums((vector signed int)v2,vclip);
 		}
-		
+
 		if((size_t)samples & 0xf)
 		{
 			v1 = (vector float)vec_perm(vec_ld(0,samples),vec_ld(0,samples),vec_lvsl(0,samples));
 			v2 = (vector float)vec_perm(vprev,v1,vperm2);
 			vec_st((vector signed int)v2,0,samples);
 		}
-		
+
 		vec_st(vclip,0,clip_tmp);
 		clip = clip_tmp[3];
 	}
 	fr->buffer.fill += 256;
-	
+
 	return clip;
 }

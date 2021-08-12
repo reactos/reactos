@@ -66,7 +66,7 @@ FatHijackCompletionRoutine (
 
 
 _Function_class_(IRP_MJ_FLUSH_BUFFERS)
-_Function_class_(DRIVER_DISPATCH)
+_Function_class_(DRIVER_DISPATCH)
 NTSTATUS
 NTAPI
 FatFsdFlushBuffers (
@@ -144,8 +144,8 @@ Return Value:
     return Status;
 }
 
-
-_Requires_lock_held_(_Global_critical_region_)    
+
+_Requires_lock_held_(_Global_critical_region_)
 NTSTATUS
 FatCommonFlushBuffers (
     IN PIRP_CONTEXT IrpContext,
@@ -280,7 +280,7 @@ Return Value:
             Status = FatFlushFile( IrpContext, Fcb, Flush );
 
             //
-            //  Also flush the file's dirent in the parent directory if the file 
+            //  Also flush the file's dirent in the parent directory if the file
             //  flush worked.
             //
 
@@ -312,11 +312,11 @@ Return Value:
                     //
                     //  Make sure the Fcb is OK.
                     //
-            
+
                     _SEH2_TRY {
-            
+
                         FatVerifyFcb( IrpContext, NextFcb );
-            
+
                     } _SEH2_EXCEPT( FsRtlIsNtstatusExpected(_SEH2_GetExceptionCode()) ?
                               EXCEPTION_EXECUTE_HANDLER : EXCEPTION_CONTINUE_SEARCH ) {
 
@@ -326,16 +326,16 @@ Return Value:
                     if (NextFcb->FcbCondition == FcbGood) {
 
                         NTSTATUS LocalStatus;
-            
+
                         LocalStatus = FatFlushFile( IrpContext, NextFcb, Flush );
-            
+
                         if (!NT_SUCCESS(LocalStatus)) {
-            
+
                             Status = LocalStatus;
                         }
 
                         if (FlagOn(NextFcb->FcbState, FCB_STATE_FLUSH_FAT)) {
-                        
+
                             FatFlushRequired = TRUE;
                         }
                     }
@@ -389,8 +389,8 @@ Return Value:
             {
                 BOOLEAN Finished;
 #ifdef _MSC_VER
-#pragma prefast( suppress:28931, "needed for debug build" )      
-#endif          
+#pragma prefast( suppress:28931, "needed for debug build" )
+#endif
                 Finished = FatAcquireExclusiveVcb( IrpContext, Vcb );
                 NT_ASSERT( Finished );
             }
@@ -442,7 +442,7 @@ Return Value:
             break;
 
         default:
-            
+
 #ifdef _MSC_VER
 #pragma prefast( suppress:28159, "things are seriously wrong if we get here" )
 #endif
@@ -456,7 +456,7 @@ Return Value:
         DebugUnwind( FatCommonFlushBuffers );
 
         if (VcbAcquired) { FatReleaseVcb( IrpContext, Vcb ); }
-        
+
         if (FcbAcquired) { FatReleaseFcb( IrpContext, Fcb ); }
 
         //
@@ -496,7 +496,7 @@ Return Value:
 
                 DriverStatus = IoCallDriver(Vcb->TargetDeviceObject, Irp);
 
-                if ((DriverStatus == STATUS_PENDING) || 
+                if ((DriverStatus == STATUS_PENDING) ||
                     (!NT_SUCCESS(DriverStatus) &&
                      (DriverStatus != STATUS_INVALID_DEVICE_REQUEST))) {
 
@@ -523,8 +523,8 @@ Return Value:
     return Status;
 }
 
-
-_Requires_lock_held_(_Global_critical_region_)    
+
+_Requires_lock_held_(_Global_critical_region_)
 NTSTATUS
 FatFlushDirectory (
     IN PIRP_CONTEXT IrpContext,
@@ -543,7 +543,7 @@ Arguments:
     Dcb - Supplies the Dcb being flushed
 
     FlushType - Specifies the kind of flushing to perform
-    
+
 Return Value:
 
     VOID
@@ -612,44 +612,44 @@ Return Value:
             //  doing the flush dance.  We may encounter corruption, and
             //  should continue flushing the volume as much as possible.
             //
-            
+
             _SEH2_TRY {
-                
+
                 //
                 //  Standard handler to release resources, etc.
                 //
-                
+
                 _SEH2_TRY {
-    
+
                     //
                     //  Make sure the Fcb is OK.
                     //
-    
+
                     _SEH2_TRY {
-    
+
                         FatVerifyFcb( IrpContext, Fcb );
-    
+
                     } _SEH2_EXCEPT( FsRtlIsNtstatusExpected(_SEH2_GetExceptionCode()) ?
                               EXCEPTION_EXECUTE_HANDLER : EXCEPTION_CONTINUE_SEARCH ) {
-    
+
                         FatResetExceptionState( IrpContext );
                     } _SEH2_END;
-    
+
                     //
                     //  If this Fcb is not good skip it.  Note that a 'continue'
                     //  here would be very expensive as we inside a try{} body.
                     //
-    
+
                     if (Fcb->FcbCondition != FcbGood) {
-    
+
                         try_leave( NOTHING);
                     }
-    
+
                     //
                     //  In case a handle was never closed and the FS and AS are more
                     //  than a cluster different, do this truncate.
                     //
-    
+
                     if ( FlagOn(Fcb->FcbState, FCB_STATE_TRUNCATE_ON_CLOSE) ) {
 
 
@@ -659,7 +659,7 @@ Return Value:
 
 
                     }
-    
+
                     //
                     //  Also compare the file's dirent in the parent directory
                     //  with the size information in the Fcb and update
@@ -667,7 +667,7 @@ Return Value:
                     //  because we will be flushing the file object presently, and
                     //  Mm knows what's really dirty.
                     //
-    
+
                     FatGetDirentFromFcbOrDcb( IrpContext,
                                               Fcb,
                                               FALSE,
@@ -675,14 +675,14 @@ Return Value:
                                               &DirentBcb );
 
 
-                    CorrectedFileSize = Fcb->Header.FileSize.LowPart; 
+                    CorrectedFileSize = Fcb->Header.FileSize.LowPart;
 
-                        
+
                     if (Dirent->FileSize != CorrectedFileSize) {
-                        
+
                         Dirent->FileSize = CorrectedFileSize;
 
-                        
+
                     }
 
                     //
@@ -692,33 +692,33 @@ Return Value:
                     //  more children as a result, we will try to initiate teardown on it
                     //  and Cc will deadlock against the active count of this Bcb.
                     //
-    
+
                     FatUnpinBcb( IrpContext, DirentBcb );
-                    
+
                     //
                     //  Now flush the file.  Note that this may make the Fcb
                     //  go away if Mm dereferences its file object.
                     //
-    
+
                     Status = FatFlushFile( IrpContext, Fcb, FlushType );
-    
+
                     if (!NT_SUCCESS(Status)) {
-    
+
                         ReturnStatus = Status;
                     }
-    
+
                 } _SEH2_FINALLY {
-    
+
                     FatUnpinBcb( IrpContext, DirentBcb );
-    
+
                     //
                     //  Since we have the Vcb exclusive we know that if any closes
                     //  come in it is because the CcPurgeCacheSection caused the
                     //  Fcb to go away.
                     //
-    
+
                     if ( !FlagOn(Vcb->VcbState, VCB_STATE_FLAG_DELETED_FCB) ) {
-                        
+
                         FatReleaseFcb( (IRPCONTEXT), Fcb );
                     }
                 } _SEH2_END;
@@ -796,7 +796,7 @@ Return Value:
     return ReturnStatus;
 }
 
-
+
 NTSTATUS
 FatFlushFat (
     IN PIRP_CONTEXT IrpContext,
@@ -814,7 +814,7 @@ Routine Description:
 Arguments:
 
     Vcb - Supplies the Vcb whose FAT is being flushed
-    
+
 Return Value:
 
     VOID
@@ -902,7 +902,7 @@ Return Value:
                                PIN_WAIT | PIN_IF_BCB,
                                &Bcb,
                                &DontCare )) {
-                    
+
                     CcSetDirtyPinnedData( Bcb, NULL );
                     CcRepinBcb( Bcb );
                     CcUnpinData( Bcb );
@@ -937,7 +937,7 @@ Return Value:
                            PIN_WAIT | PIN_IF_BCB,
                            &Bcb,
                            &DontCare )) {
-                
+
                 CcSetDirtyPinnedData( Bcb, NULL );
                 CcRepinBcb( Bcb );
                 CcUnpinData( Bcb );
@@ -957,7 +957,7 @@ Return Value:
 
     return ReturnStatus;
 }
-
+
 
 _Requires_lock_held_(_Global_critical_region_)
 NTSTATUS
@@ -979,7 +979,7 @@ Arguments:
     Vcb - Supplies the volume being flushed
 
     FlushType - Specifies the kind of flushing to perform
-    
+
 Return Value:
 
     NTSTATUS - The Status from the flush.
@@ -1036,8 +1036,8 @@ Return Value:
     return ReturnStatus;
 }
 
-
-_Requires_lock_held_(_Global_critical_region_)    
+
+_Requires_lock_held_(_Global_critical_region_)
 NTSTATUS
 FatFlushFile (
     IN PIRP_CONTEXT IrpContext,
@@ -1056,7 +1056,7 @@ Arguments:
     Fcb - Supplies the file being flushed
 
     FlushType - Specifies the kind of flushing to perform
-    
+
 Return Value:
 
     NTSTATUS - The Status from the flush.
@@ -1073,7 +1073,7 @@ Return Value:
 
 
     if ( !FlagOn( Vcb->VcbState, VCB_STATE_FLAG_DELETED_FCB )) {
-    
+
         //
         //  Grab and release PagingIo to serialize ourselves with the lazy writer.
         //  This will work to ensure that all IO has completed on the cached
@@ -1082,21 +1082,21 @@ Return Value:
         //  If we are to invalidate the file, now is the right time to do it.  Do
         //  it non-recursively so we don't thump children before their time.
         //
-                
+
         ExAcquireResourceExclusiveLite( Fcb->Header.PagingIoResource, TRUE);
-    
+
         if (FlushType == FlushAndInvalidate) {
-    
+
             FatMarkFcbCondition( IrpContext, Fcb, FcbBad, FALSE );
         }
-    
+
         ExReleaseResourceLite( Fcb->Header.PagingIoResource );
     }
 
     return Iosb.Status;
 }
 
-
+
 NTSTATUS
 FatHijackIrpAndFlushDevice (
     IN PIRP_CONTEXT IrpContext,
@@ -1133,9 +1133,9 @@ Return Value:
     PIO_STACK_LOCATION NextIrpSp;
 
     PAGED_CODE();
-    
+
     UNREFERENCED_PARAMETER( IrpContext );
-    
+
     //
     //  Get the next stack location, and copy over the stack location
     //
@@ -1186,7 +1186,7 @@ Return Value:
     return Status;
 }
 
-
+
 VOID
 FatFlushFatEntries (
     IN PIRP_CONTEXT IrpContext,
@@ -1259,7 +1259,7 @@ Return Value:
     }
 }
 
-
+
 VOID
 FatFlushDirentForFile (
     IN PIRP_CONTEXT IrpContext,
@@ -1306,7 +1306,7 @@ Return Value:
     }
 }
 
-
+
 //
 //  Local support routine
 //
@@ -1321,7 +1321,7 @@ FatFlushCompletionRoutine (
 
 {
     NTSTATUS Status = (NTSTATUS) (ULONG_PTR) Contxt;
-    
+
     if ( Irp->PendingReturned ) {
 
         IoMarkIrpPending( Irp );
@@ -1343,7 +1343,7 @@ FatFlushCompletionRoutine (
 
     return STATUS_SUCCESS;
 }
-
+
 //
 //  Local support routine
 //

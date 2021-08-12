@@ -514,13 +514,13 @@ DiscardDelete:
 #ifndef UDF_READ_ONLY_BUILD
                 LONGLONG OldFileSize, NewFileSize;
 
-                if( (OldFileSize = NtReqFcb->CommonFCBHeader.ValidDataLength.QuadPart) < 
+                if( (OldFileSize = NtReqFcb->CommonFCBHeader.ValidDataLength.QuadPart) <
                     (NewFileSize = NtReqFcb->CommonFCBHeader.FileSize.QuadPart)) {
 /*                    UDFZeroDataEx(NtReqFcb,
                                   OldFileSize,
                                   NewFileSize - OldFileSize,
                                   TRUE, Vcb, FileObject);*/
-                    
+
                     NtReqFcb->CommonFCBHeader.ValidDataLength.QuadPart = NewFileSize;
                 }
 #endif //UDF_READ_ONLY_BUILD
@@ -569,7 +569,7 @@ DiscardDelete:
                         UDFAttributesToUDF(DirNdx, NextFileInfo->Dloc->FileEntry, Attr | FILE_ATTRIBUTE_ARCHIVE);
                 }
                 // WriteTime
-                if(!(Ccb->CCBFlags & UDF_CCB_WRITE_TIME_SET) && 
+                if(!(Ccb->CCBFlags & UDF_CCB_WRITE_TIME_SET) &&
                     (Vcb->CompatFlags & UDF_VCB_IC_UPDATE_MODIFY_TIME)) {
                     UDFSetFileXTime(NextFileInfo, NULL, &NtTime, NULL, &NtTime);
                     NtReqFcb->LastWriteTime.QuadPart =

@@ -52,7 +52,7 @@ vj_compress_init(struct vjcompress *comp)
 {
   register u_char i;
   register struct cstate *tstate = comp->tstate;
-  
+
 #if MAX_SLOTS == 0
   memset((char *)comp, 0, sizeof(*comp));
 #endif
@@ -148,7 +148,7 @@ vj_compress_tcp(struct vjcompress *comp, struct pbuf *pb)
   u_char new_seq[16];
   register u_char *cp = new_seq;
 
-  /*  
+  /*
    * Check that the packet is IP proto TCP.
    */
   if (IPH_PROTO(ip) != IP_PROTO_TCP) {
@@ -158,7 +158,7 @@ vj_compress_tcp(struct vjcompress *comp, struct pbuf *pb)
   /*
    * Bail if this is an IP fragment or if the TCP packet isn't
    * `compressible' (i.e., ACK isn't set or some other control bit is
-   * set).  
+   * set).
    */
   if ((IPH_OFFSET(ip) & PP_HTONS(0x3fff)) || pb->tot_len < 40) {
     return (TYPE_IP);
@@ -192,7 +192,7 @@ vj_compress_tcp(struct vjcompress *comp, struct pbuf *pb)
      */
     register struct cstate *lcs;
     register struct cstate *lastcs = comp->last_cs;
-    
+
     do {
       lcs = cs; cs = cs->cs_next;
       INCR(vjs_searches);
@@ -255,11 +255,11 @@ vj_compress_tcp(struct vjcompress *comp, struct pbuf *pb)
    * different between the previous & current datagram, we send the
    * current datagram `uncompressed'.
    */
-  if (((u_short *)ip)[0] != ((u_short *)&cs->cs_ip)[0] 
-      || ((u_short *)ip)[3] != ((u_short *)&cs->cs_ip)[3] 
-      || ((u_short *)ip)[4] != ((u_short *)&cs->cs_ip)[4] 
-      || TCPH_HDRLEN(th) != TCPH_HDRLEN(oth) 
-      || (deltaS > 5 && BCMP(ip + 1, &cs->cs_ip + 1, (deltaS - 5) << 2)) 
+  if (((u_short *)ip)[0] != ((u_short *)&cs->cs_ip)[0]
+      || ((u_short *)ip)[3] != ((u_short *)&cs->cs_ip)[3]
+      || ((u_short *)ip)[4] != ((u_short *)&cs->cs_ip)[4]
+      || TCPH_HDRLEN(th) != TCPH_HDRLEN(oth)
+      || (deltaS > 5 && BCMP(ip + 1, &cs->cs_ip + 1, (deltaS - 5) << 2))
       || (TCPH_HDRLEN(th) > 5 && BCMP(th + 1, oth + 1, (TCPH_HDRLEN(th) - 5) << 2))) {
     goto uncompressed;
   }
@@ -429,7 +429,7 @@ vj_uncompress_uncomp(struct pbuf *nb, struct vjcompress *comp)
   register u_int hlen;
   register struct cstate *cs;
   register struct ip_hdr *ip;
-  
+
   ip = (struct ip_hdr *)nb->payload;
   hlen = IPH_HL(ip) << 2;
   if (IPH_PROTO(ip) >= MAX_SLOTS
@@ -437,7 +437,7 @@ vj_uncompress_uncomp(struct pbuf *nb, struct vjcompress *comp)
       || (hlen += TCPH_HDRLEN(((struct tcp_hdr *)&((char *)ip)[hlen])) << 2)
           > nb->len
       || hlen > MAX_HDR) {
-    PPPDEBUG(LOG_INFO, ("vj_uncompress_uncomp: bad cid=%d, hlen=%d buflen=%d\n", 
+    PPPDEBUG(LOG_INFO, ("vj_uncompress_uncomp: bad cid=%d, hlen=%d buflen=%d\n",
       IPH_PROTO(ip), hlen, nb->len));
     comp->flags |= VJF_TOSS;
     INCR(vjs_errorin);
@@ -456,7 +456,7 @@ vj_uncompress_uncomp(struct pbuf *nb, struct vjcompress *comp)
  * Uncompress a packet of type TYPE_COMPRESSED_TCP.
  * The packet is composed of a buffer chain and the first buffer
  * must contain an accurate chain length.
- * The first buffer must include the entire compressed TCP/IP header. 
+ * The first buffer must include the entire compressed TCP/IP header.
  * This procedure replaces the compressed header with the uncompressed
  * header and returns the length of the VJ header.
  */
@@ -475,9 +475,9 @@ vj_uncompress_tcp(struct pbuf **nb, struct vjcompress *comp)
   cp = (u_char *)n0->payload;
   changes = *cp++;
   if (changes & NEW_C) {
-    /* 
+    /*
      * Make sure the state index is in range, then grab the state.
-     * If we have a good state index, clear the 'discard' flag. 
+     * If we have a good state index, clear the 'discard' flag.
      */
     if (*cp >= MAX_SLOTS) {
       PPPDEBUG(LOG_INFO, ("vj_uncompress_tcp: bad cid=%d\n", *cp));
@@ -487,10 +487,10 @@ vj_uncompress_tcp(struct pbuf **nb, struct vjcompress *comp)
     comp->flags &=~ VJF_TOSS;
     comp->last_recv = *cp++;
   } else {
-    /* 
+    /*
      * this packet has an implicit state index.  If we've
      * had a line error since the last time we got an
-     * explicit state index, we have to toss the packet. 
+     * explicit state index, we have to toss the packet.
      */
     if (comp->flags & VJF_TOSS) {
       PPPDEBUG(LOG_INFO, ("vj_uncompress_tcp: tossing\n"));
@@ -559,11 +559,11 @@ vj_uncompress_tcp(struct pbuf **nb, struct vjcompress *comp)
    */
   vjlen = (u_short)(cp - (u_char*)n0->payload);
   if (n0->len < vjlen) {
-    /* 
+    /*
      * We must have dropped some characters (crc should detect
-     * this but the old slip framing won't) 
+     * this but the old slip framing won't)
      */
-    PPPDEBUG(LOG_INFO, ("vj_uncompress_tcp: head buffer %d too short %d\n", 
+    PPPDEBUG(LOG_INFO, ("vj_uncompress_tcp: head buffer %d too short %d\n",
           n0->len, vjlen));
     goto bad;
   }
@@ -584,7 +584,7 @@ vj_uncompress_tcp(struct pbuf **nb, struct vjcompress *comp)
   tmp = (tmp & 0xffff) + (tmp >> 16);
   tmp = (tmp & 0xffff) + (tmp >> 16);
   IPH_CHKSUM_SET(&cs->cs_ip,  (u_short)(~tmp));
-  
+
   /* Remove the compressed header and prepend the uncompressed header. */
   if(pbuf_header(n0, -((s16_t)(vjlen)))) {
     /* Can we cope with this failing?  Just assert for now */

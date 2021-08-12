@@ -2093,15 +2093,31 @@ static HRESULT WINAPI d3d1_Initialize(IDirect3D *iface, REFIID riid)
 static HRESULT WINAPI ddraw7_FlipToGDISurface(IDirectDraw7 *iface)
 {
     struct ddraw *ddraw = impl_from_IDirectDraw7(iface);
+    IDirectDrawSurface7 *gdi_surface;
+    struct ddraw_surface *gdi_impl;
+    HRESULT hr;
 
     TRACE("iface %p.\n", iface);
 
-    ddraw->flags |= DDRAW_GDI_FLIP;
+    wined3d_mutex_lock();
 
-    if (ddraw->primary)
-        ddraw_surface_update_frontbuffer(ddraw->primary, NULL, FALSE);
+    if (FAILED(hr = IDirectDraw7_GetGDISurface(iface, &gdi_surface)))
+    {
+        WARN("Failed to retrieve GDI surface, hr %#x.\n", hr);
+        wined3d_mutex_unlock();
+        return hr;
+    }
 
-    return DD_OK;
+    gdi_impl = impl_from_IDirectDrawSurface7(gdi_surface);
+    if (gdi_impl->surface_desc.ddsCaps.dwCaps & DDSCAPS_FRONTBUFFER)
+        hr = DD_OK;
+    else
+        hr = IDirectDrawSurface7_Flip(&ddraw->primary->IDirectDrawSurface7_iface, gdi_surface, DDFLIP_WAIT);
+    IDirectDrawSurface7_Release(gdi_surface);
+
+    wined3d_mutex_unlock();
+
+    return hr;
 }
 
 static HRESULT WINAPI ddraw4_FlipToGDISurface(IDirectDraw4 *iface)

@@ -153,8 +153,44 @@ SmpStartCsr(IN PSM_API_MSG SmApiMsg,
             IN PSMP_CLIENT_CONTEXT ClientContext,
             IN HANDLE SmApiPort)
 {
-    DPRINT1("%s is not yet implemented\n", __FUNCTION__);
-    return STATUS_NOT_IMPLEMENTED;
+    PSM_START_CSR_MSG SmStartCsr = &SmApiMsg->u.StartCsr;
+    UNICODE_STRING InitialCommand;
+    HANDLE InitialCommandProcess, InitialCommandProcessId, WindowsSubSysProcessId;
+    NTSTATUS Status;
+
+    Status = SmpLoadSubSystemsForMuSession(&SmStartCsr->MuSessionId,
+                                           &WindowsSubSysProcessId,
+                                           &InitialCommand);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("SMSS: SmpLoadSubSystemsForMuSession failed with status 0x%08x\n", Status);
+        return Status;
+    }
+
+    if (SmStartCsr->Length)
+    {
+        InitialCommand.Length = InitialCommand.MaximumLength = SmStartCsr->Length;
+        InitialCommand.Buffer = SmStartCsr->Buffer;
+    }
+
+    Status = SmpExecuteInitialCommand(SmStartCsr->MuSessionId,
+                                      &InitialCommand,
+                                      &InitialCommandProcess,
+                                      &InitialCommandProcessId);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("SMSS: SmpExecuteInitialCommand failed with status 0x%08x\n", Status);
+        /* FIXME: undo effects of SmpLoadSubSystemsForMuSession */
+        ASSERT(FALSE);
+        return Status;
+    }
+
+    NtClose(InitialCommandProcess);
+
+    SmStartCsr->WindowsSubSysProcessId = WindowsSubSysProcessId;
+    SmStartCsr->SmpInitialCommandProcessId = InitialCommandProcessId;
+
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS

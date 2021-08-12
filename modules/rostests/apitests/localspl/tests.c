@@ -210,15 +210,39 @@ Cleanup:
 
 START_TEST(fpEnumPrinters)
 {
+#if defined(_M_AMD64)
+    if (!winetest_interactive)
+    {
+        skip("ROSTESTS-366: Skipping localspl_apitest:fpEnumPrinters because it hangs on Windows Server 2003 x64-Testbot. Set winetest_interactive to run it anyway.\n");
+        return;
+    }
+#endif
+
     _RunRemoteTest("fpEnumPrinters");
 }
 
 START_TEST(fpGetPrintProcessorDirectory)
 {
+#if defined(_M_AMD64)
+    if (!winetest_interactive)
+    {
+        skip("ROSTESTS-366: Skipping localspl_apitest:fpGetPrintProcessorDirectory because it hangs on Windows Server 2003 x64-Testbot. Set winetest_interactive to run it anyway.\n");
+        return;
+    }
+#endif
+
     _RunRemoteTest("fpGetPrintProcessorDirectory");
 }
 
 START_TEST(fpSetJob)
 {
+#if defined(_M_AMD64)
+    if (!winetest_interactive)
+    {
+        skip("ROSTESTS-366: Skipping localspl_apitest:fpSetJob because it hangs on Windows Server 2003 x64-Testbot. Set winetest_interactive to run it anyway.\n");
+        return;
+    }
+#endif
+
     _RunRemoteTest("fpSetJob");
 }

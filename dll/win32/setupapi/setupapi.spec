@@ -382,8 +382,8 @@
 @ stub SetupDiSetDeviceInterfaceDefault
 @ stdcall SetupDiSetDeviceRegistryPropertyA(ptr ptr long ptr long)
 @ stdcall SetupDiSetDeviceRegistryPropertyW(ptr ptr long ptr long)
-@ stub SetupDiSetDriverInstallParamsA
-@ stub SetupDiSetDriverInstallParamsW
+@ stdcall SetupDiSetDriverInstallParamsA(ptr ptr ptr ptr)
+@ stdcall SetupDiSetDriverInstallParamsW(ptr ptr ptr ptr)
 @ stdcall SetupDiSetSelectedDevice(ptr ptr)
 @ stdcall SetupDiSetSelectedDriverA(ptr ptr ptr)
 @ stdcall SetupDiSetSelectedDriverW(ptr ptr ptr)

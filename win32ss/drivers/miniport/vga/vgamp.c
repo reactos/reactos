@@ -85,6 +85,8 @@ VGAFindAdapter(PVOID DeviceExtension,
   /* FIXME: Determine if the adapter is present  */
   *Again = FALSE;
 
+  ConfigInfo->VdmPhysicalVideoMemoryAddress.QuadPart = 0xa000;
+  ConfigInfo->VdmPhysicalVideoMemoryLength = 0x2000;
   return  NO_ERROR;
 
   /* FIXME: Claim any necessary memory/IO resources for the adapter  */

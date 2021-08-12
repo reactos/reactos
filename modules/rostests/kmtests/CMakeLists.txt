@@ -96,6 +96,7 @@ list(APPEND KMTEST_DRV_SOURCE
     ntos_ps/PsNotify.c
     ntos_se/SeHelpers.c
     ntos_se/SeInheritance.c
+    ntos_se/SeLogonSession.c
     ntos_se/SeQueryInfoToken.c
     rtl/RtlIsValidOemCharacter.c
     rtl/RtlRangeList.c

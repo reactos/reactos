@@ -11,13 +11,13 @@
 * The authors hereby grant permission to use, copy, modify, distribute,
 * and license this software and its documentation for any purpose, provided
 * that existing copyright notices are retained in all copies and that this
-* notice and the following disclaimer are included verbatim in any 
+* notice and the following disclaimer are included verbatim in any
 * distributions. No written agreement, license, or royalty fee is required
 * for any of the authorized uses.
 *
 * THIS SOFTWARE IS PROVIDED BY THE CONTRIBUTORS *AS IS* AND ANY EXPRESS OR
 * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
-* OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. 
+* OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
 * IN NO EVENT SHALL THE CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
 * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
 * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
@@ -288,11 +288,11 @@ MakeKey( u_char *key,    /* IN  56 bit DES key missing parity bits */
   des_key[5] = Get7Bits(key, 35);
   des_key[6] = Get7Bits(key, 42);
   des_key[7] = Get7Bits(key, 49);
-  
+
 #ifndef USE_CRYPT
   des_set_odd_parity((des_cblock *)des_key);
 #endif
-  
+
 #if 0
   CHAPDEBUG(LOG_INFO, ("MakeKey: 56-bit input : %02X%02X%02X%02X%02X%02X%02X\n",
              key[0], key[1], key[2], key[3], key[4], key[5], key[6]));
@@ -350,7 +350,7 @@ ChapMS_LANMan( char *rchallenge,
   int      i;
   u_char    UcasePassword[MAX_NT_PASSWORD]; /* max is actually 14 */
   u_char    PasswordHash[16];
-  
+
   /* LANMan password is case insensitive */
   BZERO(UcasePassword, sizeof(UcasePassword));
   for (i = 0; i < secret_len; i++) {

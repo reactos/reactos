@@ -44,7 +44,7 @@ FatDeviceControlCompletionRoutine(
 #pragma alloc_text(PAGE, FatFsdDeviceControl)
 #endif
 
-
+
 _Function_class_(IRP_MJ_DEVICE_CONTROL)
 _Function_class_(DRIVER_DISPATCH)
 NTSTATUS
@@ -120,7 +120,7 @@ Return Value:
     return Status;
 }
 
-
+
 _Requires_lock_held_(_Global_critical_region_)
 NTSTATUS
 FatCommonDeviceControl (
@@ -357,7 +357,7 @@ Return Value:
 
         //
         //  Release all the resources that we held because of a
-        //  VOLSNAP_FLUSH_AND_HOLD. 
+        //  VOLSNAP_FLUSH_AND_HOLD.
         //
 
         NT_ASSERT( IrpSp->Parameters.DeviceIoControl.IoControlCode == IOCTL_VOLSNAP_FLUSH_AND_HOLD_WRITES );
@@ -380,7 +380,7 @@ Return Value:
     return Status;
 }
 
-
+
 //
 //  Local support routine
 //
@@ -395,7 +395,7 @@ FatDeviceControlCompletionRoutine(
 
 {
     PKEVENT Event = (PKEVENT) Contxt;
-    
+
     //
     //  If there is an event, this is a synch request. Signal and
     //  let I/O know this isn't done yet.

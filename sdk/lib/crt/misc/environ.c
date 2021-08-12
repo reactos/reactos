@@ -28,7 +28,7 @@ char *_pgmptr = NULL;        /* pointer to program name */
 #undef _wpgmptr
 wchar_t *_wpgmptr = NULL;    /* pointer to program name */
 int __app_type = _UNKNOWN_APP; /* application type */
-int _commode = _IOCOMMIT;
+int _commode;
 
 
 int BlockEnvToEnvironA(void)

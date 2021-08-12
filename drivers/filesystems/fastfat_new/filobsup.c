@@ -34,7 +34,7 @@ Abstract:
 #pragma alloc_text(PAGE, FatDecodeFileObject)
 #endif
 
-
+
 VOID
 FatSetFileObject (
     IN PFILE_OBJECT FileObject OPTIONAL,
@@ -292,10 +292,10 @@ Return Value:
             *Vcb = (*FcbOrDcb)->Vcb;
 
             if (*Ccb != NULL ) {
-                
+
                 TypeOfOpen = UserFileOpen;
-                DebugTrace(0, Dbg, "Referencing file: %wZ\n", &(*FcbOrDcb)->FullFileName);                
-                
+                DebugTrace(0, Dbg, "Referencing file: %wZ\n", &(*FcbOrDcb)->FullFileName);
+
             } else {
 
                 //
@@ -304,16 +304,16 @@ Return Value:
 
 
                 if ( *FcbOrDcb == (*Vcb)->EaFcb ) {
-                    
+
                     TypeOfOpen = EaFile;
-                    DebugTrace(0, Dbg, "Referencing EA file: %wZ\n", &(*FcbOrDcb)->FullFileName);                               
-                    
+                    DebugTrace(0, Dbg, "Referencing EA file: %wZ\n", &(*FcbOrDcb)->FullFileName);
+
                 } else {
-                
+
 #ifdef _MSC_VER
 #pragma prefast(suppress:28159, "things are seriously wrong if we get here")
 #endif
-                    FatBugCheck( NodeType(FsContext), 0, 0 );                
+                    FatBugCheck( NodeType(FsContext), 0, 0 );
 
                 }
 
@@ -362,7 +362,7 @@ Arguments:
     Fcb - Supplies a pointer to either an fcb or a dcb
 
     FlushType - Specifies the kind of flushing to perform
-    
+
 Return Value:
 
     None.
@@ -417,8 +417,8 @@ Return Value:
     return;
 }
 
-    
-_Requires_lock_held_(_Global_critical_region_)    
+
+_Requires_lock_held_(_Global_critical_region_)
 VOID
 FatForceCacheMiss (
     IN PIRP_CONTEXT IrpContext,
@@ -443,7 +443,7 @@ Arguments:
     Fcb - Supplies a pointer to an fcb
 
     FlushType - Specifies the kind of flushing to perform
-    
+
 Return Value:
 
     None.

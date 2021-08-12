@@ -22,20 +22,10 @@ extern "C" {
 #endif  /* defined (_DLL) && defined (_M_IX86) */
 #endif
 #ifndef _mbctype
-#ifdef _MSVCRT_
-  extern unsigned char _mbctype[257];
-#else
-#define _mbctype	(*_imp___mbctype)
-  extern unsigned char **_imp___mbctype;
-#endif
+  _CRTIMP extern unsigned char _mbctype[257];
 #endif
 #ifndef _mbcasemap
-#ifdef _MSVCRT_
-  extern unsigned char *_mbcasemap;
-#else
-#define _mbcasemap	(*_imp___mbcasemap)
-  extern unsigned char **_imp___mbcasemap;
-#endif
+  _CRTIMP extern unsigned char _mbcasemap[257];
 #endif
 
   /* CRT stuff */

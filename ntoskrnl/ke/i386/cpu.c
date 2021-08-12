@@ -380,6 +380,11 @@ KiGetFeatureBits(VOID)
     if (CpuFeatures & 0x02000000) FeatureBits |= KF_XMMI;
     if (CpuFeatures & 0x04000000) FeatureBits |= KF_XMMI64;
 
+    if (CpuFeatures & 0x00000040)
+    {
+        DPRINT1("Support PAE\n");
+    }
+
     /* Check if the CPU has hyper-threading */
     if (CpuFeatures & 0x10000000)
     {
@@ -1131,15 +1136,6 @@ KeInvalidateAllCaches(VOID)
     /* Invalidate all caches */
     __wbinvd();
     return TRUE;
-}
-
-VOID
-FASTCALL
-KeZeroPages(IN PVOID Address,
-            IN ULONG Size)
-{
-    /* Not using XMMI in this routine */
-    RtlZeroMemory(Address, Size);
 }
 
 VOID

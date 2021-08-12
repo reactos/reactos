@@ -1,7 +1,17 @@
 
 PROJECT(NTOS)
 
+if (GCC)
+    # Enable this again. CORE-17637
+    add_compile_options(-Wunused-result)
+endif()
+
 include(ntos.cmake)
+
+if (CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
+    # Make sure we don't duplicate some symbols
+    add_compile_options(-fno-common)
+endif()
 
 set(NTOSKRNL_SOURCE ${SOURCE})
 set(NTOSKRNL_ASM_SOURCE ${ASM_SOURCE})
@@ -18,7 +28,7 @@ endif()
 
 add_asm_files(ntoskrnl_asm ${NTOSKRNL_ASM_SOURCE})
 
-if (GCC AND CLANG)
+if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
     # Clang optimises strcmp calls to memcmp.
     target_sources(libntoskrnl PRIVATE $<TARGET_OBJECTS:memcmp>)
 endif()
@@ -35,13 +45,6 @@ add_executable(ntoskrnl
 set_module_type(ntoskrnl kernel)
 
 source_group(TREE ${REACTOS_SOURCE_DIR}/ntoskrnl PREFIX "Source Files" FILES ${NTOSKRNL_SOURCE})
-
-if(GDB AND NOT CLANG)
-    # Completely disable optimizations when debugging the kernel
-    # Not for CLang, which fails as following in _SEH2_EXCEPT macro:
-    # error: inline assembly requires more registers than available
-    target_compile_options(ntoskrnl PRIVATE -O0)
-endif()
 
 target_link_libraries(ntoskrnl cportlib csq ${PSEH_LIB} arbiter cmlib ntlsalib rtl ${ROSSYM_LIB} libcntpr wdmguid ioevent)
 

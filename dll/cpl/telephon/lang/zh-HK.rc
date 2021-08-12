@@ -1,0 +1,10 @@
+/* Traditional Chinese translation by Henry Tang Ih 2016 (henrytang2@hotmail.com) */
+/* Improved by Luo Yufan 2019 (njlyf2011@hotmail.com) */
+
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_HONGKONG
+
+STRINGTABLE 
+BEGIN
+    IDS_CPLSYSTEMNAME "電話和數據機選項"
+    IDS_CPLSYSTEMDESCRIPTION "配置您嘅電話撥號規則和數據機設定。"
+END

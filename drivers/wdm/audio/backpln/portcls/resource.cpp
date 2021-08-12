@@ -54,7 +54,7 @@ public:
     LONG m_Ref;
 };
 
-CResourceList::~CResourceList() 
+CResourceList::~CResourceList()
 {
     if (m_TranslatedResourceList)
     {
@@ -397,9 +397,9 @@ PcNewResourceList(
     NewList->m_TranslatedResourceList= NewTranslatedResources;
     NewList->m_UntranslatedResourceList = NewUntranslatedResources;
     NewList->m_NumberOfEntries = ResourceCount;
-    NewList->m_MaxEntries = ResourceCount;    
+    NewList->m_MaxEntries = ResourceCount;
     NewList->m_PoolType = PoolType;
- 
+
     /* Done */
     return STATUS_SUCCESS;
 }

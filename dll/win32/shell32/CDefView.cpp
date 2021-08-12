@@ -861,7 +861,8 @@ BOOLEAN CDefView::LV_RenameItem(PCUITEMID_CHILD pidlOld, PCUITEMID_CHILD pidlNew
         lvItem.iSubItem = 0;
         m_ListView.GetItem(&lvItem);
 
-        SHFree(reinterpret_cast<LPVOID>(lvItem.lParam));
+        LPVOID oldPidl = reinterpret_cast<LPVOID>(lvItem.lParam);   /* Store the old pidl until the new item is replaced */
+
         lvItem.mask = LVIF_PARAM | LVIF_IMAGE | LVIF_TEXT;
         lvItem.iItem = nItem;
         lvItem.iSubItem = 0;
@@ -870,6 +871,9 @@ BOOLEAN CDefView::LV_RenameItem(PCUITEMID_CHILD pidlOld, PCUITEMID_CHILD pidlNew
         lvItem.iImage = SHMapPIDLToSystemImageListIndex(m_pSFParent, pidlNew, 0);
         m_ListView.SetItem(&lvItem);
         m_ListView.Update(nItem);
+
+        SHFree(oldPidl);                /* Now that the new item is in place, we can safely release the old pidl */
+
         return TRUE;                    /* FIXME: better handling */
     }
 
@@ -1583,6 +1587,26 @@ LRESULT CDefView::OnExplorerCommand(UINT uCommand, BOOL bUseSelection)
     if (FAILED_UNEXPECTEDLY( hResult))
         goto cleanup;
 
+    if (bUseSelection)
+    {
+        // FIXME: we should cache this....
+        SFGAOF rfg = SFGAO_BROWSABLE | SFGAO_CANCOPY | SFGAO_CANLINK | SFGAO_CANMOVE | SFGAO_CANDELETE | SFGAO_CANRENAME | SFGAO_HASPROPSHEET | SFGAO_FILESYSTEM | SFGAO_FOLDER;
+        hResult = m_pSFParent->GetAttributesOf(m_cidl, m_apidl, &rfg);
+        if (FAILED_UNEXPECTEDLY(hResult))
+            return 0;
+
+        if (!(rfg & SFGAO_CANMOVE) && uCommand == FCIDM_SHVIEW_CUT)
+            return 0;
+        if (!(rfg & SFGAO_CANCOPY) && uCommand == FCIDM_SHVIEW_COPY)
+            return 0;
+        if (!(rfg & SFGAO_CANDELETE) && uCommand == FCIDM_SHVIEW_DELETE)
+            return 0;
+        if (!(rfg & SFGAO_CANRENAME) && uCommand == FCIDM_SHVIEW_RENAME)
+            return 0;
+        if (!(rfg & SFGAO_HASPROPSHEET) && uCommand == FCIDM_SHVIEW_PROPERTIES)
+            return 0;
+    }
+
     InvokeContextMenuCommand(uCommand);
 
 cleanup:
@@ -1815,6 +1839,9 @@ LRESULT CDefView::OnCommand(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHand
         case FCIDM_SHVIEW_PROPERTIES:
         case FCIDM_SHVIEW_COPYTO:
         case FCIDM_SHVIEW_MOVETO:
+            if (SHRestricted(REST_NOVIEWCONTEXTMENU))
+                return 0;
+
             return OnExplorerCommand(dwCmdID, TRUE);
 
         case FCIDM_SHVIEW_INSERT:

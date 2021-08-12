@@ -158,7 +158,7 @@ CcRosTraceCacheMap (
 NTSTATUS
 CcRosFlushVacb (
     _In_ PROS_VACB Vacb,
-    _In_ PIO_STATUS_BLOCK Iosb)
+    _Out_opt_ PIO_STATUS_BLOCK Iosb)
 {
     NTSTATUS Status;
     BOOLEAN HaveLock = FALSE;
@@ -1045,7 +1045,7 @@ CcFlushCache (
         {
             if (vacb->Dirty)
             {
-                IO_STATUS_BLOCK VacbIosb;
+                IO_STATUS_BLOCK VacbIosb = { 0 };
                 Status = CcRosFlushVacb(vacb, &VacbIosb);
                 if (!NT_SUCCESS(Status))
                 {

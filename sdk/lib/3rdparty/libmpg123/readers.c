@@ -141,7 +141,7 @@ static ssize_t icy_fullread(mpg123_handle *fr, unsigned char *buf, ssize_t count
 			/* now off to read icy data */
 
 			/* one byte icy-meta size (must be multiplied by 16 to get icy-meta length) */
-			
+
 			ret = fr->rdat.fdread(fr,&temp_buff,1); /* Getting one single byte hast to suceed. */
 			if(ret < 0){ if(NOQUIET) error("reading icy size"); return READER_ERROR; }
 			if(ret == 0) break;

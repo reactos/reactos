@@ -1,5 +1,10 @@
 #include <rosdhcp.h>
 
+#define NDEBUG
+#include <reactos/debug.h>
+
+extern HANDLE hAdapterStateChangedEvent;
+
 SOCKET DhcpSocket = INVALID_SOCKET;
 static LIST_ENTRY AdapterList;
 static WSADATA wsd;
@@ -287,14 +292,13 @@ DWORD WINAPI AdapterDiscoveryThread(LPVOID Context) {
     PMIB_IFTABLE Table = (PMIB_IFTABLE) malloc(sizeof(MIB_IFTABLE));
     DWORD Error, Size = sizeof(MIB_IFTABLE);
     PDHCP_ADAPTER Adapter = NULL;
-    HANDLE AdapterStateChangedEvent = (HANDLE)Context;
+    HANDLE hStopEvent = (HANDLE)Context;
     struct interface_info *ifi = NULL;
     struct protocol *proto;
     int i, AdapterCount = 0, Broadcast;
 
-    /* FIXME: Kill this thread when the service is stopped */
-
-    do {
+    while (TRUE)
+    {
        DH_DbgPrint(MID_TRACE,("Getting Adapter List...\n"));
 
        while( (Error = GetIfTable(Table, &Size, 0 )) ==
@@ -346,7 +350,7 @@ DWORD WINAPI AdapterDiscoveryThread(LPVOID Context) {
                                      got_one, &Adapter->DhclientInfo);
                         state_init(&Adapter->DhclientInfo);
 
-                        SetEvent(AdapterStateChangedEvent);
+                        SetEvent(hAdapterStateChangedEvent);
                     }
 
                 } else {
@@ -444,7 +448,7 @@ DWORD WINAPI AdapterDiscoveryThread(LPVOID Context) {
                     ApiLock();
                     InsertTailList( &AdapterList, &Adapter->ListEntry );
                     AdapterCount++;
-                    SetEvent(AdapterStateChangedEvent);
+                    SetEvent(hAdapterStateChangedEvent);
                     ApiUnlock();
                 } else { free( Adapter ); Adapter = 0; }
             } else { free( Adapter ); Adapter = 0; }
@@ -458,43 +462,24 @@ DWORD WINAPI AdapterDiscoveryThread(LPVOID Context) {
         if (Error != NO_ERROR)
             break;
 #else
-        Sleep(3000);
+        if (WaitForSingleObject(hStopEvent, 3000) == WAIT_OBJECT_0)
+        {
+            DPRINT("Stopping the discovery thread!\n");
+            break;
+        }
 #endif
-    } while (TRUE);
+    }
 
-    DbgPrint("DHCPCSVC: Adapter discovery thread is terminating! (Error: %d)\n", Error);
+    if (Table)
+        free(Table);
 
-    if( Table ) free( Table );
+    DPRINT("Adapter discovery thread terminated! (Error: %d)\n", Error);
+
     return Error;
 }
 
-HANDLE StartAdapterDiscovery(VOID) {
-    HANDLE ThreadHandle, EventHandle;
-
-    EventHandle = CreateEvent(NULL,
-                              FALSE,
-                              FALSE,
-                              NULL);
-
-    if (EventHandle == NULL)
-        return NULL;
-
-    ThreadHandle = CreateThread(NULL,
-                                0,
-                                AdapterDiscoveryThread,
-                                (LPVOID)EventHandle,
-                                0,
-                                NULL);
-
-    if (ThreadHandle == NULL)
-    {
-        CloseHandle(EventHandle);
-        return NULL;
-    }
-
-    CloseHandle(ThreadHandle);
-
-    return EventHandle;
+HANDLE StartAdapterDiscovery(HANDLE hStopEvent) {
+    return CreateThread(NULL, 0, AdapterDiscoveryThread, (LPVOID)hStopEvent, 0, NULL);
 }
 
 void AdapterStop() {

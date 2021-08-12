@@ -365,15 +365,6 @@ typedef __WCHAR_TYPE__ wchar_t;
 
 #endif /* __sys_stdtypes_h */
 
-/* A null pointer constant.  */
-#ifndef NULL
-#ifdef __cplusplus
-#define NULL 0
-#else
-#define NULL ((void*)0)
-#endif
-#endif
-
 #ifndef offsetof
 
 /* Offset of member MEMBER in a struct of type TYPE. */
