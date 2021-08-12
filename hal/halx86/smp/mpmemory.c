@@ -46,6 +46,7 @@ typedef struct _APSTUB
     UINT32 StructAPSegFs;
     UINT32 StructAPTr;
     UINT32 StructAPEip;
+    UINT32 StructAPEsp;
 } APSTUB, *PAPSTUB;
 #endif
 
@@ -104,6 +105,7 @@ HalpWriteProcessorState(PVOID APStubLocation,
     APStub.StructAPSegFs = ProcessorState->ContextFrame.SegFs;
     APStub.StructAPTr = ProcessorState->SpecialRegisters.Tr;
     APStub.StructAPEip = ProcessorState->ContextFrame.Eip;
+    APStub.StructAPEsp = ProcessorState->ContextFrame.Esp;
     /* Copy over ProcessorState struct */
     RtlCopyMemory(APProcessorStateLoc, &APStub, sizeof(APSTUB));
 }

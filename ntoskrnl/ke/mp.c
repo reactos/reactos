@@ -12,6 +12,7 @@
 #include <debug.h>
 
 /* GLOBALS *******************************************************************/
+#define DPL_SYSTEM  0
 
 ULONG ProcessorCount = 0;
 
@@ -40,13 +41,18 @@ KeStartAllProcessors()
     PVOID DPCStack;
     PAPINFO APInfo;
     KPROCESSOR_STATE ProcessorState;
-    LOADER_PARAMETER_BLOCK KeLoaderBlock;
+    KDESCRIPTOR Gdt, Idt;
+   // PVOID NewGdt, NewIdt;
+    extern LOADER_PARAMETER_BLOCK *KeLoaderBlock;
     do 
     {
         SIZE_T APInfoSize = sizeof(APINFO);
         APInfo = ExAllocatePool(NonPagedPool, APInfoSize);
         ASSERT(APInfo);
         ProcessorCount++;
+
+        _sgdt(&Gdt.Limit);
+        __sidt(&Idt.Limit);
 
         KernelStack = MmCreateKernelStack(FALSE, 0);
         ASSERT(KernelStack);
@@ -80,15 +86,22 @@ KeStartAllProcessors()
         ProcessorState = APInfo->Pcr.Prcb->ProcessorState;
 
         /* Prep a new loaderblock for AP */
-        KeLoaderBlock.KernelStack = (ULONG_PTR)KernelStack;
-        KeLoaderBlock.Prcb = (ULONG_PTR)&APInfo->Pcr.Prcb;
-        KeLoaderBlock.Thread = (ULONG_PTR)&APInfo->Pcr.Prcb->IdleThread;
+        KeLoaderBlock->KernelStack = (ULONG_PTR)KernelStack;
+        KeLoaderBlock->Prcb = (ULONG_PTR)&APInfo->Pcr.Prcb;
+        KeLoaderBlock->Thread = (ULONG_PTR)&APInfo->Pcr.Prcb->IdleThread;
+        ProcessorState.ContextFrame.Esp = (ULONG_PTR)KernelStack;
     #endif
 
         /* Prep ProcessorState then start the AP */
         KxInitAPProcessorState(&ProcessorState);
-    } while (HalStartNextProcessor(&KeLoaderBlock, &ProcessorState));
 
+        /* Initalize GDT and IDT */
+        //The following notes and code needs to be cleaned and change before commiting to PR
+
+        
+        /* Load TSR */
+       // ProcessorState.SpecialRegisters.Tr = APTss;
+    } while (HalStartNextProcessor(KeLoaderBlock, &ProcessorState));
     ProcessorCount--;
     /* Started means the AP itself is online, this doesn't mean it's seen by the kernel */
     DPRINT1("HalStartNextProcessor: Sucessful AP startup count is %X\n", ProcessorCount);
@@ -132,8 +145,6 @@ KxInitAPProcessorState(
         /* Set FS to PCR */
         ProcessorState->ContextFrame.SegFs = KGDT_R0_PCR;
 
-        /* Load TSR */
-        ProcessorState->SpecialRegisters.Tr = KGDT_TSS;
 
         ProcessorState->ContextFrame.Eip = (ULONG_PTR)KiSystemStartup;
     }

@@ -17,25 +17,40 @@ EXTERN _APEntry:DWORD
 _APSpinup:
 
     /* At this point the value in ebx is the location of the bootstub + the size of the APEntry segment */
-    mov ecx, ebx
-    add ecx, [_APSpinupEnd - _APSpinup]
-    /* Load a 4kb stack for AP */
-    mov esp, [ecx + HEX(4096)] 
+
 
     /* Load the GDT based on BSP */
 
-    /* TODO: replace this with something that's going to actually work */
-    xor eax, eax
-    mov eax, ([ebx] + [APCr3 - _APSpinup])
-    mov cr3, eax
 
     /* Load some ProcessorState values into proper area */
     xor eax, eax
+    mov eax, ([ebx] + [APCr2 - _APSpinup])
+    mov cr2, eax
 
-    /* Ss */
-    mov eax, ([ebx] + [APSegSs - _APSpinup])
-    mov ss, eax
+    /* TODO: replace this with something that's going to actually work */
+    mov eax, ([ebx] + [APCr3 - _APSpinup])
+    mov cr3, eax
 
+    mov eax, ([ebx] + [APCr4 - _APSpinup])
+    mov cr4, eax
+
+    /* Setup Seg Registers */
+    //mov eax, ([ebx] + [APSegCs - _APSpinup])
+    //mov cs, eax
+    //mov eax, ([ebx] + [APSegSs - _APSpinup])
+    //mov ss, eax
+    //mov eax, ([ebx] + [APSegDs - _APSpinup])
+    //mov ds, eax
+    //mov eax, ([ebx] + [APSegEs - _APSpinup])
+    //mov es, eax
+    //mov eax, ([ebx] + [APSegGs - _APSpinup])
+    //mov gs, eax
+    //mov eax, ([ebx] + [APSegFs - _APSpinup])
+    //mov fs, eax
+
+    /* Esp */
+    mov ecx, ([ebx] + [APEsp - _APSpinup])
+    mov esp, ecx
     hlt
 
     /* Enable paging */
@@ -71,6 +86,8 @@ _APProcessorStateStruct:
     APTr:
         .long HEX(0)
     APEip:
+        .long HEX(0)
+    APEsp:
         .long HEX(0)
 _APSpinupEnd:
 END
