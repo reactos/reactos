@@ -139,7 +139,7 @@ static inline BOOL Imm32IsCrossThreadAccess(HIMC hIMC)
 {
     DWORD dwImeThreadId = Imm32QueryInputContext(hIMC, 1);
     DWORD dwThreadId = GetCurrentThreadId();
-    return (dwImeThreadId == dwThreadId);
+    return (dwImeThreadId != dwThreadId);
 }
 
 static DWORD APIENTRY Imm32NotifyIMEStatus(HWND hwnd, HIMC hIMC, DWORD dwConversion)
