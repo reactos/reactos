@@ -96,6 +96,29 @@ LPVOID APIENTRY Imm32HeapAlloc(DWORD dwFlags, DWORD dwBytes)
     return HeapAlloc(g_hImm32Heap, dwFlags, dwBytes);
 }
 
+static LPWSTR APIENTRY Imm32WideFromAnsi(LPCSTR pszA)
+{
+    INT cch = lstrlenA(pszA);
+    LPWSTR pszW = Imm32HeapAlloc(0, (cch + 1) * sizeof(WCHAR));
+    if (pszW == NULL)
+        return NULL;
+    cch = MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, pszA, cch, pszW, cch + 1);
+    pszW[cch] = 0;
+    return pszW;
+}
+
+static LPSTR APIENTRY Imm32AnsiFromWide(LPCWSTR pszW)
+{
+    INT cchW = lstrlenW(pszW);
+    INT cchA = (cchW + 1) * sizeof(WCHAR);
+    LPSTR pszA = Imm32HeapAlloc(0, cchA);
+    if (!pszA)
+        return NULL;
+    cchA = WideCharToMultiByte(CP_ACP, 0, pszW, cchW, pszA, cchA, NULL, NULL);
+    pszA[cchA] = 0;
+    return pszA;
+}
+
 static DWORD_PTR APIENTRY Imm32QueryWindow(HWND hWnd, DWORD Index)
 {
     return NtUserQueryWindow(hWnd, Index);
@@ -110,6 +133,13 @@ Imm32UpdateInputContext(HIMC hIMC, DWORD Unknown1, PCLIENTIMC pClientImc)
 static DWORD APIENTRY Imm32QueryInputContext(HIMC hIMC, DWORD dwUnknown2)
 {
     return NtUserQueryInputContext(hIMC, dwUnknown2);
+}
+
+static inline BOOL Imm32IsCrossThreadAccess(HIMC hIMC)
+{
+    DWORD dwImeThreadId = Imm32QueryInputContext(hIMC, 1);
+    DWORD dwThreadId = GetCurrentThreadId();
+    return (dwImeThreadId == dwThreadId);
 }
 
 static DWORD APIENTRY Imm32NotifyIMEStatus(HWND hwnd, HIMC hIMC, DWORD dwConversion)
@@ -1113,7 +1143,6 @@ BOOL APIENTRY Imm32CleanupContext(HIMC hIMC, HKL hKL, BOOL bKeep)
  */
 BOOL WINAPI ImmDestroyContext(HIMC hIMC)
 {
-    DWORD dwImeThreadId, dwThreadId;
     HKL hKL;
 
     TRACE("(%p)\n", hIMC);
@@ -1121,9 +1150,7 @@ BOOL WINAPI ImmDestroyContext(HIMC hIMC)
     if (g_psi == NULL || !(g_psi->dwSRVIFlags & SRVINFO_IMM32))
         return FALSE;
 
-    dwImeThreadId = Imm32QueryInputContext(hIMC, 1);
-    dwThreadId = GetCurrentThreadId();
-    if (dwImeThreadId != dwThreadId)
+    if (Imm32IsCrossThreadAccess(hIMC))
         return FALSE;
 
     hKL = GetKeyboardLayout(0);
@@ -1505,17 +1532,11 @@ static BOOL APIENTRY Imm32KEnglish(HIMC hIMC)
 
 static BOOL APIENTRY Imm32ProcessHotKey(HWND hWnd, HIMC hIMC, HKL hKL, DWORD dwHotKeyID)
 {
-    DWORD dwImeThreadId, dwThreadId;
     PIMEDPI pImeDpi;
     BOOL ret;
 
-    if (hIMC)
-    {
-        dwImeThreadId = Imm32QueryInputContext(hIMC, 1);
-        dwThreadId = GetCurrentThreadId();
-        if (dwImeThreadId != dwThreadId)
-            return FALSE;
-    }
+    if (hIMC && Imm32IsCrossThreadAccess(hIMC))
+        return FALSE;
 
     switch (dwHotKeyID)
     {
@@ -2443,7 +2464,6 @@ DWORD WINAPI ImmGetConversionListA(
   DWORD dwBufLen, UINT uFlag)
 {
     DWORD ret = 0;
-    INT cchA, cchW;
     UINT cb;
     LPWSTR pszSrcW = NULL;
     LPCANDIDATELIST pCL = NULL;
@@ -2465,13 +2485,9 @@ DWORD WINAPI ImmGetConversionListA(
 
     if (pSrc)
     {
-        cchA = lstrlenA(pSrc);
-        cchW = cchA + 1;
-        pszSrcW = Imm32HeapAlloc(0, cchW * sizeof(WCHAR));
+        pszSrcW = Imm32WideFromAnsi(pSrc);
         if (pszSrcW == NULL)
             goto Quit;
-        cchW = MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, pSrc, cchA, pszSrcW, cchW);
-        pszSrcW[cchW] = 0;
     }
 
     cb = pImeDpi->ImeConversionList(hIMC, pszSrcW, NULL, 0, uFlag);
@@ -2506,8 +2522,7 @@ DWORD WINAPI ImmGetConversionListW(
   DWORD dwBufLen, UINT uFlag)
 {
     DWORD ret = 0;
-    INT cb, cchW;
-    BOOL bUsedDefault;
+    INT cb;
     PIMEDPI pImeDpi;
     LPCANDIDATELIST pCL = NULL;
     LPSTR pszSrcA = NULL;
@@ -2528,13 +2543,9 @@ DWORD WINAPI ImmGetConversionListW(
 
     if (pSrc)
     {
-        cchW = lstrlenW(pSrc);
-        cb = (cchW + 1) * 2;
-        pszSrcA = Imm32HeapAlloc(0, cb);
+        pszSrcA = Imm32AnsiFromWide(pSrc);
         if (pszSrcA == NULL)
             goto Quit;
-        cb = WideCharToMultiByte(CP_ACP, 0, pSrc, cchW, pszSrcA, cb, NULL, &bUsedDefault);
-        pszSrcA[cb] = 0;
     }
 
     cb = pImeDpi->ImeConversionList(hIMC, pszSrcA, NULL, 0, uFlag);
@@ -3166,32 +3177,26 @@ UINT WINAPI ImmGetVirtualKey(HWND hWnd)
 HKL WINAPI ImmInstallIMEA(
   LPCSTR lpszIMEFileName, LPCSTR lpszLayoutText)
 {
-    INT cchFileName, cchLayoutText;
     LPWSTR pszFileNameW, pszLayoutTextW;
-    HKL hKL;
+    HKL hKL = NULL;
 
     TRACE("(%s, %s)\n", debugstr_a(lpszIMEFileName), debugstr_a(lpszLayoutText));
 
-    cchFileName = lstrlenA(lpszIMEFileName) + 1;
-    cchLayoutText = lstrlenA(lpszLayoutText) + 1;
-
-    pszFileNameW = Imm32HeapAlloc(0, cchFileName * sizeof(WCHAR));
+    pszFileNameW = Imm32WideFromAnsi(lpszIMEFileName);
     if (pszFileNameW == NULL)
-        return NULL;
+        goto Quit;
 
-    pszLayoutTextW = Imm32HeapAlloc(0, cchLayoutText * sizeof(WCHAR));
+    pszLayoutTextW = Imm32WideFromAnsi(lpszLayoutText);
     if (pszLayoutTextW == NULL)
-    {
-        HeapFree(g_hImm32Heap, 0, pszFileNameW);
-        return NULL;
-    }
-
-    MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, lpszIMEFileName, -1, pszFileNameW, cchFileName);
-    MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, lpszLayoutText, -1, pszLayoutTextW, cchLayoutText);
+        goto Quit;
 
     hKL = ImmInstallIMEW(pszFileNameW, pszLayoutTextW);
-    HeapFree(g_hImm32Heap, 0, pszFileNameW);
-    HeapFree(g_hImm32Heap, 0, pszLayoutTextW);
+
+Quit:
+    if (pszFileNameW)
+        HeapFree(g_hImm32Heap, 0, pszFileNameW);
+    if (pszLayoutTextW)
+        HeapFree(g_hImm32Heap, 0, pszLayoutTextW);
     return hKL;
 }
 
@@ -3313,20 +3318,14 @@ BOOL WINAPI ImmIsUIMessageW(
 BOOL WINAPI ImmNotifyIME(
   HIMC hIMC, DWORD dwAction, DWORD dwIndex, DWORD dwValue)
 {
-    DWORD dwImeThreadId, dwThreadId;
     HKL hKL;
     PIMEDPI pImeDpi;
     BOOL ret;
 
     TRACE("(%p, %lu, %lu, %lu)\n", hIMC, dwAction, dwIndex, dwValue);
 
-    if (hIMC)
-    {
-        dwImeThreadId = Imm32QueryWindow(hIMC, QUERY_WINDOW_UNIQUE_THREAD_ID);
-        dwThreadId = GetCurrentThreadId();
-        if (dwImeThreadId != dwThreadId)
-            return FALSE;
-    }
+    if (hIMC && Imm32IsCrossThreadAccess(hIMC))
+        return FALSE;
 
     hKL = GetKeyboardLayout(0);
     pImeDpi = ImmLockImeDpi(hKL);
@@ -3347,7 +3346,6 @@ BOOL WINAPI ImmRegisterWordA(
     BOOL ret = FALSE;
     PIMEDPI pImeDpi;
     LPWSTR pszReadingW = NULL, pszRegisterW = NULL;
-    INT cch;
 
     TRACE("(%p, %s, 0x%lX, %s)\n", hKL, debugstr_a(lpszReading), dwStyle,
           debugstr_a(lpszRegister));
@@ -3365,24 +3363,16 @@ BOOL WINAPI ImmRegisterWordA(
 
     if (lpszReading)
     {
-        cch = lstrlenA(lpszReading);
-        pszReadingW = Imm32HeapAlloc(0, (cch + 1) * sizeof(WCHAR));
+        pszReadingW = Imm32WideFromAnsi(lpszReading);
         if (pszReadingW == NULL)
             goto Quit;
-        cch = MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, lpszReading, cch,
-                                  pszReadingW, cch + 1);
-        pszReadingW[cch] = 0;
     }
 
     if (lpszRegister)
     {
-        cch = lstrlenA(lpszRegister);
-        pszRegisterW = Imm32HeapAlloc(0, (cch + 1) * sizeof(WCHAR));
+        pszRegisterW = Imm32WideFromAnsi(lpszRegister);
         if (pszRegisterW == NULL)
             goto Quit;
-        cch = MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, lpszRegister, cch,
-                                  pszRegisterW, cch + 1);
-        pszRegisterW[cch] = 0;
     }
 
     ret = pImeDpi->ImeRegisterWord(pszReadingW, dwStyle, pszRegisterW);
@@ -3405,7 +3395,6 @@ BOOL WINAPI ImmRegisterWordW(
     BOOL ret = FALSE;
     PIMEDPI pImeDpi;
     LPSTR pszReadingA = NULL, pszRegisterA = NULL;
-    INT cchW, cchA;
 
     TRACE("(%p, %s, 0x%lX, %s)\n", hKL, debugstr_w(lpszReading), dwStyle,
           debugstr_w(lpszRegister));
@@ -3423,24 +3412,16 @@ BOOL WINAPI ImmRegisterWordW(
 
     if (lpszReading)
     {
-        cchW = lstrlenW(lpszReading);
-        cchA = (cchW + 1) * sizeof(WCHAR);
-        pszReadingA = Imm32HeapAlloc(0, cchA);
+        pszReadingA = Imm32AnsiFromWide(lpszReading);
         if (!pszReadingA)
             goto Quit;
-        cchA = WideCharToMultiByte(CP_ACP, 0, lpszReading, cchW, pszReadingA, cchA, NULL, NULL);
-        pszReadingA[cchA] = 0;
     }
 
     if (lpszRegister)
     {
-        cchW = lstrlenW(lpszRegister);
-        cchA = (cchW + 1) * sizeof(WCHAR);
-        pszRegisterA = Imm32HeapAlloc(0, cchA);
+        pszRegisterA = Imm32AnsiFromWide(lpszRegister);
         if (!pszRegisterA)
             goto Quit;
-        cchA = WideCharToMultiByte(CP_ACP, 0, lpszRegister, cchW, pszRegisterA, cchA, NULL, NULL);
-        pszRegisterA[cchA] = 0;
     }
 
     ret = pImeDpi->ImeRegisterWord(pszReadingA, dwStyle, pszRegisterA);
@@ -3505,7 +3486,6 @@ BOOL WINAPI ImmSetCandidateWindow(
   HIMC hIMC, LPCANDIDATEFORM lpCandidate)
 {
 #define MAX_CANDIDATEFORM 4
-    DWORD dwImeThreadId, dwThreadId;
     HWND hWnd;
     LPINPUTCONTEXT pIC;
 
@@ -3514,9 +3494,7 @@ BOOL WINAPI ImmSetCandidateWindow(
     if (lpCandidate->dwIndex >= MAX_CANDIDATEFORM)
         return FALSE;
 
-    dwImeThreadId = Imm32QueryInputContext(hIMC, 1);
-    dwThreadId = GetCurrentThreadId();
-    if (dwImeThreadId != dwThreadId)
+    if (Imm32IsCrossThreadAccess(hIMC))
         return FALSE;
 
     pIC = ImmLockIMC(hIMC);
@@ -3565,7 +3543,6 @@ static VOID APIENTRY AnsiToWideLogFont(const LOGFONTA *plfA, LPLOGFONTW plfW)
 BOOL WINAPI ImmSetCompositionFontA(HIMC hIMC, LPLOGFONTA lplf)
 {
     LOGFONTW lfW;
-    DWORD dwImeThreadId, dwThreadId;
     PCLIENTIMC pClientImc;
     BOOL bWide;
     LPINPUTCONTEXTDX pIC;
@@ -3575,9 +3552,7 @@ BOOL WINAPI ImmSetCompositionFontA(HIMC hIMC, LPLOGFONTA lplf)
 
     TRACE("(%p, %p)\n", hIMC, lplf);
 
-    dwImeThreadId = Imm32QueryInputContext(hIMC, 1);
-    dwThreadId = GetCurrentThreadId();
-    if (dwImeThreadId != dwThreadId)
+    if (Imm32IsCrossThreadAccess(hIMC))
         return FALSE;
 
     pClientImc = ImmLockClientImc(hIMC);
@@ -3625,7 +3600,6 @@ BOOL WINAPI ImmSetCompositionFontA(HIMC hIMC, LPLOGFONTA lplf)
 BOOL WINAPI ImmSetCompositionFontW(HIMC hIMC, LPLOGFONTW lplf)
 {
     LOGFONTA lfA;
-    DWORD dwImeThreadId, dwThreadId;
     PCLIENTIMC pClientImc;
     BOOL bWide;
     HWND hWnd;
@@ -3635,9 +3609,7 @@ BOOL WINAPI ImmSetCompositionFontW(HIMC hIMC, LPLOGFONTW lplf)
 
     TRACE("(%p, %p)\n", hIMC, lplf);
 
-    dwImeThreadId = Imm32QueryInputContext(hIMC, 1);
-    dwThreadId = GetCurrentThreadId();
-    if (dwImeThreadId != dwThreadId)
+    if (Imm32IsCrossThreadAccess(hIMC))
         return FALSE;
 
     pClientImc = ImmLockClientImc(hIMC);
@@ -3800,13 +3772,10 @@ BOOL WINAPI ImmSetCompositionStringW(
 BOOL WINAPI ImmSetCompositionWindow(
   HIMC hIMC, LPCOMPOSITIONFORM lpCompForm)
 {
-    DWORD dwImeThreadId, dwThreadId;
     LPINPUTCONTEXT pIC;
     HWND hWnd;
 
-    dwImeThreadId = NtUserQueryInputContext(hIMC, 1);
-    dwThreadId = GetCurrentThreadId();
-    if (dwImeThreadId != dwThreadId)
+    if (Imm32IsCrossThreadAccess(hIMC))
         return FALSE;
 
     pIC = ImmLockIMC(hIMC);
@@ -3833,7 +3802,7 @@ BOOL WINAPI ImmSetConversionStatus(
 {
     HKL hKL;
     LPINPUTCONTEXT pIC;
-    DWORD dwImeThreadId, dwThreadId, dwOldConversion, dwOldSentence;
+    DWORD dwOldConversion, dwOldSentence;
     BOOL fConversionChange = FALSE, fSentenceChange = FALSE;
     HWND hWnd;
 
@@ -3849,9 +3818,7 @@ BOOL WINAPI ImmSetConversionStatus(
         }
     }
 
-    dwImeThreadId = Imm32QueryInputContext(hIMC, 1);
-    dwThreadId = GetCurrentThreadId();
-    if (dwImeThreadId != dwThreadId)
+    if (Imm32IsCrossThreadAccess(hIMC))
         return FALSE;
 
     pIC = ImmLockIMC(hIMC);
@@ -3973,16 +3940,14 @@ VOID WINAPI ImmUnlockImeDpi(PIMEDPI pImeDpi)
  */
 BOOL WINAPI ImmSetOpenStatus(HIMC hIMC, BOOL fOpen)
 {
-    DWORD dwImeThreadId, dwThreadId, dwConversion;
+    DWORD dwConversion;
     LPINPUTCONTEXT pIC;
     HWND hWnd;
     BOOL bHasChange = FALSE;
 
     TRACE("(%p, %d)\n", hIMC, fOpen);
 
-    dwImeThreadId = Imm32QueryInputContext(hIMC, 1);
-    dwThreadId = GetCurrentThreadId();
-    if (dwImeThreadId != dwThreadId)
+    if (Imm32IsCrossThreadAccess(hIMC))
         return FALSE;
 
     pIC = ImmLockIMC(hIMC);
@@ -4016,13 +3981,10 @@ BOOL WINAPI ImmSetStatusWindowPos(HIMC hIMC, LPPOINT lpptPos)
 {
     LPINPUTCONTEXT pIC;
     HWND hWnd;
-    DWORD dwImeThreadId, dwThreadId;
 
     TRACE("(%p, {%ld, %ld})\n", hIMC, lpptPos->x, lpptPos->y);
 
-    dwImeThreadId = Imm32QueryInputContext(hIMC, 1);
-    dwThreadId = GetCurrentThreadId();
-    if (dwImeThreadId != dwThreadId)
+    if (Imm32IsCrossThreadAccess(hIMC))
         return FALSE;
 
     pIC = ImmLockIMC(hIMC);
@@ -4099,7 +4061,6 @@ BOOL WINAPI ImmUnregisterWordA(
     BOOL ret = FALSE;
     PIMEDPI pImeDpi;
     LPWSTR pszReadingW = NULL, pszUnregisterW = NULL;
-    INT cch;
 
     TRACE("(%p, %s, 0x%lX, %s)\n", hKL, debugstr_a(lpszReading), dwStyle,
           debugstr_a(lpszUnregister));
@@ -4117,24 +4078,16 @@ BOOL WINAPI ImmUnregisterWordA(
 
     if (lpszReading)
     {
-        cch = lstrlenA(lpszReading);
-        pszReadingW = Imm32HeapAlloc(0, (cch + 1) * sizeof(WCHAR));
+        pszReadingW = Imm32WideFromAnsi(lpszReading);
         if (pszReadingW == NULL)
             goto Quit;
-        cch = MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, lpszReading, cch,
-                                  pszReadingW, cch + 1);
-        pszReadingW[cch] = 0;
     }
 
     if (lpszUnregister)
     {
-        cch = lstrlenA(lpszUnregister);
-        pszUnregisterW = Imm32HeapAlloc(0, (cch + 1) * sizeof(WCHAR));
+        pszUnregisterW = Imm32WideFromAnsi(lpszUnregister);
         if (pszUnregisterW == NULL)
             goto Quit;
-        cch = MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, lpszUnregister, cch,
-                                  pszUnregisterW, cch + 1);
-        pszUnregisterW[cch] = 0;
     }
 
     ret = pImeDpi->ImeUnregisterWord(pszReadingW, dwStyle, pszUnregisterW);
@@ -4157,7 +4110,6 @@ BOOL WINAPI ImmUnregisterWordW(
     BOOL ret = FALSE;
     PIMEDPI pImeDpi;
     LPSTR pszReadingA = NULL, pszUnregisterA = NULL;
-    INT cchW, cchA;
 
     TRACE("(%p, %s, 0x%lX, %s)\n", hKL, debugstr_w(lpszReading), dwStyle,
           debugstr_w(lpszUnregister));
@@ -4175,24 +4127,16 @@ BOOL WINAPI ImmUnregisterWordW(
 
     if (lpszReading)
     {
-        cchW = lstrlenW(lpszReading);
-        cchA = (cchW + 1) * sizeof(WCHAR);
-        pszReadingA = Imm32HeapAlloc(0, cchA);
+        pszReadingA = Imm32AnsiFromWide(lpszReading);
         if (!pszReadingA)
             goto Quit;
-        cchA = WideCharToMultiByte(CP_ACP, 0, lpszReading, cchW, pszReadingA, cchA, NULL, NULL);
-        pszReadingA[cchA] = 0;
     }
 
     if (lpszUnregister)
     {
-        cchW = lstrlenW(lpszUnregister);
-        cchA = (cchW + 1) * sizeof(WCHAR);
-        pszUnregisterA = Imm32HeapAlloc(0, cchA);
+        pszUnregisterA = Imm32AnsiFromWide(lpszUnregister);
         if (!pszUnregisterA)
             goto Quit;
-        cchA = WideCharToMultiByte(CP_ACP, 0, lpszUnregister, cchW, pszUnregisterA, cchA, NULL, NULL);
-        pszUnregisterA[cchA] = 0;
     }
 
     ret = pImeDpi->ImeUnregisterWord(pszReadingA, dwStyle, pszUnregisterA);
