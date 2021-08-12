@@ -587,7 +587,6 @@ static CRITICAL_SECTION_DEBUG critsect_debug =
       0, 0, { (DWORD_PTR)(__FILE__ ": threaddata_cs") }
 };
 static CRITICAL_SECTION threaddata_cs = { &critsect_debug, -1, 0, 0, 0, 0 };
-static BOOL disable_ime;
 
 static inline BOOL is_himc_ime_unicode(const InputContextData *data)
 {
@@ -623,38 +622,6 @@ static inline CHAR *strdupWtoA( const WCHAR *str )
             WideCharToMultiByte( CP_ACP, 0, str, -1, ret, len, NULL, NULL );
     }
     return ret;
-}
-
-static IMMThreadData *IMM_GetThreadData(HWND hwnd, DWORD thread)
-{
-    IMMThreadData *data;
-    DWORD process;
-
-    if (hwnd)
-    {
-        if (!(thread = GetWindowThreadProcessId(hwnd, &process))) return NULL;
-        if (process != GetCurrentProcessId()) return NULL;
-    }
-    else if (thread)
-    {
-        HANDLE h = OpenThread(THREAD_QUERY_INFORMATION, FALSE, thread);
-        if (!h) return NULL;
-        process = GetProcessIdOfThread(h);
-        CloseHandle(h);
-        if (process != GetCurrentProcessId()) return NULL;
-    }
-    else
-        thread = GetCurrentThreadId();
-
-    EnterCriticalSection(&threaddata_cs);
-    LIST_FOR_EACH_ENTRY(data, &ImmThreadDataList, IMMThreadData, entry)
-        if (data->threadID == thread) return data;
-
-    data = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*data));
-    data->threadID = thread;
-    list_add_head(&ImmThreadDataList,&data->entry);
-    TRACE("Thread Data Created (%x)\n",thread);
-    return data;
 }
 
 static HMODULE load_graphics_driver(void)
@@ -2574,17 +2541,6 @@ BOOL WINAPI ImmGetConversionStatus(
         *lpfdwSentence = pIC->fdwSentence;
 
     ImmUnlockIMC(hIMC);
-    return TRUE;
-}
-
-static BOOL needs_ime_window(HWND hwnd)
-{
-    WCHAR classW[8];
-
-    if (GetClassNameW(hwnd, classW, ARRAY_SIZE(classW)) && !lstrcmpW(classW, szwIME))
-        return FALSE;
-    if (GetClassLongPtrW(hwnd, GCL_STYLE) & CS_IME) return FALSE;
-
     return TRUE;
 }
 
