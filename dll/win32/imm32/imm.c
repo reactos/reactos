@@ -3093,7 +3093,7 @@ UINT WINAPI ImmGetRegisterWordStyleA(
 
     ret = pImeDpi->ImeGetRegisterWordStyle(nItem, pNewStylesW);
 
-    if (nItem > 0 && ret > 0)
+    if (nItem > 0)
     {
         /* lpStyleBuf <-- pNewStylesW */
         for (iItem = 0; iItem < ret; ++iItem)
@@ -3153,7 +3153,7 @@ UINT WINAPI ImmGetRegisterWordStyleW(
 
     ret = pImeDpi->ImeGetRegisterWordStyle(nItem, pNewStylesA);
 
-    if (nItem > 0 && ret > 0)
+    if (nItem > 0)
     {
         /* lpStyleBuf <-- pNewStylesA */
         for (iItem = 0; iItem < ret; ++iItem)
