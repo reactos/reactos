@@ -3065,26 +3065,58 @@ DWORD WINAPI ImmGetProperty(HKL hKL, DWORD fdwIndex)
 UINT WINAPI ImmGetRegisterWordStyleA(
   HKL hKL, UINT nItem, LPSTYLEBUFA lpStyleBuf)
 {
-    ImmHkl *immHkl = IMM_GetImmHkl(hKL);
-    TRACE("(%p, %d, %p):\n", hKL, nItem, lpStyleBuf);
-    if (immHkl->hIME && immHkl->pImeGetRegisterWordStyle)
-    {
-        if (!is_kbd_ime_unicode(immHkl))
-            return immHkl->pImeGetRegisterWordStyle(nItem,(LPSTYLEBUFW)lpStyleBuf);
-        else
-        {
-            STYLEBUFW sbw;
-            UINT rc;
+    UINT iItem, ret = 0;
+    PIMEDPI pImeDpi;
+    LPSTYLEBUFA pDestA;
+    LPSTYLEBUFW pSrcW, pNewStylesW = NULL;
+    size_t cchW;
+    INT cchA;
 
-            rc = immHkl->pImeGetRegisterWordStyle(nItem,&sbw);
-            WideCharToMultiByte(CP_ACP, 0, sbw.szDescription, -1,
-                lpStyleBuf->szDescription, 32, NULL, NULL);
-            lpStyleBuf->dwStyle = sbw.dwStyle;
-            return rc;
+    TRACE("(%p, %u, %p)\n", hKL, nItem, lpStyleBuf);
+
+    pImeDpi = ImmLockOrLoadImeDpi(hKL);
+    if (!pImeDpi)
+        return 0;
+
+    if (!(pImeDpi->ImeInfo.fdwProperty & IME_PROP_UNICODE))
+    {
+        ret = pImeDpi->ImeGetRegisterWordStyle(nItem, lpStyleBuf);
+        goto Quit;
+    }
+
+    if (nItem > 0)
+    {
+        pNewStylesW = Imm32HeapAlloc(0, nItem * sizeof(STYLEBUFW));
+        if (!pNewStylesW)
+            goto Quit;
+    }
+
+    ret = pImeDpi->ImeGetRegisterWordStyle(nItem, pNewStylesW);
+
+    if (nItem > 0 && ret > 0)
+    {
+        /* lpStyleBuf <-- pNewStylesW */
+        for (iItem = 0; iItem < nItem; ++iItem)
+        {
+            pSrcW = &pNewStylesW[iItem];
+            pDestA = &lpStyleBuf[iItem];
+            pDestA->dwStyle = pSrcW->dwStyle;
+            StringCchLengthW(pSrcW->szDescription, _countof(pSrcW->szDescription), &cchW);
+            cchA = WideCharToMultiByte(CP_ACP, MB_PRECOMPOSED,
+                                       pSrcW->szDescription, (INT)cchW,
+                                       pDestA->szDescription, _countof(pDestA->szDescription),
+                                       NULL, NULL);
+            if (cchA > _countof(pDestA->szDescription) - 1)
+                cchA = _countof(pDestA->szDescription) - 1;
+            pDestA->szDescription[cchA] = 0;
         }
     }
-    else
-        return 0;
+
+Quit:
+    if (pNewStylesW)
+        HeapFree(g_hImm32Heap, 0, pNewStylesW);
+    ImmUnlockImeDpi(pImeDpi);
+    return ret;
 }
 
 /***********************************************************************
@@ -3093,26 +3125,57 @@ UINT WINAPI ImmGetRegisterWordStyleA(
 UINT WINAPI ImmGetRegisterWordStyleW(
   HKL hKL, UINT nItem, LPSTYLEBUFW lpStyleBuf)
 {
-    ImmHkl *immHkl = IMM_GetImmHkl(hKL);
-    TRACE("(%p, %d, %p):\n", hKL, nItem, lpStyleBuf);
-    if (immHkl->hIME && immHkl->pImeGetRegisterWordStyle)
-    {
-        if (is_kbd_ime_unicode(immHkl))
-            return immHkl->pImeGetRegisterWordStyle(nItem,lpStyleBuf);
-        else
-        {
-            STYLEBUFA sba;
-            UINT rc;
+    UINT iItem, ret = 0;
+    PIMEDPI pImeDpi;
+    LPSTYLEBUFA pSrcA, pNewStylesA = NULL;
+    LPSTYLEBUFW pDestW;
+    size_t cchA;
+    INT cchW;
 
-            rc = immHkl->pImeGetRegisterWordStyle(nItem,(LPSTYLEBUFW)&sba);
-            MultiByteToWideChar(CP_ACP, 0, sba.szDescription, -1,
-                lpStyleBuf->szDescription, 32);
-            lpStyleBuf->dwStyle = sba.dwStyle;
-            return rc;
+    TRACE("(%p, %u, %p)\n", hKL, nItem, lpStyleBuf);
+
+    pImeDpi = ImmLockOrLoadImeDpi(hKL);
+    if (!pImeDpi)
+        return 0;
+
+    if (pImeDpi->ImeInfo.fdwProperty & IME_PROP_UNICODE)
+    {
+        ret = pImeDpi->ImeGetRegisterWordStyle(nItem, lpStyleBuf);
+        goto Quit;
+    }
+
+    if (nItem > 0)
+    {
+        pNewStylesA = Imm32HeapAlloc(0, nItem * sizeof(STYLEBUFA));
+        if (!pNewStylesA)
+            goto Quit;
+    }
+
+    ret = pImeDpi->ImeGetRegisterWordStyle(nItem, pNewStylesA);
+
+    if (nItem > 0 && ret > 0)
+    {
+        /* lpStyleBuf <-- pNewStylesA */
+        for (iItem = 0; iItem < nItem; ++iItem)
+        {
+            pSrcA = &pNewStylesA[iItem];
+            pDestW = &lpStyleBuf[iItem];
+            pDestW->dwStyle = pSrcA->dwStyle;
+            StringCchLengthA(pSrcA->szDescription, _countof(pSrcA->szDescription), &cchA);
+            cchW = MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED,
+                                       pSrcA->szDescription, (INT)cchA,
+                                       pDestW->szDescription, _countof(pDestW->szDescription));
+            if (cchW > _countof(pDestW->szDescription) - 1)
+                cchW = _countof(pDestW->szDescription) - 1;
+            pDestW->szDescription[cchW] = 0;
         }
     }
-    else
-        return 0;
+
+Quit:
+    if (pNewStylesA)
+        HeapFree(g_hImm32Heap, 0, pNewStylesA);
+    ImmUnlockImeDpi(pImeDpi);
+    return ret;
 }
 
 /***********************************************************************
