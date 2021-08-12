@@ -3096,7 +3096,7 @@ UINT WINAPI ImmGetRegisterWordStyleA(
     if (nItem > 0 && ret > 0)
     {
         /* lpStyleBuf <-- pNewStylesW */
-        for (iItem = 0; iItem < nItem; ++iItem)
+        for (iItem = 0; iItem < ret; ++iItem)
         {
             pSrcW = &pNewStylesW[iItem];
             pDestA = &lpStyleBuf[iItem];
@@ -3156,7 +3156,7 @@ UINT WINAPI ImmGetRegisterWordStyleW(
     if (nItem > 0 && ret > 0)
     {
         /* lpStyleBuf <-- pNewStylesA */
-        for (iItem = 0; iItem < nItem; ++iItem)
+        for (iItem = 0; iItem < ret; ++iItem)
         {
             pSrcA = &pNewStylesA[iItem];
             pDestW = &lpStyleBuf[iItem];
