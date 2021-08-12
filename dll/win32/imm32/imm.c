@@ -759,12 +759,6 @@ static ImmHkl *IMM_GetImmHkl(HKL hkl)
 }
 #undef LOAD_FUNCPTR
 
-HWND WINAPI __wine_get_ui_window(HKL hkl)
-{
-    ImmHkl *immHkl = IMM_GetImmHkl(hkl);
-    return immHkl->UIWnd;
-}
-
 /* for posting messages as the IME */
 static void ImmInternalPostIMEMessage(InputContextData *data, UINT msg, WPARAM wParam, LPARAM lParam)
 {
@@ -2592,86 +2586,6 @@ static BOOL needs_ime_window(HWND hwnd)
     if (GetClassLongPtrW(hwnd, GCL_STYLE) & CS_IME) return FALSE;
 
     return TRUE;
-}
-
-/***********************************************************************
- *		__wine_register_window (IMM32.@)
- */
-BOOL WINAPI __wine_register_window(HWND hwnd)
-{
-    HWND new = NULL;
-    IMMThreadData *thread_data;
-    TRACE("(%p)\n", hwnd);
-
-    if (!needs_ime_window(hwnd))
-        return FALSE;
-
-    thread_data = IMM_GetThreadData(hwnd, 0);
-    if (!thread_data)
-        return FALSE;
-
-    if (thread_data->disableIME || disable_ime)
-    {
-        TRACE("IME for this thread is disabled\n");
-        LeaveCriticalSection(&threaddata_cs);
-        return FALSE;
-    }
-    thread_data->windowRefs++;
-    TRACE("windowRefs=%u, hwndDefault=%p\n",
-          thread_data->windowRefs, thread_data->hwndDefault);
-
-    /* Create default IME window */
-    if (thread_data->windowRefs == 1)
-    {
-        /* Do not create the window inside of a critical section */
-        LeaveCriticalSection(&threaddata_cs);
-        new = CreateWindowExW( 0, szwIME, szwDefaultIME,
-                               WS_POPUP | WS_DISABLED | WS_CLIPSIBLINGS,
-                               0, 0, 1, 1, 0, 0, 0, 0);
-        /* thread_data is in the current thread so we can assume it's still valid */
-        EnterCriticalSection(&threaddata_cs);
-        /* See if anyone beat us */
-        if (thread_data->hwndDefault == NULL)
-        {
-            thread_data->hwndDefault = new;
-            new = NULL;
-            TRACE("Default is %p\n", thread_data->hwndDefault);
-        }
-    }
-
-    LeaveCriticalSection(&threaddata_cs);
-
-    /* Clean up an unused new window outside of the critical section */
-    if (new != NULL)
-        DestroyWindow(new);
-    return TRUE;
-}
-
-/***********************************************************************
- *		__wine_unregister_window (IMM32.@)
- */
-void WINAPI __wine_unregister_window(HWND hwnd)
-{
-    HWND to_destroy = 0;
-    IMMThreadData *thread_data;
-    TRACE("(%p)\n", hwnd);
-
-    thread_data = IMM_GetThreadData(hwnd, 0);
-    if (!thread_data) return;
-
-    thread_data->windowRefs--;
-    TRACE("windowRefs=%u, hwndDefault=%p\n",
-          thread_data->windowRefs, thread_data->hwndDefault);
-
-    /* Destroy default IME window */
-    if (thread_data->windowRefs == 0 && thread_data->hwndDefault)
-    {
-        to_destroy = thread_data->hwndDefault;
-        thread_data->hwndDefault = NULL;
-    }
-    LeaveCriticalSection(&threaddata_cs);
-
-    if (to_destroy) DestroyWindow( to_destroy );
 }
 
 /***********************************************************************
