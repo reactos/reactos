@@ -113,9 +113,3 @@
 @ stdcall -stub ImmWINNLSEnableIME(ptr long)
 @ stdcall -stub ImmWINNLSGetEnableStatus(ptr)
 @ stub ImmWINNLSGetIMEHotkey
-
-################################################################
-# Wine internal extensions
-@ stdcall __wine_get_ui_window(ptr)
-@ stdcall __wine_register_window(long)
-@ stdcall __wine_unregister_window(long)
