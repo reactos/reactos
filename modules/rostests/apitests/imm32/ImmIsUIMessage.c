@@ -11,7 +11,7 @@ START_TEST(ImmIsUIMessage)
 {
     UINT uMsg;
     BOOL ret;
-    for (uMsg = 0x200; uMsg < 0x300; ++uMsg)
+    for (uMsg = 0x100; uMsg < 0x300; ++uMsg)
     {
         ret = ImmIsUIMessageA(NULL, uMsg, 0, 0);
         switch (uMsg)
