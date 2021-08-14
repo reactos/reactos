@@ -1370,8 +1370,12 @@ typedef struct _CCB {
     //  Define a 24bit wide field for Flags, but a UCHAR for Wild Cards Present
     //  since it is used so often.  Line these up on byte boundaries for grins.
     //
-
+#ifdef __REACTOS__
+    ULONG Flags; // Due to https://developercommunity.visualstudio.com/t/Broken-runtime-checks-with-CL-19293013/1503629
+    // Note: the following BOOLEAN will not be packed anyway!
+#else
     ULONG Flags:24;
+#endif
     BOOLEAN ContainsWildCards;
 
     //
