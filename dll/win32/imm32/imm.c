@@ -1133,7 +1133,7 @@ BOOL WINAPI ImmDisableIME(DWORD dwThreadId)
 }
 
 /*
- * These functions absorbs the difference between Ansi and Wide.
+ * These functions absorb the difference between Ansi and Wide.
  */
 typedef struct ENUM_WORD_A2W
 {
