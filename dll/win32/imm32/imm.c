@@ -784,7 +784,7 @@ static void ImmInternalSendIMEMessage(InputContextData *data, UINT msg, WPARAM w
 
 static InputContextData* get_imc_data(HIMC hIMC)
 {
-    InputContextData *data = hIMC;
+    InputContextData *data = (InputContextData *)hIMC;
 
     if (hIMC == NULL)
         return NULL;
@@ -861,7 +861,7 @@ HIMC WINAPI ImmAssociateContext(HWND hWnd, HIMC hIMC)
 
         if (old)
         {
-            InputContextData *old_data = old;
+            InputContextData *old_data = (InputContextData *)old;
             if (old_data->IMC.hWnd == hWnd)
                 old_data->IMC.hWnd = NULL;
         }
@@ -2418,7 +2418,7 @@ HIMC WINAPI ImmGetContext(HWND hWnd)
 
     if (rc)
     {
-        InputContextData *data = rc;
+        InputContextData *data = (InputContextData *)rc;
         data->IMC.hWnd = hWnd;
     }
 
@@ -3212,26 +3212,38 @@ BOOL WINAPI ImmIsIME(HKL hKL)
     return !!ImmGetImeInfoEx(&info, ImeInfoExImeWindow, &hKL);
 }
 
+static BOOL APIENTRY
+ImmIsUIMessageAW(HWND hWndIME, UINT msg, WPARAM wParam, LPARAM lParam, BOOL bAnsi)
+{
+    switch (msg)
+    {
+        case WM_IME_STARTCOMPOSITION: case WM_IME_ENDCOMPOSITION:
+        case WM_IME_COMPOSITION: case WM_IME_SETCONTEXT: case WM_IME_NOTIFY:
+        case WM_IME_COMPOSITIONFULL: case WM_IME_SELECT: case WM_IME_SYSTEM:
+            break;
+        default:
+            return FALSE;
+    }
+
+    if (!hWndIME)
+        return TRUE;
+
+    if (bAnsi)
+        SendMessageA(hWndIME, msg, wParam, lParam);
+    else
+        SendMessageW(hWndIME, msg, wParam, lParam);
+
+    return TRUE;
+}
+
 /***********************************************************************
  *		ImmIsUIMessageA (IMM32.@)
  */
 BOOL WINAPI ImmIsUIMessageA(
   HWND hWndIME, UINT msg, WPARAM wParam, LPARAM lParam)
 {
-    TRACE("(%p, %x, %ld, %ld)\n", hWndIME, msg, wParam, lParam);
-    if ((msg >= WM_IME_STARTCOMPOSITION && msg <= WM_IME_KEYLAST) ||
-            (msg == WM_IME_SETCONTEXT) ||
-            (msg == WM_IME_NOTIFY) ||
-            (msg == WM_IME_COMPOSITIONFULL) ||
-            (msg == WM_IME_SELECT) ||
-            (msg == 0x287 /* FIXME: WM_IME_SYSTEM */))
-    {
-        if (hWndIME)
-            SendMessageA(hWndIME, msg, wParam, lParam);
-
-        return TRUE;
-    }
-    return FALSE;
+    TRACE("(%p, 0x%X, %p, %p)\n", hWndIME, msg, wParam, lParam);
+    return ImmIsUIMessageAW(hWndIME, msg, wParam, lParam, TRUE);
 }
 
 /***********************************************************************
@@ -3240,20 +3252,8 @@ BOOL WINAPI ImmIsUIMessageA(
 BOOL WINAPI ImmIsUIMessageW(
   HWND hWndIME, UINT msg, WPARAM wParam, LPARAM lParam)
 {
-    TRACE("(%p, %x, %ld, %ld)\n", hWndIME, msg, wParam, lParam);
-    if ((msg >= WM_IME_STARTCOMPOSITION && msg <= WM_IME_KEYLAST) ||
-            (msg == WM_IME_SETCONTEXT) ||
-            (msg == WM_IME_NOTIFY) ||
-            (msg == WM_IME_COMPOSITIONFULL) ||
-            (msg == WM_IME_SELECT) ||
-            (msg == 0x287 /* FIXME: WM_IME_SYSTEM */))
-    {
-        if (hWndIME)
-            SendMessageW(hWndIME, msg, wParam, lParam);
-
-        return TRUE;
-    }
-    return FALSE;
+    TRACE("(%p, 0x%X, %p, %p)\n", hWndIME, msg, wParam, lParam);
+    return ImmIsUIMessageAW(hWndIME, msg, wParam, lParam, TRUE);
 }
 
 /***********************************************************************
@@ -4415,7 +4415,7 @@ BOOL WINAPI ImmTranslateMessage(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lKeyD
     TRACE("%p %x %x %x\n",hwnd, msg, (UINT)wParam, (UINT)lKeyData);
 
     if (imc)
-        data = imc;
+        data = (InputContextData *)imc;
     else
         return FALSE;
 
@@ -4474,7 +4474,7 @@ BOOL WINAPI ImmProcessKey(HWND hwnd, HKL hKL, UINT vKey, LPARAM lKeyData, DWORD 
     TRACE("%p %p %x %x %x\n",hwnd, hKL, vKey, (UINT)lKeyData, unknown);
 
     if (imc)
-        data = imc;
+        data = (InputContextData *)imc;
     else
         return FALSE;
 
@@ -4706,7 +4706,7 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpReserved)
 
             hKL = GetKeyboardLayout(0);
             hWnd = (HWND)Imm32GetThreadState(THREADSTATE_CAPTUREWINDOW);
-            Imm32CleanupContext(hWnd, hKL, TRUE);
+            Imm32CleanupContext((HIMC)hWnd, hKL, TRUE); // Mistake of original?
             break;
 
         case DLL_PROCESS_DETACH:
