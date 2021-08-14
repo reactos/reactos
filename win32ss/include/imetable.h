@@ -4,7 +4,7 @@ DEFINE_IME_ENTRY(DWORD, ImeConversionList, (HIMC hIMC, LPCVOID lpSrc, LPCANDIDAT
 DEFINE_IME_ENTRY(BOOL, ImeRegisterWord, (LPCVOID lpszReading, DWORD dwStyle, LPCVOID lpszString), FALSE)
 DEFINE_IME_ENTRY(BOOL, ImeUnregisterWord, (LPCVOID lpszReading, DWORD dwStyle, LPCVOID lpszString), FALSE)
 DEFINE_IME_ENTRY(UINT, ImeGetRegisterWordStyle, (UINT nItem, LPVOID lpStyleBuf), FALSE)
-DEFINE_IME_ENTRY(UINT, ImeEnumRegisterWord, (HKL hKL, REGISTERWORDENUMPROCW lpfnEnumProc, LPCVOID lpszReading, DWORD dwStyle, LPCVOID lpszString, LPVOID lpData), FALSE)
+DEFINE_IME_ENTRY(UINT, ImeEnumRegisterWord, (LPVOID lpfnEnumProc, LPCVOID lpszReading, DWORD dwStyle, LPCVOID lpszString, LPVOID lpData), FALSE)
 DEFINE_IME_ENTRY(BOOL, ImeConfigure, (HKL hKL, HWND hWnd, DWORD dwMode, LPVOID lpData), FALSE)
 DEFINE_IME_ENTRY(BOOL, ImeDestroy, (UINT uReserved), FALSE)
 DEFINE_IME_ENTRY(LRESULT, ImeEscape, (HIMC hIMC, UINT uEscape, LPVOID lpData), FALSE)
