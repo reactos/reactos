@@ -3253,7 +3253,7 @@ BOOL WINAPI ImmIsUIMessageW(
   HWND hWndIME, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     TRACE("(%p, 0x%X, %p, %p)\n", hWndIME, msg, wParam, lParam);
-    return ImmIsUIMessageAW(hWndIME, msg, wParam, lParam, TRUE);
+    return ImmIsUIMessageAW(hWndIME, msg, wParam, lParam, FALSE);
 }
 
 /***********************************************************************
