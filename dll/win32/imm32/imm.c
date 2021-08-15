@@ -4705,8 +4705,9 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpReserved)
                 return TRUE;
 
             hKL = GetKeyboardLayout(0);
+            // FIXME: NtUserGetThreadState and enum ThreadStateRoutines are broken.
             hWnd = (HWND)Imm32GetThreadState(THREADSTATE_CAPTUREWINDOW);
-            Imm32CleanupContext((HIMC)hWnd, hKL, TRUE); // Mistake of original?
+            Imm32CleanupContext((HIMC)hWnd, hKL, TRUE);
             break;
 
         case DLL_PROCESS_DETACH:
