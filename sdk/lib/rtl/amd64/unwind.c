@@ -683,7 +683,7 @@ Exit:
 */
 BOOLEAN
 NTAPI
-RtplUnwindInternal(
+RtlpUnwindInternal(
     _In_opt_ PVOID TargetFrame,
     _In_opt_ PVOID TargetIp,
     _In_ PEXCEPTION_RECORD ExceptionRecord,
@@ -907,7 +907,7 @@ RtlUnwindEx(
     }
 
     /* Call the internal function */
-    RtplUnwindInternal(TargetFrame,
+    RtlpUnwindInternal(TargetFrame,
                        TargetIp,
                        ExceptionRecord,
                        ReturnValue,
