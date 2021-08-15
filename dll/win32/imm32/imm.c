@@ -4672,7 +4672,7 @@ BOOL WINAPI User32InitializeImmEntryTable(DWORD);
 BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpReserved)
 {
     HKL hKL;
-    HWND hWnd;
+    HIMC hIMC;
     PTEB pTeb;
 
     TRACE("(%p, 0x%X, %p)\n", hinstDLL, fdwReason, lpReserved);
@@ -4706,8 +4706,8 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpReserved)
 
             hKL = GetKeyboardLayout(0);
             // FIXME: NtUserGetThreadState and enum ThreadStateRoutines are broken.
-            hWnd = (HWND)Imm32GetThreadState(THREADSTATE_CAPTUREWINDOW);
-            Imm32CleanupContext((HIMC)hWnd, hKL, TRUE);
+            hIMC = (HIMC)Imm32GetThreadState(4);
+            Imm32CleanupContext(hIMC, hKL, TRUE);
             break;
 
         case DLL_PROCESS_DETACH:
