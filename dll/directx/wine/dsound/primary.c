@@ -459,7 +459,7 @@ LPWAVEFORMATEX DSOUND_CopyFormat(LPCWAVEFORMATEX wfex)
 
 HRESULT primarybuffer_SetFormat(DirectSoundDevice *device, LPCWAVEFORMATEX wfex)
 {
-	HRESULT err = DSERR_BUFFERLOST;
+	HRESULT err = S_OK;
 	int i;
 	DWORD nSamplesPerSec, bpp, chans;
 	LPWAVEFORMATEX oldpwfx;
