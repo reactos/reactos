@@ -4600,7 +4600,7 @@ BOOL WINAPI ImmTranslateMessage(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lKeyD
     HKL hKL;
     UINT vk;
     INT kret;
-    DWORD dwThreadId, dwCount, cMsgs, cbList;
+    DWORD dwThreadId, dwCount, cbList;
     WCHAR wch;
     WORD wChar;
 
@@ -4672,14 +4672,14 @@ BOOL WINAPI ImmTranslateMessage(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lKeyD
     pList = Imm32HeapAlloc(0, cbList);
     if (pList)
     {
-        pList->uMsgCount = dwCount;
-        cMsgs = pImeDpi->ImeToAsciiEx(vk, HIWORD(lKeyData), abKeyState, pList, 0, hIMC);
-        if (cMsgs == 0)
+        pList->uMsgCount = MSG_COUNT;
+        dwCount = pImeDpi->ImeToAsciiEx(vk, HIWORD(lKeyData), abKeyState, pList, 0, hIMC);
+        if (dwCount == 0)
             goto Quit;
 
-        if (cMsgs <= MSG_COUNT)
+        if (dwCount <= MSG_COUNT)
         {
-            Imm32PostMessages(hwnd, hIMC, cMsgs, pList->TransMsg);
+            Imm32PostMessages(hwnd, hIMC, dwCount, pList->TransMsg);
             ret = TRUE;
         }
         else
@@ -4687,7 +4687,7 @@ BOOL WINAPI ImmTranslateMessage(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lKeyD
             pTransMsg = ImmLockIMCC(pIC->hMsgBuf);
             if (pTransMsg == NULL)
                 goto Quit;
-            Imm32PostMessages(hwnd, hIMC, cMsgs, pTransMsg);
+            Imm32PostMessages(hwnd, hIMC, dwCount, pTransMsg);
             ImmUnlockIMCC(pIC->hMsgBuf);
         }
     }
