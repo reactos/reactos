@@ -91,7 +91,7 @@ typedef struct INPUTCONTEXTDX /* unconfirmed */
 {
     INPUTCONTEXT;
     UINT nVKey;
-    BOOL bHasTrans;
+    BOOL bNeedsTrans;
     DWORD dwUnknownCat;
     DWORD dwUIFlags;
     DWORD dwUnknownDog;
@@ -101,7 +101,7 @@ typedef struct INPUTCONTEXTDX /* unconfirmed */
 
 #ifndef _WIN64
 C_ASSERT(offsetof(INPUTCONTEXTDX, nVKey) == 0x140);
-C_ASSERT(offsetof(INPUTCONTEXTDX, bHasTrans) == 0x144);
+C_ASSERT(offsetof(INPUTCONTEXTDX, bNeedsTrans) == 0x144);
 C_ASSERT(offsetof(INPUTCONTEXTDX, dwUIFlags) == 0x14c);
 #endif
 

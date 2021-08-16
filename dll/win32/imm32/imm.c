@@ -3202,7 +3202,7 @@ UINT WINAPI ImmGetVirtualKey(HWND hWnd)
     if (!pIC)
         return ret;
 
-    if (pIC->bHasTrans)
+    if (pIC->bNeedsTrans)
         ret = pIC->nVKey;
 
     ImmUnlockIMC(hIMC);
@@ -4627,7 +4627,7 @@ BOOL WINAPI ImmTranslateMessage(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lKeyD
         return FALSE;
     }
 
-    if (!pIC->bHasTrans) /* is translation needed? */
+    if (!pIC->bNeedsTrans) /* is translation needed? */
     {
         /* directly post them */
         dwCount = pIC->dwNumMsgBuf;
@@ -4644,7 +4644,7 @@ BOOL WINAPI ImmTranslateMessage(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lKeyD
         pIC->dwNumMsgBuf = 0; /* done */
         goto Quit;
     }
-    pIC->bHasTrans = FALSE; /* clear the flag */
+    pIC->bNeedsTrans = FALSE; /* clear the flag */
 
     dwThreadId = GetWindowThreadProcessId(hwnd, NULL);
     hKL = GetKeyboardLayout(dwThreadId);
