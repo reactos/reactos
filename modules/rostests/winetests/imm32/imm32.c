@@ -606,9 +606,17 @@ static void test_ImmIME(void)
     if (imc)
     {
         BOOL rc;
+#ifdef __REACTOS__
+        rc = ImmConfigureIMEA((HKL)imc, NULL, IME_CONFIG_REGISTERWORD, NULL);
+#else
         rc = ImmConfigureIMEA(imc, NULL, IME_CONFIG_REGISTERWORD, NULL);
+#endif
         ok (rc == 0, "ImmConfigureIMEA did not fail\n");
+#ifdef __REACTOS__
+        rc = ImmConfigureIMEW((HKL)imc, NULL, IME_CONFIG_REGISTERWORD, NULL);
+#else
         rc = ImmConfigureIMEW(imc, NULL, IME_CONFIG_REGISTERWORD, NULL);
+#endif
         ok (rc == 0, "ImmConfigureIMEW did not fail\n");
     }
     ImmReleaseContext(hwnd,imc);

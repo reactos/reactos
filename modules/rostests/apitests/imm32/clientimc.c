@@ -28,11 +28,11 @@ START_TEST(clientimc)
     pClientImc->cLockObj = 2;
     pClientImc->dwFlags = 0x40;
     RtlInitializeCriticalSection(&pClientImc->cs);
-    ok_long(ImmGetIMCCSize(pClientImc->hImc), 4);
+    ok_long(ImmGetIMCCSize((HIMCC)pClientImc->hImc), 4);
 
     ImmUnlockClientImc(pClientImc);
     ok_long(pClientImc->cLockObj, 1);
-    ok_long(ImmGetIMCCSize(pClientImc->hImc), 4);
+    ok_long(ImmGetIMCCSize((HIMCC)pClientImc->hImc), 4);
 
     dwCode = 0;
     _SEH2_TRY
@@ -47,7 +47,7 @@ START_TEST(clientimc)
     ok_long(dwCode, STATUS_ACCESS_VIOLATION);
 
     ok_long(pClientImc->cLockObj, 0);
-    ok_long(ImmGetIMCCSize(pClientImc->hImc), 0);
+    ok_long(ImmGetIMCCSize((HIMCC)pClientImc->hImc), 0);
 
     HeapFree(GetProcessHeap(), 0, pClientImc);
 }
