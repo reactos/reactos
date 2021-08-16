@@ -4528,7 +4528,7 @@ Quit:
         HeapFree(g_hImm32Heap, 0, pTrans);
     if (hMsgBuf)
         ImmUnlockIMCC(hMsgBuf);
-    pIC->dwNumMsgBuf = 0;
+    pIC->dwNumMsgBuf = 0; /* done */
     ImmUnlockIMC(hIMC);
     return TRUE;
 }
