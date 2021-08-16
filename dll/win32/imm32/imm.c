@@ -357,7 +357,7 @@ Imm32KTrans(DWORD dwCount, LPTRANSMSG pEntries, LPINPUTCONTEXT pIC,
 }
 
 static DWORD APIENTRY
-Imm32Trans(DWORD dwCount, LPTRANSMSG pEntries, HIMC hIMC, BOOL bAnsi, DWORD dwLang)
+Imm32Trans(DWORD dwCount, LPTRANSMSG pEntries, HIMC hIMC, BOOL bAnsi, WORD wLang)
 {
     BOOL ret = FALSE;
     LPINPUTCONTEXT pIC;
@@ -370,9 +370,9 @@ Imm32Trans(DWORD dwCount, LPTRANSMSG pEntries, HIMC hIMC, BOOL bAnsi, DWORD dwLa
     pCS = ImmLockIMCC(pIC->hCompStr);
     if (pCS)
     {
-        if (dwLang == LANG_JAPANESE)
+        if (wLang == LANG_JAPANESE)
             ret = Imm32JTrans(dwCount, pEntries, pIC, pCS, bAnsi);
-        else if (dwLang == LANG_KOREAN)
+        else if (wLang == LANG_KOREAN)
             ret = Imm32KTrans(dwCount, pEntries, pIC, pCS, bAnsi);
         ImmUnlockIMCC(pIC->hCompStr);
     }
