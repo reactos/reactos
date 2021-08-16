@@ -119,47 +119,11 @@ static LPSTR APIENTRY Imm32AnsiFromWide(LPCWSTR pszW)
     return pszA;
 }
 
-static DWORD_PTR APIENTRY Imm32QueryWindow(HWND hWnd, DWORD Index)
-{
-    return NtUserQueryWindow(hWnd, Index);
-}
-
-static DWORD APIENTRY
-Imm32UpdateInputContext(HIMC hIMC, DWORD Unknown1, PCLIENTIMC pClientImc)
-{
-    return NtUserUpdateInputContext(hIMC, Unknown1, pClientImc);
-}
-
-static DWORD APIENTRY Imm32QueryInputContext(HIMC hIMC, DWORD dwUnknown2)
-{
-    return NtUserQueryInputContext(hIMC, dwUnknown2);
-}
-
 static inline BOOL Imm32IsCrossThreadAccess(HIMC hIMC)
 {
-    DWORD dwImeThreadId = Imm32QueryInputContext(hIMC, 1);
+    DWORD dwImeThreadId = NtUserQueryInputContext(hIMC, 1);
     DWORD dwThreadId = GetCurrentThreadId();
     return (dwImeThreadId != dwThreadId);
-}
-
-static DWORD APIENTRY Imm32NotifyIMEStatus(HWND hwnd, HIMC hIMC, DWORD dwConversion)
-{
-    return NtUserNotifyIMEStatus(hwnd, hIMC, dwConversion);
-}
-
-static HIMC APIENTRY Imm32CreateInputContext(PCLIENTIMC pClientImc)
-{
-    return NtUserCreateInputContext(pClientImc);
-}
-
-static BOOL APIENTRY Imm32DestroyInputContext(HIMC hIMC)
-{
-    return NtUserDestroyInputContext(hIMC);
-}
-
-DWORD_PTR APIENTRY Imm32GetThreadState(DWORD Routine)
-{
-    return NtUserGetThreadState(Routine);
 }
 
 static VOID APIENTRY Imm32FreeImeDpi(PIMEDPI pImeDpi, BOOL bDestroy)
@@ -182,7 +146,7 @@ Imm32NotifyAction(HIMC hIMC, HWND hwnd, DWORD dwAction, DWORD_PTR dwIndex, DWORD
 
     if (dwAction)
     {
-        dwLayout = Imm32QueryInputContext(hIMC, 1);
+        dwLayout = NtUserQueryInputContext(hIMC, 1);
         if (dwLayout)
         {
             /* find keyboard layout and lock it */
@@ -228,11 +192,6 @@ static BOOL Imm32GetSystemLibraryPath(LPWSTR pszPath, DWORD cchPath, LPCWSTR psz
     return TRUE;
 }
 
-DWORD APIENTRY Imm32SetImeOwnerWindow(PIMEINFOEX pImeInfoEx, BOOL fFlag)
-{
-    return NtUserSetImeOwnerWindow(pImeInfoEx, fFlag);
-}
-
 static BOOL APIENTRY Imm32InquireIme(PIMEDPI pImeDpi)
 {
     WCHAR szUIClass[64];
@@ -240,7 +199,7 @@ static BOOL APIENTRY Imm32InquireIme(PIMEDPI pImeDpi)
     DWORD dwSysInfoFlags = 0; // TODO: ???
     LPIMEINFO pImeInfo = &pImeDpi->ImeInfo;
 
-    // TODO: Imm32GetThreadState(THREADSTATE_UNKNOWN16);
+    // TODO: NtUserGetThreadState(THREADSTATE_UNKNOWN16);
 
     if (!IS_IME_HKL(pImeDpi->hKL))
     {
@@ -374,7 +333,7 @@ static BOOL APIENTRY Imm32LoadImeInfo(PIMEINFOEX pImeInfoEx, PIMEDPI pImeDpi)
     if (pImeInfoEx->fLoadFlag)
         return TRUE;
 
-    Imm32SetImeOwnerWindow(pImeInfoEx, TRUE);
+    NtUserSetImeOwnerWindow(pImeInfoEx, TRUE);
     return TRUE;
 
 Failed:
@@ -1013,7 +972,7 @@ HIMC WINAPI ImmCreateContext(void)
     if (pClientImc == NULL)
         return NULL;
 
-    hIMC = Imm32CreateInputContext(pClientImc);
+    hIMC = NtUserCreateInputContext(pClientImc);
     if (hIMC == NULL)
     {
         HeapFree(g_hImm32Heap, 0, pClientImc);
@@ -1021,7 +980,7 @@ HIMC WINAPI ImmCreateContext(void)
     }
 
     RtlInitializeCriticalSection(&pClientImc->cs);
-    pClientImc->unknown = Imm32GetThreadState(THREADSTATE_UNKNOWN13);
+    pClientImc->unknown = NtUserGetThreadState(THREADSTATE_UNKNOWN13);
     return hIMC;
 }
 
@@ -1055,7 +1014,7 @@ BOOL APIENTRY Imm32CleanupContext(HIMC hIMC, HKL hKL, BOOL bKeep)
         pClientImc->dwFlags |= CLIENTIMC_UNKNOWN1;
         ImmUnlockClientImc(pClientImc);
         if (!bKeep)
-            return Imm32DestroyInputContext(hIMC);
+            return NtUserDestroyInputContext(hIMC);
         return TRUE;
     }
 
@@ -1100,7 +1059,7 @@ BOOL APIENTRY Imm32CleanupContext(HIMC hIMC, HKL hKL, BOOL bKeep)
     ImmUnlockClientImc(pClientImc);
 
     if (!bKeep)
-        return Imm32DestroyInputContext(hIMC);
+        return NtUserDestroyInputContext(hIMC);
 
     return TRUE;
 }
@@ -1415,12 +1374,6 @@ static PCLIENTIMC APIENTRY Imm32GetClientImcCache(void)
     return NULL;
 }
 
-static NTSTATUS APIENTRY
-Imm32BuildHimcList(DWORD dwThreadId, DWORD dwCount, HIMC *phList, LPDWORD pdwCount)
-{
-    return NtUserBuildHimcList(dwThreadId, dwCount, phList, pdwCount);
-}
-
 static DWORD APIENTRY Imm32AllocAndBuildHimcList(DWORD dwThreadId, HIMC **pphList)
 {
 #define INITIAL_COUNT 0x40
@@ -1433,7 +1386,7 @@ static DWORD APIENTRY Imm32AllocAndBuildHimcList(DWORD dwThreadId, HIMC **pphLis
     if (phNewList == NULL)
         return 0;
 
-    Status = Imm32BuildHimcList(dwThreadId, dwCount, phNewList, &dwCount);
+    Status = NtUserBuildHimcList(dwThreadId, dwCount, phNewList, &dwCount);
     while (Status == STATUS_BUFFER_TOO_SMALL)
     {
         HeapFree(g_hImm32Heap, 0, phNewList);
@@ -1444,7 +1397,7 @@ static DWORD APIENTRY Imm32AllocAndBuildHimcList(DWORD dwThreadId, HIMC **pphLis
         if (phNewList == NULL)
             return 0;
 
-        Status = Imm32BuildHimcList(dwThreadId, dwCount, phNewList, &dwCount);
+        Status = NtUserBuildHimcList(dwThreadId, dwCount, phNewList, &dwCount);
     }
 
     if (NT_ERROR(Status) || !dwCount)
@@ -1701,9 +1654,9 @@ PCLIENTIMC WINAPI ImmLockClientImc(HIMC hImc)
             return NULL;
 
         RtlInitializeCriticalSection(&pClientImc->cs);
-        pClientImc->unknown = Imm32GetThreadState(THREADSTATE_UNKNOWN13);
+        pClientImc->unknown = NtUserGetThreadState(THREADSTATE_UNKNOWN13);
 
-        if (!Imm32UpdateInputContext(hImc, 0, pClientImc))
+        if (!NtUserUpdateInputContext(hImc, 0, pClientImc))
         {
             HeapFree(g_hImm32Heap, 0, pClientImc);
             return NULL;
@@ -2703,9 +2656,9 @@ HWND WINAPI ImmGetDefaultIMEWnd(HWND hWnd)
         return NULL;
 
     if (hWnd == NULL)
-        return (HWND)Imm32GetThreadState(THREADSTATE_ACTIVEWINDOW);
+        return (HWND)NtUserGetThreadState(THREADSTATE_ACTIVEWINDOW);
 
-    return (HWND)Imm32QueryWindow(hWnd, QUERY_WINDOW_DEFAULT_IME);
+    return (HWND)NtUserQueryWindow(hWnd, QUERY_WINDOW_DEFAULT_IME);
 }
 
 /***********************************************************************
@@ -3918,7 +3871,7 @@ BOOL WINAPI ImmSetConversionStatus(
     {
         Imm32NotifyAction(hIMC, hWnd, NI_CONTEXTUPDATED, dwOldConversion,
                           IMC_SETCONVERSIONMODE, IMN_SETCONVERSIONMODE, 0);
-        Imm32NotifyIMEStatus(hWnd, hIMC, fdwConversion);
+        NtUserNotifyIMEStatus(hWnd, hIMC, fdwConversion);
     }
 
     if (fSentenceChange)
@@ -4040,7 +3993,7 @@ BOOL WINAPI ImmSetOpenStatus(HIMC hIMC, BOOL fOpen)
     {
         Imm32NotifyAction(hIMC, hWnd, NI_CONTEXTUPDATED, 0,
                           IMC_SETOPENSTATUS, IMN_SETOPENSTATUS, 0);
-        Imm32NotifyIMEStatus(hWnd, hIMC, dwConversion);
+        NtUserNotifyIMEStatus(hWnd, hIMC, dwConversion);
     }
 
     return TRUE;
@@ -4742,11 +4695,6 @@ BOOL WINAPI CtfImmIsTextFrameServiceDisabled(VOID)
     return FALSE;
 }
 
-static BOOL APIENTRY Imm32GetImeInfoEx(PIMEINFOEX pImeInfoEx, IMEINFOEXCLASS SearchType)
-{
-    return NtUserGetImeInfoEx(pImeInfoEx, SearchType);
-}
-
 /***********************************************************************
  *              ImmGetImeInfoEx (IMM32.@)
  */
@@ -4792,7 +4740,7 @@ ImmGetImeInfoEx(PIMEINFOEX pImeInfoEx,
     }
 
 Quit:
-    return Imm32GetImeInfoEx(pImeInfoEx, SearchType);
+    return NtUserGetImeInfoEx(pImeInfoEx, SearchType);
 }
 
 BOOL WINAPI User32InitializeImmEntryTable(DWORD);
@@ -4834,7 +4782,7 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpReserved)
 
             hKL = GetKeyboardLayout(0);
             // FIXME: NtUserGetThreadState and enum ThreadStateRoutines are broken.
-            hIMC = (HIMC)Imm32GetThreadState(4);
+            hIMC = (HIMC)NtUserGetThreadState(4);
             Imm32CleanupContext(hIMC, hKL, TRUE);
             break;
 
