@@ -95,8 +95,7 @@ NtUserDisableThreadIme(
 
 DWORD
 APIENTRY
-NtUserGetAppImeLevel(
-    DWORD dwUnknown1)
+NtUserGetAppImeLevel(HWND hWnd)
 {
     STUB;
     return 0;

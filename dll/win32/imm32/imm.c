@@ -342,6 +342,45 @@ Failed:
     return FALSE;
 }
 
+static DWORD APIENTRY
+Imm32JTrans(DWORD dwCount, LPTRANSMSG pEntries, LPINPUTCONTEXT pIC,
+            LPCOMPOSITIONSTRING pCS, BOOL bAnsi)
+{
+    return dwCount; // FIXME
+}
+
+static DWORD APIENTRY
+Imm32KTrans(DWORD dwCount, LPTRANSMSG pEntries, LPINPUTCONTEXT pIC,
+            LPCOMPOSITIONSTRING pCS, BOOL bAnsi)
+{
+    return dwCount; // FIXME
+}
+
+static DWORD APIENTRY
+Imm32Trans(DWORD dwCount, LPTRANSMSG pEntries, HIMC hIMC, BOOL bAnsi, DWORD dwLang)
+{
+    BOOL ret = FALSE;
+    LPINPUTCONTEXT pIC;
+    LPCOMPOSITIONSTRING pCS;
+
+    pIC = ImmLockIMC(hIMC);
+    if (pIC == NULL)
+        return 0;
+
+    pCS = ImmLockIMCC(pIC->hCompStr);
+    if (pCS)
+    {
+        if (dwLang == LANG_JAPANESE)
+            ret = Imm32JTrans(dwCount, pEntries, pIC, pCS, bAnsi);
+        else if (dwLang == LANG_KOREAN)
+            ret = Imm32KTrans(dwCount, pEntries, pIC, pCS, bAnsi);
+        ImmUnlockIMCC(pIC->hCompStr);
+    }
+
+    ImmUnlockIMC(hIMC);
+    return ret;
+}
+
 static PIMEDPI APIENTRY Ime32LoadImeDpi(HKL hKL, BOOL bLock)
 {
     IMEINFOEX ImeInfoEx;
@@ -547,12 +586,6 @@ typedef struct tagInputContextData
 
 #define WINE_IMC_VALID_MAGIC 0x56434D49
 
-typedef struct _tagTRANSMSG {
-    UINT message;
-    WPARAM wParam;
-    LPARAM lParam;
-} TRANSMSG, *LPTRANSMSG;
-
 typedef struct _tagIMMThreadData {
     struct list entry;
     DWORD threadID;
@@ -720,26 +753,6 @@ static ImmHkl *IMM_GetImmHkl(HKL hkl)
     return ptr;
 }
 #undef LOAD_FUNCPTR
-
-/* for posting messages as the IME */
-static void ImmInternalPostIMEMessage(InputContextData *data, UINT msg, WPARAM wParam, LPARAM lParam)
-{
-    HWND target = GetFocus();
-    if (!target)
-       PostMessageW(data->IMC.hWnd,msg,wParam,lParam);
-    else
-       PostMessageW(target, msg, wParam, lParam);
-}
-
-/* for sending messages as the IME */
-static void ImmInternalSendIMEMessage(InputContextData *data, UINT msg, WPARAM wParam, LPARAM lParam)
-{
-    HWND target = GetFocus();
-    if (!target)
-       SendMessageW(data->IMC.hWnd,msg,wParam,lParam);
-    else
-       SendMessageW(target, msg, wParam, lParam);
-}
 
 static InputContextData* get_imc_data(HIMC hIMC)
 {
@@ -3189,7 +3202,7 @@ UINT WINAPI ImmGetVirtualKey(HWND hWnd)
     if (!pIC)
         return ret;
 
-    if (pIC->bHasVKey)
+    if (pIC->bHasTrans)
         ret = pIC->nVKey;
 
     ImmUnlockIMC(hIMC);
@@ -4444,38 +4457,125 @@ DWORD WINAPI ImmGetIMCCSize(HIMCC imcc)
 */
 BOOL WINAPI ImmGenerateMessage(HIMC hIMC)
 {
-    InputContextData *data = get_imc_data(hIMC);
+    PCLIENTIMC pClientImc;
+    LPINPUTCONTEXT pIC;
+    LPTRANSMSG pMsgs, pTrans = NULL, pItem;
+    DWORD dwIndex, dwCount, cbTrans;
+    HIMCC hMsgBuf = NULL;
+    LANGID LangID;
+    WORD wLang;
+    BOOL bAnsi;
 
-    if (!data)
-    {
-        SetLastError(ERROR_INVALID_HANDLE);
+    TRACE("(%p)\n", hIMC);
+
+    if (Imm32IsCrossThreadAccess(hIMC))
         return FALSE;
-    }
 
-    TRACE("%i messages queued\n",data->IMC.dwNumMsgBuf);
-    if (data->IMC.dwNumMsgBuf > 0)
+    pClientImc = ImmLockClientImc(hIMC);
+    if (pClientImc == NULL)
+        return FALSE;
+
+    bAnsi = !(pClientImc->dwFlags & CLIENTIMC_WIDE);
+    ImmUnlockClientImc(pClientImc);
+
+    pIC = ImmLockIMC(hIMC);
+    if (pIC == NULL)
+        return FALSE;
+
+    dwCount = pIC->dwNumMsgBuf;
+    if (dwCount == 0)
+        goto Quit;
+
+    hMsgBuf = pIC->hMsgBuf;
+    pMsgs = ImmLockIMCC(hMsgBuf);
+    if (pMsgs == NULL)
+        goto Quit;
+
+    cbTrans = dwCount * sizeof(TRANSMSG);
+    pTrans = Imm32HeapAlloc(0, cbTrans);
+    if (pTrans == NULL)
+        goto Quit;
+
+    RtlCopyMemory(pTrans, pMsgs, cbTrans);
+
+    if (GetWin32ClientInfo()->dwExpWinVer < 0x400)
     {
-        LPTRANSMSG lpTransMsg;
-        HIMCC hMsgBuf;
-        DWORD i, dwNumMsgBuf;
+        LangID = LANGIDFROMLCID(GetSystemDefaultLCID());
+        wLang = PRIMARYLANGID(LangID);
 
-        /* We are going to detach our hMsgBuff so that if processing messages
-           generates new messages they go into a new buffer */
-        hMsgBuf = data->IMC.hMsgBuf;
-        dwNumMsgBuf = data->IMC.dwNumMsgBuf;
-
-        data->IMC.hMsgBuf = ImmCreateIMCC(0);
-        data->IMC.dwNumMsgBuf = 0;
-
-        lpTransMsg = ImmLockIMCC(hMsgBuf);
-        for (i = 0; i < dwNumMsgBuf; i++)
-            ImmInternalSendIMEMessage(data, lpTransMsg[i].message, lpTransMsg[i].wParam, lpTransMsg[i].lParam);
-
-        ImmUnlockIMCC(hMsgBuf);
-        ImmDestroyIMCC(hMsgBuf);
+        if (wLang == LANG_JAPANESE ||
+            (wLang == LANG_KOREAN && NtUserGetAppImeLevel(pIC->hWnd) == 3))
+        {
+            dwCount = Imm32Trans(dwCount, pTrans, hIMC, bAnsi, wLang);
+        }
     }
 
+    pItem = pTrans;
+    for (dwIndex = 0; dwIndex < dwCount; ++dwIndex, ++pItem)
+    {
+        SendMessageW(pIC->hWnd, pItem->message, pItem->wParam, pItem->lParam);
+    }
+
+Quit:
+    if (pTrans)
+        HeapFree(g_hImm32Heap, 0, pTrans);
+    if (hMsgBuf)
+        ImmUnlockIMCC(hMsgBuf);
+    pIC->dwNumMsgBuf = 0;
+    ImmUnlockIMC(hIMC);
     return TRUE;
+}
+
+static VOID APIENTRY
+Imm32PostMessages(HWND hwnd, HIMC hIMC, DWORD dwCount, LPTRANSMSG lpTransMsg)
+{
+    DWORD dwIndex, cbTransMsg;
+    PCLIENTIMC pClientImc;
+    LPTRANSMSG pNewTransMsg = lpTransMsg, pItem;
+    BOOL bAnsi;
+    LANGID LangID;
+    WORD Lang;
+
+    pClientImc = ImmLockClientImc(hIMC);
+    if (pClientImc == NULL)
+        return;
+
+    bAnsi = !(pClientImc->dwFlags & CLIENTIMC_WIDE);
+    ImmUnlockClientImc(pClientImc);
+
+    if (GetWin32ClientInfo()->dwExpWinVer < 0x400)
+    {
+        LangID = LANGIDFROMLCID(GetSystemDefaultLCID());
+        Lang = PRIMARYLANGID(LangID);
+
+        if (Lang == LANG_JAPANESE ||
+            (Lang == LANG_KOREAN && NtUserGetAppImeLevel(hwnd) == 3))
+        {
+            cbTransMsg = dwCount * sizeof(TRANSMSG);
+            pNewTransMsg = Imm32HeapAlloc(0, cbTransMsg);
+            if (pNewTransMsg)
+            {
+                RtlCopyMemory(pNewTransMsg, lpTransMsg, cbTransMsg);
+                dwCount = Imm32Trans(dwCount, pNewTransMsg, hIMC, bAnsi, Lang);
+            }
+            else
+            {
+                pNewTransMsg = lpTransMsg;
+            }
+        }
+    }
+
+    pItem = pNewTransMsg;
+    for (dwIndex = 0; dwIndex < dwCount; ++dwIndex, ++pItem)
+    {
+        if (bAnsi)
+            PostMessageA(hwnd, pItem->message, pItem->wParam, pItem->lParam);
+        else
+            PostMessageW(hwnd, pItem->message, pItem->wParam, pItem->lParam);
+    }
+
+    if (pNewTransMsg && pNewTransMsg != lpTransMsg)
+        HeapFree(g_hImm32Heap, 0, pNewTransMsg);
 }
 
 /***********************************************************************
@@ -4484,62 +4584,121 @@ BOOL WINAPI ImmGenerateMessage(HIMC hIMC)
 */
 BOOL WINAPI ImmTranslateMessage(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lKeyData)
 {
-    InputContextData *data;
-    HIMC imc = ImmGetContext(hwnd);
-    BYTE state[256];
-    UINT scancode;
-    LPVOID list = 0;
-    UINT msg_count;
-    UINT uVirtKey;
-    static const DWORD list_count = 10;
+#define MSG_COUNT 0x100
+    BOOL ret = FALSE;
+    LPINPUTCONTEXTDX pIC;
+    PIMEDPI pImeDpi = NULL;
+    LPTRANSMSGLIST pList = NULL;
+    LPTRANSMSG pTransMsg;
+    BYTE abKeyState[256];
+    HIMC hIMC;
+    HKL hKL;
+    UINT vk;
+    INT kret;
+    DWORD dwThreadId, dwCount, cMsgs, cbList;
+    WCHAR wch;
+    WORD wChar;
 
-    TRACE("%p %x %x %x\n",hwnd, msg, (UINT)wParam, (UINT)lKeyData);
+    TRACE("(%p, 0x%X, %p, %p)\n", hwnd, msg, wParam, lKeyData);
 
-    if (imc)
-        data = (InputContextData *)imc;
-    else
-        return FALSE;
-
-    if (!data->immKbd->hIME || !data->immKbd->pImeToAsciiEx)
-        return FALSE;
-
-    GetKeyboardState(state);
-    scancode = lKeyData >> 0x10 & 0xff;
-
-    list = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, list_count * sizeof(TRANSMSG) + sizeof(DWORD));
-    ((DWORD*)list)[0] = list_count;
-
-    if (data->immKbd->imeInfo.fdwProperty & IME_PROP_KBD_CHAR_FIRST)
+    switch (msg)
     {
-        WCHAR chr;
+        case WM_KEYDOWN: case WM_KEYUP: case WM_SYSKEYDOWN: case WM_SYSKEYUP:
+            break;
+        default:
+            return FALSE;
+    }
 
-        if (!is_himc_ime_unicode(data))
-            ToAscii(data->lastVK, scancode, state, &chr, 0);
+    hIMC = ImmGetContext(hwnd);
+    pIC = (LPINPUTCONTEXTDX)ImmLockIMC(hIMC);
+    if (pIC == NULL)
+    {
+        ImmReleaseContext(hwnd, hIMC);
+        return FALSE;
+    }
+
+    if (!pIC->bHasTrans)
+    {
+        dwCount = pIC->dwNumMsgBuf;
+        if (dwCount == 0)
+            goto Quit;
+
+        pTransMsg = ImmLockIMCC(pIC->hMsgBuf);
+        if (pTransMsg)
+        {
+            Imm32PostMessages(hwnd, hIMC, dwCount, pTransMsg);
+            ImmUnlockIMCC(pIC->hMsgBuf);
+            ret = TRUE;
+        }
+        pIC->dwNumMsgBuf = 0;
+        goto Quit;
+    }
+    pIC->bHasTrans = FALSE;
+
+    dwThreadId = GetWindowThreadProcessId(hwnd, NULL);
+    hKL = GetKeyboardLayout(dwThreadId);
+    pImeDpi = ImmLockImeDpi(hKL);
+    if (pImeDpi == NULL)
+        goto Quit;
+
+    if (!GetKeyboardState(abKeyState))
+        goto Quit;
+
+    vk = pIC->nVKey;
+    if (pImeDpi->ImeInfo.fdwProperty & IME_PROP_KBD_CHAR_FIRST)
+    {
+        if (pImeDpi->ImeInfo.fdwProperty & IME_PROP_UNICODE)
+        {
+            wch = 0;
+            kret = ToUnicode(vk, HIWORD(lKeyData), abKeyState, &wch, 1, 0);
+            if (kret == 1)
+                vk = MAKELONG(LOBYTE(vk), wch);
+        }
         else
-            ToUnicodeEx(data->lastVK, scancode, state, &chr, 1, 0, GetKeyboardLayout(0));
-        uVirtKey = MAKELONG(data->lastVK,chr);
+        {
+            wChar = 0;
+            kret = ToAsciiEx(vk, HIWORD(lKeyData), abKeyState, &wChar, 0, hKL);
+            if (kret > 0)
+            {
+                vk = MAKEWORD(vk, wChar);
+                if (LOBYTE(vk) != VK_PACKET)
+                    vk = LOWORD(vk);
+            }
+        }
     }
-    else
-        uVirtKey = data->lastVK;
 
-    msg_count = data->immKbd->pImeToAsciiEx(uVirtKey, scancode, state, list, 0, imc);
-    TRACE("%i messages generated\n",msg_count);
-    if (msg_count && msg_count <= list_count)
+    cbList = offsetof(TRANSMSGLIST, TransMsg) + MSG_COUNT * sizeof(TRANSMSG);
+    pList = Imm32HeapAlloc(0, cbList);
+    if (pList)
     {
-        UINT i;
-        LPTRANSMSG msgs = (LPTRANSMSG)((LPBYTE)list + sizeof(DWORD));
+        pList->uMsgCount = dwCount;
+        cMsgs = pImeDpi->ImeToAsciiEx(vk, HIWORD(lKeyData), abKeyState, pList, 0, hIMC);
+        if (cMsgs == 0)
+            goto Quit;
 
-        for (i = 0; i < msg_count; i++)
-            ImmInternalPostIMEMessage(data, msgs[i].message, msgs[i].wParam, msgs[i].lParam);
+        if (cMsgs <= MSG_COUNT)
+        {
+            Imm32PostMessages(hwnd, hIMC, cMsgs, pList->TransMsg);
+            ret = TRUE;
+        }
+        else
+        {
+            pTransMsg = ImmLockIMCC(pIC->hMsgBuf);
+            if (pTransMsg == NULL)
+                goto Quit;
+            Imm32PostMessages(hwnd, hIMC, cMsgs, pTransMsg);
+            ImmUnlockIMCC(pIC->hMsgBuf);
+        }
     }
-    else if (msg_count > list_count)
-        ImmGenerateMessage(imc);
 
-    HeapFree(GetProcessHeap(),0,list);
-
-    data->lastVK = VK_PROCESSKEY;
-
-    return (msg_count > 0);
+Quit:
+    if (pList)
+        HeapFree(g_hImm32Heap, 0, pList);
+    ImmUnlockImeDpi(pImeDpi);
+    ImmUnlockIMC(hIMC);
+    ImmReleaseContext(hwnd, hIMC);
+    return ret;
+#undef MSG_COUNT
 }
 
 /***********************************************************************
