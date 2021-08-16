@@ -103,7 +103,7 @@
 @ stdcall ImmShowSoftKeyboard(ptr long)
 @ stdcall ImmSimulateHotKey(ptr long)
 @ stdcall -stub ImmSystemHandler(ptr long long)
-@ stdcall ImmTranslateMessage(ptr long long long)
+@ stdcall ImmTranslateMessage(ptr long ptr ptr)
 @ stdcall ImmUnlockClientImc(ptr)
 @ stdcall ImmUnlockIMC(ptr)
 @ stdcall ImmUnlockIMCC(ptr)
