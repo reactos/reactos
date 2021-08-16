@@ -4460,6 +4460,7 @@ BOOL WINAPI ImmGenerateMessage(HIMC hIMC)
     PCLIENTIMC pClientImc;
     LPINPUTCONTEXT pIC;
     LPTRANSMSG pMsgs, pTrans = NULL, pItem;
+    HWND hWnd;
     DWORD dwIndex, dwCount, cbTrans;
     HIMCC hMsgBuf = NULL;
     LANGID LangID;
@@ -4510,10 +4511,14 @@ BOOL WINAPI ImmGenerateMessage(HIMC hIMC)
         }
     }
 
+    hWnd = pIC->hWnd;
     pItem = pTrans;
     for (dwIndex = 0; dwIndex < dwCount; ++dwIndex, ++pItem)
     {
-        SendMessageW(pIC->hWnd, pItem->message, pItem->wParam, pItem->lParam);
+        if (bAnsi)
+            SendMessageA(hWnd, pItem->message, pItem->wParam, pItem->lParam);
+        else
+            SendMessageW(hWnd, pItem->message, pItem->wParam, pItem->lParam);
     }
 
 Quit:
