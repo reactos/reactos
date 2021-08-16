@@ -4504,6 +4504,7 @@ BOOL WINAPI ImmGenerateMessage(HIMC hIMC)
         LangID = LANGIDFROMLCID(GetSystemDefaultLCID());
         wLang = PRIMARYLANGID(LangID);
 
+        /* translate the messages if Japanese or Korean */
         if (wLang == LANG_JAPANESE ||
             (wLang == LANG_KOREAN && NtUserGetAppImeLevel(pIC->hWnd) == 3))
         {
@@ -4511,6 +4512,7 @@ BOOL WINAPI ImmGenerateMessage(HIMC hIMC)
         }
     }
 
+    /* send them */
     hWnd = pIC->hWnd;
     pItem = pTrans;
     for (dwIndex = 0; dwIndex < dwCount; ++dwIndex, ++pItem)
@@ -4548,7 +4550,7 @@ Imm32PostMessages(HWND hwnd, HIMC hIMC, DWORD dwCount, LPTRANSMSG lpTransMsg)
     bAnsi = !(pClientImc->dwFlags & CLIENTIMC_WIDE);
     ImmUnlockClientImc(pClientImc);
 
-    if (GetWin32ClientInfo()->dwExpWinVer < 0x400)
+    if (GetWin32ClientInfo()->dwExpWinVer < 0x400) /* old version? */
     {
         LangID = LANGIDFROMLCID(GetSystemDefaultLCID());
         Lang = PRIMARYLANGID(LangID);
@@ -4556,6 +4558,7 @@ Imm32PostMessages(HWND hwnd, HIMC hIMC, DWORD dwCount, LPTRANSMSG lpTransMsg)
         if (Lang == LANG_JAPANESE ||
             (Lang == LANG_KOREAN && NtUserGetAppImeLevel(hwnd) == 3))
         {
+            /* translate the messages if Japanese or Korean */
             cbTransMsg = dwCount * sizeof(TRANSMSG);
             pNewTransMsg = Imm32HeapAlloc(0, cbTransMsg);
             if (pNewTransMsg)
@@ -4570,6 +4573,7 @@ Imm32PostMessages(HWND hwnd, HIMC hIMC, DWORD dwCount, LPTRANSMSG lpTransMsg)
         }
     }
 
+    /* post them */
     pItem = pNewTransMsg;
     for (dwIndex = 0; dwIndex < dwCount; ++dwIndex, ++pItem)
     {
@@ -4624,6 +4628,7 @@ BOOL WINAPI ImmTranslateMessage(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lKeyD
 
     if (!pIC->bHasTrans)
     {
+        /* directly post them */
         dwCount = pIC->dwNumMsgBuf;
         if (dwCount == 0)
             goto Quit;
@@ -4635,7 +4640,7 @@ BOOL WINAPI ImmTranslateMessage(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lKeyD
             ImmUnlockIMCC(pIC->hMsgBuf);
             ret = TRUE;
         }
-        pIC->dwNumMsgBuf = 0;
+        pIC->dwNumMsgBuf = 0; /* done */
         goto Quit;
     }
     pIC->bHasTrans = FALSE;
@@ -4649,6 +4654,7 @@ BOOL WINAPI ImmTranslateMessage(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lKeyD
     if (!GetKeyboardState(abKeyState))
         goto Quit;
 
+    /* convert a virtual key */
     vk = pIC->nVKey;
     if (pImeDpi->ImeInfo.fdwProperty & IME_PROP_KBD_CHAR_FIRST)
     {
@@ -4668,27 +4674,31 @@ BOOL WINAPI ImmTranslateMessage(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lKeyD
         }
     }
 
+    /* allocate a list */
     cbList = offsetof(TRANSMSGLIST, TransMsg) + MSG_COUNT * sizeof(TRANSMSG);
     pList = Imm32HeapAlloc(0, cbList);
-    if (pList)
+    if (!pList)
+        goto Quit;
+
+    /* use IME conversion engine */
+    pList->uMsgCount = MSG_COUNT;
+    kret = pImeDpi->ImeToAsciiEx(vk, HIWORD(lKeyData), abKeyState, pList, 0, hIMC);
+    if (kret <= 0)
+        goto Quit;
+
+    /* post them */
+    if (kret <= MSG_COUNT)
     {
-        pList->uMsgCount = MSG_COUNT;
-        kret = pImeDpi->ImeToAsciiEx(vk, HIWORD(lKeyData), abKeyState, pList, 0, hIMC);
-        if (kret <= 0)
+        Imm32PostMessages(hwnd, hIMC, kret, pList->TransMsg);
+        ret = TRUE;
+    }
+    else
+    {
+        pTransMsg = ImmLockIMCC(pIC->hMsgBuf);
+        if (pTransMsg == NULL)
             goto Quit;
-        if (kret <= MSG_COUNT)
-        {
-            Imm32PostMessages(hwnd, hIMC, kret, pList->TransMsg);
-            ret = TRUE;
-        }
-        else
-        {
-            pTransMsg = ImmLockIMCC(pIC->hMsgBuf);
-            if (pTransMsg == NULL)
-                goto Quit;
-            Imm32PostMessages(hwnd, hIMC, kret, pTransMsg);
-            ImmUnlockIMCC(pIC->hMsgBuf);
-        }
+        Imm32PostMessages(hwnd, hIMC, kret, pTransMsg);
+        ImmUnlockIMCC(pIC->hMsgBuf);
     }
 
 Quit:
