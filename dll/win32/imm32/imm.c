@@ -4499,7 +4499,7 @@ BOOL WINAPI ImmGenerateMessage(HIMC hIMC)
 
     RtlCopyMemory(pTrans, pMsgs, cbTrans);
 
-    if (GetWin32ClientInfo()->dwExpWinVer < 0x400)
+    if (GetWin32ClientInfo()->dwExpWinVer < 0x400) /* old version? */
     {
         LangID = LANGIDFROMLCID(GetSystemDefaultLCID());
         wLang = PRIMARYLANGID(LangID);
@@ -4555,10 +4555,10 @@ Imm32PostMessages(HWND hwnd, HIMC hIMC, DWORD dwCount, LPTRANSMSG lpTransMsg)
         LangID = LANGIDFROMLCID(GetSystemDefaultLCID());
         Lang = PRIMARYLANGID(LangID);
 
+        /* translate the messages if Japanese or Korean */
         if (Lang == LANG_JAPANESE ||
             (Lang == LANG_KOREAN && NtUserGetAppImeLevel(hwnd) == 3))
         {
-            /* translate the messages if Japanese or Korean */
             cbTransMsg = dwCount * sizeof(TRANSMSG);
             pNewTransMsg = Imm32HeapAlloc(0, cbTransMsg);
             if (pNewTransMsg)
@@ -4610,6 +4610,7 @@ BOOL WINAPI ImmTranslateMessage(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lKeyD
 
     TRACE("(%p, 0x%X, %p, %p)\n", hwnd, msg, wParam, lKeyData);
 
+    /* filter the message */
     switch (msg)
     {
         case WM_KEYDOWN: case WM_KEYUP: case WM_SYSKEYDOWN: case WM_SYSKEYUP:
@@ -4626,7 +4627,7 @@ BOOL WINAPI ImmTranslateMessage(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lKeyD
         return FALSE;
     }
 
-    if (!pIC->bHasTrans)
+    if (!pIC->bHasTrans) /* is translation needed? */
     {
         /* directly post them */
         dwCount = pIC->dwNumMsgBuf;
@@ -4643,7 +4644,7 @@ BOOL WINAPI ImmTranslateMessage(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lKeyD
         pIC->dwNumMsgBuf = 0; /* done */
         goto Quit;
     }
-    pIC->bHasTrans = FALSE;
+    pIC->bHasTrans = FALSE; /* clear the flag */
 
     dwThreadId = GetWindowThreadProcessId(hwnd, NULL);
     hKL = GetKeyboardLayout(dwThreadId);
@@ -4651,10 +4652,10 @@ BOOL WINAPI ImmTranslateMessage(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lKeyD
     if (pImeDpi == NULL)
         goto Quit;
 
-    if (!GetKeyboardState(abKeyState))
+    if (!GetKeyboardState(abKeyState)) /* get keyboard ON/OFF status */
         goto Quit;
 
-    /* convert a virtual key */
+    /* convert a virtual key if IME_PROP_KBD_CHAR_FIRST */
     vk = pIC->nVKey;
     if (pImeDpi->ImeInfo.fdwProperty & IME_PROP_KBD_CHAR_FIRST)
     {
@@ -4680,7 +4681,7 @@ BOOL WINAPI ImmTranslateMessage(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lKeyD
     if (!pList)
         goto Quit;
 
-    /* use IME conversion engine */
+    /* use IME conversion engine and convert the list */
     pList->uMsgCount = MSG_COUNT;
     kret = pImeDpi->ImeToAsciiEx(vk, HIWORD(lKeyData), abKeyState, pList, 0, hIMC);
     if (kret <= 0)
