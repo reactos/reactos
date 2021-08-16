@@ -4659,11 +4659,7 @@ BOOL WINAPI ImmTranslateMessage(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lKeyD
             wChar = 0;
             kret = ToAsciiEx(vk, HIWORD(lKeyData), abKeyState, &wChar, 0, hKL);
             if (kret > 0)
-            {
                 vk = MAKEWORD(vk, wChar);
-                if (LOBYTE(vk) != VK_PACKET)
-                    vk = LOWORD(vk);
-            }
         }
     }
 
