@@ -1132,6 +1132,87 @@ BOOL WINAPI ImmDisableIME(DWORD dwThreadId)
     return NtUserDisableThreadIme(dwThreadId);
 }
 
+/*
+ * These functions absorb the difference between Ansi and Wide.
+ */
+typedef struct ENUM_WORD_A2W
+{
+    REGISTERWORDENUMPROCW lpfnEnumProc;
+    LPVOID lpData;
+    UINT ret;
+} ENUM_WORD_A2W, *LPENUM_WORD_A2W;
+
+typedef struct ENUM_WORD_W2A
+{
+    REGISTERWORDENUMPROCA lpfnEnumProc;
+    LPVOID lpData;
+    UINT ret;
+} ENUM_WORD_W2A, *LPENUM_WORD_W2A;
+
+static INT CALLBACK
+Imm32EnumWordProcA2W(LPCSTR pszReadingA, DWORD dwStyle, LPCSTR pszRegisterA, LPVOID lpData)
+{
+    INT ret = 0;
+    LPENUM_WORD_A2W lpEnumData = lpData;
+    LPWSTR pszReadingW = NULL, pszRegisterW = NULL;
+
+    if (pszReadingA)
+    {
+        pszReadingW = Imm32WideFromAnsi(pszReadingA);
+        if (pszReadingW == NULL)
+            goto Quit;
+    }
+
+    if (pszRegisterA)
+    {
+        pszRegisterW = Imm32WideFromAnsi(pszRegisterA);
+        if (pszRegisterW == NULL)
+            goto Quit;
+    }
+
+    ret = lpEnumData->lpfnEnumProc(pszReadingW, dwStyle, pszRegisterW, lpEnumData->lpData);
+    lpEnumData->ret = ret;
+
+Quit:
+    if (pszReadingW)
+        HeapFree(g_hImm32Heap, 0, pszReadingW);
+    if (pszRegisterW)
+        HeapFree(g_hImm32Heap, 0, pszRegisterW);
+    return ret;
+}
+
+static INT CALLBACK
+Imm32EnumWordProcW2A(LPCWSTR pszReadingW, DWORD dwStyle, LPCWSTR pszRegisterW, LPVOID lpData)
+{
+    INT ret = 0;
+    LPENUM_WORD_W2A lpEnumData = lpData;
+    LPSTR pszReadingA = NULL, pszRegisterA = NULL;
+
+    if (pszReadingW)
+    {
+        pszReadingA = Imm32AnsiFromWide(pszReadingW);
+        if (pszReadingW == NULL)
+            goto Quit;
+    }
+
+    if (pszRegisterW)
+    {
+        pszRegisterA = Imm32AnsiFromWide(pszRegisterW);
+        if (pszRegisterA == NULL)
+            goto Quit;
+    }
+
+    ret = lpEnumData->lpfnEnumProc(pszReadingA, dwStyle, pszRegisterA, lpEnumData->lpData);
+    lpEnumData->ret = ret;
+
+Quit:
+    if (pszReadingA)
+        HeapFree(g_hImm32Heap, 0, pszReadingA);
+    if (pszRegisterA)
+        HeapFree(g_hImm32Heap, 0, pszRegisterA);
+    return ret;
+}
+
 /***********************************************************************
  *		ImmEnumRegisterWordA (IMM32.@)
  */
@@ -1140,31 +1221,54 @@ UINT WINAPI ImmEnumRegisterWordA(
   LPCSTR lpszReading, DWORD dwStyle,
   LPCSTR lpszRegister, LPVOID lpData)
 {
-    ImmHkl *immHkl = IMM_GetImmHkl(hKL);
-    TRACE("(%p, %p, %s, %d, %s, %p):\n", hKL, lpfnEnumProc,
-        debugstr_a(lpszReading), dwStyle, debugstr_a(lpszRegister), lpData);
-    if (immHkl->hIME && immHkl->pImeEnumRegisterWord)
-    {
-        if (!is_kbd_ime_unicode(immHkl))
-            return immHkl->pImeEnumRegisterWord((REGISTERWORDENUMPROCW)lpfnEnumProc,
-                (LPCWSTR)lpszReading, dwStyle, (LPCWSTR)lpszRegister, lpData);
-        else
-        {
-            LPWSTR lpszwReading = strdupAtoW(lpszReading);
-            LPWSTR lpszwRegister = strdupAtoW(lpszRegister);
-            BOOL rc;
+    UINT ret = 0;
+    LPWSTR pszReadingW = NULL, pszRegisterW = NULL;
+    ENUM_WORD_W2A EnumDataW2A;
+    PIMEDPI pImeDpi;
 
-            rc = immHkl->pImeEnumRegisterWord((REGISTERWORDENUMPROCW)lpfnEnumProc,
-                                              lpszwReading, dwStyle, lpszwRegister,
-                                              lpData);
+    TRACE("(%p, %p, %s, 0x%lX, %s, %p)", hKL, lpfnEnumProc, debugstr_a(lpszReading),
+          dwStyle, debugstr_a(lpszRegister), lpData);
 
-            HeapFree(GetProcessHeap(),0,lpszwReading);
-            HeapFree(GetProcessHeap(),0,lpszwRegister);
-            return rc;
-        }
-    }
-    else
+    pImeDpi = ImmLockOrLoadImeDpi(hKL);
+    if (!pImeDpi)
         return 0;
+
+    if (!(pImeDpi->ImeInfo.fdwProperty & IME_PROP_UNICODE))
+    {
+        ret = pImeDpi->ImeEnumRegisterWord(lpfnEnumProc, lpszReading, dwStyle,
+                                           lpszRegister, lpData);
+        ImmUnlockImeDpi(pImeDpi);
+        return ret;
+    }
+
+    if (lpszReading)
+    {
+        pszReadingW = Imm32WideFromAnsi(lpszReading);
+        if (pszReadingW == NULL)
+            goto Quit;
+    }
+
+    if (lpszRegister)
+    {
+        pszRegisterW = Imm32WideFromAnsi(lpszRegister);
+        if (pszRegisterW == NULL)
+            goto Quit;
+    }
+
+    EnumDataW2A.lpfnEnumProc = lpfnEnumProc;
+    EnumDataW2A.lpData = lpData;
+    EnumDataW2A.ret = 0;
+    pImeDpi->ImeEnumRegisterWord(Imm32EnumWordProcW2A, pszReadingW, dwStyle,
+                                 pszRegisterW, &EnumDataW2A);
+    ret = EnumDataW2A.ret;
+
+Quit:
+    if (pszReadingW)
+        HeapFree(g_hImm32Heap, 0, pszReadingW);
+    if (pszRegisterW)
+        HeapFree(g_hImm32Heap, 0, pszRegisterW);
+    ImmUnlockImeDpi(pImeDpi);
+    return ret;
 }
 
 /***********************************************************************
@@ -1175,30 +1279,54 @@ UINT WINAPI ImmEnumRegisterWordW(
   LPCWSTR lpszReading, DWORD dwStyle,
   LPCWSTR lpszRegister, LPVOID lpData)
 {
-    ImmHkl *immHkl = IMM_GetImmHkl(hKL);
-    TRACE("(%p, %p, %s, %d, %s, %p):\n", hKL, lpfnEnumProc,
-        debugstr_w(lpszReading), dwStyle, debugstr_w(lpszRegister), lpData);
-    if (immHkl->hIME && immHkl->pImeEnumRegisterWord)
-    {
-        if (is_kbd_ime_unicode(immHkl))
-            return immHkl->pImeEnumRegisterWord(lpfnEnumProc, lpszReading, dwStyle,
-                                            lpszRegister, lpData);
-        else
-        {
-            LPSTR lpszaReading = strdupWtoA(lpszReading);
-            LPSTR lpszaRegister = strdupWtoA(lpszRegister);
-            BOOL rc;
+    UINT ret = 0;
+    LPSTR pszReadingA = NULL, pszRegisterA = NULL;
+    ENUM_WORD_A2W EnumDataA2W;
+    PIMEDPI pImeDpi;
 
-            rc = immHkl->pImeEnumRegisterWord(lpfnEnumProc, (LPCWSTR)lpszaReading,
-                                              dwStyle, (LPCWSTR)lpszaRegister, lpData);
+    TRACE("(%p, %p, %s, 0x%lX, %s, %p)", hKL, lpfnEnumProc, debugstr_w(lpszReading),
+          dwStyle, debugstr_w(lpszRegister), lpData);
 
-            HeapFree(GetProcessHeap(),0,lpszaReading);
-            HeapFree(GetProcessHeap(),0,lpszaRegister);
-            return rc;
-        }
-    }
-    else
+    pImeDpi = ImmLockOrLoadImeDpi(hKL);
+    if (!pImeDpi)
         return 0;
+
+    if (pImeDpi->ImeInfo.fdwProperty & IME_PROP_UNICODE)
+    {
+        ret = pImeDpi->ImeEnumRegisterWord(lpfnEnumProc, lpszReading, dwStyle,
+                                           lpszRegister, lpData);
+        ImmUnlockImeDpi(pImeDpi);
+        return ret;
+    }
+
+    if (lpszReading)
+    {
+        pszReadingA = Imm32AnsiFromWide(lpszReading);
+        if (pszReadingA == NULL)
+            goto Quit;
+    }
+
+    if (lpszRegister)
+    {
+        pszRegisterA = Imm32AnsiFromWide(lpszRegister);
+        if (pszRegisterA == NULL)
+            goto Quit;
+    }
+
+    EnumDataA2W.lpfnEnumProc = lpfnEnumProc;
+    EnumDataA2W.lpData = lpData;
+    EnumDataA2W.ret = 0;
+    pImeDpi->ImeEnumRegisterWord(Imm32EnumWordProcA2W, pszReadingA, dwStyle,
+                                 pszRegisterA, &EnumDataA2W);
+    ret = EnumDataA2W.ret;
+
+Quit:
+    if (pszReadingA)
+        HeapFree(g_hImm32Heap, 0, pszReadingA);
+    if (pszRegisterA)
+        HeapFree(g_hImm32Heap, 0, pszRegisterA);
+    ImmUnlockImeDpi(pImeDpi);
+    return ret;
 }
 
 static inline BOOL EscapeRequiresWA(UINT uEscape)
