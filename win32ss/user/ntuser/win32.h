@@ -75,6 +75,8 @@ typedef struct _W32THREAD
     PVOID pUMPDObj;
 } W32THREAD, *PW32THREAD;
 
+struct tagIMC;
+
 #ifdef __cplusplus
 typedef struct _THREADINFO : _W32THREAD
 {
@@ -126,6 +128,10 @@ typedef struct _THREADINFO
     INT                 iCursorLevel;
     /* Last message cursor position */
     POINT               ptLast;
+    /* Input context-related */
+    struct _WND *       spwndDefaultIme;
+    struct tagIMC *     spDefaultImc;
+    HKL                 hklPrev;
 
     INT                 cEnterCount;
     /* Queue of messages posted to the queue. */
