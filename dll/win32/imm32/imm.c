@@ -345,8 +345,8 @@ Failed:
 }
 
 static DWORD APIENTRY
-Imm32JTransCompA(LPINPUTCONTEXTDX pIC, LPCOMPOSITIONSTRING pCS,
-                 const TRANSMSG *pSrc, LPTRANSMSG pDest)
+ImpJTransCompA(LPINPUTCONTEXTDX pIC, LPCOMPOSITIONSTRING pCS,
+               const TRANSMSG *pSrc, LPTRANSMSG pDest)
 {
     // FIXME
     *pDest = *pSrc;
@@ -354,8 +354,8 @@ Imm32JTransCompA(LPINPUTCONTEXTDX pIC, LPCOMPOSITIONSTRING pCS,
 }
 
 static DWORD APIENTRY
-Imm32JTransCompW(LPINPUTCONTEXTDX pIC, LPCOMPOSITIONSTRING pCS,
-                 const TRANSMSG *pSrc, LPTRANSMSG pDest)
+ImpJTransCompW(LPINPUTCONTEXTDX pIC, LPCOMPOSITIONSTRING pCS,
+               const TRANSMSG *pSrc, LPTRANSMSG pDest)
 {
     // FIXME
     *pDest = *pSrc;
@@ -365,8 +365,8 @@ Imm32JTransCompW(LPINPUTCONTEXTDX pIC, LPCOMPOSITIONSTRING pCS,
 typedef LRESULT (WINAPI *FN_SendMessage)(HWND, UINT, WPARAM, LPARAM);
 
 static DWORD APIENTRY
-Imm32JTrans(DWORD dwCount, LPTRANSMSG pTrans, LPINPUTCONTEXTDX pIC,
-            LPCOMPOSITIONSTRING pCS, BOOL bAnsi)
+ImpJTrans(DWORD dwCount, LPTRANSMSG pTrans, LPINPUTCONTEXTDX pIC,
+          LPCOMPOSITIONSTRING pCS, BOOL bAnsi)
 {
     DWORD ret = 0;
     HWND hWnd, hwndDefIME;
@@ -447,9 +447,9 @@ Imm32JTrans(DWORD dwCount, LPTRANSMSG pTrans, LPINPUTCONTEXTDX pIC,
 
             case WM_IME_COMPOSITION:
                 if (bAnsi)
-                    dwNumber = Imm32JTransCompA(pIC, pCS, pEntry, pTrans);
+                    dwNumber = ImpJTransCompA(pIC, pCS, pEntry, pTrans);
                 else
-                    dwNumber = Imm32JTransCompW(pIC, pCS, pEntry, pTrans);
+                    dwNumber = ImpJTransCompW(pIC, pCS, pEntry, pTrans);
 
                 ret += dwNumber;
                 pTrans += dwNumber;
@@ -504,14 +504,14 @@ DoDefault:
 }
 
 static DWORD APIENTRY
-Imm32KTrans(DWORD dwCount, LPTRANSMSG pEntries, LPINPUTCONTEXTDX pIC,
-            LPCOMPOSITIONSTRING pCS, BOOL bAnsi)
+ImpKTrans(DWORD dwCount, LPTRANSMSG pEntries, LPINPUTCONTEXTDX pIC,
+          LPCOMPOSITIONSTRING pCS, BOOL bAnsi)
 {
     return dwCount; // FIXME
 }
 
 static DWORD APIENTRY
-Imm32Trans(DWORD dwCount, LPTRANSMSG pEntries, HIMC hIMC, BOOL bAnsi, WORD wLang)
+ImpTrans(DWORD dwCount, LPTRANSMSG pEntries, HIMC hIMC, BOOL bAnsi, WORD wLang)
 {
     BOOL ret = FALSE;
     LPINPUTCONTEXTDX pIC;
@@ -525,9 +525,9 @@ Imm32Trans(DWORD dwCount, LPTRANSMSG pEntries, HIMC hIMC, BOOL bAnsi, WORD wLang
     if (pCS)
     {
         if (wLang == LANG_JAPANESE)
-            ret = Imm32JTrans(dwCount, pEntries, pIC, pCS, bAnsi);
+            ret = ImpJTrans(dwCount, pEntries, pIC, pCS, bAnsi);
         else if (wLang == LANG_KOREAN)
-            ret = Imm32KTrans(dwCount, pEntries, pIC, pCS, bAnsi);
+            ret = ImpKTrans(dwCount, pEntries, pIC, pCS, bAnsi);
         ImmUnlockIMCC(pIC->hCompStr);
     }
 
@@ -4657,7 +4657,7 @@ BOOL WINAPI ImmGenerateMessage(HIMC hIMC)
 
     RtlCopyMemory(pTrans, pMsgs, cbTrans);
 
-    if (GetWin32ClientInfo()->dwExpWinVer < 0x400) /* old version? */
+    if (GetWin32ClientInfo()->dwExpWinVer < 0x400) /* old version (3.x)? */
     {
         LangID = LANGIDFROMLCID(GetSystemDefaultLCID());
         wLang = PRIMARYLANGID(LangID);
@@ -4666,7 +4666,7 @@ BOOL WINAPI ImmGenerateMessage(HIMC hIMC)
         if (wLang == LANG_JAPANESE ||
             (wLang == LANG_KOREAN && NtUserGetAppImeLevel(pIC->hWnd) == 3))
         {
-            dwCount = Imm32Trans(dwCount, pTrans, hIMC, bAnsi, wLang);
+            dwCount = ImpTrans(dwCount, pTrans, hIMC, bAnsi, wLang);
         }
     }
 
@@ -4708,7 +4708,7 @@ Imm32PostMessages(HWND hwnd, HIMC hIMC, DWORD dwCount, LPTRANSMSG lpTransMsg)
     bAnsi = !(pClientImc->dwFlags & CLIENTIMC_WIDE);
     ImmUnlockClientImc(pClientImc);
 
-    if (GetWin32ClientInfo()->dwExpWinVer < 0x400) /* old version? */
+    if (GetWin32ClientInfo()->dwExpWinVer < 0x400) /* old version (3.x)? */
     {
         LangID = LANGIDFROMLCID(GetSystemDefaultLCID());
         Lang = PRIMARYLANGID(LangID);
@@ -4722,7 +4722,7 @@ Imm32PostMessages(HWND hwnd, HIMC hIMC, DWORD dwCount, LPTRANSMSG lpTransMsg)
             if (pNewTransMsg)
             {
                 RtlCopyMemory(pNewTransMsg, lpTransMsg, cbTransMsg);
-                dwCount = Imm32Trans(dwCount, pNewTransMsg, hIMC, bAnsi, Lang);
+                dwCount = ImpTrans(dwCount, pNewTransMsg, hIMC, bAnsi, Lang);
             }
             else
             {
