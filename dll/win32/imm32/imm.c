@@ -454,6 +454,7 @@ Imm32JTrans(DWORD dwCount, LPTRANSMSG pTrans, LPINPUTCONTEXTDX pIC,
                 ret += dwNumber;
                 pTrans += dwNumber;
 
+                // send IR_CHANGECONVERT
                 if (!(pIC->dwUIFlags & 0x2))
                 {
                     if (pIC->cfCompForm.dwStyle != CFS_DEFAULT)
