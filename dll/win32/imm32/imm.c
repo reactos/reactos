@@ -199,7 +199,7 @@ static BOOL APIENTRY Imm32InquireIme(PIMEDPI pImeDpi)
     DWORD dwSysInfoFlags = 0; // TODO: ???
     LPIMEINFO pImeInfo = &pImeDpi->ImeInfo;
 
-    // TODO: NtUserGetThreadState(THREADSTATE_UNKNOWN16);
+    // TODO: NtUserGetThreadState(16);
 
     if (!IS_IME_HKL(pImeDpi->hKL))
     {
@@ -993,7 +993,10 @@ HIMC WINAPI ImmCreateContext(void)
     }
 
     RtlInitializeCriticalSection(&pClientImc->cs);
-    pClientImc->unknown = NtUserGetThreadState(THREADSTATE_UNKNOWN13);
+
+    // FIXME: NtUserGetThreadState and enum ThreadStateRoutines are broken.
+    pClientImc->unknown = NtUserGetThreadState(13);
+
     return hIMC;
 }
 
@@ -1667,7 +1670,9 @@ PCLIENTIMC WINAPI ImmLockClientImc(HIMC hImc)
             return NULL;
 
         RtlInitializeCriticalSection(&pClientImc->cs);
-        pClientImc->unknown = NtUserGetThreadState(THREADSTATE_UNKNOWN13);
+
+        // FIXME: NtUserGetThreadState and enum ThreadStateRoutines are broken.
+        pClientImc->unknown = NtUserGetThreadState(13);
 
         if (!NtUserUpdateInputContext(hImc, 0, pClientImc))
         {
@@ -2668,8 +2673,9 @@ HWND WINAPI ImmGetDefaultIMEWnd(HWND hWnd)
     if (!g_psi || !(g_psi->dwSRVIFlags & SRVINFO_IMM32))
         return NULL;
 
+    // FIXME: NtUserGetThreadState and enum ThreadStateRoutines are broken.
     if (hWnd == NULL)
-        return (HWND)NtUserGetThreadState(THREADSTATE_ACTIVEWINDOW);
+        return (HWND)NtUserGetThreadState(3);
 
     return (HWND)NtUserQueryWindow(hWnd, QUERY_WINDOW_DEFAULT_IME);
 }
