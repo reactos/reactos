@@ -1211,6 +1211,17 @@ typedef struct _IMEWND
     PIMEUI pimeui;
 } IMEWND, *PIMEWND;
 
+typedef struct tagTRANSMSG {
+    UINT message;
+    WPARAM wParam;
+    LPARAM lParam;
+} TRANSMSG, *PTRANSMSG, *LPTRANSMSG;
+
+typedef struct tagTRANSMSGLIST {
+    UINT     uMsgCount;
+    TRANSMSG TransMsg[1];
+} TRANSMSGLIST, *PTRANSMSGLIST, *LPTRANSMSGLIST;
+
 #define DEFINE_IME_ENTRY(type, name, params, extended) typedef type (WINAPI *FN_##name) params;
 #include "imetable.h"
 #undef DEFINE_IME_ENTRY
@@ -2203,8 +2214,7 @@ NtUserGetAncestor(
 
 DWORD
 NTAPI
-NtUserGetAppImeLevel(
-    DWORD dwUnknown1);
+NtUserGetAppImeLevel(HWND hWnd);
 
 SHORT
 NTAPI
