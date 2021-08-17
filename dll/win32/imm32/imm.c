@@ -428,7 +428,7 @@ Imm32JTrans(DWORD dwCount, LPTRANSMSG pTrans, LPINPUTCONTEXTDX pIC,
                 if (pIC->dwUIFlags & 0x2)
                 {
                     // send IR_UNDETERMINE
-                    hGlobal = GlobalAlloc(GHND | GMEM_SHARE, 0x38);
+                    hGlobal = GlobalAlloc(GHND | GMEM_SHARE, sizeof(UNDETERMINESTRUCT));
                     if (hGlobal)
                     {
                         pSendMessage(hWnd, WM_IME_REPORT, IR_UNDETERMINE, (LPARAM)hGlobal);
