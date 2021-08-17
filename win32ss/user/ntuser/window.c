@@ -3998,11 +3998,11 @@ NtUserQueryWindow(HWND hWnd, DWORD Index)
          Result = (pWnd->head.pti->MessageQueue == gpqForeground);
          break;
 
-      case QUERY_WINDOW_DEFAULT_IME: /* input context handle */
+      case QUERY_WINDOW_DEFAULT_IME: /* default IME window */
          Result = (DWORD_PTR)UserHMGetHandle(pWnd->head.pti->spwndDefaultIme);
          break;
 
-      case QUERY_WINDOW_DEFAULT_ICONTEXT: /* input context */
+      case QUERY_WINDOW_DEFAULT_ICONTEXT: /* input context handle */
          Result = (DWORD_PTR)UserHMGetHandle(pWnd->head.pti->spDefaultImc);
          break;
 
