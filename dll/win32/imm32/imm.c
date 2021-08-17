@@ -370,8 +370,8 @@ Imm32JTrans(DWORD dwCount, LPTRANSMSG pTrans, LPINPUTCONTEXTDX pIC,
 {
     DWORD ret = 0;
     HWND hWnd, hwndDefIME;
-    LPTRANSMSG pSrcTrans, pEntry, pNext;
-    DWORD dwIndex, iCandForm, dwNumber, cbSrcTrans;
+    LPTRANSMSG pTempList, pEntry, pNext;
+    DWORD dwIndex, iCandForm, dwNumber, cbTempList;
     HGLOBAL hGlobal;
     CANDIDATEFORM CandForm;
     FN_SendMessage pSendMessage;
@@ -381,16 +381,16 @@ Imm32JTrans(DWORD dwCount, LPTRANSMSG pTrans, LPINPUTCONTEXTDX pIC,
     pSendMessage = (IsWindowUnicode(hWnd) ? SendMessageW : SendMessageA);
 
     // clone the message list
-    cbSrcTrans = (dwCount + 1) * sizeof(TRANSMSG);
-    pSrcTrans = Imm32HeapAlloc(HEAP_ZERO_MEMORY, cbSrcTrans);
-    if (pSrcTrans == NULL)
+    cbTempList = (dwCount + 1) * sizeof(TRANSMSG);
+    pTempList = Imm32HeapAlloc(HEAP_ZERO_MEMORY, cbTempList);
+    if (pTempList == NULL)
         return 0;
-    RtlCopyMemory(pSrcTrans, pTrans, dwCount * sizeof(TRANSMSG));
+    RtlCopyMemory(pTempList, pTrans, dwCount * sizeof(TRANSMSG));
 
     if (pIC->dwUIFlags & 0x2)
     {
         // find WM_IME_ENDCOMPOSITION
-        pEntry = pSrcTrans;
+        pEntry = pTempList;
         for (dwIndex = 0; dwIndex < dwCount; ++dwIndex, ++pEntry)
         {
             if (pEntry->message == WM_IME_ENDCOMPOSITION)
@@ -409,7 +409,7 @@ Imm32JTrans(DWORD dwCount, LPTRANSMSG pTrans, LPINPUTCONTEXTDX pIC,
         }
     }
 
-    for (pEntry = pSrcTrans; pEntry->message != 0; ++pEntry)
+    for (pEntry = pTempList; pEntry->message != 0; ++pEntry)
     {
         switch (pEntry->message)
         {
@@ -499,7 +499,7 @@ DoDefault:
         }
     }
 
-    HeapFree(g_hImm32Heap, 0, pSrcTrans);
+    HeapFree(g_hImm32Heap, 0, pTempList);
     return ret;
 }
 
