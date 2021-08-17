@@ -335,6 +335,7 @@ Failed:
     return FALSE;
 }
 
+#ifdef IMP_SUPPORT /* 3.x support */
 static DWORD APIENTRY
 ImpJTransCompA(LPINPUTCONTEXTDX pIC, LPCOMPOSITIONSTRING pCS,
                const TRANSMSG *pSrc, LPTRANSMSG pDest)
@@ -525,6 +526,7 @@ ImpTrans(DWORD dwCount, LPTRANSMSG pEntries, HIMC hIMC, BOOL bAnsi, WORD wLang)
     ImmUnlockIMC(hIMC);
     return ret;
 }
+#endif  /* def IMP_SUPPORT */
 
 static PIMEDPI APIENTRY Ime32LoadImeDpi(HKL hKL, BOOL bLock)
 {
@@ -4612,8 +4614,6 @@ BOOL WINAPI ImmGenerateMessage(HIMC hIMC)
     HWND hWnd;
     DWORD dwIndex, dwCount, cbTrans;
     HIMCC hMsgBuf = NULL;
-    LANGID LangID;
-    WORD wLang;
     BOOL bAnsi;
 
     TRACE("(%p)\n", hIMC);
@@ -4648,10 +4648,11 @@ BOOL WINAPI ImmGenerateMessage(HIMC hIMC)
 
     RtlCopyMemory(pTrans, pMsgs, cbTrans);
 
+#ifdef IMP_SUPPORT
     if (GetWin32ClientInfo()->dwExpWinVer < 0x400) /* old version (3.x)? */
     {
-        LangID = LANGIDFROMLCID(GetSystemDefaultLCID());
-        wLang = PRIMARYLANGID(LangID);
+        LANGID LangID = LANGIDFROMLCID(GetSystemDefaultLCID());
+        WORD wLang = PRIMARYLANGID(LangID);
 
         /* translate the messages if Japanese or Korean */
         if (wLang == LANG_JAPANESE ||
@@ -4660,6 +4661,7 @@ BOOL WINAPI ImmGenerateMessage(HIMC hIMC)
             dwCount = ImpTrans(dwCount, pTrans, hIMC, bAnsi, wLang);
         }
     }
+#endif
 
     /* send them */
     hWnd = pIC->hWnd;
@@ -4685,12 +4687,10 @@ Quit:
 static VOID APIENTRY
 Imm32PostMessages(HWND hwnd, HIMC hIMC, DWORD dwCount, LPTRANSMSG lpTransMsg)
 {
-    DWORD dwIndex, cbTransMsg;
+    DWORD dwIndex;
     PCLIENTIMC pClientImc;
     LPTRANSMSG pNewTransMsg = lpTransMsg, pItem;
     BOOL bAnsi;
-    LANGID LangID;
-    WORD Lang;
 
     pClientImc = ImmLockClientImc(hIMC);
     if (pClientImc == NULL)
@@ -4699,16 +4699,17 @@ Imm32PostMessages(HWND hwnd, HIMC hIMC, DWORD dwCount, LPTRANSMSG lpTransMsg)
     bAnsi = !(pClientImc->dwFlags & CLIENTIMC_WIDE);
     ImmUnlockClientImc(pClientImc);
 
+#ifdef IMP_SUPPORT
     if (GetWin32ClientInfo()->dwExpWinVer < 0x400) /* old version (3.x)? */
     {
-        LangID = LANGIDFROMLCID(GetSystemDefaultLCID());
-        Lang = PRIMARYLANGID(LangID);
+        LANGID LangID = LANGIDFROMLCID(GetSystemDefaultLCID());
+        WORD Lang = PRIMARYLANGID(LangID);
 
         /* translate the messages if Japanese or Korean */
         if (Lang == LANG_JAPANESE ||
             (Lang == LANG_KOREAN && NtUserGetAppImeLevel(hwnd) == 3))
         {
-            cbTransMsg = dwCount * sizeof(TRANSMSG);
+            DWORD cbTransMsg = dwCount * sizeof(TRANSMSG);
             pNewTransMsg = Imm32HeapAlloc(0, cbTransMsg);
             if (pNewTransMsg)
             {
@@ -4721,6 +4722,7 @@ Imm32PostMessages(HWND hwnd, HIMC hIMC, DWORD dwCount, LPTRANSMSG lpTransMsg)
             }
         }
     }
+#endif
 
     /* post them */
     pItem = pNewTransMsg;
@@ -4732,8 +4734,10 @@ Imm32PostMessages(HWND hwnd, HIMC hIMC, DWORD dwCount, LPTRANSMSG lpTransMsg)
             PostMessageW(hwnd, pItem->message, pItem->wParam, pItem->lParam);
     }
 
+#ifdef IMP_SUPPORT
     if (pNewTransMsg && pNewTransMsg != lpTransMsg)
         HeapFree(g_hImm32Heap, 0, pNewTransMsg);
+#endif
 }
 
 /***********************************************************************
