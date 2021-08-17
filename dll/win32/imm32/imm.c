@@ -390,6 +390,7 @@ Imm32JTrans(DWORD dwCount, LPTRANSMSG pTrans, LPINPUTCONTEXTDX pIC,
     if (pIC->dwUIFlags & 0x2)
     {
         // find WM_IME_ENDCOMPOSITION
+        pEntry = pSrcTrans;
         for (dwIndex = 0; dwIndex < dwCount; ++dwIndex, ++pEntry)
         {
             if (pEntry->message == WM_IME_ENDCOMPOSITION)
