@@ -48,6 +48,8 @@ WINE_DEFAULT_DEBUG_CHANNEL(imm);
 #define IMM_INIT_MAGIC 0x19650412
 #define IMM_INVALID_CANDFORM ULONG_MAX
 
+#define MAX_CANDIDATEFORM 4
+
 #define LANGID_CHINESE_SIMPLIFIED MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED)
 #define LANGID_CHINESE_TRADITIONAL MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL)
 #define LANGID_JAPANESE MAKELANGID(LANG_JAPANESE, SUBLANG_DEFAULT)
@@ -343,14 +345,164 @@ Failed:
 }
 
 static DWORD APIENTRY
-Imm32JTrans(DWORD dwCount, LPTRANSMSG pEntries, LPINPUTCONTEXT pIC,
-            LPCOMPOSITIONSTRING pCS, BOOL bAnsi)
+Imm32JTransCompA(LPINPUTCONTEXTDX pIC, LPCOMPOSITIONSTRING pCS,
+                 const TRANSMSG *pSrc, LPTRANSMSG pDest)
 {
-    return dwCount; // FIXME
+    // FIXME
+    *pDest = *pSrc;
+    return 1;
 }
 
 static DWORD APIENTRY
-Imm32KTrans(DWORD dwCount, LPTRANSMSG pEntries, LPINPUTCONTEXT pIC,
+Imm32JTransCompW(LPINPUTCONTEXTDX pIC, LPCOMPOSITIONSTRING pCS,
+                 const TRANSMSG *pSrc, LPTRANSMSG pDest)
+{
+    // FIXME
+    *pDest = *pSrc;
+    return 1;
+}
+
+typedef LRESULT (WINAPI *FN_SendMessage)(HWND, UINT, WPARAM, LPARAM);
+
+static DWORD APIENTRY
+Imm32JTrans(DWORD dwCount, LPTRANSMSG pTrans, LPINPUTCONTEXTDX pIC,
+            LPCOMPOSITIONSTRING pCS, BOOL bAnsi)
+{
+    DWORD ret = 0;
+    HWND hWnd, hwndDefIME;
+    LPTRANSMSG pSrcTrans, pEntry, pNext;
+    DWORD dwIndex, iCandForm, dwNumber, cbNewTrans;
+    HGLOBAL hGlobal;
+    CANDIDATEFORM CandForm;
+    FN_SendMessage pSendMessage;
+
+    hWnd = pIC->hWnd;
+    hwndDefIME = ImmGetDefaultIMEWnd(hWnd);
+    pSendMessage = (IsWindowUnicode(hWnd) ? SendMessageW : SendMessageA);
+
+    // clone the message list
+    cbNewTrans = (dwCount + 1) * sizeof(TRANSMSG);
+    pSrcTrans = Imm32HeapAlloc(HEAP_ZERO_MEMORY, cbNewTrans);
+    if (pSrcTrans == NULL)
+        return 0;
+    RtlCopyMemory(pSrcTrans, pTrans, dwCount * sizeof(TRANSMSG));
+
+    if (pIC->dwUIFlags & 0x2)
+    {
+        // find WM_IME_ENDCOMPOSITION
+        for (dwIndex = 0; dwIndex < dwCount; ++dwIndex, ++pEntry)
+        {
+            if (pEntry->message == WM_IME_ENDCOMPOSITION)
+                break;
+        }
+
+        if (pEntry->message == WM_IME_ENDCOMPOSITION) // if found
+        {
+            // move WM_IME_ENDCOMPOSITION to the end of the list
+            for (pNext = pEntry + 1; pNext->message != 0; ++pEntry, ++pNext)
+                *pEntry = *pNext;
+
+            pEntry->message = WM_IME_ENDCOMPOSITION;
+            pEntry->wParam = 0;
+            pEntry->lParam = 0;
+        }
+    }
+
+    for (pEntry = pSrcTrans; pEntry->message != 0; ++pEntry)
+    {
+        switch (pEntry->message)
+        {
+            case WM_IME_STARTCOMPOSITION:
+                if (!(pIC->dwUIFlags & 0x2))
+                {
+                    // send IR_OPENCONVERT
+                    if (pIC->cfCompForm.dwStyle != CFS_DEFAULT)
+                        pSendMessage(hWnd, WM_IME_REPORT, IR_OPENCONVERT, 0);
+
+                    goto DoDefault;
+                }
+                break;
+
+            case WM_IME_ENDCOMPOSITION:
+                if (pIC->dwUIFlags & 0x2)
+                {
+                    // send IR_UNDETERMINE
+                    hGlobal = GlobalAlloc(GHND | GMEM_SHARE, 0x38);
+                    if (hGlobal)
+                    {
+                        pSendMessage(hWnd, WM_IME_REPORT, IR_UNDETERMINE, (LPARAM)hGlobal);
+                        GlobalFree(hGlobal);
+                    }
+                }
+                else
+                {
+                    // send IR_CLOSECONVERT
+                    if (pIC->cfCompForm.dwStyle != CFS_DEFAULT)
+                        pSendMessage(hWnd, WM_IME_REPORT, IR_CLOSECONVERT, 0);
+
+                    goto DoDefault;
+                }
+                break;
+
+            case WM_IME_COMPOSITION:
+                if (bAnsi)
+                    dwNumber = Imm32JTransCompA(pIC, pCS, pEntry, pTrans);
+                else
+                    dwNumber = Imm32JTransCompW(pIC, pCS, pEntry, pTrans);
+
+                ret += dwNumber;
+                pTrans += dwNumber;
+
+                if (!(pIC->dwUIFlags & 0x2))
+                {
+                    if (pIC->cfCompForm.dwStyle != CFS_DEFAULT)
+                        pSendMessage(hWnd, WM_IME_REPORT, IR_CHANGECONVERT, 0);
+                }
+                break;
+
+            case WM_IME_NOTIFY:
+                if (pEntry->wParam == IMN_OPENCANDIDATE)
+                {
+                    if (IsWindow(hWnd) && (pIC->dwUIFlags & 0x2))
+                    {
+                        // send IMC_SETCANDIDATEPOS
+                        for (iCandForm = 0; iCandForm < MAX_CANDIDATEFORM; ++iCandForm)
+                        {
+                            if (!(pEntry->lParam & (1 << iCandForm)))
+                                continue;
+
+                            CandForm.dwIndex = iCandForm;
+                            CandForm.dwStyle = CFS_EXCLUDE;
+                            CandForm.ptCurrentPos = pIC->cfCompForm.ptCurrentPos;
+                            CandForm.rcArea = pIC->cfCompForm.rcArea;
+                            pSendMessage(hwndDefIME, WM_IME_CONTROL, IMC_SETCANDIDATEPOS,
+                                         (LPARAM)&CandForm);
+                        }
+                    }
+                }
+
+                if (!(pIC->dwUIFlags & 0x2))
+                    goto DoDefault;
+
+                // send a WM_IME_NOTIFY notification to the default ime window
+                pSendMessage(hwndDefIME, pEntry->message, pEntry->wParam, pEntry->lParam);
+                break;
+
+DoDefault:
+            default:
+                // default processing
+                *pTrans++ = *pEntry;
+                ++ret;
+                break;
+        }
+    }
+
+    HeapFree(g_hImm32Heap, 0, pSrcTrans);
+    return ret;
+}
+
+static DWORD APIENTRY
+Imm32KTrans(DWORD dwCount, LPTRANSMSG pEntries, LPINPUTCONTEXTDX pIC,
             LPCOMPOSITIONSTRING pCS, BOOL bAnsi)
 {
     return dwCount; // FIXME
@@ -360,10 +512,10 @@ static DWORD APIENTRY
 Imm32Trans(DWORD dwCount, LPTRANSMSG pEntries, HIMC hIMC, BOOL bAnsi, WORD wLang)
 {
     BOOL ret = FALSE;
-    LPINPUTCONTEXT pIC;
+    LPINPUTCONTEXTDX pIC;
     LPCOMPOSITIONSTRING pCS;
 
-    pIC = ImmLockIMC(hIMC);
+    pIC = (LPINPUTCONTEXTDX)ImmLockIMC(hIMC);
     if (pIC == NULL)
         return 0;
 
@@ -3529,7 +3681,6 @@ LRESULT WINAPI ImmRequestMessageW(HIMC hIMC, WPARAM wParam, LPARAM lParam)
 BOOL WINAPI ImmSetCandidateWindow(
   HIMC hIMC, LPCANDIDATEFORM lpCandidate)
 {
-#define MAX_CANDIDATEFORM 4
     HWND hWnd;
     LPINPUTCONTEXT pIC;
 
@@ -3553,7 +3704,6 @@ BOOL WINAPI ImmSetCandidateWindow(
     Imm32NotifyAction(hIMC, hWnd, NI_CONTEXTUPDATED, 0, IMC_SETCANDIDATEPOS,
                       IMN_SETCANDIDATEPOS, (1 << lpCandidate->dwIndex));
     return TRUE;
-#undef MAX_CANDIDATEFORM
 }
 
 static VOID APIENTRY WideToAnsiLogFont(const LOGFONTW *plfW, LPLOGFONTA plfA)
