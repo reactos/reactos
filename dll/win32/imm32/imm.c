@@ -371,7 +371,7 @@ Imm32JTrans(DWORD dwCount, LPTRANSMSG pTrans, LPINPUTCONTEXTDX pIC,
     DWORD ret = 0;
     HWND hWnd, hwndDefIME;
     LPTRANSMSG pSrcTrans, pEntry, pNext;
-    DWORD dwIndex, iCandForm, dwNumber, cbNewTrans;
+    DWORD dwIndex, iCandForm, dwNumber, cbSrcTrans;
     HGLOBAL hGlobal;
     CANDIDATEFORM CandForm;
     FN_SendMessage pSendMessage;
@@ -381,8 +381,8 @@ Imm32JTrans(DWORD dwCount, LPTRANSMSG pTrans, LPINPUTCONTEXTDX pIC,
     pSendMessage = (IsWindowUnicode(hWnd) ? SendMessageW : SendMessageA);
 
     // clone the message list
-    cbNewTrans = (dwCount + 1) * sizeof(TRANSMSG);
-    pSrcTrans = Imm32HeapAlloc(HEAP_ZERO_MEMORY, cbNewTrans);
+    cbSrcTrans = (dwCount + 1) * sizeof(TRANSMSG);
+    pSrcTrans = Imm32HeapAlloc(HEAP_ZERO_MEMORY, cbSrcTrans);
     if (pSrcTrans == NULL)
         return 0;
     RtlCopyMemory(pSrcTrans, pTrans, dwCount * sizeof(TRANSMSG));
