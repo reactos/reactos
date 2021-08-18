@@ -16,6 +16,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(user32);
 
 #define IMM_INIT_MAGIC 0x19650412
 
+/* Is != NULL when we have loaded the IMM ourselves */
 HINSTANCE ghImm32 = NULL;
 
 /* define stub functions */

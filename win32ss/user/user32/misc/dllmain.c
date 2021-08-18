@@ -546,9 +546,6 @@ DllMain(
             {
                InitializeImmEntryTable();
 
-               //
-               // Wine is stub and throws an exception so save this for real Imm32.dll testing!!!!
-               //
                gImmApiEntries.pImmRegisterClient(&gSharedInfo, ghImm32);
             }
             
