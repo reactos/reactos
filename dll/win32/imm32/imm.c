@@ -4878,7 +4878,7 @@ DWORD WINAPI ImmProcessKey(HWND hWnd, HKL hKL, UINT vKey, LPARAM lParam, DWORD d
     LPINPUTCONTEXTDX pIC;
     BYTE KeyState[256];
     UINT vk;
-    BOOL bUseIme = TRUE, bSkipThisKey = FALSE, bCut = FALSE;
+    BOOL bUseIme = TRUE, bSkipThisKey = FALSE, bLowWordOnly = FALSE;
 
     TRACE("(%p, %p, 0x%X, %p, 0x%lX)\n", hWnd, hKL, vKey, lParam, dwHotKeyID);
 
@@ -4894,7 +4894,7 @@ DWORD WINAPI ImmProcessKey(HWND hWnd, HKL hKL, UINT vKey, LPARAM lParam, DWORD d
             {
                 if (pImeDpi->ImeInfo.fdwProperty & IME_PROP_UNICODE)
                 {
-                    bCut = TRUE;
+                    bLowWordOnly = TRUE;
                 }
                 else
                 {
@@ -4908,7 +4908,7 @@ DWORD WINAPI ImmProcessKey(HWND hWnd, HKL hKL, UINT vKey, LPARAM lParam, DWORD d
             {
                 if (GetKeyboardState(KeyState))
                 {
-                    vk = (bCut ? LOWORD(vKey) : vKey);
+                    vk = (bLowWordOnly ? LOWORD(vKey) : vKey);
                     if (pImeDpi->ImeProcessKey(hIMC, vk, lParam, KeyState))
                     {
                         pIC->bNeedsTrans = TRUE;
