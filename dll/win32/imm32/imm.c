@@ -5072,7 +5072,7 @@ Quit:
 UINT WINAPI ImmWINNLSGetIMEHotkey(HWND hwndIme)
 {
     TRACE("(%p)\n", hwndIme);
-    return 0;
+    return 0; /* This is correct. This function of Windows just returns zero. */
 }
 
 BOOL WINAPI User32InitializeImmEntryTable(DWORD);
