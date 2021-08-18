@@ -18,7 +18,7 @@ START_TEST(ImmIsUIMessage)
         {
             case WM_IME_STARTCOMPOSITION: case WM_IME_ENDCOMPOSITION:
             case WM_IME_COMPOSITION: case WM_IME_SETCONTEXT: case WM_IME_NOTIFY:
-            case WM_IME_COMPOSITIONFULL: case WM_IME_SELECT: case 0x287:
+            case WM_IME_COMPOSITIONFULL: case WM_IME_SELECT: case WM_IME_SYSTEM:
                 ok_int(ret, TRUE);
                 break;
             default:
