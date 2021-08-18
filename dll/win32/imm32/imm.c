@@ -31,6 +31,7 @@
 #include <ndk/rtlfuncs.h>
 #include "../../../win32ss/include/ntuser.h"
 #include "../../../win32ss/include/ntwin32.h"
+#include <undocuser.h>
 #include <imm32_undoc.h>
 #include <strsafe.h>
 
@@ -4869,47 +4870,82 @@ Quit:
 *		ImmProcessKey(IMM32.@)
 *       ( Undocumented, called from user32.dll )
 */
-BOOL WINAPI ImmProcessKey(HWND hwnd, HKL hKL, UINT vKey, LPARAM lKeyData, DWORD unknown)
+BOOL WINAPI ImmProcessKey(HWND hWnd, HKL hKL, UINT vKey, LPARAM lParam, DWORD dwHotKeyID)
 {
-    InputContextData *data;
-    HIMC imc = ImmGetContext(hwnd);
-    BYTE state[256];
+    DWORD ret = 0;
+    HIMC hIMC;
+    PIMEDPI pImeDpi;
+    LPINPUTCONTEXTDX pIC;
+    BYTE KeyState[256];
+    BOOL bUseIme = TRUE, bSkipThisKey = FALSE, bCut = FALSE;
 
-    TRACE("%p %p %x %x %x\n",hwnd, hKL, vKey, (UINT)lKeyData, unknown);
+    TRACE("(%p, %p, 0x%X, %p, 0x%lX)\n", hWnd, hKL, vKey, lParam, dwHotKeyID);
 
-    if (imc)
-        data = (InputContextData *)imc;
-    else
-        return FALSE;
-
-    /* Make sure we are inputting to the correct keyboard */
-    if (data->immKbd->hkl != hKL)
+    hIMC = ImmGetContext(hWnd);
+    pImeDpi = ImmLockImeDpi(hKL);
+    if (pImeDpi)
     {
-        ImmHkl *new_hkl = IMM_GetImmHkl(hKL);
-        if (new_hkl)
+        pIC = (LPINPUTCONTEXTDX)ImmLockIMC(hIMC);
+        if (pIC)
         {
-            data->immKbd->pImeSelect(imc, FALSE);
-            data->immKbd->uSelected--;
-            data->immKbd = new_hkl;
-            data->immKbd->pImeSelect(imc, TRUE);
-            data->immKbd->uSelected++;
+            if (LOBYTE(vKey) == VK_PACKET &&
+                !(pImeDpi->ImeInfo.fdwProperty & IME_PROP_ACCEPT_WIDE_VKEY))
+            {
+                if (pImeDpi->ImeInfo.fdwProperty & IME_PROP_UNICODE)
+                {
+                    bCut = TRUE;
+                }
+                else
+                {
+                    bUseIme = FALSE;
+                    if (pIC->fOpen)
+                        bSkipThisKey = TRUE;
+                }
+            }
+
+            if (bUseIme)
+            {
+                if (GetKeyboardState(KeyState))
+                {
+                    UINT vk = vKey;
+                    if (bCut)
+                        vk = LOWORD(vk);
+
+                    if (pImeDpi->ImeProcessKey(hIMC, vk, lParam, KeyState))
+                    {
+                        pIC->bNeedsTrans = TRUE;
+                        pIC->nVKey = vKey;
+                        ret |= IPHK_PROCESSBYIME;
+                    }
+                }
+            }
+            else if (bSkipThisKey)
+            {
+                ret |= IPHK_SKIPTHISKEY;
+            }
+
+            ImmUnlockIMC(hIMC);
         }
-        else
-            return FALSE;
+
+        ImmUnlockImeDpi(pImeDpi);
     }
 
-    if (!data->immKbd->hIME || !data->immKbd->pImeProcessKey)
-        return FALSE;
-
-    GetKeyboardState(state);
-    if (data->immKbd->pImeProcessKey(imc, vKey, lKeyData, state))
+    if (dwHotKeyID != 0xFFFFFFFF)
     {
-        data->lastVK = vKey;
-        return TRUE;
+        if (Imm32ProcessHotKey(hWnd, hIMC, hKL, dwHotKeyID))
+        {
+            if (vKey != VK_KANJI || dwHotKeyID != IME_JHOTKEY_CLOSE_OPEN)
+                ret |= IPHK_HOTKEY;
+        }
     }
 
-    data->lastVK = VK_PROCESSKEY;
-    return FALSE;
+    if (ret & IPHK_PROCESSBYIME)
+    {
+        FIXME("TODO: We have to do something here.\n");
+    }
+
+    ImmReleaseContext(hWnd, hIMC);
+    return ret;
 }
 
 /***********************************************************************
@@ -4958,7 +4994,7 @@ ImmGetHotKey(IN DWORD dwHotKey,
              OUT LPUINT lpuVKey,
              OUT LPHKL lphKL)
 {
-    TRACE("%lx, %p, %p, %p\n", dwHotKey, lpuModifiers, lpuVKey, lphKL);
+    TRACE("(0x%lX, %p, %p, %p)\n", dwHotKey, lpuModifiers, lpuVKey, lphKL);
     if (lpuModifiers && lpuVKey)
         return NtUserGetImeHotKey(dwHotKey, lpuModifiers, lpuVKey, lphKL);
     return FALSE;
