@@ -5066,6 +5066,15 @@ Quit:
     return NtUserGetImeInfoEx(pImeInfoEx, SearchType);
 }
 
+/***********************************************************************
+ *              ImmWINNLSGetIMEHotkey (IMM32.@)
+ */
+UINT WINAPI ImmWINNLSGetIMEHotkey(HWND hwndIme)
+{
+    TRACE("(%p)\n", hwndIme);
+    return 0;
+}
+
 BOOL WINAPI User32InitializeImmEntryTable(DWORD);
 
 BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpReserved)
