@@ -4020,7 +4020,7 @@ NtUserQueryWindow(HWND hWnd, DWORD Index)
              if (pti->rpdesk == pwndActive->head.rpdesk)
              {
                 ptiActive = pwndActive->head.pti;
-                if (ptiActive && ptiActive->spwndDefaultIme)
+                if (ptiActive->spwndDefaultIme)
                    Result = (DWORD_PTR)UserHMGetHandle(ptiActive->spwndDefaultIme);
              }
          }
