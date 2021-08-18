@@ -39,7 +39,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(imm);
 
 #define IMM_INIT_MAGIC 0x19650412
 #define IMM_INVALID_CANDFORM ULONG_MAX
-
+#define INVALID_HOTKEY_ID 0xFFFFFFFF
 #define MAX_CANDIDATEFORM 4
 
 #define LANGID_CHINESE_SIMPLIFIED MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED)
@@ -4928,7 +4928,7 @@ BOOL WINAPI ImmProcessKey(HWND hWnd, HKL hKL, UINT vKey, LPARAM lParam, DWORD dw
         ImmUnlockImeDpi(pImeDpi);
     }
 
-    if (dwHotKeyID != 0xFFFFFFFF)
+    if (dwHotKeyID != INVALID_HOTKEY_ID)
     {
         if (Imm32ProcessHotKey(hWnd, hIMC, hKL, dwHotKeyID))
         {
