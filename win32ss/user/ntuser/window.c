@@ -3934,7 +3934,7 @@ NtUserQueryWindow(HWND hWnd, DWORD Index)
 
    DWORD_PTR Result;
    PWND pWnd, pwndActive;
-   PTHREADINFO pti;
+   PTHREADINFO pti, ptiActive;
    DECLARE_RETURN(UINT);
 
    TRACE("Enter NtUserQueryWindow\n");
@@ -4011,11 +4011,11 @@ NtUserQueryWindow(HWND hWnd, DWORD Index)
          {
              pwndActive = gpqForeground->spwndActive;
              pti = PsGetCurrentThreadWin32Thread();
-             if (pti->rpdesk == pwndActive->head.rpdesk)
+             if (pwndActive && pti->rpdesk == pwndActive->head.rpdesk)
              {
-                pti = pwndActive->head.pti;
-                if (pwndActive && pti)
-                   Result = (DWORD_PTR)UserHMGetHandle(pti->spwndDefaultIme);
+                ptiActive = pwndActive->head.pti;
+                if (ptiActive)
+                   Result = (DWORD_PTR)UserHMGetHandle(ptiActive->spwndDefaultIme);
              }
          }
          break;
