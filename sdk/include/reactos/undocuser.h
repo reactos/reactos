@@ -56,6 +56,7 @@ extern "C" {
 #define WM_DRAGLOOP	        0x0000022D
 #define WM_DRAGSELECT       0x0000022E
 #define WM_DRAGMOVE	        0x0000022F
+#define WM_IME_SYSTEM       0x00000287
 #define WM_POPUPSYSTEMMENU  0x00000313
 #define WM_UAHINIT          0x0000031b
 #define WM_CBT              0x000003FF // ReactOS only.
