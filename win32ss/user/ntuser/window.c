@@ -3932,9 +3932,8 @@ NtUserQueryWindow(HWND hWnd, DWORD Index)
 #define GWLP_CONSOLE_LEADER_PID 0
 #define GWLP_CONSOLE_LEADER_TID 4
 
-   PWND pWnd;
    DWORD_PTR Result;
-   PWND pwndActive;
+   PWND pWnd, pwndActive;
    PTHREADINFO pti;
    DECLARE_RETURN(UINT);
 
