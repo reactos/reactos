@@ -32,7 +32,10 @@ Imm32ApiTable gImmApiEntries = {
 #include "immtable.h"
 };
 
-HRESULT WINAPI User32GetImm32PathName(LPWSTR lpBuffer, size_t cchBuffer)
+static HRESULT
+User32GetImm32PathName(
+    _Out_ LPWSTR lpBuffer,
+    _In_ size_t cchBuffer)
 {
     UINT length = GetSystemDirectoryW(lpBuffer, cchBuffer);
     if (length && length < cchBuffer)
