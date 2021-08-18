@@ -54,6 +54,7 @@ BOOL WINAPI InitializeImmEntryTable(VOID)
     WCHAR ImmFile[MAX_PATH];
     HMODULE imm32 = ghImm32;
 
+    /* Check whether the IMM table has already been initialized */
     if (IMM_FN(ImmWINNLSEnableIME) != IMMSTUB_ImmWINNLSEnableIME)
         return TRUE;
 
