@@ -4013,8 +4013,9 @@ NtUserQueryWindow(HWND hWnd, DWORD Index)
              pti = PsGetCurrentThreadWin32Thread();
              if (pti->rpdesk == pwndActive->head.rpdesk)
              {
-                if (pwndActive && pwndActive->head.pti)
-                   Result = (DWORD_PTR)UserHMGetHandle(pwndActive->head.pti->spwndDefaultIme);
+                pti = pwndActive->head.pti;
+                if (pwndActive && pti)
+                   Result = (DWORD_PTR)UserHMGetHandle(pti->spwndDefaultIme);
              }
          }
          break;
