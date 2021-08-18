@@ -17,7 +17,6 @@ WINE_DEFAULT_DEBUG_CHANNEL(user32);
 #define IMM_INIT_MAGIC 0x19650412
 
 HINSTANCE ghImm32 = NULL;
-BOOL bImmInitializing = FALSE;
 
 /* define stub functions */
 #undef DEFINE_IMM_ENTRY
@@ -33,43 +32,43 @@ Imm32ApiTable gImmApiEntries = {
 #include "immtable.h"
 };
 
-HRESULT WINAPI GetImmFileName(PWSTR lpBuffer, UINT uSize)
+HRESULT WINAPI User32GetImm32PathName(LPWSTR lpBuffer, size_t cchBuffer)
 {
-  UINT length;
-  STRSAFE_LPWSTR Safe = lpBuffer;
-
-  length = GetSystemDirectoryW(lpBuffer, uSize);
-  if ( length && length < uSize )
-  {
-    StringCchCatW(Safe, uSize, L"\\");
-    return StringCchCatW(Safe, uSize, L"imm32.dll");
-  }
-  return StringCchCopyW(Safe, uSize, L"imm32.dll");
-}  
+    UINT length = GetSystemDirectoryW(lpBuffer, cchBuffer);
+    if (length && length < cchBuffer)
+    {
+        StringCchCatW(lpBuffer, cchBuffer, L"\\");
+        return StringCchCatW(lpBuffer, cchBuffer, L"imm32.dll");
+    }
+    return StringCchCopyW(lpBuffer, cchBuffer, L"imm32.dll");
+}
 
 /*
  * @unimplemented
  */
-BOOL WINAPI IntInitializeImmEntryTable(VOID)
+BOOL WINAPI InitializeImmEntryTable(VOID)
 {
     WCHAR ImmFile[MAX_PATH];
     HMODULE imm32 = ghImm32;
 
-    GetImmFileName(ImmFile, sizeof(ImmFile));
-    TRACE("File %ws\n",ImmFile);
+    User32GetImm32PathName(ImmFile, _countof(ImmFile));
+    TRACE("File %S\n", ImmFile);
 
     if (imm32 == NULL)
-    {
-       imm32 = GetModuleHandleW(ImmFile);
-    }
+        imm32 = GetModuleHandleW(ImmFile);
 
+    /*
+     * Loading imm32.dll will call imm32!DllMain function.
+     * imm32!DllMain calls User32InitializeImmEntryTable.
+     * Thus, if imm32.dll was loaded, the table has been loaded.
+     */
     if (imm32 == NULL)
     {
         imm32 = ghImm32 = LoadLibraryW(ImmFile);
         if (imm32 == NULL)
         {
-           ERR("Did not load!\n");
-           return FALSE;
+            ERR("Did not load!\n");
+            return FALSE;
         }
         return TRUE;
     }
@@ -84,14 +83,9 @@ BOOL WINAPI IntInitializeImmEntryTable(VOID)
         } \
     } while (0);
 #include "immtable.h"
+    /* FIXME: Please implement all the IMM32 entries and return FALSE if proc was NULL. */
 
     return TRUE;
-}
-
-BOOL WINAPI InitializeImmEntryTable(VOID)
-{
-  bImmInitializing = TRUE;
-  return IntInitializeImmEntryTable();
 }
 
 BOOL WINAPI User32InitializeImmEntryTable(DWORD magic)
@@ -101,24 +95,10 @@ BOOL WINAPI User32InitializeImmEntryTable(DWORD magic)
     if (magic != IMM_INIT_MAGIC)
         return FALSE;
 
-    if (IMM_FN(ImmIsIME) != IMMSTUB_ImmIsIME)
+    if (IMM_FN(ImmWINNLSEnableIME) != IMMSTUB_ImmWINNLSEnableIME)
         return TRUE;
 
-    IntInitializeImmEntryTable();
-
-    if (ghImm32 == NULL && !bImmInitializing)
-    {
-       WCHAR ImmFile[MAX_PATH];
-       GetImmFileName(ImmFile, sizeof(ImmFile));
-       ghImm32 = LoadLibraryW(ImmFile);
-       if (ghImm32 == NULL)
-       {
-          ERR("Did not load! 2\n");
-          return FALSE;
-       } 
-    }
-
-    return TRUE;
+    return InitializeImmEntryTable();
 }
 
 LRESULT WINAPI ImeWndProc_common( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam, BOOL unicode ) // ReactOS
