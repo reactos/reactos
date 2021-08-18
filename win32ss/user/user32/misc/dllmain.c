@@ -544,12 +544,8 @@ DllMain(
 
             if (!gfServerProcess)
             {
-#if WIN32K_ISNT_BROKEN
                InitializeImmEntryTable();
-#else
-               /* imm32 takes a refcount and prevents us from unloading */
-               LoadLibraryW(L"user32");
-#endif
+
                //
                // Wine is stub and throws an exception so save this for real Imm32.dll testing!!!!
                //
