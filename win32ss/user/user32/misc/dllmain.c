@@ -546,7 +546,7 @@ DllMain(
             {
                InitializeImmEntryTable();
 
-               gImmApiEntries.pImmRegisterClient(&gSharedInfo, ghImm32);
+               IMM_FN(ImmRegisterClient)(&gSharedInfo, ghImm32);
             }
             
             break;

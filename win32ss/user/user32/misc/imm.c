@@ -62,6 +62,7 @@ BOOL WINAPI InitializeImmEntryTable(VOID)
     GetImm32PathName(ImmFile, _countof(ImmFile));
     TRACE("File %S\n", ImmFile);
 
+    /* If IMM32 is implicitly loaded, we use it without increasing reference count. */
     if (imm32 == NULL)
         imm32 = GetModuleHandleW(ImmFile);
 
