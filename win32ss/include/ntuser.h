@@ -1211,13 +1211,15 @@ typedef struct _IMEWND
     PIMEUI pimeui;
 } IMEWND, *PIMEWND;
 
-typedef struct tagTRANSMSG {
+typedef struct tagTRANSMSG
+{
     UINT message;
     WPARAM wParam;
     LPARAM lParam;
 } TRANSMSG, *PTRANSMSG, *LPTRANSMSG;
 
-typedef struct tagTRANSMSGLIST {
+typedef struct tagTRANSMSGLIST
+{
     UINT     uMsgCount;
     TRANSMSG TransMsg[1];
 } TRANSMSGLIST, *PTRANSMSGLIST, *LPTRANSMSGLIST;
