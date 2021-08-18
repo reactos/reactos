@@ -33,7 +33,7 @@ Imm32ApiTable gImmApiEntries = {
 };
 
 static HRESULT
-User32GetImm32PathName(
+GetImm32PathName(
     _Out_ LPWSTR lpBuffer,
     _In_ size_t cchBuffer)
 {
@@ -58,7 +58,7 @@ BOOL WINAPI InitializeImmEntryTable(VOID)
     if (IMM_FN(ImmWINNLSEnableIME) != IMMSTUB_ImmWINNLSEnableIME)
         return TRUE;
 
-    User32GetImm32PathName(ImmFile, _countof(ImmFile));
+    GetImm32PathName(ImmFile, _countof(ImmFile));
     TRACE("File %S\n", ImmFile);
 
     if (imm32 == NULL)
