@@ -4870,7 +4870,7 @@ Quit:
 *		ImmProcessKey(IMM32.@)
 *       ( Undocumented, called from user32.dll )
 */
-BOOL WINAPI ImmProcessKey(HWND hWnd, HKL hKL, UINT vKey, LPARAM lParam, DWORD dwHotKeyID)
+DWORD WINAPI ImmProcessKey(HWND hWnd, HKL hKL, UINT vKey, LPARAM lParam, DWORD dwHotKeyID)
 {
     DWORD ret = 0;
     HIMC hIMC;
