@@ -129,8 +129,8 @@ typedef struct _THREADINFO
     /* Last message cursor position */
     POINT               ptLast;
     /* Input context-related */
-    struct _WND *       spwndDefaultIme;
-    struct tagIMC *     spDefaultImc;
+    struct _WND*        spwndDefaultIme;
+    struct tagIMC*      spDefaultImc;
     HKL                 hklPrev;
 
     INT                 cEnterCount;
