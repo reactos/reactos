@@ -4649,7 +4649,7 @@ BOOL WINAPI ImmGenerateMessage(HIMC hIMC)
     RtlCopyMemory(pTrans, pMsgs, cbTrans);
 
 #ifdef IMP_SUPPORT
-    if (GetWin32ClientInfo()->dwExpWinVer < 0x400) /* old version (3.x)? */
+    if (GetWin32ClientInfo()->dwExpWinVer < _WIN32_WINNT_NT4) /* old version (3.x)? */
     {
         LANGID LangID = LANGIDFROMLCID(GetSystemDefaultLCID());
         WORD wLang = PRIMARYLANGID(LangID);
@@ -4700,7 +4700,7 @@ Imm32PostMessages(HWND hwnd, HIMC hIMC, DWORD dwCount, LPTRANSMSG lpTransMsg)
     ImmUnlockClientImc(pClientImc);
 
 #ifdef IMP_SUPPORT
-    if (GetWin32ClientInfo()->dwExpWinVer < 0x400) /* old version (3.x)? */
+    if (GetWin32ClientInfo()->dwExpWinVer < _WIN32_WINNT_NT4) /* old version (3.x)? */
     {
         LANGID LangID = LANGIDFROMLCID(GetSystemDefaultLCID());
         WORD Lang = PRIMARYLANGID(LangID);
