@@ -4001,7 +4001,7 @@ NtUserQueryWindow(HWND hWnd, DWORD Index)
          Result = (DWORD_PTR)UserHMGetHandle(pWnd->head.pti->spwndDefaultIme);
          break;
 
-      case QUERY_WINDOW_DEFAULT_ICONTEXT: /* input context handle */
+      case QUERY_WINDOW_DEFAULT_ICONTEXT: /* default input context handle */
          Result = (DWORD_PTR)UserHMGetHandle(pWnd->head.pti->spDefaultImc);
          break;
 
