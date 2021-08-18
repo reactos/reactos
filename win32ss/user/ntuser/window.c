@@ -3998,11 +3998,17 @@ NtUserQueryWindow(HWND hWnd, DWORD Index)
          break;
 
       case QUERY_WINDOW_DEFAULT_IME: /* default IME window */
-         Result = (DWORD_PTR)UserHMGetHandle(pWnd->head.pti->spwndDefaultIme);
+         if (pWnd->head.pti->spwndDefaultIme)
+            Result = (DWORD_PTR)UserHMGetHandle(pWnd->head.pti->spwndDefaultIme);
+         else
+            Result = 0;
          break;
 
       case QUERY_WINDOW_DEFAULT_ICONTEXT: /* default input context handle */
-         Result = (DWORD_PTR)UserHMGetHandle(pWnd->head.pti->spDefaultImc);
+         if (pWnd->head.pti->spDefaultImc)
+            Result = (DWORD_PTR)UserHMGetHandle(pWnd->head.pti->spDefaultImc);
+         else
+            Result = 0;
          break;
 
       case QUERY_WINDOW_ACTIVE_IME:
@@ -4014,7 +4020,7 @@ NtUserQueryWindow(HWND hWnd, DWORD Index)
              if (pwndActive && pti->rpdesk == pwndActive->head.rpdesk)
              {
                 ptiActive = pwndActive->head.pti;
-                if (ptiActive)
+                if (ptiActive && ptiActive->spwndDefaultIme)
                    Result = (DWORD_PTR)UserHMGetHandle(ptiActive->spwndDefaultIme);
              }
          }
