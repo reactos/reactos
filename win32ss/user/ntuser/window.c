@@ -4009,10 +4009,10 @@ NtUserQueryWindow(HWND hWnd, DWORD Index)
          Result = 0;
          if (gpqForeground && gpqForeground->spwndActive)
          {
+             pwndActive = gpqForeground->spwndActive;
              pti = PsGetCurrentThreadWin32Thread();
-             if (pti->rpdesk == gpqForeground->spwndActive->head.rpdesk)
+             if (pti->rpdesk == pwndActive->head.rpdesk)
              {
-                pwndActive = gpqForeground->spwndActive;
                 if (pwndActive && pwndActive->head.pti)
                    Result = (DWORD_PTR)UserHMGetHandle(pwndActive->head.pti->spwndDefaultIme);
              }
