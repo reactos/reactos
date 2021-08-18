@@ -1221,7 +1221,7 @@ typedef struct tagTRANSMSG
 typedef struct tagTRANSMSGLIST
 {
     UINT     uMsgCount;
-    TRANSMSG TransMsg[1];
+    TRANSMSG TransMsg[ANYSIZE_ARRAY];
 } TRANSMSGLIST, *PTRANSMSGLIST, *LPTRANSMSGLIST;
 
 #define DEFINE_IME_ENTRY(type, name, params, extended) typedef type (WINAPI *FN_##name) params;
