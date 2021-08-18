@@ -4017,7 +4017,7 @@ NtUserQueryWindow(HWND hWnd, DWORD Index)
          {
              pwndActive = gpqForeground->spwndActive;
              pti = PsGetCurrentThreadWin32Thread();
-             if (pwndActive && pti->rpdesk == pwndActive->head.rpdesk)
+             if (pti->rpdesk == pwndActive->head.rpdesk)
              {
                 ptiActive = pwndActive->head.pti;
                 if (ptiActive && ptiActive->spwndDefaultIme)
