@@ -54,6 +54,9 @@ BOOL WINAPI InitializeImmEntryTable(VOID)
     WCHAR ImmFile[MAX_PATH];
     HMODULE imm32 = ghImm32;
 
+    if (IMM_FN(ImmWINNLSEnableIME) != IMMSTUB_ImmWINNLSEnableIME)
+        return TRUE;
+
     User32GetImm32PathName(ImmFile, _countof(ImmFile));
     TRACE("File %S\n", ImmFile);
 
@@ -97,9 +100,6 @@ BOOL WINAPI User32InitializeImmEntryTable(DWORD magic)
 
     if (magic != IMM_INIT_MAGIC)
         return FALSE;
-
-    if (IMM_FN(ImmWINNLSEnableIME) != IMMSTUB_ImmWINNLSEnableIME)
-        return TRUE;
 
     return InitializeImmEntryTable();
 }
