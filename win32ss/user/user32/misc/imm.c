@@ -106,7 +106,11 @@ BOOL WINAPI User32InitializeImmEntryTable(DWORD magic)
     if (magic != IMM_INIT_MAGIC)
         return FALSE;
 
-    return InitializeImmEntryTable();
+    if (!InitializeImmEntryTable())
+        return FALSE;
+
+    IMM_FN(ImmRegisterClient)(&gSharedInfo, ghImm32);
+    return TRUE;
 }
 
 LRESULT WINAPI ImeWndProc_common( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam, BOOL unicode ) // ReactOS
