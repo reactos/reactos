@@ -34,9 +34,8 @@ Imm32ApiTable gImmApiEntries = {
 };
 
 static HRESULT
-GetImm32PathName(
-    _Out_ LPWSTR lpBuffer,
-    _In_ size_t cchBuffer)
+GetImm32PathName(_Out_ LPWSTR lpBuffer,
+                 _In_ size_t cchBuffer)
 {
     UINT length = GetSystemDirectoryW(lpBuffer, cchBuffer);
     if (length && length < cchBuffer)
