@@ -75,7 +75,7 @@ BOOL WINAPI InitializeImmEntryTable(VOID)
         imm32 = ghImm32 = LoadLibraryW(ImmFile);
         if (imm32 == NULL)
         {
-            ERR("Did not load!\n");
+            ERR("Did not load imm32.dll!\n");
             return FALSE;
         }
         return TRUE;
@@ -107,6 +107,18 @@ BOOL WINAPI User32InitializeImmEntryTable(DWORD magic)
 
     if (!InitializeImmEntryTable())
         return FALSE;
+
+    if (ghImm32 == NULL)
+    {
+        WCHAR ImmFile[MAX_PATH];
+        GetImm32PathName(ImmFile, _countof(ImmFile));
+        ghImm32 = LoadLibraryW(ImmFile);
+        if (ghImm32 == NULL)
+        {
+            ERR("Did not load imm32.dll!\n");
+            return FALSE;
+        }
+    }
 
     IMM_FN(ImmRegisterClient)(&gSharedInfo, ghImm32);
     return TRUE;
