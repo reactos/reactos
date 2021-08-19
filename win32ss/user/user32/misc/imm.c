@@ -87,12 +87,14 @@ BOOL WINAPI InitializeImmEntryTable(VOID)
 #define DEFINE_IMM_ENTRY(type, name, params, retval, retkind) \
     do { \
         FN_##name proc = (FN_##name)GetProcAddress(imm32, #name); \
-        if (proc) { \
-            IMM_FN(name) = proc; \
+        if (!proc) \
+        { \
+            ERR("Could not load %s\n", #name); \
+            return FALSE; \
         } \
+        IMM_FN(name) = proc; \
     } while (0);
 #include "immtable.h"
-    /* FIXME: Please implement all the IMM32 entries and return FALSE if proc was NULL. */
 
     return TRUE;
 }
