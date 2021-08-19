@@ -1,6 +1,6 @@
 #include <user32.h>
-
 #include <ndk/cmfuncs.h>
+#include <strsafe.h>
 
 #define MAX_USER_MODE_DRV_BUFFER 526
 
@@ -465,6 +465,19 @@ Cleanup(VOID)
     DeleteFrameBrushes();
 }
 
+static HRESULT
+GetImmFileName(_Out_ LPWSTR lpBuffer,
+               _In_ size_t cchBuffer)
+{
+    UINT length = GetSystemDirectoryW(lpBuffer, cchBuffer);
+    if (length && length < cchBuffer)
+    {
+        StringCchCatW(lpBuffer, cchBuffer, L"\\");
+        return StringCchCatW(lpBuffer, cchBuffer, L"imm32.dll");
+    }
+    return StringCchCopyW(lpBuffer, cchBuffer, L"imm32.dll");
+}
+
 INT WINAPI
 DllMain(
    IN PVOID hInstanceDll,
@@ -544,11 +557,19 @@ DllMain(
 
             if (!gfServerProcess)
             {
-               InitializeImmEntryTable();
+                HINSTANCE hImm32 = NULL;
 
-               IMM_FN(ImmRegisterClient)(&gSharedInfo, ghImm32);
+                if (gpsi && (gpsi->dwSRVIFlags & SRVINFO_IMM32))
+                {
+                    WCHAR szImmFile[MAX_PATH];
+                    InitializeImmEntryTable();
+                    GetImmFileName(szImmFile, _countof(szImmFile));
+                    hImm32 = GetModuleHandleW(szImmFile);
+                }
+
+                if (!IMM_FN(ImmRegisterClient)(&gSharedInfo, hImm32))
+                    return FALSE;
             }
-            
             break;
         }
 

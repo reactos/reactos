@@ -19,6 +19,8 @@ WINE_DEFAULT_DEBUG_CHANNEL(user32);
 /* Is != NULL when we have loaded the IMM ourselves */
 HINSTANCE ghImm32 = NULL;
 
+BOOL bImmInitializing = FALSE;
+
 /* define stub functions */
 #undef DEFINE_IMM_ENTRY
 #define DEFINE_IMM_ENTRY(type, name, params, retval, retkind) \
@@ -34,8 +36,8 @@ Imm32ApiTable gImmApiEntries = {
 };
 
 static HRESULT
-GetImm32PathName(_Out_ LPWSTR lpBuffer,
-                 _In_ size_t cchBuffer)
+GetImmFileName(_Out_ LPWSTR lpBuffer,
+               _In_ size_t cchBuffer)
 {
     UINT length = GetSystemDirectoryW(lpBuffer, cchBuffer);
     if (length && length < cchBuffer)
@@ -49,7 +51,7 @@ GetImm32PathName(_Out_ LPWSTR lpBuffer,
 /*
  * @unimplemented
  */
-BOOL WINAPI InitializeImmEntryTable(VOID)
+static BOOL IntInitializeImmEntryTable(VOID)
 {
     WCHAR ImmFile[MAX_PATH];
     HMODULE imm32 = ghImm32;
@@ -58,10 +60,10 @@ BOOL WINAPI InitializeImmEntryTable(VOID)
     if (IMM_FN(ImmWINNLSEnableIME) != IMMSTUB_ImmWINNLSEnableIME)
         return TRUE;
 
-    GetImm32PathName(ImmFile, _countof(ImmFile));
+    GetImmFileName(ImmFile, _countof(ImmFile));
     TRACE("File %S\n", ImmFile);
 
-    /* If IMM32 is implicitly loaded, we use it without increasing reference count. */
+    /* If IMM32 is already loaded, use it without increasing reference count. */
     if (imm32 == NULL)
         imm32 = GetModuleHandleW(ImmFile);
 
@@ -86,8 +88,7 @@ BOOL WINAPI InitializeImmEntryTable(VOID)
 #define DEFINE_IMM_ENTRY(type, name, params, retval, retkind) \
     do { \
         FN_##name proc = (FN_##name)GetProcAddress(imm32, #name); \
-        if (!proc) \
-        { \
+        if (!proc) { \
             ERR("Could not load %s\n", #name); \
             return FALSE; \
         } \
@@ -98,6 +99,12 @@ BOOL WINAPI InitializeImmEntryTable(VOID)
     return TRUE;
 }
 
+BOOL WINAPI InitializeImmEntryTable(VOID)
+{
+    bImmInitializing = TRUE;
+    return IntInitializeImmEntryTable();
+}
+
 BOOL WINAPI User32InitializeImmEntryTable(DWORD magic)
 {
     TRACE("Imm (%x)\n", magic);
@@ -105,13 +112,16 @@ BOOL WINAPI User32InitializeImmEntryTable(DWORD magic)
     if (magic != IMM_INIT_MAGIC)
         return FALSE;
 
-    if (!InitializeImmEntryTable())
-        return FALSE;
+    /* Check whether the IMM table has already been initialized */
+    if (IMM_FN(ImmWINNLSEnableIME) != IMMSTUB_ImmWINNLSEnableIME)
+        return TRUE;
 
-    if (ghImm32 == NULL)
+    IntInitializeImmEntryTable();
+
+    if (ghImm32 == NULL && !bImmInitializing)
     {
         WCHAR ImmFile[MAX_PATH];
-        GetImm32PathName(ImmFile, _countof(ImmFile));
+        GetImmFileName(ImmFile, _countof(ImmFile));
         ghImm32 = LoadLibraryW(ImmFile);
         if (ghImm32 == NULL)
         {
@@ -120,8 +130,7 @@ BOOL WINAPI User32InitializeImmEntryTable(DWORD magic)
         }
     }
 
-    IMM_FN(ImmRegisterClient)(&gSharedInfo, ghImm32);
-    return TRUE;
+    return IMM_FN(ImmRegisterClient)(&gSharedInfo, ghImm32);
 }
 
 LRESULT WINAPI ImeWndProc_common( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam, BOOL unicode ) // ReactOS
