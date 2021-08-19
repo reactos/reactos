@@ -5096,18 +5096,8 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpReserved)
             break;
 
         case DLL_THREAD_DETACH:
-#if 1
-            /* FIXME: hack */
-            if (g_psi == NULL ||
-                (!IsBadReadPtr(&g_psi->dwSRVIFlags, sizeof(g_psi->dwSRVIFlags)) &&
-                 (g_psi->dwSRVIFlags & SRVINFO_IMM32)))
-            {
-                return TRUE;
-            }
-#else
             if (g_psi == NULL || !(g_psi->dwSRVIFlags & SRVINFO_IMM32))
                 return TRUE;
-#endif
 
             pTeb = NtCurrentTeb();
             if (pTeb->Win32ThreadInfo == NULL)
