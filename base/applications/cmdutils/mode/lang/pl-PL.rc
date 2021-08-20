@@ -68,4 +68,5 @@ BEGIN
     IDS_ERROR_INVALID_STOP_BITS "BŁĄD: Nieprawidłowa wartość dla bitów separatora %d:\n"
     IDS_ERROR_NO_MEMORY "BŁĄD: Za mało pamięci.\n"
     IDS_ERROR_SCREEN_LINES_COL "BŁĄD: Nie można ustawić ekranu na określoną liczbę wierszy i kolumn.\n"
+    IDS_ERROR_INVALID_CODEPAGE "The code page specified is not valid.\n"
 END

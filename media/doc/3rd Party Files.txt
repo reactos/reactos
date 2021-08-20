@@ -85,7 +85,7 @@ Title: Microsoft CDFS File System Driver
 Path: drivers/filesystems/cdfs
 Used Version: git commit f73e552
 License: MS-PL (https://spdx.org/licenses/MS-PL.html)
-URL: https://github.com/microsoft/Windows-driver-samples/tree/master/filesys
+URL: https://github.com/microsoft/Windows-driver-samples/tree/master/filesys/cdfs
 
 Title: Ext2Fsd
 Path: drivers/filesystems/ext2
@@ -93,12 +93,6 @@ Path: sdk/lib/fslib/ext2lib
 Used Version: 0.69
 License: GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later.html)
 URL: http://www.ext2fsd.com
-
-Title: FFS/UFS file system driver for Windows
-Path: drivers/filesystems/ffs
-Used Version: 0.5.2
-License: GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later.html)
-URL: http://www.acc.umu.se/~bosse/
 
 Title: NFSv4.1 Client for Windows
 Path: base/services/nfsd
@@ -109,17 +103,11 @@ Used Version: ??? (Imported on 2017.06.18.)
 License: LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later.html)
 URL: http://www.citi.umich.edu/projects/nfsv4/windows/readme.html
 
-Title: ReiserFS file system driver for Windows
-Path: drivers/filesystems/reiserfs
-Used Version: 0.26
-License: GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later.html)
-URL: http://www.acc.umu.se/~bosse/
-
 Title: Microsoft fastfat File System Driver
 Path: drivers/filesystems/fastfat_new
 Used Version: git commit 16022c5
 License: MS-PL (https://spdx.org/licenses/MS-PL.html)
-URL: https://github.com/microsoft/Windows-driver-samples/tree/master/filesys
+URL: https://github.com/microsoft/Windows-driver-samples/tree/master/filesys/fastfat
 
 Title: VirtIO NetKVM Windows guest driver
 Path: drivers/network/dd/netkvm
@@ -128,28 +116,28 @@ License: BSD-3-Clause (https://spdx.org/licenses/BSD-3-Clause.html)
 URL: https://github.com/virtio-win/kvm-guest-drivers-windows/tree/master/NetKVM/NDIS5
 
 Title: Microsoft CDROM Storage Class Driver
-Path: drivers/storage/class/cdrom_new
+Path: drivers/storage/class/cdrom
 Used Version: git commit 96eb96d
 License: MS-PL (https://spdx.org/licenses/MS-PL.html)
-URL: https://github.com/microsoft/Windows-driver-samples/tree/master/storage
+URL: https://github.com/microsoft/Windows-driver-samples/tree/master/storage/class/cdrom
 
 Title: Microsoft ClassPnP Storage Class Driver Library
 Path: drivers/storage/class/classpnp
 Used Version: git commit 88541f7
 License: MS-PL (https://spdx.org/licenses/MS-PL.html)
-URL: https://github.com/microsoft/Windows-driver-samples/tree/master/storage
+URL: https://github.com/microsoft/Windows-driver-samples/tree/master/storage/class/classpnp
 
 Title: Microsoft Disk Class Driver
-Path: drivers/storage/class/disk_new
+Path: drivers/storage/class/disk
 Used Version: git commit 3428c5f
 License: MS-PL (https://spdx.org/licenses/MS-PL.html)
-URL: https://github.com/microsoft/Windows-driver-samples/tree/master/storage
+URL: https://github.com/microsoft/Windows-driver-samples/tree/master/storage/class/disk
 
-Title: Microsoft Super Floppy (sfloppy) Storage Class Driver
-Path: drivers/storage/floppy_new
+Title: Microsoft SCSI Floppy (sfloppy) Storage Class Driver
+Path: drivers/storage/class/sfloppy
 Used Version: git commit 8fb512a
 License: MS-PL (https://spdx.org/licenses/MS-PL.html)
-URL: https://github.com/microsoft/Windows-driver-samples/tree/master/storage
+URL: https://github.com/microsoft/Windows-driver-samples/tree/master/storage/sfloppy
 
 Title: Universal ATA driver for Windows
 Path: drivers/storage/ide/uniata

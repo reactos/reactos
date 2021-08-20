@@ -164,15 +164,6 @@ ShowMMCPLPropertySheet(HWND hwnd,
 }
 
 VOID WINAPI
-ShowAudioPropertySheet(HWND hwnd,
-                       HINSTANCE hInstance,
-                       LPTSTR lpszCmd,
-                       int nCmdShow)
-{
-    DPRINT1("ShowAudioPropertySheet() stubs\n");
-}
-
-VOID WINAPI
 mmseRunOnceW(HWND hwnd,
              HINSTANCE hInstance,
              LPWSTR lpszCmd,
@@ -206,15 +197,6 @@ MediaPropPageProvider(LPVOID Info,
 {
     DPRINT1("MediaPropPageProvider() stubs\n");
     return TRUE;
-}
-
-VOID WINAPI
-ShowFullControlPanel(HWND hwnd,
-                     HINSTANCE hInstance,
-                     LPSTR lpszCmd,
-                     int nCmdShow)
-{
-    DPRINT1("ShowFullControlPanel() stubs\n");
 }
 
 VOID
@@ -782,6 +764,69 @@ CPlApplet(HWND hwndCpl,
     return FALSE;
 }
 
+VOID WINAPI
+ShowAudioPropertySheet(HWND hwnd,
+                       HINSTANCE hInstance,
+                       LPTSTR lpszCmd,
+                       int nCmdShow)
+{
+    PROPSHEETPAGE psp[1];
+    PROPSHEETHEADER psh;
+    TCHAR Caption[256];
+
+    DPRINT("ShowAudioPropertySheet()\n");
+
+    LoadString(hApplet, IDS_CPLNAME, Caption, _countof(Caption));
+
+    psh.dwSize = sizeof(PROPSHEETHEADER);
+    psh.dwFlags =  PSH_PROPSHEETPAGE | PSH_PROPTITLE | PSH_USEICONID | PSH_USECALLBACK;
+    psh.hwndParent = hwnd;
+    psh.hInstance = hInstance;
+    psh.pszIcon = MAKEINTRESOURCEW(IDI_CPLICON);
+    psh.pszCaption = Caption;
+    psh.nPages = sizeof(psp) / sizeof(PROPSHEETPAGE);
+    psh.nStartPage = 0;
+    psh.ppsp = psp;
+    psh.pfnCallback = PropSheetProc;
+
+    InitPropSheetPage(&psp[0], IDD_AUDIO,AudioDlgProc);
+
+    PropertySheet(&psh);
+}
+
+VOID WINAPI
+ShowFullControlPanel(HWND hwnd,
+                     HINSTANCE hInstance,
+                     LPSTR lpszCmd,
+                     int nCmdShow)
+{
+    PROPSHEETPAGE psp[5];
+    PROPSHEETHEADER psh;
+    TCHAR Caption[256];
+
+    DPRINT("ShowFullControlPanel()\n");
+
+    LoadString(hApplet, IDS_CPLNAME, Caption, _countof(Caption));
+
+    psh.dwSize = sizeof(PROPSHEETHEADER);
+    psh.dwFlags =  PSH_PROPSHEETPAGE | PSH_PROPTITLE | PSH_USEICONID | PSH_USECALLBACK;
+    psh.hwndParent = hwnd;
+    psh.hInstance = hInstance;
+    psh.pszIcon = MAKEINTRESOURCEW(IDI_CPLICON);
+    psh.pszCaption = Caption;
+    psh.nPages = sizeof(psp) / sizeof(PROPSHEETPAGE);
+    psh.nStartPage = 0;
+    psh.ppsp = psp;
+    psh.pfnCallback = PropSheetProc;
+
+    InitPropSheetPage(&psp[0], IDD_VOLUME,VolumeDlgProc);
+    InitPropSheetPage(&psp[1], IDD_SOUNDS,SoundsDlgProc);
+    InitPropSheetPage(&psp[2], IDD_AUDIO,AudioDlgProc);
+    InitPropSheetPage(&psp[3], IDD_VOICE,VoiceDlgProc);
+    InitPropSheetPage(&psp[4], IDD_HARDWARE,HardwareDlgProc);
+
+    PropertySheet(&psh);
+}
 
 BOOL WINAPI
 DllMain(HINSTANCE hinstDLL,

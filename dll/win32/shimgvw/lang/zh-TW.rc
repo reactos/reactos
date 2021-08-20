@@ -1,4 +1,5 @@
-/* Traditional Chinese translation by Henry Tang Ih 2016 (henrytang2@hotmail.com) */
+/* Traditional Chinese translation by Henry Tang Ih 2016 (henrytang2@hotmail.com)
+   Translation improved by Chan Chilung 2021 (eason066@gmail.com) */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
 
@@ -11,27 +12,27 @@ BEGIN
     /* Tooltips */
     IDS_TOOLTIP_NEXT_PIC "下一張圖片"
     IDS_TOOLTIP_PREV_PIC "上一張圖片"
-    IDS_TOOLTIP_BEST_FIT "Best fit to window (Ctrl+B)"
-    IDS_TOOLTIP_REAL_SIZE "Actual size (Ctrl+A)"
-    IDS_TOOLTIP_SLIDE_SHOW "Start slideshow (F11)"
+    IDS_TOOLTIP_BEST_FIT "最符合視窗 (Ctrl+B)"
+    IDS_TOOLTIP_REAL_SIZE "實際大小 (Ctrl+A)"
+    IDS_TOOLTIP_SLIDE_SHOW "開始幻燈片放映 (F11)"
     IDS_TOOLTIP_ZOOM_IN "放大 (+)"
     IDS_TOOLTIP_ZOOM_OUT "縮小 (-)"
     IDS_TOOLTIP_ROT_CLOCKW "順時針旋轉 (Ctrl+K)"
     IDS_TOOLTIP_ROT_COUNCW "逆時針旋轉 (Ctrl+L)"
-    IDS_TOOLTIP_DELETE "Delete (DEL)"
+    IDS_TOOLTIP_DELETE "刪除 (DEL)"
     IDS_TOOLTIP_PRINT "列印 (Ctrl+P)"
     IDS_TOOLTIP_SAVEAS "另存新檔...(Ctrl+S)"
-    IDS_TOOLTIP_MODIFY "Modify (Ctrl+E)"
-    IDS_TOOLTIP_HELP_TOC "Help topics (F1)"
+    IDS_TOOLTIP_MODIFY "修改 (Ctrl+E)"
+    IDS_TOOLTIP_HELP_TOC "說明主題 (F1)"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_EMF_FILE    "EMF 影像"
-    IDS_GIF_FILE    "GIF 影像"
-    IDS_JPG_FILE    "JPEG 影像"
-    IDS_BMP_FILE    "Bitmap 影像"
-    IDS_PNG_FILE    "PNG 影像"
-    IDS_TIF_FILE    "TIF 影像"
-    IDS_WMF_FILE    "WMF 影像"
+    IDS_EMF_FILE    "EMF 圖像"
+    IDS_GIF_FILE    "GIF 圖像"
+    IDS_JPG_FILE    "JPEG 圖像"
+    IDS_BMP_FILE    "Bitmap 圖像"
+    IDS_PNG_FILE    "PNG 圖像"
+    IDS_TIF_FILE    "TIF 圖像"
+    IDS_WMF_FILE    "WMF 圖像"
 END

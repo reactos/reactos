@@ -21,6 +21,7 @@
 
 #include "videoprt.h"
 #include <ndk/obfuncs.h>
+#include <stdio.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -369,6 +370,7 @@ IntCreateNewRegistryPath(
     ULONG ResultLength;
     USHORT KeyMaxLength;
     OBJECT_ATTRIBUTES ObjectAttributes;
+    PWCHAR InstanceIdBuffer;
 
     /* Open the hardware key: HKLM\System\CurrentControlSet\Enum\... */
     Status = IoOpenDeviceRegistryKey(DeviceExtension->PhysicalDeviceObject,
@@ -476,9 +478,14 @@ IntCreateNewRegistryPath(
 
     /* Append a the instance path */ /// \todo HACK
     RtlAppendUnicodeToString(&DeviceExtension->NewRegistryPath, L"\\");
+    InstanceIdBuffer = DeviceExtension->NewRegistryPath.Buffer +
+        DeviceExtension->NewRegistryPath.Length / sizeof(WCHAR);
     RtlAppendUnicodeToString(&DeviceExtension->NewRegistryPath, L"0000");
 
-    /* Check this key again */
+    /* Write instance ID */
+    swprintf(InstanceIdBuffer, L"%04u", DeviceExtension->DisplayNumber);
+
+    /* Check if the name exists */
     Status = RtlCheckRegistryKey(RTL_REGISTRY_ABSOLUTE,
                                  DeviceExtension->NewRegistryPath.Buffer);
     if (Status != STATUS_SUCCESS)
@@ -491,38 +498,41 @@ IntCreateNewRegistryPath(
             ERR_(VIDEOPRT, "Failed create key '%wZ'\n", &DeviceExtension->NewRegistryPath);
             return Status;
         }
-
-        /* Open the new key */
-        InitializeObjectAttributes(&ObjectAttributes,
-                                   &DeviceExtension->NewRegistryPath,
-                                   OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE,
-                                   NULL,
-                                   NULL);
-        Status = ZwOpenKey(&NewKey, KEY_READ, &ObjectAttributes);
-        if (!NT_SUCCESS(Status))
-        {
-            ERR_(VIDEOPRT, "Failed to open settings key. Status 0x%lx\n", Status);
-            return Status;
-        }
-
-        /* Open the device profile key */
-        InitializeObjectAttributes(&ObjectAttributes,
-                                   &DeviceExtension->RegistryPath,
-                                   OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE,
-                                   NULL,
-                                   NULL);
-        Status = ZwOpenKey(&SettingsKey, KEY_READ, &ObjectAttributes);
-        if (!NT_SUCCESS(Status))
-        {
-            ERR_(VIDEOPRT, "Failed to open settings key. Status 0x%lx\n", Status);
-            ObCloseHandle(NewKey, KernelMode);
-            return Status;
-        }
-
-        /* Copy the registry data from the legacy key */
-        Status = IntCopyRegistryKey(SettingsKey, NewKey);
     }
 
+    /* Open the new key */
+    InitializeObjectAttributes(&ObjectAttributes,
+                                &DeviceExtension->NewRegistryPath,
+                                OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE,
+                                NULL,
+                                NULL);
+    Status = ZwOpenKey(&NewKey, KEY_READ, &ObjectAttributes);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR_(VIDEOPRT, "Failed to open settings key. Status 0x%lx\n", Status);
+        return Status;
+    }
+
+    /* Open the device profile key */
+    InitializeObjectAttributes(&ObjectAttributes,
+                                &DeviceExtension->RegistryPath,
+                                OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE,
+                                NULL,
+                                NULL);
+    Status = ZwOpenKey(&SettingsKey, KEY_READ, &ObjectAttributes);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR_(VIDEOPRT, "Failed to open settings key. Status 0x%lx\n", Status);
+        ObCloseHandle(NewKey, KernelMode);
+        return Status;
+    }
+
+    /* Copy the registry data from the legacy key */
+    Status = IntCopyRegistryKey(SettingsKey, NewKey);
+
+    /* Close the key handles */
+    ObCloseHandle(SettingsKey, KernelMode);
+    ObCloseHandle(NewKey, KernelMode);
 
     return Status;
 }
@@ -531,17 +541,32 @@ NTSTATUS
 NTAPI
 IntCreateRegistryPath(
     IN PCUNICODE_STRING DriverRegistryPath,
+    IN ULONG DeviceNumber,
     OUT PUNICODE_STRING DeviceRegistryPath)
 {
     static WCHAR RegistryMachineSystem[] = L"\\REGISTRY\\MACHINE\\SYSTEM\\";
     static WCHAR CurrentControlSet[] = L"CURRENTCONTROLSET\\";
     static WCHAR ControlSet[] = L"CONTROLSET";
     static WCHAR Insert1[] = L"Hardware Profiles\\Current\\System\\CurrentControlSet\\";
-    static WCHAR Insert2[] = L"\\Device0";
+    static WCHAR Insert2[] = L"\\Device";
+    UNICODE_STRING DeviceNumberString;
+    WCHAR DeviceNumberBuffer[20];
     BOOLEAN Valid;
     UNICODE_STRING AfterControlSet;
+    NTSTATUS Status;
 
     AfterControlSet = *DriverRegistryPath;
+
+    /* Convert DeviceNumber to string */
+    DeviceNumberString.Length = 0;
+    DeviceNumberString.MaximumLength = sizeof(DeviceNumberBuffer);
+    DeviceNumberString.Buffer = DeviceNumberBuffer;
+    Status = RtlIntegerToUnicodeString(DeviceNumber, 10, &DeviceNumberString);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR_(VIDEOPRT, "RtlIntegerToUnicodeString(%u) returned 0x%08x\n", DeviceNumber, Status);
+        return Status;
+    }
 
     /* Check if path begins with \\REGISTRY\\MACHINE\\SYSTEM\\ */
     Valid = (DriverRegistryPath->Length > sizeof(RegistryMachineSystem) &&
@@ -586,7 +611,8 @@ IntCreateRegistryPath(
 
     if (Valid)
     {
-        DeviceRegistryPath->MaximumLength = DriverRegistryPath->Length + sizeof(Insert1) + sizeof(Insert2);
+        DeviceRegistryPath->MaximumLength = DriverRegistryPath->Length + sizeof(Insert1) + sizeof(Insert2)
+                                          + DeviceNumberString.Length;
         DeviceRegistryPath->Buffer = ExAllocatePoolWithTag(PagedPool,
                                                            DeviceRegistryPath->MaximumLength,
                                                            TAG_VIDEO_PORT);
@@ -600,6 +626,7 @@ IntCreateRegistryPath(
             RtlAppendUnicodeToString(DeviceRegistryPath, Insert1);
             RtlAppendUnicodeStringToString(DeviceRegistryPath, &AfterControlSet);
             RtlAppendUnicodeToString(DeviceRegistryPath, Insert2);
+            RtlAppendUnicodeStringToString(DeviceRegistryPath, &DeviceNumberString);
 
             /* Check if registry key exists */
             Valid = NT_SUCCESS(RtlCheckRegistryKey(RTL_REGISTRY_ABSOLUTE, DeviceRegistryPath->Buffer));
@@ -620,7 +647,7 @@ IntCreateRegistryPath(
     /* If path doesn't point to *ControlSet*, use DriverRegistryPath directly */
     if (!Valid)
     {
-        DeviceRegistryPath->MaximumLength = DriverRegistryPath->Length + sizeof(Insert2);
+        DeviceRegistryPath->MaximumLength = DriverRegistryPath->Length + sizeof(Insert2) + DeviceNumberString.Length;
         DeviceRegistryPath->Buffer = ExAllocatePoolWithTag(NonPagedPool,
                                                            DeviceRegistryPath->MaximumLength,
                                                            TAG_VIDEO_PORT);
@@ -630,6 +657,7 @@ IntCreateRegistryPath(
 
         RtlCopyUnicodeString(DeviceRegistryPath, DriverRegistryPath);
         RtlAppendUnicodeToString(DeviceRegistryPath, Insert2);
+        RtlAppendUnicodeStringToString(DeviceRegistryPath, &DeviceNumberString);
     }
 
     DPRINT("Formatted registry key '%wZ' -> '%wZ'\n",

@@ -69,7 +69,7 @@ FUNC TscCalibrationISR
     rdtsc
 
     /* Read the current phase */
-    movzx rcx, byte ptr [TscCalibrationPhase]
+    movzx rcx, byte ptr [rip+TscCalibrationPhase]
 
     /* Check if we're already done */
     cmp cl, NUM_SAMPLES
@@ -77,12 +77,12 @@ FUNC TscCalibrationISR
 
     /* Store the current value */
     shl rcx, 3
-    lea rbx, [TscCalibrationArray]
+    lea rbx, [rip+TscCalibrationArray]
     mov dword ptr [rbx + rcx], eax
     mov dword ptr [rbx + rcx + 4], edx
 
     /* Advance phase */
-    inc byte ptr [TscCalibrationPhase]
+    inc byte ptr [rip+TscCalibrationPhase]
 
 CalibrationISR_Exit:
     /* Read CMOS register C */

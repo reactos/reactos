@@ -1,7 +1,7 @@
 /**
  * lwip DNS resolver header file.
 
- * Author: Jim Pettinato 
+ * Author: Jim Pettinato
  *   April 2007
 
  * ported from uIP resolv.c Copyright (c) 2002-2003, Adam Dunkels.

@@ -21,18 +21,10 @@ WINE_DEFAULT_DEBUG_CHANNEL(msvcrt);
 
 /* EXTERNAL PROTOTYPES ********************************************************/
 
-extern int BlockEnvToEnvironA(void);
-extern int BlockEnvToEnvironW(void);
+BOOL crt_process_init(void);
+
 extern void FreeEnvironment(char **environment);
 
-extern unsigned int _osplatform;
-extern unsigned int _osver;
-extern unsigned int _winminor;
-extern unsigned int _winmajor;
-extern unsigned int _winver;
-
-extern char* _acmdln;        /* pointer to ascii command line */
-extern wchar_t* _wcmdln;     /* pointer to wide character command line */
 #undef _environ
 extern char** _environ;      /* pointer to environment block */
 extern char** __initenv;     /* pointer to initial environment block */
@@ -45,43 +37,18 @@ BOOL
 WINAPI
 DllMain(PVOID hinstDll, ULONG dwReason, PVOID reserved)
 {
-    OSVERSIONINFOW osvi;
     switch (dwReason)
     {
     case DLL_PROCESS_ATTACH:
-        /* initialize version info */
+
         TRACE("Process Attach\n");
-        osvi.dwOSVersionInfoSize = sizeof(OSVERSIONINFOW);
-        GetVersionExW( &osvi );
-        _winver     = (osvi.dwMajorVersion << 8) | osvi.dwMinorVersion;
-        _winmajor   = osvi.dwMajorVersion;
-        _winminor   = osvi.dwMinorVersion;
-        _osplatform = osvi.dwPlatformId;
-        _osver      = osvi.dwBuildNumber;
 
-        /* create tls stuff */
-        if (!msvcrt_init_tls())
-          return FALSE;
-
-        if (BlockEnvToEnvironA() < 0)
-            return FALSE;
-
-        if (BlockEnvToEnvironW() < 0)
+        if (!crt_process_init())
         {
-            FreeEnvironment(_environ);
+            ERR("crt_init() failed!\n");
             return FALSE;
         }
 
-        _acmdln = _strdup(GetCommandLineA());
-        _wcmdln = _wcsdup(GetCommandLineW());
-
-        /* Initialization of the WINE code */
-        msvcrt_init_mt_locks();
-        //msvcrt_init_math();
-        msvcrt_init_io();
-        //msvcrt_init_console();
-        //msvcrt_init_args();
-        //msvcrt_init_signals();
         TRACE("Attach done\n");
         break;
 

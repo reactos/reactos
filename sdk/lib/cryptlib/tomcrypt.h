@@ -22,11 +22,11 @@
  */
 
 /*
- * This file contains code from the LibTomCrypt cryptographic 
+ * This file contains code from the LibTomCrypt cryptographic
  * library written by Tom St Denis (tomstdenis@iahu.ca). LibTomCrypt
  * is in the public domain. The code in this file is tailored to
  * special requirements. Take a look at http://libtomcrypt.org for the
- * original version. 
+ * original version.
  */
 
 #ifndef __WINE_TOMCRYPT_H_
@@ -78,8 +78,8 @@ enum {
 #define CONST64(a,b) ((((ULONG64)(a)) << 32) | (b))
 typedef ULONG64 ulong64;
 
-/* this is the "32-bit at least" data type 
- * Re-define it to suit your platform but it must be at least 32-bits 
+/* this is the "32-bit at least" data type
+ * Re-define it to suit your platform but it must be at least 32-bits
  */
 typedef ULONG32 ulong32;
 
@@ -117,8 +117,8 @@ static inline unsigned ROR(unsigned word, int i)
 
 #define byte(x, n) (((x) >> (8 * (n))) & 255)
 
-typedef struct tag_rc2_key { 
-	unsigned xkey[64]; 
+typedef struct tag_rc2_key {
+	unsigned xkey[64];
 } rc2_key;
 
 typedef struct tag_des_key {
@@ -184,7 +184,7 @@ unsigned long rc4_read(unsigned char *buf, unsigned long len, prng_state *prng);
 typedef unsigned long      mp_digit;
 typedef ulong64            mp_word;
 #define DIGIT_BIT 28
-   
+
 #define MP_DIGIT_BIT     DIGIT_BIT
 #define MP_MASK          ((((mp_digit)1)<<((mp_digit)DIGIT_BIT))-((mp_digit)1))
 #define MP_DIGIT_MAX     MP_MASK
@@ -376,7 +376,7 @@ int mp_exptmod(const mp_int *a, const mp_int *b, mp_int *c, mp_int *d);
 int mp_prime_fermat(mp_int *a, mp_int *b, int *result);
 
 /* This gives [for a given bit size] the number of trials required
- * such that Miller-Rabin gives a prob of failure lower than 2^-96 
+ * such that Miller-Rabin gives a prob of failure lower than 2^-96
  */
 int mp_prime_rabin_miller_trials(int size);
 
@@ -388,7 +388,7 @@ int mp_prime_rabin_miller_trials(int size);
 int mp_prime_next_prime(mp_int *a, int t, int bbs_style);
 
 /* makes a truly random prime of a given size (bytes),
- * call with bbs = 1 if you want it to be congruent to 3 mod 4 
+ * call with bbs = 1 if you want it to be congruent to 3 mod 4
  *
  * You have to supply a callback which fills in a buffer with random bytes.  "dat" is a parameter you can
  * have passed to the callback (e.g. a state or something).  This function doesn't use "dat" itself
@@ -401,7 +401,7 @@ int mp_prime_next_prime(mp_int *a, int t, int bbs_style);
 /* makes a truly random prime of a given size (bits),
  *
  * Flags are as follows:
- * 
+ *
  *   LTM_PRIME_BBS      - make prime congruent to 3 mod 4
  *   LTM_PRIME_SAFE     - make sure (p-1)/2 is prime as well (implies LTM_PRIME_BBS)
  *   LTM_PRIME_2MSB_OFF - make the 2nd highest bit zero

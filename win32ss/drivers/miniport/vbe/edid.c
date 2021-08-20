@@ -185,13 +185,25 @@ VBEReadEdid(
    VideoPortDebugPrint(Trace, "VBEMP: VBEReadEdid() called\n");
 
    /*
+    * Check if DDC1/DDC2 is supported
+    */
+   VideoPortZeroMemory(&BiosRegisters, sizeof(BiosRegisters));
+   BiosRegisters.Eax = VBE_DDC;
+   VBEDeviceExtension->Int10Interface.Int10CallBios(
+      VBEDeviceExtension->Int10Interface.Context,
+      &BiosRegisters);
+   if (VBE_GETRETURNCODE(BiosRegisters.Eax) != VBE_SUCCESS)
+      return FALSE;
+   if ((BiosRegisters.Ebx & 3) == 0)
+      return FALSE;
+
+   /*
     * Directly read EDID information
     */
    VideoPortZeroMemory(&BiosRegisters, sizeof(BiosRegisters));
    BiosRegisters.Eax = VBE_DDC;
    BiosRegisters.Ebx = VBE_DDC_READ_EDID;
    BiosRegisters.Ecx = ChildIndex;
-   BiosRegisters.Edx = 1;
    BiosRegisters.Edi = VBEDeviceExtension->TrampolineMemoryOffset;
    BiosRegisters.SegEs = VBEDeviceExtension->TrampolineMemorySegment;
    VBEDeviceExtension->Int10Interface.Int10CallBios(

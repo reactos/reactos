@@ -19,6 +19,7 @@
 
 #define KdpBufferSize  (1024 * 512)
 static BOOLEAN KdpLoggingEnabled = FALSE;
+static BOOLEAN KdpLoggingStarting = FALSE;
 static PCHAR KdpDebugBuffer = NULL;
 static volatile ULONG KdpCurrentPosition = 0;
 static volatile ULONG KdpFreeBytes = 0;
@@ -26,6 +27,7 @@ static KSPIN_LOCK KdpDebugLogSpinLock;
 static KEVENT KdpLoggerThreadEvent;
 static HANDLE KdpLogFileHandle;
 ANSI_STRING KdpLogFileName = RTL_CONSTANT_STRING("\\SystemRoot\\debug.log");
+extern ULONG ExpInitializationPhase;
 
 static KSPIN_LOCK KdpSerialSpinLock;
 ULONG  SerialPortNumber = DEFAULT_DEBUG_PORT;
@@ -108,6 +110,8 @@ KdpLoggerThread(PVOID Context)
     ULONG beg, end, num;
     IO_STATUS_BLOCK Iosb;
 
+    ASSERT(ExGetPreviousMode() == KernelMode);
+
     KdpLoggingEnabled = TRUE;
 
     while (TRUE)
@@ -155,6 +159,7 @@ KdpPrintToLogFile(PCHAR String,
 {
     KIRQL OldIrql;
     ULONG beg, end, num;
+    BOOLEAN DoReinit = FALSE;
 
     if (KdpDebugBuffer == NULL) return;
 
@@ -184,7 +189,17 @@ KdpPrintToLogFile(PCHAR String,
     }
 
     /* Release the spinlock */
+    if (OldIrql == PASSIVE_LEVEL && !KdpLoggingStarting && !KdpLoggingEnabled && ExpInitializationPhase >= 2)
+    {
+        DoReinit = TRUE;
+    }
     KdpReleaseLock(&KdpDebugLogSpinLock, OldIrql);
+
+    if (DoReinit)
+    {
+        KdpLoggingStarting = TRUE;
+        KdpDebugLogInit(NULL, 3);
+    }
 
     /* Signal the logger thread */
     if (OldIrql <= DISPATCH_LEVEL && KdpLoggingEnabled)
@@ -224,9 +239,7 @@ KdpDebugLogInit(PKD_DISPATCH_TABLE DispatchTable,
 
         /* Initialize spinlock */
         KeInitializeSpinLock(&KdpDebugLogSpinLock);
-    }
-    else if (BootPhase == 2)
-    {
+
         HalDisplayString("\r\n   File log debugging enabled\r\n\r\n");
     }
     else if (BootPhase == 3)
@@ -242,7 +255,7 @@ KdpDebugLogInit(PKD_DISPATCH_TABLE DispatchTable,
                                    NULL);
 
         /* Create the log file */
-        Status = NtCreateFile(&KdpLogFileHandle,
+        Status = ZwCreateFile(&KdpLogFileHandle,
                               FILE_APPEND_DATA | SYNCHRONIZE,
                               &ObjectAttributes,
                               &Iosb,
@@ -257,7 +270,10 @@ KdpDebugLogInit(PKD_DISPATCH_TABLE DispatchTable,
         RtlFreeUnicodeString(&FileName);
 
         if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("Failed to open log file: 0x%08x\n", Status);
             return;
+        }
 
         KeInitializeEvent(&KdpLoggerThreadEvent, SynchronizationEvent, TRUE);
 
@@ -271,15 +287,17 @@ KdpDebugLogInit(PKD_DISPATCH_TABLE DispatchTable,
                                       NULL);
         if (!NT_SUCCESS(Status))
         {
-            NtClose(KdpLogFileHandle);
+            ZwClose(KdpLogFileHandle);
             return;
         }
 
         Priority = 7;
-        NtSetInformationThread(ThreadHandle,
+        ZwSetInformationThread(ThreadHandle,
                                ThreadPriority,
                                &Priority,
                                sizeof(Priority));
+
+        ZwClose(ThreadHandle);
     }
 }
 
@@ -338,7 +356,7 @@ KdpSerialInit(PKD_DISPATCH_TABLE DispatchTable,
         /* Register as a Provider */
         InsertTailList(&KdProviders, &DispatchTable->KdProvidersList);
     }
-    else if (BootPhase == 2)
+    else if (BootPhase == 1)
     {
         HalDisplayString("\r\n   Serial debugging enabled\r\n\r\n");
     }
@@ -508,9 +526,7 @@ KdpScreenInit(PKD_DISPATCH_TABLE DispatchTable,
 
         /* Initialize spinlock */
         KeInitializeSpinLock(&KdpDmesgLogSpinLock);
-    }
-    else if (BootPhase == 2)
-    {
+
         HalDisplayString("\r\n   Screen debugging enabled\r\n\r\n");
     }
 }
@@ -564,13 +580,10 @@ KdSendPacket(
         {
 #ifdef KDBG
             PLDR_DATA_TABLE_ENTRY LdrEntry;
-            if (!WaitStateChange->u.LoadSymbols.UnloadSymbols)
+            /* Load symbols. Currently implemented only for KDBG! */
+            if (KdbpSymFindModule((PVOID)(ULONG_PTR)WaitStateChange->u.LoadSymbols.BaseOfDll, -1, &LdrEntry))
             {
-                /* Load symbols. Currently implemented only for KDBG! */
-                if (KdbpSymFindModule((PVOID)(ULONG_PTR)WaitStateChange->u.LoadSymbols.BaseOfDll, NULL, -1, &LdrEntry))
-                {
-                    KdbSymProcessSymbols(LdrEntry);
-                }
+                KdbSymProcessSymbols(LdrEntry, !WaitStateChange->u.LoadSymbols.UnloadSymbols);
             }
 #endif
             return;
@@ -595,7 +608,7 @@ KdSendPacket(
             if (KdbgExceptionRecord.ExceptionCode == STATUS_ASSERTION_FAILURE)
             {
                 /* Bump EIP to the instruction following the int 2C */
-                KdbgContext.Eip += 2;
+                KeSetContextPc(&KdbgContext, KeGetContextPc(&KdbgContext) + 2);
             }
 
             Result = KdbEnterDebuggerException(&KdbgExceptionRecord,
@@ -756,6 +769,9 @@ KdReceivePacket(
         OldIrql = KdpAcquireLock(&KdpSerialSpinLock);
     }
 
+    /* Release the spinlock */
+    KdpReleaseLock(&KdpSerialSpinLock, OldIrql);
+
     /* Print a new line */
     *StringChar.Buffer = '\n';
     KdpPrintString(&StringChar);
@@ -766,9 +782,6 @@ KdReceivePacket(
 
     if (!(KdbDebugState & KD_DEBUG_KDSERIAL))
         KbdEnableMouse();
-
-    /* Release the spinlock */
-    KdpReleaseLock(&KdpSerialSpinLock, OldIrql);
 
 #endif
     return KdPacketReceived;

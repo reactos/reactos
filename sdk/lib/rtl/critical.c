@@ -17,7 +17,7 @@
 #define MAX_STATIC_CS_DEBUG_OBJECTS 64
 
 static RTL_CRITICAL_SECTION RtlCriticalSectionLock;
-static LIST_ENTRY RtlCriticalSectionList;
+static LIST_ENTRY RtlCriticalSectionList = {&RtlCriticalSectionList, &RtlCriticalSectionList};
 static BOOLEAN RtlpCritSectInitialized = FALSE;
 static RTL_CRITICAL_SECTION_DEBUG RtlpStaticDebugInfo[MAX_STATIC_CS_DEBUG_OBJECTS];
 static BOOLEAN RtlpDebugInfoFreeList[MAX_STATIC_CS_DEBUG_OBJECTS];
@@ -265,9 +265,6 @@ VOID
 NTAPI
 RtlpInitDeferedCriticalSection(VOID)
 {
-    /* Initialize the Process Critical Section List */
-    InitializeListHead(&RtlCriticalSectionList);
-
     /* Initialize the CS Protecting the List */
     RtlInitializeCriticalSection(&RtlCriticalSectionLock);
 

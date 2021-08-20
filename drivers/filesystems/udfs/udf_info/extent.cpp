@@ -60,7 +60,7 @@ UDFExtentOffsetToLba(
     }
     BOffset -= i;
     Offs = (*((uint32*)&Offset)) - (i << BSh); // offset in frag
-    
+
     if(SectorOffset)
         (*SectorOffset) = Offs & (Vcb->BlockSize-1);// offset in 1st Lba
     if(AvailLength)
@@ -1062,7 +1062,7 @@ UDFBuildLongAllocDescs(
             Alloc[i-1].extLength & UDF_EXTENT_LENGTH_MASK));
     }
     RtlZeroMemory(&(Alloc[i]), sizeof(LONG_AD));
-    j = len*sizeof(LONG_AD); // required space              
+    j = len*sizeof(LONG_AD); // required space
     len = (InitSz & ~(sizeof(LONG_AD)-1)); // space available in 1st block
     ASSERT(len == InitSz);
 
@@ -1609,7 +1609,7 @@ UDFAllocateFESpace(
             ULONG p_end;
             ULONG fe_loc;
             ULONG l1, l2;
-            
+
             p_start = UDFPartStart(Vcb, PartNum);
             p_end   = UDFPartEnd(Vcb, PartNum);
             fe_loc  = DirInfo->Dloc->FELoc.Mapping[0].extLocation;
@@ -1790,7 +1790,7 @@ UDFFlushFESpace(
 
     if(!Discard) {
         // cache it!
-        if(OS_SUCCESS(UDFStoreCachedAllocation(Vcb, 
+        if(OS_SUCCESS(UDFStoreCachedAllocation(Vcb,
                                  Dloc->FELoc.Mapping[0].extLocation,
                                  &Dloc->DirIndex->FECharge, lim, UDF_PREALLOC_CLASS_FE))) {
             Dloc->DirIndex->FECharge.Mapping = NULL;
@@ -1846,7 +1846,7 @@ UDFMarkAllocatedAsRecorded(
         Extent[i].extLength &= UDF_EXTENT_LENGTH_MASK;
 //      Extent[i].extLength |= (EXTENT_RECORDED_ALLOCATED << 30); // = 0;
         ExtInfo->Modified = TRUE;
-        if(i && 
+        if(i &&
            ((Extent[i-1].extLength >> 30) == EXTENT_RECORDED_ALLOCATED) &&
            (lba == (Extent[i-1].extLocation + ((len = Extent[i-1].extLength & UDF_EXTENT_LENGTH_MASK) >> BSh))) &&
            ((len + (Extent[i].extLength & UDF_EXTENT_LENGTH_MASK)) <= UDF_MAX_EXTENT_LENGTH) &&
@@ -2214,7 +2214,7 @@ UDFMarkAllocatedAsNotXXX(
 
     ExtInfo->Modified = TRUE;
     ExtInfo->Mapping = NewExtent;
-    
+
     AdPrint(("Alloc->Not: ExtInfo %x, Extent %x\n", ExtInfo, ExtInfo->Mapping));
 
     if(Extent) {
@@ -2382,7 +2382,7 @@ UDFResizeExtent(
                         lim = req_s;
                     }
                     UDFAcquireResourceExclusive(&(Vcb->BitMapResource1),TRUE);
-/*                    if((ExtInfo->Flags & EXTENT_FLAG_SEQUENTIAL) && 
+/*                    if((ExtInfo->Flags & EXTENT_FLAG_SEQUENTIAL) &&
                        ((Length & ~(PS-1)) > (l & ~(PS-1))) &&
                        TRUE) {
                         status = UDFResizeExtent(Vcb, PartNum, l+MaxGrow, AlwaysInIcb, ExtInfo);
@@ -2519,7 +2519,7 @@ UDFResizeExtent(
             }
             UDFPackMapping(Vcb, ExtInfo);
         }
-    } else 
+    } else
     if(Length) {
         // decrease extent
         AdPrint(("Resize cut (8)\n"));
@@ -2540,7 +2540,7 @@ UDFResizeExtent(
                 if(TmpExtInf.Mapping) {
                     RtlCopyMemory(TmpExtInf.Mapping, &(ExtInfo->Mapping[i]), s);
                     AdPrint(("Resize save cutted (8)\n"));
-                    if(OS_SUCCESS(UDFStoreCachedAllocation(Vcb, ExtInfo->Mapping[0].extLocation, 
+                    if(OS_SUCCESS(UDFStoreCachedAllocation(Vcb, ExtInfo->Mapping[0].extLocation,
                                                &TmpExtInf, 0, UDF_PREALLOC_CLASS_DIR))) {
                         ExtInfo->Mapping[i].extLength = 0;
                         ExtInfo->Mapping[i].extLocation = 0;
@@ -2614,7 +2614,7 @@ tail_cached:;
         ExtPrint(("Resized Ext: type %x, loc %x, len %x\n",
             ExtInfo->Mapping[i].extLength >> 30, ExtInfo->Mapping[i].extLocation, ExtInfo->Mapping[i].extLength & UDF_EXTENT_LENGTH_MASK));
     }
-    
+
     return STATUS_SUCCESS;
 } // end UDFResizeExtent()
 
@@ -2844,7 +2844,7 @@ UDFPackMapping(
 #endif
 
     AdPrint(("Pack ExtInfo %x, NewMap %x, OldMap %x\n", ExtInfo, NewMap, OldMap));
-    
+
     ExtInfo->Mapping = NewMap;
     MyFreePool__(OldMap);
 
@@ -3155,7 +3155,7 @@ UDFReadExtentLocation(
 } // end UDFReadExtentLocation()
 
 #ifdef _MSC_VER
-#pragma warning(push)               
+#pragma warning(push)
 #pragma warning(disable:4035)               // re-enable below
 #endif
 
@@ -3293,7 +3293,7 @@ UDFWriteExtent(
                                 &&
                            !Vcb->CDR_Mode) {
                 status = UDFWriteData(Vcb, TRUE,
-                                      ( ((uint64)Lba) << Vcb->BlockSizeBits), 
+                                      ( ((uint64)Lba) << Vcb->BlockSizeBits),
                                       Vcb->LBlockSize, Direct, Vcb->ZBuffer, &_WrittenBytes);
                 if(!OS_SUCCESS(status))
                     return status;

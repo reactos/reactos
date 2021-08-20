@@ -132,7 +132,7 @@ HdlspPutString(IN PUCHAR String)
                 /* Add the modified char to the temporary buffer */
                 *Dest++ = Char;
             }
-            
+
             /* Check the next char */
             String++;
         }
@@ -598,7 +598,7 @@ HeadlessDispatch(IN HEADLESS_CMD Command,
     }
 
     /* Do the real work */
-    return HdlspDispatch(Command, 
+    return HdlspDispatch(Command,
                          InputBuffer,
                          InputBufferSize,
                          OutputBuffer,

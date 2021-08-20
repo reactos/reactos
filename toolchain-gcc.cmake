@@ -1,13 +1,6 @@
 
-if(NOT ARCH)
-    set(ARCH i386)
-endif()
-
-# Default to Debug for the build type
-if(NOT DEFINED CMAKE_BUILD_TYPE)
-    set(CMAKE_BUILD_TYPE "Debug" CACHE STRING
-        "Choose the type of build, options are: None(CMAKE_CXX_FLAGS or CMAKE_C_FLAGS used) Debug Release RelWithDebInfo MinSizeRel.")
-endif()
+# pass variables necessary for the toolchain (needed for try_compile)
+set(CMAKE_TRY_COMPILE_PLATFORM_VARIABLES ARCH)
 
 # Choose the right MinGW toolchain prefix
 if(NOT DEFINED MINGW_TOOLCHAIN_PREFIX)
@@ -35,9 +28,9 @@ set(CMAKE_SYSTEM_NAME Windows)
 set(CMAKE_SYSTEM_PROCESSOR i686)
 
 # Which tools to use
-set(CMAKE_C_COMPILER ${MINGW_TOOLCHAIN_PREFIX}gcc${MINGW_TOOLCHAIN_SUFFIX})
-set(CMAKE_CXX_COMPILER ${MINGW_TOOLCHAIN_PREFIX}g++${MINGW_TOOLCHAIN_SUFFIX})
-set(CMAKE_ASM_COMPILER ${MINGW_TOOLCHAIN_PREFIX}gcc${MINGW_TOOLCHAIN_SUFFIX})
+set(CMAKE_C_COMPILER ${MINGW_TOOLCHAIN_PREFIX}gcc${MINGW_TOOLCHAIN_SUFFIX} CACHE FILEPATH "The C Compiler")
+set(CMAKE_CXX_COMPILER ${MINGW_TOOLCHAIN_PREFIX}g++${MINGW_TOOLCHAIN_SUFFIX} CACHE FILEPATH "The C++ Compiler")
+set(CMAKE_ASM_COMPILER ${MINGW_TOOLCHAIN_PREFIX}gcc${MINGW_TOOLCHAIN_SUFFIX} CACHE FILEPATH "The ASM Compiler")
 set(CMAKE_ASM_COMPILER_ID "GNU")
 set(CMAKE_MC_COMPILER ${MINGW_TOOLCHAIN_PREFIX}windmc)
 set(CMAKE_RC_COMPILER ${MINGW_TOOLCHAIN_PREFIX}windres)
@@ -55,8 +48,12 @@ set(CMAKE_C_STANDARD_LIBRARIES "-lgcc" CACHE STRING "Standard C Libraries")
 #MARK_AS_ADVANCED(CLEAR CMAKE_CXX_STANDARD_LIBRARIES)
 set(CMAKE_CXX_STANDARD_LIBRARIES "-lgcc" CACHE STRING "Standard C++ Libraries")
 
+# This allows to have CMake test the compiler without linking
+set(CMAKE_TRY_COMPILE_TARGET_TYPE STATIC_LIBRARY)
+
 set(CMAKE_SHARED_LINKER_FLAGS_INIT "-nostdlib -Wl,--enable-auto-image-base,--disable-auto-import")
 set(CMAKE_MODULE_LINKER_FLAGS_INIT "-nostdlib -Wl,--enable-auto-image-base,--disable-auto-import")
+set(CMAKE_EXE_LINKER_FLAGS_INIT "-nostdlib -Wl,--enable-auto-image-base,--disable-auto-import")
 
 set(CMAKE_USER_MAKE_RULES_OVERRIDE "${CMAKE_CURRENT_LIST_DIR}/overrides-gcc.cmake")
 

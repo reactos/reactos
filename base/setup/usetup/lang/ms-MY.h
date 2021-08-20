@@ -1321,6 +1321,37 @@ static MUI_ENTRY msMYFormatPartitionEntries[] =
     }
 };
 
+static MUI_ENTRY msMYCheckFSEntries[] =
+{
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Persediaan ",
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        8,
+        "Persediaan kini sedang menyemak sekatan yang dipilih.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        "Sila tunggu...",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
 static MUI_ENTRY msMYInstallDirectoryEntries[] =
 {
     {
@@ -1473,6 +1504,30 @@ static MUI_ENTRY msMYBootLoaderEntries[] =
         0,
         0,
         "ENTER = Teruskan   F3 = Keluar",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
+static MUI_ENTRY msMYBootLoaderInstallPageEntries[] =
+{
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        "Installing the bootloader onto the media, please wait...",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
         TEXT_ID_STATIC
     },
@@ -2086,6 +2141,10 @@ MUI_PAGE msMYPages[] =
         msMYFormatPartitionEntries
     },
     {
+        CHECK_FILE_SYSTEM_PAGE,
+        msMYCheckFSEntries
+    },
+    {
         DELETE_PARTITION_PAGE,
         msMYDeletePartitionEntries
     },
@@ -2120,6 +2179,10 @@ MUI_PAGE msMYPages[] =
     {
         SUCCESS_PAGE,
         msMYSuccessPageEntries
+    },
+    {
+        BOOT_LOADER_INSTALLATION_PAGE,
+        msMYBootLoaderInstallPageEntries
     },
     {
         BOOT_LOADER_FLOPPY_PAGE,
@@ -2169,8 +2232,6 @@ MUI_STRING msMYStrings[] =
     "Partition baru tidak diformat lagi."},
     {STRING_INSTALLONPART,
     "Persediaan memasang ReactOS ke Partition"},
-    {STRING_CHECKINGPART,
-    "Persediaan kini sedang menyemak sekatan yang dipilih."},
     {STRING_CONTINUE,
     "ENTER = Teruskan"},
     {STRING_QUITCONTINUE,

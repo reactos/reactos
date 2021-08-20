@@ -1,13 +1,6 @@
 
-if(NOT ARCH)
-    set(ARCH i386)
-endif()
-
-# Default to Debug for the build type
-if(NOT DEFINED CMAKE_BUILD_TYPE)
-    set(CMAKE_BUILD_TYPE "Debug" CACHE STRING
-        "Choose the type of build, options are: None(CMAKE_CXX_FLAGS or CMAKE_C_FLAGS used) Debug Release RelWithDebInfo MinSizeRel.")
-endif()
+# pass variables necessary for the toolchain (needed for try_compile)
+set(CMAKE_TRY_COMPILE_PLATFORM_VARIABLES ARCH USE_CLANG_CL)
 
 # the name of the target operating system
 set(CMAKE_SYSTEM_NAME Windows)
@@ -53,15 +46,16 @@ endif()
 set(CMAKE_MC_COMPILER mc)
 set(CMAKE_RC_COMPILER rc)
 if(ARCH STREQUAL "amd64")
-    set(CMAKE_ASM_COMPILER ml64)
+    set(CMAKE_ASM_MASM_COMPILER ml64)
+    set(CMAKE_ASM_MASM_FLAGS_INIT "/Cp")
 elseif(ARCH STREQUAL "arm")
-    set(CMAKE_ASM_COMPILER armasm)
+    set(CMAKE_ASM_MASM_COMPILER armasm)
 elseif(ARCH STREQUAL "arm64")
-    set(CMAKE_ASM_COMPILER armasm64)
+    set(CMAKE_ASM_MASM_COMPILER armasm64)
 else()
-    set(CMAKE_ASM_COMPILER ml)
+    set(CMAKE_ASM_MASM_COMPILER ml)
+    set(CMAKE_ASM_MASM_FLAGS_INIT "/Cp")
 endif()
-
 
 set(CMAKE_C_STANDARD_LIBRARIES "" CACHE INTERNAL "")
 

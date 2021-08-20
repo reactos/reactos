@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS Font Shell Extension
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     CFontExt implementation
- * COPYRIGHT:   Copyright 2019,2020 Mark Jansen (mark.jansen@reactos.org)
+ * COPYRIGHT:   Copyright 2019-2021 Mark Jansen <mark.jansen@reactos.org>
  *              Copyright 2019 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
 
@@ -11,6 +11,9 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(fontext);
 
+#ifndef SHCIDS_ALLFIELDS
+#define SHCIDS_ALLFIELDS 0x80000000L
+#endif
 
 struct FolderViewColumns
 {
@@ -18,6 +21,15 @@ struct FolderViewColumns
     DWORD dwDefaultState;
     int cxChar;
     int fmt;
+};
+
+enum font_columns
+{
+    FONTEXT_COL_NAME,
+    FONTEXT_COL_FILENAME,
+    FONTEXT_COL_SIZE,
+    FONTEXT_COL_MODIFIED,
+    FONTEXT_COL_ATTR,
 };
 
 static FolderViewColumns g_ColumnDefs[] =
@@ -140,7 +152,7 @@ STDMETHODIMP CFontExt::GetDetailsOf(PCUITEMID_CHILD pidl, UINT iColumn, SHELLDET
     }
 
     // Name, ReactOS specific?
-    if (iColumn == 0)
+    if (iColumn == FONTEXT_COL_NAME)
         return GetDisplayNameOf(pidl, 0, &psd->str);
 
     const FontPidlEntry* fontEntry = _FontFromIL(pidl);
@@ -151,41 +163,28 @@ STDMETHODIMP CFontExt::GetDetailsOf(PCUITEMID_CHILD pidl, UINT iColumn, SHELLDET
     }
 
     // If we got here, we are in details view!
-    // Let's see if we got info about this file that we can re-use
-    if (m_LastDetailsFontName != fontEntry->Name)
+    auto info = g_FontCache->Find(fontEntry);
+    if (info == nullptr)
     {
-        CStringW File = g_FontCache->Filename(fontEntry, true);
-        HANDLE hFile = FindFirstFileW(File, &m_LastDetailsFileData);
-        if (hFile == INVALID_HANDLE_VALUE)
-        {
-            m_LastDetailsFontName.Empty();
-            ERR("Unable to query info about %S\n", File.GetString());
-            return HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
-        }
-        FindClose(hFile);
-        m_LastDetailsFontName = fontEntry->Name;
+        ERR("Unable to query info about %S\n", fontEntry->Name);
+        return HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
     }
 
-    // Most code borrowed from CFSFolder::GetDetailsOf
-    FILETIME lft;
-    SYSTEMTIME time;
     int ret;
-    LARGE_INTEGER FileSize;
     CStringA AttrLetters;
+    DWORD dwAttributes;
+    SYSTEMTIME time;
     switch (iColumn)
     {
-    case 1: // Filename
-        return SHSetStrRet(&psd->str, m_LastDetailsFileData.cFileName);
-    case 2: // Size
+    case FONTEXT_COL_FILENAME:
+        return SHSetStrRet(&psd->str, PathFindFileNameW(info->File()));
+    case FONTEXT_COL_SIZE:
         psd->str.uType = STRRET_CSTR;
-        FileSize.HighPart = m_LastDetailsFileData.nFileSizeHigh;
-        FileSize.LowPart = m_LastDetailsFileData.nFileSizeLow;
-        StrFormatKBSizeA(FileSize.QuadPart, psd->str.cStr, MAX_PATH);
+        StrFormatKBSizeA(info->FileSize().QuadPart, psd->str.cStr, MAX_PATH);
         return S_OK;
-    case 3: // Modified
-        FileTimeToLocalFileTime(&m_LastDetailsFileData.ftLastWriteTime, &lft);
-        FileTimeToSystemTime (&lft, &time);
+    case FONTEXT_COL_MODIFIED:
         psd->str.uType = STRRET_CSTR;
+        FileTimeToSystemTime(&info->FileWriteTime(), &time);
         ret = GetDateFormatA(LOCALE_USER_DEFAULT, DATE_SHORTDATE, &time, NULL, psd->str.cStr, MAX_PATH);
         if (ret < 1)
         {
@@ -195,7 +194,7 @@ STDMETHODIMP CFontExt::GetDetailsOf(PCUITEMID_CHILD pidl, UINT iColumn, SHELLDET
         psd->str.cStr[ret-1] = ' ';
         GetTimeFormatA(LOCALE_USER_DEFAULT, TIME_NOSECONDS, &time, NULL, &psd->str.cStr[ret], MAX_PATH - ret);
         return S_OK;
-    case 4: // Attributes
+    case FONTEXT_COL_ATTR:
         AttrLetters.LoadString(IDS_COL_ATTR_LETTERS);
         if (AttrLetters.GetLength() != 5)
         {
@@ -203,16 +202,17 @@ STDMETHODIMP CFontExt::GetDetailsOf(PCUITEMID_CHILD pidl, UINT iColumn, SHELLDET
             return E_FAIL;
         }
         psd->str.uType = STRRET_CSTR;
+        dwAttributes = info->FileAttributes();
         ret = 0;
-        if (m_LastDetailsFileData.dwFileAttributes & FILE_ATTRIBUTE_READONLY)
+        if (dwAttributes & FILE_ATTRIBUTE_READONLY)
             psd->str.cStr[ret++] = AttrLetters[0];
-        if (m_LastDetailsFileData.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN)
+        if (dwAttributes & FILE_ATTRIBUTE_HIDDEN)
             psd->str.cStr[ret++] = AttrLetters[1];
-        if (m_LastDetailsFileData.dwFileAttributes & FILE_ATTRIBUTE_SYSTEM)
+        if (dwAttributes & FILE_ATTRIBUTE_SYSTEM)
             psd->str.cStr[ret++] = AttrLetters[2];
-        if (m_LastDetailsFileData.dwFileAttributes & FILE_ATTRIBUTE_ARCHIVE)
+        if (dwAttributes & FILE_ATTRIBUTE_ARCHIVE)
             psd->str.cStr[ret++] = AttrLetters[3];
-        if (m_LastDetailsFileData.dwFileAttributes & FILE_ATTRIBUTE_COMPRESSED)
+        if (dwAttributes & FILE_ATTRIBUTE_COMPRESSED)
             psd->str.cStr[ret++] = AttrLetters[4];
         psd->str.cStr[ret] = '\0';
         return S_OK;
@@ -262,7 +262,53 @@ STDMETHODIMP CFontExt::CompareIDs(LPARAM lParam, PCUIDLIST_RELATIVE pidl1, PCUID
     if (!fontEntry1 || !fontEntry2)
         return E_INVALIDARG;
 
-    int result = (int)fontEntry1->Index - (int)fontEntry2->Index;
+    int result;
+    DWORD sortMode = lParam & 0xFFFF0000;
+    DWORD column = lParam & 0x0000FFFF;
+    if (sortMode == SHCIDS_ALLFIELDS)
+    {
+        UNIMPLEMENTED;
+        result = (int)fontEntry1->Index - (int)fontEntry2->Index;
+    }
+    else
+    {
+        auto info1 = g_FontCache->Find(fontEntry1);
+        auto info2 = g_FontCache->Find(fontEntry2);
+
+        if (!info1 || !info2)
+        {
+            ERR("Unable to find font %S or %S in cache!\n", fontEntry1->Name, fontEntry2->Name);
+            return E_INVALIDARG;
+        }
+
+        switch (column)
+        {
+        case 0xffff:
+            /* ROS bug? */
+        case FONTEXT_COL_NAME:
+            // These items are already ordered by name
+            result = (int)fontEntry1->Index - (int)fontEntry2->Index;
+            break;
+        case FONTEXT_COL_FILENAME:
+            result = wcsicmp(PathFindFileNameW(info1->File()), PathFindFileNameW(info2->File()));
+            break;
+        case FONTEXT_COL_SIZE:
+            result = (int)info1->FileSize().HighPart - info2->FileSize().HighPart;
+            if (result == 0)
+                result = (int)info1->FileSize().LowPart - info2->FileSize().LowPart;
+            break;
+        case FONTEXT_COL_MODIFIED:
+            result = CompareFileTime(&info1->FileWriteTime(), &info2->FileWriteTime());
+            break;
+        case FONTEXT_COL_ATTR:
+            // FIXME: how to compare attributes?
+            result = (int)info1->FileAttributes() - info2->FileAttributes();
+            break;
+        default:
+            ERR("Unimplemented column %u\n", column);
+            return E_INVALIDARG;
+        }
+    }
 
     return MAKE_COMPARE_HRESULT(result);
 }
@@ -341,7 +387,7 @@ STDMETHODIMP CFontExt::GetUIObjectOf(HWND hwndOwner, UINT cidl, PCUITEMID_CHILD_
             if (fontEntry)
             {
                 DWORD dwAttributes = FILE_ATTRIBUTE_NORMAL;
-                CStringW File = g_FontCache->Filename(fontEntry);
+                CStringW File = g_FontCache->Filename(g_FontCache->Find(fontEntry));
                 // Just create a default icon extractor based on the filename
                 // We might want to create a preview with the font to get really fancy one day.
                 return SHCreateFileExtractIconW(File, dwAttributes, riid, ppvOut);
@@ -384,6 +430,15 @@ STDMETHODIMP CFontExt::GetDisplayNameOf(PCUITEMID_CHILD pidl, DWORD dwFlags, LPS
     const FontPidlEntry* fontEntry = _FontFromIL(pidl);
     if (!fontEntry)
         return E_FAIL;
+
+    if (dwFlags == SHGDN_FORPARSING)
+    {
+        CStringW File = g_FontCache->Filename(g_FontCache->Find(fontEntry), true);
+        if (!File.IsEmpty())
+        {
+            return SHSetStrRet(strRet, File);
+        }
+    }
 
     return SHSetStrRet(strRet, fontEntry->Name);
 }

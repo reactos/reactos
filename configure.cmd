@@ -87,8 +87,8 @@ REM Parse command line parameters
             echo Please run this command in a [Developer] Command Prompt for Visual Studio.
             goto quit
         ) else if /I "%1" NEQ "" (
-            echo %1| find /I "-D" > NUL
-            if %ERRORLEVEL% == 0 (
+            echo.%1| find /I "-D" >nul 2>&1
+            if not errorlevel 1 (
                 REM User is passing a switch to CMake
                 REM Ignore it, and ignore the next parameter that follows
                 Shift
@@ -123,8 +123,8 @@ REM Parse command line parameters
                 set CMAKE_ARCH=-A ARM
             )
         ) else if /I "%1" NEQ "" (
-            echo %1| find /I "-D" > NUL
-            if %ERRORLEVEL% == 0 (
+            echo.%1| find /I "-D" >nul 2>&1
+            if not errorlevel 1 (
                 REM User is passing a switch to CMake
                 REM Ignore it, and ignore the next parameter that follows
                 Shift

@@ -1,0 +1,39 @@
+// Chinese Traditional (zh-TW) resources by Chan Chilung <eason066@gmail.com> 2021
+
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
+
+STRINGTABLE
+{
+1000, "Black Shade"
+}
+
+STRINGTABLE
+{
+2000, "Black Shade"
+}
+
+STRINGTABLE
+{
+3000, "標準"
+3001, "大字型"
+3002, "特大字型"
+}
+
+STRINGTABLE
+{
+4000, "標準"
+4001, "大字型"
+4002, "特大字型"
+}
+
+STRINGTABLE
+{
+5000, "Black Shade"
+5001, "視覺樣式"
+5002, "ReactOS Foundation"
+5003, "圖像由 David Quintana <gigaherz@gmail.com> 提供"
+5004, "圖像以 CC-BY-SA 4.0 條款發行"
+5005, "https://reactos.org/"
+5006, "1.0"
+5007, "ReactOS 的視覺樣式"
+}

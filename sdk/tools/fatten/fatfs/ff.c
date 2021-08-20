@@ -964,7 +964,7 @@ FRESULT remove_chain (	/* FR_OK(0):succeeded, !=0:error */
 #if _USE_TRIM
 			if (ecl + 1 == nxt) {	/* Is next cluster contiguous? */
 				ecl = nxt;
-			} else {				/* End of contiguous clusters */ 
+			} else {				/* End of contiguous clusters */
 				rt[0] = clust2sect(fs, scl);					/* Start sector */
 				rt[1] = clust2sect(fs, ecl) + fs->csize - 1;	/* End sector */
 				disk_ioctl(fs->drv, CTRL_TRIM, rt);				/* Erase the block */
@@ -2130,7 +2130,7 @@ int get_ldnumber (		/* Returns logical drive number (-1:invalid drive) */
 		for (tt = *path; (UINT)*tt >= (_USE_LFN ? ' ' : '!') && *tt != ':'; tt++) ;	/* Find ':' in the path */
 		if (*tt == ':') {	/* If a ':' is exist in the path name */
 			tp = *path;
-			i = *tp++ - '0'; 
+			i = *tp++ - '0';
 			if (i < 10 && tp == tt) {	/* Is there a numeric drive id? */
 				if (i < _VOLUMES) {	/* If a drive id is found, get the value and strip it */
 					vol = (int)i;
@@ -2976,7 +2976,7 @@ FRESULT f_getcwd (
 				res = dir_read(&dj, 0);
 				if (res != FR_OK) break;
 				if (ccl == ld_clust(dj.fs, dj.dir)) break;	/* Found the entry */
-				res = dir_next(&dj, 0);	
+				res = dir_next(&dj, 0);
 			} while (res == FR_OK);
 			if (res == FR_NO_FILE) res = FR_INT_ERR;/* It cannot be 'not found'. */
 			if (res != FR_OK) break;

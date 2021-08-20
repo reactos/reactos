@@ -73,7 +73,7 @@ CdEnumerateIndex (
 #pragma alloc_text(PAGE, CdQueryDirectory)
 #endif
 
-
+
 
 _Requires_lock_held_(_Global_critical_region_)
 NTSTATUS
@@ -151,7 +151,7 @@ Return Value:
     return Status;
 }
 
-
+
 //
 //  Local support routines
 //
@@ -503,16 +503,16 @@ Return Value:
             //  to guard against a user messing with the page protection and other
             //  such trickery.
             //
-            
+
             _SEH2_TRY {
-            
+
                 //
                 //  Zero and initialize the base part of the current entry.
                 //
 
                 RtlZeroMemory( Add2Ptr( UserBuffer, NextEntry, PVOID ),
                                BaseLength );
-    
+
                 //
                 //  Now we have an entry to return to our caller.
                 //  We'll case on the type of information requested and fill up
@@ -520,64 +520,64 @@ Return Value:
                 //
 
                 switch (IrpSp->Parameters.QueryDirectory.FileInformationClass) {
-    
+
                 case FileBothDirectoryInformation:
                 case FileFullDirectoryInformation:
                 case FileIdBothDirectoryInformation:
                 case FileIdFullDirectoryInformation:
                 case FileDirectoryInformation:
-    
+
                     DirInfo = Add2Ptr( UserBuffer, NextEntry, PFILE_BOTH_DIR_INFORMATION );
-    
+
                     //
                     //  Use the create time for all the time stamps.
                     //
-    
+
                     CdConvertCdTimeToNtTime( IrpContext,
                                              FileContext.InitialDirent->Dirent.CdTime,
                                              &DirInfo->CreationTime );
-    
+
                     DirInfo->LastWriteTime = DirInfo->ChangeTime = DirInfo->CreationTime;
-    
+
                     //
                     //  Set the attributes and sizes separately for directories and
                     //  files.
                     //
-    
+
                     if (FlagOn( ThisDirent->DirentFlags, CD_ATTRIBUTE_DIRECTORY )) {
-    
+
                         DirInfo->EndOfFile.QuadPart = DirInfo->AllocationSize.QuadPart = 0;
-    
+
                         SetFlag( DirInfo->FileAttributes, FILE_ATTRIBUTE_DIRECTORY);
-                        
+
                     } else {
-    
+
                         DirInfo->EndOfFile.QuadPart = FileContext.FileSize;
                         DirInfo->AllocationSize.QuadPart = LlSectorAlign( FileContext.FileSize );
-                        
+
                         SetFlag( DirInfo->FileAttributes, FILE_ATTRIBUTE_READONLY);
                     }
 
                     if (FlagOn( ThisDirent->DirentFlags,
                                 CD_ATTRIBUTE_HIDDEN )) {
-    
+
                         SetFlag( DirInfo->FileAttributes, FILE_ATTRIBUTE_HIDDEN );
                     }
-    
+
                     DirInfo->FileIndex = ThisDirent->DirentOffset;
-    
+
                     DirInfo->FileNameLength = FileNameBytes + SeparatorBytes + VersionStringBytes;
-    
+
                     break;
-    
+
                 case FileNamesInformation:
-    
+
                     NamesInfo = Add2Ptr( UserBuffer, NextEntry, PFILE_NAMES_INFORMATION );
-    
+
                     NamesInfo->FileIndex = ThisDirent->DirentOffset;
-    
+
                     NamesInfo->FileNameLength = FileNameBytes + SeparatorBytes + VersionStringBytes;
-    
+
                     break;
 
                 /* ReactOS Change: GCC "enumeration value not handled in switch" */
@@ -605,30 +605,30 @@ Return Value:
                 default:
                     break;
                 }
-    
+
                 //
                 //  Now copy as much of the name as possible.  We also may have a version
                 //  string to copy.
                 //
-    
+
                 if (FileNameBytes != 0) {
-    
+
                     //
                     //  This is a Unicode name, we can copy the bytes directly.
                     //
-    
+
                     RtlCopyMemory( Add2Ptr( UserBuffer, NextEntry + BaseLength, PVOID ),
                                    ThisDirent->CdFileName.FileName.Buffer,
                                    FileNameBytes );
-    
+
                     if (SeparatorBytes != 0) {
-    
+
                         *(Add2Ptr( UserBuffer,
                                    NextEntry + BaseLength + FileNameBytes,
                                    PWCHAR )) = L';';
-    
+
                         if (VersionStringBytes != 0) {
-    
+
                             RtlCopyMemory( Add2Ptr( UserBuffer,
                                                     NextEntry + BaseLength + FileNameBytes + sizeof( WCHAR ),
                                                     PVOID ),
@@ -650,40 +650,40 @@ Return Value:
                      IrpSp->Parameters.QueryDirectory.FileInformationClass == FileIdBothDirectoryInformation) &&
                     (Ccb->SearchExpression.VersionString.Length == 0) &&
                     !FlagOn( ThisDirent->Flags, DIRENT_FLAG_CONSTANT_ENTRY )) {
-    
+
                     //
                     //  If we already have the short name then copy into the user's buffer.
                     //
-    
+
                     if (FileContext.ShortName.FileName.Length != 0) {
-    
+
                         RtlCopyMemory( DirInfo->ShortName,
                                        FileContext.ShortName.FileName.Buffer,
                                        FileContext.ShortName.FileName.Length );
-    
+
                         DirInfo->ShortNameLength = (CCHAR) FileContext.ShortName.FileName.Length;
-    
+
                     //
                     //  If the short name length is currently zero then check if
                     //  the long name is not 8.3.  We can copy the short name in
                     //  unicode form directly into the caller's buffer.
                     //
-    
+
                     } else {
-    
+
                         if (!CdIs8dot3Name( IrpContext,
                                             ThisDirent->CdFileName.FileName )) {
-    
+
                             CdGenerate8dot3Name( IrpContext,
                                                  &ThisDirent->CdCaseFileName.FileName,
                                                  ThisDirent->DirentOffset,
                                                  DirInfo->ShortName,
                                                  &FileContext.ShortName.FileName.Length );
-    
+
                             DirInfo->ShortNameLength = (CCHAR) FileContext.ShortName.FileName.Length;
                         }
                     }
-    
+
                 }
 
                 //
@@ -714,7 +714,7 @@ Return Value:
 
                 LastEntry = NextEntry;
                 NextEntry = QuadAlign( Information );
-            
+
 #ifdef _MSC_VER
 #pragma warning(suppress: 6320)
 #endif
@@ -725,19 +725,19 @@ Return Value:
                   //  fail this request.  This is the only reason any exception
                   //  would have occured at this level.
                   //
-                  
+
                   Information = 0;
                   try_leave( Status = _SEH2_GetExceptionCode());
             } _SEH2_END;
         }
-        
+
         DoCcbUpdate = TRUE;
 
     } _SEH2_FINALLY {
 
         //
         //  Cleanup our search context - *before* aquiring the FCB mutex exclusive,
-        //  else can block on threads in cdcreateinternalstream/purge which 
+        //  else can block on threads in cdcreateinternalstream/purge which
         //  hold the FCB but are waiting for all maps in this stream to be released.
         //
 
@@ -748,13 +748,13 @@ Return Value:
         //
 
         if (DoCcbUpdate && !NT_ERROR( Status )) {
-        
+
             //
             //  Update the Ccb to show the current state of the enumeration.
             //
 
             CdLockFcb( IrpContext, Fcb );
-            
+
             Ccb->CurrentDirentOffset = ThisDirent->DirentOffset;
 
             ClearFlag( Ccb->Flags, CCB_FLAG_ENUM_RETURN_NEXT );
@@ -784,7 +784,7 @@ Return Value:
     return Status;
 }
 
-
+
 //
 //  Local support routines
 //
@@ -884,7 +884,7 @@ Return Value:
     return STATUS_PENDING;
 }
 
-
+
 //
 //  Local support routine
 //
@@ -954,7 +954,7 @@ Return Value:
     PAGED_CODE();
 
     //
-    //  If the user has specified that the scan be restarted, and has specicified 
+    //  If the user has specified that the scan be restarted, and has specicified
     //  a new query pattern, reinitialize the CCB.
     //
 
@@ -1349,7 +1349,7 @@ Return Value:
     return;
 }
 
-
+
 //
 //  Local support routine
 //
@@ -1418,7 +1418,7 @@ Return Value:
             ThisDirent = &FileContext->InitialDirent->Dirent;
 
             CdUpdateDirentName( IrpContext, ThisDirent, FlagOn( Ccb->Flags, CCB_FLAG_IGNORE_CASE ));
-        
+
         } else {
 
             ReturnNextEntry = TRUE;
@@ -1427,7 +1427,7 @@ Return Value:
         //
         //  Don't bother if we have a constant entry and are ignoring them.
         //
-        
+
         if (FlagOn( ThisDirent->Flags, DIRENT_FLAG_CONSTANT_ENTRY ) &&
             FlagOn( Ccb->Flags, CCB_FLAG_ENUM_NOMATCH_CONSTANT_ENTRY )) {
 

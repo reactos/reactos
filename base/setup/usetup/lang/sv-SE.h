@@ -1338,6 +1338,37 @@ static MUI_ENTRY svSEFormatPartitionEntries[] =
     }
 };
 
+static MUI_ENTRY svSECheckFSEntries[] =
+{
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        8,
+        "Setup unders\224ker nu den valda partitionen.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        "Var v\204nlig v\204nta...",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
 static MUI_ENTRY svSEInstallDirectoryEntries[] =
 {
     {
@@ -1491,6 +1522,30 @@ static MUI_ENTRY svSEBootLoaderEntries[] =
         0,
         "   ENTER = Forts\204tt   F3 = Avsluta",
         TEXT_TYPE_STATUS,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
+static MUI_ENTRY svSEBootLoaderInstallPageEntries[] =
+{
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        "Installing the bootloader onto the media, please wait...",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
         TEXT_ID_STATIC
     },
     {
@@ -2110,6 +2165,10 @@ MUI_PAGE svSEPages[] =
         svSEFormatPartitionEntries
     },
     {
+        CHECK_FILE_SYSTEM_PAGE,
+        svSECheckFSEntries
+    },
+    {
         DELETE_PARTITION_PAGE,
         svSEDeletePartitionEntries
     },
@@ -2144,6 +2203,10 @@ MUI_PAGE svSEPages[] =
     {
         SUCCESS_PAGE,
         svSESuccessPageEntries
+    },
+    {
+        BOOT_LOADER_INSTALLATION_PAGE,
+        svSEBootLoaderInstallPageEntries
     },
     {
         BOOT_LOADER_FLOPPY_PAGE,
@@ -2195,8 +2258,6 @@ MUI_STRING svSEStrings[] =
     "The new partition is not formatted yet."},
     {STRING_INSTALLONPART,
     "Setup installerar ReactOS till Partitionen"},
-    {STRING_CHECKINGPART,
-    "Setup unders\224ker nu den valda partitionen."},
     {STRING_CONTINUE,
     "ENTER = Forts\204tt"},
     {STRING_QUITCONTINUE,

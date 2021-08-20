@@ -7,7 +7,7 @@
 
 #include "usbhub.h"
 
-//#define NDEBUG
+#define NDEBUG
 #include <debug.h>
 
 VOID
@@ -52,7 +52,7 @@ USBHUB_DumpingConfiguration(IN PUSB_CONFIGURATION_DESCRIPTOR ConfigDescriptor)
 
     Descriptor = (PUSB_COMMON_DESCRIPTOR)ConfigDescriptor;
 
-    while ((ULONG_PTR)Descriptor < 
+    while ((ULONG_PTR)Descriptor <
            ((ULONG_PTR)ConfigDescriptor + ConfigDescriptor->wTotalLength) &&
            Descriptor->bLength)
     {

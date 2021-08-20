@@ -46,9 +46,11 @@ typedef _Return_type_success_(return >= 0) long NTSTATUS;
 #ifndef _HRESULT_DEFINED
 typedef _Return_type_success_(return >= 0) long HRESULT;
 #endif
+#ifndef SUCCEEDED
 #define SUCCEEDED(hr) (((HRESULT)(hr)) >= 0)
 #define FAILED(hr) (((HRESULT)(hr)) < 0)
 #define S_OK    ((HRESULT)0L)
+#endif
 #define INTSAFE_RESULT HRESULT
 #define INTSAFE_SUCCESS S_OK
 #define INTSAFE_E_ARITHMETIC_OVERFLOW ((HRESULT)0x80070216L)
@@ -259,7 +261,7 @@ INTSAFE_NAME(_Name)( \
     _In_ _TypeFrom Input, \
     _Out_ _Deref_out_range_(==, Input) _TypeTo *pOutput) \
 { \
-    if (Input <= _TypeTo ## _MAX) \
+    if ((sizeof(_TypeFrom) < sizeof(_TypeTo)) || (Input <= _TypeTo ## _MAX)) \
     { \
         *pOutput = (_TypeTo)Input; \
         return INTSAFE_SUCCESS; \

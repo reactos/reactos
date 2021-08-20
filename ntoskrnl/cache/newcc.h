@@ -38,6 +38,7 @@ typedef struct _NOCC_CACHE_MAP
     ULONG ReadAheadGranularity;
 } NOCC_CACHE_MAP, *PNOCC_CACHE_MAP;
 
+CODE_SEG("INIT")
 VOID
 NTAPI
 CcPfInitializePrefetcher(VOID);
@@ -53,6 +54,7 @@ CcMdlWriteComplete2(IN PFILE_OBJECT FileObject,
                     IN PLARGE_INTEGER FileOffset,
                     IN PMDL MdlChain);
 
+CODE_SEG("INIT")
 VOID
 NTAPI
 CcInitView(VOID);
@@ -158,3 +160,16 @@ CcpPinMappedData(IN PNOCC_CACHE_MAP Map,
                  IN ULONG Length,
                  IN ULONG Flags,
                  IN OUT PVOID *Bcb);
+
+ULONG
+MmGetReferenceCountPageWithoutLock(PFN_NUMBER Page)
+{
+    ULONG Ret;
+    KIRQL OldIrql = MiAcquirePfnLock();
+
+    Ret = MmGetReferenceCountPage(Page);
+
+    MiReleasePfnLock(OldIrql);
+
+    return Ret;
+}

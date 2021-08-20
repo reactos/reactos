@@ -961,7 +961,7 @@ CreateNestedKey(PHKEY KeyHandle,
         }
 
         *Ptr = (WCHAR)0;
-        LocalKeyName.Length = wcslen(LocalKeyName.Buffer) * sizeof(WCHAR);
+        LocalKeyName.Length = (USHORT)wcslen(LocalKeyName.Buffer) * sizeof(WCHAR);
 
         Status = NtCreateKey(&LocalKeyHandle,
                              KEY_CREATE_SUB_KEY,
@@ -4933,8 +4933,7 @@ RegSetValueExW(
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-            ClosePredefKey(KeyHandle);
-            return ERROR_NOACCESS;
+            /* Do not fail if we fault where we were told not to go */
         }
         _SEH2_END;
     }

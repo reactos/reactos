@@ -64,6 +64,7 @@ KMT_TESTFUNC Test_ObTypeNoClean;
 KMT_TESTFUNC Test_ObTypes;
 KMT_TESTFUNC Test_PsNotify;
 KMT_TESTFUNC Test_SeInheritance;
+KMT_TESTFUNC Test_SeLogonSession;
 KMT_TESTFUNC Test_SeQueryInfoToken;
 KMT_TESTFUNC Test_RtlAvlTree;
 KMT_TESTFUNC Test_RtlException;
@@ -152,6 +153,7 @@ const KMT_TEST TestList[] =
     { "RtlStrSafeKM",                       Test_RtlStrSafe },
     { "RtlUnicodeStringKM",                 Test_RtlUnicodeString },
     { "SeInheritance",                      Test_SeInheritance },
+    { "SeLogonSession",                     Test_SeLogonSession },
     { "SeQueryInfoToken",                   Test_SeQueryInfoToken },
     { "ZwAllocateVirtualMemory",            Test_ZwAllocateVirtualMemory },
     { "ZwCreateSection",                    Test_ZwCreateSection },

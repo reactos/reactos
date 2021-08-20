@@ -53,6 +53,7 @@ else()
 endif()
 
 add_library(consrv ${CONSRV_SOURCE})
+target_link_libraries(consrv pseh)
 add_dependencies(consrv psdk)
 add_pch(consrv consrv/consrv.h CONSRV_SOURCE)
 #add_object_library(consrv ${CONSRV_SOURCE})

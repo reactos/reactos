@@ -1,7 +1,7 @@
 
 #include <string.h>
 
-#if defined(_MSC_VER) && defined(_M_ARM)
+#if defined(_MSC_VER)
 #pragma function(memchr)
 #endif /* _MSC_VER */
 

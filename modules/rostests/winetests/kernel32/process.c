@@ -3,7 +3,7 @@
  *
  * Copyright 2002 Eric Pouech
  * Copyright 2006 Dmitry Timoshkov
- * Copyright 2014 Michael Müller
+ * Copyright 2014 Michael MÃ¼ller
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -921,7 +921,7 @@ static void test_CommandLine(void)
     startup.dwFlags = STARTF_USESHOWWINDOW;
     startup.wShowWindow = SW_SHOWNORMAL;
 
-    /* from François */
+    /* from FranÃ§ois */
     get_file_name(resfile);
     sprintf(buffer, "\"%s\" tests/process.c dump \"%s\" \"a\\\"b\\\\\" c\\\" d", selfname, resfile);
     ok(CreateProcessA(NULL, buffer, NULL, NULL, FALSE, 0L, NULL, NULL, &startup, &info), "CreateProcess\n");
@@ -1148,6 +1148,14 @@ static void test_Toolhelp(void)
     DWORD               ret;
     int                 i;
 
+#if defined(__REACTOS__) && defined(_M_AMD64)
+    if (!winetest_interactive)
+    {
+        skip("ROSTESTS-372: Skipping test in kernel32_winetest:process test_Toolhelp because it leaves a process behind on Windows Server 2003 x64-Testbot. Set winetest_interactive to run it anyway.\n");
+        //return;
+    }
+#endif
+
     memset(&startup, 0, sizeof(startup));
     startup.cb = sizeof(startup);
     startup.dwFlags = STARTF_USESHOWWINDOW;
@@ -1171,6 +1179,15 @@ static void test_Toolhelp(void)
     release_memory();
     DeleteFileA(resfile);
 
+#if defined(__REACTOS__) && defined(_M_AMD64)
+    if (!winetest_interactive)
+    {
+        skip("ROSTESTS-371: Skipping kernel32_winetest:sync test_apc_deadlock because it fails on Windows Server 2003 x64-Testbot. Set winetest_interactive to run it anyway.\n");
+    }
+    else
+    {
+#endif
+
     get_file_name(resfile);
     sprintf(buffer, "\"%s\" tests/process.c nested \"%s\"", selfname, resfile);
     ok(CreateProcessA(NULL, buffer, NULL, NULL, FALSE, 0L, NULL, NULL, &startup, &info), "CreateProcess failed\n");
@@ -1182,6 +1199,9 @@ static void test_Toolhelp(void)
 
     CloseHandle(info.hProcess);
     CloseHandle(info.hThread);
+#if defined(__REACTOS__) && defined(_M_AMD64)
+    }
+#endif
 
     for (i = 0; i < 20; i++)
     {
@@ -3959,7 +3979,7 @@ START_TEST(process)
     test_Startup();
     test_CommandLine();
     test_Directory();
-    test_Toolhelp();
+    test_Toolhelp(); //
     test_Environment();
     test_SuspendFlag();
     test_DebuggingFlag();

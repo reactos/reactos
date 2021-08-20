@@ -97,7 +97,7 @@ RosSymCreateFromFile(PVOID FileContext, PROSSYM_INFO *RosSymInfo)
 
     // Convert names to ANSI_STRINGs
     for (SectionIndex = 0; SectionIndex < NtHeaders.FileHeader.NumberOfSections;
-         SectionIndex++) 
+         SectionIndex++)
     {
         ANSI_STRING astr;
         if (SectionHeaders[SectionIndex].Name[0] != '/') {
@@ -122,7 +122,7 @@ RosSymCreateFromFile(PVOID FileContext, PROSSYM_INFO *RosSymInfo)
             if (!RosSymReadFile(FileContext, astr.Buffer, MAXIMUM_DWARF_NAME_SIZE))
                 goto freeall;
             astr.Length = GetStrnlen(astr.Buffer, MAXIMUM_DWARF_NAME_SIZE);
-            astr.MaximumLength = MAXIMUM_DWARF_NAME_SIZE;		  
+            astr.MaximumLength = MAXIMUM_DWARF_NAME_SIZE;
             DPRINT("Long name %d, %s\n", SectionIndex, astr.Buffer);
         }
         *ANSI_NAME_STRING(&SectionHeaders[SectionIndex]) = astr;

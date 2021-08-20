@@ -34,7 +34,7 @@ Abstract:
 #pragma alloc_text(PAGE, CdUpcaseName)
 #endif
 
-
+
 _Post_satisfies_(_Old_(CdName->FileName.Length) >=
                  CdName->FileName.Length + CdName->VersionString.Length)
 VOID
@@ -105,7 +105,7 @@ Return Value:
     return;
 }
 
-
+
 VOID
 CdConvertBigToLittleEndian (
     _In_ PIRP_CONTEXT IrpContext,
@@ -189,7 +189,7 @@ Return Value:
     return;
 }
 
-
+
 VOID
 CdUpcaseName (
     _In_ PIRP_CONTEXT IrpContext,
@@ -222,7 +222,7 @@ Return Value:
     PAGED_CODE();
 
     UNREFERENCED_PARAMETER( IrpContext );
-    
+
     //
     //  If the name structures are different then initialize the different components.
     //
@@ -278,7 +278,7 @@ Return Value:
 
     NT_ASSERT( Status == STATUS_SUCCESS );
     __analysis_assert( Status == STATUS_SUCCESS );
-                
+
     if (Name->VersionString.Length != 0) {
 
         Status = RtlUpcaseUnicodeString( &UpcaseName->VersionString,
@@ -290,13 +290,13 @@ Return Value:
         //
 
         NT_ASSERT( Status == STATUS_SUCCESS );
-        __analysis_assert( Status == STATUS_SUCCESS );        
+        __analysis_assert( Status == STATUS_SUCCESS );
     }
 
     return;
 }
 
-
+
 VOID
 CdDissectName (
     _In_ PIRP_CONTEXT IrpContext,
@@ -331,7 +331,7 @@ Return Value:
     PAGED_CODE();
 
     UNREFERENCED_PARAMETER( IrpContext );
-    
+
     //
     //  Find the offset of the next component separators.
     //
@@ -372,7 +372,7 @@ Return Value:
     return;
 }
 
-
+
 BOOLEAN
 CdIsLegalName (
     _In_ PIRP_CONTEXT IrpContext,
@@ -424,7 +424,7 @@ Return Value:
     return TRUE;
 }
 
-
+
 BOOLEAN
 CdIs8dot3Name (
     _In_ PIRP_CONTEXT IrpContext,
@@ -461,7 +461,7 @@ Return Value:
     PAGED_CODE();
 
     UNREFERENCED_PARAMETER( IrpContext );
-    
+
     //
     //  The length must be less than 24 bytes.
     //
@@ -545,7 +545,7 @@ Return Value:
     return FsRtlIsFatDbcsLegal( DbcsName, FALSE, FALSE, FALSE );
 }
 
-
+
 VOID
 CdGenerate8dot3Name (
     _In_ PIRP_CONTEXT IrpContext,
@@ -591,9 +591,9 @@ Return Value:
 
 --*/
 
-{   
+{
     NTSTATUS Status;
-    
+
     UNICODE_STRING ShortName;
     UNICODE_STRING BiasedShortName;
     WCHAR ShortNameBuffer[ BYTE_COUNT_8_DOT_3 / sizeof( WCHAR ) ] = {0};
@@ -664,19 +664,19 @@ Return Value:
     //  Generate an OEM version of the string so that we can check for double
     //  byte characters.
     //
-    
+
     Status = RtlUnicodeStringToOemString(&OemName, &ShortName, TRUE);
 
     //
     //  If this failed, bail out. Don't expect any problems other than no mem.
     //
-    
+
     if (!NT_SUCCESS( Status)) {
 
         NT_ASSERT( STATUS_INSUFFICIENT_RESOURCES == Status);
         CdRaiseStatus( IrpContext, Status);
     }
-    
+
     Length = 0;
 
     //
@@ -777,12 +777,12 @@ Return Value:
             OemNameOffset += 2;
 
             if ((OemNameOffset + (BiasedShortName.Length / sizeof(WCHAR))) > 8)  {
-            
+
                 OverflowBuffer = TRUE;
             }
         }
         else  {
-        
+
             OemNameOffset++;
         }
 
@@ -839,7 +839,7 @@ Return Value:
     *ShortByteCount = Length;
 }
 
-
+
 BOOLEAN
 CdIsNameInExpression (
     _In_ PIRP_CONTEXT IrpContext,
@@ -883,7 +883,7 @@ Return Value:
     PAGED_CODE();
 
     UNREFERENCED_PARAMETER( IrpContext );
-    
+
     //
     //  If there are wildcards in the expression then we call the
     //  appropriate FsRtlRoutine.
@@ -950,7 +950,7 @@ Return Value:
     return Match;
 }
 
-
+
 ULONG
 CdShortNameDirentOffset (
     _In_ PIRP_CONTEXT IrpContext,
@@ -988,7 +988,7 @@ Return Value:
     PAGED_CODE();
 
     UNREFERENCED_PARAMETER( IrpContext );
-    
+
     //
     //  Walk through the name until we either reach the end of the name
     //  or find a tilde character.
@@ -1055,7 +1055,7 @@ Return Value:
     return ResultOffset;
 }
 
-
+
 //
 //  Local support routine
 //
@@ -1096,7 +1096,7 @@ Return Value:
     PAGED_CODE();
 
     UNREFERENCED_PARAMETER( IrpContext );
-    
+
     //
     //  Figure out the minimum of the two lengths
     //

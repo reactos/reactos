@@ -25,6 +25,7 @@ DisplayClassInstaller(
     TCHAR ServiceName[MAX_SERVICE_NAME_LEN];
     TCHAR DeviceName[12];
     SP_DRVINFO_DETAIL_DATA DriverInfoDetailData;
+    DISPLAY_DEVICE DisplayDevice;
     HKEY hDriverKey = INVALID_HANDLE_VALUE; /* SetupDiOpenDevRegKey returns INVALID_HANDLE_VALUE in case of error! */
     HKEY hSettingsKey = NULL;
     HKEY hServicesKey = NULL;
@@ -244,6 +245,36 @@ DisplayClassInstaller(
     }
 
     /* FIXME: install OpenGLSoftwareSettings section */
+
+    /* Start the device */
+    if (SetupDiRestartDevices(DeviceInfoSet, DeviceInfoData))
+    {
+        /* Reenumerate display devices ; this will rescan for potential new devices */
+        DisplayDevice.cb = sizeof(DISPLAY_DEVICE);
+        EnumDisplayDevices(NULL, 0, &DisplayDevice, 0);
+    }
+    else
+    {
+        rc = GetLastError();
+        DPRINT("SetupDiRestartDevices() failed with error 0x%lx. Will reboot later.\n", rc);
+
+        /* Mark device as needing a restart */
+        InstallParams.cbSize = sizeof(InstallParams);
+        if (!SetupDiGetDeviceInstallParams(DeviceInfoSet, DeviceInfoData, &InstallParams))
+        {
+            rc = GetLastError();
+            DPRINT("SetupDiGetDeviceInstallParams() failed with error 0x%lx\n", rc);
+            goto cleanup;
+        }
+        InstallParams.Flags |= DI_NEEDRESTART;
+        result = SetupDiSetDeviceInstallParams(DeviceInfoSet, DeviceInfoData, &InstallParams);
+        if (!result)
+        {
+            rc = GetLastError();
+            DPRINT("SetupDiSetDeviceInstallParams() failed with error 0x%lx\n", rc);
+            goto cleanup;
+        }
+    }
 
     rc = ERROR_SUCCESS;
 

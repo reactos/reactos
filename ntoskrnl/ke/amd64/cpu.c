@@ -13,12 +13,6 @@
 #define NDEBUG
 #include <debug.h>
 
-/* FIXME: Local EFLAGS defines not used anywhere else */
-#define EFLAGS_IOPL     0x3000
-#define EFLAGS_NF       0x4000
-#define EFLAGS_RF       0x10000
-#define EFLAGS_ID       0x200000
-
 /* GLOBALS *******************************************************************/
 
 /* The Boot TSS */
@@ -33,10 +27,6 @@ ULONG KeLargestCacheLine = 0x40;
 ULONG KiDmaIoCoherency = 0;
 BOOLEAN KiSMTProcessorsPresent;
 
-/* Freeze data */
-KIRQL KiOldIrql;
-ULONG KiFreezeFlag;
-
 /* Flush data */
 volatile LONG KiTbFlushTimeStamp;
 
@@ -50,7 +40,6 @@ static const CHAR CmpRiseID[]        = "RiseRiseRise";
 
 /* FUNCTIONS *****************************************************************/
 
-CODE_SEG("INIT")
 VOID
 NTAPI
 KiSetProcessorType(VOID)
@@ -121,7 +110,6 @@ KiGetCpuVendor(VOID)
     return CPU_UNKNOWN;
 }
 
-CODE_SEG("INIT")
 ULONG
 NTAPI
 KiGetFeatureBits(VOID)
@@ -211,7 +199,6 @@ KiGetFeatureBits(VOID)
     return FeatureBits;
 }
 
-CODE_SEG("INIT")
 VOID
 NTAPI
 KiGetCacheInformation(VOID)

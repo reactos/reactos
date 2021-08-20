@@ -72,74 +72,57 @@ CcInitCacheZeroPage (
 VOID
 CcPostDeferredWrites(VOID)
 {
-    ULONG WrittenBytes;
+    LIST_ENTRY ToInsertBack;
+
+    InitializeListHead(&ToInsertBack);
 
     /* We'll try to write as much as we can */
-    WrittenBytes = 0;
     while (TRUE)
     {
-        KIRQL OldIrql;
-        PLIST_ENTRY ListEntry;
         PDEFERRED_WRITE DeferredWrite;
+        PLIST_ENTRY ListEntry;
 
         DeferredWrite = NULL;
 
-        /* Lock our deferred writes list */
-        KeAcquireSpinLock(&CcDeferredWriteSpinLock, &OldIrql);
-        for (ListEntry = CcDeferredWrites.Flink;
-             ListEntry != &CcDeferredWrites;
-             ListEntry = ListEntry->Flink)
+        ListEntry = ExInterlockedRemoveHeadList(&CcDeferredWrites, &CcDeferredWriteSpinLock);
+
+        if (!ListEntry)
+            break;
+
+        DeferredWrite = CONTAINING_RECORD(ListEntry, DEFERRED_WRITE, DeferredWriteLinks);
+
+        /* Check if we can write */
+        if (CcCanIWrite(DeferredWrite->FileObject, DeferredWrite->BytesToWrite, FALSE, RetryForceCheckPerFile))
         {
-            /* Extract an entry */
-            DeferredWrite = CONTAINING_RECORD(ListEntry, DEFERRED_WRITE, DeferredWriteLinks);
-
-            /* Compute the modified bytes, based on what we already wrote */
-            WrittenBytes += DeferredWrite->BytesToWrite;
-            /* We overflowed, give up */
-            if (WrittenBytes < DeferredWrite->BytesToWrite)
+            /* If we have an event, set it and go along */
+            if (DeferredWrite->Event)
             {
-                DeferredWrite = NULL;
-                break;
+                KeSetEvent(DeferredWrite->Event, IO_NO_INCREMENT, FALSE);
             }
-
-            /* Check we can write */
-            if (CcCanIWrite(DeferredWrite->FileObject, WrittenBytes, FALSE, RetryForceCheckPerFile))
+            /* Otherwise, call the write routine and free the context */
+            else
             {
-                /* We can, so remove it from the list and stop looking for entry */
-                RemoveEntryList(&DeferredWrite->DeferredWriteLinks);
-                break;
+                DeferredWrite->PostRoutine(DeferredWrite->Context1, DeferredWrite->Context2);
+                ExFreePoolWithTag(DeferredWrite, 'CcDw');
             }
-
-            /* If we don't accept modified pages, stop here */
-            if (!DeferredWrite->LimitModifiedPages)
-            {
-                DeferredWrite = NULL;
-                break;
-            }
-
-            /* Reset count as nothing was written yet */
-            WrittenBytes -= DeferredWrite->BytesToWrite;
-            DeferredWrite = NULL;
+            continue;
         }
-        KeReleaseSpinLock(&CcDeferredWriteSpinLock, OldIrql);
 
-        /* Nothing to write found, give up */
-        if (DeferredWrite == NULL)
+        /* Keep it for later */
+        InsertHeadList(&ToInsertBack, &DeferredWrite->DeferredWriteLinks);
+
+        /* If we don't accept modified pages, stop here */
+        if (!DeferredWrite->LimitModifiedPages)
         {
             break;
         }
+    }
 
-        /* If we have an event, set it and quit */
-        if (DeferredWrite->Event)
-        {
-            KeSetEvent(DeferredWrite->Event, IO_NO_INCREMENT, FALSE);
-        }
-        /* Otherwise, call the write routine and free the context */
-        else
-        {
-            DeferredWrite->PostRoutine(DeferredWrite->Context1, DeferredWrite->Context2);
-            ExFreePoolWithTag(DeferredWrite, 'CcDw');
-        }
+    /* Insert what we couldn't write back in the list */
+    while (!IsListEmpty(&ToInsertBack))
+    {
+        PLIST_ENTRY ListEntry = RemoveTailList(&ToInsertBack);
+        ExInterlockedInsertHeadList(&CcDeferredWrites, ListEntry, &CcDeferredWriteSpinLock);
     }
 }
 
@@ -398,16 +381,6 @@ CcCanIWrite (
         return FALSE;
     }
 
-    /* Otherwise, if there are no deferred writes yet, start the lazy writer */
-    if (IsListEmpty(&CcDeferredWrites))
-    {
-        KIRQL OldIrql;
-
-        OldIrql = KeAcquireQueuedSpinLock(LockQueueMasterLock);
-        CcScheduleLazyWriteScan(TRUE);
-        KeReleaseQueuedSpinLock(LockQueueMasterLock, OldIrql);
-    }
-
     /* Initialize our wait event */
     KeInitializeEvent(&WaitEvent, NotificationEvent, FALSE);
 
@@ -435,7 +408,24 @@ CcCanIWrite (
                                     &CcDeferredWriteSpinLock);
     }
 
+    /* Now make sure that the lazy scan writer will be active */
+    OldIrql = KeAcquireQueuedSpinLock(LockQueueMasterLock);
+    if (!LazyWriter.ScanActive)
+        CcScheduleLazyWriteScan(TRUE);
+    KeReleaseQueuedSpinLock(LockQueueMasterLock, OldIrql);
+
+#if DBG
     DPRINT1("Actively deferring write for: %p\n", FileObject);
+    DPRINT1("Because:\n");
+    if (CcTotalDirtyPages + Pages >= CcDirtyPageThreshold)
+        DPRINT1("    There are too many cache dirty pages: %x + %x >= %x\n", CcTotalDirtyPages, Pages, CcDirtyPageThreshold);
+    if (MmAvailablePages <= MmThrottleTop)
+        DPRINT1("    Available pages are below throttle top: %lx <= %lx\n", MmAvailablePages, MmThrottleTop);
+    if (MmModifiedPageListHead.Total >= 1000)
+        DPRINT1("    There are too many modified pages: %lu >= 1000\n", MmModifiedPageListHead.Total);
+    if (MmAvailablePages <= MmThrottleBottom)
+        DPRINT1("    Available pages are below throttle bottom: %lx <= %lx\n", MmAvailablePages, MmThrottleBottom);
+#endif
     /* Now, we'll loop until our event is set. When it is set, it means that caller
      * can immediately write, and has to
      */

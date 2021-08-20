@@ -1352,6 +1352,37 @@ static MUI_ENTRY ruRUFormatPartitionEntries[] =
     }
 };
 
+static MUI_ENTRY ruRUCheckFSEntries[] =
+{
+    {
+        4,
+        3,
+        " \223\341\342\240\255\256\242\252\240 ReactOS " KERNEL_VERSION_STR,
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        8,
+        "\217\340\256\243\340\240\254\254\240 \343\341\342\240\255\256\242\252\250 \257\340\256\242\245\340\357\245\342 \242\353\241\340\240\255\255\353\251 \340\240\247\244\245\253.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        "\217\256\246\240\253\343\251\341\342\240, \257\256\244\256\246\244\250\342\245...",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
 static MUI_ENTRY ruRUInstallDirectoryEntries[] =
 {
     {
@@ -1504,6 +1535,30 @@ static MUI_ENTRY ruRUBootLoaderEntries[] =
         0,
         0,
         "ENTER = \217\340\256\244\256\253\246\250\342\354   F3 = \202\353\345\256\244",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
+static MUI_ENTRY ruRUBootLoaderInstallPageEntries[] =
+{
+    {
+        4,
+        3,
+        " \223\341\342\240\255\256\242\252\240 ReactOS " KERNEL_VERSION_STR,
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        "\217\340\256\250\247\242\256\244\250\342\341\357 \343\341\342\240\255\256\242\252\240 \247\240\243\340\343\247\347\250\252\240 \255\240 \255\256\341\250\342\245\253\354. \217\256\246\240\253\343\251\341\342\240, \257\256\244\256\246\244\250\342\245...",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
         TEXT_ID_STATIC
     },
@@ -2124,6 +2179,10 @@ MUI_PAGE ruRUPages[] =
         ruRUFormatPartitionEntries
     },
     {
+        CHECK_FILE_SYSTEM_PAGE,
+        ruRUCheckFSEntries
+    },
+    {
         DELETE_PARTITION_PAGE,
         ruRUDeletePartitionEntries
     },
@@ -2158,6 +2217,10 @@ MUI_PAGE ruRUPages[] =
     {
         SUCCESS_PAGE,
         ruRUSuccessPageEntries
+    },
+    {
+        BOOT_LOADER_INSTALLATION_PAGE,
+        ruRUBootLoaderInstallPageEntries
     },
     {
         BOOT_LOADER_FLOPPY_PAGE,
@@ -2207,8 +2270,6 @@ MUI_STRING ruRUStrings[] =
     "\215\256\242\353\251 \340\240\247\244\245\253 \255\245 \256\342\344\256\340\254\240\342\250\340\256\242\240\255."},
     {STRING_INSTALLONPART,
     "ReactOS \343\341\342\240\255\240\242\253\250\242\240\245\342\341\357 \255\240 \340\240\247\244\245\253:"},
-    {STRING_CHECKINGPART,
-    "\217\340\256\243\340\240\254\254\240 \343\341\342\240\255\256\242\252\250 \257\340\256\242\245\340\357\245\342 \242\353\241\340\240\255\255\353\251 \340\240\247\244\245\253."},
     {STRING_CONTINUE,
     "ENTER = \217\340\256\244\256\253\246\250\342\354"},
     {STRING_QUITCONTINUE,

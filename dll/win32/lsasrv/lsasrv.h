@@ -79,7 +79,7 @@ typedef struct _LSAP_LOGON_CONTEXT
     LIST_ENTRY Entry;
     HANDLE ClientProcessHandle;
     HANDLE ConnectionHandle;
-    BOOL Untrusted;
+    BOOL TrustedCaller;
 } LSAP_LOGON_CONTEXT, *PLSAP_LOGON_CONTEXT;
 
 typedef struct _SAMPR_ULONG_ARRAY
@@ -125,6 +125,11 @@ LsapCallAuthenticationPackage(PLSA_API_MSG RequestMsg,
 NTSTATUS
 LsapLogonUser(PLSA_API_MSG RequestMsg,
               PLSAP_LOGON_CONTEXT LogonContext);
+
+VOID
+LsapTerminateLogon(
+    _In_ PLUID LogonId);
+
 
 /* authport.c */
 NTSTATUS

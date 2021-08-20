@@ -142,8 +142,6 @@ static FILE_SYSTEM RegisteredFileSystems[] =
     { L"EXT2" , Ext2Format, Ext2Chkdsk },
     { L"EXT3" , Ext2Format, Ext2Chkdsk },
     { L"EXT4" , Ext2Format, Ext2Chkdsk },
-    { L"FFS"  , FfsFormat , FfsChkdsk  },
-    { L"REISERFS", ReiserfsFormat, ReiserfsChkdsk },
 #endif
 };
 

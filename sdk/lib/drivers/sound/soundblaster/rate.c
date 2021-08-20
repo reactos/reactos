@@ -148,4 +148,4 @@ SbDsp4SetInputRate(
 
     return SbDsp4WriteRate(BasePort, Rate, Timeout);
 }
- 
+

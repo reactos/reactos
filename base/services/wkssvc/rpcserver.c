@@ -89,7 +89,6 @@ NetrWkstaGetInfo(
     DWORD dwComputerNameLength;
     LPCWSTR pszLanRoot = L"";
     PWKSTA_INFO pWkstaInfo = NULL;
-    OSVERSIONINFOW VersionInfo;
     LSA_OBJECT_ATTRIBUTES ObjectAttributes;
     LSA_HANDLE PolicyHandle;
     PPOLICY_PRIMARY_DOMAIN_INFO DomainInfo = NULL;
@@ -101,9 +100,6 @@ NetrWkstaGetInfo(
     dwComputerNameLength = MAX_COMPUTERNAME_LENGTH + 1;
     GetComputerNameW(szComputerName, &dwComputerNameLength);
     dwComputerNameLength++; /* include NULL terminator */
-
-    VersionInfo.dwOSVersionInfoSize = sizeof(VersionInfo);
-    GetVersionExW(&VersionInfo);
 
     ZeroMemory(&ObjectAttributes, sizeof(ObjectAttributes));
     NtStatus = LsaOpenPolicy(NULL,
@@ -249,6 +245,10 @@ NetrWkstaUserEnum(
     unsigned long *TotalEntries,
     unsigned long *ResumeHandle)
 {
+    ERR("NetrWkstaUserEnum(%p %p 0x%lx %p %p)\n",
+        ServerName, UserInfo, PreferredMaximumLength, TotalEntries, ResumeHandle);
+
+
     UNIMPLEMENTED;
     return 0;
 }

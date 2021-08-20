@@ -57,25 +57,25 @@ MiniportSend (
     PUCHAR runtBuffer;
 
     ASSERT(sgList != NULL);
-    
+
     ASSERT(sgList->NumberOfElements == 1);
     ASSERT(sgList->Elements[0].Address.HighPart == 0);
     ASSERT((sgList->Elements[0].Address.LowPart & 3) == 0);
     ASSERT(sgList->Elements[0].Length <= MAXIMUM_FRAME_SIZE);
-    
+
     NDIS_DbgPrint(MAX_TRACE, ("Sending %d byte packet\n", sgList->Elements[0].Length));
-    
+
     NdisAcquireSpinLock(&adapter->Lock);
-    
+
     if (adapter->TxFull)
     {
         NDIS_DbgPrint(MIN_TRACE, ("All TX descriptors are full\n"));
         NdisReleaseSpinLock(&adapter->Lock);
         return NDIS_STATUS_RESOURCES;
     }
-    
+
     NDIS_DbgPrint(MAX_TRACE, ("Sending packet on TX desc %d\n", adapter->CurrentTxDesc));
-            
+
     //
     // If this is a runt, we need to pad it manually for the RTL8139
     //
@@ -84,7 +84,7 @@ MiniportSend (
         transmitLength = MINIMUM_FRAME_SIZE;
         transmitBuffer = adapter->RuntTxBuffersPa.LowPart +
                   (MINIMUM_FRAME_SIZE * adapter->CurrentTxDesc);
-                
+
         NdisGetFirstBufferFromPacketSafe(Packet,
                                          &firstBuffer,
                                          &firstBufferVa,
@@ -97,9 +97,9 @@ MiniportSend (
             NdisReleaseSpinLock(&adapter->Lock);
             return NDIS_STATUS_RESOURCES;
         }
-                
+
         ASSERT(firstBufferLength == totalBufferLength);
-               
+
         runtBuffer = adapter->RuntTxBuffers + (MINIMUM_FRAME_SIZE * adapter->CurrentTxDesc);
         RtlCopyMemory(runtBuffer, firstBufferVa, firstBufferLength);
         RtlFillMemory(runtBuffer + firstBufferLength, MINIMUM_FRAME_SIZE - firstBufferLength, 0x00);
@@ -117,16 +117,16 @@ MiniportSend (
         NdisReleaseSpinLock(&adapter->Lock);
         return status;
     }
-        
+
     adapter->CurrentTxDesc++;
     adapter->CurrentTxDesc %= TX_DESC_COUNT;
-    
+
     if (adapter->CurrentTxDesc == adapter->DirtyTxDesc)
     {
         NDIS_DbgPrint(MID_TRACE, ("All TX descriptors are full now\n"));
         adapter->TxFull = TRUE;
     }
-    
+
     NdisReleaseSpinLock(&adapter->Lock);
 
     return NDIS_STATUS_SUCCESS;
@@ -141,7 +141,7 @@ MiniportHalt (
     PRTL_ADAPTER adapter = (PRTL_ADAPTER)MiniportAdapterContext;
 
     ASSERT(adapter != NULL);
-    
+
     //
     // Interrupts need to stop first
     //
@@ -154,7 +154,7 @@ MiniportHalt (
     // If we have a mapped IO port range, we can talk to the NIC
     //
     if (adapter->IoBase != NULL)
-    {   
+    {
         if (adapter->ReceiveBuffer != NULL)
         {
             //
@@ -169,7 +169,7 @@ MiniportHalt (
                                   adapter->ReceiveBuffer,
                                   adapter->ReceiveBufferPa);
         }
-        
+
         if (adapter->RuntTxBuffers != NULL)
         {
             NdisMFreeSharedMemory(adapter->MiniportAdapterHandle,
@@ -178,7 +178,7 @@ MiniportHalt (
                                   adapter->RuntTxBuffers,
                                   adapter->RuntTxBuffersPa);
         }
-        
+
         //
         // Unregister the IO range
         //
@@ -187,7 +187,7 @@ MiniportHalt (
                                    adapter->IoRangeLength,
                                    adapter->IoBase);
     }
-    
+
     //
     // Destroy the adapter context
     //
@@ -210,7 +210,7 @@ MiniportInitialize (
     UINT i;
     PNDIS_RESOURCE_LIST resourceList;
     UINT resourceListSize;
-    
+
     //
     // Make sure the medium is supported
     //
@@ -222,13 +222,13 @@ MiniportInitialize (
             break;
         }
     }
-    
+
     if (i == MediumArraySize)
     {
         NDIS_DbgPrint(MIN_TRACE, ("802.3 medium was not found in the medium array\n"));
         return NDIS_STATUS_UNSUPPORTED_MEDIA;
     }
-    
+
     //
     // Allocate our adapter context
     //
@@ -240,7 +240,7 @@ MiniportInitialize (
         NDIS_DbgPrint(MIN_TRACE, ("Failed to allocate adapter context\n"));
         return NDIS_STATUS_RESOURCES;
     }
-    
+
     RtlZeroMemory(adapter, sizeof(*adapter));
     adapter->MiniportAdapterHandle = MiniportAdapterHandle;
     NdisAllocateSpinLock(&adapter->Lock);
@@ -269,7 +269,7 @@ MiniportInitialize (
         status = NDIS_STATUS_FAILURE;
         goto Cleanup;
     }
-    
+
     status = NdisAllocateMemoryWithTag((PVOID*)&resourceList,
                                 resourceListSize,
                                 RESOURCE_LIST_TAG);
@@ -278,7 +278,7 @@ MiniportInitialize (
         NDIS_DbgPrint(MIN_TRACE, ("Failed to allocate resource list\n"));
         goto Cleanup;
     }
-    
+
     NdisMQueryAdapterResources(&status,
                                WrapperConfigurationContext,
                                resourceList,
@@ -288,35 +288,35 @@ MiniportInitialize (
         NDIS_DbgPrint(MIN_TRACE, ("Unexpected failure of NdisMQueryAdapterResources #2\n"));
         goto Cleanup;
     }
-    
+
     ASSERT(resourceList->Version == 1);
     ASSERT(resourceList->Revision == 1);
-    
+
     for (i = 0; i < resourceList->Count; i++)
     {
         switch (resourceList->PartialDescriptors[i].Type)
         {
             case CmResourceTypePort:
                 ASSERT(adapter->IoRangeStart == 0);
-                
+
                 ASSERT(resourceList->PartialDescriptors[i].u.Port.Start.HighPart == 0);
-                
+
                 adapter->IoRangeStart = resourceList->PartialDescriptors[i].u.Port.Start.LowPart;
                 adapter->IoRangeLength = resourceList->PartialDescriptors[i].u.Port.Length;
-                
+
                 NDIS_DbgPrint(MID_TRACE, ("I/O port range is %p to %p\n",
                               adapter->IoRangeStart, adapter->IoRangeStart + adapter->IoRangeLength));
                 break;
-                
+
             case CmResourceTypeInterrupt:
                 ASSERT(adapter->InterruptVector == 0);
                 ASSERT(adapter->InterruptLevel == 0);
-                
+
                 adapter->InterruptVector = resourceList->PartialDescriptors[i].u.Interrupt.Vector;
                 adapter->InterruptLevel = resourceList->PartialDescriptors[i].u.Interrupt.Level;
                 adapter->InterruptShared = (resourceList->PartialDescriptors[i].ShareDisposition == CmResourceShareShared);
                 adapter->InterruptFlags = resourceList->PartialDescriptors[i].Flags;
-                
+
                 NDIS_DbgPrint(MID_TRACE, ("IRQ vector is %d\n", adapter->InterruptVector));
                 break;
 
@@ -325,16 +325,16 @@ MiniportInitialize (
                 break;
         }
     }
-    
+
     NdisFreeMemory(resourceList, resourceListSize, 0);
     resourceList = NULL;
-    
+
     if (adapter->IoRangeStart == 0 || adapter->InterruptVector == 0)
     {
         NDIS_DbgPrint(MIN_TRACE, ("Adapter didn't receive enough resources\n"));
         goto Cleanup;
     }
-    
+
     //
     // Allocate the DMA resources
     //
@@ -359,7 +359,7 @@ MiniportInitialize (
         status = NDIS_STATUS_RESOURCES;
         goto Cleanup;
     }
-    
+
     NdisMAllocateSharedMemory(MiniportAdapterHandle,
                               MINIMUM_FRAME_SIZE * TX_DESC_COUNT,
                               FALSE,
@@ -371,7 +371,7 @@ MiniportInitialize (
         status = NDIS_STATUS_RESOURCES;
         goto Cleanup;
     }
-    
+
     //
     // Register the I/O port range and configure the NIC
     //
@@ -384,7 +384,7 @@ MiniportInitialize (
         NDIS_DbgPrint(MIN_TRACE, ("Unable to register IO port range (0x%x)\n", status));
         goto Cleanup;
     }
-    
+
     //
     // Adapter setup
     //
@@ -394,28 +394,28 @@ MiniportInitialize (
         NDIS_DbgPrint(MIN_TRACE, ("Unable to power on NIC (0x%x)\n", status));
         goto Cleanup;
     }
-    
+
     status = NICSoftReset(adapter);
     if (status != NDIS_STATUS_SUCCESS)
     {
         NDIS_DbgPrint(MIN_TRACE, ("Unable to reset the NIC (0x%x)\n", status));
         goto Cleanup;
     }
-    
+
     status = NICGetPermanentMacAddress(adapter, adapter->PermanentMacAddress);
     if (status != NDIS_STATUS_SUCCESS)
     {
         NDIS_DbgPrint(MIN_TRACE, ("Unable to get the fixed MAC address (0x%x)\n", status));
         goto Cleanup;
     }
-    
+
     RtlCopyMemory(adapter->CurrentMacAddress, adapter->PermanentMacAddress, IEEE_802_ADDR_LENGTH);
-    
+
     //
     // Update link state and speed
     //
     NICUpdateLinkStatus(adapter);
-        
+
     status = NICRegisterReceiveBuffer(adapter);
     if (status != NDIS_STATUS_SUCCESS)
     {
@@ -439,9 +439,9 @@ MiniportInitialize (
         NDIS_DbgPrint(MIN_TRACE, ("Unable to register interrupt (0x%x)\n", status));
         goto Cleanup;
     }
-    
+
     adapter->InterruptRegistered = TRUE;
-    
+
     //
     // Enable interrupts on the NIC
     //
@@ -452,7 +452,7 @@ MiniportInitialize (
         NDIS_DbgPrint(MIN_TRACE, ("Unable to apply interrupt mask (0x%x)\n", status));
         goto Cleanup;
     }
-    
+
     //
     // Turn on TX and RX now
     //
@@ -464,7 +464,7 @@ MiniportInitialize (
     }
 
     return NDIS_STATUS_SUCCESS;
-    
+
 Cleanup:
     if (resourceList != NULL)
     {
@@ -474,7 +474,7 @@ Cleanup:
     {
         MiniportHalt(adapter);
     }
-    
+
     return status;
 }
 

@@ -622,23 +622,25 @@ SepAccessCheckAndAuditAlarm(
     }
 
     /* Call the worker routine with the captured buffers */
-    SepAccessCheckAndAuditAlarmWorker(&CapturedSubsystemName,
-                                      HandleId,
-                                      &SubjectContext,
-                                      &CapturedObjectTypeName,
-                                      &CapturedObjectName,
-                                      CapturedSecurityDescriptor,
-                                      CapturedPrincipalSelfSid,
-                                      DesiredAccess,
-                                      AuditType,
-                                      HaveAuditPrivilege,
-                                      CapturedObjectTypeList,
-                                      ObjectTypeListLength,
-                                      &LocalGenericMapping,
-                                      SafeGrantedAccessList,
-                                      SafeAccessStatusList,
-                                      &LocalGenerateOnClose,
-                                      UseResultList);
+    Status = SepAccessCheckAndAuditAlarmWorker(&CapturedSubsystemName,
+                                               HandleId,
+                                               &SubjectContext,
+                                               &CapturedObjectTypeName,
+                                               &CapturedObjectName,
+                                               CapturedSecurityDescriptor,
+                                               CapturedPrincipalSelfSid,
+                                               DesiredAccess,
+                                               AuditType,
+                                               HaveAuditPrivilege,
+                                               CapturedObjectTypeList,
+                                               ObjectTypeListLength,
+                                               &LocalGenericMapping,
+                                               SafeGrantedAccessList,
+                                               SafeAccessStatusList,
+                                               &LocalGenerateOnClose,
+                                               UseResultList);
+    if (!NT_SUCCESS(Status))
+        goto Cleanup;
 
     /* Enter SEH to copy the data back to user mode */
     _SEH2_TRY
@@ -731,7 +733,7 @@ SeAuditingFileEventsWithContext(IN BOOLEAN AccessGranted,
                                 IN PSECURITY_DESCRIPTOR SecurityDescriptor,
                                 IN PSECURITY_SUBJECT_CONTEXT SubjectSecurityContext OPTIONAL)
 {
-    UNIMPLEMENTED;
+    UNIMPLEMENTED_ONCE;
     return FALSE;
 }
 

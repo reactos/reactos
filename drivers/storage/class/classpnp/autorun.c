@@ -184,7 +184,7 @@ ClassSendEjectionNotification(
     return;
 }
 
-
+
 _IRQL_requires_max_(DISPATCH_LEVEL)
 VOID
 NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
@@ -766,7 +766,7 @@ Notes:
     } // end switch on notification class
     return status;
 }
-
+
 /*++////////////////////////////////////////////////////////////////////////////
 
 ClasspInternalSetMediaChangeState()
@@ -911,7 +911,7 @@ ClasspInternalSetMediaChangeState(
 
     return;
 } // end ClasspInternalSetMediaChangeState()
-
+
 /*++////////////////////////////////////////////////////////////////////////////
 
 ClassSetMediaChangeState()
@@ -1021,7 +1021,7 @@ ClassSetMediaChangeState(
     ClasspSetMediaChangeStateEx(FdoExtension, NewState, Wait, FALSE);
     return;
 }
-
+
 /*++////////////////////////////////////////////////////////////////////////////
 
 ClasspMediaChangeDetectionCompletion()
@@ -1288,7 +1288,7 @@ ClasspMediaChangeDetectionCompletion(
 
     return STATUS_MORE_PROCESSING_REQUIRED;
 }
-
+
 /*++////////////////////////////////////////////////////////////////////////////
 
 ClasspSendTestUnitIrp() - ISSUE-2000/02/20-henrygab - not documented
@@ -1538,7 +1538,7 @@ ClasspPrepareMcnIrp(
     return irp;
 
 }
-
+
 /*++////////////////////////////////////////////////////////////////////////////
 
 ClasspSendMediaStateIrp() - ISSUE-2000/02/20-henrygab - not documented
@@ -1727,7 +1727,7 @@ ClasspSendMediaStateIrp(
 
     return;
 } // end ClasspSendMediaStateIrp()
-
+
 /*++////////////////////////////////////////////////////////////////////////////
 
 ClassCheckMediaState()
@@ -1781,7 +1781,7 @@ ClassCheckMediaState(
 
     return;
 } // end ClassCheckMediaState()
-
+
 /*++////////////////////////////////////////////////////////////////////////////
 
 ClassResetMediaChangeTimer()
@@ -1813,7 +1813,7 @@ ClassResetMediaChangeTimer(
     }
     return;
 } // end ClassResetMediaChangeTimer()
-
+
 /*++////////////////////////////////////////////////////////////////////////////
 
 ClasspInitializePolling() - ISSUE-2000/02/20-henrygab - not documented
@@ -1985,7 +1985,7 @@ ClasspInitializePolling(
     return STATUS_INSUFFICIENT_RESOURCES;
 
 } // end ClasspInitializePolling()
-
+
 NTSTATUS
 ClasspInitializeGesn(
     IN PFUNCTIONAL_DEVICE_EXTENSION FdoExtension,
@@ -2425,7 +2425,7 @@ ClassInitializeTestUnitPolling(
 {
     return ClasspInitializePolling(FdoExtension, AllowDriveToSleep);
 } // end ClassInitializeTestUnitPolling()
-
+
 /*++////////////////////////////////////////////////////////////////////////////
 
 ClassInitializeMediaChangeDetection()
@@ -2536,7 +2536,7 @@ ClassInitializeMediaChangeDetection(
 
     return;
 } // end ClassInitializeMediaChangeDetection()
-
+
 /*++////////////////////////////////////////////////////////////////////////////
 
 ClasspMediaChangeDeviceInstanceOverride()
@@ -2698,7 +2698,7 @@ ClasspMediaChangeDeviceInstanceOverride(
     return status;
 
 } // end ClasspMediaChangeDeviceInstanceOverride()
-
+
 /*++////////////////////////////////////////////////////////////////////////////
 
 ClasspIsMediaChangeDisabledDueToHardwareLimitation()
@@ -2926,7 +2926,7 @@ ClasspIsMediaChangeDisabledDueToHardwareLimitation(
     return FALSE;
 
 } // end ClasspIsMediaChangeDisabledDueToHardwareLimitation()
-
+
 /*++////////////////////////////////////////////////////////////////////////////
 
 ClasspIsMediaChangeDisabledForClass()
@@ -3078,7 +3078,7 @@ ClasspIsMediaChangeDisabledForClass(
 
     return (BOOLEAN)(!mcnRegistryValue);
 } // end ClasspIsMediaChangeDisabledForClass()
-
+
 /*++////////////////////////////////////////////////////////////////////////////
 
 ClassEnableMediaChangeDetection() ISSUE-2000/02/20-henrygab - why public?
@@ -3162,7 +3162,7 @@ ClassEnableMediaChangeDetection(
 
     return;
 } // end ClassEnableMediaChangeDetection()
-
+
 /*++////////////////////////////////////////////////////////////////////////////
 
 ClassDisableMediaChangeDetection() ISSUE-2000/02/20-henrygab - why public?
@@ -3213,7 +3213,7 @@ ClassDisableMediaChangeDetection(
 
     return;
 } // end ClassDisableMediaChangeDetection()
-
+
 /*++////////////////////////////////////////////////////////////////////////////
 
 ClassCleanupMediaChangeDetection() ISSUE-2000/02/20-henrygab - why public?!
@@ -3255,7 +3255,7 @@ ClassCleanupMediaChangeDetection(
     FREE_POOL(info);
     return;
 } // end ClassCleanupMediaChangeDetection()
-
+
 /*++////////////////////////////////////////////////////////////////////////////
 
 ClasspMcnControl() - ISSUE-2000/02/20-henrygab - not documented
@@ -3350,7 +3350,7 @@ ClasspMcnControl(
     }
     return status;
 } // end ClasspMcnControl(
-
+
 /*++////////////////////////////////////////////////////////////////////////////
 
 ClasspMediaChangeRegistryCallBack()
@@ -3456,7 +3456,7 @@ ClasspMediaChangeRegistryCallBack(
 
     return STATUS_SUCCESS;
 } // end ClasspMediaChangeRegistryCallBack()
-
+
 #if (NTDDI_VERSION >= NTDDI_WINBLUE)
 VOID
 ClasspTimerTickEx(
@@ -3936,7 +3936,7 @@ ClasspEnableTimer(
     }
 
 } // end ClasspEnableTimer()
-
+
 /*++////////////////////////////////////////////////////////////////////////////
 
 ClasspDisableTimer() - ISSUE-2000/02/20-henrygab - not documented
@@ -3993,7 +3993,7 @@ ClasspDisableTimer(
 
     return;
 } // end ClasspDisableTimer()
-
+
 /*++////////////////////////////////////////////////////////////////////////////
 
 ClasspFailurePredict() - ISSUE-2000/02/20-henrygab - not documented
@@ -4156,7 +4156,7 @@ ClasspFailurePredict(
     IoFreeWorkItem(workItem);
     return;
 } // end ClasspFailurePredict()
-
+
 /*++////////////////////////////////////////////////////////////////////////////
 
 ClassNotifyFailurePredicted() ISSUE-alanwar-2000/02/20 - not documented
@@ -4263,7 +4263,7 @@ ClassNotifyFailurePredicted(
     }
 
 } // end ClassNotifyFailurePredicted()
-
+
 /*++////////////////////////////////////////////////////////////////////////////
 
 ClassSetFailurePredictionPoll()

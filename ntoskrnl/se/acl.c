@@ -21,6 +21,7 @@ PACL SePublicDefaultUnrestrictedDacl = NULL;
 PACL SePublicOpenDacl = NULL;
 PACL SePublicOpenUnrestrictedDacl = NULL;
 PACL SeUnrestrictedDacl = NULL;
+PACL SeSystemAnonymousLogonDacl = NULL;
 
 /* FUNCTIONS ******************************************************************/
 
@@ -216,6 +217,31 @@ SepInitDACLs(VOID)
                            ACL_REVISION,
                            GENERIC_READ | GENERIC_EXECUTE,
                            SeRestrictedCodeSid);
+
+    /* create SystemAnonymousLogonDacl */
+    AclLength = sizeof(ACL) +
+                (sizeof(ACE) + RtlLengthSid(SeWorldSid)) +
+                (sizeof(ACE) + RtlLengthSid(SeAnonymousLogonSid));
+
+    SeSystemAnonymousLogonDacl = ExAllocatePoolWithTag(PagedPool,
+                                                       AclLength,
+                                                       TAG_ACL);
+    if (SeSystemAnonymousLogonDacl == NULL)
+        return FALSE;
+
+    RtlCreateAcl(SeSystemAnonymousLogonDacl,
+                 AclLength,
+                 ACL_REVISION);
+
+    RtlAddAccessAllowedAce(SeSystemAnonymousLogonDacl,
+                           ACL_REVISION,
+                           GENERIC_ALL,
+                           SeWorldSid);
+
+    RtlAddAccessAllowedAce(SeSystemAnonymousLogonDacl,
+                           ACL_REVISION,
+                           GENERIC_ALL,
+                           SeAnonymousLogonSid);
 
     return TRUE;
 }

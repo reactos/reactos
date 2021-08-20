@@ -1346,6 +1346,37 @@ static MUI_ENTRY elGRFormatPartitionEntries[] =
     }
 };
 
+static MUI_ENTRY elGRCheckFSEntries[] =
+{
+    {
+        4,
+        3,
+        " \204\232\241\230\253\341\251\253\230\251\236 \253\246\254 ReactOS " KERNEL_VERSION_STR,
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        8,
+        "\206 \234\232\241\230\253\341\251\253\230\251\236 \234\242\342\232\256\234\240 \253\351\250\230 \253\246 \234\247\240\242\234\232\243\342\244\246 partition.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        "\217\230\250\230\241\230\242\351 \247\234\250\240\243\342\244\234\253\234...",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
 static MUI_ENTRY elGRInstallDirectoryEntries[] =
 {
     {
@@ -1499,6 +1530,30 @@ static MUI_ENTRY elGRBootLoaderEntries[] =
         0,
         "   ENTER = \221\254\244\342\256\234\240\230   F3 = \200\247\246\256\351\250\236\251\236",
         TEXT_TYPE_STATUS,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
+static MUI_ENTRY elGRBootLoaderInstallPageEntries[] =
+{
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        "Installing the bootloader onto the media, please wait...",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
         TEXT_ID_STATIC
     },
     {
@@ -2117,6 +2172,10 @@ MUI_PAGE elGRPages[] =
         elGRFormatPartitionEntries
     },
     {
+        CHECK_FILE_SYSTEM_PAGE,
+        elGRCheckFSEntries
+    },
+    {
         DELETE_PARTITION_PAGE,
         elGRDeletePartitionEntries
     },
@@ -2151,6 +2210,10 @@ MUI_PAGE elGRPages[] =
     {
         SUCCESS_PAGE,
         elGRSuccessPageEntries
+    },
+    {
+        BOOT_LOADER_INSTALLATION_PAGE,
+        elGRBootLoaderInstallPageEntries
     },
     {
         BOOT_LOADER_FLOPPY_PAGE,
@@ -2202,8 +2265,6 @@ MUI_STRING elGRStrings[] =
     "The new partition is not formatted yet."},
     {STRING_INSTALLONPART,
     "Setup install ReactOS onto Partition"},
-    {STRING_CHECKINGPART,
-    "\206 \234\232\241\230\253\341\251\253\230\251\236 \234\242\342\232\256\234\240 \253\351\250\230 \253\246 \234\247\240\242\234\232\243\342\244\246 partition."},
     {STRING_CONTINUE,
     "ENTER = \221\254\244\342\256\234\240\230"},
     {STRING_QUITCONTINUE,

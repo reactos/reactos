@@ -761,7 +761,14 @@ NtUserCallHwndParam(
     switch (Routine)
     {
         case HWNDPARAM_ROUTINE_KILLSYSTEMTIMER:
-            return IntKillTimer(UserGetWindowObject(hWnd), (UINT_PTR)Param, TRUE);
+        {
+            DWORD ret;
+
+            UserEnterExclusive();
+            ret = IntKillTimer(UserGetWindowObject(hWnd), (UINT_PTR)Param, TRUE);
+            UserLeave();
+            return ret;
+        }
 
         case HWNDPARAM_ROUTINE_SETWNDCONTEXTHLPID:
         {
@@ -798,9 +805,10 @@ NtUserCallHwndParam(
             UserRefObjectCo(pWnd, &Ref);
 
             if (pWnd->head.pti->ppi == PsGetCurrentProcessWin32Process() &&
-                pWnd->cbwndExtra == DLGWINDOWEXTRA &&
+                pWnd->cbwndExtra >= DLGWINDOWEXTRA &&
                 !(pWnd->state & WNDS_SERVERSIDEWINDOWPROC))
             {
+                pWnd->DialogPointer = (PVOID)Param;
                 if (Param)
                 {
                     if (!pWnd->fnid) pWnd->fnid = FNID_DIALOG;

@@ -960,7 +960,12 @@ NtDisplayString(IN PUNICODE_STRING DisplayString)
         Status = STATUS_NO_MEMORY;
         goto Quit;
     }
-    RtlUnicodeStringToOemString(&OemString, &CapturedString, FALSE);
+    Status = RtlUnicodeStringToOemString(&OemString, &CapturedString, FALSE);
+    if (!NT_SUCCESS(Status))
+    {
+        ExFreePoolWithTag(OemString.Buffer, TAG_OSTR);
+        goto Quit;
+    }
 
     /* Display the string */
     InbvDisplayString(OemString.Buffer);

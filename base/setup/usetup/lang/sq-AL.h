@@ -1336,6 +1336,37 @@ static MUI_ENTRY sqALFormatPartitionEntries[] =
     }
 };
 
+static MUI_ENTRY sqALCheckFSEntries[] =
+{
+    {
+        4,
+        3,
+        " Instalimi i ReactOS " KERNEL_VERSION_STR " ",
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        8,
+        "Instalimi tani \211sht\211 duke kontrolluar particionin e p\211rzgjedhur.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        "Ju lutem prisni...",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
 static MUI_ENTRY sqALInstallDirectoryEntries[] =
 {
     {
@@ -1488,6 +1519,30 @@ static MUI_ENTRY sqALBootLoaderEntries[] =
         0,
         0,
         "ENTER = Vazhdo   F3 = Dil",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
+static MUI_ENTRY sqALBootLoaderInstallPageEntries[] =
+{
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        "Installing the bootloader onto the media, please wait...",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
         TEXT_ID_STATIC
     },
@@ -2114,6 +2169,10 @@ MUI_PAGE sqALPages[] =
         sqALFormatPartitionEntries
     },
     {
+        CHECK_FILE_SYSTEM_PAGE,
+        sqALCheckFSEntries
+    },
+    {
         DELETE_PARTITION_PAGE,
         sqALDeletePartitionEntries
     },
@@ -2148,6 +2207,10 @@ MUI_PAGE sqALPages[] =
     {
         SUCCESS_PAGE,
         sqALSuccessPageEntries
+    },
+    {
+        BOOT_LOADER_INSTALLATION_PAGE,
+        sqALBootLoaderInstallPageEntries
     },
     {
         BOOT_LOADER_FLOPPY_PAGE,
@@ -2199,8 +2262,6 @@ MUI_STRING sqALStrings[] =
     "The new partition is not formatted yet."},
     {STRING_INSTALLONPART,
     "Instalimi i ReactOS ne Particion"},
-    {STRING_CHECKINGPART,
-    "Instalimi tani \211sht\211 duke kontrolluar particionin e p\211rzgjedhur."},
     {STRING_CONTINUE,
     "ENTER = Vazhdo"},
     {STRING_QUITCONTINUE,

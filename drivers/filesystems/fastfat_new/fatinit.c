@@ -64,7 +64,7 @@ FatIsFujitsuFMR (
 #define FUJITSU_FMR_NAME_W  L"FUJITSU FMR-"
 
 
-
+
 NTSTATUS
 NTAPI
 DriverEntry(
@@ -201,7 +201,7 @@ Return Value:
 #ifdef _MSC_VER
 #pragma prefast( pop )
 #endif
-    
+
     //
     //  Initialize the filter callbacks we use.
     //
@@ -247,7 +247,7 @@ Return Value:
 
     InitializeListHead( &FatData.AsyncCloseList );
     InitializeListHead( &FatData.DelayedCloseList );
-    
+
     FatData.FatCloseItem = IoAllocateWorkItem( FatDiskFileSystemDeviceObject);
 
     if (FatData.FatCloseItem == NULL) {
@@ -263,7 +263,7 @@ Return Value:
     FatData.ZeroPage = ExAllocatePoolWithTag( NonPagedPoolNx, PAGE_SIZE, 'ZtaF' );
     if (FatData.ZeroPage == NULL) {
         IoDeleteDevice (FatDiskFileSystemDeviceObject);
-        IoDeleteDevice (FatCdromFileSystemDeviceObject);        
+        IoDeleteDevice (FatCdromFileSystemDeviceObject);
         return STATUS_INSUFFICIENT_RESOURCES;
     }
     RtlZeroMemory( FatData.ZeroPage, PAGE_SIZE );
@@ -293,7 +293,7 @@ Return Value:
 
     case MmLargeSystem:
     default:
-        
+
         MaxDepth = 16;
         FatMaxDelayedCloseCount = 16 * FAT_MAX_DELAYED_CLOSES;
         break;
@@ -320,8 +320,8 @@ Return Value:
 
     FatData.OurProcess = PsGetCurrentProcess();
 
-    // 
-    //  Setup the number of processors we support for statistics as the current number 
+    //
+    //  Setup the number of processors we support for statistics as the current number
     //  running.
     //
 
@@ -438,7 +438,7 @@ Return Value:
 }
 
 
-_Function_class_(DRIVER_UNLOAD)
+_Function_class_(DRIVER_UNLOAD)
 VOID
 NTAPI
 FatUnload(
@@ -474,7 +474,7 @@ Return Value:
     ObDereferenceObject( FatCdromFileSystemDeviceObject);
 }
 
-
+
 //
 //  Local Support routine
 //
@@ -615,7 +615,7 @@ Return Value:
 
     return Status;
 }
-
+
 //
 //  Local Support routine
 //

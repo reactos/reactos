@@ -1977,7 +1977,7 @@ KsServiceBusEnumCreateRequest(
             Status =  KspDoReparseForIrp(Irp, DeviceEntry);
             DPRINT("REPARSE Irp %p '%wZ'\n", Irp, &IoStack->FileObject->FileName);
 
-            Irp->IoStatus.Status = Status; 
+            Irp->IoStatus.Status = Status;
             Irp->IoStatus.Information = IO_REPARSE;
             return Status;
         }

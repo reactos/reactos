@@ -233,7 +233,7 @@ extern "C" int wmain (int argc, wchar_t **argv)
 
         // Now set back to the beginning
         ScreenInfo.dwCursorPosition.X = 0;
-        ScreenInfo.dwCursorPosition.Y -= Drives.size();
+        ScreenInfo.dwCursorPosition.Y -= (USHORT)Drives.size();
         SetConsoleCursorPosition (Screen, ScreenInfo.dwCursorPosition);
 
         for (size_t d = 0; d < Drives.size (); d++)

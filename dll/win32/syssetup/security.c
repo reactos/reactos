@@ -38,9 +38,19 @@ SetAccountsDomainSid(
     SAM_HANDLE DomainHandle = NULL;
     DOMAIN_NAME_INFORMATION DomainNameInfo;
 
+    SIZE_T DomainNameLength = 0;
     NTSTATUS Status;
 
     DPRINT("SYSSETUP: SetAccountsDomainSid\n");
+
+    if (DomainName != NULL)
+    {
+        DomainNameLength = wcslen(DomainName);
+        if (DomainNameLength > UNICODE_STRING_MAX_CHARS)
+        {
+            return STATUS_INVALID_PARAMETER;
+        }
+    }
 
     memset(&ObjectAttributes, 0, sizeof(LSA_OBJECT_ATTRIBUTES));
     ObjectAttributes.Length = sizeof(LSA_OBJECT_ATTRIBUTES);
@@ -69,7 +79,7 @@ SetAccountsDomainSid(
         else
         {
             Info.DomainName.Buffer = (LPWSTR)DomainName;
-            Info.DomainName.Length = wcslen(DomainName) * sizeof(WCHAR);
+            Info.DomainName.Length = DomainNameLength * sizeof(WCHAR);
             Info.DomainName.MaximumLength = Info.DomainName.Length + sizeof(WCHAR);
         }
 
@@ -81,7 +91,7 @@ SetAccountsDomainSid(
     else
     {
         Info.DomainName.Buffer = (LPWSTR)DomainName;
-        Info.DomainName.Length = wcslen(DomainName) * sizeof(WCHAR);
+        Info.DomainName.Length = DomainNameLength * sizeof(WCHAR);
         Info.DomainName.MaximumLength = Info.DomainName.Length + sizeof(WCHAR);
         Info.DomainSid = DomainSid;
     }
@@ -99,8 +109,8 @@ SetAccountsDomainSid(
 
     LsaClose(PolicyHandle);
 
-    DomainNameInfo.DomainName.Length = wcslen(DomainName) * sizeof(WCHAR);
-    DomainNameInfo.DomainName.MaximumLength = (wcslen(DomainName) + 1) * sizeof(WCHAR);
+    DomainNameInfo.DomainName.Length = DomainNameLength * sizeof(WCHAR);
+    DomainNameInfo.DomainName.MaximumLength = DomainNameInfo.DomainName.Length + sizeof(WCHAR);
     DomainNameInfo.DomainName.Buffer = (LPWSTR)DomainName;
 
     Status = SamConnect(NULL,
@@ -117,7 +127,7 @@ SetAccountsDomainSid(
         {
             Status = SamSetInformationDomain(DomainHandle,
                                              DomainNameInformation,
-                                             (PVOID)&DomainNameInfo);
+                                             &DomainNameInfo);
             if (!NT_SUCCESS(Status))
             {
                 DPRINT1("SamSetInformationDomain failed (Status: 0x%08lx)\n", Status);
@@ -147,9 +157,19 @@ SetPrimaryDomain(LPCWSTR DomainName,
     POLICY_PRIMARY_DOMAIN_INFO Info;
     LSA_OBJECT_ATTRIBUTES ObjectAttributes;
     LSA_HANDLE PolicyHandle;
+    SIZE_T DomainNameLength = 0;
     NTSTATUS Status;
 
     DPRINT1("SYSSETUP: SetPrimaryDomain()\n");
+
+    if (DomainName != NULL)
+    {
+        DomainNameLength = wcslen(DomainName);
+        if (DomainNameLength > UNICODE_STRING_MAX_CHARS)
+        {
+            return STATUS_INVALID_PARAMETER;
+        }
+    }
 
     memset(&ObjectAttributes, 0, sizeof(LSA_OBJECT_ATTRIBUTES));
     ObjectAttributes.Length = sizeof(LSA_OBJECT_ATTRIBUTES);
@@ -178,7 +198,7 @@ SetPrimaryDomain(LPCWSTR DomainName,
         else
         {
             Info.Name.Buffer = (LPWSTR)DomainName;
-            Info.Name.Length = wcslen(DomainName) * sizeof(WCHAR);
+            Info.Name.Length = DomainNameLength * sizeof(WCHAR);
             Info.Name.MaximumLength = Info.Name.Length + sizeof(WCHAR);
         }
 
@@ -190,7 +210,7 @@ SetPrimaryDomain(LPCWSTR DomainName,
     else
     {
         Info.Name.Buffer = (LPWSTR)DomainName;
-        Info.Name.Length = wcslen(DomainName) * sizeof(WCHAR);
+        Info.Name.Length = DomainNameLength * sizeof(WCHAR);
         Info.Name.MaximumLength = Info.Name.Length + sizeof(WCHAR);
         Info.Sid = DomainSid;
     }
@@ -766,7 +786,7 @@ ApplyPasswordSettings(
     _In_ PWSTR pszSectionName)
 {
     INFCONTEXT InfContext;
-    DOMAIN_PASSWORD_INFORMATION PasswordInfo;
+    PDOMAIN_PASSWORD_INFORMATION PasswordInfo = NULL;
     PPOLICY_ACCOUNT_DOMAIN_INFO OrigInfo = NULL;
     LSA_OBJECT_ATTRIBUTES ObjectAttributes;
     LSA_HANDLE PolicyHandle = NULL;
@@ -828,7 +848,7 @@ ApplyPasswordSettings(
         goto done;
     }
 
-    DPRINT("MaximumPasswordAge (OldValue) : 0x%I64x\n", PasswordInfo.MaxPasswordAge.QuadPart);
+    DPRINT("MaximumPasswordAge (OldValue) : 0x%I64x\n", PasswordInfo->MaxPasswordAge.QuadPart);
     if (SetupFindFirstLineW(hSecurityInf,
                             pszSectionName,
                             L"MaximumPasswordAge",
@@ -839,17 +859,17 @@ ApplyPasswordSettings(
             DPRINT("Value: %ld\n", nValue);
             if (nValue == -1)
             {
-                PasswordInfo.MaxPasswordAge.QuadPart = 0x8000000000000000;
+                PasswordInfo->MaxPasswordAge.QuadPart = 0x8000000000000000;
             }
             else if ((nValue >= 1) && (nValue < 1000))
             {
-                PasswordInfo.MaxPasswordAge.QuadPart = (LONGLONG)nValue * TICKS_PER_DAY;
+                PasswordInfo->MaxPasswordAge.QuadPart = (LONGLONG)nValue * TICKS_PER_DAY;
             }
-            DPRINT("MaximumPasswordAge (NewValue) : 0x%I64x\n", PasswordInfo.MaxPasswordAge.QuadPart);
+            DPRINT("MaximumPasswordAge (NewValue) : 0x%I64x\n", PasswordInfo->MaxPasswordAge.QuadPart);
         }
     }
 
-    DPRINT("MinimumPasswordAge (OldValue) : 0x%I64x\n", PasswordInfo.MinPasswordAge.QuadPart);
+    DPRINT("MinimumPasswordAge (OldValue) : 0x%I64x\n", PasswordInfo->MinPasswordAge.QuadPart);
     if (SetupFindFirstLineW(hSecurityInf,
                             pszSectionName,
                             L"MinimumPasswordAge",
@@ -860,14 +880,14 @@ ApplyPasswordSettings(
             DPRINT("Wert: %ld\n", nValue);
             if ((nValue >= 0) && (nValue < 1000))
             {
-                if (PasswordInfo.MaxPasswordAge.QuadPart < (LONGLONG)nValue * TICKS_PER_DAY)
-                    PasswordInfo.MinPasswordAge.QuadPart = (LONGLONG)nValue * TICKS_PER_DAY;
+                if (PasswordInfo->MaxPasswordAge.QuadPart < (LONGLONG)nValue * TICKS_PER_DAY)
+                    PasswordInfo->MinPasswordAge.QuadPart = (LONGLONG)nValue * TICKS_PER_DAY;
             }
-            DPRINT("MinimumPasswordAge (NewValue) : 0x%I64x\n", PasswordInfo.MinPasswordAge.QuadPart);
+            DPRINT("MinimumPasswordAge (NewValue) : 0x%I64x\n", PasswordInfo->MinPasswordAge.QuadPart);
         }
     }
 
-    DPRINT("MinimumPasswordLength (OldValue) : %lu\n", PasswordInfo.MinPasswordLength);
+    DPRINT("MinimumPasswordLength (OldValue) : %lu\n", PasswordInfo->MinPasswordLength);
     if (SetupFindFirstLineW(hSecurityInf,
                             pszSectionName,
                             L"MinimumPasswordLength",
@@ -878,13 +898,13 @@ ApplyPasswordSettings(
             DPRINT("Value: %ld\n", nValue);
             if ((nValue >= 0) && (nValue <= 65535))
             {
-                PasswordInfo.MinPasswordLength = nValue;
+                PasswordInfo->MinPasswordLength = nValue;
             }
-            DPRINT("MinimumPasswordLength (NewValue) : %lu\n", PasswordInfo.MinPasswordLength);
+            DPRINT("MinimumPasswordLength (NewValue) : %lu\n", PasswordInfo->MinPasswordLength);
         }
     }
 
-    DPRINT("PasswordHistoryLength (OldValue) : %lu\n", PasswordInfo.PasswordHistoryLength);
+    DPRINT("PasswordHistoryLength (OldValue) : %lu\n", PasswordInfo->PasswordHistoryLength);
     if (SetupFindFirstLineW(hSecurityInf,
                             pszSectionName,
                             L"PasswordHistorySize",
@@ -895,9 +915,9 @@ ApplyPasswordSettings(
             DPRINT("Value: %ld\n", nValue);
             if ((nValue >= 0) && (nValue <= 65535))
             {
-                PasswordInfo.PasswordHistoryLength = nValue;
+                PasswordInfo->PasswordHistoryLength = nValue;
             }
-            DPRINT("PasswordHistoryLength (NewValue) : %lu\n", PasswordInfo.PasswordHistoryLength);
+            DPRINT("PasswordHistoryLength (NewValue) : %lu\n", PasswordInfo->PasswordHistoryLength);
         }
     }
 
@@ -910,11 +930,11 @@ ApplyPasswordSettings(
         {
             if (nValue == 0)
             {
-                PasswordInfo.PasswordProperties &= ~DOMAIN_PASSWORD_COMPLEX;
+                PasswordInfo->PasswordProperties &= ~DOMAIN_PASSWORD_COMPLEX;
             }
             else
             {
-                PasswordInfo.PasswordProperties |= DOMAIN_PASSWORD_COMPLEX;
+                PasswordInfo->PasswordProperties |= DOMAIN_PASSWORD_COMPLEX;
             }
         }
     }
@@ -928,11 +948,11 @@ ApplyPasswordSettings(
         {
             if (nValue == 0)
             {
-                PasswordInfo.PasswordProperties &= ~DOMAIN_PASSWORD_STORE_CLEARTEXT;
+                PasswordInfo->PasswordProperties &= ~DOMAIN_PASSWORD_STORE_CLEARTEXT;
             }
             else
             {
-                PasswordInfo.PasswordProperties |= DOMAIN_PASSWORD_STORE_CLEARTEXT;
+                PasswordInfo->PasswordProperties |= DOMAIN_PASSWORD_STORE_CLEARTEXT;
             }
         }
     }
@@ -941,7 +961,7 @@ ApplyPasswordSettings(
 
     Status = SamSetInformationDomain(DomainHandle,
                                      DomainPasswordInformation,
-                                     (PVOID*)&PasswordInfo);
+                                     PasswordInfo);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("SamSetInformationDomain() failed (Status %08lx)\n", Status);
@@ -949,6 +969,9 @@ ApplyPasswordSettings(
     }
 
 done:
+    if (PasswordInfo != NULL)
+        SamFreeMemory(PasswordInfo);
+
     if (DomainHandle != NULL)
         SamCloseHandle(DomainHandle);
 
@@ -970,7 +993,7 @@ ApplyLockoutSettings(
     _In_ PWSTR pszSectionName)
 {
     INFCONTEXT InfContext;
-    DOMAIN_LOCKOUT_INFORMATION LockoutInfo;
+    PDOMAIN_LOCKOUT_INFORMATION LockoutInfo = NULL;
     PPOLICY_ACCOUNT_DOMAIN_INFO OrigInfo = NULL;
     LSA_OBJECT_ATTRIBUTES ObjectAttributes;
     LSA_HANDLE PolicyHandle = NULL;
@@ -1041,7 +1064,7 @@ ApplyLockoutSettings(
         {
             if (nValue >= 0)
             {
-                LockoutInfo.LockoutThreshold = nValue;
+                LockoutInfo->LockoutThreshold = nValue;
             }
         }
     }
@@ -1055,7 +1078,7 @@ ApplyLockoutSettings(
         {
             if (nValue >= 0)
             {
-                LockoutInfo.LockoutObservationWindow.QuadPart = (LONGLONG)nValue * TICKS_PER_MINUTE;
+                LockoutInfo->LockoutObservationWindow.QuadPart = (LONGLONG)nValue * TICKS_PER_MINUTE;
             }
         }
     }
@@ -1069,18 +1092,18 @@ ApplyLockoutSettings(
         {
             if (nValue == -1)
             {
-                LockoutInfo.LockoutDuration.QuadPart = 0x8000000000000000LL;
+                LockoutInfo->LockoutDuration.QuadPart = 0x8000000000000000LL;
             }
             else if ((nValue >= 0) && (nValue < 100000))
             {
-                LockoutInfo.LockoutDuration.QuadPart = (LONGLONG)nValue * TICKS_PER_MINUTE;
+                LockoutInfo->LockoutDuration.QuadPart = (LONGLONG)nValue * TICKS_PER_MINUTE;
             }
         }
     }
 
     Status = SamSetInformationDomain(DomainHandle,
                                      DomainLockoutInformation,
-                                     (PVOID*)&LockoutInfo);
+                                     LockoutInfo);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("SamSetInformationDomain() failed (Status %08lx)\n", Status);
@@ -1088,6 +1111,9 @@ ApplyLockoutSettings(
     }
 
 done:
+    if (LockoutInfo != NULL)
+        SamFreeMemory(LockoutInfo);
+
     if (DomainHandle != NULL)
         SamCloseHandle(DomainHandle);
 
@@ -1148,7 +1174,7 @@ EnableAccount(
 {
     INFCONTEXT InfContext;
     SAM_HANDLE UserHandle = NULL;
-    USER_CONTROL_INFORMATION ControlInfo;
+    PUSER_CONTROL_INFORMATION ControlInfo = NULL;
     INT nValue = 0;
     NTSTATUS Status;
 
@@ -1180,7 +1206,7 @@ EnableAccount(
 
     Status = SamQueryInformationUser(UserHandle,
                                      UserControlInformation,
-                                     (PVOID)&ControlInfo);
+                                     (PVOID*)&ControlInfo);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("SamQueryInformationUser() failed (Status: 0x%08lx)\n", Status);
@@ -1189,22 +1215,25 @@ EnableAccount(
 
     if (nValue == 0)
     {
-        ControlInfo.UserAccountControl |= USER_ACCOUNT_DISABLED;
+        ControlInfo->UserAccountControl |= USER_ACCOUNT_DISABLED;
     }
     else
     {
-        ControlInfo.UserAccountControl &= ~USER_ACCOUNT_DISABLED;
+        ControlInfo->UserAccountControl &= ~USER_ACCOUNT_DISABLED;
     }
 
     Status = SamSetInformationUser(UserHandle,
                                    UserControlInformation,
-                                   (PVOID)&ControlInfo);
+                                   ControlInfo);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("SamSetInformationUser() failed (Status: 0x%08lx)\n", Status);
     }
 
 done:
+    if (ControlInfo != NULL)
+        SamFreeMemory(ControlInfo);
+
     if (UserHandle != NULL)
         SamCloseHandle(UserHandle);
 }
@@ -1242,6 +1271,8 @@ SetNewAccountName(
     if (dwLength == 0)
         return;
 
+    ASSERT(dwLength <= UNICODE_STRING_MAX_CHARS);
+
     pszName = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, dwLength * sizeof(WCHAR));
     if (pszName == NULL)
     {
@@ -1271,7 +1302,7 @@ SetNewAccountName(
         goto done;
     }
 
-    NameInfo.UserName.Length = wcslen(pszName) * sizeof(WCHAR);
+    NameInfo.UserName.Length = (USHORT)wcslen(pszName) * sizeof(WCHAR);
     NameInfo.UserName.MaximumLength = NameInfo.UserName.Length + sizeof(WCHAR);
     NameInfo.UserName.Buffer = pszName;
     NameInfo.FullName.Length = 0;
@@ -1280,7 +1311,7 @@ SetNewAccountName(
 
     Status = SamSetInformationUser(UserHandle,
                                    UserNameInformation,
-                                   (PVOID)&NameInfo);
+                                   &NameInfo);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("SamSetInformationUser() failed (Status: 0x%08lx)\n", Status);
@@ -1646,7 +1677,7 @@ SetAdministratorPassword(LPCWSTR Password)
 
     Status = SamSetInformationUser(UserHandle,
                                    UserSetPasswordInformation,
-                                   (PVOID)&PasswordInfo);
+                                   &PasswordInfo);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("SamSetInformationUser() failed (Status %08lx)\n", Status);
@@ -1658,7 +1689,7 @@ SetAdministratorPassword(LPCWSTR Password)
                                      (PVOID*)&AccountNameInfo);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("SamSetInformationUser() failed (Status %08lx)\n", Status);
+        DPRINT1("SamQueryInformationUser() failed (Status 0x%08lx)\n", Status);
         goto done;
     }
 

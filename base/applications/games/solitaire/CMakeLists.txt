@@ -2,6 +2,7 @@
 list(APPEND SOURCE
     solcreate.cpp
     solgame.cpp
+    solundo.cpp
     solitaire.cpp
     solitaire.h)
 

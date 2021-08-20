@@ -31,7 +31,6 @@ extern PVOID KiArmVectorTable;
 
 /* FUNCTIONS ******************************************************************/
 
-CODE_SEG("INIT")
 VOID
 NTAPI
 KiInitMachineDependent(VOID)
@@ -306,7 +305,6 @@ KiInitializePcr(IN ULONG ProcessorNumber,
 #endif
 }
 
-CODE_SEG("INIT")
 VOID
 KiInitializeMachineType(VOID)
 {
@@ -327,6 +325,7 @@ KiInitializeMachineType(VOID)
     }
 }
 
+DECLSPEC_NORETURN
 VOID
 KiInitializeSystem(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {

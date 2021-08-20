@@ -801,7 +801,7 @@ MiBuildPfnDatabaseFromPages(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
                 Pfn1->u3.e1.CacheAttribute = MiNonCached;
 #if MI_TRACE_PFNS
                 Pfn1->PfnUsage = MI_USAGE_INIT_MEMORY;
-                memcpy(Pfn1->ProcessName, "Initial PDE", 16);
+                MI_SET_PFN_PROCESS_NAME(Pfn1, "Initial PDE");
 #endif
             }
             else
@@ -848,7 +848,7 @@ MiBuildPfnDatabaseFromPages(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
                                 Pfn2->u3.e1.CacheAttribute = MiNonCached;
 #if MI_TRACE_PFNS
                                 Pfn2->PfnUsage = MI_USAGE_INIT_MEMORY;
-                                memcpy(Pfn1->ProcessName, "Initial PTE", 16);
+                                MI_SET_PFN_PROCESS_NAME(Pfn2, "Initial PTE");
 #endif
                             }
                         }
@@ -2138,6 +2138,9 @@ MmArmInitSystem(IN ULONG Phase,
 
         /* Initialize the user mode image list */
         InitializeListHead(&MmLoadedUserImageList);
+
+        /* Initalize the Working set list */
+        InitializeListHead(&MmWorkingSetExpansionHead);
 
         /* Initialize critical section timeout value (relative time is negative) */
         MmCriticalSectionTimeout.QuadPart = MmCritsectTimeoutSeconds * (-10000000LL);

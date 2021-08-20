@@ -106,6 +106,12 @@ StdMfg = "(Standard keyboards)"
 LocationOverride = "plugged in to keyboard port"
 *PNP0303.DeviceDesc = "IBM PC/AT keyboard"
 
+[Strings.0404]
+KeyboardClassName = "鍵盤"
+HID.KeyboardDevice    = "HID 鍵盤"
+StdMfg = "(標準鍵盤)"
+*PNP0303.DeviceDesc = "IBM PC/AT 鍵盤"
+
 [Strings.0405]
 KeyboardClassName = "Klávesnice"
 HID.KeyboardDevice    = "Klávesnice standardu HID"

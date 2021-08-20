@@ -30,7 +30,7 @@
 #include <debug.h>
 
  /* Modified for ReactOS and latest ACPICA
-  * Copyright (C)2009  Samuel Serapion 
+  * Copyright (C)2009  Samuel Serapion
   */
 
 #define _COMPONENT		ACPI_BUS_COMPONENT
@@ -301,24 +301,24 @@ acpi_evaluate_reference (
 	package = (ACPI_OBJECT *) buffer.Pointer;
 
 	if ((buffer.Length == 0) || !package) {
-		ACPI_DEBUG_PRINT((ACPI_DB_ERROR, 
-			"No return object (len %X ptr %p)\n", 
+		ACPI_DEBUG_PRINT((ACPI_DB_ERROR,
+			"No return object (len %X ptr %p)\n",
 			buffer.Length, package));
 		status = AE_BAD_DATA;
 		acpi_util_eval_error(handle, pathname, status);
 		goto end;
 	}
 	if (package->Type != ACPI_TYPE_PACKAGE) {
-		ACPI_DEBUG_PRINT((ACPI_DB_ERROR, 
-			"Expecting a [Package], found type %X\n", 
+		ACPI_DEBUG_PRINT((ACPI_DB_ERROR,
+			"Expecting a [Package], found type %X\n",
 			package->Type));
 		status = AE_BAD_DATA;
 		acpi_util_eval_error(handle, pathname, status);
 		goto end;
 	}
 	if (!package->Package.Count) {
-		ACPI_DEBUG_PRINT((ACPI_DB_ERROR, 
-			"[Package] has zero elements (%p)\n", 
+		ACPI_DEBUG_PRINT((ACPI_DB_ERROR,
+			"[Package] has zero elements (%p)\n",
 			package));
 		status = AE_BAD_DATA;
 		acpi_util_eval_error(handle, pathname, status);
@@ -338,13 +338,13 @@ acpi_evaluate_reference (
 
 		if (element->Type != ACPI_TYPE_LOCAL_REFERENCE) {
 			status = AE_BAD_DATA;
-			ACPI_DEBUG_PRINT((ACPI_DB_ERROR, 
+			ACPI_DEBUG_PRINT((ACPI_DB_ERROR,
 				"Expecting a [Reference] package element, found type %X\n",
 				element->type));
 			acpi_util_eval_error(handle, pathname, status);
 			break;
 		}
-		
+
 		if (!element->Reference.Handle) {
 			ACPI_DEBUG_PRINT((ACPI_DB_ERROR, "Invalid reference in"
 			       " package %s\n", pathname));

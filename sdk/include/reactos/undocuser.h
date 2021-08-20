@@ -56,6 +56,7 @@ extern "C" {
 #define WM_DRAGLOOP	        0x0000022D
 #define WM_DRAGSELECT       0x0000022E
 #define WM_DRAGMOVE	        0x0000022F
+#define WM_IME_SYSTEM       0x00000287
 #define WM_POPUPSYSTEMMENU  0x00000313
 #define WM_UAHINIT          0x0000031b
 #define WM_CBT              0x000003FF // ReactOS only.
@@ -199,7 +200,7 @@ BOOL WINAPI SetShellWindowEx(HWND, HWND);
 
 BOOL WINAPI DrawCaptionTempA(HWND,HDC,const RECT*,HFONT,HICON,LPCSTR,UINT);
 BOOL WINAPI DrawCaptionTempW(HWND,HDC,const RECT*,HFONT,HICON,LPCWSTR,UINT);
-BOOL WINAPI PaintMenuBar(HWND hWnd, HDC hDC, ULONG left, ULONG right, ULONG top, BOOL bActive); 
+BOOL WINAPI PaintMenuBar(HWND hWnd, HDC hDC, ULONG left, ULONG right, ULONG top, BOOL bActive);
 
 #ifdef UNICODE
 #define DrawCaptionTemp DrawCaptionTempW

@@ -657,6 +657,7 @@ KiGetMachineBootPointers(IN PKGDTENTRY *Gdt,
 }
 
 CODE_SEG("INIT")
+DECLSPEC_NORETURN
 VOID
 NTAPI
 KiSystemStartupBootStack(VOID)
@@ -709,6 +710,7 @@ KiMarkPageAsReadOnly(
 }
 
 CODE_SEG("INIT")
+DECLSPEC_NORETURN
 VOID
 NTAPI
 KiSystemStartup(IN PLOADER_PARAMETER_BLOCK LoaderBlock)

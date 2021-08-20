@@ -200,7 +200,9 @@ public:
 
     VOID Initialize()
     {
+        // HACK & FIXME: CORE-17505
         SubclassWindow(m_hWnd);
+
         SetWindowTheme(m_hWnd, L"Start", NULL);
 
         m_ImageList = ImageList_LoadImageW(hExplorerInstance,
@@ -214,6 +216,8 @@ public:
         UpdateSize();
     }
 
+    // Hack:
+    // Use DECLARE_WND_SUPERCLASS instead!
     HWND Create(HWND hwndParent)
     {
         WCHAR szStartCaption[32];
@@ -1369,7 +1373,7 @@ GetPrimaryScreenRect:
 
                 m_TrayRects[m_Position] = rcTray;
             }
-            else
+            else if (m_Position != (DWORD)-1)
             {
                 /* If the user isn't resizing the tray window we need to make sure the
                    new size or position is valid. this is to prevent changes to the window

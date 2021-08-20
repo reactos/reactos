@@ -89,7 +89,7 @@ if(Vcb->CompatFlags & UDF_VCB_IC_UPDATE_ATTR_TIME) {         \
     UDFSetFileXTime(FileInfo, &NtTime, &NtTime, &NtTime, &NtTime);  \
 }
 
-void 
+void
 __fastcall
 UDFDOSNameOsNative(
     IN OUT PUNICODE_STRING DosName,
@@ -104,14 +104,14 @@ NTSTATUS MyAppendUnicodeStringToString_(IN PUNICODE_STRING Str1,
                                         IN PUNICODE_STRING Str2
 #ifdef UDF_TRACK_UNICODE_STR
                                        ,IN PCHAR Tag
-#endif 
+#endif
                                        );
 
 NTSTATUS MyAppendUnicodeToString_(IN PUNICODE_STRING Str1,
                                   IN PCWSTR Str2
 #ifdef UDF_TRACK_UNICODE_STR
                                  ,IN PCHAR Tag
-#endif 
+#endif
                                  );
 
 #ifdef UDF_TRACK_UNICODE_STR

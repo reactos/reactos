@@ -62,6 +62,10 @@ ReactOS="ReactOS Team"
 BTUSB.DeviceDesc="Generic USB Bluetooth Radio"
 BluetoothClassName="Bluetooth Radios"
 
+[Strings.0404]
+BTUSB.DeviceDesc="標準 USB 藍牙無線電"
+BluetoothClassName="藍牙無線電"
+
 [Strings.0405]
 BTUSB.DeviceDesc="Obecný USB Bluetooth vysílač"
 BluetoothClassName="Bluetooth vysílače"

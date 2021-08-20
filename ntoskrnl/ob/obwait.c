@@ -140,7 +140,7 @@ NtWaitForMultipleObjects(IN ULONG ObjectCount,
     else
     {
         /* No need for the array  */
-        WaitBlockArray = NULL;   
+        WaitBlockArray = NULL;
     }
 
     /* Enter a critical region since we'll play with handles */

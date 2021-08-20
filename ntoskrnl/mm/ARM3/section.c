@@ -1326,25 +1326,26 @@ MiMapViewOfDataSection(IN PCONTROL_AREA ControlArea,
     /* Check if the caller specified the view size */
     if (!(*ViewSize))
     {
+        LONGLONG ViewSizeLL;
+
         /* The caller did not, so pick a 64K aligned view size based on the offset */
         SectionOffset->LowPart &= ~(_64K - 1);
 
-        /* Make sure that we will not overflow */
-        if ((Section->SizeOfSection.QuadPart - SectionOffset->QuadPart) > MAXLONG_PTR)
+        /* Calculate size and make sure this fits */
+        if (!NT_SUCCESS(RtlLongLongSub(Section->SizeOfSection.QuadPart, SectionOffset->QuadPart, &ViewSizeLL))
+            || !NT_SUCCESS(RtlLongLongToSIZET(ViewSizeLL, ViewSize))
+            || (*ViewSize > MAXLONG_PTR))
         {
             MiDereferenceControlArea(ControlArea);
             return STATUS_INVALID_VIEW_SIZE;
         }
-
-        *ViewSize = (SIZE_T)(Section->SizeOfSection.QuadPart - SectionOffset->QuadPart);
     }
     else
     {
-        /* A size was specified, align it to a 64K boundary */
-        *ViewSize += SectionOffset->LowPart & (_64K - 1);
-
-        /* Check for overflow or huge value */
-        if ((*ViewSize < (SectionOffset->LowPart & (_64K - 1))) || ((*ViewSize) > MAXLONG_PTR))
+        /* A size was specified, align it to a 64K boundary
+         * and check for overflow or huge value. */
+        if (!NT_SUCCESS(RtlSIZETAdd(*ViewSize, SectionOffset->LowPart & (_64K - 1), ViewSize))
+            || (*ViewSize > MAXLONG_PTR))
         {
             MiDereferenceControlArea(ControlArea);
             return STATUS_INVALID_VIEW_SIZE;
@@ -1926,11 +1927,13 @@ MmGetFileNameForAddress(IN PVOID Address,
     if (NT_SUCCESS(Status))
     {
         /* Init modulename */
-        RtlCreateUnicodeString(ModuleName, ModuleNameInformation->Name.Buffer);
+        if (!RtlCreateUnicodeString(ModuleName, ModuleNameInformation->Name.Buffer))
+            Status = STATUS_INSUFFICIENT_RESOURCES;
 
         /* Free temp taged buffer from MmGetFileNameForFileObject() */
         ExFreePoolWithTag(ModuleNameInformation, TAG_MM);
-        DPRINT("Found ModuleName %S by address %p\n", ModuleName->Buffer, Address);
+
+        DPRINT("Found ModuleName %wZ by address %p\n", ModuleName, Address);
     }
 
    /* Return status */
@@ -3340,7 +3343,7 @@ ULONG
 NTAPI
 MmDoesFileHaveUserWritableReferences(IN PSECTION_OBJECT_POINTERS SectionPointer)
 {
-    UNIMPLEMENTED;
+    UNIMPLEMENTED_ONCE;
     return 0;
 }
 

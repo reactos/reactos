@@ -83,12 +83,12 @@ CdDiskOffsetFromMcbEntry (
 #pragma alloc_text(PAGE, CdUninitializeMcb)
 #endif
 
-
+
 _Requires_lock_held_(_Global_critical_region_)
 VOID
 #ifdef _MSC_VER
 // PREFast currently has no way to express the Fcb==Fcb->Vcb->VolumeDasdFcb early return
-#pragma warning(suppress: 6001 6101) 
+#pragma warning(suppress: 6001 6101)
 #endif
 CdLookupAllocation (
     _In_ PIRP_CONTEXT IrpContext,
@@ -330,7 +330,7 @@ Return Value:
     return;
 }
 
-
+
 VOID
 CdAddAllocationFromDirent (
     _In_ PIRP_CONTEXT IrpContext,
@@ -479,7 +479,7 @@ Return Value:
     return;
 }
 
-
+
 VOID
 CdAddInitialAllocation (
     _In_ PIRP_CONTEXT IrpContext,
@@ -494,10 +494,10 @@ Routine Description:
 
     This routine is called to set up the initial entry in an Mcb.
 
-    This routine handles the single initial entry for a directory file.  We will 
-    round the start block down to a sector boundary.  Our caller has already 
-    biased the DataLength with any adjustments.  This is used for the case 
-    where there is a single entry and we want to align the data on a sector 
+    This routine handles the single initial entry for a directory file.  We will
+    round the start block down to a sector boundary.  Our caller has already
+    biased the DataLength with any adjustments.  This is used for the case
+    where there is a single entry and we want to align the data on a sector
     boundary.
 
 Arguments:
@@ -570,7 +570,7 @@ Return Value:
     return;
 }
 
-
+
 VOID
 CdTruncateAllocation (
     _In_ PIRP_CONTEXT IrpContext,
@@ -623,7 +623,7 @@ Return Value:
     return;
 }
 
-
+
 _At_(Fcb->NodeByteSize, _In_range_(>=, FIELD_OFFSET( FCB, FcbType )))
 VOID
 CdInitializeMcb (
@@ -655,7 +655,7 @@ Return Value:
     PAGED_CODE();
 
     UNREFERENCED_PARAMETER( IrpContext );
-    
+
     ASSERT_IRP_CONTEXT( IrpContext );
     ASSERT_FCB( Fcb );
 
@@ -672,7 +672,7 @@ Return Value:
     return;
 }
 
-
+
 _At_(Fcb->NodeByteSize, _In_range_(>=, FIELD_OFFSET( FCB, FcbType )))
 _When_(Fcb->NodeTypeCode == CDFS_NTC_FCB_PATH_TABLE, _At_(Fcb->NodeByteSize, _In_range_(==, SIZEOF_FCB_INDEX)))
 _When_(Fcb->NodeTypeCode == CDFS_NTC_FCB_INDEX, _At_(Fcb->NodeByteSize, _In_range_(==, SIZEOF_FCB_INDEX)))
@@ -707,7 +707,7 @@ Return Value:
     PAGED_CODE();
 
     UNREFERENCED_PARAMETER( IrpContext );
-    
+
     ASSERT_IRP_CONTEXT( IrpContext );
     ASSERT_FCB( Fcb );
 
@@ -723,7 +723,7 @@ Return Value:
     return;
 }
 
-
+
 //
 //  Local suupport routine
 //
@@ -764,7 +764,7 @@ Return Value:
     PAGED_CODE();
 
     UNREFERENCED_PARAMETER( IrpContext );
-    
+
     ASSERT_IRP_CONTEXT( IrpContext );
     ASSERT_FCB( Fcb );
     ASSERT_LOCKED_FCB( Fcb );
@@ -803,7 +803,7 @@ Return Value:
     return CurrentMcbOffset;
 }
 
-
+
 //
 //  Local support routine
 //
@@ -858,7 +858,7 @@ Return Value:
     PAGED_CODE();
 
     UNREFERENCED_PARAMETER( IrpContext );
-    
+
     ASSERT_IRP_CONTEXT( IrpContext );
 
     //

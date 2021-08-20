@@ -388,6 +388,7 @@ static DWORD WINAPI download_proc(PVOID arg)
 
 static INT_PTR CALLBACK installer_proc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
+    HWND hwndInstallButton;
     switch(msg) {
     case WM_INITDIALOG:
         ShowWindow(GetDlgItem(hwnd, ID_DWL_PROGRESS), SW_HIDE);
@@ -410,7 +411,15 @@ static INT_PTR CALLBACK installer_proc(HWND hwnd, UINT msg, WPARAM wParam, LPARA
 
         case ID_DWL_INSTALL:
             ShowWindow(GetDlgItem(hwnd, ID_DWL_PROGRESS), SW_SHOW);
-            EnableWindow(GetDlgItem(hwnd, ID_DWL_INSTALL), 0);
+
+            /* CORE-17550: Never leave focus on a disabled control (Old/New/Thing p.228) */
+            hwndInstallButton = GetDlgItem(hwnd, ID_DWL_INSTALL);
+            if (hwndInstallButton == GetFocus())
+            {
+                SendMessageW(hwnd, WM_NEXTDLGCTL, 0, FALSE);
+            }
+            EnableWindow(hwndInstallButton, FALSE);
+
             CloseHandle( CreateThread(NULL, 0, download_proc, NULL, 0, NULL));
             return FALSE;
         }

@@ -79,8 +79,6 @@ InitUserImpl(VOID)
     NTSTATUS Status;
     HKEY hKey;
 
-    ExInitializeResourceLite(&UserLock);
-
     if (!UserCreateHandleTable())
     {
         ERR("Failed creating handle table\n");

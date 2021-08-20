@@ -1,11 +1,10 @@
 /*
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS kernel
- * FILE:            ntoskrnl/se/srm.c
+ * PROJECT:         ReactOS Kernel
+ * LICENSE:         GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:         Security Reference Monitor Server
- *
- * PROGRAMMERS:     Timo Kreuzer (timo.kreuzer@reactos.org)
- *                  Pierre Schweitzer (pierre@reactos.org)
+ * COPYRIGHT:       Copyright Timo Kreuzer <timo.kreuzer@reactos.org>
+ *                  Copyright Pierre Schweitzer <pierre@reactos.org>
+ *                  Copyright 2021 George Bișoc <george.bisoc@reactos.org>
  */
 
 /* INCLUDES *******************************************************************/
@@ -19,19 +18,6 @@ extern LUID SeAnonymousAuthenticationId;
 
 /* PRIVATE DEFINITIONS ********************************************************/
 
-#define SEP_LOGON_SESSION_TAG 'sLeS'
-#define SEP_LOGON_NOTIFICATION_TAG 'nLeS'
-
-typedef struct _SEP_LOGON_SESSION_REFERENCES
-{
-    struct _SEP_LOGON_SESSION_REFERENCES *Next;
-    LUID LogonId;
-    ULONG ReferenceCount;
-    ULONG Flags;
-    PDEVICE_MAP pDeviceMap;
-    LIST_ENTRY TokenList;
-} SEP_LOGON_SESSION_REFERENCES, *PSEP_LOGON_SESSION_REFERENCES;
-
 typedef struct _SEP_LOGON_SESSION_TERMINATED_NOTIFICATION
 {
     struct _SEP_LOGON_SESSION_TERMINATED_NOTIFICATION *Next;
@@ -42,6 +28,11 @@ VOID
 NTAPI
 SepRmCommandServerThread(
     PVOID StartContext);
+
+static
+NTSTATUS
+SepCleanupLUIDDeviceMapDirectory(
+    _In_ PLUID LogonLuid);
 
 static
 NTSTATUS
@@ -74,14 +65,38 @@ PSEP_LOGON_SESSION_TERMINATED_NOTIFICATION SepLogonNotifications = NULL;
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
+/**
+ * @brief
+ * A private registry helper that returns the desired value
+ * data based on the specifics requested by the caller.
+ *
+ * @param[in] KeyName
+ * Name of the key.
+ *
+ * @param[in] ValueName
+ * Name of the registry value.
+ *
+ * @param[in] ValueType
+ * The type of the registry value.
+ *
+ * @param[in] DataLength
+ * The data length, in bytes, representing the size of the registry value.
+ *
+ * @param[out] ValueData
+ * The requested value data provided by the function.
+ *
+ * @return
+ * Returns STATUS_SUCCESS if the operations have completed successfully,
+ * otherwise a failure NTSTATUS code is returned.
+ */
 NTSTATUS
 NTAPI
 SepRegQueryHelper(
-    PCWSTR KeyName,
-    PCWSTR ValueName,
-    ULONG ValueType,
-    ULONG DataLength,
-    PVOID ValueData)
+    _In_ PCWSTR KeyName,
+    _In_ PCWSTR ValueName,
+    _In_ ULONG ValueType,
+    _In_ ULONG DataLength,
+    _Out_ PVOID ValueData)
 {
     UNICODE_STRING ValueNameString;
     UNICODE_STRING KeyNameString;
@@ -127,7 +142,6 @@ SepRegQueryHelper(
         Status = STATUS_OBJECT_TYPE_MISMATCH;
         goto Cleanup;
     }
-
 
     if (ValueType == REG_BINARY)
     {
@@ -300,6 +314,147 @@ SepRmSetAuditEvent(
     return STATUS_SUCCESS;
 }
 
+/**
+ * @brief
+ * Inserts a logon session into an access token specified by the
+ * caller. 
+ *
+ * @param[in,out] Token
+ * An access token where the logon session is about to be inserted
+ * in.
+ *
+ * @return
+ * STATUS_SUCCESS is returned if the logon session has been inserted into
+ * the token successfully. STATUS_NO_SUCH_LOGON_SESSION is returned when no logon
+ * session has been found with the matching ID of the token and as such
+ * we've failed to add the logon session to the token. STATUS_INSUFFICIENT_RESOURCES
+ * is returned if memory pool allocation for the new session has failed.
+ */
+NTSTATUS
+NTAPI
+SepRmInsertLogonSessionIntoToken(
+    _Inout_ PTOKEN Token)
+{
+    PSEP_LOGON_SESSION_REFERENCES LogonSession;
+    PAGED_CODE();
+
+    /* Ensure that our token is not some plain garbage */
+    ASSERT(Token);
+
+    /* Acquire the database lock */
+    KeAcquireGuardedMutex(&SepRmDbLock);
+
+    for (LogonSession = SepLogonSessions;
+         LogonSession != NULL;
+         LogonSession = LogonSession->Next)
+    {
+        /*
+         * The insertion of a logon session into the token has to be done
+         * only IF the authentication ID of the token matches with the ID
+         * of the logon itself.
+         */
+        if (RtlEqualLuid(&LogonSession->LogonId, &Token->AuthenticationId))
+        {
+            break;
+        }
+    }
+
+    /* If we reach this then we cannot proceed further */
+    if (LogonSession == NULL)
+    {
+        DPRINT1("SepRmInsertLogonSessionIntoToken(): Couldn't insert the logon session into the specific access token!\n");
+        KeReleaseGuardedMutex(&SepRmDbLock);
+        return STATUS_NO_SUCH_LOGON_SESSION;
+    }
+
+    /*
+     * Allocate the session that we are going
+     * to insert it to the token.
+     */
+    Token->LogonSession = ExAllocatePoolWithTag(PagedPool,
+                                                sizeof(SEP_LOGON_SESSION_REFERENCES),
+                                                TAG_LOGON_SESSION);
+    if (Token->LogonSession == NULL)
+    {
+        DPRINT1("SepRmInsertLogonSessionIntoToken(): Couldn't allocate new logon session into the memory pool!\n");
+        KeReleaseGuardedMutex(&SepRmDbLock);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    /*
+     * Begin copying the logon session references data from the
+     * session whose ID matches with the token authentication ID to
+     * the new session we've allocated blocks of pool memory for it.
+     */
+    Token->LogonSession->Next = LogonSession->Next;
+    Token->LogonSession->LogonId = LogonSession->LogonId;
+    Token->LogonSession->ReferenceCount = LogonSession->ReferenceCount;
+    Token->LogonSession->Flags = LogonSession->Flags;
+    Token->LogonSession->pDeviceMap = LogonSession->pDeviceMap;
+    InsertHeadList(&LogonSession->TokenList, &Token->LogonSession->TokenList);
+
+    /* Release the database lock and we're done */
+    KeReleaseGuardedMutex(&SepRmDbLock);
+    return STATUS_SUCCESS;
+}
+
+/**
+ * @brief
+ * Removes a logon session from an access token.
+ *
+ * @param[in,out] Token
+ * An access token whose logon session is to be removed from it.
+ *
+ * @return
+ * STATUS_SUCCESS is returned if the logon session has been removed from
+ * the token successfully. STATUS_NO_SUCH_LOGON_SESSION is returned when no logon
+ * session has been found with the matching ID of the token and as such
+ * we've failed to remove the logon session from the token.
+ */
+NTSTATUS
+NTAPI
+SepRmRemoveLogonSessionFromToken(
+    _Inout_ PTOKEN Token)
+{
+    PSEP_LOGON_SESSION_REFERENCES LogonSession;
+    PAGED_CODE();
+
+    /* Ensure that our token is not some plain garbage */
+    ASSERT(Token);
+
+    /* Acquire the database lock */
+    KeAcquireGuardedMutex(&SepRmDbLock);
+
+    for (LogonSession = SepLogonSessions;
+         LogonSession != NULL;
+         LogonSession = LogonSession->Next)
+    {
+        /*
+         * Remove the logon session only when the IDs of the token and the
+         * logon match.
+         */
+        if (RtlEqualLuid(&LogonSession->LogonId, &Token->AuthenticationId))
+        {
+            break;
+        }
+    }
+
+    /* They don't match */
+    if (LogonSession == NULL)
+    {
+        DPRINT1("SepRmRemoveLogonSessionFromToken(): Couldn't remove the logon session from the access token!\n");
+        KeReleaseGuardedMutex(&SepRmDbLock);
+        return STATUS_NO_SUCH_LOGON_SESSION;
+    }
+
+    /* Now it's time to delete the logon session from the token */
+    RemoveEntryList(&Token->LogonSession->TokenList);
+    ExFreePoolWithTag(Token->LogonSession, TAG_LOGON_SESSION);
+
+    /* Release the database lock and we're done */
+    KeReleaseGuardedMutex(&SepRmDbLock);
+    return STATUS_SUCCESS;
+}
 
 static
 NTSTATUS
@@ -316,7 +471,7 @@ SepRmCreateLogonSession(
     /* Allocate a new session structure */
     NewSession = ExAllocatePoolWithTag(PagedPool,
                                        sizeof(SEP_LOGON_SESSION_REFERENCES),
-                                       SEP_LOGON_SESSION_TAG);
+                                       TAG_LOGON_SESSION);
     if (NewSession == NULL)
     {
         return STATUS_INSUFFICIENT_RESOURCES;
@@ -357,23 +512,119 @@ Leave:
 
     if (!NT_SUCCESS(Status))
     {
-        ExFreePoolWithTag(NewSession, SEP_LOGON_SESSION_TAG);
+        ExFreePoolWithTag(NewSession, TAG_LOGON_SESSION);
     }
 
     return Status;
 }
 
+/**
+ * @brief
+ * Deletes a logon session from the logon sessions database.
+ *
+ * @param[in] LogonLuid
+ * A logon ID represented as a LUID. This LUID is used to point
+ * the exact logon session saved within the database.
+ *
+ * @return
+ * STATUS_SUCCESS is returned if the logon session has been deleted successfully.
+ * STATUS_NO_SUCH_LOGON_SESSION is returned if the logon session with the submitted
+ * LUID doesn't exist. STATUS_BAD_LOGON_SESSION_STATE is returned if the logon session
+ * is still in use and we're not allowed to delete it, or if a system or anonymous session
+ * is submitted and we're not allowed to delete them as they're internal parts of the system.
+ * Otherwise a failure NTSTATUS code is returned.
+ */
 static
 NTSTATUS
 SepRmDeleteLogonSession(
-    PLUID LogonLuid)
+    _In_ PLUID LogonLuid)
 {
+    PSEP_LOGON_SESSION_REFERENCES SessionToDelete;
+    NTSTATUS Status;
+    PAGED_CODE();
+
     DPRINT("SepRmDeleteLogonSession(%08lx:%08lx)\n",
            LogonLuid->HighPart, LogonLuid->LowPart);
 
-    UNIMPLEMENTED;
-    NT_ASSERT(FALSE);
-    return STATUS_NOT_IMPLEMENTED;
+    /* Acquire the database lock */
+    KeAcquireGuardedMutex(&SepRmDbLock);
+
+    /* Loop over the existing logon sessions */
+    for (SessionToDelete = SepLogonSessions;
+         SessionToDelete != NULL;
+         SessionToDelete = SessionToDelete->Next)
+    {
+        /*
+         * Does the actual logon session exist in the
+         * saved logon sessions database with the LUID
+         * provided?
+         */
+        if (RtlEqualLuid(&SessionToDelete->LogonId, LogonLuid))
+        {
+            /* Did the caller supply one of these internal sessions? */
+            if (RtlEqualLuid(&SessionToDelete->LogonId, &SeSystemAuthenticationId) ||
+                RtlEqualLuid(&SessionToDelete->LogonId, &SeAnonymousAuthenticationId))
+            {
+                /* These logons are critical stuff, we can't delete them */
+                DPRINT1("SepRmDeleteLogonSession(): We're not allowed to delete anonymous/system sessions!\n");
+                Status = STATUS_BAD_LOGON_SESSION_STATE;
+                goto Leave;
+            }
+            else
+            {
+                /* We found the logon as exactly as we wanted, break the loop */
+                break;
+            }
+        }
+    }
+
+    /*
+     * If we reach this then that means we've exhausted all the logon
+     * sessions and couldn't find one with the desired LUID.
+     */
+    if (SessionToDelete == NULL)
+    {
+        DPRINT1("SepRmDeleteLogonSession(): The logon session with this LUID doesn't exist!\n");
+        Status = STATUS_NO_SUCH_LOGON_SESSION;
+        goto Leave;
+    }
+
+    /* Is somebody still using this logon session? */
+    if (SessionToDelete->ReferenceCount != 0)
+    {
+        /* The logon session is still in use, we cannot delete it... */
+        DPRINT1("SepRmDeleteLogonSession(): The logon session is still in use!\n");
+        Status = STATUS_BAD_LOGON_SESSION_STATE;
+        goto Leave;
+    }
+
+    /* If we have a LUID device map, clean it */
+    if (SessionToDelete->pDeviceMap != NULL)
+    {
+        Status = SepCleanupLUIDDeviceMapDirectory(LogonLuid);
+        if (!NT_SUCCESS(Status))
+        {
+            /*
+             * We had one job on cleaning the device map directory
+             * of the logon session but we failed, quit...
+             */
+            DPRINT1("SepRmDeleteLogonSession(): Failed to clean the LUID device map directory of the logon (Status: 0x%lx)\n", Status);
+            goto Leave;
+        }
+
+        /* And dereference the device map of the logon */
+        ObfDereferenceDeviceMap(SessionToDelete->pDeviceMap);
+    }
+
+    /* If we're here then we've deleted the logon session successfully */
+    DPRINT("SepRmDeleteLogonSession(): Logon session deleted with success!\n");
+    Status = STATUS_SUCCESS;
+    ExFreePoolWithTag(SessionToDelete, TAG_LOGON_SESSION);
+
+Leave:
+    /* Release the database lock */
+    KeReleaseGuardedMutex(&SepRmDbLock);
+    return Status;
 }
 
 
@@ -416,10 +667,10 @@ SepRmReferenceLogonSession(
     return STATUS_NO_SUCH_LOGON_SESSION;
 }
 
-
+static
 NTSTATUS
 SepCleanupLUIDDeviceMapDirectory(
-    PLUID LogonLuid)
+    _In_ PLUID LogonLuid)
 {
     BOOLEAN UseCurrentProc;
     KAPC_STATE ApcState;
@@ -700,6 +951,8 @@ SepRmDereferenceLogonSession(
                     SepCleanupLUIDDeviceMapDirectory(LogonLuid);
                     ObfDereferenceDeviceMap(DeviceMap);
                 }
+
+                /* FIXME: Alert LSA and filesystems that a logon is about to be deleted */
             }
 
             return STATUS_SUCCESS;
@@ -1112,16 +1365,64 @@ SeGetLogonIdDeviceMap(
     return Status;
 }
 
-/*
- * @unimplemented
+/**
+ * @brief
+ * Marks a logon session for future termination, given its logon ID. This triggers
+ * a callout (the registered callback) when the logon is no longer used by anyone,
+ * that is, no token is still referencing the speciffied logon session.
+ *
+ * @param[in] LogonId
+ * The ID of the logon session.
+ *
+ * @return
+ * STATUS_SUCCESS if the logon session is marked for termination notification successfully,
+ * STATUS_NOT_FOUND if the logon session couldn't be found otherwise.
  */
 NTSTATUS
 NTAPI
 SeMarkLogonSessionForTerminationNotification(
-    IN PLUID LogonId)
+    _In_ PLUID LogonId)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    PSEP_LOGON_SESSION_REFERENCES SessionToMark;
+    PAGED_CODE();
+
+    DPRINT("SeMarkLogonSessionForTerminationNotification(%08lx:%08lx)\n",
+           LogonId->HighPart, LogonId->LowPart);
+
+    /* Acquire the database lock */
+    KeAcquireGuardedMutex(&SepRmDbLock);
+
+    /* Loop over the existing logon sessions */
+    for (SessionToMark = SepLogonSessions;
+         SessionToMark != NULL;
+         SessionToMark = SessionToMark->Next)
+    {
+        /* Does the logon with the given ID exist? */
+        if (RtlEqualLuid(&SessionToMark->LogonId, LogonId))
+        {
+            /* We found it */
+            break;
+        }
+    }
+
+    /*
+     * We've exhausted all the remaining logon sessions and
+     * couldn't find one with the provided ID.
+     */
+    if (SessionToMark == NULL)
+    {
+        DPRINT1("SeMarkLogonSessionForTerminationNotification(): Logon session couldn't be found!\n");
+        KeReleaseGuardedMutex(&SepRmDbLock);
+        return STATUS_NOT_FOUND;
+    }
+
+    /* Mark the logon session for termination */
+    SessionToMark->Flags |= SEP_LOGON_SESSION_TERMINATION_NOTIFY;
+    DPRINT("SeMarkLogonSessionForTerminationNotification(): Logon session marked for termination with success!\n");
+
+    /* Release the database lock */
+    KeReleaseGuardedMutex(&SepRmDbLock);
+    return STATUS_SUCCESS;
 }
 
 
@@ -1143,7 +1444,7 @@ SeRegisterLogonSessionTerminatedRoutine(
     /* Allocate a new notification item */
     Notification = ExAllocatePoolWithTag(PagedPool,
                                          sizeof(SEP_LOGON_SESSION_TERMINATED_NOTIFICATION),
-                                         SEP_LOGON_NOTIFICATION_TAG);
+                                         TAG_LOGON_NOTIFICATION);
     if (Notification == NULL)
         return STATUS_INSUFFICIENT_RESOURCES;
 
@@ -1209,7 +1510,7 @@ SeUnregisterLogonSessionTerminatedRoutine(
 
         /* Free the current notification item */
         ExFreePoolWithTag(Current,
-                          SEP_LOGON_NOTIFICATION_TAG);
+                          TAG_LOGON_NOTIFICATION);
 
         Status = STATUS_SUCCESS;
     }

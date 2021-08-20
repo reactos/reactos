@@ -32,6 +32,9 @@ DIB_32BPP_ColorFill(SURFOBJ* DestSurface, RECTL* DestRect, ULONG color)
 {
   ULONG DestY;
 
+  /* Make WellOrdered by making top < bottom and left < right */
+  RECTL_vMakeWellOrdered(DestRect);
+
   for (DestY = DestRect->top; DestY< DestRect->bottom; DestY++)
   {
     DIB_32BPP_HLine (DestSurface, DestRect->left, DestRect->right, DestY, color);

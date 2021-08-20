@@ -17,14 +17,6 @@ extern "C" {
 #define _NLSCMPERROR 2147483647
 #endif
 
-#ifndef NULL
-#ifdef __cplusplus
-#define NULL 0
-#else
-#define NULL ((void *)0)
-#endif
-#endif
-
 #ifndef _CRT_MEMORY_DEFINED
 #define _CRT_MEMORY_DEFINED
 
@@ -150,6 +142,7 @@ extern "C" {
     _In_z_ const char *_Str1,
     _In_z_ const char *_Str2);
 
+  _CRTIMP
   size_t
   __cdecl
   strlen(

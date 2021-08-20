@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS headers
  * LICENSE:     LGPL-2.0-or-later (https://spdx.org/licenses/LGPL-2.0-or-later)
  * PURPOSE:     The layout engine of resizable dialog boxes / windows
- * COPYRIGHT:   Copyright 2020 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
+ * COPYRIGHT:   Copyright 2020-2021 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
 #pragma once
 #include <assert.h>
@@ -41,8 +41,11 @@ _layout_ModifySystemMenu(LAYOUT_DATA *pData, BOOL bEnableResize)
 static __inline HDWP
 _layout_MoveGrip(LAYOUT_DATA *pData, HDWP hDwp OPTIONAL)
 {
+    if (!IsWindowVisible(pData->m_hwndGrip))
+        return hDwp;
+
     SIZE size = { GetSystemMetrics(SM_CXVSCROLL), GetSystemMetrics(SM_CYHSCROLL) };
-    const UINT uFlags = SWP_NOACTIVATE | SWP_NOOWNERZORDER | SWP_NOZORDER;
+    const UINT uFlags = SWP_NOACTIVATE | SWP_NOOWNERZORDER | SWP_NOZORDER | SWP_NOCOPYBITS;
     RECT rcClient;
     GetClientRect(pData->m_hwndParent, &rcClient);
 
@@ -62,8 +65,18 @@ _layout_MoveGrip(LAYOUT_DATA *pData, HDWP hDwp OPTIONAL)
 }
 
 static __inline void
-_layout_ShowGrip(LAYOUT_DATA *pData, BOOL bShow)
+LayoutShowGrip(LAYOUT_DATA *pData, BOOL bShow)
 {
+    UINT uSWP = SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE |
+                SWP_NOZORDER | SWP_NOOWNERZORDER | SWP_FRAMECHANGED;
+    DWORD style = GetWindowLongPtrW(pData->m_hwndParent, GWL_STYLE);
+    DWORD new_style = (bShow ? (style | WS_SIZEBOX) : (style & ~WS_SIZEBOX));
+    if (style != new_style)
+    {
+        SetWindowLongPtrW(pData->m_hwndParent, GWL_STYLE, new_style); /* change style */
+        SetWindowPos(pData->m_hwndParent, NULL, 0, 0, 0, 0, uSWP); /* frame changed */
+    }
+
     if (!bShow)
     {
         ShowWindow(pData->m_hwndGrip, SW_HIDE);
@@ -114,7 +127,7 @@ _layout_DoMoveItem(LAYOUT_DATA *pData, HDWP hDwp, const LAYOUT_INFO *pLayout,
     {
         hDwp = DeferWindowPos(hDwp, pLayout->m_hwndCtrl, NULL, NewRect.left, NewRect.top,
                               NewRect.right - NewRect.left, NewRect.bottom - NewRect.top,
-                              SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOREPOSITION);
+                              SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOREPOSITION | SWP_NOCOPYBITS);
     }
     return hDwp;
 }
@@ -176,7 +189,7 @@ LayoutUpdate(HWND ignored1, LAYOUT_DATA *pData, LPCVOID ignored2, UINT ignored3)
     UNREFERENCED_PARAMETER(ignored1);
     UNREFERENCED_PARAMETER(ignored2);
     UNREFERENCED_PARAMETER(ignored3);
-    if (pData == NULL)
+    if (pData == NULL || !pData->m_hwndParent)
         return;
     assert(IsWindow(pData->m_hwndParent));
     _layout_ArrangeLayout(pData);
@@ -185,19 +198,30 @@ LayoutUpdate(HWND ignored1, LAYOUT_DATA *pData, LPCVOID ignored2, UINT ignored3)
 static __inline void
 LayoutEnableResize(LAYOUT_DATA *pData, BOOL bEnable)
 {
-    _layout_ShowGrip(pData, bEnable);
+    LayoutShowGrip(pData, bEnable);
     _layout_ModifySystemMenu(pData, bEnable);
 }
 
 static __inline LAYOUT_DATA *
-LayoutInit(HWND hwndParent, const LAYOUT_INFO *pLayouts, UINT cLayouts)
+LayoutInit(HWND hwndParent, const LAYOUT_INFO *pLayouts, INT cLayouts)
 {
+    BOOL bShowGrip;
     SIZE_T cb;
     LAYOUT_DATA *pData = (LAYOUT_DATA *)HeapAlloc(GetProcessHeap(), 0, sizeof(LAYOUT_DATA));
     if (pData == NULL)
     {
         assert(0);
         return NULL;
+    }
+
+    if (cLayouts < 0) /* NOTE: If cLayouts was negative, then don't show size grip */
+    {
+        cLayouts = -cLayouts;
+        bShowGrip = FALSE;
+    }
+    else
+    {
+        bShowGrip = TRUE;
     }
 
     cb = cLayouts * sizeof(LAYOUT_INFO);
@@ -211,13 +235,14 @@ LayoutInit(HWND hwndParent, const LAYOUT_INFO *pLayouts, UINT cLayouts)
     }
     memcpy(pData->m_pLayouts, pLayouts, cb);
 
-    /* NOTE: The parent window must have initially WS_SIZEBOX style. */
     assert(IsWindow(hwndParent));
-    assert(GetWindowLongPtrW(hwndParent, GWL_STYLE) & WS_SIZEBOX);
 
     pData->m_hwndParent = hwndParent;
+
     pData->m_hwndGrip = NULL;
-    LayoutEnableResize(pData, TRUE);
+    if (bShowGrip)
+        LayoutShowGrip(pData, bShowGrip);
+
     _layout_InitLayouts(pData);
     return pData;
 }

@@ -1924,7 +1924,7 @@ DdGetDC(LPDDRAWI_DDRAWSURFACE_LCL pSurfaceLocal,
         LPPALETTEENTRY pColorTable)
 {
     /* Call win32k directly */
-    return NtGdiDdGetDC(pColorTable, (HANDLE) pSurfaceLocal->hDDSurface);
+    return NtGdiDdGetDC((HANDLE)pSurfaceLocal->hDDSurface, pColorTable);
 }
 
 /*
@@ -2078,7 +2078,6 @@ DdSetGammaRamp(LPDDRAWI_DIRECTDRAW_LCL pDDraw,
                                hdc,
                                lpGammaRamp);
 }
-
 
 
 

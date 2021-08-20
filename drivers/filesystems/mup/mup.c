@@ -32,32 +32,6 @@
 #define NDEBUG
 #include <debug.h>
 
-CODE_SEG("INIT")
-NTSTATUS
-NTAPI
-DriverEntry(
-    PDRIVER_OBJECT DriverObject,
-    PUNICODE_STRING RegistryPath
-);
-
-CODE_SEG("INIT")
-VOID
-MupInitializeData(
-    VOID
-);
-
-CODE_SEG("INIT")
-VOID
-MupInitializeVcb(
-    PMUP_VCB Vcb
-);
-
-#if defined(ALLOC_PRAGMA)
-#pragma alloc_text(INIT, DriverEntry)
-#pragma alloc_text(INIT, MupInitializeData)
-#pragma alloc_text(INIT, MupInitializeVcb)
-#endif
-
 ERESOURCE MupGlobalLock;
 ERESOURCE MupPrefixTableLock;
 ERESOURCE MupCcbListLock;

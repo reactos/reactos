@@ -25,6 +25,8 @@
 #include <pnp_c.h>
 #include <winsvc.h>
 
+#include <pseh/pseh2.h>
+
 #include "rpc_private.h"
 
 DWORD
@@ -35,7 +37,8 @@ I_ScPnPGetServiceName(IN SERVICE_STATUS_HANDLE hServiceStatus,
 
 
 /* Registry key and value names */
-static const WCHAR Backslash[] = {'\\', 0};
+static const WCHAR BackslashOpenBrace[] = {'\\', '{', 0};
+static const WCHAR CloseBrace[] = {'}', 0};
 static const WCHAR Class[]  = {'C','l','a','s','s',0};
 
 static const WCHAR ControlClass[] = {'S','y','s','t','e','m','\\',
@@ -672,7 +675,7 @@ CMP_RegisterNotification(
                                        ((DEV_BROADCAST_HDR*)lpvNotificationFilter)->dbch_size,
                                        ulFlags,
                                        &pNotifyData->ulNotifyData,
-                                       0,            /* ??? */
+                                       GetCurrentProcessId(),
                                        &ulUnknown9); /* ??? */
     }
     RpcExcept(EXCEPTION_EXECUTE_HANDLER)
@@ -6343,8 +6346,9 @@ CM_Open_Class_Key_ExW(
             return CR_INVALID_DATA;
         }
 
-        lstrcatW(szKeyName, Backslash);
+        lstrcatW(szKeyName, BackslashOpenBrace);
         lstrcatW(szKeyName, lpGuidString);
+        lstrcatW(szKeyName, CloseBrace);
     }
 
     if (Disposition == RegDisposition_OpenAlways)

@@ -6,6 +6,11 @@
 * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
 */
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 #ifndef _M_ARM
 FORCEINLINE
 KPROCESSOR_MODE
@@ -1342,6 +1347,8 @@ KxUnwaitThreadForEvent(IN PKEVENT Event,
 // This routine must be entered with the PRCB lock held and it will exit
 // with the PRCB lock released!
 //
+_Requires_lock_held_(Prcb->PrcbLock)
+_Releases_lock_(Prcb->PrcbLock)
 FORCEINLINE
 VOID
 KxQueueReadyThread(IN PKTHREAD Thread,
@@ -1701,3 +1708,7 @@ KiCpuIdEx(
     __cpuidex((INT*)CpuInfo->AsUINT32, Function, SubFunction);
 }
 #endif /* _M_IX86 || _M_AMD64 */
+
+#ifdef __cplusplus
+} // extern "C"
+#endif

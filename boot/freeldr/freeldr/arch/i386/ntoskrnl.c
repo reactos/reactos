@@ -3,7 +3,7 @@
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            boot/freeldr/freeldr/arch/i386/ntoskrnl.c
  * PURPOSE:         NTOS glue routines for the MINIHAL library
- * PROGRAMMERS:     Hervé Poussineau  <hpoussin@reactos.org>
+ * PROGRAMMERS:     HervÃ© Poussineau  <hpoussin@reactos.org>
  */
 
 /* INCLUDES ******************************************************************/
@@ -25,16 +25,17 @@ KeInitializeEvent(
 
 VOID
 FASTCALL
-KiAcquireSpinLock(
+KefAcquireSpinLockAtDpcLevel(
     IN PKSPIN_LOCK SpinLock)
 {
-}
-
-VOID
-FASTCALL
-KiReleaseSpinLock(
-    IN PKSPIN_LOCK SpinLock)
-{
+#if DBG
+    /* To be on par with HAL/NTOSKRNL */
+#ifdef _M_AMD64
+    *SpinLock = (KSPIN_LOCK)KeGetCurrentThread() | 1;
+#else
+    *SpinLock = (KSPIN_LOCK)(((PKIPCR)KeGetPcr())->PrcbData.CurrentThread) | 1;
+#endif
+#endif
 }
 
 VOID

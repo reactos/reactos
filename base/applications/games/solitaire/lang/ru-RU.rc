@@ -65,6 +65,7 @@ BEGIN
     BEGIN
         MENUITEM "Н&овая игра\tF2", IDM_GAME_NEW
         MENUITEM SEPARATOR
+        MENUITEM "&Undo", IDM_GAME_UNDO, GRAYED
         MENUITEM "&Обложки...", IDM_GAME_DECK
         MENUITEM "&Настройки...", IDM_GAME_OPTIONS
         MENUITEM SEPARATOR

@@ -4,16 +4,14 @@ add_definitions(-D__ROS_LONG64__)
 if(MSVC)
     add_compile_options(
         /wd4090 # C4090: 'function': different 'const' qualifiers
-        /wd4133 # C4133: 'function': incompatible types - from '<enum> *' to 'UINT *'
         /wd4146 # C4146: unary minus operator applied to unsigned type, result still unsigned
         /wd4189 # C4189: 'x': local variable is initialized but not referenced
         /wd4267 # C4267: '=': conversion from 'size_t' to 'int', possible loss of data
         /wd4305) # C4305: '=': truncation from 'double' to 'FLOAT'
     if(ARCH STREQUAL "amd64")
         add_compile_options(
-            /wd4101 # C4101: 'x': unreferenced local variable
             /wd4312 # C4312: 'type cast': conversion from 'unsigned int' to 'char *' of greater size
-            /wd4334) # C4334: '<<': result of 32-bit shift implicitly converted to 64 bits (was 64-bit shift intended?)
+            )
     endif()
 endif()
 
@@ -101,9 +99,7 @@ add_subdirectory(reg)
 add_subdirectory(regedit)
 add_subdirectory(riched20)
 add_subdirectory(riched32)
-if(NOT ARCH STREQUAL "amd64")
-    add_subdirectory(rpcrt4)
-endif()
+add_subdirectory(rpcrt4)
 add_subdirectory(rsaenh)
 add_subdirectory(schannel)
 add_subdirectory(scrrun)

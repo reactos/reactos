@@ -33,6 +33,7 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 IDR_ADDRESSBAND REGISTRY "res/addressband.rgs"
 IDR_ADDRESSEDITBOX REGISTRY "res/addresseditbox.rgs"
 IDR_ACLMULTI REGISTRY "res/autocompletecontainer.rgs"
+IDR_ACLHISTORY REGISTRY "res/autocompletehistory.rgs"
 IDR_BANDPROXY REGISTRY "res/bandproxy.rgs"
 IDR_BANDSITE REGISTRY "res/rebarbandsite.rgs"
 IDR_BANDSITEMENU REGISTRY "res/bandsitemenu.rgs"

@@ -380,6 +380,11 @@ KiGetFeatureBits(VOID)
     if (CpuFeatures & 0x02000000) FeatureBits |= KF_XMMI;
     if (CpuFeatures & 0x04000000) FeatureBits |= KF_XMMI64;
 
+    if (CpuFeatures & 0x00000040)
+    {
+        DPRINT1("Support PAE\n");
+    }
+
     /* Check if the CPU has hyper-threading */
     if (CpuFeatures & 0x10000000)
     {
@@ -979,7 +984,7 @@ KiSaveProcessorControlState(OUT PKPROCESSOR_STATE ProcessorState)
     Ke386GetGlobalDescriptorTable(&ProcessorState->SpecialRegisters.Gdtr.Limit);
     __sidt(&ProcessorState->SpecialRegisters.Idtr.Limit);
     ProcessorState->SpecialRegisters.Tr = Ke386GetTr();
-    ProcessorState->SpecialRegisters.Ldtr = Ke386GetLocalDescriptorTable();
+    Ke386GetLocalDescriptorTable(&ProcessorState->SpecialRegisters.Ldtr);
 }
 
 CODE_SEG("INIT")
@@ -1089,6 +1094,7 @@ KiI386PentiumLockErrataFixup(VOID)
 {
     KDESCRIPTOR IdtDescriptor = {0, 0, 0};
     PKIDTENTRY NewIdt, NewIdt2;
+    PMMPTE PointerPte;
 
     /* Allocate memory for a new IDT */
     NewIdt = ExAllocatePool(NonPagedPool, 2 * PAGE_SIZE);
@@ -1114,7 +1120,10 @@ KiI386PentiumLockErrataFixup(VOID)
     _enable();
 
     /* Set the first 7 entries as read-only to produce a fault */
-    MmSetPageProtect(NULL, NewIdt, PAGE_READONLY);
+    PointerPte = MiAddressToPte(NewIdt);
+    ASSERT(PointerPte->u.Hard.Write == 1);
+    PointerPte->u.Hard.Write = 0;
+    KeInvalidateTlbEntry(NewIdt);
 }
 
 BOOLEAN
@@ -1127,15 +1136,6 @@ KeInvalidateAllCaches(VOID)
     /* Invalidate all caches */
     __wbinvd();
     return TRUE;
-}
-
-VOID
-FASTCALL
-KeZeroPages(IN PVOID Address,
-            IN ULONG Size)
-{
-    /* Not using XMMI in this routine */
-    RtlZeroMemory(Address, Size);
 }
 
 VOID

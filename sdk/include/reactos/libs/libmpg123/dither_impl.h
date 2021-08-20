@@ -26,13 +26,13 @@ static float rand_xorshift32(uint32_t *seed)
 		uint32_t i;
 		float f;
 	} fi;
-	
+
 	fi.i = *seed;
 	fi.i ^= (fi.i<<13);
 	fi.i ^= (fi.i>>17);
 	fi.i ^= (fi.i<<5);
 	*seed = fi.i;
-	
+
 	/* scale the number to [-0.5, 0.5] */
 #ifdef IEEE_FLOAT
 	fi.i = (fi.i>>9)|0x3f800000;
@@ -48,7 +48,7 @@ static void white_noise(float *table, size_t count)
 {
 	size_t i;
 	uint32_t seed = init_seed;
-	
+
 	for(i=0; i<count; ++i)
 	table[i] = rand_xorshift32(&seed);
 }
@@ -57,7 +57,7 @@ static void tpdf_noise(float *table, size_t count)
 {
 	size_t i;
 	uint32_t seed = init_seed;
-	
+
 	for(i=0; i<count; ++i)
 	table[i] = rand_xorshift32(&seed) + rand_xorshift32(&seed);
 }
@@ -80,16 +80,16 @@ static void highpass_tpdf_noise(float *table, size_t count)
 	for(i=0;i<count+lap;i++)
 	{
 		if(i==count) seed=init_seed;
-		
+
 		/* generate and add 2 random numbers, to make a TPDF noise distribution */
 		input_noise = rand_xorshift32(&seed) + rand_xorshift32(&seed);
 
 		/* apply 8th order Chebyshev high-pass IIR filter */
 		/* Coefficients are from http://www-users.cs.york.ac.uk/~fisher/mkfilter/trad.html
 		   Given parameters are: Chebyshev, Highpass, ripple=-1, order=8, samplerate=44100, corner1=19000 */
-		xv[0] = xv[1]; xv[1] = xv[2]; xv[2] = xv[3]; xv[3] = xv[4]; xv[4] = xv[5]; xv[5] = xv[6]; xv[6] = xv[7]; xv[7] = xv[8]; 
+		xv[0] = xv[1]; xv[1] = xv[2]; xv[2] = xv[3]; xv[3] = xv[4]; xv[4] = xv[5]; xv[5] = xv[6]; xv[6] = xv[7]; xv[7] = xv[8];
 		xv[8] = input_noise / 1.382814179e+07;
-		yv[0] = yv[1]; yv[1] = yv[2]; yv[2] = yv[3]; yv[3] = yv[4]; yv[4] = yv[5]; yv[5] = yv[6]; yv[6] = yv[7]; yv[7] = yv[8]; 
+		yv[0] = yv[1]; yv[1] = yv[2]; yv[2] = yv[3]; yv[3] = yv[4]; yv[4] = yv[5]; yv[5] = yv[6]; yv[6] = yv[7]; yv[7] = yv[8];
 		yv[8] = (xv[0] + xv[8]) - 8 * (xv[1] + xv[7]) + 28 * (xv[2] + xv[6])
 				- 56 * (xv[3] + xv[5]) + 70 * xv[4]
 				+ ( -0.6706204984 * yv[0]) + ( -5.3720827038 * yv[1])

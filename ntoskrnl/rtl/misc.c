@@ -36,7 +36,7 @@ RtlGetNtGlobalFlags(VOID)
 /*
  * @implemented
  */
-NTSTATUS 
+NTSTATUS
 NTAPI
 RtlGetVersion(IN OUT PRTL_OSVERSIONINFOW lpVersionInformation)
 {
@@ -80,7 +80,7 @@ RtlGetVersion(IN OUT PRTL_OSVERSIONINFOW lpVersionInformation)
  *      The call expects to be called at PASSIVE_LEVEL. The function firstly checks if the product type is
  *      actually valid by checking the "ProductTypeIsValid" member of _KUSER_SHARED_DATA structure.
  *      Currently we do not implement code that is responsible for the management of this member, yet.
- * 
+ *
  */
 BOOLEAN
 NTAPI

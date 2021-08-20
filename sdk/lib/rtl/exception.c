@@ -251,6 +251,13 @@ static VOID
         DbgPrint("Faulting Address: %8x\n", ExceptionRecord->ExceptionInformation[1]);
     }
 
+    /* Trace the wine special error and show the modulename and functionname */
+    if (ExceptionRecord->ExceptionCode == 0x80000100 /* EXCEPTION_WINE_STUB */ &&
+        ExceptionRecord->NumberParameters == 2)
+    {
+        DbgPrint("Missing function: %s!%s\n", (PSZ)ExceptionRecord->ExceptionInformation[0], (PSZ)ExceptionRecord->ExceptionInformation[1]);
+    }
+
     _dump_context(ContextRecord);
     _module_name_from_addr(ExceptionRecord->ExceptionAddress, &StartAddr, szMod, sizeof(szMod));
     DbgPrint("Address:\n   %8x+%-8x   %s\n",

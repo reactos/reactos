@@ -77,7 +77,7 @@ ConDrvDeleteController(IN PDRIVER_OBJECT DriverObject)
 
     RtlInitUnicodeString(&SymlinkName, DD_CONDRV_CTRL_SYMLNK_NAME_U);
     IoDeleteSymbolicLink(&SymlinkName);
-    
+
     /* Delete the controller device itself */
     IoDeleteDevice(Controller);
 

@@ -233,7 +233,7 @@ USBH_QueryCapabilities(IN PDEVICE_OBJECT DeviceObject,
                            TRUE);
 
     IoStack = IoGetNextIrpStackLocation(Irp);
- 
+
     IoStack->MajorFunction = IRP_MJ_PNP;
     IoStack->MinorFunction = IRP_MN_QUERY_CAPABILITIES;
 
@@ -266,7 +266,7 @@ USBH_OpenConfiguration(IN PUSBHUB_FDO_EXTENSION HubExtension)
 
     DPRINT("USBH_OpenConfiguration ... \n");
 
-    if (HubExtension->HubFlags & USBHUB_FDO_FLAG_USB20_HUB && 
+    if (HubExtension->HubFlags & USBHUB_FDO_FLAG_USB20_HUB &&
         HubExtension->LowerPDO != HubExtension->RootHubPdo)
     {
         Pid = USBD_ParseConfigurationDescriptorEx(HubExtension->HubConfigDescriptor,
@@ -1900,7 +1900,7 @@ USBH_PdoQueryDeviceText(IN PUSBHUB_PORT_PDO_EXTENSION PortExtension,
             RtlZeroMemory(Descriptor, MAXIMUM_USB_STRING_LENGTH);
 
             for (Status = USBH_CheckDeviceLanguage(DeviceObject, LanguageId);
-                 ; 
+                 ;
                  Status = USBH_CheckDeviceLanguage(DeviceObject, DefaultId))
             {
                 if (NT_SUCCESS(Status))
@@ -2651,7 +2651,7 @@ USBH_PdoPnP(IN PUSBHUB_PORT_PDO_EXTENSION PortExtension,
             {
                 return Irp->IoStatus.Status;
             }
-  
+
             DeviceRelation = ExAllocatePoolWithTag(PagedPool,
                                                    sizeof(DEVICE_RELATIONS),
                                                    USB_HUB_TAG);
@@ -2671,7 +2671,7 @@ USBH_PdoPnP(IN PUSBHUB_PORT_PDO_EXTENSION PortExtension,
             {
                 Status = STATUS_INSUFFICIENT_RESOURCES;
             }
-  
+
             Irp->IoStatus.Information = (ULONG_PTR)DeviceRelation;
             break;
 

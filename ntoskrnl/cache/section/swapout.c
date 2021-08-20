@@ -172,11 +172,11 @@ MmFinalizeSectionPageOut(PMM_SECTION_SEGMENT Segment,
     SWAPENTRY Swap = MmGetSavedSwapEntryPage(Page);
 
     /* Bail early if the reference count isn't where we need it */
-    if (MmGetReferenceCountPage(Page) != 1)
+    if (MmGetReferenceCountPageWithoutLock(Page) != 1)
     {
         DPRINT1("Cannot page out locked page %x with ref count %lu\n",
                 Page,
-                MmGetReferenceCountPage(Page));
+                MmGetReferenceCountPageWithoutLock(Page));
         return STATUS_UNSUCCESSFUL;
     }
 
@@ -357,7 +357,7 @@ MmpPageOutPhysicalAddress(PFN_NUMBER Page)
     NTSTATUS Status = STATUS_SUCCESS;
     MM_REQUIRED_RESOURCES Resources = { 0 };
 
-    DPRINTC("Page out %x (ref ct %x)\n", Page, MmGetReferenceCountPage(Page));
+    DPRINTC("Page out %x (ref ct %x)\n", Page, MmGetReferenceCountPageWithoutLock(Page));
 
     ExAcquireFastMutex(&MiGlobalPageOperation);
     if ((Segment = MmGetSectionAssociation(Page, &FileOffset)))

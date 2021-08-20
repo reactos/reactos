@@ -64,7 +64,7 @@ CmBattQueryWmiRegInfo(PDEVICE_OBJECT DeviceObject,
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
-         
+
 NTSTATUS
 NTAPI
 CmBattQueryWmiDataBlock(PDEVICE_OBJECT DeviceObject,
@@ -83,7 +83,7 @@ CmBattQueryWmiDataBlock(PDEVICE_OBJECT DeviceObject,
 NTSTATUS
 NTAPI
 CmBattSetWmiDataBlock(PDEVICE_OBJECT DeviceObject,
-                      PIRP Irp, 
+                      PIRP Irp,
                       ULONG GuidIndex,
                       ULONG InstanceIndex,
                       ULONG BufferSize,
@@ -112,10 +112,10 @@ NTAPI
 CmBattWmiDeRegistration(IN PCMBATT_DEVICE_EXTENSION DeviceExtension)
 {
     PAGED_CODE();
-    
+
     /* De-register */
     return IoWMIRegistrationControl(DeviceExtension->FdoDeviceObject,
-                                    WMIREG_ACTION_DEREGISTER); 
+                                    WMIREG_ACTION_DEREGISTER);
 }
 
 NTSTATUS
@@ -123,12 +123,12 @@ NTAPI
 CmBattWmiRegistration(IN PCMBATT_DEVICE_EXTENSION DeviceExtension)
 {
     PAGED_CODE();
-    
+
     /* GUID information */
     DeviceExtension->WmiLibInfo.GuidCount = sizeof(CmBattWmiGuidList) /
                                             sizeof(WMIGUIDREGINFO);
     DeviceExtension->WmiLibInfo.GuidList = CmBattWmiGuidList;
-    
+
     /* Callbacks */
     DeviceExtension->WmiLibInfo.QueryWmiRegInfo = CmBattQueryWmiRegInfo;
     DeviceExtension->WmiLibInfo.QueryWmiDataBlock = CmBattQueryWmiDataBlock;
@@ -136,7 +136,7 @@ CmBattWmiRegistration(IN PCMBATT_DEVICE_EXTENSION DeviceExtension)
     DeviceExtension->WmiLibInfo.SetWmiDataItem = CmBattSetWmiDataItem;
     DeviceExtension->WmiLibInfo.ExecuteWmiMethod = NULL;
     DeviceExtension->WmiLibInfo.WmiFunctionControl = NULL;
-    
+
     /* Register */
     return IoWMIRegistrationControl(DeviceExtension->FdoDeviceObject,
                                     WMIREG_ACTION_REGISTER);
@@ -155,7 +155,7 @@ CmBattSystemControl(IN PDEVICE_OBJECT DeviceObject,
     if (CmBattDebug & 2)
         DbgPrint("CmBatt: SystemControl: %s\n",
                  WMIMinorFunctionString(IoGetCurrentIrpStackLocation(Irp)->MinorFunction));
-    
+
     /* Acquire the remove lock */
     DeviceExtension = DeviceObject->DeviceExtension;
     Status = IoAcquireRemoveLock(&DeviceExtension->RemoveLock, 0);
@@ -166,7 +166,7 @@ CmBattSystemControl(IN PDEVICE_OBJECT DeviceObject,
         IoCompleteRequest(Irp, IO_NO_INCREMENT);
         return STATUS_DEVICE_REMOVED;
     }
-    
+
     /* What kind of device is this? */
     WmiLibContext = &DeviceExtension->WmiLibInfo;
     if (DeviceExtension->FdoType == CmBattBattery)
@@ -191,26 +191,26 @@ CmBattSystemControl(IN PDEVICE_OBJECT DeviceObject,
     switch (Disposition)
     {
         case IrpNotCompleted:
-        
+
             /* Complete it here */
             if (CmBattDebug & 2) DbgPrint("CmBatt: SystemControl: Irp Not Completed.\n");
             IoCompleteRequest(Irp, IO_NO_INCREMENT);
             break;
-            
+
         case IrpForward:
-        
+
             /* Forward it to ACPI */
             if (CmBattDebug & 2) DbgPrint("CmBatt: SystemControl: Irp Forward.\n");
             IoSkipCurrentIrpStackLocation(Irp);
             Status = IoCallDriver(DeviceExtension->AttachedDevice, Irp);
             break;
-            
+
         case IrpProcessed:
-        
+
             /* Nothing to do */
             if (CmBattDebug & 2) DbgPrint("CmBatt: SystemControl: Irp Processed.\n");
             break;
-            
+
         default:
             ASSERT(FALSE);
     }
@@ -219,5 +219,5 @@ CmBattSystemControl(IN PDEVICE_OBJECT DeviceObject,
     IoReleaseRemoveLock(&DeviceExtension->RemoveLock, 0);
     return Status;
 }
-    
+
 /* EOF */

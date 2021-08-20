@@ -980,6 +980,30 @@ static MUI_ENTRY itITBootPageEntries[] =
 
 };
 
+static MUI_ENTRY itITBootLoaderInstallPageEntries[] =
+{
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        "Installing the bootloader onto the media, please wait...",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
 static MUI_ENTRY itITSelectPartitionEntries[] =
 {
     {
@@ -1325,6 +1349,37 @@ static MUI_ENTRY itITFormatPartitionEntries[] =
         0,
         "   INVIO = Continua   F3 = Termina",
         TEXT_TYPE_STATUS,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
+static MUI_ENTRY itITCheckFSEntries[] =
+{
+    {
+        4,
+        3,
+        " Installazione di ReactOS " KERNEL_VERSION_STR " ",
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        8,
+        "Setup sta controllando la partizione selezionata.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        "Attendere...",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
         TEXT_ID_STATIC
     },
     {
@@ -2107,6 +2162,10 @@ MUI_PAGE itITPages[] =
         itITFormatPartitionEntries
     },
     {
+        CHECK_FILE_SYSTEM_PAGE,
+        itITCheckFSEntries
+    },
+    {
         DELETE_PARTITION_PAGE,
         itITDeletePartitionEntries
     },
@@ -2141,6 +2200,10 @@ MUI_PAGE itITPages[] =
     {
         SUCCESS_PAGE,
         itITSuccessPageEntries
+    },
+    {
+        BOOT_LOADER_INSTALLATION_PAGE,
+        itITBootLoaderInstallPageEntries
     },
     {
         BOOT_LOADER_FLOPPY_PAGE,
@@ -2190,8 +2253,6 @@ MUI_STRING itITStrings[] =
     "La nuova partizione non \x8A stata ancora formattata."},
     {STRING_INSTALLONPART,
     "Il setup installer\x85 ReactOS sulla partitione"},
-    {STRING_CHECKINGPART,
-    "Setup sta controllando la partizione selezionata."},
     {STRING_CONTINUE,
     "INVIO = Continua"},
     {STRING_QUITCONTINUE,

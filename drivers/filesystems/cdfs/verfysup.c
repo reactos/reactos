@@ -107,9 +107,9 @@ Return Value:
         //
         //  Acquire the Vcb so we're working with a stable VcbCondition.
         //
-        
+
         CdAcquireVcbShared( IrpContext, Vcb, FALSE);
-        
+
         //
         //  If the verify operation completed it will return
         //  either STATUS_SUCCESS or STATUS_WRONG_VOLUME, exactly.
@@ -129,12 +129,12 @@ Return Value:
 
             //
             //  If the verify succeeded,  but our volume is not mounted,
-            //  then some other volume is on the device. 
+            //  then some other volume is on the device.
             //
 
             Status = STATUS_WRONG_VOLUME;
-        } 
-        
+        }
+
         //
         //  Do a quick unprotected check here.  The routine will do
         //  a safe check.  After here we can release the resource.
@@ -188,7 +188,7 @@ Return Value:
             //
             //  Fill in the device object if required.
             //
-            
+
             if (IoIsErrorUserInduced( Status ) ) {
 
                 IoSetHardErrorOrVerifyDevice( Irp, DeviceToVerify );
@@ -220,7 +220,7 @@ Return Value:
     return Status;
 }
 
-
+
 
 _Requires_lock_held_(_Global_critical_region_)
 BOOLEAN
@@ -248,14 +248,14 @@ Routine Description:
 Arguments:
 
     Vcb - Vcb for the volume to try to dismount.
-    
+
     Force - Whether we will force this volume to be dismounted.
 
 Return Value:
 
     BOOLEAN - True if the Vcb was not gone by the time this function finished,
         False if it was deleted.
-        
+
     This is only a trustworthy indication to the caller if it had the vcb
     exclusive itself.
 
@@ -397,10 +397,10 @@ Return Value:
         //
         //  Flag this to avoid the VPB spinlock in future passes.
         //
-        
+
         SetFlag( Vcb->VcbState, VCB_STATE_VPB_NOT_ON_DEVICE);
     }
-    
+
     IoReleaseVpbSpinLock( SavedIrql );
 
     return Marked;
@@ -448,7 +448,7 @@ Return Value:
     //
 
     if ((Vcb->VcbCondition == VcbInvalid) ||
-        ((Vcb->VcbCondition == VcbDismountInProgress) && 
+        ((Vcb->VcbCondition == VcbDismountInProgress) &&
          (IrpContext->MajorFunction != IRP_MJ_CREATE))) {
 
         if (FlagOn( Vcb->VcbState, VCB_STATE_DISMOUNTED )) {
@@ -460,15 +460,15 @@ Return Value:
             CdRaiseStatus( IrpContext, STATUS_FILE_INVALID );
         }
     }
-    
+
     //
     //  Capture the real device verify state.
     //
-    
+
     DevMarkedForVerify = CdRealDevNeedsVerify( Vcb->Vpb->RealDevice);
-    
+
     if (FlagOn( Vcb->VcbState, VCB_STATE_REMOVABLE_MEDIA ) && !DevMarkedForVerify) {
-        
+
         //
         //  If the media is removable and the verify volume flag in the
         //  device object is not set then we want to ping the device
@@ -487,11 +487,11 @@ Return Value:
                                          &Iosb );
 
             if (Iosb.Information != sizeof(ULONG)) {
-        
+
                 //
                 //  Be safe about the count in case the driver didn't fill it in
                 //
-        
+
                 MediaChangeCount = 0;
             }
 
@@ -504,9 +504,9 @@ Return Value:
             //     set, but could be due to hardware condition)
             //  3. Media change count doesn't match the one in the Vcb
             //
-            
+
             if (((Vcb->VcbCondition == VcbMounted) &&
-                 CdIsRawDevice( IrpContext, Status )) 
+                 CdIsRawDevice( IrpContext, Status ))
                 ||
                 (Status == STATUS_VERIFY_REQUIRED)
                 ||
@@ -532,13 +532,13 @@ Return Value:
                 //  do so only when we've actually completed a verify at a particular
                 //  change count value.
                 //
-            } 
+            }
         }
 
         //
         //  This is the 4th verify case.
         //
-        //  We ALWAYS force CREATE requests on unmounted volumes through the 
+        //  We ALWAYS force CREATE requests on unmounted volumes through the
         //  verify path.  These requests could have been in limbo between
         //  IoCheckMountedVpb and us when a verify/mount took place and caused
         //  a completely different fs/volume to be mounted.  In this case the
@@ -567,14 +567,14 @@ Return Value:
     //
     //  Raise the verify / error if neccessary.
     //
-    
+
     if (ForceVerify || DevMarkedForVerify || !NT_SUCCESS( Status)) {
-    
+
         IoSetHardErrorOrVerifyDevice( IrpContext->Irp,
                                       Vcb->Vpb->RealDevice );
-       
-        CdRaiseStatus( IrpContext, (ForceVerify || DevMarkedForVerify) 
-                                   ? STATUS_VERIFY_REQUIRED 
+
+        CdRaiseStatus( IrpContext, (ForceVerify || DevMarkedForVerify)
+                                   ? STATUS_VERIFY_REQUIRED
                                    : Status);
     }
 
@@ -604,7 +604,7 @@ Return Value:
             CdRaiseStatus( IrpContext, STATUS_FILE_INVALID );
         }
         break;
-        
+
     /* ReactOS Change: GCC "enumeration value not handled in switch" */
     default: break;
     }
@@ -644,18 +644,18 @@ Return Value:
     PIRP Irp;
 
     PAGED_CODE();
-    
+
     //
     //  Check that the fileobject has not been cleaned up.
     //
-    
+
     if ( ARGUMENT_PRESENT( IrpContext ))  {
 
         PFILE_OBJECT FileObject;
 
         Irp = IrpContext->Irp;
         FileObject = IoGetCurrentIrpStackLocation( Irp)->FileObject;
-        
+
         if ( FileObject && FlagOn( FileObject->Flags, FO_CLEANUP_COMPLETE))  {
 
             PIO_STACK_LOCATION IrpSp = IoGetCurrentIrpStackLocation( Irp );
@@ -664,7 +664,7 @@ Return Value:
             //  Following FAT,  we allow certain operations even on cleaned up
             //  file objects.  Everything else,  we fail.
             //
-            
+
             if ( (FlagOn(Irp->Flags, IRP_PAGING_IO)) ||
                  (IrpSp->MajorFunction == IRP_MJ_CLOSE ) ||
                  (IrpSp->MajorFunction == IRP_MJ_QUERY_INFORMATION) ||
@@ -695,7 +695,7 @@ Return Value:
                 CdRaiseStatus( IrpContext, STATUS_VOLUME_DISMOUNTED );
 
             } else {
-            
+
                 CdRaiseStatus( IrpContext, STATUS_FILE_INVALID );
             }
         }
@@ -753,7 +753,7 @@ Return Value:
     return TRUE;
 }
 
-
+
 
 _Requires_lock_held_(_Global_critical_region_)
 BOOLEAN
@@ -922,7 +922,7 @@ Return Value:
             //  Indicate we used up the swap.
             //
 
-            Vcb->SwapVpb = NULL;            
+            Vcb->SwapVpb = NULL;
 
             CdUnlockVcb( IrpContext, Vcb );
 

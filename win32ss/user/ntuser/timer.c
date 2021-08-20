@@ -635,19 +635,18 @@ NtUserSetTimer
 )
 {
    PWND Window = NULL;
-   DECLARE_RETURN(UINT_PTR);
+   UINT_PTR ret;
 
    TRACE("Enter NtUserSetTimer\n");
    UserEnterExclusive();
    if (hWnd) Window = UserGetWindowObject(hWnd);
+
+   ret = IntSetTimer(Window, nIDEvent, uElapse, lpTimerFunc, TMRF_TIFROMWND);
+
    UserLeave();
+   TRACE("Leave NtUserSetTimer, ret=%u\n", ret);
 
-   RETURN(IntSetTimer(Window, nIDEvent, uElapse, lpTimerFunc, TMRF_TIFROMWND));
-
-CLEANUP:
-   TRACE("Leave NtUserSetTimer, ret=%u\n", _ret_);
-
-   END_CLEANUP;
+   return ret;
 }
 
 
@@ -660,18 +659,18 @@ NtUserKillTimer
 )
 {
    PWND Window = NULL;
-   DECLARE_RETURN(BOOL);
+   BOOL ret;
 
    TRACE("Enter NtUserKillTimer\n");
    UserEnterExclusive();
    if (hWnd) Window = UserGetWindowObject(hWnd);
+
+   ret = IntKillTimer(Window, uIDEvent, FALSE);
+
    UserLeave();
 
-   RETURN(IntKillTimer(Window, uIDEvent, FALSE));
-
-CLEANUP:
-   TRACE("Leave NtUserKillTimer, ret=%i\n", _ret_);
-   END_CLEANUP;
+   TRACE("Leave NtUserKillTimer, ret=%i\n", ret);
+   return ret;
 }
 
 
@@ -684,15 +683,17 @@ NtUserSetSystemTimer(
    TIMERPROC lpTimerFunc
 )
 {
-   DECLARE_RETURN(UINT_PTR);
+    UINT_PTR ret;
 
-   TRACE("Enter NtUserSetSystemTimer\n");
+    UserEnterExclusive();
+    TRACE("Enter NtUserSetSystemTimer\n");
 
-   RETURN(IntSetTimer(UserGetWindowObject(hWnd), nIDEvent, uElapse, NULL, TMRF_SYSTEM));
+    ret = IntSetTimer(UserGetWindowObject(hWnd), nIDEvent, uElapse, NULL, TMRF_SYSTEM);
 
-CLEANUP:
-   TRACE("Leave NtUserSetSystemTimer, ret=%u\n", _ret_);
-   END_CLEANUP;
+    UserLeave();
+
+    TRACE("Leave NtUserSetSystemTimer, ret=%u\n", ret);
+    return ret;
 }
 
 BOOL

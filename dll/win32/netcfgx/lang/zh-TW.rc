@@ -3,8 +3,8 @@
  * COPYRIGHT:  GPL - See COPYING in the top level directory
  * FILE:       dll/win32/netcfgx/lang/zh-TW.rc
  * PURPOSE:    Chinese (Traditional) Language Resources
- * TRANSLATOR: Henry Tang Ih <2016> <henrytang2@hotmail.com>
- *             Aobi Chan CL <2020> <eason066@gmail.com>
+ * TRANSLATOR: Henry Tang Ih 2016 <henrytang2@hotmail.com>
+ *             Chan Chilung 2020 - 2021 <eason066@gmail.com>
  */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
@@ -95,8 +95,8 @@ BEGIN
     LISTBOX IDC_DNSSUFFIXLIST, 5, 155, 180, 50, LBS_NOTIFY
     PUSHBUTTON "上", IDC_DNSSUFFIXUP, 190, 163, 50, 14, WS_TABSTOP
     PUSHBUTTON "下", IDC_DNSSUFFIXDOWN, 190, 180, 50, 14, WS_TABSTOP
-    PUSHBUTTON "新增...(&A)", IDC_DNSSUFFIXADD, 15, 207, 50, 14, WS_TABSTOP
-    PUSHBUTTON "編輯...(&E)", IDC_DNSSUFFIXMOD, 75, 207, 50, 14, WS_TABSTOP
+    PUSHBUTTON "新增(&A)...", IDC_DNSSUFFIXADD, 15, 207, 50, 14, WS_TABSTOP
+    PUSHBUTTON "編輯(&E)...", IDC_DNSSUFFIXMOD, 75, 207, 50, 14, WS_TABSTOP
     PUSHBUTTON "刪除(&V)", IDC_DNSSUFFIXDEL, 135, 207, 50, 14, WS_TABSTOP
     LTEXT "用於此連線的 DNS 尾碼(&S):", -1, 5, 228, 110, 14
     EDITTEXT IDC_SUFFIX, 120, 225, 100, 12, WS_TABSTOP
@@ -242,9 +242,9 @@ BEGIN
     IDS_IP_PROTO "IP 協議"
     IDS_PORT_RANGE "埠數目必須大於 0 且小於 65536。請輸入此範圍內的數字。"
     IDS_PROT_RANGE "協議編號必須大於 0 且小於 256。請輸入此範圍內的數字。"
-    IDS_DUP_NUMBER "您試著添加的數量已在列表中。請輸入一個不同的數字。"
-    IDS_DISABLE_FILTER "禁用這個全局 TCP/IP 設定將影響所有介面卡。"
-    IDS_NO_SUFFIX "搜索方法的當前設定，需要至少一個 DNS 尾碼。請輸入一個或改變設定。"
+    IDS_DUP_NUMBER "您嘗試新增的數量已在列表中。請輸入一個不同的數字。"
+    IDS_DISABLE_FILTER "停用這個全域 TCP/IP 設定將影響所有介面卡。"
+    IDS_NO_SUFFIX "目前的搜尋方法設定需要至少一個 DNS 尾碼。請輸入一個或更改設定。"
     IDS_DOMAIN_SUFFIX "域尾碼不是一個有效的尾碼。"
     IDS_DNS_SUFFIX "DNS 域名 ""%s"" 不是有效的 DNS 名稱。"
     IDS_DUP_SUFFIX "DNS 尾碼已在此列表中。"

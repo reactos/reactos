@@ -1,15 +1,15 @@
 /*
  *      Updated by Saibamen (July, 2015)
  *      Updated by BlackDragonDv (January, 2018)
- *      Updated by Piotr Hetnarowicz <piotrhwz@gmail.com> (August, 2020)
+ *      Updated by Piotr Hetnarowicz <piotrhwz@gmail.com> (May, 2021)
  */
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 
 MENU_001 MENUEX
 BEGIN
-    MENUITEM "&Duże Ikony", FCIDM_SHVIEW_BIGICON
-    MENUITEM "&Małe Ikony", FCIDM_SHVIEW_SMALLICON
+    MENUITEM "&Duże ikony", FCIDM_SHVIEW_BIGICON
+    MENUITEM "&Małe ikony", FCIDM_SHVIEW_SMALLICON
     MENUITEM "&Lista", FCIDM_SHVIEW_LISTVIEW
     MENUITEM "&Szczegóły", FCIDM_SHVIEW_REPORTVIEW
     MENUITEM "", -1, MFT_SEPARATOR
@@ -28,8 +28,8 @@ BEGIN
     BEGIN
         POPUP "&Widok", FCIDM_SHVIEW_VIEW
         BEGIN
-            MENUITEM "&Duże Ikony", FCIDM_SHVIEW_BIGICON
-            MENUITEM "&Małe Ikony", FCIDM_SHVIEW_SMALLICON
+            MENUITEM "&Duże ikony", FCIDM_SHVIEW_BIGICON
+            MENUITEM "&Małe ikony", FCIDM_SHVIEW_SMALLICON
             MENUITEM "&Lista", FCIDM_SHVIEW_LISTVIEW
             MENUITEM "&Szczegóły", FCIDM_SHVIEW_REPORTVIEW
         END
@@ -107,15 +107,14 @@ BEGIN
 END
 
 IDD_BROWSE_FOR_FOLDER_NEW DIALOGEX 15, 40, 218, 196
-STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU | WS_SIZEBOX
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 CAPTION "Wybierz katalog"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "", IDC_BROWSE_FOR_FOLDER_TITLE, 10, 8, 198, 24
     LTEXT "", IDC_BROWSE_FOR_FOLDER_STATUS, 10, 25, 198, 12
-    LTEXT "Katalog:", IDC_BROWSE_FOR_FOLDER_FOLDER, 10, 152, 40, 12
-    CONTROL "", IDC_BROWSE_FOR_FOLDER_TREEVIEW, "SysTreeView32", TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_EDITLABELS | WS_BORDER | WS_TABSTOP, 12, 38, 194, 105
-    EDITTEXT IDC_BROWSE_FOR_FOLDER_FOLDER_TEXT, 46, 150, 160, 14, ES_AUTOHSCROLL | WS_BORDER | WS_GROUP | WS_TABSTOP
+    EDITTEXT IDC_BROWSE_FOR_FOLDER_FOLDER_TEXT, 12, 38, 194, 14, ES_AUTOHSCROLL | WS_GROUP
+    CONTROL "", IDC_BROWSE_FOR_FOLDER_TREEVIEW, "SysTreeView32", TVS_SHOWSELALWAYS | TVS_EDITLABELS | TVS_LINESATROOT | TVS_HASLINES | TVS_HASBUTTONS | WS_BORDER | WS_TABSTOP, 12, 58, 194, 105
     PUSHBUTTON "&Utwórz katalog", IDC_BROWSE_FOR_FOLDER_NEW_FOLDER, 12, 174, 77, 14, WS_GROUP | WS_TABSTOP
     DEFPUSHBUTTON "OK", IDOK, 102, 174, 50, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
     PUSHBUTTON "Anuluj", IDCANCEL, 156, 174, 50, 14, WS_GROUP | WS_TABSTOP
@@ -499,6 +498,20 @@ BEGIN
     PUSHBUTTON "Anuluj", IDCANCEL, 95, 39, 50, 14
 END
 
+IDD_LOG_OFF_FANCY DIALOGEX 0, 0, 278, 122
+STYLE NOT WS_VISIBLE | DS_CENTER | DS_SHELLFONT | WS_BORDER | WS_POPUP
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL IDB_DLG_BG, IDC_STATIC, "STATIC", SS_BITMAP | SS_REALSIZECONTROL, 0, 0, 278, 122
+    CONTROL IDB_REACTOS_FLAG, IDC_STATIC, "STATIC", SS_BITMAP, 245, 1, 32, 26
+    PUSHBUTTON "&Przełącz użytkownika", IDC_SWITCH_USER_BUTTON, 86, 46, 22, 20, BS_OWNERDRAW | WS_GROUP
+    PUSHBUTTON "&Wyloguj", IDC_LOG_OFF_BUTTON, 169, 46, 22, 20, BS_OWNERDRAW
+    PUSHBUTTON "Anuluj", IDCANCEL, 232, 103, 40, 12, WS_GROUP | BS_FLAT
+    LTEXT "Wylogowywanie z systemu ReactOS", IDC_LOG_OFF_TEXT_STATIC, 4, 7, 232, 19
+    CTEXT "Przełącz użytkownika", IDC_SWITCH_USER_STATIC, 52, 70, 90, 11
+    CTEXT "Wyloguj", IDC_LOG_OFF_STATIC, 155, 70, 51, 11
+END
+
 IDD_DISCONNECT DIALOGEX 0, 0, 188, 60
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION
 CAPTION "Odłączanie systemu ReactOS"
@@ -771,8 +784,8 @@ BEGIN
     IDS_ABOUT_VERSION_STRING "Wersja %S (%S)"
 
     /* context menus */
-    IDS_VIEW_LARGE "&Duże Ikony"
-    IDS_VIEW_SMALL "&Małe Ikony"
+    IDS_VIEW_LARGE "&Duże ikony"
+    IDS_VIEW_SMALL "&Małe ikony"
     IDS_VIEW_LIST "&Lista"
     IDS_VIEW_DETAILS "&Szczegóły"
     IDS_SELECT "Zaznacz"
@@ -826,11 +839,15 @@ BEGIN
     IDS_RESTART_PROMPT "Czy chcesz ponownie uruchomić system?"
     IDS_SHUTDOWN_TITLE "Zamknij system"
     IDS_SHUTDOWN_PROMPT "Czy chcesz zamknąć system?"
-    
+
     /* Format Dialog Strings */
     IDS_FORMAT_TITLE "Formatuj dysk lokalny"
     IDS_FORMAT_WARNING "OSTRZEŻENIE: Formatowanie wymaże WSZYSTKIE dane na tym dysku.\nWybierz przycisk OK, aby sformatować dysk lub przycisk ANULUJ, aby zamknąć."
     IDS_FORMAT_COMPLETE "Formatowanie zakończone."
+
+    /* Warning format system drive dialog strings */
+    IDS_NO_FORMAT_TITLE "Nie można sformatować tego dysku"
+    IDS_NO_FORMAT "Nie można sformatować tego dysku! Zawiera ważne pliki systemowe wymagane do uruchamiania i pracy systemu ReactOS."
 
     /* Run File dialog */
     IDS_RUNDLG_ERROR "Nie można wyświetlić okna Uruchom (błąd wewnętrzny)"
@@ -964,8 +981,8 @@ BEGIN
     IDS_EXE_DESCRIPTION "Opis:"
 
     IDS_MENU_EMPTY "(Puste)"
-    IDS_OBJECTS "%d Obiektów"
-    IDS_OBJECTS_SELECTED "%d Zaznaczonych obiektów"
+    IDS_OBJECTS "Elementów: %d"
+    IDS_OBJECTS_SELECTED "Zaznaczonych elementów: %d"
 
     IDS_ADVANCED_FOLDER "Pliki i Foldery"
     IDS_ADVANCED_NET_CRAWLER "Automatycznie wyszukuj foldery sieciowe i drukarki"
@@ -1014,4 +1031,10 @@ BEGIN
     IDS_MOVEBUTTON "Przenieś"
 
     IDS_SYSTEMFOLDER "Folder systemowy"
+
+    /* For IDD_LOG_OFF_FANCY */
+    IDS_LOG_OFF_DESC "Zamyka programy i kończy sesję systemu ReactOS."
+    IDS_SWITCH_USER_DESC "Umożliwia innemu użytkownikowi zalogowanie się, podczas gdy Twoje programy i pliki są otwarte.\r\n\r\n(Możesz także przełączać użytkowników naciskając klawisze logo + L.)"
+    IDS_LOG_OFF_TITLE "Wyloguj"
+    IDS_SWITCH_USER_TITLE "Przełącz użytkownika"
 END

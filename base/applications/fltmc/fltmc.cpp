@@ -61,7 +61,7 @@ SetDriverLoadPrivilege()
     LUID luid;
     BOOL bSuccess;
     DWORD dwError = ERROR_SUCCESS;
- 
+
     bSuccess = OpenProcessToken(GetCurrentProcess(),
                                 TOKEN_ADJUST_PRIVILEGES,
                                 &hToken);
@@ -220,7 +220,8 @@ PrintVolumeInfo(_In_ PVOID Buffer)
         VolName[FilterVolInfo->FilterVolumeNameLength] = UNICODE_NULL;
     }
 
-    (void)FilterGetDosName(VolName, DosName, 16);
+    if (!SUCCEEDED(FilterGetDosName(VolName, DosName, _countof(DosName))))
+        DosName[0] = L'\0';
 
     switch (FilterVolInfo->FileSystemType)
     {
@@ -271,7 +272,7 @@ ListFilters()
 
     hr = FilterFindFirst(FilterAggregateStandardInformation,
                          Buffer,
-                         1024,
+                         sizeof(Buffer),
                          &BytesReturned,
                          &FindHandle);
     if (!SUCCEEDED(hr))
@@ -279,44 +280,51 @@ ListFilters()
         IsNewStyle = FALSE;
         hr = FilterFindFirst(FilterFullInformation,
                              Buffer,
-                             1024,
+                             sizeof(Buffer),
                              &BytesReturned,
                              &FindHandle);
     }
 
-    if (SUCCEEDED(hr))
+    if (!SUCCEEDED(hr))
     {
-        if (IsNewStyle)
-        {
-            LoadAndPrintString(IDS_DISPLAY_FILTERS1);
-            wprintf(L"------------------------------  -------------  ------------  -----\n");
-        }
-        else
-        {
-            LoadAndPrintString(IDS_DISPLAY_FILTERS2);
-            wprintf(L"------------------------------  -------------  -----\n");
-        }
-
-        PrintFilterInfo(Buffer, IsNewStyle);
-
-        do
-        {
-            hr = FilterFindNext(FindHandle,
-                                IsNewStyle ? FilterAggregateStandardInformation : FilterFullInformation,
-                                Buffer,
-                                1024,
-                                &BytesReturned);
-            if (SUCCEEDED(hr))
-            {
-                PrintFilterInfo(Buffer, IsNewStyle);
-            }
-
-        } while (SUCCEEDED(hr));
-
-        FilterFindClose(FindHandle);
+        LoadAndPrintString(IDS_ERROR_FILTERS, hr);
+        PrintErrorText(hr);
+        return;
     }
 
-    if (!SUCCEEDED(hr) && hr != HRESULT_FROM_WIN32(ERROR_NO_MORE_ITEMS))
+    if (IsNewStyle)
+    {
+        LoadAndPrintString(IDS_DISPLAY_FILTERS1);
+        wprintf(L"------------------------------  -------------  ------------  -----\n");
+    }
+    else
+    {
+        LoadAndPrintString(IDS_DISPLAY_FILTERS2);
+        wprintf(L"------------------------------  -------------  -----\n");
+    }
+
+    PrintFilterInfo(Buffer, IsNewStyle);
+
+    do
+    {
+        hr = FilterFindNext(FindHandle,
+                            IsNewStyle ? FilterAggregateStandardInformation : FilterFullInformation,
+                            Buffer,
+                            sizeof(Buffer),
+                            &BytesReturned);
+        if (SUCCEEDED(hr))
+        {
+            PrintFilterInfo(Buffer, IsNewStyle);
+        }
+        else if (hr != HRESULT_FROM_WIN32(ERROR_NO_MORE_ITEMS))
+        {
+            LoadAndPrintString(IDS_ERROR_FILTERS, hr);
+            PrintErrorText(hr);
+        }
+    } while (SUCCEEDED(hr));
+
+    hr = FilterFindClose(FindHandle);
+    if (!SUCCEEDED(hr))
     {
         LoadAndPrintString(IDS_ERROR_FILTERS, hr);
         PrintErrorText(hr);

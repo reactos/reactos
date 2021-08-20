@@ -15,18 +15,6 @@
 extern "C" {
 #endif
 
-#ifndef NULL
-#ifdef __cplusplus
-#ifndef _WIN64
-#define NULL 0
-#else
-#define NULL 0LL
-#endif  /* W64 */
-#else
-#define NULL ((void *)0)
-#endif
-#endif
-
 #ifndef MB_LEN_MAX
 #define MB_LEN_MAX 5
 #endif
@@ -403,16 +391,16 @@ extern "C" {
     _Pre_notnull_ _Post_z_ char *_DstBuf,
     _In_ int _Radix);
 
-  _Check_return_
   __MINGW_EXTENSION
+  _Check_return_
   _CRTIMP
   __int64
   __cdecl
   _atoi64(
     _In_z_ const char *_String);
 
-  _Check_return_
   __MINGW_EXTENSION
+  _Check_return_
   _CRTIMP
   __int64
   __cdecl
@@ -420,8 +408,8 @@ extern "C" {
     _In_z_ const char *_String,
     _In_opt_ _locale_t _Locale);
 
-  _Check_return_
   __MINGW_EXTENSION
+  _Check_return_
   _CRTIMP
   __int64
   __cdecl
@@ -430,8 +418,8 @@ extern "C" {
     _Out_opt_ _Deref_post_z_ char **_EndPtr,
     _In_ int _Radix);
 
-  _Check_return_
   __MINGW_EXTENSION
+  _Check_return_
   _CRTIMP
   __int64
   __cdecl
@@ -441,8 +429,8 @@ extern "C" {
     _In_ int _Radix,
     _In_opt_ _locale_t _Locale);
 
-  _Check_return_
   __MINGW_EXTENSION
+  _Check_return_
   _CRTIMP
   unsigned __int64
   __cdecl
@@ -451,8 +439,8 @@ extern "C" {
     _Out_opt_ _Deref_post_z_ char **_EndPtr,
     _In_ int _Radix);
 
-  _Check_return_
   __MINGW_EXTENSION
+  _Check_return_
   _CRTIMP
   unsigned __int64
   __cdecl
@@ -995,16 +983,16 @@ extern "C" {
     _Pre_notnull_ _Post_z_ wchar_t *_DstBuf,
     _In_ int _Radix);
 
-  _Check_return_
   __MINGW_EXTENSION
+  _Check_return_
   _CRTIMP
   __int64
   __cdecl
   _wtoi64(
     _In_z_ const wchar_t *_Str);
 
-  _Check_return_
   __MINGW_EXTENSION
+  _Check_return_
   _CRTIMP
   __int64
   __cdecl
@@ -1012,8 +1000,8 @@ extern "C" {
     _In_z_ const wchar_t *_Str,
     _In_opt_ _locale_t _Locale);
 
-  _Check_return_
   __MINGW_EXTENSION
+  _Check_return_
   _CRTIMP
   __int64
   __cdecl
@@ -1022,8 +1010,8 @@ extern "C" {
     _Out_opt_ _Deref_post_z_ wchar_t **_EndPtr,
     _In_ int _Radix);
 
-  _Check_return_
   __MINGW_EXTENSION
+  _Check_return_
   _CRTIMP
   __int64
   __cdecl
@@ -1033,8 +1021,8 @@ extern "C" {
     _In_ int _Radix,
     _In_opt_ _locale_t _Locale);
 
-  _Check_return_
   __MINGW_EXTENSION
+  _Check_return_
   _CRTIMP
   unsigned __int64
   __cdecl
@@ -1043,8 +1031,8 @@ extern "C" {
     _Out_opt_ _Deref_post_z_ wchar_t **_EndPtr,
     _In_ int _Radix);
 
-  _Check_return_
   __MINGW_EXTENSION
+  _Check_return_
   _CRTIMP
   unsigned __int64
   __cdecl
@@ -1193,7 +1181,7 @@ extern "C" {
   _putenv(
     _In_z_ const char *_EnvString);
 
-#if !defined(__GNUC__) && !defined(__clang__)
+#if !defined(__clang__)
 
   _Check_return_
   unsigned int
@@ -1203,8 +1191,8 @@ extern "C" {
     _In_ int _Shift);
 
 #if _INTEGRAL_MAX_BITS >= 64
-  _Check_return_
   __MINGW_EXTENSION
+  _Check_return_
   unsigned __int64
   __cdecl
   _rotl64(
@@ -1220,8 +1208,8 @@ extern "C" {
     _In_ int _Shift);
 
 #if _INTEGRAL_MAX_BITS >= 64
-  _Check_return_
   __MINGW_EXTENSION
+  _Check_return_
   unsigned __int64
   __cdecl
   _rotr64(
@@ -1229,7 +1217,7 @@ extern "C" {
     _In_ int _Shift);
 #endif
 
-#endif /* !defined(__GNUC__) && !defined(__clang__) */
+#endif /* !defined(__clang__) */
 
   _CRTIMP
   void
@@ -1438,8 +1426,12 @@ extern "C" {
 
   __MINGW_EXTENSION typedef struct { long long quot, rem; } lldiv_t;
 
-  _Check_return_ __MINGW_EXTENSION lldiv_t __cdecl lldiv(_In_ long long, _In_ long long);
+  __MINGW_EXTENSION _Check_return_ lldiv_t __cdecl lldiv(_In_ long long, _In_ long long);
 
+#if defined(_MSC_VER)
+  _Check_return_ long long __cdecl llabs(_In_ long long _j);
+  #pragma function(llabs)
+#endif
   __MINGW_EXTENSION __CRT_INLINE long long __cdecl llabs(_In_ long long _j) { return (_j >= 0 ? _j : -_j); }
 
   __MINGW_EXTENSION long long  __cdecl strtoll(const char* __restrict__, char** __restrict, int);

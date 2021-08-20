@@ -2719,6 +2719,8 @@ LoadDNSSettings(
     {
         dwSize = sizeof(DWORD);
         RegQueryValueExW(hKey, L"RegisterAdapterName", NULL, NULL, (LPBYTE)&This->pCurrentConfig->pDNS->RegisterAdapterName, &dwSize);
+
+        dwSize = sizeof(DWORD);
         RegQueryValueExW(hKey, L"RegistrationEnabled", NULL, NULL, (LPBYTE)&This->pCurrentConfig->pDNS->RegistrationEnabled, &dwSize);
 
         dwSize = sizeof(This->pCurrentConfig->pDNS->szDomain);

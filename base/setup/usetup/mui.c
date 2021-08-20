@@ -140,7 +140,7 @@ MUIClearPage(
         CONSOLE_ClearStyledText(entry[index].X,
                                 entry[index].Y,
                                 entry[index].Flags,
-                                strlen(entry[index].Buffer));
+                                (USHORT)strlen(entry[index].Buffer));
         index++;
     }
 }
@@ -325,6 +325,7 @@ MUIClearText(
     IN INT TextID)
 {
     const MUI_ENTRY * entry;
+    ULONG Index = 0;
 
     /* Get the MUI entry */
     entry = MUIGetEntry(Page, TextID);
@@ -332,11 +333,25 @@ MUIClearText(
     if (!entry)
         return;
 
-    /* Remove the text by using CONSOLE_ClearTextXY() */
-    CONSOLE_ClearTextXY(
-        entry->X,
-        entry->Y,
-        (ULONG)strlen(entry->Buffer));
+    /* Ensure that the text string given by the text ID and page is not NULL */
+    while (entry[Index].Buffer != NULL)
+    {
+        /* If text ID is not correct, skip the entry */
+        if (entry[Index].TextID != TextID)
+        {
+            Index++;
+            continue;
+        }
+
+        /* Remove the text by using CONSOLE_ClearTextXY() */
+        CONSOLE_ClearTextXY(
+            entry[Index].X,
+            entry[Index].Y,
+            (USHORT)strlen(entry[Index].Buffer));
+
+        /* Increment the index and loop over next entires with the same ID */
+        Index++;
+    }
 }
 
 /**
@@ -366,6 +381,7 @@ MUIClearStyledText(
     IN INT Flags)
 {
     const MUI_ENTRY * entry;
+    ULONG Index = 0;
 
     /* Get the MUI entry */
     entry = MUIGetEntry(Page, TextID);
@@ -373,12 +389,26 @@ MUIClearStyledText(
     if (!entry)
         return;
 
-    /* Now, begin removing the text by calling CONSOLE_ClearStyledText() */
-    CONSOLE_ClearStyledText(
-        entry->X,
-        entry->Y,
-        Flags,
-        (ULONG)strlen(entry->Buffer));
+    /* Ensure that the text string given by the text ID and page is not NULL */
+    while (entry[Index].Buffer != NULL)
+    {
+        /* If text ID is not correct, skip the entry */
+        if (entry[Index].TextID != TextID)
+        {
+            Index++;
+            continue;
+        }
+
+        /* Now, begin removing the text by calling CONSOLE_ClearStyledText() */
+        CONSOLE_ClearStyledText(
+            entry[Index].X,
+            entry[Index].Y,
+            Flags,
+            (USHORT)strlen(entry[Index].Buffer));
+
+        /* Increment the index and loop over next entires with the same ID */
+        Index++;
+    }
 }
 
 /**
@@ -403,6 +433,7 @@ MUISetText(
     IN INT TextID)
 {
     const MUI_ENTRY * entry;
+    ULONG Index = 0;
 
     /* Get the MUI entry */
     entry = MUIGetEntry(Page, TextID);
@@ -410,8 +441,22 @@ MUISetText(
     if (!entry)
         return;
 
-    /* Print the text to the console output by calling CONSOLE_SetTextXY() */
-    CONSOLE_SetTextXY(entry->X, entry->Y, entry->Buffer);
+    /* Ensure that the text string given by the text ID and page is not NULL */
+    while (entry[Index].Buffer != NULL)
+    {
+        /* If text ID is not correct, skip the entry */
+        if (entry[Index].TextID != TextID)
+        {
+            Index++;
+            continue;
+        }
+
+        /* Print the text to the console output by calling CONSOLE_SetTextXY() */
+        CONSOLE_SetTextXY(entry[Index].X, entry[Index].Y, entry[Index].Buffer);
+
+        /* Increment the index and loop over next entires with the same ID */
+        Index++;
+    }
 }
 
 /**
@@ -441,6 +486,7 @@ MUISetStyledText(
     IN INT Flags)
 {
     const MUI_ENTRY * entry;
+    ULONG Index = 0;
 
     /* Get the MUI entry */
     entry = MUIGetEntry(Page, TextID);
@@ -448,8 +494,22 @@ MUISetStyledText(
     if (!entry)
         return;
 
-    /* Print the text to the console output by calling CONSOLE_SetStyledText() */
-    CONSOLE_SetStyledText(entry->X, entry->Y, Flags, entry->Buffer);
+    /* Ensure that the text string given by the text ID and page is not NULL */
+    while (entry[Index].Buffer != NULL)
+    {
+        /* If text ID is not correct, skip the entry */
+        if (entry[Index].TextID != TextID)
+        {
+            Index++;
+            continue;
+        }
+
+        /* Print the text to the console output by calling CONSOLE_SetStyledText() */
+        CONSOLE_SetStyledText(entry[Index].X, entry[Index].Y, Flags, entry[Index].Buffer);
+
+        /* Increment the index and loop over next entires with the same ID */
+        Index++;
+    }
 }
 
 VOID

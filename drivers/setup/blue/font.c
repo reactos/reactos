@@ -163,7 +163,7 @@ ExtractFont(
                           NULL,
                           FILE_ATTRIBUTE_NORMAL,
                           0,
-                          FILE_OPEN, 
+                          FILE_OPEN,
                           FILE_SYNCHRONOUS_IO_NONALERT,
                           NULL,
                           0);

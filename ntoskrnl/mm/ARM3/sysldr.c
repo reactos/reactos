@@ -50,6 +50,12 @@ PMMPTE MiKernelResourceStartPte, MiKernelResourceEndPte;
 ULONG_PTR ExPoolCodeStart, ExPoolCodeEnd, MmPoolCodeStart, MmPoolCodeEnd;
 ULONG_PTR MmPteCodeStart, MmPteCodeEnd;
 
+#ifdef _WIN64
+#define DEFAULT_SECURITY_COOKIE 0x00002B992DDFA232ll
+#else
+#define DEFAULT_SECURITY_COOKIE 0xBB40E64E
+#endif
+
 /* FUNCTIONS ******************************************************************/
 
 PVOID
@@ -188,14 +194,7 @@ MiLoadImageSection(_Inout_ PSECTION *SectionPtr,
         /* Some debug stuff */
         MI_SET_USAGE(MI_USAGE_DRIVER_PAGE);
 #if MI_TRACE_PFNS
-        if (FileName->Buffer)
-        {
-            PWCHAR pos = NULL;
-            ULONG len = 0;
-            pos = wcsrchr(FileName->Buffer, '\\');
-            len = wcslen(pos) * sizeof(WCHAR);
-            if (pos) snprintf(MI_PFN_CURRENT_PROCESS_NAME, min(16, len), "%S", pos);
-        }
+        MI_SET_PROCESS_USTR(FileName);
 #endif
 
         /* Grab a page */
@@ -2437,8 +2436,6 @@ MiSetSystemCodeProtection(
 
     /* Flush it all */
     KeFlushEntireTb(TRUE, TRUE);
-
-    return;
 }
 
 VOID
@@ -2489,13 +2486,13 @@ MiWriteProtectSystemImage(
     /* Get the base address of the first section */
     SectionBase = Add2Ptr(ImageBase, SectionHeaders[0].VirtualAddress);
 
-    /* Start protecting the image header as R/O */
+    /* Start protecting the image header as R/W */
     FirstPte = MiAddressToPte(ImageBase);
     LastPte = MiAddressToPte(SectionBase) - 1;
-    Protection = IMAGE_SCN_MEM_READ;
+    Protection = IMAGE_SCN_MEM_READ | IMAGE_SCN_MEM_WRITE;
     if (LastPte >= FirstPte)
     {
-        MiSetSystemCodeProtection(FirstPte, LastPte, IMAGE_SCN_MEM_READ);
+        MiSetSystemCodeProtection(FirstPte, LastPte, Protection);
     }
 
     /* Loop the sections */
@@ -2563,17 +2560,20 @@ NTAPI
 MiSetPagingOfDriver(IN PMMPTE PointerPte,
                     IN PMMPTE LastPte)
 {
+#ifdef ENABLE_MISETPAGINGOFDRIVER
     PVOID ImageBase;
     PETHREAD CurrentThread = PsGetCurrentThread();
     PFN_COUNT PageCount = 0;
     PFN_NUMBER PageFrameIndex;
     PMMPFN Pfn1;
+#endif // ENABLE_MISETPAGINGOFDRIVER
+
     PAGED_CODE();
 
+#ifndef ENABLE_MISETPAGINGOFDRIVER
     /* The page fault handler is broken and doesn't page back in! */
     DPRINT1("WARNING: MiSetPagingOfDriver() called, but paging is broken! ignoring!\n");
-    return;
-
+#else  // ENABLE_MISETPAGINGOFDRIVER
     /* Get the driver's base address */
     ImageBase = MiPteToAddress(PointerPte);
     ASSERT(MI_IS_SESSION_IMAGE_ADDRESS(ImageBase) == FALSE);
@@ -2611,6 +2611,7 @@ MiSetPagingOfDriver(IN PMMPTE PointerPte,
         /* Update counters */
         InterlockedExchangeAdd((PLONG)&MmTotalSystemDriverPages, PageCount);
     }
+#endif // ENABLE_MISETPAGINGOFDRIVER
 }
 
 VOID
@@ -2812,6 +2813,84 @@ Fail:
     KeUnstackDetachProcess(&ApcState);
     ZwClose(SectionHandle);
     return Status;
+}
+
+
+PVOID
+NTAPI
+LdrpFetchAddressOfSecurityCookie(PVOID BaseAddress, ULONG SizeOfImage)
+{
+    PIMAGE_LOAD_CONFIG_DIRECTORY ConfigDir;
+    ULONG DirSize;
+    PVOID Cookie = NULL;
+
+    /* Check NT header first */
+    if (!RtlImageNtHeader(BaseAddress)) return NULL;
+
+    /* Get the pointer to the config directory */
+    ConfigDir = RtlImageDirectoryEntryToData(BaseAddress,
+                                             TRUE,
+                                             IMAGE_DIRECTORY_ENTRY_LOAD_CONFIG,
+                                             &DirSize);
+
+    /* Check for sanity */
+    if (!ConfigDir ||
+        DirSize < FIELD_OFFSET(IMAGE_LOAD_CONFIG_DIRECTORY, SEHandlerTable) ||  /* SEHandlerTable is after SecurityCookie */
+        (ConfigDir->Size != DirSize))
+    {
+        /* Invalid directory*/
+        return NULL;
+    }
+
+    /* Now get the cookie */
+    Cookie = (PVOID)ConfigDir->SecurityCookie;
+
+    /* Check this cookie */
+    if ((PCHAR)Cookie <= (PCHAR)BaseAddress ||
+        (PCHAR)Cookie >= (PCHAR)BaseAddress + SizeOfImage)
+    {
+        Cookie = NULL;
+    }
+
+    /* Return validated security cookie */
+    return Cookie;
+}
+
+PVOID
+NTAPI
+LdrpInitSecurityCookie(PLDR_DATA_TABLE_ENTRY LdrEntry)
+{
+    PULONG_PTR Cookie;
+    ULONG_PTR NewCookie;
+
+    /* Fetch address of the cookie */
+    Cookie = LdrpFetchAddressOfSecurityCookie(LdrEntry->DllBase, LdrEntry->SizeOfImage);
+
+    if (Cookie)
+    {
+        /* Check if it's a default one */
+        if ((*Cookie == DEFAULT_SECURITY_COOKIE) ||
+            (*Cookie == 0))
+        {
+            LARGE_INTEGER Counter = KeQueryPerformanceCounter(NULL);
+            /* The address should be unique */
+            NewCookie = (ULONG_PTR)Cookie;
+
+            /* We just need a simple tick, don't care about precision and whatnot */
+            NewCookie ^= (ULONG_PTR)Counter.LowPart;
+
+            /* If the result is 0 or the same as we got, just add one to the default value */
+            if ((NewCookie == 0) || (NewCookie == *Cookie))
+            {
+                NewCookie = DEFAULT_SECURITY_COOKIE + 1;
+            }
+
+            /* Set the new cookie value */
+            *Cookie = NewCookie;
+        }
+    }
+
+    return Cookie;
 }
 
 NTSTATUS
@@ -3258,6 +3337,9 @@ LoaderScan:
 
     /* Write-protect the system image */
     MiWriteProtectSystemImage(LdrEntry->DllBase);
+
+    /* Initialize the security cookie (Win7 is not doing this yet!) */
+    LdrpInitSecurityCookie(LdrEntry);
 
     /* Check if notifications are enabled */
     if (PsImageNotifyEnabled)

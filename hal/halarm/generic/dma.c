@@ -152,7 +152,7 @@ IoMapTransfer(IN PADAPTER_OBJECT AdapterObject,
 
     UNIMPLEMENTED;
     while (TRUE);
-    
+
     Address.QuadPart = 0;
     return Address;
 }

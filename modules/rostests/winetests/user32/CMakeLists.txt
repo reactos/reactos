@@ -39,8 +39,10 @@ add_executable(user32_winetest
 
 if(MSVC)
     # Disable warning C4477 (printf format warnings)
-    target_compile_options(user32_winetest PRIVATE /wd4477)
-elseif(GCC)
+    remove_target_compile_option(user32_winetest "/we4477")
+endif()
+
+if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
     target_compile_options(user32_winetest PRIVATE -Wno-format-overflow)
 endif()
 

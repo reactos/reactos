@@ -282,6 +282,7 @@ extern PCI_CONFIG_HANDLER PCIConfigHandler;
 extern PCI_CONFIG_HANDLER PCIConfigHandlerType1;
 extern PCI_CONFIG_HANDLER PCIConfigHandlerType2;
 
+CODE_SEG("INIT")
 PPCI_REGISTRY_INFO_INTERNAL
 NTAPI
 HalpQueryPciRegistryInfo(
@@ -399,13 +400,11 @@ HalpAssignPCISlotResources(
 
 ULONG
 NTAPI
-HalpGetSystemInterruptVector_Acpi(
-    ULONG BusNumber,
-    ULONG BusInterruptLevel,
-    ULONG BusInterruptVector,
-    PKIRQL Irql,
-    PKAFFINITY Affinity
-);
+HalpGetRootInterruptVector(
+    _In_ ULONG BusInterruptLevel,
+    _In_ ULONG BusInterruptVector,
+    _Out_ PKIRQL Irql,
+    _Out_ PKAFFINITY Affinity);
 
 ULONG
 NTAPI
@@ -425,12 +424,14 @@ HalpSetCmosData(
     IN ULONG Length
 );
 
+CODE_SEG("INIT")
 VOID
 NTAPI
 HalpInitializePciBus(
     VOID
 );
 
+CODE_SEG("INIT")
 VOID
 NTAPI
 HalpInitializePciStubs(
@@ -470,6 +471,7 @@ HalpFindBusAddressTranslation(
     IN BOOLEAN NextBus
 );
 
+CODE_SEG("INIT")
 VOID
 NTAPI
 HalpRegisterPciDebuggingDeviceInfo(

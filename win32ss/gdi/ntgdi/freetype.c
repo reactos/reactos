@@ -960,6 +960,11 @@ IntLoadSystemFonts(VOID)
         RTL_CONSTANT_STRING(L"*.fon"),
         RTL_CONSTANT_STRING(L"*.fnt")
     };
+    static UNICODE_STRING IgnoreFiles[] =
+    {
+        RTL_CONSTANT_STRING(L"."),
+        RTL_CONSTANT_STRING(L".."),
+    };
 
     RtlInitUnicodeString(&Directory, L"\\SystemRoot\\Fonts\\");
 
@@ -1022,14 +1027,33 @@ IntLoadSystemFonts(VOID)
                 DirInfo = (PFILE_DIRECTORY_INFORMATION)DirInfoBuffer;
                 while (1)
                 {
+                    SIZE_T ign;
+
                     TempString.Buffer = DirInfo->FileName;
-                    TempString.Length =
-                        TempString.MaximumLength = DirInfo->FileNameLength;
-                    RtlCopyUnicodeString(&FileName, &Directory);
-                    RtlAppendUnicodeStringToString(&FileName, &TempString);
-                    IntGdiAddFontResourceEx(&FileName, 0, AFRX_WRITE_REGISTRY);
+                    TempString.Length = TempString.MaximumLength = DirInfo->FileNameLength;
+
+                    /* Should we ignore this file? */
+                    for (ign = 0; ign < _countof(IgnoreFiles); ++ign)
+                    {
+                        /* Yes.. */
+                        if (RtlEqualUnicodeString(IgnoreFiles + ign, &TempString, FALSE))
+                            break;
+                    }
+
+                    /* If we tried all Ignore patterns and there was no match, try to create a font */
+                    if (ign == _countof(IgnoreFiles))
+                    {
+                        RtlCopyUnicodeString(&FileName, &Directory);
+                        RtlAppendUnicodeStringToString(&FileName, &TempString);
+                        if (!IntGdiAddFontResourceEx(&FileName, 0, AFRX_WRITE_REGISTRY))
+                        {
+                            DPRINT1("ERR: Failed to load %wZ\n", &FileName);
+                        }
+                    }
+
                     if (DirInfo->NextEntryOffset == 0)
                         break;
+
                     DirInfo = (PFILE_DIRECTORY_INFORMATION)((ULONG_PTR)DirInfo + DirInfo->NextEntryOffset);
                 }
 

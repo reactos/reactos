@@ -1700,7 +1700,7 @@ void CALLBACK RecvSubvolGUIW(HWND hwnd, HINSTANCE hinst, LPWSTR lpszCmdLine, int
         ofn.hInstance = module;
         ofn.lpstrFile = file;
         ofn.nMaxFile = sizeof(file) / sizeof(WCHAR);
-        ofn.Flags = OFN_FILEMUSTEXIST | OFN_HIDEREADONLY;
+        ofn.Flags = OFN_EXPLORER | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY;
 
         if (GetOpenFileNameW(&ofn)) {
             BtrfsRecv recv;

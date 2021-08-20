@@ -1,8 +1,0 @@
-OUTPUT_FORMAT(elf32-powerpc);
-
-SECTIONS
-{
-	.text :	{ *(.text) } 
-	.data : { *(.data) *(.rodata) }
-	.bss  : { *(.sbss) *(.bss) *(COMMON)  } 
-}

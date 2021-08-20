@@ -462,7 +462,7 @@ static int III_get_side_info(mpg123_handle *fr, struct III_sideinfo *si,int ster
 
 	if (stereo == 1)
 	si->private_bits = getbits(fr, tab[2]);
-	else 
+	else
 	si->private_bits = getbits(fr, tab[3]);
 
 	if(!fr->lsf) for(ch=0; ch<stereo; ch++)
@@ -529,7 +529,7 @@ static int III_get_side_info(mpg123_handle *fr, struct III_sideinfo *si,int ster
 				return 1;
 			}
 
-			/* region_count/start parameters are implicit in this case. */       
+			/* region_count/start parameters are implicit in this case. */
 			if( (!fr->lsf || (gr_info->block_type == 2)) && !fr->mpeg25)
 			{
 				gr_info->region1start = 36>>1;
@@ -538,7 +538,7 @@ static int III_get_side_info(mpg123_handle *fr, struct III_sideinfo *si,int ster
 			else
 			{
 				if(fr->mpeg25)
-				{ 
+				{
 					int r0c,r1c;
 					if((gr_info->block_type == 2) && (!gr_info->mixed_block_flag) ) r0c = 5;
 					else r0c = 7;
@@ -546,13 +546,13 @@ static int III_get_side_info(mpg123_handle *fr, struct III_sideinfo *si,int ster
 					/* r0c+1+r1c+1 == 22, always. */
 					r1c = 20 - r0c;
 					gr_info->region1start = bandInfo[sfreq].longIdx[r0c+1] >> 1 ;
-					gr_info->region2start = bandInfo[sfreq].longIdx[r0c+1+r1c+1] >> 1; 
+					gr_info->region2start = bandInfo[sfreq].longIdx[r0c+1+r1c+1] >> 1;
 				}
 				else
 				{
 					gr_info->region1start = 54>>1;
-					gr_info->region2start = 576>>1; 
-				} 
+					gr_info->region2start = 576>>1;
+				}
 			}
 		}
 		else
@@ -653,7 +653,7 @@ static int III_get_scale_factors_1(mpg123_handle *fr, int *scf,struct gr_info_s 
 			{
 				for (i=0;i<6;i++) *scf++ = getbits_fast(fr, num0);
 			}
-			else scf += 6; 
+			else scf += 6;
 
 			if(!(scfsi & 0x4))
 			{
@@ -701,7 +701,7 @@ static int III_get_scale_factors_2(mpg123_handle *fr, int *scf,struct gr_info_s 
 			{ 6, 9, 9,9 } , { 6, 9,12,6 } , { 15,18,0,0},
 			{ 6,15,12,0 } , { 6,12, 9,6 } , {  6,18,9,0}
 		}
-	}; 
+	};
 
 	if(i_stereo) /* i_stereo AND second channel -> do_layer3() checks this */
 	slen = i_slen2[gr_info->scalefac_compress>>1];
@@ -710,7 +710,7 @@ static int III_get_scale_factors_2(mpg123_handle *fr, int *scf,struct gr_info_s 
 
 	gr_info->preflag = (slen>>15) & 0x1;
 
-	n = 0;  
+	n = 0;
 	if( gr_info->block_type == 2 )
 	{
 		n++;
@@ -823,7 +823,7 @@ static int III_dequantize_sample(mpg123_handle *fr, real xr[SBLIMIT][SSLIMIT],in
 		int bv       = gr_info->big_values;
 		int region1  = gr_info->region1start;
 		int region2  = gr_info->region2start;
-		l3 = ((576>>1)-bv)>>1;   
+		l3 = ((576>>1)-bv)>>1;
 
 		/* we may lose the 'odd' bit here !! check this later again */
 		if(bv <= region1)
@@ -1287,7 +1287,7 @@ static int III_dequantize_sample(mpg123_handle *fr, real xr[SBLIMIT][SSLIMIT],in
 		gr_info->maxb       = 1;
 	}
 
-	while(xrpnt < &xr[SBLIMIT][0]) 
+	while(xrpnt < &xr[SBLIMIT][0])
 	*xrpnt++ = DOUBLE_TO_REAL(0.0);
 
 	while( part2remain > 16 )
@@ -1318,7 +1318,7 @@ static void III_i_stereo(real xr_buf[2][SBLIMIT][SSLIMIT],int *scalefac, struct 
 	int tab;
 /* TODO: optimize as static */
 	const real *tabs[3][2][2] =
-	{ 
+	{
 		{ { tan1_1,tan2_1 }       , { tan1_2,tan2_2 } },
 		{ { pow1_1[0],pow2_1[0] } , { pow1_2[0],pow2_2[0] } },
 		{ { pow1_1[1],pow2_1[1] } , { pow1_2[1],pow2_2[1] } }
@@ -1370,7 +1370,7 @@ static void III_i_stereo(real xr_buf[2][SBLIMIT][SSLIMIT],int *scalefac, struct 
 
 			for(;sfb<12;sfb++)
 			{
-				is_p = scalefac[sfb*3+lwin-gr_info->mixed_block_flag]; /* scale: 0-15 */ 
+				is_p = scalefac[sfb*3+lwin-gr_info->mixed_block_flag]; /* scale: 0-15 */
 				if(is_p != 7)
 				{
 					real t1,t2;
@@ -1387,7 +1387,7 @@ static void III_i_stereo(real xr_buf[2][SBLIMIT][SSLIMIT],int *scalefac, struct 
 			}
 
 #if 1
-/* in the original: copy 10 to 11 , here: copy 11 to 12 
+/* in the original: copy 10 to 11 , here: copy 11 to 12
 maybe still wrong??? (copy 12 to 13?) */
 			is_p = scalefac[11*3+lwin-gr_info->mixed_block_flag]; /* scale: 0-15 */
 			sb   = bi->shortDiff[12];
@@ -1402,7 +1402,7 @@ maybe still wrong??? (copy 12 to 13?) */
 				real t1,t2;
 				t1 = tab1[is_p]; t2 = tab2[is_p];
 				for( ; sb > 0; sb--,idx+=3 )
-				{  
+				{
 					real v = xr[0][idx];
 					xr[0][idx] = REAL_MUL_15(v, t1);
 					xr[1][idx] = REAL_MUL_15(v, t2);
@@ -1435,8 +1435,8 @@ maybe still wrong??? (copy 12 to 13?) */
 				}
 				else idx += sb;
 			}
-		}     
-	} 
+		}
+	}
 	else
 	{ /* ((gr_info->block_type != 2)) */
 		int sfb = gr_info->maxbandl;
@@ -1466,7 +1466,7 @@ maybe still wrong??? (copy 12 to 13?) */
 		if(is_p != 7)
 		{  /* copy l-band 20 to l-band 21 */
 			int sb;
-			real t1 = tab1[is_p],t2 = tab2[is_p]; 
+			real t1 = tab1[is_p],t2 = tab2[is_p];
 
 			for( sb = bi->longDiff[21]; sb > 0; sb--,idx++ )
 			{
@@ -1487,7 +1487,7 @@ static void III_antialias(real xr[SBLIMIT][SSLIMIT],struct gr_info_s *gr_info)
 	{
 			if(!gr_info->mixed_block_flag) return;
 
-			sblim = 1; 
+			sblim = 1;
 	}
 	else sblim = gr_info->maxb-1;
 
@@ -1514,7 +1514,7 @@ static void III_antialias(real xr[SBLIMIT][SSLIMIT],struct gr_info_s *gr_info)
 	}
 }
 
-/* 
+/*
 	This is an optimized DCT from Jeff Tsay's maplay 1.2+ package.
 	Saved one multiplication by doing the 'twiddle factor' stuff
 	together with the window mul. (MH)
@@ -1777,7 +1777,7 @@ void dct36(real *inbuf,real *o1,real *o2,real *wintab,real *tsbuf)
 			tb33 = REAL_MUL(in[2*3+1], c[3]);
 			tb66 = REAL_MUL(in[2*6+1], c[6]);
 
-			{ 
+			{
 				real tmp1a,tmp2a,tmp1b,tmp2b;
 				tmp1a = REAL_MUL(in[2*1+0], c[1]) + ta33 + REAL_MUL(in[2*5+0], c[5]) + REAL_MUL(in[2*7+0], c[7]);
 				tmp1b = REAL_MUL(in[2*1+1], c[1]) + tb33 + REAL_MUL(in[2*5+1], c[5]) + REAL_MUL(in[2*7+1], c[7]);
@@ -1872,7 +1872,7 @@ static void dct12(real *in,real *rawout1,real *rawout2,register real *wi,registe
 		register real *out1 = rawout1;
 		ts[SBLIMIT*0] = out1[0]; ts[SBLIMIT*1] = out1[1]; ts[SBLIMIT*2] = out1[2];
 		ts[SBLIMIT*3] = out1[3]; ts[SBLIMIT*4] = out1[4]; ts[SBLIMIT*5] = out1[5];
- 
+
 		DCT12_PART1
 
 		{
@@ -1906,7 +1906,7 @@ static void dct12(real *in,real *rawout1,real *rawout2,register real *wi,registe
 	{
 		real in0,in1,in2,in3,in4,in5;
 		register real *out2 = rawout2;
- 
+
 		DCT12_PART1
 
 		{
@@ -1935,7 +1935,7 @@ static void dct12(real *in,real *rawout1,real *rawout2,register real *wi,registe
 		ts[(17-2)*SBLIMIT] += REAL_MUL(in4, wi[5-2]);
 	}
 
-	in++; 
+	in++;
 
 	{
 		real in0,in1,in2,in3,in4,in5;
@@ -1989,7 +1989,7 @@ static void III_hybrid(real fsIn[SBLIMIT][SSLIMIT], real tsOut[SSLIMIT][SBLIMIT]
 		rawout2=block[b][ch];
 		blc[ch] = b;
 	}
-  
+
 	if(gr_info->mixed_block_flag)
 	{
 		sb = 2;
@@ -1997,7 +1997,7 @@ static void III_hybrid(real fsIn[SBLIMIT][SSLIMIT], real tsOut[SSLIMIT][SBLIMIT]
 		opt_dct36(fr)(fsIn[1],rawout1+18,rawout2+18,win1[0],tspnt+1);
 		rawout1 += 36; rawout2 += 36; tspnt += 2;
 	}
- 
+
 	bt = gr_info->block_type;
 	if(bt == 2)
 	{
@@ -2059,7 +2059,7 @@ static void fill_pinfo_side(mpg123_handle *fr, struct III_sideinfo *si, int gr, 
 				{
 					int	  j = 3 * sb + i;
 					/*
-						 is_p = scalefac[sfb*3+lwin-gr_infos->mixed_block_flag]; 
+						 is_p = scalefac[sfb*3+lwin-gr_infos->mixed_block_flag];
 					*/
 					/* scalefac was copied into pinfo->sfb_s[] before */
 					fr->pinfo->sfb_s[gr][ch][j] = -ifqstep *
@@ -2200,7 +2200,7 @@ int do_layer3(mpg123_handle *fr)
 		{
 			struct gr_info_s *gr_info = &(sideinfo.ch[1].gr[gr]);
 			long part2bits;
-			if(fr->lsf) 
+			if(fr->lsf)
 			part2bits = III_get_scale_factors_2(fr, scalefacs[1],gr_info,i_stereo);
 			else
 			part2bits = III_get_scale_factors_1(fr, scalefacs[1],gr_info,1,gr);
@@ -2254,7 +2254,7 @@ int do_layer3(mpg123_handle *fr)
 
 			if(ms_stereo || i_stereo || (single == SINGLE_MIX) )
 			{
-				if(gr_info->maxb > sideinfo.ch[0].gr[gr].maxb) 
+				if(gr_info->maxb > sideinfo.ch[0].gr[gr].maxb)
 				sideinfo.ch[0].gr[gr].maxb = gr_info->maxb;
 				else
 				gr_info->maxb = sideinfo.ch[0].gr[gr].maxb;
@@ -2267,7 +2267,7 @@ int do_layer3(mpg123_handle *fr)
 					register int i;
 					register real *in0 = (real *) hybridIn[0],*in1 = (real *) hybridIn[1];
 					for(i=0;i<SSLIMIT*(int)gr_info->maxb;i++,in0++)
-					*in0 = (*in0 + *in1++); /* *0.5 done by pow-scale */ 
+					*in0 = (*in0 + *in1++); /* *0.5 done by pow-scale */
 				}
 				break;
 				case SINGLE_RIGHT:
@@ -2325,6 +2325,6 @@ int do_layer3(mpg123_handle *fr)
 		}
 #endif
 	}
-  
+
 	return clip;
 }

@@ -189,6 +189,30 @@ MSMfg = "Microsoft"
 NecMfg = "NEC"
 *nEC1F00.DeviceDesc = "NEC PC-98 Bus Mouse"
 
+[Strings.0404]
+MouseClassName = "滑鼠和其他指標裝置"
+
+StdMfg = "(標準滑鼠)"
+SERIAL_MOUSE.DeviceDesc = "標準序列滑鼠"
+PS2_MOUSE.DeviceDesc = "標準 PS/2 滑鼠"
+HID_MOUSE.DeviceDesc = "HID 滑鼠"
+*PNP0F0D.DeviceDesc = "標準 InPort 滑鼠"
+*PNP0F11.DeviceDesc = "標準匯流排滑鼠"
+*PNP0F13.DeviceDesc = "用於 PS/2 風格滑鼠的 PS/2 連接埠"
+
+*IBM3780.DeviceDesc = "IBM PS/2 Trackpoint 指點桿"
+
+*PNP0F08.DeviceDesc = "Logitech 序列滑鼠"
+*PNP0F12.DeviceDesc = "Logitech PS/2 風格滑鼠"
+*PNP0F15.DeviceDesc = "Logitech 匯流排滑鼠"
+
+*PNP0F00.DeviceDesc = "Microsoft 匯流排滑鼠"
+*PNP0F01.DeviceDesc = "Microsoft 序列滑鼠"
+*PNP0F02.DeviceDesc = "Microsoft InPort 滑鼠"
+*PNP0F03.DeviceDesc = "Microsoft PS/2 風格滑鼠"
+
+*nEC1F00.DeviceDesc = "NEC PC-98 匯流排滑鼠"
+
 [Strings.0405]
 MouseClassName = "Myši a jiná polohovací zařízení"
 

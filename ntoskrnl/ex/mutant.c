@@ -28,7 +28,7 @@ GENERIC_MAPPING ExpMutantMapping =
 static const INFORMATION_CLASS_INFO ExMutantInfoClass[] =
 {
      /* MutantBasicInformation */
-    ICI_SQ_SAME( sizeof(MUTANT_BASIC_INFORMATION), sizeof(ULONG), ICIF_QUERY),
+    IQS_SAME(MUTANT_BASIC_INFORMATION, ULONG, ICIF_QUERY),
 };
 
 /* FUNCTIONS *****************************************************************/
@@ -243,7 +243,8 @@ NtQueryMutant(IN HANDLE MutantHandle,
                                          MutantInformationLength,
                                          ResultLength,
                                          NULL,
-                                         PreviousMode);
+                                         PreviousMode,
+                                         TRUE);
     if(!NT_SUCCESS(Status))
     {
         DPRINT("NtQueryMutant() failed, Status: 0x%x\n", Status);

@@ -23,7 +23,7 @@
 extern "C" {
 #endif /* defined(__cplusplus) */
 
-static inline ULONG
+inline ULONG
 Win32DbgPrint(const char *filename, int line, const char *lpFormat, ...)
 {
     char szMsg[512];
@@ -68,7 +68,18 @@ Win32DbgPrint(const char *filename, int line, const char *lpFormat, ...)
 #endif
 
 #if 1
-#define FAILED_UNEXPECTEDLY(hr) (FAILED(hr) && (Win32DbgPrint(__FILE__, __LINE__, "Unexpected failure %08x.\n", hr), TRUE))
+
+inline BOOL _ROS_FAILED_HELPER(HRESULT hr, const char* expr, const char* filename, int line)
+{
+    if (FAILED(hr))
+    {
+        Win32DbgPrint(filename, line, "Unexpected failure (%s)=%08x.\n", expr, hr);
+        return TRUE;
+    }
+    return FALSE;
+}
+
+#define FAILED_UNEXPECTEDLY(hr) _ROS_FAILED_HELPER((hr), #hr, __FILE__, __LINE__)
 #else
 #define FAILED_UNEXPECTEDLY(hr) FAILED(hr)
 #endif
@@ -544,6 +555,71 @@ static inline PCUIDLIST_RELATIVE HIDA_GetPIDLItem(CIDA const* pida, SIZE_T i)
 {
     return (PCUIDLIST_RELATIVE)(((LPBYTE)pida) + (pida)->aoffset[i + 1]);
 }
+
+
+#ifdef __cplusplus
+
+inline
+HRESULT DataObject_GetData(IDataObject* pDataObject, CLIPFORMAT clipformat, PVOID pBuffer, SIZE_T dwBufferSize)
+{
+    FORMATETC fmt = { clipformat, NULL, DVASPECT_CONTENT, -1, TYMED_HGLOBAL };
+    STGMEDIUM medium = { TYMED_NULL };
+
+    HRESULT hr = pDataObject->GetData(&fmt, &medium);
+    if (SUCCEEDED(hr))
+    {
+        LPVOID blob = GlobalLock(medium.hGlobal);
+        if (blob)
+        {
+            SIZE_T size = GlobalSize(medium.hGlobal);
+            if (size <= dwBufferSize)
+            {
+                CopyMemory(pBuffer, blob, size);
+                hr = S_OK;
+            }
+            else
+            {
+                hr = E_OUTOFMEMORY;
+            }
+            GlobalUnlock(medium.hGlobal);
+        }
+        else
+        {
+            hr = STG_E_INVALIDHANDLE;
+        }
+
+        ReleaseStgMedium(&medium);
+    }
+    return hr;
+}
+
+inline
+HRESULT DataObject_SetData(IDataObject* pDataObject, CLIPFORMAT clipformat, PVOID pBuffer, SIZE_T dwBufferSize)
+{
+    STGMEDIUM medium = { TYMED_HGLOBAL };
+
+    medium.hGlobal = GlobalAlloc(GHND, dwBufferSize);
+    if (!medium.hGlobal)
+        return E_OUTOFMEMORY;
+
+    HRESULT hr = E_UNEXPECTED;
+    LPVOID blob = GlobalLock(medium.hGlobal);
+    if (blob)
+    {
+        CopyMemory(blob, pBuffer, dwBufferSize);
+        GlobalUnlock(medium.hGlobal);
+
+        FORMATETC etc = { clipformat, NULL, DVASPECT_CONTENT, -1, TYMED_HGLOBAL };
+        hr = pDataObject->SetData(&etc, &medium, TRUE);
+    }
+
+    if (FAILED(hr))
+        GlobalFree(medium.hGlobal);
+
+    return hr;
+}
+
+#endif
 
 
 #endif /* __ROS_SHELL_UTILS_H */

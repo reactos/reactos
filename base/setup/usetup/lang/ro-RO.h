@@ -1361,6 +1361,37 @@ static MUI_ENTRY roROFormatPartitionEntries[] =
     }
 };
 
+static MUI_ENTRY roROCheckFSEntries[] =
+{
+    {
+        4,
+        3,
+        " Instalare ReactOS " KERNEL_VERSION_STR " ",
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        8,
+        "Programul de instalare verific\343 acum parti\376ia aleas\343.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        "A\272tepta\376i...",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
 static MUI_ENTRY roROInstallDirectoryEntries[] =
 {
     {
@@ -1506,6 +1537,30 @@ static MUI_ENTRY roROBootLoaderEntries[] =
         0,
         0,
         "ENTER = Continuare   F3 = Ie\272ire",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
+static MUI_ENTRY roROBootLoaderInstallPageEntries[] =
+{
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        "Installing the bootloader onto the media, please wait...",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
         TEXT_ID_STATIC
     },
@@ -2147,6 +2202,10 @@ MUI_PAGE roROPages[] =
         roROFormatPartitionEntries
     },
     {
+        CHECK_FILE_SYSTEM_PAGE,
+        roROCheckFSEntries
+    },
+    {
         DELETE_PARTITION_PAGE,
         roRODeletePartitionEntries
     },
@@ -2181,6 +2240,10 @@ MUI_PAGE roROPages[] =
     {
         SUCCESS_PAGE,
         roROSuccessPageEntries
+    },
+    {
+        BOOT_LOADER_INSTALLATION_PAGE,
+        roROBootLoaderInstallPageEntries
     },
     {
         BOOT_LOADER_FLOPPY_PAGE,
@@ -2230,8 +2293,6 @@ MUI_STRING roROStrings[] =
     "Noua parti\376ie \356nc\343 nu a fost formatat\343."},
     {STRING_INSTALLONPART,
     "ReactOS va fi instalat pe parti\376ia"},
-    {STRING_CHECKINGPART,
-    "Programul de instalare verific\343 acum parti\376ia aleas\343."},
     {STRING_CONTINUE,
     "ENTER = Continuare"},
     {STRING_QUITCONTINUE,

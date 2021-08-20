@@ -4,6 +4,7 @@
  *    https://sourceforge.net/projects/reactospl
  *    UTF-8 conversion by Caemyr (May, 2011)
  *    Updated by Saibamen - Adam Stachowicz (saibamenppl@gmail.com) (August, 2011)
+ *    Updated by Piotr Hetnarowicz <piotrhwz@gmail.com> (March, 2021)
  */
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
@@ -15,10 +16,10 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Witamy w Kreatorze dodawania sprzętu", IDC_FINISHTITLE, 114, 8, 203, 24
     LTEXT "Ten kreator pomoże Ci:", -1, 114, 40, 182, 8
-    LTEXT "1) Zainstalować oprogramowanie do obsługi urządzenia dodanego do Twojego komputera.", -1, 121, 56, 184, 16
+    LTEXT "1) Zainstalować oprogramowanie do obsługi sprzętu dodanego do Twojego komputera.", -1, 121, 56, 184, 16
     LTEXT "2) Rozwiązać problemy sprzętowe.", -1, 121, 78, 185, 16
     ICON IDI_WARNINGICON, IDC_WARNINGICON, 124, 109, 20, 20
-    LTEXT "Jeśli do urządzenia dołączony został nośnik z oprogramowaniem producenta, zaleca się kliknięcie przycisku Anuluj w celu zamknięcia tego kreatora i użycie oprogramowania producenta do zainstalowania tego urządzenia.", 503, 150, 106, 155, 50
+    LTEXT "Jeśli do sprzętu dołączony był instalacyjny dysk CD, zaleca się kliknięcie przycisku Anuluj w celu zamknięcia tego kreatora i użycie oprogramowania producenta do zainstalowania tego sprzętu.", 503, 150, 106, 155, 50
     LTEXT "Aby kontynuować, kliknij Dalej.", -1, 114, 166, 193, 8
 END
 
@@ -46,9 +47,9 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Kreator dodawania sprzętu"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Wybierz z poniższej listy zainstalowane urządzenie, następnie kliknij Dalej, aby sprawdzić jego właściwości lub rozwiązać ewentualny problem.", -1, 21, 8, 275, 22
-    LTEXT "Aby dodać urządzenie, którego nie ma na liście, kliknij przycisk ""Dodaj nowe urządzenie""", -1, 21, 32, 275, 24
-    LTEXT "&Zainstalowane urządzenia:", -1, 21, 62, 140, 8
+    LTEXT "Wybierz z poniższej listy zainstalowane urządzenie, a następnie kliknij przycisk Dalej, aby sprawdzić jego właściwości lub rozwiązać ewentualny problem.", -1, 21, 8, 275, 22
+    LTEXT "Aby dodać sprzęt, którego nie ma na liście, kliknij przycisk ""Dodaj nowe urządzenie""", -1, 21, 32, 275, 24
+    LTEXT "&Zainstalowany sprzęt:", -1, 21, 62, 140, 8
     CONTROL "", IDC_PROBELIST, "SysListView32", WS_BORDER | WS_GROUP | WS_TABSTOP | LVS_REPORT | LVS_NOSORTHEADER | LVS_SINGLESEL | LVS_SHAREIMAGELISTS | LVS_NOCOLUMNHEADER, 21, 72, 275, 66
 END
 
@@ -78,8 +79,8 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Kreator dodawania sprzętu"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Jeśli nie widzisz odpowiedniej kategorii urządzenia kliknij przycisk Pokaż wszystkie urządzenia.", IDC_STATUSTEXT, 21, 9, 275, 18
-    LTEXT "&Popularne typy urządzeń:", IDC_HWTYPESTEXT, 21, 31, 180, 8
+    LTEXT "Jeśli nie widzisz odpowiedniej kategorii sprzętu, kliknij przycisk Pokaż wszystkie urządzenia.", IDC_STATUSTEXT, 21, 9, 275, 18
+    LTEXT "&Popularne typy sprzętu:", IDC_HWTYPESTEXT, 21, 31, 180, 8
     CONTROL "", IDC_HWTYPESLIST, "SysListView32", WS_BORDER | WS_GROUP | WS_TABSTOP | LVS_REPORT | LVS_NOSORTHEADER | LVS_SINGLESEL | LVS_SHAREIMAGELISTS | LVS_NOCOLUMNHEADER, 21, 42, 275, 92
 END
 
@@ -88,7 +89,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Kreator dodawania sprzętu"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Wyszukiwanie nowych urządzeń może zająć kilka minut.", -1, 21, 8, 275, 15
+    LTEXT "Wyszukiwanie sprzętu może zająć kilka minut.", -1, 21, 8, 275, 15
     LTEXT "Postęp całkowity:", IDC_TPROGRESSTEXT, 21, 25, 275, 8
     CONTROL "", IDC_TPROGRESSBAR, "msctls_progress32", 0, 21, 37, 275, 14
     LTEXT "", IDC_PROGRESSTEXT, 58, 58, 200, 8, SS_NOPREFIX
@@ -112,7 +113,7 @@ CAPTION "Kreator dodawania sprzętu"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Kończenie pracy Kreatora dodawania sprzętu", IDC_FINISHTITLE, 114, 8, 203, 24
-    LTEXT "Kreator znalazł następujące urządzenia podłączone do tego komputera:", -1, 114, 32, 193, 19
+    LTEXT "Kreator znalazł następujący sprzęt podłączony do tego komputera:", -1, 114, 32, 193, 19
     LTEXT "Aby zamknąć kreatora, kliknij Zakończ", -1, 114, 166, 132, 8
     CONTROL "", IDC_FOUNDHARDWARELIST, "SysListView32", WS_BORDER | WS_GROUP | WS_TABSTOP | LVS_REPORT | LVS_NOSORTHEADER | LVS_SINGLESEL | LVS_SHAREIMAGELISTS, 114, 56, 193, 78
 END
@@ -123,10 +124,10 @@ CAPTION "Kreator dodawania sprzętu"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Kończenie pracy Kreatora dodawania sprzętu", IDC_FINISHTITLE, 114, 8, 195, 28
-    LTEXT "Oto aktualny stan wybranego urządzenia:", -1, 114, 40, 193, 19
+    LTEXT "Oto aktualny stan wybranego sprzętu:", -1, 114, 40, 193, 19
     EDITTEXT IDC_HWSTATUSEDIT, 114, 60, 193, 70, ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY | WS_VSCROLL | NOT WS_TABSTOP
-    LTEXT "Aby uruchomić moduł rozwiązywania problemów, który może pomóc Ci rozwiązać ewentualne problemy z urządzeniem, kliknij Zakończ.", -1, 114, 136, 193, 25
-    LTEXT "Aby zamknąć kreator, kliknij przycisk Anuluj", IDC_STATUSTEXT, 114, 166, 138, 8
+    LTEXT "Aby uruchomić moduł rozwiązywania problemów, który może pomóc rozwiązać ewentualne problemy, kliknij przycisk Zakończ.", -1, 114, 136, 193, 25
+    LTEXT "Aby zamknąć kreatora, kliknij przycisk Anuluj", IDC_STATUSTEXT, 114, 166, 138, 8
 END
 
 IDD_NOTCONNECTEDPAGE DIALOGEX 0, 0, 317, 186
@@ -135,9 +136,9 @@ CAPTION "Kreator dodawania sprzętu"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Nie można kontynuować pracy Kreatora dodawania sprzętu", IDC_FINISHTITLE, 114, 8, 203, 28
-    LTEXT "Aby kontynuować, podłącz nowe urządzenie do komputera.", -1, 114, 40, 193, 16
-    AUTOCHECKBOX "&Wyłącz komputer po kliknięciu przycisku Zakończ, aby można było otworzyć komputer i podłączyć urządzenie.", IDC_TURNOFFCHECKBOX, 114, 64, 203, 20, BS_TOP | BS_MULTILINE
-    LTEXT "W większości przypadków ReactOS automatycznie zainstaluje urządzenie po jego podłączeniu. Jeśli ReactOS nie odnajdzie urządzenia, uruchom ponownie ten kreator w celu zainstalowania oprogramowania do obsługi urządzenia.", -1, 114, 98, 193, 32
+    LTEXT "Aby kontynuować, podłącz sprzęt do komputera.", -1, 114, 40, 193, 16
+    AUTOCHECKBOX "&Wyłącz komputer po kliknięciu przycisku Zakończ, aby można było otworzyć komputer i podłączyć sprzęt.", IDC_TURNOFFCHECKBOX, 114, 64, 203, 20, BS_TOP | BS_MULTILINE
+    LTEXT "W większości przypadków system ReactOS automatycznie instaluje sprzęt po jego podłączeniu. Jeśli system ReactOS nie odnajdzie sprzętu, uruchom ponownie kreatora w celu zainstalowania oprogramowania do obsługi sprzętu.", -1, 114, 98, 193, 32
     LTEXT "Aby zamknąć kreatora, kliknij Zakończ.", IDC_STATUSTEXT, 114, 166, 193, 8
 END
 
@@ -146,10 +147,10 @@ BEGIN
     IDS_CPLNAME "Dodaj sprzęt"
     IDS_CPLDESCRIPTION "Dodaje sprzęt do Twojego komputera."
     IDS_SEARCHTITLE "Czekaj, kreator przeprowadza wyszukiwanie..."
-    IDS_SEARCHTEXT "Ten kreator wyszukuje urządzenia, które zostały ostatnio podłączone do tego komputera, ale jeszcze nie zostały zainstalowane."
-    IDS_ISCONNECTED "Czy urządzenie zostało już podłączone do komputera?"
-    IDS_PROBELISTTITLE "Poniższe urządzenia są już zainstalowane na tym komputerze"
+    IDS_SEARCHTEXT "Kreator szuka sprzętu, który ostatnio podłączono do komputera, ale którego jeszcze nie zainstalowano."
+    IDS_ISCONNECTED "Czy sprzęt jest podłączony?"
+    IDS_PROBELISTTITLE "Następujący sprzęt jest już zainstalowane w komputerze"
     IDS_ADDNEWDEVICE "Dodaj nowe urządzenie sprzętowe"
-    IDS_SELECTWAYTITLE "Kreator może pomóc Tobie zainstalować inne urządzenie"
-    IDS_HDTYPESTITLE "Wybierz z poniższej listy typ urządzenia, które chcesz zainstalować"
+    IDS_SELECTWAYTITLE "Kreator pomaga w instalowaniu innego sprzętu"
+    IDS_HDTYPESTITLE "Wybierz z poniższej listy typ sprzętu, który chcesz zainstalować"
 END

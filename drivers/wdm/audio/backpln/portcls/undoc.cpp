@@ -99,7 +99,7 @@ PcHandlePropertyWithTable(
     KSPROPERTY_ITEM_IRP_STORAGE(Irp) = (PKSPROPERTY_ITEM)SubDeviceDescriptor;
 
 
-    // then try KsPropertyHandler 
+    // then try KsPropertyHandler
     return KsPropertyHandler(Irp, PropertySetCount, PropertySet);
 }
 
@@ -388,7 +388,7 @@ ASSERT(PropertyItem->Set);
         // store new property set descriptors
         SubDeviceDescriptor->FilterPropertySet = NewPropertySet;
 
-        // store index 
+        // store index
         PropertySetIndex = SubDeviceDescriptor->FilterPropertySetCount;
 
         // increment property set count
@@ -397,7 +397,7 @@ ASSERT(PropertyItem->Set);
         // copy property guid
         RtlMoveMemory(Guid, PropertyItem->Set, sizeof(GUID));
 
-        // initialize property set 
+        // initialize property set
         SubDeviceDescriptor->FilterPropertySet[PropertySetIndex].Set = Guid;
         SubDeviceDescriptor->FilterPropertySet[PropertySetIndex].PropertiesCount = 0;
     }
@@ -461,7 +461,7 @@ ASSERT(PropertyItem->Set);
         // are any set operations supported
         if (PropertyItem->Flags & PCPROPERTY_ITEM_FLAG_SET)
         {
-            // setup handler 
+            // setup handler
             FilterPropertyItem->SetPropertyHandler = PropertyItemDispatch;
         }
 
@@ -475,14 +475,14 @@ ASSERT(PropertyItem->Set);
         // are get operations supported
         if (PropertyItem->Flags & PCPROPERTY_ITEM_FLAG_GET)
         {
-            // setup handler 
+            // setup handler
             FilterPropertyItem->GetPropertyHandler = PropertyItemDispatch;
         }
 
         // are basic support operations supported
         if (PropertyItem->Flags & PCPROPERTY_ITEM_FLAG_BASICSUPPORT)
         {
-            // setup handler 
+            // setup handler
             FilterPropertyItem->SupportHandler = PropertyItemDispatch;
         }
 
@@ -492,7 +492,7 @@ ASSERT(PropertyItem->Set);
             // only store property item of filter properties / pin properties
             // because filter & pin properties do not require a specific context
             // on the other hand node properties are specifically bound to a node
-             
+
             FilterPropertyItem->Relations = (const KSPROPERTY*)PropertyItem;
         }
     }
@@ -559,7 +559,7 @@ DumpAutomationTable(
     {
         if (AutomationTable->PropertyItemSize >= sizeof(PCPROPERTY_ITEM))
         {
-            // get property item 
+            // get property item
             PropertyItem = (PPCPROPERTY_ITEM)AutomationTable->Properties;
 
             // sanity check
@@ -766,7 +766,7 @@ PcCreateSubdeviceDescriptor(
     if (!Descriptor)
         return STATUS_INSUFFICIENT_RESOURCES;
 
-    // initialize physical / symbolic link connection list 
+    // initialize physical / symbolic link connection list
     InitializeListHead(&Descriptor->SymbolicLinkList);
     InitializeListHead(&Descriptor->PhysicalConnectionList);
 

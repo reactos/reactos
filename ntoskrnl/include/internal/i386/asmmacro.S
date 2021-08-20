@@ -217,6 +217,29 @@ set_sane_segs:
     mov [esp + KTRAP_FRAME_DEBUGEIP], eax
     mov [esp + KTRAP_FRAME_DEBUGEBP], ebp
     mov ebp, esp
+
+    /* Tell GDB what just happened */
+    CFI_DEF_CFA_REGISTER ebp
+    CFI_ADJUST_CFA_OFFSET FrameSize
+    CFI_REL_OFFSET ss, KTRAP_FRAME_SS
+    CFI_REL_OFFSET gs, KTRAP_FRAME_GS
+    CFI_REL_OFFSET fs, KTRAP_FRAME_FS
+    CFI_REL_OFFSET es, KTRAP_FRAME_ES
+    CFI_REL_OFFSET ds, KTRAP_FRAME_DS
+    CFI_REL_OFFSET cs, KTRAP_FRAME_CS
+
+    CFI_REL_OFFSET edi, KTRAP_FRAME_EDI
+    CFI_REL_OFFSET esi, KTRAP_FRAME_ESI
+    CFI_REL_OFFSET ebx, KTRAP_FRAME_EBX
+    CFI_REL_OFFSET ebp, KTRAP_FRAME_EBP
+    CFI_REL_OFFSET eip, KTRAP_FRAME_EIP
+    CFI_REL_OFFSET esp, KTRAP_FRAME_ESP
+
+if (NOT (Flags AND KI_NONVOLATILES_ONLY))
+    CFI_REL_OFFSET eax, KTRAP_FRAME_EAX
+    CFI_REL_OFFSET ecx, KTRAP_FRAME_ECX
+    CFI_REL_OFFSET edx, KTRAP_FRAME_EDX
+endif
 #endif
 
     /* Set parameter 1 (ECX) to point to the frame */

@@ -9,6 +9,14 @@
 #ifndef _INC_CRTDEFS
 #define _INC_CRTDEFS
 
+#ifndef NULL
+#ifdef __cplusplus
+#define NULL 0
+#else
+#define NULL ((void *)0)
+#endif
+#endif
+
 #ifdef _USE_32BIT_TIME_T
 #ifdef _WIN64
 #error You cannot use 32-bit time_t (_USE_32BIT_TIME_T) with _WIN64
@@ -36,6 +44,10 @@
 #ifndef _CRT_STRINGIZE
 #define __CRT_STRINGIZE(_Value) #_Value
 #define _CRT_STRINGIZE(_Value) __CRT_STRINGIZE(_Value)
+#endif
+
+#ifndef _CRT_DEFER_MACRO
+#define _CRT_DEFER_MACRO(M,...) M(__VA_ARGS__)
 #endif
 
 #ifndef _CRT_WIDE
@@ -170,6 +182,15 @@
 
 #define __crt_typefix(ctype)
 
+#ifndef _STATIC_ASSERT
+  #ifdef __cplusplus
+    #define _STATIC_ASSERT(expr) static_assert((expr), #expr)
+  #elif defined(__clang__) || defined(__GNUC__)
+    #define _STATIC_ASSERT(expr) _Static_assert((expr), #expr)
+  #else
+    #define _STATIC_ASSERT(expr) extern char (*__static_assert__(void)) [(expr) ? 1 : -1]
+  #endif
+#endif /* _STATIC_ASSERT */
 
 /** Deprecated ***************************************************************/
 
@@ -439,5 +460,26 @@ typedef struct localeinfo_struct {
 #endif
 
 #pragma pack(pop)
+
+/* GCC-style diagnostics */
+#ifndef PRAGMA_DIAGNOSTIC_IGNORED
+# ifdef __clang__
+#  define PRAGMA_DIAGNOSTIC_PUSH() _Pragma("clang diagnostic push")
+#  define PRAGMA_DIAGNOSTIC_IGNORED(__x) \
+    _Pragma(_CRT_STRINGIZE(clang diagnostic ignored _CRT_DEFER_MACRO(_CRT_STRINGIZE,__x)))
+#  define PRAGMA_DIAGNOSTIC_POP() _Pragma("clang diagnostic pop")
+# elif defined (__GNUC__)
+#  define PRAGMA_DIAGNOSTIC_PUSH() _Pragma("GCC diagnostic push")
+#  define PRAGMA_DIAGNOSTIC_IGNORED(__x) \
+    _Pragma("GCC diagnostic ignored \"-Wpragmas\"") /* This allows us to use it for unkonwn warnings */ \
+    _Pragma(_CRT_STRINGIZE(GCC diagnostic ignored _CRT_DEFER_MACRO(_CRT_STRINGIZE,__x))) \
+    _Pragma("GCC diagnostic error \"-Wpragmas\"") /* This makes sure that we don't have side effects because we disabled it for our own use. This will be popped anyway. */
+#  define PRAGMA_DIAGNOSTIC_POP() _Pragma("GCC diagnostic pop")
+# else
+#  define PRAGMA_DIAGNOSTIC_PUSH()
+#  define PRAGMA_DIAGNOSTIC_IGNORED(__x)
+#  define PRAGMA_DIAGNOSTIC_POP()
+# endif
+#endif
 
 #endif /* !_INC_CRTDEFS */

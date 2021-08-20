@@ -129,19 +129,19 @@ ObpCreateCacheEntry(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
     ULONG CacheSize;
     PSECURITY_DESCRIPTOR_HEADER SdHeader;
     ASSERT(Length == RtlLengthSecurityDescriptor(SecurityDescriptor));
-    
+
     /* Calculate the memory we'll need to allocate and allocate it */
     CacheSize = Length + (sizeof(SECURITY_DESCRIPTOR_HEADER) - sizeof(QUAD));
     SdHeader = ExAllocatePoolWithTag(PagedPool, CacheSize, TAG_OB_SD_CACHE);
     if (!SdHeader) return NULL;
-    
+
     /* Setup the header */
     SdHeader->RefCount = RefCount;
     SdHeader->FullHash = FullHash;
-    
+
     /* Copy the descriptor */
     RtlCopyMemory(&SdHeader->SecurityDescriptor, SecurityDescriptor, Length);
-    
+
     /* Return it */
     return SdHeader;
 }
@@ -154,13 +154,13 @@ ObpCompareSecurityDescriptors(IN PSECURITY_DESCRIPTOR Sd1,
 {
     ULONG Length2;
     ASSERT(Length1 == RtlLengthSecurityDescriptor(Sd1));
-    
+
     /* Get the length of the second SD */
     Length2 = RtlLengthSecurityDescriptor(Sd2);
-    
+
     /* Compare lengths */
     if (Length1 != Length2) return FALSE;
-    
+
     /* Compare contents */
     return RtlEqualMemory(Sd1, Sd2, Length1);
 }
@@ -260,7 +260,7 @@ ObReferenceSecurityDescriptor(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
 
     /* Get the header */
     SdHeader = ObpGetHeaderForSd(SecurityDescriptor);
-    
+
     /* Do the references */
     InterlockedExchangeAdd((PLONG)&SdHeader->RefCount, Count);
 }
@@ -291,13 +291,13 @@ ObDereferenceSecurityDescriptor(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
     LONG OldValue, NewValue;
     ULONG Index;
     POB_SD_CACHE_LIST CacheEntry;
-    
+
     /* Get the header */
     SdHeader = ObpGetHeaderForSd(SecurityDescriptor);
-    
+
     /* Get the current reference count */
     OldValue = SdHeader->RefCount;
-    
+
     /* Check if the caller is destroying this SD -- we need the lock for that */
     while (OldValue != Count)
     {
@@ -306,28 +306,28 @@ ObDereferenceSecurityDescriptor(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
                                               OldValue - Count,
                                               OldValue);
         if (NewValue == OldValue) return;
-        
+
         /* Try again */
         OldValue = NewValue;
     }
-    
+
     /* At this point, we need the lock, so choose an entry */
     Index = SdHeader->FullHash % SD_CACHE_ENTRIES;
     CacheEntry = &ObsSecurityDescriptorCache[Index];
-    
+
     /* Acquire the lock for it */
     ObpSdAcquireLock(CacheEntry);
     ASSERT(SdHeader->RefCount != 0);
-    
+
     /* Now do the dereference */
     if (InterlockedExchangeAdd((PLONG)&SdHeader->RefCount, -(LONG)Count) == Count)
     {
         /* We're down to zero -- destroy the header */
         SdHeader = ObpDestroySecurityDescriptorHeader(SdHeader);
-        
+
         /* Release the lock */
         ObpSdReleaseLock(CacheEntry);
-        
+
         /* Free the header */
         ExFreePool(SdHeader);
     }
@@ -336,7 +336,7 @@ ObDereferenceSecurityDescriptor(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
         /* Just release the lock */
         ObpSdReleaseLock(CacheEntry);
     }
-    
+
 }
 
 /*++
@@ -373,33 +373,33 @@ ObLogSecurityDescriptor(IN PSECURITY_DESCRIPTOR InputSecurityDescriptor,
 
     /* Get the length */
     Length = RtlLengthSecurityDescriptor(InputSecurityDescriptor);
-    
+
     /* Get the hash */
     Hash = ObpHashSecurityDescriptor(InputSecurityDescriptor, Length);
-    
+
     /* Now select the appropriate cache entry */
     Index = Hash % SD_CACHE_ENTRIES;
     CacheEntry = &ObsSecurityDescriptorCache[Index];
-    
+
     /* Lock it shared */
     ObpSdAcquireLockShared(CacheEntry);
-    
+
     /* Start our search */
     while (TRUE)
     {
         /* Reset result found */
         Result = FALSE;
-        
+
         /* Loop the hash list */
         NextEntry = CacheEntry->Head.Flink;
         while (NextEntry != &CacheEntry->Head)
         {
             /* Get the header */
             SdHeader = ObpGetHeaderForEntry(NextEntry);
-            
+
             /* Our hashes are ordered, so quickly check if we should stop now */
             if (SdHeader->FullHash > Hash) break;
-            
+
             /* We survived the quick hash check, now check for equalness */
             if (SdHeader->FullHash == Hash)
             {
@@ -409,41 +409,41 @@ ObLogSecurityDescriptor(IN PSECURITY_DESCRIPTOR InputSecurityDescriptor,
                                                        &SdHeader->SecurityDescriptor);
                 if (Result) break;
             }
-            
+
             /* Go to the next entry */
             NextEntry = NextEntry->Flink;
         }
-        
+
         /* Check if we found anything */
         if (Result)
         {
             /* Increment its reference count */
             InterlockedExchangeAdd((PLONG)&SdHeader->RefCount, RefBias);
-            
+
             /* Release the lock */
             ObpSdReleaseLockShared(CacheEntry);
-            
+
             /* Return the descriptor */
             *OutputSecurityDescriptor = &SdHeader->SecurityDescriptor;
-            
+
             /* Free anything that we may have had to create */
             if (NewHeader) ExFreePoolWithTag(NewHeader, TAG_OB_SD_CACHE);
             return STATUS_SUCCESS;
         }
-        
+
         /* Check if we got here, and didn't create a descriptor yet */
         if (!NewHeader)
         {
             /* Release the lock */
             ObpSdReleaseLockShared(CacheEntry);
-            
+
             /* This should be our first time in the loop, create it */
             NewHeader = ObpCreateCacheEntry(InputSecurityDescriptor,
                                             Length,
                                             Hash,
                                             RefBias);
             if (!NewHeader) return STATUS_INSUFFICIENT_RESOURCES;
-            
+
             /* Now acquire the exclusive lock and we should hit the right path */
             ObpSdAcquireLock(CacheEntry);
         }
@@ -453,13 +453,13 @@ ObLogSecurityDescriptor(IN PSECURITY_DESCRIPTOR InputSecurityDescriptor,
             break;
         }
     }
-    
+
     /* Okay, now let's do the insert, we should have the exclusive lock */
     InsertTailList(NextEntry, &NewHeader->Link);
-    
+
     /* Release the lock */
     ObpSdReleaseLock(CacheEntry);
-    
+
     /* Return the SD*/
     *OutputSecurityDescriptor = &NewHeader->SecurityDescriptor;
     return STATUS_SUCCESS;

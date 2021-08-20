@@ -14,14 +14,6 @@
 extern "C" {
 #endif
 
-#ifndef NULL
-#ifdef __cplusplus
-#define NULL 0
-#else
-#define NULL ((void *)0)
-#endif
-#endif
-
 #define LC_ALL 0
 #define LC_COLLATE 1
 #define LC_CTYPE 2
@@ -120,6 +112,16 @@ extern "C" {
   __cdecl
   __free_locale(
     _In_opt_ _locale_t _Locale);
+
+_CRTIMP
+unsigned int
+__cdecl
+___lc_collate_cp_func(void);
+
+_CRTIMP
+unsigned int
+__cdecl
+___lc_codepage_func(void);
 
 #ifndef _WLOCALE_DEFINED
 #define _WLOCALE_DEFINED

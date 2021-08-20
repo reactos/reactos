@@ -47,7 +47,7 @@ typedef struct _RFSD_SUPER_BLOCK
     char s_magic[10];              /* reiserfs magic string indicates that
                                     * file system is reiserfs:
                                     * "ReIsErFs" or "ReIsEr2Fs" or "ReIsEr3Fs" */
-    
+
     // State of the partition: valid(1), error (2)
     UINT16 s_fs_state;	           /* it is set to used by fsck to mark which phase of rebuilding is done */
 

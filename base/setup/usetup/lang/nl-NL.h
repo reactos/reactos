@@ -1344,6 +1344,37 @@ static MUI_ENTRY nlNLFormatPartitionEntries[] =
     }
 };
 
+static MUI_ENTRY nlNLCheckFSEntries[] =
+{
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        8,
+        "Setup controleert nu de geselecteerde partitie.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        "Een ogenblik geduld...",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
 static MUI_ENTRY nlNLInstallDirectoryEntries[] =
 {
     {
@@ -1496,6 +1527,30 @@ static MUI_ENTRY nlNLBootLoaderEntries[] =
         0,
         0,
         "ENTER = Doorgaan   F3 = Afsluiten",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
+static MUI_ENTRY nlNLBootLoaderInstallPageEntries[] =
+{
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        "Installing the bootloader onto the media, please wait...",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
         TEXT_ID_STATIC
     },
@@ -2126,6 +2181,10 @@ MUI_PAGE nlNLPages[] =
         nlNLFormatPartitionEntries
     },
     {
+        CHECK_FILE_SYSTEM_PAGE,
+        nlNLCheckFSEntries
+    },
+    {
         DELETE_PARTITION_PAGE,
         nlNLDeletePartitionEntries
     },
@@ -2160,6 +2219,10 @@ MUI_PAGE nlNLPages[] =
     {
         SUCCESS_PAGE,
         nlNLSuccessPageEntries
+    },
+    {
+        BOOT_LOADER_INSTALLATION_PAGE,
+        nlNLBootLoaderInstallPageEntries
     },
     {
         BOOT_LOADER_FLOPPY_PAGE,
@@ -2211,8 +2274,6 @@ MUI_STRING nlNLStrings[] =
     "The new partition is not formatted yet."},
     {STRING_INSTALLONPART,
     "Setup installeert ReactOS op Partitie"},
-    {STRING_CHECKINGPART,
-    "Setup controleert nu de geselecteerde partitie."},
     {STRING_CONTINUE,
     "ENTER = Doorgaan"},
     {STRING_QUITCONTINUE,

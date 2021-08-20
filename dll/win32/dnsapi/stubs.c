@@ -216,28 +216,6 @@ DnsFindAuthoritativeZone()
     return ERROR_OUTOFMEMORY;
 }
 
-BOOL WINAPI
-DnsFlushResolverCacheEntry_A(PCSTR entry)
-{
-    DPRINT1("DnsFlushResolverCacheEntry_A(%s) is stubplemented.\n", entry);
-    if (!entry) return FALSE;
-    return TRUE;
-}
-
-DNS_STATUS WINAPI
-DnsFlushResolverCacheEntry_UTF8()
-{
-    UNIMPLEMENTED;
-    return ERROR_OUTOFMEMORY;
-}
-
-DNS_STATUS WINAPI
-DnsFlushResolverCacheEntry_W()
-{
-    UNIMPLEMENTED;
-    return ERROR_OUTOFMEMORY;
-}
-
 DNS_STATUS WINAPI
 DnsFreeAdapterInformation()
 {

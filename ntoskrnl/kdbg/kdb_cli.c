@@ -82,7 +82,9 @@ static BOOLEAN KdbpCmdProc(ULONG Argc, PCHAR Argv[]);
 static BOOLEAN KdbpCmdMod(ULONG Argc, PCHAR Argv[]);
 static BOOLEAN KdbpCmdGdtLdtIdt(ULONG Argc, PCHAR Argv[]);
 static BOOLEAN KdbpCmdPcr(ULONG Argc, PCHAR Argv[]);
+#ifdef _M_IX86
 static BOOLEAN KdbpCmdTss(ULONG Argc, PCHAR Argv[]);
+#endif
 
 static BOOLEAN KdbpCmdBugCheck(ULONG Argc, PCHAR Argv[]);
 static BOOLEAN KdbpCmdReboot(ULONG Argc, PCHAR Argv[]);
@@ -102,6 +104,26 @@ BOOLEAN ExpKdbgExtHandle(ULONG Argc, PCHAR Argv[]);
 #ifdef __ROS_DWARF__
 static BOOLEAN KdbpCmdPrintStruct(ULONG Argc, PCHAR Argv[]);
 #endif
+
+/* Be more descriptive than intrinsics */
+#ifndef Ke386GetGlobalDescriptorTable
+# define Ke386GetGlobalDescriptorTable __sgdt
+#endif
+#ifndef Ke386GetLocalDescriptorTable
+# define Ke386GetLocalDescriptorTable __sldt
+#endif
+
+/* Portability */
+FORCEINLINE
+ULONG_PTR
+strtoulptr(const char* nptr, char** endptr, int base)
+{
+#ifdef _M_IX86
+    return strtoul(nptr, endptr, base);
+#else
+    return strtoull(nptr, endptr, base);
+#endif
+}
 
 /* GLOBALS *******************************************************************/
 
@@ -376,7 +398,9 @@ static const struct
     { "ldt", "ldt", "Display the local descriptor table.", KdbpCmdGdtLdtIdt },
     { "idt", "idt", "Display the interrupt descriptor table.", KdbpCmdGdtLdtIdt },
     { "pcr", "pcr", "Display the processor control region.", KdbpCmdPcr },
+#ifdef _M_IX86
     { "tss", "tss [selector|*descaddr]", "Display the current task state segment, or the one specified by its selector number or descriptor address.", KdbpCmdTss },
+#endif
 
     /* Others */
     { NULL, NULL, "Others", NULL },
@@ -793,7 +817,7 @@ KdbpCmdDisassembleX(
     ULONG ul;
     INT i;
     ULONGLONG Result = 0;
-    ULONG_PTR Address = KdbCurrentTrapFrame->Eip;
+    ULONG_PTR Address = KeGetContextPc(KdbCurrentTrapFrame);
     LONG InstLen;
 
     if (Argv[0][0] == 'x') /* display memory */
@@ -922,6 +946,7 @@ KdbpCmdRegs(
 
     if (Argv[0][0] == 'r') /* regs */
     {
+#ifdef _M_IX86
         KdbpPrint("CS:EIP  0x%04x:0x%08x\n"
                   "SS:ESP  0x%04x:0x%08x\n"
                   "   EAX  0x%08x   EBX  0x%08x\n"
@@ -934,7 +959,20 @@ KdbpCmdRegs(
                   Context->Ecx, Context->Edx,
                   Context->Esi, Context->Edi,
                   Context->Ebp);
-
+#else
+        KdbpPrint("CS:RIP  0x%04x:0x%p\n"
+                  "SS:RSP  0x%04x:0x%p\n"
+                  "   RAX  0x%p     RBX  0x%p\n"
+                  "   RCX  0x%p     RDX  0x%p\n"
+                  "   RSI  0x%p     RDI  0x%p\n"
+                  "   RBP  0x%p\n",
+                  Context->SegCs & 0xFFFF, Context->Rip,
+                  Context->SegSs, Context->Rsp,
+                  Context->Rax, Context->Rbx,
+                  Context->Rcx, Context->Rdx,
+                  Context->Rsi, Context->Rdi,
+                  Context->Rbp);
+#endif
         /* Display the EFlags */
         KdbpPrint("EFLAGS  0x%08x ", Context->EFlags);
         for (i = 0; i < 32; i++)
@@ -990,6 +1028,7 @@ KdbpCmdRegs(
     return TRUE;
 }
 
+#ifdef _M_IX86
 static PKTSS
 KdbpRetrieveTss(
     IN USHORT TssSelector,
@@ -1102,6 +1141,7 @@ KdbpContextFromPrevTss(
     Context->Ebp = Ebp;
     return TRUE;
 }
+#endif
 
 /*!\brief Displays a backtrace.
  */
@@ -1113,11 +1153,8 @@ KdbpCmdBackTrace(
     ULONG ul;
     ULONGLONG Result = 0;
     CONTEXT Context = *KdbCurrentTrapFrame;
-    ULONG_PTR Frame = Context.Ebp;
+    ULONG_PTR Frame = KeGetContextFrameRegister(&Context);
     ULONG_PTR Address;
-    KDESCRIPTOR Gdtr;
-    USHORT TssSelector;
-    PKTSS Tss;
 
     if (Argc >= 2)
     {
@@ -1172,6 +1209,11 @@ KdbpCmdBackTrace(
         }
     }
 
+#ifdef _M_IX86
+    KDESCRIPTOR Gdtr;
+    USHORT TssSelector;
+    PKTSS Tss;
+
     /* Retrieve the Global Descriptor Table */
     Ke386GetGlobalDescriptorTable(&Gdtr.Limit);
 
@@ -1183,13 +1225,14 @@ KdbpCmdBackTrace(
         /* Display the active TSS if it is nested */
         KdbpPrint("[Active TSS 0x%04x @ 0x%p]\n", TssSelector, Tss);
     }
+#endif
 
     /* If no Frame Address or Thread ID was given, try printing the function at EIP */
     if (Argc <= 1)
     {
         KdbpPrint("Eip:\n");
-        if (!KdbSymPrintAddress((PVOID)Context.Eip, &Context))
-            KdbpPrint("<%08x>\n", Context.Eip);
+        if (!KdbSymPrintAddress((PVOID)KeGetContextPc(&Context), &Context))
+            KdbpPrint("<%p>\n", KeGetContextPc(&Context));
         else
             KdbpPrint("\n");
     }
@@ -1215,7 +1258,9 @@ KdbpCmdBackTrace(
 
         GotNextFrame = NT_SUCCESS(KdbpSafeReadMemory(&Frame, (PVOID)Frame, sizeof(ULONG_PTR)));
         if (GotNextFrame)
-            Context.Ebp = Frame;
+        {
+            KeSetContextFrameRegister(&Context, Frame);
+        }
         // else
             // Frame = 0;
 
@@ -1237,6 +1282,9 @@ KdbpCmdBackTrace(
         continue;
 
 CheckForParentTSS:
+#ifndef _M_IX86
+        break;
+#else
         /*
          * We have ended the stack walking for the current (active) TSS.
          * Check whether this TSS was nested, and if so switch to its parent
@@ -1251,6 +1299,8 @@ CheckForParentTSS:
             KdbpPrint("Couldn't access parent TSS 0x%04x\n", Tss->Backlink);
             break; // Cannot retrieve the parent TSS, we stop there.
         }
+
+
         Address = Context.Eip;
         Frame = Context.Ebp;
 
@@ -1260,6 +1310,7 @@ CheckForParentTSS:
             KdbpPrint("<%08x>\n", Address);
         else
             KdbpPrint("\n");
+#endif
     }
 
     return TRUE;
@@ -1359,8 +1410,8 @@ KdbpCmdBreakPointList(
         else
         {
             GlobalOrLocal = Buffer;
-            sprintf(Buffer, "  PID 0x%08lx",
-                    (ULONG)(Process ? Process->UniqueProcessId : INVALID_HANDLE_VALUE));
+            sprintf(Buffer, "  PID 0x%lx",
+                    (ULONG_PTR)(Process ? Process->UniqueProcessId : INVALID_HANDLE_VALUE));
         }
 
         if (Type == KdbBreakPointSoftware || Type == KdbBreakPointTemporary)
@@ -1579,10 +1630,10 @@ KdbpCmdThread(
     PETHREAD Thread = NULL;
     PEPROCESS Process = NULL;
     BOOLEAN ReferencedThread = FALSE, ReferencedProcess = FALSE;
-    PULONG Esp;
-    PULONG Ebp;
-    ULONG Eip;
-    ULONG ul = 0;
+    PULONG_PTR Stack;
+    PULONG_PTR Frame;
+    ULONG_PTR Pc;
+    ULONG_PTR ul = 0;
     PCHAR State, pend, str1, str2;
     static const PCHAR ThreadStateToString[DeferredReady+1] =
     {
@@ -1599,7 +1650,7 @@ KdbpCmdThread(
 
         if (Argc >= 3)
         {
-            ul = strtoul(Argv[2], &pend, 0);
+            ul = strtoulptr(Argv[2], &pend, 0);
             if (Argv[2] == pend)
             {
                 KdbpPrint("thread: '%s' is not a valid process id!\n", Argv[2]);
@@ -1620,7 +1671,7 @@ KdbpCmdThread(
         if (Entry == &Process->ThreadListHead)
         {
             if (Argc >= 3)
-                KdbpPrint("No threads in process 0x%08x!\n", ul);
+                KdbpPrint("No threads in process 0x%px!\n", (PVOID)ul);
             else
                 KdbpPrint("No threads in current process!\n");
 
@@ -1649,27 +1700,23 @@ KdbpCmdThread(
             if (!Thread->Tcb.InitialStack)
             {
                 /* Thread has no kernel stack (probably terminated) */
-                Esp = Ebp = NULL;
-                Eip = 0;
+                Stack = Frame = NULL;
+                Pc = 0;
             }
             else if (Thread->Tcb.TrapFrame)
             {
-                if (Thread->Tcb.TrapFrame->PreviousPreviousMode == KernelMode)
-                    Esp = (PULONG)Thread->Tcb.TrapFrame->TempEsp;
-                else
-                    Esp = (PULONG)Thread->Tcb.TrapFrame->HardwareEsp;
-
-                Ebp = (PULONG)Thread->Tcb.TrapFrame->Ebp;
-                Eip = Thread->Tcb.TrapFrame->Eip;
+                Stack = (PULONG_PTR)KeGetTrapFrameStackRegister(Thread->Tcb.TrapFrame);
+                Frame = (PULONG_PTR)KeGetTrapFrameFrameRegister(Thread->Tcb.TrapFrame);
+                Pc = KeGetTrapFramePc(Thread->Tcb.TrapFrame);
             }
             else
             {
-                Esp = (PULONG)Thread->Tcb.KernelStack;
-                Ebp = (PULONG)Esp[4];
-                Eip = 0;
+                Stack = (PULONG_PTR)Thread->Tcb.KernelStack;
+                Frame = (PULONG_PTR)Stack[4];
+                Pc = 0;
 
-                if (Ebp) /* FIXME: Should we attach to the process to read Ebp[1]? */
-                    KdbpSafeReadMemory(&Eip, Ebp + 1, sizeof(Eip));
+                if (Frame) /* FIXME: Should we attach to the process to read Ebp[1]? */
+                    KdbpSafeReadMemory(&Pc, Frame + 1, sizeof(Pc));
             }
 
             if (Thread->Tcb.State < (DeferredReady + 1))
@@ -1683,8 +1730,8 @@ KdbpCmdThread(
                       State,
                       Thread->Tcb.Priority,
                       Thread->Tcb.Affinity,
-                      Ebp,
-                      Eip,
+                      Frame,
+                      Pc,
                       str2);
 
             Entry = Entry->Flink;
@@ -1703,7 +1750,7 @@ KdbpCmdThread(
             return TRUE;
         }
 
-        ul = strtoul(Argv[2], &pend, 0);
+        ul = strtoulptr(Argv[2], &pend, 0);
         if (Argv[2] == pend)
         {
             KdbpPrint("thread attach: '%s' is not a valid thread id!\n", Argv[2]);
@@ -1723,7 +1770,7 @@ KdbpCmdThread(
 
         if (Argc >= 2)
         {
-            ul = strtoul(Argv[1], &pend, 0);
+            ul = strtoulptr(Argv[1], &pend, 0);
             if (Argv[1] == pend)
             {
                 KdbpPrint("thread: '%s' is not a valid thread id!\n", Argv[1]);
@@ -1755,18 +1802,23 @@ KdbpCmdThread(
                   "  Stack Base:     0x%08x\n"
                   "  Kernel Stack:   0x%08x\n"
                   "  Trap Frame:     0x%08x\n"
-                  "  NPX State:      %s (0x%x)\n",
-                  (Argc < 2) ? "Current Thread:\n" : "",
-                  Thread->Cid.UniqueThread,
-                  State, Thread->Tcb.State,
-                  Thread->Tcb.Priority,
-                  Thread->Tcb.Affinity,
-                  Thread->Tcb.InitialStack,
-                  Thread->Tcb.StackLimit,
-                  Thread->Tcb.StackBase,
-                  Thread->Tcb.KernelStack,
-                  Thread->Tcb.TrapFrame,
-                  NPX_STATE_TO_STRING(Thread->Tcb.NpxState), Thread->Tcb.NpxState);
+#ifndef _M_AMD64
+                  "  NPX State:      %s (0x%x)\n"
+#endif
+                  , (Argc < 2) ? "Current Thread:\n" : ""
+                  , Thread->Cid.UniqueThread
+                  , State, Thread->Tcb.State
+                  , Thread->Tcb.Priority
+                  , Thread->Tcb.Affinity
+                  , Thread->Tcb.InitialStack
+                  , Thread->Tcb.StackLimit
+                  , Thread->Tcb.StackBase
+                  , Thread->Tcb.KernelStack
+                  , Thread->Tcb.TrapFrame
+#ifndef _M_AMD64
+                  , NPX_STATE_TO_STRING(Thread->Tcb.NpxState), Thread->Tcb.NpxState
+#endif
+            );
 
             /* Release our reference if we had one */
             if (ReferencedThread)
@@ -1787,7 +1839,7 @@ KdbpCmdProc(
     PEPROCESS Process;
     BOOLEAN ReferencedProcess = FALSE;
     PCHAR State, pend, str1, str2;
-    ULONG ul;
+    ULONG_PTR ul;
     extern LIST_ENTRY PsActiveProcessHead;
 
     if (Argc >= 2 && _stricmp(Argv[1], "list") == 0)
@@ -1837,7 +1889,7 @@ KdbpCmdProc(
             return TRUE;
         }
 
-        ul = strtoul(Argv[2], &pend, 0);
+        ul = strtoulptr(Argv[2], &pend, 0);
         if (Argv[2] == pend)
         {
             KdbpPrint("process attach: '%s' is not a valid process id!\n", Argv[2]);
@@ -1849,8 +1901,8 @@ KdbpCmdProc(
             return TRUE;
         }
 
-        KdbpPrint("Attached to process 0x%08x, thread 0x%08x.\n", (ULONG)ul,
-                  (ULONG)KdbCurrentThread->Cid.UniqueThread);
+        KdbpPrint("Attached to process 0x%p, thread 0x%p.\n", (PVOID)ul,
+                  KdbCurrentThread->Cid.UniqueThread);
     }
     else
     {
@@ -1858,7 +1910,7 @@ KdbpCmdProc(
 
         if (Argc >= 2)
         {
-            ul = strtoul(Argv[1], &pend, 0);
+            ul = strtoulptr(Argv[1], &pend, 0);
             if (Argv[1] == pend)
             {
                 KdbpPrint("proc: '%s' is not a valid process id!\n", Argv[1]);
@@ -1925,7 +1977,7 @@ KdbpCmdMod(
 
         Address = (ULONG_PTR)Result;
 
-        if (!KdbpSymFindModule((PVOID)Address, NULL, -1, &LdrEntry))
+        if (!KdbpSymFindModule((PVOID)Address, -1, &LdrEntry))
         {
             KdbpPrint("No module containing address 0x%p found!\n", Address);
             return TRUE;
@@ -1935,7 +1987,7 @@ KdbpCmdMod(
     }
     else
     {
-        if (!KdbpSymFindModule(NULL, NULL, 0, &LdrEntry))
+        if (!KdbpSymFindModule(NULL, 0, &LdrEntry))
         {
             ULONG_PTR ntoskrnlBase = ((ULONG_PTR)KdbpCmdMod) & 0xfff00000;
             KdbpPrint("  Base      Size      Name\n");
@@ -1951,7 +2003,7 @@ KdbpCmdMod(
     {
         KdbpPrint("  %08x  %08x  %wZ\n", LdrEntry->DllBase, LdrEntry->SizeOfImage, &LdrEntry->BaseDllName);
 
-        if(DisplayOnlyOneModule || !KdbpSymFindModule(NULL, NULL, i++, &LdrEntry))
+        if(DisplayOnlyOneModule || !KdbpSymFindModule(NULL, i++, &LdrEntry))
             break;
     }
 
@@ -1991,9 +2043,9 @@ KdbpCmdGdtLdtIdt(
 
         for (i = 0; (i + sizeof(SegDesc) - 1) <= Reg.Limit; i += 8)
         {
-            if (!NT_SUCCESS(KdbpSafeReadMemory(SegDesc, (PVOID)(Reg.Base + i), sizeof(SegDesc))))
+            if (!NT_SUCCESS(KdbpSafeReadMemory(SegDesc, (PVOID)((ULONG_PTR)Reg.Base + i), sizeof(SegDesc))))
             {
-                KdbpPrint("Couldn't access memory at 0x%08x!\n", Reg.Base + i);
+                KdbpPrint("Couldn't access memory at 0x%p!\n", (PVOID)((ULONG_PTR)Reg.Base + i));
                 return TRUE;
             }
 
@@ -2046,7 +2098,7 @@ KdbpCmdGdtLdtIdt(
             ASSERT(Argv[0][0] == 'l');
 
             /* Read LDTR */
-            Reg.Limit = Ke386GetLocalDescriptorTable();
+            Ke386GetLocalDescriptorTable(&Reg.Limit);
             Reg.Base = 0;
             i = 0;
             ul = 1 << 2;
@@ -2065,9 +2117,9 @@ KdbpCmdGdtLdtIdt(
 
         for (; (i + sizeof(SegDesc) - 1) <= Reg.Limit; i += 8)
         {
-            if (!NT_SUCCESS(KdbpSafeReadMemory(SegDesc, (PVOID)(Reg.Base + i), sizeof(SegDesc))))
+            if (!NT_SUCCESS(KdbpSafeReadMemory(SegDesc, (PVOID)((ULONG_PTR)Reg.Base + i), sizeof(SegDesc))))
             {
-                KdbpPrint("Couldn't access memory at 0x%08x!\n", Reg.Base + i);
+                KdbpPrint("Couldn't access memory at 0x%p!\n", (ULONG_PTR)Reg.Base + i);
                 return TRUE;
             }
 
@@ -2194,36 +2246,80 @@ KdbpCmdPcr(
               "  Tib.FiberData/Version:     0x%08x\n"
               "  Tib.ArbitraryUserPointer:  0x%08x\n"
               "  Tib.Self:                  0x%08x\n"
+#ifdef _M_IX86
               "  SelfPcr:                   0x%08x\n"
+#else
+              "  Self:                      0x%p\n"
+#endif
               "  PCRCB:                     0x%08x\n"
               "  Irql:                      0x%02x\n"
+#ifdef _M_IX86
               "  IRR:                       0x%08x\n"
               "  IrrActive:                 0x%08x\n"
               "  IDR:                       0x%08x\n"
+#endif
               "  KdVersionBlock:            0x%08x\n"
+#ifdef _M_IX86
               "  IDT:                       0x%08x\n"
               "  GDT:                       0x%08x\n"
               "  TSS:                       0x%08x\n"
+#endif
               "  MajorVersion:              0x%04x\n"
               "  MinorVersion:              0x%04x\n"
+#ifdef _M_IX86
               "  SetMember:                 0x%08x\n"
+#endif
               "  StallScaleFactor:          0x%08x\n"
+#ifdef _M_IX86
               "  Number:                    0x%02x\n"
+#endif
               "  L2CacheAssociativity:      0x%02x\n"
+#ifdef _M_IX86
               "  VdmAlert:                  0x%08x\n"
+#endif
               "  L2CacheSize:               0x%08x\n"
-              "  InterruptMode:             0x%08x\n",
-              Pcr->NtTib.ExceptionList, Pcr->NtTib.StackBase, Pcr->NtTib.StackLimit,
+#ifdef _M_IX86
+              "  InterruptMode:             0x%08x\n"
+#endif
+              , Pcr->NtTib.ExceptionList, Pcr->NtTib.StackBase, Pcr->NtTib.StackLimit,
               Pcr->NtTib.SubSystemTib, Pcr->NtTib.FiberData, Pcr->NtTib.ArbitraryUserPointer,
-              Pcr->NtTib.Self, Pcr->SelfPcr, Pcr->Prcb, Pcr->Irql, Pcr->IRR, Pcr->IrrActive,
-              Pcr->IDR, Pcr->KdVersionBlock, Pcr->IDT, Pcr->GDT, Pcr->TSS,
-              Pcr->MajorVersion, Pcr->MinorVersion, Pcr->SetMember, Pcr->StallScaleFactor,
-              Pcr->Number, Pcr->SecondLevelCacheAssociativity,
-              Pcr->VdmAlert, Pcr->SecondLevelCacheSize, Pcr->InterruptMode);
+              Pcr->NtTib.Self
+#ifdef _M_IX86
+              , Pcr->SelfPcr
+#else
+              , Pcr->Self
+#endif
+              , Pcr->Prcb, Pcr->Irql
+#ifdef _M_IX86
+              , Pcr->IRR, Pcr->IrrActive , Pcr->IDR
+#endif
+              , Pcr->KdVersionBlock
+#ifdef _M_IX86
+              , Pcr->IDT, Pcr->GDT, Pcr->TSS
+#endif
+              , Pcr->MajorVersion, Pcr->MinorVersion
+#ifdef _M_IX86
+              , Pcr->SetMember
+#endif
+              , Pcr->StallScaleFactor
+#ifdef _M_IX86
+              , Pcr->Number
+#endif
+              , Pcr->SecondLevelCacheAssociativity
+#ifdef _M_IX86
+              , Pcr->VdmAlert
+#endif
+              , Pcr->SecondLevelCacheSize
+#ifdef _M_IX86
+              , Pcr->InterruptMode
+#endif
+              );
+
 
     return TRUE;
 }
 
+#ifdef _M_IX86
 /*!\brief Displays the TSS
  */
 static BOOLEAN
@@ -2321,6 +2417,7 @@ KdbpCmdTss(
 
     return TRUE;
 }
+#endif
 
 /*!\brief Bugchecks the system.
  */
@@ -2613,6 +2710,7 @@ KdbpCmdHelp(
  * \note Doesn't correctly handle \\t and terminal escape sequences when calculating the
  *       number of lines required to print a single line from the Buffer in the terminal.
  *       Prints maximum 4096 chars, because of its buffer size.
+ *       Uses KdpDPrintf internally (NOT DbgPrint!). Callers must already hold the debugger lock.
  */
 VOID
 KdbpPrint(
@@ -2638,11 +2736,11 @@ KdbpPrint(
     /* Initialize the terminal */
     if (!TerminalInitialized)
     {
-        DbgPrint("\x1b[7h");      /* Enable linewrap */
+        KdpDprintf("\x1b[7h");      /* Enable linewrap */
 
         /* Query terminal type */
         /*DbgPrint("\x1b[Z");*/
-        DbgPrint("\x05");
+        KdpDprintf("\x05");
 
         TerminalInitialized = TRUE;
         Length = 0;
@@ -2673,7 +2771,7 @@ KdbpPrint(
             /* Try to query number of rows from terminal. A reply looks like "\x1b[8;24;80t" */
             TerminalReportsSize = FALSE;
             KeStallExecutionProcessor(100000);
-            DbgPrint("\x1b[18t");
+            KdpDprintf("\x1b[18t");
             c = KdbpTryGetCharSerial(5000);
 
             if (c == KEY_ESC)
@@ -2758,9 +2856,9 @@ KdbpPrint(
             KdbRepeatLastCommand = FALSE;
 
             if (KdbNumberOfColsPrinted > 0)
-                DbgPrint("\n");
+                KdpDprintf("\n");
 
-            DbgPrint("--- Press q to abort, any other key to continue ---");
+            KdpDprintf("--- Press q to abort, any other key to continue ---");
             RowsPrintedByTerminal++; /* added by Mna. */
 
             if (KdbDebugState & KD_DEBUG_KDSERIAL)
@@ -2779,7 +2877,7 @@ KdbpPrint(
                     c = KdbpTryGetCharKeyboard(&ScanCode, 5);
             }
 
-            DbgPrint("\n");
+            KdpDprintf("\n");
             if (c == 'q')
             {
                 KdbOutputAborted = TRUE;
@@ -2820,7 +2918,7 @@ KdbpPrint(
             }
         }
 
-        DbgPrint("%s", p);
+        KdpDprintf("%s", p);
 
         if (c != '\0')
             p[i + 1] = c;
@@ -2955,11 +3053,11 @@ KdbpPager(
     /* Initialize the terminal */
     if (!TerminalInitialized)
     {
-        DbgPrint("\x1b[7h");      /* Enable linewrap */
+        KdpDprintf("\x1b[7h");      /* Enable linewrap */
 
         /* Query terminal type */
         /*DbgPrint("\x1b[Z");*/
-        DbgPrint("\x05");
+        KdpDprintf("\x05");
 
         TerminalInitialized = TRUE;
         Length = 0;
@@ -2990,7 +3088,7 @@ KdbpPager(
             /* Try to query number of rows from terminal. A reply looks like "\x1b[8;24;80t" */
             TerminalReportsSize = FALSE;
             KeStallExecutionProcessor(100000);
-            DbgPrint("\x1b[18t");
+            KdpDprintf("\x1b[18t");
             c = KdbpTryGetCharSerial(5000);
 
             if (c == KEY_ESC)
@@ -3051,7 +3149,7 @@ KdbpPager(
     {
         if ( p > Buffer+BufLength)
         {
-          DbgPrint("Dmesg: error, p > Buffer+BufLength,d=%d", p - (Buffer+BufLength));
+          KdpDprintf("Dmesg: error, p > Buffer+BufLength,d=%d", p - (Buffer+BufLength));
           return;
         }
         i = strcspn(p, "\n");
@@ -3081,9 +3179,9 @@ KdbpPager(
             KdbRepeatLastCommand = FALSE;
 
             if (KdbNumberOfColsPrinted > 0)
-                DbgPrint("\n");
+                KdpDprintf("\n");
 
-            DbgPrint("--- Press q to abort, e/End,h/Home,u/PgUp, other key/PgDn ---");
+            KdpDprintf("--- Press q to abort, e/End,h/Home,u/PgUp, other key/PgDn ---");
             RowsPrintedByTerminal++;
 
             if (KdbDebugState & KD_DEBUG_KDSERIAL)
@@ -3103,7 +3201,7 @@ KdbpPager(
             }
 
             //DbgPrint("\n"); //Consize version: don't show pressed key
-            DbgPrint(" '%c'/scan=%04x\n", c, ScanCode); // Shows pressed key
+            KdpDprintf(" '%c'/scan=%04x\n", c, ScanCode); // Shows pressed key
 
             if (c == 'q')
             {
@@ -3167,7 +3265,7 @@ KdbpPager(
         }
 
         // The main printing of the current line:
-        DbgPrint(p);
+        KdpDprintf(p);
 
         // restore not null char with saved:
         if (c != '\0')
@@ -3613,13 +3711,13 @@ KdbpCliMainLoop(
 
     if (EnteredOnSingleStep)
     {
-        if (!KdbSymPrintAddress((PVOID)KdbCurrentTrapFrame->Eip, KdbCurrentTrapFrame))
+        if (!KdbSymPrintAddress((PVOID)KeGetContextPc(KdbCurrentTrapFrame), KdbCurrentTrapFrame))
         {
-            KdbpPrint("<%08x>", KdbCurrentTrapFrame->Eip);
+            KdbpPrint("<%p>", KeGetContextPc(KdbCurrentTrapFrame));
         }
 
         KdbpPrint(": ");
-        if (KdbpDisassemble(KdbCurrentTrapFrame->Eip, KdbUseIntelSyntax) < 0)
+        if (KdbpDisassemble(KeGetContextPc(KdbCurrentTrapFrame), KdbUseIntelSyntax) < 0)
         {
             KdbpPrint("<INVALID>");
         }

@@ -14,7 +14,6 @@
 #include <debug.h>
 
 ULONG ProcessCount;
-BOOLEAN CcPfEnablePrefetcher;
 SIZE_T KeXStateLength = sizeof(XSAVE_FORMAT);
 
 VOID
@@ -26,6 +25,7 @@ NTSTATUS
 KiConvertToGuiThread(
     VOID);
 
+_Requires_lock_not_held_(Prcb->PrcbLock)
 VOID
 NTAPI
 KiDpcInterruptHandler(VOID)
@@ -61,6 +61,9 @@ KiDpcInterruptHandler(VOID)
     }
     else if (Prcb->NextThread)
     {
+        /* Acquire the PRCB lock */
+        KiAcquirePrcbLock(Prcb);
+
         /* Capture current thread data */
         OldThread = Prcb->CurrentThread;
         NewThread = Prcb->NextThread;
@@ -83,16 +86,6 @@ KiDpcInterruptHandler(VOID)
     /* Disable interrupts and go back to old irql */
     _disable();
     KeLowerIrql(OldIrql);
-}
-
-
-VOID
-FASTCALL
-KeZeroPages(IN PVOID Address,
-            IN ULONG Size)
-{
-    /* Not using XMMI in this routine */
-    RtlZeroMemory(Address, Size);
 }
 
 PVOID
@@ -167,8 +160,8 @@ KiSwitchKernelStack(PVOID StackBase, PVOID StackLimit)
     return OldStackBase;
 }
 
+DECLSPEC_NORETURN
 VOID
-FASTCALL
 KiIdleLoop(VOID)
 {
     PKPRCB Prcb = KeGetCurrentPrcb();
@@ -260,10 +253,7 @@ NtSyscallFailure(void)
 
 PVOID
 KiSystemCallHandler(
-    _In_ ULONG64 ReturnAddress,
-    _In_ ULONG64 P2,
-    _In_ ULONG64 P3,
-    _In_ ULONG64 P4)
+    VOID)
 {
     PKTRAP_FRAME TrapFrame;
     PKSERVICE_TABLE_DESCRIPTOR DescriptorTable;
@@ -274,12 +264,6 @@ KiSystemCallHandler(
 
     /* Get a pointer to the trap frame */
     TrapFrame = (PKTRAP_FRAME)((PULONG64)_AddressOfReturnAddress() + 1 + MAX_SYSCALL_PARAMS);
-
-    /* Save some values in the trap frame */
-    TrapFrame->Rip = ReturnAddress;
-    TrapFrame->Rdx = P2;
-    TrapFrame->R8 = P3;
-    TrapFrame->R9 = P4;
 
     /* Increase system call count */
     __addgsdword(FIELD_OFFSET(KIPCR, Prcb.KeSystemCalls), 1);
@@ -353,7 +337,7 @@ KiSystemCallHandler(
             return (PVOID)NtSyscallFailure;
         }
 
-        /* Convert us to a GUI thread 
+        /* Convert us to a GUI thread
            To be entirely correct. we return KiConvertToGuiThread,
            which allocates a new stack, switches to it, calls
            PsConvertToGuiThread and resumes in the middle of
@@ -388,11 +372,11 @@ KiSystemCallHandler(
                 break;
 
             default:
-                __debugbreak();
+                ASSERT(FALSE);
                 break;
         }
     }
-    _SEH2_EXCEPT(1)
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         TrapFrame->Rax = _SEH2_GetExceptionCode();
         return (PVOID)NtSyscallFailure;

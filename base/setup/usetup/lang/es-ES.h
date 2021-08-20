@@ -1335,6 +1335,37 @@ static MUI_ENTRY esESFormatPartitionEntries[] =
     }
 };
 
+static MUI_ENTRY esESCheckFSEntries[] =
+{
+    {
+        4,
+        3,
+        " Instalaci\242n de ReactOS " KERNEL_VERSION_STR " ",
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        8,
+        "El instalador est\240 comprobando la Partici\242n seleccionada.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        "Espere un momento...",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
 static MUI_ENTRY esESInstallDirectoryEntries[] =
 {
     {
@@ -1488,6 +1519,30 @@ static MUI_ENTRY esESBootLoaderEntries[] =
         0,
         "   INTRO = Continuar   F3 = Salir",
         TEXT_TYPE_STATUS  | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
+static MUI_ENTRY etESBootLoaderInstallPageEntries[] =
+{
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        "Installing the bootloader onto the media, please wait...",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
         TEXT_ID_STATIC
     },
     {
@@ -2107,6 +2162,10 @@ MUI_PAGE esESPages[] =
         esESFormatPartitionEntries
     },
     {
+        CHECK_FILE_SYSTEM_PAGE,
+        esESCheckFSEntries
+    },
+    {
         DELETE_PARTITION_PAGE,
         esESDeletePartitionEntries
     },
@@ -2141,6 +2200,10 @@ MUI_PAGE esESPages[] =
     {
         SUCCESS_PAGE,
         esESSuccessPageEntries
+    },
+    {
+        BOOT_LOADER_INSTALLATION_PAGE,
+        etESBootLoaderInstallPageEntries
     },
     {
         BOOT_LOADER_FLOPPY_PAGE,
@@ -2190,8 +2253,6 @@ MUI_STRING esESStrings[] =
     "La Partici\242n nueva todav\241a no ha sido formateada."},
     {STRING_INSTALLONPART,
     "El instalador est\240 instalando ReactOS en la Partici\242n"},
-    {STRING_CHECKINGPART,
-    "El instalador est\240 comprobando la Partici\242n seleccionada."},
     {STRING_CONTINUE,
     "INTRO = Continuar"},
     {STRING_QUITCONTINUE,

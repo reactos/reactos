@@ -140,7 +140,7 @@ struct UnicodeString : public RtlUnicodeString {
 
 	UnicodeString(size_t len, LPWSTR buffer)
 	{
-		alloc_len = len;
+		alloc_len = (WORD)len;
 		string_ptr = buffer;
 	}
 

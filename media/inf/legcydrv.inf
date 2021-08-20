@@ -22,6 +22,9 @@ HKR, , EnumPropPages32, 0, "syssetup.dll,LegacyDriverPropPageProvider"
 ReactOS = "ReactOS Team"
 LegacyDriverClassName = "Non-Plug and Play Drivers"
 
+[Strings.0404]
+LegacyDriverClassName = "非隨插即用驅動程式"
+
 [Strings.0405]
 LegacyDriverClassName = "Zařízení nepodporující Plug and Play"
 

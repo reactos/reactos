@@ -1223,6 +1223,37 @@ static MUI_ENTRY huHUFormatPartitionEntries[] =
     }
 };
 
+static MUI_ENTRY huHUCheckFSEntries[] =
+{
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " telep\241t\213 ",
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        8,
+        "A telep\241t\213 most ellen\213rzi a kijel\224lt part\241ci\242t.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        "K\202rem v\240rjon...",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
 static MUI_ENTRY huHUInstallDirectoryEntries[] =
 {
     {
@@ -1375,6 +1406,30 @@ static MUI_ENTRY huHUBootLoaderEntries[] =
         0,
         0,
         "ENTER = Folytat\240s   F3 = Kil\202p\202s",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
+static MUI_ENTRY huHUBootLoaderInstallPageEntries[] =
+{
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " telep\241t\213 ",
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        "Bootloader telep\241t\202se az eszk\224zre, k\202rem v\240rjon...",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
         TEXT_ID_STATIC
     },
@@ -1992,6 +2047,10 @@ MUI_PAGE huHUPages[] =
         huHUFormatPartitionEntries
     },
     {
+        CHECK_FILE_SYSTEM_PAGE,
+        huHUCheckFSEntries
+    },
+    {
         DELETE_PARTITION_PAGE,
         huHUDeletePartitionEntries
     },
@@ -2026,6 +2085,10 @@ MUI_PAGE huHUPages[] =
     {
         SUCCESS_PAGE,
         huHUSuccessPageEntries
+    },
+    {
+        BOOT_LOADER_INSTALLATION_PAGE,
+        huHUBootLoaderInstallPageEntries
     },
     {
         BOOT_LOADER_FLOPPY_PAGE,
@@ -2075,8 +2138,6 @@ MUI_STRING huHUStrings[] =
     "Az \243j part\241ci\242 m\202g nincs form\240zva."},
     {STRING_INSTALLONPART,
     "A telep\241t\213 az al\240bbi part\241ci\242ra telep\241ti a ReactOS-t:"},
-    {STRING_CHECKINGPART,
-    "A telep\241t\213 most ellen\213rzi a kijel\224lt part\241ci\242t."},
     {STRING_CONTINUE,
     "ENTER = Folytat\240s"},
     {STRING_QUITCONTINUE,
@@ -2120,7 +2181,7 @@ MUI_STRING huHUStrings[] =
     {STRING_FORMATTINGDISK,
     "A telep\241t\213 form\240zza a merevlemezt"},
     {STRING_CHECKINGDISK,
-    "A telep\241t\213 ellen\213rzni a merevlemezt"},
+    "A telep\241t\213 ellen\213rzi a merevlemezt"},
     {STRING_FORMATDISK1,
     " Part\241ci\242 form\240z\240sa %S f\240jlrendszerrel (gyorsform\240z\240s) "},
     {STRING_FORMATDISK2,
@@ -2132,7 +2193,7 @@ MUI_STRING huHUStrings[] =
     {STRING_HDINFOPARTDELETE_1,
     "itt: %s."},
     {STRING_PARTTYPE,
-    "Type 0x%02x"},
+    "T\241pus 0x%02x"},
     {STRING_HDDINFO_1,
     // "%lu. merevlemez (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ) [%s]"
     "%I64u %s %lu. merevlemez (Port=%hu, Bus=%hu, Id=%hu) itt: %wZ [%s]"},

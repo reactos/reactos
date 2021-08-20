@@ -1332,6 +1332,37 @@ static MUI_ENTRY etEEFormatPartitionEntries[] =
     }
 };
 
+static MUI_ENTRY etEECheckFSEntries[] =
+{
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " paigaldus ",
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        8,
+        "Valitud partitsiooni kontrollitakse.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        "Palun oota...",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
 static MUI_ENTRY etEEInstallDirectoryEntries[] =
 {
     {
@@ -1484,6 +1515,30 @@ static MUI_ENTRY etEEBootLoaderEntries[] =
         0,
         0,
         "ENTER = J\204tka   F3 = V\204lju",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
+static MUI_ENTRY etEEBootLoaderInstallPageEntries[] =
+{
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        "Installing the bootloader onto the media, please wait...",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
         TEXT_ID_STATIC
     },
@@ -2102,6 +2157,10 @@ MUI_PAGE etEEPages[] =
         etEEFormatPartitionEntries
     },
     {
+        CHECK_FILE_SYSTEM_PAGE,
+        etEECheckFSEntries
+    },
+    {
         DELETE_PARTITION_PAGE,
         etEEDeletePartitionEntries
     },
@@ -2136,6 +2195,10 @@ MUI_PAGE etEEPages[] =
     {
         SUCCESS_PAGE,
         etEESuccessPageEntries
+    },
+    {
+        BOOT_LOADER_INSTALLATION_PAGE,
+        etEEBootLoaderInstallPageEntries
     },
     {
         BOOT_LOADER_FLOPPY_PAGE,
@@ -2186,8 +2249,6 @@ MUI_STRING etEEStrings[] =
     "Uus partitsioon on veel vormindamata."},
     {STRING_INSTALLONPART,
     "ReactOS paigaldatakse partitsioonile"},
-    {STRING_CHECKINGPART,
-    "Valitud partitsiooni kontrollitakse."},
     {STRING_CONTINUE,
     "ENTER = J\204tka"},
     {STRING_QUITCONTINUE,

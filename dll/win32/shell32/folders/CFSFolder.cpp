@@ -389,7 +389,7 @@ private:
                 hr = SHELL32_GetCLSIDForDirectory(Tmp, L"CLSID", &clsidFolder);
                 if (SUCCEEDED(hr))
                 {
-                    ERR("SHOULD DO SOMETHING WITH CLSID?\n");
+                    ERR("Got CLSID override for '%S'\n", Tmp);
                 }
             }
         }

@@ -93,19 +93,20 @@ if(USE_CLANG_CL)
 endif()
 
 if(MSVC)
-    # Disable warnings: "unreferenced local variable", "initialized, but not used variable", "benign include"
     if (NOT CLANG)
-        remove_target_compile_option(ext2fs "/we4101")
-        remove_target_compile_option(ext2fs "/we4189")
-        target_compile_options(ext2fs PRIVATE /wd4189 /wd4142 /wd4101)
+        # Disable warning C4101: 'i': unreferenced local variable
+        # Disable warning C4189: 'sbi': local variable is initialized but not referenced
+        # Disable warning C4267: '=': conversion from 'size_t' to 'USHORT', possible loss of data
+        target_compile_options(ext2fs PRIVATE /wd4101 /wd4189 /wd4267)
     endif()
 else()
     target_compile_options(ext2fs PRIVATE
         -Wno-pointer-sign -Wno-unused-function
         -Wno-unused-variable -Wno-missing-braces)
-    if (NOT CLANG)
-        target_compile_options(ext2fs PRIVATE -Wno-unused-but-set-variable)
-    endif()
+endif()
+
+if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
+    target_compile_options(ext2fs PRIVATE -Wno-unused-but-set-variable)
 endif()
 
 if(CLANG)

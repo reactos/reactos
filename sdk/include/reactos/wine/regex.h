@@ -166,7 +166,7 @@ typedef unsigned long int reg_syntax_t;
    stored in the pattern buffer, so changing this does not affect
    already-compiled regexps.  */
 extern reg_syntax_t re_syntax_options;
-
+
 /* Define combinations of the above bits for the standard possibilities.
    (The [[[ comments delimit what gets put into the Texinfo file, so
    don't delete them!)  */
@@ -235,7 +235,7 @@ extern reg_syntax_t re_syntax_options;
    | RE_NO_BK_PARENS        | RE_NO_BK_REFS				\
    | RE_NO_BK_VBAR	    | RE_UNMATCHED_RIGHT_PAREN_ORD)
 /* [[[end syntaxes]]] */
-
+
 /* Maximum number of duplicates an interval can allow.  Some systems
    (erroneously) define this in other header files, but we want our
    value, so remove any previous define.  */
@@ -310,7 +310,7 @@ typedef enum
   REG_ESIZE,		/* Compiled pattern bigger than 2^16 bytes.  */
   REG_ERPAREN		/* Unmatched ) or \); not returned from regcomp.  */
 } reg_errcode_t;
-
+
 /* This data structure represents a compiled pattern.  Before calling
    the pattern compiler, the fields `buffer', `allocated', `fastmap',
    `translate', and `no_sub' can be set.  After the pattern has been
@@ -390,7 +390,7 @@ struct re_pattern_buffer
 };
 
 typedef struct re_pattern_buffer regex_t;
-
+
 /* Type for byte offsets within the string.  POSIX mandates this.  */
 typedef int regoff_t;
 
@@ -421,7 +421,7 @@ typedef struct
   regoff_t rm_so;  /* Byte offset from string's start to substring's start.  */
   regoff_t rm_eo;  /* Byte offset from string's start to substring's end.  */
 } regmatch_t;
-
+
 /* Declarations for routines.  */
 
 /* To avoid duplicating every routine declaration -- once with a
@@ -563,7 +563,7 @@ extern void regfree _RE_ARGS ((regex_t *__preg));
 #endif	/* C++ */
 
 #endif /* regex.h */
-
+
 /*
 Local variables:
 make-backup-files: t

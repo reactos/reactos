@@ -294,6 +294,9 @@ IoReportDetectedDevice(
         return Status;
     }
 
+    // Set the device's DeviceDesc and LocationInformation fields
+    PiSetDevNodeText(DeviceNode, InstanceKey);
+
     /* Assign the resources to the device node */
     DeviceNode->BootResources = ResourceList;
     DeviceNode->ResourceRequirements = ResourceRequirements;

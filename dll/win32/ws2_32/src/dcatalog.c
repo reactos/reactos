@@ -59,23 +59,44 @@ WsTcOpen(IN PTCATALOG Catalog,
                                 &RegType,
                                 NULL,
                                 &RegSize);
+    if (ErrorCode == ERROR_FILE_NOT_FOUND)
+    {
+        static const CHAR DefaultCatalogName[] = "Protocol_Catalog9";
+        RegSize = sizeof(DefaultCatalogName);
+        CatalogKeyName = HeapAlloc(WsSockHeap, 0, RegSize);
+        memcpy(CatalogKeyName, DefaultCatalogName, RegSize);
+    }
+    else
+    {
+        if (ErrorCode != ERROR_SUCCESS)
+        {
+            DPRINT1("Failed to get protocol catalog name: %d.\n", ErrorCode);
+            return FALSE;
+        }
 
-    CatalogKeyName = HeapAlloc(WsSockHeap, 0, RegSize);
+        if (RegType != REG_SZ)
+        {
+            DPRINT1("Protocol catalog name is not a string (Type %d).\n", RegType);
+            return FALSE;
+        }
 
-    /* Read the catalog name */
-    ErrorCode = RegQueryValueEx(ParentKey,
-                                "Current_Protocol_Catalog",
-                                0,
-                                &RegType,
-                                (LPBYTE)CatalogKeyName,
-                                &RegSize);
+        CatalogKeyName = HeapAlloc(WsSockHeap, 0, RegSize);
 
-    /* Open the Catalog Key */
-    ErrorCode = RegOpenKeyEx(ParentKey,
-                             CatalogKeyName,
-                             0,
-                             MAXIMUM_ALLOWED,
-                             &CatalogKey);
+        /* Read the catalog name */
+        ErrorCode = RegQueryValueEx(ParentKey,
+                                    "Current_Protocol_Catalog",
+                                    0,
+                                    &RegType,
+                                    (LPBYTE)CatalogKeyName,
+                                    &RegSize);
+
+        /* Open the Catalog Key */
+        ErrorCode = RegOpenKeyEx(ParentKey,
+                                 CatalogKeyName,
+                                 0,
+                                 MAXIMUM_ALLOWED,
+                                 &CatalogKey);
+    }
 
     /* If we didn't find the key, create it */
     if (ErrorCode == ERROR_SUCCESS)

@@ -1,14 +1,38 @@
 
-set(SARCH "pc" CACHE STRING
-"Sub-architecture to build for. Specify one of:
- pc pc98 xbox")
+if(ARCH STREQUAL "i386")
+    set(SARCH "pc" CACHE STRING
+    "Sub-architecture to build for. Specify one of:
+     pc pc98 xbox")
+elseif(ARCH STREQUAL "amd64")
+    set(SARCH "" CACHE STRING
+    "Sub-architecture to build for.")
+elseif(ARCH STREQUAL "arm")
+    set(SARCH "omap3-zoom2" CACHE STRING
+    "Sub-architecture (board) to build for. Specify one of:
+     kurobox versatile omap3-zoom2 omap3-beagle")
+endif()
 
-set(OARCH "pentium" CACHE STRING
-"Generate instructions for this CPU type. Specify one of:
- pentium, pentiumpro")
+if(ARCH STREQUAL "i386")
+    set(OARCH "pentium" CACHE STRING
+    "Generate instructions for this CPU type. Specify one of:
+     pentium, pentiumpro")
+elseif(ARCH STREQUAL "amd64")
+    set(OARCH "athlon64" CACHE STRING
+    "Generate instructions for this CPU type. Specify one of:
+     k8 opteron athlon64 athlon-fx")
+elseif(ARCH STREQUAL "arm")
+    set(OARCH "armv7-a" CACHE STRING
+    "Generate instructions for this CPU type. Specify one of:
+     armv5te armv7-a")
+endif()
 
-set(TUNE "i686" CACHE STRING
-"Which CPU ReactOS should be optimized for.")
+if(ARCH STREQUAL "i386" OR ARCH STREQUAL "amd64")
+    set(TUNE "generic" CACHE STRING
+    "Which CPU ReactOS should be optimized for.")
+elseif(ARCH STREQUAL "arm")
+    set(TUNE "generic-arch" CACHE STRING
+    "Which CPU ReactOS should be optimized for.")
+endif()
 
 set(OPTIMIZE "4" CACHE STRING
 "What level of optimization to use.
@@ -47,7 +71,7 @@ elseif(CMAKE_C_COMPILER_ID STREQUAL "Clang")
         set(GCC TRUE CACHE BOOL "The compiler is GCC")
     endif()
     set(CLANG TRUE CACHE BOOL "The compiler is LLVM Clang")
-elseif(MSVC) # aka CMAKE_C_COMPILER_ID STEQUAL "MSVC"
+elseif(MSVC) # aka CMAKE_C_COMPILER_ID STREQUAL "MSVC"
     set(GCC FALSE CACHE BOOL "The compiler is GCC")
     set(CLANG FALSE CACHE BOOL "The compiler is LLVM Clang")
     # MSVC variable is already set by cmake
@@ -73,17 +97,17 @@ else()
     set(_WINKD_ FALSE CACHE BOOL "Whether to compile with the KD protocol.")
 endif()
 
-set(BUILD_MP TRUE CACHE BOOL
-"Whether to build the multiprocessor versions of NTOSKRNL and HAL.")
+option(BUILD_MP "Whether to build the multiprocessor versions of NTOSKRNL and HAL." ON)
+
+cmake_dependent_option(ISAPNP_ENABLE "Whether to enable the ISA PnP support." ON
+                       "ARCH STREQUAL i386 AND NOT SARCH STREQUAL xbox" OFF)
 
 set(GENERATE_DEPENDENCY_GRAPH FALSE CACHE BOOL
 "Whether to create a GraphML dependency graph of DLLs.")
 
 if(MSVC)
-set(_PREFAST_ FALSE CACHE BOOL
-"Whether to enable PREFAST while compiling.")
-set(_VS_ANALYZE_ FALSE CACHE BOOL
-"Whether to enable static analysis while compiling.")
+    option(_PREFAST_ "Whether to enable PREFAST while compiling." OFF)
+    option(_VS_ANALYZE_ "Whether to enable static analysis while compiling." OFF)
     # RTC are incompatible with compiler optimizations.
     cmake_dependent_option(RUNTIME_CHECKS "Whether to enable runtime checks on MSVC" ON
                            "CMAKE_BUILD_TYPE STREQUAL Debug" OFF)

@@ -350,7 +350,7 @@ NdisSetTimerEx(
     IN UINT  MillisecondsToDelay,
     IN PVOID  FunctionContext)
 {
-    NDIS_DbgPrint(MAX_TRACE, ("Called. Timer is: 0x%x, Timeout is: %ld, FunctionContext is: 0x%x\n", 
+    NDIS_DbgPrint(MAX_TRACE, ("Called. Timer is: 0x%x, Timeout is: %ld, FunctionContext is: 0x%x\n",
                                Timer, MillisecondsToDelay, FunctionContext));
 
     Timer->Dpc.DeferredContext = FunctionContext;

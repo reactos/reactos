@@ -1105,7 +1105,7 @@ UserProcessKeyboardInput(
         if (wVk & KBDEXT)
             KbdInput.dwFlags |= KEYEVENTF_EXTENDEDKEY;
         //
-        // Based on wine input:test_Input_blackbox this is okay. It seems the 
+        // Based on wine input:test_Input_blackbox this is okay. It seems the
         // bit did not get set and more research is needed. Now the right
         // shift works.
         //
@@ -1341,6 +1341,7 @@ NtUserToUnicodeEx(
     PWCHAR pwszBuff = NULL;
     INT i, iRet = 0;
     PKL pKl = NULL;
+    NTSTATUS Status = STATUS_SUCCESS;
 
     TRACE("Enter NtUserSetKeyboardState\n");
 
@@ -1390,16 +1391,34 @@ NtUserToUnicodeEx(
         pKl = pti->KeyboardLayout;
     }
 
-    iRet = IntToUnicodeEx(wVirtKey,
-                          wScanCode,
-                          afKeyState,
-                          pwszBuff,
-                          cchBuff,
-                          wFlags,
-                          pKl ? pKl->spkf->pKbdTbl : NULL);
+    if (pKl)
+    {
+        iRet = IntToUnicodeEx(wVirtKey,
+                            wScanCode,
+                            afKeyState,
+                            pwszBuff,
+                            cchBuff,
+                            wFlags,
+                            pKl->spkf->pKbdTbl);
 
-    MmCopyToCaller(pwszBuffUnsafe, pwszBuff, cchBuff * sizeof(WCHAR));
+        if (iRet)
+        {
+            Status = MmCopyToCaller(pwszBuffUnsafe, pwszBuff, cchBuff * sizeof(WCHAR));
+        }
+    }
+    else
+    {
+        ERR("No keyboard layout ?!\n");
+        Status = STATUS_INVALID_HANDLE;
+    }
+
     ExFreePoolWithTag(pwszBuff, TAG_STRING);
+
+    if (!NT_SUCCESS(Status))
+    {
+        iRet = 0;
+        SetLastNtError(Status);
+    }
 
     UserLeave();
     TRACE("Leave NtUserSetKeyboardState, ret=%i\n", iRet);

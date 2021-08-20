@@ -86,6 +86,9 @@ HOTKEYS ACCELERATORS
 #ifdef LANGUAGE_HE_IL
     #include "lang/he-IL.rc"
 #endif
+#ifdef LANGUAGE_HU_HU
+    #include "lang/hu-HU.rc"
+#endif
 #ifdef LANGUAGE_ID_ID
     #include "lang/id-ID.rc"
 #endif

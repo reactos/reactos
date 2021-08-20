@@ -1907,7 +1907,7 @@ ShowPartitionSizeInputBox(SHORT Left,
     coPos.X = Left + 2;
     coPos.Y = Top + 2;
     strcpy(Buffer, MUIGetString(STRING_PARTITIONSIZE));
-    iLeft = coPos.X + strlen(Buffer) + 1;
+    iLeft = coPos.X + (USHORT)strlen(Buffer) + 1;
     iTop = coPos.Y;
 
     WriteConsoleOutputCharacterA(StdOutput,
@@ -3157,6 +3157,8 @@ CheckFileSystemPage(PINPUT_RECORD Ir)
     PPARTENTRY PartEntry;
     CHAR Buffer[MAX_PATH];
 
+    MUIDisplayPage(CHECK_FILE_SYSTEM_PAGE);
+
     if (PartitionList == NULL)
     {
         /* FIXME: show an error dialog */
@@ -3169,9 +3171,6 @@ CheckFileSystemPage(PINPUT_RECORD Ir)
     }
 
     ASSERT(PartEntry->IsPartitioned && PartEntry->PartitionNumber != 0);
-
-    CONSOLE_SetTextXY(6, 8, MUIGetString(STRING_CHECKINGPART));
-    CONSOLE_SetStatusText(MUIGetString(STRING_PLEASEWAIT));
 
     DPRINT1("CheckFileSystemPage -- PartitionType: 0x%02X ; FileSystem: %S\n",
             PartEntry->PartitionType, (*PartEntry->FileSystem ? PartEntry->FileSystem : L"n/a"));
@@ -4024,13 +4023,10 @@ Quit:
         case 1:
             return BOOT_LOADER_FLOPPY_PAGE;
 
-        /* Install on both MBR and VBR */
+        /* Install on both MBR and VBR or VBR only */
         case 2:
-            return BOOT_LOADER_HARDDISK_MBR_PAGE;
-
-        /* Install on VBR only */
         case 3:
-            return BOOT_LOADER_HARDDISK_VBR_PAGE;
+            return BOOT_LOADER_INSTALLATION_PAGE;
     }
 
     return BOOT_LOADER_PAGE;
@@ -4093,83 +4089,69 @@ BootLoaderFloppyPage(PINPUT_RECORD Ir)
 
 
 /*
- * Displays the BootLoaderHarddiskVbrPage.
+ * Displays the BootLoaderInstallationPage.
  *
  * Next pages:
  *  SuccessPage (At once)
  *  QuitPage
  *
  * SIDEEFFECTS
- *  Calls InstallVBRToPartition()
- *
+ *  Calls InstallVBRToPartition() if VBR installation is chosen.
+ *  Otherwise both InstallVBRToPartition() and InstallMbrBootCodeToDisk()
+ *  are called if both MBR and VBR installation is chosen.
+ * 
  * RETURNS
  *   Number of the next page.
  */
 static PAGE_NUMBER
-BootLoaderHarddiskVbrPage(PINPUT_RECORD Ir)
-{
-    NTSTATUS Status;
-
-    Status = InstallVBRToPartition(&USetupData.SystemRootPath,
-                                   &USetupData.SourceRootPath,
-                                   &USetupData.DestinationArcPath,
-                                   SystemPartition->FileSystem);
-    if (!NT_SUCCESS(Status))
-    {
-        MUIDisplayError(ERROR_WRITE_BOOT, Ir, POPUP_WAIT_ENTER,
-                        SystemPartition->FileSystem);
-        return QUIT_PAGE;
-    }
-
-    return SUCCESS_PAGE;
-}
-
-
-/*
- * Displays the BootLoaderHarddiskMbrPage.
- *
- * Next pages:
- *  SuccessPage (At once)
- *  QuitPage
- *
- * SIDEEFFECTS
- *  Calls InstallVBRToPartition()
- *  Calls InstallMbrBootCodeToDisk()
- *
- * RETURNS
- *   Number of the next page.
- */
-static PAGE_NUMBER
-BootLoaderHarddiskMbrPage(PINPUT_RECORD Ir)
+BootLoaderInstallationPage(PINPUT_RECORD Ir)
 {
     NTSTATUS Status;
     WCHAR DestinationDevicePathBuffer[MAX_PATH];
 
-    /* Step 1: Write the VBR */
-    Status = InstallVBRToPartition(&USetupData.SystemRootPath,
-                                   &USetupData.SourceRootPath,
-                                   &USetupData.DestinationArcPath,
-                                   SystemPartition->FileSystem);
-    if (!NT_SUCCESS(Status))
-    {
-        MUIDisplayError(ERROR_WRITE_BOOT, Ir, POPUP_WAIT_ENTER,
-                        SystemPartition->FileSystem);
-        return QUIT_PAGE;
-    }
+    MUIDisplayPage(BOOT_LOADER_INSTALLATION_PAGE);
 
-    /* Step 2: Write the MBR if the disk containing the system partition is not a super-floppy */
-    if (!IsSuperFloppy(SystemPartition->DiskEntry))
+    if (USetupData.MBRInstallType == 2)
     {
-        RtlStringCchPrintfW(DestinationDevicePathBuffer, ARRAYSIZE(DestinationDevicePathBuffer),
-                L"\\Device\\Harddisk%d\\Partition0",
-                SystemPartition->DiskEntry->DiskNumber);
-        Status = InstallMbrBootCodeToDisk(&USetupData.SystemRootPath,
-                                          &USetupData.SourceRootPath,
-                                          DestinationDevicePathBuffer);
+        /* Step 1: Write the VBR */
+        Status = InstallVBRToPartition(&USetupData.SystemRootPath,
+                                       &USetupData.SourceRootPath,
+                                       &USetupData.DestinationArcPath,
+                                       SystemPartition->FileSystem);
         if (!NT_SUCCESS(Status))
         {
-            DPRINT1("InstallMbrBootCodeToDisk() failed (Status %lx)\n", Status);
-            MUIDisplayError(ERROR_INSTALL_BOOTCODE, Ir, POPUP_WAIT_ENTER, L"MBR");
+            MUIDisplayError(ERROR_WRITE_BOOT, Ir, POPUP_WAIT_ENTER,
+                            SystemPartition->FileSystem);
+            return QUIT_PAGE;
+        }
+
+        /* Step 2: Write the MBR if the disk containing the system partition is not a super-floppy */
+        if (!IsSuperFloppy(SystemPartition->DiskEntry))
+        {
+            RtlStringCchPrintfW(DestinationDevicePathBuffer, ARRAYSIZE(DestinationDevicePathBuffer),
+                                L"\\Device\\Harddisk%d\\Partition0",
+                                SystemPartition->DiskEntry->DiskNumber);
+            Status = InstallMbrBootCodeToDisk(&USetupData.SystemRootPath,
+                                              &USetupData.SourceRootPath,
+                                              DestinationDevicePathBuffer);
+            if (!NT_SUCCESS(Status))
+            {
+                DPRINT1("InstallMbrBootCodeToDisk() failed (Status %lx)\n", Status);
+                MUIDisplayError(ERROR_INSTALL_BOOTCODE, Ir, POPUP_WAIT_ENTER, L"MBR");
+                return QUIT_PAGE;
+            }
+        }
+    }
+    else
+    {
+        Status = InstallVBRToPartition(&USetupData.SystemRootPath,
+                                       &USetupData.SourceRootPath,
+                                       &USetupData.DestinationArcPath,
+                                       SystemPartition->FileSystem);
+        if (!NT_SUCCESS(Status))
+        {
+            MUIDisplayError(ERROR_WRITE_BOOT, Ir, POPUP_WAIT_ENTER,
+                            SystemPartition->FileSystem);
             return QUIT_PAGE;
         }
     }
@@ -4633,12 +4615,8 @@ RunUSetup(VOID)
                 Page = BootLoaderFloppyPage(&Ir);
                 break;
 
-            case BOOT_LOADER_HARDDISK_MBR_PAGE:
-                Page = BootLoaderHarddiskMbrPage(&Ir);
-                break;
-
-            case BOOT_LOADER_HARDDISK_VBR_PAGE:
-                Page = BootLoaderHarddiskVbrPage(&Ir);
+            case BOOT_LOADER_INSTALLATION_PAGE:
+                Page = BootLoaderInstallationPage(&Ir);
                 break;
 
             /* Repair pages */

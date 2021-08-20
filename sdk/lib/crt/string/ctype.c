@@ -611,7 +611,7 @@ int __cdecl _isctype_l(int c, int type, _locale_t locale)
 }
 
 int __cdecl _isctype (int c, int ctypeFlags)
-{ 
+{
   return _isctype_l(c, ctypeFlags, NULL);
 }
 

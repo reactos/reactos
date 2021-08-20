@@ -21,7 +21,7 @@
  * FILE:             drivers/filesystem/ntfs/ntfs.c
  * PURPOSE:          NTFS filesystem driver
  * PROGRAMMER:       Eric Kohl
- *                   Pierre Schweitzer 
+ *                   Pierre Schweitzer
  */
 
 /* INCLUDES *****************************************************************/
@@ -30,11 +30,6 @@
 
 #define NDEBUG
 #include <debug.h>
-
-#if defined(ALLOC_PRAGMA)
-#pragma alloc_text(INIT, DriverEntry)
-#pragma alloc_text(INIT, NtfsInitializeFunctionPointers)
-#endif
 
 /* GLOBALS *****************************************************************/
 
@@ -129,10 +124,10 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
     NtfsInitializeFunctionPointers(DriverObject);
 
     /* Initialize CC functions array */
-    NtfsGlobalData->CacheMgrCallbacks.AcquireForLazyWrite = NtfsAcqLazyWrite; 
-    NtfsGlobalData->CacheMgrCallbacks.ReleaseFromLazyWrite = NtfsRelLazyWrite; 
-    NtfsGlobalData->CacheMgrCallbacks.AcquireForReadAhead = NtfsAcqReadAhead; 
-    NtfsGlobalData->CacheMgrCallbacks.ReleaseFromReadAhead = NtfsRelReadAhead; 
+    NtfsGlobalData->CacheMgrCallbacks.AcquireForLazyWrite = NtfsAcqLazyWrite;
+    NtfsGlobalData->CacheMgrCallbacks.ReleaseFromLazyWrite = NtfsRelLazyWrite;
+    NtfsGlobalData->CacheMgrCallbacks.AcquireForReadAhead = NtfsAcqReadAhead;
+    NtfsGlobalData->CacheMgrCallbacks.ReleaseFromReadAhead = NtfsRelReadAhead;
 
     NtfsGlobalData->FastIoDispatch.SizeOfFastIoDispatch = sizeof(FAST_IO_DISPATCH);
     NtfsGlobalData->FastIoDispatch.FastIoCheckIfPossible = NtfsFastIoCheckIfPossible;
@@ -164,7 +159,7 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
 
 
 /*
- * FUNCTION: Called within the driver entry to initialize the IRP functions array 
+ * FUNCTION: Called within the driver entry to initialize the IRP functions array
  * ARGUMENTS:
  *           DriverObject = object describing this driver
  * RETURNS: Nothing

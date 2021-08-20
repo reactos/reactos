@@ -2,14 +2,17 @@
 add_subdirectory(load_notifications)
 
 include_directories($<TARGET_FILE_DIR:load_notifications>)
+include_directories(${REACTOS_SOURCE_DIR}/ntoskrnl/include)
 spec2def(ntdll_apitest.exe ntdll_apitest.spec)
 
 list(APPEND SOURCE
     LdrEnumResources.c
     load_notifications.c
+    locale.c
     NtAcceptConnectPort.c
     NtAllocateVirtualMemory.c
     NtApphelpCacheControl.c
+    NtCompareTokens.c
     NtContinue.c
     NtCreateFile.c
     NtCreateKey.c
@@ -17,6 +20,7 @@ list(APPEND SOURCE
     NtDeleteKey.c
     NtDuplicateObject.c
     NtFreeVirtualMemory.c
+    NtImpersonateAnonymousToken.c
     NtLoadUnloadKey.c
     NtMapViewOfSection.c
     NtMutant.c
@@ -41,6 +45,7 @@ list(APPEND SOURCE
     NtSetVolumeInformationFile.c
     NtUnloadDriver.c
     NtWriteFile.c
+    probelib.c
     RtlAllocateHeap.c
     RtlBitmap.c
     RtlComputePrivatizedDllName_U.c
@@ -58,6 +63,7 @@ list(APPEND SOURCE
     RtlGetFullPathName_U.c
     RtlGetFullPathName_Ustr.c
     RtlGetFullPathName_UstrEx.c
+    RtlGetLengthWithoutLastFullDosOrNtPathElement.c
     RtlGetLengthWithoutTrailingPathSeperators.c
     RtlGetLongestNtPathLength.c
     RtlGetNtProductType.c
@@ -69,12 +75,17 @@ list(APPEND SOURCE
     RtlMemoryStream.c
     RtlMultipleAllocateHeap.c
     RtlNtPathNameToDosPathName.c
+    RtlpApplyLengthFunction.c
     RtlpEnsureBufferSize.c
     RtlQueryTimeZoneInfo.c
     RtlReAllocateHeap.c
     RtlUnicodeStringToAnsiString.c
+    RtlUnicodeStringToCountedOemString.c
+    RtlUnicodeToOemN.c
     RtlUpcaseUnicodeStringToCountedOemString.c
     RtlValidateUnicodeString.c
+    RtlxUnicodeStringToAnsiSize.c
+    RtlxUnicodeStringToOemSize.c
     StackOverflow.c
     SystemInfo.c
     Timer.c)

@@ -172,6 +172,7 @@ KeReleaseInStackQueuedSpinLock(IN PKLOCK_QUEUE_HANDLE LockHandle)
     KeLowerIrql(LockHandle->OldIrql);
 }
 
+#ifndef _MINIHAL_
 /*
  * @implemented
  */
@@ -180,20 +181,12 @@ FASTCALL
 KeTryToAcquireQueuedSpinLockRaiseToSynch(IN KSPIN_LOCK_QUEUE_NUMBER LockNumber,
                                          IN PKIRQL OldIrql)
 {
-#ifdef CONFIG_SMP
-    ERROR_DBGBREAK("FIXME: Unused\n"); // FIXME: Unused
-    return FALSE;
-#endif
+    PKSPIN_LOCK Lock = KeGetCurrentPrcb()->LockQueue[LockNumber].Lock;
 
-    /* Simply raise to synch */
+    /* KM tests demonstrate that this raises IRQL even if locking fails */
     KeRaiseIrql(SYNCH_LEVEL, OldIrql);
-
-    /* Add an explicit memory barrier to prevent the compiler from reordering
-       memory accesses across the borders of spinlocks */
-    KeMemoryBarrierWithoutFence();
-
-    /* Always return true on UP Machines */
-    return TRUE;
+    /* HACK */
+    return KeTryToAcquireSpinLockAtDpcLevel(Lock);
 }
 
 /*
@@ -204,23 +197,15 @@ FASTCALL
 KeTryToAcquireQueuedSpinLock(IN KSPIN_LOCK_QUEUE_NUMBER LockNumber,
                              OUT PKIRQL OldIrql)
 {
-#ifdef CONFIG_SMP
-    ERROR_DBGBREAK("FIXME: Unused\n"); // FIXME: Unused
-    return FALSE;
-#endif
+    PKSPIN_LOCK Lock = KeGetCurrentPrcb()->LockQueue[LockNumber].Lock;
 
-    /* Simply raise to dispatch */
+    /* KM tests demonstrate that this raises IRQL even if locking fails */
     KeRaiseIrql(DISPATCH_LEVEL, OldIrql);
-
-    /* Add an explicit memory barrier to prevent the compiler from reordering
-       memory accesses across the borders of spinlocks */
-    KeMemoryBarrierWithoutFence();
-
-    /* Always return true on UP Machines */
-    return TRUE;
+    /* HACK */
+    return KeTryToAcquireSpinLockAtDpcLevel(Lock);
 }
-
-#endif
+#endif /* !defined(_MINIHAL_) */
+#endif /* defined(_M_IX86) */
 
 VOID
 NTAPI

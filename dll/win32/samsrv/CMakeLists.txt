@@ -9,6 +9,7 @@ spec2def(samsrv.dll samsrv.spec ADD_IMPORTLIB)
 list(APPEND SOURCE
     alias.c
     database.c
+    display.c
     domain.c
     group.c
     registry.c

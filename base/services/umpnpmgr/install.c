@@ -358,13 +358,64 @@ DeviceInstallThread(LPVOID lpParameter)
 {
     PLIST_ENTRY ListEntry;
     DeviceInstallParams* Params;
-    BOOL showWizard;
 
     UNREFERENCED_PARAMETER(lpParameter);
 
+    // Step 1: install all drivers which were configured during the boot
+
+    DPRINT("Step 1: Installing devices configured during the boot\n");
+
+    PWSTR deviceList;
+
+    while (TRUE)
+    {
+        ULONG devListSize;
+        DWORD status = PNP_GetDeviceListSize(NULL, NULL, &devListSize, 0);
+        if (status != CR_SUCCESS)
+        {
+            goto Step2;
+        }
+
+        deviceList = HeapAlloc(GetProcessHeap(), 0, devListSize * sizeof(WCHAR));
+        if (!deviceList)
+        {
+            goto Step2;
+        }
+
+        status = PNP_GetDeviceList(NULL, NULL, deviceList, &devListSize, 0);
+        if (status == CR_BUFFER_SMALL)
+        {
+            HeapFree(GetProcessHeap(), 0, deviceList);
+        }
+        else if (status != CR_SUCCESS)
+        {
+            DPRINT1("PNP_GetDeviceList failed with error %u\n", status);
+            goto Cleanup;
+        }
+        else // status == CR_SUCCESS
+        {
+            break;
+        }
+    }
+
+    for (PWSTR currentDev = deviceList;
+         currentDev[0] != UNICODE_NULL;
+         currentDev += lstrlenW(currentDev) + 1)
+    {
+        InstallDevice(currentDev, FALSE);
+    }
+
+Cleanup:
+    HeapFree(GetProcessHeap(), 0, deviceList);
+
+    // Step 2: start the wait-loop for newly added devices
+Step2:
+
+    DPRINT("Step 2: Starting the wait-loop\n");
+
     WaitForSingleObject(hInstallEvent, INFINITE);
 
-    showWizard = !SetupIsActive() && !IsConsoleBoot();
+    BOOL showWizard = !SetupIsActive() && !IsConsoleBoot();
 
     while (TRUE)
     {

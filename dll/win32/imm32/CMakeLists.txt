@@ -15,5 +15,5 @@ list(APPEND SOURCE
 add_library(imm32 MODULE ${SOURCE} version.rc)
 set_module_type(imm32 win32dll)
 target_link_libraries(imm32 wine win32ksys)
-add_importlibs(imm32 advapi32 user32 msvcrt kernel32 ntdll)
+add_importlibs(imm32 advapi32 user32 gdi32 msvcrt kernel32 ntdll)
 add_cd_file(TARGET imm32 DESTINATION reactos/system32 FOR all)

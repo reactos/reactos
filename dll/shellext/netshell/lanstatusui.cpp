@@ -915,6 +915,7 @@ CLanStatus::InitializeNetTaskbarNotifications()
     Index = 1;
     while (TRUE)
     {
+        pNetCon.Release();
         hr = pEnumCon->Next(1, &pNetCon, &Count);
         if (hr != S_OK)
             break;

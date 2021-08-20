@@ -80,6 +80,10 @@
 // Unable to create symbolic link pointing to the RAM disk device
 //
 #define RD_SYMLINK_CREATE_FAILED 5
+//
+// Unable to create system root path when creating the RAM disk
+//
+#define RD_SYSROOT_INIT_FAILED 6
 
 //
 // Max traversal of reparse points for a single open in IoParseDevice
@@ -534,7 +538,8 @@ typedef enum _DEVICE_ACTION
     PiActionEnumDeviceTree,
     PiActionEnumRootDevices,
     PiActionResetDevice,
-    PiActionAddBootDevices
+    PiActionAddBootDevices,
+    PiActionStartDevice
 } DEVICE_ACTION;
 
 //
@@ -568,6 +573,15 @@ IopDetectResourceConflict(
 //
 // PNP Routines
 //
+NTSTATUS
+NTAPI
+PipCallDriverAddDevice(
+    IN PDEVICE_NODE DeviceNode,
+    IN BOOLEAN LoadDriver,
+    IN PDRIVER_OBJECT DriverObject
+);
+
+CODE_SEG("INIT")
 NTSTATUS
 NTAPI
 IopInitializePlugPlayServices(
@@ -661,6 +675,7 @@ IoDestroyDriverList(
     VOID
 );
 
+CODE_SEG("INIT")
 NTSTATUS
 IopInitPlugPlayEvents(VOID);
 
@@ -712,12 +727,14 @@ IopCreateDeviceKeyPath(
 //
 // PnP Routines
 //
+CODE_SEG("INIT")
 NTSTATUS
 NTAPI
 IopUpdateRootKey(
     VOID
 );
 
+CODE_SEG("INIT")
 NTSTATUS
 NTAPI
 PiInitCacheGroupInformation(
@@ -752,15 +769,22 @@ PnpRegSzToString(
     OUT PUSHORT StringLength OPTIONAL
 );
 
+VOID
+PiSetDevNodeText(
+    _In_ PDEVICE_NODE DeviceNode,
+    _In_ HANDLE InstanceKey);
+
 //
 // Initialization Routines
 //
+CODE_SEG("INIT")
 NTSTATUS
 NTAPI
 IopCreateArcNames(
     IN PLOADER_PARAMETER_BLOCK LoaderBlock
 );
 
+CODE_SEG("INIT")
 NTSTATUS
 NTAPI
 IopReassignSystemRoot(
@@ -768,6 +792,7 @@ IopReassignSystemRoot(
     OUT PANSI_STRING NtBootPath
 );
 
+CODE_SEG("INIT")
 BOOLEAN
 NTAPI
 IoInitSystem(
@@ -788,6 +813,7 @@ IoInitializeCrashDump(
     IN HANDLE PageFileHandle
 );
 
+CODE_SEG("INIT")
 VOID
 PiInitializeNotifications(
     VOID);
@@ -952,11 +978,13 @@ IopShutdownBaseFileSystems(
 //
 // Boot logging support
 //
+CODE_SEG("INIT")
 VOID
 IopInitBootLog(
     IN BOOLEAN StartBootLog
 );
 
+CODE_SEG("INIT")
 VOID
 IopStartBootLog(
     VOID
@@ -1028,6 +1056,7 @@ RawFsIsRawFileSystemDeviceObject(
     IN PDEVICE_OBJECT DeviceObject
 );
 
+CODE_SEG("INIT")
 NTSTATUS
 NTAPI
 RawFsDriverEntry(
@@ -1060,12 +1089,14 @@ PnpRootRegisterDevice(
 //
 // Driver Routines
 //
+CODE_SEG("INIT")
 VOID
 FASTCALL
 IopInitializeBootDrivers(
     VOID
 );
 
+CODE_SEG("INIT")
 VOID
 FASTCALL
 IopInitializeSystemDrivers(
@@ -1299,6 +1330,7 @@ IoSetIoCompletion(
 //
 // Ramdisk Routines
 //
+CODE_SEG("INIT")
 NTSTATUS
 NTAPI
 IopStartRamdisk(
@@ -1340,16 +1372,19 @@ PiPerformSyncDeviceAction(
 //
 // PnP notifications
 //
+CODE_SEG("PAGE")
 VOID
 PiNotifyDeviceInterfaceChange(
     _In_ LPCGUID Event,
     _In_ LPCGUID InterfaceClassGuid,
     _In_ PUNICODE_STRING SymbolicLinkName);
 
+CODE_SEG("PAGE")
 VOID
 PiNotifyHardwareProfileChange(
     _In_ LPCGUID Event);
 
+CODE_SEG("PAGE")
 VOID
 PiNotifyTargetDeviceChange(
     _In_ LPCGUID Event,
@@ -1379,6 +1414,13 @@ NTSTATUS
 PiIrpQueryDeviceRelations(
     _In_ PDEVICE_NODE DeviceNode,
     _In_ DEVICE_RELATION_TYPE Type);
+
+NTSTATUS
+PiIrpQueryDeviceText(
+    _In_ PDEVICE_NODE DeviceNode,
+    _In_ LCID LocaleId,
+    _In_ DEVICE_TEXT_TYPE Type,
+    _Out_ PWSTR *DeviceText);
 
 NTSTATUS
 PiIrpQueryPnPDeviceState(

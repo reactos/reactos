@@ -1346,6 +1346,37 @@ static MUI_ENTRY ptBRFormatPartitionEntries[] =
     }
 };
 
+static MUI_ENTRY ptBRCheckFSEntries[] =
+{
+    {
+        4,
+        3,
+        " Instala\207\306o do ReactOS " KERNEL_VERSION_STR " ",
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        8,
+        "O instalador est\240 verificando a parti\207\306o selecionada.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        "Por favor, aguarde...",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
 static MUI_ENTRY ptBRInstallDirectoryEntries[] =
 {
     {
@@ -1499,6 +1530,30 @@ static MUI_ENTRY ptBRBootLoaderEntries[] =
         0,
         "ENTER=Continuar  F3=Sair",
         TEXT_TYPE_STATUS  | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
+static MUI_ENTRY ptBRBootLoaderInstallPageEntries[] =
+{
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        "Installing the bootloader onto the media, please wait...",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
         TEXT_ID_STATIC
     },
     {
@@ -2139,6 +2194,10 @@ MUI_PAGE ptBRPages[] =
         ptBRFormatPartitionEntries
     },
     {
+        CHECK_FILE_SYSTEM_PAGE,
+        ptBRCheckFSEntries
+    },
+    {
         DELETE_PARTITION_PAGE,
         ptBRDeletePartitionEntries
     },
@@ -2173,6 +2232,10 @@ MUI_PAGE ptBRPages[] =
     {
         SUCCESS_PAGE,
         ptBRSuccessPageEntries
+    },
+    {
+        BOOT_LOADER_INSTALLATION_PAGE,
+        ptBRBootLoaderInstallPageEntries
     },
     {
         BOOT_LOADER_FLOPPY_PAGE,
@@ -2224,8 +2287,6 @@ MUI_STRING ptBRStrings[] =
     "The new partition is not formatted yet."},
     {STRING_INSTALLONPART,
     "O instalador instala o ReactOS na parti\207\306o"},
-    {STRING_CHECKINGPART,
-    "O instalador est\240 verificando a parti\207\306o selecionada."},
     {STRING_CONTINUE,
     "ENTER=Continuar"},
     {STRING_QUITCONTINUE,

@@ -31,7 +31,7 @@ Abstract:
 #pragma alloc_text(PAGE, FatFsdLockControl)
 #endif
 
-
+
 _Function_class_(IRP_MJ_LOCK_CONTROL)
 _Function_class_(DRIVER_DISPATCH)
 NTSTATUS
@@ -113,7 +113,7 @@ Return Value:
 }
 
 
-_Function_class_(FAST_IO_LOCK)
+_Function_class_(FAST_IO_LOCK)
 BOOLEAN
 NTAPI
 FatFastLock (
@@ -253,7 +253,7 @@ Return Value:
 }
 
 
-_Function_class_(FAST_IO_UNLOCK_SINGLE)
+_Function_class_(FAST_IO_UNLOCK_SINGLE)
 BOOLEAN
 NTAPI
 FatFastUnlockSingle (
@@ -301,7 +301,7 @@ Return Value:
 
     PAGED_CODE();
     UNREFERENCED_PARAMETER( DeviceObject );
-    
+
     DebugTrace(+1, Dbg, "FatFastUnlockSingle\n", 0);
 
     IoStatus->Information = 0;
@@ -375,7 +375,7 @@ Return Value:
 }
 
 
-_Function_class_(FAST_IO_UNLOCK_ALL)
+_Function_class_(FAST_IO_UNLOCK_ALL)
 BOOLEAN
 NTAPI
 FatFastUnlockAll (
@@ -414,7 +414,7 @@ Return Value:
 
     PAGED_CODE();
     UNREFERENCED_PARAMETER( DeviceObject );
-    
+
     DebugTrace(+1, Dbg, "FatFastUnlockAll\n", 0);
 
     IoStatus->Information = 0;
@@ -487,7 +487,7 @@ Return Value:
     return Results;
 }
 
-
+
 _Function_class_(FAST_IO_UNLOCK_ALL_BY_KEY)
 BOOLEAN
 NTAPI
@@ -530,7 +530,7 @@ Return Value:
 
     PAGED_CODE();
     UNREFERENCED_PARAMETER( DeviceObject );
-    
+
     DebugTrace(+1, Dbg, "FatFastUnlockAllByKey\n", 0);
 
     IoStatus->Information = 0;
@@ -604,8 +604,8 @@ Return Value:
     return Results;
 }
 
-
-_Requires_lock_held_(_Global_critical_region_) 
+
+_Requires_lock_held_(_Global_critical_region_)
 NTSTATUS
 FatCommonLockControl (
     IN PIRP_CONTEXT IrpContext,

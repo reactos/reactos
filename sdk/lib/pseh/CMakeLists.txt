@@ -12,13 +12,21 @@ elseif(ARCH STREQUAL "arm")
         arm/seh_prolog.s)
 endif()
 
-if(MSVC OR (CMAKE_C_COMPILER_ID STREQUAL "GNU" AND ARCH STREQUAL "amd64"))
-
+if(MSVC OR ((CMAKE_C_COMPILER_ID STREQUAL "Clang") AND (ARCH STREQUAL "amd64")))
     list(APPEND SOURCE dummy.c)
     add_asm_files(pseh_asm ${ASM_SOURCE})
     add_library(pseh ${SOURCE} ${pseh_asm})
     add_dependencies(pseh asm)
-
+elseif((CMAKE_C_COMPILER_ID STREQUAL "GNU") AND (ARCH STREQUAL "amd64"))
+    # for GCC amd64 this is just an interface library, with our home-made plugin
+    add_library(pseh INTERFACE)
+    if (CMAKE_HOST_WIN32)
+        target_compile_options(pseh INTERFACE
+            $<$<COMPILE_LANGUAGE:C>:-fplugin=$<TARGET_FILE:native-gcc_plugin_seh>>
+            $<$<COMPILE_LANGUAGE:CXX>:-fplugin=$<TARGET_FILE:native-g++_plugin_seh>>)
+    else()
+        target_compile_options(pseh INTERFACE $<$<COMPILE_LANGUAGE:C,CXX>:-fplugin=$<TARGET_FILE:native-gcc_plugin_seh>>)
+    endif()
 else()
 
     if(USE_PSEH3)
@@ -35,12 +43,19 @@ else()
             i386/framebased-gcchack-asm.S)
     elseif(ARCH STREQUAL "amd64")
         list(APPEND SOURCE amd64/framebased.S)
-    elseif(ARCH STREQUAL "powerpc")
-        list(APPEND SOURCE powerpc/framebased.S)
     endif()
 
     add_library(pseh ${SOURCE} ${ASM_SOURCE})
     target_link_libraries(pseh chkstk)
     add_dependencies(pseh psdk)
 
+    target_include_directories(pseh PRIVATE include/pseh)
+endif()
+
+target_include_directories(pseh INTERFACE include)
+
+# Make it clear that we are using PSEH2
+if ((CMAKE_C_COMPILER_ID STREQUAL "GNU") OR
+    ((CMAKE_C_COMPILER_ID STREQUAL "Clang") AND (NOT (ARCH STREQUAL "amd64"))))
+    target_compile_definitions(pseh INTERFACE __USE_PSEH2__)
 endif()

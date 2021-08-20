@@ -918,7 +918,7 @@ DoLAYOUT(IN PLAYOUT LayoutData,
             exit(1);
         }
     }
-    
+
     /* Check if we have found any ScanCode in the file */
 
     if (ScanCodeCount == -1)

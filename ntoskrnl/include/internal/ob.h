@@ -54,6 +54,11 @@
                                                          OBJ_AUDIT_OBJECT_CLOSE)
 
 //
+// Handle Access Protection Close Flag
+//
+#define ObpAccessProtectCloseBit 0x02000000L
+
+//
 // Identifies a Kernel Handle
 //
 #ifdef _WIN64
@@ -159,6 +164,7 @@ typedef struct _OB_TEMP_BUFFER
 //
 // Startup and Shutdown Functions
 //
+CODE_SEG("INIT")
 BOOLEAN
 NTAPI
 ObInitSystem(
@@ -294,9 +300,9 @@ ObpSetHandleAttributes(
 NTSTATUS
 NTAPI
 ObQueryDeviceMapInformation(
-    IN PEPROCESS Process,
-    OUT PPROCESS_DEVICEMAP_INFORMATION DeviceMapInfo,
-    IN ULONG Flags
+    _In_opt_ PEPROCESS Process,
+    _Out_ PPROCESS_DEVICEMAP_INFORMATION DeviceMapInfo,
+    _In_ ULONG Flags
 );
 
 //
@@ -429,6 +435,7 @@ ObInheritDeviceMap(
     IN PEPROCESS Process
 );
 
+CODE_SEG("INIT")
 NTSTATUS
 NTAPI
 ObpCreateDosDevicesDirectory(
@@ -450,6 +457,7 @@ ObpReferenceDeviceMap(
 //
 // Security descriptor cache functions
 //
+CODE_SEG("INIT")
 NTSTATUS
 NTAPI
 ObpInitSdCache(

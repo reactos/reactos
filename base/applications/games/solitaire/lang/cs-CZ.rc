@@ -69,6 +69,7 @@ BEGIN
     BEGIN
         MENUITEM "&Rozdat\tF2", IDM_GAME_NEW
         MENUITEM SEPARATOR
+        MENUITEM "&Undo", IDM_GAME_UNDO, GRAYED
         MENUITEM "Rub& karet...", IDM_GAME_DECK
         MENUITEM "&Možnosti...", IDM_GAME_OPTIONS
         MENUITEM SEPARATOR

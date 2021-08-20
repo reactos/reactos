@@ -2,10 +2,10 @@
  * PROJECT:         ReactOS Kernel
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            base/applications/osk/lang/zh-TW.rc
- * PURPOSE:         On screen keyboard (American resources).
+ * PURPOSE:         On screen keyboard (Chinese Traditional resources).
  * PROGRAMMERS:     Denis ROBERT
  * TRANSLATORS:     Henry Tang Ih 2016 (henrytang2@hotmail.com)
- *                  Aobi Chan CL (eason066@gmail.com)
+ *                  Chan Chilung 2020 (eason066@gmail.com)
  */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL

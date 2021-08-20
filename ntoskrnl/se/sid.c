@@ -13,8 +13,6 @@
 #define NDEBUG
 #include <debug.h>
 
-#define TAG_SID_AND_ATTRIBUTES 'aSeS'
-
 /* GLOBALS ********************************************************************/
 
 SID_IDENTIFIER_AUTHORITY SeNullSidAuthority = {SECURITY_NULL_SID_AUTHORITY};

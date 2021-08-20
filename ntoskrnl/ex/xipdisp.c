@@ -82,7 +82,7 @@ XIPInit(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     /* Find the XIP memory descriptor */
     XipDescriptor = XIPpFindMemoryDescriptor(LoaderBlock);
     if (!XipDescriptor) return;
-    
+
     //
     // Make sure this is really XIP, and not RAM Disk -- also validate XIP
     // Basically, either this is a ROM boot or a RAM boot, but not both nor none

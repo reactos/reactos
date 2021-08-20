@@ -25,9 +25,17 @@ if(USE_CLANG_CL OR (NOT MSVC))
     target_compile_options(uniata PRIVATE "-Wno-narrowing")
     if(USE_CLANG_CL)
         target_compile_options(uniata PRIVATE "-Wno-unused-const-variable")
-    else()
-        target_compile_options(uniata PRIVATE "-Wno-unused-but-set-variable")
     endif()
+endif()
+
+if(MSVC)
+    # Disable warning C4267: '=': conversion from 'size_t' to 'USHORT', possible loss of data
+    # Disable warning C4838: conversion from 'int' to 'ULONG' requires a narrowing conversion
+    target_compile_options(uniata PRIVATE /wd4267 /wd4838)
+endif()
+
+if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
+    target_compile_options(uniata PRIVATE -Wno-unused-but-set-variable)
 endif()
 
 add_pch(uniata stdafx.h SOURCE)

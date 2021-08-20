@@ -81,10 +81,14 @@ NTAPI
 KeConnectInterrupt(IN PKINTERRUPT Interrupt)
 {
     PVOID CurrentHandler;
+    PKINTERRUPT ConnectedInterrupt;
 
+    ASSERT(Interrupt->Vector >= PRIMARY_VECTOR_BASE);
     ASSERT(Interrupt->Vector <= MAXIMUM_IDTVECTOR);
     ASSERT(Interrupt->Number < KeNumberProcessors);
     ASSERT(Interrupt->Irql <= HIGH_LEVEL);
+    ASSERT(Interrupt->SynchronizeIrql >= Interrupt->Irql);
+    ASSERT(Interrupt->Irql == (Interrupt->Vector >> 4));
 
     /* Check if its already connected */
     if (Interrupt->Connected) return TRUE;
@@ -92,7 +96,7 @@ KeConnectInterrupt(IN PKINTERRUPT Interrupt)
     /* Query the current handler */
     CurrentHandler = KeQueryInterruptHandler(Interrupt->Vector);
 
-    /* Check if the vector is already unused */
+    /* Check if the vector is unused */
     if ((CurrentHandler >= (PVOID)KiUnexpectedRange) &&
         (CurrentHandler <= (PVOID)KiUnexpectedRangeEnd))
     {
@@ -106,6 +110,7 @@ KeConnectInterrupt(IN PKINTERRUPT Interrupt)
         KeRegisterInterruptHandler(Interrupt->Vector,
                                    Interrupt->DispatchCode);
 
+        /* Enable the interrupt */
         if (!HalEnableSystemInterrupt(Interrupt->Vector,
                                       Interrupt->Irql,
                                       Interrupt->Mode))
@@ -115,15 +120,27 @@ KeConnectInterrupt(IN PKINTERRUPT Interrupt)
             KeRegisterInterruptHandler(Interrupt->Vector, CurrentHandler);
             return FALSE;
         }
-
-        /* Mark as connected */
-        Interrupt->Connected = TRUE;
     }
     else
     {
-        // later
-        __debugbreak();
+        /* Get the connected interrupt */
+        ConnectedInterrupt = CONTAINING_RECORD(CurrentHandler, KINTERRUPT, DispatchCode);
+
+        /* Check if sharing is ok */
+        if ((Interrupt->ShareVector == 0) ||
+            (ConnectedInterrupt->ShareVector == 0) ||
+            (Interrupt->Mode != ConnectedInterrupt->Mode))
+        {
+            return FALSE;
+        }
+
+        /* Insert the new interrupt into the connected interrupt's list */
+        InsertTailList(&ConnectedInterrupt->InterruptListEntry,
+                       &Interrupt->InterruptListEntry);
     }
+
+    /* Mark as connected */
+    Interrupt->Connected = TRUE;
 
     return TRUE;
 }
@@ -132,9 +149,15 @@ BOOLEAN
 NTAPI
 KeDisconnectInterrupt(IN PKINTERRUPT Interrupt)
 {
+    /* If the interrupt wasn't connected, there's nothing to do */
+    if (!Interrupt->Connected)
+    {
+        return FALSE;
+    }
+
     UNIMPLEMENTED;
     __debugbreak();
-    return FALSE;
+    return TRUE;
 }
 
 BOOLEAN

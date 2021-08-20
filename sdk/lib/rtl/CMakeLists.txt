@@ -5,6 +5,11 @@ add_definitions(
     -D_NTSYSTEM_
     -D_NTDLLBUILD_)
 
+if (GCC)
+    # Enable this again. CORE-17637
+    add_compile_options(-Wunused-result)
+endif()
+
 list(APPEND SOURCE
     access.c
     acl.c
@@ -89,6 +94,7 @@ elseif(ARCH STREQUAL "amd64")
     list(APPEND SOURCE
         bitmap64.c
         byteswap.c
+        amd64/except.c
         amd64/unwind.c
         amd64/stubs.c
         mem.c)
@@ -98,20 +104,11 @@ elseif(ARCH STREQUAL "arm")
         arm/except.c
         byteswap.c
         mem.c)
-elseif(ARCH STREQUAL "powerpc")
-    list(APPEND ASM_SOURCE
-        powerpc/rtlmem.s
-        powerpc/rtlswap.s)
-    list(APPEND SOURCE
-        byteswap.c
-        powerpc/debug.c
-        powerpc/except.c
-        powerpc/interlocked.c
-        powerpc/thread.c)
 endif()
 
 add_asm_files(rtl_asm ${ASM_SOURCE})
 add_library(rtl ${SOURCE} ${rtl_asm})
+target_link_libraries(rtl PRIVATE pseh)
 add_pch(rtl rtl.h SOURCE)
 add_dependencies(rtl psdk asm)
 
@@ -122,5 +119,6 @@ list(APPEND SOURCE_VISTA
 )
 
 add_library(rtl_vista ${SOURCE_VISTA})
-add_pch(rtl rtl_vista.h SOURCE_VISTA)
+add_pch(rtl_vista rtl_vista.h SOURCE_VISTA)
 add_dependencies(rtl_vista psdk)
+target_link_libraries(rtl_vista PRIVATE pseh)

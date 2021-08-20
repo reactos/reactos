@@ -176,6 +176,7 @@ extern UNICODE_STRING Volume;
 extern KEVENT UnloadEvent;
 extern LONG Unloading;
 
+CODE_SEG("INIT")
 DRIVER_INITIALIZE DriverEntry;
 
 VOID
@@ -228,6 +229,7 @@ HasDriveLetter(
     IN PDEVICE_INFORMATION DeviceInformation
 );
 
+CODE_SEG("INIT")
 BOOLEAN
 MountmgrReadNoAutoMount(
     IN PUNICODE_STRING RegistryPath
@@ -300,7 +302,7 @@ OpenRemoteDatabase(
 PDATABASE_ENTRY
 GetRemoteDatabaseEntry(
     IN HANDLE Database,
-    IN LONG StartingOffset 
+    IN LONG StartingOffset
 );
 
 NTSTATUS
@@ -406,13 +408,13 @@ HasNoDriveLetterEntry(
 VOID
 UpdateReplicatedUniqueIds(
     IN PDEVICE_INFORMATION DeviceInformation,
-    IN PDATABASE_ENTRY DatabaseEntry 
+    IN PDATABASE_ENTRY DatabaseEntry
 );
 
 BOOLEAN
 IsUniqueIdPresent(
     IN PDEVICE_EXTENSION DeviceExtension,
-    IN PDATABASE_ENTRY DatabaseEntry 
+    IN PDATABASE_ENTRY DatabaseEntry
 );
 
 /* point.c */

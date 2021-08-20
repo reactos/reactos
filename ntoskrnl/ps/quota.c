@@ -28,68 +28,75 @@ static KSPIN_LOCK PspQuotaLock;
 
 /*
  * Private helper to charge the specified process quota.
- * ReturnsSTATUS_QUOTA_EXCEEDED on quota limit check failure.
- * Updates QuotaPeak as needed for specified PoolIndex.
- * TODO: Research and possibly add (the undocumented) enum type PS_QUOTA_TYPE
- *       to replace UCHAR for 'PoolIndex'.
+ * Returns STATUS_QUOTA_EXCEEDED on quota limit check failure.
+ * Updates QuotaPeak as needed for specified quota type in PS_QUOTA_TYPE enum.
  * Notes: Conceptually translation unit local/private.
  */
 NTSTATUS
 NTAPI
 PspChargeProcessQuotaSpecifiedPool(IN PEPROCESS Process,
-                                   IN UCHAR     PoolIndex,
+                                   IN PS_QUOTA_TYPE QuotaType,
                                    IN SIZE_T    Amount)
 {
+    KIRQL OldIrql;
     ASSERT(Process);
     ASSERT(Process != PsInitialSystemProcess);
-    ASSERT(PoolIndex <= 2);
+    ASSERT(QuotaType < PsQuotaTypes);
     ASSERT(Process->QuotaBlock);
 
-    /* Note: Race warning. TODO: Needs to add/use lock for this */
-    if (Process->QuotaUsage[PoolIndex] + Amount >
-        Process->QuotaBlock->QuotaEntry[PoolIndex].Limit)
+    /* Guard our quota in a spin lock */
+    KeAcquireSpinLock(&PspQuotaLock, &OldIrql);
+
+    if (Process->QuotaUsage[QuotaType] + Amount >
+        Process->QuotaBlock->QuotaEntry[QuotaType].Limit)
     {
         DPRINT1("Quota exceeded, but ROS will let it slide...\n");
+        KeReleaseSpinLock(&PspQuotaLock, OldIrql);
         return STATUS_SUCCESS;
         //return STATUS_QUOTA_EXCEEDED; /* caller raises the exception */
     }
 
-    InterlockedExchangeAdd((LONG*)&Process->QuotaUsage[PoolIndex], Amount);
+    InterlockedExchangeAdd((LONG*)&Process->QuotaUsage[QuotaType], Amount);
 
-    /* Note: Race warning. TODO: Needs to add/use lock for this */
-    if (Process->QuotaPeak[PoolIndex] < Process->QuotaUsage[PoolIndex])
+    if (Process->QuotaPeak[QuotaType] < Process->QuotaUsage[QuotaType])
     {
-        Process->QuotaPeak[PoolIndex] = Process->QuotaUsage[PoolIndex];
+        Process->QuotaPeak[QuotaType] = Process->QuotaUsage[QuotaType];
     }
 
+    KeReleaseSpinLock(&PspQuotaLock, OldIrql);
     return STATUS_SUCCESS;
 }
 
 /*
  * Private helper to remove quota charge from the specified process quota.
- * TODO: Research and possibly add (the undocumented) enum type PS_QUOTA_TYPE
- *       to replace UCHAR for 'PoolIndex'.
  * Notes: Conceptually translation unit local/private.
  */
 VOID
 NTAPI
 PspReturnProcessQuotaSpecifiedPool(IN PEPROCESS Process,
-                                   IN UCHAR     PoolIndex,
+                                   IN PS_QUOTA_TYPE QuotaType,
                                    IN SIZE_T    Amount)
 {
+    KIRQL OldIrql;
     ASSERT(Process);
     ASSERT(Process != PsInitialSystemProcess);
-    ASSERT(PoolIndex <= 2);
+    ASSERT(QuotaType < PsQuotaTypes);
     ASSERT(!(Amount & 0x80000000)); /* we need to be able to negate it */
-    if (Process->QuotaUsage[PoolIndex] < Amount)
+
+    /* Guard our quota in a spin lock */
+    KeAcquireSpinLock(&PspQuotaLock, &OldIrql);
+
+    if (Process->QuotaUsage[QuotaType] < Amount)
     {
         DPRINT1("WARNING: Process->QuotaUsage sanity check failed.\n");
     }
     else
     {
-        InterlockedExchangeAdd((LONG*)&Process->QuotaUsage[PoolIndex],
+        InterlockedExchangeAdd((LONG*)&Process->QuotaUsage[QuotaType],
                                -(LONG)Amount);
     }
+
+    KeReleaseSpinLock(&PspQuotaLock, OldIrql);
 }
 
 /* FUNCTIONS ***************************************************************/
@@ -100,9 +107,9 @@ NTAPI
 PsInitializeQuotaSystem(VOID)
 {
     RtlZeroMemory(&PspDefaultQuotaBlock, sizeof(PspDefaultQuotaBlock));
-    PspDefaultQuotaBlock.QuotaEntry[PagedPool].Limit = (SIZE_T)-1;
-    PspDefaultQuotaBlock.QuotaEntry[NonPagedPool].Limit = (SIZE_T)-1;
-    PspDefaultQuotaBlock.QuotaEntry[2].Limit = (SIZE_T)-1; /* Page file */
+    PspDefaultQuotaBlock.QuotaEntry[PsNonPagedPool].Limit = (SIZE_T)-1;
+    PspDefaultQuotaBlock.QuotaEntry[PsPagedPool].Limit = (SIZE_T)-1;
+    PspDefaultQuotaBlock.QuotaEntry[PsPageFile].Limit = (SIZE_T)-1;
     PsGetCurrentProcess()->QuotaBlock = &PspDefaultQuotaBlock;
 }
 
@@ -164,7 +171,7 @@ PsChargeProcessPageFileQuota(IN PEPROCESS Process,
     /* Don't do anything for the system process */
     if (Process == PsInitialSystemProcess) return STATUS_SUCCESS;
 
-    return PspChargeProcessQuotaSpecifiedPool(Process, 2, Amount);
+    return PspChargeProcessQuotaSpecifiedPool(Process, PsPageFile, Amount);
 }
 
 /*
@@ -284,7 +291,7 @@ PsReturnProcessPageFileQuota(IN PEPROCESS Process,
     /* Don't do anything for the system process */
     if (Process == PsInitialSystemProcess) return STATUS_SUCCESS;
 
-    PspReturnProcessQuotaSpecifiedPool(Process, 2, Amount);
+    PspReturnProcessQuotaSpecifiedPool(Process, PsPageFile, Amount);
     return STATUS_SUCCESS;
 }
 
@@ -419,12 +426,12 @@ PspSetQuotaLimits(
         /* Initialize the quota block */
         QuotaBlock->ReferenceCount = 1;
         QuotaBlock->ProcessCount = 1;
-        QuotaBlock->QuotaEntry[0].Peak = Process->QuotaPeak[0];
-        QuotaBlock->QuotaEntry[1].Peak = Process->QuotaPeak[1];
-        QuotaBlock->QuotaEntry[2].Peak = Process->QuotaPeak[2];
-        QuotaBlock->QuotaEntry[0].Limit = PspDefaultQuotaBlock.QuotaEntry[0].Limit;
-        QuotaBlock->QuotaEntry[1].Limit = PspDefaultQuotaBlock.QuotaEntry[1].Limit;
-        QuotaBlock->QuotaEntry[2].Limit = PspDefaultQuotaBlock.QuotaEntry[2].Limit;
+        QuotaBlock->QuotaEntry[PsNonPagedPool].Peak = Process->QuotaPeak[PsNonPagedPool];
+        QuotaBlock->QuotaEntry[PsPagedPool].Peak = Process->QuotaPeak[PsPagedPool];
+        QuotaBlock->QuotaEntry[PsPageFile].Peak = Process->QuotaPeak[PsPageFile];
+        QuotaBlock->QuotaEntry[PsNonPagedPool].Limit = PspDefaultQuotaBlock.QuotaEntry[PsNonPagedPool].Limit;
+        QuotaBlock->QuotaEntry[PsPagedPool].Limit = PspDefaultQuotaBlock.QuotaEntry[PsPagedPool].Limit;
+        QuotaBlock->QuotaEntry[PsPageFile].Limit = PspDefaultQuotaBlock.QuotaEntry[PsPageFile].Limit;
 
         /* Try to exchange the quota block, if that failed, just drop it */
         OldQuotaBlock = InterlockedCompareExchangePointer((PVOID*)&Process->QuotaBlock,

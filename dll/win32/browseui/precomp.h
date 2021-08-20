@@ -38,6 +38,7 @@
 #include "resource.h"
 
 #include "ACLCustomMRU.h"
+#include "aclhistory.h"
 #include "aclistisf.h"
 #include "aclmulti.h"
 #include "addressband.h"

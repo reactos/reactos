@@ -22,7 +22,7 @@
  * FILE:             base/services/umpnpmgr/rpcserver.c
  * PURPOSE:          RPC server
  * PROGRAMMER:       Eric Kohl (eric.kohl@reactos.org)
- *                   Hervé Poussineau (hpoussin@reactos.org)
+ *                   HervÃ© Poussineau (hpoussin@reactos.org)
  *                   Colin Finck (colin@reactos.org)
  */
 
@@ -1153,7 +1153,7 @@ GetEnumeratorInstanceList(
             break;
 
         dwUsedLength += dwPathLength - 1;
-        dwRemainingLength += dwPathLength - 1;
+        dwRemainingLength -= dwPathLength - 1;
         pPtr += dwPathLength - 1;
     }
 
@@ -1203,7 +1203,7 @@ GetAllInstanceList(
             break;
 
         dwUsedLength += dwPathLength - 1;
-        dwRemainingLength += dwPathLength - 1;
+        dwRemainingLength -= dwPathLength - 1;
         pPtr += dwPathLength - 1;
     }
 
@@ -3007,11 +3007,13 @@ SetupDeviceInstance(
     _In_ LPWSTR pszDeviceInstance,
     _In_ DWORD ulMinorAction)
 {
+    PLUGPLAY_CONTROL_DEVICE_CONTROL_DATA ControlData;
     HKEY hDeviceKey = NULL;
     DWORD dwDisableCount, dwSize;
     DWORD ulStatus, ulProblem;
     DWORD dwError;
     CONFIGRET ret = CR_SUCCESS;
+    NTSTATUS Status;
 
     DPRINT1("SetupDeviceInstance(%S 0x%08lx)\n",
             pszDeviceInstance, ulMinorAction);
@@ -3066,8 +3068,14 @@ SetupDeviceInstance(
     if (ret != CR_SUCCESS)
         goto done;
 
-
-    /* FIXME: Start the device */
+    /* Start the device */
+    RtlInitUnicodeString(&ControlData.DeviceInstance,
+                         pszDeviceInstance);
+    Status = NtPlugPlayControl(PlugPlayControlStartDevice,
+                               &ControlData,
+                               sizeof(PLUGPLAY_CONTROL_DEVICE_CONTROL_DATA));
+    if (!NT_SUCCESS(Status))
+        ret = NtStatusToCrError(Status);
 
 done:
     if (hDeviceKey != NULL)
@@ -3081,17 +3089,14 @@ static CONFIGRET
 EnableDeviceInstance(
     _In_ LPWSTR pszDeviceInstance)
 {
-    PLUGPLAY_CONTROL_RESET_DEVICE_DATA ResetDeviceData;
+    PLUGPLAY_CONTROL_DEVICE_CONTROL_DATA ControlData;
     CONFIGRET ret = CR_SUCCESS;
     NTSTATUS Status;
 
     DPRINT("Enable device instance %S\n", pszDeviceInstance);
 
-    RtlInitUnicodeString(&ResetDeviceData.DeviceInstance,
-                         pszDeviceInstance);
-    Status = NtPlugPlayControl(PlugPlayControlResetDevice,
-                               &ResetDeviceData,
-                               sizeof(PLUGPLAY_CONTROL_RESET_DEVICE_DATA));
+    RtlInitUnicodeString(&ControlData.DeviceInstance, pszDeviceInstance);
+    Status = NtPlugPlayControl(PlugPlayControlStartDevice, &ControlData, sizeof(ControlData));
     if (!NT_SUCCESS(Status))
         ret = NtStatusToCrError(Status);
 
@@ -3188,16 +3193,71 @@ PNP_GetDeviceStatus(
     DWORD *pulProblem,
     DWORD ulFlags)
 {
+    DWORD ulDataType, ulTransferLength, ulLength;
+    DWORD ulCapabilities, ulConfigFlags;
+    CONFIGRET ret;
+
     UNREFERENCED_PARAMETER(hBinding);
     UNREFERENCED_PARAMETER(ulFlags);
 
-    DPRINT("PNP_GetDeviceStatus(%p %S %p %p)\n",
+    DPRINT("PNP_GetDeviceStatus(%p %S %p %p 0x%08lx)\n",
            hBinding, pDeviceID, pulStatus, pulProblem, ulFlags);
+
+    if (ulFlags != 0)
+        return CR_INVALID_FLAG;
+
+    if ((pulStatus == NULL) || (pulProblem == NULL))
+        return CR_INVALID_POINTER;
 
     if (!IsValidDeviceInstanceID(pDeviceID))
         return CR_INVALID_DEVINST;
 
-    return GetDeviceStatus(pDeviceID, pulStatus, pulProblem);
+    ret = GetDeviceStatus(pDeviceID, pulStatus, pulProblem);
+    if (ret != CR_SUCCESS)
+        return ret;
+
+    /* Check for DN_REMOVABLE */
+    ulTransferLength = sizeof(ulCapabilities);
+    ulLength = sizeof(ulCapabilities);
+    ret = PNP_GetDeviceRegProp(NULL,
+                               pDeviceID,
+                               CM_DRP_CAPABILITIES,
+                               &ulDataType,
+                               (PBYTE)&ulCapabilities,
+                               &ulTransferLength,
+                               &ulLength,
+                               0);
+    if (ret != CR_SUCCESS)
+        ulCapabilities = 0;
+    
+    if (ulCapabilities & CM_DEVCAP_REMOVABLE)
+        *pulStatus |= DN_REMOVABLE;
+
+    /* Check for DN_MANUAL */
+    ulTransferLength = sizeof(ulConfigFlags);
+    ulLength = sizeof(ulConfigFlags);
+    ret = PNP_GetDeviceRegProp(NULL,
+                               pDeviceID,
+                               CM_DRP_CONFIGFLAGS,
+                               &ulDataType,
+                               (PBYTE)&ulConfigFlags,
+                               &ulTransferLength,
+                               &ulLength,
+                               0);
+    if (ret != CR_SUCCESS)
+        ulConfigFlags = 0;
+
+    if (ulConfigFlags & CONFIGFLAG_MANUAL_INSTALL)
+        *pulStatus |= DN_MANUAL;
+
+    /* Check for failed install */
+    if (((*pulStatus & DN_HAS_PROBLEM) == 0) && (ulConfigFlags & CONFIGFLAG_FAILEDINSTALL))
+    {
+        *pulStatus |= DN_HAS_PROBLEM;
+        *pulProblem = CM_PROB_FAILED_INSTALL;
+    }
+
+    return CR_SUCCESS;
 }
 
 
@@ -3210,8 +3270,47 @@ PNP_SetDeviceProblem(
     DWORD ulProblem,
     DWORD ulFlags)
 {
-    UNIMPLEMENTED;
-    return CR_CALL_NOT_IMPLEMENTED;
+    ULONG ulOldStatus, ulOldProblem;
+    CONFIGRET ret = CR_SUCCESS;
+
+    UNREFERENCED_PARAMETER(hBinding);
+
+    DPRINT1("PNP_SetDeviceProblem(%p %S %lu 0x%08lx)\n",
+           hBinding, pDeviceID, ulProblem, ulFlags);
+
+    if (ulFlags & ~CM_SET_DEVNODE_PROBLEM_BITS)
+        return CR_INVALID_FLAG;
+
+    if (!IsValidDeviceInstanceID(pDeviceID))
+        return CR_INVALID_DEVINST;
+
+    ret = GetDeviceStatus(pDeviceID,
+                          &ulOldStatus,
+                          &ulOldProblem);
+    if (ret != CR_SUCCESS)
+        return ret;
+
+    if (((ulFlags & CM_SET_DEVNODE_PROBLEM_OVERRIDE) == 0) &&
+        (ulOldProblem != 0) &&
+        (ulOldProblem != ulProblem))
+    {
+        return CR_FAILURE;
+    }
+
+    if (ulProblem == 0)
+    {
+        ret = ClearDeviceStatus(pDeviceID,
+                                DN_HAS_PROBLEM,
+                                ulOldProblem);
+    }
+    else
+    {
+        ret = SetDeviceStatus(pDeviceID,
+                              DN_HAS_PROBLEM,
+                              ulProblem);
+    }
+
+    return ret;
 }
 
 

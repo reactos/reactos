@@ -208,7 +208,7 @@ target_include_directories(wdf01000
         shared/irphandlers/pnp/km # pnpprivkm.hpp
     )
 
-target_link_libraries(wdf01000 ntoskrnl_vista ${PSEH_LIB})
+target_link_libraries(wdf01000 aux_klib ntoskrnl_vista ${PSEH_LIB})
 
 if(GCC)
     target_compile_options(wdf01000

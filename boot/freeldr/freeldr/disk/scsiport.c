@@ -139,7 +139,11 @@ SpiSendSynchronousSrb(
     while (!(DeviceExtension->InterruptFlags & SCSI_PORT_NEXT_REQUEST_READY))
     {
         KeStallExecutionProcessor(100 * 1000);
-        DeviceExtension->HwInterrupt(DeviceExtension->MiniPortDeviceExtension);
+        if (!DeviceExtension->HwInterrupt(DeviceExtension->MiniPortDeviceExtension))
+        {
+            ExFreePool(Srb);
+            return FALSE;
+        }
     }
 
     DeviceExtension->InterruptFlags &= ~SCSI_PORT_NEXT_REQUEST_READY;
@@ -157,7 +161,11 @@ SpiSendSynchronousSrb(
     while (Srb->SrbFlags & SRB_FLAGS_IS_ACTIVE)
     {
         KeStallExecutionProcessor(100 * 1000);
-        DeviceExtension->HwInterrupt(DeviceExtension->MiniPortDeviceExtension);
+        if (!DeviceExtension->HwInterrupt(DeviceExtension->MiniPortDeviceExtension))
+        {
+            ExFreePool(Srb);
+            return FALSE;
+        }
     }
 
     ret = SRB_STATUS(Srb->SrbStatus) == SRB_STATUS_SUCCESS;

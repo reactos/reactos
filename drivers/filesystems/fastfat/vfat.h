@@ -483,7 +483,7 @@ typedef struct _VFATFCB
     /* List of FCB's for this volume */
     LIST_ENTRY FcbListEntry;
 
-    /* List of FCB's for the parent */ 
+    /* List of FCB's for the parent */
     LIST_ENTRY ParentListEntry;
 
     /* pointer to the parent fcb */
@@ -824,6 +824,7 @@ VfatSetExtendedAttributes(
 
 /* fastio.c */
 
+CODE_SEG("INIT")
 VOID
 VfatInitFastIoRoutines(
     PFAST_IO_DISPATCH FastIoDispatch);
@@ -1128,6 +1129,7 @@ VfatFileSystemControl(
 
 /* iface.c */
 
+CODE_SEG("INIT")
 NTSTATUS
 NTAPI
 DriverEntry(

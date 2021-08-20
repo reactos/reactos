@@ -52,7 +52,7 @@
 #define PCI_HACK_DISABLE_PM_DOWNSTREAM_PCI_BRIDGE           0x0000040000000000LL
 #define PCI_HACK_DISABLE_HOT_PLUG                           0x0000080000000000LL
 #define PCI_HACK_IGNORE_AER_CAPABILITY                      0x0000100000000000LL
-        
+
 //
 // Bit encodes for PCI_COMMON_CONFIG.u.type1.BridgeControl
 //
@@ -73,7 +73,7 @@ typedef struct _PIN_INFO
     UCHAR Link;
     USHORT InterruptMap;
 } PIN_INFO, *PPIN_INFO;
-    
+
 typedef struct _SLOT_INFO
 {
     UCHAR BusNumber;

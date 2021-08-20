@@ -215,7 +215,7 @@ ReassembleDatagram(
   RtlCopyMemory(&IPPacket->DstAddr, &IPDR->DstAddr, sizeof(IP_ADDRESS));
 
   /* Allocate space for full IP datagram */
-  IPPacket->Header = ExAllocatePoolWithTag(PagedPool, IPPacket->TotalSize, PACKET_BUFFER_TAG);
+  IPPacket->Header = ExAllocatePoolWithTag(NonPagedPool, IPPacket->TotalSize, PACKET_BUFFER_TAG);
   if (!IPPacket->Header) {
     TI_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
     (*IPPacket->Free)(IPPacket);
@@ -303,7 +303,7 @@ VOID ProcessFragment(
     TI_DbgPrint(DEBUG_IP, ("Continueing assembly.\n"));
     /* We have a reassembly structure */
     TcpipAcquireSpinLock(&IPDR->Lock, &OldIrql);
-      
+
     /* Reset the timeout since we received a fragment */
     IPDR->TimeoutCount = 0;
   } else {
@@ -454,7 +454,7 @@ VOID ProcessFragment(
        Assemble the datagram and pass it to an upper layer protocol */
 
     TI_DbgPrint(DEBUG_IP, ("Complete datagram received.\n"));
-      
+
     RemoveIPDR(IPDR);
     TcpipReleaseSpinLock(&IPDR->Lock, OldIrql);
 
@@ -539,7 +539,7 @@ VOID IPDatagramReassemblyTimeout(
            TcpipReleaseSpinLockFromDpcLevel(&CurrentIPDR->Lock);
            RemoveEntryList(CurrentEntry);
            FreeIPDR(CurrentIPDR);
-       } 
+       }
        else
        {
            ASSERT(CurrentIPDR->TimeoutCount < MAX_TIMEOUT_COUNT);
@@ -562,9 +562,9 @@ VOID IPv4Receive(PIP_INTERFACE IF, PIP_PACKET IPPacket)
 {
     UCHAR FirstByte;
     ULONG BytesCopied;
-    
+
     TI_DbgPrint(DEBUG_IP, ("Received IPv4 datagram.\n"));
-    
+
     /* Read in the first IP header byte for size information */
     BytesCopied = CopyPacketToBuffer((PCHAR)&FirstByte,
                                      IPPacket->NdisPacket,
@@ -623,7 +623,7 @@ VOID IPv4Receive(PIP_INTERFACE IF, PIP_PACKET IPPacket)
 
     AddrInitIPv4(&IPPacket->SrcAddr, ((PIPv4_HEADER)IPPacket->Header)->SrcAddr);
     AddrInitIPv4(&IPPacket->DstAddr, ((PIPv4_HEADER)IPPacket->Header)->DstAddr);
-    
+
     TI_DbgPrint(MID_TRACE,("IPPacket->Position = %d\n",
                            IPPacket->Position));
 

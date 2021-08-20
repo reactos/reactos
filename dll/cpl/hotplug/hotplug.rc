@@ -54,3 +54,6 @@ IDI_HOTPLUG ICON "resources/1.ico"
 #ifdef LANGUAGE_TR_TR
     #include "lang/tr-TR.rc"
 #endif
+#ifdef LANGUAGE_ZH_TW
+    #include "lang/zh-TW.rc"
+#endif

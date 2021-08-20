@@ -33,6 +33,8 @@
 #include <shellapi.h>
 #include <shlwapi.h>
 
+#include <pseh/pseh2.h>
+
 // #include "resource.h"
 
 #define LVM_PROGRESS    (WM_APP + 1)    // Used by the subclassed ListView
@@ -3268,8 +3270,8 @@ InitInstance(HINSTANCE hInstance)
     sfn.hInstance       = hInstance;
     sfn.lpstrFilter     = szSaveFilter;
     sfn.lpstrInitialDir = NULL;
-    sfn.Flags           = OFN_HIDEREADONLY | OFN_SHAREAWARE;
-    sfn.lpstrDefExt     = NULL;
+    sfn.Flags           = OFN_EXPLORER | OFN_HIDEREADONLY | OFN_SHAREAWARE;
+    sfn.lpstrDefExt     = L"evt";
 
     ShowWindow(hwndMainWindow, Settings.wpPos.showCmd);
     UpdateWindow(hwndMainWindow);
@@ -3671,11 +3673,38 @@ WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         case WM_INITMENUPOPUP:
             lParam = lParam;
             break;
+#endif
 
         case WM_CONTEXTMENU:
-            lParam = lParam;
+        {
+            RECT rc;
+            HTREEITEM hItem;
+            TVHITTESTINFO hInfo = {0};
+
+            INT xPos = GET_X_LPARAM(lParam);
+            INT yPos = GET_Y_LPARAM(lParam);
+
+            GetWindowRect(hwndTreeView, &rc);
+            hInfo.pt.x = xPos - rc.left;
+            hInfo.pt.y = yPos - rc.top;
+
+            hItem = TreeView_HitTest(hwndTreeView, &hInfo);
+            if (hItem)
+            {
+                TreeView_SelectItem(hwndTreeView, hItem);
+
+                if (TreeView_GetParent(hwndTreeView, hItem))
+                {
+                    HMENU hCtxMenu = GetSubMenu(LoadMenuW(hInst, MAKEINTRESOURCEW(IDM_EVENTWR_CTX)), 0);
+
+                    DWORD dwCmdID = TrackPopupMenuEx(hCtxMenu,
+                                                     TPM_LEFTALIGN | TPM_TOPALIGN | TPM_NONOTIFY | TPM_RETURNCMD,
+                                                     xPos, yPos, hWnd, NULL);
+                    SendMessageW(hWnd, WM_COMMAND, (WPARAM)dwCmdID, (LPARAM)hwndTreeView);
+                }
+            }
             break;
-#endif
+        }
 
         case WM_SETCURSOR:
         {
@@ -3895,7 +3924,7 @@ InitPropertiesDlg(HWND hDlg, PEVENTLOG EventLog)
         /* By default, it is 604800 (secs) == 7 days. On Server, the retention is zeroed out. */
         dwRetention = 0;
     }
-    /* Convert in days, rounded up */    
+    /* Convert in days, rounded up */
     if (dwRetention != INFINITE)
         dwRetention = (dwRetention + 24*3600 - 1) / (24*3600);
 
@@ -4023,7 +4052,7 @@ SavePropertiesDlg(HWND hDlg, PEVENTLOG EventLog)
     LONG Result;
     DWORD dwMaxSize = 0, dwRetention = 0;
     HKEY hLogKey;
-    WCHAR *KeyPath;    
+    WCHAR *KeyPath;
     SIZE_T cbKeyPath;
 
     if (!EventLog->Permanent)
@@ -4054,7 +4083,7 @@ SavePropertiesDlg(HWND hDlg, PEVENTLOG EventLog)
                    0,
                    REG_DWORD,
                    (LPBYTE)&dwMaxSize,
-                   sizeof(dwMaxSize));    
+                   sizeof(dwMaxSize));
 
     if (IsDlgButtonChecked(hDlg, IDC_OVERWRITE_AS_NEEDED) == BST_CHECKED)
         dwRetention = 0;
@@ -4069,7 +4098,7 @@ SavePropertiesDlg(HWND hDlg, PEVENTLOG EventLog)
                    REG_DWORD,
                    (LPBYTE)&dwRetention,
                    sizeof(dwRetention));
-    
+
     RegCloseKey(hLogKey);
 }
 
@@ -4100,14 +4129,14 @@ EventLogPropProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
         case WM_NOTIFY:
             switch (((LPNMHDR)lParam)->code)
-            {                
+            {
                 case PSN_APPLY:
                     PropSheet_UnChanged(GetParent(hDlg), hDlg);
                     SavePropertiesDlg(hDlg, EventLog);
                     return (INT_PTR)TRUE;
             }
             break;
-                        
+
         case WM_COMMAND:
             switch (LOWORD(wParam))
             {
@@ -4126,7 +4155,7 @@ EventLogPropProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
                     }
                     return (INT_PTR)TRUE;
                 }
-                
+
                 case IDC_EDIT_EVENTS_AGE:
                 case IDC_EDIT_MAXLOGSIZE:
                     if (HIWORD(wParam) == EN_CHANGE)
@@ -4134,7 +4163,7 @@ EventLogPropProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
                         PropSheet_Changed(GetParent(hDlg), hDlg);
                     }
                     return (INT_PTR)TRUE;
-                    
+
                 case IDC_OVERWRITE_AS_NEEDED:
                 {
                     CheckRadioButton(hDlg, IDC_OVERWRITE_AS_NEEDED, IDC_NO_OVERWRITE, IDC_OVERWRITE_AS_NEEDED);
@@ -4161,7 +4190,7 @@ EventLogPropProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
                     PropSheet_Changed(GetParent(hDlg), hDlg);
                     return (INT_PTR)TRUE;
                 }
-                
+
                 case IDC_RESTOREDEFAULTS:
                 {
                     LoadStringW(hInst, IDS_RESTOREDEFAULTS, szText, _countof(szText));

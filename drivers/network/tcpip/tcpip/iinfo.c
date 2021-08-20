@@ -143,7 +143,7 @@ TDI_STATUS InfoTdiSetArptableMIB(PIP_INTERFACE IF, PVOID Buffer, UINT BufferSize
 
     if ((NCE = NBLocateNeighbor(&Address, IF)))
         NBRemoveNeighbor(NCE);
-     
+
     if (NBAddNeighbor(IF,
                       &Address,
                       ArpEntry->PhysAddr,

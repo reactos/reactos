@@ -17,6 +17,9 @@ list(APPEND SOURCE
 
 BISON_TARGET(parser parser.y ${CMAKE_CURRENT_BINARY_DIR}/parser.tab.c COMPILE_FLAGS "-p parser_")
 
+list(APPEND PCH_SKIP_SOURCE
+    ${BISON_parser_OUTPUTS})
+
 list(APPEND vbscript_rc_deps
     ${CMAKE_CURRENT_SOURCE_DIR}/vbscript_classes.rgs
     ${CMAKE_CURRENT_SOURCE_DIR}/vbsglobal.rgs
@@ -32,9 +35,14 @@ add_typelib(vbsglobal.idl vbsregexp10.idl vbsregexp55.idl)
 
 add_library(vbscript MODULE
     ${SOURCE}
-    ${BISON_parser_OUTPUTS}
+    ${PCH_SKIP_SOURCE}
     vbscript.rc
     ${CMAKE_CURRENT_BINARY_DIR}/vbscript.def)
+
+if(MSVC)
+    # Disable warning C4267: '=': conversion from 'size_t' to 'WCHAR', possible loss of data
+    target_compile_options(vbscript PRIVATE /wd4267)
+endif()
 
 set_module_type(vbscript win32dll)
 target_link_libraries(vbscript uuid wine)

@@ -1,5 +1,5 @@
-/* Translated by Song Fuchang (0xfc) <sfc_0@yahoo.com.cn> */
-/* Translation improved by Aobi Chan CL <eason066@gmail.com> */
+/* Translated by Song Fuchang (0xfc) <sfc_0@yahoo.com.cn>
+ * Translation improved by Chan Chilung <eason066@gmail.com> */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
 
@@ -68,7 +68,7 @@ BEGIN
     LTEXT "下載資料夾:", -1, 16, 75, 100, 9
     EDITTEXT IDC_DOWNLOAD_DIR_EDIT, 15, 86, 166, 12, WS_CHILD | WS_VISIBLE | WS_GROUP | ES_AUTOHSCROLL
     PUSHBUTTON "選擇(&C)", IDC_CHOOSE, 187, 85, 50, 14
-    AUTOCHECKBOX "在安裝完程式後刪除安裝程式(&D)", IDC_DEL_AFTER_INSTALL, 16, 100, 218, 12
+    AUTOCHECKBOX "在完成安裝程式後刪除安裝程式(&D)", IDC_DEL_AFTER_INSTALL, 16, 100, 218, 12
     GROUPBOX "指定軟件列表源", -1, 4, 118, 240, 46
     CONTROL "使用預設來源", IDC_SOURCE_DEFAULT, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 15, 132, 74, 10
     CONTROL "指定軟件列表源", IDC_USE_SOURCE, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 15, 147, 74, 10

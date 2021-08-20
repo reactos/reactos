@@ -160,7 +160,6 @@ KiInitializePcr(IN PKIPCR Pcr,
     KeSetCurrentIrql(PASSIVE_LEVEL);
 }
 
-CODE_SEG("INIT")
 VOID
 NTAPI
 KiInitializeCpu(PKIPCR Pcr)
@@ -367,6 +366,7 @@ KiInitModuleList(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 }
 
 CODE_SEG("INIT")
+DECLSPEC_NORETURN
 VOID
 NTAPI
 KiSystemStartup(IN PLOADER_PARAMETER_BLOCK LoaderBlock)

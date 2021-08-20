@@ -291,6 +291,13 @@ SmpCheckDuplicateMuSessionId(
 
 NTSTATUS
 NTAPI
+SmpExecuteInitialCommand(IN ULONG MuSessionId,
+                         IN PUNICODE_STRING InitialCommand,
+                         IN HANDLE InitialCommandProcess,
+                         OUT PHANDLE ReturnPid);
+
+NTSTATUS
+NTAPI
 SmpExecuteImage(
     IN PUNICODE_STRING FileName,
     IN PUNICODE_STRING Directory,

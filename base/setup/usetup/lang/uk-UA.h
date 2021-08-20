@@ -1337,6 +1337,37 @@ static MUI_ENTRY ukUAFormatPartitionEntries[] =
     }
 };
 
+static MUI_ENTRY ukUACheckFSEntries[] =
+{
+    {
+        4,
+        3,
+        " \202\341\342\240\255\256\242\253\245\255\255\357 ReactOS " KERNEL_VERSION_STR " ",
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        8,
+        "\202\341\342\240\255\256\242\253\356\242\240\347 \257\245\340\245\242i\340\357\363 \242\250\241\340\240\255\250\251 \340\256\247\244i\253.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        "\201\343\244\354-\253\240\341\252\240, \247\240\347\245\252\240\251\342\245...",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
 static MUI_ENTRY ukUAInstallDirectoryEntries[] =
 {
     {
@@ -1489,6 +1520,30 @@ static MUI_ENTRY ukUABootLoaderEntries[] =
         0,
         0,
         "ENTER = \217\340\256\244\256\242\246\250\342\250   F3 = \202\250\251\342\250",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
+static MUI_ENTRY ukUABootLoaderInstallPageEntries[] =
+{
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        "Installing the bootloader onto the media, please wait...",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
         TEXT_ID_STATIC
     },
@@ -2110,6 +2165,10 @@ MUI_PAGE ukUAPages[] =
         ukUAFormatPartitionEntries
     },
     {
+        CHECK_FILE_SYSTEM_PAGE,
+        ukUACheckFSEntries
+    },
+    {
         DELETE_PARTITION_PAGE,
         ukUADeletePartitionEntries
     },
@@ -2144,6 +2203,10 @@ MUI_PAGE ukUAPages[] =
     {
         SUCCESS_PAGE,
         ukUASuccessPageEntries
+    },
+    {
+        BOOT_LOADER_INSTALLATION_PAGE,
+        ukUABootLoaderInstallPageEntries
     },
     {
         BOOT_LOADER_FLOPPY_PAGE,
@@ -2195,8 +2258,6 @@ MUI_STRING ukUAStrings[] =
     "\215\256\242\250\251 \340\256\247\244i\253 \255\245 \242i\244\344\256\340\254\240\342\256\242\240\255\256."},
     {STRING_INSTALLONPART,
     "ReactOS \242\341\342\240\255\256\242\253\356\363\342\354\341\357 \255\240 \340\256\247\244i\253"},
-    {STRING_CHECKINGPART,
-    "\202\341\342\240\255\256\242\253\356\242\240\347 \257\245\340\245\242i\340\357\363 \242\250\241\340\240\255\250\251 \340\256\247\244i\253."},
     {STRING_CONTINUE,
     "ENTER = \217\340\256\244\256\242\246\250\342\250"},
     {STRING_QUITCONTINUE,

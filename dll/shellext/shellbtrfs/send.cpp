@@ -303,6 +303,7 @@ void BtrfsSend::Browse(HWND hwnd) {
     ofn.hInstance = module;
     ofn.lpstrFile = file;
     ofn.nMaxFile = sizeof(file) / sizeof(WCHAR);
+    ofn.Flags = OFN_EXPLORER;
 
     if (!GetSaveFileNameW(&ofn))
         return;

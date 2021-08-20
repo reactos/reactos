@@ -101,7 +101,7 @@ FsRtlDissectDbcs(IN ANSI_STRING Name,
  * @name FsRtlDoesDbcsContainWildCards
  * @implemented
  *
- * Returns TRUE if the given DbcsName contains wildcards such as *, ?, 
+ * Returns TRUE if the given DbcsName contains wildcards such as *, ?,
  * ANSI_DOS_STAR, ANSI_DOS_DOT, and ANSI_DOS_QM
  *
  * @param Name
@@ -445,7 +445,7 @@ Exit:
  *        The filename to check. It can also contains pathname.
  *
  * @param WildCardsPermissible
- *        If this is set to FALSE and if filename contains wildcard, the function 
+ *        If this is set to FALSE and if filename contains wildcard, the function
  *        will fail
  *
  * @param PathNamePermissible
@@ -617,7 +617,7 @@ FsRtlIsFatDbcsLegal(IN ANSI_STRING DbcsName,
  *        The filename to check. It can also contains pathname.
  *
  * @param WildCardsPermissible
- *        If this is set to FALSE and if filename contains wildcard, the function 
+ *        If this is set to FALSE and if filename contains wildcard, the function
  *        will fail
  *
  * @param PathNamePermissible

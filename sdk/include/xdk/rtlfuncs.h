@@ -932,8 +932,7 @@ RtlSetDaclSecurityDescriptor(
 #define RtlStoreUlongPtr(Address,Value) RtlStoreUlong(Address,Value)
 #endif /* _WIN64 */
 
-_Success_(return!=FALSE)
-_Must_inspect_result_
+_Success_(return != FALSE)
 NTSYSAPI
 BOOLEAN
 NTAPI
@@ -1716,7 +1715,6 @@ RtlSecondsSince1980ToTime(
   _Out_ PLARGE_INTEGER Time);
 
 _Success_(return != 0)
-_Must_inspect_result_
 NTSYSAPI
 BOOLEAN
 NTAPI

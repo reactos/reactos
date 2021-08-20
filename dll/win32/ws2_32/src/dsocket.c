@@ -142,8 +142,8 @@ WsSockGetSocket(IN SOCKET Handle)
     PWSSOCKET Socket;
 
     /* Let WAH do the translation */
-    if ((Socket = (PWSSOCKET)WahReferenceContextByHandle(WsSockHandleTable,
-                                                         (HANDLE)Handle)))
+    if ((WsSockHandleTable != NULL) &&
+        (Socket = (PWSSOCKET)WahReferenceContextByHandle(WsSockHandleTable, (HANDLE)Handle)))
     {
         return Socket;
     }

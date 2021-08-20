@@ -102,18 +102,26 @@ GetEntry:
 
     MmLockAddressSpace(AddressSpace);
 
-    if (MmGetPfnForProcess(Process, Address) != Page)
+    MemoryArea = MmLocateMemoryAreaByAddress(AddressSpace, Address);
+    if (MemoryArea == NULL || MemoryArea->DeleteInProgress)
     {
-        /* This changed in the short window where we didn't have any locks */
         MmUnlockAddressSpace(AddressSpace);
         ExReleaseRundownProtection(&Process->RundownProtect);
         ObDereferenceObject(Process);
         goto GetEntry;
     }
 
-    MemoryArea = MmLocateMemoryAreaByAddress(AddressSpace, Address);
-    if (MemoryArea == NULL || MemoryArea->DeleteInProgress)
+
+    /* Attach to it, if needed */
+    ASSERT(PsGetCurrentProcess() == PsInitialSystemProcess);
+    if (Process != PsInitialSystemProcess)
+        KeAttachProcess(&Process->Pcb);
+
+    if (MmGetPfnForProcess(Process, Address) != Page)
     {
+        /* This changed in the short window where we didn't have any locks */
+        if (Process != PsInitialSystemProcess)
+            KeDetachProcess();
         MmUnlockAddressSpace(AddressSpace);
         ExReleaseRundownProtection(&Process->RundownProtect);
         ObDereferenceObject(Process);
@@ -140,16 +148,16 @@ GetEntry:
         {
             /* The segment is being read or something. Give up */
             MmUnlockSectionSegment(Segment);
+            if (Process != PsInitialSystemProcess)
+                KeDetachProcess();
             MmUnlockAddressSpace(AddressSpace);
-            if (Address < MmSystemRangeStart)
-            {
-                ExReleaseRundownProtection(&Process->RundownProtect);
-                ObDereferenceObject(Process);
-            }
+            ExReleaseRundownProtection(&Process->RundownProtect);
+            ObDereferenceObject(Process);
             return(STATUS_UNSUCCESSFUL);
         }
 
         /* Delete this virtual mapping in the process */
+        MmDeleteRmap(Page, Process, Address);
         MmDeleteVirtualMapping(Process, Address, &Dirty, &MapPage);
 
         /* We checked this earlier */
@@ -176,15 +184,15 @@ GetEntry:
                             Address, NULL);
 
                     /* We can't, so let this page in the Process VM */
-                    MmCreateVirtualMapping(Process, Address, Region->Protect, &Page, 1);
+                    MmCreateVirtualMapping(Process, Address, Region->Protect, Page);
+                    MmInsertRmap(Page, Process, Address);
                     MmSetDirtyPage(Process, Address);
 
                     MmUnlockAddressSpace(AddressSpace);
-                    if (Address < MmSystemRangeStart)
-                    {
-                        ExReleaseRundownProtection(&Process->RundownProtect);
-                        ObDereferenceObject(Process);
-                    }
+                    if (Process != PsInitialSystemProcess)
+                        KeDetachProcess();
+                    ExReleaseRundownProtection(&Process->RundownProtect);
+                    ObDereferenceObject(Process);
 
                     return STATUS_UNSUCCESSFUL;
                 }
@@ -192,7 +200,18 @@ GetEntry:
 
             if (Dirty)
             {
+                SWAPENTRY Dummy;
+
+                /* Put a wait entry into the process and unlock */
+                MmCreatePageFileMapping(Process, Address, MM_WAIT_ENTRY);
+                MmUnlockAddressSpace(AddressSpace);
+
                 Status = MmWriteToSwapPage(SwapEntry, Page);
+
+                MmLockAddressSpace(AddressSpace);
+                MmDeletePageFileMapping(Process, Address, &Dummy);
+                ASSERT(Dummy == MM_WAIT_ENTRY);
+
                 if (!NT_SUCCESS(Status))
                 {
                     /* We failed at saving the content of this page. Keep it in */
@@ -205,10 +224,13 @@ GetEntry:
                     MmFreeSwapPage(SwapEntry);
 
                     /* We can't, so let this page in the Process VM */
-                    MmCreateVirtualMapping(Process, Address, Region->Protect, &Page, 1);
+                    MmCreateVirtualMapping(Process, Address, Region->Protect, Page);
+                    MmInsertRmap(Page, Process, Address);
                     MmSetDirtyPage(Process, Address);
 
                     MmUnlockAddressSpace(AddressSpace);
+                    if (Process != PsInitialSystemProcess)
+                        KeDetachProcess();
                     ExReleaseRundownProtection(&Process->RundownProtect);
                     ObDereferenceObject(Process);
 
@@ -223,10 +245,10 @@ GetEntry:
                 MmSetSavedSwapEntryPage(Page, 0);
             }
 
-            MmUnlockAddressSpace(AddressSpace);
-
             /* We can finally let this page go */
-            MmDeleteRmap(Page, Process, Address);
+            MmUnlockAddressSpace(AddressSpace);
+            if (Process != PsInitialSystemProcess)
+                KeDetachProcess();
 #if DBG
             OldIrql = MiAcquirePfnLock();
             ASSERT(MmGetRmapListHeadPage(Page) == NULL);
@@ -240,13 +262,12 @@ GetEntry:
             return STATUS_SUCCESS;
         }
 
-        /* Delete this RMAP */
-        MmDeleteRmap(Page, Process, Address);
-
         /* One less mapping referencing this segment */
         Released = MmUnsharePageEntrySectionSegment(MemoryArea, Segment, &Offset, Dirty, TRUE, NULL);
 
         MmUnlockSectionSegment(Segment);
+        if (Process != PsInitialSystemProcess)
+            KeDetachProcess();
         MmUnlockAddressSpace(AddressSpace);
 
         ExReleaseRundownProtection(&Process->RundownProtect);
@@ -279,7 +300,6 @@ WriteSegment:
         Released = MmCheckDirtySegment(Segment, &SegmentOffset, FALSE, TRUE);
 
         MmUnlockSectionSegment(Segment);
-
         MmDereferenceSegment(Segment);
 
         if (Released)
@@ -290,61 +310,6 @@ WriteSegment:
 
     /* If we are here, then we didn't release the page */
     return STATUS_UNSUCCESSFUL;
-}
-
-VOID
-NTAPI
-MmSetCleanAllRmaps(PFN_NUMBER Page)
-{
-    PMM_RMAP_ENTRY current_entry;
-    KIRQL OldIrql;
-
-    OldIrql = MiAcquirePfnLock();
-    current_entry = MmGetRmapListHeadPage(Page);
-    if (current_entry == NULL)
-    {
-        DPRINT1("MmSetCleanAllRmaps: No rmaps.\n");
-        KeBugCheck(MEMORY_MANAGEMENT);
-    }
-    while (current_entry != NULL)
-    {
-        if (!RMAP_IS_SEGMENT(current_entry->Address))
-            MmSetCleanPage(current_entry->Process, current_entry->Address);
-        current_entry = current_entry->Next;
-    }
-    MiReleasePfnLock(OldIrql);
-}
-
-BOOLEAN
-NTAPI
-MmIsDirtyPageRmap(PFN_NUMBER Page)
-{
-    PMM_RMAP_ENTRY current_entry;
-    KIRQL OldIrql;
-    BOOLEAN Dirty = FALSE;
-
-    OldIrql = MiAcquirePfnLock();
-    current_entry = MmGetRmapListHeadPage(Page);
-    if (current_entry == NULL)
-    {
-        DPRINT1("MmIsDirtyPageRmap: No rmaps.\n");
-        KeBugCheck(MEMORY_MANAGEMENT);
-    }
-    while (current_entry != NULL)
-    {
-        if (!RMAP_IS_SEGMENT(current_entry->Address))
-        {
-            if (MmIsDirtyPage(current_entry->Process, current_entry->Address))
-            {
-                Dirty = TRUE;
-                break;
-            }
-        }
-        current_entry = current_entry->Next;
-    }
-    MiReleasePfnLock(OldIrql);
-
-    return Dirty;
 }
 
 VOID
@@ -509,8 +474,6 @@ MmGetSegmentRmap(PFN_NUMBER Page, PULONG RawOffset)
                 MiReleasePfnLock(OldIrql);
                 return NULL;
             }
-
-            InterlockedIncrement64(Result->Segment->ReferenceCount);
             MiReleasePfnLock(OldIrql);
             return Result;
         }

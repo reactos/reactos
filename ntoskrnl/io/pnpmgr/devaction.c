@@ -419,11 +419,15 @@ PiAttachFilterDriversCallback(
     SERVICE_LOAD_TYPE startType = DisableLoad;
 
     Status = IopGetRegistryValue(serviceHandle, L"Start", &kvInfo);
-    if (NT_SUCCESS(Status) && kvInfo->Type == REG_DWORD)
+    if (NT_SUCCESS(Status))
     {
-        RtlMoveMemory(&startType,
-                      (PVOID)((ULONG_PTR)kvInfo + kvInfo->DataOffset),
-                      sizeof(startType));
+        if (kvInfo->Type == REG_DWORD)
+        {
+            RtlMoveMemory(&startType,
+                          (PVOID)((ULONG_PTR)kvInfo + kvInfo->DataOffset),
+                          sizeof(startType));
+        }
+
         ExFreePool(kvInfo);
     }
 
@@ -621,52 +625,56 @@ PiCallDriverAddDevice(
 
     // try to get the class GUID of an instance and its registry key
     Status = IopGetRegistryValue(SubKey, REGSTR_VAL_CLASSGUID, &kvInfo);
-    if (NT_SUCCESS(Status) && kvInfo->Type == REG_SZ && kvInfo->DataLength > sizeof(WCHAR))
+    if (NT_SUCCESS(Status))
     {
-        UNICODE_STRING classGUID = {
-            .MaximumLength = kvInfo->DataLength,
-            .Length = kvInfo->DataLength - sizeof(UNICODE_NULL),
-            .Buffer = (PVOID)((ULONG_PTR)kvInfo + kvInfo->DataOffset)
-        };
-        HANDLE ccsControlHandle;
+        if (kvInfo->Type == REG_SZ && kvInfo->DataLength > sizeof(WCHAR))
+        {
+            UNICODE_STRING classGUID = {
+                .MaximumLength = kvInfo->DataLength,
+                .Length = kvInfo->DataLength - sizeof(UNICODE_NULL),
+                .Buffer = (PVOID)((ULONG_PTR)kvInfo + kvInfo->DataOffset)
+            };
+            HANDLE ccsControlHandle;
 
-        Status = IopOpenRegistryKeyEx(&ccsControlHandle, NULL, &ccsControlClass, KEY_READ);
-        if (!NT_SUCCESS(Status))
-        {
-            DPRINT1("IopOpenRegistryKeyEx() failed for \"%wZ\" (status %x)\n",
-                    &ccsControlClass, Status);
-        }
-        else
-        {
-            // open the CCS\Control\Class\<ClassGUID> key
-            Status = IopOpenRegistryKeyEx(&ClassKey, ccsControlHandle, &classGUID, KEY_READ);
-            ZwClose(ccsControlHandle);
+            Status = IopOpenRegistryKeyEx(&ccsControlHandle, NULL, &ccsControlClass, KEY_READ);
             if (!NT_SUCCESS(Status))
             {
-                DPRINT1("Failed to open class key \"%wZ\" (status %x)\n", &classGUID, Status);
-            }
-        }
-
-        if (ClassKey)
-        {
-            // Check the Properties key of a class too
-            // Windows fills some device properties from this key (which is protected)
-            // TODO: add the device properties from this key
-
-            UNICODE_STRING properties = RTL_CONSTANT_STRING(REGSTR_KEY_DEVICE_PROPERTIES);
-            HANDLE propertiesHandle;
-
-            Status = IopOpenRegistryKeyEx(&propertiesHandle, ClassKey, &properties, KEY_READ);
-            if (!NT_SUCCESS(Status))
-            {
-                DPRINT("Properties key failed to open for \"%wZ\" (status %x)\n",
-                       &classGUID, Status);
+                DPRINT1("IopOpenRegistryKeyEx() failed for \"%wZ\" (status %x)\n",
+                        &ccsControlClass, Status);
             }
             else
             {
-                ZwClose(propertiesHandle);
+                // open the CCS\Control\Class\<ClassGUID> key
+                Status = IopOpenRegistryKeyEx(&ClassKey, ccsControlHandle, &classGUID, KEY_READ);
+                ZwClose(ccsControlHandle);
+                if (!NT_SUCCESS(Status))
+                {
+                    DPRINT1("Failed to open class key \"%wZ\" (status %x)\n", &classGUID, Status);
+                }
+            }
+
+            if (ClassKey)
+            {
+                // Check the Properties key of a class too
+                // Windows fills some device properties from this key (which is protected)
+                // TODO: add the device properties from this key
+
+                UNICODE_STRING properties = RTL_CONSTANT_STRING(REGSTR_KEY_DEVICE_PROPERTIES);
+                HANDLE propertiesHandle;
+
+                Status = IopOpenRegistryKeyEx(&propertiesHandle, ClassKey, &properties, KEY_READ);
+                if (!NT_SUCCESS(Status))
+                {
+                    DPRINT("Properties key failed to open for \"%wZ\" (status %x)\n",
+                           &classGUID, Status);
+                }
+                else
+                {
+                    ZwClose(propertiesHandle);
+                }
             }
         }
+
         ExFreePool(kvInfo);
     }
 
@@ -1073,33 +1081,122 @@ IopQueryCompatibleIds(PDEVICE_NODE DeviceNode,
     return Status;
 }
 
+/**
+ * @brief      Sets the DeviceNode's DeviceDesc and LocationInformation registry values
+ */
+VOID
+PiSetDevNodeText(
+    _In_ PDEVICE_NODE DeviceNode,
+    _In_ HANDLE InstanceKey)
+{
+    PAGED_CODE();
+
+    LCID localeId;
+
+    // Get the Locale ID
+    NTSTATUS status = ZwQueryDefaultLocale(FALSE, &localeId);
+    if (!NT_SUCCESS(status))
+    {
+        DPRINT1("ZwQueryDefaultLocale() failed with status %x\n", status);
+        return;
+    }
+
+    // Step 1: Write the DeviceDesc value if does not exist
+
+    UNICODE_STRING valDeviceDesc = RTL_CONSTANT_STRING(L"DeviceDesc");
+    ULONG len;
+
+    status = ZwQueryValueKey(InstanceKey, &valDeviceDesc, KeyValueBasicInformation, NULL, 0, &len);
+    if (status == STATUS_OBJECT_NAME_NOT_FOUND)
+    {
+        PWSTR deviceDesc = NULL;
+        status = PiIrpQueryDeviceText(DeviceNode, localeId, DeviceTextDescription, &deviceDesc);
+
+        if (deviceDesc && deviceDesc[0] != UNICODE_NULL)
+        {
+            status = ZwSetValueKey(InstanceKey,
+                                   &valDeviceDesc,
+                                   0,
+                                   REG_SZ,
+                                   deviceDesc,
+                                   ((ULONG)wcslen(deviceDesc) + 1) * sizeof(WCHAR));
+
+            if (!NT_SUCCESS(status))
+            {
+                DPRINT1("ZwSetValueKey() failed (Status %x)\n", status);
+            }
+        }
+        else
+        {
+            // This key is mandatory, so even if the Irp fails, we still write it
+            UNICODE_STRING unknownDeviceDesc = RTL_CONSTANT_STRING(L"Unknown device");
+            DPRINT("Driver didn't return DeviceDesc (status %x)\n", status);
+
+            status = ZwSetValueKey(InstanceKey,
+                                   &valDeviceDesc,
+                                   0,
+                                   REG_SZ,
+                                   unknownDeviceDesc.Buffer,
+                                   unknownDeviceDesc.MaximumLength);
+            if (!NT_SUCCESS(status))
+            {
+                DPRINT1("ZwSetValueKey() failed (Status %x)\n", status);
+            }
+        }
+
+        if (deviceDesc)
+        {
+            ExFreePoolWithTag(deviceDesc, 0);
+        }
+    }
+
+    // Step 2: LocaltionInformation is overwritten unconditionally
+
+    PWSTR deviceLocationInfo = NULL;
+    status = PiIrpQueryDeviceText(DeviceNode,
+                                  localeId,
+                                  DeviceTextLocationInformation,
+                                  &deviceLocationInfo);
+
+    if (deviceLocationInfo && deviceLocationInfo[0] != UNICODE_NULL)
+    {
+        UNICODE_STRING valLocationInfo = RTL_CONSTANT_STRING(L"LocationInformation");
+
+        status = ZwSetValueKey(InstanceKey,
+                               &valLocationInfo,
+                               0,
+                               REG_SZ,
+                               deviceLocationInfo,
+                               ((ULONG)wcslen(deviceLocationInfo) + 1) * sizeof(WCHAR));
+        if (!NT_SUCCESS(status))
+        {
+            DPRINT1("ZwSetValueKey() failed (Status %x)\n", status);
+        }
+    }
+
+    if (deviceLocationInfo)
+    {
+        ExFreePoolWithTag(deviceLocationInfo, 0);
+    }
+    else
+    {
+        DPRINT("Driver didn't return LocationInformation (status %x)\n", status);
+    }
+}
+
 static
 NTSTATUS
 PiInitializeDevNode(
     _In_ PDEVICE_NODE DeviceNode)
 {
     IO_STATUS_BLOCK IoStatusBlock;
-    PWSTR DeviceDescription;
-    PWSTR LocationInformation;
-    IO_STACK_LOCATION Stack;
     NTSTATUS Status;
-    ULONG RequiredLength;
-    LCID LocaleId;
     HANDLE InstanceKey = NULL;
-    UNICODE_STRING ValueName;
     UNICODE_STRING InstancePathU;
     PDEVICE_OBJECT OldDeviceObject;
 
     DPRINT("PiProcessNewDevNode(%p)\n", DeviceNode);
     DPRINT("PDO 0x%p\n", DeviceNode->PhysicalDeviceObject);
-
-    /* Get Locale ID */
-    Status = ZwQueryDefaultLocale(FALSE, &LocaleId);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("ZwQueryDefaultLocale() failed with status 0x%lx\n", Status);
-        return Status;
-    }
 
     /*
      * FIXME: For critical errors, cleanup and disable device, but always
@@ -1155,86 +1252,8 @@ PiInitializeDevNode(
 
     DeviceNode->Flags |= DNF_IDS_QUERIED;
 
-    DPRINT("Sending IRP_MN_QUERY_DEVICE_TEXT.DeviceTextDescription to device stack\n");
-
-    Stack.Parameters.QueryDeviceText.DeviceTextType = DeviceTextDescription;
-    Stack.Parameters.QueryDeviceText.LocaleId = LocaleId;
-    Status = IopInitiatePnpIrp(DeviceNode->PhysicalDeviceObject,
-                               &IoStatusBlock,
-                               IRP_MN_QUERY_DEVICE_TEXT,
-                               &Stack);
-    DeviceDescription = NT_SUCCESS(Status) ? (PWSTR)IoStatusBlock.Information
-                                           : NULL;
-    /* This key is mandatory, so even if the Irp fails, we still write it */
-    RtlInitUnicodeString(&ValueName, L"DeviceDesc");
-    if (ZwQueryValueKey(InstanceKey, &ValueName, KeyValueBasicInformation, NULL, 0, &RequiredLength) == STATUS_OBJECT_NAME_NOT_FOUND)
-    {
-        if (DeviceDescription &&
-            *DeviceDescription != UNICODE_NULL)
-        {
-            /* This key is overriden when a driver is installed. Don't write the
-             * new description if another one already exists */
-            Status = ZwSetValueKey(InstanceKey,
-                                   &ValueName,
-                                   0,
-                                   REG_SZ,
-                                   DeviceDescription,
-                                   ((ULONG)wcslen(DeviceDescription) + 1) * sizeof(WCHAR));
-        }
-        else
-        {
-            UNICODE_STRING DeviceDesc = RTL_CONSTANT_STRING(L"Unknown device");
-            DPRINT("Driver didn't return DeviceDesc (Status 0x%08lx), so place unknown device there\n", Status);
-
-            Status = ZwSetValueKey(InstanceKey,
-                                   &ValueName,
-                                   0,
-                                   REG_SZ,
-                                   DeviceDesc.Buffer,
-                                   DeviceDesc.MaximumLength);
-            if (!NT_SUCCESS(Status))
-            {
-                DPRINT1("ZwSetValueKey() failed (Status 0x%lx)\n", Status);
-            }
-
-        }
-    }
-
-    if (DeviceDescription)
-    {
-        ExFreePoolWithTag(DeviceDescription, 0);
-    }
-
-    DPRINT("Sending IRP_MN_QUERY_DEVICE_TEXT.DeviceTextLocation to device stack\n");
-
-    Stack.Parameters.QueryDeviceText.DeviceTextType = DeviceTextLocationInformation;
-    Stack.Parameters.QueryDeviceText.LocaleId = LocaleId;
-    Status = IopInitiatePnpIrp(DeviceNode->PhysicalDeviceObject,
-                               &IoStatusBlock,
-                               IRP_MN_QUERY_DEVICE_TEXT,
-                               &Stack);
-    if (NT_SUCCESS(Status) && IoStatusBlock.Information)
-    {
-        LocationInformation = (PWSTR)IoStatusBlock.Information;
-        DPRINT("LocationInformation: %S\n", LocationInformation);
-        RtlInitUnicodeString(&ValueName, L"LocationInformation");
-        Status = ZwSetValueKey(InstanceKey,
-                               &ValueName,
-                               0,
-                               REG_SZ,
-                               LocationInformation,
-                               ((ULONG)wcslen(LocationInformation) + 1) * sizeof(WCHAR));
-        if (!NT_SUCCESS(Status))
-        {
-            DPRINT1("ZwSetValueKey() failed (Status %lx)\n", Status);
-        }
-
-        ExFreePoolWithTag(LocationInformation, 0);
-    }
-    else
-    {
-        DPRINT("IopInitiatePnpIrp() failed (Status %x) or IoStatusBlock.Information=NULL\n", Status);
-    }
+    // Set the device's DeviceDesc and LocationInformation fields
+    PiSetDevNodeText(DeviceNode, InstanceKey);
 
     DPRINT("Sending IRP_MN_QUERY_BUS_INFORMATION to device stack\n");
 
@@ -1377,6 +1396,14 @@ IopSetServiceEnumData(
         goto done;
     }
 
+    Status = RtlDuplicateUnicodeString(RTL_DUPLICATE_UNICODE_STRING_ALLOCATE_NULL_STRING,
+                                       &ServiceName,
+                                       &DeviceNode->ServiceName);
+    if (!NT_SUCCESS(Status))
+    {
+        goto done;
+    }
+
     RtlInitUnicodeString(&EnumKeyName, L"Enum");
     Status = IopCreateRegistryKeyEx(&ServiceEnumKey,
                                     ServiceKey,
@@ -1460,10 +1487,6 @@ IopSetServiceEnumData(
                                &NextInstance,
                                sizeof(NextInstance));
     }
-
-    RtlDuplicateUnicodeString(RTL_DUPLICATE_UNICODE_STRING_ALLOCATE_NULL_STRING,
-                              &ServiceName,
-                              &DeviceNode->ServiceName);
 
 done:
     if (ServiceEnumKey != NULL)
@@ -2482,6 +2505,8 @@ ActionToStr(
             return "PiActionResetDevice";
         case PiActionAddBootDevices:
             return "PiActionAddBootDevices";
+        case PiActionStartDevice:
+            return "PiActionStartDevice";
         default:
             return "(request unknown)";
     }
@@ -2521,7 +2546,7 @@ PipDeviceActionWorker(
         {
             case PiActionAddBootDevices:
             {
-                if (deviceNode->State == DeviceNodeInitialized && 
+                if (deviceNode->State == DeviceNodeInitialized &&
                     !(deviceNode->Flags & DNF_HAS_PROBLEM))
                 {
                     status = PiCallDriverAddDevice(deviceNode, PnPBootDriversInitialized);
@@ -2538,6 +2563,22 @@ PipDeviceActionWorker(
                 // TODO: the operation is a no-op for everything except removed nodes
                 // for removed nodes, it returns them back to DeviceNodeUninitialized
                 status = STATUS_SUCCESS;
+                break;
+
+            case PiActionStartDevice:
+                // This action is triggered from usermode, when a driver is installed
+                // for a non-critical PDO
+                if (deviceNode->State == DeviceNodeInitialized &&
+                    !(deviceNode->Flags & DNF_HAS_PROBLEM))
+                {
+                    PiDevNodeStateMachine(deviceNode);
+                }
+                else
+                {
+                    DPRINT1("NOTE: attempt to start an already started/uninitialized device %wZ\n",
+                            &deviceNode->InstancePath);
+                    status = STATUS_UNSUCCESSFUL;
+                }
                 break;
 
             default:

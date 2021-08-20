@@ -1,6 +1,6 @@
 ﻿========================
 ReactOS™ Version 0.4.x
-Updated August 31, 2016
+Updated July 19, 2021
 ========================
 
 1. What is ReactOS?
@@ -10,7 +10,7 @@ ReactOS™ is an Open Source effort to develop a quality operating system that i
 compatible with applications and drivers written for the Microsoft® Windows™ NT
 family of operating systems (NT4, 2000, XP, 2003, Vista, Seven).
 
-More information is available at: https://reactos.org/
+More information is available at: https://reactos.org
 
 
 2. Relationship with the WINE project
@@ -65,9 +65,9 @@ ReactOS - amongst other topics. Contributors to the project are always welcome.
 7. Frequently Asked Questions
 -----------------------------
 
-Some of your questions may be answered in: https://reactos.org/faq/
-In addition, the ReactOS forum: https://reactos.org/forum/ may contain
-complementary, yet non-official, information.
+Some of your questions may be answered in: https://reactos.org/faq
+In addition, the ReactOS forum: https://reactos.org/forum
+may contain complementary, yet non-official, information.
 
 
 8. Authors

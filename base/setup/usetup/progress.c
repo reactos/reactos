@@ -240,7 +240,7 @@ DrawProgressBar(
     if (Bar->UpdateProgressProc &&
         Bar->UpdateProgressProc(Bar, TRUE, TextBuffer, ARRAYSIZE(TextBuffer)))
     {
-        coPos.X = Bar->Left + (Bar->Width - strlen(TextBuffer) + 1) / 2;
+        coPos.X = Bar->Left + (Bar->Width - (USHORT)strlen(TextBuffer) + 1) / 2;
         coPos.Y = Bar->Top;
         WriteConsoleOutputCharacterA(StdOutput,
                                      TextBuffer,
@@ -383,7 +383,7 @@ ProgressSetStep(
     if (Bar->UpdateProgressProc &&
         Bar->UpdateProgressProc(Bar, FALSE, TextBuffer, ARRAYSIZE(TextBuffer)))
     {
-        coPos.X = Bar->Left + (Bar->Width - strlen(TextBuffer) + 1) / 2;
+        coPos.X = Bar->Left + (Bar->Width - (USHORT)strlen(TextBuffer) + 1) / 2;
         coPos.Y = Bar->Top;
         WriteConsoleOutputCharacterA(StdOutput,
                                      TextBuffer,

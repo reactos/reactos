@@ -50,13 +50,12 @@ NtUserGetImeHotKey(IN DWORD dwHotKey,
 DWORD
 APIENTRY
 NtUserNotifyIMEStatus(
-   DWORD Unknown0,
-   DWORD Unknown1,
-   DWORD Unknown2)
+    HWND hwnd,
+    HIMC hIMC,
+    DWORD dwConversion)
 {
-   STUB
-
-   return 0;
+    TRACE("NtUserNotifyIMEStatus(%p, %p, 0x%lX)\n", hwnd, hIMC, dwConversion);
+    return 0;
 }
 
 
@@ -96,8 +95,7 @@ NtUserDisableThreadIme(
 
 DWORD
 APIENTRY
-NtUserGetAppImeLevel(
-    DWORD dwUnknown1)
+NtUserGetAppImeLevel(HWND hWnd)
 {
     STUB;
     return 0;
@@ -134,11 +132,9 @@ NtUserSetImeInfoEx(
 }
 
 DWORD APIENTRY
-NtUserSetImeOwnerWindow(DWORD Unknown0,
-                        DWORD Unknown1)
+NtUserSetImeOwnerWindow(PIMEINFOEX pImeInfoEx, BOOL fFlag)
 {
    STUB
-
    return 0;
 }
 

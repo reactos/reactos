@@ -1,0 +1,8 @@
+; ISA PnP Bus Driver
+[AddReg]
+HKLM,"SYSTEM\CurrentControlSet\Services\isapnp","ErrorControl",0x00010001,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Services\isapnp","Group",0x00000000,"Boot Bus Extender"
+HKLM,"SYSTEM\CurrentControlSet\Services\isapnp","ImagePath",0x00020000,"system32\drivers\isapnp.sys"
+HKLM,"SYSTEM\CurrentControlSet\Services\isapnp","Start",0x00010001,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Services\isapnp","Type",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\isapnp","Tag",0x00010001,0x00000003

@@ -1008,7 +1008,11 @@ QSI_DEF(SystemProcessInformation)
                     else
                     {
                         RtlInitAnsiString(&ImageName, Process->ImageFileName);
-                        RtlAnsiStringToUnicodeString(&SpiCurrent->ImageName, &ImageName, FALSE);
+                        Status = RtlAnsiStringToUnicodeString(&SpiCurrent->ImageName, &ImageName, FALSE);
+                        if (!NT_SUCCESS(Status))
+                        {
+                            SpiCurrent->ImageName.Length = 0;
+                        }
                     }
                 }
                 else
@@ -1025,12 +1029,12 @@ QSI_DEF(SystemProcessInformation)
                 SpiCurrent->PageFaultCount = Process->Vm.PageFaultCount;
                 SpiCurrent->PeakWorkingSetSize = Process->Vm.PeakWorkingSetSize;
                 SpiCurrent->WorkingSetSize = Process->Vm.WorkingSetSize;
-                SpiCurrent->QuotaPeakPagedPoolUsage = Process->QuotaPeak[0];
-                SpiCurrent->QuotaPagedPoolUsage = Process->QuotaUsage[0];
-                SpiCurrent->QuotaPeakNonPagedPoolUsage = Process->QuotaPeak[1];
-                SpiCurrent->QuotaNonPagedPoolUsage = Process->QuotaUsage[1];
-                SpiCurrent->PagefileUsage = Process->QuotaUsage[2];
-                SpiCurrent->PeakPagefileUsage = Process->QuotaPeak[2];
+                SpiCurrent->QuotaPeakPagedPoolUsage = Process->QuotaPeak[PsPagedPool];
+                SpiCurrent->QuotaPagedPoolUsage = Process->QuotaUsage[PsPagedPool];
+                SpiCurrent->QuotaPeakNonPagedPoolUsage = Process->QuotaPeak[PsNonPagedPool];
+                SpiCurrent->QuotaNonPagedPoolUsage = Process->QuotaUsage[PsNonPagedPool];
+                SpiCurrent->PagefileUsage = Process->QuotaUsage[PsPageFile];
+                SpiCurrent->PeakPagefileUsage = Process->QuotaPeak[PsPageFile];
                 SpiCurrent->PrivatePageCount = Process->CommitCharge;
                 ThreadInfo = (PSYSTEM_THREAD_INFORMATION)(SpiCurrent + 1);
 

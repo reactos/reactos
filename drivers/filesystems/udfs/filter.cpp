@@ -94,10 +94,10 @@ UDFCheckOtherFSByName(PCWSTR DeviceObjectName) {
                 &fileObject,
                 &deviceObject
                 );
-        
+
     if (!NT_SUCCESS(RC)) {
         UDFPrint(("UDFCheckOtherFSByName: error %x while calling IoGetDeviceObjectPointer \n",RC));
-        return;        
+        return;
     }
 
     UDFCheckOtherFS(deviceObject);
