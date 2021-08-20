@@ -187,6 +187,14 @@ typedef struct _THRDESKHEAD
     PVOID pSelf;
 } THRDESKHEAD, *PTHRDESKHEAD;
 
+typedef struct tagIMC
+{
+    THRDESKHEAD    head;
+    struct tagIMC *pImcNext;
+    ULONG_PTR      dwClientImcData;
+    HWND           hImeWnd;
+} IMC, *PIMC;
+
 typedef struct _PROCDESKHEAD
 {
     HEAD;
