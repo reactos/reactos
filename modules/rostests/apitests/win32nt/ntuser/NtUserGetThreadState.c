@@ -14,7 +14,7 @@
 #undef DO_PRINT
 
 #ifdef DO_PRINT
-static void PrintThreadState(HWND hWnd, int lineno)
+static VOID PrintThreadState(HWND hWnd, INT lineno)
 {
     INT i;
     HIMC hIMC = ImmGetContext(hWnd);
@@ -46,7 +46,7 @@ static void PrintThreadState(HWND hWnd, int lineno)
 }
 #endif
 
-static void CheckThreadState(INT i, DWORD_PTR dwState)
+static VOID CheckThreadState(INT lineno, INT i, DWORD_PTR dwState)
 {
     DWORD_PTR dwValue;
 
@@ -61,7 +61,10 @@ static void CheckThreadState(INT i, DWORD_PTR dwState)
     _SEH2_END;
 
     if (dwState != IGNORED)
-        ok_long((DWORD)dwValue, (DWORD)dwState);
+    {
+        ok(dwValue == dwState, "Line %d: Mismatch 0x%lX vs. 0x%lX\n",
+           lineno, (DWORD)dwValue, (DWORD)dwState);
+    }
 }
 
 START_TEST(NtUserGetThreadState)
@@ -75,69 +78,72 @@ START_TEST(NtUserGetThreadState)
     hImeWnd = ImmGetDefaultIMEWnd(hWnd);
     hIMC = ImmGetContext(hWnd);
 
+#define CHECK_THIS(i, value) \
+    CheckThreadState(__LINE__, (i), (DWORD_PTR)(value));
+
 #ifdef DO_PRINT
     PrintThreadState(hWnd, __LINE__);
 #endif
-    CheckThreadState(0, (DWORD_PTR)hWnd);
-    CheckThreadState(1, (DWORD_PTR)hWnd);
-    CheckThreadState(2, (DWORD_PTR)0);
-    CheckThreadState(3, (DWORD_PTR)hImeWnd);
-    CheckThreadState(4, (DWORD_PTR)hIMC);
+    CHECK_THIS(0, hWnd);
+    CHECK_THIS(1, hWnd);
+    CHECK_THIS(2, 0);
+    CHECK_THIS(3, hImeWnd);
+    CHECK_THIS(4, hIMC);
 
     SetCapture(hWnd);
 
 #ifdef DO_PRINT
     PrintThreadState(hWnd, __LINE__);
 #endif
-    CheckThreadState(0, (DWORD_PTR)hWnd);
-    CheckThreadState(1, (DWORD_PTR)hWnd);
-    CheckThreadState(2, (DWORD_PTR)hWnd);
-    CheckThreadState(3, (DWORD_PTR)hImeWnd);
-    CheckThreadState(4, (DWORD_PTR)hIMC);
+    CHECK_THIS(0, hWnd);
+    CHECK_THIS(1, hWnd);
+    CHECK_THIS(2, hWnd);
+    CHECK_THIS(3, hImeWnd);
+    CHECK_THIS(4, hIMC);
 
     ReleaseCapture();
 
 #ifdef DO_PRINT
     PrintThreadState(hWnd, __LINE__);
 #endif
-    CheckThreadState(0, (DWORD_PTR)hWnd);
-    CheckThreadState(1, (DWORD_PTR)hWnd);
-    CheckThreadState(2, (DWORD_PTR)0);
-    CheckThreadState(3, (DWORD_PTR)hImeWnd);
-    CheckThreadState(4, (DWORD_PTR)hIMC);
+    CHECK_THIS(0, hWnd);
+    CHECK_THIS(1, hWnd);
+    CHECK_THIS(2, 0);
+    CHECK_THIS(3, hImeWnd);
+    CHECK_THIS(4, hIMC);
 
     SetFocus(hWnd);
 
 #ifdef DO_PRINT
     PrintThreadState(hWnd, __LINE__);
 #endif
-    CheckThreadState(0, (DWORD_PTR)hWnd);
-    CheckThreadState(1, (DWORD_PTR)hWnd);
-    CheckThreadState(2, (DWORD_PTR)0);
-    CheckThreadState(3, (DWORD_PTR)hImeWnd);
-    CheckThreadState(4, (DWORD_PTR)hIMC);
+    CHECK_THIS(0, hWnd);
+    CHECK_THIS(1, hWnd);
+    CHECK_THIS(2, 0);
+    CHECK_THIS(3, hImeWnd);
+    CHECK_THIS(4, hIMC);
 
     SetActiveWindow(hWnd);
 
 #ifdef DO_PRINT
     PrintThreadState(hWnd, __LINE__);
 #endif
-    CheckThreadState(0, (DWORD_PTR)hWnd);
-    CheckThreadState(1, (DWORD_PTR)hWnd);
-    CheckThreadState(2, (DWORD_PTR)0);
-    CheckThreadState(3, (DWORD_PTR)hImeWnd);
-    CheckThreadState(4, (DWORD_PTR)hIMC);
+    CHECK_THIS(0, hWnd);
+    CHECK_THIS(1, hWnd);
+    CHECK_THIS(2, 0);
+    CHECK_THIS(3, hImeWnd);
+    CHECK_THIS(4, hIMC);
 
     SetActiveWindow(NULL);
 
 #ifdef DO_PRINT
     PrintThreadState(hWnd, __LINE__);
 #endif
-    CheckThreadState(0, (DWORD_PTR)0);
-    CheckThreadState(1, (DWORD_PTR)0);
-    CheckThreadState(2, (DWORD_PTR)0);
-    CheckThreadState(3, (DWORD_PTR)hImeWnd);
-    CheckThreadState(4, (DWORD_PTR)hIMC);
+    CHECK_THIS(0, 0);
+    CHECK_THIS(1, 0);
+    CHECK_THIS(2, 0);
+    CHECK_THIS(3, hImeWnd);
+    CHECK_THIS(4, hIMC);
 
     DestroyWindow(hWnd);
 }
