@@ -6,6 +6,7 @@
  */
 
 #include <win32nt.h>
+#include <pseh/pseh2.h>
 
 #define MAX_COUNT 8
 #define IGNORED 0xDEADFACE
