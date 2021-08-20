@@ -232,7 +232,6 @@ static VOID DoTest_BUTTON(VOID)
     DO_CHECK(3, hImeWnd);
     DO_CHECK(4, hIMC);
 
-    ImmReleaseContext(GetDesktopWindow(), hIMC);
     DestroyWindow(hWnd);
 }
 
