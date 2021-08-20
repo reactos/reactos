@@ -61,6 +61,33 @@ SHAREDINFO g_SharedInfo = { NULL };
 BYTE g_bClientRegd = FALSE;
 HANDLE g_hImm32Heap = NULL;
 
+static PWND FASTCALL ValidateHwndNoErr(HWND hwnd)
+{
+    PWND pWnd = NULL;
+    PCLIENTINFO ClientInfo = GetWin32ClientInfo();
+    INT index;
+    PUSER_HANDLE_TABLE ht;
+    WORD generation;
+
+    /* See if the window is cached */
+    if (hwnd == ClientInfo->CallbackWnd.hWnd)
+        return ClientInfo->CallbackWnd.pWnd;
+
+    if (!NtUserValidateHandleSecure(hwnd))
+        return NULL;
+
+    ht = g_SharedInfo.aheList; /* handle table */
+    index = (LOWORD(hwnd) - FIRST_USER_HANDLE) >> 1;
+    if (index < 0 || index >= ht->nb_handles || !ht->handles[index].type)
+        return NULL;
+
+    generation = HIWORD(hwnd);
+    if (generation == ht->handles[index].generation || !generation || generation == 0xFFFF)
+        pWnd = (PWND)&ht->handles[index];
+
+    return pWnd;
+}
+
 static BOOL APIENTRY Imm32InitInstance(HMODULE hMod)
 {
     NTSTATUS status;
@@ -2642,36 +2669,54 @@ BOOL WINAPI ImmGetCompositionWindow(HIMC hIMC, LPCOMPOSITIONFORM lpCompForm)
     return ret;
 }
 
+static HIMC APIENTRY ImmGetContextEx(HWND hWnd, DWORD dwContextFlags)
+{
+    HIMC hIMC;
+    PCLIENTIMC pClientImc;
+    DWORD dwProcessId1, dwProcessId2;
+    PWND pWnd;
+
+    if (!g_psi || !(g_psi->dwSRVIFlags & SRVINFO_IMM32))
+        return NULL;
+
+    if (!hWnd)
+    {
+        hIMC = (HIMC)NtUserGetThreadState(4);
+        goto Quit;
+    }
+
+    pWnd = ValidateHwndNoErr(hWnd);
+    if (!pWnd)
+        return NULL;
+
+    dwProcessId1 = (DWORD)NtCurrentTeb()->ClientId.UniqueProcess;
+    dwProcessId2 = (DWORD)NtUserQueryWindow(hWnd, QUERY_WINDOW_UNIQUE_PROCESS_ID);
+    if (dwProcessId1 != dwProcessId2)
+        return NULL;
+
+    hIMC = pWnd->hImc;
+    if (!hIMC && (dwContextFlags & 1))
+        hIMC = (HIMC)NtUserQueryWindow(hWnd, QUERY_WINDOW_DEFAULT_ICONTEXT);
+
+Quit:
+    pClientImc = ImmLockClientImc(hIMC);
+    if (pClientImc == NULL)
+        return NULL;
+    if ((dwContextFlags & 2) && (pClientImc->dwFlags & CLIENTIMC_UNKNOWN3))
+        hIMC = NULL;
+    ImmUnlockClientImc(pClientImc);
+    return hIMC;
+}
+
 /***********************************************************************
  *		ImmGetContext (IMM32.@)
  */
 HIMC WINAPI ImmGetContext(HWND hWnd)
 {
-    HIMC rc;
-
-    TRACE("%p\n", hWnd);
-
-    if (!IsWindow(hWnd))
-    {
-        SetLastError(ERROR_INVALID_WINDOW_HANDLE);
+    TRACE("(%p)\n", hWnd);
+    if (hWnd == NULL)
         return NULL;
-    }
-
-    rc = GetPropW(hWnd,szwWineIMCProperty);
-    if (rc == (HIMC)-1)
-        rc = NULL;
-    else if (rc == NULL)
-        rc = get_default_context( hWnd );
-
-    if (rc)
-    {
-        InputContextData *data = (InputContextData *)rc;
-        data->IMC.hWnd = hWnd;
-    }
-
-    TRACE("returning %p\n", rc);
-
-    return rc;
+    return ImmGetContextEx(hWnd, 2);
 }
 
 /***********************************************************************
