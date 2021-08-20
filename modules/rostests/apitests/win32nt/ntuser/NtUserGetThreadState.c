@@ -14,7 +14,7 @@
 #undef DO_PRINT
 
 #ifdef DO_PRINT
-static VOID PrintThreadState(HWND hWnd, INT lineno)
+static VOID PrintThreadState(INT lineno, HWND hWnd)
 {
     INT i;
     HIMC hIMC = ImmGetContext(hWnd);
@@ -82,7 +82,7 @@ START_TEST(NtUserGetThreadState)
     CheckThreadState(__LINE__, (i), (DWORD_PTR)(value));
 
 #ifdef DO_PRINT
-    PrintThreadState(hWnd, __LINE__);
+    PrintThreadState(__LINE__, hWnd);
 #endif
     CHECK_THIS(0, hWnd);
     CHECK_THIS(1, hWnd);
@@ -93,7 +93,7 @@ START_TEST(NtUserGetThreadState)
     SetCapture(hWnd);
 
 #ifdef DO_PRINT
-    PrintThreadState(hWnd, __LINE__);
+    PrintThreadState(__LINE__, hWnd);
 #endif
     CHECK_THIS(0, hWnd);
     CHECK_THIS(1, hWnd);
@@ -104,7 +104,7 @@ START_TEST(NtUserGetThreadState)
     ReleaseCapture();
 
 #ifdef DO_PRINT
-    PrintThreadState(hWnd, __LINE__);
+    PrintThreadState(__LINE__, hWnd);
 #endif
     CHECK_THIS(0, hWnd);
     CHECK_THIS(1, hWnd);
@@ -115,7 +115,7 @@ START_TEST(NtUserGetThreadState)
     SetFocus(hWnd);
 
 #ifdef DO_PRINT
-    PrintThreadState(hWnd, __LINE__);
+    PrintThreadState(__LINE__, hWnd);
 #endif
     CHECK_THIS(0, hWnd);
     CHECK_THIS(1, hWnd);
@@ -126,7 +126,7 @@ START_TEST(NtUserGetThreadState)
     SetActiveWindow(hWnd);
 
 #ifdef DO_PRINT
-    PrintThreadState(hWnd, __LINE__);
+    PrintThreadState(__LINE__, hWnd);
 #endif
     CHECK_THIS(0, hWnd);
     CHECK_THIS(1, hWnd);
@@ -137,7 +137,7 @@ START_TEST(NtUserGetThreadState)
     SetActiveWindow(NULL);
 
 #ifdef DO_PRINT
-    PrintThreadState(hWnd, __LINE__);
+    PrintThreadState(__LINE__, hWnd);
 #endif
     CHECK_THIS(0, 0);
     CHECK_THIS(1, 0);
