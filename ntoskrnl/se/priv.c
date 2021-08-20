@@ -99,11 +99,12 @@ SepInitPrivileges(VOID)
  */
 BOOLEAN
 NTAPI
-SepPrivilegeCheck(PTOKEN Token,
-                  PLUID_AND_ATTRIBUTES Privileges,
-                  ULONG PrivilegeCount,
-                  ULONG PrivilegeControl,
-                  KPROCESSOR_MODE PreviousMode)
+SepPrivilegeCheck(
+    _In_ PTOKEN Token,
+    _In_ PLUID_AND_ATTRIBUTES Privileges,
+    _In_ ULONG PrivilegeCount,
+    _In_ ULONG PrivilegeControl,
+    _In_ KPROCESSOR_MODE PreviousMode)
 {
     ULONG i;
     ULONG j;
@@ -185,9 +186,9 @@ SepPrivilegeCheck(PTOKEN Token,
 NTSTATUS
 NTAPI
 SepSinglePrivilegeCheck(
-    LUID PrivilegeValue,
-    PTOKEN Token,
-    KPROCESSOR_MODE PreviousMode)
+    _In_ LUID PrivilegeValue,
+    _In_ PTOKEN Token,
+    _In_ KPROCESSOR_MODE PreviousMode)
 {
     LUID_AND_ATTRIBUTES Privilege;
     PAGED_CODE();
@@ -430,15 +431,16 @@ SeCheckAuditPrivilege(
  */
 NTSTATUS
 NTAPI
-SeCaptureLuidAndAttributesArray(PLUID_AND_ATTRIBUTES Src,
-                                ULONG PrivilegeCount,
-                                KPROCESSOR_MODE PreviousMode,
-                                PLUID_AND_ATTRIBUTES AllocatedMem,
-                                ULONG AllocatedLength,
-                                POOL_TYPE PoolType,
-                                BOOLEAN CaptureIfKernel,
-                                PLUID_AND_ATTRIBUTES *Dest,
-                                PULONG Length)
+SeCaptureLuidAndAttributesArray(
+    _In_ PLUID_AND_ATTRIBUTES Src,
+    _In_ ULONG PrivilegeCount,
+    _In_ KPROCESSOR_MODE PreviousMode,
+    _In_opt_ PLUID_AND_ATTRIBUTES AllocatedMem,
+    _In_opt_ ULONG AllocatedLength,
+    _In_ POOL_TYPE PoolType,
+    _In_ BOOLEAN CaptureIfKernel,
+    _Out_ PLUID_AND_ATTRIBUTES *Dest,
+    _Inout_ PULONG Length)
 {
     ULONG BufferSize;
     NTSTATUS Status = STATUS_SUCCESS;
@@ -543,9 +545,10 @@ SeCaptureLuidAndAttributesArray(PLUID_AND_ATTRIBUTES Src,
  */
 VOID
 NTAPI
-SeReleaseLuidAndAttributesArray(PLUID_AND_ATTRIBUTES Privilege,
-                                KPROCESSOR_MODE PreviousMode,
-                                BOOLEAN CaptureIfKernel)
+SeReleaseLuidAndAttributesArray(
+    _In_ PLUID_AND_ATTRIBUTES Privilege,
+    _In_ KPROCESSOR_MODE PreviousMode,
+    _In_ BOOLEAN CaptureIfKernel)
 {
     PAGED_CODE();
 
@@ -576,8 +579,9 @@ SeReleaseLuidAndAttributesArray(PLUID_AND_ATTRIBUTES Privilege,
  */
 NTSTATUS
 NTAPI
-SeAppendPrivileges(IN OUT PACCESS_STATE AccessState,
-                   IN PPRIVILEGE_SET Privileges)
+SeAppendPrivileges(
+    _Inout_ PACCESS_STATE AccessState,
+    _In_ PPRIVILEGE_SET Privileges)
 {
     PAUX_ACCESS_DATA AuxData;
     ULONG OldPrivilegeSetSize;
@@ -656,7 +660,8 @@ SeAppendPrivileges(IN OUT PACCESS_STATE AccessState,
  */
 VOID
 NTAPI
-SeFreePrivileges(IN PPRIVILEGE_SET Privileges)
+SeFreePrivileges(
+    _In_ PPRIVILEGE_SET Privileges)
 {
     PAGED_CODE();
     ExFreePoolWithTag(Privileges, TAG_PRIVILEGE_SET);
@@ -684,9 +689,10 @@ SeFreePrivileges(IN PPRIVILEGE_SET Privileges)
  */
 BOOLEAN
 NTAPI
-SePrivilegeCheck(PPRIVILEGE_SET Privileges,
-                 PSECURITY_SUBJECT_CONTEXT SubjectContext,
-                 KPROCESSOR_MODE PreviousMode)
+SePrivilegeCheck(
+    _In_ PPRIVILEGE_SET Privileges,
+    _In_ PSECURITY_SUBJECT_CONTEXT SubjectContext,
+    _In_ KPROCESSOR_MODE PreviousMode)
 {
     PACCESS_TOKEN Token = NULL;
 
@@ -729,8 +735,9 @@ SePrivilegeCheck(PPRIVILEGE_SET Privileges,
  */
 BOOLEAN
 NTAPI
-SeSinglePrivilegeCheck(IN LUID PrivilegeValue,
-                       IN KPROCESSOR_MODE PreviousMode)
+SeSinglePrivilegeCheck(
+    _In_ LUID PrivilegeValue,
+    _In_ KPROCESSOR_MODE PreviousMode)
 {
     SECURITY_SUBJECT_CONTEXT SubjectContext;
     PRIVILEGE_SET Priv;
@@ -787,10 +794,11 @@ SeSinglePrivilegeCheck(IN LUID PrivilegeValue,
  */
 BOOLEAN
 NTAPI
-SeCheckPrivilegedObject(IN LUID PrivilegeValue,
-                        IN HANDLE ObjectHandle,
-                        IN ACCESS_MASK DesiredAccess,
-                        IN KPROCESSOR_MODE PreviousMode)
+SeCheckPrivilegedObject(
+    _In_ LUID PrivilegeValue,
+    _In_ HANDLE ObjectHandle,
+    _In_ ACCESS_MASK DesiredAccess,
+    _In_ KPROCESSOR_MODE PreviousMode)
 {
     SECURITY_SUBJECT_CONTEXT SubjectContext;
     PRIVILEGE_SET Priv;
@@ -851,9 +859,10 @@ SeCheckPrivilegedObject(IN LUID PrivilegeValue,
  */
 NTSTATUS
 NTAPI
-NtPrivilegeCheck(IN HANDLE ClientToken,
-                 IN PPRIVILEGE_SET RequiredPrivileges,
-                 OUT PBOOLEAN Result)
+NtPrivilegeCheck(
+    _In_ HANDLE ClientToken,
+    _In_ PPRIVILEGE_SET RequiredPrivileges,
+    _Out_ PBOOLEAN Result)
 {
     PLUID_AND_ATTRIBUTES Privileges;
     PTOKEN Token;

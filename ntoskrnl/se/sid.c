@@ -303,11 +303,12 @@ SepInitSecurityIDs(VOID)
  */
 NTSTATUS
 NTAPI
-SepCaptureSid(IN PSID InputSid,
-              IN KPROCESSOR_MODE AccessMode,
-              IN POOL_TYPE PoolType,
-              IN BOOLEAN CaptureIfKernel,
-              OUT PSID *CapturedSid)
+SepCaptureSid(
+    _In_ PSID InputSid,
+    _In_ KPROCESSOR_MODE AccessMode,
+    _In_ POOL_TYPE PoolType,
+    _In_ BOOLEAN CaptureIfKernel,
+    _Out_ PSID *CapturedSid)
 {
     ULONG SidSize = 0;
     PISID NewSid, Sid = (PISID)InputSid;
@@ -388,9 +389,10 @@ SepCaptureSid(IN PSID InputSid,
  */
 VOID
 NTAPI
-SepReleaseSid(IN PSID CapturedSid,
-              IN KPROCESSOR_MODE AccessMode,
-              IN BOOLEAN CaptureIfKernel)
+SepReleaseSid(
+    _In_ PSID CapturedSid,
+    _In_ KPROCESSOR_MODE AccessMode,
+    _In_ BOOLEAN CaptureIfKernel)
 {
     PAGED_CODE();
 

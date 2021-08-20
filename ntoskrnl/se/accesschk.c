@@ -66,18 +66,19 @@
  * The function is currently incomplete!
  */
 BOOLEAN NTAPI
-SepAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
-               IN PSECURITY_SUBJECT_CONTEXT SubjectSecurityContext,
-               IN ACCESS_MASK DesiredAccess,
-               IN POBJECT_TYPE_LIST ObjectTypeList,
-               IN ULONG ObjectTypeListLength,
-               IN ACCESS_MASK PreviouslyGrantedAccess,
-               OUT PPRIVILEGE_SET* Privileges,
-               IN PGENERIC_MAPPING GenericMapping,
-               IN KPROCESSOR_MODE AccessMode,
-               OUT PACCESS_MASK GrantedAccessList,
-               OUT PNTSTATUS AccessStatusList,
-               IN BOOLEAN UseResultList)
+SepAccessCheck(
+    _In_ PSECURITY_DESCRIPTOR SecurityDescriptor,
+    _In_ PSECURITY_SUBJECT_CONTEXT SubjectSecurityContext,
+    _In_ ACCESS_MASK DesiredAccess,
+    _In_ POBJECT_TYPE_LIST ObjectTypeList,
+    _In_ ULONG ObjectTypeListLength,
+    _In_ ACCESS_MASK PreviouslyGrantedAccess,
+    _Out_ PPRIVILEGE_SET* Privileges,
+    _In_ PGENERIC_MAPPING GenericMapping,
+    _In_ KPROCESSOR_MODE AccessMode,
+    _Out_ PACCESS_MASK GrantedAccessList,
+    _Out_ PNTSTATUS AccessStatusList,
+    _In_ BOOLEAN UseResultList)
 {
     ACCESS_MASK RemainingAccess;
     ACCESS_MASK TempAccess;
@@ -342,7 +343,8 @@ ReturnCommonStatus:
  * Returns a SID that represents the main user (owner).
  */
 static PSID
-SepGetSDOwner(IN PSECURITY_DESCRIPTOR _SecurityDescriptor)
+SepGetSDOwner(
+    _In_ PSECURITY_DESCRIPTOR _SecurityDescriptor)
 {
     PISECURITY_DESCRIPTOR SecurityDescriptor = _SecurityDescriptor;
     PSID Owner;
@@ -368,7 +370,8 @@ SepGetSDOwner(IN PSECURITY_DESCRIPTOR _SecurityDescriptor)
  * Returns a SID that represents a group.
  */
 static PSID
-SepGetSDGroup(IN PSECURITY_DESCRIPTOR _SecurityDescriptor)
+SepGetSDGroup(
+    _In_ PSECURITY_DESCRIPTOR _SecurityDescriptor)
 {
     PISECURITY_DESCRIPTOR SecurityDescriptor = _SecurityDescriptor;
     PSID Group;
@@ -394,7 +397,8 @@ SepGetSDGroup(IN PSECURITY_DESCRIPTOR _SecurityDescriptor)
  */
 static
 ULONG
-SepGetPrivilegeSetLength(IN PPRIVILEGE_SET PrivilegeSet)
+SepGetPrivilegeSetLength(
+    _In_ PPRIVILEGE_SET PrivilegeSet)
 {
     if (PrivilegeSet == NULL)
         return 0;
@@ -452,16 +456,17 @@ SepGetPrivilegeSetLength(IN PPRIVILEGE_SET PrivilegeSet)
  */
 BOOLEAN
 NTAPI
-SeAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
-              IN PSECURITY_SUBJECT_CONTEXT SubjectSecurityContext,
-              IN BOOLEAN SubjectContextLocked,
-              IN ACCESS_MASK DesiredAccess,
-              IN ACCESS_MASK PreviouslyGrantedAccess,
-              OUT PPRIVILEGE_SET* Privileges,
-              IN PGENERIC_MAPPING GenericMapping,
-              IN KPROCESSOR_MODE AccessMode,
-              OUT PACCESS_MASK GrantedAccess,
-              OUT PNTSTATUS AccessStatus)
+SeAccessCheck(
+    _In_ PSECURITY_DESCRIPTOR SecurityDescriptor,
+    _In_ PSECURITY_SUBJECT_CONTEXT SubjectSecurityContext,
+    _In_ BOOLEAN SubjectContextLocked,
+    _In_ ACCESS_MASK DesiredAccess,
+    _In_ ACCESS_MASK PreviouslyGrantedAccess,
+    _Out_ PPRIVILEGE_SET* Privileges,
+    _In_ PGENERIC_MAPPING GenericMapping,
+    _In_ KPROCESSOR_MODE AccessMode,
+    _Out_ PACCESS_MASK GrantedAccess,
+    _Out_ PNTSTATUS AccessStatus)
 {
     BOOLEAN ret;
 
@@ -593,10 +598,11 @@ SeAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
  */
 BOOLEAN
 NTAPI
-SeFastTraverseCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
-                    IN PACCESS_STATE AccessState,
-                    IN ACCESS_MASK DesiredAccess,
-                    IN KPROCESSOR_MODE AccessMode)
+SeFastTraverseCheck(
+    _In_ PSECURITY_DESCRIPTOR SecurityDescriptor,
+    _In_ PACCESS_STATE AccessState,
+    _In_ ACCESS_MASK DesiredAccess,
+    _In_ KPROCESSOR_MODE AccessMode)
 {
     PACL Dacl;
     ULONG AceIndex;
@@ -702,14 +708,15 @@ SeFastTraverseCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
  */
 NTSTATUS
 NTAPI
-NtAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
-              IN HANDLE TokenHandle,
-              IN ACCESS_MASK DesiredAccess,
-              IN PGENERIC_MAPPING GenericMapping,
-              OUT PPRIVILEGE_SET PrivilegeSet OPTIONAL,
-              IN OUT PULONG PrivilegeSetLength,
-              OUT PACCESS_MASK GrantedAccess,
-              OUT PNTSTATUS AccessStatus)
+NtAccessCheck(
+    _In_ PSECURITY_DESCRIPTOR SecurityDescriptor,
+    _In_ HANDLE TokenHandle,
+    _In_ ACCESS_MASK DesiredAccess,
+    _In_ PGENERIC_MAPPING GenericMapping,
+    _Out_opt_ PPRIVILEGE_SET PrivilegeSet,
+    _Inout_ PULONG PrivilegeSetLength,
+    _Out_ PACCESS_MASK GrantedAccess,
+    _Out_ PNTSTATUS AccessStatus)
 {
     PSECURITY_DESCRIPTOR CapturedSecurityDescriptor = NULL;
     SECURITY_SUBJECT_CONTEXT SubjectSecurityContext;
@@ -988,17 +995,18 @@ NtAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
  */
 NTSTATUS
 NTAPI
-NtAccessCheckByType(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
-                    IN PSID PrincipalSelfSid,
-                    IN HANDLE ClientToken,
-                    IN ACCESS_MASK DesiredAccess,
-                    IN POBJECT_TYPE_LIST ObjectTypeList,
-                    IN ULONG ObjectTypeLength,
-                    IN PGENERIC_MAPPING GenericMapping,
-                    IN PPRIVILEGE_SET PrivilegeSet,
-                    IN OUT PULONG PrivilegeSetLength,
-                    OUT PACCESS_MASK GrantedAccess,
-                    OUT PNTSTATUS AccessStatus)
+NtAccessCheckByType(
+    _In_ PSECURITY_DESCRIPTOR SecurityDescriptor,
+    _In_ PSID PrincipalSelfSid,
+    _In_ HANDLE ClientToken,
+    _In_ ACCESS_MASK DesiredAccess,
+    _In_ POBJECT_TYPE_LIST ObjectTypeList,
+    _In_ ULONG ObjectTypeLength,
+    _In_ PGENERIC_MAPPING GenericMapping,
+    _In_ PPRIVILEGE_SET PrivilegeSet,
+    _Inout_ PULONG PrivilegeSetLength,
+    _Out_ PACCESS_MASK GrantedAccess,
+    _Out_ PNTSTATUS AccessStatus)
 {
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
@@ -1049,17 +1057,18 @@ NtAccessCheckByType(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
  */
 NTSTATUS
 NTAPI
-NtAccessCheckByTypeResultList(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
-                              IN PSID PrincipalSelfSid,
-                              IN HANDLE ClientToken,
-                              IN ACCESS_MASK DesiredAccess,
-                              IN POBJECT_TYPE_LIST ObjectTypeList,
-                              IN ULONG ObjectTypeLength,
-                              IN PGENERIC_MAPPING GenericMapping,
-                              IN PPRIVILEGE_SET PrivilegeSet,
-                              IN OUT PULONG PrivilegeSetLength,
-                              OUT PACCESS_MASK GrantedAccess,
-                              OUT PNTSTATUS AccessStatus)
+NtAccessCheckByTypeResultList(
+    _In_ PSECURITY_DESCRIPTOR SecurityDescriptor,
+    _In_ PSID PrincipalSelfSid,
+    _In_ HANDLE ClientToken,
+    _In_ ACCESS_MASK DesiredAccess,
+    _In_ POBJECT_TYPE_LIST ObjectTypeList,
+    _In_ ULONG ObjectTypeLength,
+    _In_ PGENERIC_MAPPING GenericMapping,
+    _In_ PPRIVILEGE_SET PrivilegeSet,
+    _Inout_ PULONG PrivilegeSetLength,
+    _Out_ PACCESS_MASK GrantedAccess,
+    _Out_ PNTSTATUS AccessStatus)
 {
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;

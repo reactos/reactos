@@ -45,11 +45,12 @@ ERESOURCE SepSubjectContextLock;
  */
 BOOLEAN
 NTAPI
-SepSidInTokenEx(IN PACCESS_TOKEN _Token,
-                IN PSID PrincipalSelfSid,
-                IN PSID _Sid,
-                IN BOOLEAN Deny,
-                IN BOOLEAN Restricted)
+SepSidInTokenEx(
+    _In_ PACCESS_TOKEN _Token,
+    _In_ PSID PrincipalSelfSid,
+    _In_ PSID _Sid,
+    _In_ BOOLEAN Deny,
+    _In_ BOOLEAN Restricted)
 {
     ULONG i;
     PTOKEN Token = (PTOKEN)_Token;
@@ -145,8 +146,9 @@ SepSidInTokenEx(IN PACCESS_TOKEN _Token,
  */
 BOOLEAN
 NTAPI
-SepSidInToken(IN PACCESS_TOKEN _Token,
-              IN PSID Sid)
+SepSidInToken(
+    _In_ PACCESS_TOKEN _Token,
+    _In_ PSID Sid)
 {
     /* Call extended API */
     return SepSidInTokenEx(_Token, NULL, Sid, FALSE, FALSE);
@@ -172,9 +174,10 @@ SepSidInToken(IN PACCESS_TOKEN _Token,
  */
 BOOLEAN
 NTAPI
-SepTokenIsOwner(IN PACCESS_TOKEN _Token,
-                IN PSECURITY_DESCRIPTOR SecurityDescriptor,
-                IN BOOLEAN TokenLocked)
+SepTokenIsOwner(
+    _In_ PACCESS_TOKEN _Token,
+    _In_ PSECURITY_DESCRIPTOR SecurityDescriptor,
+    _In_ BOOLEAN TokenLocked)
 {
     PSID Sid;
     BOOLEAN Result;
@@ -216,8 +219,9 @@ SepTokenIsOwner(IN PACCESS_TOKEN _Token,
  */
 VOID
 NTAPI
-SeGetTokenControlInformation(IN PACCESS_TOKEN _Token,
-                             OUT PTOKEN_CONTROL TokenControl)
+SeGetTokenControlInformation(
+    _In_ PACCESS_TOKEN _Token,
+    _Out_ PTOKEN_CONTROL TokenControl)
 {
     PTOKEN Token = _Token;
     PAGED_CODE();
@@ -274,13 +278,14 @@ SeGetTokenControlInformation(IN PACCESS_TOKEN _Token,
  */
 NTSTATUS
 NTAPI
-SepCreateClientSecurity(IN PACCESS_TOKEN Token,
-                        IN PSECURITY_QUALITY_OF_SERVICE ClientSecurityQos,
-                        IN BOOLEAN ServerIsRemote,
-                        IN TOKEN_TYPE TokenType,
-                        IN BOOLEAN ThreadEffectiveOnly,
-                        IN SECURITY_IMPERSONATION_LEVEL ImpersonationLevel,
-                        OUT PSECURITY_CLIENT_CONTEXT ClientContext)
+SepCreateClientSecurity(
+    _In_ PACCESS_TOKEN Token,
+    _In_ PSECURITY_QUALITY_OF_SERVICE ClientSecurityQos,
+    _In_ BOOLEAN ServerIsRemote,
+    _In_ TOKEN_TYPE TokenType,
+    _In_ BOOLEAN ThreadEffectiveOnly,
+    _In_ SECURITY_IMPERSONATION_LEVEL ImpersonationLevel,
+    _Out_ PSECURITY_CLIENT_CONTEXT ClientContext)
 {
     NTSTATUS Status;
     PACCESS_TOKEN NewToken;
@@ -382,9 +387,10 @@ SepCreateClientSecurity(IN PACCESS_TOKEN Token,
  */
 VOID
 NTAPI
-SeCaptureSubjectContextEx(IN PETHREAD Thread,
-                          IN PEPROCESS Process,
-                          OUT PSECURITY_SUBJECT_CONTEXT SubjectContext)
+SeCaptureSubjectContextEx(
+    _In_ PETHREAD Thread,
+    _In_ PEPROCESS Process,
+    _Out_ PSECURITY_SUBJECT_CONTEXT SubjectContext)
 {
     BOOLEAN CopyOnOpen, EffectiveOnly;
 
@@ -425,7 +431,8 @@ SeCaptureSubjectContextEx(IN PETHREAD Thread,
  */
 VOID
 NTAPI
-SeCaptureSubjectContext(OUT PSECURITY_SUBJECT_CONTEXT SubjectContext)
+SeCaptureSubjectContext(
+    _Out_ PSECURITY_SUBJECT_CONTEXT SubjectContext)
 {
     /* Call the extended API */
     SeCaptureSubjectContextEx(PsGetCurrentThread(),
@@ -446,7 +453,8 @@ SeCaptureSubjectContext(OUT PSECURITY_SUBJECT_CONTEXT SubjectContext)
  */
 VOID
 NTAPI
-SeLockSubjectContext(IN PSECURITY_SUBJECT_CONTEXT SubjectContext)
+SeLockSubjectContext(
+    _In_ PSECURITY_SUBJECT_CONTEXT SubjectContext)
 {
     PTOKEN PrimaryToken, ClientToken;
     PAGED_CODE();
@@ -476,7 +484,8 @@ SeLockSubjectContext(IN PSECURITY_SUBJECT_CONTEXT SubjectContext)
  */
 VOID
 NTAPI
-SeUnlockSubjectContext(IN PSECURITY_SUBJECT_CONTEXT SubjectContext)
+SeUnlockSubjectContext(
+    _In_ PSECURITY_SUBJECT_CONTEXT SubjectContext)
 {
     PTOKEN PrimaryToken, ClientToken;
     PAGED_CODE();
@@ -508,7 +517,8 @@ SeUnlockSubjectContext(IN PSECURITY_SUBJECT_CONTEXT SubjectContext)
  */
 VOID
 NTAPI
-SeReleaseSubjectContext(IN PSECURITY_SUBJECT_CONTEXT SubjectContext)
+SeReleaseSubjectContext(
+    _In_ PSECURITY_SUBJECT_CONTEXT SubjectContext)
 {
     PAGED_CODE();
 
@@ -531,7 +541,7 @@ SeReleaseSubjectContext(IN PSECURITY_SUBJECT_CONTEXT SubjectContext)
  * @param[in] Process
  * Valid process object where subject context is to be captured.
  * 
- * @param[in, out] AccessState
+ * @param[in,out] AccessState
  * An initialized returned parameter to an access state.
  * 
  * @param[in] AuxData
@@ -548,12 +558,13 @@ SeReleaseSubjectContext(IN PSECURITY_SUBJECT_CONTEXT SubjectContext)
  */
 NTSTATUS
 NTAPI
-SeCreateAccessStateEx(IN PETHREAD Thread,
-                      IN PEPROCESS Process,
-                      IN OUT PACCESS_STATE AccessState,
-                      IN PAUX_ACCESS_DATA AuxData,
-                      IN ACCESS_MASK Access,
-                      IN PGENERIC_MAPPING GenericMapping)
+SeCreateAccessStateEx(
+    _In_ PETHREAD Thread,
+    _In_ PEPROCESS Process,
+    _Inout_ PACCESS_STATE AccessState,
+    _In_ PAUX_ACCESS_DATA AuxData,
+    _In_ ACCESS_MASK Access,
+    _In_ PGENERIC_MAPPING GenericMapping)
 {
     ACCESS_MASK AccessMask = Access;
     PTOKEN Token;
@@ -608,7 +619,7 @@ SeCreateAccessStateEx(IN PETHREAD Thread,
  * @brief
  * Creates an access state.
  * 
- * @param[in, out] AccessState
+ * @param[in,out] AccessState
  * An initialized returned parameter to an access state.
  * 
  * @param[in] AuxData
@@ -625,10 +636,11 @@ SeCreateAccessStateEx(IN PETHREAD Thread,
  */
 NTSTATUS
 NTAPI
-SeCreateAccessState(IN OUT PACCESS_STATE AccessState,
-                    IN PAUX_ACCESS_DATA AuxData,
-                    IN ACCESS_MASK Access,
-                    IN PGENERIC_MAPPING GenericMapping)
+SeCreateAccessState(
+    _Inout_ PACCESS_STATE AccessState,
+    _In_ PAUX_ACCESS_DATA AuxData,
+    _In_ ACCESS_MASK Access,
+    _In_ PGENERIC_MAPPING GenericMapping)
 {
     PAGED_CODE();
 
@@ -653,7 +665,8 @@ SeCreateAccessState(IN OUT PACCESS_STATE AccessState,
  */
 VOID
 NTAPI
-SeDeleteAccessState(IN PACCESS_STATE AccessState)
+SeDeleteAccessState(
+    _In_ PACCESS_STATE AccessState)
 {
     PAUX_ACCESS_DATA AuxData;
     PAGED_CODE();
@@ -695,8 +708,9 @@ SeDeleteAccessState(IN PACCESS_STATE AccessState)
  */
 VOID
 NTAPI
-SeSetAccessStateGenericMapping(IN PACCESS_STATE AccessState,
-                               IN PGENERIC_MAPPING GenericMapping)
+SeSetAccessStateGenericMapping(
+    _In_ PACCESS_STATE AccessState,
+    _In_ PGENERIC_MAPPING GenericMapping)
 {
     PAGED_CODE();
 
@@ -725,10 +739,11 @@ SeSetAccessStateGenericMapping(IN PACCESS_STATE AccessState,
  */
 NTSTATUS
 NTAPI
-SeCreateClientSecurity(IN PETHREAD Thread,
-                       IN PSECURITY_QUALITY_OF_SERVICE Qos,
-                       IN BOOLEAN RemoteClient,
-                       OUT PSECURITY_CLIENT_CONTEXT ClientContext)
+SeCreateClientSecurity(
+    _In_ PETHREAD Thread,
+    _In_ PSECURITY_QUALITY_OF_SERVICE Qos,
+    _In_ BOOLEAN RemoteClient,
+    _Out_ PSECURITY_CLIENT_CONTEXT ClientContext)
 {
     TOKEN_TYPE TokenType;
     BOOLEAN ThreadEffectiveOnly;
@@ -786,10 +801,11 @@ SeCreateClientSecurity(IN PETHREAD Thread,
  */
 NTSTATUS
 NTAPI
-SeCreateClientSecurityFromSubjectContext(IN PSECURITY_SUBJECT_CONTEXT SubjectContext,
-                                         IN PSECURITY_QUALITY_OF_SERVICE ClientSecurityQos,
-                                         IN BOOLEAN ServerIsRemote,
-                                         OUT PSECURITY_CLIENT_CONTEXT ClientContext)
+SeCreateClientSecurityFromSubjectContext(
+    _In_ PSECURITY_SUBJECT_CONTEXT SubjectContext,
+    _In_ PSECURITY_QUALITY_OF_SERVICE ClientSecurityQos,
+    _In_ BOOLEAN ServerIsRemote,
+    _Out_ PSECURITY_CLIENT_CONTEXT ClientContext)
 {
     PACCESS_TOKEN Token;
     NTSTATUS Status;
@@ -837,8 +853,9 @@ SeCreateClientSecurityFromSubjectContext(IN PSECURITY_SUBJECT_CONTEXT SubjectCon
  */
 NTSTATUS
 NTAPI
-SeImpersonateClientEx(IN PSECURITY_CLIENT_CONTEXT ClientContext,
-                      IN PETHREAD ServerThread OPTIONAL)
+SeImpersonateClientEx(
+    _In_ PSECURITY_CLIENT_CONTEXT ClientContext,
+    _In_opt_ PETHREAD ServerThread)
 {
     BOOLEAN EffectiveOnly;
     PAGED_CODE();
@@ -881,8 +898,9 @@ SeImpersonateClientEx(IN PSECURITY_CLIENT_CONTEXT ClientContext,
  */
 VOID
 NTAPI
-SeImpersonateClient(IN PSECURITY_CLIENT_CONTEXT ClientContext,
-                    IN PETHREAD ServerThread OPTIONAL)
+SeImpersonateClient(
+    _In_ PSECURITY_CLIENT_CONTEXT ClientContext,
+    _In_opt_ PETHREAD ServerThread)
 {
     PAGED_CODE();
 

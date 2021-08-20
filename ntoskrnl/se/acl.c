@@ -349,11 +349,12 @@ SepCreateImpersonationTokenDacl(
  */
 NTSTATUS
 NTAPI
-SepCaptureAcl(IN PACL InputAcl,
-              IN KPROCESSOR_MODE AccessMode,
-              IN POOL_TYPE PoolType,
-              IN BOOLEAN CaptureIfKernel,
-              OUT PACL *CapturedAcl)
+SepCaptureAcl(
+    _In_ PACL InputAcl,
+    _In_ KPROCESSOR_MODE AccessMode,
+    _In_ POOL_TYPE PoolType,
+    _In_ BOOLEAN CaptureIfKernel,
+    _Out_ PACL *CapturedAcl)
 {
     PACL NewAcl;
     ULONG AclSize = 0;
@@ -455,9 +456,10 @@ SepCaptureAcl(IN PACL InputAcl,
  */
 VOID
 NTAPI
-SepReleaseAcl(IN PACL CapturedAcl,
-              IN KPROCESSOR_MODE AccessMode,
-              IN BOOLEAN CaptureIfKernel)
+SepReleaseAcl(
+    _In_ PACL CapturedAcl,
+    _In_ KPROCESSOR_MODE AccessMode,
+    _In_ BOOLEAN CaptureIfKernel)
 {
     PAGED_CODE();
 

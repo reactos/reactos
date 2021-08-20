@@ -325,14 +325,14 @@ SeInitSystem(VOID)
  * @param[in] SecurityInformation
  * Auxiliary security information of the object.
  * 
- * @param[in] SecurityDescriptor
+ * @param[in,out] SecurityDescriptor
  * A security descriptor. This SD is used accordingly to the operation type
  * requested by the caller.
  * 
- * @param[in] ReturnLength
+ * @param[in,out] ReturnLength
  * The length size of the queried security descriptor, in bytes.
  * 
- * @param[in] OldSecurityDescriptor
+ * @param[in,out] OldSecurityDescriptor
  * The old SD that belonged to the object, in case we're either deleting
  * or replacing it.
  * 
@@ -348,14 +348,15 @@ SeInitSystem(VOID)
  */
 NTSTATUS
 NTAPI
-SeDefaultObjectMethod(IN PVOID Object,
-                      IN SECURITY_OPERATION_CODE OperationType,
-                      IN PSECURITY_INFORMATION SecurityInformation,
-                      IN OUT PSECURITY_DESCRIPTOR SecurityDescriptor,
-                      IN OUT PULONG ReturnLength OPTIONAL,
-                      IN OUT PSECURITY_DESCRIPTOR *OldSecurityDescriptor,
-                      IN POOL_TYPE PoolType,
-                      IN PGENERIC_MAPPING GenericMapping)
+SeDefaultObjectMethod(
+    _In_ PVOID Object,
+    _In_ SECURITY_OPERATION_CODE OperationType,
+    _In_ PSECURITY_INFORMATION SecurityInformation,
+    _Inout_ PSECURITY_DESCRIPTOR SecurityDescriptor,
+    _Inout_opt_ PULONG ReturnLength,
+    _Inout_ PSECURITY_DESCRIPTOR *OldSecurityDescriptor,
+    _In_ POOL_TYPE PoolType,
+    _In_ PGENERIC_MAPPING GenericMapping)
 {
     PAGED_CODE();
 
@@ -423,8 +424,9 @@ SeDefaultObjectMethod(IN PVOID Object,
  */
 VOID
 NTAPI
-SeQuerySecurityAccessMask(IN SECURITY_INFORMATION SecurityInformation,
-                          OUT PACCESS_MASK DesiredAccess)
+SeQuerySecurityAccessMask(
+    _In_ SECURITY_INFORMATION SecurityInformation,
+    _Out_ PACCESS_MASK DesiredAccess)
 {
     *DesiredAccess = 0;
 
@@ -455,8 +457,9 @@ SeQuerySecurityAccessMask(IN SECURITY_INFORMATION SecurityInformation,
  */
 VOID
 NTAPI
-SeSetSecurityAccessMask(IN SECURITY_INFORMATION SecurityInformation,
-                        OUT PACCESS_MASK DesiredAccess)
+SeSetSecurityAccessMask(
+    _In_ SECURITY_INFORMATION SecurityInformation,
+    _Out_ PACCESS_MASK DesiredAccess)
 {
     *DesiredAccess = 0;
 

@@ -152,9 +152,10 @@ SepInitSDs(VOID)
  */
 NTSTATUS
 NTAPI
-SeSetWorldSecurityDescriptor(SECURITY_INFORMATION SecurityInformation,
-                             PISECURITY_DESCRIPTOR SecurityDescriptor,
-                             PULONG BufferLength)
+SeSetWorldSecurityDescriptor(
+    _In_ SECURITY_INFORMATION SecurityInformation,
+    _In_ PISECURITY_DESCRIPTOR SecurityDescriptor,
+    _In_ PULONG BufferLength)
 {
     ULONG Current;
     ULONG SidSize;
@@ -263,9 +264,9 @@ SeSetWorldSecurityDescriptor(SECURITY_INFORMATION SecurityInformation,
 static
 ULONG
 DetermineSIDSize(
-    PISID Sid,
-    PULONG OutSAC,
-    KPROCESSOR_MODE ProcessorMode)
+    _In_ PISID Sid,
+    _Inout_ PULONG OutSAC,
+    _In_ KPROCESSOR_MODE ProcessorMode)
 {
     ULONG Size;
 
@@ -309,8 +310,8 @@ DetermineSIDSize(
 static
 ULONG
 DetermineACLSize(
-    PACL Acl,
-    KPROCESSOR_MODE ProcessorMode)
+    _In_ PACL Acl,
+    _In_ KPROCESSOR_MODE ProcessorMode)
 {
     ULONG Size;
 
@@ -359,11 +360,11 @@ DetermineACLSize(
 NTSTATUS
 NTAPI
 SeCaptureSecurityDescriptor(
-    IN PSECURITY_DESCRIPTOR _OriginalSecurityDescriptor,
-    IN KPROCESSOR_MODE CurrentMode,
-    IN POOL_TYPE PoolType,
-    IN BOOLEAN CaptureIfKernel,
-    OUT PSECURITY_DESCRIPTOR *CapturedSecurityDescriptor)
+    _In_ PSECURITY_DESCRIPTOR _OriginalSecurityDescriptor,
+    _In_ KPROCESSOR_MODE CurrentMode,
+    _In_ POOL_TYPE PoolType,
+    _In_ BOOLEAN CaptureIfKernel,
+    _Out_ PSECURITY_DESCRIPTOR *CapturedSecurityDescriptor)
 {
     PISECURITY_DESCRIPTOR OriginalDescriptor = _OriginalSecurityDescriptor;
     SECURITY_DESCRIPTOR DescriptorCopy;
@@ -732,9 +733,10 @@ SeQuerySecurityDescriptorInfo(
  */
 NTSTATUS
 NTAPI
-SeReleaseSecurityDescriptor(IN PSECURITY_DESCRIPTOR CapturedSecurityDescriptor,
-                            IN KPROCESSOR_MODE CurrentMode,
-                            IN BOOLEAN CaptureIfKernelMode)
+SeReleaseSecurityDescriptor(
+    _In_ PSECURITY_DESCRIPTOR CapturedSecurityDescriptor,
+    _In_ KPROCESSOR_MODE CurrentMode,
+    _In_ BOOLEAN CaptureIfKernelMode)
 {
     PAGED_CODE();
 
@@ -998,8 +1000,9 @@ SeSetSecurityDescriptorInfoEx(
  * FALSE otherwise.
  */
 BOOLEAN NTAPI
-SeValidSecurityDescriptor(IN ULONG Length,
-                          IN PSECURITY_DESCRIPTOR _SecurityDescriptor)
+SeValidSecurityDescriptor(
+    _In_ ULONG Length,
+    _In_ PSECURITY_DESCRIPTOR _SecurityDescriptor)
 {
     ULONG SdLength;
     PISID Sid;

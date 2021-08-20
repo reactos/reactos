@@ -611,7 +611,8 @@ SepRemovePrivilegeToken(
  */
 VOID
 NTAPI
-SepFreeProxyData(PVOID ProxyData)
+SepFreeProxyData(
+    _Inout_ PVOID ProxyData)
 {
     UNIMPLEMENTED;
 }
@@ -624,7 +625,7 @@ SepFreeProxyData(PVOID ProxyData)
  * @param[out] Dest
  * The destination path where the proxy data is to be copied to.
  * 
- * @param[out] Src
+ * @param[in] Src
  * The source path where the proxy data is be copied from.
  *
  * @return
@@ -632,8 +633,9 @@ SepFreeProxyData(PVOID ProxyData)
  */
 NTSTATUS
 NTAPI
-SepCopyProxyData(PVOID* Dest,
-                 PVOID Src)
+SepCopyProxyData(
+    _Out_ PVOID* Dest,
+    _In_ PVOID Src)
 {
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
@@ -744,7 +746,7 @@ SeExchangePrimaryToken(
  * @brief
  * Removes the primary token of a process.
  *
- * @param[in, out] Process
+ * @param[in,out] Process
  * The process instance with the access token to be removed.
  *
  * @return
@@ -752,7 +754,8 @@ SeExchangePrimaryToken(
  */
 VOID
 NTAPI
-SeDeassignPrimaryToken(PEPROCESS Process)
+SeDeassignPrimaryToken(
+    _Inout_ PEPROCESS Process)
 {
     PTOKEN OldToken;
 
@@ -780,8 +783,9 @@ SeDeassignPrimaryToken(PEPROCESS Process)
  * Returns the total length of a SID size.
  */
 static ULONG
-RtlLengthSidAndAttributes(ULONG Count,
-                          PSID_AND_ATTRIBUTES Src)
+RtlLengthSidAndAttributes(
+    _In_ ULONG Count,
+    _In_ PSID_AND_ATTRIBUTES Src)
 {
     ULONG i;
     ULONG uLength;
@@ -1216,10 +1220,11 @@ Quit:
  */
 NTSTATUS
 NTAPI
-SeSubProcessToken(IN PTOKEN ParentToken,
-                  OUT PTOKEN *Token,
-                  IN BOOLEAN InUse,
-                  IN ULONG SessionId)
+SeSubProcessToken(
+    _In_ PTOKEN ParentToken,
+    _Out_ PTOKEN *Token,
+    _In_ BOOLEAN InUse,
+    _In_ ULONG SessionId)
 {
     PTOKEN NewToken;
     OBJECT_ATTRIBUTES ObjectAttributes;
@@ -1275,8 +1280,9 @@ SeSubProcessToken(IN PTOKEN ParentToken,
  */
 NTSTATUS
 NTAPI
-SeIsTokenChild(IN PTOKEN Token,
-               OUT PBOOLEAN IsChild)
+SeIsTokenChild(
+    _In_ PTOKEN Token,
+    _Out_ PBOOLEAN IsChild)
 {
     PTOKEN ProcessToken;
     LUID ProcessTokenId, CallerParentId;
@@ -1323,8 +1329,9 @@ SeIsTokenChild(IN PTOKEN Token,
  */
 NTSTATUS
 NTAPI
-SeIsTokenSibling(IN PTOKEN Token,
-                 OUT PBOOLEAN IsSibling)
+SeIsTokenSibling(
+    _In_ PTOKEN Token,
+    _Out_ PBOOLEAN IsSibling)
 {
     PTOKEN ProcessToken;
     LUID ProcessParentId, ProcessAuthId;
@@ -1382,10 +1389,11 @@ SeIsTokenSibling(IN PTOKEN Token,
  */
 NTSTATUS
 NTAPI
-SeCopyClientToken(IN PACCESS_TOKEN Token,
-                  IN SECURITY_IMPERSONATION_LEVEL Level,
-                  IN KPROCESSOR_MODE PreviousMode,
-                  OUT PACCESS_TOKEN* NewToken)
+SeCopyClientToken(
+    _In_ PACCESS_TOKEN Token,
+    _In_ SECURITY_IMPERSONATION_LEVEL Level,
+    _In_ KPROCESSOR_MODE PreviousMode,
+    _Out_ PACCESS_TOKEN* NewToken)
 {
     NTSTATUS Status;
     OBJECT_ATTRIBUTES ObjectAttributes;
@@ -1423,7 +1431,8 @@ SeCopyClientToken(IN PACCESS_TOKEN Token,
  */
 VOID
 NTAPI
-SepDeleteToken(PVOID ObjectBody)
+SepDeleteToken(
+    _In_ PVOID ObjectBody)
 {
     NTSTATUS Status;
     PTOKEN AccessToken = (PTOKEN)ObjectBody;
@@ -1503,8 +1512,9 @@ SepInitializeTokenImplementation(VOID)
  */
 VOID
 NTAPI
-SeAssignPrimaryToken(IN PEPROCESS Process,
-                     IN PTOKEN Token)
+SeAssignPrimaryToken(
+    _In_ PEPROCESS Process,
+    _In_ PTOKEN Token)
 {
     PAGED_CODE();
 
@@ -2180,12 +2190,13 @@ SepCreateSystemAnonymousLogonTokenNoEveryone(VOID)
  */
 NTSTATUS
 NTAPI
-SeFilterToken(IN PACCESS_TOKEN ExistingToken,
-              IN ULONG Flags,
-              IN PTOKEN_GROUPS SidsToDisable OPTIONAL,
-              IN PTOKEN_PRIVILEGES PrivilegesToDelete OPTIONAL,
-              IN PTOKEN_GROUPS RestrictedSids OPTIONAL,
-              OUT PACCESS_TOKEN * FilteredToken)
+SeFilterToken(
+    _In_ PACCESS_TOKEN ExistingToken,
+    _In_ ULONG Flags,
+    _In_opt_ PTOKEN_GROUPS SidsToDisable,
+    _In_opt_ PTOKEN_PRIVILEGES PrivilegesToDelete,
+    _In_opt_ PTOKEN_GROUPS RestrictedSids,
+    _Out_ PACCESS_TOKEN * FilteredToken)
 {
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
@@ -2575,8 +2586,9 @@ SeQueryInformationToken(
  */
 NTSTATUS
 NTAPI
-SeQuerySessionIdToken(IN PACCESS_TOKEN Token,
-                      IN PULONG pSessionId)
+SeQuerySessionIdToken(
+    _In_ PACCESS_TOKEN Token,
+    _Out_ PULONG pSessionId)
 {
     PAGED_CODE();
 
@@ -2606,8 +2618,9 @@ SeQuerySessionIdToken(IN PACCESS_TOKEN Token,
  */
 NTSTATUS
 NTAPI
-SeQueryAuthenticationIdToken(IN PACCESS_TOKEN Token,
-                             OUT PLUID LogonId)
+SeQueryAuthenticationIdToken(
+    _In_ PACCESS_TOKEN Token,
+    _Out_ PLUID LogonId)
 {
     PAGED_CODE();
 
@@ -2628,7 +2641,8 @@ SeQueryAuthenticationIdToken(IN PACCESS_TOKEN Token,
  */
 SECURITY_IMPERSONATION_LEVEL
 NTAPI
-SeTokenImpersonationLevel(IN PACCESS_TOKEN Token)
+SeTokenImpersonationLevel(
+    _In_ PACCESS_TOKEN Token)
 {
     PAGED_CODE();
 
@@ -2646,8 +2660,10 @@ SeTokenImpersonationLevel(IN PACCESS_TOKEN Token)
  * @return
  * Returns the token type from a valid token.
  */
-TOKEN_TYPE NTAPI
-SeTokenType(IN PACCESS_TOKEN Token)
+TOKEN_TYPE
+NTAPI
+SeTokenType(
+    _In_ PACCESS_TOKEN Token)
 {
     PAGED_CODE();
 
@@ -2669,7 +2685,8 @@ SeTokenType(IN PACCESS_TOKEN Token)
  */
 BOOLEAN
 NTAPI
-SeTokenIsAdmin(IN PACCESS_TOKEN Token)
+SeTokenIsAdmin(
+    _In_ PACCESS_TOKEN Token)
 {
     PAGED_CODE();
 
@@ -2691,7 +2708,8 @@ SeTokenIsAdmin(IN PACCESS_TOKEN Token)
  */
 BOOLEAN
 NTAPI
-SeTokenIsRestricted(IN PACCESS_TOKEN Token)
+SeTokenIsRestricted(
+    _In_ PACCESS_TOKEN Token)
 {
     PAGED_CODE();
 
@@ -2715,7 +2733,8 @@ SeTokenIsRestricted(IN PACCESS_TOKEN Token)
  */
 BOOLEAN
 NTAPI
-SeTokenIsWriteRestricted(IN PACCESS_TOKEN Token)
+SeTokenIsWriteRestricted(
+    _In_ PACCESS_TOKEN Token)
 {
     PAGED_CODE();
 
@@ -4192,13 +4211,15 @@ NtDuplicateToken(
  * @return
  * To be added...
  */
-NTSTATUS NTAPI
-NtAdjustGroupsToken(IN HANDLE TokenHandle,
-                    IN BOOLEAN ResetToDefault,
-                    IN PTOKEN_GROUPS NewState,
-                    IN ULONG BufferLength,
-                    OUT PTOKEN_GROUPS PreviousState OPTIONAL,
-                    OUT PULONG ReturnLength)
+NTSTATUS
+NTAPI
+NtAdjustGroupsToken(
+    _In_ HANDLE TokenHandle,
+    _In_ BOOLEAN ResetToDefault,
+    _In_ PTOKEN_GROUPS NewState,
+    _In_ ULONG BufferLength,
+    _Out_opt_ PTOKEN_GROUPS PreviousState,
+    _Out_ PULONG ReturnLength)
 {
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
@@ -4946,11 +4967,12 @@ Cleanup:
  */
 NTSTATUS
 NTAPI
-NtOpenThreadTokenEx(IN HANDLE ThreadHandle,
-                    IN ACCESS_MASK DesiredAccess,
-                    IN BOOLEAN OpenAsSelf,
-                    IN ULONG HandleAttributes,
-                    OUT PHANDLE TokenHandle)
+NtOpenThreadTokenEx(
+    _In_ HANDLE ThreadHandle,
+    _In_ ACCESS_MASK DesiredAccess,
+    _In_ BOOLEAN OpenAsSelf,
+    _In_ ULONG HandleAttributes,
+    _Out_ PHANDLE TokenHandle)
 {
     PETHREAD Thread;
     HANDLE hToken;
@@ -5145,11 +5167,13 @@ NtOpenThreadTokenEx(IN HANDLE ThreadHandle,
  * @return
  * See NtOpenThreadTokenEx.
  */
-NTSTATUS NTAPI
-NtOpenThreadToken(IN HANDLE ThreadHandle,
-                  IN ACCESS_MASK DesiredAccess,
-                  IN BOOLEAN OpenAsSelf,
-                  OUT PHANDLE TokenHandle)
+NTSTATUS
+NTAPI
+NtOpenThreadToken(
+    _In_ HANDLE ThreadHandle,
+    _In_ ACCESS_MASK DesiredAccess,
+    _In_ BOOLEAN OpenAsSelf,
+    _Out_ PHANDLE TokenHandle)
 {
     return NtOpenThreadTokenEx(ThreadHandle, DesiredAccess, OpenAsSelf, 0,
                                TokenHandle);
@@ -5286,12 +5310,13 @@ NtCompareTokens(
  */
 NTSTATUS
 NTAPI
-NtFilterToken(IN HANDLE ExistingTokenHandle,
-              IN ULONG Flags,
-              IN PTOKEN_GROUPS SidsToDisable OPTIONAL,
-              IN PTOKEN_PRIVILEGES PrivilegesToDelete OPTIONAL,
-              IN PTOKEN_GROUPS RestrictedSids OPTIONAL,
-              OUT PHANDLE NewTokenHandle)
+NtFilterToken(
+    _In_ HANDLE ExistingTokenHandle,
+    _In_ ULONG Flags,
+    _In_opt_ PTOKEN_GROUPS SidsToDisable,
+    _In_opt_ PTOKEN_PRIVILEGES PrivilegesToDelete,
+    _In_opt_ PTOKEN_GROUPS RestrictedSids,
+    _Out_ PHANDLE NewTokenHandle)
 {
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;

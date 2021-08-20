@@ -24,7 +24,7 @@ typedef struct _SEP_LOGON_SESSION_TERMINATED_NOTIFICATION
 VOID
 NTAPI
 SepRmCommandServerThread(
-    PVOID StartContext);
+    _In_ PVOID StartContext);
 
 static
 NTSTATUS
@@ -34,7 +34,7 @@ SepCleanupLUIDDeviceMapDirectory(
 static
 NTSTATUS
 SepRmCreateLogonSession(
-    PLUID LogonLuid);
+    _In_ PLUID LogonLuid);
 
 
 /* GLOBALS ********************************************************************/
@@ -322,7 +322,7 @@ SepAdtInitializeBounds(VOID)
 static
 NTSTATUS
 SepRmSetAuditEvent(
-    PSEP_RM_API_MESSAGE Message)
+    _Inout_ PSEP_RM_API_MESSAGE Message)
 {
     ULONG i;
     PAGED_CODE();
@@ -496,7 +496,7 @@ SepRmRemoveLogonSessionFromToken(
  * respective logon sessions management within the kernel,
  * as in form of a SEP_LOGON_SESSION_REFERENCES data structure.
  * 
- * @param[in,out] LogonLuid
+ * @param[in] LogonLuid
  * A logon ID represented as a LUID. This LUID is used to create
  * our logon session and add it to the sessions database.
  *
@@ -510,7 +510,7 @@ SepRmRemoveLogonSessionFromToken(
 static
 NTSTATUS
 SepRmCreateLogonSession(
-    PLUID LogonLuid)
+    _In_ PLUID LogonLuid)
 {
     PSEP_LOGON_SESSION_REFERENCES CurrentSession, NewSession;
     NTSTATUS Status;
@@ -682,7 +682,7 @@ Leave:
  * @brief
  * References a logon session.
  * 
- * @param[in,out] LogonLuid
+ * @param[in] LogonLuid
  * A valid LUID that points to the logon session in the database that
  * we're going to reference it.
  *
@@ -693,7 +693,7 @@ Leave:
  */
 NTSTATUS
 SepRmReferenceLogonSession(
-    PLUID LogonLuid)
+    _In_ PLUID LogonLuid)
 {
     PSEP_LOGON_SESSION_REFERENCES CurrentSession;
 
@@ -996,7 +996,7 @@ AllocateLinksAgain:
  * that means the session is no longer used and can be safely deleted
  * from the logon sessions database.
  * 
- * @param[in,out] LogonLuid
+ * @param[in] LogonLuid
  * A logon session ID to de-reference.
  *
  * @return
@@ -1006,7 +1006,7 @@ AllocateLinksAgain:
  */
 NTSTATUS
 SepRmDereferenceLogonSession(
-    PLUID LogonLuid)
+    _In_ PLUID LogonLuid)
 {
     ULONG RefCount;
     PDEVICE_MAP DeviceMap;
@@ -1224,7 +1224,7 @@ Cleanup:
 VOID
 NTAPI
 SepRmCommandServerThread(
-    PVOID StartContext)
+    _In_ PVOID StartContext)
 {
     SEP_RM_API_MESSAGE Message;
     PPORT_MESSAGE ReplyMessage;
@@ -1345,9 +1345,8 @@ SepRmCommandServerThread(
 NTSTATUS
 NTAPI
 SeGetLogonIdDeviceMap(
-    IN PLUID LogonId,
-    OUT PDEVICE_MAP * DeviceMap
-    )
+    _In_ PLUID LogonId,
+    _Out_ PDEVICE_MAP *DeviceMap)
 {
     NTSTATUS Status;
     WCHAR Buffer[63];
@@ -1571,7 +1570,7 @@ SeMarkLogonSessionForTerminationNotification(
 NTSTATUS
 NTAPI
 SeRegisterLogonSessionTerminatedRoutine(
-    IN PSE_LOGON_SESSION_TERMINATED_ROUTINE CallbackRoutine)
+    _In_ PSE_LOGON_SESSION_TERMINATED_ROUTINE CallbackRoutine)
 {
     PSEP_LOGON_SESSION_TERMINATED_NOTIFICATION Notification;
     PAGED_CODE();
@@ -1620,7 +1619,7 @@ SeRegisterLogonSessionTerminatedRoutine(
 NTSTATUS
 NTAPI
 SeUnregisterLogonSessionTerminatedRoutine(
-    IN PSE_LOGON_SESSION_TERMINATED_ROUTINE CallbackRoutine)
+    _In_ PSE_LOGON_SESSION_TERMINATED_ROUTINE CallbackRoutine)
 {
     PSEP_LOGON_SESSION_TERMINATED_NOTIFICATION Current, Previous = NULL;
     NTSTATUS Status;

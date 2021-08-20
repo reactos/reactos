@@ -31,7 +31,8 @@ UNICODE_STRING SeSubsystemName = RTL_CONSTANT_STRING(L"Security");
  */
 BOOLEAN
 NTAPI
-SeDetailedAuditingWithToken(IN PTOKEN Token)
+SeDetailedAuditingWithToken(
+    _In_ PTOKEN Token)
 {
     /* FIXME */
     return FALSE;
@@ -52,7 +53,8 @@ SeDetailedAuditingWithToken(IN PTOKEN Token)
  */
 VOID
 NTAPI
-SeAuditProcessCreate(IN PEPROCESS Process)
+SeAuditProcessCreate(
+    _In_ PEPROCESS Process)
 {
     /* FIXME */
 }
@@ -72,7 +74,8 @@ SeAuditProcessCreate(IN PEPROCESS Process)
  */
 VOID
 NTAPI
-SeAuditProcessExit(IN PEPROCESS Process)
+SeAuditProcessExit(
+    _In_ PEPROCESS Process)
 {
     /* FIXME */
 }
@@ -99,9 +102,10 @@ SeAuditProcessExit(IN PEPROCESS Process)
  */
 NTSTATUS
 NTAPI
-SeInitializeProcessAuditName(IN PFILE_OBJECT FileObject,
-                             IN BOOLEAN DoAudit,
-                             OUT POBJECT_NAME_INFORMATION *AuditInfo)
+SeInitializeProcessAuditName(
+    _In_ PFILE_OBJECT FileObject,
+    _In_ BOOLEAN DoAudit,
+    _Out_ POBJECT_NAME_INFORMATION *AuditInfo)
 {
     OBJECT_NAME_INFORMATION LocalNameInfo;
     POBJECT_NAME_INFORMATION ObjectNameInfo = NULL;
@@ -192,8 +196,9 @@ SeInitializeProcessAuditName(IN PFILE_OBJECT FileObject,
  */
 NTSTATUS
 NTAPI
-SeLocateProcessImageName(IN PEPROCESS Process,
-                         OUT PUNICODE_STRING *ProcessImageName)
+SeLocateProcessImageName(
+    _In_ PEPROCESS Process,
+    _Out_ PUNICODE_STRING *ProcessImageName)
 {
     POBJECT_NAME_INFORMATION AuditName;
     PUNICODE_STRING ImageName;
@@ -280,9 +285,9 @@ SeLocateProcessImageName(IN PEPROCESS Process,
 VOID
 NTAPI
 SepAdtCloseObjectAuditAlarm(
-    PUNICODE_STRING SubsystemName,
-    PVOID HandleId,
-    PSID Sid)
+    _In_ PUNICODE_STRING SubsystemName,
+    _In_ PVOID HandleId,
+    _In_ PSID Sid)
 {
     UNIMPLEMENTED;
 }
@@ -325,7 +330,7 @@ SepAdtCloseObjectAuditAlarm(
 VOID
 NTAPI
 SepAdtPrivilegedServiceAuditAlarm(
-    PSECURITY_SUBJECT_CONTEXT SubjectContext,
+    _In_ PSECURITY_SUBJECT_CONTEXT SubjectContext,
     _In_opt_ PUNICODE_STRING SubsystemName,
     _In_opt_ PUNICODE_STRING ServiceName,
     _In_ PTOKEN Token,
@@ -1060,9 +1065,10 @@ Cleanup:
  */
 VOID
 NTAPI
-SeAuditHardLinkCreation(IN PUNICODE_STRING FileName,
-                        IN PUNICODE_STRING LinkName,
-                        IN BOOLEAN bSuccess)
+SeAuditHardLinkCreation(
+    _In_ PUNICODE_STRING FileName,
+    _In_ PUNICODE_STRING LinkName,
+    _In_ BOOLEAN bSuccess)
 {
     UNIMPLEMENTED;
 }
@@ -1085,8 +1091,9 @@ SeAuditHardLinkCreation(IN PUNICODE_STRING FileName,
  */
 BOOLEAN
 NTAPI
-SeAuditingFileEvents(IN BOOLEAN AccessGranted,
-                     IN PSECURITY_DESCRIPTOR SecurityDescriptor)
+SeAuditingFileEvents(
+    _In_ BOOLEAN AccessGranted,
+    _In_ PSECURITY_DESCRIPTOR SecurityDescriptor)
 {
     UNIMPLEMENTED;
     return FALSE;
@@ -1114,9 +1121,10 @@ SeAuditingFileEvents(IN BOOLEAN AccessGranted,
  */
 BOOLEAN
 NTAPI
-SeAuditingFileEventsWithContext(IN BOOLEAN AccessGranted,
-                                IN PSECURITY_DESCRIPTOR SecurityDescriptor,
-                                IN PSECURITY_SUBJECT_CONTEXT SubjectSecurityContext OPTIONAL)
+SeAuditingFileEventsWithContext(
+    _In_ BOOLEAN AccessGranted,
+    _In_ PSECURITY_DESCRIPTOR SecurityDescriptor,
+    _In_opt_ PSECURITY_SUBJECT_CONTEXT SubjectSecurityContext)
 {
     UNIMPLEMENTED_ONCE;
     return FALSE;
@@ -1140,8 +1148,9 @@ SeAuditingFileEventsWithContext(IN BOOLEAN AccessGranted,
  */
 BOOLEAN
 NTAPI
-SeAuditingHardLinkEvents(IN BOOLEAN AccessGranted,
-                         IN PSECURITY_DESCRIPTOR SecurityDescriptor)
+SeAuditingHardLinkEvents(
+    _In_ BOOLEAN AccessGranted,
+    _In_ PSECURITY_DESCRIPTOR SecurityDescriptor)
 {
     UNIMPLEMENTED;
     return FALSE;
@@ -1169,9 +1178,10 @@ SeAuditingHardLinkEvents(IN BOOLEAN AccessGranted,
  */
 BOOLEAN
 NTAPI
-SeAuditingHardLinkEventsWithContext(IN BOOLEAN AccessGranted,
-                                    IN PSECURITY_DESCRIPTOR SecurityDescriptor,
-                                    IN PSECURITY_SUBJECT_CONTEXT SubjectSecurityContext OPTIONAL)
+SeAuditingHardLinkEventsWithContext(
+    _In_ BOOLEAN AccessGranted,
+    _In_ PSECURITY_DESCRIPTOR SecurityDescriptor,
+    _In_opt_ PSECURITY_SUBJECT_CONTEXT SubjectSecurityContext)
 {
     UNIMPLEMENTED;
     return FALSE;
@@ -1199,9 +1209,10 @@ SeAuditingHardLinkEventsWithContext(IN BOOLEAN AccessGranted,
  */
 BOOLEAN
 NTAPI
-SeAuditingFileOrGlobalEvents(IN BOOLEAN AccessGranted,
-                             IN PSECURITY_DESCRIPTOR SecurityDescriptor,
-                             IN PSECURITY_SUBJECT_CONTEXT SubjectSecurityContext)
+SeAuditingFileOrGlobalEvents(
+    _In_ BOOLEAN AccessGranted,
+    _In_ PSECURITY_DESCRIPTOR SecurityDescriptor,
+    _In_ PSECURITY_SUBJECT_CONTEXT SubjectSecurityContext)
 {
     UNIMPLEMENTED;
     return FALSE;
@@ -1227,9 +1238,10 @@ SeAuditingFileOrGlobalEvents(IN BOOLEAN AccessGranted,
  */
 VOID
 NTAPI
-SeCloseObjectAuditAlarm(IN PVOID Object,
-                        IN HANDLE Handle,
-                        IN BOOLEAN PerformAction)
+SeCloseObjectAuditAlarm(
+    _In_ PVOID Object,
+    _In_ HANDLE Handle,
+    _In_ BOOLEAN PerformAction)
 {
     UNIMPLEMENTED;
 }
@@ -1249,8 +1261,9 @@ SeCloseObjectAuditAlarm(IN PVOID Object,
  * Nothing.
  */
 VOID NTAPI
-SeDeleteObjectAuditAlarm(IN PVOID Object,
-                         IN HANDLE Handle)
+SeDeleteObjectAuditAlarm(
+    _In_ PVOID Object,
+    _In_ HANDLE Handle)
 {
     UNIMPLEMENTED;
 }
@@ -1298,15 +1311,16 @@ SeDeleteObjectAuditAlarm(IN PVOID Object,
  */
 VOID
 NTAPI
-SeOpenObjectAuditAlarm(IN PUNICODE_STRING ObjectTypeName,
-                       IN PVOID Object OPTIONAL,
-                       IN PUNICODE_STRING AbsoluteObjectName OPTIONAL,
-                       IN PSECURITY_DESCRIPTOR SecurityDescriptor,
-                       IN PACCESS_STATE AccessState,
-                       IN BOOLEAN ObjectCreated,
-                       IN BOOLEAN AccessGranted,
-                       IN KPROCESSOR_MODE AccessMode,
-                       OUT PBOOLEAN GenerateOnClose)
+SeOpenObjectAuditAlarm(
+    _In_ PUNICODE_STRING ObjectTypeName,
+    _In_opt_ PVOID Object,
+    _In_opt_ PUNICODE_STRING AbsoluteObjectName,
+    _In_ PSECURITY_DESCRIPTOR SecurityDescriptor,
+    _In_ PACCESS_STATE AccessState,
+    _In_ BOOLEAN ObjectCreated,
+    _In_ BOOLEAN AccessGranted,
+    _In_ KPROCESSOR_MODE AccessMode,
+    _Out_ PBOOLEAN GenerateOnClose)
 {
     PAGED_CODE();
 
@@ -1360,15 +1374,16 @@ SeOpenObjectAuditAlarm(IN PUNICODE_STRING ObjectTypeName,
  * Nothing.
  */
 VOID NTAPI
-SeOpenObjectForDeleteAuditAlarm(IN PUNICODE_STRING ObjectTypeName,
-                                IN PVOID Object OPTIONAL,
-                                IN PUNICODE_STRING AbsoluteObjectName OPTIONAL,
-                                IN PSECURITY_DESCRIPTOR SecurityDescriptor,
-                                IN PACCESS_STATE AccessState,
-                                IN BOOLEAN ObjectCreated,
-                                IN BOOLEAN AccessGranted,
-                                IN KPROCESSOR_MODE AccessMode,
-                                OUT PBOOLEAN GenerateOnClose)
+SeOpenObjectForDeleteAuditAlarm(
+    _In_ PUNICODE_STRING ObjectTypeName,
+    _In_opt_ PVOID Object,
+    _In_opt_ PUNICODE_STRING AbsoluteObjectName,
+    _In_ PSECURITY_DESCRIPTOR SecurityDescriptor,
+    _In_ PACCESS_STATE AccessState,
+    _In_ BOOLEAN ObjectCreated,
+    _In_ BOOLEAN AccessGranted,
+    _In_ KPROCESSOR_MODE AccessMode,
+    _Out_ PBOOLEAN GenerateOnClose)
 {
     UNIMPLEMENTED;
 }
@@ -1404,12 +1419,13 @@ SeOpenObjectForDeleteAuditAlarm(IN PUNICODE_STRING ObjectTypeName,
  */
 VOID
 NTAPI
-SePrivilegeObjectAuditAlarm(IN HANDLE Handle,
-                            IN PSECURITY_SUBJECT_CONTEXT SubjectContext,
-                            IN ACCESS_MASK DesiredAccess,
-                            IN PPRIVILEGE_SET Privileges,
-                            IN BOOLEAN AccessGranted,
-                            IN KPROCESSOR_MODE CurrentMode)
+SePrivilegeObjectAuditAlarm(
+    _In_ HANDLE Handle,
+    _In_ PSECURITY_SUBJECT_CONTEXT SubjectContext,
+    _In_ ACCESS_MASK DesiredAccess,
+    _In_ PPRIVILEGE_SET Privileges,
+    _In_ BOOLEAN AccessGranted,
+    _In_ KPROCESSOR_MODE CurrentMode)
 {
     UNIMPLEMENTED;
 }
@@ -1441,9 +1457,9 @@ SePrivilegeObjectAuditAlarm(IN HANDLE Handle,
 NTSTATUS
 NTAPI
 NtCloseObjectAuditAlarm(
-    PUNICODE_STRING SubsystemName,
-    PVOID HandleId,
-    BOOLEAN GenerateOnClose)
+    _In_ PUNICODE_STRING SubsystemName,
+    _In_ PVOID HandleId,
+    _In_ BOOLEAN GenerateOnClose)
 {
     SECURITY_SUBJECT_CONTEXT SubjectContext;
     UNICODE_STRING CapturedSubsystemName;
@@ -1557,9 +1573,10 @@ Cleanup:
  * To be added...
  */
 NTSTATUS NTAPI
-NtDeleteObjectAuditAlarm(IN PUNICODE_STRING SubsystemName,
-                         IN PVOID HandleId,
-                         IN BOOLEAN GenerateOnClose)
+NtDeleteObjectAuditAlarm(
+    _In_ PUNICODE_STRING SubsystemName,
+    _In_ PVOID HandleId,
+    _In_ BOOLEAN GenerateOnClose)
 {
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
@@ -1969,7 +1986,7 @@ NtPrivilegedServiceAuditAlarm(
     _In_opt_ PUNICODE_STRING ServiceName,
     _In_ HANDLE ClientTokenHandle,
     _In_ PPRIVILEGE_SET Privileges,
-    _In_ BOOLEAN AccessGranted )
+    _In_ BOOLEAN AccessGranted)
 {
     KPROCESSOR_MODE PreviousMode;
     PTOKEN ClientToken;
@@ -2147,12 +2164,13 @@ Cleanup:
  * To be added...
  */
 NTSTATUS NTAPI
-NtPrivilegeObjectAuditAlarm(IN PUNICODE_STRING SubsystemName,
-                            IN PVOID HandleId,
-                            IN HANDLE ClientToken,
-                            IN ULONG DesiredAccess,
-                            IN PPRIVILEGE_SET Privileges,
-                            IN BOOLEAN AccessGranted)
+NtPrivilegeObjectAuditAlarm(
+    _In_ PUNICODE_STRING SubsystemName,
+    _In_ PVOID HandleId,
+    _In_ HANDLE ClientToken,
+    _In_ ULONG DesiredAccess,
+    _In_ PPRIVILEGE_SET Privileges,
+    _In_ BOOLEAN AccessGranted)
 {
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;

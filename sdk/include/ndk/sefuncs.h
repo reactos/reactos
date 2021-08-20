@@ -37,8 +37,7 @@ SeCaptureSecurityDescriptor(
     _In_ KPROCESSOR_MODE CurrentMode,
     _In_ POOL_TYPE PoolType,
     _In_ BOOLEAN CaptureIfKernel,
-    _Out_ PSECURITY_DESCRIPTOR *CapturedSecurityDescriptor
-);
+    _Out_ PSECURITY_DESCRIPTOR *CapturedSecurityDescriptor);
 
 NTKERNELAPI
 NTSTATUS
@@ -46,8 +45,7 @@ NTAPI
 SeReleaseSecurityDescriptor(
     _In_ PSECURITY_DESCRIPTOR CapturedSecurityDescriptor,
     _In_ KPROCESSOR_MODE CurrentMode,
-    _In_ BOOLEAN CaptureIfKernelMode
-);
+    _In_ BOOLEAN CaptureIfKernelMode);
 
 //
 // Access States
@@ -56,18 +54,16 @@ NTKERNELAPI
 NTSTATUS
 NTAPI
 SeCreateAccessState(
-    PACCESS_STATE AccessState,
-    PAUX_ACCESS_DATA AuxData,
-    ACCESS_MASK Access,
-    PGENERIC_MAPPING GenericMapping
-);
+    _In_ PACCESS_STATE AccessState,
+    _In_ PAUX_ACCESS_DATA AuxData,
+    _In_ ACCESS_MASK Access,
+    _In_ PGENERIC_MAPPING GenericMapping);
 
 NTKERNELAPI
 VOID
 NTAPI
 SeDeleteAccessState(
-    _In_ PACCESS_STATE AccessState
-);
+    _In_ PACCESS_STATE AccessState);
 
 //
 // Impersonation
@@ -76,8 +72,7 @@ NTKERNELAPI
 SECURITY_IMPERSONATION_LEVEL
 NTAPI
 SeTokenImpersonationLevel(
-    _In_ PACCESS_TOKEN Token
-);
+    _In_ PACCESS_TOKEN Token);
 
 #endif
 
@@ -95,8 +90,7 @@ NtAccessCheck(
     _Out_ PPRIVILEGE_SET PrivilegeSet,
     _Out_ PULONG ReturnLength,
     _Out_ PACCESS_MASK GrantedAccess,
-    _Out_ PNTSTATUS AccessStatus
-);
+    _Out_ PNTSTATUS AccessStatus);
 
 NTSTATUS
 NTAPI
@@ -111,8 +105,7 @@ NtAccessCheckByType(
     _In_ PPRIVILEGE_SET PrivilegeSet,
     _Inout_ PULONG PrivilegeSetLength,
     _Out_ PACCESS_MASK GrantedAccess,
-    _Out_ PNTSTATUS AccessStatus
-);
+    _Out_ PNTSTATUS AccessStatus);
 
 NTSTATUS
 NTAPI
@@ -127,8 +120,7 @@ NtAccessCheckByTypeResultList(
     _In_ PPRIVILEGE_SET PrivilegeSet,
     _Inout_ PULONG PrivilegeSetLength,
     _Out_ PACCESS_MASK GrantedAccess,
-    _Out_ PNTSTATUS AccessStatus
-);
+    _Out_ PNTSTATUS AccessStatus);
 
 _Must_inspect_result_
 __kernel_entry NTSYSCALLAPI
@@ -145,8 +137,7 @@ NtAccessCheckAndAuditAlarm(
     _In_ BOOLEAN ObjectCreation,
     _Out_ PACCESS_MASK GrantedAccess,
     _Out_ PNTSTATUS AccessStatus,
-    _Out_ PBOOLEAN GenerateOnClose
-);
+    _Out_ PBOOLEAN GenerateOnClose);
 
 _Must_inspect_result_
 __kernel_entry
@@ -159,8 +150,7 @@ NtAdjustGroupsToken(
     _In_opt_ PTOKEN_GROUPS NewState,
     _In_opt_ ULONG BufferLength,
     _Out_writes_bytes_to_opt_(BufferLength, *ReturnLength) PTOKEN_GROUPS PreviousState,
-    _Out_ PULONG ReturnLength
-);
+    _Out_ PULONG ReturnLength);
 
 _Must_inspect_result_
 __kernel_entry
@@ -173,25 +163,22 @@ NtAdjustPrivilegesToken(
     _In_opt_ PTOKEN_PRIVILEGES NewState,
     _In_ ULONG BufferLength,
     _Out_writes_bytes_to_opt_(BufferLength, *ReturnLength) PTOKEN_PRIVILEGES PreviousState,
-    _When_(PreviousState != NULL, _Out_) PULONG ReturnLength
-);
+    _When_(PreviousState != NULL, _Out_) PULONG ReturnLength);
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtAllocateLocallyUniqueId(
-    _Out_ LUID *LocallyUniqueId
-);
+    _Out_ LUID *LocallyUniqueId);
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtAllocateUuids(
-    PULARGE_INTEGER Time,
-    PULONG Range,
-    PULONG Sequence,
-    PUCHAR Seed
-);
+    _Out_ PULARGE_INTEGER Time,
+    _Out_ PULONG Range,
+    _Out_ PULONG Sequence,
+    _Out_ PUCHAR Seed);
 
 NTSYSCALLAPI
 NTSTATUS
@@ -218,8 +205,7 @@ NtCreateToken(
     _In_opt_ PTOKEN_OWNER TokenOwner,
     _In_ PTOKEN_PRIMARY_GROUP TokenPrimaryGroup,
     _In_opt_ PTOKEN_DEFAULT_DACL TokenDefaultDacl,
-    _In_ PTOKEN_SOURCE TokenSource
-);
+    _In_ PTOKEN_SOURCE TokenSource);
 
 _Must_inspect_result_
 __kernel_entry
@@ -232,15 +218,13 @@ NtDuplicateToken(
     _In_opt_ POBJECT_ATTRIBUTES ObjectAttributes,
     _In_ BOOLEAN EffectiveOnly,
     _In_ TOKEN_TYPE TokenType,
-    _Out_ PHANDLE NewTokenHandle
-);
+    _Out_ PHANDLE NewTokenHandle);
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtImpersonateAnonymousToken(
-    _In_ HANDLE ThreadHandle
-);
+    _In_ HANDLE ThreadHandle);
 
 __kernel_entry
 NTSYSCALLAPI
@@ -258,8 +242,7 @@ NtOpenObjectAuditAlarm(
     _In_opt_ PPRIVILEGE_SET Privileges,
     _In_ BOOLEAN ObjectCreation,
     _In_ BOOLEAN AccessGranted,
-    _Out_ PBOOLEAN GenerateOnClose
-);
+    _Out_ PBOOLEAN GenerateOnClose);
 
 NTSYSCALLAPI
 NTSTATUS
@@ -268,8 +251,7 @@ NtOpenProcessTokenEx(
     _In_ HANDLE ProcessHandle,
     _In_ ACCESS_MASK DesiredAccess,
     _In_ ULONG HandleAttributes,
-    _Out_ PHANDLE TokenHandle
-);
+    _Out_ PHANDLE TokenHandle);
 
 _Must_inspect_result_
 __kernel_entry
@@ -279,8 +261,7 @@ NTAPI
 NtPrivilegeCheck(
     _In_ HANDLE ClientToken,
     _Inout_ PPRIVILEGE_SET RequiredPrivileges,
-    _Out_ PBOOLEAN Result
-);
+    _Out_ PBOOLEAN Result);
 
 NTSYSCALLAPI
 NTSTATUS
@@ -290,8 +271,7 @@ NtPrivilegedServiceAuditAlarm(
     _In_ PUNICODE_STRING ServiceName,
     _In_ HANDLE ClientToken,
     _In_ PPRIVILEGE_SET Privileges,
-    _In_ BOOLEAN AccessGranted
-);
+    _In_ BOOLEAN AccessGranted);
 
 __kernel_entry
 NTSYSCALLAPI
@@ -303,8 +283,7 @@ NtPrivilegeObjectAuditAlarm(
     _In_ HANDLE ClientToken,
     _In_ ACCESS_MASK DesiredAccess,
     _In_ PPRIVILEGE_SET Privileges,
-    _In_ BOOLEAN AccessGranted
-);
+    _In_ BOOLEAN AccessGranted);
 
 _When_(TokenInformationClass == TokenAccessInformation,
     _At_(TokenInformationLength, _In_range_(>=, sizeof(TOKEN_ACCESS_INFORMATION))))
@@ -318,8 +297,7 @@ NtQueryInformationToken(
     _In_ TOKEN_INFORMATION_CLASS TokenInformationClass,
     _Out_writes_bytes_to_opt_(TokenInformationLength, *ReturnLength) PVOID TokenInformation,
     _In_ ULONG TokenInformationLength,
-    _Out_ PULONG ReturnLength
-);
+    _Out_ PULONG ReturnLength);
 
 _Must_inspect_result_
 __kernel_entry
@@ -330,8 +308,7 @@ NtSetInformationToken(
     _In_ HANDLE TokenHandle,
     _In_ TOKEN_INFORMATION_CLASS TokenInformationClass,
     _In_reads_bytes_(TokenInformationLength) PVOID TokenInformation,
-    _In_ ULONG TokenInformationLength
-);
+    _In_ ULONG TokenInformationLength);
 
 NTSYSAPI
 NTSTATUS
@@ -344,8 +321,7 @@ ZwAccessCheck(
     _Out_ PPRIVILEGE_SET PrivilegeSet,
     _Out_ PULONG ReturnLength,
     _Out_ PACCESS_MASK GrantedAccess,
-    _Out_ PNTSTATUS AccessStatus
-);
+    _Out_ PNTSTATUS AccessStatus);
 
 NTSYSAPI
 NTSTATUS
@@ -356,8 +332,7 @@ ZwAdjustGroupsToken(
     _In_ PTOKEN_GROUPS NewState,
     _In_ ULONG BufferLength,
     _Out_opt_ PTOKEN_GROUPS PreviousState,
-    _Out_ PULONG ReturnLength
-);
+    _Out_ PULONG ReturnLength);
 
 _Must_inspect_result_
 NTSYSAPI
@@ -369,25 +344,22 @@ ZwAdjustPrivilegesToken(
     _In_opt_ PTOKEN_PRIVILEGES NewState,
     _In_ ULONG BufferLength,
     _Out_writes_bytes_to_opt_(BufferLength, *ReturnLength) PTOKEN_PRIVILEGES PreviousState,
-    _When_(PreviousState != NULL, _Out_) PULONG ReturnLength
-);
+    _When_(PreviousState != NULL, _Out_) PULONG ReturnLength);
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwAllocateLocallyUniqueId(
-    _Out_ LUID *LocallyUniqueId
-);
+    _Out_ LUID *LocallyUniqueId);
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwAllocateUuids(
-    PULARGE_INTEGER Time,
-    PULONG Range,
-    PULONG Sequence,
-    PUCHAR Seed
-);
+    _Out_ PULARGE_INTEGER Time,
+    _Out_ PULONG Range,
+    _Out_ PULONG Sequence,
+    _Out_ PUCHAR Seed);
 
 NTSYSAPI
 NTSTATUS
@@ -405,8 +377,7 @@ ZwCreateToken(
     _In_ PTOKEN_OWNER TokenOwner,
     _In_ PTOKEN_PRIMARY_GROUP TokenPrimaryGroup,
     _In_ PTOKEN_DEFAULT_DACL TokenDefaultDacl,
-    _In_ PTOKEN_SOURCE TokenSource
-);
+    _In_ PTOKEN_SOURCE TokenSource);
 
 _IRQL_requires_max_(PASSIVE_LEVEL)
 NTSYSAPI
@@ -418,15 +389,13 @@ ZwDuplicateToken(
     _In_opt_ POBJECT_ATTRIBUTES ObjectAttributes,
     _In_ BOOLEAN EffectiveOnly,
     _In_ TOKEN_TYPE TokenType,
-    _Out_ PHANDLE NewTokenHandle
-);
+    _Out_ PHANDLE NewTokenHandle);
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwImpersonateAnonymousToken(
-    _In_ HANDLE Thread
-);
+    _In_ HANDLE Thread);
 
 NTSYSAPI
 NTSTATUS
@@ -443,8 +412,7 @@ ZwOpenObjectAuditAlarm(
     _In_ PPRIVILEGE_SET Privileges,
     _In_ BOOLEAN ObjectCreation,
     _In_ BOOLEAN AccessGranted,
-    _Out_ PBOOLEAN GenerateOnClose
-);
+    _Out_ PBOOLEAN GenerateOnClose);
 
 _IRQL_requires_max_(PASSIVE_LEVEL)
 NTSYSAPI
@@ -453,8 +421,7 @@ NTAPI
 ZwOpenProcessToken(
     _In_ HANDLE ProcessHandle,
     _In_ ACCESS_MASK DesiredAccess,
-    _Out_ PHANDLE TokenHandle
-);
+    _Out_ PHANDLE TokenHandle);
 
 NTSYSAPI
 NTSTATUS
@@ -463,8 +430,7 @@ ZwOpenProcessTokenEx(
     _In_ HANDLE ProcessHandle,
     _In_ ACCESS_MASK DesiredAccess,
     _In_ ULONG HandleAttributes,
-    _Out_ PHANDLE TokenHandle
-);
+    _Out_ PHANDLE TokenHandle);
 
 NTSYSAPI
 NTSTATUS
@@ -472,8 +438,7 @@ NTAPI
 ZwPrivilegeCheck(
     _In_ HANDLE ClientToken,
     _In_ PPRIVILEGE_SET RequiredPrivileges,
-    _In_ PBOOLEAN Result
-);
+    _In_ PBOOLEAN Result);
 
 NTSYSAPI
 NTSTATUS
@@ -483,8 +448,7 @@ ZwPrivilegedServiceAuditAlarm(
     _In_ PUNICODE_STRING ServiceName,
     _In_ HANDLE ClientToken,
     _In_ PPRIVILEGE_SET Privileges,
-    _In_ BOOLEAN AccessGranted
-);
+    _In_ BOOLEAN AccessGranted);
 
 NTSYSAPI
 NTSTATUS
@@ -495,8 +459,7 @@ ZwPrivilegeObjectAuditAlarm(
     _In_ HANDLE ClientToken,
     _In_ ULONG DesiredAccess,
     _In_ PPRIVILEGE_SET Privileges,
-    _In_ BOOLEAN AccessGranted
-);
+    _In_ BOOLEAN AccessGranted);
 
 _IRQL_requires_max_(PASSIVE_LEVEL)
 NTSYSAPI
@@ -507,8 +470,7 @@ ZwQueryInformationToken(
     _In_ TOKEN_INFORMATION_CLASS TokenInformationClass,
     _Out_writes_bytes_to_opt_(Length,*ResultLength) PVOID TokenInformation,
     _In_ ULONG Length,
-    _Out_ PULONG ResultLength
-);
+    _Out_ PULONG ResultLength);
 
 NTSYSAPI
 NTSTATUS
@@ -517,6 +479,6 @@ ZwSetInformationToken(
     _In_ HANDLE TokenHandle,
     _In_ TOKEN_INFORMATION_CLASS TokenInformationClass,
     _Out_ PVOID TokenInformation,
-    _In_ ULONG TokenInformationLength
-);
+    _In_ ULONG TokenInformationLength);
+
 #endif
