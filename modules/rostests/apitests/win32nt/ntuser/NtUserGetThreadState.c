@@ -10,6 +10,7 @@
 #define MAX_COUNT 8
 #define IGNORED 0xDEADFACE
 #define RAISED 0xBADBEEF
+#define DO_CHECK(i, value) CheckThreadState(__LINE__, (i), (DWORD_PTR)(value))
 
 #undef DO_PRINT
 
@@ -67,7 +68,7 @@ static VOID CheckThreadState(INT lineno, INT i, DWORD_PTR dwState)
     }
 }
 
-START_TEST(NtUserGetThreadState)
+static VOID DoTest_EDIT(VOID)
 {
     HWND hWnd, hImeWnd;
     HIMC hIMC;
@@ -76,74 +77,167 @@ START_TEST(NtUserGetThreadState)
                          0, 0, 50, 30,
                          NULL, NULL, GetModuleHandleW(NULL), NULL);
     hImeWnd = ImmGetDefaultIMEWnd(hWnd);
-    hIMC = ImmGetContext(hWnd);
+    ok_int(hImeWnd != NULL, TRUE);
 
-#define CHECK_THIS(i, value) \
-    CheckThreadState(__LINE__, (i), (DWORD_PTR)(value));
+    hIMC = ImmGetContext(hWnd);
+    ok_int(hIMC != NULL, TRUE);
+    ok_int(hIMC == (HIMC)NtUserGetThreadState(4), TRUE);
 
 #ifdef DO_PRINT
     PrintThreadState(__LINE__, hWnd);
 #endif
-    CHECK_THIS(0, hWnd);
-    CHECK_THIS(1, hWnd);
-    CHECK_THIS(2, 0);
-    CHECK_THIS(3, hImeWnd);
-    CHECK_THIS(4, hIMC);
+    DO_CHECK(0, hWnd);
+    DO_CHECK(1, hWnd);
+    DO_CHECK(2, 0);
+    DO_CHECK(3, hImeWnd);
+    DO_CHECK(4, hIMC);
 
     SetCapture(hWnd);
 
 #ifdef DO_PRINT
     PrintThreadState(__LINE__, hWnd);
 #endif
-    CHECK_THIS(0, hWnd);
-    CHECK_THIS(1, hWnd);
-    CHECK_THIS(2, hWnd);
-    CHECK_THIS(3, hImeWnd);
-    CHECK_THIS(4, hIMC);
+    DO_CHECK(0, hWnd);
+    DO_CHECK(1, hWnd);
+    DO_CHECK(2, hWnd);
+    DO_CHECK(3, hImeWnd);
+    DO_CHECK(4, hIMC);
 
     ReleaseCapture();
 
 #ifdef DO_PRINT
     PrintThreadState(__LINE__, hWnd);
 #endif
-    CHECK_THIS(0, hWnd);
-    CHECK_THIS(1, hWnd);
-    CHECK_THIS(2, 0);
-    CHECK_THIS(3, hImeWnd);
-    CHECK_THIS(4, hIMC);
+    DO_CHECK(0, hWnd);
+    DO_CHECK(1, hWnd);
+    DO_CHECK(2, 0);
+    DO_CHECK(3, hImeWnd);
+    DO_CHECK(4, hIMC);
 
     SetFocus(hWnd);
 
 #ifdef DO_PRINT
     PrintThreadState(__LINE__, hWnd);
 #endif
-    CHECK_THIS(0, hWnd);
-    CHECK_THIS(1, hWnd);
-    CHECK_THIS(2, 0);
-    CHECK_THIS(3, hImeWnd);
-    CHECK_THIS(4, hIMC);
+    DO_CHECK(0, hWnd);
+    DO_CHECK(1, hWnd);
+    DO_CHECK(2, 0);
+    DO_CHECK(3, hImeWnd);
+    DO_CHECK(4, hIMC);
 
     SetActiveWindow(hWnd);
 
 #ifdef DO_PRINT
     PrintThreadState(__LINE__, hWnd);
 #endif
-    CHECK_THIS(0, hWnd);
-    CHECK_THIS(1, hWnd);
-    CHECK_THIS(2, 0);
-    CHECK_THIS(3, hImeWnd);
-    CHECK_THIS(4, hIMC);
+    DO_CHECK(0, hWnd);
+    DO_CHECK(1, hWnd);
+    DO_CHECK(2, 0);
+    DO_CHECK(3, hImeWnd);
+    DO_CHECK(4, hIMC);
 
     SetActiveWindow(NULL);
 
 #ifdef DO_PRINT
     PrintThreadState(__LINE__, hWnd);
 #endif
-    CHECK_THIS(0, 0);
-    CHECK_THIS(1, 0);
-    CHECK_THIS(2, 0);
-    CHECK_THIS(3, hImeWnd);
-    CHECK_THIS(4, hIMC);
+    DO_CHECK(0, IGNORED);
+    DO_CHECK(1, IGNORED);
+    DO_CHECK(2, 0);
+    DO_CHECK(3, hImeWnd);
+    DO_CHECK(4, hIMC);
 
+    ImmReleaseContext(hWnd, hIMC);
     DestroyWindow(hWnd);
+}
+
+static VOID DoTest_BUTTON(VOID)
+{
+    HWND hWnd, hImeWnd;
+    HIMC hIMC;
+
+    hWnd = CreateWindowA("BUTTON", "Test", BS_PUSHBUTTON | WS_VISIBLE,
+                         0, 0, 50, 30,
+                         NULL, NULL, GetModuleHandleW(NULL), NULL);
+    hImeWnd = ImmGetDefaultIMEWnd(hWnd);
+    ok_int(hImeWnd != NULL, TRUE);
+
+    hIMC = ImmGetContext(hWnd);
+    ok_int(hIMC != NULL, FALSE);
+
+    hIMC = (HIMC)NtUserGetThreadState(4);
+    ok_int(hIMC != NULL, TRUE);
+
+#ifdef DO_PRINT
+    PrintThreadState(__LINE__, hWnd);
+#endif
+    DO_CHECK(0, hWnd);
+    DO_CHECK(1, hWnd);
+    DO_CHECK(2, 0);
+    DO_CHECK(3, hImeWnd);
+    DO_CHECK(4, hIMC);
+
+    SetCapture(hWnd);
+
+#ifdef DO_PRINT
+    PrintThreadState(__LINE__, hWnd);
+#endif
+    DO_CHECK(0, hWnd);
+    DO_CHECK(1, hWnd);
+    DO_CHECK(2, hWnd);
+    DO_CHECK(3, hImeWnd);
+    DO_CHECK(4, hIMC);
+
+    ReleaseCapture();
+
+#ifdef DO_PRINT
+    PrintThreadState(__LINE__, hWnd);
+#endif
+    DO_CHECK(0, hWnd);
+    DO_CHECK(1, hWnd);
+    DO_CHECK(2, 0);
+    DO_CHECK(3, hImeWnd);
+    DO_CHECK(4, hIMC);
+
+    SetFocus(hWnd);
+
+#ifdef DO_PRINT
+    PrintThreadState(__LINE__, hWnd);
+#endif
+    DO_CHECK(0, hWnd);
+    DO_CHECK(1, hWnd);
+    DO_CHECK(2, 0);
+    DO_CHECK(3, hImeWnd);
+    DO_CHECK(4, hIMC);
+
+    SetActiveWindow(hWnd);
+
+#ifdef DO_PRINT
+    PrintThreadState(__LINE__, hWnd);
+#endif
+    DO_CHECK(0, hWnd);
+    DO_CHECK(1, hWnd);
+    DO_CHECK(2, 0);
+    DO_CHECK(3, hImeWnd);
+    DO_CHECK(4, hIMC);
+
+    SetActiveWindow(NULL);
+
+#ifdef DO_PRINT
+    PrintThreadState(__LINE__, hWnd);
+#endif
+    DO_CHECK(0, IGNORED);
+    DO_CHECK(1, IGNORED);
+    DO_CHECK(2, 0);
+    DO_CHECK(3, hImeWnd);
+    DO_CHECK(4, hIMC);
+
+    ImmReleaseContext(GetDesktopWindow(), hIMC);
+    DestroyWindow(hWnd);
+}
+
+START_TEST(NtUserGetThreadState)
+{
+    DoTest_EDIT();
+    DoTest_BUTTON();
 }
