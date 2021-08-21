@@ -224,6 +224,20 @@ E1000WriteUlong(
 
 FORCEINLINE
 VOID
+E1000WriteIoUlong(
+    _In_ PE1000_ADAPTER Adapter,
+    _In_ ULONG Address,
+    _In_ ULONG Value)
+{
+    volatile ULONG Dummy;
+
+    NdisRawWritePortUlong((PULONG)(Adapter->IoPort), Address);
+    NdisReadRegisterUlong(Adapter->IoBase + E1000_REG_STATUS, &Dummy);
+    NdisRawWritePortUlong((PULONG)(Adapter->IoPort + 4), Value);
+}
+
+FORCEINLINE
+VOID
 NICApplyInterruptMask(
     _In_ PE1000_ADAPTER Adapter)
 {

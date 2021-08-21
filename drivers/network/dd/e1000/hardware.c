@@ -53,31 +53,6 @@ static USHORT SupportedDevices[] =
     0x10B5,     // Intel 82546GB Quad Copper KSP3
 };
 
-static
-inline
-ULONG
-E1000WriteFlush(
-    _In_ PE1000_ADAPTER Adapter)
-{
-    volatile ULONG Value;
-
-    NdisReadRegisterUlong(Adapter->IoBase + E1000_REG_STATUS, &Value);
-    return Value;
-}
-
-static
-inline
-VOID
-E1000WriteIoUlong(
-    _In_ PE1000_ADAPTER Adapter,
-    _In_ ULONG Address,
-    _In_ ULONG Value)
-{
-    NdisRawWritePortUlong((PULONG)(Adapter->IoPort), Address);
-    E1000WriteFlush(Adapter);
-    NdisRawWritePortUlong((PULONG)(Adapter->IoPort + 4), Value);
-}
-
 static ULONG PacketFilterToMask(ULONG PacketFilter)
 {
     ULONG FilterMask = 0;
