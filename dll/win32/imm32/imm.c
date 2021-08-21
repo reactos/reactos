@@ -1896,7 +1896,7 @@ VOID WINAPI ImmUnlockClientImc(PCLIENTIMC pClientImc)
     HeapFree(g_hImm32Heap, 0, pClientImc);
 }
 
-static HIMC APIENTRY ImmGetContextEx(HWND hWnd, DWORD dwContextFlags)
+static HIMC APIENTRY Imm32GetContextEx(HWND hWnd, DWORD dwContextFlags)
 {
     HIMC hIMC;
     PCLIENTIMC pClientImc;
@@ -2721,7 +2721,7 @@ HIMC WINAPI ImmGetContext(HWND hWnd)
     TRACE("(%p)\n", hWnd);
     if (hWnd == NULL)
         return NULL;
-    return ImmGetContextEx(hWnd, 2);
+    return Imm32GetContextEx(hWnd, 2);
 }
 
 /***********************************************************************
