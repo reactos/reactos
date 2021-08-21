@@ -1,9 +1,9 @@
 /*
  * PROJECT:     ReactOS Intel PRO/1000 Driver
- * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later.html)
  * PURPOSE:     Sending packets
- * COPYRIGHT:   2018 Mark Jansen (mark.jansen@reactos.org)
- *              2019 Victor Perevertkin (victor.perevertkin@reactos.org)
+ * COPYRIGHT:   Copyright 2018 Mark Jansen <mark.jansen@reactos.org>
+ *              Copyright 2019 Victor Perevertkin <victor.perevertkin@reactos.org>
  */
 
 #include "nic.h"
