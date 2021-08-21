@@ -149,7 +149,7 @@ static inline BOOL Imm32IsCrossThreadAccess(HIMC hIMC)
 
 static BOOL Imm32IsCrossProcessAccess(HWND hWnd)
 {
-    DWORD dwProcessId1 = (DWORD)NtCurrentTeb()->ClientId.UniqueProcess;
+    DWORD dwProcessId1 = (DWORD)(DWORD_PTR)NtCurrentTeb()->ClientId.UniqueProcess;
     DWORD dwProcessId2 = (DWORD)NtUserQueryWindow(hWnd, QUERY_WINDOW_UNIQUE_PROCESS_ID);
     return (dwProcessId1 != dwProcessId2);
 }
@@ -2905,7 +2905,7 @@ UINT WINAPI ImmGetDescriptionA(
                               lpszDescription, uBufLen, NULL, NULL);
     if (uBufLen)
         lpszDescription[cch] = 0;
-    return cch;
+    return (UINT)cch;
 }
 
 /***********************************************************************
@@ -3748,7 +3748,7 @@ BOOL WINAPI ImmSetCandidateWindow(
     ImmUnlockIMC(hIMC);
 
     Imm32NotifyAction(hIMC, hWnd, NI_CONTEXTUPDATED, 0, IMC_SETCANDIDATEPOS,
-                      IMN_SETCANDIDATEPOS, (1 << lpCandidate->dwIndex));
+                      IMN_SETCANDIDATEPOS, (1 << (BYTE)lpCandidate->dwIndex));
     return TRUE;
 }
 
@@ -3771,7 +3771,7 @@ static VOID APIENTRY AnsiToWideLogFont(const LOGFONTA *plfA, LPLOGFONTW plfW)
     RtlCopyMemory(plfW, plfA, offsetof(LOGFONTW, lfFaceName));
     StringCchLengthA(plfA->lfFaceName, _countof(plfA->lfFaceName), &cchA);
     cchW = MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, plfA->lfFaceName, (INT)cchA,
-                               plfW->lfFaceName, cchW);
+                               plfW->lfFaceName, (INT)cchW);
     if (cchW > _countof(plfW->lfFaceName) - 1)
         cchW = _countof(plfW->lfFaceName) - 1;
     plfW->lfFaceName[cchW] = 0;
