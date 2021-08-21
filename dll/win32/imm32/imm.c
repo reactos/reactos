@@ -3682,13 +3682,8 @@ Quit:
  */
 BOOL WINAPI ImmReleaseContext(HWND hWnd, HIMC hIMC)
 {
-  static BOOL shown = FALSE;
-
-  if (!shown) {
-     FIXME("(%p, %p): stub\n", hWnd, hIMC);
-     shown = TRUE;
-  }
-  return TRUE;
+    TRACE("(%p, %p)\n", hWnd, hIMC);
+    return TRUE; // Do nothing. This is correct.
 }
 
 /***********************************************************************
