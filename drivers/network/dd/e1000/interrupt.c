@@ -25,7 +25,7 @@ MiniportISR(
     E1000ReadUlong(Adapter, E1000_REG_ICR, &Value);
 
     Value &= Adapter->InterruptMask;
-    InterlockedOr(&Adapter->InterruptPending, Value);
+    _InterlockedOr(&Adapter->InterruptPending, Value);
 
     if (Value)
     {
@@ -52,7 +52,7 @@ MiniportHandleInterrupt(
 
     NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
 
-    InterruptPending = InterlockedExchange(&Adapter->InterruptPending, 0);
+    InterruptPending = _InterlockedExchange(&Adapter->InterruptPending, 0);
 
 
     /* Link State Changed */
