@@ -147,6 +147,13 @@ static inline BOOL Imm32IsCrossThreadAccess(HIMC hIMC)
     return (dwImeThreadId != dwThreadId);
 }
 
+static BOOL Imm32IsCrossProcessAccess(HWND hWnd)
+{
+    DWORD dwProcessId1 = (DWORD)NtCurrentTeb()->ClientId.UniqueProcess;
+    DWORD dwProcessId2 = (DWORD)NtUserQueryWindow(hWnd, QUERY_WINDOW_UNIQUE_PROCESS_ID);
+    return (dwProcessId1 != dwProcessId2);
+}
+
 static VOID APIENTRY Imm32FreeImeDpi(PIMEDPI pImeDpi, BOOL bDestroy)
 {
     if (pImeDpi->hInst == NULL)
@@ -1889,6 +1896,43 @@ VOID WINAPI ImmUnlockClientImc(PCLIENTIMC pClientImc)
     HeapFree(g_hImm32Heap, 0, pClientImc);
 }
 
+static HIMC APIENTRY ImmGetContextEx(HWND hWnd, DWORD dwContextFlags)
+{
+    HIMC hIMC;
+    PCLIENTIMC pClientImc;
+    PWND pWnd;
+
+    if (!g_psi || !(g_psi->dwSRVIFlags & SRVINFO_IMM32))
+        return NULL;
+
+    if (!hWnd)
+    {
+        // FIXME: NtUserGetThreadState and enum ThreadStateRoutines are broken.
+        hIMC = (HIMC)NtUserGetThreadState(4);
+        goto Quit;
+    }
+
+    pWnd = ValidateHwndNoErr(hWnd);
+    if (!pWnd)
+        return NULL;
+
+    if (Imm32IsCrossProcessAccess(hWnd))
+        return NULL;
+
+    hIMC = pWnd->hImc;
+    if (!hIMC && (dwContextFlags & 1))
+        hIMC = (HIMC)NtUserQueryWindow(hWnd, QUERY_WINDOW_DEFAULT_ICONTEXT);
+
+Quit:
+    pClientImc = ImmLockClientImc(hIMC);
+    if (pClientImc == NULL)
+        return NULL;
+    if ((dwContextFlags & 2) && (pClientImc->dwFlags & CLIENTIMC_UNKNOWN3))
+        hIMC = NULL;
+    ImmUnlockClientImc(pClientImc);
+    return hIMC;
+}
+
 static DWORD APIENTRY
 CandidateListWideToAnsi(const CANDIDATELIST *pWideCL, LPCANDIDATELIST pAnsiCL, DWORD dwBufLen,
                         UINT uCodePage)
@@ -2667,45 +2711,6 @@ BOOL WINAPI ImmGetCompositionWindow(HIMC hIMC, LPCOMPOSITIONFORM lpCompForm)
 
     ImmUnlockIMC(hIMC);
     return ret;
-}
-
-static HIMC APIENTRY ImmGetContextEx(HWND hWnd, DWORD dwContextFlags)
-{
-    HIMC hIMC;
-    PCLIENTIMC pClientImc;
-    DWORD dwProcessId1, dwProcessId2;
-    PWND pWnd;
-
-    if (!g_psi || !(g_psi->dwSRVIFlags & SRVINFO_IMM32))
-        return NULL;
-
-    if (!hWnd)
-    {
-        hIMC = (HIMC)NtUserGetThreadState(4);
-        goto Quit;
-    }
-
-    pWnd = ValidateHwndNoErr(hWnd);
-    if (!pWnd)
-        return NULL;
-
-    dwProcessId1 = (DWORD)NtCurrentTeb()->ClientId.UniqueProcess;
-    dwProcessId2 = (DWORD)NtUserQueryWindow(hWnd, QUERY_WINDOW_UNIQUE_PROCESS_ID);
-    if (dwProcessId1 != dwProcessId2)
-        return NULL;
-
-    hIMC = pWnd->hImc;
-    if (!hIMC && (dwContextFlags & 1))
-        hIMC = (HIMC)NtUserQueryWindow(hWnd, QUERY_WINDOW_DEFAULT_ICONTEXT);
-
-Quit:
-    pClientImc = ImmLockClientImc(hIMC);
-    if (pClientImc == NULL)
-        return NULL;
-    if ((dwContextFlags & 2) && (pClientImc->dwFlags & CLIENTIMC_UNKNOWN3))
-        hIMC = NULL;
-    ImmUnlockClientImc(pClientImc);
-    return hIMC;
 }
 
 /***********************************************************************
