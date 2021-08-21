@@ -65,7 +65,9 @@ typedef struct _E1000_ADAPTER
     BOOLEAN InterruptRegistered;
 
     LONG InterruptMask;
-    LONG InterruptPending;
+
+    _Interlocked_
+    volatile LONG InterruptPending;
 
 
     /* Transmit */
