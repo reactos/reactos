@@ -8,10 +8,12 @@
 
 #include <cassert>
 #include <cstdlib>
+#include <shlwapi.h>
 #include <windows.h>
 #include <winreg.h>
 
 #include "registry.h"
+#include "dialog.h"
 
 LONG CRegKeyEx::EnumValueName(
     _In_ DWORD iIndex,
@@ -25,8 +27,58 @@ LONG CRegKeyEx::EnumValueName(
 RunOnceExEntry::RunOnceExEntry(
     _In_ const ATL::CStringW &Name,
     _In_ const ATL::CStringW &Value) :
-    m_Name(Name), m_Value(Value)
+    m_Value(Value), m_Name(Name)
 { ; }
+
+BOOL RunOnceExEntry::Delete(
+    _In_ CRegKeyEx &hParentKey)
+{
+    return hParentKey.DeleteValue(m_Name) == ERROR_SUCCESS;
+}
+
+BOOL RunOnceExEntry::Exec() const
+{
+    CStringW CommandLine;
+    if (wcsncmp(m_Value, L"||", 2) == 0)
+    {
+        // Remove the prefix.
+        CommandLine = (LPCWSTR)m_Value + 2;
+    }
+    else
+    {
+        CommandLine = m_Value;
+    }
+
+    // FIXME: SHEvaluateSystemCommandTemplate is not implemented
+    //        using PathGetArgsW, PathRemoveArgsW as a workaround.
+    LPWSTR szCommandLine = CommandLine.GetBuffer();
+    LPCWSTR szParam = PathGetArgsW(szCommandLine);
+    PathRemoveArgsW(szCommandLine);
+
+    SHELLEXECUTEINFOW Info = { 0 };
+    Info.cbSize = sizeof(Info);
+    Info.fMask = SEE_MASK_NOCLOSEPROCESS;
+    Info.lpFile = szCommandLine;
+    Info.lpParameters = szParam;
+    Info.nShow = SW_SHOWNORMAL;
+
+    BOOL bSuccess = ShellExecuteExW(&Info);
+
+    CommandLine.ReleaseBuffer();
+
+    if (!bSuccess)
+    {
+        return FALSE;
+    }
+
+    if (Info.hProcess)
+    {
+        WaitForSingleObject(Info.hProcess, INFINITE);
+        CloseHandle(Info.hProcess);
+    }
+
+    return TRUE;
+}
 
 int RunOnceExEntryCmp(
     _In_ const void *a,
@@ -65,14 +117,19 @@ BOOL RunOnceExSection::HandleValue(
     szBuffer[cbData / sizeof(WCHAR)] = L'\0';
     Buffer.ReleaseBuffer();
 
+    CStringW ExpandStr;
+    DWORD dwcchExpand = ExpandEnvironmentStringsW(Buffer, NULL, 0);
+    ExpandEnvironmentStringsW(Buffer, ExpandStr.GetBuffer(dwcchExpand + 1), dwcchExpand);
+    ExpandStr.ReleaseBuffer();
+
     if (ValueName.IsEmpty())
     {
-        // this is the default value
+        // The default value specifies the section title.
         m_SectionTitle = Buffer;
     }
     else
     {
-        m_EntryList.Add(RunOnceExEntry(ValueName, Buffer));
+        m_EntryList.Add(RunOnceExEntry(ValueName, ExpandStr));
     }
 
     return TRUE;
@@ -84,16 +141,15 @@ RunOnceExSection::RunOnceExSection(
     m_SectionName(lpSubKeyName)
 {
     m_bSuccess = FALSE;
-    CRegKeyEx hKey;
     DWORD dwValueNum;
     DWORD dwMaxValueNameLen;
     LSTATUS Error;
     CStringW ValueName;
 
-    if (hKey.Open(hParentKey, lpSubKeyName, KEY_READ) != ERROR_SUCCESS)
+    if (m_RegKey.Open(hParentKey, lpSubKeyName) != ERROR_SUCCESS)
         return;
 
-    Error = RegQueryInfoKeyW(hKey, NULL, 0, NULL, NULL, NULL, NULL,
+    Error = RegQueryInfoKeyW(m_RegKey, NULL, 0, NULL, NULL, NULL, NULL,
                              &dwValueNum, &dwMaxValueNameLen,
                              NULL, NULL, NULL);
     if (Error != ERROR_SUCCESS)
@@ -105,7 +161,7 @@ RunOnceExSection::RunOnceExSection(
         DWORD dwcchName = dwMaxValueNameLen + 1;
 
         szValueName = ValueName.GetBuffer(dwMaxValueNameLen + 1);
-        Error = hKey.EnumValueName(i, szValueName, &dwcchName);
+        Error = m_RegKey.EnumValueName(i, szValueName, &dwcchName);
         ValueName.ReleaseBuffer();
 
         if (Error != ERROR_SUCCESS)
@@ -114,20 +170,50 @@ RunOnceExSection::RunOnceExSection(
             return;
         }
 
-        if (!HandleValue(hKey, ValueName))
+        if (!HandleValue(m_RegKey, ValueName))
             return;
     }
 
-    // sort entries by name in string order.
-    qsort(m_EntryList.GetData(), m_EntryList.GetSize(), sizeof(RunOnceExEntry),
-          RunOnceExEntryCmp);
+    // Sort entries by name in string order.
+    qsort(m_EntryList.GetData(), m_EntryList.GetSize(),
+          sizeof(RunOnceExEntry), RunOnceExEntryCmp);
 
-    hKey.Close();
     m_bSuccess = TRUE;
     return;
 }
 
-int RunOnceExSectionCmp(_In_ const void *a, _In_ const void *b)
+// Copy constructor, CSimpleArray needs it.
+RunOnceExSection::RunOnceExSection(_In_ const RunOnceExSection& Section) :
+    m_SectionName(Section.m_SectionName),
+    m_bSuccess(Section.m_bSuccess),
+    m_SectionTitle(Section.m_SectionTitle),
+    m_EntryList(Section.m_EntryList)
+{
+    m_RegKey.Attach(Section.m_RegKey);
+}
+
+BOOL RunOnceExSection::CloseAndDelete(
+    _In_ CRegKeyEx &hParentKey)
+{
+    m_RegKey.Close();
+    return hParentKey.RecurseDeleteKey(m_SectionName) == ERROR_SUCCESS;
+}
+
+BOOL RunOnceExSection::Exec()
+{
+    BOOL bSuccess = TRUE;
+
+    for (int i = 0; i < m_EntryList.GetSize(); i++)
+    {
+        m_EntryList[i].Delete(m_RegKey);
+        bSuccess &= m_EntryList[i].Exec();
+    }
+    return bSuccess;
+}
+
+int RunOnceExSectionCmp(
+    _In_ const void *a,
+    _In_ const void *b)
 {
     return lstrcmpW(((RunOnceExSection *)a)->m_SectionName,
                     ((RunOnceExSection *)b)->m_SectionName);
@@ -136,24 +222,41 @@ int RunOnceExSectionCmp(_In_ const void *a, _In_ const void *b)
 RunOnceExInstance::RunOnceExInstance(_In_ HKEY BaseKey)
 {
     m_bSuccess = FALSE;
-    CRegKeyEx hKey;
     DWORD dwSubKeyNum;
     DWORD dwMaxSubKeyNameLen;
     LSTATUS Error;
     CStringW SubKeyName;
 
-    if (hKey.Open(BaseKey,
-                  L"Software\\Microsoft\\Windows\\CurrentVersion\\RunOnceEx\\",
-                  KEY_READ) != ERROR_SUCCESS)
+    Error = m_RegKey.Open(BaseKey,
+                          L"Software\\Microsoft\\Windows\\CurrentVersion\\RunOnceEx\\");
+    if (Error != ERROR_SUCCESS)
     {
         return;
     }
 
-    Error = RegQueryInfoKeyW(hKey, NULL, 0, NULL,
+    ULONG cchTitle;
+    Error = m_RegKey.QueryStringValue(L"Title", NULL, &cchTitle);
+    if (Error == ERROR_SUCCESS)
+    {
+        Error = m_RegKey.QueryStringValue(L"Title", m_Title.GetBuffer(cchTitle + 1), &cchTitle);
+        m_Title.ReleaseBuffer();
+        if (Error != ERROR_SUCCESS)
+            return;
+    }
+
+    Error = m_RegKey.QueryDWORDValue(L"Flags", m_dwFlags);
+    if (Error != ERROR_SUCCESS)
+    {
+        m_dwFlags = 0;
+    }
+
+    Error = RegQueryInfoKeyW(m_RegKey, NULL, 0, NULL,
                              &dwSubKeyNum, &dwMaxSubKeyNameLen,
                              NULL, NULL, NULL, NULL, NULL, NULL);
     if (Error != ERROR_SUCCESS)
         return;
+
+    m_bShowDialog = FALSE;
 
     for (DWORD i = 0; i < dwSubKeyNum; i++)
     {
@@ -161,7 +264,7 @@ RunOnceExInstance::RunOnceExInstance(_In_ HKEY BaseKey)
         DWORD dwcchName = dwMaxSubKeyNameLen + 1;
 
         szSubKeyName = SubKeyName.GetBuffer(dwMaxSubKeyNameLen + 1);
-        Error = hKey.EnumKey(i, szSubKeyName, &dwcchName);
+        Error = m_RegKey.EnumKey(i, szSubKeyName, &dwcchName);
         SubKeyName.ReleaseBuffer();
 
         if (Error != ERROR_SUCCESS)
@@ -170,29 +273,60 @@ RunOnceExInstance::RunOnceExInstance(_In_ HKEY BaseKey)
             return;
         }
 
-        if (!HandleSubKey(hKey, SubKeyName))
+        if (!HandleSubKey(m_RegKey, SubKeyName))
             return;
     }
 
-    // sort sections by name in string order.
-    qsort(m_SectionList.GetData(), m_SectionList.GetSize(), sizeof(RunOnceExSection),
-          RunOnceExSectionCmp);
+    // Sort sections by name in string order.
+    qsort(m_SectionList.GetData(), m_SectionList.GetSize(),
+          sizeof(RunOnceExSection), RunOnceExSectionCmp);
 
-    hKey.Close();
     m_bSuccess = TRUE;
     return;
+}
+
+BOOL RunOnceExInstance::Exec(_In_opt_ HWND hwnd)
+{
+    BOOL bSuccess = TRUE;
+
+    // Execute items from registry one by one, and remove them.
+    for (int i = 0; i < m_SectionList.GetSize(); i++)
+    {
+        if (hwnd)
+            SendMessageW(hwnd, WM_SETINDEX, i, 0);
+
+        bSuccess &= m_SectionList[i].Exec();
+        m_SectionList[i].CloseAndDelete(m_RegKey);
+    }
+
+    m_RegKey.DeleteValue(L"Title");
+    m_RegKey.DeleteValue(L"Flags");
+
+    // Notify the dialog all sections are handled.
+    if (hwnd)
+        SendMessageW(hwnd, WM_SETINDEX, m_SectionList.GetSize(), 0);
+    return bSuccess;
 }
 
 BOOL RunOnceExInstance::HandleSubKey(
     _In_ CRegKeyEx &hKey,
     _In_ const CStringW& SubKeyName)
 {
-    RunOnceExSection RunOnceExSection(hKey, SubKeyName);
-    if (!RunOnceExSection.m_bSuccess)
+    RunOnceExSection Section(hKey, SubKeyName);
+    if (!Section.m_bSuccess)
     {
         return FALSE;
     }
 
-    m_SectionList.Add(RunOnceExSection);
+    if (!Section.m_SectionTitle.IsEmpty())
+    {
+        m_bShowDialog = TRUE;
+    }
+    m_SectionList.Add(Section);
+
+    // The copy constructor of RunOnceExSection didn't detach
+    // the m_RegKey while it's attached to the one in the array.
+    // So we have to detach it manually.
+    Section.m_RegKey.Detach();
     return TRUE;
 }

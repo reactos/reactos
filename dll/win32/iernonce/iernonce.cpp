@@ -15,7 +15,7 @@
 #include <debug.h>
 
 #include "registry.h"
-
+#include "dialog.h"
 
 BOOL
 WINAPI
@@ -26,6 +26,7 @@ DllMain(_In_ HINSTANCE hinstDLL,
     switch (dwReason)
     {
         case DLL_PROCESS_ATTACH:
+            DisableThreadLibraryCalls(hinstDLL);
             break;
         case DLL_PROCESS_DETACH:
             break;
@@ -37,19 +38,42 @@ DllMain(_In_ HINSTANCE hinstDLL,
 extern "C" VOID WINAPI
 RunOnceExProcess(_In_ HWND hwnd,
                  _In_ HINSTANCE hInst,
-                 _In_ LPCSTR path,
-                 _In_ int nShow)
+                 _In_ LPCSTR pszCmdLine,
+                 _In_ int nCmdShow)
 {
-    RunOnceExInstance RunonceExInst_LM(HKEY_LOCAL_MACHINE);
-    RunOnceExInstance RunonceExInst_CU(HKEY_CURRENT_USER);
-
-    if (RunonceExInst_LM.m_bSuccess)
+    // iernonce may use shell32 API.
+    HRESULT Result = CoInitialize(NULL);
+    if (Result != S_OK && Result != S_FALSE)
     {
-        // TODO: continue coding here
+        return;
     }
 
-    if (RunonceExInst_CU.m_bSuccess)
+    HKEY RootKeys[] = { HKEY_LOCAL_MACHINE, HKEY_CURRENT_USER };
+    for (UINT i = 0; i < _countof(RootKeys); ++i)
     {
-        // TODO: continue coding here
+        RunOnceExInstance Instance(RootKeys[i]);
+        if (!Instance.m_bSuccess)
+            continue;
+
+        if ((Instance.m_dwFlags & FLAGS_NO_STAT_DIALOG) || !Instance.m_bShowDialog)
+        {
+            Instance.Exec(NULL);
+        }
+        else
+        {
+            // The dialog is responsible to create a thread and execute.
+            ProgressDlg dlg(Instance);
+            dlg.RunDialogBox();
+        }
     }
+
+    CoUninitialize();
+}
+
+extern "C" VOID WINAPI
+InitCallback(
+    _In_ PVOID Callback,
+    _In_ BOOL bSilence)
+{
+    // FIXME: unimplemented
 }

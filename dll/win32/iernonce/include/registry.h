@@ -13,6 +13,11 @@
 #include <atlcoll.h>
 #include <atlsimpcoll.h>
 
+#define FLAGS_NO_STAT_DIALOG 0x00000080
+
+#ifndef UNICODE
+#error This project must be compiled with UNICODE!
+#endif
 
 class CRegKeyEx : public CRegKey
 {
@@ -26,22 +31,28 @@ public:
 class RunOnceExEntry
 {
 private:
-    ATL::CStringW m_Name;
     ATL::CStringW m_Value;
+    ATL::CStringW m_Name;
 
 public:
+
     RunOnceExEntry(
         _In_ const ATL::CStringW &Name,
         _In_ const ATL::CStringW &Value);
 
-    friend int RunOnceExEntryCmp(_In_ const void *a, _In_ const void *b);
+    BOOL Delete(_In_ CRegKeyEx &hParentKey);
+    BOOL Exec() const;
+
+    friend int RunOnceExEntryCmp(
+        _In_ const void *a,
+        _In_ const void *b);
 };
 
 class RunOnceExSection
 {
 private:
     ATL::CStringW m_SectionName;
-    CSimpleArray<RunOnceExEntry> m_EntryList;
+    CRegKeyEx m_RegKey;
 
     BOOL HandleValue(
         _In_ CRegKeyEx &hKey,
@@ -50,17 +61,29 @@ private:
 public:
     BOOL m_bSuccess;
     ATL::CStringW m_SectionTitle;
+    CSimpleArray<RunOnceExEntry> m_EntryList;
+
     RunOnceExSection(
         _In_ CRegKeyEx &hParentKey,
         _In_ const CStringW &lpSubKeyName);
 
-    friend int RunOnceExSectionCmp(_In_ const void *a, _In_ const void *b);
+    RunOnceExSection(_In_ const RunOnceExSection &Section);
+
+    BOOL CloseAndDelete(_In_ CRegKeyEx &hParentKey);
+
+    BOOL Exec();
+
+    friend int RunOnceExSectionCmp(
+        _In_ const void *a,
+        _In_ const void *b);
+
+    friend class RunOnceExInstance;
 };
 
 class RunOnceExInstance
 {
 private:
-    CSimpleArray<RunOnceExSection> m_SectionList;
+    CRegKeyEx m_RegKey;
 
     BOOL HandleSubKey(
         _In_ CRegKeyEx &hKey,
@@ -68,5 +91,12 @@ private:
 
 public:
     BOOL m_bSuccess;
+    CSimpleArray<RunOnceExSection> m_SectionList;
+    CStringW m_Title;
+    DWORD m_dwFlags;
+    BOOL m_bShowDialog;
+
     RunOnceExInstance(_In_ HKEY BaseKey);
+
+    BOOL Exec(_In_opt_ HWND hwnd);
 };
