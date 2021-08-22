@@ -9,7 +9,8 @@ list(APPEND HAL_SMP_SOURCE
 if(ARCH STREQUAL "i386")
     list(APPEND HAL_SMP_ASM_SOURCE
         smp/i386/apentry.S
-        smp/i386/apspinup.S)
+        smp/i386/apspinup.S
+        smp/i386/apfinal.S)
 endif()
 
 if(ARCH STREQUAL "amd64")

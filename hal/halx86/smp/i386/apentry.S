@@ -12,6 +12,7 @@ PUBLIC _APEntry
 PUBLIC _APEntryEnd
 PUBLIC _APJumpOffset
 EXTERN _APSpinupEnd:DWORD
+
 .code16
 _APEntry:
     cli
@@ -30,14 +31,12 @@ _APEntry:
 
     /* Load the GDT and blank IDT */
 #ifdef _USE_ML
-    lgdt fword ptr cs:[gdtptr - _APEntry]
-    lidt fword ptr cs:[idtdesc - _APEntry]
+    lgdt fword ptr cs:[gdtptrtemp - _APEntry]
 #else
-    lgdt cs:[gdtptr - _APEntry]
-    lidt cs:[idtdesc - _APEntry]
+    lgdt cs:[gdtptrtemp - _APEntry]
 #endif
 
-    /* Clear high because virtualbox */
+    /* Disable paging, Just in case */
     xor eax, eax
     mov cr0, eax
 
@@ -52,7 +51,6 @@ _APEntry:
     shl ebx, HEX(4)
     add ebx, (_APEntryEnd - _APEntry)
 
-    /* Jump to APSpinup */
     .byte HEX(EA)
 _APJumpOffset:
     .word HEX(0)
@@ -61,44 +59,42 @@ _APJumpOffset:
     hlt
 
 /* Varibles below this line */
-gdtptr:
+gdtptrtemp:
     .word (gdtend - gdt - 1)
 gdtoffset:
     .long gdt - _APEntry
-idtdesc:
-    .word HEX(0)
-    .long HEX(0)
 gdt:
-      /* NULL Descriptor */
-     .word HEX(0000)
-     .word HEX(0000)
-     .word HEX(0000)
-     .word HEX(0000)
+    /* NULL Descriptor */
+    .word HEX(0000)
+    .word HEX(0000)
+    .word HEX(0000)
+    .word HEX(0000)
 
-      /* 32-bit flat CS */
-     .word HEX(FFFF)
-     .word HEX(0000)
-     .word HEX(9A00)
-     .word HEX(00CF)
+     /* 32-bit flat CS */
+    .word HEX(FFFF)
+    .word HEX(0000)
+    .word HEX(9A00)
+    .word HEX(00CF)
 
-      /* 32-bit flat DS */
-     .word HEX(FFFF)
-     .word HEX(0000)
-     .word HEX(9200)
-     .word HEX(00CF)
+     /* 32-bit flat DS */
+    .word HEX(FFFF)
+    .word HEX(0000)
+    .word HEX(9200)
+    .word HEX(00CF)
 
-      /* 16-bit real mode CS */
-     .word HEX(FFFF)
-     .word HEX(0000)
-     .word HEX(9E00)
-     .word HEX(0000)
+     /* 16-bit real mode CS */
+    .word HEX(FFFF)
+    .word HEX(0000)
+    .word HEX(9E00)
+    .word HEX(0000)
 
-      /* 16-bit real mode DS */
-     .word HEX(FFFF)
-     .word HEX(0000)
-     .word HEX(9200)
-     .word HEX(0000)
+     /* 16-bit real mode DS */
+    .word HEX(FFFF)
+    .word HEX(0000)
+    .word HEX(9200)
+    .word HEX(0000)
 gdtend:
     hlt
 _APEntryEnd:
+.endcode16
 END

@@ -125,6 +125,14 @@ KxInitAPProcessorState(
     {
         UNIMPLEMENTED;
     }
+
+VOID
+NTAPI
+KxInitAPTemporaryPageTables()
+{
+    UNIMPLEMENTED;
+}
+
 #else //_M_IX86
 VOID
 NTAPI
@@ -145,18 +153,26 @@ KxInitAPProcessorState(
         ProcessorState->ContextFrame.SegGs = 0;
 
         /* Set Special PCR and KernelStack */
-        ProcessorState.ContextFrame.SegFs = (ULONG_PTR)&APInfo->Pcr;
-        ProcessorState.ContextFrame.Esp = (ULONG_PTR)KernelStack;
+        ProcessorState->ContextFrame.SegFs = (ULONG_PTR)&APInfo->Pcr;
+        ProcessorState->ContextFrame.Esp = (ULONG_PTR)KernelStack;
 
         /* Setup GDT Ptrs for AP */
-        ProcessorState.SpecialRegisters.Gdtr.Base = GdtPhysicalLoc.QuadPart;
-        ProcessorState.SpecialRegisters.Gdtr.Limit = BSPGdt.Limit;
-        ProcessorState.SpecialRegisters.Idtr.Base = IdtPhysicalLoc.QuadPart;
-        ProcessorState.SpecialRegisters.Idtr.Limit = BSPIdt.Limit;
+        ProcessorState->SpecialRegisters.Gdtr.Base = GdtPhysicalLoc.QuadPart;
+        ProcessorState->SpecialRegisters.Gdtr.Limit = BSPGdt.Limit;
+        ProcessorState->SpecialRegisters.Idtr.Base = IdtPhysicalLoc.QuadPart;
+        ProcessorState->SpecialRegisters.Idtr.Limit = BSPIdt.Limit;
 
         /* Write other objects */
         ProcessorState->ContextFrame.Eip = (ULONG_PTR)KiSystemStartup;
     }
+
+VOID
+NTAPI
+KxInitAPTemporaryPageTables()
+{
+    UNIMPLEMENTED;
+}
+
 #endif
 
 /* GDT Functions, TODO: Find a way to share these between Freeldr and here */

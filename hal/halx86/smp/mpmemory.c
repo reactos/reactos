@@ -116,6 +116,15 @@ HalpWriteProcessorState(PVOID APStubLocation,
     UNIMPLEMENTED;
 }
 
+VOID
+HalpWriteTempPageTable(PVOID APStubLocation, 
+                       UINT32 PageTableLocationPhysical, 
+                       PVOID PageTableLocationBase,
+                       PKPROCESSOR_STATE ProcessorState)
+{
+    UNIMPLEMENTED;
+}
+
 #elif _M_IX86
 VOID
 HalpWriteProcessorState(PVOID APStubLocation, 
@@ -141,5 +150,14 @@ HalpWriteProcessorState(PVOID APStubLocation,
     APStub.StructAPEsp = ProcessorState->ContextFrame.Esp;
     APStub.StructAPEcx = (ULONG_PTR)LoaderBlock;
     RtlCopyMemory(APProcessorStateLoc, &APStub, sizeof(APSTUB));
+}
+
+VOID
+HalpWriteTempPageTable(PVOID APStubLocation, 
+                       UINT32 PageTableLocationPhysical, 
+                       PVOID PageTableLocationBase,
+                       PKPROCESSOR_STATE ProcessorState)
+{
+    UNIMPLEMENTED;
 }
 #endif
