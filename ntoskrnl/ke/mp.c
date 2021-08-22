@@ -123,12 +123,7 @@ NTAPI
 KxInitAPProcessorState(
     _Out_ PKPROCESSOR_STATE ProcessorState)
     {
-        /* Prep Cr Regsters */
-        ProcessorState->SpecialRegisters.Cr0 = __readcr0();
-        ProcessorState->SpecialRegisters.Cr2 = __readcr2();
-        ProcessorState->SpecialRegisters.Cr3 = __readcr3();
-        ProcessorState->SpecialRegisters.Cr4 = __readcr4();
-        ProcessorState->ContextFrame.Rip = (ULONG_PTR)KiSystemStartup;
+        UNIMPLEMENTED;
     }
 #else //_M_IX86
 VOID
@@ -149,10 +144,9 @@ KxInitAPProcessorState(
         /* Clear GS */
         ProcessorState->ContextFrame.SegGs = 0;
 
-         Set Special ProcessorState Values */
+        /* Set Special PCR and KernelStack */
         ProcessorState.ContextFrame.SegFs = (ULONG_PTR)&APInfo->Pcr;
         ProcessorState.ContextFrame.Esp = (ULONG_PTR)KernelStack;
-        ProcessorState.ContextFrame.Eax = (ULONG_PTR)PageTableLoc;
 
         /* Setup GDT Ptrs for AP */
         ProcessorState.SpecialRegisters.Gdtr.Base = GdtPhysicalLoc.QuadPart;
@@ -160,8 +154,8 @@ KxInitAPProcessorState(
         ProcessorState.SpecialRegisters.Idtr.Base = IdtPhysicalLoc.QuadPart;
         ProcessorState.SpecialRegisters.Idtr.Limit = BSPIdt.Limit;
 
+        /* Write other objects */
         ProcessorState->ContextFrame.Eip = (ULONG_PTR)KiSystemStartup;
-        DPRINT1("The location of kisystemstartup is %X\n", (ULONG_PTR)KiSystemStartup);
     }
 #endif
 

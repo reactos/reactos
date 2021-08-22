@@ -19,9 +19,8 @@ extern PHYSICAL_ADDRESS HalpLowStubPhysicalAddress;
 extern PVOID HalpLowStub;
 
 /* TODO: MaxAPCount should be assigned by a Multi APIC table */
-ULONG MaxAPCount = 8;
+ULONG MaxAPCount = 2;
 ULONG StartedProcessorCount = 1;
-ULONG Cr3Values;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -32,10 +31,15 @@ HalStartNextProcessor(
     IN PKPROCESSOR_STATE ProcessorState)
 {
     if (MaxAPCount > StartedProcessorCount)
-    {
+    { 
         /* Start an AP */
-        HalpInitializeAPStub(HalpLowStub);
-        HalpWriteProcessorState(HalpLowStub, ProcessorState);
+        HalpInitializeAPStub(HalpLowStub, 
+                             ProcessorState->SpecialRegisters.Gdtr,
+                             ProcessorState->SpecialRegisters.Idtr);
+
+        HalpWriteProcessorState(HalpLowStub, ProcessorState, (ULONG_PTR)LoaderBlock);
+        HalpWriteTempPageTable(HalpLowStub, (UINT32)ProcessorState->SpecialRegisters.Cr3, 
+                              (PVOID)ProcessorState->ContextFrame.Eax, ProcessorState);
         ApicStartApplicationProcessor(StartedProcessorCount, HalpLowStubPhysicalAddress);
         StartedProcessorCount++;
 
@@ -46,3 +50,4 @@ HalStartNextProcessor(
         return FALSE;
     }
 }
+
