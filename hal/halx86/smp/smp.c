@@ -38,7 +38,7 @@ HalStartNextProcessor(
                              ProcessorState->SpecialRegisters.Idtr);
 
         HalpWriteProcessorState(HalpLowStub, ProcessorState, (ULONG_PTR)LoaderBlock);
-        HalpWriteTempPageTable(HalpLowStub, (UINT32)ProcessorState->SpecialRegisters.Cr3, 
+        HalpWriteTempPageTable(HalpLowStub, (UINT32)ProcessorState->ContextFrame.Ecx, 
                               (PVOID)ProcessorState->ContextFrame.Eax, ProcessorState);
         ApicStartApplicationProcessor(StartedProcessorCount, HalpLowStubPhysicalAddress);
         StartedProcessorCount++;

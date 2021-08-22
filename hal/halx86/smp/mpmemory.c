@@ -158,6 +158,16 @@ HalpWriteTempPageTable(PVOID APStubLocation,
                        PVOID PageTableLocationBase,
                        PKPROCESSOR_STATE ProcessorState)
 {
-    UNIMPLEMENTED;
+    PVOID PageTableValLoc;
+    PHARDWARE_PTE PDE;
+    PDE = (PHARDWARE_PTE)PageTableLocationBase;
+    #define MM_PAGE_SHIFT   12
+    
+    PDE[0].PageFrameNumber = (ULONG)HalpLowStubPhysicalAddress.LowPart >> MM_PAGE_SHIFT;
+    PDE[0].Valid = 1;
+    PDE[0].Write = 1;
+
+    PageTableValLoc = (PVOID)((ULONG_PTR)APStubLocation + ((ULONG_PTR)&TempPageTableLoc - (ULONG_PTR)&APSpinup) + (ULONG_PTR)&APEntryEnd  - (ULONG_PTR)&APEntry);
+    RtlCopyMemory(PageTableValLoc, &PageTableLocationPhysical,  sizeof(UINT32));
 }
 #endif

@@ -26,6 +26,13 @@ _APSpinup:
     mov fs, ax
     mov gs, ax
 
+    mov eax, ([ebx] + [_TempPageTableLoc - _APSpinup])
+    mov cr3, eax
+
+    mov eax, cr0
+    or  eax, HEX(8001000)
+    mov cr0, eax
+
     hlt
 
     /* Load the Final GDT And IDT */

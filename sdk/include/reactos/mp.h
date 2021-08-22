@@ -79,7 +79,10 @@ KiSetGdtEntry(
 /* Paging Stuff */
 
 #define MM_PAGE_SIZE    4096
+#define SELFMAP_ENTRY   0x300
+#define MM_PAGE_SHIFT   12
 
 VOID
 NTAPI
-KxInitAPTemporaryPageTables();
+KxInitAPTemporaryPageTables(PHARDWARE_PTE PageTableDirectory,
+                            PKPROCESSOR_STATE ProcessorState);

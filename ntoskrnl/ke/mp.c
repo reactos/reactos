@@ -14,7 +14,7 @@
 
 /* GLOBALS *******************************************************************/
 
-ULONG ProcessorCount = 0;
+ULONG ProcessorCount;
 PAPINFO APInfo;
 KDESCRIPTOR BSPGdt, BSPIdt;
 KPROCESSOR_STATE ProcessorState;
@@ -29,11 +29,14 @@ VOID
 NTAPI
 KeStartAllProcessors()
 {
+    ProcessorCount = 0;
     while (TRUE)
     {
         SIZE_T APInfoSize = sizeof(APINFO);
+        PHARDWARE_PTE PDE;
         APInfo = ExAllocatePool(NonPagedPool, APInfoSize);
-       
+        PDE = ExAllocatePool(NonPagedPool, 100000); //TODO replace the silly size place holder
+        PageTablePhysicalLoc = MmGetPhysicalAddress(PDE);
         /* Load the GDT */
         _sgdt(&BSPGdt.Limit);
         __sidt(&BSPIdt.Limit);
@@ -97,6 +100,9 @@ KeStartAllProcessors()
 
         /* Prep ProcessorState then start the AP */
         KxInitAPProcessorState(&ProcessorState);
+        KxInitAPTemporaryPageTables(PDE, &ProcessorState);
+        ProcessorState.ContextFrame.Eax = (ULONG_PTR)PDE;
+        ProcessorState.ContextFrame.Ecx = PageTablePhysicalLoc.QuadPart;
         if (!HalStartNextProcessor(KeLoaderBlock, &ProcessorState))
         {
             break;
@@ -168,9 +174,24 @@ KxInitAPProcessorState(
 
 VOID
 NTAPI
-KxInitAPTemporaryPageTables()
+KxInitAPTemporaryPageTables(PHARDWARE_PTE PageTableDirectory, PKPROCESSOR_STATE ProcessorState)
 {
-    UNIMPLEMENTED;
+    //PHARDWARE_PTE BootStubPTE, GDTPTE, IDTPTE;
+    // Map the page directory at 0xC0000000 (maps itself)
+    PageTableDirectory[3].PageFrameNumber = (ULONG)PageTableDirectory >> MM_PAGE_SHIFT;
+    PageTableDirectory[3].Valid = 1;
+    PageTableDirectory[3].Write = 1;
+    //PDE [0] , pointing to page table for bootstub
+    PageTableDirectory[0].Valid = 0;
+    PageTableDirectory[0].Write = 0;
+    //PDE [1] , pointing to page table for GDT
+    PageTableDirectory[1].PageFrameNumber = (ULONG_PTR)ProcessorState->SpecialRegisters.Gdtr.Base >> MM_PAGE_SHIFT;
+    PageTableDirectory[1].Valid = 1;
+    PageTableDirectory[1].Write = 1;
+    //PDE [2] , pointing to page table for IDT
+    PageTableDirectory[2].PageFrameNumber = (ULONG_PTR)ProcessorState->SpecialRegisters.Idtr.Base >> MM_PAGE_SHIFT;
+    PageTableDirectory[2].Valid = 1;
+    PageTableDirectory[2].Write = 1;
 }
 
 #endif
