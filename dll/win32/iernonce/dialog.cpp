@@ -5,13 +5,7 @@
  * COPYRIGHT:   Copyright 2021 He Yang <1160386205@qq.com>
  */
 
-#include <atlbase.h>
-#include <atlwin.h>
-#include <windowsx.h>
-#include <process.h>
-
-#include "dialog.h"
-#include "registry.h"
+#include "iernonce.h"
 
 #define ITEM_VPADDING     3
 #define ITEM_LEFTPADDING 22

@@ -6,16 +6,6 @@
  *              Copyright 2021 He Yang <1160386205@qq.com>
  */
 
-#define WIN32_NO_STATUS
-#include <windef.h>
-#include <winbase.h>
-#include <windows.h>
-
-#define NDEBUG
-#include <debug.h>
-
-#include "registry.h"
-#include "dialog.h"
 #include "iernonce.h"
 
 RUNONCEEX_CALLBACK g_Callback = NULL;

@@ -5,14 +5,6 @@
  * COPYRIGHT:   Copyright 2021 He Yang <1160386205@qq.com>
  */
 
-
-#include <cassert>
-#include <cstdlib>
-#include <shlwapi.h>
-#include <windows.h>
-#include <winreg.h>
-
-#include "dialog.h"
 #include "iernonce.h"
 
 extern RUNONCEEX_CALLBACK g_Callback;
