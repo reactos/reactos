@@ -5,15 +5,9 @@
  * COPYRIGHT:   Copyright 2021 He Yang <1160386205@qq.com>
  */
 
+#include "iernonce.h"
 
-#include <cassert>
-#include <cstdlib>
-#include <shlwapi.h>
-#include <windows.h>
-#include <winreg.h>
-
-#include "registry.h"
-#include "dialog.h"
+extern RUNONCEEX_CALLBACK g_Callback;
 
 LONG CRegKeyEx::EnumValueName(
     _In_ DWORD iIndex,
@@ -199,7 +193,14 @@ BOOL RunOnceExSection::CloseAndDelete(
     return hParentKey.RecurseDeleteKey(m_SectionName) == ERROR_SUCCESS;
 }
 
-BOOL RunOnceExSection::Exec()
+UINT RunOnceExSection::GetEntryCnt() const
+{
+    return m_EntryList.GetSize();
+}
+
+BOOL RunOnceExSection::Exec(
+    _Inout_ UINT& iCompleteCnt,
+    _In_ const UINT iTotalCnt)
 {
     BOOL bSuccess = TRUE;
 
@@ -207,6 +208,10 @@ BOOL RunOnceExSection::Exec()
     {
         m_EntryList[i].Delete(m_RegKey);
         bSuccess &= m_EntryList[i].Exec();
+        iCompleteCnt++;
+        // TODO: the meaning of the third param is still unknown, seems it's always 0.
+        if (g_Callback)
+            g_Callback(iCompleteCnt, iTotalCnt, NULL);
     }
     return bSuccess;
 }
@@ -289,13 +294,20 @@ BOOL RunOnceExInstance::Exec(_In_opt_ HWND hwnd)
 {
     BOOL bSuccess = TRUE;
 
+    UINT TotalCnt = 0;
+    UINT CompleteCnt = 0;
+    for (int i = 0; i < m_SectionList.GetSize(); i++)
+    {
+        TotalCnt += m_SectionList[i].GetEntryCnt();
+    }
+
     // Execute items from registry one by one, and remove them.
     for (int i = 0; i < m_SectionList.GetSize(); i++)
     {
         if (hwnd)
             SendMessageW(hwnd, WM_SETINDEX, i, 0);
 
-        bSuccess &= m_SectionList[i].Exec();
+        bSuccess &= m_SectionList[i].Exec(CompleteCnt, TotalCnt);
         m_SectionList[i].CloseAndDelete(m_RegKey);
     }
 
@@ -304,8 +316,24 @@ BOOL RunOnceExInstance::Exec(_In_opt_ HWND hwnd)
 
     // Notify the dialog all sections are handled.
     if (hwnd)
-        SendMessageW(hwnd, WM_SETINDEX, m_SectionList.GetSize(), 0);
+        SendMessageW(hwnd, WM_SETINDEX, m_SectionList.GetSize(), bSuccess);
     return bSuccess;
+}
+
+BOOL RunOnceExInstance::Run(_In_ BOOL bSilence)
+{
+    if (bSilence ||
+        (m_dwFlags & FLAGS_NO_STAT_DIALOG) ||
+        !m_bShowDialog)
+    {
+        return Exec(NULL);
+    }
+    else
+    {
+        // The dialog is responsible to create a thread and execute.
+        ProgressDlg dlg(*this);
+        return dlg.RunDialogBox();
+    }
 }
 
 BOOL RunOnceExInstance::HandleSubKey(

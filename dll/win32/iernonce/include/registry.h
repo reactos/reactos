@@ -71,7 +71,11 @@ public:
 
     BOOL CloseAndDelete(_In_ CRegKeyEx &hParentKey);
 
-    BOOL Exec();
+    UINT GetEntryCnt() const;
+
+    BOOL Exec(
+        _Inout_ UINT& iCompleteCnt,
+        _In_ const UINT iTotalCnt);
 
     friend int RunOnceExSectionCmp(
         _In_ const void *a,
@@ -99,4 +103,5 @@ public:
     RunOnceExInstance(_In_ HKEY BaseKey);
 
     BOOL Exec(_In_opt_ HWND hwnd);
+    BOOL Run(_In_ BOOL bSilence);
 };

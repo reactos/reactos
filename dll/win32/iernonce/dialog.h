@@ -13,6 +13,8 @@
 #include "resource.h"
 #include "registry.h"
 
+// When wParam < item count ==> wParam is item index (0 based)
+//      wParam = item count ==> all finished, lParam = bSuccess
 #define WM_SETINDEX (WM_USER + 1)
 
 class ProgressDlg : public CDialogImpl<ProgressDlg>

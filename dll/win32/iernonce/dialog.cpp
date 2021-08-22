@@ -5,13 +5,8 @@
  * COPYRIGHT:   Copyright 2021 He Yang <1160386205@qq.com>
  */
 
-#include <atlbase.h>
-#include <atlwin.h>
-#include <windowsx.h>
+#include "iernonce.h"
 #include <process.h>
-
-#include "dialog.h"
-#include "registry.h"
 
 #define ITEM_VPADDING     3
 #define ITEM_LEFTPADDING 22
@@ -37,10 +32,7 @@ BOOL ProgressDlg::RunDialogBox()
     // Show the dialog and run the items only when the list is not empty.
     if (m_RunOnceExInst.m_SectionList.GetSize() != 0)
     {
-        if (DoModal() == -1)
-        {
-            return FALSE;
-        }
+        return (DoModal() == 1);
     }
     return TRUE;
 }
@@ -220,8 +212,8 @@ ProgressDlg::ProcessWindowMessage(
         {
             if ((int)wParam == m_RunOnceExInst.m_SectionList.GetSize())
             {
-                // All sections are handled.
-                EndDialog(0);
+                // All sections are handled, lParam is bSuccess.
+                EndDialog(lParam);
             }
             m_PointedItem = wParam;
             InvalidateRect(NULL);

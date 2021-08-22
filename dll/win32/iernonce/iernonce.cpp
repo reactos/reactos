@@ -6,16 +6,10 @@
  *              Copyright 2021 He Yang <1160386205@qq.com>
  */
 
-#define WIN32_NO_STATUS
-#include <windef.h>
-#include <winbase.h>
-#include <windows.h>
+#include "iernonce.h"
 
-#define NDEBUG
-#include <debug.h>
-
-#include "registry.h"
-#include "dialog.h"
+RUNONCEEX_CALLBACK g_Callback = NULL;
+BOOL g_bSilence = FALSE;
 
 BOOL
 WINAPI
@@ -52,28 +46,16 @@ RunOnceExProcess(_In_ HWND hwnd,
     for (UINT i = 0; i < _countof(RootKeys); ++i)
     {
         RunOnceExInstance Instance(RootKeys[i]);
-        if (!Instance.m_bSuccess)
-            continue;
-
-        if ((Instance.m_dwFlags & FLAGS_NO_STAT_DIALOG) || !Instance.m_bShowDialog)
-        {
-            Instance.Exec(NULL);
-        }
-        else
-        {
-            // The dialog is responsible to create a thread and execute.
-            ProgressDlg dlg(Instance);
-            dlg.RunDialogBox();
-        }
+        Instance.Run(g_bSilence);
     }
 
     CoUninitialize();
 }
 
 extern "C" VOID WINAPI
-InitCallback(
-    _In_ PVOID Callback,
-    _In_ BOOL bSilence)
+InitCallback(_In_ RUNONCEEX_CALLBACK Callback,
+             _In_ BOOL bSilence)
 {
-    // FIXME: unimplemented
+    g_Callback = Callback;
+    g_bSilence = bSilence;
 }
