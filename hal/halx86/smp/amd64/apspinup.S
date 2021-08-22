@@ -9,11 +9,33 @@
 
 PUBLIC APSpinup
 PUBLIC APSpinupEnd
-PUBLIC APCr3
+PUBLIC APGDT
+PUBLIC APIDT
+PUBLIC TempPageTableLoc
+PUBLIC APFinalOffset
+
 .code64
 APSpinup:
     hlt
 
-APCr3:
+APFinalOffset:
+
+/* Write the main GDT */
+.align 4 /* force 4-byte alignment */
+APGDT:
+    .word HEX(0) /* Padding */
+gdtptr:
+    .word HEX(0) /* Limit */
+    .long HEX(0) /* Address */
+
+/* Write the main IDT */
+.align 4 /* force 4-byte alignment */
+APIDT:
+    .word HEX(0) /* Padding */
+idtptr:
+    .word HEX(0) /* Limit */
+    .long HEX(0) /* Address */
+TempPageTableLoc:
+    .long HEX(0)
 APSpinupEnd:
 END

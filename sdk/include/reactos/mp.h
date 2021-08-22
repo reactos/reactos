@@ -26,6 +26,7 @@ NTAPI
 KxInitAPProcessorState(
     _Out_ PKPROCESSOR_STATE ProcessorState);
 
+#ifdef _M_IX86
 /* GDT stuff */
 
 #define DPL_SYSTEM  0
@@ -81,6 +82,7 @@ KiSetGdtEntry(
 #define MM_PAGE_SIZE    4096
 #define SELFMAP_ENTRY   0x300
 #define MM_PAGE_SHIFT   12
+#endif
 
 VOID
 NTAPI

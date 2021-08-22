@@ -725,23 +725,12 @@ KiSystemStartup(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     PKIPCR Pcr;
     KIRQL DummyIrql;
 
-    if(KeNumberProcessors == 0)
-    {
-        /* Boot cycles timestamp */
-        BootCycles = __rdtsc();
+    /* Boot cycles timestamp */
+    BootCycles = __rdtsc();
 
-        /* Save the loader block and get the current CPU */
-        KeLoaderBlock = LoaderBlock;
-    }
-
+    /* Save the loader block and get the current CPU */
+    KeLoaderBlock = LoaderBlock;
     Cpu = KeNumberProcessors;
-    if(KeNumberProcessors > 0)
-    {
-        __asm{
-            mov eax, 0xdeadbeef
-            hlt
-        }
-    }
     if (!Cpu)
     {
         /* If this is the boot CPU, set FS and the CPU Number*/

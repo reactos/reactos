@@ -38,8 +38,13 @@ HalStartNextProcessor(
                              ProcessorState->SpecialRegisters.Idtr);
 
         HalpWriteProcessorState(HalpLowStub, ProcessorState, (ULONG_PTR)LoaderBlock);
+        #ifdef _M_AMD64
+        HalpWriteTempPageTable(HalpLowStub, (UINT32)ProcessorState->ContextFrame.Rcx, 
+                              (PVOID)ProcessorState->ContextFrame.Rax, ProcessorState);
+        #else
         HalpWriteTempPageTable(HalpLowStub, (UINT32)ProcessorState->ContextFrame.Ecx, 
                               (PVOID)ProcessorState->ContextFrame.Eax, ProcessorState);
+        #endif
         ApicStartApplicationProcessor(StartedProcessorCount, HalpLowStubPhysicalAddress);
         StartedProcessorCount++;
 

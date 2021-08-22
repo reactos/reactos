@@ -95,14 +95,14 @@ KeStartAllProcessors()
             0xFFFF, 0x09, 0, 2);
         KiSetGdtEntry(KiGetGdtEntry(&APInfo->Gdt, KGDT_NMI_TSS), (ULONG_PTR)&APInfo->TssNMI,
             0xFFFF, TYPE_CODE, 0, 2);
-
+        ProcessorState.ContextFrame.Eax = (ULONG_PTR)PDE;
+        ProcessorState.ContextFrame.Ecx = PageTablePhysicalLoc.QuadPart;
     #endif
 
         /* Prep ProcessorState then start the AP */
         KxInitAPProcessorState(&ProcessorState);
         KxInitAPTemporaryPageTables(PDE, &ProcessorState);
-        ProcessorState.ContextFrame.Eax = (ULONG_PTR)PDE;
-        ProcessorState.ContextFrame.Ecx = PageTablePhysicalLoc.QuadPart;
+
         if (!HalStartNextProcessor(KeLoaderBlock, &ProcessorState))
         {
             break;
@@ -134,7 +134,8 @@ KxInitAPProcessorState(
 
 VOID
 NTAPI
-KxInitAPTemporaryPageTables()
+KxInitAPTemporaryPageTables(PHARDWARE_PTE PageTableDirectory, 
+                            PKPROCESSOR_STATE ProcessorState)
 {
     UNIMPLEMENTED;
 }
@@ -174,7 +175,8 @@ KxInitAPProcessorState(
 
 VOID
 NTAPI
-KxInitAPTemporaryPageTables(PHARDWARE_PTE PageTableDirectory, PKPROCESSOR_STATE ProcessorState)
+KxInitAPTemporaryPageTables(PHARDWARE_PTE PageTableDirectory, 
+                            PKPROCESSOR_STATE ProcessorState)
 {
     //PHARDWARE_PTE BootStubPTE, GDTPTE, IDTPTE;
     // Map the page directory at 0xC0000000 (maps itself)
@@ -193,8 +195,6 @@ KxInitAPTemporaryPageTables(PHARDWARE_PTE PageTableDirectory, PKPROCESSOR_STATE 
     PageTableDirectory[2].Valid = 1;
     PageTableDirectory[2].Write = 1;
 }
-
-#endif
 
 /* GDT Functions, TODO: Find a way to share these between Freeldr and here */
 
@@ -272,3 +272,5 @@ KiSetGdtEntry(
 {
     KiSetGdtEntryEx(Entry, Base, Limit, Type, Dpl, FALSE, SegMode);
 }
+
+#endif

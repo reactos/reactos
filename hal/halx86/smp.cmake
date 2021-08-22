@@ -16,7 +16,8 @@ endif()
 if(ARCH STREQUAL "amd64")
     list(APPEND HAL_SMP_ASM_SOURCE
         smp/amd64/apentry.S
-        smp/amd64/apspinup.S)
+        smp/amd64/apspinup.S
+        smp/amd64/apfinal.S)
 endif()
 
 add_asm_files(lib_hal_smp_asm ${HAL_SMP_ASM_SOURCE})
