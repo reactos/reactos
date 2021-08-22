@@ -183,7 +183,7 @@ SepPrivilegeCheck(
  * Returns TRUE if the required privilege exists and that it matches
  * with the one from the access token, FALSE otherwise.
  */
-NTSTATUS
+BOOLEAN
 NTAPI
 SepSinglePrivilegeCheck(
     _In_ LUID PrivilegeValue,
