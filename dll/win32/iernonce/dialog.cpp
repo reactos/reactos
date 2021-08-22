@@ -6,6 +6,7 @@
  */
 
 #include "iernonce.h"
+#include <process.h>
 
 #define ITEM_VPADDING     3
 #define ITEM_LEFTPADDING 22
@@ -31,12 +32,7 @@ BOOL ProgressDlg::RunDialogBox()
     // Show the dialog and run the items only when the list is not empty.
     if (m_RunOnceExInst.m_SectionList.GetSize() != 0)
     {
-        INT_PTR Ret = DoModal();
-        if (Ret == -1)
-        {
-            return FALSE;
-        }
-        return Ret;
+        return (DoModal() == 1);
     }
     return TRUE;
 }
@@ -217,7 +213,7 @@ ProgressDlg::ProcessWindowMessage(
             if ((int)wParam == m_RunOnceExInst.m_SectionList.GetSize())
             {
                 // All sections are handled, lParam is bSuccess.
-                EndDialog((int)lParam);
+                EndDialog(lParam);
             }
             m_PointedItem = wParam;
             InvalidateRect(NULL);

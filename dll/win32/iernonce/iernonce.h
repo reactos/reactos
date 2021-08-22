@@ -7,22 +7,16 @@
 
 #pragma once
 
-#define WIN32_NO_STATUS
-
-#include <windows.h>
-#include <winbase.h>
+#include <cassert>
+#include <cstdlib>
 #include <windef.h>
+#include <winbase.h>
 #include <windowsx.h>
 #include <shlwapi.h>
-#include <winreg.h>
-#include <process.h>
 #include <iernonce_undoc.h>
 
 #include <atlbase.h>
 #include <atlwin.h>
-
-#include <cassert>
-#include <cstdlib>
 
 #include "registry.h"
 #include "dialog.h"

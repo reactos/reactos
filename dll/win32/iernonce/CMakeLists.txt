@@ -4,10 +4,14 @@ include_directories(include)
 
 spec2def(iernonce.dll iernonce.spec)
 
-add_library(iernonce MODULE
+list(APPEND SOURCE
     dialog.cpp
     iernonce.cpp
     registry.cpp
+    iernonce.h)
+
+add_library(iernonce MODULE
+    ${SOURCE}
     iernonce.rc
     ${CMAKE_CURRENT_BINARY_DIR}/iernonce.def)
 
