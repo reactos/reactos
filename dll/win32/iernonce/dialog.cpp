@@ -37,10 +37,12 @@ BOOL ProgressDlg::RunDialogBox()
     // Show the dialog and run the items only when the list is not empty.
     if (m_RunOnceExInst.m_SectionList.GetSize() != 0)
     {
-        if (DoModal() == -1)
+        INT_PTR Ret = DoModal();
+        if (Ret == -1)
         {
             return FALSE;
         }
+        return Ret;
     }
     return TRUE;
 }
@@ -220,8 +222,8 @@ ProgressDlg::ProcessWindowMessage(
         {
             if ((int)wParam == m_RunOnceExInst.m_SectionList.GetSize())
             {
-                // All sections are handled.
-                EndDialog(0);
+                // All sections are handled, lParam is bSuccess.
+                EndDialog((int)lParam);
             }
             m_PointedItem = wParam;
             InvalidateRect(NULL);
