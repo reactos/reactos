@@ -13,7 +13,7 @@
 #include "resource.h"
 #include "registry.h"
 
-// when wParam < item count ==> wParam is item index (0 based)
+// When wParam < item count ==> wParam is item index (0 based)
 //      wParam = item count ==> all finished, lParam = bSuccess
 #define WM_SETINDEX (WM_USER + 1)
 
