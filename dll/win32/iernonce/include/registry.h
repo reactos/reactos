@@ -74,7 +74,7 @@ public:
     UINT GetEntryCnt() const;
 
     BOOL Exec(
-        _Inout_ UINT &iCompleteCnt,
+        _Inout_ UINT& iCompleteCnt,
         _In_ const UINT iTotalCnt);
 
     friend int RunOnceExSectionCmp(
