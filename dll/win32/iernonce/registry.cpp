@@ -207,7 +207,7 @@ UINT RunOnceExSection::GetEntryCnt() const
 }
 
 BOOL RunOnceExSection::Exec(
-    _Inout_ UINT &iCompleteCnt,
+    _Inout_ UINT& iCompleteCnt,
     _In_ const UINT iTotalCnt)
 {
     BOOL bSuccess = TRUE;
