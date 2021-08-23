@@ -78,7 +78,7 @@ static PWND FASTCALL ValidateHwndNoErr(HWND hwnd)
 
     ht = g_SharedInfo.aheList; /* handle table */
     index = (LOWORD(hwnd) - FIRST_USER_HANDLE) >> 1;
-    if (index < 0 || index >= ht->nb_handles || !ht->handles[index].type)
+    if (index < 0 || index >= ht->nb_handles || ht->handles[index].type != TYPE_WINDOW)
         return NULL;
 
     generation = HIWORD(hwnd);
