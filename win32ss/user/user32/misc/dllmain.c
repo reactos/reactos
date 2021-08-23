@@ -1,6 +1,6 @@
 #include <user32.h>
-
 #include <ndk/cmfuncs.h>
+#include <strsafe.h>
 
 #define MAX_USER_MODE_DRV_BUFFER 526
 
@@ -438,6 +438,7 @@ Init(PUSERCONNECT UserCon /*PUSERSRV_API_CONNECTINFO*/)
         gHandleTable = SharedPtrToUser(UserCon->siClient.aheList);
         gHandleEntries = SharedPtrToUser(gHandleTable->handles);
         gSharedInfo = UserCon->siClient;
+        gSharedInfo.psi = gpsi;
     }
 
     // FIXME: Yet another hack... This call should normally not be done here, but
@@ -544,18 +545,19 @@ DllMain(
 
             if (!gfServerProcess)
             {
-#if WIN32K_ISNT_BROKEN
-               InitializeImmEntryTable();
-#else
-               /* imm32 takes a refcount and prevents us from unloading */
-               LoadLibraryW(L"user32");
-#endif
-               //
-               // Wine is stub and throws an exception so save this for real Imm32.dll testing!!!!
-               //
-               //gImmApiEntries.pImmRegisterClient(&gSharedInfo, ghImm32);
+                HINSTANCE hImm32 = NULL;
+
+                if (gpsi && (gpsi->dwSRVIFlags & SRVINFO_IMM32))
+                {
+                    WCHAR szImmFile[MAX_PATH];
+                    InitializeImmEntryTable();
+                    GetImmFileName(szImmFile, _countof(szImmFile));
+                    hImm32 = GetModuleHandleW(szImmFile);
+                }
+
+                if (!IMM_FN(ImmRegisterClient)(&gSharedInfo, hImm32))
+                    return FALSE;
             }
-            
             break;
         }
 

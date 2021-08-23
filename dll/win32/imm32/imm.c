@@ -5154,6 +5154,7 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpReserved)
 
         case DLL_PROCESS_DETACH:
             RtlDeleteCriticalSection(&g_csImeDpi);
+            TRACE("imm32.dll is unloaded\n");
             break;
     }
 
