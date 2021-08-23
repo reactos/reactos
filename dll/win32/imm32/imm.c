@@ -3679,6 +3679,8 @@ Quit:
 BOOL WINAPI ImmReleaseContext(HWND hWnd, HIMC hIMC)
 {
     TRACE("(%p, %p)\n", hWnd, hIMC);
+    UNREFERENCED_PARAMETER(hWnd);
+    UNREFERENCED_PARAMETER(hIMC);
     return TRUE; // Do nothing. This is correct.
 }
 
@@ -5147,6 +5149,7 @@ Quit:
 UINT WINAPI ImmWINNLSGetIMEHotkey(HWND hwndIme)
 {
     TRACE("(%p)\n", hwndIme);
+    UNREFERENCED_PARAMETER(hwndIme);
     return 0; /* This is correct. This function of Windows just returns zero. */
 }
 
