@@ -35,7 +35,7 @@ Imm32ApiTable gImmApiEntries = {
 #include "immtable.h"
 };
 
-static HRESULT
+HRESULT
 GetImmFileName(_Out_ LPWSTR lpBuffer,
                _In_ size_t cchBuffer)
 {

@@ -466,19 +466,6 @@ Cleanup(VOID)
     DeleteFrameBrushes();
 }
 
-static HRESULT
-GetImmFileName(_Out_ LPWSTR lpBuffer,
-               _In_ size_t cchBuffer)
-{
-    UINT length = GetSystemDirectoryW(lpBuffer, cchBuffer);
-    if (length && length < cchBuffer)
-    {
-        StringCchCatW(lpBuffer, cchBuffer, L"\\");
-        return StringCchCatW(lpBuffer, cchBuffer, L"imm32.dll");
-    }
-    return StringCchCopyW(lpBuffer, cchBuffer, L"imm32.dll");
-}
-
 INT WINAPI
 DllMain(
    IN PVOID hInstanceDll,
