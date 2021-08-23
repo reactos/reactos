@@ -9,6 +9,8 @@
 
 #include <cassert>
 #include <cstdlib>
+
+#define WIN32_NO_STATUS
 #include <windef.h>
 #include <winbase.h>
 #include <windowsx.h>
