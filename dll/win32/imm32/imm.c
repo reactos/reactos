@@ -149,9 +149,8 @@ static inline BOOL Imm32IsCrossThreadAccess(HIMC hIMC)
 
 static BOOL Imm32IsCrossProcessAccess(HWND hWnd)
 {
-    DWORD dwProcessId1 = (DWORD)(DWORD_PTR)NtCurrentTeb()->ClientId.UniqueProcess;
-    DWORD dwProcessId2 = (DWORD)NtUserQueryWindow(hWnd, QUERY_WINDOW_UNIQUE_PROCESS_ID);
-    return (dwProcessId1 != dwProcessId2);
+    return (NtUserQueryWindow(hWnd, QUERY_WINDOW_UNIQUE_PROCESS_ID) !=
+            (DWORD_PTR)NtCurrentTeb()->ClientId.UniqueProcess);
 }
 
 static VOID APIENTRY Imm32FreeImeDpi(PIMEDPI pImeDpi, BOOL bDestroy)
