@@ -808,30 +808,6 @@ static inline BOOL is_kbd_ime_unicode(const ImmHkl *hkl)
 
 static InputContextData* get_imc_data(HIMC hIMC);
 
-static inline WCHAR *strdupAtoW( const char *str )
-{
-    WCHAR *ret = NULL;
-    if (str)
-    {
-        DWORD len = MultiByteToWideChar( CP_ACP, 0, str, -1, NULL, 0 );
-        if ((ret = HeapAlloc( GetProcessHeap(), 0, len * sizeof(WCHAR) )))
-            MultiByteToWideChar( CP_ACP, 0, str, -1, ret, len );
-    }
-    return ret;
-}
-
-static inline CHAR *strdupWtoA( const WCHAR *str )
-{
-    CHAR *ret = NULL;
-    if (str)
-    {
-        DWORD len = WideCharToMultiByte( CP_ACP, 0, str, -1, NULL, 0, NULL, NULL );
-        if ((ret = HeapAlloc( GetProcessHeap(), 0, len )))
-            WideCharToMultiByte( CP_ACP, 0, str, -1, ret, len, NULL, NULL );
-    }
-    return ret;
-}
-
 static HMODULE load_graphics_driver(void)
 {
     static const WCHAR display_device_guid_propW[] = {
