@@ -61,6 +61,32 @@ SHAREDINFO g_SharedInfo = { NULL };
 BYTE g_bClientRegd = FALSE;
 HANDLE g_hImm32Heap = NULL;
 
+static PWND FASTCALL ValidateHwndNoErr(HWND hwnd)
+{
+    PCLIENTINFO ClientInfo = GetWin32ClientInfo();
+    INT index;
+    PUSER_HANDLE_TABLE ht;
+    WORD generation;
+
+    /* See if the window is cached */
+    if (hwnd == ClientInfo->CallbackWnd.hWnd)
+        return ClientInfo->CallbackWnd.pWnd;
+
+    if (!NtUserValidateHandleSecure(hwnd))
+        return NULL;
+
+    ht = g_SharedInfo.aheList; /* handle table */
+    index = (LOWORD(hwnd) - FIRST_USER_HANDLE) >> 1;
+    if (index < 0 || index >= ht->nb_handles || ht->handles[index].type != TYPE_WINDOW)
+        return NULL;
+
+    generation = HIWORD(hwnd);
+    if (generation != ht->handles[index].generation && generation && generation != 0xFFFF)
+        return NULL;
+
+    return (PWND)&ht->handles[index];
+}
+
 static BOOL APIENTRY Imm32InitInstance(HMODULE hMod)
 {
     NTSTATUS status;
@@ -118,6 +144,12 @@ static inline BOOL Imm32IsCrossThreadAccess(HIMC hIMC)
     DWORD dwImeThreadId = NtUserQueryInputContext(hIMC, 1);
     DWORD dwThreadId = GetCurrentThreadId();
     return (dwImeThreadId != dwThreadId);
+}
+
+static BOOL Imm32IsCrossProcessAccess(HWND hWnd)
+{
+    return (NtUserQueryWindow(hWnd, QUERY_WINDOW_UNIQUE_PROCESS_ID) !=
+            (DWORD_PTR)NtCurrentTeb()->ClientId.UniqueProcess);
 }
 
 static VOID APIENTRY Imm32FreeImeDpi(PIMEDPI pImeDpi, BOOL bDestroy)
@@ -1862,6 +1894,40 @@ VOID WINAPI ImmUnlockClientImc(PCLIENTIMC pClientImc)
     HeapFree(g_hImm32Heap, 0, pClientImc);
 }
 
+static HIMC APIENTRY Imm32GetContextEx(HWND hWnd, DWORD dwContextFlags)
+{
+    HIMC hIMC;
+    PCLIENTIMC pClientImc;
+    PWND pWnd;
+
+    if (!g_psi || !(g_psi->dwSRVIFlags & SRVINFO_IMM32))
+        return NULL;
+
+    if (!hWnd)
+    {
+        // FIXME: NtUserGetThreadState and enum ThreadStateRoutines are broken.
+        hIMC = (HIMC)NtUserGetThreadState(4);
+        goto Quit;
+    }
+
+    pWnd = ValidateHwndNoErr(hWnd);
+    if (!pWnd || Imm32IsCrossProcessAccess(hWnd))
+        return NULL;
+
+    hIMC = pWnd->hImc;
+    if (!hIMC && (dwContextFlags & 1))
+        hIMC = (HIMC)NtUserQueryWindow(hWnd, QUERY_WINDOW_DEFAULT_ICONTEXT);
+
+Quit:
+    pClientImc = ImmLockClientImc(hIMC);
+    if (pClientImc == NULL)
+        return NULL;
+    if ((dwContextFlags & 2) && (pClientImc->dwFlags & CLIENTIMC_UNKNOWN3))
+        hIMC = NULL;
+    ImmUnlockClientImc(pClientImc);
+    return hIMC;
+}
+
 static DWORD APIENTRY
 CandidateListWideToAnsi(const CANDIDATELIST *pWideCL, LPCANDIDATELIST pAnsiCL, DWORD dwBufLen,
                         UINT uCodePage)
@@ -2647,31 +2713,10 @@ BOOL WINAPI ImmGetCompositionWindow(HIMC hIMC, LPCOMPOSITIONFORM lpCompForm)
  */
 HIMC WINAPI ImmGetContext(HWND hWnd)
 {
-    HIMC rc;
-
-    TRACE("%p\n", hWnd);
-
-    if (!IsWindow(hWnd))
-    {
-        SetLastError(ERROR_INVALID_WINDOW_HANDLE);
+    TRACE("(%p)\n", hWnd);
+    if (hWnd == NULL)
         return NULL;
-    }
-
-    rc = GetPropW(hWnd,szwWineIMCProperty);
-    if (rc == (HIMC)-1)
-        rc = NULL;
-    else if (rc == NULL)
-        rc = get_default_context( hWnd );
-
-    if (rc)
-    {
-        InputContextData *data = (InputContextData *)rc;
-        data->IMC.hWnd = hWnd;
-    }
-
-    TRACE("returning %p\n", rc);
-
-    return rc;
+    return Imm32GetContextEx(hWnd, 2);
 }
 
 /***********************************************************************
@@ -2855,7 +2900,7 @@ UINT WINAPI ImmGetDescriptionA(
                               lpszDescription, uBufLen, NULL, NULL);
     if (uBufLen)
         lpszDescription[cch] = 0;
-    return cch;
+    return (UINT)cch;
 }
 
 /***********************************************************************
@@ -3632,13 +3677,10 @@ Quit:
  */
 BOOL WINAPI ImmReleaseContext(HWND hWnd, HIMC hIMC)
 {
-  static BOOL shown = FALSE;
-
-  if (!shown) {
-     FIXME("(%p, %p): stub\n", hWnd, hIMC);
-     shown = TRUE;
-  }
-  return TRUE;
+    TRACE("(%p, %p)\n", hWnd, hIMC);
+    UNREFERENCED_PARAMETER(hWnd);
+    UNREFERENCED_PARAMETER(hIMC);
+    return TRUE; // Do nothing. This is correct.
 }
 
 /***********************************************************************
@@ -3698,7 +3740,7 @@ BOOL WINAPI ImmSetCandidateWindow(
     ImmUnlockIMC(hIMC);
 
     Imm32NotifyAction(hIMC, hWnd, NI_CONTEXTUPDATED, 0, IMC_SETCANDIDATEPOS,
-                      IMN_SETCANDIDATEPOS, (1 << lpCandidate->dwIndex));
+                      IMN_SETCANDIDATEPOS, (1 << (BYTE)lpCandidate->dwIndex));
     return TRUE;
 }
 
@@ -3721,7 +3763,7 @@ static VOID APIENTRY AnsiToWideLogFont(const LOGFONTA *plfA, LPLOGFONTW plfW)
     RtlCopyMemory(plfW, plfA, offsetof(LOGFONTW, lfFaceName));
     StringCchLengthA(plfA->lfFaceName, _countof(plfA->lfFaceName), &cchA);
     cchW = MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, plfA->lfFaceName, (INT)cchA,
-                               plfW->lfFaceName, cchW);
+                               plfW->lfFaceName, (INT)cchW);
     if (cchW > _countof(plfW->lfFaceName) - 1)
         cchW = _countof(plfW->lfFaceName) - 1;
     plfW->lfFaceName[cchW] = 0;
@@ -5106,6 +5148,7 @@ Quit:
 UINT WINAPI ImmWINNLSGetIMEHotkey(HWND hwndIme)
 {
     TRACE("(%p)\n", hwndIme);
+    UNREFERENCED_PARAMETER(hwndIme);
     return 0; /* This is correct. This function of Windows just returns zero. */
 }
 
