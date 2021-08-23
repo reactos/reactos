@@ -63,7 +63,6 @@ HANDLE g_hImm32Heap = NULL;
 
 static PWND FASTCALL ValidateHwndNoErr(HWND hwnd)
 {
-    PWND pWnd = NULL;
     PCLIENTINFO ClientInfo = GetWin32ClientInfo();
     INT index;
     PUSER_HANDLE_TABLE ht;
@@ -82,10 +81,10 @@ static PWND FASTCALL ValidateHwndNoErr(HWND hwnd)
         return NULL;
 
     generation = HIWORD(hwnd);
-    if (generation == ht->handles[index].generation || !generation || generation == 0xFFFF)
-        pWnd = (PWND)&ht->handles[index];
+    if (generation != ht->handles[index].generation && generation && generation != 0xFFFF)
+        return NULL;
 
-    return pWnd;
+    return (PWND)&ht->handles[index];
 }
 
 static BOOL APIENTRY Imm32InitInstance(HMODULE hMod)
