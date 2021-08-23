@@ -1912,10 +1912,7 @@ static HIMC APIENTRY Imm32GetContextEx(HWND hWnd, DWORD dwContextFlags)
     }
 
     pWnd = ValidateHwndNoErr(hWnd);
-    if (!pWnd)
-        return NULL;
-
-    if (Imm32IsCrossProcessAccess(hWnd))
+    if (!pWnd || Imm32IsCrossProcessAccess(hWnd))
         return NULL;
 
     hIMC = pWnd->hImc;
