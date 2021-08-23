@@ -17,6 +17,7 @@ HalpWriteProcessorState(PVOID APStubLocation,
 
 VOID
 HalpWriteTempPageTable(PVOID APStubLocation, 
-                       UINT32 PageTableLocationPhysical, 
-                       PVOID PageTableLocationBase,
-                       PKPROCESSOR_STATE ProcessorState);
+                       UINT32 PTELocationPhysical, 
+                       PVOID PTELocationBase,
+                       PKPROCESSOR_STATE ProcessorState,
+                       UINT32 PageTableLocationPhysical);

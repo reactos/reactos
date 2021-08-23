@@ -86,5 +86,8 @@ KiSetGdtEntry(
 
 VOID
 NTAPI
-KxInitAPTemporaryPageTables(PHARDWARE_PTE PageTableDirectory,
-                            PKPROCESSOR_STATE ProcessorState);
+KxInitAPTemporaryPageTables(PHARDWARE_PTE PageTableDirectory, 
+                            PKPROCESSOR_STATE ProcessorState,
+                            PHARDWARE_PTE BootStubPTE,
+                            PHARDWARE_PTE GDTPTE,
+                            PHARDWARE_PTE IDTPTE);

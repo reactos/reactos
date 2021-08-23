@@ -29,8 +29,10 @@ _APSpinup:
     mov eax, ([ebx] + [_TempPageTableLoc - _APSpinup])
     mov cr3, eax
 
+    hlt
+
     mov eax, cr0
-    or  eax, HEX(8001000)
+    or  eax, CR0_PG
     mov cr0, eax
 
     hlt

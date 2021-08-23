@@ -20,7 +20,7 @@ KDESCRIPTOR BSPGdt, BSPIdt;
 KPROCESSOR_STATE ProcessorState;
 PVOID KernelStack, DPCStack, PageTableLoc;
 extern LOADER_PARAMETER_BLOCK *KeLoaderBlock;
-PHYSICAL_ADDRESS GdtPhysicalLoc, IdtPhysicalLoc, PageTablePhysicalLoc;
+PHYSICAL_ADDRESS GdtPhysicalLoc, IdtPhysicalLoc, PageTablePhysicalLoc, BootStubPTEPhy;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -33,10 +33,14 @@ KeStartAllProcessors()
     while (TRUE)
     {
         SIZE_T APInfoSize = sizeof(APINFO);
-        PHARDWARE_PTE PDE;
+        PHARDWARE_PTE PDE, BootStubPTE, GDTPTE, IDTPTE;
         APInfo = ExAllocatePool(NonPagedPool, APInfoSize);
         PDE = ExAllocatePool(NonPagedPool, 100000); //TODO replace the silly size place holder
+        BootStubPTE = ExAllocatePool(NonPagedPool, sizeof(PHARDWARE_PTE)); //TODO replace the silly size place holder
+        GDTPTE = ExAllocatePool(NonPagedPool, sizeof(PHARDWARE_PTE)); //TODO replace the silly size place holder
+        IDTPTE = ExAllocatePool(NonPagedPool, sizeof(PHARDWARE_PTE)); //TODO replace the silly size place holder
         PageTablePhysicalLoc = MmGetPhysicalAddress(PDE);
+
         /* Load the GDT */
         _sgdt(&BSPGdt.Limit);
         __sidt(&BSPIdt.Limit);
@@ -95,13 +99,16 @@ KeStartAllProcessors()
             0xFFFF, 0x09, 0, 2);
         KiSetGdtEntry(KiGetGdtEntry(&APInfo->Gdt, KGDT_NMI_TSS), (ULONG_PTR)&APInfo->TssNMI,
             0xFFFF, TYPE_CODE, 0, 2);
-        ProcessorState.ContextFrame.Eax = (ULONG_PTR)PDE;
-        ProcessorState.ContextFrame.Ecx = PageTablePhysicalLoc.QuadPart;
+        
+        BootStubPTEPhy = MmGetPhysicalAddress(BootStubPTE);
+        ProcessorState.ContextFrame.Eax = (ULONG_PTR)BootStubPTE;
+        ProcessorState.ContextFrame.Ecx = BootStubPTEPhy.QuadPart;
+        ProcessorState.ContextFrame.Ebx = PageTablePhysicalLoc.QuadPart;
     #endif
 
         /* Prep ProcessorState then start the AP */
         KxInitAPProcessorState(&ProcessorState);
-        KxInitAPTemporaryPageTables(PDE, &ProcessorState);
+        KxInitAPTemporaryPageTables(PDE, &ProcessorState, BootStubPTE, GDTPTE, IDTPTE);
 
         if (!HalStartNextProcessor(KeLoaderBlock, &ProcessorState))
         {
@@ -135,7 +142,10 @@ KxInitAPProcessorState(
 VOID
 NTAPI
 KxInitAPTemporaryPageTables(PHARDWARE_PTE PageTableDirectory, 
-                            PKPROCESSOR_STATE ProcessorState)
+                            PKPROCESSOR_STATE ProcessorState,
+                            PHARDWARE_PTE BootStubPTE,
+                            PHARDWARE_PTE GDTPTE,
+                            PHARDWARE_PTE IDTPTE)
 {
     UNIMPLEMENTED;
 }
@@ -176,24 +186,45 @@ KxInitAPProcessorState(
 VOID
 NTAPI
 KxInitAPTemporaryPageTables(PHARDWARE_PTE PageTableDirectory, 
-                            PKPROCESSOR_STATE ProcessorState)
+                            PKPROCESSOR_STATE ProcessorState,
+                            PHARDWARE_PTE BootStubPTE,
+                            PHARDWARE_PTE GDTPTE,
+                            PHARDWARE_PTE IDTPTE)
 {
-    //PHARDWARE_PTE BootStubPTE, GDTPTE, IDTPTE;
-    // Map the page directory at 0xC0000000 (maps itself)
+    PHYSICAL_ADDRESS GDTPTEPhy, IDTPTEPhy, GDTPhy, IDTPhy, BootstubPhy;
+    GDTPhy = GdtPhysicalLoc;
+    IDTPhy = IdtPhysicalLoc;
+    GDTPTEPhy = MmGetPhysicalAddress(GDTPTE);
+    IDTPTEPhy = MmGetPhysicalAddress(IDTPTE);
+    BootstubPhy = MmGetPhysicalAddress(BootStubPTE);
+
     PageTableDirectory[3].PageFrameNumber = (ULONG)PageTableDirectory >> MM_PAGE_SHIFT;
     PageTableDirectory[3].Valid = 1;
     PageTableDirectory[3].Write = 1;
     //PDE [0] , pointing to page table for bootstub
-    PageTableDirectory[0].Valid = 0;
-    PageTableDirectory[0].Write = 0;
+    PageTableDirectory[0].PageFrameNumber = (ULONG)BootstubPhy.QuadPart >> MM_PAGE_SHIFT;
+    PageTableDirectory[0].Valid = 1;
+    PageTableDirectory[0].Write = 1;
     //PDE [1] , pointing to page table for GDT
-    PageTableDirectory[1].PageFrameNumber = (ULONG_PTR)ProcessorState->SpecialRegisters.Gdtr.Base >> MM_PAGE_SHIFT;
+    PageTableDirectory[1].PageFrameNumber = (ULONG)GDTPTEPhy.QuadPart >> MM_PAGE_SHIFT;
     PageTableDirectory[1].Valid = 1;
     PageTableDirectory[1].Write = 1;
     //PDE [2] , pointing to page table for IDT
-    PageTableDirectory[2].PageFrameNumber = (ULONG_PTR)ProcessorState->SpecialRegisters.Idtr.Base >> MM_PAGE_SHIFT;
+    PageTableDirectory[2].PageFrameNumber = (ULONG)IDTPTEPhy.QuadPart >> MM_PAGE_SHIFT;
     PageTableDirectory[2].Valid = 1;
     PageTableDirectory[2].Write = 1;
+
+    //We change this later in HAL
+    BootStubPTE[0].Valid = 0;
+    BootStubPTE[0].Write = 0;
+
+    GDTPTE[0].PageFrameNumber = (ULONG)GDTPhy.QuadPart;
+    GDTPTE[0].Valid = 1;
+    GDTPTE[0].Write = 1;
+    
+    IDTPTE[0].PageFrameNumber = (ULONG)IDTPhy.QuadPart;
+    IDTPTE[0].Valid = 1;
+    IDTPTE[0].Write = 1;
 }
 
 /* GDT Functions, TODO: Find a way to share these between Freeldr and here */

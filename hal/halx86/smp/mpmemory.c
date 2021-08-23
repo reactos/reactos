@@ -118,9 +118,10 @@ HalpWriteProcessorState(PVOID APStubLocation,
 
 VOID
 HalpWriteTempPageTable(PVOID APStubLocation, 
-                       UINT32 PageTableLocationPhysical, 
-                       PVOID PageTableLocationBase,
-                       PKPROCESSOR_STATE ProcessorState)
+                       UINT32 PTELocationPhysical, 
+                       PVOID PTELocationBase,
+                       PKPROCESSOR_STATE ProcessorState,
+                       UINT32 PageTableLocationPhysical)
 {
     UNIMPLEMENTED;
 }
@@ -154,13 +155,14 @@ HalpWriteProcessorState(PVOID APStubLocation,
 
 VOID
 HalpWriteTempPageTable(PVOID APStubLocation, 
-                       UINT32 PageTableLocationPhysical, 
-                       PVOID PageTableLocationBase,
-                       PKPROCESSOR_STATE ProcessorState)
+                       UINT32 PTELocationPhysical, 
+                       PVOID PTELocationBase,
+                       PKPROCESSOR_STATE ProcessorState,
+                       UINT32 PageTableLocationPhysical)
 {
     PVOID PageTableValLoc;
     PHARDWARE_PTE PDE;
-    PDE = (PHARDWARE_PTE)PageTableLocationBase;
+    PDE = (PHARDWARE_PTE)PTELocationBase;
     #define MM_PAGE_SHIFT   12
     
     PDE[0].PageFrameNumber = (ULONG)HalpLowStubPhysicalAddress.LowPart >> MM_PAGE_SHIFT;
