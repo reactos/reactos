@@ -4676,16 +4676,12 @@ LPINPUTCONTEXT WINAPI ImmLockIMC(HIMC hIMC)
 */
 BOOL WINAPI ImmUnlockIMC(HIMC hIMC)
 {
-    PCLIENTIMC pClientImc;
-    HLOCAL hLocalInputContext;
-
-    pClientImc = ImmLockClientImc(hIMC);
+    PCLIENTIMC pClientImc = ImmLockClientImc(hIMC);
     if (pClientImc == NULL)
         return FALSE;
 
-    hLocalInputContext = pClientImc->hLocalInputContext;
-    if (hLocalInputContext)
-        LocalUnlock(hLocalInputContext);
+    if (pClientImc->hLocalInputContext)
+        LocalUnlock(pClientImc->hLocalInputContext);
 
     InterlockedDecrement(&pClientImc->cLockObj);
     ImmUnlockClientImc(pClientImc);
