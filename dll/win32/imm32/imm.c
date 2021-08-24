@@ -61,33 +61,7 @@ SHAREDINFO g_SharedInfo = { NULL };
 BYTE g_bClientRegd = FALSE;
 HANDLE g_hImm32Heap = NULL;
 
-static PWND FASTCALL ValidateHwndNoErr(HWND hwnd)
-{
-    PCLIENTINFO ClientInfo = GetWin32ClientInfo();
-    INT index;
-    PUSER_HANDLE_TABLE ht;
-    WORD generation;
-
-    /* See if the window is cached */
-    if (hwnd == ClientInfo->CallbackWnd.hWnd)
-        return ClientInfo->CallbackWnd.pWnd;
-
-    if (!NtUserValidateHandleSecure(hwnd))
-        return NULL;
-
-    ht = g_SharedInfo.aheList; /* handle table */
-    index = (LOWORD(hwnd) - FIRST_USER_HANDLE) >> 1;
-    if (index < 0 || index >= ht->nb_handles || ht->handles[index].type != TYPE_WINDOW)
-        return NULL;
-
-    generation = HIWORD(hwnd);
-    if (generation != ht->handles[index].generation && generation && generation != 0xFFFF)
-        return NULL;
-
-    return (PWND)&ht->handles[index];
-}
-
-static LPVOID FASTCALL ValidateHandle(HANDLE hHandle, UINT uType)
+static LPVOID FASTCALL ValidateHandleNoErr(HANDLE hHandle, UINT uType)
 {
     INT index;
     PUSER_HANDLE_TABLE ht;
@@ -106,6 +80,17 @@ static LPVOID FASTCALL ValidateHandle(HANDLE hHandle, UINT uType)
         return NULL;
 
     return &ht->handles[index];
+}
+
+static PWND FASTCALL ValidateHwndNoErr(HWND hwnd)
+{
+    PCLIENTINFO ClientInfo = GetWin32ClientInfo();
+
+    /* See if the window is cached */
+    if (hwnd == ClientInfo->CallbackWnd.hWnd)
+        return ClientInfo->CallbackWnd.pWnd;
+
+    return (PWND)ValidateHandleNoErr(hwnd, TYPE_WINDOW);
 }
 
 static BOOL APIENTRY Imm32InitInstance(HMODULE hMod)
@@ -1216,7 +1201,7 @@ BOOL APIENTRY Imm32CleanupContext(HIMC hIMC, HKL hKL, BOOL bKeep)
     if (!g_psi || !(g_psi->dwSRVIFlags & SRVINFO_IMM32) || hIMC == NULL)
         return FALSE;
 
-    pImc = ValidateHandle(hIMC, TYPE_INPUTCONTEXT);
+    pImc = ValidateHandleNoErr(hIMC, TYPE_INPUTCONTEXT);
     if (!pImc || pImc->head.pti != NtCurrentTeb()->Win32ThreadInfo)
         return FALSE;
 
