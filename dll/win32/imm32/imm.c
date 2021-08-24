@@ -1222,7 +1222,7 @@ BOOL APIENTRY Imm32CleanupContext(HIMC hIMC, HKL hKL, BOOL bKeep)
     if (pClientImc->hLocalInputContext == NULL)
         goto Quit;
 
-    pIC = ImmLockIMC(hIMC);
+    pIC = LocalLock(pClientImc->hLocalInputContext);
     if (pIC == NULL)
     {
         ImmUnlockClientImc(pClientImc);
@@ -1241,9 +1241,9 @@ BOOL APIENTRY Imm32CleanupContext(HIMC hIMC, HKL hKL, BOOL bKeep)
     ImmDestroyIMCC(pIC->hGuideLine);
     ImmDestroyIMCC(pIC->hCandInfo);
     ImmDestroyIMCC(pIC->hCompStr);
+    LocalUnlock(pClientImc->hLocalInputContext);
 
     Imm32CleanupContextExtra(pIC);
-    ImmUnlockIMC(hIMC);
 
 Quit:
     pClientImc->dwFlags |= CLIENTIMC_UNKNOWN1;
