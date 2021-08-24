@@ -61,30 +61,36 @@ SHAREDINFO g_SharedInfo = { NULL };
 BYTE g_bClientRegd = FALSE;
 HANDLE g_hImm32Heap = NULL;
 
-static PWND FASTCALL ValidateHwndNoErr(HWND hwnd)
+static LPVOID FASTCALL ValidateHandleNoErr(HANDLE hHandle, UINT uType)
 {
-    PCLIENTINFO ClientInfo = GetWin32ClientInfo();
     INT index;
     PUSER_HANDLE_TABLE ht;
     WORD generation;
+
+    if (!NtUserValidateHandleSecure(hHandle))
+        return NULL;
+
+    ht = g_SharedInfo.aheList; /* handle table */
+    index = (LOWORD(hHandle) - FIRST_USER_HANDLE) >> 1;
+    if (index < 0 || index >= ht->nb_handles || ht->handles[index].type != uType)
+        return NULL;
+
+    generation = HIWORD(hHandle);
+    if (generation != ht->handles[index].generation && generation && generation != 0xFFFF)
+        return NULL;
+
+    return &ht->handles[index];
+}
+
+static PWND FASTCALL ValidateHwndNoErr(HWND hwnd)
+{
+    PCLIENTINFO ClientInfo = GetWin32ClientInfo();
 
     /* See if the window is cached */
     if (hwnd == ClientInfo->CallbackWnd.hWnd)
         return ClientInfo->CallbackWnd.pWnd;
 
-    if (!NtUserValidateHandleSecure(hwnd))
-        return NULL;
-
-    ht = g_SharedInfo.aheList; /* handle table */
-    index = (LOWORD(hwnd) - FIRST_USER_HANDLE) >> 1;
-    if (index < 0 || index >= ht->nb_handles || ht->handles[index].type != TYPE_WINDOW)
-        return NULL;
-
-    generation = HIWORD(hwnd);
-    if (generation != ht->handles[index].generation && generation && generation != 0xFFFF)
-        return NULL;
-
-    return (PWND)&ht->handles[index];
+    return (PWND)ValidateHandleNoErr(hwnd, TYPE_WINDOW);
 }
 
 static BOOL APIENTRY Imm32InitInstance(HMODULE hMod)
@@ -1185,34 +1191,37 @@ static VOID APIENTRY Imm32CleanupContextExtra(LPINPUTCONTEXT pIC)
     FIXME("We have to do something do here");
 }
 
-static PCLIENTIMC APIENTRY Imm32FindClientImc(HIMC hIMC)
-{
-    // FIXME
-    return NULL;
-}
-
 BOOL APIENTRY Imm32CleanupContext(HIMC hIMC, HKL hKL, BOOL bKeep)
 {
     PIMEDPI pImeDpi;
+    PIMC pImc;
     LPINPUTCONTEXT pIC;
     PCLIENTIMC pClientImc;
 
-    if (g_psi == NULL || !(g_psi->dwSRVIFlags & SRVINFO_IMM32) || hIMC == NULL)
+    if (!g_psi || !(g_psi->dwSRVIFlags & SRVINFO_IMM32) || hIMC == NULL)
         return FALSE;
 
-    FIXME("We have do something to do here\n");
-    pClientImc = Imm32FindClientImc(hIMC);
+    pImc = ValidateHandleNoErr(hIMC, TYPE_INPUTCONTEXT);
+    if (!pImc || pImc->head.pti != NtCurrentTeb()->Win32ThreadInfo)
+        return FALSE;
+
+    pClientImc = (PCLIENTIMC)pImc->dwClientImcData;
     if (!pClientImc)
+    {
+        if (bKeep)
+            return TRUE;
+        return NtUserDestroyInputContext(hIMC);
+    }
+
+    if ((pClientImc->dwFlags & CLIENTIMC_UNKNOWN2) && !bKeep)
         return FALSE;
 
-    if (pClientImc->hInputContext == NULL)
-    {
-        pClientImc->dwFlags |= CLIENTIMC_UNKNOWN1;
-        ImmUnlockClientImc(pClientImc);
-        if (!bKeep)
-            return NtUserDestroyInputContext(hIMC);
+    if (pClientImc->dwFlags & CLIENTIMC_UNKNOWN1)
         return TRUE;
-    }
+
+    InterlockedIncrement(&pClientImc->cLockObj);
+    if (pClientImc->hInputContext == NULL)
+        goto Quit;
 
     pIC = ImmLockIMC(hIMC);
     if (pIC == NULL)
@@ -1221,24 +1230,11 @@ BOOL APIENTRY Imm32CleanupContext(HIMC hIMC, HKL hKL, BOOL bKeep)
         return FALSE;
     }
 
-    FIXME("We have do something to do here\n");
-
-    if (pClientImc->hKL == hKL)
+    pImeDpi = ImmLockImeDpi(hKL);
+    if (pImeDpi)
     {
-        pImeDpi = ImmLockImeDpi(hKL);
-        if (pImeDpi != NULL)
-        {
-            if (IS_IME_HKL(hKL))
-            {
-                pImeDpi->ImeSelect(hIMC, FALSE);
-            }
-            else if (g_psi && (g_psi->dwSRVIFlags & SRVINFO_CICERO_ENABLED))
-            {
-                FIXME("We have do something to do here\n");
-            }
-            ImmUnlockImeDpi(pImeDpi);
-        }
-        pClientImc->hKL = NULL;
+        pImeDpi->ImeSelect(hIMC, FALSE);
+        ImmUnlockImeDpi(pImeDpi);
     }
 
     ImmDestroyIMCC(pIC->hPrivate);
@@ -1248,15 +1244,13 @@ BOOL APIENTRY Imm32CleanupContext(HIMC hIMC, HKL hKL, BOOL bKeep)
     ImmDestroyIMCC(pIC->hCompStr);
 
     Imm32CleanupContextExtra(pIC);
-
     ImmUnlockIMC(hIMC);
 
+Quit:
     pClientImc->dwFlags |= CLIENTIMC_UNKNOWN1;
     ImmUnlockClientImc(pClientImc);
-
     if (!bKeep)
         return NtUserDestroyInputContext(hIMC);
-
     return TRUE;
 }
 
