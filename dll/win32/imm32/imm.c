@@ -4673,11 +4673,10 @@ static LPINPUTCONTEXT APIENTRY Imm32LockIMCEx(HIMC hIMC, BOOL bSelect)
         }
     }
 
-    RtlLeaveCriticalSection(&pClientImc->cs);
-
+    InterlockedIncrement(&pClientImc->cLockObj);
     pIC = LocalLock(pClientImc->hLocalInputContext);
 
-    InterlockedIncrement(&pClientImc->cLockObj);
+    RtlLeaveCriticalSection(&pClientImc->cs);
 
 Quit:
     ImmUnlockClientImc(pClientImc);
