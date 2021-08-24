@@ -11,7 +11,7 @@ list(APPEND SOURCE
     candidate.c
     guideline.c
     ime.c
-    imm32.c
+    imm.c
     keymsg.c
     nt3.c
     utils.c
