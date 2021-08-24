@@ -103,3 +103,35 @@ LPSTR APIENTRY Imm32AnsiFromWide(LPCWSTR pszW)
     pszA[cchA] = 0;
     return pszA;
 }
+
+BOOL APIENTRY
+Imm32NotifyAction(HIMC hIMC, HWND hwnd, DWORD dwAction, DWORD_PTR dwIndex, DWORD_PTR dwValue,
+                  DWORD_PTR dwCommand, DWORD_PTR dwData)
+{
+    DWORD dwLayout;
+    HKL hKL;
+    PIMEDPI pImeDpi;
+
+    if (dwAction)
+    {
+        dwLayout = NtUserQueryInputContext(hIMC, 1);
+        if (dwLayout)
+        {
+            /* find keyboard layout and lock it */
+            hKL = GetKeyboardLayout(dwLayout);
+            pImeDpi = ImmLockImeDpi(hKL);
+            if (pImeDpi)
+            {
+                /* do notify */
+                pImeDpi->NotifyIME(hIMC, dwAction, dwIndex, dwValue);
+
+                ImmUnlockImeDpi(pImeDpi); /* unlock */
+            }
+        }
+    }
+
+    if (hwnd && dwCommand)
+        SendMessageW(hwnd, WM_IME_NOTIFY, dwCommand, dwData);
+
+    return TRUE;
+}
