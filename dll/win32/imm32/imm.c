@@ -4529,7 +4529,7 @@ Imm32InitInputContext(HIMC hIMC, HLOCAL hLocalInputContext, HKL hKL, BOOL bSelec
 
     /* hCompStr */
     pIC->hCompStr = ImmCreateIMCC(sizeof(COMPOSITIONSTRING));
-    if (pIC->hCompStr)
+    if (!pIC->hCompStr)
         goto Failure;
     pCS = ImmLockIMCC(pIC->hCompStr);
     if (!pCS)
