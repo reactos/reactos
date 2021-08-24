@@ -14,7 +14,7 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(imm);
 
-DWORD APIENTRY
+static DWORD APIENTRY
 ImmGetGuideLineAW(HIMC hIMC, DWORD dwIndex, LPVOID lpBuf, DWORD dwBufLen, BOOL bAnsi)
 {
     PCLIENTIMC pClientImc;

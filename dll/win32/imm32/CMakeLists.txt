@@ -12,8 +12,8 @@ list(APPEND SOURCE
     guideline.c
     ime.c
     imm32.c
-    imp.c
     keymsg.c
+    nt3.c
     utils.c
     ${CMAKE_CURRENT_BINARY_DIR}/imm32_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/imm32.def)

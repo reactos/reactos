@@ -1,7 +1,7 @@
 /*
  * PROJECT:     ReactOS IMM32
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
- * PURPOSE:     Implementing Far-Eastern languages input
+ * PURPOSE:     ImmNt3lementing Far-Eastern languages input
  * COPYRIGHT:   Copyright 1998 Patrik Stridvall
  *              Copyright 2002, 2003, 2007 CodeWeavers, Aric Stewart
  *              Copyright 2017 James Tabor <james.tabor@reactos.org>
@@ -14,10 +14,10 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(imm);
 
-#ifdef IMP_SUPPORT /* 3.x support */
+#ifdef NT3_SUPPORT /* 3.x support */
 DWORD APIENTRY
-ImpJTransCompA(LPINPUTCONTEXTDX pIC, LPCOMPOSITIONSTRING pCS,
-               const TRANSMSG *pSrc, LPTRANSMSG pDest)
+ImmNt3JTransCompA(LPINPUTCONTEXTDX pIC, LPCOMPOSITIONSTRING pCS,
+                  const TRANSMSG *pSrc, LPTRANSMSG pDest)
 {
     // FIXME
     *pDest = *pSrc;
@@ -25,8 +25,8 @@ ImpJTransCompA(LPINPUTCONTEXTDX pIC, LPCOMPOSITIONSTRING pCS,
 }
 
 DWORD APIENTRY
-ImpJTransCompW(LPINPUTCONTEXTDX pIC, LPCOMPOSITIONSTRING pCS,
-               const TRANSMSG *pSrc, LPTRANSMSG pDest)
+ImmNt3JTransCompW(LPINPUTCONTEXTDX pIC, LPCOMPOSITIONSTRING pCS,
+                  const TRANSMSG *pSrc, LPTRANSMSG pDest)
 {
     // FIXME
     *pDest = *pSrc;
@@ -36,8 +36,8 @@ ImpJTransCompW(LPINPUTCONTEXTDX pIC, LPCOMPOSITIONSTRING pCS,
 typedef LRESULT (WINAPI *FN_SendMessage)(HWND, UINT, WPARAM, LPARAM);
 
 DWORD APIENTRY
-ImpJTrans(DWORD dwCount, LPTRANSMSG pTrans, LPINPUTCONTEXTDX pIC,
-          LPCOMPOSITIONSTRING pCS, BOOL bAnsi)
+ImmNt3JTrans(DWORD dwCount, LPTRANSMSG pTrans, LPINPUTCONTEXTDX pIC,
+             LPCOMPOSITIONSTRING pCS, BOOL bAnsi)
 {
     DWORD ret = 0;
     HWND hWnd, hwndDefIME;
@@ -118,9 +118,9 @@ ImpJTrans(DWORD dwCount, LPTRANSMSG pTrans, LPINPUTCONTEXTDX pIC,
 
             case WM_IME_COMPOSITION:
                 if (bAnsi)
-                    dwNumber = ImpJTransCompA(pIC, pCS, pEntry, pTrans);
+                    dwNumber = ImmNt3JTransCompA(pIC, pCS, pEntry, pTrans);
                 else
-                    dwNumber = ImpJTransCompW(pIC, pCS, pEntry, pTrans);
+                    dwNumber = ImmNt3JTransCompW(pIC, pCS, pEntry, pTrans);
 
                 ret += dwNumber;
                 pTrans += dwNumber;
@@ -175,14 +175,14 @@ DoDefault:
 }
 
 DWORD APIENTRY
-ImpKTrans(DWORD dwCount, LPTRANSMSG pEntries, LPINPUTCONTEXTDX pIC,
-          LPCOMPOSITIONSTRING pCS, BOOL bAnsi)
+ImmNt3KTrans(DWORD dwCount, LPTRANSMSG pEntries, LPINPUTCONTEXTDX pIC,
+             LPCOMPOSITIONSTRING pCS, BOOL bAnsi)
 {
     return dwCount; // FIXME
 }
 
 DWORD APIENTRY
-ImpTrans(DWORD dwCount, LPTRANSMSG pEntries, HIMC hIMC, BOOL bAnsi, WORD wLang)
+ImmNt3Trans(DWORD dwCount, LPTRANSMSG pEntries, HIMC hIMC, BOOL bAnsi, WORD wLang)
 {
     BOOL ret = FALSE;
     LPINPUTCONTEXTDX pIC;
@@ -196,13 +196,13 @@ ImpTrans(DWORD dwCount, LPTRANSMSG pEntries, HIMC hIMC, BOOL bAnsi, WORD wLang)
     if (pCS)
     {
         if (wLang == LANG_JAPANESE)
-            ret = ImpJTrans(dwCount, pEntries, pIC, pCS, bAnsi);
+            ret = ImmNt3JTrans(dwCount, pEntries, pIC, pCS, bAnsi);
         else if (wLang == LANG_KOREAN)
-            ret = ImpKTrans(dwCount, pEntries, pIC, pCS, bAnsi);
+            ret = ImmNt3KTrans(dwCount, pEntries, pIC, pCS, bAnsi);
         ImmUnlockIMCC(pIC->hCompStr);
     }
 
     ImmUnlockIMC(hIMC);
     return ret;
 }
-#endif  /* def IMP_SUPPORT */
+#endif  /* def NT3_SUPPORT */

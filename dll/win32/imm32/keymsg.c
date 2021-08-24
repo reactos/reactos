@@ -416,7 +416,7 @@ BOOL WINAPI ImmGenerateMessage(HIMC hIMC)
         if (wLang == LANG_JAPANESE ||
             (wLang == LANG_KOREAN && NtUserGetAppImeLevel(pIC->hWnd) == 3))
         {
-            dwCount = ImpTrans(dwCount, pTrans, hIMC, bAnsi, wLang);
+            dwCount = ImmNt3Trans(dwCount, pTrans, hIMC, bAnsi, wLang);
         }
     }
 #endif
@@ -472,7 +472,7 @@ Imm32PostMessages(HWND hwnd, HIMC hIMC, DWORD dwCount, LPTRANSMSG lpTransMsg)
             if (pNewTransMsg)
             {
                 RtlCopyMemory(pNewTransMsg, lpTransMsg, cbTransMsg);
-                dwCount = ImpTrans(dwCount, pNewTransMsg, hIMC, bAnsi, Lang);
+                dwCount = ImmNt3Trans(dwCount, pNewTransMsg, hIMC, bAnsi, Lang);
             }
             else
             {

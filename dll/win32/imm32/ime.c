@@ -17,7 +17,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(imm);
 RTL_CRITICAL_SECTION g_csImeDpi;
 PIMEDPI g_pImeDpiList = NULL;
 
-BOOL APIENTRY Imm32InquireIme(PIMEDPI pImeDpi)
+static BOOL APIENTRY Imm32InquireIme(PIMEDPI pImeDpi)
 {
     WCHAR szUIClass[64];
     WNDCLASSW wcW;
@@ -119,7 +119,7 @@ BOOL APIENTRY Imm32InquireIme(PIMEDPI pImeDpi)
     return GetClassInfoW(pImeDpi->hInst, pImeDpi->szUIClass, &wcW);
 }
 
-BOOL APIENTRY Imm32LoadImeInfo(PIMEINFOEX pImeInfoEx, PIMEDPI pImeDpi)
+static BOOL APIENTRY Imm32LoadImeInfo(PIMEINFOEX pImeInfoEx, PIMEDPI pImeDpi)
 {
     WCHAR szPath[MAX_PATH];
     HINSTANCE hIME;
@@ -480,9 +480,7 @@ BOOL WINAPI ImmIsIME(HKL hKL)
  *              ImmGetImeInfoEx (IMM32.@)
  */
 BOOL WINAPI
-ImmGetImeInfoEx(PIMEINFOEX pImeInfoEx,
-                IMEINFOEXCLASS SearchType,
-                PVOID pvSearchKey)
+ImmGetImeInfoEx(PIMEINFOEX pImeInfoEx, IMEINFOEXCLASS SearchType, PVOID pvSearchKey)
 {
     BOOL bDisabled = FALSE;
     HKL hKL;
@@ -527,8 +525,7 @@ Quit:
 /***********************************************************************
  *		ImmConfigureIMEA (IMM32.@)
  */
-BOOL WINAPI ImmConfigureIMEA(
-  HKL hKL, HWND hWnd, DWORD dwMode, LPVOID lpData)
+BOOL WINAPI ImmConfigureIMEA(HKL hKL, HWND hWnd, DWORD dwMode, LPVOID lpData)
 {
     BOOL ret = FALSE;
     PWND pWnd;
@@ -589,8 +586,7 @@ Quit:
 /***********************************************************************
  *		ImmConfigureIMEW (IMM32.@)
  */
-BOOL WINAPI ImmConfigureIMEW(
-  HKL hKL, HWND hWnd, DWORD dwMode, LPVOID lpData)
+BOOL WINAPI ImmConfigureIMEW(HKL hKL, HWND hWnd, DWORD dwMode, LPVOID lpData)
 {
     BOOL ret = FALSE;
     PWND pWnd;
@@ -803,7 +799,7 @@ DWORD APIENTRY Imm32AllocAndBuildHimcList(DWORD dwThreadId, HIMC **pphList)
 /***********************************************************************
  *		ImmGetIMEFileNameA (IMM32.@)
  */
-UINT WINAPI ImmGetIMEFileNameA( HKL hKL, LPSTR lpszFileName, UINT uBufLen)
+UINT WINAPI ImmGetIMEFileNameA(HKL hKL, LPSTR lpszFileName, UINT uBufLen)
 {
     BOOL bDefUsed;
     IMEINFOEX info;
@@ -865,8 +861,7 @@ UINT WINAPI ImmGetIMEFileNameW(HKL hKL, LPWSTR lpszFileName, UINT uBufLen)
 /***********************************************************************
  *		ImmGetDescriptionA (IMM32.@)
  */
-UINT WINAPI ImmGetDescriptionA(
-  HKL hKL, LPSTR lpszDescription, UINT uBufLen)
+UINT WINAPI ImmGetDescriptionA(HKL hKL, LPSTR lpszDescription, UINT uBufLen)
 {
     IMEINFOEX info;
     size_t cch;
@@ -977,8 +972,7 @@ DWORD WINAPI ImmGetProperty(HKL hKL, DWORD fdwIndex)
 /***********************************************************************
  *		ImmGetRegisterWordStyleA (IMM32.@)
  */
-UINT WINAPI ImmGetRegisterWordStyleA(
-  HKL hKL, UINT nItem, LPSTYLEBUFA lpStyleBuf)
+UINT WINAPI ImmGetRegisterWordStyleA(HKL hKL, UINT nItem, LPSTYLEBUFA lpStyleBuf)
 {
     UINT iItem, ret = 0;
     PIMEDPI pImeDpi;
@@ -1037,8 +1031,7 @@ Quit:
 /***********************************************************************
  *		ImmGetRegisterWordStyleW (IMM32.@)
  */
-UINT WINAPI ImmGetRegisterWordStyleW(
-  HKL hKL, UINT nItem, LPSTYLEBUFW lpStyleBuf)
+UINT WINAPI ImmGetRegisterWordStyleW(HKL hKL, UINT nItem, LPSTYLEBUFW lpStyleBuf)
 {
     UINT iItem, ret = 0;
     PIMEDPI pImeDpi;

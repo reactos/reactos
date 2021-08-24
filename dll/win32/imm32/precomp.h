@@ -100,17 +100,17 @@ BOOL WINAPI CtfImmIsTextFrameServiceDisabled(VOID);
 
 #ifdef IMP_SUPPORT /* 3.x support */
     DWORD APIENTRY
-    ImpJTransCompA(LPINPUTCONTEXTDX pIC, LPCOMPOSITIONSTRING pCS,
-                   const TRANSMSG *pSrc, LPTRANSMSG pDest);
+    ImmNt3JTransCompA(LPINPUTCONTEXTDX pIC, LPCOMPOSITIONSTRING pCS,
+                      const TRANSMSG *pSrc, LPTRANSMSG pDest);
     DWORD APIENTRY
-    ImpJTransCompW(LPINPUTCONTEXTDX pIC, LPCOMPOSITIONSTRING pCS,
-                   const TRANSMSG *pSrc, LPTRANSMSG pDest);
+    ImmNt3JTransCompW(LPINPUTCONTEXTDX pIC, LPCOMPOSITIONSTRING pCS,
+                      const TRANSMSG *pSrc, LPTRANSMSG pDest);
     DWORD APIENTRY
-    ImpJTrans(DWORD dwCount, LPTRANSMSG pTrans, LPINPUTCONTEXTDX pIC,
-              LPCOMPOSITIONSTRING pCS, BOOL bAnsi);
+    ImmNt3JTrans(DWORD dwCount, LPTRANSMSG pTrans, LPINPUTCONTEXTDX pIC,
+                 LPCOMPOSITIONSTRING pCS, BOOL bAnsi);
     DWORD APIENTRY
-    ImpKTrans(DWORD dwCount, LPTRANSMSG pEntries, LPINPUTCONTEXTDX pIC,
-              LPCOMPOSITIONSTRING pCS, BOOL bAnsi)
+    ImmNt3KTrans(DWORD dwCount, LPTRANSMSG pEntries, LPINPUTCONTEXTDX pIC,
+                 LPCOMPOSITIONSTRING pCS, BOOL bAnsi)
     DWORD APIENTRY
-    ImpTrans(DWORD dwCount, LPTRANSMSG pEntries, HIMC hIMC, BOOL bAnsi, WORD wLang)
+    ImmNt3Trans(DWORD dwCount, LPTRANSMSG pEntries, HIMC hIMC, BOOL bAnsi, WORD wLang)
 #endif

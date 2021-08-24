@@ -103,7 +103,8 @@ HKL WINAPI ImmLoadLayout(HKL hKL, PIMEINFOEX pImeInfoEx)
     return hKL;
 }
 
-typedef struct _tagImmHkl{
+typedef struct _tagImmHkl
+{
     struct list entry;
     HKL         hkl;
     HMODULE     hIME;
@@ -133,19 +134,20 @@ typedef struct _tagImmHkl{
 
 typedef struct tagInputContextData
 {
-        DWORD           dwLock;
-        INPUTCONTEXT    IMC;
-        DWORD           threadID;
+    DWORD           dwLock;
+    INPUTCONTEXT    IMC;
+    DWORD           threadID;
 
-        ImmHkl          *immKbd;
-        UINT            lastVK;
-        BOOL            threadDefault;
-        DWORD           magic;
+    ImmHkl          *immKbd;
+    UINT            lastVK;
+    BOOL            threadDefault;
+    DWORD           magic;
 } InputContextData;
 
 #define WINE_IMC_VALID_MAGIC 0x56434D49
 
-typedef struct _tagIMMThreadData {
+typedef struct _tagIMMThreadData
+{
     struct list entry;
     DWORD threadID;
     HIMC defaultContext;
@@ -157,23 +159,11 @@ typedef struct _tagIMMThreadData {
 static struct list ImmHklList = LIST_INIT(ImmHklList);
 static struct list ImmThreadDataList = LIST_INIT(ImmThreadDataList);
 
-static const WCHAR szwWineIMCProperty[] = {'W','i','n','e','I','m','m','H','I','M','C','P','r','o','p','e','r','t','y',0};
+static const WCHAR szwWineIMCProperty[] = L"WineImmHIMCProperty";
 
-static const WCHAR szImeFileW[] = {'I','m','e',' ','F','i','l','e',0};
-static const WCHAR szLayoutTextW[] = {'L','a','y','o','u','t',' ','T','e','x','t',0};
-static const WCHAR szImeRegFmt[] = {'S','y','s','t','e','m','\\','C','u','r','r','e','n','t','C','o','n','t','r','o','l','S','e','t','\\','C','o','n','t','r','o','l','\\','K','e','y','b','o','a','r','d',' ','L','a','y','o','u','t','s','\\','%','0','8','l','x',0};
-
-static const WCHAR szwIME[] = {'I','M','E',0};
-static const WCHAR szwDefaultIME[] = {'D','e','f','a','u','l','t',' ','I','M','E',0};
-
-static CRITICAL_SECTION threaddata_cs;
-static CRITICAL_SECTION_DEBUG critsect_debug =
-{
-    0, 0, &threaddata_cs,
-    { &critsect_debug.ProcessLocksList, &critsect_debug.ProcessLocksList },
-      0, 0, { (DWORD_PTR)(__FILE__ ": threaddata_cs") }
-};
-static CRITICAL_SECTION threaddata_cs = { &critsect_debug, -1, 0, 0, 0, 0 };
+static const WCHAR szImeFileW[] = L"Ime File";
+static const WCHAR szLayoutTextW[] = L"Layout Text";
+static const WCHAR szImeRegFmt[] = L"System\\CurrentControlSet\\Control\\Keyboard Layouts\\%08lx";
 
 static inline BOOL is_himc_ime_unicode(const InputContextData *data)
 {
@@ -189,16 +179,10 @@ static InputContextData* get_imc_data(HIMC hIMC);
 
 static HMODULE load_graphics_driver(void)
 {
-    static const WCHAR display_device_guid_propW[] = {
-        '_','_','w','i','n','e','_','d','i','s','p','l','a','y','_',
-        'd','e','v','i','c','e','_','g','u','i','d',0 };
-    static const WCHAR key_pathW[] = {
-        'S','y','s','t','e','m','\\',
-        'C','u','r','r','e','n','t','C','o','n','t','r','o','l','S','e','t','\\',
-        'C','o','n','t','r','o','l','\\',
-        'V','i','d','e','o','\\','{',0};
-    static const WCHAR displayW[] = {'}','\\','0','0','0','0',0};
-    static const WCHAR driverW[] = {'G','r','a','p','h','i','c','s','D','r','i','v','e','r',0};
+    static const WCHAR display_device_guid_propW[] = L"__wine_display_device_guid";
+    static const WCHAR key_pathW[] = L"System\\CurrentControlSet\\Control\\Video\\{";
+    static const WCHAR displayW[] = L"}\\0000";
+    static const WCHAR driverW[] = L"GraphicsDriver";
 
     HMODULE ret = 0;
     HKEY hkey;
@@ -554,20 +538,18 @@ BOOL WINAPI ImmDestroyContext(HIMC hIMC)
 
 static inline BOOL EscapeRequiresWA(UINT uEscape)
 {
-        if (uEscape == IME_ESC_GET_EUDC_DICTIONARY ||
-            uEscape == IME_ESC_SET_EUDC_DICTIONARY ||
-            uEscape == IME_ESC_IME_NAME ||
-            uEscape == IME_ESC_GETHELPFILENAME)
-        return TRUE;
+    if (uEscape == IME_ESC_GET_EUDC_DICTIONARY ||
+        uEscape == IME_ESC_SET_EUDC_DICTIONARY ||
+        uEscape == IME_ESC_IME_NAME ||
+        uEscape == IME_ESC_GETHELPFILENAME)
+    return TRUE;
     return FALSE;
 }
 
 /***********************************************************************
  *		ImmEscapeA (IMM32.@)
  */
-LRESULT WINAPI ImmEscapeA(
-  HKL hKL, HIMC hIMC,
-  UINT uEscape, LPVOID lpData)
+LRESULT WINAPI ImmEscapeA(HKL hKL, HIMC hIMC, UINT uEscape, LPVOID lpData)
 {
     ImmHkl *immHkl = IMM_GetImmHkl(hKL);
     TRACE("(%p, %p, %d, %p):\n", hKL, hIMC, uEscape, lpData);
@@ -600,9 +582,7 @@ LRESULT WINAPI ImmEscapeA(
 /***********************************************************************
  *		ImmEscapeW (IMM32.@)
  */
-LRESULT WINAPI ImmEscapeW(
-  HKL hKL, HIMC hIMC,
-  UINT uEscape, LPVOID lpData)
+LRESULT WINAPI ImmEscapeW(HKL hKL, HIMC hIMC, UINT uEscape, LPVOID lpData)
 {
     ImmHkl *immHkl = IMM_GetImmHkl(hKL);
     TRACE("(%p, %p, %d, %p):\n", hKL, hIMC, uEscape, lpData);
@@ -808,10 +788,11 @@ BOOL WINAPI ImmGetCompositionFontW(HIMC hIMC, LPLOGFONTW lplf)
 
 /* Helpers for the GetCompositionString functions */
 
-/* Source encoding is defined by context, source length is always given in respective characters. Destination buffer
-   length is always in bytes. */
-static INT CopyCompStringIMEtoClient(const InputContextData *data, const void *src, INT src_len, void *dst,
-        INT dst_len, BOOL unicode)
+/* Source encoding is defined by context, source length is always given in respective
+   characters. Destination buffer length is always in bytes. */
+static INT
+CopyCompStringIMEtoClient(const InputContextData *data, LPCVOID src, INT src_len, LPVOID dst,
+                          INT dst_len, BOOL unicode)
 {
     int char_size = unicode ? sizeof(WCHAR) : sizeof(char);
     INT ret;
@@ -838,10 +819,12 @@ static INT CopyCompStringIMEtoClient(const InputContextData *data, const void *s
     return ret;
 }
 
-/* Composition string encoding is defined by context, returned attributes correspond to string, converted according to
-   passed mode. String length is in characters, attributes are in byte arrays. */
-static INT CopyCompAttrIMEtoClient(const InputContextData *data, const BYTE *src, INT src_len, const void *comp_string,
-        INT str_len, BYTE *dst, INT dst_len, BOOL unicode)
+/* Composition string encoding is defined by context, returned attributes correspond to
+   string, converted according to passed mode. String length is in characters, attributes
+   are in byte arrays. */
+static INT
+CopyCompAttrIMEtoClient(const InputContextData *data, const BYTE *src, INT src_len,
+                        LPCVOID comp_string, INT str_len, BYTE *dst, INT dst_len, BOOL unicode)
 {
     union
     {
@@ -911,8 +894,9 @@ static INT CopyCompAttrIMEtoClient(const InputContextData *data, const BYTE *src
     return rc;
 }
 
-static INT CopyCompClauseIMEtoClient(InputContextData *data, LPBYTE source, INT slen, LPBYTE ssource,
-                                     LPBYTE target, INT tlen, BOOL unicode )
+static INT
+CopyCompClauseIMEtoClient(InputContextData *data, LPBYTE source, INT slen, LPBYTE ssource,
+                          LPBYTE target, INT tlen, BOOL unicode )
 {
     INT rc;
 
@@ -966,7 +950,8 @@ static INT CopyCompClauseIMEtoClient(InputContextData *data, LPBYTE source, INT 
     return rc;
 }
 
-static INT CopyCompOffsetIMEtoClient(InputContextData *data, DWORD offset, LPBYTE ssource, BOOL unicode)
+static INT
+CopyCompOffsetIMEtoClient(InputContextData *data, DWORD offset, LPBYTE ssource, BOOL unicode)
 {
     int rc;
 
@@ -984,8 +969,8 @@ static INT CopyCompOffsetIMEtoClient(InputContextData *data, DWORD offset, LPBYT
     return rc;
 }
 
-static LONG ImmGetCompositionStringT( HIMC hIMC, DWORD dwIndex, LPVOID lpBuf,
-                                      DWORD dwBufLen, BOOL unicode)
+static LONG
+ImmGetCompositionStringT(HIMC hIMC, DWORD dwIndex, LPVOID lpBuf, DWORD dwBufLen, BOOL unicode)
 {
     LONG rc = 0;
     InputContextData *data = get_imc_data(hIMC);
@@ -1078,8 +1063,8 @@ static LONG ImmGetCompositionStringT( HIMC hIMC, DWORD dwIndex, LPVOID lpBuf,
 /***********************************************************************
  *		ImmGetCompositionStringA (IMM32.@)
  */
-LONG WINAPI ImmGetCompositionStringA(
-  HIMC hIMC, DWORD dwIndex, LPVOID lpBuf, DWORD dwBufLen)
+LONG WINAPI
+ImmGetCompositionStringA(HIMC hIMC, DWORD dwIndex, LPVOID lpBuf, DWORD dwBufLen)
 {
     return ImmGetCompositionStringT(hIMC, dwIndex, lpBuf, dwBufLen, FALSE);
 }
@@ -1087,9 +1072,8 @@ LONG WINAPI ImmGetCompositionStringA(
 /***********************************************************************
  *		ImmGetCompositionStringW (IMM32.@)
  */
-LONG WINAPI ImmGetCompositionStringW(
-  HIMC hIMC, DWORD dwIndex,
-  LPVOID lpBuf, DWORD dwBufLen)
+LONG WINAPI
+ImmGetCompositionStringW(HIMC hIMC, DWORD dwIndex, LPVOID lpBuf, DWORD dwBufLen)
 {
     return ImmGetCompositionStringT(hIMC, dwIndex, lpBuf, dwBufLen, TRUE);
 }
@@ -1132,10 +1116,9 @@ HIMC WINAPI ImmGetContext(HWND hWnd)
 /***********************************************************************
  *		ImmGetConversionListA (IMM32.@)
  */
-DWORD WINAPI ImmGetConversionListA(
-  HKL hKL, HIMC hIMC,
-  LPCSTR pSrc, LPCANDIDATELIST lpDst,
-  DWORD dwBufLen, UINT uFlag)
+DWORD WINAPI
+ImmGetConversionListA(HKL hKL, HIMC hIMC, LPCSTR pSrc, LPCANDIDATELIST lpDst,
+                      DWORD dwBufLen, UINT uFlag)
 {
     DWORD ret = 0;
     UINT cb;
@@ -1190,10 +1173,9 @@ Quit:
 /***********************************************************************
  *		ImmGetConversionListW (IMM32.@)
  */
-DWORD WINAPI ImmGetConversionListW(
-  HKL hKL, HIMC hIMC,
-  LPCWSTR pSrc, LPCANDIDATELIST lpDst,
-  DWORD dwBufLen, UINT uFlag)
+DWORD WINAPI
+ImmGetConversionListW(HKL hKL, HIMC hIMC, LPCWSTR pSrc, LPCANDIDATELIST lpDst,
+                      DWORD dwBufLen, UINT uFlag)
 {
     DWORD ret = 0;
     INT cb;
@@ -1248,8 +1230,7 @@ Quit:
 /***********************************************************************
  *		ImmGetConversionStatus (IMM32.@)
  */
-BOOL WINAPI ImmGetConversionStatus(
-  HIMC hIMC, LPDWORD lpfdwConversion, LPDWORD lpfdwSentence)
+BOOL WINAPI ImmGetConversionStatus(HIMC hIMC, LPDWORD lpfdwConversion, LPDWORD lpfdwSentence)
 {
     LPINPUTCONTEXT pIC;
 
@@ -1302,8 +1283,7 @@ UINT WINAPI ImmGetVirtualKey(HWND hWnd)
 /***********************************************************************
  *		ImmInstallIMEA (IMM32.@)
  */
-HKL WINAPI ImmInstallIMEA(
-  LPCSTR lpszIMEFileName, LPCSTR lpszLayoutText)
+HKL WINAPI ImmInstallIMEA(LPCSTR lpszIMEFileName, LPCSTR lpszLayoutText)
 {
     HKL hKL = NULL;
     LPWSTR pszFileNameW = NULL, pszLayoutTextW = NULL;
@@ -1331,8 +1311,7 @@ Quit:
 /***********************************************************************
  *		ImmInstallIMEW (IMM32.@)
  */
-HKL WINAPI ImmInstallIMEW(
-  LPCWSTR lpszIMEFileName, LPCWSTR lpszLayoutText)
+HKL WINAPI ImmInstallIMEW(LPCWSTR lpszIMEFileName, LPCWSTR lpszLayoutText)
 {
     INT lcid = GetUserDefaultLCID();
     INT count;
@@ -1400,8 +1379,7 @@ BOOL WINAPI ImmReleaseContext(HWND hWnd, HIMC hIMC)
 /***********************************************************************
  *		ImmSetCandidateWindow (IMM32.@)
  */
-BOOL WINAPI ImmSetCandidateWindow(
-  HIMC hIMC, LPCANDIDATEFORM lpCandidate)
+BOOL WINAPI ImmSetCandidateWindow(HIMC hIMC, LPCANDIDATEFORM lpCandidate)
 {
     HWND hWnd;
     LPINPUTCONTEXT pIC;
@@ -1546,10 +1524,9 @@ BOOL WINAPI ImmSetCompositionFontW(HIMC hIMC, LPLOGFONTW lplf)
 /***********************************************************************
  *		ImmSetCompositionStringA (IMM32.@)
  */
-BOOL WINAPI ImmSetCompositionStringA(
-  HIMC hIMC, DWORD dwIndex,
-  LPCVOID lpComp, DWORD dwCompLen,
-  LPCVOID lpRead, DWORD dwReadLen)
+BOOL WINAPI
+ImmSetCompositionStringA(HIMC hIMC, DWORD dwIndex, LPCVOID lpComp, DWORD dwCompLen,
+                         LPCVOID lpRead, DWORD dwReadLen)
 {
     DWORD comp_len;
     DWORD read_len;
@@ -1601,10 +1578,9 @@ BOOL WINAPI ImmSetCompositionStringA(
 /***********************************************************************
  *		ImmSetCompositionStringW (IMM32.@)
  */
-BOOL WINAPI ImmSetCompositionStringW(
-	HIMC hIMC, DWORD dwIndex,
-	LPCVOID lpComp, DWORD dwCompLen,
-	LPCVOID lpRead, DWORD dwReadLen)
+BOOL WINAPI
+ImmSetCompositionStringW(HIMC hIMC, DWORD dwIndex, LPCVOID lpComp, DWORD dwCompLen,
+                         LPCVOID lpRead, DWORD dwReadLen)
 {
     DWORD comp_len;
     DWORD read_len;
@@ -1660,8 +1636,7 @@ BOOL WINAPI ImmSetCompositionStringW(
 /***********************************************************************
  *		ImmSetCompositionWindow (IMM32.@)
  */
-BOOL WINAPI ImmSetCompositionWindow(
-  HIMC hIMC, LPCOMPOSITIONFORM lpCompForm)
+BOOL WINAPI ImmSetCompositionWindow(HIMC hIMC, LPCOMPOSITIONFORM lpCompForm)
 {
     LPINPUTCONTEXT pIC;
     HWND hWnd;
@@ -1688,8 +1663,7 @@ BOOL WINAPI ImmSetCompositionWindow(
 /***********************************************************************
  *		ImmSetConversionStatus (IMM32.@)
  */
-BOOL WINAPI ImmSetConversionStatus(
-  HIMC hIMC, DWORD fdwConversion, DWORD fdwSentence)
+BOOL WINAPI ImmSetConversionStatus(HIMC hIMC, DWORD fdwConversion, DWORD fdwSentence)
 {
     HKL hKL;
     LPINPUTCONTEXT pIC;
@@ -1849,9 +1823,10 @@ BOOL WINAPI ImmShowSoftKeyboard(HWND hSoftWnd, int nCmdShow)
 /***********************************************************************
  *		ImmGetImeMenuItemsA (IMM32.@)
  */
-DWORD WINAPI ImmGetImeMenuItemsA( HIMC hIMC, DWORD dwFlags, DWORD dwType,
-   LPIMEMENUITEMINFOA lpImeParentMenu, LPIMEMENUITEMINFOA lpImeMenu,
-    DWORD dwSize)
+DWORD WINAPI
+ImmGetImeMenuItemsA(HIMC hIMC, DWORD dwFlags, DWORD dwType,
+                    LPIMEMENUITEMINFOA lpImeParentMenu, LPIMEMENUITEMINFOA lpImeMenu,
+                    DWORD dwSize)
 {
     InputContextData *data = get_imc_data(hIMC);
     TRACE("(%p, %i, %i, %p, %p, %i):\n", hIMC, dwFlags, dwType,
@@ -1920,9 +1895,10 @@ DWORD WINAPI ImmGetImeMenuItemsA( HIMC hIMC, DWORD dwFlags, DWORD dwType,
 /***********************************************************************
  *		ImmGetImeMenuItemsW (IMM32.@)
  */
-DWORD WINAPI ImmGetImeMenuItemsW( HIMC hIMC, DWORD dwFlags, DWORD dwType,
-   LPIMEMENUITEMINFOW lpImeParentMenu, LPIMEMENUITEMINFOW lpImeMenu,
-   DWORD dwSize)
+DWORD WINAPI
+ImmGetImeMenuItemsW(HIMC hIMC, DWORD dwFlags, DWORD dwType,
+                    LPIMEMENUITEMINFOW lpImeParentMenu, LPIMEMENUITEMINFOW lpImeMenu,
+                    DWORD dwSize)
 {
     InputContextData *data = get_imc_data(hIMC);
     TRACE("(%p, %i, %i, %p, %p, %i):\n", hIMC, dwFlags, dwType,
