@@ -49,35 +49,25 @@ VOID APIENTRY LogFontWideToAnsi(const LOGFONTW *plfW, LPLOGFONTA plfA)
     plfA->lfFaceName[cch] = 0;
 }
 
-LPVOID FASTCALL ValidateHandleNoErr(HANDLE hHandle, UINT uType)
+PWND FASTCALL ValidateHwndNoErr(HWND hwnd)
 {
     INT index;
     PUSER_HANDLE_TABLE ht;
     WORD generation;
 
-    if (!NtUserValidateHandleSecure(hHandle))
+    if (!NtUserValidateHandleSecure(hwnd))
         return NULL;
 
     ht = g_SharedInfo.aheList; /* handle table */
-    index = (LOWORD(hHandle) - FIRST_USER_HANDLE) >> 1;
-    if (index < 0 || index >= ht->nb_handles || ht->handles[index].type != uType)
+    index = (LOWORD(hwnd) - FIRST_USER_HANDLE) >> 1;
+    if (index < 0 || index >= ht->nb_handles || ht->handles[index].type != TYPE_WINDOW)
         return NULL;
 
-    generation = HIWORD(hHandle);
+    generation = HIWORD(hwnd);
     if (generation != ht->handles[index].generation && generation && generation != 0xFFFF)
         return NULL;
 
-    return &ht->handles[index];
-}
-
-PWND FASTCALL ValidateHwndNoErr(HWND hwnd)
-{
-    /* See if the window is cached */
-    PCLIENTINFO ClientInfo = GetWin32ClientInfo();
-    if (hwnd == ClientInfo->CallbackWnd.hWnd)
-        return ClientInfo->CallbackWnd.pWnd;
-
-    return ValidateHandleNoErr(hwnd, TYPE_WINDOW);
+    return (PWND)&ht->handles[index];
 }
 
 LPVOID APIENTRY Imm32HeapAlloc(DWORD dwFlags, DWORD dwBytes)

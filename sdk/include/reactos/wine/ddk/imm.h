@@ -92,19 +92,17 @@ typedef struct INPUTCONTEXTDX /* unconfirmed */
     INPUTCONTEXT;
     UINT nVKey;
     BOOL bNeedsTrans;
-    DWORD dwUnknown1;
+    DWORD dwUnknownCat;
     DWORD dwUIFlags;
-    DWORD dwUnknown2;
-    void *pUnknown3;
-    DWORD dwUnknown4;
-    DWORD dwUnknown5;
+    DWORD dwUnknownDog;
+    void *pUnknownFox;
+    /* ... */
 } INPUTCONTEXTDX, *LPINPUTCONTEXTDX;
 
 #ifndef _WIN64
 C_ASSERT(offsetof(INPUTCONTEXTDX, nVKey) == 0x140);
 C_ASSERT(offsetof(INPUTCONTEXTDX, bNeedsTrans) == 0x144);
 C_ASSERT(offsetof(INPUTCONTEXTDX, dwUIFlags) == 0x14c);
-C_ASSERT(sizeof(INPUTCONTEXTDX) == 0x160);
 #endif
 
 // bits of fdwInit of INPUTCONTEXT

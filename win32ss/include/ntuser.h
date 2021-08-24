@@ -1289,22 +1289,21 @@ C_ASSERT(sizeof(IMEDPI) == 0xa8);
 /* unconfirmed */
 typedef struct tagCLIENTIMC
 {
-    HANDLE hInputContext;
+    HIMC hImc;
     LONG cLockObj;
     DWORD dwFlags;
     DWORD unknown;
     RTL_CRITICAL_SECTION cs;
-    UINT uCodePage;
+    DWORD unknown2;
     HKL hKL;
     BOOL bUnknown4;
 } CLIENTIMC, *PCLIENTIMC;
 
 #ifndef _WIN64
-C_ASSERT(offsetof(CLIENTIMC, hInputContext) == 0x0);
+C_ASSERT(offsetof(CLIENTIMC, hImc) == 0x0);
 C_ASSERT(offsetof(CLIENTIMC, cLockObj) == 0x4);
 C_ASSERT(offsetof(CLIENTIMC, dwFlags) == 0x8);
 C_ASSERT(offsetof(CLIENTIMC, cs) == 0x10);
-C_ASSERT(offsetof(CLIENTIMC, uCodePage) == 0x28);
 C_ASSERT(offsetof(CLIENTIMC, hKL) == 0x2c);
 C_ASSERT(sizeof(CLIENTIMC) == 0x34);
 #endif

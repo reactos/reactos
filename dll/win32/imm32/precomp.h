@@ -49,7 +49,6 @@ extern BYTE g_bClientRegd;
 extern HANDLE g_hImm32Heap;
 
 PWND FASTCALL ValidateHwndNoErr(HWND hwnd);
-LPVOID FASTCALL ValidateHandleNoErr(HANDLE hHandle, UINT uType);
 
 static inline BOOL Imm32IsCrossThreadAccess(HIMC hIMC)
 {
