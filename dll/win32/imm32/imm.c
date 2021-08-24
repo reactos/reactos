@@ -4511,7 +4511,8 @@ DWORD WINAPI ImmGetImeMenuItemsW( HIMC hIMC, DWORD dwFlags, DWORD dwType,
         return 0;
 }
 
-static BOOL APIENTRY Imm32CreateContext(HIMC hIMC, HKL hKL, BOOL bSelect)
+static BOOL APIENTRY
+Imm32InitInputContext(HIMC hIMC, HLOCAL hLocalInputContext, HKL hKL, BOOL bSelect)
 {
     LPINPUTCONTEXT pIC;
     LPCOMPOSITIONSTRING pCS;
@@ -4522,7 +4523,7 @@ static BOOL APIENTRY Imm32CreateContext(HIMC hIMC, HKL hKL, BOOL bSelect)
     PIMEDPI pImeDpi = NULL;
     DWORD cbPrivate;
 
-    pIC = ImmLockIMC(hIMC);
+    pIC = LocalLock(hLocalInputContext);
     if (!pIC)
         return FALSE;
 
@@ -4602,33 +4603,21 @@ static BOOL APIENTRY Imm32CreateContext(HIMC hIMC, HKL hKL, BOOL bSelect)
         ImmUnlockImeDpi(pImeDpi);
     }
 
-    ImmUnlockIMC(hIMC);
+    LocalUnlock(hLocalInputContext);
     return TRUE;
 
 Failure:
     if (pImeDpi)
         ImmUnlockImeDpi(pImeDpi);
     if (pIC->hGuideLine)
-    {
         ImmDestroyIMCC(pIC->hGuideLine);
-        pIC->hGuideLine = NULL;
-    }
     if (pIC->hGuideLine)
-    {
         ImmDestroyIMCC(pIC->hGuideLine);
-        pIC->hGuideLine = NULL;
-    }
     if (pIC->hCandInfo)
-    {
         ImmDestroyIMCC(pIC->hCandInfo);
-        pIC->hCandInfo = NULL;
-    }
     if (pIC->hCompStr)
-    {
         ImmDestroyIMCC(pIC->hCompStr);
-        pIC->hCompStr = NULL;
-    }
-    ImmUnlockIMC(hIMC);
+    LocalUnlock(hLocalInputContext);
     return FALSE;
 }
 
@@ -4657,7 +4646,7 @@ static LPINPUTCONTEXT APIENTRY Imm32LockIMCEx(HIMC hIMC, BOOL bSelect)
         dwThreadId = (DWORD)NtUserQueryInputContext(hIMC, 1);
         hKL = GetKeyboardLayout(dwThreadId);
 
-        if (!Imm32CreateContext(hIMC, hKL, bSelect))
+        if (!Imm32InitInputContext(hIMC, pClientImc->hLocalInputContext, hKL, bSelect))
         {
             pClientImc->hLocalInputContext = LocalFree(pClientImc->hLocalInputContext);
             goto Quit;
