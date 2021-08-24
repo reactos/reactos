@@ -1104,7 +1104,7 @@ BOOL WINAPI ImmConfigureIMEA(
 
 DoIt:
     SendMessageW(hWnd, WM_IME_SYSTEM, 0x1B, 0);
-    ret = (*pImeDpi->ImeConfigure)(hKL, hWnd, dwMode, lpData);
+    ret = pImeDpi->ImeConfigure(hKL, hWnd, dwMode, lpData);
     SendMessageW(hWnd, WM_IME_SYSTEM, 0x1A, 0);
 
 Quit:
@@ -1166,7 +1166,7 @@ BOOL WINAPI ImmConfigureIMEW(
 
 DoIt:
     SendMessageW(hWnd, WM_IME_SYSTEM, 0x1B, 0);
-    ret = (*pImeDpi->ImeConfigure)(hKL, hWnd, dwMode, lpData);
+    ret = pImeDpi->ImeConfigure(hKL, hWnd, dwMode, lpData);
     SendMessageW(hWnd, WM_IME_SYSTEM, 0x1A, 0);
 
 Quit:
