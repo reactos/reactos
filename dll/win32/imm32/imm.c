@@ -4693,18 +4693,15 @@ BOOL WINAPI ImmUnlockIMC(HIMC hIMC)
 */
 DWORD WINAPI ImmGetIMCLockCount(HIMC hIMC)
 {
-    DWORD ret;
-    HLOCAL hLocalInputContext;
+    DWORD ret = 0;
     PCLIENTIMC pClientImc;
 
     pClientImc = ImmLockClientImc(hIMC);
     if (pClientImc == NULL)
         return 0;
 
-    ret = 0;
-    hLocalInputContext = pClientImc->hLocalInputContext;
-    if (hLocalInputContext)
-        ret = (LocalFlags(hLocalInputContext) & LMEM_LOCKCOUNT);
+    if (pClientImc->hLocalInputContext)
+        ret = (LocalFlags(pClientImc->hLocalInputContext) & LMEM_LOCKCOUNT);
 
     ImmUnlockClientImc(pClientImc);
     return ret;
