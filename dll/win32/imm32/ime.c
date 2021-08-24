@@ -562,44 +562,6 @@ Quit:
     return ret;
 }
 
-DWORD APIENTRY Imm32AllocAndBuildHimcList(DWORD dwThreadId, HIMC **pphList)
-{
-#define INITIAL_COUNT 0x40
-#define MAX_RETRY 10
-    NTSTATUS Status;
-    DWORD dwCount = INITIAL_COUNT, cRetry = 0;
-    HIMC *phNewList;
-
-    phNewList = Imm32HeapAlloc(0, dwCount * sizeof(HIMC));
-    if (phNewList == NULL)
-        return 0;
-
-    Status = NtUserBuildHimcList(dwThreadId, dwCount, phNewList, &dwCount);
-    while (Status == STATUS_BUFFER_TOO_SMALL)
-    {
-        HeapFree(g_hImm32Heap, 0, phNewList);
-        if (cRetry++ >= MAX_RETRY)
-            return 0;
-
-        phNewList = Imm32HeapAlloc(0, dwCount * sizeof(HIMC));
-        if (phNewList == NULL)
-            return 0;
-
-        Status = NtUserBuildHimcList(dwThreadId, dwCount, phNewList, &dwCount);
-    }
-
-    if (NT_ERROR(Status) || !dwCount)
-    {
-        HeapFree(g_hImm32Heap, 0, phNewList);
-        return 0;
-    }
-
-    *pphList = phNewList;
-    return dwCount;
-#undef INITIAL_COUNT
-#undef MAX_RETRY
-}
-
 /***********************************************************************
  *		ImmGetIMEFileNameA (IMM32.@)
  */
