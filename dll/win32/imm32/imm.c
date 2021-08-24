@@ -4596,6 +4596,8 @@ static BOOL APIENTRY Imm32CreateContext(HIMC hIMC, HKL hKL, BOOL bSelect)
 
     /* hPrivate */
     pIC->hPrivate = ImmCreateIMCC(cbPrivate);
+    if (!pIC->hPrivate)
+        goto Failure;
 
     if (pImeDpi)
     {
