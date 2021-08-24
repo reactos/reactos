@@ -437,7 +437,7 @@ HIMC WINAPI ImmCreateContext(void)
     hIMC = NtUserCreateInputContext(pClientImc);
     if (hIMC == NULL)
     {
-        Imm32HeapFree(pClientImc);
+        HeapFree(g_hImm32Heap, 0, pClientImc);
         return NULL;
     }
 
@@ -653,7 +653,7 @@ PCLIENTIMC WINAPI ImmLockClientImc(HIMC hImc)
 
         if (!NtUserUpdateInputContext(hImc, 0, pClientImc))
         {
-            Imm32HeapFree(pClientImc);
+            HeapFree(g_hImm32Heap, 0, pClientImc);
             return NULL;
         }
 
@@ -684,7 +684,7 @@ VOID WINAPI ImmUnlockClientImc(PCLIENTIMC pClientImc)
 
     LocalFree(pClientImc->hImc);
     RtlDeleteCriticalSection(&pClientImc->cs);
-    Imm32HeapFree(pClientImc);
+    HeapFree(g_hImm32Heap, 0, pClientImc);
 }
 
 static HIMC APIENTRY Imm32GetContextEx(HWND hWnd, DWORD dwContextFlags)
@@ -1172,9 +1172,9 @@ ImmGetConversionListA(HKL hKL, HIMC hIMC, LPCSTR pSrc, LPCANDIDATELIST lpDst,
 
 Quit:
     if (pszSrcW)
-        Imm32HeapFree(pszSrcW);
+        HeapFree(g_hImm32Heap, 0, pszSrcW);
     if (pCL)
-        Imm32HeapFree(pCL);
+        HeapFree(g_hImm32Heap, 0, pCL);
     ImmUnlockImeDpi(pImeDpi);
     return ret;
 }
@@ -1229,9 +1229,9 @@ ImmGetConversionListW(HKL hKL, HIMC hIMC, LPCWSTR pSrc, LPCANDIDATELIST lpDst,
 
 Quit:
     if (pszSrcA)
-        Imm32HeapFree(pszSrcA);
+        HeapFree(g_hImm32Heap, 0, pszSrcA);
     if (pCL)
-        Imm32HeapFree(pCL);
+        HeapFree(g_hImm32Heap, 0, pCL);
     ImmUnlockImeDpi(pImeDpi);
     return ret;
 }
@@ -1311,9 +1311,9 @@ HKL WINAPI ImmInstallIMEA(LPCSTR lpszIMEFileName, LPCSTR lpszLayoutText)
 
 Quit:
     if (pszFileNameW)
-        Imm32HeapFree(pszFileNameW);
+        HeapFree(g_hImm32Heap, 0, pszFileNameW);
     if (pszLayoutTextW)
-        Imm32HeapFree(pszLayoutTextW);
+        HeapFree(g_hImm32Heap, 0, pszLayoutTextW);
     return hKL;
 }
 
@@ -2118,7 +2118,7 @@ BOOL WINAPI ImmEnumInputContext(DWORD dwThreadId, IMCENUMPROC lpfn, LPARAM lPara
             break;
     }
 
-    Imm32HeapFree(phList);
+    HeapFree(g_hImm32Heap, 0, phList);
     return ret;
 }
 

@@ -81,11 +81,6 @@ LPVOID APIENTRY Imm32HeapAlloc(DWORD dwFlags, DWORD dwBytes)
     return HeapAlloc(g_hImm32Heap, dwFlags, dwBytes);
 }
 
-VOID APIENTRY Imm32HeapFree(LPVOID lpData)
-{
-    HeapFree(g_hImm32Heap, 0, lpData);
-}
-
 LPWSTR APIENTRY Imm32WideFromAnsi(LPCSTR pszA)
 {
     INT cch = lstrlenA(pszA);

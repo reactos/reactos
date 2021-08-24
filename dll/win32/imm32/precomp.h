@@ -78,7 +78,6 @@ static inline BOOL Imm32IsCrossProcessAccess(HWND hWnd)
 }
 
 LPVOID APIENTRY Imm32HeapAlloc(DWORD dwFlags, DWORD dwBytes);
-VOID APIENTRY Imm32HeapFree(LPVOID lpData);
 
 LPWSTR APIENTRY Imm32WideFromAnsi(LPCSTR pszA);
 LPSTR APIENTRY Imm32AnsiFromWide(LPCWSTR pszW);
