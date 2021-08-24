@@ -14,6 +14,7 @@ list(APPEND SOURCE
     imm.c
     keymsg.c
     nt3.c
+    regword.c
     utils.c
     ${CMAKE_CURRENT_BINARY_DIR}/imm32_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/imm32.def)

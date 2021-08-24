@@ -236,6 +236,30 @@ BOOL APIENTRY Imm32ProcessHotKey(HWND hWnd, HIMC hIMC, HKL hKL, DWORD dwHotKeyID
     return ret;
 }
 
+BOOL APIENTRY
+ImmIsUIMessageAW(HWND hWndIME, UINT msg, WPARAM wParam, LPARAM lParam, BOOL bAnsi)
+{
+    switch (msg)
+    {
+        case WM_IME_STARTCOMPOSITION: case WM_IME_ENDCOMPOSITION:
+        case WM_IME_COMPOSITION: case WM_IME_SETCONTEXT: case WM_IME_NOTIFY:
+        case WM_IME_COMPOSITIONFULL: case WM_IME_SELECT: case WM_IME_SYSTEM:
+            break;
+        default:
+            return FALSE;
+    }
+
+    if (!hWndIME)
+        return TRUE;
+
+    if (bAnsi)
+        SendMessageA(hWndIME, msg, wParam, lParam);
+    else
+        SendMessageW(hWndIME, msg, wParam, lParam);
+
+    return TRUE;
+}
+
 /***********************************************************************
  *              ImmGetHotKey(IMM32.@)
  */
@@ -621,30 +645,6 @@ Quit:
     ImmReleaseContext(hwnd, hIMC);
     return ret;
 #undef MSG_COUNT
-}
-
-BOOL APIENTRY
-ImmIsUIMessageAW(HWND hWndIME, UINT msg, WPARAM wParam, LPARAM lParam, BOOL bAnsi)
-{
-    switch (msg)
-    {
-        case WM_IME_STARTCOMPOSITION: case WM_IME_ENDCOMPOSITION:
-        case WM_IME_COMPOSITION: case WM_IME_SETCONTEXT: case WM_IME_NOTIFY:
-        case WM_IME_COMPOSITIONFULL: case WM_IME_SELECT: case WM_IME_SYSTEM:
-            break;
-        default:
-            return FALSE;
-    }
-
-    if (!hWndIME)
-        return TRUE;
-
-    if (bAnsi)
-        SendMessageA(hWndIME, msg, wParam, lParam);
-    else
-        SendMessageW(hWndIME, msg, wParam, lParam);
-
-    return TRUE;
 }
 
 /***********************************************************************
