@@ -4523,8 +4523,8 @@ static BOOL APIENTRY Imm32CreateContext(HIMC hIMC, HKL hKL, BOOL bSelect)
     LPCANDIDATEINFO pCI;
     LPGUIDELINE pGL;
     DWORD iCandForm;
-    PIMEDPI pImeDpi;
     PCLIENTIMC pClientImc;
+    PIMEDPI pImeDpi = NULL;
     DWORD cbPrivate;
 
     pIC = ImmLockIMC(hIMC);
@@ -4534,70 +4534,37 @@ static BOOL APIENTRY Imm32CreateContext(HIMC hIMC, HKL hKL, BOOL bSelect)
     /* hCompStr */
     pIC->hCompStr = ImmCreateIMCC(sizeof(COMPOSITIONSTRING));
     if (pIC->hCompStr)
-    {
-        ImmUnlockIMC(hIMC);
-        return FALSE;
-    }
+        goto Failure;
     pCS = ImmLockIMCC(pIC->hCompStr);
     if (!pCS)
-    {
-        ImmDestroyIMCC(pIC->hCompStr);
-        ImmUnlockIMC(hIMC);
-        return FALSE;
-    }
+        goto Failure;
     pCS->dwSize = sizeof(COMPOSITIONSTRING);
     ImmUnlockIMCC(pIC->hCompStr);
 
     /* hCandInfo */
     pIC->hCandInfo = ImmCreateIMCC(sizeof(CANDIDATEINFO));
     if (!pIC->hCandInfo)
-    {
-        ImmDestroyIMCC(pIC->hCompStr);
-        ImmUnlockIMC(hIMC);
-        return FALSE;
-    }
+        goto Failure;
     pCI = (LPCANDIDATEINFO)ImmLockIMCC(pIC->hCandInfo);
     if (!pCI)
-    {
-        ImmDestroyIMCC(pIC->hCandInfo);
-        ImmDestroyIMCC(pIC->hCompStr);
-        ImmUnlockIMC(hIMC);
-        return FALSE;
-    }
+        goto Failure;
     pCI->dwSize = sizeof(CANDIDATEINFO);
     ImmUnlockIMCC(pIC->hCandInfo);
 
     /* hGuideLine */
     pIC->hGuideLine = ImmCreateIMCC(sizeof(GUIDELINE));
     if (!pIC->hGuideLine)
-    {
-        ImmDestroyIMCC(pIC->hCandInfo);
-        ImmDestroyIMCC(pIC->hCompStr);
-        ImmUnlockIMC(hIMC);
-        return FALSE;
-    }
+        goto Failure;
     pGL = (LPGUIDELINE)ImmLockIMCC(pIC->hGuideLine);
     if (!pGL)
-    {
-        ImmDestroyIMCC(pIC->hGuideLine);
-        ImmDestroyIMCC(pIC->hCandInfo);
-        ImmDestroyIMCC(pIC->hCompStr);
-        ImmUnlockIMC(hIMC);
-        return FALSE;
-    }
+        goto Failure;
     pGL->dwSize = sizeof(GUIDELINE);
     ImmUnlockIMCC(pIC->hGuideLine);
 
     /* hMsgBuf */
     pIC->hMsgBuf = ImmCreateIMCC(sizeof(UINT));
     if (!pIC->hMsgBuf)
-    {
-        ImmDestroyIMCC(pIC->hGuideLine);
-        ImmDestroyIMCC(pIC->hCandInfo);
-        ImmDestroyIMCC(pIC->hCompStr);
-        ImmUnlockIMC(hIMC);
-        return FALSE;
-    }
+        goto Failure;
     pIC->dwNumMsgBuf = 0;
 
     pIC->fOpen = FALSE;
@@ -4613,15 +4580,7 @@ static BOOL APIENTRY Imm32CreateContext(HIMC hIMC, HKL hKL, BOOL bSelect)
     {
         pClientImc = ImmLockClientImc(hIMC);
         if (!pClientImc)
-        {
-            ImmUnlockImeDpi(pImeDpi);
-            ImmDestroyIMCC(pIC->hMsgBuf);
-            ImmDestroyIMCC(pIC->hGuideLine);
-            ImmDestroyIMCC(pIC->hCandInfo);
-            ImmDestroyIMCC(pIC->hCompStr);
-            ImmUnlockIMC(hIMC);
-            return FALSE;
-        }
+            goto Failure;
 
         if (pImeDpi->ImeInfo.fdwProperty & IME_PROP_UNICODE)
             pClientImc->dwFlags |= CLIENTIMC_WIDE;
@@ -4648,6 +4607,20 @@ static BOOL APIENTRY Imm32CreateContext(HIMC hIMC, HKL hKL, BOOL bSelect)
 
     ImmUnlockIMC(hIMC);
     return TRUE;
+
+Failure:
+    if (pImeDpi)
+        ImmUnlockImeDpi(pImeDpi);
+    if (pIC->hGuideLine)
+        ImmDestroyIMCC(pIC->hGuideLine);
+    if (pIC->hGuideLine)
+        ImmDestroyIMCC(pIC->hGuideLine);
+    if (pIC->hCandInfo)
+        ImmDestroyIMCC(pIC->hCandInfo);
+    if (pIC->hCompStr)
+        ImmDestroyIMCC(pIC->hCompStr);
+    ImmUnlockIMC(hIMC);
+    return FALSE;
 }
 
 static LPINPUTCONTEXT APIENTRY Imm32LockIMCEx(HIMC hIMC, BOOL bSelect)
