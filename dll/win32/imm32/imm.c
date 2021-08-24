@@ -1066,7 +1066,7 @@ BOOL WINAPI ImmConfigureIMEA(
     REGISTERWORDW RegWordW;
     LPREGISTERWORDA pRegWordA;
 
-    TRACE("(%p, %p, %d, %p)\n", hKL, hWnd, dwMode, lpData);
+    TRACE("(%p, %p, %ld, %p)\n", hKL, hWnd, dwMode, lpData);
 
     pWnd = ValidateHwndNoErr(hWnd);
     if (!pWnd || Imm32IsCrossProcessAccess(hWnd))
@@ -1128,7 +1128,7 @@ BOOL WINAPI ImmConfigureIMEW(
     REGISTERWORDA RegWordA;
     LPREGISTERWORDW pRegWordW;
 
-    TRACE("(%p, %p, %d, %p)\n", hKL, hWnd, dwMode, lpData);
+    TRACE("(%p, %p, %ld, %p)\n", hKL, hWnd, dwMode, lpData);
 
     pWnd = ValidateHwndNoErr(hWnd);
     if (!pWnd || Imm32IsCrossProcessAccess(hWnd))
