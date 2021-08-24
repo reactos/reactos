@@ -4667,8 +4667,7 @@ static LPINPUTCONTEXT APIENTRY Imm32LockIMCEx(HIMC hIMC, BOOL bSelect)
 
         if (!Imm32CreateContext(hIMC, hKL, bSelect))
         {
-            LocalFree(pClientImc->hLocalInputContext);
-            pClientImc->hLocalInputContext = NULL;
+            pClientImc->hLocalInputContext = LocalFree(pClientImc->hLocalInputContext);
             RtlLeaveCriticalSection(&pClientImc->cs);
             goto Quit;
         }
