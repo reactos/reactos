@@ -690,36 +690,6 @@ UINT WINAPI ImmGetVirtualKey(HWND hWnd)
     return ret;
 }
 
-/***********************************************************************
- *              ImmRequestMessageA(IMM32.@)
- */
-LRESULT WINAPI ImmRequestMessageA(HIMC hIMC, WPARAM wParam, LPARAM lParam)
-{
-    LPINPUTCONTEXT pIC;
-
-    TRACE("(%p, %p, %p)\n", hIMC, wParam, lParam);
-
-    pIC = ImmLockIMC(hIMC);
-    if (pIC)
-        return SendMessageA(pIC->hWnd, WM_IME_REQUEST, wParam, lParam);
-    return 0;
-}
-
-/***********************************************************************
- *              ImmRequestMessageW(IMM32.@)
- */
-LRESULT WINAPI ImmRequestMessageW(HIMC hIMC, WPARAM wParam, LPARAM lParam)
-{
-    LPINPUTCONTEXT pIC;
-
-    TRACE("(%p, %p, %p)\n", hIMC, wParam, lParam);
-
-    pIC = ImmLockIMC(hIMC);
-    if (pIC)
-        return SendMessageW(pIC->hWnd, WM_IME_REQUEST, wParam, lParam);
-    return 0;
-}
-
 BOOL APIENTRY
 Imm32NotifyAction(HIMC hIMC, HWND hwnd, DWORD dwAction, DWORD_PTR dwIndex, DWORD_PTR dwValue,
                   DWORD_PTR dwCommand, DWORD_PTR dwData)
