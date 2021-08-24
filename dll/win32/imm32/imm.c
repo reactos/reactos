@@ -1267,29 +1267,6 @@ BOOL WINAPI CtfImmIsCiceroEnabled(VOID)
 }
 
 /***********************************************************************
- *		ImmGetVirtualKey (IMM32.@)
- */
-UINT WINAPI ImmGetVirtualKey(HWND hWnd)
-{
-    HIMC hIMC;
-    LPINPUTCONTEXTDX pIC;
-    UINT ret = VK_PROCESSKEY;
-
-    TRACE("(%p)\n", hWnd);
-
-    hIMC = ImmGetContext(hWnd);
-    pIC = (LPINPUTCONTEXTDX)ImmLockIMC(hIMC);
-    if (!pIC)
-        return ret;
-
-    if (pIC->bNeedsTrans)
-        ret = pIC->nVKey;
-
-    ImmUnlockIMC(hIMC);
-    return ret;
-}
-
-/***********************************************************************
  *		ImmInstallIMEA (IMM32.@)
  */
 HKL WINAPI ImmInstallIMEA(LPCSTR lpszIMEFileName, LPCSTR lpszLayoutText)
