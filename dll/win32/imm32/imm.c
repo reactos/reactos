@@ -4612,13 +4612,25 @@ Failure:
     if (pImeDpi)
         ImmUnlockImeDpi(pImeDpi);
     if (pIC->hGuideLine)
+    {
         ImmDestroyIMCC(pIC->hGuideLine);
+        pIC->hGuideLine = NULL;
+    }
     if (pIC->hGuideLine)
+    {
         ImmDestroyIMCC(pIC->hGuideLine);
+        pIC->hGuideLine = NULL;
+    }
     if (pIC->hCandInfo)
+    {
         ImmDestroyIMCC(pIC->hCandInfo);
+        pIC->hCandInfo = NULL;
+    }
     if (pIC->hCompStr)
+    {
         ImmDestroyIMCC(pIC->hCompStr);
+        pIC->hCompStr = NULL;
+    }
     ImmUnlockIMC(hIMC);
     return FALSE;
 }
