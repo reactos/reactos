@@ -1219,33 +1219,34 @@ BOOL APIENTRY Imm32CleanupContext(HIMC hIMC, HKL hKL, BOOL bKeep)
         return TRUE;
 
     InterlockedIncrement(&pClientImc->cLockObj);
-    if (pClientImc->hLocalInputContext == NULL)
-        goto Quit;
 
-    pIC = LocalLock(pClientImc->hLocalInputContext);
-    if (pIC == NULL)
+    if (pClientImc->hLocalInputContext)
     {
-        ImmUnlockClientImc(pClientImc);
-        return FALSE;
-    }
+        pIC = LocalLock(pClientImc->hLocalInputContext);
+        if (pIC == NULL)
+        {
+            ImmUnlockClientImc(pClientImc);
+            return FALSE;
+        }
 
-    pImeDpi = ImmLockImeDpi(hKL);
-    if (pImeDpi)
-    {
-        pImeDpi->ImeSelect(hIMC, FALSE);
-        ImmUnlockImeDpi(pImeDpi);
-    }
+        pImeDpi = ImmLockImeDpi(hKL);
+        if (pImeDpi)
+        {
+            pImeDpi->ImeSelect(hIMC, FALSE);
+            ImmUnlockImeDpi(pImeDpi);
+        }
 
-    ImmDestroyIMCC(pIC->hPrivate);
-    ImmDestroyIMCC(pIC->hMsgBuf);
-    ImmDestroyIMCC(pIC->hGuideLine);
-    ImmDestroyIMCC(pIC->hCandInfo);
-    ImmDestroyIMCC(pIC->hCompStr);
-    LocalUnlock(pClientImc->hLocalInputContext);
+        ImmDestroyIMCC(pIC->hPrivate);
+        ImmDestroyIMCC(pIC->hMsgBuf);
+        ImmDestroyIMCC(pIC->hGuideLine);
+        ImmDestroyIMCC(pIC->hCandInfo);
+        ImmDestroyIMCC(pIC->hCompStr);
+
+        LocalUnlock(pClientImc->hLocalInputContext);
+    }
 
     Imm32CleanupContextExtra(pIC);
 
-Quit:
     pClientImc->dwFlags |= CLIENTIMC_UNKNOWN1;
     ImmUnlockClientImc(pClientImc);
     if (!bKeep)
