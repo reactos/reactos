@@ -1289,7 +1289,7 @@ C_ASSERT(sizeof(IMEDPI) == 0xa8);
 /* unconfirmed */
 typedef struct tagCLIENTIMC
 {
-    HLOCAL hLocalInputContext;
+    HANDLE hInputContext;
     LONG cLockObj;
     DWORD dwFlags;
     DWORD unknown;
@@ -1300,7 +1300,7 @@ typedef struct tagCLIENTIMC
 } CLIENTIMC, *PCLIENTIMC;
 
 #ifndef _WIN64
-C_ASSERT(offsetof(CLIENTIMC, hLocalInputContext) == 0x0);
+C_ASSERT(offsetof(CLIENTIMC, hInputContext) == 0x0);
 C_ASSERT(offsetof(CLIENTIMC, cLockObj) == 0x4);
 C_ASSERT(offsetof(CLIENTIMC, dwFlags) == 0x8);
 C_ASSERT(offsetof(CLIENTIMC, cs) == 0x10);
