@@ -4563,10 +4563,6 @@ Imm32InitInputContext(HIMC hIMC, HLOCAL hLocalInputContext, HKL hKL, BOOL bSelec
         goto Failure;
     pIC->dwNumMsgBuf = 0;
 
-    pIC->fOpen = FALSE;
-    pIC->fdwConversion = 0;
-    pIC->fdwSentence = 0;
-
     /* cfCandForm */
     for (iCandForm = 0; iCandForm < MAX_CANDIDATEFORM; ++iCandForm)
         pIC->cfCandForm[iCandForm].dwIndex = IMM_INVALID_CANDFORM;
