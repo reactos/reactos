@@ -1241,11 +1241,10 @@ BOOL APIENTRY Imm32CleanupContext(HIMC hIMC, HKL hKL, BOOL bKeep)
         ImmDestroyIMCC(pIC->hGuideLine);
         ImmDestroyIMCC(pIC->hCandInfo);
         ImmDestroyIMCC(pIC->hCompStr);
+        Imm32CleanupContextExtra(pIC);
 
         LocalUnlock(pClientImc->hLocalInputContext);
     }
-
-    Imm32CleanupContextExtra(pIC);
 
     pClientImc->dwFlags |= CLIENTIMC_UNKNOWN1;
     ImmUnlockClientImc(pClientImc);
