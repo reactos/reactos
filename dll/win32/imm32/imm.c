@@ -1220,7 +1220,7 @@ BOOL APIENTRY Imm32CleanupContext(HIMC hIMC, HKL hKL, BOOL bKeep)
         return TRUE;
 
     InterlockedIncrement(&pClientImc->cLockObj);
-    if (pClientImc->hInputContext == NULL)
+    if (pClientImc->hLocalInputContext == NULL)
         goto Quit;
 
     pIC = ImmLockIMC(hIMC);
@@ -1872,7 +1872,7 @@ PCLIENTIMC WINAPI ImmLockClientImc(HIMC hImc)
 VOID WINAPI ImmUnlockClientImc(PCLIENTIMC pClientImc)
 {
     LONG cLocks;
-    HLOCAL hInputContext;
+    HLOCAL hLocalInputContext;
 
     TRACE("(%p)\n", pClientImc);
 
@@ -1880,9 +1880,9 @@ VOID WINAPI ImmUnlockClientImc(PCLIENTIMC pClientImc)
     if (cLocks != 0 || !(pClientImc->dwFlags & CLIENTIMC_UNKNOWN1))
         return;
 
-    hInputContext = pClientImc->hInputContext;
-    if (hInputContext)
-        LocalFree(hInputContext);
+    hLocalInputContext = pClientImc->hLocalInputContext;
+    if (hLocalInputContext)
+        LocalFree(hLocalInputContext);
 
     RtlDeleteCriticalSection(&pClientImc->cs);
     HeapFree(g_hImm32Heap, 0, pClientImc);
@@ -4663,7 +4663,7 @@ static LPINPUTCONTEXT APIENTRY Imm32LockIMCEx(HIMC hIMC, BOOL bSelect)
 
     RtlEnterCriticalSection(&pClientImc->cs);
 
-    if (!pClientImc->hInputContext)
+    if (!pClientImc->hLocalInputContext)
     {
         if (NtUserQueryInputContext(hIMC, 2) == 0)
         {
@@ -4671,8 +4671,8 @@ static LPINPUTCONTEXT APIENTRY Imm32LockIMCEx(HIMC hIMC, BOOL bSelect)
             goto Quit;
         }
 
-        pClientImc->hInputContext = LocalAlloc(LHND, sizeof(INPUTCONTEXTDX));
-        if (!pClientImc->hInputContext)
+        pClientImc->hLocalInputContext = LocalAlloc(LHND, sizeof(INPUTCONTEXTDX));
+        if (!pClientImc->hLocalInputContext)
         {
             RtlLeaveCriticalSection(&pClientImc->cs);
             goto Quit;
@@ -4683,8 +4683,8 @@ static LPINPUTCONTEXT APIENTRY Imm32LockIMCEx(HIMC hIMC, BOOL bSelect)
 
         if (!Imm32CreateContext(hIMC, hKL, bSelect))
         {
-            LocalFree(pClientImc->hInputContext);
-            pClientImc->hInputContext = NULL;
+            LocalFree(pClientImc->hLocalInputContext);
+            pClientImc->hLocalInputContext = NULL;
             RtlLeaveCriticalSection(&pClientImc->cs);
             goto Quit;
         }
@@ -4692,7 +4692,7 @@ static LPINPUTCONTEXT APIENTRY Imm32LockIMCEx(HIMC hIMC, BOOL bSelect)
 
     RtlLeaveCriticalSection(&pClientImc->cs);
 
-    pIC = LocalLock(pClientImc->hInputContext);
+    pIC = LocalLock(pClientImc->hLocalInputContext);
 
     InterlockedIncrement(&pClientImc->cLockObj);
 
@@ -4716,15 +4716,15 @@ LPINPUTCONTEXT WINAPI ImmLockIMC(HIMC hIMC)
 BOOL WINAPI ImmUnlockIMC(HIMC hIMC)
 {
     PCLIENTIMC pClientImc;
-    HLOCAL hInputContext;
+    HLOCAL hLocalInputContext;
 
     pClientImc = ImmLockClientImc(hIMC);
     if (pClientImc == NULL)
         return FALSE;
 
-    hInputContext = pClientImc->hInputContext;
-    if (hInputContext)
-        LocalUnlock(hInputContext);
+    hLocalInputContext = pClientImc->hLocalInputContext;
+    if (hLocalInputContext)
+        LocalUnlock(hLocalInputContext);
 
     InterlockedDecrement(&pClientImc->cLockObj);
     ImmUnlockClientImc(pClientImc);
@@ -4737,7 +4737,7 @@ BOOL WINAPI ImmUnlockIMC(HIMC hIMC)
 DWORD WINAPI ImmGetIMCLockCount(HIMC hIMC)
 {
     DWORD ret;
-    HLOCAL hInputContext;
+    HLOCAL hLocalInputContext;
     PCLIENTIMC pClientImc;
 
     pClientImc = ImmLockClientImc(hIMC);
@@ -4745,9 +4745,9 @@ DWORD WINAPI ImmGetIMCLockCount(HIMC hIMC)
         return 0;
 
     ret = 0;
-    hInputContext = pClientImc->hInputContext;
-    if (hInputContext)
-        ret = (LocalFlags(hInputContext) & LMEM_LOCKCOUNT);
+    hLocalInputContext = pClientImc->hLocalInputContext;
+    if (hLocalInputContext)
+        ret = (LocalFlags(hLocalInputContext) & LMEM_LOCKCOUNT);
 
     ImmUnlockClientImc(pClientImc);
     return ret;
