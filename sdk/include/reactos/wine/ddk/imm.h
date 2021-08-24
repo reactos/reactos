@@ -92,12 +92,12 @@ typedef struct INPUTCONTEXTDX /* unconfirmed */
     INPUTCONTEXT;
     UINT nVKey;
     BOOL bNeedsTrans;
-    DWORD dwUnknownCat;
+    DWORD dwUnknown1;
     DWORD dwUIFlags;
-    DWORD dwUnknownDog;
-    void *pUnknownFox;
-    DWORD dwUnknownPig;
-    DWORD dwUnknownPony;
+    DWORD dwUnknown2;
+    void *pUnknown3;
+    DWORD dwUnknown4;
+    DWORD dwUnknown5;
 } INPUTCONTEXTDX, *LPINPUTCONTEXTDX;
 
 #ifndef _WIN64
