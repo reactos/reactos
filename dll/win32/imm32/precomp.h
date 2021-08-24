@@ -97,7 +97,7 @@ Imm32NotifyAction(HIMC hIMC, HWND hwnd, DWORD dwAction, DWORD_PTR dwIndex, DWORD
 
 BOOL WINAPI CtfImmIsTextFrameServiceDisabled(VOID);
 
-#ifdef IMP_SUPPORT /* 3.x support */
+#ifdef NT3_SUPPORT /* 3.x support */
     DWORD APIENTRY
     ImmNt3JTransCompA(LPINPUTCONTEXTDX pIC, LPCOMPOSITIONSTRING pCS,
                       const TRANSMSG *pSrc, LPTRANSMSG pDest);

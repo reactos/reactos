@@ -406,7 +406,7 @@ BOOL WINAPI ImmGenerateMessage(HIMC hIMC)
 
     RtlCopyMemory(pTrans, pMsgs, cbTrans);
 
-#ifdef IMP_SUPPORT
+#ifdef NT3_SUPPORT
     if (GetWin32ClientInfo()->dwExpWinVer < _WIN32_WINNT_NT4) /* old version (3.x)? */
     {
         LANGID LangID = LANGIDFROMLCID(GetSystemDefaultLCID());
@@ -457,7 +457,7 @@ Imm32PostMessages(HWND hwnd, HIMC hIMC, DWORD dwCount, LPTRANSMSG lpTransMsg)
     bAnsi = !(pClientImc->dwFlags & CLIENTIMC_WIDE);
     ImmUnlockClientImc(pClientImc);
 
-#ifdef IMP_SUPPORT
+#ifdef NT3_SUPPORT
     if (GetWin32ClientInfo()->dwExpWinVer < _WIN32_WINNT_NT4) /* old version (3.x)? */
     {
         LANGID LangID = LANGIDFROMLCID(GetSystemDefaultLCID());
@@ -492,7 +492,7 @@ Imm32PostMessages(HWND hwnd, HIMC hIMC, DWORD dwCount, LPTRANSMSG lpTransMsg)
             PostMessageW(hwnd, pItem->message, pItem->wParam, pItem->lParam);
     }
 
-#ifdef IMP_SUPPORT
+#ifdef NT3_SUPPORT
     if (pNewTransMsg && pNewTransMsg != lpTransMsg)
         Imm32HeapFree(pNewTransMsg);
 #endif
