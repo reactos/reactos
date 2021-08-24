@@ -1871,7 +1871,6 @@ PCLIENTIMC WINAPI ImmLockClientImc(HIMC hImc)
 VOID WINAPI ImmUnlockClientImc(PCLIENTIMC pClientImc)
 {
     LONG cLocks;
-    HLOCAL hLocalInputContext;
 
     TRACE("(%p)\n", pClientImc);
 
@@ -1879,10 +1878,7 @@ VOID WINAPI ImmUnlockClientImc(PCLIENTIMC pClientImc)
     if (cLocks != 0 || !(pClientImc->dwFlags & CLIENTIMC_UNKNOWN1))
         return;
 
-    hLocalInputContext = pClientImc->hLocalInputContext;
-    if (hLocalInputContext)
-        LocalFree(hLocalInputContext);
-
+    LocalFree(pClientImc->hLocalInputContext);
     RtlDeleteCriticalSection(&pClientImc->cs);
     HeapFree(g_hImm32Heap, 0, pClientImc);
 }
