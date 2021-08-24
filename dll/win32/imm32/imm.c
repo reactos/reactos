@@ -4652,17 +4652,11 @@ static LPINPUTCONTEXT APIENTRY Imm32LockIMCEx(HIMC hIMC, BOOL bSelect)
     if (!pClientImc->hLocalInputContext)
     {
         if (NtUserQueryInputContext(hIMC, 2) == 0)
-        {
-            RtlLeaveCriticalSection(&pClientImc->cs);
             goto Quit;
-        }
 
         pClientImc->hLocalInputContext = LocalAlloc(LHND, sizeof(INPUTCONTEXTDX));
         if (!pClientImc->hLocalInputContext)
-        {
-            RtlLeaveCriticalSection(&pClientImc->cs);
             goto Quit;
-        }
 
         dwThreadId = (DWORD)NtUserQueryInputContext(hIMC, 1);
         hKL = GetKeyboardLayout(dwThreadId);
@@ -4670,7 +4664,6 @@ static LPINPUTCONTEXT APIENTRY Imm32LockIMCEx(HIMC hIMC, BOOL bSelect)
         if (!Imm32CreateContext(hIMC, hKL, bSelect))
         {
             pClientImc->hLocalInputContext = LocalFree(pClientImc->hLocalInputContext);
-            RtlLeaveCriticalSection(&pClientImc->cs);
             goto Quit;
         }
     }
@@ -4678,9 +4671,8 @@ static LPINPUTCONTEXT APIENTRY Imm32LockIMCEx(HIMC hIMC, BOOL bSelect)
     InterlockedIncrement(&pClientImc->cLockObj);
     pIC = LocalLock(pClientImc->hLocalInputContext);
 
-    RtlLeaveCriticalSection(&pClientImc->cs);
-
 Quit:
+    RtlLeaveCriticalSection(&pClientImc->cs);
     ImmUnlockClientImc(pClientImc);
     return pIC;
 }
