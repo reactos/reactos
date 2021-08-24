@@ -90,7 +90,7 @@ static PWND FASTCALL ValidateHwndNoErr(HWND hwnd)
     if (hwnd == ClientInfo->CallbackWnd.hWnd)
         return ClientInfo->CallbackWnd.pWnd;
 
-    return (PWND)ValidateHandleNoErr(hwnd, TYPE_WINDOW);
+    return ValidateHandleNoErr(hwnd, TYPE_WINDOW);
 }
 
 static BOOL APIENTRY Imm32InitInstance(HMODULE hMod)
