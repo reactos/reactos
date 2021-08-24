@@ -28,8 +28,7 @@ static BOOL APIENTRY Imm32InquireIme(PIMEDPI pImeDpi)
 
     if (!IS_IME_HKL(pImeDpi->hKL))
     {
-        if (g_psi && (g_psi->dwSRVIFlags & SRVINFO_CICERO_ENABLED) &&
-            pImeDpi->CtfImeInquireExW)
+        if (IS_CICERO_ENABLED() && pImeDpi->CtfImeInquireExW)
         {
             // TODO:
             return FALSE;
@@ -325,7 +324,7 @@ BOOL WINAPI ImmLoadIME(HKL hKL)
 
     if (!IS_IME_HKL(hKL))
     {
-        if (!g_psi || !(g_psi->dwSRVIFlags & SRVINFO_CICERO_ENABLED))
+        if (!IS_CICERO_ENABLED())
             return FALSE;
 
         pInfo = (PW32CLIENTINFO)(NtCurrentTeb()->Win32ClientInfo);
@@ -346,7 +345,7 @@ PIMEDPI APIENTRY ImmLockOrLoadImeDpi(HKL hKL)
 
     if (!IS_IME_HKL(hKL))
     {
-        if (!g_psi || !(g_psi->dwSRVIFlags & SRVINFO_CICERO_ENABLED))
+        if (!IS_CICERO_ENABLED())
             return NULL;
 
         pInfo = (PW32CLIENTINFO)(NtCurrentTeb()->Win32ClientInfo);
@@ -507,7 +506,7 @@ ImmGetImeInfoEx(PIMEINFOEX pImeInfoEx, IMEINFOEXCLASS SearchType, PVOID pvSearch
 
     if (!IS_IME_HKL(hKL))
     {
-        if (g_psi && (g_psi->dwSRVIFlags & SRVINFO_CICERO_ENABLED))
+        if (IS_CICERO_ENABLED())
         {
             pTeb = NtCurrentTeb();
             if (((PW32CLIENTINFO)pTeb->Win32ClientInfo)->W32ClientInfo[0] & 2)
@@ -1113,7 +1112,7 @@ BOOL WINAPI ImmGetStatusWindowPos(HIMC hIMC, LPPOINT lpptPos)
  */
 HWND WINAPI ImmGetDefaultIMEWnd(HWND hWnd)
 {
-    if (!g_psi || !(g_psi->dwSRVIFlags & SRVINFO_IMM32))
+    if (!IS_IME_ENABLED())
         return NULL;
 
     // FIXME: NtUserGetThreadState and enum ThreadStateRoutines are broken.

@@ -63,7 +63,7 @@ HKL WINAPI ImmLoadLayout(HKL hKL, PIMEINFOEX pImeInfoEx)
     TRACE("(%p, %p)\n", hKL, pImeInfoEx);
 
     if (IS_IME_HKL(hKL) ||
-        !g_psi || !(g_psi->dwSRVIFlags & SRVINFO_CICERO_ENABLED) ||
+        !IS_CICERO_ENABLED() ||
         ((PW32CLIENTINFO)NtCurrentTeb()->Win32ClientInfo)->W32ClientInfo[0] & 2)
     {
         UnicodeString.Buffer = szLayout;
@@ -427,7 +427,7 @@ HIMC WINAPI ImmCreateContext(void)
 
     TRACE("()\n");
 
-    if (g_psi == NULL || !(g_psi->dwSRVIFlags & SRVINFO_IMM32))
+    if (!IS_IME_ENABLED())
         return NULL;
 
     pClientImc = Imm32HeapAlloc(HEAP_ZERO_MEMORY, sizeof(CLIENTIMC));
@@ -461,7 +461,7 @@ BOOL APIENTRY Imm32CleanupContext(HIMC hIMC, HKL hKL, BOOL bKeep)
     LPINPUTCONTEXT pIC;
     PCLIENTIMC pClientImc;
 
-    if (!g_psi || !(g_psi->dwSRVIFlags & SRVINFO_IMM32) || hIMC == NULL)
+    if (hIMC == NULL || !IS_IME_ENABLED())
         return FALSE;
 
     pImc = ValidateHandleNoErr(hIMC, TYPE_INPUTCONTEXT);
@@ -526,10 +526,7 @@ BOOL WINAPI ImmDestroyContext(HIMC hIMC)
 
     TRACE("(%p)\n", hIMC);
 
-    if (g_psi == NULL || !(g_psi->dwSRVIFlags & SRVINFO_IMM32))
-        return FALSE;
-
-    if (Imm32IsCrossThreadAccess(hIMC))
+    if (!IS_IME_ENABLED() || Imm32IsCrossThreadAccess(hIMC))
         return FALSE;
 
     hKL = GetKeyboardLayout(0);
@@ -684,7 +681,7 @@ static HIMC APIENTRY Imm32GetContextEx(HWND hWnd, DWORD dwContextFlags)
     PCLIENTIMC pClientImc;
     PWND pWnd;
 
-    if (!g_psi || !(g_psi->dwSRVIFlags & SRVINFO_IMM32))
+    if (!IS_IME_ENABLED())
         return NULL;
 
     if (!hWnd)
@@ -1254,7 +1251,7 @@ BOOL WINAPI ImmGetConversionStatus(HIMC hIMC, LPDWORD lpfdwConversion, LPDWORD l
  */
 BOOL WINAPI CtfImmIsCiceroEnabled(VOID)
 {
-    return (g_psi && (g_psi->dwSRVIFlags & SRVINFO_CICERO_ENABLED));
+    return IS_CICERO_ENABLED();
 }
 
 /***********************************************************************
@@ -1674,13 +1671,10 @@ BOOL WINAPI ImmSetConversionStatus(HIMC hIMC, DWORD fdwConversion, DWORD fdwSent
     TRACE("(%p, 0x%lX, 0x%lX)\n", hIMC, fdwConversion, fdwSentence);
 
     hKL = GetKeyboardLayout(0);
-    if (!IS_IME_HKL(hKL))
+    if (!IS_IME_HKL(hKL) && IS_CICERO_ENABLED())
     {
-        if (g_psi && (g_psi->dwSRVIFlags & SRVINFO_CICERO_ENABLED))
-        {
-            FIXME("Cicero\n");
-            return FALSE;
-        }
+        FIXME("Cicero\n");
+        return FALSE;
     }
 
     if (Imm32IsCrossThreadAccess(hIMC))
@@ -2332,7 +2326,7 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpReserved)
             break;
 
         case DLL_THREAD_DETACH:
-            if (g_psi == NULL || !(g_psi->dwSRVIFlags & SRVINFO_IMM32))
+            if (!IS_IME_ENABLED())
                 return TRUE;
 
             pTeb = NtCurrentTeb();

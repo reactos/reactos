@@ -37,7 +37,8 @@
 
 #define ROUNDUP4(n) (((n) + 3) & ~3)  /* DWORD alignment */
 
-#define IS_IME_ENABLED() (g_psi && (g_psi->dwSRVIFlags & SRVINFO_CICERO_ENABLED))
+#define IS_IME_ENABLED()    (g_psi && (g_psi->dwSRVIFlags & SRVINFO_CICERO_ENABLED))
+#define IS_CICERO_ENABLED() (g_psi && (g_psi->dwSRVIFlags & SRVINFO_CICERO_ENABLED))
 
 extern HMODULE g_hImm32Inst;
 extern RTL_CRITICAL_SECTION g_csImeDpi;
