@@ -688,6 +688,46 @@ BOOL WINAPI ImmGetOpenStatus(HIMC hIMC)
     return ret;
 }
 
+
+/***********************************************************************
+ *		ImmSetOpenStatus (IMM32.@)
+ */
+BOOL WINAPI ImmSetOpenStatus(HIMC hIMC, BOOL fOpen)
+{
+    DWORD dwConversion;
+    LPINPUTCONTEXT pIC;
+    HWND hWnd;
+    BOOL bHasChange = FALSE;
+
+    TRACE("(%p, %d)\n", hIMC, fOpen);
+
+    if (Imm32IsCrossThreadAccess(hIMC))
+        return FALSE;
+
+    pIC = ImmLockIMC(hIMC);
+    if (pIC == NULL)
+        return FALSE;
+
+    if (pIC->fOpen != fOpen)
+    {
+        pIC->fOpen = fOpen;
+        hWnd = pIC->hWnd;
+        dwConversion = pIC->fdwConversion;
+        bHasChange = TRUE;
+    }
+
+    ImmUnlockIMC(hIMC);
+
+    if (bHasChange)
+    {
+        Imm32NotifyAction(hIMC, hWnd, NI_CONTEXTUPDATED, 0,
+                          IMC_SETOPENSTATUS, IMN_SETOPENSTATUS, 0);
+        NtUserNotifyIMEStatus(hWnd, hIMC, dwConversion);
+    }
+
+    return TRUE;
+}
+
 /***********************************************************************
  *		ImmGetProperty (IMM32.@)
  */
@@ -755,6 +795,34 @@ BOOL WINAPI ImmGetStatusWindowPos(HIMC hIMC, LPPOINT lpptPos)
 
     ImmUnlockIMC(hIMC);
     return ret;
+}
+
+/***********************************************************************
+ *		ImmSetStatusWindowPos (IMM32.@)
+ */
+BOOL WINAPI ImmSetStatusWindowPos(HIMC hIMC, LPPOINT lpptPos)
+{
+    LPINPUTCONTEXT pIC;
+    HWND hWnd;
+
+    TRACE("(%p, {%ld, %ld})\n", hIMC, lpptPos->x, lpptPos->y);
+
+    if (Imm32IsCrossThreadAccess(hIMC))
+        return FALSE;
+
+    pIC = ImmLockIMC(hIMC);
+    if (!pIC)
+        return FALSE;
+
+    hWnd = pIC->hWnd;
+    pIC->ptStatusWndPos = *lpptPos;
+    pIC->fdwInit |= INIT_STATUSWNDPOS;
+
+    ImmUnlockIMC(hIMC);
+
+    Imm32NotifyAction(hIMC, hWnd, NI_CONTEXTUPDATED, 0,
+                      IMC_SETSTATUSWINDOWPOS, IMN_SETSTATUSWINDOWPOS, 0);
+    return TRUE;
 }
 
 /***********************************************************************
