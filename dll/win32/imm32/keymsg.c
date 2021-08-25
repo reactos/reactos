@@ -650,8 +650,7 @@ Quit:
 /***********************************************************************
  *		ImmIsUIMessageA (IMM32.@)
  */
-BOOL WINAPI ImmIsUIMessageA(
-  HWND hWndIME, UINT msg, WPARAM wParam, LPARAM lParam)
+BOOL WINAPI ImmIsUIMessageA(HWND hWndIME, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     TRACE("(%p, 0x%X, %p, %p)\n", hWndIME, msg, wParam, lParam);
     return ImmIsUIMessageAW(hWndIME, msg, wParam, lParam, TRUE);
@@ -660,8 +659,7 @@ BOOL WINAPI ImmIsUIMessageA(
 /***********************************************************************
  *		ImmIsUIMessageW (IMM32.@)
  */
-BOOL WINAPI ImmIsUIMessageW(
-  HWND hWndIME, UINT msg, WPARAM wParam, LPARAM lParam)
+BOOL WINAPI ImmIsUIMessageW(HWND hWndIME, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     TRACE("(%p, 0x%X, %p, %p)\n", hWndIME, msg, wParam, lParam);
     return ImmIsUIMessageAW(hWndIME, msg, wParam, lParam, FALSE);
