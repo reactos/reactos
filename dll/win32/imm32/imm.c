@@ -157,7 +157,6 @@ typedef struct _tagIMMThreadData
 } IMMThreadData;
 
 static struct list ImmHklList = LIST_INIT(ImmHklList);
-static struct list ImmThreadDataList = LIST_INIT(ImmThreadDataList);
 
 static const WCHAR szwWineIMCProperty[] = L"WineImmHIMCProperty";
 
