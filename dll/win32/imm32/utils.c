@@ -173,3 +173,71 @@ DWORD APIENTRY Imm32AllocAndBuildHimcList(DWORD dwThreadId, HIMC **pphList)
 #undef INITIAL_COUNT
 #undef MAX_RETRY
 }
+
+/***********************************************************************
+ *		ImmCreateIMCC(IMM32.@)
+ */
+HIMCC  WINAPI ImmCreateIMCC(DWORD size)
+{
+    if (size < 4)
+        size = 4;
+    return LocalAlloc(LHND, size);
+}
+
+/***********************************************************************
+ *       ImmDestroyIMCC(IMM32.@)
+ */
+HIMCC WINAPI ImmDestroyIMCC(HIMCC block)
+{
+    if (block)
+        return LocalFree(block);
+    return NULL;
+}
+
+/***********************************************************************
+ *		ImmLockIMCC(IMM32.@)
+ */
+LPVOID WINAPI ImmLockIMCC(HIMCC imcc)
+{
+    if (imcc)
+        return LocalLock(imcc);
+    return NULL;
+}
+
+/***********************************************************************
+ *		ImmUnlockIMCC(IMM32.@)
+ */
+BOOL WINAPI ImmUnlockIMCC(HIMCC imcc)
+{
+    if (imcc)
+        return LocalUnlock(imcc);
+    return FALSE;
+}
+
+/***********************************************************************
+ *		ImmGetIMCCLockCount(IMM32.@)
+ */
+DWORD WINAPI ImmGetIMCCLockCount(HIMCC imcc)
+{
+    return LocalFlags(imcc) & LMEM_LOCKCOUNT;
+}
+
+/***********************************************************************
+ *		ImmReSizeIMCC(IMM32.@)
+ */
+HIMCC  WINAPI ImmReSizeIMCC(HIMCC imcc, DWORD size)
+{
+    if (!imcc)
+        return NULL;
+    return LocalReAlloc(imcc, size, LHND);
+}
+
+/***********************************************************************
+ *		ImmGetIMCCSize(IMM32.@)
+ */
+DWORD WINAPI ImmGetIMCCSize(HIMCC imcc)
+{
+    if (imcc)
+        return LocalSize(imcc);
+    return 0;
+}
