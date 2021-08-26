@@ -95,13 +95,13 @@ HalpInitializeAPStub(PVOID APStubLocation,
     RtlCopyMemory(APFinalLoc, &APFinalOffset,  sizeof(APFinalOffset));
 
     /* Copy GDT Descriptor into area */
-    GdtLoc = (PKDESCRIPTOR)((ULONG_PTR)APStubLocation + ((ULONG_PTR)&APGDT - (ULONG_PTR)&APSpinup) + (ULONG_PTR)&APEntryEnd  - (ULONG_PTR)&APEntry);
+    GdtLoc = (PKDESCRIPTOR)((ULONG_PTR)APStubLocation + ((ULONG_PTR)&APGDT - (ULONG_PTR)&APEntry));
     GdtLoc->Limit = FinalGdt.Limit;
     GdtLoc->Base = FinalGdt.Base;
     DPRINT1("The GDT Limit.Base is %X.%X\n", GdtLoc->Limit, GdtLoc->Base);
 
     /* Copy IDT Descriptor into area */
-    IdtLoc = (PKDESCRIPTOR)((ULONG_PTR)APStubLocation + ((ULONG_PTR)&APIDT - (ULONG_PTR)&APSpinup) + (ULONG_PTR)&APEntryEnd  - (ULONG_PTR)&APEntry);
+    IdtLoc = (PKDESCRIPTOR)((ULONG_PTR)APStubLocation + ((ULONG_PTR)&APIDT - (ULONG_PTR)&APEntry));
     IdtLoc->Limit = FinalIdt.Limit;
     IdtLoc->Base = FinalIdt.Base;
     DPRINT1("The IDT Limit.Base is %X.%X\n", IdtLoc->Limit, IdtLoc->Base);
@@ -117,11 +117,11 @@ HalpWriteProcessorState(PVOID APStubLocation,
 }
 
 VOID
-HalpWriteTempPageTable(PVOID APStubLocation, 
-                       UINT32 PTELocationPhysical, 
-                       PVOID PTELocationBase,
-                       PKPROCESSOR_STATE ProcessorState,
-                       UINT32 PageTableLocationPhysical)
+HalpAdjustTempPageTable(PVOID APStubLocation, 
+                        UINT32 PTELocationPhysical, 
+                        PVOID PTELocationBase,
+                        PKPROCESSOR_STATE ProcessorState,
+                        UINT32 PageTableLocationPhysical)
 {
     UNIMPLEMENTED;
 }
@@ -134,7 +134,7 @@ HalpWriteProcessorState(PVOID APStubLocation,
 {
     APSTUB APStub;
     PVOID APProcessorStateLoc;
-    APProcessorStateLoc = (PVOID)((ULONG_PTR)APStubLocation + ((ULONG_PTR)&APProcessorStateStruct - (ULONG_PTR)&APFinal) + ((ULONG_PTR)&APSpinupEnd - (ULONG_PTR)&APSpinup) + ((ULONG_PTR)&APEntryEnd  - (ULONG_PTR)&APEntry));
+    APProcessorStateLoc = (PVOID)((ULONG_PTR)APStubLocation + ((ULONG_PTR)&APProcessorStateStruct - (ULONG_PTR)&APSpinup) + ((ULONG_PTR)&APEntryEnd  - (ULONG_PTR)&APEntry));
     DPRINT1("HalpWriteProcessorState: Writing ProcessorState into the AP BootStub\n");
     APStub.StructAPCr0 = ProcessorState->SpecialRegisters.Cr0;
     APStub.StructAPCr2 = ProcessorState->SpecialRegisters.Cr2;
@@ -154,11 +154,11 @@ HalpWriteProcessorState(PVOID APStubLocation,
 }
 
 VOID
-HalpWriteTempPageTable(PVOID APStubLocation, 
-                       UINT32 PTELocationPhysical, 
-                       PVOID PTELocationBase,
-                       PKPROCESSOR_STATE ProcessorState,
-                       UINT32 PageTableLocationPhysical)
+HalpAdjustTempPageTable(PVOID APStubLocation, 
+                        UINT32 PTELocationPhysical, 
+                        PVOID PTELocationBase,
+                        PKPROCESSOR_STATE ProcessorState,
+                        UINT32 PageTableLocationPhysical)
 {
     PVOID PageTableValLoc;
     PHARDWARE_PTE PDE;
@@ -169,7 +169,7 @@ HalpWriteTempPageTable(PVOID APStubLocation,
     PDE[0].Valid = 1;
     PDE[0].Write = 1;
 
-    PageTableValLoc = (PVOID)((ULONG_PTR)APStubLocation + ((ULONG_PTR)&TempPageTableLoc - (ULONG_PTR)&APSpinup) + (ULONG_PTR)&APEntryEnd  - (ULONG_PTR)&APEntry);
+    PageTableValLoc = (PVOID)((ULONG_PTR)APStubLocation + ((ULONG_PTR)&TempPageTableLoc - (ULONG_PTR)&APEntry));
     RtlCopyMemory(PageTableValLoc, &PageTableLocationPhysical,  sizeof(UINT32));
 }
 #endif

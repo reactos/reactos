@@ -10,41 +10,53 @@
 
 PUBLIC _APSpinup
 PUBLIC _APSpinupEnd
-PUBLIC _APGDT
-PUBLIC _APIDT
 PUBLIC _APFinalOffset
-PUBLIC _TempPageTableLoc
+PUBLIC _APProcessorStateStruct
 EXTERN _APEntry:DWORD
 
 .code32
 _APSpinup:
     cli
 
-    mov ax, HEX(10)
-	mov ds, ax
-	mov ss, ax
-    mov fs, ax
-    mov gs, ax
+    /* Load segment registers from ProcessorState values */
+    mov eax, ([ebx] + [APSegSs - _APSpinup])
+    mov ss, eax
+    mov eax, ([ebx] + [APSegDs - _APSpinup])
+    mov ds, eax
+    mov eax, ([ebx] + [APSegEs - _APSpinup])
+    mov es, eax
+    mov eax, ([ebx] + [APSegGs - _APSpinup])
+    mov gs, eax
+    mov eax, ([ebx] + [APSegFs - _APSpinup])
+    mov fs, eax
 
-    mov eax, ([ebx] + [_TempPageTableLoc - _APSpinup])
+    /* Write CR registers with ProcessorState values */
+    xor eax, eax
+    mov eax, ([ebx] + [APCr2 - _APSpinup])
+    mov cr2, eax
+    mov eax, ([ebx] + [APCr3 - _APSpinup])
     mov cr3, eax
+    mov eax, ([ebx] + [APCr4 - _APSpinup])
+    mov cr4, eax
 
+    /* Load AP Stack*/
+    mov ecx, ([ebx] + [APEsp - _APSpinup])
+    mov esp, ecx
+
+    /* Load LoaderBlock and the location of KiSystemStartup */
+    xor eax, eax
+    xor ecx, ecx
+    mov eax, ([ebx] + [APEip - _APSpinup])
+    mov ecx, ([ebx] + [APEcx - _APSpinup])
+
+    /* Push Loaderblock onto the stack as paramter */
+    //TODO: Ask about this... It's inside ECX at this stage
+
+    /* make the jump to KiSystemStartup */
+    //TODO: Ask about this... It's inside EAX at this stage
+
+    /* APFinal will probably not be impelemented for x86 in final version */
     hlt
-
-    mov eax, cr0
-    or  eax, CR0_PG
-    mov cr0, eax
-
-    hlt
-
-    /* Load the Final GDT And IDT */
-#ifdef _USE_ML
-    lgdt fword ptr ([ebx] + [gdtptr - _APSpinup])
-    lidt fword ptr ([ebx] + [idtptr - _APSpinup])
-#else
-    lgdt ([ebx] + [gdtptr - _APSpinup])
-    lidt ([ebx] + [idtptr - _APSpinup])
-#endif
 
     .byte HEX(EA)
 _APFinalOffset:
@@ -53,23 +65,35 @@ _APFinalOffset:
     nop
     hlt
 
-
-/* Write the main GDT */
-.align 4 /* force 4-byte alignment */
-_APGDT:
-    .word HEX(0) /* Padding */
-gdtptr:
-    .word HEX(0) /* Limit */
-    .long HEX(0) /* Address */
-
-/* Write the main IDT */
-.align 4 /* force 4-byte alignment */
-_APIDT:
-    .word HEX(0) /* Padding */
-idtptr:
-    .word HEX(0) /* Limit */
-    .long HEX(0) /* Address */
-_TempPageTableLoc:
-    .long HEX(0)
+/* ProcessorState "Struct" */
+_APProcessorStateStruct:
+    APCr0:
+        .long HEX(0)
+    APCr2:
+        .long HEX(0)
+    APCr3:
+        .long HEX(0) 
+    APCr4:
+        .long HEX(0)   
+    APSegCs:
+        .long HEX(0)
+    APSegSs:
+        .long HEX(0)
+    APSegDs:
+        .long HEX(0)
+    APSegEs:
+        .long HEX(0)
+    APSegGs:
+        .long HEX(0)
+    APSegFs:
+        .long HEX(0)
+    APTr:
+        .long HEX(0)
+    APEip:
+        .long HEX(0)
+    APEsp:
+        .long HEX(0)
+    APEcx:
+        .long HEX(0)
 _APSpinupEnd:
 END

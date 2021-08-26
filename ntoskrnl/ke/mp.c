@@ -35,10 +35,10 @@ KeStartAllProcessors()
         SIZE_T APInfoSize = sizeof(APINFO);
         PHARDWARE_PTE PDE, BootStubPTE, GDTPTE, IDTPTE;
         APInfo = ExAllocatePool(NonPagedPool, APInfoSize);
-        PDE = ExAllocatePool(NonPagedPool, 100000); //TODO replace the silly size place holder
-        BootStubPTE = ExAllocatePool(NonPagedPool, sizeof(PHARDWARE_PTE)); //TODO replace the silly size place holder
-        GDTPTE = ExAllocatePool(NonPagedPool, sizeof(PHARDWARE_PTE)); //TODO replace the silly size place holder
-        IDTPTE = ExAllocatePool(NonPagedPool, sizeof(PHARDWARE_PTE)); //TODO replace the silly size place holder
+        PDE = ExAllocatePool(NonPagedPool, MM_PAGE_SIZE);
+        BootStubPTE = ExAllocatePool(NonPagedPool, sizeof(MM_PAGE_SIZE));
+        GDTPTE = ExAllocatePool(NonPagedPool, sizeof(MM_PAGE_SIZE));
+        IDTPTE = ExAllocatePool(NonPagedPool, sizeof(MM_PAGE_SIZE));
         PageTablePhysicalLoc = MmGetPhysicalAddress(PDE);
 
         /* Load the GDT */
@@ -100,6 +100,7 @@ KeStartAllProcessors()
         KiSetGdtEntry(KiGetGdtEntry(&APInfo->Gdt, KGDT_NMI_TSS), (ULONG_PTR)&APInfo->TssNMI,
             0xFFFF, TYPE_CODE, 0, 2);
         
+        /* Load some pagetable information for later use */
         BootStubPTEPhy = MmGetPhysicalAddress(BootStubPTE);
         ProcessorState.ContextFrame.Eax = (ULONG_PTR)BootStubPTE;
         ProcessorState.ContextFrame.Ecx = BootStubPTEPhy.QuadPart;

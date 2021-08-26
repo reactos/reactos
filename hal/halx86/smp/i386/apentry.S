@@ -11,6 +11,9 @@
 PUBLIC _APEntry
 PUBLIC _APEntryEnd
 PUBLIC _APJumpOffset
+PUBLIC _APGDT
+PUBLIC _APIDT
+PUBLIC _TempPageTableLoc
 EXTERN _APSpinupEnd:DWORD
 
 .code16
@@ -23,26 +26,8 @@ _APEntry:
     mov fs, ax
     mov gs, ax
 
-    /* bitshift 4 to get the address */
-    mov bx, cs
-    shl ebx, HEX(4)
-    add ebx, (gdt - _APEntry)
-    mov dword ptr cs:[gdtoffset - _APEntry], ebx
-
-    /* Load the GDT and blank IDT */
-#ifdef _USE_ML
-    lgdt fword ptr cs:[gdtptrtemp - _APEntry]
-#else
-    lgdt cs:[gdtptrtemp - _APEntry]
-#endif
-
     /* Disable paging, Just in case */
     xor eax, eax
-    mov cr0, eax
-
-    /* Enable Protected mode */
-    mov eax, cr0
-    or  eax, CR0_PE
     mov cr0, eax
 
     /* Load offset of APStub for use later */
@@ -51,6 +36,32 @@ _APEntry:
     shl ebx, HEX(4)
     add ebx, (_APEntryEnd - _APEntry)
 
+    /* Load temp page tables and enable paging */
+    mov eax, cs:[_TempPageTableLoc - _APEntry]
+    mov cr3, eax
+
+    mov eax, cr0
+    or  eax, CR0_PG
+    mov cr0, eax
+
+    /* Load GDT */
+    .byte HEX(66)
+#ifdef _USE_ML
+    lgdt fword ptr cs:[gdtptr - _APEntry]
+    .byte HEX(66)
+    lidt fword ptr cs:[idtptr - _APEntry]
+#else
+    lgdt cs:[gdtptr - _APEnry]
+    .byte HEX(66)
+    lidt cs:[idtptr - _APEnry]
+#endif
+
+    /* Enable Protected mode */
+    mov eax, cr0
+    or  eax, CR0_PE
+    mov cr0, eax
+
+    .byte HEX(66)
     .byte HEX(EA)
 _APJumpOffset:
     .word HEX(0)
@@ -58,43 +69,23 @@ _APJumpOffset:
 
     hlt
 
-/* Varibles below this line */
-gdtptrtemp:
-    .word (gdtend - gdt - 1)
-gdtoffset:
-    .long gdt - _APEntry
-gdt:
-    /* NULL Descriptor */
-    .word HEX(0000)
-    .word HEX(0000)
-    .word HEX(0000)
-    .word HEX(0000)
+/* Write the main GDT */
+.align 4 /* force 4-byte alignment */
+_APGDT:
+    .word HEX(0) /* Padding */
+gdtptr:
+    .word HEX(0) /* Limit */
+    .long HEX(0) /* Address */
 
-     /* 32-bit flat CS */
-    .word HEX(FFFF)
-    .word HEX(0000)
-    .word HEX(9A00)
-    .word HEX(00CF)
-
-     /* 32-bit flat DS */
-    .word HEX(FFFF)
-    .word HEX(0000)
-    .word HEX(9200)
-    .word HEX(00CF)
-
-     /* 16-bit real mode CS */
-    .word HEX(FFFF)
-    .word HEX(0000)
-    .word HEX(9E00)
-    .word HEX(0000)
-
-     /* 16-bit real mode DS */
-    .word HEX(FFFF)
-    .word HEX(0000)
-    .word HEX(9200)
-    .word HEX(0000)
-gdtend:
-    hlt
+/* Write the main IDT */
+.align 4 /* force 4-byte alignment */
+_APIDT:
+    .word HEX(0) /* Padding */
+idtptr:
+    .word HEX(0) /* Limit */
+    .long HEX(0) /* Address */
+_TempPageTableLoc:
+    .long HEX(0)
 _APEntryEnd:
 .endcode16
 END
