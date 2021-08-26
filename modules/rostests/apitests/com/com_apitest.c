@@ -488,6 +488,25 @@ static KNOWN_INTERFACE KnownInterfaces[] =
     { ID_NAME(IID_IPinnedListOld),              TRUE },
     { ID_NAME(IID_IPinnedList),                 TRUE },
     { ID_NAME(IID_IAttachmentExecute),          TRUE },
+
+    // + MMC stuff
+    { ID_NAME(IID_IComponentData),              TRUE },
+    { ID_NAME(IID_IConsole),                    TRUE },
+    { ID_NAME(IID_IConsole2),                   TRUE },
+    { ID_NAME(IID_IConsoleNameSpace),           TRUE },
+    { ID_NAME(IID_IConsoleNameSpace2),          TRUE },
+    { ID_NAME(IID_IPropertySheetCallback),      TRUE },
+    { ID_NAME(IID_IPropertySheetProvider),      TRUE },
+    { ID_NAME(IID_IExtendPropertySheet),        TRUE },
+    { ID_NAME(IID_IExtendPropertySheet2),       TRUE },
+    { ID_NAME(IID_IHeaderCtrl),                 TRUE },
+    { ID_NAME(IID_IToolbar),                    TRUE },
+    { ID_NAME(IID_IImageList_mmc),              TRUE },
+    { ID_NAME(IID_IConsoleVerb),                TRUE },
+    { ID_NAME(IID_ISnapInAbout),                TRUE },
+    // - MMC stuff
+
+    { ID_NAME(IID_ICertificateManager),         TRUE },
 };
 static const INT KnownInterfaceCount = RTL_NUMBER_OF(KnownInterfaces);
 
