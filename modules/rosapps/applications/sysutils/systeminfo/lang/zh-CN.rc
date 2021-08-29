@@ -14,9 +14,9 @@ IDS_USAGE, "SYSTEMINFO [/S system [/U username [/P [password]]]] [/FO format] [/
   /P      [password]       指定指定用户上下文的密码。如果省略则\n\
                            提示输入。\n\n\
   /FO     format           指定显示结果的格式。\n\
-                           有效值: ""TABLE"", ""LIST"", ""CSV""。\n\n\
+                           有效值：“TABLE”，“LIST”，“CSV”。\n\n\
   /NH                      指定“列标题”不应该在输出中显示。\n\
-                           只对 ""TABLE"" 和 ""CSV"" 格式有效。\n\n\
+                           只对“TABLE”和“CSV”格式有效。\n\n\
   /?                       显示此帮助/用法。\n\n\
 示例:\n\
   SYSTEMINFO\n\

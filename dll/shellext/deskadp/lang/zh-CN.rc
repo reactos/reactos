@@ -12,13 +12,13 @@ BEGIN
     LTEXT "", IDC_ADAPTERNAME, 40, 17, 190, 20, SS_NOPREFIX
     PUSHBUTTON "属性(&P)", IDC_ADAPTERPROPERTIES, 177, 33, 59, 14
     GROUPBOX "适配器信息", -1, 7, 56, 237, 75
-    LTEXT "芯片类型:", -1, 13, 68, 58, 8
+    LTEXT "芯片类型：", -1, 13, 68, 58, 8
     LTEXT "", IDC_CHIPTYPE, 71, 68, 160, 8, SS_NOPREFIX
-    LTEXT "DAC 类型:", -1, 13, 80, 58, 8
+    LTEXT "DAC 类型：", -1, 13, 80, 58, 8
     LTEXT "", IDC_DACTYPE, 71, 80, 160, 8, SS_NOPREFIX
-    LTEXT "内存大小:", -1, 13, 92, 58, 8
+    LTEXT "内存大小：", -1, 13, 92, 58, 8
     LTEXT "", IDC_MEMORYSIZE, 71, 92, 160, 8, SS_NOPREFIX
-    LTEXT "适配器字符串:", -1, 13, 104, 58, 8
+    LTEXT "适配器字符串：", -1, 13, 104, 58, 8
     LTEXT "", IDC_ADAPTERSTRING, 71, 104, 160, 8, SS_NOPREFIX
     LTEXT "BIOS 信息:", -1, 13, 116, 58, 8
     LTEXT "", IDC_BIOSINFORMATION, 71, 116, 160, 8, SS_NOPREFIX
@@ -43,8 +43,8 @@ BEGIN
     IDES_REFRESHRATEFMT "%d 赫兹"
     IDS_4BPP "16 色"
     IDS_8BPP "256 色"
-    IDS_15BPP "增强色 (15 位)"
-    IDS_16BPP "增强色 (16 位)"
-    IDS_24BPP "真彩色 (24 位)"
-    IDS_32BPP "真彩色 (32 位)"
+    IDS_15BPP "增强色（15 位）"
+    IDS_16BPP "增强色（16 位）"
+    IDS_24BPP "真彩色（24 位）"
+    IDS_32BPP "真彩色（32 位）"
 END

@@ -4,6 +4,7 @@
  * FILE:       dll/win32/netcfgx/lang/zh-CN.rc
  * PURPOSE:    Chinese (Simplified) Language Resources
  * TRANSLATOR: Elton Chung aka MfldElton <elton328@gmail.com>
+               Wu Haotian 2022 <rigoligo03@gmail.com>
  */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
@@ -13,22 +14,22 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "常规"
 FONT 9, "宋体"
 BEGIN
-    LTEXT "你可以得到如果您的网络支持此功能自动分配的 IP 设置。 否则，您需要询问网络管理员以获得合适的 IP 设置。", -1, 9, 9, 235, 27
+    LTEXT "如果您的网络支持自动分配 IP 地址，则可以自动获取 IP 地址。 否则，您需要询问网络管理员来获得合适的 IP 设置。", -1, 9, 9, 235, 27
     CONTROL "自动取得IP 地址", IDC_USEDHCP, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 43, 210, 12
     GROUPBOX "", -1, 9, 61, 228, 70, BS_GROUPBOX
-    CONTROL "使用下列的IP 地址(&U):", IDC_NODHCP, "BUTTON", BS_AUTORADIOBUTTON, 14, 59, 120, 12
-    LTEXT "IP 地址:", -1, 14, 75, 135, 8
+    CONTROL "使用下列的IP 地址(&U)：", IDC_NODHCP, "BUTTON", BS_AUTORADIOBUTTON, 14, 59, 120, 12
+    LTEXT "IP 地址：", -1, 14, 75, 135, 8
     CONTROL "", IDC_IPADDR, "SysIPAddress32", WS_TABSTOP, 144, 75 - 2, 85, 12
-    LTEXT "子网掩码:", -1, 14, 90, 135, 8
+    LTEXT "子网掩码：", -1, 14, 90, 135, 8
     CONTROL "", IDC_SUBNETMASK, "SysIPAddress32", WS_TABSTOP, 144, 90 - 2, 85, 12
-    LTEXT "网关:", -1, 14, 105, 135, 8
+    LTEXT "网关：", -1, 14, 105, 135, 8
     CONTROL "", IDC_DEFGATEWAY, "SysIPAddress32", WS_TABSTOP, 144, 105 - 2, 85, 12
     CONTROL "自动获得 DNS 服务器地址", IDC_AUTODNS, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 139, 210, 12
     GROUPBOX "", -1, 9, 157, 228, 47, BS_GROUPBOX
-    CONTROL "使用以下的 DNS 伺服器位址(&U)", IDC_FIXEDDNS, "BUTTON", BS_AUTORADIOBUTTON, 14, 155, 152, 12
-    LTEXT "首选的 DNS 服务器:", -1, 14, 171, 135, 8
+    CONTROL "使用以下的 DNS 服务器地址(&U)", IDC_FIXEDDNS, "BUTTON", BS_AUTORADIOBUTTON, 14, 155, 152, 12
+    LTEXT "首选的 DNS 服务器：", -1, 14, 171, 135, 8
     CONTROL "", IDC_DNS1, "SysIPAddress32", WS_TABSTOP, 144, 171 - 2, 85, 12
-    LTEXT " DNS 服务器:", -1, 14, 186, 135, 8
+    LTEXT " DNS 服务器：", -1, 14, 186, 135, 8
     CONTROL "", IDC_DNS2, "SysIPAddress32", WS_TABSTOP, 144, 186 - 2, 85, 12
     PUSHBUTTON "高级(&A)", IDC_ADVANCED, 186, 209, 50, 14, WS_TABSTOP
 END
@@ -42,15 +43,15 @@ BEGIN
     CONTROL "自动专用 IP 地址(&T)", IDC_USEDHCP, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 40, 210, 12
     GROUPBOX "", -1, 9, 55, 228, 80, BS_GROUPBOX
     CONTROL "用户配置(&S)", IDC_NODHCP, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 55, 70, 12
-    LTEXT "IP 地址(&I):", -1, 14, 75, 135, 8
+    LTEXT "IP 地址(&I)：", -1, 14, 75, 135, 8
     CONTROL "", IDC_IPADDR, "SysIPAddress32", WS_TABSTOP, 144, 75, 85, 12
-    LTEXT "子网掩码(&U):", -1, 14, 95, 135, 8
+    LTEXT "子网掩码(&U)：", -1, 14, 95, 135, 8
     CONTROL "", IDC_SUBNETMASK, "SysIPAddress32", WS_TABSTOP, 144, 95, 85, 12
-    LTEXT "网关(&D):", -1, 14, 115, 135, 8
+    LTEXT "网关(&D)：", -1, 14, 115, 135, 8
     CONTROL "", IDC_DEFGATEWAY, "SysIPAddress32", WS_TABSTOP, 144, 115, 85, 12
-    LTEXT "首选的 DNS 服务器(&P):", -1, 14, 150, 135, 8
+    LTEXT "首选的 DNS 服务器(&P)：", -1, 14, 150, 135, 8
     CONTROL "", IDC_DNS1, "SysIPAddress32", WS_TABSTOP, 144, 150, 85, 12
-    LTEXT "备用的 DNS 服务器(&A):", -1, 14, 165, 180, 8
+    LTEXT "备用的 DNS 服务器(&A)：", -1, 14, 165, 180, 8
     CONTROL "", IDC_DNS2, "SysIPAddress32", WS_TABSTOP, 144, 165, 85, 12
 END
 
@@ -64,14 +65,14 @@ BEGIN
     PUSHBUTTON "添加...", IDC_IPADD, 60, 75, 50, 14, WS_TABSTOP
     PUSHBUTTON "编辑...", IDC_IPMOD, 120, 75, 50, 14, WS_TABSTOP
     PUSHBUTTON "删除", IDC_IPDEL, 180, 75, 50, 14, WS_TABSTOP
-    GROUPBOX "默认网关:", -1, 5, 100, 240, 90
+    GROUPBOX "默认网关：", -1, 5, 100, 240, 90
     CONTROL "", IDC_GWLIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 15, 110, 215, 55
     PUSHBUTTON "添加...", IDC_GWADD, 60, 170, 50, 14, WS_TABSTOP
     PUSHBUTTON "编辑...", IDC_GWMOD, 120, 170, 50, 14, WS_TABSTOP
     PUSHBUTTON "删除", IDC_GWDEL, 180, 170, 50, 14, WS_TABSTOP
     GROUPBOX "", -1, 5, 200, 240, 30
     CHECKBOX "自动跃点计数", IDC_AUTOMETRIC, 9, 200, 90, 12, BS_AUTOCHECKBOX | WS_TABSTOP
-    LTEXT "接口跃点数:", -1, 15, 215, 90, 12
+    LTEXT "接口跃点数：", -1, 15, 215, 90, 12
     EDITTEXT IDC_METRIC, 110, 212, 50, 12, WS_TABSTOP | ES_NUMBER
 END
 
@@ -81,7 +82,7 @@ CAPTION "DNS"
 FONT 9, "宋体"
 BEGIN
     LISTBOX IDC_DNSADDRLIST, 5, 17, 180, 50, LBS_NOTIFY
-    LTEXT "DNS 服务器地址,按使用顺序排列(&N):", -1, 5, 5, 180, 12
+    LTEXT "DNS 服务器地址,按使用顺序排列(&N)：", -1, 5, 5, 180, 12
     PUSHBUTTON "向上", IDC_DNSADDRUP, 190, 25, 50, 14, WS_TABSTOP
     PUSHBUTTON "向下", IDC_DNSADDRDOWN, 190, 45, 50, 14, WS_TABSTOP
     PUSHBUTTON "添加...(&A)", IDC_DNSADDRADD, 15, 69, 50, 14, WS_TABSTOP
@@ -90,14 +91,14 @@ BEGIN
     LTEXT "以下三种设置被应用到所有连接启用 TCP/IP。解析不合格的名称：", -1, 5, 90, 220, 24
     CONTROL "附加主要的和连接特定的 DNS 后缀(&P)", IDC_PRIMSUFFIX, "BUTTON", BS_AUTORADIOBUTTON, 5, 110, 220, 12
     CHECKBOX "附加主 DNS 后缀的父后缀(&X)", IDC_TOPPRIMSUFFIX, 15, 125, 220, 12, BS_AUTOCHECKBOX | WS_TABSTOP
-    CONTROL "附加这些 DNS 后缀 (按顺序)(&H):", IDC_SELSUFFIX, "BUTTON", BS_AUTORADIOBUTTON, 5, 140, 220, 12
+    CONTROL "附加这些 DNS 后缀 (按顺序)(&H)：", IDC_SELSUFFIX, "BUTTON", BS_AUTORADIOBUTTON, 5, 140, 220, 12
     LISTBOX IDC_DNSSUFFIXLIST, 5, 155, 180, 50, LBS_NOTIFY
     PUSHBUTTON "上", IDC_DNSSUFFIXUP, 190, 163, 50, 14, WS_TABSTOP
     PUSHBUTTON "下", IDC_DNSSUFFIXDOWN, 190, 180, 50, 14, WS_TABSTOP
     PUSHBUTTON "添加...(&A)", IDC_DNSSUFFIXADD, 15, 207, 50, 14, WS_TABSTOP
     PUSHBUTTON "编辑...(&E)", IDC_DNSSUFFIXMOD, 75, 207, 50, 14, WS_TABSTOP
     PUSHBUTTON "删除(&V)", IDC_DNSSUFFIXDEL, 135, 207, 50, 14, WS_TABSTOP
-    LTEXT "用于此连接的 DNS 后缀(&S):", -1, 5, 228, 110, 14
+    LTEXT "用于此连接的 DNS 后缀(&S)：", -1, 5, 228, 110, 14
     EDITTEXT IDC_SUFFIX, 120, 225, 100, 12, WS_TABSTOP
     CHECKBOX "在 DNS 中注册此连接的地址(&R)", IDC_REGSUFFIX, 15, 240, 190, 12, BS_AUTOCHECKBOX | WS_TABSTOP
     CHECKBOX "在 DNS 注册中使用此连接的 DNS 后缀(&U)", IDC_USESUFFIX, 15, 255, 220, 12, BS_AUTOCHECKBOX | WS_TABSTOP
@@ -111,7 +112,7 @@ BEGIN
     LISTBOX IDC_OPTLIST, 5, 30, 230, 70
     LTEXT "可选设置(&O)", -1, 5, 15, 130, 12
     PUSHBUTTON "属性(&P)", IDC_OPTPROP, 165, 100, 70, 14, WS_TABSTOP
-    GROUPBOX "描述:", -1, 5, 120, 240, 70
+    GROUPBOX "描述：", -1, 5, 120, 240, 70
     LTEXT "", IDC_OPTDESC, 15, 130, 220, 33
 END
 
@@ -121,8 +122,8 @@ CAPTION "TCP/IP 地址"
 FONT 9, "宋体"
 BEGIN
     CONTROL "", IDC_IPADDR, "SysIPAddress32", WS_TABSTOP, 96, 15, 85, 12
-    LTEXT "IP 地址:", -1, 5, 15, 70, 12
-    LTEXT "子网掩码:", -1, 5, 30, 70, 12
+    LTEXT "IP 地址：", -1, 5, 15, 70, 12
+    LTEXT "子网掩码：", -1, 5, 30, 70, 12
     CONTROL "", IDC_SUBNETMASK, "SysIPAddress32", WS_TABSTOP, 96, 30, 85, 12
     DEFPUSHBUTTON "确定", IDC_OK, 50, 50, 50, 14, WS_TABSTOP
     PUSHBUTTON "取消", IDCANCEL, 110, 50, 50, 14, WS_TABSTOP
@@ -134,9 +135,9 @@ CAPTION "TCP/IP 网关地址"
 FONT 9, "宋体"
 BEGIN
     CONTROL "", IDC_IPADDR, "SysIPAddress32", WS_TABSTOP, 96, 15, 85, 12
-    LTEXT "网关:", -1, 5, 15, 70, 12
+    LTEXT "网关：", -1, 5, 15, 70, 12
     CHECKBOX "自动跃点计数", IDC_USEMETRIC, 15, 30, 190, 12, BS_AUTOCHECKBOX | WS_TABSTOP
-    LTEXT "公制(&M):", IDC_METRICTXT, 5, 45, 45, 12, WS_DISABLED
+    LTEXT "权值(&M)：", IDC_METRICTXT, 5, 45, 45, 12, WS_DISABLED
     EDITTEXT IDC_METRIC, 100, 45, 50, 12, WS_TABSTOP | ES_NUMBER | WS_DISABLED
     DEFPUSHBUTTON "确定", IDC_OK, 50, 60, 50, 14, WS_TABSTOP
     PUSHBUTTON "取消", IDCANCEL, 110, 60, 50, 14, WS_TABSTOP
@@ -148,7 +149,7 @@ CAPTION "TCP/IP DNS Server"
 FONT 9, "宋体"
 BEGIN
     CONTROL "", IDC_IPADDR, "SysIPAddress32", WS_TABSTOP, 5, 25, 85, 12
-    LTEXT "DNS 服务器:", -1, 5, 10, 120, 12
+    LTEXT "DNS 服务器：", -1, 5, 10, 120, 12
     PUSHBUTTON "", IDC_OK, 50, 50, 50, 14, WS_TABSTOP
     PUSHBUTTON "取消", IDCANCEL, 110, 50, 50, 14, WS_TABSTOP
 END
@@ -159,7 +160,7 @@ CAPTION "TCP/IP 域后缀"
 FONT 9, "宋体"
 BEGIN
     EDITTEXT IDC_SUFFIX, 5, 25, 190, 12, WS_TABSTOP
-    LTEXT "域后缀:", -1, 5, 10, 120, 12
+    LTEXT "域后缀：", -1, 5, 10, 120, 12
     PUSHBUTTON "", IDC_OK, 50, 50, 50, 14, WS_TABSTOP
     PUSHBUTTON "取消", IDCANCEL, 110, 50, 50, 14, WS_TABSTOP
 END
@@ -169,7 +170,7 @@ STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "TCP/IP 筛选"
 FONT 9, "宋体"
 BEGIN
-    CHECKBOX "启用 TCP/IP 筛选 （所有适配器）", IDC_USE_FILTER, 15, 5, 190, 12, BS_AUTOCHECKBOX | WS_TABSTOP
+    CHECKBOX "启用 TCP/IP 筛选（所有适配器）", IDC_USE_FILTER, 15, 5, 190, 12, BS_AUTOCHECKBOX | WS_TABSTOP
     GROUPBOX "", -1, 5, 30, 90, 150
     CONTROL "全部允许", IDC_TCP_ALLOW_ALL, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 15, 30, 70, 12
     CONTROL "仅允许", IDC_TCP_RESTRICT, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 15, 44, 70, 12
@@ -205,34 +206,34 @@ END
 
 IDD_NET_PROPERTY_DLG DIALOGEX 0, 0, 252, 218
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Advanced"
-FONT 8, "MS Shell Dlg"
+CAPTION "高级选项"
+FONT 9, "宋体"
 BEGIN
-    LTEXT "The following properties are available for this network adapter. Click the property you want to change on the left, and then select its value on the right.", -1, 7, 7, 218, 24, WS_GROUP
-    LTEXT "&Property:", -1, 7, 37, 60, 8, WS_GROUP
+    LTEXT "该网络适配器具有如下属性。在左侧单击您想要更改的属性，然后在右侧选择它的值。", -1, 7, 7, 218, 24, WS_GROUP
+    LTEXT "属性(&P)：", -1, 7, 37, 60, 8, WS_GROUP
     LISTBOX IDC_PROPERTY_NAME, 7, 48, 124, 124, LBS_STANDARD | WS_TABSTOP
-    LTEXT "&Value:", -1, 151, 37, 60, 8, WS_GROUP
+    LTEXT "值（&V）：", -1, 151, 37, 60, 8, WS_GROUP
     EDITTEXT IDC_PROPERTY_VALUE_EDIT, 153, 48, 92, 14, ES_LEFT | ES_AUTOHSCROLL | WS_BORDER | WS_TABSTOP
     CONTROL "", IDC_PROPERTY_VALUE_UPDN, "msctls_updown32", UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS | UDS_NOTHOUSANDS | WS_BORDER, 232, 48, 12, 12
     COMBOBOX IDC_PROPERTY_VALUE_LIST, 153, 48, 92, 64, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
     AUTORADIOBUTTON "", IDC_PROPERTY_PRESENT, 141, 50, 8, 10, BS_TOP | WS_GROUP
-    AUTORADIOBUTTON "&Not Present", IDC_PROPERTY_NOT_PRESENT, 141, 68, 103, 10, BS_TOP
+    AUTORADIOBUTTON "不存在(&N)", IDC_PROPERTY_NOT_PRESENT, 141, 68, 103, 10, BS_TOP
 END
 
 STRINGTABLE
 BEGIN
     IDS_NET_CONNECT "网络连接"
-    IDS_NO_IPADDR_SET "适配器需要至少一个 IP 地址。请输入一个。"
-    IDS_NO_SUBMASK_SET "您输入缺少及其子网掩码地址。请添加子网掩码。"
-    IDS_TCPFILTERDESC "TCP/IP 筛选允许您控制到达您的计算机的 TCP/IP 网络通信的类型。"
-    IDS_TCPFILTER "TCP/IP 筛选"
+    IDS_NO_IPADDR_SET "适配器需要至少一个 IP 地址。请添加 IP 地址。"
+    IDS_NO_SUBMASK_SET "您输入的地址缺少子网掩码。请添加子网掩码。"
+    IDS_TCPFILTERDESC "TCP/IP 筛选器可控制到达计算机的 TCP/IP 网络通信的类型。"
+    IDS_TCPFILTER "TCP/IP 筛选器"
     IDS_IPADDR "IP 地址"
     IDS_SUBMASK "子网掩码"
     IDS_GATEWAY "网关"
-    IDS_METRIC "公制"
+    IDS_METRIC "权值"
     IDS_DHCPACTIVE "启用 DHCP"
     IDS_AUTOMATIC "自动"
-    IDS_NOITEMSEL "您没有选择一个项目。先选择一个。"
+    IDS_NOITEMSEL "没有选择项目。先选择一个。"
     IDS_TCPIP "ReactOS-TCP/IP"
     IDS_ADD "添加"
     IDS_MOD "确定"
@@ -241,12 +242,12 @@ BEGIN
     IDS_IP_PROTO "IP 协议"
     IDS_PORT_RANGE "端口数目必须大于 0 且小于 65536。请输入此范围内的数字。"
     IDS_PROT_RANGE "协议编号必须大于 0 且小于 256。请输入此范围内的数字。"
-    IDS_DUP_NUMBER "您试着添加的数量已在列表中。请输入一个不同的数字。"
-    IDS_DISABLE_FILTER "禁用这个全局 TCP/IP 设置将影响所有适配器。"
-    IDS_NO_SUFFIX "搜索方法的当前设置，需要至少一个 DNS 后缀。请输入一个或改变设置。"
-    IDS_DOMAIN_SUFFIX "域后缀不是一个有效的后缀。"
-    IDS_DNS_SUFFIX "DNS 域名 ""%s"" 不是有效的 DNS 名称。"
-    IDS_DUP_SUFFIX "已经位于此列表中的 DNS 后缀。"
-    IDS_DUP_IPADDR "IP 地址已在列表中。"
-    IDS_DUP_GW "默认网关已在列表中。"
+    IDS_DUP_NUMBER "您试图添加的编号已在列表中。请输入一个不同的数字。"
+    IDS_DISABLE_FILTER "禁用此全局 TCP/IP 设置将影响所有适配器。"
+    IDS_NO_SUFFIX "当前设置的搜索方法至少需要一个 DNS 后缀。请添加 DNS 后缀或改变设置。"
+    IDS_DOMAIN_SUFFIX "域后缀无效。"
+    IDS_DNS_SUFFIX "DNS 域名“%s”无效。"
+    IDS_DUP_SUFFIX "此 DNS 后缀已经位于列表中。"
+    IDS_DUP_IPADDR "此 IP 地址已在列表中。"
+    IDS_DUP_GW "此默认网关已在列表中。"
 END

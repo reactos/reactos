@@ -1,5 +1,6 @@
 /* Simplified Chinese translation by Henry Tang Ih 2016 (henrytang2@hotmail.com) */
 /* Translation has been changed by Luo Yufan 2018 <njlyf2011@hotmail.com> */
+/* Improved by Wu Haotian <rigoligo03@gmail.com> 2021 */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
@@ -13,7 +14,7 @@ Usage: DISKPART [/S filename] [/T timeout] [/?]\n\n\
 /T <超时>\t超时秒数，防止 DiskPart 使用重叠。\n\
 /?\t\t显示此帮助消息。\n\n"
     IDS_APP_LICENSE "基于 GNU GPLv2 许可证发行\n"
-    IDS_APP_CURR_COMPUTER "在计算机上: %s\n\n"
+    IDS_APP_CURR_COMPUTER "所在计算机：%s\n\n"
     IDS_APP_LEAVING "\n正在离开 DiskPart ......\n"
     IDS_APP_PROMPT "DISKPART> "
 END
@@ -45,7 +46,7 @@ END
 /* Detail header titles */
 STRINGTABLE
 BEGIN
-    IDS_LIST_DISK_HEAD "\n  磁盘 ###   状态      大小     可用    Dyn  Gpt\n"
+    IDS_LIST_DISK_HEAD "\n  磁盘 ###   状态      大小     可用    活动 Gpt\n"
     IDS_LIST_DISK_LINE "  --------  ----------  -------  -------  ---  ---\n"
     IDS_LIST_DISK_FORMAT "%c %7lu   %-10s  %4I64u %-2s  %4I64u %-2s   %1s    %1s\n"
     IDS_LIST_PARTITION_HEAD "\n     分区           类型          大小     偏移量\n"
@@ -85,7 +86,7 @@ BEGIN
     IDS_STATUS_YES "是"
     IDS_STATUS_NO "否"
     IDS_STATUS_DISK_HEALTHY "健康"
-    IDS_STATUS_DISK_SICK "生病"
+    IDS_STATUS_DISK_SICK "欠佳"
     IDS_STATUS_UNAVAILABLE "不可用"
     IDS_STATUS_ONLINE "联机"
     IDS_STATUS_OFFLINE "脱机"
@@ -95,7 +96,7 @@ END
 /* CMD Messages for commands */
 STRINGTABLE
 BEGIN
-    IDS_MSG_ARG_SYNTAX_ERROR "为此命令指定的参数不是有效的。\n有关命令类型的详细信息:"
+    IDS_MSG_ARG_SYNTAX_ERROR "为此命令指定的参数无效。\n有关命令类型的详细信息："
 END
 
 /* Help Command Descripions */
@@ -103,10 +104,10 @@ STRINGTABLE
 BEGIN
     IDS_HELP_CMD_DESC_ACTIVE "ACTIVE\t\t- 将所选分区标记为活动。\n"
     IDS_HELP_CMD_DESC_ADD "ADD\t\t- 将镜像添加到一个简单卷。\n"
-    IDS_HELP_CMD_DESC_ASSIGN "ASSIGN\t\t- 为所选的卷分配一个驱动器号或装入点。\n"
-    IDS_HELP_CMD_DESC_ATTACH "ATTACH\t\t- 附加虚拟磁盘文件。\n"
+    IDS_HELP_CMD_DESC_ASSIGN "ASSIGN\t\t- 为所选的卷分配一个驱动器号或挂载点。\n"
+    IDS_HELP_CMD_DESC_ATTACH "ATTACH\t\t- 附加到虚拟磁盘文件。\n"
     IDS_HELP_CMD_DESC_ATTRIBUTES "ATTRIBUTES\t- 操纵卷或磁盘的属性。\n"
-    IDS_HELP_CMD_DESC_AUTOMOUNT "AUTOMOUNT\t- 启用和禁用基本卷的自动装入。\n"
+    IDS_HELP_CMD_DESC_AUTOMOUNT "AUTOMOUNT\t- 启用和禁用基本卷的自动挂载。\n"
     IDS_HELP_CMD_DESC_BREAK "BREAK\t\t- 中断镜像集。\n"
     IDS_HELP_CMD_DESC_CLEAN "CLEAN\t\t- 清除配置信息或所有信息，关闭\n\t\t 磁盘。\n"
     IDS_HELP_CMD_DESC_COMPACT "COMPACT\t\t- 尝试减少文件的物理大小。\n"
@@ -128,24 +129,24 @@ BEGIN
     IDS_HELP_CMD_DESC_MERGE "MERGE\t\t- 将子磁盘与父磁盘合并。\n"
     IDS_HELP_CMD_DESC_OFFLINE "OFFLINE\t\t- 将当前标记为脱机的磁盘设置为联机。\n"
     IDS_HELP_CMD_DESC_ONLINE "ONLINE\t\t- 将当前标记为联机的磁盘设置为脱机。\n"
-    IDS_HELP_CMD_DESC_RECOVER "RECOVER\t\t- 刷新无效包中的所有磁盘的状态，\n\t\t  并重新同步具有过时丛或奇偶校\n\t\t  验数据的镜像卷和 RAID5 卷。\n"
+    IDS_HELP_CMD_DESC_RECOVER "RECOVER\t\t- 刷新无效包中的所有磁盘的状态，\n\t\t  并重新同步具有过期块或奇偶校\n\t\t  验数据的镜像卷和 RAID5 卷。\n"
     IDS_HELP_CMD_DESC_REM "REM\t\t- 无作用。这用来注释脚本。\n"
     IDS_HELP_CMD_DESC_REMOVE "REMOVE\t\t- 删除驱动器号或指派的装载点。\n"
-    IDS_HELP_CMD_DESC_REPAIR "REPAIR\t\t- 用失败的成员修复 RAID 5 卷。\n"
+    IDS_HELP_CMD_DESC_REPAIR "REPAIR\t\t- 修复一个含有损坏成员的 RAID 5 卷。\n"
     IDS_HELP_CMD_DESC_RESCAN "RESCAN\t\t- 重新扫描计算机，查找磁盘和卷。\n"
-    IDS_HELP_CMD_DESC_RETAIN "RETAIN\t\t- 放置在一个简单卷下的一个保留的分区。\n"
+    IDS_HELP_CMD_DESC_RETAIN "RETAIN\t\t- 在一个简单卷下放置一个保留分区。\n"
     IDS_HELP_CMD_DESC_SAN "SAN\t\t- 显示或设置当前引导 OS 的 SAN 策略。\n"
-    IDS_HELP_CMD_DESC_SELECT "SELECT\t\t- 将重点转移到一个对象。\n"
+    IDS_HELP_CMD_DESC_SELECT "SELECT\t\t- 将焦点转移到一个对象。\n"
     IDS_HELP_CMD_DESC_SETID "SETID\t\t- 更改分区类型。\n"
     IDS_HELP_CMD_DESC_SHRINK "SHRINK\t\t- 减小所选卷的大小。\n"
-    IDS_HELP_CMD_DESC_UNIQUEID "UNIQUEID\t- 显示或设置 GUID 分区表 (GPT) 的标识符\n\t\t  或主引导记录 (MBR) 磁盘的签名。"
+    IDS_HELP_CMD_DESC_UNIQUEID "UNIQUEID\t- 显示或设置 GUID 分区表（GPT）的标识符\n\t\t  或主引导记录（MBR）磁盘的签名。"
 END
 
 /* Common Error Messages */
 STRINGTABLE
 BEGIN
-    IDS_ERROR_MSG_NO_SCRIPT "错误开始的脚本: %s\n"
-    IDS_ERROR_MSG_BAD_ARG "错误处理参数: %s\n"
+    IDS_ERROR_MSG_NO_SCRIPT "打开脚本时出错：%s\n"
+    IDS_ERROR_MSG_BAD_ARG "处理参数时出错：%s\n"
     IDS_ERROR_INVALID_ARGS "无效的参数\n"
 END
 

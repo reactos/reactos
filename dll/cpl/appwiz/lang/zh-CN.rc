@@ -3,8 +3,9 @@
  *
  * TRANSLATOR:  Jingjing Fu (jingjingf AT 188.com)
  *              Luo Yufan (njlyf2011@hotmail.com)
+ *              Wu Haotian (rigoligo03@gmail.com)
  * CREATED:     2009-04-25
- * UPDATED:     2018-12-03
+ * UPDATED:     2021-08-24
  */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
@@ -94,5 +95,5 @@ BEGIN
     IDS_NO_MEMORY "没有可以分配的内存空间。"
     IDS_NO_DIRECTORY "没有指定路径。"
     IDS_INVALID_PATH "指定的路径无效。"
-    IDS_INVALID_NAME "The shortcut name you entered either contained characters that are invalid for file names or was too long."
+    IDS_INVALID_NAME "您输入的快捷方式名称过长，或含有不能在文件名中使用的字符。"
 END

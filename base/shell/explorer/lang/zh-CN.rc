@@ -5,6 +5,7 @@
  * PURPOSE:    Simplified Chinese Language File for ReactOS Explorer-New
  * TRANSLATOR: Song Fuchang <sfc_0@yahoo.com.cn>
                Luo Yufan <njlyf2011@hotmail.com>
+               Wu Haotian <rigoligo03@gmail.com>
  */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
@@ -37,15 +38,15 @@ BEGIN
         MENUITEM "", -1, MFT_SEPARATOR
         POPUP "程序(&P)", IDM_PROGRAMS
         BEGIN
-            MENUITEM "(空)", -1, MFT_STRING, MFS_GRAYED
+            MENUITEM "（空）", -1, MFT_STRING, MFS_GRAYED
         END
         POPUP "收藏夹(&A)", IDM_FAVORITES
         BEGIN
-            MENUITEM "(空)", -1, MFT_STRING, MFS_GRAYED
+            MENUITEM "（空）", -1, MFT_STRING, MFS_GRAYED
         END
         POPUP "文档(&D)", IDM_DOCUMENTS
         BEGIN
-            MENUITEM "(空)", -1, MFT_STRING, MFS_GRAYED
+            MENUITEM "（空）", -1, MFT_STRING, MFS_GRAYED
         END
         POPUP "设置(&S)", IDM_SETTINGS
         BEGIN
@@ -149,7 +150,7 @@ BEGIN
     LTEXT            "", IDC_STATIC, 7, 51, 258, 1, NOT WS_GROUP
     AUTOCHECKBOX     "不要在启动时执行此检查(&D)", IDC_NOTCHECK, 7, 62, 139, 10
     ICON             32515, IDC_STATIC, 7, 7, 21, 20
-    LTEXT            "您的计算机内有一个称为 %s 的文件或文件夹，这可能会导致某些应用程序不能够正确执行。将其重命名为 %s 则可以解决这个问题。您想现在重命名它？", IDC_STATIC, 34, 7, 224, 37
+    LTEXT            "您的计算机上有一个名为 %s 的文件或文件夹，这可能会导致某些应用程序不能正确运行。将其重命名为 %s 可以解决这个问题。您想现在重命名它吗？", IDC_STATIC, 34, 7, 224, 37
 END
 
 IDD_MODERNSTART_ADVANCED DIALOGEX 0, 0, 251, 198, 0

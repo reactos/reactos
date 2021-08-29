@@ -14,16 +14,16 @@ FONT 9, "宋体"
 BEGIN
     GROUPBOX "字符重复", -1, 5, 5, 236, 135
     ICON IDI_REPEAT_DELAY, IDC_ICON_REPEAT_DELAY, 13, 18, 15, 15
-    LTEXT "重复延迟(&D):", -1, 40, 18, 100, 10
+    LTEXT "重复延迟(&D)：", -1, 40, 18, 100, 10
     LTEXT "长", -1, 40, 33, 20, 10
     LTEXT "短", -1, 200, 33, 20, 10
     CONTROL "", IDC_SLIDER_REPEAT_DELAY, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 65, 33, 130, 17
     ICON IDI_REPEAT_RATE, IDC_ICON_REPEAT_RATE, 13, 70, 15, 15
-    LTEXT "重复率(&R)::", -1, 40, 70, 100, 10
+    LTEXT "重复率(&R)：", -1, 40, 70, 100, 10
     LTEXT "慢", -1, 40, 85, 20, 10
     LTEXT "快", -1, 200, 85, 20, 10
     CONTROL "", IDC_SLIDER_REPEAT_RATE, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 65, 85, 130, 17
-    LTEXT "单击此处并按住一个键以便测试重复率(&T):", -1, 15, 105, 216, 10
+    LTEXT "单击此处并按住一个键以便测试重复率(&T)：", -1, 15, 105, 216, 10
     EDITTEXT IDC_EDIT_REPEAT_RATE, 15, 116, 216, 14, WS_CHILD | WS_VISIBLE | WS_GROUP
     GROUPBOX "光标闪烁频率(&B)", -1, 5, 145, 236, 50
     LTEXT "", IDC_TEXT_CURSOR_BLINK, 20, 165, 1, 8
@@ -64,7 +64,7 @@ BEGIN
     LTEXT "选择此复选框来将右按钮设成用于主要性能如选择和拖放之用。", -1, 10, 36, 156, 30
     GROUPBOX "双击速度", -1, 5, 78, 236, 70
     LTEXT "双击文件夹以检测您的设置。如果文件夹没打开或关闭，请用慢一点的设置再试一次。", -1, 10, 90, 156, 28
-    LTEXT "速度(&D):   Slow", -1, 10, 123, 50, 10
+    LTEXT "速度(&D)：   慢", -1, 10, 123, 50, 10
     LTEXT "快", -1, 136, 123, 24, 10
     CONTROL "", IDC_SLIDER_DOUBLE_CLICK_SPEED, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 60, 123, 70, 17
     CONTROL "", IDC_IMAGE_DOUBLE_CLICK_SPEED, "Static", SS_ICON | SS_NOTIFY | SS_CENTERIMAGE | WS_VISIBLE, 171, 87, 65, 57, WS_EX_STATICEDGE
@@ -84,7 +84,7 @@ BEGIN
     PUSHBUTTON "另存为(&V)...", IDC_BUTTON_SAVEAS_SCHEME, 65, 31, 60, 14
     PUSHBUTTON "删除(&D)", IDC_BUTTON_DELETE_SCHEME, 128, 31, 50, 14
     CONTROL "", IDC_IMAGE_CURRENT_CURSOR, "Static", SS_ICON | SS_CENTERIMAGE | WS_VISIBLE, 196, 9, 45, 41, WS_EX_STATICEDGE
-    LTEXT "自定义(&C):", -1, 5, 57, 60, 10
+    LTEXT "自定义(&C)：", -1, 5, 57, 60, 10
     LISTBOX IDC_LISTBOX_CURSOR, 5, 68, 236, 124, WS_VISIBLE | WS_BORDER | WS_TABSTOP | WS_VSCROLL | LBS_OWNERDRAWFIXED | LBS_NOTIFY
     CHECKBOX "启用指针阴影(&E)", IDC_CHECK_CURSOR_SHADOW, 5, 198, 105, 10
     PUSHBUTTON "使用默认值(&F)", IDC_BUTTON_USE_DEFAULT_CURSOR, 117, 196, 65, 14
@@ -96,7 +96,7 @@ STYLE DS_SHELLFONT | WS_CAPTION | WS_SYSMENU
 CAPTION "保存方案"
 FONT 9, "宋体"
 BEGIN
-    LTEXT "将该光标方案另存为:", -1, 5, 5, 181, 10
+    LTEXT "将该光标方案另存为：", -1, 5, 5, 181, 10
     EDITTEXT IDC_EDIT_SCHEME_NAME, 5, 15, 180, 15, WS_CHILD | WS_VISIBLE | WS_GROUP
     PUSHBUTTON "确定(&O)", IDOK, 63, 35, 60, 14
     PUSHBUTTON "取消(&C)", IDCANCEL, 126, 35, 60, 14
@@ -108,18 +108,18 @@ CAPTION "指针选项"
 FONT 9, "宋体"
 BEGIN
     GROUPBOX "移动", -1, 5, 5, 236, 60
-    LTEXT "选择指针移动速度(&C):", -1, 52, 15, 110, 10
+    LTEXT "选择指针移动速度(&C)：", -1, 52, 15, 110, 10
     LTEXT "慢", -1, 60, 30, 20, 10
     CONTROL "", IDC_SLIDER_MOUSE_SPEED, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 90, 30, 70, 17
     LTEXT "快", -1, 170, 30, 20, 10
     ICON IDI_MOUSE_SPEED, IDC_ICON_MOUSE_SPEED, 18, 20, 32, 32
     CHECKBOX "提高指针精确度(&E)", IDC_CHECK_POINTER_PRECISION, 52, 50, 140, 10
-    GROUPBOX "取默认按钮 To", -1, 5, 70, 236, 40
+    GROUPBOX "自动吸附", -1, 5, 70, 236, 40
     CHECKBOX "自动将指针移动到对话框中的默认按钮(&U)",
              IDC_CHECK_SNAP_TO, 52, 84, 183, 20, BS_MULTILINE | BS_TOP
     ICON IDI_MOUSE_BUTTON, IDC_ICON_SNAP_TO, 18, 83, 15, 15
     GROUPBOX "可见性", -1, 5, 115, 236, 95
-    CHECKBOX "显示指针踪迹(&D):", IDC_CHECK_POINTER_TRAIL, 52, 128, 125, 10
+    CHECKBOX "显示指针踪迹(&D)：", IDC_CHECK_POINTER_TRAIL, 52, 128, 125, 10
     LTEXT "短", IDC_TEXT_TRAIL_SHORT, 54, 143, 25, 10
     LTEXT "长", IDC_TEXT_TRAIL_LONG, 157, 143, 30, 10
     ICON IDI_MOUSE_TRAILS, IDC_ICON_POINTER_TRAIL, 20, 128, 15, 15
@@ -158,7 +158,7 @@ BEGIN
     IDS_CROSSHAIR "精确定位"
     IDS_IBEAM "选定文本"
     IDS_NWPEN "手写"
-    IDS_NO "(无)"
+    IDS_NO "（无）"
     IDS_SIZENS "垂直调整"
     IDS_SIZEWE "水平调整"
     IDS_SIZENWSE "沿对角线调整 1"
@@ -166,13 +166,13 @@ BEGIN
     IDS_SIZEALL "移动"
     IDS_UPARROW "候选"
     IDS_HAND "链接选择"
-    IDS_NONE "(无)"
-    IDS_SYSTEM_SCHEME "(系统方案)"
+    IDS_NONE "（无）"
+    IDS_SYSTEM_SCHEME "（系统方案）"
     IDS_BROWSE_FILTER "光标 (*.ani, *.cur)\0*.ani;*.cur\0动画光标 (*.ani)\0*.ani\0静态光标 (*.cur)\0*.cur\0所有文件\0*.*\0\0"
     IDS_BROWSE_TITLE "浏览"
     IDS_REMOVE_TITLE "确认方案的删除"
-    IDS_REMOVE_TEXT "是否确实要将“%s”从系统中完全删除?"
-    IDS_OVERWRITE_TITLE "是否替换方案?"
-    IDS_OVERWRITE_TEXT "您所选择的光标方案名已在使用中。是否要替换原方案?"
+    IDS_REMOVE_TEXT "是否确实要将“%s”从系统中完全删除？"
+    IDS_OVERWRITE_TITLE "是否替换方案？"
+    IDS_OVERWRITE_TEXT "您所选择的光标方案名已在使用中。是否要替换原方案？"
     IDS_ANIMATE_CURSOR "动画光标"
 END

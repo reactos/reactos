@@ -14,9 +14,9 @@ CAPTION "添加硬件向导"
 FONT 9, "宋体"
 BEGIN
     LTEXT "欢迎使用添加硬件向导", IDC_FINISHTITLE, 114, 8, 203, 24
-    LTEXT "这个向导帮助您:", -1, 114, 40, 182, 8
-    LTEXT "1) 安装软件来支持添加到计算机的硬件。", -1, 121, 56, 184, 16
-    LTEXT "2) 解决您的硬件问题。", -1, 121, 78, 185, 16
+    LTEXT "这个向导帮助您：", -1, 114, 40, 182, 8
+    LTEXT "1）安装软件来支持添加到计算机的硬件。", -1, 121, 56, 184, 16
+    LTEXT "2）解决您的硬件问题。", -1, 121, 78, 185, 16
     ICON IDI_WARNINGICON, IDC_WARNINGICON, 124, 109, 20, 20
     LTEXT "如果该硬件附带安装 CD，建议您单击“取消” 并关闭此向导以使用制造商的 CD 安装此硬件。", 503, 150, 106, 155, 50
     LTEXT "若要继续，请单击“下一步”。", -1, 114, 166, 193, 8
@@ -48,7 +48,7 @@ FONT 9, "宋体"
 BEGIN
     LTEXT "从以下列表，选择一个已安装的硬件设备，然后单击“下一步”，检查属性或解决您遇到的问题。", -1, 21, 8, 275, 22
     LTEXT "要添加列表中没有显示的硬件，请单击“添加新的硬件设备”。", -1, 21, 32, 275, 24
-    LTEXT "已安装的硬件(&N):", -1, 21, 62, 140, 8
+    LTEXT "已安装的硬件(&N)：", -1, 21, 62, 140, 8
     CONTROL "", IDC_PROBELIST, "SysListView32", WS_BORDER | WS_GROUP | WS_TABSTOP | LVS_REPORT | LVS_NOSORTHEADER | LVS_SINGLESEL | LVS_SHAREIMAGELISTS | LVS_NOCOLUMNHEADER, 21, 72, 275, 66
 END
 
@@ -58,9 +58,9 @@ CAPTION "添加硬件向导"
 FONT 9, "宋体"
 BEGIN
     LTEXT "这个向导可以搜索其他硬件并为您自动安装。或者，如果您知道要安装哪个型号的硬件，您可以从列表选择。", -1, 21, 8, 280, 24
-    LTEXT "您期望向导做什么?", -1, 23, 40, 275, 8
-    AUTORADIOBUTTON "搜索并自动安装硬件(推荐)(&S)", IDC_AUTOINSTALL, 30, 55, 266, 8, WS_GROUP | NOT WS_TABSTOP
-    AUTORADIOBUTTON "安装我手动从列表选择的硬件(高级)(&M)", IDC_MANUALLYINST, 30, 70, 266, 8, NOT WS_TABSTOP
+    LTEXT "您期望向导做什么？", -1, 23, 40, 275, 8
+    AUTORADIOBUTTON "搜索并自动安装硬件（推荐）(&S)", IDC_AUTOINSTALL, 30, 55, 266, 8, WS_GROUP | NOT WS_TABSTOP
+    AUTORADIOBUTTON "安装我手动从列表选择的硬件（高级）(&M)", IDC_MANUALLYINST, 30, 70, 266, 8, NOT WS_TABSTOP
 END
 
 IDD_DETECTEDHWPAGE DIALOGEX 0, 0, 317, 143
@@ -69,7 +69,7 @@ CAPTION "添加硬件向导"
 FONT 9, "宋体"
 BEGIN
     LTEXT "", IDC_STATUSTEXT, 21, 9, 275, 40
-    LTEXT "检测到的硬件:", IDC_DETECTEDHWTEXT, 21, 53, 176, 8
+    LTEXT "检测到的硬件：", IDC_DETECTEDHWTEXT, 21, 53, 176, 8
     CONTROL "", IDC_DETECTEDHWLIST, "SysListView32", WS_BORDER | WS_GROUP | WS_TABSTOP | LVS_REPORT | LVS_NOSORTHEADER | LVS_SINGLESEL | LVS_SHAREIMAGELISTS | LVS_NOCOLUMNHEADER, 21, 65, 275, 70
 END
 
@@ -79,7 +79,7 @@ CAPTION "添加硬件向导"
 FONT 9, "宋体"
 BEGIN
     LTEXT "如果看不到想要的硬件类别，请单击“显示所有设备”。", IDC_STATUSTEXT, 21, 9, 275, 18
-    LTEXT "常见硬件类型(&H):", IDC_HWTYPESTEXT, 21, 31, 180, 8
+    LTEXT "常见硬件类型(&H)：", IDC_HWTYPESTEXT, 21, 31, 180, 8
     CONTROL "", IDC_HWTYPESLIST, "SysListView32", WS_BORDER | WS_GROUP | WS_TABSTOP | LVS_REPORT | LVS_NOSORTHEADER | LVS_SINGLESEL | LVS_SHAREIMAGELISTS | LVS_NOCOLUMNHEADER, 21, 42, 275, 92
 END
 
@@ -89,7 +89,7 @@ CAPTION "添加硬件向导"
 FONT 9, "宋体"
 BEGIN
     LTEXT "可能需要几分钟的时间来查找该硬件。", -1, 21, 8, 275, 15
-    LTEXT "整个进度:", IDC_TPROGRESSTEXT, 21, 25, 275, 8
+    LTEXT "整个进度：", IDC_TPROGRESSTEXT, 21, 25, 275, 8
     CONTROL "", IDC_TPROGRESSBAR, "msctls_progress32", 0, 21, 37, 275, 14
     LTEXT "", IDC_PROGRESSTEXT, 58, 58, 200, 8, SS_NOPREFIX
     CONTROL "", IDC_PROGRESSBAR, "msctls_progress32", 0, 58, 70, 200, 8
@@ -112,7 +112,7 @@ CAPTION "添加硬件向导"
 FONT 9, "宋体"
 BEGIN
     LTEXT "正在完成添加硬件向导", IDC_FINISHTITLE, 114, 8, 203, 24
-    LTEXT "已经安装下列硬件:", -1, 114, 32, 193, 19
+    LTEXT "已经安装下列硬件：", -1, 114, 32, 193, 19
     LTEXT "想要关闭这个向导，请单击“完成”。", -1, 114, 166, 132, 8
     CONTROL "", IDC_FOUNDHARDWARELIST, "SysListView32", WS_BORDER | WS_GROUP | WS_TABSTOP | LVS_REPORT | LVS_NOSORTHEADER | LVS_SINGLESEL | LVS_SHAREIMAGELISTS, 114, 56, 193, 78
 END
@@ -123,7 +123,7 @@ CAPTION "添加硬件向导"
 FONT 9, "宋体"
 BEGIN
     LTEXT "正在完成添加硬件向导", IDC_FINISHTITLE, 114, 8, 195, 28
-    LTEXT "这里是您所选硬件的当前状态:", -1, 114, 40, 193, 19
+    LTEXT "这里是您所选硬件的当前状态：", -1, 114, 40, 193, 19
     EDITTEXT IDC_HWSTATUSEDIT, 114, 60, 193, 70, ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY | WS_VSCROLL | NOT WS_TABSTOP
     LTEXT "要启用可以帮助您解决问题的疑难解答，请单击“完成”。", -1, 114, 136, 193, 16
     LTEXT "想要退出这个向导，请单击“取消”。", IDC_STATUSTEXT, 114, 166, 132, 8
@@ -147,7 +147,7 @@ BEGIN
     IDS_CPLDESCRIPTION "为您的计算机添加新硬件。"
     IDS_SEARCHTITLE "向导正在搜索，请稍候..."
     IDS_SEARCHTEXT "向导正在搜索最近连接到计算机但尚未安装的硬件。"
-    IDS_ISCONNECTED "硬件已经与计算机连接了吗?"
+    IDS_ISCONNECTED "硬件已经与计算机连接了吗？"
     IDS_PROBELISTTITLE "以下硬件已安装在您的计算机上"
     IDS_ADDNEWDEVICE "添加新硬件设备"
     IDS_SELECTWAYTITLE "此向导可以帮助您安装其它硬件"

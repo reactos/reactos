@@ -1,5 +1,6 @@
 /* Simplified Chinese translation by Song Fuchang (0xfc) <sfc_0@yahoo.com.cn> 2011 */
 /* Improved by He Yang (@kernel.bin) <1160386205@qq.com> 2020 */
+/* Improved by Wu Haotian <rigoligo03@gmail.com> */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
@@ -8,10 +9,10 @@ BEGIN
     STRING_ASSOC_HELP "修改文件关联。\n\n\
 assoc [.ext[=[文件类型]]]\n\
 \n\
-assoc (输出所有文件关联)\n\
-assoc .ext (输出指定的文件关联)\n\
-assoc .ext= (删除指定的文件关联)\n\
-assoc .ext=文件类型 (添加新的文件关联)\n"
+assoc （输出所有文件关联）\n\
+assoc .ext （输出指定的文件关联）\n\
+assoc .ext= （删除指定的文件关联）\n\
+assoc .ext=文件类型 （添加新的文件关联）\n"
     STRING_ALIAS_HELP "设置、删除或显示别名。\n\n\
 ALIAS [别名=[命令]]\n\n\
   别名    别名的名称。\n\
@@ -22,7 +23,7 @@ ALIAS [别名=[命令]]\n\n\
   ALIAS da=dir a:\n\n\
 删除一个别名：\n\
   ALIAS da="
-    STRING_BEEP_HELP "使扬声器发出BEEP声。\n\nBEEP\n"
+    STRING_BEEP_HELP "使扬声器发出哔哔声。\n\nBEEP\n"
     STRING_CALL_HELP "从一个批处理程序调用另一个。\n\n\
 CALL [驱动器:][路径]文件名 [批处理参数]\n\n\
   批处理参数  指定被调用的批处理程序所需的命令行信息。\n"
@@ -49,23 +50,23 @@ ERRORLEVEL 将被设置为用户输入在选项中的偏移。\n"
     STRING_CMD_HELP2 "\n可用功能："
     STRING_CMD_HELP3 "  [别名]"
     STRING_CMD_HELP4 "  [历史]"
-    STRING_CMD_HELP5 "  [Bash 文件名自动完成]"
+    STRING_CMD_HELP5 "  [Bash 文件名自动补全]"
     STRING_CMD_HELP6 "  [目录栈]"
     STRING_CMD_HELP7 "  [重定向和管道]"
     STRING_CMD_HELP8 "启动一个新的 ReactOS 命令行解释器的新实例。\n\n\
 CMD [/[C|K] 命令][/P][/Q][/T:bf]\n\n\
   /C 命令      运行指定的命令后退出。\n\
   /K 命令      运行指定的命令后不退出。\n\
-  /P           永久保留 CMD 并运行 autoexec.bat (无法终止)。\n\
-  /T:bf        设置前景/背景颜色 (参见 COLOR 命令)。\n"
+  /P           永久保留 CMD 并运行 autoexec.bat（无法终止）。\n\
+  /T:bf        设置前景/背景颜色（参见 COLOR 命令）。\n"
     STRING_COLOR_HELP1 "设置默认前景和背景颜色。\n\n\
 COLOR [属性 [/-F]]\n\n\
   属性          指定控制台输出的颜色属性。\n\
   /-F           不要使用颜色填充控制台的空白区域。\n\n\
 有3种方法指定颜色：\n\
-1) [bright] 名称 on [bright] 名称 (仅需要开头的3个字母)\n\
-2) 十进制 on 十进制\n\
-3) 两位十六进制数\n\n\
+1）[bright] 名称 on [bright] 名称（仅需要开头的3个字母）\n\
+2）十进制 on 十进制\n\
+3）两位十六进制数\n\n\
 颜色列表：\n\
 dec  hex  名称         dec  hex  名称\n\
 0    0    黑色         8    8    灰色\n\
@@ -76,7 +77,7 @@ dec  hex  名称         dec  hex  名称\n\
 5    5    紫色        13    D    淡紫色\n\
 6    6    黄色        14    E    淡黄色\n\
 7    7    白色        15    F    亮白色\n"
-    STRING_COPY_HELP1 "覆盖 %s 吗 (Yes/No/All)? "
+    STRING_COPY_HELP1 "覆盖 %s 吗 (Yes/No/All)？"
     STRING_COPY_HELP2 "将一个或多个文件复制到另一个位置。\n\n\
 COPY [/V][/Y|/-Y][/A|/B] 源 [/A|/B]\n\
      [+ 源 [/A|/B] [+ ...]] [目的 [/A|/B]]\n\n\
@@ -109,7 +110,7 @@ DEL [/N /P /T /Q /S /W /Y /Z /A[[:]属性]] 文件 ...\n\
 DELETE [/N /P /T /Q /S /W /Y /Z /A[[:]属性]] 文件 ...\n\
 ERASE [/N /P /T /Q /S /W /Y /Z /A[[:]属性]] 文件 ...\n\n\
       文件  指定要删除的一个或多个文件。\n\n\
-  /N    Nothing.\n\
+  /N    无操作。\n\
   /P    在删除每个文件前询问。\n\
   /T    显示删除文件的总数和释放的磁盘空间。n\
   /Q    安静模式。\n\
@@ -138,14 +139,14 @@ DELAY [/m]n\n\n\
   属性         D  目录                           R  只读文件\n\
                H  隐藏文件                       A  归档文件\n\
                S  系统文件                       -  意为“否”的前缀\n\
-  /B          使用原始格式 (没有开头信息或总览)。\n\
+  /B          使用原始格式（没有开头信息或总览）。\n\
   /C          在文件大小中显示千分符。这是默认行为。使用 /-C 来禁用分隔符的显示。\n\
   /D          和宽模式相同但文件是按列排序的。\n\
   /L          使用小写字母。\n\
   /N          新的文件名在右边的长列表格式。\n\
   /O          排序显示的文件列表。\n\
-  排序顺序     N  按名称 (字母顺序)               S  按大小 (小文件在前)\n\
-               E  按扩展名 (字母顺序)             D  按日期/时间 (最老的文件在前)\n\
+  排序顺序     N  按名称（字母顺序）              S  按大小（小文件在前）\n\
+               E  按扩展名（字母顺序）            D  按日期/时间（最老的文件在前）\n\
                G  分组目录在前                    -  反转顺序的前缀\n\
   /P          在每屏幕信息输出后停顿。\n\
   /Q          显示文件的所有者。\n\
@@ -196,19 +197,19 @@ FOR /L %变量 IN (start,step,end) DO 命令 [参数]\n\
 FOR /D %变量 IN (集合) DO 命令 [参数]\n\
 FOR /R [[drive:]path] IN (集合) DO 命令 [参数]\n\
 FOR /F [""options""] IN (集合) DO 命令 [参数]\n\n\
-  /L    Generates a number sequence from start to end incrementing by step.\n\
-  /D    Modifies the set to refer to directories instead of files.\n\
-  /R    Executes command for files in the set in the specified path (or current\n\
-        working directory if not specified) and every directory below.\n\
-  /F    Modifies the set to refer to the contents of the files in the set.\n\n\
+  /L    生成一个从 start 开始、以 step 递增、到 end 结束的数字序列。\n\
+  /D    修改指定的集合，使其只匹配目录而不匹配文件。\n\
+  /R    对指定路径（如不指定，则默认为当前目录）和它包含的所有目录中，集合所能匹配\n\
+        的文件执行一个命令。\n\
+  /F    修改指定的集合，使其匹配集合所指文件的内容。\n\n\
   %变量       指定一个可被替换的参数。\n\
   (集合)      指定一个含有一个或多个文件的集合。可以使用通配符。\n\
   命令        指定要为每个文件执行的命令。\n\
   参数        为指定的命令指定参数或开关。\n\
-  options    Supported options are: eol, skip, delims, tokens, and usebackq.\n\n\
-Replacable parameters can be modified by adding a ~ and an optional qualifier\n\
-after the % and before the name (e.g. %~X). Supported qualifiers are:\n\
-f,d,p,n,x,s,a,t,z.\n\n\
+  选项        支持的选项有： eol, skip, delims, tokens 和 usebackq.\n\n\
+可以通过在变量名和 % 之间添加一个 ~ 符号及一个可选的修饰符来变更该变量使用的值，\n\
+例如 %~X。支持的修饰符有：\n\
+f,d,p,n,x,s,a,t,z。\n\n\
 在批处理文件中使用 FOR 命令时，使用 %%变量 而不是 %变量。\n"
     STRING_FREE_HELP1 "\n驱动器 %s 中的卷是 %-11s\n\
  序列号为 %s\n\
@@ -249,7 +250,7 @@ MKLINK [/D | /H | /J] 链接名 目标\n\n\
   %13s 字节 总虚拟内存。\n\
   %13s 字节 可用虚拟内存。\n"
     STRING_MISC_HELP1 "按任意键继续..."
-    STRING_MOVE_HELP1 "覆盖 %s 吗 (Yes/No/All)？"
+    STRING_MOVE_HELP1 "覆盖 %s 吗（Yes/No/All）？"
     STRING_MOVE_HELP2 "移动文件并重命名文件和目录。\n\n\
 移动一个或多个文件：\n\
 MOVE [/N][/Y|/-Y][驱动器:][路径]文件名1[,...] 目标\n\n\
@@ -274,30 +275,30 @@ PATH [[驱动器:]路径[;...]]\nPATH ;\n\n\
 执行 PATH ; 以清除所有的搜索路径设置并指示命令行外壳仅在当前目录搜索。\n\
 不带参数执行 PATH 将会显示当前路径。\n"
     STRING_PAUSE_HELP1 "停止一个批处理文件的执行并显示以下信息：\n\
-'按任意键继续...' 或者一条用户定义的消息。\n\n\
+“按任意键继续...”或者一条用户定义的消息。\n\n\
 PAUSE [消息]"
     STRING_PROMPT_HELP1 "改变命令提示符。\n\n\
 PROMPT [文本]\n\n\
   文本      指定新的命令提示符。\n\n\
 提示符可以由普通字符和以下特殊代码组合：\n\n\
-  $A   & (AND 符号)\n\
-  $B   | (管道)\n\
-  $C   ( (左括号)\n\
+  $A   &（AND 符号）\n\
+  $B   |（管道）\n\
+  $C   (（左括号）\n\
   $D   当前日期\n\
-  $E   ESC 码 (ASCII 码 27)\n\
-  $F   ) (右括号)\n\
-  $G   > (大于号)\n\
-  $H   退格 (擦除前一个字符)\n\
+  $E   ESC 码（ASCII 码 27）\n\
+  $F   )（右括号）\n\
+  $G   >（大于号）\n\
+  $H   退格（擦除前一个字符）\n\
   $I   Information line\n\
-  $L   < (小于号)\n\
+  $L   <（小于号）\n\
   $N   当前驱动器\n\
   $P   当前驱动器和路径\n\
-  $Q   = (等于号)\n\
-  $S   (space)\n\
+  $Q   =（等于号）\n\
+  $S   （空格）\n\
   $T   当前时间\n\
   $V   操作系统版本号\n\
   $_    回车和换行符\n\
-  $$   $ (美元符号)\n"
+  $$   $（美元符号）\n"
     STRING_PROMPT_HELP2 "  $+   显示当前目录栈的深度"
     STRING_PROMPT_HELP3 "\n执行不带参数的 PROMPT 将会把提示符重置为默认设置。"
     STRING_REM_HELP "在批处理文件中开始一行注释。\n\nREM [注释]"
@@ -312,11 +313,11 @@ REN [/E /N /P /Q /S /T] 旧名称 ... 新名称\n\n\
   /E    不显示错误消息。\n\
   /N    不做任何处理。\n\
   /P    在重命名每个文件前请求确认。\n\
-          (尚未实现！)\n\
+         （尚未实现！）\n\
   /Q    安静模式。\n\
   /S    重命名子目录。\n\
   /T    显示被重命名文件的总数。\n\n\
-记住您不能在目的地里指定新的驱动器或路径。使用 MOVE 命令来达成这个目的。\n"
+注意，您不能在新名称里指定新的驱动器或路径。请使用 MOVE 命令来达成这个目的。\n"
     STRING_REN_HELP2 "    %lu 文件已重命名\n"
     STRING_REN_HELP3 "    %lu 个文件已重命名\n"
     STRING_REPLACE_HELP1 "替换文件。\n\n\
@@ -329,7 +330,7 @@ REPLACE [驱动器1:][路径1]文件名 [驱动器2:][路径2] [/P] [/R] [/S] [/
   /R                        将只读文件视为未保护文件并替换。\n\
   /S                        替换目标目录中所有子目录中的文件。不能与 /A 同时使用。\n\
   /W                        在开始前等待您插入一张磁盘。\n\
-  /U                        仅替换(更新)比原文件老的文件。不能和 /A 同时使用。\n"
+  /U                        仅替换（更新）比原文件老的文件。不能和 /A 同时使用。\n"
     STRING_REPLACE_HELP2 "需要源路径\n"
     STRING_REPLACE_HELP3 "没有文件被替换\n"
     STRING_REPLACE_HELP4 "%lu 个文件已被替换\n"
@@ -352,18 +353,17 @@ SET [变量[=][字符串]]\n\n\
   字符串      指定要赋给该环境变量的一系列字符。\n\n\
 执行不带参数的 SET 将会显示当前所有环境变量。\n"
     STRING_START_HELP1 "启动一个命令。\n\n\
-START [""title""] [/D path] [/I] [/B] [/MIN] [/MAX] [/WAIT]\n\
-      [command/program] [parameters]\n\n\
-  ""title""     Title of the window.\n\
-  path        Specifies the startup directory.\n\
-  I           Uses the original environment given to cmd.exe,\n\
-              instead of the current environment.\n\
-  B           Starts the command or program without creating any window.\n\
-  MIN         Starts with a minimized window.\n\
-  MAX         Starts with a maximized window.\n\
-  WAIT        Starts the command or program and waits for its termination.\n\
+START [""标题""] [/D 路径] [/I] [/B] [/MIN] [/MAX] [/WAIT]\n\
+      [命令/程序名] [参数]\n\n\
+  ""标题""     窗口的标题。\n\
+  路径         指定程序或命令启动时所在的目录。\n\
+  I           使用 cmd.exe 原本的环境，而不是当前的环境。\n\
+  B           启动程序时不创建新的窗口。\n\
+  MIN         启动程序时使窗口最小化。\n\
+  MAX         启动程序时使窗口最大化。\n\
+  WAIT        启动程序并等待它终止。\n\
   命令         要启动的命令。\n\
-  parameters  Specifies the parameters to be given to the command or program.\n"
+  参数         指定传递给要启动的程序或命令的参数。\n"
     STRING_TITLE_HELP "设置命令提示符窗口的标题。\n\n\
 TITLE [字符串]\n\n\
 字符串         指定命令提示符窗口的标题。\n"
@@ -381,7 +381,7 @@ TIMER  [ON|OFF] [/S] [/n] [/Fn]\n\n\
   /S          分割时间。返回停表分割时间而不改变它的值。\n\
   /n          指定停表编号。停表编号可以从 0 至 9。如果未指定则默认为 1。\n\
   /Fn         输出格式\n\
-              n 可以为:\n\
+              n 可以为：\n\
                     0    毫秒\n\
                     1    hh%cmm%css%cdd\n\n\
 如果没有 ON，OFF 或者 /S 在调用该命令时被指定，将会切换停表状态。\n\n"
@@ -398,18 +398,15 @@ VER [/C][/R][/W]\n\n\
   /C  显示作者。\n\
   /R  显示再发布信息。\n\
   /W  显示保证信息。"
-    STRING_VERSION_HELP2 " comes with ABSOLUTELY NO WARRANTY; for details\n\
-type: `ver /w'. This is free software, and you are welcome to redistribute\n\
-it under certain conditions; type `ver /r' for details. Type `ver /c' for a\n\
-listing of credits."
-    STRING_VERSION_HELP3 "\n This program is distributed in the hope that it will be useful,\n\
- but WITHOUT ANY WARRANTY; without even the implied warranty of\n\
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\n\
- GNU General Public License for more details."
-    STRING_VERSION_HELP4 "\n This program is free software; you can redistribute it and/or modify\n\
- it under the terms of the GNU General Public License as published by\n\
- the Free Software Foundation; either version 2 of the License, or\n\
- (at your option) any later version.\n"
+    STRING_VERSION_HELP2 " 不承诺 *任何品质保证* ；请输入“ver /w”查看详情。\n\
+本软件为自由软件，您可以在一定的条件下自由传播该软件；\n\
+请输入“ver /r”查看详情。输入“ver /c”可查看制作人员的列表。"
+    STRING_VERSION_HELP3 "\n 传播本程序时，我们希望它对其他人有用，但不承诺 *任何品质保证*；\n\
+ 甚至不包括任何隐含的适售性或对某个目的的适用性。\n\
+ 请参阅 GNU 通用公共许可证获悉详情。"
+    STRING_VERSION_HELP4 "\n 本程序是一个自由软件，您可以在自由软件基金会发布的 GNU 通用公共许可证\n\
+ 第二版（如果您自己愿意，也可以是任何一个新的版本）规定的条款下自由地\n\
+ 传播和/或修改本软件。\n"
     STRING_VERSION_HELP5 "\nBug 报告发送到 <ros-dev@reactos.org>。\n\
 更新可在 http://www.reactos.org 查看。"
     STRING_VERSION_HELP6 "\nFreeDOS 版本作者：\n"
@@ -450,35 +447,35 @@ RESTORE       恢复窗口\n\
     STRING_COLOR_ERROR1 "同样颜色错误！ (背景和前景不能同色)"
     STRING_COLOR_ERROR2 "颜色指定错误"
     STRING_CONSOLE_ERROR "未知错误：%d\n"
-    STRING_COPY_ERROR1 "错误：无法打开源 -  %s！\n"
+    STRING_COPY_ERROR1 "错误：无法打开源文件 -  %s！\n"
     STRING_COPY_ERROR2 "错误：无法复制到自身！\n"
-    STRING_COPY_ERROR3 "写入目的时出错！\n"
+    STRING_COPY_ERROR3 "写入目标文件时出错！\n"
     STRING_COPY_ERROR4 "错误：尚未实现！\n"
     STRING_DATE_ERROR "无效日期。"
     STRING_DEL_ERROR5 "文件 %s 将会被删除！"
-    STRING_DEL_ERROR6 "您确定吗 (Y/N)？ "
+    STRING_DEL_ERROR6 "您确定吗（Y/N）？ "
     STRING_DEL_ERROR7 "正在删除：%s\n"
     STRING_ERROR_ERROR1 "未知错误！错误码：0x%lx\n"
     STRING_ERROR_ERROR2 "语法错误"
-    STRING_FOR_ERROR1 "语句中缺少 'in'。"
+    STRING_FOR_ERROR1 "语句中缺少“in”。"
     STRING_FOR_ERROR2 "没有发现括号。"
-    STRING_FOR_ERROR3 "缺少 'do'。"
-    STRING_FOR_ERROR4 "'do' 后没有命令。"
+    STRING_FOR_ERROR3 "缺少“do”。"
+    STRING_FOR_ERROR4 "“do”后没有命令。"
     STRING_FREE_ERROR1 "无效驱动器"
     STRING_FREE_ERROR2 "未标记"
     STRING_GOTO_ERROR1 "没有为 GOTO 指定标签\n"
-    STRING_GOTO_ERROR2 "标签 '%s' 未找到\n"
-    STRING_MD_ERROR "%s 一个子目录或文件已存在。\n"
+    STRING_GOTO_ERROR2 "标签“%s”未找到\n"
+    STRING_MD_ERROR "一个名为“%s”的子目录或文件已存在。\n"
     STRING_MD_ERROR2 "到新文件夹的路径不存在。\n"
     STRING_MOVE_ERROR1 "[成功]\n"
     STRING_MOVE_ERROR2 "[错误]\n"
     STRING_REN_ERROR1 "MoveFile() 失败。错误码：%lu\n"
     STRING_TIME_ERROR1 "无效时间。"
-    STRING_TYPE_ERROR1 "无效选项 '/%s'\n"
+    STRING_TYPE_ERROR1 "无效选项“/%s”\n"
     STRING_WINDOW_ERROR1 "未找到窗口"
     STRING_ERROR_PARAMETERF_ERROR "参数格式不正确 - %c\n"
     STRING_ERROR_INVALID_SWITCH "无效开关 - /%c\n"
-    STRING_ERROR_TOO_MANY_PARAMETERS "太多参数 - %s\n"
+    STRING_ERROR_TOO_MANY_PARAMETERS "参数过多 - %s\n"
     STRING_ERROR_PATH_NOT_FOUND "路径未找到\n"
     STRING_ERROR_FILE_NOT_FOUND "文件未找到\n"
     STRING_ERROR_REQ_PARAM_MISSING "所需参数缺失\n"
@@ -489,7 +486,7 @@ RESTORE       恢复窗口\n\
     STRING_ERROR_CANNOTPIPE "错误！无法创建管道！不能打开临时文件！\n"
     STRING_ERROR_D_PAUSEMSG "按任意键继续... "
     STRING_ERROR_DRIVER_NOT_READY "驱动器未就绪"
-    STRING_SET_ENV_ERROR "Environment variable '%s' is not defined\n"
+    STRING_SET_ENV_ERROR "环境变量“%s”未定义\n"
     STRING_REPLACE_ERROR1 "无效开关 - %s\n"
     STRING_REPLACE_ERROR2 "路径未找到 - %s\n"
     STRING_REPLACE_ERROR3 "文件名、目录名或卷标语法不正确。\n"
@@ -514,7 +511,7 @@ RESTORE       恢复窗口\n\
     STRING_MORE "更多？"
     STRING_CANCEL_BATCH_FILE "\r\nCtrl-Break 已被按下。停止批处理文件吗？ (Yes/No/All) "
     STRING_INVALID_OPERAND "无效操作数。\n"
-    STRING_EXPECTED_CLOSE_PAREN "期望 ')'。\n"
+    STRING_EXPECTED_CLOSE_PAREN "期望“)”。\n"
     STRING_EXPECTED_NUMBER_OR_VARIABLE "期望数值或变量名。\n"
     STRING_SYNTAX_COMMAND_INCORRECT "命令语法不正确。\n"
 END

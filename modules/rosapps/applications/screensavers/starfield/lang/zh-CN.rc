@@ -6,5 +6,5 @@ STRINGTABLE DISCARDABLE
 BEGIN
     IDS_DESCRIPTION "星空屏幕保护程序"
     IDS_TITLE       "关于"
-    IDS_TEXT        "没有选择需要为其设置。"
+    IDS_TEXT        "没有需要设置的选项。"
 END

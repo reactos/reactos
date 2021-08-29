@@ -1,3 +1,5 @@
+/* Improved by Wu Haotian <rigoligo03@gmail.com> 2021 */
+
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
 STRINGTABLE
@@ -29,7 +31,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_SIZE_NORMAL "Normal"
-    IDS_SIZE_LARGE "Large"
-    IDS_SIZE_XLARGE "Extra Large"
+    IDS_SIZE_NORMAL "正常"
+    IDS_SIZE_LARGE "大"
+    IDS_SIZE_XLARGE "非常大"
 END

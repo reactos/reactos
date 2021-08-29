@@ -1,20 +1,21 @@
+/* Translated by Wu Haotian <rigoligo03@gmail.com> 2021 */
+
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
 STRINGTABLE
 BEGIN
-    IDS_USAGE, "Usage: TASKLIST [/?] [/NH]\n"
+    IDS_USAGE, "用法：TASKLIST [/?] [/NH]\n"
     IDS_DESCRIPTION, "\n\
-Desciption:\
-    This tool displays a list of currently running processes on\n\
-    the machine.\n"
-    IDS_OPTION_TOO_MUCH, "Error: Invalid syntax. '%1' option is not allowed more than '%2!d!' time(s).\n"
-    IDS_INVALID_SYNTAX, "Error: Invalid syntax.\n"
-    IDS_INVALID_OPTION, "Error: Unknown or invalid command line option specified.\n"
-    IDS_ENUM_FAILED, "Error: Unable to enumerate the process list.\n"
-    IDS_OUT_OF_MEMORY, "Error: Out of memory.\n"
-    IDS_HEADER_IMAGENAME, "Image Name"
+详细帮助：\
+    本工具显示当前在本机上运行的进程。\n"
+    IDS_OPTION_TOO_MUCH, "错误：语法错误。选项“%1”不能出现多于 %2!d! 次。\n"
+    IDS_INVALID_SYNTAX, "错误：语法错误。\n"
+    IDS_INVALID_OPTION, "错误：指定了未知或不正确的命令行选项。\n"
+    IDS_ENUM_FAILED, "错误：无法遍历进程列表。\n"
+    IDS_OUT_OF_MEMORY, "错误：内存不足。\n"
+    IDS_HEADER_IMAGENAME, "镜像名"
     IDS_HEADER_PID, "PID"
-    IDS_HEADER_SESSION, "Session#"
-    IDS_HEADER_MEMUSAGE, "Mem Usage"
+    IDS_HEADER_SESSION, "会话#"
+    IDS_HEADER_MEMUSAGE, "内存占用 "
     IDS_MEMORY_STR, "%s K"
 END

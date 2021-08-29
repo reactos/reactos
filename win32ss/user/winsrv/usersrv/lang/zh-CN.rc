@@ -1,3 +1,5 @@
+/* Improved by Wu Haotian <rigoligo03@gmail.com> 2021 */
+
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
 IDD_END_NOW DIALOGEX 0, 0, 200, 95
@@ -26,16 +28,16 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_SEVERITY_SUCCESS        "Success"
-    IDS_SEVERITY_INFORMATIONAL  "System Information"
-    IDS_SEVERITY_WARNING        "System Warning"
-    IDS_SEVERITY_ERROR          "System Error"
+    IDS_SEVERITY_SUCCESS        "成功"
+    IDS_SEVERITY_INFORMATIONAL  "系统信息"
+    IDS_SEVERITY_WARNING        "系统警告"
+    IDS_SEVERITY_ERROR          "系统错误"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_SYSTEM_PROCESS          "System Process"
-    IDS_UNKNOWN_SOFTWARE_EXCEPT "unknown software exception"
-    IDS_OK_TERMINATE_PROGRAM    "Click on OK to terminate the program."
-    IDS_CANCEL_DEBUG_PROGRAM    "Click on CANCEL to debug the program."
+    IDS_SYSTEM_PROCESS          "系统进程"
+    IDS_UNKNOWN_SOFTWARE_EXCEPT "未知软件异常"
+    IDS_OK_TERMINATE_PROGRAM    "单击 确定 结束该程序。"
+    IDS_CANCEL_DEBUG_PROGRAM    "单击 取消 调试该程序。"
 END

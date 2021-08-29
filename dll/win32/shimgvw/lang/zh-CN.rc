@@ -1,5 +1,6 @@
 /* Simplified Chinese translation by Henry Tang Ih 2015 (henrytang2@hotmail.com) */
 /* Improved by Luo Yufan (njlyf2011@hotmail.com) */
+/* Improved by Wu Haotian <rigoligo03@gmail.com> 2021 */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
@@ -7,23 +8,23 @@ STRINGTABLE
 BEGIN
     IDS_APPTITLE "ReactOS 图片和传真查看器"
     IDS_SETASDESKBG "设置为桌面背景"
-    IDS_NOPREVIEW "No preview available."
+    IDS_NOPREVIEW "没有预览。"
     IDS_PREVIEW "预览"
     /* Tooltips */
     IDS_TOOLTIP_NEXT_PIC "下一张图片"
     IDS_TOOLTIP_PREV_PIC "上一张图片"
-    IDS_TOOLTIP_BEST_FIT "Best fit to window (Ctrl+B)"
-    IDS_TOOLTIP_REAL_SIZE "Actual size (Ctrl+A)"
-    IDS_TOOLTIP_SLIDE_SHOW "Start slideshow (F11)"
+    IDS_TOOLTIP_BEST_FIT "适合窗口 (Ctrl+B)"
+    IDS_TOOLTIP_REAL_SIZE "原大小 (Ctrl+A)"
+    IDS_TOOLTIP_SLIDE_SHOW "开始幻灯片放映 (F11)"
     IDS_TOOLTIP_ZOOM_IN "放大 (+)"
     IDS_TOOLTIP_ZOOM_OUT "缩小 (-)"
     IDS_TOOLTIP_ROT_CLOCKW "顺时针旋转 (Ctrl+K)"
     IDS_TOOLTIP_ROT_COUNCW "逆时针旋转 (Ctrl+L)"
-    IDS_TOOLTIP_DELETE "Delete (DEL)"
+    IDS_TOOLTIP_DELETE "删除 (DEL)"
     IDS_TOOLTIP_PRINT "打印 (Ctrl+P)"
     IDS_TOOLTIP_SAVEAS "另存为...(Ctrl+S)"
-    IDS_TOOLTIP_MODIFY "Modify (Ctrl+E)"
-    IDS_TOOLTIP_HELP_TOC "Help topics (F1)"
+    IDS_TOOLTIP_MODIFY "修改 (Ctrl+E)"
+    IDS_TOOLTIP_HELP_TOC "帮助主题 (F1)"
 END
 
 STRINGTABLE

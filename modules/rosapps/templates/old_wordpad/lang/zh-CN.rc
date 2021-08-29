@@ -2,6 +2,7 @@
  *  WordPad (Simplified Chinese resources)
  *  写字板(简体中文资源)
  *  Copyright 2007 zhangbing <e_zb@21cn.com, ezb@mail.gywb.cn>
+ *            2021 Wu Haotian <rigoligo03@gmail.com>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -131,9 +132,9 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-  IDS_LICENSE           "This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later version.\r\n\r\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.\r\n\r\nYou should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA."
-  IDS_DEFAULT_NAME      "Document %1!u!"
-  IDS_READY             " Ready."
+  IDS_LICENSE           "本程序为自由软件; 您可以根据自由软件基金会发布的 GNU 通用公共许可证的第 2 版，或（根据您的选择）任何更高版本的条款进行重新分发和修改它。\r\n\r\n本程序的发布是希望它有用，但没有任何担保; 甚至没有适销性或特定用途适用性的暗示保证。 有关详细信息，请参阅 GNU 通用公共许可证。\r\n\r\n您应该已收到 GNU 通用公共许可证的副本以及本程序; 如果没有，请写信给 the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA。"
+  IDS_DEFAULT_NAME      "文档 %1!u!"
+  IDS_READY             " 准备就绪。"
 END
 
 STRINGTABLE DISCARDABLE

@@ -1,5 +1,6 @@
 /* Simplified Chinese translation by Henry Tang Ih 2015 (henrytang2@hotmail.com) */
 /* Translation has been changed by Luo Yufan 2019 (njlyf2011@hotmail.com) */
+/* Improved by Wu Haotian (rigoligo03@gmail.com) 2021 */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
@@ -10,7 +11,7 @@ FONT 9, "宋体", 0, 0, 0x0
 BEGIN
     LTEXT "如果您在 ReactOS 中运行此程序出现问题，请选择 ReactOS 应报告给应用程序的操作系统类型。\n请注意，改进系统的兼容性是一项我们正在进行的工作。", IDC_EXPLANATION, 7, 7, 210, 31
     GROUPBOX "兼容模式", IDC_COMPATGROUP, 7, 41, 210, 49
-    CHECKBOX "用兼容模式运行这个程序:", IDC_CHKRUNCOMPATIBILITY, 18, 57, 188, 10, BS_AUTOCHECKBOX | WS_TABSTOP
+    CHECKBOX "用兼容模式运行这个程序：", IDC_CHKRUNCOMPATIBILITY, 18, 57, 188, 10, BS_AUTOCHECKBOX | WS_TABSTOP
     COMBOBOX IDC_COMPATIBILITYMODE, 18, 70, 188, 85, CBS_HASSTRINGS | CBS_DROPDOWNLIST | WS_TABSTOP | WS_DISABLED
     GROUPBOX "显示设置", -1, 7, 99, 210, 61, BS_GROUPBOX
     CHECKBOX "以 256 色运行", IDC_CHKRUNIN256COLORS, 18, 114, 188, 10, BS_AUTOCHECKBOX | WS_TABSTOP
@@ -33,8 +34,8 @@ BEGIN
     PUSHBUTTON      "<",IDC_REMOVE,144,60,18,14,WS_DISABLED
     PUSHBUTTON      "确定(&O)",IDOK,174,114,60,14
     PUSHBUTTON      "取消(&C)",IDCANCEL,240,114,60,14
-    LTEXT           "Available modes",-1,6,6,52,8
-    LTEXT           "Selected modes",-1,168,6,51,8
+    LTEXT           "可用模式",-1,6,6,52,8
+    LTEXT           "已选模式",-1,168,6,51,8
 END
 
 STRINGTABLE

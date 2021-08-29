@@ -5,6 +5,7 @@
  * PURPOSE:    Chinese (Simplified) Language File for ReactX-Diagnostic program
  * TRANSLATOR: Elton Chung <elton328@gmail.com>
  *             Li Keqing <auroracloud4096@gmail.com>
+ *             Wu Haotian <rigoligo03@gmail.com>
  */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
@@ -27,7 +28,7 @@ STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 9, "宋体"
 BEGIN
     LTEXT "该工具报告有关 ReactX 组件和安装在系统上的驱动程序的详细信息。", IDC_STATIC, 5, 0, 443, 17
-    LTEXT "如果您知道是哪个部分引起的错误，请单击上面适当的选项卡。否则，您可以使用下面的“下一页”按钮按顺序查阅每一页。 ", IDC_STATIC, 5, 15, 443, 25
+    LTEXT "如果您知道是哪个部分引起的错误，请单击上面适当的选项卡。否则，您可以使用下面的“下一页”按钮按顺序查阅每一页。", IDC_STATIC, 5, 15, 443, 25
     GROUPBOX "系统信息", IDC_STATIC, 5, 35, 452, 150, SS_RIGHT
     LTEXT "当前日期/时间：", IDC_STATIC, 70, 50, 80, 10, SS_RIGHT
     LTEXT "计算机名：", IDC_STATIC, 70, 60, 80, 10, SS_RIGHT
@@ -191,7 +192,7 @@ IDD_HELP_DIALOG DIALOGEX 0, 0, 462, 220
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 9, "宋体"
 BEGIN
-    LTEXT "仍然找不到你要找的信息吗？下面是一些其他的事情你可以做：", IDC_STATIC, 5, 0, 300, 10
+    LTEXT "仍然找不到你要找的信息吗？下面是一些你可以做的其他的事情：", IDC_STATIC, 5, 0, 300, 10
     PUSHBUTTON "系统信息", IDC_BUTTON_SYSINFO, 5, 20, 80, 14, WS_DISABLED
     LTEXT "显示附加的系统信息", IDC_STATIC, 90, 23, 300, 10
     PUSHBUTTON "刷新频率替换", IDC_BUTTON_DDRAW_REFRESH, 5, 40, 80, 14, WS_DISABLED
@@ -210,8 +211,8 @@ BEGIN
     IDS_HELP_DIALOG "帮助"
     IDS_FORMAT_MB "%I64uMB RAM"
     IDS_FORMAT_SWAP "已使用 %I64u MB，还有 %I64u MB 可用"
-    IDS_FORMAT_UNIPROC "%s (%u CPU)"
-    IDS_FORMAT_MPPROC "%s (%u CPUs)"
+    IDS_FORMAT_UNIPROC "%s（%u 个 CPU）"
+    IDS_FORMAT_MPPROC "%s（%u 个 CPU）" /* Note: there's usually no plural form of a noun in Chinese. */
     IDS_VERSION_UNKNOWN "未知版本"
     IDS_DEVICE_STATUS_ATTACHED "已连接"
     IDS_DEVICE_STATUS_MISSING "已中断连接"
@@ -247,7 +248,7 @@ BEGIN
     IDS_DDFULLSCREEN_DESCRIPTION "此测试将使用 DirectDraw 在全屏模式绘图。您应该会看到移动的白方块。是否继续？"
     IDS_DDFULLSCREEN_RESULT "您是否在全屏模式中看到移动的白色矩形？"
     IDS_FORMAT_ADAPTER_MEM "%u MB"
-    IDS_FORMAT_ADAPTER_MODE "%d x %d (%u bit)(%uHz)"
+    IDS_FORMAT_ADAPTER_MODE "%d x %d（%u bit）（%uHz）"
     IDS_OPTION_NO "否"
     IDS_D3DTEST_DESCRIPTION "这将启动 Direct3D 表面测试。是否继续？"
     IDS_D3DTEST_D3Dx "此测试将使用硬体加速的 Direct3D %u 接口。"

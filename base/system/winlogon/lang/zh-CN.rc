@@ -1,5 +1,6 @@
 /* Simplified Chinese translation by zhangbing <e_zb@21cn.com, ezb@mail.gywb.cn> */
 /* Improved by Luo Yufan (njlyf2011@hotmail.com), Wexpo Lyu (laosb@lasteam.net) */
+/* Improved by Wu Haotian <rigoligo03@gmail.com> 2021 */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
@@ -29,7 +30,7 @@ CAPTION "关机"
 FONT 9, "宋体"
 BEGIN
     ICON IDI_WARNING, IDC_SYSSHUTDOWNICON, 6, 7, 18, 20
-    LTEXT "已启动系统关闭。请保存所有工作并终止会话。 系统关闭时，所有未保存的工作都将丢失。", -1, 38, 7, 135, 40
+    LTEXT "已计划系统关闭。请保存所有工作并终止会话。系统关闭时，所有未保存的工作都将丢失。", -1, 38, 7, 135, 40
     LTEXT "系统将在以下时间内关机：", -1, 38, 50, 90, 8
     LTEXT "00:00:00", IDC_SYSSHUTDOWNTIMELEFT, 132, 50, 41, 8
     LTEXT "附加信息：", -1, 38, 65, 135, 8
@@ -47,8 +48,8 @@ BEGIN
     IDS_RUNNINGLOGONSCRIPTS "正在运行登录脚本..."
     IDS_LOADINGYOURPERSONALSETTINGS "正在加载个人设置..."
     IDS_CLOSINGNETWORKCONNECTIONS "正在关闭网络连接..."
-    IDS_REACTOSISRESTARTING "Restarting..."
-    IDS_REACTOSISSHUTTINGDOWN "Shutting down..."
+    IDS_REACTOSISRESTARTING "正在重新启动..."
+    IDS_REACTOSISSHUTTINGDOWN "正在关机..."
     IDS_PREPARETOSTANDBY "正在准备待机..."
     IDS_PREPARETOHIBERNATE "正在准备休眠..."
     IDS_SAVEYOURSETTINGS "正在保存设置..."
