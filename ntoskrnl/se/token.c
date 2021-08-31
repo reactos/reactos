@@ -599,6 +599,43 @@ SepRemovePrivilegeToken(
 }
 
 /**
+ * @brief
+ * Removes a group from the token.
+ *
+ * @param[in,out] Token
+ * The token where the group is to be removed.
+ *
+ * @param[in] Index
+ * The index count which represents the number position of the group
+ * we want to remove.
+ *
+ * @return
+ * Nothing.
+ */
+static
+VOID
+SepRemoveUserGroupToken(
+    _Inout_ PTOKEN Token,
+    _In_ ULONG Index)
+{
+    ULONG MoveCount;
+    ASSERT(Index < Token->UserAndGroupCount);
+
+    /* Calculate the number of trailing groups */
+    MoveCount = Token->UserAndGroupCount - Index - 1;
+    if (MoveCount != 0)
+    {
+        /* Time to remove the group by moving one location ahead */
+        RtlMoveMemory(&Token->UserAndGroups[Index],
+                      &Token->UserAndGroups[Index + 1],
+                      MoveCount * sizeof(SID_AND_ATTRIBUTES));
+    }
+
+    /* Remove one group count */
+    Token->UserAndGroupCount--;
+}
+
+/**
  * @unimplemented
  * @brief
  * Frees (de-allocates) the proxy data memory block of a token. 
@@ -969,6 +1006,7 @@ SepDuplicateToken(
     PVOID EndMem;
     ULONG VariableLength;
     ULONG TotalSize;
+    ULONG PrivilegesIndex, GroupsIndex;
 
     PAGED_CODE();
 
@@ -1141,12 +1179,64 @@ SepDuplicateToken(
         }
     }
 
+    /*
+     * Filter the token by removing the disabled privileges
+     * and groups if the caller wants to duplicate an access
+     * token as effective only.
+     */
+    if (EffectiveOnly)
+    {
+        /* Begin querying the groups and search for disabled ones */
+        for (GroupsIndex = 0; GroupsIndex < AccessToken->UserAndGroupCount; GroupsIndex++)
+        {
+            /*
+             * A group or user is considered disabled if its attributes is either
+             * 0 or SE_GROUP_ENABLED is not included in the attributes flags list.
+             * That is because a certain user and/or group can have several attributes
+             * that bear no influence on whether a user/group is enabled or not
+             * (SE_GROUP_ENABLED_BY_DEFAULT for example which is a mere indicator
+             * that the group has just been enabled by default). A mandatory
+             * group (that is, the group has SE_GROUP_MANDATORY attribute)
+             * by standards it's always enabled and no one can disable it.
+             */
+            if (AccessToken->UserAndGroups[GroupsIndex].Attributes == 0 ||
+                (AccessToken->UserAndGroups[GroupsIndex].Attributes & SE_GROUP_ENABLED) == 0)
+            {
+                /*
+                 * A group is not enabled, it's time to remove
+                 * from the token and update the groups index
+                 * accordingly and continue with the next group.
+                 */
+                SepRemoveUserGroupToken(AccessToken, GroupsIndex);
+                GroupsIndex--;
+            }
+        }
 
-    //
-    // FIXME: Implement the "EffectiveOnly" option, that removes all
-    // the disabled parts (privileges and groups) of the token.
-    //
-
+        /* Begin querying the privileges and search for disabled ones */
+        for (PrivilegesIndex = 0; PrivilegesIndex < AccessToken->PrivilegeCount; PrivilegesIndex++)
+        {
+            /*
+             * A privilege is considered disabled if its attributes is either
+             * 0 or SE_PRIVILEGE_ENABLED is not included in the attributes flags list.
+             * That is because a certain privilege can have several attributes
+             * that bear no influence on whether a privilege is enabled or not
+             * (SE_PRIVILEGE_ENABLED_BY_DEFAULT for example which is a mere indicator
+             * that the privilege has just been enabled by default).
+             */
+            if (AccessToken->Privileges[PrivilegesIndex].Attributes == 0 ||
+                (AccessToken->Privileges[PrivilegesIndex].Attributes & SE_PRIVILEGE_ENABLED) == 0)
+            {
+                /*
+                 * A privilege is not enabled, therefor it's time
+                 * to strip it from the token and continue with the next
+                 * privilege. Of course we must also want to update the
+                 * privileges index accordingly.
+                 */
+                SepRemovePrivilegeToken(AccessToken, PrivilegesIndex);
+                PrivilegesIndex--;
+            }
+        }
+    }
 
     //
     // NOTE: So far our dynamic area only contains
