@@ -4,6 +4,7 @@
  * FILE:            drivers/wdm/audio/backpln/portcls/pin_wavepci.cpp
  * PURPOSE:         WavePci IRP Audio Pin
  * PROGRAMMER:      Johannes Anderwald
+ *                  Oleg Dubinskiy
  */
 
 #include "private.hpp"
@@ -74,9 +75,12 @@ protected:
 
     KSALLOCATOR_FRAMING m_AllocatorFraming;
 
+    KSRESET m_ResetState;
+
     LONG m_Ref;
 
     NTSTATUS NTAPI HandleKsProperty(IN PIRP Irp);
+    NTSTATUS NTAPI HandleKsReset(IN PIRP Irp);
     NTSTATUS NTAPI HandleKsStream(IN PIRP Irp);
 };
 
@@ -460,14 +464,13 @@ CPortPinWavePci::TerminatePacket()
     return STATUS_SUCCESS;
 }
 
-
 VOID
 NTAPI
 CPortPinWavePci::RequestService()
 {
     PC_ASSERT_IRQL(DISPATCH_LEVEL);
 
-    if (m_State == KSSTATE_RUN)
+    if (m_State == KSSTATE_RUN && m_ResetState == KSRESET_END)
     {
         m_Stream->Service();
         //TODO
@@ -544,6 +547,45 @@ CPortPinWavePci::HandleKsProperty(
 
 NTSTATUS
 NTAPI
+CPortPinWavePci::HandleKsReset(
+    IN PIRP Irp)
+{
+    KSRESET ResetValue;
+    NTSTATUS Status;
+
+    Status = KsAcquireResetValue(Irp, &ResetValue);
+    DPRINT("Status %x Value %u\n", Status, ResetValue);
+    /* check for success */
+    if (NT_SUCCESS(Status))
+    {
+        //determine state of reset request
+        if (ResetValue == KSRESET_BEGIN)
+        {
+            // start reset process
+            // incoming read/write requests will be rejected
+            m_ResetState = KSRESET_BEGIN;
+
+            // cancel existing buffers
+            m_IrpQueue->CancelBuffers();
+        }
+        else if (ResetValue == KSRESET_END)
+        {
+            // end of reset process
+            m_ResetState = KSRESET_END;
+        }
+    }
+
+    if (Status != STATUS_PENDING)
+    {
+        Irp->IoStatus.Status = Status;
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    }
+
+    return Status;
+}
+
+NTSTATUS
+NTAPI
 CPortPinWavePci::HandleKsStream(
     IN PIRP Irp)
 {
@@ -554,24 +596,40 @@ CPortPinWavePci::HandleKsStream(
 
     DPRINT("IPortPinWaveCyclic_HandleKsStream entered Total %u State %x MinData %u\n", m_TotalPackets, m_State, m_IrpQueue->NumData());
 
-    bFailed = m_IrpQueue->HasLastMappingFailed();
-
-    Status = m_IrpQueue->AddMapping(Irp, &Data);
-
-    if (NT_SUCCESS(Status))
+    /* is the device not currently reset */
+    if (m_ResetState == KSRESET_END)
     {
-        if (m_Capture)
-            m_Position.WriteOffset += Data;
-        else
-            m_Position.PlayOffset += Data;
+        bFailed = m_IrpQueue->HasLastMappingFailed();
 
-        if (bFailed)
+        Status = m_IrpQueue->AddMapping(Irp, &Data);
+
+        if (NT_SUCCESS(Status))
         {
-            // notify stream of new mapping
-            m_Stream->MappingAvailable();
-        }
+            if (m_Capture)
+                m_Position.WriteOffset += Data;
+            else
+                m_Position.PlayOffset += Data;
 
-        return STATUS_PENDING;
+            if (bFailed)
+            {
+                // notify stream of new mapping
+                m_Stream->MappingAvailable();
+            }
+
+            Status = STATUS_PENDING;
+        }
+    }
+    else
+    {
+        /* reset request is currently in progress */
+        Status = STATUS_DEVICE_NOT_READY;
+        DPRINT1("NotReady\n");
+    }
+
+    if (Status != STATUS_PENDING)
+    {
+        Irp->IoStatus.Status = Status;
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
     }
 
     return Status;
@@ -588,22 +646,33 @@ CPortPinWavePci::DeviceIoControl(
 
     IoStack = IoGetCurrentIrpStackLocation(Irp);
 
-    if (IoStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_KS_PROPERTY)
+    switch (IoStack->Parameters.DeviceIoControl.IoControlCode)
     {
-        return HandleKsProperty(Irp);
-    }
-    else if (IoStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_KS_WRITE_STREAM || IoStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_KS_READ_STREAM)
-    {
-       return HandleKsStream(Irp);
-    }
+        case IOCTL_KS_PROPERTY:
+            return HandleKsProperty(Irp);
 
-    UNIMPLEMENTED;
+        case IOCTL_KS_ENABLE_EVENT:
+            return PcHandleEnableEventWithTable(Irp, &m_Descriptor);
+
+        case IOCTL_KS_DISABLE_EVENT:
+            return PcHandleDisableEventWithTable(Irp, &m_Descriptor);
+
+        case IOCTL_KS_RESET_STATE:
+            return HandleKsReset(Irp);
+
+        case IOCTL_KS_READ_STREAM:
+        case IOCTL_KS_WRITE_STREAM:
+            return HandleKsStream(Irp);
+
+        default:
+            return KsDefaultDeviceIoCompletion(DeviceObject, Irp);
+    }
 
     Irp->IoStatus.Information = 0;
-    Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
+    Irp->IoStatus.Status = STATUS_SUCCESS;
     IoCompleteRequest(Irp, IO_NO_INCREMENT);
 
-    return STATUS_UNSUCCESSFUL;
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS
@@ -946,6 +1015,9 @@ CPortPinWavePci::Init(
         // this function should never fail
         ASSERT(0);
     }
+
+    // initialize reset state
+    m_ResetState = KSRESET_END;
 
     // release subdevice
     Subdevice->Release();
