@@ -1,5 +1,7 @@
 
-include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
+include_directories(
+    ${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine
+    ${REACTOS_SOURCE_DIR}/sdk/include/reactos/subsys)
 add_definitions(-D__WINESRC__)
 
 remove_definitions(-D_WIN32_WINNT=0x502)
@@ -14,6 +16,6 @@ list(APPEND SOURCE
 
 add_library(imm32 MODULE ${SOURCE} version.rc)
 set_module_type(imm32 win32dll)
-target_link_libraries(imm32 wine win32ksys)
+target_link_libraries(imm32 wine pseh win32ksys)
 add_importlibs(imm32 advapi32 user32 gdi32 msvcrt kernel32 ntdll)
 add_cd_file(TARGET imm32 DESTINATION reactos/system32 FOR all)

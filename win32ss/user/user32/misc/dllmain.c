@@ -439,6 +439,7 @@ Init(PUSERCONNECT UserCon /*PUSERSRV_API_CONNECTINFO*/)
         gHandleEntries = SharedPtrToUser(gHandleTable->handles);
         gSharedInfo = UserCon->siClient;
         gSharedInfo.psi = gpsi;
+        gSharedInfo.aheList = gHandleTable;
     }
 
     // FIXME: Yet another hack... This call should normally not be done here, but

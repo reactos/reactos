@@ -34,6 +34,7 @@
 #include <undocuser.h>
 #include <imm32_undoc.h>
 #include <strsafe.h>
+#include <pseh/pseh2.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(imm);
 
@@ -61,7 +62,7 @@ SHAREDINFO g_SharedInfo = { NULL };
 BYTE g_bClientRegd = FALSE;
 HANDLE g_hImm32Heap = NULL;
 
-static PWND FASTCALL ValidateHwndNoErr(HWND hwnd)
+static PWND FASTCALL ValidateHwndNoErr(HWND hWnd)
 {
     PCLIENTINFO ClientInfo = GetWin32ClientInfo();
     INT index;
@@ -69,19 +70,28 @@ static PWND FASTCALL ValidateHwndNoErr(HWND hwnd)
     WORD generation;
 
     /* See if the window is cached */
-    if (hwnd == ClientInfo->CallbackWnd.hWnd)
+    if (hWnd == ClientInfo->CallbackWnd.hWnd)
         return ClientInfo->CallbackWnd.pWnd;
 
-    if (!NtUserValidateHandleSecure(hwnd))
-        return NULL;
-
     ht = g_SharedInfo.aheList; /* handle table */
-    index = (LOWORD(hwnd) - FIRST_USER_HANDLE) >> 1;
-    if (index < 0 || index >= ht->nb_handles || ht->handles[index].type != TYPE_WINDOW)
-        return NULL;
+    index = (LOWORD(hWnd) - FIRST_USER_HANDLE) >> 1;
 
-    generation = HIWORD(hwnd);
-    if (generation != ht->handles[index].generation && generation && generation != 0xFFFF)
+    _SEH2_TRY
+    {
+        if (index < 0 || index >= ht->nb_handles || ht->handles[index].type != TYPE_WINDOW)
+            return NULL;
+
+        generation = HIWORD(hWnd);
+        if (generation != ht->handles[index].generation && generation && generation != 0xFFFF)
+            return NULL;
+    }
+    _SEH2_EXCEPT(_SEH2_GetExceptionCode() == STATUS_ACCESS_VIOLATION)
+    {
+        return NULL;
+    }
+    _SEH2_END
+
+    if (!NtUserValidateHandleSecure(hWnd))
         return NULL;
 
     return (PWND)&ht->handles[index];
@@ -5078,6 +5088,7 @@ BOOL WINAPI ImmSetActiveContextConsoleIME(HWND hwnd, BOOL fFlag)
 */
 BOOL WINAPI ImmRegisterClient(PSHAREDINFO ptr, HINSTANCE hMod)
 {
+    TRACE("(%p, %p)\n", ptr, hMod);
     g_SharedInfo = *ptr;
     g_psi = g_SharedInfo.psi;
     return Imm32InitInstance(hMod);
