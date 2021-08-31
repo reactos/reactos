@@ -72,8 +72,4 @@ typedef struct _PATRECT
     HBRUSH hBrush;
 } PATRECT, * PPATRECT;
 
-HRESULT
-GetImmFileName(_Out_ LPWSTR lpBuffer,
-               _In_ size_t cchBuffer);
-
 #endif /* _USER32_PCH_ */
