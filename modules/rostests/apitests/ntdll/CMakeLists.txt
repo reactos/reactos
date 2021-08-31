@@ -20,6 +20,7 @@ list(APPEND SOURCE
     NtCreateThread.c
     NtDeleteKey.c
     NtDuplicateObject.c
+    NtDuplicateToken.c
     NtFreeVirtualMemory.c
     NtImpersonateAnonymousToken.c
     NtLoadUnloadKey.c
