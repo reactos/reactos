@@ -39,13 +39,12 @@ typedef struct
 extern HINSTANCE User32Instance;
 #define user32_module User32Instance
 extern PPROCESSINFO g_ppi;
-extern ULONG_PTR g_ulSharedDelta;
-extern PSERVERINFO gpsi;
 extern SHAREDINFO gSharedInfo;
-extern BOOLEAN gfLogonProcess;
-extern BOOLEAN gfServerProcess;
+extern PSERVERINFO gpsi;
 extern PUSER_HANDLE_TABLE gHandleTable;
 extern PUSER_HANDLE_ENTRY gHandleEntries;
+extern BOOLEAN gfLogonProcess;
+extern BOOLEAN gfServerProcess;
 extern CRITICAL_SECTION U32AccelCacheLock;
 extern HINSTANCE ghImm32;
 extern RTL_CRITICAL_SECTION gcsUserApiHook;

@@ -531,8 +531,8 @@ NtUserProcessConnect(
 
     TRACE("NtUserProcessConnect\n");
 
-    if ( pUserConnect == NULL ||
-         Size         != sizeof(*pUserConnect) )
+    if (pUserConnect == NULL ||
+        Size != sizeof(*pUserConnect))
     {
         return STATUS_UNSUCCESSFUL;
     }
@@ -553,14 +553,51 @@ NtUserProcessConnect(
 
     _SEH2_TRY
     {
+        UINT i;
+
         // FIXME: Check that pUserConnect->ulVersion == USER_VERSION;
+        // FIXME: Check the value of pUserConnect->dwDispatchCount.
 
         ProbeForWrite(pUserConnect, sizeof(*pUserConnect), sizeof(PVOID));
-        pUserConnect->siClient.psi = gpsi;
-        pUserConnect->siClient.aheList = gHandleTable;
+
+        // FIXME: Instead of assuming that the mapping of the heap desktop
+        // also holds there, we **MUST** create and map instead the shared
+        // section! Its client base must be stored in W32Process->pClientBase.
+        // What is currently done (ReactOS-specific only), is that within the
+        // IntUserHeapCommitRoutine()/MapGlobalUserHeap() routines we assume
+        // it's going to be also called early, so that we manually add a very
+        // first memory mapping that corresponds to the "global user heap",
+        // and that we use instead of a actual win32 "shared USER section"
+        // (see slide 29 of https://paper.bobylive.com/Meeting_Papers/BlackHat/USA-2011/BH_US_11_Mandt_win32k_Slides.pdf )
+
         pUserConnect->siClient.ulSharedDelta =
             (ULONG_PTR)W32Process->HeapMappings.KernelMapping -
             (ULONG_PTR)W32Process->HeapMappings.UserMapping;
+
+#define SERVER_TO_CLIENT(ptr) \
+    ((PVOID)((ULONG_PTR)ptr - pUserConnect->siClient.ulSharedDelta))
+
+        ASSERT(gpsi);
+        ASSERT(gHandleTable);
+
+        pUserConnect->siClient.psi       = SERVER_TO_CLIENT(gpsi);
+        pUserConnect->siClient.aheList   = SERVER_TO_CLIENT(gHandleTable);
+        pUserConnect->siClient.pDispInfo = NULL;
+
+        // NOTE: kernel server should also have a SHAREDINFO gSharedInfo;
+        // FIXME: These USER window-proc data should be used somehow!
+
+        pUserConnect->siClient.DefWindowMsgs.maxMsgs     = 0;
+        pUserConnect->siClient.DefWindowMsgs.abMsgs      = NULL;
+        pUserConnect->siClient.DefWindowSpecMsgs.maxMsgs = 0;
+        pUserConnect->siClient.DefWindowSpecMsgs.abMsgs  = NULL;
+
+        for (i = 0; i < ARRAYSIZE(pUserConnect->siClient.awmControl); ++i)
+        {
+            pUserConnect->siClient.awmControl[i].maxMsgs = 0;
+            pUserConnect->siClient.awmControl[i].abMsgs  = NULL;
+        }
+#undef SERVER_TO_CLIENT
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {

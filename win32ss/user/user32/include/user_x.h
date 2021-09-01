@@ -4,8 +4,8 @@ static __inline PVOID
 SharedPtrToUser(PVOID Ptr)
 {
     ASSERT(Ptr != NULL);
-    ASSERT(g_ulSharedDelta != 0);
-    return (PVOID)((ULONG_PTR)Ptr - g_ulSharedDelta);
+    ASSERT(gSharedInfo.ulSharedDelta != 0);
+    return (PVOID)((ULONG_PTR)Ptr - gSharedInfo.ulSharedDelta);
 }
 
 static __inline PVOID
