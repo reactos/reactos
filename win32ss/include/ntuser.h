@@ -858,10 +858,11 @@ typedef LONG_PTR
 #define FNID_TOOLTIPS               0x02B6
 #define FNID_SENDNOTIFYMESSAGE      0x02B7
 #define FNID_SENDMESSAGECALLBACK    0x02B8
-#define FNID_LAST                   0x02B9
 
-#define FNID_NUM FNID_LAST - FNID_FIRST + 1
-#define FNID_NUMSERVERPROC FNID_SWITCH - FNID_FIRST + 1
+#define FNID_LAST                   FNID_SENDMESSAGECALLBACK
+
+#define FNID_NUM                    (FNID_LAST - FNID_FIRST + 1)
+#define FNID_NUMSERVERPROC          (FNID_SWITCH - FNID_FIRST + 1)
 
 #define FNID_DDEML   0x2000 /* Registers DDEML */
 #define FNID_DESTROY 0x4000 /* This is sent when WM_NCDESTROY or in the support routine. */
@@ -1084,11 +1085,11 @@ typedef struct _WNDMSG
 
 typedef struct _SHAREDINFO
 {
-    PSERVERINFO psi; /* global Server Info */
-    PVOID aheList; /* Handle Entry List */
-    PVOID pDispInfo; /* global PDISPLAYINFO pointer */
-    ULONG_PTR ulSharedDelta; /* Heap delta */
-    WNDMSG awmControl[FNID_LAST - FNID_FIRST];
+    PSERVERINFO psi;         /* Global Server Info */
+    PVOID aheList;           /* Handle Entry List */
+    PVOID pDispInfo;         /* Global PDISPLAYINFO pointer */
+    ULONG_PTR ulSharedDelta; /* Shared USER mapped section delta */
+    WNDMSG awmControl[FNID_NUM];
     WNDMSG DefWindowMsgs;
     WNDMSG DefWindowSpecMsgs;
 } SHAREDINFO, *PSHAREDINFO;
