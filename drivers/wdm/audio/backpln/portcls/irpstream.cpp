@@ -4,6 +4,7 @@
  * FILE:            drivers/wdm/audio/backpln/portcls/irpstream.cpp
  * PURPOSE:         IRP Stream handling
  * PROGRAMMER:      Johannes Anderwald
+ *                  Oleg Dubinskiy
  */
 
 #include "private.hpp"
@@ -779,23 +780,50 @@ CIrpQueue::GetCurrentIrpOffset()
 BOOLEAN
 NTAPI
 CIrpQueue::GetAcquiredTagRange(
-    IN PVOID * FirstTag,
-    IN PVOID * LastTag)
+    OUT PVOID * FirstTag,
+    OUT PVOID * LastTag)
 {
     KIRQL OldLevel;
     BOOLEAN Ret = FALSE;
-    //PIRP Irp;
-    //PLIST_ENTRY CurEntry;
-    //PKSSTREAM_DATA StreamData;
+    PIRP Irp;
+    PLIST_ENTRY CurEntry;
+    PKSSTREAM_DATA StreamData;
 
     // lock list
     KeAcquireSpinLock(&m_IrpListLock, &OldLevel);
 
-    // initialize to zero
-    *FirstTag = NULL;
-    *LastTag = NULL;
+    CurEntry = m_IrpList.Flink;
 
-    UNIMPLEMENTED;
+    while (CurEntry != &m_IrpList)
+    {
+        // get irp from list entry
+        Irp = (PIRP)CONTAINING_RECORD(CurEntry, IRP, Tail.Overlay.ListEntry);
+
+        // get stream data
+        StreamData = (PKSSTREAM_DATA)Irp->Tail.Overlay.DriverContext[STREAM_DATA_OFFSET];
+
+        if (StreamData->StreamHeaderIndex == 0)
+        {
+            // store the first tag from stream header index
+            *FirstTag = StreamData->Tags[StreamData->StreamHeaderIndex].Tag;
+        }
+
+        // increment stream header index
+        StreamData->StreamHeaderIndex++;
+
+        if (StreamData->StreamHeaderIndex == StreamData->StreamHeaderCount)
+        {
+            // store the last tag from stream header index
+            *LastTag = StreamData->Tags[StreamData->StreamHeaderIndex].Tag;
+
+            // done
+            Ret = TRUE;
+            break;
+        }
+
+        // move to the next entry
+        CurEntry = CurEntry->Flink;
+    }
 
     // release lock
     KeReleaseSpinLock(&m_IrpListLock, OldLevel);

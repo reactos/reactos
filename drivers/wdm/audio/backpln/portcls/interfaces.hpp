@@ -396,8 +396,8 @@ DECLARE_INTERFACE_(IIrpQueue, IUnknown)
     STDMETHODIMP_(BOOLEAN) HasLastMappingFailed(THIS); \
     STDMETHODIMP_(ULONG) GetCurrentIrpOffset(THIS);    \
     STDMETHODIMP_(BOOLEAN) GetAcquiredTagRange(THIS_      \
-        IN PVOID * FirstTag,                           \
-        IN PVOID * LastTag);
+        OUT PVOID * FirstTag,                           \
+        OUT PVOID * LastTag);
 
 
 
