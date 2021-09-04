@@ -3932,8 +3932,9 @@ NtUserQueryWindow(HWND hWnd, DWORD Index)
 #define GWLP_CONSOLE_LEADER_PID 0
 #define GWLP_CONSOLE_LEADER_TID 4
 
-   PWND pWnd;
    DWORD_PTR Result;
+   PWND pWnd, pwndActive;
+   PTHREADINFO pti, ptiActive;
    DECLARE_RETURN(UINT);
 
    TRACE("Enter NtUserQueryWindow\n");
@@ -3996,19 +3997,33 @@ NtUserQueryWindow(HWND hWnd, DWORD Index)
          Result = (pWnd->head.pti->MessageQueue == gpqForeground);
          break;
 
-      case QUERY_WINDOW_DEFAULT_IME:
-         ERR("QUERY_WINDOW_DEFAULT_IME: FIXME\n");
-         Result = 0;
+      case QUERY_WINDOW_DEFAULT_IME: /* default IME window */
+         if (pWnd->head.pti->spwndDefaultIme)
+            Result = (DWORD_PTR)UserHMGetHandle(pWnd->head.pti->spwndDefaultIme);
+         else
+            Result = 0;
          break;
 
-      case QUERY_WINDOW_DEFAULT_ICONTEXT:
-         ERR("QUERY_WINDOW_DEFAULT_ICONTEXT: FIXME\n");
-         Result = 0;
+      case QUERY_WINDOW_DEFAULT_ICONTEXT: /* default input context handle */
+         if (pWnd->head.pti->spDefaultImc)
+            Result = (DWORD_PTR)UserHMGetHandle(pWnd->head.pti->spDefaultImc);
+         else
+            Result = 0;
          break;
 
       case QUERY_WINDOW_ACTIVE_IME:
-         ERR("QUERY_WINDOW_ACTIVE_IME: FIXME\n");
          Result = 0;
+         if (gpqForeground && gpqForeground->spwndActive)
+         {
+             pwndActive = gpqForeground->spwndActive;
+             pti = PsGetCurrentThreadWin32Thread();
+             if (pti->rpdesk == pwndActive->head.rpdesk)
+             {
+                ptiActive = pwndActive->head.pti;
+                if (ptiActive->spwndDefaultIme)
+                   Result = (DWORD_PTR)UserHMGetHandle(ptiActive->spwndDefaultIme);
+             }
+         }
          break;
 
       default:

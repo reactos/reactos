@@ -25,10 +25,13 @@
 extern "C" {
 #endif
 
+#ifdef __REACTOS__
+DECLARE_HANDLE(HIMC);
+DECLARE_HANDLE(HIMCC);
+typedef HKL *LPHKL;
+#else
 typedef HANDLE HIMC;
 typedef HANDLE HIMCC;
-#ifdef __REACTOS__
-typedef HKL *LPHKL;
 #endif
 
 typedef struct tagREGISTERWORDA {
@@ -853,7 +856,7 @@ BOOL WINAPI ImmIsUIMessageW(_In_ HWND, _In_ UINT, _In_ WPARAM, _In_ LPARAM);
 
 BOOL WINAPI ImmNotifyIME(_In_ HIMC, _In_ DWORD, _In_ DWORD, _In_ DWORD);
 
-BOOL   WINAPI ImmProcessKey(HWND, HKL, UINT, LPARAM, DWORD);
+DWORD WINAPI ImmProcessKey(HWND, HKL, UINT, LPARAM, DWORD);
 
 BOOL
 WINAPI

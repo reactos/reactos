@@ -276,6 +276,7 @@ co_IntGetScrollInfo(PWND Window, INT nBar, PSBDATA pSBData, LPSCROLLINFO lpsi)
 
    ASSERT_REFS_CO(Window);
 
+   lpsi->fMask &= ~SIF_THEMED;    // Remove Theme bit
    if(!SBID_IS_VALID(nBar))
    {
       EngSetLastError(ERROR_INVALID_PARAMETER);
@@ -334,6 +335,7 @@ NEWco_IntGetScrollInfo(
   UINT Mask;
   PSBTRACK pSBTrack = pWnd->head.pti->pSBTrack;
 
+  lpsi->fMask &= ~SIF_THEMED;         // Remove Theme bit
   if (!SBID_IS_VALID(nBar))
   {
      EngSetLastError(ERROR_INVALID_PARAMETER);
@@ -511,7 +513,7 @@ co_IntSetScrollInfo(PWND Window, INT nBar, LPCSCROLLINFO lpsi, BOOL bRedraw)
       EngSetLastError(ERROR_INVALID_PARAMETER);
       return 0;
    }
-   if (lpsi->fMask & ~(SIF_ALL | SIF_DISABLENOSCROLL | SIF_PREVIOUSPOS))
+   if ((lpsi->fMask & ~SIF_THEMED) & ~(SIF_ALL | SIF_DISABLENOSCROLL | SIF_PREVIOUSPOS))
    {
       EngSetLastError(ERROR_INVALID_PARAMETER);
       return 0;
@@ -611,7 +613,7 @@ co_IntSetScrollInfo(PWND Window, INT nBar, LPCSCROLLINFO lpsi, BOOL bRedraw)
          }
       }
       else /* Show and enable scroll-bar only if no page only changed. */
-      if (lpsi->fMask != SIF_PAGE)
+      if ((lpsi->fMask & ~SIF_THEMED) != SIF_PAGE)
       {
          if ((nBar != SB_CTL) && bChangeParams)
          {
@@ -643,19 +645,48 @@ co_IntSetScrollInfo(PWND Window, INT nBar, LPCSCROLLINFO lpsi, BOOL bRedraw)
             return lpsi->fMask & SIF_PREVIOUSPOS ? OldPos : pSBData->pos; /* SetWindowPos() already did the painting */
       if (bRedraw)
       {
-         if (action & SA_SSI_REPAINT_ARROWS)
-         {  // Redraw the entire bar.
+         if (!(lpsi->fMask & SIF_THEMED)) /* Not Using Themes */
+         {
+            TRACE("Not using themes.\n");
+            if (action & SA_SSI_REPAINT_ARROWS)
+            {
+               // Redraw the entire bar.
+               RECTL UpdateRect = psbi->rcScrollBar;
+               UpdateRect.left -= Window->rcClient.left - Window->rcWindow.left;
+               UpdateRect.right -= Window->rcClient.left - Window->rcWindow.left;
+               UpdateRect.top -= Window->rcClient.top - Window->rcWindow.top;
+               UpdateRect.bottom -= Window->rcClient.top - Window->rcWindow.top;
+               co_UserRedrawWindow(Window, &UpdateRect, 0, RDW_INVALIDATE | RDW_FRAME);
+            }
+            else
+            {
+               // Redraw only the interior part of the bar.
+               IntRefeshScrollInterior(Window, nBar, psbi);
+            }
+         }
+         else  /* Using Themes */
+         {
             RECTL UpdateRect = psbi->rcScrollBar;
+            TRACE("Using themes.\n");
             UpdateRect.left -= Window->rcClient.left - Window->rcWindow.left;
             UpdateRect.right -= Window->rcClient.left - Window->rcWindow.left;
             UpdateRect.top -= Window->rcClient.top - Window->rcWindow.top;
             UpdateRect.bottom -= Window->rcClient.top - Window->rcWindow.top;
+            /* Just paint the interior and not the arrows. */
+            if (!(action & SA_SSI_REPAINT_ARROWS))
+            {
+               if (nBar == SB_HORZ)
+               {
+                  UpdateRect.left += psbi->dxyLineButton;
+                  UpdateRect.right -= psbi->dxyLineButton;
+               }
+               if (nBar == SB_VERT)
+               {
+                  UpdateRect.top += psbi->dxyLineButton;
+                  UpdateRect.bottom -= psbi->dxyLineButton;
+               }
+            }
             co_UserRedrawWindow(Window, &UpdateRect, 0, RDW_INVALIDATE | RDW_FRAME);
-         }
-         else
-         {
-            // Redraw only the interior part of the bar.
-            IntRefeshScrollInterior(Window, nBar, psbi);
          }
       } // FIXME: Arrows
 /*      else if( action & SA_SSI_REPAINT_ARROWS )

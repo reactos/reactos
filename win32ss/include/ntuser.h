@@ -6,9 +6,6 @@ struct _THREADINFO;
 struct _DESKTOP;
 struct _WND;
 struct tagPOPUPMENU;
-#ifndef HIMC
-typedef HANDLE HIMC;
-#endif
 
 #define FIRST_USER_HANDLE 0x0020 /* first possible value for low word of user handle */
 #define LAST_USER_HANDLE 0xffef /* last possible value for low word of user handle */
@@ -189,6 +186,14 @@ typedef struct _THRDESKHEAD
     struct _DESKTOP *rpdesk;
     PVOID pSelf;
 } THRDESKHEAD, *PTHRDESKHEAD;
+
+typedef struct tagIMC
+{
+    THRDESKHEAD    head;
+    struct tagIMC *pImcNext;
+    ULONG_PTR      dwClientImcData;
+    HWND           hImeWnd;
+} IMC, *PIMC;
 
 typedef struct _PROCDESKHEAD
 {
@@ -1212,6 +1217,19 @@ typedef struct _IMEWND
     PIMEUI pimeui;
 } IMEWND, *PIMEWND;
 
+typedef struct tagTRANSMSG
+{
+    UINT message;
+    WPARAM wParam;
+    LPARAM lParam;
+} TRANSMSG, *PTRANSMSG, *LPTRANSMSG;
+
+typedef struct tagTRANSMSGLIST
+{
+    UINT     uMsgCount;
+    TRANSMSG TransMsg[ANYSIZE_ARRAY];
+} TRANSMSGLIST, *PTRANSMSGLIST, *LPTRANSMSGLIST;
+
 #define DEFINE_IME_ENTRY(type, name, params, extended) typedef type (WINAPI *FN_##name) params;
 #include "imetable.h"
 #undef DEFINE_IME_ENTRY
@@ -1249,8 +1267,8 @@ C_ASSERT(offsetof(IMEDPI, ImeEnumRegisterWord) == 0x68);
 C_ASSERT(offsetof(IMEDPI, ImeConfigure) == 0x6c);
 C_ASSERT(offsetof(IMEDPI, ImeDestroy) == 0x70);
 C_ASSERT(offsetof(IMEDPI, ImeEscape) == 0x74);
-C_ASSERT(offsetof(IMEDPI, ImeSelect) == 0x78);
-C_ASSERT(offsetof(IMEDPI, ImeProcessKey) == 0x7c);
+C_ASSERT(offsetof(IMEDPI, ImeProcessKey) == 0x78);
+C_ASSERT(offsetof(IMEDPI, ImeSelect) == 0x7c);
 C_ASSERT(offsetof(IMEDPI, ImeSetActiveContext) == 0x80);
 C_ASSERT(offsetof(IMEDPI, ImeToAsciiEx) == 0x84);
 C_ASSERT(offsetof(IMEDPI, NotifyIME) == 0x88);
@@ -1293,6 +1311,7 @@ C_ASSERT(sizeof(CLIENTIMC) == 0x34);
 /* flags for CLIENTIMC */
 #define CLIENTIMC_WIDE 0x1
 #define CLIENTIMC_UNKNOWN1 0x40
+#define CLIENTIMC_UNKNOWN3 0x80
 #define CLIENTIMC_UNKNOWN2 0x100
 
 DWORD
@@ -2204,8 +2223,7 @@ NtUserGetAncestor(
 
 DWORD
 NTAPI
-NtUserGetAppImeLevel(
-    DWORD dwUnknown1);
+NtUserGetAppImeLevel(HWND hWnd);
 
 SHORT
 NTAPI

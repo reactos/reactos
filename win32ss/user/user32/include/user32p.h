@@ -129,6 +129,7 @@ VOID DeleteFrameBrushes(VOID);
 BOOL WINAPI GdiValidateHandle(HGDIOBJ);
 HANDLE FASTCALL UserGetProp(HWND hWnd, ATOM Atom, BOOLEAN SystemProp);
 BOOL WINAPI InitializeImmEntryTable(VOID);
+HRESULT GetImmFileName(_Out_ LPWSTR lpBuffer, _In_ size_t cchBuffer);
 BOOL WINAPI UpdatePerUserImmEnabling(VOID);
 
 /* EOF */

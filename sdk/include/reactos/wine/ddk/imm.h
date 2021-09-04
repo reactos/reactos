@@ -91,7 +91,7 @@ typedef struct INPUTCONTEXTDX /* unconfirmed */
 {
     INPUTCONTEXT;
     UINT nVKey;
-    BOOL bHasVKey;
+    BOOL bNeedsTrans;
     DWORD dwUnknownCat;
     DWORD dwUIFlags;
     DWORD dwUnknownDog;
@@ -101,7 +101,7 @@ typedef struct INPUTCONTEXTDX /* unconfirmed */
 
 #ifndef _WIN64
 C_ASSERT(offsetof(INPUTCONTEXTDX, nVKey) == 0x140);
-C_ASSERT(offsetof(INPUTCONTEXTDX, bHasVKey) == 0x144);
+C_ASSERT(offsetof(INPUTCONTEXTDX, bNeedsTrans) == 0x144);
 C_ASSERT(offsetof(INPUTCONTEXTDX, dwUIFlags) == 0x14c);
 #endif
 
@@ -131,6 +131,24 @@ C_ASSERT(offsetof(INPUTCONTEXTDX, dwUIFlags) == 0x14c);
 #define IR_STRINGEX      0x180
 #define IR_MODEINFO      0x190
 
+// for IR_UNDETERMINE
+typedef struct tagUNDETERMINESTRUCT
+{
+    DWORD dwSize;
+    UINT  uDefIMESize;
+    UINT  uDefIMEPos;
+    UINT  uUndetTextLen;
+    UINT  uUndetTextPos;
+    UINT  uUndetAttrPos;
+    UINT  uCursorPos;
+    UINT  uDeltaStart;
+    UINT  uDetermineTextLen;
+    UINT  uDetermineTextPos;
+    UINT  uDetermineDelimPos;
+    UINT  uYomiTextLen;
+    UINT  uYomiTextPos;
+    UINT  uYomiDelimPos;
+} UNDETERMINESTRUCT, *PUNDETERMINESTRUCT, *LPUNDETERMINESTRUCT;
 
 LPINPUTCONTEXT WINAPI ImmLockIMC(HIMC);
 

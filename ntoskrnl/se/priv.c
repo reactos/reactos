@@ -1,10 +1,10 @@
 /*
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS kernel
- * FILE:            ntoskrnl/se/priv.c
- * PURPOSE:         Security manager
- *
- * PROGRAMMERS:     No programmer listed.
+ * PROJECT:         ReactOS Kernel
+ * LICENSE:         GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:         Security privileges support
+ * COPYRIGHT:       Copyright Alex Ionescu <alex@relsoft.net>
+ *                  Copyright Timo Kreuzer <timo.kreuzer@reactos.org>
+ *                  Copyright Eric Kohl
  */
 
 /* INCLUDES ******************************************************************/
@@ -54,6 +54,15 @@ const LUID SeCreateSymbolicLinkPrivilege = CONST_LUID(SE_CREATE_SYMBOLIC_LINK_PR
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
+/**
+ * @brief
+ * Initializes the privileges during the startup phase of the security
+ * manager module. This function serves as a placeholder as it currently
+ * does nothing.
+ * 
+ * @return
+ * Nothing.
+ */
 CODE_SEG("INIT")
 VOID
 NTAPI
@@ -62,14 +71,40 @@ SepInitPrivileges(VOID)
 
 }
 
-
+/**
+ * @brief
+ * Checks the privileges pointed by Privileges array argument if they exist and
+ * match with the privileges from an access token.
+ * 
+ * @param[in] Token
+ * An access token where privileges are to be checked.
+ * 
+ * @param[in] Privileges
+ * An array of privileges with attributes used as checking indicator for
+ * the function.
+ * 
+ * @param[in] PrivilegeCount
+ * The total number count of privileges in the array.
+ * 
+ * @param[in] PrivilegeControl
+ * Privilege control bit mask to determine if we should check all the
+ * privileges based on the number count of privileges or not.
+ * 
+ * @param[in] PreviousMode
+ * Processor level access mode.
+ * 
+ * @return
+ * Returns TRUE if the required privileges exist and that they do match.
+ * Otherwise the functions returns FALSE.
+ */
 BOOLEAN
 NTAPI
-SepPrivilegeCheck(PTOKEN Token,
-                  PLUID_AND_ATTRIBUTES Privileges,
-                  ULONG PrivilegeCount,
-                  ULONG PrivilegeControl,
-                  KPROCESSOR_MODE PreviousMode)
+SepPrivilegeCheck(
+    _In_ PTOKEN Token,
+    _In_ PLUID_AND_ATTRIBUTES Privileges,
+    _In_ ULONG PrivilegeCount,
+    _In_ ULONG PrivilegeControl,
+    _In_ KPROCESSOR_MODE PreviousMode)
 {
     ULONG i;
     ULONG j;
@@ -129,12 +164,31 @@ SepPrivilegeCheck(PTOKEN Token,
     return FALSE;
 }
 
-NTSTATUS
+/**
+ * @brief
+ * Checks only single privilege based upon the privilege pointed by a LUID and
+ * if it matches with the one from an access token.
+ * 
+ * @param[in] PrivilegeValue
+ * The privilege to be checked.
+ * 
+ * @param[in] Token
+ * An access token where its privilege is to be checked against the one
+ * provided by the caller.
+ * 
+ * @param[in] PreviousMode
+ * Processor level access mode.
+ * 
+ * @return
+ * Returns TRUE if the required privilege exists and that it matches
+ * with the one from the access token, FALSE otherwise.
+ */
+BOOLEAN
 NTAPI
 SepSinglePrivilegeCheck(
-    LUID PrivilegeValue,
-    PTOKEN Token,
-    KPROCESSOR_MODE PreviousMode)
+    _In_ LUID PrivilegeValue,
+    _In_ PTOKEN Token,
+    _In_ KPROCESSOR_MODE PreviousMode)
 {
     LUID_AND_ATTRIBUTES Privilege;
     PAGED_CODE();
@@ -149,6 +203,40 @@ SepSinglePrivilegeCheck(
                              PreviousMode);
 }
 
+/**
+ * @brief
+ * Checks the security policy and returns a set of privileges
+ * based upon the said security policy context.
+ * 
+ * @param[in,out] DesiredAccess
+ * The desired access right mask.
+ * 
+ * @param[in,out] GrantedAccess
+ * The granted access rights masks. The rights are granted depending
+ * on the desired access rights requested by the calling thread.
+ * 
+ * @param[in] SubjectContext
+ * Security subject context. If the caller supplies one, the access token
+ * supplied by the caller will be assigned to one of client or primary tokens
+ * of the subject context in question.
+ * 
+ * @param[in] Token
+ * An access token.
+ * 
+ * @param[out] OutPrivilegeSet
+ * An array set of privileges to be reported to the caller, if the actual
+ * calling thread wants such set of privileges in the first place.
+ * 
+ * @param[in] PreviousMode
+ * Processor level access mode.
+ * 
+ * @return
+ * Returns STATUS_PRIVILEGE_NOT_HELD if the respective operations have succeeded
+ * without problems. STATUS_PRIVILEGE_NOT_HELD is returned if the access token
+ * doesn't have SeSecurityPrivilege privilege to warrant ACCESS_SYSTEM_SECURITY
+ * access right. STATUS_INSUFFICIENT_RESOURCES is returned if we failed
+ * to allocate block of memory pool for the array set of privileges.
+ */
 NTSTATUS
 NTAPI
 SePrivilegePolicyCheck(
@@ -248,6 +336,23 @@ SePrivilegePolicyCheck(
     return STATUS_SUCCESS;
 }
 
+/**
+ * @brief
+ * Checks a single privilege and performs an audit
+ * against a privileged service based on a security subject
+ * context.
+ * 
+ * @param[in] DesiredAccess
+ * Security subject context used for privileged service
+ * auditing.
+ * 
+ * @param[in] PreviousMode
+ * Processor level access mode.
+ * 
+ * @return
+ * Returns TRUE if service auditing and privilege checking
+ * tests have succeeded, FALSE otherwise.
+ */
 BOOLEAN
 NTAPI
 SeCheckAuditPrivilege(
@@ -282,17 +387,60 @@ SeCheckAuditPrivilege(
     return Result;
 }
 
+/**
+ * @brief
+ * Captures a LUID with attributes structure. This function is mainly
+ * tied in the context of privileges.
+ * 
+ * @param[in] Src
+ * Source of a valid LUID with attributes structure.
+ * 
+ * @param[in] PrivilegeCount
+ * Count number of privileges to be captured.
+ * 
+ * @param[in] PreviousMode
+ * Processor level access mode.
+ * 
+ * @param[in] AllocatedMem
+ * If specified, the function will use this allocated block memory
+ * buffer for the captured LUID and attributes structure. Otherwise
+ * the function will automatically allocate some buffer for it.
+ * 
+ * @param[in] AllocatedLength
+ * The length of the buffer, pointed by AllocatedMem.
+ * 
+ * @param[in] PoolType
+ * Pool type of the memory allocation.
+ * 
+ * @param[in] CaptureIfKernel
+ * If set to TRUE, the capturing is done in the kernel itself.
+ * FALSE if the capturing is done in a kernel mode driver instead.
+ * 
+ * @param[out] Dest
+ * The captured LUID with attributes buffer.
+ * 
+ * @param[in,out] Length
+ * The length of the captured privileges count.
+ * 
+ * @return
+ * Returns STATUS_SUCCESS if the LUID and attributes array
+ * has been captured successfully. STATUS_INSUFFICIENT_RESOURCES is returned
+ * if memory pool allocation for the captured buffer has failed.
+ * STATUS_BUFFER_TOO_SMALL is returned if the buffer size is less than the
+ * required size.
+ */
 NTSTATUS
 NTAPI
-SeCaptureLuidAndAttributesArray(PLUID_AND_ATTRIBUTES Src,
-                                ULONG PrivilegeCount,
-                                KPROCESSOR_MODE PreviousMode,
-                                PLUID_AND_ATTRIBUTES AllocatedMem,
-                                ULONG AllocatedLength,
-                                POOL_TYPE PoolType,
-                                BOOLEAN CaptureIfKernel,
-                                PLUID_AND_ATTRIBUTES *Dest,
-                                PULONG Length)
+SeCaptureLuidAndAttributesArray(
+    _In_ PLUID_AND_ATTRIBUTES Src,
+    _In_ ULONG PrivilegeCount,
+    _In_ KPROCESSOR_MODE PreviousMode,
+    _In_opt_ PLUID_AND_ATTRIBUTES AllocatedMem,
+    _In_opt_ ULONG AllocatedLength,
+    _In_ POOL_TYPE PoolType,
+    _In_ BOOLEAN CaptureIfKernel,
+    _Out_ PLUID_AND_ATTRIBUTES *Dest,
+    _Inout_ PULONG Length)
 {
     ULONG BufferSize;
     NTSTATUS Status = STATUS_SUCCESS;
@@ -378,11 +526,29 @@ SeCaptureLuidAndAttributesArray(PLUID_AND_ATTRIBUTES Src,
     return Status;
 }
 
+/**
+ * @brief
+ * Releases a LUID with attributes structure.
+ * 
+ * @param[in] Privilege
+ * Array of a LUID and attributes that represents a privilege.
+ * 
+ * @param[in] PreviousMode
+ * Processor level access mode.
+ * 
+ * @param[in] CaptureIfKernel
+ * If set to TRUE, the releasing is done in the kernel itself.
+ * FALSE if the releasing is done in a kernel mode driver instead.
+ * 
+ * @return
+ * Nothing.
+ */
 VOID
 NTAPI
-SeReleaseLuidAndAttributesArray(PLUID_AND_ATTRIBUTES Privilege,
-                                KPROCESSOR_MODE PreviousMode,
-                                BOOLEAN CaptureIfKernel)
+SeReleaseLuidAndAttributesArray(
+    _In_ PLUID_AND_ATTRIBUTES Privilege,
+    _In_ KPROCESSOR_MODE PreviousMode,
+    _In_ BOOLEAN CaptureIfKernel)
 {
     PAGED_CODE();
 
@@ -395,13 +561,27 @@ SeReleaseLuidAndAttributesArray(PLUID_AND_ATTRIBUTES Privilege,
 
 /* PUBLIC FUNCTIONS ***********************************************************/
 
-/*
- * @implemented
+/**
+ * @brief
+ * Appends additional privileges.
+ * 
+ * @param[in] AccessState
+ * Access request to append.
+ * 
+ * @param[in] Privileges
+ * Set of new privileges to append.
+ * 
+ * @return
+ * Returns STATUS_SUCCESS if the privileges have been successfully
+ * appended. Otherwise STATUS_INSUFFICIENT_RESOURCES is returned,
+ * indicating that pool allocation has failed for the buffer to hold
+ * the new set of privileges.
  */
 NTSTATUS
 NTAPI
-SeAppendPrivileges(IN OUT PACCESS_STATE AccessState,
-                   IN PPRIVILEGE_SET Privileges)
+SeAppendPrivileges(
+    _Inout_ PACCESS_STATE AccessState,
+    _In_ PPRIVILEGE_SET Privileges)
 {
     PAUX_ACCESS_DATA AuxData;
     ULONG OldPrivilegeSetSize;
@@ -468,25 +648,51 @@ SeAppendPrivileges(IN OUT PACCESS_STATE AccessState,
     return STATUS_SUCCESS;
 }
 
-/*
- * @implemented
+/**
+ * @brief
+ * Frees a set of privileges.
+ * 
+ * @param[in] Privileges
+ * Set of privileges array to be freed.
+ * 
+ * @return
+ * Nothing.
  */
 VOID
 NTAPI
-SeFreePrivileges(IN PPRIVILEGE_SET Privileges)
+SeFreePrivileges(
+    _In_ PPRIVILEGE_SET Privileges)
 {
     PAGED_CODE();
     ExFreePoolWithTag(Privileges, TAG_PRIVILEGE_SET);
 }
 
-/*
- * @implemented
+/**
+ * @brief
+ * Checks if a set of privileges exist and match within a
+ * security subject context.
+ * 
+ * @param[in] Privileges
+ * A set of privileges where the check must be performed
+ * against the subject context.
+ * 
+ * @param[in] SubjectContext
+ * A subject security context.
+ * 
+ * @param[in] PreviousMode
+ * Processor level access mode.
+ * 
+ * @return
+ * Returns TRUE if all the privileges do exist and match
+ * with the ones specified by the caller and subject
+ * context, FALSE otherwise.
  */
 BOOLEAN
 NTAPI
-SePrivilegeCheck(PPRIVILEGE_SET Privileges,
-                 PSECURITY_SUBJECT_CONTEXT SubjectContext,
-                 KPROCESSOR_MODE PreviousMode)
+SePrivilegeCheck(
+    _In_ PPRIVILEGE_SET Privileges,
+    _In_ PSECURITY_SUBJECT_CONTEXT SubjectContext,
+    _In_ KPROCESSOR_MODE PreviousMode)
 {
     PACCESS_TOKEN Token = NULL;
 
@@ -512,13 +718,26 @@ SePrivilegeCheck(PPRIVILEGE_SET Privileges,
                              PreviousMode);
 }
 
-/*
- * @implemented
+/**
+ * @brief
+ * Checks if a single privilege is present in the context
+ * of the calling thread.
+ * 
+ * @param[in] PrivilegeValue
+ * The specific privilege to be checked.
+ * 
+ * @param[in] PreviousMode
+ * Processor level access mode.
+ * 
+ * @return
+ * Returns TRUE if the privilege is present, FALSE
+ * otherwise.
  */
 BOOLEAN
 NTAPI
-SeSinglePrivilegeCheck(IN LUID PrivilegeValue,
-                       IN KPROCESSOR_MODE PreviousMode)
+SeSinglePrivilegeCheck(
+    _In_ LUID PrivilegeValue,
+    _In_ KPROCESSOR_MODE PreviousMode)
 {
     SECURITY_SUBJECT_CONTEXT SubjectContext;
     PRIVILEGE_SET Priv;
@@ -551,12 +770,35 @@ SeSinglePrivilegeCheck(IN LUID PrivilegeValue,
     return Result;
 }
 
+/**
+ * @brief
+ * Checks a privileged object if such object has
+ * the specific privilege submitted by the caller.
+ * 
+ * @param[in] PrivilegeValue
+ * A privilege to be checked against the one from
+ * the object.
+ * 
+ * @param[in] ObjectHandle
+ * A handle to any kind of object.
+ * 
+ * @param[in] DesiredAccess
+ * Desired access right mask requested by the caller.
+ * 
+ * @param[in] PreviousMode
+ * Processor level access mode.
+ * 
+ * @return
+ * Returns TRUE if the privilege is present, FALSE
+ * otherwise.
+ */
 BOOLEAN
 NTAPI
-SeCheckPrivilegedObject(IN LUID PrivilegeValue,
-                        IN HANDLE ObjectHandle,
-                        IN ACCESS_MASK DesiredAccess,
-                        IN KPROCESSOR_MODE PreviousMode)
+SeCheckPrivilegedObject(
+    _In_ LUID PrivilegeValue,
+    _In_ HANDLE ObjectHandle,
+    _In_ ACCESS_MASK DesiredAccess,
+    _In_ KPROCESSOR_MODE PreviousMode)
 {
     SECURITY_SUBJECT_CONTEXT SubjectContext;
     PRIVILEGE_SET Priv;
@@ -591,11 +833,36 @@ SeCheckPrivilegedObject(IN LUID PrivilegeValue,
 
 /* SYSTEM CALLS ***************************************************************/
 
+/**
+ * @brief
+ * Checks a client access token if it has the required set of
+ * privileges.
+ * 
+ * @param[in] ClientToken
+ * A handle to an access client token.
+ * 
+ * @param[in] RequiredPrivileges
+ * A set of required privileges to be checked against the privileges
+ * of the access token.
+ * 
+ * @param[out] Result
+ * The result, as a boolean value. If TRUE, the token has all the required
+ * privileges, FALSE otherwise.
+ * 
+ * @return
+ * Returns STATUS_SUCCESS if the function has completed successfully.
+ * STATUS_INVALID_PARAMETER is returned if the set array of required
+ * privileges has a bogus number of privileges, that is, the array
+ * has a count of privileges that exceeds the maximum threshold
+ * (or in other words, an integer overflow). A failure NTSTATUS code
+ * is returned otherwise.
+ */
 NTSTATUS
 NTAPI
-NtPrivilegeCheck(IN HANDLE ClientToken,
-                 IN PPRIVILEGE_SET RequiredPrivileges,
-                 OUT PBOOLEAN Result)
+NtPrivilegeCheck(
+    _In_ HANDLE ClientToken,
+    _In_ PPRIVILEGE_SET RequiredPrivileges,
+    _Out_ PBOOLEAN Result)
 {
     PLUID_AND_ATTRIBUTES Privileges;
     PTOKEN Token;

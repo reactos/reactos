@@ -1,5 +1,9 @@
 @ stdcall CtfImmIsCiceroEnabled()
 @ stdcall CtfImmIsTextFrameServiceDisabled()
+@ stdcall -stub CtfImmTIMActivate(ptr)
+@ stdcall -stub CtfImmRestoreToolbarWnd(long)
+@ stdcall -stub CtfImmHideToolbarWnd()
+@ stdcall -stub CtfImmDispatchDefImeMessage(ptr long ptr ptr)
 @ stdcall -stub ImmActivateLayout(long)
 @ stdcall ImmAssociateContext(ptr ptr)
 @ stdcall ImmAssociateContextEx(ptr ptr long)
@@ -66,8 +70,8 @@
 @ stdcall ImmInstallIMEA(str str)
 @ stdcall ImmInstallIMEW(wstr wstr)
 @ stdcall ImmIsIME(long)
-@ stdcall ImmIsUIMessageA(long long long long)
-@ stdcall ImmIsUIMessageW(long long long long)
+@ stdcall ImmIsUIMessageA(ptr long ptr ptr)
+@ stdcall ImmIsUIMessageW(ptr long ptr ptr)
 @ stdcall ImmLoadIME(ptr)
 @ stdcall ImmLoadLayout(ptr ptr)
 @ stdcall ImmLockClientImc(ptr)
@@ -103,7 +107,7 @@
 @ stdcall ImmShowSoftKeyboard(ptr long)
 @ stdcall ImmSimulateHotKey(ptr long)
 @ stdcall -stub ImmSystemHandler(ptr long long)
-@ stdcall ImmTranslateMessage(ptr long long long)
+@ stdcall ImmTranslateMessage(ptr long ptr ptr)
 @ stdcall ImmUnlockClientImc(ptr)
 @ stdcall ImmUnlockIMC(ptr)
 @ stdcall ImmUnlockIMCC(ptr)
@@ -112,10 +116,4 @@
 @ stdcall ImmUnregisterWordW(long wstr long wstr)
 @ stdcall -stub ImmWINNLSEnableIME(ptr long)
 @ stdcall -stub ImmWINNLSGetEnableStatus(ptr)
-@ stub ImmWINNLSGetIMEHotkey
-
-################################################################
-# Wine internal extensions
-@ stdcall __wine_get_ui_window(ptr)
-@ stdcall __wine_register_window(long)
-@ stdcall __wine_unregister_window(long)
+@ stdcall ImmWINNLSGetIMEHotkey(ptr)

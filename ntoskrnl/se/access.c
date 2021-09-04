@@ -1,11 +1,8 @@
 /*
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS kernel
- * FILE:            ntoskrnl/se/access.c
- * PURPOSE:         Access state functions
- *
- * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net) -
- *                               Based on patch by Javier M. Mellid
+ * PROJECT:         ReactOS Kernel
+ * LICENSE:         GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:         Security access state functions support
+ * COPYRIGHT:       Copyright Alex Ionescu <alex@relsoft.net>
  */
 
 /* INCLUDES *******************************************************************/
@@ -20,13 +17,40 @@ ERESOURCE SepSubjectContextLock;
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
+/**
+ * @brief
+ * Checks if a SID is present in a token.
+ * 
+ * @param[in] _Token
+ * A valid token object.
+ * 
+ * @param[in] PrincipalSelfSid
+ * A principal self SID.
+ * 
+ * @param[in] _Sid
+ * A regular SID.
+ * 
+ * @param[in] Deny
+ * If set to TRUE, the caller expected that a SID in a token
+ * must be a deny-only SID, that is, access checks are performed
+ * only for deny-only ACEs of the said SID.
+ * 
+ * @param[in] Restricted
+ * If set to TRUE, the caller expects that a SID in a token is
+ * restricted.
+ *
+ * @return
+ * Returns TRUE if the specified SID in the call is present in the token,
+ * FALSE otherwise.
+ */
 BOOLEAN
 NTAPI
-SepSidInTokenEx(IN PACCESS_TOKEN _Token,
-                IN PSID PrincipalSelfSid,
-                IN PSID _Sid,
-                IN BOOLEAN Deny,
-                IN BOOLEAN Restricted)
+SepSidInTokenEx(
+    _In_ PACCESS_TOKEN _Token,
+    _In_ PSID PrincipalSelfSid,
+    _In_ PSID _Sid,
+    _In_ BOOLEAN Deny,
+    _In_ BOOLEAN Restricted)
 {
     ULONG i;
     PTOKEN Token = (PTOKEN)_Token;
@@ -106,20 +130,54 @@ SepSidInTokenEx(IN PACCESS_TOKEN _Token,
     return FALSE;
 }
 
+/**
+ * @brief
+ * Checks if a SID is present in a token.
+ * 
+ * @param[in] _Token
+ * A valid token object.
+ * 
+ * @param[in] _Sid
+ * A regular SID.
+ *
+ * @return
+ * Returns TRUE if the specified SID in the call is present in the token,
+ * FALSE otherwise.
+ */
 BOOLEAN
 NTAPI
-SepSidInToken(IN PACCESS_TOKEN _Token,
-              IN PSID Sid)
+SepSidInToken(
+    _In_ PACCESS_TOKEN _Token,
+    _In_ PSID Sid)
 {
     /* Call extended API */
     return SepSidInTokenEx(_Token, NULL, Sid, FALSE, FALSE);
 }
 
+/**
+ * @brief
+ * Checks if a token belongs to the main user, being the owner.
+ * 
+ * @param[in] _Token
+ * A valid token object.
+ * 
+ * @param[in] SecurityDescriptor
+ * A security descriptor where the owner is to be found.
+ * 
+ * @param[in] TokenLocked
+ * If set to TRUE, the token has been already locked and there's
+ * no need to lock it again. Otherwise the function will acquire
+ * the lock.
+ *
+ * @return
+ * Returns TRUE if the token belongs to a owner, FALSE otherwise.
+ */
 BOOLEAN
 NTAPI
-SepTokenIsOwner(IN PACCESS_TOKEN _Token,
-                IN PSECURITY_DESCRIPTOR SecurityDescriptor,
-                IN BOOLEAN TokenLocked)
+SepTokenIsOwner(
+    _In_ PACCESS_TOKEN _Token,
+    _In_ PSECURITY_DESCRIPTOR SecurityDescriptor,
+    _In_ BOOLEAN TokenLocked)
 {
     PSID Sid;
     BOOLEAN Result;
@@ -146,10 +204,24 @@ SepTokenIsOwner(IN PACCESS_TOKEN _Token,
     return Result;
 }
 
+/**
+ * @brief
+ * Retrieves token control information.
+ * 
+ * @param[in] _Token
+ * A valid token object.
+ * 
+ * @param[out] SecurityDescriptor
+ * The returned token control information.
+ *
+ * @return
+ * Nothing.
+ */
 VOID
 NTAPI
-SeGetTokenControlInformation(IN PACCESS_TOKEN _Token,
-                             OUT PTOKEN_CONTROL TokenControl)
+SeGetTokenControlInformation(
+    _In_ PACCESS_TOKEN _Token,
+    _Out_ PTOKEN_CONTROL TokenControl)
 {
     PTOKEN Token = _Token;
     PAGED_CODE();
@@ -169,15 +241,51 @@ SeGetTokenControlInformation(IN PACCESS_TOKEN _Token,
     SepReleaseTokenLock(Token);
 }
 
+/**
+ * @brief
+ * Creates a client security context based upon an access token.
+ * 
+ * @param[in] Token
+ * A valid token object.
+ * 
+ * @param[in] ClientSecurityQos
+ * The Quality of Service (QoS) of a client security context.
+ * 
+ * @param[in] ServerIsRemote
+ * If the client is a remote server (TRUE), the function will retrieve the
+ * control information of an access token, that is, we're doing delegation
+ * and that the server isn't local.
+ * 
+ * @param[in] TokenType
+ * Type of token.
+ * 
+ * @param[in] ThreadEffectiveOnly
+ * If set to TRUE, the client wants that the current thread wants to modify
+ * (enable or disable) privileges and groups.
+ * 
+ * @param[in] ImpersonationLevel
+ * Security impersonation level filled in the QoS context.
+ * 
+ * @param[out] ClientContext
+ * The returned security client context.
+ *
+ * @return
+ * Returns STATUS_SUCCESS if client security creation has completed successfully.
+ * STATUS_INVALID_PARAMETER is returned if one or more of the parameters are bogus.
+ * STATUS_BAD_IMPERSONATION_LEVEL is returned if the current impersonation level
+ * within QoS context doesn't meet with the conditions required. A failure
+ * NTSTATUS code is returned otherwise.
+ */
 NTSTATUS
 NTAPI
-SepCreateClientSecurity(IN PACCESS_TOKEN Token,
-                        IN PSECURITY_QUALITY_OF_SERVICE ClientSecurityQos,
-                        IN BOOLEAN ServerIsRemote,
-                        IN TOKEN_TYPE TokenType,
-                        IN BOOLEAN ThreadEffectiveOnly,
-                        IN SECURITY_IMPERSONATION_LEVEL ImpersonationLevel,
-                        OUT PSECURITY_CLIENT_CONTEXT ClientContext)
+SepCreateClientSecurity(
+    _In_ PACCESS_TOKEN Token,
+    _In_ PSECURITY_QUALITY_OF_SERVICE ClientSecurityQos,
+    _In_ BOOLEAN ServerIsRemote,
+    _In_ TOKEN_TYPE TokenType,
+    _In_ BOOLEAN ThreadEffectiveOnly,
+    _In_ SECURITY_IMPERSONATION_LEVEL ImpersonationLevel,
+    _Out_ PSECURITY_CLIENT_CONTEXT ClientContext)
 {
     NTSTATUS Status;
     PACCESS_TOKEN NewToken;
@@ -258,14 +366,31 @@ SepCreateClientSecurity(IN PACCESS_TOKEN Token,
 
 /* PUBLIC FUNCTIONS ***********************************************************/
 
-/*
- * @implemented
+/**
+ * @brief
+ * An extended function that captures the security subject context based upon
+ * the specified thread and process.
+ * 
+ * @param[in] Thread
+ * A thread where the calling thread's token is to be referenced for
+ * the security context.
+ * 
+ * @param[in] Process
+ * A process where the main process' token is to be referenced for
+ * the security context.
+ * 
+ * @param[out] SubjectContext
+ * The returned security subject context.
+ *
+ * @return
+ * Nothing.
  */
 VOID
 NTAPI
-SeCaptureSubjectContextEx(IN PETHREAD Thread,
-                          IN PEPROCESS Process,
-                          OUT PSECURITY_SUBJECT_CONTEXT SubjectContext)
+SeCaptureSubjectContextEx(
+    _In_ PETHREAD Thread,
+    _In_ PEPROCESS Process,
+    _Out_ PSECURITY_SUBJECT_CONTEXT SubjectContext)
 {
     BOOLEAN CopyOnOpen, EffectiveOnly;
 
@@ -293,12 +418,21 @@ SeCaptureSubjectContextEx(IN PETHREAD Thread,
     SubjectContext->PrimaryToken = PsReferencePrimaryToken(Process);
 }
 
-/*
- * @implemented
+/**
+ * @brief
+ * Captures the security subject context of the calling thread and calling
+ * process.
+ * 
+ * @param[out] SubjectContext
+ * The returned security subject context.
+ *
+ * @return
+ * Nothing.
  */
 VOID
 NTAPI
-SeCaptureSubjectContext(OUT PSECURITY_SUBJECT_CONTEXT SubjectContext)
+SeCaptureSubjectContext(
+    _Out_ PSECURITY_SUBJECT_CONTEXT SubjectContext)
 {
     /* Call the extended API */
     SeCaptureSubjectContextEx(PsGetCurrentThread(),
@@ -306,12 +440,21 @@ SeCaptureSubjectContext(OUT PSECURITY_SUBJECT_CONTEXT SubjectContext)
                               SubjectContext);
 }
 
-/*
- * @implemented
+/**
+ * @brief
+ * Locks both the referenced primary and client access tokens of a
+ * security subject context.
+ * 
+ * @param[in] SubjectContext
+ * A valid security context with both referenced tokens.
+ *
+ * @return
+ * Nothing.
  */
 VOID
 NTAPI
-SeLockSubjectContext(IN PSECURITY_SUBJECT_CONTEXT SubjectContext)
+SeLockSubjectContext(
+    _In_ PSECURITY_SUBJECT_CONTEXT SubjectContext)
 {
     PTOKEN PrimaryToken, ClientToken;
     PAGED_CODE();
@@ -328,12 +471,21 @@ SeLockSubjectContext(IN PSECURITY_SUBJECT_CONTEXT SubjectContext)
     SepAcquireTokenLockShared(ClientToken);
 }
 
-/*
- * @implemented
+/**
+ * @brief
+ * Unlocks both the referenced primary and client access tokens of a
+ * security subject context.
+ * 
+ * @param[in] SubjectContext
+ * A valid security context with both referenced tokens.
+ *
+ * @return
+ * Nothing.
  */
 VOID
 NTAPI
-SeUnlockSubjectContext(IN PSECURITY_SUBJECT_CONTEXT SubjectContext)
+SeUnlockSubjectContext(
+    _In_ PSECURITY_SUBJECT_CONTEXT SubjectContext)
 {
     PTOKEN PrimaryToken, ClientToken;
     PAGED_CODE();
@@ -352,12 +504,21 @@ SeUnlockSubjectContext(IN PSECURITY_SUBJECT_CONTEXT SubjectContext)
     SepReleaseTokenLock(PrimaryToken);
 }
 
-/*
- * @implemented
+/**
+ * @brief
+ * Releases both the primary and client tokens of a security
+ * subject context.
+ * 
+ * @param[in] SubjectContext
+ * The captured security context.
+ *
+ * @return
+ * Nothing.
  */
 VOID
 NTAPI
-SeReleaseSubjectContext(IN PSECURITY_SUBJECT_CONTEXT SubjectContext)
+SeReleaseSubjectContext(
+    _In_ PSECURITY_SUBJECT_CONTEXT SubjectContext)
 {
     PAGED_CODE();
 
@@ -370,17 +531,40 @@ SeReleaseSubjectContext(IN PSECURITY_SUBJECT_CONTEXT SubjectContext)
     SubjectContext->ClientToken = NULL;
 }
 
-/*
- * @implemented
+/**
+ * @brief
+ * An extended function that creates an access state.
+ * 
+ * @param[in] Thread
+ * Valid thread object where subject context is to be captured.
+ * 
+ * @param[in] Process
+ * Valid process object where subject context is to be captured.
+ * 
+ * @param[in,out] AccessState
+ * An initialized returned parameter to an access state.
+ * 
+ * @param[in] AuxData
+ * Auxiliary security data for access state.
+ * 
+ * @param[in] Access
+ * Type of access mask to assign.
+ * 
+ * @param[in] GenericMapping
+ * Generic mapping for the access state to assign.
+ *
+ * @return
+ * Returns STATUS_SUCCESS.
  */
 NTSTATUS
 NTAPI
-SeCreateAccessStateEx(IN PETHREAD Thread,
-                      IN PEPROCESS Process,
-                      IN OUT PACCESS_STATE AccessState,
-                      IN PAUX_ACCESS_DATA AuxData,
-                      IN ACCESS_MASK Access,
-                      IN PGENERIC_MAPPING GenericMapping)
+SeCreateAccessStateEx(
+    _In_ PETHREAD Thread,
+    _In_ PEPROCESS Process,
+    _Inout_ PACCESS_STATE AccessState,
+    _In_ PAUX_ACCESS_DATA AuxData,
+    _In_ ACCESS_MASK Access,
+    _In_ PGENERIC_MAPPING GenericMapping)
 {
     ACCESS_MASK AccessMask = Access;
     PTOKEN Token;
@@ -431,15 +615,32 @@ SeCreateAccessStateEx(IN PETHREAD Thread,
     return STATUS_SUCCESS;
 }
 
-/*
- * @implemented
+/**
+ * @brief
+ * Creates an access state.
+ * 
+ * @param[in,out] AccessState
+ * An initialized returned parameter to an access state.
+ * 
+ * @param[in] AuxData
+ * Auxiliary security data for access state.
+ * 
+ * @param[in] Access
+ * Type of access mask to assign.
+ * 
+ * @param[in] GenericMapping
+ * Generic mapping for the access state to assign.
+ *
+ * @return
+ * See SeCreateAccessStateEx.
  */
 NTSTATUS
 NTAPI
-SeCreateAccessState(IN OUT PACCESS_STATE AccessState,
-                    IN PAUX_ACCESS_DATA AuxData,
-                    IN ACCESS_MASK Access,
-                    IN PGENERIC_MAPPING GenericMapping)
+SeCreateAccessState(
+    _Inout_ PACCESS_STATE AccessState,
+    _In_ PAUX_ACCESS_DATA AuxData,
+    _In_ ACCESS_MASK Access,
+    _In_ PGENERIC_MAPPING GenericMapping)
 {
     PAGED_CODE();
 
@@ -452,12 +653,20 @@ SeCreateAccessState(IN OUT PACCESS_STATE AccessState,
                                  GenericMapping);
 }
 
-/*
- * @implemented
+/**
+ * @brief
+ * Deletes an allocated access state from the memory.
+ * 
+ * @param[in] AccessState
+ * A valid access state.
+ *
+ * @return
+ * Nothing.
  */
 VOID
 NTAPI
-SeDeleteAccessState(IN PACCESS_STATE AccessState)
+SeDeleteAccessState(
+    _In_ PACCESS_STATE AccessState)
 {
     PAUX_ACCESS_DATA AuxData;
     PAGED_CODE();
@@ -484,13 +693,24 @@ SeDeleteAccessState(IN PACCESS_STATE AccessState)
     SeReleaseSubjectContext(&AccessState->SubjectSecurityContext);
 }
 
-/*
- * @implemented
+/**
+ * @brief
+ * Sets a new generic mapping for an allocated access state.
+ * 
+ * @param[in] AccessState
+ * A valid access state.
+ * 
+ * @param[in] GenericMapping
+ * New generic mapping to assign.
+ *
+ * @return
+ * Nothing.
  */
 VOID
 NTAPI
-SeSetAccessStateGenericMapping(IN PACCESS_STATE AccessState,
-                               IN PGENERIC_MAPPING GenericMapping)
+SeSetAccessStateGenericMapping(
+    _In_ PACCESS_STATE AccessState,
+    _In_ PGENERIC_MAPPING GenericMapping)
 {
     PAGED_CODE();
 
@@ -498,15 +718,32 @@ SeSetAccessStateGenericMapping(IN PACCESS_STATE AccessState,
     ((PAUX_ACCESS_DATA)AccessState->AuxData)->GenericMapping = *GenericMapping;
 }
 
-/*
- * @implemented
+/**
+ * @brief
+ * Creates a client security context.
+ * 
+ * @param[in] Thread
+ * Thread object of the client where impersonation has to begin.
+ * 
+ * @param[in] Qos
+ * Quality of service to specify what kind of impersonation to be done.
+ * 
+ * @param[in] RemoteClient
+ * If set to TRUE, the client that we're going to impersonate is remote.
+ * 
+ * @param[out] ClientContext
+ * The returned security client context.
+ *
+ * @return
+ * See SepCreateClientSecurity.
  */
 NTSTATUS
 NTAPI
-SeCreateClientSecurity(IN PETHREAD Thread,
-                       IN PSECURITY_QUALITY_OF_SERVICE Qos,
-                       IN BOOLEAN RemoteClient,
-                       OUT PSECURITY_CLIENT_CONTEXT ClientContext)
+SeCreateClientSecurity(
+    _In_ PETHREAD Thread,
+    _In_ PSECURITY_QUALITY_OF_SERVICE Qos,
+    _In_ BOOLEAN RemoteClient,
+    _Out_ PSECURITY_CLIENT_CONTEXT ClientContext)
 {
     TOKEN_TYPE TokenType;
     BOOLEAN ThreadEffectiveOnly;
@@ -541,15 +778,34 @@ SeCreateClientSecurity(IN PETHREAD Thread,
     return Status;
 }
 
-/*
- * @implemented
+/**
+ * @brief
+ * Creates a client security context based upon the captured security
+ * subject context.
+ * 
+ * @param[in] SubjectContext
+ * The captured subject context where client security is to be created
+ * from.
+ * 
+ * @param[in] ClientSecurityQos
+ * Quality of service to specify what kind of impersonation to be done.
+ * 
+ * @param[in] ServerIsRemote
+ * If set to TRUE, the client that we're going to impersonate is remote.
+ * 
+ * @param[out] ClientContext
+ * The returned security client context.
+ *
+ * @return
+ * See SepCreateClientSecurity.
  */
 NTSTATUS
 NTAPI
-SeCreateClientSecurityFromSubjectContext(IN PSECURITY_SUBJECT_CONTEXT SubjectContext,
-                                         IN PSECURITY_QUALITY_OF_SERVICE ClientSecurityQos,
-                                         IN BOOLEAN ServerIsRemote,
-                                         OUT PSECURITY_CLIENT_CONTEXT ClientContext)
+SeCreateClientSecurityFromSubjectContext(
+    _In_ PSECURITY_SUBJECT_CONTEXT SubjectContext,
+    _In_ PSECURITY_QUALITY_OF_SERVICE ClientSecurityQos,
+    _In_ BOOLEAN ServerIsRemote,
+    _Out_ PSECURITY_CLIENT_CONTEXT ClientContext)
 {
     PACCESS_TOKEN Token;
     NTSTATUS Status;
@@ -581,13 +837,25 @@ SeCreateClientSecurityFromSubjectContext(IN PSECURITY_SUBJECT_CONTEXT SubjectCon
     return Status;
 }
 
-/*
- * @implemented
+/**
+ * @brief
+ * Extended function that impersonates a client.
+ * 
+ * @param[in] ClientContext
+ * A valid client context.
+ * 
+ * @param[in] ServerThread
+ * The thread where impersonation is to be done.
+ * 
+ * @return
+ * STATUS_SUCCESS is returned if the calling thread successfully impersonates
+ * the client. A failure NTSTATUS code is returned otherwise.
  */
 NTSTATUS
 NTAPI
-SeImpersonateClientEx(IN PSECURITY_CLIENT_CONTEXT ClientContext,
-                      IN PETHREAD ServerThread OPTIONAL)
+SeImpersonateClientEx(
+    _In_ PSECURITY_CLIENT_CONTEXT ClientContext,
+    _In_opt_ PETHREAD ServerThread)
 {
     BOOLEAN EffectiveOnly;
     PAGED_CODE();
@@ -615,13 +883,24 @@ SeImpersonateClientEx(IN PSECURITY_CLIENT_CONTEXT ClientContext,
                                ClientContext->SecurityQos.ImpersonationLevel);
 }
 
-/*
- * @implemented
+/**
+ * @brief
+ * Impersonates a client user.
+ * 
+ * @param[in] ClientContext
+ * A valid client context.
+ * 
+ * @param[in] ServerThread
+ * The thread where impersonation is to be done.
+ * *
+ * @return
+ * Nothing.
  */
 VOID
 NTAPI
-SeImpersonateClient(IN PSECURITY_CLIENT_CONTEXT ClientContext,
-                    IN PETHREAD ServerThread OPTIONAL)
+SeImpersonateClient(
+    _In_ PSECURITY_CLIENT_CONTEXT ClientContext,
+    _In_opt_ PETHREAD ServerThread)
 {
     PAGED_CODE();
 
