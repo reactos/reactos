@@ -1020,8 +1020,11 @@ UserSendKeyboardInput(KEYBDINPUT *pKbdInput, BOOL bInjected)
         }
         else
         {
-            wVk = pKbdInput->wVk & 0xFF;
+            wVk = pKbdInput->wVk;
         }
+
+        /* Remove all virtual key flags (KBDEXT, KBDMULTIVK, KBDSPECIAL, KBDNUMPAD) */
+        wVk &= 0xFF;
     }
 
     /* If time is given, use it */
