@@ -176,3 +176,10 @@ SCSIClassName = "Controladores SCSI e RAID"
 
 GenericMfg = "(Controladores SCSI e RAID padrão)"
 PCI\VEN_104B&CC_0100.DeviceDesc = "Controlador SCSI BusLogic"
+
+[Strings.0C04]
+SCSIClassName = "SCSI / RAID 控制器"
+
+GenericMfg = "(標準 SCSI / RAID 控制器)"
+GEN_SCSIADAPTER.DeviceDesc = "SCSI/RAID 主機控制器"
+PCI\VEN_104B&CC_0100.DeviceDesc = "BusLogic SCSI 控制器"

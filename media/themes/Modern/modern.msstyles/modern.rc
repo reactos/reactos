@@ -444,6 +444,9 @@ DARK_USERTILEBACKGROUND_BMP BITMAP  "bitmaps/Dark/DARK_USERTILEBACKGROUND.bmp"
 #ifdef LANGUAGE_ZH_CN
     #include "lang/zh-CN.rc"
 #endif
+#ifdef LANGUAGE_ZH_HK
+    #include "lang/zh-HK.rc"
+#endif
 #ifdef LANGUAGE_ZH_TW
     #include "lang/zh-TW.rc"
 #endif

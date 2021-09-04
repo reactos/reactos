@@ -167,3 +167,9 @@ ReactOS = "Equipa ReactOS"
 FDCClassName = "Unidades de disquete"
 GenericMfg = "(Unidades de disquete padrão)"
 *PNP0700.DeviceDesc = "Controlador de disquete padrão"
+
+[Strings.0C04]
+FDCClassName = "軟碟控制器"
+
+GenericMfg = "(標準軟碟控制器)"
+*PNP0700.DeviceDesc = "標準軟碟控制器"
