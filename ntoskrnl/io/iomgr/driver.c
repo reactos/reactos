@@ -454,7 +454,8 @@ IopInitializeDriverModule(
      */
     PIMAGE_NT_HEADERS NtHeaders = RtlImageNtHeader(ModuleObject->DllBase);
     ASSERT(NtHeaders);
-    ASSERT(ModuleObject->SizeOfImage == NtHeaders->OptionalHeader.SizeOfImage);
+    // NOTE: ModuleObject->SizeOfImage is actually (number of PTEs)*PAGE_SIZE.
+    ASSERT(ModuleObject->SizeOfImage == ROUND_TO_PAGES(NtHeaders->OptionalHeader.SizeOfImage));
     ASSERT(ModuleObject->EntryPoint == RVA(ModuleObject->DllBase, NtHeaders->OptionalHeader.AddressOfEntryPoint));
 
     /* Obtain the registry path for the DriverInit routine */
