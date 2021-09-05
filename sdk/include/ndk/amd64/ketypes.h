@@ -277,13 +277,17 @@ typedef enum
 //
 #define KSEG0_BASE 0xfffff80000000000ULL
 
+#define NMI_STACK_SIZE 0x2000
+#define ISR_STACK_SIZE 0x6000
+
 //
 // Synchronization-level IRQL
 //
-#define SYNCH_LEVEL 12
-
-#define NMI_STACK_SIZE 0x2000
-#define ISR_STACK_SIZE 0x6000
+#ifndef CONFIG_SMP
+#define SYNCH_LEVEL             DISPATCH_LEVEL
+#else
+#define SYNCH_LEVEL             (IPI_LEVEL - 2)
+#endif
 
 //
 // Number of pool lookaside lists per pool in the PRCB

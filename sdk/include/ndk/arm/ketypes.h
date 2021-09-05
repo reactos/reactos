@@ -29,9 +29,6 @@ extern "C" {
 //
 
 
-#define SYNCH_LEVEL DISPATCH_LEVEL
-
-
 //
 // CPU Vendors
 //
@@ -302,6 +299,11 @@ typedef enum
 // Static Kernel-Mode Address start (use MM_KSEG0_BASE for actual)
 //
 #define KSEG0_BASE              0x80000000
+
+//
+// Synchronization-level IRQL
+//
+#define SYNCH_LEVEL             DISPATCH_LEVEL
 
 //
 // Number of pool lookaside lists per pool in the PRCB
