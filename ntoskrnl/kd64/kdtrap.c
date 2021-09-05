@@ -144,11 +144,6 @@ KdpTrap(IN PKTRAP_FRAME TrapFrame,
     BOOLEAN Handled;
     NTSTATUS ReturnStatus;
     USHORT ReturnLength;
-    KIRQL OldIrql = DISPATCH_LEVEL;
-
-    /* Raise if we have to. */
-    if (KeGetCurrentIrql() < DISPATCH_LEVEL)
-        OldIrql = KeRaiseIrqlToDpcLevel();
 
     /*
      * Check if we got a STATUS_BREAKPOINT with a SubID for Print, Prompt or
@@ -261,9 +256,6 @@ KdpTrap(IN PKTRAP_FRAME TrapFrame,
                             PreviousMode,
                             SecondChanceException);
     }
-
-    if (OldIrql < DISPATCH_LEVEL)
-        KeLowerIrql(OldIrql);
 
     /* Return TRUE or FALSE to caller */
     return Handled;

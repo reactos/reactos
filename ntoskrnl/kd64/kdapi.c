@@ -1890,7 +1890,7 @@ KdEnterDebugger(IN PKTRAP_FRAME TrapFrame,
     /* Save the current IRQL */
     KeGetCurrentPrcb()->DebuggerSavedIRQL = KeGetCurrentIrql();
 
-    /* Freeze all CPUs */
+    /* Freeze all CPUs, raising also the IRQL to HIGH_LEVEL */
     Enable = KeFreezeExecution(TrapFrame, ExceptionFrame);
 
     /* Lock the port, save the state and set debugger entered */
@@ -1929,7 +1929,7 @@ KdExitDebugger(IN BOOLEAN Enable)
     KdRestore(FALSE);
     if (KdpPortLocked) KdpPortUnlock();
 
-    /* Unfreeze the CPUs */
+    /* Unfreeze the CPUs, restoring also the IRQL */
     KeThawExecution(Enable);
 
     /* Compare time with the one from KdEnterDebugger */
