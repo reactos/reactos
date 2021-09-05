@@ -1987,8 +1987,8 @@ KdEnableDebuggerWithLock(IN BOOLEAN NeedLock)
         if (NeedLock)
         {
             /* Do the unlock */
-            KeLowerIrql(OldIrql);
             KdpPortUnlock();
+            KeLowerIrql(OldIrql);
 
             /* Fail: We're already enabled */
             return STATUS_INVALID_PARAMETER;
@@ -2022,8 +2022,8 @@ KdEnableDebuggerWithLock(IN BOOLEAN NeedLock)
     if (NeedLock)
     {
         /* Yes, now unlock it */
-        KeLowerIrql(OldIrql);
         KdpPortUnlock();
+        KeLowerIrql(OldIrql);
     }
 
     /* We're done */
@@ -2083,8 +2083,8 @@ KdDisableDebuggerWithLock(IN BOOLEAN NeedLock)
             if (!NT_SUCCESS(Status))
             {
                 /* Release the lock and fail */
-                KeLowerIrql(OldIrql);
                 KdpPortUnlock();
+                KeLowerIrql(OldIrql);
                 return Status;
             }
         }
@@ -2112,8 +2112,8 @@ KdDisableDebuggerWithLock(IN BOOLEAN NeedLock)
     if (NeedLock)
     {
         /* Yes, now unlock it */
-        KeLowerIrql(OldIrql);
         KdpPortUnlock();
+        KeLowerIrql(OldIrql);
     }
 
     /* We're done */
