@@ -883,10 +883,26 @@ HRESULT WINAPI CFSFolder::BindToObject(
     CLSID clsidFolder;
     if (_ILIsFolder(pidl))
     {
-        clsidFolder = CLSID_ShellFSFolder;
-
         if ((pData->uFileAttribs & (FILE_ATTRIBUTE_SYSTEM | FILE_ATTRIBUTE_READONLY)) != 0)
-            SHELL32_GetCLSIDForDirectory(pfti.szTargetParsingName, L"CLSID", &clsidFolder);
+        {
+            hr = SHELL32_GetCLSIDForDirectory(pfti.szTargetParsingName, L"CLSID", &clsidFolder);
+
+            if (SUCCEEDED(hr))
+            {
+                /* We got a GUID from a desktop.ini, let's try it */
+                hr = SHELL32_BindToSF(m_pidlRoot, &pfti, pidl, &clsidFolder, riid, ppvOut);
+                if (SUCCEEDED(hr))
+                {
+                    TRACE("-- returning (%p) %08x, (%s)\n", *ppvOut, hr, wine_dbgstr_guid(&clsidFolder));
+                    return hr;
+                }
+
+                /* Something went wrong, re-try it with a normal ShellFSFolder */
+                ERR("CFSFolder::BindToObject: %s failed to bind, using fallback (0x%08x)\n", wine_dbgstr_guid(&clsidFolder), hr);
+            }
+        }
+        /* No system folder or the custom class failed */
+        clsidFolder = CLSID_ShellFSFolder;
     }
     else
     {
