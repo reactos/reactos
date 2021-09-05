@@ -1362,13 +1362,6 @@ KiTrap0EHandler(IN PKTRAP_FRAME TrapFrame)
                          TrapFrame);
     }
 
-    /* Check for S-List fault */
-    if (KiCheckForSListFault(TrapFrame))
-    {
-        /* Continue execution */
-        KiEoiHelper(TrapFrame);
-    }
-
     /* Call the access fault handler */
     Status = MmAccessFault(TrapFrame->ErrCode,
                            (PVOID)Cr2,
@@ -1379,6 +1372,13 @@ KiTrap0EHandler(IN PKTRAP_FRAME TrapFrame)
         /* Check whether the kernel debugger has owed breakpoints to be inserted */
         KdSetOwedBreakpoints();
         /* We succeeded, return */
+        KiEoiHelper(TrapFrame);
+    }
+
+    /* Check for S-List fault */
+    if (KiCheckForSListFault(TrapFrame))
+    {
+        /* Continue execution */
         KiEoiHelper(TrapFrame);
     }
 
