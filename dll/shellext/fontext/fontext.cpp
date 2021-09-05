@@ -54,7 +54,9 @@ STDAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID *ppv)
 STDAPI DllRegisterServer()
 {
     WCHAR Path[MAX_PATH] = { 0 };
-    static const char DesktopIniContents[] = "[.ShellClassInfo]\r\nCLSID={BD84B380-8CA2-1069-AB1D-08000948F534}\r\n";
+    static const char DesktopIniContents[] = "[.ShellClassInfo]\r\n"
+        "CLSID={BD84B380-8CA2-1069-AB1D-08000948F534}\r\n"
+        "IconResource=%SystemRoot%\\system32\\shell32.dll,-39\r\n"; // IDI_SHELL_FONTS_FOLDER
     HANDLE hFile;
     HRESULT hr;
 
