@@ -25,7 +25,9 @@ DBG_DEFAULT_CHANNEL(UserIcon);
 SYSTEM_CURSORINFO gSysCursorInfo;
 
 PCURICON_OBJECT gcurFirst = NULL; // After all is done, this should be WINLOGO!
+PCURICON_OBJECT FrameCurIcon = NULL;
 
+PCURICON_OBJECT getCurrentIcon(){return FrameCurIcon;}
 //
 //   System Cursors
 //
@@ -443,7 +445,7 @@ NtUserGetIconInfo(
     /* Give back the icon information */
     if (IconInfo)
     {
-        PCURICON_OBJECT FrameCurIcon = CurIcon;
+        FrameCurIcon = CurIcon;
         if (CurIcon->CURSORF_flags & CURSORF_ACON)
         {
             /* Get information from first frame. */

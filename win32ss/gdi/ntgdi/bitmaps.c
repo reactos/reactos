@@ -704,12 +704,15 @@ NtGdiSetBitmapDimension(
 
 /*  Internal Functions  */
 
+PCURICON_OBJECT getCurrentIcon();
+
 HBITMAP
 FASTCALL
 BITMAP_CopyBitmap(HBITMAP hBitmap)
 {
     HBITMAP hbmNew;
     SURFACE *psurfSrc, *psurfNew;
+    LONG bmRealHeight;
 
     /* Fail, if no source bitmap is given */
     if (hBitmap == NULL) return 0;
@@ -721,9 +724,19 @@ BITMAP_CopyBitmap(HBITMAP hBitmap)
         return 0;
     }
 
+    bmRealHeight = psurfSrc->SurfObj.sizlBitmap.cy;
+    PCURICON_OBJECT curIcon = getCurrentIcon();
+
+
+    if (curIcon && curIcon->hbmColor == NULL)
+    {
+        if (psurfSrc->SurfObj.sizlBitmap.cy == (curIcon->cy * 2))
+            bmRealHeight = curIcon->cy;
+    }
+
     /* Allocate a new bitmap with the same dimensions as the source bmp */
     hbmNew = GreCreateBitmapEx(psurfSrc->SurfObj.sizlBitmap.cx,
-                               psurfSrc->SurfObj.sizlBitmap.cy,
+                               bmRealHeight,
                                abs(psurfSrc->SurfObj.lDelta),
                                psurfSrc->SurfObj.iBitmapFormat,
                                psurfSrc->SurfObj.fjBitmap & BMF_TOPDOWN,
