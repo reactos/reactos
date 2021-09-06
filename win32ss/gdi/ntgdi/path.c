@@ -2378,8 +2378,11 @@ PATH_ExtTextOut(
                                       TRUE);
         if (dwSize == GDI_ERROR)
         {
-           PATH_UnlockPath(pPath);
-           return FALSE;
+           // With default DC font,,, bitmap font?
+           // ExtTextOut on a path with bitmap font selected shouldn't fail.
+           // This just leads to empty path generated.
+           // Ref : test_emf_ExtTextOut_on_path
+           continue;
         }
 
         /* Add outline only if char is printable */
