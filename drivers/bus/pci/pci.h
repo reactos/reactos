@@ -3,6 +3,7 @@
 
 #include <ntifs.h>
 #include <cmreslist.h>
+#include <ntstrsafe.h>
 
 #define TAG_PCI '0ICP'
 
@@ -24,6 +25,8 @@ typedef struct _PCI_DEVICE
     BOOLEAN EnableIoSpace;
     // Enable bus master
     BOOLEAN EnableBusMaster;
+    // Whether the device is owned by the KD
+    BOOLEAN IsDebuggingDevice;
 } PCI_DEVICE, *PPCI_DEVICE;
 
 
@@ -105,11 +108,27 @@ typedef struct _PCI_DRIVER_EXTENSION
     KSPIN_LOCK BusListLock;
 } PCI_DRIVER_EXTENSION, *PPCI_DRIVER_EXTENSION;
 
+typedef union _PCI_TYPE1_CFG_CYCLE_BITS
+{
+    struct
+    {
+        ULONG InUse:2;
+        ULONG RegisterNumber:6;
+        ULONG FunctionNumber:3;
+        ULONG DeviceNumber:5;
+        ULONG BusNumber:8;
+        ULONG Reserved2:8;
+    };
+    ULONG AsULONG;
+} PCI_TYPE1_CFG_CYCLE_BITS, *PPCI_TYPE1_CFG_CYCLE_BITS;
 
 /* We need a global variable to get the driver extension,
  * because at least InterfacePciDevicePresent has no
  * other way to get it... */
 extern PPCI_DRIVER_EXTENSION DriverExtension;
+
+extern BOOLEAN HasDebuggingDevice;
+extern PCI_TYPE1_CFG_CYCLE_BITS PciDebuggingDevice[2];
 
 /* fdo.c */
 
