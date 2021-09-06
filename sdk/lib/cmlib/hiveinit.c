@@ -46,133 +46,6 @@ HvpVerifyHiveHeader(
 }
 
 /**
- * @name HvRestoreFromLog
- *
- * Function to restore hive from log.
- */
-BOOLEAN CMAPI
-HvRestoreFromLog(
-    IN PHHIVE Hive,
-    IN OUT PHBASE_BLOCK BaseBlock)
-{
-    HBASE_BLOCK LogBaseBlock;
-    ULONG Offset = 0;
-    ULONG IndexInLog;
-    BOOLEAN IsSuccess;
-    UCHAR DirtyVectBuffer[HSECTOR_SIZE];
-    UCHAR Buffer[HBLOCK_SIZE];
-
-    ASSERT(sizeof(HBASE_BLOCK) >= (HSECTOR_SIZE * Hive->Cluster));
-
-    /* Read log file header */
-    IsSuccess = Hive->FileRead(Hive,
-                               HFILE_TYPE_LOG,
-                               &Offset,
-                               &LogBaseBlock,
-                               Hive->Cluster * HSECTOR_SIZE);
-
-    if (!IsSuccess)
-    {
-        DPRINT1("Read LOG file failed\n");
-        return FALSE;
-    }
-
-    /* Validate log header */
-    if (!HvpVerifyHiveHeader(&LogBaseBlock, HFILE_TYPE_LOG))
-    {
-        DPRINT1("LOG header corrupted\n");
-        return FALSE;
-    }
-
-    /* Read dirty blocks from log file */
-    Offset = HV_LOG_HEADER_SIZE;
-    IsSuccess = Hive->FileRead(Hive,
-                               HFILE_TYPE_LOG,
-                               &Offset,
-                               DirtyVectBuffer,
-                               HSECTOR_SIZE);
-
-    if (!IsSuccess)
-    {
-        DPRINT1("Read dirty vector from LOG file failed\n");
-        return FALSE;
-    }
-
-    if (*((PULONG)DirtyVectBuffer) != DIRTY_ID)
-    {
-        DPRINT1("Wrong header in dirty block\n");
-        return FALSE;
-    }
-
-    IndexInLog = 0;
-    /* Write birty blocks */
-    for (ULONG blockIndex = 0; blockIndex < LogBaseBlock.Length / HBLOCK_SIZE; ++blockIndex)
-    {
-        if (DirtyVectBuffer[blockIndex + DIRTY_ID_SIZE] != DIRTY_BLOCK)
-        {
-            continue;
-        }
-
-        Offset = HSECTOR_SIZE + HSECTOR_SIZE + IndexInLog * HBLOCK_SIZE;
-        IsSuccess = Hive->FileRead(Hive,
-                                   HFILE_TYPE_LOG,
-                                   &Offset,
-                                   Buffer,
-                                   HBLOCK_SIZE);
-
-        if (!IsSuccess)
-        {
-            DPRINT1("Read hive data failed\n");
-            return FALSE;
-        }
-
-        Offset = HBLOCK_SIZE + blockIndex * HBLOCK_SIZE;
-        IsSuccess = Hive->FileWrite(Hive,
-                                    HFILE_TYPE_PRIMARY,
-                                    &Offset,
-                                    Buffer,
-                                    HBLOCK_SIZE);
-
-        if (!IsSuccess)
-        {
-            DPRINT1("Write hive data failed\n");
-            return FALSE;
-        }
-
-        IndexInLog++;
-    }
-
-    LogBaseBlock.Type = HFILE_TYPE_PRIMARY;
-    LogBaseBlock.CheckSum = HvpHiveHeaderChecksum(&LogBaseBlock);
-
-    /* Validate header */
-    if (!HvpVerifyHiveHeader(&LogBaseBlock, HFILE_TYPE_PRIMARY))
-    {
-        DPRINT1("Header corrupted\n");
-        return FALSE;
-    }
-    
-    /* Write header to hive */
-    Offset = 0;
-    IsSuccess = Hive->FileWrite(Hive,
-                                HFILE_TYPE_PRIMARY,
-                                &Offset,
-                                &LogBaseBlock,
-                                Hive->Cluster * HSECTOR_SIZE);
-
-    if (!IsSuccess)
-    {
-        DPRINT1("Write hive header failed\n");
-        return FALSE;
-    }    
-
-    /* Copy restored header */
-    RtlCopyMemory(BaseBlock, &LogBaseBlock, Hive->Cluster * HSECTOR_SIZE);
-
-    return TRUE;
-}
-
-/**
  * @name HvpFreeHiveBins
  *
  * Internal function to free all bin storage associated with a hive descriptor.
@@ -490,6 +363,150 @@ HvpInitializeFlatHive(
     return STATUS_SUCCESS;
 }
 
+/**
+ * @name HvpRecoverHeaderFromLog
+ *
+ * Function to recover hive header from log.
+ */
+BOOLEAN CMAPI
+HvpRecoverHeaderFromLog(
+    IN PHHIVE Hive,
+    IN OUT PHBASE_BLOCK *BaseBlock)
+{
+    PHBASE_BLOCK LogBaseBlock;
+    ULONG Offset = 0;
+    BOOLEAN IsSuccess;
+
+    ASSERT(sizeof(HBASE_BLOCK) >= (HSECTOR_SIZE * Hive->Cluster));
+
+    LogBaseBlock = HvpAllocBaseBlockAligned(Hive, TRUE, TAG_CM);
+    if (!LogBaseBlock)
+    {
+        DPRINT1("Allocate base block failed\n");
+        return FALSE;
+    }
+
+    /* Read log file header */
+    IsSuccess = Hive->FileRead(Hive,
+                               HFILE_TYPE_LOG,
+                               &Offset,
+                               LogBaseBlock,
+                               Hive->Cluster * HSECTOR_SIZE);
+
+    if (!IsSuccess)
+    {
+        DPRINT1("Read LOG file failed\n");
+        return FALSE;
+    }
+
+    /* Validate log header */
+    if (!HvpVerifyHiveHeader(LogBaseBlock, HFILE_TYPE_LOG))
+    {
+        DPRINT1("LOG header corrupted\n");
+        // TODO: Self heal
+
+        return FALSE;
+    }
+
+    LogBaseBlock->Type = HFILE_TYPE_PRIMARY;
+    LogBaseBlock->CheckSum = HvpHiveHeaderChecksum(LogBaseBlock);
+    
+    /* Write header to hive */
+    Offset = 0;
+    IsSuccess = Hive->FileWrite(Hive,
+                                HFILE_TYPE_PRIMARY,
+                                &Offset,
+                                LogBaseBlock,
+                                Hive->Cluster * HSECTOR_SIZE);
+
+    if (!IsSuccess)
+    {
+        DPRINT1("Write hive header failed\n");
+        return FALSE;
+    }
+
+    *BaseBlock = LogBaseBlock;
+
+    return TRUE;
+}
+
+/**
+ * @name HvpRecoverDataLog
+ *
+ * Function to recover hive data from log.
+ */
+BOOLEAN CMAPI
+HvpRecoverDataFromLog(
+    IN PHHIVE Hive,
+    IN OUT PHBASE_BLOCK BaseBlock)
+{
+    ULONG Offset = 0;
+    ULONG IndexInLog;
+    BOOLEAN IsSuccess;
+    UCHAR DirtyVectBuffer[HSECTOR_SIZE];
+    UCHAR Buffer[HBLOCK_SIZE];
+
+    /* Read dirty blocks from log file */
+    Offset = HV_LOG_HEADER_SIZE;
+    IsSuccess = Hive->FileRead(Hive,
+                               HFILE_TYPE_LOG,
+                               &Offset,
+                               DirtyVectBuffer,
+                               HSECTOR_SIZE);
+
+    if (!IsSuccess)
+    {
+        DPRINT1("Read dirty vector from LOG file failed\n");
+        return FALSE;
+    }
+
+    if (*((PULONG)DirtyVectBuffer) != DIRTY_ID)
+    {
+        DPRINT1("Wrong header in dirty block\n");
+        return FALSE;
+    }
+
+    IndexInLog = 0;
+    /* Write birty blocks */
+    for (ULONG blockIndex = 0; blockIndex < BaseBlock->Length / HBLOCK_SIZE; ++blockIndex)
+    {
+        if (DirtyVectBuffer[blockIndex + DIRTY_ID_SIZE] != DIRTY_BLOCK)
+        {
+            continue;
+        }
+
+        Offset = HSECTOR_SIZE + HSECTOR_SIZE + IndexInLog * HBLOCK_SIZE;
+        IsSuccess = Hive->FileRead(Hive,
+                                   HFILE_TYPE_LOG,
+                                   &Offset,
+                                   Buffer,
+                                   HBLOCK_SIZE);
+
+        if (!IsSuccess)
+        {
+            DPRINT1("Read hive data failed\n");
+            return FALSE;
+        }
+
+        Offset = HBLOCK_SIZE + blockIndex * HBLOCK_SIZE;
+        IsSuccess = Hive->FileWrite(Hive,
+                                    HFILE_TYPE_PRIMARY,
+                                    &Offset,
+                                    Buffer,
+                                    HBLOCK_SIZE);
+
+        if (!IsSuccess)
+        {
+            DPRINT1("Write hive data failed\n");
+            return FALSE;
+        }
+
+        IndexInLog++;
+    }
+
+    return TRUE;
+}
+
 typedef enum _RESULT
 {
     NotHive,
@@ -533,13 +550,8 @@ HvpGetHiveHeader(IN PHHIVE Hive,
     /* Do validation */
     if (!HvpVerifyHiveHeader(BaseBlock, HFILE_TYPE_PRIMARY))
     {
-        DPRINT1("HvpVerifyHiveHeader() failed. Try restore.\n");
-        if (!HvRestoreFromLog(Hive, BaseBlock))
-        {
-            DPRINT1("Restore from LOG Failed\n");
-            return NotHive;
-        }
-        DPRINT1("Hive restored\n");
+        Hive->Free(BaseBlock, Hive->BaseBlockAlloc);
+        return RecoverHeader;
     }
 
     /* Return information */
@@ -578,10 +590,36 @@ HvLoadHive(IN PHHIVE Hive,
 
         /* Has recovery data */
         case RecoverData:
-        case RecoverHeader:
-
+            
             /* Fail */
             return STATUS_REGISTRY_CORRUPT;
+
+        case RecoverHeader:
+        {
+            DPRINT1("Header corrupted. Try recover.\n");
+
+            #if (NTDDI_VERSION < NTDDI_VISTA)
+            if (!Hive->Log)
+            {
+                DPRINT1("Haven't LOG\n");
+                return STATUS_REGISTRY_CORRUPT;
+            }
+            #endif 
+            
+            if (!HvpRecoverHeaderFromLog(Hive, &BaseBlock))
+            {
+                DPRINT1("Recover header from LOG failed\n");
+                return STATUS_REGISTRY_CORRUPT;
+            }
+
+            if (!HvpRecoverDataFromLog(Hive, BaseBlock))
+            {
+                DPRINT1("Recover data from LOG failed\n");
+                return STATUS_REGISTRY_CORRUPT;
+            }
+
+            DPRINT1("Hive data recovered\n");
+        }
     }
 
     /* Set default boot type */
