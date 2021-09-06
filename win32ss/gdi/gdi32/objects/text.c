@@ -475,6 +475,7 @@ ExtTextOutA(
     return ret;
 }
 
+static BOOL bBypassETOWMF = FALSE;
 
 /*
  * @implemented
@@ -493,24 +494,33 @@ ExtTextOutW(
 {
     PDC_ATTR pdcattr;
 
-    HANDLE_METADC(BOOL,
-                  ExtTextOut,
-                  FALSE,
-                  hdc,
-                  x,
-                  y,
-                  fuOptions,
-                  lprc,
-                  lpString,
-                  cwc,
-                  lpDx);
+    if ( !bBypassETOWMF )
+    {
+        HANDLE_METADC(BOOL,
+                      ExtTextOut,
+                      FALSE,
+                      hdc,
+                      x,
+                      y,
+                      fuOptions,
+                      lprc,
+                      lpString,
+                      cwc,
+                      lpDx);
+    }
 
     if ( GdiConvertAndCheckDC(hdc) == NULL ) return FALSE;
 
     if (!(fuOptions & (ETO_GLYPH_INDEX | ETO_IGNORELANGUAGE)))
     {
+        bBypassETOWMF = TRUE;
+
         if (LoadLPK(LPK_ETO))
             return LpkExtTextOut(hdc, x, y, fuOptions, lprc, lpString, cwc , lpDx, 0);
+    }
+    else
+    {
+        bBypassETOWMF = FALSE;
     }
 
     /* Get the DC attribute */
