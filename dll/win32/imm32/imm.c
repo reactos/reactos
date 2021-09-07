@@ -66,6 +66,7 @@ static PWND FASTCALL ValidateHwndNoErr(HWND hwnd)
     PCLIENTINFO ClientInfo = GetWin32ClientInfo();
     INT index;
     PUSER_HANDLE_TABLE ht;
+    PUSER_HANDLE_ENTRY he;
     WORD generation;
 
     /* See if the window is cached */
@@ -76,15 +77,20 @@ static PWND FASTCALL ValidateHwndNoErr(HWND hwnd)
         return NULL;
 
     ht = g_SharedInfo.aheList; /* handle table */
+    ASSERT(ht);
+    /* ReactOS-Specific! */
+    ASSERT(g_SharedInfo.ulSharedDelta != 0);
+    he = (PUSER_HANDLE_ENTRY)((ULONG_PTR)ht->handles - g_SharedInfo.ulSharedDelta);
+
     index = (LOWORD(hwnd) - FIRST_USER_HANDLE) >> 1;
-    if (index < 0 || index >= ht->nb_handles || ht->handles[index].type != TYPE_WINDOW)
+    if (index < 0 || index >= ht->nb_handles || he[index].type != TYPE_WINDOW)
         return NULL;
 
     generation = HIWORD(hwnd);
-    if (generation != ht->handles[index].generation && generation && generation != 0xFFFF)
+    if (generation != he[index].generation && generation && generation != 0xFFFF)
         return NULL;
 
-    return (PWND)&ht->handles[index];
+    return (PWND)&he[index];
 }
 
 static BOOL APIENTRY Imm32InitInstance(HMODULE hMod)
