@@ -701,6 +701,18 @@ Test_Region(void)
     DeleteObject(hRgn);
 }
 
+void Test_CursorIcon()
+{
+    ICONINFO info;
+    BITMAP bmp;
+    HCURSOR hCursor = LoadImage(NULL, MAKEINTRESOURCE(OCR_NORMAL), IMAGE_CURSOR, 0, 0, LR_DEFAULTSIZE|LR_SHARED);
+    GetIconInfo(hCursor, &info);
+
+    GetObjectW(info.hbmMask, sizeof(bmp), &bmp);
+    ok(bmp.bmWidth == bmp.bmHeight, "ERR CursorIcon  got %ldx%ld\n", bmp.bmWidth, bmp.bmHeight);
+    ok(bmp.bmHeight == 64, "ERR CursorIcon Height got %ldx\n", bmp.bmHeight);
+}
+
 START_TEST(GetObject)
 {
 
@@ -716,5 +728,6 @@ START_TEST(GetObject)
     Test_ExtPen(); // not implemented yet in ROS
     Test_MetaDC();
     Test_Region();
+    Test_CursorIcon();
 }
 
