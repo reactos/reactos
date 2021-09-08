@@ -725,9 +725,7 @@ BITMAP_CopyBitmap(HBITMAP hBitmap)
     }
 
     bmRealHeight = psurfSrc->SurfObj.sizlBitmap.cy;
-    PCURICON_OBJECT curIcon = getCurrentIcon();
-
-
+    curIcon = getCurrentIcon();
     if (curIcon && curIcon->hbmColor == NULL)
     {
         if (psurfSrc->SurfObj.sizlBitmap.cy == (curIcon->cy * 2))
