@@ -1285,7 +1285,7 @@ SeAssignSecurityEx(
     }
     if (!Owner)
     {
-        if (AutoInheritFlags & 0x20 /* FIXME: SEF_DEFAULT_OWNER_FROM_PARENT */)
+        if (AutoInheritFlags & SEF_DEFAULT_OWNER_FROM_PARENT)
         {
             DPRINT("Use parent owner sid!\n");
             if (!ARGUMENT_PRESENT(ParentDescriptor))
@@ -1317,7 +1317,7 @@ SeAssignSecurityEx(
     }
     if (!Group)
     {
-        if (AutoInheritFlags & 0x40 /* FIXME: SEF_DEFAULT_GROUP_FROM_PARENT */)
+        if (AutoInheritFlags & SEF_DEFAULT_GROUP_FROM_PARENT)
         {
             DPRINT("Use parent group sid!\n");
             if (!ARGUMENT_PRESENT(ParentDescriptor))
