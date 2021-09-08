@@ -713,6 +713,7 @@ BITMAP_CopyBitmap(HBITMAP hBitmap)
     HBITMAP hbmNew;
     SURFACE *psurfSrc, *psurfNew;
     LONG bmRealHeight;
+    PCURICON_OBJECT curIcon;
 
     /* Fail, if no source bitmap is given */
     if (hBitmap == NULL) return 0;
