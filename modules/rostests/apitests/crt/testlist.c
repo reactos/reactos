@@ -12,6 +12,7 @@ extern void func_atexit(void);
 #if defined(_M_ARM)
 extern void func___rt_div(void);
 extern void func___fto64(void);
+extern void func___64tof(void);
 #endif
 #endif
 #if defined(TEST_NTDLL)
@@ -62,6 +63,7 @@ const struct test winetest_testlist[] =
 #if defined(_M_ARM)
     { "__rt_div", func___rt_div },
     { "__fto64", func___fto64 },
+    { "__64tof", func___64tof },
 #endif
 #endif
 #if defined(TEST_STATIC_CRT)
