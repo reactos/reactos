@@ -62,6 +62,7 @@ void Test___badioinfo(void)
     ok(__badioinfo[0] != NULL, "__badioinfo is NULL\n");
 }
 
+#ifndef _M_ARM
 void Test___initenv(void)
 {
     _CRTIMP extern char** __initenv;
@@ -93,6 +94,7 @@ void Test___lc_collate_cp(void)
     ok_int(___lc_collate_cp_func(), 0);
     __lc_collate_cp--;
 }
+#endif // !_M_ARM
 
 void Test___lc_handle(void)
 {
@@ -145,6 +147,7 @@ void Test___pioinfo(void)
 
 }
 
+#ifndef _M_ARM
 void Test___setlc_active(void)
 {
     _CRTIMP extern unsigned int __setlc_active;
@@ -166,6 +169,7 @@ void Test___unguarded_readlc_active(void)
     _CRTIMP unsigned int* ___unguarded_readlc_active_add_func(void);
     ok_ptr(___unguarded_readlc_active_add_func(), p);
 }
+#endif // !_M_ARM
 
 void Test___wargv(void)
 {
@@ -180,6 +184,7 @@ void Test___wargv(void)
 #endif
 }
 
+#ifndef _M_ARM
 void Test___winitenv(void)
 {
     _CRTIMP extern wchar_t** __winitenv;
@@ -189,6 +194,7 @@ void Test___winitenv(void)
     ok_ptr(__p___winitenv(), &__winitenv);
 #endif
 }
+#endif
 
 void Test__acmdln(void)
 {
@@ -293,6 +299,7 @@ void Test__daylight(void)
 #endif
 }
 
+#ifndef _M_ARM
 void Test__dstbias(void)
 {
     void* p = &_dstbias;
@@ -334,6 +341,7 @@ void Test__fileinfo(void)
     ok_ptr(__p__fileinfo(), &_fileinfo);
 #endif
 }
+#endif // !_M_ARM
 
 void Test__fmode(void)
 {
@@ -408,6 +416,7 @@ void Test__mbctype(void)
 #endif
 }
 
+#ifndef _M_ARM
 void Test__osplatform(void)
 {
     ok_int(_osplatform, s_osvi.dwPlatformId);
@@ -416,6 +425,7 @@ void Test__osplatform(void)
     ok_ptr(_get_osplatform(), _osplatform);
 #endif
 }
+#endif
 
 void Test__osver(void)
 {
@@ -510,6 +520,7 @@ void Test__wcmdln(void)
 #endif
 }
 
+#ifndef _M_ARM
 void Test__wenviron(void)
 {
     void* p = &_wenviron;
@@ -526,6 +537,7 @@ void Test__wenviron(void)
     ok_int(_get_wenviron(), _wenviron);
 #endif
 }
+#endif
 
 void Test__winmajor(void)
 {
@@ -553,6 +565,7 @@ void Test__winminor(void)
 #endif
 }
 
+#ifndef _M_ARM
 void Test__winver(void)
 {
     ok_int(_winver, (s_osvi.dwMajorVersion << 8) | s_osvi.dwMinorVersion);
@@ -565,6 +578,7 @@ void Test__winver(void)
     ok_int(_get_winver(), _winver);
 #endif
 }
+#endif
 
 void Test__wpgmptr(void)
 {
@@ -598,16 +612,22 @@ START_TEST(crtdata)
     Test___argc();
     Test___argv();
     Test___badioinfo();
+#ifndef _M_ARM
     Test___initenv();
     Test___lc_codepage();
     Test___lc_collate_cp();
+#endif
     Test___lc_handle();
     Test___mb_cur_max();
     Test___pioinfo();
+#ifndef _M_ARM
     Test___setlc_active();
     Test___unguarded_readlc_active();
+#endif
     Test___wargv();
+#ifndef _M_ARM
     Test___winitenv();
+#endif
     Test__acmdln();
 #ifdef _M_IX86
     Test__adjust_fdiv();
@@ -616,14 +636,18 @@ START_TEST(crtdata)
     Test__commode();
     Test__ctype();
     Test__daylight();
+#ifndef _M_ARM
     Test__dstbias();
     Test__environ();
     Test__fileinfo();
+#endif
     Test__fmode();
     Test__iob();
     Test__mbcasemap();
     Test__mbctype();
+#ifndef _M_ARM
     Test__osplatform();
+#endif
     Test__osver();
     Test__pgmptr();
     Test__sys_errlist();
@@ -632,9 +656,13 @@ START_TEST(crtdata)
     Test__tzname();
     Test__wcmdln();
     Test__wctype();
+#ifndef _M_ARM
     Test__wenviron();
+#endif
     Test__winmajor();
     Test__winminor();
+#ifndef _M_ARM
     Test__winver();
+#endif
     Test__wpgmptr();
 }
