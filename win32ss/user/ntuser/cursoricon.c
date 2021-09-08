@@ -27,7 +27,6 @@ SYSTEM_CURSORINFO gSysCursorInfo;
 PCURICON_OBJECT gcurFirst = NULL; // After all is done, this should be WINLOGO!
 PCURICON_OBJECT FrameCurIcon = NULL;
 
-PCURICON_OBJECT getCurrentIcon(){return FrameCurIcon;}
 //
 //   System Cursors
 //
@@ -61,6 +60,11 @@ SYSTEMCURICO gasysico[] = {
     {OIC_NOTE,   NULL},
     {OIC_WINLOGO,NULL},
     };
+
+PCURICON_OBJECT getCurrentIcon()
+{
+    return FrameCurIcon;
+}
 
 BOOL
 InitCursorImpl(VOID)
