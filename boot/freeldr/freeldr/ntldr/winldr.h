@@ -58,6 +58,7 @@ typedef struct _LOADER_SYSTEM_BLOCK
     CHAR NtBootPathName[MAX_PATH+1];
     CHAR NtHalPathName[MAX_PATH+1];
     ARC_DISK_INFORMATION ArcDiskInformation;
+    LOADER_PERFORMANCE_DATA LoaderPerformanceData;
 } LOADER_SYSTEM_BLOCK, *PLOADER_SYSTEM_BLOCK;
 
 extern PLOADER_SYSTEM_BLOCK WinLdrSystemBlock;
@@ -107,7 +108,10 @@ BOOLEAN
 WinLdrAddDriverToList(LIST_ENTRY *BootDriverListHead,
                       PWSTR RegistryPath,
                       PWSTR ImagePath,
-                      PWSTR ServiceName);
+                      PWSTR ServiceName,
+                      PWSTR GroupName,
+                      ULONG ErrorControl,
+                      ULONG Tag);
 
 VOID
 WinLdrpDumpMemoryDescriptors(PLOADER_PARAMETER_BLOCK LoaderBlock);
@@ -129,7 +133,7 @@ VOID
 WinLdrSetupMachineDependent(PLOADER_PARAMETER_BLOCK LoaderBlock);
 
 VOID
-WinLdrSetProcessorContext(VOID);
+WinLdrSetProcessorContext(USHORT OperatingSystemVersion);
 
 // arch/xxx/winldr.c
 BOOLEAN

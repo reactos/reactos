@@ -159,7 +159,10 @@ SetupLdrScanBootDrivers(PLIST_ENTRY BootDriverListHead, HINF InfHandle, PCSTR Se
                 Success = WinLdrAddDriverToList(BootDriverListHead,
                                                 L"\\Registry\\Machine\\System\\CurrentControlSet\\Services\\",
                                                 ImagePathW,
-                                                ServiceName);
+                                                ServiceName,
+                                                NULL,
+                                                1,
+                                                (ULONG)-1);
                 if (!Success)
                 {
                     ERR("Could not add boot driver '%s', '%s'\n", SearchPath, DriverName);
