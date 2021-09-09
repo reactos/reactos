@@ -41,7 +41,7 @@ list(APPEND SOURCE
     unix_func.c
     ${CMAKE_CURRENT_BINARY_DIR}/epm_c.c)
 
-if(MSVC AND NOT ARCH STREQUAL "arm")
+if(MSVC)
     add_asm_files(rpcrt4_asm msvc.S)
 endif()
 

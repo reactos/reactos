@@ -164,7 +164,7 @@
 ;@ cdecl -arch=arm __ExceptionPtrRethrow()
 ;@ cdecl -arch=arm __ExceptionPtrSwap()
 ;@ cdecl -arch=arm __ExceptionPtrToBool()
-@ cdecl -arch=arm __uncaught_exception()
+@ cdecl -arch=arm __uncaught_exception(ptr) MSVCRT___uncaught_exception
 @ cdecl -arch=arm ?_query_new_handler@@YAP6AHI@ZXZ() MSVCRT__query_new_handler # int (__cdecl*__cdecl _query_new_handler(void))(unsigned int)
 @ cdecl -arch=arm ?_set_new_handler@@YAP6AHI@ZP6AHI@Z@Z() MSVCRT__set_new_handler # int (__cdecl*__cdecl _set_new_handler(int (__cdecl*)(unsigned int)))(unsigned int)
 @ cdecl -arch=arm ?_set_new_mode@@YAHH@Z() MSVCRT__set_new_mode # int __cdecl _set_new_mode(int)
@@ -947,7 +947,7 @@
 @ cdecl _seterrormode(long)
 @ cdecl -norelay _setjmp(ptr)
 @ cdecl -arch=i386 -norelay _setjmp3(ptr long)
-@ cdecl -arch=x86_64 -norelay _setjmpex(ptr ptr)
+@ cdecl -arch=x86_64,arm -norelay _setjmpex(ptr ptr)
 @ cdecl _setmaxstdio(long)
 @ cdecl _setmbcp(long)
 @ cdecl _setmode(long long)
