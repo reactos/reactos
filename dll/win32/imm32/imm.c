@@ -791,7 +791,7 @@ VOID WINAPI ImmUnlockClientImc(PCLIENTIMC pClientImc)
     HeapFree(g_hImm32Heap, 0, pClientImc);
 }
 
-HIMC APIENTRY Imm32GetContextEx(HWND hWnd, DWORD dwContextFlags)
+static HIMC APIENTRY Imm32GetContextEx(HWND hWnd, DWORD dwContextFlags)
 {
     HIMC hIMC;
     PCLIENTIMC pClientImc;
@@ -1130,70 +1130,6 @@ BOOL WINAPI CtfImmIsCiceroEnabled(VOID)
 }
 
 /***********************************************************************
-*		ImmLockIMC(IMM32.@)
-*/
-LPINPUTCONTEXT WINAPI ImmLockIMC(HIMC hIMC)
-{
-    InputContextData *data = get_imc_data(hIMC);
-
-    if (!data)
-        return NULL;
-    data->dwLock++;
-    return &data->IMC;
-}
-
-/***********************************************************************
-*		ImmUnlockIMC(IMM32.@)
-*/
-BOOL WINAPI ImmUnlockIMC(HIMC hIMC)
-{
-    PCLIENTIMC pClientImc;
-    HIMC hClientImc;
-
-    pClientImc = ImmLockClientImc(hIMC);
-    if (pClientImc == NULL)
-        return FALSE;
-
-    hClientImc = pClientImc->hImc;
-    if (hClientImc)
-        LocalUnlock(hClientImc);
-
-    InterlockedDecrement(&pClientImc->cLockObj);
-    ImmUnlockClientImc(pClientImc);
-    return TRUE;
-}
-
-/***********************************************************************
- *              ImmRequestMessageA(IMM32.@)
- */
-LRESULT WINAPI ImmRequestMessageA(HIMC hIMC, WPARAM wParam, LPARAM lParam)
-{
-    InputContextData *data = get_imc_data(hIMC);
-
-    TRACE("%p %ld %ld\n", hIMC, wParam, wParam);
-
-    if (data) return SendMessageA(data->IMC.hWnd, WM_IME_REQUEST, wParam, lParam);
-
-    SetLastError(ERROR_INVALID_HANDLE);
-    return 0;
-}
-
-/***********************************************************************
- *              ImmRequestMessageW(IMM32.@)
- */
-LRESULT WINAPI ImmRequestMessageW(HIMC hIMC, WPARAM wParam, LPARAM lParam)
-{
-    InputContextData *data = get_imc_data(hIMC);
-
-    TRACE("%p %ld %ld\n", hIMC, wParam, wParam);
-
-    if (data) return SendMessageW(data->IMC.hWnd, WM_IME_REQUEST, wParam, lParam);
-
-    SetLastError(ERROR_INVALID_HANDLE);
-    return 0;
-}
-
-/***********************************************************************
  *		ImmInstallIMEA (IMM32.@)
  */
 HKL WINAPI ImmInstallIMEA(LPCSTR lpszIMEFileName, LPCSTR lpszLayoutText)
@@ -1276,6 +1212,70 @@ HKL WINAPI ImmInstallIMEW(LPCWSTR lpszIMEFileName, LPCWSTR lpszLayoutText)
         WARN("Unable to set IME registry values\n");
         return 0;
     }
+}
+
+/***********************************************************************
+*		ImmLockIMC(IMM32.@)
+*/
+LPINPUTCONTEXT WINAPI ImmLockIMC(HIMC hIMC)
+{
+    InputContextData *data = get_imc_data(hIMC);
+
+    if (!data)
+        return NULL;
+    data->dwLock++;
+    return &data->IMC;
+}
+
+/***********************************************************************
+*		ImmUnlockIMC(IMM32.@)
+*/
+BOOL WINAPI ImmUnlockIMC(HIMC hIMC)
+{
+    PCLIENTIMC pClientImc;
+    HIMC hClientImc;
+
+    pClientImc = ImmLockClientImc(hIMC);
+    if (pClientImc == NULL)
+        return FALSE;
+
+    hClientImc = pClientImc->hImc;
+    if (hClientImc)
+        LocalUnlock(hClientImc);
+
+    InterlockedDecrement(&pClientImc->cLockObj);
+    ImmUnlockClientImc(pClientImc);
+    return TRUE;
+}
+
+/***********************************************************************
+ *              ImmRequestMessageA(IMM32.@)
+ */
+LRESULT WINAPI ImmRequestMessageA(HIMC hIMC, WPARAM wParam, LPARAM lParam)
+{
+    InputContextData *data = get_imc_data(hIMC);
+
+    TRACE("%p %ld %ld\n", hIMC, wParam, wParam);
+
+    if (data) return SendMessageA(data->IMC.hWnd, WM_IME_REQUEST, wParam, lParam);
+
+    SetLastError(ERROR_INVALID_HANDLE);
+    return 0;
+}
+
+/***********************************************************************
+ *              ImmRequestMessageW(IMM32.@)
+ */
+LRESULT WINAPI ImmRequestMessageW(HIMC hIMC, WPARAM wParam, LPARAM lParam)
+{
+    InputContextData *data = get_imc_data(hIMC);
+
+    TRACE("%p %ld %ld\n", hIMC, wParam, wParam);
+
+    if (data) return SendMessageW(data->IMC.hWnd, WM_IME_REQUEST, wParam, lParam);
+
+    SetLastError(ERROR_INVALID_HANDLE);
+    return 0;
 }
 
 /***********************************************************************
