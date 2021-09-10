@@ -8,7 +8,14 @@ add_definitions(-D_WIN32_WINNT=0x600)
 spec2def(imm32.dll imm32.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
+    candidate.c
+    guideline.c
+    ime.c
     imm.c
+    keymsg.c
+    nt3.c
+    regword.c
+    utils.c
     ${CMAKE_CURRENT_BINARY_DIR}/imm32_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/imm32.def)
 
