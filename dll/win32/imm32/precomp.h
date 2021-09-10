@@ -31,8 +31,8 @@
 #include <ndk/umtypes.h>
 #include <ndk/pstypes.h>
 #include <ndk/rtlfuncs.h>
-#include "../../../win32ss/include/ntuser.h"
-#include "../../../win32ss/include/ntwin32.h"
+#include "ntuser.h"
+#include "ntwin32.h"
 #include <undocuser.h>
 #include <imm32_undoc.h>
 #include <strsafe.h>

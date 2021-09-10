@@ -10,6 +10,7 @@
 WINE_DEFAULT_DEBUG_CHANNEL(imm);
 
 #ifdef IMM_NT3_SUPPORT /* 3.x support */
+
 DWORD APIENTRY
 ImmNt3JTransCompA(LPINPUTCONTEXTDX pIC, LPCOMPOSITIONSTRING pCS,
                   const TRANSMSG *pSrc, LPTRANSMSG pDest)
@@ -200,4 +201,5 @@ ImmNt3Trans(DWORD dwCount, LPTRANSMSG pEntries, HIMC hIMC, BOOL bAnsi, WORD wLan
     ImmUnlockIMC(hIMC);
     return ret;
 }
-#endif
+
+#endif /* IMM_NT3_SUPPORT */
