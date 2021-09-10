@@ -103,7 +103,8 @@ HKL WINAPI ImmLoadLayout(HKL hKL, PIMEINFOEX pImeInfoEx)
     return hKL;
 }
 
-typedef struct _tagImmHkl{
+typedef struct _tagImmHkl
+{
     struct list entry;
     HKL         hkl;
     HMODULE     hIME;
@@ -399,7 +400,6 @@ HIMC WINAPI ImmAssociateContext(HWND hWnd, HIMC hIMC)
 
     return old;
 }
-
 
 /*
  * Helper function for ImmAssociateContextEx
@@ -825,12 +825,14 @@ Quit:
     return hIMC;
 }
 
+
 /* Helpers for the GetCompositionString functions */
 
 /* Source encoding is defined by context, source length is always given in respective characters. Destination buffer
    length is always in bytes. */
-static INT CopyCompStringIMEtoClient(const InputContextData *data, const void *src, INT src_len, void *dst,
-        INT dst_len, BOOL unicode)
+static INT
+CopyCompStringIMEtoClient(const InputContextData *data, const void *src, INT src_len, void *dst,
+                          INT dst_len, BOOL unicode)
 {
     int char_size = unicode ? sizeof(WCHAR) : sizeof(char);
     INT ret;
@@ -859,8 +861,9 @@ static INT CopyCompStringIMEtoClient(const InputContextData *data, const void *s
 
 /* Composition string encoding is defined by context, returned attributes correspond to string, converted according to
    passed mode. String length is in characters, attributes are in byte arrays. */
-static INT CopyCompAttrIMEtoClient(const InputContextData *data, const BYTE *src, INT src_len, const void *comp_string,
-        INT str_len, BYTE *dst, INT dst_len, BOOL unicode)
+static INT
+CopyCompAttrIMEtoClient(const InputContextData *data, const BYTE *src, INT src_len, const void *comp_string,
+                        INT str_len, BYTE *dst, INT dst_len, BOOL unicode)
 {
     union
     {
@@ -930,8 +933,9 @@ static INT CopyCompAttrIMEtoClient(const InputContextData *data, const BYTE *src
     return rc;
 }
 
-static INT CopyCompClauseIMEtoClient(InputContextData *data, LPBYTE source, INT slen, LPBYTE ssource,
-                                     LPBYTE target, INT tlen, BOOL unicode )
+static INT
+CopyCompClauseIMEtoClient(InputContextData *data, LPBYTE source, INT slen, LPBYTE ssource,
+                          LPBYTE target, INT tlen, BOOL unicode )
 {
     INT rc;
 
@@ -985,7 +989,8 @@ static INT CopyCompClauseIMEtoClient(InputContextData *data, LPBYTE source, INT 
     return rc;
 }
 
-static INT CopyCompOffsetIMEtoClient(InputContextData *data, DWORD offset, LPBYTE ssource, BOOL unicode)
+static INT
+CopyCompOffsetIMEtoClient(InputContextData *data, DWORD offset, LPBYTE ssource, BOOL unicode)
 {
     int rc;
 
@@ -1003,8 +1008,9 @@ static INT CopyCompOffsetIMEtoClient(InputContextData *data, DWORD offset, LPBYT
     return rc;
 }
 
-static LONG ImmGetCompositionStringT( HIMC hIMC, DWORD dwIndex, LPVOID lpBuf,
-                                      DWORD dwBufLen, BOOL unicode)
+static LONG
+ImmGetCompositionStringT(HIMC hIMC, DWORD dwIndex, LPVOID lpBuf,
+                         DWORD dwBufLen, BOOL unicode)
 {
     LONG rc = 0;
     InputContextData *data = get_imc_data(hIMC);
