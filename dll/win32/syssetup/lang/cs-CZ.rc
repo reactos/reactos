@@ -250,7 +250,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_PRODUCTTITLE "Product Options"
-    IDS_PRODUCTSUBTITLE "You can choose a product option that affects the behaviour of the system."
+    IDS_PRODUCTSUBTITLE "You can choose a product option that affects the behavior of the system."
     IDS_PRODUCTSERVERNAME "ReactOS Server"
     IDS_PRODUCTWORKSTATIONNAME "ReactOS Workstation"
     IDS_PRODUCTSERVERINFO "The system will be recognized as a server. Private folders ""My Pictures"", ""My Videos"" and ""My Music"" are independent from ""My Documents""."
