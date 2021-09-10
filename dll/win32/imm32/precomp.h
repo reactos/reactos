@@ -12,30 +12,38 @@
 
 #pragma once
 
-#include <stdarg.h>
 #include <stdio.h>
+#include <stdlib.h>
 
+/* PSDK/NDK Headers */
 #define WIN32_NO_STATUS
 #include <windef.h>
 #include <winbase.h>
 #include <wingdi.h>
 #include <winuser.h>
-#include <winerror.h>
-#include <wine/debug.h>
-#include <imm.h>
-#include <ddk/imm.h>
 #include <winnls.h>
 #include <winreg.h>
-#include <wine/list.h>
-#include <stdlib.h>
+
+#include <imm.h>
+#include <ddk/imm.h>
+
+#define NTOS_MODE_USER
 #include <ndk/umtypes.h>
 #include <ndk/pstypes.h>
 #include <ndk/rtlfuncs.h>
+
+/* Public Win32K Headers */
 #include "ntuser.h"
 #include "ntwin32.h"
+
+/* Undocumented user definitions */
 #include <undocuser.h>
 #include <imm32_undoc.h>
+
 #include <strsafe.h>
+
+#include <wine/debug.h>
+#include <wine/list.h>
 
 #define IMM_INIT_MAGIC          0x19650412
 #define IMM_INVALID_CANDFORM    ULONG_MAX
