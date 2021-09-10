@@ -2,12 +2,7 @@
  * PROJECT:     ReactOS IMM32
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  * PURPOSE:     Implementing IMM32 registering/unregistering words
- * COPYRIGHT:   Copyright 1998 Patrik Stridvall
- *              Copyright 2002, 2003, 2007 CodeWeavers, Aric Stewart
- *              Copyright 2017 James Tabor <james.tabor@reactos.org>
- *              Copyright 2018 Amine Khaldi <amine.khaldi@reactos.org>
- *              Copyright 2020 Oleg Dubinskiy <oleg.dubinskij2013@yandex.ua>
- *              Copyright 2020-2021 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
+ * COPYRIGHT:   Copyright 2020-2021 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
 #include "precomp.h"
