@@ -4,8 +4,6 @@ include_directories(
     ${REACTOS_SOURCE_DIR}/win32ss/include)
 
 add_definitions(-D__WINESRC__)
-remove_definitions(-D_WIN32_WINNT=0x502)
-add_definitions(-D_WIN32_WINNT=0x600)
 
 spec2def(imm32.dll imm32.spec ADD_IMPORTLIB)
 
