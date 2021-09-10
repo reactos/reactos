@@ -128,7 +128,7 @@ BEGIN
             "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 110, 267, 19
     CONTROL "直到我按 Alt 鍵之前，請隱藏有下劃線的字母供鍵盤使用",
             IDC_EFFAPPEARANCE_KEYBOARDCUES, "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 125, 267, 19
-    CONTROL "Use &flat menus", IDC_EFFAPPEARANCE_FLATMENUS,
+    CONTROL "使用扁平化選單(&F)", IDC_EFFAPPEARANCE_FLATMENUS,
             "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 140, 267, 19
     PUSHBUTTON "取消", IDCANCEL, 226, 165, 50, 14
     DEFPUSHBUTTON "確定", IDOK, 172, 165, 50, 14
@@ -236,9 +236,9 @@ STRINGTABLE
 BEGIN
     IDS_COLOR_4BIT "16 色"
     IDS_COLOR_8BIT "256 色"
-    IDS_COLOR_16BIT "增強色(16 位元)"
-    IDS_COLOR_24BIT "真彩色(24 位元)"
-    IDS_COLOR_32BIT "真彩色(32 位元)"
+    IDS_COLOR_16BIT "增強色 (16 位元)"
+    IDS_COLOR_24BIT "真彩色 (24 位元)"
+    IDS_COLOR_32BIT "真彩色 (32 位元)"
     IDS_PIXEL "%lux%lu 像素"
 END
 
@@ -274,8 +274,8 @@ BEGIN
     IDS_ELEMENT_11 "標題按鈕"
     IDS_ELEMENT_12 "訊息框"
     IDS_ELEMENT_13 "應用程式背景"
-    IDS_ELEMENT_14 "圖示間距(水平)"
-    IDS_ELEMENT_15 "圖示間距(垂直)"
+    IDS_ELEMENT_14 "圖示間距 (水平)"
+    IDS_ELEMENT_15 "圖示間距 (垂直)"
     IDS_ELEMENT_16 "工具提示"
     IDS_ELEMENT_17 "圖示"
 //  IDS_ELEMENT_18 "已禁用的選單項"

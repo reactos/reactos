@@ -26,7 +26,7 @@ BEGIN
     IDS_SNDVOL32 "音量控制"
     IDS_NOMIXERDEVICES "沒有可用的混音器設備！這個程式即將結束。"
     IDS_SELECT "選擇(&S)"
-    IDS_ADVANCED_CONTROLS "進階控制: %s"
+    IDS_ADVANCED_CONTROLS "進階控制︰%s"
     IDS_OTHER_CONTROLS1 "&1  %s"
     IDS_OTHER_CONTROLS2 "&2  %s"
 END

@@ -75,8 +75,8 @@ BEGIN
     IDS_ERRORTITLE "壓縮的 (zipped) 資料夾發生錯誤"
     IDS_CANTSTARTTHREAD "無法開始壓縮檔案的執行緒。"
     IDS_NOFILES "指定的目錄 '%s' 是空的，所以壓縮的 (zipped) 資料夾無法將它新增到保存檔中。"
-    IDS_CANTCREATEZIP "無法建立壓縮的資料夾 '%s' (錯誤碼: %d)."
-    IDS_CANTREADFILE "無法讀取檔案 '%s'."
+    IDS_CANTCREATEZIP "無法建立壓縮的資料夾「%s」(錯誤碼: %d)."
+    IDS_CANTREADFILE "無法讀取檔案「%s」."
     IDS_EXTRACTING "正在解壓縮..."
 
     IDS_WIZ_TITLE "解壓縮精靈"
@@ -87,7 +87,7 @@ BEGIN
     IDS_WIZ_BROWSE_TITLE "選擇檔案解壓縮路徑。"
 
     IDS_OVERWRITEFILE_TEXT "這個資料夾中已包含一個名為 %1 的檔案。\n您想要取代它嗎？"
-    IDS_PASSWORD_FILE_TEXT "檔案 '%1' 正被密碼保護。 請輸入密碼。"
+    IDS_PASSWORD_FILE_TEXT "檔案「%1」正被密碼保護。請輸入密碼。"
     IDS_PASSWORD_ZIP_TEXT "請指定解壓縮該壓縮檔時使用的密碼。"
 
     IDS_MENUITEM "解壓縮全部(&A)..."

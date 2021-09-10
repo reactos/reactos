@@ -340,7 +340,7 @@ BEGIN
     IDS_ERR_DELVAL_CAPTION "刪除值時出錯。"
     IDS_ERR_DELETEVALUE "無法刪除所有指定的值！"
     IDS_ERR_RENVAL_CAPTION "重新命名值時產生錯誤"
-    IDS_ERR_RENVAL_TOEMPTY "登錄編輯程式無法重新命名 %s。指定值的名稱為空。請鍵入其他名稱，再試一次。"
+    IDS_ERR_RENVAL_TOEMPTY "登錄編輯程式無法重新命名 %s。指定值的名稱為空。請輸入其他名稱，然後再試一次。"
     IDS_QUERY_IMPORT_HIVE_CAPTION "確認恢復機碼"
     IDS_QUERY_IMPORT_HIVE_MSG "一個機碼將在目前選定的機碼的頂部恢復。\n所有此機碼的值和子機碼都將被刪除。\n您要繼續該操作嗎？"
     IDS_NEW_KEY "新機碼 #%d"
@@ -409,8 +409,8 @@ STRINGTABLE
 BEGIN
     IDS_IMPORT_PROMPT "新增資訊可無意中更改或刪除值並導致元件停止正常工作。\n如果您不信任此「%s」中的資訊的來源，請不要將其新增到登錄。\n\n是否需要繼續？"
     IDS_IMPORT_OK "「%s」中包含的值和機碼已成功新增到登錄。"
-    IDS_IMPORT_ERROR "無法將「%s」匯入： 開啟該檔案時出錯。可能有磁碟或檔案系統錯誤，或是檔案可能不存在。"
-    IDS_EXPORT_ERROR "無法匯出「%s」： 建立或寫入檔案時出錯。可能有磁碟或檔案系統錯誤。"
+    IDS_IMPORT_ERROR "無法匯入「%s」：開啟該檔案時出錯。可能有磁碟或檔案系統錯誤，或是檔案可能不存在。"
+    IDS_EXPORT_ERROR "無法匯出「%s」：建立或寫入檔案時出錯。可能有磁碟或檔案系統錯誤。"
 END
 
 STRINGTABLE

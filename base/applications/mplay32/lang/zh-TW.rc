@@ -19,7 +19,7 @@ BEGIN
     END
     POPUP "播放(&P)"
     BEGIN
-        MENUITEM "播放/暫停(&P)\tCtrl+P", IDC_PLAY
+        MENUITEM "播放／暫停(&P)\tCtrl+P", IDC_PLAY
         MENUITEM "停止(&O)\tCtrl+S", IDC_STOP
         MENUITEM SEPARATOR
         MENUITEM "重複(&T)\tCtrl+T", IDM_REPEAT

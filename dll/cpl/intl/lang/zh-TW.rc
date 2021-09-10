@@ -39,7 +39,7 @@ BEGIN
     PUSHBUTTON "詳細資訊(&T)...", IDC_DETAIL_BUTTON, 177, 34, 54, 14
     GROUPBOX "附加的語言支援", -1, 5, 62, 234, 82
     LTEXT "大多數語言都會預設安裝。要安裝其他語言，請選取下面相應的核取方塊。", -1, 12, 72, 220, 18
-    CHECKBOX "為複雜字集和從右到左的語言安裝檔案(包括泰文)(&N)", IDC_INST_FILES_FOR_RTOL_LANG, 12, 92, 215, 22, BS_MULTILINE | BS_TOP
+    CHECKBOX "為複雜字集和從右到左的語言安裝檔案 (包括泰文)(&N)", IDC_INST_FILES_FOR_RTOL_LANG, 12, 92, 215, 22, BS_MULTILINE | BS_TOP
     CHECKBOX "安裝東亞語言檔案(&S)", IDC_INST_FILES_FOR_ASIAN, 12, 114, 180, 22, BS_MULTILINE | BS_TOP
 END
 
@@ -199,10 +199,10 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_APPLY_DEFAULT_TITLE "更改默認設定"
-    IDS_APPLY_DEFAULT_TEXT "設定將應用於默認的使用者帳戶。\n\n\
-這些更改應用到登入螢幕和新使用者帳戶。\n\
-必須重新啟動電腦，以便將更改用於一些系統服套務。"
+    IDS_APPLY_DEFAULT_TITLE "更改預設設定"
+    IDS_APPLY_DEFAULT_TEXT "設定將套用在預設的使用者帳戶。\n\n\
+這些更改會套用到登入螢幕和新的使用者帳戶。\n\
+電腦必須重新啟動，以便將更改套用於一些系統服務。"
 END
 
 STRINGTABLE
@@ -211,12 +211,12 @@ BEGIN
     IDS_ERROR_SYMBOL_SEPARATE "短日期元件分隔符包含不正確的符號"
     IDS_ERROR_SYMBOL_FORMAT_SHORT "短日期格式包含不正確的符號"
     IDS_ERROR_SYMBOL_FORMAT_LONG "長日期格式包含不正確的符號"
-    IDS_ERROR_OEM_CODE_PAGE "閱讀 OEM 內碼表時出現問題。"
-    IDS_ERROR_ANSI_CODE_PAGE "閱讀 ANSI 內碼表時出現問題。"
-    IDS_ERROR_INT_KEY_REG "問題開啟項: HKCU\\Control Panel\\International"
-    IDS_ERROR_DEF_INT_KEY_REG "問題開啟項: HKU\\.DEFAULT\\Control Panel\\International"
-    IDS_ERROR_NLS_KEY_REG "問題開啟項: HKLM\\SYSTEM\\CurrentControlSet\\Control\\NLS\\Language"
-    IDS_ERROR_NLS_CODE_REG "問題開啟項: HKLM\\SYSTEM\\CurrentControlSet\\Control\\NLS\\CodePage"
+    IDS_ERROR_OEM_CODE_PAGE "讀取 OEM 內碼表時出現問題。"
+    IDS_ERROR_ANSI_CODE_PAGE "讀取 ANSI 內碼表時出現問題。"
+    IDS_ERROR_INT_KEY_REG "開啟項有問題: HKCU\\Control Panel\\International"
+    IDS_ERROR_DEF_INT_KEY_REG "開啟項有問題: HKU\\.DEFAULT\\Control Panel\\International"
+    IDS_ERROR_NLS_KEY_REG "開啟項有問題: HKLM\\SYSTEM\\CurrentControlSet\\Control\\NLS\\Language"
+    IDS_ERROR_NLS_CODE_REG "開啟項有問題: HKLM\\SYSTEM\\CurrentControlSet\\Control\\NLS\\CodePage"
     IDS_ERROR_INPUT_DLL "無法啟動 input.dll"
     IDS_ERROR_UNICODE "無法為不支援 Unicode 的程式安裝新語言!"
 END

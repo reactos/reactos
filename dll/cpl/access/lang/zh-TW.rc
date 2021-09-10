@@ -8,17 +8,17 @@ CAPTION "鍵盤"
 FONT 9, "新細明體", 0, 0, 0x0
 BEGIN
     GROUPBOX "相黏鍵", -1, 6, 11, 234, 62
-    LTEXT "如果您希望以一次僅按一鍵的方式來使用 SHIFT、CTRL或 ALT 鍵，請使用 相黏鍵。",
+    LTEXT "如果您希望以一次僅按一鍵的方式來使用 SHIFT、CTRL 或 ALT 鍵，請使用「相黏鍵」。",
           -1, 12, 20, 222, 29
     AUTOCHECKBOX "使用相黏鍵(&U)", IDC_STICKY_BOX, 12, 49, 126, 14
     PUSHBUTTON "設定(&S)", IDC_STICKY_BUTTON, 144, 49, 90, 14
     GROUPBOX "篩選鍵", -1, 6, 79, 234, 67
-    LTEXT "如果您希望 ReactOS 忽略短暫或重複的按鍵、或者減緩重複速度，請使用 篩選鍵”。",
+    LTEXT "如果您希望 ReactOS 忽略短暫或重複的按鍵、或者減緩重複速度，請使用「篩選鍵」。",
           -1, 12, 89, 222, 29
     AUTOCHECKBOX "使用篩選鍵(&F)", IDC_FILTER_BOX, 12, 121, 126, 14
     PUSHBUTTON "設定(&E)", IDC_FILTER_BUTTON, 144, 121, 90, 14
     GROUPBOX "切換鍵", -1, 6, 148, 234, 62
-    LTEXT "如果您希望在按下 CAPS、NUM LOCK 和 SCROLL LOCK 鍵時聽到聲音，請使用 切換鍵。",
+    LTEXT "如果您希望在按下 CAPS、NUM LOCK 和 SCROLL LOCK 鍵時聽到聲音，請使用「切換鍵」。",
           -1, 12, 161, 222, 20
     AUTOCHECKBOX "使用切換鍵(&T)", IDC_TOGGLE_BOX, 12, 184, 126, 14
     PUSHBUTTON "設定(&N)", IDC_TOGGLE_BUTTON, 144, 184, 90, 14
@@ -32,14 +32,14 @@ CAPTION "聲音"
 FONT 9, "新細明體", 0, 0, 0x0
 BEGIN
     GROUPBOX "聲音衛士", -1, 6, 11, 234, 98
-    LTEXT "如果您 ReactOS 能在系統發出聲音時發出可視警告，請使用 聲音衛士。",
+    LTEXT "如果您 ReactOS 能在系統發出聲音時發出可視警告，請使用「聲音衛士」。",
           -1, 12, 20, 222, 29
     AUTOCHECKBOX "使用聲音衛士(&S)", IDC_SENTRY_BOX, 12, 49, 90, 14
     LTEXT "選擇視覺警告:", IDC_SENTRY_TEXT, 12, 72, 222, 11
     COMBOBOX IDC_SENTRY_COMBO, 12, 83, 222, 56,
              CBS_DROPDOWNLIST | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
     GROUPBOX "聲音顯示", -1, 6, 115, 234, 67
-    LTEXT "如果您程式顯示所發出的語音和聲音的文字，請使用 聲音顯示。",
+    LTEXT "如果您程式顯示所發出的語音和聲音的文字，請使用「聲音顯示」。",
           -1, 12, 125, 222, 29
     AUTOCHECKBOX "使用聲音顯示(&H)", IDC_SSHOW_BOX, 12, 148, 222, 14
 END
@@ -76,7 +76,7 @@ CAPTION "滑鼠"
 FONT 9, "新細明體", 0, 0, 0x0
 BEGIN
     GROUPBOX "滑鼠鍵", -1, 6, 11, 234, 62
-    LTEXT "如果您希望用數字鍵盤來控制滑鼠指針，請使用 滑鼠鍵。",
+    LTEXT "如果您希望用數字鍵盤來控制滑鼠指針，請使用「滑鼠鍵」。",
           -1, 12, 20, 222, 29
     AUTOCHECKBOX "使用滑鼠鍵(&M)", IDC_MOUSE_BOX, 12, 49, 126, 14
     PUSHBUTTON "設定(&S)", IDC_MOUSE_BUTTON, 144, 49, 90, 14
@@ -242,7 +242,7 @@ CAPTION "篩選鍵進階設定"
 FONT 9, "新細明體"
 BEGIN
     GROUPBOX "重複鍵", -1, 6, 11, 234, 106
-    LTEXT "替代控制面板“鍵盤”上的設定：",
+    LTEXT "覆寫控制台上的「鍵盤」的設定：",
           -1, 12, 20, 222, 20
     AUTORADIOBUTTON "無鍵盤重複(&N)", IDC_REPEAT_NOREPEAT_RADIO, 12, 32, 78, 11, WS_GROUP
     AUTORADIOBUTTON "減緩鍵盤重複速度(&S)", IDC_REPEAT_REPEAT_RADIO, 12, 45, 131, 11

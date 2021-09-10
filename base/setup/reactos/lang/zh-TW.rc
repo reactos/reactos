@@ -25,9 +25,9 @@ CAPTION "ReactOS 安裝程式"
 FONT 9, "新細明體"
 BEGIN
     AUTORADIOBUTTON "安裝 ReactOS", IDC_INSTALL, 7, 7, 277, 10, WS_GROUP | WS_TABSTOP
-    LTEXT "安裝 ReactOS 的新副本。此選項不會儲存您的檔案、 設定和程式。您可以對磁碟和磁碟區進行更改。", IDC_INSTALLTEXT, 18, 18, 269, 25, NOT WS_GROUP
+    LTEXT "安裝 ReactOS 的新副本。此選項不會儲存您的檔案、設定和程式。您可以對磁碟和磁碟區進行更改。", IDC_INSTALLTEXT, 18, 18, 269, 25, NOT WS_GROUP
     AUTORADIOBUTTON "修復或更新已安裝的 ReactOS", IDC_UPDATE, 7, 50, 277, 10
-    LTEXT "更新或修復已安裝的 ReactOS 副本。此選項會儲存您的檔案、 設定和程式。只有在 ReactOS 已經安裝在此電腦時才能使用此選項。", IDC_UPDATETEXT, 18, 61, 269, 30, NOT WS_GROUP
+    LTEXT "更新或修復已安裝的 ReactOS 副本。此選項會儲存您的檔案、設定和程式。只有在 ReactOS 已經安裝在此電腦時才能使用此選項。", IDC_UPDATETEXT, 18, 61, 269, 30, NOT WS_GROUP
     LTEXT "按 [下一步] 繼續安裝。", IDC_STATIC, 7, 128, 297, 8
 END
 
@@ -162,8 +162,8 @@ BEGIN
     IDS_RESTARTSUBTITLE "第一階段安裝已經完成，重新啟動進行第二階段安裝"
     IDS_SUMMARYTITLE "安裝概要"
     IDS_SUMMARYSUBTITLE "正是安裝前列出安裝屬性以供檢查"
-    IDS_ABORTSETUP "ReactOS 尚未完全安裝在您的電腦上。如果您現在退出安裝程式，您需要重新執行安裝程式來安裝 ReactOS。您確定退出嗎?"
-    IDS_ABORTSETUP2 "終止安裝?"
+    IDS_ABORTSETUP "ReactOS 尚未完全安裝在您的電腦上。如果您現在退出安裝程式，您需要重新執行安裝程式來安裝 ReactOS。您確定退出嗎？"
+    IDS_ABORTSETUP2 "終止安裝？"
     IDS_NO_TXTSETUP_SIF "無法找到 'txtsetup.sif'。\n安裝程式無法繼續。"
     IDS_CAPTION "ReactOS 安裝程式"
 END

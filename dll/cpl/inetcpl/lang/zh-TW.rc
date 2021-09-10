@@ -27,7 +27,7 @@ STRINGTABLE
 BEGIN
     IDS_CPL_NAME        "網際網路選項"
     IDS_CPL_INFO        "配置 Wine 網際網路瀏覽器和相關的設定"
-    IDS_SEC_SETTINGS    "區域的安全設定: "
+    IDS_SEC_SETTINGS    "區域的安全設定︰"
     IDS_SEC_LEVEL0      "自訂"
     IDS_SEC_LEVEL1      "非常低"
     IDS_SEC_LEVEL2      "低"
@@ -51,7 +51,7 @@ BEGIN
     PUSHBUTTON  "預設頁面(&D)", IDC_HOME_DEFAULT, 144, 42, 80, 14
     PUSHBUTTON  "空白頁面(&B)", IDC_HOME_BLANK, 230, 42, 80, 14
     GROUPBOX    "瀏覽歷史記錄", IDC_STATIC, 4, 66, 312, 42
-    LTEXT       "您可以刪除網頁快取、 Cookie 和其他資料。",
+    LTEXT       "您可以刪除網頁快取、Cookie 和其他資料。",
                 IDC_STATIC, 10, 76, 300, 10
     PUSHBUTTON  "刪除檔案...(&F)", IDC_HISTORY_DELETE, 144, 90, 80, 14
     PUSHBUTTON  "設定...(&S)", IDC_HISTORY_SETTINGS, 230, 90, 80, 14
