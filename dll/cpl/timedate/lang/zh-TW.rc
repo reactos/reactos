@@ -1,5 +1,6 @@
-/* Traditional Chinese translation by Henry Tang Ih 2016 (henrytang2@hotmail.com) */
-/* Translation by Aobi Chan CL 2020 (eason066@gmail.com) */
+/* Traditional Chinese translation by:
+ * Henry Tang Ih 2016 (henrytang2@hotmail.com) 
+ * Chan Chilung 2020 (eason066@gmail.com) */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
 
@@ -27,7 +28,7 @@ FONT 9, "新細明體", 0, 0, 0x0
 BEGIN
     COMBOBOX IDC_TIMEZONELIST, 5, 4, 241, 136, CBS_DROPDOWNLIST | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
     CONTROL "", IDC_WORLD_BACKGROUND, "Static", SS_OWNERDRAW, 5, 20, 240, 110, WS_EX_STATICEDGE
-    AUTOCHECKBOX "根據夏令時間自動調節時鐘(&U)",
+    AUTOCHECKBOX "根據夏令時間自動調整時間(&U)",
                  IDC_AUTODAYLIGHT, 6, 132, 242, 11, WS_VISIBLE | WS_GROUP | WS_TABSTOP
 END
 
@@ -56,7 +57,7 @@ BEGIN
     IDS_INETTIMESUCSYNC "已經與 %s 在 %s %s 成功同步時間。"
     IDS_INETTIMENEXTSYNC "下次同步:%s 在 %s"
     IDS_INETTIMESYNCING "請稍後，ReactOS 正在同步 %s"
-    IDS_INETTIMEERROR "在 ReactOS 同步時發生了一個錯誤。%s"
+    IDS_INETTIMEERROR "在 ReactOS 同步時發生錯誤。%s"
     IDS_INETTIMESUCFILL "請輸入 NTP 伺服器名稱以便同步時間"
     IDS_INETTIMEWELCOME "請從清單中選擇一個 NTP 伺服器，或輸入 NTP 伺服器名稱以同步電腦時間"
 END

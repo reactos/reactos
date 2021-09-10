@@ -91,7 +91,7 @@ END
 
 IDD_PROPPAGEADVANCED DIALOGEX 0, 0, 252, 237
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "高級"
+CAPTION "進階"
 FONT 9, "新細明體"
 BEGIN
     ICON IDI_ACDC, IDI_ACDC, 7, 7, 20, 20
@@ -115,9 +115,9 @@ CAPTION "休眠"
 FONT 9, "新細明體"
 BEGIN
     ICON IDI_HIBERNATE, IDI_HIBERNATE, 7, 7, 20, 20
-    LTEXT "在電腦休眠時，它將內存中所有信息保存到硬碟上，然後關閉電腦。在退出休眠狀態時，電腦會恢復到原來的狀態。", -1, 37, 6, 210, 35
+    LTEXT "在電腦休眠時，它將記憶體中所有信息保存到硬碟上，然後關閉電腦。在退出休眠狀態時，電腦會恢復到原來的狀態。", -1, 37, 6, 210, 35
     GROUPBOX "休眠", -1, 6, 41, 240, 32
-    AUTOCHECKBOX "啓用休眠(&H)", IDC_HIBERNATEFILE, 17, 55, 210, 10, WS_TABSTOP
+    AUTOCHECKBOX "啟用休眠(&H)", IDC_HIBERNATEFILE, 17, 55, 210, 10, WS_TABSTOP
     GROUPBOX "用於休眠的磁碟空間", -1, 6, 80, 240, 76
     LTEXT "空閒的磁碟空間:", -1, 15, 95, 140, 10
     LTEXT "未知", IDC_FREESPACE, 160, 95, 80, 10
@@ -143,16 +143,16 @@ BEGIN
     IDS_CPLDESCRIPTION_1 "配置電腦的節能設置。"
     IDS_PERCENT "%i%%"
     IDS_SOUND "聲音"
-    IDS_TEXT "文本"
-    IDS_CONFIG1 "爲 %s 設置電源使用方案"
-    IDS_CONFIG2 "%s 的高級設置"
+    IDS_TEXT "文字檔案"
+    IDS_CONFIG1 "為 %s 設置電源使用方案"
+    IDS_CONFIG2 "%s 的進階設置"
     IDS_NOACTION "無操作"
     IDS_PowerActionNone1 "無動作"
     IDS_PowerActionUnknown "未知"
     IDS_PowerActionSleep "待機"
     IDS_PowerActionHibernate "休眠"
     IDS_PowerActionShutdown "關機"
-    IDS_PowerActionRestart "重新啓動"
+    IDS_PowerActionRestart "重新啟動"
     IDS_PowerActionShutdownOff "關機並切斷電源"
     IDS_PowerActionWarmEject "問我要做什麼"
     IDS_PowerActionNone2 "無"

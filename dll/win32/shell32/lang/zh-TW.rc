@@ -795,7 +795,7 @@ BEGIN
     IDS_CREATELINK "建立捷徑(&L)"
     IDS_COPY "複製"
     IDS_DELETE "刪除"
-    IDS_PROPERTIES "屬性"
+    IDS_PROPERTIES "內容"
     IDS_CUT "剪下"
     IDS_RESTORE "復原"
     IDS_FORMATDRIVE "格式化..."
@@ -848,8 +848,8 @@ BEGIN
     IDS_FORMAT_COMPLETE "格式化完成"
 
     /* Warning format system drive dialog strings */
-    IDS_NO_FORMAT_TITLE "Cannot format this volume"
-    IDS_NO_FORMAT "This volume cannot be formatted! It contains important system files in order for ReactOS to run."
+    IDS_NO_FORMAT_TITLE "無法格式化這個磁碟區"
+    IDS_NO_FORMAT "這個磁碟區無法格式化! 磁碟區內有重要的系統檔案，使 ReactOS 正常運作。"
 
     /* Run File dialog */
     IDS_RUNDLG_ERROR "無法顯示執行文件對話方塊 (內部錯誤)"
