@@ -686,7 +686,6 @@ co_IntSetScrollInfo(PWND Window, INT nBar, LPCSCROLLINFO lpsi, BOOL bRedraw)
                   UpdateRect.bottom -= psbi->dxyLineButton;
                }
             }
-            co_UserRedrawWindow(Window, &UpdateRect, 0, RDW_INVALIDATE | RDW_FRAME);
          }
       } // FIXME: Arrows
 /*      else if( action & SA_SSI_REPAINT_ARROWS )
