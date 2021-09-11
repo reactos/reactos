@@ -142,6 +142,12 @@ typedef enum
 
     /* Types that are specific to particular ACPI tables */
 
+    ACPI_DMT_AEST,
+    ACPI_DMT_AEST_CACHE,
+    ACPI_DMT_AEST_GIC,
+    ACPI_DMT_AEST_RES,
+    ACPI_DMT_AEST_XFACE,
+    ACPI_DMT_AEST_XRUPT,
     ACPI_DMT_ASF,
     ACPI_DMT_CEDT,
     ACPI_DMT_DMAR,
@@ -175,6 +181,7 @@ typedef enum
     ACPI_DMT_SRAT,
     ACPI_DMT_TPM2,
     ACPI_DMT_VIOT,
+    ACPI_DMT_WPBT_UNICODE,
 
     /* Special opcodes */
 
@@ -252,6 +259,17 @@ extern const char               *AcpiGbl_AccessTypes[];
 extern const char               *AcpiGbl_UpdateRules[];
 extern const char               *AcpiGbl_MatchOps[];
 
+extern ACPI_DMTABLE_INFO        AcpiDmTableInfoAestHdr[];
+extern ACPI_DMTABLE_INFO        AcpiDmTableInfoAestProcError[];
+extern ACPI_DMTABLE_INFO        AcpiDmTableInfoAestCacheRsrc[];
+extern ACPI_DMTABLE_INFO        AcpiDmTableInfoAestTlbRsrc[];
+extern ACPI_DMTABLE_INFO        AcpiDmTableInfoAestGenRsrc[];
+extern ACPI_DMTABLE_INFO        AcpiDmTableInfoAestMemError[];
+extern ACPI_DMTABLE_INFO        AcpiDmTableInfoAestSmmuError[];
+extern ACPI_DMTABLE_INFO        AcpiDmTableInfoAestVendorError[];
+extern ACPI_DMTABLE_INFO        AcpiDmTableInfoAestGicError[];
+extern ACPI_DMTABLE_INFO        AcpiDmTableInfoAestXface[];
+extern ACPI_DMTABLE_INFO        AcpiDmTableInfoAestXrupt[];
 extern ACPI_DMTABLE_INFO        AcpiDmTableInfoAsf0[];
 extern ACPI_DMTABLE_INFO        AcpiDmTableInfoAsf1[];
 extern ACPI_DMTABLE_INFO        AcpiDmTableInfoAsf1a[];
@@ -572,6 +590,10 @@ AcpiDmDumpUnicode (
     void                    *Table,
     UINT32                  BufferOffset,
     UINT32                  ByteLength);
+
+void
+AcpiDmDumpAest (
+    ACPI_TABLE_HEADER       *Table);
 
 void
 AcpiDmDumpAsf (

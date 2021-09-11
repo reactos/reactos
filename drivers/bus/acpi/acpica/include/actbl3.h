@@ -847,6 +847,12 @@ typedef struct acpi_table_wpbt
 
 } ACPI_TABLE_WPBT;
 
+typedef struct acpi_wpbt_unicode
+{
+    UINT16                  *UnicodeString;
+
+} ACPI_WPBT_UNICODE;
+
 
 /*******************************************************************************
  *

@@ -629,7 +629,7 @@ AcpiDsExecEndOp (
             if (ACPI_SUCCESS (Status))
             {
                 Status = AcpiExWriteDataToField (ObjDesc, Op->Common.Node->Object, NULL);
-                if ACPI_FAILURE (Status)
+                if (ACPI_FAILURE (Status))
                 {
                     ACPI_EXCEPTION ((AE_INFO, Status, "While writing to buffer field"));
                 }

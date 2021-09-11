@@ -107,6 +107,193 @@
 
 /*******************************************************************************
  *
+ * AEST - Arm Error Source Table
+ *
+ * Conforms to: ACPI for the Armv8 RAS Extensions 1.1 Platform Design Document
+ * September 2020.
+ *
+ ******************************************************************************/
+
+typedef struct acpi_table_aest
+{
+    ACPI_TABLE_HEADER       Header;
+    void                    *NodeArray[];
+
+} ACPI_TABLE_AEST;
+
+/* Common Subtable header - one per Node Structure (Subtable) */
+
+typedef struct              acpi_aest_hdr
+{
+    UINT8                   Type;
+    UINT16                  Length;
+    UINT8                   Reserved;
+    UINT32                  NodeSpecificOffset;
+    UINT32                  NodeInterfaceOffset;
+    UINT32                  NodeInterruptOffset;
+    UINT32                  NodeInterruptCount;
+    UINT64                  TimestampRate;
+    UINT64                  Reserved1;
+    UINT64                  ErrorInjectionRate;
+
+} ACPI_AEST_HEADER;
+
+/* Values for Type above */
+
+#define ACPI_AEST_PROCESSOR_ERROR_NODE      0
+#define ACPI_AEST_MEMORY_ERROR_NODE         1
+#define ACPI_AEST_SMMU_ERROR_NODE           2
+#define ACPI_AEST_VENDOR_ERROR_NODE         3
+#define ACPI_AEST_GIC_ERROR_NODE            4
+#define ACPI_AEST_NODE_TYPE_RESERVED        5 /* 5 and above are reserved */
+
+
+/*
+ * AEST subtables (Error nodes)
+ */
+
+/* 0: Processor Error */
+
+typedef struct              acpi_aest_processor
+{
+    UINT32                  ProcessorId;
+    UINT8                   ResourceType;
+    UINT8                   Reserved;
+    UINT8                   Flags;
+    UINT8                   Revision;
+    UINT64                  ProcessorAffinity;
+
+} ACPI_AEST_PROCESSOR;
+
+/* Values for ResourceType above, related structs below */
+
+#define ACPI_AEST_CACHE_RESOURCE            0
+#define ACPI_AEST_TLB_RESOURCE              1
+#define ACPI_AEST_GENERIC_RESOURCE          2
+#define ACPI_AEST_RESOURCE_RESERVED         3   /* 3 and above are reserved */
+
+/* 0R: Processor Cache Resource Substructure */
+
+typedef struct              acpi_aest_processor_cache
+{
+    UINT32                  CacheReference;
+    UINT32                  Reserved;
+
+} ACPI_AEST_PROCESSOR_CACHE;
+
+/* Values for CacheType above */
+
+#define ACPI_AEST_CACHE_DATA                0
+#define ACPI_AEST_CACHE_INSTRUCTION         1
+#define ACPI_AEST_CACHE_UNIFIED             2
+#define ACPI_AEST_CACHE_RESERVED            3   /* 3 and above are reserved */
+
+/* 1R: Processor TLB Resource Substructure */
+
+typedef struct              acpi_aest_processor_tlb
+{
+    UINT32                  TlbLevel;
+    UINT32                  Reserved;
+
+} ACPI_AEST_PROCESSOR_TLB;
+
+/* 2R: Processor Generic Resource Substructure */
+
+typedef struct              acpi_aest_processor_generic
+{
+    UINT8                   *Resource;
+
+} ACPI_AEST_PROCESSOR_GENERIC;
+
+/* 1: Memory Error */
+
+typedef struct              acpi_aest_memory
+{
+    UINT32                  SratProximityDomain;
+
+} ACPI_AEST_MEMORY;
+
+/* 2: Smmu Error */
+
+typedef struct              acpi_aest_smmu
+{
+    UINT32                  IortNodeReference;
+    UINT32                  SubcomponentReference;
+
+} ACPI_AEST_SMMU;
+
+/* 3: Vendor Defined */
+
+typedef struct              acpi_aest_vendor
+{
+    UINT32                  AcpiHid;
+    UINT32                  AcpiUid;
+    UINT8                   VendorSpecificData[16];
+
+} ACPI_AEST_VENDOR;
+
+/* 4: Gic Error */
+
+typedef struct              acpi_aest_gic
+{
+    UINT32                  InterfaceType;
+    UINT32                  InstanceId;
+
+} ACPI_AEST_GIC;
+
+/* Values for InterfaceType above */
+
+#define ACPI_AEST_GIC_CPU                   0
+#define ACPI_AEST_GIC_DISTRIBUTOR           1
+#define ACPI_AEST_GIC_REDISTRIBUTOR         2
+#define ACPI_AEST_GIC_ITS                   3
+#define ACPI_AEST_GIC_RESERVED              4   /* 4 and above are reserved */
+
+
+/* Node Interface Structure */
+
+typedef struct              acpi_aest_node_interface
+{
+    UINT8                   Type;
+    UINT8                   Reserved[3];
+    UINT32                  Flags;
+    UINT64                  Address;
+    UINT32                  ErrorRecordIndex;
+    UINT32                  ErrorRecordCount;
+    UINT64                  ErrorRecordImplemented;
+    UINT64                  ErrorStatusReporting;
+    UINT64                  AddressingMode;
+
+} ACPI_AEST_NODE_INTERFACE;
+
+/* Values for Type field above */
+
+#define ACPI_AEST_NODE_SYSTEM_REGISTER      0
+#define ACPI_AEST_NODE_MEMORY_MAPPED        1
+#define ACPI_AEST_XFACE_RESERVED            2   /* 2 and above are reserved */
+
+/* Node Interrupt Structure */
+
+typedef struct              acpi_aest_node_interrupt
+{
+    UINT8                   Type;
+    UINT8                   Reserved[2];
+    UINT8                   Flags;
+    UINT32                  Gsiv;
+    UINT8                   IortId;
+    UINT8                   Reserved1[3];
+
+} ACPI_AEST_NODE_INTERRUPT;
+
+/* Values for Type field above */
+
+#define ACPI_AEST_NODE_FAULT_HANDLING       0
+#define ACPI_AEST_NODE_ERROR_RECOVERY       1
+#define ACPI_AEST_XRUPT_RESERVED            2   /* 2 and above are reserved */
+
+
+/*******************************************************************************
+ *
  * BDAT - BIOS Data ACPI Table
  *
  * Conforms to "BIOS Data ACPI Table", Interface Specification v4.0 Draft 5
@@ -2054,6 +2241,13 @@ typedef struct acpi_table_prmt_header
     UINT32                  ModuleInfoCount;
 
 } ACPI_TABLE_PRMT_HEADER;
+
+typedef struct acpi_prmt_module_header
+{
+	UINT16                  Revision;
+	UINT16                  Length;
+
+} ACPI_PRMT_MODULE_HEADER;
 
 typedef struct acpi_prmt_module_info
 {
