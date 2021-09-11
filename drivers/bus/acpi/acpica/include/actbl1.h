@@ -30,7 +30,7 @@
  * NO WARRANTY
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTIBILITY AND FITNESS FOR
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
  * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
  * HOLDERS OR CONTRIBUTORS BE LIABLE FOR SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
  * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
@@ -64,6 +64,7 @@
 #define ACPI_SIG_BERT           "BERT"      /* Boot Error Record Table */
 #define ACPI_SIG_BGRT           "BGRT"      /* Boot Graphics Resource Table */
 #define ACPI_SIG_BOOT           "BOOT"      /* Simple Boot Flag Table */
+#define ACPI_SIG_CEDT           "CEDT"      /* CXL Early Discovery Table */
 #define ACPI_SIG_CPEP           "CPEP"      /* Corrected Platform Error Polling table */
 #define ACPI_SIG_CSRT           "CSRT"      /* Core System Resource Table */
 #define ACPI_SIG_DBG2           "DBG2"      /* Debug Port table type 2 */
@@ -382,6 +383,58 @@ typedef struct acpi_table_boot
     UINT8                   Reserved[3];
 
 } ACPI_TABLE_BOOT;
+
+
+/*******************************************************************************
+ *
+ * CEDT - CXL Early Discovery Table
+ *        Version 1
+ *
+ * Conforms to the "CXL Early Discovery Table" (CXL 2.0)
+ *
+ ******************************************************************************/
+
+typedef struct acpi_table_cedt
+{
+    ACPI_TABLE_HEADER       Header;             /* Common ACPI table header */
+
+} ACPI_TABLE_CEDT;
+
+/* CEDT subtable header (Performance Record Structure) */
+
+typedef struct acpi_cedt_header
+{
+    UINT8                   Type;
+    UINT8                   Reserved;
+    UINT16                  Length;
+
+} ACPI_CEDT_HEADER;
+
+/* Values for Type field above */
+
+enum AcpiCedtType
+{
+    ACPI_CEDT_TYPE_CHBS                 = 0,
+    ACPI_CEDT_TYPE_RESERVED             = 1
+};
+
+
+/*
+ * CEDT subtables
+ */
+
+/* 0: CXL Host Bridge Structure */
+
+typedef struct acpi_cedt_chbs
+{
+    ACPI_CEDT_HEADER        Header;
+    UINT32                  Uid;
+    UINT32                  CxlVersion;
+    UINT32                  Reserved;
+    UINT64                  Base;
+    UINT64                  Length;
+
+} ACPI_CEDT_CHBS;
 
 
 /*******************************************************************************
@@ -1721,7 +1774,8 @@ typedef struct acpi_hmat_locality
     ACPI_HMAT_STRUCTURE     Header;
     UINT8                   Flags;
     UINT8                   DataType;
-    UINT16                  Reserved1;
+    UINT8                   MinTransferSize;
+    UINT8                   Reserved1;
     UINT32                  NumberOfInitiatorPDs;
     UINT32                  NumberOfTargetPDs;
     UINT32                  Reserved2;
@@ -1731,14 +1785,17 @@ typedef struct acpi_hmat_locality
 
 /* Masks for Flags field above */
 
-#define ACPI_HMAT_MEMORY_HIERARCHY  (0x0F)
+#define ACPI_HMAT_MEMORY_HIERARCHY  (0x0F)      /* Bits 0-3 */
 
-/* Values for Memory Hierarchy flag */
+/* Values for Memory Hierarchy flags */
 
 #define ACPI_HMAT_MEMORY            0
 #define ACPI_HMAT_1ST_LEVEL_CACHE   1
 #define ACPI_HMAT_2ND_LEVEL_CACHE   2
 #define ACPI_HMAT_3RD_LEVEL_CACHE   3
+#define ACPI_HMAT_MINIMUM_XFER_SIZE 0x10        /* Bit 4: ACPI 6.4 */
+#define ACPI_HMAT_NON_SEQUENTIAL_XFERS 0x20     /* Bit 5: ACPI 6.4 */
+
 
 /* Values for DataType field above */
 

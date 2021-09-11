@@ -69,7 +69,7 @@ URL: https://gitlab.freedesktop.org/mesa/glu, ftp://ftp.freedesktop.org/pub/mesa
 
 Title: ACPICA
 Path: drivers/bus/acpi/acpica
-Used Version: 20210105
+Used Version: 20210331
 License: GPL-2.0 (https://spdx.org/licenses/GPL-2.0.html)
 URL: https://acpica.org/
 
