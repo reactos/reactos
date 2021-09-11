@@ -1233,18 +1233,21 @@ BOOL WINAPI ImmConfigureIMEA(HKL hKL, HWND hWnd, DWORD dwMode, LPVOID lpData)
     }
 
     pRegWordA = lpData;
+
     if (pRegWordA->lpReading)
     {
         RegWordW.lpReading = Imm32WideFromAnsi(pRegWordA->lpReading);
         if (!RegWordW.lpReading)
             goto Quit;
     }
+
     if (pRegWordA->lpWord)
     {
         RegWordW.lpWord = Imm32WideFromAnsi(pRegWordA->lpWord);
         if (!RegWordW.lpWord)
             goto Quit;
     }
+
     lpData = &RegWordW;
 
 DoIt:
@@ -1294,18 +1297,21 @@ BOOL WINAPI ImmConfigureIMEW(HKL hKL, HWND hWnd, DWORD dwMode, LPVOID lpData)
     }
 
     pRegWordW = lpData;
+
     if (pRegWordW->lpReading)
     {
         RegWordA.lpReading = Imm32AnsiFromWide(pRegWordW->lpReading);
         if (!RegWordA.lpReading)
             goto Quit;
     }
+
     if (pRegWordW->lpWord)
     {
         RegWordA.lpWord = Imm32AnsiFromWide(pRegWordW->lpWord);
         if (!RegWordA.lpWord)
             goto Quit;
     }
+
     lpData = &RegWordA;
 
 DoIt:
