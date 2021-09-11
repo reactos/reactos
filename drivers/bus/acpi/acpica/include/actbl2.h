@@ -60,6 +60,7 @@
  * file. Useful because they make it more difficult to inadvertently type in
  * the wrong signature.
  */
+#define ACPI_SIG_BDAT           "BDAT"      /* BIOS Data ACPI Table */
 #define ACPI_SIG_IORT           "IORT"      /* IO Remapping Table */
 #define ACPI_SIG_IVRS           "IVRS"      /* I/O Virtualization Reporting Structure */
 #define ACPI_SIG_LPIT           "LPIT"      /* Low Power Idle Table */
@@ -75,11 +76,14 @@
 #define ACPI_SIG_PHAT           "PHAT"      /* Platform Health Assessment Table */
 #define ACPI_SIG_PMTT           "PMTT"      /* Platform Memory Topology Table */
 #define ACPI_SIG_PPTT           "PPTT"      /* Processor Properties Topology Table */
+#define ACPI_SIG_PRMT           "PRMT"      /* Platform Runtime Mechanism Table */
 #define ACPI_SIG_RASF           "RASF"      /* RAS Feature table */
+#define ACPI_SIG_RGRT           "RGRT"      /* Regulatory Graphics Resource Table */
 #define ACPI_SIG_SBST           "SBST"      /* Smart Battery Specification Table */
 #define ACPI_SIG_SDEI           "SDEI"      /* Software Delegated Exception Interface Table */
 #define ACPI_SIG_SDEV           "SDEV"      /* Secure Devices table */
 #define ACPI_SIG_NHLT           "NHLT"      /* Non-HDAudio Link Table */
+#define ACPI_SIG_SVKL           "SVKL"      /* Storage Volume Key Location Table */
 
 
 /*
@@ -99,6 +103,23 @@
  * and stuck with it." Norman Ramsey.
  * See http://stackoverflow.com/a/1053662/41661
  */
+
+
+/*******************************************************************************
+ *
+ * BDAT - BIOS Data ACPI Table
+ *
+ * Conforms to "BIOS Data ACPI Table", Interface Specification v4.0 Draft 5
+ * Nov 2020
+ *
+ ******************************************************************************/
+
+typedef struct acpi_table_bdat
+{
+    ACPI_TABLE_HEADER       Header;
+    ACPI_GENERIC_ADDRESS    Gas;
+
+} ACPI_TABLE_BDAT;
 
 
 /*******************************************************************************
@@ -541,6 +562,11 @@ typedef struct acpi_ivrs_device_hid
 
 } ACPI_IVRS_DEVICE_HID;
 
+/* Values for UidType above */
+
+#define ACPI_IVRS_UID_NOT_PRESENT   0
+#define ACPI_IVRS_UID_IS_INTEGER    1
+#define ACPI_IVRS_UID_IS_STRING     2
 
 /* 0x20, 0x21, 0x22: I/O Virtualization Memory Definition Block (IVMD) */
 
@@ -925,6 +951,22 @@ typedef struct acpi_madt_multiproc_wakeup
     UINT64                  BaseAddress;
 
 } ACPI_MADT_MULTIPROC_WAKEUP;
+
+#define ACPI_MULTIPROC_WAKEUP_MB_OS_SIZE	2032
+#define ACPI_MULTIPROC_WAKEUP_MB_FIRMWARE_SIZE	2048
+
+typedef struct acpi_madt_multiproc_wakeup_mailbox
+{
+    UINT16                  Command;
+    UINT16                  Reserved; /* reserved - must be zero */
+    UINT32                  ApicId;
+    UINT64                  WakeupVector;
+    UINT8                   ReservedOs[ACPI_MULTIPROC_WAKEUP_MB_OS_SIZE]; /* reserved for OS use */
+    UINT8                   ReservedFirmware[ACPI_MULTIPROC_WAKEUP_MB_FIRMWARE_SIZE]; /* reserved for firmware use */
+
+} ACPI_MADT_MULTIPROC_WAKEUP_MAILBOX;
+
+#define ACPI_MP_WAKE_COMMAND_WAKEUP    1
 
 
 /*
@@ -1994,6 +2036,52 @@ typedef struct acpi_pptt_id
 
 /*******************************************************************************
  *
+ * PRMT - Platform Runtime Mechanism Table
+ *        Version 1
+ *
+ ******************************************************************************/
+
+typedef struct acpi_table_prmt
+{
+    ACPI_TABLE_HEADER       Header;             /* Common ACPI table header */
+
+} ACPI_TABLE_PRMT;
+
+typedef struct acpi_table_prmt_header
+{
+    UINT8                   PlatformGuid[16];
+    UINT32                  ModuleInfoOffset;
+    UINT32                  ModuleInfoCount;
+
+} ACPI_TABLE_PRMT_HEADER;
+
+typedef struct acpi_prmt_module_info
+{
+    UINT16                  Revision;
+    UINT16                  Length;
+    UINT8                   ModuleGuid[16];
+    UINT16                  MajorRev;
+    UINT16                  MinorRev;
+    UINT16                  HandlerInfoCount;
+    UINT32                  HandlerInfoOffset;
+    UINT64                  MmioListPointer;
+
+} ACPI_PRMT_MODULE_INFO;
+
+typedef struct acpi_prmt_handler_info
+{
+    UINT16                  Revision;
+    UINT16                  Length;
+    UINT8                   HandlerGuid[16];
+    UINT64                  HandlerAddress;
+    UINT64                  StaticDataBufferAddress;
+    UINT64                  AcpiParamBufferAddress;
+
+} ACPI_PRMT_HANDLER_INFO;
+
+
+/*******************************************************************************
+ *
  * RASF - RAS Feature Table (ACPI 5.0)
  *        Version 1
  *
@@ -2099,6 +2187,36 @@ enum AcpiRasfStatus
 #define ACPI_RASF_SCI_DOORBELL          (1<<1)
 #define ACPI_RASF_ERROR                 (1<<2)
 #define ACPI_RASF_STATUS                (0x1F<<3)
+
+
+/*******************************************************************************
+ *
+ * RGRT - Regulatory Graphics Resource Table
+ *        Version 1
+ *
+ * Conforms to "ACPI RGRT" available at:
+ * https://microsoft.github.io/mu/dyn/mu_plus/MsCorePkg/AcpiRGRT/feature_acpi_rgrt/
+ *
+ ******************************************************************************/
+
+typedef struct acpi_table_rgrt
+{
+    ACPI_TABLE_HEADER       Header;             /* Common ACPI table header */
+    UINT16                  Version;
+    UINT8                   ImageType;
+    UINT8                   Reserved;
+    UINT8                   Image[0];
+
+} ACPI_TABLE_RGRT;
+
+/* ImageType values */
+
+enum AcpiRgrtImageType
+{
+    ACPI_RGRT_TYPE_RESERVED0            = 0,
+    ACPI_RGRT_IMAGE_TYPE_PNG            = 1,
+    ACPI_RGRT_TYPE_RESERVED             = 2     /* 2 and greater are reserved */
+};
 
 
 /*******************************************************************************
@@ -2261,6 +2379,44 @@ typedef struct acpi_sdev_pcie_path
     UINT8                   Function;
 
 } ACPI_SDEV_PCIE_PATH;
+
+
+/*******************************************************************************
+ *
+ * SVKL - Storage Volume Key Location Table (ACPI 6.4)
+ *        From: "Guest-Host-Communication Interface (GHCI) for Intel
+ *        Trust Domain Extensions (Intel TDX)".
+ *        Version 1
+ *
+ ******************************************************************************/
+
+typedef struct acpi_table_svkl
+{
+    ACPI_TABLE_HEADER       Header; /* Common ACPI table header */
+    UINT32                  Count;
+
+} ACPI_TABLE_SVKL;
+
+typedef struct acpi_svkl_key
+{
+    UINT16                  Type;
+    UINT16                  Format;
+    UINT32                  Size;
+    UINT64                  Address;
+
+} ACPI_SVKL_KEY;
+
+enum acpi_svkl_type
+{
+    ACPI_SVKL_TYPE_MAIN_STORAGE = 0,
+    ACPI_SVKL_TYPE_RESERVED     = 1 /* 1 and greater are reserved */
+};
+
+enum acpi_svkl_format
+{
+    ACPI_SVKL_FORMAT_RAW_BINARY = 0,
+    ACPI_SVKL_FORMAT_RESERVED   = 1 /* 1 and greater are reserved */
+};
 
 
 /* Reset to default packing */

@@ -457,6 +457,13 @@ AcpiNsRepair_CID (
 
             (*ElementPtr)->Common.ReferenceCount =
                 OriginalRefCount;
+
+            /*
+             * The OriginalElement holds a reference from the package object
+             * that represents _HID. Since a new element was created by _HID,
+             * remove the reference from the _CID package.
+             */
+            AcpiUtRemoveReference (OriginalElement);
         }
 
         ElementPtr++;

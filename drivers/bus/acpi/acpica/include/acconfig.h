@@ -225,6 +225,7 @@
 #define ACPI_MAX_GSBUS_DATA_SIZE        255
 #define ACPI_MAX_GSBUS_BUFFER_SIZE      ACPI_SERIAL_HEADER_SIZE + ACPI_MAX_GSBUS_DATA_SIZE
 
+#define ACPI_PRM_INPUT_BUFFER_SIZE      26
 
 /* _SxD and _SxW control methods */
 

@@ -335,6 +335,14 @@ AcpiUtDeleteInternalObj (
         }
         break;
 
+    case ACPI_TYPE_LOCAL_ADDRESS_HANDLER:
+
+        ACPI_DEBUG_PRINT ((ACPI_DB_ALLOCATIONS,
+            "***** Address handler %p\n", Object));
+
+        AcpiOsDeleteMutex (Object->AddressSpace.ContextMutex);
+        break;
+
     default:
 
         break;

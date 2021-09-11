@@ -1160,6 +1160,11 @@ void
 AcpiUtConvertStringToUuid (
     char                    *InString,
     UINT8                   *UuidBuffer);
+
+ACPI_STATUS
+AcpiUtConvertUuidToString (
+    char                    *UuidBuffer,
+    char                    *OutString);
 #endif
 
 #endif /* _ACUTILS_H */

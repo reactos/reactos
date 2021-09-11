@@ -100,4 +100,52 @@ AcpiUtConvertStringToUuid (
             InString[AcpiGbl_MapToUuidOffset[i] + 1]);
     }
 }
+
+
+/*******************************************************************************
+ *
+ * FUNCTION:    AcpiUtConvertUuidToString
+ *
+ * PARAMETERS:  UuidBuffer          - 16-byte UUID buffer
+ *              OutString           - 36-byte formatted UUID string
+ *
+ * RETURN:      Status
+ *
+ * DESCRIPTION: Convert 16-byte UUID buffer to 36-byte formatted UUID string
+ *              OutString must be 37 bytes to include null terminator.
+ *
+ ******************************************************************************/
+
+ACPI_STATUS
+AcpiUtConvertUuidToString (
+    char                    *UuidBuffer,
+    char                    *OutString)
+{
+    UINT32                  i;
+
+
+    if (!UuidBuffer || !OutString)
+    {
+        return (AE_BAD_PARAMETER);
+    }
+
+    for (i = 0; i < UUID_BUFFER_LENGTH; i++)
+    {
+        OutString[AcpiGbl_MapToUuidOffset[i]] =
+            AcpiUtHexToAsciiChar (UuidBuffer[i], 4);
+
+        OutString[AcpiGbl_MapToUuidOffset[i] + 1] =
+            AcpiUtHexToAsciiChar (UuidBuffer[i], 0);
+    }
+
+    /* Insert required hyphens (dashes) */
+
+    OutString[UUID_HYPHEN1_OFFSET] =
+    OutString[UUID_HYPHEN2_OFFSET] =
+    OutString[UUID_HYPHEN3_OFFSET] =
+    OutString[UUID_HYPHEN4_OFFSET] = '-';
+
+    OutString[UUID_STRING_LENGTH] = 0; /* Null terminate */
+    return (AE_OK);
+}
 #endif
