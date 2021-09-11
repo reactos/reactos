@@ -5,7 +5,7 @@
  *****************************************************************************/
 
 /*
- * Copyright (C) 2000 - 2020, Intel Corp.
+ * Copyright (C) 2000 - 2021, Intel Corp.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -385,8 +385,6 @@ extern ACPI_DMTABLE_INFO        AcpiDmTableInfoMpst1[];
 extern ACPI_DMTABLE_INFO        AcpiDmTableInfoMpst2[];
 extern ACPI_DMTABLE_INFO        AcpiDmTableInfoMsct[];
 extern ACPI_DMTABLE_INFO        AcpiDmTableInfoMsct0[];
-extern ACPI_DMTABLE_INFO        AcpiDmTableInfoMtmr[];
-extern ACPI_DMTABLE_INFO        AcpiDmTableInfoMtmr0[];
 extern ACPI_DMTABLE_INFO        AcpiDmTableInfoNfit[];
 extern ACPI_DMTABLE_INFO        AcpiDmTableInfoNfitHdr[];
 extern ACPI_DMTABLE_INFO        AcpiDmTableInfoNfit0[];
@@ -459,8 +457,6 @@ extern ACPI_DMTABLE_INFO        AcpiDmTableInfoTpm211[];
 extern ACPI_DMTABLE_INFO        AcpiDmTableInfoTpm23[];
 extern ACPI_DMTABLE_INFO        AcpiDmTableInfoTpm23a[];
 extern ACPI_DMTABLE_INFO        AcpiDmTableInfoUefi[];
-extern ACPI_DMTABLE_INFO        AcpiDmTableInfoVrtc[];
-extern ACPI_DMTABLE_INFO        AcpiDmTableInfoVrtc0[];
 extern ACPI_DMTABLE_INFO        AcpiDmTableInfoWaet[];
 extern ACPI_DMTABLE_INFO        AcpiDmTableInfoWdat[];
 extern ACPI_DMTABLE_INFO        AcpiDmTableInfoWdat0[];
@@ -613,10 +609,6 @@ AcpiDmDumpMsct (
     ACPI_TABLE_HEADER       *Table);
 
 void
-AcpiDmDumpMtmr (
-    ACPI_TABLE_HEADER       *Table);
-
-void
 AcpiDmDumpNfit (
     ACPI_TABLE_HEADER       *Table);
 
@@ -674,10 +666,6 @@ AcpiDmDumpTcpa (
 
 void
 AcpiDmDumpTpm2 (
-    ACPI_TABLE_HEADER       *Table);
-
-void
-AcpiDmDumpVrtc (
     ACPI_TABLE_HEADER       *Table);
 
 void
