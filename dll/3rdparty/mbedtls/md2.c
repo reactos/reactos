@@ -181,6 +181,9 @@ int mbedtls_internal_md2_process( mbedtls_md2_context *ctx )
         t  = ctx->cksum[i];
     }
 
+    /* Zeroise variables to clear sensitive data from memory. */
+    mbedtls_zeroize( &t, sizeof( t ) );
+
     return( 0 );
 }
 

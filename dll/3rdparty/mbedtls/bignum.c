@@ -1201,7 +1201,10 @@ int mbedtls_mpi_sub_abs( mbedtls_mpi *X, const mbedtls_mpi *A, const mbedtls_mpi
         /* If we ran out of space for the carry, it means that the result
          * is negative. */
         if( n == X->n )
-            return( MBEDTLS_ERR_MPI_NEGATIVE_VALUE );
+        {
+            ret = MBEDTLS_ERR_MPI_NEGATIVE_VALUE;
+            goto cleanup;
+        }
         --X->p[n];
     }
 
@@ -1850,7 +1853,7 @@ int mbedtls_mpi_exp_mod( mbedtls_mpi *X, const mbedtls_mpi *A, const mbedtls_mpi
     size_t i, j, nblimbs;
     size_t bufsize, nbits;
     mbedtls_mpi_uint ei, mm, state;
-    mbedtls_mpi RR, T, W[ 2 << MBEDTLS_MPI_WINDOW_SIZE ], Apos;
+    mbedtls_mpi RR, T, W[ 1 << MBEDTLS_MPI_WINDOW_SIZE ], Apos;
     int neg;
 
     if( mbedtls_mpi_cmp_int( N, 0 ) <= 0 || ( N->p[0] & 1 ) == 0 )
@@ -1858,6 +1861,10 @@ int mbedtls_mpi_exp_mod( mbedtls_mpi *X, const mbedtls_mpi *A, const mbedtls_mpi
 
     if( mbedtls_mpi_cmp_int( E, 0 ) < 0 )
         return( MBEDTLS_ERR_MPI_BAD_INPUT_DATA );
+
+    if( mbedtls_mpi_bitlen( E ) > MBEDTLS_MPI_MAX_BITS ||
+        mbedtls_mpi_bitlen( N ) > MBEDTLS_MPI_MAX_BITS )
+        return ( MBEDTLS_ERR_MPI_BAD_INPUT_DATA );
 
     /*
      * Init temps and window size

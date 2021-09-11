@@ -3393,6 +3393,12 @@ static int ssl_parse_encrypted_pms( mbedtls_ssl_context *ssl,
     if( ret != 0 )
         return( ret );
 
+    /* In case of a failure in decryption, peer_pmslen may not have been
+     * initialized, and it is accessed later. The diff will be nonzero anyway,
+     * but it's better to avoid accessing uninitialized memory in any case.
+     */
+    peer_pmslen = 0;
+
     ret = mbedtls_pk_decrypt( mbedtls_ssl_own_key( ssl ), p, len,
                       peer_pms, &peer_pmslen,
                       sizeof( peer_pms ),

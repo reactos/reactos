@@ -510,6 +510,9 @@ int mbedtls_pem_write_buffer( const char *header, const char *footer,
     *p++ = '\0';
     *olen = p - buf;
 
+    /* Clean any remaining data previously written to the buffer */
+    memset( buf + *olen, 0, buf_len - *olen );
+
     mbedtls_free( encode_buf );
     return( 0 );
 }
