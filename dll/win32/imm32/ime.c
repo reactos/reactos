@@ -1199,3 +1199,125 @@ BOOL WINAPI ImmSetConversionStatus(HIMC hIMC, DWORD fdwConversion, DWORD fdwSent
 
     return TRUE;
 }
+
+/***********************************************************************
+ *		ImmConfigureIMEA (IMM32.@)
+ */
+BOOL WINAPI ImmConfigureIMEA(HKL hKL, HWND hWnd, DWORD dwMode, LPVOID lpData)
+{
+    BOOL ret = FALSE;
+    PWND pWnd;
+    PIMEDPI pImeDpi;
+    REGISTERWORDW RegWordW;
+    LPREGISTERWORDA pRegWordA;
+
+    TRACE("(%p, %p, 0x%lX, %p)", hKL, hWnd, dwMode, lpData);
+
+    pWnd = ValidateHwndNoErr(hWnd);
+    if (!pWnd)
+        return FALSE;
+
+    if (Imm32IsCrossProcessAccess(hWnd))
+        return FALSE;
+
+    pImeDpi = ImmLockOrLoadImeDpi(hKL);
+    if (!pImeDpi)
+        return FALSE;
+
+    RtlZeroMemory(&RegWordW, sizeof(RegWordW));
+
+    if (!(pImeDpi->ImeInfo.fdwProperty & IME_PROP_UNICODE) || !lpData ||
+        dwMode != IME_CONFIG_REGISTERWORD)
+    {
+        goto DoIt;
+    }
+
+    pRegWordA = lpData;
+    if (pRegWordA->lpReading)
+    {
+        RegWordW.lpReading = Imm32WideFromAnsi(pRegWordA->lpReading);
+        if (!RegWordW.lpReading)
+            goto Quit;
+    }
+    if (pRegWordA->lpWord)
+    {
+        RegWordW.lpWord = Imm32WideFromAnsi(pRegWordA->lpWord);
+        if (!RegWordW.lpWord)
+            goto Quit;
+    }
+    lpData = &RegWordW;
+
+DoIt:
+    SendMessageW(hWnd, WM_IME_SYSTEM, IMS_OPENPROPERTYWINDOW, 0);
+    ret = (*pImeDpi->ImeConfigure)(hKL, hWnd, dwMode, lpData);
+    SendMessageW(hWnd, WM_IME_SYSTEM, IMS_CLOSEPROPERTYWINDOW, 0);
+
+Quit:
+    if (RegWordW.lpReading)
+        HeapFree(g_hImm32Heap, 0, RegWordW.lpReading);
+    if (RegWordW.lpWord)
+        HeapFree(g_hImm32Heap, 0, RegWordW.lpWord);
+    ImmUnlockImeDpi(pImeDpi);
+    return ret;
+}
+
+/***********************************************************************
+ *		ImmConfigureIMEW (IMM32.@)
+ */
+BOOL WINAPI ImmConfigureIMEW(HKL hKL, HWND hWnd, DWORD dwMode, LPVOID lpData)
+{
+    BOOL ret = FALSE;
+    PWND pWnd;
+    PIMEDPI pImeDpi;
+    REGISTERWORDA RegWordA;
+    LPREGISTERWORDW pRegWordW;
+
+    TRACE("(%p, %p, 0x%lX, %p)", hKL, hWnd, dwMode, lpData);
+
+    pWnd = ValidateHwndNoErr(hWnd);
+    if (!pWnd)
+        return FALSE;
+
+    if (Imm32IsCrossProcessAccess(hWnd))
+        return FALSE;
+
+    pImeDpi = ImmLockOrLoadImeDpi(hKL);
+    if (!pImeDpi)
+        return FALSE;
+
+    RtlZeroMemory(&RegWordA, sizeof(RegWordA));
+
+    if ((pImeDpi->ImeInfo.fdwProperty & IME_PROP_UNICODE) || !lpData ||
+        dwMode != IME_CONFIG_REGISTERWORD)
+    {
+        goto DoIt;
+    }
+
+    pRegWordW = lpData;
+    if (pRegWordW->lpReading)
+    {
+        RegWordA.lpReading = Imm32AnsiFromWide(pRegWordW->lpReading);
+        if (!RegWordA.lpReading)
+            goto Quit;
+    }
+    if (pRegWordW->lpWord)
+    {
+        RegWordA.lpWord = Imm32AnsiFromWide(pRegWordW->lpWord);
+        if (!RegWordA.lpWord)
+            goto Quit;
+    }
+    lpData = &RegWordA;
+
+DoIt:
+    SendMessageW(hWnd, WM_IME_SYSTEM, IMS_OPENPROPERTYWINDOW, 0);
+    ret = (*pImeDpi->ImeConfigure)(hKL, hWnd, dwMode, lpData);
+    SendMessageW(hWnd, WM_IME_SYSTEM, IMS_CLOSEPROPERTYWINDOW, 0);
+
+Quit:
+    if (RegWordA.lpReading)
+        HeapFree(g_hImm32Heap, 0, RegWordA.lpReading);
+    if (RegWordA.lpWord)
+        HeapFree(g_hImm32Heap, 0, RegWordA.lpWord);
+    ImmUnlockImeDpi(pImeDpi);
+    return ret;
+}
