@@ -1206,18 +1206,13 @@ BOOL WINAPI ImmSetConversionStatus(HIMC hIMC, DWORD fdwConversion, DWORD fdwSent
 BOOL WINAPI ImmConfigureIMEA(HKL hKL, HWND hWnd, DWORD dwMode, LPVOID lpData)
 {
     BOOL ret = FALSE;
-    PWND pWnd;
     PIMEDPI pImeDpi;
     REGISTERWORDW RegWordW;
     LPREGISTERWORDA pRegWordA;
 
     TRACE("(%p, %p, 0x%lX, %p)", hKL, hWnd, dwMode, lpData);
 
-    pWnd = ValidateHwndNoErr(hWnd);
-    if (!pWnd)
-        return FALSE;
-
-    if (Imm32IsCrossProcessAccess(hWnd))
+    if (!ValidateHwndNoErr(hWnd) || Imm32IsCrossProcessAccess(hWnd))
         return FALSE;
 
     pImeDpi = ImmLockOrLoadImeDpi(hKL);
@@ -1270,18 +1265,13 @@ Quit:
 BOOL WINAPI ImmConfigureIMEW(HKL hKL, HWND hWnd, DWORD dwMode, LPVOID lpData)
 {
     BOOL ret = FALSE;
-    PWND pWnd;
     PIMEDPI pImeDpi;
     REGISTERWORDA RegWordA;
     LPREGISTERWORDW pRegWordW;
 
     TRACE("(%p, %p, 0x%lX, %p)", hKL, hWnd, dwMode, lpData);
 
-    pWnd = ValidateHwndNoErr(hWnd);
-    if (!pWnd)
-        return FALSE;
-
-    if (Imm32IsCrossProcessAccess(hWnd))
+    if (!ValidateHwndNoErr(hWnd) || Imm32IsCrossProcessAccess(hWnd))
         return FALSE;
 
     pImeDpi = ImmLockOrLoadImeDpi(hKL);
