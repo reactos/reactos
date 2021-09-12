@@ -488,10 +488,13 @@ co_IntSetScrollInfo(PWND Window, INT nBar, LPCSCROLLINFO lpsi, BOOL bRedraw)
    UINT new_flags;
    INT action = 0;
    PSBDATA pSBData;
-   DWORD OldPos = 0;
+   DWORD OldPos = 0, CurrentPos = 0;
    BOOL bChangeParams = FALSE; /* Don't show/hide scrollbar if params don't change */
    UINT MaxPage;
    int MaxPos;
+   /* [0] = HORZ, [1] = VERT */
+   static PWND PrevHwnd[2] = { 0 };
+   static DWORD PrevPos[2] = { 0 };
 
    ASSERT_REFS_CO(Window);
 
@@ -686,7 +689,14 @@ co_IntSetScrollInfo(PWND Window, INT nBar, LPCSCROLLINFO lpsi, BOOL bRedraw)
                   UpdateRect.bottom -= psbi->dxyLineButton;
                }
             }
-            co_UserRedrawWindow(Window, &UpdateRect, 0, RDW_INVALIDATE | RDW_FRAME);
+            CurrentPos = lpsi->fMask & SIF_PREVIOUSPOS ? OldPos : pSBData->pos;
+            /* Check for changes to Window or CurrentPos */
+            if ((Window != PrevHwnd[nBar]) || (CurrentPos != PrevPos[nBar]))
+            {
+                co_UserRedrawWindow(Window, &UpdateRect, 0, RDW_INVALIDATE | RDW_FRAME);
+                PrevHwnd[nBar] = Window;
+                PrevPos[nBar] = CurrentPos;
+            }
          }
       } // FIXME: Arrows
 /*      else if( action & SA_SSI_REPAINT_ARROWS )
