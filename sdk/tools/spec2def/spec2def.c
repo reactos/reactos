@@ -439,7 +439,7 @@ OutputLine_stub(FILE *file, EXPORT *pexp)
 void
 OutputHeader_asmstub(FILE *file, char *libname)
 {
-    fprintf(file, "; File generated automatically, do not edit! \n\n");
+    fprintf(file, "; File generated automatically, do not edit!\n\n");
 
     if (giArch == ARCH_X86)
     {

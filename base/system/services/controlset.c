@@ -239,7 +239,7 @@ ScmCopyTree(
                  lpNameBuffer);
     }
 
-    DPRINT("ScmCopyTree() done \n");
+    DPRINT("ScmCopyTree() done\n");
 
     return ERROR_SUCCESS;
 }

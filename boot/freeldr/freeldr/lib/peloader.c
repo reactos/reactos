@@ -678,7 +678,7 @@ PeLdrAllocateDataTableEntry(
 
     /* Insert this DTE to a list in the LPB */
     InsertTailList(ModuleListHead, &DataTableEntry->InLoadOrderLinks);
-    TRACE("Inserting DTE %p, name='%.*S' DllBase=%p \n", DataTableEntry,
+    TRACE("Inserting DTE %p, name='%.*S' DllBase=%p\n", DataTableEntry,
           DataTableEntry->BaseDllName.Length / 2,
           VaToPa(DataTableEntry->BaseDllName.Buffer),
           DataTableEntry->DllBase);

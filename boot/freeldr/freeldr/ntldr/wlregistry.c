@@ -540,8 +540,8 @@ WinLdrScanRegistry(IN OUT PLIST_ENTRY BootDriverListHead,
     TRACE_CH(REACTOS, "RegQueryValue(): rc %d\n", (int)rc);
     if (rc != ERROR_SUCCESS)
         return;
-    TRACE_CH(REACTOS, "BufferSize: %d \n", (int)BufferSize);
-    TRACE_CH(REACTOS, "GroupNameBuffer: '%S' \n", GroupNameBuffer);
+    TRACE_CH(REACTOS, "BufferSize: %d\n", (int)BufferSize);
+    TRACE_CH(REACTOS, "GroupNameBuffer: '%S'\n", GroupNameBuffer);
 
     /* Loop through each group */
     GroupName = GroupNameBuffer;
@@ -580,18 +580,18 @@ WinLdrScanRegistry(IN OUT PLIST_ENTRY BootDriverListHead,
                 ValueSize = sizeof(ULONG);
                 rc = RegQueryValue(hDriverKey, L"Start", &ValueType, (PUCHAR)&StartValue, &ValueSize);
                 if (rc != ERROR_SUCCESS) StartValue = (ULONG)-1;
-                //TRACE_CH(REACTOS, "  Start: %x  \n", (int)StartValue);
+                //TRACE_CH(REACTOS, "  Start: %x\n", (int)StartValue);
 
                 /* Read the Tag */
                 ValueSize = sizeof(ULONG);
                 rc = RegQueryValue(hDriverKey, L"Tag", &ValueType, (PUCHAR)&TagValue, &ValueSize);
                 if (rc != ERROR_SUCCESS) TagValue = (ULONG)-1;
-                //TRACE_CH(REACTOS, "  Tag:   %x  \n", (int)TagValue);
+                //TRACE_CH(REACTOS, "  Tag:   %x\n", (int)TagValue);
 
                 /* Read the driver's group */
                 DriverGroupSize = sizeof(DriverGroup);
                 rc = RegQueryValue(hDriverKey, L"Group", NULL, (PUCHAR)DriverGroup, &DriverGroupSize);
-                //TRACE_CH(REACTOS, "  Group: '%S'  \n", DriverGroup);
+                //TRACE_CH(REACTOS, "  Group: '%S'\n", DriverGroup);
 
                 /* Make sure it should be started */
                 if ((StartValue == 0) &&
@@ -659,18 +659,18 @@ WinLdrScanRegistry(IN OUT PLIST_ENTRY BootDriverListHead,
             ValueSize = sizeof(ULONG);
             rc = RegQueryValue(hDriverKey, L"Start", &ValueType, (PUCHAR)&StartValue, &ValueSize);
             if (rc != ERROR_SUCCESS) StartValue = (ULONG)-1;
-            //TRACE_CH(REACTOS, "  Start: %x  \n", (int)StartValue);
+            //TRACE_CH(REACTOS, "  Start: %x\n", (int)StartValue);
 
             /* Read the Tag */
             ValueSize = sizeof(ULONG);
             rc = RegQueryValue(hDriverKey, L"Tag", &ValueType, (PUCHAR)&TagValue, &ValueSize);
             if (rc != ERROR_SUCCESS) TagValue = (ULONG)-1;
-            //TRACE_CH(REACTOS, "  Tag:   %x  \n", (int)TagValue);
+            //TRACE_CH(REACTOS, "  Tag:   %x\n", (int)TagValue);
 
             /* Read the driver's group */
             DriverGroupSize = sizeof(DriverGroup);
             rc = RegQueryValue(hDriverKey, L"Group", NULL, (PUCHAR)DriverGroup, &DriverGroupSize);
-            //TRACE_CH(REACTOS, "  Group: '%S'  \n", DriverGroup);
+            //TRACE_CH(REACTOS, "  Group: '%S'\n", DriverGroup);
 
             for (TagIndex = 1; TagIndex <= OrderList[0]; TagIndex++)
             {

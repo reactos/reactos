@@ -30,7 +30,7 @@ IopCleanupAfterException(IN PFILE_OBJECT FileObject,
                          IN PKEVENT LocalEvent OPTIONAL)
 {
     PAGED_CODE();
-    IOTRACE(IO_API_DEBUG, "IRP: %p. FO: %p \n", Irp, FileObject);
+    IOTRACE(IO_API_DEBUG, "IRP: %p. FO: %p\n", Irp, FileObject);
 
     if (Irp)
     {
@@ -76,7 +76,7 @@ IopFinalizeAsynchronousIo(IN NTSTATUS SynchStatus,
 {
     NTSTATUS FinalStatus = SynchStatus;
     PAGED_CODE();
-    IOTRACE(IO_API_DEBUG, "IRP: %p. Status: %lx \n", Irp, SynchStatus);
+    IOTRACE(IO_API_DEBUG, "IRP: %p. Status: %lx\n", Irp, SynchStatus);
 
     /* Make sure the IRP was completed, but returned pending */
     if (FinalStatus == STATUS_PENDING)
@@ -129,7 +129,7 @@ IopPerformSynchronousRequest(IN PDEVICE_OBJECT DeviceObject,
     PVOID NormalContext = NULL;
     KIRQL OldIrql;
     PAGED_CODE();
-    IOTRACE(IO_API_DEBUG, "IRP: %p. DO: %p. FO: %p \n",
+    IOTRACE(IO_API_DEBUG, "IRP: %p. DO: %p. FO: %p\n",
             Irp, DeviceObject, FileObject);
 
     /* Queue the IRP */
@@ -220,7 +220,7 @@ IopDeviceFsIoControl(IN HANDLE DeviceHandle,
 
     PAGED_CODE();
 
-    IOTRACE(IO_CTL_DEBUG, "Handle: %p. CTL: %lx. Type: %lx \n",
+    IOTRACE(IO_CTL_DEBUG, "Handle: %p. CTL: %lx. Type: %lx\n",
             DeviceHandle, IoControlCode, IsDevIoCtl);
 
     /* Get the access type */
@@ -662,7 +662,7 @@ IopQueryDeviceInformation(IN PFILE_OBJECT FileObject,
     KEVENT Event;
     NTSTATUS Status;
     PAGED_CODE();
-    IOTRACE(IO_API_DEBUG, "Handle: %p. CTL: %lx. Type: %lx \n",
+    IOTRACE(IO_API_DEBUG, "Handle: %p. CTL: %lx. Type: %lx\n",
             FileObject, InformationClass, File);
 
     /* Reference the object */
@@ -1150,7 +1150,7 @@ IoSynchronousPageWrite(IN PFILE_OBJECT FileObject,
     PIRP Irp;
     PIO_STACK_LOCATION StackPtr;
     PDEVICE_OBJECT DeviceObject;
-    IOTRACE(IO_API_DEBUG, "FileObject: %p. Mdl: %p. Offset: %p \n",
+    IOTRACE(IO_API_DEBUG, "FileObject: %p. Mdl: %p. Offset: %p\n",
             FileObject, Mdl, Offset);
 
     /* Is the write originating from Cc? */
@@ -1205,7 +1205,7 @@ IoPageRead(IN PFILE_OBJECT FileObject,
     PIRP Irp;
     PIO_STACK_LOCATION StackPtr;
     PDEVICE_OBJECT DeviceObject;
-    IOTRACE(IO_API_DEBUG, "FileObject: %p. Mdl: %p. Offset: %p \n",
+    IOTRACE(IO_API_DEBUG, "FileObject: %p. Mdl: %p. Offset: %p\n",
             FileObject, Mdl, Offset);
 
     /* Get the Device Object */
@@ -1322,7 +1322,7 @@ IoSetInformation(IN PFILE_OBJECT FileObject,
     KEVENT Event;
     NTSTATUS Status;
     PAGED_CODE();
-    IOTRACE(IO_API_DEBUG, "FileObject: %p. Class: %lx. Length: %lx \n",
+    IOTRACE(IO_API_DEBUG, "FileObject: %p. Class: %lx. Length: %lx\n",
             FileObject, FileInformationClass, Length);
 
     /* Reference the object */

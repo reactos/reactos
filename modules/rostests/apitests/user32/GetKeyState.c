@@ -107,8 +107,8 @@ void Test_GetKeyState()
 	hKbdHook = SetWindowsHookEx(WH_KEYBOARD, KeyboardProc, GetModuleHandleA( NULL ), 0);
 	hKbdLLHook = SetWindowsHookEx(WH_KEYBOARD_LL, LowLevelKeyboardProc, GetModuleHandleA( NULL ), 0);
 	
-	ok(hKbdHook!=NULL," \n");
-	ok(hKbdLLHook!=NULL," \n");
+	ok(hKbdHook != NULL, "\n");
+	ok(hKbdLLHook != NULL, "\n");
 	
 	keybd_event(VK_LMENU, 0, 0,0);
 	

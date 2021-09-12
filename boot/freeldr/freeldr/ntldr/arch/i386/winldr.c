@@ -324,7 +324,7 @@ MempSetupPaging(IN PFN_NUMBER StartPage,
 
         if (KernelMapping)
         {
-             if (KernelPT[Page & 0x3ff].Valid) WARN("xxx already mapped \n");
+            if (KernelPT[Page & 0x3ff].Valid) WARN("KernelPT already mapped\n");
             KernelPT[Page & 0x3ff].PageFrameNumber = Page;
             KernelPT[Page & 0x3ff].Valid = (Page != 0);
             KernelPT[Page & 0x3ff].Write = (Page != 0);

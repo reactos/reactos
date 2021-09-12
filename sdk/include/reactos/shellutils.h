@@ -154,7 +154,7 @@ public:
     {
         int rc = this->InternalAddRef();
 #if DEBUG_CCOMOBJECT_REFCOUNTING
-        DbgPrint("%s, RefCount is now %d(--)! \n", __FUNCTION__, rc);
+        DbgPrint("%s, RefCount is now %d(--)!\n", __FUNCTION__, rc);
 #endif
         return rc;
     }
@@ -164,7 +164,7 @@ public:
         int rc = this->InternalRelease();
 
 #if DEBUG_CCOMOBJECT_REFCOUNTING
-        DbgPrint("%s, RefCount is now %d(--)! \n", __FUNCTION__, rc);
+        DbgPrint("%s, RefCount is now %d(--)!\n", __FUNCTION__, rc);
 #endif
 
         if (rc == 0)
