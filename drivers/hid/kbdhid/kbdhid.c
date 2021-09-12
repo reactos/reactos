@@ -444,8 +444,8 @@ KbdHid_InternalDeviceControl(
         case IOCTL_KEYBOARD_QUERY_INDICATORS:
             if (IoStack->Parameters.DeviceIoControl.OutputBufferLength < sizeof(KEYBOARD_INDICATOR_PARAMETERS))
             {
-                /* invalid parameter */
-                Irp->IoStatus.Status = STATUS_INVALID_PARAMETER;
+                /* buffer too small */
+                Irp->IoStatus.Status = STATUS_BUFFER_TOO_SMALL;
                 IoCompleteRequest(Irp, IO_NO_INCREMENT);
                 return STATUS_INVALID_PARAMETER;
             }
@@ -464,8 +464,8 @@ KbdHid_InternalDeviceControl(
         case IOCTL_KEYBOARD_QUERY_TYPEMATIC:
             if (IoStack->Parameters.DeviceIoControl.OutputBufferLength < sizeof(KEYBOARD_TYPEMATIC_PARAMETERS))
             {
-                /* invalid parameter */
-                Irp->IoStatus.Status = STATUS_INVALID_PARAMETER;
+                /* buffer too small */
+                Irp->IoStatus.Status = STATUS_BUFFER_TOO_SMALL;
                 IoCompleteRequest(Irp, IO_NO_INCREMENT);
                 return STATUS_INVALID_PARAMETER;
             }
