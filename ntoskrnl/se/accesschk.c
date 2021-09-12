@@ -882,8 +882,8 @@ NtAccessCheck(
     }
 
     /* Check security descriptor for valid owner and group */
-    if (SepGetSDOwner(SecurityDescriptor) == NULL ||  // FIXME: use CapturedSecurityDescriptor
-        SepGetSDGroup(SecurityDescriptor) == NULL)    // FIXME: use CapturedSecurityDescriptor
+    if (SepGetSDOwner(CapturedSecurityDescriptor) == NULL ||
+        SepGetSDGroup(CapturedSecurityDescriptor) == NULL)
     {
         DPRINT("Security Descriptor does not have a valid group or owner\n");
         SeReleaseSecurityDescriptor(CapturedSecurityDescriptor,
@@ -902,7 +902,7 @@ NtAccessCheck(
     /* Check if the token is the owner and grant WRITE_DAC and READ_CONTROL rights */
     if (DesiredAccess & (WRITE_DAC | READ_CONTROL | MAXIMUM_ALLOWED))
     {
-        if (SepTokenIsOwner(Token, SecurityDescriptor, FALSE)) // FIXME: use CapturedSecurityDescriptor
+        if (SepTokenIsOwner(Token, CapturedSecurityDescriptor, FALSE))
         {
             if (DesiredAccess & MAXIMUM_ALLOWED)
                 PreviouslyGrantedAccess |= (WRITE_DAC | READ_CONTROL);
@@ -921,7 +921,7 @@ NtAccessCheck(
     else
     {
         /* Now perform the access check */
-        SepAccessCheck(SecurityDescriptor, // FIXME: use CapturedSecurityDescriptor
+        SepAccessCheck(CapturedSecurityDescriptor,
                        &SubjectSecurityContext,
                        DesiredAccess,
                        NULL,
