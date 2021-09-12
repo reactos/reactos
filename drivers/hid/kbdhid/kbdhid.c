@@ -381,7 +381,7 @@ KbdHid_InternalDeviceControl(
     {
         case IOCTL_KEYBOARD_QUERY_ATTRIBUTES:
             /* verify output buffer length */
-            if (IoStack->Parameters.DeviceIoControl.OutputBufferLength < sizeof(MOUSE_ATTRIBUTES))
+            if (IoStack->Parameters.DeviceIoControl.OutputBufferLength < sizeof(KEYBOARD_ATTRIBUTES))
             {
                 /* invalid request */
                 DPRINT1("[KBDHID] IOCTL_KEYBOARD_QUERY_ATTRIBUTES Buffer too small\n");
@@ -399,7 +399,7 @@ KbdHid_InternalDeviceControl(
                           sizeof(KEYBOARD_ATTRIBUTES));
 
             /* complete request */
-            Irp->IoStatus.Information = sizeof(MOUSE_ATTRIBUTES);
+            Irp->IoStatus.Information = sizeof(KEYBOARD_ATTRIBUTES);
             Irp->IoStatus.Status = STATUS_SUCCESS;
             IoCompleteRequest(Irp, IO_NO_INCREMENT);
             return STATUS_SUCCESS;
