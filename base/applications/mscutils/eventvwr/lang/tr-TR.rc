@@ -174,7 +174,7 @@ BEGIN
 \n\
 EventVwr [bilgisayar adı] [/l:<etkinlik günlüğü dosyası>] [/?]\n\
 \n\
-""bilgisayar adı"" : Görüntülenecek olayların alınacağı uzak \n\
+""bilgisayar adı"" : Görüntülenecek olayların alınacağı uzak\n\
 \tbilgisayarı belirtir. İsim belirtilmezse yerel bilgisayar\n\
 \tkullanıır.\n\
 \n\

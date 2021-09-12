@@ -27,7 +27,7 @@ ALIAS listesinden bir takma adı kaldırmak için:\n\
     STRING_BEEP_HELP "Hoparlörden ""biip"" sesi çıkart.\n\nBEEP\n"
     STRING_CALL_HELP "Bir toplu iş dosyasından bir diğerini çağırır.\n\n\
 CALL [sürücü:][yol]program-adı [program-parametreleri]\n\n\
-  program-parametreleri  Toplu iş dosyasının gerektirdiği komut satırı \n\
+  program-parametreleri  Toplu iş dosyasının gerektirdiği komut satırı\n\
                          değişkenlerini belirtir.\n"
     STRING_CD_HELP "Çalışma dizinini değiştirir veya adını gösterir.\n\n\
 CHDIR [/D][sürücü:][yol]\n\
@@ -68,7 +68,7 @@ COLOR [attr [/-F]]\n\n\
   /-F         Komut satırının boş alanını renk özelliği ile doldurmaz.\n\n\
 Renkleri belirtlemek için üç yol vardır:\n\
 1) renk belirtecindeki [parlaklık] değerleri (belirteçteki ilk üç harftir)\n\
-2) renklerin ondalıklı ifadeleri (decimal on decimal) \n\
+2) renklerin ondalıklı ifadeleri (decimal on decimal)\n\
 3) renk değerlerinin onaltılık rakam formu\n\n\
 Renkler şunlardır:\n\
 ondalık  onaltılık  renk       ondalık  onaltılık  renk\n\
@@ -98,7 +98,7 @@ COPY [/V][/Y|/-Y][/A|/B] kaynak [/A|/B]\n\
     STRING_CTTY_HELP "Standart Girdi/Çıktı (G/Ç) terminal cihazını bir yardımcı cihaz olarak değiştirir.\n\n\
 CTTY [cihaz]\n\n\
   cihaz     Yeni standart G/Ç cihazı olarak kullanmak istediğiniz terminal cihazı.\n\
-            Bu cihaz, geçerli bir karakter cihazı olmalıdır: \n\
+            Bu cihaz, geçerli bir karakter cihazı olmalıdır:\n\
             AUX, COMx (x=1..N), CON, LPTx (x=1..N), PRN, NUL.\n\
             CON genellikle varsayılan standart G/Ç cihazıdır..\n\n\
 Kontrolü standart konsola geri döndürmek için, yardımcı cihazda CTTY CON yazın."
@@ -108,7 +108,7 @@ Kontrolü standart konsola geri döndürmek için, yardımcı cihazda CTTY CON y
     STRING_DATE_HELP4 "Tarihi görüntüler veya ayarlar.\n\n\
 DATE [/T][tarih]\n\n\
   /T    sadece tarihi gösterir\n\n\
-Şimdiki tarih ayarını ve yeni bir istemi görüntülemek için parametresiz olarak DATE yazın. \n\
+Şimdiki tarih ayarını ve yeni bir istemi görüntülemek için parametresiz olarak DATE yazın.\n\
 Aynı tarihi korumak için ENTER'a basın..\n"
     STRING_DEL_HELP1 "Bir veya daha fazla dosya siler.\n\n\
 DEL [/N /P /T /Q /S /W /Y /Z /A[[:]öznitellikler]] hedef ...\n\
@@ -147,7 +147,7 @@ DELAY [/m]n\n\n\
                   S  Sistem dosyaları           -  değil anlamına gelen ön ek\n\
   /B              Basit format kullanır (başlık bilgisi veya özet yok).\n\
   /C              Binlik ayırıcıyı dosya boyutlarında görüntüler. Bu varsayılandır.\n\
-                  Ayırıcının görüntülenmesini devre dışı bırakmak için / -C'yi kullanın. \n\
+                  Ayırıcının görüntülenmesini devre dışı bırakmak için /-C'yi kullanın.\n\
   /D              Geniş liste biçimi ile aynıdır, ancak dosyalar sütunlara göre sıralanır.\n\
   /L              Küçük harf kullanır.\n\
   /N              Dosya adlarının en sağda olduğu yeni uzun liste biçimi.\n\
@@ -177,7 +177,7 @@ bir anahtarın önüne - (tire) koyarak ön ayarlı anahtarları geçersiz kıl�
     STRING_DIR_HELP6 "%16i Dizin(ler)% 15s bayt boşaltıldı\n"
     STRING_DIR_HELP7 "\n %s'nın dizini\n\n"
     STRING_DIR_HELP8 "%16i dosya(lar)% 14s bayt\n"
-    STRING_DIRSTACK_HELP1 "Şimdiki dizini POPD komutu tarafından kullanılmak üzere depolar, \n\
+    STRING_DIRSTACK_HELP1 "Şimdiki dizini POPD komutu tarafından kullanılmak üzere depolar,\n\
 ardından belirtilen dizine değiştirir.\n\n\
 PUSHD [yol | ..]\n\n\
   yol        Şimdiki dizini, yapacak dizin olarak işaretler\n"
@@ -191,7 +191,7 @@ PUSHD [yol | ..]\n\n\
   ECHOERR.           boş bir satırı gösterir "
     STRING_ECHO_HELP3 "ECHO dönüşü ve satır beslemesini takip etmeden standart hata çıktısına mesaj yazdırır.\n\n\
   ECHOSERR mesaj"
-    STRING_ECHO_HELP4 "Bir mesaj görüntüler veya komut yankılamasını açar veya kapatır. \n\n\
+    STRING_ECHO_HELP4 "Bir mesaj görüntüler veya komut yankılamasını açar veya kapatır.\n\n\
   ECHO [ON | OFF]\n\
   ECHO [mesaj]\n\
   ECHO.             Boş bir satır yazdırır\n\n\
@@ -210,7 +210,7 @@ FOR /F [""ayarlar""] IN (küme) DO komut [parametreler]\n\n\
   /L    Baştan sona kadar adım adım artan bir sayı dizisi oluşturur.\n\
   /D    Kümeyi dosyalar yerine dizinlere başvuracak şekilde değiştirir.\n\
   /R    Belirtilen yolda (veya belirtilmemişse şimdiki çalışma dizininde)\n\
-        ve bu dizinin altınaki her dizinde yer alan veya kümede bulunan \n\
+        ve bu dizinin altınaki her dizinde yer alan veya kümede bulunan\n\
         dosyalar için verilen komutu yürütür.\n\
   /F    Kümeyi, kümedeki dosyaların içeriğine başvuracak şekilde değiştirir.\n\n\
   %değişken     Değiştirilebilir bir parametre belirtir.\n\
@@ -227,7 +227,7 @@ FOR komutunu bir toplu iş dosyasında kullanmak için,%değişken yerine %%değ
   %16s bayt toplam disk alanı\n\
   %16s bayt kullanılan alan\n\
   %16s bayt boş alan\n"
-    STRING_FREE_HELP2 "Sürücü bilgilerini görüntüler. \n\nFREE [sürücü: ...]\n"
+    STRING_FREE_HELP2 "Sürücü bilgilerini görüntüler.\n\nFREE [sürücü: ...]\n"
     STRING_GOTO_HELP1 "CMD'yi bir toplu iş dosyasındaki etiketli bir satıra yönlendirir.\n\n\
 GOTO etiket\n\n\
   etiket  Bir toplu iş dosyasında etiket olarak kullanılan bir metin dizesini belirtir.\n\n\
@@ -253,7 +253,7 @@ MKLINK [/D | /H | /J] link_adi hedef\n\n\
   /H  Sabit bağlantı oluşturun.\n\
   /J  Bir dizin birleşimi oluşturun.\n\n\
 /H veya /J belirtilmezse, sembolik bir bağ oluşturulur."
-    STRING_MEMORY_HELP1 "Sistem belleği miktarını gösterir. \n\nBELLEK"
+    STRING_MEMORY_HELP1 "Sistem belleği miktarını gösterir.\n\nBELLEK"
     STRING_MEMORY_HELP2 "\n  %12s%% bellek yükü.\n\n\
   %13s bayt toplam fiziksel RAM.\n\
   %13s bayt kullanılabilir fiziksel RAM.\n\n\
@@ -280,12 +280,12 @@ tip           görüntülenecek tuş,\n\
               YESNO, YESNOCANCEL\n\
 başlık        mesaj kutusunun başlığı\n\
 komut_metni   mesaj kutusu tarafından görüntülenen metin\n\n\n\
-ERRORLEVEL, basılan düğmeye göre ayarlanır: \n\n\
+ERRORLEVEL, basılan düğmeye göre ayarlanır:\n\n\
 YES  :  10    |  NO      :  11\n\
 OK   :  10    |  CANCEL  :  12\n"
     STRING_PATH_HELP1 "Çalıştırılabilir dosyalar için bir arama yolu görüntüler veya ayarlar.\n\n\
 PATH [[sürücü:]yol[;...]]\nPATH ;\n\n\
-Tüm arama yolu ayarlarını temizlemek için PATH ; yazın ve komut istemini \n\
+Tüm arama yolu ayarlarını temizlemek için PATH ; yazın ve komut istemini\n\
 yalnızca şimdiki dizinde arama yapmaya yönlendirin.\n\
 Şimdiki yolu görüntülemek için parametresiz olarak PATH yazın.\n"
     STRING_PAUSE_HELP1 "Bir toplu iş dosyasının yürütülmesini durdurur ve aşağıdaki mesajı gösterir:\n\
@@ -331,7 +331,7 @@ REN [/E /N /P /Q /S /T] eski_isim ... yeni_isim\n\n\
   /Q    Sessizce çalıştır.\n\
   /S    Alt dizinleri yeniden adlandır.\n\
   /T    Yeniden adlandırılan dosyaların sayısını gösterir\n\n\
-Hedefiniz için yeni bir sürücü veya yol belirtemeyeceğinizi unutmayın. \n\
+Hedefiniz için yeni bir sürücü veya yol belirtemeyeceğinizi unutmayın.\n\
 Bu amaç için MOVE komutunu kullanın.\n"
     STRING_REN_HELP2 "    %lu dosya yeniden adlandırıldı\n"
     STRING_REN_HELP3 "    %lu dosya yeniden adlandırıldı\n"
@@ -340,15 +340,15 @@ REPLACE [sürücü1:][yol1]filename [sürücü2:][yol2] [/A] [/P] [/R] [/W]\n\
 REPLACE [sürücü1:][yol1]filename [sürücü2:][yol2] [/P] [/R] [/S] [/W] [/U]\n\n\
   [drive1:][yol1]dosya adı  Kaynak dosyayı veya dosyaları belirtir.\n\
   [drive2:][yol2]           Dosyaların aktarılacağı dizini belirtir.\n\
-  /A                        Hedef dizine yeni dosyalar ekler. /S veya /U \n\
+  /A                        Hedef dizine yeni dosyalar ekler. /S veya /U\n\
                             anahtarlarıyla kullanılamaz.\n\
   /P                        Bir dosyayı değiştirmeden veya bir kaynak dosya eklemeden\n\
                             önce onay ister.\n\
   /R                        Salt okunur dosyaları da normal dosyalar gibi değiştirir\n\
-  /S                        Hedef dizinin tüm alt dizinlerindeki dosyaları değiştirir. \n\
+  /S                        Hedef dizinin tüm alt dizinlerindeki dosyaları değiştirir.\n\
                             /A anahtarıyla kullanılamaz.\n\
   /W                        Başlamadan önce bir disk yerleştirmenizi bekler.\n\
-  /U                        Yalnızca kaynak dosyalardan daha eski dosyaları \n\
+  /U                        Yalnızca kaynak dosyalardan daha eski dosyaları\n\
                             değiştirir (günceller). /A anahtarıyla kullanılamaz.\n"
     STRING_REPLACE_HELP2 "Kaynak konum gerekli\n"
     STRING_REPLACE_HELP3 "Herhangi bir dosya değiştirilmedi\n"
@@ -407,7 +407,7 @@ TIMER  [ON|OFF] [/S] [/n] [/Fn]\n\n\
               n şunlardan birisi olabilir:\n\
                     0    milisaniye formu\n\
                     1    saat%cdakika%csaniye%cgün formunda tarih\n\n\
-ON, OFF veya / S'den hiçbiri belirtilmezse, \n\
+ON, OFF veya / S'den hiçbiri belirtilmezse,\n\
 komut kronometre durumunu değiştirir\n\n"
     STRING_TYPE_HELP1 "Metin dosyalarının içeriğini görüntüler.\n\n [sürücü:][yol]dosya adı yazınız\n\
   /P          Her seferinde tek bir çıktı ekranı gösterir.\n"
@@ -422,16 +422,16 @@ VER [/C][/R][/W]\n\n\
   /C  Telif listesini yazdırır.\n\
   /R  Yeniden dağıtım bilgilerini görüntüler.\n\
   /W  Lisans sözleşmesi metnini yazdırır."
-    STRING_VERSION_HELP2 "KESİNLİKLE HİÇBİR GARANTİ verilemez; ayrıntılar için şunu yazın: \n\
-`ver /w`. Bu bir özgür yazılımdır ve belirli koşullar altında yeniden dağıtabilirsiniz; \n\
+    STRING_VERSION_HELP2 "KESİNLİKLE HİÇBİR GARANTİ verilemez; ayrıntılar için şunu yazın:\n\
+`ver /w`. Bu bir özgür yazılımdır ve belirli koşullar altında yeniden dağıtabilirsiniz;\n\
 ayrıntılar için `ver /r` yazın. Telif sahiplerinin listesi için `ver /c` yazın."
-    STRING_VERSION_HELP3 "\n Bu program, kullanışlı olabileceği beklentisiyle dağıtılmıştır; \n\
-ancak, bu program HİÇBİR GÜVENCE VEREMEZ, SATILABİLİRLİĞİN ve BELİRLİ BİR AMACA UYGUNLUĞUN \n\
+    STRING_VERSION_HELP3 "\n Bu program, kullanışlı olabileceği beklentisiyle dağıtılmıştır;\n\
+ancak, bu program HİÇBİR GÜVENCE VEREMEZ, SATILABİLİRLİĞİN ve BELİRLİ BİR AMACA UYGUNLUĞUN\n\
 güvencesi de verilemez. Daha çok bilgi için GNU Genel Kamu Lisansı'na bakınız."
     STRING_VERSION_HELP4 "\n Bu program ücretsiz bir yazılımdır; Özgür Yazılım Vakfı tarafından\n\
-yayınlanan GNU Genel Kamu Lisansı'nın 2. sürümü ya da (sizin tercihinize göre) sonraki herhangi \n\
+yayınlanan GNU Genel Kamu Lisansı'nın 2. sürümü ya da (sizin tercihinize göre) sonraki herhangi\n\
 bir sürüm altında olmak kaydı ile, lisansın size sağladığı koşullar altında yeniden dağıtabilir ve\n\
-/ veya değiştirebilirsiniz; \n"
+/ veya değiştirebilirsiniz;\n"
     STRING_VERSION_HELP5 "\nHata raporlarını <jira.reactos.org> e-posta adresine bildirin.\n\
 Güncellemeleri takip etmek için: http://www.reactos.org"
     STRING_VERSION_HELP6 "\nFreeDOS sürümü şu kişi tarafından yazılmıştır:\n"
@@ -464,7 +464,7 @@ başlık        pencere için yeni başlık\n"
     STRING_CHOICE_ERROR "Geçersiz seçenek. Beklenen seçenek biçimi: /C[:]seçenekler\n"
     STRING_CHOICE_ERROR_TXT "Geçersiz seçenek. Beklenen seçenek biçimi: /T[:]c,nn\n"
     STRING_CHOICE_ERROR_OPTION "Geçersiz Seçenek: %s\n"
-    STRING_CMD_ERROR1 "Girdi %s dosyasından yeniden yönlendirilemiyor \n"
+    STRING_CMD_ERROR1 "Girdi %s dosyasından yeniden yönlendirilemiyor\n"
     STRING_CMD_ERROR2 "Borulama verileri için geçici dosya oluşturulamadı\n"
     STRING_CMD_ERROR3 "%s dosyasına yönlendirilemedi\n"
     STRING_CMD_ERROR4 "%s çalışıtırılıyor...\n"

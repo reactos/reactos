@@ -244,9 +244,9 @@ GOTO etiqueta\n\n\
 Digite uma etiqueta numa linha isolada, começando por dois pontos.\n"
     STRING_IF_HELP1 "Executa processamento condicional em programas batch.\n\n\
   IF [NOT] ERRORLEVEL número comando\n\
-  IF [NOT] string1==string2 comando \n\
-  IF [NOT] EXIST ficheiro comando \n\
-  IF [NOT] DEFINED variável comando \n\n\
+  IF [NOT] string1==string2 comando\n\
+  IF [NOT] EXIST ficheiro comando\n\
+  IF [NOT] DEFINED variável comando\n\n\
 NOT                Especifica que o CMD deve executar o comando apenas se\n\
                    a condição é falsa\n\
 ERRORLEVEL número  Especifica uma condição verdadeira se a última execução\n\
@@ -262,7 +262,7 @@ DEFINED variável   Especifica uma condição verdadeira se a variável especifi
                    for definida.\n"
     STRING_LOCALE_HELP1 "A hora actual é"
     STRING_MKDIR_HELP "Cria um directório.\n\n\
-MKDIR [unidade:] caminho \nMD [unidade:] caminho"
+MKDIR [unidade:] caminho\nMD [unidade:] caminho"
     STRING_MKLINK_HELP "Cria uma ligação simbólica.\n\n\
 MKLINK [/D | /H | /J] Ligação Destino\n\n\
   /D        Cria uma ligação simbólica de directório. A predefinição é\n\

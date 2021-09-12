@@ -12052,7 +12052,7 @@ Language=English
 Initialization failed because of an open/create error on the\nfile %1. The system error code is the data.
 .
 Language=Polish
-Zainicjowanie nie powiodło się z powodu błędu otwarcia/utworzenia \npliku %1. Przedstawione dane to kod błędu systemu.
+Zainicjowanie nie powiodło się z powodu błędu otwarcia/utworzenia\npliku %1. Przedstawione dane to kod błędu systemu.
 .
 Language=Romanian
 Initialization failed because of an open/create error on the\nfile %1. The system error code is the data.
@@ -42251,9 +42251,9 @@ registered in DNS.\n\n
 %nDetermine what might have caused this failure, resolve the problem, and initiate\n
 registration of the DNS records by the domain controller. To determine what might\n
 have caused this failure, run DCDiag.exe. You can find this program on the ReactOS\n
-Server installation CD in Support\\Tools\\support.cab. To learn more about \n
-DCDiag.exe, see Help and Support Center. To initiate registration of the DNS records by \n
-this domain controller, run 'nltest.exe /dsregdns' from the command prompt on the domain \n
+Server installation CD in Support\\Tools\\support.cab. To learn more about\n
+DCDiag.exe, see Help and Support Center. To initiate registration of the DNS records by\n
+this domain controller, run 'nltest.exe /dsregdns' from the command prompt on the domain\n
 controller or restart Net Logon service. Nltest.exe is available in the ReactOS Server\n
 Resource Kit CD. %n  Or, you can manually add this record to DNS, but it is not\n
 recommended.\n\n
@@ -42271,9 +42271,9 @@ mogli lokalizować ten kontroler domeny.\n\n
 %nOkreśl przyczynę tego błędu, rozwiąż problem i zainicjuj rejestrację rekordów DNS\n
 przez kontroler domeny. Aby określić przyczynę tego błędu, uruchom program\n
 DCDiag.exe. Można go znaleźć na dysku instalacyjnym CD systemu ReactOS Server\n
-w pliku Support\\Tools\\support.cab. Aby dowiedzieć się więcej o programie \n
-DCDiag.exe, zajrzyj do Centrum pomocy i obsługi technicznej. Aby zainicjować \n
-rejestrację rekordów DNS przez ten kontroler domeny, uruchom polecenie \n
+w pliku Support\\Tools\\support.cab. Aby dowiedzieć się więcej o programie\n
+DCDiag.exe, zajrzyj do Centrum pomocy i obsługi technicznej. Aby zainicjować\n
+rejestrację rekordów DNS przez ten kontroler domeny, uruchom polecenie\n
 'nltest.exe /dsregdns' z wiersza polecenia na kontrolerze domeny lub uruchom ponownie\n
 usługę Net Logon. Program Nltest.exe jest dostępny na dysku CD Microsoft ReactOS Server\n
 Resource Kit. %n  Lub można ręcznie dodać ten rekord do systemu DNS, choć nie jest to\n
@@ -42292,9 +42292,9 @@ registered in DNS.\n\n
 %nDetermine what might have caused this failure, resolve the problem, and initiate\n
 registration of the DNS records by the domain controller. To determine what might\n
 have caused this failure, run DCDiag.exe. You can find this program on the ReactOS\n
-Server installation CD in Support\\Tools\\support.cab. To learn more about \n
-DCDiag.exe, see Help and Support Center. To initiate registration of the DNS records by \n
-this domain controller, run 'nltest.exe /dsregdns' from the command prompt on the domain \n
+Server installation CD in Support\\Tools\\support.cab. To learn more about\n
+DCDiag.exe, see Help and Support Center. To initiate registration of the DNS records by\n
+this domain controller, run 'nltest.exe /dsregdns' from the command prompt on the domain\n
 controller or restart Net Logon service. Nltest.exe is available in the ReactOS Server\n
 Resource Kit CD. %n  Or, you can manually add this record to DNS, but it is not\n
 recommended.\n\n
@@ -42312,9 +42312,9 @@ registered in DNS.\n\n
 %nDetermine what might have caused this failure, resolve the problem, and initiate\n
 registration of the DNS records by the domain controller. To determine what might\n
 have caused this failure, run DCDiag.exe. You can find this program on the ReactOS\n
-Server installation CD in Support\\Tools\\support.cab. To learn more about \n
-DCDiag.exe, see Help and Support Center. To initiate registration of the DNS records by \n
-this domain controller, run 'nltest.exe /dsregdns' from the command prompt on the domain \n
+Server installation CD in Support\\Tools\\support.cab. To learn more about\n
+DCDiag.exe, see Help and Support Center. To initiate registration of the DNS records by\n
+this domain controller, run 'nltest.exe /dsregdns' from the command prompt on the domain\n
 controller or restart Net Logon service. Nltest.exe is available in the ReactOS Server\n
 Resource Kit CD. %n  Or, you can manually add this record to DNS, but it is not\n
 recommended.\n\n
@@ -42332,9 +42332,9 @@ registered in DNS.\n\n
 %nDetermine what might have caused this failure, resolve the problem, and initiate\n
 registration of the DNS records by the domain controller. To determine what might\n
 have caused this failure, run DCDiag.exe. You can find this program on the ReactOS\n
-Server installation CD in Support\\Tools\\support.cab. To learn more about \n
-DCDiag.exe, see Help and Support Center. To initiate registration of the DNS records by \n
-this domain controller, run 'nltest.exe /dsregdns' from the command prompt on the domain \n
+Server installation CD in Support\\Tools\\support.cab. To learn more about\n
+DCDiag.exe, see Help and Support Center. To initiate registration of the DNS records by\n
+this domain controller, run 'nltest.exe /dsregdns' from the command prompt on the domain\n
 controller or restart Net Logon service. Nltest.exe is available in the ReactOS Server\n
 Resource Kit CD. %n  Or, you can manually add this record to DNS, but it is not\n
 recommended.\n\n
@@ -42352,9 +42352,9 @@ registered in DNS.\n\n
 %nDetermine what might have caused this failure, resolve the problem, and initiate\n
 registration of the DNS records by the domain controller. To determine what might\n
 have caused this failure, run DCDiag.exe. You can find this program on the ReactOS\n
-Server installation CD in Support\\Tools\\support.cab. To learn more about \n
-DCDiag.exe, see Help and Support Center. To initiate registration of the DNS records by \n
-this domain controller, run 'nltest.exe /dsregdns' from the command prompt on the domain \n
+Server installation CD in Support\\Tools\\support.cab. To learn more about\n
+DCDiag.exe, see Help and Support Center. To initiate registration of the DNS records by\n
+this domain controller, run 'nltest.exe /dsregdns' from the command prompt on the domain\n
 controller or restart Net Logon service. Nltest.exe is available in the ReactOS Server\n
 Resource Kit CD. %n  Or, you can manually add this record to DNS, but it is not\n
 recommended.\n\n
@@ -42372,9 +42372,9 @@ registered in DNS.\n\n
 %nDetermine what might have caused this failure, resolve the problem, and initiate\n
 registration of the DNS records by the domain controller. To determine what might\n
 have caused this failure, run DCDiag.exe. You can find this program on the ReactOS\n
-Server installation CD in Support\\Tools\\support.cab. To learn more about \n
-DCDiag.exe, see Help and Support Center. To initiate registration of the DNS records by \n
-this domain controller, run 'nltest.exe /dsregdns' from the command prompt on the domain \n
+Server installation CD in Support\\Tools\\support.cab. To learn more about\n
+DCDiag.exe, see Help and Support Center. To initiate registration of the DNS records by\n
+this domain controller, run 'nltest.exe /dsregdns' from the command prompt on the domain\n
 controller or restart Net Logon service. Nltest.exe is available in the ReactOS Server\n
 Resource Kit CD. %n  Or, you can manually add this record to DNS, but it is not\n
 recommended.\n\n
@@ -42392,9 +42392,9 @@ registered in DNS.\n\n
 %nDetermine what might have caused this failure, resolve the problem, and initiate\n
 registration of the DNS records by the domain controller. To determine what might\n
 have caused this failure, run DCDiag.exe. You can find this program on the ReactOS\n
-Server installation CD in Support\\Tools\\support.cab. To learn more about \n
-DCDiag.exe, see Help and Support Center. To initiate registration of the DNS records by \n
-this domain controller, run 'nltest.exe /dsregdns' from the command prompt on the domain \n
+Server installation CD in Support\\Tools\\support.cab. To learn more about\n
+DCDiag.exe, see Help and Support Center. To initiate registration of the DNS records by\n
+this domain controller, run 'nltest.exe /dsregdns' from the command prompt on the domain\n
 controller or restart Net Logon service. Nltest.exe is available in the ReactOS Server\n
 Resource Kit CD. %n  Or, you can manually add this record to DNS, but it is not\n
 recommended.\n\n

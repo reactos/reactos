@@ -838,7 +838,7 @@ BEGIN
 
     /* Format Dialog Strings */
     IDS_FORMAT_TITLE "Yerel Diski Formatla"
-    IDS_FORMAT_WARNING "UYARI: Biçimlendirme bu diskteki TÜM verileri silecektir. \nDiski biçimlendirmek için Tamam'ı tıklayın. Çıkmak için İPTAL'i tıklayın."
+    IDS_FORMAT_WARNING "UYARI: Biçimlendirme bu diskteki TÜM verileri silecektir.\nDiski biçimlendirmek için Tamam'ı tıklayın. Çıkmak için İPTAL'i tıklayın."
     IDS_FORMAT_COMPLETE "Format Tamamlandı"
 
     /* Warning format system drive dialog strings */
@@ -1014,7 +1014,7 @@ BEGIN
     IDS_ACTION_EXISTS "'%s' eylemi bu dosya türü için zaten kayıtlı. Lütfen farklı bir ad girin ve tekrar deneyin."
     IDS_EXE_FILTER "Programlar\0*.exe\0Tüm Dosyalar\0*.*\0"
     IDS_EDITING_ACTION "Tür için eylemi düzenleme: "
-    IDS_NO_ICONS "'%s' dosyası simge içermiyor. \n\nListeden bir simge seçin veya farklı bir dosya belirtin."
+    IDS_NO_ICONS "'%s' dosyası simge içermiyor.\n\nListeden bir simge seçin veya farklı bir dosya belirtin."
     IDS_FILE_NOT_FOUND "'%s' dosyası bulunamadı."
     IDS_LINK_INVALID "Bu kısayolun başvurduğu '%s' öğesi değiştirildi veya taşındı, bu nedenle bu kısayol artık düzgün çalışmayacak."
     IDS_COPYTOMENU "Dizine &kopyala..."

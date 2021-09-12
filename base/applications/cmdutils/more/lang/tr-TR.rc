@@ -32,7 +32,7 @@ Seçenekler:\n\
     +n       Dosyanın ilk n satırını görüntüle.\n\
     dosyalar Boşluklarla ayrılmış olarak görüntülenecek dosyaların listesi.\n\
 \n\
-Genişletilmiş Özellikler etkinleştirildiğinde, ""-- Sürdür --"" isteminde \n\
+Genişletilmiş Özellikler etkinleştirildiğinde, ""-- Sürdür --"" isteminde\n\
 aşağıdaki komutlar kullanılabilir:\n\
 \n\
     P n      Sonraki n satırı göster.\n\

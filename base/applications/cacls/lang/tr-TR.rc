@@ -30,7 +30,7 @@ CACLS dosya adı [/T] [/E] [/C] [/G kullanıcı:izin [...]] [/R kullanıcı [...
                                                    C  Değiştirme (yazma)\n\
                                                    F  Tüm denetim\n\
    /D kullanıcı       Belirtilen kullanıcı erişimini verme.\n\
-Özel semboller, bir komutta birden fazla dosya belirtmek için kullanılabilir. \n\
+Özel semboller, bir komutta birden fazla dosya belirtmek için kullanılabilir.\n\
 Bir komutta birden fazla kullanıcı belirtebilirsiniz.\n\n\
 Kısaltmalar:\n\
    CI - Kapsayıcı Devralma.\n\
