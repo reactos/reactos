@@ -65,7 +65,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "Di&zin Yolunu Çoğalt", ID_EDIT_COPYKEYNAME
         MENUITEM SEPARATOR
-        MENUITEM "&Bul...\CTRL+F", ID_EDIT_FIND
+        MENUITEM "&Bul...\tCtrl+F", ID_EDIT_FIND
         MENUITEM "S&onrakini Bul\tF3...", ID_EDIT_FINDNEXT
     END
     POPUP "&Görünüm"
