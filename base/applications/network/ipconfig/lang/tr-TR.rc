@@ -26,42 +26,42 @@ STRINGTABLE
 BEGIN
 /* Please keep the spacing/formatting as per En.rc when translating */
     IDS_USAGE
-    "\nKULLANIM:\n \
-        ipconfig [/? | /all | /renew [bağdaştırıcı] | /release [bağdaştırıcı] |\n \
-                  /flushdns | /displaydns | /registerdns |\n \
-                  /showclassid bağdaştırıcı |\n \
-                  /setclassid bağdaştırıcı [sınıf kimliği] ]\n \
-\n \
-    nereye\n \
-        bağdaştırıcı     Bağlantı adı\n \
-                       (* ve ? özel karakterlerine  bakınız)\n \
-\n \
-        Seçenekler:\n \
-           /?           Bu yardım iletisini görüntüler.\n \
-           /all         Tüm yapılandırma bilgisini görüntüler.\n \
-           /release     Belirtilen bağdaştırıcı için IP adresini bırakır.\n \
-           /renew       Belirtilen bağdaştırıcı için IP adresini yeniler.\n \
-           /flushdns    DNS Çözücü ön belleğini siler.\n \
-           /registerdns Tüm DHCP kiralarını yeniler ve DNS adlarını yeniden kaydettirir.\n \
-           /displaydns  DNS Çözücü ön belleğinin içeriğini görüntüle.\n \
-           /showclassid Bağdaştırıcı için izin verilen tüm DHCP sınıf kimliklerini görüntüler.\n \
-           /setclassid  DHCP sınıf kimliğini değiştirir.\n \
-\n \
-    Varsayılan, TCP/IP için tüm kayıtlı bağdaştırıcılar için yalnızca\n \
-    IP adresini, alt ağ maskesini ve varsayılan geçidi görüntülemektir.\n \
-\n \
-    release ve renew için, bir bağdaştırıcı adı belirtilmemişse TCP/IP için tüm kayıtlı\n \
-    bağdaştırıcılar için yapılmış IP adres tahsisi bırakılacak veya yenilenecektir.\n \
-\n \
-    setclassid için, bir sınıf kimliği belirtilmemişse sınıf kimliği silinmiş olacaktır.\n \
-\n \
-    Örnekler:\n \
-        > ipconfig                   ... Bilgi gösterir.\n \
-        > ipconfig /all              ... Ayrıntılı bilgi gösterir.\n \
-        > ipconfig /renew            ... Tüm bağdaştırıcıları yeniler.\n \
-        > ipconfig /renew EL*        ... EL ile başlayan adı olan tüm\n \
-                                         bağlantıları yeniler.\n \
-        > ipconfig /release *Bağ*    ... Eşleşen tüm bağlantıları bırakır.\n \
-                                         Ör: ""Yerel Ağ Bağlantısı 1"" veya\n \
+    "\nKULLANIM:\n\
+        ipconfig [/? | /all | /renew [bağdaştırıcı] | /release [bağdaştırıcı] |\n\
+                  /flushdns | /displaydns | /registerdns |\n\
+                  /showclassid bağdaştırıcı |\n\
+                  /setclassid bağdaştırıcı [sınıf kimliği] ]\n\
+\n\
+    nereye\n\
+        bağdaştırıcı     Bağlantı adı\n\
+                       (* ve ? özel karakterlerine  bakınız)\n\
+\n\
+        Seçenekler:\n\
+           /?           Bu yardım iletisini görüntüler.\n\
+           /all         Tüm yapılandırma bilgisini görüntüler.\n\
+           /release     Belirtilen bağdaştırıcı için IP adresini bırakır.\n\
+           /renew       Belirtilen bağdaştırıcı için IP adresini yeniler.\n\
+           /flushdns    DNS Çözücü ön belleğini siler.\n\
+           /registerdns Tüm DHCP kiralarını yeniler ve DNS adlarını yeniden kaydettirir.\n\
+           /displaydns  DNS Çözücü ön belleğinin içeriğini görüntüle.\n\
+           /showclassid Bağdaştırıcı için izin verilen tüm DHCP sınıf kimliklerini görüntüler.\n\
+           /setclassid  DHCP sınıf kimliğini değiştirir.\n\
+\n\
+    Varsayılan, TCP/IP için tüm kayıtlı bağdaştırıcılar için yalnızca\n\
+    IP adresini, alt ağ maskesini ve varsayılan geçidi görüntülemektir.\n\
+\n\
+    release ve renew için, bir bağdaştırıcı adı belirtilmemişse TCP/IP için tüm kayıtlı\n\
+    bağdaştırıcılar için yapılmış IP adres tahsisi bırakılacak veya yenilenecektir.\n\
+\n\
+    setclassid için, bir sınıf kimliği belirtilmemişse sınıf kimliği silinmiş olacaktır.\n\
+\n\
+    Örnekler:\n\
+        > ipconfig                   ... Bilgi gösterir.\n\
+        > ipconfig /all              ... Ayrıntılı bilgi gösterir.\n\
+        > ipconfig /renew            ... Tüm bağdaştırıcıları yeniler.\n\
+        > ipconfig /renew EL*        ... EL ile başlayan adı olan tüm\n\
+                                         bağlantıları yeniler.\n\
+        > ipconfig /release *Bağ*    ... Eşleşen tüm bağlantıları bırakır.\n\
+                                         Ör: ""Yerel Ağ Bağlantısı 1"" veya\n\
                                              ""Yerel Ağ Bağlantısı 2""\n"
 END

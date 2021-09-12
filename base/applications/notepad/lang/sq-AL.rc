@@ -148,13 +148,13 @@ BEGIN
     STRING_UNTITLED "Pa emer"
     STRING_ALL_FILES "Te gjith dokumentat (*.*)"
     STRING_TEXT_FILES_TXT "Dokumenta teksti (*.txt)"
-    STRING_TOOLARGE "Dokumenti '%s' është shume i madh për notepad.\n \
+    STRING_TOOLARGE "Dokumenti '%s' është shume i madh për notepad.\n\
 Ju lutem perdorni editor tjeter."
     STRING_NOTEXT "Nuk keni shkruaj ndonje tekst. \
 \nJu lutem shkruani diqka dhe provoni perseri"
-    STRING_DOESNOTEXIST "Dokumenti '%s'\nnuk ekziston\n\n \
+    STRING_DOESNOTEXIST "Dokumenti '%s'\nnuk ekziston\n\n\
 Doni te krijoni nje dokument te ri ?"
-    STRING_NOTSAVED "Dokumenti '%s'\nështë modifikuar\n\n \
+    STRING_NOTSAVED "Dokumenti '%s'\nështë modifikuar\n\n\
 Doni te ruani ndryshimet ?"
     STRING_NOTFOUND "'%s' nuk gjindet."
     STRING_OUT_OF_MEMORY "Nuk ka memorie te mjaftueshme per te kompletuar kete \

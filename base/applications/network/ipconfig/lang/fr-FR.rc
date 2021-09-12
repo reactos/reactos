@@ -24,42 +24,42 @@ STRINGTABLE
 BEGIN
 /* Please keep the spacing/formatting as per En.rc when translating */
     IDS_USAGE
-    "\nUSAGE:\n \
-        ipconfig [/? | /all | /renew [adapteur] | /release [adapteur] |\n \
-                  /flushdns | /displaydns | /registerdns |\n \
-                  /showclassid adapteur |\n \
-                  /setclassid adapteur [classid] ]\n \
-\n \
-    où\n \
-        adapteur         Nom de Connection\n \
-                       (jokers * et ? autorisés, voir les exemples)\n \
-\n \
-        Options:\n \
-           /?           Affiche ce message d'aide\n \
-           /all         Affiche toutes les information de configuration.\n \
-           /release     Libère l'addresse IP pour l'adapteur spécifié.\n \
-           /renew       Renouvelle l'addresse IP pour l'adapteur spécifié.\n \
-           /flushdns    Purge le cache de résolution DNS.\n \
-           /registerdns Renouvelle tous les baux DHCP et réenregistre les noms DNS.\n \
-           /displaydns  Affiche le contentu du cache de résolution DNS.\n \
-           /showclassid Affiche tous les class IDs dhcp alloués pour l'adapteur.\n \
-           /setclassid  Modifie le class id dhcp.\n \
-\n \
-    L'action par défaut est d'afficher seulement l'addresse IP, le masque de\n \
-    sous réseau et la passerelle par défaut de chaque adapteur lié à TCP/IP.\n \
-\n \
-    Pour Release et Renew, si aucun nom d'adapteur n'est spécifié, les baux d'addresse IP\n \
-    pour tous les adapteurs liés à TCP/IP seront libérés ou renouvelés.\n \
-\n \
-    Pour Setclassid, si aucun ClassId n'est spécifié, le ClassId existant est enlevé.\n \
-\n \
-    Exemples:\n \
-        > ipconfig                   ... Affiche les informations.\n \
-        > ipconfig /all              ... Affiche les informations detaillées\n \
-        > ipconfig /renew            ... Renouvelle tous les adapteurs\n \
-        > ipconfig /renew EL*        ... Renouvelle toute connection dont le nom\n \
-                                         commence par EL\n \
-        > ipconfig /release *Con*    ... Libère toutes les connections concernées,\n \
-                                         ex. ""Connection au réseau local 1"" ou\n \
+    "\nUSAGE:\n\
+        ipconfig [/? | /all | /renew [adapteur] | /release [adapteur] |\n\
+                  /flushdns | /displaydns | /registerdns |\n\
+                  /showclassid adapteur |\n\
+                  /setclassid adapteur [classid] ]\n\
+\n\
+    où\n\
+        adapteur         Nom de Connection\n\
+                       (jokers * et ? autorisés, voir les exemples)\n\
+\n\
+        Options:\n\
+           /?           Affiche ce message d'aide\n\
+           /all         Affiche toutes les information de configuration.\n\
+           /release     Libère l'addresse IP pour l'adapteur spécifié.\n\
+           /renew       Renouvelle l'addresse IP pour l'adapteur spécifié.\n\
+           /flushdns    Purge le cache de résolution DNS.\n\
+           /registerdns Renouvelle tous les baux DHCP et réenregistre les noms DNS.\n\
+           /displaydns  Affiche le contentu du cache de résolution DNS.\n\
+           /showclassid Affiche tous les class IDs dhcp alloués pour l'adapteur.\n\
+           /setclassid  Modifie le class id dhcp.\n\
+\n\
+    L'action par défaut est d'afficher seulement l'addresse IP, le masque de\n\
+    sous réseau et la passerelle par défaut de chaque adapteur lié à TCP/IP.\n\
+\n\
+    Pour Release et Renew, si aucun nom d'adapteur n'est spécifié, les baux d'addresse IP\n\
+    pour tous les adapteurs liés à TCP/IP seront libérés ou renouvelés.\n\
+\n\
+    Pour Setclassid, si aucun ClassId n'est spécifié, le ClassId existant est enlevé.\n\
+\n\
+    Exemples:\n\
+        > ipconfig                   ... Affiche les informations.\n\
+        > ipconfig /all              ... Affiche les informations detaillées\n\
+        > ipconfig /renew            ... Renouvelle tous les adapteurs\n\
+        > ipconfig /renew EL*        ... Renouvelle toute connection dont le nom\n\
+                                         commence par EL\n\
+        > ipconfig /release *Con*    ... Libère toutes les connections concernées,\n\
+                                         ex. ""Connection au réseau local 1"" ou\n\
                                              ""Connection au réseau local 2""\n"
 END

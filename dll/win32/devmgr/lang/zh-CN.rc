@@ -228,7 +228,7 @@ BEGIN
     ICON "", IDC_DEVICON, 7, 7, 20, 20
     LTEXT "", IDC_DEVNAME, 37, 9, 174, 16, SS_NOPREFIX
     LTEXT "资源设置:", -1, 7, 36, 204, 8
-    CONTROL "", IDC_DRIVERRESOURCES, "SysListView32", LVS_REPORT | 
+    CONTROL "", IDC_DRIVERRESOURCES, "SysListView32", LVS_REPORT |
             LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SHAREIMAGELISTS | LVS_SORTASCENDING |
             LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 7, 46, 238, 80
 END
@@ -324,7 +324,7 @@ BEGIN
   IDS_HINT_DISABLE      " 禁用所选的设备。"
   IDS_HINT_UPDATE       " 启动所选设备的更新驱动程序软件向导。"
   IDS_HINT_UNINSTALL    " 卸载所选设备的驱动程序。"
-  IDS_HINT_ADD          " 将一个旧的 (非即插) 设备添加到计算机。" 
+  IDS_HINT_ADD          " 将一个旧的 (非即插) 设备添加到计算机。"
   IDS_HINT_ABOUT        " 关于 ReactOS 设备管理器。"
   IDS_HINT_EXIT         " 退出程序。"
 

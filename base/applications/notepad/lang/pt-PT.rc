@@ -144,13 +144,13 @@ BEGIN
     STRING_UNTITLED "Sem nome"
     STRING_ALL_FILES "Todos os arquivos (*.*)"
     STRING_TEXT_FILES_TXT "Arquivos texto (*.txt)"
-    STRING_TOOLARGE "Arquivo '%s' é muito longo para o notepad.\n \
+    STRING_TOOLARGE "Arquivo '%s' é muito longo para o notepad.\n\
 Por favor use um editor diferente."
     STRING_NOTEXT "Você não digitou nenhum texto. \
 \nPor favor digite alguma coisa e tente novamente"
-    STRING_DOESNOTEXIST "Arquivo '%s'\nnão existe\n\n \
+    STRING_DOESNOTEXIST "Arquivo '%s'\nnão existe\n\n\
 Você deseja criar um novo arquivo?"
-    STRING_NOTSAVED "Arquivo '%s'\nfoi modificado\n\n \
+    STRING_NOTSAVED "Arquivo '%s'\nfoi modificado\n\n\
 Gostaria de salvar as alteraçÕes?"
     STRING_NOTFOUND "'%s' não pode ser encontrado."
     STRING_OUT_OF_MEMORY "Não há memória suficiente para completar essa \

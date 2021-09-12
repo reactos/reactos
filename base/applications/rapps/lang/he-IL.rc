@@ -268,4 +268,4 @@ BEGIN
     IDS_CMD_FIND_RESULT_FOR "Find result for %1:\n"
     IDS_CMD_PACKAGE_NOT_FOUND "החבילה %1 לא נמצאה.\n"
     IDS_CMD_PACKAGE_INFO "מידע על החבילה %1:\n"
-END 
+END

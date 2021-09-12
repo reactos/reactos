@@ -152,13 +152,13 @@ BEGIN
     STRING_UNTITLED "Nimetu"
     STRING_ALL_FILES "Kõik failid (*.*)"
     STRING_TEXT_FILES_TXT "Tekstifailid (*.txt)"
-    STRING_TOOLARGE "Fail '%s' on liiga suur Notepad'i jaoks.\n \
+    STRING_TOOLARGE "Fail '%s' on liiga suur Notepad'i jaoks.\n\
 Palun kasuta erinevat redigeerijat."
     STRING_NOTEXT "Sa ei sisestanud midagi. \
 \nPalun kirjuta midagi ja proovi uuesti."
-    STRING_DOESNOTEXIST "Faili '%s'\nei ole olemas\n\n \
+    STRING_DOESNOTEXIST "Faili '%s'\nei ole olemas\n\n\
 Kas soovid uut faili koostada ?"
-    STRING_NOTSAVED "Faili '%s'\non redigeeritud\n\n \
+    STRING_NOTSAVED "Faili '%s'\non redigeeritud\n\n\
 Kas soovid muudatused salvestada ?"
     STRING_NOTFOUND "'%s' ei suudetud leida."
     STRING_OUT_OF_MEMORY "Pole piisavalt mälu selle \

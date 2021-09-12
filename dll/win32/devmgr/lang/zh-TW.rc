@@ -229,7 +229,7 @@ BEGIN
     ICON "", IDC_DEVICON, 7, 7, 20, 20
     LTEXT "", IDC_DEVNAME, 37, 9, 174, 16, SS_NOPREFIX
     LTEXT "資源設定:", -1, 7, 36, 204, 8
-    CONTROL "", IDC_DRIVERRESOURCES, "SysListView32", LVS_REPORT | 
+    CONTROL "", IDC_DRIVERRESOURCES, "SysListView32", LVS_REPORT |
             LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SHAREIMAGELISTS | LVS_SORTASCENDING |
             LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 7, 46, 238, 80
 END
@@ -325,7 +325,7 @@ BEGIN
   IDS_HINT_DISABLE      " 停用所選的裝置。"
   IDS_HINT_UPDATE       " 啟動所選裝置的更新驅動程式軟體精靈。"
   IDS_HINT_UNINSTALL    " 解除安裝所選裝置的驅動程式。"
-  IDS_HINT_ADD          " 新增一個舊的 (非隨插即用) 裝置到電腦。" 
+  IDS_HINT_ADD          " 新增一個舊的 (非隨插即用) 裝置到電腦。"
   IDS_HINT_ABOUT        " 關於 ReactOS 裝置管理員。"
   IDS_HINT_EXIT         " 結束程式。"
 

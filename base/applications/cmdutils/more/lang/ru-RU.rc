@@ -3,7 +3,7 @@
  * LICENSE:     GPL - See COPYING in the top level directory
  * FILE:        base/applications/cmdutils/more/lang/ru-RU.rc
  * PURPOSE:     Russian Language File for ReactOS Console Command More
- * PROGRAMMERS: towerr & Lentin 
+ * PROGRAMMERS: towerr & Lentin
  */
 
 LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT

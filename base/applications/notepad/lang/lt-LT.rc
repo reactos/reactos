@@ -144,13 +144,13 @@ BEGIN
     STRING_UNTITLED "Bevardis"
     STRING_ALL_FILES "Visos bylos (*.*)"
     STRING_TEXT_FILES_TXT "Tekstinės bylos (*.txt)"
-    STRING_TOOLARGE "Byla '%s' yra perdidelė.\n \
+    STRING_TOOLARGE "Byla '%s' yra perdidelė.\n\
 Prašome naudotis kitu redaktoriumi."
     STRING_NOTEXT "Jūs neivedėte jokio teksto. \
 \nPrašome parašyti ką nors ir bandyti dar kartą"
-    STRING_DOESNOTEXIST "Byla '%s'\nneegzistuoja\n\n \
+    STRING_DOESNOTEXIST "Byla '%s'\nneegzistuoja\n\n\
 Ar norite sukurti naują bylą?"
-    STRING_NOTSAVED "Byla '%s'\nbuvo pakeista\n\n \
+    STRING_NOTSAVED "Byla '%s'\nbuvo pakeista\n\n\
 Ar norite išsaugoti pakeitimus?"
     STRING_NOTFOUND "'%s' nerastas."
     STRING_OUT_OF_MEMORY "Nepakanka atminties užduoties užbaigimui. \

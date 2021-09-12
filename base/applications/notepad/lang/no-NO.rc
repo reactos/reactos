@@ -144,13 +144,13 @@ BEGIN
     STRING_UNTITLED "(uten navn)"
     STRING_ALL_FILES "Alle filer (*.*)"
     STRING_TEXT_FILES_TXT "Tekst filer (*.txt)"
-    STRING_TOOLARGE "Filen '%s' er for stor for notisblokk.\n \
+    STRING_TOOLARGE "Filen '%s' er for stor for notisblokk.\n\
 Vennligst bruk en annen editor."
     STRING_NOTEXT "Du utfører innskrivet tekst. \
 \nVennligst skriv noe og pr?jen"
-    STRING_DOESNOTEXIST "Filen '%s'\n eksistere ikke\n\n \
+    STRING_DOESNOTEXIST "Filen '%s'\n eksistere ikke\n\n\
 Vil du opprette en ny fil?"
-    STRING_NOTSAVED "Filen '%s'\nhar ikke blitt lagret\n\n \
+    STRING_NOTSAVED "Filen '%s'\nhar ikke blitt lagret\n\n\
 Vil du lagre endringen?"
     STRING_NOTFOUND "'%s' ble ikke funnet."
     STRING_OUT_OF_MEMORY "Ikke nok minne for å åpne \

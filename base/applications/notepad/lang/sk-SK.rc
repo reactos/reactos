@@ -152,16 +152,16 @@ BEGIN
     STRING_UNTITLED "Bez názvu"
     STRING_ALL_FILES "Všetky súbory (*.*)"
     STRING_TEXT_FILES_TXT "Textové súbory (*.txt)"
-    STRING_TOOLARGE "Súbor '%s' je pre Poznámkový blok príliš veľký.\n \
+    STRING_TOOLARGE "Súbor '%s' je pre Poznámkový blok príliš veľký.\n\
 Na otvorenie súboru použite iný editor."
     STRING_NOTEXT "Nevložili ste žiadny text. \
 \nProsím, napíšte niečo a skúste to znova."
-    STRING_DOESNOTEXIST "Nie je možné nájsť súbor '%s'\n\n \
+    STRING_DOESNOTEXIST "Nie je možné nájsť súbor '%s'\n\n\
 Chcete vytvoriť nový súbor?"
-    STRING_NOTSAVED "Text súboru '%s'\nsa zmenil.\n\n \
+    STRING_NOTSAVED "Text súboru '%s'\nsa zmenil.\n\n\
 Chcete uložiť zmeny?"
     STRING_NOTFOUND "Nie je možné nájsť '%s' ."
-    STRING_OUT_OF_MEMORY "Nedostatok pamäte na dokončenie tejto operácie. Zatvorte jednu\n \
+    STRING_OUT_OF_MEMORY "Nedostatok pamäte na dokončenie tejto operácie. Zatvorte jednu\n\
 alebo viac aplikácií, aby sa uvoľnila pamäť a skúste to znova."
     STRING_CANNOTFIND "Nemožno nájsť '%s'"
     STRING_ANSI "ANSI"

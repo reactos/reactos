@@ -146,13 +146,13 @@ BEGIN
     STRING_UNTITLED "Untitled"
     STRING_ALL_FILES "Semua fail (*.*)"
     STRING_TEXT_FILES_TXT "Fail teks (*.txt)"
-    STRING_TOOLARGE "Fail '%s' adalah terlalu besar untuk notepad.\n \
+    STRING_TOOLARGE "Fail '%s' adalah terlalu besar untuk notepad.\n\
 Sila gunakan editor yang berbeza."
     STRING_NOTEXT "Anda tidak memasukkan sebarang teks. \
 \nSila taip sesuatu dan cuba lagi"
-    STRING_DOESNOTEXIST "Fail '%s'\ntidak wujud\n\n \
+    STRING_DOESNOTEXIST "Fail '%s'\ntidak wujud\n\n\
 Adakah anda mahu mencipta fail baru?"
-    STRING_NOTSAVED "Fail '%s'\ntelah diubahsuai\n\n \
+    STRING_NOTSAVED "Fail '%s'\ntelah diubahsuai\n\n\
 Adakah anda mahu menyimpan perubahan?"
     STRING_NOTFOUND "'%s' tidak dapat ditemui."
     STRING_OUT_OF_MEMORY "Tidak cukup ingatan untuk melengkapkan \

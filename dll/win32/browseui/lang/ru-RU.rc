@@ -113,7 +113,7 @@ BEGIN
         END
         MENUITEM "&Открыть папку", IDM_OPEN_FOLDER
         MENUITEM "Показ&ывать подписи", IDM_SHOW_TEXT
-    END    
+    END
 END
 
 /* Dialogs */

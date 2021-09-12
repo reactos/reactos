@@ -144,13 +144,13 @@ BEGIN
     STRING_UNTITLED "Bez názvu"
     STRING_ALL_FILES "Všechny soubory (*.*)"
     STRING_TEXT_FILES_TXT "Textové soubory (*.txt)"
-    STRING_TOOLARGE "Soubor '%s' je pro notepad příliš velký.\n \
+    STRING_TOOLARGE "Soubor '%s' je pro notepad příliš velký.\n\
 Použijte jiný editor, prosím."
     STRING_NOTEXT "Nebyl zadán žádný text. \
 \nVložte nějaký text a zkuste to znovu."
-    STRING_DOESNOTEXIST "Soubor '%s'\nneexistuje.\n\n \
+    STRING_DOESNOTEXIST "Soubor '%s'\nneexistuje.\n\n\
 Chcete ho vytvořit ?"
-    STRING_NOTSAVED "Soubor '%s'\nbyl změněn.\n\n \
+    STRING_NOTSAVED "Soubor '%s'\nbyl změněn.\n\n\
 Chcete uložit změny ?"
     STRING_NOTFOUND "'%s' nebyl nalezen."
     STRING_OUT_OF_MEMORY "Není dost paměti na dokončení této úlohy. \

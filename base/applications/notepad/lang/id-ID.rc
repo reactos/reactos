@@ -144,13 +144,13 @@ BEGIN
     STRING_UNTITLED "Tanpa judul"
     STRING_ALL_FILES "Semua berkas (*.*)"
     STRING_TEXT_FILES_TXT "Berkas teks (*.txt)"
-    STRING_TOOLARGE "Berkas '%s' terlalu besar untuk notepad.\n \
+    STRING_TOOLARGE "Berkas '%s' terlalu besar untuk notepad.\n\
 Mohon gunakan editor teks yang berbeda."
     STRING_NOTEXT "Anda belum memasukkan teks apapun. \
 \nMohon ketik sesuatu dan coba lagi."
-    STRING_DOESNOTEXIST "Berkas '%s'\ntidak ada\n\n \
+    STRING_DOESNOTEXIST "Berkas '%s'\ntidak ada\n\n\
 Ingin membuat berkas baru?"
-    STRING_NOTSAVED "Berkas '%s'\ntelah diubah\n\n \
+    STRING_NOTSAVED "Berkas '%s'\ntelah diubah\n\n\
 Ingin menyimpan perubahan?"
     STRING_NOTFOUND "'%s' tidak bisa ditemukan."
     STRING_OUT_OF_MEMORY "Memori tidak cukup untuk menyelesaikan tugas \

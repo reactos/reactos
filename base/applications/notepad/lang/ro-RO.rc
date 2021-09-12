@@ -149,13 +149,13 @@ BEGIN
     STRING_UNTITLED "Neintitulat"
     STRING_ALL_FILES "Orice fișier (*.*)"
     STRING_TEXT_FILES_TXT "Fișiere text (*.txt)"
-    STRING_TOOLARGE "Fișierul „%s” este prea mare.\n \
+    STRING_TOOLARGE "Fișierul „%s” este prea mare.\n\
 Încercați un alt editor."
     STRING_NOTEXT "Nu ați scris nimic. \
 \nScrieți ceva apoi încercați din nou."
-    STRING_DOESNOTEXIST "Fișierul „%s”\nnu există.\n\n \
+    STRING_DOESNOTEXIST "Fișierul „%s”\nnu există.\n\n\
 Creați un nou fișier ?"
-    STRING_NOTSAVED "Fișierul „%s” a fost modificat!\n\n \
+    STRING_NOTSAVED "Fișierul „%s” a fost modificat!\n\n\
 Păstrați modificările aduse?"
     STRING_NOTFOUND "„%s” nu poate fi găsit."
     STRING_OUT_OF_MEMORY "Nu există suficientă memorie pentru a efectua această operație. \

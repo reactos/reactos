@@ -151,13 +151,13 @@ BEGIN
     STRING_UNTITLED "शीर्षकहीन"
     STRING_ALL_FILES "सभी फाइलें (*.*)"
     STRING_TEXT_FILES_TXT "पाठ फाइलें (*.txt)"
-    STRING_TOOLARGE "नोटपैड के लिए फ़ाइल '% s' बहुत बड़ी है।\n \
+    STRING_TOOLARGE "नोटपैड के लिए फ़ाइल '% s' बहुत बड़ी है।\n\
 कृपया एक अलग इडिटर का प्रयोग करें।"
     STRING_NOTEXT "आपने कोई टेक्स्ट दर्ज नहीं किया है।\
 \nकृपया कुछ टाइप करें और पुनः प्रयास करें"
-    STRING_DOESNOTEXIST "फ़ाइल' %s'\nमौजूद नहीं है\n\n \
+    STRING_DOESNOTEXIST "फ़ाइल' %s'\nमौजूद नहीं है\n\n\
 क्या आप एक नई फाइल बनाना चाहते हैं?"
-    STRING_NOTSAVED "फ़ाइल '%s'\nको संशोधित किया गया है\n\n \
+    STRING_NOTSAVED "फ़ाइल '%s'\nको संशोधित किया गया है\n\n\
 क्या आप बदलावों को सहेजना चाहते हैं?"
     STRING_NOTFOUND "'%s' नहीं मिला।"
     STRING_OUT_OF_MEMORY "इस कार्य को पूरा करने के लिए पर्याप्त स्मृति नहीं \

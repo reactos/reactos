@@ -144,14 +144,14 @@ BEGIN
     STRING_UNTITLED "Unbenannt"
     STRING_ALL_FILES "Alle Dateien (*.*)"
     STRING_TEXT_FILES_TXT "Textdateien (*.txt)"
-    STRING_TOOLARGE "Die Datei '%s' ist zu groß für den Editor.\n \
+    STRING_TOOLARGE "Die Datei '%s' ist zu groß für den Editor.\n\
 Benutzen Sie bitte einen anderen Editor, um diese Datei zu bearbeiten."
     STRING_NOTEXT "Sie haben keinen Text eingegeben, der \
 gespeichert\n werden könnte. Geben Sie Text ein, und versuchen Sie es \
 \nerneut."
-    STRING_DOESNOTEXIST "Die Datei '%s'\nexistiert nicht.\n\n \
+    STRING_DOESNOTEXIST "Die Datei '%s'\nexistiert nicht.\n\n\
 Möchten Sie eine neue Datei erstellen ?"
-    STRING_NOTSAVED "Datei %s\n wurde geändert.\n\n \
+    STRING_NOTSAVED "Datei %s\n wurde geändert.\n\n\
 Möchten Sie die Änderungen speichern ?"
     STRING_NOTFOUND "'%s' kann nicht gefunden werden."
     STRING_OUT_OF_MEMORY "Nicht genügend Arbeitsspeicher, \

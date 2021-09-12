@@ -144,13 +144,13 @@ BEGIN
     STRING_UNTITLED "Sans-titre"
     STRING_ALL_FILES "Tous les fichiers (*.*)"
     STRING_TEXT_FILES_TXT "Fichiers texte (*.txt)"
-    STRING_TOOLARGE "Le fichier '%s' est trop grand pour le bloc-notes.\n \
+    STRING_TOOLARGE "Le fichier '%s' est trop grand pour le bloc-notes.\n\
 Veuillez utiliser un autre éditeur."
     STRING_NOTEXT "Vous n'avez pas entré de texte. \
 Veuillez taper quelque chose et recommencer"
-    STRING_DOESNOTEXIST "Le fichier '%s'\nn'existe pas.\n\n \
+    STRING_DOESNOTEXIST "Le fichier '%s'\nn'existe pas.\n\n\
 Voulez-vous créer un nouveau fichier ?"
-    STRING_NOTSAVED "Le fichier '%s'\na été modifié\n\n \
+    STRING_NOTSAVED "Le fichier '%s'\na été modifié\n\n\
 Voulez-vous enregistrer vos modifications ?"
     STRING_NOTFOUND "'%s' non trouvé."
     STRING_OUT_OF_MEMORY "Pas assez de mémoire pour compléter cette \

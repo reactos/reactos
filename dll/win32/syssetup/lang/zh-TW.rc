@@ -17,8 +17,8 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-/* Traditional Chinese translation by: 
- * Henry Tang Ih 2016 (henrytang2@hotmail.com) 
+/* Traditional Chinese translation by:
+ * Henry Tang Ih 2016 (henrytang2@hotmail.com)
  * Luo Yufan 2018 (njlyf2011@hotmail.com)
  * Chan Chilung 2020 - 2021 (eason066@gmail.com)
  */
@@ -247,7 +247,7 @@ END
 
 /* ATTENTION: Synchronize these strings with dll/win32/shell32/lang */
 
-/* ATTENTION: If there is no special situation, please DO NOT change 
+/* ATTENTION: If there is no special situation, please DO NOT change
 English folder names into Chinese, or it may cause problems in the system. */
 
 STRINGTABLE

@@ -31,7 +31,7 @@ BEGIN
     IDS_ALIAS_LOGGING_USERS_NAME "Performance Log Users"
     IDS_ALIAS_LOGGING_USERS_COMMENT "Members of this group have remote access to schedule logging of performance counters on this computer"
     /*
-     * ATTENTION: 
+     * ATTENTION:
      *   If you translate the administrator account name, keep IDS_USER_ADMINISTRATOR_NAME and
      *   syssetup.dll:IDS_ADMINISTRATOR_NAME synchronized.
      */

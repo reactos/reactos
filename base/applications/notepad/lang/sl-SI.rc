@@ -144,13 +144,13 @@ BEGIN
     STRING_UNTITLED "Neimenovana"
     STRING_ALL_FILES "Vse datoteke (*.*)"
     STRING_TEXT_FILES_TXT "Datoteke z besedilom (*.txt)"
-    STRING_TOOLARGE "Datoteka '%s' je prevelika za Beležnico.\n \
+    STRING_TOOLARGE "Datoteka '%s' je prevelika za Beležnico.\n\
 Uporabite drug urejevalnik."
     STRING_NOTEXT "Niste vnesli besedila. \
 \nVnesite besedilo in poskusite znova."
-    STRING_DOESNOTEXIST "Datoteka '%s' ne obstaja.\n\n \
+    STRING_DOESNOTEXIST "Datoteka '%s' ne obstaja.\n\n\
 Ali želite ustvariti novo datoteko?"
-    STRING_NOTSAVED "Vsebina datoteke '%s'je bila spremenjena.\n\n \
+    STRING_NOTSAVED "Vsebina datoteke '%s'je bila spremenjena.\n\n\
 Ali želite shraniti spremembe?"
     STRING_NOTFOUND "Ni mogoèe najti '%s'."
     STRING_OUT_OF_MEMORY "Na voljo ni dovolj pomnilnika, da bi bilo mogoèe dokonèati to \

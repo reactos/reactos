@@ -146,13 +146,13 @@ BEGIN
     STRING_UNTITLED "未命名"
     STRING_ALL_FILES "所有文件 (*.*)"
     STRING_TEXT_FILES_TXT "文本文件 (*.txt)"
-    STRING_TOOLARGE "文件 '%s' 太大，记事本无法打开它。\n \
+    STRING_TOOLARGE "文件 '%s' 太大，记事本无法打开它。\n\
 请使用其他的编辑器。"
     STRING_NOTEXT "您没有输入任何文本。\
 \n请输入一些再试试"
-    STRING_DOESNOTEXIST "文件 '%s'\n不存在\n\n \
+    STRING_DOESNOTEXIST "文件 '%s'\n不存在\n\n\
 您想新建一个文件吗？"
-    STRING_NOTSAVED "文件 '%s'\n已经被更改\n\n \
+    STRING_NOTSAVED "文件 '%s'\n已经被更改\n\n\
 是否保存更改？"
     STRING_NOTFOUND "找不到文件 '%s'"
     STRING_OUT_OF_MEMORY "没有足够的内存可以用来完成此项任务。 \

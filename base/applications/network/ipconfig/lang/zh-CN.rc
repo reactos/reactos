@@ -26,42 +26,42 @@ STRINGTABLE
 BEGIN
 /* Please keep the spacing/formatting as per En.rc when translating */
     IDS_USAGE
-    "\n用法:\n \
-        ipconfig [/? | /all | /renew [adapter] | /release [adapter] |\n \
-                  /flushdns | /displaydns | /registerdns |\n \
-                  /showclassid adapter |\n \
-                  /setclassid adapter [classid] ]\n \
-\n \
-    其中\n \
-        adapter         连接名称\n \
-                        (允许使用通配符 * 和 ？，参见示例)\n \
-\n \
-        选项:\n \
-           /?           显示这个帮助信息。\n \
-           /all         显示完整的配置信息。\n \
-           /release     释放指定适配器的 IP 地址。\n \
-           /renew       更新指定适配器的 IP 地址。\n \
-           /flushdns    清空 DNS 缓存。\n \
-           /registerdns 刷新所有 DHCP 租约并且重新注册 DNS 名称。\n \
-           /displaydns  显示 DNS 缓存中的内容。\n \
-           /showclassid 显示所有被指定适配器允许的 DHCP 类 ID。\n \
-           /setclassid  修改 DHCP 类 ID。\n \
-\n \
-    该程序的默认行为是仅显示每个绑定到 TCP/IP 的适配器的 IP 地址，子网掩码和\n \
-    默认网关。\n \
-\n \
-    对于释放和更新操作，如果没有指定适配器名称，那么所有绑定到 TCP/IP 的适配器\n \
-    的 IP 地址将会被释放或更新。\n \
-\n \
-    对于设置类 ID 操作，如果没有指定类 ID，那么类 ID 将被删除。\n \
-\n \
-    示例：\n \
-        > ipconfig                   ... 显示信息。\n \
-        > ipconfig /all              ... 显示详细信息\n \
-        > ipconfig /renew            ... 更新所有适配器\n \
-        > ipconfig /renew EL*        ... 更新所有名称以 EL 开头\n \
-                                         的连接\n \
-        > ipconfig /release *Con*    ... 释放所有匹配的连接，\n \
-                                         如 ""Local Area Connection 1"" 或\n \
-                                             ""Local Area Connection 2""\n"
+    "\n用法:\n\
+        ipconfig [/? | /all | /renew [adapter] | /release [adapter] |\n\
+                  /flushdns | /displaydns | /registerdns |\n\
+                  /showclassid adapter |\n\
+                  /setclassid adapter [classid] ]\n\
+\n\
+    其中\n\
+        adapter         连接名称\n\
+                        (允许使用通配符 * 和 ？，参见示例)\n\
+\n\
+        选项:\n\
+           /?           显示这个帮助信息。\n\
+           /all         显示完整的配置信息。\n\
+           /release     释放指定适配器的 IP 地址。\n\
+           /renew       更新指定适配器的 IP 地址。\n\
+           /flushdns    清空 DNS 缓存。\n\
+           /registerdns 刷新所有 DHCP 租约并且重新注册 DNS 名称。\n\
+           /displaydns  显示 DNS 缓存中的内容。\n\
+           /showclassid 显示所有被指定适配器允许的 DHCP 类 ID。\n\
+           /setclassid  修改 DHCP 类 ID。\n\
+\n\
+    该程序的默认行为是仅显示每个绑定到 TCP/IP 的适配器的 IP 地址，子网掩码和\n\
+    默认网关。\n\
+\n\
+    对于释放和更新操作，如果没有指定适配器名称，那么所有绑定到 TCP/IP 的适配器\n\
+    的 IP 地址将会被释放或更新。\n\
+\n\
+    对于设置类 ID 操作，如果没有指定类 ID，那么类 ID 将被删除。\n\
+\n\
+    示例：\n\
+        > ipconfig                   ... 显示信息。\n\
+        > ipconfig /all              ... 显示详细信息\n\
+        > ipconfig /renew            ... 更新所有适配器\n\
+        > ipconfig /renew EL*        ... 更新所有名称以 EL 开头\n\
+                                         的连接\n\
+        > ipconfig /release *Con*    ... 释放所有匹配的连接，\n\
+                                         如 ""Local Area Connection 1"" 或\n\
+                                            ""Local Area Connection 2""\n"
 END

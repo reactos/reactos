@@ -26,42 +26,42 @@ STRINGTABLE
 BEGIN
 /* Please keep the spacing/formatting as per En.rc when translating */
     IDS_USAGE
-    "\n用法：\n \
-        ipconfig [/? | /all | /renew [配接器] | /release [配接器] |\n \
-                  /flushdns | /displaydns | /registerdns |\n \
-                  /showclassid 配接器 |\n \
-                  /setclassid 配接器 [类ID] ]\n \
-\n \
-    其中\n \
-        配接器          連接名稱\n \
-                       (萬用字元 * 和 ？ 是被允許的，參見示例)\n \
-\n \
-        選項：\n \
-           /?           顯示這個説明資訊。\n \
-           /all         顯示完全的配置資訊。\n \
-           /release     釋放指定配接器的 IP 位址。\n \
-           /renew       更新指定配接器的 IP 位址。\n \
-           /flushdns    清除 DNS 解析程式緩存。\n \
-           /registerdns 刷新所有的 DHCP 租約，重新註冊的 DNS 名稱。\n \
-           /displaydns  顯示 DNS 緩存中的內容。\n \
-           /showclassid 顯示所有被指定配接器允許的 DHCP 類 ID。\n \
-           /setclassid  修改 DHCP 類 ID。\n \
-\n \
-    該程式的預設行為是僅顯示每個綁定到 TCP/IP 的配接器的 IP 位址，子網路遮罩\n \
-    和預設閘道。\n \
-\n \
-    對於釋放和更新操作，如果沒有指定配接器名稱，那麼所有綁定到 TCP/IP 的配接器\n \
-    的 IP 位址將會被釋放或更新。\n \
-\n \
-    對於設置類 ID 操作，如果沒有指定類 ID，那麼類 ID 將被刪除。\n \
-\n \
-    示例：\n \
-        > ipconfig                   ... 顯示資訊\n \
-        > ipconfig /all              ... 顯示詳細資訊\n \
-        > ipconfig /renew            ... 更新所有配接器\n \
-        > ipconfig /renew EL*        ... 更新所有名稱以 EL 開頭\n \
-                                         的連接\n \
-        > ipconfig /release *Con*    ... 釋放所有匹配的連接，\n \
-                                         如 ""Local Area Connection 1"" 或\n \
-                                             ""Local Area Connection 2""\n"
+    "\n用法：\n\
+        ipconfig [/? | /all | /renew [配接器] | /release [配接器] |\n\
+                  /flushdns | /displaydns | /registerdns |\n\
+                  /showclassid 配接器 |\n\
+                  /setclassid 配接器 [类ID] ]\n\
+\n\
+    其中\n\
+        配接器          連接名稱\n\
+                       (萬用字元 * 和 ？ 是被允許的，參見示例)\n\
+\n\
+        選項：\n\
+           /?           顯示這個説明資訊。\n\
+           /all         顯示完全的配置資訊。\n\
+           /release     釋放指定配接器的 IP 位址。\n\
+           /renew       更新指定配接器的 IP 位址。\n\
+           /flushdns    清除 DNS 解析程式緩存。\n\
+           /registerdns 刷新所有的 DHCP 租約，重新註冊的 DNS 名稱。\n\
+           /displaydns  顯示 DNS 緩存中的內容。\n\
+           /showclassid 顯示所有被指定配接器允許的 DHCP 類 ID。\n\
+           /setclassid  修改 DHCP 類 ID。\n\
+\n\
+    該程式的預設行為是僅顯示每個綁定到 TCP/IP 的配接器的 IP 位址，子網路遮罩\n\
+    和預設閘道。\n\
+\n\
+    對於釋放和更新操作，如果沒有指定配接器名稱，那麼所有綁定到 TCP/IP 的配接器\n\
+    的 IP 位址將會被釋放或更新。\n\
+\n\
+    對於設置類 ID 操作，如果沒有指定類 ID，那麼類 ID 將被刪除。\n\
+\n\
+    示例：\n\
+        > ipconfig                   ... 顯示資訊\n\
+        > ipconfig /all              ... 顯示詳細資訊\n\
+        > ipconfig /renew            ... 更新所有配接器\n\
+        > ipconfig /renew EL*        ... 更新所有名稱以 EL 開頭\n\
+                                         的連接\n\
+        > ipconfig /release *Con*    ... 釋放所有匹配的連接，\n\
+                                         如 ""Local Area Connection 1"" 或\n\
+                                            ""Local Area Connection 2""\n"
 END

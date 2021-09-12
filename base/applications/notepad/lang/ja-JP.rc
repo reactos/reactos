@@ -144,13 +144,13 @@ BEGIN
     STRING_UNTITLED "無題"
     STRING_ALL_FILES "すべてのファイル (*.*)"
     STRING_TEXT_FILES_TXT "テキスト ファイル (*.txt)"
-    STRING_TOOLARGE "ファイル '%s' のサイズは大きすぎるため、メモ帳では編集できません。\n \
+    STRING_TOOLARGE "ファイル '%s' のサイズは大きすぎるため、メモ帳では編集できません。\n\
 別のエディタを使用して下さい。"
     STRING_NOTEXT "何も入力されていません。\
 \n何か入力してから実行して下さい。"
-    STRING_DOESNOTEXIST "ファイル '%s'\nは存在しません\n\n \
+    STRING_DOESNOTEXIST "ファイル '%s'\nは存在しません\n\n\
 新しいファイルを作成しますか ?"
-    STRING_NOTSAVED "ファイル '%s'\nは変更されています\n\n \
+    STRING_NOTSAVED "ファイル '%s'\nは変更されています\n\n\
 変更を保存しますか ?"
     STRING_NOTFOUND "'%s' は見つかりませんでした"
     STRING_OUT_OF_MEMORY "この操作を実行するためのメモリが\

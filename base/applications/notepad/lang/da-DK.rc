@@ -148,9 +148,9 @@ BEGIN
 \nBrug en anden editor til at redigere filen."
     STRING_NOTEXT "Du har ikke skrevet noget tekst. \
 \nSkriv noget tekst, og prøv så igen"
-    STRING_DOESNOTEXIST "Filen '%s'\neksistere ikke\n\n \
+    STRING_DOESNOTEXIST "Filen '%s'\neksistere ikke\n\n\
 Ønkser du at oprette en ny fil?"
-    STRING_NOTSAVED "Filen '%s'\ner blevet ændret\n\n \
+    STRING_NOTSAVED "Filen '%s'\ner blevet ændret\n\n\
 Ønsker du at gemme ændringerne?"
     STRING_NOTFOUND "Kan ikke finde '%s'."
     STRING_OUT_OF_MEMORY "Der er ikke nok hukommelse til at udføre \

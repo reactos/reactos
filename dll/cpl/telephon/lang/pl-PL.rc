@@ -3,12 +3,12 @@
  *    Use ReactOS forum PM or IRC to contact me
  *    http://www.reactos.org
  *    IRC: irc.freenode.net #reactos-pl;
- *    UTF-8 conversion by Caemyr (May, 2011) 
+ *    UTF-8 conversion by Caemyr (May, 2011)
  */
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     IDS_CPLSYSTEMNAME "Opcje telefonu i modemu"
     IDS_CPLSYSTEMDESCRIPTION "Skonfiguruj reguły wybierania numerów oraz ustawienia modemu."

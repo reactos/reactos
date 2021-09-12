@@ -144,13 +144,13 @@ BEGIN
     STRING_UNTITLED "Без заголовка"
     STRING_ALL_FILES "Усі файли (*.*)"
     STRING_TEXT_FILES_TXT "Текстові файли (*.txt)"
-    STRING_TOOLARGE "Файл '%s' завеликий для блокнота.\n \
+    STRING_TOOLARGE "Файл '%s' завеликий для блокнота.\n\
 Будь ласка, використайте інший редактор."
     STRING_NOTEXT "Ви не ввели ніякого тексту. \
 \nБудь ласка, введіть що-небудь і спробуйте ще раз"
-    STRING_DOESNOTEXIST "Файл '%s'\nне існує\n\n \
+    STRING_DOESNOTEXIST "Файл '%s'\nне існує\n\n\
 Хочете створити новий файл?"
-    STRING_NOTSAVED "Файл '%s'\nбув змінений\n\n \
+    STRING_NOTSAVED "Файл '%s'\nбув змінений\n\n\
 Хочете зберегти зміни?"
     STRING_NOTFOUND "'%s' не знайдено."
     STRING_OUT_OF_MEMORY "Недостатньо пам'яті для виконання операції.\

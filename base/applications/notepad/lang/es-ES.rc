@@ -152,7 +152,7 @@ bloc de notas.\n Utilice otro editor."
 inténtelo de nuevo"
     STRING_DOESNOTEXIST "El archivo '%s'\nno existe\n\n ¿Desea crear \
 un nuevo archivo?"
-    STRING_NOTSAVED "El texto en el archivo '%s' ha cambiado\n\n \
+    STRING_NOTSAVED "El texto en el archivo '%s' ha cambiado\n\n\
 ¿Desea guardar los cambios?"
     STRING_NOTFOUND "No se encontró '%s'."
     STRING_OUT_OF_MEMORY "No hay suficiente memoria para terminar esta \

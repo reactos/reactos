@@ -144,13 +144,13 @@ BEGIN
     STRING_UNTITLED "Без име"
     STRING_ALL_FILES "Всички файлове (*.*)"
     STRING_TEXT_FILES_TXT "Словесни файлове (*.txt)"
-    STRING_TOOLARGE "Файлът '%s' е твърде голям за бележника.\n \
+    STRING_TOOLARGE "Файлът '%s' е твърде голям за бележника.\n\
 Използвайте друг обработчик."
     STRING_NOTEXT "Не сте въвел текст. \
 \nНапишете нещо и опитайте пак."
-    STRING_DOESNOTEXIST "Файлът '%s'\nне съществува\n\n \
+    STRING_DOESNOTEXIST "Файлът '%s'\nне съществува\n\n\
 Искате ли да създадете нов файл?"
-    STRING_NOTSAVED "Файлът '%s'\nе бил променен\n\n \
+    STRING_NOTSAVED "Файлът '%s'\nе бил променен\n\n\
 Искате ли да запишете промените?"
     STRING_NOTFOUND "'%s' не може да бъде открит."
     STRING_OUT_OF_MEMORY "Няма достатъчно памет за приключване на\

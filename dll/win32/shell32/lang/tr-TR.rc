@@ -844,7 +844,7 @@ BEGIN
     /* Warning format system drive dialog strings */
     IDS_NO_FORMAT_TITLE "Bu birim biçimlendirilemiyor"
     IDS_NO_FORMAT "Bu birim biçimlendirilemez! ReactOS'un çalışması için önemli sistem dosyalarını içerir."
-    
+
     /* Run File dialog */
     IDS_RUNDLG_ERROR "Dosya Çalıştır iletişim kutusu görüntülenemiyor (iç hata)."
     IDS_RUNDLG_BROWSE_ERROR "Göz At iletişim kutusu görüntülenemiyor (iç hata)."

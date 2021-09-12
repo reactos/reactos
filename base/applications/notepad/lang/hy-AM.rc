@@ -144,13 +144,13 @@ BEGIN
     STRING_UNTITLED "Առանց վերնագրի"
     STRING_ALL_FILES "Բոլոր ֆայլերը (*.*)"
     STRING_TEXT_FILES_TXT "Տեքստային ֆայլերը (*.txt)"
-    STRING_TOOLARGE "Ֆայլը '%s' բավականին մեծ է բլոկնոտի համար.\n \
+    STRING_TOOLARGE "Ֆայլը '%s' բավականին մեծ է բլոկնոտի համար.\n\
 Please use a different editor."
     STRING_NOTEXT "Դուք տեքստ չեք ներմուծել \
 \nPlease type something and try again"
-    STRING_DOESNOTEXIST "Ֆայլը '%s'\n գոյութնուն չունի\n\n \
+    STRING_DOESNOTEXIST "Ֆայլը '%s'\n գոյութնուն չունի\n\n\
 Do you want to create a new file ?"
-    STRING_NOTSAVED "Ֆայլը '%s'\n ենթարկվել է փոփոխման\n\n \
+    STRING_NOTSAVED "Ֆայլը '%s'\n ենթարկվել է փոփոխման\n\n\
 Would you like to save the changes ?"
     STRING_NOTFOUND "'%s' չի  գտնվել."
     STRING_OUT_OF_MEMORY "Կա հիծողությոն անբավարարվախույուն. \

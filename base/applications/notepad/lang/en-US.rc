@@ -144,13 +144,13 @@ BEGIN
     STRING_UNTITLED "Untitled"
     STRING_ALL_FILES "All files (*.*)"
     STRING_TEXT_FILES_TXT "Text files (*.txt)"
-    STRING_TOOLARGE "File '%s' is too large for notepad.\n \
+    STRING_TOOLARGE "File '%s' is too large for notepad.\n\
 Please use a different editor."
     STRING_NOTEXT "You didn't enter any text. \
 \nPlease type something and try again"
-    STRING_DOESNOTEXIST "File '%s'\ndoes not exist\n\n \
+    STRING_DOESNOTEXIST "File '%s'\ndoes not exist\n\n\
 Do you want to create a new file ?"
-    STRING_NOTSAVED "File '%s'\nhas been modified\n\n \
+    STRING_NOTSAVED "File '%s'\nhas been modified\n\n\
 Would you like to save the changes ?"
     STRING_NOTFOUND "'%s' can not be found."
     STRING_OUT_OF_MEMORY "Not enough memory to complete this \

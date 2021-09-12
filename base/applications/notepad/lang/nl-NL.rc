@@ -144,13 +144,13 @@ BEGIN
     STRING_UNTITLED "Naamloos"
     STRING_ALL_FILES "Alle bestanden (*.*)"
     STRING_TEXT_FILES_TXT "Tekstbestanden (*.txt)"
-    STRING_TOOLARGE "Het bestand '%s' is te groot voor Kladblok.\n \
+    STRING_TOOLARGE "Het bestand '%s' is te groot voor Kladblok.\n\
 Gebruik een andere editor."
     STRING_NOTEXT "U heeft geen tekst ingevoerd. \
 \nType uw tekst en probeer het nogmaals"
-    STRING_DOESNOTEXIST "Het bestand '%s'\nbestaat niet\n\n \
+    STRING_DOESNOTEXIST "Het bestand '%s'\nbestaat niet\n\n\
 Wilt u een nieuw bestand maken?"
-    STRING_NOTSAVED "Het bestand '%s'\nis gewijzigd\n\n \
+    STRING_NOTSAVED "Het bestand '%s'\nis gewijzigd\n\n\
 Wilt u de wijzigingen opslaan?"
     STRING_NOTFOUND "'%s' kan niet worden gevonden."
     STRING_OUT_OF_MEMORY "Onvoldoende geheugen. \

@@ -144,17 +144,17 @@ BEGIN
     STRING_UNTITLED "Otsikoimaton"
     STRING_ALL_FILES "Kaikki tiedostot (*.*)"
     STRING_TEXT_FILES_TXT "Teksti tiedostot (*.txt)"
-    STRING_TOOLARGE "Tiedosto '%s' on liian suuri.\n \
+    STRING_TOOLARGE "Tiedosto '%s' on liian suuri.\n\
 Please use a different editor."
     STRING_NOTEXT "Et syöttänyt lainkaan tekstiä. \
 \nKirjoita jotain ja yritä uudelleen"
-    STRING_DOESNOTEXIST "File '%s'\ndoes not exist\n\n \
+    STRING_DOESNOTEXIST "File '%s'\ndoes not exist\n\n\
 Do you want to create a new file ?"
-    STRING_NOTSAVED "File '%s'\nhas been modified\n\n \
+    STRING_NOTSAVED "File '%s'\nhas been modified\n\n\
 Would you like to save the changes ?"
     STRING_NOTFOUND "'%s' ei löydy."
     STRING_OUT_OF_MEMORY "Muistia ei ole riittävästi tämän \
-\ntehtävän tekemiseksi. Sulje jokin sovellus vapauttaaksesi\n \
+\ntehtävän tekemiseksi. Sulje jokin sovellus vapauttaaksesi\n\
 muistia."
     STRING_CANNOTFIND "Cannot find '%s'"
     STRING_ANSI "ANSI"

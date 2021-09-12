@@ -144,13 +144,13 @@ BEGIN
     STRING_UNTITLED "Névtelen"
     STRING_ALL_FILES "Minden fájl (*.*)"
     STRING_TEXT_FILES_TXT "Szövegfájlok (*.txt)"
-    STRING_TOOLARGE "'%s' fájl túl nagy méretű.\n \
+    STRING_TOOLARGE "'%s' fájl túl nagy méretű.\n\
 Kérem használjon másik szövegszerkesztő programot."
     STRING_NOTEXT "A szöveg nem tartalmaz karaktert! \
 \nKérem gépeljen be néhány karaktert és próbálja újra!"
-    STRING_DOESNOTEXIST "A megadott '%s'\nfájl nem létezik!\n\n \
+    STRING_DOESNOTEXIST "A megadott '%s'\nfájl nem létezik!\n\n\
 Kíván létrehozni új fájlt?"
-    STRING_NOTSAVED "'%s' fájl\nmódosult\n\n \
+    STRING_NOTSAVED "'%s' fájl\nmódosult\n\n\
 Szeretné menteni a változásokat?"
     STRING_NOTFOUND "'%s' nem található!"
     STRING_OUT_OF_MEMORY "Nincs elegendő szabad memória!\

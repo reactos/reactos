@@ -11,7 +11,7 @@
 ;
 
 ;
-; Polish translation by; Updated by pithwz - Piotr Hetnarowicz (piotrhwz@gmail.com) (April, 2020) 
+; Polish translation by; Updated by pithwz - Piotr Hetnarowicz (piotrhwz@gmail.com) (April, 2020)
 ; Romanian translation by Ștefan Fulea (stefan dot fulea at mail dot com)
 ; Russian translation by Kudratov Olimjon (olim98@bk.ru)
 ; Spanish translation by Ismael Ferreras Morezuelas <2014-11-07>

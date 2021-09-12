@@ -167,7 +167,7 @@ BEGIN
 
     52936 "52936 (HZ-GB2312 简体中文)"
     54936 "54936 (GB18030 简体中文)"
-    
+
 /* Locations */
     2+NLSRC_OFFSET "安提瓜和巴布达"
     3+NLSRC_OFFSET "阿富汗"

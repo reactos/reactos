@@ -24,43 +24,43 @@ STRINGTABLE
 BEGIN
 /* Please keep the spacing/formatting as per En.rc when translating */
     IDS_USAGE
-    "\nPENGGUNAAN:\n \
-        ipconfig [/? | /all | /renew [adapter] | /release [adapter] |\n \
-                  /flushdns | /displaydns | /registerdns |\n \
-                  /showclassid adapter |\n \
-                  /setclassid adapter [classid] ]\n \
-\n \
-    where\n \
-        adapter         Nama koneksi\n \
-                       (karakter wildcard * dan ? dibolehkan, lihat contoh)\n \
-\n \
-        Opsi:\n \
-           /?           Menampilkan pesan bantuan ini\n \
-           /all         Menampilkan informasi konfigurasi lengkap.\n \
-           /release     Melepaskan alamat IP untuk adapter tertentu.\n \
-           /renew       Memperbarui alamat IP untuk adapter tertentu.\n \
-           /flushdns    Membersihkan cache DNS Resolver.\n \
-           /registerdns Menyegarkan semua sewa DHCP dan re-register nama DNS.\n \
-           /displaydns  Menampilkan isi DNS Resolver Cache.\n \
-           /showclassid Menampilkan semua dhcp class ID yang dibolehkan pada adapter.\n \
-           /setclassid  Mengubah dhcp class id.\n \
-\n \
-    Standarnya adalah hanya menampilkan alamat IP, subnet mask dan\n \
-    gateway standar untuk setiap adapter yang terikat ke TCP/IP.\n \
-\n \
-    Untuk Melepas dan Memperbarui, jika tidak ada nama adapter, maka sewa\n \
-    alamat IP untuk seluruh adapter yang terikat ke TCP/IP akan dilepaskan\n \
-    atau diperbaharui.\n \
-\n \
-    Untuk Setclassid, jika tidak ada ClassId yang ditetapkan, maka ClassId dihapus.\n \
-\n \
-    Contoh:\n \
-        > ipconfig                   ... Menampilkan informasi.\n \
-        > ipconfig /all              ... Menampilkan detil informasi\n \
-        > ipconfig /renew            ... Memperbarui semua adapter\n \
-        > ipconfig /renew EL*        ... Memperbarui setiap koneksi yang\n \
-                                         namanya dimulai dengan EL\n \
-        > ipconfig /release *Con*    ... melepaskan semua koneksi yang sama,\n \
-                                          ""Local Area Connection 1"" atau\n \
+    "\nPENGGUNAAN:\n\
+        ipconfig [/? | /all | /renew [adapter] | /release [adapter] |\n\
+                  /flushdns | /displaydns | /registerdns |\n\
+                  /showclassid adapter |\n\
+                  /setclassid adapter [classid] ]\n\
+\n\
+    where\n\
+        adapter         Nama koneksi\n\
+                       (karakter wildcard * dan ? dibolehkan, lihat contoh)\n\
+\n\
+        Opsi:\n\
+           /?           Menampilkan pesan bantuan ini\n\
+           /all         Menampilkan informasi konfigurasi lengkap.\n\
+           /release     Melepaskan alamat IP untuk adapter tertentu.\n\
+           /renew       Memperbarui alamat IP untuk adapter tertentu.\n\
+           /flushdns    Membersihkan cache DNS Resolver.\n\
+           /registerdns Menyegarkan semua sewa DHCP dan re-register nama DNS.\n\
+           /displaydns  Menampilkan isi DNS Resolver Cache.\n\
+           /showclassid Menampilkan semua dhcp class ID yang dibolehkan pada adapter.\n\
+           /setclassid  Mengubah dhcp class id.\n\
+\n\
+    Standarnya adalah hanya menampilkan alamat IP, subnet mask dan\n\
+    gateway standar untuk setiap adapter yang terikat ke TCP/IP.\n\
+\n\
+    Untuk Melepas dan Memperbarui, jika tidak ada nama adapter, maka sewa\n\
+    alamat IP untuk seluruh adapter yang terikat ke TCP/IP akan dilepaskan\n\
+    atau diperbaharui.\n\
+\n\
+    Untuk Setclassid, jika tidak ada ClassId yang ditetapkan, maka ClassId dihapus.\n\
+\n\
+    Contoh:\n\
+        > ipconfig                   ... Menampilkan informasi.\n\
+        > ipconfig /all              ... Menampilkan detil informasi\n\
+        > ipconfig /renew            ... Memperbarui semua adapter\n\
+        > ipconfig /renew EL*        ... Memperbarui setiap koneksi yang\n\
+                                         namanya dimulai dengan EL\n\
+        > ipconfig /release *Con*    ... melepaskan semua koneksi yang sama,\n\
+                                          ""Local Area Connection 1"" atau\n\
                                           ""Local Area Connection 2""\n"
 END

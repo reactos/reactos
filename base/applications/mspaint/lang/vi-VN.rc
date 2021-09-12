@@ -146,7 +146,7 @@ BEGIN
     EDITTEXT IDD_ATTRIBUTESEDIT2, 128, 40, 35, 12
     LTEXT "&Chiều rộng:", IDD_ATTRIBUTESTEXT1, 10, 40, 35, 10
     LTEXT "&Chiều cao:", IDD_ATTRIBUTESTEXT2, 90, 40, 35, 10
-    LTEXT "Ngày tạo &tập tin:", IDD_ATTRIBUTESTEXT3, 10, 5, 60, 10 
+    LTEXT "Ngày tạo &tập tin:", IDD_ATTRIBUTESTEXT3, 10, 5, 60, 10
     LTEXT "Kích thước &tập tin :", IDD_ATTRIBUTESTEXT4, 10, 15, 60, 10
     LTEXT "&Độ phân giải:", IDD_ATTRIBUTESTEXT5, 10, 25, 60, 10
     LTEXT "Không có sẵn", IDD_ATTRIBUTESTEXT6, 60, 5, 90, 10
