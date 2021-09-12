@@ -51,7 +51,7 @@ URL: http://xmlsoft.org
 
 Title: mbed TLS
 Path: dll/3rdparty/mbedtls
-Used Version: 2.16.10
+Used Version: 2.16.11
 License: Apache-2.0 (https://spdx.org/licenses/Apache-2.0.html)
 URL: https://tls.mbed.org/
 
