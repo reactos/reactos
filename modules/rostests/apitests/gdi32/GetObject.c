@@ -11,6 +11,27 @@
 
 #define INVALID_POINTER ((PVOID)(ULONG_PTR)0xdeadbeefdeadbeefULL)
 
+unsigned char src_mask[]={
+	  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+	  0,0,0,0,0,0,255,0,0,0,0,0,0,0,0,0,
+	  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+	  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+	  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+	  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+	  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+	  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+
+	  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+	  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+	  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+	  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+	  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+	  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+	  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+	  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+};
+
+
 void
 Test_General(void)
 {
@@ -703,27 +724,21 @@ Test_Region(void)
 
 void Test_CursorIcon()
 {
-    ICONINFO info;
     BITMAP bmp;
-    HCURSOR hCursor = LoadImageW(NULL, MAKEINTRESOURCEW(OCR_NORMAL), IMAGE_CURSOR, 0, 0, LR_DEFAULTSIZE|LR_SHARED);
-    GetIconInfo(hCursor, &info);
+    HBITMAP hbmMask = CreateBitmap(32, 64, 1, 1, (VOID*)src_mask);
     /*
          This test is valid until Win2003Srv sp2.
          On XP sp3 GetObject reports a 32x32 bitmap.
     */
-    GetObjectW(info.hbmMask, sizeof(bmp), &bmp);
+    GetObjectW(hbmMask, sizeof(bmp), &bmp);
     ok(bmp.bmWidth == (bmp.bmHeight / 2), "ERR UNICODE CursorIcon RECT got %ldx%ld\n", bmp.bmWidth, bmp.bmHeight);
     ok(bmp.bmHeight == 64, "ERR UNICODE CursorIcon Height got %ld\n", bmp.bmHeight);
-    DeleteObject(info.hbmMask);
-    DeleteObject(info.hbmColor);
-
-    hCursor = LoadImageA(NULL, MAKEINTRESOURCEA(OCR_NORMAL), IMAGE_CURSOR, 0, 0, LR_DEFAULTSIZE|LR_SHARED);
-    GetIconInfo(hCursor, &info);
-    GetObjectA(info.hbmMask, sizeof(bmp), &bmp);
+    DeleteObject(hbmMask);
+ 
+    GetObjectA(hbmMask, sizeof(bmp), &bmp);
     ok(bmp.bmWidth == (bmp.bmHeight / 2), "ERR ANSI CursorIcon RECT got %ldx%ld\n", bmp.bmWidth, bmp.bmHeight);
     ok(bmp.bmHeight == 64, "ERR ANSI CursorIcon Height got %ld\n", bmp.bmHeight);
-    DeleteObject(info.hbmMask);
-    DeleteObject(info.hbmColor);
+    DeleteObject(hbmMask);
 }
 
 START_TEST(GetObject)
