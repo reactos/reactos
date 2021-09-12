@@ -346,7 +346,7 @@ REPLACE [sürücü1:][yol1]filename [sürücü2:][yol2] [/P] [/R] [/S] [/W] [/U]
                             önce onay ister.\n\
   /R                        Salt okunur dosyaları da normal dosyalar gibi değiştirir\n\
   /S                        Hedef dizinin tüm alt dizinlerindeki dosyaları değiştirir. \n\
-                            /A anahtarıyla kullanılamaz.\n\                      
+                            /A anahtarıyla kullanılamaz.\n\
   /W                        Başlamadan önce bir disk yerleştirmenizi bekler.\n\
   /U                        Yalnızca kaynak dosyalardan daha eski dosyaları \n\
                             değiştirir (günceller). /A anahtarıyla kullanılamaz.\n"
