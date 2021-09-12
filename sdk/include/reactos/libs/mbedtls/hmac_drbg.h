@@ -109,7 +109,7 @@ extern "C" {
 /**
  * HMAC_DRBG context.
  */
-typedef struct
+typedef struct mbedtls_hmac_drbg_context
 {
     /* Working state: the key K is not stored explicitly,
      * but is implied by the HMAC context */
@@ -325,28 +325,6 @@ int mbedtls_hmac_drbg_update_ret( mbedtls_hmac_drbg_context *ctx,
                        const unsigned char *additional, size_t add_len );
 
 /**
- * \brief               HMAC_DRBG update state
- *
- * \warning             This function cannot report errors. You should use
- *                      mbedtls_hmac_drbg_update_ret() instead.
- *
- * \note                This function is not thread-safe. It is not safe
- *                      to call this function if another thread might be
- *                      concurrently obtaining random numbers from the same
- *                      context or updating or reseeding the same context.
- *
- * \param ctx           HMAC_DRBG context
- * \param additional    Additional data to update state with, or NULL
- * \param add_len       Length of additional data, or 0
- *
- * \note                Additional data is optional, pass NULL and 0 as second
- *                      third argument if no additional data is being used.
- */
-void mbedtls_hmac_drbg_update( mbedtls_hmac_drbg_context *ctx,
-                               const unsigned char *additional,
-                               size_t add_len );
-
-/**
  * \brief               This function reseeds the HMAC_DRBG context, that is
  *                      extracts data from the entropy source.
  *
@@ -445,6 +423,30 @@ int mbedtls_hmac_drbg_random( void *p_rng, unsigned char *output, size_t out_len
  * \param ctx           The HMAC_DRBG context to free.
  */
 void mbedtls_hmac_drbg_free( mbedtls_hmac_drbg_context *ctx );
+
+#if ! defined(MBEDTLS_DEPRECATED_REMOVED)
+#if defined(MBEDTLS_DEPRECATED_WARNING)
+#define MBEDTLS_DEPRECATED    __attribute__((deprecated))
+#else
+#define MBEDTLS_DEPRECATED
+#endif
+/**
+ * \brief               This function updates the state of the HMAC_DRBG context.
+ *
+ * \deprecated          Superseded by mbedtls_hmac_drbg_update_ret()
+ *                      in 2.16.0.
+ *
+ * \param ctx           The HMAC_DRBG context.
+ * \param additional    The data to update the state with.
+ *                      If this is \c NULL, there is no additional data.
+ * \param add_len       Length of \p additional in bytes.
+ *                      Unused if \p additional is \c NULL.
+ */
+MBEDTLS_DEPRECATED void mbedtls_hmac_drbg_update(
+    mbedtls_hmac_drbg_context *ctx,
+    const unsigned char *additional, size_t add_len );
+#undef MBEDTLS_DEPRECATED
+#endif /* !MBEDTLS_DEPRECATED_REMOVED */
 
 #if defined(MBEDTLS_FS_IO)
 /**

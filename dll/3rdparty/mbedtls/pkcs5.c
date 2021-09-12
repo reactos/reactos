@@ -79,11 +79,6 @@
 #define mbedtls_printf printf
 #endif
 
-/* Implementation that should never be optimized out by the compiler */
-static void mbedtls_zeroize( void *v, size_t n ) {
-    volatile unsigned char *p = (unsigned char*)v; while( n-- ) *p++ = 0;
-}
-
 #if defined(MBEDTLS_ASN1_PARSE_C)
 static int pkcs5_parse_pbkdf2_params( const mbedtls_asn1_buf *params,
                                       mbedtls_asn1_buf *salt, int *iterations,
@@ -319,8 +314,8 @@ int mbedtls_pkcs5_pbkdf2_hmac( mbedtls_md_context_t *ctx, const unsigned char *p
 
 cleanup:
     /* Zeroise buffers to clear sensitive data from memory. */
-    mbedtls_zeroize( work, MBEDTLS_MD_MAX_SIZE );
-    mbedtls_zeroize( md1, MBEDTLS_MD_MAX_SIZE );
+    mbedtls_platform_zeroize( work, MBEDTLS_MD_MAX_SIZE );
+    mbedtls_platform_zeroize( md1, MBEDTLS_MD_MAX_SIZE );
 
     return( ret );
 }

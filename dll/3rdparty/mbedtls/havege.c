@@ -61,6 +61,7 @@
 
 #include "mbedtls/havege.h"
 #include "mbedtls/timing.h"
+#include "mbedtls/platform_util.h"
 
 #include <limits.h>
 #include <string.h>
@@ -74,11 +75,6 @@
 #if UINT_MAX != 0xffffffff
 #error "The HAVEGE module requires unsigned to be exactly 32 bits."
 #endif
-
-/* Implementation that should never be optimized out by the compiler */
-static void mbedtls_zeroize( void *v, size_t n ) {
-    volatile unsigned char *p = v; while( n-- ) *p++ = 0;
-}
 
 /* ------------------------------------------------------------------------
  * On average, one iteration accesses two 8-word blocks in the havege WALK
@@ -245,7 +241,7 @@ void mbedtls_havege_free( mbedtls_havege_state *hs )
     if( hs == NULL )
         return;
 
-    mbedtls_zeroize( hs, sizeof( mbedtls_havege_state ) );
+    mbedtls_platform_zeroize( hs, sizeof( mbedtls_havege_state ) );
 }
 
 /*

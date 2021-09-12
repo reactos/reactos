@@ -58,6 +58,7 @@
 #if defined(MBEDTLS_SHA512_C)
 
 #include "mbedtls/sha512.h"
+#include "mbedtls/platform_util.h"
 
 #if defined(_MSC_VER) || defined(__WATCOMC__)
   #define UL64(x) x##ui64
@@ -79,12 +80,11 @@
 #endif /* MBEDTLS_PLATFORM_C */
 #endif /* MBEDTLS_SELF_TEST */
 
-#if !defined(MBEDTLS_SHA512_ALT)
+#define SHA512_VALIDATE_RET(cond)                           \
+    MBEDTLS_INTERNAL_VALIDATE_RET( cond, MBEDTLS_ERR_SHA512_BAD_INPUT_DATA )
+#define SHA512_VALIDATE(cond)  MBEDTLS_INTERNAL_VALIDATE( cond )
 
-/* Implementation that should never be optimized out by the compiler */
-static void mbedtls_zeroize( void *v, size_t n ) {
-    volatile unsigned char *p = v; while( n-- ) *p++ = 0;
-}
+#if !defined(MBEDTLS_SHA512_ALT)
 
 /*
  * 64-bit integer manipulation macros (big endian)
@@ -119,6 +119,8 @@ static void mbedtls_zeroize( void *v, size_t n ) {
 
 void mbedtls_sha512_init( mbedtls_sha512_context *ctx )
 {
+    SHA512_VALIDATE( ctx != NULL );
+
     memset( ctx, 0, sizeof( mbedtls_sha512_context ) );
 }
 
@@ -127,12 +129,15 @@ void mbedtls_sha512_free( mbedtls_sha512_context *ctx )
     if( ctx == NULL )
         return;
 
-    mbedtls_zeroize( ctx, sizeof( mbedtls_sha512_context ) );
+    mbedtls_platform_zeroize( ctx, sizeof( mbedtls_sha512_context ) );
 }
 
 void mbedtls_sha512_clone( mbedtls_sha512_context *dst,
                            const mbedtls_sha512_context *src )
 {
+    SHA512_VALIDATE( dst != NULL );
+    SHA512_VALIDATE( src != NULL );
+
     *dst = *src;
 }
 
@@ -141,6 +146,9 @@ void mbedtls_sha512_clone( mbedtls_sha512_context *dst,
  */
 int mbedtls_sha512_starts_ret( mbedtls_sha512_context *ctx, int is384 )
 {
+    SHA512_VALIDATE_RET( ctx != NULL );
+    SHA512_VALIDATE_RET( is384 == 0 || is384 == 1 );
+
     ctx->total[0] = 0;
     ctx->total[1] = 0;
 
@@ -241,8 +249,11 @@ int mbedtls_internal_sha512_process( mbedtls_sha512_context *ctx,
         uint64_t A, B, C, D, E, F, G, H;
     } local;
 
-#define  SHR(x,n) (x >> n)
-#define ROTR(x,n) (SHR(x,n) | (x << (64 - n)))
+    SHA512_VALIDATE_RET( ctx != NULL );
+    SHA512_VALIDATE_RET( (const unsigned char *)data != NULL );
+
+#define  SHR(x,n) ((x) >> (n))
+#define ROTR(x,n) (SHR((x),(n)) | ((x) << (64 - (n))))
 
 #define S0(x) (ROTR(x, 1) ^ ROTR(x, 8) ^  SHR(x, 7))
 #define S1(x) (ROTR(x,19) ^ ROTR(x,61) ^  SHR(x, 6))
@@ -250,15 +261,16 @@ int mbedtls_internal_sha512_process( mbedtls_sha512_context *ctx,
 #define S2(x) (ROTR(x,28) ^ ROTR(x,34) ^ ROTR(x,39))
 #define S3(x) (ROTR(x,14) ^ ROTR(x,18) ^ ROTR(x,41))
 
-#define F0(x,y,z) ((x & y) | (z & (x | y)))
-#define F1(x,y,z) (z ^ (x & (y ^ z)))
+#define F0(x,y,z) (((x) & (y)) | ((z) & ((x) | (y))))
+#define F1(x,y,z) ((z) ^ ((x) & ((y) ^ (z))))
 
-#define P(a,b,c,d,e,f,g,h,x,K)                        \
-{                                                     \
-    local.temp1 = h + S3(e) + F1(e,f,g) + K + x;      \
-    local.temp2 = S2(a) + F0(a,b,c);                  \
-    d += local.temp1; h = local.temp1 + local.temp2;  \
-}
+#define P(a,b,c,d,e,f,g,h,x,K)                                      \
+    do                                                              \
+    {                                                               \
+        local.temp1 = (h) + S3(e) + F1((e),(f),(g)) + (K) + (x);    \
+        local.temp2 = S2(a) + F0((a),(b),(c));                      \
+        (d) += local.temp1; (h) = local.temp1 + local.temp2;        \
+    } while( 0 )
 
     for( i = 0; i < 16; i++ )
     {
@@ -312,7 +324,7 @@ int mbedtls_internal_sha512_process( mbedtls_sha512_context *ctx,
     ctx->state[7] += local.H;
 
     /* Zeroise buffers and variables to clear sensitive data from memory. */
-    mbedtls_zeroize( &local, sizeof( local ) );
+    mbedtls_platform_zeroize( &local, sizeof( local ) );
 
     return( 0 );
 }
@@ -336,6 +348,9 @@ int mbedtls_sha512_update_ret( mbedtls_sha512_context *ctx,
     int ret;
     size_t fill;
     unsigned int left;
+
+    SHA512_VALIDATE_RET( ctx != NULL );
+    SHA512_VALIDATE_RET( ilen == 0 || input != NULL );
 
     if( ilen == 0 )
         return( 0 );
@@ -393,6 +408,9 @@ int mbedtls_sha512_finish_ret( mbedtls_sha512_context *ctx,
     int ret;
     unsigned used;
     uint64_t high, low;
+
+    SHA512_VALIDATE_RET( ctx != NULL );
+    SHA512_VALIDATE_RET( (unsigned char *)output != NULL );
 
     /*
      * Add padding: 0x80 then 0x00 until 16 bytes remain for the length
@@ -469,6 +487,10 @@ int mbedtls_sha512_ret( const unsigned char *input,
 {
     int ret;
     mbedtls_sha512_context ctx;
+
+    SHA512_VALIDATE_RET( is384 == 0 || is384 == 1 );
+    SHA512_VALIDATE_RET( ilen == 0 || input != NULL );
+    SHA512_VALIDATE_RET( (unsigned char *)output != NULL );
 
     mbedtls_sha512_init( &ctx );
 

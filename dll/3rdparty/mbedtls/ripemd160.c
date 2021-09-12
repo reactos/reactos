@@ -59,6 +59,7 @@
 #if defined(MBEDTLS_RIPEMD160_C)
 
 #include "mbedtls/ripemd160.h"
+#include "mbedtls/platform_util.h"
 
 #include <string.h>
 
@@ -96,11 +97,6 @@
 }
 #endif
 
-/* Implementation that should never be optimized out by the compiler */
-static void mbedtls_zeroize( void *v, size_t n ) {
-    volatile unsigned char *p = v; while( n-- ) *p++ = 0;
-}
-
 void mbedtls_ripemd160_init( mbedtls_ripemd160_context *ctx )
 {
     memset( ctx, 0, sizeof( mbedtls_ripemd160_context ) );
@@ -111,7 +107,7 @@ void mbedtls_ripemd160_free( mbedtls_ripemd160_context *ctx )
     if( ctx == NULL )
         return;
 
-    mbedtls_zeroize( ctx, sizeof( mbedtls_ripemd160_context ) );
+    mbedtls_platform_zeroize( ctx, sizeof( mbedtls_ripemd160_context ) );
 }
 
 void mbedtls_ripemd160_clone( mbedtls_ripemd160_context *dst,
@@ -179,22 +175,29 @@ int mbedtls_internal_ripemd160_process( mbedtls_ripemd160_context *ctx,
     local.D = local.Dp = ctx->state[3];
     local.E = local.Ep = ctx->state[4];
 
-#define F1( x, y, z )   ( x ^ y ^ z )
-#define F2( x, y, z )   ( ( x & y ) | ( ~x & z ) )
-#define F3( x, y, z )   ( ( x | ~y ) ^ z )
-#define F4( x, y, z )   ( ( x & z ) | ( y & ~z ) )
-#define F5( x, y, z )   ( x ^ ( y | ~z ) )
+#define F1( x, y, z )   ( (x) ^ (y) ^ (z) )
+#define F2( x, y, z )   ( ( (x) & (y) ) | ( ~(x) & (z) ) )
+#define F3( x, y, z )   ( ( (x) | ~(y) ) ^ (z) )
+#define F4( x, y, z )   ( ( (x) & (z) ) | ( (y) & ~(z) ) )
+#define F5( x, y, z )   ( (x) ^ ( (y) | ~(z) ) )
 
-#define S( x, n ) ( ( x << n ) | ( x >> (32 - n) ) )
+#define S( x, n ) ( ( (x) << (n) ) | ( (x) >> (32 - (n)) ) )
 
-#define P( a, b, c, d, e, r, s, f, k )      \
-    a += f( b, c, d ) + local.X[r] + k;     \
-    a = S( a, s ) + e;                      \
-    c = S( c, 10 );
+#define P( a, b, c, d, e, r, s, f, k )                      \
+    do                                                      \
+    {                                                       \
+        (a) += f( (b), (c), (d) ) + local.X[r] + (k);       \
+        (a) = S( (a), (s) ) + (e);                          \
+        (c) = S( (c), 10 );                                 \
+    } while( 0 )
 
-#define P2( a, b, c, d, e, r, s, rp, sp )   \
-    P( a, b, c, d, e, r, s, F, K );         \
-    P( a ## p, b ## p, c ## p, d ## p, e ## p, rp, sp, Fp, Kp );
+#define P2( a, b, c, d, e, r, s, rp, sp )                               \
+    do                                                                  \
+    {                                                                   \
+        P( (a), (b), (c), (d), (e), (r), (s), F, K );                   \
+        P( a ## p, b ## p, c ## p, d ## p, e ## p,                      \
+           (rp), (sp), Fp, Kp );                                        \
+    } while( 0 )
 
 #define F   F1
 #define K   0x00000000
@@ -329,7 +332,7 @@ int mbedtls_internal_ripemd160_process( mbedtls_ripemd160_context *ctx,
     ctx->state[0] = local.C;
 
     /* Zeroise variables to clear sensitive data from memory. */
-    mbedtls_zeroize( &local, sizeof( local ) );
+    mbedtls_platform_zeroize( &local, sizeof( local ) );
 
     return( 0 );
 }

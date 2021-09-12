@@ -53,10 +53,17 @@
 #if defined(MBEDTLS_ECP_C)
 
 #include "mbedtls/ecp.h"
+#include "mbedtls/platform_util.h"
 
 #include <string.h>
 
 #if !defined(MBEDTLS_ECP_ALT)
+
+/* Parameter validation macros based on platform_util.h */
+#define ECP_VALIDATE_RET( cond )    \
+    MBEDTLS_INTERNAL_VALIDATE_RET( cond, MBEDTLS_ERR_ECP_BAD_INPUT_DATA )
+#define ECP_VALIDATE( cond )        \
+    MBEDTLS_INTERNAL_VALIDATE( cond )
 
 #if ( defined(__ARMCC_VERSION) || defined(_MSC_VER) ) && \
     !defined(inline) && !defined(__cplusplus)
@@ -69,11 +76,11 @@
  */
 #if defined(MBEDTLS_HAVE_INT32)
 
-#define BYTES_TO_T_UINT_4( a, b, c, d )             \
-    ( (mbedtls_mpi_uint) a <<  0 ) |                          \
-    ( (mbedtls_mpi_uint) b <<  8 ) |                          \
-    ( (mbedtls_mpi_uint) c << 16 ) |                          \
-    ( (mbedtls_mpi_uint) d << 24 )
+#define BYTES_TO_T_UINT_4( a, b, c, d )                       \
+    ( (mbedtls_mpi_uint) (a) <<  0 ) |                        \
+    ( (mbedtls_mpi_uint) (b) <<  8 ) |                        \
+    ( (mbedtls_mpi_uint) (c) << 16 ) |                        \
+    ( (mbedtls_mpi_uint) (d) << 24 )
 
 #define BYTES_TO_T_UINT_2( a, b )                   \
     BYTES_TO_T_UINT_4( a, b, 0, 0 )
@@ -85,14 +92,14 @@
 #else /* 64-bits */
 
 #define BYTES_TO_T_UINT_8( a, b, c, d, e, f, g, h ) \
-    ( (mbedtls_mpi_uint) a <<  0 ) |                          \
-    ( (mbedtls_mpi_uint) b <<  8 ) |                          \
-    ( (mbedtls_mpi_uint) c << 16 ) |                          \
-    ( (mbedtls_mpi_uint) d << 24 ) |                          \
-    ( (mbedtls_mpi_uint) e << 32 ) |                          \
-    ( (mbedtls_mpi_uint) f << 40 ) |                          \
-    ( (mbedtls_mpi_uint) g << 48 ) |                          \
-    ( (mbedtls_mpi_uint) h << 56 )
+    ( (mbedtls_mpi_uint) (a) <<  0 ) |                        \
+    ( (mbedtls_mpi_uint) (b) <<  8 ) |                        \
+    ( (mbedtls_mpi_uint) (c) << 16 ) |                        \
+    ( (mbedtls_mpi_uint) (d) << 24 ) |                        \
+    ( (mbedtls_mpi_uint) (e) << 32 ) |                        \
+    ( (mbedtls_mpi_uint) (f) << 40 ) |                        \
+    ( (mbedtls_mpi_uint) (g) << 48 ) |                        \
+    ( (mbedtls_mpi_uint) (h) << 56 )
 
 #define BYTES_TO_T_UINT_4( a, b, c, d )             \
     BYTES_TO_T_UINT_8( a, b, c, d, 0, 0, 0, 0 )
@@ -652,6 +659,9 @@ static int ecp_mod_p521( mbedtls_mpi * );
 #if defined(MBEDTLS_ECP_DP_CURVE25519_ENABLED)
 static int ecp_mod_p255( mbedtls_mpi * );
 #endif
+#if defined(MBEDTLS_ECP_DP_CURVE448_ENABLED)
+static int ecp_mod_p448( mbedtls_mpi * );
+#endif
 #if defined(MBEDTLS_ECP_DP_SECP192K1_ENABLED)
 static int ecp_mod_p192k1( mbedtls_mpi * );
 #endif
@@ -695,7 +705,12 @@ static int ecp_use_curve25519( mbedtls_ecp_group *grp )
     MBEDTLS_MPI_CHK( mbedtls_mpi_sub_int( &grp->P, &grp->P, 19 ) );
     grp->pbits = mbedtls_mpi_bitlen( &grp->P );
 
-    /* Y intentionaly not set, since we use x/z coordinates.
+    /* N = 2^252 + 27742317777372353535851937790883648493 */
+    MBEDTLS_MPI_CHK( mbedtls_mpi_read_string( &grp->N, 16,
+                                              "14DEF9DEA2F79CD65812631A5CF5D3ED" ) );
+    MBEDTLS_MPI_CHK( mbedtls_mpi_set_bit( &grp->N, 252, 1 ) );
+
+    /* Y intentionally not set, since we use x/z coordinates.
      * This is used as a marker to identify Montgomery curves! */
     MBEDTLS_MPI_CHK( mbedtls_mpi_lset( &grp->G.X, 9 ) );
     MBEDTLS_MPI_CHK( mbedtls_mpi_lset( &grp->G.Z, 1 ) );
@@ -712,11 +727,58 @@ cleanup:
 }
 #endif /* MBEDTLS_ECP_DP_CURVE25519_ENABLED */
 
+#if defined(MBEDTLS_ECP_DP_CURVE448_ENABLED)
+/*
+ * Specialized function for creating the Curve448 group
+ */
+static int ecp_use_curve448( mbedtls_ecp_group *grp )
+{
+    mbedtls_mpi Ns;
+    int ret;
+
+    mbedtls_mpi_init( &Ns );
+
+    /* Actually ( A + 2 ) / 4 */
+    MBEDTLS_MPI_CHK( mbedtls_mpi_read_string( &grp->A, 16, "98AA" ) );
+
+    /* P = 2^448 - 2^224 - 1 */
+    MBEDTLS_MPI_CHK( mbedtls_mpi_lset( &grp->P, 1 ) );
+    MBEDTLS_MPI_CHK( mbedtls_mpi_shift_l( &grp->P, 224 ) );
+    MBEDTLS_MPI_CHK( mbedtls_mpi_sub_int( &grp->P, &grp->P, 1 ) );
+    MBEDTLS_MPI_CHK( mbedtls_mpi_shift_l( &grp->P, 224 ) );
+    MBEDTLS_MPI_CHK( mbedtls_mpi_sub_int( &grp->P, &grp->P, 1 ) );
+    grp->pbits = mbedtls_mpi_bitlen( &grp->P );
+
+    /* Y intentionally not set, since we use x/z coordinates.
+     * This is used as a marker to identify Montgomery curves! */
+    MBEDTLS_MPI_CHK( mbedtls_mpi_lset( &grp->G.X, 5 ) );
+    MBEDTLS_MPI_CHK( mbedtls_mpi_lset( &grp->G.Z, 1 ) );
+    mbedtls_mpi_free( &grp->G.Y );
+
+    /* N = 2^446 - 13818066809895115352007386748515426880336692474882178609894547503885 */
+    MBEDTLS_MPI_CHK( mbedtls_mpi_set_bit( &grp->N, 446, 1 ) );
+    MBEDTLS_MPI_CHK( mbedtls_mpi_read_string( &Ns, 16,
+                                              "8335DC163BB124B65129C96FDE933D8D723A70AADC873D6D54A7BB0D" ) );
+    MBEDTLS_MPI_CHK( mbedtls_mpi_sub_mpi( &grp->N, &grp->N, &Ns ) );
+
+    /* Actually, the required msb for private keys */
+    grp->nbits = 447;
+
+cleanup:
+    mbedtls_mpi_free( &Ns );
+    if( ret != 0 )
+        mbedtls_ecp_group_free( grp );
+
+    return( ret );
+}
+#endif /* MBEDTLS_ECP_DP_CURVE448_ENABLED */
+
 /*
  * Set a group using well-known domain parameters
  */
 int mbedtls_ecp_group_load( mbedtls_ecp_group *grp, mbedtls_ecp_group_id id )
 {
+    ECP_VALIDATE_RET( grp != NULL );
     mbedtls_ecp_group_free( grp );
 
     grp->id = id;
@@ -792,6 +854,12 @@ int mbedtls_ecp_group_load( mbedtls_ecp_group *grp, mbedtls_ecp_group_id id )
             return( ecp_use_curve25519( grp ) );
 #endif /* MBEDTLS_ECP_DP_CURVE25519_ENABLED */
 
+#if defined(MBEDTLS_ECP_DP_CURVE448_ENABLED)
+        case MBEDTLS_ECP_DP_CURVE448:
+            grp->modp = ecp_mod_p448;
+            return( ecp_use_curve448( grp ) );
+#endif /* MBEDTLS_ECP_DP_CURVE448_ENABLED */
+
         default:
             mbedtls_ecp_group_free( grp );
             return( MBEDTLS_ERR_ECP_FEATURE_UNAVAILABLE );
@@ -847,7 +915,7 @@ static inline void carry64( mbedtls_mpi_uint *dst, mbedtls_mpi_uint *carry )
 }
 
 #define WIDTH       8 / sizeof( mbedtls_mpi_uint )
-#define A( i )      N->p + i * WIDTH
+#define A( i )      N->p + (i) * WIDTH
 #define ADD( i )    add64( p, A( i ), &c )
 #define NEXT        p += WIDTH; carry64( p, &c )
 #define LAST        p += WIDTH; *p = c; while( ++p < end ) *p = 0
@@ -912,7 +980,8 @@ cleanup:
 #else                               /* 64-bit */
 
 #define MAX32       N->n * 2
-#define A( j ) j % 2 ? (uint32_t)( N->p[j/2] >> 32 ) : (uint32_t)( N->p[j/2] )
+#define A( j ) (j) % 2 ? (uint32_t)( N->p[(j)/2] >> 32 ) : \
+                         (uint32_t)( N->p[(j)/2] )
 #define STORE32                                   \
     if( i % 2 ) {                                 \
         N->p[i/2] &= 0x00000000FFFFFFFF;          \
@@ -946,20 +1015,21 @@ static inline void sub32( uint32_t *dst, uint32_t src, signed char *carry )
  * Helpers for the main 'loop'
  * (see fix_negative for the motivation of C)
  */
-#define INIT( b )                                           \
-    int ret;                                                \
-    signed char c = 0, cc;                                  \
-    uint32_t cur;                                           \
-    size_t i = 0, bits = b;                                 \
-    mbedtls_mpi C;                                                  \
-    mbedtls_mpi_uint Cp[ b / 8 / sizeof( mbedtls_mpi_uint) + 1 ];               \
-                                                            \
-    C.s = 1;                                                \
-    C.n = b / 8 / sizeof( mbedtls_mpi_uint) + 1;                      \
-    C.p = Cp;                                               \
-    memset( Cp, 0, C.n * sizeof( mbedtls_mpi_uint ) );                \
-                                                            \
-    MBEDTLS_MPI_CHK( mbedtls_mpi_grow( N, b * 2 / 8 / sizeof( mbedtls_mpi_uint ) ) ); \
+#define INIT( b )                                                       \
+    int ret;                                                            \
+    signed char c = 0, cc;                                              \
+    uint32_t cur;                                                       \
+    size_t i = 0, bits = (b);                                           \
+    mbedtls_mpi C;                                                      \
+    mbedtls_mpi_uint Cp[ (b) / 8 / sizeof( mbedtls_mpi_uint) + 1 ];     \
+                                                                        \
+    C.s = 1;                                                            \
+    C.n = (b) / 8 / sizeof( mbedtls_mpi_uint) + 1;                      \
+    C.p = Cp;                                                           \
+    memset( Cp, 0, C.n * sizeof( mbedtls_mpi_uint ) );                  \
+                                                                        \
+    MBEDTLS_MPI_CHK( mbedtls_mpi_grow( N, (b) * 2 / 8 /                 \
+                                       sizeof( mbedtls_mpi_uint ) ) );  \
     LOAD32;
 
 #define NEXT                    \
@@ -1201,7 +1271,7 @@ static int ecp_mod_p255( mbedtls_mpi *N )
     M.s = 1;
     M.n = N->n - ( P255_WIDTH - 1 );
     if( M.n > P255_WIDTH + 1 )
-        M.n = P255_WIDTH + 1;
+        return( MBEDTLS_ERR_ECP_BAD_INPUT_DATA );
     M.p = Mp;
     memset( Mp, 0, sizeof Mp );
     memcpy( Mp, N->p + P255_WIDTH - 1, M.n * sizeof( mbedtls_mpi_uint ) );
@@ -1221,6 +1291,77 @@ cleanup:
     return( ret );
 }
 #endif /* MBEDTLS_ECP_DP_CURVE25519_ENABLED */
+
+#if defined(MBEDTLS_ECP_DP_CURVE448_ENABLED)
+
+/* Size of p448 in terms of mbedtls_mpi_uint */
+#define P448_WIDTH      ( 448 / 8 / sizeof( mbedtls_mpi_uint ) )
+
+/* Number of limbs fully occupied by 2^224 (max), and limbs used by it (min) */
+#define DIV_ROUND_UP( X, Y ) ( ( ( X ) + ( Y ) - 1 ) / ( Y ) )
+#define P224_WIDTH_MIN   ( 28 / sizeof( mbedtls_mpi_uint ) )
+#define P224_WIDTH_MAX   DIV_ROUND_UP( 28, sizeof( mbedtls_mpi_uint ) )
+#define P224_UNUSED_BITS ( ( P224_WIDTH_MAX * sizeof( mbedtls_mpi_uint ) * 8 ) - 224 )
+
+/*
+ * Fast quasi-reduction modulo p448 = 2^448 - 2^224 - 1
+ * Write N as A0 + 2^448 A1 and A1 as B0 + 2^224 B1, and return
+ * A0 + A1 + B1 + (B0 + B1) * 2^224.  This is different to the reference
+ * implementation of Curve448, which uses its own special 56-bit limbs rather
+ * than a generic bignum library.  We could squeeze some extra speed out on
+ * 32-bit machines by splitting N up into 32-bit limbs and doing the
+ * arithmetic using the limbs directly as we do for the NIST primes above,
+ * but for 64-bit targets it should use half the number of operations if we do
+ * the reduction with 224-bit limbs, since mpi_add_mpi will then use 64-bit adds.
+ */
+static int ecp_mod_p448( mbedtls_mpi *N )
+{
+    int ret;
+    size_t i;
+    mbedtls_mpi M, Q;
+    mbedtls_mpi_uint Mp[P448_WIDTH + 1], Qp[P448_WIDTH];
+
+    if( N->n <= P448_WIDTH )
+        return( 0 );
+
+    /* M = A1 */
+    M.s = 1;
+    M.n = N->n - ( P448_WIDTH );
+    if( M.n > P448_WIDTH )
+        /* Shouldn't be called with N larger than 2^896! */
+        return( MBEDTLS_ERR_ECP_BAD_INPUT_DATA );
+    M.p = Mp;
+    memset( Mp, 0, sizeof( Mp ) );
+    memcpy( Mp, N->p + P448_WIDTH, M.n * sizeof( mbedtls_mpi_uint ) );
+
+    /* N = A0 */
+    for( i = P448_WIDTH; i < N->n; i++ )
+        N->p[i] = 0;
+
+    /* N += A1 */
+    MBEDTLS_MPI_CHK( mbedtls_mpi_add_mpi( N, N, &M ) );
+
+    /* Q = B1, N += B1 */
+    Q = M;
+    Q.p = Qp;
+    memcpy( Qp, Mp, sizeof( Qp ) );
+    MBEDTLS_MPI_CHK( mbedtls_mpi_shift_r( &Q, 224 ) );
+    MBEDTLS_MPI_CHK( mbedtls_mpi_add_mpi( N, N, &Q ) );
+
+    /* M = (B0 + B1) * 2^224, N += M */
+    if( sizeof( mbedtls_mpi_uint ) > 4 )
+        Mp[P224_WIDTH_MIN] &= ( (mbedtls_mpi_uint)-1 ) >> ( P224_UNUSED_BITS );
+    for( i = P224_WIDTH_MAX; i < M.n; ++i )
+        Mp[i] = 0;
+    MBEDTLS_MPI_CHK( mbedtls_mpi_add_mpi( &M, &M, &Q ) );
+    M.n = P448_WIDTH + 1; /* Make room for shifted carry bit from the addition */
+    MBEDTLS_MPI_CHK( mbedtls_mpi_shift_l( &M, 224 ) );
+    MBEDTLS_MPI_CHK( mbedtls_mpi_add_mpi( N, N, &M ) );
+
+cleanup:
+    return( ret );
+}
+#endif /* MBEDTLS_ECP_DP_CURVE448_ENABLED */
 
 #if defined(MBEDTLS_ECP_DP_SECP192K1_ENABLED) ||   \
     defined(MBEDTLS_ECP_DP_SECP224K1_ENABLED) ||   \

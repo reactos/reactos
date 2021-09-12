@@ -59,6 +59,7 @@
 #if defined(MBEDTLS_MD4_C)
 
 #include "mbedtls/md4.h"
+#include "mbedtls/platform_util.h"
 
 #include <string.h>
 
@@ -72,11 +73,6 @@
 #endif /* MBEDTLS_SELF_TEST */
 
 #if !defined(MBEDTLS_MD4_ALT)
-
-/* Implementation that should never be optimized out by the compiler */
-static void mbedtls_zeroize( void *v, size_t n ) {
-    volatile unsigned char *p = v; while( n-- ) *p++ = 0;
-}
 
 /*
  * 32-bit integer manipulation macros (little endian)
@@ -111,7 +107,7 @@ void mbedtls_md4_free( mbedtls_md4_context *ctx )
     if( ctx == NULL )
         return;
 
-    mbedtls_zeroize( ctx, sizeof( mbedtls_md4_context ) );
+    mbedtls_platform_zeroize( ctx, sizeof( mbedtls_md4_context ) );
 }
 
 void mbedtls_md4_clone( mbedtls_md4_context *dst,
@@ -169,15 +165,21 @@ int mbedtls_internal_md4_process( mbedtls_md4_context *ctx,
     GET_UINT32_LE( local.X[14], data, 56 );
     GET_UINT32_LE( local.X[15], data, 60 );
 
-#define S(x,n) ((x << n) | ((x & 0xFFFFFFFF) >> (32 - n)))
+#define S(x,n) (((x) << (n)) | (((x) & 0xFFFFFFFF) >> (32 - (n))))
 
     local.A = ctx->state[0];
     local.B = ctx->state[1];
     local.C = ctx->state[2];
     local.D = ctx->state[3];
 
-#define F(x, y, z) ((x & y) | ((~x) & z))
-#define P(a,b,c,d,x,s) { a += F(b,c,d) + x; a = S(a,s); }
+#define F(x, y, z) (((x) & (y)) | ((~(x)) & (z)))
+#define P(a,b,c,d,x,s)                           \
+    do                                           \
+    {                                            \
+        (a) += F((b),(c),(d)) + (x);             \
+        (a) = S((a),(s));                        \
+    } while( 0 )
+
 
     P( local.A, local.B, local.C, local.D, local.X[ 0],  3 );
     P( local.D, local.A, local.B, local.C, local.X[ 1],  7 );
@@ -199,8 +201,13 @@ int mbedtls_internal_md4_process( mbedtls_md4_context *ctx,
 #undef P
 #undef F
 
-#define F(x,y,z) ((x & y) | (x & z) | (y & z))
-#define P(a,b,c,d,x,s) { a += F(b,c,d) + x + 0x5A827999; a = S(a,s); }
+#define F(x,y,z) (((x) & (y)) | ((x) & (z)) | ((y) & (z)))
+#define P(a,b,c,d,x,s)                          \
+    do                                          \
+    {                                           \
+        (a) += F((b),(c),(d)) + (x) + 0x5A827999;       \
+        (a) = S((a),(s));                               \
+    } while( 0 )
 
     P( local.A, local.B, local.C, local.D, local.X[ 0],  3 );
     P( local.D, local.A, local.B, local.C, local.X[ 4],  5 );
@@ -222,8 +229,13 @@ int mbedtls_internal_md4_process( mbedtls_md4_context *ctx,
 #undef P
 #undef F
 
-#define F(x,y,z) (x ^ y ^ z)
-#define P(a,b,c,d,x,s) { a += F(b,c,d) + x + 0x6ED9EBA1; a = S(a,s); }
+#define F(x,y,z) ((x) ^ (y) ^ (z))
+#define P(a,b,c,d,x,s)                                  \
+    do                                                  \
+    {                                                   \
+        (a) += F((b),(c),(d)) + (x) + 0x6ED9EBA1;       \
+        (a) = S((a),(s));                               \
+    } while( 0 )
 
     P( local.A, local.B, local.C, local.D, local.X[ 0],  3 );
     P( local.D, local.A, local.B, local.C, local.X[ 8],  9 );
@@ -251,7 +263,7 @@ int mbedtls_internal_md4_process( mbedtls_md4_context *ctx,
     ctx->state[3] += local.D;
 
     /* Zeroise variables to clear sensitive data from memory. */
-    mbedtls_zeroize( &local, sizeof( local ) );
+    mbedtls_platform_zeroize( &local, sizeof( local ) );
 
     return( 0 );
 }

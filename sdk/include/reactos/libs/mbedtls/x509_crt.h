@@ -123,14 +123,14 @@ mbedtls_x509_crt;
  * Build flag from an algorithm/curve identifier (pk, md, ecp)
  * Since 0 is always XXX_NONE, ignore it.
  */
-#define MBEDTLS_X509_ID_FLAG( id )   ( 1 << ( ( id ) - 1 ) )
+#define MBEDTLS_X509_ID_FLAG( id )   ( 1 << ( (id) - 1 ) )
 
 /**
  * Security profile for certificate verification.
  *
  * All lists are bitfields, built by ORing flags from MBEDTLS_X509_ID_FLAG().
  */
-typedef struct
+typedef struct mbedtls_x509_crt_profile
 {
     uint32_t allowed_mds;       /**< MDs for signatures         */
     uint32_t allowed_pks;       /**< PK algs for signatures     */
@@ -167,6 +167,63 @@ typedef struct mbedtls_x509write_cert
     mbedtls_asn1_named_data *extensions;
 }
 mbedtls_x509write_cert;
+
+/**
+ * Item in a verification chain: cert and flags for it
+ */
+typedef struct {
+    mbedtls_x509_crt *crt;
+    uint32_t flags;
+} mbedtls_x509_crt_verify_chain_item;
+
+/**
+ * Max size of verification chain: end-entity + intermediates + trusted root
+ */
+#define MBEDTLS_X509_MAX_VERIFY_CHAIN_SIZE  ( MBEDTLS_X509_MAX_INTERMEDIATE_CA + 2 )
+
+/**
+ * Verification chain as built by \c mbedtls_crt_verify_chain()
+ */
+typedef struct
+{
+    mbedtls_x509_crt_verify_chain_item items[MBEDTLS_X509_MAX_VERIFY_CHAIN_SIZE];
+    unsigned len;
+} mbedtls_x509_crt_verify_chain;
+
+#if defined(MBEDTLS_ECDSA_C) && defined(MBEDTLS_ECP_RESTARTABLE)
+
+/**
+ * \brief       Context for resuming X.509 verify operations
+ */
+typedef struct
+{
+    /* for check_signature() */
+    mbedtls_pk_restart_ctx pk;
+
+    /* for find_parent_in() */
+    mbedtls_x509_crt *parent; /* non-null iff parent_in in progress */
+    mbedtls_x509_crt *fallback_parent;
+    int fallback_signature_is_good;
+
+    /* for find_parent() */
+    int parent_is_trusted; /* -1 if find_parent is not in progress */
+
+    /* for verify_chain() */
+    enum {
+        x509_crt_rs_none,
+        x509_crt_rs_find_parent,
+    } in_progress;  /* none if no operation is in progress */
+    int self_cnt;
+    mbedtls_x509_crt_verify_chain ver_chain;
+
+} mbedtls_x509_crt_restart_ctx;
+
+#else /* MBEDTLS_ECDSA_C && MBEDTLS_ECP_RESTARTABLE */
+
+/* Now we can declare functions that take a pointer to that */
+typedef void mbedtls_x509_crt_restart_ctx;
+
+#endif /* MBEDTLS_ECDSA_C && MBEDTLS_ECP_RESTARTABLE */
 
 #if defined(MBEDTLS_X509_CRT_PARSE_C)
 /**
@@ -393,6 +450,37 @@ int mbedtls_x509_crt_verify_with_profile( mbedtls_x509_crt *crt,
                      int (*f_vrfy)(void *, mbedtls_x509_crt *, int, uint32_t *),
                      void *p_vrfy );
 
+/**
+ * \brief          Restartable version of \c mbedtls_crt_verify_with_profile()
+ *
+ * \note           Performs the same job as \c mbedtls_crt_verify_with_profile()
+ *                 but can return early and restart according to the limit
+ *                 set with \c mbedtls_ecp_set_max_ops() to reduce blocking.
+ *
+ * \param crt      a certificate (chain) to be verified
+ * \param trust_ca the list of trusted CAs
+ * \param ca_crl   the list of CRLs for trusted CAs
+ * \param profile  security profile for verification
+ * \param cn       expected Common Name (can be set to
+ *                 NULL if the CN must not be verified)
+ * \param flags    result of the verification
+ * \param f_vrfy   verification function
+ * \param p_vrfy   verification parameter
+ * \param rs_ctx   restart context (NULL to disable restart)
+ *
+ * \return         See \c mbedtls_crt_verify_with_profile(), or
+ * \return         #MBEDTLS_ERR_ECP_IN_PROGRESS if maximum number of
+ *                 operations was reached: see \c mbedtls_ecp_set_max_ops().
+ */
+int mbedtls_x509_crt_verify_restartable( mbedtls_x509_crt *crt,
+                     mbedtls_x509_crt *trust_ca,
+                     mbedtls_x509_crl *ca_crl,
+                     const mbedtls_x509_crt_profile *profile,
+                     const char *cn, uint32_t *flags,
+                     int (*f_vrfy)(void *, mbedtls_x509_crt *, int, uint32_t *),
+                     void *p_vrfy,
+                     mbedtls_x509_crt_restart_ctx *rs_ctx );
+
 #if defined(MBEDTLS_X509_CHECK_KEY_USAGE)
 /**
  * \brief          Check usage of certificate against keyUsage extension.
@@ -464,6 +552,18 @@ void mbedtls_x509_crt_init( mbedtls_x509_crt *crt );
  * \param crt      Certificate chain to free
  */
 void mbedtls_x509_crt_free( mbedtls_x509_crt *crt );
+
+#if defined(MBEDTLS_ECDSA_C) && defined(MBEDTLS_ECP_RESTARTABLE)
+/**
+ * \brief           Initialize a restart context
+ */
+void mbedtls_x509_crt_restart_init( mbedtls_x509_crt_restart_ctx *ctx );
+
+/**
+ * \brief           Free the components of a restart context
+ */
+void mbedtls_x509_crt_restart_free( mbedtls_x509_crt_restart_ctx *ctx );
+#endif /* MBEDTLS_ECDSA_C && MBEDTLS_ECP_RESTARTABLE */
 #endif /* MBEDTLS_X509_CRT_PARSE_C */
 
 /* \} name */
