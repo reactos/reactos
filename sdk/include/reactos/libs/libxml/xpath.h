@@ -359,8 +359,6 @@ struct _xmlXPathContext {
     unsigned long opLimit;
     unsigned long opCount;
     int depth;
-    int maxDepth;
-    int maxParserDepth;
 };
 
 /*
@@ -373,7 +371,7 @@ typedef xmlXPathCompExpr *xmlXPathCompExprPtr;
 /**
  * xmlXPathParserContext:
  *
- * An XPath parser context. It contains pure parsing informations,
+ * An XPath parser context. It contains pure parsing information,
  * an xmlXPathContext, and the stack of objects.
  */
 struct _xmlXPathParserContext {

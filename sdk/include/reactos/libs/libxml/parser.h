@@ -79,7 +79,7 @@ struct _xmlParserInput {
 /**
  * xmlParserNodeInfo:
  *
- * The parser can be asked to collect Node informations, i.e. at what
+ * The parser can be asked to collect Node information, i.e. at what
  * place in the file they were detected.
  * NOTE: This is off by default and not very well tested.
  */
@@ -169,6 +169,8 @@ typedef enum {
     XML_PARSE_READER = 5
 } xmlParserMode;
 
+typedef struct _xmlStartTag xmlStartTag;
+
 /**
  * xmlParserCtxt:
  *
@@ -231,7 +233,7 @@ struct _xmlParserCtxt {
     int                nameMax;       /* Max depth of the parsing stack */
     const xmlChar *   *nameTab;       /* array of nodes */
 
-    long               nbChars;       /* number of xmlChar processed */
+    long               nbChars;       /* unused */
     long            checkIndex;       /* used by progressive parsing lookup */
     int             keepBlanks;       /* ugly but ... */
     int             disableSAX;       /* SAX callbacks are disabled */
@@ -280,7 +282,7 @@ struct _xmlParserCtxt {
     int                nsMax;         /* the size of the arrays */
     const xmlChar *   *nsTab;         /* the array of prefix/namespace name */
     int               *attallocs;     /* which attribute were allocated */
-    void *            *pushTab;       /* array of data for push */
+    xmlStartTag       *pushTab;       /* array of data for push */
     xmlHashTablePtr    attsDefault;   /* defaulted attributes if any */
     xmlHashTablePtr    attsSpecial;   /* non-CDATA attributes if any */
     int                nsWellFormed;  /* is the document XML Namespace okay */
@@ -296,7 +298,7 @@ struct _xmlParserCtxt {
     xmlAttrPtr        freeAttrs;    /* List of freed attributes nodes */
 
     /*
-     * the complete error informations for the last error.
+     * the complete error information for the last error.
      */
     xmlError          lastError;
     xmlParserMode     parseMode;    /* the parser mode */
@@ -329,7 +331,7 @@ struct _xmlSAXLocator {
  * xmlSAXHandler:
  *
  * A SAX handler is bunch of callbacks called by the parser when processing
- * of the input generate data or structure informations.
+ * of the input generate data or structure information.
  */
 
 /**
@@ -685,7 +687,7 @@ typedef int (*hasExternalSubsetSAXFunc) (void *ctx);
  *               attribute values.
  *
  * SAX2 callback when an element start has been detected by the parser.
- * It provides the namespace informations for the element, as well as
+ * It provides the namespace information for the element, as well as
  * the new namespace declarations on the element.
  */
 
@@ -707,7 +709,7 @@ typedef void (*startElementNsSAX2Func) (void *ctx,
  * @URI:  the element namespace name if available
  *
  * SAX2 callback when an element end has been detected by the parser.
- * It provides the namespace informations for the element.
+ * It provides the namespace information for the element.
  */
 
 typedef void (*endElementNsSAX2Func)   (void *ctx,

@@ -325,7 +325,7 @@ Usage : %s [options] catalogfile entities...\n\
 \t         used with --add or --del, it saves the catalog changes\n\
 \t         and with --sgml it automatically updates the super catalog\n\
 \t--no-super-update: do not update the SGML super catalog\n\
-\t-v --verbose : provide debug informations\n");
+\t-v --verbose : provide debug information\n");
 }
 int main(int argc, char **argv) {
     int i;
