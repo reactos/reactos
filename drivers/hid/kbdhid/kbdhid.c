@@ -459,7 +459,7 @@ KbdHid_InternalDeviceControl(
                 /* buffer too small */
                 Irp->IoStatus.Status = STATUS_BUFFER_TOO_SMALL;
                 IoCompleteRequest(Irp, IO_NO_INCREMENT);
-                return STATUS_INVALID_PARAMETER;
+                return STATUS_BUFFER_TOO_SMALL;
             }
 
             /* copy indicators */
@@ -479,7 +479,7 @@ KbdHid_InternalDeviceControl(
                 /* buffer too small */
                 Irp->IoStatus.Status = STATUS_BUFFER_TOO_SMALL;
                 IoCompleteRequest(Irp, IO_NO_INCREMENT);
-                return STATUS_INVALID_PARAMETER;
+                return STATUS_BUFFER_TOO_SMALL;
             }
 
             /* copy indicators */
