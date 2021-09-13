@@ -718,7 +718,7 @@ LRESULT WINAPI ImmEscapeA(HKL hKL, HIMC hIMC, UINT uSubFunc, LPVOID lpData)
                     cch = MAX_IMM_FILENAME - 1;
                 ((LPSTR)lpData)[cch] = 0;
             }
-        break;
+            break;
 
         case IME_ESC_SET_EUDC_DICTIONARY:
         case IME_ESC_HANJA_MODE:
@@ -769,8 +769,9 @@ LRESULT WINAPI ImmEscapeW(HKL hKL, HIMC hIMC, UINT uSubFunc, LPVOID lpData)
         case IME_ESC_SEQUENCE_TO_INTERNAL:
             ret = pImeDpi->ImeEscape(hIMC, uSubFunc, lpData);
 
-            cch = 0;
             w = LOWORD(ret);
+
+            cch = 0;
             if (HIBYTE(w))
                 szA[cch++] = HIBYTE(w);
             if (LOBYTE(w))
