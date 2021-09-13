@@ -96,7 +96,7 @@ extern "C" {
 #define IMS_SENDNOTIFICATION     0x1F
 #define IMS_FINALIZE_COMPSTR     0x20
 
-/* Non SDK DCE types.*/
+/* Non SDK DCE types */
 #define DCX_USESTYLE     0x00010000
 #define DCX_KEEPCLIPRGN  0x00040000
 #define DCX_KEEPLAYOUT   0x40000000
