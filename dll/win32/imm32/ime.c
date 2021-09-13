@@ -685,7 +685,8 @@ LRESULT WINAPI ImmEscapeA(HKL hKL, HIMC hIMC, UINT uSubFunc, LPVOID lpData)
             if (LOWORD(ret))
                 szW[cch++] = LOWORD(ret);
 
-            cch = WideCharToMultiByte(pImeDpi->uCodePage, 0, szW, cch, szA, _countof(szA), NULL, NULL);
+            cch = WideCharToMultiByte(pImeDpi->uCodePage, 0, szW, cch, szA, _countof(szA),
+                                      NULL, NULL);
             switch (cch)
             {
                 case 1:
@@ -770,7 +771,6 @@ LRESULT WINAPI ImmEscapeW(HKL hKL, HIMC hIMC, UINT uSubFunc, LPVOID lpData)
             ret = pImeDpi->ImeEscape(hIMC, uSubFunc, lpData);
 
             w = LOWORD(ret);
-
             cch = 0;
             if (HIBYTE(w))
                 szA[cch++] = HIBYTE(w);
