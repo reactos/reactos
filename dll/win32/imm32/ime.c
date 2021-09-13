@@ -658,8 +658,8 @@ LRESULT WINAPI ImmEscapeA(HKL hKL, HIMC hIMC, UINT uSubFunc, LPVOID lpData)
     LRESULT ret = 0;
     PIMEDPI pImeDpi;
     INT cch;
-    CHAR szA[80];
-    WCHAR szW[80];
+    CHAR szA[MAX_IMM_FILENAME];
+    WCHAR szW[MAX_IMM_FILENAME];
 
     TRACE("(%p, %p, %u, %p)\n", hKL, hIMC, uSubFunc, lpData);
 
@@ -712,8 +712,10 @@ LRESULT WINAPI ImmEscapeA(HKL hKL, HIMC hIMC, UINT uSubFunc, LPVOID lpData)
             ret = pImeDpi->ImeEscape(hIMC, uSubFunc, szW);
             if (ret)
             {
-                cch = WideCharToMultiByte(pImeDpi->uCodePage, 0, szW, -1, lpData, 80,
-                                          NULL, NULL);
+                cch = WideCharToMultiByte(pImeDpi->uCodePage, 0, szW, -1,
+                                          lpData, MAX_IMM_FILENAME, NULL, NULL);
+                if (cch > MAX_IMM_FILENAME - 1)
+                    cch = MAX_IMM_FILENAME - 1;
                 ((LPSTR)lpData)[cch] = 0;
             }
         break;
@@ -722,6 +724,8 @@ LRESULT WINAPI ImmEscapeA(HKL hKL, HIMC hIMC, UINT uSubFunc, LPVOID lpData)
         case IME_ESC_HANJA_MODE:
             cch = MultiByteToWideChar(pImeDpi->uCodePage, MB_PRECOMPOSED,
                                       lpData, -1, szW, _countof(szW));
+            if (cch > MAX_IMM_FILENAME - 1)
+                cch = MAX_IMM_FILENAME - 1;
             szW[cch] = 0;
             ret = pImeDpi->ImeEscape(hIMC, uSubFunc, szW);
             break;
@@ -743,8 +747,9 @@ LRESULT WINAPI ImmEscapeW(HKL hKL, HIMC hIMC, UINT uSubFunc, LPVOID lpData)
     LRESULT ret = 0;
     PIMEDPI pImeDpi;
     INT cch;
-    CHAR szA[80];
-    WCHAR szW[80];
+    CHAR szA[MAX_IMM_FILENAME];
+    WCHAR szW[MAX_IMM_FILENAME];
+    WORD w;
 
     TRACE("(%p, %p, %u, %p)\n", hKL, hIMC, uSubFunc, lpData);
 
@@ -765,10 +770,11 @@ LRESULT WINAPI ImmEscapeW(HKL hKL, HIMC hIMC, UINT uSubFunc, LPVOID lpData)
             ret = pImeDpi->ImeEscape(hIMC, uSubFunc, lpData);
 
             cch = 0;
-            if (HIBYTE(LOWORD(ret)))
-                szA[cch++] = HIBYTE(LOWORD(ret));
-            if (LOBYTE(LOWORD(ret)))
-                szA[cch++] = LOBYTE(LOWORD(ret));
+            w = LOWORD(ret);
+            if (HIBYTE(w))
+                szA[cch++] = HIBYTE(w);
+            if (LOBYTE(w))
+                szA[cch++] = LOBYTE(w);
 
             cch = MultiByteToWideChar(pImeDpi->uCodePage, MB_PRECOMPOSED,
                                       szA, cch, szW, _countof(szW));
@@ -787,7 +793,9 @@ LRESULT WINAPI ImmEscapeW(HKL hKL, HIMC hIMC, UINT uSubFunc, LPVOID lpData)
             if (ret)
             {
                 cch = MultiByteToWideChar(pImeDpi->uCodePage, MB_PRECOMPOSED,
-                                          szA, -1, lpData, 80);
+                                          szA, -1, lpData, MAX_IMM_FILENAME);
+                if (cch > MAX_IMM_FILENAME - 1)
+                    cch = MAX_IMM_FILENAME - 1;
                 ((LPWSTR)lpData)[cch] = 0;
             }
             break;
@@ -796,6 +804,8 @@ LRESULT WINAPI ImmEscapeW(HKL hKL, HIMC hIMC, UINT uSubFunc, LPVOID lpData)
         case IME_ESC_HANJA_MODE:
             cch = WideCharToMultiByte(pImeDpi->uCodePage, 0,
                                       lpData, -1, szA, _countof(szA), NULL, NULL);
+            if (cch > MAX_IMM_FILENAME - 1)
+                cch = MAX_IMM_FILENAME - 1;
             szA[cch] = 0;
             ret = pImeDpi->ImeEscape(hIMC, uSubFunc, szA);
             break;
