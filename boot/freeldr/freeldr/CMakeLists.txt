@@ -266,7 +266,7 @@ set_target_properties(freeldr_pe
 
 if(MSVC)
     if(ARCH STREQUAL "arm")
-        add_target_link_flags(freeldr_pe "/ignore:4078 /ignore:4254 /DRIVER")
+        target_link_options(freeldr_pe PRIVATE /ignore:4078 /ignore:4254 /DRIVER)
     else()
         target_link_options(freeldr_pe PRIVATE /ignore:4078 /ignore:4254 /DYNAMICBASE:NO /FIXED /FILEALIGN:512 /ALIGN:512)
         add_linker_script(freeldr_pe freeldr_i386.msvc.lds)
@@ -301,7 +301,7 @@ endif()
 
 if(RUNTIME_CHECKS)
     target_link_libraries(freeldr_pe runtmchk)
-    add_target_link_flags(freeldr_pe "/MERGE:.rtc=.text")
+    target_link_options(freeldr_pe PRIVATE "/MERGE:.rtc=.text")
 endif()
 
 add_dependencies(freeldr_pe asm)

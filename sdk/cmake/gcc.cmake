@@ -277,24 +277,24 @@ set(CMAKE_DEPFILE_FLAGS_RC "--preprocessor=\"${CMAKE_C_COMPILER}\" ${RC_PREPROCE
 # Optional 3rd parameter: stdcall stack bytes
 function(set_entrypoint MODULE ENTRYPOINT)
     if(${ENTRYPOINT} STREQUAL "0")
-        add_target_link_flags(${MODULE} "-Wl,-entry,0")
+        target_link_options(${MODULE} PRIVATE "-Wl,-entry,0")
     elseif(ARCH STREQUAL "i386")
         set(_entrysymbol _${ENTRYPOINT})
         if(${ARGC} GREATER 2)
             set(_entrysymbol ${_entrysymbol}@${ARGV2})
         endif()
-        add_target_link_flags(${MODULE} "-Wl,-entry,${_entrysymbol}")
+        target_link_options(${MODULE} PRIVATE "-Wl,-entry,${_entrysymbol}")
     else()
-        add_target_link_flags(${MODULE} "-Wl,-entry,${ENTRYPOINT}")
+        target_link_options(${MODULE} PRIVATE "-Wl,-entry,${ENTRYPOINT}")
     endif()
 endfunction()
 
 function(set_subsystem MODULE SUBSYSTEM)
-    add_target_link_flags(${MODULE} "-Wl,--subsystem,${SUBSYSTEM}:5.01")
+    target_link_options(${MODULE} PRIVATE "-Wl,--subsystem,${SUBSYSTEM}:5.01")
 endfunction()
 
 function(set_image_base MODULE IMAGE_BASE)
-    add_target_link_flags(${MODULE} "-Wl,--image-base,${IMAGE_BASE}")
+    target_link_options(${MODULE} PRIVATE "-Wl,--image-base,${IMAGE_BASE}")
 endfunction()
 
 function(set_module_type_toolchain MODULE TYPE)
@@ -476,8 +476,8 @@ endmacro()
 
 function(add_linker_script _target _linker_script_file)
     get_filename_component(_file_full_path ${_linker_script_file} ABSOLUTE)
-    add_target_link_flags(${_target} "-Wl,-T,${_file_full_path}")
-    add_target_property(${_target} LINK_DEPENDS ${_file_full_path})
+    target_link_options(${_target} PRIVATE "-Wl,-T,${_file_full_path}")
+    set_property(TARGET ${_target} APPEND PROPERTY LINK_DEPENDS ${_file_full_path})
 endfunction()
 
 # Manage our C++ options
