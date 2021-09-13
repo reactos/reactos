@@ -651,6 +651,165 @@ DWORD WINAPI ImmGetProperty(HKL hKL, DWORD fdwIndex)
 }
 
 /***********************************************************************
+ *		ImmEscapeA (IMM32.@)
+ */
+LRESULT WINAPI ImmEscapeA(HKL hKL, HIMC hIMC, UINT uSubFunc, LPVOID lpData)
+{
+    LRESULT ret = 0;
+    PIMEDPI pImeDpi;
+    INT cch;
+    CHAR szA[80];
+    WCHAR szW[80];
+
+    TRACE("(%p, %p, %u, %p)\n", hKL, hIMC, uSubFunc, lpData);
+
+    pImeDpi = ImmLockOrLoadImeDpi(hKL);
+    if (!pImeDpi)
+        return 0;
+
+    if (!(pImeDpi->ImeInfo.fdwProperty & IME_PROP_UNICODE) || !lpData)
+    {
+        ret = pImeDpi->ImeEscape(hIMC, uSubFunc, lpData);
+        ImmUnlockImeDpi(pImeDpi);
+        return ret;
+    }
+
+    switch (uSubFunc)
+    {
+        case IME_ESC_SEQUENCE_TO_INTERNAL:
+            ret = pImeDpi->ImeEscape(hIMC, uSubFunc, lpData);
+
+            cch = 0;
+            if (HIWORD(ret))
+                szW[cch++] = HIWORD(ret);
+            if (LOWORD(ret))
+                szW[cch++] = LOWORD(ret);
+
+            cch = WideCharToMultiByte(pImeDpi->uCodePage, 0, szW, cch, szA, _countof(szA), NULL, NULL);
+            switch (cch)
+            {
+                case 1:
+                    ret = MAKEWORD(szA[0], 0);
+                    break;
+                case 2:
+                    ret = MAKEWORD(szA[1], szA[0]);
+                    break;
+                case 3:
+                    ret = MAKELONG(MAKEWORD(szA[2], szA[1]), MAKEWORD(szA[0], 0));
+                    break;
+                case 4:
+                    ret = MAKELONG(MAKEWORD(szA[3], szA[2]), MAKEWORD(szA[1], szA[0]));
+                    break;
+                default:
+                    ret = 0;
+                    break;
+            }
+            break;
+
+        case IME_ESC_GET_EUDC_DICTIONARY:
+        case IME_ESC_IME_NAME:
+        case IME_ESC_GETHELPFILENAME:
+            ret = pImeDpi->ImeEscape(hIMC, uSubFunc, szW);
+            if (ret)
+            {
+                cch = WideCharToMultiByte(pImeDpi->uCodePage, 0, szW, -1, lpData, 80,
+                                          NULL, NULL);
+                ((LPSTR)lpData)[cch] = 0;
+            }
+        break;
+
+        case IME_ESC_SET_EUDC_DICTIONARY:
+        case IME_ESC_HANJA_MODE:
+            cch = MultiByteToWideChar(pImeDpi->uCodePage, MB_PRECOMPOSED,
+                                      lpData, -1, szW, _countof(szW));
+            szW[cch] = 0;
+            ret = pImeDpi->ImeEscape(hIMC, uSubFunc, szW);
+            break;
+
+        default:
+            ret = pImeDpi->ImeEscape(hIMC, uSubFunc, lpData);
+            break;
+    }
+
+    ImmUnlockImeDpi(pImeDpi);
+    return ret;
+}
+
+/***********************************************************************
+ *		ImmEscapeW (IMM32.@)
+ */
+LRESULT WINAPI ImmEscapeW(HKL hKL, HIMC hIMC, UINT uSubFunc, LPVOID lpData)
+{
+    LRESULT ret = 0;
+    PIMEDPI pImeDpi;
+    INT cch;
+    CHAR szA[80];
+    WCHAR szW[80];
+
+    TRACE("(%p, %p, %u, %p)\n", hKL, hIMC, uSubFunc, lpData);
+
+    pImeDpi = ImmLockOrLoadImeDpi(hKL);
+    if (!pImeDpi)
+        return ret;
+
+    if ((pImeDpi->ImeInfo.fdwProperty & IME_PROP_UNICODE) || !lpData)
+    {
+        ret = pImeDpi->ImeEscape(hIMC, uSubFunc, lpData);
+        ImmUnlockImeDpi(pImeDpi);
+        return ret;
+    }
+
+    switch (uSubFunc)
+    {
+        case IME_ESC_SEQUENCE_TO_INTERNAL:
+            ret = pImeDpi->ImeEscape(hIMC, uSubFunc, lpData);
+
+            cch = 0;
+            if (HIBYTE(LOWORD(ret)))
+                szA[cch++] = HIBYTE(LOWORD(ret));
+            if (LOBYTE(LOWORD(ret)))
+                szA[cch++] = LOBYTE(LOWORD(ret));
+
+            cch = MultiByteToWideChar(pImeDpi->uCodePage, MB_PRECOMPOSED,
+                                      szA, cch, szW, _countof(szW));
+            switch (cch)
+            {
+                case 1:  ret = szW[0]; break;
+                case 2:  ret = MAKELONG(szW[1], szW[0]); break;
+                default: ret = 0; break;
+            }
+            break;
+
+        case IME_ESC_GET_EUDC_DICTIONARY:
+        case IME_ESC_IME_NAME:
+        case IME_ESC_GETHELPFILENAME:
+            ret = pImeDpi->ImeEscape(hIMC, uSubFunc, szA);
+            if (ret)
+            {
+                cch = MultiByteToWideChar(pImeDpi->uCodePage, MB_PRECOMPOSED,
+                                          szA, -1, lpData, 80);
+                ((LPWSTR)lpData)[cch] = 0;
+            }
+            break;
+
+        case IME_ESC_SET_EUDC_DICTIONARY:
+        case IME_ESC_HANJA_MODE:
+            cch = WideCharToMultiByte(pImeDpi->uCodePage, 0,
+                                      lpData, -1, szA, _countof(szA), NULL, NULL);
+            szA[cch] = 0;
+            ret = pImeDpi->ImeEscape(hIMC, uSubFunc, szA);
+            break;
+
+        default:
+            ret = pImeDpi->ImeEscape(hIMC, uSubFunc, lpData);
+            break;
+    }
+
+    ImmUnlockImeDpi(pImeDpi);
+    return ret;
+}
+
+/***********************************************************************
  *		ImmGetOpenStatus (IMM32.@)
  */
 BOOL WINAPI ImmGetOpenStatus(HIMC hIMC)
