@@ -687,9 +687,10 @@ FindFirstFileExW(IN LPCWSTR lpFileName,
         /*
          * May represent many FILE_BOTH_DIR_INFORMATION
          * or many FILE_FULL_DIR_INFORMATION structures.
+         * NOTE: NtQueryDirectoryFile requires the buffer to be ULONG-aligned
          */
-        BYTE DirectoryInfo[FIND_DATA_SIZE];
-        DIR_INFORMATION DirInfo = {&DirectoryInfo};
+        DECLSPEC_ALIGN(4) BYTE DirectoryInfo[FIND_DATA_SIZE];
+        DIR_INFORMATION DirInfo = { .DirInfo = &DirectoryInfo };
 
         /* The search filter is always unused */
         if (lpSearchFilter)
