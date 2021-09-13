@@ -734,11 +734,6 @@ void Test_CursorIcon()
     ok(bmp.bmWidth == (bmp.bmHeight / 2), "ERR UNICODE CursorIcon RECT got %ldx%ld\n", bmp.bmWidth, bmp.bmHeight);
     ok(bmp.bmHeight == 64, "ERR UNICODE CursorIcon Height got %ld\n", bmp.bmHeight);
     DeleteObject(hbmMask);
- 
-    GetObjectA(hbmMask, sizeof(bmp), &bmp);
-    ok(bmp.bmWidth == (bmp.bmHeight / 2), "ERR ANSI CursorIcon RECT got %ldx%ld\n", bmp.bmWidth, bmp.bmHeight);
-    ok(bmp.bmHeight == 64, "ERR ANSI CursorIcon Height got %ld\n", bmp.bmHeight);
-    DeleteObject(hbmMask);
 }
 
 START_TEST(GetObject)
