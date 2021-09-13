@@ -8,7 +8,7 @@ endif()
 
 include(ntos.cmake)
 
-if (CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
+if(NOT MSVC)
     # Make sure we don't duplicate some symbols
     add_compile_options(-fno-common)
 endif()

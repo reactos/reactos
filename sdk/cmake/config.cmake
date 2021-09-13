@@ -79,7 +79,7 @@ else()
     message("WARNING: the compiler has not been recognized")
 endif()
 
-if(MSVC AND (NOT USE_CLANG_CL))
+if(MSVC)
     set(KDBG FALSE CACHE BOOL
 "Whether to compile in the integrated kernel debugger.")
     if(CMAKE_BUILD_TYPE STREQUAL "Release")

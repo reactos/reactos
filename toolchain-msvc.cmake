@@ -24,6 +24,10 @@ if(USE_CLANG_CL)
     set(CMAKE_CXX_COMPILER clang-cl)
     # Clang now defaults to lld-link which we're not compatible with yet
     set(CMAKE_LINKER link)
+    # llvm-lib with link.exe can't generate proper delayed imports
+    set(CMAKE_AR lib)
+    set(CMAKE_C_COMPILER_AR lib)
+    set(CMAKE_CXX_COMPILER_AR lib)
     # Explicitly set target so CMake doesn't get confused
     if (ARCH STREQUAL "amd64")
         set(CMAKE_C_COMPILER_TARGET "x86_64-pc-windows-msvc")
@@ -38,6 +42,11 @@ if(USE_CLANG_CL)
         set(CMAKE_C_COMPILER_TARGET "i686-pc-windows-msvc")
         set(CMAKE_CXX_COMPILER_TARGET "i686-pc-windows-msvc")
     endif()
+
+    # Avoid wrapping RC compiler with cmcldeps utility for clang-cl.
+    # Otherwise it breaks cross-compilation (32bit ReactOS cannot be compiled by 64bit LLVM),
+    # target architecture is not passed properly
+    set(CMAKE_NINJA_CMCLDEPS_RC OFF)
 else()
     set(CMAKE_C_COMPILER cl)
     set(CMAKE_CXX_COMPILER cl)
