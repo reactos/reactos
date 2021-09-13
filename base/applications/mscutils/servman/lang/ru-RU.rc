@@ -280,7 +280,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_HELP_OPTIONS "ОПЦИИ СОЗДАНИЯ:\r\nПримечание: Имя опции включает знак ""равно"".\r\n type= <own|share|interact|kernel|filesys|rec>\r\n       (по умолчанию = own)\r\n start= <boot|system|auto|demand|disabled>\r\n       (по умолчанию = demand) \r\n error= <normal|severe|critical|ignore>\r\n       (по умолчанию = normal)\r\n group= <LoadOrderGroup>\r\n tag= <yes|no>\r\n depend= <Dependencies(отделяется / (наклонная черта))>\r\n obj= <AccountName|ObjectName>\r\n       (по умолчанию = LocalSystem)\r\n password= <password>\r\n"
+    IDS_HELP_OPTIONS "ОПЦИИ СОЗДАНИЯ:\nПримечание: Имя опции включает знак ""равно"".\n type= <own|share|interact|kernel|filesys|rec>\n       (по умолчанию = own)\n start= <boot|system|auto|demand|disabled>\n       (по умолчанию = demand)\n error= <normal|severe|critical|ignore>\n       (по умолчанию = normal)\n group= <LoadOrderGroup>\n tag= <yes|no>\n depend= <Dependencies(отделяется / (наклонная черта))>\n obj= <AccountName|ObjectName>\n       (по умолчанию = LocalSystem)\n password= <password>\n"
 END
 
 /* Hints */

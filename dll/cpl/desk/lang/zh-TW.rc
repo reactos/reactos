@@ -163,7 +163,7 @@ BEGIN
     COMBOBOX IDC_FONTSIZE_COMBO, 14, 30, 223, 80, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     LTEXT "", IDC_FONTSIZE_CUSTOM, 14, 46, 223, 12
     GROUPBOX "相容性", -1, 7, 67, 237, 97
-    LTEXT "如果在更改顏色設定後不立即重新啟動電腦，某些程式可能無法正常工作。\r\n\n更改顯示設定後:", -1, 12, 78, 228, 34
+    LTEXT "如果在更改顏色設定後不立即重新啟動電腦，某些程式可能無法正常工作。\n\n更改顯示設定後:", -1, 12, 78, 228, 34
     AUTORADIOBUTTON "在應用新的顯示設定之前重新啟動電腦(&R)", IDC_RESTART_RB, 14, 116, 228, 10
     AUTORADIOBUTTON "應用新的顯示設定而不重新啟動電腦(&P)", IDC_WITHOUTREBOOT_RB, 14, 131, 228, 10
     AUTORADIOBUTTON "在應用新的顯示設定之前詢問(&K)", IDC_ASKME_RB, 14, 146, 228, 10

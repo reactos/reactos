@@ -290,8 +290,8 @@ STRINGTABLE DISCARDABLE
 BEGIN
   IDS_APPNAME               "ReactOS 设备管理器"
   IDS_APP_AUTHORS           "Copyright 2015 Ged Murphy"
-  IDS_CONFIRM_DISABLE       "禁用此设备会使其停止运行。\r\n你真的想要禁用它吗?"
-  IDS_CONFIRM_UNINSTALL     "警告: 您将要从系统中卸载此设备。\r\n你想要继续吗?"
+  IDS_CONFIRM_DISABLE       "禁用此设备会使其停止运行。\n你真的想要禁用它吗?"
+  IDS_CONFIRM_UNINSTALL     "警告: 您将要从系统中卸载此设备。\n你想要继续吗?"
 END
 STRINGTABLE DISCARDABLE
 BEGIN

@@ -328,7 +328,7 @@ BEGIN
     IDS_BAD_VALUE "不能查詢值 '%s'"
     IDS_UNSUPPORTED_TYPE "不能編輯這類型的項 (%ld)"
     IDS_TOO_BIG_VALUE "數值過大 (%ld)"
-    IDS_MULTI_SZ_EMPTY_STRING "REG_MULTI_SZ 類型的資料不能包含空字元串。\r\n註冊表編輯器將刪除找到得空字元串。"
+    IDS_MULTI_SZ_EMPTY_STRING "REG_MULTI_SZ 類型的資料不能包含空字元串。\n註冊表編輯器將刪除找到得空字元串。"
     IDS_QUERY_DELETE_KEY_ONE "確實要刪除這個項嗎?"
     IDS_QUERY_DELETE_KEY_MORE "確實要刪除這些項嗎?"
     IDS_QUERY_DELETE_KEY_CONFIRM "確認項刪除"

@@ -3,35 +3,34 @@ LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
 
 STRINGTABLE
 BEGIN
-    IDS_USAGE "\r\n\
-Usage: tracert [-d] [-h maximum_hops] [-j host-list] [-w timeout] target_name \r\n\r\n\
-Options:\r\n\
-    -d                 Do not resolve addresses to hostnames.\r\n\
-    -h maximum_hops    Maximum number of hops to search for target.\r\n\
-    -j host-list       Loose source route along host-list.\r\n\
-    -w timeout         Wait timeout milliseconds for each reply.\r\n\
-    -4                 Force using IPv4.\r\n\
-    -6                 Force using IPv6.\r\n\
-\r\n"
+    IDS_USAGE "\n\
+Usage: tracert [-d] [-h maximum_hops] [-j host-list] [-w timeout] target_name\n\n\
+Options:\n\
+    -d                 Do not resolve addresses to hostnames.\n\
+    -h maximum_hops    Maximum number of hops to search for target.\n\
+    -j host-list       Loose source route along host-list.\n\
+    -w timeout         Wait timeout milliseconds for each reply.\n\
+    -4                 Force using IPv4.\n\
+    -6                 Force using IPv6.\n\
+\n"
 
-    IDS_INVALID_OPTION  "%1 is not a valid command option.\r\n"
-    IDS_TRACE_INFO      "\r\nTracing route to %1 [%2]\r\nover a maximum of %3!u! hops:\r\n\r\n"
-    IDS_TRACE_COMPLETE  "\r\nTrace complete.\r\n"
-    IDS_UNABLE_RESOLVE  "Unable to resolve target system name %1.\r\n"
+    IDS_INVALID_OPTION  "%1 is not a valid command option.\n"
+    IDS_TRACE_INFO      "\nTracing route to %1 [%2]\nover a maximum of %3!u! hops:\n\n"
+    IDS_TRACE_COMPLETE  "\nTrace complete.\n"
+    IDS_UNABLE_RESOLVE  "Unable to resolve target system name %1.\n"
 
-    IDS_GEN_FAILURE     "General failure.\r\n"
-    IDS_TRANSMIT_FAILED "Transmit failed. (Error %1!u!)\r\n"
+    IDS_GEN_FAILURE     "General failure.\n"
+    IDS_TRANSMIT_FAILED "Transmit failed. (Error %1!u!)\n"
 
-    IDS_HOP_COUNT       "%1!3lu!  %0\r\n"
-    IDS_HOP_TIME        "%1!4lu! ms  %0\r\n"
-    IDS_HOP_ZERO,       "  <1 ms  %0\r\n"
-    IDS_TIMEOUT         "   *     %0\r\n"
+    IDS_HOP_COUNT       "%1!3lu!  %0\n"
+    IDS_HOP_TIME        "%1!4lu! ms  %0\n"
+    IDS_HOP_ZERO        "  <1 ms  %0\n"
+    IDS_TIMEOUT         "   *     %0\n"
     IDS_HOP_RES_INFO    "%1 [%2]"
     IDS_HOP_IP_INFO     "%1"
     IDS_LINEBREAK       "\r\n"
-    IDS_REQ_TIMED_OUT   "Request timed out.\r\n"
+    IDS_REQ_TIMED_OUT   "Request timed out.\n"
     IDS_HOP_RESPONSE    "  reports: "
-    IDS_DEST_HOST_UNREACHABLE "Destination host unreachable.\r\n"
-    IDS_DEST_NET_UNREACHABLE  "Destination network unreachable.\r\n"
-
+    IDS_DEST_HOST_UNREACHABLE "Destination host unreachable.\n"
+    IDS_DEST_NET_UNREACHABLE  "Destination network unreachable.\n"
 END

@@ -373,9 +373,8 @@ CCharMapWindow::DialogProc(
         switch (wParam)
         {
         case ID_ABOUT:
-            // Apportion blame
             MessageBoxW(This->m_hMainWnd,
-                        L"ReactOS Character Map\r\nCopyright Ged Murphy 2015",
+                        L"ReactOS Character Map\nCopyright Ged Murphy 2015",
                         L"About",
                         MB_OK | MB_APPLMODAL);
             break;

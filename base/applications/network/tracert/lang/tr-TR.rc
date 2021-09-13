@@ -3,36 +3,35 @@ LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-    IDS_USAGE "\r\n\
-Kullanım: tracert [-d] [-h maksimum_zıplama] [-j host-list] [-w süre] hedef_adı \r\n\r\n\
-Seçenekler:\r\n\
-    -d                     Adresleri, anabilgisayar adına çevirmez.\r\n\
-    -h maksimum_zıplama    Hedef ararken kullanılacak maksimum atlama sayısı.\r\n\
-    -j host-list           Ana bilgisayar listesi 'host-list' boyunca kaynak yolu gevşetir.\r\n\
-    -w süre                Her geri dönüşün ardından belirtilen \r\n\
-                           'süre' kara milisaniye cinsinden bekler.\r\n\
-    -4                     IPv4 kullanmaya zorlar.\r\n\
-    -6                     IPv6 kullanmaya zorlar.\r\n\
-\r\n"
+    IDS_USAGE "\n\
+Kullanım: tracert [-d] [-h maksimum_zıplama] [-j host-list] [-w süre] hedef_adı\n\n\
+Seçenekler:\n\
+    -d                     Adresleri, anabilgisayar adına çevirmez.\n\
+    -h maksimum_zıplama    Hedef ararken kullanılacak maksimum atlama sayısı.\n\
+    -j host-list           Ana bilgisayar listesi 'host-list' boyunca kaynak yolu gevşetir.\n\
+    -w süre                Her geri dönüşün ardından belirtilen\n\
+                           'süre' kara milisaniye cinsinden bekler.\n\
+    -4                     IPv4 kullanmaya zorlar.\n\
+    -6                     IPv6 kullanmaya zorlar.\n\
+\n"
 
-    IDS_INVALID_OPTION  "%1 geçerli bir komut seçeneği değil.\r\n"
-    IDS_TRACE_INFO      "\r\n%1 [%2] üzerinden maksimum [%2]\r\n%3!u! hoplamalı bir rota izlenecek:\r\n\r\n"
-    IDS_TRACE_COMPLETE  "\r\nİzleme başarıyla tamamlandı.\r\n"
-    IDS_UNABLE_RESOLVE  "Hedef sistemin ismi çözümlenemedi: %1.\r\n"
+    IDS_INVALID_OPTION  "%1 geçerli bir komut seçeneği değil.\n"
+    IDS_TRACE_INFO      "\n%1 [%2] üzerinden maksimum [%2]\n%3!u! hoplamalı bir rota izlenecek:\n\n"
+    IDS_TRACE_COMPLETE  "\nİzleme başarıyla tamamlandı.\n"
+    IDS_UNABLE_RESOLVE  "Hedef sistemin ismi çözümlenemedi: %1.\n"
 
-    IDS_GEN_FAILURE     "Genel hata.\r\n"
-    IDS_TRANSMIT_FAILED "İletim başarısız oldu. (Hata %1!u!)\r\n"
+    IDS_GEN_FAILURE     "Genel hata.\n"
+    IDS_TRANSMIT_FAILED "İletim başarısız oldu. (Hata %1!u!)\n"
 
-    IDS_HOP_COUNT       "%1!3lu!  %0\r\n"
-    IDS_HOP_TIME        "%1!4lu! ms  %0\r\n"
-    IDS_HOP_ZERO,       "  <1 ms  %0\r\n"
-    IDS_TIMEOUT         "   *     %0\r\n"
+    IDS_HOP_COUNT       "%1!3lu!  %0\n"
+    IDS_HOP_TIME        "%1!4lu! ms  %0\n"
+    IDS_HOP_ZERO        "  <1 ms  %0\n"
+    IDS_TIMEOUT         "   *     %0\n"
     IDS_HOP_RES_INFO    "%1 [%2]"
     IDS_HOP_IP_INFO     "%1"
     IDS_LINEBREAK       "\r\n"
-    IDS_REQ_TIMED_OUT   "İstek zaman aşımına uğradı.\r\n"
+    IDS_REQ_TIMED_OUT   "İstek zaman aşımına uğradı.\n"
     IDS_HOP_RESPONSE    "  raporlar: "
-    IDS_DEST_HOST_UNREACHABLE "Hedef cihaza erişilemiyor.\r\n"
-    IDS_DEST_NET_UNREACHABLE  "Hedef ağa erişilemiyor.\r\n"
-
+    IDS_DEST_HOST_UNREACHABLE "Hedef cihaza erişilemiyor.\n"
+    IDS_DEST_NET_UNREACHABLE  "Hedef ağa erişilemiyor.\n"
 END

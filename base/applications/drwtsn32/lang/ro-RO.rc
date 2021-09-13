@@ -10,5 +10,5 @@ LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 STRINGTABLE
 BEGIN
     IDS_APP_TITLE "Crash reporter de ReactOS"
-    IDS_USER_ALERT_MESSAGE "Aplicația %ls a eșuat să funcționeze. Informațiile despre acest crash sunt salvate în:\r\n\r\n%ls"
+    IDS_USER_ALERT_MESSAGE "Aplicația %ls a eșuat să funcționeze. Informațiile despre acest crash sunt salvate în:\n\n%ls"
 END

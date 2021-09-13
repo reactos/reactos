@@ -282,7 +282,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_HELP_OPTIONS "OLUŞTURMA SEÇENEKLERİ:\r\nÖNEMLİ: Seçenek adı, eşittir işaretini kapsar.\r\n type= <own|share|interact|kernel|filesys|rec>\r\n       (Varsayılan = own)\r\n start= <boot|system|auto|demand|disabled>\r\n       (Varsayılan = demand) \r\n error= <normal|severe|critical|ignore>\r\n       (Varsayılan = normal)\r\n group= <Yükleme dizisi öbeği>\r\n tag= <yes|no>\r\n depend= <Bağımlılıklar (Ters bölü çizgisiyle birbirinden ayrılmalıdır.)>\r\n obj= <Hesap adı|Nesne adı>\r\n       (Varsayılan = LocalSystem)\r\n password= <Şifre>\r\n"
+    IDS_HELP_OPTIONS "OLUŞTURMA SEÇENEKLERİ:\nÖNEMLİ: Seçenek adı, eşittir işaretini kapsar.\n type= <own|share|interact|kernel|filesys|rec>\n       (Varsayılan = own)\n start= <boot|system|auto|demand|disabled>\n       (Varsayılan = demand)\n error= <normal|severe|critical|ignore>\n       (Varsayılan = normal)\n group= <Yükleme dizisi öbeği>\n tag= <yes|no>\n depend= <Bağımlılıklar (Ters bölü çizgisiyle birbirinden ayrılmalıdır.)>\n obj= <Hesap adı|Nesne adı>\n       (Varsayılan = LocalSystem)\n password= <Şifre>\n"
 END
 
 /* Hints */

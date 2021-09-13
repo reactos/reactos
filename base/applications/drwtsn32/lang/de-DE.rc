@@ -10,5 +10,5 @@ LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
 STRINGTABLE
 BEGIN
     IDS_APP_TITLE "ReactOS Fehlerberichterstattung"
-    IDS_USER_ALERT_MESSAGE "Die Anwendung %ls ist abgestürzt. Informationen über den Absturz wurden hier abgespeichert:\r\n\r\n%ls"
+    IDS_USER_ALERT_MESSAGE "Die Anwendung %ls ist abgestürzt. Informationen über den Absturz wurden hier abgespeichert:\n\n%ls"
 END

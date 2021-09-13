@@ -289,8 +289,8 @@ STRINGTABLE DISCARDABLE
 BEGIN
   IDS_APPNAME               "Gestionnaire de périphériques ReactOS"
   IDS_APP_AUTHORS           "Copyright 2015 Ged Murphy"
-  IDS_CONFIRM_DISABLE       "Désactiver ce périphérique va le rendre inopérant.\r\nVoulez-vous réellement le désactiver ?"
-  IDS_CONFIRM_UNINSTALL     "Attention : vous êtes sur le point de désinstaller ce périphérique de votre système.\r\nVoulez-vous continuer ?"
+  IDS_CONFIRM_DISABLE       "Désactiver ce périphérique va le rendre inopérant.\nVoulez-vous réellement le désactiver ?"
+  IDS_CONFIRM_UNINSTALL     "Attention : vous êtes sur le point de désinstaller ce périphérique de votre système.\nVoulez-vous continuer ?"
 END
 STRINGTABLE DISCARDABLE
 BEGIN

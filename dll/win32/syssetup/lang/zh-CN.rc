@@ -79,7 +79,7 @@ BEGIN
     LTEXT "", IDC_LOCALETEXT, 53, 29, 250, 16
     LTEXT "想要更改系统和用户的区域设置，请单击 “自定义” 。", IDC_STATIC, 53, 60, 184, 8
     PUSHBUTTON "自定义(&C)...", IDC_CUSTOMLOCALE, 245, 57, 50, 14
-    LTEXT "“文字输入语言”让您使用多种输入方法和设备用\r\n许多不同的语言输入文字。", IDC_STATIC, 53, 86, 253, 20
+    LTEXT "“文字输入语言”让您使用多种输入方法和设备用\n许多不同的语言输入文字。", IDC_STATIC, 53, 86, 253, 20
     LTEXT "", IDC_LAYOUTTEXT, 53, 100, 250, 16
     LTEXT "想要查看或改变当前配置，请单击“自定义”。", IDC_STATIC, 53, 124, 184, 8
     PUSHBUTTON "自定义(&U)...", IDC_CUSTOMLAYOUT, 245, 120, 50, 14

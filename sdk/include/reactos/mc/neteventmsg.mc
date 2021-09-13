@@ -856,8 +856,8 @@ Le serveur de configuration de sécurité (scesrv.dll) n'a pas réussi à s'init
 avec l'erreur %1. Le système redémarre...
 .
 Language=Polish
-Menedżer sterowania usługami nie został zainicjowany pomyślnie.\r\nNie udało się zainicjować serwera
-konfiguracji zabezpieczeń (scesrv.dll)\r\nz powodu błędu %1. Trwa ponowne uruchamianie systemu...
+Menedżer sterowania usługami nie został zainicjowany pomyślnie. Nie udało się zainicjować serwera
+konfiguracji zabezpieczeń (scesrv.dll) z powodu błędu %1. Trwa ponowne uruchamianie systemu...
 .
 
 MessageId=7034

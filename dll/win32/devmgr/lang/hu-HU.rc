@@ -289,8 +289,8 @@ STRINGTABLE DISCARDABLE
 BEGIN
   IDS_APPNAME               "ReactOS Eszközkezelő"
   IDS_APP_AUTHORS           "Copyright 2015 Ged Murphy"
-  IDS_CONFIRM_DISABLE       "Az eszköz letiltás után nem fog működni.\r\nBiztosan letiltja?"
-  IDS_CONFIRM_UNINSTALL     "Figyelem: arra készül hogy eltávolítsa ezt az eszközt a rendszerből.\r\nFolytatni szeretné?"
+  IDS_CONFIRM_DISABLE       "Az eszköz letiltás után nem fog működni.\nBiztosan letiltja?"
+  IDS_CONFIRM_UNINSTALL     "Figyelem: arra készül hogy eltávolítsa ezt az eszközt a rendszerből.\nFolytatni szeretné?"
 END
 STRINGTABLE DISCARDABLE
 BEGIN

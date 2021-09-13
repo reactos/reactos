@@ -290,8 +290,8 @@ STRINGTABLE DISCARDABLE
 BEGIN
   IDS_APPNAME               "ReactOS Aygıt Yöneticisi"
   IDS_APP_AUTHORS           "Telif Hakkı: 2015 Ged Murphy"
-  IDS_CONFIRM_DISABLE       "Bu aygıtı devre dışı bırakmak işleyiş durmasına neden olacaktır.\r\nOnu devre dışı bırakmayı gerçekten istiyor musunuz?"
-  IDS_CONFIRM_UNINSTALL     "Uyarı: Bu aygıtı sisteminizden kaldırmak üzeresiniz.\r\nSürdürmek istiyor musunuz?"
+  IDS_CONFIRM_DISABLE       "Bu aygıtı devre dışı bırakmak işleyiş durmasına neden olacaktır.\nOnu devre dışı bırakmayı gerçekten istiyor musunuz?"
+  IDS_CONFIRM_UNINSTALL     "Uyarı: Bu aygıtı sisteminizden kaldırmak üzeresiniz.\nSürdürmek istiyor musunuz?"
 END
 
 STRINGTABLE DISCARDABLE
