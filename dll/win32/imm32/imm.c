@@ -177,30 +177,6 @@ static inline BOOL is_kbd_ime_unicode(const ImmHkl *hkl)
 
 static InputContextData* get_imc_data(HIMC hIMC);
 
-static inline WCHAR *strdupAtoW( const char *str )
-{
-    WCHAR *ret = NULL;
-    if (str)
-    {
-        DWORD len = MultiByteToWideChar( CP_ACP, 0, str, -1, NULL, 0 );
-        if ((ret = HeapAlloc( GetProcessHeap(), 0, len * sizeof(WCHAR) )))
-            MultiByteToWideChar( CP_ACP, 0, str, -1, ret, len );
-    }
-    return ret;
-}
-
-static inline CHAR *strdupWtoA( const WCHAR *str )
-{
-    CHAR *ret = NULL;
-    if (str)
-    {
-        DWORD len = WideCharToMultiByte( CP_ACP, 0, str, -1, NULL, 0, NULL, NULL );
-        if ((ret = HeapAlloc( GetProcessHeap(), 0, len )))
-            WideCharToMultiByte( CP_ACP, 0, str, -1, ret, len, NULL, NULL );
-    }
-    return ret;
-}
-
 static HMODULE load_graphics_driver(void)
 {
     static const WCHAR display_device_guid_propW[] = {
@@ -444,74 +420,6 @@ BOOL WINAPI ImmAssociateContextEx(HWND hWnd, HIMC hIMC, DWORD dwFlags)
         FIXME("Unknown dwFlags 0x%x\n",dwFlags);
         return FALSE;
     }
-}
-
-/***********************************************************************
- *		ImmConfigureIMEA (IMM32.@)
- */
-BOOL WINAPI ImmConfigureIMEA(HKL hKL, HWND hWnd, DWORD dwMode, LPVOID lpData)
-{
-    ImmHkl *immHkl = IMM_GetImmHkl(hKL);
-
-    TRACE("(%p, %p, %d, %p):\n", hKL, hWnd, dwMode, lpData);
-
-    if (dwMode == IME_CONFIG_REGISTERWORD && !lpData)
-        return FALSE;
-
-    if (immHkl->hIME && immHkl->pImeConfigure)
-    {
-        if (dwMode != IME_CONFIG_REGISTERWORD || !is_kbd_ime_unicode(immHkl))
-            return immHkl->pImeConfigure(hKL,hWnd,dwMode,lpData);
-        else
-        {
-            REGISTERWORDW rww;
-            REGISTERWORDA *rwa = lpData;
-            BOOL rc;
-
-            rww.lpReading = strdupAtoW(rwa->lpReading);
-            rww.lpWord = strdupAtoW(rwa->lpWord);
-            rc = immHkl->pImeConfigure(hKL,hWnd,dwMode,&rww);
-            HeapFree(GetProcessHeap(),0,rww.lpReading);
-            HeapFree(GetProcessHeap(),0,rww.lpWord);
-            return rc;
-        }
-    }
-    else
-        return FALSE;
-}
-
-/***********************************************************************
- *		ImmConfigureIMEW (IMM32.@)
- */
-BOOL WINAPI ImmConfigureIMEW(HKL hKL, HWND hWnd, DWORD dwMode, LPVOID lpData)
-{
-    ImmHkl *immHkl = IMM_GetImmHkl(hKL);
-
-    TRACE("(%p, %p, %d, %p):\n", hKL, hWnd, dwMode, lpData);
-
-    if (dwMode == IME_CONFIG_REGISTERWORD && !lpData)
-        return FALSE;
-
-    if (immHkl->hIME && immHkl->pImeConfigure)
-    {
-        if (dwMode != IME_CONFIG_REGISTERWORD || is_kbd_ime_unicode(immHkl))
-            return immHkl->pImeConfigure(hKL,hWnd,dwMode,lpData);
-        else
-        {
-            REGISTERWORDW *rww = lpData;
-            REGISTERWORDA rwa;
-            BOOL rc;
-
-            rwa.lpReading = strdupWtoA(rww->lpReading);
-            rwa.lpWord = strdupWtoA(rww->lpWord);
-            rc = immHkl->pImeConfigure(hKL,hWnd,dwMode,&rwa);
-            HeapFree(GetProcessHeap(),0,rwa.lpReading);
-            HeapFree(GetProcessHeap(),0,rwa.lpWord);
-            return rc;
-        }
-    }
-    else
-        return FALSE;
 }
 
 /***********************************************************************

@@ -62,6 +62,40 @@ extern "C" {
 #define WM_CBT              0x000003FF // ReactOS only.
 #define WM_MAXIMUM          0x0001FFFF
 
+/* wParam for WM_IME_SYSTEM */
+#define IMS_DESTROYWINDOW        0x1
+#define IMS_IME31COMPATIBLE      0x2
+#define IMS_SETOPENSTATUS        0x3
+#define IMS_SETACTIVECONTEXT     0x4
+#define IMS_CHANGE_SHOWSTAT      0x5
+#define IMS_WINDOWPOS            0x6
+#define IMS_SENDIMEMSG           0x7
+#define IMS_SENDIMEMSGEX         0x8
+#define IMS_SETCANDIDATEPOS      0x9
+#define IMS_SETCOMPOSITIONFONT   0xA
+#define IMS_SETCOMPOSITIONWINDOW 0xB
+#define IMS_CHECKENABLE          0xC
+#define IMS_CONFIGUREIME         0xD
+#define IMS_CONTROLIMEMSG        0xE
+#define IMS_SETOPENCLOSE         0xF
+#define IMS_ISACTIVATED          0x10
+#define IMS_UNLOADTHREADLAYOUT   0x11
+#define IMS_LCHGREQUEST          0x12
+#define IMS_SETSOFTKBDONOFF      0x13
+#define IMS_GETCONVERSIONMODE    0x14
+#define IMS_IMEHELP              0x15
+#define IMS_IMENT35SENDAPPMSG    0x16
+#define IMS_ACTIVATECONTEXT      0x17
+#define IMS_DEACTIVATECONTEXT    0x18
+#define IMS_ACTIVATETHREADLAYOUT 0x19
+#define IMS_CLOSEPROPERTYWINDOW  0x1A
+#define IMS_OPENPROPERTYWINDOW   0x1B
+#define IMS_GETIMEMENU           0x1C
+#define IMS_ENDIMEMENU           0x1D
+#define IMS_GETCONTEXT           0x1E
+#define IMS_SENDNOTIFICATION     0x1F
+#define IMS_FINALIZE_COMPSTR     0x20
+
 /* Non SDK DCE types.*/
 #define DCX_USESTYLE     0x00010000
 #define DCX_KEEPCLIPRGN  0x00040000
