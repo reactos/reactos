@@ -204,7 +204,7 @@ static DWORD WINAPI SdbpGetModuleType(PMEMMAPPED mapping, PIMAGE_NT_HEADERS* nt_
 
 /**
  * Frees attribute data allocated by SdbGetFileAttributes.
- * 
+ *
  * @note Unlike Windows, this implementation will not crash if attr_info is NULL.
  *
  * @param [in]  attr_info   Pointer to array of ATTRINFO which will be freed.
@@ -227,7 +227,7 @@ BOOL WINAPI SdbFreeFileAttributes(PATTRINFO attr_info)
 
 /**
  * Retrieves attribute data shim database requires to match a file with database entry
- * 
+ *
  * @note You must free the attr_info allocated by this function by calling SdbFreeFileAttributes.
  *
  * @param [in]  path            Path to the file.

@@ -351,7 +351,7 @@ BiInitializeAndValidateHive (
     if (NT_SUCCESS(Status))
     {
         /* Cleanup volatile/old data */
-        CmPrepareHive(&Hive->Hive.Hive); // CmCheckRegistry 
+        CmPrepareHive(&Hive->Hive.Hive); // CmCheckRegistry
         Status = STATUS_SUCCESS;
     }
 

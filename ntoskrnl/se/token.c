@@ -638,7 +638,7 @@ SepRemoveUserGroupToken(
 /**
  * @unimplemented
  * @brief
- * Frees (de-allocates) the proxy data memory block of a token. 
+ * Frees (de-allocates) the proxy data memory block of a token.
  *
  * @param[in,out] ProxyData
  * The proxy data to be freed.
@@ -657,11 +657,11 @@ SepFreeProxyData(
 /**
  * @unimplemented
  * @brief
- * Copies the proxy data from the source into the destination of a token. 
+ * Copies the proxy data from the source into the destination of a token.
  *
  * @param[out] Dest
  * The destination path where the proxy data is to be copied to.
- * 
+ *
  * @param[in] Src
  * The source path where the proxy data is be copied from.
  *
@@ -685,10 +685,10 @@ SepCopyProxyData(
  *
  * @param[in] Process
  * The process instance where its access token is about to be replaced.
- * 
+ *
  * @param[in] NewAccessToken
  * The new token that it's going to replace the old one.
- * 
+ *
  * @param[out] OldAccessToken
  * The returned old token that's been replaced, which the caller can do anything.
  *
@@ -812,7 +812,7 @@ SeDeassignPrimaryToken(
  *
  * @param[in] Count
  * Total count of entries that have SIDs in them (that being PSID_AND_ATTRIBUTES in this context).
- * 
+ *
  * @param[in] Src
  * Source that points to the attributes and SID entry structure.
  *
@@ -843,18 +843,18 @@ RtlLengthSidAndAttributes(
  *
  * @param[in] Token
  * Access token to begin the search query of primary group and default owner.
- * 
+ *
  * @param[in] PrimaryGroup
  * A primary group SID to be used for search query, determining if user & groups of a token
  * and the submitted primary group do match.
- * 
+ *
  * @param[in] DefaultOwner
  * The default owner. If specified, it's used to determine if the token belongs to the actual user,
  * that is, being the owner himself.
- * 
+ *
  * @param[out] PrimaryGroupIndex
  * Returns the primary group index.
- * 
+ *
  * @param[out] DefaultOwnerIndex
  * Returns the default owner index.
  *
@@ -965,23 +965,23 @@ SepFindPrimaryGroupAndDefaultOwner(
  *
  * @param[in] Token
  * Access token to duplicate.
- * 
+ *
  * @param[in] ObjectAttributes
  * Object attributes for the new token.
- * 
+ *
  * @param[in] EffectiveOnly
  * If set to TRUE, the function removes all the disabled privileges and groups of the token
  * to duplicate.
- * 
+ *
  * @param[in] TokenType
  * Type of token.
- * 
+ *
  * @param[in] Level
  * Security impersonation level of a token.
- * 
+ *
  * @param[in] PreviousMode
  * The processor request level mode.
- * 
+ *
  * @param[out] NewAccessToken
  * The duplicated token.
  *
@@ -1293,14 +1293,14 @@ Quit:
  *
  * @param[in] ParentToken
  * The parent access token for duplication.
- * 
+ *
  * @param[out] Token
  * The new duplicated token.
- * 
+ *
  * @param[in] InUse
  * Set this to TRUE if the token is about to be used immediately after the call execution
  * of this function, FALSE otherwise.
- * 
+ *
  * @param[in] SessionId
  * Session ID for the token to be assigned.
  *
@@ -1360,7 +1360,7 @@ SeSubProcessToken(
  *
  * @param[in] Token
  * An access token to determine if it's a child or not.
- * 
+ *
  * @param[out] IsChild
  * The returned boolean result.
  *
@@ -1409,7 +1409,7 @@ SeIsTokenChild(
  *
  * @param[in] Token
  * An access token to determine if it's a sibling or not.
- * 
+ *
  * @param[out] IsSibling
  * The returned boolean result.
  *
@@ -1463,13 +1463,13 @@ SeIsTokenSibling(
  *
  * @param[in] Token
  * Token to copy.
- * 
+ *
  * @param[in] Level
  * Impersonation security level to assign to the newly copied token.
- * 
+ *
  * @param[in] PreviousMode
  * Processor request level mode.
- * 
+ *
  * @param[out] NewToken
  * The newly copied token.
  *
@@ -1593,10 +1593,10 @@ SepInitializeTokenImplementation(VOID)
  *
  * @param[in] Process
  * Process where the token is about to be assigned.
- * 
+ *
  * @param[in] Token
  * The token to be assigned.
- * 
+ *
  * @return
  * Nothing.
  */
@@ -1629,66 +1629,66 @@ SeAssignPrimaryToken(
  *
  * @param[out] TokenHandle
  * Valid token handle that's ready for use after token creation and object insertion.
- * 
+ *
  * @param[in] PreviousMode
  * Processor request level mode.
- * 
+ *
  * @param[in] DesiredAccess
  * Desired access right for the token object to be granted. This kind of access right
  * impacts how the token can be used and who.
- * 
+ *
  * @param[in] ObjectAttributes
  * Object attributes for the token to be created.
- * 
+ *
  * @param[in] TokenType
  * Type of token to assign upon creation.
- * 
+ *
  * @param[in] ImpersonationLevel
  * Security impersonation level of token to assign upon creation.
- * 
+ *
  * @param[in] AuthenticationId
  * Authentication ID that represents the authentication information of the token.
- * 
+ *
  * @param[in] ExpirationTime
  * Expiration time of the token to assign. A value of -1 means that the token never
  * expires and its life depends upon the amount of references this token object has.
- * 
+ *
  * @param[in] User
  * User entry to assign to the token.
- * 
+ *
  * @param[in] GroupCount
  * The total number of groups count for the token.
- * 
+ *
  * @param[in] Groups
  * The group entries for the token.
- * 
+ *
  * @param[in] GroupsLength
  * The length size of the groups array, pointed by the Groups parameter.
- * 
+ *
  * @param[in] PrivilegeCount
  * The total number of priivleges that the newly created token has.
- * 
+ *
  * @param[in] Privileges
  * The privileges for the token.
- * 
+ *
  * @param[in] Owner
  * The main user (or also owner) that represents the token that we create.
- * 
+ *
  * @param[in] PrimaryGroup
  * The main group that represents the token that we create.
- * 
+ *
  * @param[in] DefaultDacl
  * A discretionary access control list for the token.
- * 
+ *
  * @param[in] TokenSource
  * Source (or the origin) of the access token that creates it.
- * 
+ *
  * @param[in] SystemToken
  * If set to TRUE, the newly created token is a system token and only in charge
  * by the internal system. The function directly returns a pointer to the
  * created token object for system kernel use. Otherwise if set to FALSE, the
  * function inserts the object to a handle making it a regular access token.
- * 
+ *
  * @return
  * Returns STATUS_SUCCESS if token creation has completed successfully.
  * STATUS_INSUFFICIENT_RESOURCES is returned if the dynamic area of memory of the
@@ -2255,23 +2255,23 @@ SepCreateSystemAnonymousLogonTokenNoEveryone(VOID)
  * @brief
  * Filters an access token from an existing token, making it more restricted
  * than the previous one.
- * 
+ *
  * @param[in] ExistingToken
  * An existing token for filtering.
- * 
+ *
  * @param[in] Flags
  * Privilege flag options. This parameter argument influences how the token
  * is filtered. Such parameter can be 0.
- * 
+ *
  * @param[in] SidsToDisable
  * Array of SIDs to disable.
- * 
+ *
  * @param[in] PrivilegesToDelete
  * Array of privileges to delete.
- * 
+ *
  * @param[in] RestrictedSids
  * An array of restricted SIDs for the new filtered token.
- * 
+ *
  * @param[out] FilteredToken
  * The newly filtered token, returned to the caller.
  *
@@ -2664,10 +2664,10 @@ SeQueryInformationToken(
 /**
  * @brief
  * Queries the session ID of an access token.
- * 
+ *
  * @param[in] Token
  * A valid access token where the session ID has to be gathered.
- * 
+ *
  * @param[out] pSessionId
  * The returned pointer to a session ID to the caller.
  *
@@ -2696,10 +2696,10 @@ SeQuerySessionIdToken(
 /**
  * @brief
  * Queries the authentication ID of an access token.
- * 
+ *
  * @param[in] Token
  * A valid access token where the authentication ID has to be gathered.
- * 
+ *
  * @param[out] pSessionId
  * The returned pointer to an authentication ID to the caller.
  *
@@ -2722,7 +2722,7 @@ SeQueryAuthenticationIdToken(
 /**
  * @brief
  * Gathers the security impersonation level of an access token.
- * 
+ *
  * @param[in] Token
  * A valid access token where the impersonation level has to be gathered.
  *
@@ -2743,7 +2743,7 @@ SeTokenImpersonationLevel(
  * @brief
  * Gathers the token type of an access token. A token ca be either
  * a primary token or impersonation token.
- * 
+ *
  * @param[in] Token
  * A valid access token where the token type has to be gathered.
  *
@@ -2766,7 +2766,7 @@ SeTokenType(
  * condition is checked based upon TOKEN_HAS_ADMIN_GROUP flag,
  * which means if the respective access token belongs to an
  * administrator group or not.
- * 
+ *
  * @param[in] Token
  * A valid access token to determine if such token is admin or not.
  *
@@ -2789,7 +2789,7 @@ SeTokenIsAdmin(
  * @brief
  * Determines if a token is restricted or not, based upon the token
  * flags.
- * 
+ *
  * @param[in] Token
  * A valid access token to determine if such token is restricted.
  *
@@ -2810,13 +2810,13 @@ SeTokenIsRestricted(
  * @brief
  * Determines if a token is write restricted, that is, nobody can write anything
  * to it.
- * 
+ *
  * @param[in] Token
  * A valid access token to determine if such token is write restricted.
  *
  * @return
  * Returns TRUE if the token is write restricted, FALSE otherwise.
- * 
+ *
  * @remarks
  * First introduced in NT 5.1 SP2 x86 (5.1.2600.2622), absent in NT 5.2,
  * then finally re-introduced in Vista+.
@@ -2938,20 +2938,20 @@ Quit:
  * Queries a specific type of information in regard of an access token based upon
  * the information class. The calling thread must have specific access rights in order
  * to obtain specific information about the token.
- * 
+ *
  * @param[in] TokenHandle
  * A handle of a token where information is to be gathered.
- * 
+ *
  * @param[in] TokenInformationClass
  * Token information class.
- * 
+ *
  * @param[out] TokenInformation
  * A returned output buffer with token information, which information is arbitrarily upon
  * the information class chosen.
- * 
+ *
  * @param[in] TokenInformationLength
  * Length of the token information buffer, in bytes.
- * 
+ *
  * @param[out] ReturnLength
  * If specified in the call, the function returns the total length size of the token
  * information buffer..
@@ -3541,18 +3541,18 @@ NtQueryInformationToken(
  * Sets (modifies) some specific information in regard of an access token. The
  * calling thread must have specific access rights in order to modify token's
  * information data.
- * 
+ *
  * @param[in] TokenHandle
  * A handle of a token where information is to be modified.
- * 
+ *
  * @param[in] TokenInformationClass
  * Token information class.
- * 
+ *
  * @param[in] TokenInformation
  * An arbitrary pointer to a buffer with token information to set. Such
  * arbitrary buffer depends on the information class chosen that the caller
  * wants to modify such information data of a token.
- * 
+ *
  * @param[in] TokenInformationLength
  * Length of the token information buffer, in bytes.
  *
@@ -3563,7 +3563,7 @@ NtQueryInformationToken(
  * returned if memory pool allocation has failed. STATUS_PRIVILEGE_NOT_HELD
  * is returned if the calling thread hasn't the required privileges to perform
  * the operation in question. A failure NTSTATUS code is returned otherwise.
- * 
+ *
  * @remarks
  * The function is partly implemented, mainly TokenOrigin and TokenDefaultDacl.
  */
@@ -3928,7 +3928,7 @@ NtSetInformationToken(
                     /*
                      * Otherwise if the flag was never set but just for this first time then
                      * remove the referenced logon session data from the token and dereference
-                     * the logon session when needed. 
+                     * the logon session when needed.
                      */
                     if (SessionReference == 0)
                     {
@@ -4092,23 +4092,23 @@ Cleanup:
 /**
  * @brief
  * Duplicates a token.
- * 
+ *
  * @param[in] ExistingTokenHandle
  * An existing token to duplicate.
- * 
+ *
  * @param[in] DesiredAccess
  * The desired access rights for the new duplicated token.
- * 
+ *
  * @param[in] ObjectAttributes
  * Object attributes for the new duplicated token.
- * 
+ *
  * @param[in] EffectiveOnly
  * If set to TRUE, the function removes all the disabled privileges and groups
  * of the token to duplicate.
- * 
+ *
  * @param[in] TokenType
  * Type of token to assign to the duplicated token.
- * 
+ *
  * @param[out] NewTokenHandle
  * The returned duplicated token handle.
  *
@@ -4117,7 +4117,7 @@ Cleanup:
  * STATUS_BAD_IMPERSONATION_LEVEL is returned if the caller erroneously wants
  * to raise the impersonation level even though the conditions do not permit
  * it. A failure NTSTATUS code is returned otherwise.
- * 
+ *
  * @remarks
  * Some sources claim 4th param is ImpersonationLevel, but on W2K
  * this is certainly NOT true, although I can't say for sure that EffectiveOnly
@@ -4274,26 +4274,26 @@ NtDuplicateToken(
 /**
  * @brief
  * Changes the groups list of SIDs of a token.
- * 
+ *
  * @param[in] TokenHandle
  * Token handle where the list of groups SIDs are to be adjusted.
- * 
+ *
  * @param[in] ResetToDefault
  * If set to TRUE, the function resets the list of groups SIDs to default.
  * All the rest of parameters are ignored.
- * 
+ *
  * @param[in] NewState
  * A new list of groups SIDs that the function will use it accordingly to
  * modify the current list of groups SIDs of a token.
- * 
+ *
  * @param[in] BufferLength
  * The length size of the buffer that is pointed by the NewState parameter
  * argument, in bytes.
- * 
+ *
  * @param[out] PreviousState
  * If specified, the function will return to the caller the old list of groups
  * SIDs.
- * 
+ *
  * @param[out] ReturnLength
  * If specified, the function will return the total size length of the old list
  * of groups SIDs, in bytes.
@@ -4319,30 +4319,30 @@ NtAdjustGroupsToken(
  * @brief
  * Removes a certain amount of privileges of a token based upon the request
  * by the caller.
- * 
+ *
  * @param[in,out] Token
  * Token handle where the privileges are about to be modified.
- * 
+ *
  * @param[in] DisableAllPrivileges
  * If set to TRUE, the function disables all the privileges.
- * 
+ *
  * @param[in] NewState
  * A new list of privileges that the function will use it accordingly to
  * either disable or enable the said privileges and change them.
- * 
+ *
  * @param[in] NewStateCount
  * The new total number count of privileges.
- * 
+ *
  * @param[out] PreviousState
  * If specified, the function will return the previous state list of privileges.
- * 
+ *
  * @param[in] ApplyChanges
  * If set to TRUE, the function will immediatelly apply the changes onto the
  * token's privileges.
- * 
+ *
  * @param[out] ChangedPrivileges
  * The returned count number of changed privileges.
- * 
+ *
  * @param[out] ChangesMade
  * If TRUE, the function has made changes to the token's privileges. FALSE
  * otherwise.
@@ -4472,30 +4472,30 @@ SepAdjustPrivileges(
  * @brief
  * Removes a certain amount of privileges of a token based upon the request
  * by the caller.
- * 
+ *
  * @param[in,out] Token
  * Token handle where the privileges are about to be modified.
- * 
+ *
  * @param[in] DisableAllPrivileges
  * If set to TRUE, the function disables all the privileges.
- * 
+ *
  * @param[in] NewState
  * A new list of privileges that the function will use it accordingly to
  * either disable or enable the said privileges and change them.
- * 
+ *
  * @param[in] NewStateCount
  * The new total number count of privileges.
- * 
+ *
  * @param[out] PreviousState
  * If specified, the function will return the previous state list of privileges.
- * 
+ *
  * @param[in] ApplyChanges
  * If set to TRUE, the function will immediatelly apply the changes onto the
  * token's privileges.
- * 
+ *
  * @param[out] ChangedPrivileges
  * The returned count number of changed privileges.
- * 
+ *
  * @param[out] ChangesMade
  * If TRUE, the function has made changes to the token's privileges. FALSE
  * otherwise.
@@ -4710,44 +4710,44 @@ Cleanup:
 /**
  * @brief
  * Creates an access token.
- * 
+ *
  * @param[out] TokenHandle
  * The returned created token handle to the caller.
- * 
+ *
  * @param[in] DesiredAccess
  * The desired access rights for the token that we're creating.
- * 
+ *
  * @param[in] ObjectAttributes
  * The object attributes for the token object that we're creating.
- * 
+ *
  * @param[in] TokenType
  * The type of token to assign for the newly created token.
- * 
+ *
  * @param[in] AuthenticationId
  * Authentication ID that represents the token's identity.
- * 
+ *
  * @param[in] ExpirationTime
  * Expiration time for the token. If set to -1, the token never expires.
- * 
+ *
  * @param[in] TokenUser
  * The main user entity for the token to assign.
- * 
+ *
  * @param[in] TokenGroups
  * Group list of SIDs for the token to assign.
- * 
+ *
  * @param[in] TokenPrivileges
  * Privileges for the token.
- * 
+ *
  * @param[in] TokenOwner
  * The main user that owns the newly created token.
- * 
+ *
  * @param[in] TokenPrimaryGroup
  * The primary group that represents as the main group of the token.
- * 
+ *
  * @param[in] TokenDefaultDacl
  * Discretionary access control list for the token. This limits on how
  * the token can be used, accessed and used by whom.
- * 
+ *
  * @param[in] TokenSource
  * The source origin of the token who creates it.
  *
@@ -5031,21 +5031,21 @@ Cleanup:
 /**
  * @brief
  * Opens a token that is tied to a thread handle.
- * 
+ *
  * @param[out] ThreadHandle
  * Thread handle where the token is about to be opened.
- * 
+ *
  * @param[in] DesiredAccess
  * The request access right for the token.
- * 
+ *
  * @param[in] OpenAsSelf
  * If set to TRUE, the access check will be made with the security context
  * of the process of the calling thread (opening as self). Otherwise the access
  * check will be made with the security context of the calling thread instead.
- * 
+ *
  * @param[in] HandleAttributes
  * Handle attributes for the opened thread token handle.
- * 
+ *
  * @param[out] TokenHandle
  * The opened token handle returned to the caller for use.
  *
@@ -5239,18 +5239,18 @@ NtOpenThreadTokenEx(
 /**
  * @brief
  * Opens a token that is tied to a thread handle.
- * 
+ *
  * @param[out] ThreadHandle
  * Thread handle where the token is about to be opened.
- * 
+ *
  * @param[in] DesiredAccess
  * The request access right for the token.
- * 
+ *
  * @param[in] OpenAsSelf
  * If set to TRUE, the access check will be made with the security context
  * of the process of the calling thread (opening as self). Otherwise the access
  * check will be made with the security context of the calling thread instead.
- * 
+ *
  * @param[out] TokenHandle
  * The opened token handle returned to the caller for use.
  *
@@ -5375,23 +5375,23 @@ NtCompareTokens(
  * @unimplemented
  * @brief
  * Opens a token that is tied to a thread handle.
- * 
+ *
  * @param[in] ExistingTokenHandle
  * An existing token for filtering.
- * 
+ *
  * @param[in] Flags
  * Privilege flag options. This parameter argument influences how the token
  * is filtered. Such parameter can be 0.
- * 
+ *
  * @param[in] SidsToDisable
  * Array of SIDs to disable.
- * 
+ *
  * @param[in] PrivilegesToDelete
  * Array of privileges to delete.
- * 
+ *
  * @param[in] RestrictedSids
  * An array of restricted SIDs for the new filtered token.
- * 
+ *
  * @param[out] NewTokenHandle
  * The newly filtered token, returned to the caller.
  *

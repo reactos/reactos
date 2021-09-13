@@ -535,7 +535,7 @@ static MUI_ENTRY euESRepairPageEntries[] =
     {
         6,
         12,
-        "Zuzentzaile funtzioak ez daude artean ezarrita.", 
+        "Zuzentzaile funtzioak ez daude artean ezarrita.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },

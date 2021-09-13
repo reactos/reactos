@@ -2,7 +2,7 @@
 * PROJECT:         ReactOS api tests
 * LICENSE:         GPL - See COPYING in the top level directory
 * PURPOSE:         Test for nonblocking sockets
-* PROGRAMMERS:     Peter Hater 
+* PROGRAMMERS:     Peter Hater
 */
 
 #include "ws2_32.h"

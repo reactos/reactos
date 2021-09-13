@@ -1,9 +1,9 @@
-[]==============================[ping.exe]=======================================[] 
-  
+[]==============================[ping.exe]=======================================[]
+
   Ptoject:     ReactOS ping utility
   Purpose:     Network test utility
   Programmers: Casper S. Hornstrup (chorns@users.sourceforge.net)
-  
+
   Usage: ping [-t] [-n count] [-l size] [-w timeout] destination-host\n\n
             -t             Ping the specified host until stopped.
                            To stop - type Control-C.

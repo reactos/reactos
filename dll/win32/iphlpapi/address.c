@@ -488,9 +488,9 @@ GetAdaptersAddresses(
                 CurrentAA->IfType = Entry->if_type;
                 if(Entry->if_operstatus >= IF_OPER_STATUS_CONNECTING)
                     CurrentAA->OperStatus = IfOperStatusUp;
-                else 
+                else
                     CurrentAA->OperStatus = IfOperStatusDown;
-                    
+
                 /* Next items */
                 Ptr = (BYTE*)(CurrentAA + 1);
 

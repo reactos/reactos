@@ -164,10 +164,10 @@ HRESULT SHELL32_BindToSF (LPCITEMIDLIST pidlRoot, PERSIST_FOLDER_TARGET_INFO* pp
         return E_FAIL;
 
     CComPtr<IShellFolder> psf;
-    HRESULT hr = SHELL32_CoCreateInitSF(pidlRoot, 
-                                        ppfti, 
-                                        pidlChild, 
-                                        clsid, 
+    HRESULT hr = SHELL32_CoCreateInitSF(pidlRoot,
+                                        ppfti,
+                                        pidlChild,
+                                        clsid,
                                         IID_PPV_ARG(IShellFolder, &psf));
     ILFree(pidlChild);
 

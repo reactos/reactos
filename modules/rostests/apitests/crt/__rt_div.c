@@ -41,7 +41,7 @@ typedef struct _UDIV64_TEST_DATA
 
 START_TEST(__rt_div)
 {
-    SDIV_TEST_DATA sdiv[] = 
+    SDIV_TEST_DATA sdiv[] =
     {
         /* Dividend is larger than divisor */
         { 3425, 400, 8, 225 },
@@ -59,7 +59,7 @@ START_TEST(__rt_div)
         { 16777216, -65536, -256, 0 },
         { -16777216, -65536, 256, 0 },
     };
-    UDIV_TEST_DATA udiv[] = 
+    UDIV_TEST_DATA udiv[] =
     {
         /* Dividend is larger than divisor */
         { 3425, 400, 8, 225 },
@@ -68,7 +68,7 @@ START_TEST(__rt_div)
         /* Division without remainder */
         { 16777216, 65536, 256, 0 },
     };
-    SDIV64_TEST_DATA sdiv64[] = 
+    SDIV64_TEST_DATA sdiv64[] =
     {
         /* Dividend is larger than divisor */
         { 34918215, 7, 4988316, 3 },
@@ -104,7 +104,7 @@ START_TEST(__rt_div)
         { 0x2AFFFFFFFLL * 100, -100, -0x2AFFFFFFFLL, 0 },
         { -0x2AFFFFFFFLL * 100, -100, 0x2AFFFFFFFLL, 0 },
     };
-    UDIV64_TEST_DATA udiv64[] = 
+    UDIV64_TEST_DATA udiv64[] =
     {
         /* Dividend is larger than divisor */
         { 34918215, 7, 4988316, 3 },

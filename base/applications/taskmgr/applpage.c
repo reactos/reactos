@@ -486,7 +486,7 @@ void AddOrUpdateHwnd(HWND hWnd, WCHAR *szTitle, HICON hIcon, BOOL bHung)
     }
 
     /* Select first item if any */
-    if ((ListView_GetNextItem(hApplicationPageListCtrl, -1, LVNI_FOCUSED | LVNI_SELECTED) == -1) && 
+    if ((ListView_GetNextItem(hApplicationPageListCtrl, -1, LVNI_FOCUSED | LVNI_SELECTED) == -1) &&
         (ListView_GetItemCount(hApplicationPageListCtrl) > 0) && !bApplicationPageSelectionMade)
     {
         ListView_SetItemState(hApplicationPageListCtrl, 0, LVIS_FOCUSED | LVIS_SELECTED, LVIS_FOCUSED | LVIS_SELECTED);

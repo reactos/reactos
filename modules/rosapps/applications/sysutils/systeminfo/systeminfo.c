@@ -77,7 +77,7 @@ RegGetSZ(HKEY hKey, LPCWSTR lpSubKey, LPCWSTR lpValueName, LPWSTR lpBuf, DWORD c
 
     /* NULL-terminate string */
     lpBuf[min(cchBuf-1, cChars)] = L'\0';
-    
+
     /* Don't count NULL characters */
     while(cChars && !lpBuf[cChars-1])
         --cChars;
@@ -423,12 +423,12 @@ AllSysInfo(VOID)
     {
         swprintf(Tmp, L"HARDWARE\\DESCRIPTION\\System\\CentralProcessor\\%u", i);
         j = swprintf(Buf, L"[%02u]: ", i + 1);
-        
+
         j += RegGetSZ(HKEY_LOCAL_MACHINE, Tmp, L"Identifier", Buf + j, BUFFER_SIZE - j);
         if(j + 1 < BUFFER_SIZE)
             Buf[j++] = L' ';
         RegGetSZ(HKEY_LOCAL_MACHINE, Tmp, L"VendorIdentifier", Buf + j, BUFFER_SIZE - j);
-        
+
         PrintRow(0, FALSE, L"%s", Buf);
     }
 
@@ -628,7 +628,7 @@ AllSysInfo(VOID)
                 ++cAdapters;
             pCurrentAdapter = pCurrentAdapter->Next;
         }
-            
+
 
         /* Print adapters count */
         if (!LoadStringW(GetModuleHandle(NULL), IDS_NETWORK_CARDS_FORMAT, Tmp, BUFFER_SIZE))

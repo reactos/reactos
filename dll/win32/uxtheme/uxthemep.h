@@ -69,7 +69,7 @@ typedef struct _THEME_IMAGE {
     WCHAR name[MAX_PATH];
     HBITMAP image;
     BOOL hasAlpha;
-    
+
     struct _THEME_IMAGE *next;
 } THEME_IMAGE, *PTHEME_IMAGE;
 
@@ -90,7 +90,7 @@ typedef struct _THEME_FILE {
 
 typedef struct _UXINI_FILE *PUXINI_FILE;
 
-typedef struct _UXTHEME_HANDLE 
+typedef struct _UXTHEME_HANDLE
 {
     RTL_HANDLE_TABLE_ENTRY Handle;
     PTHEME_CLASS pClass;
@@ -174,7 +174,7 @@ typedef struct _DRAW_CONTEXT
 {
     HWND hWnd;
     HDC hDC;
-    HTHEME theme; 
+    HTHEME theme;
     HTHEME scrolltheme;
     HTHEME hPrevTheme;
     WINDOWINFO wi;
@@ -187,7 +187,7 @@ typedef struct _DRAW_CONTEXT
     HBITMAP hbmpOld;
 } DRAW_CONTEXT, *PDRAW_CONTEXT;
 
-typedef enum 
+typedef enum
 {
     CLOSEBUTTON,
     MAXBUTTON,
@@ -197,7 +197,7 @@ typedef enum
 
 /*
 The following values specify all possible button states
-Note that not all of them are documented but it is easy to 
+Note that not all of them are documented but it is easy to
 find them by opening a theme file
 */
 typedef enum {

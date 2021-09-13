@@ -137,7 +137,7 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
         }
         //goto def;
         break;
-    
+
     case WM_LBUTTONDOWN: {
         RECT rt;
         int x = LOWORD(lParam);

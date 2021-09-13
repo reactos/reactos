@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS Applications Manager
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Cabinet extraction using FDI API
- * COPYRIGHT:   Copyright 2018 Alexander Shaposhnikov     (sanchaez@reactos.org)            
+ * COPYRIGHT:   Copyright 2018 Alexander Shaposhnikov     (sanchaez@reactos.org)
  */
 #include "rapps.h"
 #include <debug.h>
@@ -12,7 +12,7 @@
 
 /*
  * HACK: treat any input strings as Unicode (UTF-8)
- * cabinet.dll lacks any sort of a Unicode API, but FCI/FDI 
+ * cabinet.dll lacks any sort of a Unicode API, but FCI/FDI
  * provide an ability to use user-defined callbacks for any file or memory
  * operations. This flexibility and the magic power of C/C++ casting allows
  * us to treat input as we please.
@@ -66,7 +66,7 @@ inline BOOL MultiByteToWide(const CStringA& szSource,
                                     NULL);
     if (!sz)
         return FALSE;
-        
+
     // do the actual conversion
     sz = MultiByteToWideChar(CP_UTF8,
                                 0,
@@ -215,7 +215,7 @@ FNFDINOTIFY(fnNotify)
         WideToMultiByte(szNewFileName, szFilePathUTF8, CP_UTF8);
 
         // Open the file
-        iResult = fnFileOpen((LPSTR) szFilePathUTF8.GetString(), 
+        iResult = fnFileOpen((LPSTR) szFilePathUTF8.GetString(),
                              _O_WRONLY | _O_CREAT,
                              0);
     }
@@ -254,14 +254,14 @@ FNFDINOTIFY(fnNotify)
 
 /* cabinet.dll FDI function pointers */
 
-typedef HFDI(*fnFDICreate)(PFNALLOC, 
-                           PFNFREE, 
-                           PFNOPEN, 
-                           PFNREAD, 
+typedef HFDI(*fnFDICreate)(PFNALLOC,
+                           PFNFREE,
+                           PFNOPEN,
+                           PFNREAD,
                            PFNWRITE,
-                           PFNCLOSE, 
-                           PFNSEEK, 
-                           int, 
+                           PFNCLOSE,
+                           PFNSEEK,
+                           int,
                            PERF);
 
 typedef BOOL(*fnFDICopy)(HFDI,
@@ -274,12 +274,12 @@ typedef BOOL(*fnFDICopy)(HFDI,
 
 typedef BOOL(*fnFDIDestroy)(HFDI);
 
-/* 
- * Extraction function 
+/*
+ * Extraction function
  * TODO: require only a full path to the cab as an argument
  */
-BOOL ExtractFilesFromCab(const ATL::CStringW& szCabName, 
-                         const ATL::CStringW& szCabDir, 
+BOOL ExtractFilesFromCab(const ATL::CStringW& szCabName,
+                         const ATL::CStringW& szCabDir,
                          const ATL::CStringW& szOutputDir)
 {
     HINSTANCE hCabinetDll;
@@ -291,7 +291,7 @@ BOOL ExtractFilesFromCab(const ATL::CStringW& szCabName,
     fnFDIDestroy pfnFDIDestroy;
     BOOL bResult;
 
-    // Load cabinet.dll and extract needed functions 
+    // Load cabinet.dll and extract needed functions
     hCabinetDll = LoadLibraryW(L"cabinet.dll");
 
     if (!hCabinetDll)
@@ -328,7 +328,7 @@ BOOL ExtractFilesFromCab(const ATL::CStringW& szCabName,
 
     // Create output dir
     bResult = CreateDirectoryW(szOutputDir, NULL);
-    
+
     if (bResult || GetLastError() == ERROR_ALREADY_EXISTS)
     {
         // Convert wide strings to UTF-8

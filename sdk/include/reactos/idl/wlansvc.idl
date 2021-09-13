@@ -44,9 +44,9 @@ typedef struct struct_E {
     pointer_default(unique)
 #ifndef __midl
     ,explicit_handle
-#endif    
+#endif
 ]
- 
+
 interface wlansvc_interface
 {
     /* Function: 0x00 */
@@ -65,7 +65,7 @@ interface wlansvc_interface
         [in] WLANSVC_RPC_HANDLE hClientHandle,
         [out, ref] PWLAN_INTERFACE_INFO_LIST *ppInterfaceList);
 
-    /* Function: 0x03 */ 
+    /* Function: 0x03 */
     DWORD _RpcSetAutoConfigParameter(
         [in] WLANSVC_RPC_HANDLE hClientHandle,
         [in] /* enum32 */ long OpCode,

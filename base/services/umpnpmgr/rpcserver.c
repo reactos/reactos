@@ -3229,7 +3229,7 @@ PNP_GetDeviceStatus(
                                0);
     if (ret != CR_SUCCESS)
         ulCapabilities = 0;
-    
+
     if (ulCapabilities & CM_DEVCAP_REMOVABLE)
         *pulStatus |= DN_REMOVABLE;
 

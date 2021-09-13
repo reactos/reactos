@@ -40,7 +40,7 @@ DllMain(HINSTANCE hinstDll,
 
 /*
  * @unimplemented
- * 
+ *
  * NOTES:
  *   Based on the documentation from:
  *   http://sendmail2.blogspot.com/2012/11/windows-small-business-server-2008_7553.html?view=magazine
@@ -58,7 +58,7 @@ RemapAndMoveUserA(IN LPCSTR pComputer,
 
 /*
  * @unimplemented
- * 
+ *
  * NOTES:
  *   Based on the documentation from:
  *   http://sendmail2.blogspot.com/2012/11/windows-small-business-server-2008_7553.html?view=magazine

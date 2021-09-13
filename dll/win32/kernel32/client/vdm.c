@@ -1763,7 +1763,7 @@ GetNextVDMCommand(PVDM_COMMAND_INFO CommandData)
     Success = TRUE;
 
 Cleanup:
-    if (CaptureBuffer != NULL) CsrFreeCaptureBuffer(CaptureBuffer); 
+    if (CaptureBuffer != NULL) CsrFreeCaptureBuffer(CaptureBuffer);
     return Success;
 }
 

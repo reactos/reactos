@@ -23,20 +23,20 @@
  * doesn't fill object attributes to the function, it automatically assumes
  * SQOS is not present, or if, there's no SQOS present in the object attributes list
  * of the object itself.
- * 
+ *
  * @param[in] AccessMode
  * Processor access mode.
- * 
+ *
  * @param[in] PoolType
  * The pool type for the captured SQOS to be used for allocation.
- * 
+ *
  * @param[in] CaptureIfKernel
  * Capture access condition. To be set to TRUE if the capture is done within the kernel,
  * FALSE if the capture is done in a kernel mode driver or user mode otherwise.
- * 
+ *
  * @param[out] CapturedSecurityQualityOfService
  * The captured SQOS data from the object.
- * 
+ *
  * @param[out] Present
  * Returns TRUE if SQOS is present in an object, FALSE otherwise. FALSE is also immediately
  * returned if no object attributes is given to the call.
@@ -209,10 +209,10 @@ SepCaptureSecurityQualityOfService(
  *
  * @param[in] CapturedSecurityQualityOfService
  * The captured SQOS data to be released.
- * 
+ *
  * @param[in] AccessMode
  * Processor access mode.
- * 
+ *
  * @param[in] CaptureIfKernel
  * Capture access condition. To be set to TRUE if the capture is done within the kernel,
  * FALSE if the capture is done in a kernel mode driver or user mode otherwise.

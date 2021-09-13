@@ -1180,7 +1180,7 @@ RunControlPanelApplet(HWND hwnd, PCWSTR pwszCPLParameters)
     }
 
     while ((MsgWaitForMultipleObjects(1, &ProcessInformation.hProcess, FALSE, INFINITE, QS_ALLINPUT|QS_ALLPOSTMESSAGE )) != WAIT_OBJECT_0)
-    { 
+    {
        while (PeekMessageW(&msg, NULL, 0, 0, PM_REMOVE))
        {
            TranslateMessage(&msg);

@@ -12,7 +12,7 @@ _AUDIO_NAMESPACE_START_
 
 /* Protected Functions */
 
-void 
+void
 audio_membuffer::alloc_mem_(unsigned int bytes)
 {
     /* Some checking */
@@ -79,7 +79,7 @@ audio_membuffer::resize_mem_(unsigned int new_size)
         buffer_resized(new_size);
 }
 
-void 
+void
 audio_membuffer::truncate_(void)
 {
     /* If `buf_size' is already = to the `bytes_received' of audio data,
@@ -113,7 +113,7 @@ audio_membuffer::clear(void)
     bytes_received = 0;
 }
 
-void 
+void
 audio_membuffer::reset(void)
 {
     /* Frees memory and reset to initial state */
@@ -122,37 +122,37 @@ audio_membuffer::reset(void)
     alloc_mem_(init_size);
 }
 
-void 
+void
 audio_membuffer::alloc_bytes(unsigned int bytes)
 {
     alloc_mem_(bytes);
 }
 
-void 
+void
 audio_membuffer::alloc_seconds(unsigned int secs)
 {
     alloc_mem_(aud_info.byte_rate() * secs);
 }
 
-void 
+void
 audio_membuffer::alloc_seconds(float secs)
 {
     alloc_mem_((unsigned int)((float)aud_info.byte_rate() * secs));
 }
 
-void 
+void
 audio_membuffer::resize_bytes(unsigned int bytes)
 {
     resize_mem_(bytes);
 }
 
-void 
+void
 audio_membuffer::resize_seconds(unsigned int secs)
 {
     resize_mem_(aud_info.byte_rate() * secs);
 }
 
-void 
+void
 audio_membuffer::resize_seconds(float secs)
 {
     resize_mem_((unsigned int)((float)aud_info.byte_rate() * secs));
@@ -160,7 +160,7 @@ audio_membuffer::resize_seconds(float secs)
 
 /* Inherited Functions */
 
-void 
+void
 audio_membuffer::audio_receive(unsigned char *data, unsigned int size)
 {
     /* If there isn't a buffer, allocs memory for it of size*2, and copies audio data arrival */
@@ -196,7 +196,7 @@ audio_membuffer::audio_receive(unsigned char *data, unsigned int size)
         audio_arrival(aud_info.samples_in_bytes(size));
 }
 
-unsigned int 
+unsigned int
 audio_membuffer::read(BYTE *out_buf, unsigned int bytes)
 {
     /* Some checking */

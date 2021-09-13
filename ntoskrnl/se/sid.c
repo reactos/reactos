@@ -279,21 +279,21 @@ SepInitSecurityIDs(VOID)
 /**
  * @brief
  * Captures a SID.
- * 
+ *
  * @param[in] InputSid
  * A valid security identifier to be captured.
- * 
+ *
  * @param[in] AccessMode
  * Processor level access mode.
- * 
+ *
  * @param[in] PoolType
  * Pool memory type for the captured SID to assign upon
  * allocation.
- * 
+ *
  * @param[in] CaptureIfKernel
  * If set to TRUE, the capturing is done within the kernel.
  * Otherwise the capturing is done in a kernel mode driver.
- * 
+ *
  * @param[out] CapturedSid
  * The captured security identifier, returned to the caller.
  *
@@ -373,13 +373,13 @@ SepCaptureSid(
 /**
  * @brief
  * Releases a captured SID.
- * 
+ *
  * @param[in] CapturedSid
  * The captured SID to be released.
- * 
+ *
  * @param[in] AccessMode
  * Processor level access mode.
- * 
+ *
  * @param[in] CaptureIfKernel
  * If set to TRUE, the releasing is done within the kernel.
  * Otherwise the releasing is done in a kernel mode driver.
@@ -407,36 +407,36 @@ SepReleaseSid(
 /**
  * @brief
  * Captures a SID with attributes.
- * 
+ *
  * @param[in] SrcSidAndAttributes
  * Source of the SID with attributes to be captured.
- * 
+ *
  * @param[in] AttributeCount
  * The number count of attributes, in total.
- * 
+ *
  * @param[in] PreviousMode
  * Processor access level mode.
- * 
+ *
  * @param[in] AllocatedMem
  * The allocated memory buffer for the captured SID. If the caller
  * supplies no allocated block of memory then the function will
  * allocate some buffer block of memory for the captured SID
  * automatically.
- * 
+ *
  * @param[in] AllocatedLength
  * The length of the buffer that points to the allocated memory,
  * in bytes.
- * 
+ *
  * @param[in] PoolType
  * The pool type for the captured SID and attributes to assign.
- * 
+ *
  * @param[in] CaptureIfKernel
  * If set to TRUE, the capturing is done within the kernel.
  * Otherwise the capturing is done in a kernel mode driver.
- * 
+ *
  * @param[out] CapturedSidAndAttributes
  * The captured SID and attributes.
- * 
+ *
  * @param[out] ResultLength
  * The length of the captured SID and attributes, in bytes.
  *
@@ -654,13 +654,13 @@ SeCaptureSidAndAttributesArray(
 /**
  * @brief
  * Releases a captured SID with attributes.
- * 
+ *
  * @param[in] CapturedSidAndAttributes
  * The captured SID with attributes to be released.
- * 
+ *
  * @param[in] AccessMode
  * Processor access level mode.
- * 
+ *
  * @param[in] CaptureIfKernel
  * If set to TRUE, the releasing is done within the kernel.
  * Otherwise the releasing is done in a kernel mode driver.

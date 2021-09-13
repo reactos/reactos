@@ -145,7 +145,7 @@ CKsDataTypeHandler::KsIsMediaTypeInRanges(
                         if (Format->nSamplesPerSec >= AudioRange->MinimumSampleFrequency &&
                             Format->nSamplesPerSec <= AudioRange->MaximumSampleFrequency &&
                             Format->wBitsPerSample >= AudioRange->MinimumSampleFrequency &&
-                            Format->wBitsPerSample <= AudioRange->MaximumBitsPerSample && 
+                            Format->wBitsPerSample <= AudioRange->MaximumBitsPerSample &&
                             Format->nChannels <= AudioRange->MaximumChannels)
                         {
                             // found match

@@ -87,10 +87,10 @@ CClassFactory::LockServer(
     return E_NOTIMPL;
 }
 
-IClassFactory * 
+IClassFactory *
 CClassFactory_fnConstructor(
-    LPFNCREATEINSTANCE lpfnCI, 
-    PLONG pcRefDll, 
+    LPFNCREATEINSTANCE lpfnCI,
+    PLONG pcRefDll,
     IID * riidInst)
 {
     CClassFactory* factory = new CClassFactory(lpfnCI, pcRefDll, riidInst);

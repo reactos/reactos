@@ -78,7 +78,7 @@ NetrJobGetInfo(
 
 HRESULT
 WINAPI
-SAGetAccountInformation( 
+SAGetAccountInformation(
     _In_z_ SASEC_HANDLE Handle,
     _In_z_ const wchar_t* pwszJobName,
     _In_range_(0, MAX_BUFFER_SIZE) DWORD ccBufferSize,
@@ -90,7 +90,7 @@ SAGetAccountInformation(
 
 HRESULT
 WINAPI
-SAGetNSAccountInformation( 
+SAGetNSAccountInformation(
     _In_z_ SASEC_HANDLE Handle,
     _In_range_(0, MAX_BUFFER_SIZE) DWORD ccBufferSize,
     _Inout_updates_z_(ccBufferSize) wchar_t wszBuffer[])
@@ -101,7 +101,7 @@ SAGetNSAccountInformation(
 
 HRESULT
 WINAPI
-SASetAccountInformation( 
+SASetAccountInformation(
     _In_z_ SASEC_HANDLE Handle,
     _In_z_ const wchar_t* pwszJobName,
     _In_z_ const wchar_t* pwszAccount,
@@ -114,7 +114,7 @@ SASetAccountInformation(
 
 HRESULT
 WINAPI
-SASetNSAccountInformation( 
+SASetNSAccountInformation(
     _In_z_ SASEC_HANDLE Handle,
     _In_z_ const wchar_t* pwszAccount,
     _In_z_ const wchar_t* pwszPassword)

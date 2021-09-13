@@ -180,7 +180,7 @@ public:
 
             return 0;
         }
-		
+
         BOOL OnQueryCancel()
         {
             if (m_hExtractionThread != NULL)

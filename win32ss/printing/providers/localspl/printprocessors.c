@@ -148,7 +148,7 @@ InitializePrintProcessorList(void)
 
     // Initialize an empty list for our Print Processors.
     InitializeListHead(&_PrintProcessorList);
-    
+
     // Prepare the path to the Print Processor directory.
     if (!LocalGetPrintProcessorDirectory(NULL, (PWSTR)wszCurrentEnvironment, 1, (PBYTE)wszPrintProcessorPath, sizeof(wszPrintProcessorPath), &cchPrintProcessorPath))
     {

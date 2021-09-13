@@ -22,46 +22,46 @@
  * Private function that determines whether security access rights can be given
  * to an object depending on the security descriptor and other security context
  * entities, such as an owner.
- * 
+ *
  * @param[in] SecurityDescriptor
  * Security descriptor of the object that is being accessed.
- * 
+ *
  * @param[in] SubjectSecurityContext
  * The captured subject security context.
- * 
+ *
  * @param[in] DesiredAccess
  * Access right bitmask that the calling thread wants to acquire.
- * 
+ *
  * @param[in] ObjectTypeListLength
  * The length of a object type list.
- * 
+ *
  * @param[in] PreviouslyGrantedAccess
  * The access rights previously acquired in the past.
- * 
+ *
  * @param[out] Privileges
  * The returned set of privileges.
- * 
+ *
  * @param[in] GenericMapping
  * The generic mapping of access rights of an object type.
- * 
+ *
  * @param[in] AccessMode
  * The processor request level mode.
- * 
+ *
  * @param[out] GrantedAccessList
  * A list of granted access rights.
- * 
+ *
  * @param[out] AccessStatusList
  * The returned status code specifying why access cannot be made
  * onto an object (if said access is denied in the first place).
- * 
+ *
  * @param[in] UseResultList
- * If set to TRUE, the function will return complete lists of 
+ * If set to TRUE, the function will return complete lists of
  * access status codes and granted access rights.
- * 
+ *
  * @return
  * Returns TRUE if access onto the specific object is allowed, FALSE
  * otherwise.
- * 
+ *
  * @remarks
  * The function is currently incomplete!
  */
@@ -334,11 +334,11 @@ ReturnCommonStatus:
 /**
  * @brief
  * Retrieves the main user from a security descriptor.
- * 
+ *
  * @param[in] SecurityDescriptor
  * A valid allocated security descriptor structure where the owner
  * is to be retrieved.
- * 
+ *
  * @return
  * Returns a SID that represents the main user (owner).
  */
@@ -361,11 +361,11 @@ SepGetSDOwner(
 /**
  * @brief
  * Retrieves the group from a security descriptor.
- * 
+ *
  * @param[in] SecurityDescriptor
  * A valid allocated security descriptor structure where the group
  * is to be retrieved.
- * 
+ *
  * @return
  * Returns a SID that represents a group.
  */
@@ -388,10 +388,10 @@ SepGetSDGroup(
 /**
  * @brief
  * Retrieves the length size of a set list of privileges structure.
- * 
+ *
  * @param[in] PrivilegeSet
  * A valid set of privileges.
- * 
+ *
  * @return
  * Returns the total length of a set of privileges.
  */
@@ -417,39 +417,39 @@ SepGetPrivilegeSetLength(
  * Determines whether security access rights can be given to an object
  * depending on the security descriptor and other security context
  * entities, such as an owner.
- * 
+ *
  * @param[in] SecurityDescriptor
  * Security descriptor of the object that is being accessed.
- * 
+ *
  * @param[in] SubjectSecurityContext
  * The captured subject security context.
- * 
+ *
  * @param[in] SubjectContextLocked
  * If set to TRUE, a lock must be acquired for the security subject
  * context.
- * 
+ *
  * @param[in] DesiredAccess
  * Access right bitmask that the calling thread wants to acquire.
- * 
+ *
  * @param[in] PreviouslyGrantedAccess
  * The access rights previously acquired in the past.
- * 
+ *
  * @param[out] Privileges
  * The returned set of privileges.
- * 
+ *
  * @param[in] GenericMapping
  * The generic mapping of access rights of an object type.
- * 
+ *
  * @param[in] AccessMode
  * The processor request level mode.
- * 
+ *
  * @param[out] GrantedAccess
  * A list of granted access rights.
- * 
+ *
  * @param[out] AccessStatus
  * The returned status code specifying why access cannot be made
  * onto an object (if said access is denied in the first place).
- * 
+ *
  * @return
  * Returns TRUE if access onto the specific object is allowed, FALSE
  * otherwise.
@@ -578,20 +578,20 @@ SeAccessCheck(
  * depending on the security descriptor. Unlike the regular access check
  * procedure in the NT kernel, the fast traverse check is a faster way
  * to quickly check if access can be made into an object.
- * 
+ *
  * @param[in] SecurityDescriptor
  * Security descriptor of the object that is being accessed.
- * 
+ *
  * @param[in] AccessState
  * An access state to determine if the access token in the current
  * security context of the object is an restricted token.
- * 
+ *
  * @param[in] DesiredAccess
  * The access right bitmask where the calling thread wants to acquire.
- * 
+ *
  * @param[in] AccessMode
  * Process level request mode.
- * 
+ *
  * @return
  * Returns TRUE if access onto the specific object is allowed, FALSE
  * otherwise.
@@ -668,32 +668,32 @@ SeFastTraverseCheck(
  * Determines whether security access rights can be given to an object
  * depending on the security descriptor and a valid handle to an access
  * token.
- * 
+ *
  * @param[in] SecurityDescriptor
  * Security descriptor of the object that is being accessed.
- * 
+ *
  * @param[in] TokenHandle
  * A handle to a token.
- * 
+ *
  * @param[in] DesiredAccess
  * The access right bitmask where the calling thread wants to acquire.
- * 
+ *
  * @param[in] GenericMapping
  * The generic mapping of access rights of an object type.
- * 
+ *
  * @param[out] PrivilegeSet
  * The returned set of privileges.
- * 
+ *
  * @param[in,out] PrivilegeSetLength
  * The total length size of a set of privileges.
- * 
+ *
  * @param[out] GrantedAccess
  * A list of granted access rights.
- * 
+ *
  * @param[out] AccessStatus
  * The returned status code specifying why access cannot be made
  * onto an object (if said access is denied in the first place).
- * 
+ *
  * @return
  * Returns STATUS_SUCCESS if access check has been done without problems
  * and that the object can be accessed. STATUS_GENERIC_NOT_MAPPED is returned
@@ -955,41 +955,41 @@ NtAccessCheck(
  * @brief
  * Determines whether security access could be granted or not on
  * an object by the requestor who wants such access through type.
- * 
+ *
  * @param[in] SecurityDescriptor
  * A security descriptor with information data for auditing.
- * 
+ *
  * @param[in] PrincipalSelfSid
  * A principal self user SID.
- * 
+ *
  * @param[in] ClientToken
  * A client access token.
- * 
+ *
  * @param[in] DesiredAccess
  * The desired access masks rights requested by the caller.
- * 
+ *
  * @param[in] ObjectTypeList
  * A list of object types.
- * 
+ *
  * @param[in] ObjectTypeLength
  * The length size of the list.
- * 
+ *
  * @param[in] GenericMapping
  * The generic mapping list of access masks rights.
- * 
+ *
  * @param[in] PrivilegeSet
  * An array set of privileges.
- * 
+ *
  * @param[in,out] PrivilegeSetLength
  * The length size of the array set of privileges.
- * 
+ *
  * @param[out] GrantedAccess
  * The returned granted access rights.
- * 
+ *
  * @param[out] AccessStatus
  * The returned NTSTATUS code indicating the final results
  * of auditing.
- * 
+ *
  * @return
  * To be added...
  */
@@ -1017,41 +1017,41 @@ NtAccessCheckByType(
  * Determines whether security access could be granted or not on
  * an object by the requestor who wants such access through
  * type list.
- * 
+ *
  * @param[in] SecurityDescriptor
  * A security descriptor with information data for auditing.
- * 
+ *
  * @param[in] PrincipalSelfSid
  * A principal self user SID.
- * 
+ *
  * @param[in] ClientToken
  * A client access token.
- * 
+ *
  * @param[in] DesiredAccess
  * The desired access masks rights requested by the caller.
- * 
+ *
  * @param[in] ObjectTypeList
  * A list of object types.
- * 
+ *
  * @param[in] ObjectTypeLength
  * The length size of the list.
- * 
+ *
  * @param[in] GenericMapping
  * The generic mapping list of access masks rights.
- * 
+ *
  * @param[in] PrivilegeSet
  * An array set of privileges.
- * 
+ *
  * @param[in,out] PrivilegeSetLength
  * The length size of the array set of privileges.
- * 
+ *
  * @param[out] GrantedAccess
  * The returned granted access rights.
- * 
+ *
  * @param[out] AccessStatus
  * The returned NTSTATUS code indicating the final results
  * of auditing.
- * 
+ *
  * @return
  * To be added...
  */

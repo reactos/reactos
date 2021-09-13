@@ -21,7 +21,7 @@ DWORD gHandleToIndexMask;
 CONST DWORD SockPrimes[] =
 {
     31, 61, 127, 257, 521, 1031, 2053,
-    4099, 8191, 16381, 32749, 65537, 131071, 261983, 
+    4099, 8191, 16381, 32749, 65537, 131071, 261983,
     -1
 };
 
@@ -96,7 +96,7 @@ DoWaitForReaders(IN PWAH_SEARCH_TABLE Table,
     /* Check if the counter is above one */
     if (*Counter > 0)
     {
-        /* 
+        /*
          * This shouldn't happen unless priorities are messed up. Do a wait so
          * that the threads with lower priority will get their chance now.
          */
@@ -122,7 +122,7 @@ DoWaitForReaders(IN PWAH_SEARCH_TABLE Table,
             }
         }
 
-        /* 
+        /*
          * Our event is ready. Tell the others to signal us by making sure
          * that the last counter will be -1, notifying the last thread of our
          * request.
@@ -145,7 +145,7 @@ TryWaitForReaders(IN PWAH_SEARCH_TABLE Table)
 {
     PVLONG OldCount = Table->CurrentCount;
     LONG SpinCount;
-    
+
     /* See which counter is being used */
     if (OldCount == &Table->Count1)
     {
@@ -539,7 +539,7 @@ WahReferenceContextByHandle(IN PWAH_HANDLE_TABLE Table,
     HashTable = SearchTable->HashTable;
 
     /* Check if it's valid, and if it's the one we want */
-    if ((HashTable) && 
+    if ((HashTable) &&
         (HashHandle = WSH_HASH_FROM_HANDLE(Handle, HashTable)) &&
         (HashHandle->Handle == Handle))
     {

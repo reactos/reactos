@@ -289,11 +289,11 @@ HRESULT STDMETHODCALLTYPE CToolsBand::SetSite(IUnknown* pUnkSite){
     SendMessage(TB_SETMAXTEXTROWS, 1, 0);
     SendMessage(TB_SETEXTENDEDSTYLE, 0, TBSTYLE_EX_HIDECLIPPEDBUTTONS | TBSTYLE_EX_MIXEDBUTTONS | TBSTYLE_EX_DRAWDDARROWS);
 
-    m_himlNormal = ImageList_LoadImageW(_AtlBaseModule.GetResourceInstance(), 
+    m_himlNormal = ImageList_LoadImageW(_AtlBaseModule.GetResourceInstance(),
                                         MAKEINTRESOURCEW(IDB_SHELL_EXPLORER_LG),
                                         0, 0, RGB(255, 0, 255), IMAGE_BITMAP, LR_DEFAULTSIZE | LR_CREATEDIBSECTION);
 
-    m_himlHot = ImageList_LoadImageW(_AtlBaseModule.GetResourceInstance(), 
+    m_himlHot = ImageList_LoadImageW(_AtlBaseModule.GetResourceInstance(),
                                      MAKEINTRESOURCEW(IDB_SHELL_EXPLORER_LG_HOT),
                                      0, 0, RGB(255, 0, 255), IMAGE_BITMAP, LR_DEFAULTSIZE | LR_CREATEDIBSECTION);
 
@@ -338,7 +338,7 @@ HRESULT STDMETHODCALLTYPE CToolsBand::CloseDW(DWORD dwReserved)
 
     if (m_himlNormal)
         ImageList_Destroy(m_himlNormal);
-    
+
     if (m_himlHot)
         ImageList_Destroy(m_himlHot);
 

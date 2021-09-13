@@ -99,7 +99,7 @@ CCharMapWindow::Run(void)
 {
     MSG Msg;
 
-    // Pump the message queue 
+    // Pump the message queue
     while (GetMessageW(&Msg, NULL, 0, 0) != 0)
     {
         TranslateMessage(&Msg);
@@ -195,7 +195,7 @@ CCharMapWindow::OnCreate(_In_ HWND hDlg)
         }
     }
 
-    // Add all the fonts to the 
+    // Add all the fonts to the list
     if (!CreateFontComboBox())
         return FALSE;
 

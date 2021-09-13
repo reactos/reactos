@@ -310,7 +310,7 @@ SepAdtInitializeBounds(VOID)
 /**
  * @brief
  * Sets an audit event for future security auditing monitoring.
- * 
+ *
  * @param[in,out] Message
  * The reference monitoring API message. It is used to determine
  * if the right API message number is provided, RmAuditSetCommand
@@ -350,7 +350,7 @@ SepRmSetAuditEvent(
 /**
  * @brief
  * Inserts a logon session into an access token specified by the
- * caller. 
+ * caller.
  *
  * @param[in,out] Token
  * An access token where the logon session is about to be inserted
@@ -495,7 +495,7 @@ SepRmRemoveLogonSessionFromToken(
  * module of Executive uses this as an internal kernel data for
  * respective logon sessions management within the kernel,
  * as in form of a SEP_LOGON_SESSION_REFERENCES data structure.
- * 
+ *
  * @param[in] LogonLuid
  * A logon ID represented as a LUID. This LUID is used to create
  * our logon session and add it to the sessions database.
@@ -681,7 +681,7 @@ Leave:
 /**
  * @brief
  * References a logon session.
- * 
+ *
  * @param[in] LogonLuid
  * A valid LUID that points to the logon session in the database that
  * we're going to reference it.
@@ -734,7 +734,7 @@ SepRmReferenceLogonSession(
  * @brief
  * Cleans the DOS device map directory of a logon
  * session.
- * 
+ *
  * @param[in] LogonLuid
  * A logon session ID where its DOS device map directory
  * is to be cleaned.
@@ -995,7 +995,7 @@ AllocateLinksAgain:
  * count of 0 by the time the function has de-referenced the logon,
  * that means the session is no longer used and can be safely deleted
  * from the logon sessions database.
- * 
+ *
  * @param[in] LogonLuid
  * A logon session ID to de-reference.
  *
@@ -1327,10 +1327,10 @@ SepRmCommandServerThread(
 /**
  * @brief
  * Retrieves the DOS device map from a logon session.
- * 
+ *
  * @param[in] LogonId
  * A valid logon session ID.
- * 
+ *
  * @param[out] DeviceMap
  * The returned device map buffer from the logon session.
  *
@@ -1556,7 +1556,7 @@ SeMarkLogonSessionForTerminationNotification(
  * @brief
  * Registers a callback that will be called once a logon session
  * terminates.
- * 
+ *
  * @param[in] CallbackRoutine
  * Callback routine address.
  *
@@ -1606,7 +1606,7 @@ SeRegisterLogonSessionTerminatedRoutine(
  * @brief
  * Un-registers a callback routine, previously registered by
  * SeRegisterLogonSessionTerminatedRoutine function.
- * 
+ *
  * @param[in] CallbackRoutine
  * Callback routine address to un-register.
  *

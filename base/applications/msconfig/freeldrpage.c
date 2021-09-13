@@ -53,11 +53,11 @@ LoadBootIni(WCHAR *szDrive, HWND hDlg)
         hr = StringCbCatW(szBuffer, sizeof(szBuffer), L"boot.ini");
         if (FAILED(hr))
             return FALSE;
-            
+
         file = _wfopen(szBuffer, L"rt");
         if (!file)
             return FALSE;
-    }     
+    }
 
     hDlgCtrl = GetDlgItem(hDlg, IDC_LIST_BOX);
 

@@ -505,7 +505,7 @@ UINT
 CDefaultContextMenu::AddStaticContextMenusToMenu(
     HMENU hMenu,
     UINT* pIndexMenu,
-    UINT iIdCmdFirst, 
+    UINT iIdCmdFirst,
     UINT iIdCmdLast)
 {
     MENUITEMINFOW mii;

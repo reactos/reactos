@@ -26,7 +26,7 @@ PSECURITY_DESCRIPTOR SeSystemAnonymousLogonSd = NULL;
 /**
  * @brief
  * Initializes the known security descriptors in the system.
- * 
+ *
  * @return
  * Returns TRUE if all the security descriptors have been initialized,
  * FALSE otherwise.
@@ -133,17 +133,17 @@ SepInitSDs(VOID)
 /**
  * @brief
  * Sets a "World" security descriptor.
- * 
+ *
  * @param[in] SecurityInformation
  * Security information details, alongside with the security
  * descriptor to set the World SD.
- * 
+ *
  * @param[in] SecurityDescriptor
  * A security descriptor buffer.
- * 
+ *
  * @param[in] BufferLength
  * Length size of the buffer.
- * 
+ *
  * @return
  * Returns STATUS_SUCCESS if the World security descriptor has been
  * set. STATUS_ACCESS_DENIED is returned if the caller hasn't
@@ -247,17 +247,17 @@ SeSetWorldSecurityDescriptor(
 /**
  * @brief
  * Determines the size of a SID.
- * 
+ *
  * @param[in] Sid
  * A security identifier where its size is to be determined.
- * 
+ *
  * @param[in,out] OutSAC
  * The returned sub authority count of the security
  * identifier.
- * 
+ *
  * @param[in] ProcessorMode
  * Processor level access mode.
- * 
+ *
  * @return
  * Returns the size length of a security identifier (SID).
  */
@@ -295,14 +295,14 @@ DetermineSIDSize(
 /**
  * @brief
  * Determines the size of an ACL.
- * 
+ *
  * @param[in] Acl
  * An access control list where its size is to be
  * determined.
- * 
+ *
  * @param[in] ProcessorMode
  * Processor level access mode.
- * 
+ *
  * @return
  * Returns the size length of a an access control
  * list (ACL).
@@ -329,25 +329,25 @@ DetermineACLSize(
 /**
  * @brief
  * Captures a security descriptor.
- * 
+ *
  * @param[in] _OriginalSecurityDescriptor
  * An already existing and valid security descriptor
  * to be captured.
- * 
+ *
  * @param[in] CurrentMode
  * Processor level access mode.
- * 
+ *
  * @param[in] PoolType
  * Pool type to be used when allocating the captured
  * buffer.
- * 
+ *
  * @param[in] CaptureIfKernel
  * Set this to TRUE if capturing is done within the
  * kernel.
- * 
+ *
  * @param[out] CapturedSecurityDescriptor
  * The captured security descriptor.
- * 
+ *
  * @return
  * Returns STATUS_SUCCESS if the operations have been
  * completed successfully and that the security descriptor
@@ -546,21 +546,21 @@ SeCaptureSecurityDescriptor(
  * @brief
  * Queries information details about a security
  * descriptor.
- * 
+ *
  * @param[in] SecurityInformation
  * Security information details to be queried
  * from a security descriptor.
- * 
+ *
  * @param[out] SecurityDescriptor
  * The returned security descriptor with security information
  * data.
- * 
+ *
  * @param[in,out] Length
  * The returned length of a security descriptor.
- * 
+ *
  * @param[in,out] ObjectsSecurityDescriptor
  * The returned object security descriptor.
- * 
+ *
  * @return
  * Returns STATUS_SUCCESS if the operations have been
  * completed successfully and that the specific information
@@ -717,17 +717,17 @@ SeQuerySecurityDescriptorInfo(
 /**
  * @brief
  * Releases a captured security descriptor buffer.
- * 
+ *
  * @param[in] CapturedSecurityDescriptor
  * The captured security descriptor to be freed.
- * 
+ *
  * @param[in] CurrentMode
  * Processor level access mode.
- * 
+ *
  * @param[in] CaptureIfKernelMode
  * Set this to TRUE if the releasing is to be done within
  * the kernel.
- * 
+ *
  * @return
  * Returns STATUS_SUCCESS.
  */
@@ -760,26 +760,26 @@ SeReleaseSecurityDescriptor(
  * @brief
  * Modifies some information data about a security
  * descriptor.
- * 
+ *
  * @param[in] Object
  * If specified, the function will use this arbitrary
  * object that points to an object security descriptor.
- * 
+ *
  * @param[in] SecurityInformation
  * Security information details to be set.
- * 
+ *
  * @param[in] SecurityDescriptor
  * A security descriptor where its info is to be changed.
- * 
+ *
  * @param[in,out] ObjectsSecurityDescriptor
  * The returned pointer to security descriptor objects.
- * 
+ *
  * @param[in] PoolType
  * Pool type for the new security descriptor to allocate.
- * 
+ *
  * @param[in] GenericMapping
  * The generic mapping of access rights masks.
- * 
+ *
  * @return
  * See SeSetSecurityDescriptorInfoEx.
  */
@@ -809,31 +809,31 @@ SeSetSecurityDescriptorInfo(
  * @brief
  * An extended function that sets new information data to
  * a security descriptor.
- * 
+ *
  * @param[in] Object
  * If specified, the function will use this arbitrary
  * object that points to an object security descriptor.
- * 
+ *
  * @param[in] SecurityInformation
  * Security information details to be set.
- * 
+ *
  * @param[in] SecurityDescriptor
  * A security descriptor where its info is to be changed.
- * 
+ *
  * @param[in,out] ObjectsSecurityDescriptor
  * The returned pointer to security descriptor objects.
- * 
+ *
  * @param[in] AutoInheritFlags
  * Flags bitmask inheritation, influencing how the security
  * descriptor can be inherited and if it can be in the first
  * place.
- * 
+ *
  * @param[in] PoolType
  * Pool type for the new security descriptor to allocate.
- * 
+ *
  * @param[in] GenericMapping
  * The generic mapping of access rights masks.
- * 
+ *
  * @return
  * Returns STATUS_SUCCESS if the operations have been
  * completed without problems and that new info has been
@@ -987,14 +987,14 @@ SeSetSecurityDescriptorInfoEx(
  * Determines if a security descriptor is valid according
  * to the general security requirements and conditions
  * set by the kernel.
- * 
+ *
  * @param[in] Length
  * The length of a security descriptor.
- * 
+ *
  * @param[in] _SecurityDescriptor
  * A security descriptor where its properties are to be
  * checked for validity.
- * 
+ *
  * @return
  * Returns TRUE if the given security descriptor is valid,
  * FALSE otherwise.
@@ -1136,10 +1136,10 @@ SeValidSecurityDescriptor(
 /**
  * @brief
  * Frees a security descriptor.
- * 
+ *
  * @param[in] SecurityDescriptor
  * A security descriptor to be freed from memory.
- * 
+ *
  * @return
  * Returns STATUS_SUCCESS.
  */
@@ -1164,38 +1164,38 @@ SeDeassignSecurity(
  * @brief
  * An extended function that assigns a security descriptor for a new
  * object.
- * 
+ *
  * @param[in] _ParentDescriptor
  * A security descriptor of the parent object that is being
  * created.
- * 
+ *
  * @param[in] _ExplicitDescriptor
  * An explicit security descriptor that is applied to a new
  * object.
- * 
+ *
  * @param[out] NewDescriptor
  * The new allocated security descriptor.
- * 
+ *
  * @param[in] ObjectType
  * The type of the new object.
- * 
+ *
  * @param[in] IsDirectoryObject
  * Set this to TRUE if the newly created object is a directory
  * object, otherwise set this to FALSE.
- * 
+ *
  * @param[in] AutoInheritFlags
  * Automatic inheritance flags that influence how access control
  * entries within ACLs from security descriptors are inherited.
- * 
+ *
  * @param[in] SubjectContext
  * Security subject context of the new object.
- * 
+ *
  * @param[in] GenericMapping
  * Generic mapping of access mask rights.
- * 
+ *
  * @param[in] PoolType
  * This parameter is unused.
- * 
+ *
  * @return
  * Returns STATUS_SUCCESS if the operations have been completed
  * successfully and that the security descriptor has been
@@ -1505,31 +1505,31 @@ SeAssignSecurityEx(
 /**
  * @brief
  * Assigns a security descriptor for a new object.
- * 
+ *
  * @param[in] ParentDescriptor
  * A security descriptor of the parent object that is being
  * created.
- * 
+ *
  * @param[in] ExplicitDescriptor
  * An explicit security descriptor that is applied to a new
  * object.
- * 
+ *
  * @param[out] NewDescriptor
  * The new allocated security descriptor.
- * 
+ *
  * @param[in] IsDirectoryObject
  * Set this to TRUE if the newly created object is a directory
  * object, otherwise set this to FALSE.
- * 
+ *
  * @param[in] SubjectContext
  * Security subject context of the new object.
- * 
+ *
  * @param[in] GenericMapping
  * Generic mapping of access mask rights.
- * 
+ *
  * @param[in] PoolType
  * This parameter is unused.
- * 
+ *
  * @return
  * See SeAssignSecurityEx.
  */
@@ -1561,16 +1561,16 @@ SeAssignSecurity(
 /**
  * @brief
  * Computes the quota size of a security descriptor.
- * 
+ *
  * @param[in] SecurityDescriptor
  * A security descriptor.
- * 
+ *
  * @param[out] QuotaInfoSize
  * The returned quota size of the given security descriptor to
  * the caller. The function may return 0 to this parameter if
  * the descriptor doesn't have a group or a discretionary
  * access control list (DACL) even.
- * 
+ *
  * @return
  * Returns STATUS_SUCCESS if the quota size of a security
  * descriptor has been computed successfully. STATUS_UNKNOWN_REVISION

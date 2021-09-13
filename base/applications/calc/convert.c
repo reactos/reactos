@@ -512,7 +512,7 @@ static const conv_t conv_VOLUME[] = {
 1 chang = 20 tamlung
 1 tamlung = 4 baht
 1 baht = 4 saloung
-1 saloung = 
+1 saloung =
 
 1 chang = 6/5 kg = 1200 g
 1 tamlung = 1/20 chang = 60 g

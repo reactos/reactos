@@ -323,7 +323,7 @@ HRESULT STDMETHODCALLTYPE CBaseBarSite::OnWinEvent(
     // RECT                                    newBounds;
     HRESULT                                 hResult;
     LRESULT                                 result;
-    
+
     hResult = S_OK;
     if (uMsg == WM_NOTIFY)
     {
@@ -339,7 +339,7 @@ HRESULT STDMETHODCALLTYPE CBaseBarSite::OnWinEvent(
                     hResult = fDeskBarSite->QueryInterface(IID_PPV_ARG(IDeskBar, &deskBar));
                     GetClientRect(&newBounds);
                     hResult = deskBar->OnPosRectChangeDB(&newBounds);
-                    
+
 #endif
                     break;
                 case NM_CUSTOMDRAW:
@@ -375,9 +375,9 @@ HRESULT STDMETHODCALLTYPE CBaseBarSite::SetDeskBarSite(IUnknown *punkSite)
 {
     CComPtr<IOleWindow>                     oleWindow;
     HWND                                    ownerWindow;
-    HRESULT                                 hResult;  
+    HRESULT                                 hResult;
     DWORD                                   dwBandID;
-    
+
     if (punkSite == NULL)
     {
 
@@ -426,7 +426,7 @@ HRESULT STDMETHODCALLTYPE CBaseBarSite::SetDeskBarSite(IUnknown *punkSite)
         /* Create close toolbar and imagelist */
         toolbarWnd = CreateWindowW(TOOLBARCLASSNAMEW, NULL,
             WS_VISIBLE | WS_CHILD | WS_CLIPSIBLINGS | WS_CLIPCHILDREN |
-            TBSTYLE_FLAT | TBSTYLE_TRANSPARENT | TBSTYLE_TOOLTIPS | 
+            TBSTYLE_FLAT | TBSTYLE_TRANSPARENT | TBSTYLE_TOOLTIPS |
             CCS_NOMOVEY | CCS_NORESIZE | CCS_NOPARENTALIGN | CCS_NODIVIDER
             , 0, 0, 0, 0, m_hWnd, NULL, _AtlBaseModule.GetModuleInstance(), NULL);
 
@@ -440,7 +440,7 @@ HRESULT STDMETHODCALLTYPE CBaseBarSite::SetDeskBarSite(IUnknown *punkSite)
         DeleteObject(hBmp);
 
         SendMessage(toolbarWnd, TB_SETIMAGELIST, 0, (LPARAM)toolImageList);
-        
+
         /* Add button to toolbar */
         closeBtn.iBitmap = MAKELONG(1, 0);
         closeBtn.idCommand = IDM_BASEBAR_CLOSE;

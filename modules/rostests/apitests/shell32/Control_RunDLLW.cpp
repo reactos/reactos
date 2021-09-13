@@ -63,7 +63,7 @@ CPlApplet(HWND hwndCPl,
             {
                 wcscpy(pinfo->szName, L"name1");
                 wcscpy(pinfo->szInfo, L"info1");
-                wcscpy(pinfo->szHelpFile, L"help1");                
+                wcscpy(pinfo->szHelpFile, L"help1");
             }
             break;
         }
@@ -93,7 +93,7 @@ struct param_test
     INT iClick;       /* MSG_NOT_CALLED when CPL_DBLCLK is not sent */
 };
 
-struct param_test tests[] = 
+struct param_test tests[] =
 {
     {__LINE__, L"", MSG_NOT_CALLED, L"", 0},
     {__LINE__, L",name0", MSG_NOT_CALLED, L"", 0},

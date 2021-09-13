@@ -35,7 +35,7 @@ int Count_myLpkTabbedTextOut = 0;
 int Count_myLpkPSMTextOut = 0;
 int Count_myLpkDrawTextEx = 0;
 
-DWORD WINAPI myLpkTabbedTextOut (LPVOID x1,LPVOID x2,LPVOID x3, LPVOID x4, LPVOID x5, LPVOID x6, LPVOID x7, LPVOID x8, 
+DWORD WINAPI myLpkTabbedTextOut (LPVOID x1,LPVOID x2,LPVOID x3, LPVOID x4, LPVOID x5, LPVOID x6, LPVOID x7, LPVOID x8,
                                    LPVOID x9, LPVOID x10, LPVOID x11, LPVOID x12)
 {
     Count_myLpkTabbedTextOut++;

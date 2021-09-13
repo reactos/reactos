@@ -320,7 +320,7 @@ BmFwInitializeBootDirectoryPath (
     /* Try to open the boot device */
     Status = BlpDeviceOpen(BlpBootDevice,
                            BL_DEVICE_READ_ACCESS,
-                           0, 
+                           0,
                            &DeviceHandle);
     if (!NT_SUCCESS(Status))
     {
@@ -2007,7 +2007,7 @@ Quickie:
     return Status;
 }
 
-NTSTATUS 
+NTSTATUS
 BmLaunchRecoverySequence (
     _In_ PBL_LOADED_APPLICATION_ENTRY BootEntry,
     _In_ ULONG LaunchCode
@@ -2095,7 +2095,7 @@ BmLaunchRecoverySequence (
 Quickie:
     /* Did we have a sequence of entries? */
     if (Sequence)
-    {   
+    {
         /* Loop through each one */
         for (RecoveryIndex = 0; RecoveryIndex < Count; RecoveryIndex++)
         {
@@ -2118,7 +2118,7 @@ Quickie:
         /* Free it */
         BlMmFreeHeap(RecoverySequence);
     }
-  
+
     /* Return back to caller */
     return Status;
 }
@@ -2840,7 +2840,7 @@ BmMain (
 
     /* Copy the library parameters and add the re-initialization flag */
     RtlCopyMemory(&LibraryParameters,
-                  &BlpLibraryParameters, 
+                  &BlpLibraryParameters,
                   sizeof(LibraryParameters));
     LibraryParameters.LibraryFlags |= (BL_LIBRARY_FLAG_REINITIALIZE_ALL |
                                        BL_LIBRARY_FLAG_REINITIALIZE);

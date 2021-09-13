@@ -132,7 +132,7 @@ SetWelcomeText(HWND hWnd)
     TRACE("SetWelcomeText(%p)\n", hWnd);
 
     /* Open the Winlogon key */
-    rc = RegOpenKeyExW(HKEY_LOCAL_MACHINE, 
+    rc = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
                        L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon",
                        0,
                        KEY_QUERY_VALUE,
@@ -294,12 +294,12 @@ StartupWindowThread(LPVOID lpParam)
 
     /* When SetThreadDesktop is called the system closes the desktop handle when needed
        so we have to create a new handle because this handle may still be in use by winlogon  */
-    if (!DuplicateHandle (  GetCurrentProcess(), 
-                            msg->hDesktop, 
-                            GetCurrentProcess(), 
-                            (HANDLE*)&hDesk, 
-                            0, 
-                            FALSE, 
+    if (!DuplicateHandle (  GetCurrentProcess(),
+                            msg->hDesktop,
+                            GetCurrentProcess(),
+                            (HANDLE*)&hDesk,
+                            0,
+                            FALSE,
                             DUPLICATE_SAME_ACCESS))
     {
         ERR("Duplicating handle failed!\n");

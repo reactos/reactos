@@ -115,7 +115,7 @@ SetNTPServer(HWND hwnd, BOOL bBeginUpdate)
         SetDlgItemTextW(hwnd, IDC_SUCSYNC, szFormat);
     }
 
-    /* If there is new data entered then save it in the registry 
+    /* If there is new data entered then save it in the registry
        The same key name of "0" is used to store all user entered values
     */
     if (uSel == -1)

@@ -23,7 +23,7 @@
 23 stub ShareAsDialogA0
 24 stub ShareCreate
 25 stub ShareManage
-26 stub ShareStop 
+26 stub ShareStop
 27 stub StopShareDialogA0
 28 stub -noname Ordinal28
 29 stdcall NPPropertyDialog(ptr long long wstr long)

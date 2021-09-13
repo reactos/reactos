@@ -6,5 +6,5 @@ list(APPEND CRT_CONIO_SOURCE
     conio/getche.c
     conio/kbhit.c
     conio/putch.c
-    conio/ungetch.c   
+    conio/ungetch.c
 )

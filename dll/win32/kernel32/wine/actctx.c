@@ -7,7 +7,7 @@
  *                  Eric Pouech
  *                  Jon Griffiths
  *                  Dmitry Chapyshev (dmitry@reactos.org)
- *                  Samuel Serapión 
+ *                  Samuel Serapión
  */
 
 /* Partly synched with Wine 1.7.17 */

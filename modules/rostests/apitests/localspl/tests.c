@@ -9,7 +9,7 @@
  * The original localspl.dll from Windows Server 2003 is not easily testable.
  * It relies on a proper initialization inside spoolsv.exe, so we can't just load it in an API-Test as usual.
  * See https://www.reactos.org/pipermail/ros-dev/2015-June/017395.html for more information.
- * 
+ *
  * To make testing possible anyway, this program basically does four things:
  *     - Injecting our testing code into spoolsv.exe.
  *     - Registering and running us as a service in the SYSTEM security context like spoolsv.exe, so that injection is possible at all.

@@ -396,7 +396,7 @@ static HRESULT GetFavoritesFolder(IShellFolder ** ppsfFavorites, LPITEMIDLIST * 
 
     if (ppsfFavorites)
         *ppsfFavorites = NULL;
-    
+
     if (ppidl)
         *ppidl = NULL;
 
@@ -515,7 +515,7 @@ HRESULT STDMETHODCALLTYPE CMenuCallback::GetObject(LPSMDATA psmd, REFIID riid, v
 
         if (FAILED(hResult))
             return hResult;
-            
+
         fFavoritesMenu = newMenu;
     }
 
@@ -666,7 +666,7 @@ HRESULT CInternetToolbar::CreateMenuBar(IShellMenu **pMenuBar)
     hResult = CMenuBand_CreateInstance(IID_PPV_ARG(IShellMenu, &menubar));
     if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
-    
+
     hResult = fMenuCallback->QueryInterface(IID_PPV_ARG(IShellMenuCallback, &callback));
     if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
@@ -976,7 +976,7 @@ HRESULT STDMETHODCALLTYPE CInternetToolbar::ResizeBorderDW(LPCRECT prcBorder,
     neededBorderSpace.bottom = 0;
 
     CComPtr<IDockingWindowSite> dockingWindowSite;
-    
+
     HRESULT hResult = fSite->QueryInterface(IID_PPV_ARG(IDockingWindowSite, &dockingWindowSite));
     if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
@@ -1522,7 +1522,7 @@ LRESULT CInternetToolbar::OnUpLevel(WORD wNotifyCode, WORD wID, HWND hWndCtl, BO
 
 LRESULT CInternetToolbar::OnSearch(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled)
 {
-    IUnknown_Exec(fSite, CGID_Explorer, 0x1c, 1, NULL, NULL); 
+    IUnknown_Exec(fSite, CGID_Explorer, 0x1c, 1, NULL, NULL);
     return 1;
 }
 
@@ -1546,7 +1546,7 @@ LRESULT CInternetToolbar::OnForwardToCommandTarget(WORD wNotifyCode, WORD wID, H
     }
     return 1;
 }
-    
+
 LRESULT CInternetToolbar::OnMenuDropDown(UINT idControl, NMHDR *pNMHDR, BOOL &bHandled)
 {
     CComPtr<IBrowserService>                browserService;
@@ -1849,10 +1849,10 @@ LRESULT CInternetToolbar::OnLDown(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL 
     fSizing = TRUE;
 
     DWORD msgp = GetMessagePos();
-    
+
     fStartPosition.x = GET_X_LPARAM(msgp);
     fStartPosition.y = GET_Y_LPARAM(msgp);
-    
+
     RECT rc;
     GetWindowRect(&rc);
 

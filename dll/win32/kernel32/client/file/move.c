@@ -511,7 +511,7 @@ BasepOpenFileForMove(IN LPCWSTR File,
     _SEH2_TRY
     {
         /* Zero output */
-        RelativeNtName->Length = 
+        RelativeNtName->Length =
         RelativeNtName->MaximumLength = 0;
         RelativeNtName->Buffer = NULL;
         *NtName = NULL;

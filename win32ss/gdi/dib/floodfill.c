@@ -1,9 +1,9 @@
-/* 
+/*
 * COPYRIGHT:         See COPYING in the top level directory
 * PROJECT:           ReactOS win32 subsystem
 * PURPOSE:           Flood filling support
 * FILE:              win32ss/gdi/dib/floodfill.c
-* PROGRAMMER:        Gregor Schneider, <grschneider AT gmail DOT com>
+* PROGRAMMER:        Gregor Schneider <grschneider AT gmail DOT com>
 */
 
 #include <win32k.h>
@@ -15,7 +15,7 @@
 *  This floodfill algorithm is an iterative four neighbors version. It works with an internal stack like data structure.
 *  The stack is kept in an array, sized for the worst case scenario of having to add all pixels of the surface.
 *  This avoids having to allocate and free memory blocks  all the time. The stack grows from the end of the array towards the start.
-*  All pixels are checked before being added, against belonging to the fill rule (FLOODFILLBORDER or FLOODFILLSURFACE) 
+*  All pixels are checked before being added, against belonging to the fill rule (FLOODFILLBORDER or FLOODFILLSURFACE)
 *  and the position in respect to the clip region. This guarantees all pixels lying on the stack belong to the filled surface.
 *  Further optimisations of the algorithm are possible.
 */
@@ -38,7 +38,7 @@ static __inline BOOL initFlood(FLOODINFO *info, RECTL *DstRect)
 {
   ULONG width = DstRect->right - DstRect->left;
   ULONG height = DstRect->bottom - DstRect->top;
-  info->floodData = ExAllocatePoolWithTag(NonPagedPool, width * height * sizeof(FLOODITEM), TAG_DIB); 
+  info->floodData = ExAllocatePoolWithTag(NonPagedPool, width * height * sizeof(FLOODITEM), TAG_DIB);
   if (info->floodData == NULL)
   {
     return FALSE;
@@ -52,11 +52,11 @@ static __inline VOID finalizeFlood(FLOODINFO *info)
   ExFreePoolWithTag(info->floodData, TAG_DIB);
 }
 static __inline VOID addItemFlood(FLOODINFO *info,
-                                  ULONG x, 
-                                  ULONG y, 
-                                  SURFOBJ *DstSurf, 
-                                  RECTL *DstRect, 
-                                  ULONG Color, 
+                                  ULONG x,
+                                  ULONG y,
+                                  SURFOBJ *DstSurf,
+                                  RECTL *DstRect,
+                                  ULONG Color,
                                   BOOL isSurf)
 {
   if (RECTL_bPointInRect(DstRect,x,y))
@@ -83,11 +83,11 @@ static __inline VOID removeItemFlood(FLOODINFO *info)
   info->floodLen--;
 }
 
-BOOLEAN DIB_XXBPP_FloodFillSolid(SURFOBJ *DstSurf, 
-                                 BRUSHOBJ *Brush, 
-                                 RECTL *DstRect, 
+BOOLEAN DIB_XXBPP_FloodFillSolid(SURFOBJ *DstSurf,
+                                 BRUSHOBJ *Brush,
+                                 RECTL *DstRect,
                                  POINTL *Origin,
-                                 ULONG ConvColor, 
+                                 ULONG ConvColor,
                                  UINT FillType)
 {
   ULONG x, y;
@@ -111,7 +111,7 @@ BOOLEAN DIB_XXBPP_FloodFillSolid(SURFOBJ *DstSurf,
       return FALSE;
     }
     addItemFlood(&flood, x, y, DstSurf, DstRect, ConvColor, FALSE);
-    while (flood.floodLen != 0) 
+    while (flood.floodLen != 0)
     {
       x = flood.floodStart->x;
       y = flood.floodStart->y;
@@ -119,7 +119,7 @@ BOOLEAN DIB_XXBPP_FloodFillSolid(SURFOBJ *DstSurf,
 
       DibFunctionsForBitmapFormat[DstSurf->iBitmapFormat].DIB_PutPixel(DstSurf, x, y, BrushColor);
       if (flood.floodStart - 4 < flood.floodData)
-      {   
+      {
         DPRINT1("Can't finish flooding!\n");
         finalizeFlood(&flood);
         return FALSE;
@@ -144,7 +144,7 @@ BOOLEAN DIB_XXBPP_FloodFillSolid(SURFOBJ *DstSurf,
       return FALSE;
     }
     addItemFlood(&flood, x, y, DstSurf, DstRect, ConvColor, TRUE);
-    while (flood.floodLen != 0) 
+    while (flood.floodLen != 0)
     {
       x = flood.floodStart->x;
       y = flood.floodStart->y;

@@ -102,7 +102,7 @@ SampCreateServerSD(OUT PSECURITY_DESCRIPTOR *ServerSd,
         goto done;
 
     /* allocate and create the DACL */
-    DaclSize = sizeof(ACL) + 
+    DaclSize = sizeof(ACL) +
                2 * sizeof(ACE) +
                RtlLengthSid(EveryoneSid) +
                RtlLengthSid(AdministratorsSid);
@@ -150,7 +150,7 @@ SampCreateServerSD(OUT PSECURITY_DESCRIPTOR *ServerSd,
         goto done;
 
     /* allocate and create the SACL */
-    SaclSize = sizeof(ACL) + 
+    SaclSize = sizeof(ACL) +
                2 * sizeof(ACE) +
                RtlLengthSid(EveryoneSid) +
                RtlLengthSid(AnonymousSid);
@@ -364,7 +364,7 @@ SampCreateBuiltinDomainSD(OUT PSECURITY_DESCRIPTOR *ServerSd,
         goto done;
 
     /* allocate and create the DACL */
-    DaclSize = sizeof(ACL) + 
+    DaclSize = sizeof(ACL) +
                2 * sizeof(ACE) +
                RtlLengthSid(EveryoneSid) +
                RtlLengthSid(AdministratorsSid);
@@ -412,7 +412,7 @@ SampCreateBuiltinDomainSD(OUT PSECURITY_DESCRIPTOR *ServerSd,
         goto done;
 
     /* allocate and create the SACL */
-    SaclSize = sizeof(ACL) + 
+    SaclSize = sizeof(ACL) +
                2 * sizeof(ACE) +
                RtlLengthSid(EveryoneSid) +
                RtlLengthSid(AnonymousSid);
@@ -660,7 +660,7 @@ SampCreateAccountDomainSD(OUT PSECURITY_DESCRIPTOR *ServerSd,
         goto done;
 
     /* allocate and create the DACL */
-    DaclSize = sizeof(ACL) + 
+    DaclSize = sizeof(ACL) +
                4 * sizeof(ACE) +
                RtlLengthSid(EveryoneSid) +
                RtlLengthSid(AdministratorsSid) +
@@ -726,7 +726,7 @@ SampCreateAccountDomainSD(OUT PSECURITY_DESCRIPTOR *ServerSd,
         goto done;
 
     /* allocate and create the SACL */
-    SaclSize = sizeof(ACL) + 
+    SaclSize = sizeof(ACL) +
                2 * sizeof(ACE) +
                RtlLengthSid(EveryoneSid) +
                RtlLengthSid(AnonymousSid);
@@ -956,7 +956,7 @@ SampCreateAliasSD(OUT PSECURITY_DESCRIPTOR *AliasSd,
         goto done;
 
     /* allocate and create the DACL */
-    DaclSize = sizeof(ACL) + 
+    DaclSize = sizeof(ACL) +
                3 * sizeof(ACE) +
                RtlLengthSid(EveryoneSid) +
                RtlLengthSid(AdministratorsSid) +
@@ -1013,7 +1013,7 @@ SampCreateAliasSD(OUT PSECURITY_DESCRIPTOR *AliasSd,
         goto done;
 
     /* allocate and create the SACL */
-    SaclSize = sizeof(ACL) + 
+    SaclSize = sizeof(ACL) +
                2 * sizeof(ACE) +
                RtlLengthSid(EveryoneSid) +
                RtlLengthSid(AnonymousSid);
@@ -1243,7 +1243,7 @@ SampCreateGroupSD(OUT PSECURITY_DESCRIPTOR *GroupSd,
         goto done;
 
     /* allocate and create the DACL */
-    DaclSize = sizeof(ACL) + 
+    DaclSize = sizeof(ACL) +
                3 * sizeof(ACE) +
                RtlLengthSid(EveryoneSid) +
                RtlLengthSid(AdministratorsSid) +
@@ -1300,7 +1300,7 @@ SampCreateGroupSD(OUT PSECURITY_DESCRIPTOR *GroupSd,
         goto done;
 
     /* allocate and create the SACL */
-    SaclSize = sizeof(ACL) + 
+    SaclSize = sizeof(ACL) +
                2 * sizeof(ACE) +
                RtlLengthSid(EveryoneSid) +
                RtlLengthSid(AnonymousSid);
@@ -1514,7 +1514,7 @@ SampCreateUserSD(IN PSID UserSid,
         goto done;
 
     /* allocate and create the DACL */
-    DaclSize = sizeof(ACL) + 
+    DaclSize = sizeof(ACL) +
                3 * sizeof(ACE) +
                RtlLengthSid(EveryoneSid) +
                RtlLengthSid(AdministratorsSid) +
@@ -1573,7 +1573,7 @@ SampCreateUserSD(IN PSID UserSid,
         goto done;
 
     /* allocate and create the SACL */
-    SaclSize = sizeof(ACL) + 
+    SaclSize = sizeof(ACL) +
                2 * sizeof(ACE) +
                RtlLengthSid(EveryoneSid) +
                RtlLengthSid(AnonymousSid);

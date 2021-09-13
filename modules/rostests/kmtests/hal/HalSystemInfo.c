@@ -63,7 +63,7 @@ TestAMLIllegalIOPortAddresses(void)
     {
         return;
     }
-    
+
     if (ReturnedLength != sizeof(*AddressList))
     {
         /* Try with space for exactly one entry and make sure we get

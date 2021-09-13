@@ -1084,7 +1084,7 @@ ImageView_WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
                         ImageView_UpdateWindow(hwnd);
                     }
                     break;
-    
+
                 case IDC_ROT_COUNCW:
                     if (image)
                     {

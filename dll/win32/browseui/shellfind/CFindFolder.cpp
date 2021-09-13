@@ -252,7 +252,7 @@ IsDataUnicode(
                      IS_TEXT_UNICODE_REVERSE_MASK | IS_TEXT_UNICODE_UNICODE_MASK)
                         & ~IS_TEXT_UNKNOWN_FLAGS_MASK;
         INT Results;
-    
+
         IsTextUnicode(Buffer, BufferSize, &Tests);
         Results = Tests;
 

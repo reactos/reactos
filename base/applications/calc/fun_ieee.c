@@ -55,7 +55,7 @@ double acosh(double x)
 {
     // must be x>=1, if not return Nan (Not a Number)
     if(!(x>=1.0)) return sqrt(-1.0);
-    
+
     // return only the positive result (as sqrt does).
     return log(x+sqrt(x*x-1.0));
 }
@@ -64,7 +64,7 @@ double atanh(double x)
 {
     // must be x>-1, x<1, if not return Nan (Not a Number)
     if(!(x>-1.0 && x<1.0)) return sqrt(-1.0);
-    
+
     return log((1.0+x)/(1.0-x))/2.0;
 }
 
@@ -372,7 +372,7 @@ static __int64 cbrti(__int64 x) {
 
    s = 60;
    y = 0;
-   while(s >= 0) { 
+   while(s >= 0) {
       y = 2*y;
       b = (3*y*(y + 1) + 1) << s;
       s = s - 3;

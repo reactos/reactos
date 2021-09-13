@@ -295,7 +295,7 @@ HRESULT WINAPI Main_DDrawSurface_Blt(LPDDRAWI_DDRAWSURFACE_INT ThisDest, LPRECT 
 
     if (ThisDest == NULL)
     {
-        return DDERR_INVALIDPARAMS; 
+        return DDERR_INVALIDPARAMS;
     }
 
     /* Zero out members in DDHAL_BLTDATA */
@@ -448,7 +448,7 @@ Main_DDrawSurface_Lock (LPDDRAWI_DDRAWSURFACE_INT ThisDest, LPRECT prect,
 
     if (events != NULL)
     {
-        return DDERR_INVALIDPARAMS; 
+        return DDERR_INVALIDPARAMS;
     }
 
     /* FIXME add a check see if lock support or not */

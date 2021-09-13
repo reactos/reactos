@@ -59,7 +59,7 @@ const LUID SeCreateSymbolicLinkPrivilege = CONST_LUID(SE_CREATE_SYMBOLIC_LINK_PR
  * Initializes the privileges during the startup phase of the security
  * manager module. This function serves as a placeholder as it currently
  * does nothing.
- * 
+ *
  * @return
  * Nothing.
  */
@@ -75,24 +75,24 @@ SepInitPrivileges(VOID)
  * @brief
  * Checks the privileges pointed by Privileges array argument if they exist and
  * match with the privileges from an access token.
- * 
+ *
  * @param[in] Token
  * An access token where privileges are to be checked.
- * 
+ *
  * @param[in] Privileges
  * An array of privileges with attributes used as checking indicator for
  * the function.
- * 
+ *
  * @param[in] PrivilegeCount
  * The total number count of privileges in the array.
- * 
+ *
  * @param[in] PrivilegeControl
  * Privilege control bit mask to determine if we should check all the
  * privileges based on the number count of privileges or not.
- * 
+ *
  * @param[in] PreviousMode
  * Processor level access mode.
- * 
+ *
  * @return
  * Returns TRUE if the required privileges exist and that they do match.
  * Otherwise the functions returns FALSE.
@@ -168,17 +168,17 @@ SepPrivilegeCheck(
  * @brief
  * Checks only single privilege based upon the privilege pointed by a LUID and
  * if it matches with the one from an access token.
- * 
+ *
  * @param[in] PrivilegeValue
  * The privilege to be checked.
- * 
+ *
  * @param[in] Token
  * An access token where its privilege is to be checked against the one
  * provided by the caller.
- * 
+ *
  * @param[in] PreviousMode
  * Processor level access mode.
- * 
+ *
  * @return
  * Returns TRUE if the required privilege exists and that it matches
  * with the one from the access token, FALSE otherwise.
@@ -207,29 +207,29 @@ SepSinglePrivilegeCheck(
  * @brief
  * Checks the security policy and returns a set of privileges
  * based upon the said security policy context.
- * 
+ *
  * @param[in,out] DesiredAccess
  * The desired access right mask.
- * 
+ *
  * @param[in,out] GrantedAccess
  * The granted access rights masks. The rights are granted depending
  * on the desired access rights requested by the calling thread.
- * 
+ *
  * @param[in] SubjectContext
  * Security subject context. If the caller supplies one, the access token
  * supplied by the caller will be assigned to one of client or primary tokens
  * of the subject context in question.
- * 
+ *
  * @param[in] Token
  * An access token.
- * 
+ *
  * @param[out] OutPrivilegeSet
  * An array set of privileges to be reported to the caller, if the actual
  * calling thread wants such set of privileges in the first place.
- * 
+ *
  * @param[in] PreviousMode
  * Processor level access mode.
- * 
+ *
  * @return
  * Returns STATUS_PRIVILEGE_NOT_HELD if the respective operations have succeeded
  * without problems. STATUS_PRIVILEGE_NOT_HELD is returned if the access token
@@ -341,14 +341,14 @@ SePrivilegePolicyCheck(
  * Checks a single privilege and performs an audit
  * against a privileged service based on a security subject
  * context.
- * 
+ *
  * @param[in] DesiredAccess
  * Security subject context used for privileged service
  * auditing.
- * 
+ *
  * @param[in] PreviousMode
  * Processor level access mode.
- * 
+ *
  * @return
  * Returns TRUE if service auditing and privilege checking
  * tests have succeeded, FALSE otherwise.
@@ -391,37 +391,37 @@ SeCheckAuditPrivilege(
  * @brief
  * Captures a LUID with attributes structure. This function is mainly
  * tied in the context of privileges.
- * 
+ *
  * @param[in] Src
  * Source of a valid LUID with attributes structure.
- * 
+ *
  * @param[in] PrivilegeCount
  * Count number of privileges to be captured.
- * 
+ *
  * @param[in] PreviousMode
  * Processor level access mode.
- * 
+ *
  * @param[in] AllocatedMem
  * If specified, the function will use this allocated block memory
  * buffer for the captured LUID and attributes structure. Otherwise
  * the function will automatically allocate some buffer for it.
- * 
+ *
  * @param[in] AllocatedLength
  * The length of the buffer, pointed by AllocatedMem.
- * 
+ *
  * @param[in] PoolType
  * Pool type of the memory allocation.
- * 
+ *
  * @param[in] CaptureIfKernel
  * If set to TRUE, the capturing is done in the kernel itself.
  * FALSE if the capturing is done in a kernel mode driver instead.
- * 
+ *
  * @param[out] Dest
  * The captured LUID with attributes buffer.
- * 
+ *
  * @param[in,out] Length
  * The length of the captured privileges count.
- * 
+ *
  * @return
  * Returns STATUS_SUCCESS if the LUID and attributes array
  * has been captured successfully. STATUS_INSUFFICIENT_RESOURCES is returned
@@ -529,17 +529,17 @@ SeCaptureLuidAndAttributesArray(
 /**
  * @brief
  * Releases a LUID with attributes structure.
- * 
+ *
  * @param[in] Privilege
  * Array of a LUID and attributes that represents a privilege.
- * 
+ *
  * @param[in] PreviousMode
  * Processor level access mode.
- * 
+ *
  * @param[in] CaptureIfKernel
  * If set to TRUE, the releasing is done in the kernel itself.
  * FALSE if the releasing is done in a kernel mode driver instead.
- * 
+ *
  * @return
  * Nothing.
  */
@@ -564,13 +564,13 @@ SeReleaseLuidAndAttributesArray(
 /**
  * @brief
  * Appends additional privileges.
- * 
+ *
  * @param[in] AccessState
  * Access request to append.
- * 
+ *
  * @param[in] Privileges
  * Set of new privileges to append.
- * 
+ *
  * @return
  * Returns STATUS_SUCCESS if the privileges have been successfully
  * appended. Otherwise STATUS_INSUFFICIENT_RESOURCES is returned,
@@ -651,10 +651,10 @@ SeAppendPrivileges(
 /**
  * @brief
  * Frees a set of privileges.
- * 
+ *
  * @param[in] Privileges
  * Set of privileges array to be freed.
- * 
+ *
  * @return
  * Nothing.
  */
@@ -671,17 +671,17 @@ SeFreePrivileges(
  * @brief
  * Checks if a set of privileges exist and match within a
  * security subject context.
- * 
+ *
  * @param[in] Privileges
  * A set of privileges where the check must be performed
  * against the subject context.
- * 
+ *
  * @param[in] SubjectContext
  * A subject security context.
- * 
+ *
  * @param[in] PreviousMode
  * Processor level access mode.
- * 
+ *
  * @return
  * Returns TRUE if all the privileges do exist and match
  * with the ones specified by the caller and subject
@@ -722,13 +722,13 @@ SePrivilegeCheck(
  * @brief
  * Checks if a single privilege is present in the context
  * of the calling thread.
- * 
+ *
  * @param[in] PrivilegeValue
  * The specific privilege to be checked.
- * 
+ *
  * @param[in] PreviousMode
  * Processor level access mode.
- * 
+ *
  * @return
  * Returns TRUE if the privilege is present, FALSE
  * otherwise.
@@ -774,20 +774,20 @@ SeSinglePrivilegeCheck(
  * @brief
  * Checks a privileged object if such object has
  * the specific privilege submitted by the caller.
- * 
+ *
  * @param[in] PrivilegeValue
  * A privilege to be checked against the one from
  * the object.
- * 
+ *
  * @param[in] ObjectHandle
  * A handle to any kind of object.
- * 
+ *
  * @param[in] DesiredAccess
  * Desired access right mask requested by the caller.
- * 
+ *
  * @param[in] PreviousMode
  * Processor level access mode.
- * 
+ *
  * @return
  * Returns TRUE if the privilege is present, FALSE
  * otherwise.
@@ -837,18 +837,18 @@ SeCheckPrivilegedObject(
  * @brief
  * Checks a client access token if it has the required set of
  * privileges.
- * 
+ *
  * @param[in] ClientToken
  * A handle to an access client token.
- * 
+ *
  * @param[in] RequiredPrivileges
  * A set of required privileges to be checked against the privileges
  * of the access token.
- * 
+ *
  * @param[out] Result
  * The result, as a boolean value. If TRUE, the token has all the required
  * privileges, FALSE otherwise.
- * 
+ *
  * @return
  * Returns STATUS_SUCCESS if the function has completed successfully.
  * STATUS_INVALID_PARAMETER is returned if the set array of required

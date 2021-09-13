@@ -133,7 +133,7 @@ int LoadStringAndOem(HINSTANCE hInst,
         return 0;
     }
 
-    res = LoadString(hInst, uID, szTmp, byteSize); 
+    res = LoadString(hInst, uID, szTmp, byteSize);
     CharToOem(szTmp, szNode);
     HeapFree(ProcessHeap, 0, szTmp);
     return res;
@@ -300,7 +300,7 @@ LPTSTR GetConnectionType(LPTSTR lpClass)
 
             if (ConTypeTmp == NULL)
                 return NULL;
-                                        
+
             ConType = (LPTSTR)HeapAlloc(ProcessHeap,
                                         0,
                                         dwDataSize);

@@ -11,7 +11,7 @@
 const GUID IID_IKsPinPipe = {0xe539cd90, 0xa8b4, 0x11d1, {0x81, 0x89, 0x00, 0xa0, 0xc9, 0x06, 0x28, 0x02}};
 const GUID IID_IKsPinEx   = {0x7bb38260L, 0xd19c, 0x11d2, {0xb3, 0x8a, 0x00, 0xa0, 0xc9, 0x5e, 0xc2, 0x2e}};
 
-KSPIN_INTERFACE StandardPinInterface = 
+KSPIN_INTERFACE StandardPinInterface =
 {
     {STATIC_KSINTERFACESETID_Standard},
     KSINTERFACE_STANDARD_STREAMING,
@@ -403,7 +403,7 @@ CInputPin::Render(
 HRESULT
 STDMETHODCALLTYPE
 CInputPin::Backout(
-    IPin *ppinOut, 
+    IPin *ppinOut,
     IGraphBuilder *pGraph)
 {
 #ifdef KSPROXY_TRACE
@@ -834,7 +834,7 @@ CInputPin::KsMediaSamplesCompleted(PKSSTREAM_SEGMENT StreamSegment)
     return NOERROR;
 }
 
-IMemAllocator * 
+IMemAllocator *
 STDMETHODCALLTYPE
 CInputPin::KsPeekAllocator(KSPEEKOPERATION Operation)
 {

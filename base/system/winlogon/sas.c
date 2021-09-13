@@ -1047,9 +1047,9 @@ HandleShutdown(
     BOOLEAN Old;
 
     // SwitchDesktop(Session->WinlogonDesktop);
-    
+
     /* If the system is rebooting, show the appropriate string */
-    if (wlxAction == WLX_SAS_ACTION_SHUTDOWN_REBOOT) 
+    if (wlxAction == WLX_SAS_ACTION_SHUTDOWN_REBOOT)
         DisplayStatusMessage(Session, Session->WinlogonDesktop, IDS_REACTOSISRESTARTING);
     else
         DisplayStatusMessage(Session, Session->WinlogonDesktop, IDS_REACTOSISSHUTTINGDOWN);

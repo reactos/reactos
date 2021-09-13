@@ -1,6 +1,6 @@
-/* 
+/*
  * COPYRIGHT:            See COPYING in the top level directory
- * PROJECT:              ReactOS 
+ * PROJECT:              ReactOS
  * PURPOSE:              LPK Library
  * PROGRAMMER:           Magnus Olsen (greatlrd)
  *
@@ -76,7 +76,7 @@ DWORD WINAPI ftsWordBreak(DWORD x1,DWORD x2,DWORD x3,DWORD x4,DWORD x5);
 BOOL WINAPI LpkExtTextOut(HDC hdc, int x, int y, UINT fuOptions, const RECT *lprc,
                           LPCWSTR lpString, UINT uCount , const INT *lpDx, INT unknown);
 
-DWORD WINAPI LpkGetCharacterPlacement(HDC hdc, LPCWSTR lpString, INT uCount, INT nMaxExtent, 
+DWORD WINAPI LpkGetCharacterPlacement(HDC hdc, LPCWSTR lpString, INT uCount, INT nMaxExtent,
                                       GCP_RESULTSW *lpResults, DWORD dwFlags, DWORD dwUnused);
 
 INT WINAPI LpkPSMTextOut(HDC hdc, int x, int y, LPCWSTR lpString, int cString, DWORD dwFlags);

@@ -949,7 +949,7 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
 
             /* Fixup user's structure size */
             metrics->cbSize = sizeof(NONCLIENTMETRICSW);
-            
+
             if (!SpiSet(&gspv.ncm, metrics, sizeof(NONCLIENTMETRICSW), fl))
                 return 0;
 

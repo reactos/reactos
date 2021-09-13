@@ -218,7 +218,7 @@ capGetDriverDescriptionW(WORD wDriverIndex,
                         if (dwInfoSize)
                         {
                             Version = HeapAlloc(GetProcessHeap(), 0, dwInfoSize);
-                            
+
                             if (Version != NULL)
                             {
                                 GetFileVersionInfo(szFileName, 0, dwInfoSize, Version);

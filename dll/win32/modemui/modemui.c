@@ -30,7 +30,7 @@ ModemCplDlgProc(IN HWND hwndDlg,
     {
         case WM_INITDIALOG:
         {
-            
+
         }
 		break;
     }
@@ -51,7 +51,7 @@ ModemPropPagesProvider(IN HWND hwndDlg,
     {
         case WM_INITDIALOG:
         {
-            
+
         }
 		break;
     }

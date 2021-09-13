@@ -1141,7 +1141,7 @@ IntGdiBitBltRgn(
 
     if (pdc->fs & (DC_ACCUM_APP|DC_ACCUM_WMGR))
     {
-        RECTL rcrgn;        
+        RECTL rcrgn;
         REGION_GetRgnBox(prgnClip, &rcrgn);
         IntUpdateBoundsRect(pdc, &rcrgn);
     }
@@ -1226,7 +1226,7 @@ IntGdiFillRgn(
 
     if (pdc->fs & (DC_ACCUM_APP|DC_ACCUM_WMGR))
     {
-        RECTL rcrgn;        
+        RECTL rcrgn;
         REGION_GetRgnBox(prgnClip, &rcrgn);
         IntUpdateBoundsRect(pdc, &rcrgn);
     }

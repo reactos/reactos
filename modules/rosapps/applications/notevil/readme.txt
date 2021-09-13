@@ -9,7 +9,7 @@ displays the NT programmers' names if one writes
 
 To add a new name, add a new string in the
 resource script notevil.rc (string index numbers must be
-unique) and edit resource.h to update minimum and 
+unique) and edit resource.h to update minimum and
 maximum indices.
 
 Eventually run make.

@@ -718,7 +718,7 @@ HRESULT STDMETHODCALLTYPE CBandSiteBase::OnWinEvent(HWND hWnd, UINT uMsg, WPARAM
         HRESULT hr = _OnContextMenu(hWnd, uMsg, wParam, lParam, plrResult);
         if (FAILED_UNEXPECTEDLY(hr))
             return hr;
-        
+
         return S_OK;
     }
     else if (uMsg == WM_COMMAND && lParam)

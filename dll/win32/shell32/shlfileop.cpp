@@ -551,7 +551,7 @@ static void _SetOperationTexts(FILE_OPERATION *op, LPCWSTR src, LPCWSTR dest) {
         default:
             return;
     }
-    
+
     FormatMessageW(FORMAT_MESSAGE_FROM_STRING|FORMAT_MESSAGE_ARGUMENT_ARRAY,
                    op->szBuilderString, 0, 0, szFinalString, sizeof(szFinalString), (va_list*)args);
 
@@ -574,11 +574,11 @@ DWORD CALLBACK SHCopyProgressRoutine(
     FILE_OPERATION *op = (FILE_OPERATION *) lpData;
 
     if (op->progress) {
-        /* 
-         * This is called at the start of each file. To keop less state, 
+        /*
+         * This is called at the start of each file. To keop less state,
          * I'm adding the file to the completed size here, and the re-subtracting
          * it when drawing the progress bar.
-         */ 
+         */
         if (dwCallbackReason & CALLBACK_STREAM_SWITCH)
             op->completedSize.QuadPart += TotalFileSize.QuadPart;
 
@@ -586,7 +586,7 @@ DWORD CALLBACK SHCopyProgressRoutine(
                                     TotalFileSize.QuadPart +
                                     TotalBytesTransferred.QuadPart
                                   , op->totalSize.QuadPart);
-    
+
 
         op->bCancelled = op->progress->HasUserCancelled();
     }
@@ -1513,7 +1513,7 @@ static HRESULT copy_files(FILE_OPERATION *op, BOOL multiDest, const FILE_LIST *f
                 return ERROR_CANCELLED;
             }
         }
-        
+
         if (op->progress != NULL)
             op->bCancelled |= op->progress->HasUserCancelled();
         /* Vista return code. XP would return e.g. ERROR_FILE_NOT_FOUND, ERROR_ALREADY_EXISTS */
@@ -1753,7 +1753,7 @@ static DWORD move_files(FILE_OPERATION *op, BOOL multiDest, const FILE_LIST *flF
             move_to_dir(op, entryToMove, fileDest);
         else
             SHNotifyMoveFileW(op, entryToMove->szFullPath, fileDest->szFullPath, IsAttribDir(entryToMove->attributes));
-    
+
         if (op->progress != NULL)
             op->bCancelled |= op->progress->HasUserCancelled();
         /* Should fire on progress dialog only */
@@ -1952,9 +1952,9 @@ int WINAPI SHFileOperationW(LPSHFILEOPSTRUCTW lpFileOp)
         goto cleanup;
 #endif
     if (lpFileOp->wFunc != FO_RENAME && !(lpFileOp->fFlags & FOF_SILENT)) {
-        ret = CoCreateInstance(CLSID_ProgressDialog, 
-                               NULL, 
-                               CLSCTX_INPROC_SERVER, 
+        ret = CoCreateInstance(CLSID_ProgressDialog,
+                               NULL,
+                               CLSCTX_INPROC_SERVER,
                                IID_PPV_ARG(IProgressDialog, &op.progress));
         if (FAILED(ret))
             goto cleanup;
@@ -2232,7 +2232,7 @@ EXTERN_C HRESULT WINAPI SHPathPrepareForWriteA(HWND hwnd, IUnknown *modless, LPC
 }
 
 
-/* 
+/*
  * The two following background operations were modified from filedefext.cpp
  * They use an inordinate amount of mutable state across the string functions,
  * so are not easy to follow and care is required when modifying.
@@ -2243,11 +2243,11 @@ _FileOpCountManager(FILE_OPERATION *op, const FILE_LIST *from)
 {
     DWORD ticks = GetTickCount();
     FILE_ENTRY *entryToCount;
-    
+
     for (UINT i = 0; i < from->dwNumFiles; i++)
     {
         entryToCount = &from->feFiles[i];
-        
+
         WCHAR theFileName[MAX_PATH];
         StringCchCopyW(theFileName, MAX_PATH, entryToCount->szFullPath);
         _FileOpCount(op, theFileName, IsAttribDir(entryToCount->attributes), &ticks);

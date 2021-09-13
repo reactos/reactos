@@ -1,6 +1,6 @@
 
 # FIXFIX: You guys should move this header in include/reactos/libs/iphlpapi!
-include_directories(${REACTOS_SOURCE_DIR}/dll/win32/iphlpapi) 
+include_directories(${REACTOS_SOURCE_DIR}/dll/win32/iphlpapi)
 list(APPEND SOURCE
     enum.c
     handle.c

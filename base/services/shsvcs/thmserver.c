@@ -6,9 +6,9 @@
  * PROGRAMMER:       Giannis Adamopoulos
  */
 
-/* 
- * NOTE: 
- * ThemeWaitForServiceReady and ThemeWatchForStart are called from msgina  
+/*
+ * NOTE:
+ * ThemeWaitForServiceReady and ThemeWatchForStart are called from msgina
  * so all the functions in this file run in the context of winlogon
  */
 
@@ -32,7 +32,7 @@ BOOL WINAPI ThemeWatchForStart(VOID);
 
 /* FUNCTIONS *****************************************************************/
 
-static 
+static
 HANDLE
 GetThemeServiceProcessHandle(VOID)
 {
@@ -162,7 +162,7 @@ ThemeWaitForServiceReady(DWORD dwTimeout)
             break;
         }
 
-        if (GetTickCount() - start_time > dwTimeout) 
+        if (GetTickCount() - start_time > dwTimeout)
         {
             break;
         }

@@ -381,7 +381,7 @@ XboxPrepareForReactOS(VOID)
     XboxVideoPrepareForReactOS();
     XboxDiskInit(FALSE);
     DiskStopFloppyMotor();
-    
+
     /* Turn off debug messages to screen */
     DebugDisableScreenPort();
 }

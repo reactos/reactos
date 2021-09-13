@@ -564,9 +564,9 @@ HRESULT WINAPI CDrivesFolder::FinalConstruct()
     if (pidlRoot == NULL)
         return E_OUTOFMEMORY;
 
-    HRESULT hr = CRegFolder_CreateInstance(&CLSID_MyComputer, 
-                                           pidlRoot, 
-                                           L"::{20D04FE0-3AEA-1069-A2D8-08002B30309D}", 
+    HRESULT hr = CRegFolder_CreateInstance(&CLSID_MyComputer,
+                                           pidlRoot,
+                                           L"::{20D04FE0-3AEA-1069-A2D8-08002B30309D}",
                                            L"MyComputer",
                                            IID_PPV_ARG(IShellFolder2, &m_regFolder));
 
@@ -667,7 +667,7 @@ HRESULT WINAPI CDrivesFolder::BindToObject(PCUIDLIST_RELATIVE pidl, LPBC pbcRese
         return m_regFolder->BindToObject(pidl, pbcReserved, riid, ppvOut);
 
     CHAR* pchDrive = _ILGetDataPointer(pidl)->u.drive.szDriveName;
-    
+
     PERSIST_FOLDER_TARGET_INFO pfti = {0};
     pfti.dwAttributes = -1;
     pfti.csidl = -1;
@@ -723,7 +723,7 @@ HRESULT WINAPI CDrivesFolder::CompareIDs(LPARAM lParam, PCUIDLIST_RELATIVE pidl1
     CHAR* pszDrive2 = _ILGetDataPointer(pidl2)->u.drive.szDriveName;
 
     int result;
-    switch(LOWORD(lParam)) 
+    switch(LOWORD(lParam))
     {
         case 0:        /* name */
         {

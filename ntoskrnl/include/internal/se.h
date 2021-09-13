@@ -601,13 +601,13 @@ SepRegQueryHelper(
     _In_ ULONG DataLength,
     _Out_ PVOID ValueData);
 
-VOID 
+VOID
 NTAPI
 SeQuerySecurityAccessMask(
     _In_ SECURITY_INFORMATION SecurityInformation,
     _Out_ PACCESS_MASK DesiredAccess);
 
-VOID 
+VOID
 NTAPI
 SeSetSecurityAccessMask(
     _In_ SECURITY_INFORMATION SecurityInformation,

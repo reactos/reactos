@@ -1,25 +1,25 @@
 	.section .text
         .globl  setup_bats
 
-_start:	
+_start:
 	.long	0xe00000 + 12
 	.long	0
 	.long	0
-	
+
 _begin:
-	sync                    
+	sync
 	isync
 
-	lis     %r1,stack@ha    
-	addi    %r1,%r1,stack@l 
+	lis     %r1,stack@ha
+	addi    %r1,%r1,stack@l
 	addi    %r1,%r1,16384 - 0x10
-          
-	mfmsr   %r8             
-	li      %r0,0
-	mtmsr   %r0             
-	isync                   
 
-	bl	setup_bats	                               
+	mfmsr   %r8
+	li      %r0,0
+	mtmsr   %r0
+	isync
+
+	bl	setup_bats
 
 	li	%r8,0x3030
 	mtmsr	%r8
@@ -52,15 +52,15 @@ _begin:
 
 	/* Zero CTR */
 	mtcr	%r31
-	
+
 	lis	%r3,0x8000@ha
 	addi	%r3,%r3,0x8000@l
 
 	mtlr	%r3
-	
+
 	lis	%r3,call_ofw@ha
 	addi	%r3,%r3,call_ofw - _start
-	
+
 	b	call_freeldr
 
 /*
@@ -110,7 +110,7 @@ setup_bats:
 5:	sync
         isync
         blr
-	
+
 	.align	4
 call_freeldr:
 	/* Get the address of the functions list --
@@ -122,14 +122,14 @@ call_freeldr:
 	mtmsr	%r10
 
 	nop
-	
+
 	/* Note that this is little-endian from here on */
 	blr
 	nop
 
 	.align  4
 call_ofw:
-	/* R3 has the function offset to call (n * 4) 
+	/* R3 has the function offset to call (n * 4)
 	 * Other arg registers are unchanged.
 	 * Note that these 4 instructions are in reverse order due to
 	 * little-endian convention */
@@ -149,7 +149,7 @@ call_ofw:
 	add	%r9,%r3,%r10
 	lwz	%r3,ofw_functions - _start@l(%r9)
 	mtctr	%r3
-	
+
 	mr	%r3,%r4
 	mr	%r4,%r5
 	mr	%r5,%r6
@@ -180,7 +180,7 @@ zero_registers:
 	xor	%r2,%r2,%r2
 	mr	%r0,%r2
 	mr	%r3,%r2
-	
+
 	mr	%r4,%r2
 	mr	%r5,%r2
 	mr	%r6,%r2
@@ -195,47 +195,47 @@ zero_registers:
 	mr	%r13,%r2
 	mr	%r14,%r2
 	mr	%r15,%r2
-	
+
 	mr	%r12,%r2
 	mr	%r13,%r2
 	mr	%r14,%r2
 	mr	%r15,%r2
-	
+
 	mr	%r16,%r2
 	mr	%r17,%r2
 	mr	%r18,%r2
 	mr	%r19,%r2
-	
+
 	mr	%r20,%r2
 	mr	%r21,%r2
 	mr	%r22,%r2
 	mr	%r23,%r2
-	
+
 	mr	%r24,%r2
 	mr	%r25,%r2
 	mr	%r26,%r2
 	mr	%r27,%r2
-	
+
 	mr	%r28,%r2
 	mr	%r29,%r2
 	mr	%r30,%r2
 	mr	%r31,%r2
 
 	blr
-	
+
 prim_strlen:
 	mr	%r5,%r3
-prim_strlen_loop:	
+prim_strlen_loop:
 	lbz	%r4,0(%r3)
 	cmpi	0,0,%r4,0
 	beq	prim_strlen_done
 	addi	%r3,%r3,1
 	b	prim_strlen_loop
-	
+
 prim_strlen_done:
 	sub	%r3,%r3,%r5
 	blr
-	
+
 copy_bits:
 	cmp	0,0,%r3,%r4
 	beqlr
@@ -248,14 +248,14 @@ copy_bits:
 ofw_print_string_hook:
 	bl	ofw_print_number
 	bl	ofw_exit
-	
+
 ofw_print_string:
 	/* Reserve some stack space */
 	subi	%r1,%r1,32
 
 	/* Save args */
 	stw	%r3,0(%r1)
-	
+
 	/* Save the lr, a scratch register */
 	stw	%r8,8(%r1)
 	mflr	%r8
@@ -284,7 +284,7 @@ ofw_print_string:
 	lwz	%r3,0(%r1)
 	bl	prim_strlen
 	mr	%r5,%r3
-	
+
 	lwz	%r3,20(%r1)
 	lwz	%r4,0(%r1)
 
@@ -295,7 +295,7 @@ ofw_print_string:
 	lwz	%r8,12(%r1)
 	mtlr	%r8
 	lwz	%r8,8(%r1)
-	
+
 	addi	%r1,%r1,32
 	blr
 
@@ -329,16 +329,16 @@ ofw_number_loop:
 	srwi	%r7,%r7,4
 
 	nop
-	
+
 	cmpi	0,0,%r4,10
 	bge	ofw_number_letter
 	addi	%r4,%r4,'0'
 	b	ofw_number_digit_out
-	
+
 ofw_number_letter:
 	addi	%r4,%r4,'A' - 10
 
-ofw_number_digit_out:	
+ofw_number_digit_out:
 	stb	%r4,12(%r1)
 	addi	%r3,%r1,12
 
@@ -346,17 +346,17 @@ ofw_number_digit_out:
 	stw	%r7,20(%r1)
 	stw	%r8,24(%r1)
 	stw	%r9,28(%r1)
-	
+
 	bl	ofw_print_string
 
 	lwz	%r6,16(%r1)
 	lwz	%r7,20(%r1)
 	lwz	%r8,24(%r1)
 	lwz	%r9,28(%r1)
-	
+
 	b	ofw_number_loop
 
-ofw_number_return:	
+ofw_number_return:
 	/* Return */
 	lwz	%r9,8(%r1)
 	lwz	%r8,4(%r1)
@@ -416,7 +416,7 @@ ofw_print_space:
 	addi	%r1,%r1,16
 	blr
 
-ofw_print_regs:	
+ofw_print_regs:
 	/* Construct ofw exit call */
 	subi	%r1,%r1,0xa0
 
@@ -429,32 +429,32 @@ ofw_print_regs:
 	stw	%r5,20(%r1)
 	stw	%r6,24(%r1)
 	stw	%r7,28(%r1)
-	
+
 	stw	%r8,32(%r1)
 	stw	%r9,36(%r1)
 	stw	%r10,40(%r1)
 	stw	%r11,44(%r1)
-	
+
 	stw	%r12,48(%r1)
 	stw	%r13,52(%r1)
 	stw	%r14,56(%r1)
 	stw	%r15,60(%r1)
-	
+
 	stw	%r16,64(%r1)
 	stw	%r17,68(%r1)
 	stw	%r18,72(%r1)
 	stw	%r19,76(%r1)
-	
+
 	stw	%r20,80(%r1)
 	stw	%r21,84(%r1)
 	stw	%r22,88(%r1)
 	stw	%r23,92(%r1)
-	
+
 	stw	%r24,96(%r1)
 	stw	%r25,100(%r1)
 	stw	%r26,104(%r1)
 	stw	%r27,108(%r1)
-	
+
 	stw	%r28,112(%r1)
 	stw	%r29,116(%r1)
 	stw	%r30,120(%r1)
@@ -474,7 +474,7 @@ ofw_print_regs:
 	stw	%r0,144(%r1)
 	mr	%r3,%r1
 	stw	%r3,148(%r1)
-	
+
 	/* Body, print the regname, then the register */
 ofw_register_loop:
 	lwz	%r3,144(%r1)
@@ -497,26 +497,26 @@ ofw_register_loop:
 	stw	%r3,144(%r1)
 	b	done_dump
 
-dump_optional:	
+dump_optional:
 	bl	ofw_print_space
 	bl	ofw_print_space
 	lwz	%r3,152(%r1)
 	lwz	%r3,0(%r3)
 	bl	ofw_print_number
-	bl	ofw_print_space	
+	bl	ofw_print_space
 	lwz	%r3,152(%r1)
 	lwz	%r3,4(%r3)
 	bl	ofw_print_number
-	bl	ofw_print_space	
+	bl	ofw_print_space
 	lwz	%r3,152(%r1)
 	lwz	%r3,8(%r3)
 	bl	ofw_print_number
-	bl	ofw_print_space	
+	bl	ofw_print_space
 	lwz	%r3,152(%r1)
 	lwz	%r3,12(%r3)
 	bl	ofw_print_number
 	bl	ofw_print_space
-done_dump:	
+done_dump:
 	bl	ofw_print_eol
 	b	ofw_register_loop
 
@@ -529,7 +529,7 @@ ofw_register_special:
 	lwz	%r3,128(%r1)
 	bl	ofw_print_number
 	bl	ofw_print_eol
-	
+
 	/* CR */
 	lis	%r3,0xe00000@ha
 	addi	%r3,%r3,freeldr_reg_cr - _start
@@ -538,7 +538,7 @@ ofw_register_special:
 	lwz	%r3,132(%r1)
 	bl	ofw_print_number
 	bl	ofw_print_eol
-	
+
 	/* CTR */
 	lis	%r3,0xe00000@ha
 	addi	%r3,%r3,freeldr_reg_ctr - _start
@@ -547,7 +547,7 @@ ofw_register_special:
 	lwz	%r3,136(%r1)
 	bl	ofw_print_number
 	bl	ofw_print_eol
-	
+
 	/* MSR */
 	lis	%r3,0xe00000@ha
 	addi	%r3,%r3,freeldr_reg_msr - _start
@@ -560,7 +560,7 @@ ofw_register_special:
 	/* Return */
 	lwz	%r0,128(%r1)
 	mtlr	%r0
-	
+
 	lwz	%r0,0(%r1)
 	lwz	%r2,8(%r1)
 	lwz	%r3,12(%r1)
@@ -571,9 +571,9 @@ ofw_register_special:
 	lwz	%r7,28(%r1)
 
 	addi	%r1,%r1,0xa0
-		
+
 	blr
-	
+
 ofw_finddevice_hook:
 	subi	%r1,%r1,32
 	stw	%r3,0(%r1)
@@ -585,9 +585,9 @@ ofw_finddevice_hook:
 	lwz	%r3,4(%r1)
 	mtlr	%r3
 	lwz	%r3,0(%r1)
-	addi	%r1,%r1,32	
+	addi	%r1,%r1,32
 	blr
-	
+
 ofw_finddevice:
 	/* Reserve stack space ...
 	 * 20 bytes for the ofw call,
@@ -599,7 +599,7 @@ ofw_finddevice:
 	stw	%r9,24(%r1)
 	mflr	%r8
 	stw	%r8,28(%r1)
-	
+
 	/* Get finddevice name */
 	lis	%r8,0xe00000@ha
 	addi	%r9,%r8,ofw_finddevice_name - _start
@@ -618,20 +618,20 @@ ofw_finddevice:
 
 	/* Set argument */
 	mr	%r3,%r1
-	
+
 	/* Fire */
 	blrl
-	
+
 	lwz	%r3,16(%r1)
-	
+
 	/* Restore registers */
 	lwz	%r8,28(%r1)
 	mtlr	%r8
 	lwz	%r9,24(%r1)
 	lwz	%r8,20(%r1)
-	
+
 	addi	%r1,%r1,32
-	
+
 	/* Return */
 	blr
 
@@ -646,7 +646,7 @@ ofw_open:
 	stw	%r9,24(%r1)
 	mflr	%r8
 	stw	%r8,28(%r1)
-	
+
 	/* Get open name */
 	lis	%r8,0xe00000@ha
 	addi	%r9,%r8,ofw_open_name - _start
@@ -665,20 +665,20 @@ ofw_open:
 
 	/* Set argument */
 	mr	%r3,%r1
-	
+
 	/* Fire */
 	blrl
-	
+
 	lwz	%r3,16(%r1)
-	
+
 	/* Restore registers */
 	lwz	%r8,28(%r1)
 	mtlr	%r8
 	lwz	%r9,24(%r1)
 	lwz	%r8,20(%r1)
-	
+
 	addi	%r1,%r1,32
-	
+
 	/* Return */
 	blr
 
@@ -686,7 +686,7 @@ ofw_getprop_hook:
 	/* Reserve stack space:
 	 * 32 bytes for the ofw call
 	 * 12 bytes for r8, r9, lr
-	 */		
+	 */
 	/* Reserve stack space ...
 	 * 20 bytes for the ofw call,
 	 * r8, r9, and lr */
@@ -697,7 +697,7 @@ ofw_getprop_hook:
 	stw	%r9,36(%r1)
 	mflr	%r8
 	stw	%r8,40(%r1)
-	
+
 	/* Get getprop name */
 	lis	%r8,0xe00000@ha
 	addi	%r9,%r8,ofw_getprop_name - _start
@@ -713,7 +713,7 @@ ofw_getprop_hook:
 	stw	%r4,16(%r1) /* Property */
 	stw	%r5,20(%r1) /* Return buffer */
 	stw	%r6,24(%r1) /* Buffer size */
-	
+
 	/* Load up the call address */
 	lwz	%r9,ofw_call_addr - _start(%r8)
 	mtlr	%r9
@@ -727,7 +727,7 @@ ofw_getprop_hook:
 	/* Workaround to a wierd crash ... not sure what causes it.
 	 * XXX investigate me */
 	bl	ofw_print_nothing
-	
+
 	/* Return */
 	lwz	%r3,28(%r1)
 
@@ -736,9 +736,9 @@ ofw_getprop_hook:
 	mtlr	%r8
 	lwz	%r9,36(%r1)
 	lwz	%r8,32(%r1)
-	
+
 	addi	%r1,%r1,48
-		
+
 	/* Return */
 	blr
 
@@ -746,7 +746,7 @@ ofw_getprop:
 	/* Reserve stack space:
 	 * 32 bytes for the ofw call
 	 * 12 bytes for r8, r9, lr
-	 */		
+	 */
 	/* Reserve stack space ...
 	 * 20 bytes for the ofw call,
 	 * r8, r9, and lr */
@@ -757,7 +757,7 @@ ofw_getprop:
 	stw	%r9,36(%r1)
 	mflr	%r8
 	stw	%r8,40(%r1)
-	
+
 	/* Get getprop name */
 	lis	%r8,0xe00000@ha
 	addi	%r9,%r8,ofw_getprop_name - _start
@@ -773,7 +773,7 @@ ofw_getprop:
 	stw	%r4,16(%r1) /* Property */
 	stw	%r5,20(%r1) /* Return buffer */
 	stw	%r6,24(%r1) /* Buffer size */
-	
+
 	/* Load up the call address */
 	lwz	%r9,ofw_call_addr - _start(%r8)
 	mtlr	%r9
@@ -783,7 +783,7 @@ ofw_getprop:
 
 	/* Fire */
 	blrl
-	
+
 	/* Return */
 	lwz	%r3,28(%r1)
 
@@ -793,30 +793,30 @@ ofw_getprop:
 	mtlr	%r8
 	lwz	%r9,36(%r1)
 	lwz	%r8,32(%r1)
-	
+
 	addi	%r1,%r1,48
-		
+
 	/* Return */
 	blr
-		
+
 ofw_write:
 	/* Reserve stack space:
 	 * 28 bytes for the ofw call
 	 * 12 bytes for r8, r9, lr
-	 */		
+	 */
 	/* Reserve stack space ...
 	 * 20 bytes for the ofw call,
 	 * r8, r9, and lr */
 	subi	%r1,%r1,48
 
 	nop
-	
+
 	/* Store r8, r9, lr */
 	stw	%r8,28(%r1)
 	stw	%r9,32(%r1)
 	mflr	%r8
 	stw	%r8,36(%r1)
-	
+
 	/* Get write name */
 	lis	%r8,0xe00000@ha
 	addi	%r9,%r8,ofw_write_name - _start
@@ -831,7 +831,7 @@ ofw_write:
 	stw	%r3,12(%r1)
 	stw	%r4,16(%r1)
 	stw	%r5,20(%r1)
-	
+
 	/* Load up the call address */
 	lwz	%r9,ofw_call_addr - _start(%r8)
 	mtlr	%r9
@@ -850,9 +850,9 @@ ofw_write:
 	mtlr	%r8
 	lwz	%r9,32(%r1)
 	lwz	%r8,28(%r1)
-	
+
 	addi	%r1,%r1,48
-	
+
 	/* Return */
 	blr
 
@@ -860,20 +860,20 @@ ofw_read:
 	/* Reserve stack space:
 	 * 28 bytes for the ofw call
 	 * 12 bytes for r8, r9, lr
-	 */		
+	 */
 	/* Reserve stack space ...
 	 * 20 bytes for the ofw call,
 	 * r8, r9, and lr */
 	subi	%r1,%r1,48
 
 	nop
-	
+
 	/* Store r8, r9, lr */
 	stw	%r8,28(%r1)
 	stw	%r9,32(%r1)
 	mflr	%r8
 	stw	%r8,36(%r1)
-	
+
 	/* Get read name */
 	lis	%r8,0xe00000@ha
 	addi	%r9,%r8,ofw_read_name - _start
@@ -888,7 +888,7 @@ ofw_read:
 	stw	%r3,12(%r1)
 	stw	%r4,16(%r1)
 	stw	%r5,20(%r1)
-	
+
 	/* Load up the call address */
 	lwz	%r9,ofw_call_addr - _start(%r8)
 	mtlr	%r9
@@ -907,19 +907,19 @@ ofw_read:
 	mtlr	%r8
 	lwz	%r9,32(%r1)
 	lwz	%r8,28(%r1)
-	
+
 	addi	%r1,%r1,48
-	
+
 	/* Return */
 	blr
-		
+
 ofw_exit:
 	lis	%r3,0xe00000@ha
 	addi	%r3,%r3,freeldr_halt - _start
 
 	bl	ofw_print_string
-/*	
-ofw_exit_loop:	
+/*
+ofw_exit_loop:
 	b	ofw_exit_loop
 */
 	/* Load the exit name */
@@ -931,7 +931,7 @@ ofw_exit_loop:
 	xor	%r9,%r9,%r9
 	stw	%r9,4(%r1)
 	stw	%r9,8(%r1)
-	
+
 	/* Load up the call address */
 	lwz	%r9,ofw_call_addr - _start(%r8)
 	mtlr	%r9
@@ -953,7 +953,7 @@ ofw_child:
 	stw	%r9,24(%r1)
 	mflr	%r8
 	stw	%r8,28(%r1)
-	
+
 	/* Get child name */
 	lis	%r8,0xe00000@ha
 	addi	%r9,%r8,ofw_child_name - _start
@@ -972,23 +972,23 @@ ofw_child:
 
 	/* Set argument */
 	mr	%r3,%r1
-	
+
 	/* Fire */
 	blrl
-	
+
 	lwz	%r3,16(%r1)
-	
+
 	/* Restore registers */
 	lwz	%r8,28(%r1)
 	mtlr	%r8
 	lwz	%r9,24(%r1)
 	lwz	%r8,20(%r1)
-	
+
 	addi	%r1,%r1,32
-	
+
 	/* Return */
 	blr
-	
+
 ofw_peer:
 	/* Reserve stack space ...
 	 * 20 bytes for the ofw call,
@@ -1000,7 +1000,7 @@ ofw_peer:
 	stw	%r9,24(%r1)
 	mflr	%r8
 	stw	%r8,28(%r1)
-	
+
 	/* Get peer name */
 	lis	%r8,0xe00000@ha
 	addi	%r9,%r8,ofw_peer_name - _start
@@ -1019,23 +1019,23 @@ ofw_peer:
 
 	/* Set argument */
 	mr	%r3,%r1
-	
+
 	/* Fire */
 	blrl
-	
+
 	lwz	%r3,16(%r1)
-	
+
 	/* Restore registers */
 	lwz	%r8,28(%r1)
 	mtlr	%r8
 	lwz	%r9,24(%r1)
 	lwz	%r8,20(%r1)
-	
+
 	addi	%r1,%r1,32
-	
+
 	/* Return */
 	blr
-				
+
 ofw_seek:
 	/* Reserve stack space ...
 	 * 20 bytes for the ofw call,
@@ -1047,7 +1047,7 @@ ofw_seek:
 	stw	%r9,24(%r1)
 	mflr	%r8
 	stw	%r8,28(%r1)
-	
+
 	/* Get peer name */
 	lis	%r8,0xe00000@ha
 	addi	%r9,%r8,ofw_seek_name - _start
@@ -1069,20 +1069,20 @@ ofw_seek:
 
 	/* Set argument */
 	mr	%r3,%r1
-	
+
 	/* Fire */
 	blrl
-	
+
 	lwz	%r3,16(%r1)
-	
+
 	/* Restore registers */
 	lwz	%r8,28(%r1)
 	mtlr	%r8
 	lwz	%r9,24(%r1)
 	lwz	%r8,20(%r1)
-	
+
 	addi	%r1,%r1,32
-	
+
 	/* Return */
 	blr
 
@@ -1097,21 +1097,21 @@ setup_exc:
 	stw	%r9,12(%r1)
 	stw	%r10,16(%r1)
 	stw	%r12,20(%r1)
-	
+
 	lis	%r8,0xe00000@ha
 	xor	%r12,%r12,%r12
 	addi	%r12,%r12,0x300
 	addi	%r9,%r8,dsi_exc - _start
 	addi	%r10,%r8,dsi_end - _start
 
-copy_loop:	
+copy_loop:
 	cmp	0,0,%r9,%r10
 	beq	ret_setup_exc
 
 	mr	%r3,%r12
 	bl	ofw_print_number
 	bl	ofw_print_space
-	
+
 	lwz	%r3,0(%r9)
 	stw	%r3,0(%r12)
 
@@ -1121,12 +1121,12 @@ copy_loop:
 	addi	%r12,%r12,4
 	addi	%r9,%r9,4
 	b	copy_loop
-	
+
 ret_setup_exc:
 	mfmsr	%r12
-	andi.	%r12,%r12,0xffbf 
+	andi.	%r12,%r12,0xffbf
 	mtmsr	%r12
-	
+
 	lwz	%r12,20(%r1)
 	lwz	%r10,16(%r1)
 	lwz	%r9,12(%r1)
@@ -1135,12 +1135,12 @@ ret_setup_exc:
 	lwz	%r3,4(%r1)
 	mtlr	%r3
 	lwz	%r3,0(%r1)
-	
+
 	blr
 
 dsi_exc:
 	subi	%r1,%r1,16
-	
+
 	stw	%r0,0(%r1)
 	stw	%r3,4(%r1)
 
@@ -1151,14 +1151,14 @@ dsi_exc:
 	/* mfsrr1	%r3 */
 	/* ori	%r3,%r3,2 */
 	/* mtsrr1	%r3 */
-		
+
 	lwz	%r3,4(%r1)
 	lwz	%r0,0(%r1)
 
 	addi	%r1,%r1,16
 	rfi
-dsi_end:	
-					
+dsi_end:
+
 	.org	0x1000
 freeldr_banner:
 	.ascii	"ReactOS OpenFirmware Boot Program\r\n\0"
@@ -1168,16 +1168,16 @@ freeldr_halt:
 
 freeldr_reg_init:
 	.ascii	"r\0"
-freeldr_reg_lr:	
+freeldr_reg_lr:
 	.ascii	"lr \0"
-freeldr_reg_cr:	
+freeldr_reg_cr:
 	.ascii	"cr \0"
-freeldr_reg_ctr:	
+freeldr_reg_ctr:
 	.ascii	"ctr\0"
-freeldr_reg_msr:	
+freeldr_reg_msr:
 	.ascii	"msr\0"
-			
-ofw_call_addr:	
+
+ofw_call_addr:
 	.long	0
 
 ofw_memory_size:
@@ -1185,10 +1185,10 @@ ofw_memory_size:
 	.long	0
 	.long	0
 	.long	0
-	
+
 ofw_finddevice_name:
 	.ascii	"finddevice\0"
-		
+
 ofw_getprop_name:
 	.ascii	"getprop\0"
 
@@ -1197,7 +1197,7 @@ ofw_write_name:
 
 ofw_read_name:
 	.ascii	"read\0"
-	
+
 ofw_exit_name:
 	.ascii	"exit\0"
 
@@ -1209,10 +1209,10 @@ ofw_child_name:
 
 ofw_peer_name:
 	.ascii	"peer\0"
-		
+
 ofw_seek_name:
 	.ascii	"seek\0"
-	
+
 ofw_chosen_name:
 	.ascii	"/chosen\0"
 
@@ -1224,7 +1224,7 @@ ofw_memory_name:
 
 ofw_reg_name:
 	.ascii	"reg\0"
-	
+
 ofw_functions:
 	.long	ofw_finddevice_hook
 	.long	ofw_getprop_hook
@@ -1238,7 +1238,7 @@ ofw_functions:
 	.long	ofw_child
 	.long	ofw_peer
 	.long   ofw_seek
-	
+
 	.org	0x2000
 stack:
 	.space	0x4000

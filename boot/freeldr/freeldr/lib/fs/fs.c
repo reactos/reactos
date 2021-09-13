@@ -330,7 +330,7 @@ ULONG FsGetNumPathParts(PCSTR Path)
     size_t i;
     size_t len;
     ULONG  num;
-    
+
     len = strlen(Path);
 
     for (i = 0, num = 0; i < len; i++)

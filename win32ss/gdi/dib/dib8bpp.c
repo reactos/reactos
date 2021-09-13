@@ -175,7 +175,7 @@ DIB_8BPP_BitBltSrcCopy(PBLTINFO BltInfo)
       break;
 
     case BMF_8BPP:
-      DPRINT("8BPP-dstRect: (%d,%d)-(%d,%d) and Width of '%d'.\n", 
+      DPRINT("8BPP-dstRect: (%d,%d)-(%d,%d) and Width of '%d'.\n",
               BltInfo->DestRect.left, BltInfo->DestRect.top,
               BltInfo->DestRect.right, BltInfo->DestRect.bottom,
               BltInfo->DestRect.right - BltInfo->DestRect.left);
@@ -318,7 +318,7 @@ DIB_8BPP_BitBltSrcCopy(PBLTINFO BltInfo)
           if (bTopToBottom)
           {
             DPRINT("Flip is bTopToBottom.\n");
-    
+
             DWORD  Index;
 
             /* Allocate enough pixels for a column in BYTE's */
@@ -338,7 +338,7 @@ DIB_8BPP_BitBltSrcCopy(PBLTINFO BltInfo)
             if (OneDone)
             {
               /* This sets SourceLine to the bottom line of our previous destination */
-              SourceLine = (PBYTE)BltInfo->DestSurface->pvScan0 + 
+              SourceLine = (PBYTE)BltInfo->DestSurface->pvScan0 +
                 (BltInfo->DestRect.top * BltInfo->DestSurface->lDelta) + BltInfo->DestRect.left  +
                 (BltInfo->DestRect.bottom - BltInfo->DestRect.top - 1) * BltInfo->DestSurface->lDelta;
             }
@@ -373,7 +373,7 @@ DIB_8BPP_BitBltSrcCopy(PBLTINFO BltInfo)
                 SourceBits -= BltInfo->SourceSurface->lDelta;
                 Index++;
               }
- 
+
               Index = 0;
 
               /* Get the stored pixel and copy then down the column */
@@ -399,7 +399,7 @@ DIB_8BPP_BitBltSrcCopy(PBLTINFO BltInfo)
       DPRINT("16BPP Case Selected with DestRect Width of '%d'.\n",
              BltInfo->DestRect.right - BltInfo->DestRect.left);
 
-      DPRINT("BMF_16BPP-dstRect: (%d,%d)-(%d,%d) and Width of '%d'.\n", 
+      DPRINT("BMF_16BPP-dstRect: (%d,%d)-(%d,%d) and Width of '%d'.\n",
              BltInfo->DestRect.left, BltInfo->DestRect.top,
              BltInfo->DestRect.right, BltInfo->DestRect.bottom,
              BltInfo->DestRect.right - BltInfo->DestRect.left);
@@ -438,7 +438,7 @@ DIB_8BPP_BitBltSrcCopy(PBLTINFO BltInfo)
       break;
 
     case BMF_24BPP:
-      DPRINT("24BPP-dstRect: (%d,%d)-(%d,%d) and Width of '%d'.\n", 
+      DPRINT("24BPP-dstRect: (%d,%d)-(%d,%d) and Width of '%d'.\n",
              BltInfo->DestRect.left, BltInfo->DestRect.top,
              BltInfo->DestRect.right, BltInfo->DestRect.bottom,
              BltInfo->DestRect.right - BltInfo->DestRect.left);

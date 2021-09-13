@@ -75,7 +75,7 @@ TestShellExecuteEx(const WCHAR* Name, BOOL ExpectedResult)
     ShellExecInfo.lpDirectory = NULL;
     Result = ShellExecuteExW(&ShellExecInfo);
     ok(Result == ExpectedResult, "ShellExecuteEx lpFile %s failed. Error: %lu\n", wine_dbgstr_w(Name), GetLastError());
-    if (ShellExecInfo.hProcess) 
+    if (ShellExecInfo.hProcess)
     {
         Result = TerminateProcess(ShellExecInfo.hProcess, 0);
         if (!Result) trace("Terminate process failed. Error: %lu\n", GetLastError());

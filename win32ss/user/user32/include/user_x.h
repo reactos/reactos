@@ -84,13 +84,13 @@ static __inline BOOL STATIC_update_uistate(HWND hwnd, BOOL unicode)
 
 static __inline void LoadUserApiHook()
 {
-   if (!gfServerProcess &&                                
-       !IsInsideUserApiHook() &&                          
-       (gpsi->dwSRVIFlags & SRVINFO_APIHOOK) &&           
-       !RtlIsThreadWithinLoaderCallout())                 
-   {                                                      
-      NtUserCallNoParam(NOPARAM_ROUTINE_LOADUSERAPIHOOK); 
-   }                                                      
+   if (!gfServerProcess &&
+       !IsInsideUserApiHook() &&
+       (gpsi->dwSRVIFlags & SRVINFO_APIHOOK) &&
+       !RtlIsThreadWithinLoaderCallout())
+   {
+      NtUserCallNoParam(NOPARAM_ROUTINE_LOADUSERAPIHOOK);
+   }
 }
 
 #define UserHasDlgFrameStyle(Style, ExStyle)                                   \

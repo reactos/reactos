@@ -1332,7 +1332,7 @@ static ChildWnd* alloc_child_window(LPCWSTR path, LPITEMIDLIST pidl, HWND hwnd)
             pathlen--;
         }
         lstrcpynW(child->path, npath, pathlen + 1);
-        
+
         _wsplitpath(child->path, drv, dir, name, ext);
 	}
 

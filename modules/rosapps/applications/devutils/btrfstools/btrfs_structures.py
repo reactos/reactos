@@ -562,7 +562,7 @@ superblock = struct.Struct('<32x16s2Q8s9Q5L4QH2B611x2048s')
 # log_root_transid
 # total_bytes
 # bytes_used
-# root_dir_objectid (usually 6) 
+# root_dir_objectid (usually 6)
 # num_devices
 # sectorsize
 # nodesize
@@ -1089,7 +1089,7 @@ def key_bin_search(fd, base_offset, item_size, cmp_item, min, max):
       low = mid + 1
     else:
       return True, mid
-    
+
   return False, low
 
 
@@ -1152,7 +1152,7 @@ class FileSystem(object):
   @property
   def fs_root(self):
     return self._fs_root_level, self._fs_root
-  
+
   @property
   def extent_root(self):
     return self._extent_root_level, self._extent_root
@@ -1173,7 +1173,7 @@ class FileSystem(object):
           k = LeafKey(self.fd.read(LeafKey.sstruct.size))
           self.fd.seek(offset + k.data_offset)
           if k.type == CHUNK_ITEM_KEY:
-            item = _key_type_class_map[k.type](k, self.fd.read(k.data_size)) 
+            item = _key_type_class_map[k.type](k, self.fd.read(k.data_size))
             for st in item.stripes:
               self._insert_chunk(chunk_map_item(item.vaddr, st.offset, item.length, st.devid))
 
@@ -1215,10 +1215,10 @@ class FileSystem(object):
       # TODO: better understand this
       if not found and itemnr > 0:
         itemnr -= 1
-      
+
       self.fd.seek(root_offset + _node_header_struct.size + itemnr * InnerKey.sstruct.size)
       k = InnerKey(self.fd.read(InnerKey.sstruct.size))
-      root_offset = k.block_num  
+      root_offset = k.block_num
     else:
       # we are in leaf node
       root_offset = self.logical_to_physical(root_offset)
@@ -1260,7 +1260,7 @@ class FileSystem(object):
       print(k)
       self.fd.seek(root_paddr + _node_header_struct.size + k.data_offset)
       if k.type in _key_type_class_map and header.level == 0:
-        item = _key_type_class_map[k.type](k, self.fd.read(k.data_size)) 
+        item = _key_type_class_map[k.type](k, self.fd.read(k.data_size))
         print(item)
         if k.type == DIR_ITEM_KEY:
           for it in item:

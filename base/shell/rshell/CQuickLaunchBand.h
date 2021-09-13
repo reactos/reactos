@@ -18,14 +18,14 @@ class CQuickLaunchBand :
     public CComCoClass<CQuickLaunchBand, &CLSID_QuickLaunchBand>,
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
     public IObjectWithSite,
-    public IDeskBand,    
+    public IDeskBand,
     public IPersistStream,
     public IWinEventHandler,
     public IOleCommandTarget,
     public IContextMenu
 {
     HWND m_hWndBro;
-    CComPtr<IUnknown> m_punkISFB;   
+    CComPtr<IUnknown> m_punkISFB;
 
     public:
 
@@ -46,36 +46,36 @@ class CQuickLaunchBand :
     virtual STDMETHODIMP SetSite(
         IN IUnknown *pUnkSite
     );
- 
+
 // IDeskBand
 
     virtual STDMETHODIMP GetWindow(
         OUT HWND *phwnd
-    );    
+    );
 
     virtual STDMETHODIMP ContextSensitiveHelp(
         IN BOOL fEnterMode
-    );    
+    );
 
     virtual STDMETHODIMP ShowDW(
         IN BOOL bShow
-    );    
+    );
 
     virtual STDMETHODIMP CloseDW(
         IN DWORD dwReserved
-    );    
+    );
 
     virtual STDMETHODIMP ResizeBorderDW(
         LPCRECT prcBorder,
         IUnknown *punkToolbarSite,
         BOOL fReserved
-    );    
+    );
 
     virtual STDMETHODIMP GetBandInfo(
         IN DWORD dwBandID,
         IN DWORD dwViewMode,
         IN OUT DESKBANDINFO *pdbi
-    );   
+    );
 
 // IPersistStream
 
@@ -98,17 +98,17 @@ class CQuickLaunchBand :
         IN BOOL    fClearDirty
     );
 
-// IWinEventHandler   
+// IWinEventHandler
 
     virtual STDMETHODIMP ContainsWindow(
         IN HWND hWnd
     );
 
     virtual STDMETHODIMP OnWinEvent(
-        HWND hWnd, 
-        UINT uMsg, 
-        WPARAM wParam, 
-        LPARAM lParam, 
+        HWND hWnd,
+        UINT uMsg,
+        WPARAM wParam,
+        LPARAM lParam,
         LRESULT *theResult
     );
 
@@ -169,5 +169,5 @@ class CQuickLaunchBand :
         COM_INTERFACE_ENTRY_IID(IID_IWinEventHandler, IWinEventHandler)
         COM_INTERFACE_ENTRY_IID(IID_IOleCommandTarget, IOleCommandTarget)
         COM_INTERFACE_ENTRY_IID(IID_IContextMenu, IContextMenu)
-    END_COM_MAP()    
+    END_COM_MAP()
 };

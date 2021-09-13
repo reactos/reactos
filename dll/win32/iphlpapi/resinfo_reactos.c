@@ -376,7 +376,7 @@ getResInfo()
     return ResInfo;
 }
 
-VOID disposeResInfo( PIPHLP_RES_INFO InfoPtr ) 
+VOID disposeResInfo( PIPHLP_RES_INFO InfoPtr )
 {
     HeapFree(GetProcessHeap(), 0, InfoPtr->DnsList);
     RtlFreeHeap( GetProcessHeap(), 0, InfoPtr );

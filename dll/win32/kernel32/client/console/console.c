@@ -2042,26 +2042,26 @@ AddConsoleCtrlHandler(PHANDLER_ROUTINE HandlerRoutine)
         NtCurrentPeb()->ProcessParameters->ConsoleFlags = TRUE;
         return TRUE;
     }
-    
+
     if (NrCtrlHandlers == NrAllocatedHandlers)
     {
         NewCtrlHandlers = RtlAllocateHeap(RtlGetProcessHeap(),
                                           0,
                                           (NrCtrlHandlers + 4) * sizeof(PHANDLER_ROUTINE));
-        if (NewCtrlHandlers == NULL)   
+        if (NewCtrlHandlers == NULL)
         {
             SetLastError(ERROR_NOT_ENOUGH_MEMORY);
             return FALSE;
         }
-        
+
         memmove(NewCtrlHandlers, CtrlHandlers, sizeof(PHANDLER_ROUTINE) * NrCtrlHandlers);
-        
+
         if (NrAllocatedHandlers > 1) RtlFreeHeap(RtlGetProcessHeap(), 0, CtrlHandlers);
-        
+
         CtrlHandlers = NewCtrlHandlers;
         NrAllocatedHandlers += 4;
     }
-    
+
     ASSERT(NrCtrlHandlers < NrAllocatedHandlers);
 
     CtrlHandlers[NrCtrlHandlers++] = HandlerRoutine;

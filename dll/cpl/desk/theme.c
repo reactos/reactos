@@ -707,7 +707,7 @@ EnumThemeStyles(IN LPCWSTR pszThemeFileName, IN ENUMTHEMESTYLE pfnEnumTheme)
 PTHEME LoadTheme(IN LPCWSTR pszThemeFileName,IN LPCWSTR pszThemeName)
 {
     PTHEME pTheme = CreateTheme(pszThemeFileName, pszThemeName);
-    if (pTheme == NULL) 
+    if (pTheme == NULL)
         return NULL;
 
     pTheme->SizesList = EnumThemeStyles( pszThemeFileName, (ENUMTHEMESTYLE)EnumThemeSizes);
@@ -784,11 +784,11 @@ LoadThemes(VOID)
 }
 
 /*
- * FindSelectedTheme: Finds the specified theme in the list of themes 
+ * FindSelectedTheme: Finds the specified theme in the list of themes
  *                    or loads it if it was not loaded already.
  */
 BOOL
-FindOrAppendTheme(IN PTHEME pThemeList, 
+FindOrAppendTheme(IN PTHEME pThemeList,
                   IN LPCWSTR pwszThemeFileName,
                   IN LPCWSTR pwszColorBuff,
                   IN LPCWSTR pwszSizeBuff,
@@ -855,7 +855,7 @@ GetActiveTheme(IN PTHEME pThemeList, OUT PTHEME_SELECTION pSelectedTheme)
                                MAX_PATH,
                                szSizeBuff,
                                MAX_PATH);
-    if (FAILED(hret))  
+    if (FAILED(hret))
         return FALSE;
 
     return FindOrAppendTheme(pThemeList, szThemeFileName, szColorBuff, szSizeBuff, pSelectedTheme);

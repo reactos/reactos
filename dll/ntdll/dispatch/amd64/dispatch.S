@@ -218,7 +218,7 @@ Exit:
     mov dword ptr [rsp + ErExceptionFlags], EXCEPTION_NONCONTINUABLE
     mov [rsp + ErExceptionRecord], rcx
     mov [rsp + ErExceptionCode], edx
- 
+
     /* Raise the exception */
     mov rcx, rsp
     call RtlRaiseException

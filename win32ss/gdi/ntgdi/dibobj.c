@@ -798,7 +798,7 @@ GreGetDIBitsInternal(
         Info->bmiHeader.biSizeImage = DIB_GetDIBImageBytes( Info->bmiHeader.biWidth,
                                       Info->bmiHeader.biHeight,
                                       Info->bmiHeader.biBitCount);
-        Info->bmiHeader.biCompression = (Info->bmiHeader.biBitCount == 16 || Info->bmiHeader.biBitCount == 32) ? 
+        Info->bmiHeader.biCompression = (Info->bmiHeader.biBitCount == 16 || Info->bmiHeader.biBitCount == 32) ?
                                         BI_BITFIELDS : BI_RGB;
         Info->bmiHeader.biXPelsPerMeter = 0;
         Info->bmiHeader.biYPelsPerMeter = 0;

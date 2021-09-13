@@ -51,7 +51,7 @@ DhcpCApiInitialize(LPDWORD Version)
     }
 
     /* Change the pipe into message mode */
-    PipeMode = PIPE_READMODE_MESSAGE; 
+    PipeMode = PIPE_READMODE_MESSAGE;
     if (!SetNamedPipeHandleState(PipeHandle, &PipeMode, NULL, NULL))
     {
         /* Mode change failed */

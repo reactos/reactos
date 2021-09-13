@@ -314,31 +314,31 @@ SeInitSystem(VOID)
  * Internal function that is responsible for querying, deleting, assigning and
  * setting a security descriptor for an object in the NT kernel. It is the default
  * security method for objects regarding the security context of objects.
- * 
+ *
  * @param[in] Object
  * The object that has the default security method, which the function has been
  * called upon.
- * 
+ *
  * @param[in] OperationType
  * Operation type to perform to that object.
- * 
+ *
  * @param[in] SecurityInformation
  * Auxiliary security information of the object.
- * 
+ *
  * @param[in,out] SecurityDescriptor
  * A security descriptor. This SD is used accordingly to the operation type
  * requested by the caller.
- * 
+ *
  * @param[in,out] ReturnLength
  * The length size of the queried security descriptor, in bytes.
- * 
+ *
  * @param[in,out] OldSecurityDescriptor
  * The old SD that belonged to the object, in case we're either deleting
  * or replacing it.
- * 
+ *
  * @param[in] PoolType
  * Pool type allocation for the security descriptor.
- * 
+ *
  * @param[in] GenericMapping
  * The generic mapping of access rights masks for the object.
  *
@@ -411,14 +411,14 @@ SeDefaultObjectMethod(
 /**
  * @brief
  * Queries the access mask from a security information context.
- * 
+ *
  * @param[in] SecurityInformation
  * The security information context where the access mask is to be
  * gathered.
- * 
+ *
  * @param[out] DesiredAccess
  * The queried access mask right.
- * 
+ *
  * @return
  * Nothing.
  */
@@ -445,13 +445,13 @@ SeQuerySecurityAccessMask(
 /**
  * @brief
  * Sets the access mask for a security information context.
- * 
+ *
  * @param[in] SecurityInformation
  * The security information context to apply a new access right.
- * 
+ *
  * @param[out] DesiredAccess
  * The returned access mask right.
- * 
+ *
  * @return
  * Nothing.
  */
@@ -483,21 +483,21 @@ SeSetSecurityAccessMask(
  * @unimplemented
  * @brief
  * Report a security event to the security manager.
- * 
+ *
  * @param[in] Flags
  * Flags that influence how the event should be reported.
- * 
+ *
  * @param[in] SourceName
  * A Unicode string that represents the source name of the event.
- * 
+ *
  * @param[in] UserSid
  * The SID that represents a user that initiated the reporting.
- * 
+ *
  * @param[in] AuditParameters
  * An array of parameters for auditing purposes. This is used
  * for reporting the event which the security manager will take
  * care subsequently of doing eventual security auditing.
- * 
+ *
  * @return
  * Returns STATUS_SUCCESS if the security event has been reported.
  * STATUS_INVALID_PARAMETER is returned if one of the parameters
@@ -576,21 +576,21 @@ SeReportSecurityEvent(
  * @unimplemented
  * @brief
  * Sets an array of audit parameters for later security auditing use.
- * 
+ *
  * @param[in,out] AuditParameters
  * An array of audit parameters to be set.
- * 
+ *
  * @param[in] Type
  * The type of audit parameters to be set.
- * 
+ *
  * @param[in] Index
  * Index number that represents an instance of an audit parameters.
  * Such index must be within the maximum range of audit parameters.
- * 
+ *
  * @param[in] Data
  * An arbitrary buffer data that is bounds to what kind of audit parameter
  * type must be set.
- * 
+ *
  * @return
  * To be added...
  */

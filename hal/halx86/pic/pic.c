@@ -1257,7 +1257,7 @@ HalpGetRootInterruptVector(IN ULONG BusInterruptLevel,
     *Irql = HalpVectorToIrql(SystemVector);
     *Affinity = HalpDefaultInterruptAffinity;
     ASSERT(HalpDefaultInterruptAffinity);
-    
+
     /* Return the vector */
     return SystemVector;
 }

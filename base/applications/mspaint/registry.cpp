@@ -62,7 +62,7 @@ void RegistrySettings::LoadPresets()
     ThumbYPos = 200;
     UnitSetting = 0;
     const WINDOWPLACEMENT DefaultWindowPlacement = {
-        sizeof(WINDOWPLACEMENT), 
+        sizeof(WINDOWPLACEMENT),
         0,
         SW_SHOWNORMAL,
         {0, 0},

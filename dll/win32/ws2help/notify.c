@@ -71,7 +71,7 @@ WahNotifyAllProcesses(IN HANDLE NotificationHelperHandle)
 }
 
 INT
-WINAPI 
+WINAPI
 WahWaitForNotification(IN HANDLE NotificationHelperHandle,
                        IN HANDLE lpNotificationHandle,
                        IN LPWSAOVERLAPPED lpOverlapped,

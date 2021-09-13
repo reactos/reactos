@@ -188,7 +188,7 @@ GreGetTextExtentExW(
     return Result;
 }
 
-BOOL 
+BOOL
 WINAPI
 GreGetTextMetricsW(
     _In_  HDC hdc,

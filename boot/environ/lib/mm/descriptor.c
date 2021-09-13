@@ -208,7 +208,7 @@ MmMdCountList (
 {
     PLIST_ENTRY First, NextEntry;
     ULONG Count;
-    
+
     /* Iterate the list */
     for (Count = 0, First = MdList->First, NextEntry = First->Flink;
          NextEntry != First;
@@ -220,7 +220,7 @@ MmMdCountList (
 
 VOID
 MmMdInitializeList (
-    _In_ PBL_MEMORY_DESCRIPTOR_LIST MdList, 
+    _In_ PBL_MEMORY_DESCRIPTOR_LIST MdList,
     _In_ ULONG Type,
     _In_ PLIST_ENTRY ListHead
     )
@@ -247,10 +247,10 @@ MmMdInitializeList (
 
 NTSTATUS
 MmMdCopyList (
-    _In_ PBL_MEMORY_DESCRIPTOR_LIST DestinationList, 
+    _In_ PBL_MEMORY_DESCRIPTOR_LIST DestinationList,
     _In_ PBL_MEMORY_DESCRIPTOR_LIST SourceList,
     _In_opt_ PBL_MEMORY_DESCRIPTOR ListDescriptor,
-    _Out_ PULONG ActualCount, 
+    _Out_ PULONG ActualCount,
     _In_ ULONG Count,
     _In_ ULONG Flags
     )
@@ -286,7 +286,7 @@ MmMdCopyList (
         Count = MmGlobalMemoryDescriptorCount;
         ListDescriptor = MmGlobalMemoryDescriptors;
     }
-    
+
     /* Never truncate descriptors during a list copy */
     Flags |= BL_MM_ADD_DESCRIPTOR_NEVER_TRUNCATE_FLAG;
 
@@ -640,7 +640,7 @@ MmMdAddDescriptorToList (
         ThisDescriptor = CONTAINING_RECORD(ThisEntry, BL_MEMORY_DESCRIPTOR, ListEntry);
 
         /* Is the address smaller, or equal but more important? */
-        if ((MemoryDescriptor->BasePage < ThisDescriptor->BasePage) || 
+        if ((MemoryDescriptor->BasePage < ThisDescriptor->BasePage) ||
             ((MemoryDescriptor->BasePage == ThisDescriptor->BasePage) &&
              (MmMdpHasPrecedence(MemoryDescriptor->Type, ThisDescriptor->Type))))
         {
@@ -789,7 +789,7 @@ MmMdRemoveRegionFromMdlEx (
                     {
                         Descriptor->VirtualPage += RegionSize;
                     }
-                    
+
                     /* Initialize a descriptor for the start of the region */
                     NewDescriptor = MmMdInitByteGranularDescriptor(Descriptor->Flags,
                                                                    Descriptor->Type,
@@ -958,8 +958,8 @@ Quickie:
 
 PBL_MEMORY_DESCRIPTOR
 MmMdFindDescriptorFromMdl (
-    _In_ PBL_MEMORY_DESCRIPTOR_LIST MdList, 
-    _In_ ULONG Flags, 
+    _In_ PBL_MEMORY_DESCRIPTOR_LIST MdList,
+    _In_ ULONG Flags,
     _In_ ULONGLONG Page
     )
 {
@@ -987,7 +987,7 @@ MmMdFindDescriptorFromMdl (
         IsVirtual = TRUE;
         NextEntry = MdList->First->Flink;
     }
-    
+
     /* Check if this is a physical search */
     if (!IsVirtual)
     {
@@ -1047,7 +1047,7 @@ MmMdFindDescriptorFromMdl (
 
 PBL_MEMORY_DESCRIPTOR
 MmMdFindDescriptor (
-    _In_ ULONG WhichList, 
+    _In_ ULONG WhichList,
     _In_ ULONG Flags,
     _In_ ULONGLONG Page
     )

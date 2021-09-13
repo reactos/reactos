@@ -181,7 +181,7 @@ GLvoid InitGL(GLsizei Width, GLsizei Height)
 }
 
 // Handles Window Resizing
-GLvoid ReSizeGLScene(GLsizei Width, GLsizei Height)	
+GLvoid ReSizeGLScene(GLsizei Width, GLsizei Height)
 {
     // Is Window Too Small (Divide By Zero Error)
     if (Height == 0)

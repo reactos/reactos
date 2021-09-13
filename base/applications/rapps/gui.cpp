@@ -280,7 +280,7 @@ BOOL CMainWindow::RemoveSelectedAppFromRegistry()
         CInstalledApplicationInfo *InstalledApp = (CInstalledApplicationInfo *)m_ApplicationView->GetFocusedItemData();
         if (!InstalledApp)
             return FALSE;
-        
+
         LSTATUS Result = InstalledApp->RemoveFromRegistry();
         if (Result != ERROR_SUCCESS)
         {
@@ -488,7 +488,7 @@ BOOL CMainWindow::ProcessWindowMessage(HWND hwnd, UINT Msg, WPARAM wParam, LPARA
         if (wParam == SEARCH_TIMER_ID)
         {
             ::KillTimer(hwnd, SEARCH_TIMER_ID);
-            
+
             UpdateApplicationsList(-1);
         }
         break;
@@ -688,7 +688,7 @@ VOID CMainWindow::UpdateApplicationsList(INT EnumType)
         // set the display type of application-view. this will remove all the item in application-view too.
         m_ApplicationView->SetDisplayAppType(AppViewTypeInstalledApps);
 
-        // enum installed softwares 
+        // enum installed softwares
         m_InstalledApps.Enum(EnumType, s_EnumInstalledAppProc, this);
     }
     else if (IsAvailableEnum(EnumType))
@@ -696,7 +696,7 @@ VOID CMainWindow::UpdateApplicationsList(INT EnumType)
         // set the display type of application-view. this will remove all the item in application-view too.
         m_ApplicationView->SetDisplayAppType(AppViewTypeAvailableApps);
 
-        // enum available softwares 
+        // enum available softwares
         m_AvailableApps.Enum(EnumType, s_EnumAvailableAppProc, this);
     }
     m_ApplicationView->SetRedraw(TRUE);
@@ -832,7 +832,7 @@ void CMainWindow::HandleTabOrder(int direction)
     m_TreeView->AppendTabOrderWindow(direction, TabOrderHwndList);
     m_ApplicationView->AppendTabOrderWindow(direction, TabOrderHwndList);
 
-    
+
     if (TabOrderHwndList.GetSize() == 0)
     {
         // in case the list is empty

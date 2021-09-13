@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS Services
  * LICENSE:     GPL - See COPYING in the top level directory
  * FILE:        base/applications/sc/depend.c
- * PURPOSE:     
+ * PURPOSE:
  * COPYRIGHT:   Copyright 2016 Eric Kohl
  *
  */

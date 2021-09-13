@@ -19,7 +19,7 @@ DWORD WINAPI RpcThreadRoutine(LPVOID lpParameter)
     RPC_STATUS Status;
 
     InitializeListHead(&WlanSvcHandleListHead);
-    
+
     Status = RpcServerUseProtseqEpW(L"ncalrpc", 20, L"wlansvc", NULL);
     if (Status != RPC_S_OK)
     {
@@ -81,13 +81,13 @@ DWORD _RpcOpenHandle(
 
     if (dwClientVersion > 2)
         dwClientVersion = 2;
-    
+
     if (dwClientVersion < 1)
         dwClientVersion = 1;
-    
+
     lpWlanSvcHandle->dwClientVersion = dwClientVersion;
     *pdwNegotiatedVersion = dwClientVersion;
-    
+
     InsertTailList(&WlanSvcHandleListHead, &lpWlanSvcHandle->WlanSvcHandleListEntry);
     *phClientHandle = lpWlanSvcHandle;
 
@@ -264,7 +264,7 @@ DWORD _RpcScan(
     {
         return ERROR_INVALID_HANDLE;
     }
-    
+
     /*
     DWORD dwBytesReturned;
     HANDLE hDevice;

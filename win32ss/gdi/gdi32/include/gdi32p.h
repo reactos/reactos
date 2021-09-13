@@ -45,7 +45,7 @@ typedef DWORD
     HDC hdc,
     LPCWSTR lpString,
     INT uCount,
-    INT nMaxExtent, 
+    INT nMaxExtent,
     LPGCP_RESULTSW lpResults,
     DWORD dwFlags,
     DWORD dwUnused

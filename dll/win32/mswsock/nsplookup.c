@@ -716,7 +716,7 @@ NSP_GetServiceByNameHeapAllocW(_In_ PWSHANDLEINTERN data,
     PCHAR nameServiceA = NULL;
     PCHAR nameProtoA = NULL;
     INT res = WSANO_RECOVERY;
-    
+
     if (!data->hostnameW)
     {
         res = WSANO_RECOVERY;

@@ -353,7 +353,7 @@ static UCHAR XmsRealloc(WORD Handle, WORD NewSize)
         RtlSetBits(&AllocBitmap, BlockNumber, HandleEntry->Size);
         return XMS_STATUS_OUT_OF_MEMORY;
     }
-    
+
     return XMS_STATUS_SUCCESS;
 }
 

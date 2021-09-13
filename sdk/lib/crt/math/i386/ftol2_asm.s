@@ -3,7 +3,7 @@
  * PROJECT:           ReactOS kernel
  * PURPOSE:           Run-Time Library
  * FILE:              lib/sdk/crt/math/i386/ftol2_asm.s
- * PROGRAMER:         
+ * PROGRAMER:
  *
  */
 
@@ -12,7 +12,7 @@
 EXTERN __ftol:PROC
 PUBLIC __ftol2
 PUBLIC __ftol2_sse
- 
+
 /* FUNCTIONS ***************************************************************/
 .code
 

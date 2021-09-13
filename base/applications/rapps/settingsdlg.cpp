@@ -54,13 +54,13 @@ BOOL IsUrlValid(const WCHAR * Url)
     URL_COMPONENTSW UrlComponmentInfo = { 0 };
     UrlComponmentInfo.dwStructSize = sizeof(UrlComponmentInfo);
     UrlComponmentInfo.dwSchemeLength = 1;
-    
+
     BOOL bSuccess = InternetCrackUrlW(Url, wcslen(Url), 0, &UrlComponmentInfo);
     if(!bSuccess)
     {
         return FALSE;
     }
-    
+
     switch(UrlComponmentInfo.nScheme)
     {
         case INTERNET_SCHEME_HTTP:
@@ -69,7 +69,7 @@ BOOL IsUrlValid(const WCHAR * Url)
         case INTERNET_SCHEME_FILE:
         // supported
             return TRUE;
-            
+
         default:
             return FALSE;
     }
@@ -104,9 +104,9 @@ namespace
             EnableWindow(GetDlgItem(hDlg, IDC_PROXY_SERVER), FALSE);
             EnableWindow(GetDlgItem(hDlg, IDC_NO_PROXY_FOR), FALSE);
         }
-        
+
         CheckRadioButton(hDlg, IDC_SOURCE_DEFAULT, IDC_USE_SOURCE, Info->bUseSource ? IDC_USE_SOURCE : IDC_SOURCE_DEFAULT);
-        
+
         EnableWindow(GetDlgItem(hDlg, IDC_SOURCE_URL), Info->bUseSource);
 
         SetWindowTextW(GetDlgItem(hDlg, IDC_SOURCE_URL), Info->szSourceURL);
@@ -153,12 +153,12 @@ namespace
                 NewSettingsInfo.bUseSource = FALSE;
                 EnableWindow(GetDlgItem(hDlg, IDC_SOURCE_URL), NewSettingsInfo.bUseSource);
                 break;
-                
+
             case IDC_USE_SOURCE:
                 NewSettingsInfo.bUseSource = TRUE;
                 EnableWindow(GetDlgItem(hDlg, IDC_SOURCE_URL), NewSettingsInfo.bUseSource);
                 break;
-                
+
             case IDC_PROXY_DEFAULT:
                 NewSettingsInfo.Proxy = 0;
                 EnableWindow(GetDlgItem(hDlg, IDC_PROXY_SERVER), FALSE);
@@ -241,13 +241,13 @@ namespace
                         break;
                     }
                 }
-                
-                
+
+
                 if(NewSettingsInfo.bUseSource && !IsUrlValid(szSource.GetString()))
                 {
                     ATL::CStringW szMsgText;
                     szMsgText.LoadStringW(IDS_URL_INVALID);
-                    
+
                     MessageBoxW(hDlg, szMsgText.GetString(), NULL, 0);
                     SetFocus(GetDlgItem(hDlg, IDC_SOURCE_URL));
                     break;

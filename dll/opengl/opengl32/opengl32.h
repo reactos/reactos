@@ -92,18 +92,18 @@ struct wgl_dc_data
         HANDLE u;
     } owner;
     ULONG flags;
-    
+
     /* Pixel format */
     INT pixelformat;
-    
+
     /* ICD */
     struct ICD_Data* icd_data;
     INT nb_icd_formats;
-    
+
     /* Software implementation */
     INT nb_sw_formats;
     void* sw_data;
-    
+
     /* Linked list */
     struct wgl_dc_data* next;
 };

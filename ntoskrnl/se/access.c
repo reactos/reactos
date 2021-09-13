@@ -20,21 +20,21 @@ ERESOURCE SepSubjectContextLock;
 /**
  * @brief
  * Checks if a SID is present in a token.
- * 
+ *
  * @param[in] _Token
  * A valid token object.
- * 
+ *
  * @param[in] PrincipalSelfSid
  * A principal self SID.
- * 
+ *
  * @param[in] _Sid
  * A regular SID.
- * 
+ *
  * @param[in] Deny
  * If set to TRUE, the caller expected that a SID in a token
  * must be a deny-only SID, that is, access checks are performed
  * only for deny-only ACEs of the said SID.
- * 
+ *
  * @param[in] Restricted
  * If set to TRUE, the caller expects that a SID in a token is
  * restricted.
@@ -133,10 +133,10 @@ SepSidInTokenEx(
 /**
  * @brief
  * Checks if a SID is present in a token.
- * 
+ *
  * @param[in] _Token
  * A valid token object.
- * 
+ *
  * @param[in] _Sid
  * A regular SID.
  *
@@ -157,13 +157,13 @@ SepSidInToken(
 /**
  * @brief
  * Checks if a token belongs to the main user, being the owner.
- * 
+ *
  * @param[in] _Token
  * A valid token object.
- * 
+ *
  * @param[in] SecurityDescriptor
  * A security descriptor where the owner is to be found.
- * 
+ *
  * @param[in] TokenLocked
  * If set to TRUE, the token has been already locked and there's
  * no need to lock it again. Otherwise the function will acquire
@@ -207,10 +207,10 @@ SepTokenIsOwner(
 /**
  * @brief
  * Retrieves token control information.
- * 
+ *
  * @param[in] _Token
  * A valid token object.
- * 
+ *
  * @param[out] SecurityDescriptor
  * The returned token control information.
  *
@@ -244,28 +244,28 @@ SeGetTokenControlInformation(
 /**
  * @brief
  * Creates a client security context based upon an access token.
- * 
+ *
  * @param[in] Token
  * A valid token object.
- * 
+ *
  * @param[in] ClientSecurityQos
  * The Quality of Service (QoS) of a client security context.
- * 
+ *
  * @param[in] ServerIsRemote
  * If the client is a remote server (TRUE), the function will retrieve the
  * control information of an access token, that is, we're doing delegation
  * and that the server isn't local.
- * 
+ *
  * @param[in] TokenType
  * Type of token.
- * 
+ *
  * @param[in] ThreadEffectiveOnly
  * If set to TRUE, the client wants that the current thread wants to modify
  * (enable or disable) privileges and groups.
- * 
+ *
  * @param[in] ImpersonationLevel
  * Security impersonation level filled in the QoS context.
- * 
+ *
  * @param[out] ClientContext
  * The returned security client context.
  *
@@ -370,15 +370,15 @@ SepCreateClientSecurity(
  * @brief
  * An extended function that captures the security subject context based upon
  * the specified thread and process.
- * 
+ *
  * @param[in] Thread
  * A thread where the calling thread's token is to be referenced for
  * the security context.
- * 
+ *
  * @param[in] Process
  * A process where the main process' token is to be referenced for
  * the security context.
- * 
+ *
  * @param[out] SubjectContext
  * The returned security subject context.
  *
@@ -422,7 +422,7 @@ SeCaptureSubjectContextEx(
  * @brief
  * Captures the security subject context of the calling thread and calling
  * process.
- * 
+ *
  * @param[out] SubjectContext
  * The returned security subject context.
  *
@@ -444,7 +444,7 @@ SeCaptureSubjectContext(
  * @brief
  * Locks both the referenced primary and client access tokens of a
  * security subject context.
- * 
+ *
  * @param[in] SubjectContext
  * A valid security context with both referenced tokens.
  *
@@ -475,7 +475,7 @@ SeLockSubjectContext(
  * @brief
  * Unlocks both the referenced primary and client access tokens of a
  * security subject context.
- * 
+ *
  * @param[in] SubjectContext
  * A valid security context with both referenced tokens.
  *
@@ -508,7 +508,7 @@ SeUnlockSubjectContext(
  * @brief
  * Releases both the primary and client tokens of a security
  * subject context.
- * 
+ *
  * @param[in] SubjectContext
  * The captured security context.
  *
@@ -534,22 +534,22 @@ SeReleaseSubjectContext(
 /**
  * @brief
  * An extended function that creates an access state.
- * 
+ *
  * @param[in] Thread
  * Valid thread object where subject context is to be captured.
- * 
+ *
  * @param[in] Process
  * Valid process object where subject context is to be captured.
- * 
+ *
  * @param[in,out] AccessState
  * An initialized returned parameter to an access state.
- * 
+ *
  * @param[in] AuxData
  * Auxiliary security data for access state.
- * 
+ *
  * @param[in] Access
  * Type of access mask to assign.
- * 
+ *
  * @param[in] GenericMapping
  * Generic mapping for the access state to assign.
  *
@@ -618,16 +618,16 @@ SeCreateAccessStateEx(
 /**
  * @brief
  * Creates an access state.
- * 
+ *
  * @param[in,out] AccessState
  * An initialized returned parameter to an access state.
- * 
+ *
  * @param[in] AuxData
  * Auxiliary security data for access state.
- * 
+ *
  * @param[in] Access
  * Type of access mask to assign.
- * 
+ *
  * @param[in] GenericMapping
  * Generic mapping for the access state to assign.
  *
@@ -656,7 +656,7 @@ SeCreateAccessState(
 /**
  * @brief
  * Deletes an allocated access state from the memory.
- * 
+ *
  * @param[in] AccessState
  * A valid access state.
  *
@@ -696,10 +696,10 @@ SeDeleteAccessState(
 /**
  * @brief
  * Sets a new generic mapping for an allocated access state.
- * 
+ *
  * @param[in] AccessState
  * A valid access state.
- * 
+ *
  * @param[in] GenericMapping
  * New generic mapping to assign.
  *
@@ -721,16 +721,16 @@ SeSetAccessStateGenericMapping(
 /**
  * @brief
  * Creates a client security context.
- * 
+ *
  * @param[in] Thread
  * Thread object of the client where impersonation has to begin.
- * 
+ *
  * @param[in] Qos
  * Quality of service to specify what kind of impersonation to be done.
- * 
+ *
  * @param[in] RemoteClient
  * If set to TRUE, the client that we're going to impersonate is remote.
- * 
+ *
  * @param[out] ClientContext
  * The returned security client context.
  *
@@ -782,17 +782,17 @@ SeCreateClientSecurity(
  * @brief
  * Creates a client security context based upon the captured security
  * subject context.
- * 
+ *
  * @param[in] SubjectContext
  * The captured subject context where client security is to be created
  * from.
- * 
+ *
  * @param[in] ClientSecurityQos
  * Quality of service to specify what kind of impersonation to be done.
- * 
+ *
  * @param[in] ServerIsRemote
  * If set to TRUE, the client that we're going to impersonate is remote.
- * 
+ *
  * @param[out] ClientContext
  * The returned security client context.
  *
@@ -840,13 +840,13 @@ SeCreateClientSecurityFromSubjectContext(
 /**
  * @brief
  * Extended function that impersonates a client.
- * 
+ *
  * @param[in] ClientContext
  * A valid client context.
- * 
+ *
  * @param[in] ServerThread
  * The thread where impersonation is to be done.
- * 
+ *
  * @return
  * STATUS_SUCCESS is returned if the calling thread successfully impersonates
  * the client. A failure NTSTATUS code is returned otherwise.
@@ -886,10 +886,10 @@ SeImpersonateClientEx(
 /**
  * @brief
  * Impersonates a client user.
- * 
+ *
  * @param[in] ClientContext
  * A valid client context.
- * 
+ *
  * @param[in] ServerThread
  * The thread where impersonation is to be done.
  * *

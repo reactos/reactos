@@ -185,7 +185,7 @@ DWORD DSStaticRefreshParams( PipeSendFunc Send, HANDLE CommPipe, COMM_DHCP_REQ *
             DeleteIpForwardEntry( &Adapter->RouterMib );
             Adapter->RouterMib.dwForwardNextHop = 0;
         }
-        
+
         Adapter->DhclientState.state = S_STATIC;
         proto = find_protocol_by_adapter( &Adapter->DhclientInfo );
         if (proto)

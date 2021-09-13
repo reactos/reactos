@@ -67,7 +67,7 @@ void TestHostName(void)
     dns_status = DnsQuery_A(host_name, DNS_TYPE_A, DNS_QUERY_STANDARD, 0, NULL, 0);
     ok(dns_status == ERROR_INVALID_PARAMETER, "DnsQuery_A failed with error %lu\n", dns_status);
 
-    //Testing HostName 
+    //Testing HostName
     dp = InvalidPointer;
     dns_status = DnsQuery_A(host_name, DNS_TYPE_A, DNS_QUERY_STANDARD, 0, &dp, 0);
     ok(dns_status == NO_ERROR, "DnsQuery_A failed with error %lu\n", dns_status);
@@ -79,7 +79,7 @@ void TestHostName(void)
     }
     ok(dp != InvalidPointer && dp != NULL, "dp = %p\n", dp);
     if (dp != InvalidPointer) DnsRecordListFree(dp, DnsFreeRecordList);
-    
+
     //127.0.0.1
     dp = InvalidPointer;
     dns_status = DnsQuery_A("127.0.0.1", DNS_TYPE_A, DNS_QUERY_STANDARD, 0, &dp, 0);

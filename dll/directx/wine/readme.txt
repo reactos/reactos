@@ -1,21 +1,20 @@
-This Is wine DirectX support.
-It works in reactos and windows
-When ReactOS own ReactX are inplace 
-this file will be remove from our SVN
-for now they stay as temporary solutions
+This is Wine DirectX support.
+It works in Reactos and Windows.
+When ReactOS own ReactX are in-place
+this file will be removed from our SVN
+for now they stay as temporary solutions.
 
-
-People that have help getting this thing 
-to working in ReactOS Building system
+People that have helped getting this thing
+to work in ReactOS building system:
 
 Roderick Colenbrander - thunderbird2k at gmx dot net
-The  informations how to build it and done 
-the windows port in wine (wine devloper)
+The  informations how to build it and done
+the Windows port in Wine (Wine devloper).
 
-Magnus Olsen aka GreatLord 
-Did import it to ReactOS and setupup
-the build
+Magnus Olsen aka GreatLord
+Did import it to ReactOS and setup
+the build.
 
 GedMurphy
 Did help with minor issue, info how to
-make DllMain being call
+make DllMain being called.

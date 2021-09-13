@@ -88,7 +88,7 @@ public:
     HRESULT DisableMouseTrack(BOOL bDisable);
 
     virtual HRESULT FillToolbar(BOOL clearFirst=FALSE) = 0;
-    
+
     HRESULT CancelCurrentPopup();
     HRESULT PopupItem(INT iItem, BOOL keyInitiated);
     HRESULT GetDataFromId(INT iItem, INT* pIndex, DWORD_PTR* pData);

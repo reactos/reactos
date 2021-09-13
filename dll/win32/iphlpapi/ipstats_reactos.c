@@ -440,7 +440,7 @@ RouteTable *getRouteTable(void)
         getNthIpEntity( tcpFile, i, &ent );
 
         tdiGetRoutesForIpEntity( tcpFile, &ent, &route_set, &numRoutes );
-        
+
         if( !route_set ) {
             closeTcpFile( tcpFile );
             HeapFree( GetProcessHeap(), 0, out_route_table );

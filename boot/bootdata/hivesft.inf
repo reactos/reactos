@@ -543,7 +543,7 @@ HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Print\Printers\Dummy Printer 
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Print\Printers\Dummy Printer On LPT1","Printer Driver",,"Dummy Printer Driver"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Print\Printers\Dummy Printer On LPT1","Status",0x00010001,0
 
-; Image File Execution Options (NtGlobalFlag with FLG_SHOW_LDR_SNAPS set for loadlib.exe) 
+; Image File Execution Options (NtGlobalFlag with FLG_SHOW_LDR_SNAPS set for loadlib.exe)
 HKLM,"Software\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\loadlib.exe","GlobalFlag",0x00000000,"0x02000000"
 ;HKLM,"Software\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\loaddll.exe","GlobalFlag",0x00010001,0x00000002
 ;HKLM,"Software\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\soffice.exe","GlobalFlag",0x00010001,0x00000002

@@ -607,7 +607,7 @@ Quickie:
     return Status;
 }
 
-PIMAGE_SECTION_HEADER 
+PIMAGE_SECTION_HEADER
 BlImgFindSection (
     _In_ PVOID ImageBase,
     _In_ ULONG ImageSize
@@ -650,11 +650,11 @@ BlImgFindSection (
 VOID
 BlImgQueryCodeIntegrityBootOptions (
     _In_ PBL_LOADED_APPLICATION_ENTRY ApplicationEntry,
-    _Out_ PBOOLEAN IntegrityChecksDisabled, 
+    _Out_ PBOOLEAN IntegrityChecksDisabled,
     _Out_ PBOOLEAN TestSigning
     )
 {
-    
+
     NTSTATUS Status;
     BOOLEAN Value;
 
@@ -1656,7 +1656,7 @@ NTSTATUS
 ImgpInitializeBootApplicationParameters (
     _In_ PBL_BUFFER_DESCRIPTOR ImageParameters,
     _In_ PBL_APPLICATION_ENTRY AppEntry,
-    _In_ PVOID ImageBase, 
+    _In_ PVOID ImageBase,
     _In_ ULONG ImageSize
     )
 {
@@ -1704,8 +1704,8 @@ ImgpInitializeBootApplicationParameters (
                  BlpBootDevice->Size +
                  MemoryParameters.BufferSize +
                  sizeof(*ReturnArguments) +
-                 sizeof(*MemoryData) + 
-                 sizeof(*FirmwareParameters) + 
+                 sizeof(*MemoryData) +
+                 sizeof(*FirmwareParameters) +
                  sizeof(*ParameterBlock);
 
     /* Check if this gives us enough space */

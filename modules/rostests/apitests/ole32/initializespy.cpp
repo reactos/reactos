@@ -279,7 +279,7 @@ void test_IInitializeSpy_fail()
     test_HRES(hr, E_INVALIDARG, "Unexpected hr while unregistering invalid interface");
     test_ref(&spy, 0);
 
-    /* we should not crash here, just return E_NOINTERFACE 
+    /* we should not crash here, just return E_NOINTERFACE
         do note the Cookie is not even being touched at all, compared to calling this with an interface
         that does not respond to IID_IInitializeSpy */
     spy.Cookie.HighPart = spy.Cookie.LowPart = INVALID_VALUE;

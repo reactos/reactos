@@ -56,7 +56,7 @@ Utf8Convert_(
     {
         ok_(File, Line)(Buffer[i] == ExpectedUtf8[i], "Convert with null: Buffer[%lu] = 0x%x, expected 0x%x\n", i, (unsigned char)Buffer[i], (unsigned char)ExpectedUtf8[i]);
     }
-    
+
     /* Get length, reject invalid */
     SetLastError(0xfeedf00d);
     Ret = WideCharToMultiByte(CP_UTF8, WC_ERR_INVALID_CHARS, WideString, WideLen + 1, NULL, 0, NULL, NULL);
@@ -75,7 +75,7 @@ Utf8Convert_(
     {
         ok_(File, Line)(Ret == Utf8Len + 1, "Length check, reject invalid: Ret = %d\n", Ret);
     }
-    
+
     /* Convert, reject invalid */
     FillMemory(Buffer, sizeof(Buffer), 0x55);
     SetLastError(0xfeedf00d);

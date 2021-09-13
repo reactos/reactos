@@ -169,7 +169,7 @@ FileTableCompareWithSameAttributes (
 
 NTSTATUS
 FileTableDestroyEntry (
-    _In_ PBL_FILE_ENTRY FileEntry, 
+    _In_ PBL_FILE_ENTRY FileEntry,
     _In_ ULONG Index
     )
 {

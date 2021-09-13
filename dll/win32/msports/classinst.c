@@ -514,7 +514,7 @@ InstallParallelPort(IN HDEVINFO DeviceInfoSet,
                            L"FilterResourceMethod",
                            0,
                            REG_DWORD,
-                           (LPBYTE)&dwValue, 
+                           (LPBYTE)&dwValue,
                            sizeof(dwValue));
 
             RegCloseKey(hKey);

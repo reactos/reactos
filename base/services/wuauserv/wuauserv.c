@@ -94,7 +94,7 @@ ServiceMain(DWORD argc, LPTSTR *argv)
     UNREFERENCED_PARAMETER(argv);
 
     DPRINT("WU ServiceMain() called\n");
-    
+
     ServiceStatusHandle = RegisterServiceCtrlHandlerExW(ServiceName,
                                                         ServiceControlHandler,
                                                         NULL);

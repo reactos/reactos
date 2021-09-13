@@ -2,8 +2,8 @@
  * PROJECT:         ReactOS winsta.dll
  * FILE:            lib/winsta/ws.c
  * PURPOSE:         WinStation
- * PROGRAMMER:      Samuel Serapi?n
- * 
+ * PROGRAMMER:      Samuel Serapión
+ *
  */
 
 #include "winsta.h"

@@ -47,7 +47,7 @@ const GUID CLSID_QuickLaunchBand = { 0x260cb95d, 0x4544, 0x44f6, { 0xa0, 0x79, 0
         if (SUCCEEDED(hr))
         {
             CATID catid = CATID_DeskBand;
-            hr = pcr->RegisterClassImplCategories(CLSID_QuickLaunchBand, 1, &catid);            
+            hr = pcr->RegisterClassImplCategories(CLSID_QuickLaunchBand, 1, &catid);
         }
         return hr;
     }
@@ -59,7 +59,7 @@ const GUID CLSID_QuickLaunchBand = { 0x260cb95d, 0x4544, 0x44f6, { 0xa0, 0x79, 0
         if (SUCCEEDED(hr))
         {
             CATID catid = CATID_DeskBand;
-            hr = pcr->UnRegisterClassImplCategories(CLSID_QuickLaunchBand, 1, &catid);            
+            hr = pcr->UnRegisterClassImplCategories(CLSID_QuickLaunchBand, 1, &catid);
         }
         return hr;
     }
@@ -82,16 +82,16 @@ const GUID CLSID_QuickLaunchBand = { 0x260cb95d, 0x4544, 0x44f6, { 0xa0, 0x79, 0
     LPITEMIDLIST PidlBrowse(HWND hwnd, int nCSIDL)
     {
         CComHeapPtr<ITEMIDLIST> pidlRoot;
-        
+
         WCHAR path[MAX_PATH];
 
         if (nCSIDL)
         {
             SHGetSpecialFolderLocation(hwnd, nCSIDL, &pidlRoot);
-        }        
+        }
 
         BROWSEINFO bi = { hwnd, pidlRoot, path, L"Choose a folder", 0, NULL, 0, 0 };
-        LPITEMIDLIST pidlSelected = SHBrowseForFolder(&bi);        
+        LPITEMIDLIST pidlSelected = SHBrowseForFolder(&bi);
 
         return pidlSelected;
     }
@@ -132,24 +132,24 @@ const GUID CLSID_QuickLaunchBand = { 0x260cb95d, 0x4544, 0x44f6, { 0xa0, 0x79, 0
         if (pidl == NULL)
             return E_FAIL;
         pISFB->InitializeSFB(pISF, pidl);
-        
+
         return hr;
     }
 
 // IObjectWithSite
     STDMETHODIMP CQuickLaunchBand::SetSite(IUnknown *pUnkSite)
-    { 
+    {
         // Internal CISFBand Calls
         CComPtr<IObjectWithSite> pIOWS;
         HRESULT hr = m_punkISFB->QueryInterface(IID_PPV_ARG(IObjectWithSite, &pIOWS));
         if (FAILED(hr))
-            return hr; 
+            return hr;
 
         return pIOWS->SetSite(pUnkSite);
     }
 
     STDMETHODIMP CQuickLaunchBand::GetSite(IN REFIID riid, OUT VOID **ppvSite)
-    {        
+    {
         CComPtr<IObjectWithSite> pIOWS;
         HRESULT hr = m_punkISFB->QueryInterface(IID_PPV_ARG(IObjectWithSite, &pIOWS));
         if (FAILED(hr))
@@ -165,7 +165,7 @@ const GUID CLSID_QuickLaunchBand = { 0x260cb95d, 0x4544, 0x44f6, { 0xa0, 0x79, 0
         // Internal CISFBand Calls
         CComPtr<IDeskBand> pIDB;
         HRESULT hr = m_punkISFB->QueryInterface(IID_PPV_ARG(IDeskBand, &pIDB));
-        if (FAILED(hr)) 
+        if (FAILED(hr))
             return hr;
 
         return pIDB->GetWindow(phwnd);
@@ -183,53 +183,53 @@ const GUID CLSID_QuickLaunchBand = { 0x260cb95d, 0x4544, 0x44f6, { 0xa0, 0x79, 0
     }
 
     STDMETHODIMP CQuickLaunchBand::ShowDW(IN BOOL bShow)
-    {        
+    {
         // Internal CISFBand Calls
         CComPtr<IDeskBand> pIDB;
         HRESULT hr = m_punkISFB->QueryInterface(IID_PPV_ARG(IDeskBand, &pIDB));
         if (FAILED(hr))
             return hr;
 
-        return pIDB->ShowDW(bShow);       
+        return pIDB->ShowDW(bShow);
     }
 
     STDMETHODIMP CQuickLaunchBand::CloseDW(IN DWORD dwReserved)
-    {        
+    {
         // Internal CISFBand Calls
         CComPtr<IDeskBand> pIDB;
         HRESULT hr = m_punkISFB->QueryInterface(IID_PPV_ARG(IDeskBand, &pIDB));
-        if (FAILED(hr)) 
+        if (FAILED(hr))
             return hr;
 
         return pIDB->CloseDW(dwReserved);
     }
 
-    STDMETHODIMP CQuickLaunchBand::ResizeBorderDW(LPCRECT prcBorder, IUnknown *punkToolbarSite, BOOL fReserved) 
-    {        
+    STDMETHODIMP CQuickLaunchBand::ResizeBorderDW(LPCRECT prcBorder, IUnknown *punkToolbarSite, BOOL fReserved)
+    {
         // Internal CISFBand Calls
         CComPtr<IDeskBand> pIDB;
         HRESULT hr = m_punkISFB->QueryInterface(IID_PPV_ARG(IDeskBand, &pIDB));
-        if (FAILED(hr)) 
+        if (FAILED(hr))
             return hr;
 
         return pIDB->ResizeBorderDW(prcBorder, punkToolbarSite, fReserved);
     }
 
     STDMETHODIMP CQuickLaunchBand::GetBandInfo(IN DWORD dwBandID, IN DWORD dwViewMode, IN OUT DESKBANDINFO *pdbi)
-    {        
+    {
         // Internal CISFBand Calls
         CComPtr<IDeskBand> pIDB;
         HRESULT hr = m_punkISFB->QueryInterface(IID_PPV_ARG(IDeskBand, &pIDB));
-        if (FAILED(hr)) 
+        if (FAILED(hr))
             return hr;
 
         return pIDB->GetBandInfo(dwBandID, dwViewMode, pdbi);
-    }  
- 
+    }
+
 /*****************************************************************************/
 // IPersistStream
     STDMETHODIMP CQuickLaunchBand::GetClassID(OUT CLSID *pClassID)
-    {     
+    {
         // Internal CISFBand Calls
         CComPtr<IPersistStream> pIPS;
         HRESULT hr = m_punkISFB->QueryInterface(IID_PPV_ARG(IPersistStream, &pIPS));
@@ -240,7 +240,7 @@ const GUID CLSID_QuickLaunchBand = { 0x260cb95d, 0x4544, 0x44f6, { 0xa0, 0x79, 0
     }
 
     STDMETHODIMP CQuickLaunchBand::IsDirty()
-    {        
+    {
         // Internal CISFBand Calls
         CComPtr<IPersistStream> pIPS;
         HRESULT hr = m_punkISFB->QueryInterface(IID_PPV_ARG(IPersistStream, &pIPS));
@@ -261,7 +261,7 @@ const GUID CLSID_QuickLaunchBand = { 0x260cb95d, 0x4544, 0x44f6, { 0xa0, 0x79, 0
     }
 
     STDMETHODIMP CQuickLaunchBand::Save(IN IStream *pStm, IN BOOL fClearDirty)
-    {       
+    {
         // Internal CISFBand Calls
         CComPtr<IPersistStream> pIPS;
         HRESULT hr = m_punkISFB->QueryInterface(IID_PPV_ARG(IPersistStream, &pIPS));
@@ -280,7 +280,7 @@ const GUID CLSID_QuickLaunchBand = { 0x260cb95d, 0x4544, 0x44f6, { 0xa0, 0x79, 0
 
         return pIPS->GetSizeMax(pcbSize);
     }
-    
+
 
 /*****************************************************************************/
 // IWinEventHandler
@@ -290,50 +290,50 @@ const GUID CLSID_QuickLaunchBand = { 0x260cb95d, 0x4544, 0x44f6, { 0xa0, 0x79, 0
     }
 
     STDMETHODIMP CQuickLaunchBand::OnWinEvent(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT *theResult)
-    {         
+    {
          // Internal CISFBand Calls
          CComPtr<IWinEventHandler> pWEH;
          HRESULT hr = m_punkISFB->QueryInterface(IID_PPV_ARG(IWinEventHandler, &pWEH));
-         if (FAILED(hr)) 
+         if (FAILED(hr))
              return hr;
 
          return pWEH->OnWinEvent(hWnd, uMsg, wParam, lParam, theResult);
     }
 
     STDMETHODIMP CQuickLaunchBand::IsWindowOwner(HWND hWnd)
-    {        
+    {
         // Internal CISFBand Calls
         CComPtr<IWinEventHandler> pWEH;
         HRESULT hr = m_punkISFB->QueryInterface(IID_PPV_ARG(IWinEventHandler, &pWEH));
-        if (FAILED(hr)) 
+        if (FAILED(hr))
             return hr;
 
         return pWEH->IsWindowOwner(hWnd);
     }
-    
+
 /*****************************************************************************/
 // *** IOleCommandTarget methods ***
     STDMETHODIMP CQuickLaunchBand::QueryStatus(const GUID *pguidCmdGroup, ULONG cCmds, OLECMD prgCmds [], OLECMDTEXT *pCmdText)
-    {        
+    {
         // Internal CISFBand Calls
         CComPtr<IOleCommandTarget> pOCT;
         HRESULT hr = m_punkISFB->QueryInterface(IID_PPV_ARG(IOleCommandTarget, &pOCT));
-        if (FAILED(hr)) 
+        if (FAILED(hr))
             return hr;
 
         return pOCT->QueryStatus(pguidCmdGroup, cCmds, prgCmds, pCmdText);
     }
 
     STDMETHODIMP CQuickLaunchBand::Exec(const GUID *pguidCmdGroup, DWORD nCmdID, DWORD nCmdexecopt, VARIANT *pvaIn, VARIANT *pvaOut)
-    {       
+    {
         // Internal CISFBand Calls
         CComPtr<IOleCommandTarget> pOCT;
         HRESULT hr = m_punkISFB->QueryInterface(IID_PPV_ARG(IOleCommandTarget, &pOCT));
-        if (FAILED(hr)) 
+        if (FAILED(hr))
             return hr;
 
         return pOCT->Exec(pguidCmdGroup, nCmdID, nCmdexecopt, pvaIn, pvaOut);
-    }  
+    }
 
 /*****************************************************************************/
 // *** IContextMenu ***
@@ -342,7 +342,7 @@ const GUID CLSID_QuickLaunchBand = { 0x260cb95d, 0x4544, 0x44f6, { 0xa0, 0x79, 0
         // Internal CISFBand Calls
         CComPtr<IContextMenu> pICM;
         HRESULT hr = m_punkISFB->QueryInterface(IID_PPV_ARG(IContextMenu, &pICM));
-        if (FAILED(hr)) 
+        if (FAILED(hr))
             return hr;
 
         return pICM->GetCommandString(idCmd, uFlags, pwReserved, pszName, cchMax);
@@ -353,7 +353,7 @@ const GUID CLSID_QuickLaunchBand = { 0x260cb95d, 0x4544, 0x44f6, { 0xa0, 0x79, 0
         // Internal CISFBand Calls
         CComPtr<IContextMenu> pICM;
         HRESULT hr = m_punkISFB->QueryInterface(IID_PPV_ARG(IContextMenu, &pICM));
-        if (FAILED(hr)) 
+        if (FAILED(hr))
             return hr;
 
         return pICM->InvokeCommand(pici);

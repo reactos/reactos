@@ -298,7 +298,7 @@ DllMain(HINSTANCE hDllHandle,
             {
                 PsStopAndAnalyzeProfile();
             }
-            break;  
+            break;
   }
 
   return TRUE;

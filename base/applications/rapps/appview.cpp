@@ -220,14 +220,14 @@ HWND CComboBox::Create(HWND hwndParent)
         NULL);
 
     SendMessageW(WM_SETFONT, (WPARAM)GetStockObject(DEFAULT_GUI_FONT), 0);
-    
+
     for (int i = 0; i < (int)_countof(m_TypeStringID); i++)
     {
         ATL::CStringW szBuf;
         szBuf.LoadStringW(m_TypeStringID[i]);
         SendMessageW(CB_ADDSTRING, 0, (LPARAM)(LPCWSTR)szBuf);
     }
-    
+
     SendMessageW(CB_SETCURSEL, m_DefaultSelectType, 0); // select the first item
 
     return m_hWnd;
@@ -1639,7 +1639,7 @@ BOOL CApplicationView::ProcessWindowMessage(HWND hwnd, UINT message, WPARAM wPar
     return FALSE;
 }
 
-BOOL CApplicationView::CreateToolbar() 
+BOOL CApplicationView::CreateToolbar()
 {
     m_Toolbar = new CMainToolbar();
     m_Toolbar->m_VerticalAlignment = UiAlign_LeftTop;

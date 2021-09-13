@@ -232,7 +232,7 @@ public:
 
         if (IsEqualCLSID(m_Clsid, CLSID_StartMenu))
             return RSHELL_CStartMenu_CreateInstance(riid, ppvObject);
-            
+
         if (IsEqualCLSID(m_Clsid, CLSID_MenuDeskBar))
             return RSHELL_CMenuDeskBar_CreateInstance(riid, ppvObject);
 

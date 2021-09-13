@@ -1436,7 +1436,7 @@ EnumPrintersA(DWORD Flags, PSTR Name, DWORD Level, PBYTE pPrinterEnum, DWORD cbB
 
         MultiByteToWideChar(CP_ACP, 0, Name, -1, pwszName, cch + 1);
     }
- 
+
     /* Ref: https://stackoverflow.com/questions/41147180/why-enumprintersa-and-enumprintersw-request-the-same-amount-of-memory */
     if (!EnumPrintersW(Flags, pwszName, Level, pPrinterEnum, cbBuf, pcbNeeded, pcReturned))
     {

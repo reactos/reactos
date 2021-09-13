@@ -52,7 +52,7 @@ HRESULT STDMETHODCALLTYPE CAddressEditBox::SetOwner(IUnknown *pOwner)
         HRESULT hResult = IUnknown_QueryService(fSite, SID_SShellBrowser, IID_PPV_ARG(IBrowserService, &browserService));
         if (SUCCEEDED(hResult))
             AtlUnadvise(browserService, DIID_DWebBrowserEvents, fAdviseCookie);
-        fSite = NULL; 
+        fSite = NULL;
     }
     // connect to browser connection point
     return 0;
@@ -191,7 +191,7 @@ HRESULT STDMETHODCALLTYPE CAddressEditBox::Execute(long paramC)
 {
     HRESULT hr;
 
-    /* 
+    /*
      * Parse the path is it wasn't parsed
      */
     if (!pidlLastParsed)
@@ -206,8 +206,8 @@ HRESULT STDMETHODCALLTYPE CAddressEditBox::Execute(long paramC)
     if (!pidlLastParsed)
         return E_FAIL;
 
-    /* 
-     * Get the IShellBrowser and IBrowserService interfaces of the shell browser 
+    /*
+     * Get the IShellBrowser and IBrowserService interfaces of the shell browser
      */
     CComPtr<IShellBrowser> pisb;
     hr = IUnknown_QueryService(fSite, SID_SShellBrowser, IID_PPV_ARG(IShellBrowser, &pisb));
@@ -238,14 +238,14 @@ HRESULT STDMETHODCALLTYPE CAddressEditBox::Execute(long paramC)
     if (hr == 0)
         return S_OK;
 
-    /* 
-     * Attempt to browse to the parsed pidl 
+    /*
+     * Attempt to browse to the parsed pidl
      */
     hr = pisb->BrowseObject(pidlLastParsed, 0);
     if (SUCCEEDED(hr))
         return hr;
 
-    /* 
+    /*
      * Browsing to the pidl failed so it's not a folder. So invoke its defaule command.
      */
     HWND topLevelWindow;

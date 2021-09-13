@@ -61,7 +61,7 @@ VOID InitializeGDIPlus(BOOL bInitialize)
 INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, INT nShowCmd)
 {
     BOOL bIsFirstLaunch;
-    
+
     InitializeAtlModule(hInstance, TRUE);
     InitializeGDIPlus(TRUE);
 
@@ -83,7 +83,7 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 
     // parse cmd-line and perform the corresponding operation
     BOOL bSuccess = ParseCmdAndExecute(GetCommandLineW(), bIsFirstLaunch, SW_SHOWNORMAL);
-    
+
     InitializeGDIPlus(FALSE);
     InitializeAtlModule(GetModuleHandle(NULL), FALSE);
 

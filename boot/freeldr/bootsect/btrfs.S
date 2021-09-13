@@ -78,7 +78,7 @@ main:
     mov byte ptr [BootDrive], dl
 
 // Now check if this computer supports extended reads. This boot sector will not work without it
-CheckInt13hExtensions:                          
+CheckInt13hExtensions:
     mov  ah, HEX(41)                        // AH = 41h
     mov  bx, HEX(55aa)                      // BX = 55AAh
     int  HEX(13)                            // IBM/MS INT 13 Extensions - INSTALLATION CHECK

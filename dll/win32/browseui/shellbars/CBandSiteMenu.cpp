@@ -26,7 +26,7 @@
 /* The menu consists of 3 parts. The first is loaded from the resources,
    the second is populated with the classes of the CATID_DeskBand comcat
    and the third part consists of the entries for each CISFBand in the band side.
-   The first 5 ids are reserved for the resource menu, the following ids will be 
+   The first 5 ids are reserved for the resource menu, the following ids will be
    for the CATID_DeskBand classes and the rest for the CISFBands.
    The ids for the CISFBand menu items are not continuous, in this range
    each menu id is calculated by adding the band id to the last id for the CATID_DeskBand range */
@@ -330,7 +330,7 @@ UINT CBandSiteMenu::_GetBandIdForBuiltinISFBand(UINT uID)
 HRESULT STDMETHODCALLTYPE CBandSiteMenu::SetOwner(IUnknown *pOwner)
 {
     TRACE("CBandSiteMenu::SetOwner(%p, %p)\n", this, pOwner);
-    
+
     /* Cache the menu that will be merged every time QueryContextMenu is called */
     _CreateMenuPart();
 
@@ -384,7 +384,7 @@ HRESULT STDMETHODCALLTYPE CBandSiteMenu::QueryContextMenu(
             CheckMenuItem(hmenuToolbars, menuID + idCmdFirst, MF_CHECKED);
     }
 
-    return MAKE_HRESULT(SEVERITY_SUCCESS, 0, USHORT(idMax - idCmdFirst +1)); 
+    return MAKE_HRESULT(SEVERITY_SUCCESS, 0, USHORT(idMax - idCmdFirst +1));
 }
 
 HRESULT CBandSiteMenu::_ShowToolbarError(HRESULT hRet)

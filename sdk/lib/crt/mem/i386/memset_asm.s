@@ -37,7 +37,7 @@ FUNC _memset
 	rep stosd
 	mov ecx, edx
 	and ecx, 3
-.L1:	
+.L1:
 	test ecx, ecx
 	je .L3
 	rep stosb

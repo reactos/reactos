@@ -32,9 +32,9 @@ static HICON g_hIconBattery = NULL;
 
 /*++
 * @name Quantize
-* 
+*
 * This function quantizes the mentioned quantity to nearest level.
-* 
+*
 * @param p
 *        Should be a quantity in percentage.
 *
@@ -93,7 +93,7 @@ static HICON DynamicLoadIcon(HINSTANCE hinst)
         ((PowerStatus.BatteryFlag & BATTERY_FLAG_CHARGING) == BATTERY_FLAG_CHARGING))
     {
         index = Quantize(PowerStatus.BatteryLifePercent);
-        hBatIcon = LoadIcon(hinst, MAKEINTRESOURCE(bc_icons[index])); 
+        hBatIcon = LoadIcon(hinst, MAKEINTRESOURCE(bc_icons[index]));
         g_strTooltip.Format(IDS_PWR_CHARGING, PowerStatus.BatteryLifePercent);
     }
     else if (((PowerStatus.BatteryFlag & BATTERY_FLAG_NO_BATTERY) == 0) &&
@@ -113,7 +113,7 @@ static HICON DynamicLoadIcon(HINSTANCE hinst)
 }
 
 HRESULT STDMETHODCALLTYPE Power_Init(_In_ CSysTray * pSysTray)
-{ 
+{
     TRACE("Power_Init\n");
     g_hIconBattery = DynamicLoadIcon(g_hInstance);
 
@@ -213,7 +213,7 @@ ShowPowerSchemesPopupMenu(
 
     SetForegroundWindow(pSysTray->GetHWnd());
     GetCursorPos(&pt);
-    
+
     id = TrackPopupMenuEx(PowerSchemeContext.hPopup,
                           TPM_RETURNCMD | TPM_NONOTIFY | TPM_RIGHTALIGN | TPM_BOTTOMALIGN,
                           pt.x,

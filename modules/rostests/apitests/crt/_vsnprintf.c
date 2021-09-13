@@ -62,7 +62,7 @@ START_TEST(_vsnprintf)
 
 #if defined(TEST_USER32)
     EndSeh(STATUS_ACCESS_VIOLATION);
-#else 
+#else
     EndSeh(STATUS_SUCCESS);
 #endif
 

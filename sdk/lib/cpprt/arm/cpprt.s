@@ -26,7 +26,7 @@ _Target SETS "|$Target|"
 
     ; These are the same
     //DEFINE_ALIAS __CxxFrameHandler3, __CxxFrameHandler
-    
+
     ; void __cdecl operator delete(void *,struct std::nothrow_t const &)
     DEFINE_ALIAS ??3@YAXPAXABUnothrow_t@std@@@Z, ??3@YAXPAX@Z
 

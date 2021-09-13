@@ -11,11 +11,11 @@ Usage: format.com drive: [-FS:file-system] [-V:label] [-Q] [-A:size] [-C]
   -FS:file-system  Specifies the type of file system (e.g. FAT).
   -V:label         Specifies volume label.
   -Q               Performs a quick format.
-  -A:size          Overrides the default allocation unit size. 
+  -A:size          Overrides the default allocation unit size.
                    Default settings are strongly recommended for general
-                   use NTFS supports 512, 1024, 2048, 4096, 8192, 16K, 
+                   use NTFS supports 512, 1024, 2048, 4096, 8192, 16K,
                    32K, 64K. FAT supports 8192, 16K, 32K, 64K, 128K, 256K.
-                   NTFS compression is not supported for allocation 
+                   NTFS compression is not supported for allocation
                    unit sizes above 4096.
   -C               Files created on the new volume will be compressed by
                    default.

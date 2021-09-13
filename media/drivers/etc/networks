@@ -1,6 +1,6 @@
 # The ReactOS networks file
 #
-# This file contains network name/network number mappings for 
+# This file contains network name/network number mappings for
 # local networks. Network numbers are recognized in dotted decimal form.
 #
 # Format:

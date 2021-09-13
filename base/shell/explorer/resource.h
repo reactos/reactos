@@ -134,7 +134,7 @@
 
 /* Customize Notifications Dialog */
 #define IDC_TASKBARPROP_NOTIREST             1402
-#define IDC_NOTIFICATION_LIST                1005 
+#define IDC_NOTIFICATION_LIST                1005
 #define IDC_NOTIFICATION_BEHAVIOUR           1006
 
 /* Customize classic start menu dialog */

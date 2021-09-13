@@ -65,7 +65,7 @@ PUBLIC _DIB_24BPP_HLine
                          ret
 
                Align4byte:
-                         /* Align to 4-byte address */ 
+                         /* Align to 4-byte address */
                          test    al, 3
                          mov     ecx, eax
                          jz      loop1

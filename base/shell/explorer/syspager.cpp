@@ -369,7 +369,7 @@ bool CIconWatcher::AddIconToWatcher(_In_ CONST NOTIFYICONDATA *iconData)
 bool CIconWatcher::RemoveIconFromWatcher(_In_ CONST NOTIFYICONDATA *iconData)
 {
     EnterCriticalSection(&m_ListLock);
-        
+
     IconWatcherData *Icon;
     Icon = GetListEntry(iconData, NULL, true);
 
@@ -717,7 +717,7 @@ BOOL CNotifyToolbar::AddButton(_In_ CONST NOTIFYICONDATA *iconData)
     InternalIconData * notifyItem;
     WCHAR text[] = L"";
 
-    TRACE("Adding icon %d from hWnd %08x flags%s%s state%s%s", 
+    TRACE("Adding icon %d from hWnd %08x flags%s%s state%s%s",
         iconData->uID, iconData->hWnd,
         (iconData->uFlags & NIF_ICON) ? " ICON" : "",
         (iconData->uFlags & NIF_STATE) ? " STATE" : "",
@@ -1243,7 +1243,7 @@ void CNotifyToolbar::Initialize(HWND hWndParent, CBalloonQueue * queue)
 
     SetWindowTheme(m_hWnd, L"TrayNotify", NULL);
 
-    m_ImageList = ImageList_Create(GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CYSMICON), ILC_COLOR32 | ILC_MASK, 0, 1000);        
+    m_ImageList = ImageList_Create(GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CYSMICON), ILC_COLOR32 | ILC_MASK, 0, 1000);
     SetImageList(m_ImageList);
 
     TBMETRICS tbm = {sizeof(tbm)};
@@ -1292,7 +1292,7 @@ LRESULT CSysPagerWnd::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
     HWND hWndTop = GetAncestor(m_hWnd, GA_ROOT);
 
     m_Balloons.Create(hWndTop, TTS_NOPREFIX | TTS_BALLOON | TTS_CLOSE);
-        
+
     TOOLINFOW ti = { 0 };
     ti.cbSize = TTTOOLINFOW_V1_SIZE;
     ti.uFlags = TTF_TRACK | TTF_IDISHWND;
@@ -1380,7 +1380,7 @@ BOOL CSysPagerWnd::NotifyIcon(DWORD dwMessage, _In_ CONST NOTIFYICONDATA *iconDa
 void CSysPagerWnd::GetSize(IN BOOL IsHorizontal, IN PSIZE size)
 {
     /* Get the ideal height or width */
-#if 0 
+#if 0
     /* Unfortunately this doens't work correctly in ros */
     Toolbar.GetIdealSize(!IsHorizontal, size);
 

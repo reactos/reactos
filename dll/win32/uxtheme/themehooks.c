@@ -5,7 +5,7 @@
  * PURPOSE:         uxtheme user api hook functions
  * PROGRAMMER:      Giannis Adamopoulos
  */
- 
+
 #include "uxthemep.h"
 
 USERAPIHOOK g_user32ApiHook;
@@ -21,14 +21,14 @@ PWND_DATA ThemeGetWndData(HWND hWnd)
     pwndData = (PWND_DATA)GetPropW(hWnd, (LPCWSTR)MAKEINTATOM(atWndContext));
     if(pwndData == NULL)
     {
-        pwndData = HeapAlloc(GetProcessHeap(), 
-                            HEAP_ZERO_MEMORY, 
+        pwndData = HeapAlloc(GetProcessHeap(),
+                            HEAP_ZERO_MEMORY,
                             sizeof(WND_DATA));
         if(pwndData == NULL)
         {
             return NULL;
         }
-        
+
         SetPropW( hWnd, (LPCWSTR)MAKEINTATOM(atWndContext), pwndData);
     }
 
@@ -272,20 +272,20 @@ ThemeDefWindowProcW(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
 
     pwndData = (PWND_DATA)GetPropW(hWnd, (LPCWSTR)MAKEINTATOM(atWndContext));
 
-    if(!IsAppThemed() || 
+    if(!IsAppThemed() ||
        !(GetThemeAppProperties() & STAP_ALLOW_NONCLIENT) ||
        (pwndData && pwndData->HasAppDefinedRgn))
     {
-        return g_user32ApiHook.DefWindowProcW(hWnd, 
-                                            Msg, 
-                                            wParam, 
+        return g_user32ApiHook.DefWindowProcW(hWnd,
+                                            Msg,
+                                            wParam,
                                             lParam);
     }
 
-    return ThemeWndProc(hWnd, 
-                        Msg, 
-                        wParam, 
-                        lParam, 
+    return ThemeWndProc(hWnd,
+                        Msg,
+                        wParam,
+                        lParam,
                         g_user32ApiHook.DefWindowProcW);
 }
 
@@ -296,20 +296,20 @@ ThemeDefWindowProcA(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
 
     pwndData = (PWND_DATA)GetPropW(hWnd, (LPCWSTR)MAKEINTATOM(atWndContext));
 
-    if(!IsAppThemed() || 
+    if(!IsAppThemed() ||
        !(GetThemeAppProperties() & STAP_ALLOW_NONCLIENT) ||
        (pwndData && pwndData->HasAppDefinedRgn))
     {
-        return g_user32ApiHook.DefWindowProcA(hWnd, 
-                                            Msg, 
-                                            wParam, 
+        return g_user32ApiHook.DefWindowProcA(hWnd,
+                                            Msg,
+                                            wParam,
                                             lParam);
     }
 
-    return ThemeWndProc(hWnd, 
-                        Msg, 
-                        wParam, 
-                        lParam, 
+    return ThemeWndProc(hWnd,
+                        Msg,
+                        wParam,
+                        lParam,
                         g_user32ApiHook.DefWindowProcA);
 }
 
@@ -508,7 +508,7 @@ ThemeDlgPostWindowProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam, ULONG_
 
             GetDiaogTextureBrush(hTheme, hwndTarget, hdc, phbrush, Msg != WM_CTLCOLORDLG);
 
-#if 1 
+#if 1
             {
                 WCHAR controlClass[32];
                 GetClassNameW (hwndTarget, controlClass, sizeof(controlClass) / sizeof(controlClass[0]));
@@ -556,16 +556,16 @@ BOOL WINAPI ThemeGetScrollInfo(HWND hwnd, int fnBar, LPSCROLLINFO lpsi)
     if (pwndData == NULL)
         goto dodefault;
 
-    /* 
-     * Uxtheme needs to handle the tracking of the scrollbar itself 
+    /*
+     * Uxtheme needs to handle the tracking of the scrollbar itself
      * This means than if an application needs to get the track position
      * with GetScrollInfo, it will get wrong data. So uxtheme needs to
      * hook it and set the correct tracking position itself
      */
     ret = g_user32ApiHook.GetScrollInfo(hwnd, fnBar, lpsi);
-    if ( lpsi && 
+    if ( lpsi &&
         (lpsi->fMask & SIF_TRACKPOS) &&
-         pwndData->SCROLL_TrackingWin == hwnd && 
+         pwndData->SCROLL_TrackingWin == hwnd &&
          pwndData->SCROLL_TrackingBar == fnBar)
     {
         lpsi->nTrackPos = pwndData->SCROLL_TrackingVal;
@@ -603,7 +603,7 @@ dodefault:
  *      Exports
  */
 
-BOOL CALLBACK 
+BOOL CALLBACK
 ThemeInitApiHook(UAPIHK State, PUSERAPIHOOK puah)
 {
     if (!puah || State != uahLoadInit)
@@ -618,7 +618,7 @@ ThemeInitApiHook(UAPIHK State, PUSERAPIHOOK puah)
 
     /* Store the original functions from user32 */
     g_user32ApiHook = *puah;
-    
+
     puah->DefWindowProcA = ThemeDefWindowProcA;
     puah->DefWindowProcW = ThemeDefWindowProcW;
     puah->PreWndProc = ThemePreWindowProc;

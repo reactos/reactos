@@ -193,7 +193,7 @@ NtStopDriver(LPCWSTR lpService)
 
 //
 // We shouldn't be able to call this from umode.
-// Returns true if 
+// Returns true if
 //
 BOOL
 LoadVia_SystemLoadGdiDriverInformation(LPWSTR lpDriverPath)

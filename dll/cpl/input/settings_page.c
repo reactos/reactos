@@ -267,7 +267,7 @@ OnCommandSettingsPage(HWND hwndDlg, WPARAM wParam)
         case IDC_REMOVE_BUTTON:
         {
             HWND hwndList;
-            
+
             hwndList = GetDlgItem(hwndDlg, IDC_KEYLAYOUT_LIST);
 
             if (hwndList != NULL)
@@ -290,7 +290,7 @@ OnCommandSettingsPage(HWND hwndDlg, WPARAM wParam)
         case IDC_PROP_BUTTON:
         {
             HWND hwndList;
-            
+
             hwndList = GetDlgItem(hwndDlg, IDC_KEYLAYOUT_LIST);
 
             if (hwndList != NULL)
@@ -319,7 +319,7 @@ OnCommandSettingsPage(HWND hwndDlg, WPARAM wParam)
         case IDC_SET_DEFAULT:
         {
             HWND hwndList;
-            
+
             hwndList = GetDlgItem(hwndDlg, IDC_KEYLAYOUT_LIST);
 
             if (hwndList != NULL)

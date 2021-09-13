@@ -65,12 +65,12 @@ static VOID InitSettings(HWND hWndDlg)
         if (!pOglDrivers)
             dwNumDrivers = 0;
 
-        for (iKey = 0; iKey < dwNumDrivers; iKey++) 
-        { 
+        for (iKey = 0; iKey < dwNumDrivers; iKey++)
+        {
             dwSize = MAX_KEY_LENGTH;
             ret = RegEnumKeyEx(hKeyDrivers, iKey, szBuffer, &dwSize, NULL, NULL, NULL, NULL);
 
-            if (ret != ERROR_SUCCESS) 
+            if (ret != ERROR_SUCCESS)
                 break;
 
             /* Mind the null terminator */

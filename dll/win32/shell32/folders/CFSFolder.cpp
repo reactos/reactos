@@ -261,32 +261,32 @@ HRESULT CFSExtractIcon_CreateInstance(IShellFolder * psf, LPCITEMIDLIST pidl, RE
 
     if (_ILIsFolder (pidl))
     {
-        if (SUCCEEDED(getIconLocationForFolder(psf, 
+        if (SUCCEEDED(getIconLocationForFolder(psf,
                           pidl, 0, wTemp, _countof(wTemp),
                           &icon_idx,
                           &flags)))
         {
             initIcon->SetNormalIcon(wTemp, icon_idx);
-            // FIXME: if/when getIconLocationForFolder does something for 
+            // FIXME: if/when getIconLocationForFolder does something for
             //        GIL_FORSHORTCUT, code below should be uncommented. and
             //        the following line removed.
             initIcon->SetShortcutIcon(wTemp, icon_idx);
         }
-        if (SUCCEEDED(getIconLocationForFolder(psf, 
+        if (SUCCEEDED(getIconLocationForFolder(psf,
                           pidl, GIL_DEFAULTICON, wTemp, _countof(wTemp),
                           &icon_idx,
                           &flags)))
         {
             initIcon->SetDefaultIcon(wTemp, icon_idx);
         }
-        // if (SUCCEEDED(getIconLocationForFolder(psf, 
+        // if (SUCCEEDED(getIconLocationForFolder(psf,
         //                   pidl, GIL_FORSHORTCUT, wTemp, _countof(wTemp),
         //                   &icon_idx,
         //                   &flags)))
         // {
         //     initIcon->SetShortcutIcon(wTemp, icon_idx);
         // }
-        if (SUCCEEDED(getIconLocationForFolder(psf, 
+        if (SUCCEEDED(getIconLocationForFolder(psf,
                           pidl, GIL_OPENICON, wTemp, _countof(wTemp),
                           &icon_idx,
                           &flags)))
@@ -773,7 +773,7 @@ HRESULT WINAPI CFSFolder::ParseDisplayName(HWND hwndOwner,
         if (pidlTemp != NULL)
         {
             /* We are creating an id list without ensuring that the items exist.
-               If we have a remaining path, this must be a folder. 
+               If we have a remaining path, this must be a folder.
                We have to do it now because it is set as a file by default */
             if (szNext)
             {
@@ -965,7 +965,7 @@ HRESULT WINAPI CFSFolder::CompareIDs(LPARAM lParam,
         case 2: /* Type */
             pExtension1 = PathFindExtensionW(pDataW1->wszName);
             pExtension2 = PathFindExtensionW(pDataW2->wszName);
-            result = wcsicmp(pExtension1, pExtension2); 
+            result = wcsicmp(pExtension1, pExtension2);
             break;
         case 3: /* Size */
             if (pData1->u.file.dwFileSize > pData2->u.file.dwFileSize)
@@ -1210,7 +1210,7 @@ HRESULT WINAPI CFSFolder::GetUIObjectOf(HWND hwndOwner,
         }
         else if (IsEqualIID (riid, IID_IDataObject))
         {
-            if (cidl >= 1) 
+            if (cidl >= 1)
             {
                 hr = IDataObject_Constructor (hwndOwner, m_pidlRoot, apidl, cidl, TRUE, (IDataObject **)&pObj);
             }
@@ -1331,7 +1331,7 @@ HRESULT WINAPI CFSFolder::GetDisplayNameOf(PCUITEMID_CHILD pidl,
     else if (pidl && !pidl->mkid.cb) /* empty pidl */
     {
         /* If it is an empty pidl return only the path of the folder */
-        if ((GET_SHGDN_FOR(dwFlags) & SHGDN_FORPARSING) && 
+        if ((GET_SHGDN_FOR(dwFlags) & SHGDN_FORPARSING) &&
             (GET_SHGDN_RELATION(dwFlags) != SHGDN_INFOLDER) &&
             m_sPathTarget)
         {
@@ -1339,7 +1339,7 @@ HRESULT WINAPI CFSFolder::GetDisplayNameOf(PCUITEMID_CHILD pidl,
         }
         return E_INVALIDARG;
     }
-    
+
     int len = 0;
     LPWSTR pszPath = (LPWSTR)CoTaskMemAlloc((MAX_PATH + 1) * sizeof(WCHAR));
     if (!pszPath)
@@ -1709,7 +1709,7 @@ HRESULT CFSFolder::_CreateExtensionUIObject(PCUIDLIST_RELATIVE pidl, REFIID riid
     return S_OK;
 }
 
-HRESULT CFSFolder::_GetDropTarget(LPCITEMIDLIST pidl, LPVOID *ppvOut) 
+HRESULT CFSFolder::_GetDropTarget(LPCITEMIDLIST pidl, LPVOID *ppvOut)
 {
     HRESULT hr;
 
@@ -1737,7 +1737,7 @@ HRESULT CFSFolder::_GetDropTarget(LPCITEMIDLIST pidl, LPVOID *ppvOut)
     return S_OK;
 }
 
-HRESULT CFSFolder::_GetIconHandler(LPCITEMIDLIST pidl, REFIID riid, LPVOID *ppvOut) 
+HRESULT CFSFolder::_GetIconHandler(LPCITEMIDLIST pidl, REFIID riid, LPVOID *ppvOut)
 {
     CLSID clsid;
     HRESULT hr;

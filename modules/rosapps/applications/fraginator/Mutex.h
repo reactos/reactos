@@ -63,9 +63,9 @@ public:
     }
 
 
-    bool IsLocked (void)  
-    { 
-        return (Locked); 
+    bool IsLocked (void)
+    {
+        return (Locked);
     }
 
 protected:

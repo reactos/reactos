@@ -93,7 +93,7 @@ HRESULT STDMETHODCALLTYPE CRegistryFolderExtractIcon::Extract(
     return SHDefExtractIconW(pszFile, nIconIndex, 0, phiconLarge, phiconSmall, nIconSize);
 }
 
-// CRegistryFolder 
+// CRegistryFolder
 
 CRegistryFolder::CRegistryFolder()
 {

@@ -320,7 +320,6 @@ BOOL CInstalledApps::Enum(INT EnumType, APPENUMPROC lpEnumProc, PVOID param)
         szKeyName.ReleaseBuffer();
         RegCloseKey(hKey);
     }
-    
 
     return TRUE;
 }
