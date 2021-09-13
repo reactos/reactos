@@ -724,8 +724,8 @@ LRESULT WINAPI ImmEscapeA(HKL hKL, HIMC hIMC, UINT uSubFunc, LPVOID lpData)
         case IME_ESC_HANJA_MODE:
             cch = MultiByteToWideChar(pImeDpi->uCodePage, MB_PRECOMPOSED,
                                       lpData, -1, szW, _countof(szW));
-            if (cch > MAX_IMM_FILENAME - 1)
-                cch = MAX_IMM_FILENAME - 1;
+            if (cch > _countof(szW) - 1)
+                cch = _countof(szW) - 1;
             szW[cch] = 0;
             ret = pImeDpi->ImeEscape(hIMC, uSubFunc, szW);
             break;
@@ -804,8 +804,8 @@ LRESULT WINAPI ImmEscapeW(HKL hKL, HIMC hIMC, UINT uSubFunc, LPVOID lpData)
         case IME_ESC_HANJA_MODE:
             cch = WideCharToMultiByte(pImeDpi->uCodePage, 0,
                                       lpData, -1, szA, _countof(szA), NULL, NULL);
-            if (cch > MAX_IMM_FILENAME - 1)
-                cch = MAX_IMM_FILENAME - 1;
+            if (cch > _countof(szA) - 1)
+                cch = _countof(szA) - 1;
             szA[cch] = 0;
             ret = pImeDpi->ImeEscape(hIMC, uSubFunc, szA);
             break;
