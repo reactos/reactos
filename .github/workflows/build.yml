@@ -173,13 +173,7 @@ jobs:
     steps:
     - name: Install ninja
       run: choco install -y ninja
-    - name: Install LLVM (x86)
-      if: ${{ matrix.arch == 'i386' }}
-      run: |
-        choco install --x86 -y llvm
-        echo "LLVM_PATH=${env:PROGRAMFILES(X86)}\llvm\bin" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-    - name: Install LLVM (amd64)
-      if: ${{ matrix.arch == 'amd64' }}
+    - name: Install LLVM
       run: |
         choco install -y llvm
         echo "LLVM_PATH=${env:PROGRAMFILES}\llvm\bin" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
