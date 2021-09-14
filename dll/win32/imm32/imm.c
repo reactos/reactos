@@ -384,7 +384,7 @@ BOOL WINAPI ImmAssociateContextEx(HWND hWnd, HIMC hIMC, DWORD dwFlags)
 {
     HWND hwndFocus;
     PWND pFocusWnd;
-    HIMC hOldIMC;
+    HIMC hOldIMC = NULL;
     DWORD dwValue;
 
     TRACE("(%p, %p, 0x%lX)\n", hWnd, hIMC, dwFlags);
@@ -399,8 +399,6 @@ BOOL WINAPI ImmAssociateContextEx(HWND hWnd, HIMC hIMC, DWORD dwFlags)
     pFocusWnd = ValidateHwndNoErr(hwndFocus);
     if (pFocusWnd)
         hOldIMC = pFocusWnd->hImc;
-    else
-        hOldIMC = NULL;
 
     dwValue = NtUserAssociateInputContext(hWnd, hIMC, dwFlags);
     switch (dwValue)
@@ -409,15 +407,11 @@ BOOL WINAPI ImmAssociateContextEx(HWND hWnd, HIMC hIMC, DWORD dwFlags)
             return TRUE;
 
         case 1:
-            pFocusWnd = ValidateHwndNoErr(hwndFocus);
-            if (pFocusWnd)
+            hIMC = pFocusWnd->hImc;
+            if (hIMC != hOldIMC)
             {
-                hIMC = pFocusWnd->hImc;
-                if (hIMC != hOldIMC)
-                {
-                    ImmSetActiveContext(hwndFocus, hOldIMC, FALSE);
-                    ImmSetActiveContext(hwndFocus, hIMC, TRUE);
-                }
+                ImmSetActiveContext(hwndFocus, hOldIMC, FALSE);
+                ImmSetActiveContext(hwndFocus, hIMC, TRUE);
             }
             return TRUE;
 
