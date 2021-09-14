@@ -287,7 +287,6 @@ ImeDpi_Escape(PIMEDPI pImeDpi, HIMC hIMC, UINT uSubFunc, LPVOID lpData, HKL hKL)
         if (pImeDpi->CtfImeEscapeEx)
             return pImeDpi->CtfImeEscapeEx(hIMC, uSubFunc, lpData, hKL);
     }
-
     return 0;
 }
 
@@ -768,7 +767,7 @@ LRESULT WINAPI ImmEscapeW(HKL hKL, HIMC hIMC, UINT uSubFunc, LPVOID lpData)
 
     pImeDpi = ImmLockOrLoadImeDpi(hKL);
     if (!pImeDpi)
-        return ret;
+        return 0;
 
     if ((pImeDpi->ImeInfo.fdwProperty & IME_PROP_UNICODE) || !lpData)
     {
