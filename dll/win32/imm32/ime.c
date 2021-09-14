@@ -669,7 +669,7 @@ DWORD WINAPI ImmGetProperty(HKL hKL, DWORD fdwIndex)
  */
 LRESULT WINAPI ImmEscapeA(HKL hKL, HIMC hIMC, UINT uSubFunc, LPVOID lpData)
 {
-    LRESULT ret = 0;
+    LRESULT ret;
     PIMEDPI pImeDpi;
     INT cch;
     CHAR szA[MAX_IMM_FILENAME];
@@ -756,7 +756,7 @@ LRESULT WINAPI ImmEscapeA(HKL hKL, HIMC hIMC, UINT uSubFunc, LPVOID lpData)
  */
 LRESULT WINAPI ImmEscapeW(HKL hKL, HIMC hIMC, UINT uSubFunc, LPVOID lpData)
 {
-    LRESULT ret = 0;
+    LRESULT ret;
     PIMEDPI pImeDpi;
     INT cch;
     CHAR szA[MAX_IMM_FILENAME];
