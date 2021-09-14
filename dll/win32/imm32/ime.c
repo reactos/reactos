@@ -276,8 +276,8 @@ PIMEDPI APIENTRY ImmLockOrLoadImeDpi(HKL hKL)
     return pImeDpi;
 }
 
-static LRESULT
-ImeDpi_Escape(PIMEDPI pImeDpi, HKL hKL, HIMC hIMC, UINT uSubFunc, LPVOID lpData)
+static LRESULT APIENTRY
+ImeDpi_Escape(PIMEDPI pImeDpi, HIMC hIMC, UINT uSubFunc, LPVOID lpData, HKL hKL)
 {
     if (IS_IME_HKL(hKL))
         return pImeDpi->ImeEscape(hIMC, uSubFunc, lpData);
@@ -684,7 +684,7 @@ LRESULT WINAPI ImmEscapeA(HKL hKL, HIMC hIMC, UINT uSubFunc, LPVOID lpData)
 
     if (!(pImeDpi->ImeInfo.fdwProperty & IME_PROP_UNICODE) || !lpData)
     {
-        ret = ImeDpi_Escape(pImeDpi, hKL, hIMC, uSubFunc, lpData);
+        ret = ImeDpi_Escape(pImeDpi, hIMC, uSubFunc, lpData, hKL);
         ImmUnlockImeDpi(pImeDpi);
         return ret;
     }
@@ -692,7 +692,7 @@ LRESULT WINAPI ImmEscapeA(HKL hKL, HIMC hIMC, UINT uSubFunc, LPVOID lpData)
     switch (uSubFunc)
     {
         case IME_ESC_SEQUENCE_TO_INTERNAL:
-            ret = ImeDpi_Escape(pImeDpi, hKL, hIMC, uSubFunc, lpData);
+            ret = ImeDpi_Escape(pImeDpi, hIMC, uSubFunc, lpData, hKL);
 
             cch = 0;
             if (HIWORD(ret))
@@ -725,7 +725,7 @@ LRESULT WINAPI ImmEscapeA(HKL hKL, HIMC hIMC, UINT uSubFunc, LPVOID lpData)
         case IME_ESC_GET_EUDC_DICTIONARY:
         case IME_ESC_IME_NAME:
         case IME_ESC_GETHELPFILENAME:
-            ret = ImeDpi_Escape(pImeDpi, hKL, hIMC, uSubFunc, szW);
+            ret = ImeDpi_Escape(pImeDpi, hIMC, uSubFunc, szW, hKL);
             if (ret)
             {
                 szW[_countof(szW) - 1] = 0;
@@ -740,11 +740,11 @@ LRESULT WINAPI ImmEscapeA(HKL hKL, HIMC hIMC, UINT uSubFunc, LPVOID lpData)
             MultiByteToWideChar(pImeDpi->uCodePage, MB_PRECOMPOSED,
                                 lpData, -1, szW, _countof(szW));
             szW[_countof(szW) - 1] = 0;
-            ret = ImeDpi_Escape(pImeDpi, hKL, hIMC, uSubFunc, szW);
+            ret = ImeDpi_Escape(pImeDpi, hIMC, uSubFunc, szW, hKL);
             break;
 
         default:
-            ret = ImeDpi_Escape(pImeDpi, hKL, hIMC, uSubFunc, lpData);
+            ret = ImeDpi_Escape(pImeDpi, hIMC, uSubFunc, lpData, hKL);
             break;
     }
 
@@ -772,7 +772,7 @@ LRESULT WINAPI ImmEscapeW(HKL hKL, HIMC hIMC, UINT uSubFunc, LPVOID lpData)
 
     if ((pImeDpi->ImeInfo.fdwProperty & IME_PROP_UNICODE) || !lpData)
     {
-        ret = ImeDpi_Escape(pImeDpi, hKL, hIMC, uSubFunc, lpData);
+        ret = ImeDpi_Escape(pImeDpi, hIMC, uSubFunc, lpData, hKL);
         ImmUnlockImeDpi(pImeDpi);
         return ret;
     }
@@ -780,7 +780,7 @@ LRESULT WINAPI ImmEscapeW(HKL hKL, HIMC hIMC, UINT uSubFunc, LPVOID lpData)
     switch (uSubFunc)
     {
         case IME_ESC_SEQUENCE_TO_INTERNAL:
-            ret = ImeDpi_Escape(pImeDpi, hKL, hIMC, uSubFunc, lpData);
+            ret = ImeDpi_Escape(pImeDpi, hIMC, uSubFunc, lpData, hKL);
 
             w = LOWORD(ret);
             cch = 0;
@@ -802,7 +802,7 @@ LRESULT WINAPI ImmEscapeW(HKL hKL, HIMC hIMC, UINT uSubFunc, LPVOID lpData)
         case IME_ESC_GET_EUDC_DICTIONARY:
         case IME_ESC_IME_NAME:
         case IME_ESC_GETHELPFILENAME:
-            ret = ImeDpi_Escape(pImeDpi, hKL, hIMC, uSubFunc, szA);
+            ret = ImeDpi_Escape(pImeDpi, hIMC, uSubFunc, szA, hKL);
             if (ret)
             {
                 szA[_countof(szA) - 1] = 0;
@@ -817,11 +817,11 @@ LRESULT WINAPI ImmEscapeW(HKL hKL, HIMC hIMC, UINT uSubFunc, LPVOID lpData)
             WideCharToMultiByte(pImeDpi->uCodePage, 0,
                                 lpData, -1, szA, _countof(szA), NULL, NULL);
             szA[_countof(szA) - 1] = 0;
-            ret = ImeDpi_Escape(pImeDpi, hKL, hIMC, uSubFunc, szA);
+            ret = ImeDpi_Escape(pImeDpi, hIMC, uSubFunc, szA, hKL);
             break;
 
         default:
-            ret = ImeDpi_Escape(pImeDpi, hKL, hIMC, uSubFunc, lpData);
+            ret = ImeDpi_Escape(pImeDpi, hIMC, uSubFunc, lpData, hKL);
             break;
     }
 
