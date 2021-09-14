@@ -713,21 +713,18 @@ LRESULT WINAPI ImmEscapeA(HKL hKL, HIMC hIMC, UINT uSubFunc, LPVOID lpData)
             ret = pImeDpi->ImeEscape(hIMC, uSubFunc, szW);
             if (ret)
             {
-                cch = WideCharToMultiByte(pImeDpi->uCodePage, 0, szW, -1,
-                                          lpData, MAX_IMM_FILENAME, NULL, NULL);
-                if (cch > MAX_IMM_FILENAME - 1)
-                    cch = MAX_IMM_FILENAME - 1;
-                ((LPSTR)lpData)[cch] = 0;
+                szW[_countof(szW) - 1] = 0;
+                WideCharToMultiByte(pImeDpi->uCodePage, 0, szW, -1,
+                                    lpData, MAX_IMM_FILENAME, NULL, NULL);
+                ((LPSTR)lpData)[MAX_IMM_FILENAME - 1] = 0;
             }
             break;
 
         case IME_ESC_SET_EUDC_DICTIONARY:
         case IME_ESC_HANJA_MODE:
-            cch = MultiByteToWideChar(pImeDpi->uCodePage, MB_PRECOMPOSED,
-                                      lpData, -1, szW, _countof(szW));
-            if (cch > _countof(szW) - 1)
-                cch = _countof(szW) - 1;
-            szW[cch] = 0;
+            MultiByteToWideChar(pImeDpi->uCodePage, MB_PRECOMPOSED,
+                                lpData, -1, szW, _countof(szW));
+            szW[_countof(szW) - 1] = 0;
             ret = pImeDpi->ImeEscape(hIMC, uSubFunc, szW);
             break;
 
@@ -793,21 +790,18 @@ LRESULT WINAPI ImmEscapeW(HKL hKL, HIMC hIMC, UINT uSubFunc, LPVOID lpData)
             ret = pImeDpi->ImeEscape(hIMC, uSubFunc, szA);
             if (ret)
             {
-                cch = MultiByteToWideChar(pImeDpi->uCodePage, MB_PRECOMPOSED,
-                                          szA, -1, lpData, MAX_IMM_FILENAME);
-                if (cch > MAX_IMM_FILENAME - 1)
-                    cch = MAX_IMM_FILENAME - 1;
-                ((LPWSTR)lpData)[cch] = 0;
+                szA[_countof(szA) - 1] = 0;
+                MultiByteToWideChar(pImeDpi->uCodePage, MB_PRECOMPOSED,
+                                    szA, -1, lpData, MAX_IMM_FILENAME);
+                ((LPWSTR)lpData)[MAX_IMM_FILENAME - 1] = 0;
             }
             break;
 
         case IME_ESC_SET_EUDC_DICTIONARY:
         case IME_ESC_HANJA_MODE:
-            cch = WideCharToMultiByte(pImeDpi->uCodePage, 0,
-                                      lpData, -1, szA, _countof(szA), NULL, NULL);
-            if (cch > _countof(szA) - 1)
-                cch = _countof(szA) - 1;
-            szA[cch] = 0;
+            WideCharToMultiByte(pImeDpi->uCodePage, 0,
+                                lpData, -1, szA, _countof(szA), NULL, NULL);
+            szA[_countof(szA) - 1] = 0;
             ret = pImeDpi->ImeEscape(hIMC, uSubFunc, szA);
             break;
 
