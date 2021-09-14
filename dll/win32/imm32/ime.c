@@ -276,6 +276,21 @@ PIMEDPI APIENTRY ImmLockOrLoadImeDpi(HKL hKL)
     return pImeDpi;
 }
 
+static LRESULT
+ImeDpi_Escape(PIMEDPI pImeDpi, HKL hKL, HIMC hIMC, UINT uSubFunc, LPVOID lpData)
+{
+    if (IS_IME_HKL(hKL))
+        return pImeDpi->ImeEscape(hIMC, uSubFunc, lpData);
+
+    if (g_psi && (g_psi->dwSRVIFlags & SRVINFO_CICERO_ENABLED))
+    {
+        if (pImeDpi->CtfImeEscapeEx)
+            return pImeDpi->CtfImeEscapeEx(hIMC, uSubFunc, lpData, hKL);
+    }
+
+    return 0;
+}
+
 /***********************************************************************
  *		ImmIsIME (IMM32.@)
  */
@@ -669,7 +684,7 @@ LRESULT WINAPI ImmEscapeA(HKL hKL, HIMC hIMC, UINT uSubFunc, LPVOID lpData)
 
     if (!(pImeDpi->ImeInfo.fdwProperty & IME_PROP_UNICODE) || !lpData)
     {
-        ret = pImeDpi->ImeEscape(hIMC, uSubFunc, lpData);
+        ret = ImeDpi_Escape(pImeDpi, hKL, hIMC, uSubFunc, lpData);
         ImmUnlockImeDpi(pImeDpi);
         return ret;
     }
@@ -677,7 +692,7 @@ LRESULT WINAPI ImmEscapeA(HKL hKL, HIMC hIMC, UINT uSubFunc, LPVOID lpData)
     switch (uSubFunc)
     {
         case IME_ESC_SEQUENCE_TO_INTERNAL:
-            ret = pImeDpi->ImeEscape(hIMC, uSubFunc, lpData);
+            ret = ImeDpi_Escape(pImeDpi, hKL, hIMC, uSubFunc, lpData);
 
             cch = 0;
             if (HIWORD(ret))
@@ -710,7 +725,7 @@ LRESULT WINAPI ImmEscapeA(HKL hKL, HIMC hIMC, UINT uSubFunc, LPVOID lpData)
         case IME_ESC_GET_EUDC_DICTIONARY:
         case IME_ESC_IME_NAME:
         case IME_ESC_GETHELPFILENAME:
-            ret = pImeDpi->ImeEscape(hIMC, uSubFunc, szW);
+            ret = ImeDpi_Escape(pImeDpi, hKL, hIMC, uSubFunc, szW);
             if (ret)
             {
                 szW[_countof(szW) - 1] = 0;
@@ -725,11 +740,11 @@ LRESULT WINAPI ImmEscapeA(HKL hKL, HIMC hIMC, UINT uSubFunc, LPVOID lpData)
             MultiByteToWideChar(pImeDpi->uCodePage, MB_PRECOMPOSED,
                                 lpData, -1, szW, _countof(szW));
             szW[_countof(szW) - 1] = 0;
-            ret = pImeDpi->ImeEscape(hIMC, uSubFunc, szW);
+            ret = ImeDpi_Escape(pImeDpi, hKL, hIMC, uSubFunc, szW);
             break;
 
         default:
-            ret = pImeDpi->ImeEscape(hIMC, uSubFunc, lpData);
+            ret = ImeDpi_Escape(pImeDpi, hKL, hIMC, uSubFunc, lpData);
             break;
     }
 
@@ -757,7 +772,7 @@ LRESULT WINAPI ImmEscapeW(HKL hKL, HIMC hIMC, UINT uSubFunc, LPVOID lpData)
 
     if ((pImeDpi->ImeInfo.fdwProperty & IME_PROP_UNICODE) || !lpData)
     {
-        ret = pImeDpi->ImeEscape(hIMC, uSubFunc, lpData);
+        ret = ImeDpi_Escape(pImeDpi, hKL, hIMC, uSubFunc, lpData);
         ImmUnlockImeDpi(pImeDpi);
         return ret;
     }
@@ -765,7 +780,7 @@ LRESULT WINAPI ImmEscapeW(HKL hKL, HIMC hIMC, UINT uSubFunc, LPVOID lpData)
     switch (uSubFunc)
     {
         case IME_ESC_SEQUENCE_TO_INTERNAL:
-            ret = pImeDpi->ImeEscape(hIMC, uSubFunc, lpData);
+            ret = ImeDpi_Escape(pImeDpi, hKL, hIMC, uSubFunc, lpData);
 
             w = LOWORD(ret);
             cch = 0;
@@ -787,7 +802,7 @@ LRESULT WINAPI ImmEscapeW(HKL hKL, HIMC hIMC, UINT uSubFunc, LPVOID lpData)
         case IME_ESC_GET_EUDC_DICTIONARY:
         case IME_ESC_IME_NAME:
         case IME_ESC_GETHELPFILENAME:
-            ret = pImeDpi->ImeEscape(hIMC, uSubFunc, szA);
+            ret = ImeDpi_Escape(pImeDpi, hKL, hIMC, uSubFunc, szA);
             if (ret)
             {
                 szA[_countof(szA) - 1] = 0;
@@ -802,11 +817,11 @@ LRESULT WINAPI ImmEscapeW(HKL hKL, HIMC hIMC, UINT uSubFunc, LPVOID lpData)
             WideCharToMultiByte(pImeDpi->uCodePage, 0,
                                 lpData, -1, szA, _countof(szA), NULL, NULL);
             szA[_countof(szA) - 1] = 0;
-            ret = pImeDpi->ImeEscape(hIMC, uSubFunc, szA);
+            ret = ImeDpi_Escape(pImeDpi, hKL, hIMC, uSubFunc, szA);
             break;
 
         default:
-            ret = pImeDpi->ImeEscape(hIMC, uSubFunc, lpData);
+            ret = ImeDpi_Escape(pImeDpi, hKL, hIMC, uSubFunc, lpData);
             break;
     }
 
