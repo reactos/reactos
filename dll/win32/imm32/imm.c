@@ -430,16 +430,6 @@ BOOL WINAPI ImmDestroyContext(HIMC hIMC)
     return Imm32CleanupContext(hIMC, hKL, FALSE);
 }
 
-static inline BOOL EscapeRequiresWA(UINT uEscape)
-{
-    if (uEscape == IME_ESC_GET_EUDC_DICTIONARY ||
-        uEscape == IME_ESC_SET_EUDC_DICTIONARY ||
-        uEscape == IME_ESC_IME_NAME ||
-        uEscape == IME_ESC_GETHELPFILENAME)
-        return TRUE;
-    return FALSE;
-}
-
 static PCLIENTIMC APIENTRY Imm32GetClientImcCache(void)
 {
     // FIXME: Do something properly here
