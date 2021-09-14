@@ -11,10 +11,7 @@ DBG_DEFAULT_CHANNEL(UserMisc);
 
 DWORD
 APIENTRY
-NtUserAssociateInputContext(
-    DWORD dwUnknown1,
-    DWORD dwUnknown2,
-    DWORD dwUnknown3)
+NtUserAssociateInputContext(HWND hWnd, HIMC hIMC, DWORD dwFlags)
 {
     STUB
     return 0;

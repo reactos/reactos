@@ -1317,10 +1317,7 @@ C_ASSERT(sizeof(CLIENTIMC) == 0x34);
 
 DWORD
 NTAPI
-NtUserAssociateInputContext(
-    DWORD dwUnknown1,
-    DWORD dwUnknown2,
-    DWORD dwUnknown3);
+NtUserAssociateInputContext(HWND hWnd, HIMC hIMC, DWORD dwFlags);
 
 NTSTATUS
 NTAPI

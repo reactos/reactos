@@ -627,6 +627,7 @@ BOOL WINAPI ImmConfigureIMEW(_In_ HKL, _In_ HWND, _In_ DWORD, _In_ LPVOID);
 #define ImmConfigureIME WINELIB_NAME_AW(ImmConfigureIME)
 
 HIMC WINAPI ImmCreateContext(void);
+BOOL WINAPI ImmSetActiveContext(HWND hwnd, HIMC hIMC, BOOL fFlag);
 BOOL WINAPI ImmDestroyContext(_In_ HIMC hIMC);
 BOOL WINAPI ImmDisableIME(_In_ DWORD idThread);
 BOOL WINAPI ImmEnumInputContext(_In_ DWORD, _In_ IMCENUMPROC, _In_ LPARAM);

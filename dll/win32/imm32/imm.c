@@ -377,48 +377,52 @@ HIMC WINAPI ImmAssociateContext(HWND hWnd, HIMC hIMC)
     return old;
 }
 
-/*
- * Helper function for ImmAssociateContextEx
- */
-static BOOL CALLBACK _ImmAssociateContextExEnumProc(HWND hwnd, LPARAM lParam)
-{
-    HIMC hImc = (HIMC)lParam;
-    ImmAssociateContext(hwnd,hImc);
-    return TRUE;
-}
-
 /***********************************************************************
  *              ImmAssociateContextEx (IMM32.@)
  */
 BOOL WINAPI ImmAssociateContextEx(HWND hWnd, HIMC hIMC, DWORD dwFlags)
 {
-    TRACE("(%p, %p, 0x%x):\n", hWnd, hIMC, dwFlags);
+    HWND hwndFocus;
+    PWND pFocusWnd;
+    HIMC hOldIMC;
+    DWORD dwValue;
 
-    if (!hWnd)
+    TRACE("(%p, %p, 0x%lX)\n", hWnd, hIMC, dwFlags);
+
+    if (!g_psi || !(g_psi->dwSRVIFlags & SRVINFO_IMM32))
         return FALSE;
 
-    switch (dwFlags)
-    {
-    case 0:
-        ImmAssociateContext(hWnd,hIMC);
-        return TRUE;
-    case IACE_DEFAULT:
-    {
-        HIMC defaultContext = get_default_context( hWnd );
-        if (!defaultContext) return FALSE;
-        ImmAssociateContext(hWnd,defaultContext);
-        return TRUE;
-    }
-    case IACE_IGNORENOCONTEXT:
-        if (GetPropW(hWnd,szwWineIMCProperty))
-            ImmAssociateContext(hWnd,hIMC);
-        return TRUE;
-    case IACE_CHILDREN:
-        EnumChildWindows(hWnd,_ImmAssociateContextExEnumProc,(LPARAM)hIMC);
-        return TRUE;
-    default:
-        FIXME("Unknown dwFlags 0x%x\n",dwFlags);
+    if (hIMC && !(dwFlags & IACE_DEFAULT) && Imm32IsCrossThreadAccess(hIMC))
         return FALSE;
+
+    hwndFocus = (HWND)NtUserQueryWindow(hWnd, QUERY_WINDOW_FOCUS);
+    pFocusWnd = ValidateHwndNoErr(hwndFocus);
+    if (pFocusWnd)
+        hOldIMC = pFocusWnd->hImc;
+    else
+        hOldIMC = NULL;
+
+    dwValue = NtUserAssociateInputContext(hWnd, hIMC, dwFlags);
+    switch (dwValue)
+    {
+        case 0:
+            return TRUE;
+
+        case 1:
+            pFocusWnd = ValidateHwndNoErr(hwndFocus);
+            if (pFocusWnd)
+            {
+                hIMC = pFocusWnd->hImc;
+                if (hIMC != hOldIMC)
+                {
+                    ImmSetActiveContext(hwndFocus, hOldIMC, FALSE);
+                    ImmSetActiveContext(hwndFocus, hIMC, TRUE);
+                }
+            }
+            return TRUE;
+
+        default:
+            return FALSE;
     }
 }
 
