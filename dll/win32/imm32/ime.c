@@ -761,7 +761,7 @@ LRESULT WINAPI ImmEscapeW(HKL hKL, HIMC hIMC, UINT uSubFunc, LPVOID lpData)
     INT cch;
     CHAR szA[MAX_IMM_FILENAME];
     WCHAR szW[MAX_IMM_FILENAME];
-    WORD w;
+    WORD word;
 
     TRACE("(%p, %p, %u, %p)\n", hKL, hIMC, uSubFunc, lpData);
 
@@ -781,12 +781,12 @@ LRESULT WINAPI ImmEscapeW(HKL hKL, HIMC hIMC, UINT uSubFunc, LPVOID lpData)
         case IME_ESC_SEQUENCE_TO_INTERNAL:
             ret = ImeDpi_Escape(pImeDpi, hIMC, uSubFunc, lpData, hKL);
 
-            w = LOWORD(ret);
+            word = LOWORD(ret);
             cch = 0;
-            if (HIBYTE(w))
-                szA[cch++] = HIBYTE(w);
-            if (LOBYTE(w))
-                szA[cch++] = LOBYTE(w);
+            if (HIBYTE(word))
+                szA[cch++] = HIBYTE(word);
+            if (LOBYTE(word))
+                szA[cch++] = LOBYTE(word);
 
             cch = MultiByteToWideChar(pImeDpi->uCodePage, MB_PRECOMPOSED,
                                       szA, cch, szW, _countof(szW));
