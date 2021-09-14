@@ -407,11 +407,15 @@ BOOL WINAPI ImmAssociateContextEx(HWND hWnd, HIMC hIMC, DWORD dwFlags)
             return TRUE;
 
         case 1:
-            hIMC = pFocusWnd->hImc;
-            if (hIMC != hOldIMC)
+            pFocusWnd = ValidateHwndNoErr(hwndFocus);
+            if (pFocusWnd)
             {
-                ImmSetActiveContext(hwndFocus, hOldIMC, FALSE);
-                ImmSetActiveContext(hwndFocus, hIMC, TRUE);
+                hIMC = pFocusWnd->hImc;
+                if (hIMC != hOldIMC)
+                {
+                    ImmSetActiveContext(hwndFocus, hOldIMC, FALSE);
+                    ImmSetActiveContext(hwndFocus, hIMC, TRUE);
+                }
             }
             return TRUE;
 
