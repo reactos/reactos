@@ -926,10 +926,10 @@ OFFSET(IbWow64CfgBitMap, PS_SYSTEM_DLL_INIT_BLOCK, Wow64CfgBitMap),
 OFFSET(IbMitigationOptionsMap, PS_SYSTEM_DLL_INIT_BLOCK, MitigationOptionsMap),
 
 HEADER("Extended context"),
-OFFSET(CxxLegacyOffset 0x8
-OFFSET(CxxLegacyLength 0xc
-OFFSET(CxxXStateOffset 0x10
-OFFSET(CxxXStateLength 0x14
+OFFSET(CxxLegacyOffset 0x8),
+OFFSET(CxxLegacyLength 0xc),
+OFFSET(CxxXStateOffset 0x10),
+OFFSET(CxxXStateLength 0x14),
 
 HEADER("Enclave call dispatch frame"),
 OFFSET(EcEnclaveNumber, ???, EnclaveNumber),
