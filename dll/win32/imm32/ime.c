@@ -221,7 +221,7 @@ PIMEDPI APIENTRY Ime32LoadImeDpi(HKL hKL, BOOL bLock)
 
     if (!Imm32LoadImeInfo(&ImeInfoEx, pImeDpiNew))
     {
-        HeapFree(g_hImm32Heap, 0, pImeDpiNew);
+        Imm32HeapFree(pImeDpiNew);
         return FALSE;
     }
 
@@ -236,7 +236,7 @@ PIMEDPI APIENTRY Ime32LoadImeDpi(HKL hKL, BOOL bLock)
         RtlLeaveCriticalSection(&g_csImeDpi);
 
         Imm32FreeImeDpi(pImeDpiNew, FALSE);
-        HeapFree(g_hImm32Heap, 0, pImeDpiNew);
+        Imm32HeapFree(pImeDpiNew);
         return pImeDpiFound;
     }
     else
@@ -477,7 +477,7 @@ VOID WINAPI ImmUnlockImeDpi(PIMEDPI pImeDpi)
     }
 
     Imm32FreeImeDpi(pImeDpi, TRUE);
-    HeapFree(g_hImm32Heap, 0, pImeDpi);
+    Imm32HeapFree(pImeDpi);
 
     RtlLeaveCriticalSection(&g_csImeDpi);
 }
@@ -1229,9 +1229,9 @@ ImmGetConversionListA(HKL hKL, HIMC hIMC, LPCSTR pSrc, LPCANDIDATELIST lpDst,
 
 Quit:
     if (pszSrcW)
-        HeapFree(g_hImm32Heap, 0, pszSrcW);
+        Imm32HeapFree(pszSrcW);
     if (pCL)
-        HeapFree(g_hImm32Heap, 0, pCL);
+        Imm32HeapFree(pCL);
     ImmUnlockImeDpi(pImeDpi);
     return ret;
 }
@@ -1286,9 +1286,9 @@ ImmGetConversionListW(HKL hKL, HIMC hIMC, LPCWSTR pSrc, LPCANDIDATELIST lpDst,
 
 Quit:
     if (pszSrcA)
-        HeapFree(g_hImm32Heap, 0, pszSrcA);
+        Imm32HeapFree(pszSrcA);
     if (pCL)
-        HeapFree(g_hImm32Heap, 0, pCL);
+        Imm32HeapFree(pCL);
     ImmUnlockImeDpi(pImeDpi);
     return ret;
 }
@@ -1430,9 +1430,9 @@ DoIt:
 
 Quit:
     if (RegWordW.lpReading)
-        HeapFree(g_hImm32Heap, 0, RegWordW.lpReading);
+        Imm32HeapFree(RegWordW.lpReading);
     if (RegWordW.lpWord)
-        HeapFree(g_hImm32Heap, 0, RegWordW.lpWord);
+        Imm32HeapFree(RegWordW.lpWord);
     ImmUnlockImeDpi(pImeDpi);
     return ret;
 }
@@ -1489,9 +1489,9 @@ DoIt:
 
 Quit:
     if (RegWordA.lpReading)
-        HeapFree(g_hImm32Heap, 0, RegWordA.lpReading);
+        Imm32HeapFree(RegWordA.lpReading);
     if (RegWordA.lpWord)
-        HeapFree(g_hImm32Heap, 0, RegWordA.lpWord);
+        Imm32HeapFree(RegWordA.lpWord);
     ImmUnlockImeDpi(pImeDpi);
     return ret;
 }
