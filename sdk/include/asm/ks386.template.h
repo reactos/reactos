@@ -556,7 +556,12 @@ SIZE(XsaHeaderLength, XSAVE_AREA_HEADER),
 
 HEADER("Data access macros"),
 RAW("#define USERDATA ds:[HEX(0FFDF0000)]"),
+RAW("#ifdef CONFIG_SMP"),
 RAW("#define PCR fs:"),
+RAW("#else"),
+/* Address at KIP0PCRADDRESS */
+RAW("#define PCR ds:[HEX(0FFDFF000)]"),
+RAW("#endif"),
 
 #if (NTDDI_VERSION >= NTDDI_WIN8)
 HEADER("KNODE offsets"),

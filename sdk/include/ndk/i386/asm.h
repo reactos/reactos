@@ -27,6 +27,7 @@ Author:
 #ifdef CONFIG_SMP
 #define PCR                                     fs:
 #else
+/* Address at KIP0PCRADDRESS */
 #define PCR                                     ds:[0xFFDFF000]
 #endif
 #endif
