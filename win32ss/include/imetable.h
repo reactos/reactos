@@ -17,6 +17,6 @@ DEFINE_IME_ENTRY(BOOL, ImeSetCompositionString, (HIMC hIMC, DWORD dwIndex, LPCVO
 DEFINE_IME_ENTRY(DWORD, ImeGetImeMenuItems, (HIMC hIMC, DWORD dwFlags, DWORD dwType, LPIMEMENUITEMINFOW lpImeParentMenu, LPIMEMENUITEMINFOW lpImeMenu, DWORD dwSize), FALSE)
 DEFINE_IME_ENTRY(DWORD, CtfImeInquireExW, (VOID /* FIXME: unknown */), TRUE)
 DEFINE_IME_ENTRY(DWORD, CtfImeSelectEx, (VOID /* FIXME: unknown */), TRUE)
-DEFINE_IME_ENTRY(DWORD, CtfImeEscapeEx, (VOID /* FIXME: unknown */), TRUE)
+DEFINE_IME_ENTRY(LRESULT, CtfImeEscapeEx, (HIMC hIMC, UINT uSubFunc, LPVOID lpData, HKL hKL), TRUE)
 DEFINE_IME_ENTRY(DWORD, CtfImeGetGuidAtom, (VOID /* FIXME: unknown */), TRUE)
 DEFINE_IME_ENTRY(DWORD, CtfImeIsGuidMapEnable, (VOID /* FIXME: unknown */), TRUE)
