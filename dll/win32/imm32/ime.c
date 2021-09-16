@@ -1228,10 +1228,8 @@ ImmGetConversionListA(HKL hKL, HIMC hIMC, LPCSTR pSrc, LPCANDIDATELIST lpDst,
     ret = CandidateListWideToAnsi(pCL, lpDst, dwBufLen, CP_ACP);
 
 Quit:
-    if (pszSrcW)
-        Imm32HeapFree(pszSrcW);
-    if (pCL)
-        Imm32HeapFree(pCL);
+    Imm32HeapFree(pszSrcW);
+    Imm32HeapFree(pCL);
     ImmUnlockImeDpi(pImeDpi);
     return ret;
 }
@@ -1285,10 +1283,8 @@ ImmGetConversionListW(HKL hKL, HIMC hIMC, LPCWSTR pSrc, LPCANDIDATELIST lpDst,
     ret = CandidateListAnsiToWide(pCL, lpDst, dwBufLen, CP_ACP);
 
 Quit:
-    if (pszSrcA)
-        Imm32HeapFree(pszSrcA);
-    if (pCL)
-        Imm32HeapFree(pCL);
+    Imm32HeapFree(pszSrcA);
+    Imm32HeapFree(pCL);
     ImmUnlockImeDpi(pImeDpi);
     return ret;
 }
@@ -1429,10 +1425,8 @@ DoIt:
     SendMessageW(hWnd, WM_IME_SYSTEM, 0x1A, 0);
 
 Quit:
-    if (RegWordW.lpReading)
-        Imm32HeapFree(RegWordW.lpReading);
-    if (RegWordW.lpWord)
-        Imm32HeapFree(RegWordW.lpWord);
+    Imm32HeapFree(RegWordW.lpReading);
+    Imm32HeapFree(RegWordW.lpWord);
     ImmUnlockImeDpi(pImeDpi);
     return ret;
 }
@@ -1488,10 +1482,8 @@ DoIt:
     SendMessageW(hWnd, WM_IME_SYSTEM, 0x1A, 0);
 
 Quit:
-    if (RegWordA.lpReading)
-        Imm32HeapFree(RegWordA.lpReading);
-    if (RegWordA.lpWord)
-        Imm32HeapFree(RegWordA.lpWord);
+    Imm32HeapFree(RegWordA.lpReading);
+    Imm32HeapFree(RegWordA.lpWord);
     ImmUnlockImeDpi(pImeDpi);
     return ret;
 }

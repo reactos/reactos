@@ -497,8 +497,7 @@ BOOL WINAPI ImmGenerateMessage(HIMC hIMC)
     }
 
 Quit:
-    if (pTrans)
-        Imm32HeapFree(pTrans);
+    Imm32HeapFree(pTrans);
     if (hMsgBuf)
         ImmUnlockIMCC(hMsgBuf);
     pIC->dwNumMsgBuf = 0; /* done */
@@ -557,7 +556,7 @@ Imm32PostMessages(HWND hwnd, HIMC hIMC, DWORD dwCount, LPTRANSMSG lpTransMsg)
     }
 
 #ifdef IMM_NT3_SUPPORT
-    if (pNewTransMsg && pNewTransMsg != lpTransMsg)
+    if (pNewTransMsg != lpTransMsg)
         Imm32HeapFree(pNewTransMsg);
 #endif
 }
@@ -678,8 +677,7 @@ BOOL WINAPI ImmTranslateMessage(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lKeyD
     }
 
 Quit:
-    if (pList)
-        Imm32HeapFree(pList);
+    Imm32HeapFree(pList);
     ImmUnlockImeDpi(pImeDpi);
     ImmUnlockIMC(hIMC);
     ImmReleaseContext(hwnd, hIMC);

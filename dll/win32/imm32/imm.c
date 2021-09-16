@@ -867,10 +867,8 @@ HKL WINAPI ImmInstallIMEA(LPCSTR lpszIMEFileName, LPCSTR lpszLayoutText)
     hKL = ImmInstallIMEW(pszFileNameW, pszLayoutTextW);
 
 Quit:
-    if (pszFileNameW)
-        Imm32HeapFree(pszFileNameW);
-    if (pszLayoutTextW)
-        Imm32HeapFree(pszLayoutTextW);
+    Imm32HeapFree(pszFileNameW);
+    Imm32HeapFree(pszLayoutTextW);
     return hKL;
 }
 
