@@ -783,7 +783,7 @@ VOID CAutoComplete::SelectItem(INT iItem)
         m_hwndList.EnsureVisible(iItem, FALSE);
 }
 
-VOID CAutoComplete::DoAutoAppend(AC_THREAD *pThread)
+VOID CAutoComplete::DoAutoAppend(PAC_THREAD pThread)
 {
     if (!CanAutoAppend()) // can we auto-append?
         return; // don't append
