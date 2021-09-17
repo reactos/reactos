@@ -168,8 +168,8 @@ cleanup:
     if (pidlCurrent)
         ILFree(pidlCurrent);
     if (address != input)
-        delete [] address;
-    delete [] input;
+        delete[] address;
+    delete[] input;
 
     return hr;
 }
@@ -192,19 +192,19 @@ HRESULT STDMETHODCALLTYPE CAddressEditBox::Execute(long paramC)
     HRESULT hr;
 
     /*
-     * Parse the path is it wasn't parsed
+     * Parse the path if it wasn't parsed
      */
     if (!pidlLastParsed)
+    {
         hr = ParseNow(0);
 
-    /*
-     * If the destination path doesn't exist then display an error message
-     */
-    if (hr == HRESULT_FROM_WIN32(ERROR_INVALID_DRIVE) || hr == HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND))
-        return ShowFileNotFoundError(hr);
+        /* If the destination path doesn't exist then display an error message */
+        if (hr == HRESULT_FROM_WIN32(ERROR_INVALID_DRIVE) || hr == HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND))
+            return ShowFileNotFoundError(hr);
 
-    if (!pidlLastParsed)
-        return E_FAIL;
+        if (!pidlLastParsed)
+            return E_FAIL;
+    }
 
     /*
      * Get the IShellBrowser and IBrowserService interfaces of the shell browser
