@@ -2092,13 +2092,16 @@ LRESULT CAutoComplete::OnAutoCompStart(UINT uMsg, WPARAM wParam, LPARAM lParam, 
         delete pOld;
 
     BOOL bDoStart = FALSE;
-    DWORD dwWait = WaitForSingleObject(m_hThread, 0);
-    if (dwWait != WAIT_TIMEOUT)
+    if (m_hThread)
     {
-        CloseHandle(m_hThread);
-        bDoStart = TRUE;
+        if (WaitForSingleObject(m_hThread, 0) != WAIT_TIMEOUT)
+        {
+            CloseHandle(m_hThread);
+            m_hThread = NULL;
+            bDoStart = TRUE;
+        }
     }
-    else if (!m_hThread)
+    else
     {
         bDoStart = TRUE;
     }
@@ -2131,14 +2134,8 @@ VOID CAutoComplete::FinishCompletion(PAC_THREAD pThread)
     if (!CanAutoSuggest() && !CanAutoAppend())
         return;
 
-    if (m_pThread || !m_hThread)
-        return;
-
     // set inner list
     m_innerList = pThread->m_innerList;
-
-    if (m_pThread || !m_hThread)
-        return;
 
     // set the items of the virtual listview
     m_outerList = pThread->m_outerList; // FIXME: We need more speed!
