@@ -1509,18 +1509,18 @@ HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon","DefaultUserName",0
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon","DefaultPassword",0x00000000,""
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\Notify",,0x00000012
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\Notify\ScCertProp",,0x00000012
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\Notify\ScCertProp","DlLName",0x00020000,"wlnotify.dll"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\Notify\ScCertProp","DllName",0x00020000,"wlnotify.dll"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\Notify\ScCertProp","Lock",0x00000000,"SCardSuspendCertProp"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\Notify\ScCertProp","Logoff",0x00000000,"SCardStopCertProp"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\Notify\ScCertProp","Logon",0x00000000,"SCardStartCertProp"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\Notify\ScCertProp","Unlock",0x00000000,"SCardResumeCertProp"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\Notify\Schedule",,0x00000012
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\Notify\Schedule","DlLName",0x00020000,"wlnotify.dll"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\Notify\Schedule","DllName",0x00020000,"wlnotify.dll"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\Notify\Schedule","Logoff",0x00000000,"SchedEventLogoff"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\Notify\Schedule","StartShell",0x00000000,"SchedStartShell"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\Notify\SensLogn",,0x00000012
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\Notify\SensLogn","Disconnect",0x00000000,"SensDisconnectEvent"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\Notify\SensLogn","DlLName",0x00020000,"wlnotify.dll"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\Notify\SensLogn","DllName",0x00020000,"wlnotify.dll"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\Notify\SensLogn","Lock",0x00000000,"SensLockEvent"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\Notify\SensLogn","Logoff",0x00000000,"SensLogoffEvent"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\Notify\SensLogn","Logon",0x00000000,"SensLogonEvent"
@@ -1534,7 +1534,7 @@ HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\Notify\SensLogn","St
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\Notify\SensLogn","Unlock",0x00000000,"SensUnlockEvent"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\Notify\termsrv",,0x00000012
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\Notify\termsrv","Disconnect",0x00000000,"TSEventDisconnect"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\Notify\termsrv","DlLName",0x00020000,"wlnotify.dll"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\Notify\termsrv","DllName",0x00020000,"wlnotify.dll"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\Notify\termsrv","Logoff",0x00000000,"TSEventLogoff"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\Notify\termsrv","Logon",0x00000000,"TSEventLogon"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\Notify\termsrv","PostShell",0x00000000,"TSEventPostShell"
@@ -1543,7 +1543,7 @@ HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\Notify\termsrv","Shu
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\Notify\termsrv","StartShell",0x00000000,"TSEventStartShell"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\Notify\termsrv","Startup",0x00000000,"TSEventStartup"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\Notify\wlballoon",,0x00000012
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\Notify\wlballoon","DlLName",0x00020000,"wlnotify.dll"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\Notify\wlballoon","DllName",0x00020000,"wlnotify.dll"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\Notify\wlballoon","Logoff",0x00000000,"UnregisterTicketExpiredNotificationEvent"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\Notify\wlballoon","Logon",0x00000000,"RegisterTicketExpiredNotificationEvent"
 
