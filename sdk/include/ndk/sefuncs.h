@@ -150,7 +150,7 @@ NtAdjustGroupsToken(
     _In_opt_ PTOKEN_GROUPS NewState,
     _In_opt_ ULONG BufferLength,
     _Out_writes_bytes_to_opt_(BufferLength, *ReturnLength) PTOKEN_GROUPS PreviousState,
-    _Out_ PULONG ReturnLength);
+    _When_(PreviousState != NULL, _Out_) PULONG ReturnLength);
 
 _Must_inspect_result_
 __kernel_entry

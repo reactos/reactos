@@ -4273,18 +4273,262 @@ NtDuplicateToken(
 
 /**
  * @brief
- * Changes the groups list of SIDs of a token.
+ * Private routine that iterates over the groups of an
+ * access token to be adjusted as per on request by the
+ * caller, where a group can be enabled or disabled.
  *
- * @param[in] TokenHandle
- * Token handle where the list of groups SIDs are to be adjusted.
- *
- * @param[in] ResetToDefault
- * If set to TRUE, the function resets the list of groups SIDs to default.
- * All the rest of parameters are ignored.
+ * @param[in] Token
+ * Access token where its groups are to be enabled or disabled.
  *
  * @param[in] NewState
- * A new list of groups SIDs that the function will use it accordingly to
- * modify the current list of groups SIDs of a token.
+ * A list of groups with new state attributes to be assigned to
+ * the token.
+ *
+ * @param[in] NewStateCount
+ * The captured count number of groups in the list.
+ *
+ * @param[in] ApplyChanges
+ * If set to FALSE, the function will only iterate over the token's
+ * groups without performing any kind of modification. If set to TRUE,
+ * the changes will be applied immediately when the function has done
+ * looping the groups.
+ *
+ * @param[in] ResetToDefaultStates
+ * The function will reset the groups in an access token to default
+ * states if set to TRUE. In such scenario the function ignores
+ * NewState outright. Otherwise if set to FALSE, the function will
+ * use NewState to assign the newly attributes to adjust the token's
+ * groups. SE_GROUP_ENABLED_BY_DEFAULT is a flag indicator that is used
+ * for such purpose.
+ *
+ * @param[out] ChangesMade
+ * Returns TRUE if changes to token's groups have been made, otherwise
+ * FALSE is returned. Bear in mind such changes aren't always deterministic.
+ * See remarks for further details.
+ *
+ * @param[out] PreviousGroupsState
+ * If requested by the caller, the function will return the previous state
+ * of groups in an access token prior taking action on adjusting the token.
+ * This is a UM (user mode) pointer and it's prone to raise exceptions
+ * if such pointer address is not valid.
+ *
+ * @param[out] ChangedGroups
+ * Returns the total number of changed groups in an access token. This
+ * argument could also indicate the number of groups to be changed if
+ * the calling thread hasn't chosen to apply the changes yet. A number
+ * of 0 indicates no groups have been or to be changed because the groups'
+ * attributes in a token are the same as the ones from NewState given by
+ * the caller.
+ *
+ * @return
+ * STATUS_SUCCESS is returned if the function has successfully completed
+ * the operation of adjusting groups in a token. STATUS_CANT_DISABLE_MANDATORY
+ * is returned if there was an attempt to disable a mandatory group which is
+ * not possible. STATUS_CANT_ENABLE_DENY_ONLY is returned if there was an attempt
+ * to enable a "use for Deny only" group which is not allowed, that is, a restricted
+ * group. STATUS_NOT_ALL_ASSIGNED is returned if not all the groups are actually
+ * assigned to the token.
+ *
+ * @remarks
+ * Token groups adjusting can be judged to be deterministic or not based on the
+ * NT status code value. That is, STATUS_SUCCESS indicates the function not only
+ * has iterated over the whole groups in a token, it also has applied the changes
+ * thoroughly without impediment and the results perfectly match with the request
+ * desired by the caller. In this situation the condition is deemed deterministic.
+ * In a different situation however, if the status code was STATUS_NOT_ALL_ASSIGNED,
+ * the function would still continue looping the groups in a token and apply the
+ * changes whenever possible where the respective groups actually exist in the
+ * token. This kind of situation is deemed as indeterministic.
+ * For STATUS_CANT_DISABLE_MANDATORY and STATUS_CANT_ENABLE_DENY_ONLY the scenario
+ * is even more indeterministic as the iteration of groups comes to a halt thus
+ * leaving all other possible groups to be adjusted.
+ */
+static
+NTSTATUS
+SepAdjustGroups(
+    _In_ PTOKEN Token,
+    _In_opt_ PSID_AND_ATTRIBUTES NewState,
+    _In_ ULONG NewStateCount,
+    _In_ BOOLEAN ApplyChanges,
+    _In_ BOOLEAN ResetToDefaultStates,
+    _Out_ PBOOLEAN ChangesMade,
+    _Out_opt_ PTOKEN_GROUPS PreviousGroupsState,
+    _Out_ PULONG ChangedGroups)
+{
+    ULONG GroupsInToken, GroupsInList;
+    ULONG ChangeCount, GroupsCount, NewAttributes;
+
+    PAGED_CODE();
+
+    /* Ensure that the token we get is not plain garbage */
+    ASSERT(Token);
+
+    /* Initialize the counters and begin the work */
+    *ChangesMade = FALSE;
+    GroupsCount = 0;
+    ChangeCount = 0;
+
+    /* Begin looping all the groups in the token */
+    for (GroupsInToken = 0; GroupsInToken < Token->UserAndGroupCount; GroupsInToken++)
+    {
+        /* Does the caller want to reset groups to default states? */
+        if (ResetToDefaultStates)
+        {
+            /*
+             * SE_GROUP_ENABLED_BY_DEFAULT is a special indicator that informs us
+             * if a certain group has been enabled by default or not. In case
+             * a group is enabled by default but it is not currently enabled then
+             * at that point we must enable it back by default. For now just
+             * assign the respective SE_GROUP_ENABLED attribute as we'll do the
+             * eventual work later.
+             */
+            if ((Token->UserAndGroups[GroupsInToken].Attributes & SE_GROUP_ENABLED_BY_DEFAULT) &&
+                (Token->UserAndGroups[GroupsInToken].Attributes & SE_GROUP_ENABLED) == 0)
+            {
+                NewAttributes = Token->UserAndGroups[GroupsInToken].Attributes |= SE_GROUP_ENABLED;
+            }
+
+            /*
+             * Unlike the case above, a group that hasn't been enabled by
+             * default but it's currently enabled then we must disable
+             * it back.
+             */
+            if ((Token->UserAndGroups[GroupsInToken].Attributes & SE_GROUP_ENABLED_BY_DEFAULT) == 0 &&
+                (Token->UserAndGroups[GroupsInToken].Attributes & SE_GROUP_ENABLED))
+            {
+                NewAttributes = Token->UserAndGroups[GroupsInToken].Attributes & ~SE_GROUP_ENABLED;
+            }
+        }
+        else
+        {
+            /* Loop the provided groups in the list then */
+            for (GroupsInList = 0; GroupsInList < NewStateCount; GroupsInList++)
+            {
+                /* Does this group exist in the token? */
+                if (RtlEqualSid(&Token->UserAndGroups[GroupsInToken].Sid,
+                                &NewState[GroupsInList].Sid))
+                {
+                    /*
+                     * This is the group that we're looking for.
+                     * However, it could be that the group is a
+                     * mandatory group which we are not allowed
+                     * and cannot disable it.
+                     */
+                    if ((Token->UserAndGroups[GroupsInToken].Attributes & SE_GROUP_MANDATORY) &&
+                        (NewState[GroupsInList].Attributes & SE_GROUP_ENABLED) == 0)
+                    {
+                        /* It is mandatory, forget about this group */
+                        DPRINT1("SepAdjustGroups(): The SID group is mandatory!\n");
+                        return STATUS_CANT_DISABLE_MANDATORY;
+                    }
+
+                    /*
+                     * We've to ensure that apart the group mustn't be
+                     * mandatory, it mustn't be a restricted group as
+                     * well. That is, the group is marked with
+                     * SE_GROUP_USE_FOR_DENY_ONLY flag and no one
+                     * can enable it because it's for "deny" use only.
+                     */
+                    if ((Token->UserAndGroups[GroupsInToken].Attributes & SE_GROUP_USE_FOR_DENY_ONLY) &&
+                        (NewState[GroupsInList].Attributes & SE_GROUP_ENABLED))
+                    {
+                        /* This group is restricted, forget about it */
+                        DPRINT1("SepAdjustGroups(): The SID group is for use deny only!\n");
+                        return STATUS_CANT_ENABLE_DENY_ONLY;
+                    }
+
+                    /* Copy the attributes and stop searching */
+                    NewAttributes = NewState[GroupsInList].Attributes;
+                    NewAttributes &= SE_GROUP_ENABLED;
+                    NewAttributes = Token->UserAndGroups[GroupsInToken].Attributes & ~SE_GROUP_ENABLED;
+                    break;
+                }
+
+                /* Did we find the specific group we wanted? */
+                if (GroupsInList == NewStateCount)
+                {
+                    /* We didn't, continue with the next token's group */
+                    continue;
+                }
+            }
+
+            /* Count the group that we found it */
+            GroupsCount++;
+
+            /* Does the token have the same attributes as the caller requested them? */
+            if (Token->UserAndGroups[GroupsInToken].Attributes != NewAttributes)
+            {
+                /*
+                 * No, then it's time to make some adjustment to the
+                 * token's groups. Does the caller want the previous states
+                 * of groups?
+                 */
+                if (PreviousGroupsState != NULL)
+                {
+                    PreviousGroupsState->Groups[ChangeCount] = Token->UserAndGroups[GroupsInToken];
+                }
+
+                /* Time to apply the changes now? */
+                if (ApplyChanges)
+                {
+                    /* The caller gave us consent, apply and report that we made changes! */
+                    Token->UserAndGroups[GroupsInToken].Attributes = NewAttributes;
+                    *ChangesMade = TRUE;
+                }
+
+                /* Increment the count change */
+                ChangeCount++;
+            }
+        }
+    }
+
+    /* Report the number of previous saved groups */
+    if (PreviousGroupsState != NULL)
+    {
+        PreviousGroupsState->GroupCount = ChangeCount;
+    }
+
+    /* Report the number of changed groups */
+    *ChangedGroups = ChangeCount;
+
+    /* Did we miss some groups? */
+    if (!ResetToDefaultStates && (GroupsCount < NewStateCount))
+    {
+        /*
+         * If we're at this stage then we are in a situation
+         * where the adjust changes done to token's groups is
+         * not deterministic as the caller might have wanted
+         * as per NewState parameter.
+         */
+        DPRINT1("SepAdjustGroups(): The token hasn't all the groups assigned!\n");
+        return STATUS_NOT_ALL_ASSIGNED;
+    }
+
+    return STATUS_SUCCESS;
+}
+
+/**
+ * @brief
+ * Changes the list of groups by enabling or disabling them
+ * in an access token. Unlike NtAdjustPrivilegesToken,
+ * this API routine does not remove groups.
+ *
+ * @param[in] TokenHandle
+ * Token handle where the list of groups SID are to be adjusted.
+ * The access token must have TOKEN_ADJUST_GROUPS access right
+ * in order to change the groups in a token. The token must also
+ * have TOKEN_QUERY access right if the caller requests the previous
+ * states of groups list, that is, PreviousState is not NULL.
+ *
+ * @param[in] ResetToDefault
+ * If set to TRUE, the function resets the list of groups to default
+ * enabled and disabled states. NewState is ignored in this case.
+ * Otherwise if the parameter is set to FALSE, the function expects
+ * a new list of groups from NewState to be adjusted within the token.
+ *
+ * @param[in] NewState
+ * A new list of groups SID that the function will use it accordingly to
+ * modify the current list of groups SID of a token.
  *
  * @param[in] BufferLength
  * The length size of the buffer that is pointed by the NewState parameter
@@ -4292,14 +4536,20 @@ NtDuplicateToken(
  *
  * @param[out] PreviousState
  * If specified, the function will return to the caller the old list of groups
- * SIDs.
+ * SID. If this parameter is NULL, ReturnLength must also be NULL.
  *
  * @param[out] ReturnLength
  * If specified, the function will return the total size length of the old list
  * of groups SIDs, in bytes.
  *
  * @return
- * To be added...
+ * STATUS_SUCCESS is returned if the function has successfully adjusted the
+ * token's groups. STATUS_INVALID_PARAMETER is returned if the caller has
+ * submitted one or more invalid parameters, that is, the caller didn't want
+ * to reset the groups to default state but no NewState argument list has been
+ * provided. STATUS_BUFFER_TOO_SMALL is returned if the buffer length given
+ * by the caller is smaller than the required length size. A failure NTSTATUS
+ * code is returned otherwise.
  */
 NTSTATUS
 NTAPI
@@ -4308,11 +4558,222 @@ NtAdjustGroupsToken(
     _In_ BOOLEAN ResetToDefault,
     _In_ PTOKEN_GROUPS NewState,
     _In_ ULONG BufferLength,
-    _Out_opt_ PTOKEN_GROUPS PreviousState,
-    _Out_ PULONG ReturnLength)
+    _Out_writes_bytes_to_opt_(BufferLength, *ReturnLength)
+    PTOKEN_GROUPS PreviousState,
+    _When_(PreviousState != NULL, _Out_) PULONG ReturnLength)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    PTOKEN Token;
+    NTSTATUS Status;
+    KPROCESSOR_MODE PreviousMode;
+    ULONG ChangeCount, RequiredLength;
+    ULONG CapturedCount = 0;
+    ULONG CapturedLength = 0;
+    ULONG NewStateSize = 0;
+    PSID_AND_ATTRIBUTES CapturedGroups = NULL;
+    BOOLEAN ChangesMade = FALSE;
+    BOOLEAN LockAndReferenceAcquired = FALSE;
+
+    PAGED_CODE();
+
+    /*
+     * If the caller doesn't want to reset the groups of an
+     * access token to default states then at least we must
+     * expect a list of groups to be adjusted based on NewState
+     * parameter. Otherwise bail out because the caller has
+     * no idea what they're doing.
+     */
+    if (!ResetToDefault && !NewState)
+    {
+        DPRINT1("NtAdjustGroupsToken(): The caller hasn't provided any list of groups to adjust!\n");
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    PreviousMode = ExGetPreviousMode();
+
+    if (PreviousMode != KernelMode)
+    {
+        _SEH2_TRY
+        {
+            /* Probe NewState */
+            if (!ResetToDefault)
+            {
+                /* Probe the header */
+                ProbeForRead(NewState, sizeof(*NewState), sizeof(ULONG));
+
+                CapturedCount = NewState->GroupCount;
+                NewStateSize = FIELD_OFFSET(TOKEN_GROUPS, Groups[CapturedCount]);
+
+                ProbeForRead(NewState, NewStateSize, sizeof(ULONG));
+            }
+
+            if (PreviousState != NULL)
+            {
+                ProbeForWrite(PreviousState, BufferLength, sizeof(ULONG));
+                ProbeForWrite(ReturnLength, sizeof(*ReturnLength), sizeof(ULONG));
+            }
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            /* Return the exception code */
+            _SEH2_YIELD(return _SEH2_GetExceptionCode());
+        }
+        _SEH2_END;
+    }
+    else
+    {
+        /*
+         * We're calling directly from the kernel, just retrieve
+         * the number count of captured groups outright.
+         */
+        if (!ResetToDefault)
+        {
+            CapturedCount = NewState->GroupCount;
+        }
+    }
+
+    /* Time to capture the NewState list */
+    if (!ResetToDefault)
+    {
+        _SEH2_TRY
+        {
+            Status = SeCaptureSidAndAttributesArray(NewState->Groups,
+                                                    CapturedCount,
+                                                    PreviousMode,
+                                                    NULL,
+                                                    0,
+                                                    PagedPool,
+                                                    TRUE,
+                                                    &CapturedGroups,
+                                                    &CapturedLength);
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            Status = _SEH2_GetExceptionCode();
+        }
+        _SEH2_END;
+
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("NtAdjustGroupsToken(): Failed to capture the NewState list of groups (Status 0x%lx)\n", Status);
+            return Status;
+        }
+    }
+
+    /* Time to reference the token */
+    Status = ObReferenceObjectByHandle(TokenHandle,
+                                       TOKEN_ADJUST_GROUPS | (PreviousState != NULL ? TOKEN_QUERY : 0),
+                                       SeTokenObjectType,
+                                       PreviousMode,
+                                       (PVOID*)&Token,
+                                       NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        /* We couldn't reference the access token, bail out */
+        DPRINT1("NtAdjustGroupsToken(): Failed to reference the token (Status 0x%lx)\n", Status);
+
+        if (CapturedGroups != NULL)
+        {
+            SeReleaseSidAndAttributesArray(CapturedGroups,
+                                           PreviousMode,
+                                           TRUE);
+        }
+
+        goto Quit;
+    }
+
+    /* Lock the token */
+    SepAcquireTokenLockExclusive(Token);
+    LockAndReferenceAcquired = TRUE;
+
+    /* Count the number of groups to be changed */
+    Status = SepAdjustGroups(Token,
+                             CapturedGroups,
+                             CapturedCount,
+                             FALSE,
+                             ResetToDefault,
+                             &ChangesMade,
+                             NULL,
+                             &ChangeCount);
+
+    /* Does the caller want the previous state of groups? */
+    if (PreviousState != NULL)
+    {
+        /* Calculate the required length */
+        RequiredLength = FIELD_OFFSET(TOKEN_GROUPS, Groups[ChangeCount]);
+
+        /* Return the required length to the caller */
+        _SEH2_TRY
+        {
+            *ReturnLength = RequiredLength;
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            /* Bail out and return the exception code */
+            Status = _SEH2_GetExceptionCode();
+            _SEH2_YIELD(goto Quit);
+        }
+        _SEH2_END;
+
+        /* The buffer length provided is smaller than the required length, bail out */
+        if (BufferLength < RequiredLength)
+        {
+            Status = STATUS_BUFFER_TOO_SMALL;
+            goto Quit;
+        }
+    }
+
+    /*
+     * Now it's time to apply changes. Wrap the code
+     * in SEH as we are returning the old groups state
+     * list to the caller since PreviousState is a
+     * UM pointer.
+     */
+    _SEH2_TRY
+    {
+        Status = SepAdjustGroups(Token,
+                                 CapturedGroups,
+                                 CapturedCount,
+                                 TRUE,
+                                 ResetToDefault,
+                                 &ChangesMade,
+                                 PreviousState,
+                                 &ChangeCount);
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        /* Bail out and return the exception code */
+        Status = _SEH2_GetExceptionCode();
+
+        /* Force the write as we touched the token still */
+        ChangesMade = TRUE;
+        _SEH2_YIELD(goto Quit);
+    }
+    _SEH2_END;
+
+Quit:
+    /* Allocate a new ID for the token as we made changes */
+    if (ChangesMade)
+    {
+        ExAllocateLocallyUniqueId(&Token->ModifiedId);
+    }
+
+    /* Have we successfully acquired the lock and referenced the token before? */
+    if (LockAndReferenceAcquired)
+    {
+        /* Unlock and dereference the token */
+        SepReleaseTokenLock(Token);
+        ObDereferenceObject(Token);
+    }
+
+    /* Release the captured groups */
+    if (CapturedGroups != NULL)
+    {
+        SeReleaseSidAndAttributesArray(CapturedGroups,
+                                       PreviousMode,
+                                       TRUE);
+    }
+
+    return Status;
 }
 
 /**
