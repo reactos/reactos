@@ -681,7 +681,7 @@ LRESULT WINAPI ImmEscapeA(HKL hKL, HIMC hIMC, UINT uSubFunc, LPVOID lpData)
     if (!pImeDpi)
         return 0;
 
-    if (!(pImeDpi->ImeInfo.fdwProperty & IME_PROP_UNICODE) || !lpData)
+    if (!ImeDpi_IsUnicode(pImeDpi) || !lpData)
     {
         ret = ImeDpi_Escape(pImeDpi, hIMC, uSubFunc, lpData, hKL);
         ImmUnlockImeDpi(pImeDpi);
@@ -769,7 +769,7 @@ LRESULT WINAPI ImmEscapeW(HKL hKL, HIMC hIMC, UINT uSubFunc, LPVOID lpData)
     if (!pImeDpi)
         return 0;
 
-    if ((pImeDpi->ImeInfo.fdwProperty & IME_PROP_UNICODE) || !lpData)
+    if (ImeDpi_IsUnicode(pImeDpi) || !lpData)
     {
         ret = ImeDpi_Escape(pImeDpi, hIMC, uSubFunc, lpData, hKL);
         ImmUnlockImeDpi(pImeDpi);
@@ -1199,7 +1199,7 @@ ImmGetConversionListA(HKL hKL, HIMC hIMC, LPCSTR pSrc, LPCANDIDATELIST lpDst,
     if (pImeDpi == NULL)
         return 0;
 
-    if (!(pImeDpi->ImeInfo.fdwProperty & IME_PROP_UNICODE))
+    if (!ImeDpi_IsUnicode(pImeDpi))
     {
         ret = pImeDpi->ImeConversionList(hIMC, pSrc, lpDst, dwBufLen, uFlag);
         ImmUnlockImeDpi(pImeDpi);
@@ -1254,7 +1254,7 @@ ImmGetConversionListW(HKL hKL, HIMC hIMC, LPCWSTR pSrc, LPCANDIDATELIST lpDst,
     if (!pImeDpi)
         return 0;
 
-    if (pImeDpi->ImeInfo.fdwProperty & IME_PROP_UNICODE)
+    if (ImeDpi_IsUnicode(pImeDpi))
     {
         ret = pImeDpi->ImeConversionList(hIMC, pSrc, lpDst, dwBufLen, uFlag);
         ImmUnlockImeDpi(pImeDpi);
@@ -1395,11 +1395,8 @@ BOOL WINAPI ImmConfigureIMEA(HKL hKL, HWND hWnd, DWORD dwMode, LPVOID lpData)
 
     RtlZeroMemory(&RegWordW, sizeof(RegWordW));
 
-    if (!(pImeDpi->ImeInfo.fdwProperty & IME_PROP_UNICODE) || !lpData ||
-        dwMode != IME_CONFIG_REGISTERWORD)
-    {
+    if (!ImeDpi_IsUnicode(pImeDpi) || !lpData || dwMode != IME_CONFIG_REGISTERWORD)
         goto DoIt;
-    }
 
     pRegWordA = lpData;
 
@@ -1452,11 +1449,8 @@ BOOL WINAPI ImmConfigureIMEW(HKL hKL, HWND hWnd, DWORD dwMode, LPVOID lpData)
 
     RtlZeroMemory(&RegWordA, sizeof(RegWordA));
 
-    if ((pImeDpi->ImeInfo.fdwProperty & IME_PROP_UNICODE) || !lpData ||
-        dwMode != IME_CONFIG_REGISTERWORD)
-    {
+    if (ImeDpi_IsUnicode(pImeDpi) || !lpData || dwMode != IME_CONFIG_REGISTERWORD)
         goto DoIt;
-    }
 
     pRegWordW = lpData;
 
