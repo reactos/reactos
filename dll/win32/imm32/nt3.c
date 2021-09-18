@@ -166,7 +166,7 @@ DoDefault:
         }
     }
 
-    HeapFree(g_hImm32Heap, 0, pTempList);
+    Imm32HeapFree(pTempList);
     return ret;
 }
 

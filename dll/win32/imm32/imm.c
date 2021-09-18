@@ -321,7 +321,7 @@ HIMC WINAPI ImmCreateContext(void)
     hIMC = NtUserCreateInputContext(pClientImc);
     if (hIMC == NULL)
     {
-        HeapFree(g_hImm32Heap, 0, pClientImc);
+        Imm32HeapFree(pClientImc);
         return NULL;
     }
 
@@ -464,7 +464,7 @@ PCLIENTIMC WINAPI ImmLockClientImc(HIMC hImc)
 
         if (!NtUserUpdateInputContext(hImc, 0, pClientImc))
         {
-            HeapFree(g_hImm32Heap, 0, pClientImc);
+            Imm32HeapFree(pClientImc);
             return NULL;
         }
 
@@ -499,7 +499,7 @@ VOID WINAPI ImmUnlockClientImc(PCLIENTIMC pClientImc)
         LocalFree(hImc);
 
     RtlDeleteCriticalSection(&pClientImc->cs);
-    HeapFree(g_hImm32Heap, 0, pClientImc);
+    Imm32HeapFree(pClientImc);
 }
 
 static HIMC APIENTRY Imm32GetContextEx(HWND hWnd, DWORD dwContextFlags)
@@ -867,10 +867,8 @@ HKL WINAPI ImmInstallIMEA(LPCSTR lpszIMEFileName, LPCSTR lpszLayoutText)
     hKL = ImmInstallIMEW(pszFileNameW, pszLayoutTextW);
 
 Quit:
-    if (pszFileNameW)
-        HeapFree(g_hImm32Heap, 0, pszFileNameW);
-    if (pszLayoutTextW)
-        HeapFree(g_hImm32Heap, 0, pszLayoutTextW);
+    Imm32HeapFree(pszFileNameW);
+    Imm32HeapFree(pszLayoutTextW);
     return hKL;
 }
 
@@ -1183,7 +1181,7 @@ BOOL WINAPI ImmEnumInputContext(DWORD dwThreadId, IMCENUMPROC lpfn, LPARAM lPara
             break;
     }
 
-    HeapFree(g_hImm32Heap, 0, phList);
+    Imm32HeapFree(phList);
     return ret;
 }
 

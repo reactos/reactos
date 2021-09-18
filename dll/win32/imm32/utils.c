@@ -162,7 +162,7 @@ DWORD APIENTRY Imm32AllocAndBuildHimcList(DWORD dwThreadId, HIMC **pphList)
     Status = NtUserBuildHimcList(dwThreadId, dwCount, phNewList, &dwCount);
     while (Status == STATUS_BUFFER_TOO_SMALL)
     {
-        HeapFree(g_hImm32Heap, 0, phNewList);
+        Imm32HeapFree(phNewList);
         if (cRetry++ >= MAX_RETRY)
             return 0;
 
@@ -175,7 +175,7 @@ DWORD APIENTRY Imm32AllocAndBuildHimcList(DWORD dwThreadId, HIMC **pphList)
 
     if (NT_ERROR(Status) || !dwCount)
     {
-        HeapFree(g_hImm32Heap, 0, phNewList);
+        Imm32HeapFree(phNewList);
         return 0;
     }
 
