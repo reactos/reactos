@@ -27,7 +27,7 @@ typedef PVOID (*PFN_KBDLAYERDESCRIPTOR)(VOID);
 
 /* PRIVATE FUNCTIONS ******************************************************/
 
-#if DBG
+#if 0 && DBG
 
 static VOID
 DumpKbdLayout(
