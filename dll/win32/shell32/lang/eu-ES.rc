@@ -329,7 +329,7 @@ BEGIN
     EDITTEXT 14007, 110, 103, 86, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     EDITTEXT 14008, 197, 103, 33, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     CONTROL "", 14015, "Static", SS_OWNERDRAW, 70, 116, 100, 30
-    LTEXT "unitate %c", 14009, 100, 150, 70, 10
+    LTEXT "%c: unitatea", 14009, 100, 150, 70, 10
     PUSHBUTTON "&Garbitu diskoa", 14010, 160, 154, 70, 15, WS_TABSTOP
     LTEXT "", -1, 8, 171, 223, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
     CHECKBOX "&Konprimatu unitatea diskoan leku gehiago egiteko", 14011, 8, 191, 222, 10, WS_DISABLED
@@ -646,7 +646,7 @@ END
 
 IDD_NOOPEN DIALOGEX 0, 0, 240, 75
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Advertencia"
+CAPTION "Kontuz"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_SHELL_SYSTEM_FILE, IDI_SHELL_SYSTEM_FILE, 5, 5, 21, 20
@@ -673,22 +673,22 @@ BEGIN
 END
 
 IDD_EDITTYPE DIALOG 0, 0, 225, 190
-CAPTION "Editar tipo de archivo"
+CAPTION "Editatu fitxategi-mota"
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", IDC_EDITTYPE_ICON, 5, 8, 20, 20
     EDITTEXT IDC_EDITTYPE_TEXT, 30, 10, 115, 14, ES_AUTOHSCROLL
-    PUSHBUTTON "Cambiar &Ícono...", IDC_EDITTYPE_CHANGE_ICON, 150, 10, 70, 14
-    LTEXT "&Acciones:", -1, 5, 37, 70, 10
+    PUSHBUTTON "Aldatu &Ikonoa...", IDC_EDITTYPE_CHANGE_ICON, 150, 10, 70, 14
+    LTEXT "&Ekintzak:", -1, 5, 37, 70, 10
     LISTBOX IDC_EDITTYPE_LISTBOX, 5, 50, 140, 60, LBS_NOINTEGRALHEIGHT | LBS_HASSTRINGS | LBS_OWNERDRAWFIXED | LBS_NOTIFY | WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON "&Nueva...", IDC_EDITTYPE_NEW, 150, 50, 70, 14
-    PUSHBUTTON "&Editar...", IDC_EDITTYPE_EDIT_BUTTON, 150, 65, 70, 14
-    PUSHBUTTON "E&liminar", IDC_EDITTYPE_REMOVE, 150, 80, 70, 14
-    PUSHBUTTON "Establecer por &defecto", IDC_EDITTYPE_SET_DEFAULT, 150, 95, 70, 14
-    AUTOCHECKBOX "Abrir al &terminar descarga", IDC_EDITTYPE_CONFIRM_OPEN, 5, 115, 150, 14
-    AUTOCHECKBOX "Siempre &mostrar extensión", IDC_EDITTYPE_SHOW_EXT, 5, 130, 150, 14
-    AUTOCHECKBOX "Examinar en la misma &ventana", IDC_EDITTYPE_SAME_WINDOW, 5, 145, 150, 14
+    PUSHBUTTON "&Berria...", IDC_EDITTYPE_NEW, 150, 50, 70, 14
+    PUSHBUTTON "&Editatu...", IDC_EDITTYPE_EDIT_BUTTON, 150, 65, 70, 14
+    PUSHBUTTON "&Kendu", IDC_EDITTYPE_REMOVE, 150, 80, 70, 14
+    PUSHBUTTON "L&ehenesi", IDC_EDITTYPE_SET_DEFAULT, 150, 95, 70, 14
+    AUTOCHECKBOX "Berre&tsi irekitzea deskargatu ondoren", IDC_EDITTYPE_CONFIRM_OPEN, 5, 115, 150, 14
+    AUTOCHECKBOX "E&rakutsi beti luzapena", IDC_EDITTYPE_SHOW_EXT, 5, 130, 150, 14
+    AUTOCHECKBOX "Arakatu &leiho berean", IDC_EDITTYPE_SAME_WINDOW, 5, 145, 150, 14
     DEFPUSHBUTTON "Ados", IDOK, 95, 170, 60, 14
     PUSHBUTTON "Utzi", IDCANCEL, 160, 170, 60, 14
 END
@@ -746,17 +746,17 @@ END
 STRINGTABLE
 BEGIN
     /* columns in the shellview */
-    IDS_SHV_COLUMN_NAME "Nombre"
-    IDS_SHV_COLUMN_SIZE "Tamaño"
-    IDS_SHV_COLUMN_TYPE "Tipo"
-    IDS_SHV_COLUMN_MODIFIED "Modificado"
-    IDS_SHV_COLUMN_ATTRIBUTES "Atributos"
-    IDS_SHV_COLUMN_DISK_CAPACITY "Tamaño"
+    IDS_SHV_COLUMN_NAME "Izena"
+    IDS_SHV_COLUMN_SIZE "Tamaina"
+    IDS_SHV_COLUMN_TYPE "Mota"
+    IDS_SHV_COLUMN_MODIFIED "Aldatze-data"
+    IDS_SHV_COLUMN_ATTRIBUTES "Atributuak"
+    IDS_SHV_COLUMN_DISK_CAPACITY "Tamaina"
     IDS_SHV_COLUMN_DISK_AVAILABLE "Tamaño disponible"
-    IDS_SHV_COLUMN_OWNER "Propietario"
-    IDS_SHV_COLUMN_GROUP "Grupo"
-    IDS_SHV_COLUMN_FILENAME "Nombre del archivo"
-    IDS_SHV_COLUMN_CATEGORY "Categoría"
+    IDS_SHV_COLUMN_OWNER "Egile"
+    IDS_SHV_COLUMN_GROUP "Talde"
+    IDS_SHV_COLUMN_FILENAME "Fitxategi izena"
+    IDS_SHV_COLUMN_CATEGORY "Kategoria"
     IDS_SHV_COLUMN_DELFROM "Ubicación original"
     IDS_SHV_COLUMN_DELDATE "Fecha de eliminación"
     IDS_SHV_COLUMN_FONTTYPE "Tipo de fuente"
@@ -805,16 +805,16 @@ BEGIN
     IDS_OPENFILELOCATION "Abrir &ubicación del archivo"
     IDS_SENDTO_MENU "E&nviar a"
 
-    IDS_MOVEERRORTITLE "Error moviendo Archivo o Carpeta"
-    IDS_COPYERRORTITLE "Error copiando Archivo o Carpeta"
+    IDS_MOVEERRORTITLE "Errore bat gertatu da fitxategia edo karpeta lekuz aldatzean"
+    IDS_COPYERRORTITLE "Errore bat gertatu da fitxategia edo karpeta kopiatzean"
     IDS_MOVEERRORSAMEFOLDER "Imposible mover '%s': La carpeta de destino es la misma que la de origen."
     IDS_MOVEERRORSAME "Imposible mover '%s': El archivo de origen y el de destino son el mismo."
     IDS_COPYERRORSAME "Imposible copiar '%s': El archivo de origen y el de destino son el mismo."
     IDS_MOVEERRORSUBFOLDER "Imposible mover '%s': La carpeta de destino es un subdirectorio de la de origen."
     IDS_COPYERRORSUBFOLDER "Imposible copiar '%s': La carpeta de destino es un subdirectorio de la de origen."
 
-    IDS_CREATEFOLDER_DENIED "No se pudo crear la carpeta '%1'"
-    IDS_CREATEFOLDER_CAPTION "No se pudo crear la carpeta"
+    IDS_CREATEFOLDER_DENIED "Ezin da sortu '%1'"
+    IDS_CREATEFOLDER_CAPTION "Ezin da sortu karpeta"
     IDS_DELETEITEM_CAPTION "Confirmar eliminación de archivos"
     IDS_DELETEFOLDER_CAPTION "Confirmar eliminación de carpetas"
     IDS_DELETEITEM_TEXT "¿Seguro que desea eliminar '%1'?"
@@ -828,11 +828,11 @@ BEGIN
     IDS_OVERWRITEFILE_CAPTION "Confirmar el reemplazo de archivo"
     IDS_OVERWRITEFOLDER_TEXT "Esta carpeta ya contiene una carpeta con el nombre '%1'.\n\nSi los archivos de la carpeta existente tienen el mismo nombre que los\narchivos de la carpeta que está moviendo o copiando, serán\nreemplazados. ¿Desea mover o copiar la carpeta de todas formas?"
 
-    IDS_FILEOOP_COPYING "Copiando..."
-    IDS_FILEOOP_MOVING "Moviendo..."
-    IDS_FILEOOP_DELETING "Borrando..."
-    IDS_FILEOOP_FROM_TO "%1 a %2"
-    IDS_FILEOOP_FROM "%1"
+    IDS_FILEOOP_COPYING "Kopiatzen..."
+    IDS_FILEOOP_MOVING "Lekuz aldatzen..."
+    IDS_FILEOOP_DELETING "Ezabatzen..."
+    IDS_FILEOOP_FROM_TO "%1-dik %2-ra"
+    IDS_FILEOOP_FROM "%1-dik"
     IDS_FILEOOP_PREFLIGHT "Comprobando"
 
     /* message box strings */
@@ -843,7 +843,7 @@ BEGIN
 
     /* Format Dialog Strings */
     IDS_FORMAT_TITLE "Formatear Disco Local"
-    IDS_FORMAT_WARNING "ADVERTENCIA: Al dar formato se borrarán TODOS los datos del disco.\nPara formatear, haga clic en Aceptar. Para salir, haga clic en Cancelar."
+    IDS_FORMAT_WARNING "KONTUZ: Al dar formato se borrarán TODOS los datos del disco.\nPara formatear, haga clic en Aceptar. Para salir, haga clic en Cancelar."
     IDS_FORMAT_COMPLETE "Formato completo."
 
     /* Warning format system drive dialog strings */
@@ -901,10 +901,10 @@ BEGIN
     IDS_OPEN_WITH_RECOMMENDED "Programas recomendados:"
     IDS_OPEN_WITH_OTHER "Otros programas:"
 
-    IDS_SHELL_ABOUT_AUTHORS "&Autores"
-    IDS_SHELL_ABOUT_BACK "< A&trás"
-    FCIDM_SHVIEW_NEW "Nuevo"
-    FCIDM_SHVIEW_NEWFOLDER "Nueva &carpeta"
+    IDS_SHELL_ABOUT_AUTHORS "&Egileak"
+    IDS_SHELL_ABOUT_BACK "< A&tzea"
+    FCIDM_SHVIEW_NEW "Berria"
+    FCIDM_SHVIEW_NEWFOLDER "&Karpeta &berria"
     FCIDM_SHVIEW_NEWLINK "Nuevo &acceso directo"
     IDS_FOLDER_OPTIONS "Opciones de carpeta"
     IDS_RECYCLEBIN_LOCATION "Ubicación de la Papelera"
@@ -952,14 +952,14 @@ BEGIN
 
     IDS_OPEN_VERB "Ireki"
     IDS_EXPLORE_VERB "Esploratu"
-    IDS_RUNAS_VERB "Ejecutar como..."
-    IDS_EDIT_VERB "Editar"
-    IDS_FIND_VERB "Buscar"
-    IDS_PRINT_VERB "Imprimir"
+    IDS_RUNAS_VERB "Exekutatu honela..."
+    IDS_EDIT_VERB "Editatu"
+    IDS_FIND_VERB "Bilatu"
+    IDS_PRINT_VERB "Inprimatu"
     IDS_CMD_VERB "Abrir en Línea de Comandos"
 
     IDS_FILE_FOLDER "%u archivos, %u carpetas"
-    IDS_PRINTERS "Impresoras"
+    IDS_PRINTERS "Imprimagailuak"
     IDS_FONTS "Fuentes"
     IDS_INSTALLNEWFONT "Instalar fuente..."
 
