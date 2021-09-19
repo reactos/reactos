@@ -495,6 +495,8 @@ co_IntSetScrollInfo(PWND Window, INT nBar, LPCSCROLLINFO lpsi, BOOL bRedraw)
    /* [0] = HORZ, [1] = VERT */
    static PWND PrevHwnd[2] = { 0 };
    static DWORD PrevPos[2] = { 0 };
+   static DWORD PrevMax[2] = { 0 };
+   static INT PrevAction[2] = { 0 };
 
    ASSERT_REFS_CO(Window);
 
@@ -602,7 +604,7 @@ co_IntSetScrollInfo(PWND Window, INT nBar, LPCSCROLLINFO lpsi, BOOL bRedraw)
    if (lpsi->fMask & (SIF_RANGE | SIF_PAGE | SIF_DISABLENOSCROLL))
    {
       new_flags = Window->pSBInfo->WSBflags;
-      if (Info->nMin >= (int)(Info->nMax - max(Info->nPage - 1, 0)))
+      if (Info->nMin + (int)max(Info->nPage, 1) > Info->nMax)
       {
          /* Hide or disable scroll-bar */
          if (lpsi->fMask & SIF_DISABLENOSCROLL)
@@ -637,6 +639,16 @@ co_IntSetScrollInfo(PWND Window, INT nBar, LPCSCROLLINFO lpsi, BOOL bRedraw)
    }
 
 //done:
+   if ((Window != PrevHwnd[nBar]) || (action != PrevAction[nBar]))
+   {
+      if ((action == SA_SSI_SHOW) && (PrevAction[nBar] == SA_SSI_HIDE))
+      {
+         co_UserShowScrollBar(Window, nBar, TRUE, TRUE);
+      }
+   }
+   if ((action != PrevAction[nBar]) && action != 0)
+      PrevAction[nBar] = action;
+
    if ( action & SA_SSI_HIDE )
    {
       co_UserShowScrollBar(Window, nBar, FALSE, FALSE);
@@ -690,12 +702,14 @@ co_IntSetScrollInfo(PWND Window, INT nBar, LPCSCROLLINFO lpsi, BOOL bRedraw)
                }
             }
             CurrentPos = lpsi->fMask & SIF_PREVIOUSPOS ? OldPos : pSBData->pos;
-            /* Check for changes to Window or CurrentPos */
-            if ((Window != PrevHwnd[nBar]) || (CurrentPos != PrevPos[nBar]))
+            /* Check for changes to Window or CurrentPos or lpsi->nMax */
+            if ((Window != PrevHwnd[nBar]) || (CurrentPos != PrevPos[nBar]) ||
+               (lpsi->nMax != PrevMax[nBar]))
             {
                 co_UserRedrawWindow(Window, &UpdateRect, 0, RDW_INVALIDATE | RDW_FRAME);
                 PrevHwnd[nBar] = Window;
                 PrevPos[nBar] = CurrentPos;
+                PrevMax[nBar] = lpsi->nMax;
             }
          }
       } // FIXME: Arrows
