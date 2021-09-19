@@ -348,11 +348,11 @@ BEGIN
     GROUPBOX "Desfragmentazioa", -1, 5, 65, 230, 60
     ICON IDI_SHELL_TOOLS_DEFRAG, IDC_STATIC, 13, 85, 21, 20
     LTEXT "Aukera honekin bolumeneko fitxategiak \ndesfragmentatuko dira.", -1, 40, 85, 160, 20
-    PUSHBUTTON ""&Desfragmentatu orain...", 14001, 130, 105, 90, 15, WS_TABSTOP
+    PUSHBUTTON "&Desfragmentatu orain...", 14001, 130, 105, 90, 15, WS_TABSTOP
     GROUPBOX "Babeskopia", -1, 5, 130, 230, 60
     ICON IDI_SHELL_TOOLS_BACKUP, IDC_STATIC, 13, 150, 21, 20
     LTEXT "Aukera honekin bolumeneko fitxategien \nbabeskopia egingo da.", -1, 40, 150, 160, 20
-    PUSHBUTTON ""&Egin babeskopia orain...", 14002, 90, 170, 130, 15, WS_TABSTOP
+    PUSHBUTTON "&Egin babeskopia orain...", 14002, 90, 170, 130, 15, WS_TABSTOP
 END
 
 IDD_DRIVE_HARDWARE DIALOGEX 0, 0, 240, 230
@@ -532,9 +532,9 @@ BEGIN
     LTEXT "Ha&utatu eduki-mota bat, eta aukeratu ReactOS-ek automatikoki egiteko ekintza bat, mota hori gailu honetan erabiltzean denean:", 1000, 7, 7, 215, 20
     CONTROL "", 1001, "COMBOBOXEX32", WS_TABSTOP | 0x00000043, 7, 27, 212, 200
     GROUPBOX "Ekintzak ", -1, 7, 45, 212, 146
-    AUTORADIOBUTTON ""&Hautatu ekintza bat egiteko:", 1005, 14, 54, 202, 10, WS_GROUP
+    AUTORADIOBUTTON "&Hautatu ekintza bat egiteko:", 1005, 14, 54, 202, 10, WS_GROUP
     CONTROL "LIST2", 1002, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000C04D, 22, 66, 192, 107
-    AUTORADIOBUTTON ""&Abisatu ekintza bat aukeratu behar denean", 1006, 14, 177, 202, 10
+    AUTORADIOBUTTON "&Abisatu ekintza bat aukeratu behar denean", 1006, 14, 177, 202, 10
     PUSHBUTTON "&Berrezarri lehenetsiak", 1008, 108, 197, 110, 14, WS_DISABLED
 END
 
