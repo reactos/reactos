@@ -54,7 +54,7 @@ START_TEST(himc)
     SetFocus(hwndEdit);
     pIC = ImmLockIMC(hIMC);
     ok_int(pIC != NULL, TRUE);
-    ok_int(pIC->hWnd != NULL, TRUE);
+    ok_int(pIC->hWnd == hwndEdit, TRUE);
     ok_int(pIC->fOpen, FALSE);
     ImmUnlockIMC(hNewIMC);
     SetFocus(NULL);
