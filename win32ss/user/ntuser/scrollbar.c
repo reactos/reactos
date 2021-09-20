@@ -492,15 +492,15 @@ co_IntSetScrollInfo(PWND Window, INT nBar, LPCSCROLLINFO lpsi, BOOL bRedraw)
    BOOL bChangeParams = FALSE; /* Don't show/hide scrollbar if params don't change */
    UINT MaxPage;
    int MaxPos;
-   /* [0] = HORZ, [1] = VERT */
-   static PWND PrevHwnd[2] = { 0 };
-   static DWORD PrevPos[2] = { 0 };
-   static DWORD PrevMax[2] = { 0 };
-   static INT PrevAction[2] = { 0 };
+   /* [0] = SB_HORZ, [1] = SB_VERT, [2] = SB_CTL */
+   static PWND PrevHwnd[3] = { 0 };
+   static DWORD PrevPos[3] = { 0 };
+   static DWORD PrevMax[3] = { 0 };
+   static INT PrevAction[3] = { 0 };
 
    ASSERT_REFS_CO(Window);
 
-   if(!SBID_IS_VALID(nBar))
+   if(!SBID_IS_VALID(nBar)) /* Assures nBar is 0, 1, or 2 */
    {
       EngSetLastError(ERROR_INVALID_PARAMETER);
       ERR("Trying to set scrollinfo for unknown scrollbar type %d", nBar);
