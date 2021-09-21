@@ -425,17 +425,12 @@ BOOL WINAPI ImmDestroyContext(HIMC hIMC)
     return Imm32CleanupContext(hIMC, hKL, FALSE);
 }
 
-static PCLIENTIMC APIENTRY Imm32GetClientImcCache(void)
-{
-    // FIXME: Do something properly here
-    return NULL;
-}
-
 /***********************************************************************
  *		ImmLockClientImc (IMM32.@)
  */
 PCLIENTIMC WINAPI ImmLockClientImc(HIMC hImc)
 {
+    PIMC pIMC;
     PCLIENTIMC pClientImc;
 
     TRACE("(%p)\n", hImc);
@@ -443,7 +438,11 @@ PCLIENTIMC WINAPI ImmLockClientImc(HIMC hImc)
     if (hImc == NULL)
         return NULL;
 
-    pClientImc = Imm32GetClientImcCache();
+    pIMC = ValidateHandleNoErr(hImc, TYPE_INPUTCONTEXT);
+    if (!pIMC)
+        return NULL;
+
+    pClientImc = (PCLIENTIMC)pIMC->dwClientImcData;
     if (!pClientImc)
     {
         pClientImc = Imm32HeapAlloc(HEAP_ZERO_MEMORY, sizeof(CLIENTIMC));
