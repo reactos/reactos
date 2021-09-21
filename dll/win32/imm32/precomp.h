@@ -93,6 +93,8 @@ static inline BOOL Imm32IsCrossProcessAccess(HWND hWnd)
             (DWORD_PTR)NtCurrentTeb()->ClientId.UniqueProcess);
 }
 
+#define ImeDpi_IsUnicode(pImeDpi) ((pImeDpi)->ImeInfo.fdwProperty & IME_PROP_UNICODE)
+
 DWORD APIENTRY
 CandidateListWideToAnsi(const CANDIDATELIST *pWideCL, LPCANDIDATELIST pAnsiCL, DWORD dwBufLen,
                         UINT uCodePage);

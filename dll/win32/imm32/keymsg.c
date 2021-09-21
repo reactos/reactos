@@ -371,7 +371,7 @@ ImmProcessKey(HWND hWnd, HKL hKL, UINT vKey, LPARAM lParam, DWORD dwHotKeyID)
             if (LOBYTE(vKey) == VK_PACKET &&
                 !(pImeDpi->ImeInfo.fdwProperty & IME_PROP_ACCEPT_WIDE_VKEY))
             {
-                if (pImeDpi->ImeInfo.fdwProperty & IME_PROP_UNICODE)
+                if (ImeDpi_IsUnicode(pImeDpi))
                 {
                     bLowWordOnly = TRUE;
                 }
@@ -633,7 +633,7 @@ BOOL WINAPI ImmTranslateMessage(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lKeyD
     vk = pIC->nVKey;
     if (pImeDpi->ImeInfo.fdwProperty & IME_PROP_KBD_CHAR_FIRST)
     {
-        if (pImeDpi->ImeInfo.fdwProperty & IME_PROP_UNICODE)
+        if (ImeDpi_IsUnicode(pImeDpi))
         {
             wch = 0;
             kret = ToUnicode(vk, HIWORD(lKeyData), abKeyState, &wch, 1, 0);
