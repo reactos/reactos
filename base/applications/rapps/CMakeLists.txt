@@ -9,6 +9,7 @@ list(APPEND SOURCE
     asyncinet.cpp
     available.cpp
     cabinet.cpp
+    configparser.cpp
     gui.cpp
     installed.cpp
     integrity.cpp
@@ -16,23 +17,24 @@ list(APPEND SOURCE
     misc.cpp
     settings.cpp
     settingsdlg.cpp
-    winmain.cpp
     unattended.cpp
-    include/rapps.h
+    winmain.cpp
     include/appview.h
     include/asyncinet.h
     include/available.h
+    include/configparser.h
+    include/crichedit.h
+    include/defines.h
     include/dialogs.h
     include/gui.h
     include/installed.h
-    include/crichedit.h
-    include/defines.h
     include/misc.h
-    include/settings.h
+    include/rapps.h
     include/resource.h
     include/rosui.h
-    include/winmain.h
+    include/settings.h
     include/unattended.h
+    include/winmain.h
 )
 
 add_definitions(

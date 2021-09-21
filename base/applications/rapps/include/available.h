@@ -6,6 +6,7 @@
 #include <atlcoll.h>
 
 #include "misc.h"
+#include "configparser.h"
 
 
 #define MAX_SCRNSHOT_NUM 16
