@@ -4366,6 +4366,8 @@ SepAdjustPrivileges(
 {
     ULONG i, j, PrivilegeCount, ChangeCount, NewAttributes;
 
+    PAGED_CODE();
+
     /* Count the found privileges and those that need to be changed */
     PrivilegeCount = 0;
     ChangeCount = 0;
