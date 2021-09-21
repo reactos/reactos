@@ -336,14 +336,9 @@ static VOID APIENTRY Imm32CleanupContextExtra(LPINPUTCONTEXT pIC)
     FIXME("We have to do something do here");
 }
 
-static PCLIENTIMC APIENTRY Imm32FindClientImc(HIMC hIMC)
-{
-    // FIXME
-    return NULL;
-}
-
 BOOL APIENTRY Imm32CleanupContext(HIMC hIMC, HKL hKL, BOOL bKeep)
 {
+    PIMC pIMC;
     PIMEDPI pImeDpi;
     LPINPUTCONTEXT pIC;
     PCLIENTIMC pClientImc;
@@ -351,8 +346,11 @@ BOOL APIENTRY Imm32CleanupContext(HIMC hIMC, HKL hKL, BOOL bKeep)
     if (!IS_IME_ENABLED() || !hIMC)
         return FALSE;
 
-    FIXME("We have do something to do here\n");
-    pClientImc = Imm32FindClientImc(hIMC);
+    pIMC = ValidateHandleNoErr(hIMC, TYPE_INPUTCONTEXT);
+    if (pIMC == NULL)
+        return FALSE;
+
+    pClientImc = (PCLIENTIMC)pIMC->dwClientImcData;
     if (!pClientImc)
         return FALSE;
 

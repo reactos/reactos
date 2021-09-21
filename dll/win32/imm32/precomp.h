@@ -71,7 +71,8 @@ extern HANDLE g_hImm32Heap;
 BOOL Imm32GetSystemLibraryPath(LPWSTR pszPath, DWORD cchPath, LPCWSTR pszFileName);
 VOID APIENTRY LogFontAnsiToWide(const LOGFONTA *plfA, LPLOGFONTW plfW);
 VOID APIENTRY LogFontWideToAnsi(const LOGFONTW *plfW, LPLOGFONTA plfA);
-PWND FASTCALL ValidateHwndNoErr(HWND hwnd);
+LPVOID APIENTRY ValidateHandleNoErr(HANDLE hHandle, UINT uType);
+PWND APIENTRY ValidateHwndNoErr(HWND hWnd);
 
 LPVOID APIENTRY Imm32HeapAlloc(DWORD dwFlags, DWORD dwBytes);
 #define Imm32HeapFree(lpData) HeapFree(g_hImm32Heap, 0, (lpData))
