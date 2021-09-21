@@ -181,6 +181,10 @@ SeSetWorldSecurityDescriptor(
     {
         SdSize += sizeof(ACL) + sizeof(ACE) + SidSize;
     }
+    if (SecurityInformation & SACL_SECURITY_INFORMATION)
+    {
+        SdSize += sizeof(ACL) + sizeof(ACE) + SidSize;
+    }
 
     if (*BufferLength < SdSize)
     {
@@ -236,7 +240,26 @@ SeSetWorldSecurityDescriptor(
 
     if (SecurityInformation & SACL_SECURITY_INFORMATION)
     {
-        /* FIXME - SdRel->Control |= SE_SACL_PRESENT; */
+        PACL Sacl = (PACL)((PUCHAR)SdRel + Current);
+
+        Status = RtlCreateAcl(Sacl,
+                              sizeof(ACL) + sizeof(ACE) + SidSize,
+                              ACL_REVISION);
+        if (!NT_SUCCESS(Status))
+            return Status;
+
+        Status = RtlAddAuditAccessAce(Sacl,
+                                      ACL_REVISION,
+                                      ACCESS_SYSTEM_SECURITY | STANDARD_RIGHTS_ALL,
+                                      SeWorldSid,
+                                      TRUE,
+                                      TRUE);
+        if (!NT_SUCCESS(Status))
+            return Status;
+
+        SdRel->Control |= SE_SACL_PRESENT;
+        SdRel->Sacl = Current;
+        Current += SidSize;
     }
 
     return STATUS_SUCCESS;
