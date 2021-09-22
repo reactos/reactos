@@ -16,96 +16,96 @@ START_TEST(himc)
 
     /* ImmCreateContext/ImmDestroyContext and ImmLockIMC/ImmUnlockIMC */
     hNewIMC = ImmCreateContext();
-    ok_int(hNewIMC != NULL, TRUE);
+    ok(hNewIMC != NULL, "\n");
     pIC = ImmLockIMC(hNewIMC);
-    ok_int(pIC == NULL, TRUE);
+    ok(pIC == NULL, "\n");
     ImmUnlockIMC(hNewIMC);
-    ok_int(ImmDestroyContext(hNewIMC), TRUE);
+    ok(ImmDestroyContext(hNewIMC), "\n");
 
     /* ImmGetContext against NULL */
     hIMC = ImmGetContext(NULL);
-    ok_int(hIMC == NULL, TRUE);
+    ok(hIMC == NULL, "\n");
 
     /* Create EDIT control */
     style = ES_MULTILINE | ES_LEFT;
     hwndEdit = CreateWindowW(L"EDIT", NULL, style, 0, 0, 100, 20, NULL, NULL,
                              GetModuleHandleW(NULL), NULL);
-    ok_int(hwndEdit != NULL, TRUE);
+    ok(hwndEdit != NULL, "\n");
 
     /* Create STATIC control */
     style = SS_LEFT;
     hwndStatic = CreateWindowW(L"STATIC", NULL, style, 0, 30, 100, 20, NULL, NULL,
                                GetModuleHandleW(NULL), NULL);
-    ok_int(hwndStatic != NULL, TRUE);
+    ok(hwndStatic != NULL, "\n");
 
     /* ImmGetContext/ImmReleaseContext and ImmLockIMC/ImmUnlockIMC */
     hIMC1 = hIMC = ImmGetContext(hwndEdit);
-    ok_int(hIMC != NULL, TRUE);
+    ok(hIMC != NULL, "\n");
     pIC = ImmLockIMC(hIMC);
-    ok_int(pIC != NULL, TRUE);
-    ok_int(pIC->hWnd == NULL, TRUE);
-    ok_int(pIC->fOpen, FALSE);
-    ok_int(ImmGetIMCCSize(pIC->hCompStr) != 0, TRUE);
-    ok_int(ImmGetIMCCSize(pIC->hCandInfo) != 0, TRUE);
-    ok_int(ImmGetIMCCSize(pIC->hGuideLine) != 0, TRUE);
-    ok_int(ImmGetIMCCSize(pIC->hPrivate) != 0, TRUE);
-    ok_int(ImmGetIMCCSize(pIC->hMsgBuf) != 0, TRUE);
+    ok(pIC != NULL, "\n");
+    ok(pIC->hWnd == NULL, "\n");
+    ok(!pIC->fOpen, "\n");
+    ok(ImmGetIMCCSize(pIC->hCompStr) != 0, "\n");
+    ok(ImmGetIMCCSize(pIC->hCandInfo) != 0, "\n");
+    ok(ImmGetIMCCSize(pIC->hGuideLine) != 0, "\n");
+    ok(ImmGetIMCCSize(pIC->hPrivate) != 0, "\n");
+    ok(ImmGetIMCCSize(pIC->hMsgBuf) != 0, "\n");
     ImmUnlockIMC(hNewIMC);
     SetFocus(hwndEdit);
     pIC = ImmLockIMC(hIMC);
-    ok_int(pIC != NULL, TRUE);
-    ok_int(pIC->hWnd == hwndEdit, TRUE);
-    ok_int(pIC->fOpen, FALSE);
+    ok(pIC != NULL, "\n");
+    ok(pIC->hWnd == hwndEdit, "\n");
+    ok(!pIC->fOpen, "\n");
     ImmUnlockIMC(hNewIMC);
     SetFocus(NULL);
     pIC = ImmLockIMC(hIMC);
-    ok_int(pIC != NULL, TRUE);
-    ok_int(pIC->hWnd == hwndEdit, TRUE);
+    ok(pIC != NULL, "\n");
+    ok(pIC->hWnd == hwndEdit, "\n");
     ImmUnlockIMC(hNewIMC);
-    ok_int(ImmSetOpenStatus(hIMC, TRUE), TRUE);
+    ok(ImmSetOpenStatus(hIMC, TRUE), "\n");
     pIC = ImmLockIMC(hIMC);
-    ok_int(pIC != NULL, TRUE);
-    ok_int(pIC->fOpen, TRUE);
+    ok(pIC != NULL, "\n");
+    ok(pIC->fOpen, "\n");
     ImmUnlockIMC(hNewIMC);
-    ok_int(ImmReleaseContext(hwndEdit, hIMC), TRUE);
+    ok(ImmReleaseContext(hwndEdit, hIMC), "\n");
 
     hIMC2 = hIMC = ImmGetContext(hwndStatic);
-    ok_int(hIMC != NULL, TRUE);
+    ok(hIMC != NULL, "\n");
     pIC = ImmLockIMC(hIMC);
-    ok_int(pIC != NULL, TRUE);
-    ok_int(pIC->hWnd == hwndEdit, TRUE);
-    ok_int(ImmGetIMCCSize(pIC->hCompStr) != 0, TRUE);
-    ok_int(ImmGetIMCCSize(pIC->hCandInfo) != 0, TRUE);
-    ok_int(ImmGetIMCCSize(pIC->hGuideLine) != 0, TRUE);
-    ok_int(ImmGetIMCCSize(pIC->hPrivate) != 0, TRUE);
-    ok_int(ImmGetIMCCSize(pIC->hMsgBuf) != 0, TRUE);
+    ok(pIC != NULL, "\n");
+    ok(pIC->hWnd == hwndEdit, "\n");
+    ok(ImmGetIMCCSize(pIC->hCompStr) != 0, "\n");
+    ok(ImmGetIMCCSize(pIC->hCandInfo) != 0, "\n");
+    ok(ImmGetIMCCSize(pIC->hGuideLine) != 0, "\n");
+    ok(ImmGetIMCCSize(pIC->hPrivate) != 0, "\n");
+    ok(ImmGetIMCCSize(pIC->hMsgBuf) != 0, "\n");
     ImmUnlockIMC(hNewIMC);
-    ok_int(ImmReleaseContext(hwndEdit, hIMC), TRUE);
+    ok(ImmReleaseContext(hwndEdit, hIMC), "\n");
 
-    ok_int(hIMC1 == hIMC2, TRUE);
+    ok(hIMC1 == hIMC2, "\n");
 
     /* ImmAssociateContext */
     hNewIMC = ImmCreateContext();
-    ok_int(hNewIMC != NULL, TRUE);
+    ok(hNewIMC != NULL, "\n");
     pIC = ImmLockIMC(hNewIMC);
-    ok_int(pIC != NULL, TRUE);
+    ok(pIC != NULL, "\n");
     ImmUnlockIMC(hNewIMC);
     hOldIMC = ImmAssociateContext(hwndEdit, hNewIMC);
-    ok_int(hNewIMC != hOldIMC, TRUE);
+    ok(hNewIMC != hOldIMC, "\n");
     hIMC = ImmGetContext(hwndEdit);
-    ok_int(hIMC == hNewIMC, TRUE);
-    ok_int(hIMC != hOldIMC, TRUE);
+    ok(hIMC == hNewIMC, "\n");
+    ok(hIMC != hOldIMC, "\n");
     pIC = ImmLockIMC(hNewIMC);
-    ok_int(pIC != NULL, TRUE);
-    ok_int(pIC->hWnd == NULL, TRUE);
-    ok_int(ImmGetIMCCSize(pIC->hCompStr) != 0, TRUE);
-    ok_int(ImmGetIMCCSize(pIC->hCandInfo) != 0, TRUE);
-    ok_int(ImmGetIMCCSize(pIC->hGuideLine) != 0, TRUE);
-    ok_int(ImmGetIMCCSize(pIC->hPrivate) != 0, TRUE);
-    ok_int(ImmGetIMCCSize(pIC->hMsgBuf) != 0, TRUE);
+    ok(pIC != NULL, "\n");
+    ok(pIC->hWnd == NULL, "\n");
+    ok(ImmGetIMCCSize(pIC->hCompStr) != 0, "\n");
+    ok(ImmGetIMCCSize(pIC->hCandInfo) != 0, "\n");
+    ok(ImmGetIMCCSize(pIC->hGuideLine) != 0, "\n");
+    ok(ImmGetIMCCSize(pIC->hPrivate) != 0, "\n");
+    ok(ImmGetIMCCSize(pIC->hMsgBuf) != 0, "\n");
     ImmUnlockIMC(hNewIMC);
-    ok_int(ImmReleaseContext(hwndEdit, hIMC), TRUE);
-    ok_int(ImmDestroyContext(hNewIMC), TRUE);
+    ok(ImmReleaseContext(hwndEdit, hIMC), "\n");
+    ok(ImmDestroyContext(hNewIMC), "\n");
 
     DestroyWindow(hwndEdit);
     DestroyWindow(hwndStatic);
