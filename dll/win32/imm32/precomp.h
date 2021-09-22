@@ -93,7 +93,14 @@ static inline BOOL Imm32IsCrossProcessAccess(HWND hWnd)
             (DWORD_PTR)NtCurrentTeb()->ClientId.UniqueProcess);
 }
 
-#define ImeDpi_IsUnicode(pImeDpi) ((pImeDpi)->ImeInfo.fdwProperty & IME_PROP_UNICODE)
+#define ImeDpi_IsUnicode(pImeDpi)   ((pImeDpi)->ImeInfo.fdwProperty & IME_PROP_UNICODE)
+#define Imm32IsImmMode()            (g_psi && (g_psi->dwSRVIFlags & SRVINFO_IMM32))
+#define Imm32IsCiceroMode()         (g_psi && (g_psi->dwSRVIFlags & SRVINFO_CICERO_ENABLED))
+
+static inline BOOL Imm32IsSomethingMode(VOID) /* TODO: unknown */
+{
+    return !!(((PW32CLIENTINFO)NtCurrentTeb()->Win32ClientInfo)->W32ClientInfo[0] & 2);
+}
 
 DWORD APIENTRY
 CandidateListWideToAnsi(const CANDIDATELIST *pWideCL, LPCANDIDATELIST pAnsiCL, DWORD dwBufLen,
