@@ -1849,9 +1849,17 @@ NtSetInformationObject(IN HANDLE ObjectHandle,
                                                    NULL);
                 if (NT_SUCCESS(Status))
                 {
-                    /* FIXME: Missng locks */
+                    /* Setup a lookup context */
+                    OBP_LOOKUP_CONTEXT LookupContext;
+                    ObpInitializeLookupContext(&LookupContext);
+
                     /* Set its session ID */
+                    ObpAcquireDirectoryLockExclusive(Directory, &LookupContext);
                     Directory->SessionId = PsGetCurrentProcessSessionId();
+                    ObpReleaseDirectoryLock(Directory, &LookupContext);
+
+                    /* We're done, release the context and dereference the directory */
+                    ObpReleaseLookupContext(&LookupContext);
                     ObDereferenceObject(Directory);
                 }
             }
