@@ -1193,8 +1193,10 @@ NTAPI
 RawFsDriverEntry(IN PDRIVER_OBJECT DriverObject,
                  IN PUNICODE_STRING RegistryPath)
 {
-    UNICODE_STRING DeviceName;
     NTSTATUS Status;
+    UNICODE_STRING DeviceName;
+
+    UNREFERENCED_PARAMETER(RegistryPath);
 
     /* Create the raw disk device */
     RtlInitUnicodeString(&DeviceName, L"\\Device\\RawDisk");
@@ -1205,7 +1207,10 @@ RawFsDriverEntry(IN PDRIVER_OBJECT DriverObject,
                             0,
                             FALSE,
                             &RawDiskDeviceObject);
-    if (!NT_SUCCESS(Status)) return Status;
+    if (!NT_SUCCESS(Status))
+    {
+        return Status;
+    }
 
     /* Create the raw CDROM device */
     RtlInitUnicodeString(&DeviceName, L"\\Device\\RawCdRom");
@@ -1216,7 +1221,11 @@ RawFsDriverEntry(IN PDRIVER_OBJECT DriverObject,
                             0,
                             FALSE,
                             &RawCdromDeviceObject);
-    if (!NT_SUCCESS(Status)) return Status;
+    if (!NT_SUCCESS(Status))
+    {
+        IoDeleteDevice(RawDiskDeviceObject);
+        return Status;
+    }
 
     /* Create the raw tape device */
     RtlInitUnicodeString(&DeviceName, L"\\Device\\RawTape");
@@ -1227,7 +1236,12 @@ RawFsDriverEntry(IN PDRIVER_OBJECT DriverObject,
                             0,
                             FALSE,
                             &RawTapeDeviceObject);
-    if (!NT_SUCCESS(Status)) return Status;
+    if (!NT_SUCCESS(Status))
+    {
+        IoDeleteDevice(RawDiskDeviceObject);
+        IoDeleteDevice(RawCdromDeviceObject);
+        return Status;
+    }
 
     /* Set Direct I/O for all devices */
     RawDiskDeviceObject->Flags |= DO_DIRECT_IO;
