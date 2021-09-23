@@ -318,10 +318,12 @@ NTAPI
 DriverEntry(IN PDRIVER_OBJECT DriverObject,
             IN PUNICODE_STRING RegistryPath)
 {
-    ULONG DeviceCount = 0;
     NTSTATUS Status;
+    ULONG DeviceCount = 0;
     PDEVICE_OBJECT CdfsObject;
     PDEVICE_OBJECT UdfsObject;
+    PDEVICE_OBJECT FatObject;
+
     PAGED_CODE();
 
     UNREFERENCED_PARAMETER(RegistryPath);
@@ -392,11 +394,22 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
     /* Register FAT */
     Status = FsRecRegisterFs(DriverObject,
                              NULL,
-                             NULL,
+                             &FatObject,
                              L"\\Fat",
                              L"\\FileSystem\\FatRecognizer",
                              FS_TYPE_VFAT,
                              FILE_DEVICE_DISK_FILE_SYSTEM,
+                             0);
+    if (NT_SUCCESS(Status)) DeviceCount++;
+
+    /* Register FAT for CDs */
+    Status = FsRecRegisterFs(DriverObject,
+                             FatObject,
+                             NULL,
+                             L"\\FatCdrom",
+                             L"\\FileSystem\\FatCdRomRecognizer",
+                             FS_TYPE_VFAT,
+                             FILE_DEVICE_CD_ROM_FILE_SYSTEM,
                              0);
     if (NT_SUCCESS(Status)) DeviceCount++;
 
