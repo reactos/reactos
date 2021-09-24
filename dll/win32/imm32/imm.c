@@ -62,7 +62,7 @@ HKL WINAPI ImmLoadLayout(HKL hKL, PIMEINFOEX pImeInfoEx)
 
     TRACE("(%p, %p)\n", hKL, pImeInfoEx);
 
-    if (IS_IME_HKL(hKL) || !Imm32IsCiceroMode() || Imm32IsSomethingMode())
+    if (IS_IME_HKL(hKL) || !Imm32IsCiceroMode() || Imm32Is16BitMode())
     {
         UnicodeString.Buffer = szLayout;
         UnicodeString.MaximumLength = sizeof(szLayout);

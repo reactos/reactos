@@ -96,11 +96,8 @@ static inline BOOL Imm32IsCrossProcessAccess(HWND hWnd)
 #define ImeDpi_IsUnicode(pImeDpi)   ((pImeDpi)->ImeInfo.fdwProperty & IME_PROP_UNICODE)
 #define Imm32IsImmMode()            (g_psi && (g_psi->dwSRVIFlags & SRVINFO_IMM32))
 #define Imm32IsCiceroMode()         (g_psi && (g_psi->dwSRVIFlags & SRVINFO_CICERO_ENABLED))
-
-static inline BOOL Imm32IsSomethingMode(VOID) /* TODO: unknown */
-{
-    return !!(((PW32CLIENTINFO)NtCurrentTeb()->Win32ClientInfo)->W32ClientInfo[0] & 2);
-}
+#define Imm32Is16BitMode() \
+    (((PTHREADINFO)NtCurrentTeb()->Win32ThreadInfo)->TIF_flags & TIF_16BIT)
 
 DWORD APIENTRY
 CandidateListWideToAnsi(const CANDIDATELIST *pWideCL, LPCANDIDATELIST pAnsiCL, DWORD dwBufLen,

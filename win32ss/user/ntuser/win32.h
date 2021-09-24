@@ -33,8 +33,6 @@
 #define W32PF_CREATEDWINORDC         (0x04000000)
 #define W32PF_APIHOOKLOADED          (0x08000000)
 
-#define QSIDCOUNTS 7
-
 typedef enum _QS_ROS_TYPES
 {
     QSRosKey = 0,
@@ -52,120 +50,6 @@ extern HANDLE hModuleWin;    // This Win32k Instance.
 extern struct _CLS *SystemClassList;
 extern BOOL RegisteredSysClasses;
 
-#include <pshpack1.h>
-// FIXME: Move to ntuser.h
-typedef struct _TL
-{
-    struct _TL* next;
-    PVOID pobj;
-    PVOID pfnFree;
-} TL, *PTL;
-
-typedef struct _W32THREAD
-{
-    PETHREAD pEThread;
-    LONG RefCount;
-    PTL ptlW32;
-    PVOID pgdiDcattr;
-    PVOID pgdiBrushAttr;
-    PVOID pUMPDObjs;
-    PVOID pUMPDHeap;
-    DWORD dwEngAcquireCount;
-    PVOID pSemTable;
-    PVOID pUMPDObj;
-} W32THREAD, *PW32THREAD;
-
-struct tagIMC;
-
-#ifdef __cplusplus
-typedef struct _THREADINFO : _W32THREAD
-{
-#else
-typedef struct _THREADINFO
-{
-    W32THREAD;
-#endif
-    PTL                 ptl;
-    PPROCESSINFO        ppi;
-    struct _USER_MESSAGE_QUEUE* MessageQueue;
-    struct tagKL*       KeyboardLayout;
-    struct _CLIENTTHREADINFO  * pcti;
-    struct _DESKTOP*    rpdesk;
-    struct _DESKTOPINFO  *  pDeskInfo;
-    struct _CLIENTINFO * pClientInfo;
-    FLONG               TIF_flags;
-    PUNICODE_STRING     pstrAppName;
-    struct _USER_SENT_MESSAGE *pusmSent;
-    struct _USER_SENT_MESSAGE *pusmCurrent;
-    /* Queue of messages sent to the queue. */
-    LIST_ENTRY          SentMessagesListHead;    // psmsReceiveList
-    /* Last message time and ID */
-    LONG                timeLast;
-    ULONG_PTR           idLast;
-    /* True if a WM_QUIT message is pending. */
-    BOOLEAN             QuitPosted;
-    /* The quit exit code. */
-    INT                 exitCode;
-    HDESK               hdesk;
-    UINT                cPaintsReady; /* Count of paints pending. */
-    UINT                cTimersReady; /* Count of timers pending. */
-    struct tagMENUSTATE* pMenuState;
-    DWORD               dwExpWinVer;
-    DWORD               dwCompatFlags;
-    DWORD               dwCompatFlags2;
-    struct _USER_MESSAGE_QUEUE* pqAttach;
-    PTHREADINFO         ptiSibling;
-    ULONG               fsHooks;
-    struct tagHOOK *    sphkCurrent;
-    LPARAM              lParamHkCurrent;
-    WPARAM              wParamHkCurrent;
-    struct tagSBTRACK*  pSBTrack;
-    /* Set if there are new messages specified by WakeMask in any of the queues. */
-    HANDLE              hEventQueueClient;
-    /* Handle for the above event (in the context of the process owning the queue). */
-    PKEVENT             pEventQueueServer;
-    LIST_ENTRY          PtiLink;
-    INT                 iCursorLevel;
-    /* Last message cursor position */
-    POINT               ptLast;
-    /* Input context-related */
-    struct _WND*        spwndDefaultIme;
-    struct tagIMC*      spDefaultImc;
-    HKL                 hklPrev;
-
-    INT                 cEnterCount;
-    /* Queue of messages posted to the queue. */
-    LIST_ENTRY          PostedMessagesListHead; // mlPost
-    WORD                fsChangeBitsRemoved;
-    WCHAR               wchInjected;
-    UINT                cWindows;
-    UINT                cVisWindows;
-#ifndef __cplusplus /// FIXME!
-    LIST_ENTRY          aphkStart[NB_HOOKS];
-    CLIENTTHREADINFO    cti;  // Used only when no Desktop or pcti NULL.
-
-    /* ReactOS */
-
-    /* Thread Queue state tracking */
-    // Send list QS_SENDMESSAGE
-    // Post list QS_POSTMESSAGE|QS_HOTKEY|QS_PAINT|QS_TIMER|QS_KEY
-    // Hard list QS_MOUSE|QS_KEY only
-    // Accounting of queue bit sets, the rest are flags. QS_TIMER QS_PAINT counts are handled in thread information.
-    DWORD nCntsQBits[QSIDCOUNTS]; // QS_KEY QS_MOUSEMOVE QS_MOUSEBUTTON QS_POSTMESSAGE QS_SENDMESSAGE QS_HOTKEY
-
-    LIST_ENTRY WindowListHead;
-    LIST_ENTRY W32CallbackListHead;
-    SINGLE_LIST_ENTRY  ReferencesList;
-    ULONG cExclusiveLocks;
-#if DBG
-    USHORT acExclusiveLockCount[GDIObjTypeTotal + 1];
-#endif
-#endif // __cplusplus
-} THREADINFO;
-
-#include <poppack.h>
-
-
 #define IntReferenceThreadInfo(pti) \
     InterlockedIncrement(&(pti)->RefCount)
 
@@ -179,7 +63,6 @@ do { \
         UserDeleteW32Thread(pti); \
     } \
 } while(0)
-
 
 #define IntReferenceProcessInfo(ppi) \
     InterlockedIncrement((volatile LONG*)(&(ppi)->RefCount))
