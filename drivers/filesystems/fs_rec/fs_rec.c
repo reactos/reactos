@@ -23,21 +23,22 @@ NTAPI
 FsRecLoadFileSystem(IN PDEVICE_OBJECT DeviceObject,
                     IN PWCHAR DriverServiceName)
 {
-    UNICODE_STRING DriverName;
-    PDEVICE_EXTENSION DeviceExtension = DeviceObject->DeviceExtension;
     NTSTATUS Status = STATUS_IMAGE_ALREADY_LOADED;
+    PDEVICE_EXTENSION DeviceExtension = DeviceObject->DeviceExtension;
+    UNICODE_STRING DriverName;
+
     PAGED_CODE();
 
     /* Make sure we haven't already been called */
     if (DeviceExtension->State != Loaded)
     {
         /* Acquire the load lock */
+        KeEnterCriticalRegion();
         KeWaitForSingleObject(FsRecLoadSync,
                               Executive,
                               KernelMode,
                               FALSE,
                               NULL);
-        KeEnterCriticalRegion();
 
         /* Make sure we're active */
         if (DeviceExtension->State == Pending)
@@ -67,11 +68,10 @@ FsRecLoadFileSystem(IN PDEVICE_OBJECT DeviceObject,
         }
 
         /* Release the lock */
-        KeSetEvent(FsRecLoadSync, 0, FALSE);
+        KeSetEvent(FsRecLoadSync, IO_NO_INCREMENT, FALSE);
         KeLeaveCriticalRegion();
     }
 
-    /* Return */
     return Status;
 }
 
