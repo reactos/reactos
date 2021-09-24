@@ -1093,8 +1093,8 @@ ObCreateObjectType(IN PUNICODE_STRING TypeName,
     /* Check if we've already created the directory of types */
     if (ObpTypeDirectoryObject)
     {
-        /* Acquire the directory lock */
-        ObpAcquireDirectoryLockExclusive(ObpTypeDirectoryObject, &Context);
+        /* Lock the lookup context */
+        ObpAcquireLookupContextLock(&Context, ObpTypeDirectoryObject);
 
         /* Do the lookup */
         if (ObpLookupEntryDirectory(ObpTypeDirectoryObject,
@@ -1853,7 +1853,7 @@ NtSetInformationObject(IN HANDLE ObjectHandle,
                     OBP_LOOKUP_CONTEXT LookupContext;
                     ObpInitializeLookupContext(&LookupContext);
 
-                    /* Set its session ID */
+                    /* Set the directory session ID */
                     ObpAcquireDirectoryLockExclusive(Directory, &LookupContext);
                     Directory->SessionId = PsGetCurrentProcessSessionId();
                     ObpReleaseDirectoryLock(Directory, &LookupContext);

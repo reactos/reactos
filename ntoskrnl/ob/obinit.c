@@ -386,11 +386,9 @@ ObPostPhase0:
     Status = NtClose(Handle);
     if (!NT_SUCCESS(Status)) return FALSE;
 
-    /* Initialize lookup context */
+    /* Initialize the lookup context and lock it */
     ObpInitializeLookupContext(&Context);
-
-    /* Lock it */
-    ObpAcquireDirectoryLockExclusive(ObpTypeDirectoryObject, &Context);
+    ObpAcquireLookupContextLock(&Context, ObpTypeDirectoryObject);
 
     /* Loop the object types */
     ListHead = &ObpTypeObjectType->TypeList;

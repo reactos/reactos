@@ -169,15 +169,26 @@ ObpDereferenceNameInfo(IN POBJECT_HEADER_NAME_INFO HeaderNameInfo)
     }
 }
 
+/**
+ * @brief
+ * Locks a directory for shared access.
+ * Used for reading members of the directory object.
+ *
+ * @param[in] Directory
+ * The directory to lock.
+ *
+ * @param[in] Context
+ * The lookup lock context.
+ */
 FORCEINLINE
 VOID
 ObpAcquireDirectoryLockShared(IN POBJECT_DIRECTORY Directory,
-                               IN POBP_LOOKUP_CONTEXT Context)
+                              IN POBP_LOOKUP_CONTEXT Context)
 {
-    /* It's not, set lock flag */
+    /* Update lock flag */
     Context->LockStateSignature = OBP_LOCK_STATE_PRE_ACQUISITION_SHARED;
 
-    /* Lock it */
+    /* Acquire an shared directory lock */
     KeEnterCriticalRegion();
     ExAcquirePushLockShared(&Directory->Lock);
 
@@ -185,10 +196,21 @@ ObpAcquireDirectoryLockShared(IN POBJECT_DIRECTORY Directory,
     Context->LockStateSignature = OBP_LOCK_STATE_POST_ACQUISITION_SHARED;
 }
 
+/**
+ * @brief
+ * Locks a directory for exclusive access.
+ * Used for writing/reading members of the directory object.
+ *
+ * @param[in] Directory
+ * The directory to lock.
+ *
+ * @param[in] Context
+ * The lookup lock context.
+ */
 FORCEINLINE
 VOID
 ObpAcquireDirectoryLockExclusive(IN POBJECT_DIRECTORY Directory,
-                                  IN POBP_LOOKUP_CONTEXT Context)
+                                 IN POBP_LOOKUP_CONTEXT Context)
 {
     /* Update lock flag */
     Context->LockStateSignature = OBP_LOCK_STATE_PRE_ACQUISITION_EXCLUSIVE;
@@ -197,18 +219,24 @@ ObpAcquireDirectoryLockExclusive(IN POBJECT_DIRECTORY Directory,
     KeEnterCriticalRegion();
     ExAcquirePushLockExclusive(&Directory->Lock);
 
-    /* Set the directory */
-    Context->Directory = Directory;
-
-    /* Update lock settings */
+    /* Update lock flag */
     Context->LockStateSignature = OBP_LOCK_STATE_POST_ACQUISITION_EXCLUSIVE;
-    Context->DirectoryLocked = TRUE;
 }
 
+/**
+ * @brief
+ * Unlocks a previously shared or exclusively locked directory.
+ *
+ * @param[in] Directory
+ * The directory to unlock.
+ *
+ * @param[in] Context
+ * The lookup lock context.
+ */
 FORCEINLINE
 VOID
 ObpReleaseDirectoryLock(IN POBJECT_DIRECTORY Directory,
-                         IN POBP_LOOKUP_CONTEXT Context)
+                        IN POBP_LOOKUP_CONTEXT Context)
 {
     /* Release the lock */
     ExReleasePushLock(&Directory->Lock);
@@ -216,6 +244,15 @@ ObpReleaseDirectoryLock(IN POBJECT_DIRECTORY Directory,
     KeLeaveCriticalRegion();
 }
 
+/**
+ * @brief
+ * Initializes a new object directory lookup context.
+ * Used for lookup operations (insertions/deletions) in a directory.
+ * Employed in conjunction with the directory locking functions.
+ *
+ * @param[in] Context
+ * The new lookup context to initialize.
+ */
 FORCEINLINE
 VOID
 ObpInitializeLookupContext(IN POBP_LOOKUP_CONTEXT Context)
@@ -227,6 +264,29 @@ ObpInitializeLookupContext(IN POBP_LOOKUP_CONTEXT Context)
     Context->LockStateSignature = OBP_LOCK_STATE_INITIALIZED;
 }
 
+/**
+ * @brief
+ * Locks an object directory lookup context for performing
+ * lookup operations (insertions/deletions) in a directory.
+ * The directory is locked for exclusive access.
+ *
+ * @param[in] Context
+ * The lookup context to lock.
+ *
+ * @param[in] Directory
+ * The directory on which the lookup context applies.
+ */
+FORCEINLINE
+VOID
+ObpAcquireLookupContextLock(IN POBP_LOOKUP_CONTEXT Context,
+                            IN POBJECT_DIRECTORY Directory)
+{
+    /* Acquire an exclusive directory lock and save its lock state */
+    ObpAcquireDirectoryLockExclusive(Directory, Context);
+    Context->Directory = Directory;
+    Context->DirectoryLocked = TRUE;
+}
+
 FORCEINLINE
 VOID
 ObpReleaseLookupContextObject(IN POBP_LOOKUP_CONTEXT Context)
@@ -234,14 +294,14 @@ ObpReleaseLookupContextObject(IN POBP_LOOKUP_CONTEXT Context)
     POBJECT_HEADER ObjectHeader;
     POBJECT_HEADER_NAME_INFO HeaderNameInfo;
 
-    /* Check if we had found an object */
+    /* Check if we had an object */
     if (Context->Object)
     {
         /* Get the object name information */
         ObjectHeader = OBJECT_TO_OBJECT_HEADER(Context->Object);
         HeaderNameInfo = OBJECT_HEADER_TO_NAME_INFO(ObjectHeader);
 
-        /* release the name information */
+        /* Release the name information */
         ObpDereferenceNameInfo(HeaderNameInfo);
 
         /* Dereference the object */
@@ -250,6 +310,14 @@ ObpReleaseLookupContextObject(IN POBP_LOOKUP_CONTEXT Context)
     }
 }
 
+/**
+ * @brief
+ * Releases an initialized object directory lookup context.
+ * Unlocks it if necessary, and dereferences the underlying object.
+ *
+ * @param[in] Context
+ * The lookup context to release.
+ */
 FORCEINLINE
 VOID
 ObpReleaseLookupContext(IN POBP_LOOKUP_CONTEXT Context)
@@ -257,13 +325,13 @@ ObpReleaseLookupContext(IN POBP_LOOKUP_CONTEXT Context)
     /* Check if we came back with the directory locked */
     if (Context->DirectoryLocked)
     {
-        /* Release the lock */
+        /* Release the directory lock */
         ObpReleaseDirectoryLock(Context->Directory, Context);
         Context->Directory = NULL;
         Context->DirectoryLocked = FALSE;
     }
 
-    /* Clear the context  */
+    /* Clear the context */
     ObpReleaseLookupContextObject(Context);
 }
 

@@ -573,7 +573,7 @@ NtQueryDirectoryObject(IN HANDLE DirectoryHandle,
         return Status;
     }
 
-    /* Lock directory in shared mode */
+    /* Lock the directory in shared mode */
     ObpAcquireDirectoryLockShared(Directory, &LookupContext);
 
     /* Start at position 0 */
