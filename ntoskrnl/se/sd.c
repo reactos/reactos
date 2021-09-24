@@ -220,7 +220,6 @@ SeSetWorldSecurityDescriptor(
     if (SecurityInformation & DACL_SECURITY_INFORMATION)
     {
         PACL Dacl = (PACL)((PUCHAR)SdRel + Current);
-        SdRel->Control |= SE_DACL_PRESENT;
 
         Status = RtlCreateAcl(Dacl,
                               sizeof(ACL) + sizeof(ACE) + SidSize,
@@ -235,7 +234,9 @@ SeSetWorldSecurityDescriptor(
         if (!NT_SUCCESS(Status))
             return Status;
 
+        SdRel->Control |= SE_DACL_PRESENT;
         SdRel->Dacl = Current;
+        Current += SidSize;
     }
 
     if (SecurityInformation & SACL_SECURITY_INFORMATION)
