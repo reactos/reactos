@@ -635,7 +635,7 @@ ObpAllocateObject(IN POBJECT_CREATE_INFORMATION ObjectCreateInfo,
     {
         /* Use default tag and non-paged pool */
         PoolType = NonPagedPool;
-        Tag = 'TjbO';
+        Tag = TAG_OBJECT_TYPE;
     }
     else
     {
@@ -1159,7 +1159,7 @@ ObCreateObjectType(IN PUNICODE_STRING TypeName,
 
         /* Set the hard-coded key and object count */
         LocalObjectType->TotalNumberOfObjects = 1;
-        LocalObjectType->Key = 'TjbO';
+        LocalObjectType->Key = TAG_OBJECT_TYPE;
     }
     else
     {
