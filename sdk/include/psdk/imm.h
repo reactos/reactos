@@ -237,6 +237,10 @@ typedef struct tagCANDIDATEINFO {
 #define NI_SETCANDIDATE_PAGESIZE        0x0017
 #define NI_IMEMENUSELECTED              0x0018
 
+/* dwSystemInfoFlags bits */
+#define IME_SYSINFO_WINLOGON            0x0001
+#define IME_SYSINFO_WOW16               0x0002
+
 BOOL  WINAPI ImmUnlockIMC(HIMC);
 DWORD WINAPI ImmGetIMCLockCount(HIMC);
 HIMCC  WINAPI ImmCreateIMCC(DWORD);

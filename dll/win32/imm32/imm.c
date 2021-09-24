@@ -62,9 +62,7 @@ HKL WINAPI ImmLoadLayout(HKL hKL, PIMEINFOEX pImeInfoEx)
 
     TRACE("(%p, %p)\n", hKL, pImeInfoEx);
 
-    if (IS_IME_HKL(hKL) ||
-        !g_psi || !(g_psi->dwSRVIFlags & SRVINFO_CICERO_ENABLED) ||
-        ((PW32CLIENTINFO)NtCurrentTeb()->Win32ClientInfo)->W32ClientInfo[0] & 2)
+    if (IS_IME_HKL(hKL) || !Imm32IsCiceroMode() || Imm32Is16BitMode())
     {
         UnicodeString.Buffer = szLayout;
         UnicodeString.MaximumLength = sizeof(szLayout);
@@ -266,7 +264,7 @@ BOOL WINAPI ImmAssociateContextEx(HWND hWnd, HIMC hIMC, DWORD dwFlags)
 
     TRACE("(%p, %p, 0x%lX)\n", hWnd, hIMC, dwFlags);
 
-    if (!g_psi || !(g_psi->dwSRVIFlags & SRVINFO_IMM32))
+    if (!Imm32IsImmMode())
         return FALSE;
 
     if (hIMC && !(dwFlags & IACE_DEFAULT) && Imm32IsCrossThreadAccess(hIMC))
@@ -311,7 +309,7 @@ HIMC WINAPI ImmCreateContext(void)
 
     TRACE("()\n");
 
-    if (g_psi == NULL || !(g_psi->dwSRVIFlags & SRVINFO_IMM32))
+    if (!Imm32IsImmMode())
         return NULL;
 
     pClientImc = Imm32HeapAlloc(HEAP_ZERO_MEMORY, sizeof(CLIENTIMC));
@@ -350,7 +348,7 @@ BOOL APIENTRY Imm32CleanupContext(HIMC hIMC, HKL hKL, BOOL bKeep)
     LPINPUTCONTEXT pIC;
     PCLIENTIMC pClientImc;
 
-    if (g_psi == NULL || !(g_psi->dwSRVIFlags & SRVINFO_IMM32) || hIMC == NULL)
+    if (!Imm32IsImmMode() || hIMC == NULL)
         return FALSE;
 
     FIXME("We have do something to do here\n");
@@ -385,9 +383,9 @@ BOOL APIENTRY Imm32CleanupContext(HIMC hIMC, HKL hKL, BOOL bKeep)
             {
                 pImeDpi->ImeSelect(hIMC, FALSE);
             }
-            else if (g_psi && (g_psi->dwSRVIFlags & SRVINFO_CICERO_ENABLED))
+            else if (Imm32IsCiceroMode() && pImeDpi->CtfImeSelectEx)
             {
-                FIXME("We have do something to do here\n");
+                pImeDpi->CtfImeSelectEx(hIMC, FALSE, hKL);
             }
             ImmUnlockImeDpi(pImeDpi);
         }
@@ -422,7 +420,7 @@ BOOL WINAPI ImmDestroyContext(HIMC hIMC)
 
     TRACE("(%p)\n", hIMC);
 
-    if (g_psi == NULL || !(g_psi->dwSRVIFlags & SRVINFO_IMM32))
+    if (!Imm32IsImmMode())
         return FALSE;
 
     if (Imm32IsCrossThreadAccess(hIMC))
@@ -508,7 +506,7 @@ static HIMC APIENTRY Imm32GetContextEx(HWND hWnd, DWORD dwContextFlags)
     PCLIENTIMC pClientImc;
     PWND pWnd;
 
-    if (!g_psi || !(g_psi->dwSRVIFlags & SRVINFO_IMM32))
+    if (!Imm32IsImmMode())
         return NULL;
 
     if (!hWnd)
@@ -843,7 +841,7 @@ HIMC WINAPI ImmGetContext(HWND hWnd)
  */
 BOOL WINAPI CtfImmIsCiceroEnabled(VOID)
 {
-    return (g_psi && (g_psi->dwSRVIFlags & SRVINFO_CICERO_ENABLED));
+    return Imm32IsCiceroMode();
 }
 
 /***********************************************************************
@@ -1380,7 +1378,7 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpReserved)
             break;
 
         case DLL_THREAD_DETACH:
-            if (g_psi == NULL || !(g_psi->dwSRVIFlags & SRVINFO_IMM32))
+            if (!Imm32IsImmMode())
                 return TRUE;
 
             pTeb = NtCurrentTeb();

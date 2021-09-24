@@ -46,23 +46,26 @@ BOOL APIENTRY Imm32InquireIme(PIMEDPI pImeDpi)
 {
     WCHAR szUIClass[64];
     WNDCLASSW wcW;
-    DWORD dwSysInfoFlags = 0; // TODO: ???
+    DWORD dwSysInfoFlags = 0;
     LPIMEINFO pImeInfo = &pImeDpi->ImeInfo;
 
-    // TODO: NtUserGetThreadState(16);
+    if (NtUserGetThreadState(16))
+        dwSysInfoFlags |= IME_SYSINFO_WINLOGON;
 
-    if (!IS_IME_HKL(pImeDpi->hKL))
+    if (IS_IME_HKL(pImeDpi->hKL))
     {
-        if (g_psi && (g_psi->dwSRVIFlags & SRVINFO_CICERO_ENABLED) &&
-            pImeDpi->CtfImeInquireExW)
-        {
-            // TODO:
+        if (!pImeDpi->ImeInquire(pImeInfo, szUIClass, dwSysInfoFlags))
             return FALSE;
-        }
     }
-
-    if (!pImeDpi->ImeInquire(pImeInfo, szUIClass, dwSysInfoFlags))
+    else if (Imm32IsCiceroMode() && pImeDpi->CtfImeInquireExW)
+    {
+        if (!pImeDpi->CtfImeInquireExW(pImeInfo, szUIClass, dwSysInfoFlags, pImeDpi->hKL))
+            return FALSE;
+    }
+    else
+    {
         return FALSE;
+    }
 
     szUIClass[_countof(szUIClass) - 1] = 0;
 
@@ -257,18 +260,10 @@ PIMEDPI APIENTRY Ime32LoadImeDpi(HKL hKL, BOOL bLock)
 
 PIMEDPI APIENTRY ImmLockOrLoadImeDpi(HKL hKL)
 {
-    PW32CLIENTINFO pInfo;
     PIMEDPI pImeDpi;
 
-    if (!IS_IME_HKL(hKL))
-    {
-        if (!g_psi || !(g_psi->dwSRVIFlags & SRVINFO_CICERO_ENABLED))
-            return NULL;
-
-        pInfo = (PW32CLIENTINFO)(NtCurrentTeb()->Win32ClientInfo);
-        if ((pInfo->W32ClientInfo[0] & 2))
-            return NULL;
-    }
+    if (!IS_IME_HKL(hKL) && (!Imm32IsCiceroMode() || Imm32Is16BitMode()))
+        return NULL;
 
     pImeDpi = ImmLockImeDpi(hKL);
     if (pImeDpi == NULL)
@@ -282,11 +277,9 @@ ImeDpi_Escape(PIMEDPI pImeDpi, HIMC hIMC, UINT uSubFunc, LPVOID lpData, HKL hKL)
     if (IS_IME_HKL(hKL))
         return pImeDpi->ImeEscape(hIMC, uSubFunc, lpData);
 
-    if (g_psi && (g_psi->dwSRVIFlags & SRVINFO_CICERO_ENABLED))
-    {
-        if (pImeDpi->CtfImeEscapeEx)
-            return pImeDpi->CtfImeEscapeEx(hIMC, uSubFunc, lpData, hKL);
-    }
+    if (Imm32IsCiceroMode() && pImeDpi->CtfImeEscapeEx)
+        return pImeDpi->CtfImeEscapeEx(hIMC, uSubFunc, lpData, hKL);
+
     return 0;
 }
 
@@ -305,7 +298,7 @@ BOOL WINAPI ImmIsIME(HKL hKL)
  */
 HWND WINAPI ImmGetDefaultIMEWnd(HWND hWnd)
 {
-    if (!g_psi || !(g_psi->dwSRVIFlags & SRVINFO_IMM32))
+    if (!Imm32IsImmMode())
         return NULL;
 
     // FIXME: NtUserGetThreadState and enum ThreadStateRoutines are broken.
@@ -367,7 +360,6 @@ ImmGetImeInfoEx(PIMEINFOEX pImeInfoEx, IMEINFOEXCLASS SearchType, PVOID pvSearch
 {
     BOOL bDisabled = FALSE;
     HKL hKL;
-    PTEB pTeb;
 
     switch (SearchType)
     {
@@ -390,10 +382,9 @@ ImmGetImeInfoEx(PIMEINFOEX pImeInfoEx, IMEINFOEXCLASS SearchType, PVOID pvSearch
 
     if (!IS_IME_HKL(hKL))
     {
-        if (g_psi && (g_psi->dwSRVIFlags & SRVINFO_CICERO_ENABLED))
+        if (Imm32IsCiceroMode())
         {
-            pTeb = NtCurrentTeb();
-            if (((PW32CLIENTINFO)pTeb->Win32ClientInfo)->W32ClientInfo[0] & 2)
+            if (Imm32Is16BitMode())
                 return FALSE;
             if (!bDisabled)
                 goto Quit;
@@ -487,18 +478,10 @@ VOID WINAPI ImmUnlockImeDpi(PIMEDPI pImeDpi)
  */
 BOOL WINAPI ImmLoadIME(HKL hKL)
 {
-    PW32CLIENTINFO pInfo;
     PIMEDPI pImeDpi;
 
-    if (!IS_IME_HKL(hKL))
-    {
-        if (!g_psi || !(g_psi->dwSRVIFlags & SRVINFO_CICERO_ENABLED))
-            return FALSE;
-
-        pInfo = (PW32CLIENTINFO)(NtCurrentTeb()->Win32ClientInfo);
-        if ((pInfo->W32ClientInfo[0] & 2))
-            return FALSE;
-    }
+    if (!IS_IME_HKL(hKL) && (!Imm32IsCiceroMode() || Imm32Is16BitMode()))
+        return FALSE;
 
     pImeDpi = Imm32FindImeDpi(hKL);
     if (pImeDpi == NULL)
@@ -1319,20 +1302,14 @@ BOOL WINAPI ImmSetConversionStatus(HIMC hIMC, DWORD fdwConversion, DWORD fdwSent
     HKL hKL;
     LPINPUTCONTEXT pIC;
     DWORD dwOldConversion, dwOldSentence;
-    BOOL fConversionChange = FALSE, fSentenceChange = FALSE;
+    BOOL fConversionChange = FALSE, fSentenceChange = FALSE, fUseCicero = FALSE;
     HWND hWnd;
 
     TRACE("(%p, 0x%lX, 0x%lX)\n", hIMC, fdwConversion, fdwSentence);
 
     hKL = GetKeyboardLayout(0);
-    if (!IS_IME_HKL(hKL))
-    {
-        if (g_psi && (g_psi->dwSRVIFlags & SRVINFO_CICERO_ENABLED))
-        {
-            FIXME("Cicero\n");
-            return FALSE;
-        }
-    }
+    if (!IS_IME_HKL(hKL) && Imm32IsCiceroMode() && !Imm32Is16BitMode())
+        fUseCicero = TRUE;
 
     if (Imm32IsCrossThreadAccess(hIMC))
         return FALSE;
@@ -1358,14 +1335,15 @@ BOOL WINAPI ImmSetConversionStatus(HIMC hIMC, DWORD fdwConversion, DWORD fdwSent
     hWnd = pIC->hWnd;
     ImmUnlockIMC(hIMC);
 
-    if (fConversionChange)
+    if (fConversionChange || fUseCicero)
     {
         Imm32NotifyAction(hIMC, hWnd, NI_CONTEXTUPDATED, dwOldConversion,
                           IMC_SETCONVERSIONMODE, IMN_SETCONVERSIONMODE, 0);
-        NtUserNotifyIMEStatus(hWnd, hIMC, fdwConversion);
+        if (fConversionChange)
+            NtUserNotifyIMEStatus(hWnd, hIMC, fdwConversion);
     }
 
-    if (fSentenceChange)
+    if (fSentenceChange || fUseCicero)
     {
         Imm32NotifyAction(hIMC, hWnd, NI_CONTEXTUPDATED, dwOldSentence,
                           IMC_SETSENTENCEMODE, IMN_SETSENTENCEMODE, 0);
