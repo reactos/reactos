@@ -425,6 +425,7 @@ BOOL APIENTRY Imm32CreateContext(HIMC hIMC, HKL hKL, BOOL fSelect)
     if (!pIC)
         goto Fail;
 
+    /* Create IC components */
     pIC->hCompStr = ImmCreateIMCC(sizeof(COMPOSITIONSTRING));
     pIC->hCandInfo = ImmCreateIMCC(sizeof(CANDIDATEINFO));
     pIC->hGuideLine = ImmCreateIMCC(sizeof(GUIDELINE));
@@ -432,6 +433,7 @@ BOOL APIENTRY Imm32CreateContext(HIMC hIMC, HKL hKL, BOOL fSelect)
     if (!pIC->hCompStr || !pIC->hCandInfo || !pIC->hGuideLine || !pIC->hMsgBuf)
         goto Fail;
 
+    /* Initialize IC components */
     pCS = ImmLockIMCC(pIC->hCompStr);
     if (!pCS)
         goto Fail;
@@ -445,6 +447,8 @@ BOOL APIENTRY Imm32CreateContext(HIMC hIMC, HKL hKL, BOOL fSelect)
     ImmUnlockIMCC(pIC->hCandInfo);
 
     pGL = ImmLockIMCC(pIC->hGuideLine);
+    if (!pGL)
+        goto Fail;
     pGL->dwSize = sizeof(GUIDELINE);
     ImmUnlockIMCC(pIC->hGuideLine);
 
@@ -455,6 +459,7 @@ BOOL APIENTRY Imm32CreateContext(HIMC hIMC, HKL hKL, BOOL fSelect)
     for (dwIndex = 0; dwIndex < MAX_CANDIDATEFORM; ++dwIndex)
         pIC->cfCandForm[dwIndex].dwIndex = IMM_INVALID_CANDFORM;
 
+    /* Get private data size */
     pImeDpi = ImmLockImeDpi(hKL);
     if (!pImeDpi)
     {
@@ -466,21 +471,24 @@ BOOL APIENTRY Imm32CreateContext(HIMC hIMC, HKL hKL, BOOL fSelect)
         if (!pClientImc)
             goto Fail;
 
+        /* Update CLIENTIMC */
+        pClientImc->uCodePage = pImeDpi->uCodePage;
         if (ImeDpi_IsUnicode(pImeDpi))
             pClientImc->dwFlags |= CLIENTIMC_WIDE;
 
-        pClientImc->uCodePage = pImeDpi->uCodePage;
         ImmUnlockClientImc(pClientImc);
 
         cbPrivate = pImeDpi->ImeInfo.dwPrivateDataSize;
     }
 
+    /* Create private data */
     pIC->hPrivate = ImmCreateIMCC(cbPrivate);
     if (!pIC->hPrivate)
         goto Fail;
 
     if (pImeDpi)
     {
+        /* Select the IME */
         if (fSelect)
         {
             if (IS_IME_HKL(hKL))
@@ -489,6 +497,7 @@ BOOL APIENTRY Imm32CreateContext(HIMC hIMC, HKL hKL, BOOL fSelect)
                 pImeDpi->CtfImeSelectEx(hIMC, TRUE, hKL);
         }
 
+        /* Set HKL */
         pClientImc = ImmLockClientImc(hIMC);
         if (pClientImc)
         {
