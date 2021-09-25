@@ -101,9 +101,8 @@ LPVOID FASTCALL ValidateHandleNoErr(HANDLE hObject, UINT uType)
 
 PWND FASTCALL ValidateHwndNoErr(HWND hwnd)
 {
-    PCLIENTINFO ClientInfo = GetWin32ClientInfo();
-
     /* See if the window is cached */
+    PCLIENTINFO ClientInfo = GetWin32ClientInfo();
     if (hwnd == ClientInfo->CallbackWnd.hWnd)
         return ClientInfo->CallbackWnd.pWnd;
 
