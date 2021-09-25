@@ -89,7 +89,7 @@ LPVOID FASTCALL ValidateHandleNoErr(HANDLE hObject, UINT uType)
     he = (PUSER_HANDLE_ENTRY)((ULONG_PTR)ht->handles - g_SharedInfo.ulSharedDelta);
 
     index = (LOWORD(hObject) - FIRST_USER_HANDLE) >> 1;
-    if (index < 0 || index >= ht->nb_handles || he[index].type != uType)
+    if (index < 0 || ht->nb_handles <= index || he[index].type != uType)
         return NULL;
 
     generation = HIWORD(hObject);
