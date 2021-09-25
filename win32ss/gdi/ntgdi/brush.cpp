@@ -543,7 +543,13 @@ NtGdiSetBrushAttributes(
     _In_ HBRUSH hbr,
     _In_ DWORD dwFlags)
 {
-    FIXME("NtGdiSetBrushAttributes is unimplemented\n");
+    if ( dwFlags & SC_BB_STOCKOBJ )
+    {
+        if (GDIOBJ_ConvertToStockObj((HGDIOBJ*)&hbr))
+        {
+            return hbr;
+        }
+    }
     return NULL;
 }
 
@@ -554,7 +560,13 @@ NtGdiClearBrushAttributes(
     _In_ HBRUSH hbr,
     _In_ DWORD dwFlags)
 {
-    FIXME("NtGdiClearBrushAttributes is unimplemented\n");
+    if ( dwFlags & SC_BB_STOCKOBJ )
+    {
+        if (GDIOBJ_ConvertFromStockObj((HGDIOBJ*)&hbr))
+        {
+            return hbr;
+        }
+    }
     return NULL;
 }
 

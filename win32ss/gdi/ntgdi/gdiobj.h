@@ -195,6 +195,7 @@ GDIOBJ_pvGetObjectAttr(
     POBJ pobj);
 
 BOOL    NTAPI GDIOBJ_ConvertToStockObj(HGDIOBJ *hObj);
+BOOL    NTAPI GDIOBJ_ConvertFromStockObj(HGDIOBJ *phObj);
 POBJ    NTAPI GDIOBJ_AllocObjWithHandle(ULONG ObjectType, ULONG cjSize);
 PGDIOBJ NTAPI GDIOBJ_ShareLockObj(HGDIOBJ hObj, DWORD ObjectType);
 PVOID   NTAPI GDI_MapHandleTable(PEPROCESS Process);
