@@ -72,14 +72,14 @@ VOID APIENTRY LogFontWideToAnsi(const LOGFONTW *plfW, LPLOGFONTA plfA)
     plfA->lfFaceName[cch] = 0;
 }
 
-LPVOID FASTCALL ValidateHandleNoErr(HANDLE hHandle, UINT uType)
+LPVOID FASTCALL ValidateHandleNoErr(HANDLE hObject, UINT uType)
 {
     INT index;
     PUSER_HANDLE_TABLE ht;
     PUSER_HANDLE_ENTRY he;
     WORD generation;
 
-    if (!NtUserValidateHandleSecure(hHandle))
+    if (!NtUserValidateHandleSecure(hObject))
         return NULL;
 
     ht = g_SharedInfo.aheList; /* handle table */
@@ -88,11 +88,11 @@ LPVOID FASTCALL ValidateHandleNoErr(HANDLE hHandle, UINT uType)
     ASSERT(g_SharedInfo.ulSharedDelta != 0);
     he = (PUSER_HANDLE_ENTRY)((ULONG_PTR)ht->handles - g_SharedInfo.ulSharedDelta);
 
-    index = (LOWORD(hHandle) - FIRST_USER_HANDLE) >> 1;
+    index = (LOWORD(hObject) - FIRST_USER_HANDLE) >> 1;
     if (index < 0 || index >= ht->nb_handles || he[index].type != uType)
         return NULL;
 
-    generation = HIWORD(hHandle);
+    generation = HIWORD(hObject);
     if (generation != he[index].generation && generation && generation != 0xFFFF)
         return NULL;
 
