@@ -392,11 +392,11 @@ BOOL APIENTRY Imm32CleanupContext(HIMC hIMC, HKL hKL, BOOL bKeep)
         pClientImc->hKL = NULL;
     }
 
-    ImmDestroyIMCC(pIC->hPrivate);
-    ImmDestroyIMCC(pIC->hMsgBuf);
-    ImmDestroyIMCC(pIC->hGuideLine);
-    ImmDestroyIMCC(pIC->hCandInfo);
-    ImmDestroyIMCC(pIC->hCompStr);
+    pIC->hPrivate = ImmDestroyIMCC(pIC->hPrivate);
+    pIC->hMsgBuf = ImmDestroyIMCC(pIC->hMsgBuf);
+    pIC->hGuideLine = ImmDestroyIMCC(pIC->hGuideLine);
+    pIC->hCandInfo = ImmDestroyIMCC(pIC->hCandInfo);
+    pIC->hCompStr = ImmDestroyIMCC(pIC->hCompStr);
 
     Imm32CleanupContextExtra(pIC);
 
@@ -512,31 +512,11 @@ Fail:
     if (pImeDpi)
         ImmUnlockImeDpi(pImeDpi);
 
-    if (pIC->hCompStr)
-    {
-        ImmDestroyIMCC(pIC->hCompStr);
-        pIC->hCompStr = NULL;
-    }
-    if (pIC->hMsgBuf)
-    {
-        ImmDestroyIMCC(pIC->hMsgBuf);
-        pIC->hMsgBuf = NULL;
-    }
-    if (pIC->hGuideLine)
-    {
-        ImmDestroyIMCC(pIC->hGuideLine);
-        pIC->hGuideLine = NULL;
-    }
-    if (pIC->hCandInfo)
-    {
-        ImmDestroyIMCC(pIC->hCandInfo);
-        pIC->hCandInfo = NULL;
-    }
-    if (pIC->hCompStr)
-    {
-        ImmDestroyIMCC(pIC->hCompStr);
-        pIC->hCompStr = NULL;
-    }
+    pIC->hCompStr = ImmDestroyIMCC(pIC->hCompStr);
+    pIC->hMsgBuf = ImmDestroyIMCC(pIC->hMsgBuf);
+    pIC->hGuideLine = ImmDestroyIMCC(pIC->hGuideLine);
+    pIC->hCandInfo = ImmDestroyIMCC(pIC->hCandInfo);
+    pIC->hCompStr = ImmDestroyIMCC(pIC->hCompStr);
 
     ImmUnlockIMC(hIMC);
     return FALSE;
