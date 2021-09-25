@@ -425,8 +425,6 @@ BOOL APIENTRY Imm32CreateContext(HIMC hIMC, HKL hKL, BOOL fSelect)
     if (!pIC)
         goto Fail;
 
-    pIC->hCompStr = pIC->hCandInfo = pIC->hGuideLine = pIC->hMsgBuf = pIC->hPrivate = NULL;
-
     pIC->hCompStr = ImmCreateIMCC(sizeof(COMPOSITIONSTRING));
     if (!pIC->hCompStr)
         goto Fail;
