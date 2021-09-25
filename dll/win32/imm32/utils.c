@@ -119,7 +119,7 @@ BOOL APIENTRY Imm32CheckImcProcess(PIMC pIMC)
 
     hIMC = pIMC->head.h;
     dwProcessID = (DWORD)NtUserQueryInputContext(hIMC, 0);
-    return dwProcessID == (DWORD)NtCurrentTeb()->ClientId.UniqueProcess;
+    return dwProcessID == (DWORD_PTR)NtCurrentTeb()->ClientId.UniqueProcess;
 }
 
 LPVOID APIENTRY Imm32HeapAlloc(DWORD dwFlags, DWORD dwBytes)
