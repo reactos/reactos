@@ -72,7 +72,7 @@ BOOL Imm32GetSystemLibraryPath(LPWSTR pszPath, DWORD cchPath, LPCWSTR pszFileNam
 VOID APIENTRY LogFontAnsiToWide(const LOGFONTA *plfA, LPLOGFONTW plfW);
 VOID APIENTRY LogFontWideToAnsi(const LOGFONTW *plfW, LPLOGFONTA plfA);
 PWND FASTCALL ValidateHwndNoErr(HWND hwnd);
-LPVOID FASTCALL ValidateHandleNoErr(HANDLE hHandle, UINT uType);
+LPVOID FASTCALL ValidateHandleNoErr(HANDLE hObject, UINT uType);
 BOOL APIENTRY Imm32CheckImcProcess(PIMC pIMC);
 
 LPVOID APIENTRY Imm32HeapAlloc(DWORD dwFlags, DWORD dwBytes);
