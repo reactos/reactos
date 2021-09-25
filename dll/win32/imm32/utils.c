@@ -117,7 +117,7 @@ BOOL APIENTRY Imm32CheckImcProcess(PIMC pIMC)
         return TRUE;
 
     hIMC = pIMC->head.h;
-    dwProcessID = (DWORD)NtUserQueryInputContext(hIMC, 0);
+    dwProcessID = NtUserQueryInputContext(hIMC, 0);
     return dwProcessID == (DWORD_PTR)NtCurrentTeb()->ClientId.UniqueProcess;
 }
 
