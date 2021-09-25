@@ -111,7 +111,7 @@ PWND FASTCALL ValidateHwndNoErr(HWND hwnd)
 
 BOOL APIENTRY Imm32CheckImcProcess(PIMC pIMC)
 {
-    HANDLE hIMC;
+    HIMC hIMC;
     DWORD dwProcessID;
     if (pIMC->head.pti == NtCurrentTeb()->Win32ThreadInfo)
         return TRUE;
