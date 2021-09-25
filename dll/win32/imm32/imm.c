@@ -547,7 +547,7 @@ LPINPUTCONTEXT APIENTRY Imm32LockIMCEx(HIMC hIMC, BOOL fSelect)
         {
             hKL = GetKeyboardLayout(0);
             Word = LOWORD(hKL);
-            hNewKL = (HANDLE)(DWORD_PTR)MAKELONG(Word, Word);
+            hNewKL = (HKL)(DWORD_PTR)MAKELONG(Word, Word);
 
             pImeDpi = ImmLockOrLoadImeDpi(hNewKL);
             if (pImeDpi)
