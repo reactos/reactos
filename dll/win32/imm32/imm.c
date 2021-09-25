@@ -426,16 +426,10 @@ BOOL APIENTRY Imm32CreateContext(HIMC hIMC, HKL hKL, BOOL fSelect)
         goto Fail;
 
     pIC->hCompStr = ImmCreateIMCC(sizeof(COMPOSITIONSTRING));
-    if (!pIC->hCompStr)
-        goto Fail;
     pIC->hCandInfo = ImmCreateIMCC(sizeof(CANDIDATEINFO));
-    if (!pIC->hCandInfo)
-        goto Fail;
     pIC->hGuideLine = ImmCreateIMCC(sizeof(GUIDELINE));
-    if (!pIC->hGuideLine)
-        goto Fail;
     pIC->hMsgBuf = ImmCreateIMCC(sizeof(UINT));
-    if (!pIC->hMsgBuf)
+    if (!pIC->hCompStr || !pIC->hCandInfo || !pIC->hGuideLine || !pIC->hMsgBuf)
         goto Fail;
 
     pCS = ImmLockIMCC(pIC->hCompStr);
