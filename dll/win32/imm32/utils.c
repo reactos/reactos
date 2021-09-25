@@ -72,19 +72,14 @@ VOID APIENTRY LogFontWideToAnsi(const LOGFONTW *plfW, LPLOGFONTA plfA)
     plfA->lfFaceName[cch] = 0;
 }
 
-PWND FASTCALL ValidateHwndNoErr(HWND hwnd)
+LPVOID FASTCALL ValidateHandleNoErr(HANDLE hHandle, UINT uType)
 {
-    PCLIENTINFO ClientInfo = GetWin32ClientInfo();
     INT index;
     PUSER_HANDLE_TABLE ht;
     PUSER_HANDLE_ENTRY he;
     WORD generation;
 
-    /* See if the window is cached */
-    if (hwnd == ClientInfo->CallbackWnd.hWnd)
-        return ClientInfo->CallbackWnd.pWnd;
-
-    if (!NtUserValidateHandleSecure(hwnd))
+    if (!NtUserValidateHandleSecure(hHandle))
         return NULL;
 
     ht = g_SharedInfo.aheList; /* handle table */
@@ -93,15 +88,38 @@ PWND FASTCALL ValidateHwndNoErr(HWND hwnd)
     ASSERT(g_SharedInfo.ulSharedDelta != 0);
     he = (PUSER_HANDLE_ENTRY)((ULONG_PTR)ht->handles - g_SharedInfo.ulSharedDelta);
 
-    index = (LOWORD(hwnd) - FIRST_USER_HANDLE) >> 1;
-    if (index < 0 || index >= ht->nb_handles || he[index].type != TYPE_WINDOW)
+    index = (LOWORD(hHandle) - FIRST_USER_HANDLE) >> 1;
+    if (index < 0 || index >= ht->nb_handles || he[index].type != uType)
         return NULL;
 
-    generation = HIWORD(hwnd);
+    generation = HIWORD(hHandle);
     if (generation != he[index].generation && generation && generation != 0xFFFF)
         return NULL;
 
-    return (PWND)&he[index];
+    return &he[index];
+}
+
+PWND FASTCALL ValidateHwndNoErr(HWND hwnd)
+{
+    PCLIENTINFO ClientInfo = GetWin32ClientInfo();
+
+    /* See if the window is cached */
+    if (hwnd == ClientInfo->CallbackWnd.hWnd)
+        return ClientInfo->CallbackWnd.pWnd;
+
+    return ValidateHandleNoErr(hwnd, TYPE_WINDOW);
+}
+
+BOOL APIENTRY Imm32CheckImcProcess(PIMC pIMC)
+{
+    HANDLE hIMC;
+    DWORD dwProcessID;
+    if (pIMC->head.pti == NtCurrentTeb()->Win32ThreadInfo)
+        return TRUE;
+
+    hIMC = pIMC->head.h;
+    dwProcessID = (DWORD)NtUserQueryInputContext(hIMC, 0);
+    return dwProcessID == (DWORD)NtCurrentTeb()->ClientId.UniqueProcess;
 }
 
 LPVOID APIENTRY Imm32HeapAlloc(DWORD dwFlags, DWORD dwBytes)

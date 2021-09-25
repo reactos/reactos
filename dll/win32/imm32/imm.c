@@ -336,23 +336,21 @@ static VOID APIENTRY Imm32CleanupContextExtra(LPINPUTCONTEXT pIC)
     FIXME("We have to do something do here");
 }
 
-static PCLIENTIMC APIENTRY Imm32FindClientImc(HIMC hIMC)
-{
-    // FIXME
-    return NULL;
-}
-
 BOOL APIENTRY Imm32CleanupContext(HIMC hIMC, HKL hKL, BOOL bKeep)
 {
     PIMEDPI pImeDpi;
     LPINPUTCONTEXT pIC;
     PCLIENTIMC pClientImc;
+    PIMC pIMC;
 
     if (!Imm32IsImmMode() || hIMC == NULL)
         return FALSE;
 
-    FIXME("We have do something to do here\n");
-    pClientImc = Imm32FindClientImc(hIMC);
+    pIMC = ValidateHandleNoErr(hIMC, TYPE_INPUTCONTEXT);
+    if (!pIMC || pIMC->head.pti != NtCurrentTeb()->Win32ThreadInfo)
+        return FALSE;
+
+    pClientImc = (PCLIENTIMC)pIMC->dwClientImcData;
     if (!pClientImc)
         return FALSE;
 
@@ -430,17 +428,12 @@ BOOL WINAPI ImmDestroyContext(HIMC hIMC)
     return Imm32CleanupContext(hIMC, hKL, FALSE);
 }
 
-static PCLIENTIMC APIENTRY Imm32GetClientImcCache(void)
-{
-    // FIXME: Do something properly here
-    return NULL;
-}
-
 /***********************************************************************
  *		ImmLockClientImc (IMM32.@)
  */
 PCLIENTIMC WINAPI ImmLockClientImc(HIMC hImc)
 {
+    PIMC pIMC;
     PCLIENTIMC pClientImc;
 
     TRACE("(%p)\n", hImc);
@@ -448,7 +441,11 @@ PCLIENTIMC WINAPI ImmLockClientImc(HIMC hImc)
     if (hImc == NULL)
         return NULL;
 
-    pClientImc = Imm32GetClientImcCache();
+    pIMC = ValidateHandleNoErr(hImc, TYPE_INPUTCONTEXT);
+    if (pIMC == NULL || !Imm32CheckImcProcess(pIMC))
+        return NULL;
+
+    pClientImc = (PCLIENTIMC)pIMC->dwClientImcData;
     if (!pClientImc)
     {
         pClientImc = Imm32HeapAlloc(HEAP_ZERO_MEMORY, sizeof(CLIENTIMC));
