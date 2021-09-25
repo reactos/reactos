@@ -515,12 +515,10 @@ Fail:
     if (pImeDpi)
         ImmUnlockImeDpi(pImeDpi);
 
-    pIC->hCompStr = ImmDestroyIMCC(pIC->hCompStr);
     pIC->hMsgBuf = ImmDestroyIMCC(pIC->hMsgBuf);
     pIC->hGuideLine = ImmDestroyIMCC(pIC->hGuideLine);
     pIC->hCandInfo = ImmDestroyIMCC(pIC->hCandInfo);
     pIC->hCompStr = ImmDestroyIMCC(pIC->hCompStr);
-
     ImmUnlockIMC(hIMC);
     return FALSE;
 }
