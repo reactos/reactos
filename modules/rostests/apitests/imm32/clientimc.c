@@ -24,15 +24,15 @@ START_TEST(clientimc)
     DWORD dwCode;
     CLIENTIMC *pClientImc = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(CLIENTIMC));
 
-    pClientImc->hImc = (HIMC)ImmCreateIMCC(4);
+    pClientImc->hInputContext = (HANDLE)ImmCreateIMCC(4);
     pClientImc->cLockObj = 2;
     pClientImc->dwFlags = 0x40;
     RtlInitializeCriticalSection(&pClientImc->cs);
-    ok_long(ImmGetIMCCSize((HIMCC)pClientImc->hImc), 4);
+    ok_long(ImmGetIMCCSize((HIMCC)pClientImc->hInputContext), 4);
 
     ImmUnlockClientImc(pClientImc);
     ok_long(pClientImc->cLockObj, 1);
-    ok_long(ImmGetIMCCSize((HIMCC)pClientImc->hImc), 4);
+    ok_long(ImmGetIMCCSize((HIMCC)pClientImc->hInputContext), 4);
 
     dwCode = 0;
     _SEH2_TRY
@@ -47,7 +47,7 @@ START_TEST(clientimc)
     ok_long(dwCode, STATUS_ACCESS_VIOLATION);
 
     ok_long(pClientImc->cLockObj, 0);
-    ok_long(ImmGetIMCCSize((HIMCC)pClientImc->hImc), 0);
+    ok_long(ImmGetIMCCSize((HIMCC)pClientImc->hInputContext), 0);
 
     HeapFree(GetProcessHeap(), 0, pClientImc);
 }
