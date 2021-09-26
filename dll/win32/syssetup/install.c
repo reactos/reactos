@@ -121,7 +121,8 @@ CreateShortcut(
     LPCWSTR pszCommand,
     LPCWSTR pszDescription,
     INT iIconNr,
-    LPCWSTR pszWorkingDir)
+    LPCWSTR pszWorkingDir,
+    LPCWSTR pszArgs)
 {
     DWORD dwLen;
     LPWSTR Ptr;
@@ -170,7 +171,7 @@ CreateShortcut(
     /* Create the shortcut */
     return SUCCEEDED(CreateShellLink(szPath,
                                      pszCommand,
-                                     L"",
+                                     pszArgs,
                                      pszWorkingDir,
                                      /* Special value to indicate no icon */
                                      (iIconNr != -1 ? pszCommand : NULL),
@@ -188,6 +189,7 @@ static BOOL CreateShortcutsFromSection(HINF hinf, LPWSTR pszSection, LPCWSTR psz
     WCHAR szName[MAX_PATH];
     WCHAR szDescription[MAX_PATH];
     WCHAR szDirectory[MAX_PATH];
+    WCHAR szArgs[MAX_PATH];
 
     if (!SetupFindFirstLine(hinf, pszSection, NULL, &Context))
         return FALSE;
@@ -213,9 +215,12 @@ static BOOL CreateShortcutsFromSection(HINF hinf, LPWSTR pszSection, LPCWSTR psz
         if (dwFieldCount < 5 || !SetupGetStringFieldW(&Context, 5, szDirectory, ARRAYSIZE(szDirectory), NULL))
             szDirectory[0] = L'\0';
 
+        if (dwFieldCount < 6 || !SetupGetStringFieldW(&Context, 6, szArgs, ARRAYSIZE(szArgs), NULL))
+            szArgs[0] = L'\0';
+
         wcscat(szName, L".lnk");
 
-        CreateShortcut(pszFolder, szName, szCommand, szDescription, iIconNr, szDirectory);
+        CreateShortcut(pszFolder, szName, szCommand, szDescription, iIconNr, szDirectory, szArgs);
 
     } while (SetupFindNextLine(&Context, &Context));
 
