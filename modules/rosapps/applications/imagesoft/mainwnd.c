@@ -119,6 +119,7 @@ MainWndCreateToolbarClient(struct _TOOLBAR_DOCKS *TbDocks,
     const TBBUTTON *Buttons = NULL;
     UINT NumButtons = 0;
     UINT StartImageRes = 0;
+    UINT NumImages = 0;
     HWND hWndClient = NULL;
 
     UNREFERENCED_PARAMETER(Context);
@@ -130,6 +131,7 @@ MainWndCreateToolbarClient(struct _TOOLBAR_DOCKS *TbDocks,
             Buttons = StdButtons;
             NumButtons = sizeof(StdButtons) / sizeof(StdButtons[0]);
             StartImageRes = IDB_MAINNEWICON;
+            NumImages = 10;
             break;
         }
 
@@ -138,6 +140,7 @@ MainWndCreateToolbarClient(struct _TOOLBAR_DOCKS *TbDocks,
             Buttons = TextButtons;
             NumButtons = sizeof(TextButtons) / sizeof(TextButtons[0]);
             StartImageRes = IDB_TEXTBOLD;
+            NumImages = 6;
             break;
         }
 
@@ -194,8 +197,7 @@ MainWndCreateToolbarClient(struct _TOOLBAR_DOCKS *TbDocks,
                         0,
                         (LPARAM)MAKELONG(TB_BMP_WIDTH, TB_BMP_HEIGHT));
 
-            hImageList = InitImageList(NumButtons,
-                                       StartImageRes);
+            hImageList = InitImageList(StartImageRes, NumImages);
 
             ImageList_Destroy((HIMAGELIST)SendMessage(hWndClient,
                                                       TB_SETIMAGELIST,
