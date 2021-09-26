@@ -493,7 +493,7 @@ MainWndMoveFloatingWindows(PMAIN_WND_INFO Info,
 
         CopyMemory(wndOldPos,
                    &wndNewPos,
-                   sizeof(wndOldPos));
+                   sizeof(wndNewPos));
     }
 }
 
