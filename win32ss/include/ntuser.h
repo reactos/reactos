@@ -1290,7 +1290,7 @@ C_ASSERT(sizeof(IMEDPI) == 0xa8);
 /* unconfirmed */
 typedef struct tagCLIENTIMC
 {
-    HANDLE hInputContext;
+    HANDLE hInputContext;   /* LocalAlloc'ed LHND */
     LONG cLockObj;
     DWORD dwFlags;
     DWORD unknown;
