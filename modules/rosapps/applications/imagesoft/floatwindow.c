@@ -58,8 +58,7 @@ FloatToolbarCreateToolsGui(PMAIN_WND_INFO Info)
     HIMAGELIST hImageList;
     UINT NumButtons;
 
-    NumButtons = sizeof(ToolsButtons) / sizeof(ToolsButtons[0]);
-
+    NumButtons = ARRAYSIZE(ToolsButtons);
     hTb = CreateWindowEx(0,
                          TOOLBARCLASSNAME,
                          NULL,
@@ -293,7 +292,7 @@ FloatToolbarCreateHistoryGui(PMAIN_WND_INFO Info)
     if (hList == NULL)
         return FALSE;
 
-    NumButtons = sizeof(HistoryButtons) / sizeof(HistoryButtons[0]);
+    NumButtons = ARRAYSIZE(HistoryButtons);
     hButtons = CreateWindowEx(0,
                               TOOLBARCLASSNAME,
                               NULL,
@@ -603,7 +602,7 @@ InitFloatWndClass(VOID)
 {
     WNDCLASSEX wc = {0};
 
-    wc.cbSize = sizeof(WNDCLASSEX);
+    wc.cbSize = sizeof(wc);
     wc.style = CS_HREDRAW | CS_VREDRAW;
     wc.lpfnWndProc = FloatToolbarWndProc;
     wc.hInstance = hInstance;

@@ -32,7 +32,7 @@ AboutDialogProc(HWND hDlg,
         LoadString(hInstance,
                    IDS_LICENSE,
                    strLicense,
-                   sizeof(strLicense) / sizeof(TCHAR));
+                   ARRAYSIZE(strLicense));
 
         SetWindowText(hLicenseEditWnd,
                       strLicense);

@@ -16,7 +16,7 @@ EnumFontSizes(ENUMLOGFONTEX *lpelfe,
 
     if (fTrueType)
     {
-        for (i = 0; i < (sizeof(ttsizes) / sizeof(ttsizes[0])); i++)
+        for (i = 0; i < ARRAYSIZE(ttsizes); i++)
         {
             wsprintf(ach, _T("%d"), ttsizes[i]);
 

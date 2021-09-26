@@ -21,7 +21,7 @@ AdjustBrightness(HBITMAP hOrigBitmap,
     RECT rc;
 
     GetObject(hNewBitmap,
-              sizeof(BITMAP),
+              sizeof(bitmap),
               &bitmap);
 
     /* Bitmap header */

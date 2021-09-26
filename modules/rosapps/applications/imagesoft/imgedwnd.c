@@ -65,14 +65,14 @@ LoadDIBImage(PEDIT_WND_INFO Info)
 
     bSuccess = ReadFile(hFile,
                         &bmfh,
-                        sizeof(BITMAPFILEHEADER),
+                        sizeof(bmfh),
                         &BytesRead,
                         NULL);
 
-    if (bSuccess && (BytesRead == sizeof(BITMAPFILEHEADER))
+    if (bSuccess && (BytesRead == sizeof(bmfh))
                  && (bmfh.bfType == *(WORD *)"BM"))
     {
-        DWORD InfoSize = bmfh.bfOffBits - sizeof(BITMAPFILEHEADER);
+        DWORD InfoSize = bmfh.bfOffBits - sizeof(bmfh);
 
         Info->pbmi = HeapAlloc(ProcessHeap,
                                0,
@@ -102,7 +102,7 @@ LoadDIBImage(PEDIT_WND_INFO Info)
                              NULL);
 
                     GetObject(Info->hBitmap,
-                              sizeof(BITMAP),
+                              sizeof(bitmap),
                               &bitmap);
 
                     Info->Width = bitmap.bmWidth;
@@ -514,7 +514,7 @@ InitImageEditWindowImpl(VOID)
 {
     WNDCLASSEX wc = {0};
 
-    wc.cbSize = sizeof(WNDCLASSEX);
+    wc.cbSize = sizeof(wc);
     wc.style = CS_HREDRAW | CS_VREDRAW;
     wc.lpfnWndProc = ImageEditWndProc;
     wc.hInstance = hInstance;
