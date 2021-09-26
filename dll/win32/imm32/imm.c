@@ -419,6 +419,7 @@ Imm32InitContext(HIMC hIMC, LPINPUTCONTEXT pIC, PCLIENTIMC pClientImc, HKL hKL, 
     LPCOMPOSITIONSTRING pCS;
     LPCANDIDATEINFO pCI;
     LPGUIDELINE pGL;
+    /* NOTE: Windows does recursive call ImmLockIMC here but we don't do so. */
 
     /* Create IC components */
     pIC->hCompStr = ImmCreateIMCC(sizeof(COMPOSITIONSTRING));
