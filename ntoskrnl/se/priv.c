@@ -15,6 +15,8 @@
 
 /* GLOBALS ********************************************************************/
 
+#define SE_MAXIMUM_PRIVILEGE_LIMIT 0x3C
+
 #define CONST_LUID(x1, x2) {x1, x2}
 const LUID SeCreateTokenPrivilege = CONST_LUID(SE_CREATE_TOKEN_PRIVILEGE, 0);
 const LUID SeAssignPrimaryTokenPrivilege = CONST_LUID(SE_ASSIGNPRIMARYTOKEN_PRIVILEGE, 0);
@@ -427,7 +429,9 @@ SeCheckAuditPrivilege(
  * has been captured successfully. STATUS_INSUFFICIENT_RESOURCES is returned
  * if memory pool allocation for the captured buffer has failed.
  * STATUS_BUFFER_TOO_SMALL is returned if the buffer size is less than the
- * required size.
+ * required size. STATUS_INVALID_PARAMETER is returned if the caller has
+ * submitted a privilege count that exceeds that maximum threshold the
+ * kernel can permit, for the purpose to avoid an integer overflow.
  */
 NTSTATUS
 NTAPI
@@ -454,14 +458,16 @@ SeCaptureLuidAndAttributesArray(
         return STATUS_SUCCESS;
     }
 
+    if (PrivilegeCount > SE_MAXIMUM_PRIVILEGE_LIMIT)
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
     if (PreviousMode == KernelMode && !CaptureIfKernel)
     {
         *Dest = Src;
         return STATUS_SUCCESS;
     }
-
-    /* FIXME - check PrivilegeCount for a valid number so we don't
-     cause an integer overflow or exhaust system resources! */
 
     BufferSize = PrivilegeCount * sizeof(LUID_AND_ATTRIBUTES);
     *Length = ROUND_UP(BufferSize, 4); /* round up to a 4 byte alignment */
