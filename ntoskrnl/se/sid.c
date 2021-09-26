@@ -13,6 +13,8 @@
 
 /* GLOBALS ********************************************************************/
 
+#define SE_MAXIMUM_GROUP_LIMIT 0x1000
+
 SID_IDENTIFIER_AUTHORITY SeNullSidAuthority = {SECURITY_NULL_SID_AUTHORITY};
 SID_IDENTIFIER_AUTHORITY SeWorldSidAuthority = {SECURITY_WORLD_SID_AUTHORITY};
 SID_IDENTIFIER_AUTHORITY SeLocalSidAuthority = {SECURITY_LOCAL_SID_AUTHORITY};
@@ -444,7 +446,8 @@ SepReleaseSid(
  * Returns STATUS_SUCCESS if SID and attributes capturing
  * has been completed successfully. STATUS_INVALID_PARAMETER
  * is returned if the count of attributes exceeds the maximum
- * threshold that the kernel can permit. STATUS_INSUFFICIENT_RESOURCES
+ * threshold that the kernel can permit, with the purpose of
+ * avoiding integer overflows. STATUS_INSUFFICIENT_RESOURCES
  * is returned if memory pool allocation for the captured SID has failed.
  * STATUS_BUFFER_TOO_SMALL is returned if the length of the allocated
  * buffer is less than the required size. A failure NTSTATUS code is
@@ -478,7 +481,7 @@ SeCaptureSidAndAttributesArray(
         return STATUS_SUCCESS;
     }
 
-    if (AttributeCount > 0x1000)
+    if (AttributeCount > SE_MAXIMUM_GROUP_LIMIT)
     {
         return STATUS_INVALID_PARAMETER;
     }
