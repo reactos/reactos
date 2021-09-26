@@ -563,6 +563,7 @@ LPINPUTCONTEXT APIENTRY Imm32LockIMCEx(HIMC hIMC, BOOL fSelect)
         }
 
         hKL = GetKeyboardLayout(dwThreadId);
+        // bInited = Imm32InitContext(hIMC, hKL, fSelect);
         bInited = Imm32InitContext(hIMC, pIC, pClientImc, hKL, fSelect);
         LocalUnlock(pClientImc->hInputContext);
         pIC = NULL;
