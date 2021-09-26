@@ -566,10 +566,10 @@ LPINPUTCONTEXT APIENTRY Imm32LockIMCEx(HIMC hIMC, BOOL fSelect)
         // bInited = Imm32InitContext(hIMC, hKL, fSelect);
         bInited = Imm32InitContext(hIMC, pIC, pClientImc, hKL, fSelect);
         LocalUnlock(pClientImc->hInputContext);
-        pIC = NULL;
 
         if (!bInited)
         {
+            pIC = NULL;
             pClientImc->hInputContext = LocalFree(pClientImc->hInputContext);
             RtlLeaveCriticalSection(&pClientImc->cs);
             goto Quit;
