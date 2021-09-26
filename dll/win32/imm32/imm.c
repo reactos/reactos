@@ -411,19 +411,14 @@ BOOL APIENTRY Imm32CleanupContext(HIMC hIMC, HKL hKL, BOOL bKeep)
     return TRUE;
 }
 
-BOOL APIENTRY Imm32CreateContext(HIMC hIMC, HKL hKL, BOOL fSelect)
+BOOL APIENTRY
+Imm32InitContext(HIMC hIMC, LPINPUTCONTEXT pIC, PCLIENTIMC pClientImc, HKL hKL, BOOL fSelect)
 {
     DWORD dwIndex, cbPrivate;
     PIMEDPI pImeDpi = NULL;
-    LPINPUTCONTEXT pIC;
-    PCLIENTIMC pClientImc;
     LPCOMPOSITIONSTRING pCS;
     LPCANDIDATEINFO pCI;
     LPGUIDELINE pGL;
-
-    pIC = ImmLockIMC(hIMC);
-    if (!pIC)
-        goto Fail;
 
     /* Create IC components */
     pIC->hCompStr = ImmCreateIMCC(sizeof(COMPOSITIONSTRING));
@@ -467,16 +462,10 @@ BOOL APIENTRY Imm32CreateContext(HIMC hIMC, HKL hKL, BOOL fSelect)
     }
     else
     {
-        pClientImc = ImmLockClientImc(hIMC);
-        if (!pClientImc)
-            goto Fail;
-
         /* Update CLIENTIMC */
         pClientImc->uCodePage = pImeDpi->uCodePage;
         if (ImeDpi_IsUnicode(pImeDpi))
             pClientImc->dwFlags |= CLIENTIMC_WIDE;
-
-        ImmUnlockClientImc(pClientImc);
 
         cbPrivate = pImeDpi->ImeInfo.dwPrivateDataSize;
     }
@@ -498,17 +487,11 @@ BOOL APIENTRY Imm32CreateContext(HIMC hIMC, HKL hKL, BOOL fSelect)
         }
 
         /* Set HKL */
-        pClientImc = ImmLockClientImc(hIMC);
-        if (pClientImc)
-        {
-            pClientImc->hKL = hKL;
-            ImmUnlockClientImc(pClientImc);
-        }
+        pClientImc->hKL = hKL;
 
         ImmUnlockImeDpi(pImeDpi);
     }
 
-    ImmUnlockIMC(hIMC);
     return TRUE;
 
 Fail:
@@ -519,7 +502,6 @@ Fail:
     pIC->hGuideLine = ImmDestroyIMCC(pIC->hGuideLine);
     pIC->hCandInfo = ImmDestroyIMCC(pIC->hCandInfo);
     pIC->hCompStr = ImmDestroyIMCC(pIC->hCompStr);
-    ImmUnlockIMC(hIMC);
     return FALSE;
 }
 
@@ -532,6 +514,7 @@ LPINPUTCONTEXT APIENTRY Imm32LockIMCEx(HIMC hIMC, BOOL fSelect)
     DWORD dwThreadId;
     HKL hKL, hNewKL;
     PIMEDPI pImeDpi = NULL;
+    BOOL bInited;
 
     pClientImc = ImmLockClientImc(hIMC);
     if (!pClientImc)
@@ -570,8 +553,20 @@ LPINPUTCONTEXT APIENTRY Imm32LockIMCEx(HIMC hIMC, BOOL fSelect)
         }
         pClientImc->hInputContext = hIC;
 
+        pIC = LocalLock(pClientImc->hInputContext);
+        if (!pIC)
+        {
+            pClientImc->hInputContext = LocalFree(pClientImc->hInputContext);
+            RtlLeaveCriticalSection(&pClientImc->cs);
+            goto Quit;
+        }
+
         hKL = GetKeyboardLayout(dwThreadId);
-        if (!Imm32CreateContext(hIMC, hKL, fSelect))
+        bInited = Imm32InitContext(hIMC, pIC, pClientImc, hKL, fSelect);
+        LocalUnlock(pClientImc->hInputContext);
+        pIC = NULL;
+
+        if (!bInited)
         {
             pClientImc->hInputContext = LocalFree(pClientImc->hInputContext);
             RtlLeaveCriticalSection(&pClientImc->cs);
@@ -582,9 +577,7 @@ LPINPUTCONTEXT APIENTRY Imm32LockIMCEx(HIMC hIMC, BOOL fSelect)
     FIXME("We have to do something here\n");
 
     RtlLeaveCriticalSection(&pClientImc->cs);
-
     pIC = LocalLock(pClientImc->hInputContext);
-
     InterlockedIncrement(&pClientImc->cLockObj);
 
 Quit:
