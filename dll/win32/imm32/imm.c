@@ -1104,8 +1104,10 @@ HKL WINAPI ImmInstallIMEW(LPCWSTR lpszIMEFileName, LPCWSTR lpszLayoutText)
 }
 
 /***********************************************************************
-*		ImmLockIMC(IMM32.@)
-*/
+ *		ImmLockIMC(IMM32.@)
+ *
+ * NOTE: This is not ImmLockIMCC. Don't confuse.
+ */
 LPINPUTCONTEXT WINAPI ImmLockIMC(HIMC hIMC)
 {
     TRACE("(%p)\n", hIMC);
