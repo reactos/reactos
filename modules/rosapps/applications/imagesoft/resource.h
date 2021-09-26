@@ -17,6 +17,7 @@
 #define IDR_POPUP               103
 
 /* COMMANDS */
+
 /* main */
 #define ID_NEW                  2000
 #define ID_OPEN                 2001
@@ -129,20 +130,42 @@
 #define IDS_HINT_SYS_CLOSE      21006
 
 
-/* Toolbar button bitmaps.
+/* TOOLBAR BUTTON BITMAPS
  * These must be numbered consecutively
  * See loop in InitImageList (misc.c)
  */
-#define IDB_MAINNEWICON         10000
-#define IDB_MAINOPENICON        10001
-#define IDB_MAINSAVEICON        10002
-#define IDB_MAINPRINTICON       10003
-#define IDB_MAINPRINTPREICON    10004
-#define IDB_MAINCUTICON         10005
-#define IDB_MAINCOPYICON        10006
-#define IDB_MAINPASTEICON       10007
-#define IDB_MAINUNDOICON        10008
-#define IDB_MAINREDOICON        10009
+
+/* standard */
+#define TBICON_NEW              0
+#define TBICON_OPEN             1
+#define TBICON_SAVE             2
+#define TBICON_PRINT            3
+#define TBICON_PRINTPRE         4
+#define TBICON_CUT              5
+#define TBICON_COPY             6
+#define TBICON_PASTE            7
+#define TBICON_UNDO             8
+#define TBICON_REDO             9
+
+#define IDB_MAINNEW             10000
+#define IDB_MAINOPEN            10001
+#define IDB_MAINSAVE            10002
+#define IDB_MAINPRINT           10003
+#define IDB_MAINPRINTPRE        10004
+#define IDB_MAINCUT             10005
+#define IDB_MAINCOPY            10006
+#define IDB_MAINPASTE           10007
+#define IDB_MAINUNDO            10008
+#define IDB_MAINREDO            10009
+
+
+/* text */
+#define TBICON_BOLD             0
+#define TBICON_ITALIC           1
+#define TBICON_ULINE            2
+#define TBICON_TXTLEFT          3
+#define TBICON_TXTCENTER        4
+#define TBICON_TXTRIGHT         5
 
 #define IDB_TEXTBOLD            10020
 #define IDB_TEXTITALIC          10021
@@ -150,6 +173,29 @@
 #define IDB_TEXTLEFT            10023
 #define IDB_TEXTCENTER          10024
 #define IDB_TEXTRIGHT           10025
+
+
+/* tools */
+#define TBICON_RECTSEL          0
+#define TBICON_MOVESEL          1
+#define TBICON_LASOO            2
+#define TBICON_MOVE             3
+#define TBICON_ECLIPSESEL       4
+#define TBICON_ZOOM             5
+#define TBICON_MAGICWAND        6
+#define TBICON_TEXT             7
+#define TBICON_PAINTBRUSH       8
+#define TBICON_ERASER           9
+#define TBICON_PENCIL           10
+#define TBICON_COLORPICKER      11
+#define TBICON_CLONESTAMP       12
+#define TBICON_RECOLORING       13
+#define TBICON_PAINTBUCKET      14
+#define TBICON_LINE             15
+#define TBICON_RECTANGLE        16
+#define TBICON_ROUNDRECT        17
+#define TBICON_ECLIPSE          18
+#define TBICON_FREEFORM         19
 
 #define IDB_TOOLSRECTSEL        10030
 #define IDB_TOOLSMOVESEL        10031
@@ -172,6 +218,14 @@
 #define IDB_TOOLSECLIPSE        10048
 #define IDB_TOOLSFREEFORM       10049
 
+
+/* history */
+#define TBICON_BACKSM           0
+#define TBICON_UNDOSM           1
+#define TBICON_REDOSM           2
+#define TBICON_FORWARDSM        3
+#define TBICON_DELETESM         4
+
 #define IDB_HISTBACK            10060
 #define IDB_HISTUNDO            10061
 #define IDB_HISTREDO            10062
@@ -180,54 +234,6 @@
 
 #define IDB_COLORSMORE          10080
 #define IDB_COLORSLESS          10081
-
-/* TOOLBAR BITMAPS */
-
-/* standard */
-#define TBICON_NEW              0
-#define TBICON_OPEN             1
-#define TBICON_SAVE             2
-#define TBICON_PRINT            3
-#define TBICON_PRINTPRE         4
-#define TBICON_CUT              5
-#define TBICON_COPY             6
-#define TBICON_PASTE            7
-#define TBICON_UNDO             8
-#define TBICON_REDO             9
-/* text */
-#define TBICON_BOLD             0
-#define TBICON_ITALIC           1
-#define TBICON_ULINE            2
-#define TBICON_TXTLEFT          3
-#define TBICON_TXTCENTER        4
-#define TBICON_TXTRIGHT         5
-/* tools */
-#define TBICON_RECTSEL          0
-#define TBICON_MOVESEL          1
-#define TBICON_LASOO            2
-#define TBICON_MOVE             3
-#define TBICON_ECLIPSESEL       4
-#define TBICON_ZOOM             5
-#define TBICON_MAGICWAND        6
-#define TBICON_TEXT             7
-#define TBICON_PAINTBRUSH       8
-#define TBICON_ERASER           9
-#define TBICON_PENCIL           10
-#define TBICON_COLORPICKER      11
-#define TBICON_CLONESTAMP       12
-#define TBICON_RECOLORING       13
-#define TBICON_PAINTBUCKET      14
-#define TBICON_LINE             15
-#define TBICON_RECTANGLE        16
-#define TBICON_ROUNDRECT        17
-#define TBICON_ECLIPSE          18
-#define TBICON_FREEFORM         19
-/* history */
-#define TBICON_BACKSM           0
-#define TBICON_UNDOSM           1
-#define TBICON_REDOSM           2
-#define TBICON_FORWARDSM        3
-#define TBICON_DELETESM         4
 
 
 /* tooltips */
@@ -290,8 +296,8 @@
 #define IDS_APPNAME             4202
 #define IDS_VERSION             4203
 #define IDS_LICENSE             4204
-#define IDS_READY               42050
+#define IDS_READY               4205
 #define IDS_TOOLBAR_STANDARD    4206
 #define IDS_TOOLBAR_TEST        4207
-#define IDS_TOOLBAR_TEXT        4205
+#define IDS_TOOLBAR_TEXT        4208
 #define IDS_IMAGE_NAME          4209

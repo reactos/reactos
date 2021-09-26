@@ -130,7 +130,7 @@ MainWndCreateToolbarClient(struct _TOOLBAR_DOCKS *TbDocks,
         {
             Buttons = StdButtons;
             NumButtons = ARRAYSIZE(StdButtons);
-            StartImageRes = IDB_MAINNEWICON;
+            StartImageRes = IDB_MAINNEW;
             NumImages = 10;
             break;
         }
