@@ -27,15 +27,28 @@
 #include "winbase.h"
 #include "wingdi.h"
 
-#define GDILoObjType_LO_DC_TYPE         0x10000
-#define GDILoObjType_LO_FONT_TYPE       0xa0000
-#define GDILoObjType_LO_BRUSH_TYPE      0x100000
-#define GDILoObjType_LO_ALTDC_TYPE      0x210000
-#define GDILoObjType_LO_PEN_TYPE        0x300000
-#define GDILoObjType_LO_EXTPEN_TYPE     0x500000
-#define GDILoObjType_LO_METAFILE16_TYPE 0x260000
-#define GDILoObjType_LO_METAFILE_TYPE   0x460000
-#define GDILoObjType_LO_METADC16_TYPE   0x660000
+#ifndef _NTGDITYP_
+typedef enum GDILoObjType
+{
+    GDILoObjType_LO_BRUSH_TYPE = 0x100000,
+    GDILoObjType_LO_DC_TYPE = 0x10000,
+    GDILoObjType_LO_BITMAP_TYPE = 0x50000,
+    GDILoObjType_LO_PALETTE_TYPE = 0x80000,
+    GDILoObjType_LO_FONT_TYPE = 0xa0000,
+    GDILoObjType_LO_REGION_TYPE = 0x40000,
+    GDILoObjType_LO_ICMLCS_TYPE = 0x90000,
+    GDILoObjType_LO_CLIENTOBJ_TYPE = 0x60000,
+    GDILoObjType_LO_UMPD_TYPE = 0x110000,
+    GDILoObjType_LO_META_TYPE = 0x150000,
+    GDILoObjType_LO_ALTDC_TYPE = 0x210000,
+    GDILoObjType_LO_PEN_TYPE = 0x300000,
+    GDILoObjType_LO_EXTPEN_TYPE = 0x500000,
+    GDILoObjType_LO_DIBSECTION_TYPE = 0x250000,
+    GDILoObjType_LO_METAFILE16_TYPE = 0x260000,
+    GDILoObjType_LO_METAFILE_TYPE = 0x460000,
+    GDILoObjType_LO_METADC16_TYPE = 0x660000
+} GDILOOBJTYPE, *PGDILOOBJTYPE;
+#endif
 
 #define GDI_HANDLE_TYPE_MASK  0x007f0000
 #define GDI_HANDLE_GET_TYPE(h)     \
@@ -50,7 +63,7 @@ BOOL APIENTRY NtGdiGetTransform(_In_ HDC hdc,_In_ DWORD iXform, _Out_ LPXFORM px
 BOOL WINAPI GetBoundsRectAlt(HDC hdc,LPRECT prc,UINT flags);
 BOOL WINAPI SetBoundsRectAlt(HDC hdc,LPRECT prc,UINT flags);
 
-HGDIOBJ WINAPI GdiCreateClientObj(_In_ PVOID pvObject,_In_ UINT eObjType);
+HGDIOBJ WINAPI GdiCreateClientObj(_In_ PVOID pvObject, _In_ GDILOOBJTYPE eObjType);
 PVOID WINAPI GdiGetClientObjLink(_In_ HGDIOBJ hobj);
 PVOID WINAPI GdiDeleteClientObj(_In_ HGDIOBJ hobj);
 

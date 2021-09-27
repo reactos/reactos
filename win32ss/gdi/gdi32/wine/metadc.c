@@ -114,8 +114,8 @@ static BOOL metadc_param1( HDC hdc, short func, short param )
 
 static BOOL metadc_param2( HDC hdc, short func, short param1, short param2 )
 {
-    //char buffer[FIELD_OFFSET(METARECORD, rdParm[2])];
-    char buffer[10];
+    unsigned char buffer[FIELD_OFFSET(METARECORD, rdParm)
+                   + 2*RTL_FIELD_SIZE(METARECORD, rdParm)];
     METARECORD *mr = (METARECORD *)&buffer;
 
     mr->rdSize = sizeof(buffer) / sizeof(WORD);
@@ -128,8 +128,8 @@ static BOOL metadc_param2( HDC hdc, short func, short param1, short param2 )
 static BOOL metadc_param4( HDC hdc, short func, short param1, short param2,
                            short param3, short param4 )
 {
-    //char buffer[FIELD_OFFSET(METARECORD, rdParm[4])];
-    char buffer[14];
+    unsigned char buffer[FIELD_OFFSET(METARECORD, rdParm)
+                   + 4*RTL_FIELD_SIZE(METARECORD, rdParm)];
     METARECORD *mr = (METARECORD *)&buffer;
 
     mr->rdSize = sizeof(buffer) / sizeof(WORD);
@@ -144,8 +144,8 @@ static BOOL metadc_param4( HDC hdc, short func, short param1, short param2,
 static BOOL metadc_param5( HDC hdc, short func, short param1, short param2,
                            short param3, short param4, short param5 )
 {
-    //char buffer[FIELD_OFFSET(METARECORD, rdParm[5])];
-    char buffer[16];
+    unsigned char buffer[FIELD_OFFSET(METARECORD, rdParm)
+                   + 5*RTL_FIELD_SIZE(METARECORD, rdParm)];
     METARECORD *mr = (METARECORD *)&buffer;
 
     mr->rdSize = sizeof(buffer) / sizeof(WORD);
@@ -162,8 +162,8 @@ static BOOL metadc_param6( HDC hdc, short func, short param1, short param2,
                            short param3, short param4, short param5,
                            short param6 )
 {
-    //char buffer[FIELD_OFFSET(METARECORD, rdParm[6])];
-    char buffer[18];
+    unsigned char buffer[FIELD_OFFSET(METARECORD, rdParm)
+                   + 6*RTL_FIELD_SIZE(METARECORD, rdParm)];
     METARECORD *mr = (METARECORD *)&buffer;
 
     mr->rdSize = sizeof(buffer) / sizeof(WORD);
@@ -181,8 +181,8 @@ static BOOL metadc_param8( HDC hdc, short func, short param1, short param2,
                            short param3, short param4, short param5,
                            short param6, short param7, short param8)
 {
-    //char buffer[FIELD_OFFSET(METARECORD, rdParm[8])];
-    char buffer[22];
+    unsigned char buffer[FIELD_OFFSET(METARECORD, rdParm)
+                   + 8*RTL_FIELD_SIZE(METARECORD, rdParm)];
     METARECORD *mr = (METARECORD *)&buffer;
 
     mr->rdSize = sizeof(buffer) / sizeof(WORD);
@@ -559,8 +559,8 @@ static INT16 metadc_create_brush( struct metadc *metadc, HBRUSH brush )
     case BS_PATTERN:
     case BS_DIBPATTERN:
         {
-            //char buffer[FIELD_OFFSET( BITMAPINFO, bmiColors[256] )];
-            char buffer[sizeof(BITMAPINFO) + 255 * sizeof(RGBQUAD)];
+            unsigned char buffer[FIELD_OFFSET(BITMAPINFO, bmiColors)
+                         + 256*RTL_FIELD_SIZE(BITMAPINFO, bmiColors)];
             BITMAPINFO *dst_info, *src_info = (BITMAPINFO *)buffer;
             DWORD info_size;
             UINT usage;
@@ -1067,12 +1067,12 @@ static HBRUSH METADC_SelectBrush( HDC hdc, HBRUSH hbrush )
 
 static UINT16 metadc_create_font( struct metadc *metadc, HFONT font, LOGFONTW *logfont )
 {
-    char buffer[sizeof(METARECORD) - 2 + sizeof(LOGFONT16)];
+    unsigned char buffer[FIELD_OFFSET(METARECORD, rdParm) + sizeof(LOGFONT16)];
     METARECORD *mr = (METARECORD *)&buffer;
     LOGFONT16 *font16;
     INT written;
 
-    mr->rdSize = (sizeof(METARECORD) + sizeof(LOGFONT16) - 2) / 2;
+    mr->rdSize = sizeof(buffer) / sizeof(WORD);
     mr->rdFunction = META_CREATEFONTINDIRECT;
     font16 = (LOGFONT16 *)&mr->rdParm;
 
@@ -1124,8 +1124,8 @@ static HFONT METADC_SelectFont( HDC hdc, HFONT hfont )
 
 static UINT16 metadc_create_pen( struct metadc *metadc, HPEN pen, LOGPEN16 *logpen )
 {
-    //char buffer[FIELD_OFFSET(METARECORD, rdParm[sizeof(*logpen) / sizeof(WORD)])];
-    char buffer[sizeof(METARECORD) - 2 + sizeof(*logpen)];
+    unsigned char buffer[FIELD_OFFSET(METARECORD, rdParm)
+        + (sizeof(*logpen) / sizeof(WORD)) * RTL_FIELD_SIZE(METARECORD, rdParm)];
     METARECORD *mr = (METARECORD *)&buffer;
 
     mr->rdSize = sizeof(buffer) / sizeof(WORD);
