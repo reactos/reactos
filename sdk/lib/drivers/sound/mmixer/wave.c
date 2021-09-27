@@ -126,8 +126,8 @@ MMixerInitializeDataFormat(
     DataFormat->WaveFormatEx.nBlockAlign = WaveFormatEx->nBlockAlign;
     DataFormat->WaveFormatEx.nAvgBytesPerSec = WaveFormatEx->nAvgBytesPerSec;
     DataFormat->WaveFormatEx.wBitsPerSample = WaveFormatEx->wBitsPerSample;
-    DataFormat->WaveFormatEx.cbSize = 0;
-    DataFormat->DataFormat.FormatSize = sizeof(KSDATAFORMAT) + sizeof(WAVEFORMATEX);
+    DataFormat->WaveFormatEx.cbSize = WaveFormatEx->cbSize;
+    DataFormat->DataFormat.FormatSize = sizeof(KSDATAFORMAT) + sizeof(WAVEFORMATEX) + WaveFormatEx->cbSize;
     DataFormat->DataFormat.Flags = 0;
     DataFormat->DataFormat.Reserved = 0;
     DataFormat->DataFormat.MajorFormat = KSDATAFORMAT_TYPE_AUDIO;
@@ -459,9 +459,11 @@ MMixerOpenWave(
     /* grab mixer list */
     MixerList = (PMIXER_LIST)MixerContext->MixerContext;
 
-    if (WaveFormat->wFormatTag != WAVE_FORMAT_PCM)
+    if (WaveFormat->wFormatTag != WAVE_FORMAT_PCM &&
+        WaveFormat->wFormatTag != WAVE_FORMAT_EXTENSIBLE)
     {
         /* not implemented */
+        DPRINT1("Unsupported format tag 0x%x requested\n", WaveFormat->wFormatTag);
         return MM_STATUS_NOT_IMPLEMENTED;
     }
 
