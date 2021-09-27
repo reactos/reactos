@@ -310,7 +310,7 @@ BOOL APIENTRY Imm32ReleaseIME(HKL hKL)
     {
         g_pImeDpiList = pImeDpi0->pNext;
     }
-    else (g_pImeDpiList)
+    else if (g_pImeDpiList)
     {
         for (pImeDpi1 = g_pImeDpiList; pImeDpi1; pImeDpi1 = pImeDpi1->pNext)
         {
