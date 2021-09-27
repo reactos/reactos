@@ -1515,6 +1515,8 @@ BOOL WINAPI ImmFreeLayout(DWORD dwUnknown)
     PIMEDPI pImeDpi;
     LANGID LangID;
 
+    TRACE("(0x%lX)\n", dwUnknown);
+
     hOldKL = GetKeyboardLayout(0);
 
     if (dwUnknown == 1)
