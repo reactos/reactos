@@ -114,7 +114,8 @@ static BOOL metadc_param1( HDC hdc, short func, short param )
 
 static BOOL metadc_param2( HDC hdc, short func, short param1, short param2 )
 {
-    char buffer[FIELD_OFFSET(METARECORD, rdParm[2])];
+    //char buffer[FIELD_OFFSET(METARECORD, rdParm[2])];
+    char buffer[10];
     METARECORD *mr = (METARECORD *)&buffer;
 
     mr->rdSize = sizeof(buffer) / sizeof(WORD);
@@ -127,7 +128,8 @@ static BOOL metadc_param2( HDC hdc, short func, short param1, short param2 )
 static BOOL metadc_param4( HDC hdc, short func, short param1, short param2,
                            short param3, short param4 )
 {
-    char buffer[FIELD_OFFSET(METARECORD, rdParm[4])];
+    //char buffer[FIELD_OFFSET(METARECORD, rdParm[4])];
+    char buffer[14];
     METARECORD *mr = (METARECORD *)&buffer;
 
     mr->rdSize = sizeof(buffer) / sizeof(WORD);
@@ -142,7 +144,8 @@ static BOOL metadc_param4( HDC hdc, short func, short param1, short param2,
 static BOOL metadc_param5( HDC hdc, short func, short param1, short param2,
                            short param3, short param4, short param5 )
 {
-    char buffer[FIELD_OFFSET(METARECORD, rdParm[5])];
+    //char buffer[FIELD_OFFSET(METARECORD, rdParm[5])];
+    char buffer[16];
     METARECORD *mr = (METARECORD *)&buffer;
 
     mr->rdSize = sizeof(buffer) / sizeof(WORD);
@@ -159,7 +162,8 @@ static BOOL metadc_param6( HDC hdc, short func, short param1, short param2,
                            short param3, short param4, short param5,
                            short param6 )
 {
-    char buffer[FIELD_OFFSET(METARECORD, rdParm[6])];
+    //char buffer[FIELD_OFFSET(METARECORD, rdParm[6])];
+    char buffer[18];
     METARECORD *mr = (METARECORD *)&buffer;
 
     mr->rdSize = sizeof(buffer) / sizeof(WORD);
@@ -177,7 +181,8 @@ static BOOL metadc_param8( HDC hdc, short func, short param1, short param2,
                            short param3, short param4, short param5,
                            short param6, short param7, short param8)
 {
-    char buffer[FIELD_OFFSET(METARECORD, rdParm[8])];
+    //char buffer[FIELD_OFFSET(METARECORD, rdParm[8])];
+    char buffer[22];
     METARECORD *mr = (METARECORD *)&buffer;
 
     mr->rdSize = sizeof(buffer) / sizeof(WORD);
@@ -554,7 +559,8 @@ static INT16 metadc_create_brush( struct metadc *metadc, HBRUSH brush )
     case BS_PATTERN:
     case BS_DIBPATTERN:
         {
-            char buffer[FIELD_OFFSET( BITMAPINFO, bmiColors[256] )];
+            //char buffer[FIELD_OFFSET( BITMAPINFO, bmiColors[256] )];
+            char buffer[sizeof(BITMAPINFO) + 255 * sizeof(RGBQUAD)];
             BITMAPINFO *dst_info, *src_info = (BITMAPINFO *)buffer;
             DWORD info_size;
             UINT usage;
@@ -1118,7 +1124,8 @@ static HFONT METADC_SelectFont( HDC hdc, HFONT hfont )
 
 static UINT16 metadc_create_pen( struct metadc *metadc, HPEN pen, LOGPEN16 *logpen )
 {
-    char buffer[FIELD_OFFSET(METARECORD, rdParm[sizeof(*logpen) / sizeof(WORD)])];
+    //char buffer[FIELD_OFFSET(METARECORD, rdParm[sizeof(*logpen) / sizeof(WORD)])];
+    char buffer[sizeof(METARECORD) - 2 + sizeof(*logpen)];
     METARECORD *mr = (METARECORD *)&buffer;
 
     mr->rdSize = sizeof(buffer) / sizeof(WORD);

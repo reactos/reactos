@@ -133,7 +133,8 @@ static UINT get_bitmap_info( HDC *hdc, HBITMAP *bitmap, BITMAPINFO *info )
     }
     else
     {
-        unsigned char dib_info_buffer[FIELD_OFFSET(BITMAPINFO, bmiColors[256])];
+        //unsigned char dib_info_buffer[FIELD_OFFSET(BITMAPINFO, bmiColors[256])];
+        unsigned char dib_info_buffer[sizeof(BITMAPINFO) + 255 * sizeof(RGBQUAD)];
         BITMAPINFO *dib_info = (BITMAPINFO *)dib_info_buffer;
         BITMAP bmp = dib.dsBm;
         HPALETTE palette;
@@ -275,7 +276,8 @@ static DWORD emfdc_create_brush( struct emf *emf, HBRUSH brush )
     case BS_DIBPATTERN:
         {
             EMRCREATEDIBPATTERNBRUSHPT *emr;
-            char buffer[FIELD_OFFSET( BITMAPINFO, bmiColors[256] )];
+            //char buffer[FIELD_OFFSET( BITMAPINFO, bmiColors[256] )];
+            char buffer[sizeof(BITMAPINFO) + 255 * sizeof(RGBQUAD)];
             BITMAPINFO *info = (BITMAPINFO *)buffer;
             DWORD info_size;
             UINT usage;
@@ -1476,7 +1478,8 @@ BOOL EMFDC_MaskBlt( WINEDC *dc_attr, INT x_dst, INT y_dst, INT width_dst, INT he
                     HDC hdc_src, INT x_src, INT y_src, HBITMAP mask,
                     INT x_mask, INT y_mask, DWORD rop )
 {
-    unsigned char mask_info_buffer[FIELD_OFFSET(BITMAPINFO, bmiColors[256])];
+    //unsigned char mask_info_buffer[FIELD_OFFSET(BITMAPINFO, bmiColors[256])];
+    unsigned char mask_info_buffer[sizeof(BITMAPINFO) + 255 * sizeof(RGBQUAD)];
     BITMAPINFO *mask_bits_info = (BITMAPINFO *)mask_info_buffer;
     struct emf *emf = dc_attr->emf;
     BITMAPINFO mask_info = {{ sizeof( mask_info.bmiHeader ) }};
@@ -1581,7 +1584,8 @@ err:
 BOOL EMFDC_PlgBlt( WINEDC *dc_attr, const POINT *points, HDC hdc_src, INT x_src, INT y_src,
                    INT width, INT height, HBITMAP mask, INT x_mask, INT y_mask )
 {
-    unsigned char mask_info_buffer[FIELD_OFFSET(BITMAPINFO, bmiColors[256])];
+    //unsigned char mask_info_buffer[FIELD_OFFSET(BITMAPINFO, bmiColors[256])];
+    unsigned char mask_info_buffer[sizeof(BITMAPINFO) + 255 * sizeof(RGBQUAD)];
     BITMAPINFO *mask_bits_info = (BITMAPINFO *)mask_info_buffer;
     struct emf *emf = dc_attr->emf;
     BITMAPINFO mask_info = {{ sizeof( mask_info.bmiHeader ) }};
