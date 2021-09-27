@@ -811,7 +811,7 @@ StretchDIBits(
     BOOL Hit = FALSE;
 
     DPRINT("StretchDIBits %p : %p : %u\n", lpBits, lpBitsInfo, iUsage);
-#if 0
+
     HANDLE_METADC( int,
                    StretchDIBits,
                    0,
@@ -828,11 +828,10 @@ StretchDIBits(
                    lpBitsInfo,
                    iUsage,
                    dwRop );
-#endif
+
     if ( GdiConvertAndCheckDC(hdc) == NULL ) return 0;
 
-    pConvertedInfo = ConvertBitmapInfo(lpBitsInfo, iUsage, &ConvertedInfoSize,
-        FALSE);
+    pConvertedInfo = ConvertBitmapInfo(lpBitsInfo, iUsage, &ConvertedInfoSize, FALSE);
     if (!pConvertedInfo)
     {
         return 0;
@@ -878,10 +877,22 @@ StretchDIBits(
      (pConvertedInfo->bmiHeader.biCompression == BI_JPEG ||
      pConvertedInfo->bmiHeader.biCompression  == BI_PNG )) )*/
     {
-        LinesCopied = NtGdiStretchDIBitsInternal(hdc, XDest, YDest, nDestWidth, nDestHeight, XSrc,
-            YSrc, nSrcWidth, nSrcHeight, pvSafeBits, pConvertedInfo, (DWORD) iUsage, dwRop,
-            ConvertedInfoSize, cjBmpScanSize,
-            NULL);
+        LinesCopied = NtGdiStretchDIBitsInternal( hdc,
+                                                  XDest,
+                                                  YDest,
+                                                  nDestWidth,
+                                                  nDestHeight,
+                                                  XSrc,
+                                                  YSrc,
+                                                  nSrcWidth,
+                                                  nSrcHeight,
+                                                  pvSafeBits,
+                                                  pConvertedInfo,
+                                                  (DWORD) iUsage,
+                                                  dwRop,
+                                                  ConvertedInfoSize,
+                                                  cjBmpScanSize,
+                                                  NULL );
     }
     if (pvSafeBits)
         RtlFreeHeap(RtlGetProcessHeap(), 0, pvSafeBits);

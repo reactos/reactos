@@ -782,10 +782,7 @@ SetTextCharacterExtra(
         return 0x80000000;
     }
 
-    if (GDI_HANDLE_GET_TYPE(hdc) == GDILoObjType_LO_METADC16_TYPE)
-    {
-        HANDLE_METADC(INT, SetTextCharacterExtra, 0x80000000, hdc, nCharExtra);
-    }
+    HANDLE_METADC16(INT, SetTextCharacterExtra, 0x80000000, hdc, nCharExtra);
 
     /* Get the DC attribute */
     pdcattr = GdiGetDcAttr(hdc);
@@ -935,10 +932,7 @@ SetTextJustification(
 {
     PDC_ATTR pdcattr;
 
-    if (GDI_HANDLE_GET_TYPE(hdc) == GDILoObjType_LO_METADC16_TYPE)
-    {
-        HANDLE_METADC(BOOL, SetTextJustification, FALSE, hdc, nBreakExtra, nBreakCount);
-    }
+    HANDLE_METADC16(BOOL, SetTextJustification, FALSE, hdc, nBreakExtra, nBreakCount);
 
     /* Get the DC attribute */
     pdcattr = GdiGetDcAttr(hdc);

@@ -6,35 +6,31 @@
 /*
  * @unimplemented
  */
-DWORD
+BOOL
 WINAPI
 IsValidEnhMetaRecord(
-    DWORD	a0,
-    DWORD	a1
-)
+    PVOID pv0,
+    PVOID pv1)
 {
     UNIMPLEMENTED;
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return 0;
-
+    return FALSE;
 }
 
 /*
  * @unimplemented
  */
-DWORD
+BOOL
 WINAPI
 IsValidEnhMetaRecordOffExt(
-    DWORD	a0,
-    DWORD	a1,
-    DWORD	a2,
-    DWORD	a3
-)
+    PVOID pv0,
+    PVOID pv1,
+    DWORD dwOffset,
+    DWORD dwExtends )
 {
     UNIMPLEMENTED;
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return 0;
-
+    return FALSE;
 }
 
 /*
@@ -136,9 +132,7 @@ GdiComment(
     if (GDI_HANDLE_GET_TYPE(hdc) != GDILoObjType_LO_ALTDC_TYPE)
         return TRUE;
 
-    HANDLE_METADC(BOOL, GdiComment, FALSE, hdc, cbSize, lpData);
-
-    return TRUE;
+    return EMFDC_GdiComment( hdc, cbSize, lpData );
 }
 
 /*
@@ -147,10 +141,9 @@ GdiComment(
 UINT
 WINAPI
 GetEnhMetaFilePixelFormat(
-    HENHMETAFILE			hemf,
-    UINT				cbBuffer,
-    PIXELFORMATDESCRIPTOR	*ppfd
-)
+    HENHMETAFILE hemf,
+    UINT cbBuffer,
+    PIXELFORMATDESCRIPTOR *ppfd )
 {
     ENHMETAHEADER pemh;
 

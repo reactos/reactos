@@ -294,11 +294,16 @@ typedef struct _LDC
     PDEVMODEW pdm;
     PVOID pUMPDev;        /* Ptr to User Mode Printer Device structure */
     PUMDHPDEV pUMdhpdev;  /* Ptr to Combined UMPD and DHPDEV structure */
+    PVOID UFIHashTable[3];
+    UNIVERSAL_FONT_ID ufi;
+    PVOID pvEMFSpoolData;
+    ULONG cjSize;
+    LIST_ENTRY leRecords;
     DEVCAPS DevCaps;
     HBRUSH BrushColor;
     HPEN PenColor;
     // wine data
-    DWORD dwData[7];
+    DWORD dwData[5];
 } LDC, *PLDC;
 
 typedef struct _DC_ATTR

@@ -575,7 +575,7 @@ typedef struct _SBINFOEX
     SCROLLINFO ScrollInfo;
 } SBINFOEX, *PSBINFOEX;
 
-/* State Flags !Not Implemented! */
+/* State Flags !Not ALL Implemented! */
 #define WNDS_HASMENU                 0X00000001
 #define WNDS_HASVERTICALSCROOLLBAR   0X00000002
 #define WNDS_HASHORIZONTALSCROLLBAR  0X00000004
@@ -611,7 +611,7 @@ typedef struct _SBINFOEX
 
 #define WNDSACTIVEFRAME              0x00000006
 
-/* State2 Flags !Not Implemented! */
+/* State2 Flags !Not ALL Implemented! */
 #define WNDS2_WMPAINTSENT               0X00000001
 #define WNDS2_ENDPAINTINVALIDATE        0X00000002
 #define WNDS2_STARTPAINT                0X00000004

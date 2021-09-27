@@ -66,7 +66,7 @@ Escape(
 
     if (ulObjType == GDILoObjType_LO_METADC16_TYPE)
     {
-        return METADC16_Escape(hdc, nEscape, cbInput, lpvInData, lpvOutData);
+        return METADC_ExtEscape(hdc, nEscape, cbInput, lpvInData, 0, lpvOutData);
     }
 
     switch (nEscape)

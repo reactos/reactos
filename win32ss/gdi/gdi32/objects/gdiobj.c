@@ -323,14 +323,15 @@ DeleteObject(HGDIOBJ hObject)
     if ((DWORD_PTR)hObject & GDI_HANDLE_STOCK_MASK)
     {
         /* Ignore the attempt to delete a stock object */
-        DPRINT("Trying to delete system object 0x%p\n", hObject);
+        DPRINT1("Trying to delete system object 0x%p\n", hObject);
         return TRUE;
     }
 
     /* If we have any METAFILE objects, we need to check them */
     if (gcClientObj > 0)
     {
-        METADC_DeleteObject(hObject);
+        DPRINT("Going Glue\n");
+        METADC_RosGlueDeleteObject(hObject);
     }
 
     /* Switch by object type */
@@ -349,16 +350,7 @@ DeleteObject(HGDIOBJ hObject)
 
         case GDILoObjType_LO_REGION_TYPE:
             return DeleteRegion(hObject);
-#if 0
-        case GDI_OBJECT_TYPE_METADC:
-            return MFDRV_DeleteObject( hObject );
-        case GDI_OBJECT_TYPE_EMF:
-        {
-            PLDC pLDC = GdiGetLDC(hObject);
-            if ( !pLDC ) return FALSE;
-            return EMFDRV_DeleteObject( hObject );
-        }
-#endif
+
         case GDILoObjType_LO_BRUSH_TYPE:
         case GDILoObjType_LO_PEN_TYPE:
         case GDILoObjType_LO_EXTPEN_TYPE:
