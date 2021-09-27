@@ -1530,7 +1530,6 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpReserved)
     switch (fdwReason)
     {
         case DLL_PROCESS_ATTACH:
-            //Imm32GenerateRandomSeed(hinstDLL, 1, lpReserved); // Non-sense
             if (!Imm32InitInstance(hinstDLL))
             {
                 ERR("Imm32InitInstance failed\n");

@@ -172,9 +172,9 @@ BOOL APIENTRY Imm32LoadImeInfo(PIMEINFOEX pImeInfoEx, PIMEDPI pImeDpi)
     do { \
         fn = GetProcAddress(hIME, #name); \
         if (fn) pImeDpi->name = (FN_##name)fn; \
-        else if (!extended) goto Failed; \
+        else if (!(extended)) goto Failed; \
     } while (0);
-#include "../../../win32ss/include/imetable.h"
+#include "imetable.h"
 #undef DEFINE_IME_ENTRY
 
     if (!Imm32InquireIme(pImeDpi))
@@ -346,10 +346,7 @@ BOOL WINAPI ImmDisableLegacyIME(void)
  */
 BOOL WINAPI CtfImmIsTextFrameServiceDisabled(VOID)
 {
-    PTEB pTeb = NtCurrentTeb();
-    if (((PW32CLIENTINFO)pTeb->Win32ClientInfo)->CI_flags & CI_TFSDISABLED)
-        return TRUE;
-    return FALSE;
+    return !!(GetWin32ClientInfo()->CI_flags & CI_TFSDISABLED);
 }
 
 /***********************************************************************
