@@ -1564,7 +1564,7 @@ Retry:
     else
     {
         hNewKL = (HKL)(DWORD_PTR)dwUnknown;
-        if (IS_IME_HKL(hNewKL) || hNewKL != hOldKL)
+        if (IS_IME_HKL(hNewKL) && hNewKL != hOldKL)
             Imm32ReleaseIME(hNewKL);
     }
 
