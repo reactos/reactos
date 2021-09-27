@@ -283,6 +283,53 @@ ImeDpi_Escape(PIMEDPI pImeDpi, HIMC hIMC, UINT uSubFunc, LPVOID lpData, HKL hKL)
     return 0;
 }
 
+BOOL APIENTRY Imm32ReleaseIME(HKL hKL)
+{
+    BOOL ret = TRUE;
+    PIMEDPI pImeDpi0, pImeDpi1;
+
+    RtlEnterCriticalSection(&g_csImeDpi);
+
+    for (pImeDpi0 = g_pImeDpiList; pImeDpi0; pImeDpi0 = pImeDpi0->pNext)
+    {
+        if (pImeDpi0->hKL == hKL)
+            break;
+    }
+
+    if (!pImeDpi0)
+        goto Quit;
+
+    if (pImeDpi0->cLockObj)
+    {
+        pImeDpi0->dwFlags |= IMEDPI_FLAG_UNKNOWN;
+        ret = FALSE;
+        goto Quit;
+    }
+
+    if (g_pImeDpiList == pImeDpi0)
+    {
+        g_pImeDpiList = pImeDpi0->pNext;
+    }
+    else (g_pImeDpiList)
+    {
+        for (pImeDpi1 = g_pImeDpiList; pImeDpi1; pImeDpi1 = pImeDpi1->pNext)
+        {
+            if (pImeDpi1->pNext == pImeDpi0)
+            {
+                pImeDpi1->pNext = pImeDpi0->pNext;
+                break;
+            }
+        }
+    }
+
+    Imm32FreeImeDpi(pImeDpi0, TRUE);
+    Imm32HeapFree(pImeDpi0);
+
+Quit:
+    RtlLeaveCriticalSection(&g_csImeDpi);
+    return ret;
+}
+
 /***********************************************************************
  *		ImmIsIME (IMM32.@)
  */
@@ -1455,4 +1502,69 @@ Quit:
     Imm32HeapFree(RegWordA.lpWord);
     ImmUnlockImeDpi(pImeDpi);
     return ret;
+}
+
+/***********************************************************************
+ *		ImmFreeLayout (IMM32.@)
+ */
+BOOL WINAPI ImmFreeLayout(DWORD dwUnknown)
+{
+    WCHAR szKBD[9];
+    UINT iKL, cKLs;
+    HKL hOldKL, hNewKL, *pList;
+    PIMEDPI pImeDpi;
+    LANGID LangID;
+
+    hOldKL = GetKeyboardLayout(0);
+
+    if (dwUnknown == 1)
+    {
+        if (!IS_IME_HKL(hOldKL))
+            return TRUE;
+
+        LangID = LANGIDFROMLCID(GetSystemDefaultLCID());
+
+        cKLs = GetKeyboardLayoutList(0, NULL);
+        if (cKLs)
+        {
+            pList = Imm32HeapAlloc(0, cKLs * sizeof(HKL));
+            if (pList == NULL)
+                return FALSE;
+
+            cKLs = GetKeyboardLayoutList(cKLs, pList);
+            for (iKL = 0; iKL < cKLs; ++iKL)
+            {
+                if (!IS_IME_HKL(pList[iKL]))
+                {
+                    LangID = LOWORD(pList[iKL]);
+                    break;
+                }
+            }
+
+            Imm32HeapFree(pList);
+        }
+
+        StringCchPrintfW(szKBD, _countof(szKBD), L"%08X", LangID);
+        if (!LoadKeyboardLayoutW(szKBD, KLF_ACTIVATE))
+            LoadKeyboardLayoutW(L"00000409", KLF_ACTIVATE | 0x200);
+    }
+    else if (dwUnknown == 2)
+    {
+        RtlEnterCriticalSection(&g_csImeDpi);
+Retry:
+        for (pImeDpi = g_pImeDpiList; pImeDpi; pImeDpi = pImeDpi->pNext)
+        {
+            if (Imm32ReleaseIME(pImeDpi->hKL))
+                goto Retry;
+        }
+        RtlLeaveCriticalSection(&g_csImeDpi);
+    }
+    else
+    {
+        hNewKL = (HKL)(DWORD_PTR)dwUnknown;
+        if (IS_IME_HKL(hNewKL) || hNewKL != hOldKL)
+            Imm32ReleaseIME(hNewKL);
+    }
+
+    return TRUE;
 }

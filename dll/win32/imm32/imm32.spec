@@ -24,7 +24,7 @@
 @ stdcall ImmEnumRegisterWordW(long ptr wstr long wstr ptr)
 @ stdcall ImmEscapeA(long ptr long ptr)
 @ stdcall ImmEscapeW(long ptr long ptr)
-@ stdcall -stub ImmFreeLayout(long)
+@ stdcall ImmFreeLayout(long)
 @ stdcall ImmGenerateMessage(ptr)
 @ stdcall ImmGetCandidateListA(long long ptr long)
 @ stdcall ImmGetCandidateListCountA(long ptr)
