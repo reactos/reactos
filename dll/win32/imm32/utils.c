@@ -276,7 +276,7 @@ DWORD WINAPI ImmGetIMCCSize(HIMCC imcc)
 DWORD WINAPI ImmGetIMCLockCount(HIMC hIMC)
 {
     DWORD ret;
-    HIMC hClientImc;
+    HANDLE hInputContext;
     PCLIENTIMC pClientImc;
 
     pClientImc = ImmLockClientImc(hIMC);
@@ -284,9 +284,9 @@ DWORD WINAPI ImmGetIMCLockCount(HIMC hIMC)
         return 0;
 
     ret = 0;
-    hClientImc = pClientImc->hImc;
-    if (hClientImc)
-        ret = (LocalFlags(hClientImc) & LMEM_LOCKCOUNT);
+    hInputContext = pClientImc->hInputContext;
+    if (hInputContext)
+        ret = (LocalFlags(hInputContext) & LMEM_LOCKCOUNT);
 
     ImmUnlockClientImc(pClientImc);
     return ret;
