@@ -602,7 +602,7 @@ METADC_ExtTextOutW(
               SetLastError(ERROR_INVALID_HANDLE); \
               return (_RetType)_Ret; \
            } \
-           if ( pLDC->iType == LDC_EMFLDC && !(_Ret = (_RetType)EMFDC_##_Func(pLDC, __VA_ARGS__)) ) \
+           if ( pLDC->iType == LDC_EMFLDC && !(EMFDC_##_Func(pLDC, __VA_ARGS__)) ) \
            { \
               return (_RetType)_Ret; \
            } \
@@ -634,7 +634,7 @@ METADC_ExtTextOutW(
           SetLastError(ERROR_INVALID_HANDLE); \
           return (_RetType)_Ret; \
        } \
-       if ( pLDC->iType == LDC_EMFLDC && !(_Ret = (_RetType)EMFDC_##_Func(pLDC)) ) \
+       if ( pLDC->iType == LDC_EMFLDC && !(EMFDC_##_Func(pLDC)) ) \
        { \
           return (_RetType)_Ret; \
        } \
@@ -656,7 +656,7 @@ METADC_ExtTextOutW(
           SetLastError(ERROR_INVALID_HANDLE); \
           return (_RetType)_Ret; \
        } \
-       if ( pLDC->iType == LDC_EMFLDC && !(_Ret = EMFDC_##_Func(pLDC, __VA_ARGS__)) ) \
+       if ( pLDC->iType == LDC_EMFLDC && !(EMFDC_##_Func(pLDC, __VA_ARGS__)) ) \
        { \
           return (_RetType)_Ret; \
        } \
@@ -679,7 +679,7 @@ METADC_ExtTextOutW(
               SetLastError(ERROR_INVALID_HANDLE); \
               return (_RetType)_Ret; \
            } \
-           if ( pLDC->iType == LDC_EMFLDC && !(_Ret = (_RetType)EMFDC_##_Func(pLDC)) ) \
+           if ( pLDC->iType == LDC_EMFLDC && !(EMFDC_##_Func(pLDC)) ) \
            { \
               return (_RetType)_Ret; \
            } \
@@ -767,7 +767,7 @@ extern BOOL METADC_SetWindowOrgEx( HDC, INT x, INT y ) DECLSPEC_HIDDEN;
 extern BOOL METADC_StretchBlt( HDC hdc_dst, INT x_dst, INT y_dst, INT width_dst, INT height_dst,
                                HDC hdc_src, INT x_src, INT y_src, INT width_src, INT height_src,
                                DWORD rop );
-extern INT  METADC_StretchDIBits( HDC hdc, INT x_dst, INT y_dst, INT width_dst, INT height_dst,
+extern BOOL METADC_StretchDIBits( HDC hdc, INT x_dst, INT y_dst, INT width_dst, INT height_dst,
                                   INT x_src, INT y_src, INT width_src, INT height_src,
                                   const void *bits, const BITMAPINFO *info, UINT coloruse,
                                   DWORD rop ) DECLSPEC_HIDDEN;
@@ -785,7 +785,7 @@ extern BOOL EMFDC_BeginPath( LDC *dc_attr ) DECLSPEC_HIDDEN;
 extern BOOL EMFDC_BitBlt( LDC *dc_attr, INT x_dst, INT y_dst, INT width, INT height,
                           HDC hdc_src, INT x_src, INT y_src, DWORD rop );
 extern BOOL EMFDC_CloseFigure( LDC *dc_attr ) DECLSPEC_HIDDEN;
-extern void EMFDC_DeleteDC( LDC *dc_attr ) DECLSPEC_HIDDEN;
+extern BOOL EMFDC_DeleteDC( LDC *dc_attr ) DECLSPEC_HIDDEN;
 extern BOOL EMFDC_Ellipse( LDC *dc_attr, INT left, INT top, INT right,
                            INT bottom ) DECLSPEC_HIDDEN;
 extern BOOL EMFDC_EndPath( LDC *dc_attr ) DECLSPEC_HIDDEN;
@@ -842,7 +842,7 @@ extern BOOL EMFDC_SetBkColor( LDC *dc_attr, COLORREF color ) DECLSPEC_HIDDEN;
 extern BOOL EMFDC_SetBkMode( LDC *dc_attr, INT mode ) DECLSPEC_HIDDEN;
 extern BOOL EMFDC_SetDCBrushColor( LDC *dc_attr, COLORREF color ) DECLSPEC_HIDDEN;
 extern BOOL EMFDC_SetDCPenColor( LDC *dc_attr, COLORREF color ) DECLSPEC_HIDDEN;
-extern INT  EMFDC_SetDIBitsToDevice( LDC *dc_attr, INT x_dest, INT y_dest, DWORD width,
+extern BOOL EMFDC_SetDIBitsToDevice( LDC *dc_attr, INT x_dest, INT y_dest, DWORD width,
                                      DWORD height, INT x_src, INT y_src, UINT startscan,
                                      UINT lines, const void *bits, const BITMAPINFO *info,
                                      UINT coloruse ) DECLSPEC_HIDDEN;
@@ -878,8 +878,8 @@ BOOL EMFDC_PlgBlt( LDC *dc_attr, const POINT * ppt, HDC hdcSrc, INT xSrc, INT yS
 BOOL EMFDC_TransparentBlt( LDC *dc_attr, INT xDst, INT yDst, INT cxDst, INT cyDst, HDC hdcSrc, INT xSrc, INT ySrc, INT cxSrc, INT cySrc, UINT crTransparent);
 BOOL EMFDC_SetBrushOrg( LDC *dc_attr, INT x, INT y);
 BOOL EMFDC_SetMetaRgn( LDC *dc_attr );
-INT EMFDC_WriteNamedEscape( LDC *dc_attr, PWCHAR pDriver, INT nEscape, INT cbInput, LPCSTR lpszInData);
-INT EMFDC_WriteEscape( LDC *dc_attr, INT nEscape, INT cbInput, LPSTR lpszInData, DWORD emrType);
+BOOL EMFDC_WriteNamedEscape( LDC *dc_attr, PWCHAR pDriver, INT nEscape, INT cbInput, LPCSTR lpszInData);
+BOOL EMFDC_WriteEscape( LDC *dc_attr, INT nEscape, INT cbInput, LPSTR lpszInData, DWORD emrType);
 
 
 FORCEINLINE BOOL EMFDC_Arc( PLDC dc_attr, INT left, INT top, INT right, INT bottom, INT xstart, INT ystart, INT xend, INT yend )

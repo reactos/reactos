@@ -1944,7 +1944,7 @@ BOOL EMFDC_SetArcDirection( WINEDC *dc_attr, INT dir )
     return emfdc_record( dc_attr->emf, &emr.emr );
 }
 
-INT EMFDC_ExcludeClipRect( WINEDC *dc_attr, INT left, INT top, INT right, INT bottom )
+BOOL EMFDC_ExcludeClipRect( WINEDC *dc_attr, INT left, INT top, INT right, INT bottom )
 {
     EMREXCLUDECLIPRECT emr;
 
@@ -2215,7 +2215,7 @@ BOOL EMFDC_WidenPath( WINEDC *dc_attr )
     return emfdc_record( dc_attr->emf, &emr.emr );
 }
 
-void EMFDC_DeleteDC( WINEDC *dc_attr )
+BOOL EMFDC_DeleteDC( WINEDC *dc_attr )
 {
     struct emf *emf = dc_attr->emf;
     UINT index;
@@ -2225,6 +2225,7 @@ void EMFDC_DeleteDC( WINEDC *dc_attr )
         if (emf->handles[index])
             GDI_hdc_not_using_object( emf->handles[index], emf->dc_attr->hdc );
     HeapFree( GetProcessHeap(), 0, emf->handles );
+    return TRUE;
 }
 
 //
@@ -2235,12 +2236,11 @@ void EMFDC_DeleteDC( WINEDC *dc_attr )
 //
 // ReactOS Print Support
 //
-INT
-EMFDC_WriteEscape( WINEDC *dc_attr, INT nEscape, INT cbInput, LPSTR lpszInData, DWORD emrType)
+BOOL EMFDC_WriteEscape( WINEDC *dc_attr, INT nEscape, INT cbInput, LPSTR lpszInData, DWORD emrType)
 {
     PEMRESCAPE pemr;
     UINT total, rounded_size;
-    INT ret;
+    BOOL ret;
 
     rounded_size = (cbInput+3) & ~3;
     total = offsetof(EMRESCAPE,Data) + rounded_size;
@@ -2264,8 +2264,7 @@ EMFDC_WriteEscape( WINEDC *dc_attr, INT nEscape, INT cbInput, LPSTR lpszInData, 
     return ret;
 }
 
-INT
-EMFDC_WriteNamedEscape( WINEDC *dc_attr, PWCHAR pDriver, INT nEscape, INT cbInput, LPCSTR lpszInData)
+BOOL EMFDC_WriteNamedEscape( WINEDC *dc_attr, PWCHAR pDriver, INT nEscape, INT cbInput, LPCSTR lpszInData)
 {
     PEMRNAMEDESCAPE pemr;
     UINT sizestr, total, rounded_size;
@@ -2299,8 +2298,7 @@ EMFDC_WriteNamedEscape( WINEDC *dc_attr, PWCHAR pDriver, INT nEscape, INT cbInpu
     return ret;
 }
 
-BOOL
-EMFDC_SetMetaRgn( WINEDC *dc_attr )
+BOOL EMFDC_SetMetaRgn( WINEDC *dc_attr )
 {
     EMRSETMETARGN emr;
 
@@ -2310,8 +2308,7 @@ EMFDC_SetMetaRgn( WINEDC *dc_attr )
     return emfdc_record( dc_attr->emf, &emr.emr );
 }
 
-BOOL
-EMFDC_SetBrushOrg( WINEDC *dc_attr, INT x, INT y)
+BOOL EMFDC_SetBrushOrg( WINEDC *dc_attr, INT x, INT y)
 {
     EMRSETBRUSHORGEX emr;
 
