@@ -169,87 +169,46 @@ static InputContextData* get_imc_data(HIMC hIMC)
     return data;
 }
 
-static HIMC get_default_context( HWND hwnd )
-{
-    FIXME("Don't use this function\n");
-    return FALSE;
-}
-
-static BOOL IMM_IsCrossThreadAccess(HWND hWnd,  HIMC hIMC)
-{
-    InputContextData *data;
-
-    if (hWnd)
-    {
-        DWORD thread = GetWindowThreadProcessId(hWnd, NULL);
-        if (thread != GetCurrentThreadId()) return TRUE;
-    }
-    data = get_imc_data(hIMC);
-    if (data && data->threadID != GetCurrentThreadId())
-        return TRUE;
-
-    return FALSE;
-}
-
 /***********************************************************************
  *		ImmAssociateContext (IMM32.@)
  */
 HIMC WINAPI ImmAssociateContext(HWND hWnd, HIMC hIMC)
 {
-    HIMC old = NULL;
-    InputContextData *data = get_imc_data(hIMC);
+    PWND pWnd;
+    HWND hwndFocus;
+    DWORD dwValue;
+    HIMC hOldIMC;
 
-    TRACE("(%p, %p):\n", hWnd, hIMC);
+    TRACE("(%p, %p)\n", hWnd, hIMC);
 
-    if(hIMC && !data)
+    if (!Imm32IsImmMode())
         return NULL;
 
-    /*
-     * If already associated just return
-     */
-    if (hIMC && data->IMC.hWnd == hWnd)
+    pWnd = ValidateHwndNoErr(hWnd);
+    if (!pWnd)
+        return NULL;
+
+    if (hIMC && Imm32IsCrossThreadAccess(hIMC))
+        return NULL;
+
+    hOldIMC = pWnd->hImc;
+    if (hOldIMC == hIMC)
         return hIMC;
 
-    if (hIMC && IMM_IsCrossThreadAccess(hWnd, hIMC))
+    dwValue = NtUserAssociateInputContext(hWnd, hIMC, 0);
+    if (dwValue == 0)
+        return hOldIMC;
+    if (dwValue != 1)
         return NULL;
 
-    if (hWnd)
+    hwndFocus = (HWND)NtUserQueryWindow(hWnd, QUERY_WINDOW_FOCUS);
+    if (hwndFocus == hWnd)
     {
-        HIMC defaultContext = get_default_context( hWnd );
-        old = RemovePropW(hWnd,szwWineIMCProperty);
-
-        if (old == NULL)
-            old = defaultContext;
-        else if (old == (HIMC)-1)
-            old = NULL;
-
-        if (hIMC != defaultContext)
-        {
-            if (hIMC == NULL) /* Meaning disable imm for that window*/
-                SetPropW(hWnd,szwWineIMCProperty,(HANDLE)-1);
-            else
-                SetPropW(hWnd,szwWineIMCProperty,hIMC);
-        }
-
-        if (old)
-        {
-            InputContextData *old_data = (InputContextData *)old;
-            if (old_data->IMC.hWnd == hWnd)
-                old_data->IMC.hWnd = NULL;
-        }
+        ImmSetActiveContext(hWnd, hOldIMC, FALSE);
+        ImmSetActiveContext(hWnd, hIMC, TRUE);
     }
 
-    if (!hIMC)
-        return old;
-
-    if(GetActiveWindow() == data->IMC.hWnd)
-    {
-        SendMessageW(data->IMC.hWnd, WM_IME_SETCONTEXT, FALSE, ISC_SHOWUIALL);
-        data->IMC.hWnd = hWnd;
-        SendMessageW(data->IMC.hWnd, WM_IME_SETCONTEXT, TRUE, ISC_SHOWUIALL);
-    }
-
-    return old;
+    return hOldIMC;
 }
 
 /***********************************************************************
