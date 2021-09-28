@@ -349,7 +349,7 @@ Imm32GetImeMenuItemsAW(HIMC hIMC, DWORD dwFlags, DWORD dwType, LPVOID lpImeParen
     IMEMENUITEMINFOW ItemInfoW;
     LPIMEMENUITEMINFOA pItemA;
     LPIMEMENUITEMINFOW pItemW;
-    LPVOID pNewItems = NULL;
+    LPVOID pNewItems = NULL, pNewParent = NULL;
     BOOL bImcIsAnsi;
     HKL hKL;
 
@@ -400,7 +400,7 @@ Imm32GetImeMenuItemsAW(HIMC hIMC, DWORD dwFlags, DWORD dwType, LPVOID lpImeParen
             {
                 if (!Imm32ImeMenuAnsiToWide(lpImeParentMenu, &ItemInfoW, CP_ACP, TRUE))
                     goto Quit;
-                lpImeParentMenu = &ItemInfoW;
+                pNewParent = &ItemInfoW;
             }
 
             if (lpImeMenu)
@@ -417,7 +417,7 @@ Imm32GetImeMenuItemsAW(HIMC hIMC, DWORD dwFlags, DWORD dwType, LPVOID lpImeParen
             {
                 if (!Imm32ImeMenuWideToAnsi(lpImeParentMenu, &ItemInfoA, pImeDpi->uCodePage))
                     goto Quit;
-                lpImeParentMenu = &ItemInfoA;
+                pNewParent = &ItemInfoA;
             }
 
             if (lpImeMenu)
@@ -434,7 +434,7 @@ Imm32GetImeMenuItemsAW(HIMC hIMC, DWORD dwFlags, DWORD dwType, LPVOID lpImeParen
         pNewItems = lpImeMenu;
     }
 
-    ret = pImeDpi->ImeGetImeMenuItems(hIMC, dwFlags, dwType, lpImeParentMenu, pNewItems, dwSize);
+    ret = pImeDpi->ImeGetImeMenuItems(hIMC, dwFlags, dwType, pNewParent, pNewItems, dwSize);
     if (!ret || !lpImeMenu)
         goto Quit;
 
@@ -442,11 +442,14 @@ Imm32GetImeMenuItemsAW(HIMC hIMC, DWORD dwFlags, DWORD dwType, LPVOID lpImeParen
     {
         if (bTargetIsAnsi)
         {
+            if (pNewParent)
+                Imm32ImeMenuWideToAnsi(pNewParent, lpImeParentMenu, CP_ACP);
+
             pItemW = pNewItems;
             pItemA = lpImeMenu;
             for (iItem = 0; iItem < ret; ++iItem, ++pItemW, ++pItemA)
             {
-                if (!Imm32ImeMenuWideToAnsi(pItemW, pItemA, 0))
+                if (!Imm32ImeMenuWideToAnsi(pItemW, pItemA, CP_ACP))
                 {
                     ret = 0;
                     break;
@@ -455,6 +458,9 @@ Imm32GetImeMenuItemsAW(HIMC hIMC, DWORD dwFlags, DWORD dwType, LPVOID lpImeParen
         }
         else
         {
+            if (pNewParent)
+                Imm32ImeMenuAnsiToWide(pNewParent, lpImeParentMenu, pImeDpi->uCodePage, TRUE);
+
             pItemA = pNewItems;
             pItemW = lpImeMenu;
             for (iItem = 0; iItem < dwSize; ++iItem, ++pItemA, ++pItemW)
