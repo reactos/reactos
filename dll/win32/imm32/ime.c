@@ -330,6 +330,152 @@ Quit:
     return ret;
 }
 
+DWORD APIENTRY
+Imm32GetImeMenuItemWCrossProcess(HIMC hIMC, DWORD dwFlags, DWORD dwType, LPVOID lpImeParentMenu,
+                                 LPVOID lpImeMenu, DWORD dwSize)
+{
+    FIXME("We have to do something\n");
+    return 0;
+}
+
+DWORD APIENTRY
+Imm32GetImeMenuItemsAW(HIMC hIMC, DWORD dwFlags, DWORD dwType, LPVOID lpImeParentMenu,
+                       LPVOID lpImeMenu, DWORD dwSize, BOOL bTargetIsAnsi)
+{
+    DWORD ret = 0, cbTotal, dwProcessId, dwThreadId, iItem;
+    LPINPUTCONTEXT pIC;
+    PIMEDPI pImeDpi = NULL;
+    IMEMENUITEMINFOA ItemInfoA;
+    IMEMENUITEMINFOW ItemInfoW;
+    LPIMEMENUITEMINFOA pItemA;
+    LPIMEMENUITEMINFOW pItemW;
+    LPVOID pNewItems = NULL;
+    BOOL bImcIsAnsi;
+    HKL hKL;
+
+    if (!hIMC)
+        return 0;
+
+    bImcIsAnsi = Imm32IsImcAnsi(hIMC);
+
+    dwProcessId = NtUserQueryInputContext(hIMC, 0);
+    if (dwProcessId == 0)
+        return 0;
+
+    if (dwProcessId != GetCurrentProcessId())
+    {
+        if (bTargetIsAnsi)
+            return 0;
+        return Imm32GetImeMenuItemWCrossProcess(hIMC, dwFlags, dwType, lpImeParentMenu,
+                                                lpImeMenu, dwSize);
+    }
+
+    pIC = ImmLockIMC(hIMC);
+    if (pIC == NULL)
+        return 0;
+
+    dwThreadId = NtUserQueryInputContext(hIMC, 1);
+    if (dwThreadId == 0)
+    {
+        ImmUnlockIMC(hIMC);
+        return 0;
+    }
+
+    hKL = GetKeyboardLayout(dwThreadId);
+    pImeDpi = ImmLockImeDpi(hKL);
+    if (!pImeDpi)
+    {
+        ImmUnlockIMC(hIMC);
+        return ret;
+    }
+
+    if (pImeDpi->ImeGetImeMenuItems == NULL)
+        goto Quit;
+
+    if (bImcIsAnsi != bTargetIsAnsi)
+    {
+        if (bTargetIsAnsi)
+        {
+            if (lpImeParentMenu)
+            {
+                if (!Imm32ImeMenuAnsiToWide(lpImeParentMenu, &ItemInfoW, CP_ACP, TRUE))
+                    goto Quit;
+                lpImeParentMenu = &ItemInfoW;
+            }
+
+            if (lpImeMenu)
+            {
+                cbTotal = ((dwSize / sizeof(IMEMENUITEMINFOA)) * sizeof(IMEMENUITEMINFOW));
+                pNewItems = Imm32HeapAlloc(0, cbTotal);
+                if (!pNewItems)
+                    goto Quit;
+            }
+        }
+        else
+        {
+            if (lpImeParentMenu)
+            {
+                if (!Imm32ImeMenuWideToAnsi(lpImeParentMenu, &ItemInfoA, pImeDpi->uCodePage))
+                    goto Quit;
+                lpImeParentMenu = &ItemInfoA;
+            }
+
+            if (lpImeMenu)
+            {
+                cbTotal = (dwSize / sizeof(IMEMENUITEMINFOW) * sizeof(IMEMENUITEMINFOA));
+                pNewItems = Imm32HeapAlloc(0, cbTotal);
+                if (!pNewItems)
+                    goto Quit;
+            }
+        }
+    }
+    else
+    {
+        pNewItems = lpImeMenu;
+    }
+
+    ret = pImeDpi->ImeGetImeMenuItems(hIMC, dwFlags, dwType, lpImeParentMenu, pNewItems, dwSize);
+    if (!ret || !lpImeMenu)
+        goto Quit;
+
+    if (bImcIsAnsi != bTargetIsAnsi)
+    {
+        if (bTargetIsAnsi)
+        {
+            pItemW = pNewItems;
+            pItemA = lpImeMenu;
+            for (iItem = 0; iItem < ret; ++iItem, ++pItemW, ++pItemA)
+            {
+                if (!Imm32ImeMenuWideToAnsi(pItemW, pItemA, 0))
+                {
+                    ret = 0;
+                    break;
+                }
+            }
+        }
+        else
+        {
+            pItemA = pNewItems;
+            pItemW = lpImeMenu;
+            for (iItem = 0; iItem < dwSize; ++iItem, ++pItemA, ++pItemW)
+            {
+                if (!Imm32ImeMenuAnsiToWide(pItemA, pItemW, pImeDpi->uCodePage, TRUE))
+                {
+                    ret = 0;
+                    break;
+                }
+            }
+        }
+    }
+
+Quit:
+    if (pNewItems != lpImeMenu)
+        Imm32HeapFree(pNewItems);
+    ImmUnlockImeDpi(pImeDpi);
+    ImmUnlockIMC(hIMC);
+    return ret;
+}
+
 /***********************************************************************
  *		ImmIsIME (IMM32.@)
  */
@@ -1502,6 +1648,34 @@ Quit:
     Imm32HeapFree(RegWordA.lpWord);
     ImmUnlockImeDpi(pImeDpi);
     return ret;
+}
+
+/***********************************************************************
+ *		ImmGetImeMenuItemsA (IMM32.@)
+ */
+DWORD WINAPI
+ImmGetImeMenuItemsA(HIMC hIMC, DWORD dwFlags, DWORD dwType,
+                    LPIMEMENUITEMINFOA lpImeParentMenu,
+                    LPIMEMENUITEMINFOA lpImeMenu, DWORD dwSize)
+{
+    TRACE("(%p, 0x%lX, 0x%lX, %p, %p, 0x%lX)\n",
+        hIMC, dwFlags, dwType, lpImeParentMenu, lpImeMenu, dwSize);
+    return Imm32GetImeMenuItemsAW(hIMC, dwFlags, dwType, lpImeParentMenu, lpImeMenu,
+                                  dwSize, TRUE);
+}
+
+/***********************************************************************
+ *		ImmGetImeMenuItemsW (IMM32.@)
+ */
+DWORD WINAPI
+ImmGetImeMenuItemsW(HIMC hIMC, DWORD dwFlags, DWORD dwType,
+                    LPIMEMENUITEMINFOW lpImeParentMenu,
+                    LPIMEMENUITEMINFOW lpImeMenu, DWORD dwSize)
+{
+    TRACE("(%p, 0x%lX, 0x%lX, %p, %p, 0x%lX)\n",
+        hIMC, dwFlags, dwType, lpImeParentMenu, lpImeMenu, dwSize);
+    return Imm32GetImeMenuItemsAW(hIMC, dwFlags, dwType, lpImeParentMenu, lpImeMenu,
+                                  dwSize, FALSE);
 }
 
 /***********************************************************************
