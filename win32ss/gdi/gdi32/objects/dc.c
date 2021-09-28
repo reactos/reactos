@@ -1314,8 +1314,26 @@ SelectPalette(
     HPALETTE hpal,
     BOOL bForceBackground)
 {
-    HANDLE_METADC(HPALETTE, SelectPalette, NULL, hdc, hpal);
-
+    if (GDI_HANDLE_GET_TYPE(hdc) != GDILoObjType_LO_DC_TYPE)
+    {
+        if (GDI_HANDLE_GET_TYPE(hdc) == GDILoObjType_LO_METADC16_TYPE)
+        {
+           return (HPALETTE)((ULONG_PTR)METADC_SelectPalette(hdc, hpal));
+        }
+        else
+        {
+           PLDC pLDC = GdiGetLDC(hdc);
+           if ( !pLDC )
+           {
+              SetLastError(ERROR_INVALID_HANDLE);
+              return NULL;
+           }
+           if ( pLDC->iType == LDC_EMFLDC && !(EMFDC_SelectPalette(pLDC, hpal)) )
+           {
+              return NULL;
+           }
+        }
+    }
     return NtUserSelectPalette(hdc, hpal, bForceBackground);
 }
 

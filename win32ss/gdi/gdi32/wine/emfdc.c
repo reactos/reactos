@@ -184,7 +184,7 @@ static UINT get_bitmap_info( HDC *hdc, HBITMAP *bitmap, BITMAPINFO *info )
 
     bpp = info->bmiHeader.biBitCount;
     if (bpp <= 8)
-        return sizeof(BITMAPINFOHEADER) + (1 << bpp) * sizeof(RGBQUAD);
+        return sizeof(BITMAPINFOHEADER) + (1L << bpp) * sizeof(RGBQUAD);
     else if (bpp == 16 || bpp == 32)
         return sizeof(BITMAPINFOHEADER) + 3 * sizeof(RGBQUAD);
 
@@ -853,7 +853,7 @@ static BOOL emfdc_polylinegon( WINEDC *dc_attr, const POINT *points, INT count, 
     DWORD size;
     BOOL ret, use_small_emr = can_use_short_points( points, count );
 
-    size = use_small_emr ? offsetof( EMRPOLYLINE16, apts[count] ) : offsetof( EMRPOLYLINE, aptl[count] );
+    size = use_small_emr ? (DWORD)offsetof( EMRPOLYLINE16, apts[count] ) : (DWORD)offsetof( EMRPOLYLINE, aptl[count] );
 
     emr = HeapAlloc( GetProcessHeap(), 0, size );
     emr->emr.iType = use_small_emr ? type + EMR_POLYLINE16 - EMR_POLYLINE : type;
@@ -970,8 +970,8 @@ BOOL EMFDC_PolyDraw( WINEDC *dc_attr, const POINT *pts, const BYTE *types, DWORD
     BOOL use_small_emr = can_use_short_points( pts, count );
     DWORD size;
 
-    size = use_small_emr ? offsetof( EMRPOLYDRAW16, apts[count] )
-        : offsetof( EMRPOLYDRAW, aptl[count] );
+    size = use_small_emr ? (DWORD)offsetof( EMRPOLYDRAW16, apts[count] )
+        : (DWORD)offsetof( EMRPOLYDRAW, aptl[count] );
     size += (count + 3) & ~3;
 
     if (!(emr = HeapAlloc( GetProcessHeap(), 0, size ))) return FALSE;
@@ -2273,7 +2273,7 @@ BOOL EMFDC_WriteNamedEscape( WINEDC *dc_attr, PWCHAR pDriver, INT nEscape, INT c
     rounded_size = (cbInput+3) & ~3;
     total = offsetof(EMRNAMEDESCAPE,Data) + rounded_size;
 
-    total += sizestr = (wcslen(pDriver) + 1 ) * sizeof(WCHAR);
+    total += sizestr = (UINT)((wcslen(pDriver) + 1 ) * sizeof(WCHAR));
 
     pemr = RtlAllocateHeap( GetProcessHeap(), 0, total );
     if ( !pemr )
@@ -2369,8 +2369,8 @@ HDC WINAPI CreateEnhMetaFileA( HDC hdc, const char *filename, const RECT *rect,
 
     if(description)
     {
-        len1 = strlen(description);
-        len2 = strlen(description + len1 + 1);
+        len1 = (DWORD)strlen(description);
+        len2 = (DWORD)strlen(description + len1 + 1);
         total = MultiByteToWideChar( CP_ACP, 0, description, len1 + len2 + 3, NULL, 0 );
         descriptionW = HeapAlloc( GetProcessHeap(), 0, total * sizeof(WCHAR) );
         MultiByteToWideChar( CP_ACP, 0, description, len1 + len2 + 3, descriptionW, total );

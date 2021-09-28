@@ -667,7 +667,7 @@ static INT16 metadc_create_region( struct metadc *metadc, HRGN hrgn )
     mr->rdParm[1] = 6;
     mr->rdParm[2] = 0x2f6;
     mr->rdParm[3] = 0;
-    mr->rdParm[4] = (param - &mr->rdFunction) * sizeof(WORD);
+    mr->rdParm[4] = (WORD)((param - &mr->rdFunction) * sizeof(WORD));
     mr->rdParm[5] = bands;
     mr->rdParm[6] = max_bounds;
     mr->rdParm[7] = rgndata->rdh.rcBound.left;
@@ -757,7 +757,7 @@ static BOOL metadc_stretchblt( HDC hdc, INT x_dst, INT y_dst, INT width_dst, INT
 
     bpp = src_info.bmiHeader.biBitCount;
     if (bpp <= 8)
-        bmi_size = sizeof(BITMAPINFOHEADER) + (1 << bpp) * sizeof(RGBQUAD);
+        bmi_size = sizeof(BITMAPINFOHEADER) + (1L << bpp) * sizeof(RGBQUAD);
     else if (bpp == 16 || bpp == 32)
         bmi_size = sizeof(BITMAPINFOHEADER) + 3 * sizeof(RGBQUAD);
     else
