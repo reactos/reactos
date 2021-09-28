@@ -1312,6 +1312,8 @@ C_ASSERT(sizeof(CLIENTIMC) == 0x34);
 
 /* flags for CLIENTIMC */
 #define CLIENTIMC_WIDE 0x1
+#define CLIENTIMC_UNKNOWN5 0x2
+#define CLIENTIMC_UNKNOWN4 0x20
 #define CLIENTIMC_UNKNOWN1 0x40
 #define CLIENTIMC_UNKNOWN3 0x80
 #define CLIENTIMC_UNKNOWN2 0x100
@@ -2769,10 +2771,7 @@ NtUserMoveWindow(
 
 DWORD
 NTAPI
-NtUserNotifyIMEStatus(
-    HWND hwnd,
-    HIMC hIMC,
-    DWORD dwConversion);
+NtUserNotifyIMEStatus(HWND hwnd, BOOL fOpen, DWORD dwConversion);
 
 BOOL
 NTAPI

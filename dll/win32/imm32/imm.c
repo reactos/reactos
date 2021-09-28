@@ -169,6 +169,11 @@ static InputContextData* get_imc_data(HIMC hIMC)
     return data;
 }
 
+static VOID APIENTRY Imm32CiceroSetActiveContext(HIMC hIMC, BOOL fActivate, HWND hWnd, HKL hKL)
+{
+    FIXME("We have to do something\n");
+}
+
 /***********************************************************************
  *		ImmAssociateContext (IMM32.@)
  */
@@ -1314,10 +1319,96 @@ BOOL WINAPI ImmEnumInputContext(DWORD dwThreadId, IMCENUMPROC lpfn, LPARAM lPara
 /***********************************************************************
  *              ImmSetActiveContext(IMM32.@)
  */
-BOOL WINAPI ImmSetActiveContext(HWND hwnd, HIMC hIMC, BOOL fFlag)
+BOOL WINAPI ImmSetActiveContext(HWND hWnd, HIMC hIMC, BOOL fActivate)
 {
-    FIXME("(%p, %p, %d): stub\n", hwnd, hIMC, fFlag);
-    return FALSE;
+    PCLIENTIMC pClientImc;
+    LPINPUTCONTEXTDX pIC;
+    PIMEDPI pImeDpi;
+    HKL hKL;
+    BOOL fOpen = FALSE;
+    DWORD dwConversion = 0, iShow = ISC_SHOWUIALL;
+    HWND hwndDefIME;
+
+    TRACE("(%p, %p, %d)\n", hWnd, hIMC, fActivate);
+
+    if (Imm32IsImmMode())
+        return FALSE;
+
+    pClientImc = ImmLockClientImc(hIMC);
+
+    if (!fActivate)
+    {
+        if (pClientImc)
+            pClientImc->dwFlags &= ~CLIENTIMC_UNKNOWN4;
+    }
+    else if (hIMC)
+    {
+        if (!pClientImc)
+            return FALSE;
+
+        pIC = (LPINPUTCONTEXTDX)ImmLockIMC(hIMC);
+        if (!pIC)
+        {
+            ImmUnlockClientImc(pClientImc);
+            return FALSE;
+        }
+
+        pIC->hWnd = hWnd;
+        pClientImc->dwFlags |= CLIENTIMC_UNKNOWN5;
+
+        if (pIC->dwUIFlags & 2)
+            iShow = (ISC_SHOWUIGUIDELINE | ISC_SHOWUIALLCANDIDATEWINDOW);
+
+        fOpen = pIC->fOpen;
+        dwConversion = pIC->fdwConversion;
+
+        ImmUnlockIMC(hIMC);
+    }
+    else
+    {
+        hIMC = Imm32GetContextEx(hWnd, TRUE);
+        pIC = (LPINPUTCONTEXTDX)ImmLockIMC(hIMC);
+        if (pIC)
+        {
+            pIC->hWnd = hWnd;
+            ImmUnlockIMC(hIMC);
+        }
+        hIMC = NULL;
+    }
+
+    hKL = GetKeyboardLayout(0);
+
+    if (Imm32IsCiceroMode() && !Imm32Is16BitMode())
+    {
+        Imm32CiceroSetActiveContext(hIMC, fActivate, hWnd, hKL);
+        hKL = GetKeyboardLayout(0);
+    }
+
+    pImeDpi = ImmLockImeDpi(hKL);
+    if (pImeDpi)
+    {
+        if (IS_IME_HKL(hKL))
+            pImeDpi->ImeSetActiveContext(hIMC, fActivate);
+        ImmUnlockImeDpi(pImeDpi);
+    }
+
+    if (IsWindow(hWnd))
+    {
+        SendMessageW(hWnd, WM_IME_SETCONTEXT, fActivate, iShow);
+        if (fActivate)
+            NtUserNotifyIMEStatus(hWnd, fOpen, dwConversion);
+    }
+    else if (!fActivate)
+    {
+        hwndDefIME = ImmGetDefaultIMEWnd(NULL);
+        if (hwndDefIME)
+            SendMessageW(hwndDefIME, WM_IME_SETCONTEXT, 0, iShow);
+    }
+
+    if (pClientImc)
+        ImmUnlockClientImc(pClientImc);
+
+    return TRUE;
 }
 
 /***********************************************************************

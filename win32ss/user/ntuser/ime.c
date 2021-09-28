@@ -49,15 +49,11 @@ NtUserGetImeHotKey(IN DWORD dwHotKey,
 
 DWORD
 APIENTRY
-NtUserNotifyIMEStatus(
-    HWND hwnd,
-    HIMC hIMC,
-    DWORD dwConversion)
+NtUserNotifyIMEStatus(HWND hwnd, BOOL fOpen, DWORD dwConversion)
 {
-    TRACE("NtUserNotifyIMEStatus(%p, %p, 0x%lX)\n", hwnd, hIMC, dwConversion);
+    TRACE("NtUserNotifyIMEStatus(%p, %d, 0x%lX)\n", hwnd, fOpen, dwConversion);
     return 0;
 }
-
 
 DWORD
 APIENTRY
