@@ -1659,7 +1659,7 @@ ImmGetImeMenuItemsA(HIMC hIMC, DWORD dwFlags, DWORD dwType,
                     LPIMEMENUITEMINFOA lpImeMenu, DWORD dwSize)
 {
     TRACE("(%p, 0x%lX, 0x%lX, %p, %p, 0x%lX)\n",
-        hIMC, dwFlags, dwType, lpImeParentMenu, lpImeMenu, dwSize);
+          hIMC, dwFlags, dwType, lpImeParentMenu, lpImeMenu, dwSize);
     return Imm32GetImeMenuItemsAW(hIMC, dwFlags, dwType, lpImeParentMenu, lpImeMenu,
                                   dwSize, TRUE);
 }
@@ -1673,7 +1673,7 @@ ImmGetImeMenuItemsW(HIMC hIMC, DWORD dwFlags, DWORD dwType,
                     LPIMEMENUITEMINFOW lpImeMenu, DWORD dwSize)
 {
     TRACE("(%p, 0x%lX, 0x%lX, %p, %p, 0x%lX)\n",
-        hIMC, dwFlags, dwType, lpImeParentMenu, lpImeMenu, dwSize);
+          hIMC, dwFlags, dwType, lpImeParentMenu, lpImeMenu, dwSize);
     return Imm32GetImeMenuItemsAW(hIMC, dwFlags, dwType, lpImeParentMenu, lpImeMenu,
                                   dwSize, FALSE);
 }
