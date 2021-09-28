@@ -345,8 +345,8 @@ Imm32GetImeMenuItemsAW(HIMC hIMC, DWORD dwFlags, DWORD dwType, LPVOID lpImeParen
     DWORD ret = 0, cbTotal, dwProcessId, dwThreadId, iItem;
     LPINPUTCONTEXT pIC;
     PIMEDPI pImeDpi = NULL;
-    IMEMENUITEMINFOA ItemInfoA;
-    IMEMENUITEMINFOW ItemInfoW;
+    IMEMENUITEMINFOA ParentA;
+    IMEMENUITEMINFOW ParentW;
     LPIMEMENUITEMINFOA pItemA;
     LPIMEMENUITEMINFOW pItemW;
     LPVOID pNewItems = NULL, pNewParent = NULL;
@@ -398,9 +398,9 @@ Imm32GetImeMenuItemsAW(HIMC hIMC, DWORD dwFlags, DWORD dwType, LPVOID lpImeParen
         {
             if (lpImeParentMenu)
             {
-                if (!Imm32ImeMenuAnsiToWide(lpImeParentMenu, &ItemInfoW, CP_ACP, TRUE))
+                if (!Imm32ImeMenuAnsiToWide(lpImeParentMenu, &ParentW, CP_ACP, TRUE))
                     goto Quit;
-                pNewParent = &ItemInfoW;
+                pNewParent = &ParentW;
             }
 
             if (lpImeMenu)
@@ -415,9 +415,9 @@ Imm32GetImeMenuItemsAW(HIMC hIMC, DWORD dwFlags, DWORD dwType, LPVOID lpImeParen
         {
             if (lpImeParentMenu)
             {
-                if (!Imm32ImeMenuWideToAnsi(lpImeParentMenu, &ItemInfoA, pImeDpi->uCodePage))
+                if (!Imm32ImeMenuWideToAnsi(lpImeParentMenu, &ParentA, pImeDpi->uCodePage))
                     goto Quit;
-                pNewParent = &ItemInfoA;
+                pNewParent = &ParentA;
             }
 
             if (lpImeMenu)
