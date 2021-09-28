@@ -250,7 +250,7 @@ Imm32ImeMenuWideToAnsi(const IMEMENUITEMINFOW *pItemW, LPIMEMENUITEMINFOA pItemA
     pItemA->hbmpItem = pItemW->hbmpItem;
     ret = WideCharToMultiByte(uCodePage, 0, pItemW->szString, -1,
                               pItemA->szString, _countof(pItemA->szString), NULL, NULL);
-    if (ret > _countof(pItemA->szString))
+    if (ret >= _countof(pItemA->szString))
         ret = 0;
     return ret;
 }
