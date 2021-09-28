@@ -1501,7 +1501,7 @@ GDIOBJ_ConvertFromStockObj(HGDIOBJ *phObj)
 
     /* Update the entry */
     pentry->FullUnique &= ~GDI_ENTRY_STOCK_MASK;
-    pentry->ObjectOwner.ulObj = 0;
+    pentry->ObjectOwner.ulObj = PtrToUlong(PsGetCurrentProcessId());
 
     /* Get the pointer to the BASEOBJECT */
     pobj = pentry->einfo.pobj;
