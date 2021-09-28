@@ -356,8 +356,6 @@ Imm32GetImeMenuItemsAW(HIMC hIMC, DWORD dwFlags, DWORD dwType, LPVOID lpImeParen
     if (!hIMC)
         return 0;
 
-    bImcIsAnsi = Imm32IsImcAnsi(hIMC);
-
     dwProcessId = NtUserQueryInputContext(hIMC, 0);
     if (dwProcessId == 0)
         return 0;
@@ -386,11 +384,13 @@ Imm32GetImeMenuItemsAW(HIMC hIMC, DWORD dwFlags, DWORD dwType, LPVOID lpImeParen
     if (!pImeDpi)
     {
         ImmUnlockIMC(hIMC);
-        return ret;
+        return 0;
     }
 
     if (pImeDpi->ImeGetImeMenuItems == NULL)
         goto Quit;
+
+    bImcIsAnsi = Imm32IsImcAnsi(hIMC);
 
     if (bImcIsAnsi != bTargetIsAnsi)
     {
