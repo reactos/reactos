@@ -18,10 +18,11 @@ HANDLE g_hImm32Heap = NULL;
 
 BOOL WINAPI Imm32IsImcAnsi(HIMC hIMC)
 {
+    BOOL ret;
     PCLIENTIMC pClientImc = ImmLockClientImc(hIMC);
     if (!pClientImc)
         return 0xFFFFFFFF;
-    BOOL ret = !(pClientImc->dwFlags & CLIENTIMC_WIDE);
+    ret = !(pClientImc->dwFlags & CLIENTIMC_WIDE);
     ImmUnlockClientImc(pClientImc);
     return ret;
 }
