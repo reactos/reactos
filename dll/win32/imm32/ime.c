@@ -432,6 +432,7 @@ Imm32GetImeMenuItemsAW(HIMC hIMC, DWORD dwFlags, DWORD dwType, LPVOID lpImeParen
     else
     {
         pNewItems = lpImeMenu;
+        pNewParent = lpImeParentMenu;
     }
 
     ret = pImeDpi->ImeGetImeMenuItems(hIMC, dwFlags, dwType, pNewParent, pNewItems, dwSize);
