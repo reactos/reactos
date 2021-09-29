@@ -232,7 +232,10 @@ Imm32ImeMenuAnsiToWide(const IMEMENUITEMINFOA *pItemA, LPIMEMENUITEMINFOW pItemW
     ret = MultiByteToWideChar(uCodePage, 0, pItemA->szString, -1,
                               pItemW->szString, _countof(pItemW->szString));
     if (ret >= _countof(pItemW->szString))
+    {
         ret = 0;
+        pItemW->szString[0] = 0;
+    }
     return ret;
 }
 
@@ -252,7 +255,10 @@ Imm32ImeMenuWideToAnsi(const IMEMENUITEMINFOW *pItemW, LPIMEMENUITEMINFOA pItemA
     ret = WideCharToMultiByte(uCodePage, 0, pItemW->szString, -1,
                               pItemA->szString, _countof(pItemA->szString), NULL, NULL);
     if (ret >= _countof(pItemA->szString))
+    {
         ret = 0;
+        pItemA->szString[0] = 0;
+    }
     return ret;
 }
 
