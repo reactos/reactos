@@ -414,7 +414,7 @@ Imm32GetImeMenuItemsAW(HIMC hIMC, DWORD dwFlags, DWORD dwType, LPVOID lpImeParen
 
             if (lpImeMenu)
             {
-                cbTotal = (dwSize / sizeof(IMEMENUITEMINFOW) * sizeof(IMEMENUITEMINFOA));
+                cbTotal = ((dwSize / sizeof(IMEMENUITEMINFOW)) * sizeof(IMEMENUITEMINFOA));
                 pNewItems = Imm32HeapAlloc(0, cbTotal);
                 if (!pNewItems)
                     goto Quit;
