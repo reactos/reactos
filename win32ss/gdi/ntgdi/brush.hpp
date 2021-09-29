@@ -113,6 +113,8 @@ public:
     VOID
     vSetSolidColor(
         _In_ COLORREF crColor);
+
+    VOID vReleaseAttribute(VOID);
 };
 
 /* HACK! */
