@@ -1331,7 +1331,7 @@ BOOL WINAPI ImmSetActiveContext(HWND hWnd, HIMC hIMC, BOOL fActive)
 
     TRACE("(%p, %p, %d)\n", hWnd, hIMC, fActive);
 
-    if (Imm32IsImmMode())
+    if (!Imm32IsImmMode())
         return FALSE;
 
     pClientImc = ImmLockClientImc(hIMC);
