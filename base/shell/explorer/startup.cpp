@@ -3,6 +3,7 @@
  * Copyright (C) 2002 Shachar Shemesh
  * Copyright (C) 2013 Edijs Kolesnikovics
  * Copyright (C) 2018 Katayama Hirofumi MZ
+ * Copyright (C) 2021 He Yang
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -28,7 +29,7 @@
  * The operations performed are (by order of execution):
  *
  * After log in
- * - HKEY_LOCAL_MACHINE\Software\Microsoft\Windows\CurrentVersion\RunOnceEx (synch, no imp)
+ * - HKEY_LOCAL_MACHINE\Software\Microsoft\Windows\CurrentVersion\RunOnceEx (synch)
  * - HKEY_LOCAL_MACHINE\Software\Microsoft\Windows\CurrentVersion\RunOnce (synch)
  * - HKEY_LOCAL_MACHINE\Software\Microsoft\Windows\CurrentVersion\Run (asynch)
  * - HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Run (asynch)
@@ -36,7 +37,7 @@
  * - Current user Startup folder "%USERPROFILE%\Start Menu\Programs\Startup" (asynch, no imp)
  * - HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\RunOnce (asynch)
  *
- * None is processed in Safe Mode // FIXME: Check RunOnceEx in Safe Mode
+ * None is processed in Safe Mode
  */
 
 #include "precomp.h"
@@ -317,6 +318,68 @@ end:
     return res == ERROR_SUCCESS ? TRUE : FALSE;
 }
 
+/**
+ * Process "RunOnceEx" type registry key.
+ * rundll32.exe will be invoked if the corresponding key has items inside, and wait for it.
+ * hkRoot is the HKEY from which
+ *      "Software\Microsoft\Windows\CurrentVersion\RunOnceEx"
+ *      is opened.
+ */
+static BOOL ProcessRunOnceEx(HKEY hkRoot)
+{
+    HKEY hkRunOnceEx = NULL;
+    LONG res = ERROR_SUCCESS;
+    WCHAR cmdLine[] = L"rundll32 iernonce.dll RunOnceExProcess";
+    DWORD dwSubKeyCnt;
+
+    res = RegOpenKeyExW(hkRoot,
+                        L"Software\\Microsoft\\Windows\\CurrentVersion\\RunOnceEx",
+                        0,
+                        KEY_READ,
+                        &hkRunOnceEx);
+    if (res != ERROR_SUCCESS)
+    {
+        TRACE("RegOpenKeyW failed on Software\\Microsoft\\Windows\\CurrentVersion\\RunOnceEx (%ld)\n", res);
+        goto end;
+    }
+
+    res = RegQueryInfoKeyW(hkRunOnceEx,
+                           NULL,
+                           NULL,
+                           NULL,
+                           &dwSubKeyCnt,
+                           NULL,
+                           NULL,
+                           NULL,
+                           NULL,
+                           NULL,
+                           NULL,
+                           NULL);
+
+    if (res != ERROR_SUCCESS)
+    {
+        TRACE("RegQueryInfoKeyW failed on Software\\Microsoft\\Windows\\CurrentVersion\\RunOnceEx (%ld)\n", res);
+        goto end;
+    }
+
+    if (dwSubKeyCnt != 0)
+    {
+        if (runCmd(cmdLine, NULL, TRUE, TRUE) == INVALID_RUNCMD_RETURN)
+        {
+            TRACE("runCmd failed (%ld)\n", res = GetLastError());
+            goto end;
+        }
+    }
+
+end:
+    if (hkRunOnceEx != NULL)
+        RegCloseKey(hkRunOnceEx);
+
+    TRACE("done\n");
+
+    return res == ERROR_SUCCESS ? TRUE : FALSE;
+}
+
 static BOOL
 AutoStartupApplications(INT nCSIDL_Folder)
 {
@@ -414,7 +477,9 @@ INT ProcessStartupItems(VOID)
      * stopping if one fails, skipping if necessary.
      */
     res = TRUE;
-    /* TODO: RunOnceEx */
+
+    if (res && bNormalBoot)
+        ProcessRunOnceEx(HKEY_LOCAL_MACHINE);
 
     if (res && (SHRestricted(REST_NOLOCALMACHINERUNONCE) == 0))
         res = ProcessRunKeys(HKEY_LOCAL_MACHINE, L"RunOnce", TRUE, TRUE);
