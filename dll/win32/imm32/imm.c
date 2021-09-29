@@ -169,7 +169,7 @@ static InputContextData* get_imc_data(HIMC hIMC)
     return data;
 }
 
-static VOID APIENTRY Imm32CiceroSetActiveContext(HIMC hIMC, BOOL fActivate, HWND hWnd, HKL hKL)
+static VOID APIENTRY Imm32CiceroSetActiveContext(HIMC hIMC, BOOL fActive, HWND hWnd, HKL hKL)
 {
     FIXME("We have to do something\n");
 }
@@ -1319,7 +1319,7 @@ BOOL WINAPI ImmEnumInputContext(DWORD dwThreadId, IMCENUMPROC lpfn, LPARAM lPara
 /***********************************************************************
  *              ImmSetActiveContext(IMM32.@)
  */
-BOOL WINAPI ImmSetActiveContext(HWND hWnd, HIMC hIMC, BOOL fActivate)
+BOOL WINAPI ImmSetActiveContext(HWND hWnd, HIMC hIMC, BOOL fActive)
 {
     PCLIENTIMC pClientImc;
     LPINPUTCONTEXTDX pIC;
@@ -1329,14 +1329,14 @@ BOOL WINAPI ImmSetActiveContext(HWND hWnd, HIMC hIMC, BOOL fActivate)
     DWORD dwConversion = 0, iShow = ISC_SHOWUIALL;
     HWND hwndDefIME;
 
-    TRACE("(%p, %p, %d)\n", hWnd, hIMC, fActivate);
+    TRACE("(%p, %p, %d)\n", hWnd, hIMC, fActive);
 
     if (Imm32IsImmMode())
         return FALSE;
 
     pClientImc = ImmLockClientImc(hIMC);
 
-    if (!fActivate)
+    if (!fActive)
     {
         if (pClientImc)
             pClientImc->dwFlags &= ~CLIENTIMC_UNKNOWN4;
@@ -1380,7 +1380,7 @@ BOOL WINAPI ImmSetActiveContext(HWND hWnd, HIMC hIMC, BOOL fActivate)
 
     if (Imm32IsCiceroMode() && !Imm32Is16BitMode())
     {
-        Imm32CiceroSetActiveContext(hIMC, fActivate, hWnd, hKL);
+        Imm32CiceroSetActiveContext(hIMC, fActive, hWnd, hKL);
         hKL = GetKeyboardLayout(0);
     }
 
@@ -1388,17 +1388,17 @@ BOOL WINAPI ImmSetActiveContext(HWND hWnd, HIMC hIMC, BOOL fActivate)
     if (pImeDpi)
     {
         if (IS_IME_HKL(hKL))
-            pImeDpi->ImeSetActiveContext(hIMC, fActivate);
+            pImeDpi->ImeSetActiveContext(hIMC, fActive);
         ImmUnlockImeDpi(pImeDpi);
     }
 
     if (IsWindow(hWnd))
     {
-        SendMessageW(hWnd, WM_IME_SETCONTEXT, fActivate, iShow);
-        if (fActivate)
+        SendMessageW(hWnd, WM_IME_SETCONTEXT, fActive, iShow);
+        if (fActive)
             NtUserNotifyIMEStatus(hWnd, fOpen, dwConversion);
     }
-    else if (!fActivate)
+    else if (!fActive)
     {
         hwndDefIME = ImmGetDefaultIMEWnd(NULL);
         if (hwndDefIME)
