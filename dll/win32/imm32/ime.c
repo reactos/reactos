@@ -168,11 +168,11 @@ BOOL APIENTRY Imm32LoadImeInfo(PIMEINFOEX pImeInfoEx, PIMEDPI pImeDpi)
     }
     pImeDpi->hInst = hIME;
 
-#define DEFINE_IME_ENTRY(type, name, params, extended) \
+#define DEFINE_IME_ENTRY(type, name, params, optional) \
     do { \
         fn = GetProcAddress(hIME, #name); \
         if (fn) pImeDpi->name = (FN_##name)fn; \
-        else if (!(extended)) goto Failed; \
+        else if (!(optional)) goto Failed; \
     } while (0);
 #include "imetable.h"
 #undef DEFINE_IME_ENTRY
