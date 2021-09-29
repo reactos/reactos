@@ -397,11 +397,7 @@ Imm32GetImeMenuItemsAW(HIMC hIMC, DWORD dwFlags, DWORD dwType, LPVOID lpImeParen
         if (bTargetIsAnsi)
         {
             if (lpImeParentMenu)
-            {
-                if (!Imm32ImeMenuAnsiToWide(lpImeParentMenu, &ParentW, CP_ACP, TRUE))
-                    goto Quit;
                 pNewParent = &ParentW;
-            }
 
             if (lpImeMenu)
             {
@@ -414,11 +410,7 @@ Imm32GetImeMenuItemsAW(HIMC hIMC, DWORD dwFlags, DWORD dwType, LPVOID lpImeParen
         else
         {
             if (lpImeParentMenu)
-            {
-                if (!Imm32ImeMenuWideToAnsi(lpImeParentMenu, &ParentA, pImeDpi->uCodePage))
-                    goto Quit;
                 pNewParent = &ParentA;
-            }
 
             if (lpImeMenu)
             {
