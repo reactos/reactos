@@ -21,7 +21,7 @@ BOOL WINAPI Imm32IsImcAnsi(HIMC hIMC)
     BOOL ret;
     PCLIENTIMC pClientImc = ImmLockClientImc(hIMC);
     if (!pClientImc)
-        return 0xFFFFFFFF;
+        return -1;
     ret = !(pClientImc->dwFlags & CLIENTIMC_WIDE);
     ImmUnlockClientImc(pClientImc);
     return ret;
