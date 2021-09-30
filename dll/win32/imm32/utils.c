@@ -147,17 +147,17 @@ BOOL APIENTRY
 Imm32NotifyAction(HIMC hIMC, HWND hwnd, DWORD dwAction, DWORD_PTR dwIndex, DWORD_PTR dwValue,
                   DWORD_PTR dwCommand, DWORD_PTR dwData)
 {
-    DWORD dwLayout;
+    DWORD dwThreadId;
     HKL hKL;
     PIMEDPI pImeDpi;
 
     if (dwAction)
     {
-        dwLayout = NtUserQueryInputContext(hIMC, 1);
-        if (dwLayout)
+        dwThreadId = NtUserQueryInputContext(hIMC, 1);
+        if (dwThreadId)
         {
             /* find keyboard layout and lock it */
-            hKL = GetKeyboardLayout(dwLayout);
+            hKL = GetKeyboardLayout(dwThreadId);
             pImeDpi = ImmLockImeDpi(hKL);
             if (pImeDpi)
             {
