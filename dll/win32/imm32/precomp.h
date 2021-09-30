@@ -95,6 +95,8 @@ static inline BOOL Imm32IsCrossProcessAccess(HWND hWnd)
             (DWORD_PTR)NtCurrentTeb()->ClientId.UniqueProcess);
 }
 
+BOOL WINAPI Imm32IsImcAnsi(HIMC hIMC);
+
 #define ImeDpi_IsUnicode(pImeDpi)   ((pImeDpi)->ImeInfo.fdwProperty & IME_PROP_UNICODE)
 #define Imm32IsImmMode()            (g_psi && (g_psi->dwSRVIFlags & SRVINFO_IMM32))
 #define Imm32IsCiceroMode()         (g_psi && (g_psi->dwSRVIFlags & SRVINFO_CICERO_ENABLED))
@@ -112,3 +114,10 @@ Imm32NotifyAction(HIMC hIMC, HWND hwnd, DWORD dwAction, DWORD_PTR dwIndex, DWORD
                   DWORD_PTR dwCommand, DWORD_PTR dwData);
 
 DWORD APIENTRY Imm32AllocAndBuildHimcList(DWORD dwThreadId, HIMC **pphList);
+
+INT APIENTRY
+Imm32ImeMenuAnsiToWide(const IMEMENUITEMINFOA *pItemA, LPIMEMENUITEMINFOW pItemW,
+                       UINT uCodePage, BOOL bBitmap);
+INT APIENTRY
+Imm32ImeMenuWideToAnsi(const IMEMENUITEMINFOW *pItemW, LPIMEMENUITEMINFOA pItemA,
+                       UINT uCodePage);
