@@ -731,6 +731,8 @@ SetDIBitsToDevice(
 
     cjBmpScanSize = DIB_BitmapMaxBitsSize((LPBITMAPINFO) lpbmi, ScanLines);
 
+    ((PW32CLIENTINFO)NtCurrentTeb()->Win32ClientInfo)->cSpins = 0;
+
     pvSafeBits = RtlAllocateHeap(GetProcessHeap(), 0, cjBmpScanSize);
     if (pvSafeBits)
     {
@@ -838,6 +840,8 @@ StretchDIBits(
     }
 
     cjBmpScanSize = GdiGetBitmapBitsSize((BITMAPINFO *) pConvertedInfo);
+
+    ((PW32CLIENTINFO)NtCurrentTeb()->Win32ClientInfo)->cSpins = 0;
 
     if (lpBits)
     {

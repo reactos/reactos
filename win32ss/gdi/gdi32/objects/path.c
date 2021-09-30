@@ -70,6 +70,8 @@ FillPath(
     HDC	hdc)
 {
     HANDLE_METADC0P(BOOL, FillPath, FALSE, hdc);
+
+    ((PW32CLIENTINFO)NtCurrentTeb()->Win32ClientInfo)->cSpins = 0;
     return NtGdiFillPath( hdc );
 }
 
@@ -154,6 +156,8 @@ StrokeAndFillPath(
     HDC	hdc)
 {
     HANDLE_METADC0P(BOOL, StrokeAndFillPath, FALSE, hdc);
+
+    ((PW32CLIENTINFO)NtCurrentTeb()->Win32ClientInfo)->cSpins = 0;
     return NtGdiStrokeAndFillPath ( hdc );
 }
 
@@ -167,6 +171,8 @@ StrokePath(
     HDC	hdc)
 {
     HANDLE_METADC0P(BOOL, StrokePath, FALSE, hdc);
+
+    ((PW32CLIENTINFO)NtCurrentTeb()->Win32ClientInfo)->cSpins = 0;
     return NtGdiStrokePath ( hdc );
 }
 

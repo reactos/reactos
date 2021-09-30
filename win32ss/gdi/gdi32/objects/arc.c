@@ -28,6 +28,7 @@ Arc(
 
     if ( GdiConvertAndCheckDC(hdc) == NULL ) return FALSE;
 
+    ((PW32CLIENTINFO)NtCurrentTeb()->Win32ClientInfo)->cSpins = 0;
     return NtGdiArcInternal(GdiTypeArc,
                             hdc,
                             xLeft,
@@ -66,6 +67,7 @@ AngleArc(
 
     if ( GdiConvertAndCheckDC(hdc) == NULL ) return FALSE;
 
+    ((PW32CLIENTINFO)NtCurrentTeb()->Win32ClientInfo)->cSpins = 0;
     return NtGdiAngleArc(hdc,
                          x,
                          y,
@@ -102,6 +104,7 @@ ArcTo(
 
     if ( GdiConvertAndCheckDC(hdc) == NULL ) return FALSE;
 
+    ((PW32CLIENTINFO)NtCurrentTeb()->Win32ClientInfo)->cSpins = 0;
     return NtGdiArcInternal(GdiTypeArcTo,
                             hdc,
                             xLeft,
@@ -142,6 +145,7 @@ Chord(
 
     if ( GdiConvertAndCheckDC(hdc) == NULL ) return FALSE;
 
+    ((PW32CLIENTINFO)NtCurrentTeb()->Win32ClientInfo)->cSpins = 0;
     return NtGdiArcInternal(GdiTypeChord,
                             hdc,
                             xLeft,
@@ -186,6 +190,7 @@ Pie(
 
     if ( GdiConvertAndCheckDC(hdc) == NULL ) return FALSE;
 
+    ((PW32CLIENTINFO)NtCurrentTeb()->Win32ClientInfo)->cSpins = 0;
     return NtGdiArcInternal(GdiTypePie,
                             hdc,
                             xLeft,

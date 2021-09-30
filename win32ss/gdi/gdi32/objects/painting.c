@@ -15,6 +15,7 @@ LineTo(
 
     if ( GdiConvertAndCheckDC(hdc) == NULL ) return FALSE;
 
+    ((PW32CLIENTINFO)NtCurrentTeb()->Win32ClientInfo)->cSpins = 0;
     return NtGdiLineTo(hdc, x, y);
 }
 
@@ -79,6 +80,7 @@ Ellipse(
 
     if ( GdiConvertAndCheckDC(hdc) == NULL ) return FALSE;
 
+    ((PW32CLIENTINFO)NtCurrentTeb()->Win32ClientInfo)->cSpins = 0;
     return NtGdiEllipse(hdc, left, top, right, bottom);
 }
 
@@ -99,6 +101,7 @@ Rectangle(
 
     if ( GdiConvertAndCheckDC(hdc) == NULL ) return FALSE;
 
+    ((PW32CLIENTINFO)NtCurrentTeb()->Win32ClientInfo)->cSpins = 0;
     return NtGdiRectangle(hdc, left, top, right, bottom);
 }
 
@@ -121,6 +124,7 @@ RoundRect(
 
     if ( GdiConvertAndCheckDC(hdc) == NULL ) return FALSE;
 
+    ((PW32CLIENTINFO)NtCurrentTeb()->Win32ClientInfo)->cSpins = 0;
     return NtGdiRoundRect(hdc, left, top, right, bottom, width, height);
 }
 
@@ -156,6 +160,7 @@ SetPixel(
 
     if ( GdiConvertAndCheckDC(hdc) == NULL ) return FALSE;
 
+    ((PW32CLIENTINFO)NtCurrentTeb()->Win32ClientInfo)->cSpins = 0;
     return NtGdiSetPixel(hdc, x, y, crColor);
 }
 
@@ -193,6 +198,7 @@ FillRgn(
 
     if ( GdiConvertAndCheckDC(hdc) == NULL ) return FALSE;
 
+    ((PW32CLIENTINFO)NtCurrentTeb()->Win32ClientInfo)->cSpins = 0;
     return NtGdiFillRgn(hdc, hrgn, hbr);
 }
 
@@ -217,6 +223,7 @@ FrameRgn(
 
     if ( GdiConvertAndCheckDC(hdc) == NULL ) return FALSE;
 
+    ((PW32CLIENTINFO)NtCurrentTeb()->Win32ClientInfo)->cSpins = 0;
     return NtGdiFrameRgn(hdc, hrgn, hbr, nWidth, nHeight);
 }
 
@@ -238,6 +245,7 @@ InvertRgn(
 
     if ( GdiConvertAndCheckDC(hdc) == NULL ) return FALSE;
 
+    ((PW32CLIENTINFO)NtCurrentTeb()->Win32ClientInfo)->cSpins = 0;
     return NtGdiInvertRgn(hdc, hrgn);
 }
 
@@ -421,6 +429,7 @@ ExtFloodFill(
 
     if ( GdiConvertAndCheckDC(hdc) == NULL ) return FALSE;
 
+    ((PW32CLIENTINFO)NtCurrentTeb()->Win32ClientInfo)->cSpins = 0;
     return NtGdiExtFloodFill(hdc, xStart, yStart, crFill, fuFillType);
 }
 
@@ -477,6 +486,7 @@ BitBlt(
 
     if ( GdiConvertAndCheckDC(hdcDest) == NULL ) return FALSE;
 
+    ((PW32CLIENTINFO)NtCurrentTeb()->Win32ClientInfo)->cSpins = 0;
     return NtGdiBitBlt(hdcDest, xDest, yDest, cx, cy, hdcSrc, xSrc, ySrc, dwRop, 0, 0);
 }
 
@@ -495,6 +505,8 @@ PatBlt(
     HANDLE_EMETAFDC(BOOL, PatBlt, FALSE, hdc, nXLeft, nYLeft, nWidth, nHeight, dwRop);
 
     if ( GdiConvertAndCheckDC(hdc) == NULL ) return FALSE;
+
+    ((PW32CLIENTINFO)NtCurrentTeb()->Win32ClientInfo)->cSpins = 0;
 
     /* Get the DC attribute */
     pdcattr = GdiGetDcAttr(hdc);
@@ -575,6 +587,8 @@ PolyPatBlt(
         return bResult;
     }
 
+    ((PW32CLIENTINFO)NtCurrentTeb()->Win32ClientInfo)->cSpins = 0;
+
     /* Get the DC attribute */
     pdcattr = GdiGetDcAttr(hdc);
     if (nCount && pdcattr && !(pdcattr->ulDirty_ & DC_DIBSECTION))
@@ -650,6 +664,7 @@ StretchBlt(
 
     if ( GdiConvertAndCheckDC(hdcDest) == NULL ) return FALSE;
 
+    ((PW32CLIENTINFO)NtCurrentTeb()->Win32ClientInfo)->cSpins = 0;
     return NtGdiStretchBlt(hdcDest,
                            xDest,
                            yDest,
@@ -702,6 +717,7 @@ MaskBlt(
 
     if ( GdiConvertAndCheckDC(hdcDest) == NULL ) return FALSE;
 
+    ((PW32CLIENTINFO)NtCurrentTeb()->Win32ClientInfo)->cSpins = 0;
     return NtGdiMaskBlt(hdcDest,
                         xDest,
                         yDest,
@@ -751,6 +767,7 @@ PlgBlt(
 
     if ( GdiConvertAndCheckDC(hdcDest) == NULL ) return FALSE;
 
+    ((PW32CLIENTINFO)NtCurrentTeb()->Win32ClientInfo)->cSpins = 0;
     return NtGdiPlgBlt(hdcDest,
                        (LPPOINT)ppt,
                        hdcSrc,
@@ -800,6 +817,7 @@ GdiAlphaBlend(
 
     if ( GdiConvertAndCheckDC(hdcDst) == NULL ) return FALSE;
 
+    ((PW32CLIENTINFO)NtCurrentTeb()->Win32ClientInfo)->cSpins = 0;
     return NtGdiAlphaBlend(hdcDst,
                            xDst,
                            yDst,
@@ -850,6 +868,7 @@ GdiTransparentBlt(
 
     if ( GdiConvertAndCheckDC(hdcDst) == NULL ) return FALSE;
 
+    ((PW32CLIENTINFO)NtCurrentTeb()->Win32ClientInfo)->cSpins = 0;
     return NtGdiTransparentBlt(hdcDst, xDst, yDst, cxDst, cyDst, hdcSrc, xSrc, ySrc, cxSrc, cySrc, crTransparent);
 }
 
@@ -872,5 +891,6 @@ GdiGradientFill(
 
     if ( GdiConvertAndCheckDC(hdc) == NULL ) return FALSE;
 
+    ((PW32CLIENTINFO)NtCurrentTeb()->Win32ClientInfo)->cSpins = 0;
     return NtGdiGradientFill(hdc, pVertex, nVertex, pMesh, nCount, ulMode);
 }

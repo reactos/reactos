@@ -511,6 +511,8 @@ ExtTextOutW(
 
     if ( GdiConvertAndCheckDC(hdc) == NULL ) return FALSE;
 
+    ((PW32CLIENTINFO)NtCurrentTeb()->Win32ClientInfo)->cSpins = 0;
+
     if (!(fuOptions & (ETO_GLYPH_INDEX | ETO_IGNORELANGUAGE)))
     {
         bBypassETOWMF = TRUE;
