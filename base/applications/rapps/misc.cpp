@@ -15,38 +15,6 @@ static HANDLE hLog = NULL;
 static BOOL bIsSys64ResultCached = FALSE;
 static BOOL bIsSys64Result = FALSE;
 
-INT GetWindowWidth(HWND hwnd)
-{
-    RECT Rect;
-
-    GetWindowRect(hwnd, &Rect);
-    return (Rect.right - Rect.left);
-}
-
-INT GetWindowHeight(HWND hwnd)
-{
-    RECT Rect;
-
-    GetWindowRect(hwnd, &Rect);
-    return (Rect.bottom - Rect.top);
-}
-
-INT GetClientWindowWidth(HWND hwnd)
-{
-    RECT Rect;
-
-    GetClientRect(hwnd, &Rect);
-    return (Rect.right - Rect.left);
-}
-
-INT GetClientWindowHeight(HWND hwnd)
-{
-    RECT Rect;
-
-    GetClientRect(hwnd, &Rect);
-    return (Rect.bottom - Rect.top);
-}
-
 VOID CopyTextToClipboard(LPCWSTR lpszText)
 {
     if (!OpenClipboard(NULL))
@@ -112,18 +80,7 @@ VOID ShowPopupMenuEx(HWND hwnd, HWND hwndOwner, UINT MenuID, UINT DefaultItem)
     }
 }
 
-VOID ShowPopupMenu(HWND hwnd, UINT MenuID, UINT DefaultItem)
-{
-    ShowPopupMenuEx(hwnd, hMainWnd, MenuID, DefaultItem);
-}
-
-
-BOOL StartProcess(ATL::CStringW &Path, BOOL Wait)
-{
-    return StartProcess(const_cast<LPWSTR>(Path.GetString()), Wait);;
-}
-
-BOOL StartProcess(LPWSTR lpPath, BOOL Wait)
+BOOL StartProcess(const ATL::CStringW& Path, BOOL Wait)
 {
     PROCESS_INFORMATION pi;
     STARTUPINFOW si;
@@ -135,7 +92,11 @@ BOOL StartProcess(LPWSTR lpPath, BOOL Wait)
     si.dwFlags = STARTF_USESHOWWINDOW;
     si.wShowWindow = SW_SHOW;
 
-    if (!CreateProcessW(NULL, lpPath, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi))
+    // The Unicode version of CreateProcess can modify the contents of this string.
+    CStringW Tmp = Path;
+    BOOL fSuccess = CreateProcessW(NULL, Tmp.GetBuffer(), NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi);
+    Tmp.ReleaseBuffer();
+    if (!fSuccess)
     {
         return FALSE;
     }

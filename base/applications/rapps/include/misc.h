@@ -3,9 +3,6 @@
 #include <windef.h>
 #include <atlstr.h>
 
-#define EPOCH_DIFF 116444736000000000 //FILETIME starts from 1601-01-01 UTC, UnixTime starts from 1970-01-01
-#define RATE_DIFF 10000000
-
 #ifdef _M_IX86
 #define CurrentArchitecture L"x86"
 #elif defined(_M_AMD64)
@@ -20,16 +17,9 @@
 #define CurrentArchitecture L"ppc"
 #endif
 
-INT GetWindowWidth(HWND hwnd);
-INT GetWindowHeight(HWND hwnd);
-INT GetClientWindowWidth(HWND hwnd);
-INT GetClientWindowHeight(HWND hwnd);
-
 VOID CopyTextToClipboard(LPCWSTR lpszText);
 VOID ShowPopupMenuEx(HWND hwnd, HWND hwndOwner, UINT MenuID, UINT DefaultItem);
-VOID ShowPopupMenu(HWND hwnd, UINT MenuID, UINT DefaultItem);
-BOOL StartProcess(ATL::CStringW &Path, BOOL Wait);
-BOOL StartProcess(LPWSTR lpPath, BOOL Wait);
+BOOL StartProcess(const ATL::CStringW &Path, BOOL Wait);
 BOOL GetStorageDirectory(ATL::CStringW &lpDirectory);
 
 VOID InitLogs();
