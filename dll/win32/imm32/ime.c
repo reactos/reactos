@@ -911,7 +911,7 @@ BOOL WINAPI ImmSetOpenStatus(HIMC hIMC, BOOL fOpen)
     {
         Imm32NotifyAction(hIMC, hWnd, NI_CONTEXTUPDATED, 0,
                           IMC_SETOPENSTATUS, IMN_SETOPENSTATUS, 0);
-        NtUserNotifyIMEStatus(hWnd, hIMC, dwConversion);
+        NtUserNotifyIMEStatus(hWnd, fOpen, dwConversion);
     }
 
     return TRUE;
@@ -1346,7 +1346,7 @@ BOOL WINAPI ImmSetConversionStatus(HIMC hIMC, DWORD fdwConversion, DWORD fdwSent
     HKL hKL;
     LPINPUTCONTEXT pIC;
     DWORD dwOldConversion, dwOldSentence;
-    BOOL fConversionChange = FALSE, fSentenceChange = FALSE, fUseCicero = FALSE;
+    BOOL fOpen = FALSE, fConversionChange = FALSE, fSentenceChange = FALSE, fUseCicero = FALSE;
     HWND hWnd;
 
     TRACE("(%p, 0x%lX, 0x%lX)\n", hIMC, fdwConversion, fdwSentence);
@@ -1377,6 +1377,7 @@ BOOL WINAPI ImmSetConversionStatus(HIMC hIMC, DWORD fdwConversion, DWORD fdwSent
     }
 
     hWnd = pIC->hWnd;
+    fOpen = pIC->fOpen;
     ImmUnlockIMC(hIMC);
 
     if (fConversionChange || fUseCicero)
@@ -1384,7 +1385,7 @@ BOOL WINAPI ImmSetConversionStatus(HIMC hIMC, DWORD fdwConversion, DWORD fdwSent
         Imm32NotifyAction(hIMC, hWnd, NI_CONTEXTUPDATED, dwOldConversion,
                           IMC_SETCONVERSIONMODE, IMN_SETCONVERSIONMODE, 0);
         if (fConversionChange)
-            NtUserNotifyIMEStatus(hWnd, hIMC, fdwConversion);
+            NtUserNotifyIMEStatus(hWnd, fOpen, fdwConversion);
     }
 
     if (fSentenceChange || fUseCicero)
