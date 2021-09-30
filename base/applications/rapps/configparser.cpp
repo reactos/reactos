@@ -2,18 +2,31 @@
  * PROJECT:     ReactOS Applications Manager
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Config parser
- * COPYRIGHT:   Copyright 2009 Dmitry Chapyshev           (dmitry@reactos.org)
+ * COPYRIGHT:   Copyright 2009 Dmitry Chapyshev (dmitry@reactos.org)
  *              Copyright 2015 Ismael Ferreras Morezuelas (swyterzone+ros@gmail.com)
- *              Copyright 2017 Alexander Shaposhnikov     (sanchaez@reactos.org)
+ *              Copyright 2017 Alexander Shaposhnikov (sanchaez@reactos.org)
+ *              Copyright 2021 Mark Jansen <mark.jansen@reactos.org>
  */
 #include "rapps.h"
+#include <debug.h>
 
-CConfigParser::CConfigParser(const ATL::CStringW& FileName) : szConfigPath(GetINIFullPath(FileName))
+struct CLocaleSections
 {
-    CacheINILocale();
-}
+    CStringW Locale;
+    CStringW LocaleNeutral;
+    CStringW Section;
+};
 
-ATL::CStringW CConfigParser::GetINIFullPath(const ATL::CStringW& FileName)
+struct CSectionNames
+{
+    CLocaleSections ArchSpecific;
+    CLocaleSections ArchNeutral;
+};
+static CSectionNames g_Names;
+
+
+static
+ATL::CStringW GetINIFullPath(const ATL::CStringW& FileName)
 {
     ATL::CStringW szDir;
     ATL::CStringW szBuffer;
@@ -24,79 +37,124 @@ ATL::CStringW CConfigParser::GetINIFullPath(const ATL::CStringW& FileName)
     return szBuffer;
 }
 
-VOID CConfigParser::CacheINILocale()
+CConfigParser::CConfigParser(const ATL::CStringW& FileName)
+    : szConfigPath(GetINIFullPath(FileName))
 {
-    // TODO: Set default locale if call fails
-    // find out what is the current system lang code (e.g. "0a") and append it to SectionLocale
-    GetLocaleInfoW(GetUserDefaultLCID(), LOCALE_ILANGUAGE,
-                    m_szLocaleID.GetBuffer(m_cchLocaleSize), m_cchLocaleSize);
-
-    m_szLocaleID.ReleaseBuffer();
-    m_szCachedINISectionLocale = L"Section." + m_szLocaleID;
-
-    // turn "Section.0c0a" into "Section.0a", keeping just the neutral lang part
-    if (m_szLocaleID.GetLength() >= 2)
-        m_szCachedINISectionLocaleNeutral = L"Section." + m_szLocaleID.Right(2);
-    else
-        m_szCachedINISectionLocaleNeutral = m_szCachedINISectionLocale;
+    CacheINI();
 }
 
-BOOL CConfigParser::GetStringWorker(const ATL::CStringW& KeyName, PCWSTR Suffix, ATL::CStringW& ResultString)
+void CConfigParser::ReadSection(ATL::CStringW& Buffer, const ATL::CStringW& Section, BOOL isArch)
 {
-    DWORD dwResult;
+    DWORD len = 512;
+    DWORD result;
 
-    LPWSTR ResultStringBuffer = ResultString.GetBuffer(MAX_PATH);
-    // 1st - find localized strings (e.g. "Section.0c0a")
-    dwResult = GetPrivateProfileStringW((m_szCachedINISectionLocale + Suffix).GetString(),
-                                        KeyName.GetString(),
-                                        NULL,
-                                        ResultStringBuffer,
-                                        MAX_PATH,
-                                        szConfigPath.GetString());
-
-    if (!dwResult)
+    do
     {
-        // 2nd - if they weren't present check for neutral sub-langs/ generic translations (e.g. "Section.0a")
-        dwResult = GetPrivateProfileStringW((m_szCachedINISectionLocaleNeutral + Suffix).GetString(),
-                                            KeyName.GetString(),
-                                            NULL,
-                                            ResultStringBuffer,
-                                            MAX_PATH,
-                                            szConfigPath.GetString());
-        if (!dwResult)
+        len *= 2;
+
+        result = GetPrivateProfileSectionW(Section, Buffer.GetBuffer(len), len, szConfigPath);
+        Buffer.ReleaseBuffer(result);
+    } while (result == len - 2);
+
+    len = 0;
+    while (len < result)
+    {
+        // Explicitly use the null terminator!
+        CString tmp = Buffer.GetBuffer() + len;
+        if (tmp.GetLength() > 0)
         {
-            // 3rd - if they weren't present fallback to standard english strings (just "Section")
-            dwResult = GetPrivateProfileStringW((ATL::CStringW(L"Section") + Suffix).GetString(),
-                                                KeyName.GetString(),
-                                                NULL,
-                                                ResultStringBuffer,
-                                                MAX_PATH,
-                                                szConfigPath.GetString());
+            len += tmp.GetLength() + 1;
+
+            int idx = tmp.Find('=');
+            if (idx >= 0)
+            {
+                CString key = tmp.Left(idx);
+
+#ifndef _M_IX86
+                // On non-x86 architecture we need the architecture specific URL
+                if (!isArch && key == "URLDownload")
+                {
+                    continue;
+                }
+#endif
+
+                // Is this key already present from a more specific translation?
+                if (m_Keys.FindKey(key) >= 0)
+                {
+                    continue;
+                }
+
+                CString value = tmp.Mid(idx+1);
+                m_Keys.Add(key, value);
+            }
+            else
+            {
+                DPRINT1("ERROR: invalid key/value pair: '%S'\n", tmp.GetString());
+            }
+        }
+        else
+        {
+            break;
         }
     }
+}
 
-    ResultString.ReleaseBuffer();
-    return (dwResult != 0 ? TRUE : FALSE);
+VOID CConfigParser::CacheINI()
+{
+    // Cache section names
+    if (g_Names.ArchSpecific.Locale.IsEmpty())
+    {
+        CString szLocaleID;
+        const INT cchLocaleSize = 5;
+
+        GetLocaleInfoW(GetUserDefaultLCID(), LOCALE_ILANGUAGE, szLocaleID.GetBuffer(cchLocaleSize), cchLocaleSize);
+        szLocaleID.ReleaseBuffer();
+        CString INISectionLocale = L"Section." + szLocaleID;
+
+        g_Names.ArchSpecific.Locale = INISectionLocale + L"." CurrentArchitecture;
+        g_Names.ArchNeutral.Locale = INISectionLocale;
+
+        // turn "Section.0c0a" into "Section.0a", keeping just the neutral lang part
+        if (szLocaleID.GetLength() >= 2)
+        {
+            g_Names.ArchSpecific.LocaleNeutral = L"Section." + szLocaleID.Right(2) + L"." CurrentArchitecture;
+            g_Names.ArchNeutral.LocaleNeutral = L"Section." + szLocaleID.Right(2);
+        }
+
+        g_Names.ArchSpecific.Section = L"Section." CurrentArchitecture;
+        g_Names.ArchNeutral.Section = L"Section";
+    }
+
+    // Use a shared buffer so that we don't have to re-allocate it every time
+    CStringW Buffer;
+
+    ReadSection(Buffer, g_Names.ArchSpecific.Locale, TRUE);
+    if (!g_Names.ArchSpecific.LocaleNeutral.IsEmpty())
+    {
+        ReadSection(Buffer, g_Names.ArchSpecific.LocaleNeutral, TRUE);
+    }
+    ReadSection(Buffer, g_Names.ArchSpecific.Section, TRUE);
+
+
+    ReadSection(Buffer, g_Names.ArchNeutral.Locale, FALSE);
+    if (!g_Names.ArchNeutral.LocaleNeutral.IsEmpty())
+    {
+        ReadSection(Buffer, g_Names.ArchNeutral.LocaleNeutral, FALSE);
+    }
+    ReadSection(Buffer, g_Names.ArchNeutral.Section, FALSE);
 }
 
 BOOL CConfigParser::GetString(const ATL::CStringW& KeyName, ATL::CStringW& ResultString)
 {
-    /* First try */
-    if (GetStringWorker(KeyName, L"." CurrentArchitecture, ResultString))
+    int nIndex = m_Keys.FindKey(KeyName);
+    if (nIndex >= 0)
     {
+        ResultString = m_Keys.GetValueAt(nIndex);
         return TRUE;
     }
 
-#ifndef _M_IX86
-    /* On non-x86 architecture we need the architecture specific URL */
-    if (KeyName == L"URLDownload")
-    {
-        return FALSE;
-    }
-#endif
-
-    /* Fall back to default */
-    return GetStringWorker(KeyName, L"", ResultString);
+    ResultString.Empty();
+    return FALSE;
 }
 
 BOOL CConfigParser::GetInt(const ATL::CStringW& KeyName, INT& iResult)

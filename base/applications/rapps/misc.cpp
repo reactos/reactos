@@ -140,17 +140,36 @@ BOOL StartProcess(const ATL::CStringW& Path, BOOL Wait)
 
 BOOL GetStorageDirectory(ATL::CStringW& Directory)
 {
-    LPWSTR DirectoryStr = Directory.GetBuffer(MAX_PATH);
-    if (!SHGetSpecialFolderPathW(NULL, DirectoryStr, CSIDL_LOCAL_APPDATA, TRUE))
+    static CStringW CachedDirectory;
+    static BOOL CachedDirectoryInitialized = FALSE;
+
+    if (!CachedDirectoryInitialized)
     {
-        Directory.ReleaseBuffer();
-        return FALSE;
+        LPWSTR DirectoryStr = CachedDirectory.GetBuffer(MAX_PATH);
+        BOOL bHasPath = SHGetSpecialFolderPathW(NULL, DirectoryStr, CSIDL_LOCAL_APPDATA, TRUE);
+        if (bHasPath)
+        {
+            PathAppendW(DirectoryStr, L"rapps");
+        }
+        CachedDirectory.ReleaseBuffer();
+
+        if (bHasPath)
+        {
+            if (!CreateDirectoryW(CachedDirectory, NULL) && GetLastError() != ERROR_ALREADY_EXISTS)
+            {
+                CachedDirectory.Empty();
+            }
+        }
+        else
+        {
+            CachedDirectory.Empty();
+        }
+
+        CachedDirectoryInitialized = TRUE;
     }
 
-    PathAppendW(DirectoryStr, L"rapps");
-    Directory.ReleaseBuffer();
-
-    return (CreateDirectoryW(Directory.GetString(), NULL) || GetLastError() == ERROR_ALREADY_EXISTS);
+    Directory = CachedDirectory;
+    return !Directory.IsEmpty();
 }
 
 VOID InitLogs()

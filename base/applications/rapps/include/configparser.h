@@ -5,18 +5,11 @@
 
 class CConfigParser
 {
-    // Locale names cache
-    const static INT m_cchLocaleSize = 5;
-
-    ATL::CStringW m_szLocaleID;
-    ATL::CStringW m_szCachedINISectionLocale;
-    ATL::CStringW m_szCachedINISectionLocaleNeutral;
-
     const ATL::CStringW szConfigPath;
+    CSimpleMap<CStringW, CStringW> m_Keys;
 
-    ATL::CStringW GetINIFullPath(const ATL::CStringW& FileName);
-    VOID CacheINILocale();
-    BOOL GetStringWorker(const ATL::CStringW& KeyName, PCWSTR Suffix, ATL::CStringW& ResultString);
+    void CacheINI();
+    void ReadSection(ATL::CStringW& Buffer, const ATL::CStringW& Section, BOOL isArch);
 
 public:
     CConfigParser(const ATL::CStringW& FileName);

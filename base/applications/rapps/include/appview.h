@@ -351,42 +351,31 @@ private:
     BOOL ProcessWindowMessage(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam, LRESULT &theResult, DWORD dwMapId);
 
     BOOL CreateToolbar();
-
     BOOL CreateSearchBar();
-
     BOOL CreateComboBox();
-
     BOOL CreateHSplitter();
-
     BOOL CreateListView();
-
     BOOL CreateAppInfoDisplay();
 
     VOID OnSize(HWND hwnd, WPARAM wParam, LPARAM lParam);
-
     VOID OnCommand(WPARAM wParam, LPARAM lParam);
 public:
 
     CApplicationView(CMainWindow *MainWindow);
-
     ~CApplicationView();
 
     static ATL::CWndClassInfo &GetWndClassInfo();
 
     HWND Create(HWND hwndParent);
-
+    void SetRedraw(BOOL bRedraw);
     BOOL SetDisplayAppType(APPLICATION_VIEW_TYPE AppType);
 
     BOOL AddInstalledApplication(CInstalledApplicationInfo *InstAppInfo, LPVOID param);
-
     BOOL AddAvailableApplication(CAvailableApplicationInfo *AvlbAppInfo, BOOL InitCheckState, LPVOID param);
 
     void CheckAll();
-
     PVOID GetFocusedItemData();
-
     int GetItemCount();
-
     VOID AppendTabOrderWindow(int Direction, ATL::CSimpleArray<HWND> &TabOrderList);
 
     // this function is called when a item of listview get focus.

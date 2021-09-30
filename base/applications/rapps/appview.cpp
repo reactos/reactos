@@ -1705,6 +1705,12 @@ BOOL CApplicationView::CreateAppInfoDisplay()
     return m_AppsInfo->Create(m_hWnd) != NULL;
 }
 
+void CApplicationView::SetRedraw(BOOL bRedraw)
+{
+    CWindow::SetRedraw(bRedraw);
+    m_ListView->SetRedraw(bRedraw);
+}
+
 VOID CApplicationView::OnSize(HWND hwnd, WPARAM wParam, LPARAM lParam)
 {
     if (wParam == SIZE_MINIMIZED)
