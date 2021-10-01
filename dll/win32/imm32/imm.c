@@ -249,6 +249,8 @@ VOID APIENTRY Imm32SelectLayout(HKL hNewKL, HKL hOldKL, HIMC hIMC)
     LPGUIDELINE pGL;
     LPCANDIDATEINFO pCI;
     LPCOMPOSITIONSTRING pCS;
+    LOGFONTA LogFontA;
+    LOGFONTW LogFontW;
     BOOL fOpen, bIsNewHKLIme = TRUE, bIsOldHKLIme = TRUE, bClientWide, bNewDpiWide;
     DWORD cbNewPrivate = 0, cbOldPrivate = 0, dwConversion, dwSentence, dwSize, dwNewSize;
     PIMEDPI pNewImeDpi = NULL, pOldImeDpi = NULL;
@@ -337,15 +339,19 @@ VOID APIENTRY Imm32SelectLayout(HKL hNewKL, HKL hOldKL, HIMC hIMC)
             if (bClientWide && !bNewDpiWide)
             {
                 if (pIC->fdwInit & INIT_LOGFONT)
-                    LogFontWideToAnsi(&pIC->lfFont.W, &pIC->lfFont.A);
-
+                {
+                    LogFontWideToAnsi(&pIC->lfFont.W, &LogFontA);
+                    pIC->lfFont.A = LogFontA;
+                }
                 pClientImc->dwFlags &= ~CLIENTIMC_WIDE;
             }
             else if (!bClientWide && bNewDpiWide)
             {
                 if (pIC->fdwInit & INIT_LOGFONT)
-                    LogFontAnsiToWide(&pIC->lfFont.A, &pIC->lfFont.W);
-
+                {
+                    LogFontAnsiToWide(&pIC->lfFont.A, &LogFontW);
+                    pIC->lfFont.W = LogFontW;
+                }
                 pClientImc->dwFlags |= CLIENTIMC_WIDE;
             }
         }
