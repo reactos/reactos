@@ -219,7 +219,7 @@ Imm32FetchImeSubState(PIME_STATE pState, HKL hKL)
 }
 
 static BOOL APIENTRY
-Imm32LoadImeState(LPINPUTCONTEXTDX pIC, PIME_STATE pState, HKL hKL)
+Imm32LoadImeStateSentence(LPINPUTCONTEXTDX pIC, PIME_STATE pState, HKL hKL)
 {
     PIME_SUBSTATE pSubState = Imm32FetchImeSubState(pState, hKL);
     if (pSubState)
@@ -231,7 +231,7 @@ Imm32LoadImeState(LPINPUTCONTEXTDX pIC, PIME_STATE pState, HKL hKL)
 }
 
 static BOOL APIENTRY
-Imm32SaveImeState(LPINPUTCONTEXTDX pIC, PIME_STATE pState, HKL hKL)
+Imm32SaveImeStateSentence(LPINPUTCONTEXTDX pIC, PIME_STATE pState, HKL hKL)
 {
     PIME_SUBSTATE pSubState = Imm32FetchImeSubState(pState, hKL);
     if (pSubState)
@@ -426,7 +426,7 @@ VOID APIENTRY Imm32SelectLayout(HKL hNewKL, HKL hOldKL, HIMC hIMC)
         {
             pOldState = Imm32FetchImeState(pIC, hOldKL);
             if (pOldState)
-                Imm32SaveImeState(pIC, pOldState, hOldKL);
+                Imm32SaveImeStateSentence(pIC, pOldState, hOldKL);
         }
 
         if (pNewImeDpi && bIsNewHKLIme)
@@ -462,7 +462,7 @@ VOID APIENTRY Imm32SelectLayout(HKL hNewKL, HKL hOldKL, HIMC hIMC)
         }
 
         if (pNewState)
-            Imm32LoadImeState(pIC, pNewState, hNewKL);
+            Imm32LoadImeStateSentence(pIC, pNewState, hNewKL);
 
         if (pNewImeDpi)
         {
