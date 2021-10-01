@@ -177,7 +177,7 @@ BOOL WINAPI CtfImmIsTextFrameServiceDisabled(VOID)
 }
 
 static PIMM_STATE_STOCK APIENTRY
-Imm32GetStateStock(LPINPUTCONTEXTDX pIC, HKL hKL)
+Imm32FetchStateStock(LPINPUTCONTEXTDX pIC, HKL hKL)
 {
     PIMM_STATE_STOCK pStock;
     WORD Lang = PRIMARYLANGID(LOWORD(hKL));
@@ -200,7 +200,7 @@ Imm32GetStateStock(LPINPUTCONTEXTDX pIC, HKL hKL)
 }
 
 static PIMM_STATE_STOCK2 APIENTRY
-Imm32GetStateStock2(PIMM_STATE_STOCK pStock, HKL hKL)
+Imm32FetchStateStock2(PIMM_STATE_STOCK pStock, HKL hKL)
 {
     PIMM_STATE_STOCK2 pStock2;
     for (pStock2 = pStock->pStock2; pStock2; pStock2 = pStock2->pNext)
@@ -221,7 +221,7 @@ Imm32GetStateStock2(PIMM_STATE_STOCK pStock, HKL hKL)
 static BOOL APIENTRY
 Imm32GetStockState(LPINPUTCONTEXTDX pIC, PIMM_STATE_STOCK pStock, HKL hKL)
 {
-    PIMM_STATE_STOCK2 pStock2 = Imm32GetStateStock2(pStock, hKL);
+    PIMM_STATE_STOCK2 pStock2 = Imm32FetchStateStock2(pStock, hKL);
     if (pStock2)
     {
         pIC->fdwSentence |= pStock2->dwValue;
@@ -233,7 +233,7 @@ Imm32GetStockState(LPINPUTCONTEXTDX pIC, PIMM_STATE_STOCK pStock, HKL hKL)
 static BOOL APIENTRY
 Imm32SetStockState(LPINPUTCONTEXTDX pIC, PIMM_STATE_STOCK pStock, HKL hKL)
 {
-    PIMM_STATE_STOCK2 pStock2 = Imm32GetStateStock2(pStock, hKL);
+    PIMM_STATE_STOCK2 pStock2 = Imm32FetchStateStock2(pStock, hKL);
     if (pStock2)
     {
         pStock2->dwValue = (pIC->fdwSentence & 0xffff0000);
@@ -424,13 +424,13 @@ VOID APIENTRY Imm32SelectLayout(HKL hNewKL, HKL hOldKL, HIMC hIMC)
 
         if (pOldImeDpi && bIsOldImeHKL)
         {
-            pOldStock = Imm32GetStateStock(pIC, hOldKL);
+            pOldStock = Imm32FetchStateStock(pIC, hOldKL);
             if (pOldStock)
                 Imm32SetStockState(pIC, pOldStock, hOldKL);
         }
 
         if (pNewImeDpi && bIsNewImeHKL)
-            pNewStock = Imm32GetStateStock(pIC, hNewKL);
+            pNewStock = Imm32FetchStateStock(pIC, hNewKL);
 
         if (pOldStock != pNewStock)
         {
