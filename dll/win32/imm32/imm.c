@@ -678,15 +678,29 @@ HIMC WINAPI ImmCreateContext(void)
     return hIMC;
 }
 
-static VOID APIENTRY Imm32CleanupContextExtra(LPINPUTCONTEXT pIC)
+static VOID APIENTRY Imm32FreeImeStates(LPINPUTCONTEXTDX pIC)
 {
-    FIXME("We have to do something do here");
+    PIME_STATE pState, pStateNext;
+    PIME_SUBSTATE pSubState, pSubStateNext;
+
+    for (pState = pIC->pState; pState; pState = pStateNext)
+    {
+        pStateNext = pState->pNext;
+        for (pSubState = pState->pSubState; pSubState; pSubState = pSubStateNext)
+        {
+            pSubStateNext = pSubState->pNext;
+            Imm32HeapFree(pSubState);
+        }
+        Imm32HeapFree(pState);
+    }
+
+    pIC->pState = NULL;
 }
 
 BOOL APIENTRY Imm32CleanupContext(HIMC hIMC, HKL hKL, BOOL bKeep)
 {
     PIMEDPI pImeDpi;
-    LPINPUTCONTEXT pIC;
+    LPINPUTCONTEXTDX pIC;
     PCLIENTIMC pClientImc;
     PIMC pIMC;
 
@@ -710,7 +724,7 @@ BOOL APIENTRY Imm32CleanupContext(HIMC hIMC, HKL hKL, BOOL bKeep)
         return TRUE;
     }
 
-    pIC = ImmLockIMC(hIMC);
+    pIC = (LPINPUTCONTEXTDX)ImmLockIMC(hIMC);
     if (pIC == NULL)
     {
         ImmUnlockClientImc(pClientImc);
@@ -743,7 +757,7 @@ BOOL APIENTRY Imm32CleanupContext(HIMC hIMC, HKL hKL, BOOL bKeep)
     pIC->hCandInfo = ImmDestroyIMCC(pIC->hCandInfo);
     pIC->hCompStr = ImmDestroyIMCC(pIC->hCompStr);
 
-    Imm32CleanupContextExtra(pIC);
+    Imm32FreeImeStates(pIC);
 
     ImmUnlockIMC(hIMC);
 
