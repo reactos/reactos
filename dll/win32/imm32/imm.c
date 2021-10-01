@@ -179,16 +179,12 @@ BOOL WINAPI CtfImmIsTextFrameServiceDisabled(VOID)
 static PIMM_STATE_STOCK APIENTRY
 Imm32GetStateStock(LPINPUTCONTEXTDX pIC, HKL hKL)
 {
-    PIMM_STATE_STOCK pStock = pIC->pStock;
+    PIMM_STATE_STOCK pStock;
     WORD Lang = PRIMARYLANGID(LOWORD(hKL));
-    if (pStock)
+    for (pStock = pIC->pStock; pStock; pStock = pStock->pNext)
     {
-        do
-        {
-            if (pStock->wLang == Lang)
-                break;
-            pStock = pStock->pNext;
-        } while (pStock);
+        if (pStock->wLang == Lang)
+            break;
     }
     if (!pStock)
     {
@@ -206,16 +202,10 @@ Imm32GetStateStock(LPINPUTCONTEXTDX pIC, HKL hKL)
 static PIMM_STATE_STOCK2 APIENTRY
 Imm32GetStateStock2(PIMM_STATE_STOCK pStock, HKL hKL)
 {
-    PIMM_STATE_STOCK2 pStock2 = pStock->pStock2;
-    if (pStock2)
+    PIMM_STATE_STOCK2 pStock2;
+    for (pStock2 = pStock->pStock2; pStock2; pStock2 = pStock2->pNext)
     {
-        do
-        {
-            if (pStock2->hKL == hKL)
-                break;
-            pStock2 = pStock2->pNext;
-        } while (pStock2);
-        if (pStock2)
+        if (pStock2->hKL == hKL)
             return pStock2;
     }
     pStock2 = Imm32HeapAlloc(0, sizeof(IMM_STATE_STOCK2));
