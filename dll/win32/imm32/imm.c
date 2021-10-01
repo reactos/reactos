@@ -37,6 +37,72 @@ static BOOL APIENTRY Imm32InitInstance(HMODULE hMod)
     return TRUE;
 }
 
+static PIME_STATE APIENTRY
+Imm32FetchImeState(LPINPUTCONTEXTDX pIC, HKL hKL)
+{
+    PIME_STATE pState;
+    WORD Lang = PRIMARYLANGID(LOWORD(hKL));
+    for (pState = pIC->pState; pState; pState = pState->pNext)
+    {
+        if (pState->wLang == Lang)
+            break;
+    }
+    if (!pState)
+    {
+        pState = Imm32HeapAlloc(HEAP_ZERO_MEMORY, sizeof(IME_STATE));
+        if (pState)
+        {
+            pState->wLang = Lang;
+            pState->pNext = pIC->pState;
+            pIC->pState = pState;
+        }
+    }
+    return pState;
+}
+
+static PIME_SUBSTATE APIENTRY
+Imm32FetchImeSubState(PIME_STATE pState, HKL hKL)
+{
+    PIME_SUBSTATE pSubState;
+    for (pSubState = pState->pSubState; pSubState; pSubState = pSubState->pNext)
+    {
+        if (pSubState->hKL == hKL)
+            return pSubState;
+    }
+    pSubState = Imm32HeapAlloc(0, sizeof(IME_SUBSTATE));
+    if (!pSubState)
+        return NULL;
+    pSubState->dwValue = 0;
+    pSubState->hKL = hKL;
+    pSubState->pNext = pState->pSubState;
+    pState->pSubState = pSubState;
+    return pSubState;
+}
+
+static BOOL APIENTRY
+Imm32LoadImeStateSentence(LPINPUTCONTEXTDX pIC, PIME_STATE pState, HKL hKL)
+{
+    PIME_SUBSTATE pSubState = Imm32FetchImeSubState(pState, hKL);
+    if (pSubState)
+    {
+        pIC->fdwSentence |= pSubState->dwValue;
+        return TRUE;
+    }
+    return FALSE;
+}
+
+static BOOL APIENTRY
+Imm32SaveImeStateSentence(LPINPUTCONTEXTDX pIC, PIME_STATE pState, HKL hKL)
+{
+    PIME_SUBSTATE pSubState = Imm32FetchImeSubState(pState, hKL);
+    if (pSubState)
+    {
+        pSubState->dwValue = (pIC->fdwSentence & 0xffff0000);
+        return TRUE;
+    }
+    return FALSE;
+}
+
 /***********************************************************************
  *		ImmRegisterClient(IMM32.@)
  *       ( Undocumented, called from user32.dll )
@@ -166,80 +232,6 @@ Retry:
     }
 
     return TRUE;
-}
-
-/***********************************************************************
- *		CtfImmIsTextFrameServiceDisabled(IMM32.@)
- */
-BOOL WINAPI CtfImmIsTextFrameServiceDisabled(VOID)
-{
-    return !!(GetWin32ClientInfo()->CI_flags & CI_TFSDISABLED);
-}
-
-static PIME_STATE APIENTRY
-Imm32FetchImeState(LPINPUTCONTEXTDX pIC, HKL hKL)
-{
-    PIME_STATE pState;
-    WORD Lang = PRIMARYLANGID(LOWORD(hKL));
-    for (pState = pIC->pState; pState; pState = pState->pNext)
-    {
-        if (pState->wLang == Lang)
-            break;
-    }
-    if (!pState)
-    {
-        pState = Imm32HeapAlloc(HEAP_ZERO_MEMORY, sizeof(IME_STATE));
-        if (pState)
-        {
-            pState->wLang = Lang;
-            pState->pNext = pIC->pState;
-            pIC->pState = pState;
-        }
-    }
-    return pState;
-}
-
-static PIME_SUBSTATE APIENTRY
-Imm32FetchImeSubState(PIME_STATE pState, HKL hKL)
-{
-    PIME_SUBSTATE pSubState;
-    for (pSubState = pState->pSubState; pSubState; pSubState = pSubState->pNext)
-    {
-        if (pSubState->hKL == hKL)
-            return pSubState;
-    }
-    pSubState = Imm32HeapAlloc(0, sizeof(IME_SUBSTATE));
-    if (!pSubState)
-        return NULL;
-    pSubState->dwValue = 0;
-    pSubState->hKL = hKL;
-    pSubState->pNext = pState->pSubState;
-    pState->pSubState = pSubState;
-    return pSubState;
-}
-
-static BOOL APIENTRY
-Imm32LoadImeStateSentence(LPINPUTCONTEXTDX pIC, PIME_STATE pState, HKL hKL)
-{
-    PIME_SUBSTATE pSubState = Imm32FetchImeSubState(pState, hKL);
-    if (pSubState)
-    {
-        pIC->fdwSentence |= pSubState->dwValue;
-        return TRUE;
-    }
-    return FALSE;
-}
-
-static BOOL APIENTRY
-Imm32SaveImeStateSentence(LPINPUTCONTEXTDX pIC, PIME_STATE pState, HKL hKL)
-{
-    PIME_SUBSTATE pSubState = Imm32FetchImeSubState(pState, hKL);
-    if (pSubState)
-    {
-        pSubState->dwValue = (pIC->fdwSentence & 0xffff0000);
-        return TRUE;
-    }
-    return FALSE;
 }
 
 VOID APIENTRY Imm32SelectLayout(HKL hNewKL, HKL hOldKL, HIMC hIMC)
@@ -521,6 +513,7 @@ BOOL WINAPI ImmActivateLayout(HKL hKL)
     SELECT_LAYOUT SelectLayout;
 
     hOldKL = GetKeyboardLayout(0);
+
     if (hOldKL == hKL && !(GetWin32ClientInfo()->CI_flags & CI_IMMACTIVATE))
         return TRUE;
 

@@ -263,6 +263,14 @@ Imm32ImeMenuWideToAnsi(const IMEMENUITEMINFOW *pItemW, LPIMEMENUITEMINFOA pItemA
 }
 
 /***********************************************************************
+ *		CtfImmIsTextFrameServiceDisabled(IMM32.@)
+ */
+BOOL WINAPI CtfImmIsTextFrameServiceDisabled(VOID)
+{
+    return !!(GetWin32ClientInfo()->CI_flags & CI_TFSDISABLED);
+}
+
+/***********************************************************************
  *		ImmCreateIMCC(IMM32.@)
  */
 HIMCC WINAPI ImmCreateIMCC(DWORD size)
