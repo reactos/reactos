@@ -97,7 +97,7 @@ typedef struct INPUTCONTEXTDX /* unconfirmed */
     DWORD dwUnknown1;
     DWORD dwUIFlags;
     DWORD dwUnknown2;
-    struct IME_STATE *pStock;
+    struct IME_STATE *pState;
     DWORD dwChange;
     DWORD dwUnknown5;
 } INPUTCONTEXTDX, *LPINPUTCONTEXTDX;
@@ -106,7 +106,7 @@ typedef struct INPUTCONTEXTDX /* unconfirmed */
 C_ASSERT(offsetof(INPUTCONTEXTDX, nVKey) == 0x140);
 C_ASSERT(offsetof(INPUTCONTEXTDX, bNeedsTrans) == 0x144);
 C_ASSERT(offsetof(INPUTCONTEXTDX, dwUIFlags) == 0x14c);
-C_ASSERT(offsetof(INPUTCONTEXTDX, pStock) == 0x154);
+C_ASSERT(offsetof(INPUTCONTEXTDX, pState) == 0x154);
 C_ASSERT(offsetof(INPUTCONTEXTDX, dwChange) == 0x158);
 C_ASSERT(sizeof(INPUTCONTEXTDX) == 0x160);
 #endif
@@ -118,6 +118,12 @@ C_ASSERT(sizeof(INPUTCONTEXTDX) == 0x160);
 #define INIT_LOGFONT                    0x00000008
 #define INIT_COMPFORM                   0x00000010
 #define INIT_SOFTKBDPOS                 0x00000020
+
+// bits for INPUTCONTEXTDX.dwChange
+#define INPUTCONTEXTDX_CHANGE_OPEN          0x1
+#define INPUTCONTEXTDX_CHANGE_CONVERSION    0x2
+#define INPUTCONTEXTDX_CHANGE_SENTENCE      0x4
+#define INPUTCONTEXTDX_CHANGE_UNKNOWN       0x100
 
 #ifndef WM_IME_REPORT
     #define WM_IME_REPORT 0x280
@@ -158,15 +164,15 @@ typedef struct tagUNDETERMINESTRUCT
 
 LPINPUTCONTEXT WINAPI ImmLockIMC(HIMC);
 
-typedef struct IME_STATE2
+typedef struct IME_SUBSTATE
 {
-    struct IME_STATE2 *pNext;
+    struct IME_SUBSTATE *pNext;
     HKL hKL;
     DWORD dwValue;
-} IME_STATE2, *PIME_STATE2;
+} IME_SUBSTATE, *PIME_SUBSTATE;
 
 #ifndef _WIN64
-C_ASSERT(sizeof(IME_STATE2) == 0xc);
+C_ASSERT(sizeof(IME_SUBSTATE) == 0xc);
 #endif
 
 typedef struct IME_STATE
@@ -177,7 +183,7 @@ typedef struct IME_STATE
     DWORD dwConversion;
     DWORD dwSentence;
     DWORD dwInit;
-    PIME_STATE2 pState2;
+    PIME_SUBSTATE pSubState;
 } IME_STATE, *PIME_STATE;
 
 #ifndef _WIN64

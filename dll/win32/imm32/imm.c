@@ -179,64 +179,64 @@ BOOL WINAPI CtfImmIsTextFrameServiceDisabled(VOID)
 static PIME_STATE APIENTRY
 Imm32FetchImeState(LPINPUTCONTEXTDX pIC, HKL hKL)
 {
-    PIME_STATE pStock;
+    PIME_STATE pState;
     WORD Lang = PRIMARYLANGID(LOWORD(hKL));
-    for (pStock = pIC->pStock; pStock; pStock = pStock->pNext)
+    for (pState = pIC->pState; pState; pState = pState->pNext)
     {
-        if (pStock->wLang == Lang)
+        if (pState->wLang == Lang)
             break;
     }
-    if (!pStock)
+    if (!pState)
     {
-        pStock = Imm32HeapAlloc(HEAP_ZERO_MEMORY, sizeof(IME_STATE));
-        if (pStock)
+        pState = Imm32HeapAlloc(HEAP_ZERO_MEMORY, sizeof(IME_STATE));
+        if (pState)
         {
-            pStock->wLang = Lang;
-            pStock->pNext = pIC->pStock;
-            pIC->pStock = pStock;
+            pState->wLang = Lang;
+            pState->pNext = pIC->pState;
+            pIC->pState = pState;
         }
     }
-    return pStock;
+    return pState;
 }
 
-static PIME_STATE2 APIENTRY
-Imm32FetchImeState2(PIME_STATE pStock, HKL hKL)
+static PIME_SUBSTATE APIENTRY
+Imm32FetchImeSubState(PIME_STATE pState, HKL hKL)
 {
-    PIME_STATE2 pState2;
-    for (pState2 = pStock->pState2; pState2; pState2 = pState2->pNext)
+    PIME_SUBSTATE pSubState;
+    for (pSubState = pState->pSubState; pSubState; pSubState = pSubState->pNext)
     {
-        if (pState2->hKL == hKL)
-            return pState2;
+        if (pSubState->hKL == hKL)
+            return pSubState;
     }
-    pState2 = Imm32HeapAlloc(0, sizeof(IME_STATE2));
-    if (!pState2)
+    pSubState = Imm32HeapAlloc(0, sizeof(IME_SUBSTATE));
+    if (!pSubState)
         return NULL;
-    pState2->dwValue = 0;
-    pState2->hKL = hKL;
-    pState2->pNext = pStock->pState2;
-    pStock->pState2 = pState2;
-    return pState2;
+    pSubState->dwValue = 0;
+    pSubState->hKL = hKL;
+    pSubState->pNext = pState->pSubState;
+    pState->pSubState = pSubState;
+    return pSubState;
 }
 
 static BOOL APIENTRY
-Imm32LoadImeState(LPINPUTCONTEXTDX pIC, PIME_STATE pStock, HKL hKL)
+Imm32LoadImeState(LPINPUTCONTEXTDX pIC, PIME_STATE pState, HKL hKL)
 {
-    PIME_STATE2 pState2 = Imm32FetchImeState2(pStock, hKL);
-    if (pState2)
+    PIME_SUBSTATE pSubState = Imm32FetchImeSubState(pState, hKL);
+    if (pSubState)
     {
-        pIC->fdwSentence |= pState2->dwValue;
+        pIC->fdwSentence |= pSubState->dwValue;
         return TRUE;
     }
     return FALSE;
 }
 
 static BOOL APIENTRY
-Imm32SaveImeState(LPINPUTCONTEXTDX pIC, PIME_STATE pStock, HKL hKL)
+Imm32SaveImeState(LPINPUTCONTEXTDX pIC, PIME_STATE pState, HKL hKL)
 {
-    PIME_STATE2 pState2 = Imm32FetchImeState2(pStock, hKL);
-    if (pState2)
+    PIME_SUBSTATE pSubState = Imm32FetchImeSubState(pState, hKL);
+    if (pSubState)
     {
-        pState2->dwValue = (pIC->fdwSentence & 0xffff0000);
+        pSubState->dwValue = (pIC->fdwSentence & 0xffff0000);
         return TRUE;
     }
     return FALSE;
@@ -444,9 +444,9 @@ VOID APIENTRY Imm32SelectLayout(HKL hNewKL, HKL hOldKL, HIMC hIMC)
 
             if (pNewState)
             {
-                if (pIC->dwChange & 0x100)
+                if (pIC->dwChange & INPUTCONTEXTDX_CHANGE_UNKNOWN)
                 {
-                    pIC->dwChange &= ~0x100;
+                    pIC->dwChange &= ~INPUTCONTEXTDX_CHANGE_UNKNOWN;
                     pIC->fOpen = TRUE;
                 }
                 else
@@ -476,11 +476,11 @@ VOID APIENTRY Imm32SelectLayout(HKL hNewKL, HKL hOldKL, HIMC hIMC)
 
         pIC->dwChange = 0;
         if (pIC->fOpen != fOpen)
-            pIC->dwChange |= 1;
+            pIC->dwChange |= INPUTCONTEXTDX_CHANGE_OPEN;
         if (pIC->fdwConversion != dwConversion)
-            pIC->dwChange |= 2;
+            pIC->dwChange |= INPUTCONTEXTDX_CHANGE_CONVERSION;
         if (pIC->fdwSentence != dwSentence)
-            pIC->dwChange |= 4;
+            pIC->dwChange |= INPUTCONTEXTDX_CHANGE_SENTENCE;
 
         ImmUnlockIMC(hIMC);
     }
