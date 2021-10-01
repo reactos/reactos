@@ -444,9 +444,9 @@ VOID APIENTRY Imm32SelectLayout(HKL hNewKL, HKL hOldKL, HIMC hIMC)
 
             if (pNewState)
             {
-                if (pIC->dwChange & INPUTCONTEXTDX_CHANGE_UNKNOWN)
+                if (pIC->dwChange & INPUTCONTEXTDX_CHANGE_FORCE_OPEN)
                 {
-                    pIC->dwChange &= ~INPUTCONTEXTDX_CHANGE_UNKNOWN;
+                    pIC->dwChange &= ~INPUTCONTEXTDX_CHANGE_FORCE_OPEN;
                     pIC->fOpen = TRUE;
                 }
                 else
