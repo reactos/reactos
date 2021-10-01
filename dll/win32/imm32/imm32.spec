@@ -4,7 +4,7 @@
 @ stdcall -stub CtfImmRestoreToolbarWnd(long)
 @ stdcall -stub CtfImmHideToolbarWnd()
 @ stdcall -stub CtfImmDispatchDefImeMessage(ptr long ptr ptr)
-@ stdcall -stub ImmActivateLayout(long)
+@ stdcall ImmActivateLayout(ptr)
 @ stdcall ImmAssociateContext(ptr ptr)
 @ stdcall ImmAssociateContextEx(ptr ptr long)
 @ stdcall ImmConfigureIMEA(ptr ptr long ptr)

@@ -534,14 +534,6 @@ BOOL WINAPI ImmDisableLegacyIME(void)
 }
 
 /***********************************************************************
- *		CtfImmIsTextFrameServiceDisabled(IMM32.@)
- */
-BOOL WINAPI CtfImmIsTextFrameServiceDisabled(VOID)
-{
-    return !!(GetWin32ClientInfo()->CI_flags & CI_TFSDISABLED);
-}
-
-/***********************************************************************
  *              ImmGetImeInfoEx (IMM32.@)
  */
 BOOL WINAPI
