@@ -176,10 +176,10 @@ BOOL WINAPI CtfImmIsTextFrameServiceDisabled(VOID)
     return !!(GetWin32ClientInfo()->CI_flags & CI_TFSDISABLED);
 }
 
-static PIMM_STATE_STOCK APIENTRY
-Imm32FetchStateStock(LPINPUTCONTEXTDX pIC, HKL hKL)
+static PIME_STATE APIENTRY
+Imm32FetchImeState(LPINPUTCONTEXTDX pIC, HKL hKL)
 {
-    PIMM_STATE_STOCK pStock;
+    PIME_STATE pStock;
     WORD Lang = PRIMARYLANGID(LOWORD(hKL));
     for (pStock = pIC->pStock; pStock; pStock = pStock->pNext)
     {
@@ -188,7 +188,7 @@ Imm32FetchStateStock(LPINPUTCONTEXTDX pIC, HKL hKL)
     }
     if (!pStock)
     {
-        pStock = Imm32HeapAlloc(HEAP_ZERO_MEMORY, sizeof(IMM_STATE_STOCK));
+        pStock = Imm32HeapAlloc(HEAP_ZERO_MEMORY, sizeof(IME_STATE));
         if (pStock)
         {
             pStock->wLang = Lang;
@@ -199,44 +199,44 @@ Imm32FetchStateStock(LPINPUTCONTEXTDX pIC, HKL hKL)
     return pStock;
 }
 
-static PIMM_STATE_STOCK2 APIENTRY
-Imm32FetchStateStock2(PIMM_STATE_STOCK pStock, HKL hKL)
+static PIME_STATE2 APIENTRY
+Imm32FetchImeState2(PIME_STATE pStock, HKL hKL)
 {
-    PIMM_STATE_STOCK2 pStock2;
-    for (pStock2 = pStock->pStock2; pStock2; pStock2 = pStock2->pNext)
+    PIME_STATE2 pState2;
+    for (pState2 = pStock->pState2; pState2; pState2 = pState2->pNext)
     {
-        if (pStock2->hKL == hKL)
-            return pStock2;
+        if (pState2->hKL == hKL)
+            return pState2;
     }
-    pStock2 = Imm32HeapAlloc(0, sizeof(IMM_STATE_STOCK2));
-    if (!pStock2)
+    pState2 = Imm32HeapAlloc(0, sizeof(IME_STATE2));
+    if (!pState2)
         return NULL;
-    pStock2->dwValue = 0;
-    pStock2->hKL = hKL;
-    pStock2->pNext = pStock->pStock2;
-    pStock->pStock2 = pStock2;
-    return pStock2;
+    pState2->dwValue = 0;
+    pState2->hKL = hKL;
+    pState2->pNext = pStock->pState2;
+    pStock->pState2 = pState2;
+    return pState2;
 }
 
 static BOOL APIENTRY
-Imm32GetStockState(LPINPUTCONTEXTDX pIC, PIMM_STATE_STOCK pStock, HKL hKL)
+Imm32LoadImeState(LPINPUTCONTEXTDX pIC, PIME_STATE pStock, HKL hKL)
 {
-    PIMM_STATE_STOCK2 pStock2 = Imm32FetchStateStock2(pStock, hKL);
-    if (pStock2)
+    PIME_STATE2 pState2 = Imm32FetchImeState2(pStock, hKL);
+    if (pState2)
     {
-        pIC->fdwSentence |= pStock2->dwValue;
+        pIC->fdwSentence |= pState2->dwValue;
         return TRUE;
     }
     return FALSE;
 }
 
 static BOOL APIENTRY
-Imm32SetStockState(LPINPUTCONTEXTDX pIC, PIMM_STATE_STOCK pStock, HKL hKL)
+Imm32SaveImeState(LPINPUTCONTEXTDX pIC, PIME_STATE pStock, HKL hKL)
 {
-    PIMM_STATE_STOCK2 pStock2 = Imm32FetchStateStock2(pStock, hKL);
-    if (pStock2)
+    PIME_STATE2 pState2 = Imm32FetchImeState2(pStock, hKL);
+    if (pState2)
     {
-        pStock2->dwValue = (pIC->fdwSentence & 0xffff0000);
+        pState2->dwValue = (pIC->fdwSentence & 0xffff0000);
         return TRUE;
     }
     return FALSE;
@@ -251,11 +251,11 @@ VOID APIENTRY Imm32SelectLayout(HKL hNewKL, HKL hOldKL, HIMC hIMC)
     LPCOMPOSITIONSTRING pCS;
     LOGFONTA LogFontA;
     LOGFONTW LogFontW;
-    BOOL fOpen, bIsNewImeHKL = TRUE, bIsOldImeHKL = TRUE, bClientWide, bNewDpiWide;
+    BOOL fOpen, bIsNewHKLIme = TRUE, bIsOldHKLIme = TRUE, bClientWide, bNewDpiWide;
     DWORD cbNewPrivate = 0, cbOldPrivate = 0, dwConversion, dwSentence, dwSize, dwNewSize;
     PIMEDPI pNewImeDpi = NULL, pOldImeDpi = NULL;
     HANDLE hPrivate;
-    PIMM_STATE_STOCK pNewStock = NULL, pOldStock = NULL;
+    PIME_STATE pNewState = NULL, pOldState = NULL;
 
     pClientImc = ImmLockClientImc(hIMC);
     if (!pClientImc)
@@ -302,9 +302,9 @@ VOID APIENTRY Imm32SelectLayout(HKL hNewKL, HKL hOldKL, HIMC hIMC)
         if (Imm32IsImmMode() && !Imm32IsCiceroMode())
         {
             if (!IS_IME_HKL(hNewKL))
-                bIsNewImeHKL = FALSE;
+                bIsNewHKLIme = FALSE;
             if (!IS_IME_HKL(hOldKL))
-                bIsOldImeHKL = FALSE;
+                bIsOldHKLIme = FALSE;
         }
     }
 
@@ -422,27 +422,27 @@ VOID APIENTRY Imm32SelectLayout(HKL hNewKL, HKL hOldKL, HIMC hIMC)
         }
 #undef MAX_IMCC_SIZE
 
-        if (pOldImeDpi && bIsOldImeHKL)
+        if (pOldImeDpi && bIsOldHKLIme)
         {
-            pOldStock = Imm32FetchStateStock(pIC, hOldKL);
-            if (pOldStock)
-                Imm32SetStockState(pIC, pOldStock, hOldKL);
+            pOldState = Imm32FetchImeState(pIC, hOldKL);
+            if (pOldState)
+                Imm32SaveImeState(pIC, pOldState, hOldKL);
         }
 
-        if (pNewImeDpi && bIsNewImeHKL)
-            pNewStock = Imm32FetchStateStock(pIC, hNewKL);
+        if (pNewImeDpi && bIsNewHKLIme)
+            pNewState = Imm32FetchImeState(pIC, hNewKL);
 
-        if (pOldStock != pNewStock)
+        if (pOldState != pNewState)
         {
-            if (pOldStock)
+            if (pOldState)
             {
-                pOldStock->fOpen = !!pIC->fOpen;
-                pOldStock->dwConversion = (pIC->fdwConversion & ~IME_CMODE_EUDC);
-                pOldStock->dwSentence = pIC->fdwSentence;
-                pOldStock->dwInit = pIC->fdwInit;
+                pOldState->fOpen = !!pIC->fOpen;
+                pOldState->dwConversion = (pIC->fdwConversion & ~IME_CMODE_EUDC);
+                pOldState->dwSentence = pIC->fdwSentence;
+                pOldState->dwInit = pIC->fdwInit;
             }
 
-            if (pNewStock)
+            if (pNewState)
             {
                 if (pIC->dwChange & 0x100)
                 {
@@ -451,18 +451,18 @@ VOID APIENTRY Imm32SelectLayout(HKL hNewKL, HKL hOldKL, HIMC hIMC)
                 }
                 else
                 {
-                    pIC->fOpen = pNewStock->fOpen;
+                    pIC->fOpen = pNewState->fOpen;
                 }
 
                 pIC->fdwConversion &= ~IME_CMODE_EUDC;
                 pIC->fdwConversion |= (pIC->fdwConversion & ~IME_CMODE_EUDC);
-                pIC->fdwSentence = pNewStock->dwSentence;
-                pIC->fdwInit = pNewStock->dwInit;
+                pIC->fdwSentence = pNewState->dwSentence;
+                pIC->fdwInit = pNewState->dwInit;
             }
         }
 
-        if (pNewStock)
-            Imm32GetStockState(pIC, pNewStock, hNewKL);
+        if (pNewState)
+            Imm32LoadImeState(pIC, pNewState, hNewKL);
 
         if (pNewImeDpi)
         {

@@ -87,7 +87,7 @@ C_ASSERT(offsetof(INPUTCONTEXT, dwReserve) == 0x134);
 C_ASSERT(sizeof(INPUTCONTEXT) == 0x140);
 #endif
 
-struct IMM_STATE_STOCK;
+struct IME_STATE;
 
 typedef struct INPUTCONTEXTDX /* unconfirmed */
 {
@@ -97,7 +97,7 @@ typedef struct INPUTCONTEXTDX /* unconfirmed */
     DWORD dwUnknown1;
     DWORD dwUIFlags;
     DWORD dwUnknown2;
-    struct IMM_STATE_STOCK *pStock;
+    struct IME_STATE *pStock;
     DWORD dwChange;
     DWORD dwUnknown5;
 } INPUTCONTEXTDX, *LPINPUTCONTEXTDX;
@@ -158,30 +158,30 @@ typedef struct tagUNDETERMINESTRUCT
 
 LPINPUTCONTEXT WINAPI ImmLockIMC(HIMC);
 
-typedef struct IMM_STATE_STOCK2
+typedef struct IME_STATE2
 {
-    struct IMM_STATE_STOCK2 *pNext;
+    struct IME_STATE2 *pNext;
     HKL hKL;
     DWORD dwValue;
-} IMM_STATE_STOCK2, *PIMM_STATE_STOCK2;
+} IME_STATE2, *PIME_STATE2;
 
 #ifndef _WIN64
-C_ASSERT(sizeof(IMM_STATE_STOCK2) == 0xc);
+C_ASSERT(sizeof(IME_STATE2) == 0xc);
 #endif
 
-typedef struct IMM_STATE_STOCK
+typedef struct IME_STATE
 {
-    struct IMM_STATE_STOCK *pNext;
+    struct IME_STATE *pNext;
     WORD wLang;
     WORD fOpen;
     DWORD dwConversion;
     DWORD dwSentence;
     DWORD dwInit;
-    PIMM_STATE_STOCK2 pStock2;
-} IMM_STATE_STOCK, *PIMM_STATE_STOCK;
+    PIME_STATE2 pState2;
+} IME_STATE, *PIME_STATE;
 
 #ifndef _WIN64
-C_ASSERT(sizeof(IMM_STATE_STOCK) == 0x18);
+C_ASSERT(sizeof(IME_STATE) == 0x18);
 #endif
 
 #endif /* _WINE_IMM_H_ */
