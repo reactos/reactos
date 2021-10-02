@@ -58,6 +58,7 @@ START_TEST(ImmGetImeInfoEx)
 
     // ImeInfoExKeyboardLayout
     FillMemory(&InfoEx, sizeof(InfoEx), 0xCC);
+    InfoEx.wszUIClass[0] = InfoEx.wszImeFile[0] = 0;
     ret = fnImmGetImeInfoEx(&InfoEx, ImeInfoExKeyboardLayout, &hKL);
     PrintInfoEx(&InfoEx);
 
@@ -66,13 +67,14 @@ START_TEST(ImmGetImeInfoEx)
     else
         ok_long((DWORD)(DWORD_PTR)InfoEx.hkl, MAKELONG(LangID, LangID));
     ok(InfoEx.ImeInfo.dwPrivateDataSize >= 4, "\n");
-    ok(InfoEx.wszUIClass[0] != 0, "\n");
+    ok(InfoEx.wszUIClass[0] != 0, "wszUIClass was empty\n");
     ok_long(InfoEx.dwImeWinVersion, 0x40000);
     ok(InfoEx.wszImeFile[0] != 0, "wszImeFile was empty\n");
     ok_int(ret, TRUE);
 
     // ImeInfoExImeWindow
     FillMemory(&InfoEx, sizeof(InfoEx), 0xCC);
+    InfoEx.wszUIClass[0] = InfoEx.wszImeFile[0] = 0;
     ret = fnImmGetImeInfoEx(&InfoEx, ImeInfoExImeWindow, &hKL);
     PrintInfoEx(&InfoEx);
 
@@ -81,7 +83,7 @@ START_TEST(ImmGetImeInfoEx)
     else
         ok_long((DWORD)(DWORD_PTR)InfoEx.hkl, MAKELONG(LangID, LangID));
     ok(InfoEx.ImeInfo.dwPrivateDataSize >= 4, "\n");
-    ok(InfoEx.wszUIClass[0] != 0, "\n");
+    ok(InfoEx.wszUIClass[0] != 0, "wszUIClass was empty\n");
     ok_long(InfoEx.dwImeWinVersion, 0x40000);
     ok(InfoEx.wszImeFile[0] != 0, "wszImeFile was empty\n");
     ok_int(ret, TRUE);
