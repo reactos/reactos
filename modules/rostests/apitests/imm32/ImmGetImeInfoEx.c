@@ -44,7 +44,8 @@ START_TEST(ImmGetImeInfoEx)
     HKL hKL = GetKeyboardLayout(0), hOldKL;
 
     HMODULE hImm32 = GetModuleHandleA("imm32");
-    FN_ImmGetImeInfoEx fnImmGetImeInfoEx = GetProcAddress(hImm32, "ImmGetImeInfoEx");
+    FN_ImmGetImeInfoEx fnImmGetImeInfoEx =
+        (FN_ImmGetImeInfoEx)GetProcAddress(hImm32, "ImmGetImeInfoEx");
     if (!fnImmGetImeInfoEx)
     {
         skip("ImmGetImeInfoEx not found\n");
