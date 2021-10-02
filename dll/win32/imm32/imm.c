@@ -675,7 +675,9 @@ static VOID APIENTRY Imm32FreeImeStates(LPINPUTCONTEXTDX pIC)
     PIME_STATE pState, pStateNext;
     PIME_SUBSTATE pSubState, pSubStateNext;
 
-    for (pState = pIC->pState; pState; pState = pStateNext)
+    pState = pIC->pState;
+    pIC->pState = NULL;
+    for (; pState; pState = pStateNext)
     {
         pStateNext = pState->pNext;
         for (pSubState = pState->pSubState; pSubState; pSubState = pSubStateNext)
@@ -685,8 +687,6 @@ static VOID APIENTRY Imm32FreeImeStates(LPINPUTCONTEXTDX pIC)
         }
         Imm32HeapFree(pState);
     }
-
-    pIC->pState = NULL;
 }
 
 BOOL APIENTRY Imm32CleanupContext(HIMC hIMC, HKL hKL, BOOL bKeep)
