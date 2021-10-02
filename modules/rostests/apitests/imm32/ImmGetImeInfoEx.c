@@ -65,7 +65,7 @@ START_TEST(ImmGetImeInfoEx)
     PrintInfoEx(&InfoEx);
     ok_int(ret, TRUE);
     ok_long((DWORD)(DWORD_PTR)hOldKL, (DWORD)(DWORD_PTR)hKL);
-    if ((HIWORD(InfoEx.hkl) & 0xe000) == 0xe000)
+    if (IS_IME_HKL(InfoEx.hkl))
         ok_long(LOWORD(InfoEx.hkl), LangID);
     else
         ok_long((DWORD)(DWORD_PTR)InfoEx.hkl, MAKELONG(LangID, LangID));
@@ -82,7 +82,7 @@ START_TEST(ImmGetImeInfoEx)
     ret = fnImmGetImeInfoEx(&InfoEx, ImeInfoExImeWindow, &hKL);
     PrintInfoEx(&InfoEx);
     ok_int(ret, TRUE);
-    if ((HIWORD(InfoEx.hkl) & 0xe000) == 0xe000)
+    if (IS_IME_HKL(InfoEx.hkl))
         ok_long(LOWORD(InfoEx.hkl), LangID);
     else
         ok_long((DWORD)(DWORD_PTR)InfoEx.hkl, MAKELONG(LangID, LangID));
