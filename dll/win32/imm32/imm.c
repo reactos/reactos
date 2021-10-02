@@ -240,14 +240,9 @@ VOID APIENTRY Imm32SelectLayout(HKL hNewKL, HKL hOldKL, HIMC hIMC)
         if (pNewImeDpi)
         {
             if (IS_IME_HKL(hNewKL))
-            {
                 pNewImeDpi->ImeSelect(hIMC, TRUE);
-            }
-            else if (!Imm32IsImmMode() || (Imm32IsCiceroMode() && !Imm32Is16BitMode()))
-            {
-                if (pNewImeDpi->CtfImeSelectEx)
-                    pNewImeDpi->CtfImeSelectEx(hIMC, TRUE, hNewKL);
-            }
+            else if (Imm32IsCiceroMode() && !Imm32Is16BitMode() && pNewImeDpi->CtfImeSelectEx)
+                pNewImeDpi->CtfImeSelectEx(hIMC, TRUE, hNewKL);
 
             pClientImc->hKL = hNewKL;
         }
