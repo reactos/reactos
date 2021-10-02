@@ -380,8 +380,8 @@ VOID APIENTRY Imm32SelectLayout(HKL hNewKL, HKL hOldKL, HIMC hIMC)
                     pIC->fOpen = pNewState->fOpen;
                 }
 
-                pIC->fdwConversion &= ~IME_CMODE_EUDC;
-                pIC->fdwConversion |= (pNewState->dwConversion & ~IME_CMODE_EUDC);
+                pIC->fdwConversion =
+                    ((pIC->fdwConversion | pNewState->dwConversion) & ~IME_CMODE_EUDC);
                 pIC->fdwSentence = pNewState->dwSentence;
                 pIC->fdwInit = pNewState->dwInit;
             }
