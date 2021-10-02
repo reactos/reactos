@@ -9,8 +9,6 @@
 
 //#define DO_PRINT
 
-typedef BOOL (WINAPI *FN_ImmGetImeInfoEx)(PIMEINFOEX, IMEINFOEXCLASS, PVOID);
-
 static VOID PrintInfoEx(PIMEINFOEX pInfoEx)
 {
 #ifdef DO_PRINT
@@ -35,12 +33,15 @@ static VOID PrintInfoEx(PIMEINFOEX pInfoEx)
 #endif
 }
 
+typedef BOOL (WINAPI *FN_ImmGetImeInfoEx)(PIMEINFOEX, IMEINFOEXCLASS, PVOID);
+
 START_TEST(ImmGetImeInfoEx)
 {
     IMEINFOEX InfoEx;
-    BOOL ret;
+    BOOL ret, bMatch;
+    size_t ib;
     LANGID LangID = GetSystemDefaultLangID();
-    HKL hKL = GetKeyboardLayout(0);
+    HKL hKL = GetKeyboardLayout(0), hOldKL;
 
     HMODULE hImm32 = GetModuleHandleA("imm32");
     FN_ImmGetImeInfoEx fnImmGetImeInfoEx = GetProcAddress(hImm32, "ImmGetImeInfoEx");
@@ -57,11 +58,13 @@ START_TEST(ImmGetImeInfoEx)
     }
 
     // ImeInfoExKeyboardLayout
+    hOldKL = hKL;
     FillMemory(&InfoEx, sizeof(InfoEx), 0xCC);
     InfoEx.wszUIClass[0] = InfoEx.wszImeFile[0] = 0;
     ret = fnImmGetImeInfoEx(&InfoEx, ImeInfoExKeyboardLayout, &hKL);
     PrintInfoEx(&InfoEx);
-
+    ok_int(ret, TRUE);
+    ok_long((DWORD)(DWORD_PTR)hOldKL, (DWORD)(DWORD_PTR)hKL);
     if ((HIWORD(InfoEx.hkl) & 0xe000) == 0xe000)
         ok_long(LOWORD(InfoEx.hkl), LangID);
     else
@@ -70,14 +73,15 @@ START_TEST(ImmGetImeInfoEx)
     ok(InfoEx.wszUIClass[0] != 0, "wszUIClass was empty\n");
     ok_long(InfoEx.dwImeWinVersion, 0x40000);
     ok(InfoEx.wszImeFile[0] != 0, "wszImeFile was empty\n");
-    ok_int(ret, TRUE);
+    hKL = hOldKL;
 
     // ImeInfoExImeWindow
+    hOldKL = hKL;
     FillMemory(&InfoEx, sizeof(InfoEx), 0xCC);
     InfoEx.wszUIClass[0] = InfoEx.wszImeFile[0] = 0;
     ret = fnImmGetImeInfoEx(&InfoEx, ImeInfoExImeWindow, &hKL);
     PrintInfoEx(&InfoEx);
-
+    ok_int(ret, TRUE);
     if ((HIWORD(InfoEx.hkl) & 0xe000) == 0xe000)
         ok_long(LOWORD(InfoEx.hkl), LangID);
     else
@@ -86,7 +90,23 @@ START_TEST(ImmGetImeInfoEx)
     ok(InfoEx.wszUIClass[0] != 0, "wszUIClass was empty\n");
     ok_long(InfoEx.dwImeWinVersion, 0x40000);
     ok(InfoEx.wszImeFile[0] != 0, "wszImeFile was empty\n");
-    ok_int(ret, TRUE);
+    hKL = hOldKL;
 
     // TODO: ImeInfoExImeFileName
+
+    // 4
+    hOldKL = hKL;
+    FillMemory(&InfoEx, sizeof(InfoEx), 0xCC);
+    ret = fnImmGetImeInfoEx(&InfoEx, 4, &hKL);
+    ok_int(ret, FALSE);
+    bMatch = TRUE;
+    for (ib = 0; ib < sizeof(InfoEx); ++ib)
+    {
+        if (((LPBYTE)&InfoEx)[ib] != 0xCC)
+        {
+            bMatch = FALSE;
+            break;
+        }
+    }
+    ok_int(bMatch, TRUE);
 }
