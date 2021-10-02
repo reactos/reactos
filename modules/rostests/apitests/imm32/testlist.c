@@ -6,6 +6,7 @@ extern void func_clientimc(void);
 extern void func_himc(void);
 extern void func_imcc(void);
 extern void func_ImmIsUIMessage(void);
+extern void func_ImmGetImeInfoEx(void);
 
 const struct test winetest_testlist[] =
 {
@@ -13,5 +14,6 @@ const struct test winetest_testlist[] =
     { "himc", func_himc },
     { "imcc", func_imcc },
     { "ImmIsUIMessage", func_ImmIsUIMessage },
+    { "ImmGetImeInfoEx", func_ImmGetImeInfoEx },
     { 0, 0 }
 };

@@ -6,6 +6,7 @@ list(APPEND SOURCE
     himc.c
     imcc.c
     ImmIsUIMessage.c
+    ImmGetImeInfoEx.c
     testlist.c)
 
 add_executable(imm32_apitest ${SOURCE})
