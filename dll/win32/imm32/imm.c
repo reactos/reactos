@@ -227,10 +227,8 @@ VOID APIENTRY Imm32SelectLayout(HKL hNewKL, HKL hOldKL, HIMC hIMC)
     {
         if (Imm32IsImmMode() && !Imm32IsCiceroMode())
         {
-            if (!IS_IME_HKL(hNewKL))
-                bIsNewHKLIme = FALSE;
-            if (!IS_IME_HKL(hOldKL))
-                bIsOldHKLIme = FALSE;
+            bIsNewHKLIme = IS_IME_HKL(hNewKL);
+            bIsOldHKLIme = IS_IME_HKL(hOldKL);
         }
     }
 
