@@ -67,9 +67,14 @@ START_TEST(ImmGetImeInfoEx)
     ok_int(ret, TRUE);
     ok_long((DWORD)(DWORD_PTR)hOldKL, (DWORD)(DWORD_PTR)hKL);
     if (IS_IME_HKL(InfoEx.hkl))
+    {
         ok_long(LOWORD(InfoEx.hkl), LangID);
+    }
     else
-        ok_long((DWORD)(DWORD_PTR)InfoEx.hkl, MAKELONG(LangID, LangID));
+    {
+        ok_int(LOWORD(InfoEx.hkl), LangID);
+        ok_int(HIWORD(InfoEx.hkl), LangID);
+    }
     ok(InfoEx.ImeInfo.dwPrivateDataSize >= 4, "\n");
     ok(InfoEx.wszUIClass[0] != 0, "wszUIClass was empty\n");
     ok_long(InfoEx.dwImeWinVersion, 0x40000);
@@ -84,9 +89,14 @@ START_TEST(ImmGetImeInfoEx)
     PrintInfoEx(&InfoEx);
     ok_int(ret, TRUE);
     if (IS_IME_HKL(InfoEx.hkl))
+    {
         ok_long(LOWORD(InfoEx.hkl), LangID);
+    }
     else
-        ok_long((DWORD)(DWORD_PTR)InfoEx.hkl, MAKELONG(LangID, LangID));
+    {
+        ok_int(LOWORD(InfoEx.hkl), LangID);
+        ok_int(HIWORD(InfoEx.hkl), LangID);
+    }
     ok(InfoEx.ImeInfo.dwPrivateDataSize >= 4, "\n");
     ok(InfoEx.wszUIClass[0] != 0, "wszUIClass was empty\n");
     ok_long(InfoEx.dwImeWinVersion, 0x40000);
