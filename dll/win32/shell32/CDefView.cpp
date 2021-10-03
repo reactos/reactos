@@ -1866,9 +1866,6 @@ SelectExtOnRename(void)
     HKEY hKey;
     LONG error;
     DWORD dwValue = FALSE, cbValue;
-    static DWORD s_dwCached = 0xDEADBEEF;
-    if (s_dwCached != 0xDEADBEEF)
-        return s_dwCached;
 
     error = RegOpenKeyExW(HKEY_CURRENT_USER,
                           L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer",
@@ -1880,8 +1877,7 @@ SelectExtOnRename(void)
     RegQueryValueExW(hKey, L"SelectExtOnRename", NULL, NULL, (LPBYTE)&dwValue, &cbValue);
 
     RegCloseKey(hKey);
-    s_dwCached = !!dwValue;
-    return s_dwCached;
+    return !!dwValue;
 }
 
 /**********************************************************
