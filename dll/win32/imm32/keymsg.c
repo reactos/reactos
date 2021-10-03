@@ -260,6 +260,94 @@ ImmIsUIMessageAW(HWND hWndIME, UINT msg, WPARAM wParam, LPARAM lParam, BOOL bAns
     return TRUE;
 }
 
+typedef struct IMM_UNKNOWN_PROCESS1
+{
+    HWND hWnd;
+    BOOL fFlag;
+} IMM_UNKNOWN_PROCESS1, *PIMM_UNKNOWN_PROCESS1;
+
+static DWORD WINAPI Imm32UnknownProcess1Proc(LPVOID arg)
+{
+    HWND hwndDefIME;
+    UINT uValue;
+    DWORD_PTR lResult;
+    PIMM_UNKNOWN_PROCESS1 pUnknown = arg;
+
+    Sleep(3000);
+    hwndDefIME = ImmGetDefaultIMEWnd(pUnknown->hWnd);
+    if (hwndDefIME)
+    {
+        uValue = (pUnknown->fFlag ? 0x23 : 0x24);
+        SendMessageTimeoutW(hwndDefIME, WM_IME_SYSTEM, uValue, (LPARAM)pUnknown->hWnd,
+                            SMTO_BLOCK | SMTO_ABORTIFHUNG, 5000, &lResult);
+    }
+    Imm32HeapFree(pUnknown);
+    return FALSE;
+}
+
+LRESULT APIENTRY Imm32UnknownProcess1(HWND hWnd, BOOL fFlag)
+{
+    HANDLE hThread;
+    PWND pWnd = NULL;
+    PIMM_UNKNOWN_PROCESS1 pUnknown1;
+    DWORD_PTR lResult = 0;
+
+    if (hWnd && g_psi)
+        pWnd = ValidateHwndNoErr(hWnd);
+
+    if (!pWnd)
+        return 0;
+
+    if (pWnd->state2 & WNDS2_WMCREATEMSGPROCESSED)
+    {
+        SendMessageTimeoutW(hWnd, 0x505, 0, fFlag, 3, 5000, &lResult);
+        return lResult;
+    }
+
+    pUnknown1 = Imm32HeapAlloc(0, sizeof(IMM_UNKNOWN_PROCESS1));
+    if (!pUnknown1)
+        return 0;
+
+    pUnknown1->hWnd = hWnd;
+    pUnknown1->fFlag = fFlag;
+
+    hThread = CreateThread(NULL, 0, Imm32UnknownProcess1Proc, pUnknown1, 0, NULL);
+    if (hThread)
+        CloseHandle(hThread);
+    return 0;
+}
+
+static BOOL CALLBACK Imm32SendChangeProc(HIMC hIMC, LPARAM lParam)
+{
+    HWND hWnd;
+    LPINPUTCONTEXTDX pIC;
+
+    pIC = (LPINPUTCONTEXTDX)ImmLockIMC(hIMC);
+    if (!pIC)
+        return TRUE;
+
+    hWnd = pIC->hWnd;
+    if (!IsWindow(hWnd))
+        goto Quit;
+
+    if (pIC->dwChange & INPUTCONTEXTDX_CHANGE_OPEN)
+        SendMessageW(hWnd, WM_IME_NOTIFY, IMN_SETOPENSTATUS, 0);
+    if (pIC->dwChange & INPUTCONTEXTDX_CHANGE_CONVERSION)
+        SendMessageW(hWnd, WM_IME_NOTIFY, IMN_SETCONVERSIONMODE, 0);
+    if (pIC->dwChange & (INPUTCONTEXTDX_CHANGE_OPEN | INPUTCONTEXTDX_CHANGE_CONVERSION))
+        NtUserNotifyIMEStatus(hWnd, pIC->fOpen, pIC->fdwConversion);
+    if (pIC->dwChange & INPUTCONTEXTDX_CHANGE_SENTENCE)
+        SendMessageW(hWnd, WM_IME_NOTIFY, IMN_SETSENTENCEMODE, 0);
+Quit:
+    pIC->dwChange = 0;
+    return TRUE;
+}
+
+BOOL APIENTRY Imm32SendChange(BOOL bProcess)
+{
+    return ImmEnumInputContext((bProcess ? -1 : 0), Imm32SendChangeProc, 0);
+}
+
 /***********************************************************************
  *		ImmIsUIMessageA (IMM32.@)
  */
@@ -423,6 +511,29 @@ ImmProcessKey(HWND hWnd, HKL hKL, UINT vKey, LPARAM lParam, DWORD dwHotKeyID)
 
     ImmReleaseContext(hWnd, hIMC);
     return ret;
+}
+
+/***********************************************************************
+ *		ImmSystemHandler(IMM32.@)
+ */
+LRESULT WINAPI ImmSystemHandler(HIMC hIMC, WPARAM wParam, LPARAM lParam)
+{
+    switch (wParam)
+    {
+        case 0x1f:
+            Imm32SendChange((BOOL)lParam);
+            return 0;
+
+        case 0x20:
+            ImmNotifyIME(hIMC, NI_COMPOSITIONSTR, CPS_COMPLETE, 0);
+            return 0;
+
+        case 0x23: case 0x24:
+            return Imm32UnknownProcess1((HWND)lParam, (wParam == 0x23));
+
+        default:
+            return 0;
+    }
 }
 
 /***********************************************************************
