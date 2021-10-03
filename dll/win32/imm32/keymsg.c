@@ -518,6 +518,8 @@ ImmProcessKey(HWND hWnd, HKL hKL, UINT vKey, LPARAM lParam, DWORD dwHotKeyID)
  */
 LRESULT WINAPI ImmSystemHandler(HIMC hIMC, WPARAM wParam, LPARAM lParam)
 {
+    TRACE("(%p, %p, %p)\n", hIMC, wParam, lParam);
+
     switch (wParam)
     {
         case 0x1f:
