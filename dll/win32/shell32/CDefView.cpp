@@ -1866,6 +1866,9 @@ SelectExtOnRename(void)
     HKEY hKey;
     LONG error;
     DWORD dwValue = FALSE, cbValue;
+    static DWORD s_dwCached = 0xDEADBEEF;
+    if (s_dwCached != 0xDEADBEEF)
+        return s_dwCached;
 
     error = RegOpenKeyExW(HKEY_CURRENT_USER,
                           L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer",
@@ -1877,7 +1880,8 @@ SelectExtOnRename(void)
     RegQueryValueExW(hKey, L"SelectExtOnRename", NULL, NULL, (LPBYTE)&dwValue, &cbValue);
 
     RegCloseKey(hKey);
-    return !!dwValue;
+    s_dwCached = !!dwValue;
+    return s_dwCached;
 }
 
 /**********************************************************
@@ -2093,9 +2097,11 @@ LRESULT CDefView::OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
                 HWND hEdit = reinterpret_cast<HWND>(m_ListView.SendMessage(LVM_GETEDITCONTROL));
                 SHLimitInputEdit(hEdit, m_pSFParent);
 
-                if (!(dwAttr & SFGAO_LINK) && (lpdi->item.mask & LVIF_TEXT) && !SelectExtOnRename())
+                LPWSTR pszText = lpdi->item.pszText;
+                if (!(dwAttr & (SFGAO_LINK | SFGAO_FOLDER)) && (dwAttr & SFGAO_FILESYSTEM) &&
+                    (lpdi->item.mask & LVIF_TEXT) &&
+                    !SelectExtOnRename() && !SHELL_FS_HideExtension(pszText))
                 {
-                    LPWSTR pszText = lpdi->item.pszText;
                     LPWSTR pchDotExt = PathFindExtensionW(pszText);
                     ::PostMessageW(hEdit, EM_SETSEL, 0, pchDotExt - pszText);
                     ::PostMessageW(hEdit, EM_SCROLLCARET, 0, 0);
