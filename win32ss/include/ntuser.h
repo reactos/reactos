@@ -3314,9 +3314,7 @@ NtUserSetSystemTimer(
 
 DWORD
 NTAPI
-NtUserSetThreadLayoutHandles(
-    DWORD dwUnknown1,
-    DWORD dwUnknown2);
+NtUserSetThreadLayoutHandles(HKL hNewKL, HKL hOldKL);
 
 UINT_PTR
 NTAPI

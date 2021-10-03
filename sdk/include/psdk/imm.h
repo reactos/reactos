@@ -635,6 +635,8 @@ BOOL WINAPI ImmSetActiveContext(HWND hwnd, HIMC hIMC, BOOL fFlag);
 BOOL WINAPI ImmDestroyContext(_In_ HIMC hIMC);
 BOOL WINAPI ImmDisableIME(_In_ DWORD idThread);
 BOOL WINAPI ImmEnumInputContext(_In_ DWORD, _In_ IMCENUMPROC, _In_ LPARAM);
+BOOL WINAPI ImmLoadIME(HKL hKL);
+BOOL WINAPI CtfImmIsTextFrameServiceDisabled(VOID);
 
 UINT
 WINAPI

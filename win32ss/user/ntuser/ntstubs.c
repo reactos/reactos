@@ -894,9 +894,7 @@ Quit:
 
 DWORD
 APIENTRY
-NtUserSetThreadLayoutHandles(
-    DWORD dwUnknown1,
-    DWORD dwUnknown2)
+NtUserSetThreadLayoutHandles(HKL hNewKL, HKL hOldKL)
 {
     STUB;
     return 0;

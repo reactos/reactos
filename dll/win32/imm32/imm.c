@@ -168,6 +168,314 @@ Retry:
     return TRUE;
 }
 
+VOID APIENTRY Imm32SelectLayout(HKL hNewKL, HKL hOldKL, HIMC hIMC)
+{
+    PCLIENTIMC pClientImc;
+    LPINPUTCONTEXTDX pIC;
+    LPGUIDELINE pGL;
+    LPCANDIDATEINFO pCI;
+    LPCOMPOSITIONSTRING pCS;
+    LOGFONTA LogFontA;
+    LOGFONTW LogFontW;
+    BOOL fOpen, bIsNewHKLIme = TRUE, bIsOldHKLIme = TRUE, bClientWide, bNewDpiWide;
+    DWORD cbNewPrivate = 0, cbOldPrivate = 0, dwConversion, dwSentence, dwSize, dwNewSize;
+    PIMEDPI pNewImeDpi = NULL, pOldImeDpi = NULL;
+    HANDLE hPrivate;
+    PIME_STATE pNewState = NULL, pOldState = NULL;
+
+    pClientImc = ImmLockClientImc(hIMC);
+    if (!pClientImc)
+        return;
+
+    pNewImeDpi = ImmLockImeDpi(hNewKL);
+
+    if (hNewKL != hOldKL)
+        pOldImeDpi = ImmLockImeDpi(hOldKL);
+
+    if (pNewImeDpi)
+    {
+        cbNewPrivate = pNewImeDpi->ImeInfo.dwPrivateDataSize;
+        pClientImc->uCodePage = pNewImeDpi->uCodePage;
+    }
+    else
+    {
+        pClientImc->uCodePage = CP_ACP;
+    }
+
+    if (cbNewPrivate < 4)
+        cbNewPrivate = 4;
+
+    if (pOldImeDpi)
+        cbOldPrivate = pOldImeDpi->ImeInfo.dwPrivateDataSize;
+
+    if (cbOldPrivate < 4)
+        cbOldPrivate = 4;
+
+    if (pClientImc->hKL == hOldKL)
+    {
+        if (pOldImeDpi)
+        {
+            if (IS_IME_HKL(hOldKL))
+                pOldImeDpi->ImeSelect(hIMC, FALSE);
+            else if (Imm32IsCiceroMode() && !Imm32Is16BitMode() && pOldImeDpi->CtfImeSelectEx)
+                pOldImeDpi->CtfImeSelectEx(hIMC, FALSE, hOldKL);
+        }
+        pClientImc->hKL = NULL;
+    }
+
+    if (CtfImmIsTextFrameServiceDisabled())
+    {
+        if (Imm32IsImmMode() && !Imm32IsCiceroMode())
+        {
+            bIsNewHKLIme = IS_IME_HKL(hNewKL);
+            bIsOldHKLIme = IS_IME_HKL(hOldKL);
+        }
+    }
+
+    pIC = (LPINPUTCONTEXTDX)Imm32LockIMCEx(hIMC, FALSE);
+    if (!pIC)
+    {
+        if (pNewImeDpi)
+        {
+            if (IS_IME_HKL(hNewKL))
+                pNewImeDpi->ImeSelect(hIMC, TRUE);
+            else if (Imm32IsCiceroMode() && !Imm32Is16BitMode() && pNewImeDpi->CtfImeSelectEx)
+                pNewImeDpi->CtfImeSelectEx(hIMC, TRUE, hNewKL);
+
+            pClientImc->hKL = hNewKL;
+        }
+    }
+    else
+    {
+        dwConversion = pIC->fdwConversion;
+        dwSentence = pIC->fdwSentence;
+        fOpen = pIC->fOpen;
+
+        if (pNewImeDpi)
+        {
+            bClientWide = (pClientImc->dwFlags & CLIENTIMC_WIDE);
+            bNewDpiWide = ImeDpi_IsUnicode(pNewImeDpi);
+            if (bClientWide && !bNewDpiWide)
+            {
+                if (pIC->fdwInit & INIT_LOGFONT)
+                {
+                    LogFontWideToAnsi(&pIC->lfFont.W, &LogFontA);
+                    pIC->lfFont.A = LogFontA;
+                }
+                pClientImc->dwFlags &= ~CLIENTIMC_WIDE;
+            }
+            else if (!bClientWide && bNewDpiWide)
+            {
+                if (pIC->fdwInit & INIT_LOGFONT)
+                {
+                    LogFontAnsiToWide(&pIC->lfFont.A, &LogFontW);
+                    pIC->lfFont.W = LogFontW;
+                }
+                pClientImc->dwFlags |= CLIENTIMC_WIDE;
+            }
+        }
+
+        if (cbOldPrivate != cbNewPrivate)
+        {
+            hPrivate = ImmReSizeIMCC(pIC->hPrivate, cbNewPrivate);
+            if (!hPrivate)
+            {
+                ImmDestroyIMCC(pIC->hPrivate);
+                hPrivate = ImmCreateIMCC(cbNewPrivate);
+            }
+            pIC->hPrivate = hPrivate;
+        }
+
+#define MAX_IMCC_SIZE 0x1000
+        dwSize = ImmGetIMCCSize(pIC->hMsgBuf);
+        if (ImmGetIMCCLockCount(pIC->hMsgBuf) || dwSize > MAX_IMCC_SIZE)
+        {
+            ImmDestroyIMCC(pIC->hMsgBuf);
+            pIC->hMsgBuf = ImmCreateIMCC(sizeof(UINT));
+            pIC->dwNumMsgBuf = 0;
+        }
+
+        dwSize = ImmGetIMCCSize(pIC->hGuideLine);
+        dwNewSize = sizeof(GUIDELINE);
+        if (ImmGetIMCCLockCount(pIC->hGuideLine) ||
+            dwSize < dwNewSize || dwSize > MAX_IMCC_SIZE)
+        {
+            ImmDestroyIMCC(pIC->hGuideLine);
+            pIC->hGuideLine = ImmCreateIMCC(dwNewSize);
+            pGL = ImmLockIMCC(pIC->hGuideLine);
+            if (pGL)
+            {
+                pGL->dwSize = dwNewSize;
+                ImmUnlockIMCC(pIC->hGuideLine);
+            }
+        }
+
+        dwSize = ImmGetIMCCSize(pIC->hCandInfo);
+        dwNewSize = sizeof(CANDIDATEINFO);
+        if (ImmGetIMCCLockCount(pIC->hCandInfo) ||
+            dwSize < dwNewSize || dwSize > MAX_IMCC_SIZE)
+        {
+            ImmDestroyIMCC(pIC->hCandInfo);
+            pIC->hCandInfo = ImmCreateIMCC(dwNewSize);
+            pCI = ImmLockIMCC(pIC->hCandInfo);
+            if (pCI)
+            {
+                pCI->dwSize = dwNewSize;
+                ImmUnlockIMCC(pIC->hCandInfo);
+            }
+        }
+
+        dwSize = ImmGetIMCCSize(pIC->hCompStr);
+        dwNewSize = sizeof(COMPOSITIONSTRING);
+        if (ImmGetIMCCLockCount(pIC->hCompStr) ||
+            dwSize < dwNewSize || dwSize > MAX_IMCC_SIZE)
+        {
+            ImmDestroyIMCC(pIC->hCompStr);
+            pIC->hCompStr = ImmCreateIMCC(dwNewSize);
+            pCS = ImmLockIMCC(pIC->hCompStr);
+            if (pCS)
+            {
+                pCS->dwSize = dwNewSize;
+                ImmUnlockIMCC(pIC->hCompStr);
+            }
+        }
+#undef MAX_IMCC_SIZE
+
+        if (pOldImeDpi && bIsOldHKLIme)
+        {
+            pOldState = Imm32FetchImeState(pIC, hOldKL);
+            if (pOldState)
+                Imm32SaveImeStateSentence(pIC, pOldState, hOldKL);
+        }
+
+        if (pNewImeDpi && bIsNewHKLIme)
+            pNewState = Imm32FetchImeState(pIC, hNewKL);
+
+        if (pOldState != pNewState)
+        {
+            if (pOldState)
+            {
+                pOldState->fOpen = !!pIC->fOpen;
+                pOldState->dwConversion = (pIC->fdwConversion & ~IME_CMODE_EUDC);
+                pOldState->dwSentence = pIC->fdwSentence;
+                pOldState->dwInit = pIC->fdwInit;
+            }
+
+            if (pNewState)
+            {
+                if (pIC->dwChange & INPUTCONTEXTDX_CHANGE_FORCE_OPEN)
+                {
+                    pIC->dwChange &= ~INPUTCONTEXTDX_CHANGE_FORCE_OPEN;
+                    pIC->fOpen = TRUE;
+                }
+                else
+                {
+                    pIC->fOpen = pNewState->fOpen;
+                }
+
+                pIC->fdwConversion = (pNewState->dwConversion & ~IME_CMODE_EUDC);
+                pIC->fdwSentence = pNewState->dwSentence;
+                pIC->fdwInit = pNewState->dwInit;
+            }
+        }
+
+        if (pNewState)
+            Imm32LoadImeStateSentence(pIC, pNewState, hNewKL);
+
+        if (pNewImeDpi)
+        {
+            if (IS_IME_HKL(hNewKL))
+                pNewImeDpi->ImeSelect(hIMC, TRUE);
+            else if (Imm32IsCiceroMode() && !Imm32Is16BitMode() && pNewImeDpi->CtfImeSelectEx)
+                pNewImeDpi->CtfImeSelectEx(hIMC, TRUE, hNewKL);
+
+            pClientImc->hKL = hNewKL;
+        }
+
+        pIC->dwChange = 0;
+        if (pIC->fOpen != fOpen)
+            pIC->dwChange |= INPUTCONTEXTDX_CHANGE_OPEN;
+        if (pIC->fdwConversion != dwConversion)
+            pIC->dwChange |= INPUTCONTEXTDX_CHANGE_CONVERSION;
+        if (pIC->fdwSentence != dwSentence)
+            pIC->dwChange |= INPUTCONTEXTDX_CHANGE_SENTENCE;
+
+        ImmUnlockIMC(hIMC);
+    }
+
+    ImmUnlockImeDpi(pOldImeDpi);
+    ImmUnlockImeDpi(pNewImeDpi);
+    ImmUnlockClientImc(pClientImc);
+}
+
+typedef struct SELECT_LAYOUT
+{
+    HKL hNewKL;
+    HKL hOldKL;
+} SELECT_LAYOUT, *LPSELECT_LAYOUT;
+
+static BOOL CALLBACK Imm32SelectLayoutProc(HIMC hIMC, LPARAM lParam)
+{
+    LPSELECT_LAYOUT pSelect = (LPSELECT_LAYOUT)lParam;
+    Imm32SelectLayout(pSelect->hNewKL, pSelect->hOldKL, hIMC);
+    return TRUE;
+}
+
+static BOOL CALLBACK Imm32NotifyCompStrProc(HIMC hIMC, LPARAM lParam)
+{
+    ImmNotifyIME(hIMC, NI_COMPOSITIONSTR, (DWORD)lParam, 0);
+    return TRUE;
+}
+
+/***********************************************************************
+ *		ImmActivateLayout (IMM32.@)
+ */
+BOOL WINAPI ImmActivateLayout(HKL hKL)
+{
+    PIMEDPI pImeDpi;
+    HKL hOldKL;
+    LPARAM lParam;
+    HWND hwndDefIME = NULL;
+    SELECT_LAYOUT SelectLayout;
+
+    hOldKL = GetKeyboardLayout(0);
+
+    if (hOldKL == hKL && !(GetWin32ClientInfo()->CI_flags & CI_IMMACTIVATE))
+        return TRUE;
+
+    ImmLoadIME(hKL);
+
+    if (hOldKL != hKL)
+    {
+        pImeDpi = ImmLockImeDpi(hOldKL);
+        if (pImeDpi)
+        {
+            if (pImeDpi->ImeInfo.fdwProperty & IME_PROP_COMPLETE_ON_UNSELECT)
+                lParam = CPS_COMPLETE;
+            else
+                lParam = CPS_CANCEL;
+            ImmUnlockImeDpi(pImeDpi);
+
+            ImmEnumInputContext(0, Imm32NotifyCompStrProc, lParam);
+        }
+
+        hwndDefIME = ImmGetDefaultIMEWnd(NULL);
+        if (IsWindow(hwndDefIME))
+            SendMessageW(hwndDefIME, WM_IME_SELECT, FALSE, (LPARAM)hOldKL);
+
+        NtUserSetThreadLayoutHandles(hKL, hOldKL);
+    }
+
+    SelectLayout.hNewKL = hKL;
+    SelectLayout.hOldKL = hOldKL;
+    ImmEnumInputContext(0, Imm32SelectLayoutProc, (LPARAM)&SelectLayout);
+
+    if (IsWindow(hwndDefIME))
+        SendMessageW(hwndDefIME, WM_IME_SELECT, TRUE, (LPARAM)hKL);
+
+    return TRUE;
+}
+
 typedef struct _tagImmHkl
 {
     struct list entry;
@@ -362,15 +670,29 @@ HIMC WINAPI ImmCreateContext(void)
     return hIMC;
 }
 
-static VOID APIENTRY Imm32CleanupContextExtra(LPINPUTCONTEXT pIC)
+static VOID APIENTRY Imm32FreeImeStates(LPINPUTCONTEXTDX pIC)
 {
-    FIXME("We have to do something do here");
+    PIME_STATE pState, pStateNext;
+    PIME_SUBSTATE pSubState, pSubStateNext;
+
+    pState = pIC->pState;
+    pIC->pState = NULL;
+    for (; pState; pState = pStateNext)
+    {
+        pStateNext = pState->pNext;
+        for (pSubState = pState->pSubState; pSubState; pSubState = pSubStateNext)
+        {
+            pSubStateNext = pSubState->pNext;
+            Imm32HeapFree(pSubState);
+        }
+        Imm32HeapFree(pState);
+    }
 }
 
 BOOL APIENTRY Imm32CleanupContext(HIMC hIMC, HKL hKL, BOOL bKeep)
 {
     PIMEDPI pImeDpi;
-    LPINPUTCONTEXT pIC;
+    LPINPUTCONTEXTDX pIC;
     PCLIENTIMC pClientImc;
     PIMC pIMC;
 
@@ -394,7 +716,7 @@ BOOL APIENTRY Imm32CleanupContext(HIMC hIMC, HKL hKL, BOOL bKeep)
         return TRUE;
     }
 
-    pIC = ImmLockIMC(hIMC);
+    pIC = (LPINPUTCONTEXTDX)ImmLockIMC(hIMC);
     if (pIC == NULL)
     {
         ImmUnlockClientImc(pClientImc);
@@ -427,7 +749,7 @@ BOOL APIENTRY Imm32CleanupContext(HIMC hIMC, HKL hKL, BOOL bKeep)
     pIC->hCandInfo = ImmDestroyIMCC(pIC->hCandInfo);
     pIC->hCompStr = ImmDestroyIMCC(pIC->hCompStr);
 
-    Imm32CleanupContextExtra(pIC);
+    Imm32FreeImeStates(pIC);
 
     ImmUnlockIMC(hIMC);
 
