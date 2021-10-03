@@ -170,14 +170,14 @@ DoDefault:
     return ret;
 }
 
-static DWORD APIENTRY
+DWORD APIENTRY
 ImmNt3KTrans(DWORD dwCount, LPTRANSMSG pEntries, LPINPUTCONTEXTDX pIC,
              LPCOMPOSITIONSTRING pCS, BOOL bAnsi)
 {
     return dwCount; // FIXME
 }
 
-static DWORD APIENTRY
+DWORD APIENTRY
 ImmNt3Trans(DWORD dwCount, LPTRANSMSG pEntries, HIMC hIMC, BOOL bAnsi, WORD wLang)
 {
     BOOL ret = FALSE;
@@ -203,3 +203,57 @@ ImmNt3Trans(DWORD dwCount, LPTRANSMSG pEntries, HIMC hIMC, BOOL bAnsi, WORD wLan
 }
 
 #endif /* IMM_NT3_SUPPORT */
+
+/***********************************************************************
+ *		IMPGetIMEA(IMM32.@)
+ */
+BOOL WINAPI IMPGetIMEA(HWND hWnd, LPIMEPROA pImePro)
+{
+    FIXME("(%p, %p)\n", hWnd, pImePro);
+    return FALSE;
+}
+
+/***********************************************************************
+ *		IMPGetIMEW(IMM32.@)
+ */
+BOOL WINAPI IMPGetIMEW(HWND hWnd, LPIMEPROW pImePro)
+{
+    FIXME("(%p, %p)\n", hWnd, pImePro);
+    return FALSE;
+}
+
+/***********************************************************************
+ *		IMPQueryIMEA(IMM32.@)
+ */
+BOOL WINAPI IMPQueryIMEA(LPIMEPROA pImePro)
+{
+    FIXME("(%p)\n", pImePro);
+    return FALSE;
+}
+
+/***********************************************************************
+ *		IMPQueryIMEW(IMM32.@)
+ */
+BOOL WINAPI IMPQueryIMEW(LPIMEPROW pImePro)
+{
+    FIXME("(%p)\n", pImePro);
+    return FALSE;
+}
+
+/***********************************************************************
+ *		IMPSetIMEA(IMM32.@)
+ */
+BOOL WINAPI IMPSetIMEA(HWND hWnd, LPIMEPROA pImePro)
+{
+    FIXME("(%p, %p)\n", hWnd, pImePro);
+    return FALSE;
+}
+
+/***********************************************************************
+ *		IMPSetIMEW(IMM32.@)
+ */
+BOOL WINAPI IMPSetIMEW(HWND hWnd, LPIMEPROW pImePro)
+{
+    FIXME("(%p, %p)\n", hWnd, pImePro);
+    return FALSE;
+}
