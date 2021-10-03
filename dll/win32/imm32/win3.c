@@ -203,3 +203,21 @@ ImmNt3Trans(DWORD dwCount, LPTRANSMSG pEntries, HIMC hIMC, BOOL bAnsi, WORD wLan
 }
 
 #endif /* IMM_WIN3_SUPPORT */
+
+/***********************************************************************
+ *		ImmSendIMEMessageExA(IMM32.@)
+ */
+WORD WINAPI ImmSendIMEMessageExA(HWND hWnd, LPARAM lParam)
+{
+    FIXME("(%p, %p)\n", hWnd, lParam);
+    return 0;
+}
+
+/***********************************************************************
+ *		ImmSendIMEMessageExW(IMM32.@)
+ */
+WORD WINAPI ImmSendIMEMessageExW(HWND hWnd, LPARAM lParam)
+{
+    FIXME("(%p, %p)\n", hWnd, lParam);
+    return 0;
+}

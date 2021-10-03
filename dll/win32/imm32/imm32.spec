@@ -89,8 +89,8 @@
 @ stdcall ImmReleaseContext(ptr ptr)
 @ stdcall ImmRequestMessageA(ptr long long)
 @ stdcall ImmRequestMessageW(ptr long long)
-@ stdcall -stub ImmSendIMEMessageExA(ptr long)
-@ stdcall -stub ImmSendIMEMessageExW(ptr long)
+@ stdcall ImmSendIMEMessageExA(ptr ptr)
+@ stdcall ImmSendIMEMessageExW(ptr ptr)
 @ stub ImmSendMessageToActiveDefImeWndW
 @ stdcall ImmSetActiveContext(ptr ptr long)
 @ stdcall ImmSetActiveContextConsoleIME(ptr long)
