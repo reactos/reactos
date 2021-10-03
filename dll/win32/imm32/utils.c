@@ -351,3 +351,57 @@ DWORD WINAPI ImmGetIMCLockCount(HIMC hIMC)
     ImmUnlockClientImc(pClientImc);
     return ret;
 }
+
+/***********************************************************************
+ *		ImmIMPGetIMEA(IMM32.@)
+ */
+BOOL WINAPI ImmIMPGetIMEA(HWND hWnd, LPIMEPROA pImePro)
+{
+    FIXME("(%p, %p)\n", hWnd, pImePro);
+    return FALSE;
+}
+
+/***********************************************************************
+ *		ImmIMPGetIMEW(IMM32.@)
+ */
+BOOL WINAPI ImmIMPGetIMEW(HWND hWnd, LPIMEPROW pImePro)
+{
+    FIXME("(%p, %p)\n", hWnd, pImePro);
+    return FALSE;
+}
+
+/***********************************************************************
+ *		ImmIMPQueryIMEA(IMM32.@)
+ */
+BOOL WINAPI ImmIMPQueryIMEA(LPIMEPROA pImePro)
+{
+    FIXME("(%p)\n", pImePro);
+    return FALSE;
+}
+
+/***********************************************************************
+ *		ImmIMPQueryIMEW(IMM32.@)
+ */
+BOOL WINAPI ImmIMPQueryIMEW(LPIMEPROW pImePro)
+{
+    FIXME("(%p)\n", pImePro);
+    return FALSE;
+}
+
+/***********************************************************************
+ *		ImmIMPSetIMEA(IMM32.@)
+ */
+BOOL WINAPI ImmIMPSetIMEA(HWND hWnd, LPIMEPROA pImePro)
+{
+    FIXME("(%p, %p)\n", hWnd, pImePro);
+    return FALSE;
+}
+
+/***********************************************************************
+ *		ImmIMPSetIMEW(IMM32.@)
+ */
+BOOL WINAPI ImmIMPSetIMEW(HWND hWnd, LPIMEPROW pImePro)
+{
+    FIXME("(%p, %p)\n", hWnd, pImePro);
+    return FALSE;
+}
