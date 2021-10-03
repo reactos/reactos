@@ -398,6 +398,8 @@ BOOL CAppRichEdit::ShowInstalledAppInfo(CInstalledApplicationInfo *Info)
     SetText(Info->szDisplayName, CFE_BOLD);
     InsertText(L"\n", 0);
 
+    Info->EnsureDetailsLoaded();
+
     InsertTextWithString(IDS_INFO_VERSION, CFE_BOLD, Info->szDisplayVersion, 0);
     InsertTextWithString(IDS_INFO_PUBLISHER, CFE_BOLD, Info->szPublisher, 0);
     InsertTextWithString(IDS_INFO_REGOWNER, CFE_BOLD, Info->szRegOwner, 0);

@@ -191,7 +191,6 @@ public:
     HWND Create(HWND hwndParent);
 
     BOOL ShowAvailableAppInfo(CAvailableApplicationInfo *Info);
-
     BOOL ShowInstalledAppInfo(CInstalledApplicationInfo *Info);
 
     VOID SetWelcomeText();

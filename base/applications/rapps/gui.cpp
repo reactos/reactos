@@ -567,7 +567,7 @@ VOID CMainWindow::OnCommand(WPARAM wParam, LPARAM lParam)
                     CAvailableApplicationInfo *FocusedApps = (CAvailableApplicationInfo *)m_ApplicationView->GetFocusedItemData();
                     if (FocusedApps)
                     {
-                        if (DownloadApplication(FocusedApps, FALSE))
+                        if (DownloadApplication(FocusedApps))
                         {
                             UpdateApplicationsList(-1);
                         }
@@ -782,7 +782,7 @@ BOOL CMainWindow::InstallApplication(CAvailableApplicationInfo *Info)
 {
     if (Info)
     {
-        if (DownloadApplication(Info, FALSE))
+        if (DownloadApplication(Info))
         {
             UpdateApplicationsList(-1);
             return TRUE;
