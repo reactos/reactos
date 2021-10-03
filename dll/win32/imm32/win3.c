@@ -1,7 +1,7 @@
 /*
  * PROJECT:     ReactOS IMM32
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
- * PURPOSE:     Implementing IMM32 NT3 compatibility
+ * PURPOSE:     Implementing IMM32 Win3 3.x compatibility
  * COPYRIGHT:   Copyright 2020-2021 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
@@ -9,7 +9,7 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(imm);
 
-#ifdef IMM_NT3_SUPPORT /* 3.x support */
+#ifdef IMM_WIN3_SUPPORT /* 3.x support */
 
 DWORD APIENTRY
 ImmNt3JTransCompA(LPINPUTCONTEXTDX pIC, LPCOMPOSITIONSTRING pCS,
@@ -202,57 +202,57 @@ ImmNt3Trans(DWORD dwCount, LPTRANSMSG pEntries, HIMC hIMC, BOOL bAnsi, WORD wLan
     return ret;
 }
 
-#endif /* IMM_NT3_SUPPORT */
+#endif /* IMM_WIN3_SUPPORT */
 
 /***********************************************************************
- *		IMPGetIMEA(IMM32.@)
+ *		ImmIMPGetIMEA(IMM32.@)
  */
-BOOL WINAPI IMPGetIMEA(HWND hWnd, LPIMEPROA pImePro)
+BOOL WINAPI ImmIMPGetIMEA(HWND hWnd, LPIMEPROA pImePro)
 {
     FIXME("(%p, %p)\n", hWnd, pImePro);
     return FALSE;
 }
 
 /***********************************************************************
- *		IMPGetIMEW(IMM32.@)
+ *		ImmIMPGetIMEW(IMM32.@)
  */
-BOOL WINAPI IMPGetIMEW(HWND hWnd, LPIMEPROW pImePro)
+BOOL WINAPI ImmIMPGetIMEW(HWND hWnd, LPIMEPROW pImePro)
 {
     FIXME("(%p, %p)\n", hWnd, pImePro);
     return FALSE;
 }
 
 /***********************************************************************
- *		IMPQueryIMEA(IMM32.@)
+ *		ImmIMPQueryIMEA(IMM32.@)
  */
-BOOL WINAPI IMPQueryIMEA(LPIMEPROA pImePro)
+BOOL WINAPI ImmIMPQueryIMEA(LPIMEPROA pImePro)
 {
     FIXME("(%p)\n", pImePro);
     return FALSE;
 }
 
 /***********************************************************************
- *		IMPQueryIMEW(IMM32.@)
+ *		ImmIMPQueryIMEW(IMM32.@)
  */
-BOOL WINAPI IMPQueryIMEW(LPIMEPROW pImePro)
+BOOL WINAPI ImmIMPQueryIMEW(LPIMEPROW pImePro)
 {
     FIXME("(%p)\n", pImePro);
     return FALSE;
 }
 
 /***********************************************************************
- *		IMPSetIMEA(IMM32.@)
+ *		ImmIMPSetIMEA(IMM32.@)
  */
-BOOL WINAPI IMPSetIMEA(HWND hWnd, LPIMEPROA pImePro)
+BOOL WINAPI ImmIMPSetIMEA(HWND hWnd, LPIMEPROA pImePro)
 {
     FIXME("(%p, %p)\n", hWnd, pImePro);
     return FALSE;
 }
 
 /***********************************************************************
- *		IMPSetIMEW(IMM32.@)
+ *		ImmIMPSetIMEW(IMM32.@)
  */
-BOOL WINAPI IMPSetIMEW(HWND hWnd, LPIMEPROW pImePro)
+BOOL WINAPI ImmIMPSetIMEW(HWND hWnd, LPIMEPROW pImePro)
 {
     FIXME("(%p, %p)\n", hWnd, pImePro);
     return FALSE;
