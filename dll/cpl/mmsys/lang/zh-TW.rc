@@ -89,7 +89,7 @@ BEGIN
     COMBOBOX IDC_DEVICE_VOICE_REC_LIST, 50, 128, 180, 46, CBS_DROPDOWNLIST | WS_TABSTOP
     PUSHBUTTON "音量(&O)...", IDC_VOLUME5_BTN, 85, 145, 70, 15
     PUSHBUTTON "進階(&C)...", IDC_ADV5_BTN, 160, 145, 70, 15
-    PUSHBUTTON "測試硬體...(&T)", IDC_TEST_HARDWARE, 160, 175, 70, 15, WS_GROUP | WS_TABSTOP
+    PUSHBUTTON "測試硬體(&T)...", IDC_TEST_HARDWARE, 160, 175, 70, 15, WS_GROUP | WS_TABSTOP
 END
 
 IDD_HARDWARE DIALOGEX 0, 0, 246, 228
@@ -228,7 +228,7 @@ BEGIN
     GROUPBOX "ReactOS 音訊", 10259, 7, 5, 213, 192
     ICON 4394, 10257, 25, 25, 20, 20
     LTEXT "ReactOS 音訊服務已經啟用。您必須重新啟動 ReactOS，新的設定才會生效。請確定在重新啟動之前已經儲存工作並關閉所有程式。", 10261, 60, 25, 150, 50
-    LTEXT "按 [確定] 重新啟動 ReactOS", 10262, 60, 75, 150, 20
+    LTEXT "按［確定］重新啟動 ReactOS", 10262, 60, 75, 150, 20
     LTEXT "如果取消，則需要在稍後重新啟動 ReactOS 使新的設定生效。", 10263, 60, 100, 150, 40
 END
 
@@ -238,7 +238,7 @@ BEGIN
     IDS_CPLDESCRIPTION "更改電腦的聲音方案，或配置揚聲器和錄音裝置的設定"
     IDS_NO_SOUND "(無)"
     IDS_NO_DEVICES "沒有裝置"
-    IDS_SPEAKER_VOLUME "Speaker Volume"
+    IDS_SPEAKER_VOLUME "揚聲器音量"
     IDS_SPEAKER_LEFT "&Left:"
     IDS_SPEAKER_RIGHT "&Right:"
     IDS_SPEAKER_CENTER "&Center:"

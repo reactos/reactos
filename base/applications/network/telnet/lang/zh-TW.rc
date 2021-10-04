@@ -6,7 +6,7 @@ STRINGTABLE
 BEGIN
     MSG_COPYRIGHT "Telnet Win32 v2.1b2, Copyright (C) 2000 Paul Brannan <pbranna@clemson.edu>\nand the team.  This program comes with ABSOLUTELY NO WARRANTY; for details\nread LICENSE.TXT.  "
     MSG_COPYRIGHT_1 "This is free software, and you are welcome to redistribute\nit under certain conditions.\n\n"
-    MSG_USAGE "用法: TELNET [params][host [port]]\n\n  params\n    -d:FILENAME.EXT  转储所有傳入的數據到 FILENAME.EXT。\n  host              要連線的遠端主機的主機名或者 IP 地址。\n"
+    MSG_USAGE "用法: TELNET [params][host [port]]\n\n  params\n    -d:FILENAME.EXT  傾印所有傳入的數據到 FILENAME.EXT。\n  host              要連線的遠端主機的主機名或者 IP 地址。\n"
     MSG_USAGE_1 "  port              要開啟的服務通訊埠 (telnet 的預設通訊埠是 23).\n\n"
     MSG_HELP "命令可以被簡寫。  命令有:\n\ncl[ose]         關閉目前連線\nop[en]          連線到一個網站\nq[uit]          退出 telnet\n"
     MSG_HELP_1 "ke[ys]          修改或顯示按鍵映射 (寫入一些鍵來查看選項)\nse[t]           顯示或修改配置選項\nz               暫停\n? h[elp]        列印說明資訊\n"

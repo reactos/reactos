@@ -28,7 +28,7 @@ CAPTION "新增遊戲控制器"
 FONT 9, "新細明體"
 BEGIN
     ICON IDI_CPLSYSTEM, -1, 8, 7, 20, 20
-    LTEXT "請在下面列表中選擇遊戲控制器並按 [確定]。如果您的遊戲控制器不在列表中，請按 [自訂]。", -1, 35, 7, 210, 33
+    LTEXT "請在下面列表中選擇遊戲控制器並按［確定］。如果您的遊戲控制器不在列表中，請按［自訂］。", -1, 35, 7, 210, 33
     LTEXT "遊戲控制器(&G):", -1, 8, 45, 126, 8
     LISTBOX IDC_GAME_CONTROLLERS_LIST, 7, 55, 251, 57, LBS_STANDARD | LBS_NOINTEGRALHEIGHT | LBS_WANTKEYBOARDINPUT | WS_HSCROLL | WS_TABSTOP
     AUTOCHECKBOX "啟用方向舵和腳踏板(&E)", IDC_ENABLE_RUDDERS_CHECKBOX, 7, 114, 100, 10, WS_GROUP

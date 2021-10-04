@@ -15,13 +15,11 @@
  * You should have received a copy of the GNU General Public License along
  * with this program; if not, write to the Free Software Foundation, Inc.,
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
- */
-
+ */ 
 /* Traditional Chinese translation by:
  * Henry Tang Ih 2016 (henrytang2@hotmail.com)
  * Luo Yufan 2018 (njlyf2011@hotmail.com)
- * Chan Chilung 2020 - 2021 (eason066@gmail.com)
- */
+ * Chan Chilung 2020 - 2021 (eason066@gmail.com) */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
 
@@ -32,7 +30,7 @@ FONT 9, "新細明體"
 BEGIN
     LTEXT "歡迎使用 ReactOS 安裝程式。", IDC_WELCOMETITLE, 115, 8, 195, 24
     LTEXT "安裝程式將在電腦上安裝 ReactOS 作業系統。\n它需要收集有關您和您的電腦的資訊以正確安裝 ReactOS。", IDC_STATIC, 115, 40, 195, 100
-    LTEXT "按 [下一步] 繼續安裝程式。", IDC_STATIC, 115, 169, 195, 17
+    LTEXT "按［下一步］繼續安裝程式。", IDC_STATIC, 115, 169, 195, 17
 END
 
 IDD_ACKPAGE DIALOGEX 0, 0, 317, 145
@@ -44,7 +42,7 @@ BEGIN
     LISTBOX IDC_PROJECTS, 15, 30, 286, 75, LBS_NOSEL | LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | WS_VSCROLL
     LTEXT "ReactOS 基於 GPL 許可證發佈，因此如果您需要二次開發或重新發表 ReactOS 的部分或全部，您必須遵循 GPL 許可。", IDC_STATIC, 15, 110, 227, 19
     PUSHBUTTON "檢視 GPL(&V)...", IDC_VIEWGPL, 251, 110, 50, 19
-    LTEXT "按 [下一步] 繼續安裝程式。", IDC_STATIC, 15, 136, 195, 17
+    LTEXT "按［下一步］繼續安裝程式。", IDC_STATIC, 15, 136, 195, 17
 END
 
 IDD_PRODUCT DIALOGEX 0, 0, 317, 143
@@ -100,11 +98,11 @@ BEGIN
     ICON IDI_ICON4, IDC_STATIC, 21, 7, 20, 20
     LTEXT "系統區域設定應符合您要使用的應用程式的語言。使用者區域設定可控制數字，貨幣和日期的顯示方式。", IDC_STATIC, 53, 7, 253, 20
     LTEXT "", IDC_LOCALETEXT, 53, 29, 250, 16
-    LTEXT "若要變更系統和使用者的地區設定, 請按 [自訂]。", IDC_STATIC, 53, 60, 196, 8
+    LTEXT "若要變更系統和使用者的地區設定, 請按［自訂］。", IDC_STATIC, 53, 60, 196, 8
     PUSHBUTTON "自訂(&C)...", IDC_CUSTOMLOCALE, 250, 57, 50, 14
     LTEXT "鍵盤配置控制鍵入時出現的字元。", IDC_STATIC, 53, 86, 253, 8
     LTEXT "", IDC_LAYOUTTEXT, 53, 100, 250, 16
-    LTEXT "要查看或變更目前設定，請按 [自訂]。", IDC_STATIC, 53, 126, 184, 8
+    LTEXT "要查看或變更目前設定，請按［自訂］。", IDC_STATIC, 53, 126, 184, 8
     PUSHBUTTON "自訂(&U)...", IDC_CUSTOMLAYOUT, 250, 122, 50, 14
 END
 
@@ -146,9 +144,9 @@ CAPTION "正在完成 ReactOS 安裝程式"
 FONT 9, "新細明體"
 BEGIN
     LTEXT "正在完成 ReactOS 安裝程式。", IDC_FINISHTITLE, 115, 8, 195, 24
-    LTEXT "ReactOS 安裝程式已順利完成。\n\n按下 [完成] 後，您的電腦將會重新啟動。", IDC_STATIC, 115, 40, 195, 100
+    LTEXT "ReactOS 安裝程式已順利完成。\n\n按下［完成］後，您的電腦將會重新啟動。", IDC_STATIC, 115, 40, 195, 100
     CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 115, 138, 188, 12
-    LTEXT "如果光碟機裡還有光碟，請將其取出。然後按 [完成]，重新啟動您的電腦。", IDC_STATIC, 115, 169, 195, 17
+    LTEXT "如果光碟機裡還有光碟，請將其取出。然後按［完成］，重新啟動您的電腦。", IDC_STATIC, 115, 169, 195, 17
 END
 
 IDD_GPL DIALOGEX 0, 0, 333, 230
@@ -278,6 +276,6 @@ BEGIN
     IDS_PRODUCTSERVERNAME "ReactOS Server"
     IDS_PRODUCTWORKSTATIONNAME "ReactOS Workstation"
     IDS_PRODUCTSERVERINFO "系統將識別為一個伺服器。私人資料夾「我的圖片」、「我的影片」和「我的音樂」會獨立於「我的文件」。"
-    IDS_PRODUCTWORKSTATIONINFO "系統將識別為一個工作站。私人資料夾「我的圖片」、「我的影片」和「我的音樂」會在 ""我的文件」資料夾內。"
-    IDS_DEFAULT "(預設)"
+    IDS_PRODUCTWORKSTATIONINFO "系統將識別為一個工作站。私人資料夾「我的圖片」、「我的影片」和「我的音樂」會在「我的文件」資料夾內。"
+    IDS_DEFAULT "（預設）"
 END

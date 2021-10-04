@@ -23,22 +23,22 @@ BEGIN
     IDS_PWR_METER             "開啟電源表(&O)"
     IDS_PWR_RUN               "shell32.dll,Control_RunDLL PowerCfg.cpl"
     IDS_PWR_PERCENT_REMAINING "剩餘 %u%%"
-    IDS_PWR_CHARGING          "%u%% and charging"
+    IDS_PWR_CHARGING          "%u%%，充電中"
     IDS_PWR_UNKNOWN_REMAINING "未知電量"
     IDS_PWR_AC "交流電源"
-    IDS_PWR_HOURS_REMAINING "%1!u!:%2!02u! 小時 剩餘 (%3!u!%%) "
-    IDS_PWR_MINUTES_REMAINING "%1!u! 分鐘 剩餘 (%2!u!%%) "
+    IDS_PWR_HOURS_REMAINING "剩餘 %1!u!:%2!02u! 小時（%3!u!%%）"
+    IDS_PWR_MINUTES_REMAINING "剩餘 %1!u! 分鐘（%2!u!%%）"
 
     //Hotplug related strings
     IDS_HOTPLUG_REMOVE_1 "安全地移除硬體"
     IDS_HOTPLUG_REMOVE_2 "安全地移除硬體(&S)"
-    IDS_HOTPLUG_REMOVE_3 "安全地移除 %s"
+    IDS_HOTPLUG_REMOVE_3 "安全地移除「%s」"
     IDS_HOTPLUG_RUN "shell32.dll,Control_RunDLL hotplug.dll"
     IDS_HOTPLUG_COMMA ", "
-    IDS_HOTPLUG_DRIVE " - 磁碟(%s)"
-    IDS_HOTPLUG_DRIVES " - 磁碟(%s)"
+    IDS_HOTPLUG_DRIVE " - 磁碟（%s）"
+    IDS_HOTPLUG_DRIVES " - 磁碟（%s）"
     IDS_HOTPLUG_A "A:"
-    IDS_HOTPLUG_REQUIRES "這個硬體需要 ""安全移除"""
+    IDS_HOTPLUG_REQUIRES "這個硬體需要「安全移除」"
     IDS_HOTPLUG_CLICK "在移除這個硬體前，點擊此圖示並選擇您要移除的硬體。"
 
     //Volume related strings
@@ -53,4 +53,3 @@ BEGIN
     IDS_KEYS_MOUSE "滑鼠鍵"
     IDS_KEYS_FILTER "篩選鍵"
 END
-

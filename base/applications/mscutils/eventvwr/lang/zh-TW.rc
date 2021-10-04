@@ -1,5 +1,6 @@
-/* Traditional Chinese translation by Henry Tang Ih 2016 (henrytang2@hotmail.com)
- * Translation improved by Chan Chilung 2021 (eason066@gmail.com) */
+/* Traditional Chinese translation by:
+ * Henry Tang Ih 2016 (henrytang2@hotmail.com)
+ * Chan Chilung 2021 (eason066@gmail.com) */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
 
@@ -158,8 +159,8 @@ BEGIN
     IDS_EVENTLOG_USER "使用者記錄"
     IDS_SAVE_FILTER "事件記錄 (*.evt)\0*.evt\0"
     IDS_CLEAREVENTS_MSG "你想要在清除之前保存此事件記錄嗎？"
-    IDS_RESTOREDEFAULTS "您要這個記錄的所有設定還原至預設值嗎?"
-    IDS_EVENTSTRINGIDNOTFOUND "找不到來源 ( %s ) 中的事件 ID ( %lu ) 的描述。 本地電腦可能沒有顯示來自遠端電腦消息所必需的註冊表資訊或消息 DLL 檔。\n\n下列資訊是部分事件:\n\n"
+    IDS_RESTOREDEFAULTS "您要這個記錄的所有設定還原至預設值嗎？"
+    IDS_EVENTSTRINGIDNOTFOUND "找不到來源（%s）中的事件 ID（%lu）的描述。本地電腦可能沒有顯示來自遠端電腦消息所必需的註冊表資訊或消息 DLL 檔。\n\n下列資訊是部分事件︰\n\n"
 END
 
 STRINGTABLE

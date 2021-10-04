@@ -55,7 +55,7 @@ BEGIN
     AUTOCHECKBOX "使用高對比度(&U)", IDC_CONTRAST_BOX, 12, 49, 126, 14
     PUSHBUTTON "設定(&S)", IDC_CONTRAST_BUTTON, 144, 49, 90, 14
     GROUPBOX "游標選項", -1, 6, 79, 234, 115
-    LTEXT "移動滑桿來改變游標閃爍的速度(游標閃爍速度)和游標的寬度。",
+    LTEXT "移動滑桿來改變游標閃爍的速度（游標閃爍速度）和游標的寬度。",
           -1, 12, 88, 222, 20
     CTEXT "閃爍速度(&R):", -1, 12, 115, 222, 11
     LTEXT "無", -1, 18, 130, 36, 11
@@ -115,7 +115,7 @@ CAPTION "相黏鍵設定"
 FONT 9, "新細明體"
 BEGIN
     GROUPBOX "鍵盤快捷鍵", -1, 6, 11, 234, 62
-    LTEXT "相黏鍵的快捷鍵是:\n將 SHIFT 鍵連續按五次後啟用。",
+    LTEXT "相黏鍵的快捷鍵是：\n連續按 SHIFT 鍵五次。",
           -1, 12, 20, 222, 29
     AUTOCHECKBOX "使用快捷鍵(&C)", IDC_STICKY_ACTIVATE_CHECK, 12, 49, 222, 14
     GROUPBOX "選項", -1, 6, 83, 234, 44
@@ -138,7 +138,7 @@ CAPTION "篩選鍵設定"
 FONT 9, "新細明體"
 BEGIN
     GROUPBOX "鍵盤快捷鍵", -1, 6, 11, 234, 62
-    LTEXT "篩選鍵的快捷鍵是:\n將 右 SHIFT 鍵按住八秒鐘。",
+    LTEXT "篩選鍵的快捷鍵是：\n按住右 SHIFT 鍵八秒鐘。",
           -1, 12, 20, 222, 29
     AUTOCHECKBOX "使用快捷鍵(&U)", IDC_FILTER_ACTIVATE_CHECK, 12, 49, 126, 14
     GROUPBOX "篩選器選項", -1, 6, 79, 234, 79
@@ -165,7 +165,7 @@ CAPTION "切換鍵設定"
 FONT 9, "新細明體"
 BEGIN
     GROUPBOX "鍵盤快捷鍵", -1, 6, 11, 234, 62
-    LTEXT "切換鍵的快捷鍵是:\n將 NUM LOCK 鍵按住五秒鐘。",
+    LTEXT "切換鍵的快捷鍵是：\n按住 NUM LOCK 鍵五秒鐘。",
           -1, 12, 20, 222, 29
     AUTOCHECKBOX "使用快捷鍵(&S)", IDC_TOGGLE_ACTIVATE_CHECK, 12, 49, 222, 14
     DEFPUSHBUTTON "確定", IDOK, 135, 207, 50, 14
@@ -178,7 +178,7 @@ CAPTION "高對比度設定"
 FONT 9, "新細明體"
 BEGIN
     GROUPBOX "鍵盤快捷鍵", -1, 6, 11, 234, 62
-    LTEXT "高對比度的快捷鍵是:\n同時按住左 ALT 鍵、左 SHIFT 鍵和 PRINT SCREEN 鍵。",
+    LTEXT "高對比度的快捷鍵是：\n同時按住左 ALT 鍵、左 SHIFT 鍵和 PRINT SCREEN 鍵。",
           -1, 12, 20, 222, 29
     AUTOCHECKBOX "使用快捷鍵(&U)", IDC_CONTRAST_ACTIVATE_CHECK, 12, 49, 222, 14
     GROUPBOX "高對比度外觀方案", -1, 6, 83, 234, 44
@@ -227,10 +227,10 @@ CAPTION "篩選鍵進階設定"
 FONT 9, "新細明體"
 BEGIN
     GROUPBOX "反彈鍵", -1, 6, 11, 234, 47
-    LTEXT "當快於以下時間時忽略重複的按鍵：(&I)", -1, 12, 21, 222, 20
+    LTEXT "當快於以下時間時忽略重複的按鍵(&I)：", -1, 12, 21, 222, 20
     COMBOBOX IDC_BOUNCE_TIME_COMBO, 12, 34, 222, 56,
              CBS_DROPDOWNLIST | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
-    LTEXT "試驗區:(&T)", -1, 6, 68, 48, 11
+    LTEXT "試驗區(&T)：", -1, 6, 68, 48, 11
     EDITTEXT IDC_BOUNCE_TEST_EDIT, 60, 65, 180, 14, ES_AUTOHSCROLL
     DEFPUSHBUTTON "確定", IDOK, 135, 207, 50, 14
     PUSHBUTTON "取消", IDCANCEL, 189, 207, 50, 14
@@ -270,10 +270,10 @@ BEGIN
     GROUPBOX "序列鍵", -1, 6, 11, 234, 92
     LTEXT "選擇用於連線其他輸入裝置的埠。",
           -1, 12, 20, 222, 20
-    LTEXT "序列口(&S):", -1, 12, 34, 222, 20
+    LTEXT "序列埠(&S)：", -1, 12, 34, 222, 20
     COMBOBOX IDC_SERIAL_PORT_COMBO, 12, 45, 222, 56,
              CBS_DROPDOWNLIST | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
-    LTEXT "波特率(&B):", -1, 12, 65, 222, 20
+    LTEXT "調變速率(&B)：", -1, 12, 65, 222, 20
     COMBOBOX IDC_SERIAL_BAUD_COMBO, 12, 76, 222, 74,
              CBS_DROPDOWNLIST | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
     DEFPUSHBUTTON "確定", IDOK, 135, 207, 50, 14

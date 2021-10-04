@@ -85,10 +85,10 @@ END
 STRINGTABLE
 BEGIN
     IDS_UDP_IP4_HEADER    "\nIPv4 的 UDP 統計資料\n\n"
-    IDS_UDP_DATAG_RECEIVE "  收到的資料包    = %lu\n"
-    IDS_UDP_NO_PORT       "  無連接埠              = %lu\n"
-    IDS_UDP_RECEIVE_ERROR "  接收錯誤        = %lu\n"
-    IDS_UDP_DATAG_SEND    "  傳送的資料包        = %lu\n"
+    IDS_UDP_DATAG_RECEIVE "  收到的資料包     = %lu\n"
+    IDS_UDP_NO_PORT       "  無連接埠         = %lu\n"
+    IDS_UDP_RECEIVE_ERROR "  接收錯誤         = %lu\n"
+    IDS_UDP_DATAG_SEND    "  傳送的資料包     = %lu\n"
 END
 
 STRINGTABLE

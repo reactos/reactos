@@ -21,7 +21,7 @@
   <TOOL _locID="Command Prompt" NAME="命令提示字符" PATH="%windir%\System32\cmd.exe" DEFAULT_OPT="" ADV_OPT="" HELP="開啟一個命令提示字符視窗。"/>
   <TOOL _locID="Registry Editor" NAME="註冊表編輯器" PATH="%windir%\System32\regedt32.exe" DEFAULT_OPT="" ADV_OPT="" HELP="修改 ReactOS 的註冊表。"/>
   <TOOL _locID="Remote Assistance" NAME="遠端協助" PATH="%windir%\System32\msra.exe" DEFAULT_OPT="" ADV_OPT="" HELP="通過互聯網從（向）您的朋友取得（提供）幫助。"/>
-  <TOOL _locID="System Restore" NAME="系統還原" PATH="%windir%\System32\rstrui.exe" DEFAULT_OPT="" ADV_OPT="" HELP="將您的電腦系统恢復到上一個狀態。"/>
+  <TOOL _locID="System Restore" NAME="系統還原" PATH="%windir%\System32\rstrui.exe" DEFAULT_OPT="" ADV_OPT="" HELP="將您的電腦系統恢復到上一個狀態。"/>
 </MSCONFIGTOOLS>
 
 </MSCONFIGTOOLFILE>

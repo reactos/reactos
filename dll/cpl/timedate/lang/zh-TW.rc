@@ -51,11 +51,11 @@ STRINGTABLE
 BEGIN
     IDS_CPLNAME "日期和時間"
     IDS_CPLDESCRIPTION "請為您的電腦設定日期、時間和時區資訊"
-    IDS_TIMEZONETEXT "目前時區: %s"
+    IDS_TIMEZONETEXT "目前時區：%s"
     IDS_TIMEZONEINVALID "無效"
     IDS_TIMEZONEUNKNOWN "未知"
     IDS_INETTIMESUCSYNC "已經與 %s 在 %s %s 成功同步時間。"
-    IDS_INETTIMENEXTSYNC "下次同步:%s 在 %s"
+    IDS_INETTIMENEXTSYNC "下次同步：%s 在 %s"
     IDS_INETTIMESYNCING "請稍後，ReactOS 正在同步 %s"
     IDS_INETTIMEERROR "在 ReactOS 同步時發生錯誤。%s"
     IDS_INETTIMESUCFILL "請輸入 NTP 伺服器名稱以便同步時間"

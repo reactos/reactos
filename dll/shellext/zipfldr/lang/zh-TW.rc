@@ -18,7 +18,7 @@ BEGIN
     EDITTEXT        IDC_DIRECTORY,86,24,157,12,ES_AUTOHSCROLL
     PUSHBUTTON      "瀏覽...",IDC_BROWSE,189,42,54,14
     PUSHBUTTON      "密碼",IDC_PASSWORD,189,66,54,14
-    LTEXT           "點擊 [下一步] 來解壓縮",IDC_STATUSTEXT,86,114,80,8
+    LTEXT           "點擊［下一步］來解壓縮",IDC_STATUSTEXT,86,114,80,8
     CONTROL         "",IDC_PROGRESS,"msctls_progress32",WS_BORDER,86,126,157,6
     CONTROL         IDB_ZIPFLDR,-1,"STATIC",SS_BITMAP | WS_CHILD | WS_VISIBLE,0,0,78,138
 END
@@ -72,11 +72,11 @@ BEGIN
     IDS_COL_DATE_MOD "修改日期"
     IDS_YES "是"
     IDS_NO "否"
-    IDS_ERRORTITLE "壓縮的 (zipped) 資料夾發生錯誤"
+    IDS_ERRORTITLE "壓縮的（zipped）資料夾發生錯誤"
     IDS_CANTSTARTTHREAD "無法開始壓縮檔案的執行緒。"
-    IDS_NOFILES "指定的目錄 '%s' 是空的，所以壓縮的 (zipped) 資料夾無法將它新增到保存檔中。"
-    IDS_CANTCREATEZIP "無法建立壓縮的資料夾「%s」(錯誤碼: %d)."
-    IDS_CANTREADFILE "無法讀取檔案「%s」."
+    IDS_NOFILES "指定的目錄 '%s' 是空的，所以壓縮的（zipped）資料夾無法將它新增到保存檔中。"
+    IDS_CANTCREATEZIP "無法建立壓縮的資料夾「%s」。（錯誤碼: %d）"
+    IDS_CANTREADFILE "無法讀取檔案「%s」。"
     IDS_EXTRACTING "正在解壓縮..."
 
     IDS_WIZ_TITLE "解壓縮精靈"
@@ -86,7 +86,7 @@ BEGIN
     IDS_WIZ_COMPL_SUBTITLE "ZIP 檔中的檔案已被解壓縮。"
     IDS_WIZ_BROWSE_TITLE "選擇檔案解壓縮路徑。"
 
-    IDS_OVERWRITEFILE_TEXT "這個資料夾中已包含一個名為 %1 的檔案。\n您想要取代它嗎？"
+    IDS_OVERWRITEFILE_TEXT "這個資料夾中已包含一個名為「%1」的檔案。\n您想要取代它嗎？"
     IDS_PASSWORD_FILE_TEXT "檔案「%1」正被密碼保護。請輸入密碼。"
     IDS_PASSWORD_ZIP_TEXT "請指定解壓縮該壓縮檔時使用的密碼。"
 

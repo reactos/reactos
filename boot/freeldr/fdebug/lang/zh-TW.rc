@@ -81,5 +81,5 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_LICENSE "本程式為自由軟體; 您可以根據自由軟體基金會發佈的 GNU 通用公共授權條款的第 2 版，或 (根據您的選擇) 任何更高版本的條款進行重新分發和修改它。\r\n\r\n本程式的發佈是希望它有用，但沒有任何擔保; 甚至沒有適銷性或特定用途適用性的暗示保證。 有關詳細信息，請參閱 GNU 通用公共許可證。\r\n\r\n您應該已收到GNU通用公共授權條款的副本以及本程式; 如果沒有，請寫信給 the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA。"
+    IDS_LICENSE "本程式為自由軟體；您可以根據自由軟體基金會發佈的 GNU 通用公共授權條款的第 2 版，或（根據您的選擇）任何更高版本的條款進行重新分發和修改它。\r\n\r\n本程式的發佈是希望它有用，但沒有任何擔保；甚至沒有適銷性或特定用途適用性的暗示保證。有關詳細信息，請參閱 GNU 通用公共許可證。\r\n\r\n您應該已收到 GNU 通用公共授權條款的副本以及本程式；如果沒有，請寫信給 the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA。"
 END

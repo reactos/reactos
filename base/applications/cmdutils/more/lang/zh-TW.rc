@@ -34,7 +34,7 @@ MORE [/E] [選項] [檔案]\n\
     +n       在第 n 行開始顯示第一個檔案。\n\
     files    要顯示的檔案清單。以空格分開在清單中的檔案。\n\
 \n\
-當擴充功能啟用時，可以在 ""-- Continue --""\n\
+當擴充功能啟用時，可以在 ""-- 繼續 --""\n\
 提示出現時使用以下命令:\n\
 \n\
     P n      顯示下面 n 行。\n\
@@ -47,10 +47,10 @@ MORE [/E] [選項] [檔案]\n\
     <Enter>  顯示下一行。\n"
 
     IDS_BAD_FLAG "無效的參數 - '%ls'\n"
-	IDS_FILE_ACCESS "無法存取檔案 %s。\n"
-	IDS_CONTINUE_PROMPT  "-- 繼續%1%2%3 --%4"
-	IDS_CONTINUE_PERCENT " (%d%%)"
-	IDS_CONTINUE_LINE_AT " [行:%d]"
-    IDS_CONTINUE_OPTIONS " [選項: psfq=<Space><Enter>] --"
+    IDS_FILE_ACCESS "無法存取檔案 %s。\n"
+    IDS_CONTINUE_PROMPT  "-- 繼續%1%2%3 --%4"
+    IDS_CONTINUE_PERCENT " (%d%%)"
+    IDS_CONTINUE_LINE_AT " [行:%d]"
+    IDS_CONTINUE_OPTIONS " [選項: psfq=<Space><Enter>]"
     IDS_CONTINUE_LINES   " 行: "
 END

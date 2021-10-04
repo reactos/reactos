@@ -9,7 +9,7 @@ FONT 9, "新細明體"
 BEGIN
     LTEXT "正在結束程式... 請稍候", IDC_STATIC, 7, 7, 186, 11
     CONTROL "Progress", IDC_PROGRESS, "msctls_progress32", WS_BORDER, 7, 20, 186, 13
-    LTEXT "如果您選擇立即結束程式，您將失去所有未儲存的資料。若要立即結束程式，請按 [立即結束]。", IDC_STATIC, 7, 40, 186, 26
+    LTEXT "如果您選擇立即結束程式，您將失去所有未儲存的資料。若要立即結束程式，請按［立即結束］。", IDC_STATIC, 7, 40, 186, 26
     DEFPUSHBUTTON "立即結束(&E)", IDC_END_NOW, 150, 71, 43, 17
 END
 
@@ -21,8 +21,8 @@ BEGIN
     DEFPUSHBUTTON "取消", IDCANCEL, 142, 98, 43, 17
     PUSHBUTTON "立即結束(&E) ", IDC_END_NOW, 78, 98, 43, 17
     LTEXT "這個程式沒有回應", IDC_STATIC, 7, 7, 178, 8
-    LTEXT "若要返回至 ReactOS 並檢視程式的狀態，請按 [取消]。", IDC_STATIC, 7, 26, 178, 16
-    LTEXT "如果您選擇立即結束程式，您將失去所有未儲存的資料。若要立即結束程式，請按 [立即結束]。", IDC_STATIC, 7, 53, 178, 26
+    LTEXT "若要返回至 ReactOS 並檢視程式的狀態，請按［取消］。", IDC_STATIC, 7, 26, 178, 16
+    LTEXT "如果您選擇立即結束程式，您將失去所有未儲存的資料。若要立即結束程式，請按［立即結束］。", IDC_STATIC, 7, 53, 178, 26
 END
 
 
@@ -38,6 +38,6 @@ STRINGTABLE
 BEGIN
     IDS_SYSTEM_PROCESS          "系統進程"
     IDS_UNKNOWN_SOFTWARE_EXCEPT "不明的軟體例外錯誤"
-    IDS_OK_TERMINATE_PROGRAM    "按 [確定] 來結束程式。"
-    IDS_CANCEL_DEBUG_PROGRAM    "按 [取消] 對程式進行偵錯。"
+    IDS_OK_TERMINATE_PROGRAM    "按［確定］來結束程式。"
+    IDS_CANCEL_DEBUG_PROGRAM    "按［取消］對程式進行偵錯。"
 END

@@ -15,10 +15,10 @@ CAPTION "一般"
 FONT 9, "新細明體"
 BEGIN
     CONTROL "", IDC_COMPONENTSLIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOCOLUMNHEADER | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 9, 71, 230, 55
-    LTEXT "連接時使用:", -1, 9, 9, 217, 8
+    LTEXT "連接時使用：", -1, 9, 9, 217, 8
     EDITTEXT IDC_NETCARDNAME, 9, 21, 230, 12, WS_BORDER | WS_TABSTOP | ES_READONLY
     PUSHBUTTON "配置(&C)", IDC_CONFIGURE, 189, 38, 50, 14
-    LTEXT "這個連線使用下列元件:", -1, 9, 59, 217, 8
+    LTEXT "這個連線使用下列元件：", -1, 9, 59, 217, 8
     PUSHBUTTON "安裝(&I)", IDC_INSTALL, 9, 130, 65, 14, WS_DISABLED | WS_TABSTOP
     PUSHBUTTON "解除安裝(&U)", IDC_UNINSTALL, 90, 130, 65, 14, WS_DISABLED | WS_TABSTOP
     PUSHBUTTON "內容(&P)", IDC_PROPERTIES, 174, 130, 65, 14
@@ -41,14 +41,14 @@ CAPTION "一般"
 FONT 9, "新細明體"
 BEGIN
     GROUPBOX "連接", -1, 9, 8, 190, 58, BS_GROUPBOX
-    LTEXT "狀態:", -1, 22, 20, 65, 8
-    LTEXT "持續時間:", -1, 22, 34, 65, 8
-    LTEXT "速度:", -1, 22, 48, 65, 8
+    LTEXT "狀態：", -1, 22, 20, 65, 8
+    LTEXT "持續時間：", -1, 22, 34, 65, 8
+    LTEXT "速度：", -1, 22, 48, 65, 8
     GROUPBOX "活動", -1, 9, 74, 190, 70, BS_GROUPBOX
     LTEXT "傳送", -1, 60, 90, 60, 8
     ICON "", IDC_NETSTAT, 110, 85, 32, 32
     RTEXT "接收", -1, 146, 90, 44, 8
-    LTEXT "位元組:", -1, 22, 115, 32, 8
+    LTEXT "位元組：", -1, 22, 115, 32, 8
     LTEXT "000.000.000", IDC_SEND, 60, 115, 44, 8
     RTEXT "000.000.000", IDC_RECEIVED, 146, 115, 44, 8
     PUSHBUTTON "內容(&P)", IDC_STATUS_PROPERTIES, 10, 150, 60, 14
@@ -64,10 +64,10 @@ CAPTION "支援"
 FONT 9, "新細明體"
 BEGIN
     GROUPBOX "連接狀態", -1, 9, 8, 190, 88, BS_GROUPBOX
-    LTEXT "位址類型:", -1, 22, 20, 80, 8
-    LTEXT "IP 位址:", -1, 22, 34, 80, 8
-    LTEXT "子網路遮罩:", -1, 22, 48, 80, 8
-    LTEXT "預設閘道:", -1, 22, 62, 80, 8
+    LTEXT "位址類型：", -1, 22, 20, 80, 8
+    LTEXT "IP 位址：", -1, 22, 34, 80, 8
+    LTEXT "子網路遮罩：", -1, 22, 48, 80, 8
+    LTEXT "預設閘道：", -1, 22, 62, 80, 8
     RTEXT "N/A", IDC_DETAILSTYPE, 110, 20, 80, 8
     RTEXT "000.000.000.000", IDC_DETAILSIP, 110, 34, 80, 8
     RTEXT "000.000.000.000", IDC_DETAILSSUBNET, 110, 48, 80, 8
@@ -80,7 +80,7 @@ STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION | DS_MODALFRAME
 CAPTION "網路連線詳細資料"
 FONT 9, "新細明體"
 BEGIN
-    LTEXT "網路連線詳細資料(&D):", -1, 10, 4, 170, 12
+    LTEXT "網路連線詳細資料(&D)：", -1, 10, 4, 170, 12
     CONTROL "", IDC_DETAILS, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 10, 15, 170, 130
     PUSHBUTTON "關閉(&C)", IDC_CLOSE, 120, 155, 60, 14
 END
@@ -91,7 +91,7 @@ CAPTION "ReactOS 安裝程式"
 FONT 9, "新細明體"
 BEGIN
     ICON IDI_NET_SETUP, IDC_STATIC, 21, 10, 20, 20
-    LTEXT "請問您想使用一般或自訂設定:", IDC_STATIC, 53, 7, 240, 20
+    LTEXT "請問您想使用一般或自訂設定：", IDC_STATIC, 53, 7, 240, 20
     AUTORADIOBUTTON "一般設定", IDC_NETWORK_TYPICAL, 53, 27, 253, 20, WS_TABSTOP | WS_GROUP
     AUTORADIOBUTTON "自訂設定", IDC_NETWORK_CUSTOM, 53, 72, 253, 20, WS_TABSTOP
 	LTEXT "使用 ReactOS 網路用戶端、ReactOS 網絡檔案和列印共享及具有自動指派位址功能的 TCP/IP 傳輸協議來建立網路連接。", IDC_STATIC, 65, 45, 240, 30
@@ -122,9 +122,9 @@ BEGIN
 (你可向您的網路管理員取得這方面的資訊。)", IDC_STATIC, 33, 2, 263, 50
     AUTORADIOBUTTON "否，這台電腦將成為工作群組的成員之一。", IDC_SELECT_WORKGROUP, 33, 32, 253, 20, WS_TABSTOP | WS_GROUP
     AUTORADIOBUTTON "是，這台電腦將成為網域的成員之一。", IDC_SELECT_DOMAIN, 33, 47, 253, 20, WS_TABSTOP
-    LTEXT "工作群組或網域名稱:", IDC_STATIC, 33, 72, 126, 14
+    LTEXT "工作群組或網域名稱：", IDC_STATIC, 33, 72, 126, 14
     EDITTEXT IDC_DOMAIN_NAME, 33, 82, 126, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "注意: 如果這台電腦不會成為網路的一部分、您沒有足夠的權限加入網域、或您不知道要輸入什麼，您應該先選擇加入工作群組。這些選項可以在以後更改。", IDC_STATIC, 33, 107, 263, 50
+    LTEXT "注意：如果這台電腦不會成為網路的一部分、您沒有足夠的權限加入網域、或您不知道要輸入什麼，您應該先選擇加入工作群組。這些選項可以在以後更改。", IDC_STATIC, 33, 107, 263, 50
 END
 
 STRINGTABLE
@@ -162,9 +162,9 @@ BEGIN
     IDS_NET_DELETE "刪除"
     IDS_NET_RENAME "重新命名"
     IDS_NET_PROPERTIES "內容"
-    IDS_FORMAT_BIT "%u Bit/秒"
-    IDS_FORMAT_KBIT "%u KBit/秒"
-    IDS_FORMAT_MBIT "%u MBit/秒"
+    IDS_FORMAT_BIT "%u Bit／秒"
+    IDS_FORMAT_KBIT "%u KBit／秒"
+    IDS_FORMAT_MBIT "%u MBit／秒"
     IDS_FORMAT_GBIT "%u GBit/秒"
     IDS_DURATION_DAY "%d 天 %s"
     IDS_DURATION_DAYS "%d 天 %s"

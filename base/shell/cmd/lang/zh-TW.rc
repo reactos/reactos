@@ -199,7 +199,7 @@ FOR %變數 IN (集合) DO 命令 [參數]\n\
 FOR /L %變數 IN (start,step,end) DO 命令 [參數]\n\
 FOR /D %變數 IN (集合) DO 命令 [參數]\n\
 FOR /R [[磁碟機:]路徑] IN (集合) DO 命令 [參數]\n\
-FOR /F [""options""] IN (集合) DO 命令 [參數]\n\n\
+FOR /F [""選項""] IN (集合) DO 命令 [參數]\n\n\
   /L    Generates a number sequence from start to end incrementing by step.\n\
   /D    Modifies the set to refer to directories instead of files.\n\
   /R    Executes command for files in the set in the specified path (or current\n\
@@ -209,7 +209,7 @@ FOR /F [""options""] IN (集合) DO 命令 [參數]\n\n\
   (集合)      指定一個含有一個或多個檔案的集合。可以使用通配符。\n\
   命令        指定要為每個檔案執行的命令。\n\
   參數        為指定的命令指定參數或開關。\n\
-  options     支援的 options: eol, skip, delims, tokens, usebackq.\n\n\
+  選項        支援的選項: eol, skip, delims, tokens, usebackq.\n\n\
 Replacable parameters can be modified by adding a ~ and an optional qualifier\n\
 after the % and before the name (e.g. %~X). Supported qualifiers are:\n\
 f,d,p,n,x,s,a,t,z.\n\n\
@@ -501,7 +501,7 @@ RESTORE       恢復視窗\n\
     STRING_REPLACE_ERROR5 "存取被拒 - %s\n"
     STRING_REPLACE_ERROR6 "找不到檔案 - %s\n"
     STRING_REPLACE_ERROR7 "擴展錯誤 32\n"
-    STRING_CMD_INFOLINE "  ReactOS 命令列直譯器                                       輸入 HELP = 幫助  "
+    STRING_CMD_INFOLINE "  ReactOS 命令列直譯器                                       輸入 HELP = 說明  "
     STRING_REACTOS_VERSION "ReactOS [版本 %s %s]\n"
     STRING_CMD_SHELLINFO "\nReactOS 命令列直譯器\n版本 %s %s"
     STRING_VERSION_RUNNING_ON "在 上運行"
@@ -515,10 +515,10 @@ RESTORE       恢復視窗\n\
     STRING_MKLINK_CREATED_SYMBOLIC "已為 %s <<===>> %s 建立符號連結\n"
     STRING_MKLINK_CREATED_HARD "已為 %s <<===>> %s 建立硬連結\n"
     STRING_MKLINK_CREATED_JUNCTION "已為 %s <<===>> %s 建立接合點\n"
-    STRING_MORE "更多?"
+    STRING_MORE "更多？"
     STRING_CANCEL_BATCH_FILE "\r\nCtrl-Break 已被按下。要停止處理批次檔案嗎？ (Yes/No/All) "
     STRING_INVALID_OPERAND "無效的操作數。\n"
     STRING_EXPECTED_CLOSE_PAREN "預期 ')'。\n"
     STRING_EXPECTED_NUMBER_OR_VARIABLE "預期為數值或變數名。\n"
     STRING_SYNTAX_COMMAND_INCORRECT "命令語法不正確。\n"
-END 
+END
