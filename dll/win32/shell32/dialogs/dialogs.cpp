@@ -3,7 +3,7 @@
  *
  * Copyright 2000 Juergen Schmied
  * Copyright 2018 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
- * Copyright 2021 Arnav Bhatt <arnavbhatt288@gmail.com>
+ * Copyright 2022 Arnav Bhatt <arnavbhatt288@gmail.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -32,16 +32,6 @@ typedef struct
     UINT uFlags;
     BOOL bCoInited;
 } RUNFILEDLGPARAMS;
-
-typedef struct
-{
-    BOOL bFriendlyUI;
-    BOOL bIsButtonHot[2];
-    HBITMAP hImageStrip;
-    HBRUSH hBrush;
-    HFONT hfFont;
-    WNDPROC OldButtonProc;
-} LOGOFF_DLG_CONTEXT, *PLOGOFF_DLG_CONTEXT;
 
 typedef BOOL (WINAPI * LPFNOFN) (OPENFILENAMEW *);
 
@@ -1100,7 +1090,7 @@ int WINAPI RestartDialogEx(HWND hWndOwner, LPCWSTR lpwstrReason, DWORD uFlags, D
     return 0;
 }
 
-/* Functions and macros used for fancy log off dialog box */
+/* Structs, functions and macros used for fancy log off dialog box */
 #define IS_PRODUCT_VERSION_WORKSTATION          0x300
 #define FRIENDLY_LOGOFF_IS_NOT_ENFORCED         0x0
 
@@ -1114,27 +1104,163 @@ int WINAPI RestartDialogEx(HWND hWndOwner, LPCWSTR lpwstrReason, DWORD uFlags, D
 #define CY_BITMAP                       33
 
 #define NUMBER_OF_BUTTONS               2
+#define NUMBER_OF_BUTTON_STATES         7
+
+/* For HTHEME and HBITMAP */
+#define DLG_BITMAP_CUSTOMIZABLE         3
+#define THEME_COMPATIBLE_CONTROLS       (DLG_BITMAP_CUSTOMIZABLE + 2)
+
+#define DLG_BACKGROUND                  0
+#define DLG_FLAG                        1
+#define DLG_BUTTON_BITMAP               2
+#define DLG_STATIC_TITLE                3
+#define DLG_STATIC_BUTTONS              4
+
+/* Static Texts */
+#define NUMBER_OF_STATIC_CONTROLS       (NUMBER_OF_BUTTONS + 1)
+
+#define STATIC_LOGOFF_TITLE             0
+#define STATIC_LOGOFF                   1
+#define STATIC_SWITCH_USER              2
 
 /* After determining the button as well as its state paint the image strip bitmap using these predefined positions */
 #define BUTTON_SWITCH_USER              0
-#define BUTTON_SWITCH_USER_PRESSED      (CY_BITMAP + BUTTON_SWITCH_USER)
-#define BUTTON_SWITCH_USER_FOCUSED      (CY_BITMAP + BUTTON_SWITCH_USER_PRESSED)
-#define BUTTON_LOG_OFF                  (CY_BITMAP + BUTTON_SWITCH_USER_FOCUSED)
-#define BUTTON_LOG_OFF_PRESSED          (CY_BITMAP + BUTTON_LOG_OFF)
-#define BUTTON_LOG_OFF_FOCUSED          (CY_BITMAP + BUTTON_LOG_OFF_PRESSED)
-#define BUTTON_SWITCH_USER_DISABLED     (CY_BITMAP + BUTTON_LOG_OFF_FOCUSED) // Temporary
+#define BUTTON_SWITCH_USER_PRESSED      cy
+#define BUTTON_SWITCH_USER_FOCUSED      (cy * 2)
+#define BUTTON_LOG_OFF                  (cy * 3)
+#define BUTTON_LOG_OFF_PRESSED          (cy * 4)
+#define BUTTON_LOG_OFF_FOCUSED          (cy * 5)
+#define BUTTON_SWITCH_USER_DISABLED     (cy * 6) // Temporary
 
-BOOL DrawIconOnOwnerDrawnButtons(DRAWITEMSTRUCT* pdis, PLOGOFF_DLG_CONTEXT pContext)
+/* For bIsButtonHot */
+#define LOG_OFF_BUTTON_HOT              0
+#define SWITCH_USER_BUTTON_HOT          1
+
+typedef struct
+{
+    BOOL bFriendlyUI;
+    BOOL bIsButtonHot[NUMBER_OF_BUTTONS];
+    HBITMAP hBitmap[DLG_BITMAP_CUSTOMIZABLE];
+    HTHEME hTheme[THEME_COMPATIBLE_CONTROLS];
+    HFONT hfFont;
+    WCHAR StaticTexts[NUMBER_OF_STATIC_CONTROLS][128];
+    WNDPROC OldButtonProc;
+} LOGOFF_DLG_CONTEXT, *PLOGOFF_DLG_CONTEXT;
+
+BOOL DrawDialogBoxBgElements(PDRAWITEMSTRUCT pdis, PLOGOFF_DLG_CONTEXT pContext)
+{
+    BITMAP bm;
+    RECT rect;
+    int Part;
+    HDC hdcMem;
+    HBITMAP hbmOld;
+
+    GetClientRect(pdis->hwndItem, &rect);
+
+    switch (pdis->CtlID)
+    {
+        case IDC_LOG_OFF_DLG_BG:
+            Part = DLG_BACKGROUND;
+            break;
+
+        case IDC_LOG_OFF_DLG_FLAG:
+            Part = DLG_FLAG;
+            break;
+    }
+    
+    if (pContext->hTheme[Part])
+    {
+        DrawThemeBackground(pContext->hTheme[Part], pdis->hDC, 0, 0, &rect, NULL);
+    }
+    else
+    {
+        hdcMem = CreateCompatibleDC(pdis->hDC);
+        hbmOld = (HBITMAP)SelectObject(hdcMem, pContext->hBitmap[Part]);
+
+        GetObject(pContext->hBitmap[Part], sizeof(bm), &bm);
+
+        if (Part == DLG_BACKGROUND)
+        {
+            StretchBlt(pdis->hDC, 0, 0,
+                       rect.right - rect.left,
+                       rect.bottom - rect.top,
+                       hdcMem, 0, 0, bm.bmWidth,
+                       bm.bmHeight, SRCCOPY);
+        }
+        else if (Part == DLG_FLAG)
+        {
+            BitBlt(pdis->hDC,
+                   0, 0,
+                   bm.bmWidth, bm.bmHeight, 
+                   hdcMem, 0, 0, SRCCOPY);
+        }
+
+        SelectObject(hdcMem, hbmOld);
+        DeleteDC(hdcMem);
+    }
+
+    return TRUE;
+}
+
+BOOL DrawDialogBoxStaticTexts(PDRAWITEMSTRUCT pdis, PLOGOFF_DLG_CONTEXT pContext)
+{
+    RECT rect;
+    DWORD dwStyle = DT_CENTER;
+    int Part = DLG_STATIC_BUTTONS;
+    int StaticPart;
+
+    GetClientRect(pdis->hwndItem, &rect);
+
+    switch (pdis->CtlID)
+    {
+        case IDC_LOG_OFF_TEXT_STATIC:
+            dwStyle = DT_LEFT;
+            Part = DLG_STATIC_TITLE;
+            StaticPart = STATIC_LOGOFF_TITLE;
+            break;
+
+        case IDC_LOG_OFF_STATIC:
+            StaticPart = STATIC_LOGOFF;
+            break;
+
+        case IDC_SWITCH_USER_STATIC:
+            StaticPart = STATIC_SWITCH_USER;
+            break;
+    }
+    
+    if (pContext->hTheme[Part])
+    {
+        DrawThemeText(pContext->hTheme[Part], pdis->hDC, 0, 0, pContext->StaticTexts[StaticPart], -1,  DT_SINGLELINE | dwStyle, 0, &rect);
+    }
+    else
+    {
+        DrawText(pdis->hDC, pContext->StaticTexts[StaticPart], -1, &rect, DT_SINGLELINE | dwStyle);
+    }
+
+    return TRUE;
+}
+
+BOOL DrawIconOnOwnerDrawnButtons(PDRAWITEMSTRUCT pdis, PLOGOFF_DLG_CONTEXT pContext)
 {
     BOOL bRet = FALSE;
+    int y = 0;
+    int cx, cy = 0;
     HDC hdcMem = NULL;
     HBITMAP hbmOld = NULL;
-    int y = 0;
+    BITMAP bm;
     RECT rect;
+    SIZE size;
 
-    hdcMem = CreateCompatibleDC(pdis->hDC);
-    hbmOld = (HBITMAP)SelectObject(hdcMem, pContext->hImageStrip);
     rect = pdis->rcItem;
+
+    if (pContext->hTheme[DLG_BUTTON_BITMAP])
+    {
+        GetThemePartSize(pContext->hTheme[DLG_BUTTON_BITMAP], pdis->hDC, 0, 0, NULL, TS_TRUE, &size);
+    }
+    else
+    {
+        GetObject(pContext->hBitmap[DLG_BUTTON_BITMAP], sizeof(bm), &bm);
+    }
 
     /* Check the button ID for revelant bitmap to be used */
     switch (pdis->CtlID)
@@ -1152,7 +1278,7 @@ BOOL DrawIconOnOwnerDrawnButtons(DRAWITEMSTRUCT* pdis, PLOGOFF_DLG_CONTEXT pCont
                     {
                         y = BUTTON_LOG_OFF_PRESSED;
                     }
-                    else if (pContext->bIsButtonHot[0] || (pdis->itemState & ODS_FOCUS))
+                    else if (pContext->bIsButtonHot[LOG_OFF_BUTTON_HOT] || (pdis->itemState & ODS_FOCUS))
                     {
                         y = BUTTON_LOG_OFF_FOCUSED;
                     }
@@ -1175,7 +1301,7 @@ BOOL DrawIconOnOwnerDrawnButtons(DRAWITEMSTRUCT* pdis, PLOGOFF_DLG_CONTEXT pCont
                     {
                         y = BUTTON_SWITCH_USER_PRESSED;
                     }
-                    else if (pContext->bIsButtonHot[1] || (pdis->itemState & ODS_FOCUS))
+                    else if (pContext->bIsButtonHot[SWITCH_USER_BUTTON_HOT] || (pdis->itemState & ODS_FOCUS))
                     {
                         y = BUTTON_SWITCH_USER_FOCUSED;
                     }
@@ -1195,14 +1321,32 @@ BOOL DrawIconOnOwnerDrawnButtons(DRAWITEMSTRUCT* pdis, PLOGOFF_DLG_CONTEXT pCont
         }
     }
 
-    /* Draw it on the required button */
-    bRet = BitBlt(pdis->hDC,
-                  (rect.right - rect.left - CX_BITMAP) / 2,
-                  (rect.bottom - rect.top - CY_BITMAP) / 2,
-                  CX_BITMAP, CY_BITMAP, hdcMem, 0, y, SRCCOPY);
+    if (pContext->hTheme[DLG_BUTTON_BITMAP])
+    {
+        rect.bottom = size.cy;
+        OffsetRect(&rect, 0, -y);
 
-    SelectObject(hdcMem, hbmOld);
-    DeleteDC(hdcMem);
+        DrawThemeBackground(pContext->hTheme[DLG_BUTTON_BITMAP], pdis->hDC, 0, 0, &rect, 0);
+        bRet = TRUE;
+    }
+    
+    else
+    {
+        cx = bm.bmWidth;
+        cy = bm.bmHeight / NUMBER_OF_BUTTON_STATES;
+
+        hdcMem = CreateCompatibleDC(pdis->hDC);
+        hbmOld = (HBITMAP)SelectObject(hdcMem, pContext->hBitmap[DLG_BUTTON_BITMAP]);
+
+        /* Draw it on the required button */
+        bRet = BitBlt(pdis->hDC,
+                     (rect.right - rect.left - cx) / 2,
+                     (rect.bottom - rect.top - cy) / 2,
+                     cx, cy, hdcMem, 0, y, SRCCOPY);
+
+        SelectObject(hdcMem, hbmOld);
+        DeleteDC(hdcMem);
+    }
 
     return bRet;
 }
@@ -1210,7 +1354,7 @@ BOOL DrawIconOnOwnerDrawnButtons(DRAWITEMSTRUCT* pdis, PLOGOFF_DLG_CONTEXT pCont
 INT_PTR CALLBACK OwnerDrawButtonSubclass(HWND hButton, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     PLOGOFF_DLG_CONTEXT pContext;
-    pContext = (PLOGOFF_DLG_CONTEXT)GetWindowLongPtrW(hButton, GWLP_USERDATA);
+    pContext = (PLOGOFF_DLG_CONTEXT)GetWindowLongPtrW(GetParent(hButton), GWLP_USERDATA);
 
     int buttonID = GetDlgCtrlID(hButton);
 
@@ -1224,13 +1368,19 @@ INT_PTR CALLBACK OwnerDrawButtonSubclass(HWND hButton, UINT uMsg, WPARAM wParam,
             if (GetCapture() != hButton)
             {
                 SetCapture(hButton);
-                if (buttonID == IDC_LOG_OFF_BUTTON)
+                
+                switch (buttonID)
                 {
-                    pContext->bIsButtonHot[0] = TRUE;
-                }
-                else if (buttonID == IDC_SWITCH_USER_BUTTON)
-                {
-                    pContext->bIsButtonHot[1] = TRUE;
+                    case IDC_LOG_OFF_BUTTON:
+                    {
+                        pContext->bIsButtonHot[LOG_OFF_BUTTON_HOT] = TRUE;
+                        break;
+                    }
+                    case IDC_SWITCH_USER_BUTTON:
+                    {
+                        pContext->bIsButtonHot[SWITCH_USER_BUTTON_HOT] = TRUE;
+                        break;
+                    }
                 }
                 SetCursor(LoadCursorW(NULL, MAKEINTRESOURCEW(IDC_HAND)));
             }
@@ -1241,13 +1391,19 @@ INT_PTR CALLBACK OwnerDrawButtonSubclass(HWND hButton, UINT uMsg, WPARAM wParam,
             if (hwndTarget != hButton)
             {
                 ReleaseCapture();
-                if (buttonID == IDC_LOG_OFF_BUTTON)
+                
+                switch (buttonID)
                 {
-                    pContext->bIsButtonHot[0] = FALSE;
-                }
-                else if (buttonID == IDC_SWITCH_USER_BUTTON)
-                {
-                    pContext->bIsButtonHot[1] = FALSE;
+                    case IDC_LOG_OFF_BUTTON:
+                    {
+                        pContext->bIsButtonHot[LOG_OFF_BUTTON_HOT] = FALSE;
+                        break;
+                    }
+                    case IDC_SWITCH_USER_BUTTON:
+                    {
+                        pContext->bIsButtonHot[SWITCH_USER_BUTTON_HOT] = FALSE;
+                        break;
+                    }
                 }
             }
             InvalidateRect(hButton, NULL, FALSE);
@@ -1271,16 +1427,16 @@ INT_PTR CALLBACK OwnerDrawButtonSubclass(HWND hButton, UINT uMsg, WPARAM wParam,
     return CallWindowProcW(pContext->OldButtonProc, hButton, uMsg, wParam, lParam);
 }
 
-VOID CreateToolTipForButtons(int controlID, int detailID, HWND hDlg, int titleID)
+VOID CreateToolTipForButtons(int controlID, int detailID, HWND hwnd, int titleID)
 {
     HWND hwndTool = NULL, hwndTip = NULL;
     WCHAR szBuffer[256];
     TTTOOLINFOW tool;
 
-    hwndTool = GetDlgItem(hDlg, controlID);
+    hwndTool = GetDlgItem(hwnd, controlID);
 
     tool.cbSize = sizeof(tool);
-    tool.hwnd = hDlg;
+    tool.hwnd = hwnd;
     tool.uFlags = TTF_IDISHWND | TTF_SUBCLASS;
     tool.uId = (UINT_PTR)hwndTool;
 
@@ -1289,7 +1445,7 @@ VOID CreateToolTipForButtons(int controlID, int detailID, HWND hDlg, int titleID
                               WS_POPUP | TTS_ALWAYSTIP | TTS_BALLOON,
                               CW_USEDEFAULT, CW_USEDEFAULT,
                               CW_USEDEFAULT, CW_USEDEFAULT,
-                              hDlg, NULL, shell32_hInstance, NULL);
+                              hwnd, NULL, shell32_hInstance, NULL);
 
     /* Associate the tooltip with the tool. */
     LoadStringW(shell32_hInstance, detailID, szBuffer, _countof(szBuffer));
@@ -1298,6 +1454,43 @@ VOID CreateToolTipForButtons(int controlID, int detailID, HWND hDlg, int titleID
     LoadStringW(shell32_hInstance, titleID, szBuffer, _countof(szBuffer));
     SendMessageW(hwndTip, TTM_SETTITLEW, TTI_NONE, (LPARAM)szBuffer);
     SendMessageW(hwndTip, TTM_SETMAXTIPWIDTH, 0, 250);
+}
+
+VOID EndFriendlyDialog(HWND hwnd, PLOGOFF_DLG_CONTEXT pContext)
+{
+    int i;
+
+    for (i = 0; i < DLG_BITMAP_CUSTOMIZABLE; i++)
+    {
+        if (pContext->hTheme[i])
+        {
+            CloseThemeData(pContext->hTheme[i]);
+        }
+        else
+        {
+            DeleteObject(pContext->hBitmap[i]);
+        }
+    }
+
+    if (pContext->hTheme[DLG_STATIC_TITLE])
+    {
+        CloseThemeData(pContext->hTheme[DLG_STATIC_TITLE]);
+    }
+    else
+    {
+        DeleteObject(pContext->hfFont);
+    }
+
+    if (pContext->hTheme[DLG_STATIC_BUTTONS])
+    {
+        CloseThemeData(pContext->hTheme[DLG_STATIC_BUTTONS]);
+    }
+
+    /* Remove the subclass from the buttons */
+    for (i = 0; i < NUMBER_OF_BUTTONS; i++)
+    {
+        SetWindowLongPtrW(GetDlgItem(hwnd, IDC_LOG_OFF_BUTTON + i), GWLP_WNDPROC, (LONG_PTR)pContext->OldButtonProc);
+    }
 }
 
 static BOOL IsFriendlyUIActive(VOID)
@@ -1379,29 +1572,58 @@ static VOID FancyLogoffOnInit(HWND hwnd, PLOGOFF_DLG_CONTEXT pContext)
     HDC hdc = NULL;
     LONG lfHeight = NULL;
 
-    hdc = GetDC(NULL);
-    lfHeight = -MulDiv(FONT_POINT_SIZE, GetDeviceCaps(hdc, LOGPIXELSY), 72);
-    ReleaseDC(NULL, hdc);
-    pContext->hfFont = CreateFontW(lfHeight, 0, 0, 0, FW_MEDIUM, FALSE, 0, 0, 0, 0, 0, 0, 0, L"MS Shell Dlg");
-    SendDlgItemMessageW(hwnd, IDC_LOG_OFF_TEXT_STATIC, WM_SETFONT, (WPARAM)pContext->hfFont, TRUE);
-
-    pContext->hBrush = CreateSolidBrush(DARK_GREY_COLOR);
-
-    pContext->hImageStrip = LoadBitmapW(shell32_hInstance, MAKEINTRESOURCEW(IDB_IMAGE_STRIP));
-
-    CreateToolTipForButtons(IDC_LOG_OFF_BUTTON, IDS_LOG_OFF_DESC, hwnd, IDS_LOG_OFF_TITLE);
-    CreateToolTipForButtons(IDC_SWITCH_USER_BUTTON, IDS_SWITCH_USER_DESC, hwnd, IDS_SWITCH_USER_TITLE);
-
     /* Gather old button func */
     pContext->OldButtonProc = (WNDPROC)GetWindowLongPtrW(GetDlgItem(hwnd, IDC_LOG_OFF_BUTTON), GWLP_WNDPROC);
 
-    /* Make buttons to remember pContext and subclass the buttons as well as set bIsButtonHot boolean flags to false */
+    LoadStringW(shell32_hInstance,
+                IDS_LOG_OFF_DLG_TITLE,
+                pContext->StaticTexts[STATIC_LOGOFF_TITLE],
+                _countof(pContext->StaticTexts[STATIC_LOGOFF_TITLE]));
+
+    /* Gather revelant theme data or bitmaps */
+    pContext->hTheme[DLG_BACKGROUND] = OpenThemeData(hwnd, L"LogOffShutDownDialogBg");
+    if (pContext->hTheme[DLG_BACKGROUND])
+    {
+        SetWindowLong(hwnd, GWL_STYLE, GetWindowLong(hwnd, GWL_STYLE)&~WS_BORDER);
+    }
+    else
+    {
+        pContext->hBitmap[DLG_BACKGROUND] = LoadBitmapW(shell32_hInstance, MAKEINTRESOURCEW(IDB_DLG_BG));
+    }
+
+    pContext->hTheme[DLG_FLAG] = OpenThemeData(hwnd, L"LogOffShutDownDialogFlag");
+    if (!pContext->hTheme[DLG_FLAG])
+    {
+        pContext->hBitmap[DLG_FLAG] = LoadBitmapW(shell32_hInstance, MAKEINTRESOURCEW(IDB_REACTOS_FLAG));
+    }
+
+    pContext->hTheme[DLG_BUTTON_BITMAP] = OpenThemeData(hwnd, L"LogOffDialogButtons");
+    if (!pContext->hTheme[DLG_BUTTON_BITMAP])
+    {
+        pContext->hBitmap[DLG_BUTTON_BITMAP] = LoadBitmapW(shell32_hInstance, MAKEINTRESOURCEW(IDB_IMAGE_STRIP));
+    }
+
+    pContext->hTheme[DLG_STATIC_TITLE] = OpenThemeData(hwnd, L"LogOffShutDownDialogStaticTitle");
+    if (!pContext->hTheme[DLG_STATIC_TITLE])
+    {
+        hdc = GetDC(hwnd);
+        lfHeight = -MulDiv(FONT_POINT_SIZE, GetDeviceCaps(hdc, LOGPIXELSY), 72);
+        ReleaseDC(hwnd, hdc);
+        pContext->hfFont = CreateFontW(lfHeight, 0, 0, 0, FW_MEDIUM, FALSE, 0, 0, 0, 0, 0, 0, 0, L"MS Shell Dlg");
+        SendDlgItemMessageW(hwnd, IDC_LOG_OFF_TEXT_STATIC, WM_SETFONT, (WPARAM)pContext->hfFont, TRUE);
+    }
+
+    pContext->hTheme[DLG_STATIC_BUTTONS] = OpenThemeData(hwnd, L"LogOffShutDownDialogStaticButtons");
+
     for (int i = 0; i < NUMBER_OF_BUTTONS; i++)
     {
         pContext->bIsButtonHot[i] = FALSE;
-        SetWindowLongPtrW(GetDlgItem(hwnd, IDC_LOG_OFF_BUTTON + i), GWLP_USERDATA, (LONG_PTR)pContext);
+        GetDlgItemTextW(hwnd, IDC_LOG_OFF_BUTTON + i, pContext->StaticTexts[i + 1], _countof(pContext->StaticTexts[i + 1]));
         SetWindowLongPtrW(GetDlgItem(hwnd, IDC_LOG_OFF_BUTTON + i), GWLP_WNDPROC, (LONG_PTR)OwnerDrawButtonSubclass);
     }
+
+    CreateToolTipForButtons(IDC_LOG_OFF_BUTTON, IDS_LOG_OFF_DESC, hwnd, IDS_LOG_OFF_TITLE);
+    CreateToolTipForButtons(IDC_SWITCH_USER_BUTTON, IDS_SWITCH_USER_DESC, hwnd, IDS_SWITCH_USER_TITLE);
 }
 
 /*************************************************************************
@@ -1411,7 +1633,6 @@ static VOID FancyLogoffOnInit(HWND hwnd, PLOGOFF_DLG_CONTEXT pContext)
  */
 INT_PTR CALLBACK LogOffDialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-    DRAWITEMSTRUCT* pdis = (DRAWITEMSTRUCT*)lParam;
     PLOGOFF_DLG_CONTEXT pContext;
     pContext = (PLOGOFF_DLG_CONTEXT)GetWindowLongPtrW(hwnd, GWLP_USERDATA);
 
@@ -1428,8 +1649,7 @@ INT_PTR CALLBACK LogOffDialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
         }
 
         case WM_CLOSE:
-            DestroyWindow(hwnd);
-            PostQuitMessage(IDCANCEL);
+            EndDialog(hwnd, IDCANCEL);
             break;
 
         /*
@@ -1441,8 +1661,7 @@ INT_PTR CALLBACK LogOffDialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
         {
             if (LOWORD(wParam) == WA_INACTIVE)
             {
-                DestroyWindow(hwnd);
-                PostQuitMessage(0);
+                EndDialog(hwnd, IDCANCEL);
             }
             return FALSE;
         }
@@ -1456,27 +1675,21 @@ INT_PTR CALLBACK LogOffDialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
                     break;
 
                 case IDCANCEL:
-                    DestroyWindow(hwnd);
-                    PostQuitMessage(IDCANCEL);
+                    EndDialog(hwnd, IDCANCEL);
                     break;
             }
             break;
 
         case WM_DESTROY:
-            DeleteObject(pContext->hBrush);
-            DeleteObject(pContext->hImageStrip);
-            DeleteObject(pContext->hfFont);
-
-            /* Remove the subclass from the buttons */
-            for (int i = 0; i < NUMBER_OF_BUTTONS; i++)
+            if (pContext->bFriendlyUI)
             {
-                SetWindowLongPtrW(GetDlgItem(hwnd, IDC_LOG_OFF_BUTTON + i), GWLP_WNDPROC, (LONG_PTR)pContext->OldButtonProc);
+                EndFriendlyDialog(hwnd, pContext);
             }
-            return TRUE;
+            break;
 
         case WM_CTLCOLORSTATIC:
         {
-            /* Either make background transparent or fill it with color for required static controls */
+            /* Make background transparent and fill the text with required colours*/
             HDC hdcStatic = (HDC)wParam;
             UINT StaticID = (UINT)GetWindowLongPtrW((HWND)lParam, GWL_ID);
 
@@ -1491,7 +1704,7 @@ INT_PTR CALLBACK LogOffDialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
                 case IDC_SWITCH_USER_STATIC:
                     SetTextColor(hdcStatic, LIGHT_GREY_COLOR);
                     SetBkMode(hdcStatic, TRANSPARENT);
-                    return (LONG_PTR)pContext->hBrush;
+                    return (INT_PTR)GetStockObject(HOLLOW_BRUSH);
             }
             return FALSE;
         }
@@ -1499,12 +1712,21 @@ INT_PTR CALLBACK LogOffDialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
         case WM_DRAWITEM:
         {
-            /* Draw bitmaps on required buttons */
+            PDRAWITEMSTRUCT pdis = (DRAWITEMSTRUCT*)lParam;
             switch (pdis->CtlID)
             {
                 case IDC_LOG_OFF_BUTTON:
                 case IDC_SWITCH_USER_BUTTON:
                     return DrawIconOnOwnerDrawnButtons(pdis, pContext);
+
+                case IDC_LOG_OFF_DLG_BG:
+                case IDC_LOG_OFF_DLG_FLAG:
+                    return DrawDialogBoxBgElements(pdis, pContext);
+
+                case IDC_LOG_OFF_TEXT_STATIC:
+                case IDC_SWITCH_USER_STATIC:
+                case IDC_LOG_OFF_STATIC:
+                    return DrawDialogBoxStaticTexts(pdis, pContext);
             }
         }
         break;
@@ -1522,11 +1744,7 @@ INT_PTR CALLBACK LogOffDialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 EXTERN_C int WINAPI LogoffWindowsDialog(HWND hWndOwner)
 {
     CComPtr<IUnknown> fadeHandler;
-    BOOL bIsAltKeyPressed = FALSE;
-    MSG Msg;
     HWND parent = NULL;
-    HWND hWndChild = NULL;
-    WCHAR szBuffer[30];
     DWORD LogoffDialogID = IDD_LOG_OFF;
     LOGOFF_DLG_CONTEXT Context;
 
@@ -1539,36 +1757,8 @@ EXTERN_C int WINAPI LogoffWindowsDialog(HWND hWndOwner)
         LogoffDialogID = IDD_LOG_OFF_FANCY;
     }
 
-    hWndChild = CreateDialogParamW(shell32_hInstance, MAKEINTRESOURCEW(LogoffDialogID), parent, LogOffDialogProc, (LPARAM)&Context);
-    ShowWindow(hWndChild, SW_SHOWNORMAL);
+    DialogBoxParamW(shell32_hInstance, MAKEINTRESOURCEW(LogoffDialogID), parent, LogOffDialogProc, (LPARAM)&Context);
 
-     /* Detect either Alt key has been pressed */
-    while (GetMessageW(&Msg, NULL, 0, 0))
-    {
-        if(!IsDialogMessageW(hWndChild, &Msg))
-        {
-            TranslateMessage(&Msg);
-            DispatchMessageW(&Msg);
-        }
-
-        switch (Msg.message)
-        {
-            case WM_SYSKEYDOWN:
-            {
-                /* If the Alt key has been pressed once, add prefix to static controls */
-                if (Msg.wParam == VK_MENU && !bIsAltKeyPressed && Context.bFriendlyUI)
-                {
-                    for (int i = 0; i < NUMBER_OF_BUTTONS; i++)
-                    {
-                        GetDlgItemTextW(hWndChild, IDC_LOG_OFF_BUTTON + i, szBuffer, _countof(szBuffer));
-                        SetDlgItemTextW(hWndChild, IDC_LOG_OFF_STATIC + i, szBuffer);
-                    }
-                    bIsAltKeyPressed = TRUE;
-                }
-            }
-            break;
-        }
-    }
     return 0;
 }
 

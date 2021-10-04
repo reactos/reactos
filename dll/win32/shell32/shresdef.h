@@ -332,6 +332,7 @@
 #define IDS_SWITCH_USER_DESC                        35001
 #define IDS_LOG_OFF_TITLE                           35010
 #define IDS_SWITCH_USER_TITLE                       35011
+#define IDS_LOG_OFF_DLG_TITLE                       35012
 
 /* Dialogs */
 
@@ -489,6 +490,8 @@
 #define IDC_LOG_OFF_STATIC                  15003
 #define IDC_SWITCH_USER_STATIC              15004
 #define IDC_LOG_OFF_TEXT_STATIC             15005
+#define IDC_LOG_OFF_DLG_BG                  15006
+#define IDC_LOG_OFF_DLG_FLAG                15007
 
 /* Other dialogs */
 #define IDD_RUN_AS       23

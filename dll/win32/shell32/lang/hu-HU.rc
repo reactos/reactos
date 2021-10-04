@@ -496,14 +496,14 @@ IDD_LOG_OFF_FANCY DIALOGEX 0, 0, 208, 122
 STYLE NOT WS_VISIBLE | DS_CENTER | DS_SHELLFONT | WS_BORDER | WS_POPUP
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL IDB_DLG_BG, IDC_STATIC, "STATIC", SS_BITMAP | SS_REALSIZECONTROL, 0, 0, 208, 122
-    CONTROL IDB_REACTOS_FLAG, IDC_STATIC, "STATIC", SS_BITMAP, 176, 1, 32, 26
+    CONTROL "", IDC_LOG_OFF_DLG_BG, "STATIC", SS_OWNERDRAW, 0, 0, 208, 122
+    CONTROL "", IDC_LOG_OFF_DLG_FLAG, "STATIC", SS_OWNERDRAW, 176, 1, 32, 26
     PUSHBUTTON "&Felhasználóváltás", IDC_SWITCH_USER_BUTTON, 55, 46, 22, 20, BS_OWNERDRAW | WS_DISABLED | WS_GROUP
     PUSHBUTTON "&Kijelentkezés", IDC_LOG_OFF_BUTTON, 132, 46, 22, 20, BS_OWNERDRAW
-    PUSHBUTTON "Mégse", IDCANCEL, 162, 103, 40, 12, WS_GROUP | BS_FLAT
-    LTEXT "Kijelentkezés a ReactOS-ből", IDC_LOG_OFF_TEXT_STATIC, 4, 7, 165, 19
-    CTEXT "Felhasználóváltás", IDC_SWITCH_USER_STATIC, 35, 70, 61, 11
-    CTEXT "Kijelentkezés", IDC_LOG_OFF_STATIC, 118, 70, 51, 11
+    PUSHBUTTON "Mégse", IDCANCEL, 162, 103, 40, 12, BS_FLAT | WS_GROUP
+    CONTROL "", IDC_LOG_OFF_TEXT_STATIC, "STATIC", SS_OWNERDRAW, 4, 7, 165, 19
+    CONTROL "", IDC_SWITCH_USER_STATIC, "STATIC", SS_OWNERDRAW, 35, 70, 61, 11
+    CONTROL "", IDC_LOG_OFF_STATIC, "STATIC", SS_OWNERDRAW, 118, 70, 51, 11
 END
 
 IDD_DISCONNECT DIALOGEX 0, 0, 188, 60
@@ -1035,6 +1035,7 @@ BEGIN
     /* For IDD_LOG_OFF_FANCY */
     IDS_LOG_OFF_DESC "Bezárja a programokat és befejezi az Ön ReactOS munkamenetét."
     IDS_SWITCH_USER_DESC "Lehetővé teszi hogy egy másik felhasználó bejelentkezzen, miközben az Ön programjai és fájljai nyitva maradnak.\r\n\r\n(A felhasználóváltás a Windows logó gomb + L gyorsbillentyűvel is működik.)"
+    IDS_LOG_OFF_DLG_TITLE "Kijelentkezés a ReactOS-ből"
     IDS_LOG_OFF_TITLE "Kijelentkezés"
     IDS_SWITCH_USER_TITLE "Felhasználóváltás"
 END
