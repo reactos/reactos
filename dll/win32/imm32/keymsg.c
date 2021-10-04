@@ -340,7 +340,7 @@ static BOOL CALLBACK Imm32SendChangeProc(HIMC hIMC, LPARAM lParam)
         SendMessageW(hWnd, WM_IME_NOTIFY, IMN_SETSENTENCEMODE, 0);
 Quit:
     pIC->dwChange = 0;
-    ImmUnlockIMC(hIMC); // ??? Windows doesn't unlock
+    ImmUnlockIMC(hIMC); // ??? Windows doesn't unlock here
     return TRUE;
 }
 
