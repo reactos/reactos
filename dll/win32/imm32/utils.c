@@ -341,8 +341,8 @@ BOOL WINAPI CtfImmIsTextFrameServiceDisabled(VOID)
  */
 HIMCC WINAPI ImmCreateIMCC(DWORD size)
 {
-    if (size < 4)
-        size = 4;
+    if (size < sizeof(DWORD))
+        size = sizeof(DWORD);
     return LocalAlloc(LHND, size);
 }
 

@@ -70,7 +70,7 @@ BOOL APIENTRY Imm32InquireIme(PIMEDPI pImeDpi)
     szUIClass[_countof(szUIClass) - 1] = 0;
 
     if (pImeInfo->dwPrivateDataSize == 0)
-        pImeInfo->dwPrivateDataSize = 4;
+        pImeInfo->dwPrivateDataSize = sizeof(DWORD);
 
 #define VALID_IME_PROP (IME_PROP_AT_CARET              | \
                         IME_PROP_SPECIAL_UI            | \

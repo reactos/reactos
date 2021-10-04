@@ -202,14 +202,14 @@ VOID APIENTRY Imm32SelectLayout(HKL hNewKL, HKL hOldKL, HIMC hIMC)
         pClientImc->uCodePage = CP_ACP;
     }
 
-    if (cbNewPrivate < 4)
-        cbNewPrivate = 4;
+    if (cbNewPrivate < sizeof(DWORD))
+        cbNewPrivate = sizeof(DWORD);
 
     if (pOldImeDpi)
         cbOldPrivate = pOldImeDpi->ImeInfo.dwPrivateDataSize;
 
-    if (cbOldPrivate < 4)
-        cbOldPrivate = 4;
+    if (cbOldPrivate < sizeof(DWORD))
+        cbOldPrivate = sizeof(DWORD);
 
     if (pClientImc->hKL == hOldKL)
     {
