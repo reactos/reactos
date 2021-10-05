@@ -79,6 +79,8 @@ BEGIN
     IDS_CANTCREATEZIP "Failed to create a compressed folder '%s' (Error Code: %d)."
     IDS_CANTREADFILE "無法讀取檔案 '%s'."
     IDS_EXTRACTING "正在解壓縮..."
+    IDS_CANTEXTRACTFILE "Cannot extract file '%1'."
+    IDS_UNKNOWNERROR "Unknown error 0x%08x."
 
     IDS_WIZ_TITLE "解壓縮精靈"
     IDS_WIZ_DEST_TITLE "選擇一個目標資料夾"

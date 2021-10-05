@@ -75,6 +75,7 @@ public:
 
         CZipExtract* m_pExtract;
         CStringA* m_pPassword;
+        CStringW m_OldStatus;
 
     public:
         CExtractSettingsPage(CZipExtract* extract, CStringA* password)
@@ -127,6 +128,8 @@ public:
             ::EnableWindow(GetDlgItem(IDC_PASSWORD), FALSE);
             SetWizardButtons(0);
 
+            ::GetWindowTextW(GetDlgItem(IDC_STATUSTEXT), m_OldStatus.GetBuffer(MAX_PATH), MAX_PATH);
+            m_OldStatus.ReleaseBuffer();
             CStringW strExtracting(MAKEINTRESOURCEW(IDS_EXTRACTING));
             SetDlgItemTextW(IDC_STATUSTEXT, strExtracting);
 
@@ -156,6 +159,11 @@ public:
             return TRUE;
         }
 
+        void WizardReset()
+        {
+            SetDlgItemTextW(IDC_STATUSTEXT, m_OldStatus);
+        }
+
         static DWORD WINAPI ExtractEntry(LPVOID lpParam)
         {
             CExtractSettingsPage* pPage = (CExtractSettingsPage*)lpParam;
@@ -175,6 +183,7 @@ public:
                 CWindow Progress(pPage->GetDlgItem(IDC_PROGRESS));
                 Progress.SendMessage(PBM_SETRANGE32, 0, 1);
                 Progress.SendMessage(PBM_SETPOS, 0, 0);
+                pPage->WizardReset();
             }
             SendMessageCallback(pPage->GetParent().m_hWnd, PSM_PRESSBUTTON, PSBTN_NEXT, 0, NULL, NULL);
 
@@ -571,6 +580,7 @@ public:
             PathCombineA(CombinedPath, BaseDirectory, Name);
             CStringA FullPath = CombinedPath;
             FullPath.Replace('/', '\\');    /* SHPathPrepareForWriteA does not handle '/' */
+        Retry:
             eZipExtractError Result = ExtractSingle(hDlg, FullPath, is_dir, &Info, Name, Password, &bOverwriteAll, bCancel, &err);
             if (Result != eDirectoryError)
                 CurrentFile++;
@@ -580,12 +590,43 @@ public:
                     break;
 
                 case eExtractAbort:
-                case eDirectoryError:
-                case eFileError:
                 case eOpenError:
                 case eUnpackError:
+                {
                     Close();
                     return false;
+                }
+
+                case eDirectoryError:
+                {
+                    char StrippedPath[MAX_PATH] = { 0 };
+
+                    StrCpyNA(StrippedPath, FullPath, _countof(StrippedPath));
+                    if (!is_dir)
+                        PathRemoveFileSpecA(StrippedPath);
+                    PathStripPathA(StrippedPath);
+                    if (ShowExtractError(hDlg, (LPCSTR)&StrippedPath, err, eDirectoryError) == IDRETRY)
+                        goto Retry;
+                    Close();
+                    return false;
+                }
+
+                case eFileError:
+                {
+                    int Result = ShowExtractError(hDlg, FullPath, err, eFileError);
+                    switch (Result)
+                    {
+                    case IDABORT:
+                        Close();
+                        return false;
+                    case IDRETRY:
+                        CurrentFile--;
+                        goto Retry;
+                    case IDIGNORE:
+                        break;
+                    }
+                    break;
+                }
             }
             if (Result == eNoError && is_dir)
                 continue;
@@ -594,6 +635,43 @@ public:
 
         Close();
         return true;
+    }
+
+    int ShowExtractError(HWND hDlg, LPCSTR path, int Error, eZipExtractError ErrorType)
+    {
+        CStringA strTitle(MAKEINTRESOURCEW(IDS_ERRORTITLE));
+        CStringA strErr, strText;
+        PSTR Win32ErrorString;
+
+        if (ErrorType == eFileError)
+            strText.LoadString(IDS_CANTEXTRACTFILE);
+        else
+            strText.LoadString(GetModuleHandleA("shell32.dll"), 128); // IDS_CREATEFOLDER_DENIED
+
+        strText.FormatMessage(strText.GetString(), path);
+
+        if (ErrorType == eFileError || HRESULT_FACILITY(Error) == FACILITY_WIN32)
+        {
+            if (FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
+                               NULL, ErrorType == eFileError ? Error : HRESULT_CODE(Error), 0,
+                               (PSTR)&Win32ErrorString, 0, NULL) != 0)
+            {
+                strErr.SetString(Win32ErrorString);
+                LocalFree(Win32ErrorString);
+            }
+        }
+        if (strErr.GetLength() == 0)
+            strErr.Format(IDS_UNKNOWNERROR, Error);
+
+        strText.Append("\r\n\r\n" + strErr);
+
+        UINT mbFlags = MB_ICONWARNING;
+        if (ErrorType == eDirectoryError)
+            mbFlags |= MB_RETRYCANCEL;
+        else if (ErrorType == eFileError)
+            mbFlags |= MB_ABORTRETRYIGNORE;
+
+        return MessageBoxA(hDlg, strText, strTitle, mbFlags);
     }
 };
 
