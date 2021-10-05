@@ -1,7 +1,7 @@
 /*
  * PROJECT:     ReactOS IMM32
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
- * PURPOSE:     Implementing IMM32 NT3 compatibility
+ * PURPOSE:     Implementing IMM32 Win3.x compatibility
  * COPYRIGHT:   Copyright 2020-2021 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
@@ -9,7 +9,7 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(imm);
 
-#ifdef IMM_NT3_SUPPORT /* 3.x support */
+#ifdef IMM_WIN3_SUPPORT /* 3.x support */
 
 DWORD APIENTRY
 ImmNt3JTransCompA(LPINPUTCONTEXTDX pIC, LPCOMPOSITIONSTRING pCS,
@@ -170,14 +170,14 @@ DoDefault:
     return ret;
 }
 
-static DWORD APIENTRY
+DWORD APIENTRY
 ImmNt3KTrans(DWORD dwCount, LPTRANSMSG pEntries, LPINPUTCONTEXTDX pIC,
              LPCOMPOSITIONSTRING pCS, BOOL bAnsi)
 {
     return dwCount; // FIXME
 }
 
-static DWORD APIENTRY
+DWORD APIENTRY
 ImmNt3Trans(DWORD dwCount, LPTRANSMSG pEntries, HIMC hIMC, BOOL bAnsi, WORD wLang)
 {
     BOOL ret = FALSE;
@@ -202,4 +202,22 @@ ImmNt3Trans(DWORD dwCount, LPTRANSMSG pEntries, HIMC hIMC, BOOL bAnsi, WORD wLan
     return ret;
 }
 
-#endif /* IMM_NT3_SUPPORT */
+#endif /* IMM_WIN3_SUPPORT */
+
+/***********************************************************************
+ *		ImmSendIMEMessageExA(IMM32.@)
+ */
+WORD WINAPI ImmSendIMEMessageExA(HWND hWnd, LPARAM lParam)
+{
+    FIXME("(%p, %p)\n", hWnd, lParam);
+    return 0;
+}
+
+/***********************************************************************
+ *		ImmSendIMEMessageExW(IMM32.@)
+ */
+WORD WINAPI ImmSendIMEMessageExW(HWND hWnd, LPARAM lParam)
+{
+    FIXME("(%p, %p)\n", hWnd, lParam);
+    return 0;
+}

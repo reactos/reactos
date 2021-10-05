@@ -23,6 +23,7 @@
 #include <winuser.h>
 #include <winnls.h>
 #include <winreg.h>
+#include <winnls32.h>
 
 #include <imm.h>
 #include <ddk/imm.h>
