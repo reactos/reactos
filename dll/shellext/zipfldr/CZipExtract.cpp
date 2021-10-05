@@ -590,7 +590,6 @@ public:
                     break;
 
                 case eExtractAbort:
-                case eOpenError:
                 case eUnpackError:
                 {
                     Close();
@@ -627,6 +626,20 @@ public:
                     }
                     break;
                 }
+
+                case eOpenError:
+                {
+                    if (err == UNZ_BADZIPFILE &&
+                        Info.compression_method != 0 &&
+                        Info.compression_method != Z_DEFLATED &&
+                        Info.compression_method != Z_BZIP2ED)
+                    {
+                        if (ShowExtractError(hDlg, FullPath, Info.compression_method, eOpenError) == IDYES)
+                            break;
+                    }
+                    Close();
+                    return false;
+                }
             }
             if (Result == eNoError && is_dir)
                 continue;
@@ -643,7 +656,7 @@ public:
         CStringA strErr, strText;
         PSTR Win32ErrorString;
 
-        if (ErrorType == eFileError)
+        if (ErrorType == eFileError || ErrorType == eOpenError)
             strText.LoadString(IDS_CANTEXTRACTFILE);
         else
             strText.LoadString(GetModuleHandleA("shell32.dll"), 128); // IDS_CREATEFOLDER_DENIED
@@ -660,7 +673,9 @@ public:
                 LocalFree(Win32ErrorString);
             }
         }
-        if (strErr.GetLength() == 0)
+        if (ErrorType == eOpenError)
+            strErr.Format(IDS_DECOMPRESSERROR, Error);
+        else if (strErr.GetLength() == 0)
             strErr.Format(IDS_UNKNOWNERROR, Error);
 
         strText.Append("\r\n\r\n" + strErr);
@@ -670,6 +685,8 @@ public:
             mbFlags |= MB_RETRYCANCEL;
         else if (ErrorType == eFileError)
             mbFlags |= MB_ABORTRETRYIGNORE;
+        else if (ErrorType == eOpenError)
+            mbFlags |= MB_YESNO;
 
         return MessageBoxA(hDlg, strText, strTitle, mbFlags);
     }

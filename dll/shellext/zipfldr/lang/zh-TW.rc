@@ -80,6 +80,7 @@ BEGIN
     IDS_CANTREADFILE "無法讀取檔案 '%s'."
     IDS_EXTRACTING "正在解壓縮..."
     IDS_CANTEXTRACTFILE "Cannot extract file '%1'."
+    IDS_DECOMPRESSERROR "Unsupported compression method %d. Do you want to continue?"
     IDS_UNKNOWNERROR "Unknown error 0x%08x."
 
     IDS_WIZ_TITLE "解壓縮精靈"
