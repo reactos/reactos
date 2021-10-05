@@ -106,7 +106,7 @@
 @ stdcall ImmSetStatusWindowPos(ptr ptr)
 @ stdcall ImmShowSoftKeyboard(ptr long)
 @ stdcall ImmSimulateHotKey(ptr long)
-@ stdcall -stub ImmSystemHandler(ptr long long)
+@ stdcall ImmSystemHandler(ptr ptr ptr)
 @ stdcall ImmTranslateMessage(ptr long ptr ptr)
 @ stdcall ImmUnlockClientImc(ptr)
 @ stdcall ImmUnlockIMC(ptr)
