@@ -2093,9 +2093,11 @@ LRESULT CDefView::OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
                 HWND hEdit = reinterpret_cast<HWND>(m_ListView.SendMessage(LVM_GETEDITCONTROL));
                 SHLimitInputEdit(hEdit, m_pSFParent);
 
-                if (!(dwAttr & SFGAO_LINK) && (lpdi->item.mask & LVIF_TEXT) && !SelectExtOnRename())
+                LPWSTR pszText = lpdi->item.pszText;
+                if (!(dwAttr & (SFGAO_LINK | SFGAO_FOLDER)) && (dwAttr & SFGAO_FILESYSTEM) &&
+                    (lpdi->item.mask & LVIF_TEXT) &&
+                    !SelectExtOnRename() && !SHELL_FS_HideExtension(pszText))
                 {
-                    LPWSTR pszText = lpdi->item.pszText;
                     LPWSTR pchDotExt = PathFindExtensionW(pszText);
                     ::PostMessageW(hEdit, EM_SETSEL, 0, pchDotExt - pszText);
                     ::PostMessageW(hEdit, EM_SCROLLCARET, 0, 0);
