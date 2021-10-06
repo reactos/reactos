@@ -1484,36 +1484,6 @@ BOOL WINAPI ImmUnlockIMC(HIMC hIMC)
 }
 
 /***********************************************************************
- *              ImmRequestMessageA(IMM32.@)
- */
-LRESULT WINAPI ImmRequestMessageA(HIMC hIMC, WPARAM wParam, LPARAM lParam)
-{
-    InputContextData *data = get_imc_data(hIMC);
-
-    TRACE("%p %ld %ld\n", hIMC, wParam, wParam);
-
-    if (data) return SendMessageA(data->IMC.hWnd, WM_IME_REQUEST, wParam, lParam);
-
-    SetLastError(ERROR_INVALID_HANDLE);
-    return 0;
-}
-
-/***********************************************************************
- *              ImmRequestMessageW(IMM32.@)
- */
-LRESULT WINAPI ImmRequestMessageW(HIMC hIMC, WPARAM wParam, LPARAM lParam)
-{
-    InputContextData *data = get_imc_data(hIMC);
-
-    TRACE("%p %ld %ld\n", hIMC, wParam, wParam);
-
-    if (data) return SendMessageW(data->IMC.hWnd, WM_IME_REQUEST, wParam, lParam);
-
-    SetLastError(ERROR_INVALID_HANDLE);
-    return 0;
-}
-
-/***********************************************************************
  *		ImmReleaseContext (IMM32.@)
  */
 BOOL WINAPI ImmReleaseContext(HWND hWnd, HIMC hIMC)

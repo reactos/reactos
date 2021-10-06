@@ -50,6 +50,45 @@ LPSTR APIENTRY Imm32AnsiFromWide(LPCWSTR pszW)
     return pszA;
 }
 
+DWORD APIENTRY IchWideFromAnsi(DWORD cchAnsi, LPCSTR pchAnsi, UINT uCodePage)
+{
+    DWORD cchWide;
+    for (cchWide = 0; cchAnsi; ++cchWide)
+    {
+        if (IsDBCSLeadByteEx(uCodePage, *pchAnsi))
+        {
+            if (cchAnsi <= 1)
+            {
+                ++cchWide;
+                break;
+            }
+            else
+            {
+                cchAnsi -= 2;
+                pchAnsi += 2;
+            }
+        }
+        else
+        {
+            --cchAnsi;
+            ++pchAnsi;
+        }
+    }
+    return cchWide;
+}
+
+DWORD APIENTRY IchAnsiFromWide(DWORD cchWide, LPCWSTR pchWide, UINT uCodePage)
+{
+    DWORD cb, cchAnsi;
+    for (cchAnsi = 0; cchWide; ++cchAnsi, ++pchWide, --cchWide)
+    {
+        cb = WideCharToMultiByte(uCodePage, 0, pchWide, 1, NULL, 0, NULL, NULL);
+        if (cb > 1)
+            ++cchAnsi;
+    }
+    return cchAnsi;
+}
+
 BOOL Imm32GetSystemLibraryPath(LPWSTR pszPath, DWORD cchPath, LPCWSTR pszFileName)
 {
     if (!pszFileName[0] || !GetSystemDirectoryW(pszPath, cchPath))
