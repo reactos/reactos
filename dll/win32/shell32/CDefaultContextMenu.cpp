@@ -833,7 +833,8 @@ HRESULT CDefaultContextMenu::DoDelete(LPCMINVOKECOMMANDINFO lpcmi)
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
-    SHSimulateDrop(pDT, m_pDataObj, 0, NULL, NULL);
+    DWORD grfKeyState = (lpcmi->fMask & CMIC_MASK_SHIFT_DOWN) ? MK_SHIFT : 0;
+    SHSimulateDrop(pDT, m_pDataObj, grfKeyState, NULL, NULL);
 
     return S_OK;
 }

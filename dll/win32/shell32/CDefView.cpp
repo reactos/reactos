@@ -1398,10 +1398,10 @@ HRESULT CDefView::InvokeContextMenuCommand(UINT uCommand)
     cmi.lpVerb = MAKEINTRESOURCEA(uCommand);
     cmi.hwnd = m_hWnd;
 
-    if (GetKeyState(VK_SHIFT) & 0x8000)
+    if (GetAsyncKeyState(VK_SHIFT) < 0)
         cmi.fMask |= CMIC_MASK_SHIFT_DOWN;
 
-    if (GetKeyState(VK_CONTROL) & 0x8000)
+    if (GetAsyncKeyState(VK_CONTROL) < 0)
         cmi.fMask |= CMIC_MASK_CONTROL_DOWN;
 
     HRESULT hr = m_pCM->InvokeCommand(&cmi);
@@ -3573,6 +3573,11 @@ HRESULT WINAPI CDefView::Drop(IDataObject* pDataObject, DWORD grfKeyState, POINT
 {
     ImageList_DragLeave(m_hWnd);
     ImageList_EndDrag();
+
+    if (GetAsyncKeyState(VK_SHIFT) < 0)
+        grfKeyState |= MK_SHIFT;
+    else
+        grfKeyState &= ~MK_SHIFT;
 
     if ((IsDropOnSource(NULL) == S_OK) &&
         (*pdwEffect & DROPEFFECT_MOVE) &&
