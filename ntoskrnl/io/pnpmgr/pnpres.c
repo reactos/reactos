@@ -915,7 +915,7 @@ IopUpdateResourceMap(
             ASSERT(FALSE);
         }
 
-        NameU.Length = (USHORT)OldLength;
+        NameU.Length = (USHORT)OldLength - sizeof(UNICODE_NULL); /* Remove final NULL */
 
         RtlAppendUnicodeStringToString(&NameU, &RawSuffix);
 
@@ -933,7 +933,7 @@ IopUpdateResourceMap(
         }
 
         /* "Remove" the suffix by setting the length back to what it used to be */
-        NameU.Length = (USHORT)OldLength;
+        NameU.Length = (USHORT)OldLength - sizeof(UNICODE_NULL); /* Remove final NULL */
 
         RtlAppendUnicodeStringToString(&NameU, &TranslatedSuffix);
 
