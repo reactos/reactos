@@ -363,7 +363,7 @@ GetResourceList(
 
     CStringW keyName = L"SYSTEM\\CurrentControlSet\\Enum\\";
     keyName += pszDeviceID;
-    keyName += L"\\LogConf";
+    keyName += L"\\Control";
 
     dwError = RegOpenKeyExW(HKEY_LOCAL_MACHINE, keyName, 0, KEY_READ, &hKey);
     if (dwError != ERROR_SUCCESS)
@@ -373,7 +373,7 @@ GetResourceList(
     }
 
     dwSize = 0;
-    RegQueryValueExW(hKey, L"BootConfig", NULL, NULL, NULL, &dwSize);
+    RegQueryValueExW(hKey, L"AllocConfig", NULL, NULL, NULL, &dwSize);
     if (dwSize == 0)
         goto done;
 
@@ -381,7 +381,7 @@ GetResourceList(
     if (pResourceList == NULL)
         goto done;
 
-    dwError = RegQueryValueExW(hKey, L"BootConfig", NULL, NULL, (LPBYTE)pResourceList, &dwSize);
+    dwError = RegQueryValueExW(hKey, L"AllocConfig", NULL, NULL, (LPBYTE)pResourceList, &dwSize);
     if (dwError != ERROR_SUCCESS)
     {
         HeapFree(GetProcessHeap(), 0, pResourceList);
