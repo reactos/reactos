@@ -1264,7 +1264,7 @@ IopDetectResourceConflict(
    PKEY_BASIC_INFORMATION KeyInformation;
    PKEY_VALUE_PARTIAL_INFORMATION KeyValueInformation;
    PKEY_VALUE_BASIC_INFORMATION KeyNameInformation;
-   ULONG ChildKeyIndex1 = 0, ChildKeyIndex2 = 0, ChildKeyIndex3 = 0;
+   ULONG ChildKeyIndex1 = 0, ChildKeyIndex2, ChildKeyIndex3;
    NTSTATUS Status;
 
    RtlInitUnicodeString(&KeyName, L"\\Registry\\Machine\\HARDWARE\\RESOURCEMAP");
@@ -1332,6 +1332,7 @@ IopDetectResourceConflict(
       if (!NT_SUCCESS(Status))
           goto cleanup;
 
+      ChildKeyIndex2 = 0;
       while (TRUE)
       {
           Status = ZwEnumerateKey(ChildKey2,
@@ -1382,6 +1383,7 @@ IopDetectResourceConflict(
           if (!NT_SUCCESS(Status))
               goto cleanup;
 
+          ChildKeyIndex3 = 0;
           while (TRUE)
           {
               Status = ZwEnumerateValueKey(ChildKey3,
