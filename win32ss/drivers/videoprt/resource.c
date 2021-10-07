@@ -76,6 +76,7 @@ IntVideoPortGetLegacyResources(
 NTSTATUS NTAPI
 IntVideoPortFilterResourceRequirements(
     IN PDEVICE_OBJECT DeviceObject,
+    IN PIO_STACK_LOCATION IrpStack,
     IN PIRP Irp)
 {
     PDRIVER_OBJECT DriverObject;
@@ -83,7 +84,8 @@ IntVideoPortFilterResourceRequirements(
     PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension;
     PVIDEO_ACCESS_RANGE AccessRanges;
     ULONG AccessRangeCount, ListSize, i;
-    PIO_RESOURCE_REQUIREMENTS_LIST ResList, OldResList = (PVOID)Irp->IoStatus.Information;
+    PIO_RESOURCE_REQUIREMENTS_LIST ResList;
+    PIO_RESOURCE_REQUIREMENTS_LIST OldResList = IrpStack->Parameters.FilterResourceRequirements.IoResourceRequirementList;
     PIO_RESOURCE_DESCRIPTOR CurrentDescriptor;
     NTSTATUS Status;
 
@@ -163,8 +165,8 @@ IntVideoPortFilterResourceRequirements(
         if (CurrentDescriptor->Type == CmResourceTypePort)
         {
             CurrentDescriptor->u.Port.Length = AccessRanges[i].RangeLength;
-            CurrentDescriptor->u.Port.MinimumAddress =
-            CurrentDescriptor->u.Port.MaximumAddress = AccessRanges[i].RangeStart;
+            CurrentDescriptor->u.Port.MinimumAddress = AccessRanges[i].RangeStart;
+            CurrentDescriptor->u.Port.MaximumAddress.QuadPart = AccessRanges[i].RangeStart.QuadPart + AccessRanges[i].RangeLength - 1;
             CurrentDescriptor->u.Port.Alignment = 1;
             if (AccessRanges[i].RangePassive & VIDEO_RANGE_PASSIVE_DECODE)
                 CurrentDescriptor->Flags |= CM_RESOURCE_PORT_PASSIVE_DECODE;
@@ -174,8 +176,8 @@ IntVideoPortFilterResourceRequirements(
         else
         {
             CurrentDescriptor->u.Memory.Length = AccessRanges[i].RangeLength;
-            CurrentDescriptor->u.Memory.MinimumAddress =
-            CurrentDescriptor->u.Memory.MaximumAddress = AccessRanges[i].RangeStart;
+            CurrentDescriptor->u.Memory.MinimumAddress = AccessRanges[i].RangeStart;
+            CurrentDescriptor->u.Memory.MaximumAddress.QuadPart = AccessRanges[i].RangeStart.QuadPart + AccessRanges[i].RangeLength - 1;
             CurrentDescriptor->u.Memory.Alignment = 1;
             CurrentDescriptor->Flags |= CM_RESOURCE_MEMORY_READ_WRITE;
         }
