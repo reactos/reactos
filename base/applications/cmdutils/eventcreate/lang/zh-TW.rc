@@ -1,4 +1,12 @@
-/* Traditional Chinese translation by Chan Chilung 2021 <auroracloud4096@gmail.com> */
+/*
+ * PROJECT:     ReactOS EventCreate Command
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Chinese (Traditional) resource file
+ * TRANSLATORS: Copyright 2021 Chan Chilung <eason066@gmail.com>
+ * REFERENCES:  Chinese (Simplified) resource translation
+ *              Copyright 2017 Li Keqing <auroracloud4096@gmail.com>
+ */
+ 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
 
 STRINGTABLE

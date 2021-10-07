@@ -1,6 +1,10 @@
-/* Traditional Chinese translation by:
- * Elton Chung aka MfldElton <elton328@gmail.com> 
- * Chan Chilung <eason066@gmail.com> */
+/*
+ * PROJECT:     ReactOS Sound Volume Control
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * PURPOSE:     Chinese (Traditional) resource file
+ * TRANSLATORS: Copyright 2011 Elton Chung aka MfldElton <elton328@gmail.com>
+ *              Copyright 2021 Chan Chilung <eason066@gmail.com>
+ */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
 

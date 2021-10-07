@@ -2,8 +2,8 @@
  * PROJECT:     ReactOS CryptExt Shell Extension
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Chinese (Traditional) resource translation
- * COPYRIGHT:   Copyright 2019 Mark Jansen (mark.jansen@reactos.org)
- * TRANSLATOR:  2021 Chan Chilung (eason066@gmail.com)
+ * COPYRIGHT:   Copyright 2019 Mark Jansen <mark.jansen@reactos.org>
+ * TRANSLATOR:  Copyright 2021 Chan Chilung <eason066@gmail.com>
  */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL

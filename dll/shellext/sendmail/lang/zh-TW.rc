@@ -1,4 +1,9 @@
-// Traditional Chinese translation by Chan Chilung 2021 <eason066@gmail.com>
+/*
+ * PROJECT:     sendmail
+ * LICENSE:     LGPL-2.1+ (https://spdx.org/licenses/LGPL-2.1+)
+ * PURPOSE:     Chinese (Traditional) resource file
+ * TRANSLATORS: Copyright 2021 Chan Chilung <eason066@gmail.com>
+ */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
 

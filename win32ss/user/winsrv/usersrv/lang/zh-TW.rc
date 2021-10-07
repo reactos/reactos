@@ -1,4 +1,9 @@
-// Translation by Chan Chilung 2020 - 2021 <eason066@gmail.com>
+/*
+ * PROJECT:     ReactOS User API Server DLL
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Chinese (Traditional) resource file
+ * TRANSLATORS: Copyright 2020-2021 Chan Chilung <eason066@gmail.com>
+ */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
 
