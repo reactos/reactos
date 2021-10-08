@@ -84,8 +84,8 @@ BEGIN
     CHECKBOX        "開機記錄 (/&BOOTLOG)", IDC_CBX_BOOT_LOG, 158, 110, 127, 12
     CHECKBOX        "基地視頻 (/BAS&EVIDEO)", IDC_CBX_BASE_VIDEO, 158, 124, 127, 12
     CHECKBOX        "OS 引導資訊 (/S&OS)", IDC_CBX_SOS, 158, 138, 127, 12
-    PUSHBUTTON      "進階選項...(&V)", IDC_BTN_ADVANCED_OPTIONS, 207, 151, 78, 14
-    LTEXT           "逾時:(&T)", IDC_STATIC, 296, 91, 32, 10
+    PUSHBUTTON      "進階選項(&V)...", IDC_BTN_ADVANCED_OPTIONS, 207, 151, 78, 14
+    LTEXT           "逾時(&T)：", IDC_STATIC, 296, 91, 32, 10
     EDITTEXT        IDC_TXT_BOOT_TIMEOUT, 295, 102, 33, 12, ES_RIGHT | ES_NUMBER
     LTEXT           "秒", IDC_STATIC, 330, 104, 31, 10
     CONTROL         "使所有引導設定永久有效(&A)", 292,
@@ -125,7 +125,7 @@ BEGIN
     EDITTEXT        IDC_TOOLS_CMDLINE, 5, 139, 356, 14, ES_READONLY
     PUSHBUTTON      "執行(&R)", IDC_BTN_RUN, 311, 156, 50, 14
     CONTROL         "進階選項(&A)", IDC_CBX_TOOLS_ADVOPT, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 5, 158, 134, 12
-    LTEXT           "所選的命令:(&C)", IDC_STATIC, 5, 127, 128, 10
+    LTEXT           "所選的命令(&C)：", IDC_STATIC, 5, 127, 128, 10
 END
 
 IDD_FILE_EXTRACT_DIALOG DIALOGEX 0, 0, 353, 117
@@ -134,15 +134,15 @@ CAPTION "從安裝源展開檔案"
 FONT 9, "新細明體"
 BEGIN
     LTEXT           "指定您想要還原的檔案，包含安裝檔案的來源和目標位置。", IDC_STATIC, 7, 7, 339, 17
-    LTEXT           "要還原的檔案:(&I)", IDC_STATIC, 7, 34, 93, 10
+    LTEXT           "要還原的檔案(&I)：", IDC_STATIC, 7, 34, 93, 10
     EDITTEXT        IDC_TXT_FILE_TO_RESTORE, 103, 32, 158, 12, ES_AUTOHSCROLL
-    PUSHBUTTON      "瀏覽檔案...(&B)", IDC_BTN_BROWSE_ALL_FILES, 264, 30, 82, 14
-    LTEXT           "還原來源:(&R)", IDC_STATIC, 7, 55, 93, 10
+    PUSHBUTTON      "瀏覽檔案(&B)...", IDC_BTN_BROWSE_ALL_FILES, 264, 30, 82, 14
+    LTEXT           "還原來源(&R)：", IDC_STATIC, 7, 55, 93, 10
     COMBOBOX        IDC_DRP_CAB_FILE, 103, 53, 158, 56, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON      "從...瀏覽(&F)", IDC_BTN_BROWSE_CAB_FILES, 264, 51, 82, 14
-    LTEXT           "儲存檔案到:(&S)", IDC_STATIC, 7, 76, 93, 10
+    LTEXT           "儲存檔案到(&S)：", IDC_STATIC, 7, 76, 93, 10
     COMBOBOX        IDC_DRP_DEST_DIR, 103, 74, 158, 42, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON      "瀏覽到...(&T)", IDC_BTN_BROWSE_DIRS, 264, 72, 82, 14
+    PUSHBUTTON      "瀏覽到(&T)...", IDC_BTN_BROWSE_DIRS, 264, 72, 82, 14
     DEFPUSHBUTTON   "展開", IDOK, 179, 96, 82, 14
     PUSHBUTTON      "取消", IDCANCEL, 264, 96, 82, 14
 END
@@ -152,17 +152,17 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "尋找"
 FONT 9, "新細明體"
 BEGIN
-    LTEXT           "尋找內容:(&F)", IDC_STATIC, 4, 8, 42, 10, NOT WS_GROUP
+    LTEXT           "尋找內容(&F)：", IDC_STATIC, 4, 8, 42, 10, NOT WS_GROUP
     EDITTEXT        IDC_TXT_FIND_TEXT, 47, 7, 128, 12, ES_AUTOHSCROLL | WS_GROUP
     CONTROL         "必須全字相符(&W)", IDC_CBX_FIND_WHOLE_WORD_ONLY,
                     "Button", BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP, 4, 26, 100, 12
-    CONTROL         "區分大小寫&C)", IDC_CBX_FIND_MATCH_CASE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 4, 42, 100, 12
+    CONTROL         "區分大小寫(&C)", IDC_CBX_FIND_MATCH_CASE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 4, 42, 100, 12
     GROUPBOX        "方向", IDC_STATIC, 107, 26, 68, 28
     CONTROL         "向上(&U)", IDC_RB_FIND_UP, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 111, 38, 28, 12
     CONTROL         "向下(&D)", IDC_RB_FIND_DOWN, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 143, 38, 28, 12
     DEFPUSHBUTTON   "查找下一個(&N)", IDOK, 182, 5, 50, 14, WS_GROUP
     PUSHBUTTON      "取消", IDCANCEL, 182, 23, 50, 14, WS_GROUP
-    CONTROL         "從開頭 (方向: 向下) 或從結尾 (方向: 向上) 開始搜尋(&S)", IDC_CBX_FIND_FROM_BEGINNING,
+    CONTROL         "從開頭（方向：向下）或從結尾（方向：向上）開始搜尋(&S)", IDC_CBX_FIND_FROM_BEGINNING,
                     "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 4, 58, 231, 12
 END
 

@@ -13,7 +13,7 @@ BEGIN
     POPUP "日誌(&L)"
     BEGIN
         MENUITEM "開啟...(&O)", IDM_OPEN_EVENTLOG
-        MENUITEM "Save Event Log as...(&E)", IDM_SAVE_EVENTLOG
+        MENUITEM "Save &Event Log as...", IDM_SAVE_EVENTLOG
         MENUITEM "關閉(&C)", IDM_CLOSE_EVENTLOG
         MENUITEM SEPARATOR
         MENUITEM "清除所有事件(&L)", IDM_CLEAR_EVENTS
@@ -27,7 +27,7 @@ BEGIN
         MENUITEM "最新的在前(&N)", IDM_LIST_NEWEST
         MENUITEM "最舊的在前(&O)", IDM_LIST_OLDEST
         MENUITEM SEPARATOR
-        MENUITEM "詳情... (&D)\tEnter", IDM_EVENT_DETAILS
+        MENUITEM "詳情(&D)...\tEnter", IDM_EVENT_DETAILS
         MENUITEM SEPARATOR
         MENUITEM "重新整理(&R)\tF5", IDM_REFRESH
     END
