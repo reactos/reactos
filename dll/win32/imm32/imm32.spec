@@ -87,8 +87,8 @@
 @ stdcall ImmRegisterWordA(long str long str)
 @ stdcall ImmRegisterWordW(long wstr long wstr)
 @ stdcall ImmReleaseContext(ptr ptr)
-@ stdcall ImmRequestMessageA(ptr long long)
-@ stdcall ImmRequestMessageW(ptr long long)
+@ stdcall ImmRequestMessageA(ptr ptr ptr)
+@ stdcall ImmRequestMessageW(ptr ptr ptr)
 @ stdcall ImmSendIMEMessageExA(ptr ptr)
 @ stdcall ImmSendIMEMessageExW(ptr ptr)
 @ stub ImmSendMessageToActiveDefImeWndW
