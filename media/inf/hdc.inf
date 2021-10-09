@@ -2570,10 +2570,12 @@ PCI\CC_0101.DeviceDesc  = "Двухканальный PCI BusMaster IDE конт
 PCI\CC_0104.DeviceDesc  = "Универсальный RAID IDE контроллер"
 PCI\CC_0105.DeviceDesc  = "Универсальный ATA контроллер"
 PCI\CC_0106.DeviceDesc  = "Универсальный Serial ATA контроллер"
+
+; Turkish
 [Strings.041f]
 ReactOS = "ReactOS Takımı"
 HDCClassName = "IDE ATA/ATAPI Denetleyicileri"
-GenericMfg = "(Umûmî Sâbit Disk Denetleyicileri)"
+GenericMfg = "(Genel Sabit Disk Denetleyicileri)"
 PCI\VEN_1191&DEV_0005.DeviceDesc="Acard ATP850 ATA-33 Denetleyicisi"
 PCI\VEN_1191&DEV_0006.DeviceDesc="Acard ATP860A ATA-66 Denetleyicisi"
 PCI\VEN_1191&DEV_0007.DeviceDesc="Acard ATP860R ATA-66 Denetleyicisi"
@@ -2877,13 +2879,13 @@ PCI\VEN_ffff&DEV_ffff&REV_ff.DeviceDesc="IDE Denetleyicisi"
 
 ;Compatible adapters
 
-UniATA_Name = "Evrenlik ATA Sürücüsü"
+UniATA_Name = "Evrensel ATA Sürücüsü"
 *PNP0600.PriDeviceDesc  = "Birinci IDE Kanalı"
 *PNP0600.SecDeviceDesc  = "İkinci IDE Kanalı"
 PCI\CC_0101.DeviceDesc  = "İkili Kanal PCI BusMaster IDE Denetleyicisi"
-PCI\CC_0104.DeviceDesc  = "Umûmî RAID IDE Denetleyicisi"
-PCI\CC_0105.DeviceDesc  = "Umûmî ATA Denetleyicisi"
-PCI\CC_0106.DeviceDesc  = "Umûmî Dizilik ATA Denetleyicisi"
+PCI\CC_0104.DeviceDesc  = "Genel RAID IDE Denetleyicisi"
+PCI\CC_0105.DeviceDesc  = "Genel ATA Denetleyicisi"
+PCI\CC_0106.DeviceDesc  = "Genel Seri ATA Denetleyicisi"
 
 [Strings.0422]
 ReactOS = "Команда ReactOS"

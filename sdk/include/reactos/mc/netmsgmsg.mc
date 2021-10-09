@@ -15892,7 +15892,7 @@ Language=Spanish
 System error %1 has occurred.
 .
 Language=Turkish
-%1 dizge hatâsı oldu.
+%1 sistem hatâsı oldu.
 .
 Language=Chinese
 发生了系统错误 %1。
@@ -24550,7 +24550,7 @@ Language=Spanish
 Miembro de los grupos globales%0
 .
 Language=Turkish
-Umûmî takım üyelikleri%0
+Genel takım üyelikleri%0
 .
 Language=Chinese
 全局组成员身份%0
@@ -26319,7 +26319,7 @@ Language=Spanish
 Duración del bloqueo (en minutos):%0
 .
 Language=Turkish
-Kilitleme süresi (dakîka):%0
+Kilitleme süresi (dakika):%0
 .
 Language=Chinese
 锁定时间 (以分钟为单位):%0
@@ -26348,7 +26348,7 @@ Language=Spanish
 Ventana de cumpl. de bloqueo (en minutos):%0
 .
 Language=Turkish
-Kilitleme gözlem penceresi (dakîka):%0
+Kilitleme gözlem penceresi (dakika):%0
 .
 Language=Chinese
 锁定观察窗口 (以分钟为单位):%0

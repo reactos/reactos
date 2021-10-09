@@ -49,7 +49,7 @@ BEGIN
             MENUITEM "", -1, MFT_SEPARATOR
             MENUITEM "&Güvenlik...", IDM_SECURITY, MFT_STRING, MFS_ENABLED
             MENUITEM "&Ağ Bağlantıları", IDM_NETWORKCONNECTIONS, MFT_STRING, MFS_ENABLED
-            MENUITEM "&Yazıcılar ve Faks makineleri", IDM_PRINTERSANDFAXES, MFT_STRING, MFS_ENABLED
+            MENUITEM "&Yazıcılar ve Faks Cihazları", IDM_PRINTERSANDFAXES, MFT_STRING, MFS_ENABLED
             MENUITEM "G&örev Çubuğu ve Başlat Menüsü", IDM_TASKBARANDSTARTMENU, MFT_STRING, MFS_ENABLED
         END
         MENUITEM "A&ra", IDM_SEARCH, MFT_STRING, MFS_ENABLED
@@ -95,7 +95,7 @@ BEGIN
     LTEXT "Bu menü türü; size dizinlerinize, sık kullanılan programlara ve arama menüsüne kolay erişim verir.", IDC_TASKBARPROP_STARTMENUMODERNTEXT, 20, 145, 150, 24
     PUSHBUTTON "&Özelleştir...", IDC_TASKBARPROP_STARTMENUCUST, 192, 132, 53, 14
     AUTORADIOBUTTON "&Geleneksel Başlat Menüsü", IDC_TASKBARPROP_STARTMENUCLASSIC, 7, 175, 105, 10
-    LTEXT "Bu menü türü, size geleneksel görünümü ve geleneksel işlevliliği sağlar.", IDC_TASKBARPROP_STARTMENUCLASSICTEXT, 20, 185, 150, 24
+    LTEXT "Bu menü türü, size geleneksel görünümü ve işlevliliği sağlar.", IDC_TASKBARPROP_STARTMENUCLASSICTEXT, 20, 185, 150, 24
     PUSHBUTTON "Ö&zelleştir...", IDC_TASKBARPROP_STARTMENUCLASSICCUST, 192, 172, 53, 14
 END
 
@@ -127,7 +127,7 @@ BEGIN
     PUSHBUTTON       "&Gelişmiş", IDC_CLASSICSTART_ADVANCED, 162, 49, 53, 14
     PUSHBUTTON       "&Diz", IDC_CLASSICSTART_SORT, 162, 65, 53, 14
     ICON             IDI_RECYCLEBIN, IDC_STATIC, 20, 85, 20, 20
-    LTEXT            "Son erişilen belgelerin, programların ve Ortak Ağ sitelerinin kayıtlarını silmek için Sil'e tıklayınız.", IDC_STATIC, 49, 85, 108, 33
+    LTEXT            "Son erişilen belgelerin, programların ve Genel Ağ sitelerinin kayıtlarını silmek için Sil'e tıklayınız.", IDC_STATIC, 49, 85, 108, 33
     PUSHBUTTON       "S&il", IDC_CLASSICSTART_CLEAR, 162, 94, 53, 14
     LTEXT            "Ge&lişmiş Başlat Menüsü Ayarları:", IDC_STATIC, 8, 129, 150, 8
     CONTROL          "&Başlat Menüsü Ayarları", IDC_CLASSICSTART_SETTINGS, "SysTreeView32", WS_BORDER | 0x00000001, 8, 139, 218, 72, WS_EX_CLIENTEDGE
@@ -145,7 +145,7 @@ BEGIN
     LTEXT            "", IDC_STATIC, 7, 51, 258, 1, NOT WS_GROUP
     AUTOCHECKBOX     "&Başlangıçta Bu Denetlemeyi Yapma", IDC_NOTCHECK, 7, 62, 139, 10
     ICON             32515, IDC_STATIC, 7, 7, 21, 20
-    LTEXT            "Bilgisayarınızda %s adlı bir dosya ya da dizin belirli uygulamaların düzgün çalışmamasına neden olabilir. Onu %s olarak yeniden adlandırma bu sorunu çözecek. Onu şimdi yeniden adlandırmak ister misiniz?", IDC_STATIC, 34, 7, 224, 37
+    LTEXT            "Bilgisayarınızda %s adlı bir dosya ya da dizin belirli uygulamaların düzgün çalışmamasına neden olabilir. Onu %s olarak yeniden adlandırmak bu sorunu çözecek. Şimdi yeniden adlandırmak ister misiniz?", IDC_STATIC, 34, 7, 224, 37
 END
 
 IDD_MODERNSTART_ADVANCED DIALOGEX 0, 0, 251, 198, 0
@@ -154,8 +154,8 @@ CAPTION "Gelişmiş"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX         "Başlat Menüsü Ayarları", IDC_STATIC, 7, 7, 238, 42
-    AUTOCHECKBOX     "&Faremle Onların Üzerinde Durakladığımda Alt Seçkeleri Aç", IDC_AUTOOPEN, 14, 21, 224, 10
-    AUTOCHECKBOX     "&Yeni Kurulmuş İzlenceleri Vurgula", IDC_HIGHLIGHT, 14, 35, 224, 10
+    AUTOCHECKBOX     "İ&mleci Üzerlerine Getirdiğimde Alt Menüleri Aç", IDC_AUTOOPEN, 14, 21, 224, 10
+    AUTOCHECKBOX     "&Yeni Kurulmuş Programları Vurgula", IDC_HIGHLIGHT, 14, 35, 224, 10
     LTEXT            "&Başlat Menüsü Ayarları:", IDC_STATIC, 7, 53, 238, 8
     CONTROL          "B&aşlat Menüsü Ayarları", IDC_ITEMS, "SysTreeView32", WS_BORDER | 0x00000001, 7, 63, 238, 67, WS_EX_CLIENTEDGE
     GROUPBOX         "Son Belgeler", IDC_STATIC, 7, 133, 238, 56
@@ -175,13 +175,13 @@ BEGIN
     AUTORADIOBUTTON  "&Büyük Simgeler", IDC_CHOOSELARGE, 43, 25, 53, 10
     AUTORADIOBUTTON  "&Küçük Simgeler", IDC_CHOOSESMALL, 177, 25, 51, 10, NOT WS_TABSTOP
     GROUPBOX         "Programlar", IDC_STATIC, 7, 49, 238, 70
-    LTEXT            "Başlat menüsü en sık kullandığınız programlar için kısayollar içerir. Kısayolların listesini silme programları silmez.", IDC_STATIC, 14, 63, 224, 20
+    LTEXT            "Başlat menüsü, en sık kullandığınız programlar için kısayollar içerir. Kısayolların listesini silmek programları silmez.", IDC_STATIC, 14, 63, 224, 20
     LTEXT            "B&aşlat Menüsünde Bulunan Programların Sayısı:", IDC_STATIC, 14, 86, 112, 8
     EDITTEXT         IDC_NUMBEROFPROGRAMS, 133, 84, 27, 12, ES_LEFT | ES_RIGHT | ES_NUMBER
     CONTROL          "", IDC_NUMBERUPDOWN, "msctls_updown32", WS_BORDER | 0x000000B6, 160, 84, 11, 12
     PUSHBUTTON       "&Listeyi Sil", IDC_CLEARLIST, 182, 98, 57, 14
     GROUPBOX         "Başlat Menüsünü Göster", IDC_STATIC, 7, 126, 238, 63
-    AUTOCHECKBOX     "&Ortak Ağ:", IDC_SHOWINTERNET, 14, 140, 42, 10
+    AUTOCHECKBOX     "&Genel Ağ:", IDC_SHOWINTERNET, 14, 140, 42, 10
     COMBOBOX         IDC_INTERNETDEFAULTAPP, 98, 138, 140, 200, CBS_DROPDOWNLIST | WS_VSCROLL
     AUTOCHECKBOX     "&E-posta:", IDC_SHOWEMAIL, 14, 157, 37, 10
     COMBOBOX         IDC_EMAILDEFAULTAPP, 98, 155, 140, 200, CBS_DROPDOWNLIST | WS_VSCROLL

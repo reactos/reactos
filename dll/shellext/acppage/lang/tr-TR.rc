@@ -7,17 +7,17 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Uyumluluk"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT "ReactOS'ta bu programı çalıştırırken sorunlarınız oluyorsa ReactOS'un uygulamaya bildireceği bir işletim sistemi seçiniz.\nŞu an üzerinde çalışılmaktadır, bunu göz önünde bulundurarak kullanınız.", IDC_EXPLANATION, 7, 7, 210, 31
-    GROUPBOX "Uyumluluk Modu", IDC_COMPATGROUP, 7, 41, 210, 49
+    LTEXT "ReactOS'ta bu programı çalıştırırken sorun yaşıyorsanız, ReactOS'un uygulamaya bildireceği bir işletim sistemi seçiniz.\nŞu an üzerinde çalışılan bir özelliktir, bunu göz önünde bulundurunuz.", IDC_EXPLANATION, 7, 7, 210, 31
+    GROUPBOX "Uyumluluk modu", IDC_COMPATGROUP, 7, 41, 210, 49
     CHECKBOX "Bu programı şu uyumluluk modunda çalıştır:", IDC_CHKRUNCOMPATIBILITY, 18, 57, 188, 10, BS_AUTOCHECKBOX | WS_TABSTOP
     COMBOBOX IDC_COMPATIBILITYMODE, 18, 70, 188, 85, CBS_HASSTRINGS | CBS_DROPDOWNLIST | WS_TABSTOP | WS_DISABLED
-    GROUPBOX "Görüntü Ayarları", -1, 7, 99, 210, 61, BS_GROUPBOX
-    CHECKBOX "256 Renkte Çalıştır", IDC_CHKRUNIN256COLORS, 18, 114, 188, 10, BS_AUTOCHECKBOX | WS_TABSTOP
-    CHECKBOX "640x480 Ekran Çözünürlüğünde Çalıştır", IDC_CHKRUNIN640480RES, 18, 129, 188, 10, BS_AUTOCHECKBOX | WS_TABSTOP
-    CHECKBOX "Görsel Temaları Devre Dışı Bırak", IDC_CHKDISABLEVISUALTHEMES, 18, 144, 188, 10, BS_AUTOCHECKBOX | WS_TABSTOP
+    GROUPBOX "Görüntü ayarları", -1, 7, 99, 210, 61, BS_GROUPBOX
+    CHECKBOX "256 renkte çalıştır", IDC_CHKRUNIN256COLORS, 18, 114, 188, 10, BS_AUTOCHECKBOX | WS_TABSTOP
+    CHECKBOX "640x480 ekran çözünürlüğünde çalıştır", IDC_CHKRUNIN640480RES, 18, 129, 188, 10, BS_AUTOCHECKBOX | WS_TABSTOP
+    CHECKBOX "Görsel temaları devre dışı bırak", IDC_CHKDISABLEVISUALTHEMES, 18, 144, 188, 10, BS_AUTOCHECKBOX | WS_TABSTOP
     PUSHBUTTON "&Uyumluluk Modlarını Düzenle...", IDC_EDITCOMPATIBILITYMODES, 112, 167, 105, 15
     LTEXT "",IDC_ENABLED_LAYERS,7,185,210,21
-    CONTROL "<A>Program uyumluluğu</A> konusunda daha çok öğren.", IDC_INFOLINK, "SysLink", WS_CHILD | WS_TABSTOP | WS_VISIBLE, 7, 207, 210, 10, WS_EX_NOPARENTNOTIFY
+    CONTROL "<A>Program uyumluluğu</A> konusunda daha fazlasını öğren.", IDC_INFOLINK, "SysLink", WS_CHILD | WS_TABSTOP | WS_VISIBLE, 7, 207, 210, 10, WS_EX_NOPARENTNOTIFY
 END
 
 IDD_EDITCOMPATIBILITYMODES DIALOGEX 0, 0, 309, 134
@@ -42,4 +42,3 @@ BEGIN
     IDS_FAILED_NETWORK "Bir ağ sürücüsü üzerinde olduğundan bu programda uyumluluk modları ayarlanamaz."
     IDS_FAILED_PROTECTED "ReactOS'un bir parçası olduğundan bu programda uyumluluk modları ayarlanamaz."
 END
-

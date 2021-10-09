@@ -280,7 +280,7 @@ STRINGTABLE
 BEGIN
     ID_REGISTRY_MENU "Bütün Kayıt Defteri ile çalışma komutlarını içerir."
     ID_EDIT_MENU "Anahtar veya değerleri düzenleme komutlarını içerir."
-    ID_VIEW_MENU "Kayıt Defteri penceresinin husûsileştirme komutlarını içerir."
+    ID_VIEW_MENU "Kayıt Defteri penceresinin özelleştirme komutlarını içerir."
     ID_FAVOURITES_MENU "Sık kullanılan anahtarları kullanma komutlarını içerir."
     ID_HELP_MENU "Kayıt Defteri Düzenleyicisi ile ilgili bilgiyi ya da yardımı görüntüleme komutlarını içerir."
     ID_EDIT_NEW_MENU "Yeni bir anahtar ya da yeni bir değer oluşturma komutlarını içerir."

@@ -11,12 +11,12 @@ IDR_BROWSE_MAIN_MENU MENU
             MENUITEM "&Pencere",                ID_BROWSE_NEW_WINDOW
         }
         MENUITEM "&Aç...",                      ID_BROWSE_OPEN
-        MENUITEM "&Sakla",                      ID_BROWSE_SAVE
-        MENUITEM "Ay&rı Sakla...",              ID_BROWSE_SAVE_AS
+        MENUITEM "&Kaydet",                      ID_BROWSE_SAVE
+        MENUITEM "Fa&rklı Kaydet...",              ID_BROWSE_SAVE_AS
         MENUITEM SEPARATOR
         MENUITEM "Ya&zdırma Biçimi...",         ID_BROWSE_PRINT_FORMAT
         MENUITEM "Yaz&dır...",                  ID_BROWSE_PRINT
-        MENUITEM "Yazd&ırma Ön İzlemesi",       ID_BROWSE_PRINT_PREVIEW
+        MENUITEM "Yazd&ırma Önizlemesi",       ID_BROWSE_PRINT_PREVIEW
         MENUITEM SEPARATOR
         MENUITEM "&Özellikler",               ID_BROWSE_PROPERTIES
         MENUITEM "&Kapat",                      ID_BROWSE_QUIT
@@ -36,7 +36,7 @@ IDR_BROWSE_MAIN_MENU MENU
     }
     POPUP "Y&ardım"
     {
-        MENUITEM "&Internet Explorer Üzerine", ID_BROWSE_ABOUT
+        MENUITEM "&Internet Explorer Hakkında", ID_BROWSE_ABOUT
     }
 }
 
@@ -58,9 +58,9 @@ STRINGTABLE
 STRINGTABLE
 {
     IDS_FINDINGRESOURCE     "%s İçin Aranıyor"
-    IDS_BEGINDOWNLOADDATA   "%s İndirmeye Başlanıyor"
+    IDS_BEGINDOWNLOADDATA   "%s Ögesini İndirmeye Başla"
     IDS_ENDDOWNLOADDATA     "%s İndiriliyor"
-    IDS_SENDINGREQUEST      "%s İçin Soruyor"
+    IDS_SENDINGREQUEST      "%s İçin Soruluyor"
 }
 
 
@@ -69,7 +69,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION
 CAPTION "URL Aç"
 FONT 8, "MS Shell Dlg"
 {
-    LTEXT "Internet Explorer içinde açmak için istedğiniz URL'yi belirtiniz.",-1, 35,5,160,25
+    LTEXT "Internet Explorer'de açmak istediğiniz URL'yi belirtiniz.",-1, 35,5,160,25
     LTEXT "Aç:", -1, 5, 32, 30, 15
 #ifdef __REACTOS__
     ICON IDC_PAGEICO, IDC_PAGEICO, 2, 5, 21, 20, SS_ICON

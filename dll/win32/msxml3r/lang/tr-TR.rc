@@ -1,0 +1,14 @@
+/*
+ * PROJECT:     ReactOS MSXML 3.0 Resource Library
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Turkish resource file
+ * TRANSLATOR:  Copyright 2021 Süleyman Poyraz <zaryob.dev@gmail.com>
+ */
+
+LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    IDS_XML_FILE "XML Dosyası"
+    IDS_XLS_FILE "XSL Stil Sayfası"
+END

@@ -1137,38 +1137,38 @@ TEST="測試"
 CPLFILE_OPENWITH="Denetim Masası'yla Aç"
 
 ;; In hhctrl.ocx
-;CHMFILE="Compiled HTML Help File"
+;CHMFILE="Derlenmiş HTML Yardım Dosyası"
 
 ;; In msxml3r.dll
-;XMLFILE="XML Document"
-;XSLFILE="XSL Stylesheet"
+;XMLFILE="XML Dosyası"
+;XSLFILE="XSL Stil Şablonu"
 
 ;; In msi.dll
-;MSIPACK="ReactOS Installer Package"
+;MSIPACK="ReactOS Yükleyicisi Paketi"
 
 ;; In themeui.dll
-;MSSTYLESFILE="Visual Style File"
-;THEMEFILE="Theme File"
+;MSSTYLESFILE="Görsel Stil Dosyası"
+;THEMEFILE="Tema Dosyası"
 
 ;; In some multimedia exe/dll
-;WAVFILE="Wave Sound"
-;MIDFILE="MIDI Sequence"
-;CDAFILE="CD Audio Track"
-;AVIFILE="Video Clip"
+;WAVFILE="Ses Dosyası"
+;MIDFILE="MIDI Dizisi"
+;CDAFILE="CD Ses Parçası"
+;AVIFILE="Video Klibi"
 
 ;; Misc file types without friendly (localized in .dll resources) name
-;CSSFILE="Cascading Style Sheet"
-;SCFFILE="ReactOS Explorer Command"
-;WMZFILE="Compressed Enhanced Metafile"
+;CSSFILE="Basamaklı Stil Şablonu"
+;SCFFILE="ReactOS Gezgini Komutu"
+;WMZFILE="Sıkıştırılmış Geliştirilmiş Meta Dosyası"
 
 ;; For .reg files, right-click menu
-;MERGE="Merge"
+;MERGE="Birleştir"
 
 ;; For screensaver (*.scr) and MSI install package (*.msi) files, right-click menu
-;CONFIGURE="Configure"
-;INSTALL="Install"
-;UNINSTALL="Uninstall"
-;REPAIR="Repair"
-;TEST="Test"
+;CONFIGURE="Yapılandır"
+;INSTALL="Yükle"
+;UNINSTALL="Kaldır"
+;REPAIR="Onar"
+;TEST="Dene"
 
 ; EOF

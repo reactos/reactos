@@ -8,9 +8,9 @@ EXSTYLE WS_EX_CONTEXTHELP
 CAPTION "Güç Sayacı"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "Güç Durumu", 1001, "Button", BS_GROUPBOX | WS_CHILD | WS_VISIBLE, 9, 20, 234, 189
-    CONTROL "&Görev Çubuğunda Sürekli Simge Göster", 1002, "Button", BS_AUTOCHECKBOX | WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP, 6, 6, 120, 10
-    CONTROL "&Tüm Piller İçin Ayrıntıları Göster", 1003, "Button", BS_AUTOCHECKBOX | WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP, 135, 6, 120, 8
+    CONTROL "Güç durumu", 1001, "Button", BS_GROUPBOX | WS_CHILD | WS_VISIBLE, 9, 20, 234, 189
+    CONTROL "&Görev çubuğunda sürekli simge göster", 1002, "Button", BS_AUTOCHECKBOX | WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP, 6, 6, 120, 10
+    CONTROL "&Tüm piller için ayrıntıları göster", 1003, "Button", BS_AUTOCHECKBOX | WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP, 135, 6, 120, 8
     CONTROL "", 1000, "Static", SS_LEFT | WS_CHILD | WS_GROUP, 11, 29, 229, 178
 END
 
@@ -21,11 +21,11 @@ BEGIN
     IDS_PWR_METER             "G&üç Ölçücüsünü Aç"
     IDS_PWR_RUN               "shell32.dll,Control_RunDLL PowerCfg.cpl"
     IDS_PWR_PERCENT_REMAINING "%%%u kaldı."
-    IDS_PWR_CHARGING          "%%%u (Yükleniyor)"
-    IDS_PWR_UNKNOWN_REMAINING "Bilinmeyen kalan."
-    IDS_PWR_AC "Dalgalı akımda(AC)."
+    IDS_PWR_CHARGING          "%%%u ve şarj oluyor"
+    IDS_PWR_UNKNOWN_REMAINING "Kalan güç bilinmiyor."
+    IDS_PWR_AC "Dalgalı akımda (AC)."
     IDS_PWR_HOURS_REMAINING "%1!u!.%2!02u! saat (%%%3!u!) kalan"
-    IDS_PWR_MINUTES_REMAINING "%1!u! dakîka (%%%2!u!) kalan"
+    IDS_PWR_MINUTES_REMAINING "%1!u! dakika (%%%2!u!) kalan"
 
     //Hotplug related strings
     IDS_HOTPLUG_REMOVE_1 "Donanımı Güvenli Kaldır"
@@ -48,6 +48,6 @@ BEGIN
 
     //Keyboard-Mouse related strings
     IDS_KEYS_STICKY "Yapışkan Tuşlar"
-    IDS_KEYS_MOUSE "Fare Düğmeleri"
-    IDS_KEYS_FILTER "Filtre Anahtarları"
+    IDS_KEYS_MOUSE "Fare Tuşları"
+    IDS_KEYS_FILTER "Filtre Tuşları"
 END

@@ -185,11 +185,11 @@ StdMfg = "(Štandardné klávesnice)"
 
 [Strings.041f]
 ReactOS = "ReactOS Takımı"
-KeyboardClassName = "Düğme Takımları"
-HID.KeyboardDevice    = "HID Düğme Takımı"
-StdMfg = "(Ölçünlü Düğme Takımları)"
-LocationOverride = "düğme takımı girişine takılı"
-*PNP0303.DeviceDesc = "IBM PC/AT Düğme Takımı"
+KeyboardClassName = "Klavyeler"
+HID.KeyboardDevice    = "HID Klavyeler"
+StdMfg = "(Standart Klavyeler)"
+LocationOverride = "klavye girişine takılı"
+*PNP0303.DeviceDesc = "IBM PC/AT Klavye"
 
 [Strings.0422]
 ReactOS = "Команда ReactOS"

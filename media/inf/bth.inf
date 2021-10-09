@@ -96,7 +96,7 @@ BluetoothClassName="Радиомодули Bluetooth"
 
 [Strings.041f]
 ReactOS="ReactOS Takımı"
-BTUSB.DeviceDesc="Umûmî USB Bluetooth Radyo"
+BTUSB.DeviceDesc="Genel USB Bluetooth Radyo"
 BluetoothClassName="Bluetooth Radyoları"
 
 [Strings.0804]

@@ -7,44 +7,44 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Özellik"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Eğer ağınız bu yeteneği destekliyorsa kendiliğinden atanmış IP ayarları alabilirsiniz. Yoksa uygun IP ayarları için ağ yöneticinize sormanız gerekir.", -1, 9, 9, 235, 27
-    CONTROL "IP Adresini Kendiliğinden Al", IDC_USEDHCP, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 43, 210, 12
+    LTEXT "Eğer ağınız bu özelliği destekliyorsa otomatik atanmış IP ayarları alabilirsiniz. Yoksa, uygun IP ayarları için ağ yöneticinize başvurmanız gerekir.", -1, 9, 9, 235, 27
+    CONTROL "IP adresini otomatik al", IDC_USEDHCP, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 43, 210, 12
     GROUPBOX "", -1, 9, 61, 228, 70, BS_GROUPBOX
-    CONTROL "&Aşağıdaki IP Adresini Kullan:", IDC_NODHCP, "BUTTON", BS_AUTORADIOBUTTON, 14, 59, 120, 12
-    LTEXT "IP Adresi:", -1, 14, 75, 135, 8
+    CONTROL "&Aşağıdaki IP adresini kullan:", IDC_NODHCP, "BUTTON", BS_AUTORADIOBUTTON, 14, 59, 120, 12
+    LTEXT "IP adresi:", -1, 14, 75, 135, 8
     CONTROL "", IDC_IPADDR, "SysIPAddress32", WS_TABSTOP, 144, 75 - 2, 85, 12
-    LTEXT "Alt Ağ Maskesi:", -1, 14, 90, 135, 8
+    LTEXT "Alt ağ maskesi:", -1, 14, 90, 135, 8
     CONTROL "", IDC_SUBNETMASK, "SysIPAddress32", WS_TABSTOP, 144, 90 - 2, 85, 12
-    LTEXT "Ön Tanımlı Geçit:", -1, 14, 105, 135, 8
+    LTEXT "Varsayılan geçit:", -1, 14, 105, 135, 8
     CONTROL "", IDC_DEFGATEWAY, "SysIPAddress32", WS_TABSTOP, 144, 105 - 2, 85, 12
-    CONTROL "DNS Sunucusu Adresini Kendiliğinden Al", IDC_AUTODNS, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 139, 210, 12
+    CONTROL "DNS sunucusu adresini otomatik al", IDC_AUTODNS, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 139, 210, 12
     GROUPBOX "", -1, 9, 157, 228, 47, BS_GROUPBOX
-    CONTROL "A&şağıdaki DNS Sunucusu Adreslerini Kullan", IDC_FIXEDDNS, "BUTTON", BS_AUTORADIOBUTTON, 14, 155, 152, 12
-    LTEXT "Tercih edilen DNS Sunucusu:", -1, 14, 171, 135, 8
+    CONTROL "A&şağıdaki DNS sunucusu adreslerini kullan", IDC_FIXEDDNS, "BUTTON", BS_AUTORADIOBUTTON, 14, 155, 152, 12
+    LTEXT "Tercih edilen DNS sunucusu:", -1, 14, 171, 135, 8
     CONTROL "", IDC_DNS1, "SysIPAddress32", WS_TABSTOP, 144, 171 - 2, 85, 12
-    LTEXT "Başka DNS Sunucusu:", -1, 14, 186, 135, 8
+    LTEXT "Alternatif DNS sunucusu:", -1, 14, 186, 135, 8
     CONTROL "", IDC_DNS2, "SysIPAddress32", WS_TABSTOP, 144, 186 - 2, 85, 12
     PUSHBUTTON "&Gelişmiş", IDC_ADVANCED, 186, 209, 50, 14, WS_TABSTOP
 END
 
 IDD_TCPIP_ALTCF_DLG DIALOGEX 0, 0, 246, 228
 STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
-CAPTION "Başka Yapılandırma"
+CAPTION "Alternatif Yapılandırma"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Eğer bu bilgisayar birden çok ağda kullanılıyorsa aşağıda başka IP ayarlarını giriniz.", -1, 9, 9, 220, 20
-    CONTROL "&Kendiliğinden IP Adresi ayarla", IDC_USEDHCP, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 40, 210, 12
+    LTEXT "Eğer bu bilgisayar birden çok ağda kullanılıyorsa, aşağıya alternatif IP ayarlarını giriniz.", -1, 9, 9, 220, 20
+    CONTROL "&Otomatik özel IP adresi", IDC_USEDHCP, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 40, 210, 12
     GROUPBOX "", -1, 9, 55, 228, 80, BS_GROUPBOX
-    CONTROL "K&ullanıcının Yapılandırdığı", IDC_NODHCP, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 55, 70, 12
-    LTEXT "&IP Adresi:", -1, 14, 75, 135, 8
+    CONTROL "K&ullanıcının yapılandırdığı", IDC_NODHCP, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 55, 70, 12
+    LTEXT "&IP adresi:", -1, 14, 75, 135, 8
     CONTROL "", IDC_IPADDR, "SysIPAddress32", WS_TABSTOP, 144, 75, 85, 12
-    LTEXT "&Alt Ağ Maskesi:", -1, 14, 95, 135, 8
+    LTEXT "&Alt ağ maskesi:", -1, 14, 95, 135, 8
     CONTROL "", IDC_SUBNETMASK, "SysIPAddress32", WS_TABSTOP, 144, 95, 85, 12
-    LTEXT "&Ön Tanımlı Geçit:", -1, 14, 115, 135, 8
+    LTEXT "&Varsayılan geçit:", -1, 14, 115, 135, 8
     CONTROL "", IDC_DEFGATEWAY, "SysIPAddress32", WS_TABSTOP, 144, 115, 85, 12
     LTEXT "&Tercih edilen DNS Sunucusu:", -1, 14, 150, 135, 8
     CONTROL "", IDC_DNS1, "SysIPAddress32", WS_TABSTOP, 144, 150, 85, 12
-    LTEXT "&Başka DNS Sunucusu:", -1, 14, 165, 180, 8
+    LTEXT "A&lternatif DNS Sunucusu:", -1, 14, 165, 180, 8
     CONTROL "", IDC_DNS2, "SysIPAddress32", WS_TABSTOP, 144, 165, 85, 12
 END
 
@@ -53,19 +53,19 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
 CAPTION "IP Ayarları"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "IP Adresleri", -1, 5, 5, 240, 90
+    GROUPBOX "IP adresleri", -1, 5, 5, 240, 90
     CONTROL "", IDC_IPLIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 15, 15, 215, 55
     PUSHBUTTON "Ekle...", IDC_IPADD, 60, 75, 50, 14, WS_TABSTOP
     PUSHBUTTON "Düzenle...", IDC_IPMOD, 120, 75, 50, 14, WS_TABSTOP
-    PUSHBUTTON "Sil", IDC_IPDEL, 180, 75, 50, 14, WS_TABSTOP
-    GROUPBOX "Ön Tanımlı Geçitler:", -1, 5, 100, 240, 90
+    PUSHBUTTON "Kaldır", IDC_IPDEL, 180, 75, 50, 14, WS_TABSTOP
+    GROUPBOX "Varsayılan geçitler:", -1, 5, 100, 240, 90
     CONTROL "", IDC_GWLIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 15, 110, 215, 55
     PUSHBUTTON "Ekle...", IDC_GWADD, 60, 170, 50, 14, WS_TABSTOP
     PUSHBUTTON "Düzenle...", IDC_GWMOD, 120, 170, 50, 14, WS_TABSTOP
-    PUSHBUTTON "Sil", IDC_GWDEL, 180, 170, 50, 14, WS_TABSTOP
+    PUSHBUTTON "Kaldır", IDC_GWDEL, 180, 170, 50, 14, WS_TABSTOP
     GROUPBOX "", -1, 5, 200, 240, 30
     CHECKBOX "Ölçülendirmeyi ayarla", IDC_AUTOMETRIC, 9, 200, 90, 12, BS_AUTOCHECKBOX | WS_TABSTOP
-    LTEXT "Arayüz Ölçüsü:", -1, 15, 215, 90, 12
+    LTEXT "Arayüz ölçüsü:", -1, 15, 215, 90, 12
     EDITTEXT IDC_METRIC, 110, 212, 50, 12, WS_TABSTOP | ES_NUMBER
 END
 
@@ -75,26 +75,26 @@ CAPTION "DNS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LISTBOX IDC_DNSADDRLIST, 5, 17, 180, 50, LBS_NOTIFY
-    LTEXT "&Kullanmak için DNS sunucusu adresleri:", -1, 5, 5, 180, 12
+    LTEXT "&Kullanım sırasıyla DNS sunucusu adresleri:", -1, 5, 5, 180, 12
     PUSHBUTTON "Yukarı", IDC_DNSADDRUP, 190, 25, 50, 14, WS_TABSTOP
     PUSHBUTTON "Aşağı", IDC_DNSADDRDOWN, 190, 45, 50, 14, WS_TABSTOP
     PUSHBUTTON "&Ekle...", IDC_DNSADDRADD, 15, 69, 50, 14, WS_TABSTOP
     PUSHBUTTON "&Düzenle...", IDC_DNSADDRMOD, 75, 69, 50, 14, WS_TABSTOP
-    PUSHBUTTON "&Sil", IDC_DNSADDRDEL, 135, 69, 50, 14, WS_TABSTOP
-    LTEXT "Aşağıdaki üç ayar, TCP/IP'nin etkin olduğu tüm bağlantılara uygulanmıştır. Nitelenmemiş adların çözümü için:", -1, 5, 90, 220, 24
-    CONTROL "&Birinci ve Bağlantıya Özgü DNS Son Eklerini Ekle", IDC_PRIMSUFFIX, "BUTTON", BS_AUTORADIOBUTTON, 5, 110, 220, 12
-    CHECKBOX "Bi&rinci DNS Son Ekinin Ana Son Eklerini Ekle", IDC_TOPPRIMSUFFIX, 15, 125, 220, 12, BS_AUTOCHECKBOX | WS_TABSTOP
-    CONTROL "Di&ziyle Şu DNS Son Eklerini Ekle:", IDC_SELSUFFIX, "BUTTON", BS_AUTORADIOBUTTON, 5, 140, 220, 12
+    PUSHBUTTON "&Kaldır", IDC_DNSADDRDEL, 135, 69, 50, 14, WS_TABSTOP
+    LTEXT "Aşağıdaki üç ayar, TCP/IP'nin etkin olduğu tüm bağlantılara uygulanır. Nitelenmemiş adların çözümü için:", -1, 5, 90, 220, 24
+    CONTROL "&Birinci ve bağlantıya özgü DNS son eklerini ekle", IDC_PRIMSUFFIX, "BUTTON", BS_AUTORADIOBUTTON, 5, 110, 220, 12
+    CHECKBOX "Bi&rinci DNS son ekinin ana son eklerini ekle", IDC_TOPPRIMSUFFIX, 15, 125, 220, 12, BS_AUTOCHECKBOX | WS_TABSTOP
+    CONTROL "&Sırayla şu DNS son eklerini ekle:", IDC_SELSUFFIX, "BUTTON", BS_AUTORADIOBUTTON, 5, 140, 220, 12
     LISTBOX IDC_DNSSUFFIXLIST, 5, 155, 180, 50, LBS_NOTIFY
     PUSHBUTTON "Yukarı", IDC_DNSSUFFIXUP, 190, 163, 50, 14, WS_TABSTOP
     PUSHBUTTON "Aşağı", IDC_DNSSUFFIXDOWN, 190, 180, 50, 14, WS_TABSTOP
     PUSHBUTTON "Ek&le...", IDC_DNSSUFFIXADD, 15, 207, 50, 14, WS_TABSTOP
     PUSHBUTTON "D&üzenle...", IDC_DNSSUFFIXMOD, 75, 207, 50, 14, WS_TABSTOP
-    PUSHBUTTON "S&il", IDC_DNSSUFFIXDEL, 135, 207, 50, 14, WS_TABSTOP
-    LTEXT "B&u Bağlantı İçin DNS Son Eki:", -1, 5, 228, 110, 14
+    PUSHBUTTON "Kal&dır", IDC_DNSSUFFIXDEL, 135, 207, 50, 14, WS_TABSTOP
+    LTEXT "B&u bağlantı için DNS son eki:", -1, 5, 228, 110, 14
     EDITTEXT IDC_SUFFIX, 120, 225, 100, 12, WS_TABSTOP
-    CHECKBOX "D&NS'ye Bu Bağlantının Adreslerini Sakla", IDC_REGSUFFIX, 15, 240, 190, 12, BS_AUTOCHECKBOX | WS_TABSTOP
-    CHECKBOX "DNS K&aydında Bu Bağlantının DNS Son Ekini Kullan", IDC_USESUFFIX, 15, 255, 220, 12, BS_AUTOCHECKBOX | WS_TABSTOP
+    CHECKBOX "D&NS'ye bu bağlantının adreslerini kaydet", IDC_REGSUFFIX, 15, 240, 190, 12, BS_AUTOCHECKBOX | WS_TABSTOP
+    CHECKBOX "DNS k&aydında bu bağlantının DNS son ekini kullan", IDC_USESUFFIX, 15, 255, 220, 12, BS_AUTOCHECKBOX | WS_TABSTOP
 END
 
 IDD_TCPIP_ADVOPT_DLG DIALOGEX 0, 0, 247, 247
@@ -103,9 +103,9 @@ CAPTION "Seçenekler"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LISTBOX IDC_OPTLIST, 5, 30, 230, 70
-    LTEXT "&SeçilebilirAyarlar", -1, 5, 15, 130, 12
+    LTEXT "&Seçilebilir Ayarlar", -1, 5, 15, 130, 12
     PUSHBUTTON "&Özellikler", IDC_OPTPROP, 165, 100, 70, 14, WS_TABSTOP
-    GROUPBOX "Tanım:", -1, 5, 120, 240, 70
+    GROUPBOX "Açıklama:", -1, 5, 120, 240, 70
     LTEXT "", IDC_OPTDESC, 15, 130, 220, 33
 END
 
@@ -115,8 +115,8 @@ CAPTION "TCP/IP Adresi"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "", IDC_IPADDR, "SysIPAddress32", WS_TABSTOP, 96, 15, 85, 12
-    LTEXT "IP Adresi:", -1, 5, 15, 70, 12
-    LTEXT "Alt Ağ Maskesi:", -1, 5, 30, 70, 12
+    LTEXT "IP adresi:", -1, 5, 15, 70, 12
+    LTEXT "Alt ağ maskesi:", -1, 5, 30, 70, 12
     CONTROL "", IDC_SUBNETMASK, "SysIPAddress32", WS_TABSTOP, 96, 30, 85, 12
     DEFPUSHBUTTON "", IDC_OK, 50, 50, 50, 14, WS_TABSTOP
     PUSHBUTTON "İptal", IDCANCEL, 110, 50, 50, 14, WS_TABSTOP
@@ -129,7 +129,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "", IDC_IPADDR, "SysIPAddress32", WS_TABSTOP, 96, 15, 85, 12
     LTEXT "Geçit:", -1, 5, 15, 70, 12
-    CHECKBOX "Ölçülendirmeyi Ayarla", IDC_USEMETRIC, 15, 30, 190, 12, BS_AUTOCHECKBOX | WS_TABSTOP
+    CHECKBOX "Ölçülendirmeyi ayarla", IDC_USEMETRIC, 15, 30, 190, 12, BS_AUTOCHECKBOX | WS_TABSTOP
     LTEXT "&Ölçü:", IDC_METRICTXT, 5, 45, 45, 12, WS_DISABLED
     EDITTEXT IDC_METRIC, 100, 45, 50, 12, WS_TABSTOP | ES_NUMBER | WS_DISABLED
     DEFPUSHBUTTON "", IDC_OK, 50, 60, 50, 14, WS_TABSTOP
@@ -142,7 +142,7 @@ CAPTION "TCP/IP DNS Sunucusu"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "", IDC_IPADDR, "SysIPAddress32", WS_TABSTOP, 5, 25, 85, 12
-    LTEXT "DNS Sunucusu:", -1, 5, 10, 120, 12
+    LTEXT "DNS sunucusu:", -1, 5, 10, 120, 12
     PUSHBUTTON "", IDC_OK, 50, 50, 50, 14, WS_TABSTOP
     PUSHBUTTON "İptal", IDCANCEL, 110, 50, 50, 14, WS_TABSTOP
 END
@@ -153,17 +153,17 @@ CAPTION "TCP/IP Etki Alanı Son Eki"
 FONT 8, "MS Shell Dlg"
 BEGIN
     EDITTEXT IDC_SUFFIX, 5, 25, 190, 12, WS_TABSTOP
-    LTEXT "Etki Alanı Son Eki:", -1, 5, 10, 120, 12
+    LTEXT "Etki alanı son eki:", -1, 5, 10, 120, 12
     PUSHBUTTON "", IDC_OK, 50, 50, 50, 14, WS_TABSTOP
     PUSHBUTTON "İptal", IDCANCEL, 110, 50, 50, 14, WS_TABSTOP
 END
 
 IDD_TCPIP_FILTER_DLG DIALOGEX 0, 0, 305, 220
 STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "TCP/IP Süzme"
+CAPTION "TCP/IP Filtreleme"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CHECKBOX "Tüm Bağdaştırıcılar İçin TCP/IP Süzmeyi Etkinleştir", IDC_USE_FILTER, 15, 5, 190, 12, BS_AUTOCHECKBOX | WS_TABSTOP
+    CHECKBOX "Tüm Bağdaştırıcılar İçin TCP/IP Filtrelemeyi Etkinleştir", IDC_USE_FILTER, 15, 5, 190, 12, BS_AUTOCHECKBOX | WS_TABSTOP
     GROUPBOX "", -1, 5, 30, 90, 150
     CONTROL "Tümüne İzin Ver", IDC_TCP_ALLOW_ALL, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 15, 30, 70, 12
     CONTROL "Yalnızca Şunlara İzin Ver:", IDC_TCP_RESTRICT, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 15, 44, 70, 12
@@ -188,7 +188,7 @@ END
 
 IDD_TCPIP_PORT_DLG DIALOGEX 0, 0, 200, 60
 STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Süzgeç Ekle"
+CAPTION "Filtre Ekle"
 FONT 8, "MS Shell Dlg"
 BEGIN
     EDITTEXT IDC_PORT_VAL, 5, 30, 70, 12, WS_TABSTOP | ES_NUMBER
@@ -202,8 +202,8 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Gelişmiş"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Bu ağ bağdaştırıcısı için aşağıdaki özellikler mevcuttur. Solda değiştirmek istediğiniz mülke tıklayın ve ardından sağda değerini seçin.", -1, 7, 7, 218, 24, WS_GROUP
-    LTEXT "&Ayar:", -1, 7, 37, 60, 8, WS_GROUP
+    LTEXT "Bu ağ bağdaştırıcısı için aşağıdaki özellikler kullanılabilir. Solda değiştirmek istediğiniz özelliğe tıklayın, ardından sağda değerini seçin.", -1, 7, 7, 218, 24, WS_GROUP
+    LTEXT "Ö&zellik:", -1, 7, 37, 60, 8, WS_GROUP
     LISTBOX IDC_PROPERTY_NAME, 7, 48, 124, 124, LBS_STANDARD | WS_TABSTOP
     LTEXT "&Değer:", -1, 151, 37, 60, 8, WS_GROUP
     EDITTEXT IDC_PROPERTY_VALUE_EDIT, 153, 48, 92, 14, ES_LEFT | ES_AUTOHSCROLL | WS_BORDER | WS_TABSTOP
@@ -218,29 +218,29 @@ BEGIN
     IDS_NET_CONNECT "Ağ Bağlantısı"
     IDS_NO_IPADDR_SET "Bağdaştırıcı, en az bir IP adresi gerektiriyor. Lütfen bir tane giriniz."
     IDS_NO_SUBMASK_SET "Alt ağ maskesi eksik olan bir adres girdiniz. Lütfen bir alt ağ maskesi giriniz."
-    IDS_TCPFILTERDESC "TCP/IP süzmesi, bilgisayarınıza uzanan TCP/IP ağ gidişgelişinin türünü denetlemenize izin verir."
-    IDS_TCPFILTER "TCP/IP Süzmesi"
-    IDS_IPADDR "IP Adresi"
-    IDS_SUBMASK "Alt Ağ Maskesi"
+    IDS_TCPFILTERDESC "TCP/IP filtrelemesi, bilgisayarınıza uzanan TCP/IP ağ trafiğinin türünü denetlemenize izin verir."
+    IDS_TCPFILTER "TCP/IP Filtrelemesi"
+    IDS_IPADDR "IP adresi"
+    IDS_SUBMASK "Alt ağ maskesi"
     IDS_GATEWAY "Geçit"
     IDS_METRIC "Ölçü"
     IDS_DHCPACTIVE "DHCP Etkin"
-    IDS_AUTOMATIC "Kendiliğinden"
-    IDS_NOITEMSEL "Bir öğe seçmediniz. İlk önce birini seçiniz."
+    IDS_AUTOMATIC "Otomatik"
+    IDS_NOITEMSEL "Bir öge seçmediniz. İlk önce birini seçiniz."
     IDS_TCPIP "ReactOS TCP/IP"
     IDS_ADD "Ekle"
     IDS_MOD "Tamam"
-    IDS_TCP_PORTS "TCP Girişleri"
-    IDS_UDP_PORTS "UDP Girişleri"
-    IDS_IP_PROTO "IP İletişim Protokolleri"
-    IDS_PORT_RANGE "Giriş numaraları, 0'dan büyük ve 65536'dan küçük olmalıdır. Lütfen bu aralıkta bir numara giriniz."
-    IDS_PROT_RANGE "İletişim protokol numaraları, 0'dan büyük ve 256'dan küçük olmalıdır. Lütfen bu aralıkta bir numara giriniz."
-    IDS_DUP_NUMBER "Eklemeye çalıştığınız numara önceden listede. Lütfen ayrı bir numara giriniz."
+    IDS_TCP_PORTS "TCP Bağlantı Noktaları"
+    IDS_UDP_PORTS "UDP Bağlantı Noktaları"
+    IDS_IP_PROTO "IP protokolleri"
+    IDS_PORT_RANGE "Bağlantı nokta numaraları, 0'dan büyük ve 65536'dan küçük olmalıdır. Lütfen bu aralıkta bir numara giriniz."
+    IDS_PROT_RANGE "Protokol numaraları, 0'dan büyük ve 256'dan küçük olmalıdır. Lütfen bu aralıkta bir numara giriniz."
+    IDS_DUP_NUMBER "Eklemeye çalıştığınız numara zaten listede. Lütfen başka bir numara giriniz."
     IDS_DISABLE_FILTER "Bu genel TCP/IP ayarını devre dışı bırakmak tüm bağdaştırıcıları etkileyecektir."
     IDS_NO_SUFFIX "Arama yönteminin şimdiki ayarı en az bir DNS son eki gerektiriyor. Lütfen bir tane giriniz ya da ayarı değiştiriniz."
     IDS_DOMAIN_SUFFIX "Etki alanı son eki geçerli bir son ek değil."
     IDS_DNS_SUFFIX """%s"" DNS etki alanı adı geçerli bir DNS adı değil."
-    IDS_DUP_SUFFIX "DNS son eki önceden listede."
-    IDS_DUP_IPADDR "IP adresi önceden listede."
-    IDS_DUP_GW "Ön tanımlı geçit önceden listede."
+    IDS_DUP_SUFFIX "DNS son eki zaten listede."
+    IDS_DUP_IPADDR "IP adresi zaten listede."
+    IDS_DUP_GW "Varsayılan geçit zaten listede."
 END

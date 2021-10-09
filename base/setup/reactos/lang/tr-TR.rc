@@ -9,7 +9,7 @@ LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
 IDD_STARTPAGE DIALOGEX 0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS'u Kur"
+CAPTION "ReactOS Kur"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "ReactOS Kur Sihirbazına'na Hoş Geldiniz", IDC_STARTTITLE, 115, 8, 195, 24
@@ -19,7 +19,7 @@ END
 
 IDD_TYPEPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS'u Kur"
+CAPTION "ReactOS Kur"
 FONT 8, "MS Shell Dlg"
 BEGIN
     AUTORADIOBUTTON "ReactOS'u Yükleme", IDC_INSTALL, 7, 7, 277, 10, WS_GROUP | WS_TABSTOP
@@ -31,7 +31,7 @@ END
 
 IDD_UPDATEREPAIRPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS'u Kur"
+CAPTION "ReactOS Kur"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT       "ReactOS Kurulum Yöneticisi aşağıda listelenen ReactOS kurulumlarının birini yükseltebilir ya da eğer ReactOS kurulumu zarar görmüşse kurulum yöneticisi onu onarmaya çalışabilir.", IDC_STATIC, 6, 6, 300, 18
@@ -42,7 +42,7 @@ END
 
 IDD_DEVICEPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS'u Kur"
+CAPTION "ReactOS Kur"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Bilgisayar:", IDC_STATIC, 20, 15, 80, 10
@@ -56,7 +56,7 @@ END
 
 IDD_DRIVEPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS'u Kur"
+CAPTION "ReactOS Kur"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "", IDC_PARTITION, "SysTreeList32", WS_BORDER | WS_VISIBLE | WS_TABSTOP | LVS_REPORT | LVS_SINGLESEL, 7, 7, 303, 112
@@ -100,7 +100,7 @@ END
 
 IDD_SUMMARYPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS'u Kur"
+CAPTION "ReactOS Kur"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Kurulum türü:", IDC_STATIC, 18, 5, 74, 11
@@ -126,7 +126,7 @@ END
 
 IDD_PROCESSPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS'u Kur"
+CAPTION "ReactOS Kur"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Dosyalar yükleniyor...", IDC_ACTIVITY, 20, 50, 277, 10
@@ -136,7 +136,7 @@ END
 
 IDD_RESTARTPAGE DIALOGEX 0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS'u Kur"
+CAPTION "ReactOS Kur"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "ReactOS Kurulum Sihirbazını Tamamlama", IDC_FINISHTITLE, 115, 8, 195, 24
@@ -163,7 +163,7 @@ BEGIN
     IDS_ABORTSETUP "ReactOS, bilgisayarınıza tümüyle kurulamadı. Eğer şimdi Kurulum Yöneticisinden çıkarsanız, ReactOS'u kurmak için Kurulum Yöneticisini yeniden çalıştırmayı isteybilirsiniz. Gerçekten çıkılsın mı?"
     IDS_ABORTSETUP2 "Kurulum iptal edilsin mi?"
     IDS_NO_TXTSETUP_SIF """txtsetup.sif"" bulunamıyor.\nKurulum Yöneticisi sürdüremiyor."
-    IDS_CAPTION "ReactOS'u Kur"
+    IDS_CAPTION "ReactOS Kur"
 END
 
 STRINGTABLE

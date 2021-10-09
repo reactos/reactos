@@ -95,7 +95,7 @@ GenericMfg = "(Generické systémové zariadenia)"
 [Strings.041f]
 ReactOS = "ReactOS Takımı"
 
-GenericMfg = "(Umûmî Dizge Aygıtları)"
+GenericMfg = "(Genel Sistem Aygıtları)"
 *PNP0C08.DeviceDesc = "ACPI Donanım"
 
 [Strings.0422]

@@ -34,7 +34,7 @@ BEGIN
     EDITTEXT IDC_LOGON_USERNAME, 67, 57, 148, 14, ES_AUTOHSCROLL
     LTEXT "Şifre:", IDC_STATIC, 6, 78, 59, 8
     EDITTEXT IDC_LOGON_PASSWORD, 67, 76, 148, 14, ES_AUTOHSCROLL | ES_PASSWORD
-    LTEXT "Üzerinde Oturum Aç:", IDC_STATIC, 6, 96, 59, 8
+    LTEXT "Şunun Üzerinde Oturum Aç:", IDC_STATIC, 6, 96, 59, 8
     COMBOBOX IDC_LOGON_DOMAIN, 67, 95, 148, 14, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON "Tamam", IDOK, 91, 122, 50, 14, BS_DEFPUSHBUTTON
     PUSHBUTTON "İptal", IDCANCEL, 145, 122, 50, 14
@@ -48,7 +48,7 @@ FONT 8, "MS Shell Dlg", 400, 0, 1
 BEGIN
     CONTROL IDI_ROSLOGO, IDC_ROSLOGO, "Static", SS_BITMAP, 0, 0, 275, 54
     GROUPBOX "Oturum Açma Bilgisi", IDC_STATIC, 7, 50, 261, 52
-    LTEXT "<Mesaj>", IDC_SECURITY_MESSAGE, 15, 62, 245, 18
+    LTEXT "<İleti>", IDC_SECURITY_MESSAGE, 15, 62, 245, 18
     LTEXT "<Oturum açma tarihi>", IDC_SECURITY_LOGONDATE, 15, 83, 245, 8
     CTEXT "Ne yapmak istersiniz?", IDC_STATIC, 10, 108, 255, 8
     PUSHBUTTON "Bilgisayarı Kilitle", IDC_SECURITY_LOCK, 7, 124, 80, 14
@@ -66,8 +66,8 @@ FONT 8, "MS Shell Dlg", 400, 0, 1
 BEGIN
     CONTROL IDI_ROSLOGO, IDC_ROSLOGO, "Static", SS_BITMAP, 0, 0, 275, 54
     ICON IDI_LOCKICON, IDC_STATIC, 7, 59, 20, 20
-    LTEXT "Bu bilgisayar kullanımda ve kilitli.", IDC_STATIC, 36, 61, 232, 8
-    LTEXT "<Mesaj>", IDC_LOCKED_MESSAGE, 37, 75, 231, 26
+    LTEXT "Bu bilgisayar şu an kullanımda ve kilitli.", IDC_STATIC, 36, 61, 232, 8
+    LTEXT "<İleti>", IDC_LOCKED_MESSAGE, 37, 75, 231, 26
     LTEXT "Bu bilgisayarın kilidini açmak için Ctrl-Alt-Del tuşlarına birlikte basınız.", IDC_STATIC, 36, 106, 232, 8
 END
 
@@ -78,8 +78,8 @@ FONT 8, "MS Shell Dlg", 400, 0, 1
 BEGIN
     CONTROL IDI_ROSLOGO, IDC_ROSLOGO, "Static", SS_BITMAP, 0, 0, 275, 54
     ICON IDI_LOCKICON, IDC_STATIC, 7, 59, 20, 20
-    LTEXT "Bu bilgisayar kullanımda ve kilitli.", IDC_STATIC, 36, 61, 232, 8
-    LTEXT "<Mesaj>", IDC_UNLOCK_MESSAGE, 36, 75, 232, 26
+    LTEXT "Bu bilgisayar şu an kullanımda ve kilitli.", IDC_STATIC, 36, 61, 232, 8
+    LTEXT "<İleti>", IDC_UNLOCK_MESSAGE, 36, 75, 232, 26
     LTEXT "Kullanıcı Adı:", IDC_STATIC, 36, 107, 40, 8
     EDITTEXT IDC_UNLOCK_USERNAME, 84, 104, 119, 14, ES_AUTOHSCROLL
     LTEXT "Şifre:", IDC_STATIC, 36, 125, 42, 8
@@ -96,7 +96,7 @@ BEGIN
     CONTROL IDI_ROSLOGO, IDC_ROSLOGO, "Static", SS_BITMAP, 0, 0, 275, 54
     LTEXT "Kullanıcı Adı:", IDC_STATIC, 7, 61, 78, 8
     EDITTEXT IDC_CHANGEPWD_USERNAME, 90, 59, 127, 12, ES_AUTOHSCROLL
-    LTEXT "Üzerinde Oturum Aç:", IDC_STATIC, 7, 78, 78, 8
+    LTEXT "Şunun Üzerinde Oturum Aç:", IDC_STATIC, 7, 78, 78, 8
     COMBOBOX IDC_CHANGEPWD_DOMAIN, 90, 75, 127, 144, CBS_DROPDOWNLIST | CBS_SORT | WS_TABSTOP
     LTEXT "Eski Şifre:", IDC_STATIC, 7, 95, 78, 8
     EDITTEXT IDC_CHANGEPWD_OLDPWD, 90, 92, 127, 12, ES_AUTOHSCROLL | ES_PASSWORD
@@ -114,7 +114,7 @@ CAPTION "Oturumu Kapat"
 FONT 8, "MS Shell Dlg", 400, 0, 1
 BEGIN
     ICON IDI_LOGOFF, IDC_STATIC, 7, 7, 20, 20
-    LTEXT "Oturumu kapatmayı istediğinizden emin misiniz?", IDC_STATIC, 35, 16, 146, 8
+    LTEXT "Oturumu kapatmak istediğinizden emin misiniz?", IDC_STATIC, 35, 16, 146, 8
     PUSHBUTTON "Evet", IDYES, 41, 39, 50, 14, BS_DEFPUSHBUTTON
     PUSHBUTTON "Hayır", IDNO, 95, 39, 50, 14
 END
@@ -150,9 +150,9 @@ BEGIN
     COMBOBOX IDC_SHUTDOWN_ACTION, 39, 70, 190, 210, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     LTEXT "", IDC_SHUTDOWN_DESCRIPTION, 39, 93, 190, 27
     GROUPBOX "Kapanma Olayı İzleyicisi", IDC_STATIC, 9, 122, 257, 146
-    LTEXT "Bilgisayarınızı neden kapatmak istediğinizi en iyi tanımlayan seçeneği seçin..", IDC_STATIC, 39, 134, 190, 17
+    LTEXT "Bilgisayarınızı neden kapatmak istediğinizi en iyi tanımlayan seçeneği seçiniz.", IDC_STATIC, 39, 134, 190, 17
     LTEXT "&Seçenek:", IDC_STATIC, 39, 154, 80, 8
-    AUTOCHECKBOX "&Planlandı", IDC_REASON_PLANNED, 182, 154, 47, 10
+    AUTOCHECKBOX "&Planlı", IDC_REASON_PLANNED, 182, 154, 47, 10
     COMBOBOX IDC_REASON_LIST, 39, 165, 190, 210, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     LTEXT "", IDC_REASON_DESCRIPTION, 39, 184, 190, 27
     LTEXT "&Yorum:", IDC_STATIC, 39, 214, 80, 8
@@ -182,7 +182,7 @@ BEGIN
     CONTROL IDI_ROSLOGO_FLAG, IDC_ROSLOGO_WHITE, "STATIC", SS_BITMAP, 176, 1, 32, 26
     PUSHBUTTON "&Hazırda Beklet", IDC_BUTTON_HIBERNATE, 30093, 30049, 22, 20, BS_OWNERDRAW | WS_DISABLED
     PUSHBUTTON "&Uykuya Geçir", IDC_BUTTON_SLEEP, 36, 46, 22, 20, BS_OWNERDRAW | WS_GROUP
-    PUSHBUTTON "Bilgi&sayarı", IDC_BUTTON_SHUTDOWN, 93, 46, 22, 20, BS_OWNERDRAW
+    PUSHBUTTON "Bilgi&sayarı Kapat", IDC_BUTTON_SHUTDOWN, 93, 46, 22, 20, BS_OWNERDRAW
     PUSHBUTTON "Yeniden &Başlat", IDC_BUTTON_REBOOT, 150, 46, 22, 20, BS_OWNERDRAW
     PUSHBUTTON "İptal", IDCANCEL, 162, 103, 40, 12, BS_FLAT | WS_GROUP
     LTEXT "Bilgisayarı Kapat", IDC_TURN_OFF_STATIC, 4, 7, 130, 19
@@ -199,7 +199,7 @@ BEGIN
     CONTROL IDI_ROSLOGO_FLAG, IDC_ROSLOGO_WHITE, "STATIC", SS_BITMAP, 232, 1, 32, 26
     PUSHBUTTON "&Hazırda Beklet", IDC_BUTTON_HIBERNATE, 36, 46, 22, 20, BS_OWNERDRAW | WS_GROUP
     PUSHBUTTON "&Uykuya Geçir", IDC_BUTTON_SLEEP, 93, 46, 22, 20, BS_OWNERDRAW
-    PUSHBUTTON "Bilgi&sayarı", IDC_BUTTON_SHUTDOWN, 150, 46, 22, 20, BS_OWNERDRAW
+    PUSHBUTTON "Bilgi&sayarı Kapat", IDC_BUTTON_SHUTDOWN, 150, 46, 22, 20, BS_OWNERDRAW
     PUSHBUTTON "Yeniden &Başlat", IDC_BUTTON_REBOOT, 207, 46, 22, 20, BS_OWNERDRAW
     PUSHBUTTON "İptal", IDCANCEL, 218, 103, 40, 12, BS_FLAT | WS_GROUP
     LTEXT "Bilgisayarı Kapat", IDC_TURN_OFF_STATIC, 4, 7, 130, 19
@@ -212,29 +212,29 @@ END
 STRINGTABLE
 BEGIN
     IDS_LOGGEDOUTSAS "Hoşgeldiniz!"
-    IDS_LOCKEDSAS "Bu bilgisayar şimdilik kilitli."
+    IDS_LOCKEDSAS "Bu bilgisayar şu an kilitli."
     IDS_PRESSCTRLALTDELETE "Oturum açmak için Ctrl-Alt-Del tuşlarına birlikte basınız."
     IDS_ASKFORUSER "Kullanıcı Adı: "
     IDS_ASKFORPASSWORD "Şifre: "
-    IDS_FORCELOGOFF "Bu, şimdiki kullanıcının oturumunu kapatacak ve tüm saklanmış bilgiler yitirilecek. Sürdürülsün mü?"
+    IDS_FORCELOGOFF "Bu, şimdiki kullanıcının oturumunu kapatacak ve kaydedilmemiş tüm bilgiler kaybolacak. Devam edilsin mi?"
     IDS_LOCKMSG "Yalnızca %s ve bir yönetici bu bilgisayarın kilidini açabilir."
     IDS_LOGONMSG "%s olarak oturum açtınız."
     IDS_LOGONDATE "Oturum Açma Zamanı: %s %s"
     IDS_COMPUTERLOCKED "Bilgisayar kilitlendi."
-    IDS_LOCKEDWRONGPASSWORD "Şifre yanlış. Lütfen şifrenizi yeniden giriniz. Şifrelerdeki harfler doğru büyük-küçük ayrımı kullanılarak yazılmalıdır."
+    IDS_LOCKEDWRONGPASSWORD "Şifre yanlış. Lütfen şifrenizi yeniden giriniz. Şifrelerdeki harfler, büyük-küçük harflere dikkat edilerek yazılmalıdır."
     IDS_LOCKEDWRONGUSER "Bu bilgisayar kilitli. Yalnızca %s\\%s ve bir yönetici bu bilgisayarın kilidini açabilir."
-    IDS_CHANGEPWDTITLE "Şifre Değştirme"
-    IDS_NONMATCHINGPASSWORDS "Yazıdığınız şifreler birbiriyle uyuşmuyor. İki metin kutusunda aynı şifreyi yazınız."
+    IDS_CHANGEPWDTITLE "Şifre Değiştirme"
+    IDS_NONMATCHINGPASSWORDS "Yazıdığınız şifreler birbiriyle uyuşmuyor. İki metin kutusunda da aynı şifreyi yazınız."
     IDS_PASSWORDCHANGED "Şifreniz değiştirildi."
     IDS_LOGONTITLE "Oturum Açma İletisi"
-    IDS_LOGONWRONGUSERORPWD "Sistem oturumunuzu açamadı. Kullanıcı adınızın ve etki alanının doğru olduğundan emin olunuz, sonra şifrenizi yeniden yazınız. Şifrelerdeki harfler doğru büyük-küçük ayrımı kullanılarak yazılmalıdır."
-    IDS_LOGONUSERDISABLED "Hesabınız devra dışı bırakıldı. Lütfen sistem yöneticinizle görüşünüz."
+    IDS_LOGONWRONGUSERORPWD "Sistem oturumunuzu açamadı. Kullanıcı adınızın ve etki alanının doğru olduğundan emin olunuz, sonra şifrenizi yeniden yazınız. Şifrelerdeki harfler, büyük-küçük harflere dikkat edilerek yazılmalıdır."
+    IDS_LOGONUSERDISABLED "Hesabınız devre dışı bırakıldı. Lütfen sistem yöneticinizle görüşünüz."
     IDS_PASSWORDMUSTCHANGE "İlk oturum açmada şifrenizi değiştirmeniz gerekir."
-    IDS_PASSWORDEXPIRED "Şifrenizin süresi doldu ve şifreniz değiştirilmelidir."
-    IDS_ACCOUNTEXPIRED "Hesabınızın süresi doldu. Lütfen sistem yöneticinizle görüşün."
-    IDS_ACCOUNTLOCKED "Hesabınız kilitlendiği için giriş yapılamıyor. Lütfen sistem yöneticinizle görüşün."
-    IDS_INVALIDLOGONHOURS "Hesabınızda şu anda oturum açmanızı engelleyen zaman kısıtlamaları vardır. Lütfen daha sonra tekrar deneyiniz."
-    IDS_INVALIDWORKSTATION "Hesabınız, bu bilgisayarı kullanmanızı engelleyecek şekilde yapılandırıldı. Lütfen başka bir bilgisayar deneyin."
+    IDS_PASSWORDEXPIRED "Şifrenizin süresi doldu, şifreniz değiştirilmelidir."
+    IDS_ACCOUNTEXPIRED "Hesabınızın süresi doldu. Lütfen sistem yöneticinizle görüşünüz."
+    IDS_ACCOUNTLOCKED "Hesabınız kilitlendiği için giriş yapılamıyor. Lütfen sistem yöneticinizle görüşünüz."
+    IDS_INVALIDLOGONHOURS "Hesabınızda şu anda oturum açmanızı engelleyen zaman kısıtlamaları var. Lütfen daha sonra tekrar deneyiniz."
+    IDS_INVALIDWORKSTATION "Hesabınız, bu bilgisayarı kullanmanızı engelleyecek şekilde yapılandırıldı. Lütfen başka bir bilgisayar deneyiniz."
     IDS_ACCOUNTRESTRICTION "Hesap kısıtlaması nedeniyle oturum açılamıyor."
 END
 
@@ -248,8 +248,8 @@ BEGIN
     IDS_SHUTDOWN_HIBERNATE "Hazırda Beklet"
     /* Shut down descriptions */
     IDS_SHUTDOWN_LOGOFF_DESC "Şimdiki oturumunuzu sonlandırır ve başka kullanıcılara sistemde oturum açmaya olanak sağlar."
-    IDS_SHUTDOWN_SHUTDOWN_DESC "Şimdiki oturumunuzu sonlandırır ve sistemi kapatır, böylece gücü güvenli olarak kapatbilirsiniz."
+    IDS_SHUTDOWN_SHUTDOWN_DESC "Şimdiki oturumunuzu sonlandırır ve sistemi kapatır, böylece gücü güvenli olarak kesebilirsiniz."
     IDS_SHUTDOWN_RESTART_DESC "Şimdiki oturumunuzu sonlandırır sistemi yeniden başlatır."
     IDS_SHUTDOWN_SLEEP_DESC "Sistemi uyku kipine geçirir."
-    IDS_SHUTDOWN_HIBERNATE_DESC "Şimdiki oturumu saklar ve bilgisayarı kapatır."
+    IDS_SHUTDOWN_HIBERNATE_DESC "Şimdiki oturumu kaydeder ve bilgisayarı kapatır."
 END

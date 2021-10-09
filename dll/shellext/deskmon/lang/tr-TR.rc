@@ -7,19 +7,19 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Monitör"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    GROUPBOX "Monitör Türü", -1, 7, 3, 237, 52
+    GROUPBOX "Monitör türü", -1, 7, 3, 237, 52
     ICON IDC_MONITORICO, IDC_MONITORICO, 13, 11, 21, 20, SS_ICON
     LTEXT "", IDC_MONITORNAME, 40, 17, 190, 20, SS_NOPREFIX
     LISTBOX IDC_MONITORLIST, 40, 13, 196, 30, WS_VSCROLL
     PUSHBUTTON "&Özellikler", IDC_MONITORPROPERTIES, 177, 35, 59, 14, WS_DISABLED
-    GROUPBOX "Monitör Ayarları", IDS_MONITORSETTINGSGROUP, 7, 58, 237, 63
-    LTEXT "&Monitör Yenileme Sıklığı:", IDS_REFRESHRATELABEL, 13, 73, 225, 8
+    GROUPBOX "Monitör ayarları", IDS_MONITORSETTINGSGROUP, 7, 58, 237, 63
+    LTEXT "&Monitör yenileme sıklığı:", IDS_REFRESHRATELABEL, 13, 73, 225, 8
     COMBOBOX IDC_REFRESHRATE, 13, 85, 225, 200, WS_VSCROLL | CBS_DROPDOWNLIST | CBS_SORT
-    AUTOCHECKBOX "&Bu Monitörün Görüntüleyemeyeceği Biçimleri Gizle", IDC_PRUNINGCHECK, 13, 106, 225, 10
+    AUTOCHECKBOX "&Bu monitörün görüntüleyemeyeceği biçimleri gizle", IDC_PRUNINGCHECK, 13, 106, 225, 10
 END
 
 STRINGTABLE
 BEGIN
-    IDS_USEDEFFRQUENCY "Ön Tanımlı Donanım Ayarlarını Kullan"
+    IDS_USEDEFFRQUENCY "Varsayılan donanım ayarlarını kullan"
     IDS_FREQFMT "%u Hertz"
 END

@@ -22,7 +22,7 @@ LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
 STRINGTABLE
 {
-    IDS_CERT_POLICY "Onay Belgesi İlkesi"
+    IDS_CERT_POLICY "Sertifika İlkesi"
     IDS_POLICY_ID "İlke Tanımlayıcısı: "
     IDS_POLICY_QUALIFIER_INFO "İlke Niteleyici Bilgisi"
     IDS_POLICY_QUALIFIER_ID "İlke Niteleyici Kimliği="

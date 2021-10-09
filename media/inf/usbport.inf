@@ -279,7 +279,7 @@ PCI\VEN_8086&DEV_7112&CC_0C0300.DeviceDesc = "Intel 82371AB/EB/MB PIIX4 USB vald
 ReactOS = "ReactOS Takımı"
 USBClassName = "USB Denetleyicileri"
 
-GenericMfg = "(Umûmî USB Aygıtları)"
+GenericMfg = "(Genel USB Aygıtları)"
 PCI\CC_0C0300.DeviceDesc = "UHCI USB Denetleyicisi"
 PCI\CC_0C0310.DeviceDesc = "OHCI USB Denetleyicisi"
 PCI\CC_0C0320.DeviceDesc = "EHCI USB Denetleyicisi"

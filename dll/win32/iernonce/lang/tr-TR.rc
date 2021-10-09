@@ -4,26 +4,26 @@ LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-    IDS_INVALIDFORMAT "%1 RunEx veya RunOnceEx girişinin biçimi geçersiz oldu. WinMain() değişkenlerini desteklemek için fonksiyondan ve fonksiyon adından sonra dikey bir çubuk (|) gereklidir."
-    IDS_LOADERROR "%1 yüklemede bir sorun oluştu. Dosya, kurulu olmayabilir ya da bozulmuş olabilir."
-    IDS_CALLERROR "%2 içinde %1 işlecini çağırırken bir hata ya da ayrıklık oluştu."
-    IDS_INCORRECTFORMAT "Aşağıdaki RunEx ya da RunOnceEx komutunun biçimi yanlış: %1. kabuk çalıştırma komutu || ile başlamalıdır."
-    IDS_NOEXPORT "İşlecin, var olmadığından ya da verilmediğinden dolayı %2 dosyası içindeki %1 işleci çağrılamaz."
+    IDS_INVALIDFORMAT "%1 RunEx veya RunOnceEx girdisinin biçimi geçersiz. WinMain() değişkenlerini desteklemek için fonksiyondan ve fonksiyon adından sonra dikey bir çubuk (|) gereklidir."
+    IDS_LOADERROR "%1 yüklenirken bir sorun oluştu. Dosya, kurulu olmayabilir ya da bozulmuş olabilir."
+    IDS_CALLERROR "%2 içinde %1 fonksiyonunu çağırırken bir hata ya da ayrıklık oluştu."
+    IDS_INCORRECTFORMAT "Aşağıdaki RunEx ya da RunOnceEx komutunun biçimi yanlış: %1. Kabuk çalıştırma komutu || ile başlamalıdır."
+    IDS_NOEXPORT "Fonksiyonun var olmamasından ya da verilmemesinden dolayı %2 dosyası içindeki %1 fonksiyonu çağrılamadı."
     IDS_EXECUTEERROR "%1 çalıştırılırken bir hata ya da ayrıklık oluştu."
-    IDS_NOFUNCTION "%2 dosya içindeki %1 işleci bulunamaz."
-    IDS_NODEPENDENCY "%1 bağımlılık dosyası yüklenemez."
-    IDS_SETUPERROR "%1 kurulurken bir yanlışlık oluştu. Bu yanlışlık kayıt edildi, kurulum sürecek."
+    IDS_NOFUNCTION "%2 dosya içindeki %1 fonksiyonu bulunamadı."
+    IDS_NODEPENDENCY "%1 bağımlılık dosyası yüklenemedi."
+    IDS_SETUPERROR "%1 kurulurken bir hata oluştu. Bu hata günlüğe yazıldı, kurulum sürecek."
     IDS_INCOMPLETE "Bir uygulamanın önceki kurulumu bitirilememiş.\n\nKurulumu bitirmek için bir Yönetici hesabıyla oturum açınız."
-    IDS_SETUP "ReactOS'u Kur"
-    IDS_SERVICEERROR "Birtakım hizmetler başlatılamadı. Kur, hizmetleri başlatmak için sisteminizin yeniden başlatılmasını gerektiriyor."
+    IDS_SETUP "ReactOS Kur"
+    IDS_SERVICEERROR "Bazı hizmetler başlatılamadı. Kur, hizmetleri başlatmak için sisteminizin yeniden başlatılmasını gerektiriyor."
 END
 
 IDD_DIALOG DIALOGEX 0, 0, 206, 166
 STYLE DS_MODALFRAME | DS_NOIDLEMSG | WS_POPUP | WS_VISIBLE | WS_CAPTION
-CAPTION "ReactOS'u Kur"
+CAPTION "ReactOS Kur"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "ReactOS şimdi aşağıdaki öğeleri kuruyor:", -1, 36, 13, 163, 11
+    LTEXT "ReactOS şimdi aşağıdaki ögeleri kuruyor:", -1, 36, 13, 163, 11
     LISTBOX IDC_LB_ITEMS, 36, 32, 163, 127, LBS_NOTIFY | LBS_OWNERDRAWVARIABLE | LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | WS_CHILD | WS_VISIBLE | WS_DISABLED | WS_VSCROLL | WS_TABSTOP
     ICON IDI_ICON, -1, 7, 7, 20, 20
 END

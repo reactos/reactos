@@ -8,7 +8,7 @@ CAPTION "Çevirme Protokolleri"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON 201, 2000, 7, 7, 21, 20
-    LTEXT "Aşağıdaki tablo, belirttiğiniz konumları gösterir. İçinden çevirdiğiniz konumu seçiniz.", -1, 35, 7, 210, 16
+    LTEXT "Aşağıdaki liste, belirttiğiniz konumları gösterir. İçinden çevirdiğiniz konumu seçiniz.", -1, 35, 7, 210, 16
     LTEXT "&Konumlar:", -1, 7, 35, 210, 8
     CONTROL "", 1033, "SysListView32", WS_BORDER | WS_TABSTOP | 0x0000011D, 7, 46, 238, 105, WS_EX_CLIENTEDGE
     PUSHBUTTON "&Yeni...", 1030, 87, 155, 50, 14
@@ -24,27 +24,27 @@ CAPTION "Genel"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON 202, 2000, 7, 7, 20, 20
-    LTEXT "&Konum Adı:", -1, 35, 11, 56, 8, SS_CENTERIMAGE
+    LTEXT "&Konum adı:", -1, 35, 11, 56, 8, SS_CENTERIMAGE
     EDITTEXT 1038, 96, 8, 149, 14, ES_AUTOHSCROLL
     LTEXT "İçinden çevireceğiniz konumu belirtiniz.", 2001, 7, 33, 238, 8
-    LTEXT "&Ülke ya da Bölge:", -1, 7, 49, 161, 8
+    LTEXT "&Ülke ya da bölge:", -1, 7, 49, 161, 8
     COMBOBOX 1006, 7, 60, 175, 200, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL
-    LTEXT "&Alan Kodu:", -1, 190, 49, 48, 8
+    LTEXT "&Alan kodu:", -1, 190, 49, 48, 8
     EDITTEXT 1034, 190, 60, 48, 12, ES_AUTOHSCROLL
-    GROUPBOX "Çevirme Protokolleri", 2002, 7, 80, 238, 92
-    LTEXT "Bu Konumdan Çevrildiğinde Aşağıdaki Protokolleri Kullan:", 2003, 14, 92, 224, 8
-    LTEXT "&Yerel Aramalar İçin, Bir Dış Geçeğe Erişmek İçin Şunu Çevir:", -1, 14, 106, 170, 8
+    GROUPBOX "Çevirme kuralları", 2002, 7, 80, 238, 92
+    LTEXT "Bu konumdan çevrildiğinde, aşağıdaki kuralları kullan:", 2003, 14, 92, 224, 8
+    LTEXT "&Yerel aramalar için, bir dış modeme erişmek için şunu çevir:", -1, 14, 106, 170, 8
     EDITTEXT 1010, 190, 104, 48, 12, ES_AUTOHSCROLL
-    LTEXT "&Uzun Aralıklı Aramalar İçin, Bir Dış Geçeğe Erişmek İçin Şunu Çevir:", -1, 14, 122, 170, 8
+    LTEXT "&Uzun mesafeli aramalar için, bir dış modeme erişmek için şunu çevir:", -1, 14, 122, 170, 8
     EDITTEXT 1011, 190, 120, 48, 12, ES_AUTOHSCROLL
-    LTEXT "U&zun Aralıklı Aramalar Yapmak İçin Şu Taşıyıcı Kodu Kullan:", -1, 14, 138, 170, 8
+    LTEXT "U&zun mesafeli aramalar yapmak için şu taşıyıcı kodu kullan:", -1, 14, 138, 170, 8
     EDITTEXT 1059, 190, 136, 48, 12, ES_AUTOHSCROLL
-    LTEXT "U&luslararası Aramalar Yapmak İçin Şu Taşıyıcı Kodu Kullan:", -1, 14, 154, 170, 8
+    LTEXT "U&luslararası aramalar yapmak için şu taşıyıcı kodu kullan:", -1, 14, 154, 170, 8
     EDITTEXT 1060, 190, 152, 48, 12, ES_AUTOHSCROLL
-    AUTOCHECKBOX "A&rama Bekletmeyi Devre Dışı Bırakmak İçin Şunu Çevir:", 1035, 14, 177, 170, 10
+    AUTOCHECKBOX "A&rama bekletmeyi devre dışı bırakmak için şunu çevir:", 1035, 14, 177, 170, 10
     COMBOBOX 1013, 190, 176, 48, 73, CBS_DROPDOWN | CBS_SORT | WS_VSCROLL
-    LTEXT "Şunu Kullanarak Çevir:", -1, 14, 195, 40, 8
-    AUTORADIOBUTTON "&Titrem", 1036, 58, 194, 50, 10, NOT WS_TABSTOP
+    LTEXT "Şunu kullanarak çevir:", -1, 14, 195, 40, 8
+    AUTORADIOBUTTON "&Ton", 1036, 58, 194, 50, 10, NOT WS_TABSTOP
     AUTORADIOBUTTON "&Vuruş", 1037, 112, 194, 50, 10, NOT WS_TABSTOP
     LTEXT "Telefon numarası şöyle çevrilecek:", 1052, 7, 219, 100, 8
     LTEXT "", 1053, 14, 232, 224, 16
@@ -55,8 +55,8 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
 CAPTION "Alan Kodu Kuralları"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Bir alan kodu kuralı, şimdiki alan kodunuzdan başka alan kodlarına ve alan kodunuz içinde telefon numaralarının ne biçimde çevrileceğini belirtir.", 2000, 7, 7, 238, 16
-    LTEXT "&Alan Kodu Kuralları:", -1, 7, 31, 238, 8
+    LTEXT "Bir alan kodu kuralı, şimdiki alan kodunuzdan başka alan kodlarına ve alan kodunuz içinde telefon numaralarının nasıl çevrileceğini belirtir.", 2000, 7, 7, 238, 16
+    LTEXT "&Alan kodu kuralları:", -1, 7, 31, 238, 8
     CONTROL "", 1033, "SysListView32", WS_BORDER | WS_TABSTOP | 0x0000801D, 7, 42, 238, 99, WS_EX_CLIENTEDGE
     PUSHBUTTON "&Yeni...", 1030, 87, 147, 50, 14
     PUSHBUTTON "&Düzenle...", 1031, 141, 147, 50, 14
@@ -76,16 +76,16 @@ BEGIN
     PUSHBUTTON "&Yeni...", 1030, 87, 103, 50, 14
     PUSHBUTTON "&Düzenle...", 1031, 141, 103, 50, 14
     PUSHBUTTON "&Sil", 1032, 195, 103, 50, 14
-    LTEXT "&Hesap Numarası:", -1, 7, 127, 91, 8
+    LTEXT "&Hesap numarası:", -1, 7, 127, 91, 8
     EDITTEXT 1018, 102, 125, 143, 12, ES_AUTOHSCROLL
-    LTEXT "&Özel Kimlik Numarası (PIN):", -1, 7, 145, 91, 8
+    LTEXT "&Özel kimlik numarası (PIN):", -1, 7, 145, 91, 8
     EDITTEXT 1019, 102, 143, 143, 12, ES_AUTOHSCROLL
-    GROUPBOX "Şunlar İçin Erişim Telefon Numaraları", 2001, 7, 158, 238, 53
-    LTEXT "Uzun Aralıklı Aramalar:", -1, 14, 172, 84, 8
+    GROUPBOX "Şunlar için erişim telefon numaraları", 2001, 7, 158, 238, 53
+    LTEXT "Uzun mesafeli aramalar:", -1, 14, 172, 84, 8
     LTEXT "", 1042, 102, 172, 136, 8
-    LTEXT "Uluslararası Aramalar:", -1, 14, 184, 84, 8
+    LTEXT "Uluslararası aramalar:", -1, 14, 184, 84, 8
     LTEXT "", 1043, 102, 184, 136, 8
-    LTEXT "Yerel Aramalar:", -1, 14, 196, 84, 8
+    LTEXT "Yerel aramalar:", -1, 14, 196, 84, 8
     LTEXT "", 1051, 102, 196, 136, 8
 END
 
@@ -95,14 +95,14 @@ CAPTION "Genel"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON 203, 2000, 7, 7, 20, 20
-    LTEXT "&Arama Kartı Adı:", -1, 35, 12, 64, 8, SS_CENTERIMAGE
+    LTEXT "&Arama kartı adı:", -1, 35, 12, 64, 8, SS_CENTERIMAGE
     EDITTEXT 1047, 105, 9, 140, 14, ES_AUTOHSCROLL
-    LTEXT "&Hesap Numarası:", -1, 7, 35, 238, 8
+    LTEXT "&Hesap numarası:", -1, 7, 35, 238, 8
     EDITTEXT 1018, 7, 46, 116, 14, ES_AUTOHSCROLL
-    LTEXT "&Şahsî Kimlik Numarası (PIN):", -1, 7, 68, 238, 8
+    LTEXT "&Özel kimlik numarası (PIN):", -1, 7, 68, 238, 8
     EDITTEXT 1019, 7, 80, 116, 14, ES_AUTOHSCROLL
-    LTEXT "Şuyken bu arama kartı kullanılacak:", 1056, 14, 117, 224, 8
-    GROUPBOX "Arama Kartı Ayrıntıları", 2001, 7, 105, 238, 66
+    LTEXT "Bu arama kartı, şu zamanda kullanılacak:", 1056, 14, 117, 224, 8
+    GROUPBOX "Arama kartı ayrıntıları", 2001, 7, 105, 238, 66
     LTEXT "", 1000, 22, 131, 216, 8
     LTEXT "", 1001, 22, 143, 216, 8
     LTEXT "", 1002, 22, 155, 216, 8
@@ -110,13 +110,13 @@ END
 
 106 DIALOGEX 0, 0, 252, 218
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Uzun Aralıklı"
+CAPTION "Uzun Mesafeli"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "&Uzun Aralıklı Aramalar İçin Erişim Numarası:", -1, 7, 7, 238, 8
+    LTEXT "&Uzun mesafeli aramalar için erişim numarası:", -1, 7, 7, 238, 8
     EDITTEXT 1044, 7, 18, 140, 14, ES_AUTOHSCROLL
-    LTEXT "Uzun aralıklı aramalar yapmak için, çevirme adımlarını girmek için aşağıdaki tuşları kullanınız. Bu adımları, arama kartınızda göründüğü gibi doğru diziyle giriniz.", 2000, 7, 40, 238, 24
-    LTEXT "&Arama Kartı Çevirme Adımları:", -1, 7, 72, 80, 8
+    LTEXT "Uzun aralıklı aramalar yapmak için, çevirme adımlarını girmek için aşağıdaki tuşları kullanınız. Bu adımları, arama kartınızda göründüğü gibi doğru sırayla giriniz.", 2000, 7, 40, 238, 24
+    LTEXT "&Arama kartı çevirme adımları:", -1, 7, 72, 80, 8
     CONTROL "List1", 1033, "SysListView32", WS_BORDER | WS_TABSTOP | 0x0000400D, 7, 83, 184, 74, WS_EX_CLIENTEDGE
     PUSHBUTTON "&Yukarı Taşı", 1022, 195, 83, 50, 14
     PUSHBUTTON "A&şağı Taşı", 1023, 195, 101, 50, 14
@@ -125,7 +125,7 @@ BEGIN
     PUSHBUTTON "&Hesap Numarası", 1018, 101, 161, 90, 14
     PUSHBUTTON "&PIN", 1019, 7, 179, 90, 14
     PUSHBUTTON "H&edef Numarası...", 1020, 101, 179, 90, 14
-    PUSHBUTTON "&Erişim İçin Bekle...", 1017, 7, 197, 90, 14
+    PUSHBUTTON "İ&stek İçin Bekle...", 1017, 7, 197, 90, 14
     PUSHBUTTON "&Basamakları Belirt...", 1021, 101, 197, 90, 14
 END
 
@@ -134,10 +134,10 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
 CAPTION "Uluslararası"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "&Uluslararası Aramalar İçin Erişim Numarası:", -1, 7, 7, 238, 8
+    LTEXT "&Uluslararası aramalar için erişim numarası:", -1, 7, 7, 238, 8
     EDITTEXT 1045, 7, 18, 140, 14, ES_AUTOHSCROLL
-    LTEXT "Uluslararası aramalar yapmak için, çevirme adımlarını girmek için aşağıdaki tuşları kullanınız. Bu adımları, arama kartınızda göründüğü gibi doğru diziyle giriniz.", 2000, 7, 40, 244, 24
-    LTEXT "&Arama Kartı Çevirme Adımları:", -1, 7, 72, 80, 8
+    LTEXT "Uluslararası aramalar yapmak için, çevirme adımlarını girmek için aşağıdaki tuşları kullanınız. Bu adımları, arama kartınızda göründüğü gibi doğru sırayla giriniz.", 2000, 7, 40, 244, 24
+    LTEXT "&Arama kartı çevirme adımları:", -1, 7, 72, 80, 8
     CONTROL "List1", 1033, "SysListView32", WS_BORDER | WS_TABSTOP | 0x0000400D, 7, 83, 184, 74, WS_EX_CLIENTEDGE
     PUSHBUTTON "&Yukarı Taşı", 1022, 195, 83, 50, 14
     PUSHBUTTON "A&şağı Taşı", 1023, 195, 101, 50, 14
@@ -146,7 +146,7 @@ BEGIN
     PUSHBUTTON "&Hesap Numarası", 1018, 101, 161, 90, 14
     PUSHBUTTON "&PIN", 1019, 7, 179, 90, 14
     PUSHBUTTON "H&edef Numarası...", 1020, 101, 179, 90, 14
-    PUSHBUTTON "&Erişim İçin Bekle...", 1017, 7, 197, 90, 14
+    PUSHBUTTON "İ&stek İçin Bekle...", 1017, 7, 197, 90, 14
     PUSHBUTTON "&Basamakları Belirt...", 1021, 101, 197, 90, 14
 END
 
@@ -158,7 +158,7 @@ BEGIN
     LTEXT "Yer&el Aramalar İçin Erişim Numarası:", -1, 7, 7, 238, 8
     EDITTEXT 1008, 7, 18, 140, 14, ES_AUTOHSCROLL
     LTEXT "Yerel aramalar yapmak için, çevirme adımlarını girmek için aşağıdaki tuşları kullanınız. Bu adımları, arama kartınızda göründüğü gibi doğru diziyle giriniz. Arama kartınızı kullanmadan yerel aramalar yapmak için bu bölümü boş bırakınız.", 2000, 7, 40, 238, 24
-    LTEXT "&Arama Kartı Çevirme Adımları:", -1, 7, 72, 238, 8
+    LTEXT "&Arama kartı çevirme adımları:", -1, 7, 72, 238, 8
     CONTROL "List1", 1033, "SysListView32", WS_BORDER | WS_TABSTOP | 0x0000400D, 7, 83, 184, 74, WS_EX_CLIENTEDGE
     PUSHBUTTON "&Yukarı Taşı", 1022, 195, 83, 50, 14
     PUSHBUTTON "A&şağı Taşı", 1023, 195, 101, 50, 14
@@ -167,40 +167,40 @@ BEGIN
     PUSHBUTTON "&Hesap Numarası", 1018, 101, 161, 90, 14
     PUSHBUTTON "&PIN", 1019, 7, 179, 90, 14
     PUSHBUTTON "H&edef Numarası...", 1020, 101, 179, 90, 14
-    PUSHBUTTON "&Erişim İçin Bekle...", 1017, 7, 197, 90, 14
+    PUSHBUTTON "İ&stek İçin Bekle...", 1017, 7, 197, 90, 14
     PUSHBUTTON "&Basamakları Belirt...", 1021, 101, 197, 90, 14
 END
 
 109 DIALOGEX 0, 0, 252, 257
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
 EXSTYLE WS_EX_CONTEXTHELP
-CAPTION "Yeni Alan Kodu Protokolü"
+CAPTION "Yeni Alan Kodu Kuralı"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Bu alan kodu protokolü, yalnızca alan koduna yapılan aramalara ve aşağıda belirttiğiniz ön ek düzenine uygulayacaktır.", 2000, 7, 6, 238, 16
-    LTEXT "Aradığınız Alan Kodu:", -1, 7, 31, 110, 8
-    LTEXT "&Alan Kodu:", -1, 7, 47, 36, 8
+    LTEXT "Bu alan kodu kuralı, yalnızca alan koduna yapılan aramalara ve aşağıda belirttiğiniz ön ek düzenine uygulayacaktır.", 2000, 7, 6, 238, 16
+    LTEXT "Aradığınız alan kodu:", -1, 7, 31, 110, 8
+    LTEXT "&Alan kodu:", -1, 7, 47, 36, 8
     EDITTEXT 1034, 46, 44, 50, 14, ES_AUTOHSCROLL
     LTEXT "Bu alan kodu protokolü için kullanılan ön ekleri belirtiniz.", -1, 14, 78, 224, 8
-    AUTORADIOBUTTON "&Bu Alan Kodu İçine Tüm Ön Ekleri Ekle", 1014, 14, 90, 224, 12, NOT WS_TABSTOP
-    AUTORADIOBUTTON "&Yalnızca Aşağıdaki Tablodaki Ön Ekleri Ekle", 1015, 14, 104, 224, 12, NOT WS_TABSTOP
-    LTEXT "&Eklemek İçin Ön Ekler:", 1057, 26, 117, 119, 8
+    AUTORADIOBUTTON "&Bu alan koduna tüm ön ekleri ekle", 1014, 14, 90, 224, 12, NOT WS_TABSTOP
+    AUTORADIOBUTTON "&Yalnızca aşağıdaki listekdeki ön ekleri ekle", 1015, 14, 104, 224, 12, NOT WS_TABSTOP
+    LTEXT "&Eklenecek ön ekler:", 1057, 26, 117, 119, 8
     CONTROL "List1", 1033, "SysListView32", WS_BORDER | WS_TABSTOP | 0x0000411D, 25, 128, 66, 32, WS_EX_CLIENTEDGE
     PUSHBUTTON "E&kle...", 1005, 95, 128, 50, 14
     PUSHBUTTON "&Sil", 1024, 95, 146, 50, 14
-    LTEXT "Aşağıdaki Ön Ekleri İçeren Telefon Numaraları Çevrildiğinde:", -1, 14, 184, 224, 8
+    LTEXT "Aşağıdaki ön ekleri içeren telefon numaraları çevrildiğinde:", -1, 14, 184, 224, 8
     AUTOCHECKBOX "&Çevir:", 1012, 14, 198, 30, 12
     EDITTEXT 1007, 46, 196, 42, 14, ES_AUTOHSCROLL
-    AUTOCHECKBOX "A&lan Kodunu Ekle", 1029, 14, 214, 85, 12
+    AUTOCHECKBOX "A&lan kodunu ekle", 1029, 14, 214, 85, 12
     DEFPUSHBUTTON "Tamam", 1, 141, 236, 50, 14
     PUSHBUTTON "İptal", 2, 195, 236, 50, 14
-    RTEXT "Alan Kodu", 2001, 133, 31, 51, 8
-    LTEXT "Ön Ek", 2002, 200, 31, 45, 8
+    RTEXT "Alan kodu", 2001, 133, 31, 51, 8
+    LTEXT "Ön ek", 2002, 200, 31, 45, 8
     CONTROL "", 2003, "STATIC", SS_BLACKFRAME | SS_SUNKEN, 180, 41, 1, 6
     CONTROL "", 2004, "STATIC", SS_BLACKFRAME | SS_SUNKEN, 203, 41, 1, 6
     RTEXT "X - X X X - X X X - X X X X", 2005, 133, 48, 112, 8
-    GROUPBOX "Ön Ekler", -1, 7, 64, 238, 102
-    GROUPBOX "Protokoller", -1, 7, 170, 238, 60
+    GROUPBOX "Ön ekler", -1, 7, 64, 238, 102
+    GROUPBOX "Kurallar", -1, 7, 170, 238, 60
 END
 
 110 DIALOGEX 0, 0, 227, 82
@@ -218,13 +218,13 @@ END
 111 DIALOGEX 0, 0, 252, 124
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
 EXSTYLE WS_EX_CONTEXTHELP
-CAPTION "Şunun İçin Bekle"
+CAPTION "Şunun için bekle"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Çevirme dizisiyle sürdürmeden önce beklemek için istemin türünü seçiniz.", 2000, 7, 7, 238, 16
-    AUTORADIOBUTTON "&Bir Çevirme Sesi İçin Bekle", 1009, 7, 31, 238, 10, WS_GROUP
-    AUTORADIOBUTTON "B&itirmek İçin Bir Ses İletisi İçin Bekle", 1016, 7, 47, 238, 10, NOT WS_TABSTOP
-    AUTORADIOBUTTON "Bi&r Belirli Uzunluktaki Süre İçin Bekle:", 1048, 7, 63, 238, 10, NOT WS_TABSTOP
+    LTEXT "Çevirme sırasıyla devam etmeden önce beklemek için istemin türünü seçiniz.", 2000, 7, 7, 238, 16
+    AUTORADIOBUTTON "&Bir çevirme sesini bekle", 1009, 7, 31, 238, 10, WS_GROUP
+    AUTORADIOBUTTON "B&itirmek için bir ses iletisini bekle", 1016, 7, 47, 238, 10, NOT WS_TABSTOP
+    AUTORADIOBUTTON "Belirli bi&r uzunluktaki süreyi bekle:", 1048, 7, 63, 238, 10, NOT WS_TABSTOP
     EDITTEXT 1050, 18, 77, 36, 14, ES_AUTOHSCROLL | WS_GROUP
     CONTROL "Spin1", 1049, "msctls_updown32", 0x00000036, 42, 78, 11, 14
     LTEXT "&saniye", -1, 58, 79, 187, 8
@@ -235,13 +235,13 @@ END
 112 DIALOGEX 0, 0, 252, 111
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
 EXSTYLE WS_EX_CONTEXTHELP
-CAPTION "Varış Numarası"
+CAPTION "Hedef numarası"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Bu adım, arama kartı dizisi içine çevireceğiniz varış numarasını yerleştirecektir. Varış numarasını çevirdiğinizde numaranın hangi bölümlerini çevirmek istersiniz?", 2000, 7, 7, 238, 24
-    AUTOCHECKBOX "&Ülke ya da Bölge Kodunu Çevir", 1027, 7, 39, 238, 10
-    AUTOCHECKBOX "&Alan Kodunu Çevir", 1034, 7, 55, 238, 10
-    AUTOCHECKBOX "&Numarayı Çevir", 1008, 7, 71, 238, 10, WS_DISABLED
+    LTEXT "Bu adım, arama kartı dizisi içine, çevireceğiniz hedef numarasını yerleştirecektir. Hedef numarasını çevirdiğinizde numaranın hangi bölümlerini çevirmek istersiniz?", 2000, 7, 7, 238, 24
+    AUTOCHECKBOX "&Ülke ya da bölge kodunu çevir", 1027, 7, 39, 238, 10
+    AUTOCHECKBOX "&Alan kodunu çevir", 1034, 7, 55, 238, 10
+    AUTOCHECKBOX "&Numarayı çevir", 1008, 7, 71, 238, 10, WS_DISABLED
     DEFPUSHBUTTON "Tamam", 1, 141, 92, 50, 14
     PUSHBUTTON "İptal", 2, 195, 92, 50, 14
 END
@@ -279,17 +279,17 @@ CAPTION "Konum Bilgisi"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL 302, 302, "STATIC", SS_BITMAP, 10, 10, 88, 155
-    LTEXT "Bir telefon ya da modem bağlantısı yapabilmenizden önce ReactOS'un şimdiki konumunuz üzerine aşağıdaki bilgilere gereksinimi vardır.", 2000, 107, 15, 188, 25
+    LTEXT "Bir telefon ya da modem bağlantısı yapabilmenizden önce ReactOS'un şimdiki konumunuz hakkıdna aşağıdaki bilgilere gereksinimi vardır.", 2000, 107, 15, 188, 25
     LTEXT "&Şimdi içinde bulunduğunuz ülke ya da bölge nedir?", -1, 107, 43, 189, 10
     COMBOBOX 1006, 107, 55, 180, 200, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL
     LTEXT "Ş&imdi içinde bulunduğunuz alan kodu ya da kent kodu nedir?", -1, 107, 74, 189, 10
     EDITTEXT 1034, 107, 87, 45, 12, ES_AUTOHSCROLL
-    LTEXT "Bi&r taşıyıcı kod belirlemeye gereksiniminiz varsa o nedir?", -1, 107, 105, 189, 10
+    LTEXT "Bi&r taşıyıcı kod belirlemeniz gerekiyorsa, varsa o nedir?", -1, 107, 105, 189, 10
     EDITTEXT 1058, 106, 118, 45, 12, ES_UPPERCASE | ES_AUTOHSCROLL
-    LTEXT "&Bir dış hatta erişmek için bir numarayı çevirirseniz o nedir?", -1, 107, 137, 189, 10
+    LTEXT "&Bir dış hatta erişmek için bir numarayı çeviriyorsanız, o nedir?", -1, 107, 137, 189, 10
     EDITTEXT 1010, 107, 149, 45, 12, ES_UPPERCASE | ES_AUTOHSCROLL
     LTEXT "Bu konumdaki telefon hattı şunu kullanır:", -1, 107, 168, 189, 10
-    AUTORADIOBUTTON "&Titremli Çevirme", 1036, 107, 178, 64, 14, WS_GROUP | NOT WS_TABSTOP
+    AUTORADIOBUTTON "&Tonlu Çevirme", 1036, 107, 178, 64, 14, WS_GROUP | NOT WS_TABSTOP
     AUTORADIOBUTTON "&Vuruşlu Çevirme", 1037, 175, 178, 64, 14, NOT WS_TABSTOP
     DEFPUSHBUTTON "Tamam", 1, 192, 204, 50, 14
     PUSHBUTTON "İptal", 2, 246, 204, 50, 14
@@ -305,10 +305,10 @@ BEGIN
     COMBOBOX 1006, 95, 41, 177, 68, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL
     LTEXT "Ş&imdi içinde bulunduğunuz alan kodu ya da kent kodu nedir?", -1, 95, 61, 188, 10
     EDITTEXT 1034, 95, 73, 40, 14, ES_AUTOHSCROLL
-    LTEXT "&Bir dış hatta erişmek için bir numarayı çevirirseniz o nedir?", -1, 95, 96, 188, 10
+    LTEXT "&Bir dış hatta erişmek için bir numarayı çeviriyorsanız, o nedir?", -1, 95, 96, 188, 10
     EDITTEXT 1010, 95, 107, 40, 14, ES_UPPERCASE | ES_AUTOHSCROLL
     LTEXT "Bu konumdaki telefon hattı şunu kullanır:", -1, 95, 129, 159, 10
-    AUTORADIOBUTTON "&Titremli Çevirme", 1036, 95, 139, 65, 12, WS_GROUP | NOT WS_TABSTOP
+    AUTORADIOBUTTON "&Tonlu Çevirme", 1036, 95, 139, 65, 12, WS_GROUP | NOT WS_TABSTOP
     AUTORADIOBUTTON "&Vuruşlu Çevirme", 1037, 165, 139, 65, 12, NOT WS_TABSTOP
 END
 
@@ -319,7 +319,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     ICON 504, 501, 13, 14, 21, 20
     LTEXT "", 502, 47, 15, 180, 32
-    AUTOCHECKBOX "&Gelecekte Sürekli Bu Sayfaya Güven", 503, 50, 47, 147, 12
+    AUTOCHECKBOX "&Gelecekte her zaman bu sayfaya güven", 503, 50, 47, 147, 12
     DEFPUSHBUTTON "Tamam", 505, 110, 65, 50, 14
     PUSHBUTTON "İptal", 506, 164, 65, 50, 14
 END
@@ -327,7 +327,7 @@ END
 STRINGTABLE
 BEGIN
     1 "Telefon ve Modem Seçenekleri"
-    2 "Modeminizi kullanmak için çevirme protokollerini ve özellikleri yapılandır."
+    2 "Modeminizi kullanmak için çevirme kurallarını ve özellikleri yapılandırır."
     3 "Konum"
     4 "Yeni bir konum oluşturmak için Yeni'ye tıklayınız."
     5 "Yeni Konum"
@@ -337,9 +337,9 @@ BEGIN
     9 "Alan Kodu"
     10 "Ön Ekler"
     11 "Protokol"
-    12 "Girdiğiniz karakter geçersiz.\n\nGeçerli karakterler; 0'dan 9'a dek, *, #, ve virgüldür."
-    13 "Girdiğiniz karakter geçersiz.\n\nGeçerli karakterler; 0'dan 9'a dek, *, #, boşluk ve virgüldür."
-    14 "Girdiğiniz karakter geçersiz.\n\nGeçerli karakterler; 0'dan 9'a dektir."
+    12 "Girdiğiniz karakter geçersiz.\n\nGeçerli karakterler; 0'dan 9'a kadar, *, #, ve virgüldür."
+    13 "Girdiğiniz karakter geçersiz.\n\nGeçerli karakterler; 0'dan 9'a kadar, *, #, boşluk ve virgüldür."
+    14 "Girdiğiniz karakter geçersiz.\n\nGeçerli karakterler; 0'dan 9'a kadardır."
     15 "Girdiğiniz karakter geçersiz."
     16 "Çevir: %1"
     17 "Çevir: %1 ve alan kodu."
@@ -347,8 +347,8 @@ BEGIN
     19 "Yalnızca numarayı çevir."
     20 "Tümü"
     21 "Seçili"
-    22 "Alan Kodu Protokolü'nü Düzenle"
-    23 "Özellikleri görüntülemek için yukarıdaki tablodan bir protokol seçiniz ya da bir protokol eklemek için Yeni'ye tıklayınız."
+    22 "Alan Kodu Kuralını Düzenle"
+    23 "Özellikleri görüntülemek için yukarıdaki listeden bir kural seçiniz ya da bir kural eklemek için Yeni'ye tıklayınız."
     24 "%1 alan kodu içindeki tüm aramalar için numaradan önce ""%2"" kodunu ve alan kodunu çeviriniz."
     25 "%1 alan kodu içindeki tüm aramalar için numaradan önce ""%2"" kodunu çeviriniz."
     26 "%1 alan kodu içindeki tüm aramalar için numaradan önce alan kodunu çeviriniz."
@@ -362,7 +362,7 @@ BEGIN
     34 "Bir ya da daha çok, boşluklarla ya da virgüllerle ayrılan ön ek giriniz."
     35 "Basamakları Belirle"
     36 "Çevrilmek için * ve # içinde olmak üzere bir ya da daha çok basamak giriniz."
-    37 "Geçersiz bir karakter girmeye çalıştınız.\n\nGeçerli damgalar, 0'dan 9'a dek ve boşluktur."
+    37 "Geçersiz bir karakter girmeye çalıştınız.\n\nGeçerli karakter, 0'dan 9'a kadar ve boşluktur."
     38 "%1!d! saniye bekleyiniz."
     39 "Erişim numarasını çeviriniz."
     40 "Hesap numarasını çeviriniz."
@@ -375,19 +375,19 @@ BEGIN
     47 "Ülke ya da bölge kodunu çeviriniz."
     48 "Alan kodunu çeviriniz."
     49 "Numarayı çeviriniz."
-    50 "uzun aralıklı aramalar çevriliyor."
+    50 "uzun mesafeli aramalar çevriliyor."
     51 "uluslararası aramalar çevriliyor."
     52 "yerel aramalar çevriliyor."
-    53 "Bu arama kartının ne biçimde kullanılması üzerine bir protokol tanımlanmamış."
+    53 "Bu arama kartının nasıl kullanıldığı hakkında bir kural tanımlanmamış."
     54 "Bu konum için uzun aralıklı taşıyıcı kodu girmelisiniz."
     55 "Bu konum için bir ad girmelisiniz."
     56 "Bu konum için alan kodunu girmelisiniz."
-    57 "Arama bekletmeyi devre dışı bırakmak için çevirmeye numara seçmelisiniz."
+    57 "Arama bekletmeyi devre dışı bırakmak için çevirmeye, numara seçmelisiniz."
     58 "İçinden çevirdiğiniz ülkeyi ya da bölgeyi seçmelisiniz."
     59 "Eksik Bilgi"
-    60 "Girdiğiniz konum adı önceden kullanımda. Lütfen eşsiz bir ad giriniz."
-    61 "Bu arama kartında birtakım gerekli bilgiler eksik. Bu kartı kullanmak için, daha çok bilgi sağlamak için Düzenle'ye tıklayınız ya da ayrı bir kart seçiniz."
-    62 "Bir ön tanımlı arama kartı seçmelisiniz. Listeden bir kart seçiniz ya da yeni bir kart oluşturmak için Yeni'ye tıklayınız."
+    60 "Girdiğiniz konum adı zaten kullanılıyor. Lütfen eşsiz bir ad giriniz."
+    61 "Bu arama kartında bazı gerekli bilgiler eksik. Bu kartı kullanmak için, daha çok bilgi sağlamak için Düzenle'ye tıklayınız ya da ayrı bir kart seçiniz."
+    62 "Bir varsayılan arama kartı seçmelisiniz. Listeden bir kart seçiniz ya da yeni bir kart oluşturmak için Yeni'ye tıklayınız."
     63 "Arama kartı adını girmelisiniz."
     64 "Hesap numarasını girmelisiniz."
     65 "PIN numarasını girmelisiniz."
@@ -396,31 +396,31 @@ BEGIN
     68 "Uluslararası protokolünüz, arama kartınızın uluslararası erişim numarasını gerektiriyor."
     69 "Yerel protokolünüz, arama kartınızın yerel erişim numarasını gerektiriyor."
     70 "Yok"
-    71 "Seçili Telefon Hizmeti Sağlayıcısı'nı silmek istediğinizden emin misiniz?"
+    71 "Seçili Telefon Hizmeti Sağlayıcısı'nı kaldırmak istediğinizden emin misiniz?"
     72 "<Kurulu hizmet sağlayıcısı yok.>"
     73 "Bu protokolün uyguladığı ön ekleri girmelisiniz."
     74 "&Basamaklar:"
     75 "&Ön Ekler:"
-    76 "Geçersiz bir karakter girmeye çalıştınız.\n\nGeçerli karakterler; 0'dan 9'a dek, boşluk ve virgüldür."
+    76 "Geçersiz bir karakter girmeye çalıştınız.\n\nGeçerli karakterler; 0'dan 9'a kadar, boşluk ve virgüldür."
     77 "Silmeyi Doğrula"
     78 "Bu konumu silmeyi istediğinizden emin misiniz?"
     79 "Bu arama kartını silmek istediğinizden emin misiniz?"
     80 "Bu alan kodu protokolünü silmek istediğinizden emin misiniz?"
     81 "Çevirmek için basamakları girmelisiniz."
-    82 "Girdiğiniz arama kartı adı önceden kullanımda. Lütfen eşsiz bir ad giriniz."
-    83 "ReactOS, içinden çevireceğiniz konum üzerine telefon bilgisine gereksinim duyar. Bu bilgiyi sağlamadan iptal ederseniz, bu izlence çevirirken doğru çalışmayabilir. Ek olarak, birtakım uygulamalar onu gecikmeden yeniden göndererek bu iletişim kutusunu iptal ettiğinize yanıt verir.\nİptal etmek istedğinizden emin misiniz?"
+    82 "Girdiğiniz arama kartı adı zaten kullanımda. Lütfen eşsiz bir ad giriniz."
+    83 "ReactOS, içinden çevireceğiniz konum hakkında telefon bilgisine gereksinim duyar. Bu bilgiyi sağlamadan iptal ederseniz, bu program çevirirken doğru çalışmayabilir. Ek olarak, bazı uygulamalar onu gecikmeden yeniden göndererek bu iletişim kutusunu iptal ettiğinize yanıt verir.\nİptal etmek istedğinizden emin misiniz?"
     84 "Doğrulamayı İptal Et"
     85 "Konumum"
     86 "<Kurulum için hizmet sağlayıcısı yok.>"
     87 "Girdiğiniz karakter geçersiz.\n\nGeçerli karakterler; 0'dan 9'a dek, A'dan D'ye dek, *, #, +, !, boşluk ve virgüldür."
     88 "Bu konum için uluslararası taşıyıcı kodu girmelisiniz."
     89 "Bu konum için taşıyıcı kodu girmelisiniz."
-    90 "Bu sayfa, bilgisayarınızda telefon aramalarını veya başka çoklu ortam bağlantılarını yapmaya veya izlemeye çalışıyor.\nSürdürmek için ona izin vermek istiyor musunuz?"
-    91 "Bu sayfa, ağınızda dizin bilgisine erişmeye çalışıyor.\nSürdürmek için ona izin vermek istiyor musunuz?"
-    92 "Bu sayfa, ağ toplantı bilgisine erişmeye veya bunu değiştirmeye çalışıyor.\nSürdürmek için ona izin vermek istiyor musunuz?"
-    93 "Bu sayfa, değer defteri bilgisine erişmeye veya bunu değiştirmeye çalışıyor.\nSürdürmek için ona izin vermek istiyor musunuz?"
-    1064 "Telefon ve Modem denetim masası açılamıyor. Bir telefon hizmetini başlatma sorununuz olabilir."
-    1065 "Sağlayıcı Sil"
+    90 "Bu sayfa, bilgisayarınızda telefon aramalarını veya başka çoklu ortam bağlantılarını yapmaya veya izlemeye çalışıyor.\nDevam etmek için ona izin vermek istiyor musunuz?"
+    91 "Bu sayfa, ağınızda dizin bilgisine erişmeye çalışıyor.\nDevam etmek için ona izin vermek istiyor musunuz?"
+    92 "Bu sayfa, ağ toplantı bilgisine erişmeye veya bunu değiştirmeye çalışıyor.\nDevam etmek için ona izin vermek istiyor musunuz?"
+    93 "Bu sayfa, aygıt yöneticisi bilgisine erişmeye veya bunu değiştirmeye çalışıyor.\nDevam etmek için ona izin vermek istiyor musunuz?"
+    1064 "Telefon ve Modem denetim masası açılamıyor. Telefon hizmetini başlatmada sorun  olabilir."
+    1065 "Sağlayıcıyı Kaldır"
     15800 "23"
     15801 "0,""Yok (Doğrudan Çevir) ("","""","""","""","""","""","""","""","""",1)"
     15802 "1,""AT&T Doğrudan Çevir (1010ATT1"","""",""G"",""J1FG"",""J011EFG"","""","""",""1010288"",""1010288"",1)"
@@ -440,7 +440,7 @@ BEGIN
     15816 "15,""İngiliz Telekom (BK) ("","""",""J$H,0FG"",""J$H,0FG"",""J$H,00EFG"","""",""144"",""144"".""144"",1)"
     15817 "16,""CLEAR İletişim (Yeni Zelanda) ("","""",""J$TH,0FG"",""J$TH,0FG"",""J$TH,00EFG"","""",""0502333"",""0502333"",""0502333"",1)"
     15818 "17,""Telekom Yeni Zelanda ("","""",""J,0FG?H"",""J,0FG?H"",""J,00EFG?H"","""",""012"",""012"",""012"",1)"
-    15819 "18,""Yeryüzülük Kart (Tayvan'dan ABD'ye) ("","""",""G"",""0FG"",""J,102880$TFG$H"","""","""","""",""0080"",1)"
+    15819 "18,""Küresel Kart (Tayvan'dan ABD'ye) ("","""",""G"",""0FG"",""J,102880$TFG$H"","""","""","""",""0080"",1)"
     15820 "19,""Telstra (Avustralya), 1818 ile (ses) ("","""",""J$TH,FG#"",""J$TH,FG#"",""J$TH,0011EFG#"","""",""1818"",""1818"",""1818"",1)"
     15821 "20,""Telstra (Avustralya), 1818 ile (belgegeçer) ("","""",""J$TH,FG#"",""J$TH,FG#"",""J$TH,0015EFG#"","""",""1818"",""1818"",""1818"",1)"
     15822 "21,""Optus (Avustralya), 1812 ile ("","""",""FG"",""FG"",""J@TH,0011EFG"","""","""","""",""1812"",1)"

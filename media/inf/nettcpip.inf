@@ -344,6 +344,12 @@ TCPIP_DEF = "Протокол контроля передачи/Протокол
 
 [Strings.041f]
 ReactOS = "ReactOS Takımı"
+MS_TCPIP.DisplayName = "Genel Ağ Protokolü Sürüm 4 (TCP/IPv4)"
+DNSCLIENT_NAME = "DNS İstemcisi"
+DNSCLIENT_DESC = "Yerel DNS sorgularını önbelleğe alan hizmet"
+DHCPCLIENT_NAME = "DHCP İstemcisi"
+DHCPCLIENT_DESC = "Kullanılabilir bir DHCP sunucusundan otomatik olarak ağ ayarlarını almayı dener"
+TCPIP_DEF = "Aktarım Denetim Protokolü/Genel Ağ Protokolü"
 
 [Strings.0422]
 ReactOS = "Команда ReactOS"

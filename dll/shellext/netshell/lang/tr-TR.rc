@@ -8,17 +8,17 @@ CAPTION "Genel"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "", IDC_COMPONENTSLIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOCOLUMNHEADER | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 9, 71, 230, 55
-    LTEXT "Bağlantıda Kullanılıyor:", -1, 9, 9, 217, 8
+    LTEXT "Şunu Kullanarak Bağlan:", -1, 9, 9, 217, 8
     EDITTEXT IDC_NETCARDNAME, 9, 21, 230, 12, WS_BORDER | WS_TABSTOP | ES_READONLY
     PUSHBUTTON "&Yapılandır", IDC_CONFIGURE, 189, 38, 50, 14
-    LTEXT "Bu Bağlantıyla Kullanılan Seçilmiş Bileşenler:", -1, 9, 59, 217, 8
+    LTEXT "Bu bağlantıyla kullanılan seçili bileşenler:", -1, 9, 59, 217, 8
     PUSHBUTTON "&Kur", IDC_INSTALL, 9, 130, 65, 14, WS_DISABLED | WS_TABSTOP
     PUSHBUTTON "K&aldır", IDC_UNINSTALL, 90, 130, 65, 14, WS_DISABLED | WS_TABSTOP
     PUSHBUTTON "&Özellikler", IDC_PROPERTIES, 174, 130, 65, 14
     GROUPBOX "Tanım", -1, 9, 153, 230, 46, BS_GROUPBOX
     LTEXT "Bileşen tanımı buraya gelecek.", IDC_DESCRIPTION, 15, 165, 217, 28, WS_GROUP
-    AUTOCHECKBOX "&Bağlandığında Görev Çubuğunda Simge Göster", IDC_SHOWTASKBAR, 9, 206, 230, 12, WS_TABSTOP
-    AUTOCHECKBOX "B&u Bağlantının, Kısıtlı Bağlanabilirliği Varsa ya da Bağlanabilirliği Yoksa Beni Uyar", IDC_NOTIFYNOCONNECTION, 9, 220, 230, 20, BS_MULTILINE | BS_TOP | WS_TABSTOP
+    AUTOCHECKBOX "&Bağlandığında görev çubuğunda simge göster", IDC_SHOWTASKBAR, 9, 206, 230, 12, WS_TABSTOP
+    AUTOCHECKBOX "B&u bağlantı kısıtlıysa veya bağlanamıyorsa beni uyar", IDC_NOTIFYNOCONNECTION, 9, 220, 230, 20, BS_MULTILINE | BS_TOP | WS_TABSTOP
 END
 
 IDD_STATUS DIALOGEX 0, 0, 200, 280
@@ -45,7 +45,7 @@ BEGIN
     LTEXT "000.000.000", IDC_SEND, 60, 115, 44, 8
     RTEXT "000.000.000", IDC_RECEIVED, 146, 115, 44, 8
     PUSHBUTTON "&Özellikler", IDC_STATUS_PROPERTIES, 10, 150, 60, 14
-    PUSHBUTTON "&Etkisizleştir", IDC_ENDISABLE, 76, 150, 60, 14
+    PUSHBUTTON "&Devre Dışı Bırak", IDC_ENDISABLE, 76, 150, 60, 14
     RTEXT "", IDC_STATUS, 90, 20, 100, 8
     RTEXT "", IDC_DURATION, 90, 34, 100, 8
     RTEXT "", IDC_SPEED, 90, 48, 100, 8
@@ -60,7 +60,7 @@ BEGIN
     LTEXT "Adres Türü:", -1, 22, 20, 80, 8
     LTEXT "IP Adresi:", -1, 22, 34, 80, 8
     LTEXT "Alt Ağ Maskesi:", -1, 22, 48, 80, 8
-    LTEXT "Ön Tanımlı Geçit:", -1, 22, 62, 80, 8
+    LTEXT "Varsayılan Geçit:", -1, 22, 62, 80, 8
     RTEXT "Yok", IDC_DETAILSTYPE, 110, 20, 80, 8
     RTEXT "000.000.000.000", IDC_DETAILSIP, 110, 34, 80, 8
     RTEXT "000.000.000.000", IDC_DETAILSSUBNET, 110, 48, 80, 8
@@ -80,25 +80,25 @@ END
 
 IDD_NETWORKSETTINGSPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS'u Kur"
+CAPTION "ReactOS Kur"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_NET_SETUP, IDC_STATIC, 21, 10, 20, 20
-    LTEXT "Tipik ya da özelliştirilmiş ayarlar kullanıp kullanmayacağınızı seçiniz:", IDC_STATIC, 53, 7, 240, 20
-    AUTORADIOBUTTON "Tipik Ayarlar", IDC_NETWORK_TYPICAL, 53, 27, 253, 20, WS_TABSTOP | WS_GROUP
+    LTEXT "Normal ya da özelleştirilmiş ayarlar kullanıp kullanmayacağınızı seçiniz:", IDC_STATIC, 53, 7, 240, 20
+    AUTORADIOBUTTON "Normal Ayarlar", IDC_NETWORK_TYPICAL, 53, 27, 253, 20, WS_TABSTOP | WS_GROUP
     AUTORADIOBUTTON "Özelleştirilmiş Ayarlar", IDC_NETWORK_CUSTOM, 53, 72, 253, 20, WS_TABSTOP
-    LTEXT "ReactOS Ağları için, Dosya ve Yazdırma Paylaşımı'yla İstemci'yi kullanan ağ bağlantılarını ve kendiliğinden adreslemeli TCP/IP aktarım kuralı oluşturur.", IDC_STATIC, 65, 45, 240, 30
+    LTEXT "ReactOS Ağları için İstemci'yi, Dosya ve Yazdırma Paylaşımı'nı ve otomatik adreslemeli TCP/IP protokolünü kullanarak ağ bağlantıları oluşturur.", IDC_STATIC, 65, 45, 240, 30
     LTEXT "Ağ bileşenlerini elle yapılandırmanıza olanak sağlar.", IDC_STATIC, 65, 90, 243, 20
 END
 
 IDD_NETWORKCOMPONENTPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS'u Kur"
+CAPTION "ReactOS Kur"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Aygıt için:", IDC_STATIC, 33, 2, 100, 20
     LTEXT "Yok", IDC_NETWORK_DEVICE, 75, 2, 253, 20
-    LTEXT "Denetlenen ve bu bağlantı eliyle kullanan bileşenler:", IDC_STATIC, 33, 12, 253, 20
+    LTEXT "Bu bağlantının kullandığı seçili bileşenler:", IDC_STATIC, 33, 12, 253, 20
     CONTROL "", IDC_COMPONENT_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOCOLUMNHEADER | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 33, 22, 250, 50
     PUSHBUTTON "&Kur...", IDC_NETWORK_INSTALL, 122, 75, 50, 14, WS_DISABLED | WS_TABSTOP
     PUSHBUTTON "K&aldır", IDC_NETWORK_UNINSTALL, 177, 75, 50, 14, WS_DISABLED | WS_TABSTOP
@@ -113,19 +113,19 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Bu bilgisayarın bir etki alanının bir üyesi olmasını ister misiniz?\n\
 (Ağ yöneticinizden bu bilgiyi edinebilirsiniz.)", IDC_STATIC, 33, 2, 263, 50
-    AUTORADIOBUTTON "Hayır, bu bilgisayar bir çalışma takımının parçası olacak.", IDC_SELECT_WORKGROUP, 33, 32, 253, 20, WS_TABSTOP | WS_GROUP
+    AUTORADIOBUTTON "Hayır, bu bilgisayar bir çalışma grubunun parçası olacak.", IDC_SELECT_WORKGROUP, 33, 32, 253, 20, WS_TABSTOP | WS_GROUP
     AUTORADIOBUTTON "Evet, bu bilgisayar bir etki alanının parçası olacak.", IDC_SELECT_DOMAIN, 33, 47, 253, 20, WS_TABSTOP
     LTEXT "Çalışma Takımı ya da Etki Alanı Adı:", IDC_STATIC, 33, 72, 126, 14
     EDITTEXT IDC_DOMAIN_NAME, 33, 82, 126, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "ÖNEMLİ: Bu bilgisayar bir ağın parçası olmayacaksa bir etki alanına katılmak için yeterli haklarınız olmaz, ya da ne gireceğinizi bilmiyorsanız yalnızca şu an için çalışma takımı seçiniz. Bu seçenekler ileriki bir zamanda değiştirilebilir.", IDC_STATIC, 33, 107, 263, 50
+    LTEXT "ÖNEMLİ: Bu bilgisayar bir ağın parçası olmayacaksa bir etki alanına katılmak için yeterli haklarınız olmaz, ya da ne gireceğinizi bilmiyorsanız yalnızca şu an için çalışma grubunu seçiniz. Bu seçenekler ileriki bir zamanda değiştirilebilir.", IDC_STATIC, 33, 107, 263, 50
 END
 
 STRINGTABLE
 BEGIN
-    IDS_PHYSICAL_ADDRESS "Fiziki Adres"
+    IDS_PHYSICAL_ADDRESS "Fiziksel Adres"
     IDS_IP_ADDRESS "IP Adresi"
     IDS_SUBNET_MASK "Alt Ağ Maskesi"
-    IDS_DEF_GATEWAY "Ön Tanımlı Geçit"
+    IDS_DEF_GATEWAY "Varsayılan Geçit"
     IDS_DHCP_SERVER "DHCP Sunucusu"
     IDS_LEASE_OBTAINED "IP Adresi Ne Kadar Kullanılacak"
     IDS_LEASE_EXPIRES "IP Adresi Kullanım Bitişi"
@@ -141,14 +141,14 @@ BEGIN
     IDS_SHV_COLUMN_PHONE "Telefon Numarası ya da Anabilgisayar Adresi"
     IDS_SHV_COLUMN_OWNER "Sahip"
     IDS_TYPE_ETHERNET "LAN ya da Yüksek Hızlı İnternet"
-    IDS_STATUS_NON_OPERATIONAL "Etkisiz"
+    IDS_STATUS_NON_OPERATIONAL "Devre Dışı"
     IDS_STATUS_UNREACHABLE "Bağlı Değil"
-    IDS_STATUS_DISCONNECTED "Ağ kablosu takılmamış."
-    IDS_STATUS_CONNECTING "Elde Edilen Ağ Adresi"
+    IDS_STATUS_DISCONNECTED "Ağ kablosu takılmamış"
+    IDS_STATUS_CONNECTING "Ağ adresi alınıyor"
     IDS_STATUS_CONNECTED "Bağlı"
     IDS_STATUS_OPERATIONAL "Bağlı"
     IDS_NET_ACTIVATE "Etkinleştir"
-    IDS_NET_DEACTIVATE "Etkisizleştir"
+    IDS_NET_DEACTIVATE "Devre Dışı Bırak"
     IDS_NET_STATUS "Durum"
     IDS_NET_REPAIR "Onar"
     IDS_NET_CREATELINK "Kısayol Oluştur"
@@ -161,7 +161,7 @@ BEGIN
     IDS_FORMAT_GBIT "%u GBit/s"
     IDS_DURATION_DAY "%d Gün %s"
     IDS_DURATION_DAYS "%d Gün %s"
-    IDS_ASSIGNED_DHCP "DHCP eliyle atanmış."
+    IDS_ASSIGNED_DHCP "DHCP tarafından atanmış."
     IDS_ASSIGNED_MANUAL "Elle yapılandırılmış."
 END
 
@@ -171,8 +171,8 @@ BEGIN
     IDS_NETWORKSETTINGSSUBTITLE "Başka ağlara, bilgisayarlara ve İnternet'e bağlanmak için kullanılacak ağ yazılımını kurar."
     IDS_NETWORKCOMPONENTTITLE "Ağ Bileşenleri"
     IDS_NETWORKCOMPONENTSUBTITLE "Bilgisayarınızda hangi ağ bileşenlerinin kullanacağını belirtir. Yeni bileşenler eklemek için Kur'a tıklayınız."
-    IDS_NETWORKDOMAINTITLE "Çalışma Takımı ya da Bilgisayar Etki Alanı"
-    IDS_NETWORKDOMAINSUBTITLE "Bir etki alanı, bir ağ yöneticisi eliyle tanımlanmış bir takım bilgisayardır. Bir çalışma takımı, aynı çalışma takımı adını paylaşan bir takım bilgisayardır."
-    IDS_REACTOS_SETUP "ReactOS'u Kur"
-    IDS_WZD_DOMAIN_NAME "Kurulum Yöneticisi, etki alanınızın ya da\nçalışma takımınızın adını\ngirene dek sürdüremez."
+    IDS_NETWORKDOMAINTITLE "Çalışma Grubu ya da Bilgisayar Etki Alanı"
+    IDS_NETWORKDOMAINSUBTITLE "Bir etki alanı, bir ağ yöneticisi tarafından tanımlanmış bir grup bilgisayardır. Bir çalışma grubu, aynı çalışma grubu adını paylaşan bir grup bilgisayardır."
+    IDS_REACTOS_SETUP "ReactOS Kur"
+    IDS_WZD_DOMAIN_NAME "Kurulum Yöneticisi, etki alanınızın ya da\nçalışma takımınızın adını\ngirene kadar devam edemez."
 END

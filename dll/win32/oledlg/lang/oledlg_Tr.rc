@@ -25,7 +25,7 @@ STRINGTABLE
   IDS_RESULTOBJDESC	"Belgenize yeni bir %s nesnesi ekleyiniz."
   IDS_RESULTFILEOBJDESC	"Belgenize kütüğün içeriğini bir nesne olarak ekleyiniz, böylece onu, kendisini oluşturan izlenceyi kullanarak etkinleştirebilirsiniz."
   IDS_BROWSE            "Göz At"
-  IDS_NOTOLEMOD         "Kütük, geçerli bir OLE parçası olarak görünmüyor. OLE denetimi saklanamıyor."
+  IDS_NOTOLEMOD         "Dosya, geçerli bir OLE parçası olarak görünmüyor. OLE denetimi saklanamıyor."
   IDS_NOTOLEMODCAPTION  "Denetim Ekle"
   IDS_VERBMENU_OBJECT   "&Nesne"
   IDS_VERBMENU_OBJECT_WITH_NAME "%1 &Nesne"
@@ -63,7 +63,7 @@ BEGIN
                     WS_GROUP,7,20,84,10
     CONTROL         "&Denetim Oluştur",IDC_CREATECONTROL,"Button",
                     BS_AUTORADIOBUTTON | NOT WS_VISIBLE,7,54,84,10
-    CONTROL         "&Kütükten Oluştur",IDC_CREATEFROMFILE,"Button",
+    CONTROL         "&Dosyadan Oluştur",IDC_CREATEFROMFILE,"Button",
                     BS_AUTORADIOBUTTON,7,37,84,10
     LTEXT           "",IDC_RESULTDESC,49,112,169,26
     PUSHBUTTON      "D&enetim Ekle...",IDC_ADDCONTROL,92,88,80,14,NOT WS_VISIBLE
@@ -76,7 +76,7 @@ END
 
 IDD_PASTESPECIAL4 DIALOGEX 3, 15, 304, 160
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Husûsî Yapıştır"
+CAPTION "Özel Yapıştır"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT         "Kaynak:", -1, 6, 9, 150, 8, WS_VISIBLE | WS_GROUP

@@ -8,20 +8,20 @@ CAPTION "Bilgisayar Adı"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_COMPNAME, IDC_STATIC, 4, 3, 26, 24, SS_ICON
-    LTEXT "ReactOS, ağda bilgisayarınızı tanılamak için aşağıdaki bilgiyi kullanır.", IDC_STATIC, 40, 5, 204, 20
-    LTEXT "Bilgisayar Tanımı:", IDC_STATIC, 7, 40, 90, 9
+    LTEXT "ReactOS, ağda bilgisayarınızı tanımak için aşağıdaki bilgiyi kullanır.", IDC_STATIC, 40, 5, 204, 20
+    LTEXT "Bilgisayar tanımı:", IDC_STATIC, 7, 40, 90, 9
     EDITTEXT IDC_COMPDESC, 98, 38, 146, 13, WS_CHILD | WS_VISIBLE | WS_TABSTOP
-    LTEXT "Tüm Bilgisayar Adı:", IDC_STATIC, 7, 68, 85, 9
+    LTEXT "Tam bilgisayar adı:", IDC_STATIC, 7, 68, 85, 9
     EDITTEXT IDC_COMPUTERNAME, 98, 68, 144, 12, ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT "Çalışma Takımı:", IDC_WORKGROUPDOMAIN, 7, 84, 64, 9
+    LTEXT "Çalışma grubu:", IDC_WORKGROUPDOMAIN, 7, 84, 64, 9
     EDITTEXT IDC_WORKGROUPDOMAIN_NAME, 98, 84, 144, 12, ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT "Bir etki alanına katılmak ve bir yerel kullanıcı oluşturmak için, Ağ Tanılama Yardımcısı'nı kullanmak için ""Ağ Kimliği""ne tıklayınız.", IDC_STATIC, 7, 113, 172, 24
+    LTEXT "Bir etki alanına katılmak ve bir yerel kullanıcı oluşturmak amacıyla, Ağ Tanılama Sihirbazı'nı kullanmak için ""Ağ Kimliği""ne tıklayınız.", IDC_STATIC, 7, 113, 172, 24
     PUSHBUTTON "&Ağ Kimliği...", IDC_NETWORK_ID, 190, 114, 58, 15
     LTEXT "Bu bilgisayarı yeniden adlandırmak veya bir etki alanına katılmak için ""Değiştir""e tıklayınız.", IDC_STATIC, 7, 149, 170, 17
-    PUSHBUTTON "&Değştir...", IDC_NETWORK_PROPERTY, 190, 149, 58, 15
+    PUSHBUTTON "&Değiştir...", IDC_NETWORK_PROPERTY, 190, 149, 58, 15
     LTEXT "", IDC_MESSAGETEXT, 7, 179, 242, 46
     ICON IDI_WARNINGICO, IDC_RESTARTICON, 7, 194, 20, 20, SS_ICON | SS_REALSIZEIMAGE
-    LTEXT "Bu bilgisayarı yeniden başlattıktan sonra değişiklikler geçerli olacaktır.", IDC_RESTARTTEXT, 25, 195, 209, 8
+    LTEXT "Değişiklikler, bu bilgisayar yeniden başlatıldıktan sonra geçerli olacaktır.", IDC_RESTARTTEXT, 25, 195, 209, 8
 END
 
 IDD_PROPPAGECOMPNAMECHENGE DIALOGEX 0, 0, 232, 222
@@ -30,16 +30,16 @@ CAPTION "Bilgisayar Adı Değişiklikleri"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "(İleti buraya gelecek.)", 1017, 7, 5, 218, 30
-    LTEXT "&Bilgisayar Adı:", -1, 7, 41, 219, 8
+    LTEXT "&Bilgisayar adı:", -1, 7, 41, 219, 8
     EDITTEXT 1002, 7, 53, 218, 14, ES_AUTOHSCROLL | ES_OEMCONVERT
-    LTEXT "Tüm Bilgisayar Adı:", 1016, 7, 72, 218, 10
+    LTEXT "Tam bilgisayar adı:", 1016, 7, 72, 218, 10
     EDITTEXT 1001, 7, 82, 219, 14, ES_AUTOHSCROLL | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
-    PUSHBUTTON "&Fazlası...", 1003, 150, 102, 75, 14
+    PUSHBUTTON "Daha &fazla...", 1003, 150, 102, 75, 14
     GROUPBOX "Üyelik", 1018, 7, 119, 219, 73
-    AUTORADIOBUTTON "&Etki Alanı:", 1008, 17, 132, 192, 10, WS_GROUP
-    AUTORADIOBUTTON "&Çalışma Takımı:", 1004, 17, 161, 191, 10
+    AUTORADIOBUTTON "&Etki alanı:", 1008, 17, 132, 192, 10, WS_GROUP
+    AUTORADIOBUTTON "&Çalışma grubu:", 1004, 17, 161, 191, 10
     EDITTEXT 116, 28, 144, 181, 14, ES_AUTOHSCROLL | WS_GROUP
-    PUSHBUTTON "E&tki Alanımı Bul", 1010, 7, 203, 109, 14, NOT WS_VISIBLE | WS_DISABLED
+    PUSHBUTTON "E&tki alanımı bul", 1010, 7, 203, 109, 14, NOT WS_VISIBLE | WS_DISABLED
     EDITTEXT 1007, 28, 172, 181, 14, ES_UPPERCASE | ES_AUTOHSCROLL | ES_OEMCONVERT
     DEFPUSHBUTTON "Tamam", 1, 121, 203, 50, 14, WS_GROUP
     PUSHBUTTON "İptal", 2, 176, 203, 50, 14
@@ -50,40 +50,40 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_CAPTIO
 CAPTION "DNS Son Eki ve NetBIOS Bilgisayar Adı"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "&Bu Bilgisayarın Birinci DNS Son Eki:", -1, 7, 5, 253, 8
+    LTEXT "&Bu bilgisayarın birinci DNS son eki:", -1, 7, 5, 253, 8
     EDITTEXT 1011, 7, 17, 252, 14, ES_AUTOHSCROLL
-    AUTOCHECKBOX "&Etki Alanı Üyeliği Değiştiğinde Birinci DNS Son Ekini Değiştir", 115, 11, 39, 250, 10
-    LTEXT "&NetBIOS Bilgisayar Adı:", -1, 7, 57, 148, 8
+    AUTOCHECKBOX "&Etki alanı üyeliği değiştiğinde birinci DNS son ekini değiştir", 115, 11, 39, 250, 10
+    LTEXT "&NetBIOS bilgisayar adı:", -1, 7, 57, 148, 8
     EDITTEXT 1013, 7, 69, 150, 14, ES_UPPERCASE | ES_AUTOHSCROLL | ES_READONLY
     DEFPUSHBUTTON "Tamam", 1, 153, 104, 50, 14
     PUSHBUTTON "İptal", 2, 209, 104, 50, 14
-    LTEXT "Bu ad, daha eski bilgisayarlarla ve daha eski hizmetlerle birlikte çalışabilirlik için kullanılır.", 13, 7, 88, 253, 8
+    LTEXT "Bu ad, daha eski bilgisayarlarla ve hizmetlerle birlikte çalışabilirlik için kullanılır.", 13, 7, 88, 253, 8
 END
 
 STRINGTABLE
 BEGIN
     1 "* Bilinmeyen *"
-    2 "ÇALIŞMATAKIMI"
-    3 "Etki alanı üyeliği bilgisini okumaya çalışırken aşağıdaki yanlışlık oluştu:"
+    2 "CALISMAGRUBU"
+    3 "Etki alanı üyeliği bilgisini okumaya çalışırken aşağıdaki hata oluştu:"
     4 "Bilgisayar Adı Değişiklikleri"
-    5 "Çalışma Takımı:"
-    6 "Etki Alanı:"
-    7 """%1"" etki alanı adı, yasal bir ReactOS adı olmasına rağmen İnternet Etki Alanı Adı Hizmeti belirtimlerine uymuyor. Standart olmayan adlar için ReactOS DNS sunucusunu kullanmalısınız. "
-    8 """%1"" etki alanı adı düzgün biçimlendirilmemiş. Alan adlarını ayırmak için noktalar (.) Kullanılır. Her alan 63 karakterle sınırlıdır. Örnek: alan-1.reactos.org."
+    5 "Çalışma grubu:"
+    6 "Etki alanı:"
+    7 """%1"" etki alanı adı, geçerli bir ReactOS adı olmasına rağmen Genel Ağ Etki Alanı Adı Hizmeti özelliklerine uymuyor. Standart olmayan adlar için ReactOS DNS sunucusunu kullanmalısınız. "
+    8 """%1"" etki alanı adı düzgün biçimlendirilmemiş. Alan adlarını ayırmak için noktalar (.) kullanılır. Her alan 63 karakterle sınırlıdır. Örnek: alan-1.reactos.org."
     10 "Yeni bilgisayar adı ""%1"" çok uzun. İsim 63 karakterden uzun olamaz."
-    11 "Girilen yeni bilgisayar adı doğru biçimlendirilmemiş. Standart adlar harf (a-z, A-Z), sayı (0-9) ve kısa çizgi (-) içerebilir, ancak boşluk veya nokta (.) İçeremez. Adları tamamen rakamlardan oluşturulamaz. "
-    22 "%1 çalışma takımına hoş geldiniz."
+    11 "Girilen yeni bilgisayar adı doğru biçimlendirilmemiş. Standart adlar harf (a-z, A-Z), sayı (0-9) ve kısa çizgi (-) içerebilir, ancak boşluk veya nokta (.) içeremez. Adlar tamamen rakamlardan oluşturulamaz. "
+    22 "%1 çalışma grubuna hoş geldiniz."
     23 "%1 etki alanına hoş geldiniz."
     24 "Değişikliklerin etkili olması için bu bilgisayarı yeniden başlatmalısınız."
     25 "Bu bilgisayarın adını ve üyeliğini değiştirebilirsiniz. Değişiklikler, ağ kaynaklarına erişimi etkileyebilir."
     1021 "Önemli: Bu bilgisayarın kimliğini yalnızca yöneticiler değiştirebilir."
     1022 "Önemli: Bilgisayarın kimliği şundan dolayı değiştirilemedi:"
-    1029 "Yeni bilgisayar adı ""%1"" bir sayı. İsim bir numara olamaz."
+    1029 "Yeni bilgisayar adı ""%1"" bir numara. Ad bir numara olamaz."
     1030 """%1"" yeni bilgisayar adı izin verilmeyen işaretler içeriyor. İzin verilmeyen işaretler; `, ~, !, @, #, $, %%, ^, &, *, (, ), =, +, [, ], {, }, \\, |, ;, :, ', "", ,, <, >, /, ve ?'ni kapsar."
-    1031 "Etki alanı adının ilk etki alanı ""%1"" bir sayıdır. İlk etki alanı bir sayı olmayabilir."
-    1032 """%1"" etki alanı adı, izin verilmeyen karakterler içeriyor. Standart DNS adları harf (a-z, A-Z), sayı (0-9) ve kısa çizgi içerebilir ancak boşluk içeremez. Alan adlarını ayırmak için noktalar (.) Kullanılır. Örnek: alan-1.reactos.org."
+    1031 "Etki alanı adının ilk etki alanı ""%1"" bir sayıdır. İlk etki alanı bir sayı olamaz."
+    1032 """%1"" etki alanı adı, izin verilmeyen karakterler içeriyor. Standart DNS adları harf (a-z, A-Z), sayı (0-9) ve kısa çizgi içerebilir ancak boşluk içeremez. Alan adlarını ayırmak için noktalar (.) kullanılır. Örnek: alan-1.reactos.org."
     3210 "&Ayrıntılar >>"
     3220 "<< A&yrıntılar"
     4000 "Bilgi"
-    4001 "Yeni bir bilgisayar adı oluşturulamaz!"
+    4001 "Yeni bir bilgisayar adı oluşturulamadı!"
 END

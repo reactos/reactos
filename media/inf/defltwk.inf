@@ -177,7 +177,7 @@ SceInfUsers = "Përdoruesit"
 
 [Strings.041f]
 SceInfAuthUsers = "Kimliği Doğrulanmış Kullanıcılar"
-SceInfInteractive = "ETKLİEŞİMLİ"
+SceInfInteractive = "ETKİLEŞİMLİ"
 SceInfGuest = "Konuk"
 SceInfUsers = "Kullanıcılar"
 

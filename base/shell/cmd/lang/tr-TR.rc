@@ -10,7 +10,7 @@ BEGIN
     STRING_ASSOC_HELP "Dosya uzantısı ilişkilerini değiştirir.\n\n\
 assoc [.ext[=[DosyaTuru]]]\n\
 \n\
-assoc (bütün ilişkiler yazdırın)\n\
+assoc (bütün ilişkileri yazdır)\n\
 assoc .uzantı (belirli ilişkilendirmeyi yazdır)\n\
 assoc .uzantı= (belirli bir ilişkiyi kaldır)\n\
 assoc .uzantı=DosyaTuru (yeni bir ilişki ekle)\n"
@@ -29,14 +29,14 @@ ALIAS listesinden bir takma adı kaldırmak için:\n\
 CALL [sürücü:][yol]program-adı [program-parametreleri]\n\n\
   program-parametreleri  Toplu iş dosyasının gerektirdiği komut satırı\n\
                          değişkenlerini belirtir.\n"
-    STRING_CD_HELP "Çalışma dizinini değiştirir veya adını gösterir.\n\n\
+    STRING_CD_HELP "Şimdiki dizini değiştirir veya adını gösterir.\n\n\
 CHDIR [/D][sürücü:][yol]\n\
 CHDIR[..|.]\n\
 CD [/D][sürücü:][yol]\n\
 CD[..|.]\n\n\
   ..   bir üst dizin\n\
-  .    çalışma dizini\n\
-  /D   Mevcut sürücüyü ve çalışma dizinini değiştirecektir.\n\n\
+  .    şimdiki dizin\n\
+  /D   Şimdiki sürücüyü ve çalışma dizinini değiştirecektir.\n\n\
 CD [sürücü] yazın: belirtilen sürücüdeki bir dizine geçmek için.\n\
 Şimdiki sürücüyü ve dizini görüntülemek için bir değişken olmadan CD yazın.\n"
     STRING_CHOICE_HELP "Kullanıcının bir dizi seçenekten birini seçmesini bekler.\n\n\
@@ -80,7 +80,7 @@ ondalık  onaltılık  renk       ondalık  onaltılık  renk\n\
 5        5          Eflatun    13        D         Parlak Eflatun\n\
 6        6          Sarı       14        E         Parlak Sarı\n\
 7        7          Beyaz      15        F         Parlak Beyaz\n"
-    STRING_COPY_HELP1 "Yeniden yaz %s (Evet/Hayır/Hepsi)? "
+    STRING_COPY_HELP1 "Yeniden yaz %s (Evet/Hayır/Tümü)? "
     STRING_COPY_HELP2 "Bir veya daha fazla dosyayı başka bir konuma kopyalar.\n\n\
 COPY [/V][/Y|/-Y][/A|/B] kaynak [/A|/B]\n\
      [+ kaynak [/A|/B] [+ ...]] [hedef [/A|/B]]\n\n\
@@ -89,9 +89,9 @@ COPY [/V][/Y|/-Y][/A|/B] kaynak [/A|/B]\n\
   /B           İkili bir dosyayı gösterir.\n\
   hedef        Yeni dosya(lar) için dizini ve/veya dosya adını belirtir.\n\
   /V           Yeni dosyaların doğru yazıldığını doğrular.\n\
-  /Y           Kaynakta var olan bir dosyayı, hedefin üzerine yazılmasını istemeyi\n\
+  /Y           Kaynakta var olan bir dosyanın, hedefin üzerine yazılmasını\n\
                onaylamak için sormaz.\n\
-  /-Y          Kaynakta var olan bir dosyayı, hedefin üzerine yazılmasını istemeyi\n\
+  /-Y          Kaynakta var olan bir dosyanın, hedefin üzerine yazılmasını\n\
                onaylamak için sorar.\n\
 /Y anahtarı, COPYCMD komutunun çevresel değişkeninde mevcut olabilir.\n\
 ...\n"
@@ -103,8 +103,8 @@ CTTY [cihaz]\n\n\
             CON genellikle varsayılan standart G/Ç cihazıdır..\n\n\
 Kontrolü standart konsola geri döndürmek için, yardımcı cihazda CTTY CON yazın."
     STRING_DATE_HELP1 "\nYeni tarihi giriniz (ay%cgün%cyıl): "
-    STRING_DATE_HELP2 "\nYeni tarihi giriniz (gün%cay%cyil): "
-    STRING_DATE_HELP3 "\nYeni tarihi giriniz (yil%cay%cgün): "
+    STRING_DATE_HELP2 "\nYeni tarihi giriniz (gün%cay%cyıl): "
+    STRING_DATE_HELP3 "\nYeni tarihi giriniz (yıl%cay%cgün): "
     STRING_DATE_HELP4 "Tarihi görüntüler veya ayarlar.\n\n\
 DATE [/T][tarih]\n\n\
   /T    sadece tarihi gösterir\n\n\
@@ -119,8 +119,8 @@ ERASE [/N /P /T /Q /S /W /Y /Z /A[[:]öznitellikler]] hedef ...\n\n\
   /P    Her dosyayı silmeden önce sorar.\n\
   /T    Toplam silinen dosya sayısını ve boş disk alanını görüntüler.\n\
   /Q    Sessizce çalışır.\n\
-  /W    Temizle. Silmeden önce dosyanın üzerine rastgele sayılar yazar, dosyayı kökten temizlers.\n\
-  /Y    Onayla. Hiçbir şey sormadan her şeyi tamamiyle siler.\n\
+  /W    Temizle. Silmeden önce dosyanın üzerine rastgele veri yazar, dosyayı kökten temizler.\n\
+  /Y    Onayla. Hiçbir şey sormadan, her şeyi tamamen siler.\n\
   /F    Gizli dosyaları, salt okunur dosyaları ve sistem dosyalarını silmeye zorlar.\n\
   /S    Dosyayı tüm alt dizinlerden siler.\n\
   /A    Özniteliklere göre silinecek dosyaları seçer.\n\
@@ -145,7 +145,7 @@ DELAY [/m]n\n\n\
   öznitellikler   D  Dizinler                   R  Salt okunur dosyalar\n\
                   H  Gizli dosyalar             A  Arşivlemeye hazır dosyalar\n\
                   S  Sistem dosyaları           -  değil anlamına gelen ön ek\n\
-  /B              Basit format kullanır (başlık bilgisi veya özet yok).\n\
+  /B              Basit biçim kullanır (başlık bilgisi veya özet yok).\n\
   /C              Binlik ayırıcıyı dosya boyutlarında görüntüler. Bu varsayılandır.\n\
                   Ayırıcının görüntülenmesini devre dışı bırakmak için /-C'yi kullanın.\n\
   /D              Geniş liste biçimi ile aynıdır, ancak dosyalar sütunlara göre sıralanır.\n\
@@ -167,21 +167,21 @@ DELAY [/m]n\n\n\
   /X              Bu, 8.3 olmayan dosya adları için oluşturulan kısa adları görüntüler.\n\
                   Biçim, uzun addan önce eklenen kısa adla /N biçimidir. Kısa ad yoksa, yerine\n\
                   boşluklar görüntülenir.\n\
-  /4              Dört basamaklı biçimde yılları görüntüler\n\n\
+  /4              Dört basamaklı biçimde yılları görüntüler.\n\n\
 Anahtarlar, DIRCMD çevresel değişkeninde önceden ayarlanabilir. Herhangi\n\
 bir anahtarın önüne - (tire) koyarak ön ayarlı anahtarları geçersiz kılın - örneğin, /-W.\n"
-    STRING_DIR_HELP2 " %c sürücüsündeki birim %s\n"
+    STRING_DIR_HELP2 " %c sürücüsündeki birimin etiketi %s\n"
     STRING_DIR_HELP3 " %c sürücüsündeki birimin etiketi yok.\n"
     STRING_DIR_HELP4 " Birimin Seri Numarası: %04X-%04X\n"
     STRING_DIR_HELP5 "\n     Toplam Listelenen Dosya Miktarı:\n%16i dosya(lar)% 14s bayt değerinde\n"
-    STRING_DIR_HELP6 "%16i Dizin(ler)% 15s bayt boşaltıldı\n"
+    STRING_DIR_HELP6 "%16i dizin %15s bayt boş\n"
     STRING_DIR_HELP7 "\n %s'nın dizini\n\n"
     STRING_DIR_HELP8 "%16i dosya(lar)% 14s bayt\n"
     STRING_DIRSTACK_HELP1 "Şimdiki dizini POPD komutu tarafından kullanılmak üzere depolar,\n\
 ardından belirtilen dizine değiştirir.\n\n\
 PUSHD [yol | ..]\n\n\
-  yol        Şimdiki dizini, yapacak dizin olarak işaretler\n"
-    STRING_DIRSTACK_HELP2 "PUSHD komutu tarafından saklanan dizinde yapılan değişiklikler.\n\nPOPD"
+  yol        Şimdiki dizin yapılacak dizini belirtir.\n"
+    STRING_DIRSTACK_HELP2 "PUSHD komutunun kaydettiği dizine geçirir.\n\nPOPD"
     STRING_DIRSTACK_HELP3 "Dizin yığınının içeriğini yazdırır.\n\nDIRS"
     STRING_DIRSTACK_HELP4 "Dizin yığını boş"
     STRING_ECHO_HELP1 "Sonda satır başı ve satır beslemesi olmayan bir mesaj görüntüler.\n\n\
@@ -262,7 +262,7 @@ MKLINK [/D | /H | /J] link_adi hedef\n\n\
   %13s bayt toplam sanal bellek.\n\
   %13s bayt kullanılabilir sanal bellek.\n"
     STRING_MISC_HELP1 "Devam etmek için bir tuşa basın..."
-    STRING_MOVE_HELP1 "Üzerine yaz %s (Evet/Hayır/Hepsi)? "
+    STRING_MOVE_HELP1 "Üzerine yaz %s (Evet/Hayır/Tümü)? "
     STRING_MOVE_HELP2 "Dosyaları taşır veya dosyaları ve dizinleri yeniden adlandırır.\n\n\
 Bir veya daha fazla dosyayı taşımak için:\n\
 MOVE [/N][/Y|/-Y][sürücü:][yol]dosya_adi[1,2,...] hedef\n\n\
@@ -357,20 +357,20 @@ REPLACE [sürücü1:][yol1]filename [sürücü2:][yol2] [/P] [/R] [/S] [/W] [/U]
     STRING_REPLACE_HELP6 "Değiştir: %s\n"
     STRING_REPLACE_HELP7 "Herhangi bir dosya eklenemedi\n"
     STRING_REPLACE_HELP8 "%lu dosya(lar) eklendi\n"
-    STRING_REPLACE_HELP9 "Ekle %s (E/H)? "
-    STRING_REPLACE_HELP10 "Değiştir %s (E/H)? "
+    STRING_REPLACE_HELP9 "Şunu ekle %s (E/H)? "
+    STRING_REPLACE_HELP10 "Şunu değiştir %s (E/H)? "
     STRING_REPLACE_HELP11 "Ekleniyor: %s\n"
     STRING_SHIFT_HELP "Bir toplu iş dosyasında değiştirilebilir parametrelerin konumunu değiştirir.\n\n\
 SHIFT [DOWN]"
-    STRING_SCREEN_HELP "imleci hareket ettirin ve isteğe bağlı olarak parametre olarak verilen metni yazdırın.\n\n\
+    STRING_SCREEN_HELP "İmleci hareket ettirin ve isteğe bağlı olarak parametre olarak verilen metni yazdırın.\n\n\
 SCREEN satır sutun [metin]\n\n\
   satır         imleci bir satır hareket ettir\n\
-  sutun         imleci bir sutun hareket ettir"
-    STRING_SET_HELP "Çevresel değişkenlerini görüntüler, ayarlar veya kaldırır.\n\n\
+  sutun         imleci bir sütun hareket ettir"
+    STRING_SET_HELP "Çevresel değişkenleri görüntüler, ayarlar veya kaldırır.\n\n\
 SET [değişken[=][karakter dizisi]]\n\n\
-  değişken            Çevresel değişkeni adını belirtir.\n\
+  değişken            Çevresel değişken adını belirtir.\n\
   karakter dizisi     Değişkene atanacak bir dizi karakter belirtir.\n\n\
-Mevcut çevresel değişkenlerini görüntülemek için parametresiz SET yazın.\n"
+Mevcut çevresel değişkenleri görüntülemek için parametresiz SET yazın.\n"
     STRING_START_HELP1 "Bir komut başlatır.\n\n\
 START [""başlık""] [/D yol] [/I] [/B] [/MIN] [/MAX] [/WAIT]\n\
       [komut/program] [parametreler]\n\n\
@@ -388,7 +388,7 @@ TITLE [başlık]\n\n\
 başlık       Komut istemi penceresinin başlığını belirtir.\n"
     STRING_TIME_HELP1 "Sistem saatini görüntüler veya ayarlar.\n\n\
 TIME [/T][zaman]\n\n\
-  /T    sadece zamanı göster\n\n\
+  /T    sadece zamanı gösterir.\n\n\
 Şimdiki saat ayarını ve yeni bir istemi görüntülemek için parametresiz TIME yazın.\n\
 Aynı zamanı korumak için ENTER'a basın.\n"
     STRING_TIME_HELP2 "Yeni bir zaman giriniz: "
@@ -396,11 +396,11 @@ Aynı zamanı korumak için ENTER'a basın.\n"
     STRING_TIMER_HELP2 "%02d%c%02d%c%02d%c%02d geçti\n"
     STRING_TIMER_HELP3 "10 kronometrenin kullanımına izin verin.\n\n\
 TIMER  [ON|OFF] [/S] [/n] [/Fn]\n\n\
-  ON          kronometreyi ON olarak ayarlar\n\
-  OFF         kronometreyi OFF olarak ayarlar\n\
+  ON          kronometreyi AÇIK olarak ayarlar\n\
+  OFF         kronometreyi KAPALI olarak ayarlar\n\
   /S          Ayrık zaman. Kronometre ayrık zamanını\n\
-              değerini değiştirmeden döndür.\n\
-  /n          Kronometre numarasını belirtin.\n\
+              değerini değiştirmeden döndürür.\n\
+  /n          Kronometre numarasını belirtir.\n\
               Mevcut kronometre değerleri 0 ila 9 arasındadır\n\
               Belirtilmemişse varsayılan 1'dir\n\
   /Fn         Çıktı için format\n\
@@ -473,9 +473,9 @@ başlık        pencere için yeni başlık\n"
     STRING_COLOR_ERROR2 "Renk özelliklerinde hata"
     STRING_CONSOLE_ERROR "Bilinmeyen Hata: %d\n"
     STRING_COPY_ERROR1 "Hata: Kaynak açılamadı - %s!\n"
-    STRING_COPY_ERROR2 "Hata: Kendi üzerine kopyalayanamaz!\n"
+    STRING_COPY_ERROR2 "Hata: Kendi üzerine kopyalanamaz!\n"
     STRING_COPY_ERROR3 "Hata: Hedefe yazılırken hata oluştu!\n"
-    STRING_COPY_ERROR4 "Hata: Henüz uygulanmadı!\n"
+    STRING_COPY_ERROR4 "Hata: Henüz eklenmedi/geliştirilmedi!\n"
     STRING_DATE_ERROR "Geçersiz tarih."
     STRING_DEL_ERROR5 "%s dosyası silinecek! "
     STRING_DEL_ERROR6 "Emin misiniz (E/H)? "
@@ -507,36 +507,36 @@ başlık        pencere için yeni başlık\n"
     STRING_ERROR_INVALID_DRIVE "Geçersiz sürücü özelliği\n"
     STRING_ERROR_INVALID_PARAM_FORMAT "Geçersiz parametre biçimi- %s\n"
     STRING_ERROR_BADCOMMAND "Hatalı komut veya dosya adı - %s\n"
-    STRING_ERROR_OUT_OF_MEMORY "Yetersiz bellek hatası.\n"
-    STRING_ERROR_CANNOTPIPE "Hata! Borulayamıyorum (Piping invalid)! Geçici dosya açılamıyor!\n"
+    STRING_ERROR_OUT_OF_MEMORY "Yetersiz bellek.\n"
+    STRING_ERROR_CANNOTPIPE "Hata! Borulanamadı! Geçici dosya açılamıyor!\n"
     STRING_ERROR_D_PAUSEMSG "Devam etmek için herhangi bir tuşa basın . . . "
     STRING_ERROR_DRIVER_NOT_READY "Sürücü hazır değil"
-    STRING_SET_ENV_ERROR "Çevresel değişkeni '%s', tanımlanmadı.\n"
+    STRING_SET_ENV_ERROR "'%s' çevresel değişkeni tanımlanmadı.\n"
     STRING_REPLACE_ERROR1 "Geçersiz anahtar - %s\n"
-    STRING_REPLACE_ERROR2 "Tol bulunamadı - %s\n"
+    STRING_REPLACE_ERROR2 "Yol bulunamadı - %s\n"
     STRING_REPLACE_ERROR3 "Dosya adı, dizin adı veya birim etiketi sözdizimi yanlış.\n"
     STRING_REPLACE_ERROR4 "Hatalı parametre kombinasyonu\n"
     STRING_REPLACE_ERROR5 "Erişim reddedildi - %s\n"
     STRING_REPLACE_ERROR6 "Hiçbir dosya bulunamadı - %s\n"
     STRING_REPLACE_ERROR7 "Genişletilmiş Hata 32\n"
-    STRING_CMD_INFOLINE "  ReactOS Komut Satırı                                      Yardım için, HELP yazın"
+    STRING_CMD_INFOLINE "  ReactOS Komut Satırı                                 Yardım için, HELP yazın"
     STRING_REACTOS_VERSION "ReactOS [Sürüm %s %s]\n"
     STRING_CMD_SHELLINFO "\nReactOS Komut Satırı Yorumlayıcısı\nSürüm %s %s"
-    STRING_VERSION_RUNNING_ON "Devam ediyor: "
+    STRING_VERSION_RUNNING_ON "Üzerinde Çalışıyor: "
     STRING_VERSION_RUNVER "%s [Sürüm %d.%d.%d] %s"
     STRING_COPY_FILE "        %d adet dosya(lar) kopyalandı\n"
     STRING_DELETE_WIPE "temizlendi"
-    STRING_FOR_ERROR "kötü değişken belirtimi."
-    STRING_SCREEN_COL "sutun için geçersiz değer"
+    STRING_FOR_ERROR "hatalı değişken belirtimi."
+    STRING_SCREEN_COL "sütun için geçersiz değer"
     STRING_SCREEN_ROW "satır için geçersiz değer"
     STRING_TIMER_TIME "Sayaç %d, %s'dır: "
     STRING_MKLINK_CREATED_SYMBOLIC "%s <<===>> %s için sembolik bağlantı oluşturuldu.\n"
     STRING_MKLINK_CREATED_HARD "%s <<===>> %s için sabit bağlantı oluşturuldu.\n"
     STRING_MKLINK_CREATED_JUNCTION "%s <<===>> %s için bağlantı oluşturuldu.\n"
     STRING_MORE "Daha Fazla? "
-    STRING_CANCEL_BATCH_FILE "\r\nCtrl-Break tuşuna basıldı. Toplu dosya iptal edilsin mi? (Evet/Hayır/Hepsi) "
-    STRING_INVALID_OPERAND "Invalid operand.\n"
-    STRING_EXPECTED_CLOSE_PAREN "Beklenen ')'.\n"
-    STRING_EXPECTED_NUMBER_OR_VARIABLE "Beklenen sayı veya değişken adı.\n"
+    STRING_CANCEL_BATCH_FILE "\r\nCtrl-Break tuşuna basıldı. Toplu dosya iptal edilsin mi? (Evet/Hayır/Tümü) "
+    STRING_INVALID_OPERAND "Geçersiz işlenen.\n"
+    STRING_EXPECTED_CLOSE_PAREN "')' beklendi.\n"
+    STRING_EXPECTED_NUMBER_OR_VARIABLE "Sayı veya değişken adı beklendi.\n"
     STRING_SYNTAX_COMMAND_INCORRECT "Komutun sözdizimi yanlış.\n"
 END

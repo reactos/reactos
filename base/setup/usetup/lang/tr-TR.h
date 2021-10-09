@@ -17,14 +17,14 @@ static MUI_ENTRY trTRSetupInitPageEntries[] =
     {
         0,
         20,
-        "ReactOS Kurulumu kendini ba\237lat\215rken l\201tfen bekleyin",
+        "ReactOS Kurulumu kendini ba\237lat\215rken ve ayg\215tlar\215n\215z\215",
         TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER,
         TEXT_ID_STATIC
     },
     {
         0,
         21,
-        "ve cihazlar\215n\215z\215 ke\237federken...",
+        "alg\215larken l\201tfen bekleyin...",
         TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER,
         TEXT_ID_STATIC
     },
@@ -62,7 +62,7 @@ static MUI_ENTRY trTRLanguagePageEntries[] =
     {
         8,
         10,
-        "\x07  L\201tfen kurulum s\201reci i\207in kullan\215lacak dili se\207iniz.",
+        "\x07  L\201tfen kurulum i\237lemi i\207in kullan\215lacak dili se\207iniz.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -76,14 +76,14 @@ static MUI_ENTRY trTRLanguagePageEntries[] =
     {
         8,
         13,
-        "\x07  Bu dil, kurulacak sistemin \224n tan\215ml\215 dili olacakt\215r.",
+        "\x07  Bu dil, kurulacak sistemin varsay\215lan dili olacakt\215r.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         0,
         0,
-        "ENTER = S\201rd\201r   F3 = \200\215k",
+        "ENTER = Devam Et  F3 = \200\215k",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
         TEXT_ID_STATIC
     },
@@ -142,7 +142,7 @@ static MUI_ENTRY trTRWelcomePageEntries[] =
     {
         8,
         19,
-        "\x07  ReactOS Lisans Terimleri'ni ve \236artlar\215'n\215 g\224r\201nt\201lemek i\207in L'ye bas\215n\215z.",
+        "\x07  ReactOS Lisans Terimleri'ni ve \236artlar\215'n\215 g\224rmek i\207in L'ye bas\215n\215z.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -170,7 +170,7 @@ static MUI_ENTRY trTRWelcomePageEntries[] =
     {
         0,
         0,
-        "ENTER = S\201rd\201r  R = Onar veya Y\201kselt  L = Lisans  F3 = \200\215k",
+        "ENTER = Devam Et  R = Onar veya Y\201kselt  L = Lisans  F3 = \200\215k",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
         TEXT_ID_STATIC
     },
@@ -208,14 +208,14 @@ static MUI_ENTRY trTRIntroPageEntries[] =
     {
         6,
         12,
-        "ve a\247\215r geli\237tirme alt\215ndad\215r. Yaln\215zca de\247erlendirme ve s\215nama ama\207lar\215yla",
+        "ve a\247\215r geli\237tirme alt\215ndad\215r. Yaln\215zca de\247erlendirme ve deneme amac\215yla",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         6,
         13,
-        "kullan\215m\215 \224nerilmektedir ve g\201nl\201k kullan\215m i\237letim sisteminiz de\247ildir.",
+        "kullan\215m\215 \224nerilir ve g\201nl\201k kullan\215m i\237letim sisteminiz de\247ildir.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -229,28 +229,28 @@ static MUI_ENTRY trTRIntroPageEntries[] =
     {
         6,
         16,
-        "verilerinizi yedekleyin veya bir ikinci bilgisayar\215n\215zda s\215nay\215n.",
+        "verilerinizi yedekleyiniz veya ikinci bir bilgisayar\215n\215zda deneyiniz.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         8,
         19,
-        "\x07  ReactOS Kur'a s\201rd\201rmek i\207in ENTER'e bas\215n\215z.",
+        "\x07  ReactOS Kur'a devam etmek i\207in ENTER'e bas\215n\215z.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         8,
         21,
-        "\x07  ReactOS'u kurmaks\215z\215n \207\215kmak i\207in F3'e bas\215n\215z.",
+        "\x07  ReactOS'u kurmadan \207\215kmak i\207in F3'e bas\215n\215z.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         0,
         0,
-        "ENTER = S\201rd\201r   F3 = \200\215k",
+        "ENTER = Devam Et   F3 = \200\215k",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
         TEXT_ID_STATIC
     },
@@ -281,7 +281,7 @@ static MUI_ENTRY trTRLicensePageEntries[] =
     {
         8,
         8,
-        "ReactOS Sistemi, GNU GPL'yle X11, BSD ve GNU LPGL",
+        "ReactOS Sistemi, GNU GPL'yle X11, BSD ve GNU LGPL",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -337,7 +337,7 @@ static MUI_ENTRY trTRLicensePageEntries[] =
     {
         8,
         17,
-        "E\247er birtak\215m nedenlerden dolay\215 ReactOS ile GNU Genel",
+        "E\247er baz\215 nedenlerden dolay\215 ReactOS ile GNU Genel",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -365,7 +365,7 @@ static MUI_ENTRY trTRLicensePageEntries[] =
     {
         8,
         23,
-        "Bu \224zg\201r yaz\215l\215md\215r, kopylama \237artlar\215 i\207in kayna\247a bak\215n\215z.",
+        "Bu \224zg\201r yaz\215l\215md\215r, kopyalama \237artlar\215 i\207in kayna\247a bak\215n\215z.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -445,21 +445,21 @@ static MUI_ENTRY trTRDevicePageEntries[] =
     {
         24,
         16,
-        "Do\247rula:",
+        "Onayla:",
         TEXT_STYLE_NORMAL | TEXT_ALIGN_RIGHT,
         TEXT_ID_STATIC
     },
     {
         25,
         16,
-        "Bu ayg\215t ayarlar\215n\215 do\247rula.",
+        "Bu ayg\215t ayarlar\215n\215 onayla.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         6,
         19,
-        "Ayg\215t ayarlar\215n\215, bir se\207enek se\207mek i\207in Yukar\215 veya A\237a\247\215",
+        "Ayg\215t ayarlar\215n\215, bir se\207enek se\207mek i\207in YUKARI veya A\236A\246I",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -480,21 +480,21 @@ static MUI_ENTRY trTRDevicePageEntries[] =
     {
         6,
         23,
-        "T\201m ayarlar uygun oldu\247unda ""Bu ayg\215t ayarlar\215n\215 do\247rula.""y\215",
+        "T\201m ayarlar uygun oldu\247unda \"Bu ayg\215t ayarlar\215n\215 onayla\"",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         6,
         24,
-        "se\207iniz ve ENTER tu\237una bas\215n\215z.",
+        "se\207ene\247ini se\207iniz ve ENTER tu\237una bas\215n\215z.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         0,
         0,
-        "ENTER = S\201rd\201r   F3 = \200\215k",
+        "ENTER = Devam Et   F3 = \200\215k",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
         TEXT_ID_STATIC
     },
@@ -598,7 +598,7 @@ static MUI_ENTRY trTRUpgradePageEntries[] =
     {
         6,
         9,
-        "y\201kseltebilir ya da ReactOS kurulumu zarar g\224rm\201\237se Kur program\215 onu",
+        "y\201kseltebilir ya da ReactOS kurulumu zarar g\224rm\201\237se Kur, onu",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -626,21 +626,21 @@ static MUI_ENTRY trTRUpgradePageEntries[] =
     {
         8,
         17,
-        "\x07  Se\207ilmi\237 i\237letim sistemi kurulumunu y\201kseltmek i\207in U'ya bas\215n\215z.",
+        "\x07  Se\207ilen i\237letim sistemi kurulumunu y\201kseltmek i\207in U'ya bas\215n\215z.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         8,
         19,
-        "\x07  Bir yeni kuruluma s\201rd\201rmek i\207in ESC'e bas\215n\215z.",
+        "\x07  Yeni bir kuruluma devam etmek i\207in ESC'e bas\215n\215z.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         8,
         21,
-        "\x07  ReactOS kurmaks\215z\215n \207\215kmak i\207in F3'e bas\215n\215z.",
+        "\x07  ReactOS kurmadan \207\215kmak i\207in F3'e bas\215n\215z.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -678,7 +678,7 @@ static MUI_ENTRY trTRComputerPageEntries[] =
     {
         8,
         10,
-        "\x07  \230stenen bilgisyar t\201r\201n\201 se\207mek i\207in YUKARI'ya veya A\236A\246I'ya bas\215n\215z.",
+        "\x07  \230stenen bilgisayar t\201r\201n\201 se\207mek i\207in YUKARI'ya veya A\236A\246I'ya bas\215n\215z.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -706,7 +706,7 @@ static MUI_ENTRY trTRComputerPageEntries[] =
     {
         0,
         0,
-        "ENTER = S\201rd\201r   ESC = \230ptal   F3 = \200\215k",
+        "ENTER = Devam Et   ESC = \230ptal   F3 = \200\215k",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
         TEXT_ID_STATIC
     },
@@ -730,7 +730,7 @@ static MUI_ENTRY trTRFlushPageEntries[] =
     {
         10,
         6,
-        "Sistem, \237imdi diskinize saklanm\215\237 t\201m veriyi do\247ruluyor.",
+        "Sistem, \237imdi diskinize kaydedilmi\237 t\201m veriyi do\247ruluyor.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -744,7 +744,7 @@ static MUI_ENTRY trTRFlushPageEntries[] =
     {
         10,
         9,
-        "Bitti\247inde bilgisayar\215n\215z kendili\247inden yeniden ba\237layacakt\215r.",
+        "Bitti\247inde bilgisayar\215n\215z otomatik olarak yeniden ba\237layacakt\215r.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -862,7 +862,7 @@ static MUI_ENTRY trTRDisplayPageEntries[] =
     {
         0,
         0,
-        "ENTER = S\201rd\201r   ESC = \230ptal   F3 = \200\215k",
+        "ENTER = Devam Et   ESC = \230ptal   F3 = \200\215k",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
         TEXT_ID_STATIC
     },
@@ -886,7 +886,7 @@ static MUI_ENTRY trTRSuccessPageEntries[] =
     {
         10,
         6,
-        "ReactOS'un ana bile\237enleri ba\237ar\215l\215 olarak kuruldu.",
+        "ReactOS'un ana bile\237enleri ba\237ar\215yla kuruldu.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1033,7 +1033,7 @@ static MUI_ENTRY trTRSelectPartitionEntries[] =
     {
         8,
         21,
-        "\x07  Var olan bir b\224l\201m silmek i\207in D'ye bas\215n\215z.",
+        "\x07  Var olan bir b\224l\201m\224 silmek i\207in D'ye bas\215n\215z.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1078,7 +1078,7 @@ static MUI_ENTRY trTRChangeSystemPartition[] =
     {
         6,
         16,
-        "bir format kullan\215yor..",
+        "bir bi\207im kullan\215yor.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1106,28 +1106,28 @@ static MUI_ENTRY trTRChangeSystemPartition[] =
     {
         8,
         25,
-        "\x07  Bu se\207imi kabul etmek i\207in ENTER'a bas\215n.",
+        "\x07  Bu se\207imi kabul etmek i\207in ENTER'a bas\215n\215z.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         8,
         27,
-        "\x07  Sistem b\224l\201m\201n\201 elle de\247i\237tirmek i\207in ESC'ye basarak geri d\224n\201n.",
+        "\x07  Sistem b\224l\201m\201n\201 elle de\247i\237tirmek i\207in ESC'e basarak geri d\224n\201n\201z.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         8,
         28,
-        "   ard\215ndan sistem diskinde yeni bir sistem b\224l\201m\201 se\207in",
+        "   ard\215ndan sistem diskinde yeni bir sistem b\224l\201m\201 se\207iniz",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         8,
         29,
-        "   veya olu\237turun.",
+        "   veya olu\237turunuz.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1162,7 +1162,7 @@ static MUI_ENTRY trTRChangeSystemPartition[] =
     {
         0,
         0,
-        "ENTER = S\201rd\201r  ESC = \230ptal",
+        "ENTER = Devam Et  ESC = \230ptal",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
         TEXT_ID_STATIC
     },
@@ -1186,7 +1186,7 @@ static MUI_ENTRY trTRConfirmDeleteSystemPartitionEntries[] =
     {
         6,
         8,
-        "Kur'a sistem b\224l\201m\201n\201 silmeyi sordunuz.",
+        "Kur'un sistem b\224l\201m\201n\201 silmesini istediniz.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1228,14 +1228,14 @@ static MUI_ENTRY trTRConfirmDeleteSystemPartitionEntries[] =
     {
         6,
         16,
-        "B\224l\201m\201 sildi\247inizde ReactOS Kur'u bitirene dek bilgisayar\215 sabit diskten",
+        "B\224l\201m\201 sildi\247inizde ReactOS Kur'u bitirene kadar bilgisayar\215 sabit diskten",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         6,
         17,
-        "\224ny\201kleyemeyebilirsiniz.",
+        "ba\237latamayabilirsiniz.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1249,7 +1249,7 @@ static MUI_ENTRY trTRConfirmDeleteSystemPartitionEntries[] =
     {
         8,
         21,
-        "Sonra b\224l\201m\201 silmeyi onaylamak i\207in yeniden sorulacaks\215n\215z.",
+        "Sonra b\224l\201m\201 silmeyi yeniden onaylaman\215z istenecek.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1263,7 +1263,7 @@ static MUI_ENTRY trTRConfirmDeleteSystemPartitionEntries[] =
     {
         0,
         0,
-        "ENTER = S\201rd\201r  ESC = \230ptal",
+        "ENTER = Devam Et  ESC = \230ptal",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
         TEXT_ID_STATIC
     },
@@ -1294,14 +1294,14 @@ static MUI_ENTRY trTRFormatPartitionEntries[] =
     {
         6,
         10,
-        "Kur, \237imdi b\224l\201m\201 bi\207imlendirecek. S\201rd\201rmek i\207in ENTER'e bas\215n\215z.",
+        "Kur, \237imdi b\224l\201m\201 bi\207imlendirecek. Devam etmek i\207in ENTER'e bas\215n\215z.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_FORMAT_PROMPT
     },
     {
         0,
         0,
-        "ENTER = S\201rd\201r   F3 = \200\215k",
+        "ENTER = Devam Et   F3 = \200\215k",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
         TEXT_ID_STATIC
     },
@@ -1384,7 +1384,7 @@ static MUI_ENTRY trTRInstallDirectoryEntries[] =
     {
         0,
         0,
-        "ENTER = S\201rd\201r   F3 = \200\215k",
+        "ENTER = Devam Et   F3 = \200\215k",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
         TEXT_ID_STATIC
     },
@@ -1422,7 +1422,7 @@ static MUI_ENTRY trTRFileCopyEntries[] =
     {
         0,
         14,
-        "Bu, bitirmek i\207in birka\207 dakika s\201rebilir.",
+        "Bu i\237lem birka\207 dakika s\201rebilir.",
         TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER,
         TEXT_ID_STATIC
     },
@@ -1488,7 +1488,7 @@ static MUI_ENTRY trTRBootLoaderEntries[] =
     {
         0,
         0,
-        "ENTER = S\201rd\201r   F3 = \200\215k",
+        "ENTER = Devam Et   F3 = \200\215k",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
         TEXT_ID_STATIC
     },
@@ -1512,7 +1512,7 @@ static MUI_ENTRY trTRBootLoaderInstallPageEntries[] =
     {
         0,
         0,
-        "Installing the bootloader onto the media, please wait...",
+        "\231ny\201kleyici diske kuruluyor, l\201tfen bekleyiniz...",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
         TEXT_ID_STATIC
     },
@@ -1571,7 +1571,7 @@ static MUI_ENTRY trTRKeyboardSettingsEntries[] =
     {
         0,
         0,
-        "ENTER = S\201rd\201r   ESC = \230ptal   F3 = \200\215k",
+        "ENTER = Devam Et   ESC = \230ptal   F3 = \200\215k",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
         TEXT_ID_STATIC
     },
@@ -1595,7 +1595,7 @@ static MUI_ENTRY trTRLayoutSettingsEntries[] =
     {
         6,
         8,
-        "L\201tfen \224ntan\215ml\215 olarak kurulacak bir d\201zen se\207iniz.",
+        "L\201tfen varsay\215lan olarak kurulacak bir klavye d\201zeni se\207iniz.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1616,21 +1616,21 @@ static MUI_ENTRY trTRLayoutSettingsEntries[] =
     {
         8,
         13,
-        "\x07  G\224r\201nt\201 t\201r\201n\201 de\247i\237tirmeden bir \224nceki sayfaya",
+        "\x07  Klavye d\201zenini de\247i\237tirmeden bir \224nceki sayfaya",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         8,
         14,
-        "   d\224nmek i\207in ESC d\201\247mesine bas\215n\215z.",
+        "   d\224nmek i\207in ESC'e bas\215n\215z.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         0,
         0,
-        "ENTER = S\201rd\201r   ESC = \230ptal   F3 = \200\215k",
+        "ENTER = Devam Et   ESC = \230ptal   F3 = \200\215k",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
         TEXT_ID_STATIC
     },
@@ -1662,7 +1662,7 @@ static MUI_ENTRY trTRPrepareCopyEntries[] =
     {
         0,
         0,
-        "Dosya kopylalama listesi olu\237turuluyor...",
+        "Dosya kopyalama listesi olu\237turuluyor...",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
         TEXT_ID_STATIC
     },
@@ -1711,7 +1711,7 @@ static MUI_ENTRY trTRSelectFSEntries[] =
     {
         0,
         0,
-        "ENTER = S\201rd\201r   ESC = \230ptal   F3 = \200\215k",
+        "ENTER = Devam Et   ESC = \230ptal   F3 = \200\215k",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
         TEXT_ID_STATIC
     },
@@ -1749,7 +1749,7 @@ static MUI_ENTRY trTRDeletePartitionEntries[] =
     {
         11,
         19,
-        "UYARI: Bu b\224l\201mdeki t\201m veriler yitirilecektir!",
+        "UYARI: Bu b\224l\201mdeki t\201m veriler kaybedilecektir!",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1817,11 +1817,11 @@ MUI_ERROR trTRErrorEntries[] =
         // ERROR_NOT_INSTALLED
         "ReactOS, bilgisayara t\201m\201yle kurulmad\215. E\247er \237imdi\n"
         "Kur'dan \207\215karsan\215z ReactOS'u kurmak i\207in Kur'u\n"
-        "yeniden \207al\215\237t\215rmaya gereksinim duyacaks\215n\215z.\n"
+        "yeniden \207al\215\237t\215rman\215z gerekecektir.\n"
         "\n"
-        "  \x07  Kur'u s\201rd\201rmek i\207in ENTER'e bas\215n\215z.\n"
+        "  \x07  Kur'a devam etmek i\207in ENTER'e bas\215n\215z.\n"
         "  \x07  Kur'dan \207\215kmak i\207in F3'e bas\215n\215z.",
-        "F3 = \200\215k  ENTER = S\201rd\201r"
+        "F3 = \200\215k  ENTER = Devam Et"
     },
     {
         // ERROR_NO_BUILD_PATH
@@ -1860,7 +1860,7 @@ MUI_ERROR trTRErrorEntries[] =
     },
     {
         // ERROR_SIGNATURE_TXTSETUPSIF,
-        "Kur, TXTSETUP.SIF'ta ge\207ersiz bir i\237aret buldu.\n",
+        "Kur, TXTSETUP.SIF'ta ge\207ersiz bir imza buldu.\n",
         "ENTER = Bilgisayar\215 Yeniden Ba\237lat"
     },
     {
@@ -1875,7 +1875,7 @@ MUI_ERROR trTRErrorEntries[] =
     },
     {
         // ERROR_LOAD_COMPUTER,
-        "Kur, bilgisayar t\201r\201 sistemini y\201klemede ba\237ar\215s\215z oldu.\n",
+        "Kur, bilgisayar t\201r\201 listesini y\201klemede ba\237ar\215s\215z oldu.\n",
         "ENTER = Bilgisayar\215 Yeniden Ba\237lat"
     },
     {
@@ -1895,28 +1895,28 @@ MUI_ERROR trTRErrorEntries[] =
     },
     {
         // ERROR_WARN_PARTITION,
-        "Kur, d\201zg\201n y\224netilemeyen bir uyumsuz b\224l\201m tablosu i\207eren en az\n"
-        "bir sabit disk buldu!\n"
+        "Kur, d\201zg\201n y\224netilemeyecek uyumsuz bir b\224l\201m tablosu i\207eren\n"
+        "en az bir sabit disk buldu!\n"
         "\n"
-        "B\224l\201mleri olu\237turmak veya silmek b\224l\201m tablosunu yok edebilir.\n"
+        "B\224l\201mleri olu\237turmak veya silmek, b\224l\201m tablosunu yok edebilir.\n"
         "\n"
         "  \x07  Kur'dan \207\215kmak i\207in F3'e bas\215n\215z.\n"
-        "  \x07  S\201rd\201rmek i\207in ENTER'e bas\215n\215z.",
-        "F3 = \200\215k   ENTER = S\201rd\201r"
+        "  \x07  Devam etmek i\207in ENTER'e bas\215n\215z.",
+        "F3 = \200\215k   ENTER = Devam Et"
     },
     {
         // ERROR_NEW_PARTITION,
-        "\231neden var olan bir b\224l\201m\201n i\207ine yeni\n"
+        "Zaten var olan bir b\224l\201m\201n i\207ine yeni\n"
         "bir b\224l\201m olu\237turamazs\215n\215z!\n"
         "\n"
-        "  * S\201rd\201rmek i\207in bir tu\237a bas\215n\215z.",
+        "  * Devam etmek i\207in bir tu\237a bas\215n\215z.",
         NULL
     },
     {
         // ERROR_DELETE_SPACE,
-        "B\224l\201mlenmemi\237 disk bo\237lu\247unu silemezsiniz!\n"
+        "B\224l\201mlenmemi\237 disk alan\215n\215 silemezsiniz!\n"
         "\n"
-        "  * S\201rd\201rmek i\207in bir tu\237a bas\215n\215z.",
+        "  * Devam etmek i\207in bir tu\237a bas\215n\215z.",
         NULL
     },
     {
@@ -1927,7 +1927,7 @@ MUI_ERROR trTRErrorEntries[] =
     {
         // ERROR_NO_FLOPPY,
         "A: s\201r\201c\201s\201nde disk yok.",
-        "ENTER = S\201rd\201r"
+        "ENTER = Devam Et"
     },
     {
         // ERROR_UPDATE_KBSETTINGS,
@@ -1941,7 +1941,7 @@ MUI_ERROR trTRErrorEntries[] =
     },
     {
         // ERROR_IMPORT_HIVE,
-        "Kur, bir y\215\247\215n dosyas\215 almada ba\237ar\215s\215z oldu.",
+        "Kur, bir y\215\247\215n dosyas\215n\215 almada ba\237ar\215s\215z oldu.",
         "ENTER = Bilgisayar\215 Yeniden Ba\237lat"
     },
     {
@@ -1961,22 +1961,22 @@ MUI_ERROR trTRErrorEntries[] =
     },
     {
         // ERROR_INVALID_CABINET_INF,
-        "Cabinet'in ge\207erli yap\215land\215rma dosyas\215 yok.\n",
+        "Dolab\215n ge\207erli yap\215land\215rma dosyas\215 yok.\n",
         "ENTER = Bilgisayar\215 Yeniden Ba\237lat"
     },
     {
         // ERROR_CABINET_MISSING,
-        "Cabinet bulunamad\215.\n",
+        "Dolap dosyas\215 bulunamad\215.\n",
         "ENTER = Bilgisayar\215 Yeniden Ba\237lat"
     },
     {
         // ERROR_CABINET_SCRIPT,
-        "Cabinet kurulum beti\247i yok.\n",
+        "Dolap dosyas\215 kurulum beti\247i yok.\n",
         "ENTER = Bilgisayar\215 Yeniden Ba\237lat"
     },
     {
         // ERROR_COPY_QUEUE,
-        "Kur, dosya kopyalamada kuyru\247unu a\207mada ba\237ar\215s\215z oldu.\n",
+        "Kur, dosya kopyalama kuyru\247unu a\207mada ba\237ar\215s\215z oldu.\n",
         "ENTER = Bilgisayar\215 Yeniden Ba\237lat"
     },
     {
@@ -2030,14 +2030,14 @@ MUI_ERROR trTRErrorEntries[] =
         // ERROR_DIRECTORY_NAME,
         "Ge\207ersiz dizin ad\215.\n"
         "\n"
-        "  * S\201rd\201rmek i\207in bir tu\237a bas\215n\215z."
+        "  * Devam etmek i\207in bir tu\237a bas\215n\215z."
     },
     {
         // ERROR_INSUFFICIENT_PARTITION_SIZE,
-        "Se\207ili b\224l\201m ReactOS'u kurmak i\207in yetecek \224l\207\201de b\201y\201k de\247il.\n"
+        "Se\207ili b\224l\201m ReactOS'u kurmak i\207in yeteri katar b\201y\201k de\247il.\n"
         "Kurulum b\224l\201m\201 en az %lu MB b\201y\201kl\201\247\201nde olmal\215.\n"
         "\n"
-        "  * S\201rd\201rmek i\207in bir tu\237a bas\215n\215z.",
+        "  * Devam etmek i\207in bir tu\237a bas\215n\215z.",
         NULL
     },
     {
@@ -2045,17 +2045,17 @@ MUI_ERROR trTRErrorEntries[] =
         "B\224l\201m tablosu dolu oldu\247undan dolay\215 bu diskin b\224l\201m tablosunda yeni bir ana b\224l\201m\n"
         "ya da yeni bir geni\237letilmi\237 b\224l\201m olu\237turamazs\215n\215z.\n"
         "\n"
-        "  * S\201rd\201rmek i\207in bir tu\237a bas\215n\215z."
+        "  * Devam etmek i\207in bir tu\237a bas\215n\215z."
     },
     {
         // ERROR_ONLY_ONE_EXTENDED,
         "Bir diskte birden \207ok geni\237letilmi\237 b\224l\201m olu\237turamazs\215n\215z.\n"
         "\n"
-        "  * S\201rd\201rmek i\207in bir tu\237a bas\215n\215z."
+        "  * Devam etmek i\207in bir tu\237a bas\215n\215z."
     },
     {
         // ERROR_FORMATTING_PARTITION,
-        "Kur, b\224l\201m\201 bi\207imlendiremez:\n"
+        "Kur, b\224l\201m\201 bi\207imlendiremiyor:\n"
         " %S\n"
         "\n"
         "ENTER = Bilgisayar\215 Yeniden Ba\237lat"
@@ -2203,7 +2203,7 @@ MUI_STRING trTRStrings[] =
     {STRING_DELETEPARTITION,
     "   D = B\224l\201m\201 Sil   F3 = \200\215k"},
     {STRING_PARTITIONSIZE,
-    "Yeni b\224l\201m\201n b\201y\201kl\201\247\201n\201 giriniz:"},
+    "Yeni b\224l\201m\201n b\201y\201kl\201\247\201:"},
     {STRING_CHOOSENEWPARTITION,
     "\232zerinde bir ana b\224l\201m olu\237turmay\215 se\207tiniz:"},
     {STRING_CHOOSE_NEW_EXTENDED_PARTITION,
@@ -2219,15 +2219,15 @@ MUI_STRING trTRStrings[] =
     {STRING_NONFORMATTEDPART,
     "ReactOS'u yeni ya da bi\207imlendirilmemi\237 bir b\224l\201me kurmay\215 se\207tiniz."},
     {STRING_NONFORMATTEDSYSTEMPART,
-    "Sistem b\224l\201m\201 daha bi\207imlendirilmemi\237."},
+    "Sistem b\224l\201m\201 hen\201z bi\207imlendirilmemi\237."},
     {STRING_NONFORMATTEDOTHERPART,
-    "Yeni b\224l\201m daha bi\207imlendirilmemi\237."},
+    "Yeni b\224l\201m hen\201z bi\207imlendirilmemi\237."},
     {STRING_INSTALLONPART,
     "Kur, ReactOS'u b\224l\201m \201zerine kurar."},
     {STRING_CONTINUE,
-    "ENTER = S\201rd\201r"},
+    "ENTER = Devam Et"},
     {STRING_QUITCONTINUE,
-    "F3 = \200\215k   ENTER = S\201rd\201r"},
+    "F3 = \200\215k   ENTER = Devam Et"},
     {STRING_REBOOTCOMPUTER,
     "ENTER = Bilgisayar\215 Yeniden Ba\237lat"},
     {STRING_DELETING,
@@ -2282,14 +2282,14 @@ MUI_STRING trTRStrings[] =
     "T\201r 0x%02x"},
     {STRING_HDDINFO_1,
     // "Sabit Disk %lu (%I64u %s), Giri\237=%hu, Veriyolu=%hu, Kimlik=%hu (%wZ) [%s]"
-    "%I64u %s Sabit Disk %lu (Giri\237=%hu, Veriyolu=%hu, Kimlik=%hu), %wZ \201zerinde [%s]"},
+    "%I64u %s Disk %lu (Giri\237=%hu, VYolu=%hu, Kimlik=%hu), (%wZ) [%s]"},
     {STRING_HDDINFO_2,
     // "Sabit Disk %lu (%I64u %s), Giri\237=%hu, Veriyolu=%hu, Kimlik=%hu [%s]"
-    "%I64u %s Sabit Disk %lu (Giri\237=%hu, Veriyolu=%hu, Kimlik=%hu) [%s]"},
+    "%I64u %s Disk %lu (Giri\237=%hu, VYolu=%hu, Kimlik=%hu) [%s]"},
     {STRING_NEWPARTITION,
     "Kur, \201zerinde bir yeni b\224l\201m olu\237turdu:"},
     {STRING_UNPSPACE,
-    "Kullan\215lmayan Bo\237luk"},
+    "Kullan\215lmayan Alan"},
     {STRING_MAXSIZE,
     "MB (En \207ok %lu MB)"},
     {STRING_EXTENDED_PARTITION,

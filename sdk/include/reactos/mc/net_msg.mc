@@ -58,7 +58,7 @@ NET ACCOUNTS [/FORCELOGOFF:{minutos | NO}] [/MINPWLEN:longitud]
              [/UNIQUEPW:número] [/DOMAIN]
 .
 Language=Turkish
-NET ACCOUNTS [/FORCELOGOFF:{Dakîka|NO}] [/MINPWLEN:Uzunluk]
+NET ACCOUNTS [/FORCELOGOFF:{dakika|NO}] [/MINPWLEN:Uzunluk]
              [/MAXPWAGE:{Gün|UNLIMITED}] [/MINPWAGE:Gün]
              [/UNIQUEPW:Sayı] [/DOMAIN]
 .

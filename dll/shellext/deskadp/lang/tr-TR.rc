@@ -39,7 +39,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_MODEFMT "%d ile %d, %s, %s"
-    IDS_DEFREFRESHRATE "Ön Tanımlı Yenileme"
+    IDS_DEFREFRESHRATE "Varsayılan Yenileme"
     IDES_REFRESHRATEFMT "%d Hertz"
     IDS_4BPP "16 Renk"
     IDS_8BPP "256 Renk"

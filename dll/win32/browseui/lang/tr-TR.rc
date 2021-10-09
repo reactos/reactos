@@ -37,7 +37,7 @@ BEGIN
             MENUITEM "", -1, MFT_SEPARATOR
         END
         MENUITEM "&Durum Çubuğu", IDM_VIEW_STATUSBAR
-        POPUP "&Gezinme çubuğu", IDM_VIEW_EXPLORERBAR
+        POPUP "&Gezinme Çubuğu", IDM_VIEW_EXPLORERBAR
         BEGIN
             MENUITEM "&Ara\tCtrl+E", IDM_EXPLORERBAR_SEARCH
             MENUITEM "&Yer İmleri\tCtrl+I", IDM_EXPLORERBAR_FAVORITES
@@ -149,7 +149,7 @@ BEGIN
     LTEXT "&Şurada ara:", -1, 10, 75, 500, 10
     CONTROL "", IDC_SEARCH_COMBOBOX, WC_COMBOBOXEXW, WS_CHILD | WS_VISIBLE | WS_CLIPCHILDREN | WS_TABSTOP | CCS_NODIVIDER | CCS_NOMOVEY | CBS_OWNERDRAWFIXED, 10, 85, 200, 200
 
-    DEFPUSHBUTTON "Ara&", IDC_SEARCH_BUTTON, 80, 110, 40, 15, WS_GROUP | WS_TABSTOP | WS_VISIBLE
+    DEFPUSHBUTTON "&Ara", IDC_SEARCH_BUTTON, 80, 110, 40, 15, WS_GROUP | WS_TABSTOP | WS_VISIBLE
     PUSHBUTTON "&Durdur", IDC_SEARCH_STOP_BUTTON, 80, 110, 40, 15, WS_GROUP | WS_TABSTOP
 
     AUTOCHECKBOX "Gizli dosya ve dizinleri göster",
@@ -300,7 +300,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_HISTORYTEXT "&Geçmiş\tDenetim+H"
+    IDS_HISTORYTEXT "&Geçmiş\tCtrl+H"
 END
 
 STRINGTABLE
@@ -317,7 +317,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_STANDARD_TOOLBAR, "|Geri|İleri|Yukarı|Ara|Dizinler|Taşı|Çoğalt|Sil|Geri Al|Görünümler|Dur|Yenile|Giriş|Sürücü Oluştur|Bağlantıyı Kes|Yer İmleri|Geçmiş|Tam Ekran|Özellikler|Kes|Kopyala|Yapıştır|Dizin Seçenekleri||"
+    IDS_STANDARD_TOOLBAR, "|Geri|İleri|Yukarı|Ara|Dizinler|Taşı|Kopyala|Sil|Geri Al|Görünümler|Dur|Yenile|Giriş|Sürücü Oluştur|Bağlantıyı Kes|Yer İmleri|Geçmiş|Tam Ekran|Özellikler|Kes|Kopyala|Yapıştır|Dizin Seçenekleri||"
 END
 
 STRINGTABLE
@@ -330,10 +330,10 @@ END
 STRINGTABLE
 BEGIN
     IDS_SEARCH_RESULTS "Arama sonuçları"
-    IDS_SEARCHINVALID "'%1' geçerli bir dizin değildir."
+    IDS_SEARCHINVALID "'%1' geçerli bir dizin değil."
     IDS_SEARCH_FOLDER "%s aranıyor."
     IDS_SEARCH_FILES_FOUND "%u dosya bulundu"
-    IDS_SEARCH_OPEN_FOLDER "Bulunan &Dizini Açılıyor"
+    IDS_SEARCH_OPEN_FOLDER "Bulunduğu &Dizini Aç"
     IDS_COL_NAME "İsim"
     IDS_COL_LOCATION "Şurada"
     IDS_COL_RELEVANCE "Uygunluk"
@@ -342,5 +342,5 @@ END
 STRINGTABLE
 BEGIN
     IDS_PARSE_ADDR_ERR_TITLE "ReactOS Gezgini"
-    IDS_PARSE_ADDR_ERR_TEXT "ReactOS Gezgini '%1' ögesini bulamadı. Girdiğiniz değeri kontrol edin ve yeniden arayın"
+    IDS_PARSE_ADDR_ERR_TEXT "ReactOS Gezgini '%1' ögesini bulamadı. Girdiğiniz değeri kontrol edin ve yeniden arayın."
 END

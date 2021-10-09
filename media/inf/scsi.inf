@@ -150,7 +150,8 @@ PCI\VEN_104B&CC_0100.DeviceDesc = "BusLogic SCSI radič"
 ReactOS = "ReactOS Takımı"
 SCSIClassName = "SCSI ve RAID Denetleyicileri"
 
-GenericMfg = "(Ölçünlü SCSI ve RAID Denetleyicileri)"
+GenericMfg = "(Standart SCSI ve RAID Denetleyicileri)"
+GEN_SCSIADAPTER.DeviceDesc = "SCSI/RAID Ana Denetleyicisi"
 PCI\VEN_104B&CC_0100.DeviceDesc = "BusLogic SCSI Denetleyicisi"
 
 [Strings.0422]
