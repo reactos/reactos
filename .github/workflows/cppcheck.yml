@@ -1,0 +1,41 @@
+name: cppcheck-action
+
+on: [push, pull_request]
+
+jobs:
+
+  build:
+
+    name: cppcheck
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - uses: actions/checkout@v2
+
+      - name: cppcheck
+
+        uses: deep5050/cppcheck-action@main
+
+        with:
+
+          github_token: ${{ secrets.GITHUB_TOKEN}}
+
+          skip_preprocessor: true
+
+          enable: error,warning,portability
+
+          platform: win32A
+
+          output_file: cppcheck.log
+
+      - name: Upload the log   
+
+        uses: actions/upload-artifact@v2
+
+        with:
+
+          name: reactos-log-${{ github.sha }}
+
+          path: cppcheck.log
