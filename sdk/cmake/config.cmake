@@ -30,7 +30,7 @@ if(ARCH STREQUAL "i386" OR ARCH STREQUAL "amd64")
     set(TUNE "generic" CACHE STRING
     "Which CPU ReactOS should be optimized for.")
 elseif(ARCH STREQUAL "arm")
-    set(TUNE "generic-arch" CACHE STRING
+    set(TUNE "generic-armv7-a" CACHE STRING
     "Which CPU ReactOS should be optimized for.")
 endif()
 
