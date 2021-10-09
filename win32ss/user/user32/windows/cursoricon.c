@@ -122,15 +122,25 @@ static BOOL is_dib_monochrome( const BITMAPINFO* info )
         if (((const BITMAPCOREINFO*)info)->bmciHeader.bcBitCount != 1) return FALSE;
 
         /* Check if the first color is black */
-        if ((rgb->rgbtRed == 0) && (rgb->rgbtGreen == 0) && (rgb->rgbtBlue == 0))
+        if ((rgb[0].rgbtRed == 0) && (rgb[0].rgbtGreen == 0) &&
+            (rgb[0].rgbtBlue == 0))
         {
-            rgb++;
-
             /* Check if the second color is white */
-            return ((rgb->rgbtRed == 0xff) && (rgb->rgbtGreen == 0xff)
-                 && (rgb->rgbtBlue == 0xff));
+            if ((rgb[1].rgbtRed == 0xff) && (rgb[1].rgbtGreen == 0xff) &&
+                (rgb[1].rgbtBlue == 0xff))
+                return TRUE;
         }
-        else return FALSE;
+
+        /* Check if the first color is white */
+        if ((rgb[0].rgbtRed == 0xff) && (rgb[0].rgbtGreen == 0xff) &&
+            (rgb[0].rgbtBlue == 0xff))
+        {
+            /* Check if the second color is black */
+            if ((rgb[1].rgbtRed == 0) && (rgb[1].rgbtGreen == 0) &&
+            (rgb[1].rgbtBlue == 0))
+                return TRUE;
+        }
+        return FALSE;
     }
     else  /* assume BITMAPINFOHEADER */
     {
@@ -139,16 +149,25 @@ static BOOL is_dib_monochrome( const BITMAPINFO* info )
         if (info->bmiHeader.biBitCount != 1) return FALSE;
 
         /* Check if the first color is black */
-        if ((rgb->rgbRed == 0) && (rgb->rgbGreen == 0) &&
-            (rgb->rgbBlue == 0) && (rgb->rgbReserved == 0))
+        if ((rgb[0].rgbRed == 0) && (rgb[0].rgbGreen == 0) &&
+            (rgb[0].rgbBlue == 0) && (rgb[0].rgbReserved == 0))
         {
-            rgb++;
-
             /* Check if the second color is white */
-            return ((rgb->rgbRed == 0xff) && (rgb->rgbGreen == 0xff)
-                 && (rgb->rgbBlue == 0xff) && (rgb->rgbReserved == 0));
+            if ((rgb[1].rgbRed == 0xff) && (rgb[1].rgbGreen == 0xff) &&
+                (rgb[1].rgbBlue == 0xff) && (rgb[1].rgbReserved == 0))
+                return TRUE;
         }
-        else return FALSE;
+
+        /* Check if the first color is white */
+        if ((rgb[0].rgbRed == 0xff) && (rgb[0].rgbGreen == 0xff) &&
+            (rgb[0].rgbBlue == 0xff) && (rgb[0].rgbReserved == 0))
+        {
+            /* Check if the second color is black */
+            if ((rgb[1].rgbRed == 0) && (rgb[1].rgbGreen == 0) &&
+                (rgb[1].rgbBlue == 0) && (rgb[1].rgbReserved == 0))
+                return TRUE;
+        }
+        return FALSE;
     }
 }
 
