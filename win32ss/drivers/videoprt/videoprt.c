@@ -345,6 +345,7 @@ IntVideoPortFindAdapter(
 {
     PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension;
     NTSTATUS Status;
+    VP_STATUS vpStatus = NO_ERROR;
     VIDEO_PORT_CONFIG_INFO ConfigInfo;
     SYSTEM_BASIC_INFORMATION SystemBasicInfo;
     UCHAR Again = FALSE;
@@ -405,32 +406,27 @@ IntVideoPortFindAdapter(
                           DriverExtension->InitializationData.HwDeviceExtensionSize);
 
             /* FIXME: Need to figure out what string to pass as param 3. */
-            Status = DriverExtension->InitializationData.HwFindAdapter(
+            vpStatus = DriverExtension->InitializationData.HwFindAdapter(
                          &DeviceExtension->MiniPortDeviceExtension,
                          DriverExtension->HwContext,
                          NULL,
                          &ConfigInfo,
                          &Again);
 
-            if (Status == ERROR_DEV_NOT_EXIST)
+            if (vpStatus == ERROR_DEV_NOT_EXIST)
             {
                 continue;
             }
-            else if (Status == NO_ERROR)
-            {
-                break;
-            }
             else
             {
-                ERR_(VIDEOPRT, "HwFindAdapter call failed with error 0x%X\n", Status);
-                goto Failure;
+                break;
             }
         }
     }
     else
     {
         /* FIXME: Need to figure out what string to pass as param 3. */
-        Status = DriverExtension->InitializationData.HwFindAdapter(
+        vpStatus = DriverExtension->InitializationData.HwFindAdapter(
                      &DeviceExtension->MiniPortDeviceExtension,
                      DriverExtension->HwContext,
                      NULL,
@@ -438,9 +434,10 @@ IntVideoPortFindAdapter(
                      &Again);
     }
 
-    if (Status != NO_ERROR)
+    if (vpStatus != NO_ERROR)
     {
-        ERR_(VIDEOPRT, "HwFindAdapter call failed with error 0x%X\n", Status);
+        ERR_(VIDEOPRT, "HwFindAdapter call failed with error 0x%X\n", vpStatus);
+        Status = STATUS_UNSUCCESSFUL;
         goto Failure;
     }
 
