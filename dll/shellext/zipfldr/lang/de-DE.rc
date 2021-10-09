@@ -77,7 +77,7 @@ BEGIN
     IDS_CANTREADFILE "Datei '%s' konnte nicht gelesen werden."
     IDS_EXTRACTING "Extrahieren..."
     IDS_CANTEXTRACTFILE "Datei '%1' konnte nicht extrahiert werden."
-    IDS_DECOMPRESSERROR "Unsupported compression method %d. Do you want to continue?"
+    IDS_DECOMPRESSERROR "Kompressionsverfahren %d wird nicht unterstützt. Dennoch fortfahren?"
     IDS_UNKNOWNERROR "Unbekannter Fehler 0x%08x."
 
     IDS_WIZ_TITLE "Extrahier-Assistent"
