@@ -284,7 +284,7 @@ BEGIN
     402 "Uyarı"
     460 "Genel iletişim kutusunu görüntülemek için yeterli bellek yok.\nBazı dosyaları veya programları kapatınız, sonra yeniden deneyiniz."
     461 "Modem Ayarları iletişim kutusunu görüntülemek için yeterli bellek yok.\nBazı dosyaları veya programları kapatınız, sonra yeniden deneyiniz."
-    463 "Her bir arama adresi, ""Otomatik""e ya da eşsiz bir çalma türüne ayarlanmalıdır.\n\Aynısı olan çalma türünü farklı bir türle değiştiriniz."
+    463 "Her bir arama adresi, ""Otomatik""e ya da eşsiz bir çalma türüne ayarlanmalıdır.\n\nAynısı olan çalma türünü farklı bir türle değiştiriniz."
     465 "Standart EC"
     466 "Zorunlu EC"
     467 "Mobil veri"
