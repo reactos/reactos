@@ -1283,7 +1283,8 @@ BOOL SHELL_FS_HideExtension(LPCWSTR szPath)
 {
     HKEY hKey;
     WCHAR szClass[MAX_PATH];
-    DWORD dwData, dwDataSize = sizeof(DWORD), cbClass;
+    DWORD dwData, dwDataSize = sizeof(DWORD);
+    LONG cbClass;
     BOOL doHide = FALSE; /* The default value is FALSE (win98 at least) */
     LPCWSTR DotExt;
     LONG error;
@@ -1302,25 +1303,19 @@ BOOL SHELL_FS_HideExtension(LPCWSTR szPath)
         DotExt = PathFindExtensionW(szPath);
         if (*DotExt != 0)
         {
-            error = RegOpenKeyExW(HKEY_CLASSES_ROOT, DotExt, 0, KEY_READ, &hKey);
+            cbClass = sizeof(szClass);
+            error = RegQueryValueW(HKEY_CLASSES_ROOT, DotExt, szClass, &cbClass);
             if (!error)
             {
-                cbClass = sizeof(szClass);
-                error = RegQueryValueExW(hKey, NULL, NULL, NULL, (LPBYTE)szClass, &cbClass);
-                RegCloseKey(hKey);
-
+                error = RegOpenKeyExW(HKEY_CLASSES_ROOT, szClass, 0, KEY_READ, &hKey);
                 if (!error)
                 {
-                    error = RegOpenKeyExW(HKEY_CLASSES_ROOT, szClass, 0, KEY_READ, &hKey);
+                    error = RegQueryValueExW(hKey, NeverShowExtW, NULL, NULL, NULL, NULL);
                     if (!error)
                     {
-                        error = RegQueryValueExW(hKey, NeverShowExtW, NULL, NULL, NULL, NULL);
-                        if (!error)
-                        {
-                            doHide = TRUE;
-                        }
-                        RegCloseKey(hKey);
+                        doHide = TRUE;
                     }
+                    RegCloseKey(hKey);
                 }
             }
         }
