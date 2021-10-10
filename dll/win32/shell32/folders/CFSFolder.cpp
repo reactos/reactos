@@ -1286,11 +1286,12 @@ BOOL SHELL_FS_HideExtension(LPCWSTR szPath)
     BOOL doHide = FALSE; /* The default value is FALSE (win98 at least) */
     LONG error;
 
-    error = RegCreateKeyExW(HKEY_CURRENT_USER, AdvancedW, 0, NULL, 0,
-                            KEY_ALL_ACCESS, NULL, &hKey, NULL);
+    error = RegCreateKeyExW(HKEY_CURRENT_USER, AdvancedW, 0, NULL, 0, KEY_ALL_ACCESS, NULL,
+                            &hKey, NULL);
     if (!error)
     {
-        if (!RegQueryValueExW(hKey, HideFileExtW, NULL, NULL, (LPBYTE)&dwData, &dwDataSize))
+        error = RegQueryValueExW(hKey, HideFileExtW, NULL, NULL, (LPBYTE)&dwData, &dwDataSize);
+        if (!error)
             doHide = dwData;
         RegCloseKey(hKey);
     }
