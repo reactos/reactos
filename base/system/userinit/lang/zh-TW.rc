@@ -1,5 +1,10 @@
-/* Traditional Chinese translation by Henry Tang Ih 2016 (henrytang2@hotmail.com) */
-/* Translation improved by Aobi Chan CL (eason066@gmail.com) */
+/*
+ * PROJECT:     ReactOS Userinit Logon Application
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Chinese (Traditional) resource file
+ * TRANSLATORS: Copyright 2016 Henry Tang Ih <henrytang2@hotmail.com>
+ *              Copyright 2020-2021 Chan Chilung <eason066@gmail.com>
+ */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
 
@@ -9,11 +14,11 @@ CAPTION "ReactOS LiveCD"
 FONT 9, "新細明體"
 BEGIN
     CONTROL "IDB_LOGO", IDC_LOCALELOGO, "Static", WS_CHILD | WS_VISIBLE | SS_OWNERDRAW, 18, 4, 290, 99
-    RTEXT "語言(&L):", IDC_STATIC, 20, 109, 106, 11, WS_CHILD | WS_VISIBLE | WS_GROUP
+    RTEXT "語言(&L)：", IDC_STATIC, 20, 109, 106, 11, WS_CHILD | WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_LANGUAGELIST, 132, 107, 176, 142, CBS_DROPDOWNLIST | CBS_NOINTEGRALHEIGHT | CBS_SORT | WS_VSCROLL | WS_CHILD | WS_VISIBLE | WS_TABSTOP
-    RTEXT "鍵盤配置(&K):", IDC_STATIC, 20, 132, 106, 11, WS_CHILD | WS_VISIBLE | WS_GROUP
+    RTEXT "鍵盤配置(&K)：", IDC_STATIC, 20, 132, 106, 11, WS_CHILD | WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_LAYOUTLIST, 132, 130, 176, 81, CBS_DROPDOWNLIST | CBS_NOINTEGRALHEIGHT | CBS_SORT | WS_VSCROLL | WS_CHILD | WS_VISIBLE | WS_TABSTOP
-    LTEXT "選擇您的語言和鍵盤配置，然後按 [下一步] 繼續。", IDC_STATIC, 7, 152, 300, 8
+    LTEXT "選擇您的語言和鍵盤配置，然後按［下一步］繼續。", IDC_STATIC, 7, 152, 300, 8
 
     CONTROL "", IDC_STATIC, "STATIC", SS_ETCHEDHORZ, 0, 165, 317, 1
     DEFPUSHBUTTON "下一步(&N)", IDOK, 205, 172, 50, 14
@@ -26,7 +31,7 @@ CAPTION "ReactOS LiveCD"
 FONT 9, "新細明體"
 BEGIN
     CONTROL "IDB_LOGO", IDC_STARTLOGO, "Static", WS_CHILD | WS_VISIBLE | SS_OWNERDRAW, 18, 4, 290, 99
-    DEFPUSHBUTTON "運行 ReactOS &Live CD", IDC_RUN, 71, 108, 175, 21
+    DEFPUSHBUTTON "執行 ReactOS &Live CD", IDC_RUN, 71, 108, 175, 21
     PUSHBUTTON "安裝 ReactOS(&I)", IDC_INSTALL, 71, 136, 175, 21
 
     // LTEXT "", IDC_STATIC, 7, 152, 300, 8
@@ -40,10 +45,10 @@ STRINGTABLE
 BEGIN
     IDS_SHELL_FAIL "Userinit 無法啟動外殼！"
     IDS_INSTALLER_FAIL "Userinit 啟動安裝程式失敗！"
-    IDS_CANCEL_CONFIRM "您確定要退出 ReactOS LiveCD 嗎？\n如果您選擇退出，您的電腦將會重新啟動。"
+    IDS_CANCEL_CONFIRM "您確定要結束 ReactOS LiveCD 嗎？\n如果您選擇結束，您的電腦將會重新啟動。"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_SPAIN "西班牙文 (西班牙)"
+    IDS_SPAIN "西班牙文（西班牙）"
 END

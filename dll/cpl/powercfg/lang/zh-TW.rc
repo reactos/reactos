@@ -1,5 +1,10 @@
-/* Traditional Chinese translation by Henry Tang Ih 2016 (henrytang2@hotmail.com)
-   Translation improved by Chan Chilung 2021 (eason066@gmail.com) */
+/*
+ * PROJECT:     ReactOS Power Configuration
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Chinese (Traditional) resource file
+ * TRANSLATORS: Copyright 2016 Henry Tang Ih <henrytang2@hotmail.com>
+ *              Copyright 2021 Chan Chilung <eason066@gmail.com>
+ */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
 
@@ -12,7 +17,7 @@ BEGIN
     LTEXT "請選定對於您使用電腦方式最適合的電源使用方案。請注意，更改下面的設置將修改選定的方案。", -1, 37, 6, 209, 36
     GROUPBOX "電源使用方案(&O)", -1, 6, 43, 240, 50
     COMBOBOX IDC_ENERGYLIST, 14, 54, 224, 92, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON "另存為(&S)...", IDC_SAVEAS_BTN, 109, 72, 70, 14, WS_DISABLED
+    PUSHBUTTON "另存新檔(&S)...", IDC_SAVEAS_BTN, 109, 72, 70, 14, WS_DISABLED
     PUSHBUTTON "刪除(&D)", IDC_DELETE_BTN, 183, 72, 55, 14, WS_DISABLED
     GROUPBOX "未知", IDC_GRPDETAIL, 6, 95, 240, 136
     LTEXT "當電腦︰", IDC_SAT, 12, 109, 60, 12
@@ -43,7 +48,7 @@ BEGIN
     LTEXT "請選定對於您使用電腦方式最適合的電源使用方案。請注意，更改下面的設置將修改選定的方案。", -1, 37, 6, 209, 36
     GROUPBOX "電源使用方案(&O)", -1, 6, 43, 240, 50
     COMBOBOX IDC_ENERGYLIST, 14, 54, 224, 92, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL
-    PUSHBUTTON "另存為(&S)...", IDC_SAVEAS_BTN, 109, 72, 70, 14, WS_DISABLED
+    PUSHBUTTON "另存新檔(&S)...", IDC_SAVEAS_BTN, 109, 72, 70, 14, WS_DISABLED
     PUSHBUTTON "刪除(&D)", IDC_DELETE_BTN, 183, 72, 55, 14, WS_DISABLED
     GROUPBOX "未知", IDC_GRPDETAIL, 6, 95, 240, 136
     LTEXT "關閉顯示器(&M)︰", IDC_MONITOR, 13, 148, 84, 10
@@ -72,7 +77,7 @@ BEGIN
     LTEXT "未知", IDC_ALARMMSG1, 154, 71, 84, 10
     LTEXT "操作︰", -1, 95, 83, 55, 10
     LTEXT "未知", IDC_ALARMAKTION1, 154, 83, 84, 10
-    LTEXT "運行程序︰", -1, 95, 95, 55, 10
+    LTEXT "執行程序︰", -1, 95, 95, 55, 10
     LTEXT "未知", IDC_ALARMPROG1, 154, 95, 84, 10
     GROUPBOX "電池嚴重短缺警報", -1, 6, 120, 239, 106
     AUTOCHECKBOX "當電力降低到以下水平時，發出電池嚴重短缺警報(&C)︰", IDC_ALARM2, 15, 131, 180, 15, WS_TABSTOP
@@ -85,7 +90,7 @@ BEGIN
     LTEXT "未知", IDC_ALARMMSG2, 154, 185, 84, 10
     LTEXT "操作︰", -1, 95, 198, 45, 10
     LTEXT "未知", IDC_ALARMAKTION2, 154, 198, 84, 10
-    LTEXT "運行程序︰", -1, 95, 211, 50, 10
+    LTEXT "執行程序︰", -1, 95, 211, 50, 10
     LTEXT "未知", IDC_ALARMPROG2, 154, 211, 84, 10
 END
 
@@ -95,13 +100,13 @@ CAPTION "進階"
 FONT 9, "新細明體"
 BEGIN
     ICON IDI_ACDC, IDI_ACDC, 7, 7, 20, 20
-    LTEXT "請選擇要使用的節能設置。", -1, 37, 6, 207, 20
+    LTEXT "請選擇要使用的節能設定。", -1, 37, 6, 207, 20
     GROUPBOX "選項", -1, 6, 30, 240, 65
     AUTOCHECKBOX "總是在任務欄上顯示圖標(&S)", IDC_SYSTRAYBATTERYMETER, 17, 43, 220, 10, WS_TABSTOP
     AUTOCHECKBOX "在電腦從待機狀態恢復時，提示輸入密碼(&P)", IDC_PASSWORDLOGON, 17, 60, 220, 10, WS_TABSTOP
-    AUTOCHECKBOX "在使用電池時弱顯示(&D)。", IDC_VIDEODIMDISPLAY, 17, 78, 220, 10, WS_TABSTOP
+    AUTOCHECKBOX "在使用電池時將顯示器變暗(&D)。", IDC_VIDEODIMDISPLAY, 17, 78, 220, 10, WS_TABSTOP
     GROUPBOX "電源按鈕", -1, 6, 101, 240, 127
-    LTEXT "在合上便攜式電腦時(&W)︰", IDC_SLIDCLOSE, 15, 115, 222, 10
+    LTEXT "在便攜式電腦合上時(&W)︰", IDC_SLIDCLOSE, 15, 115, 222, 10
     COMBOBOX IDC_LIDCLOSE, 15, 127, 220, 90, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
     LTEXT "在按下電腦電源按鈕時(&E)︰", IDC_SPOWERBUTTON, 15, 153, 222, 10
     COMBOBOX IDC_POWERBUTTON, 15, 165, 220, 90, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
@@ -115,11 +120,11 @@ CAPTION "休眠"
 FONT 9, "新細明體"
 BEGIN
     ICON IDI_HIBERNATE, IDI_HIBERNATE, 7, 7, 20, 20
-    LTEXT "在電腦休眠時，它將記憶體中所有信息保存到硬碟上，然後關閉電腦。在退出休眠狀態時，電腦會恢復到原來的狀態。", -1, 37, 6, 210, 35
+    LTEXT "當電腦在休眠時，會將所有在記憶體的資訊儲存到硬碟上，然後關閉電腦。在結束休眠狀態時，電腦會恢復到原來的狀態。", -1, 37, 6, 210, 35
     GROUPBOX "休眠", -1, 6, 41, 240, 32
     AUTOCHECKBOX "啟用休眠(&H)", IDC_HIBERNATEFILE, 17, 55, 210, 10, WS_TABSTOP
     GROUPBOX "用於休眠的磁碟空間", -1, 6, 80, 240, 76
-    LTEXT "空閒的磁碟空間︰", -1, 15, 95, 140, 10
+    LTEXT "可用的磁碟空間︰", -1, 15, 95, 140, 10
     LTEXT "未知", IDC_FREESPACE, 160, 95, 80, 10
     LTEXT "休眠所需的磁碟空間︰", -1, 15, 115, 140, 10
     LTEXT "未知", IDC_SPACEFORHIBERNATEFILE, 160, 115, 80, 10
@@ -140,12 +145,12 @@ END
 STRINGTABLE
 BEGIN
     IDS_CPLNAME_1 "電源選項"
-    IDS_CPLDESCRIPTION_1 "配置電腦的節能設置。"
+    IDS_CPLDESCRIPTION_1 "配置電腦的節能設定。"
     IDS_PERCENT "%i%%"
     IDS_SOUND "聲音"
     IDS_TEXT "文字檔案"
     IDS_CONFIG1 "為 %s 設置電源使用方案"
-    IDS_CONFIG2 "%s 的進階設置"
+    IDS_CONFIG2 "%s 的進階設定"
     IDS_NOACTION "無操作"
     IDS_PowerActionNone1 "無動作"
     IDS_PowerActionUnknown "未知"

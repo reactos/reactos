@@ -1,5 +1,10 @@
-/* Translated by Song Fuchang (0xfc) <sfc_0@yahoo.com.cn>
- * Translation improved by Chan Chilung <eason066@gmail.com> */
+/*
+ * PROJECT:     ReactOS ReactOS Applications Manager
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Chinese (Traditional) resource file
+ * TRANSLATORS: Copyright 2011 Song Fuchang (0xfc) <sfc_0@yahoo.com.cn>
+ *              Copyright 2020-2021 Chan Chilung <eason066@gmail.com>
+ */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
 
@@ -63,12 +68,12 @@ BEGIN
     GROUPBOX "一般", -1, 4, 2, 240, 61
     AUTOCHECKBOX "儲存視窗位置(&S)", IDC_SAVE_WINDOW_POS, 15, 12, 219, 12
     AUTOCHECKBOX "啟動時更新可獲得的程式列表(&U)", IDC_UPDATE_AVLIST, 15, 29, 222, 12
-    AUTOCHECKBOX "將程式的安裝和解除安裝記錄到日誌(&L)", IDC_LOG_ENABLED, 15, 46, 219, 12
+    AUTOCHECKBOX "記錄程式的安裝和解除安裝過程(&L)", IDC_LOG_ENABLED, 15, 46, 219, 12
     GROUPBOX "正在下載", -1, 4, 65, 240, 51
-    LTEXT "下載資料夾:", -1, 16, 75, 100, 9
+    LTEXT "下載資料夾：", -1, 16, 75, 100, 9
     EDITTEXT IDC_DOWNLOAD_DIR_EDIT, 15, 86, 166, 12, WS_CHILD | WS_VISIBLE | WS_GROUP | ES_AUTOHSCROLL
     PUSHBUTTON "選擇(&C)", IDC_CHOOSE, 187, 85, 50, 14
-    AUTOCHECKBOX "在完成安裝程式後刪除安裝程式(&D)", IDC_DEL_AFTER_INSTALL, 16, 100, 218, 12
+    AUTOCHECKBOX "在程式完成安裝後刪除安裝程式(&D)", IDC_DEL_AFTER_INSTALL, 16, 100, 218, 12
     GROUPBOX "指定軟件列表源", -1, 4, 118, 240, 46
     CONTROL "使用預設來源", IDC_SOURCE_DEFAULT, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 15, 132, 74, 10
     CONTROL "指定軟件列表源", IDC_USE_SOURCE, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 15, 147, 74, 10
@@ -91,7 +96,7 @@ CAPTION "安裝程式"
 FONT 9, "新細明體"
 BEGIN
     LTEXT "…", IDC_INSTALL_TEXT, 4, 5, 209, 35
-    AUTORADIOBUTTON "從儲存裝置安裝 (CD 或 DVD)(&I)", IDC_CD_INSTALL, 10, 46, 197, 11, WS_GROUP
+    AUTORADIOBUTTON "從儲存裝置安裝（CD 或 DVD）(&I)", IDC_CD_INSTALL, 10, 46, 197, 11, WS_GROUP
     AUTORADIOBUTTON "下載並安裝(&D)", IDC_DOWNLOAD_INSTALL, 10, 59, 197, 11, NOT WS_TABSTOP
     DEFPUSHBUTTON "確定", IDOK, 86, 78, 60, 14
     PUSHBUTTON "取消", IDCANCEL, 150, 78, 60, 14
@@ -196,23 +201,23 @@ BEGIN
     IDS_UPDATES "更新"
     IDS_APPLICATIONS "應用程式"
     IDS_CHOOSE_FOLDER_TEXT "請選擇用來儲存下載檔案的資料夾︰"
-    IDS_CHOOSE_FOLDER_ERROR "您選擇的資料夾不存在。要創建嗎？"
-    IDS_URL_INVALID "您指定的 URL 無效或不支持。請更正！"
+    IDS_CHOOSE_FOLDER_ERROR "您選擇的資料夾不存在。要建立嗎？"
+    IDS_URL_INVALID "您指定的 URL 無效或不支援。請更正！"
     IDS_APP_REG_REMOVE "您確定要從登錄檔刪除該程式的資料嗎？"
     IDS_INFORMATION "資訊"
-    IDS_UNABLE_TO_DOWNLOAD "無法下載軟件包！找不到網路位址！"
-    IDS_UNABLE_TO_DOWNLOAD2 "無法下載軟件包！請檢查網路連接！"
+    IDS_UNABLE_TO_DOWNLOAD "無法下載軟體套件！找不到網路位址！"
+    IDS_UNABLE_TO_DOWNLOAD2 "無法下載軟體套件！請檢查網路連接！"
     IDS_UNABLE_TO_REMOVE "無法從登錄檔刪除該程式的資料！"
-    IDS_UNABLE_TO_INSTALL "無法打開安裝程式！"
+    IDS_UNABLE_TO_INSTALL "無法開啟安裝程式！"
     IDS_UNABLE_TO_QUERY_CERT "無法獲取證書資訊。\n\n您是否仍要繼續？"
-    IDS_INTEG_CHECK_TITLE "驗證套裝軟體的完整性…"
-    IDS_INTEG_CHECK_FAIL "包沒有通過完整性檢查，它可能已損壞，或者在下載過程中篡改。建議您不要運行該軟體。"
+    IDS_INTEG_CHECK_TITLE "驗證軟體套件的完整性..."
+    IDS_INTEG_CHECK_FAIL "套件未能通過完整性檢查，它可能已損壞，或者在下載過程中篡改。建議您不要運行該軟體。"
     IDS_INTERRUPTED_DOWNLOAD "下載中斷。請檢查網路連接。"
     IDS_UNABLE_TO_WRITE "無法寫入儲存裝置。儲存裝置可能已滿。"
-    IDS_SELECT_ALL "全選/全反選"
+    IDS_SELECT_ALL "全選／全反選"
     IDS_INSTALL_SELECTED "安裝已選中的"
     IDS_SELECTEDFORINST "選中以安裝"
-    IDS_MISMATCH_CERT_INFO "使用了未知的證書：\n主題：%s\n發行方：%s\n您是否仍然想繼續？"
+    IDS_MISMATCH_CERT_INFO "使用了未知的證書：\n主題：%s\n發行方：%s\n您是否仍然要繼續？"
     IDS_UNABLE_PATH "不正確的 URL 格式。"
     IDS_APP_DISPLAY_DETAILS "詳情"
     IDS_APP_DISPLAY_LIST "列表"
@@ -225,9 +230,9 @@ BEGIN
     IDS_STATUS_NOTINSTALLED "未安裝"
     IDS_STATUS_DOWNLOADED "下載"
     IDS_STATUS_UPDATE_AVAILABLE "有可用更新"
-    IDS_STATUS_DOWNLOADING "正在下載…"
-    IDS_STATUS_INSTALLING "正在安裝…"
-    IDS_STATUS_WAITING "正在等待安裝…"
+    IDS_STATUS_DOWNLOADING "正在下載..."
+    IDS_STATUS_INSTALLING "正在安裝..."
+    IDS_STATUS_WAITING "正在等待安裝..."
     IDS_STATUS_FINISHED "完成"
 END
 
@@ -244,15 +249,15 @@ BEGIN
     IDS_LANGUAGE_NO_TRANSLATION "支持其他語言"
     IDS_LANGUAGE_ENGLISH_TRANSLATION "支持英語"
     IDS_LANGUAGE_SINGLE "單語言"
-    IDS_LANGUAGE_MORE_PLACEHOLDER " (+%d 及更多)"
-    IDS_LANGUAGE_AVAILABLE_PLACEHOLDER " (+%d 可用)"
+    IDS_LANGUAGE_MORE_PLACEHOLDER "（+%d 及更多）"
+    IDS_LANGUAGE_AVAILABLE_PLACEHOLDER "（+%d 可用）"
 END
 
 STRINGTABLE
 BEGIN
     IDS_DL_DIALOG_DB_DISP "應用程式資料庫"
     IDS_DL_DIALOG_DB_DOWNLOAD_DISP "更新資料庫..."
-    IDS_DL_DIALOG_DB_UNOFFICIAL_DOWNLOAD_DISP "正在更新資料庫... (非官方來源)"
+    IDS_DL_DIALOG_DB_UNOFFICIAL_DOWNLOAD_DISP "正在更新資料庫...（非官方來源）"
 END
 
 STRINGTABLE

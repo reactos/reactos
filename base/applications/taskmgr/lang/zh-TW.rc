@@ -1,9 +1,9 @@
 /*
- * PROJECT:    ReactOS Task Manager
- * LICENSE:    GPL - See COPYING in the top level directory
- * FILE:       base/applications/taskmgr/lang/zh-TW.rc
- * PURPOSE:    Chinese (Traditional) Language File for taskmgr
- * TRANSLATOR: Elton Chung aka MfldElton <elton328@gmail.com>
+ * PROJECT:     ReactOS Task Manager
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Chinese (Traditional) resource file
+ * TRANSLATORS: Copyright 2011 Elton Chung <elton328@gmail.com>
+ *              Copyright 2021 Chan Chilung <eason066@gmail.com>
  */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
@@ -14,7 +14,7 @@ BEGIN
     BEGIN
         MENUITEM "新工作(執行...)(&N)", ID_FILE_NEW
         MENUITEM SEPARATOR
-        MENUITEM "退出工作管理員(&X)", ID_FILE_EXIT
+        MENUITEM "結束工作管理員(&X)", ID_FILE_EXIT
     END
     POPUP "選項(&O)"
     BEGIN
@@ -40,12 +40,12 @@ BEGIN
         MENUITEM "選擇欄位(&S)...", ID_VIEW_SELECTCOLUMNS
         POPUP "CPU 記錄(&C)"
         BEGIN
-            MENUITEM "所有 CPU 一個圖形(&O)", ID_VIEW_CPUHISTORY_ONEGRAPHALL
-            MENUITEM "每個 CPU 一個圖形(&P)", ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU, CHECKED
+            MENUITEM "所有 CPU 處理成一個圖形(&O)", ID_VIEW_CPUHISTORY_ONEGRAPHALL
+            MENUITEM "每個 CPU 處理成一個圖形(&P)", ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU, CHECKED
         END
         MENUITEM "顯示核心程式時間(&S)", ID_VIEW_SHOWKERNELTIMES
     END
-    POPUP "窗口(&W)"
+    POPUP "視窗(&W)"
     BEGIN
         MENUITEM "橫向平鋪(&H)", ID_WINDOWS_TILEHORIZONTALLY
         MENUITEM "縱向平鋪(&V)", ID_WINDOWS_TILEVERTICALLY
@@ -92,7 +92,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "大圖示(&G)", ID_VIEW_LARGE
         MENUITEM "小圖示(&M)", ID_VIEW_SMALL
-        MENUITEM "詳細訊息(&D)", ID_VIEW_DETAILS, CHECKED
+        MENUITEM "詳細資訊(&D)", ID_VIEW_DETAILS, CHECKED
     END
 END
 

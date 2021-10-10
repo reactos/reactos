@@ -1,5 +1,10 @@
-/* Traditional Chinese translation by Henry Tang Ih 2016 (henrytang2@hotmail.com)
- * Translation improved by Chan Chilung 2021 (eason066@gmail.com) */
+/*
+ * PROJECT:     ReactOS Services Manager
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Chinese (Traditional) resource file
+ * TRANSLATORS: Copyright 2016 Henry Tang Ih <henrytang2@hotmail.com>
+ *              Copyright 2021 Chan Chilung <eason066@gmail.com>
+ */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
 
@@ -7,11 +12,11 @@ IDR_MAINMENU MENU
 BEGIN
     POPUP "檔案(&F)"
     BEGIN
-        MENUITEM "匯出...", ID_EXPORT
+        MENUITEM "匯出(&E)...", ID_EXPORT
         MENUITEM SEPARATOR
-        MENUITEM "退出(&X)", ID_EXIT
+        MENUITEM "結束(&X)", ID_EXIT
     END
-    POPUP "行動"
+    POPUP "動作(&A)"
     BEGIN
         MENUITEM "連接到(&C)...", ID_CONNECT, GRAYED
         MENUITEM SEPARATOR
@@ -29,19 +34,19 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "內容(&R)...", ID_PROP, GRAYED
     END
-    POPUP "查看"
+    POPUP "查看(&V)"
     BEGIN
-        MENUITEM "大圖示", ID_VIEW_LARGE
-        MENUITEM "小圖示", ID_VIEW_SMALL
-        MENUITEM "清單", ID_VIEW_LIST
-        MENUITEM "詳細資訊", ID_VIEW_DETAILS
+        MENUITEM "大圖示(&G)", ID_VIEW_LARGE
+        MENUITEM "小圖示(&M)", ID_VIEW_SMALL
+        MENUITEM "清單(&L)", ID_VIEW_LIST
+        MENUITEM "詳細資訊(&D)", ID_VIEW_DETAILS
         MENUITEM SEPARATOR
-        MENUITEM "自訂...", ID_VIEW_CUST, GRAYED
+        MENUITEM "自訂(&U)...", ID_VIEW_CUST, GRAYED
     END
-    POPUP "說明"
+    POPUP "說明(&H)"
     BEGIN
-        MENUITEM "說明內容", ID_HELP
-        MENUITEM "關於", ID_ABOUT
+        MENUITEM "說明內容(&H)", ID_HELP
+        MENUITEM "關於(&A)", ID_ABOUT
     END
 END
 
@@ -104,9 +109,9 @@ FONT 9, "新細明體", 0, 0
 STYLE DS_SHELLFONT | WS_BORDER | WS_VISIBLE | WS_DLGFRAME | WS_SYSMENU | WS_GROUP | WS_TABSTOP
 BEGIN
     LTEXT "登入為:", IDC_STATIC, 7, 7, 238, 8
-    AUTORADIOBUTTON "&Local System account", IDC_LOGON_SYSTEMACCOUNT, 7, 22, 238, 10, BS_TOP | BS_MULTILINE | WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP
-    AUTORADIOBUTTON "&This account:", IDC_LOGON_THISACCOUNT, 7, 52, 60, 10, BS_TOP | BS_MULTILINE | WS_CHILD | WS_VISIBLE
-    AUTOCHECKBOX "Allo&w service to interact with desktop", IDC_LOGON_INTERACTIVE, 18, 34, 227, 10, WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_TOP | BS_MULTILINE
+    AUTORADIOBUTTON "本機身份帳戶(&L)", IDC_LOGON_SYSTEMACCOUNT, 7, 22, 238, 10, BS_TOP | BS_MULTILINE | WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "這個帳戶(&T)：", IDC_LOGON_THISACCOUNT, 7, 52, 60, 10, BS_TOP | BS_MULTILINE | WS_CHILD | WS_VISIBLE
+    AUTOCHECKBOX "允許服務與桌面互動(&W)", IDC_LOGON_INTERACTIVE, 18, 34, 227, 10, WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_TOP | BS_MULTILINE
     EDITTEXT IDC_LOGON_ACCOUNTNAME, 72, 50, 103, 14, ES_LEFT | ES_AUTOHSCROLL | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_GROUP | WS_TABSTOP
     PUSHBUTTON "瀏覽(&B)...", IDC_LOGON_SEARCH, 185, 50, 60, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
     LTEXT "密碼(&P)：", IDC_LOGON_PW1TEXT, 18, 71, 33, 8, WS_CHILD | WS_VISIBLE | WS_DISABLED | WS_GROUP
@@ -124,27 +129,27 @@ CAPTION "還原"
 FONT 9, "新細明體", 0, 0
 STYLE DS_SHELLFONT | WS_BORDER | WS_VISIBLE | WS_DLGFRAME | WS_SYSMENU | WS_GROUP | WS_TABSTOP
 BEGIN
-    LTEXT "Select the computer's response if this service fails.", IDC_STATIC, 7, 7, 238, 8
-    LTEXT "&First failure:", IDC_STATIC, 7, 24, 92, 8
+    LTEXT "選取電腦在這個服務失敗時的回應。", IDC_STATIC, 7, 7, 238, 8
+    LTEXT "第一次失敗時(&F)：", IDC_STATIC, 7, 24, 92, 8
     COMBOBOX IDC_FIRST_FAILURE, 104, 22, 141, 147, WS_CHILD | WS_VISIBLE | WS_TABSTOP | CBS_DROPDOWNLIST
-    LTEXT "&Second failure:", IDC_STATIC, 7, 41, 92, 8
+    LTEXT "第二次失敗時(&S)：", IDC_STATIC, 7, 41, 92, 8
     COMBOBOX IDC_SECOND_FAILURE, 104, 39, 141, 147, WS_CHILD | WS_VISIBLE | WS_TABSTOP | CBS_DROPDOWNLIST
     LTEXT "Subsequent failures:", IDC_STATIC, 7, 58, 92, 8
     COMBOBOX IDC_SUBSEQUENT_FAILURES, 104, 56, 141, 147, WS_CHILD | WS_VISIBLE | WS_TABSTOP | CBS_DROPDOWNLIST
-    LTEXT "Reset fail c&ounter after:", IDC_STATIC, 7, 75, 72, 8
+    LTEXT "在以下時間後重設失敗計數(&O)：", IDC_STATIC, 7, 75, 72, 8
     EDITTEXT IDC_RESET_TIME, 104, 73, 40, 13, WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP | ES_LEFT | ES_AUTOHSCROLL | ES_NUMBER
     LTEXT "天", IDC_STATIC, 150, 75, 95, 8
-    LTEXT "Restart ser&vice after:", IDC_RESTART_TEXT1, 7, 92, 92, 8
+    LTEXT "在以下時間後重新啟動服務(&V)：", IDC_RESTART_TEXT1, 7, 92, 92, 8
     EDITTEXT IDC_RESTART_TIME, 104, 90, 40, 13, WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP | ES_LEFT | ES_AUTOHSCROLL | ES_NUMBER
     LTEXT "分鐘", IDC_RESTART_TEXT2, 150, 92, 95, 8
     GROUPBOX "執行程式", IDC_RUN_GROUPBOX, 7, 108, 238, 80
-    LTEXT "&Program:", IDC_RUN_TEXT1, 14, 121, 168, 8
+    LTEXT "程式(&P)：", IDC_RUN_TEXT1, 14, 121, 168, 8
     EDITTEXT IDC_PROGRAM, 14, 131, 165, 14
     PUSHBUTTON "瀏覽(&B)...", IDC_BROWSE_PROGRAM, 180, 131, 58, 14
     LTEXT "&Command line parameters:", IDC_RUN_TEXT2, 14, 155, 108, 8
     EDITTEXT IDC_PARAMETERS, 128, 152, 110, 14
     AUTOCHECKBOX "Append fail count to &end of command line (/fail=%1%)", IDC_ADD_FAILCOUNT, 14, 171, 219, 10, WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_TOP | BS_MULTILINE
-    PUSHBUTTON "&Restart Computer Options...", IDC_RESTART_OPTIONS, 116, 197, 129, 14
+    PUSHBUTTON "電腦重新啟動選項(&R)...", IDC_RESTART_OPTIONS, 116, 197, 129, 14
 END
 
 IDD_DLG_DEPEND DIALOGEX 6, 6, 253, 225
@@ -179,8 +184,8 @@ BEGIN
     LTEXT "描述：", IDC_STATIC, 12, 86, 44, 9
     PUSHBUTTON "確定", IDOK, 126, 192, 44, 13
     PUSHBUTTON "取消", IDCANCEL, 176, 192, 46, 13
-    LTEXT "附加選項 (點擊説明以獲得詳細資訊)", IDC_STATIC, 10, 151, 134, 9
-    PUSHBUTTON "説明", ID_CREATE_HELP, 10, 192, 44, 13
+    LTEXT "附加選項（按［說明］以取得詳細資訊）", IDC_STATIC, 10, 151, 134, 9
+    PUSHBUTTON "說明", ID_CREATE_HELP, 10, 192, 44, 13
 END
 
 IDD_DLG_DELETE DIALOGEX 6, 6, 185, 148
@@ -251,7 +256,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_NUM_SERVICES "服務總數: %d"
+    IDS_NUM_SERVICES "服務總數：%d"
     IDS_STOP_DEPENDS "當 %s 停止時，這些服務也將被停止"
     IDS_NO_DEPENDS "<沒有依賴>"
 END
@@ -277,21 +282,21 @@ BEGIN
     IDS_PROGRESS_INFO_RESUME "ReactOS 正在嘗試恢復以下服務"
     IDS_CREATE_SUCCESS "成功建立服務"
     IDS_DELETE_SUCCESS "成功刪除服務"
-    IDS_CREATE_REQ "標記有\n星號 (*) 的欄位是必需的"
+    IDS_CREATE_REQ "標記有\n星號（*）的欄位是必需的"
     IDS_DELETE_STOP "您必須在刪除該服務前停止它！"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_HELP_OPTIONS "建立選項：\n注意：選項名包含了等號(=)。\n type= <own|share|interact|kernel|filesys|rec>\n       (default = own)\n start= <boot|system|auto|demand|disabled>\n       (default = demand)\n error= <normal|severe|critical|ignore>\n       (default = normal)\n group= <LoadOrderGroup>\n tag= <yes|no>\n depend= <Dependencies(separated by / (forward slash))>\n obj= <AccountName|ObjectName>\n       (default = LocalSystem)\n password= <password>\n"
+    IDS_HELP_OPTIONS "建立選項：\n注意：選項名包含了等號（=）。\n type= <own|share|interact|kernel|filesys|rec>\n       (default = own)\n start= <boot|system|auto|demand|disabled>\n       (default = demand)\n error= <normal|severe|critical|ignore>\n       (default = normal)\n group= <LoadOrderGroup>\n tag= <yes|no>\n depend= <Dependencies(separated by / (forward slash))>\n obj= <AccountName|ObjectName>\n       (default = LocalSystem)\n password= <password>\n"
 END
 
 /* Hints */
 STRINGTABLE
 BEGIN
     IDS_HINT_BLANK " "
-    IDS_HINT_EXPORT " 將當前服務清單匯出為一個檔。"
-    IDS_HINT_EXIT " 退出這個程式。"
+    IDS_HINT_EXPORT " 將目前服務清單匯出為一個檔案。"
+    IDS_HINT_EXIT " 結束這個程式。"
     IDS_HINT_CONNECT " 管理一台不同的電腦。"
     IDS_HINT_START " 啟動選定的服務。"
     IDS_HINT_STOP " 停止選定的服務。"
@@ -299,7 +304,7 @@ BEGIN
     IDS_HINT_RESUME " 恢復選定的服務。"
     IDS_HINT_RESTART " 停止然後啟動選定的服務。"
     IDS_HINT_REFRESH " 重新整理服務清單。"
-    IDS_HINT_EDIT " 編輯選定服務的屬性。"
+    IDS_HINT_EDIT " 編輯選定服務的內容。"
     IDS_HINT_CREATE " 建立一個新的服務。"
     IDS_HINT_DELETE " 刪除選定的服務。"
     IDS_HINT_PROP " 為目前選擇專案開啟內容頁。"
@@ -308,7 +313,7 @@ BEGIN
     IDS_HINT_LIST " 用清單顯示條目。"
     IDS_HINT_DETAILS " 在視窗中顯示每個條目的資訊。"
     IDS_HINT_CUST " 自訂視圖。"
-    IDS_HINT_HELP " 顯示説明視窗。"
+    IDS_HINT_HELP " 顯示說明視窗。"
     IDS_HINT_ABOUT " 關於 ReactOS 服務管理員。"
     IDS_HINT_SYS_RESTORE " 將這個視窗恢復到普通大小。"
     IDS_HINT_SYS_MOVE " 移動這個視窗。"
@@ -327,7 +332,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_NO_ACTION "Take no action"
+    IDS_NO_ACTION "不執行動作"
     IDS_RESTART_SERVICE "重新啟動服務"
     IDS_RUN_PROGRAM "執行程式"
     IDS_RESTART_COMPUTER "重新啟動電腦"

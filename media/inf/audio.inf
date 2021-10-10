@@ -70,7 +70,7 @@ ReactOS = "ReactOS Team"
 AUDIOClassName = "Audio & Videocontroller"
 
 [Strings.0404]
-AUDIOClassName = "音頻及視頻控制器"
+AUDIOClassName = "音訊及視訊控制器"
 
 [Strings.0405]
 AUDIOClassName = "Řadiče zvuku a obrazu"

@@ -186,9 +186,6 @@ IDI_TT_ERROR_SM ICON idi_tt_error_sm.ico
 #ifdef LANGUAGE_UK_UA
     #include "lang/comctl_Uk.rc"
 #endif
-#ifdef LANGUAGE_ZH_TW
-    #include "lang/comctl_Tw.rc"
-#endif
 #ifdef LANGUAGE_ZH_CN
     #include "lang/comctl_Zh.rc"
 #endif

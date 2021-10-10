@@ -1,10 +1,9 @@
 /*
- * PROJECT:    ReactOS Netshell
- * LICENSE:    GPL - See COPYING in the top level directory
- * FILE:       dll/shellext/netshell/lang/zh-TW.rc
- * PURPOSE:    Chinese (Traditional) Language File
- * TRANSLATOR: 2011 Elton Chung aka MfldElton <elton328@gmail.com>
- *             2020 - 2021 Chan Chilung <eason066@gmail.com>
+ * PROJECT:     ReactOS Netshell
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Chinese (Traditional) resource file
+ * TRANSLATORS: Copyright 2011 Elton Chung aka MfldElton <elton328@gmail.com>
+ *              Copyright 2020-2021 Chan Chilung <eason066@gmail.com>
  */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
@@ -18,7 +17,7 @@ BEGIN
     LTEXT "連接時使用：", -1, 9, 9, 217, 8
     EDITTEXT IDC_NETCARDNAME, 9, 21, 230, 12, WS_BORDER | WS_TABSTOP | ES_READONLY
     PUSHBUTTON "配置(&C)", IDC_CONFIGURE, 189, 38, 50, 14
-    LTEXT "這個連線使用下列元件：", -1, 9, 59, 217, 8
+    LTEXT "這個連線會使用下列已選取的元件：", -1, 9, 59, 217, 8
     PUSHBUTTON "安裝(&I)", IDC_INSTALL, 9, 130, 65, 14, WS_DISABLED | WS_TABSTOP
     PUSHBUTTON "解除安裝(&U)", IDC_UNINSTALL, 90, 130, 65, 14, WS_DISABLED | WS_TABSTOP
     PUSHBUTTON "內容(&P)", IDC_PROPERTIES, 174, 130, 65, 14
@@ -103,9 +102,9 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "ReactOS 安裝程式"
 FONT 9, "新細明體"
 BEGIN
-    LTEXT "For Device:", IDC_STATIC, 33, 2, 100, 20
+    LTEXT "裝置對象：", IDC_STATIC, 33, 2, 100, 20
     LTEXT "N/A", IDC_NETWORK_DEVICE, 75, 2, 253, 20
-    LTEXT "Components checked are used by this connection:", IDC_STATIC, 33, 12, 253, 20
+    LTEXT "這個連線會使用下列已選取的元件：", IDC_STATIC, 33, 12, 253, 20
     CONTROL "", IDC_COMPONENT_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOCOLUMNHEADER | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 33, 22, 250, 50
     PUSHBUTTON "安裝(&I)...", IDC_NETWORK_INSTALL, 122, 75, 50, 14, WS_DISABLED | WS_TABSTOP
     PUSHBUTTON "解除安裝(&U)", IDC_NETWORK_UNINSTALL, 177, 75, 50, 14, WS_DISABLED | WS_TABSTOP
@@ -119,7 +118,7 @@ CAPTION "ReactOS 安裝程式"
 FONT 9, "新細明體"
 BEGIN
     LTEXT "您要讓這台電腦成為網域的成員嗎？\n\
-(你可向您的網路管理員取得這方面的資訊。)", IDC_STATIC, 33, 2, 263, 50
+（你可向您的網路管理員取得這方面的資訊。）", IDC_STATIC, 33, 2, 263, 50
     AUTORADIOBUTTON "否，這台電腦將成為工作群組的成員之一。", IDC_SELECT_WORKGROUP, 33, 32, 253, 20, WS_TABSTOP | WS_GROUP
     AUTORADIOBUTTON "是，這台電腦將成為網域的成員之一。", IDC_SELECT_DOMAIN, 33, 47, 253, 20, WS_TABSTOP
     LTEXT "工作群組或網域名稱：", IDC_STATIC, 33, 72, 126, 14
@@ -177,7 +176,7 @@ BEGIN
     IDS_NETWORKSETTINGSTITLE "網路設定"
     IDS_NETWORKSETTINGSSUBTITLE "安裝用於連接到其他網路、電腦和網際網路的網路軟體。"
     IDS_NETWORKCOMPONENTTITLE "網路元件"
-    IDS_NETWORKCOMPONENTSUBTITLE "Determine which networking components are used on your computer. To add new components, click on Install."
+    IDS_NETWORKCOMPONENTSUBTITLE "判斷您的電腦使用了哪些網路元件。要安裝新的元件，請按［安裝］。"
     IDS_NETWORKDOMAINTITLE "工作群組或電腦網域"
     IDS_NETWORKDOMAINSUBTITLE "網域是一組由網路管理員定義的電腦群組。工作群組是一組共同使用同一個工作群組名稱的電腦群組。"
     IDS_REACTOS_SETUP "ReactOS 安裝程式"

@@ -1,8 +1,13 @@
-// Chinese Traditional (zh-TW) resources by Chan Chilung <eason066@gmail.com> 2021
+/*
+ * PROJECT:     ReactOS Mydocs
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Chinese (Traditional) resource file
+ * TRANSLATORS: Copyright 2021 Chan Chilung <eason066@gmail.com>
+ */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
 
 STRINGTABLE
 {
-    IDS_NOSRCFILEFOUND "無法找到檔案或資料夾 '%ls'。"
+    IDS_NOSRCFILEFOUND "無法找到檔案或資料夾「%ls」。"
 }

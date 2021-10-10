@@ -1,4 +1,10 @@
-/* Traditional Chinese translation by Henry Tang Ih 2016 (henrytang2@hotmail.com) */
+/*
+ * PROJECT:      ReactOS Accessibility Control Panel
+ * LICENSE:      GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:      Chinese (Traditional) resource file
+ * TRANSLATORS:  Copyright 2016 Henry Tang Ih <henrytang2@hotmail.com>
+ *               Copyright 2021 Chan Chilung <eason066@gmail.com>
+ */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
 
@@ -32,14 +38,14 @@ CAPTION "聲音"
 FONT 9, "新細明體", 0, 0, 0x0
 BEGIN
     GROUPBOX "聲音衛士", -1, 6, 11, 234, 98
-    LTEXT "如果您 ReactOS 能在系統發出聲音時發出可視警告，請使用「聲音衛士」。",
+    LTEXT "如果您希望 ReactOS 能在系統發出聲音時發出可視警告，請使用「聲音衛士」。",
           -1, 12, 20, 222, 29
     AUTOCHECKBOX "使用聲音衛士(&S)", IDC_SENTRY_BOX, 12, 49, 90, 14
     LTEXT "選擇視覺警告:", IDC_SENTRY_TEXT, 12, 72, 222, 11
     COMBOBOX IDC_SENTRY_COMBO, 12, 83, 222, 56,
              CBS_DROPDOWNLIST | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
     GROUPBOX "聲音顯示", -1, 6, 115, 234, 67
-    LTEXT "如果您程式顯示所發出的語音和聲音的文字，請使用「聲音顯示」。",
+    LTEXT "如果您希望程式顯示所發出的語音和聲音的文字，請使用「聲音顯示」。",
           -1, 12, 125, 222, 29
     AUTOCHECKBOX "使用聲音顯示(&H)", IDC_SSHOW_BOX, 12, 148, 222, 14
 END
@@ -50,7 +56,7 @@ CAPTION "顯示"
 FONT 9, "新細明體", 0, 0, 0x0
 BEGIN
     GROUPBOX "高對比度", -1, 6, 11, 234, 62
-    LTEXT "如果您 ReactOS 使用可讀性好的顏色與字型，請使用該選項。",
+    LTEXT "如果您希望 ReactOS 使用可讀性更好的顏色與字型，請使用「高對比度」。",
           -1, 12, 20, 222, 29
     AUTOCHECKBOX "使用高對比度(&U)", IDC_CONTRAST_BOX, 12, 49, 126, 14
     PUSHBUTTON "設定(&S)", IDC_CONTRAST_BUTTON, 144, 49, 90, 14
@@ -88,7 +94,7 @@ CAPTION "一般"
 FONT 9, "新細明體", 0, 0, 0x0
 BEGIN
     GROUPBOX "自動重置", -1, 6, 11, 234, 47
-    AUTOCHECKBOX "電腦閒置下列時間後關閉輔助功能(&T):",
+    AUTOCHECKBOX "電腦閒置下列時間後關閉輔助功能(&T)：",
                  IDC_RESET_BOX, 12, 18, 222, 14
     COMBOBOX IDC_RESET_COMBO, 24, 38, 60, 47,
              CBS_DROPDOWNLIST | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
@@ -148,7 +154,7 @@ BEGIN
                     12, 106, 120, 20, BS_TOP | BS_MULTILINE
     PUSHBUTTON "設定(&S)", IDC_FILTER_BOUNCE_BUTTON, 144, 88, 90, 14, WS_GROUP
     PUSHBUTTON "設定(&E)", IDC_FILTER_REPEAT_BUTTON, 144, 106, 90, 14, WS_GROUP
-    LTEXT "點擊此處並鍵入字元來測試篩選鍵設定(&C):", -1, 12, 129, 222, 11
+    LTEXT "點擊此處並鍵入字元來測試篩選鍵設定(&C)：", -1, 12, 129, 222, 11
     EDITTEXT IDC_FILTER_TEST_EDIT, 12, 138, 222, 14, WS_GROUP | ES_AUTOHSCROLL
     GROUPBOX "通知", -1, 6, 161, 234, 41
     AUTOCHECKBOX "當按鍵或鍵被接受時發出聲響(&B)", IDC_FILTER_SOUND_CHECK,
@@ -182,7 +188,7 @@ BEGIN
           -1, 12, 20, 222, 29
     AUTOCHECKBOX "使用快捷鍵(&U)", IDC_CONTRAST_ACTIVATE_CHECK, 12, 49, 222, 14
     GROUPBOX "高對比度外觀方案", -1, 6, 83, 234, 44
-    LTEXT "目前的高對比度方案為:", -1, 12, 94, 222, 11
+    LTEXT "目前的高對比度方案：", -1, 12, 94, 222, 11
     COMBOBOX IDC_CONTRAST_COMBO, 12, 103, 222, 56,
              CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
     DEFPUSHBUTTON "確定", IDOK, 135, 207, 50, 14
@@ -284,7 +290,7 @@ STRINGTABLE
 BEGIN
     IDS_CPLSYSTEMNAME "輔助功能"
     IDS_CPLSYSTEMDESCRIPTION "為視覺、聽力和行動能力而調整電腦設定。"
-    IDS_SENTRY_NONE "[無]"
+    IDS_SENTRY_NONE "［無］"
     IDS_SENTRY_TITLE "閃爍活動標題欄"
     IDS_SENTRY_WINDOW "閃爍活動視窗"
     IDS_SENTRY_DISPLAY "閃爍桌面"
