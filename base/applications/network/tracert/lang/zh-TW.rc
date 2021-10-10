@@ -1,26 +1,32 @@
+/*
+ * PROJECT:     ReactOS trace route utility
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Chinese (Traditional) resource file
+ * TRANSLATORS: Copyright 2021 Chan Chilung <eason066@gmail.com>
+ */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
 
 STRINGTABLE
 BEGIN
     IDS_USAGE "\n\
-Usage: tracert [-d] [-h maximum_hops] [-j host-list] [-w timeout] target_name\n\n\
-Options:\n\
-    -d                 Do not resolve addresses to hostnames.\n\
-    -h maximum_hops    Maximum number of hops to search for target.\n\
-    -j host-list       Loose source route along host-list.\n\
-    -w timeout         Wait timeout milliseconds for each reply.\n\
-    -4                 Force using IPv4.\n\
-    -6                 Force using IPv6.\n\
+用法: tracert [-d] [-h 最大躍點數目] [-j 主機清單] [-w 逾時] 目標名稱 \n\n\
+選項:\n\
+    -d                 不要將位址解析為主機名稱。\n\
+    -h 最大躍點數目    搜尋目標所使用的最大躍點數目。\n\
+    -j 主機清單        鬆散的主機清單來源路由\n\
+    -w 逾時            每個回覆的等候逾時 (毫秒)。\n\
+    -4                 強制使用 IPv4。\n\
+    -6                 強制使用 IPv6。\n\
 \n"
 
-    IDS_INVALID_OPTION  "%1 is not a valid command option.\n"
-    IDS_TRACE_INFO      "\nTracing route to %1 [%2]\nover a maximum of %3!u! hops:\n\n"
-    IDS_TRACE_COMPLETE  "\nTrace complete.\n"
-    IDS_UNABLE_RESOLVE  "Unable to resolve target system name %1.\n"
+    IDS_INVALID_OPTION  "%1 不是有效的選項。\n"
+    IDS_TRACE_INFO      "\n在上限 %3!u! 個躍點上\n追蹤 %1 [%2] 的路由:\n\n"
+    IDS_TRACE_COMPLETE  "\n追蹤完成。\n"
+    IDS_UNABLE_RESOLVE  "無法解析目標系統名稱 %1。\n"
 
-    IDS_GEN_FAILURE     "General failure.\n"
-    IDS_TRANSMIT_FAILED "Transmit failed. (Error %1!u!)\n"
+    IDS_GEN_FAILURE     "一般失敗。\n"
+    IDS_TRANSMIT_FAILED "傳輸失敗。 (錯誤 %1!u!)\n"
 
     IDS_HOP_COUNT       "%1!3lu!  %0\n"
     IDS_HOP_TIME        "%1!4lu! ms  %0\n"
@@ -29,8 +35,8 @@ Options:\n\
     IDS_HOP_RES_INFO    "%1 [%2]"
     IDS_HOP_IP_INFO     "%1"
     IDS_LINEBREAK       "\r\n"
-    IDS_REQ_TIMED_OUT   "Request timed out.\n"
+    IDS_REQ_TIMED_OUT   "要求逾時。\n"
     IDS_HOP_RESPONSE    "  reports: "
-    IDS_DEST_HOST_UNREACHABLE "Destination host unreachable.\n"
-    IDS_DEST_NET_UNREACHABLE  "Destination network unreachable.\n"
+    IDS_DEST_HOST_UNREACHABLE "無法連線至目標主機。\n"
+    IDS_DEST_NET_UNREACHABLE  "無法連線至目標網路。\n"
 END

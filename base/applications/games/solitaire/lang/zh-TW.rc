@@ -55,9 +55,9 @@ END
 STRINGTABLE
 BEGIN
     IDS_SOL_NAME "接龍"
-    IDS_SOL_ABOUT "接龍由 J Brown 開發\n\nCardLib 版本 1.0."
+    IDS_SOL_ABOUT "接龍由 J Brown 開發\n\nCardLib 版本 1.0"
     IDS_SOL_QUIT "退出目前遊戲？"
-    IDS_SOL_WIN "恭喜你，你嬴了！！"
+    IDS_SOL_WIN "恭喜您，您贏了！！"
     IDS_SOL_DEAL "再玩一次？"
     IDS_SOL_SCORE "分數: %d"
     IDS_SOL_TIME "時間: %d"

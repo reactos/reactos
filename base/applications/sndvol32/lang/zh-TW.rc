@@ -1,4 +1,10 @@
-/* Translated by Elton Chung aka MfldElton <elton328@gmail.com> */
+/*
+ * PROJECT:     ReactOS Sound Volume Control
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * PURPOSE:     Chinese (Traditional) resource file
+ * TRANSLATORS: Copyright 2011 Elton Chung aka MfldElton <elton328@gmail.com>
+ *              Copyright 2021 Chan Chilung <eason066@gmail.com>
+ */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
 
@@ -6,7 +12,7 @@ IDM_MAINMENU MENU
 BEGIN
     POPUP "選項(&P)"
     BEGIN
-        MENUITEM "屬性(&R)", IDM_PROPERTIES
+        MENUITEM "內容(&R)", IDM_PROPERTIES
         MENUITEM "進階控制(&A)", IDM_ADVANCED_CONTROLS
         MENUITEM SEPARATOR
         MENUITEM "結束(&X)", IDM_EXIT
@@ -23,15 +29,15 @@ STRINGTABLE
 BEGIN
     IDS_SNDVOL32 "音量控制"
     IDS_NOMIXERDEVICES "沒有可用的混音器設備！這個程式即將結束。"
-    IDS_SELECT "&Select"
-    IDS_ADVANCED_CONTROLS "Advanced Controls for %s"
+    IDS_SELECT "選擇(&S)"
+    IDS_ADVANCED_CONTROLS "進階控制︰%s"
     IDS_OTHER_CONTROLS1 "&1  %s"
     IDS_OTHER_CONTROLS2 "&2  %s"
 END
 
 IDD_PREFERENCES DIALOGEX 0, 0, 224, 250
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "屬性"
+CAPTION "內容"
 FONT 9, "新細明體"
 BEGIN
     LTEXT "混音設備(&M)：", -1, 7, 8, 48, 9
@@ -60,7 +66,7 @@ BEGIN
     LTEXT "音量", -1, 4, 58, 80, 8
     CONTROL "", IDC_LINE_SLIDER_VERT, "msctls_trackbar32", TBS_VERT | TBS_BOTH | TBS_DOWNISLEFT | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 32, 67, 30, 56
     AUTOCHECKBOX "靜音(&M)", IDC_LINE_SWITCH, 4, 123, 55, 12
-    PUSHBUTTON "&Advanced", IDC_LINE_ADVANCED, 4, 138, 80, 14, WS_TABSTOP
+    PUSHBUTTON "進階(&A)", IDC_LINE_ADVANCED, 4, 138, 80, 14, WS_TABSTOP
     CONTROL "", IDC_LINE_SEP, "static", SS_ETCHEDVERT | WS_CHILD | WS_VISIBLE, 90, 1, 1, 137
 END
 
@@ -77,7 +83,7 @@ BEGIN
     LTEXT "音量", -1, 4, 58, 60, 8
     CONTROL "", IDC_LINE_SLIDER_VERT, "msctls_trackbar32", TBS_VERT | TBS_BOTH | TBS_DOWNISLEFT | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 20, 67, 30, 56
     AUTOCHECKBOX "靜音(&M)", IDC_LINE_SWITCH, 4, 123, 55, 12
-    PUSHBUTTON "&Advanced", IDC_LINE_ADVANCED, 7, 138, 55, 14, WS_TABSTOP
+    PUSHBUTTON "進階(&A)", IDC_LINE_ADVANCED, 7, 138, 55, 14, WS_TABSTOP
     CONTROL "", IDC_LINE_SEP, "static", SS_ETCHEDVERT | WS_CHILD | WS_VISIBLE, 70, 25, 1, 113
 END
 
@@ -115,24 +121,24 @@ END
 
 IDD_ADVANCED DIALOGEX 0, 0, 255, 140
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Advanced Controls for Volume Control"
+CAPTION "進階音量控制"
 FONT 9, "新細明體"
 BEGIN
     CONTROL IDI_MAINAPP, -1, "static", SS_ICON | WS_CHILD | WS_VISIBLE, 7, 7, 32, 32
-    LTEXT "These settings can be used to make fine adjustments to your audio.", -1, 44, 7, 200, 32
-    GROUPBOX "Tone Controls", IDC_ADV_TONE_CONTROLS, 7, 33, 240, 80
-    LTEXT "These settings control how the tone of your audio sounds.", -1, 17, 48, 200, 14
-    LTEXT "&Bass:", -1, 17, 62, 50, 8
-    LTEXT "Low", IDC_ADV_BASS_LOW, 77, 62, 20, 8
-    LTEXT "High", IDC_ADV_BASS_HIGH, 182, 62, 20, 8
+    LTEXT "這些設定可以對您的音訊進行仔細的調整。", -1, 44, 7, 200, 32
+    GROUPBOX "音調控制", IDC_ADV_TONE_CONTROLS, 7, 33, 240, 80
+    LTEXT "這些設定可以控制音訊的不同音色聽起來的感受。", -1, 17, 48, 200, 14
+    LTEXT "低音(&B)：", -1, 17, 62, 50, 8
+    LTEXT "低", IDC_ADV_BASS_LOW, 77, 62, 20, 8
+    LTEXT "高", IDC_ADV_BASS_HIGH, 182, 62, 20, 8
     CONTROL "", IDC_ADV_BASS_SLIDER, "msctls_trackbar32", TBS_HORZ | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 97, 62, 80, 20
-    LTEXT "&Treble:", -1, 17, 90, 50, 8
-    LTEXT "Low", IDC_ADV_TREBLE_LOW, 77, 90, 20, 8
-    LTEXT "High", IDC_ADV_TREBLE_HIGH, 182, 90, 20, 8
+    LTEXT "高音(&T)：", -1, 17, 90, 50, 8
+    LTEXT "低", IDC_ADV_TREBLE_LOW, 77, 90, 20, 8
+    LTEXT "高", IDC_ADV_TREBLE_HIGH, 182, 90, 20, 8
     CONTROL "", IDC_ADV_TREBLE_SLIDER, "msctls_trackbar32", TBS_HORZ | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 97, 90, 80, 20
-    GROUPBOX "Other Controls", IDC_ADV_OTHER_CONTROLS, 7, 119, 240, 66
-    LTEXT "These settings make other changes to how your audio sounds. See your hardware documentation for details.", IDC_ADV_OTHER_TEXT, 17, 135, 220, 28
+    GROUPBOX "其他控制", IDC_ADV_OTHER_CONTROLS, 7, 119, 240, 66
+    LTEXT "這些設定可以對您的音訊的其他方面進行調整。詳情請參考硬體的說明檔案。", IDC_ADV_OTHER_TEXT, 17, 135, 220, 28
     AUTOCHECKBOX "&1 ", IDC_ADV_OTHER_CHECK1, 17, 159, 220, 14
     AUTOCHECKBOX "&2 ", IDC_ADV_OTHER_CHECK2, 17, 174, 220, 14
-    DEFPUSHBUTTON "Close", IDOK, 197, 120, 50, 14, WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP
+    DEFPUSHBUTTON "關閉", IDOK, 197, 120, 50, 14, WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP
 END

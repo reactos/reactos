@@ -1,9 +1,10 @@
 /*
- * (Traditional Chinese resources)
- * (繁體中文資源)
- * by Henry Tang Ih 2016 (henrytang2@hotmail.com)
- *    Luo Yufan 2018 (njlyf2011@hotmail.com)
- *    Aobi Chan CL 2020 (eason066@gmail.com)
+ * PROJECT:     ReactOS Add hardware control panel
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Chinese (Traditional) resource file
+ * TRANSLATORS: Copyright 2016 Henry Tang Ih <henrytang2@hotmail.com>
+ *              Copyright 2018 Luo Yufan <njlyf2011@hotmail.com>
+ *              Copyright 2020-2021 Chan Chilung <eason066@gmail.com>
  */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
@@ -14,12 +15,12 @@ CAPTION "新增硬體精靈"
 FONT 9, "新細明體"
 BEGIN
     LTEXT "歡迎使用新增硬體精靈", IDC_FINISHTITLE, 114, 8, 203, 24
-    LTEXT "這個精靈將幫助您:", -1, 114, 40, 182, 8
-    LTEXT "1) 安裝軟體來支援添加到電腦的硬體。", -1, 121, 56, 184, 16
-    LTEXT "2) 解決您的硬體問題。", -1, 121, 78, 185, 16
+    LTEXT "這個精靈將幫助您︰", -1, 114, 40, 182, 8
+    LTEXT "1) 安裝軟體來支援新增到電腦的硬體。", -1, 121, 56, 184, 16
+    LTEXT "2) 解決您的硬體的問題。", -1, 121, 78, 185, 16
     ICON IDI_WARNINGICON, IDC_WARNINGICON, 124, 109, 20, 20
-    LTEXT "如果硬體帶安裝 CD，建議您按 [取消]，關閉這個精靈，用製造商的 CD 來安裝這個硬體。", 503, 150, 106, 155, 50
-    LTEXT "如要繼續，請按 [下一步]。", -1, 114, 166, 193, 8
+    LTEXT "如果硬體帶有安裝 CD，建議您按［取消］關閉這個精靈，然後使用製造商的 CD 來安裝這個硬體。", 503, 150, 106, 155, 50
+    LTEXT "如要繼續，請按［下一步］。", -1, 114, 166, 193, 8
 END
 
 IDD_SEARCHPAGE DIALOGEX 0, 0, 317, 143
@@ -46,9 +47,9 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "新增硬體精靈"
 FONT 9, "新細明體"
 BEGIN
-    LTEXT "從以下清單中選擇一個已安裝的硬體裝置，然後按 [下一步]，檢查內容或解決您遇到的問題。", -1, 21, 8, 275, 22
-    LTEXT "要添加列表中沒有顯示的硬體，請按 [添加新的硬體裝置]。", -1, 21, 32, 275, 24
-    LTEXT "已安裝的硬體(&N):", -1, 21, 62, 140, 8
+    LTEXT "從以下清單中選擇一個已安裝的硬體裝置，然後按［下一步］，檢查內容或解決您遇到的問題。", -1, 21, 8, 275, 22
+    LTEXT "要新增列表中沒有顯示的硬體，請按［新增新的硬體裝置］。", -1, 21, 32, 275, 24
+    LTEXT "已安裝的硬體(&N)︰", -1, 21, 62, 140, 8
     CONTROL "", IDC_PROBELIST, "SysListView32", WS_BORDER | WS_GROUP | WS_TABSTOP | LVS_REPORT | LVS_NOSORTHEADER | LVS_SINGLESEL | LVS_SHAREIMAGELISTS | LVS_NOCOLUMNHEADER, 21, 72, 275, 66
 END
 
@@ -57,10 +58,10 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "新增硬體精靈"
 FONT 9, "新細明體"
 BEGIN
-    LTEXT "這個精靈可以搜索其他硬體並自動安裝。或者，如果您知道要安裝哪個型號的硬體，您可以從清單選擇。", -1, 21, 8, 280, 24
-    LTEXT "您想精靈做什麼?", -1, 23, 40, 275, 8
-    AUTORADIOBUTTON "搜索並自動安裝硬體(推薦)(&S)", IDC_AUTOINSTALL, 30, 55, 266, 8, WS_GROUP | NOT WS_TABSTOP
-    AUTORADIOBUTTON "安裝我從清單中手動選取的硬體(進階)(&M)", IDC_MANUALLYINST, 30, 70, 266, 8, NOT WS_TABSTOP
+    LTEXT "這個精靈可以搜尋其他硬體並自動安裝。或者，如果您知道要安裝哪個型號的硬體，您可以從清單選擇。", -1, 21, 8, 280, 24
+    LTEXT "您想精靈做什麼？", -1, 23, 40, 275, 8
+    AUTORADIOBUTTON "搜尋並自動安裝硬體（推薦）(&S)", IDC_AUTOINSTALL, 30, 55, 266, 8, WS_GROUP | NOT WS_TABSTOP
+    AUTORADIOBUTTON "安裝我從清單中手動選取的硬體（進階）(&M)", IDC_MANUALLYINST, 30, 70, 266, 8, NOT WS_TABSTOP
 END
 
 IDD_DETECTEDHWPAGE DIALOGEX 0, 0, 317, 143
@@ -69,7 +70,7 @@ CAPTION "新增硬體精靈"
 FONT 9, "新細明體"
 BEGIN
     LTEXT "", IDC_STATUSTEXT, 21, 9, 275, 40
-    LTEXT "偵測到的硬體:", IDC_DETECTEDHWTEXT, 21, 53, 176, 8
+    LTEXT "偵測到的硬體︰", IDC_DETECTEDHWTEXT, 21, 53, 176, 8
     CONTROL "", IDC_DETECTEDHWLIST, "SysListView32", WS_BORDER | WS_GROUP | WS_TABSTOP | LVS_REPORT | LVS_NOSORTHEADER | LVS_SINGLESEL | LVS_SHAREIMAGELISTS | LVS_NOCOLUMNHEADER, 21, 65, 275, 70
 END
 
@@ -78,8 +79,8 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "新增硬體精靈"
 FONT 9, "新細明體"
 BEGIN
-    LTEXT "如果看不到想要的硬體類別，請按 [顯示所有裝置]。", IDC_STATUSTEXT, 21, 9, 275, 18
-    LTEXT "常見硬體類型(&H):", IDC_HWTYPESTEXT, 21, 31, 180, 8
+    LTEXT "如果看不到想要的硬體類別，請按［顯示所有裝置］。", IDC_STATUSTEXT, 21, 9, 275, 18
+    LTEXT "常見硬體類型(&H)︰", IDC_HWTYPESTEXT, 21, 31, 180, 8
     CONTROL "", IDC_HWTYPESLIST, "SysListView32", WS_BORDER | WS_GROUP | WS_TABSTOP | LVS_REPORT | LVS_NOSORTHEADER | LVS_SINGLESEL | LVS_SHAREIMAGELISTS | LVS_NOCOLUMNHEADER, 21, 42, 275, 92
 END
 
@@ -89,7 +90,7 @@ CAPTION "新增硬體精靈"
 FONT 9, "新細明體"
 BEGIN
     LTEXT "可能需要幾分鐘的時間來搜尋硬體。", -1, 21, 8, 275, 15
-    LTEXT "整個進度:", IDC_TPROGRESSTEXT, 21, 25, 275, 8
+    LTEXT "整個進度︰", IDC_TPROGRESSTEXT, 21, 25, 275, 8
     CONTROL "", IDC_TPROGRESSBAR, "msctls_progress32", 0, 21, 37, 275, 14
     LTEXT "", IDC_PROGRESSTEXT, 58, 58, 200, 8, SS_NOPREFIX
     CONTROL "", IDC_PROGRESSBAR, "msctls_progress32", 0, 58, 70, 200, 8
@@ -103,7 +104,7 @@ BEGIN
     LTEXT "正在完成新增硬體精靈", IDC_FINISHTITLE, 114, 8, 203, 24
     LTEXT "您已成功完成新增硬體精靈。", -1, 114, 32, 193, 19
     LTEXT "", IDC_STATUSTEXT, 114, 70, 193, 92
-    LTEXT "要關閉這個精靈，請按 [完成]。", -1, 114, 166, 132, 8
+    LTEXT "要關閉這個精靈，請按［完成］。", -1, 114, 166, 132, 8
 END
 
 IDD_ISFOUNDPAGE DIALOGEX 0, 0, 317, 186
@@ -112,8 +113,8 @@ CAPTION "新增硬體精靈"
 FONT 9, "新細明體"
 BEGIN
     LTEXT "正在完成新增硬體精靈", IDC_FINISHTITLE, 114, 8, 203, 24
-    LTEXT "安裝了下列硬體:", -1, 114, 32, 193, 19
-    LTEXT "要關閉這個精靈，請按 [完成]。", -1, 114, 166, 132, 8
+    LTEXT "安裝了下列硬體︰", -1, 114, 32, 193, 19
+    LTEXT "要關閉這個精靈，請按［完成］。", -1, 114, 166, 132, 8
     CONTROL "", IDC_FOUNDHARDWARELIST, "SysListView32", WS_BORDER | WS_GROUP | WS_TABSTOP | LVS_REPORT | LVS_NOSORTHEADER | LVS_SINGLESEL | LVS_SHAREIMAGELISTS, 114, 56, 193, 78
 END
 
@@ -123,10 +124,10 @@ CAPTION "新增硬體精靈"
 FONT 9, "新細明體"
 BEGIN
     LTEXT "正在完成新增硬體精靈", IDC_FINISHTITLE, 114, 8, 195, 28
-    LTEXT "這裡是您所選硬體的當前狀態:", -1, 114, 40, 193, 19
+    LTEXT "這是您所選的硬體目前的狀態︰", -1, 114, 40, 193, 19
     EDITTEXT IDC_HWSTATUSEDIT, 114, 60, 193, 70, ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY | WS_VSCROLL | NOT WS_TABSTOP
-    LTEXT "要啟用可以幫助您解決問題的疑難排解，請按 [完成]。", -1, 114, 136, 193, 16
-    LTEXT "要關閉這個精靈，請按 [取消]。", IDC_STATUSTEXT, 114, 166, 132, 8
+    LTEXT "要啟用可以幫助您解決問題的疑難排解，請按［完成］。", -1, 114, 136, 193, 16
+    LTEXT "要關閉這個精靈，請按［取消］。", IDC_STATUSTEXT, 114, 166, 132, 8
 END
 
 IDD_NOTCONNECTEDPAGE DIALOGEX 0, 0, 317, 186
@@ -135,21 +136,21 @@ CAPTION "新增硬體精靈"
 FONT 9, "新細明體"
 BEGIN
     LTEXT "無法繼續新增硬體精靈", IDC_FINISHTITLE, 114, 8, 203, 28
-    LTEXT "要繼續，請將這個硬體跟電腦連線。", -1, 114, 40, 193, 16
-    AUTOCHECKBOX "按下 [完成] 時關閉電腦；這樣，我可以開啟電腦並連線硬體(&T)。", IDC_TURNOFFCHECKBOX, 114, 64, 203, 20, BS_TOP | BS_MULTILINE
-    LTEXT "在大多數情況下，ReactOS 在硬體和電腦連線後自動將其安裝。如果 ReactOS 找不到這個硬體，您可以重新開啟這個精靈，安裝支援軟體。", -1, 114, 98, 193, 32
-    LTEXT "要關閉這個精靈，請按 [完成]。", IDC_STATUSTEXT, 114, 166, 193, 8
+    LTEXT "如要繼續，請將這個硬體連接至電腦。", -1, 114, 40, 193, 16
+    AUTOCHECKBOX "按下［完成］時關閉電腦；這樣，我可以開啟電腦並連接硬體(&T)。", IDC_TURNOFFCHECKBOX, 114, 64, 203, 20, BS_TOP | BS_MULTILINE
+    LTEXT "在大多數情況下，ReactOS 在硬體和電腦連接後自動將其安裝。如果 ReactOS 找不到這個硬體，您可以重新開啟這個精靈，安裝支援軟體。", -1, 114, 98, 193, 32
+    LTEXT "要關閉這個精靈，請按［完成］。", IDC_STATUSTEXT, 114, 166, 193, 8
 END
 
 STRINGTABLE
 BEGIN
     IDS_CPLNAME "新增硬體"
-    IDS_CPLDESCRIPTION "為電腦添加新硬體"
+    IDS_CPLDESCRIPTION "為電腦新增新硬體"
     IDS_SEARCHTITLE "正在搜尋，請稍候..."
-    IDS_SEARCHTEXT "精靈正在搜索最近連線到電腦但尚未安裝的硬體。"
-    IDS_ISCONNECTED "硬體已經與電腦連線了嗎?"
+    IDS_SEARCHTEXT "精靈正在搜尋最近連接到電腦但尚未安裝的硬體。"
+    IDS_ISCONNECTED "硬體已經與電腦連接了嗎？"
     IDS_PROBELISTTITLE "以下硬體已安裝在您的電腦上"
-    IDS_ADDNEWDEVICE "添加一個新硬體裝置"
+    IDS_ADDNEWDEVICE "新增新的硬體裝置"
     IDS_SELECTWAYTITLE "此精靈可以幫助您安裝其它硬體"
     IDS_HDTYPESTITLE "從以下清單中選擇要安裝的硬體類型"
 END

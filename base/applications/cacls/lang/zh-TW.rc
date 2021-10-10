@@ -1,36 +1,36 @@
 /*
- * PROJECT:    ReactOS CACLS
- * FILE:       base/applications/cacls/lang/zh-TW.rc
- * LICENSE:    LGPL - See COPYING.LIB in the top level directory
- * PURPOSE:    TRADITIONAL Chinese resource file
- * TRANSLATOR: jauming <jauming.tw@gmail.com>
+ * PROJECT:     ReactOS CACLS
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * PURPOSE:     Chinese (Traditional) resource file
+ * TRANSLATORS: Copyright 2007 Chaoming Tseng <jauming.tw@gmail.com>
+ *              Copyright 2021 Chan Chilung <eason066@gmail.com>
  */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
 
 STRINGTABLE
 BEGIN
-    IDS_HELP "顯示或者修改文件的訪問控制表\n\n\
+    IDS_HELP "顯示或修改文件的存取控制串列\n\n\
 CACLS filename [/T] [/E] [/C] [/G user:perm [...]] [/R user [...]]\n\
                [/P user:perm [...]] [/D user [...]]\n\
    filename      顯示 ACLs。\n\
-   /T            更改當前目錄及其所有子目錄中\n\
+   /T            更改目前目錄及其所有子目錄\n\
                  指定文件的 ACL。\n\
    /E            編輯 ACL 而不替換。\n\
-   /C            在出現拒絕訪問錯誤時繼續。\n\
-   /G user:perm  賦予指定使用者訪問權限。\n\
-                 Perm 可以是: R  讀取\n\
+   /C            在出現拒絕存取錯誤時繼續。\n\
+   /G user:perm  賦予指定使用者存取權限。\n\
+                 perm 可以是: R  讀取\n\
                               W  寫入\n\
                               C  更改(寫入)\n\
                               F  完全控制\n\
-   /R user       撤銷指定使用者的訪問權限(僅在與 /E 一起使用時才有效)。\n\
-   /P user:perm  替換指定使用者的訪問權限。\n\
-                 Perm 可以是: N  無\n\
+   /R user       撤銷指定使用者的存取權限 (僅在與 /E 一起使用時才有效)。\n\
+   /P user:perm  替換指定使用者的存取權限。\n\
+                 perm 可以是: N  無\n\
                               R  讀取\n\
                               W  寫入\n\
                               C  更改(寫入)\n\
                               F  完全控制\n\
-   /D user       拒絕指定使用者的訪問。\n\
+   /D user       拒絕指定使用者的存取。\n\
 在命令中可以使用通配符指定多個文件。\n\
 您也可以在命令中指定多個使用者。\n\n\
 縮寫:\n\
@@ -39,7 +39,7 @@ CACLS filename [/T] [/E] [/C] [/G user:perm [...]] [/R user [...]]\n\
    OI - 對象繼承。\n\
         ACE 會由文件繼承。\n\
    IO - 只繼承。\n\
-        ACE 不適用於當前文件/目錄。\n"
+        ACE 不適用於目前文件/目錄。\n"
     IDS_ABBR_CI "(CI)"
     IDS_ABBR_OI "(OI)"
     IDS_ABBR_IO "(IO)"

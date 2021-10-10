@@ -3,7 +3,7 @@
  *
  * Copyright 2008 Hongbo Ni <hongbo.at.njstar.com>
  * Copyright 2010 Cheer Xiao <xiaqqaix.at.gmail.com>
- * Sync to Wine by 2020 Aobi Chan CL <eason066.at.gmail.com>
+ * Sync to Wine by 2020 - 2021 Chan Chilung <eason066.at.gmail.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -53,7 +53,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "搜尋(&F)...\tCtrl+F", ID_FIND
         MENUITEM "找下一個(&N)\tF3", ID_FIND_NEXT
-        MENUITEM "替換(&R)...\tCtrl+H", ID_REPLACE
+        MENUITEM "取代(&R)...\tCtrl+H", ID_REPLACE
         MENUITEM SEPARATOR
         MENUITEM "唯讀(&0))", ID_EDIT_READONLY
         MENUITEM "已改動(M)", ID_EDIT_MODIFIED
@@ -83,7 +83,7 @@ BEGIN
     POPUP "格式(&O)"
     BEGIN
         MENUITEM "字型(&F)..", ID_FONTSETTINGS
-        MENUITEM "子彈點(&B)", ID_BULLET
+        MENUITEM "項目符號(&B)", ID_BULLET
         MENUITEM "段落(&P)...", ID_PARAFORMAT
         MENUITEM "標籤(&T)...", ID_TABSTOPS
         POPUP "背景(&D)"
@@ -106,7 +106,7 @@ BEGIN
         MENUITEM "複製(&C)", ID_EDIT_COPY
         MENUITEM "貼上(&P)", ID_EDIT_PASTE
         MENUITEM SEPARATOR
-        MENUITEM "子彈點(&B)",       ID_BULLET
+        MENUITEM "項目符號(&B)",       ID_BULLET
         MENUITEM "段落(&P)...",        ID_PARAFORMAT
     END
 END
@@ -241,9 +241,9 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 CAPTION "標籤"
 FONT 9, "新細明體"
 BEGIN
-    GROUPBOX "標籤停點", -1, 10, 10, 120, 90
+    GROUPBOX "定位停點", -1, 10, 10, 120, 90
     COMBOBOX IDC_TABSTOPS, 20, 20, 100, 60, CBS_SIMPLE
-    DEFPUSHBUTTON "添加(&A)", ID_TAB_ADD, 20, 80, 45, 15
+    DEFPUSHBUTTON "新增(&A)", ID_TAB_ADD, 20, 80, 45, 15
     PUSHBUTTON "刪除(&R)", ID_TAB_DEL, 72, 80, 45, 15
     PUSHBUTTON "確定(&O)", IDOK, 135, 15, 58, 15
     PUSHBUTTON "取消(&C)", IDCANCEL, 135, 33, 58, 15

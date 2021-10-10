@@ -35,7 +35,7 @@ BEGIN
     LTEXT "輸入項目位置：", -1, 120, 50, 120, 10
     EDITTEXT IDC_SHORTCUT_LOCATION, 120, 65, 150, 15, ES_LEFT | ES_AUTOHSCROLL
     PUSHBUTTON "瀏覽...", IDC_SHORTCUT_BROWSE, 272, 65, 55, 15, ES_LEFT
-    LTEXT "按 [下一步] 繼續。", -1, 120, 97, 162, 10
+    LTEXT "按［下一步］繼續。", -1, 120, 97, 162, 10
 END
 
 IDD_SHORTCUT_FINISH DIALOGEX 0, 0, 340, 200
@@ -45,7 +45,7 @@ FONT 9, "新細明體", 0, 0, 0x0
 BEGIN
     LTEXT "輸入捷徑名稱(&T)：", -1, 120, 15, 150, 10
     EDITTEXT IDC_SHORTCUT_NAME, 120, 35, 150, 15, ES_LEFT | ES_AUTOHSCROLL
-    LTEXT "按 [完成] 建立捷徑", -1, 118, 97, 178, 17
+    LTEXT "按［完成］建立捷徑", -1, 118, 97, 178, 17
 END
 
 IDD_CONFIG_STARTMENU DIALOGEX 0, 0, 212, 200
@@ -53,7 +53,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "刪除捷徑/資料夾"
 FONT 9, "新細明體"
 BEGIN
-    LTEXT "要刪除「開始」功能表中的項目，請選擇項目，然後按 [刪除]。(&T)", -1, 10, 10, 192, 16
+    LTEXT "要刪除「開始」功能表中的項目，請選擇項目，然後按［刪除］。(&T)", -1, 10, 10, 192, 16
     CONTROL "List1", IDC_STARTMENU_TREE, "SysListView32", LVS_REPORT | LVS_SHOWSELALWAYS |
             LVS_SORTASCENDING | WS_BORDER | WS_TABSTOP, 10, 32, 192, 138
     PUSHBUTTON "刪除(&R)", IDC_REMOVE_ENTRIES, 98, 176, 50, 14, WS_GROUP | WS_TABSTOP
@@ -65,7 +65,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPT
 CAPTION "Wine Gecko 套件"
 FONT 9, "新細明體"
 BEGIN
-    CONTROL "ReactOS 無法找到使內嵌 HTML 的應用程式正常工作的 Wine Gecko 套件。ReactOS 能為您自動下載並安裝。",
+    CONTROL "ReactOS 無法找到使內嵌 HTML 的應用程式正常工作的 Wine Gecko 套件。\nReactOS 能為您自動下載並安裝。",
           ID_DWL_STATUS, "SysLink", 0, 10, 10, 240, 65
     CONTROL "", ID_DWL_PROGRESS, PROGRESS_CLASSA, WS_BORDER | PBS_SMOOTH, 10, 40, 240, 12
     DEFPUSHBUTTON "安裝(&I)", ID_DWL_INSTALL, 200, 76, 50, 14, WS_GROUP | WS_TABSTOP
@@ -74,7 +74,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_CPLSYSTEMNAME "新增/移除程式"
+    IDS_CPLSYSTEMNAME "新增／移除程式"
     IDS_CPLSYSTEMDESCRIPTION "設定程式和捷徑"
     IDS_CREATE_SHORTCUT "建立捷徑"
     IDS_ERROR_NOT_FOUND "找不到檔案 %s"
@@ -86,7 +86,7 @@ BEGIN
     IDS_INSTALLING "安裝中..."
     IDS_INVALID_SHA "下載的檔案總和檢查碼錯誤。正在終止安裝已損毀的檔案。"
     IDS_NEW_INTERNET_SHORTCUT "新增網際網路捷徑"
-    IDS_DWL_FAILED "無法下載 Gecko 套件。請確保在您有網際網路連線的情況下才能進行下載。安裝程式將在不安裝 Gecko 的情況下繼續。"
+    IDS_DWL_FAILED "無法下載 Gecko 套件。請確保在您有網際網路連線的情況下才進行下載。安裝程式將在不安裝 Gecko 的情況下繼續。"
     IDS_CANTMAKEINETSHORTCUT "無法建立網際網路捷徑。"
     IDS_CANTMAKESHORTCUT "無法建立捷徑。"
     IDS_NO_MEMORY "沒有可以分配的記憶體空間。"

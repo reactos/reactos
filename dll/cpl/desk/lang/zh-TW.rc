@@ -1,5 +1,7 @@
-/* Traditional Chinese translation by Henry Tang Ih 2016 (henrytang2@hotmail.com) */
-/* Translation has been changed by Luo Yufan 2018 (njlyf2011@hotmail.com) and Aobi Chan CL 2020 (eason066@gmail.com) */
+/* Traditional Chinese translation by:
+ * Henry Tang Ih 2016 (henrytang2@hotmail.com)
+ * Luo Yufan 2018 (njlyf2011@hotmail.com)
+ * Chan Chilung 2020 - 2021 (eason066@gmail.com) */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
 
@@ -8,7 +10,7 @@ CAPTION "主題"
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 FONT 9, "新細明體"
 BEGIN
-    LTEXT "主題是由一個背景和一組聲音、圖示和其他因素組成的群組。它能幫助您個人化您的電腦。", IDC_STATIC, 5, 5, 235, 30
+    LTEXT "主題是由一個背景和一組聲音、圖示和其他元素組成的群組。它能幫助您個人化您的電腦。", IDC_STATIC, 5, 5, 235, 30
     LTEXT "主題︰", IDC_STATIC, 5, 42, 55, 10
     COMBOBOX IDC_THEMES_COMBOBOX, 5, 52, 160, 300, CBS_HASSTRINGS | CBS_AUTOHSCROLL | CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON "另存新檔(&A)...", IDC_THEMES_SAVE_AS, 170, 52, 70, 14
@@ -49,7 +51,7 @@ BEGIN
     CONTROL "以密碼保護(&P)", IDC_SCREENS_USEPASSCHK, "button",
             BS_AUTOCHECKBOX | WS_TABSTOP, 108, 120, 117, 19
     GROUPBOX "顯示器電源(&E)", IDC_SCREENS_DUMMY2, 8, 150, 230, 41
-    LTEXT "要修改顯示器的電源設定，請按 [電源]。", IDC_STATIC, 16, 161, 146, 27
+    LTEXT "要修改顯示器的電源設定，請按［電源］。", IDC_STATIC, 16, 161, 146, 27
     PUSHBUTTON "電源(&O)...", IDC_SCREENS_POWER_BUTTON, 167, 165, 61, 15
 END
 
@@ -110,7 +112,7 @@ EXSTYLE WS_EX_DLGMODALFRAME | WS_EX_WINDOWEDGE
 CAPTION "效果"
 FONT 9, "新細明體"
 BEGIN
-    CONTROL "為選單和工具提示使用以下過渡效果(&U):",
+    CONTROL "為選單和工具提示使用以下過渡效果(&U)︰",
             IDC_EFFAPPEARANCE_ANIMATION, "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 5, 267, 19
     COMBOBOX IDC_EFFAPPEARANCE_ANIMATIONTYPE, 20, 25, 95, 19, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | WS_CHILD | WS_VSCROLL | WS_TABSTOP
@@ -126,7 +128,7 @@ BEGIN
             "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 110, 267, 19
     CONTROL "直到我按 Alt 鍵之前，請隱藏有下劃線的字母供鍵盤使用",
             IDC_EFFAPPEARANCE_KEYBOARDCUES, "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 125, 267, 19
-    CONTROL "Use &flat menus", IDC_EFFAPPEARANCE_FLATMENUS,
+    CONTROL "使用扁平化選單(&F)", IDC_EFFAPPEARANCE_FLATMENUS,
             "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 140, 267, 19
     PUSHBUTTON "取消", IDCANCEL, 226, 165, 50, 14
     DEFPUSHBUTTON "確定", IDOK, 172, 165, 50, 14
@@ -163,7 +165,7 @@ BEGIN
     COMBOBOX IDC_FONTSIZE_COMBO, 14, 30, 223, 80, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     LTEXT "", IDC_FONTSIZE_CUSTOM, 14, 46, 223, 12
     GROUPBOX "相容性", -1, 7, 67, 237, 97
-    LTEXT "如果在更改顏色設定後不立即重新啟動電腦，某些程式可能無法正常工作。\n\n更改顯示設定後:", -1, 12, 78, 228, 34
+    LTEXT "如果在更改顏色設定後不立即重新啟動電腦，某些程式可能無法正常工作。\n\n更改顯示設定後︰", -1, 12, 78, 228, 34
     AUTORADIOBUTTON "在應用新的顯示設定之前重新啟動電腦(&R)", IDC_RESTART_RB, 14, 116, 228, 10
     AUTORADIOBUTTON "應用新的顯示設定而不重新啟動電腦(&P)", IDC_WITHOUTREBOOT_RB, 14, 131, 228, 10
     AUTORADIOBUTTON "在應用新的顯示設定之前詢問(&K)", IDC_ASKME_RB, 14, 146, 228, 10
@@ -174,7 +176,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 CAPTION "顯示設定"
 FONT 8, "新細明體"
 BEGIN
-    LTEXT "您是否想要保留顯示設定?", IDC_STATIC, 7, 7, 219, 8
+    LTEXT "您是否想要保留顯示設定？", IDC_STATIC, 7, 7, 219, 8
     LTEXT "", IDC_TIMEOUTTEXT, 7, 20, 219, 8
     PUSHBUTTON "是(&Y)", IDYES, 121, 36, 50, 14
     DEFPUSHBUTTON "否(&N)", IDNO, 175, 36, 50, 14
@@ -226,18 +228,18 @@ BEGIN
     IDS_CENTER "居中"
     IDS_STRETCH "拉伸"
     IDS_TILE "並排"
-    IDS_FIT "Fit"
-    IDS_FILL "Fill"
+    IDS_FIT "自動調整"
+    IDS_FILL "填滿"
 END
 
 STRINGTABLE
 BEGIN
     IDS_COLOR_4BIT "16 色"
     IDS_COLOR_8BIT "256 色"
-    IDS_COLOR_16BIT "增強色(16 位元)"
-    IDS_COLOR_24BIT "真彩色(24 位元)"
-    IDS_COLOR_32BIT "真彩色(32 位元)"
-    IDS_PIXEL "%lux%lu 像素"
+    IDS_COLOR_16BIT "增強色（16 位元）"
+    IDS_COLOR_24BIT "真彩色（24 位元）"
+    IDS_COLOR_32BIT "真彩色（32 位元）"
+    IDS_PIXEL "%lux%lu 畫素"
 END
 
 STRINGTABLE
@@ -272,8 +274,8 @@ BEGIN
     IDS_ELEMENT_11 "標題按鈕"
     IDS_ELEMENT_12 "訊息框"
     IDS_ELEMENT_13 "應用程式背景"
-    IDS_ELEMENT_14 "圖示間距(水平)"
-    IDS_ELEMENT_15 "圖示間距(垂直)"
+    IDS_ELEMENT_14 "圖示間距（水平）"
+    IDS_ELEMENT_15 "圖示間距（垂直）"
     IDS_ELEMENT_16 "工具提示"
     IDS_ELEMENT_17 "圖示"
 //  IDS_ELEMENT_18 "已禁用的選單項"

@@ -17,10 +17,13 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-/* Traditional Chinese translation by:
- * Henry Tang Ih 2016 (henrytang2@hotmail.com)
- * Luo Yufan 2018 (njlyf2011@hotmail.com)
- * Chan Chilung 2020 - 2021 (eason066@gmail.com)
+/*
+ * PROJECT:     ReactOS System Setup Library
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Chinese (Traditional) resource file
+ * TRANSLATORS: Copyright 2016 Henry Tang Ih <henrytang2@hotmail.com>
+ *              Copyright 2018 Luo Yufan <njlyf2011@hotmail.com>
+ *              Copyright 2020-2021 Chan Chilung <eason066@gmail.com>
  */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
@@ -31,8 +34,8 @@ CAPTION "ReactOS 安裝程式"
 FONT 9, "新細明體"
 BEGIN
     LTEXT "歡迎使用 ReactOS 安裝程式。", IDC_WELCOMETITLE, 115, 8, 195, 24
-    LTEXT "安裝程式將在電腦上安裝 ReactOS。它需要收集有關您和您的電腦的資訊以正確安裝 ReactOS。", IDC_STATIC, 115, 40, 195, 100
-    LTEXT "按 [下一步] 繼續安裝程式。", IDC_STATIC, 115, 169, 195, 17
+    LTEXT "安裝程式將在電腦上安裝 ReactOS 作業系統。\n它需要收集有關您和您的電腦的資訊以正確安裝 ReactOS。", IDC_STATIC, 115, 40, 195, 100
+    LTEXT "按［下一步］繼續安裝程式。", IDC_STATIC, 115, 169, 195, 17
 END
 
 IDD_ACKPAGE DIALOGEX 0, 0, 317, 145
@@ -44,7 +47,7 @@ BEGIN
     LISTBOX IDC_PROJECTS, 15, 30, 286, 75, LBS_NOSEL | LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | WS_VSCROLL
     LTEXT "ReactOS 基於 GPL 許可證發佈，因此如果您需要二次開發或重新發表 ReactOS 的部分或全部，您必須遵循 GPL 許可。", IDC_STATIC, 15, 110, 227, 19
     PUSHBUTTON "檢視 GPL(&V)...", IDC_VIEWGPL, 251, 110, 50, 19
-    LTEXT "按 [下一步] 繼續安裝程式。", IDC_STATIC, 15, 136, 195, 17
+    LTEXT "按［下一步］繼續安裝程式。", IDC_STATIC, 15, 136, 195, 17
 END
 
 IDD_PRODUCT DIALOGEX 0, 0, 317, 143
@@ -53,11 +56,11 @@ STYLE DS_MODALFRAME | DS_SHELLFONT | WS_POPUPWINDOW | WS_CAPTION | WS_VISIBLE
 FONT 9, "新細明體"
 BEGIN
     ICON "", IDC_PRODUCT_ICON, 5, 5, 20, 20
-    LTEXT "請選擇您要安裝的產品:", IDC_STATIC, 35, 7, 230, 12
-    LTEXT "產品(&O):", IDC_STATIC, 5, 32, 85, 10
+    LTEXT "請選擇您要安裝的產品︰", IDC_STATIC, 35, 7, 230, 12
+    LTEXT "產品(&O)︰", IDC_STATIC, 5, 32, 85, 10
     COMBOBOX IDC_PRODUCT_OPTIONS, 95, 30, 170, 300, CBS_HASSTRINGS | CBS_AUTOHSCROLL | CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     GROUPBOX "產品資訊", IDC_STATIC, 5, 50, 305, 85
-    LTEXT "說明:", IDC_STATIC, 20, 65, 70, 10
+    LTEXT "說明︰", IDC_STATIC, 20, 65, 70, 10
     EDITTEXT IDC_PRODUCT_DESCRIPTION, 95, 65, 205, 60, ES_READONLY | ES_AUTOVSCROLL | ES_MULTILINE | WS_VSCROLL
 END
 
@@ -68,9 +71,9 @@ FONT 9, "新細明體"
 BEGIN
     ICON IDI_ICON2, IDC_STATIC, 21, 7, 20, 20
     LTEXT "輸入您的姓名以及公司或組織的名稱。", IDC_STATIC, 54, 7, 242, 21
-    LTEXT "姓名(&M):", IDC_STATIC, 54, 37, 44, 8
+    LTEXT "姓名(&M)︰", IDC_STATIC, 54, 37, 44, 8
     EDITTEXT IDC_OWNERNAME, 132, 35, 163, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "組織(&O):", IDC_STATIC, 54, 57, 44, 8
+    LTEXT "組織(&O)︰", IDC_STATIC, 54, 57, 44, 8
     EDITTEXT IDC_OWNERORGANIZATION, 132, 55, 163, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL
 END
 
@@ -81,14 +84,14 @@ FONT 9, "新細明體"
 BEGIN
     ICON IDI_ICON1, IDC_STATIC, 21, 7, 20, 20
     LTEXT "請輸入不超過 15 個字元的電腦名稱。每一個在您網路上的電腦都必須有一個獨一無二的名稱。", IDC_STATIC, 54, 7, 250, 24
-    LTEXT "電腦名稱(&C):", IDC_STATIC, 54, 38, 75, 8
+    LTEXT "電腦名稱(&C)︰", IDC_STATIC, 54, 38, 75, 8
     EDITTEXT IDC_COMPUTERNAME, 165, 35, 148, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL | ES_UPPERCASE
     ICON IDI_ICON5, IDC_STATIC, 21, 57, 20, 20
     LTEXT "安裝程式會建立一個稱為 Administrator (系統管理員) 的帳戶。當需要完全控制電腦時，可以使用這個帳戶。.", IDC_STATIC, 54, 57, 250, 25
     LTEXT "請輸入不超過 127 個字元的系統管理員密碼。", IDC_STATIC, 54, 87, 250, 8
-    LTEXT "系統管理員密碼(&A):", IDC_STATIC, 54, 104, 105, 8
+    LTEXT "系統管理員密碼(&A)︰", IDC_STATIC, 54, 104, 105, 8
     EDITTEXT IDC_ADMINPASSWORD1, 165, 101, 148, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
-    LTEXT "確認密碼(&O):", IDC_STATIC, 54, 123, 105, 8
+    LTEXT "確認密碼(&O)︰", IDC_STATIC, 54, 123, 105, 8
     EDITTEXT IDC_ADMINPASSWORD2, 165, 120, 148, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
 END
 
@@ -100,11 +103,11 @@ BEGIN
     ICON IDI_ICON4, IDC_STATIC, 21, 7, 20, 20
     LTEXT "系統區域設定應符合您要使用的應用程式的語言。使用者區域設定可控制數字，貨幣和日期的顯示方式。", IDC_STATIC, 53, 7, 253, 20
     LTEXT "", IDC_LOCALETEXT, 53, 29, 250, 16
-    LTEXT "若要變更系統和使用者的地區設定, 請按 [自訂]。", IDC_STATIC, 53, 60, 196, 8
+    LTEXT "若要變更系統和使用者的地區設定, 請按［自訂］。", IDC_STATIC, 53, 60, 196, 8
     PUSHBUTTON "自訂(&C)...", IDC_CUSTOMLOCALE, 250, 57, 50, 14
     LTEXT "鍵盤配置控制鍵入時出現的字元。", IDC_STATIC, 53, 86, 253, 8
     LTEXT "", IDC_LAYOUTTEXT, 53, 100, 250, 16
-    LTEXT "要查看或變更當前設定，請按 [自訂]。", IDC_STATIC, 53, 126, 184, 8
+    LTEXT "要查看或變更目前設定，請按［自訂］。", IDC_STATIC, 53, 126, 184, 8
     PUSHBUTTON "自訂(&U)...", IDC_CUSTOMLAYOUT, 250, 122, 50, 14
 END
 
@@ -114,10 +117,10 @@ CAPTION "ReactOS 安裝程式"
 FONT 9, "新細明體"
 BEGIN
     ICON IDI_ICON3, IDC_STATIC, 21, 10, 20, 20
-    LTEXT "日期和時間:", IDC_STATIC, 53, 7, 253, 8
+    LTEXT "日期和時間︰", IDC_STATIC, 53, 7, 253, 8
     CONTROL "", IDC_DATEPICKER, "SysDateTimePick32", DTS_LONGDATEFORMAT | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 53, 17, 137, 14
     CONTROL "", IDC_TIMEPICKER, "SysDateTimePick32", DTS_TIMEFORMAT | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 200, 17, 54, 14
-    LTEXT "時區:", IDC_STATIC, 53, 42, 253, 8
+    LTEXT "時區︰", IDC_STATIC, 53, 42, 253, 8
     COMBOBOX IDC_TIMEZONELIST, 53, 52, 201, 93, CBS_DROPDOWNLIST | CBS_NOINTEGRALHEIGHT | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
     AUTOCHECKBOX "因應夏令時間自動調整時間(&D)", IDC_AUTODAYLIGHT, 53, 124, 201, 10
 END
@@ -146,9 +149,9 @@ CAPTION "正在完成 ReactOS 安裝程式"
 FONT 9, "新細明體"
 BEGIN
     LTEXT "正在完成 ReactOS 安裝程式。", IDC_FINISHTITLE, 115, 8, 195, 24
-    LTEXT "ReactOS 安裝程式已順利完成。\n\n按下 [完成] 後，您的電腦將會重新啟動。", IDC_STATIC, 115, 40, 195, 100
+    LTEXT "ReactOS 安裝程式已順利完成。\n\n按下［完成］後，您的電腦將會重新啟動。", IDC_STATIC, 115, 40, 195, 100
     CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 115, 138, 188, 12
-    LTEXT "如果光碟機裡有光碟，請將其取出。然後按 [完成]，以重新啟動您的電腦。", IDC_STATIC, 115, 169, 195, 17
+    LTEXT "如果光碟機裡還有光碟，請將其取出。然後按［完成］，重新啟動您的電腦。", IDC_STATIC, 115, 169, 195, 17
 END
 
 IDD_GPL DIALOGEX 0, 0, 333, 230
@@ -176,12 +179,12 @@ CAPTION "進階設定"
 FONT 9, "新細明體"
 BEGIN
     GROUPBOX "", IDC_PS2STATIC, 5, 20, 242, 110
-    RTEXT "採樣速率(&S):", -1, 27, 35, 90, 8
+    RTEXT "採樣速率(&S)︰", -1, 27, 35, 90, 8
     LTEXT "報告速率", -1, 169, 35, 76, 8
     COMBOBOX IDC_PS2MOUSESAMPLERATE, 124, 33, 42, 41, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
-    RTEXT "滾輪偵測(&W):", -1, 27, 55, 90, 8
+    RTEXT "滾輪偵測(&W)︰", -1, 27, 55, 90, 8
     COMBOBOX IDC_PS2MOUSEWHEEL, 124, 53, 95, 46, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
-    RTEXT "輸入緩衝區長度(&I):", -1, 27, 75, 90, 8
+    RTEXT "輸入緩衝區長度(&I)︰", -1, 27, 75, 90, 8
     LTEXT "封包", -1, 169, 75, 26, 8
     EDITTEXT IDC_PS2MOUSEINPUTLEN, 124, 72, 40, 14, ES_LEFT | ES_AUTOHSCROLL | ES_READONLY | ES_NUMBER | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_BORDER
     CONTROL "", IDC_PS2MOUSEINPUTUPDN, "msctls_updown32", UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS | WS_CHILD | WS_VISIBLE, 168, 70, 10, 14
@@ -192,9 +195,9 @@ END
 STRINGTABLE
 BEGIN
     IDS_ACKTITLE "鳴謝"
-    IDS_ACKSUBTITLE "ReactOS 所依賴的開源項目及其許可證信息"
+    IDS_ACKSUBTITLE "ReactOS 所依賴的開源項目及其許可證資訊"
     IDS_OWNERTITLE "自訂您的軟體"
-    IDS_OWNERSUBTITLE "安裝程式將使用您提供的個人信息，自訂您的 ReactOS 軟體。"
+    IDS_OWNERSUBTITLE "安裝程式將使用您提供的個人資訊，自訂您的 ReactOS 軟體。"
     IDS_COMPUTERTITLE "電腦名稱和系統管理員密碼"
     IDS_COMPUTERSUBTITLE "您必須提供電腦名稱和管理員密碼。"
     IDS_LOCALETITLE "地區設定"
@@ -213,10 +216,10 @@ BEGIN
     IDS_REACTOS_SETUP "ReactOS 安裝程式"
     IDS_UNKNOWN_ERROR "未知的錯誤"
     IDS_REGISTERING_COMPONENTS "正在登錄元件..."
-    IDS_LOADLIBRARY_FAILED "LoadLibrary 失敗: "
-    IDS_GETPROCADDR_FAILED "GetProcAddr 失敗: "
-    IDS_REGSVR_FAILED "DllRegisterServer 失敗: "
-    IDS_DLLINSTALL_FAILED "DllInstall 失敗: "
+    IDS_LOADLIBRARY_FAILED "LoadLibrary 失敗︰"
+    IDS_GETPROCADDR_FAILED "GetProcAddr 失敗︰"
+    IDS_REGSVR_FAILED "DllRegisterServer 失敗︰"
+    IDS_DLLINSTALL_FAILED "DllInstall 失敗︰"
     IDS_TIMEOUT "註冊逾時"
     IDS_REASON_UNKNOWN ""
     /*
@@ -235,7 +238,7 @@ BEGIN
     IDS_WZD_SETCOMPUTERNAME "安裝程式無法設定電腦名稱。"
     IDS_WZD_COMPUTERNAME "安裝程式無法繼續，直到您輸入電腦名稱。"
     IDS_WZD_PASSWORDEMPTY "您必須輸入密碼！"
-    IDS_WZD_PASSWORDMATCH "您輸入的密碼不匹配。 請再次輸入所需的密碼。"
+    IDS_WZD_PASSWORDMATCH "您輸入的密碼不相符。 請再次輸入所需的密碼。"
     IDS_WZD_PASSWORDCHAR "您輸入的密碼包含無效字元。請輸入符合要求的密碼。"
     IDS_WZD_LOCALTIME "安裝程式無法設定本地時間。"
 END
@@ -274,10 +277,10 @@ END
 STRINGTABLE
 BEGIN
     IDS_PRODUCTTITLE "產品選擇"
-    IDS_PRODUCTSUBTITLE "You can choose a product option that affects the behavior of the system."
+    IDS_PRODUCTSUBTITLE "您可以選擇要安裝的產品。這會對系統的一些特性造成影響。"
     IDS_PRODUCTSERVERNAME "ReactOS Server"
     IDS_PRODUCTWORKSTATIONNAME "ReactOS Workstation"
-    IDS_PRODUCTSERVERINFO "The system will be recognized as a server. Private folders ""My Pictures"", ""My Videos"" and ""My Music"" are independent from ""My Documents""."
-    IDS_PRODUCTWORKSTATIONINFO "The system will be recognized as a workstation. Private folders ""My Pictures"", ""My Videos"" and ""My Music"" are in ""My Documents""."
-    IDS_DEFAULT "(預設)"
+    IDS_PRODUCTSERVERINFO "系統將識別為一個伺服器。私人資料夾「我的圖片」、「我的影片」和「我的音樂」會獨立於「我的文件」。"
+    IDS_PRODUCTWORKSTATIONINFO "系統將識別為一個工作站。私人資料夾「我的圖片」、「我的影片」和「我的音樂」會在「我的文件」資料夾內。"
+    IDS_DEFAULT "（預設）"
 END

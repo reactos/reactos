@@ -1,0 +1,28 @@
+/*
+ * PROJECT:     ReactOS Network Places Wizard
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     Chinese (Traditional) resource file
+ * TRANSLATORS: Copyright 2021 Chan Chilung <eason066@gmail.com>
+ */
+
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
+
+IDD_DISCONNECTDRIVES DIALOGEX 0, 0, 300, 200
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "中斷網路磁碟機連線"
+FONT 9, "新細明體"
+BEGIN
+    LTEXT "選擇您要中斷連線的網路磁碟機，然後點擊［確定］。", -1, 7, 7, 286, 8
+    LTEXT "網路磁碟機(&N)：", -1, 7, 23, 286, 8
+    CONTROL "", IDC_CONNECTEDDRIVELIST, "SysListView32", LVS_REPORT | LVS_SHOWSELALWAYS | LVS_SORTASCENDING | LVS_SINGLESEL | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP, 7, 31, 286, 140
+    PUSHBUTTON "確定", ID_OK, 189, 179, 50, 14
+    PUSHBUTTON "取消", IDCANCEL, 243, 179, 50, 14
+END
+
+STRINGTABLE
+BEGIN
+    IDS_DIALOG_CAPTION "中斷網路磁碟機連線"
+    IDS_DRIVE_LETTER "磁碟機代號"
+    IDS_NETWORK_PATH "網路路徑"
+    IDS_NO_DRIVES "您沒有可以中斷連線的網路磁碟機。"
+END

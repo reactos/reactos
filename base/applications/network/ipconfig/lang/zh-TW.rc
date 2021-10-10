@@ -7,8 +7,8 @@ BEGIN
     IDS_BCAST "廣播"
     IDS_P2P "點對點"
     IDS_MIXED "混合"
-    IDS_HYBRID "混雜"
-    IDS_UNKNOWN "未知"
+    IDS_HYBRID "混合"
+    IDS_UNKNOWN "不明"
 END
 
 STRINGTABLE
@@ -30,19 +30,19 @@ BEGIN
         ipconfig [/? | /all | /renew [配接器] | /release [配接器] |\n\
                   /flushdns | /displaydns | /registerdns |\n\
                   /showclassid 配接器 |\n\
-                  /setclassid 配接器 [类ID] ]\n\
+                  /setclassid 配接器 [類ID] ]\n\
 \n\
     其中\n\
         配接器          連接名稱\n\
-                       (萬用字元 * 和 ？ 是被允許的，參見示例)\n\
+                       (可以使用萬用字元 * 和 ? ，參見示例)\n\
 \n\
         選項：\n\
            /?           顯示這個説明資訊。\n\
-           /all         顯示完全的配置資訊。\n\
+           /all         顯示完整的配置資訊。\n\
            /release     釋放指定配接器的 IP 位址。\n\
            /renew       更新指定配接器的 IP 位址。\n\
-           /flushdns    清除 DNS 解析程式緩存。\n\
-           /registerdns 刷新所有的 DHCP 租約，重新註冊的 DNS 名稱。\n\
+           /flushdns    清除 DNS 解析程式快取。\n\
+           /registerdns 重新整理所有的 DHCP 租約，並重新註冊 DNS 名稱。\n\
            /displaydns  顯示 DNS 緩存中的內容。\n\
            /showclassid 顯示所有被指定配接器允許的 DHCP 類 ID。\n\
            /setclassid  修改 DHCP 類 ID。\n\
@@ -61,7 +61,7 @@ BEGIN
         > ipconfig /renew            ... 更新所有配接器\n\
         > ipconfig /renew EL*        ... 更新所有名稱以 EL 開頭\n\
                                          的連接\n\
-        > ipconfig /release *Con*    ... 釋放所有匹配的連接，\n\
+        > ipconfig /release *Con*    ... 釋放所有相符的連接，\n\
                                          如 ""Local Area Connection 1"" 或\n\
-                                            ""Local Area Connection 2""\n"
+                                             ""Local Area Connection 2""\n"
 END

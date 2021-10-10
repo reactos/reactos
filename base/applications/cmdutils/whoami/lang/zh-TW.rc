@@ -1,6 +1,9 @@
 /*
- * Traditional Chinese translation by Henry Tang Ih 2016 (henrytang2@hotmail.com)
- * modified by Chan Chilung 2021 (eason066@gmail.com)
+ * PROJECT:     ReactOS Whoami
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Chinese (Traditional) resource file
+ * TRANSLATORS: Copyright 2016 Henry Tang Ih <henrytang2@hotmail.com>
+ *              Copyright 2021 Chan Chilung <eason066@gmail.com>
  */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
@@ -34,8 +37,8 @@ BEGIN
     IDS_UNKNOWN_DESCRIPTION "???"
     IDS_STATE_ENABLED "啟用"
     IDS_STATE_DISABLED "停用"
-    IDS_ERROR_UPN "錯誤: 無法獲取使用者主體名稱 (UPN)，\n因為當前登入的使用者不是網域使用者。\n"
-    IDS_ERROR_FQDN "錯誤: 無法獲取完全限定可分辨名稱 (FQDN)，\n因為當前登入的使用者不是網域使用者。\n"
+    IDS_ERROR_UPN "錯誤: 無法獲取使用者主體名稱 (UPN)，\n因為目前登入的使用者不是網域使用者。\n"
+    IDS_ERROR_FQDN "錯誤: 無法獲取完全限定可分辨名稱 (FQDN)，\n因為目前登入的使用者不是網域使用者。\n"
     IDS_ERROR_VALUEXPECTED "錯誤: 無效語法。 值的預期 '/fo'。\n輸入 ""WHOAMI /?"" 以了解用法。\n"
     IDS_ERROR_VALUENOTALLOWED "錯誤: 無效語法。 '%s' 值不允許為 '/fo' 選項。\n輸入 ""WHOAMI /?"" 以了解用法。\n"
     IDS_ERROR_1TIMES "錯誤: 無效語法。 選項不允許超過 '1' 的次數。\n輸入 ""WHOAMI /?"" 以了解用法。\n"
@@ -44,7 +47,7 @@ BEGIN
     IDS_ERROR_NH_LIST "錯誤: /NH 開關不能用的列表格式。\n輸入 ""WHOAMI /?"" 以了解用法。\n"
     IDS_HELP "描述:\n\
   顯示本地登入的使用者的使用者、群組和許可權資訊。\n\
-  如果不提供任何參數，則顯示當前的網域和使用者名稱。\n\
+  如果不提供任何參數，則顯示目前的網域和使用者名稱。\n\
 \n\
   可用的輸出格式為 '/fo' 選項是 'csv', 'list' 和 'table'.\n\
   使用 '/nh' 要隱藏頁首。 預設情況下表中顯示資料。\n\
@@ -54,7 +57,7 @@ BEGIN
   whoami {[/user] [/groups] [/priv]} [/fo <格式>] [/nh]\n\
   whoami /all [/fo <格式>] [/nh]\n\
 \n\
-例子:\n\
+示例:\n\
   whoami /groups /priv /nh /fo csv\n\
   whoami /logonid\n\
   whoami\n"

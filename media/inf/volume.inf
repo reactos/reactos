@@ -43,3 +43,8 @@ ReactOS = "ReactOS Team"
 VolumeClassName = "Storage volumes"
 GenericMfg = "(Generic storage volumes)"
 STORAGE\Volume.DeviceDesc = "Storage volume"
+
+[Strings.0404]
+VolumeClassName = "儲存磁碟區"
+GenericMfg = "(標準儲存磁碟區)"
+STORAGE\Volume.DeviceDesc = "儲存磁碟區"

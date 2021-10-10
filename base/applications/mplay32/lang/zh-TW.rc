@@ -19,7 +19,7 @@ BEGIN
     END
     POPUP "播放(&P)"
     BEGIN
-        MENUITEM "播放/暫停(&P)\tCtrl+P", IDC_PLAY
+        MENUITEM "播放／暫停(&P)\tCtrl+P", IDC_PLAY
         MENUITEM "停止(&O)\tCtrl+S", IDC_STOP
         MENUITEM SEPARATOR
         MENUITEM "重複(&T)\tCtrl+T", IDM_REPEAT
@@ -31,7 +31,7 @@ BEGIN
     POPUP "設備(&D)"
     BEGIN
         MENUITEM SEPARATOR
-        MENUITEM "屬性(&P)", IDM_DEVPROPS
+        MENUITEM "內容(&P)", IDM_DEVPROPS
         MENUITEM SEPARATOR
         MENUITEM "音量控制(&V)", IDM_VOLUMECTL
     END
@@ -59,12 +59,12 @@ BEGIN
     IDS_MODE_PAUSE "已暫停"
     IDS_MODE_RECORD "錄音中"
     IDS_MODE_SEEK "尋找中"
-    IDS_MODE_NOT_READY "未準備好"
+    IDS_MODE_NOT_READY "未就緒"
     IDS_ALL_TYPES_FILTER "所有支援的格式"
     IDS_TOOLTIP_PLAY "播放"
     IDS_TOOLTIP_STOP "停止"
     IDS_TOOLTIP_EJECT "卸載"
-    IDS_TOOLTIP_BACKWARD "迴轉"
+    IDS_TOOLTIP_BACKWARD "倒轉"
     IDS_TOOLTIP_SEEKBACK "後退"
     IDS_TOOLTIP_SEEKFORW "前進"
     IDS_TOOLTIP_FORWARD "快轉"
