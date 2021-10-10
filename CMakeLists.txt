@@ -144,6 +144,10 @@ if(NOT CMAKE_CROSSCOMPILING)
             # FIXME: Inspect
             add_definitions(/Dinline=__inline)
         endif()
+    else()
+        add_compile_options(-Wno-incompatible-pointer-types-discards-qualifiers
+            -Wno-typedef-redefinition -Wno-pragma-pack -Wno-tautological-constant-out-of-range-compare
+            -Wno-format -Wno-shift-negative-value)
     endif()
     add_subdirectory(sdk/include/host)
 
