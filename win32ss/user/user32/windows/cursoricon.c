@@ -1,4 +1,4 @@
-/*
+﻿/*
  * PROJECT:         ReactOS user32.dll
  * COPYRIGHT:       GPL - See COPYING in the top level directory
  * FILE:            win32ss/user/user32/windows/cursoricon.c
@@ -128,7 +128,9 @@ static BOOL is_dib_monochrome( const BITMAPINFO* info )
             /* Check if the second color is white */
             if ((rgb[1].rgbtRed == 0xff) && (rgb[1].rgbtGreen == 0xff) &&
                 (rgb[1].rgbtBlue == 0xff))
+            {
                 return TRUE;
+            }
         }
 
         /* Check if the first color is white */
@@ -138,8 +140,11 @@ static BOOL is_dib_monochrome( const BITMAPINFO* info )
             /* Check if the second color is black */
             if ((rgb[1].rgbtRed == 0) && (rgb[1].rgbtGreen == 0) &&
             (rgb[1].rgbtBlue == 0))
+            {
                 return TRUE;
+            }
         }
+
         return FALSE;
     }
     else  /* assume BITMAPINFOHEADER */
@@ -155,7 +160,9 @@ static BOOL is_dib_monochrome( const BITMAPINFO* info )
             /* Check if the second color is white */
             if ((rgb[1].rgbRed == 0xff) && (rgb[1].rgbGreen == 0xff) &&
                 (rgb[1].rgbBlue == 0xff) && (rgb[1].rgbReserved == 0))
+            {
                 return TRUE;
+            }
         }
 
         /* Check if the first color is white */
@@ -165,8 +172,11 @@ static BOOL is_dib_monochrome( const BITMAPINFO* info )
             /* Check if the second color is black */
             if ((rgb[1].rgbRed == 0) && (rgb[1].rgbGreen == 0) &&
                 (rgb[1].rgbBlue == 0) && (rgb[1].rgbReserved == 0))
+            {
                 return TRUE;
+            }
         }
+
         return FALSE;
     }
 }
