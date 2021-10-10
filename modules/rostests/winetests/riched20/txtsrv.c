@@ -130,6 +130,7 @@ static ULONG WINAPI ITextHostImpl_Release(ITextHost *iface)
 }
 
 #ifdef __REACTOS__
+#undef __thiscall
 #define __thiscall WINAPI
 #endif /* __REACTOS__ */
 
