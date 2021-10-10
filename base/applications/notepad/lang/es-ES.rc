@@ -8,7 +8,7 @@ BEGIN
     "^C", CMD_COPY
     "^B", CMD_SEARCH
     "^T", CMD_GOTO
-    "^R", CMD_REPLACE
+    "R", CMD_REPLACE, VIRTKEY, CONTROL
     "^N", CMD_NEW
     "N", CMD_NEW_WINDOW, VIRTKEY,CONTROL , SHIFT
     "^A", CMD_OPEN
