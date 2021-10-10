@@ -1307,14 +1307,13 @@ BOOL SHELL_FS_HideExtension(LPCWSTR szPath)
             error = RegQueryValueW(HKEY_CLASSES_ROOT, DotExt, szClass, &cbClass);
             if (!error)
             {
-                error = RegOpenKeyExW(HKEY_CLASSES_ROOT, szClass, 0, KEY_READ, &hKey);
+                error = RegOpenKeyW(HKEY_CLASSES_ROOT, szClass, &hKey);
                 if (!error)
                 {
                     error = RegQueryValueExW(hKey, NeverShowExtW, NULL, NULL, NULL, NULL);
                     if (!error)
-                    {
                         doHide = TRUE;
-                    }
+
                     RegCloseKey(hKey);
                 }
             }
