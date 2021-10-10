@@ -1,4 +1,4 @@
-﻿/*
+/*
  * PROJECT:         ReactOS user32.dll
  * COPYRIGHT:       GPL - See COPYING in the top level directory
  * FILE:            win32ss/user/user32/windows/cursoricon.c
@@ -139,7 +139,7 @@ static BOOL is_dib_monochrome( const BITMAPINFO* info )
         {
             /* Check if the second color is black */
             if ((rgb[1].rgbtRed == 0) && (rgb[1].rgbtGreen == 0) &&
-            (rgb[1].rgbtBlue == 0))
+                (rgb[1].rgbtBlue == 0))
             {
                 return TRUE;
             }
