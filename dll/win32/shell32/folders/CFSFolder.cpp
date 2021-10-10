@@ -1282,11 +1282,8 @@ static const WCHAR NeverShowExtW[] = L"NeverShowExt";
 BOOL SHELL_FS_HideExtension(LPCWSTR szPath)
 {
     HKEY hKey;
-    WCHAR szClass[MAX_PATH];
     DWORD dwData, dwDataSize = sizeof(DWORD);
-    LONG cbClass;
     BOOL doHide = FALSE; /* The default value is FALSE (win98 at least) */
-    LPCWSTR DotExt;
     LONG error;
 
     error = RegCreateKeyExW(HKEY_CURRENT_USER, AdvancedW, 0, NULL, 0,
@@ -1300,10 +1297,11 @@ BOOL SHELL_FS_HideExtension(LPCWSTR szPath)
 
     if (!doHide)
     {
-        DotExt = PathFindExtensionW(szPath);
+        LPCWSTR DotExt = PathFindExtensionW(szPath);
         if (*DotExt != 0)
         {
-            cbClass = sizeof(szClass);
+            WCHAR szClass[MAX_PATH];
+            LONG cbClass = sizeof(szClass);
             error = RegQueryValueW(HKEY_CLASSES_ROOT, DotExt, szClass, &cbClass);
             if (!error)
             {
