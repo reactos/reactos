@@ -1284,14 +1284,14 @@ BOOL SHELL_FS_HideExtension(LPCWSTR szPath)
     HKEY hKey;
     DWORD dwData, dwDataSize = sizeof(DWORD);
     BOOL doHide = FALSE; /* The default value is FALSE (win98 at least) */
-    LONG error;
+    LONG lError;
 
-    error = RegCreateKeyExW(HKEY_CURRENT_USER, AdvancedW, 0, NULL, 0, KEY_ALL_ACCESS, NULL,
-                            &hKey, NULL);
-    if (!error)
+    lError = RegCreateKeyExW(HKEY_CURRENT_USER, AdvancedW, 0, NULL, 0, KEY_ALL_ACCESS, NULL,
+                             &hKey, NULL);
+    if (lError == ERROR_SUCCESS)
     {
-        error = RegQueryValueExW(hKey, HideFileExtW, NULL, NULL, (LPBYTE)&dwData, &dwDataSize);
-        if (!error)
+        lError = RegQueryValueExW(hKey, HideFileExtW, NULL, NULL, (LPBYTE)&dwData, &dwDataSize);
+        if (lError == ERROR_SUCCESS)
             doHide = dwData;
         RegCloseKey(hKey);
     }
@@ -1303,14 +1303,14 @@ BOOL SHELL_FS_HideExtension(LPCWSTR szPath)
         {
             WCHAR classname[MAX_PATH];
             LONG classlen = sizeof(classname);
-            error = RegQueryValueW(HKEY_CLASSES_ROOT, DotExt, classname, &classlen);
-            if (!error)
+            lError = RegQueryValueW(HKEY_CLASSES_ROOT, DotExt, classname, &classlen);
+            if (lError == ERROR_SUCCESS)
             {
-                error = RegOpenKeyW(HKEY_CLASSES_ROOT, classname, &hKey);
-                if (!error)
+                lError = RegOpenKeyW(HKEY_CLASSES_ROOT, classname, &hKey);
+                if (lError == ERROR_SUCCESS)
                 {
-                    error = RegQueryValueExW(hKey, NeverShowExtW, NULL, NULL, NULL, NULL);
-                    if (!error)
+                    lError = RegQueryValueExW(hKey, NeverShowExtW, NULL, NULL, NULL, NULL);
+                    if (lError == ERROR_SUCCESS)
                         doHide = TRUE;
 
                     RegCloseKey(hKey);
