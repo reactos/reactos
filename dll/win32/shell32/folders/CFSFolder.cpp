@@ -1300,12 +1300,12 @@ BOOL SHELL_FS_HideExtension(LPCWSTR szPath)
         LPCWSTR DotExt = PathFindExtensionW(szPath);
         if (*DotExt != 0)
         {
-            WCHAR szClass[MAX_PATH];
-            LONG cbClass = sizeof(szClass);
-            error = RegQueryValueW(HKEY_CLASSES_ROOT, DotExt, szClass, &cbClass);
+            WCHAR classname[MAX_PATH];
+            LONG classlen = sizeof(classname);
+            error = RegQueryValueW(HKEY_CLASSES_ROOT, DotExt, classname, &classlen);
             if (!error)
             {
-                error = RegOpenKeyW(HKEY_CLASSES_ROOT, szClass, &hKey);
+                error = RegOpenKeyW(HKEY_CLASSES_ROOT, classname, &hKey);
                 if (!error)
                 {
                     error = RegQueryValueExW(hKey, NeverShowExtW, NULL, NULL, NULL, NULL);
