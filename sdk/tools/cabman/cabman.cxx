@@ -689,7 +689,7 @@ int main(int argc, char * argv[])
     CCABManager CABMgr;
 
     if (!CABMgr.ParseCmdline(argc, argv))
-        return false;
+        return 1;
 
     return CABMgr.Run() ? 0 : 1;
 }
