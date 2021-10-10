@@ -476,50 +476,6 @@ BOOL WINAPI ImmActivateLayout(HKL hKL)
     return TRUE;
 }
 
-typedef struct _tagImmHkl
-{
-    struct list entry;
-    HKL         hkl;
-    HMODULE     hIME;
-    IMEINFO     imeInfo;
-    WCHAR       imeClassName[17]; /* 16 character max */
-    ULONG       uSelected;
-    HWND        UIWnd;
-
-    /* Function Pointers */
-    BOOL (WINAPI *pImeInquire)(IMEINFO *, WCHAR *, const WCHAR *);
-    BOOL (WINAPI *pImeConfigure)(HKL, HWND, DWORD, void *);
-    BOOL (WINAPI *pImeDestroy)(UINT);
-    LRESULT (WINAPI *pImeEscape)(HIMC, UINT, void *);
-    BOOL (WINAPI *pImeSelect)(HIMC, BOOL);
-    BOOL (WINAPI *pImeSetActiveContext)(HIMC, BOOL);
-    UINT (WINAPI *pImeToAsciiEx)(UINT, UINT, const BYTE *, DWORD *, UINT, HIMC);
-    BOOL (WINAPI *pNotifyIME)(HIMC, DWORD, DWORD, DWORD);
-    BOOL (WINAPI *pImeRegisterWord)(const WCHAR *, DWORD, const WCHAR *);
-    BOOL (WINAPI *pImeUnregisterWord)(const WCHAR *, DWORD, const WCHAR *);
-    UINT (WINAPI *pImeEnumRegisterWord)(REGISTERWORDENUMPROCW, const WCHAR *, DWORD, const WCHAR *, void *);
-    BOOL (WINAPI *pImeSetCompositionString)(HIMC, DWORD, const void *, DWORD, const void *, DWORD);
-    DWORD (WINAPI *pImeConversionList)(HIMC, const WCHAR *, CANDIDATELIST *, DWORD, UINT);
-    BOOL (WINAPI *pImeProcessKey)(HIMC, UINT, LPARAM, const BYTE *);
-    UINT (WINAPI *pImeGetRegisterWordStyle)(UINT, STYLEBUFW *);
-    DWORD (WINAPI *pImeGetImeMenuItems)(HIMC, DWORD, DWORD, IMEMENUITEMINFOW *, IMEMENUITEMINFOW *, DWORD);
-} ImmHkl;
-
-typedef struct tagInputContextData
-{
-    DWORD           dwLock;
-    INPUTCONTEXT    IMC;
-    DWORD           threadID;
-
-    ImmHkl          *immKbd;
-    UINT            lastVK;
-    BOOL            threadDefault;
-    DWORD           magic;
-} InputContextData;
-
-#define WINE_IMC_VALID_MAGIC 0x56434D49
-
-static const WCHAR szwWineIMCProperty[] = {'W','i','n','e','I','m','m','H','I','M','C','P','r','o','p','e','r','t','y',0};
 static const WCHAR szImeFileW[] = {'I','m','e',' ','F','i','l','e',0};
 static const WCHAR szLayoutTextW[] = {'L','a','y','o','u','t',' ','T','e','x','t',0};
 static const WCHAR szImeRegFmt[] = {'S','y','s','t','e','m','\\','C','u','r','r','e','n','t','C','o','n','t','r','o','l','S','e','t','\\','C','o','n','t','r','o','l','\\','K','e','y','b','o','a','r','d',' ','L','a','y','o','u','t','s','\\','%','0','8','l','x',0};
