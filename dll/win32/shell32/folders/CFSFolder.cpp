@@ -1279,34 +1279,53 @@ static const WCHAR NeverShowExtW[] = L"NeverShowExt";
  *  TRUE, if the filename's extension should be hidden
  *  FALSE, otherwise.
  */
-BOOL SHELL_FS_HideExtension(LPWSTR szPath)
+BOOL SHELL_FS_HideExtension(LPCWSTR szPath)
 {
     HKEY hKey;
-    DWORD dwData;
-    DWORD dwDataSize = sizeof (DWORD);
+    WCHAR szClass[MAX_PATH];
+    DWORD dwData, dwDataSize = sizeof(DWORD), cbClass;
     BOOL doHide = FALSE; /* The default value is FALSE (win98 at least) */
+    LPCWSTR DotExt;
+    LONG error;
 
-    if (!RegCreateKeyExW(HKEY_CURRENT_USER, AdvancedW, 0, 0, 0, KEY_ALL_ACCESS, 0, &hKey, 0)) {
-        if (!RegQueryValueExW(hKey, HideFileExtW, 0, 0, (LPBYTE) &dwData, &dwDataSize))
+    error = RegCreateKeyExW(HKEY_CURRENT_USER, AdvancedW, 0, NULL, 0,
+                            KEY_ALL_ACCESS, NULL, &hKey, NULL);
+    if (!error)
+    {
+        if (!RegQueryValueExW(hKey, HideFileExtW, NULL, NULL, (LPBYTE)&dwData, &dwDataSize))
             doHide = dwData;
-        RegCloseKey (hKey);
+        RegCloseKey(hKey);
     }
 
-    if (!doHide) {
-        LPWSTR ext = PathFindExtensionW(szPath);
+    if (!doHide)
+    {
+        DotExt = PathFindExtensionW(szPath);
+        if (*DotExt != 0)
+        {
+            error = RegOpenKeyExW(HKEY_CLASSES_ROOT, DotExt, 0, KEY_READ, &hKey);
+            if (!error)
+            {
+                cbClass = sizeof(szClass);
+                error = RegQueryValueExW(hKey, NULL, NULL, NULL, (LPBYTE)szClass, &cbClass);
+                RegCloseKey(hKey);
 
-        if (*ext != '\0') {
-            WCHAR classname[MAX_PATH];
-            LONG classlen = sizeof(classname);
-
-            if (!RegQueryValueW(HKEY_CLASSES_ROOT, ext, classname, &classlen))
-                if (!RegOpenKeyW(HKEY_CLASSES_ROOT, classname, &hKey)) {
-                    if (!RegQueryValueExW(hKey, NeverShowExtW, 0, NULL, NULL, NULL))
-                        doHide = TRUE;
-                    RegCloseKey(hKey);
+                if (!error)
+                {
+                    error = RegOpenKeyExW(HKEY_CLASSES_ROOT, szClass, 0, KEY_READ, &hKey);
+                    if (!error)
+                    {
+                        error = RegQueryValueExW(hKey, NeverShowExtW, NULL, NULL, NULL, NULL);
+                        if (!error)
+                        {
+                            doHide = TRUE;
+                        }
+                        RegCloseKey(hKey);
+                    }
                 }
+            }
         }
     }
+
     return doHide;
 }
 
