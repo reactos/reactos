@@ -541,7 +541,7 @@ int main(int argc, char* argv[])
     output.write(reinterpret_cast<char*>(wc_table), 65536 * FileHeader.MaximumCharacterSize);
 
     output.close();
-    delete wc_table;
+    delete[] wc_table;
 
     return 0;
 }
