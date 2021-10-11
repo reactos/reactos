@@ -131,6 +131,10 @@ static BOOL is_dib_monochrome( const BITMAPINFO* info )
             {
                 return TRUE;
             }
+            else
+            {
+                return FALSE;
+            }
         }
 
         /* Check if the first color is white */
@@ -162,6 +166,10 @@ static BOOL is_dib_monochrome( const BITMAPINFO* info )
                 (rgb[1].rgbBlue == 0xff) && (rgb[1].rgbReserved == 0))
             {
                 return TRUE;
+            }
+            else
+            {
+                return FALSE;
             }
         }
 
