@@ -79,11 +79,11 @@ InputList_SetFontSubstitutes(LCID dwLocaleId)
             {
                 case SUBLANG_CHINESE_SIMPLIFIED:
                 case SUBLANG_CHINESE_SINGAPORE:
-                case SUBLANG_CHINESE_MACAU:
                     pSubstitutes = ChineseSimplifiedFonts;
                     break;
                 case SUBLANG_CHINESE_TRADITIONAL:
                 case SUBLANG_CHINESE_HONGKONG:
+                case SUBLANG_CHINESE_MACAU:
                     pSubstitutes = ChineseTraditionalFonts;
                     break;
                 default:
