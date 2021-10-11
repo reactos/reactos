@@ -2093,14 +2093,23 @@ LRESULT CDefView::OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
                 HWND hEdit = reinterpret_cast<HWND>(m_ListView.SendMessage(LVM_GETEDITCONTROL));
                 SHLimitInputEdit(hEdit, m_pSFParent);
 
-                LPWSTR pszText = lpdi->item.pszText;
-                if (!(dwAttr & (SFGAO_LINK | SFGAO_FOLDER)) && (dwAttr & SFGAO_FILESYSTEM) &&
-                    (lpdi->item.mask & LVIF_TEXT) &&
-                    !SelectExtOnRename() && !SHELL_FS_HideExtension(pszText))
+                /* smartass-renaming: See CORE-15242 */
+                if (!(dwAttr & SFGAO_FOLDER) && (dwAttr & SFGAO_FILESYSTEM) &&
+                    (lpdi->item.mask & LVIF_TEXT) && !SelectExtOnRename())
                 {
-                    LPWSTR pchDotExt = PathFindExtensionW(pszText);
-                    ::PostMessageW(hEdit, EM_SETSEL, 0, pchDotExt - pszText);
-                    ::PostMessageW(hEdit, EM_SCROLLCARET, 0, 0);
+                    WCHAR szFullPath[MAX_PATH];
+                    PIDLIST_ABSOLUTE pidlFull = ILCombine(m_pidlParent, pidl);
+                    SHGetPathFromIDListW(pidlFull, szFullPath);
+
+                    if (!SHELL_FS_HideExtension(szFullPath))
+                    {
+                        LPWSTR pszText = lpdi->item.pszText;
+                        LPWSTR pchDotExt = PathFindExtensionW(pszText);
+                        ::PostMessageW(hEdit, EM_SETSEL, 0, pchDotExt - pszText);
+                        ::PostMessageW(hEdit, EM_SCROLLCARET, 0, 0);
+                    }
+
+                    ILFree(pidlFull);
                 }
 
                 m_isEditing = TRUE;
