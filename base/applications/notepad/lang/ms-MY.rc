@@ -26,7 +26,7 @@ BEGIN
     POPUP "&Fail"
     BEGIN
         MENUITEM "Baru(&N)\tCtrl+N", CMD_NEW
-        MENUITEM "&New Window\tCtrl+Shift+N", CMD_NEW_WINDOW
+        MENUITEM "New &Window\tCtrl+Shift+N", CMD_NEW_WINDOW
         MENUITEM "Buka(&O)...\tCtrl+O", CMD_OPEN
         MENUITEM "&Simpan\tCtrl+S", CMD_SAVE
         MENUITEM "Simp&an sebagai...", CMD_SAVE_AS

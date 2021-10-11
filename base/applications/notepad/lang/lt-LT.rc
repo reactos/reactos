@@ -24,7 +24,7 @@ BEGIN
     POPUP "&Byla"
     BEGIN
         MENUITEM "&Nauja\tCtrl+N", CMD_NEW
-        MENUITEM "&New Window\tCtrl+Shift+N", CMD_NEW_WINDOW
+        MENUITEM "New &Window\tCtrl+Shift+N", CMD_NEW_WINDOW
         MENUITEM "&Atverti...\tCtrl+O", CMD_OPEN
         MENUITEM "Į&rašyti\tCtrl+S", CMD_SAVE
         MENUITEM "Įrašyti &kaip...", CMD_SAVE_AS

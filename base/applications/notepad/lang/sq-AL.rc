@@ -28,7 +28,7 @@ BEGIN
     POPUP "&File"
     BEGIN
         MENUITEM "E Re\tCtrl+N", CMD_NEW
-        MENUITEM "&New Window\tCtrl+Shift+N", CMD_NEW_WINDOW
+        MENUITEM "New &Window\tCtrl+Shift+N", CMD_NEW_WINDOW
         MENUITEM "Hap...\tCtrl+O", CMD_OPEN
         MENUITEM "Ruaj\tCtrl+S", CMD_SAVE
         MENUITEM "Ruaj si...", CMD_SAVE_AS
