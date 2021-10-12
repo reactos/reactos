@@ -134,3 +134,10 @@ BOOL APIENTRY
 Imm32LoadImeStateSentence(LPINPUTCONTEXTDX pIC, PIME_STATE pState, HKL hKL);
 BOOL APIENTRY
 Imm32SaveImeStateSentence(LPINPUTCONTEXTDX pIC, PIME_STATE pState, HKL hKL);
+
+LONG APIENTRY
+Imm32GetCompStrA(HIMC hIMC, const COMPOSITIONSTRING *pCS, DWORD dwIndex,
+                 LPVOID lpBuf, DWORD dwBufLen, BOOL bAnsiClient, UINT uCodePage);
+LONG APIENTRY
+Imm32GetCompStrW(HIMC hIMC, const COMPOSITIONSTRING *pCS, DWORD dwIndex,
+                 LPVOID lpBuf, DWORD dwBufLen, BOOL bAnsiClient, UINT uCodePage);
