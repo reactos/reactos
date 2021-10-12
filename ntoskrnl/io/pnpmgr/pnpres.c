@@ -590,18 +590,21 @@ IopCheckResourceDescriptor(
             switch (ResDesc->Type)
             {
                 case CmResourceTypeMemory:
-                    if (((ULONGLONG)ResDesc->u.Memory.Start.QuadPart < (ULONGLONG)ResDesc2->u.Memory.Start.QuadPart &&
-                         (ULONGLONG)ResDesc->u.Memory.Start.QuadPart + ResDesc->u.Memory.Length >
-                         (ULONGLONG)ResDesc2->u.Memory.Start.QuadPart) || ((ULONGLONG)ResDesc2->u.Memory.Start.QuadPart <
-                         (ULONGLONG)ResDesc->u.Memory.Start.QuadPart && (ULONGLONG)ResDesc2->u.Memory.Start.QuadPart +
-                         ResDesc2->u.Memory.Length > (ULONGLONG)ResDesc->u.Memory.Start.QuadPart))
+                {
+                    /* NOTE: ranges are in a form [x1;x2) */
+                    UINT64 rStart = (UINT64)ResDesc->u.Memory.Start.QuadPart;
+                    UINT64 rEnd = (UINT64)ResDesc->u.Memory.Start.QuadPart
+                                  + ResDesc->u.Memory.Length;
+                    UINT64 r2Start = (UINT64)ResDesc2->u.Memory.Start.QuadPart;
+                    UINT64 r2End = (UINT64)ResDesc2->u.Memory.Start.QuadPart
+                                   + ResDesc2->u.Memory.Length;
+
+                    if (rStart < r2End && r2Start < rEnd)
                     {
                         if (!Silent)
                         {
                             DPRINT1("Resource conflict: Memory (0x%I64x to 0x%I64x vs. 0x%I64x to 0x%I64x)\n",
-                                    ResDesc->u.Memory.Start.QuadPart, ResDesc->u.Memory.Start.QuadPart +
-                                    ResDesc->u.Memory.Length, ResDesc2->u.Memory.Start.QuadPart,
-                                    ResDesc2->u.Memory.Start.QuadPart + ResDesc2->u.Memory.Length);
+                                    rStart, rEnd, r2Start, r2End);
                         }
 
                         Result = TRUE;
@@ -609,20 +612,23 @@ IopCheckResourceDescriptor(
                         goto ByeBye;
                     }
                     break;
-
+                }
                 case CmResourceTypePort:
-                    if (((ULONGLONG)ResDesc->u.Port.Start.QuadPart < (ULONGLONG)ResDesc2->u.Port.Start.QuadPart &&
-                         (ULONGLONG)ResDesc->u.Port.Start.QuadPart + ResDesc->u.Port.Length >
-                         (ULONGLONG)ResDesc2->u.Port.Start.QuadPart) || ((ULONGLONG)ResDesc2->u.Port.Start.QuadPart <
-                         (ULONGLONG)ResDesc->u.Port.Start.QuadPart && (ULONGLONG)ResDesc2->u.Port.Start.QuadPart +
-                         ResDesc2->u.Port.Length > (ULONGLONG)ResDesc->u.Port.Start.QuadPart))
+                {
+                    /* NOTE: ranges are in a form [x1;x2) */
+                    UINT64 rStart = (UINT64)ResDesc->u.Port.Start.QuadPart;
+                    UINT64 rEnd = (UINT64)ResDesc->u.Port.Start.QuadPart
+                                  + ResDesc->u.Port.Length;
+                    UINT64 r2Start = (UINT64)ResDesc2->u.Port.Start.QuadPart;
+                    UINT64 r2End = (UINT64)ResDesc2->u.Port.Start.QuadPart
+                                   + ResDesc2->u.Port.Length;
+
+                    if (rStart < r2End && r2Start < rEnd)
                     {
                         if (!Silent)
                         {
                             DPRINT1("Resource conflict: Port (0x%I64x to 0x%I64x vs. 0x%I64x to 0x%I64x)\n",
-                                    ResDesc->u.Port.Start.QuadPart, ResDesc->u.Port.Start.QuadPart +
-                                    ResDesc->u.Port.Length, ResDesc2->u.Port.Start.QuadPart,
-                                    ResDesc2->u.Port.Start.QuadPart + ResDesc2->u.Port.Length);
+                                    rStart, rEnd, r2Start, r2End);
                         }
 
                         Result = TRUE;
@@ -630,8 +636,9 @@ IopCheckResourceDescriptor(
                         goto ByeBye;
                     }
                     break;
-
+                }
                 case CmResourceTypeInterrupt:
+                {
                     if (ResDesc->u.Interrupt.Vector == ResDesc2->u.Interrupt.Vector)
                     {
                         if (!Silent)
@@ -646,20 +653,21 @@ IopCheckResourceDescriptor(
                         goto ByeBye;
                     }
                     break;
-
+                }
                 case CmResourceTypeBusNumber:
-                    if ((ResDesc->u.BusNumber.Start < ResDesc2->u.BusNumber.Start &&
-                         ResDesc->u.BusNumber.Start + ResDesc->u.BusNumber.Length >
-                         ResDesc2->u.BusNumber.Start) || (ResDesc2->u.BusNumber.Start <
-                         ResDesc->u.BusNumber.Start && ResDesc2->u.BusNumber.Start +
-                         ResDesc2->u.BusNumber.Length > ResDesc->u.BusNumber.Start))
+                {
+                    /* NOTE: ranges are in a form [x1;x2) */
+                    UINT32 rStart = ResDesc->u.BusNumber.Start;
+                    UINT32 rEnd = ResDesc->u.BusNumber.Start + ResDesc->u.BusNumber.Length;
+                    UINT32 r2Start = ResDesc2->u.BusNumber.Start;
+                    UINT32 r2End = ResDesc2->u.BusNumber.Start + ResDesc2->u.BusNumber.Length;
+
+                    if (rStart < r2End && r2Start < rEnd)
                     {
                         if (!Silent)
                         {
                             DPRINT1("Resource conflict: Bus number (0x%x to 0x%x vs. 0x%x to 0x%x)\n",
-                                    ResDesc->u.BusNumber.Start, ResDesc->u.BusNumber.Start +
-                                    ResDesc->u.BusNumber.Length, ResDesc2->u.BusNumber.Start,
-                                    ResDesc2->u.BusNumber.Start + ResDesc2->u.BusNumber.Length);
+                                    rStart, rEnd, r2Start, r2End);
                         }
 
                         Result = TRUE;
@@ -667,8 +675,9 @@ IopCheckResourceDescriptor(
                         goto ByeBye;
                     }
                     break;
-
+                }
                 case CmResourceTypeDma:
+                {
                     if (ResDesc->u.Dma.Channel == ResDesc2->u.Dma.Channel)
                     {
                         if (!Silent)
@@ -683,6 +692,7 @@ IopCheckResourceDescriptor(
                         goto ByeBye;
                     }
                     break;
+                }
             }
         }
     }
