@@ -25,7 +25,8 @@ WINE_DEFAULT_DEBUG_CHANNEL(imm);
 static inline LONG APIENTRY
 Imm32CompStrAnsiToWide(LPCSTR psz, DWORD cb, LPVOID lpBuf, DWORD dwBufLen, UINT uCodePage)
 {
-    DWORD ret = MultiByteToWideChar(uCodePage, 0, psz, cb / sizeof(CHAR), lpBuf, dwBufLen);
+    DWORD ret = MultiByteToWideChar(uCodePage, 0, psz, cb / sizeof(CHAR), lpBuf,
+                                    dwBufLen / sizeof(WCHAR));
     if ((ret + 1) * sizeof(WCHAR) <= dwBufLen)
         ((LPWSTR)lpBuf)[ret] = 0;
     return ret * sizeof(WCHAR);
