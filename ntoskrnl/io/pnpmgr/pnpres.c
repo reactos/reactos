@@ -591,7 +591,7 @@ IopCheckResourceDescriptor(
             {
                 case CmResourceTypeMemory:
                 {
-                    // NOTE: ranges are in a form [x1;x2)
+                    /* NOTE: ranges are in a form [x1;x2) */
                     UINT64 rStart = (UINT64)ResDesc->u.Memory.Start.QuadPart;
                     UINT64 rEnd = (UINT64)ResDesc->u.Memory.Start.QuadPart
                                   + ResDesc->u.Memory.Length;
@@ -615,7 +615,7 @@ IopCheckResourceDescriptor(
                 }
                 case CmResourceTypePort:
                 {
-                    // NOTE: ranges are in a form [x1;x2)
+                    /* NOTE: ranges are in a form [x1;x2) */
                     UINT64 rStart = (UINT64)ResDesc->u.Port.Start.QuadPart;
                     UINT64 rEnd = (UINT64)ResDesc->u.Port.Start.QuadPart
                                   + ResDesc->u.Port.Length;
@@ -656,7 +656,7 @@ IopCheckResourceDescriptor(
                 }
                 case CmResourceTypeBusNumber:
                 {
-                    // NOTE: ranges are in a form [x1;x2)
+                    /* NOTE: ranges are in a form [x1;x2) */
                     UINT32 rStart = ResDesc->u.BusNumber.Start;
                     UINT32 rEnd = ResDesc->u.BusNumber.Start + ResDesc->u.BusNumber.Length;
                     UINT32 r2Start = ResDesc2->u.BusNumber.Start;
