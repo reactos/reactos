@@ -25,16 +25,20 @@ WINE_DEFAULT_DEBUG_CHANNEL(imm);
 static inline LONG APIENTRY
 Imm32CompStrAnsiToWide(LPCSTR psz, DWORD cb, LPVOID lpBuf, DWORD dwBufLen, UINT uCodePage)
 {
-    dwBufLen = MultiByteToWideChar(uCodePage, 0, psz, cb / sizeof(CHAR), lpBuf, dwBufLen);
-    return dwBufLen * sizeof(WCHAR);
+    DWORD ret = MultiByteToWideChar(uCodePage, 0, psz, cb / sizeof(CHAR), lpBuf, dwBufLen);
+    if ((ret + 1) * sizeof(WCHAR) <= dwBufLen)
+        ((LPWSTR)lpBuf)[ret] = 0;
+    return ret * sizeof(WCHAR);
 }
 
 static inline LONG APIENTRY
 Imm32CompStrWideToAnsi(LPCWSTR psz, DWORD cb, LPVOID lpBuf, DWORD dwBufLen, UINT uCodePage)
 {
-    dwBufLen = WideCharToMultiByte(uCodePage, 0, psz, cb / sizeof(WCHAR),
-                                   lpBuf, dwBufLen, NULL, NULL);
-    return dwBufLen * sizeof(CHAR);
+    DWORD ret = WideCharToMultiByte(uCodePage, 0, psz, cb / sizeof(WCHAR),
+                                    lpBuf, dwBufLen, NULL, NULL);
+    if ((ret + 1) * sizeof(CHAR) <= dwBufLen)
+        ((LPSTR)ret)[ret] = 0;
+    return ret * sizeof(CHAR);
 }
 
 static INT APIENTRY
