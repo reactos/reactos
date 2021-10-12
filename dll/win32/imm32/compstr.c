@@ -25,8 +25,8 @@ WINE_DEFAULT_DEBUG_CHANNEL(imm);
 static inline LONG APIENTRY
 Imm32CompStrAnsiToWide(LPCSTR psz, DWORD cb, LPVOID lpBuf, DWORD dwBufLen, UINT uCodePage)
 {
-    DWORD ret = MultiByteToWideChar(uCodePage, 0, psz, cb / sizeof(CHAR), lpBuf,
-                                    dwBufLen / sizeof(WCHAR));
+    DWORD ret = MultiByteToWideChar(uCodePage, MB_PRECOMPOSED, psz, cb / sizeof(CHAR),
+                                    lpBuf, dwBufLen / sizeof(WCHAR));
     if ((ret + 1) * sizeof(WCHAR) <= dwBufLen)
         ((LPWSTR)lpBuf)[ret] = 0;
     return ret * sizeof(WCHAR);
@@ -36,17 +36,17 @@ static inline LONG APIENTRY
 Imm32CompStrWideToAnsi(LPCWSTR psz, DWORD cb, LPVOID lpBuf, DWORD dwBufLen, UINT uCodePage)
 {
     DWORD ret = WideCharToMultiByte(uCodePage, 0, psz, cb / sizeof(WCHAR),
-                                    lpBuf, dwBufLen, NULL, NULL);
+                                    lpBuf, dwBufLen / sizeof(CHAR), NULL, NULL);
     if ((ret + 1) * sizeof(CHAR) <= dwBufLen)
         ((LPSTR)ret)[ret] = 0;
     return ret * sizeof(CHAR);
 }
 
 static INT APIENTRY
-Imm32CompAttrWideToAnsi(const BYTE *src, INT src_len, LPCWSTR comp_string,
-                        INT str_len, BYTE *dst, INT dst_len, UINT uCodePage)
+Imm32CompAttrWideToAnsi(const BYTE *src, INT src_len, LPCWSTR text,
+                        INT str_len, LPBYTE dst, INT dst_len, UINT uCodePage)
 {
-    INT rc = WideCharToMultiByte(uCodePage, 0, comp_string, str_len, NULL, 0, NULL, NULL);
+    INT rc = WideCharToMultiByte(uCodePage, 0, text, str_len, NULL, 0, NULL, NULL);
     INT i, j = 0, k = 0, len;
 
     if (dst_len)
@@ -56,7 +56,7 @@ Imm32CompAttrWideToAnsi(const BYTE *src, INT src_len, LPCWSTR comp_string,
 
         for (i = 0; i < str_len; ++i)
         {
-            len = WideCharToMultiByte(uCodePage, 0, comp_string + i, 1, NULL, 0, NULL, NULL);
+            len = WideCharToMultiByte(uCodePage, 0, text + i, 1, NULL, 0, NULL, NULL);
             for (; len > 0; --len)
             {
                 dst[j++] = src[k];
@@ -75,10 +75,10 @@ end:
 }
 
 static INT APIENTRY
-Imm32CompAttrAnsiToWide(const BYTE *src, INT src_len, LPCSTR comp_string,
-                        INT str_len, BYTE *dst, INT dst_len, UINT uCodePage)
+Imm32CompAttrAnsiToWide(const BYTE *src, INT src_len, LPCSTR text,
+                        INT str_len, LPBYTE dst, INT dst_len, UINT uCodePage)
 {
-    INT rc = MultiByteToWideChar(uCodePage, 0, comp_string, str_len, NULL, 0);
+    INT rc = MultiByteToWideChar(uCodePage, MB_PRECOMPOSED, text, str_len, NULL, 0);
     INT i, j = 0;
 
     if (dst_len)
@@ -88,7 +88,7 @@ Imm32CompAttrAnsiToWide(const BYTE *src, INT src_len, LPCSTR comp_string,
 
         for (i = 0; i < str_len; ++i)
         {
-            if (IsDBCSLeadByteEx(uCodePage, comp_string[i]))
+            if (IsDBCSLeadByteEx(uCodePage, text[i]))
                 continue;
 
             dst[j++] = src[i];
@@ -104,7 +104,7 @@ Imm32CompAttrAnsiToWide(const BYTE *src, INT src_len, LPCSTR comp_string,
 }
 
 static INT APIENTRY
-Imm32CompClauseAnsiToWide(const DWORD *source, INT slen, LPCVOID ssource,
+Imm32CompClauseAnsiToWide(const DWORD *source, INT slen, LPCSTR text,
                           LPDWORD target, INT tlen, UINT uCodePage)
 {
     INT rc, i;
@@ -118,7 +118,7 @@ Imm32CompClauseAnsiToWide(const DWORD *source, INT slen, LPCVOID ssource,
 
         for (i = 0; i < tlen; ++i)
         {
-            target[i] = MultiByteToWideChar(uCodePage, 0, ssource, source[i], NULL, 0);
+            target[i] = MultiByteToWideChar(uCodePage, MB_PRECOMPOSED, text, source[i], NULL, 0);
         }
 
         rc = sizeof(DWORD) * i;
@@ -132,7 +132,7 @@ Imm32CompClauseAnsiToWide(const DWORD *source, INT slen, LPCVOID ssource,
 }
 
 static INT APIENTRY
-Imm32CompClauseWideToAnsi(const DWORD *source, INT slen, LPCVOID ssource,
+Imm32CompClauseWideToAnsi(const DWORD *source, INT slen, LPCWSTR text,
                           LPDWORD target, INT tlen, UINT uCodePage)
 {
     INT rc, i;
@@ -146,7 +146,7 @@ Imm32CompClauseWideToAnsi(const DWORD *source, INT slen, LPCVOID ssource,
 
         for (i = 0; i < tlen; ++i)
         {
-            target[i] = WideCharToMultiByte(uCodePage, 0, ssource, source[i], NULL, 0, NULL, NULL);
+            target[i] = WideCharToMultiByte(uCodePage, 0, text, source[i], NULL, 0, NULL, NULL);
         }
 
         rc = sizeof(DWORD) * i;
