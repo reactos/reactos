@@ -24,7 +24,7 @@ BEGIN
     POPUP "&Datoteka"
     BEGIN
         MENUITEM "&Nova\tCtrl+N", CMD_NEW
-        MENUITEM "&New Window\tCtrl+Shift+N", CMD_NEW_WINDOW
+        MENUITEM "New &Window\tCtrl+Shift+N", CMD_NEW_WINDOW
         MENUITEM "&Odpri\tCtrl+O", CMD_OPEN
         MENUITEM "&Shrani\tCtrl+S", CMD_SAVE
         MENUITEM "Shrani &kot ...", CMD_SAVE_AS

@@ -24,7 +24,7 @@ BEGIN
     POPUP "&Plik"
     BEGIN
         MENUITEM "&Nowy\tCtrl+N", CMD_NEW
-        MENUITEM "&New Window\tCtrl+Shift+N", CMD_NEW_WINDOW
+        MENUITEM "New &Window\tCtrl+Shift+N", CMD_NEW_WINDOW
         MENUITEM "&Otwórz...\tCtrl+O", CMD_OPEN
         MENUITEM "Zapi&sz\tCtrl+S", CMD_SAVE
         MENUITEM "Z&apisz jako...", CMD_SAVE_AS

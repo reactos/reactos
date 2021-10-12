@@ -31,7 +31,7 @@ BEGIN
     POPUP "&फ़ाइल"
     BEGIN
         MENUITEM "&नया\tCtrl+N", CMD_NEW
-        MENUITEM "&New Window\tCtrl+Shift+N", CMD_NEW_WINDOW
+        MENUITEM "New &Window\tCtrl+Shift+N", CMD_NEW_WINDOW
         MENUITEM "&खोलो...\tCtrl+O", CMD_OPEN
         MENUITEM "&सेव\tCtrl+S", CMD_SAVE
         MENUITEM "सेव &इज़...", CMD_SAVE_AS

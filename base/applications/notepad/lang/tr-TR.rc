@@ -27,7 +27,7 @@ BEGIN
     POPUP "&Dosya"
     BEGIN
         MENUITEM "&Yeni\tCtrl+N", CMD_NEW
-        MENUITEM "&Yeni Pencere\tCtrl+Shift+N", CMD_NEW_WINDOW
+        MENUITEM "Yeni P&encere\tCtrl+Shift+N", CMD_NEW_WINDOW
         MENUITEM "&Aç...\tCtrl+O", CMD_OPEN
         MENUITEM "&Kaydet\tCtrl+S", CMD_SAVE
         MENUITEM "&Farklı Kaydet...", CMD_SAVE_AS

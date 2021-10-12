@@ -24,7 +24,7 @@ BEGIN
     POPUP "&Bestand"
     BEGIN
         MENUITEM "&Nieuw\tCtrl+N", CMD_NEW
-        MENUITEM "&New Window\tCtrl+Shift+N", CMD_NEW_WINDOW
+        MENUITEM "New &Window\tCtrl+Shift+N", CMD_NEW_WINDOW
         MENUITEM "&Openen\tCtrl+O", CMD_OPEN
         MENUITEM "O&pslaan\tCtrl+S", CMD_SAVE
         MENUITEM "Ops&laan als...", CMD_SAVE_AS
