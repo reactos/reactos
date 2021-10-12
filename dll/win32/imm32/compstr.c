@@ -65,9 +65,9 @@ Imm32CompStrWideToAnsi(HIMC hIMC, const COMPOSITIONSTRING *pCS, DWORD dwIndex,
 
 static INT APIENTRY
 Imm32CompAttrWideToAnsi(const BYTE *src, INT src_len, LPCWSTR comp_string,
-                        INT str_len, BYTE *dst, INT dst_len)
+                        INT str_len, BYTE *dst, INT dst_len, UINT uCodePage)
 {
-    INT rc = WideCharToMultiByte(CP_ACP, 0, comp_string, str_len, NULL, 0, NULL, NULL);
+    INT rc = WideCharToMultiByte(uCodePage, 0, comp_string, str_len, NULL, 0, NULL, NULL);
     INT i, j = 0, k = 0, len;
 
     if (dst_len)
@@ -77,7 +77,7 @@ Imm32CompAttrWideToAnsi(const BYTE *src, INT src_len, LPCWSTR comp_string,
 
         for (i = 0; i < str_len; ++i)
         {
-            len = WideCharToMultiByte(CP_ACP, 0, comp_string + i, 1, NULL, 0, NULL, NULL);
+            len = WideCharToMultiByte(uCodePage, 0, comp_string + i, 1, NULL, 0, NULL, NULL);
             for (; len > 0; --len)
             {
                 dst[j++] = src[k];
@@ -97,9 +97,9 @@ end:
 
 static INT APIENTRY
 Imm32CompAttrAnsiToWide(const BYTE *src, INT src_len, LPCSTR comp_string,
-                        INT str_len, BYTE *dst, INT dst_len)
+                        INT str_len, BYTE *dst, INT dst_len, UINT uCodePage)
 {
-    INT rc = MultiByteToWideChar(CP_ACP, 0, comp_string, str_len, NULL, 0);
+    INT rc = MultiByteToWideChar(uCodePage, 0, comp_string, str_len, NULL, 0);
     INT i, j = 0;
 
     if (dst_len)
@@ -109,7 +109,7 @@ Imm32CompAttrAnsiToWide(const BYTE *src, INT src_len, LPCSTR comp_string,
 
         for (i = 0; i < str_len; ++i)
         {
-            if (IsDBCSLeadByte(comp_string[i]))
+            if (IsDBCSLeadByteEx(uCodePage, comp_string[i]))
                 continue;
 
             dst[j++] = src[i];
@@ -126,7 +126,7 @@ Imm32CompAttrAnsiToWide(const BYTE *src, INT src_len, LPCSTR comp_string,
 
 static INT APIENTRY
 Imm32CompClauseAnsiToWide(const DWORD *source, INT slen, LPCVOID ssource,
-                          LPDWORD target, INT tlen)
+                          LPDWORD target, INT tlen, UINT uCodePage)
 {
     INT rc, i;
 
@@ -139,7 +139,7 @@ Imm32CompClauseAnsiToWide(const DWORD *source, INT slen, LPCVOID ssource,
 
         for (i = 0; i < tlen; ++i)
         {
-            target[i] = MultiByteToWideChar(CP_ACP, 0, ssource, source[i], NULL, 0);
+            target[i] = MultiByteToWideChar(uCodePage, 0, ssource, source[i], NULL, 0);
         }
 
         rc = sizeof(DWORD) * i;
@@ -153,7 +153,8 @@ Imm32CompClauseAnsiToWide(const DWORD *source, INT slen, LPCVOID ssource,
 }
 
 static INT APIENTRY
-Imm32CompClauseWideToAnsi(const DWORD *source, INT slen, LPCVOID ssource, LPDWORD target, INT tlen)
+Imm32CompClauseWideToAnsi(const DWORD *source, INT slen, LPCVOID ssource,
+                          LPDWORD target, INT tlen, UINT uCodePage)
 {
     INT rc, i;
 
@@ -166,7 +167,7 @@ Imm32CompClauseWideToAnsi(const DWORD *source, INT slen, LPCVOID ssource, LPDWOR
 
         for (i = 0; i < tlen; ++i)
         {
-            target[i] = WideCharToMultiByte(CP_ACP, 0, ssource, source[i], NULL, 0, NULL, NULL);
+            target[i] = WideCharToMultiByte(uCodePage, 0, ssource, source[i], NULL, 0, NULL, NULL);
         }
 
         rc = sizeof(DWORD) * i;
@@ -274,37 +275,41 @@ Imm32GetCompStrA(HIMC hIMC, const COMPOSITIONSTRING *pCS, DWORD dwIndex,
                 dwBufLen = Imm32CompAttrWideToAnsi(CS_Attr(pCS, CompReadAttr),
                                                    CS_SizeA(pCS, CompReadAttr),
                                                    CS_StrW(pCS, CompStr), CS_SizeW(pCS, CompStr),
-                                                   lpBuf, dwBufLen);
+                                                   lpBuf, dwBufLen, uCodePage);
                 break;
             case GCS_COMPATTR:
                 dwBufLen = Imm32CompAttrWideToAnsi(CS_Attr(pCS, CompAttr),
                                                    CS_SizeA(pCS, CompAttr),
                                                    CS_StrW(pCS, CompStr), CS_SizeW(pCS, CompStr),
-                                                   lpBuf, dwBufLen);
+                                                   lpBuf, dwBufLen, uCodePage);
                 break;
 
             case GCS_COMPREADCLAUSE:
                 dwBufLen = Imm32CompClauseWideToAnsi(CS_Clause(pCS, CompReadClause),
                                                      CS_SizeA(pCS, CompReadClause),
-                                                     CS_StrW(pCS, CompStr), lpBuf, dwBufLen);
+                                                     CS_StrW(pCS, CompStr),
+                                                     lpBuf, dwBufLen, uCodePage);
                 break;
 
             case GCS_COMPCLAUSE:
                 dwBufLen = Imm32CompClauseWideToAnsi(CS_Clause(pCS, CompClause),
                                                      CS_SizeA(pCS, CompClause),
-                                                     CS_StrW(pCS, CompStr), lpBuf, dwBufLen);
+                                                     CS_StrW(pCS, CompStr), lpBuf,
+                                                     dwBufLen, uCodePage);
                 break;
 
             case GCS_RESULTREADCLAUSE:
                 dwBufLen = Imm32CompClauseWideToAnsi(CS_Clause(pCS, ResultReadClause),
                                                      CS_SizeA(pCS, ResultReadClause),
-                                                     CS_StrW(pCS, CompStr), lpBuf, dwBufLen);
+                                                     CS_StrW(pCS, CompStr), lpBuf,
+                                                     dwBufLen, uCodePage);
                 break;
 
             case GCS_RESULTCLAUSE:
                 dwBufLen = Imm32CompClauseWideToAnsi(CS_Clause(pCS, ResultClause),
                                                      CS_SizeA(pCS, ResultClause),
-                                                     CS_StrW(pCS, CompStr), lpBuf, dwBufLen);
+                                                     CS_StrW(pCS, CompStr), lpBuf,
+                                                     dwBufLen, uCodePage);
                 break;
 
             case GCS_CURSORPOS:
@@ -341,37 +346,41 @@ Imm32GetCompStrW(HIMC hIMC, const COMPOSITIONSTRING *pCS, DWORD dwIndex,
                 dwBufLen = Imm32CompAttrAnsiToWide(CS_Attr(pCS, CompReadAttr),
                                                    CS_SizeA(pCS, CompReadAttr),
                                                    CS_StrA(pCS, CompStr), CS_SizeA(pCS, CompStr),
-                                                   lpBuf, dwBufLen);
+                                                   lpBuf, dwBufLen, uCodePage);
                 break;
             case GCS_COMPATTR:
                 dwBufLen = Imm32CompAttrAnsiToWide(CS_Attr(pCS, CompAttr),
                                                    CS_SizeA(pCS, CompAttr),
                                                    CS_StrA(pCS, CompStr), CS_SizeA(pCS, CompStr),
-                                                   lpBuf, dwBufLen);
+                                                   lpBuf, dwBufLen, uCodePage);
                 break;
 
             case GCS_COMPREADCLAUSE:
                 dwBufLen = Imm32CompClauseAnsiToWide(CS_Clause(pCS, CompReadClause),
                                                      CS_SizeA(pCS, CompReadClause),
-                                                     CS_StrA(pCS, CompStr), lpBuf, dwBufLen);
+                                                     CS_StrA(pCS, CompStr), lpBuf, dwBufLen,
+                                                     uCodePage);
                 break;
 
             case GCS_COMPCLAUSE:
                 dwBufLen = Imm32CompClauseAnsiToWide(CS_Clause(pCS, CompClause),
                                                      CS_SizeA(pCS, CompClause),
-                                                     CS_StrA(pCS, CompStr), lpBuf, dwBufLen);
+                                                     CS_StrA(pCS, CompStr), lpBuf, dwBufLen,
+                                                     uCodePage);
                 break;
 
             case GCS_RESULTREADCLAUSE:
                 dwBufLen = Imm32CompClauseAnsiToWide(CS_Clause(pCS, ResultReadClause),
                                                      CS_SizeA(pCS, ResultReadClause),
-                                                     CS_StrA(pCS, CompStr), lpBuf, dwBufLen);
+                                                     CS_StrA(pCS, CompStr), lpBuf, dwBufLen,
+                                                     uCodePage);
                 break;
 
             case GCS_RESULTCLAUSE:
                 dwBufLen = Imm32CompClauseAnsiToWide(CS_Clause(pCS, ResultClause),
                                                      CS_SizeA(pCS, ResultClause),
-                                                     CS_StrA(pCS, CompStr), lpBuf, dwBufLen);
+                                                     CS_StrA(pCS, CompStr), lpBuf, dwBufLen,
+                                                     uCodePage);
                 break;
 
             case GCS_CURSORPOS:
