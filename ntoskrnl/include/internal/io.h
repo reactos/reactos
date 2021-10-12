@@ -527,7 +527,8 @@ typedef enum _DEVICE_ACTION
     PiActionEnumRootDevices,
     PiActionResetDevice,
     PiActionAddBootDevices,
-    PiActionStartDevice
+    PiActionStartDevice,
+    PiActionQueryState,
 } DEVICE_ACTION;
 
 //
@@ -1402,6 +1403,16 @@ NTSTATUS
 PiIrpQueryDeviceRelations(
     _In_ PDEVICE_NODE DeviceNode,
     _In_ DEVICE_RELATION_TYPE Type);
+
+NTSTATUS
+PiIrpQueryResources(
+    _In_ PDEVICE_NODE DeviceNode,
+    _Out_ PCM_RESOURCE_LIST *Resources);
+
+NTSTATUS
+PiIrpQueryResourceRequirements(
+    _In_ PDEVICE_NODE DeviceNode,
+    _Out_ PIO_RESOURCE_REQUIREMENTS_LIST *Resources);
 
 NTSTATUS
 PiIrpQueryDeviceText(

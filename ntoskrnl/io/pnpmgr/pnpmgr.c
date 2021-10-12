@@ -2412,3 +2412,11 @@ IoTranslateBusAddress(IN INTERFACE_TYPE InterfaceType,
                                   AddressSpace,
                                   TranslatedAddress);
 }
+
+VOID
+NTAPI
+IoInvalidateDeviceState(
+    IN PDEVICE_OBJECT DeviceObject)
+{
+    PiQueueDeviceAction(DeviceObject, PiActionQueryState, NULL, NULL);
+}
