@@ -386,7 +386,7 @@ Imm32GetCompStrW(HIMC hIMC, const COMPOSITIONSTRING *pCS, DWORD dwIndex,
                 break;
 
             case GCS_DELTASTART:
-                dwBufLen = pCS->dwCursorPos;
+                dwBufLen = pCS->dwDeltaStart;
                 dwBufLen = IchWideFromAnsi(dwBufLen, CS_StrA(pCS, CompStr), uCodePage);
                 break;
 
