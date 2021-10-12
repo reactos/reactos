@@ -50,7 +50,7 @@ Imm32CompAttrWideToAnsi(const BYTE *src, INT src_len, LPCWSTR comp_string,
 
     if (dst_len)
     {
-        if (rc < dst_len)
+        if (dst_len > rc)
             dst_len = rc;
 
         for (i = 0; i < str_len; ++i)
@@ -82,7 +82,7 @@ Imm32CompAttrAnsiToWide(const BYTE *src, INT src_len, LPCSTR comp_string,
 
     if (dst_len)
     {
-        if (rc < dst_len)
+        if (dst_len > rc)
             dst_len = rc;
 
         for (i = 0; i < str_len; ++i)
@@ -92,7 +92,7 @@ Imm32CompAttrAnsiToWide(const BYTE *src, INT src_len, LPCSTR comp_string,
 
             dst[j++] = src[i];
 
-            if (j >= dst_len)
+            if (dst_len <= j)
                 break;
         }
 
@@ -110,7 +110,7 @@ Imm32CompClauseAnsiToWide(const DWORD *source, INT slen, LPCVOID ssource,
 
     if (tlen)
     {
-        if (slen < tlen)
+        if (tlen > slen)
             tlen = slen;
 
         tlen /= sizeof(DWORD);
@@ -138,7 +138,7 @@ Imm32CompClauseWideToAnsi(const DWORD *source, INT slen, LPCVOID ssource,
 
     if (tlen)
     {
-        if (slen < tlen)
+        if (tlen > slen)
             tlen = slen;
 
         tlen /= sizeof(DWORD);
