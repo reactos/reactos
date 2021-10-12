@@ -288,13 +288,11 @@ Imm32GetCompStrA(HIMC hIMC, const COMPOSITIONSTRING *pCS, DWORD dwIndex,
                 break;
 
             case GCS_CURSORPOS:
-                dwBufLen = pCS->dwCursorPos;
-                dwBufLen = IchAnsiFromWide(dwBufLen, CS_StrW(pCS, CompStr), uCodePage);
+                dwBufLen = IchAnsiFromWide(pCS->dwCursorPos, CS_StrW(pCS, CompStr), uCodePage);
                 break;
 
             case GCS_DELTASTART:
-                dwBufLen = pCS->dwDeltaStart;
-                dwBufLen = IchAnsiFromWide(dwBufLen, CS_StrW(pCS, CompStr), uCodePage);
+                dwBufLen = IchAnsiFromWide(pCS->dwDeltaStart, CS_StrW(pCS, CompStr), uCodePage);
                 break;
 
             case GCS_RESULTREADSTR:
@@ -381,13 +379,11 @@ Imm32GetCompStrW(HIMC hIMC, const COMPOSITIONSTRING *pCS, DWORD dwIndex,
                 break;
 
             case GCS_CURSORPOS:
-                dwBufLen = pCS->dwCursorPos;
-                dwBufLen = IchWideFromAnsi(dwBufLen, CS_StrA(pCS, CompStr), uCodePage);
+                dwBufLen = IchWideFromAnsi(pCS->dwCursorPos, CS_StrA(pCS, CompStr), uCodePage);
                 break;
 
             case GCS_DELTASTART:
-                dwBufLen = pCS->dwDeltaStart;
-                dwBufLen = IchWideFromAnsi(dwBufLen, CS_StrA(pCS, CompStr), uCodePage);
+                dwBufLen = IchWideFromAnsi(pCS->dwDeltaStart, CS_StrA(pCS, CompStr), uCodePage);
                 break;
 
             case GCS_RESULTREADSTR:
