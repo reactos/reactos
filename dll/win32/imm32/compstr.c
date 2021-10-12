@@ -54,7 +54,7 @@ Imm32CompAttrWideToAnsi(const BYTE *src, INT src_len, LPCWSTR text,
         if (dst_len > rc)
             dst_len = rc;
 
-        for (i = 0; i < str_len; ++i)
+        for (i = 0; i < str_len; ++i, ++k)
         {
             len = WideCharToMultiByte(uCodePage, 0, text + i, 1, NULL, 0, NULL, NULL);
             for (; len > 0; --len)
@@ -64,8 +64,6 @@ Imm32CompAttrWideToAnsi(const BYTE *src, INT src_len, LPCWSTR text,
                 if (j >= dst_len)
                     goto end;
             }
-
-            ++k;
         }
 end:
         rc = j;
