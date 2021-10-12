@@ -22,14 +22,14 @@ WINE_DEFAULT_DEBUG_CHANNEL(imm);
 #define CS_SizeA(pCS, Name)     (CS_Size(pCS, Name) * sizeof(CHAR))
 #define CS_SizeW(pCS, Name)     (CS_Size(pCS, Name) * sizeof(WCHAR))
 
-LONG APIENTRY
+static inline LONG APIENTRY
 Imm32CompStrAnsiToWide(LPCSTR psz, DWORD cb, LPVOID lpBuf, DWORD dwBufLen, UINT uCodePage)
 {
     dwBufLen = MultiByteToWideChar(uCodePage, 0, psz, cb / sizeof(CHAR), lpBuf, dwBufLen);
     return dwBufLen * sizeof(WCHAR);
 }
 
-LONG APIENTRY
+static inline LONG APIENTRY
 Imm32CompStrWideToAnsi(LPCWSTR psz, DWORD cb, LPVOID lpBuf, DWORD dwBufLen, UINT uCodePage)
 {
     dwBufLen = WideCharToMultiByte(uCodePage, 0, psz, cb / sizeof(WCHAR),
