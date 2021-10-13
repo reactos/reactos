@@ -53,7 +53,7 @@ Imm32CompAttrWideToAnsi(const BYTE *src, INT src_len, LPCWSTR text,
 
         for (i = 0; i < str_len; ++i, ++k)
         {
-            len = WideCharToMultiByte(uCodePage, 0, text + i, 1, NULL, 0, NULL, NULL);
+            len = WideCharToMultiByte(uCodePage, 0, &text[i], 1, NULL, 0, NULL, NULL);
             for (; len > 0; --len)
             {
                 dst[j++] = src[k];
