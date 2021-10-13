@@ -88,7 +88,7 @@ Imm32CompAttrAnsiToWide(const BYTE *src, INT src_len, LPCSTR text,
 
         for (i = 0; i < str_len; ++i)
         {
-            if (IsDBCSLeadByteEx(uCodePage, text[i]))
+            if (IsDBCSLeadByteEx(uCodePage, text[i]) && text[i + 1])
                 continue;
 
             dst[j++] = src[i];
