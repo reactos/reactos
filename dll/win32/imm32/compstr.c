@@ -58,7 +58,7 @@ Imm32CompAttrWideToAnsi(const BYTE *src, INT src_len, LPCWSTR text,
             {
                 dst[j++] = src[k];
 
-                if (j >= dst_len)
+                if (dst_len <= j)
                     goto end;
             }
         }
