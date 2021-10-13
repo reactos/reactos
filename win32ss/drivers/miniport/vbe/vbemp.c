@@ -180,6 +180,13 @@ VBEInitialize(PVOID HwDeviceExtension)
    ULONG CurrentMode;
    PVBE_MODEINFO VbeModeInfo;
 
+   if (VideoPortIsNoVesa())
+   {
+      VBEDeviceExtension->Int10Interface.Version = 0;
+      VBEDeviceExtension->Int10Interface.Size = 0;
+      return FALSE;
+   }
+
    /*
     * Get the Int 10 interface that we will use for allocating real
     * mode memory and calling the video BIOS.
