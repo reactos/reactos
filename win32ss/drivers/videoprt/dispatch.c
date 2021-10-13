@@ -405,18 +405,19 @@ IntVideoPortDispatchOpen(
 
     if (DriverExtension->InitializationData.HwInitialize(&DeviceExtension->MiniPortDeviceExtension))
     {
-        Irp->IoStatus.Status = STATUS_SUCCESS;
+        Status = STATUS_SUCCESS;
         InterlockedIncrement((PLONG)&DeviceExtension->DeviceOpened);
     }
     else
     {
-        Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
+        Status = STATUS_UNSUCCESSFUL;
     }
 
+    Irp->IoStatus.Status = Status;
     Irp->IoStatus.Information = FILE_OPENED;
     IoCompleteRequest(Irp, IO_NO_INCREMENT);
 
-    return STATUS_SUCCESS;
+    return Status;
 }
 
 /*
