@@ -46,8 +46,13 @@ static INT APIENTRY
 Imm32CompAttrWideToAnsi(const BYTE *src, INT src_len, LPCWSTR text,
                         INT str_len, LPBYTE dst, INT dst_len, UINT uCodePage)
 {
-    INT rc = WideCharToMultiByte(uCodePage, 0, text, str_len, NULL, 0, NULL, NULL);
+    INT rc;
     INT i, j = 0, k = 0, len;
+
+    if (!src_len)
+        return 0;
+
+    rc = WideCharToMultiByte(uCodePage, 0, text, str_len, NULL, 0, NULL, NULL);
 
     if (dst_len)
     {
@@ -76,8 +81,13 @@ static INT APIENTRY
 Imm32CompAttrAnsiToWide(const BYTE *src, INT src_len, LPCSTR text,
                         INT str_len, LPBYTE dst, INT dst_len, UINT uCodePage)
 {
-    INT rc = MultiByteToWideChar(uCodePage, MB_PRECOMPOSED, text, str_len, NULL, 0);
+    INT rc;
     INT i, j = 0;
+
+    if (!src_len)
+        return 0;
+
+    rc = MultiByteToWideChar(uCodePage, MB_PRECOMPOSED, text, str_len, NULL, 0);
 
     if (dst_len)
     {
@@ -107,6 +117,9 @@ Imm32CompClauseAnsiToWide(const DWORD *source, INT slen, LPCSTR text,
 {
     INT rc, i;
 
+    if (!slen)
+        return 0;
+
     if (tlen)
     {
         if (tlen > slen)
@@ -134,6 +147,9 @@ Imm32CompClauseWideToAnsi(const DWORD *source, INT slen, LPCWSTR text,
                           LPDWORD target, INT tlen, UINT uCodePage)
 {
     INT rc, i;
+
+    if (!slen)
+        return 0;
 
     if (tlen)
     {
