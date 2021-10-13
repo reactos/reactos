@@ -50,23 +50,15 @@ LPSTR APIENTRY Imm32AnsiFromWide(LPCWSTR pszW)
     return pszA;
 }
 
-DWORD APIENTRY IchWideFromAnsi(DWORD cchAnsi, LPCSTR pchAnsi, UINT uCodePage)
+LONG APIENTRY IchWideFromAnsi(LONG cchAnsi, LPCSTR pchAnsi, UINT uCodePage)
 {
-    DWORD cchWide;
-    for (cchWide = 0; cchAnsi; ++cchWide)
+    LONG cchWide;
+    for (cchWide = 0; cchAnsi > 0; ++cchWide)
     {
-        if (IsDBCSLeadByteEx(uCodePage, *pchAnsi))
+        if (IsDBCSLeadByteEx(uCodePage, *pchAnsi) && pchAnsi[1])
         {
-            if (cchAnsi <= 1)
-            {
-                ++cchWide;
-                break;
-            }
-            else
-            {
-                cchAnsi -= 2;
-                pchAnsi += 2;
-            }
+            cchAnsi -= 2;
+            pchAnsi += 2;
         }
         else
         {
@@ -77,10 +69,10 @@ DWORD APIENTRY IchWideFromAnsi(DWORD cchAnsi, LPCSTR pchAnsi, UINT uCodePage)
     return cchWide;
 }
 
-DWORD APIENTRY IchAnsiFromWide(DWORD cchWide, LPCWSTR pchWide, UINT uCodePage)
+LONG APIENTRY IchAnsiFromWide(LONG cchWide, LPCWSTR pchWide, UINT uCodePage)
 {
-    DWORD cb, cchAnsi;
-    for (cchAnsi = 0; cchWide; ++cchAnsi, ++pchWide, --cchWide)
+    LONG cb, cchAnsi;
+    for (cchAnsi = 0; cchWide > 0; ++cchAnsi, ++pchWide, --cchWide)
     {
         cb = WideCharToMultiByte(uCodePage, 0, pchWide, 1, NULL, 0, NULL, NULL);
         if (cb > 1)

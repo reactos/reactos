@@ -81,8 +81,8 @@ LPVOID APIENTRY Imm32HeapAlloc(DWORD dwFlags, DWORD dwBytes);
 
 LPWSTR APIENTRY Imm32WideFromAnsi(LPCSTR pszA);
 LPSTR APIENTRY Imm32AnsiFromWide(LPCWSTR pszW);
-DWORD APIENTRY IchWideFromAnsi(DWORD cchAnsi, LPCSTR pchAnsi, UINT uCodePage);
-DWORD APIENTRY IchAnsiFromWide(DWORD cchWide, LPCWSTR pchWide, UINT uCodePage);
+LONG APIENTRY IchWideFromAnsi(LONG cchAnsi, LPCSTR pchAnsi, UINT uCodePage);
+LONG APIENTRY IchAnsiFromWide(LONG cchWide, LPCWSTR pchWide, UINT uCodePage);
 PIMEDPI APIENTRY ImmLockOrLoadImeDpi(HKL hKL);
 LPINPUTCONTEXT APIENTRY Imm32LockIMCEx(HIMC hIMC, BOOL fSelect);
 BOOL APIENTRY Imm32ReleaseIME(HKL hKL);
