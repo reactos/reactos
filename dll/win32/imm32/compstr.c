@@ -14,14 +14,6 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(imm);
 
-#define CS_StrA(pCS, Name)      ((LPCSTR)(pCS) + (pCS)->dw##Name##Offset)
-#define CS_StrW(pCS, Name)      ((LPCWSTR)CS_StrA(pCS, Name))
-#define CS_Attr(pCS, Name)      ((const BYTE *)CS_StrA(pCS, Name))
-#define CS_Clause(pCS, Name)    ((const DWORD *)CS_StrA(pCS, Name))
-#define CS_Size(pCS, Name)      ((pCS)->dw##Name##Len)
-#define CS_SizeA(pCS, Name)     (CS_Size(pCS, Name) * sizeof(CHAR))
-#define CS_SizeW(pCS, Name)     (CS_Size(pCS, Name) * sizeof(WCHAR))
-
 static inline LONG APIENTRY
 Imm32CompStrAnsiToWide(LPCSTR psz, DWORD cb, LPWSTR lpBuf, DWORD dwBufLen, UINT uCodePage)
 {
@@ -173,26 +165,26 @@ Imm32CompClauseWideToAnsi(const DWORD *source, INT slen, LPCWSTR text,
     return rc;
 }
 
-#define CS_DoStrA(pCS, Name) do { \
+#define CS_StrA(pCS, Name)      ((LPCSTR)(pCS) + (pCS)->dw##Name##Offset)
+#define CS_StrW(pCS, Name)      ((LPCWSTR)CS_StrA(pCS, Name))
+#define CS_Attr(pCS, Name)      ((const BYTE *)CS_StrA(pCS, Name))
+#define CS_Clause(pCS, Name)    ((const DWORD *)CS_StrA(pCS, Name))
+#define CS_Size(pCS, Name)      ((pCS)->dw##Name##Len)
+#define CS_SizeA(pCS, Name)     (CS_Size(pCS, Name) * sizeof(CHAR))
+#define CS_SizeW(pCS, Name)     (CS_Size(pCS, Name) * sizeof(WCHAR))
+
+#define CS_DoStr(pCS, Name, AorW) do { \
     if (dwBufLen == 0) { \
-        dwBufLen = CS_SizeA((pCS), Name); \
+        dwBufLen = CS_Size##AorW((pCS), Name); \
     } else { \
-        if (dwBufLen > CS_SizeA((pCS), Name)) \
-            dwBufLen = CS_SizeA((pCS), Name); \
-        RtlCopyMemory(lpBuf, CS_StrA((pCS), Name), dwBufLen); \
+        if (dwBufLen > CS_Size##AorW((pCS), Name)) \
+            dwBufLen = CS_Size##AorW((pCS), Name); \
+        RtlCopyMemory(lpBuf, CS_Str##AorW((pCS), Name), dwBufLen); \
     } \
 } while (0)
 
-#define CS_DoStrW(pCS, Name) do { \
-    if (dwBufLen == 0) { \
-        dwBufLen = CS_SizeW((pCS), Name); \
-    } else { \
-        if (dwBufLen > CS_SizeW((pCS), Name)) \
-            dwBufLen = CS_SizeW((pCS), Name); \
-        RtlCopyMemory(lpBuf, CS_StrW((pCS), Name), dwBufLen); \
-    } \
-} while (0)
-
+#define CS_DoStrA(pCS, Name) CS_DoStr(pCS, Name, A)
+#define CS_DoStrW(pCS, Name) CS_DoStr(pCS, Name, W)
 #define CS_DoAttr CS_DoStrA
 #define CS_DoClause CS_DoStrA
 
