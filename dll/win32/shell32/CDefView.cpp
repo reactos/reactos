@@ -1583,9 +1583,12 @@ LRESULT CDefView::OnExplorerCommand(UINT uCommand, BOOL bUseSelection)
     if (FAILED_UNEXPECTEDLY( hResult))
         goto cleanup;
 
-    hResult = m_pCM->QueryContextMenu(hMenu, 0, FCIDM_SHVIEWFIRST, FCIDM_SHVIEWLAST, CMF_NORMAL);
-    if (FAILED_UNEXPECTEDLY( hResult))
-        goto cleanup;
+    if ((uCommand != FCIDM_SHVIEW_DELETE) && (uCommand != FCIDM_SHVIEW_RENAME))
+    {
+        hResult = m_pCM->QueryContextMenu(hMenu, 0, FCIDM_SHVIEWFIRST, FCIDM_SHVIEWLAST, CMF_NORMAL);
+        if (FAILED_UNEXPECTEDLY( hResult))
+            goto cleanup;
+    }
 
     if (bUseSelection)
     {
