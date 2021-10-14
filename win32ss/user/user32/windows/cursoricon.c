@@ -122,12 +122,12 @@ static BOOL is_dib_monochrome( const BITMAPINFO* info )
         if (((const BITMAPCOREINFO*)info)->bmciHeader.bcBitCount != 1) return FALSE;
 
         /* Check if the first color is black */
-        if ((rgb[0].rgbtRed == 0) && (rgb[0].rgbtGreen == 0) &&
-            (rgb[0].rgbtBlue == 0))
+        if (RGB(rgb[0].rgbtRed, rgb[0].rgbtGreen, rgb[0].rgbtBlue) ==
+            RGB(0, 0, 0))
         {
             /* Check if the second color is white */
-            if ((rgb[1].rgbtRed == 0xff) && (rgb[1].rgbtGreen == 0xff) &&
-                (rgb[1].rgbtBlue == 0xff))
+            if (RGB(rgb[1].rgbtRed, rgb[1].rgbtGreen, rgb[1].rgbtBlue) ==
+                RGB(0xff, 0xff, 0xff))
             {
                 return TRUE;
             }
@@ -138,12 +138,12 @@ static BOOL is_dib_monochrome( const BITMAPINFO* info )
         }
 
         /* Check if the first color is white */
-        if ((rgb[0].rgbtRed == 0xff) && (rgb[0].rgbtGreen == 0xff) &&
-            (rgb[0].rgbtBlue == 0xff))
+        if (RGB(rgb[0].rgbtRed, rgb[0].rgbtGreen, rgb[0].rgbtBlue) ==
+            RGB(0xff, 0xff, 0xff))
         {
             /* Check if the second color is black */
-            if ((rgb[1].rgbtRed == 0) && (rgb[1].rgbtGreen == 0) &&
-                (rgb[1].rgbtBlue == 0))
+            if (RGB(rgb[1].rgbtRed, rgb[1].rgbtGreen, rgb[1].rgbtBlue) ==
+                RGB(0, 0, 0))
             {
                 return TRUE;
             }
@@ -158,12 +158,12 @@ static BOOL is_dib_monochrome( const BITMAPINFO* info )
         if (info->bmiHeader.biBitCount != 1) return FALSE;
 
         /* Check if the first color is black */
-        if ((rgb[0].rgbRed == 0) && (rgb[0].rgbGreen == 0) &&
-            (rgb[0].rgbBlue == 0) && (rgb[0].rgbReserved == 0))
+        if (RGBA(rgb[0].rgbRed, rgb[0].rgbGreen, rgb[0].rgbBlue,
+            rgb[0].rgbReserved) == RGBA(0, 0, 0, 0))
         {
             /* Check if the second color is white */
-            if ((rgb[1].rgbRed == 0xff) && (rgb[1].rgbGreen == 0xff) &&
-                (rgb[1].rgbBlue == 0xff) && (rgb[1].rgbReserved == 0))
+            if (RGBA(rgb[1].rgbRed, rgb[1].rgbGreen, rgb[1].rgbBlue,
+                rgb[1].rgbReserved) == RGBA(0xff, 0xff, 0xff, 0))
             {
                 return TRUE;
             }
@@ -174,12 +174,12 @@ static BOOL is_dib_monochrome( const BITMAPINFO* info )
         }
 
         /* Check if the first color is white */
-        if ((rgb[0].rgbRed == 0xff) && (rgb[0].rgbGreen == 0xff) &&
-            (rgb[0].rgbBlue == 0xff) && (rgb[0].rgbReserved == 0))
+        if (RGBA(rgb[0].rgbRed, rgb[0].rgbGreen, rgb[0].rgbBlue,
+            rgb[0].rgbReserved) == RGBA(0xff, 0xff, 0xff, 0))
         {
             /* Check if the second color is black */
-            if ((rgb[1].rgbRed == 0) && (rgb[1].rgbGreen == 0) &&
-                (rgb[1].rgbBlue == 0) && (rgb[1].rgbReserved == 0))
+            if (RGBA(rgb[1].rgbRed, rgb[1].rgbGreen, rgb[1].rgbBlue,
+                rgb[1].rgbReserved) == RGBA(0, 0, 0, 0))
             {
                 return TRUE;
             }
