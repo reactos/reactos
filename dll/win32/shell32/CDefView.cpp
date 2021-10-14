@@ -1573,19 +1573,21 @@ cleanup:
 LRESULT CDefView::OnExplorerCommand(UINT uCommand, BOOL bUseSelection)
 {
     HRESULT hResult;
-    HMENU hMenu;
-
-    hMenu = CreatePopupMenu();
-    if (!hMenu)
-        return 0;
+    HMENU hMenu = NULL;
 
     hResult = GetItemObject( bUseSelection ? SVGIO_SELECTION : SVGIO_BACKGROUND, IID_PPV_ARG(IContextMenu, &m_pCM));
     if (FAILED_UNEXPECTEDLY( hResult))
         goto cleanup;
+    if ((uCommand != FCIDM_SHVIEW_DELETE) && (uCommand != FCIDM_SHVIEW_RENAME))
+    {
+        hMenu = CreatePopupMenu();
+        if (!hMenu)
+            return 0;
 
-    hResult = m_pCM->QueryContextMenu(hMenu, 0, FCIDM_SHVIEWFIRST, FCIDM_SHVIEWLAST, CMF_NORMAL);
-    if (FAILED_UNEXPECTEDLY( hResult))
-        goto cleanup;
+        hResult = m_pCM->QueryContextMenu(hMenu, 0, FCIDM_SHVIEWFIRST, FCIDM_SHVIEWLAST, CMF_NORMAL);
+        if (FAILED_UNEXPECTEDLY(hResult))
+            goto cleanup;
+    }
 
     if (bUseSelection)
     {
