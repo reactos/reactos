@@ -19,7 +19,7 @@ BEGIN
     LTEXT "ReactOSを新しくインストールします。このオプションは、あなたのファイル、設定、プログラムを維持しません。あなたはディスクとパーティションに変更を加えることができます。", IDC_INSTALLTEXT, 18, 18, 269, 25, NOT WS_GROUP
     AUTORADIOBUTTON "ReactOSを更新または修正する", IDC_UPDATE, 7, 50, 277, 10
     LTEXT "インストールされたReactOSを更新または修正します。このオプションはあなたのファイル、設定、プログラムを保持します。このオプションは、このコンピュータですでにReactOSがインストール済みのときのみ利用できます。", IDC_UPDATETEXT, 18, 61, 269, 30, NOT WS_GROUP
-    LTEXT "次へをクリックすると続行します", IDC_STATIC, 7, 128, 297, 8
+    LTEXT "次へをクリックすると続行します。", IDC_STATIC, 7, 128, 297, 8
 END
 
 IDD_UPDATEREPAIRPAGE DIALOGEX 0, 0, 317, 143
@@ -66,14 +66,14 @@ CAPTION "パーティションの作成"
 FONT 9, "MS UI Gothic"
 BEGIN
     CONTROL "", IDC_UPDOWN1, "msctls_updown32", 0, 129, 22, 9, 13
-    GROUPBOX "パーティションを作成し、フォーマットします", IDC_STATIC, 6, 5, 161, 57
+    CONTROL "パーティションを作成し、フォーマットします", IDC_STATIC, "Button", BS_GROUPBOX, 6, 5, 161, 57
     LTEXT "サイズ:", IDC_STATIC, 13, 24, 27, 9
-    EDITTEXT IDC_PARTSIZE, 83, 22, 47, 13
+    EDITTEXT IDC_PARTSIZE, 83, 22, 47, 13, WS_VISIBLE | WS_TABSTOP
     LTEXT "GB", IDC_UNIT, 142, 24, 14, 9
     LTEXT "ファイルシステム:", IDC_STATIC, 13, 46, 63, 9
-    COMBOBOX IDC_FSTYPE, 83, 42, 73, 50, CBS_DROPDOWNLIST | WS_TABSTOP
-    PUSHBUTTON "&OK", IDOK, 35, 68, 47, 15
-    PUSHBUTTON "キャンセル(&C)", IDCANCEL, 89, 68, 55, 15
+    CONTROL "", IDC_FSTYPE, "ComboBox", WS_VISIBLE | WS_TABSTOP | CBS_DROPDOWNLIST | WS_TABSTOP, 83, 42, 73, 50
+    PUSHBUTTON "&OK", IDOK, 35, 68, 47, 15, WS_VISIBLE | WS_TABSTOP
+    PUSHBUTTON "キャンセル(&C)", IDCANCEL, 89, 68, 55, 15, WS_VISIBLE | WS_TABSTOP
 END
 
 IDD_BOOTOPTIONS DIALOGEX 0, 0, 305, 116
@@ -110,7 +110,7 @@ BEGIN
     EDITTEXT IDC_KEYBOARD, 95, 64, 210, 13, ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT "インストール先ボリューム:", IDC_STATIC, 6, 77, 88, 11
     EDITTEXT IDC_DESTDRIVE, 95, 76, 210, 13, ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT "インストール先フォルダー:", IDC_STATIC, 6, 89, 88, 11
+    LTEXT "インストール先フォルダ:", IDC_STATIC, 6, 89, 88, 11
     EDITTEXT IDC_PATH, 95, 88, 210, 13, ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE | NOT WS_BORDER | NOT WS_TABSTOP
     AUTOCHECKBOX "すべてのインストール設定が正しいことを確認しました。また、ReactOSがまだアルファ版であり、あなたのコンピュータやデータを壊す恐れがあることを理解しています。",
         IDC_CONFIRM_INSTALL, 7, 104, 303, 18, BS_MULTILINE
