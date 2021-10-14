@@ -404,11 +404,6 @@ Imm32ReconvertWideFromAnsi(LPRECONVERTSTRING pDest, const RECONVERTSTRING *pSrc,
     /* dwStrOffset */
     pDest->dwStrOffset = sizeof(RECONVERTSTRING);
 
-    /* the string */
-    pchDest = (LPWSTR)((LPBYTE)pDest + pDest->dwStrOffset);
-    cchDest = MultiByteToWideChar(uCodePage, MB_PRECOMPOSED, pchSrc, pSrc->dwStrLen,
-                                  pchDest, pSrc->dwStrLen);
-
     /* dwCompStrOffset */
     cch0 = IchWideFromAnsi(pSrc->dwCompStrOffset, pchSrc, uCodePage);
     pDest->dwCompStrOffset = cch0 * sizeof(WCHAR);
@@ -427,6 +422,11 @@ Imm32ReconvertWideFromAnsi(LPRECONVERTSTRING pDest, const RECONVERTSTRING *pSrc,
 
     /* dwStrLen */
     pDest->dwStrLen = cchDest;
+
+    /* the string */
+    pchDest = (LPWSTR)((LPBYTE)pDest + pDest->dwStrOffset);
+    cchDest = MultiByteToWideChar(uCodePage, MB_PRECOMPOSED, pchSrc, pSrc->dwStrLen,
+                                  pchDest, cchDest);
     pchDest[cchDest] = 0;
 
     return cbDest;
@@ -460,11 +460,6 @@ Imm32ReconvertAnsiFromWide(LPRECONVERTSTRING pDest, const RECONVERTSTRING *pSrc,
     /* dwStrOffset */
     pDest->dwStrOffset = sizeof(RECONVERTSTRING);
 
-    /* the string */
-    pchDest = (LPSTR)pDest + pDest->dwStrOffset;
-    cchDest = WideCharToMultiByte(uCodePage, 0, pchSrc, pSrc->dwStrLen,
-                                  pchDest, pSrc->dwStrLen * sizeof(WCHAR), NULL, NULL);
-
     /* dwCompStrOffset */
     cch1 = pSrc->dwCompStrOffset / sizeof(WCHAR);
     cch0 = IchAnsiFromWide(cch1, pchSrc, uCodePage);
@@ -485,6 +480,11 @@ Imm32ReconvertAnsiFromWide(LPRECONVERTSTRING pDest, const RECONVERTSTRING *pSrc,
 
     /* dwStrLen */
     pDest->dwStrLen = cchDest;
+
+    /* the string */
+    pchDest = (LPSTR)pDest + pDest->dwStrOffset;
+    cchDest = WideCharToMultiByte(uCodePage, 0, pchSrc, pSrc->dwStrLen,
+                                  pchDest, cchDest, NULL, NULL);
     pchDest[cchDest] = 0;
 
     return cbDest;
