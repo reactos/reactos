@@ -1573,7 +1573,7 @@ cleanup:
 LRESULT CDefView::OnExplorerCommand(UINT uCommand, BOOL bUseSelection)
 {
     HRESULT hResult;
-    HMENU hMenu;
+    HMENU hMenu = NULL;
 
     hResult = GetItemObject( bUseSelection ? SVGIO_SELECTION : SVGIO_BACKGROUND, IID_PPV_ARG(IContextMenu, &m_pCM));
     if (FAILED_UNEXPECTEDLY( hResult))
