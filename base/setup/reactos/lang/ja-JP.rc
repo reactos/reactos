@@ -112,7 +112,7 @@ BEGIN
     EDITTEXT IDC_DESTDRIVE, 95, 76, 210, 13, ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT "インストール先フォルダー:", IDC_STATIC, 6, 89, 88, 11
     EDITTEXT IDC_PATH, 95, 88, 210, 13, ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE | NOT WS_BORDER | NOT WS_TABSTOP
-    AUTOCHECKBOX "すべてのインストール設定が正しいことを確認しました。また、ReactOSがアルファ版の\nソフトウェアであり、あなたのコンピュータやデータを壊す恐れがあります。",
+    AUTOCHECKBOX "すべてのインストール設定が正しいことを確認しました。また、ReactOSがまだアルファ版であり、あなたのコンピュータやデータを壊す恐れがあることを理解しています。",
         IDC_CONFIRM_INSTALL, 7, 104, 303, 18, BS_MULTILINE
     LTEXT "すべてのインストール設定が正しいことを確認し、インストールプロセスを開始するために、インストールをクリックして下さい。", IDC_STATIC, 7, 124, 303, 18
 END
