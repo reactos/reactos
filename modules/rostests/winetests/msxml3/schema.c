@@ -19,6 +19,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+/* Synced to Wine-6.14 by Doug Lyons on September 21, 2021 */
+
 #include <stdio.h>
 #include <assert.h>
 #define COBJMACROS
@@ -30,23 +32,12 @@
 #undef CLSID_DOMDocument
 #include "msxml2did.h"
 #include "dispex.h"
+#include "cguid.h"
 
 #include "wine/test.h"
 
-#ifdef __REACTOS__
-#include <cguid.h>
-#endif
-
 #define EXPECT_HR(hr,hr_exp) \
     ok(hr == hr_exp, "got 0x%08x, expected 0x%08x\n", hr, hr_exp)
-
-static const WCHAR xdr_schema_uri[] = {'x','-','s','c','h','e','m','a',':','t','e','s','t','.','x','m','l',0};
-
-static const WCHAR xdr_schema_xml[] = {
-    '<','S','c','h','e','m','a',' ','x','m','l','n','s','=','\"','u','r','n',':','s','c','h','e','m','a','s','-','m','i','c','r','o','s','o','f','t','-','c','o','m',':','x','m','l','-','d','a','t','a','\"','\n',
-    'x','m','l','n','s',':','d','t','=','\"','u','r','n',':','s','c','h','e','m','a','s','-','m','i','c','r','o','s','o','f','t','-','c','o','m',':','d','a','t','a','t','y','p','e','s','\"','>','\n',
-    '<','/','S','c','h','e','m','a','>','\n',0
-};
 
 static const CHAR xdr_schema1_uri[] = "x-schema:test1.xdr";
 static const CHAR xdr_schema1_xml[] =
@@ -506,7 +497,8 @@ static void* _create_object(const GUID *clsid, const char *name, const IID *iid,
 
 static void test_schema_refs(void)
 {
-    static const WCHAR emptyW[] = {0};
+    static const WCHAR xdr_schema_xml[] =
+        L"<Schema xmlns=\"urn:schemas-microsoft-com:xml-data\"\nxmlns:dt=\"urn:schemas-microsoft-com:datatypes\">\n</Schema>\n";
     IXMLDOMDocument2 *doc;
     IXMLDOMNode *node;
     IXMLDOMSchemaCollection *cache;
@@ -551,12 +543,18 @@ static void test_schema_refs(void)
     node = NULL;
     ole_check(IXMLDOMSchemaCollection_get(cache, NULL, &node));
     ok(node != NULL, "%p\n", node);
+#if __REACTOS__
+    if (node)
+#endif
     IXMLDOMNode_Release(node);
 
     node = NULL;
-    str = SysAllocString(emptyW);
+    str = SysAllocString(L"");
     ole_check(IXMLDOMSchemaCollection_get(cache, str, &node));
     ok(node != NULL, "%p\n", node);
+#if __REACTOS__
+    if (node)
+#endif
     IXMLDOMNode_Release(node);
     SysFreeString(str);
 
@@ -584,7 +582,7 @@ static void test_schema_refs(void)
     ok(hr == S_OK, "got 0x%08x\n", hr);
     ok(len == 0, "got %d\n", len);
 
-    str = SysAllocString(xdr_schema_uri);
+    str = SysAllocString(L"x-schema:test.xml");
     ole_check(IXMLDOMSchemaCollection_add(cache, str, _variantdoc_(doc)));
 
     /* IXMLDOMSchemaCollection_add doesn't add a ref on doc */
@@ -989,10 +987,20 @@ static void test_collection_content(void)
         bstr = NULL;
         ole_check(IXMLDOMSchemaCollection_get_namespaceURI(cache1, i, &bstr));
         ok(bstr != NULL && *bstr, "expected non-empty string\n");
+#if __REACTOS__
+        if (bstr != NULL && *bstr)
+        {
+            content[i] = bstr;
+            for (j = 0; j < i; ++j)
+                ok(wcscmp(content[j], bstr), "got duplicate entry\n");
+        }
+#else
         content[i] = bstr;
 
         for (j = 0; j < i; ++j)
             ok(winetest_strcmpW(content[j], bstr), "got duplicate entry\n");
+#endif
+
     }
 
     for (i = 0; i < 3; ++i)
@@ -1009,8 +1017,16 @@ static void test_collection_content(void)
             ole_check(IXMLDOMSchemaCollection_get_namespaceURI(cache2, i, &bstr));
             ok(bstr != NULL && *bstr, "expected non-empty string\n");
 
+#if __REACTOS__
+            if (bstr != NULL && *bstr)
+            {
+                for (j = 0; j < i; ++j)
+                    ok(wcscmp(content[j], bstr), "got duplicate entry\n");
+            }
+#else
             for (j = 0; j < i; ++j)
                 ok(winetest_strcmpW(content[j], bstr), "got duplicate entry\n");
+#endif
             content[i] = bstr;
         }
 
@@ -1025,6 +1041,167 @@ static void test_collection_content(void)
     if (cache2) IXMLDOMSchemaCollection_Release(cache2);
 
     free_bstrs();
+}
+
+static HRESULT validate_regex_document(IXMLDOMDocument2 *doc, IXMLDOMDocument2 *schema, IXMLDOMSchemaCollection* cache,
+    const WCHAR *regex, const WCHAR *input)
+{
+    static const WCHAR regex_doc[] =
+L""
+"<?xml version='1.0'?>"
+"<root xmlns='urn:test'>%s</root>";
+
+    static const WCHAR regex_schema[] =
+L"<?xml version='1.0'?>"
+"<schema xmlns='http://www.w3.org/2001/XMLSchema'"
+"            targetNamespace='urn:test'>"
+"    <element name='root'>"
+"        <simpleType>"
+"            <restriction base='string'>"
+"                <pattern value='%s'/>"
+"            </restriction>"
+"        </simpleType>"
+"    </element>"
+"</schema>";
+
+    WCHAR buffer[1024];
+    IXMLDOMParseError* err;
+    VARIANT v;
+    VARIANT_BOOL b;
+    BSTR namespace;
+    BSTR bstr;
+    HRESULT hr;
+
+    VariantInit(&v);
+
+#ifdef __REACTOS__
+    swprintf(buffer, regex_doc, input);
+#else
+    swprintf(buffer, ARRAY_SIZE(buffer), regex_doc, input);
+#endif
+    bstr = SysAllocString(buffer);
+    ole_check(IXMLDOMDocument2_loadXML(doc, bstr, &b));
+    ok(b == VARIANT_TRUE, "failed to load XML\n");
+    SysFreeString(bstr);
+
+#ifdef __REACTOS__
+    swprintf(buffer, regex_schema, regex);
+#else
+    swprintf(buffer, ARRAY_SIZE(buffer), regex_schema, regex);
+#endif
+    bstr = SysAllocString(buffer);
+    ole_check(IXMLDOMDocument2_loadXML(schema, bstr, &b));
+    ok(b == VARIANT_TRUE, "failed to load XML\n");
+    SysFreeString(bstr);
+
+    /* add the schema to the cache */
+    V_VT(&v) = VT_DISPATCH;
+    V_DISPATCH(&v) = NULL;
+    ole_check(IXMLDOMDocument2_QueryInterface(schema, &IID_IDispatch, (void**)&V_DISPATCH(&v)));
+    ok(V_DISPATCH(&v) != NULL, "failed to get IDispatch interface\n");
+    namespace = alloc_str_from_narrow("urn:test");
+    hr = IXMLDOMSchemaCollection_add(cache, namespace, v);
+    SysFreeString(namespace);
+    VariantClear(&v);
+    if (FAILED(hr))
+        return hr;
+
+    /* associate the cache to the doc */
+    V_VT(&v) = VT_DISPATCH;
+    V_DISPATCH(&v) = NULL;
+    ole_check(IXMLDOMSchemaCollection_QueryInterface(cache, &IID_IDispatch, (void**)&V_DISPATCH(&v)));
+    ok(V_DISPATCH(&v) != NULL, "failed to get IDispatch interface\n");
+    ole_check(IXMLDOMDocument2_putref_schemas(doc, v));
+    VariantClear(&v);
+
+    /* validate the doc
+     * only declared elements in the declared order
+     * this is fine */
+    err = NULL;
+    bstr = NULL;
+    hr = IXMLDOMDocument2_validate(doc, &err);
+    ok(err != NULL, "domdoc_validate() should always set err\n");
+    if (IXMLDOMParseError_get_reason(err, &bstr) != S_FALSE)
+        trace("got error: %s\n", wine_dbgstr_w(bstr));
+    SysFreeString(bstr);
+    IXMLDOMParseError_Release(err);
+
+    return hr;
+}
+
+static void test_regex(void)
+{
+    struct regex_test {
+        const WCHAR *regex;
+        const WCHAR *input;
+        BOOL todo;
+    };
+
+    struct regex_test tests[] = {
+        { L"\\!", L"!", TRUE },
+        { L"\\\"", L"\"", TRUE },
+        { L"\\#", L"#", TRUE },
+        { L"\\$", L"$", TRUE },
+        { L"\\%", L"%", TRUE },
+        { L"\\,", L",", TRUE },
+        { L"\\/", L"/", TRUE },
+        { L"\\:", L":", TRUE },
+        { L"\\;", L";", TRUE },
+        { L"\\=", L"=", TRUE },
+        { L"\\>", L">", TRUE },
+        { L"\\@", L"@", TRUE },
+        { L"\\`", L"`", TRUE },
+        { L"\\~", L"~", TRUE },
+        { L"\\uCAFE", L"\xCAFE", TRUE },
+        /* non-BMP character in surrogate pairs: */
+        { L"\\uD83D\\uDE00", L"\xD83D\xDE00", TRUE }
+    };
+
+    int i;
+
+    for (i = 0; i < ARRAY_SIZE(tests); i++)
+    {
+        IXMLDOMDocument2 *doc40, *doc60;
+        IXMLDOMDocument2 *schema40, *schema60;
+        IXMLDOMSchemaCollection *cache40, *cache60;
+
+        doc40 = create_document_version(40, &IID_IXMLDOMDocument2);
+        doc60 = create_document_version(60, &IID_IXMLDOMDocument2);
+        schema40 = create_document_version(40, &IID_IXMLDOMDocument2);
+        schema60 = create_document_version(60, &IID_IXMLDOMDocument2);
+        cache40 = create_cache_version(40, &IID_IXMLDOMSchemaCollection);
+        cache60 = create_cache_version(60, &IID_IXMLDOMSchemaCollection);
+
+        if (doc60 && schema60 && cache60)
+        {
+            HRESULT hr = validate_regex_document(doc60, schema60, cache60, tests[i].regex, tests[i].input);
+            todo_wine_if(tests[i].todo)
+                ok(hr == S_OK, "got 0x%08x for version 60 regex %s input %s\n",
+                    hr, wine_dbgstr_w(tests[i].regex), wine_dbgstr_w(tests[i].input));
+            if (doc40 && schema40 && cache40)
+            {
+                hr = validate_regex_document(doc40, schema40, cache40, tests[i].regex, tests[i].input);
+                todo_wine_if(tests[i].todo)
+                    ok(hr == S_OK, "got 0x%08x for version 40 regex %s input %s\n",
+                        hr, wine_dbgstr_w(tests[i].regex), wine_dbgstr_w(tests[i].input));
+            }
+        }
+        else
+            ok(0, "out of memory\n");
+
+        if (doc40)
+            IXMLDOMDocument2_Release(doc40);
+        if (doc60)
+            IXMLDOMDocument2_Release(doc60);
+        if (schema40)
+            IXMLDOMDocument2_Release(schema40);
+        if (schema60)
+            IXMLDOMDocument2_Release(schema60);
+        if (cache40)
+            IXMLDOMSchemaCollection_Release(cache40);
+        if (cache60)
+            IXMLDOMSchemaCollection_Release(cache60);
+    }
 }
 
 static void test_XDR_schemas(void)
@@ -1438,8 +1615,6 @@ static void test_validate_on_load(void)
 
 static void test_obj_dispex(IUnknown *obj)
 {
-    static const WCHAR testW[] = {'t','e','s','t','p','r','o','p',0};
-    static const WCHAR starW[] = {'*',0};
     DISPID dispid = DISPID_SAX_XMLREADER_GETFEATURE;
     IDispatchEx *dispex;
     IUnknown *unk;
@@ -1457,7 +1632,7 @@ static void test_obj_dispex(IUnknown *obj)
     EXPECT_HR(hr, S_OK);
     ok(ticnt == 1, "ticnt=%u\n", ticnt);
 
-    name = SysAllocString(starW);
+    name = SysAllocString(L"*");
     hr = IDispatchEx_DeleteMemberByName(dispex, name, fdexNameCaseSensitive);
     EXPECT_HR(hr, E_NOTIMPL);
     SysFreeString(name);
@@ -1482,7 +1657,7 @@ static void test_obj_dispex(IUnknown *obj)
     EXPECT_HR(hr, E_NOTIMPL);
     ok(unk == (IUnknown*)0xdeadbeef, "got %p\n", unk);
 
-    name = SysAllocString(testW);
+    name = SysAllocString(L"testprop");
     hr = IDispatchEx_GetDispID(dispex, name, fdexNameEnsure, &dispid);
     ok(hr == DISP_E_UNKNOWNNAME, "got 0x%08x\n", hr);
     SysFreeString(name);
@@ -1686,6 +1861,7 @@ START_TEST(schema)
     test_collection_refs();
     test_length();
     test_collection_content();
+    test_regex();
     test_XDR_schemas();
     test_XDR_datatypes();
     test_validate_on_load();
