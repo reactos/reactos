@@ -429,9 +429,7 @@ Imm32ReconvertWideFromAnsi(LPRECONVERTSTRING pDest, const RECONVERTSTRING *pSrc,
     pDest->dwStrLen = cchDest;
     pchDest[cchDest] = 0;
 
-    /* dwSize */
-    pDest->dwSize = cbDest;
-    return pDest->dwSize;
+    return cbDest;
 }
 
 DWORD APIENTRY
@@ -489,7 +487,7 @@ Imm32ReconvertAnsiFromWide(LPRECONVERTSTRING pDest, const RECONVERTSTRING *pSrc,
     pDest->dwStrLen = cchDest;
     pchDest[cchDest] = 0;
 
-    return pDest->dwSize;
+    return cbDest;
 }
 
 /***********************************************************************
