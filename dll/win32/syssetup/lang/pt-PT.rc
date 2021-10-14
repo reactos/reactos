@@ -73,12 +73,12 @@ CAPTION "Instalação do ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON4, IDC_STATIC, 21, 7, 20, 20
-    LTEXT "A localização do sistema deve coincidir com o idioma das aplicações que quer utilizar. As informações regionais controlam o formato dos números, unidade monetária, data e hora.", IDC_STATIC, 50, 7, 253, 35
-    LTEXT "", IDC_LOCALETEXT, 50, 29, 250, 16
+    LTEXT "A localização do sistema deve coincidir com o idioma das aplicações que quer utilizar. As informações regionais controlam o formato dos números, unidade monetária, data e hora.", IDC_STATIC, 50, 7, 253, 25
+    LTEXT "%s", IDC_LOCALETEXT, 50, 36, 250, 16
     LTEXT "Para alterar a localização do sistema, clique em Personalizar.", IDC_STATIC, 50, 60, 196, 8
     PUSHBUTTON "&Personalizar...", IDC_CUSTOMLOCALE, 245, 57, 55, 14
     LTEXT "O tipo de teclado controla os caracteres que aparecem quando digita.", IDC_STATIC, 50, 86, 253, 8
-    LTEXT "", IDC_LAYOUTTEXT, 50, 100, 250, 16
+    LTEXT "%s", IDC_LAYOUTTEXT, 50, 100, 250, 16
     LTEXT "Para alterar o tipo do teclado, clique em Personalizar.", IDC_STATIC, 50, 126, 184, 8
     PUSHBUTTON "P&ersonalizar...", IDC_CUSTOMLAYOUT, 245, 122, 55, 14
 END

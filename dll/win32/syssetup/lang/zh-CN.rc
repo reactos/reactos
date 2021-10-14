@@ -1,4 +1,9 @@
-/* Improved by Luo Yufan 2018-10-06 (njlyf2011@hotmail.com) */
+/*
+ * PROJECT:     ReactOS System Setup Library
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Chinese (Simplified) resource file
+ * TRANSLATORS: Copyright 2018 Luo Yufan <njlyf2011@hotmail.com>
+ */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
@@ -76,11 +81,11 @@ FONT 9, "宋体"
 BEGIN
     ICON IDI_ICON4, IDC_STATIC, 21, 7, 20, 20
     LTEXT "系统区域设置应与您要使用的应用程序的语言相匹配。用户区域设置控制数字，货币和日期的显示方式。", IDC_STATIC, 53, 7, 253, 20
-    LTEXT "", IDC_LOCALETEXT, 53, 29, 250, 16
+    LTEXT "%s", IDC_LOCALETEXT, 53, 29, 250, 16
     LTEXT "想要更改系统和用户的区域设置，请单击 “自定义” 。", IDC_STATIC, 53, 60, 184, 8
     PUSHBUTTON "自定义(&C)...", IDC_CUSTOMLOCALE, 245, 57, 50, 14
     LTEXT "“文字输入语言”让您使用多种输入方法和设备用\n许多不同的语言输入文字。", IDC_STATIC, 53, 86, 253, 20
-    LTEXT "", IDC_LAYOUTTEXT, 53, 100, 250, 16
+    LTEXT "%s", IDC_LAYOUTTEXT, 53, 106, 250, 16
     LTEXT "想要查看或改变当前配置，请单击“自定义”。", IDC_STATIC, 53, 124, 184, 8
     PUSHBUTTON "自定义(&U)...", IDC_CUSTOMLAYOUT, 245, 120, 50, 14
 END

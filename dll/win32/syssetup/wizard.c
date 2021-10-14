@@ -1087,6 +1087,13 @@ ComputerPageDlgProc(HWND hwndDlg,
 
 
 static VOID
+SetUserLocaleName(HWND hwnd)
+{
+    /* FIXME: Set actual locale name */
+    SetWindowTextW(hwnd, L"");
+}
+
+static VOID
 SetKeyboardLayoutName(HWND hwnd)
 {
 #if 0
@@ -1139,6 +1146,9 @@ SetKeyboardLayoutName(HWND hwnd)
     }
 
     RegCloseKey(hKey);
+#else
+    /* FIXME: Set actual layout name */
+    SetWindowTextW(hwnd, L"");
 #endif
 }
 
@@ -1233,6 +1243,7 @@ LocalePageDlgProc(HWND hwndDlg,
             SetWindowLongPtr(hwndDlg, GWLP_USERDATA, (DWORD_PTR)SetupData);
             WriteUserLocale();
 
+            SetUserLocaleName(GetDlgItem(hwndDlg, IDC_LOCALETEXT));
             SetKeyboardLayoutName(GetDlgItem(hwndDlg, IDC_LAYOUTTEXT));
         }
         break;

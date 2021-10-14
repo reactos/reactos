@@ -74,11 +74,11 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON4, IDC_STATIC, 21, 7, 20, 20
     LTEXT "Bahasa sistem lokal harus sama dengan aplikasi yang ingin anda gunakan. Pengguna lokal mengontrol tampilan angka, kurs, dan tanggal.", IDC_STATIC, 53, 7, 253, 20
-    LTEXT "", IDC_LOCALETEXT, 53, 29, 250, 16
+    LTEXT "%s", IDC_LOCALETEXT, 53, 29, 250, 16
     LTEXT "Untuk mengubah setelan lokal sistem atau pengguna, klik Sesuaikan.", IDC_STATIC, 53, 60, 184, 16
     PUSHBUTTON "&Sesuaikan...", IDC_CUSTOMLOCALE, 245, 57, 50, 14
     LTEXT "Tata letak papan ketik mengontrol tampilan karakter yang muncul ketika anda ketik.", IDC_STATIC, 53, 86, 253, 8
-    LTEXT "", IDC_LAYOUTTEXT, 53, 100, 250, 16
+    LTEXT "%s", IDC_LAYOUTTEXT, 53, 100, 250, 16
     LTEXT "Untuk mengubah tata letak papan ketik, klik Sesuaikan.", IDC_STATIC, 53, 126, 184, 8
     PUSHBUTTON "S&esuaikan...", IDC_CUSTOMLAYOUT, 245, 122, 50, 14
 END
