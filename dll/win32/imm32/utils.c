@@ -361,6 +361,129 @@ Imm32SaveImeStateSentence(LPINPUTCONTEXTDX pIC, PIME_STATE pState, HKL hKL)
     return FALSE;
 }
 
+/*
+ * See RECONVERTSTRING structure:
+ * https://katahiromz.web.fc2.com/colony3rd/imehackerz/en/RECONVERTSTRING.html
+ *
+ * The dwCompStrOffset and dwTargetOffset members are the relative position of dwStrOffset.
+ * dwStrLen, dwCompStrLen, and dwTargetStrLen are the TCHAR count. dwStrOffset,
+ * dwCompStrOffset, and dwTargetStrOffset are the byte offset.
+ */
+
+DWORD APIENTRY
+Imm32ReconvertWideFromAnsi(LPRECONVERTSTRING pDest, const RECONVERTSTRING *pSrc, UINT uCodePage)
+{
+    DWORD cch0, cchDest, cbDest;
+    LPCSTR pchSrc = (LPCSTR)pSrc + pSrc->dwStrOffset;
+    LPWSTR pchDest;
+
+    if (pSrc->dwVersion != 0)
+        return 0;
+
+    cchDest = MultiByteToWideChar(uCodePage, MB_PRECOMPOSED, pchSrc, pSrc->dwStrLen,
+                                  NULL, 0);
+    cbDest = sizeof(RECONVERTSTRING) + (cchDest + 1) * sizeof(WCHAR);
+    if (!pDest)
+        return cbDest;
+
+    if (pDest->dwSize < cbDest)
+        return 0;
+
+    /* dwSize */
+    pDest->dwSize = cbDest;
+
+    /* dwVersion */
+    pDest->dwVersion = 0;
+
+    /* dwStrOffset */
+    pDest->dwStrOffset = sizeof(RECONVERTSTRING);
+
+    /* dwCompStrOffset */
+    cch0 = IchWideFromAnsi(pSrc->dwCompStrOffset, pchSrc, uCodePage);
+    pDest->dwCompStrOffset = cch0 * sizeof(WCHAR);
+
+    /* dwCompStrLen */
+    cch0 = IchWideFromAnsi(pSrc->dwCompStrOffset + pSrc->dwCompStrLen, pchSrc, uCodePage);
+    pDest->dwCompStrLen = (cch0 * sizeof(WCHAR) - pDest->dwCompStrOffset) / sizeof(WCHAR);
+
+    /* dwTargetStrOffset */
+    cch0 = IchWideFromAnsi(pSrc->dwTargetStrOffset, pchSrc, uCodePage);
+    pDest->dwTargetStrOffset = cch0 * sizeof(WCHAR);
+
+    /* dwTargetStrLen */
+    cch0 = IchWideFromAnsi(pSrc->dwTargetStrOffset + pSrc->dwTargetStrLen, pchSrc, uCodePage);
+    pDest->dwTargetStrLen = (cch0 * sizeof(WCHAR) - pSrc->dwTargetStrOffset) / sizeof(WCHAR);
+
+    /* dwStrLen */
+    pDest->dwStrLen = cchDest;
+
+    /* the string */
+    pchDest = (LPWSTR)((LPBYTE)pDest + pDest->dwStrOffset);
+    cchDest = MultiByteToWideChar(uCodePage, MB_PRECOMPOSED, pchSrc, pSrc->dwStrLen,
+                                  pchDest, cchDest);
+    pchDest[cchDest] = 0;
+
+    return cbDest;
+}
+
+DWORD APIENTRY
+Imm32ReconvertAnsiFromWide(LPRECONVERTSTRING pDest, const RECONVERTSTRING *pSrc, UINT uCodePage)
+{
+    DWORD cch0, cch1, cchDest, cbDest;
+    LPCWSTR pchSrc = (LPCWSTR)((LPCSTR)pSrc + pSrc->dwStrOffset);
+    LPSTR pchDest;
+
+    if (pSrc->dwVersion != 0)
+        return 0;
+
+    cchDest = WideCharToMultiByte(uCodePage, 0, pchSrc, pSrc->dwStrLen,
+                                  NULL, 0, NULL, NULL);
+    cbDest = sizeof(RECONVERTSTRING) + (cchDest + 1) * sizeof(CHAR);
+    if (!pDest)
+        return cbDest;
+
+    if (pDest->dwSize < cbDest)
+        return 0;
+
+    /* dwSize */
+    pDest->dwSize = cbDest;
+
+    /* dwVersion */
+    pDest->dwVersion = 0;
+
+    /* dwStrOffset */
+    pDest->dwStrOffset = sizeof(RECONVERTSTRING);
+
+    /* dwCompStrOffset */
+    cch1 = pSrc->dwCompStrOffset / sizeof(WCHAR);
+    cch0 = IchAnsiFromWide(cch1, pchSrc, uCodePage);
+    pDest->dwCompStrOffset = cch0 * sizeof(CHAR);
+
+    /* dwCompStrLen */
+    cch0 = IchAnsiFromWide(cch1 + pSrc->dwCompStrLen, pchSrc, uCodePage);
+    pDest->dwCompStrLen = cch0 * sizeof(CHAR) - pDest->dwCompStrOffset;
+
+    /* dwTargetStrOffset */
+    cch1 = pSrc->dwTargetStrOffset / sizeof(WCHAR);
+    cch0 = IchAnsiFromWide(cch1, pchSrc, uCodePage);
+    pDest->dwTargetStrOffset = cch0 * sizeof(CHAR);
+
+    /* dwTargetStrLen */
+    cch0 = IchAnsiFromWide(cch1 + pSrc->dwTargetStrLen, pchSrc, uCodePage);
+    pDest->dwTargetStrLen = cch0 * sizeof(CHAR) - pDest->dwTargetStrOffset;
+
+    /* dwStrLen */
+    pDest->dwStrLen = cchDest;
+
+    /* the string */
+    pchDest = (LPSTR)pDest + pDest->dwStrOffset;
+    cchDest = WideCharToMultiByte(uCodePage, 0, pchSrc, pSrc->dwStrLen,
+                                  pchDest, cchDest, NULL, NULL);
+    pchDest[cchDest] = 0;
+
+    return cbDest;
+}
+
 /***********************************************************************
  *		CtfImmIsTextFrameServiceDisabled(IMM32.@)
  */
