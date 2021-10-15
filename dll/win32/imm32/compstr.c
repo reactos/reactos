@@ -794,7 +794,7 @@ Imm32SetCompositionStringAW(HIMC hIMC, DWORD dwIndex, LPVOID pComp, DWORD dwComp
             {
                 if (bAnsiClient)
                 {
-                    cbReadNew = Imm32ReconvertAnsiFromWide(NULL, pComp, uCodePage);
+                    cbReadNew = Imm32ReconvertAnsiFromWide(NULL, pRead, uCodePage);
                     pReadNew = Imm32HeapAlloc(0, cbReadNew);
                     if (!pReadNew)
                         goto Quit;
@@ -802,11 +802,11 @@ Imm32SetCompositionStringAW(HIMC hIMC, DWORD dwIndex, LPVOID pComp, DWORD dwComp
                     pRS = pReadNew;
                     pRS->dwSize = cbReadNew;
                     pRS->dwVersion = 0;
-                    Imm32ReconvertAnsiFromWide(pRS, pComp, uCodePage);
+                    Imm32ReconvertAnsiFromWide(pRS, pRead, uCodePage);
                 }
                 else
                 {
-                    cbReadNew = Imm32ReconvertWideFromAnsi(NULL, pComp, uCodePage);
+                    cbReadNew = Imm32ReconvertWideFromAnsi(NULL, pRead, uCodePage);
                     pReadNew = Imm32HeapAlloc(0, cbReadNew);
                     if (!pReadNew)
                         goto Quit;
@@ -814,7 +814,7 @@ Imm32SetCompositionStringAW(HIMC hIMC, DWORD dwIndex, LPVOID pComp, DWORD dwComp
                     pRS = pReadNew;
                     pRS->dwSize = cbReadNew;
                     pRS->dwVersion = 0;
-                    Imm32ReconvertWideFromAnsi(pRS, pComp, uCodePage);
+                    Imm32ReconvertWideFromAnsi(pRS, pRead, uCodePage);
                 }
             }
             break;
