@@ -27,7 +27,7 @@ Imm32OpenICAndCS(HIMC hIMC, LPINPUTCONTEXT *ppIC, LPCOMPOSITIONSTRING *ppCS)
     if (!pIC)
         return FALSE;
 
-    pCS = (LPCOMPOSITIONSTRING)ImmLockIMCC(pIC->hCompStr);
+    pCS = ImmLockIMCC(pIC->hCompStr);
     if (!pCS)
     {
         ImmUnlockIMC(hIMC);
@@ -520,8 +520,8 @@ Imm32SetCompositionStringAW(HIMC hIMC, DWORD dwIndex, LPVOID pComp, DWORD dwComp
     BOOL ret = FALSE, bAnsiClient;
     LPVOID pCompNew = NULL, pReadNew = NULL;
     DWORD dwThreadId, cbCompNew = 0, cbReadNew = 0;
-    LPINPUTCONTEXT pIC = NULL;
-    LPCOMPOSITIONSTRING pCS = NULL;
+    LPINPUTCONTEXT pIC;
+    LPCOMPOSITIONSTRING pCS;
     HKL hKL;
     PIMEDPI pImeDpi;
     UINT uCodePage;
