@@ -131,7 +131,13 @@ dll/win32/msvfw32             # Synced to WineStaging-4.18
 dll/win32/msvidc32            # Synced to WineStaging-4.0
 dll/win32/msxml               # Synced to WineStaging-3.3
 dll/win32/msxml2              # Synced to WineStaging-3.3
-dll/win32/msxml3              # Synced to WineStaging-4.18
+dll/win32/msxml3/domdoc       # Synced to WineStaging-4.18
+dll/win32/msxml3/httpreq      # Synced to WineStaging-4.18
+dll/win32/msxml3/saxreader    # Synced to WineStaging-4.18
+dll/win32/msxml3/schema       # Synced to Wine-6.14
+dll/win32/msxml3/xmldoc       # Synced to WineStaging-4.18
+dll/win32/msxml3/xmlparser    # Synced to WineStaging-4.18
+dll/win32/msxml3/xmlview      # Synced to WineStaging-4.18
 dll/win32/msxml4              # Synced to WineStaging-3.3
 dll/win32/msxml6              # Synced to WineStaging-3.3
 dll/win32/nddeapi             # Synced to WineStaging-3.3
