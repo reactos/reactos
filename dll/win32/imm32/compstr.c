@@ -69,6 +69,7 @@ Imm32CompAttrWideToAnsi(const BYTE *src, INT src_len, LPCWSTR text,
     if (!src_len)
         return 0;
 
+    str_len /= sizeof(WCHAR);
     rc = WideCharToMultiByte(uCodePage, 0, text, str_len, NULL, 0, NULL, NULL);
 
     if (dst_len)
@@ -91,7 +92,7 @@ end:
         rc = j;
     }
 
-    return rc;
+    return rc * sizeof(CHAR);
 }
 
 static INT APIENTRY
@@ -104,6 +105,7 @@ Imm32CompAttrAnsiToWide(const BYTE *src, INT src_len, LPCSTR text,
     if (!src_len)
         return 0;
 
+    str_len /= sizeof(CHAR);
     rc = MultiByteToWideChar(uCodePage, MB_PRECOMPOSED, text, str_len, NULL, 0);
 
     if (dst_len)
@@ -125,7 +127,7 @@ Imm32CompAttrAnsiToWide(const BYTE *src, INT src_len, LPCSTR text,
         rc = j;
     }
 
-    return rc;
+    return rc * sizeof(WCHAR);
 }
 
 static INT APIENTRY
