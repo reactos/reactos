@@ -23,6 +23,14 @@ typedef struct _VARIABLE_DATA
     LPTSTR lpCookedValue;
 } VARIABLE_DATA, *PVARIABLE_DATA;
 
+typedef struct _ENVIRONMENT_DIALOG_DATA
+{
+    DWORD cxMin;
+    DWORD cyMin;
+    DWORD cxOld;
+    DWORD cyOld;
+} ENVIRONMENT_DIALOG_DATA, *PENVIRONMENT_DIALOG_DATA;
+
 typedef struct _ENVIRONMENT_EDIT_DIALOG_DATA
 {
     BOOL bIsItemSelected;
@@ -230,7 +238,7 @@ AddEmptyItem(HWND hwndListView,
     lvi.pszText = _T("");
     lvi.iItem = dwSelectedValueIndex;
     lvi.iSubItem = 0;
-    ListView_InsertItem(hwndListView, &lvi);    
+    ListView_InsertItem(hwndListView, &lvi);
 }
 
 static VOID
@@ -417,12 +425,12 @@ OnEnvironmentEditDlgResize(HWND hwndDlg,
 
     if ((cx == DlgData->cxOld) && (cy == DlgData->cyOld))
         return;
-    
+
     if (DlgData->dwDlgID == IDD_EDIT_VARIABLE)
     {
         hdwp = BeginDeferWindowPos(5);
-            
-        /* For edit control */ 
+
+        /* For edit control */
         hItemWnd = GetDlgItem(hwndDlg, IDC_VARIABLE_NAME);
         GetWindowRect(hItemWnd, &rect);
         MapWindowPoints(HWND_DESKTOP, hwndDlg, (LPPOINT)&rect, sizeof(RECT)/sizeof(POINT));
@@ -947,7 +955,7 @@ EditVariableDlgProc(HWND hwndDlg,
 
                     LoadString(hApplet, IDS_ENVIRONMENT_WARNING, szStr, _countof(szStr));
                     LoadString(hApplet, IDS_ENVIRONMENT_WARNING_TITLE, szStr2, _countof(szStr2));
-                    
+
                     if (MessageBox(hwndDlg,
                                    szStr,
                                    szStr2,
@@ -959,7 +967,7 @@ EditVariableDlgProc(HWND hwndDlg,
                 }
 
                 case IDC_BUTTON_NEW:
-                {                    
+                {
                     DlgData->dwSelectedValueIndex = ListView_GetItemCount(hwndListView);
                     AddEmptyItem(hwndListView, DlgData->dwSelectedValueIndex);
                     ListView_EditLabel(hwndListView, DlgData->dwSelectedValueIndex);
@@ -1243,10 +1251,10 @@ OnEditVariable(HWND hwndDlg,
     DlgData = GlobalAlloc(GPTR, sizeof(EDIT_DIALOG_DATA));
     if (!DlgData)
         return;
-    
+
     DlgData->dwDlgID = IDD_EDIT_VARIABLE;
     DlgData->dwSelectedValueIndex = -1;
-    
+
     hwndListView = GetDlgItem(hwndDlg, iDlgItem);
 
     iItem = GetSelectedListViewItem(hwndListView);
@@ -1280,7 +1288,7 @@ OnEditVariable(HWND hwndDlg,
                                       EditVariableDlgProc,
                                       (LPARAM)DlgData);
             }
-            
+
             if (iRet > 0)
             {
                 ListView_SetItemText(hwndListView, iItem, 0, DlgData->VarData->lpName);
@@ -1342,6 +1350,238 @@ OnDeleteVariable(HWND hwndDlg,
     }
 }
 
+static VOID
+OnEnvironmentDlgResize(HWND hwndDlg,
+                       PENVIRONMENT_DIALOG_DATA DlgData,
+                       DWORD cx,
+                       DWORD cy)
+{
+    RECT rect;
+    INT Colx, y = 0;
+    HDWP hdwp = NULL;
+    HWND hItemWnd;
+
+    if ((cx == DlgData->cxOld) && (cy == DlgData->cyOld))
+        return;
+
+    hdwp = BeginDeferWindowPos(13);
+
+    if (cy >= DlgData->cyOld)
+        y += (cy - DlgData->cyOld + 1) / 2;
+    else
+        y -= (DlgData->cyOld - cy + 1) / 2;
+
+    /* For group box control */
+    hItemWnd = GetDlgItem(hwndDlg, IDC_USER_VARIABLE_GROUP);
+    GetWindowRect(hItemWnd, &rect);
+    MapWindowPoints(HWND_DESKTOP, hwndDlg, (LPPOINT)&rect, sizeof(RECT)/sizeof(POINT));
+
+    if (hdwp)
+    {
+        hdwp = DeferWindowPos(hdwp,
+                              hItemWnd,
+                              0,
+                              rect.left, rect.top,
+                              (rect.right - rect.left) + (cx - DlgData->cxOld),
+                              (rect.bottom - rect.top) + y,
+                              SWP_NOZORDER | SWP_NOACTIVATE);
+    }
+
+    hItemWnd = GetDlgItem(hwndDlg, IDC_SYSTEM_VARIABLE_GROUP);
+    GetWindowRect(hItemWnd, &rect);
+    MapWindowPoints(HWND_DESKTOP, hwndDlg, (LPPOINT)&rect, sizeof(RECT)/sizeof(POINT));
+
+    if (hdwp)
+    {
+        hdwp = DeferWindowPos(hdwp,
+                              hItemWnd,
+                              0,
+                              rect.left, rect.top + y,
+                              (rect.right - rect.left) + (cx - DlgData->cxOld),
+                              (rect.bottom - rect.top) + y,
+                              SWP_NOZORDER | SWP_NOACTIVATE);
+    }
+
+    /* For list view control */
+    hItemWnd = GetDlgItem(hwndDlg, IDC_USER_VARIABLE_LIST);
+    GetWindowRect(hItemWnd, &rect);
+    MapWindowPoints(HWND_DESKTOP, hwndDlg, (LPPOINT)&rect, sizeof(RECT)/sizeof(POINT));
+
+    if (hdwp)
+    {
+        hdwp = DeferWindowPos(hdwp,
+                              hItemWnd,
+                              0,
+                              rect.left, rect.top,
+                              (rect.right - rect.left) + (cx - DlgData->cxOld),
+                              (rect.bottom - rect.top) + y,
+                              SWP_NOZORDER | SWP_NOACTIVATE);
+        Colx = ListView_GetColumnWidth(hItemWnd, 1);
+        ListView_SetColumnWidth(hItemWnd, 1, Colx + (cx - DlgData->cxOld));
+    }
+
+    hItemWnd = GetDlgItem(hwndDlg, IDC_SYSTEM_VARIABLE_LIST);
+    GetWindowRect(hItemWnd, &rect);
+    MapWindowPoints(HWND_DESKTOP, hwndDlg, (LPPOINT)&rect, sizeof(RECT)/sizeof(POINT));
+
+    if (hdwp)
+    {
+        hdwp = DeferWindowPos(hdwp,
+                              hItemWnd,
+                              0,
+                              rect.left, rect.top + y,
+                              (rect.right - rect.left) + (cx - DlgData->cxOld),
+                              (rect.bottom - rect.top) + y,
+                              SWP_NOZORDER | SWP_NOACTIVATE);
+        Colx = ListView_GetColumnWidth(hItemWnd, 1);
+        ListView_SetColumnWidth(hItemWnd, 1, Colx + (cx - DlgData->cxOld));
+    }
+
+    /* For the buttons */
+    hItemWnd = GetDlgItem(hwndDlg, IDC_USER_VARIABLE_NEW);
+    GetWindowRect(hItemWnd, &rect);
+    MapWindowPoints(HWND_DESKTOP, hwndDlg, (LPPOINT)&rect, sizeof(RECT)/sizeof(POINT));
+
+    if (hdwp)
+    {
+        hdwp = DeferWindowPos(hdwp,
+                              hItemWnd,
+                              0,
+                              rect.left + (cx - DlgData->cxOld),
+                              rect.top + y,
+                              0, 0,
+                              SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE);
+    }
+
+    hItemWnd = GetDlgItem(hwndDlg, IDC_USER_VARIABLE_EDIT);
+    GetWindowRect(hItemWnd, &rect);
+    MapWindowPoints(HWND_DESKTOP, hwndDlg, (LPPOINT)&rect, sizeof(RECT)/sizeof(POINT));
+
+    if (hdwp)
+    {
+        hdwp = DeferWindowPos(hdwp,
+                              hItemWnd,
+                              0,
+                              rect.left + (cx - DlgData->cxOld),
+                              rect.top + y,
+                              0, 0,
+                              SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE);
+    }
+
+    hItemWnd = GetDlgItem(hwndDlg, IDC_USER_VARIABLE_DELETE);
+    GetWindowRect(hItemWnd, &rect);
+    MapWindowPoints(HWND_DESKTOP, hwndDlg, (LPPOINT)&rect, sizeof(RECT)/sizeof(POINT));
+
+    if (hdwp)
+    {
+        hdwp = DeferWindowPos(hdwp,
+                              hItemWnd,
+                              0,
+                              rect.left + (cx - DlgData->cxOld),
+                              rect.top + y,
+                              0, 0,
+                              SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE);
+    }
+
+    hItemWnd = GetDlgItem(hwndDlg, IDC_SYSTEM_VARIABLE_NEW);
+    GetWindowRect(hItemWnd, &rect);
+    MapWindowPoints(HWND_DESKTOP, hwndDlg, (LPPOINT)&rect, sizeof(RECT)/sizeof(POINT));
+
+    if (hdwp)
+    {
+        hdwp = DeferWindowPos(hdwp,
+                              hItemWnd,
+                              0,
+                              rect.left + (cx - DlgData->cxOld),
+                              rect.top + y * 2,
+                              0, 0,
+                              SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE);
+    }
+
+    hItemWnd = GetDlgItem(hwndDlg, IDC_SYSTEM_VARIABLE_EDIT);
+    GetWindowRect(hItemWnd, &rect);
+    MapWindowPoints(HWND_DESKTOP, hwndDlg, (LPPOINT)&rect, sizeof(RECT)/sizeof(POINT));
+
+    if (hdwp)
+    {
+        hdwp = DeferWindowPos(hdwp,
+                              hItemWnd,
+                              0,
+                              rect.left + (cx - DlgData->cxOld),
+                              rect.top + y * 2,
+                              0, 0,
+                              SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE);
+    }
+
+    hItemWnd = GetDlgItem(hwndDlg, IDC_SYSTEM_VARIABLE_DELETE);
+    GetWindowRect(hItemWnd, &rect);
+    MapWindowPoints(HWND_DESKTOP, hwndDlg, (LPPOINT)&rect, sizeof(RECT)/sizeof(POINT));
+
+    if (hdwp)
+    {
+        hdwp = DeferWindowPos(hdwp,
+                              hItemWnd,
+                              0,
+                              rect.left + (cx - DlgData->cxOld),
+                              rect.top + y * 2,
+                              0, 0,
+                              SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE);
+    }
+
+    hItemWnd = GetDlgItem(hwndDlg, IDOK);
+    GetWindowRect(hItemWnd, &rect);
+    MapWindowPoints(HWND_DESKTOP, hwndDlg, (LPPOINT)&rect, sizeof(RECT)/sizeof(POINT));
+
+    if (hdwp)
+    {
+        hdwp = DeferWindowPos(hdwp,
+                              hItemWnd,
+                              0,
+                              rect.left + (cx - DlgData->cxOld),
+                              rect.top + (cy - DlgData->cyOld * 2),
+                              0, 0,
+                              SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE);
+    }
+
+    hItemWnd = GetDlgItem(hwndDlg, IDCANCEL);
+    GetWindowRect(hItemWnd, &rect);
+    MapWindowPoints(HWND_DESKTOP, hwndDlg, (LPPOINT)&rect, sizeof(RECT)/sizeof(POINT));
+
+    if (hdwp)
+    {
+        hdwp = DeferWindowPos(hdwp,
+                              hItemWnd,
+                              0,
+                              rect.left + (cx - DlgData->cxOld),
+                              rect.top + y * 2,
+                              0, 0,
+                              SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE);
+    }
+
+    /* For the size grip */
+    hItemWnd = GetDlgItem(hwndDlg, IDC_DIALOG_GRIP);
+    GetWindowRect(hItemWnd, &rect);
+    MapWindowPoints(HWND_DESKTOP, hwndDlg, (LPPOINT)&rect, sizeof(RECT)/sizeof(POINT));
+
+    if (hdwp)
+    {
+        hdwp = DeferWindowPos(hdwp,
+                              hItemWnd,
+                              0,
+                              rect.left + (cx - DlgData->cxOld),
+                              rect.top + (cy - DlgData->cyOld),
+                              0, 0,
+                              SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE);
+    }
+
+    if (hdwp)
+    {
+        EndDeferWindowPos(hdwp);
+    }
+
+    DlgData->cxOld = cx;
+    DlgData->cyOld = cy;
+}
 
 static VOID
 ReleaseListViewItems(HWND hwndDlg,
@@ -1557,11 +1797,53 @@ EnvironmentDlgProc(HWND hwndDlg,
                    WPARAM wParam,
                    LPARAM lParam)
 {
+    PENVIRONMENT_DIALOG_DATA DlgData;
+    DlgData = (PENVIRONMENT_DIALOG_DATA)GetWindowLongPtr(hwndDlg, GWLP_USERDATA);
+
     switch (uMsg)
     {
         case WM_INITDIALOG:
+        {
+            RECT rect;
+
+            DlgData = GlobalAlloc(GPTR, sizeof(ENVIRONMENT_DIALOG_DATA));
+            if (!DlgData)
+            {
+                EndDialog(hwndDlg, 0);
+                return (INT_PTR)TRUE;
+            }
+            SetWindowLongPtr(hwndDlg, GWLP_USERDATA, (LONG_PTR)DlgData);
+
+            GetClientRect(hwndDlg, &rect);
+            DlgData->cxOld = rect.right - rect.left;
+            DlgData->cyOld = rect.bottom - rect.top;
+
+            GetWindowRect(hwndDlg, &rect);
+            DlgData->cxMin = rect.right - rect.left;
+            DlgData->cyMin = rect.bottom - rect.top;
+
             OnInitEnvironmentDialog(hwndDlg);
             break;
+        }
+
+        case WM_SIZE:
+        {
+            OnEnvironmentDlgResize(hwndDlg, DlgData, LOWORD(lParam), HIWORD(lParam));
+            break;
+        }
+
+        case WM_SIZING:
+        {
+            LPRECT pRect = (LPRECT)lParam;
+
+            if (pRect->right - pRect->left < DlgData->cxMin)
+                pRect->right = pRect->left + DlgData->cxMin;
+
+            if (pRect->bottom - pRect->top < DlgData->cyMin)
+                pRect->bottom = pRect->top + DlgData->cyMin;
+
+            return TRUE;
+        }
 
         case WM_COMMAND:
             switch (LOWORD(wParam))
@@ -1607,6 +1889,7 @@ EnvironmentDlgProc(HWND hwndDlg,
         case WM_DESTROY:
             ReleaseListViewItems(hwndDlg, IDC_USER_VARIABLE_LIST);
             ReleaseListViewItems(hwndDlg, IDC_SYSTEM_VARIABLE_LIST);
+            GlobalFree(DlgData);
             break;
 
         case WM_NOTIFY:
