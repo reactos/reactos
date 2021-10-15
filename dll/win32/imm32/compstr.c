@@ -568,7 +568,7 @@ Imm32SetCompositionStringAW(HIMC hIMC, DWORD dwIndex, LPVOID pComp, DWORD dwComp
     /*
      * This code is really too complicated. But I cannot simplify.
      * It converts like (pComp, dwCompLen) --> (pCompNew, cbCompNew) and
-     * (pRead, dwReadLen) --> (pRead, cbReadNew).
+     * (pRead, dwReadLen) --> (pReadNew, cbReadNew).
      * (1) Check bAnsiClient, (2) Get the size, (3) Allocate a buffer to convert,
      * (4) Store converted data into the buffer.
      */
