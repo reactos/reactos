@@ -14,12 +14,37 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(imm);
 
+BOOL APIENTRY
+Imm32OpenICAndCS(HIMC hIMC, LPINPUTCONTEXT *ppIC, LPCOMPOSITIONSTRING *ppCS)
+{
+    LPINPUTCONTEXT pIC;
+    LPCOMPOSITIONSTRING pCS;
+
+    *ppIC = NULL;
+    *ppCS = NULL;
+
+    pIC = ImmLockIMC(hIMC);
+    if (!pIC)
+        return FALSE;
+
+    pCS = (LPCOMPOSITIONSTRING)ImmLockIMCC(pIC->hCompStr);
+    if (!pCS)
+    {
+        ImmUnlockIMC(hIMC);
+        return FALSE;
+    }
+
+    *ppIC = pIC;
+    *ppCS = pCS;
+    return TRUE;
+}
+
 static inline LONG APIENTRY
 Imm32CompStrAnsiToWide(LPCSTR psz, DWORD cb, LPWSTR lpBuf, DWORD dwBufLen, UINT uCodePage)
 {
     DWORD ret = MultiByteToWideChar(uCodePage, MB_PRECOMPOSED, psz, cb / sizeof(CHAR),
                                     lpBuf, dwBufLen / sizeof(WCHAR));
-    if ((ret + 1) * sizeof(WCHAR) <= dwBufLen)
+    if (lpBuf && (ret + 1) * sizeof(WCHAR) <= dwBufLen)
         lpBuf[ret] = 0;
     return ret * sizeof(WCHAR);
 }
@@ -29,7 +54,7 @@ Imm32CompStrWideToAnsi(LPCWSTR psz, DWORD cb, LPSTR lpBuf, DWORD dwBufLen, UINT 
 {
     DWORD ret = WideCharToMultiByte(uCodePage, 0, psz, cb / sizeof(WCHAR),
                                     lpBuf, dwBufLen / sizeof(CHAR), NULL, NULL);
-    if ((ret + 1) * sizeof(CHAR) <= dwBufLen)
+    if (lpBuf && (ret + 1) * sizeof(CHAR) <= dwBufLen)
         lpBuf[ret] = 0;
     return ret * sizeof(CHAR);
 }
@@ -487,11 +512,349 @@ Imm32GetCompStrW(HIMC hIMC, const COMPOSITIONSTRING *pCS, DWORD dwIndex,
 }
 
 BOOL APIENTRY
-Imm32SetCompositionStringAW(HIMC hIMC, DWORD dwIndex, LPCVOID lpComp, DWORD dwCompLen,
-                            LPCVOID lpRead, DWORD dwReadLen, BOOL bAnsi)
+Imm32SetCompositionStringAW(HIMC hIMC, DWORD dwIndex, LPVOID pComp, DWORD dwCompLen,
+                            LPVOID pRead, DWORD dwReadLen, BOOL bAnsiAPI)
 {
-    FIXME("TODO:\n");
-    return FALSE;
+    BOOL ret = FALSE, bAnsiClient;
+    LPVOID pCompNew = NULL, pReadNew = NULL;
+    DWORD dwThreadId, cbCompNew = 0, cbReadNew = 0;
+    LPINPUTCONTEXT pIC = NULL;
+    LPCOMPOSITIONSTRING pCS = NULL;
+    HKL hKL;
+    PIMEDPI pImeDpi;
+    UINT uCodePage;
+    LPRECONVERTSTRING pRS;
+
+    dwThreadId = NtUserQueryInputContext(hIMC, 1);
+    if (dwThreadId != GetCurrentThreadId())
+        return FALSE;
+
+    hKL = GetKeyboardLayout(dwThreadId);
+    pImeDpi = ImmLockImeDpi(hKL);
+    if (!pImeDpi)
+        return FALSE;
+
+    uCodePage = pImeDpi->uCodePage;
+    bAnsiClient = !ImeDpi_IsUnicode(pImeDpi);
+
+    switch (dwIndex)
+    {
+        case SCS_SETSTR: case SCS_CHANGEATTR: case SCS_CHANGECLAUSE:
+            break;
+
+        case SCS_SETRECONVERTSTRING: case SCS_QUERYRECONVERTSTRING:
+            if (pImeDpi->ImeInfo.fdwSCSCaps & SCS_CAP_SETRECONVERTSTRING)
+                break;
+            /* FALL THROUGH */
+        default:
+            ImmUnlockImeDpi(pImeDpi);
+            return FALSE;
+    }
+
+    if (bAnsiAPI == bAnsiClient || (!pComp && !pRead))
+    {
+        ret = pImeDpi->ImeSetCompositionString(hIMC, dwIndex, pComp, dwCompLen,
+                                               pRead, dwReadLen);
+        ImmUnlockImeDpi(pImeDpi);
+        return ret;
+    }
+
+    if (!Imm32OpenICAndCS(hIMC, &pIC, &pCS))
+    {
+        ImmUnlockImeDpi(pImeDpi);
+        return FALSE;
+    }
+
+    /*
+     * This code is really too complicated. But I cannot simplify.
+     * It converts like (pComp, dwCompLen) --> (pCompNew, cbCompNew) and
+     * (pRead, dwReadLen) --> (pRead, cbReadNew).
+     * (1) Check bAnsiClient, (2) Get the size, (3) Allocate a buffer to convert,
+     * (4) Store converted data into the buffer.
+     */
+    switch (dwIndex)
+    {
+        case SCS_SETSTR:
+            if (pComp)
+            {
+                if (bAnsiClient)
+                {
+                    cbCompNew = Imm32CompStrWideToAnsi(pComp, dwCompLen, NULL, 0, uCodePage);
+                    pCompNew = Imm32HeapAlloc(0, cbCompNew);
+                    if (!pCompNew)
+                        goto Quit;
+
+                    Imm32CompStrWideToAnsi(pComp, dwCompLen, pCompNew, cbCompNew, uCodePage);
+                }
+                else
+                {
+                    cbCompNew = Imm32CompStrAnsiToWide(pComp, dwCompLen, NULL, 0, uCodePage);
+                    pCompNew = Imm32HeapAlloc(0, cbCompNew);
+                    if (!pCompNew)
+                        goto Quit;
+
+                    Imm32CompStrAnsiToWide(pComp, dwCompLen, pCompNew, cbCompNew, uCodePage);
+                }
+            }
+
+            if (pRead)
+            {
+                if (bAnsiClient)
+                {
+                    cbReadNew = Imm32CompStrWideToAnsi(pRead, dwReadLen, NULL, 0, uCodePage);
+                    pReadNew = Imm32HeapAlloc(0, cbReadNew);
+                    if (!pReadNew)
+                        goto Quit;
+
+                    Imm32CompStrWideToAnsi(pRead, dwReadLen, pReadNew, cbReadNew, uCodePage);
+                }
+                else
+                {
+                    cbReadNew = Imm32CompStrAnsiToWide(pRead, dwReadLen, NULL, 0, uCodePage);
+                    pReadNew = Imm32HeapAlloc(0, cbReadNew);
+                    if (!pReadNew)
+                        goto Quit;
+
+                    Imm32CompStrAnsiToWide(pRead, dwReadLen, pReadNew, cbReadNew, uCodePage);
+                }
+            }
+            break;
+
+        case SCS_CHANGEATTR:
+            if (pComp)
+            {
+                if (bAnsiClient)
+                {
+                    cbCompNew = Imm32CompAttrWideToAnsi(CS_Attr(pCS, CompAttr),
+                                                        CS_Size(pCS, CompAttr),
+                                                        CS_StrW(pCS, CompStr),
+                                                        CS_SizeW(pCS, CompStr),
+                                                        NULL, 0, uCodePage);
+                    pCompNew = Imm32HeapAlloc(0, cbCompNew);
+                    if (!pCompNew)
+                        goto Quit;
+
+                    Imm32CompAttrWideToAnsi(CS_Attr(pCS, CompAttr), CS_Size(pCS, CompAttr),
+                                            CS_StrW(pCS, CompStr), CS_SizeW(pCS, CompStr),
+                                            pCompNew, cbCompNew, uCodePage);
+                }
+                else
+                {
+                    cbCompNew = Imm32CompAttrAnsiToWide(CS_Attr(pCS, CompAttr),
+                                                        CS_Size(pCS, CompAttr),
+                                                        CS_StrA(pCS, CompStr),
+                                                        CS_SizeA(pCS, CompStr),
+                                                        NULL, 0, uCodePage);
+                    pCompNew = Imm32HeapAlloc(0, cbCompNew);
+                    if (!pCompNew)
+                        goto Quit;
+
+                    Imm32CompAttrAnsiToWide(CS_Attr(pCS, CompAttr), CS_Size(pCS, CompAttr),
+                                            CS_StrA(pCS, CompStr), CS_SizeA(pCS, CompStr),
+                                            pCompNew, cbCompNew, uCodePage);
+                }
+            }
+
+            if (pRead)
+            {
+                if (bAnsiClient)
+                {
+                    cbReadNew = Imm32CompAttrWideToAnsi(CS_Attr(pCS, CompReadAttr),
+                                                        CS_Size(pCS, CompReadAttr),
+                                                        CS_StrW(pCS, CompReadStr),
+                                                        CS_SizeW(pCS, CompReadStr),
+                                                        NULL, 0, uCodePage);
+                    pReadNew = Imm32HeapAlloc(0, cbReadNew);
+                    if (!pReadNew)
+                        goto Quit;
+
+                    Imm32CompAttrWideToAnsi(CS_Attr(pCS, CompReadAttr), CS_Size(pCS, CompReadAttr),
+                                            CS_StrW(pCS, CompReadStr), CS_SizeW(pCS, CompReadStr),
+                                            pReadNew, cbReadNew, uCodePage);
+                }
+                else
+                {
+                    cbReadNew = Imm32CompAttrAnsiToWide(CS_Attr(pCS, CompReadAttr),
+                                                        CS_Size(pCS, CompReadAttr),
+                                                        CS_StrA(pCS, CompReadStr),
+                                                        CS_SizeA(pCS, CompReadStr),
+                                                        NULL, 0, uCodePage);
+                    pReadNew = Imm32HeapAlloc(0, cbReadNew);
+                    if (!pReadNew)
+                        goto Quit;
+
+                    Imm32CompAttrAnsiToWide(CS_Attr(pCS, CompReadAttr), CS_Size(pCS, CompReadAttr),
+                                            CS_StrA(pCS, CompReadStr), CS_SizeA(pCS, CompReadStr),
+                                            pReadNew, cbReadNew, uCodePage);
+                }
+            }
+            break;
+
+        case SCS_CHANGECLAUSE:
+            if (pComp)
+            {
+                if (bAnsiClient)
+                {
+                    cbCompNew = Imm32CompClauseWideToAnsi(CS_Clause(pCS, CompClause),
+                                                          CS_Size(pCS, CompClause),
+                                                          CS_StrW(pCS, CompStr),
+                                                          NULL, 0, uCodePage);
+                    pCompNew = Imm32HeapAlloc(0, cbCompNew);
+                    if (!pCompNew)
+                        goto Quit;
+
+                    Imm32CompClauseWideToAnsi(CS_Clause(pCS, CompClause), CS_Size(pCS, CompClause),
+                                              CS_StrW(pCS, CompStr),
+                                              pCompNew, cbCompNew, uCodePage);
+                }
+                else
+                {
+                    cbCompNew = Imm32CompClauseAnsiToWide(CS_Clause(pCS, CompClause),
+                                                          CS_Size(pCS, CompClause),
+                                                          CS_StrA(pCS, CompStr),
+                                                          NULL, 0, uCodePage);
+                    pCompNew = Imm32HeapAlloc(0, cbCompNew);
+                    if (!pCompNew)
+                        goto Quit;
+
+                    Imm32CompClauseAnsiToWide(CS_Clause(pCS, CompClause), CS_Size(pCS, CompClause),
+                                              CS_StrA(pCS, CompStr),
+                                              pCompNew, cbCompNew, uCodePage);
+                }
+            }
+
+            if (pRead)
+            {
+                if (bAnsiClient)
+                {
+                    cbReadNew = Imm32CompClauseWideToAnsi(CS_Clause(pCS, CompReadClause),
+                                                          CS_Size(pCS, CompReadClause),
+                                                          CS_StrW(pCS, CompReadStr),
+                                                          NULL, 0, uCodePage);
+                    pReadNew = Imm32HeapAlloc(0, cbReadNew);
+                    if (!pReadNew)
+                        goto Quit;
+
+                    Imm32CompClauseWideToAnsi(CS_Clause(pCS, CompReadClause),
+                                              CS_Size(pCS, CompReadClause),
+                                              CS_StrW(pCS, CompReadStr),
+                                              pReadNew, cbReadNew, uCodePage);
+                }
+                else
+                {
+                    cbReadNew = Imm32CompClauseAnsiToWide(CS_Clause(pCS, CompReadClause),
+                                                          CS_Size(pCS, CompReadClause),
+                                                          CS_StrA(pCS, CompReadStr),
+                                                          NULL, 0, uCodePage);
+                    pReadNew = Imm32HeapAlloc(0, cbReadNew);
+                    if (!pReadNew)
+                        goto Quit;
+
+                    Imm32CompClauseAnsiToWide(CS_Clause(pCS, CompReadClause),
+                                              CS_Size(pCS, CompReadClause),
+                                              CS_StrA(pCS, CompReadStr),
+                                              pReadNew, cbReadNew, uCodePage);
+                }
+            }
+            break;
+
+        case SCS_SETRECONVERTSTRING: case SCS_QUERYRECONVERTSTRING:
+        {
+            if (pComp)
+            {
+                if (bAnsiClient)
+                {
+                    cbCompNew = Imm32ReconvertAnsiFromWide(NULL, pComp, uCodePage);
+                    pCompNew = Imm32HeapAlloc(0, cbCompNew);
+                    if (!pCompNew)
+                        goto Quit;
+
+                    pRS = pCompNew;
+                    pRS->dwSize = cbCompNew;
+                    pRS->dwVersion = 0;
+                    Imm32ReconvertAnsiFromWide(pRS, pComp, uCodePage);
+                }
+                else
+                {
+                    cbCompNew = Imm32ReconvertWideFromAnsi(NULL, pComp, uCodePage);
+                    pCompNew = Imm32HeapAlloc(0, cbCompNew);
+                    if (!pCompNew)
+                        goto Quit;
+
+                    pRS = pCompNew;
+                    pRS->dwSize = cbCompNew;
+                    pRS->dwVersion = 0;
+                    Imm32ReconvertWideFromAnsi(pRS, pComp, uCodePage);
+                }
+            }
+
+            if (pRead)
+            {
+                if (bAnsiClient)
+                {
+                    cbReadNew = Imm32ReconvertAnsiFromWide(NULL, pComp, uCodePage);
+                    pReadNew = Imm32HeapAlloc(0, cbReadNew);
+                    if (!pReadNew)
+                        goto Quit;
+
+                    pRS = pReadNew;
+                    pRS->dwSize = cbReadNew;
+                    pRS->dwVersion = 0;
+                    Imm32ReconvertAnsiFromWide(pRS, pComp, uCodePage);
+                }
+                else
+                {
+                    cbReadNew = Imm32ReconvertWideFromAnsi(NULL, pComp, uCodePage);
+                    pReadNew = Imm32HeapAlloc(0, cbReadNew);
+                    if (!pReadNew)
+                        goto Quit;
+
+                    pRS = pReadNew;
+                    pRS->dwSize = cbReadNew;
+                    pRS->dwVersion = 0;
+                    Imm32ReconvertWideFromAnsi(pRS, pComp, uCodePage);
+                }
+            }
+            break;
+        }
+    }
+
+    ImmUnlockIMCC(pIC->hCompStr);
+    pCS = NULL;
+    ImmUnlockIMC(hIMC);
+    pIC = NULL;
+
+    ret = pImeDpi->ImeSetCompositionString(hIMC, dwIndex, pCompNew, cbCompNew,
+                                           pReadNew, cbReadNew);
+
+    if (dwIndex == SCS_QUERYRECONVERTSTRING)
+    {
+        if (pComp)
+        {
+            if (bAnsiClient)
+                ret = Imm32ReconvertWideFromAnsi(pComp, pCompNew, uCodePage);
+            else
+                ret = Imm32ReconvertAnsiFromWide(pComp, pCompNew, uCodePage);
+        }
+
+        if (pRead)
+        {
+            if (bAnsiClient)
+                ret = Imm32ReconvertWideFromAnsi(pRead, pReadNew, uCodePage);
+            else
+                ret = Imm32ReconvertAnsiFromWide(pRead, pReadNew, uCodePage);
+        }
+    }
+
+Quit:
+    if (pCS)
+        ImmUnlockIMCC(pIC->hCompStr);
+    if (pIC)
+        ImmUnlockIMC(hIMC);
+    Imm32HeapFree(pCompNew);
+    Imm32HeapFree(pReadNew);
+    ImmUnlockImeDpi(pImeDpi);
+    return ret;
 }
 
 /***********************************************************************
@@ -582,8 +945,8 @@ LONG WINAPI ImmGetCompositionStringW(HIMC hIMC, DWORD dwIndex, LPVOID lpBuf, DWO
  *		ImmSetCompositionStringA (IMM32.@)
  */
 BOOL WINAPI
-ImmSetCompositionStringA(HIMC hIMC, DWORD dwIndex, LPCVOID lpComp, DWORD dwCompLen,
-                         LPCVOID lpRead, DWORD dwReadLen)
+ImmSetCompositionStringA(HIMC hIMC, DWORD dwIndex, LPVOID lpComp, DWORD dwCompLen,
+                         LPVOID lpRead, DWORD dwReadLen)
 {
     TRACE("(%p, %lu, %p, %lu, %p, %lu)\n",
           hIMC, dwIndex, lpComp, dwCompLen, lpRead, dwReadLen);
@@ -595,8 +958,8 @@ ImmSetCompositionStringA(HIMC hIMC, DWORD dwIndex, LPCVOID lpComp, DWORD dwCompL
  *		ImmSetCompositionStringW (IMM32.@)
  */
 BOOL WINAPI
-ImmSetCompositionStringW(HIMC hIMC, DWORD dwIndex, LPCVOID lpComp, DWORD dwCompLen,
-                         LPCVOID lpRead, DWORD dwReadLen)
+ImmSetCompositionStringW(HIMC hIMC, DWORD dwIndex, LPVOID lpComp, DWORD dwCompLen,
+                         LPVOID lpRead, DWORD dwReadLen)
 {
     TRACE("(%p, %lu, %p, %lu, %p, %lu)\n",
           hIMC, dwIndex, lpComp, dwCompLen, lpRead, dwReadLen);
