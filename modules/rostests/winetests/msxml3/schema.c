@@ -19,8 +19,6 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-/* Synced to Wine-6.14 by Doug Lyons on September 21, 2021 */
-
 #include <stdio.h>
 #include <assert.h>
 #define COBJMACROS
