@@ -92,7 +92,7 @@ end:
         rc = j;
     }
 
-    return rc * sizeof(CHAR);
+    return rc * sizeof(BYTE);
 }
 
 static INT APIENTRY
@@ -127,7 +127,7 @@ Imm32CompAttrAnsiToWide(const BYTE *src, INT src_len, LPCSTR text,
         rc = j;
     }
 
-    return rc * sizeof(WCHAR);
+    return rc * sizeof(BYTE);
 }
 
 static INT APIENTRY
