@@ -486,8 +486,7 @@ DefWndGetIcon(PWND pWnd, WPARAM wParam, LPARAM lParam)
         case ICON_SMALL2:
             hIconRet = UserGetProp(pWnd, gpsi->atomIconSmProp, TRUE);
             break;
-        default:
-            break;
+        DEFAULT_UNREACHABLE;
     }
     return (LRESULT)hIconRet;
 }
