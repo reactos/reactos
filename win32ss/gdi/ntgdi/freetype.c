@@ -6168,6 +6168,7 @@ IntExtTextOutW(
                 {
                     DPRINT1("Failed to render glyph! [index: %d]\n", glyph_index);
                     IntUnLockFreeType();
+                    bResult = FALSE;
                     goto Cleanup;
                 }
 
@@ -6243,6 +6244,7 @@ IntExtTextOutW(
             {
                 DPRINT1("Failed to load and render glyph! [index: %d]\n", glyph_index);
                 IntUnLockFreeType();
+                bResult = FALSE;
                 goto Cleanup;
             }
 
@@ -6256,6 +6258,7 @@ IntExtTextOutW(
             {
                 DPRINT1("Failed to render glyph! [index: %d]\n", glyph_index);
                 IntUnLockFreeType();
+                bResult = FALSE;
                 goto Cleanup;
             }
 
