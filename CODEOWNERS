@@ -39,7 +39,7 @@
 ## As responsible, he may refuse a local patch if you did not try to
 ## upstream your changes.
 
-## If you want to get listed in that file, either put yourself in the
+## If you want to get listed in this file, either put yourself in the
 ## file and push it, or open a pull request. You can also ask a person
 ## who has push access to add yourself.
 
@@ -121,8 +121,8 @@
 #   R: learn-more, learn_more, Mark Jansen
 #   R: ThFabba, Thomas Faber
 #   S: Maintained
-/sdk/cmake/     @learn-more @ThFabba
-*.cmake         @learn-more @ThFabba
+/sdk/cmake/     @learn-more
+*.cmake         @learn-more
 
 # File Patch API
 #   M: learn-more, learn_more, Mark Jansen
@@ -225,7 +225,7 @@
 #   R: learn-more, learn_more, Mark Jansen
 #   R: ThFabba, Thomas Faber
 #   S: Maintained
-/modules/rostests/apitests/ @learn-more @ThFabba
+/modules/rostests/apitests/ @learn-more
 
 # ReactOS Kernel-Mode Tests
 #   M: ThFabba, Thomas Faber
