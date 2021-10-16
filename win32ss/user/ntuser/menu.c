@@ -3813,6 +3813,7 @@ static LRESULT FASTCALL MENU_DoNextMenu(MTRACKER* pmt, UINT Vk, UINT wFlags)
               /* switch to the system menu */
               MenuTmp = get_win_sys_menu(hNewWnd);
               if (MenuTmp) hNewMenu = UserHMGetHandle(MenuTmp);
+              else hNewMenu = NULL;
           }
           else
               return FALSE;
