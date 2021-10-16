@@ -494,6 +494,22 @@ ExtTextOutW(
 {
     PDC_ATTR pdcattr;
 
+    // Need both, should return a parameter error? No they don't!
+    if ( !lpDx && fuOptions & ETO_PDY )
+        return FALSE;
+
+    // Now sorting out rectangle.
+
+    // Here again, need both.
+    if ( lprc && !(fuOptions & (ETO_CLIPPED|ETO_OPAQUE)) )
+    {
+        lprc = NULL; // No flags, no rectangle.
+    }
+    else if (!lprc) // No rectangle, force clear flags if set and continue.
+    {
+       fuOptions &= ~(ETO_CLIPPED|ETO_OPAQUE);
+    }
+
     if ( !bBypassETOWMF )
     {
         HANDLE_METADC(BOOL,
