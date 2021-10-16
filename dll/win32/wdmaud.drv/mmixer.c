@@ -496,6 +496,20 @@ WdmAudSetWaveDeviceFormatByMMixer(
 
     bWaveIn = (DeviceType == WAVE_IN_DEVICE_TYPE ? TRUE : FALSE);
 
+    if (WaveFormatSize >= sizeof(WAVEFORMAT))
+    {
+        /* Store format */
+        Instance->WaveFormatEx.wFormatTag = WaveFormat->wFormatTag;
+        Instance->WaveFormatEx.nChannels = WaveFormat->nChannels;
+        Instance->WaveFormatEx.nSamplesPerSec = WaveFormat->nSamplesPerSec;
+        Instance->WaveFormatEx.nBlockAlign = WaveFormat->nBlockAlign;
+        Instance->WaveFormatEx.nAvgBytesPerSec = WaveFormat->nAvgBytesPerSec;
+    }
+
+    /* Store details */
+    Instance->WaveFormatEx.cbSize = WaveFormat->cbSize;
+    Instance->WaveFormatEx.wBitsPerSample = (WaveFormat->nAvgBytesPerSec * 8) / (WaveFormat->nSamplesPerSec * WaveFormat->nChannels);
+
     if (MMixerOpenWave(&MixerContext, DeviceId, bWaveIn, WaveFormat, NULL, NULL, &Instance->Handle) == MM_STATUS_SUCCESS)
     {
         if (DeviceType == WAVE_OUT_DEVICE_TYPE)
@@ -506,6 +520,53 @@ WdmAudSetWaveDeviceFormatByMMixer(
         }
         return MMSYSERR_NOERROR;
     }
+#if 1
+    else
+    {
+        /* HACK for Intel AC97 driver (which does not support anything other
+         * except 16 bits per sample and 2 (stereo) channels) (until the proper resampling is implemented):
+         * if opening device fails for requested format, then just try to open it with default format instead.
+         * Many other old audio cards also don't support other quality modes and channel layouts
+         * (besides 16 bps and stereo), but support many sample rates (8000 - 48000 Hz).
+         * So forcing bps and channels only is enough for them.
+         */
+
+        if (WaveFormat->nChannels != 2 ||
+            WaveFormat->wBitsPerSample != 16)
+        {
+            DPRINT1("Using AC97 HACK\n");
+
+            if (WaveFormat->nChannels != 2)
+            {
+                /* Correct channels */
+                WaveFormat->nChannels = 2;
+            }
+
+            if (WaveFormat->wBitsPerSample != 16)
+            {
+                /* Correct bits per sample */
+                WaveFormat->wBitsPerSample = 16;
+            }
+
+            /* Recalculate other values depending on it */
+            WaveFormat->nBlockAlign = WaveFormat->wBitsPerSample * WaveFormat->nChannels / 8;
+            WaveFormat->nAvgBytesPerSec = WaveFormat->nSamplesPerSec * WaveFormat->nBlockAlign;
+
+            /* Try to open device again */
+            if (MMixerOpenWave(&MixerContext, DeviceId, bWaveIn, WaveFormat, NULL, NULL, &Instance->Handle) == MM_STATUS_SUCCESS)
+            {
+                if (DeviceType == WAVE_OUT_DEVICE_TYPE)
+                {
+                    MMixerSetWaveStatus(&MixerContext, Instance->Handle, KSSTATE_ACQUIRE);
+                    MMixerSetWaveStatus(&MixerContext, Instance->Handle, KSSTATE_PAUSE);
+                    MMixerSetWaveStatus(&MixerContext, Instance->Handle, KSSTATE_RUN);
+                }
+
+                return MMSYSERR_NOERROR;
+            }
+        }
+    }
+#endif
     return MMSYSERR_ERROR;
 }
 
