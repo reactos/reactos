@@ -553,25 +553,23 @@ HKL WINAPI ImmInstallIMEW(LPCWSTR lpszIMEFileName, LPCWSTR lpszLayoutText)
         if (!pEntries)
             return NULL;
 
-        if (Imm32LoadRegImeEntries(pEntries, nCount))
-        {
-            for (iEntry = 0; iEntry < nCount; ++iEntry)
-            {
-                /* Same filename? */
-                if (lstrcmpiW(pEntries[iEntry].szFileName, pchFilePart) == 0)
-                {
-                    if (wLangID != LOWORD(pEntries[iEntry].hKL))
-                        goto Quit; /* The language is different */
-
-                    hNewKL = pEntries[iEntry].hKL; /* Found */
-                    break;
-                }
-            }
-        }
-        else
+        if (!Imm32LoadRegImeEntries(pEntries, nCount))
         {
             Imm32HeapFree(pEntries);
             return NULL;
+        }
+
+        for (iEntry = 0; iEntry < nCount; ++iEntry)
+        {
+            /* Same filename? */
+            if (lstrcmpiW(pEntries[iEntry].szFileName, pchFilePart) == 0)
+            {
+                if (wLangID != LOWORD(pEntries[iEntry].hKL))
+                    goto Quit; /* The language is different */
+
+                hNewKL = pEntries[iEntry].hKL; /* Found */
+                break;
+            }
         }
     }
 
