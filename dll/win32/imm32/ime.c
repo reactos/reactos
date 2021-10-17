@@ -152,6 +152,7 @@ BOOL APIENTRY Imm32LoadImeInfo(PIMEINFOEX pImeInfoEx, PIMEDPI pImeDpi)
     WCHAR szPath[MAX_PATH];
     HINSTANCE hIME;
     FARPROC fn;
+    BOOL ret = FALSE;
 
     if (!Imm32GetSystemLibraryPath(szPath, _countof(szPath), pImeInfoEx->wszImeFile))
         return FALSE;
@@ -177,22 +178,37 @@ BOOL APIENTRY Imm32LoadImeInfo(PIMEINFOEX pImeInfoEx, PIMEDPI pImeDpi)
 #include "imetable.h"
 #undef DEFINE_IME_ENTRY
 
-    if (!Imm32InquireIme(pImeDpi))
+    if (Imm32InquireIme(pImeDpi))
     {
-        ERR("Imm32LoadImeInfo: Imm32InquireIme failed\n");
-        goto Failed;
+        ret = TRUE;
+    }
+    else
+    {
+        ERR("Imm32InquireIme failed\n");
+Failed:
+        ret = FALSE;
+        FreeLibrary(pImeDpi->hInst);
+        pImeDpi->hInst = NULL;
     }
 
-    if (pImeInfoEx->fLoadFlag)
-        return TRUE;
+    if (pImeInfoEx->fLoadFlag == 0)
+    {
+        if (ret)
+        {
+            pImeInfoEx->ImeInfo = pImeDpi->ImeInfo;
+            RtlCopyMemory(pImeInfoEx->wszUIClass, pImeDpi->szUIClass,
+                          sizeof(pImeInfoEx->wszUIClass));
+            pImeInfoEx->fLoadFlag = 2;
+        }
+        else
+        {
+            pImeInfoEx->fLoadFlag = 1;
+        }
 
-    NtUserSetImeOwnerWindow(pImeInfoEx, TRUE);
-    return TRUE;
+        NtUserSetImeInfoEx(pImeInfoEx);
+    }
 
-Failed:
-    FreeLibrary(pImeDpi->hInst);
-    pImeDpi->hInst = NULL;
-    return FALSE;
+    return ret;
 }
 
 PIMEDPI APIENTRY Ime32LoadImeDpi(HKL hKL, BOOL bLock)
