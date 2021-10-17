@@ -657,7 +657,7 @@ Quit:
     return ret;
 }
 
-HKL APIENTRY Imm32GetNextHKL(UINT cKLs, const IME_LAYOUT *pLayouts, WORD wLangID)
+HKL APIENTRY Imm32GetNextHKL(UINT cKLs, const REG_IME *pLayouts, WORD wLangID)
 {
     UINT iKL, wID, wLow = 0xE0FF, wHigh = 0xE01F, wNextID = 0;
 
@@ -702,7 +702,7 @@ HKL APIENTRY Imm32GetNextHKL(UINT cKLs, const IME_LAYOUT *pLayouts, WORD wLangID
     return (HKL)(DWORD_PTR)MAKELONG(wLangID, wNextID);
 }
 
-UINT APIENTRY Imm32GetRegImes(PIME_LAYOUT pLayouts, UINT cLayouts)
+UINT APIENTRY Imm32GetRegImes(PREG_IME pLayouts, UINT cLayouts)
 {
     HKEY hkeyLayouts, hkeyIME;
     WCHAR szImeFileName[80], szImeKey[20];

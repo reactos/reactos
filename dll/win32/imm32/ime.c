@@ -531,7 +531,7 @@ HKL WINAPI ImmInstallIMEW(LPCWSTR lpszIMEFileName, LPCWSTR lpszLayoutText)
     UINT iLayout, cLayouts;
     HKL hNewKL;
     WORD wLangID;
-    PIME_LAYOUT pLayouts = NULL;
+    PREG_IME pLayouts = NULL;
 
     TRACE("(%s, %s)\n", debugstr_w(lpszIMEFileName), debugstr_w(lpszLayoutText));
 
@@ -552,7 +552,7 @@ HKL WINAPI ImmInstallIMEW(LPCWSTR lpszIMEFileName, LPCWSTR lpszLayoutText)
     cLayouts = Imm32GetRegImes(NULL, 0);
     if (cLayouts)
     {
-        pLayouts = Imm32HeapAlloc(0, cLayouts * sizeof(IME_LAYOUT));
+        pLayouts = Imm32HeapAlloc(0, cLayouts * sizeof(REG_IME));
         if (!pLayouts || !Imm32GetRegImes(pLayouts, cLayouts))
         {
             Imm32HeapFree(pLayouts);
