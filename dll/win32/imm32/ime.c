@@ -525,7 +525,7 @@ HKL WINAPI ImmInstallIMEW(LPCWSTR lpszIMEFileName, LPCWSTR lpszLayoutText)
     WCHAR szImeFileName[MAX_PATH], szImeDestPath[MAX_PATH], szImeKey[20];
     IMEINFOEX InfoEx;
     LPWSTR pchFilePart;
-    UINT iItem, nCount;
+    UINT iEntry, nCount;
     HKL hNewKL;
     WORD wLangID;
     PIME_ENTRY pEntries = NULL;
@@ -555,15 +555,15 @@ HKL WINAPI ImmInstallIMEW(LPCWSTR lpszIMEFileName, LPCWSTR lpszLayoutText)
 
         if (Imm32LoadRegImeEntries(pEntries, nCount))
         {
-            for (iItem = 0; iItem < nCount; ++iItem)
+            for (iEntry = 0; iEntry < nCount; ++iEntry)
             {
                 /* Same filename? */
-                if (lstrcmpiW(pEntries[iItem].szFileName, pchFilePart) == 0)
+                if (lstrcmpiW(pEntries[iEntry].szFileName, pchFilePart) == 0)
                 {
-                    if (wLangID != LOWORD(pEntries[iItem].hKL))
-                        goto Quit;
+                    if (wLangID != LOWORD(pEntries[iEntry].hKL))
+                        goto Quit; /* The language is different */
 
-                    hNewKL = pEntries[iItem].hKL; /* Found */
+                    hNewKL = pEntries[iEntry].hKL; /* Found */
                     break;
                 }
             }
