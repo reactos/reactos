@@ -476,12 +476,141 @@ Quit:
 }
 
 /***********************************************************************
+ *		ImmInstallIMEA (IMM32.@)
+ */
+HKL WINAPI ImmInstallIMEA(LPCSTR lpszIMEFileName, LPCSTR lpszLayoutText)
+{
+    HKL hKL = NULL;
+    LPWSTR pszFileNameW = NULL, pszLayoutTextW = NULL;
+
+    TRACE("(%s, %s)\n", debugstr_a(lpszIMEFileName), debugstr_a(lpszLayoutText));
+
+    pszFileNameW = Imm32WideFromAnsi(lpszIMEFileName);
+    if (!pszFileNameW)
+        goto Quit;
+
+    pszLayoutTextW = Imm32WideFromAnsi(lpszLayoutText);
+    if (!pszLayoutTextW)
+        goto Quit;
+
+    hKL = ImmInstallIMEW(pszFileNameW, pszLayoutTextW);
+
+Quit:
+    Imm32HeapFree(pszFileNameW);
+    Imm32HeapFree(pszLayoutTextW);
+    return hKL;
+}
+
+/***********************************************************************
+ *		ImmInstallIMEW (IMM32.@)
+ */
+HKL WINAPI ImmInstallIMEW(LPCWSTR lpszIMEFileName, LPCWSTR lpszLayoutText)
+{
+    WCHAR szImeFileName[MAX_PATH], szImeDestPath[MAX_PATH], szImeKey[20];
+    IMEINFOEX InfoEx;
+    LPWSTR pchFilePart;
+    UINT iItem, nCount;
+    HKL hNewKL;
+    WORD wLangID;
+    PIME_ENTRY pEntries = NULL;
+
+    TRACE("(%p, %p)\n", lpszIMEFileName, lpszLayoutText);
+
+    GetFullPathNameW(lpszIMEFileName, _countof(szImeFileName), szImeFileName, &pchFilePart);
+    CharUpperW(szImeFileName);
+    if (!pchFilePart)
+        return NULL;
+
+    /* Load the IME version info */
+    InfoEx.hkl = hNewKL = NULL;
+    StringCchCopyW(InfoEx.wszImeFile, _countof(InfoEx.wszImeFile), pchFilePart);
+    if (Imm32LoadImeVerInfo(&InfoEx) && InfoEx.hkl)
+        wLangID = LOWORD(InfoEx.hkl);
+    else
+        return NULL;
+
+    /* Load the IME entries from registry */
+    nCount = Imm32LoadRegImeEntries(NULL, 0);
+    if (nCount)
+    {
+        pEntries = Imm32HeapAlloc(0, nCount * sizeof(IME_ENTRY));
+        if (!pEntries)
+            return NULL;
+
+        if (Imm32LoadRegImeEntries(pEntries, nCount))
+        {
+            for (iItem = 0; iItem < nCount; ++iItem)
+            {
+                /* Same filename? */
+                if (lstrcmpiW(pEntries[iItem].szFileName, pchFilePart) == 0)
+                {
+                    if (wLangID != LOWORD(pEntries[iItem].hKL))
+                        goto Quit;
+
+                    hNewKL = pEntries[iItem].hKL; /* Found */
+                    break;
+                }
+            }
+        }
+        else
+        {
+            Imm32HeapFree(pEntries);
+            return NULL;
+        }
+    }
+
+    /* If the IME for the specified filename is valid, then unload it now */
+    /* FIXME: ImmGetImeInfoEx is broken */
+    if (ImmGetImeInfoEx(&InfoEx, 3, pchFilePart) &&
+        !UnloadKeyboardLayout(InfoEx.hkl))
+    {
+        hNewKL = NULL;
+        goto Quit;
+    }
+
+    Imm32GetSystemLibraryPath(szImeDestPath, _countof(szImeDestPath), pchFilePart);
+    CharUpperW(szImeDestPath);
+
+    /* If the source and the destination pathnames were different, then copy the IME file */
+    if (lstrcmpiW(szImeFileName, szImeDestPath) != 0)
+    {
+        if (!Imm32CopyFile(szImeFileName, szImeDestPath))
+        {
+            hNewKL = NULL;
+            goto Quit;
+        }
+    }
+
+    if (hNewKL == NULL)
+        hNewKL = Imm32GetNextHKL(nCount, pEntries, wLangID);
+
+    if (hNewKL)
+    {
+        /* Write the IME entry to registry */
+        if (Imm32WriteRegImeEntry(hNewKL, pchFilePart, lpszLayoutText))
+        {
+            Imm32UIntToStr((DWORD)(DWORD_PTR)hNewKL, 16, szImeKey, _countof(szImeKey));
+            hNewKL = LoadKeyboardLayoutW(szImeKey, KLF_REPLACELANG);
+        }
+        else
+        {
+            hNewKL = NULL;
+        }
+    }
+
+Quit:
+    Imm32HeapFree(pEntries);
+    return hNewKL;
+}
+
+/***********************************************************************
  *		ImmIsIME (IMM32.@)
  */
 BOOL WINAPI ImmIsIME(HKL hKL)
 {
     IMEINFOEX info;
     TRACE("(%p)\n", hKL);
+    /* FIXME: ImmGetImeInfoEx is broken */
     return !!ImmGetImeInfoEx(&info, ImeInfoExImeWindow, &hKL);
 }
 
@@ -542,6 +671,7 @@ ImmGetImeInfoEx(PIMEINFOEX pImeInfoEx, IMEINFOEXCLASS SearchType, PVOID pvSearch
     BOOL bDisabled = FALSE;
     HKL hKL;
 
+    /* FIXME: broken */
     switch (SearchType)
     {
         case ImeInfoExKeyboardLayout:

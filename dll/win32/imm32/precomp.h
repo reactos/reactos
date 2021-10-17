@@ -24,6 +24,7 @@
 #include <winnls.h>
 #include <winreg.h>
 #include <winnls32.h>
+#include <winver.h>
 
 #include <imm.h>
 #include <ddk/imm.h>
@@ -60,6 +61,13 @@
 #define REGKEY_IMM                  L"Software\\Microsoft\\Windows NT\\CurrentVersion\\IMM"
 
 #define ROUNDUP4(n) (((n) + 3) & ~3)  /* DWORD alignment */
+
+typedef struct IME_ENTRY
+{
+    HKL hKL;
+    WCHAR szImeKey[20];     /* "E0XXYYYY": "E0XX" is the device handle. "YYYY" is a LANGID. */
+    WCHAR szFileName[80];   /* The IME module filename */
+} IME_ENTRY, *PIME_ENTRY;
 
 extern HMODULE g_hImm32Inst;
 extern RTL_CRITICAL_SECTION g_csImeDpi;
@@ -139,3 +147,11 @@ DWORD APIENTRY
 Imm32ReconvertAnsiFromWide(LPRECONVERTSTRING pDest, const RECONVERTSTRING *pSrc, UINT uCodePage);
 DWORD APIENTRY
 Imm32ReconvertWideFromAnsi(LPRECONVERTSTRING pDest, const RECONVERTSTRING *pSrc, UINT uCodePage);
+
+HRESULT APIENTRY Imm32StrToUInt(LPCWSTR pszText, LPDWORD pdwValue, ULONG nBase);
+HRESULT APIENTRY Imm32UIntToStr(DWORD dwValue, ULONG nBase, LPWSTR pszBuff, USHORT cchBuff);
+BOOL APIENTRY Imm32LoadImeVerInfo(PIMEINFOEX pImeInfoEx);
+UINT APIENTRY Imm32LoadRegImeEntries(PIME_ENTRY pEntries, UINT cEntries);
+BOOL APIENTRY Imm32CopyFile(LPWSTR pszOldFile, LPCWSTR pszNewFile);
+HKL APIENTRY Imm32GetNextHKL(UINT cKLs, const IME_ENTRY *pEntries, WORD wLangID);
+BOOL APIENTRY Imm32WriteRegImeEntry(HKL hKL, LPCWSTR pchFilePart, LPCWSTR pszLayout);

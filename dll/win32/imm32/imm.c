@@ -51,54 +51,59 @@ BOOL WINAPI ImmRegisterClient(PSHAREDINFO ptr, HINSTANCE hMod)
 /***********************************************************************
  *		ImmLoadLayout (IMM32.@)
  */
-HKL WINAPI ImmLoadLayout(HKL hKL, PIMEINFOEX pImeInfoEx)
+BOOL WINAPI ImmLoadLayout(HKL hKL, PIMEINFOEX pImeInfoEx)
 {
     DWORD cbData;
-    UNICODE_STRING UnicodeString;
     HKEY hLayoutKey = NULL, hLayoutsKey = NULL;
     LONG error;
-    NTSTATUS Status;
     WCHAR szLayout[MAX_PATH];
 
     TRACE("(%p, %p)\n", hKL, pImeInfoEx);
 
     if (IS_IME_HKL(hKL) || !Imm32IsCiceroMode() || Imm32Is16BitMode())
     {
-        UnicodeString.Buffer = szLayout;
-        UnicodeString.MaximumLength = sizeof(szLayout);
-        Status = RtlIntegerToUnicodeString((DWORD_PTR)hKL, 16, &UnicodeString);
-        if (!NT_SUCCESS(Status))
-            return NULL;
+        Imm32UIntToStr((DWORD)(DWORD_PTR)hKL, 16, szLayout, _countof(szLayout));
 
         error = RegOpenKeyW(HKEY_LOCAL_MACHINE, REGKEY_KEYBOARD_LAYOUTS, &hLayoutsKey);
         if (error)
-            return NULL;
+        {
+            ERR("RegOpenKeyW error: 0x%08lX\n", error);
+            return FALSE;
+        }
 
         error = RegOpenKeyW(hLayoutsKey, szLayout, &hLayoutKey);
+        if (error)
+        {
+            ERR("RegOpenKeyW error: 0x%08lX\n", error);
+            RegCloseKey(hLayoutsKey);
+            return FALSE;
+        }
     }
     else
     {
         error = RegOpenKeyW(HKEY_LOCAL_MACHINE, REGKEY_IMM, &hLayoutKey);
+        if (error)
+        {
+            ERR("RegOpenKeyW error: 0x%08lX\n", error);
+            return FALSE;
+        }
     }
 
-    if (error)
-    {
-        ERR("RegOpenKeyW error: 0x%08lX\n", error);
-        hKL = NULL;
-    }
-    else
-    {
-        cbData = sizeof(pImeInfoEx->wszImeFile);
-        error = RegQueryValueExW(hLayoutKey, L"Ime File", 0, 0,
-                                 (LPBYTE)pImeInfoEx->wszImeFile, &cbData);
-        if (error)
-            hKL = NULL;
-    }
+    cbData = sizeof(pImeInfoEx->wszImeFile);
+    error = RegQueryValueExW(hLayoutKey, L"Ime File", 0, 0,
+                             (LPBYTE)pImeInfoEx->wszImeFile, &cbData);
+    pImeInfoEx->wszImeFile[_countof(pImeInfoEx->wszImeFile) - 1] = 0;
 
     RegCloseKey(hLayoutKey);
     if (hLayoutsKey)
         RegCloseKey(hLayoutsKey);
-    return hKL;
+
+    if (error)
+        return FALSE;
+
+    pImeInfoEx->hkl = hKL;
+    pImeInfoEx->fLoadFlag = 0;
+    return Imm32LoadImeVerInfo(pImeInfoEx);
 }
 
 /***********************************************************************
@@ -475,10 +480,6 @@ BOOL WINAPI ImmActivateLayout(HKL hKL)
 
     return TRUE;
 }
-
-static const WCHAR szImeFileW[] = {'I','m','e',' ','F','i','l','e',0};
-static const WCHAR szLayoutTextW[] = {'L','a','y','o','u','t',' ','T','e','x','t',0};
-static const WCHAR szImeRegFmt[] = {'S','y','s','t','e','m','\\','C','u','r','r','e','n','t','C','o','n','t','r','o','l','S','e','t','\\','C','o','n','t','r','o','l','\\','K','e','y','b','o','a','r','d',' ','L','a','y','o','u','t','s','\\','%','0','8','l','x',0};
 
 static VOID APIENTRY Imm32CiceroSetActiveContext(HIMC hIMC, BOOL fActive, HWND hWnd, HKL hKL)
 {
@@ -1013,89 +1014,6 @@ HIMC WINAPI ImmGetContext(HWND hWnd)
 BOOL WINAPI CtfImmIsCiceroEnabled(VOID)
 {
     return Imm32IsCiceroMode();
-}
-
-/***********************************************************************
- *		ImmInstallIMEA (IMM32.@)
- */
-HKL WINAPI ImmInstallIMEA(LPCSTR lpszIMEFileName, LPCSTR lpszLayoutText)
-{
-    HKL hKL = NULL;
-    LPWSTR pszFileNameW = NULL, pszLayoutTextW = NULL;
-
-    TRACE("(%s, %s)\n", debugstr_a(lpszIMEFileName), debugstr_a(lpszLayoutText));
-
-    pszFileNameW = Imm32WideFromAnsi(lpszIMEFileName);
-    if (pszFileNameW == NULL)
-        goto Quit;
-
-    pszLayoutTextW = Imm32WideFromAnsi(lpszLayoutText);
-    if (pszLayoutTextW == NULL)
-        goto Quit;
-
-    hKL = ImmInstallIMEW(pszFileNameW, pszLayoutTextW);
-
-Quit:
-    Imm32HeapFree(pszFileNameW);
-    Imm32HeapFree(pszLayoutTextW);
-    return hKL;
-}
-
-/***********************************************************************
- *		ImmInstallIMEW (IMM32.@)
- */
-HKL WINAPI ImmInstallIMEW(LPCWSTR lpszIMEFileName, LPCWSTR lpszLayoutText)
-{
-    INT lcid = GetUserDefaultLCID();
-    INT count;
-    HKL hkl;
-    DWORD rc;
-    HKEY hkey;
-    WCHAR regKey[ARRAY_SIZE(szImeRegFmt)+8];
-
-    TRACE ("(%s, %s):\n", debugstr_w(lpszIMEFileName),
-                          debugstr_w(lpszLayoutText));
-
-    /* Start with 2.  e001 will be blank and so default to the wine internal IME */
-    count = 2;
-
-    while (count < 0xfff)
-    {
-        DWORD disposition = 0;
-
-        hkl = (HKL)MAKELPARAM( lcid, 0xe000 | count );
-        wsprintfW( regKey, szImeRegFmt, (ULONG_PTR)hkl);
-
-        rc = RegCreateKeyExW(HKEY_LOCAL_MACHINE, regKey, 0, NULL, 0, KEY_WRITE, NULL, &hkey, &disposition);
-        if (rc == ERROR_SUCCESS && disposition == REG_CREATED_NEW_KEY)
-            break;
-        else if (rc == ERROR_SUCCESS)
-            RegCloseKey(hkey);
-
-        count++;
-    }
-
-    if (count == 0xfff)
-    {
-        WARN("Unable to find slot to install IME\n");
-        return 0;
-    }
-
-    if (rc == ERROR_SUCCESS)
-    {
-        rc = RegSetValueExW(hkey, szImeFileW, 0, REG_SZ, (const BYTE*)lpszIMEFileName,
-                            (lstrlenW(lpszIMEFileName) + 1) * sizeof(WCHAR));
-        if (rc == ERROR_SUCCESS)
-            rc = RegSetValueExW(hkey, szLayoutTextW, 0, REG_SZ, (const BYTE*)lpszLayoutText,
-                                (lstrlenW(lpszLayoutText) + 1) * sizeof(WCHAR));
-        RegCloseKey(hkey);
-        return hkl;
-    }
-    else
-    {
-        WARN("Unable to set IME registry values\n");
-        return 0;
-    }
 }
 
 /***********************************************************************
