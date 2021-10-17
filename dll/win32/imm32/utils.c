@@ -782,6 +782,7 @@ BOOL APIENTRY Imm32WriteRegImeEntry(HKL hKL, LPCWSTR pchFilePart, LPCWSTR pszLay
     DWORD cbData;
     LANGID LangID;
     LONG lError;
+    LPCWSTR pszLayoutFile;
 
     lError = RegOpenKeyW(HKEY_LOCAL_MACHINE, REGKEY_KEYBOARD_LAYOUTS, &hkeyLayouts);
     if (lError != ERROR_SUCCESS)
@@ -810,18 +811,11 @@ BOOL APIENTRY Imm32WriteRegImeEntry(HKL hKL, LPCWSTR pchFilePart, LPCWSTR pszLay
     LangID = LOWORD(hKL);
     switch (LOBYTE(LangID))
     {
-        case LANG_JAPANESE:
-            StringCchCopyW(szImeFileName, _countof(szImeFileName), L"kbdjpn.dll");
-            break;
-
-        case LANG_KOREAN:
-            StringCchCopyW(szImeFileName, _countof(szImeFileName), L"kbdkor.dll");
-            break;
-
-        default:
-            StringCchCopyW(szImeFileName, _countof(szImeFileName), L"kbdus.dll");
-            break;
+        case LANG_JAPANESE:     pszLayoutFile = L"kbdjpn.dll"; break;
+        case LANG_KOREAN:       pszLayoutFile = L"kbdkor.dll"; break;
+        default:                pszLayoutFile = L"kbdus.dll"; break;
     }
+    StringCchCopyW(szImeFileName, _countof(szImeFileName), pszLayoutFile);
 
     cbData = (wcslen(szImeFileName) + 1) * sizeof(WCHAR);
     lError = RegSetValueExW(hkeyIME, L"Layout File", 0, REG_SZ, (LPBYTE)szImeFileName, cbData);
