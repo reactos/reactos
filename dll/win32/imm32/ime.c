@@ -586,13 +586,11 @@ HKL WINAPI ImmInstallIMEW(LPCWSTR lpszIMEFileName, LPCWSTR lpszLayoutText)
     CharUpperW(szImeDestPath);
 
     /* If the source and the destination pathnames were different, then copy the IME file */
-    if (lstrcmpiW(szImeFileName, szImeDestPath) != 0)
+    if (lstrcmpiW(szImeFileName, szImeDestPath) != 0 &&
+        !Imm32CopyFile(szImeFileName, szImeDestPath))
     {
-        if (!Imm32CopyFile(szImeFileName, szImeDestPath))
-        {
-            hNewKL = NULL;
-            goto Quit;
-        }
+        hNewKL = NULL;
+        goto Quit;
     }
 
     if (hNewKL == NULL)
