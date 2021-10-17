@@ -548,15 +548,15 @@ HKL WINAPI ImmInstallIMEW(LPCWSTR lpszIMEFileName, LPCWSTR lpszLayoutText)
     else
         return NULL;
 
-    /* Load the IME entries from registry */
-    nCount = Imm32LoadRegImeLayouts(NULL, 0);
+    /* Load the IME layouts from registry */
+    nCount = Imm32GetRegImes(NULL, 0);
     if (nCount)
     {
         pLayouts = Imm32HeapAlloc(0, nCount * sizeof(IME_LAYOUT));
         if (!pLayouts)
             return NULL;
 
-        if (!Imm32LoadRegImeLayouts(pLayouts, nCount))
+        if (!Imm32GetRegImes(pLayouts, nCount))
         {
             Imm32HeapFree(pLayouts);
             return NULL;
@@ -601,8 +601,8 @@ HKL WINAPI ImmInstallIMEW(LPCWSTR lpszIMEFileName, LPCWSTR lpszLayoutText)
 
     if (hNewKL)
     {
-        /* Write the IME entry to registry */
-        if (Imm32WriteRegImeLayout(hNewKL, pchFilePart, lpszLayoutText))
+        /* Write the IME layout to registry */
+        if (Imm32WriteRegIme(hNewKL, pchFilePart, lpszLayoutText))
         {
             Imm32UIntToStr((DWORD)(DWORD_PTR)hNewKL, 16, szImeKey, _countof(szImeKey));
             hNewKL = LoadKeyboardLayoutW(szImeKey, KLF_REPLACELANG);

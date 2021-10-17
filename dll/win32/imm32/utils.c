@@ -706,7 +706,7 @@ HKL APIENTRY Imm32GetNextHKL(UINT cKLs, const IME_LAYOUT *pLayouts, WORD wLangID
     return (HKL)(DWORD_PTR)MAKELONG(wLangID, wNextID);
 }
 
-UINT APIENTRY Imm32LoadRegImeLayouts(PIME_LAYOUT pLayouts, UINT cLayouts)
+UINT APIENTRY Imm32GetRegImes(PIME_LAYOUT pLayouts, UINT cLayouts)
 {
     HKEY hkeyLayouts, hkeyIME;
     WCHAR szImeFileName[80], szImeKey[20];
@@ -771,7 +771,7 @@ UINT APIENTRY Imm32LoadRegImeLayouts(PIME_LAYOUT pLayouts, UINT cLayouts)
     return nCount;
 }
 
-BOOL APIENTRY Imm32WriteRegImeLayout(HKL hKL, LPCWSTR pchFilePart, LPCWSTR pszLayout)
+BOOL APIENTRY Imm32WriteRegIme(HKL hKL, LPCWSTR pchFilePart, LPCWSTR pszLayout)
 {
     UINT iPreload;
     HKEY hkeyLayouts, hkeyIME, hkeyPreload;

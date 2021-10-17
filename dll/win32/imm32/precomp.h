@@ -151,7 +151,7 @@ Imm32ReconvertWideFromAnsi(LPRECONVERTSTRING pDest, const RECONVERTSTRING *pSrc,
 HRESULT APIENTRY Imm32StrToUInt(LPCWSTR pszText, LPDWORD pdwValue, ULONG nBase);
 HRESULT APIENTRY Imm32UIntToStr(DWORD dwValue, ULONG nBase, LPWSTR pszBuff, USHORT cchBuff);
 BOOL APIENTRY Imm32LoadImeVerInfo(PIMEINFOEX pImeInfoEx);
-UINT APIENTRY Imm32LoadRegImeLayouts(PIME_LAYOUT pLayouts, UINT cLayouts);
-BOOL APIENTRY Imm32WriteRegImeLayout(HKL hKL, LPCWSTR pchFilePart, LPCWSTR pszLayout);
+UINT APIENTRY Imm32GetRegImes(PIME_LAYOUT pLayouts, UINT cLayouts);
+BOOL APIENTRY Imm32WriteRegIme(HKL hKL, LPCWSTR pchFilePart, LPCWSTR pszLayout);
 HKL APIENTRY Imm32GetNextHKL(UINT cKLs, const IME_LAYOUT *pLayouts, WORD wLangID);
 BOOL APIENTRY Imm32CopyFile(LPWSTR pszOldFile, LPCWSTR pszNewFile);
