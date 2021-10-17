@@ -534,7 +534,7 @@ static FN_GetFileVersionInfoW s_fnGetFileVersionInfoW = NULL;
 static FN_GetFileVersionInfoSizeW s_fnGetFileVersionInfoSizeW = NULL;
 static FN_VerQueryValueW s_fnVerQueryValueW = NULL;
 
-BOOL APIENTRY Imm32LoadImeFixedInfo(PIMEINFOEX pInfoEx, LPCVOID pVerInfo)
+static BOOL APIENTRY Imm32LoadImeFixedInfo(PIMEINFOEX pInfoEx, LPCVOID pVerInfo)
 {
     UINT cbFixed = 0;
     VS_FIXEDFILEINFO *pFixed;
@@ -551,7 +551,7 @@ BOOL APIENTRY Imm32LoadImeFixedInfo(PIMEINFOEX pInfoEx, LPCVOID pVerInfo)
     return TRUE;
 }
 
-LPWSTR APIENTRY
+static LPWSTR APIENTRY
 Imm32GetVerInfoValue(LPCVOID pVerInfo, LPWSTR pszKey, DWORD cchKey, LPCWSTR pszName)
 {
     size_t cchExtra;
@@ -800,12 +800,12 @@ BOOL APIENTRY Imm32WriteRegImeEntry(HKL hKL, LPCWSTR pchFilePart, LPCWSTR pszLay
     cbData = (wcslen(pchFilePart) + 1) * sizeof(WCHAR);
     lError = RegSetValueExW(hkeyIME, L"Ime File", 0, REG_SZ, (LPBYTE)pchFilePart, cbData);
     if (lError != ERROR_SUCCESS)
-        goto Quit;
+        goto Failure;
 
     cbData = (wcslen(pszLayout) + 1) * sizeof(WCHAR);
     lError = RegSetValueExW(hkeyIME, L"Layout Text", 0, REG_SZ, (LPBYTE)pszLayout, cbData);
     if (lError != ERROR_SUCCESS)
-        goto Quit;
+        goto Failure;
 
     LangID = LOWORD(hKL);
     switch (LOBYTE(LangID))
@@ -826,7 +826,7 @@ BOOL APIENTRY Imm32WriteRegImeEntry(HKL hKL, LPCWSTR pchFilePart, LPCWSTR pszLay
     cbData = (wcslen(szImeFileName) + 1) * sizeof(WCHAR);
     lError = RegSetValueExW(hkeyIME, L"Layout File", 0, REG_SZ, (LPBYTE)szImeFileName, cbData);
     if (lError != ERROR_SUCCESS)
-        goto Quit;
+        goto Failure;
 
     RegCloseKey(hkeyIME);
     RegCloseKey(hkeyLayouts);
@@ -860,7 +860,7 @@ BOOL APIENTRY Imm32WriteRegImeEntry(HKL hKL, LPCWSTR pchFilePart, LPCWSTR pszLay
     return lError == ERROR_SUCCESS;
 #undef MAX_PRELOAD
 
-Quit:
+Failure:
     RegCloseKey(hkeyIME);
     RegDeleteKeyW(hkeyLayouts, szImeKey);
     RegCloseKey(hkeyLayouts);
