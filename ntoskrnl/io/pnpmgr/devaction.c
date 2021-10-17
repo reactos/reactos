@@ -1652,9 +1652,13 @@ IopSendRemoveDevice(IN PDEVICE_OBJECT DeviceObject)
     PiIrpSendRemoveCheckVpb(DeviceObject, IRP_MN_REMOVE_DEVICE);
 
     /* Start of HACK: update resources stored in registry, so IopDetectResourceConflict works */
-    DeviceNode->ResourceList->Count = 0;
-    DeviceNode->ResourceListTranslated->Count = 0;
-    IopUpdateResourceMapForPnPDevice(DeviceNode);
+    if (DeviceNode->ResourceList)
+    {
+        ASSERT(DeviceNode->ResourceListTranslated);
+        DeviceNode->ResourceList->Count = 0;
+        DeviceNode->ResourceListTranslated->Count = 0;
+        IopUpdateResourceMapForPnPDevice(DeviceNode);
+    }
     /* End of HACK */
 
     PiSetDevNodeState(DeviceNode, DeviceNodeRemoved);
