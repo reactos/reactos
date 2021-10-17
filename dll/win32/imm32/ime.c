@@ -173,7 +173,10 @@ BOOL APIENTRY Imm32LoadImeInfo(PIMEINFOEX pImeInfoEx, PIMEDPI pImeDpi)
     do { \
         fn = GetProcAddress(hIME, #name); \
         if (fn) pImeDpi->name = (FN_##name)fn; \
-        else if (!(optional)) goto Failed; \
+        else if (!(optional)) { \
+            ERR("'%s' not found in the IME module.\n", #name); \
+            goto Failed; \
+        } \
     } while (0);
 #include "imetable.h"
 #undef DEFINE_IME_ENTRY

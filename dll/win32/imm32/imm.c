@@ -67,14 +67,14 @@ BOOL WINAPI ImmLoadLayout(HKL hKL, PIMEINFOEX pImeInfoEx)
         error = RegOpenKeyW(HKEY_LOCAL_MACHINE, REGKEY_KEYBOARD_LAYOUTS, &hLayoutsKey);
         if (error)
         {
-            ERR("RegOpenKeyW error: 0x%08lX\n", error);
+            ERR("RegOpenKeyW: 0x%08lX\n", error);
             return FALSE;
         }
 
         error = RegOpenKeyW(hLayoutsKey, szLayout, &hLayoutKey);
         if (error)
         {
-            ERR("RegOpenKeyW error: 0x%08lX\n", error);
+            ERR("RegOpenKeyW: 0x%08lX\n", error);
             RegCloseKey(hLayoutsKey);
             return FALSE;
         }
@@ -84,7 +84,7 @@ BOOL WINAPI ImmLoadLayout(HKL hKL, PIMEINFOEX pImeInfoEx)
         error = RegOpenKeyW(HKEY_LOCAL_MACHINE, REGKEY_IMM, &hLayoutKey);
         if (error)
         {
-            ERR("RegOpenKeyW error: 0x%08lX\n", error);
+            ERR("RegOpenKeyW: 0x%08lX\n", error);
             return FALSE;
         }
     }
@@ -99,10 +99,15 @@ BOOL WINAPI ImmLoadLayout(HKL hKL, PIMEINFOEX pImeInfoEx)
         RegCloseKey(hLayoutsKey);
 
     if (error)
+    {
+        ERR("RegQueryValueExW: 0x%08lX\n", error);
+        pImeInfoEx->fLoadFlag = 0;
+        pImeInfoEx->hkl = NULL;
         return FALSE;
+    }
 
-    pImeInfoEx->hkl = hKL;
     pImeInfoEx->fLoadFlag = 0;
+    pImeInfoEx->hkl = hKL;
     return Imm32LoadImeVerInfo(pImeInfoEx);
 }
 

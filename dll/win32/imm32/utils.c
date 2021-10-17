@@ -538,7 +538,6 @@ static BOOL APIENTRY Imm32LoadImeFixedInfo(PIMEINFOEX pInfoEx, LPCVOID pVerInfo)
 {
     UINT cbFixed = 0;
     VS_FIXEDFILEINFO *pFixed;
-
     if (!s_fnVerQueryValueW(pVerInfo, L"\\", (LPVOID*)&pFixed, &cbFixed) || !cbFixed)
         return FALSE;
 
@@ -740,8 +739,7 @@ UINT APIENTRY Imm32LoadRegImeEntries(PIME_ENTRY pEntries, UINT cEntries)
         if (cEntries <= nCount)
             break;
 
-        /* Open the IME key */
-        lError = RegOpenKeyW(hkeyLayouts, szImeKey, &hkeyIME);
+        lError = RegOpenKeyW(hkeyLayouts, szImeKey, &hkeyIME); /* Open the IME key */
         if (lError != ERROR_SUCCESS)
             break;
 
@@ -750,14 +748,13 @@ UINT APIENTRY Imm32LoadRegImeEntries(PIME_ENTRY pEntries, UINT cEntries)
         cbData = sizeof(szImeFileName);
         RegQueryValueExW(hkeyIME, L"Ime File", NULL, NULL, (LPBYTE)szImeFileName, &cbData);
         szImeFileName[_countof(szImeFileName) - 1] = 0;
+        CharUpperW(szImeFileName);
+
         RegCloseKey(hkeyIME);
 
         if (!szImeFileName[0])
             break;
 
-        CharUpperW(szImeFileName);
-
-        Value = 0;
         Imm32StrToUInt(szImeKey, &Value, 16);
         if (!Value)
             break;
@@ -788,7 +785,7 @@ BOOL APIENTRY Imm32WriteRegImeEntry(HKL hKL, LPCWSTR pchFilePart, LPCWSTR pszLay
     if (lError != ERROR_SUCCESS)
         return FALSE;
 
-    /* Create a registry ime key */
+    /* Create a registry IME key */
     Imm32UIntToStr((DWORD)(DWORD_PTR)hKL, 16, szImeKey, _countof(szImeKey));
     lError = RegCreateKeyW(hkeyLayouts, szImeKey, &hkeyIME);
     if (lError != ERROR_SUCCESS)
@@ -811,9 +808,9 @@ BOOL APIENTRY Imm32WriteRegImeEntry(HKL hKL, LPCWSTR pchFilePart, LPCWSTR pszLay
     LangID = LOWORD(hKL);
     switch (LOBYTE(LangID))
     {
-        case LANG_JAPANESE:     pszLayoutFile = L"kbdjpn.dll"; break;
-        case LANG_KOREAN:       pszLayoutFile = L"kbdkor.dll"; break;
-        default:                pszLayoutFile = L"kbdus.dll"; break;
+        case LANG_JAPANESE: pszLayoutFile = L"kbdjpn.dll"; break;
+        case LANG_KOREAN:   pszLayoutFile = L"kbdkor.dll"; break;
+        default:            pszLayoutFile = L"kbdus.dll"; break;
     }
     StringCchCopyW(szImeFileName, _countof(szImeFileName), pszLayoutFile);
 
@@ -867,9 +864,8 @@ typedef VOID (WINAPI *FN_LZClose)(INT);
 
 BOOL APIENTRY Imm32CopyFile(LPWSTR pszOldFile, LPCWSTR pszNewFile)
 {
-    BOOL ret = FALSE;
+    BOOL ret = FALSE, bLoaded = FALSE;
     HMODULE hinstLZ32;
-    BOOL bLoaded = FALSE;
     WCHAR szLZ32Path[MAX_PATH];
     CHAR szDestA[MAX_PATH];
     OFSTRUCT OFStruct;
@@ -877,7 +873,6 @@ BOOL APIENTRY Imm32CopyFile(LPWSTR pszOldFile, LPCWSTR pszNewFile)
     FN_LZCopy fnLZCopy;
     FN_LZClose fnLZClose;
     HFILE hfDest, hfSrc;
-    LONG nValue;
 
     /* Load LZ32.dll for copying/decompressing file */
     Imm32GetSystemLibraryPath(szLZ32Path, _countof(szLZ32Path), L"LZ32");
@@ -910,9 +905,7 @@ BOOL APIENTRY Imm32CopyFile(LPWSTR pszOldFile, LPCWSTR pszNewFile)
     hfDest = OpenFile(szDestA, &OFStruct, OF_CREATE);
     if (hfDest != HFILE_ERROR)
     {
-        nValue = fnLZCopy(hfSrc, hfDest);
-        ret = (nValue >= 0);
-
+        ret = (fnLZCopy(hfSrc, hfDest) >= 0);
         _lclose(hfDest);
     }
 
