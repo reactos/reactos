@@ -62,12 +62,12 @@
 
 #define ROUNDUP4(n) (((n) + 3) & ~3)  /* DWORD alignment */
 
-typedef struct IME_ENTRY
+typedef struct IME_LAYOUT
 {
     HKL hKL;
     WCHAR szImeKey[20];     /* "E0XXYYYY": "E0XX" is the device handle. "YYYY" is a LANGID. */
     WCHAR szFileName[80];   /* The IME module filename */
-} IME_ENTRY, *PIME_ENTRY;
+} IME_LAYOUT, *PIME_LAYOUT;
 
 extern HMODULE g_hImm32Inst;
 extern RTL_CRITICAL_SECTION g_csImeDpi;
@@ -151,7 +151,7 @@ Imm32ReconvertWideFromAnsi(LPRECONVERTSTRING pDest, const RECONVERTSTRING *pSrc,
 HRESULT APIENTRY Imm32StrToUInt(LPCWSTR pszText, LPDWORD pdwValue, ULONG nBase);
 HRESULT APIENTRY Imm32UIntToStr(DWORD dwValue, ULONG nBase, LPWSTR pszBuff, USHORT cchBuff);
 BOOL APIENTRY Imm32LoadImeVerInfo(PIMEINFOEX pImeInfoEx);
-UINT APIENTRY Imm32LoadRegImeEntries(PIME_ENTRY pEntries, UINT cEntries);
-BOOL APIENTRY Imm32WriteRegImeEntry(HKL hKL, LPCWSTR pchFilePart, LPCWSTR pszLayout);
-HKL APIENTRY Imm32GetNextHKL(UINT cKLs, const IME_ENTRY *pEntries, WORD wLangID);
+UINT APIENTRY Imm32LoadRegImeLayouts(PIME_LAYOUT pLayouts, UINT cLayouts);
+BOOL APIENTRY Imm32WriteRegImeLayout(HKL hKL, LPCWSTR pchFilePart, LPCWSTR pszLayout);
+HKL APIENTRY Imm32GetNextHKL(UINT cKLs, const IME_LAYOUT *pLayouts, WORD wLangID);
 BOOL APIENTRY Imm32CopyFile(LPWSTR pszOldFile, LPCWSTR pszNewFile);

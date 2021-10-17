@@ -528,10 +528,10 @@ HKL WINAPI ImmInstallIMEW(LPCWSTR lpszIMEFileName, LPCWSTR lpszLayoutText)
     WCHAR szImeFileName[MAX_PATH], szImeDestPath[MAX_PATH], szImeKey[20];
     IMEINFOEX InfoEx;
     LPWSTR pchFilePart;
-    UINT iEntry, nCount;
+    UINT iLayout, nCount;
     HKL hNewKL;
     WORD wLangID;
-    PIME_ENTRY pEntries = NULL;
+    PIME_LAYOUT pLayouts = NULL;
 
     TRACE("(%s, %s)\n", debugstr_w(lpszIMEFileName), debugstr_w(lpszLayoutText));
 
@@ -549,28 +549,28 @@ HKL WINAPI ImmInstallIMEW(LPCWSTR lpszIMEFileName, LPCWSTR lpszLayoutText)
         return NULL;
 
     /* Load the IME entries from registry */
-    nCount = Imm32LoadRegImeEntries(NULL, 0);
+    nCount = Imm32LoadRegImeLayouts(NULL, 0);
     if (nCount)
     {
-        pEntries = Imm32HeapAlloc(0, nCount * sizeof(IME_ENTRY));
-        if (!pEntries)
+        pLayouts = Imm32HeapAlloc(0, nCount * sizeof(IME_LAYOUT));
+        if (!pLayouts)
             return NULL;
 
-        if (!Imm32LoadRegImeEntries(pEntries, nCount))
+        if (!Imm32LoadRegImeLayouts(pLayouts, nCount))
         {
-            Imm32HeapFree(pEntries);
+            Imm32HeapFree(pLayouts);
             return NULL;
         }
 
-        for (iEntry = 0; iEntry < nCount; ++iEntry)
+        for (iLayout = 0; iLayout < nCount; ++iLayout)
         {
             /* Same filename? */
-            if (lstrcmpiW(pEntries[iEntry].szFileName, pchFilePart) == 0)
+            if (lstrcmpiW(pLayouts[iLayout].szFileName, pchFilePart) == 0)
             {
-                if (wLangID != LOWORD(pEntries[iEntry].hKL))
+                if (wLangID != LOWORD(pLayouts[iLayout].hKL))
                     goto Quit; /* The language is different */
 
-                hNewKL = pEntries[iEntry].hKL; /* Found */
+                hNewKL = pLayouts[iLayout].hKL; /* Found */
                 break;
             }
         }
@@ -597,12 +597,12 @@ HKL WINAPI ImmInstallIMEW(LPCWSTR lpszIMEFileName, LPCWSTR lpszLayoutText)
     }
 
     if (hNewKL == NULL)
-        hNewKL = Imm32GetNextHKL(nCount, pEntries, wLangID);
+        hNewKL = Imm32GetNextHKL(nCount, pLayouts, wLangID);
 
     if (hNewKL)
     {
         /* Write the IME entry to registry */
-        if (Imm32WriteRegImeEntry(hNewKL, pchFilePart, lpszLayoutText))
+        if (Imm32WriteRegImeLayout(hNewKL, pchFilePart, lpszLayoutText))
         {
             Imm32UIntToStr((DWORD)(DWORD_PTR)hNewKL, 16, szImeKey, _countof(szImeKey));
             hNewKL = LoadKeyboardLayoutW(szImeKey, KLF_REPLACELANG);
@@ -614,7 +614,7 @@ HKL WINAPI ImmInstallIMEW(LPCWSTR lpszIMEFileName, LPCWSTR lpszLayoutText)
     }
 
 Quit:
-    Imm32HeapFree(pEntries);
+    Imm32HeapFree(pLayouts);
     return hNewKL;
 }
 

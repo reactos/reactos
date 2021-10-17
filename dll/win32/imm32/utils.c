@@ -660,15 +660,15 @@ Quit:
     return ret;
 }
 
-HKL APIENTRY Imm32GetNextHKL(UINT cKLs, const IME_ENTRY *pEntries, WORD wLangID)
+HKL APIENTRY Imm32GetNextHKL(UINT cKLs, const IME_LAYOUT *pLayouts, WORD wLangID)
 {
     UINT iKL;
     DWORD wID, wLow = 0xE0FF, wHigh = 0xE01F, wNextID = 0;
 
     for (iKL = 0; iKL < cKLs; ++iKL)
     {
-        wHigh = max(wHigh, HIWORD(pEntries[iKL].hKL));
-        wLow = min(wLow, HIWORD(pEntries[iKL].hKL));
+        wHigh = max(wHigh, HIWORD(pLayouts[iKL].hKL));
+        wLow = min(wLow, HIWORD(pLayouts[iKL].hKL));
     }
 
     if (wHigh < 0xE0FF)
@@ -685,8 +685,8 @@ HKL APIENTRY Imm32GetNextHKL(UINT cKLs, const IME_ENTRY *pEntries, WORD wLangID)
         {
             for (iKL = 0; iKL < cKLs; ++iKL)
             {
-                if (LOWORD(pEntries[iKL].hKL) == wLangID &&
-                    HIWORD(pEntries[iKL].hKL) == wID)
+                if (LOWORD(pLayouts[iKL].hKL) == wLangID &&
+                    HIWORD(pLayouts[iKL].hKL) == wID)
                 {
                     break;
                 }
@@ -706,7 +706,7 @@ HKL APIENTRY Imm32GetNextHKL(UINT cKLs, const IME_ENTRY *pEntries, WORD wLangID)
     return (HKL)(DWORD_PTR)MAKELONG(wLangID, wNextID);
 }
 
-UINT APIENTRY Imm32LoadRegImeEntries(PIME_ENTRY pEntries, UINT cEntries)
+UINT APIENTRY Imm32LoadRegImeLayouts(PIME_LAYOUT pLayouts, UINT cLayouts)
 {
     HKEY hkeyLayouts, hkeyIME;
     WCHAR szImeFileName[80], szImeKey[20];
@@ -730,13 +730,13 @@ UINT APIENTRY Imm32LoadRegImeEntries(PIME_ENTRY pEntries, UINT cEntries)
         if (szImeKey[0] != L'E' && szImeKey[0] != L'e')
             continue; /* Not an IME layout */
 
-        if (pEntries == NULL) /* for counting only */
+        if (pLayouts == NULL) /* for counting only */
         {
             ++nCount;
             continue;
         }
 
-        if (cEntries <= nCount)
+        if (cLayouts <= nCount)
             break;
 
         lError = RegOpenKeyW(hkeyLayouts, szImeKey, &hkeyIME); /* Open the IME key */
@@ -760,9 +760,9 @@ UINT APIENTRY Imm32LoadRegImeEntries(PIME_ENTRY pEntries, UINT cEntries)
             break;
 
         /* Store the IME key and the IME filename */
-        pEntries[nCount].hKL = (HKL)(DWORD_PTR)Value;
-        StringCchCopyW(pEntries[nCount].szImeKey, _countof(pEntries[nCount].szImeKey), szImeKey);
-        StringCchCopyW(pEntries[nCount].szFileName, _countof(pEntries[nCount].szFileName),
+        pLayouts[nCount].hKL = (HKL)(DWORD_PTR)Value;
+        StringCchCopyW(pLayouts[nCount].szImeKey, _countof(pLayouts[nCount].szImeKey), szImeKey);
+        StringCchCopyW(pLayouts[nCount].szFileName, _countof(pLayouts[nCount].szFileName),
                        szImeFileName);
         ++nCount;
     }
@@ -771,7 +771,7 @@ UINT APIENTRY Imm32LoadRegImeEntries(PIME_ENTRY pEntries, UINT cEntries)
     return nCount;
 }
 
-BOOL APIENTRY Imm32WriteRegImeEntry(HKL hKL, LPCWSTR pchFilePart, LPCWSTR pszLayout)
+BOOL APIENTRY Imm32WriteRegImeLayout(HKL hKL, LPCWSTR pchFilePart, LPCWSTR pszLayout)
 {
     UINT iPreload;
     HKEY hkeyLayouts, hkeyIME, hkeyPreload;
