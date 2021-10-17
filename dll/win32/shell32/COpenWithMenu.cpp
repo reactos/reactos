@@ -148,7 +148,9 @@ BOOL COpenWithList::Load()
                         pApp->bHidden = TRUE;
                     }
                     else
+                    {
                         TRACE("App added %ls\n", pApp->wszCmd);
+                    }
                 }
                 else
                 {
@@ -162,7 +164,9 @@ BOOL COpenWithList::Load()
             }
         }
         else
+        {
             ERR("AddInternal failed\n");
+        }
     }
 
     RegCloseKey(hKey);
