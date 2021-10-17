@@ -717,7 +717,7 @@ UINT APIENTRY Imm32LoadRegImeEntries(PIME_ENTRY pEntries, UINT cEntries)
     ULONG Value;
 
     /* Open the registry keyboard layouts */
-    lError = RegOpenKeyW(HKEY_LOCAL_MACHINE, L"Keyboard Layouts", &hkeyLayouts);
+    lError = RegOpenKeyW(HKEY_LOCAL_MACHINE, REGKEY_KEYBOARD_LAYOUTS, &hkeyLayouts);
     if (lError != ERROR_SUCCESS)
         return 0;
 
