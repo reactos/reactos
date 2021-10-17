@@ -611,7 +611,7 @@ BOOL WINAPI ImmIsIME(HKL hKL)
     IMEINFOEX info;
     TRACE("(%p)\n", hKL);
     /* FIXME: ImmGetImeInfoEx is broken */
-    return !!ImmGetImeInfoEx(&info, ImeInfoExImeWindow, &hKL);
+    return !!ImmGetImeInfoEx(&info, 1, &hKL);
 }
 
 /***********************************************************************
