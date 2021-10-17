@@ -891,9 +891,9 @@ WINAPI
 ImmSetCompositionStringA(
   _In_ HIMC,
   _In_ DWORD dwIndex,
-  _In_reads_bytes_opt_(dwCompLen) LPCVOID lpComp,
+  _Inout_updates_bytes_opt_(dwCompLen) LPVOID lpComp,
   _In_ DWORD dwCompLen,
-  _In_reads_bytes_opt_(dwReadLen) LPCVOID lpRead,
+  _Inout_updates_bytes_opt_(dwReadLen) LPVOID lpRead,
   _In_ DWORD dwReadLen);
 
 BOOL
@@ -901,9 +901,9 @@ WINAPI
 ImmSetCompositionStringW(
   _In_ HIMC,
   _In_ DWORD dwIndex,
-  _In_reads_bytes_opt_(dwCompLen) LPCVOID lpComp,
+  _Inout_updates_bytes_opt_(dwCompLen) LPVOID lpComp,
   _In_ DWORD dwCompLen,
-  _In_reads_bytes_opt_(dwReadLen) LPCVOID lpRead,
+  _Inout_updates_bytes_opt_(dwReadLen) LPVOID lpRead,
   _In_ DWORD dwReadLen);
 
 #define ImmSetCompositionString WINELIB_NAME_AW(ImmSetCompositionString)
