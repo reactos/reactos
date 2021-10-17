@@ -581,10 +581,7 @@ BOOL APIENTRY Imm32LoadImeLangAndDesc(PIMEINFOEX pInfoEx, LPCVOID pVerInfo)
         return FALSE;
 
     if (pInfoEx->hkl == NULL)
-    {
-        /* Ugly but Windows does it. This is an invalid HKL */
-        pInfoEx->hkl = (HKL)(DWORD_PTR)*pw;
-    }
+        pInfoEx->hkl = (HKL)(DWORD_PTR)*pw; /* This is an invalid HKL */
 
     /* Try the current language and the Unicode codepage (0x04B0) */
     LangID = LANGIDFROMLCID(GetThreadLocale());
@@ -597,7 +594,7 @@ BOOL APIENTRY Imm32LoadImeLangAndDesc(PIMEINFOEX pInfoEx, LPCVOID pVerInfo)
         pszDesc = Imm32GetVerInfoValue(pVerInfo, szKey, _countof(szKey), L"FileDescription");
     }
 
-    /* Got the description */
+    /* The description */
     if (pszDesc)
         StringCchCopyW(pInfoEx->wszImeDescription, _countof(pInfoEx->wszImeDescription), pszDesc);
     else
@@ -646,10 +643,10 @@ BOOL APIENTRY Imm32LoadImeVerInfo(PIMEINFOEX pImeInfoEx)
         goto Quit;
 
     /* Load the version info of the IME module */
-    if (s_fnGetFileVersionInfoW(szPath, dwHandle, cbVerInfo, pVerInfo))
+    if (s_fnGetFileVersionInfoW(szPath, dwHandle, cbVerInfo, pVerInfo) &&
+        Imm32LoadImeFixedInfo(pImeInfoEx, pVerInfo))
     {
-        if (Imm32LoadImeFixedInfo(pImeInfoEx, pVerInfo))
-            ret = Imm32LoadImeLangAndDesc(pImeInfoEx, pVerInfo);
+        ret = Imm32LoadImeLangAndDesc(pImeInfoEx, pVerInfo);
     }
 
     Imm32HeapFree(pVerInfo);
@@ -662,8 +659,7 @@ Quit:
 
 HKL APIENTRY Imm32GetNextHKL(UINT cKLs, const IME_LAYOUT *pLayouts, WORD wLangID)
 {
-    UINT iKL;
-    DWORD wID, wLow = 0xE0FF, wHigh = 0xE01F, wNextID = 0;
+    UINT iKL, wID, wLow = 0xE0FF, wHigh = 0xE01F, wNextID = 0;
 
     for (iKL = 0; iKL < cKLs; ++iKL)
     {
@@ -714,6 +710,7 @@ UINT APIENTRY Imm32GetRegImes(PIME_LAYOUT pLayouts, UINT cLayouts)
     DWORD cbData;
     LONG lError;
     ULONG Value;
+    HKL hKL;
 
     /* Open the registry keyboard layouts */
     lError = RegOpenKeyW(HKEY_LOCAL_MACHINE, REGKEY_KEYBOARD_LAYOUTS, &hkeyLayouts);
@@ -748,7 +745,6 @@ UINT APIENTRY Imm32GetRegImes(PIME_LAYOUT pLayouts, UINT cLayouts)
         cbData = sizeof(szImeFileName);
         RegQueryValueExW(hkeyIME, L"Ime File", NULL, NULL, (LPBYTE)szImeFileName, &cbData);
         szImeFileName[_countof(szImeFileName) - 1] = 0;
-        CharUpperW(szImeFileName);
 
         RegCloseKey(hkeyIME);
 
@@ -756,12 +752,14 @@ UINT APIENTRY Imm32GetRegImes(PIME_LAYOUT pLayouts, UINT cLayouts)
             break;
 
         Imm32StrToUInt(szImeKey, &Value, 16);
-        if (!Value)
+        hKL = (HKL)(DWORD_PTR)Value;
+        if (!IS_IME_HKL(hKL))
             break;
 
         /* Store the IME key and the IME filename */
-        pLayouts[nCount].hKL = (HKL)(DWORD_PTR)Value;
+        pLayouts[nCount].hKL = hKL;
         StringCchCopyW(pLayouts[nCount].szImeKey, _countof(pLayouts[nCount].szImeKey), szImeKey);
+        CharUpperW(szImeFileName);
         StringCchCopyW(pLayouts[nCount].szFileName, _countof(pLayouts[nCount].szFileName),
                        szImeFileName);
         ++nCount;
@@ -781,30 +779,32 @@ BOOL APIENTRY Imm32WriteRegIme(HKL hKL, LPCWSTR pchFilePart, LPCWSTR pszLayout)
     LONG lError;
     LPCWSTR pszLayoutFile;
 
+    /* Open the registry keyboard layouts */
     lError = RegOpenKeyW(HKEY_LOCAL_MACHINE, REGKEY_KEYBOARD_LAYOUTS, &hkeyLayouts);
     if (lError != ERROR_SUCCESS)
         return FALSE;
 
-    /* Create a registry IME key */
+    /* Get the IME key from hKL */
     Imm32UIntToStr((DWORD)(DWORD_PTR)hKL, 16, szImeKey, _countof(szImeKey));
+
+    /* Create a registry IME key */
     lError = RegCreateKeyW(hkeyLayouts, szImeKey, &hkeyIME);
     if (lError != ERROR_SUCCESS)
-    {
-        RegCloseKey(hkeyLayouts);
-        return FALSE;
-    }
+        goto Failure;
 
-    /* Write the IME key */
+    /* Write "Ime File" */
     cbData = (wcslen(pchFilePart) + 1) * sizeof(WCHAR);
     lError = RegSetValueExW(hkeyIME, L"Ime File", 0, REG_SZ, (LPBYTE)pchFilePart, cbData);
     if (lError != ERROR_SUCCESS)
         goto Failure;
 
+    /* Write "Layout Text" */
     cbData = (wcslen(pszLayout) + 1) * sizeof(WCHAR);
     lError = RegSetValueExW(hkeyIME, L"Layout Text", 0, REG_SZ, (LPBYTE)pszLayout, cbData);
     if (lError != ERROR_SUCCESS)
         goto Failure;
 
+    /* Choose "Layout File" from hKL */
     LangID = LOWORD(hKL);
     switch (LOBYTE(LangID))
     {
@@ -814,6 +814,7 @@ BOOL APIENTRY Imm32WriteRegIme(HKL hKL, LPCWSTR pchFilePart, LPCWSTR pszLayout)
     }
     StringCchCopyW(szImeFileName, _countof(szImeFileName), pszLayoutFile);
 
+    /* Write "Layout File" */
     cbData = (wcslen(szImeFileName) + 1) * sizeof(WCHAR);
     lError = RegSetValueExW(hkeyIME, L"Layout File", 0, REG_SZ, (LPBYTE)szImeFileName, cbData);
     if (lError != ERROR_SUCCESS)
@@ -822,8 +823,10 @@ BOOL APIENTRY Imm32WriteRegIme(HKL hKL, LPCWSTR pchFilePart, LPCWSTR pszLayout)
     RegCloseKey(hkeyIME);
     RegCloseKey(hkeyLayouts);
 
-#define MAX_PRELOAD 0x400
+    /* Create "Preload" key */
     RegCreateKeyW(HKEY_CURRENT_USER, L"Keyboard Layout\\Preload", &hkeyPreload);
+
+#define MAX_PRELOAD 0x400
     for (iPreload = 1; iPreload < MAX_PRELOAD; ++iPreload)
     {
         Imm32UIntToStr(iPreload, 10, szPreloadNumber, _countof(szPreloadNumber));
@@ -843,13 +846,13 @@ BOOL APIENTRY Imm32WriteRegIme(HKL hKL, LPCWSTR pchFilePart, LPCWSTR pszLayout)
         RegCloseKey(hkeyPreload);
         return FALSE;
     }
+#undef MAX_PRELOAD
 
     /* Write the IME key to the preload number */
     cbData = (wcslen(szImeKey) + 1) * sizeof(WCHAR);
     lError = RegSetValueExW(hkeyPreload, szPreloadNumber, 0, REG_SZ, (LPBYTE)szImeKey, cbData);
     RegCloseKey(hkeyPreload);
     return lError == ERROR_SUCCESS;
-#undef MAX_PRELOAD
 
 Failure:
     RegCloseKey(hkeyIME);

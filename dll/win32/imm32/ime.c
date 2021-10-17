@@ -528,7 +528,7 @@ HKL WINAPI ImmInstallIMEW(LPCWSTR lpszIMEFileName, LPCWSTR lpszLayoutText)
     WCHAR szImeFileName[MAX_PATH], szImeDestPath[MAX_PATH], szImeKey[20];
     IMEINFOEX InfoEx;
     LPWSTR pchFilePart;
-    UINT iLayout, nCount;
+    UINT iLayout, cLayouts;
     HKL hNewKL;
     WORD wLangID;
     PIME_LAYOUT pLayouts = NULL;
@@ -548,23 +548,19 @@ HKL WINAPI ImmInstallIMEW(LPCWSTR lpszIMEFileName, LPCWSTR lpszLayoutText)
     else
         return NULL;
 
-    /* Load the IME layouts from registry */
-    nCount = Imm32GetRegImes(NULL, 0);
-    if (nCount)
+    /* Get the IME layouts from registry */
+    cLayouts = Imm32GetRegImes(NULL, 0);
+    if (cLayouts)
     {
-        pLayouts = Imm32HeapAlloc(0, nCount * sizeof(IME_LAYOUT));
-        if (!pLayouts)
-            return NULL;
-
-        if (!Imm32GetRegImes(pLayouts, nCount))
+        pLayouts = Imm32HeapAlloc(0, cLayouts * sizeof(IME_LAYOUT));
+        if (!pLayouts || !Imm32GetRegImes(pLayouts, cLayouts))
         {
             Imm32HeapFree(pLayouts);
             return NULL;
         }
 
-        for (iLayout = 0; iLayout < nCount; ++iLayout)
+        for (iLayout = 0; iLayout < cLayouts; ++iLayout)
         {
-            /* Same filename? */
             if (lstrcmpiW(pLayouts[iLayout].szFileName, pchFilePart) == 0)
             {
                 if (wLangID != LOWORD(pLayouts[iLayout].hKL))
@@ -597,7 +593,7 @@ HKL WINAPI ImmInstallIMEW(LPCWSTR lpszIMEFileName, LPCWSTR lpszLayoutText)
     }
 
     if (hNewKL == NULL)
-        hNewKL = Imm32GetNextHKL(nCount, pLayouts, wLangID);
+        hNewKL = Imm32GetNextHKL(cLayouts, pLayouts, wLangID);
 
     if (hNewKL)
     {
