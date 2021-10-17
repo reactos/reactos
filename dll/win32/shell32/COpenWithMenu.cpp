@@ -114,7 +114,6 @@ BOOL COpenWithList::Load()
     WCHAR wszName[256], wszBuf[100];
     DWORD i = 0, cchName, dwSize;
     SApp *pApp;
-    PHKEY phKeyApp = &hKeyApp;
 
     if (RegOpenKeyEx(HKEY_CLASSES_ROOT, L"Applications", 0, KEY_READ, &hKey) != ERROR_SUCCESS)
     {
@@ -133,15 +132,13 @@ BOOL COpenWithList::Load()
         if (pApp)
         {
             StringCbPrintfW(wszBuf, sizeof(wszBuf), L"%s", wszName);
-            if (RegOpenKeyW(hKey, wszBuf, phKeyApp) == ERROR_SUCCESS)
+            if (RegOpenKeyW(hKey, wszBuf, &hKeyApp) == ERROR_SUCCESS)
             {
-                if ((RegQueryValueExW(hKeyApp, L"NoOpenWith", NULL,  NULL, NULL, NULL)
-                    != ERROR_SUCCESS) &&
-                    (RegQueryValueExW(hKeyApp, L"NoStartPage", NULL,  NULL, NULL, NULL)
-                    != ERROR_SUCCESS))
+                if ((RegQueryValueExW(hKeyApp, L"NoOpenWith", NULL,  NULL, NULL, NULL) != ERROR_SUCCESS) &&
+                    (RegQueryValueExW(hKeyApp, L"NoStartPage", NULL,  NULL, NULL, NULL) != ERROR_SUCCESS))
                 {
                     StringCbPrintfW(wszBuf, sizeof(wszBuf), L"%s\\shell\\open\\command", wszName);
-                     dwSize = sizeof(pApp->wszCmd);
+                    dwSize = sizeof(pApp->wszCmd);
                     if (RegGetValueW(hKey, wszBuf, L"", RRF_RT_REG_SZ, NULL, pApp->wszCmd, &dwSize) != ERROR_SUCCESS)
                     {
                         ERR("Failed to add app %ls\n", wszName);
