@@ -697,7 +697,7 @@ HKL APIENTRY Imm32GetNextHKL(UINT cKLs, const IME_ENTRY *pEntries, WORD wLangID)
                 break;
         }
 
-        if (wID < 0xE100)
+        if (wID <= 0xE0FF)
             wNextID = wID;
     }
 
