@@ -152,6 +152,6 @@ HRESULT APIENTRY Imm32StrToUInt(LPCWSTR pszText, LPDWORD pdwValue, ULONG nBase);
 HRESULT APIENTRY Imm32UIntToStr(DWORD dwValue, ULONG nBase, LPWSTR pszBuff, USHORT cchBuff);
 BOOL APIENTRY Imm32LoadImeVerInfo(PIMEINFOEX pImeInfoEx);
 UINT APIENTRY Imm32LoadRegImeEntries(PIME_ENTRY pEntries, UINT cEntries);
-BOOL APIENTRY Imm32CopyFile(LPWSTR pszOldFile, LPCWSTR pszNewFile);
-HKL APIENTRY Imm32GetNextHKL(UINT cKLs, const IME_ENTRY *pEntries, WORD wLangID);
 BOOL APIENTRY Imm32WriteRegImeEntry(HKL hKL, LPCWSTR pchFilePart, LPCWSTR pszLayout);
+HKL APIENTRY Imm32GetNextHKL(UINT cKLs, const IME_ENTRY *pEntries, WORD wLangID);
+BOOL APIENTRY Imm32CopyFile(LPWSTR pszOldFile, LPCWSTR pszNewFile);

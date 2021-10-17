@@ -514,7 +514,7 @@ HKL WINAPI ImmInstallIMEW(LPCWSTR lpszIMEFileName, LPCWSTR lpszLayoutText)
     WORD wLangID;
     PIME_ENTRY pEntries = NULL;
 
-    TRACE("(%p, %p)\n", lpszIMEFileName, lpszLayoutText);
+    TRACE("(%s, %s)\n", debugstr_w(lpszIMEFileName), debugstr_w(lpszLayoutText));
 
     GetFullPathNameW(lpszIMEFileName, _countof(szImeFileName), szImeFileName, &pchFilePart);
     CharUpperW(szImeFileName);
