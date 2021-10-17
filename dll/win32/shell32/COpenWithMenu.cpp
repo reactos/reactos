@@ -131,8 +131,7 @@ BOOL COpenWithList::Load()
 
         if (pApp)
         {
-            StringCbPrintfW(wszBuf, sizeof(wszBuf), L"%s", wszName);
-            if (RegOpenKeyW(hKey, wszBuf, &hKeyApp) == ERROR_SUCCESS)
+            if (RegOpenKeyW(hKey, wszName, &hKeyApp) == ERROR_SUCCESS)
             {
                 if ((RegQueryValueExW(hKeyApp, L"NoOpenWith", NULL,  NULL, NULL, NULL) != ERROR_SUCCESS) &&
                     (RegQueryValueExW(hKeyApp, L"NoStartPage", NULL,  NULL, NULL, NULL) != ERROR_SUCCESS))
