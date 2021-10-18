@@ -600,6 +600,7 @@ HKL WINAPI ImmInstallIMEW(LPCWSTR lpszIMEFileName, LPCWSTR lpszLayoutText)
         /* Write the IME layout to registry */
         if (Imm32WriteRegIme(hNewKL, pchFilePart, lpszLayoutText))
         {
+            /* Load the keyboard layout */
             Imm32UIntToStr((DWORD)(DWORD_PTR)hNewKL, 16, szImeKey, _countof(szImeKey));
             hNewKL = LoadKeyboardLayoutW(szImeKey, KLF_REPLACELANG);
         }
