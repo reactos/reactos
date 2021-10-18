@@ -48,6 +48,27 @@ IntGetThreadFocusWindow(VOID)
    return ThreadQueue->spwndFocus ? UserHMGetHandle(ThreadQueue->spwndFocus) : 0;
 }
 
+BOOL FASTCALL IntIsFullScreen(PWND pWnd)
+{
+    PMONITOR pMonitor;
+    POINT pt;
+    RECTL rcl;
+    RECT rcMonitor;
+
+    if (!IntGetWindowRect(pWnd, &rcl))
+        return FALSE;
+
+    pt.x = (rcl.left + rcl.right) / 2;
+    pt.y = (rcl.top + rcl.bottom) / 2;
+    pMonitor = UserMonitorFromPoint(pt, MONITOR_DEFAULTTONEAREST);
+    if (!pMonitor)
+        return FALSE;
+
+    rcMonitor = pMonitor->rcMonitor;
+    return (rcl.left <= rcMonitor.left && rcMonitor.right <= rcl.right &&
+            rcl.top <= rcMonitor.top && rcMonitor.bottom <= rcl.bottom);
+}
+
 VOID FASTCALL
 UpdateShellHook(PWND Window)
 {
@@ -55,8 +76,8 @@ UpdateShellHook(PWND Window)
        (!(Window->ExStyle & WS_EX_TOOLWINDOW) ||
          (Window->ExStyle & WS_EX_APPWINDOW)))
    {
-       // FIXME lParam; The value is TRUE if the window is in full-screen mode, or FALSE otherwise.
-       co_IntShellHookNotify(HSHELL_WINDOWACTIVATED, (WPARAM) UserHMGetHandle(Window), FALSE);
+       LPARAM lParam = IntIsFullScreen(Window);
+       co_IntShellHookNotify(HSHELL_WINDOWACTIVATED, (WPARAM) UserHMGetHandle(Window), lParam);
    }
    else
    {
