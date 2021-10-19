@@ -156,7 +156,7 @@ RtlGetExpWinVer( HMODULE hModule )
     DWORD dwMinorVersion = 10;
     PIMAGE_NT_HEADERS pinth;
 
-    if ( hModule && !((ULONG_PTR)hModule >> 16))
+    if ( hModule && !LOWORD( ((ULONG_PTR)hModule) ))
     {
         pinth = RtlImageNtHeader( hModule );
         if ( pinth )
