@@ -739,7 +739,7 @@ IntGetWindowProc(PWND pWnd,
    PCLS Class;
    WNDPROC gcpd, Ret = 0;
 
-   ASSERT(UserIsEnteredExclusive() == TRUE);
+   ASSERT(UserIsEnteredExclusive());
 
    Class = pWnd->pcls;
 
