@@ -561,6 +561,8 @@ IntResolveDesktop(
     BOOLEAN bInteractive = FALSE;
     BOOLEAN bAccessAllowed = FALSE;
 
+    ASSERT(UserIsEnteredExclusive());
+
     ASSERT(phWinSta);
     ASSERT(phDesktop);
     ASSERT(DesktopPath);
@@ -2329,6 +2331,8 @@ IntCreateDesktop(
 
     TRACE("Enter IntCreateDesktop\n");
 
+    ASSERT(UserIsEnteredExclusive());
+
     ASSERT(phDesktop);
     *phDesktop = NULL;
 
@@ -2808,7 +2812,7 @@ NtUserResolveDesktop(
     if (!NT_SUCCESS(Status))
         return NULL;
 
-    // UserEnterShared();
+    UserEnterExclusive();
 
     _SEH2_TRY
     {
@@ -2863,7 +2867,7 @@ NtUserResolveDesktop(
     ReleaseCapturedUnicodeString(&CapturedDesktopPath, UserMode);
 
 Quit:
-    // UserLeave();
+    UserLeave();
 
     /* Dereference the process object */
     ObDereferenceObject(Process);
