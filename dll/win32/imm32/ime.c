@@ -174,7 +174,7 @@ BOOL APIENTRY Imm32LoadImeInfo(PIMEINFOEX pImeInfoEx, PIMEDPI pImeDpi)
         fn = GetProcAddress(hIME, #name); \
         if (fn) pImeDpi->name = (FN_##name)fn; \
         else if (!(optional)) { \
-            ERR("'%s' not found in the IME module.\n", #name); \
+            ERR("'%s' not found in the IME module '%s'.\n", #name, debugstr_w(szPath)); \
             goto Failed; \
         } \
     } while (0);
