@@ -198,6 +198,7 @@ Failed:
     {
         if (ret)
         {
+            C_ASSERT(sizeof(pImeInfoEx->wszUIClass) == sizeof(pImeDpi->szUIClass));
             pImeInfoEx->ImeInfo = pImeDpi->ImeInfo;
             RtlCopyMemory(pImeInfoEx->wszUIClass, pImeDpi->szUIClass,
                           sizeof(pImeInfoEx->wszUIClass));
