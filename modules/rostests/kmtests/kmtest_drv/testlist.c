@@ -66,6 +66,7 @@ KMT_TESTFUNC Test_PsNotify;
 KMT_TESTFUNC Test_SeInheritance;
 KMT_TESTFUNC Test_SeLogonSession;
 KMT_TESTFUNC Test_SeQueryInfoToken;
+KMT_TESTFUNC Test_SeTokenFiltering;
 KMT_TESTFUNC Test_RtlAvlTree;
 KMT_TESTFUNC Test_RtlException;
 KMT_TESTFUNC Test_RtlIntSafe;
@@ -155,6 +156,7 @@ const KMT_TEST TestList[] =
     { "SeInheritance",                      Test_SeInheritance },
     { "SeLogonSession",                     Test_SeLogonSession },
     { "SeQueryInfoToken",                   Test_SeQueryInfoToken },
+    { "SeTokenFiltering",                   Test_SeTokenFiltering },
     { "ZwAllocateVirtualMemory",            Test_ZwAllocateVirtualMemory },
     { "ZwCreateSection",                    Test_ZwCreateSection },
     { "ZwMapViewOfSection",                 Test_ZwMapViewOfSection },

@@ -98,6 +98,7 @@ list(APPEND KMTEST_DRV_SOURCE
     ntos_se/SeInheritance.c
     ntos_se/SeLogonSession.c
     ntos_se/SeQueryInfoToken.c
+    ntos_se/SeTokenFiltering.c
     rtl/RtlIsValidOemCharacter.c
     rtl/RtlRangeList.c
     ${COMMON_SOURCE}
