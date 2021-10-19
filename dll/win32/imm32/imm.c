@@ -98,15 +98,15 @@ BOOL WINAPI ImmLoadLayout(HKL hKL, PIMEINFOEX pImeInfoEx)
     if (hLayoutsKey)
         RegCloseKey(hLayoutsKey);
 
+    pImeInfoEx->fLoadFlag = 0;
+
     if (error)
     {
         ERR("RegQueryValueExW: 0x%08lX\n", error);
-        pImeInfoEx->fLoadFlag = 0;
         pImeInfoEx->hkl = NULL;
         return FALSE;
     }
 
-    pImeInfoEx->fLoadFlag = 0;
     pImeInfoEx->hkl = hKL;
     return Imm32LoadImeVerInfo(pImeInfoEx);
 }
