@@ -22,6 +22,7 @@ list(APPEND SOURCE
     NtDeleteKey.c
     NtDuplicateObject.c
     NtDuplicateToken.c
+    NtFilterToken.c
     NtFreeVirtualMemory.c
     NtImpersonateAnonymousToken.c
     NtLoadUnloadKey.c
