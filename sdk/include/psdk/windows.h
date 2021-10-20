@@ -30,7 +30,7 @@
 #define _ALPHA_
 #elif defined(_M_ARM) || defined(__arm__)
 #define _ARM_
-#elif defined(_M_ARM64) || defined(__arm64__)
+#elif defined(_M_ARM64) || defined(__arm64__) || defined(__aarch64__)
 #define _ARM64_
 #elif defined(_M_PPC) || defined(__powerpc__)
 #define _PPC_
