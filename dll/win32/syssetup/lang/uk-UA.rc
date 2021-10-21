@@ -86,6 +86,7 @@ BEGIN
     LTEXT "%s", IDC_LOCALETEXT, 53, 36, 250, 16
     LTEXT "Для зміни мови системи або мови користувача натисніть ""Налаштувати"".", IDC_STATIC, 53, 60, 184, 16
     PUSHBUTTON "На&лаштувати...", IDC_CUSTOMLOCALE, 240, 57, 57, 14
+    LTEXT "", IDC_STATIC, 53, 81, 246, 1, SS_ETCHEDHORZ
     LTEXT "Розкладка клавіатури визначає символи, що вводяться при натисненні клавіш.", IDC_STATIC, 53, 84, 253, 18
     LTEXT "%s", IDC_LAYOUTTEXT, 53, 106, 250, 16
     LTEXT "Для зміни розкладки клавіатури натисніть ""Налаштувати"".", IDC_STATIC, 53, 126, 184, 18
@@ -183,6 +184,8 @@ BEGIN
     IDS_COMPUTERSUBTITLE "Ви маєте вказати ім'я та пароль адміністратора Вашого комп'ютера."
     IDS_LOCALETITLE "Регіональні налаштування"
     IDS_LOCALESUBTITLE "Ви можете налаштувати ReactOS для різних регіонів і мов."
+    IDS_LOCALETEXT "The Standards and formats are set to %s, and the location is set to %s."
+    IDS_LAYOUTTEXT "Your default text input language and method is: %s keyboard layout"
     IDS_DATETIMETITLE "Дата та час"
     IDS_DATETIMESUBTITLE "Встановіть правильні дату і час для Вашого комп'ютера."
     IDS_PROCESSTITLE "Реєстрація компонентів"

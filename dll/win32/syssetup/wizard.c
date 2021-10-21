@@ -1089,67 +1089,99 @@ ComputerPageDlgProc(HWND hwndDlg,
 static VOID
 SetUserLocaleName(HWND hwnd)
 {
-    /* FIXME: Set actual locale name */
-    SetWindowTextW(hwnd, L"");
+    WCHAR CurLocale[256] = L"";
+    WCHAR CurGeo[256] = L"";
+    WCHAR ResText[256] = L"";
+    WCHAR LocaleText[256 * 2];
+
+    GetLocaleInfoW(GetUserDefaultLCID(), LOCALE_SLANGUAGE, CurLocale, ARRAYSIZE(CurLocale));
+    GetGeoInfoW(GetUserGeoID(GEOCLASS_NATION), GEO_FRIENDLYNAME, CurGeo, ARRAYSIZE(CurGeo), LANG_SYSTEM_DEFAULT);
+
+    LoadStringW(hDllInstance, IDS_LOCALETEXT, ResText, ARRAYSIZE(ResText));
+    StringCchPrintfW(LocaleText, ARRAYSIZE(LocaleText), ResText, CurLocale, CurGeo);
+
+    SetWindowTextW(hwnd, LocaleText);
 }
 
 static VOID
 SetKeyboardLayoutName(HWND hwnd)
 {
-#if 0
-    TCHAR szLayoutPath[256];
-    TCHAR szLocaleName[32];
-    DWORD dwLocaleSize;
+    HKL hkl;
+    BOOL LayoutSpecial = FALSE;
+    WCHAR LayoutPath[256];
+    WCHAR LocaleName[32];
+    WCHAR SpecialId[5] = L"";
+    WCHAR ResText[256] = L"";
+    DWORD dwValueSize;
     HKEY hKey;
+    UINT i;
 
-    if (RegOpenKeyEx(HKEY_LOCAL_MACHINE,
-                     _T("SYSTEM\\CurrentControlSet\\Control\\NLS\\Locale"),
-                     0,
-                     KEY_ALL_ACCESS,
-                     &hKey))
-        return;
-
-    dwValueSize = 16 * sizeof(TCHAR);
-    if (RegQueryValueEx(hKey,
-                        NULL,
-                        NULL,
-                        NULL,
-                        szLocaleName,
-                        &dwLocaleSize))
+    /* Get the default input language and method */
+    if (!SystemParametersInfoW(SPI_GETDEFAULTINPUTLANG, 0, (LPDWORD)&hkl, 0))
     {
-        RegCloseKey(hKey);
-        return;
+        hkl = GetKeyboardLayout(0);
     }
 
-    _tcscpy(szLayoutPath,
-            _T("SYSTEM\\CurrentControlSet\\Control\\Keyboard Layouts\\"));
-    _tcscat(szLayoutPath,
-            szLocaleName);
-
-    if (RegOpenKeyEx(HKEY_LOCAL_MACHINE,
-                     szLayoutPath,
-                     0,
-                     KEY_ALL_ACCESS,
-                     &hKey))
-        return;
-
-    dwValueSize = 32 * sizeof(TCHAR);
-    if (RegQueryValueEx(hKey,
-                        _T("Layout Text"),
-                        NULL,
-                        NULL,
-                        szLocaleName,
-                        &dwLocaleSize))
+    if ((HIWORD(hkl) & 0xF000) == 0xF000)
     {
-        RegCloseKey(hKey);
-        return;
+        /* Process keyboard layout with special id */
+        StringCchPrintfW(SpecialId, ARRAYSIZE(SpecialId), L"%04x", (HIWORD(hkl) & 0x0FFF));
+        LayoutSpecial = TRUE;
     }
 
-    RegCloseKey(hKey);
-#else
-    /* FIXME: Set actual layout name */
-    SetWindowTextW(hwnd, L"");
-#endif
+#define MAX_LAYOUTS_PER_LANGID 0x10000
+    for (i = 0; i < (LayoutSpecial ? MAX_LAYOUTS_PER_LANGID : 1); i++)
+    {
+        /* Generate a hexadecimal identifier for keyboard layout registry key */
+        StringCchPrintfW(LocaleName, ARRAYSIZE(LocaleName), L"%08lx", (i << 16) | LOWORD(hkl));
+
+        StringCchCopyW(LayoutPath, ARRAYSIZE(LayoutPath), L"SYSTEM\\CurrentControlSet\\Control\\Keyboard Layouts\\");
+        StringCchCatW(LayoutPath, ARRAYSIZE(LayoutPath), LocaleName);
+        *LocaleName = UNICODE_NULL;
+
+        if (RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                          LayoutPath,
+                          0,
+                          KEY_ALL_ACCESS,
+                          &hKey) == ERROR_SUCCESS)
+        {
+            /* Make sure the keyboard layout key we opened is the one we need.
+             * If the layout has no special id, just pass this check. */
+            dwValueSize = sizeof(LocaleName);
+            if (!LayoutSpecial ||
+                ((RegQueryValueExW(hKey,
+                                   L"Layout Id",
+                                   NULL,
+                                   NULL,
+                                   (PVOID)&LocaleName,
+                                   &dwValueSize) == ERROR_SUCCESS) &&
+                (wcscmp(LocaleName, SpecialId) == 0)))
+            {
+                *LocaleName = UNICODE_NULL;
+                dwValueSize = sizeof(LocaleName);
+                RegQueryValueExW(hKey,
+                                 L"Layout Text",
+                                 NULL,
+                                 NULL,
+                                 (PVOID)&LocaleName,
+                                 &dwValueSize);
+                /* Let the loop know where to stop */
+                i = MAX_LAYOUTS_PER_LANGID;
+            }
+            RegCloseKey(hKey);
+        }
+        else
+        {
+            /* Keyboard layout registry keys are expected to go in order without gaps */
+            break;
+        }
+    }
+#undef MAX_LAYOUTS_PER_LANGID
+
+    LoadStringW(hDllInstance, IDS_LAYOUTTEXT, ResText, ARRAYSIZE(ResText));
+    StringCchPrintfW(LayoutPath, ARRAYSIZE(LayoutPath), ResText, LocaleName);
+
+    SetWindowTextW(hwnd, LayoutPath);
 }
 
 
@@ -1157,6 +1189,7 @@ static BOOL
 RunControlPanelApplet(HWND hwnd, PCWSTR pwszCPLParameters)
 {
     MSG msg;
+    HWND MainWindow = GetParent(hwnd);
     STARTUPINFOW StartupInfo;
     PROCESS_INFORMATION ProcessInformation;
     WCHAR CmdLine[MAX_PATH] = L"rundll32.exe shell32.dll,Control_RunDLL ";
@@ -1189,8 +1222,14 @@ RunControlPanelApplet(HWND hwnd, PCWSTR pwszCPLParameters)
         return FALSE;
     }
 
+    /* Disable the Back and Next buttons and the main window
+     * while we're interacting with the control panel applet */
+    PropSheet_SetWizButtons(MainWindow, 0);
+    EnableWindow(MainWindow, FALSE);
+
     while ((MsgWaitForMultipleObjects(1, &ProcessInformation.hProcess, FALSE, INFINITE, QS_ALLINPUT|QS_ALLPOSTMESSAGE )) != WAIT_OBJECT_0)
     {
+       /* We still need to process main window messages to avoid freeze */
        while (PeekMessageW(&msg, NULL, 0, 0, PM_REMOVE))
        {
            TranslateMessage(&msg);
@@ -1199,6 +1238,11 @@ RunControlPanelApplet(HWND hwnd, PCWSTR pwszCPLParameters)
     }
     CloseHandle(ProcessInformation.hThread);
     CloseHandle(ProcessInformation.hProcess);
+
+    /* Enable the Back and Next buttons and the main window again */
+    PropSheet_SetWizButtons(MainWindow, PSWIZB_BACK | PSWIZB_NEXT);
+    EnableWindow(MainWindow, TRUE);
+
     return TRUE;
 }
 
@@ -1255,11 +1299,12 @@ LocalePageDlgProc(HWND hwndDlg,
                 {
                     case IDC_CUSTOMLOCALE:
                         RunControlPanelApplet(hwndDlg, L"intl.cpl,,5");
-                        /* FIXME: Update input locale name */
+                        SetUserLocaleName(GetDlgItem(hwndDlg, IDC_LOCALETEXT));
                         break;
 
                     case IDC_CUSTOMLAYOUT:
                         RunControlPanelApplet(hwndDlg, L"input.dll,@1");
+                        SetKeyboardLayoutName(GetDlgItem(hwndDlg, IDC_LAYOUTTEXT));
                         break;
                 }
             }

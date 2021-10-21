@@ -86,6 +86,7 @@ BEGIN
     LTEXT "%s", IDC_LOCALETEXT, 53, 34, 250, 16
     LTEXT "Para modificar esta configuración, pulse Modificar.", IDC_STATIC, 53, 60, 184, 8
     PUSHBUTTON "&Modificar...", IDC_CUSTOMLOCALE, 245, 57, 50, 14
+    LTEXT "", IDC_STATIC, 53, 79, 241, 1, SS_ETCHEDHORZ
     LTEXT "La distribución del teclado determina el caracter que se muestra al presionar cada tecla.", IDC_STATIC, 53, 86, 253, 32
     LTEXT "%s", IDC_LAYOUTTEXT, 53, 109, 250, 16
     LTEXT "Para cambiar la distribución del teclado, pulse Modificar.", IDC_STATIC, 53, 126, 184, 8
@@ -183,6 +184,8 @@ BEGIN
     IDS_COMPUTERSUBTITLE "Debe dar un nombre y una contraseña de Administrador a su equipo."
     IDS_LOCALETITLE "Opciones regionales"
     IDS_LOCALESUBTITLE "Puede personalizar ReactOS para diferentes regiones e idiomas."
+    IDS_LOCALETEXT "The Standards and formats are set to %s, and the location is set to %s."
+    IDS_LAYOUTTEXT "Your default text input language and method is: %s keyboard layout"
     IDS_DATETIMETITLE "Fecha y hora"
     IDS_DATETIMESUBTITLE "Fije la fecha y hora correcta de su equipo."
     IDS_PROCESSTITLE "Registrando componentes"

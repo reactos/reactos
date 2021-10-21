@@ -85,6 +85,7 @@ BEGIN
     LTEXT "%s", IDC_LOCALETEXT, 53, 29, 250, 16
     LTEXT "Pro změnu lokalizace systému klikněte na Změnit.", IDC_STATIC, 53, 60, 184, 8
     PUSHBUTTON "&Změnit...", IDC_CUSTOMLOCALE, 245, 57, 50, 14
+    LTEXT "", IDC_STATIC, 53, 79, 241, 1, SS_ETCHEDHORZ
     LTEXT "Rozložení kláves určí znaky, které se zobrazí, když píšete.", IDC_STATIC, 53, 86, 253, 8
     LTEXT "%s", IDC_LAYOUTTEXT, 53, 100, 250, 16
     LTEXT "Pro změnu rozložení kláves, klikněte na Změnit.", IDC_STATIC, 53, 126, 184, 8
@@ -182,6 +183,8 @@ BEGIN
     IDS_COMPUTERSUBTITLE "Zadejte jméno a heslo pro účet Administrator."
     IDS_LOCALETITLE "Regionální nastavení"
     IDS_LOCALESUBTITLE "Systém ReactOS můžete přizpůsobit různým regionům a jazykům."
+    IDS_LOCALETEXT "The Standards and formats are set to %s, and the location is set to %s."
+    IDS_LAYOUTTEXT "Your default text input language and method is: %s keyboard layout"
     IDS_DATETIMETITLE "Datum a čas"
     IDS_DATETIMESUBTITLE "Nastavte správný čas pro Váš počítač."
     IDS_PROCESSTITLE "Registrace součástí"

@@ -86,6 +86,7 @@ BEGIN
     LTEXT "%s", IDC_LOCALETEXT, 53, 34, 250, 16
     LTEXT "Sistem veya kullanıcı yerel ayarlarını değiştirmek için Özelleştir'e tıklayınız.", IDC_STATIC, 53, 60, 196, 30
     PUSHBUTTON "Ö&zelleştir...", IDC_CUSTOMLOCALE, 250, 57, 50, 14
+    LTEXT "", IDC_STATIC, 53, 81, 246, 1, SS_ETCHEDHORZ
     LTEXT "Klavye düzeni, yazdığınızda gözüken karakterleri denetler.", IDC_STATIC, 53, 86, 253, 8
     LTEXT "%s", IDC_LAYOUTTEXT, 53, 100, 250, 16
     LTEXT "Klavye düzenini değiştirmek için Özelleştir'e tıklayınız.", IDC_STATIC, 53, 126, 184, 8
@@ -183,6 +184,8 @@ BEGIN
     IDS_COMPUTERSUBTITLE "Bilgisayarınız için bir ad ve bir Yönetici Şifresi sağlamalısınız."
     IDS_LOCALETITLE "Yerel Ayarlar"
     IDS_LOCALESUBTITLE "Farklı bölgeler ve diller için ReactOS'u özelleştirebilirsiniz."
+    IDS_LOCALETEXT "The Standards and formats are set to %s, and the location is set to %s."
+    IDS_LAYOUTTEXT "Your default text input language and method is: %s keyboard layout"
     IDS_DATETIMETITLE "Tarih ve Saat"
     IDS_DATETIMESUBTITLE "Bilgisayarınız için doğru zamanı ayarlayınız."
     IDS_PROCESSTITLE "Bileşenler Kaydediliyor"
