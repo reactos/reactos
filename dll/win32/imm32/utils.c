@@ -16,6 +16,48 @@ WINE_DEFAULT_DEBUG_CHANNEL(imm);
 
 HANDLE g_hImm32Heap = NULL;
 
+HRESULT APIENTRY
+Imm32StrToUInt(LPCWSTR pszText, LPDWORD pdwValue, ULONG nBase)
+{
+#if 1
+    NTSTATUS Status;
+    UNICODE_STRING UnicodeString;
+    RtlInitUnicodeString(&UnicodeString, pszText);
+    Status = RtlUnicodeStringToInteger(&UnicodeString, nBase, pdwValue);
+    if (!NT_SUCCESS(Status))
+        return E_FAIL;
+    return S_OK;
+#else
+    LPWSTR endptr;
+    *pdwValue = wcstoul(pszText, &endptr, nBase);
+    return (*endptr ? E_FAIL : S_OK);
+#endif
+}
+
+HRESULT APIENTRY
+Imm32UIntToStr(DWORD dwValue, ULONG nBase, LPWSTR pszBuff, USHORT cchBuff)
+{
+#if 1
+    NTSTATUS Status;
+    UNICODE_STRING UnicodeString;
+    UnicodeString.Buffer = pszBuff;
+    UnicodeString.MaximumLength = cchBuff * sizeof(WCHAR);
+    Status = RtlIntegerToUnicodeString(dwValue, nBase, &UnicodeString);
+    if (!NT_SUCCESS(Status))
+        return E_FAIL;
+    return S_OK;
+#else
+    LPCWSTR pszFormat;
+    if (nBase == 16)
+        pszFormat = L"%lX";
+    else if (nBase == 10)
+        pszFormat = L"%lu";
+    else
+        return E_INVALIDARG;
+    return StringCchPrintfW(pszBuff, cchBuff, pszFormat, dwValue);
+#endif
+}
+
 BOOL WINAPI Imm32IsImcAnsi(HIMC hIMC)
 {
     BOOL ret;
@@ -482,6 +524,400 @@ Imm32ReconvertAnsiFromWide(LPRECONVERTSTRING pDest, const RECONVERTSTRING *pSrc,
     pchDest[cchDest] = 0;
 
     return cbDest;
+}
+
+typedef BOOL (WINAPI *FN_GetFileVersionInfoW)(LPCWSTR, DWORD, DWORD, LPVOID);
+typedef DWORD (WINAPI *FN_GetFileVersionInfoSizeW)(LPCWSTR, LPDWORD);
+typedef BOOL (WINAPI *FN_VerQueryValueW)(LPCVOID, LPCWSTR, LPVOID*, PUINT);
+
+static FN_GetFileVersionInfoW s_fnGetFileVersionInfoW = NULL;
+static FN_GetFileVersionInfoSizeW s_fnGetFileVersionInfoSizeW = NULL;
+static FN_VerQueryValueW s_fnVerQueryValueW = NULL;
+
+static BOOL APIENTRY Imm32LoadImeFixedInfo(PIMEINFOEX pInfoEx, LPCVOID pVerInfo)
+{
+    UINT cbFixed = 0;
+    VS_FIXEDFILEINFO *pFixed;
+    if (!s_fnVerQueryValueW(pVerInfo, L"\\", (LPVOID*)&pFixed, &cbFixed) || !cbFixed)
+        return FALSE;
+
+    /* NOTE: The IME module must contain a version info of input method driver. */
+    if (pFixed->dwFileType != VFT_DRV || pFixed->dwFileSubtype != VFT2_DRV_INPUTMETHOD)
+        return FALSE;
+
+    pInfoEx->dwProdVersion = pFixed->dwProductVersionMS;
+    pInfoEx->dwImeWinVersion = 0x40000;
+    return TRUE;
+}
+
+static LPWSTR APIENTRY
+Imm32GetVerInfoValue(LPCVOID pVerInfo, LPWSTR pszKey, DWORD cchKey, LPCWSTR pszName)
+{
+    size_t cchExtra;
+    LPWSTR pszValue;
+    UINT cbValue = 0;
+
+    StringCchLengthW(pszKey, cchKey, &cchExtra);
+
+    StringCchCatW(pszKey, cchKey, pszName);
+    s_fnVerQueryValueW(pVerInfo, pszKey, (LPVOID*)&pszValue, &cbValue);
+    pszKey[cchExtra] = 0;
+
+    return (cbValue ? pszValue : NULL);
+}
+
+BOOL APIENTRY Imm32LoadImeLangAndDesc(PIMEINFOEX pInfoEx, LPCVOID pVerInfo)
+{
+    BOOL ret;
+    WCHAR szKey[80];
+    LPWSTR pszDesc;
+    LPWORD pw;
+    UINT cbData;
+    LANGID LangID;
+
+    /* Getting the version info. See VerQueryValue */
+    ret = s_fnVerQueryValueW(pVerInfo, L"\\VarFileInfo\\Translation", (LPVOID*)&pw, &cbData);
+    if (!ret || !cbData)
+        return FALSE;
+
+    if (pInfoEx->hkl == NULL)
+        pInfoEx->hkl = (HKL)(DWORD_PTR)*pw; /* This is an invalid HKL */
+
+    /* Try the current language and the Unicode codepage (0x04B0) */
+    LangID = LANGIDFROMLCID(GetThreadLocale());
+    StringCchPrintfW(szKey, _countof(szKey), L"\\StringFileInfo\\%04X04B0\\", LangID);
+    pszDesc = Imm32GetVerInfoValue(pVerInfo, szKey, _countof(szKey), L"FileDescription");
+    if (!pszDesc)
+    {
+        /* Retry the language and codepage of the IME module */
+        StringCchPrintfW(szKey, _countof(szKey), L"\\StringFileInfo\\%04X%04X\\", pw[0], pw[1]);
+        pszDesc = Imm32GetVerInfoValue(pVerInfo, szKey, _countof(szKey), L"FileDescription");
+    }
+
+    /* The description */
+    if (pszDesc)
+        StringCchCopyW(pInfoEx->wszImeDescription, _countof(pInfoEx->wszImeDescription), pszDesc);
+    else
+        pInfoEx->wszImeDescription[0] = 0;
+
+    return TRUE;
+}
+
+BOOL APIENTRY Imm32LoadImeVerInfo(PIMEINFOEX pImeInfoEx)
+{
+    HINSTANCE hinstVersion;
+    BOOL ret = FALSE, bLoaded = FALSE;
+    WCHAR szPath[MAX_PATH];
+    LPVOID pVerInfo;
+    DWORD cbVerInfo, dwHandle;
+
+    /* Load version.dll to use the version info API */
+    Imm32GetSystemLibraryPath(szPath, _countof(szPath), L"version.dll");
+    hinstVersion = GetModuleHandleW(szPath);
+    if (!hinstVersion)
+    {
+        hinstVersion = LoadLibraryW(szPath);
+        if (!hinstVersion)
+            return FALSE;
+        bLoaded = TRUE;
+    }
+
+#define GET_FN(name) do { \
+    s_fn##name = (FN_##name)GetProcAddress(hinstVersion, #name); \
+    if (!s_fn##name) goto Quit; \
+} while (0)
+    GET_FN(GetFileVersionInfoW);
+    GET_FN(GetFileVersionInfoSizeW);
+    GET_FN(VerQueryValueW);
+#undef GET_FN
+
+    /* The path of the IME module */
+    Imm32GetSystemLibraryPath(szPath, _countof(szPath), pImeInfoEx->wszImeFile);
+
+    cbVerInfo = s_fnGetFileVersionInfoSizeW(szPath, &dwHandle);
+    if (!cbVerInfo)
+        goto Quit;
+
+    pVerInfo = Imm32HeapAlloc(0, cbVerInfo);
+    if (!pVerInfo)
+        goto Quit;
+
+    /* Load the version info of the IME module */
+    if (s_fnGetFileVersionInfoW(szPath, dwHandle, cbVerInfo, pVerInfo) &&
+        Imm32LoadImeFixedInfo(pImeInfoEx, pVerInfo))
+    {
+        ret = Imm32LoadImeLangAndDesc(pImeInfoEx, pVerInfo);
+    }
+
+    Imm32HeapFree(pVerInfo);
+
+Quit:
+    if (bLoaded)
+        FreeLibrary(hinstVersion);
+    return ret;
+}
+
+HKL APIENTRY Imm32GetNextHKL(UINT cKLs, const REG_IME *pLayouts, WORD wLangID)
+{
+    UINT iKL, wID, wLow = 0xE0FF, wHigh = 0xE01F, wNextID = 0;
+
+    for (iKL = 0; iKL < cKLs; ++iKL)
+    {
+        wHigh = max(wHigh, HIWORD(pLayouts[iKL].hKL));
+        wLow = min(wLow, HIWORD(pLayouts[iKL].hKL));
+    }
+
+    if (wHigh < 0xE0FF)
+    {
+        wNextID = wHigh + 1;
+    }
+    else if (wLow > 0xE001)
+    {
+        wNextID = wLow - 1;
+    }
+    else
+    {
+        for (wID = 0xE020; wID <= 0xE0FF; ++wID)
+        {
+            for (iKL = 0; iKL < cKLs; ++iKL)
+            {
+                if (LOWORD(pLayouts[iKL].hKL) == wLangID &&
+                    HIWORD(pLayouts[iKL].hKL) == wID)
+                {
+                    break;
+                }
+            }
+
+            if (iKL >= cKLs)
+                break;
+        }
+
+        if (wID <= 0xE0FF)
+            wNextID = wID;
+    }
+
+    if (!wNextID)
+        return NULL;
+
+    return (HKL)(DWORD_PTR)MAKELONG(wLangID, wNextID);
+}
+
+UINT APIENTRY Imm32GetRegImes(PREG_IME pLayouts, UINT cLayouts)
+{
+    HKEY hkeyLayouts, hkeyIME;
+    WCHAR szImeFileName[80], szImeKey[20];
+    UINT iKey, nCount;
+    DWORD cbData;
+    LONG lError;
+    ULONG Value;
+    HKL hKL;
+
+    /* Open the registry keyboard layouts */
+    lError = RegOpenKeyW(HKEY_LOCAL_MACHINE, REGKEY_KEYBOARD_LAYOUTS, &hkeyLayouts);
+    if (lError != ERROR_SUCCESS)
+        return 0;
+
+    for (iKey = nCount = 0; ; ++iKey)
+    {
+        /* Get the key name */
+        lError = RegEnumKeyW(hkeyLayouts, iKey, szImeKey, _countof(szImeKey));
+        if (lError != ERROR_SUCCESS)
+            break;
+
+        if (szImeKey[0] != L'E' && szImeKey[0] != L'e')
+            continue; /* Not an IME layout */
+
+        if (pLayouts == NULL) /* for counting only */
+        {
+            ++nCount;
+            continue;
+        }
+
+        if (cLayouts <= nCount)
+            break;
+
+        lError = RegOpenKeyW(hkeyLayouts, szImeKey, &hkeyIME); /* Open the IME key */
+        if (lError != ERROR_SUCCESS)
+            break;
+
+        /* Load the "Ime File" value */
+        szImeFileName[0] = 0;
+        cbData = sizeof(szImeFileName);
+        RegQueryValueExW(hkeyIME, L"Ime File", NULL, NULL, (LPBYTE)szImeFileName, &cbData);
+        szImeFileName[_countof(szImeFileName) - 1] = 0;
+
+        RegCloseKey(hkeyIME);
+
+        if (!szImeFileName[0])
+            break;
+
+        Imm32StrToUInt(szImeKey, &Value, 16);
+        hKL = (HKL)(DWORD_PTR)Value;
+        if (!IS_IME_HKL(hKL))
+            break;
+
+        /* Store the IME key and the IME filename */
+        pLayouts[nCount].hKL = hKL;
+        StringCchCopyW(pLayouts[nCount].szImeKey, _countof(pLayouts[nCount].szImeKey), szImeKey);
+        CharUpperW(szImeFileName);
+        StringCchCopyW(pLayouts[nCount].szFileName, _countof(pLayouts[nCount].szFileName),
+                       szImeFileName);
+        ++nCount;
+    }
+
+    RegCloseKey(hkeyLayouts);
+    return nCount;
+}
+
+BOOL APIENTRY Imm32WriteRegIme(HKL hKL, LPCWSTR pchFilePart, LPCWSTR pszLayout)
+{
+    UINT iPreload;
+    HKEY hkeyLayouts, hkeyIME, hkeyPreload;
+    WCHAR szImeKey[20], szPreloadNumber[20], szPreloadKey[20], szImeFileName[80];
+    DWORD cbData;
+    LANGID LangID;
+    LONG lError;
+    LPCWSTR pszLayoutFile;
+
+    /* Open the registry keyboard layouts */
+    lError = RegOpenKeyW(HKEY_LOCAL_MACHINE, REGKEY_KEYBOARD_LAYOUTS, &hkeyLayouts);
+    if (lError != ERROR_SUCCESS)
+        return FALSE;
+
+    /* Get the IME key from hKL */
+    Imm32UIntToStr((DWORD)(DWORD_PTR)hKL, 16, szImeKey, _countof(szImeKey));
+
+    /* Create a registry IME key */
+    lError = RegCreateKeyW(hkeyLayouts, szImeKey, &hkeyIME);
+    if (lError != ERROR_SUCCESS)
+        goto Failure;
+
+    /* Write "Ime File" */
+    cbData = (wcslen(pchFilePart) + 1) * sizeof(WCHAR);
+    lError = RegSetValueExW(hkeyIME, L"Ime File", 0, REG_SZ, (LPBYTE)pchFilePart, cbData);
+    if (lError != ERROR_SUCCESS)
+        goto Failure;
+
+    /* Write "Layout Text" */
+    cbData = (wcslen(pszLayout) + 1) * sizeof(WCHAR);
+    lError = RegSetValueExW(hkeyIME, L"Layout Text", 0, REG_SZ, (LPBYTE)pszLayout, cbData);
+    if (lError != ERROR_SUCCESS)
+        goto Failure;
+
+    /* Choose "Layout File" from hKL */
+    LangID = LOWORD(hKL);
+    switch (LOBYTE(LangID))
+    {
+        case LANG_JAPANESE: pszLayoutFile = L"kbdjpn.dll"; break;
+        case LANG_KOREAN:   pszLayoutFile = L"kbdkor.dll"; break;
+        default:            pszLayoutFile = L"kbdus.dll"; break;
+    }
+    StringCchCopyW(szImeFileName, _countof(szImeFileName), pszLayoutFile);
+
+    /* Write "Layout File" */
+    cbData = (wcslen(szImeFileName) + 1) * sizeof(WCHAR);
+    lError = RegSetValueExW(hkeyIME, L"Layout File", 0, REG_SZ, (LPBYTE)szImeFileName, cbData);
+    if (lError != ERROR_SUCCESS)
+        goto Failure;
+
+    RegCloseKey(hkeyIME);
+    RegCloseKey(hkeyLayouts);
+
+    /* Create "Preload" key */
+    RegCreateKeyW(HKEY_CURRENT_USER, L"Keyboard Layout\\Preload", &hkeyPreload);
+
+#define MAX_PRELOAD 0x400
+    for (iPreload = 1; iPreload < MAX_PRELOAD; ++iPreload)
+    {
+        Imm32UIntToStr(iPreload, 10, szPreloadNumber, _countof(szPreloadNumber));
+
+        /* Load the key of the preload number */
+        cbData = sizeof(szPreloadKey);
+        lError = RegQueryValueExW(hkeyPreload, szPreloadNumber, NULL, NULL,
+                                  (LPBYTE)szPreloadKey, &cbData);
+        szPreloadKey[_countof(szPreloadKey) - 1] = 0;
+
+        if (lError != ERROR_SUCCESS || lstrcmpiW(szImeKey, szPreloadKey) == 0)
+            break; /* Found an empty room or the same key */
+    }
+
+    if (iPreload >= MAX_PRELOAD) /* Not found */
+    {
+        RegCloseKey(hkeyPreload);
+        return FALSE;
+    }
+#undef MAX_PRELOAD
+
+    /* Write the IME key to the preload number */
+    cbData = (wcslen(szImeKey) + 1) * sizeof(WCHAR);
+    lError = RegSetValueExW(hkeyPreload, szPreloadNumber, 0, REG_SZ, (LPBYTE)szImeKey, cbData);
+    RegCloseKey(hkeyPreload);
+    return lError == ERROR_SUCCESS;
+
+Failure:
+    RegCloseKey(hkeyIME);
+    RegDeleteKeyW(hkeyLayouts, szImeKey);
+    RegCloseKey(hkeyLayouts);
+    return FALSE;
+}
+
+typedef INT (WINAPI *FN_LZOpenFileW)(LPWSTR, LPOFSTRUCT, WORD);
+typedef LONG (WINAPI *FN_LZCopy)(INT, INT);
+typedef VOID (WINAPI *FN_LZClose)(INT);
+
+BOOL APIENTRY Imm32CopyFile(LPWSTR pszOldFile, LPCWSTR pszNewFile)
+{
+    BOOL ret = FALSE, bLoaded = FALSE;
+    HMODULE hinstLZ32;
+    WCHAR szLZ32Path[MAX_PATH];
+    CHAR szDestA[MAX_PATH];
+    OFSTRUCT OFStruct;
+    FN_LZOpenFileW fnLZOpenFileW;
+    FN_LZCopy fnLZCopy;
+    FN_LZClose fnLZClose;
+    HFILE hfDest, hfSrc;
+
+    /* Load LZ32.dll for copying/decompressing file */
+    Imm32GetSystemLibraryPath(szLZ32Path, _countof(szLZ32Path), L"LZ32");
+    hinstLZ32 = GetModuleHandleW(szLZ32Path);
+    if (!hinstLZ32)
+    {
+        hinstLZ32 = LoadLibraryW(szLZ32Path);
+        if (!hinstLZ32)
+            return FALSE;
+        bLoaded = TRUE;
+    }
+
+#define GET_FN(name) do { \
+    fn##name = (FN_##name)GetProcAddress(hinstLZ32, #name); \
+    if (!fn##name) goto Quit; \
+} while (0)
+    GET_FN(LZOpenFileW);
+    GET_FN(LZCopy);
+    GET_FN(LZClose);
+#undef GET_FN
+
+    if (!WideCharToMultiByte(CP_ACP, 0, pszNewFile, -1, szDestA, _countof(szDestA), NULL, NULL))
+        goto Quit;
+    szDestA[_countof(szDestA) - 1] = 0;
+
+    hfSrc = fnLZOpenFileW(pszOldFile, &OFStruct, OF_READ);
+    if (hfSrc < 0)
+        goto Quit;
+
+    hfDest = OpenFile(szDestA, &OFStruct, OF_CREATE);
+    if (hfDest != HFILE_ERROR)
+    {
+        ret = (fnLZCopy(hfSrc, hfDest) >= 0);
+        _lclose(hfDest);
+    }
+
+    fnLZClose(hfSrc);
+
+Quit:
+    if (bLoaded)
+        FreeLibrary(hinstLZ32);
+    return ret;
 }
 
 /***********************************************************************
