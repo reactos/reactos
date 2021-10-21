@@ -1,0 +1,260 @@
+/*
+ * PROJECT:     ReactOS Win32 Setup
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     Basque locale file
+ * COPYRIGHT:   Julen Urizar Compains
+ */
+
+LANGUAGE LANG_BASQUE, SUBLANG_NEUTRAL
+
+IDD_WELCOMEPAGE DIALOGEX 0, 0, 317, 193
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "ReactOS-aren Instalazioa"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Ongi etorri ReactOS-aren instalazio bigarren zati.", IDC_WELCOMETITLE, 115, 8, 195, 24
+    LTEXT "Morroi hau ReactOS instalatuko zure ordenagailuan.\n\nInstalazioa behar du zure eta zure ordenagailuaren informazio gutxia osatzeko zuzen konfiguratzeko.", IDC_STATIC, 115, 40, 195, 100
+    LTEXT "Sakatu Aurrera instalazioa jarraitzeko.", IDC_STATIC, 115, 169, 195, 17
+END
+
+IDD_ACKPAGE DIALOGEX 0, 0, 317, 145
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "ReactOS-aren Instalazioa"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    LTEXT "Los desarrolladores de ReactOS quieren dar las gracias a los siguientes proyectos de código abierto, los cuales han sido parte fundamental a la hora de crear ReactOS:", IDC_STATIC, 15, 7, 286, 19
+    LISTBOX IDC_PROJECTS, 15, 30, 286, 75, LBS_NOSEL | LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | WS_VSCROLL
+    LTEXT "ReactOS se distribuye bajo licencia GPL, por lo que si quiere reutilizarlo o redistribuirlo, en todo o en parte, debe respetar sus términos.", IDC_STATIC, 15, 110, 227, 19
+    PUSHBUTTON "&Ikusi GPL-a...", IDC_VIEWGPL, 251, 110, 50, 19
+    LTEXT "Sakatu Aurrera instalazioa jarraitzeko.", IDC_STATIC, 15, 136, 195, 17
+END
+
+IDD_PRODUCT DIALOGEX 0, 0, 317, 143
+CAPTION "ReactOS-aren Instalazioa"
+STYLE DS_MODALFRAME | DS_SHELLFONT | WS_POPUPWINDOW | WS_CAPTION | WS_VISIBLE
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON "", IDC_PRODUCT_ICON, 5, 5, 20, 20
+    LTEXT "Por favor, escriba una opción de producto:", IDC_STATIC, 35, 7, 230, 12
+    LTEXT "&Opciones de producto:", IDC_STATIC, 5, 32, 85, 10
+    COMBOBOX IDC_PRODUCT_OPTIONS, 95, 30, 170, 300, CBS_HASSTRINGS | CBS_AUTOHSCROLL | CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    GROUPBOX "Información de producto", IDC_STATIC, 5, 50, 305, 85
+    LTEXT "Descripción:", IDC_STATIC, 20, 65, 70, 10
+    EDITTEXT IDC_PRODUCT_DESCRIPTION, 95, 65, 205, 60, ES_READONLY | ES_AUTOVSCROLL | ES_MULTILINE | WS_VSCROLL
+END
+
+IDD_OWNERPAGE DIALOGEX 0, 0, 317, 143
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "ReactOS-aren Instalazioa"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON IDI_ICON2, IDC_STATIC, 21, 7, 20, 20
+    LTEXT "Escriba su nombre completo y el nombre de su compañia u organización.", IDC_STATIC, 54, 7, 242, 21
+    LTEXT "&Izena:", IDC_STATIC, 83, 37, 44, 8, SS_RIGHT
+    EDITTEXT IDC_OWNERNAME, 132, 35, 163, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL
+    LTEXT "&Organización:", IDC_STATIC, 83, 57, 44, 8,  SS_RIGHT
+    EDITTEXT IDC_OWNERORGANIZATION, 132, 55, 163, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL
+END
+
+IDD_COMPUTERPAGE DIALOGEX 0, 0, 317, 143
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "ReactOS-aren Instalazioa"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON IDI_ICON1, IDC_STATIC, 21, 7, 20, 20
+    LTEXT "Escriba un nombre para su equipo que sea de 15 caracteres o menos. Si se encuentra conectado a una red, el nombre tiene que ser único.", IDC_STATIC, 54, 7, 250, 24
+    LTEXT "O&rdenagailuaren izena:", IDC_STATIC, 53, 38, 75, 8, SS_RIGHT
+    EDITTEXT IDC_COMPUTERNAME, 132, 35, 163, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL | ES_UPPERCASE
+    ICON IDI_ICON5, IDC_STATIC, 21, 57, 20, 20
+    LTEXT "El instalador creará un perfil de usuario en su equipo llamado Administrador. Puede utilizar este perfil si necesita acceso completo a su equipo.", IDC_STATIC, 54, 57, 250, 25
+    LTEXT "Escriba una contraseña para este perfil de 127 caracteres o menos.", IDC_STATIC, 54, 87, 250, 8
+    LTEXT "Contraseña de &Administrador:", IDC_STATIC, 25, 104, 104, 8, SS_RIGHT
+    EDITTEXT IDC_ADMINPASSWORD1, 132, 101, 172, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
+    LTEXT "&Repita la contraseña:", IDC_STATIC, 54, 123, 75, 8, SS_RIGHT
+    EDITTEXT IDC_ADMINPASSWORD2, 132, 120, 172, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
+END
+
+IDD_LOCALEPAGE DIALOGEX 0, 0, 317, 143
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "ReactOS-aren Instalazioa"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON IDI_ICON4, IDC_STATIC, 21, 7, 20, 20
+    LTEXT "Las opciones regionales y de idioma permiten configurar la forma en la que se representan fechas, números, monedas y horas. También permite compatibilizar con otros idiomas y cambiar los ajustes de ubicación.", IDC_STATIC, 53, 6, 253, 30
+    LTEXT "", IDC_LOCALETEXT, 53, 34, 250, 16
+    LTEXT "Para modificar esta configuración, pulse Modificar.", IDC_STATIC, 53, 60, 184, 8
+    PUSHBUTTON "&Modificar...", IDC_CUSTOMLOCALE, 245, 57, 50, 14
+    LTEXT "La distribución del teclado determina el caracter que se muestra al presionar cada tecla.", IDC_STATIC, 53, 86, 253, 32
+    LTEXT "", IDC_LAYOUTTEXT, 53, 109, 250, 16
+    LTEXT "Para cambiar la distribución del teclado, pulse Modificar.", IDC_STATIC, 53, 126, 184, 8
+    PUSHBUTTON "&Modificar...", IDC_CUSTOMLAYOUT, 245, 122, 50, 14
+END
+
+IDD_DATETIMEPAGE DIALOGEX 0, 0, 317, 143
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "ReactOS-aren Instalazioa"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON IDI_ICON3, IDC_STATIC, 21, 10, 20, 20
+    LTEXT "Data eta ordua", IDC_STATIC, 53, 7, 253, 8
+    CONTROL "", IDC_DATEPICKER, "SysDateTimePick32", DTS_LONGDATEFORMAT | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 53, 17, 137, 14
+    CONTROL "", IDC_TIMEPICKER, "SysDateTimePick32", DTS_TIMEFORMAT | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 200, 17, 54, 14
+    LTEXT "Zona horaria", IDC_STATIC, 53, 42, 253, 8
+    COMBOBOX IDC_TIMEZONELIST, 53, 52, 201, 93, CBS_DROPDOWNLIST | CBS_NOINTEGRALHEIGHT | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
+    AUTOCHECKBOX "Ajustar el reloj automáticamente durante el horario de verano", IDC_AUTODAYLIGHT, 53, 124, 230, 10 //201
+END
+
+IDD_THEMEPAGE DIALOGEX 0, 0, 317, 143
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "ReactOS-aren Instalazioa"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL "", IDC_THEMEPICKER, "SysListView32", LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_ALIGNLEFT | WS_TABSTOP, 18, 8, 288, 130
+END
+
+IDD_PROCESSPAGE DIALOGEX 0, 0, 317, 143
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "ReactOS-aren Instalazioa"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "", IDC_ACTIVITY, 53, 7, 253, 20
+    LTEXT "", IDC_ITEM, 53, 29, 253, 20
+    CONTROL "", IDC_PROCESSPROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 53, 70, 253, 8
+END
+
+IDD_FINISHPAGE DIALOGEX 0, 0, 317, 193
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "ReactOS-aren Instalazio bukaera"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "ReactOS-aren Instalazioa bukatu da.", IDC_FINISHTITLE, 115, 8, 195, 24
+    LTEXT "ReactOS-aren Instalazioa se ha completado correctamente.\nSe reiniciará el equipo al hacer clic sobre el botón Terminar.", IDC_STATIC, 115, 40, 195, 100
+    CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 115, 138, 188, 12
+    LTEXT "Si hay algún CD en el lector de disco, retírelo.\nUna vez hecho esto reinicie su equipo pulsando Terminar.", IDC_STATIC, 115, 169, 195, 17
+END
+
+IDD_GPL DIALOGEX 0, 0, 333, 230
+STYLE DS_SHELLFONT | DS_CENTER | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Licencia Pública General de GNU"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    EDITTEXT IDC_GPL_TEXT, 7, 7, 319, 190, ES_MULTILINE | ES_AUTOHSCROLL | ES_READONLY | WS_VSCROLL
+    DEFPUSHBUTTON   "Ados", IDOK, 141, 209, 50, 14
+END
+
+IDD_STATUSWINDOW_DLG DIALOGEX 0, 0, 275, 78
+STYLE NOT WS_VISIBLE | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_POPUP
+CAPTION "Itxaron mezedez..."
+FONT 8, "MS Shell Dlg", 400, 0, 1
+BEGIN
+    CONTROL IDB_REACTOS, IDC_ROSLOGO, "Static", SS_BITMAP, 0, 0, 275, 54
+    CONTROL "", IDC_BAR, "Static", SS_OWNERDRAW, 0, 44, 275, 4
+    LTEXT "", IDC_STATUSLABEL, 7, 59, 235, 12, SS_WORDELLIPSIS
+END
+
+IDD_PS2MOUSEPROPERTIES DIALOGEX 0, 0, 252, 218
+STYLE WS_CHILD | WS_VISIBLE | WS_CAPTION
+CAPTION "Configuración avanzada"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX "", IDC_PS2STATIC, 5, 20, 242, 110
+    RTEXT "&Promedio de muestra:", -1, 27, 35, 90, 8
+    LTEXT "reportes por segundo", -1, 169, 35, 76, 8
+    COMBOBOX IDC_PS2MOUSESAMPLERATE, 124, 33, 42, 41, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
+    RTEXT "&Detectar rueda:", -1, 27, 55, 90, 8
+    COMBOBOX IDC_PS2MOUSEWHEEL, 124, 53, 95, 46, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
+    RTEXT "&Buffer de entrada:", -1, 27, 75, 90, 8
+    LTEXT "paquetes", -1, 169, 75, 26, 8
+    EDITTEXT IDC_PS2MOUSEINPUTLEN, 124, 72, 40, 14, ES_LEFT | ES_AUTOHSCROLL | ES_READONLY | ES_NUMBER | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_BORDER
+    CONTROL "", IDC_PS2MOUSEINPUTUPDN, "msctls_updown32", UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS | WS_CHILD | WS_VISIBLE, 168, 70, 10, 14
+    AUTOCHECKBOX "&Inicialización rápida", IDC_PS2MOUSEFASTINIT, 124, 97, 90, 10
+    PUSHBUTTON "Por &defecto", IDC_PS2MOUSEDEFAULTS, 195, 188, 50, 14
+END
+
+STRINGTABLE
+BEGIN
+    IDS_ACKTITLE "Agradecimientos"
+    IDS_ACKSUBTITLE "Cimientos sobre los que se alza ReactOS e información de licencia."
+    IDS_OWNERTITLE "Personalice su software"
+    IDS_OWNERSUBTITLE "El instalador utiliza esta información personal para personalizar ReactOS."
+    IDS_COMPUTERTITLE "Nombre del equipo y contraseña de Administrador"
+    IDS_COMPUTERSUBTITLE "Debe dar un nombre y una contraseña de Administrador a su equipo."
+    IDS_LOCALETITLE "Opciones regionales"
+    IDS_LOCALESUBTITLE "Puede personalizar ReactOS para diferentes regiones e idiomas."
+    IDS_DATETIMETITLE "Data eta ordua"
+    IDS_DATETIMESUBTITLE "Fije la fecha y hora correcta de su equipo."
+    IDS_PROCESSTITLE "Registrando componentes"
+    IDS_PROCESSSUBTITLE "Espere un momento..."
+    IDS_THEMESELECTIONTITLE "Apariencia"
+    IDS_THEMESELECTIONSUBTITLE "Seleccione el estilo de su preferencia."
+END
+
+STRINGTABLE
+BEGIN
+    IDS_REACTOS_SETUP "ReactOS-aren Instalazioa"
+    IDS_UNKNOWN_ERROR "Error desconocido"
+    IDS_REGISTERING_COMPONENTS "Registrando componentes..."
+    IDS_LOADLIBRARY_FAILED "No se pudo cargar la librería: "
+    IDS_GETPROCADDR_FAILED "No se pudo obtener la ubicación del proceso: "
+    IDS_REGSVR_FAILED "No se pudo registrar la librería: "
+    IDS_DLLINSTALL_FAILED "No se pudo instalar la librería: "
+    IDS_TIMEOUT "Se ha agotado el tiempo disponible para la instalación y registro de bibliotecas."
+    IDS_REASON_UNKNOWN ""
+    /*
+     * ATTENTION:
+     *   If you translate the administrator account name, keep IDS_ADMINISTRATOR_NAME and
+     *   samsrv.dll:IDS_USER_ADMINISTRATOR_NAME synchronized.
+     *   Also check the IDD_COMPUTERPAGE dialog.
+     */
+    IDS_ADMINISTRATOR_NAME "Administratzaile"
+    IDS_MACHINE_OWNER_NAME "Jabea"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_WZD_NAME "El proceso de instalación no puede continuar hasta que no escriba su nombre."
+    IDS_WZD_SETCOMPUTERNAME "El proceso de instalación no pudo configurar el nombre del equipo."
+    IDS_WZD_COMPUTERNAME "El proceso de instalación no puede continuar hasta que no escriba un nombre para su equipo."
+    IDS_WZD_PASSWORDEMPTY "Es necesario establecer una contraseña."
+    IDS_WZD_PASSWORDMATCH "La segunda contraseña no concuerda con la primera contraseña introducida. Pruebe a escribir de nuevo la contraseña."
+    IDS_WZD_PASSWORDCHAR "La contraseña que ha introducido contiene carácteres no válidos. Pruebe a escribir de nuevo la contraseña."
+    IDS_WZD_LOCALTIME "El proceso de instalación no pudo configurar la hora del equipo."
+END
+
+STRINGTABLE
+BEGIN
+    IDS_STATUS_INSTALL_DEV "Instalando dispositivos..."
+END
+
+/* ATTENTION: Synchronize these strings with dll/win32/shell32/lang */
+STRINGTABLE
+BEGIN
+    IDS_PROGRAMFILES "%SystemDrive%\\Programaren fitxategiak"
+    IDS_COMMONFILES "Archivos comunes"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_DETECTIONDISABLED "Detección desactivada"
+    IDS_LOOKFORWHEEL "Detectar rueda"
+    IDS_ASSUMEPRESENT "Asumir que la rueda está presente"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_CLASSIC "Klasikoa"
+    IDS_LAUTUS "Lautus-a"
+    IDS_LUNAR "Lunar-a"
+    IDS_MIZU "Mizu-a"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_PRODUCTTITLE "Opciones de producto"
+    IDS_PRODUCTSUBTITLE "Puedes seleccionar una opción de producto afectará al comportamiento del sistema."
+    IDS_PRODUCTSERVERNAME "ReactOS como Servidor"
+    IDS_PRODUCTWORKSTATIONNAME "ReactOS como Sobremesa"
+    IDS_PRODUCTSERVERINFO "El sistema será reconocido como un servidor. Las carpetas privadas ""Mis imágenes"", ""Mis vídeos"" y ""Mi música"" serán independientes de ""Mis documentos""."
+    IDS_PRODUCTWORKSTATIONINFO "El sistema será reconocido como un PC de sobremesa. Las carpetas privadas ""Mis imágenes"", ""Mis vídeos"" y ""Mi música"" estarán dentro de ""Mis documentos""."
+    IDS_DEFAULT "(Por defecto)"
+END
