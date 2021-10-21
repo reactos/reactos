@@ -3264,12 +3264,7 @@ RegOpenKeyA(HKEY hKey,
     if (!phkResult)
         return ERROR_INVALID_PARAMETER;
 
-    if (!hKey && lpSubKey && phkResult)
-    {
-        return ERROR_INVALID_HANDLE;
-    }
-
-    if (!lpSubKey || !*lpSubKey)
+    if (!hKey && !lpSubKey)
     {
         *phkResult = hKey;
         return ERROR_SUCCESS;
@@ -3303,12 +3298,7 @@ RegOpenKeyW(HKEY hKey,
     if (!phkResult)
         return ERROR_INVALID_PARAMETER;
 
-    if (!hKey && lpSubKey && phkResult)
-    {
-        return ERROR_INVALID_HANDLE;
-    }
-
-    if (!lpSubKey || !*lpSubKey)
+    if (!hKey && !lpSubKey)
     {
         *phkResult = hKey;
         return ERROR_SUCCESS;
@@ -3383,6 +3373,17 @@ RegOpenKeyExW(HKEY hKey,
         return ERROR_INVALID_PARAMETER;
     }
 
+    if (!hKey && lpSubKey && phkResult)
+    {
+        return ERROR_INVALID_HANDLE;
+    }
+
+    if (IsPredefKey(hKey) && (!lpSubKey || !*lpSubKey))
+    {
+        *phkResult = hKey;
+        return ERROR_SUCCESS;
+    }
+
     Status = MapDefaultKey(&KeyHandle, hKey);
     if (!NT_SUCCESS(Status))
     {
@@ -3399,7 +3400,10 @@ RegOpenKeyExW(HKEY hKey,
     if (ulOptions & REG_OPTION_OPEN_LINK)
         Attributes |= OBJ_OPENLINK;
 
-    RtlInitUnicodeString(&SubKeyString, lpSubKey ? lpSubKey : L"");
+    if (lpSubKey == NULL || wcscmp(lpSubKey, L"\\") == 0)
+        RtlInitUnicodeString(&SubKeyString, L"");
+    else
+        RtlInitUnicodeString(&SubKeyString, lpSubKey);
 
     InitializeObjectAttributes(&ObjectAttributes,
                                &SubKeyString,
