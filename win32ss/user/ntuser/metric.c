@@ -155,7 +155,11 @@ InitMetrics(VOID)
     piSysMet[SM_MIDEASTENABLED] = 0;
     piSysMet[SM_CMONITORS] = 1;
     piSysMet[SM_SAMEDISPLAYFORMAT] = 1;
+#ifdef ENABLE_IME_SUPPORT
+    piSysMet[SM_IMMENABLED] = 1;
+#else
     piSysMet[SM_IMMENABLED] = 0;
+#endif
 
     /* Reserved */
     piSysMet[SM_RESERVED1] = 0;

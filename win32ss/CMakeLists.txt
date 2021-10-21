@@ -4,6 +4,11 @@ set(USE_DIBLIB FALSE)
 # Give WIN32 subsystem its own project.
 PROJECT(WIN32SS)
 
+option(ENABLE_IME_SUPPORT "Enable IME/IMM support" OFF)
+if (ENABLE_IME_SUPPORT)
+    add_definitions(-DENABLE_IME_SUPPORT)
+endif()
+
 add_subdirectory(drivers)
 
 if(USE_DIBLIB)
