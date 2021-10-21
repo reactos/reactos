@@ -267,8 +267,6 @@ static const TEST_ENTRY s_entries1[] =
     { __LINE__, 0, TYPE_2, STYLE_2, EXSTYLE_3, STYLE_2, EXSTYLE_3 },
 };
 
-static const size_t s_num_entries1 = sizeof(s_entries1) / sizeof(s_entries1[0]);
-
 static void DoTestEntryPart1(const TEST_ENTRY *pEntry)
 {
     ok(!pEntry->bIsChild || pEntry->bHasOwner,
@@ -432,8 +430,6 @@ static const RUDEAPP_TEST_ENTRY s_entries2[] =
     { __LINE__, 0, STYLE_2, EXSTYLE_3, TRUE, TRUE, TRUE },
 };
 
-static const size_t s_num_entries2 = sizeof(s_entries2) / sizeof(s_entries2[0]);
-
 static void DoRudeAppTest1(const RUDEAPP_TEST_ENTRY *pEntry)
 {
     s_hwndParent = NULL;
@@ -507,7 +503,7 @@ WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                 INT i = (INT)wParam - ID_BURNING;
                 DoTestEntryPart2(&s_entries1[i]);
                 ++i;
-                if (i == (INT)s_num_entries1)
+                if (i == (INT)_countof(s_entries1))
                 {
                     PostMessageW(hwnd, WM_COMMAND, ID_RUDEAPPTEST1, 0);
                     break;
@@ -525,7 +521,7 @@ WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                 INT i = (INT)wParam - ID_RUDEAPPTEST2;
                 DoRudeAppTest2(&s_entries2[i]);
                 ++i;
-                if (i == (INT)s_num_entries2)
+                if (i == (INT)_countof(s_entries2))
                 {
                     PostQuitMessage(0);
                     break;
