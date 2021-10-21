@@ -7,28 +7,6 @@
 #include "shelltest.h"
 #include "undocshell.h"
 
-static UINT s_uShellHookMsg = 0;
-static HWND s_hwndHookViewer = NULL;
-static HWND s_hwndParent = NULL;
-static HWND s_hwndTarget = NULL;
-static UINT s_nWindowCreatedCount = 0;
-static UINT s_nRudeAppFound = 0;
-static WCHAR s_szName[] = L"ReactOS ShellHook testcase";
-
-static HWND
-DoCreateWindow(HWND hwndParent, DWORD style, DWORD exstyle, BOOL bFullscreen = FALSE)
-{
-    INT x = CW_USEDEFAULT, y = CW_USEDEFAULT, cx = 100, cy = 100;
-    if (bFullscreen)
-    {
-        x = y = 0;
-        cx = GetSystemMetrics(SM_CXSCREEN);
-        cy = GetSystemMetrics(SM_CYSCREEN);
-    }
-    return CreateWindowExW(exstyle, s_szName, s_szName, style, x, y, cx, cy,
-                           hwndParent, NULL, GetModuleHandleW(NULL), NULL);
-}
-
 struct TEST_ENTRY
 {
     INT lineno;
@@ -267,44 +245,6 @@ static const TEST_ENTRY s_entries1[] =
     { __LINE__, 0, TYPE_2, STYLE_2, EXSTYLE_3, STYLE_2, EXSTYLE_3 },
 };
 
-static void DoTestEntryPart1(const TEST_ENTRY *pEntry)
-{
-    ok(!pEntry->bIsChild || pEntry->bHasOwner,
-       "Line %d: bIsChild && !bHasOwner\n", pEntry->lineno);
-
-    s_hwndParent = NULL;
-    if (pEntry->bIsChild || pEntry->bHasOwner)
-    {
-        s_hwndParent = DoCreateWindow(NULL, pEntry->owner_style, pEntry->owner_exstyle);
-    }
-
-    DWORD style = pEntry->style;
-    DWORD exstyle = pEntry->exstyle;
-    if (pEntry->bIsChild)
-        style |= WS_CHILD;
-    else
-        style &= ~WS_CHILD;
-
-    s_nWindowCreatedCount = 0;
-    s_hwndTarget = DoCreateWindow(s_hwndParent, style, exstyle);
-}
-
-static void DoTestEntryPart2(const TEST_ENTRY *pEntry)
-{
-    ok(s_nWindowCreatedCount == pEntry->nCount,
-       "Line %d: s_nWindowCreatedCount expected %u but was %u\n",
-       pEntry->lineno, pEntry->nCount, s_nWindowCreatedCount);
-
-    PostMessageW(s_hwndTarget, WM_CLOSE, 0, 0);
-    s_hwndTarget = NULL;
-
-    if (pEntry->bIsChild || pEntry->bHasOwner)
-    {
-        PostMessageW(s_hwndParent, WM_CLOSE, 0, 0);
-        s_hwndParent = NULL;
-    }
-}
-
 typedef struct RUDEAPP_TEST_ENTRY
 {
     INT lineno;
@@ -430,6 +370,66 @@ static const RUDEAPP_TEST_ENTRY s_entries2[] =
     { __LINE__, 0, STYLE_2, EXSTYLE_3, TRUE, TRUE, TRUE },
 };
 
+static UINT s_uShellHookMsg = 0;
+static HWND s_hwndHookViewer = NULL;
+static HWND s_hwndParent = NULL;
+static HWND s_hwndTarget = NULL;
+static UINT s_nWindowCreatedCount = 0;
+static UINT s_nRudeAppActivated = 0;
+static WCHAR s_szName[] = L"ReactOS ShellHook testcase";
+
+static HWND
+DoCreateWindow(HWND hwndParent, DWORD style, DWORD exstyle, BOOL bFullscreen = FALSE)
+{
+    INT x = CW_USEDEFAULT, y = CW_USEDEFAULT, cx = 100, cy = 100;
+    if (bFullscreen)
+    {
+        x = y = 0;
+        cx = GetSystemMetrics(SM_CXSCREEN);
+        cy = GetSystemMetrics(SM_CYSCREEN);
+    }
+    return CreateWindowExW(exstyle, s_szName, s_szName, style, x, y, cx, cy,
+                           hwndParent, NULL, GetModuleHandleW(NULL), NULL);
+}
+
+static void DoTestEntryPart1(const TEST_ENTRY *pEntry)
+{
+    ok(!pEntry->bIsChild || pEntry->bHasOwner,
+       "Line %d: bIsChild && !bHasOwner\n", pEntry->lineno);
+
+    s_hwndParent = NULL;
+    if (pEntry->bIsChild || pEntry->bHasOwner)
+    {
+        s_hwndParent = DoCreateWindow(NULL, pEntry->owner_style, pEntry->owner_exstyle);
+    }
+
+    DWORD style = pEntry->style;
+    DWORD exstyle = pEntry->exstyle;
+    if (pEntry->bIsChild)
+        style |= WS_CHILD;
+    else
+        style &= ~WS_CHILD;
+
+    s_nWindowCreatedCount = 0;
+    s_hwndTarget = DoCreateWindow(s_hwndParent, style, exstyle);
+}
+
+static void DoTestEntryPart2(const TEST_ENTRY *pEntry)
+{
+    ok(s_nWindowCreatedCount == pEntry->nCount,
+       "Line %d: s_nWindowCreatedCount expected %u but was %u\n",
+       pEntry->lineno, pEntry->nCount, s_nWindowCreatedCount);
+
+    PostMessageW(s_hwndTarget, WM_CLOSE, 0, 0);
+    s_hwndTarget = NULL;
+
+    if (pEntry->bIsChild || pEntry->bHasOwner)
+    {
+        PostMessageW(s_hwndParent, WM_CLOSE, 0, 0);
+        s_hwndParent = NULL;
+    }
+}
+
 static void DoRudeAppTest1(const RUDEAPP_TEST_ENTRY *pEntry)
 {
     s_hwndParent = NULL;
@@ -437,13 +437,13 @@ static void DoRudeAppTest1(const RUDEAPP_TEST_ENTRY *pEntry)
     DWORD style = pEntry->style;
     DWORD exstyle = pEntry->exstyle;
 
-    s_nRudeAppFound = 0;
+    s_nRudeAppActivated = 0;
     s_hwndTarget = DoCreateWindow(s_hwndParent, style, exstyle, pEntry->bFullscreen);
     if (pEntry->bSetForeground)
         SetForegroundWindow(s_hwndTarget);
     if (pEntry->bSetFullscreen)
     {
-        s_nRudeAppFound = 0;
+        s_nRudeAppActivated = 0;
         MoveWindow(s_hwndTarget, 0, 0,
                    GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN), TRUE);
     }
@@ -451,9 +451,9 @@ static void DoRudeAppTest1(const RUDEAPP_TEST_ENTRY *pEntry)
 
 static void DoRudeAppTest2(const RUDEAPP_TEST_ENTRY *pEntry)
 {
-    ok(s_nRudeAppFound == pEntry->nCount,
-       "Line %d: s_nRudeAppFound expected %u but was %u\n",
-       pEntry->lineno, pEntry->nCount, s_nRudeAppFound);
+    ok(s_nRudeAppActivated == pEntry->nCount,
+       "Line %d: s_nRudeAppActivated expected %u but was %u\n",
+       pEntry->lineno, pEntry->nCount, s_nRudeAppActivated);
 
     PostMessageW(s_hwndTarget, WM_CLOSE, 0, 0);
     s_hwndTarget = NULL;
@@ -475,7 +475,7 @@ WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             case HSHELL_RUDEAPPACTIVATED:
                 if ((HWND)lParam != s_hwndTarget)
                     break;
-                ++s_nRudeAppFound;
+                ++s_nRudeAppActivated;
                 break;
         }
     }
