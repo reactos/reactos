@@ -156,6 +156,7 @@ _RpcAddPrinterDriverEx(WINSPOOL_HANDLE pName, WINSPOOL_DRIVER_CONTAINER* pDriver
             pdi8w->pszzCoreDriverDependencies  = pdi->pszzCoreDriverDependencies;
             pdi8w->ftMinInboxDriverVerDate     = pdi->ftMinInboxDriverVerDate;
             pdi8w->dwlMinInboxDriverVerVersion = pdi->dwlMinInboxDriverVerVersion;
+            break;
         }
         case 6:
         {
@@ -178,6 +179,7 @@ _RpcAddPrinterDriverEx(WINSPOOL_HANDLE pName, WINSPOOL_DRIVER_CONTAINER* pDriver
             pdi6w->pszProvider      = pdi->pProvider;
             pdi6w->ftDriverDate     = pdi->ftDriverDate;
             pdi6w->dwlDriverVersion = pdi->dwlDriverVersion;
+            break;
         }
         case 4:
         {
@@ -195,6 +197,7 @@ _RpcAddPrinterDriverEx(WINSPOOL_HANDLE pName, WINSPOOL_DRIVER_CONTAINER* pDriver
             }
 
             pdi4w->pszzPreviousNames = pdi->pszzPreviousNames;
+            break;
         }
         case 3:
         {
@@ -216,6 +219,7 @@ _RpcAddPrinterDriverEx(WINSPOOL_HANDLE pName, WINSPOOL_DRIVER_CONTAINER* pDriver
             pdi3w->pMonitorName     = pdi->pMonitorName;
             pdi3w->pDefaultDataType = pdi->pDefaultDataType;
             pdi3w->pDependentFiles  = pdi->pDependentFiles;
+            break;
         }
         case 2:
         {
