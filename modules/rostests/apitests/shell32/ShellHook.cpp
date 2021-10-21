@@ -443,7 +443,6 @@ static void DoRudeAppTest1(const RUDEAPP_TEST_ENTRY *pEntry)
         SetForegroundWindow(s_hwndTarget);
     if (pEntry->bSetFullscreen)
     {
-        s_nRudeAppActivated = 0;
         MoveWindow(s_hwndTarget, 0, 0,
                    GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN), TRUE);
     }
