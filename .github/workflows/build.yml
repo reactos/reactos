@@ -136,7 +136,7 @@ jobs:
     strategy:
       matrix:
         toolset: ['14.2', '14.1'] # VS 2019, 2017
-        arch: [arm]
+        arch: [arm, arm64]
       fail-fast: false
     runs-on: windows-latest
     steps:
@@ -150,9 +150,16 @@ jobs:
         echo "BISON_PKGDATADIR=${{github.workspace}}\bin\share\bison" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
         echo "M4=${{github.workspace}}\bin\m4.exe" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
     - name: Activate VS cmd (arm)
+      if: ${{ matrix.arch == 'arm' }}
       uses: ilammy/msvc-dev-cmd@v1
       with:
         arch: x86_arm
+        toolset: ${{matrix.toolset}}
+    - name: Activate VS cmd (arm64)
+      if: ${{ matrix.arch == 'arm64' }}
+      uses: ilammy/msvc-dev-cmd@v1
+      with:
+        arch: amd64_arm64
         toolset: ${{matrix.toolset}}
     - name: Source checkout
       uses: actions/checkout@v2
@@ -161,7 +168,8 @@ jobs:
     - name: Configure
       run: cmake -S src -B build -G Ninja -DCMAKE_TOOLCHAIN_FILE:FILEPATH=toolchain-msvc.cmake -DARCH:STRING=${{matrix.arch}} -DENABLE_ROSTESTS=1 -DENABLE_ROSAPPS=1
     - name: Build rapps
-      run: cmake --build build --target rapps
+      if: ${{ matrix.arch == 'arm' }}
+      run: cmake --build build --target rapps -- -k0
 
   build-clang-cl:
     strategy:
