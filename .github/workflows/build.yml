@@ -34,7 +34,7 @@ jobs:
     - name: Install LLVM
       if: ${{ matrix.compiler == 'clang' }}
       run: |
-        export LLVM_VERSION=12
+        export LLVM_VERSION=13
         wget https://apt.llvm.org/llvm.sh
         chmod +x llvm.sh
         sudo ./llvm.sh $LLVM_VERSION
