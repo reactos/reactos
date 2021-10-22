@@ -1625,6 +1625,11 @@ public:
         return FALSE;
     }
 
+    static VOID CALLBACK
+    SendAsyncProc(HWND hwnd, UINT uMsg, DWORD_PTR dwData, LRESULT lResult)
+    {
+        ::PostMessageW(hwnd, WM_NULL, 0, 0);
+    }
 
     VOID HandleTaskItemRightClick(IN OUT PTASK_ITEM TaskItem)
     {
@@ -1635,14 +1640,11 @@ public:
 
         ActivateTask(TaskItem->hWnd);
 
-       /* Wait up to 2 seconds for the window to process the foreground notification. */
-        DWORD_PTR resultDummy;
-        if (!SendMessageTimeout(TaskItem->hWnd, WM_NULL, 0, 0, 0, 2000, &resultDummy))
-            ERR("HandleTaskItemRightClick detected the window was unresponsive for 2 seconds, or was destroyed\n");
         if (GetForegroundWindow() != TaskItem->hWnd)
             ERR("HandleTaskItemRightClick detected the window did not become foreground\n");
 
-        ::SendMessageW(TaskItem->hWnd, WM_POPUPSYSTEMMENU, 0, MAKELPARAM(pt.x, pt.y));
+        ::SendMessageCallbackW(TaskItem->hWnd, WM_POPUPSYSTEMMENU, 0, MAKELPARAM(pt.x, pt.y),
+                               SendAsyncProc, (ULONG_PTR)TaskItem);
     }
 
     VOID HandleTaskGroupRightClick(IN OUT PTASK_GROUP TaskGroup)
