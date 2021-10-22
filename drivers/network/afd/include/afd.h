@@ -13,6 +13,7 @@
 
 #include <ntifs.h>
 #include <ndk/obtypes.h>
+#include <ndk/mmfuncs.h>
 #include <tdi.h>
 #include <tcpioctl.h>
 #define _WINBASE_
@@ -52,6 +53,14 @@
 #define TAG_AFD_SNMP_ADDRESS_INFO          'asfA'
 #define TAG_AFD_TDI_CONNECTION_INFORMATION 'cTfA'
 #define TAG_AFD_WSA_BUFFER                 'bWfA'
+
+/* Window Sizes for Send & Receive */
+#define SMALL_SYSTEM_SEND_WINDOW_SIZE     0x1000
+#define SMALL_SYSTEM_RECEIVE_WINDOW_SIZE  0x1000
+#define MEDIUM_SYSTEM_SEND_WINDOW_SIZE    0x2000
+#define MEDIUM_SYSTEM_RECEIVE_WINDOW_SIZE 0x2000
+#define LARGE_SYSTEM_SEND_WINDOW_SIZE     0x2000
+#define LARGE_SYSTEM_RECEIVE_WINDOW_SIZE  0x2000
 
 typedef struct IPADDR_ENTRY {
 	ULONG  Addr;
