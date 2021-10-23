@@ -205,7 +205,11 @@ UDFCommonCreate(
     PACCESS_STATE               AccessState;
 
     PVCB                        Vcb = NULL;
+#if __REACTOS__
+    BOOLEAN                     AcquiredVcb = FALSE;
+#else
     _SEH2_VOLATILE BOOLEAN      AcquiredVcb = FALSE;
+#endif
     BOOLEAN                     OpenExisting = FALSE;
     PERESOURCE                  Res1 = NULL;
     PERESOURCE                  Res2 = NULL;
