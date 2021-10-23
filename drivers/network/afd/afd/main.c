@@ -22,6 +22,8 @@ DWORD DebugTraceLevel = MIN_TRACE;
 
 #endif /* DBG */
 
+ULONG AfdReceiveWindowSize, AfdSendWindowSize;
+
 void OskitDumpBuffer( PCHAR Data, UINT Len ) {
     unsigned int i;
 
@@ -306,7 +308,6 @@ AfdCreateSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     PWCHAR EaInfoValue = NULL;
     //UINT Disposition;
     UINT i;
-    ULONG AfdReceiveWindowSize, AfdSendWindowSize;
     NTSTATUS Status = STATUS_SUCCESS;
 
     AFD_DbgPrint(MID_TRACE,("AfdCreate(DeviceObject %p Irp %p)\n",
@@ -344,21 +345,6 @@ AfdCreateSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
                             FCB, FileObject, ConnectInfo ? ConnectInfo->EndpointFlags : 0));
 
     RtlZeroMemory( FCB, sizeof( *FCB ) );
-
-    switch (MmQuerySystemSize()) {
-        case MmSmallSystem:
-            AfdReceiveWindowSize = SMALL_SYSTEM_RECEIVE_WINDOW_SIZE;
-            AfdSendWindowSize = SMALL_SYSTEM_SEND_WINDOW_SIZE;
-            break;
-        case MmMediumSystem:
-            AfdReceiveWindowSize = MEDIUM_SYSTEM_RECEIVE_WINDOW_SIZE;
-            AfdSendWindowSize = MEDIUM_SYSTEM_SEND_WINDOW_SIZE;
-            break;
-        case MmLargeSystem:
-            AfdReceiveWindowSize = LARGE_SYSTEM_RECEIVE_WINDOW_SIZE;
-            AfdSendWindowSize = LARGE_SYSTEM_SEND_WINDOW_SIZE;
-            break;
-    }
 
     FCB->Flags = ConnectInfo ? ConnectInfo->EndpointFlags : 0;
     FCB->GroupID = ConnectInfo ? ConnectInfo->GroupID : 0;
@@ -1326,6 +1312,21 @@ DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
     UNICODE_STRING wstrDeviceName = RTL_CONSTANT_STRING(L"\\Device\\Afd");
     PAFD_DEVICE_EXTENSION DeviceExt;
     NTSTATUS Status;
+
+    switch (MmQuerySystemSize()) {
+        case MmSmallSystem:
+            AfdReceiveWindowSize = SMALL_SYSTEM_RECEIVE_WINDOW_SIZE;
+            AfdSendWindowSize = SMALL_SYSTEM_SEND_WINDOW_SIZE;
+            break;
+        case MmMediumSystem:
+            AfdReceiveWindowSize = MEDIUM_SYSTEM_RECEIVE_WINDOW_SIZE;
+            AfdSendWindowSize = MEDIUM_SYSTEM_SEND_WINDOW_SIZE;
+            break;
+        case MmLargeSystem:
+            AfdReceiveWindowSize = LARGE_SYSTEM_RECEIVE_WINDOW_SIZE;
+            AfdSendWindowSize = LARGE_SYSTEM_SEND_WINDOW_SIZE;
+            break;
+    }
 
     UNREFERENCED_PARAMETER(RegistryPath);
     /* register driver routines */
