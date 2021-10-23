@@ -19,7 +19,6 @@ HANDLE g_hImm32Heap = NULL;
 HRESULT APIENTRY
 Imm32StrToUInt(LPCWSTR pszText, LPDWORD pdwValue, ULONG nBase)
 {
-#if 1
     NTSTATUS Status;
     UNICODE_STRING UnicodeString;
     RtlInitUnicodeString(&UnicodeString, pszText);
@@ -27,17 +26,11 @@ Imm32StrToUInt(LPCWSTR pszText, LPDWORD pdwValue, ULONG nBase)
     if (!NT_SUCCESS(Status))
         return E_FAIL;
     return S_OK;
-#else
-    LPWSTR endptr;
-    *pdwValue = wcstoul(pszText, &endptr, nBase);
-    return (*endptr ? E_FAIL : S_OK);
-#endif
 }
 
 HRESULT APIENTRY
 Imm32UIntToStr(DWORD dwValue, ULONG nBase, LPWSTR pszBuff, USHORT cchBuff)
 {
-#if 1
     NTSTATUS Status;
     UNICODE_STRING UnicodeString;
     UnicodeString.Buffer = pszBuff;
@@ -46,16 +39,6 @@ Imm32UIntToStr(DWORD dwValue, ULONG nBase, LPWSTR pszBuff, USHORT cchBuff)
     if (!NT_SUCCESS(Status))
         return E_FAIL;
     return S_OK;
-#else
-    LPCWSTR pszFormat;
-    if (nBase == 16)
-        pszFormat = L"%lX";
-    else if (nBase == 10)
-        pszFormat = L"%lu";
-    else
-        return E_INVALIDARG;
-    return StringCchPrintfW(pszBuff, cchBuff, pszFormat, dwValue);
-#endif
 }
 
 BOOL WINAPI Imm32IsImcAnsi(HIMC hIMC)
