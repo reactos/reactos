@@ -1004,6 +1004,7 @@ SepDuplicateToken(
     NTSTATUS Status;
     PTOKEN AccessToken;
     PVOID EndMem;
+    ULONG PrimaryGroupIndex;
     ULONG VariableLength;
     ULONG TotalSize;
     ULONG PrivilegesIndex, GroupsIndex;
@@ -1133,10 +1134,6 @@ SepDuplicateToken(
         }
     }
 
-#if 1
-    {
-    ULONG PrimaryGroupIndex;
-
     /* Find the token primary group */
     Status = SepFindPrimaryGroupAndDefaultOwner(AccessToken,
                                                 Token->PrimaryGroup,
@@ -1148,11 +1145,8 @@ SepDuplicateToken(
         DPRINT1("SepFindPrimaryGroupAndDefaultOwner failed (Status 0x%lx)\n", Status);
         goto Quit;
     }
+
     AccessToken->PrimaryGroup = AccessToken->UserAndGroups[PrimaryGroupIndex].Sid;
-    }
-#else
-    AccessToken->PrimaryGroup = (PVOID)((ULONG_PTR)AccessToken + (ULONG_PTR)Token->PrimaryGroup - (ULONG_PTR)Token->UserAndGroups);
-#endif
     AccessToken->DefaultOwnerIndex = Token->DefaultOwnerIndex;
 
     /* Copy the restricted SIDs */
