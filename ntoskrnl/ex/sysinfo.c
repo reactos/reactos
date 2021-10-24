@@ -2989,12 +2989,13 @@ NtQuerySystemInformation(
     return FStatus;
 }
 
-
+__kernel_entry
 NTSTATUS
 NTAPI
-NtSetSystemInformation (IN SYSTEM_INFORMATION_CLASS SystemInformationClass,
-                        IN PVOID SystemInformation,
-                        IN ULONG SystemInformationLength)
+NtSetSystemInformation(
+    _In_ SYSTEM_INFORMATION_CLASS SystemInformationClass,
+    _In_reads_bytes_(SystemInformationLength) PVOID SystemInformation,
+    _In_ ULONG SystemInformationLength)
 {
     NTSTATUS Status = STATUS_INVALID_INFO_CLASS;
     KPROCESSOR_MODE PreviousMode;
