@@ -1095,7 +1095,7 @@ SetUserLocaleName(HWND hwnd)
     WCHAR LocaleText[256 * 2];
 
     GetLocaleInfoW(GetUserDefaultLCID(), LOCALE_SLANGUAGE, CurLocale, ARRAYSIZE(CurLocale));
-    GetGeoInfoW(GetUserGeoID(GEOCLASS_NATION), GEO_FRIENDLYNAME, CurGeo, ARRAYSIZE(CurGeo), LANG_SYSTEM_DEFAULT);
+    GetGeoInfoW(GetUserGeoID(GEOCLASS_NATION), GEO_FRIENDLYNAME, CurGeo, ARRAYSIZE(CurGeo), GetThreadLocale());
 
     LoadStringW(hDllInstance, IDS_LOCALETEXT, ResText, ARRAYSIZE(ResText));
     StringCchPrintfW(LocaleText, ARRAYSIZE(LocaleText), ResText, CurLocale, CurGeo);
