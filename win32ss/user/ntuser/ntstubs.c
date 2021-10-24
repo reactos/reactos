@@ -428,8 +428,24 @@ BOOL
 APIENTRY
 NtUserDestroyInputContext(HIMC hIMC)
 {
-    STUB;
-    return FALSE;
+    PIMC pIMC;
+    BOOL ret = FALSE;
+
+    UserEnterExclusive();
+
+    if (!(gpsi->dwSRVIFlags & SRVINFO_IMM32))
+    {
+        EngSetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+        UserLeave();
+        return FALSE;
+    }
+
+    pIMC = ValidateHandle(hIMC, TYPE_INPUTCONTEXT);
+    if (pIMC)
+        ret = UserDereferenceObject(pIMC);
+
+    UserLeave();
+    return ret;
 }
 
 DWORD
