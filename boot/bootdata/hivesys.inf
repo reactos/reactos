@@ -573,7 +573,7 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000040e","Layout Text",
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000040e","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5033"
 
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000040f","Layout File",0x00000000,"kbdic.dll"
-HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000040f","Layout Text",0x00000000,%ICELANDIC%"Icelandic"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000040f","Layout Text",0x00000000,%ICELANDIC%
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000040f","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5013"
 
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000410","Layout File",0x00000000,"kbdit.dll"
@@ -786,7 +786,6 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000044d","Layout Displa
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000455","Layout File",0x00000000,"kbdbur.dll"
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000455","Layout Text",0x00000000,%BURMESE%
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000455","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5140"
-
 
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000048f","Layout File",0x00000000,"kbdeo.dll"
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000048f","Layout Text",0x00000000,"Esperanto"
