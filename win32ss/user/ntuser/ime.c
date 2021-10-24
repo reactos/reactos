@@ -134,5 +134,27 @@ NtUserSetImeOwnerWindow(PIMEINFOEX pImeInfoEx, BOOL fFlag)
    return 0;
 }
 
+BOOL APIENTRY
+NtUserDestroyInputContext(HIMC hIMC)
+{
+    PIMC pIMC;
+    BOOL ret = FALSE;
+
+    UserEnterExclusive();
+
+    if (!(gpsi->dwSRVIFlags & SRVINFO_IMM32))
+    {
+        EngSetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+        UserLeave();
+        return FALSE;
+    }
+
+    pIMC = UserGetObject(gHandleTable, hIMC, TYPE_INPUTCONTEXT);
+    if (pIMC)
+        ret = UserDereferenceObject(pIMC);
+
+    UserLeave();
+    return ret;
+}
 
 /* EOF */
