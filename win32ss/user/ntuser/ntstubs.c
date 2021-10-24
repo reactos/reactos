@@ -440,7 +440,7 @@ NtUserDestroyInputContext(HIMC hIMC)
         return FALSE;
     }
 
-    pIMC = ValidateHandle(hIMC, TYPE_INPUTCONTEXT);
+    pIMC = UserGetObject(gHandleTable, hIMC, TYPE_INPUTCONTEXT);
     if (pIMC)
         ret = UserDereferenceObject(pIMC);
 
