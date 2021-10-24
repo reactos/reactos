@@ -34,7 +34,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "內容(&R)...", ID_PROP, GRAYED
     END
-    POPUP "查看(&V)"
+    POPUP "檢視(&V)"
     BEGIN
         MENUITEM "大圖示(&G)", ID_VIEW_LARGE
         MENUITEM "小圖示(&M)", ID_VIEW_SMALL

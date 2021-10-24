@@ -109,7 +109,7 @@ EXSTYLE WS_EX_CONTEXTHELP
 CAPTION "自訂通知"
 FONT 9, "新細明體"
 BEGIN
-    LTEXT            "ReactOS 顯示圖示為活躍和緊急通知，並隱藏不活動的。您可以更改此行為下面清單中的專案。", IDC_STATIC, 6, 6, 220, 30
+    LTEXT            "ReactOS 會顯示活躍和緊急通知的圖示，並隱藏不活動的通知。您可以在下面清單中的專案更改行為。", IDC_STATIC, 6, 6, 220, 30
     LTEXT            "選擇一個專案，然後選擇它的通知行為：", IDC_STATIC, 6, 40, 220, 10
     CONTROL          "", IDC_NOTIFICATION_LIST, "SysListView32", WS_CLIPSIBLINGS | WS_BORDER | 0x00008005, 6, 50, 220, 128
     COMBOBOX         IDC_NOTIFICATION_BEHAVIOUR, 103, 178, 78, 200, CBS_DROPDOWNLIST | NOT WS_VISIBLE | WS_CLIPSIBLINGS
@@ -125,7 +125,7 @@ FONT 9, "新細明體"
 BEGIN
     GROUPBOX         "開始功能表", IDC_STATIC, 8, 7, 218, 114
     ICON             IDI_STARTMENU2, IDC_STATIC, 19, 17, 20, 20
-    LTEXT            "你可以通過新增或移除項自訂開始功能表。", IDC_STATIC, 48, 17, 108, 39
+    LTEXT            "你可以通過新增或移除項來自訂開始功能表。", IDC_STATIC, 48, 17, 108, 39
     PUSHBUTTON       "新增(&D)...", IDC_CLASSICSTART_ADD, 162, 18, 53, 14
     PUSHBUTTON       "刪除(&R)...", IDC_CLASSICSTART_REMOVE, 162, 33, 53, 14
     PUSHBUTTON       "進階(&V)", IDC_CLASSICSTART_ADVANCED, 162, 49, 53, 14
@@ -149,7 +149,7 @@ BEGIN
     LTEXT            "", IDC_STATIC, 7, 51, 258, 1, NOT WS_GROUP
     AUTOCHECKBOX     "啟動時不執行此檢查(&D)", IDC_NOTCHECK, 7, 62, 139, 10
     ICON             32515, IDC_STATIC, 7, 7, 21, 20
-    LTEXT            "電腦上有一個名為 %s 的檔案或資料夾，可能會造成應用程式無法正常執行。將其名稱改為 %s 可以解決問題。您想現在重新命名它？", IDC_STATIC, 34, 7, 224, 37
+    LTEXT            "電腦上有一個名為 %s 的檔案或資料夾，可能會造成應用程式無法正常執行。將其名稱改為 %s 則可以解決問題。您想現在重新命名它？", IDC_STATIC, 34, 7, 224, 37
 END
 
 IDD_MODERNSTART_ADVANCED DIALOGEX 0, 0, 251, 198, 0

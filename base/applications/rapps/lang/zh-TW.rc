@@ -26,12 +26,12 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "重新整理(&R)\tF5", ID_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM "更新資料庫(&A)\tCtrl+F5", ID_RESETDB
+        MENUITEM "更新資料庫(&T)\tCtrl+F5", ID_RESETDB
     END
     POPUP "說明"
     BEGIN
         MENUITEM "說明內容\tF1", ID_HELP, GRAYED
-        MENUITEM "關於", ID_ABOUT
+        MENUITEM "關於(&A)", ID_ABOUT
     END
 END
 
@@ -74,9 +74,9 @@ BEGIN
     EDITTEXT IDC_DOWNLOAD_DIR_EDIT, 15, 86, 166, 12, WS_CHILD | WS_VISIBLE | WS_GROUP | ES_AUTOHSCROLL
     PUSHBUTTON "選擇(&C)", IDC_CHOOSE, 187, 85, 50, 14
     AUTOCHECKBOX "在程式完成安裝後刪除安裝程式(&D)", IDC_DEL_AFTER_INSTALL, 16, 100, 218, 12
-    GROUPBOX "指定軟件列表源", -1, 4, 118, 240, 46
+    GROUPBOX "軟體來源", -1, 4, 118, 240, 46
     CONTROL "使用預設來源", IDC_SOURCE_DEFAULT, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 15, 132, 74, 10
-    CONTROL "指定軟件列表源", IDC_USE_SOURCE, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 15, 147, 74, 10
+    CONTROL "使用指定來源", IDC_USE_SOURCE, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 15, 147, 74, 10
     EDITTEXT IDC_SOURCE_URL, 97, 147, 140, 12, ES_AUTOHSCROLL | WS_DISABLED
     GROUPBOX "代理伺服器", -1, 4, 166, 240, 76
     CONTROL "使用系統代理設定", IDC_PROXY_DEFAULT, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 15, 180, 210, 10
@@ -142,14 +142,14 @@ BEGIN
     IDS_INFO_PRODUCTID "\n產品 ID："
     IDS_INFO_CONTACT "\n聯繫方式："
     IDS_INFO_UPDATEINFO "\n更新資訊："
-    IDS_INFO_INFOABOUT "\n關於資訊："
+    IDS_INFO_INFOABOUT "\n相關資訊："
     IDS_INFO_COMMENTS "\n註釋："
     IDS_INFO_INSTLOCATION "\n安裝位置："
     IDS_INFO_INSTALLSRC "\n安裝來源："
-    IDS_INFO_UNINSTALLSTR "\n解除安裝字元串："
+    IDS_INFO_UNINSTALLSTR "\n解除安裝字串："
     IDS_INFO_MODIFYPATH "\n修改路徑："
     IDS_INFO_INSTALLDATE "\n安裝日期："
-    IDS_AINFO_PACKAGE_NAME "\n軟件包名稱："
+    IDS_AINFO_PACKAGE_NAME "\n套件名稱："
 END
 
 STRINGTABLE
@@ -211,13 +211,13 @@ BEGIN
     IDS_UNABLE_TO_INSTALL "無法開啟安裝程式！"
     IDS_UNABLE_TO_QUERY_CERT "無法獲取證書資訊。\n\n您是否仍要繼續？"
     IDS_INTEG_CHECK_TITLE "驗證軟體套件的完整性..."
-    IDS_INTEG_CHECK_FAIL "套件未能通過完整性檢查，它可能已損壞，或者在下載過程中篡改。建議您不要運行該軟體。"
+    IDS_INTEG_CHECK_FAIL "套件未能通過完整性檢查，它可能已損壞，或者在下載過程中篡改。建議您不要執行該軟體。"
     IDS_INTERRUPTED_DOWNLOAD "下載中斷。請檢查網路連接。"
-    IDS_UNABLE_TO_WRITE "無法寫入儲存裝置。儲存裝置可能已滿。"
+    IDS_UNABLE_TO_WRITE "無法寫入至儲存裝置。儲存裝置可能已滿。"
     IDS_SELECT_ALL "全選／全反選"
-    IDS_INSTALL_SELECTED "安裝已選中的"
+    IDS_INSTALL_SELECTED "安裝已選取軟體"
     IDS_SELECTEDFORINST "選中以安裝"
-    IDS_MISMATCH_CERT_INFO "使用了未知的證書：\n主題：%s\n發行方：%s\n您是否仍然要繼續？"
+    IDS_MISMATCH_CERT_INFO "使用了不明的證書：\n主體：%s\n簽發者：%s\n您是否仍然要繼續？"
     IDS_UNABLE_PATH "不正確的 URL 格式。"
     IDS_APP_DISPLAY_DETAILS "詳情"
     IDS_APP_DISPLAY_LIST "列表"
@@ -238,19 +238,19 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_LICENSE_OPENSOURCE "開源軟件"
-    IDS_LICENSE_FREEWARE "免費軟件"
-    IDS_LICENSE_TRIAL "試用版/演示版"
+    IDS_LICENSE_OPENSOURCE "開源軟體"
+    IDS_LICENSE_FREEWARE "免費軟體"
+    IDS_LICENSE_TRIAL "試用版／演示版"
 END
 
 STRINGTABLE
 BEGIN
     IDS_LANGUAGE_AVAILABLE_TRANSLATION "支持您的語言"
     IDS_LANGUAGE_NO_TRANSLATION "支持其他語言"
-    IDS_LANGUAGE_ENGLISH_TRANSLATION "支持英語"
+    IDS_LANGUAGE_ENGLISH_TRANSLATION "支持英文"
     IDS_LANGUAGE_SINGLE "單語言"
-    IDS_LANGUAGE_MORE_PLACEHOLDER "（+%d 及更多）"
-    IDS_LANGUAGE_AVAILABLE_PLACEHOLDER "（+%d 可用）"
+    IDS_LANGUAGE_MORE_PLACEHOLDER " （+%d 及更多）"
+    IDS_LANGUAGE_AVAILABLE_PLACEHOLDER " （+%d 可用）"
 END
 
 STRINGTABLE
@@ -263,11 +263,11 @@ END
 STRINGTABLE
 BEGIN
     IDS_CMD_USAGE "用法："
-    IDS_CMD_NEED_PACKAGE_NAME "錯誤：選項 %1 需要一個或多個軟件包名稱。\n"
+    IDS_CMD_NEED_PACKAGE_NAME "錯誤：選項 %1 需要一個或多個軟體套件名稱。\n"
     IDS_CMD_NEED_FILE_NAME "錯誤：選項 %1 需要一個檔案名稱。\n"
     IDS_CMD_NEED_PARAMS "錯誤：選項 %1 需要一個或多個參數。\n"
-    IDS_CMD_INVALID_OPTION "錯誤：指定了未知或錯誤的命令行參數。\n"
+    IDS_CMD_INVALID_OPTION "錯誤：指定了未知或錯誤的命令列參數。\n"
     IDS_CMD_FIND_RESULT_FOR "%1 的搜尋結果：\n"
-    IDS_CMD_PACKAGE_NOT_FOUND "無法找到軟件包 %1。\n"
-    IDS_CMD_PACKAGE_INFO "有關軟件包 %1 的資訊：\n"
+    IDS_CMD_PACKAGE_NOT_FOUND "無法找到軟體套件 %1。\n"
+    IDS_CMD_PACKAGE_INFO "有關軟體套件 %1 的資訊：\n"
 END
