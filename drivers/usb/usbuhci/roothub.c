@@ -241,7 +241,7 @@ UhciRHSetFeaturePortResetWorker(IN PUHCI_EXTENSION UhciExtension,
     RegPacket.UsbPortRequestAsyncCallback(UhciExtension,
                                           10, // TimerValue
                                           pPort,
-                                          sizeof(pPort),
+                                          sizeof(*pPort),
                                           UhciRHPortResetComplete);
 }
 
