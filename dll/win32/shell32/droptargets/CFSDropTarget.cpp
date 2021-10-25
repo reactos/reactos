@@ -132,7 +132,7 @@ CFSDropTarget::~CFSDropTarget()
 }
 
 BOOL
-CFSDropTarget::_GetUniqueFileName(LPWSTR pwszBasePath, LPCWSTR pwszExt, LPWSTR pwszTarget, BOOL bShortcut)
+CFSDropTarget::_GetUniqueFileName(LPCWSTR pwszBasePath, LPCWSTR pwszExt, LPWSTR pwszTarget, BOOL bShortcut)
 {
     WCHAR wszLink[40];
 
@@ -608,11 +608,12 @@ HRESULT CFSDropTarget::_DoDrop(IDataObject *pDataObject,
                 LPWSTR placementPath = PathCombineW(buffer_1, m_sPathTarget, pwszFileName);
                 CComPtr<IPersistFile> ppf;
 
-                //Check to see if it's already a link.
+                // Check to see if it's already a link.
                 if (!wcsicmp(pwszExt, L".lnk"))
                 {
-                    //It's a link so, we create a new one which copies the old.
-                    if(!_GetUniqueFileName(placementPath, pwszExt, wszTarget, TRUE))
+                    // It's a link so, we create a new one which copies the old.
+                    PathRemoveExtensionW(placementPath);
+                    if (!_GetUniqueFileName(placementPath, L".lnk", wszTarget, TRUE))
                     {
                         ERR("Error getting unique file name");
                         hr = E_FAIL;
