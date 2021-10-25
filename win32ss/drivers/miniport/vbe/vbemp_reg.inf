@@ -6,6 +6,7 @@ HKLM,"SYSTEM\CurrentControlSet\Services\VBE","ImagePath",0x00020000,"system32\dr
 HKLM,"SYSTEM\CurrentControlSet\Services\VBE","Start",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\VBE","Type",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\VBE","Tag",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\VBE\Video","Service",0x00000000,"VBE"
 
 HKLM,"SYSTEM\CurrentControlSet\Hardware Profiles\Current\System\CurrentControlSet\Services\VBE\Device0","InstalledDisplayDrivers",0x00010000,"framebuf"
 HKLM,"SYSTEM\CurrentControlSet\Hardware Profiles\Current\System\CurrentControlSet\Services\VBE\Device0","DefaultSettings.VRefresh",0x00010001,1
