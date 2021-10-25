@@ -523,6 +523,7 @@ EnumPrinterDriversA(PSTR pName, PSTR pEnvironment, DWORD Level, PBYTE pDriverInf
                     {
                         goto Cleanup;
                     }
+                    break;
                 }
                 case 6:
                 {
@@ -549,6 +550,7 @@ EnumPrinterDriversA(PSTR pName, PSTR pEnvironment, DWORD Level, PBYTE pDriverInf
                     {
                         goto Cleanup;
                     }
+                    break;
                 }
                 case 4:
                 {
@@ -557,6 +559,7 @@ EnumPrinterDriversA(PSTR pName, PSTR pEnvironment, DWORD Level, PBYTE pDriverInf
                     {
                         goto Cleanup;
                     }
+                    break;
                 }
                 case 3:
                 {
@@ -583,8 +586,10 @@ EnumPrinterDriversA(PSTR pName, PSTR pEnvironment, DWORD Level, PBYTE pDriverInf
                     {
                         goto Cleanup;
                     }
+                    break;
                 }
                 case 2:
+                    break;
                 case 5:
                 {
                     dwErrorCode = UnicodeToAnsiInPlace(pdi8w[i].pName);
@@ -616,6 +621,7 @@ EnumPrinterDriversA(PSTR pName, PSTR pEnvironment, DWORD Level, PBYTE pDriverInf
                     {
                         goto Cleanup;
                     }
+                    break;
                 }
             }
         }
