@@ -551,10 +551,11 @@ HRESULT CFSDropTarget::_DoDrop(IDataObject *pDataObject,
 
             TRACE("target path = %s\n", debugstr_w(m_sPathTarget));
 
-            /* We need to create a link for each pidl in the copied items, so step through the pidls from the clipboard */
+            // We need to create a link for each pidl in the copied items,
+            // so step through the pidls from the clipboard
             for (UINT i = 0; i < lpcida->cidl; i++)
             {
-                //Find out which file we're copying
+                // Find out which file we're copying
                 STRRET strFile;
                 hr = psfFrom->GetDisplayNameOf(apidl[i], SHGDN_FORPARSING, &strFile);
                 if (FAILED_UNEXPECTEDLY(hr))
@@ -595,7 +596,7 @@ HRESULT CFSDropTarget::_DoDrop(IDataObject *pDataObject,
                 WCHAR wszCombined[MAX_PATH];
                 PathCombineW(wszCombined, m_sPathTarget, pwszFileName);
 
-                // Check to see if it's already a link.
+                // Check to see if the source is a link.
                 BOOL fSourceIsLink = FALSE;
                 LPWSTR pwszExt = PathFindExtensionW(wszSrcPath);
                 if (!wcsicmp(pwszExt, L".lnk"))
@@ -605,6 +606,7 @@ HRESULT CFSDropTarget::_DoDrop(IDataObject *pDataObject,
                     fSourceIsLink = TRUE;
                 }
 
+                // Create a pathname for the new link
                 if (!_GetUniqueFileName(wszCombined, L".lnk", wszSaveTo, TRUE))
                 {
                     ERR("Error getting unique file name\n");
