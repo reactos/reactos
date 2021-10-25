@@ -547,13 +547,9 @@ HRESULT CFSDropTarget::_DoDrop(IDataObject *pDataObject,
 
         if (bLinking)
         {
-            WCHAR wszTargetPath[MAX_PATH];
-            WCHAR wszPath[MAX_PATH];
-            WCHAR wszTarget[MAX_PATH];
+            WCHAR wszPath[MAX_PATH], wszTarget[MAX_PATH];
 
-            wcscpy(wszTargetPath, m_sPathTarget);
-
-            TRACE("target path = %s", debugstr_w(wszTargetPath));
+            TRACE("target path = %s", debugstr_w(m_sPathTarget));
 
             /* We need to create a link for each pidl in the copied items, so step through the pidls from the clipboard */
             for (UINT i = 0; i < lpcida->cidl; i++)
@@ -573,16 +569,43 @@ HRESULT CFSDropTarget::_DoDrop(IDataObject *pDataObject,
                     ERR("Error putting source path into buffer");
                     break;
                 }
+
+                WCHAR wszDisplayName[MAX_PATH];
+                LPWSTR pwszFileName = PathFindFileNameW(wszPath);
+                if (PathIsRootW(wszPath)) // Drive?
+                {
+                    hr = psfFrom->GetDisplayNameOf(apidl[i], 0, &strFile);
+                    if (FAILED(hr))
+                    {
+                        ERR("Error source obtaining path");
+                        break;
+                    }
+                    hr = StrRetToBufW(&strFile, apidl[i], wszDisplayName, _countof(wszDisplayName));
+                    if (FAILED(hr))
+                    {
+                        ERR("Error putting source path into buffer");
+                        break;
+                    }
+
+                    // Delete ':'
+                    LPWSTR pch0, pch1;
+                    for (pch0 = pch1 = wszDisplayName; *pch0; ++pch0)
+                    {
+                        if (*pch0 == ':')
+                            continue;
+                        *pch1++ = *pch0;
+                    }
+                    *pch1 = 0;
+
+                    pwszFileName = wszDisplayName; // Use display name
+                }
+
                 TRACE("source path = %s", debugstr_w(wszPath));
 
                 // Creating a buffer to hold the combined path
-                WCHAR buffer_1[MAX_PATH] = L"";
-                WCHAR *lpStr1;
-                lpStr1 = buffer_1;
-
-                LPWSTR pwszFileName = PathFindFileNameW(wszPath);
+                WCHAR buffer_1[MAX_PATH];
                 LPWSTR pwszExt = PathFindExtensionW(wszPath);
-                LPWSTR placementPath = PathCombineW(lpStr1, m_sPathTarget, pwszFileName);
+                LPWSTR placementPath = PathCombineW(buffer_1, m_sPathTarget, pwszFileName);
                 CComPtr<IPersistFile> ppf;
 
                 //Check to see if it's already a link.
