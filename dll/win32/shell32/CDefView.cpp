@@ -1496,7 +1496,7 @@ LRESULT CDefView::OnContextMenu(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &b
         }
         else
         {
-            m_ListView.SetItemState(-1, 0, LVIS_SELECTED);
+            m_ListView.SetItemState(-1, 0, LVIS_SELECTED); // Deselect all.
         }
     }
 
