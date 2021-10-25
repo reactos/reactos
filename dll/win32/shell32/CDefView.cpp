@@ -1489,10 +1489,14 @@ LRESULT CDefView::OnContextMenu(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &b
 
         // Right-Clicked item is selected? If selected, no selection change.
         // If not selected, then reset the selection and select the item.
-        if ((hittest.flags & LVHT_ONITEM) &&
-            m_ListView.GetItemState(hittest.iItem, LVIS_SELECTED) != LVIS_SELECTED)
+        if (hittest.flags & LVHT_ONITEM)
         {
-            SelectItem(hittest.iItem, SVSI_SELECT | SVSI_DESELECTOTHERS | SVSI_ENSUREVISIBLE);
+            if (m_ListView.GetItemState(hittest.iItem, LVIS_SELECTED) != LVIS_SELECTED)
+                SelectItem(hittest.iItem, SVSI_SELECT | SVSI_DESELECTOTHERS | SVSI_ENSUREVISIBLE);
+        }
+        else
+        {
+            m_ListView.SetItemState(-1, 0, LVIS_SELECTED);
         }
     }
 
@@ -1543,6 +1547,7 @@ LRESULT CDefView::OnContextMenu(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &b
         y = pt.y;
     }
 
+    ::SetForegroundWindow(m_hWnd);
     uCommand = TrackPopupMenu(m_hContextMenu,
                               TPM_LEFTALIGN | TPM_RETURNCMD | TPM_LEFTBUTTON | TPM_RIGHTBUTTON,
                               x, y, 0, m_hWnd, NULL);
@@ -3238,6 +3243,7 @@ HRESULT WINAPI CDefView::Exec(const GUID *pguidCmdGroup, DWORD nCmdID, DWORD nCm
                 DeleteMenu(hmenuViewPopup, GetMenuItemCount(hmenuViewPopup) - 1, MF_BYPOSITION);
                 DeleteMenu(hmenuViewPopup, GetMenuItemCount(hmenuViewPopup) - 1, MF_BYPOSITION);
                 CheckViewMode(hmenuViewPopup);
+                ::SetForegroundWindow(m_hWndParent);
                 TrackPopupMenuEx(hmenuViewPopup, TPM_LEFTALIGN | TPM_TOPALIGN, params.rcExclude.left, params.rcExclude.bottom, m_hWndParent, &params);
                 ::DestroyMenu(hmenuViewPopup);
             }
