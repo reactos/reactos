@@ -1313,7 +1313,11 @@ DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
     PAFD_DEVICE_EXTENSION DeviceExt;
     NTSTATUS Status;
 
-    switch (MmQuerySystemSize()) {
+    UNREFERENCED_PARAMETER(RegistryPath);
+
+    /* set window sizes based on system size */
+    switch (MmQuerySystemSize())
+    {
         case MmSmallSystem:
             AfdReceiveWindowSize = SMALL_SYSTEM_RECEIVE_WINDOW_SIZE;
             AfdSendWindowSize = SMALL_SYSTEM_SEND_WINDOW_SIZE;
@@ -1328,7 +1332,6 @@ DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
             break;
     }
 
-    UNREFERENCED_PARAMETER(RegistryPath);
     /* register driver routines */
     DriverObject->MajorFunction[IRP_MJ_CLOSE] = AfdDispatch;
     DriverObject->MajorFunction[IRP_MJ_CREATE] = AfdDispatch;
