@@ -549,13 +549,13 @@ HRESULT CFSDropTarget::_DoDrop(IDataObject *pDataObject,
         {
             WCHAR wszSrcPath[MAX_PATH], wszSaveTo[MAX_PATH];
 
-            TRACE("target path = %s\n", debugstr_w(m_sPathTarget));
+            TRACE("target path: %s\n", debugstr_w(m_sPathTarget));
 
             // We need to create a link for each pidl in the copied items,
-            // so step through the pidls from the clipboard
+            // so step through the pidls from the clipboard.
             for (UINT i = 0; i < lpcida->cidl; i++)
             {
-                // Find out which file we're copying
+                // Find out which file we're linking.
                 STRRET strFile;
                 hr = psfFrom->GetDisplayNameOf(apidl[i], SHGDN_FORPARSING, &strFile);
                 if (FAILED_UNEXPECTEDLY(hr))
@@ -564,6 +564,8 @@ HRESULT CFSDropTarget::_DoDrop(IDataObject *pDataObject,
                 hr = StrRetToBufW(&strFile, apidl[i], wszSrcPath, _countof(wszSrcPath));
                 if (FAILED_UNEXPECTEDLY(hr))
                     break;
+
+                TRACE("source path: %s\n", debugstr_w(wszSrcPath));
 
                 WCHAR wszDisplayName[MAX_PATH];
                 LPWSTR pwszFileName = PathFindFileNameW(wszSrcPath);
@@ -577,42 +579,33 @@ HRESULT CFSDropTarget::_DoDrop(IDataObject *pDataObject,
                     if (FAILED_UNEXPECTEDLY(hr))
                         break;
 
-                    // Delete ':'
+                    // Delete ':' in wszDisplayName.
                     LPWSTR pch0, pch1;
                     for (pch0 = pch1 = wszDisplayName; *pch0; ++pch0)
                     {
-                        if (*pch0 == ':')
+                        if (*pch0 == L':')
                             continue;
                         *pch1++ = *pch0;
                     }
                     *pch1 = 0;
 
-                    pwszFileName = wszDisplayName; // Use display name
+                    pwszFileName = wszDisplayName; // Use wszDisplayName
                 }
 
-                TRACE("source path = %s\n", debugstr_w(wszSrcPath));
-
-                // Creating a buffer to hold the combined path
+                // Creating a buffer to hold the combined path.
                 WCHAR wszCombined[MAX_PATH];
                 PathCombineW(wszCombined, m_sPathTarget, pwszFileName);
 
-                // Check to see if the source is a link.
+                // Check to see if the source is a link
                 BOOL fSourceIsLink = FALSE;
-                LPWSTR pwszExt = PathFindExtensionW(wszSrcPath);
-                if (!wcsicmp(pwszExt, L".lnk"))
+                if (!wcsicmp(PathFindExtensionW(wszSrcPath), L".lnk"))
                 {
-                    // It's a link so, we create a new one which copies the old.
-                    PathRemoveExtensionW(wszCombined);
                     fSourceIsLink = TRUE;
+                    PathRemoveExtensionW(wszCombined);
                 }
 
-                // Create a pathname for the new link
-                if (!_GetUniqueFileName(wszCombined, L".lnk", wszSaveTo, TRUE))
-                {
-                    ERR("Error getting unique file name\n");
-                    hr = E_FAIL;
-                    break;
-                }
+                // Create a pathname to save the new link.
+                _GetUniqueFileName(wszCombined, L".lnk", wszSaveTo, TRUE);
 
                 CComPtr<IPersistFile> ppf;
                 if (fSourceIsLink)
