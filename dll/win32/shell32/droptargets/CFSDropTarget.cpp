@@ -645,7 +645,7 @@ HRESULT CFSDropTarget::_DoDrop(IDataObject *pDataObject,
                 }
 
                 hr = ppf->Save(wszSaveTo, !fSourceIsLink);
-                if (FAILED(hr))
+                if (FAILED_UNEXPECTEDLY(hr))
                     break;
 
                 SHChangeNotify(SHCNE_CREATE, SHCNF_PATHW, wszSaveTo, NULL);
