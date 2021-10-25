@@ -547,9 +547,9 @@ HRESULT CFSDropTarget::_DoDrop(IDataObject *pDataObject,
 
         if (bLinking)
         {
-            WCHAR wszPath[MAX_PATH], wszTarget[MAX_PATH];
+            WCHAR wszSrcPath[MAX_PATH], wszSaveTo[MAX_PATH];
 
-            TRACE("target path = %s", debugstr_w(m_sPathTarget));
+            TRACE("target path = %s\n", debugstr_w(m_sPathTarget));
 
             /* We need to create a link for each pidl in the copied items, so step through the pidls from the clipboard */
             for (UINT i = 0; i < lpcida->cidl; i++)
@@ -557,35 +557,24 @@ HRESULT CFSDropTarget::_DoDrop(IDataObject *pDataObject,
                 //Find out which file we're copying
                 STRRET strFile;
                 hr = psfFrom->GetDisplayNameOf(apidl[i], SHGDN_FORPARSING, &strFile);
-                if (FAILED(hr))
-                {
-                    ERR("Error source obtaining path");
+                if (FAILED_UNEXPECTEDLY(hr))
                     break;
-                }
 
-                hr = StrRetToBufW(&strFile, apidl[i], wszPath, _countof(wszPath));
-                if (FAILED(hr))
-                {
-                    ERR("Error putting source path into buffer");
+                hr = StrRetToBufW(&strFile, apidl[i], wszSrcPath, _countof(wszSrcPath));
+                if (FAILED_UNEXPECTEDLY(hr))
                     break;
-                }
 
                 WCHAR wszDisplayName[MAX_PATH];
-                LPWSTR pwszFileName = PathFindFileNameW(wszPath);
-                if (PathIsRootW(wszPath)) // Drive?
+                LPWSTR pwszFileName = PathFindFileNameW(wszSrcPath);
+                if (PathIsRootW(wszSrcPath)) // Drive?
                 {
                     hr = psfFrom->GetDisplayNameOf(apidl[i], 0, &strFile);
-                    if (FAILED(hr))
-                    {
-                        ERR("Error source obtaining path");
+                    if (FAILED_UNEXPECTEDLY(hr))
                         break;
-                    }
+
                     hr = StrRetToBufW(&strFile, apidl[i], wszDisplayName, _countof(wszDisplayName));
-                    if (FAILED(hr))
-                    {
-                        ERR("Error putting source path into buffer");
+                    if (FAILED_UNEXPECTEDLY(hr))
                         break;
-                    }
 
                     // Delete ':'
                     LPWSTR pch0, pch1;
@@ -600,75 +589,66 @@ HRESULT CFSDropTarget::_DoDrop(IDataObject *pDataObject,
                     pwszFileName = wszDisplayName; // Use display name
                 }
 
-                TRACE("source path = %s", debugstr_w(wszPath));
+                TRACE("source path = %s\n", debugstr_w(wszSrcPath));
 
                 // Creating a buffer to hold the combined path
-                WCHAR buffer_1[MAX_PATH];
-                LPWSTR pwszExt = PathFindExtensionW(wszPath);
-                LPWSTR placementPath = PathCombineW(buffer_1, m_sPathTarget, pwszFileName);
-                CComPtr<IPersistFile> ppf;
+                WCHAR wszCombined[MAX_PATH];
+                PathCombineW(wszCombined, m_sPathTarget, pwszFileName);
 
                 // Check to see if it's already a link.
+                BOOL fSourceIsLink = FALSE;
+                LPWSTR pwszExt = PathFindExtensionW(wszSrcPath);
                 if (!wcsicmp(pwszExt, L".lnk"))
                 {
                     // It's a link so, we create a new one which copies the old.
-                    PathRemoveExtensionW(placementPath);
-                    if (!_GetUniqueFileName(placementPath, L".lnk", wszTarget, TRUE))
-                    {
-                        ERR("Error getting unique file name");
-                        hr = E_FAIL;
-                        break;
-                    }
-                    hr = IShellLink_ConstructFromPath(wszPath, IID_PPV_ARG(IPersistFile, &ppf));
-                    if (FAILED(hr)) {
-                        ERR("Error constructing link from file");
-                        break;
-                    }
+                    PathRemoveExtensionW(wszCombined);
+                    fSourceIsLink = TRUE;
+                }
 
-                    hr = ppf->Save(wszTarget, FALSE);
-                    if (FAILED(hr))
+                if (!_GetUniqueFileName(wszCombined, L".lnk", wszSaveTo, TRUE))
+                {
+                    ERR("Error getting unique file name\n");
+                    hr = E_FAIL;
+                    break;
+                }
+
+                CComPtr<IPersistFile> ppf;
+                if (fSourceIsLink)
+                {
+                    hr = IShellLink_ConstructFromPath(wszSrcPath, IID_PPV_ARG(IPersistFile, &ppf));
+                    if (FAILED_UNEXPECTEDLY(hr))
                         break;
-                    SHChangeNotify(SHCNE_CREATE, SHCNF_PATHW, wszTarget, NULL);
                 }
                 else
                 {
-                    //It's not a link, so build a new link using the creator class and fill it in.
-                    //Create a file name for the link
-                    if (!_GetUniqueFileName(placementPath, L".lnk", wszTarget, TRUE))
-                    {
-                        ERR("Error creating unique file name");
-                        hr = E_FAIL;
-                        break;
-                    }
-
                     CComPtr<IShellLinkW> pLink;
                     hr = CShellLink::_CreatorClass::CreateInstance(NULL, IID_PPV_ARG(IShellLinkW, &pLink));
-                    if (FAILED(hr)) {
-                        ERR("Error instantiating IShellLinkW");
+                    if (FAILED_UNEXPECTEDLY(hr))
                         break;
-                    }
 
                     WCHAR szDirPath[MAX_PATH], *pwszFile;
-                    GetFullPathName(wszPath, MAX_PATH, szDirPath, &pwszFile);
-                    if (pwszFile) pwszFile[0] = 0;
+                    GetFullPathName(wszSrcPath, MAX_PATH, szDirPath, &pwszFile);
+                    if (pwszFile)
+                        pwszFile[0] = 0;
 
-                    hr = pLink->SetPath(wszPath);
-                    if(FAILED(hr))
+                    hr = pLink->SetPath(wszSrcPath);
+                    if (FAILED_UNEXPECTEDLY(hr))
                         break;
 
                     hr = pLink->SetWorkingDirectory(szDirPath);
-                    if(FAILED(hr))
+                    if (FAILED_UNEXPECTEDLY(hr))
                         break;
 
                     hr = pLink->QueryInterface(IID_PPV_ARG(IPersistFile, &ppf));
-                    if(FAILED(hr))
+                    if (FAILED_UNEXPECTEDLY(hr))
                         break;
-
-                    hr = ppf->Save(wszTarget, TRUE);
-                    if (FAILED(hr))
-                        break;
-                    SHChangeNotify(SHCNE_CREATE, SHCNF_PATHW, wszTarget, NULL);
                 }
+
+                hr = ppf->Save(wszSaveTo, !fSourceIsLink);
+                if (FAILED(hr))
+                    break;
+
+                SHChangeNotify(SHCNE_CREATE, SHCNF_PATHW, wszSaveTo, NULL);
             }
         }
         else
