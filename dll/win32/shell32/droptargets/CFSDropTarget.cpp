@@ -591,6 +591,27 @@ HRESULT CFSDropTarget::_DoDrop(IDataObject *pDataObject,
 
                     pwszFileName = wszDisplayName; // Use wszDisplayName
                 }
+                else if (wszSrcPath[0] == L':' && wszSrcPath[1] == L':') // ::{GUID}?
+                {
+                    CLSID clsid;
+                    hr = ::CLSIDFromString(&wszSrcPath[2], &clsid);
+                    if (SUCCEEDED(hr))
+                    {
+                        LPITEMIDLIST pidl = ILCreateFromPathW(wszSrcPath);
+                        if (pidl)
+                        {
+                            SHFILEINFOW fi = { NULL };
+                            SHGetFileInfoW((LPCWSTR)pidl, 0, &fi, sizeof(fi),
+                                           SHGFI_DISPLAYNAME | SHGFI_PIDL);
+                            if (fi.szDisplayName[0])
+                            {
+                                lstrcpynW(wszDisplayName, fi.szDisplayName, _countof(wszDisplayName));
+                                pwszFileName = wszDisplayName; // Use wszDisplayName
+                            }
+                            ILFree(pidl);
+                        }
+                    }
+                }
 
                 // Creating a buffer to hold the combined path.
                 WCHAR wszCombined[MAX_PATH];
