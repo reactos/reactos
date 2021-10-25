@@ -1547,7 +1547,7 @@ LRESULT CDefView::OnContextMenu(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &b
         y = pt.y;
     }
 
-    ::SetForegroundWindow(m_hWnd);
+    ::SetForegroundWindow(m_hWnd); // CORE-15524
     uCommand = TrackPopupMenu(m_hContextMenu,
                               TPM_LEFTALIGN | TPM_RETURNCMD | TPM_LEFTBUTTON | TPM_RIGHTBUTTON,
                               x, y, 0, m_hWnd, NULL);
@@ -3243,7 +3243,7 @@ HRESULT WINAPI CDefView::Exec(const GUID *pguidCmdGroup, DWORD nCmdID, DWORD nCm
                 DeleteMenu(hmenuViewPopup, GetMenuItemCount(hmenuViewPopup) - 1, MF_BYPOSITION);
                 DeleteMenu(hmenuViewPopup, GetMenuItemCount(hmenuViewPopup) - 1, MF_BYPOSITION);
                 CheckViewMode(hmenuViewPopup);
-                ::SetForegroundWindow(m_hWndParent);
+                ::SetForegroundWindow(m_hWndParent); // CORE-15524
                 TrackPopupMenuEx(hmenuViewPopup, TPM_LEFTALIGN | TPM_TOPALIGN, params.rcExclude.left, params.rcExclude.bottom, m_hWndParent, &params);
                 ::DestroyMenu(hmenuViewPopup);
             }

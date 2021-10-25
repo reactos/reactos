@@ -221,7 +221,7 @@ HRESULT CFSDropTarget::_GetEffectFromMenu(IDataObject *pDataObject, POINTL pt, D
                               NULL,
                               NULL,
                               NULL);
-    ::SetForegroundWindow(hwndDummy);
+    ::SetForegroundWindow(hwndDummy); // CORE-15524
     UINT uCommand = TrackPopupMenu(hpopupmenu,
                                    TPM_LEFTALIGN | TPM_RETURNCMD | TPM_LEFTBUTTON | TPM_RIGHTBUTTON | TPM_NONOTIFY,
                                    pt.x, pt.y, 0, hwndDummy, NULL);
