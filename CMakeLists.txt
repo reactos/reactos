@@ -140,10 +140,6 @@ if(NOT CMAKE_CROSSCOMPILING)
         if(MSVC_VERSION GREATER 1699)
             add_definitions(/D_ALLOW_KEYWORD_MACROS)
         endif()
-        if(NOT USE_CLANG_CL)
-            # FIXME: Inspect
-            add_definitions(/Dinline=__inline)
-        endif()
     endif()
     add_subdirectory(sdk/include/host)
 

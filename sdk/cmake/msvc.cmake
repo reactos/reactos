@@ -30,7 +30,7 @@ if(ARCH STREQUAL "i386")
     add_definitions(/DWIN32 /D_WINDOWS)
 endif()
 
-add_definitions(/Dinline=__inline /D__STDC__=1)
+add_definitions(/D__STDC__=1)
 
 # Ignore any "standard" include paths, and do not use any default CRT library.
 if(NOT USE_CLANG_CL)

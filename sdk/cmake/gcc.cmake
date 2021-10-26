@@ -166,8 +166,6 @@ elseif(ARCH STREQUAL "arm")
     add_definitions(-D__MSVCRT__) # DUBIOUS
 endif()
 
-add_definitions(-D_inline=__inline)
-
 # Fix build with GLIBCXX + our c++ headers
 add_definitions(-D_GLIBCXX_HAVE_BROKEN_VSWPRINTF)
 
