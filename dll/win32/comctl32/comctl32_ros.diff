@@ -959,20 +959,6 @@ diff -pudN e:\wine\dlls\comctl32/monthcal.c e:\reactos\dll\win32\comctl32/monthc
 diff -pudN e:\wine\dlls\comctl32/propsheet.c e:\reactos\dll\win32\comctl32/propsheet.c
 --- e:\wine\dlls\comctl32/propsheet.c	2017-09-07 12:58:14 +0100
 +++ e:\reactos\dll\win32\comctl32/propsheet.c	2017-05-21 20:32:06 +0100
-@@ -1176,8 +1176,13 @@ PROPSHEET_WizardSubclassProc(HWND hwnd, 
-       return TRUE;
- 
-     case WM_CTLCOLORSTATIC:
-+#ifdef __REACTOS__
-+      SetBkMode((HDC)wParam, TRANSPARENT);
-+      return (INT_PTR)GetStockObject(HOLLOW_BRUSH);
-+#else
-       SetBkColor((HDC)wParam, GetSysColor(COLOR_WINDOW));
-       return (INT_PTR)GetSysColorBrush(COLOR_WINDOW);
-+#endif
-   }
- 
-   return DefSubclassProc(hwnd, uMsg, wParam, lParam);
 @@ -2440,12 +2445,19 @@ static void PROPSHEET_SetWizButtons(HWND
    HWND hwndFinish = GetDlgItem(hwndDlg, IDC_FINISH_BUTTON);
    BOOL enable_finish = ((dwFlags & PSWIZB_FINISH) || psInfo->hasFinish) && !(dwFlags & PSWIZB_DISABLEDFINISH);
