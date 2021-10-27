@@ -19,7 +19,7 @@ OpenTokenFromProcess(VOID)
                                &Token);
     if (!Success)
     {
-        skip("OpenProcessToken() has failed to get the process' token (error code: %lu)!\n", GetLastError());
+        ok(FALSE, "Failed to get the process' token (error code: %lu)\n", GetLastError());
         return NULL;
     }
 
@@ -27,7 +27,7 @@ OpenTokenFromProcess(VOID)
 }
 
 static
-VOID
+BOOL
 DisablePrivilege(
     _In_ HANDLE Token,
     _In_ LPCWSTR PrivilegeName)
@@ -39,25 +39,28 @@ DisablePrivilege(
     Success = LookupPrivilegeValueW(NULL, PrivilegeName, &PrivLuid);
     if (!Success)
     {
-        skip("LookupPrivilegeValueW() has failed to locate the privilege value (error code: %lu)!\n", GetLastError());
-        return;
+        ok(FALSE, "Failed to locate the privilege value (error code: %lu)\n", GetLastError());
+        return FALSE;
     }
 
     TokenPriv.PrivilegeCount = 1;
     TokenPriv.Privileges[0].Luid = PrivLuid;
     TokenPriv.Privileges[0].Attributes = 0;
 
+    SetLastError(0xdeadbeef);
     Success = AdjustTokenPrivileges(Token,
                                     FALSE,
                                     &TokenPriv,
                                     0,
                                     NULL,
                                     NULL);
-    if (!Success)
+    if (!Success || GetLastError() != ERROR_SUCCESS)
     {
-        skip("AdjustTokenPrivileges() has failed to adjust privileges of token (error code: %lu)!\n", GetLastError());
-        return;
+        ok(FALSE, "Failed to adjust privileges of token (error code: %lu)\n", GetLastError());
+        return FALSE;
     }
+
+    return TRUE;
 }
 
 static
@@ -67,9 +70,18 @@ DuplicateTokenAsEffective(VOID)
     NTSTATUS Status;
     ULONG Size;
     HANDLE TokenHandle;
-    HANDLE DuplicatedTokenHandle;
+    HANDLE DuplicatedTokenHandle = NULL;
     OBJECT_ATTRIBUTES ObjectAttributes;
-    PTOKEN_STATISTICS TokenStats;
+    PTOKEN_STATISTICS TokenStats = NULL;
+
+    /* We give a bogus invalid handle */
+    Status = NtDuplicateToken(NULL,
+                              0,
+                              NULL,
+                              TRUE,
+                              TokenPrimary,
+                              NULL);
+    ok_ntstatus(Status, STATUS_ACCESS_VIOLATION);
 
     /* Initialize the object attributes for token duplication */
     InitializeObjectAttributes(&ObjectAttributes,
@@ -80,15 +92,11 @@ DuplicateTokenAsEffective(VOID)
 
     /* Get the token from process and begin the tests */
     TokenHandle = OpenTokenFromProcess();
-
-    /* We give a bogus invalid handle */
-    Status = NtDuplicateToken(NULL,
-                              0,
-                              NULL,
-                              TRUE,
-                              TokenPrimary,
-                              NULL);
-    ok_hex(Status, STATUS_ACCESS_VIOLATION);
+    if (TokenHandle == NULL)
+    {
+        skip("TokenHandle is NULL\n");
+        return;
+    }
 
     /*
      * Disable a privilege, the impersonation privilege for example.
@@ -98,30 +106,40 @@ DuplicateTokenAsEffective(VOID)
      * the token effective, with this potential privilege being
      * disabled by ourselves.
      */
-    DisablePrivilege(TokenHandle, L"SeImpersonatePrivilege");
+    if (!DisablePrivilege(TokenHandle, L"SeImpersonatePrivilege"))
+    {
+        skip("DisablePrivilege() failed\n");
+        goto cleanup;
+    }
 
     /* Query the total size of the token statistics structure */
     Status = NtQueryInformationToken(TokenHandle, TokenStatistics, NULL, 0, &Size);
-    if (!NT_SUCCESS(Status) && Status != STATUS_BUFFER_TOO_SMALL)
+    ok_ntstatus(Status, STATUS_BUFFER_TOO_SMALL);
+    if (Status != STATUS_BUFFER_TOO_SMALL)
     {
-        skip("Failed to query the total size for token statistics structure! (Status -> 0x%lx)\n", Status);
-        return;
+        if (NT_SUCCESS(Status))
+            skip("NtQueryInformationToken() succeeded unexpectedly\n");
+        else
+            skip("Failed to query the total size for token statistics structure\n");
+        goto cleanup;
     }
 
     /* Total size queried, time to allocate our buffer based on that size */
     TokenStats = RtlAllocateHeap(RtlGetProcessHeap(), 0, Size);
+    ok(TokenStats != NULL, "Failed to allocate our token statistics buffer\n");
     if (TokenStats == NULL)
     {
-        skip("Failed to allocate our token statistics buffer!\n");
-        return;
+        skip("TokenStats is NULL\n");
+        goto cleanup;
     }
 
     /* Time to query our token statistics, prior duplicating the token as effective */
     Status = NtQueryInformationToken(TokenHandle, TokenStatistics, TokenStats, Size, &Size);
+    ok_ntstatus(Status, STATUS_SUCCESS);
     if (!NT_SUCCESS(Status))
     {
-        skip("Failed to query the token statistics! (Status -> 0x%lx)\n", Status);
-        return;
+        skip("Failed to query the token statistics\n");
+        goto cleanup;
     }
 
     trace("Number of privileges of regular token -- %lu\n", TokenStats->PrivilegeCount);
@@ -134,7 +152,12 @@ DuplicateTokenAsEffective(VOID)
                               TRUE,
                               TokenPrimary,
                               &DuplicatedTokenHandle);
-    ok_hex(Status, STATUS_SUCCESS);
+    ok_ntstatus(Status, STATUS_SUCCESS);
+    if (!NT_SUCCESS(Status))
+    {
+        skip("NtDuplicateToken() failed\n");
+        goto cleanup;
+    }
 
     /*
      * Query the token statistics again, but now this time of
@@ -144,22 +167,28 @@ DuplicateTokenAsEffective(VOID)
      * that the duplicated token includes, whatever that is.
      */
     Status = NtQueryInformationToken(DuplicatedTokenHandle, TokenStatistics, TokenStats, Size, &Size);
+    ok_ntstatus(Status, STATUS_SUCCESS);
     if (!NT_SUCCESS(Status))
     {
-        skip("Failed to query the token statistics! (Status -> 0x%lx)\n", Status);
-        return;
+        skip("Failed to query the token statistics\n");
+        goto cleanup;
     }
 
     trace("Number of privileges of effective only token -- %lu\n", TokenStats->PrivilegeCount);
     trace("Number of groups of effective only token -- %lu\n", TokenStats->GroupCount);
 
+    // TODO: Actually check that counts are lower than before.
+
+cleanup:
     /*
      * We finished our tests, free the memory
      * block and close the handles now.
      */
-    RtlFreeHeap(RtlGetProcessHeap(), 0, TokenStats);
-    CloseHandle(TokenHandle),
-    CloseHandle(DuplicatedTokenHandle);
+    if (DuplicatedTokenHandle)
+        CloseHandle(DuplicatedTokenHandle);
+    if (TokenStats)
+        RtlFreeHeap(RtlGetProcessHeap(), 0, TokenStats);
+    CloseHandle(TokenHandle);
 }
 
 START_TEST(NtDuplicateToken)
