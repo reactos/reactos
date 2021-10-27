@@ -3420,7 +3420,7 @@ FILE* CDECL _wfreopen(const wchar_t *path, const wchar_t *mode, FILE* file)
 {
   int open_flags, stream_flags, fd;
 
-  TRACE(":path (%p) mode (%s) file (%p) fd (%d)\n", debugstr_w(path), debugstr_w(mode), file, file ? file->_file : -1);
+  TRACE(":path (%s) mode (%s) file (%p) fd (%d)\n", debugstr_w(path), debugstr_w(mode), file, file ? file->_file : -1);
 
   LOCK_FILES();
   if (!file || ((fd = file->_file) < 0))
