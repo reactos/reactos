@@ -1166,6 +1166,9 @@ HRESULT CDECL wined3d_device_init_gdi(struct wined3d_device *device,
     if (!(device->swapchains = heap_calloc(device->swapchain_count, sizeof(*device->swapchains))))
     {
         ERR("Out of memory!\n");
+#ifdef __REACTOS__
+        device->swapchain_count = 0;
+#endif
         goto err_out;
     }
     device->swapchains[0] = swapchain;
@@ -1181,7 +1184,14 @@ HRESULT CDECL wined3d_device_init_gdi(struct wined3d_device *device,
     return WINED3D_OK;
 
 err_out:
+#ifdef __REACTOS__
+    if (swapchain)
+    {
+#endif
     wined3d_swapchain_decref(swapchain);
+#ifdef __REACTOS__
+    }
+#endif
     return hr;
 }
 
