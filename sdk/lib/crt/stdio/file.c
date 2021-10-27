@@ -474,7 +474,7 @@ void msvcrt_init_io(void)
     count = min(count, MSVCRT_MAX_FILES);
     for (i = 0; i < count; i++)
     {
-      if ((*wxflag_ptr & WX_OPEN) && *handle_ptr != INVALID_HANDLE_VALUE)
+      if ((*wxflag_ptr & WX_OPEN) && GetFileType(*handle_ptr) != FILE_TYPE_UNKNOWN)
       {
         fdinfo = get_ioinfo_alloc_fd(i);
         if(fdinfo != &__badioinfo)
