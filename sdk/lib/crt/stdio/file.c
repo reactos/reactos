@@ -831,16 +831,17 @@ int CDECL _commit(int fd)
     int ret;
 
     TRACE(":fd (%d) handle (%p)\n", fd, info->handle);
+
     if (info->handle == INVALID_HANDLE_VALUE)
         ret = -1;
     else if (!FlushFileBuffers(info->handle))
     {
         if (GetLastError() == ERROR_INVALID_HANDLE)
         {
-          /* FlushFileBuffers fails for console handles
-           * so we ignore this error.
-           */
-          ret = 0;
+            /* FlushFileBuffers fails for console handles
+             * so we ignore this error.
+             */
+            ret = 0;
         }
         else
         {
@@ -1669,7 +1670,7 @@ wchar_t * CDECL _wmktemp(wchar_t *pattern)
 
 /*static*/ unsigned split_oflags(unsigned oflags)
 {
-    int         wxflags = 0;
+    int wxflags = 0;
     unsigned unsupp; /* until we support everything */
 
     if (oflags & _O_APPEND)              wxflags |= WX_APPEND;
@@ -1871,7 +1872,7 @@ int CDECL _wsopen_s( int *fd, const wchar_t* path, int oflags, int shflags, int 
     return *_errno();
   }
 
-  if (oflags & (_O_WTEXT|_O_U16TEXT|_O_U8TEXT))
+  if (oflags & (_O_WTEXT | _O_U16TEXT | _O_U8TEXT))
   {
       if ((access & GENERIC_WRITE) && (creation==CREATE_NEW
                   || creation==CREATE_ALWAYS || creation==TRUNCATE_EXISTING
