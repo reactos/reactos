@@ -993,7 +993,7 @@ int CDECL _dup2(int od, int nd)
     if (DuplicateHandle(GetCurrentProcess(), info_od->handle,
      GetCurrentProcess(), &handle, 0, TRUE, DUPLICATE_SAME_ACCESS))
     {
-      int wxflag = info_od->wxflag & ~_O_NOINHERIT;
+      int wxflag = info_od->wxflag & ~WX_DONTINHERIT;
 
       if (info_nd->wxflag & WX_OPEN)
         _close(nd);
