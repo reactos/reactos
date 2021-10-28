@@ -148,6 +148,8 @@ IopPerformSynchronousRequest(IN PDEVICE_OBJECT DeviceObject,
         if (Status != STATUS_PENDING)
         {
             /* Complete it ourselves */
+            NormalRoutine = NULL;
+            NormalContext = NULL;
             ASSERT(!Irp->PendingReturned);
             KeRaiseIrql(APC_LEVEL, &OldIrql);
             IopCompleteRequest(&Irp->Tail.Apc,
@@ -2640,6 +2642,8 @@ NtQueryInformationFile(IN HANDLE FileHandle,
         Irp->UserIosb = IoStatusBlock;
 
         /* The IRP wasn't completed, complete it ourselves */
+        NormalRoutine = NULL;
+        NormalContext = NULL;
         KeRaiseIrql(APC_LEVEL, &OldIrql);
         IopCompleteRequest(&Irp->Tail.Apc,
                            &NormalRoutine,
@@ -3480,6 +3484,8 @@ NtSetInformationFile(IN HANDLE FileHandle,
         Irp->UserIosb = IoStatusBlock;
 
         /* The IRP wasn't completed, complete it ourselves */
+        NormalRoutine = NULL;
+        NormalContext = NULL;
         KeRaiseIrql(APC_LEVEL, &OldIrql);
         IopCompleteRequest(&Irp->Tail.Apc,
                            &NormalRoutine,
