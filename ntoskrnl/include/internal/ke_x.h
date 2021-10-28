@@ -28,12 +28,12 @@ KeGetPreviousMode(VOID)
 {                                                                           \
     /* Sanity checks */                                                     \
     ASSERT(KeGetCurrentIrql() <= APC_LEVEL);                                \
-    ASSERT(_Thread == KeGetCurrentThread());                                \
-    ASSERT((_Thread->SpecialApcDisable <= 0) &&                             \
-           (_Thread->SpecialApcDisable != -32768));                         \
+    ASSERT((_Thread) == KeGetCurrentThread());                              \
+    ASSERT(((_Thread)->SpecialApcDisable <= 0) &&                           \
+           ((_Thread)->SpecialApcDisable != -32768));                       \
                                                                             \
     /* Disable Special APCs */                                              \
-    _Thread->SpecialApcDisable--;                                           \
+    (_Thread)->SpecialApcDisable--;                                         \
 }
 
 #define KeEnterGuardedRegion()                                              \
@@ -49,14 +49,14 @@ KeGetPreviousMode(VOID)
 {                                                                           \
     /* Sanity checks */                                                     \
     ASSERT(KeGetCurrentIrql() <= APC_LEVEL);                                \
-    ASSERT(_Thread == KeGetCurrentThread());                                \
-    ASSERT(_Thread->SpecialApcDisable < 0);                                 \
+    ASSERT((_Thread) == KeGetCurrentThread());                              \
+    ASSERT((_Thread)->SpecialApcDisable < 0);                               \
                                                                             \
     /* Leave region and check if APCs are OK now */                         \
-    if (!(++_Thread->SpecialApcDisable))                                    \
+    if (!(++(_Thread)->SpecialApcDisable))                                  \
     {                                                                       \
         /* Check for Kernel APCs on the list */                             \
-        if (!IsListEmpty(&_Thread->ApcState.                                \
+        if (!IsListEmpty(&(_Thread)->ApcState.                              \
                          ApcListHead[KernelMode]))                          \
         {                                                                   \
             /* Check for APC Delivery */                                    \
@@ -77,12 +77,12 @@ KeGetPreviousMode(VOID)
 #define KeEnterCriticalRegionThread(_Thread)                                \
 {                                                                           \
     /* Sanity checks */                                                     \
-    ASSERT(_Thread == KeGetCurrentThread());                                \
-    ASSERT((_Thread->KernelApcDisable <= 0) &&                              \
-           (_Thread->KernelApcDisable != -32768));                          \
+    ASSERT((_Thread) == KeGetCurrentThread());                              \
+    ASSERT(((_Thread)->KernelApcDisable <= 0) &&                            \
+           ((_Thread)->KernelApcDisable != -32768));                        \
                                                                             \
     /* Disable Kernel APCs */                                               \
-    _Thread->KernelApcDisable--;                                            \
+    (_Thread)->KernelApcDisable--;                                          \
 }
 
 #define KeEnterCriticalRegion()                                             \
@@ -97,18 +97,18 @@ KeGetPreviousMode(VOID)
 #define KeLeaveCriticalRegionThread(_Thread)                                \
 {                                                                           \
     /* Sanity checks */                                                     \
-    ASSERT(_Thread == KeGetCurrentThread());                                \
-    ASSERT(_Thread->KernelApcDisable < 0);                                  \
+    ASSERT((_Thread) == KeGetCurrentThread());                              \
+    ASSERT((_Thread)->KernelApcDisable < 0);                                \
                                                                             \
     /* Enable Kernel APCs */                                                \
-    _Thread->KernelApcDisable++;                                            \
+    (_Thread)->KernelApcDisable++;                                          \
                                                                             \
     /* Check if Kernel APCs are now enabled */                              \
-    if (!(_Thread->KernelApcDisable))                                       \
+    if (!((_Thread)->KernelApcDisable))                                     \
     {                                                                       \
         /* Check if we need to request an APC Delivery */                   \
-        if (!(IsListEmpty(&_Thread->ApcState.ApcListHead[KernelMode])) &&   \
-            !(_Thread->SpecialApcDisable))                                  \
+        if (!(IsListEmpty(&(_Thread)->ApcState.ApcListHead[KernelMode])) && \
+            !((_Thread)->SpecialApcDisable))                                \
         {                                                                   \
             /* Check for the right environment */                           \
             KiCheckForKernelApcDelivery();                                  \
