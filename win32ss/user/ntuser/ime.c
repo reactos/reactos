@@ -3,7 +3,8 @@
  * PROJECT:          ReactOS Win32k subsystem
  * PURPOSE:          Input Method Editor and Input Method Manager support
  * FILE:             win32ss/user/ntuser/ime.c
- * PROGRAMER:        Casper S. Hornstrup (chorns@users.sourceforge.net)
+ * PROGRAMERS:       Casper S. Hornstrup (chorns@users.sourceforge.net)
+ *                   Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
 
 #include <win32k.h>
@@ -134,8 +135,63 @@ NtUserSetImeOwnerWindow(PIMEINFOEX pImeInfoEx, BOOL fFlag)
    return 0;
 }
 
-BOOL APIENTRY
-NtUserDestroyInputContext(HIMC hIMC)
+PVOID
+AllocInputContextObject(PDESKTOP pDesk,
+                        PTHREADINFO pti,
+                        SIZE_T Size,
+                        PVOID* HandleOwner)
+{
+    PTHRDESKHEAD ObjHead;
+
+    ASSERT(Size > sizeof(*ObjHead));
+    ASSERT(pti != NULL);
+
+    ObjHead = UserHeapAlloc(Size);
+    if (!ObjHead)
+        return NULL;
+
+    RtlZeroMemory(ObjHead, Size);
+
+    ObjHead->pSelf = ObjHead;
+    ObjHead->rpdesk = pDesk;
+    ObjHead->pti = pti;
+    IntReferenceThreadInfo(pti);
+    *HandleOwner = pti;
+    pti->ppi->UserHandleCount++;
+
+    return ObjHead;
+}
+
+VOID UserFreeInputContext(PVOID Object)
+{
+    PIMC pIMC = Object, pImc0;
+    PTHREADINFO pti = pIMC->head.pti;
+
+    UserMarkObjectDestroy(Object);
+
+    for (pImc0 = pti->spDefaultImc; pImc0; pImc0 = pImc0->pImcNext)
+    {
+        if (pImc0->pImcNext == pIMC)
+        {
+            pImc0->pImcNext = pIMC->pImcNext;
+            break;
+        }
+    }
+
+    UserHeapFree(Object);
+
+    pti->ppi->UserHandleCount--;
+    IntDereferenceThreadInfo(pti);
+}
+
+BOOLEAN UserDestroyInputContext(PVOID Object)
+{
+    PIMC pIMC = Object;
+    UserDeleteObject(pIMC->head.h, TYPE_INPUTCONTEXT);
+    return TRUE;
+}
+
+BOOL APIENTRY NtUserDestroyInputContext(HIMC hIMC)
 {
     PIMC pIMC;
     BOOL ret = FALSE;
