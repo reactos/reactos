@@ -12,6 +12,7 @@ extern void func_CComQIPtr(void);
 extern void func_CComVariant(void);
 extern void func_CHeapPtrList(void);
 extern void func_CImage(void);
+extern void func_CPath(void);
 extern void func_CRegKey(void);
 extern void func_CSimpleArray(void);
 extern void func_CSimpleMap(void);
@@ -31,6 +32,7 @@ const struct test winetest_testlist[] =
     { "CComVariant", func_CComVariant },
     { "CHeapPtrList", func_CHeapPtrList },
     { "CImage", func_CImage },
+    { "CPath", func_CPath },
     { "CRegKey", func_CRegKey },
     { "CSimpleArray", func_CSimpleArray },
     { "CSimpleMap", func_CSimpleMap },
