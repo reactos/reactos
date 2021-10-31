@@ -1495,11 +1495,12 @@ _When_(OldIrql == MM_NOIRQL, _IRQL_requires_max_(DISPATCH_LEVEL))
 _When_(OldIrql == MM_NOIRQL, _Requires_lock_not_held_(MmPfnLock))
 _When_(OldIrql != MM_NOIRQL, _Requires_lock_held_(MmPfnLock))
 _When_(OldIrql != MM_NOIRQL, _Releases_lock_(MmPfnLock))
-_When_(OldIrql != MM_NOIRQL, _IRQL_restores_(OldIrql))
 _When_(OldIrql != MM_NOIRQL, _IRQL_requires_(DISPATCH_LEVEL))
 VOID
 NTAPI
-MmDereferenceSegmentWithLock(PMM_SECTION_SEGMENT Segment, KIRQL OldIrql);
+MmDereferenceSegmentWithLock(
+    _In_ PMM_SECTION_SEGMENT Segment,
+    _In_ _When_(OldIrql != MM_NOIRQL, _IRQL_restores_) KIRQL OldIrql);
 
 _IRQL_requires_max_(DISPATCH_LEVEL)
 _Requires_lock_not_held_(MmPfnLock)
