@@ -102,6 +102,39 @@ static const ULONG_PTR HalpEisaPortPage[8] = {
 };
 
 #ifndef _MINIHAL_
+NTSTATUS
+NTAPI
+HalCalculateScatterGatherListSize(
+    IN PADAPTER_OBJECT AdapterObject,
+    IN PMDL Mdl OPTIONAL,
+    IN PVOID CurrentVa,
+    IN ULONG Length,
+    OUT PULONG ScatterGatherListSize,
+    OUT PULONG pNumberOfMapRegisters);
+
+NTSTATUS
+NTAPI
+HalBuildScatterGatherList(
+    IN PADAPTER_OBJECT AdapterObject,
+    IN PDEVICE_OBJECT DeviceObject,
+    IN PMDL Mdl,
+    IN PVOID CurrentVa,
+    IN ULONG Length,
+    IN PDRIVER_LIST_CONTROL ExecutionRoutine,
+    IN PVOID Context,
+    IN BOOLEAN WriteToDevice,
+    IN PVOID ScatterGatherBuffer,
+    IN ULONG ScatterGatherLength);
+
+NTSTATUS
+NTAPI
+HalBuildMdlFromScatterGatherList(
+    IN PDMA_ADAPTER DmaAdapter,
+    IN PSCATTER_GATHER_LIST ScatterGather,
+    IN PMDL OriginalMdl,
+    OUT PMDL *TargetMdl);
+
+
 static DMA_OPERATIONS HalpDmaOperations = {
    sizeof(DMA_OPERATIONS),
    (PPUT_DMA_ADAPTER)HalPutDmaAdapter,
@@ -114,12 +147,11 @@ static DMA_OPERATIONS HalpDmaOperations = {
    NULL, /* Initialized in HalpInitDma() */
    (PGET_DMA_ALIGNMENT)HalpDmaGetDmaAlignment,
    (PREAD_DMA_COUNTER)HalReadDmaCounter,
-   /* FIXME: Implement the S/G funtions. */
    (PGET_SCATTER_GATHER_LIST)HalGetScatterGatherList,
    (PPUT_SCATTER_GATHER_LIST)HalPutScatterGatherList,
-   NULL /*(PCALCULATE_SCATTER_GATHER_LIST_SIZE)HalCalculateScatterGatherListSize*/,
-   NULL /*(PBUILD_SCATTER_GATHER_LIST)HalBuildScatterGatherList*/,
-   NULL /*(PBUILD_MDL_FROM_SCATTER_GATHER_LIST)HalBuildMdlFromScatterGatherList*/
+   (PCALCULATE_SCATTER_GATHER_LIST_SIZE)HalCalculateScatterGatherListSize,
+   (PBUILD_SCATTER_GATHER_LIST)HalBuildScatterGatherList,
+   (PBUILD_MDL_FROM_SCATTER_GATHER_LIST)HalBuildMdlFromScatterGatherList
 };
 #endif
 
@@ -1129,6 +1161,50 @@ HalpScatterGatherAdapterControl(IN PDEVICE_OBJECT DeviceObject,
 
 	ExFreePoolWithTag(AdapterControlContext, TAG_DMA);
 	ExFreePoolWithTag(ScatterGather, TAG_DMA);
+}
+
+NTSTATUS
+NTAPI
+HalCalculateScatterGatherListSize(
+    IN PADAPTER_OBJECT AdapterObject,
+    IN PMDL Mdl OPTIONAL,
+    IN PVOID CurrentVa,
+    IN ULONG Length,
+    OUT PULONG ScatterGatherListSize,
+    OUT PULONG pNumberOfMapRegisters)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS
+NTAPI
+HalBuildScatterGatherList(
+    IN PADAPTER_OBJECT AdapterObject,
+    IN PDEVICE_OBJECT DeviceObject,
+    IN PMDL Mdl,
+    IN PVOID CurrentVa,
+    IN ULONG Length,
+    IN PDRIVER_LIST_CONTROL ExecutionRoutine,
+    IN PVOID Context,
+    IN BOOLEAN WriteToDevice,
+    IN PVOID ScatterGatherBuffer,
+    IN ULONG ScatterGatherLength)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS
+NTAPI
+HalBuildMdlFromScatterGatherList(
+    IN PDMA_ADAPTER DmaAdapter,
+    IN PSCATTER_GATHER_LIST ScatterGather,
+    IN PMDL OriginalMdl,
+    OUT PMDL *TargetMdl)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
 }
 #endif
 
