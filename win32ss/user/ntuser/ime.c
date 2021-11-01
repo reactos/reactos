@@ -3,7 +3,8 @@
  * PROJECT:          ReactOS Win32k subsystem
  * PURPOSE:          Input Method Editor and Input Method Manager support
  * FILE:             win32ss/user/ntuser/ime.c
- * PROGRAMER:        Casper S. Hornstrup (chorns@users.sourceforge.net)
+ * PROGRAMERS:       Casper S. Hornstrup (chorns@users.sourceforge.net)
+ *                   Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
 
 #include <win32k.h>
@@ -134,5 +135,82 @@ NtUserSetImeOwnerWindow(PIMEINFOEX pImeInfoEx, BOOL fFlag)
    return 0;
 }
 
+PVOID
+AllocInputContextObject(PDESKTOP pDesk,
+                        PTHREADINFO pti,
+                        SIZE_T Size,
+                        PVOID* HandleOwner)
+{
+    PTHRDESKHEAD ObjHead;
+
+    ASSERT(Size > sizeof(*ObjHead));
+    ASSERT(pti != NULL);
+
+    ObjHead = UserHeapAlloc(Size);
+    if (!ObjHead)
+        return NULL;
+
+    RtlZeroMemory(ObjHead, Size);
+
+    ObjHead->pSelf = ObjHead;
+    ObjHead->rpdesk = pDesk;
+    ObjHead->pti = pti;
+    IntReferenceThreadInfo(pti);
+    *HandleOwner = pti;
+    pti->ppi->UserHandleCount++;
+
+    return ObjHead;
+}
+
+VOID UserFreeInputContext(PVOID Object)
+{
+    PIMC pIMC = Object, pImc0;
+    PTHREADINFO pti = pIMC->head.pti;
+
+    UserMarkObjectDestroy(Object);
+
+    for (pImc0 = pti->spDefaultImc; pImc0; pImc0 = pImc0->pImcNext)
+    {
+        if (pImc0->pImcNext == pIMC)
+        {
+            pImc0->pImcNext = pIMC->pImcNext;
+            break;
+        }
+    }
+
+    UserHeapFree(Object);
+
+    pti->ppi->UserHandleCount--;
+    IntDereferenceThreadInfo(pti);
+}
+
+BOOLEAN UserDestroyInputContext(PVOID Object)
+{
+    PIMC pIMC = Object;
+    UserDeleteObject(pIMC->head.h, TYPE_INPUTCONTEXT);
+    return TRUE;
+}
+
+BOOL APIENTRY NtUserDestroyInputContext(HIMC hIMC)
+{
+    PIMC pIMC;
+    BOOL ret = FALSE;
+
+    UserEnterExclusive();
+
+    if (!(gpsi->dwSRVIFlags & SRVINFO_IMM32))
+    {
+        EngSetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+        UserLeave();
+        return FALSE;
+    }
+
+    pIMC = UserGetObject(gHandleTable, hIMC, TYPE_INPUTCONTEXT);
+    if (pIMC)
+        ret = UserDereferenceObject(pIMC);
+
+    UserLeave();
+    return ret;
+}
 
 /* EOF */
