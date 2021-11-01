@@ -920,6 +920,15 @@ IopLegacyResourceAllocation(IN ARBITER_REQUEST_SOURCE AllocationType,
 
     DPRINT1("IopLegacyResourceAllocation is halfplemented!\n");
 
+    if (!ResourceRequirements)
+    {
+        /* We can get there by calling IoAssignResources() with RequestedResources = NULL.
+         * TODO: not sure what we should do, but we shouldn't crash.
+         * */
+        UNIMPLEMENTED;
+        return STATUS_NOT_IMPLEMENTED;
+    }
+
     Status = IopFixupResourceListWithRequirements(ResourceRequirements,
                                                   AllocatedResources);
     if (!NT_SUCCESS(Status))
