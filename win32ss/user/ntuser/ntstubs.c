@@ -424,14 +424,6 @@ NtUserCreateInputContext(PCLIENTIMC pClientImc)
     return NULL;
 }
 
-BOOL
-APIENTRY
-NtUserDestroyInputContext(HIMC hIMC)
-{
-    STUB;
-    return FALSE;
-}
-
 DWORD
 APIENTRY
 NtUserGetRawInputBuffer(
