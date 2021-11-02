@@ -919,6 +919,9 @@ ProbeMdl:
             goto ProbeMdl;
     }
 
+    // HACK for MS portcls
+    HeaderSize = Length;
+
     /* probe user mode buffers */
     if (Length && ( (!HeaderSize) || (Length % HeaderSize == 0) || ((ProbeFlags & KSPROBE_ALLOWFORMATCHANGE) && (Length == sizeof(KSSTREAM_HEADER))) ) )
     {
@@ -1662,18 +1665,6 @@ KsAddIrpToCancelableQueue(
 
     DPRINT("KsAddIrpToCancelableQueue QueueHead %p SpinLock %p Irp %p ListLocation %x DriverCancel %p\n", QueueHead, SpinLock, Irp, ListLocation, DriverCancel);
 
-    // HACK for ms portcls
-    if (IoStack->MajorFunction == IRP_MJ_CREATE)
-    {
-        // complete the request
-        DPRINT1("MS HACK\n");
-        Irp->IoStatus.Status = STATUS_SUCCESS;
-        CompleteRequest(Irp, IO_NO_INCREMENT);
-
-        return;
-    }
-
-
     if (!DriverCancel)
     {
         /* default to KsCancelRoutine */
@@ -2031,6 +2022,9 @@ KsSetMajorFunctionHandler(
     IN  ULONG MajorFunction)
 {
     DPRINT("KsSetMajorFunctionHandler Function %x\n", MajorFunction);
+
+    // HACK for MS portcls
+    DriverObject->MajorFunction[IRP_MJ_CREATE] = KspCreate;
 
     switch ( MajorFunction )
     {
