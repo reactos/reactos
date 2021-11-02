@@ -1,4 +1,4 @@
-**This repo is not connected with ringwormGO**
+
 
 <p align=center>
   <a href="https://reactos.org/">
