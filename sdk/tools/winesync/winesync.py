@@ -64,10 +64,14 @@ class wine_sync:
             wine_target_commit = self.wine_repo.revparse_single(wine_tag)
             if isinstance(wine_target_commit, pygit2.Tag):
                 wine_target_commit = wine_target_commit.target
+            if isinstance(wine_target_commit, pygit2.Commit):
+                wine_target_commit = wine_target_commit.id
 
             wine_staging_target_commit = self.wine_staging_repo.revparse_single(wine_staging_tag)
             if isinstance(wine_staging_target_commit, pygit2.Tag):
                 wine_staging_target_commit = wine_staging_target_commit.target
+            if isinstance(wine_staging_target_commit, pygit2.Commit):
+                wine_staging_target_commit = wine_staging_target_commit.id
 
             self.wine_repo.branches.local.create(wine_branch_name, self.wine_repo.revparse_single('HEAD'))
             self.wine_repo.checkout(self.wine_repo.lookup_branch(wine_branch_name))
@@ -306,16 +310,18 @@ class wine_sync:
         wine_target_commit = self.wine_repo.revparse_single(wine_tag)
         if isinstance(wine_target_commit, pygit2.Tag):
             wine_target_commit = wine_target_commit.target
+        if isinstance(wine_target_commit, pygit2.Commit):
+            wine_target_commit = wine_target_commit.id
         # print(f'wine target commit is {wine_target_commit}')
 
         # get the wine commit id where we left
         in_staging = False
         wine_last_sync = self.wine_repo.revparse_single(self.module_cfg['tags']['wine'])
-        if (isinstance(wine_last_sync, pygit2.Tag)):
+        if isinstance(wine_last_sync, pygit2.Tag):
             if not self.revert_staged_patchset():
                 return
             wine_last_sync = wine_last_sync.target
-        if (isinstance(wine_last_sync, pygit2.Commit)):
+        if isinstance(wine_last_sync, pygit2.Commit):
             wine_last_sync = wine_last_sync.id
 
         # create a branch to keep things clean
