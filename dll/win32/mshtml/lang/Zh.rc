@@ -1,22 +1,11 @@
 /*
- * mshtml (Simplified and Traditional Chinese Resources)
- *
- * Copyright 2008 Hongbo Ni <hongbo.at.njstar.com>
- * Copyright 2010 Cheer Xiao <xiaqqaix.at.gmail.com>
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ * PROJECT:     ReactOS mshtml.dll
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * PURPOSE:     Chinese resource file
+ * TRANSLATORS: Copyright 2008 Hongbo Ni <hongbo@njstar.com>
+ *              Copyright 2010 Cheer Xiao <xiaqqaix@gmail.com>
+ *              Copyright 2021 Chan Chilung <eason066@gmail.com>
+ * REFERENCES:  Wine's Chinese resource translation
  */
 
 /* Chinese text is encoded in UTF-8 */
@@ -69,7 +58,7 @@ STRINGTABLE
 
 STRINGTABLE
 {
-    IDS_HTMLDOCUMENT    "HTML 檔案"
+    IDS_HTMLDOCUMENT    "HTML 文件"
 }
 
 IDD_HYPERLINK DIALOGEX 0, 0, 255, 65
@@ -78,9 +67,9 @@ CAPTION "超連結"
 FONT 9, "新細明體"
 {
     GROUPBOX "超連結資訊", -1, 5, 5, 190, 55
-    LTEXT "類型(&T):", -1, 10, 22, 24, 10
+    LTEXT "類型(&T)：", -1, 10, 22, 24, 10
     COMBOBOX IDC_TYPE, 35, 20, 45, 100, WS_TABSTOP | WS_GROUP | WS_VSCROLL | CBS_DROPDOWNLIST | CBS_HASSTRINGS
-    LTEXT "網址(&U):", -1, 10, 42, 24, 10
+    LTEXT "網址(&U)：", -1, 10, 42, 24, 10
     EDITTEXT IDC_URL, 35, 40, 150, 14, ES_AUTOHSCROLL | WS_BORDER | WS_GROUP | WS_TABSTOP
     PUSHBUTTON "確定", IDOK, 200, 10, 50, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
     PUSHBUTTON "取消", IDCANCEL, 200, 28, 50, 14, WS_GROUP | WS_TABSTOP

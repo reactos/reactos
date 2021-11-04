@@ -1,26 +1,13 @@
 /*
- * Help Viewer
- * Simplified and Traditional Chinese Language Support
- *
- * Copyright 2002 liuspider <liuspider@yahoo.com>
- * Copyright 2008 Hongbo Ni <hongbo.at.njstar.com>
- * Copyright 2010 Cheer Xiao <xiaqqaix.at.gmail.com>
- * Copyright 2018 Li Keqing <auroracloud4096@gmail.com>
- * Traditional Chinese translation synchronized to Wine by Aobi Chan CL 2020 <eason066@gmail.com>
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ * PROJECT:     ReactOS winhlp32.dll
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * PURPOSE:     Chinese resource file
+ * TRANSLATORS: Copyright 2002 liuspider <liuspider@yahoo.com>
+ *              Copyright 2008 Hongbo Ni <hongbo@njstar.com>
+ *              Copyright 2010 Cheer Xiao <xiaqqaix.at.gmail.com>
+ *              Copyright 2018 Li Keqing <auroracloud4096@gmail.com>
+ *              Copyright 2020-2021 Chan Chilung <eason066@gmail.com>
+ * REFERENCES:  Wine's Chinese resource translation
  */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
@@ -131,11 +118,11 @@ MAIN_MENU MENU
  }
  POPUP "選項(&O)" {
   MENUITEM "總是在最上層(&T)", MNID_HELP_HELPTOP
-  MENUITEM "歷程",		MNID_OPTS_HISTORY
+  MENUITEM "歷程記錄",		MNID_OPTS_HISTORY
   POPUP    "字型"
   BEGIN
     MENUITEM "小",		MNID_OPTS_FONTS_SMALL
-    MENUITEM "中",    	MNID_OPTS_FONTS_NORMAL
+    MENUITEM "標準",    	MNID_OPTS_FONTS_NORMAL
     MENUITEM "大",     	MNID_OPTS_FONTS_LARGE
   END
  }
@@ -151,11 +138,11 @@ BEGIN
 	BEGIN
 		MENUITEM "註釋...",       MNID_CTXT_ANNOTATE
 		MENUITEM "複製",                MNID_CTXT_COPY
-		MENUITEM "印刷...",            MNID_CTXT_PRINT
+		MENUITEM "列印...",            MNID_CTXT_PRINT
 		POPUP    "字型"
 		BEGIN
 			MENUITEM "小",       MNID_CTXT_FONTS_SMALL
-			MENUITEM "中",      MNID_CTXT_FONTS_NORMAL
+			MENUITEM "標準",      MNID_CTXT_FONTS_NORMAL
 			MENUITEM "大",       MNID_CTXT_FONTS_LARGE
 		END
 	END
@@ -167,15 +154,15 @@ STID_WINE_HELP, 	"ReactOS 說明"
 STID_WHERROR, 		"錯誤"
 STID_WARNING,  		"警告"
 STID_INFO,  		"資訊"
-STID_NOT_IMPLEMENTED, 	"未實作"
-STID_HLPFILE_ERROR_s, 	"載入說明檔案 ‘%s’ 時發生錯誤"
-STID_INDEX, 		"內容(&C)"
+STID_NOT_IMPLEMENTED, 	"尚未實作"
+STID_HLPFILE_ERROR_s, 	"載入說明檔案「%s」時發生錯誤"
+STID_INDEX, 		"索引(&C)"
 STID_CONTENTS,		"概要"
-STID_BACK, 		"返回(&B)"
+STID_BACK, 		"上一頁(&B)"
 STID_ALL_FILES, 	"所有檔案 (*.*)"
 STID_HELP_FILES_HLP, 	"說明檔案 (*.hlp)"
-STID_FILE_NOT_FOUND_s	"無法開啟檔案 '%s'. 您想要自己搜尋這個檔案嗎？"
-STID_NO_RICHEDIT	"找不到 richedit... 終止"
+STID_FILE_NOT_FOUND_s	"無法開啟檔案「%s」。您想要自己搜尋這個檔案嗎？"
+STID_NO_RICHEDIT	"找不到 richedit 實作... 正在終止"
 STID_PSH_INDEX,		"說明主題："
 }
 

@@ -1,23 +1,10 @@
 /*
- * HTML Help (Simplified and Traditional Chinese Resources)
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
- *
- * TRANSLATOR:
- * 2008 Hongbo Ni <hongbo.at.njstar.com>
- * Sync with Wine: Traditional Chinese on 2021; Simplified Chinese on 2021
+ * PROJECT:     ReactOS hhctrl.ocx
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * PURPOSE:     Chinese resource file
+ * TRANSLATORS: Copyright 2008 Hongbo Ni <hongbo@njstar.com>
+ *              Copyright 2021 Chan Chilung <eason066@gmail.com>
+ * REFERENCES:  Wine's Chinese resource translation
  */
 
 /* Chinese text is encoded in UTF-8 */
@@ -61,7 +48,7 @@ MENU_POPUP MENU
         MENUITEM "首页(&H)", IDTB_HOME
         MENUITEM "停止(&S)", IDTB_STOP
         MENUITEM "刷新(&R)", IDTB_REFRESH
-        MENUITEM "打印...(&P)", IDTB_PRINT
+        MENUITEM "打印(&P)...", IDTB_PRINT
     }
 }
 
@@ -76,7 +63,7 @@ MENU_WEBBROWSER MENU
         MENUITEM SEPARATOR
         MENUITEM "查看源代码(&V)", MIID_VIEWSOURCE
         MENUITEM SEPARATOR
-        MENUITEM "打印...(&P)", IDTB_PRINT
+        MENUITEM "打印(&P)...", IDTB_PRINT
         MENUITEM "刷新(&R)", IDTB_REFRESH
         MENUITEM SEPARATOR
         MENUITEM "属性(&T)", MIID_PROPERTIES
@@ -96,7 +83,7 @@ LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
 STRINGTABLE
 BEGIN
     IDS_CONTENTS     "內容(&C)"
-    IDS_INDEX        "目錄(&N)"
+    IDS_INDEX        "索引(&N)"
     IDS_SEARCH       "搜尋(&S)"
     IDS_FAVORITES    "我的最愛(&I)"
 
@@ -110,12 +97,12 @@ BEGIN
     IDTB_CONTRACT    "隱藏"
     IDTB_STOP        "停止"
     IDTB_REFRESH     "重新整理"
-    IDTB_BACK        "向後"
+    IDTB_BACK        "上一頁"
     IDTB_HOME        "首頁"
     IDTB_SYNC        "同步"
     IDTB_PRINT       "列印"
     IDTB_OPTIONS     "選項"
-    IDTB_FORWARD     "向前"
+    IDTB_FORWARD     "下一頁"
 END
 
 MENU_POPUP MENU
@@ -124,12 +111,12 @@ MENU_POPUP MENU
     {
         MENUITEM "", IDTB_EXPAND
         MENUITEM "同步(&Y)", IDTB_SYNC
-        MENUITEM "返回(&B)", IDTB_BACK
-        MENUITEM "向前(&F)", IDTB_FORWARD
+        MENUITEM "上一頁(&B)", IDTB_BACK
+        MENUITEM "下一頁(&F)", IDTB_FORWARD
         MENUITEM "首頁(&H)", IDTB_HOME
         MENUITEM "停止(&S)", IDTB_STOP
         MENUITEM "重新整理(&R)", IDTB_REFRESH
-        MENUITEM "列印...(&P)", IDTB_PRINT
+        MENUITEM "列印(&P)...", IDTB_PRINT
     }
 }
 
@@ -137,8 +124,8 @@ MENU_WEBBROWSER MENU
 {
     POPUP ""
     {
-        MENUITEM "返回(&B)", IDTB_BACK
-        MENUITEM "向前(&F)", IDTB_FORWARD
+        MENUITEM "上一頁(&B)", IDTB_BACK
+        MENUITEM "下一頁(&F)", IDTB_FORWARD
         MENUITEM SEPARATOR
         MENUITEM "全選(&A)", MIID_SELECTALL
         MENUITEM SEPARATOR

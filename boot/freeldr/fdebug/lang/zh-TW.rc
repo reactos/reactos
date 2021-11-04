@@ -1,4 +1,10 @@
-/* Traditional Chinese translation by Henry Tang Ih 2016 (henrytang2@hotmail.com) */
+/*
+ * PROJECT:     ReactOS FreeLoader Debugger
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     Chinese (Traditional) resource file
+ * TRANSLATORS: Copyright 2016 Henry Tang Ih <henrytang2@hotmail.com>
+ *              Copyright 2021 Chan Chilung <eason066@gmail.com>
+ */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
 
@@ -12,8 +18,8 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "清除顯示(&C)", IDM_FILE_CLEARDISPLAY
         MENUITEM SEPARATOR
-        MENUITEM "開始捕獲(&S)", IDM_FILE_STARTCAPTURE
-        MENUITEM "停止捕獲(&T)", IDM_FILE_STOPCAPTURE, GRAYED
+        MENUITEM "開始擷取(&S)", IDM_FILE_STARTCAPTURE
+        MENUITEM "停止擷取(&T)", IDM_FILE_STOPCAPTURE, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "本地回顯(&L)", IDM_FILE_LOCALECHO
         MENUITEM SEPARATOR
@@ -21,7 +27,7 @@ BEGIN
     END
     POPUP "說明(&H)"
     BEGIN
-        MENUITEM "關於 ...(&A)", IDM_ABOUT
+        MENUITEM "關於(&A)...", IDM_ABOUT
     END
 END
 
@@ -36,10 +42,10 @@ END
 
 IDD_ABOUTBOX DIALOGEX 22, 17, 259, 210
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-CAPTION "關於 FreeLoader 偵錯程式"
+CAPTION "關於 FreeLoader 除錯程式"
 FONT 9, "新細明體"
 BEGIN
-    CONTROL "FreeLoader 偵錯程式 v1.0\nCopyright (C) 2003\n由 Brian Palmer (brianp@reactos.org) 開發", IDC_STATIC, "Static", SS_LEFTNOWORDWRAP | WS_GROUP, 53, 28, 122, 26
+    CONTROL "FreeLoader 除錯程式 v1.0\nCopyright (C) 2003\n由 Brian Palmer (brianp@reactos.org) 開發", IDC_STATIC, "Static", SS_LEFTNOWORDWRAP | WS_GROUP, 53, 28, 122, 26
     DEFPUSHBUTTON "確定", IDOK, 183, 189, 44, 14, WS_GROUP
     ICON IDI_FDEBUG, IDC_STATIC, 19, 30, 20, 20
     EDITTEXT IDC_LICENSE_EDIT, 53, 63, 174, 107, ES_MULTILINE | ES_READONLY | WS_VSCROLL
@@ -50,9 +56,9 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "連線選項"
 FONT 9, "新細明體"
 BEGIN
-    LTEXT "輸入的 COM 埠 (例如 COM1):", IDC_STATIC, 7, 7, 108, 8
+    LTEXT "輸入的 COM 埠（例如 COM1）：", IDC_STATIC, 7, 7, 108, 8
     EDITTEXT IDC_COMPORT, 7, 17, 182, 14, ES_AUTOHSCROLL
-    LTEXT "輸入調變速率 (例如 115200):", IDC_STATIC, 7, 38, 114, 8
+    LTEXT "輸入調變速率（例如 115200）：", IDC_STATIC, 7, 38, 114, 8
     EDITTEXT IDC_BAUTRATE, 7, 48, 182, 14, ES_AUTOHSCROLL
     DEFPUSHBUTTON "確定", IDOK, 45, 79, 50, 14
     PUSHBUTTON "取消", IDCANCEL, 100, 79, 50, 14
@@ -63,7 +69,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "擷取檔案"
 FONT 9, "新細明體"
 BEGIN
-    LTEXT "擷取檔案名稱:", IDC_STATIC, 7, 17, 62, 8
+    LTEXT "擷取檔案名稱：", IDC_STATIC, 7, 17, 62, 8
     EDITTEXT IDC_CAPTUREFILENAME, 7, 26, 181, 14, ES_AUTOHSCROLL
     PUSHBUTTON "瀏覽(&B)", IDC_BROWSE, 194, 26, 50, 14
     DEFPUSHBUTTON "確定", IDOK, 139, 74, 50, 14
@@ -74,7 +80,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_APP_TITLE "FreeLoader 偵錯程式"
+    IDS_APP_TITLE "FreeLoader 除錯程式"
     IDS_HELLO "世界您好！"
     IDC_FDEBUG "FDEBUG"
 END

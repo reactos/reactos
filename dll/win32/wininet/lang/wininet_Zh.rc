@@ -1,25 +1,12 @@
 /*
- * wininet (Simplified and Traditional Chinese Resources)
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
- *
- * Translator:
- * 2008 Hongbo Ni <hongbo.at.njstar.com>
- * 2010 Rex Tsai <chihchun.at.kalug.linux.org.tw>
- * Sync with Wine: Traditional Chinese on 2021
-*/
+ * PROJECT:     ReactOS wininet.dll
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * PURPOSE:     Chinese resource file
+ * TRANSLATORS: Copyright 2008 Hongbo Ni <hongbo@njstar.com>
+ *              Copyright 2010 Rex Tsai <chihchun@kalug.linux.org.tw>
+ *              Copyright 2021 Chan Chilung <eason066@gmail.com>
+ * REFERENCES:  Wine's Chinese resource translation
+ */
 
 /* Chinese text is encoded in UTF-8 */
 #pragma code_page(65001)
@@ -105,19 +92,19 @@ STRINGTABLE
   IDS_LANCONNECTION "區域網路連線"
   IDS_CERT_CA_INVALID   "憑證由不明或不可信的發行者所發放。"
   IDS_CERT_DATE_INVALID "憑證上的日期無效。"
-  IDS_CERT_CN_INVALID   "憑證上的名稱不匹配站台。"
-  IDS_CERT_ERRORS       "有至少一個未指定的安全問題與這個憑證相關。"
+  IDS_CERT_CN_INVALID   "憑證上的名稱與站臺不相符。"
+  IDS_CERT_ERRORS       "這個憑證有至少一個未指定的安全問題。"
   IDS_CERT_SUBJECT      "主體"
   IDS_CERT_ISSUER       "發證者"
   IDS_CERT_EFFECTIVE    "生效日期"
-  IDS_CERT_EXPIRATION   "過期日期"
-  IDS_CERT_PROTOCOL     "Security Protocol"
-  IDS_CERT_SIGNATURE    "簽名類型"
+  IDS_CERT_EXPIRATION   "到期日期"
+  IDS_CERT_PROTOCOL     "安全性通訊協定"
+  IDS_CERT_SIGNATURE    "簽章類型"
   IDS_CERT_ENCRYPTION   "加密類型"
-  IDS_CERT_PRIVACY      "Privacy Strength"
+  IDS_CERT_PRIVACY      "隱私層次"
   IDS_CERT_HIGH         "高"
   IDS_CERT_LOW          "低"
-  IDS_CERT_BITS         "bits"
+  IDS_CERT_BITS         "位元"
 }
 
 IDD_PROXYDLG DIALOGEX 36, 24, 220, 146
@@ -125,7 +112,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "輸入網路密碼"
 FONT 9, "新細明體"
 {
- LTEXT "請輸入使用者名稱和密碼:", -1, 6, 6, 210, 15
+ LTEXT "請輸入使用者名稱和密碼：", -1, 6, 6, 210, 15
  LTEXT "代理伺服器", -1, 6, 26, 50, 18
  LTEXT "Realm", -1, 6, 46, 50, 18
  LTEXT "使用者", -1, 6, 66, 50, 18
@@ -134,7 +121,7 @@ FONT 9, "新細明體"
  LTEXT "", IDC_REALM, 60, 46, 150, 14, 0
  EDITTEXT IDC_USERNAME, 60, 66, 150, 14, ES_AUTOHSCROLL | WS_BORDER | WS_TABSTOP
  EDITTEXT IDC_PASSWORD, 60, 86, 150, 14, ES_AUTOHSCROLL | WS_BORDER | WS_TABSTOP | ES_PASSWORD
- CHECKBOX "儲存密碼 (不安全)(&S)", IDC_SAVEPASSWORD,
+ CHECKBOX "儲存密碼（不安全）(&S)", IDC_SAVEPASSWORD,
            60, 106, 150, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
  PUSHBUTTON "確定", IDOK, 90, 126, 56, 14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
  PUSHBUTTON "取消", IDCANCEL, 154, 126, 56, 14, WS_GROUP | WS_TABSTOP
@@ -145,7 +132,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "需要認證"
 FONT 9, "新細明體"
 {
- LTEXT "請輸入使用者名稱和密碼:", -1, 6, 6, 210, 15
+ LTEXT "請輸入使用者名稱和密碼：", -1, 6, 6, 210, 15
  LTEXT "伺服器", -1, 6, 26, 50, 18
  LTEXT "Realm", -1, 6, 46, 50, 18
  LTEXT "使用者", -1, 6, 66, 50, 18
@@ -154,7 +141,7 @@ FONT 9, "新細明體"
  LTEXT "", IDC_REALM, 60, 46, 150, 14, 0
  EDITTEXT IDC_USERNAME, 60, 66, 150, 14, ES_AUTOHSCROLL | WS_BORDER | WS_TABSTOP
  EDITTEXT IDC_PASSWORD, 60, 86, 150, 14, ES_AUTOHSCROLL | WS_BORDER | WS_TABSTOP | ES_PASSWORD
- CHECKBOX "儲存密碼 (不安全)(&S)", IDC_SAVEPASSWORD,
+ CHECKBOX "儲存密碼（不安全）(&S)", IDC_SAVEPASSWORD,
            60, 106, 150, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
  PUSHBUTTON "確定", IDOK, 90, 126, 56, 14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
  PUSHBUTTON "取消", IDCANCEL, 154, 126, 56, 14, WS_GROUP | WS_TABSTOP
@@ -162,10 +149,10 @@ FONT 9, "新細明體"
 
 IDD_INVCERTDLG DIALOGEX 3, 24, 250, 86
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "安全警告"
+CAPTION "安全性警告"
 FONT 9, "新細明體"
 {
- LTEXT "這個站台的憑證有問題。", -1, 40, 6, 200, 20
+ LTEXT "這個站臺的憑證有問題。", -1, 40, 6, 200, 20
  LTEXT "", IDC_CERT_ERROR, 40, 26, 200, 20
  LTEXT "您無論如何都要繼續？", -1, 40, 46, 200, 20
  PUSHBUTTON "是", IDOK, 40, 66, 56, 14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON

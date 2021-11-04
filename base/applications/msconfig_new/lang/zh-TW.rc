@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS MSConfig
+ * PROJECT:     ReactOS System Configuration Tool
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  * PURPOSE:     Chinese (Traditional) resource file
  * TRANSLATORS: Copyright 2011 Elton Chung aka MfldElton <elton328@gmail.com>
@@ -16,7 +16,7 @@ BEGIN
     ICON            IDI_APPICON, IDC_STATIC, 14, 14, 20, 20
     LTEXT           "系統組態程式\n版本 1.0", IDC_STATIC, 42, 14, 182, 17, SS_NOPREFIX
 //  "Copyright (C) ReactOS Team 2005-"COPYRIGHT_YEAR"\n"
-    LTEXT           "版權所有 (C) ReactOS 團隊 2005-2015\n\
+    LTEXT           "著作權 (C) ReactOS Team 2005-2015\n\
 Christoph von Wittich (Christoph@ApiViewer.de)\n\
 Gregor Schneider (Gregor.Schneider@reactos.org)\n\
 Hermès BÉLUSCA - MAÏTO (hermes.belusca@sfr.fr)",
@@ -197,8 +197,8 @@ CAPTION "系統設定"
 FONT 9, "新細明體"
 BEGIN
     DEFPUSHBUTTON   "確定", IDOK, 180, 41, 50, 14
-    LTEXT           "不能停用基本服務。這樣做可能會阻止 %s 在您的電腦上運行。", IDC_STATIC_REQSVCSDIS_INFO, 7, 7, 223, 28
-    CONTROL         "以後不再顯示此消息(&D)", IDC_CBX_REQSVCSDIS_NO_MSG_ANYMORE,
+    LTEXT           "無法停用基本服務。這樣做可能會阻止 %s 在您的電腦上執行。", IDC_STATIC_REQSVCSDIS_INFO, 7, 7, 223, 28
+    CONTROL         "以後不再顯示這個訊息(&D)", IDC_CBX_REQSVCSDIS_NO_MSG_ANYMORE,
                     "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 42, 154, 13
 END
 
@@ -206,7 +206,7 @@ STRINGTABLE
 BEGIN
     IDS_MSCONFIG            "系統設定"
     IDS_MSCONFIG_2          "系統組態"
-    IDS_ABOUT               "關於...(&A)\tShift+F1"
+    IDS_ABOUT               "關於(&A)...\tShift+F1"
 END
 
 STRINGTABLE

@@ -1,5 +1,10 @@
-/* Translation has been created by Luo Yufan 2019 <njlyf2011@hotmail.com> */
-/* Translation improved by Chan Chilung 2021 (eason066@gmail.com) */
+/*
+ * PROJECT:      ReactOS user32.dll
+ * LICENSE:      GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:      Chinese (Traditional) resource file
+ * TRANSLATORS:  Copyright 2019 Luo Yufan <njlyf2011@hotmail.com>
+ *               Copyright 2021 Chan Chilung <eason066@gmail.com>
+ */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
 
@@ -66,9 +71,9 @@ BEGIN
     IDS_HUNG_UP_TITLE "沒有回應。"
     IDS_OK "確定"
     IDS_CANCEL "取消"
-    IDS_ABORT "終止(&A)"
+    IDS_ABORT "中止(&A)"
     IDS_RETRY "重試(&R)"
-    IDS_IGNORE "忽略(&I)"
+    IDS_IGNORE "略過(&I)"
     IDS_YES "是(&Y)"
     IDS_NO "否(&N)"
     IDS_CLOSE "關閉(&C)"

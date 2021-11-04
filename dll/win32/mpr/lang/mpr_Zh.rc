@@ -1,21 +1,10 @@
 /*
- * MPR dll (Simplified and Traditional Chinese Resources)
- *
- * Copyright 2008 Hongbo Ni <hongbo.at.njstar.com>
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ * PROJECT:     ReactOS mpr.dll
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * PURPOSE:     Chinese resource file
+ * TRANSLATORS: Copyright 2008 Hongbo Ni <hongbo@njstar.com>
+ *              Copyright 2021 Chan Chilung <eason066@gmail.com>
+ * REFERENCES:  Wine's Chinese resource translation
  */
 
 /* Chinese text is encoded in UTF-8 */
@@ -60,7 +49,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "輸入網路密碼"
 FONT 9, "新細明體"
 {
- LTEXT "請輸入使用者名稱和密碼:", IDC_EXPLAIN, 6, 6, 150, 18
+ LTEXT "請輸入使用者名稱和密碼：", IDC_EXPLAIN, 6, 6, 150, 18
  LTEXT "代理伺服器", -1, 6, 26, 60, 10
 /* LTEXT "Realm", -1, 6, 46, 60, 10 */
  LTEXT "使用者", -1, 6, 66, 60, 10
@@ -69,7 +58,7 @@ FONT 9, "新細明體"
  LTEXT "", IDC_REALM, 70, 46, 150, 14, 0
  EDITTEXT IDC_USERNAME, 70, 66, 150, 14, ES_AUTOHSCROLL | WS_BORDER | WS_TABSTOP
  EDITTEXT IDC_PASSWORD, 70, 86, 150, 14, ES_AUTOHSCROLL | WS_BORDER | WS_TABSTOP | ES_PASSWORD
- CHECKBOX "儲存密碼 (不安全)(&S)", IDC_SAVEPASSWORD,
+ CHECKBOX "儲存密碼（不安全）(&S)", IDC_SAVEPASSWORD,
            70, 106, 150, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
  PUSHBUTTON "確定", IDOK, 114, 126, 50, 14, WS_GROUP | WS_TABSTOP
  PUSHBUTTON "取消", IDCANCEL, 170, 126, 50, 14, WS_GROUP | WS_TABSTOP

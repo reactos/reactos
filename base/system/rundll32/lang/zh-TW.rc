@@ -1,9 +1,15 @@
-/* Traditional Chinese translation by Henry Tang Ih 2016 (henrytang2@hotmail.com) */
-
+/* 
+ * PROJECT:     Run a DLL as an App
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Chinese (Traditional) resource file
+ * TRANSLATORS: Copyright 2016 Henry Tang Ih <henrytang2@hotmail.com>
+ *              Copyright 2021 Chan Chilung <eason066@gmail.com>
+ */
+ 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
 
 STRINGTABLE
 BEGIN
-    IDS_DllNotLoaded "LoadLibrary 無法載入 '%s'"
-    IDS_MissingEntry "缺少進入點：%s\n在 %s 中"
+    IDS_DllNotLoaded "LoadLibrary 無法載入「%s」"
+    IDS_MissingEntry "由於缺少進入點：%s\n因此 %s 發生錯誤"
 END
