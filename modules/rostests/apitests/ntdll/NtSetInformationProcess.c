@@ -20,7 +20,7 @@ Test_ProcBasePriorityClass(void)
      * as the process who executed the caller doesn't have the requested
      * privileges to perform the operation.
     */
-    KPRIORITY BasePriority = HIGH_PRIORITY;
+    KPRIORITY BasePriority;
 
     /* Everything is NULL */
     Status = NtSetInformationProcess(NULL,
@@ -30,11 +30,13 @@ Test_ProcBasePriorityClass(void)
     ok_hex(Status, STATUS_INFO_LENGTH_MISMATCH);
 
     /* Set the base priority to an invalid process handle */
+    BasePriority = HIGH_PRIORITY;
     Status = NtSetInformationProcess(NULL,
                                      ProcessBasePriority,
                                      &BasePriority,
                                      sizeof(KPRIORITY));
     ok_hex(Status, STATUS_INVALID_HANDLE);
+    ok_dec(BasePriority, HIGH_PRIORITY);
 
     /* Don't input anything to the caller but the length information is valid */
     Status = NtSetInformationProcess(NtCurrentProcess(),
@@ -44,27 +46,22 @@ Test_ProcBasePriorityClass(void)
     ok_hex(Status, STATUS_ACCESS_VIOLATION);
 
     /* Give the base priority input to the caller but length is invalid */
+    BasePriority = HIGH_PRIORITY;
     Status = NtSetInformationProcess(NtCurrentProcess(),
                                      ProcessBasePriority,
                                      &BasePriority,
                                      0);
     ok_hex(Status, STATUS_INFO_LENGTH_MISMATCH);
+    ok_dec(BasePriority, HIGH_PRIORITY);
 
     /* The input buffer is misaligned and length information invalid */
     Status = NtSetInformationProcess(NtCurrentProcess(),
                                      ProcessBasePriority,
-                                     (PVOID)1,
+                                     (PVOID)2,
                                      0);
     ok_hex(Status, STATUS_INFO_LENGTH_MISMATCH);
 
     /* The input buffer is misaligned */
-    Status = NtSetInformationProcess(NtCurrentProcess(),
-                                     ProcessBasePriority,
-                                     (PVOID)1,
-                                     sizeof(KPRIORITY));
-    ok_hex(Status, STATUS_DATATYPE_MISALIGNMENT);
-
-    /* The input buffer is misaligned (try with an alignment of 2) */
     Status = NtSetInformationProcess(NtCurrentProcess(),
                                      ProcessBasePriority,
                                      (PVOID)2,
@@ -72,11 +69,13 @@ Test_ProcBasePriorityClass(void)
     ok_hex(Status, STATUS_DATATYPE_MISALIGNMENT);
 
     /* Set the base priority but we have lack privileges to do so */
+    BasePriority = HIGH_PRIORITY;
     Status = NtSetInformationProcess(NtCurrentProcess(),
                                      ProcessBasePriority,
                                      &BasePriority,
                                      sizeof(KPRIORITY));
     ok_hex(Status, STATUS_PRIVILEGE_NOT_HELD);
+    ok_dec(BasePriority, HIGH_PRIORITY);
 
     /*
      * Assign a random priority value this time and
@@ -88,6 +87,7 @@ Test_ProcBasePriorityClass(void)
                                      &BasePriority,
                                      sizeof(KPRIORITY));
     ok_hex(Status, STATUS_SUCCESS);
+    ok_dec(BasePriority, 8);
 }
 
 static
@@ -97,7 +97,7 @@ Test_ProcRaisePriorityClass(void)
     NTSTATUS Status;
 
     /* Raise the priority as much as possible */
-    ULONG RaisePriority = MAXIMUM_PRIORITY;
+    ULONG RaisePriority;
 
     /* Everything is NULL */
     Status = NtSetInformationProcess(NULL,
@@ -107,16 +107,18 @@ Test_ProcRaisePriorityClass(void)
     ok_hex(Status, STATUS_INFO_LENGTH_MISMATCH);
 
     /* A invalid handle to process is given */
+    RaisePriority = MAXIMUM_PRIORITY;
     Status = NtSetInformationProcess(NULL,
                                      ProcessRaisePriority,
                                      &RaisePriority,
                                      sizeof(ULONG));
     ok_hex(Status, STATUS_INVALID_HANDLE);
+    ok_dec(RaisePriority, MAXIMUM_PRIORITY);
 
     /* The input buffer is misaligned and length information invalid */
     Status = NtSetInformationProcess(NtCurrentProcess(),
                                      ProcessRaisePriority,
-                                     (PVOID)1,
+                                     (PVOID)2,
                                      0);
     ok_hex(Status, STATUS_INFO_LENGTH_MISMATCH);
 
@@ -130,23 +132,18 @@ Test_ProcRaisePriorityClass(void)
     /* The input buffer is misaligned */
     Status = NtSetInformationProcess(NtCurrentProcess(),
                                      ProcessRaisePriority,
-                                     (PVOID)1,
-                                     sizeof(ULONG));
-    ok_hex(Status, STATUS_DATATYPE_MISALIGNMENT);
-
-    /* The input buffer is misaligned -- try with an alignment size of 2 */
-    Status = NtSetInformationProcess(NtCurrentProcess(),
-                                     ProcessRaisePriority,
                                      (PVOID)2,
                                      sizeof(ULONG));
     ok_hex(Status, STATUS_DATATYPE_MISALIGNMENT);
 
     /* Raise the priority of the given current process */
+    RaisePriority = MAXIMUM_PRIORITY;
     Status = NtSetInformationProcess(NtCurrentProcess(),
                                      ProcessRaisePriority,
                                      &RaisePriority,
                                      sizeof(ULONG));
     ok_hex(Status, STATUS_SUCCESS);
+    ok_dec(RaisePriority, MAXIMUM_PRIORITY);
 }
 
 static
@@ -154,17 +151,18 @@ void
 Test_ProcForegroundBackgroundClass(void)
 {
     NTSTATUS Status;
+
+    /* As a test, set the foreground of the retrieved current process to FALSE */
     PPROCESS_FOREGROUND_BACKGROUND ProcForeground;
 
     ProcForeground = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(PROCESS_FOREGROUND_BACKGROUND));
+    ok(ProcForeground != NULL, "Failed to allocate memory block from heap for PROCESS_FOREGROUND_BACKGROUND!\n");
+
     if (ProcForeground == NULL)
     {
-        skip("Failed to allocate memory block from heap for PROCESS_FOREGROUND_BACKGROUND!\n");
+        skip("No ProcForeground\n");
         return;
     }
-
-    /* As a test, set the foreground of the retrieved current process to FALSE */
-    ProcForeground->Foreground = FALSE;
 
     /* Set everything NULL for the caller */
     Status = NtSetInformationProcess(NULL,
@@ -174,11 +172,13 @@ Test_ProcForegroundBackgroundClass(void)
     ok_hex(Status, STATUS_INFO_LENGTH_MISMATCH);
 
     /* Give an invalid process handle (but the input buffer and length are correct) */
+    ProcForeground->Foreground = FALSE;
     Status = NtSetInformationProcess(NULL,
                                      ProcessForegroundInformation,
                                      ProcForeground,
                                      sizeof(PROCESS_FOREGROUND_BACKGROUND));
     ok_hex(Status, STATUS_INVALID_HANDLE);
+    ok_dec(ProcForeground->Foreground, FALSE);
 
     /* Give a buffer data to the argument input as NULL */
     Status = NtSetInformationProcess(NtCurrentProcess(),
@@ -206,11 +206,13 @@ Test_ProcForegroundBackgroundClass(void)
     ok_hex(Status, STATUS_ACCESS_VIOLATION);
 
     /* Set the foreground information to the current given process, we must expect the function should succeed */
+    ProcForeground->Foreground = FALSE;
     Status = NtSetInformationProcess(NtCurrentProcess(),
                                      ProcessForegroundInformation,
                                      ProcForeground,
                                      sizeof(PROCESS_FOREGROUND_BACKGROUND));
     ok_hex(Status, STATUS_SUCCESS);
+    ok_dec(ProcForeground->Foreground, FALSE);
 
     /* Clear all the stuff */
     HeapFree(GetProcessHeap(), 0, ProcForeground);
@@ -240,18 +242,11 @@ Test_ProcessWx86InformationClass(void)
     /* The buffer is misaligned and information length is wrong */
     Status = NtSetInformationProcess(NtCurrentProcess(),
                                      ProcessWx86Information,
-                                     (PVOID)1,
+                                     (PVOID)2,
                                      0);
     ok_hex(Status, STATUS_INFO_LENGTH_MISMATCH);
 
     /* The buffer is misaligned */
-    Status = NtSetInformationProcess(NtCurrentProcess(),
-                                     ProcessWx86Information,
-                                     (PVOID)1,
-                                     sizeof(VdmPower));
-    ok_hex(Status, STATUS_DATATYPE_MISALIGNMENT);
-
-    /* The buffer is misaligned -- try with an alignment size of 2 */
     Status = NtSetInformationProcess(NtCurrentProcess(),
                                      ProcessWx86Information,
                                      (PVOID)2,
@@ -264,6 +259,7 @@ Test_ProcessWx86InformationClass(void)
                                      &VdmPower,
                                      sizeof(VdmPower));
     ok_hex(Status, STATUS_PRIVILEGE_NOT_HELD);
+    ok_dec(VdmPower, 1);
 }
 
 static

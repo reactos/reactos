@@ -15,7 +15,7 @@ static
 void
 Test_ProcessTimes(void)
 {
-#define SPIN_TIME 1000000
+#define SPIN_TIME 1000000LL // 0.1 second.
     NTSTATUS Status;
     KERNEL_USER_TIMES Times1;
     KERNEL_USER_TIMES Times2;
@@ -123,8 +123,8 @@ Test_ProcessTimes(void)
     ok_hex(Status, STATUS_SUCCESS);
     ok(Times1.CreateTime.QuadPart < TestStartTime.QuadPart,
        "CreateTime is %I64u, expected < %I64u\n", Times1.CreateTime.QuadPart, TestStartTime.QuadPart);
-    ok(Times1.CreateTime.QuadPart > TestStartTime.QuadPart - 100000000LL,
-       "CreateTime is %I64u, expected > %I64u\n", Times1.CreateTime.QuadPart, TestStartTime.QuadPart - 100000000LL);
+    ok(Times1.CreateTime.QuadPart > TestStartTime.QuadPart - 100000000LL, // 10 seconds.
+       "CreateTime is %I64u, expected > %I64u\n", Times1.CreateTime.QuadPart, TestStartTime.QuadPart - 100000000LL); // 10 seconds.
     ok(Times1.ExitTime.QuadPart == 0,
        "ExitTime is %I64u, expected 0\n", Times1.ExitTime.QuadPart);
     ok(Times1.KernelTime.QuadPart != 0, "KernelTime is 0\n");
@@ -195,9 +195,11 @@ Test_ProcessPriorityClassAlignment(void)
 
     /* Allocate some memory for the priority class structure */
     ProcPriority = malloc(sizeof(PROCESS_PRIORITY_CLASS));
+    ok(ProcPriority != NULL, "Failed to allocate memory for PROCESS_PRIORITY_CLASS!\n");
+
     if (ProcPriority == NULL)
     {
-        skip("Failed to allocate memory for PROCESS_PRIORITY_CLASS!\n");
+        skip("No ProcPriority\n");
         return;
     }
 
@@ -211,28 +213,12 @@ Test_ProcessPriorityClassAlignment(void)
     /* Unaligned buffer -- wrong size */
     Status = NtQueryInformationProcess(NtCurrentProcess(),
                                        ProcessPriorityClass,
-                                       (PVOID)1,
-                                       0,
-                                       NULL);
-    ok_hex(Status, STATUS_INFO_LENGTH_MISMATCH);
-
-    /* Unaligned buffer -- correct size */
-    Status = NtQueryInformationProcess(NtCurrentProcess(),
-                                       ProcessPriorityClass,
-                                       (PVOID)1,
-                                       sizeof(PROCESS_PRIORITY_CLASS),
-                                       NULL);
-    ok_hex(Status, STATUS_DATATYPE_MISALIGNMENT);
-
-    /* Unaligned buffer -- wrong size (but this time do with an alignment of 2) */
-    Status = NtQueryInformationProcess(NtCurrentProcess(),
-                                       ProcessPriorityClass,
                                        (PVOID)2,
                                        0,
                                        NULL);
     ok_hex(Status, STATUS_INFO_LENGTH_MISMATCH);
 
-    /* Unaligned buffer -- correct size (but this time do with an alignment of 2) */
+    /* Unaligned buffer -- correct size */
     Status = NtQueryInformationProcess(NtCurrentProcess(),
                                        ProcessPriorityClass,
                                        (PVOID)2,
@@ -251,6 +237,7 @@ Test_ProcessPriorityClassAlignment(void)
     /* Make sure the returned priority class is a valid number (non negative) but also it should be within the PROCESS_PRIORITY_CLASS range */
     ok(ProcPriority->PriorityClass > PROCESS_PRIORITY_CLASS_INVALID && ProcPriority->PriorityClass <= PROCESS_PRIORITY_CLASS_ABOVE_NORMAL,
        "Expected a valid number from priority class range but got %d\n", ProcPriority->PriorityClass);
+
     free(ProcPriority);
 }
 
@@ -259,7 +246,7 @@ void
 Test_ProcessWx86Information(void)
 {
     NTSTATUS Status;
-    ULONG VdmPower = 1, ReturnLength;
+    ULONG VdmPower, ReturnLength;
 
     /* Everything is NULL */
     Status = NtQueryInformationProcess(NULL,
@@ -270,12 +257,14 @@ Test_ProcessWx86Information(void)
     ok_hex(Status, STATUS_INFO_LENGTH_MISMATCH);
 
     /* Given an invalid process handle */
+    VdmPower = 0xDEADBEEF;
     Status = NtQueryInformationProcess(NULL,
                                        ProcessWx86Information,
                                        &VdmPower,
                                        sizeof(VdmPower),
                                        NULL);
     ok_hex(Status, STATUS_INVALID_HANDLE);
+    ok_dec(VdmPower, 0xDEADBEEF);
 
     /* Don't query anything */
     Status = NtQueryInformationProcess(NtCurrentProcess(),
@@ -288,20 +277,12 @@ Test_ProcessWx86Information(void)
     /* The buffer is misaligned and information length is wrong */
     Status = NtQueryInformationProcess(NtCurrentProcess(),
                                        ProcessWx86Information,
-                                       (PVOID)1,
+                                       (PVOID)2,
                                        0,
                                        NULL);
     ok_hex(Status, STATUS_INFO_LENGTH_MISMATCH);
 
     /* The buffer is misaligned */
-    Status = NtQueryInformationProcess(NtCurrentProcess(),
-                                       ProcessWx86Information,
-                                       (PVOID)1,
-                                       sizeof(VdmPower),
-                                       NULL);
-    ok_hex(Status, STATUS_DATATYPE_MISALIGNMENT);
-
-    /* The buffer is misaligned -- try with an alignment size of 2 */
     Status = NtQueryInformationProcess(NtCurrentProcess(),
                                        ProcessWx86Information,
                                        (PVOID)2,
@@ -310,6 +291,7 @@ Test_ProcessWx86Information(void)
     ok_hex(Status, STATUS_DATATYPE_MISALIGNMENT);
 
     /* Query the VDM power */
+    VdmPower = 0xDEADBEEF;
     Status = NtQueryInformationProcess(NtCurrentProcess(),
                                        ProcessWx86Information,
                                        &VdmPower,
@@ -319,6 +301,7 @@ Test_ProcessWx86Information(void)
     ok(VdmPower == 0 || VdmPower == 1, "The VDM power value must be within the boundary between 0 and 1, not anything else! Got %lu\n", VdmPower);
 
     /* Same but with ReturnLength */
+    VdmPower = 0xDEADBEEF;
     Status = NtQueryInformationProcess(NtCurrentProcess(),
                                        ProcessWx86Information,
                                        &VdmPower,
