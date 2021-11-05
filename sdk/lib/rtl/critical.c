@@ -168,7 +168,8 @@ RtlpWaitForCriticalSection(PRTL_CRITICAL_SECTION CriticalSection)
             /* Is this the 2nd time we've timed out? */
             if (LastChance)
             {
-                ERROR_DBGBREAK("Deadlock: 0x%p\n", CriticalSection);
+                ERROR_DBGBREAK("(2/2) Deadlock: critical section 0x%p, owned by thread 0x%p\n",
+                               CriticalSection, CriticalSection->OwningThread);
 
                 /* Yes it is, we are raising an exception */
                 ExceptionRecord.ExceptionCode    = STATUS_POSSIBLE_DEADLOCK;
@@ -179,6 +180,10 @@ RtlpWaitForCriticalSection(PRTL_CRITICAL_SECTION CriticalSection)
                 ExceptionRecord.ExceptionInformation[0] = (ULONG_PTR)CriticalSection;
                 RtlRaiseException(&ExceptionRecord);
             }
+
+            /* Incentive to check the blocking thread */
+            DPRINT1("(1/2) Timeout: critical section 0x%p, owned by thread 0x%p\n",
+                    CriticalSection, CriticalSection->OwningThread);
 
             /* One more try */
             LastChance = TRUE;
@@ -505,7 +510,10 @@ RtlEnterCriticalSection(PRTL_CRITICAL_SECTION CriticalSection)
                   OwningThread is NULL here! */
 
         /* We don't own it, so we must wait for it */
+        DPRINT("Thread 0x%p waits for critical section 0x%p, owned by thread 0x%p\n",
+               Thread, CriticalSection, CriticalSection->OwningThread);
         RtlpWaitForCriticalSection(CriticalSection);
+        DPRINT("Thread 0x%p acquired critical section 0x%p\n", Thread, CriticalSection);
     }
 
     /*
