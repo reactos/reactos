@@ -294,7 +294,7 @@ Test_ProcSetAlignmentProbe(void)
                                  InfoClass,
                                  (PVOID)(ULONG_PTR)PsProcessInfoClass[InfoClass].AlignmentSET,
                                  PsProcessInfoClass[InfoClass].RequiredSizeSET - 1,
-                                 STATUS_INFO_LENGTH_MISMATCH);
+                                 PsProcessInfoClass[InfoClass].RequiredSizeSET == 0 ? STATUS_ACCESS_VIOLATION : STATUS_INFO_LENGTH_MISMATCH);
     }
 }
 

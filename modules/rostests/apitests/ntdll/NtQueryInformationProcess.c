@@ -361,7 +361,7 @@ Test_ProcQueryAlignmentProbe(void)
                                  InfoClass,
                                  (PVOID)(ULONG_PTR)PsProcessInfoClass[InfoClass].AlignmentQUERY,
                                  PsProcessInfoClass[InfoClass].RequiredSizeQUERY - 1,
-                                 STATUS_INFO_LENGTH_MISMATCH);
+                                 PsProcessInfoClass[InfoClass].RequiredSizeQUERY == 0 ? STATUS_ACCESS_VIOLATION : STATUS_INFO_LENGTH_MISMATCH);
     }
 }
 
