@@ -1217,7 +1217,6 @@ SepDuplicateToken(
                  */
                 SepRemoveUserGroupToken(AccessToken, GroupsIndex);
                 GroupsIndex--;
-                continue;
             }
         }
 
@@ -1243,7 +1242,6 @@ SepDuplicateToken(
                  */
                 SepRemovePrivilegeToken(AccessToken, PrivilegesIndex);
                 PrivilegesIndex--;
-                continue;
             }
         }
     }
