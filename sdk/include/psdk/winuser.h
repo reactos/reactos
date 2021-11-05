@@ -886,9 +886,6 @@ extern "C" {
 #define QS_MOUSEMOVE 2
 #define QS_PAINT 32
 #define QS_POSTMESSAGE 8
-#if (_WIN32_WINNT >= 0x0501)
-#define QS_RAWINPUT 1024
-#endif
 #define QS_SENDMESSAGE 64
 #define QS_TIMER 16
 
