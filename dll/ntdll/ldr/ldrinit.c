@@ -55,7 +55,7 @@ ULONG LdrpNumberOfTlsEntries;
 ULONG LdrpNumberOfProcessors;
 PVOID NtDllBase;
 extern LARGE_INTEGER RtlpTimeout;
-BOOLEAN RtlpTimeoutDisable;
+extern BOOLEAN RtlpTimeoutDisable;
 PVOID LdrpHeap;
 LIST_ENTRY LdrpHashTable[LDR_HASH_TABLE_ENTRIES];
 LIST_ENTRY LdrpDllNotificationList;
