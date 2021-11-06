@@ -571,7 +571,7 @@ HRESULT CFSDropTarget::_DoDrop(IDataObject *pDataObject,
                 LPWSTR pwszFileName = PathFindFileNameW(wszPath);
                 if (PathIsRootW(wszPath)) // Drive?
                 {
-                    hr = psfFrom->GetDisplayNameOf(apidl[i], 0, &strFile);
+                    hr = psfFrom->GetDisplayNameOf(apidl[i], SHGDN_NORMAL, &strFile);
                     if (FAILED_UNEXPECTEDLY(hr))
                         break;
 
