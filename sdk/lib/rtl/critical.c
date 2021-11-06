@@ -251,7 +251,7 @@ RtlpUnWaitCriticalSection(PRTL_CRITICAL_SECTION CriticalSection)
 }
 
 /*++
- * RtlpInitDeferedCriticalSection
+ * RtlpInitDeferredCriticalSection
  *
  *     Initializes the Critical Section implementation.
  *
@@ -267,7 +267,7 @@ RtlpUnWaitCriticalSection(PRTL_CRITICAL_SECTION CriticalSection)
  *--*/
 VOID
 NTAPI
-RtlpInitDeferedCriticalSection(VOID)
+RtlpInitDeferredCriticalSection(VOID)
 {
     /* Initialize the CS Protecting the List */
     RtlInitializeCriticalSection(&RtlCriticalSectionLock);

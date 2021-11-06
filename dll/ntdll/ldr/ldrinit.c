@@ -86,7 +86,7 @@ ULONG LdrpActiveUnloadCount;
 //extern LIST_ENTRY RtlCriticalSectionList;
 
 VOID NTAPI RtlpInitializeVectoredExceptionHandling(VOID);
-VOID NTAPI RtlpInitDeferedCriticalSection(VOID);
+VOID NTAPI RtlpInitDeferredCriticalSection(VOID);
 VOID NTAPI RtlInitializeHeapManager(VOID);
 
 ULONG RtlpDisableHeapLookaside; // TODO: Move to heap.c
@@ -1943,7 +1943,7 @@ LdrpInitializeProcess(IN PCONTEXT Context,
     }
 
     /* Initialize Critical Section Data */
-    RtlpInitDeferedCriticalSection();
+    RtlpInitDeferredCriticalSection();
 
     /* Initialize VEH Call lists */
     RtlpInitializeVectoredExceptionHandling();
