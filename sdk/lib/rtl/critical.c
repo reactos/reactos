@@ -158,14 +158,14 @@ RtlpWaitForCriticalSection(PRTL_CRITICAL_SECTION CriticalSection)
             Status = NtWaitForKeyedEvent(NULL,
                                          CriticalSection,
                                          FALSE,
-                                         &RtlpTimeout);
+                                         (RtlpTimeoutDisable ? NULL : &RtlpTimeout));
         }
         else
         {
             /* Wait on the Event */
             Status = NtWaitForSingleObject(CriticalSection->LockSemaphore,
                                            FALSE,
-                                           &RtlpTimeout);
+                                           (RtlpTimeoutDisable ? NULL : &RtlpTimeout));
         }
 
         /* We have Timed out */
