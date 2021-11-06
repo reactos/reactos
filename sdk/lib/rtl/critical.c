@@ -21,7 +21,9 @@ static LIST_ENTRY RtlCriticalSectionList = {&RtlCriticalSectionList, &RtlCritica
 static BOOLEAN RtlpCritSectInitialized = FALSE;
 static RTL_CRITICAL_SECTION_DEBUG RtlpStaticDebugInfo[MAX_STATIC_CS_DEBUG_OBJECTS];
 static BOOLEAN RtlpDebugInfoFreeList[MAX_STATIC_CS_DEBUG_OBJECTS];
+
 LARGE_INTEGER RtlpTimeout;
+BOOLEAN RtlpTimeoutDisable;
 
 extern BOOLEAN LdrpShutdownInProgress;
 extern HANDLE LdrpShutdownThreadId;
