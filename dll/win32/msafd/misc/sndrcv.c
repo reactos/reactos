@@ -173,6 +173,7 @@ WSPRecv(SOCKET Handle,
     HANDLE                  Event = NULL;
     HANDLE                  SockEvent;
     PSOCKET_INFORMATION     Socket;
+    BOOLEAN                 BlockMode;
 
     TRACE("Called (%x)\n", Handle);
 
@@ -202,6 +203,11 @@ WSPRecv(SOCKET Handle,
 
     if( !NT_SUCCESS(Status) )
         return -1;
+
+    /* HACK: change the Socket to Non Blocking. See CORE-12828. */
+    BlockMode = TRUE;
+    SetSocketInformation(Socket, AFD_INFO_BLOCKING_MODE, &BlockMode, NULL, NULL, NULL, NULL);
+    Socket->SharedData->NonBlocking = TRUE;
 
     /* Set up the Receive Structure */
     RecvInfo.BufferArray = (PAFD_WSABUF)lpBuffers;
@@ -292,12 +298,12 @@ WSPRecv(SOCKET Handle,
                                    0);
 
     /* Wait for completion of not overlapped */
-    if (Status == STATUS_PENDING && lpOverlapped == NULL)
+    if (Status == STATUS_PENDING)
     {
         /* It's up to the protocol to time out recv.  We must wait
          * until the protocol decides it's had enough.
          */
-        WaitForSingleObject(SockEvent, INFINITE);
+        WaitForSingleObject(SockEvent, (lpOverlapped || Socket->SharedData->NonBlocking) ? 0 : INFINITE);
         Status = IOSB->Status;
     }
 
