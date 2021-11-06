@@ -547,7 +547,8 @@ HRESULT CFSDropTarget::_DoDrop(IDataObject *pDataObject,
 
         if (bLinking)
         {
-            WCHAR wszSrcPath[MAX_PATH], wszSaveTo[MAX_PATH];
+            WCHAR wszSrcPath[MAX_PATH];
+            WCHAR wszTarget[MAX_PATH];
 
             TRACE("target path: %s\n", debugstr_w(m_sPathTarget));
 
@@ -626,7 +627,7 @@ HRESULT CFSDropTarget::_DoDrop(IDataObject *pDataObject,
                 }
 
                 // Create a pathname to save the new link.
-                _GetUniqueFileName(wszCombined, L".lnk", wszSaveTo, TRUE);
+                _GetUniqueFileName(wszCombined, L".lnk", wszTarget, TRUE);
 
                 CComPtr<IPersistFile> ppf;
                 if (fSourceIsLink)
@@ -660,11 +661,11 @@ HRESULT CFSDropTarget::_DoDrop(IDataObject *pDataObject,
                         break;
                 }
 
-                hr = ppf->Save(wszSaveTo, !fSourceIsLink);
+                hr = ppf->Save(wszTarget, !fSourceIsLink);
                 if (FAILED_UNEXPECTEDLY(hr))
                     break;
 
-                SHChangeNotify(SHCNE_CREATE, SHCNF_PATHW, wszSaveTo, NULL);
+                SHChangeNotify(SHCNE_CREATE, SHCNF_PATHW, wszTarget, NULL);
             }
         }
         else
