@@ -580,15 +580,17 @@ HRESULT CFSDropTarget::_DoDrop(IDataObject *pDataObject,
                     if (FAILED_UNEXPECTEDLY(hr))
                         break;
 
-                    // Delete ':' in wszDisplayName.
-                    LPWSTR pch0, pch1;
-                    for (pch0 = pch1 = wszDisplayName; *pch0; ++pch0)
+                    // Delete a ':' in wszDisplayName.
+                    LPWSTR pch0 = wcschr(wszDisplayName, L':'), pch1;
+                    if (pch0)
                     {
-                        if (*pch0 == L':')
-                            continue;
-                        *pch1++ = *pch0;
+                        pch1 = pch0;
+                        for (++pch0; *pch0; ++pch0, ++pch1)
+                        {
+                            *pch1 = *pch0;
+                        }
+                        *pch1 = 0;
                     }
-                    *pch1 = 0;
 
                     pwszFileName = wszDisplayName; // Use wszDisplayName
                 }
