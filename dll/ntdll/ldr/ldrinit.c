@@ -1839,7 +1839,7 @@ LdrpInitializeProcess(IN PCONTEXT Context,
     /* ReactOS specific: do not clear it. (Windows starts doing the same in later versions) */
     //Peb->pShimData = NULL;
 
-    /* Save the number of processors and CS Timeout */
+    /* Save the number of processors and CS timeout */
     LdrpNumberOfProcessors = Peb->NumberOfProcessors;
     RtlpTimeout = Peb->CriticalSectionTimeout;
 
@@ -1894,8 +1894,9 @@ LdrpInitializeProcess(IN PCONTEXT Context,
         if (VALID_CONFIG_FIELD(GlobalFlagsClear) && LoadConfig->GlobalFlagsClear)
             Peb->NtGlobalFlag &= ~LoadConfig->GlobalFlagsClear;
 
+        /* Convert the default CS timeout from milliseconds to 100ns units */
         if (VALID_CONFIG_FIELD(CriticalSectionDefaultTimeout) && LoadConfig->CriticalSectionDefaultTimeout)
-            RtlpTimeout.QuadPart = Int32x32To64(LoadConfig->CriticalSectionDefaultTimeout, -10000000);
+            RtlpTimeout.QuadPart = Int32x32To64(LoadConfig->CriticalSectionDefaultTimeout, -10000);
 
         if (VALID_CONFIG_FIELD(DeCommitFreeBlockThreshold) && LoadConfig->DeCommitFreeBlockThreshold)
             HeapParameters.DeCommitFreeBlockThreshold = LoadConfig->DeCommitFreeBlockThreshold;
@@ -1935,12 +1936,9 @@ LdrpInitializeProcess(IN PCONTEXT Context,
                 &CommandLine);
     }
 
-    /* If the timeout is too long */
+    /* If the CS timeout is longer than 1 hour, disable it */
     if (RtlpTimeout.QuadPart < Int32x32To64(3600, -10000000))
-    {
-        /* Then disable CS Timeout */
         RtlpTimeoutDisable = TRUE;
-    }
 
     /* Initialize Critical Section Data */
     RtlpInitDeferredCriticalSection();
