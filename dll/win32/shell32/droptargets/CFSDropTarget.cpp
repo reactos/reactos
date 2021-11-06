@@ -547,13 +547,12 @@ HRESULT CFSDropTarget::_DoDrop(IDataObject *pDataObject,
 
         if (bLinking)
         {
-            WCHAR wszSrcPath[MAX_PATH];
+            WCHAR wszPath[MAX_PATH];
             WCHAR wszTarget[MAX_PATH];
 
-            TRACE("target path: %s\n", debugstr_w(m_sPathTarget));
+            TRACE("target path = %s\n", debugstr_w(m_sPathTarget));
 
-            // We need to create a link for each pidl in the copied items,
-            // so step through the pidls from the clipboard.
+            /* We need to create a link for each pidl in the copied items, so step through the pidls from the clipboard */
             for (UINT i = 0; i < lpcida->cidl; i++)
             {
                 // Find out which file we're linking.
@@ -562,15 +561,15 @@ HRESULT CFSDropTarget::_DoDrop(IDataObject *pDataObject,
                 if (FAILED_UNEXPECTEDLY(hr))
                     break;
 
-                hr = StrRetToBufW(&strFile, apidl[i], wszSrcPath, _countof(wszSrcPath));
+                hr = StrRetToBufW(&strFile, apidl[i], wszPath, _countof(wszPath));
                 if (FAILED_UNEXPECTEDLY(hr))
                     break;
 
-                TRACE("source path: %s\n", debugstr_w(wszSrcPath));
+                TRACE("source path = %s\n", debugstr_w(wszPath));
 
                 WCHAR wszDisplayName[MAX_PATH];
-                LPWSTR pwszFileName = PathFindFileNameW(wszSrcPath);
-                if (PathIsRootW(wszSrcPath)) // Drive?
+                LPWSTR pwszFileName = PathFindFileNameW(wszPath);
+                if (PathIsRootW(wszPath)) // Drive?
                 {
                     hr = psfFrom->GetDisplayNameOf(apidl[i], 0, &strFile);
                     if (FAILED_UNEXPECTEDLY(hr))
@@ -594,13 +593,13 @@ HRESULT CFSDropTarget::_DoDrop(IDataObject *pDataObject,
 
                     pwszFileName = wszDisplayName; // Use wszDisplayName
                 }
-                else if (wszSrcPath[0] == L':' && wszSrcPath[1] == L':') // ::{GUID}?
+                else if (wszPath[0] == L':' && wszPath[1] == L':') // ::{GUID}?
                 {
                     CLSID clsid;
-                    hr = ::CLSIDFromString(&wszSrcPath[2], &clsid);
+                    hr = ::CLSIDFromString(&wszPath[2], &clsid);
                     if (SUCCEEDED(hr))
                     {
-                        LPITEMIDLIST pidl = ILCreateFromPathW(wszSrcPath);
+                        LPITEMIDLIST pidl = ILCreateFromPathW(wszPath);
                         if (pidl)
                         {
                             SHFILEINFOW fi = { NULL };
@@ -622,7 +621,7 @@ HRESULT CFSDropTarget::_DoDrop(IDataObject *pDataObject,
 
                 // Check to see if the source is a link
                 BOOL fSourceIsLink = FALSE;
-                if (!wcsicmp(PathFindExtensionW(wszSrcPath), L".lnk"))
+                if (!wcsicmp(PathFindExtensionW(wszPath), L".lnk"))
                 {
                     fSourceIsLink = TRUE;
                     PathRemoveExtensionW(wszCombined);
@@ -634,7 +633,7 @@ HRESULT CFSDropTarget::_DoDrop(IDataObject *pDataObject,
                 CComPtr<IPersistFile> ppf;
                 if (fSourceIsLink)
                 {
-                    hr = IShellLink_ConstructFromPath(wszSrcPath, IID_PPV_ARG(IPersistFile, &ppf));
+                    hr = IShellLink_ConstructFromPath(wszPath, IID_PPV_ARG(IPersistFile, &ppf));
                     if (FAILED_UNEXPECTEDLY(hr))
                         break;
                 }
@@ -646,11 +645,11 @@ HRESULT CFSDropTarget::_DoDrop(IDataObject *pDataObject,
                         break;
 
                     WCHAR szDirPath[MAX_PATH], *pwszFile;
-                    GetFullPathName(wszSrcPath, MAX_PATH, szDirPath, &pwszFile);
+                    GetFullPathName(wszPath, MAX_PATH, szDirPath, &pwszFile);
                     if (pwszFile)
                         pwszFile[0] = 0;
 
-                    hr = pLink->SetPath(wszSrcPath);
+                    hr = pLink->SetPath(wszPath);
                     if (FAILED_UNEXPECTEDLY(hr))
                         break;
 
