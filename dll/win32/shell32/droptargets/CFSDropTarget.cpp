@@ -583,12 +583,10 @@ HRESULT CFSDropTarget::_DoDrop(IDataObject *pDataObject,
                     LPWSTR pch0 = wcschr(wszDisplayName, L':'), pch1;
                     if (pch0)
                     {
-                        pch1 = pch0;
-                        for (++pch0; *pch0; ++pch0, ++pch1)
+                        do
                         {
-                            *pch1 = *pch0;
-                        }
-                        *pch1 = 0;
+                            *pch0 = *(pch0+1);
+                        } while (*++pch0);
                     }
 
                     pwszFileName = wszDisplayName; // Use wszDisplayName
