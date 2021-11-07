@@ -4,7 +4,7 @@
  * FILE:            base/system/winlogon/sas.c
  * PURPOSE:         Secure Attention Sequence
  * PROGRAMMERS:     Thomas Weidenmueller (w3seek@users.sourceforge.net)
- *                  Hervé Poussineau (hpoussin@reactos.org)
+ *                  HervÃ© Poussineau (hpoussin@reactos.org)
  *                  Arnav Bhatt (arnavbhatt288@gmail.com)
  * UPDATE HISTORY:
  *                  Created 28/03/2004
@@ -279,95 +279,24 @@ PlaySoundRoutine(
     return Ret;
 }
 
-DWORD
-WINAPI
-PlayLogonSoundThread(
-    IN LPVOID lpParameter)
+DWORD WINAPI PlayLogonSoundThread(LPVOID lpParameter)
 {
-    BYTE TokenUserBuffer[256];
-    PTOKEN_USER pTokenUser = (TOKEN_USER*)TokenUserBuffer;
-    ULONG Length;
-    HKEY hKey;
-    WCHAR wszBuffer[MAX_PATH] = {0};
-    WCHAR wszDest[MAX_PATH];
-    DWORD dwSize = sizeof(wszBuffer), dwType;
+    PWLSESSION Session = (PWLSESSION)lpParameter;
+
+    LPCWSTR lpRegSubKey = L"AppEvents\\Schemes\\Apps\\.Default\\WindowsLogon";
+    HKEY hHKCU, hRegKey, hRegSnd;
+    LPWSTR lpRegVal, lpSndPath;
+    DWORD dwRegValType, dwRegValSize, dwSndPathLen;
+    LONG lRegStatus;
+
     SERVICE_STATUS_PROCESS Info;
-    UNICODE_STRING SidString;
-    NTSTATUS Status;
+    DWORD dwSize;
     ULONG Index = 0;
     SC_HANDLE hSCManager, hService;
 
-    //
-    // FIXME: Isn't it possible to *JUST* impersonate the current user
-    // *AND* open its HKCU??
-    //
-
-    /* Get SID of current user */
-    Status = NtQueryInformationToken((HANDLE)lpParameter,
-                                     TokenUser,
-                                     TokenUserBuffer,
-                                     sizeof(TokenUserBuffer),
-                                     &Length);
-    if (!NT_SUCCESS(Status))
-    {
-        ERR("NtQueryInformationToken failed: %x!\n", Status);
-        return 0;
-    }
-
-    /* Convert SID to string */
-    RtlInitEmptyUnicodeString(&SidString, wszBuffer, sizeof(wszBuffer));
-    Status = RtlConvertSidToUnicodeString(&SidString, pTokenUser->User.Sid, FALSE);
-    if (!NT_SUCCESS(Status))
-    {
-        ERR("RtlConvertSidToUnicodeString failed: %x!\n", Status);
-        return 0;
-    }
-
-    /* Build path to logon sound registry key.
-       Note: We can't use HKCU here, because Winlogon is owned by SYSTEM user */
-    if (FAILED(StringCbCopyW(wszBuffer + SidString.Length/sizeof(WCHAR),
-                             sizeof(wszBuffer) - SidString.Length,
-                             L"\\AppEvents\\Schemes\\Apps\\.Default\\WindowsLogon\\.Current")))
-    {
-        /* SID is too long. Should not happen. */
-        ERR("StringCbCopyW failed!\n");
-        return 0;
-    }
-
-    /* Open registry key and query sound path */
-    if (RegOpenKeyExW(HKEY_USERS, wszBuffer, 0, KEY_READ, &hKey) != ERROR_SUCCESS)
-    {
-        ERR("RegOpenKeyExW(%ls) failed!\n", wszBuffer);
-        return 0;
-    }
-
-    if (RegQueryValueExW(hKey, NULL, NULL, &dwType,
-                      (LPBYTE)wszBuffer, &dwSize) != ERROR_SUCCESS ||
-        (dwType != REG_SZ && dwType != REG_EXPAND_SZ))
-    {
-        ERR("RegQueryValueExW failed!\n");
-        RegCloseKey(hKey);
-        return 0;
-    }
-
-    RegCloseKey(hKey);
-
-    if (!wszBuffer[0])
-    {
-        /* No sound has been set */
-        ERR("No sound has been set\n");
-        return 0;
-    }
-
-    /* Expand environment variables */
-    if (!ExpandEnvironmentStringsW(wszBuffer, wszDest, MAX_PATH))
-    {
-        ERR("ExpandEnvironmentStringsW failed!\n");
-        return 0;
-    }
-
     /* Open the service manager */
     hSCManager = OpenSCManager(NULL, NULL, SC_MANAGER_CONNECT);
+
     if (!hSCManager)
     {
         ERR("OpenSCManager failed (%x)\n", GetLastError());
@@ -376,11 +305,14 @@ PlayLogonSoundThread(
 
     /* Open the wdmaud service */
     hService = OpenServiceW(hSCManager, L"wdmaud", GENERIC_READ);
+
     if (!hService)
     {
         /* The service is not installed */
         TRACE("Failed to open wdmaud service (%x)\n", GetLastError());
+
         CloseServiceHandle(hSCManager);
+
         return 0;
     }
 
@@ -394,7 +326,9 @@ PlayLogonSoundThread(
         }
 
         if (Info.dwCurrentState == SERVICE_RUNNING)
+        {
             break;
+        }
 
         Sleep(1000);
 
@@ -411,21 +345,239 @@ PlayLogonSoundThread(
     }
 
     /* Sound subsystem is running. Play logon sound. */
-    TRACE("Playing logon sound: %ls\n", wszDest);
-    PlaySoundRoutine(wszDest, TRUE, SND_FILENAME);
+
+    /* Impersonate current user */
+    if (!ImpersonateLoggedOnUser(Session->UserToken))
+    {
+        return 0;
+    }
+
+    /* Open user's HKCU */
+    lRegStatus = RegOpenCurrentUser(KEY_QUERY_VALUE, &hHKCU);
+
+    if (lRegStatus != ERROR_SUCCESS)
+    {
+        RevertToSelf();
+        return 0;
+    }
+
+    RevertToSelf();
+
+    /* Open registry key */
+    lRegStatus = RegOpenKeyExW(hHKCU, lpRegSubKey, 0, KEY_QUERY_VALUE, &hRegKey);
+
+    RegCloseKey(hHKCU);
+
+    if (lRegStatus != ERROR_SUCCESS)
+    {
+        return 0;
+    }
+
+    /* Open .Current */
+    lRegStatus = RegOpenKeyExW(hRegKey, L".Current", 0, KEY_QUERY_VALUE, &hRegSnd);
+
+    if (lRegStatus != ERROR_SUCCESS)
+    {
+        /* If fail then open .Default */
+        lRegStatus = RegOpenKeyExW(hRegKey, L".Default", 0, KEY_QUERY_VALUE, &hRegSnd);
+
+        RegCloseKey(hRegKey);
+
+        if (lRegStatus != ERROR_SUCCESS)
+        {
+            return 0;
+        }
+    }
+
+    RegCloseKey(hRegKey);
+
+    /* Get registry value size */
+    lRegStatus = RegQueryValueExW(hRegSnd, NULL, NULL, &dwRegValType, NULL, &dwRegValSize);
+
+    /* Check whether the type is valid */
+    if (lRegStatus != ERROR_SUCCESS || (dwRegValType != REG_SZ && dwRegValType != REG_EXPAND_SZ))
+    {
+        RegCloseKey(hRegSnd);
+        return 0;
+    }
+
+    /* Allocate buffer for registry value */
+    lpRegVal = HeapAlloc(GetProcessHeap(), 0, (SIZE_T)dwRegValSize);
+
+    if (!lpRegVal)
+    {
+        RegCloseKey(hRegSnd);
+        return 0;
+    }
+
+    /* Get registry value */
+    RegQueryValueExW(hRegSnd, NULL, NULL, &dwRegValType, (LPBYTE)lpRegVal, &dwRegValSize);
+
+    RegCloseKey(hRegSnd);
+
+    /* Get full sound path length (including the terminating null character) */
+    dwSndPathLen = ExpandEnvironmentStringsW(lpRegVal, NULL, 0);
+
+    if (dwSndPathLen == 0)
+    {
+        HeapFree(GetProcessHeap(), 0, lpRegVal);
+        return 0;
+    }
+
+    /* Allocate buffer for sound path */
+    lpSndPath = HeapAlloc(GetProcessHeap(), 0, (SIZE_T)(dwSndPathLen * sizeof(WCHAR)));
+
+    if (!lpSndPath)
+    {
+        HeapFree(GetProcessHeap(), 0, lpRegVal);
+        return 0;
+    }
+
+    ExpandEnvironmentStringsW(lpRegVal, lpSndPath, dwSndPathLen);
+
+    TRACE("Playing logon sound: %ls\n", lpSndPath);
+
+    /* Play sound */
+    PlaySoundRoutine(lpSndPath, TRUE, SND_FILENAME | SND_NODEFAULT);
+
+    HeapFree(GetProcessHeap(), 0, lpRegVal);
+    HeapFree(GetProcessHeap(), 0, lpSndPath);
+
     return 0;
 }
 
-static
-VOID
-PlayLogonSound(
-    IN OUT PWLSESSION Session)
+DWORD WINAPI PlayLogoffSoundThread(LPVOID lpParameter)
+{
+    PWLSESSION Session = (PWLSESSION)lpParameter;
+
+    LPCWSTR lpRegSubKey = L"AppEvents\\Schemes\\Apps\\.Default\\WindowsLogoff";
+    HKEY hHKCU, hRegKey, hRegSnd;
+    LPWSTR lpRegVal, lpSndPath;
+    DWORD dwRegValType, dwRegValSize, dwSndPathLen;
+    LONG lRegStatus;
+
+    /* Impersonate current user */
+    if (!ImpersonateLoggedOnUser(Session->UserToken))
+    {
+        return 0;
+    }
+
+    /* Open user's HKCU */
+    lRegStatus = RegOpenCurrentUser(KEY_QUERY_VALUE, &hHKCU);
+
+    if (lRegStatus != ERROR_SUCCESS)
+    {
+        RevertToSelf();
+        return 0;
+    }
+
+    RevertToSelf();
+
+    /* Open registry key */
+    lRegStatus = RegOpenKeyExW(hHKCU, lpRegSubKey, 0, KEY_QUERY_VALUE, &hRegKey);
+
+    RegCloseKey(hHKCU);
+
+    if (lRegStatus != ERROR_SUCCESS)
+    {
+        return 0;
+    }
+
+    /* Open .Current */
+    lRegStatus = RegOpenKeyExW(hRegKey, L".Current", 0, KEY_QUERY_VALUE, &hRegSnd);
+
+    if (lRegStatus != ERROR_SUCCESS)
+    {
+        /* If fail then open .Default */
+        lRegStatus = RegOpenKeyExW(hRegKey, L".Default", 0, KEY_QUERY_VALUE, &hRegSnd);
+
+        RegCloseKey(hRegKey);
+
+        if (lRegStatus != ERROR_SUCCESS)
+        {
+            return 0;
+        }
+    }
+
+    RegCloseKey(hRegKey);
+
+    /* Get registry value size */
+    lRegStatus = RegQueryValueExW(hRegSnd, NULL, NULL, &dwRegValType, NULL, &dwRegValSize);
+
+    /* Check whether the type is valid */
+    if (lRegStatus != ERROR_SUCCESS || (dwRegValType != REG_SZ && dwRegValType != REG_EXPAND_SZ))
+    {
+        RegCloseKey(hRegSnd);
+        return 0;
+    }
+
+    /* Allocate buffer for registry value */
+    lpRegVal = HeapAlloc(GetProcessHeap(), 0, (SIZE_T)dwRegValSize);
+
+    if (!lpRegVal)
+    {
+        RegCloseKey(hRegSnd);
+        return 0;
+    }
+
+    /* Get registry value */
+    RegQueryValueExW(hRegSnd, NULL, NULL, &dwRegValType, (LPBYTE)lpRegVal, &dwRegValSize);
+
+    RegCloseKey(hRegSnd);
+
+    /* Get full sound path length (including the terminating null character) */
+    dwSndPathLen = ExpandEnvironmentStringsW(lpRegVal, NULL, 0);
+
+    if (dwSndPathLen == 0)
+    {
+        HeapFree(GetProcessHeap(), 0, lpRegVal);
+        return 0;
+    }
+
+    /* Allocate buffer for sound path */
+    lpSndPath = HeapAlloc(GetProcessHeap(), 0, (SIZE_T)(dwSndPathLen * sizeof(WCHAR)));
+
+    if (!lpSndPath)
+    {
+        HeapFree(GetProcessHeap(), 0, lpRegVal);
+        return 0;
+    }
+
+    ExpandEnvironmentStringsW(lpRegVal, lpSndPath, dwSndPathLen);
+
+    TRACE("Playing logoff sound: %ls\n", lpSndPath);
+
+    /* Play sound */
+    PlaySoundRoutine(lpSndPath, TRUE, SND_FILENAME | SND_NODEFAULT);
+
+    HeapFree(GetProcessHeap(), 0, lpRegVal);
+    HeapFree(GetProcessHeap(), 0, lpSndPath);
+
+    return 0;
+}
+
+static void PlayLogonSound(PWLSESSION Session)
 {
     HANDLE hThread;
 
-    hThread = CreateThread(NULL, 0, PlayLogonSoundThread, (PVOID)Session->UserToken, 0, NULL);
+    hThread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)PlayLogonSoundThread, (LPVOID)Session, 0, NULL);
+
     if (hThread)
+    {
         CloseHandle(hThread);
+    }
+}
+
+static void PlayLogoffSound(PWLSESSION Session)
+{
+    HANDLE hThread;
+
+    hThread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)PlayLogoffSoundThread, (LPVOID)Session, 0, NULL);
+
+    if (hThread)
+    {
+        CloseHandle(hThread);
+    }
 }
 
 static BOOL
@@ -951,6 +1103,7 @@ HandleLogoff(
     SwitchDesktop(Session->WinlogonDesktop);
 
     // TODO: Play logoff sound!
+    PlayLogoffSound(Session);
 
     SetWindowStationUser(Session->InteractiveWindowStation,
                          &LuidNone, NULL, 0);
@@ -1344,38 +1497,142 @@ UnregisterHotKeys(
     return TRUE;
 }
 
-BOOL
-WINAPI
-HandleMessageBeep(UINT uType)
+BOOL WINAPI HandleMessageBeep(PWLSESSION Session, UINT uType)
 {
-    LPWSTR EventName;
+    LPCWSTR lpRegSubKey;
+    HKEY hHKCU, hRegKey, hRegSnd;
+    LPWSTR lpRegVal, lpSndPath;
+    DWORD dwRegValType, dwRegValSize, dwSndPathLen;
+    LONG lRegStatus;
+    BOOL bRet;
 
-    switch(uType)
+    switch (uType)
     {
-    case 0xFFFFFFFF:
-        EventName = NULL;
-        break;
-    case MB_OK:
-        EventName = L"SystemDefault";
-        break;
-    case MB_ICONASTERISK:
-        EventName = L"SystemAsterisk";
-        break;
-    case MB_ICONEXCLAMATION:
-        EventName = L"SystemExclamation";
-        break;
-    case MB_ICONHAND:
-        EventName = L"SystemHand";
-        break;
-    case MB_ICONQUESTION:
-        EventName = L"SystemQuestion";
-        break;
-    default:
-        WARN("Unhandled type %d\n", uType);
-        EventName = L"SystemDefault";
+        case 0xFFFFFFFF:
+            return Beep(500, 500);
+
+        /* SystemDefault */
+        case MB_OK:
+            lpRegSubKey = L"AppEvents\\Schemes\\Apps\\.Default\\SystemDefault";
+            break;
+
+        case MB_ICONINFORMATION: // case MB_ICONASTERISK:
+            lpRegSubKey = L"AppEvents\\Schemes\\Apps\\.Default\\SystemAsterisk";
+            break;
+
+        case MB_ICONEXCLAMATION: // case MB_ICONWARNING:
+            lpRegSubKey = L"AppEvents\\Schemes\\Apps\\.Default\\SystemExclamation";
+            break;
+
+        case MB_ICONERROR: // case MB_ICONHAND: case MB_ICONSTOP:
+            lpRegSubKey = L"AppEvents\\Schemes\\Apps\\.Default\\SystemHand";
+            break;
+
+        case MB_ICONQUESTION:
+            lpRegSubKey = L"AppEvents\\Schemes\\Apps\\.Default\\SystemQuestion";
+            break;
+
+        default:
+            WARN("Unhandled type %d\n", uType);
+            lpRegSubKey = L"AppEvents\\Schemes\\Apps\\.Default\\SystemDefault";
     }
 
-    return PlaySoundRoutine(EventName, FALSE, SND_ALIAS | SND_NOWAIT | SND_NOSTOP | SND_ASYNC);
+    /* Impersonate current user */
+    if (!ImpersonateLoggedOnUser(Session->UserToken))
+    {
+        return FALSE;
+    }
+
+    /* Open user's HKCU */
+    lRegStatus = RegOpenCurrentUser(KEY_QUERY_VALUE, &hHKCU);
+
+    if (lRegStatus != ERROR_SUCCESS)
+    {
+        RevertToSelf();
+        return FALSE;
+    }
+
+    RevertToSelf();
+
+    /* Open registry key */
+    lRegStatus = RegOpenKeyExW(hHKCU, lpRegSubKey, 0, KEY_QUERY_VALUE, &hRegKey);
+
+    RegCloseKey(hHKCU);
+
+    if (lRegStatus != ERROR_SUCCESS)
+    {
+        return FALSE;
+    }
+
+    /* Open .Current */
+    lRegStatus = RegOpenKeyExW(hRegKey, L".Current", 0, KEY_QUERY_VALUE, &hRegSnd);
+
+    if (lRegStatus != ERROR_SUCCESS)
+    {
+        /* If fail then open .Default */
+        lRegStatus = RegOpenKeyExW(hRegKey, L".Default", 0, KEY_QUERY_VALUE, &hRegSnd);
+
+        RegCloseKey(hRegKey);
+
+        if (lRegStatus != ERROR_SUCCESS)
+        {
+            return FALSE;
+        }
+    }
+
+    RegCloseKey(hRegKey);
+
+    /* Get registry value size */
+    lRegStatus = RegQueryValueExW(hRegSnd, NULL, NULL, &dwRegValType, NULL, &dwRegValSize);
+
+    /* Check whether the type is valid */
+    if (lRegStatus != ERROR_SUCCESS || (dwRegValType != REG_SZ && dwRegValType != REG_EXPAND_SZ))
+    {
+        RegCloseKey(hRegSnd);
+        return FALSE;
+    }
+
+    /* Allocate buffer for registry value */
+    lpRegVal = HeapAlloc(GetProcessHeap(), 0, (SIZE_T)dwRegValSize);
+
+    if (!lpRegVal)
+    {
+        RegCloseKey(hRegSnd);
+        return FALSE;
+    }
+
+    /* Get registry value */
+    RegQueryValueExW(hRegSnd, NULL, NULL, &dwRegValType, (LPBYTE)lpRegVal, &dwRegValSize);
+
+    RegCloseKey(hRegSnd);
+
+    /* Get full sound path length (including the terminating null character) */
+    dwSndPathLen = ExpandEnvironmentStringsW(lpRegVal, NULL, 0);
+
+    if (dwSndPathLen == 0)
+    {
+        HeapFree(GetProcessHeap(), 0, lpRegVal);
+        return FALSE;
+    }
+
+    /* Allocate buffer for sound path */
+    lpSndPath = HeapAlloc(GetProcessHeap(), 0, (SIZE_T)(dwSndPathLen * sizeof(WCHAR)));
+
+    if (!lpSndPath)
+    {
+        HeapFree(GetProcessHeap(), 0, lpRegVal);
+        return FALSE;
+    }
+
+    ExpandEnvironmentStringsW(lpRegVal, lpSndPath, dwSndPathLen);
+
+    /* Play sound */
+    bRet = PlaySoundRoutine(lpSndPath, FALSE, SND_FILENAME | SND_ASYNC | SND_NODEFAULT);
+
+    HeapFree(GetProcessHeap(), 0, lpRegVal);
+    HeapFree(GetProcessHeap(), 0, lpSndPath);
+
+    return bRet;
 }
 
 static
@@ -1446,7 +1703,7 @@ SASWindowProc(
             {
                 case LN_MESSAGE_BEEP:
                 {
-                    return HandleMessageBeep(lParam);
+                    return HandleMessageBeep(Session, lParam);
                 }
                 case LN_SHELL_EXITED:
                 {
