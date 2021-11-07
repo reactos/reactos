@@ -559,16 +559,16 @@ DWORD WINAPI PlayLogoffSoundThread(LPVOID lpParameter)
     return 0;
 }
 
-static
-VOID
-PlayLogonSound(
-    IN OUT PWLSESSION Session)
+static void PlayLogonSound(PWLSESSION Session)
 {
     HANDLE hThread;
 
-    hThread = CreateThread(NULL, 0, PlayLogonSoundThread, (PVOID)Session, 0, NULL);
+    hThread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)PlayLogonSoundThread, (LPVOID)Session, 0, NULL);
+
     if (hThread)
+    {
         CloseHandle(hThread);
+    }
 }
 
 static void PlayLogoffSound(PWLSESSION Session)
