@@ -72,35 +72,35 @@ extern ULONG_PTR ExpDebuggerPageIn;
 VOID NTAPI ExpDebuggerWorker(IN PVOID Context);
 
 #ifdef _WIN64
-#define HANDLE_LOW_BITS (PAGE_SHIFT - 4)
-#define HANDLE_HIGH_BITS (PAGE_SHIFT - 3)
+#define HANDLE_LOW_BITS     (PAGE_SHIFT - 4)
+#define HANDLE_HIGH_BITS    (PAGE_SHIFT - 3)
 #else
-#define HANDLE_LOW_BITS (PAGE_SHIFT - 3)
-#define HANDLE_HIGH_BITS (PAGE_SHIFT - 2)
+#define HANDLE_LOW_BITS     (PAGE_SHIFT - 3)
+#define HANDLE_HIGH_BITS    (PAGE_SHIFT - 2)
 #endif
-#define HANDLE_TAG_BITS (2)
-#define HANDLE_INDEX_BITS (HANDLE_LOW_BITS + 2*HANDLE_HIGH_BITS)
-#define KERNEL_FLAG_BITS (sizeof(PVOID)*8 - HANDLE_INDEX_BITS - HANDLE_TAG_BITS)
+#define HANDLE_TAG_BITS     (2)
+#define HANDLE_INDEX_BITS   (HANDLE_LOW_BITS + 2*HANDLE_HIGH_BITS)
+#define KERNEL_FLAG_BITS    (sizeof(PVOID)*8 - HANDLE_INDEX_BITS - HANDLE_TAG_BITS)
 
 typedef union _EXHANDLE
 {
-     struct
-     {
-         ULONG_PTR TagBits:     HANDLE_TAG_BITS;
-         ULONG_PTR Index:       HANDLE_INDEX_BITS;
-         ULONG_PTR KernelFlag : KERNEL_FLAG_BITS;
-     };
-     struct
-     {
-         ULONG_PTR TagBits2:    HANDLE_TAG_BITS;
-         ULONG_PTR LowIndex:    HANDLE_LOW_BITS;
-         ULONG_PTR MidIndex:    HANDLE_HIGH_BITS;
-         ULONG_PTR HighIndex:   HANDLE_HIGH_BITS;
-         ULONG_PTR KernelFlag2: KERNEL_FLAG_BITS;
-     };
-     HANDLE GenericHandleOverlay;
-     ULONG_PTR Value;
-     ULONG AsULONG;
+    struct
+    {
+        ULONG_PTR TagBits:      HANDLE_TAG_BITS;
+        ULONG_PTR Index:        HANDLE_INDEX_BITS;
+        ULONG_PTR KernelFlag:   KERNEL_FLAG_BITS;
+    };
+    struct
+    {
+        ULONG_PTR TagBits2:     HANDLE_TAG_BITS;
+        ULONG_PTR LowIndex:     HANDLE_LOW_BITS;
+        ULONG_PTR MidIndex:     HANDLE_HIGH_BITS;
+        ULONG_PTR HighIndex:    HANDLE_HIGH_BITS;
+        ULONG_PTR KernelFlag2:  KERNEL_FLAG_BITS;
+    };
+    HANDLE GenericHandleOverlay;
+    ULONG_PTR Value;
+    ULONG AsULONG;
 } EXHANDLE, *PEXHANDLE;
 
 typedef struct _ETIMER
@@ -131,12 +131,12 @@ typedef struct _HARDERROR_USER_PARAMETERS
 
 #define MAX_FAST_REFS           7
 
-#define ExAcquireRundownProtection                      _ExAcquireRundownProtection
-#define ExReleaseRundownProtection                      _ExReleaseRundownProtection
-#define ExInitializeRundownProtection                   _ExInitializeRundownProtection
-#define ExWaitForRundownProtectionRelease               _ExWaitForRundownProtectionRelease
-#define ExRundownCompleted                              _ExRundownCompleted
-#define ExGetPreviousMode                               KeGetPreviousMode
+#define ExAcquireRundownProtection          _ExAcquireRundownProtection
+#define ExReleaseRundownProtection          _ExReleaseRundownProtection
+#define ExInitializeRundownProtection       _ExInitializeRundownProtection
+#define ExWaitForRundownProtectionRelease   _ExWaitForRundownProtectionRelease
+#define ExRundownCompleted                  _ExRundownCompleted
+#define ExGetPreviousMode                   KeGetPreviousMode
 
 
 //
@@ -159,9 +159,9 @@ typedef struct _HARDERROR_USER_PARAMETERS
 #define MAX_MID_INDEX       (MID_LEVEL_ENTRIES * LOW_LEVEL_ENTRIES)
 #define MAX_HIGH_INDEX      (MID_LEVEL_ENTRIES * MID_LEVEL_ENTRIES * LOW_LEVEL_ENTRIES)
 
-#define ExpChangeRundown(x, y, z) (ULONG_PTR)InterlockedCompareExchangePointer(&x->Ptr, (PVOID)y, (PVOID)z)
-#define ExpChangePushlock(x, y, z) InterlockedCompareExchangePointer((PVOID*)x, (PVOID)y, (PVOID)z)
-#define ExpSetRundown(x, y) InterlockedExchangePointer(&x->Ptr, (PVOID)y)
+#define ExpChangeRundown(x, y, z)   (ULONG_PTR)InterlockedCompareExchangePointer(&x->Ptr, (PVOID)y, (PVOID)z)
+#define ExpChangePushlock(x, y, z)  InterlockedCompareExchangePointer((PVOID*)x, (PVOID)y, (PVOID)z)
+#define ExpSetRundown(x, y)         InterlockedExchangePointer(&x->Ptr, (PVOID)y)
 
 NTSTATUS
 NTAPI
