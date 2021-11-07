@@ -42,6 +42,13 @@ typedef struct tagLOGOFF_SHUTDOWN_DATA
     PWLSESSION Session;
 } LOGOFF_SHUTDOWN_DATA, *PLOGOFF_SHUTDOWN_DATA;
 
+typedef struct tagLOGON_PLAYSOUND_DATA
+{
+    BOOL IsLogon;
+    PWLSESSION Session;
+
+} LOGON_PLAYSOUND_DATA, *PLOGON_PLAYSOUND_DATA;
+
 static BOOL ExitReactOSInProgress = FALSE;
 
 LUID LuidNone = {0, 0};
@@ -279,14 +286,11 @@ PlaySoundRoutine(
     return Ret;
 }
 
-DWORD
-WINAPI
-PlayLogonSoundThread(
-    IN LPVOID lpParameter)
+DWORD WINAPI PlayLogonSoundThread(LPVOID lpParameter)
 {
-    PWLSESSION Session = (PWLSESSION)lpParameter;
+    PLOGON_PLAYSOUND_DATA LPSData = (PLOGON_PLAYSOUND_DATA)lpParameter;
 
-    LPCWSTR lpRegSubKey = L"AppEvents\\Schemes\\Apps\\.Default\\WindowsLogon";
+    LPCWSTR lpRegSubKey;
     HKEY hHKCU, hRegKey, hRegSnd;
     LPWSTR lpRegVal, lpSndPath;
     DWORD dwRegValType, dwRegValSize, dwSndPathLen;
@@ -297,60 +301,70 @@ PlayLogonSoundThread(
     ULONG Index = 0;
     SC_HANDLE hSCManager, hService;
 
-    /* Open the service manager */
-    hSCManager = OpenSCManager(NULL, NULL, SC_MANAGER_CONNECT);
-
-    if (!hSCManager)
+    if (LPSData->IsLogon)
     {
-        ERR("OpenSCManager failed (%x)\n", GetLastError());
-        return 0;
-    }
+        /* Open the service manager */
+        hSCManager = OpenSCManager(NULL, NULL, SC_MANAGER_CONNECT);
 
-    /* Open the wdmaud service */
-    hService = OpenServiceW(hSCManager, L"wdmaud", GENERIC_READ);
+        if (!hSCManager)
+        {
+            ERR("OpenSCManager failed (%x)\n", GetLastError());
+            return 0;
+        }
 
-    if (!hService)
-    {
-        /* The service is not installed */
-        TRACE("Failed to open wdmaud service (%x)\n", GetLastError());
+        /* Open the wdmaud service */
+        hService = OpenServiceW(hSCManager, L"wdmaud", GENERIC_READ);
 
+        if (!hService)
+        {
+            /* The service is not installed */
+            TRACE("Failed to open wdmaud service (%x)\n", GetLastError());
+
+            CloseServiceHandle(hSCManager);
+
+            return 0;
+        }
+
+        /* Wait for wdmaud to start */
+        do
+        {
+            if (!QueryServiceStatusEx(hService, SC_STATUS_PROCESS_INFO, (LPBYTE)&Info, sizeof(SERVICE_STATUS_PROCESS), &dwSize))
+            {
+                TRACE("QueryServiceStatusEx failed (%x)\n", GetLastError());
+                break;
+            }
+
+            if (Info.dwCurrentState == SERVICE_RUNNING)
+            {
+                break;
+            }
+
+            Sleep(1000);
+
+        } while (Index++ < 20);
+
+        CloseServiceHandle(hService);
         CloseServiceHandle(hSCManager);
 
-        return 0;
-    }
-
-    /* Wait for wdmaud to start */
-    do
-    {
-        if (!QueryServiceStatusEx(hService, SC_STATUS_PROCESS_INFO, (LPBYTE)&Info, sizeof(SERVICE_STATUS_PROCESS), &dwSize))
+        /* If wdmaud is not running exit */
+        if (Info.dwCurrentState != SERVICE_RUNNING)
         {
-            TRACE("QueryServiceStatusEx failed (%x)\n", GetLastError());
-            break;
+            WARN("wdmaud has not started!\n");
+            return 0;
         }
 
-        if (Info.dwCurrentState == SERVICE_RUNNING)
-        {
-            break;
-        }
+        /* Sound subsystem is running. Play logon sound. */
 
-        Sleep(1000);
-
-    } while (Index++ < 20);
-
-    CloseServiceHandle(hService);
-    CloseServiceHandle(hSCManager);
-
-    /* If wdmaud is not running exit */
-    if (Info.dwCurrentState != SERVICE_RUNNING)
-    {
-        WARN("wdmaud has not started!\n");
-        return 0;
+        lpRegSubKey = L"AppEvents\\Schemes\\Apps\\.Default\\WindowsLogon";
     }
 
-    /* Sound subsystem is running. Play logon sound. */
+    else
+    {
+        lpRegSubKey = L"AppEvents\\Schemes\\Apps\\.Default\\WindowsLogoff";
+    }
 
     /* Impersonate current user */
-    if (!ImpersonateLoggedOnUser(Session->UserToken))
+    if (!ImpersonateLoggedOnUser(LPSData->Session->UserToken))
     {
         return 0;
     }
@@ -438,10 +452,18 @@ PlayLogonSoundThread(
 
     ExpandEnvironmentStringsW(lpRegVal, lpSndPath, dwSndPathLen);
 
-    TRACE("Playing logon sound: %ls\n", lpSndPath);
+    if (LPSData->IsLogon)
+    {
+        TRACE("Playing logon sound: %ls\n", lpSndPath);
+    }
+
+    else
+    {
+        TRACE("Playing logoff sound: %ls\n", lpSndPath);
+    }
 
     /* Play sound */
-    PlaySoundRoutine(lpSndPath, TRUE, SND_FILENAME | SND_NODEFAULT);
+    PlaySoundRoutine(lpSndPath, (UINT)(LPSData->IsLogon), SND_FILENAME | SND_NODEFAULT);
 
     HeapFree(GetProcessHeap(), 0, lpRegVal);
     HeapFree(GetProcessHeap(), 0, lpSndPath);
@@ -449,133 +471,15 @@ PlayLogonSoundThread(
     return 0;
 }
 
-DWORD WINAPI PlayLogoffSoundThread(LPVOID lpParameter)
+static void PlayLogonSound(PWLSESSION Session, BOOL bLogon)
 {
-    PWLSESSION Session = (PWLSESSION)lpParameter;
-
-    LPCWSTR lpRegSubKey = L"AppEvents\\Schemes\\Apps\\.Default\\WindowsLogoff";
-    HKEY hHKCU, hRegKey, hRegSnd;
-    LPWSTR lpRegVal, lpSndPath;
-    DWORD dwRegValType, dwRegValSize, dwSndPathLen;
-    LONG lRegStatus;
-
-    /* Impersonate current user */
-    if (!ImpersonateLoggedOnUser(Session->UserToken))
-    {
-        return 0;
-    }
-
-    /* Open user's HKCU */
-    lRegStatus = RegOpenCurrentUser(KEY_QUERY_VALUE, &hHKCU);
-
-    if (lRegStatus != ERROR_SUCCESS)
-    {
-        RevertToSelf();
-        return 0;
-    }
-
-    RevertToSelf();
-
-    /* Open registry key */
-    lRegStatus = RegOpenKeyExW(hHKCU, lpRegSubKey, 0, KEY_QUERY_VALUE, &hRegKey);
-
-    RegCloseKey(hHKCU);
-
-    if (lRegStatus != ERROR_SUCCESS)
-    {
-        return 0;
-    }
-
-    /* Open .Current */
-    lRegStatus = RegOpenKeyExW(hRegKey, L".Current", 0, KEY_QUERY_VALUE, &hRegSnd);
-
-    if (lRegStatus != ERROR_SUCCESS)
-    {
-        /* If fail then open .Default */
-        lRegStatus = RegOpenKeyExW(hRegKey, L".Default", 0, KEY_QUERY_VALUE, &hRegSnd);
-
-        RegCloseKey(hRegKey);
-
-        if (lRegStatus != ERROR_SUCCESS)
-        {
-            return 0;
-        }
-    }
-
-    RegCloseKey(hRegKey);
-
-    /* Get registry value size */
-    lRegStatus = RegQueryValueExW(hRegSnd, NULL, NULL, &dwRegValType, NULL, &dwRegValSize);
-
-    /* Check whether the type is valid */
-    if (lRegStatus != ERROR_SUCCESS || (dwRegValType != REG_SZ && dwRegValType != REG_EXPAND_SZ))
-    {
-        RegCloseKey(hRegSnd);
-        return 0;
-    }
-
-    /* Allocate buffer for registry value */
-    lpRegVal = HeapAlloc(GetProcessHeap(), 0, (SIZE_T)dwRegValSize);
-
-    if (!lpRegVal)
-    {
-        RegCloseKey(hRegSnd);
-        return 0;
-    }
-
-    /* Get registry value */
-    RegQueryValueExW(hRegSnd, NULL, NULL, &dwRegValType, (LPBYTE)lpRegVal, &dwRegValSize);
-
-    RegCloseKey(hRegSnd);
-
-    /* Get full sound path length (including the terminating null character) */
-    dwSndPathLen = ExpandEnvironmentStringsW(lpRegVal, NULL, 0);
-
-    if (dwSndPathLen == 0)
-    {
-        HeapFree(GetProcessHeap(), 0, lpRegVal);
-        return 0;
-    }
-
-    /* Allocate buffer for sound path */
-    lpSndPath = HeapAlloc(GetProcessHeap(), 0, (SIZE_T)(dwSndPathLen * sizeof(WCHAR)));
-
-    if (!lpSndPath)
-    {
-        HeapFree(GetProcessHeap(), 0, lpRegVal);
-        return 0;
-    }
-
-    ExpandEnvironmentStringsW(lpRegVal, lpSndPath, dwSndPathLen);
-
-    TRACE("Playing logoff sound: %ls\n", lpSndPath);
-
-    /* Play sound */
-    PlaySoundRoutine(lpSndPath, TRUE, SND_FILENAME | SND_NODEFAULT);
-
-    HeapFree(GetProcessHeap(), 0, lpRegVal);
-    HeapFree(GetProcessHeap(), 0, lpSndPath);
-
-    return 0;
-}
-
-static
-VOID
-PlayLogonSound(
-    IN OUT PWLSESSION Session)
-{
+    PLOGON_PLAYSOUND_DATA LPSData;
     HANDLE hThread;
 
-    hThread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)PlayLogonSoundThread, (LPVOID)Session, 0, NULL);
-    if (hThread)
-        CloseHandle(hThread);
-}
+    LPSData->Session = Session;
+    LPSData->IsLogon = bLogon;
 
-static void PlayLogoffSound(PWLSESSION Session)
-{
-    HANDLE hThread;
-
-    hThread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)PlayLogoffSoundThread, (LPVOID)Session, 0, NULL);
+    hThread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)PlayLogonSoundThread, (LPVOID)LPSData, 0, NULL);
 
     if (hThread)
     {
@@ -810,7 +714,7 @@ HandleLogon(
     Session->hProfileInfo = ProfileInfo.hProfile;
 
     /* Logon has succeeded. Play sound. */
-    PlayLogonSound(Session);
+    PlayLogonSound(Session, TRUE);
 
     ret = TRUE;
 
@@ -1106,7 +1010,7 @@ HandleLogoff(
     SwitchDesktop(Session->WinlogonDesktop);
 
     // TODO: Play logoff sound!
-    PlayLogoffSound(Session);
+    PlayLogonSound(Session, FALSE);
 
     SetWindowStationUser(Session->InteractiveWindowStation,
                          &LuidNone, NULL, 0);
