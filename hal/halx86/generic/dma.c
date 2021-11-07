@@ -1173,8 +1173,18 @@ HalCalculateScatterGatherListSize(
     OUT PULONG ScatterGatherListSize,
     OUT PULONG pNumberOfMapRegisters)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    ULONG NumberOfMapRegisters;
+    ULONG SgSize;
+
+    UNIMPLEMENTED_ONCE;
+
+    NumberOfMapRegisters = PAGE_ROUND_UP(Length) >> PAGE_SHIFT;
+    SgSize = sizeof(SCATTER_GATHER_CONTEXT);
+
+    *ScatterGatherListSize = SgSize;
+    if (pNumberOfMapRegisters) *pNumberOfMapRegisters = NumberOfMapRegisters;
+
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS
