@@ -286,7 +286,10 @@ PlaySoundRoutine(
     return Ret;
 }
 
-DWORD WINAPI PlayLogonSoundThread(LPVOID lpParameter)
+DWORD
+WINAPI
+PlayLogonSoundThread(
+    IN LPVOID lpParameter)
 {
     PLOGON_PLAYSOUND_DATA LPSData = (PLOGON_PLAYSOUND_DATA)lpParameter;
 
