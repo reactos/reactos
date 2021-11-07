@@ -130,7 +130,7 @@ BEGIN
     LTEXT "ReactOS-aren Instalazioa bukatu da.", IDC_FINISHTITLE, 115, 8, 195, 24
     LTEXT "ReactOS-aren Instalazioa se ha completado correctamente.\nSe reiniciará el equipo al hacer clic sobre el botón Terminar.", IDC_STATIC, 115, 40, 195, 100
     CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 115, 138, 188, 12
-    LTEXT "Disko-unitatean CDren bat badago, kendu.\nBukatu ondoren, berrabiarazi ordenagailua Amaitu sakatuz.", IDC_STATIC, 115, 169, 195, 17
+    LTEXT "Disko-unitatean CDren bat badago, kendu.\nBukatu ondoren, berrabiarazi ordenagailua sakatu Amaitu.", IDC_STATIC, 115, 169, 195, 17
 END
 
 IDD_GPL DIALOGEX 0, 0, 333, 230
