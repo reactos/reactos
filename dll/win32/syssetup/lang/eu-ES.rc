@@ -84,7 +84,7 @@ BEGIN
     LTEXT "", IDC_LOCALETEXT, 53, 34, 250, 16
     LTEXT "Ezarpen hauek aldatzeko, sakatu Aldatu.", IDC_STATIC, 53, 60, 184, 8
     PUSHBUTTON "&Aldatu...", IDC_CUSTOMLOCALE, 245, 57, 50, 14
-    LTEXT "La distribución del teclado determina el caracter que se muestra al presionar cada tecla.", IDC_STATIC, 53, 86, 253, 32
+    LTEXT "Teklatuaren distribuzioa mugatu du zer karakter idazten zertarako tekla.", IDC_STATIC, 53, 86, 253, 32
     LTEXT "", IDC_LAYOUTTEXT, 53, 109, 250, 16
     LTEXT "Teklatuaren diseinua aldatzeko, sakatu Aldatu.", IDC_STATIC, 53, 126, 184, 8
     PUSHBUTTON "&Aldatu...", IDC_CUSTOMLAYOUT, 245, 122, 50, 14
@@ -158,16 +158,16 @@ CAPTION "Konfigurazio aurreratua"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "", IDC_PS2STATIC, 5, 20, 242, 110
-    RTEXT "&Promedio de muestra:", -1, 27, 35, 90, 8
+    RTEXT "&Lagin babesteko:", -1, 27, 35, 90, 8
     LTEXT "reportes por segundo", -1, 169, 35, 76, 8
     COMBOBOX IDC_PS2MOUSESAMPLERATE, 124, 33, 42, 41, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
-    RTEXT "&Detectar rueda:", -1, 27, 55, 90, 8
+    RTEXT "&Aurkitu errota:", -1, 27, 55, 90, 8
     COMBOBOX IDC_PS2MOUSEWHEEL, 124, 53, 95, 46, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
-    RTEXT "&Buffer de entrada:", -1, 27, 75, 90, 8
-    LTEXT "paquetes", -1, 169, 75, 26, 8
+    RTEXT "&Sarbideren Buffer-a:", -1, 27, 75, 90, 8
+    LTEXT "paketeak", -1, 169, 75, 26, 8
     EDITTEXT IDC_PS2MOUSEINPUTLEN, 124, 72, 40, 14, ES_LEFT | ES_AUTOHSCROLL | ES_READONLY | ES_NUMBER | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_BORDER
     CONTROL "", IDC_PS2MOUSEINPUTUPDN, "msctls_updown32", UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS | WS_CHILD | WS_VISIBLE, 168, 70, 10, 14
-    AUTOCHECKBOX "&Inicialización rápida", IDC_PS2MOUSEFASTINIT, 124, 97, 90, 10
+    AUTOCHECKBOX "&Azkar hasieraketa", IDC_PS2MOUSEFASTINIT, 124, 97, 90, 10
     PUSHBUTTON "&Lehenetsiak", IDC_PS2MOUSEDEFAULTS, 195, 188, 50, 14
 END
 
