@@ -19,6 +19,7 @@ extern ERESOURCE ExpFirmwareTableResource;
 extern ERESOURCE ExpTimeRefreshLock;
 extern LIST_ENTRY ExpFirmwareTableProviderListHead;
 extern BOOLEAN ExpIsWinPEMode;
+extern ULONG ExpResourceTimeoutCount;
 extern LIST_ENTRY ExpSystemResourcesList;
 extern ULONG ExpAnsiCodePageDataOffset, ExpOemCodePageDataOffset;
 extern ULONG ExpUnicodeCaseTableDataOffset;

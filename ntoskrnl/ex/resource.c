@@ -18,7 +18,7 @@
 #define IsOwnedExclusive(r)     (r->Flag & ResourceOwnedExclusive)
 #define IsBoostAllowed(r)       (!(r->Flag & ResourceHasDisabledPriorityBoost))
 
-#if (!(defined(CONFIG_SMP)) && !(DBG))
+#if !defined(CONFIG_SMP) && !DBG
 
 FORCEINLINE
 VOID
@@ -65,13 +65,17 @@ ExReleaseResourceLock(IN PERESOURCE Resource,
     /* Release the lock */
     KeReleaseInStackQueuedSpinLock(LockHandle);
 }
-#endif
+
+#endif // !defined(CONFIG_SMP) && !DBG
 
 /* DATA***********************************************************************/
 
 LARGE_INTEGER ExShortTime = {{-100000, -1}};
 LARGE_INTEGER ExpTimeout;
-ULONG ExpResourceTimeoutCount = 90 * 3600 / 2;
+
+/* Timeout value for resources in 4-second units (7 days) */
+ULONG ExpResourceTimeoutCount = 90 * 3600 / 2; // NT value: 648000 (30 days)
+
 KSPIN_LOCK ExpResourceSpinLock;
 LIST_ENTRY ExpSystemResourcesList;
 BOOLEAN ExResourceStrict = TRUE;
@@ -631,7 +635,7 @@ ExpWaitForResource(IN PERESOURCE Resource,
 
     /* Increase contention count and use a 5 second timeout */
     Resource->ContentionCount++;
-    Timeout.QuadPart = 500 * -10000;
+    Timeout.QuadPart = 500 * -10000LL;
     for (;;)
     {
         /* Wait for ownership */
@@ -640,7 +644,8 @@ ExpWaitForResource(IN PERESOURCE Resource,
                                        KernelMode,
                                        FALSE,
                                        &Timeout);
-        if (Status != STATUS_TIMEOUT) break;
+        if (Status != STATUS_TIMEOUT)
+            break;
 
         /* Increase wait count */
         WaitCount++;
