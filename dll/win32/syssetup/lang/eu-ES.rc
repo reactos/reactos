@@ -24,9 +24,7 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     LTEXT "ReactOS garatzaileek kode-irekiko-proiektu hauei eskerrak eman nahi dizkiete, ReactOS sortzeko oinarrizko zati izan direnak:", IDC_STATIC, 15, 7, 286, 19
     LISTBOX IDC_PROJECTS, 15, 30, 286, 75, LBS_NOSEL | LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | WS_VSCROLL
-    LTEXT "ReactOS GPL lizentziapean banatzen da, beraz, osorik edo zati batean berrerabili edo birbanatu nahi baduzu, bere baldintzak errespetatu behar dituzu.
-
-", IDC_STATIC, 15, 110, 227, 19
+    LTEXT "ReactOS GPL lizentziapean banatzen da, beraz, osorik edo zati batean berrerabili edo birbanatu nahi baduzu, bere baldintzak errespetatu behar dituzu.", IDC_STATIC, 15, 110, 227, 19
     PUSHBUTTON "&Ikusi GPL-a...", IDC_VIEWGPL, 251, 110, 50, 19
     LTEXT "Sakatu Aurrera instalazioa jarraitzeko.", IDC_STATIC, 15, 136, 195, 17
 END
