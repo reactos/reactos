@@ -561,7 +561,7 @@ DATA_SEG("INITDATA") CM_SYSTEM_CONTROL_VECTOR CmControlVector[] =
     {
         L"Session Manager",
         L"ResourceTimeoutCount",
-        &DummyData,
+        &ExpResourceTimeoutCount,
         NULL,
         NULL
     },
