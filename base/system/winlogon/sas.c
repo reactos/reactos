@@ -54,13 +54,6 @@ typedef enum tagWINLOGON_SYSTEM_SOUND
 
 } WINLOGON_SYSTEM_SOUND, *PWINLOGON_SYSTEM_SOUND;
 
-typedef struct tagWINLOGON_PLAYSOUND_DATA
-{
-    WINLOGON_SYSTEM_SOUND Sound;
-    PWLSESSION Session;
-
-} WINLOGON_PLAYSOUND_DATA, *PWINLOGON_PLAYSOUND_DATA;
-
 static BOOL ExitReactOSInProgress = FALSE;
 
 LUID LuidNone = {0, 0};
@@ -298,23 +291,23 @@ PlaySoundRoutine(
     return Ret;
 }
 
-DWORD WINAPI PlaySystemSoundThread(LPVOID lpParameter)
+static BOOL PlaySystemSound(PWLSESSION Session, WINLOGON_SYSTEM_SOUND Sound)
 {
-    PWINLOGON_PLAYSOUND_DATA PSData = (PWINLOGON_PLAYSOUND_DATA)lpParameter;
-
     LPCWSTR lpRegSubKey;
     HKEY hHKCU, hRegKey, hRegSnd;
     LPWSTR lpRegVal, lpSndPath;
     DWORD dwRegValType, dwRegValSize, dwSndPathLen;
     LONG lRegStatus;
-    BOOL bLogon = (PSData->Sound == SYSTEMSND_LOGON) ? TRUE : FALSE;
+    BOOL bLogon, bRet;
 
     SERVICE_STATUS_PROCESS Info;
     DWORD dwSize;
     ULONG Index = 0;
     SC_HANDLE hSCManager, hService;
 
-    if (PSData->Sound == SYSTEMSND_LOGON)
+    bLogon = (Sound == SYSTEMSND_LOGON) ? TRUE : FALSE;
+
+    if (bLogon)
     {
         /* Open the service manager */
         hSCManager = OpenSCManager(NULL, NULL, SC_MANAGER_CONNECT);
@@ -322,7 +315,7 @@ DWORD WINAPI PlaySystemSoundThread(LPVOID lpParameter)
         if (!hSCManager)
         {
             ERR("OpenSCManager failed (%x)\n", GetLastError());
-            return 0;
+            return FALSE;
         }
 
         /* Open the wdmaud service */
@@ -335,7 +328,7 @@ DWORD WINAPI PlaySystemSoundThread(LPVOID lpParameter)
 
             CloseServiceHandle(hSCManager);
 
-            return 0;
+            return FALSE;
         }
 
         /* Wait for wdmaud to start */
@@ -363,13 +356,13 @@ DWORD WINAPI PlaySystemSoundThread(LPVOID lpParameter)
         if (Info.dwCurrentState != SERVICE_RUNNING)
         {
             WARN("wdmaud has not started!\n");
-            return 0;
+            return FALSE;
         }
 
         /* Sound subsystem is running. Play logon sound. */
     }
 
-    switch (PSData->Sound)
+    switch (Sound)
     {
         case SYSTEMSND_DEFAULT:
             lpRegSubKey = L"AppEvents\\Schemes\\Apps\\.Default\\SystemDefault";
@@ -404,9 +397,9 @@ DWORD WINAPI PlaySystemSoundThread(LPVOID lpParameter)
     }
 
     /* Impersonate current user */
-    if (!ImpersonateLoggedOnUser(PSData->Session->UserToken))
+    if (!ImpersonateLoggedOnUser(Session->UserToken))
     {
-        return 0;
+        return FALSE;
     }
 
     /* Open user's HKCU */
@@ -415,7 +408,7 @@ DWORD WINAPI PlaySystemSoundThread(LPVOID lpParameter)
     if (lRegStatus != ERROR_SUCCESS)
     {
         RevertToSelf();
-        return 0;
+        return FALSE;
     }
 
     RevertToSelf();
@@ -427,7 +420,7 @@ DWORD WINAPI PlaySystemSoundThread(LPVOID lpParameter)
 
     if (lRegStatus != ERROR_SUCCESS)
     {
-        return 0;
+        return FALSE;
     }
 
     /* Open .Current */
@@ -442,7 +435,7 @@ DWORD WINAPI PlaySystemSoundThread(LPVOID lpParameter)
 
         if (lRegStatus != ERROR_SUCCESS)
         {
-            return 0;
+            return FALSE;
         }
     }
 
@@ -455,7 +448,7 @@ DWORD WINAPI PlaySystemSoundThread(LPVOID lpParameter)
     if (lRegStatus != ERROR_SUCCESS || (dwRegValType != REG_SZ && dwRegValType != REG_EXPAND_SZ))
     {
         RegCloseKey(hRegSnd);
-        return 0;
+        return FALSE;
     }
 
     /* Allocate buffer for registry value */
@@ -464,7 +457,7 @@ DWORD WINAPI PlaySystemSoundThread(LPVOID lpParameter)
     if (!lpRegVal)
     {
         RegCloseKey(hRegSnd);
-        return 0;
+        return FALSE;
     }
 
     /* Get registry value */
@@ -478,7 +471,7 @@ DWORD WINAPI PlaySystemSoundThread(LPVOID lpParameter)
     if (dwSndPathLen == 0)
     {
         HeapFree(GetProcessHeap(), 0, lpRegVal);
-        return 0;
+        return FALSE;
     }
 
     /* Allocate buffer for sound path */
@@ -487,7 +480,7 @@ DWORD WINAPI PlaySystemSoundThread(LPVOID lpParameter)
     if (!lpSndPath)
     {
         HeapFree(GetProcessHeap(), 0, lpRegVal);
-        return 0;
+        return FALSE;
     }
 
     ExpandEnvironmentStringsW(lpRegVal, lpSndPath, dwSndPathLen);
@@ -495,31 +488,12 @@ DWORD WINAPI PlaySystemSoundThread(LPVOID lpParameter)
     TRACE("Playing system sound: %ls\n", lpSndPath);
 
     /* Play sound */
-    PlaySoundRoutine(lpSndPath, (UINT)bLogon, SND_FILENAME | SND_NODEFAULT);
+    bRet = PlaySoundRoutine(lpSndPath, (UINT)bLogon, SND_FILENAME | SND_ASYNC | SND_NODEFAULT);
 
     HeapFree(GetProcessHeap(), 0, lpRegVal);
     HeapFree(GetProcessHeap(), 0, lpSndPath);
 
-    return 0;
-}
-
-static BOOL PlaySystemSound(PWLSESSION Session, WINLOGON_SYSTEM_SOUND Sound)
-{
-    WINLOGON_PLAYSOUND_DATA PSData;
-    HANDLE hThread;
-
-    PSData.Sound = Sound;
-    PSData.Session = Session;
-
-    hThread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)PlaySystemSoundThread, (LPVOID)&PSData, 0, NULL);
-
-    if (hThread)
-    {
-        CloseHandle(hThread);
-        return TRUE;
-    }
-
-    return FALSE;
+    return bRet;
 }
 
 static BOOL
