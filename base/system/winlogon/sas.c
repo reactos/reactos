@@ -505,13 +505,13 @@ DWORD WINAPI PlaySystemSoundThread(LPVOID lpParameter)
 
 static BOOL PlaySystemSound(PWLSESSION Session, WINLOGON_SYSTEM_SOUND Sound)
 {
-    PWINLOGON_PLAYSOUND_DATA PSData;
+    WINLOGON_PLAYSOUND_DATA PSData;
     HANDLE hThread;
 
-    PSData->Sound = Sound;
-    PSData->Session = Session;
+    PSData.Sound = Sound;
+    PSData.Session = Session;
 
-    hThread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)PlaySystemSoundThread, (LPVOID)PSData, 0, NULL);
+    hThread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)PlaySystemSoundThread, (LPVOID)&PSData, 0, NULL);
 
     if (hThread)
     {
