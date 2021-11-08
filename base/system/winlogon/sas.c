@@ -42,12 +42,24 @@ typedef struct tagLOGOFF_SHUTDOWN_DATA
     PWLSESSION Session;
 } LOGOFF_SHUTDOWN_DATA, *PLOGOFF_SHUTDOWN_DATA;
 
-typedef struct tagLOGON_PLAYSOUND_DATA
+typedef enum tagWINLOGON_SYSTEM_SOUND
 {
-    BOOL IsLogon;
+    SYSTEMSND_DEFAULT,
+    SYSTEMSND_LOGON,
+    SYSTEMSND_LOGOFF,
+    SYSTEMSND_ASTERISK,
+    SYSTEMSND_EXCLAMATION,
+    SYSTEMSND_HAND,
+    SYSTEMSND_QUESTION
+
+} WINLOGON_SYSTEM_SOUND, *PWINLOGON_SYSTEM_SOUND;
+
+typedef struct tagWINLOGON_PLAYSOUND_DATA
+{
+    WINLOGON_SYSTEM_SOUND Sound;
     PWLSESSION Session;
 
-} LOGON_PLAYSOUND_DATA, *PLOGON_PLAYSOUND_DATA;
+} WINLOGON_PLAYSOUND_DATA, *PWINLOGON_PLAYSOUND_DATA;
 
 static BOOL ExitReactOSInProgress = FALSE;
 
@@ -286,25 +298,23 @@ PlaySoundRoutine(
     return Ret;
 }
 
-DWORD
-WINAPI
-PlayLogonSoundThread(
-    IN LPVOID lpParameter)
+DWORD WINAPI PlaySystemSoundThread(LPVOID lpParameter)
 {
-    PLOGON_PLAYSOUND_DATA LPSData = (PLOGON_PLAYSOUND_DATA)lpParameter;
+    PWINLOGON_PLAYSOUND_DATA PSData = (PWINLOGON_PLAYSOUND_DATA)lpParameter;
 
     LPCWSTR lpRegSubKey;
     HKEY hHKCU, hRegKey, hRegSnd;
     LPWSTR lpRegVal, lpSndPath;
     DWORD dwRegValType, dwRegValSize, dwSndPathLen;
     LONG lRegStatus;
+    BOOL bLogon = (PSData->Sound == SYSTEMSND_LOGON) ? TRUE : FALSE;
 
     SERVICE_STATUS_PROCESS Info;
     DWORD dwSize;
     ULONG Index = 0;
     SC_HANDLE hSCManager, hService;
 
-    if (LPSData->IsLogon)
+    if (PSData->Sound == SYSTEMSND_LOGON)
     {
         /* Open the service manager */
         hSCManager = OpenSCManager(NULL, NULL, SC_MANAGER_CONNECT);
@@ -357,17 +367,44 @@ PlayLogonSoundThread(
         }
 
         /* Sound subsystem is running. Play logon sound. */
-
-        lpRegSubKey = L"AppEvents\\Schemes\\Apps\\.Default\\WindowsLogon";
     }
 
-    else
+    switch (PSData->Sound)
     {
-        lpRegSubKey = L"AppEvents\\Schemes\\Apps\\.Default\\WindowsLogoff";
+        case SYSTEMSND_DEFAULT:
+            lpRegSubKey = L"AppEvents\\Schemes\\Apps\\.Default\\SystemDefault";
+            break;
+
+        case SYSTEMSND_LOGON:
+            lpRegSubKey = L"AppEvents\\Schemes\\Apps\\.Default\\WindowsLogon";
+            break;
+
+        case SYSTEMSND_LOGOFF:
+            lpRegSubKey = L"AppEvents\\Schemes\\Apps\\.Default\\WindowsLogoff";
+            break;
+
+        case SYSTEMSND_ASTERISK:
+            lpRegSubKey = L"AppEvents\\Schemes\\Apps\\.Default\\SystemAsterisk";
+            break;
+
+        case SYSTEMSND_EXCLAMATION:
+            lpRegSubKey = L"AppEvents\\Schemes\\Apps\\.Default\\SystemExclamation";
+            break;
+
+        case SYSTEMSND_HAND:
+            lpRegSubKey = L"AppEvents\\Schemes\\Apps\\.Default\\SystemHand";
+            break;
+
+        case SYSTEMSND_QUESTION:
+            lpRegSubKey = L"AppEvents\\Schemes\\Apps\\.Default\\SystemQuestion";
+            break;
+
+        default:
+            lpRegSubKey = L"AppEvents\\Schemes\\Apps\\.Default\\SystemDefault";
     }
 
     /* Impersonate current user */
-    if (!ImpersonateLoggedOnUser(LPSData->Session->UserToken))
+    if (!ImpersonateLoggedOnUser(PSData->Session->UserToken))
     {
         return 0;
     }
@@ -455,18 +492,10 @@ PlayLogonSoundThread(
 
     ExpandEnvironmentStringsW(lpRegVal, lpSndPath, dwSndPathLen);
 
-    if (LPSData->IsLogon)
-    {
-        TRACE("Playing logon sound: %ls\n", lpSndPath);
-    }
-
-    else
-    {
-        TRACE("Playing logoff sound: %ls\n", lpSndPath);
-    }
+    TRACE("Playing system sound: %ls\n", lpSndPath);
 
     /* Play sound */
-    PlaySoundRoutine(lpSndPath, (UINT)(LPSData->IsLogon), SND_FILENAME | SND_NODEFAULT);
+    PlaySoundRoutine(lpSndPath, (UINT)bLogon, SND_FILENAME | SND_NODEFAULT);
 
     HeapFree(GetProcessHeap(), 0, lpRegVal);
     HeapFree(GetProcessHeap(), 0, lpSndPath);
@@ -474,20 +503,23 @@ PlayLogonSoundThread(
     return 0;
 }
 
-static void PlayLogonSound(PWLSESSION Session, BOOL bLogon)
+static BOOL PlaySystemSound(PWLSESSION Session, WINLOGON_SYSTEM_SOUND Sound)
 {
-    PLOGON_PLAYSOUND_DATA LPSData;
+    PWINLOGON_PLAYSOUND_DATA PSData;
     HANDLE hThread;
 
-    LPSData->Session = Session;
-    LPSData->IsLogon = bLogon;
+    PSData->Sound = Sound;
+    PSData->Session = Session;
 
-    hThread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)PlayLogonSoundThread, (LPVOID)LPSData, 0, NULL);
+    hThread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)PlaySystemSoundThread, (LPVOID)PSData, 0, NULL);
 
     if (hThread)
     {
         CloseHandle(hThread);
+        return TRUE;
     }
+
+    return FALSE;
 }
 
 static BOOL
@@ -717,7 +749,7 @@ HandleLogon(
     Session->hProfileInfo = ProfileInfo.hProfile;
 
     /* Logon has succeeded. Play sound. */
-    PlayLogonSound(Session, TRUE);
+    PlaySystemSound(Session, SYSTEMSND_LOGON);
 
     ret = TRUE;
 
@@ -1013,7 +1045,7 @@ HandleLogoff(
     SwitchDesktop(Session->WinlogonDesktop);
 
     // TODO: Play logoff sound!
-    PlayLogonSound(Session, FALSE);
+    PlaySystemSound(Session, SYSTEMSND_LOGOFF);
 
     SetWindowStationUser(Session->InteractiveWindowStation,
                          &LuidNone, NULL, 0);
@@ -1409,12 +1441,7 @@ UnregisterHotKeys(
 
 BOOL WINAPI HandleMessageBeep(PWLSESSION Session, UINT uType)
 {
-    LPCWSTR lpRegSubKey;
-    HKEY hHKCU, hRegKey, hRegSnd;
-    LPWSTR lpRegVal, lpSndPath;
-    DWORD dwRegValType, dwRegValSize, dwSndPathLen;
-    LONG lRegStatus;
-    BOOL bRet;
+    WINLOGON_SYSTEM_SOUND Sound;
 
     switch (uType)
     {
@@ -1423,126 +1450,31 @@ BOOL WINAPI HandleMessageBeep(PWLSESSION Session, UINT uType)
 
         /* SystemDefault */
         case MB_OK:
-            lpRegSubKey = L"AppEvents\\Schemes\\Apps\\.Default\\SystemDefault";
+            Sound = SYSTEMSND_DEFAULT;
             break;
 
         case MB_ICONINFORMATION: // case MB_ICONASTERISK:
-            lpRegSubKey = L"AppEvents\\Schemes\\Apps\\.Default\\SystemAsterisk";
+            Sound = SYSTEMSND_ASTERISK;
             break;
 
         case MB_ICONEXCLAMATION: // case MB_ICONWARNING:
-            lpRegSubKey = L"AppEvents\\Schemes\\Apps\\.Default\\SystemExclamation";
+            Sound = SYSTEMSND_EXCLAMATION;
             break;
 
         case MB_ICONERROR: // case MB_ICONHAND: case MB_ICONSTOP:
-            lpRegSubKey = L"AppEvents\\Schemes\\Apps\\.Default\\SystemHand";
+            Sound = SYSTEMSND_HAND;
             break;
 
         case MB_ICONQUESTION:
-            lpRegSubKey = L"AppEvents\\Schemes\\Apps\\.Default\\SystemQuestion";
+            Sound = SYSTEMSND_QUESTION;
             break;
 
         default:
             WARN("Unhandled type %d\n", uType);
-            lpRegSubKey = L"AppEvents\\Schemes\\Apps\\.Default\\SystemDefault";
+            Sound = SYSTEMSND_DEFAULT;
     }
 
-    /* Impersonate current user */
-    if (!ImpersonateLoggedOnUser(Session->UserToken))
-    {
-        return FALSE;
-    }
-
-    /* Open user's HKCU */
-    lRegStatus = RegOpenCurrentUser(KEY_QUERY_VALUE, &hHKCU);
-
-    if (lRegStatus != ERROR_SUCCESS)
-    {
-        RevertToSelf();
-        return FALSE;
-    }
-
-    RevertToSelf();
-
-    /* Open registry key */
-    lRegStatus = RegOpenKeyExW(hHKCU, lpRegSubKey, 0, KEY_QUERY_VALUE, &hRegKey);
-
-    RegCloseKey(hHKCU);
-
-    if (lRegStatus != ERROR_SUCCESS)
-    {
-        return FALSE;
-    }
-
-    /* Open .Current */
-    lRegStatus = RegOpenKeyExW(hRegKey, L".Current", 0, KEY_QUERY_VALUE, &hRegSnd);
-
-    if (lRegStatus != ERROR_SUCCESS)
-    {
-        /* If fail then open .Default */
-        lRegStatus = RegOpenKeyExW(hRegKey, L".Default", 0, KEY_QUERY_VALUE, &hRegSnd);
-
-        RegCloseKey(hRegKey);
-
-        if (lRegStatus != ERROR_SUCCESS)
-        {
-            return FALSE;
-        }
-    }
-
-    RegCloseKey(hRegKey);
-
-    /* Get registry value size */
-    lRegStatus = RegQueryValueExW(hRegSnd, NULL, NULL, &dwRegValType, NULL, &dwRegValSize);
-
-    /* Check whether the type is valid */
-    if (lRegStatus != ERROR_SUCCESS || (dwRegValType != REG_SZ && dwRegValType != REG_EXPAND_SZ))
-    {
-        RegCloseKey(hRegSnd);
-        return FALSE;
-    }
-
-    /* Allocate buffer for registry value */
-    lpRegVal = HeapAlloc(GetProcessHeap(), 0, (SIZE_T)dwRegValSize);
-
-    if (!lpRegVal)
-    {
-        RegCloseKey(hRegSnd);
-        return FALSE;
-    }
-
-    /* Get registry value */
-    RegQueryValueExW(hRegSnd, NULL, NULL, &dwRegValType, (LPBYTE)lpRegVal, &dwRegValSize);
-
-    RegCloseKey(hRegSnd);
-
-    /* Get full sound path length (including the terminating null character) */
-    dwSndPathLen = ExpandEnvironmentStringsW(lpRegVal, NULL, 0);
-
-    if (dwSndPathLen == 0)
-    {
-        HeapFree(GetProcessHeap(), 0, lpRegVal);
-        return FALSE;
-    }
-
-    /* Allocate buffer for sound path */
-    lpSndPath = HeapAlloc(GetProcessHeap(), 0, (SIZE_T)(dwSndPathLen * sizeof(WCHAR)));
-
-    if (!lpSndPath)
-    {
-        HeapFree(GetProcessHeap(), 0, lpRegVal);
-        return FALSE;
-    }
-
-    ExpandEnvironmentStringsW(lpRegVal, lpSndPath, dwSndPathLen);
-
-    /* Play sound */
-    bRet = PlaySoundRoutine(lpSndPath, FALSE, SND_FILENAME | SND_ASYNC | SND_NODEFAULT);
-
-    HeapFree(GetProcessHeap(), 0, lpRegVal);
-    HeapFree(GetProcessHeap(), 0, lpSndPath);
-
-    return bRet;
+    return PlaySystemSound(Session, Sound);
 }
 
 static
