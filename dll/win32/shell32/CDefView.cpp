@@ -1398,10 +1398,10 @@ HRESULT CDefView::InvokeContextMenuCommand(UINT uCommand)
     cmi.lpVerb = MAKEINTRESOURCEA(uCommand);
     cmi.hwnd = m_hWnd;
 
-    if (GetAsyncKeyState(VK_SHIFT) < 0)
+    if (GetKeyState(VK_SHIFT) & 0x8000)
         cmi.fMask |= CMIC_MASK_SHIFT_DOWN;
 
-    if (GetAsyncKeyState(VK_CONTROL) < 0)
+    if (GetKeyState(VK_CONTROL) & 0x8000)
         cmi.fMask |= CMIC_MASK_CONTROL_DOWN;
 
     HRESULT hr = m_pCM->InvokeCommand(&cmi);
