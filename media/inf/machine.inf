@@ -24,6 +24,7 @@ HKR, , Icon,           0, "-27"
 [Manufacturer]
 %GenericMfg% = GenericMfg
 %IntelMfg% = IntelMfg
+%NecMfg% = NecMfg
 %nVidiaMfg% = nVidiaMfg
 
 [GenericMfg]
@@ -69,6 +70,13 @@ HKR, , Icon,           0, "-27"
 %PCI\VEN_8086&DEV_7180.DeviceDesc% = NO_DRV,PCI\VEN_8086&DEV_7180
 %PCI\VEN_8086&DEV_7190.DeviceDesc% = NO_DRV,PCI\VEN_8086&DEV_7190
 %PCI\VEN_8086&DEV_7192.DeviceDesc% = NO_DRV,PCI\VEN_8086&DEV_7192
+
+[NecMfg]
+%NecCb.DeviceDesc% = PCI_ISA_Inst,PCI\VEN_1033&DEV_0001
+%NecVl.DeviceDesc% = NO_DRV,PCI\VEN_1033&DEV_0002
+%NecVl.DeviceDesc% = NO_DRV,PCI\VEN_1033&DEV_0016
+%NecCb.DeviceDesc% = PCI_ISA_Inst,PCI\VEN_1033&DEV_002D
+%NecCb.DeviceDesc% = PCI_ISA_Inst,PCI\VEN_1033&DEV_003B
 
 [nVidiaMfg]
 %PCI\VEN_10DE&DEV_01B2.DeviceDesc% = PCI_ISA_Inst,PCI\VEN_10DE&DEV_01B2
@@ -200,6 +208,10 @@ PCI\VEN_8086&DEV_7113.DeviceDesc = "Intel 82371AB/EB Power Management Controller
 PCI\VEN_8086&DEV_7180.DeviceDesc = "Intel 82443LX/EX Pentium(R) II CPU to PCI Bridge"
 PCI\VEN_8086&DEV_7190.DeviceDesc = "Intel 82443BX/ZX/DX Pentium(R) II CPU to PCI Bridge"
 PCI\VEN_8086&DEV_7192.DeviceDesc = "Intel 82443BX/ZX/DX Pentium(R) II CPU to PCI Bridge"
+
+NecMfg = "NEC"
+NecCb.DeviceDesc = "NEC PCI to C-bus Bridge"
+NecVl.DeviceDesc = "NEC PCI to VL bus Bridge"
 
 nVidiaMfg = "nVidia"
 PCI\VEN_10DE&DEV_01B2.DeviceDesc = "nVidia nForce PCI to ISA Bridge"
@@ -661,6 +673,9 @@ PCI\VEN_8086&DEV_7113.DeviceDesc = "Контроллер управления п
 PCI\VEN_8086&DEV_7180.DeviceDesc = "Intel 82443LX/EX Pentium(R) II мост CPU - PCI"
 PCI\VEN_8086&DEV_7190.DeviceDesc = "Intel 82443BX/ZX/DX Pentium(R) II мост CPU - PCI"
 PCI\VEN_8086&DEV_7192.DeviceDesc = "Intel 82443BX/ZX/DX Pentium(R) II мост CPU - PCI"
+
+NecCb.DeviceDesc = "NEC мост PCI - C-bus"
+NecVl.DeviceDesc = "NEC мост PCI - VL"
 
 PCI\VEN_10DE&DEV_01B2.DeviceDesc = "nVidia nForce мост PCI - ISA"
 PCI\VEN_10DE&DEV_01B4.DeviceDesc = "nVidia nForce контроллер SMBus"
