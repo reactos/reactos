@@ -186,6 +186,7 @@
 #define TAG_LOGON_SESSION      'sLeS'
 #define TAG_LOGON_NOTIFICATION 'nLeS'
 #define TAG_SID_AND_ATTRIBUTES 'aSeS'
+#define TAG_SID_VALIDATE       'vSeS'
 
 /* LPC Tags */
 #define TAG_LPC_MESSAGE   'McpL'
