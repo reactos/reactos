@@ -3574,11 +3574,6 @@ HRESULT WINAPI CDefView::Drop(IDataObject* pDataObject, DWORD grfKeyState, POINT
     ImageList_DragLeave(m_hWnd);
     ImageList_EndDrag();
 
-    if (GetAsyncKeyState(VK_SHIFT) < 0)
-        grfKeyState |= MK_SHIFT;
-    else
-        grfKeyState &= ~MK_SHIFT;
-
     if ((IsDropOnSource(NULL) == S_OK) &&
         (*pdwEffect & DROPEFFECT_MOVE) &&
         (m_grfKeyState & MK_LBUTTON))
