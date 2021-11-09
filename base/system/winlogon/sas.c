@@ -525,14 +525,23 @@ static BOOL PlaySystemSound(PWLSESSION Session, WINLOGON_SYSTEM_SOUND Sound)
     PSData->Sound = Sound;
     PSData->Session = Session;
 
-    hThread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)PlaySystemSoundThread, (LPVOID)PSData, 0, NULL);
+    hThread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)PlaySystemSoundThread, (LPVOID)PSData, CREATE_SUSPENDED, NULL);
 
     if (hThread)
     {
+        if (Sound != SYSTEMSND_LOGON && Sound != SYSTEMSND_LOGOFF)
+        {
+            /* Same as SND_ASYNC */
+            SetThreadPriority(hThread, THREAD_PRIORITY_TIME_CRITICAL);
+        }
+
+        ResumeThread(hThread);
+
         CloseHandle(hThread);
+
         return TRUE;
     }
-
+    
     /* Error */
 
     HeapFree(GetProcessHeap(), 0, PSData);
