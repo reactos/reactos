@@ -13,8 +13,13 @@
 extern "C" {
 #endif
 
+#if defined(SARCH_PC98)
+#define ISAPNP_ADDRESS 0x259
+#define ISAPNP_WRITE_DATA 0xA59
+#else
 #define ISAPNP_ADDRESS 0x279
 #define ISAPNP_WRITE_DATA 0xA79
+#endif
 
 #define ISAPNP_READPORT 0x00
 #define ISAPNP_SERIALISOLATION 0x01
