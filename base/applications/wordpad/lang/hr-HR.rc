@@ -57,7 +57,7 @@ BEGIN
             MENUITEM "Dobij &tekst",                   ID_EDIT_GETTEXT
         END
     END
-    POPUP "&View"
+    POPUP "&Pogled"
     BEGIN
         MENUITEM "&Alatna traka",        ID_TOGGLE_TOOLBAR
         MENUITEM "Traka &formatiranja",     ID_TOGGLE_FORMATBAR
@@ -82,7 +82,7 @@ BEGIN
             MENUITEM "&Bijelo žuta\tCtrl+2",    ID_BACK_2
         END
     END
-    POPUP "&Help"
+    POPUP "&Pomoć"
     BEGIN
         MENUITEM "&O Wine WordPad-u",      ID_ABOUT
     END
