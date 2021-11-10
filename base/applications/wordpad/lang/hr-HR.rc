@@ -26,7 +26,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Ispiši...\tCtrl+P",     ID_PRINT
         MENUITEM "Ispiši &pregled",        ID_PREVIEW
-        MENUITEM "Postavljanje &stranice",        ID_PRINTSETUP
+        MENUITEM "Postavljanje stranic&e",        ID_PRINTSETUP
         MENUITEM SEPARATOR
         MENUITEM "Iz&ađi",                 ID_FILE_EXIT
     END
