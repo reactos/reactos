@@ -1006,8 +1006,6 @@ static void TRASH_PlayEmptyRecycleBinSound()
         /* If fail then open .Default */
         lRegStatus = RegOpenKeyExW(hRegKey, L".Default", 0, KEY_QUERY_VALUE, &hRegSnd);
 
-        RegCloseKey(hRegKey);
-
         if (lRegStatus != ERROR_SUCCESS)
         {
             return;
