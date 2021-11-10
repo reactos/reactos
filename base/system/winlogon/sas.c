@@ -535,7 +535,6 @@ static BOOL PlaySystemSound(PWLSESSION Session, WINLOGON_SYSTEM_SOUND Sound)
         }
 
         ResumeThread(hThread);
-
         CloseHandle(hThread);
 
         return TRUE;
