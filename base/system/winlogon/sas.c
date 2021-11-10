@@ -440,10 +440,9 @@ DWORD WINAPI PlaySystemSoundThread(LPVOID lpParameter)
         /* If fail then open .Default */
         lRegStatus = RegOpenKeyExW(hRegKey, L".Default", 0, KEY_QUERY_VALUE, &hRegSnd);
 
-        RegCloseKey(hRegKey);
-
         if (lRegStatus != ERROR_SUCCESS)
         {
+            RegCloseKey(hRegKey);
             goto Quit;
         }
     }
