@@ -1008,6 +1008,7 @@ static void TRASH_PlayEmptyRecycleBinSound()
 
         if (lRegStatus != ERROR_SUCCESS)
         {
+            RegCloseKey(hRegKey);
             return;
         }
     }
