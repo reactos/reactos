@@ -82,7 +82,7 @@ BEGIN
             MENUITEM "&Bijelo žuta\tCtrl+2",    ID_BACK_2
         END
     END
-    POPUP "&Pomoć"
+    POPUP "P&omoć"
     BEGIN
         MENUITEM "&O Wine WordPad-u",      ID_ABOUT
     END
