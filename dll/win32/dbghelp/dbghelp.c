@@ -194,29 +194,36 @@ struct cpu* cpu_find(DWORD machine)
 static WCHAR* make_default_search_path(void)
 {
     WCHAR*      search_path;
-    unsigned    size;
-    unsigned    len;
+    WCHAR*      p;
+    unsigned    sym_path_len;
+    unsigned    alt_sym_path_len;
 
-    search_path = HeapAlloc(GetProcessHeap(), 0, (len = MAX_PATH) * sizeof(WCHAR));
-    while ((size = GetCurrentDirectoryW(len, search_path)) >= len)
-        search_path = HeapReAlloc(GetProcessHeap(), 0, search_path, (len *= 2) * sizeof(WCHAR));
-    search_path = HeapReAlloc(GetProcessHeap(), 0, search_path, (size + 1) * sizeof(WCHAR));
+    sym_path_len = GetEnvironmentVariableW(L"_NT_SYMBOL_PATH", NULL, 0);
+    alt_sym_path_len = GetEnvironmentVariableW(L"_NT_ALTERNATE_SYMBOL_PATH", NULL, 0);
 
-    len = GetEnvironmentVariableW(L"_NT_SYMBOL_PATH", NULL, 0);
-    if (len)
+    /* The default symbol path is ".[;%_NT_SYMBOL_PATH%][;%_NT_ALTERNATE_SYMBOL_PATH%]".
+     * If the variables exist, the lengths include a null-terminator. We use that
+     * space for the semicolons, and only add the initial dot and the final null. */
+    search_path = HeapAlloc(GetProcessHeap(), 0,
+                            (1 + sym_path_len + alt_sym_path_len + 1) * sizeof(WCHAR));
+    if (!search_path) return NULL;
+
+    p = search_path;
+    *p++ = L'.';
+    if (sym_path_len)
     {
-        search_path = HeapReAlloc(GetProcessHeap(), 0, search_path, (size + 1 + len + 1) * sizeof(WCHAR));
-        search_path[size] = ';';
-        GetEnvironmentVariableW(L"_NT_SYMBOL_PATH", search_path + size + 1, len);
-        size += 1 + len;
+        *p++ = L';';
+        GetEnvironmentVariableW(L"_NT_SYMBOL_PATH", p, sym_path_len);
+        p += sym_path_len - 1;
     }
-    len = GetEnvironmentVariableW(L"_NT_ALTERNATE_SYMBOL_PATH", NULL, 0);
-    if (len)
+
+    if (alt_sym_path_len)
     {
-        search_path = HeapReAlloc(GetProcessHeap(), 0, search_path, (size + 1 + len + 1) * sizeof(WCHAR));
-        search_path[size] = ';';
-        GetEnvironmentVariableW(L"_NT_ALTERNATE_SYMBOL_PATH", search_path + size + 1, len);
+        *p++ = L';';
+        GetEnvironmentVariableW(L"_NT_ALTERNATE_SYMBOL_PATH", p, alt_sym_path_len);
+        p += alt_sym_path_len - 1;
     }
+    *p = L'\0';
 
     return search_path;
 }

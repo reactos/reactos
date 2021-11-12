@@ -141,7 +141,6 @@ static void test_search_path(void)
      * We unset both variables earlier so should simply get "." */
     ret = SymGetSearchPath(GetCurrentProcess(), search_path, ARRAY_SIZE(search_path));
     ok(ret == TRUE, "ret = %d\n", ret);
-    todo_wine
     ok(!strcmp(search_path, "."), "Got search path '%s', expected '.'\n", search_path);
 
     /* Set an arbitrary search path */
@@ -156,7 +155,6 @@ static void test_search_path(void)
     ok(ret == TRUE, "ret = %d\n", ret);
     ret = SymGetSearchPath(GetCurrentProcess(), search_path, ARRAY_SIZE(search_path));
     ok(ret == TRUE, "ret = %d\n", ret);
-    todo_wine
     ok(!strcmp(search_path, "."), "Got search path '%s', expected '.'\n", search_path);
 
     /* With _NT_SYMBOL_PATH */
@@ -165,7 +163,6 @@ static void test_search_path(void)
     ok(ret == TRUE, "ret = %d\n", ret);
     ret = SymGetSearchPath(GetCurrentProcess(), search_path, ARRAY_SIZE(search_path));
     ok(ret == TRUE, "ret = %d\n", ret);
-    todo_wine
     ok(!strcmp(search_path, ".;X:\\"), "Got search path '%s', expected '.;X:\\'\n", search_path);
 
     /* With both _NT_SYMBOL_PATH and _NT_ALT_SYMBOL_PATH */
@@ -192,7 +189,6 @@ static void test_search_path(void)
     ok(ret == TRUE, "ret = %d\n", ret);
     ret = SymGetSearchPath(GetCurrentProcess(), search_path, ARRAY_SIZE(search_path));
     ok(ret == TRUE, "ret = %d\n", ret);
-    todo_wine
     ok(!strcmp(search_path, "."), "Got search path '%s', expected '.'\n", search_path);
 }
 
