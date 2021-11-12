@@ -38,12 +38,12 @@ BEGIN
         MENUITEM "&Izreži\tCtrl+X",                ID_EDIT_CUT
         MENUITEM "&Kopiraj\tCtrl+C",               ID_EDIT_COPY
         MENUITEM "&Zalijepi\tCtrl+V",              ID_EDIT_PASTE
-        MENUITEM "I&zbriši\tDel",                 ID_EDIT_CLEAR
+        MENUITEM "Iz&briši\tDel",                 ID_EDIT_CLEAR
         MENUITEM "&Označi sve\tCtrl+A",         ID_EDIT_SELECTALL
         MENUITEM SEPARATOR
-        MENUITEM "&Pronađi...\tCtrl+F",            ID_FIND
+        MENUITEM "P&ronađi...\tCtrl+F",            ID_FIND
         MENUITEM "Pronađi &slijedeće\tF3",              ID_FIND_NEXT
-        MENUITEM "&Zamijeni...\tCtrl+H",         ID_REPLACE
+        MENUITEM "Z&amijeni...\tCtrl+H",         ID_REPLACE
         MENUITEM SEPARATOR
         MENUITEM "Pročitaj-samo &način",                  ID_EDIT_READONLY
         MENUITEM "&Modificirano",                   ID_EDIT_MODIFIED
@@ -129,7 +129,7 @@ STRINGTABLE
 BEGIN
     STRING_ALL_FILES,              "Svi dokumenti (*.*)"
     STRING_TEXT_FILES_TXT,         "Tekstni dokumenti (*.txt)"
-    STRING_TEXT_FILES_UNICODE_TXT, "Unicode tekstualni dokument (*.txt)"
+    STRING_TEXT_FILES_UNICODE_TXT, "Unicode tekstni dokumenti (*.txt)"
     STRING_RICHTEXT_FILES_RTF,     "Obogaćeni tekstni formati (*.rtf)"
     STRING_NEWFILE_RICHTEXT,       "Obogaćeni tekstni dokument"
     STRING_NEWFILE_TXT,            "Tekstni dokument"
@@ -148,7 +148,7 @@ STRINGTABLE
 BEGIN
     STRING_VIEWPROPS_TITLE,          "Opcije"
     STRING_VIEWPROPS_TEXT,           "Tekst"
-    STRING_VIEWPROPS_RICHTEXT,       "Obogaćeni tekst"
+    STRING_VIEWPROPS_RICHTEXT,       "Obogaćeni teskt"
 END
 
 STRINGTABLE
@@ -188,7 +188,7 @@ END
 
 IDD_DATETIME DIALOGEX 30, 20, 130, 80
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-CAPTION "Datum i vrijeme"
+CAPTION "Date and time"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT        "Podražni formati",-1,3,2,100,15
@@ -228,7 +228,7 @@ END
 
 IDD_TABSTOPS DIALOGEX 30, 20, 200, 110
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-CAPTION "Kartice"
+CAPTION "Tabulatori"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Tabulatori", -1, 10, 10, 120, 90
