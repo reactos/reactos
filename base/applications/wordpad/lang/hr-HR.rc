@@ -188,7 +188,7 @@ END
 
 IDD_DATETIME DIALOGEX 30, 20, 130, 80
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-CAPTION "Date and time"
+CAPTION "Datum i vrijeme"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT        "Podražni formati",-1,3,2,100,15
