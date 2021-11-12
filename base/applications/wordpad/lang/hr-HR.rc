@@ -148,7 +148,7 @@ STRINGTABLE
 BEGIN
     STRING_VIEWPROPS_TITLE,          "Opcije"
     STRING_VIEWPROPS_TEXT,           "Tekst"
-    STRING_VIEWPROPS_RICHTEXT,       "Obogaćeni teskt"
+    STRING_VIEWPROPS_RICHTEXT,       "Obogaćeni tekst"
 END
 
 STRINGTABLE
