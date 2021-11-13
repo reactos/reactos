@@ -16,7 +16,6 @@
 
 #define WIN32_LEAN_AND_MEAN
 #include <aclapi.h>
-#include <mmsystem.h>
 #include <userenv.h>
 #include <ndk/setypes.h>
 #include <ndk/sefuncs.h>
