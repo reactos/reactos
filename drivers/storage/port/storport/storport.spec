@@ -27,7 +27,7 @@
 @ stdcall StorPortPause(ptr long)
 @ stdcall StorPortPauseDevice(ptr long long long long)
 @ stdcall -arch=i386 StorPortQuerySystemTime(ptr) NTOSKRNL.KeQuerySystemTime
-@ stdcall -arch=amd64 StorPortQuerySystemTime(ptr)
+@ stdcall -arch=x86_64 StorPortQuerySystemTime(ptr)
 @ stdcall StorPortReadPortBufferUchar(ptr ptr ptr long)
 @ stdcall StorPortReadPortBufferUlong(ptr ptr ptr long)
 @ stdcall StorPortReadPortBufferUshort(ptr ptr ptr long)
