@@ -171,7 +171,6 @@ static void test_search_path(void)
     ok(ret == TRUE, "ret = %d\n", ret);
     ret = SymGetSearchPath(GetCurrentProcess(), search_path, ARRAY_SIZE(search_path));
     ok(ret == TRUE, "ret = %d\n", ret);
-    todo_wine
     ok(!strcmp(search_path, ".;X:\\;Y:\\"), "Got search path '%s', expected '.;X:\\;Y:\\'\n", search_path);
 
     /* With just _NT_ALT_SYMBOL_PATH */
@@ -180,7 +179,6 @@ static void test_search_path(void)
     ok(ret == TRUE, "ret = %d\n", ret);
     ret = SymGetSearchPath(GetCurrentProcess(), search_path, ARRAY_SIZE(search_path));
     ok(ret == TRUE, "ret = %d\n", ret);
-    todo_wine
     ok(!strcmp(search_path, ".;Y:\\"), "Got search path '%s', expected '.;Y:\\'\n", search_path);
 
     /* Restore original search path */

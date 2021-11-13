@@ -199,9 +199,9 @@ static WCHAR* make_default_search_path(void)
     unsigned    alt_sym_path_len;
 
     sym_path_len = GetEnvironmentVariableW(L"_NT_SYMBOL_PATH", NULL, 0);
-    alt_sym_path_len = GetEnvironmentVariableW(L"_NT_ALTERNATE_SYMBOL_PATH", NULL, 0);
+    alt_sym_path_len = GetEnvironmentVariableW(L"_NT_ALT_SYMBOL_PATH", NULL, 0);
 
-    /* The default symbol path is ".[;%_NT_SYMBOL_PATH%][;%_NT_ALTERNATE_SYMBOL_PATH%]".
+    /* The default symbol path is ".[;%_NT_SYMBOL_PATH%][;%_NT_ALT_SYMBOL_PATH%]".
      * If the variables exist, the lengths include a null-terminator. We use that
      * space for the semicolons, and only add the initial dot and the final null. */
     search_path = HeapAlloc(GetProcessHeap(), 0,
@@ -220,7 +220,7 @@ static WCHAR* make_default_search_path(void)
     if (alt_sym_path_len)
     {
         *p++ = L';';
-        GetEnvironmentVariableW(L"_NT_ALTERNATE_SYMBOL_PATH", p, alt_sym_path_len);
+        GetEnvironmentVariableW(L"_NT_ALT_SYMBOL_PATH", p, alt_sym_path_len);
         p += alt_sym_path_len - 1;
     }
     *p = L'\0';
