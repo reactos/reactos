@@ -608,6 +608,3 @@
 608 stdcall bMakePathNameW(wstr wstr wstr long)
 609 stdcall cGetTTFFromFOT(long long long long long long long)
 610 stdcall gdiPlaySpoolStream(long long long long long long)
-; FIXME: Wine DX Dlls need these
-@ stdcall D3DKMTCreateDCFromMemory(ptr)
-@ stdcall D3DKMTDestroyDCFromMemory(ptr)
