@@ -1149,7 +1149,14 @@ static LRESULT CALLBACK BUTTON_WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, L
                 BUTTON_NOTIFY_PARENT( hWnd, (state & BST_PUSHED) ? BN_HILITE : BN_UNHILITE );
             infoPtr->state = state;
 
+#ifdef __REACTOS__
+            if ((infoPtr->state == 0) && (btn_type == 0) && (infoPtr->imlData.himl))
+                paint_button( infoPtr, btn_type, ODA_SELECT );
+            else
+                InvalidateRect( hWnd, NULL, FALSE );
+#else
             InvalidateRect( hWnd, NULL, FALSE );
+#endif
         }
         break;
 
