@@ -23,6 +23,16 @@
 extern "C" {
 #endif
 
+#ifdef __REACTOS__
+#include <wine/asm.h>
+#endif
+
+#ifdef __cplusplus
+#define THISCALLMETHOD_(type,method)  virtual type __thiscall method
+#else
+#define THISCALLMETHOD_(type,method)  type (__thiscall *method)
+#endif
+
 DEFINE_GUID(IID_ITextServices,0x8d33f740,0xcf58,0x11ce,0xa8,0x9d,0x00,0xaa,0x00,0x6c,0xad,0xc5);
 DEFINE_GUID(IID_ITextHost,    0xc5bdd8d0,0xd26e,0x11ce,0xa8,0x9e,0x00,0xaa,0x00,0x6c,0xad,0xc5);
 DEFINE_GUID(IID_ITextHost2,   0xc5bdd8d0,0xd26e,0x11ce,0xa8,0x9e,0x00,0xaa,0x00,0x6c,0xad,0xc5);
@@ -44,10 +54,10 @@ DECLARE_INTERFACE_(ITextServices,IUnknown)
 
     /*** ITextServices methods ***/
 
-    STDMETHOD(TxSendMessage)( THIS_
+    THISCALLMETHOD_(HRESULT,TxSendMessage)( THIS_
         UINT msg, WPARAM wparam, LPARAM lparam, LRESULT* plresult) PURE;
 
-    STDMETHOD(TxDraw)( THIS_
+    THISCALLMETHOD_(HRESULT,TxDraw)( THIS_
         DWORD dwDrawAspect,
         LONG lindex,
         void* pvAspect,
@@ -61,21 +71,21 @@ DECLARE_INTERFACE_(ITextServices,IUnknown)
         DWORD dwContinue,
         LONG lViewId) PURE;
 
-    STDMETHOD(TxGetHScroll)( THIS_
+    THISCALLMETHOD_(HRESULT,TxGetHScroll)( THIS_
         LONG* plMin,
         LONG* plMax,
         LONG* plPos,
         LONG* plPage,
         BOOL* pfEnabled) PURE;
 
-    STDMETHOD(TxGetVScroll)( THIS_
+    THISCALLMETHOD_(HRESULT,TxGetVScroll)( THIS_
         LONG* plMin,
         LONG* plMax,
         LONG* plPos,
         LONG* plPage,
         BOOL* pfEnabled) PURE;
 
-    STDMETHOD(OnTxSetCursor)( THIS_
+    THISCALLMETHOD_(HRESULT,OnTxSetCursor)( THIS_
         DWORD dwDrawAspect,
         LONG lindex,
         void* pvAspect,
@@ -86,7 +96,7 @@ DECLARE_INTERFACE_(ITextServices,IUnknown)
         INT x,
         INT y) PURE;
 
-    STDMETHOD(TxQueryHitPoint)( THIS_
+    THISCALLMETHOD_(HRESULT,TxQueryHitPoint)( THIS_
         DWORD dwDrawAspect,
         LONG lindex,
         void* pvAspect,
@@ -98,28 +108,28 @@ DECLARE_INTERFACE_(ITextServices,IUnknown)
         INT y,
         DWORD* pHitResult) PURE;
 
-    STDMETHOD(OnTxInplaceActivate)( THIS_
+    THISCALLMETHOD_(HRESULT,OnTxInplaceActivate)( THIS_
         LPCRECT prcClient) PURE;
 
-    STDMETHOD(OnTxInplaceDeactivate)( THIS ) PURE;
+    THISCALLMETHOD_(HRESULT,OnTxInplaceDeactivate)( THIS ) PURE;
 
-    STDMETHOD(OnTxUIActivate)( THIS ) PURE;
+    THISCALLMETHOD_(HRESULT,OnTxUIActivate)( THIS ) PURE;
 
-    STDMETHOD(OnTxUIDeactivate)( THIS ) PURE;
+    THISCALLMETHOD_(HRESULT,OnTxUIDeactivate)( THIS ) PURE;
 
-    STDMETHOD(TxGetText)( THIS_
+    THISCALLMETHOD_(HRESULT,TxGetText)( THIS_
         BSTR* pbstrText) PURE;
 
-    STDMETHOD(TxSetText)( THIS_
+    THISCALLMETHOD_(HRESULT,TxSetText)( THIS_
         LPCWSTR pszText) PURE;
 
-    STDMETHOD(TxGetCurrentTargetX)( THIS_
+    THISCALLMETHOD_(HRESULT,TxGetCurTargetX)( THIS_
         LONG* x) PURE;
 
-    STDMETHOD(TxGetBaseLinePos)( THIS_
+    THISCALLMETHOD_(HRESULT,TxGetBaseLinePos)( THIS_
         LONG* x) PURE;
 
-    STDMETHOD(TxGetNaturalSize)( THIS_
+    THISCALLMETHOD_(HRESULT,TxGetNaturalSize)( THIS_
         DWORD dwAspect,
         HDC hdcDraw,
         HDC hicTargetDev,
@@ -129,14 +139,14 @@ DECLARE_INTERFACE_(ITextServices,IUnknown)
         LONG* pwidth,
         LONG* pheight) PURE;
 
-    STDMETHOD(TxGetDropTarget)( THIS_
+    THISCALLMETHOD_(HRESULT,TxGetDropTarget)( THIS_
         IDropTarget** ppDropTarget) PURE;
 
-    STDMETHOD(OnTxPropertyBitsChange)( THIS_
+    THISCALLMETHOD_(HRESULT,OnTxPropertyBitsChange)( THIS_
         DWORD dwMask,
         DWORD dwBits) PURE;
 
-    STDMETHOD(TxGetCachedSize)( THIS_
+    THISCALLMETHOD_(HRESULT,TxGetCachedSize)( THIS_
         DWORD* pdwWidth,
         DWORD* pdwHeight) PURE;
 
@@ -212,58 +222,58 @@ DECLARE_INTERFACE_(ITextHost,IUnknown)
     STDMETHOD_(ULONG,Release)(THIS) PURE;
 
     /*** ITextHost methods ***/
-    STDMETHOD_(HDC,TxGetDC)( THIS
+    THISCALLMETHOD_(HDC,TxGetDC)( THIS
         ) PURE;
 
-    STDMETHOD_(INT,TxReleaseDC)( THIS_
+    THISCALLMETHOD_(INT,TxReleaseDC)( THIS_
         HDC hdc) PURE;
 
-    STDMETHOD_(BOOL,TxShowScrollBar)( THIS_
+    THISCALLMETHOD_(BOOL,TxShowScrollBar)( THIS_
         INT fnBar,
         BOOL fShow) PURE;
 
-    STDMETHOD_(BOOL,TxEnableScrollBar)( THIS_
+    THISCALLMETHOD_(BOOL,TxEnableScrollBar)( THIS_
         INT fuSBFlags,
         INT fuArrowflags) PURE;
 
-    STDMETHOD_(BOOL,TxSetScrollRange)( THIS_
+    THISCALLMETHOD_(BOOL,TxSetScrollRange)( THIS_
         INT fnBar,
         LONG nMinPos,
         INT nMaxPos,
         BOOL fRedraw) PURE;
 
-    STDMETHOD_(BOOL,TxSetScrollPos)( THIS_
+    THISCALLMETHOD_(BOOL,TxSetScrollPos)( THIS_
         INT fnBar,
         INT nPos,
         BOOL fRedraw) PURE;
 
-    STDMETHOD_(void,TxInvalidateRect)( THIS_
+    THISCALLMETHOD_(void,TxInvalidateRect)( THIS_
         LPCRECT prc,
         BOOL fMode) PURE;
 
-    STDMETHOD_(void,TxViewChange)( THIS_
+    THISCALLMETHOD_(void,TxViewChange)( THIS_
         BOOL fUpdate) PURE;
 
-    STDMETHOD_(BOOL,TxCreateCaret)( THIS_
+    THISCALLMETHOD_(BOOL,TxCreateCaret)( THIS_
         HBITMAP hbmp,
         INT xWidth,
         INT yHeight) PURE;
 
-    STDMETHOD_(BOOL,TxShowCaret)( THIS_
+    THISCALLMETHOD_(BOOL,TxShowCaret)( THIS_
         BOOL fShow) PURE;
 
-    STDMETHOD_(BOOL,TxSetCaretPos)( THIS_
+    THISCALLMETHOD_(BOOL,TxSetCaretPos)( THIS_
         INT x,
         INT y) PURE;
 
-    STDMETHOD_(BOOL,TxSetTimer)( THIS_
+    THISCALLMETHOD_(BOOL,TxSetTimer)( THIS_
         UINT idTimer,
         UINT uTimeout) PURE;
 
-    STDMETHOD_(void,TxKillTimer)( THIS_
+    THISCALLMETHOD_(void,TxKillTimer)( THIS_
         UINT idTimer) PURE;
 
-    STDMETHOD_(void,TxScrollWindowEx)( THIS_
+    THISCALLMETHOD_(void,TxScrollWindowEx)( THIS_
         INT dx,
         INT dy,
         LPCRECT lprcScroll,
@@ -272,82 +282,82 @@ DECLARE_INTERFACE_(ITextHost,IUnknown)
         LPRECT lprcUpdate,
         UINT fuScroll) PURE;
 
-    STDMETHOD_(void,TxSetCapture)( THIS_
+    THISCALLMETHOD_(void,TxSetCapture)( THIS_
         BOOL fCapture) PURE;
 
-    STDMETHOD_(void,TxSetFocus)( THIS
+    THISCALLMETHOD_(void,TxSetFocus)( THIS
         ) PURE;
 
-    STDMETHOD_(void,TxSetCursor)( THIS_
+    THISCALLMETHOD_(void,TxSetCursor)( THIS_
         HCURSOR hcur,
         BOOL fText) PURE;
 
-    STDMETHOD_(BOOL,TxScreenToClient)( THIS_
+    THISCALLMETHOD_(BOOL,TxScreenToClient)( THIS_
         LPPOINT lppt) PURE;
 
-    STDMETHOD_(BOOL,TxClientToScreen)( THIS_
+    THISCALLMETHOD_(BOOL,TxClientToScreen)( THIS_
         LPPOINT lppt) PURE;
 
-    STDMETHOD(TxActivate)( THIS_
+    THISCALLMETHOD_(HRESULT,TxActivate)( THIS_
         LONG* plOldState) PURE;
 
-    STDMETHOD(TxDeactivate)( THIS_
+    THISCALLMETHOD_(HRESULT,TxDeactivate)( THIS_
         LONG lNewState) PURE;
 
-    STDMETHOD(TxGetClientRect)( THIS_
+    THISCALLMETHOD_(HRESULT,TxGetClientRect)( THIS_
         LPRECT prc) PURE;
 
-    STDMETHOD(TxGetViewInset)( THIS_
+    THISCALLMETHOD_(HRESULT,TxGetViewInset)( THIS_
         LPRECT prc) PURE;
 
-    STDMETHOD(TxGetCharFormat)( THIS_
+    THISCALLMETHOD_(HRESULT,TxGetCharFormat)( THIS_
         const CHARFORMATW** ppCF) PURE;
 
-    STDMETHOD(TxGetParaFormat)( THIS_
+    THISCALLMETHOD_(HRESULT,TxGetParaFormat)( THIS_
         const PARAFORMAT** ppPF) PURE;
 
-    STDMETHOD_(COLORREF,TxGetSysColor)( THIS_
+    THISCALLMETHOD_(COLORREF,TxGetSysColor)( THIS_
         int nIndex) PURE;
 
-    STDMETHOD(TxGetBackStyle)( THIS_
+    THISCALLMETHOD_(HRESULT,TxGetBackStyle)( THIS_
         TXTBACKSTYLE* pStyle) PURE;
 
-    STDMETHOD(TxGetMaxLength)( THIS_
+    THISCALLMETHOD_(HRESULT,TxGetMaxLength)( THIS_
         DWORD* plength) PURE;
 
-    STDMETHOD(TxGetScrollBars)( THIS_
+    THISCALLMETHOD_(HRESULT,TxGetScrollBars)( THIS_
         DWORD* pdwScrollBar) PURE;
 
-    STDMETHOD(TxGetPasswordChar)( THIS_
+    THISCALLMETHOD_(HRESULT,TxGetPasswordChar)( THIS_
         WCHAR* pch) PURE;
 
-    STDMETHOD(TxGetAcceleratorPos)( THIS_
+    THISCALLMETHOD_(HRESULT,TxGetAcceleratorPos)( THIS_
         LONG* pch) PURE;
 
-    STDMETHOD(TxGetExtent)( THIS_
+    THISCALLMETHOD_(HRESULT,TxGetExtent)( THIS_
         LPSIZEL lpExtent) PURE;
 
-    STDMETHOD(OnTxCharFormatChange)( THIS_
+    THISCALLMETHOD_(HRESULT,OnTxCharFormatChange)( THIS_
         const CHARFORMATW* pcf) PURE;
 
-    STDMETHOD(OnTxParaFormatChange)( THIS_
+    THISCALLMETHOD_(HRESULT,OnTxParaFormatChange)( THIS_
         const PARAFORMAT* ppf) PURE;
 
-    STDMETHOD(TxGetPropertyBits)( THIS_
+    THISCALLMETHOD_(HRESULT,TxGetPropertyBits)( THIS_
         DWORD dwMask,
         DWORD* pdwBits) PURE;
 
-    STDMETHOD(TxNotify)( THIS_
+    THISCALLMETHOD_(HRESULT,TxNotify)( THIS_
         DWORD iNotify,
         void* pv) PURE;
 
-    STDMETHOD_(HIMC,TxImmGetContext)( THIS
+    THISCALLMETHOD_(HIMC,TxImmGetContext)( THIS
         ) PURE;
 
-    STDMETHOD_(void,TxImmReleaseContext)( THIS_
+    THISCALLMETHOD_(void,TxImmReleaseContext)( THIS_
         HIMC himc) PURE;
 
-    STDMETHOD(TxGetSelectionBarWidth)( THIS_
+    THISCALLMETHOD_(HRESULT,TxGetSelectionBarWidth)( THIS_
         LONG* lSelBarWidth) PURE;
 
 };
