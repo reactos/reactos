@@ -96,6 +96,10 @@ HRESULT WINAPI SHILCreateFromPathW (
 BOOL WINAPI StrRetToStrNA(LPSTR,DWORD,LPSTRRET,const ITEMIDLIST*);
 BOOL WINAPI StrRetToStrNW(LPWSTR,DWORD,LPSTRRET,const ITEMIDLIST*);
 
+/****************************************************************************
+ * Recycle Bin API
+ */
+HRESULT WINAPI SHUpdateRecycleBinIcon(void);
 
 /****************************************************************************
  * SHChangeNotifyRegister API

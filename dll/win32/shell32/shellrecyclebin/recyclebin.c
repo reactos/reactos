@@ -7,6 +7,7 @@
  */
 
 #include "recyclebin_private.h"
+#include <undocshell.h>
 
 BOOL WINAPI
 CloseRecycleBinHandle(
