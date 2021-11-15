@@ -149,7 +149,6 @@ CreateDIBPalette(
 
                 /* Set the RGB value in the palette */
                 PALETTE_vSetRGBColorForIndex(ppal, i, crColor);
-
             }
         }
         else
