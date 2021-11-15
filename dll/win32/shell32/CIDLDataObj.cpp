@@ -400,3 +400,15 @@ HRESULT WINAPI SHCreateDataObject(PCIDLIST_ABSOLUTE pidlFolder, UINT cidl, PCUIT
     }
     return E_FAIL;
 }
+
+/*************************************************************************
+ * SHCreateFileDataObject       [SHELL32.740]
+ *
+ */
+
+HRESULT WINAPI SHCreateFileDataObject(PCIDLIST_ABSOLUTE pidlFolder, UINT cidl, PCUITEMID_CHILD_ARRAY apidl, IDataObject* pDataInner, IDataObject** ppDataObj)
+{
+    if (pDataInner)
+        UNIMPLEMENTED;
+    return IDataObject_Constructor(NULL, pidlFolder, apidl, cidl, TRUE, ppDataObj);
+}

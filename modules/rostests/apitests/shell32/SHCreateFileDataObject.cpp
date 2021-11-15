@@ -1,8 +1,10 @@
 /*
  * PROJECT:     ReactOS api tests
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
- * PURPOSE:     Test for SHCreateDataObject
- * COPYRIGHT:   Copyright 2019 Mark Jansen <mark.jansen@reactos.org>
+ * PURPOSE:     Test for SHCreateFileDataObject
+ * COPYRIGHT:   Copyright 2019-2021 Mark Jansen <mark.jansen@reactos.org>
+ *
+ * This is 99% the same as the test for SHCreateDataObject, except that this always has 4 data types (TestDefaultFormat)
  */
 
 #include "shelltest.h"
@@ -13,14 +15,14 @@
 
 static DWORD g_WinVersion;
 
-typedef HRESULT (WINAPI *tSHCreateDataObject)(PCIDLIST_ABSOLUTE pidlFolder, UINT cidl, PCUITEMID_CHILD_ARRAY apidl, IDataObject *pdtInner, REFIID riid, void **ppv);
-static tSHCreateDataObject pSHCreateDataObject;
+typedef HRESULT(WINAPI* tSHCreateFileDataObject)(PCIDLIST_ABSOLUTE pidlFolder, UINT cidl, PCUITEMID_CHILD_ARRAY apidl, IDataObject* pDataInner, IDataObject** ppDataObj);
+static tSHCreateFileDataObject pSHCreateFileDataObject;
 
 
 static void TestAdviseAndCanonical(PCIDLIST_ABSOLUTE pidlFolder, UINT cidl, PCUIDLIST_RELATIVE_ARRAY apidl)
 {
     CComPtr<IDataObject> spDataObj;
-    HRESULT hr = pSHCreateDataObject(pidlFolder, cidl, apidl, NULL, IID_PPV_ARG(IDataObject, &spDataObj));
+    HRESULT hr = pSHCreateFileDataObject(pidlFolder, cidl, apidl, NULL, &spDataObj);
 
     ok_hex(hr, S_OK);
     if (!SUCCEEDED(hr))
@@ -144,7 +146,7 @@ static void TestFilenameW(PVOID pData, SIZE_T Size, LPCWSTR ExpectRoot, LPCWSTR 
 static void TestDefaultFormat(PCIDLIST_ABSOLUTE pidlFolder, UINT cidl, PCUIDLIST_RELATIVE_ARRAY apidl)
 {
     CComPtr<IDataObject> spDataObj;
-    HRESULT hr = pSHCreateDataObject(pidlFolder, cidl, apidl, NULL, IID_PPV_ARG(IDataObject, &spDataObj));
+    HRESULT hr = pSHCreateFileDataObject(pidlFolder, cidl, apidl, NULL, &spDataObj);
 
     ok_hex(hr, S_OK);
     if (!SUCCEEDED(hr))
@@ -186,7 +188,7 @@ static void TestDefaultFormat(PCIDLIST_ABSOLUTE pidlFolder, UINT cidl, PCUIDLIST
         Count++;
     }
     trace("Got %u formats\n", Count);
-    ULONG ExpectedCount = (g_WinVersion < _WIN32_WINNT_WIN8) ? 1 : 4;
+    ULONG ExpectedCount = 4;
     ok_int(Count, (int)ExpectedCount);
     ok_hex(hr, S_FALSE);
 
@@ -242,10 +244,10 @@ static void TestDefaultFormat(PCIDLIST_ABSOLUTE pidlFolder, UINT cidl, PCUIDLIST
         }
         else
         {
-            if (g_WinVersion < _WIN32_WINNT_VISTA)
+            //if (g_WinVersion < _WIN32_WINNT_VISTA)
                 ok(hr == E_INVALIDARG, "0x%x (0x%x(%s))\n", (unsigned int)hr, Expected[Count], szExpected);
-            else
-                ok(hr == DV_E_FORMATETC, "0x%x (0x%x(%s))\n", (unsigned int)hr, Expected[Count], szExpected);
+            //else
+            //    ok(hr == DV_E_FORMATETC, "0x%x (0x%x(%s))\n", (unsigned int)hr, Expected[Count], szExpected);
         }
 
         if (SUCCEEDED(hr))
@@ -267,7 +269,7 @@ static void TestDefaultFormat(PCIDLIST_ABSOLUTE pidlFolder, UINT cidl, PCUIDLIST
 static void TestSetAndGetExtraFormat(PCIDLIST_ABSOLUTE pidlFolder, UINT cidl, PCUIDLIST_RELATIVE_ARRAY apidl)
 {
     CComPtr<IDataObject> spDataObj;
-    HRESULT hr = pSHCreateDataObject(pidlFolder, cidl, apidl, NULL, IID_PPV_ARG(IDataObject, &spDataObj));
+    HRESULT hr = pSHCreateFileDataObject(pidlFolder, cidl, apidl, NULL, &spDataObj);
 
     ok_hex(hr, S_OK);
     if (!SUCCEEDED(hr))
@@ -398,14 +400,14 @@ static void TestSetAndGetExtraFormat(PCIDLIST_ABSOLUTE pidlFolder, UINT cidl, PC
     ok_size_t(size, 0);
 }
 
-START_TEST(SHCreateDataObject)
+START_TEST(SHCreateFileDataObject)
 {
     HRESULT hr;
 
-    pSHCreateDataObject = (tSHCreateDataObject)GetProcAddress(GetModuleHandleA("shell32.dll"), "SHCreateDataObject");
-    if (!pSHCreateDataObject)
+    pSHCreateFileDataObject = (tSHCreateFileDataObject)GetProcAddress(GetModuleHandleA("shell32.dll"), MAKEINTRESOURCEA(740));
+    if (!pSHCreateFileDataObject)
     {
-        skip("shell32!SHCreateDataObject not exported\n");
+        skip("shell32!SHCreateFileDataObject not exported\n");
         return;
     }
 
