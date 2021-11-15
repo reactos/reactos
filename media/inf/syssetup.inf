@@ -126,6 +126,7 @@ AddReg=Classes
 11,,zipfldr.dll,1
 
 [TypeLibraries]
+riched20.dll
 stdole2.tlb
 stdole32.tlb
 mshtml.tlb
