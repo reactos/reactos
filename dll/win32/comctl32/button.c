@@ -1150,10 +1150,18 @@ static LRESULT CALLBACK BUTTON_WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, L
             infoPtr->state = state;
 
 #ifdef __REACTOS__
-            if ((infoPtr->state == 0) && (btn_type == 0) && (infoPtr->imlData.himl))
-                paint_button( infoPtr, btn_type, ODA_SELECT );
+            /* We are in the Button Message SETSTATE processing here.
+             * If we have a normal pushbutton and it is not focused
+             * and it has an image list then we just need to use
+             * paint_button with ODA_SELECT to process it.
+             * This fixes the START button staying down after
+             * the Shutdown menu selection has been made. CORE-17845 */
+            if ((btn_type == BS_PUSHBUTTON)  &&
+                !(infoPtr->state & BST_FOCUS) &&
+                (infoPtr->imlData.himl))
+                paint_button(infoPtr, btn_type, ODA_SELECT);
             else
-                InvalidateRect( hWnd, NULL, FALSE );
+                InvalidateRect(hWnd, NULL, FALSE);
 #else
             InvalidateRect( hWnd, NULL, FALSE );
 #endif
