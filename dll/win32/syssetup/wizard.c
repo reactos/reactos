@@ -2170,6 +2170,12 @@ RegistrationProc(LPVOID Parameter)
     RegistrationNotify.Progress = RegistrationData->DllCount;
     RegistrationNotify.ActivityID = IDS_REGISTERING_COMPONENTS;
     RegistrationNotify.CurrentItem = NULL;
+
+    RegisterTypeLibraries(hSysSetupInf, L"TypeLibraries");
+
+    // FIXME: Move this call to a separate cleanup page!
+    RtlCreateBootStatusDataFile();
+
     SendMessage(RegistrationData->hwndDlg, PM_REGISTRATION_NOTIFY,
                 1, (LPARAM) &RegistrationNotify);
     if (NULL != RegistrationNotify.ErrorMessage &&
@@ -2180,11 +2186,6 @@ RegistrationProc(LPVOID Parameter)
 
     SetupTermDefaultQueueCallback(RegistrationData->DefaultContext);
     HeapFree(GetProcessHeap(), 0, RegistrationData);
-
-    RegisterTypeLibraries(hSysSetupInf, L"TypeLibraries");
-
-    // FIXME: Move this call to a separate cleanup page!
-    RtlCreateBootStatusDataFile();
 
     return 0;
 }
