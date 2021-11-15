@@ -1275,6 +1275,89 @@ MiReadPage(PMEMORY_AREA MemoryArea,
 }
 #endif
 
+static VOID
+MmAlterViewAttributes(PMMSUPPORT AddressSpace,
+                      PVOID BaseAddress,
+                      SIZE_T RegionSize,
+                      ULONG OldType,
+                      ULONG OldProtect,
+                      ULONG NewType,
+                      ULONG NewProtect)
+{
+    PMEMORY_AREA MemoryArea;
+    PMM_SECTION_SEGMENT Segment;
+    BOOLEAN DoCOW = FALSE;
+    ULONG i;
+    PEPROCESS Process = MmGetAddressSpaceOwner(AddressSpace);
+
+    MemoryArea = MmLocateMemoryAreaByAddress(AddressSpace, BaseAddress);
+    ASSERT(MemoryArea != NULL);
+    Segment = MemoryArea->Data.SectionData.Segment;
+    MmLockSectionSegment(Segment);
+
+    if ((Segment->WriteCopy) &&
+            (NewProtect == PAGE_READWRITE || NewProtect == PAGE_EXECUTE_READWRITE))
+    {
+        DoCOW = TRUE;
+    }
+
+    if (OldProtect != NewProtect)
+    {
+        for (i = 0; i < PAGE_ROUND_UP(RegionSize) / PAGE_SIZE; i++)
+        {
+            SWAPENTRY SwapEntry;
+            PVOID Address = (char*)BaseAddress + (i * PAGE_SIZE);
+            ULONG Protect = NewProtect;
+
+            /* Wait for a wait entry to disappear */
+            do
+            {
+                MmGetPageFileMapping(Process, Address, &SwapEntry);
+                if (SwapEntry != MM_WAIT_ENTRY)
+                    break;
+                MiWaitForPageEvent(Process, Address);
+            }
+            while (TRUE);
+
+            /*
+             * If we doing COW for this segment then check if the page is
+             * already private.
+             */
+            if (DoCOW && MmIsPagePresent(Process, Address))
+            {
+                LARGE_INTEGER Offset;
+                ULONG_PTR Entry;
+                PFN_NUMBER Page;
+
+                Offset.QuadPart = (ULONG_PTR)Address - MA_GetStartingAddress(MemoryArea)
+                                  + MemoryArea->Data.SectionData.ViewOffset.QuadPart;
+                Entry = MmGetPageEntrySectionSegment(Segment, &Offset);
+                /*
+                 * An MM_WAIT_ENTRY is ok in this case...  It'll just count as
+                 * IS_SWAP_FROM_SSE and we'll do the right thing.
+                 */
+                Page = MmGetPfnForProcess(Process, Address);
+
+                Protect = PAGE_READONLY;
+                if (Segment->Image.Characteristics & IMAGE_SCN_CNT_UNINITIALIZED_DATA ||
+                        IS_SWAP_FROM_SSE(Entry) ||
+                        PFN_FROM_SSE(Entry) != Page)
+                {
+                    Protect = NewProtect;
+                }
+            }
+
+            if (MmIsPagePresent(Process, Address) || MmIsDisabledPage(Process, Address))
+            {
+                MmSetPageProtect(Process, Address,
+                                 Protect);
+            }
+        }
+    }
+
+    MmUnlockSectionSegment(Segment);
+}
+
 NTSTATUS
 NTAPI
 MmNotPresentFaultSectionView(PMMSUPPORT AddressSpace,
@@ -1329,6 +1412,29 @@ MmNotPresentFaultSectionView(PMMSUPPORT AddressSpace,
                           &MemoryArea->Data.SectionData.RegionListHead,
                           Address, NULL);
     ASSERT(Region != NULL);
+
+    /* Check for a NOACCESS mapping */
+    if (Region->Protect & PAGE_NOACCESS)
+    {
+        return STATUS_ACCESS_VIOLATION;
+    }
+
+    if (Region->Protect & PAGE_GUARD)
+    {
+        /* Remove it */
+        Status = MmAlterRegion(AddressSpace, (PVOID)MA_GetStartingAddress(MemoryArea),
+                &MemoryArea->Data.SectionData.RegionListHead,
+                Address, PAGE_SIZE, Region->Type, Region->Protect & ~PAGE_GUARD,
+                MmAlterViewAttributes);
+
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("Removing PAGE_GUARD protection failed : 0x%08x.\n", Status);
+        }
+
+        return STATUS_GUARD_PAGE_VIOLATION;
+    }
+
     /*
      * Lock the segment
      */
@@ -2415,89 +2521,6 @@ MmWritePageSectionView(PMMSUPPORT AddressSpace,
     DPRINT("MM: Wrote section page 0x%.8X to swap!\n", Page << PAGE_SHIFT);
     MiSetPageEvent(NULL, NULL);
     return(STATUS_SUCCESS);
-}
-
-static VOID
-MmAlterViewAttributes(PMMSUPPORT AddressSpace,
-                      PVOID BaseAddress,
-                      SIZE_T RegionSize,
-                      ULONG OldType,
-                      ULONG OldProtect,
-                      ULONG NewType,
-                      ULONG NewProtect)
-{
-    PMEMORY_AREA MemoryArea;
-    PMM_SECTION_SEGMENT Segment;
-    BOOLEAN DoCOW = FALSE;
-    ULONG i;
-    PEPROCESS Process = MmGetAddressSpaceOwner(AddressSpace);
-
-    MemoryArea = MmLocateMemoryAreaByAddress(AddressSpace, BaseAddress);
-    ASSERT(MemoryArea != NULL);
-    Segment = MemoryArea->Data.SectionData.Segment;
-    MmLockSectionSegment(Segment);
-
-    if ((Segment->WriteCopy) &&
-            (NewProtect == PAGE_READWRITE || NewProtect == PAGE_EXECUTE_READWRITE))
-    {
-        DoCOW = TRUE;
-    }
-
-    if (OldProtect != NewProtect)
-    {
-        for (i = 0; i < PAGE_ROUND_UP(RegionSize) / PAGE_SIZE; i++)
-        {
-            SWAPENTRY SwapEntry;
-            PVOID Address = (char*)BaseAddress + (i * PAGE_SIZE);
-            ULONG Protect = NewProtect;
-
-            /* Wait for a wait entry to disappear */
-            do
-            {
-                MmGetPageFileMapping(Process, Address, &SwapEntry);
-                if (SwapEntry != MM_WAIT_ENTRY)
-                    break;
-                MiWaitForPageEvent(Process, Address);
-            }
-            while (TRUE);
-
-            /*
-             * If we doing COW for this segment then check if the page is
-             * already private.
-             */
-            if (DoCOW && MmIsPagePresent(Process, Address))
-            {
-                LARGE_INTEGER Offset;
-                ULONG_PTR Entry;
-                PFN_NUMBER Page;
-
-                Offset.QuadPart = (ULONG_PTR)Address - MA_GetStartingAddress(MemoryArea)
-                                  + MemoryArea->Data.SectionData.ViewOffset.QuadPart;
-                Entry = MmGetPageEntrySectionSegment(Segment, &Offset);
-                /*
-                 * An MM_WAIT_ENTRY is ok in this case...  It'll just count as
-                 * IS_SWAP_FROM_SSE and we'll do the right thing.
-                 */
-                Page = MmGetPfnForProcess(Process, Address);
-
-                Protect = PAGE_READONLY;
-                if (Segment->Image.Characteristics & IMAGE_SCN_CNT_UNINITIALIZED_DATA ||
-                        IS_SWAP_FROM_SSE(Entry) ||
-                        PFN_FROM_SSE(Entry) != Page)
-                {
-                    Protect = NewProtect;
-                }
-            }
-
-            if (MmIsPagePresent(Process, Address) || MmIsDisabledPage(Process, Address))
-            {
-                MmSetPageProtect(Process, Address,
-                                 Protect);
-            }
-        }
-    }
-
-    MmUnlockSectionSegment(Segment);
 }
 
 NTSTATUS
