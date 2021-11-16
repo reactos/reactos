@@ -553,4 +553,8 @@ BUSMASTER_CONTROLLER_INFORMATION_BASE const BusMasterAdapters[] = {
     PCI_DEV_HW_SPEC_BM( ffff, ffff, 0xff, BMLIST_TERMINATOR, NULL       , BMLIST_TERMINATOR )
 };
 
-/* static */ const ULONG _NUM_BUSMASTER_ADAPTERS = (sizeof(BusMasterAdapters) / sizeof(BUSMASTER_CONTROLLER_INFORMATION_BASE));
+#ifndef __REACTOS__
+static const ULONG _NUM_BUSMASTER_ADAPTERS = (sizeof(BusMasterAdapters) / sizeof(BUSMASTER_CONTROLLER_INFORMATION_BASE));
+#else
+const ULONG _NUM_BUSMASTER_ADAPTERS = (sizeof(BusMasterAdapters) / sizeof(BUSMASTER_CONTROLLER_INFORMATION_BASE));
+#endif
