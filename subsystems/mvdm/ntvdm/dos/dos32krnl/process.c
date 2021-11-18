@@ -796,10 +796,40 @@ WORD DosCreateProcess(IN LPCSTR ProgramName,
         /* Those are handled by NTVDM */
         case SCS_WOW_BINARY:
         {
-            DisplayMessage(L"Trying to load '%S'.\n"
-                           L"WOW16 applications are not supported internally by NTVDM at the moment.\n"
-                           L"Press 'OK' to continue.",
-                           ProgramName);
+            CHAR AppName[50] = "\"%programfiles%\\otvdm\\otvdmw.exe\" ";
+            STARTUPINFOA si;
+            CHAR ExpName[256];
+            ExpandEnvironmentStringsA(AppName, ExpName, 255);
+            strcat(ExpName, "\"");         // Add double-quote before ProgramName
+            strcat(ExpName, ProgramName);  // Append Program name
+            strcat(ExpName, "\"");         // Add double-quote after ProgramName
+            PROCESS_INFORMATION pi;
+            ZeroMemory( &si, sizeof(si) );
+            si.cb = sizeof(si);
+            ZeroMemory( &pi, sizeof(pi) );
+
+            /* Create the process. */
+            if(CreateProcessA( NULL,   // No Application Name
+                (LPSTR)ExpName,   // Just our Command Line
+                NULL,             // Cannot inherit Process Handle
+                NULL,             // Cannot inherit Thread Handle
+                FALSE,            // No handle inheritance
+                0,                // No extra creation flags
+                NULL,             // No environment block
+                NULL,             // No starting directory 
+                &si,              // STARTUPINFOA
+                &pi ))            // PROCESS_INFORMATION
+            {
+                /* Close handles. */
+                CloseHandle(pi.hProcess);
+                CloseHandle(pi.hThread);
+                break;
+            }
+            else
+                DisplayMessage(L"Trying to load '%S'.\n"
+                               L"WOW16 applications are not supported internally by NTVDM at the moment.\n"
+                               L"Consider adding otvdm. Press 'OK' to continue.",
+                               ProgramName);
             // Fall through
         }
         case SCS_DOS_BINARY:
