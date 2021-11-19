@@ -796,33 +796,36 @@ WORD DosCreateProcess(IN LPCSTR ProgramName,
         /* Those are handled by NTVDM */
         case SCS_WOW_BINARY:
         {
-            CHAR AppName[50] = "\"%programfiles%\\otvdm\\otvdmw.exe\" ";
+            static const PCSTR AppName = "\"%ProgramFiles%\\otvdm\\otvdmw.exe\" ";
+
             STARTUPINFOA si;
-            CHAR ExpName[256];
-            ExpandEnvironmentStringsA(AppName, ExpName, 255);
+            PROCESS_INFORMATION pi;
+            CHAR ExpName[MAX_PATH];
+
+            ExpandEnvironmentStringsA(AppName, ExpName, ARRAYSIZE(ExpName) - 1);
             strcat(ExpName, "\"");         // Add double-quote before ProgramName
             strcat(ExpName, ProgramName);  // Append Program name
             strcat(ExpName, "\"");         // Add double-quote after ProgramName
-            PROCESS_INFORMATION pi;
+
             ZeroMemory(&pi, sizeof(pi));
             ZeroMemory(&si, sizeof(si));
             si.cb = sizeof(si);
 
             /* Create the process. */
-            if (CreateProcessA(NULL,   // No Application Name
-                (LPSTR)ExpName,   // Just our Command Line
-                NULL,             // Cannot inherit Process Handle
-                NULL,             // Cannot inherit Thread Handle
-                FALSE,            // No handle inheritance
-                0,                // No extra creation flags
-                NULL,             // No environment block
-                NULL,             // No starting directory 
-                &si,              // STARTUPINFOA
-                &pi))             // PROCESS_INFORMATION
+            if (CreateProcessA(NULL,    // No Application Name
+                               ExpName, // Just our Command Line
+                               NULL,    // Cannot inherit Process Handle
+                               NULL,    // Cannot inherit Thread Handle
+                               FALSE,   // No handle inheritance
+                               0,       // No extra creation flags
+                               NULL,    // No environment block
+                               NULL,    // No starting directory 
+                               &si,
+                               &pi))
             {
-                /* Close handles. */
-                CloseHandle(pi.hProcess);
+                /* Close the handles */
                 CloseHandle(pi.hThread);
+                CloseHandle(pi.hProcess);
                 break;
             }
             else
