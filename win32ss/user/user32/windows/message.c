@@ -2899,7 +2899,7 @@ DWORD
 WINAPI
 RealGetQueueStatus(UINT flags)
 {
-   if (flags & ~(QS_SMRESULT|QS_ALLPOSTMESSAGE|QS_ALLINPUT))
+   if (flags & ~(QS_ALLINPUT|QS_ALLPOSTMESSAGE|QS_SMRESULT))
    {
       SetLastError( ERROR_INVALID_FLAGS );
       return 0;
