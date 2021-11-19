@@ -2899,12 +2899,21 @@ DWORD
 WINAPI
 RealGetQueueStatus(UINT flags)
 {
-   #define QS_TEMPALLINPUT 255 // ATM, do not support QS_RAWINPUT
-   if (flags & ~(QS_SMRESULT|QS_ALLPOSTMESSAGE|QS_TEMPALLINPUT))
+   if (flags & ~(QS_ALLINPUT|QS_ALLPOSTMESSAGE|QS_SMRESULT))
    {
       SetLastError( ERROR_INVALID_FLAGS );
       return 0;
    }
+   /** ATM, we do not support QS_RAWINPUT, but we need to support apps that pass
+    ** this flag along, while also working around QS_RAWINPUT checks in winetests.
+    ** Just set the last error to ERROR_INVALID_FLAGS but do not fail the call.
+    **/
+   if (flags & QS_RAWINPUT)
+   {
+      SetLastError(ERROR_INVALID_FLAGS);
+      flags &= ~QS_RAWINPUT;
+   }
+   /**/
    return NtUserxGetQueueStatus(flags);
 }
 
