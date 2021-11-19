@@ -811,7 +811,7 @@ WORD DosCreateProcess(IN LPCSTR ProgramName,
             ZeroMemory(&si, sizeof(si));
             si.cb = sizeof(si);
 
-            /* Create the process. */
+            /* Create the process */
             if (CreateProcessA(NULL,    // No Application Name
                                ExpName, // Just our Command Line
                                NULL,    // Cannot inherit Process Handle
