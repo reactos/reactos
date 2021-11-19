@@ -804,12 +804,12 @@ WORD DosCreateProcess(IN LPCSTR ProgramName,
             strcat(ExpName, ProgramName);  // Append Program name
             strcat(ExpName, "\"");         // Add double-quote after ProgramName
             PROCESS_INFORMATION pi;
-            ZeroMemory( &si, sizeof(si) );
+            ZeroMemory(&pi, sizeof(pi));
+            ZeroMemory(&si, sizeof(si));
             si.cb = sizeof(si);
-            ZeroMemory( &pi, sizeof(pi) );
 
             /* Create the process. */
-            if(CreateProcessA( NULL,   // No Application Name
+            if (CreateProcessA(NULL,   // No Application Name
                 (LPSTR)ExpName,   // Just our Command Line
                 NULL,             // Cannot inherit Process Handle
                 NULL,             // Cannot inherit Thread Handle
@@ -818,7 +818,7 @@ WORD DosCreateProcess(IN LPCSTR ProgramName,
                 NULL,             // No environment block
                 NULL,             // No starting directory 
                 &si,              // STARTUPINFOA
-                &pi ))            // PROCESS_INFORMATION
+                &pi))             // PROCESS_INFORMATION
             {
                 /* Close handles. */
                 CloseHandle(pi.hProcess);
@@ -826,10 +826,12 @@ WORD DosCreateProcess(IN LPCSTR ProgramName,
                 break;
             }
             else
+            {
                 DisplayMessage(L"Trying to load '%S'.\n"
                                L"WOW16 applications are not supported internally by NTVDM at the moment.\n"
                                L"Consider adding otvdm. Press 'OK' to continue.",
                                ProgramName);
+            }
             // Fall through
         }
         case SCS_DOS_BINARY:
