@@ -434,7 +434,8 @@ HRESULT CNewMenu::SelectNewItem(LONG wEventId, UINT uFlags, LPWSTR pszName, BOOL
 
         /* Find the pidl of the new item from the parent folder */
         lpCurrentSF->ParseDisplayName(NULL, NULL, (LPWSTR)pszFileName, NULL, &pidlNewItem, NULL);
-        if (pidlNewItem) {
+        if (pidlNewItem)
+        {
             pidlFullNewItem = ILCombine(m_pidlFolder, pidlNewItem);
 			
             /* Notify the view object about the new item */
