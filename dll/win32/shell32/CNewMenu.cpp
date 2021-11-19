@@ -432,7 +432,7 @@ HRESULT CNewMenu::SelectNewItem(LONG wEventId, UINT uFlags, LPWSTR pszName, BOOL
     if (lpCurrentSF) {
         pszFileName = PathFindFileNameW(pszName);
 
-        /* Find pidl of the new item from parent folder */
+        /* Find the pidl of the new item from the parent folder */
         lpCurrentSF->ParseDisplayName(NULL, NULL, (LPWSTR)pszFileName, NULL, &pidlNewItem, NULL);
         if (pidlNewItem) {
             pidlFullNewItem = ILCombine(m_pidlFolder, pidlNewItem);
