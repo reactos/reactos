@@ -429,7 +429,8 @@ HRESULT CNewMenu::SelectNewItem(LONG wEventId, UINT uFlags, LPWSTR pszName, BOOL
 	
     hr = lpDesktopSF->BindToObject(m_pidlFolder, NULL, IID_IShellFolder, (PVOID*)&lpCurrentSF);
 	
-    if (lpCurrentSF) {
+    if (lpCurrentSF)
+    {
         pszFileName = PathFindFileNameW(pszName);
 
         /* Find the pidl of the new item from the parent folder */
