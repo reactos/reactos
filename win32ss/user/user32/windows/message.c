@@ -2899,15 +2899,12 @@ DWORD
 WINAPI
 RealGetQueueStatus(UINT flags)
 {
-   #define QS_TEMPALLINPUT 255 // ATM, do not support QS_RAWINPUT
-   DWORD ret;
-   if (flags & ~(QS_SMRESULT|QS_ALLPOSTMESSAGE|QS_TEMPALLINPUT))
+   if (flags & ~(QS_SMRESULT|QS_ALLPOSTMESSAGE|QS_ALLINPUT))
    {
       SetLastError( ERROR_INVALID_FLAGS );
-      ret = 0;
+      return 0;
    }
-   ret = NtUserxGetQueueStatus(flags);
-   return ret;
+   return NtUserxGetQueueStatus(flags);
 }
 
 
