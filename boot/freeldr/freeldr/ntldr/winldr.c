@@ -445,6 +445,7 @@ WinLdrDetectVersion(VOID)
         /* Key doesn't exist; assume NT 4.0 */
         return _WIN32_WINNT_NT4;
     }
+    RegCloseKey(hKey);
 
     /* We may here want to read the value of ProductVersion */
     return _WIN32_WINNT_WS03;
@@ -739,10 +740,13 @@ WinLdrInitErrataInf(
     if (rc != ERROR_SUCCESS)
     {
         WARN("Could not retrieve the InfName value (Error %u)\n", (int)rc);
+        RegCloseKey(hKey);
         return FALSE;
     }
 
     // TODO: "SystemBiosDate"
+
+    RegCloseKey(hKey);
 
     RtlStringCbPrintfA(ErrataFilePath, sizeof(ErrataFilePath), "%s%s%S",
                        SystemRoot, "inf\\", szFileName);
