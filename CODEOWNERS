@@ -246,6 +246,12 @@
 #   S: Maintained
 /sdk/lib/rtl/   @HeisSpiter @learn-more @ThFabba @tkreuzer
 
+# Security Manager
+#   M: GeoB99, George Bișoc
+#   S: Maintained
+/modules/rostests/kmtests/ntos_se/   @GeoB99
+/ntoskrnl/se/                        @GeoB99
+
 # Shell Extensions
 #   M:
 #   R: learn-more, learn_more, Mark Jansen
