@@ -235,7 +235,7 @@ DetectBiosFloppyPeripheral(PCONFIGURATION_COMPONENT_DATA ControllerKey)
             return;
         }
 
-        memset(PartialResourceList, 0, Size);
+        RtlZeroMemory(PartialResourceList, Size);
         PartialResourceList->Version = 1;
         PartialResourceList->Revision = 1;
         PartialResourceList->Count = 1;
@@ -375,7 +375,7 @@ DetectBiosDisks(PCONFIGURATION_COMPONENT_DATA SystemKey,
     }
 
     /* Initialize resource descriptor */
-    memset(PartialResourceList, 0, Size);
+    RtlZeroMemory(PartialResourceList, Size);
     PartialResourceList->Version = 1;
     PartialResourceList->Revision = 1;
     PartialResourceList->Count = 1;

@@ -81,7 +81,7 @@ DetectAcpiBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
             return;
         }
 
-        memset(PartialResourceList, 0, sizeof(CM_PARTIAL_RESOURCE_LIST) + TableSize);
+        RtlZeroMemory(PartialResourceList, sizeof(CM_PARTIAL_RESOURCE_LIST) + TableSize);
         PartialResourceList->Version = 0;
         PartialResourceList->Revision = 0;
         PartialResourceList->Count = 1;

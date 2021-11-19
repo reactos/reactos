@@ -166,7 +166,7 @@ static inline unsigned long btrfs_chunk_item_size(int num_stripes)
 
 static inline void init_path(const struct btrfs_super_block *sb, struct btrfs_path *path)
 {
-    memset(path, 0, sizeof(*path));
+    RtlZeroMemory(path, sizeof(*path));
     path->tree_buf = FrLdrTempAlloc(sb->nodesize, TAG_BTRFS_NODE);
 }
 

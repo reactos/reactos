@@ -138,7 +138,7 @@ DetectPciIrqRoutingTable(PCONFIGURATION_COMPONENT_DATA BusKey)
         }
 
         /* Initialize resource descriptor */
-        memset(PartialResourceList, 0, Size);
+        RtlZeroMemory(PartialResourceList, Size);
         PartialResourceList->Version = 1;
         PartialResourceList->Revision = 1;
         PartialResourceList->Count = 2;
@@ -196,7 +196,7 @@ DetectPciBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
         }
 
         /* Initialize resource descriptor */
-        memset(PartialResourceList, 0, Size);
+        RtlZeroMemory(PartialResourceList, Size);
 
         /* Create new bus key */
         FldrCreateComponentKey(SystemKey,
@@ -235,7 +235,7 @@ DetectPciBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
                 }
 
                 /* Initialize resource descriptor */
-                memset(PartialResourceList, 0, Size);
+                RtlZeroMemory(PartialResourceList, Size);
                 PartialResourceList->Version = 1;
                 PartialResourceList->Revision = 1;
                 PartialResourceList->Count = 1;
@@ -261,7 +261,7 @@ DetectPciBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
                 }
 
                 /* Initialize resource descriptor */
-                memset(PartialResourceList, 0, Size);
+                RtlZeroMemory(PartialResourceList, Size);
             }
 
             /* Create the bus key */
