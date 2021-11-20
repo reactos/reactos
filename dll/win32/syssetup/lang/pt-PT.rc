@@ -152,7 +152,7 @@ CAPTION "Definições avançadas"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "", IDC_PS2STATIC, 5, 20, 242, 110
-    RTEXT "&Frequencia de amostragem:", -1, 27, 35, 90, 8
+    RTEXT "&Frequência de amostragem:", -1, 27, 35, 90, 8
     LTEXT "Relatórios por segundo", -1, 169, 35, 76, 8
     COMBOBOX IDC_PS2MOUSESAMPLERATE, 124, 33, 42, 41, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
     RTEXT "&Detecção da roda:", -1, 27, 55, 90, 8
@@ -175,8 +175,8 @@ BEGIN
     IDS_COMPUTERSUBTITLE "Deve fornecer um nome e palavra-passe de administrador para o seu computador."
     IDS_LOCALETITLE "Configurações Regionais"
     IDS_LOCALESUBTITLE "Pode personalizar o ReactOS para diferentes regiões e línguas."
-    IDS_LOCALETEXT "The Standards and formats are set to %s, and the location is set to %s."
-    IDS_LAYOUTTEXT "Your default text input language and method is: %s keyboard layout"
+    IDS_LOCALETEXT "Os padrões e formatos são definidos como %s, e o local é definido como %s." 
+    IDS_LAYOUTTEXT "O método e idioma de entrada de texto padrão é: Estilo de teclado %s"
     IDS_DATETIMETITLE "Data e Hora"
     IDS_DATETIMESUBTITLE "Definir a data e a hora correctas para o seu computador."
     IDS_PROCESSTITLE "A registar componentes"
@@ -202,7 +202,7 @@ BEGIN
      *   samsrv.dll:IDS_USER_ADMINISTRATOR_NAME synchronized.
      *   Also check the IDD_COMPUTERPAGE dialog.
      */
-    IDS_ADMINISTRATOR_NAME "Administrator"
+    IDS_ADMINISTRATOR_NAME "Administrador"
     IDS_MACHINE_OWNER_NAME "Proprietário"
 END
 
@@ -252,5 +252,5 @@ BEGIN
     IDS_PRODUCTWORKSTATIONNAME "Estação de trabalho ReactOS"
     IDS_PRODUCTSERVERINFO "O sistema será reconhecido como um servidor. As pastas privadas ""Minhas imagens"", ""Meus vídeos"" e ""Minhas músicas"" são independentes de ""Meus documentos""."
     IDS_PRODUCTWORKSTATIONINFO "O sistema será reconhecido como uma estação de trabalho. As pastas privadas ""Minhas imagens"", ""Meus vídeos"" e ""Minhas músicas"" estão em ""Meus documentos""."
-    IDS_DEFAULT "(Default)"
+    IDS_DEFAULT "(Padrão)"
 END
