@@ -79,8 +79,10 @@ static struct {
     BOOL sendinput_broken;
 } key_status;
 
+#if (_WIN32_WINNT >= 0x0602)
 static BOOL (WINAPI *pGetCurrentInputMessageSource)( INPUT_MESSAGE_SOURCE *source );
 static BOOL (WINAPI *pGetPointerType)(UINT32, POINTER_INPUT_TYPE*);
+#endif
 static int (WINAPI *pGetMouseMovePointsEx) (UINT, LPMOUSEMOVEPOINT, LPMOUSEMOVEPOINT, int, DWORD);
 static UINT (WINAPI *pGetRawInputDeviceList) (PRAWINPUTDEVICELIST, PUINT, UINT);
 static UINT (WINAPI *pGetRawInputDeviceInfoW) (HANDLE, UINT, void *, UINT *);
@@ -157,9 +159,13 @@ static void init_function_pointers(void)
     if (!(p ## func = (void*)GetProcAddress(hdll, #func))) \
       trace("GetProcAddress(%s) failed\n", #func)
 
+#if (_WIN32_WINNT >= 0x0602)
     GET_PROC(GetCurrentInputMessageSource);
+#endif
     GET_PROC(GetMouseMovePointsEx);
+#if (_WIN32_WINNT >= 0x0602)
     GET_PROC(GetPointerType);
+#endif
     GET_PROC(GetRawInputDeviceList);
     GET_PROC(GetRawInputDeviceInfoW);
     GET_PROC(GetRawInputDeviceInfoA);
@@ -2974,6 +2980,8 @@ static void test_OemKeyScan(void)
     }
 }
 
+#if (_WIN32_WINNT >= 0x0602)
+
 static INPUT_MESSAGE_SOURCE expect_src;
 
 static LRESULT WINAPI msg_source_proc( HWND hwnd, UINT message, WPARAM wp, LPARAM lp )
@@ -3128,6 +3136,8 @@ static void test_GetPointerType(void)
     ok(type == PT_MOUSE, " type %d\n", type );
 }
 
+#endif // (_WIN32_WINNT >= 0x0602)
+
 static void test_GetKeyboardLayoutList(void)
 {
     int cnt, cnt2;
@@ -3197,15 +3207,19 @@ START_TEST(input)
     else
         win_skip("GetRawInputDeviceList is not available\n");
 
+#if (_WIN32_WINNT >= 0x0602)
     if (pGetCurrentInputMessageSource)
         test_input_message_source();
     else
         win_skip("GetCurrentInputMessageSource is not available\n");
+#endif
 
     SetCursorPos( pos.x, pos.y );
 
+#if (_WIN32_WINNT >= 0x0602)
     if(pGetPointerType)
         test_GetPointerType();
     else
         win_skip("GetPointerType is not available\n");
+#endif
 }
