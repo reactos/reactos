@@ -1562,7 +1562,7 @@ ChangePos:
         else
         {
             WndSize.cx = StartBtnSize.cx;
-            WndSize.cy = StartBtnSize.cy - EdgeSize.cx;
+            WndSize.cy = StartBtnSize.cy - EdgeSize.cy;
         }
 
         if (WndSize.cx < g_TaskbarSettings.sr.Size.cx)
@@ -1628,13 +1628,20 @@ ChangePos:
         if (StartSize.cx > rcClient.right)
             StartSize.cx = rcClient.right;
 
-        if (!m_Theme)
+        HWND hwndTaskToolbar = ::GetWindow(m_TaskSwitch, GW_CHILD);
+        if (hwndTaskToolbar)
         {
-            HWND hwndTaskToolbar = ::GetWindow(m_TaskSwitch, GW_CHILD);
-            if (hwndTaskToolbar)
+            SIZE EdgeSize;
+            EdgeSize.cy = GetSystemMetrics(SM_CYEDGE);
+            DWORD size = SendMessageW(hwndTaskToolbar, TB_GETBUTTONSIZE, 0, 0);
+            if (!m_Theme)
             {
-                DWORD size = SendMessageW(hwndTaskToolbar, TB_GETBUTTONSIZE, 0, 0);
                 StartSize.cy = HIWORD(size);
+            }
+            else
+            {
+                /* Themed button covers Edge area as well */
+                StartSize.cy = HIWORD(size) + EdgeSize.cy;
             }
         }
 
