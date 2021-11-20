@@ -263,7 +263,7 @@ DefWndDoSizeMove(PWND pwnd, WORD wParam)
    ExStyle = pwnd->ExStyle;
    iconic = (Style & WS_MINIMIZE) != 0;
 
-   if ((Style & WS_MAXIMIZE) || !IntIsWindowVisible(pwnd)) return;
+   if (((Style & WS_MAXIMIZE) && syscommand != SC_MOVE) || !IntIsWindowVisible(pwnd)) return;
 
    thickframe = UserHasThickFrameStyle(Style, ExStyle) && !iconic;
 
@@ -438,7 +438,7 @@ DefWndDoSizeMove(PWND pwnd, WORD wParam)
             if (doSideSnap)
             {
                co_WinPosSetWindowPos(pwnd,
-                                     0,
+                                     NULL,
                                      snapRect.left,
                                      snapRect.top,
                                      snapRect.right - snapRect.left,
@@ -511,7 +511,40 @@ DefWndDoSizeMove(PWND pwnd, WORD wParam)
 	      RECT newRect = unmodRect;
 
 	      if (!iconic && !DragFullWindows) UserDrawMovingFrame( hdc, &sizingRect, thickframe );
-	      if (hittest == HTCAPTION) RECTL_vOffsetRect( &newRect, dx, dy );
+          if (hittest == HTCAPTION)
+          {
+              /* Restore window size if it is snapped */
+              if (!RECTL_bIsEmptyRect(&pwnd->InternalPos.NormalRect) &&
+                  !IntEqualRect(&pwnd->InternalPos.NormalRect, &pwnd->rcWindow))
+              {
+                  UserSetCursorPos(max(0, pwnd->InternalPos.NormalRect.left) + pt.x, pwnd->InternalPos.NormalRect.top + pt.y, 0, 0, FALSE);
+
+                  /* Save normal size - it required when window unsnapped from one side and snapped to another holding mouse down */
+                  origRect = pwnd->InternalPos.NormalRect;
+
+                  /* Restore from maximized state */
+                  if (Style & WS_MAXIMIZE)
+                  {
+                      co_IntSendMessage(UserHMGetHandle(pwnd), WM_SYSCOMMAND, SC_RESTORE, 0);
+                  }
+                  /* Restore snapped to left/right place */
+                  else
+                  {
+                      co_WinPosSetWindowPos(pwnd,
+                                            NULL,
+                                            pwnd->InternalPos.NormalRect.left,
+                                            pwnd->InternalPos.NormalRect.top,
+                                            pwnd->InternalPos.NormalRect.right - pwnd->InternalPos.NormalRect.left,
+                                            pwnd->InternalPos.NormalRect.bottom - pwnd->InternalPos.NormalRect.top,
+                                            0);
+                  }
+                  RECTL_vSetEmptyRect(&pwnd->InternalPos.NormalRect);
+                  continue;
+              }
+
+              /* regular window moving */
+              RECTL_vOffsetRect(&newRect, dx, dy);
+          }
 	      if (ON_LEFT_BORDER(hittest)) newRect.left += dx;
 	      else if (ON_RIGHT_BORDER(hittest)) newRect.right += dx;
 	      if (ON_TOP_BORDER(hittest)) newRect.top += dy;
@@ -1646,7 +1679,7 @@ NC_HandleNCLButtonDblClk(PWND pWnd, WPARAM wParam, LPARAM lParam)
       UserSystemParametersInfo(SPI_GETWORKAREA, 0, &mouseRect, 0);
         
       co_WinPosSetWindowPos(pWnd,
-                            0,
+                            NULL,
                             sizingRect.left,
                             mouseRect.top,
                             sizingRect.right - sizingRect.left,
