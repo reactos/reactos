@@ -314,6 +314,15 @@ Test_ProcessWx86Information(void)
                                        ProcessWx86Information,
                                        &VdmPower,
                                        sizeof(VdmPower),
+                                       NULL);
+    ok_hex(Status, STATUS_SUCCESS);
+    ok(VdmPower == 0 || VdmPower == 1, "The VDM power value must be within the boundary between 0 and 1, not anything else! Got %lu\n", VdmPower);
+
+    /* Same but with ReturnLength */
+    Status = NtQueryInformationProcess(NtCurrentProcess(),
+                                       ProcessWx86Information,
+                                       &VdmPower,
+                                       sizeof(VdmPower),
                                        &ReturnLength);
     ok_hex(Status, STATUS_SUCCESS);
     ok(ReturnLength != 0, "ReturnLength shouldn't be 0!\n");
