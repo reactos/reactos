@@ -1657,7 +1657,7 @@ WINAPI
 GetPriorityClass(IN HANDLE hProcess)
 {
     NTSTATUS Status;
-    PROCESS_PRIORITY_CLASS PriorityClass;
+    PROCESS_PRIORITY_CLASS DECLSPEC_ALIGN(4) PriorityClass;
 
     /* Query the kernel */
     Status = NtQueryInformationProcess(hProcess,
@@ -1681,7 +1681,7 @@ GetPriorityClass(IN HANDLE hProcess)
 
     /* Failure path */
     BaseSetLastNTError(Status);
-    return FALSE;
+    return 0;
 }
 
 /*

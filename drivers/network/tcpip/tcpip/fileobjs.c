@@ -42,7 +42,7 @@ PADDRESS_FILE AddrSearchFirst(
     PAF_SEARCH SearchContext)
 {
     KIRQL OldIrql;
-    
+
     SearchContext->Address  = Address;
     SearchContext->Port     = Port;
     SearchContext->Protocol = Protocol;
@@ -115,7 +115,7 @@ LogActiveObjects(VOID)
     PCONNECTION_ENDPOINT Conn;
 
     DbgPrint("----------- TCP/IP Active Object Dump -------------\n");
-    
+
     TcpipAcquireSpinLock(&AddressFileListLock, &OldIrql);
 
     CurrentEntry = AddressFileListHead.Flink;
@@ -144,19 +144,19 @@ LogActiveObjects(VOID)
             }
             DbgPrint("\n");
         }
-        
+
         CurrentEntry = CurrentEntry->Flink;
     }
-    
+
     TcpipReleaseSpinLock(&AddressFileListLock, OldIrql);
-    
+
     TcpipAcquireSpinLock(&ConnectionEndpointListLock, &OldIrql);
-    
+
     CurrentEntry = ConnectionEndpointListHead.Flink;
     while (CurrentEntry != &ConnectionEndpointListHead)
     {
         Conn = CONTAINING_RECORD(CurrentEntry, CONNECTION_ENDPOINT, ListEntry);
-        
+
         DbgPrint("Connection @ 0x%p | Ref count: %d\n", Conn, Conn->RefCount);
         DbgPrint("\tPCB: ");
         if (Conn->SocketContext == NULL)
@@ -177,10 +177,10 @@ LogActiveObjects(VOID)
         DbgPrint("\tReceive shutdown: %s\n", Conn->ReceiveShutdown ? "Yes" : "No");
         if (Conn->ReceiveShutdown) DbgPrint("\tReceive shutdown status: 0x%x\n", Conn->ReceiveShutdownStatus);
         DbgPrint("\tClosing: %s\n", Conn->Closing ? "Yes" : "No");
-        
+
         CurrentEntry = CurrentEntry->Flink;
     }
-    
+
     TcpipReleaseSpinLock(&ConnectionEndpointListLock, OldIrql);
 
     DbgPrint("---------------------------------------------------\n");
@@ -237,7 +237,7 @@ PADDRESS_FILE AddrSearchNext(
     PADDRESS_FILE Current = NULL;
     BOOLEAN Found = FALSE;
     PADDRESS_FILE StartingAddrFile;
-    
+
     TcpipAcquireSpinLock(&AddressFileListLock, &OldIrql);
 
     if (SearchContext->Next == &AddressFileListHead)
@@ -310,7 +310,7 @@ VOID AddrFileFree(
   PADDRESS_FILE AddrFile = Object;
   KIRQL OldIrql;
   PDATAGRAM_RECEIVE_REQUEST ReceiveRequest;
-  PDATAGRAM_SEND_REQUEST SendRequest;
+  // PDATAGRAM_SEND_REQUEST SendRequest; See WTF below
   PLIST_ENTRY CurrentEntry;
 
   TI_DbgPrint(MID_TRACE, ("Called.\n"));
@@ -330,20 +330,26 @@ VOID AddrFileFree(
   TI_DbgPrint(DEBUG_ADDRFILE, ("Aborting receive requests on AddrFile at (0x%X).\n", AddrFile));
 
   /* Go through pending receive request list and cancel them all */
-  while ((CurrentEntry = ExInterlockedRemoveHeadList(&AddrFile->ReceiveQueue, &AddrFile->Lock))) {
+  while (!IsListEmpty(&AddrFile->ReceiveQueue))
+  {
+    CurrentEntry = RemoveHeadList(&AddrFile->ReceiveQueue);
     ReceiveRequest = CONTAINING_RECORD(CurrentEntry, DATAGRAM_RECEIVE_REQUEST, ListEntry);
     (*ReceiveRequest->Complete)(ReceiveRequest->Context, STATUS_CANCELLED, 0);
-    /* ExFreePoolWithTag(ReceiveRequest, DATAGRAM_RECV_TAG); FIXME: WTF? */
+    ExFreePoolWithTag(ReceiveRequest, DATAGRAM_RECV_TAG);
   }
 
   TI_DbgPrint(DEBUG_ADDRFILE, ("Aborting send requests on address file at (0x%X).\n", AddrFile));
 
+#if 0 /* Biggest WTF. All of this was taken care of above as DATAGRAM_RECEIVE_REQUEST. */
   /* Go through pending send request list and cancel them all */
-  while ((CurrentEntry = ExInterlockedRemoveHeadList(&AddrFile->ReceiveQueue, &AddrFile->Lock))) {
+  while (!IsListEmpty(&AddrFile->ReceiveQueue))
+  {
+    CurrentEntry = RemoveHeadList(&AddrFile->ReceiveQueue);
     SendRequest = CONTAINING_RECORD(CurrentEntry, DATAGRAM_SEND_REQUEST, ListEntry);
     (*SendRequest->Complete)(SendRequest->Context, STATUS_CANCELLED, 0);
     ExFreePoolWithTag(SendRequest, DATAGRAM_SEND_TAG);
   }
+#endif
 
   /* Protocol specific handling */
   switch (AddrFile->Protocol) {
@@ -360,6 +366,8 @@ VOID AddrFileFree(
   }
 
   RemoveEntityByContext(AddrFile);
+
+  ExDeleteResourceLite(&AddrFile->Resource);
 
   ExFreePoolWithTag(Object, ADDR_FILE_TAG);
 }
@@ -465,14 +473,14 @@ NTSTATUS FileOpenAddress(
       {
           /* The client specified an explicit port so we force a bind to this */
           AddrFile->Port = TCPAllocatePort(Address->Address[0].Address[0].sin_port);
-          
+
           /* Check for bind success */
           if (AddrFile->Port == 0xffff)
           {
               ExFreePoolWithTag(AddrFile, ADDR_FILE_TAG);
               return STATUS_ADDRESS_ALREADY_EXISTS;
           }
-          
+
           /* Sanity check */
           ASSERT(Address->Address[0].Address[0].sin_port == AddrFile->Port);
       }
@@ -480,7 +488,7 @@ NTSTATUS FileOpenAddress(
       {
           /* The client is trying to bind to a local address so allocate a port now too */
           AddrFile->Port = TCPAllocatePort(0);
-          
+
           /* Check for bind success */
           if (AddrFile->Port == 0xffff)
           {
@@ -553,7 +561,7 @@ NTSTATUS FileOpenAddress(
   InitializeListHead(&AddrFile->TransmitQueue);
 
   /* Initialize spin lock that protects the address file object */
-  KeInitializeSpinLock(&AddrFile->Lock);
+  ExInitializeResourceLite(&AddrFile->Resource);
 
   /* Return address file object */
   Request->Handle.AddressHandle = AddrFile;
@@ -581,26 +589,26 @@ NTSTATUS FileCloseAddress(
   PTDI_REQUEST Request)
 {
   PADDRESS_FILE AddrFile = Request->Handle.AddressHandle;
-  KIRQL OldIrql;
+  PCONNECTION_ENDPOINT Listener;
 
   if (!Request->Handle.AddressHandle) return STATUS_INVALID_PARAMETER;
 
-  LockObject(AddrFile, &OldIrql);
+  LockObject(AddrFile);
 
   if (InterlockedDecrement(&AddrFile->Sharers) != 0)
   {
       /* Still other guys have open handles to this, so keep it around */
-      UnlockObject(AddrFile, OldIrql);
+      UnlockObject(AddrFile);
       return STATUS_SUCCESS;
   }
 
   /* We have to close this listener because we started it */
-  if( AddrFile->Listener )
+  Listener = AddrFile->Listener;
+  UnlockObject(AddrFile);
+  if( Listener )
   {
-      TCPClose( AddrFile->Listener );
+      TCPClose( Listener );
   }
-
-  UnlockObject(AddrFile, OldIrql);
 
   DereferenceObject(AddrFile);
 
