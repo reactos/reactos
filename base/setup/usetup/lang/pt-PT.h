@@ -220,7 +220,7 @@ static MUI_ENTRY ptPTIntroPageEntries[] =
     {
         6,
         15,
-        "Fa\207a c\242pia de segur\306n\207 dos seus dados ou teste num computador",
+        "Fa\207a c\242pia de seguran\207a dos seus dados ou teste num computador",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
