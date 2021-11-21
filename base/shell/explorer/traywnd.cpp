@@ -1634,14 +1634,9 @@ ChangePos:
             SIZE EdgeSize;
             EdgeSize.cy = GetSystemMetrics(SM_CYEDGE);
             DWORD size = SendMessageW(hwndTaskToolbar, TB_GETBUTTONSIZE, 0, 0);
-            if (!m_Theme)
-            {
-                StartSize.cy = HIWORD(size);
-            }
-            else
-            {
-                /* Themed button covers Edge area as well */
-                StartSize.cy = HIWORD(size) + EdgeSize.cy;
+
+            /* Themed button covers Edge area as well */
+            StartSize.cy = HIWORD(size) + (m_Theme ? GetSystemMetrics(SM_CYEDGE) : 0);
             }
         }
 
