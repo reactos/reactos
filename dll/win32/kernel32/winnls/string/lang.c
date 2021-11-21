@@ -3239,7 +3239,7 @@ EnumSystemCodePagesW (
 {
     ENUMSYSTEMCODEPAGES_CALLBACKS procs;
 
-    TRACE("(%p,0x%08X,0x%08lX)\n", lpCodePageEnumProc, dwFlags);
+    TRACE("(%p,0x%08X)\n", lpCodePageEnumProc, dwFlags);
 
     procs.procA = NULL;
     procs.procW = lpCodePageEnumProc;
@@ -3261,7 +3261,7 @@ EnumSystemCodePagesA (
 {
     ENUMSYSTEMCODEPAGES_CALLBACKS procs;
 
-    TRACE("(%p,0x%08X,0x%08lX)\n", lpCodePageEnumProc, dwFlags);
+    TRACE("(%p,0x%08X)\n", lpCodePageEnumProc, dwFlags);
 
     procs.procA = lpCodePageEnumProc;
     procs.procW = NULL;

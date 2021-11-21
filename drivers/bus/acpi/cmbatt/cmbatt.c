@@ -65,7 +65,7 @@ CmBattPowerCallBack(IN PCMBATT_DEVICE_EXTENSION DeviceExtension,
         else if (CmBattDebug & 0x10)
         {
             /* Unknown value */
-            DbgPrint("CmBattPowerCallBack: unknown argument2 = %08x\n");
+            DbgPrint("CmBattPowerCallBack: unknown argument2 = %08x\n", Value);
         }
     }
 }
@@ -770,10 +770,11 @@ CmBattSetStatusNotify(IN PCMBATT_DEVICE_EXTENSION DeviceExtension,
           DbgPrint("CmBattSetStatusNotify: Want %X CurrentCap %X\n",
                     Capacity, DeviceExtension->RemainingCapacity);
     if (CmBattDebug & CMBATT_ACPI_WARNING)
-          DbgPrint("CmBattSetStatusNotify: Set to: [%#08lx][%#08lx][%#08lx] Status %x\n",
+          DbgPrint("CmBattSetStatusNotify: Set to: [%#08lx][%#08lx][%#08lx] Status %lx\n",
                     BatteryNotify->PowerState,
                     BatteryNotify->LowCapacity,
-                    BatteryNotify->HighCapacity);
+                    BatteryNotify->HighCapacity,
+                    Status);
     return Status;
 }
 

@@ -182,7 +182,8 @@ WmipGetRawSMBiosTableData(
                                            'BTMS');
         if (BiosTables == NULL)
         {
-            DPRINT1("Failed to allocate %lu bytes for the SMBIOS table\n");
+            DPRINT1("Failed to allocate %lu bytes for the SMBIOS table\n",
+                    HeaderSize + TableSize);
             return STATUS_INSUFFICIENT_RESOURCES;
         }
 
