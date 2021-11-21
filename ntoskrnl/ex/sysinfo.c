@@ -1226,7 +1226,11 @@ SSI_DEF(SystemFlagsInformation)
 
     if (!SeSinglePrivilegeCheck(SeDebugPrivilege, ExGetPreviousMode()))
     {
+#if (NTDDI_VERSION < NTDDI_WIN7)
+        return STATUS_ACCESS_VIOLATION;
+#else
         return STATUS_ACCESS_DENIED;
+#endif
     }
 
     NtGlobalFlag = ((PSYSTEM_FLAGS_INFORMATION) Buffer)->Flags;
