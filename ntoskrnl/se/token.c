@@ -3582,11 +3582,13 @@ SeTokenCanImpersonate(
 
     /*
      * SecurityAnonymous and SecurityIdentification levels do not
-     * allow impersonation. If we get such levels from the call
-     * then something's seriously wrong.
+     * allow impersonation.
      */
-    ASSERT(ImpersonationLevel != SecurityAnonymous &&
-           ImpersonationLevel != SecurityIdentification);
+    if (ImpersonationLevel == SecurityAnonymous ||
+        ImpersonationLevel == SecurityIdentification)
+    {
+        return FALSE;
+    }
 
     /* Time to lock our tokens */
     SepAcquireTokenLockShared(ProcessToken);
