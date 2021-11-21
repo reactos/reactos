@@ -59,7 +59,7 @@ BEGIN
     LTEXT "Nome do &Computador:", IDC_STATIC, 54, 38, 75, 8
     EDITTEXT IDC_COMPUTERNAME, 165, 35, 148, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL | ES_UPPERCASE
     ICON IDI_ICON5, IDC_STATIC, 21, 57, 20, 20
-    LTEXT "A instalação vai criar uma conta chamada Administrator. Pode usar esta conta se precisar de acesso total ao seu computador.", IDC_STATIC, 54, 57, 250, 25
+    LTEXT "A instalação vai criar uma conta chamada Administrador. Pode usar esta conta se precisar de acesso total ao seu computador.", IDC_STATIC, 54, 57, 250, 25
     LTEXT "Digite uma palavra-passe para o administrador com 127 caracteres ou menos.", IDC_STATIC, 54, 87, 250, 8
     LTEXT "Palavra-passe do &Administrador:", IDC_STATIC, 54, 104, 105, 8
     EDITTEXT IDC_ADMINPASSWORD1, 165, 101, 148, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
