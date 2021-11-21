@@ -1631,13 +1631,11 @@ ChangePos:
         HWND hwndTaskToolbar = ::GetWindow(m_TaskSwitch, GW_CHILD);
         if (hwndTaskToolbar)
         {
-            SIZE EdgeSize;
-            EdgeSize.cy = GetSystemMetrics(SM_CYEDGE);
+            LONG EdgeSizeY = GetSystemMetrics(SM_CYEDGE);
             DWORD size = SendMessageW(hwndTaskToolbar, TB_GETBUTTONSIZE, 0, 0);
 
             /* Themed button covers Edge area as well */
-            StartSize.cy = HIWORD(size) + (m_Theme ? GetSystemMetrics(SM_CYEDGE) : 0);
-            }
+            StartSize.cy = HIWORD(size) + (m_Theme ? EdgeSizeY : 0);
         }
 
         if (m_StartButton.m_hWnd != NULL)
