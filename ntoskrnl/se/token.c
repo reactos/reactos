@@ -3585,7 +3585,7 @@ SeTokenCanImpersonate(
      * allow impersonation. If we get such levels from the call
      * then something's seriously wrong.
      */
-    ASSERT(ImpersonationLevel != SecurityAnonymous ||
+    ASSERT(ImpersonationLevel != SecurityAnonymous &&
            ImpersonationLevel != SecurityIdentification);
 
     /* Time to lock our tokens */
