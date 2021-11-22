@@ -1489,7 +1489,6 @@ NtGdiStretchDIBitsInternal(
         if (pdc) DC_UnlockDc(pdc);
     }
 
-    if (pbmiSafe) ExFreePoolWithTag(pbmiSafe, 'imBG');
     if (pvBits) ExFreePoolWithTag(pvBits, TAG_DIB);
 
     /* This is not what MSDN says is returned from this function, but it
@@ -1503,6 +1502,8 @@ NtGdiStretchDIBitsInternal(
     {
         LinesCopied = pbmiSafe->bmiHeader.biHeight;
     }
+
+    ExFreePoolWithTag(pbmiSafe, 'imBG');
 
     return LinesCopied;
 }
