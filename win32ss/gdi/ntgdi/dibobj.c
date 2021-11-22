@@ -1505,6 +1505,7 @@ NtGdiStretchDIBitsInternal(
     }
 
     ExFreePoolWithTag(pbmiSafe, 'imBG');
+
     return LinesCopied;
 }
 
