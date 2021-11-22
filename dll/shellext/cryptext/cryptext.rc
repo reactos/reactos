@@ -47,6 +47,9 @@
 #ifdef LANGUAGE_UK_UA
     #include "lang/uk-UA.rc"
 #endif
+#ifdef LANGUAGE_ZH_HK
+    #include "lang/zh-HK.rc"
+#endif
 #ifdef LANGUAGE_ZH_TW
     #include "lang/zh-TW.rc"
 #endif

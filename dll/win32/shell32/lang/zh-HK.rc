@@ -759,7 +759,7 @@ BEGIN
     IDS_SHV_COLUMN_DELFROM "原始位置"
     IDS_SHV_COLUMN_DELDATE "刪除日期"
     IDS_SHV_COLUMN_FONTTYPE "字型類型"
-    IDS_SHV_COLUMN_WORKGROUP "工作群組"
+    IDS_SHV_COLUMN_WORKGROUP "工作羣組"
     IDS_SHV_COLUMN_NETLOCATION "網絡位置"
     IDS_SHV_COLUMN_DOCUMENTS "文件"
     IDS_SHV_COLUMN_STATUS "狀態"
@@ -844,7 +844,7 @@ BEGIN
 
     /* Format Dialog Strings */
     IDS_FORMAT_TITLE "格式化本機磁碟"
-    IDS_FORMAT_WARNING "警告: 格式化將會清除磁碟上的所有數據。\n想要格式化這個磁碟，請按［確定］。如要結束，請按［返回］。"
+    IDS_FORMAT_WARNING "警告：格式化將會清除磁碟上的所有數據。\n想要格式化這個磁碟，請按［確定］。如要結束，請按［返回］。"
     IDS_FORMAT_COMPLETE "格式化完成"
 
     /* Warning format system drive dialog strings */
@@ -961,7 +961,7 @@ BEGIN
     IDS_PRINT_VERB "列印"
     IDS_CMD_VERB "在這裡開啟命令提示字元"
 
-    IDS_FILE_FOLDER "%u 個檔案, %u 個檔案夾"
+    IDS_FILE_FOLDER "%u 個檔案，%u 個檔案夾"
     IDS_PRINTERS "印表機"
     IDS_FONTS "字型"
     IDS_INSTALLNEWFONT "安裝新字型..."
