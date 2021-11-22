@@ -830,10 +830,13 @@ WORD DosCreateProcess(IN LPCSTR ProgramName,
             }
             else
             {
+                /* Retrieve the actual path to the "Program Files" directory for displaying the error */
+                ExpandEnvironmentStringsA("%ProgramFiles%", ExpName, ARRAYSIZE(ExpName) - 1);
+
                 DisplayMessage(L"Trying to load '%S'.\n"
                                L"WOW16 applications are not supported internally by NTVDM at the moment.\n"
-                               L"Consider installing otvdm in 'C:\\Program files'. Press 'OK' to continue.",
-                               ProgramName);
+                               L"Consider installing OTVDM in '%S'. Press 'OK' to continue.",
+                               ProgramName, ExpName);
             }
             // Fall through
         }
