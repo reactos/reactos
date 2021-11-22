@@ -832,7 +832,7 @@ WORD DosCreateProcess(IN LPCSTR ProgramName,
             {
                 DisplayMessage(L"Trying to load '%S'.\n"
                                L"WOW16 applications are not supported internally by NTVDM at the moment.\n"
-                               L"Consider adding otvdm. Press 'OK' to continue.",
+                               L"Consider installing otvdm in 'C:\\Program files'. Press 'OK' to continue.",
                                ProgramName);
             }
             // Fall through
