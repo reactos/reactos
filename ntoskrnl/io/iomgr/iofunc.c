@@ -287,7 +287,7 @@ IopDeviceFsIoControl(IN HANDLE DeviceHandle,
                                        &HandleInformation);
     if (!NT_SUCCESS(Status)) return Status;
 
-    /* Can't use an I/O completion port and an APC in the same time */
+    /* Can't use an I/O completion port and an APC at the same time */
     if ((FileObject->CompletionContext) && (UserApcRoutine))
     {
         /* Fail */
@@ -1675,6 +1675,14 @@ NtNotifyChangeDirectoryFile(IN HANDLE FileHandle,
                                        NULL);
     if (!NT_SUCCESS(Status)) return Status;
 
+    /* Can't use an I/O completion port and an APC at the same time */
+    if ((FileObject->CompletionContext) && (ApcRoutine))
+    {
+        /* Fail */
+        ObDereferenceObject(FileObject);
+        return STATUS_INVALID_PARAMETER;
+    }
+
     /* Check if we have an event handle */
     if (EventHandle)
     {
@@ -1793,6 +1801,14 @@ NtLockFile(IN HANDLE FileHandle,
     /* Check if we're called from user mode */
     if (PreviousMode != KernelMode)
     {
+        /* Can't use an I/O completion port and an APC at the same time */
+        if ((FileObject->CompletionContext) && (ApcRoutine))
+        {
+            /* Fail */
+            ObDereferenceObject(FileObject);
+            return STATUS_INVALID_PARAMETER;
+        }
+
         /* Must have either FILE_READ_DATA or FILE_WRITE_DATA access */
         if (!(HandleInformation.GrantedAccess &
             (FILE_WRITE_DATA | FILE_READ_DATA)))
@@ -2741,6 +2757,14 @@ NtReadFile(IN HANDLE FileHandle,
             {
                 /* Capture and probe it */
                 CapturedByteOffset = ProbeForReadLargeInteger(ByteOffset);
+            }
+
+            /* Can't use an I/O completion port and an APC at the same time */
+            if ((FileObject->CompletionContext) && (ApcRoutine))
+            {
+                /* Fail */
+                ObDereferenceObject(FileObject);
+                return STATUS_INVALID_PARAMETER;
             }
 
             /* Perform additional checks for non-cached file access */
@@ -3794,6 +3818,14 @@ NtWriteFile(IN HANDLE FileHandle,
             {
                 /* Capture and probe it */
                 CapturedByteOffset = ProbeForReadLargeInteger(ByteOffset);
+            }
+
+            /* Can't use an I/O completion port and an APC at the same time */
+            if ((FileObject->CompletionContext) && (ApcRoutine))
+            {
+                /* Fail */
+                ObDereferenceObject(FileObject);
+                return STATUS_INVALID_PARAMETER;
             }
 
             /* Perform additional checks for non-cached file access */
