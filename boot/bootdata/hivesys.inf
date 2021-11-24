@@ -252,11 +252,9 @@ HKLM,"SYSTEM\CurrentControlSet\Control\SafeBoot\Network\{745A17A0-74D3-11D0-B6FE
 
 ; ReactOS specific - required to load in Safe Mode and for debugging in Safe Mode (until vga.sys and vgasave.sys are implemented)
 HKLM,"SYSTEM\CurrentControlSet\Control\SafeBoot\Minimal\Debug","",0x00000000,"Driver Group"
-HKLM,"SYSTEM\CurrentControlSet\Control\SafeBoot\Minimal\vgamp.sys","",0x00000000,"Driver"
 HKLM,"SYSTEM\CurrentControlSet\Control\SafeBoot\Minimal\vbemp.sys","",0x00000000,"Driver"
 
 HKLM,"SYSTEM\CurrentControlSet\Control\SafeBoot\Network\Debug","",0x00000000,"Driver Group"
-HKLM,"SYSTEM\CurrentControlSet\Control\SafeBoot\Network\vgamp.sys","",0x00000000,"Driver"
 HKLM,"SYSTEM\CurrentControlSet\Control\SafeBoot\Network\vbemp.sys","",0x00000000,"Driver"
 
 ; Other

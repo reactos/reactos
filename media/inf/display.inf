@@ -38,7 +38,6 @@ HKR, , Installer32,     0, "desk.cpl,DisplayClassInstaller"
 CopyFiles = VGA.Miniport_CopyFiles.NT, VGA.Display_CopyFiles.NT
 
 [VGA.Miniport_CopyFiles.NT]
-vgamp.sys
 vbemp.sys
 
 [VGA.Display_CopyFiles.NT]
@@ -47,15 +46,7 @@ framebuf.dll
 
 [VGA_Inst.NT.Services]
 AddService = , 0x00000002
-;AddService = VGA, , VGA_Service_Inst
 AddService = VBE, 0x00000003, VBE_Service_Inst ; SPSVCINST_TAGTOFRONT + SPSVCINST_ASSOCSERVICE
-
-[VGA_Service_Inst]
-ServiceType   = 1
-StartType     = 1
-ErrorControl  = 0
-ServiceBinary = %12%\vgamp.sys
-LoadOrderGroup = Video Save
 
 [VBE_Service_Inst]
 ServiceType   = 1
