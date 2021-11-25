@@ -4,7 +4,7 @@
  * PURPOSE:     Chinese (Hong Kong) resources file
  * TRANSLATORS: Copyright 2021 Chan Chilung <eason066@gmail.com>
  * REFERENCES:  Chinese (Simplified) resource translation
- *              Copyright 2018 Li Keqing (auroracloud4096@gmail.com)
+ *              Copyright 2018 Li Keqing <auroracloud4096@gmail.com>
  */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_HONGKONG
@@ -78,9 +78,9 @@ BEGIN
     IDS_CANTCREATEZIP "無法建立壓縮的資料夾「%s」（錯誤碼：%d）。"
     IDS_CANTREADFILE "無法讀取檔案「%s」。"
     IDS_EXTRACTING "正在解壓縮..."
-	IDS_CANTEXTRACTFILE "無法解壓縮檔案「%1」。"
-	IDS_DECOMPRESSERROR "不支援的壓縮方法 %d。您要繼續嗎？"
-	IDS_UNKNOWNERROR "不明錯誤 0x%08x。"
+    IDS_CANTEXTRACTFILE "無法解壓縮檔案「%1」。"
+    IDS_DECOMPRESSERROR "不支援的壓縮方法 %d。您要繼續嗎？"
+    IDS_UNKNOWNERROR "不明錯誤 0x%08x。"
 
     IDS_WIZ_TITLE "解壓縮精靈"
     IDS_WIZ_DEST_TITLE "選擇一個目標資料夾"

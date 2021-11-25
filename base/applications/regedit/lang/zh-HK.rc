@@ -28,7 +28,7 @@ BEGIN
     BEGIN
         MENUITEM "結束(&X)", ID_REGISTRY_EXIT
     END
-    POPUP "說明(&H)"
+    POPUP "説明(&H)"
     BEGIN
         MENUITEM "關於登錄編輯程式(&A)", ID_HELP_ABOUT
     END
@@ -44,8 +44,8 @@ BEGIN
         MENUITEM "載入 Hive 控制檔...", ID_REGISTRY_LOADHIVE, GRAYED
         MENUITEM "解除載入 Hive 控制檔...", ID_REGISTRY_UNLOADHIVE, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "連線網路登錄(&C)...", ID_REGISTRY_CONNECTNETWORKREGISTRY
-        MENUITEM "中斷網路登錄連線(&C)...", ID_REGISTRY_DISCONNECTNETWORKREGISTRY, GRAYED
+        MENUITEM "連線網絡登錄(&C)...", ID_REGISTRY_CONNECTNETWORKREGISTRY
+        MENUITEM "中斷網絡登錄連線(&C)...", ID_REGISTRY_DISCONNECTNETWORKREGISTRY, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "列印(&P)...\tCtrl+P", ID_REGISTRY_PRINT, GRAYED
         MENUITEM SEPARATOR
@@ -89,9 +89,9 @@ BEGIN
         MENUITEM "新增到我的最愛(&A)", ID_FAVOURITES_ADDTOFAVOURITES, GRAYED
         MENUITEM "刪除我的最愛(&R)", ID_FAVOURITES_REMOVEFAVOURITE, GRAYED
     END
-    POPUP "說明(&H)"
+    POPUP "説明(&H)"
     BEGIN
-        MENUITEM "說明主題(&H)\tF1", ID_HELP_HELPTOPICS
+        MENUITEM "説明主題(&H)\tF1", ID_HELP_HELPTOPICS
         MENUITEM SEPARATOR
         MENUITEM "關於登錄編輯程式(&A)", ID_HELP_ABOUT
     END
@@ -145,7 +145,7 @@ BEGIN
     END
     POPUP ""
     BEGIN
-        MENUITEM "展開/摺疊", ID_TREE_EXPANDBRANCH
+        MENUITEM "展開／摺疊", ID_TREE_EXPANDBRANCH
         MENUITEM SEPARATOR
         MENUITEM "匯出(&E)", ID_TREE_EXPORT
         MENUITEM SEPARATOR
@@ -290,7 +290,7 @@ BEGIN
     ID_EDIT_MENU "包含編輯值或機碼的命令。"
     ID_VIEW_MENU "包含自訂登錄視窗的命令。"
     ID_FAVOURITES_MENU "包含訪問常用機碼時所用的命令。"
-    ID_HELP_MENU "包含顯示幫助以及登錄編輯程式有關資訊的命令。"
+    ID_HELP_MENU "包含顯示説明以及登錄編輯程式有關資訊的命令。"
     ID_EDIT_NEW_MENU "包含新增機碼或值的命令。"
 END
 
@@ -298,7 +298,7 @@ STRINGTABLE
 BEGIN
     ID_EDIT_MODIFY "修改該值的資料。"
     ID_EDIT_NEW_KEY "新增新機碼。"
-    ID_EDIT_NEW_STRINGVALUE "新增新字串值。"
+    ID_EDIT_NEW_STRINGVALUE "新增新的字串值。"
     ID_EDIT_NEW_BINARYVALUE "新增新二進制值。"
     ID_EDIT_NEW_DWORDVALUE "新增新 DWORD 值。"
     ID_REGISTRY_IMPORTREGISTRYFILE "將檔案匯入到登錄中。"
@@ -308,22 +308,22 @@ BEGIN
     ID_REGISTRY_CONNECTNETWORKREGISTRY "連線到遠端電腦的登錄。"
     ID_REGISTRY_DISCONNECTNETWORKREGISTRY "斷開與遠端電腦登錄的連線。"
     ID_REGISTRY_PRINT "列印所有或部分登錄。"
-/*    ID_HELP_HELPTOPICS "開啟登錄編輯程式幫助。" */
+/*    ID_HELP_HELPTOPICS "開啟登錄編輯程式説明。" */
     ID_HELP_ABOUT "顯示程式資訊、版本號和版權。"
 END
 
 STRINGTABLE
 BEGIN
     ID_REGISTRY_EXIT "結束登錄編輯程式。"
-    ID_FAVOURITES_ADDTOFAVOURITES "將機碼新增到我的最愛列表。"
+    ID_FAVOURITES_ADDTOFAVOURITES "將機碼新增到我的最愛列表中。"
     ID_FAVOURITES_REMOVEFAVOURITE "將機碼從我的最愛列表中刪除。"
     ID_VIEW_STATUSBAR "顯示或隱藏狀態列。"
-    ID_VIEW_SPLIT "變更兩窗格的分拆位置。"
+    ID_VIEW_SPLIT "變更兩個窗格之間的分隔線位置。"
     ID_VIEW_REFRESH "重新整理視窗。"
-    ID_EDIT_DELETE "刪除選定內容。"
-    ID_EDIT_RENAME "重新命名選定內容。"
-    ID_EDIT_COPYKEYNAME "將選定機碼的名稱複製到剪貼簿上。"
-    ID_EDIT_FIND "在機碼、值或資料中尋找文字字串。"
+    ID_EDIT_DELETE "刪除已選取內容。"
+    ID_EDIT_RENAME "重新命名已選取內容。"
+    ID_EDIT_COPYKEYNAME "將已選取機碼的名稱複製到剪貼簿。"
+    ID_EDIT_FIND "在機碼、值或資料裡找到文字字串。"
     ID_EDIT_FINDNEXT "繼續搜尋上次搜尋的文字。"
 END
 
@@ -331,21 +331,21 @@ STRINGTABLE
 BEGIN
     IDS_ERROR "錯誤"
     IDS_WARNING "警告"
-    IDS_BAD_KEY "不能查詢機碼「%s」"
-    IDS_BAD_VALUE "不能查詢值「%s」"
+    IDS_BAD_KEY "無法查詢機碼「%s」"
+    IDS_BAD_VALUE "無法查詢值「%s」"
     IDS_UNSUPPORTED_TYPE "不能編輯這類型的機碼（%ld）"
     IDS_TOO_BIG_VALUE "數值過大（%ld）"
-    IDS_MULTI_SZ_EMPTY_STRING "REG_MULTI_SZ 類型的資料不能包括空字元串。\r\n空字串已從註冊表編輯器中刪除。"
+    IDS_MULTI_SZ_EMPTY_STRING "REG_MULTI_SZ 類型的資料不能包括空字串。\r\n已將空字串從登錄檔編輯器中刪除。"
     IDS_QUERY_DELETE_KEY_ONE "確定要刪除這個機碼嗎？"
     IDS_QUERY_DELETE_KEY_MORE "確定要刪除這些機碼嗎？"
     IDS_QUERY_DELETE_KEY_CONFIRM "確認刪除機碼"
     IDS_QUERY_DELETE_ONE "確定要刪除這個值嗎？"
     IDS_QUERY_DELETE_MORE "確定要刪除這些值嗎？"
-    IDS_QUERY_DELETE_CONFIRM "確認刪除值"
+    IDS_QUERY_DELETE_CONFIRM "確認數值刪除"
     IDS_ERR_DELVAL_CAPTION "刪除值時發生錯誤。"
     IDS_ERR_DELETEVALUE "無法刪除所有指定的值！"
     IDS_ERR_RENVAL_CAPTION "重新命名值時發生錯誤"
-    IDS_ERR_RENVAL_TOEMPTY "登錄編輯程式無法重新命名 %s。指定的值名稱為空。請輸入其他名稱，然後再試一次。"
+    IDS_ERR_RENVAL_TOEMPTY "無法重新命名 %s。指定的值名稱為空。請輸入其他名稱，然後再試一次。"
     IDS_QUERY_IMPORT_HIVE_CAPTION "確認恢復機碼"
     IDS_QUERY_IMPORT_HIVE_MSG "一個機碼將在目前選定的機碼的頂部恢復。\n所有這個機碼的值和子機碼都將被刪除。\n您要繼續嗎？"
     IDS_NEW_KEY "新機碼 #%d"
@@ -412,10 +412,10 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_IMPORT_PROMPT "新增資訊可能會意外更改或刪除值並導致元件停止正常工作。\n如果您不信任此「%s」中的資訊來源，請不要將其新增到登錄。\n\n您要繼續嗎？"
+    IDS_IMPORT_PROMPT "新增資料可以無意中更改或刪除值並導致元件停止正常工作。\n如果您不信任此「%s」中的資料的來源，請不要將其新增到登錄。\n\n您要繼續嗎？"
     IDS_IMPORT_OK "「%s」中包含的值和機碼已成功新增到登錄。"
-    IDS_IMPORT_ERROR "無法將匯入「%s」：開啟該檔案時出錯。可能有磁碟或檔案系統錯誤，或者檔案可能不存在。"
-    IDS_EXPORT_ERROR "無法匯出「%s」：建立或寫入檔案時出錯。可能有磁碟或檔案系統錯誤。"
+    IDS_IMPORT_ERROR "無法匯入「%s」：開啟該檔案時出錯。這可能是磁碟或檔案系統錯誤，或是檔案不存在。"
+    IDS_EXPORT_ERROR "無法匯出「%s」：建立或寫入檔案時出錯。這可能是磁碟或檔案系統錯誤。"
 END
 
 STRINGTABLE
@@ -504,7 +504,7 @@ FONT 9, "新細明體"
 BEGIN
     DEFPUSHBUTTON "確定", IDOK, 129, 7, 50, 14
     PUSHBUTTON "取消", IDCANCEL, 129, 24, 50, 14
-    LTEXT "我的最愛名稱(&F):", IDC_STATIC, 7, 7, 70, 10
+    LTEXT "我的最愛名稱(&F)：", IDC_STATIC, 7, 7, 70, 10
     EDITTEXT IDC_FAVORITENAME, 7, 26, 110, 13, ES_AUTOHSCROLL
 END
 
@@ -556,7 +556,7 @@ END
 /*
  *STRINGTABLE
  *BEGIN
- *    ID_HELP_HELPTOPICS "開啟登錄編輯程式說明。"
- *    ID_HELP_ABOUT "顯示程式資訊、版本號碼和著作權。"
+ *    ID_HELP_HELPTOPICS "開啟登錄編輯程式説明。"
+ *    ID_HELP_ABOUT "顯示程式資訊、版本號碼和版權。"
  *END
  */

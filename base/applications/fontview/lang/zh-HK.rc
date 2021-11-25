@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS FontView
+ * PROJECT:     ReactOS Font Viewer
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Chinese (Hong Kong) resource file
  * TRANSLATORS: Copyright 2021 Chan Chilung <eason066@gmail.com>
@@ -11,8 +11,8 @@ LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_HONGKONG
 
 STRINGTABLE
 BEGIN
-    IDS_INSTALL "安裝"
-    IDS_PRINT "列印"
+    IDS_INSTALL "安裝(&I)"
+    IDS_PRINT "列印(&P)"
     IDS_STRING "路曼曼其脩遠兮，吾將上下而求索。1234567890"
     IDS_OPEN "開啟字型..."
     IDS_ERROR "錯誤"

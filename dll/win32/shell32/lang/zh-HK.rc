@@ -432,7 +432,7 @@ BEGIN
     CONTROL "", IDC_FOLDER_OPTIONS_CLICKICON, "Static", SS_ICON | WS_CHILD | WS_VISIBLE, 14, 120, 21, 20
     AUTORADIOBUTTON "通過按一下來開啟項目（指向時選擇）(&S)", IDC_FOLDER_OPTIONS_SINGLECLICK, 40, 120, 170, 10, WS_TABSTOP | WS_GROUP
     AUTORADIOBUTTON "通過按兩下來開啟項目（按一下時選擇）(&D)", IDC_FOLDER_OPTIONS_DOUBLECLICK, 40, 156, 170, 10
-    AUTORADIOBUTTON "在圖示標題下新增下劃線，同瀏覽器設定相同(&B)", IDC_FOLDER_OPTIONS_ULBROWSER, 50, 132, 170, 10, WS_TABSTOP | WS_GROUP
+    AUTORADIOBUTTON "在圖示標題下新增下劃線，與瀏覽器設定相同(&B)", IDC_FOLDER_OPTIONS_ULBROWSER, 50, 132, 170, 10, WS_TABSTOP | WS_GROUP
     AUTORADIOBUTTON "只在我指向圖示標題時才新增下劃線(&P)", IDC_FOLDER_OPTIONS_ULPOINT, 50, 144, 170, 10
     PUSHBUTTON "還原成預設值(&R)", IDC_FOLDER_OPTIONS_RESTORE, 167, 175, 90, 14, WS_TABSTOP
 END
@@ -548,7 +548,7 @@ FONT 9, "新細明體"
 BEGIN
     ICON "", 1000, 5, 7, 21, 20
     LTEXT "這個磁碟或裝置包含多種類型的內容。", 1001, 32, 7, 191, 20
-    LTEXT "您希望 ReactOS 做什麼？", 1002, 32, 31, 188, 8
+    LTEXT "您希望 ReactOS 做甚麼？", 1002, 32, 31, 188, 8
     CONTROL "", 1003, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000C04D, 32, 43, 188, 139
     DEFPUSHBUTTON "確定", IDOK, 96, 186, 60, 14
     PUSHBUTTON "取消", IDCANCEL, 160, 186, 60, 14
@@ -560,10 +560,10 @@ CAPTION "混合內容"
 FONT 9, "新細明體"
 BEGIN
     ICON "", 1000, 5, 7, 21, 20
-    LTEXT "每次插入磁碟或使用依類文件連接裝置時，ReactOS 都可以執行相同的動作：", 1001, 30, 7, 193, 20
+    LTEXT "每次插入磁碟或連接有同類檔案的裝置時，ReactOS 都可以執行相同的動作：", 1001, 30, 7, 193, 20
     ICON "", 1005, 32, 27, 11, 10, SS_REALSIZECONTROL
     EDITTEXT 1006, 49, 28, 177, 14, ES_AUTOHSCROLL | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT "您希望 ReactOS 做什麼？", 1002, 32, 41, 190, 8
+    LTEXT "您希望 ReactOS 做甚麼？", 1002, 32, 41, 190, 8
     CONTROL "", 1003, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000C04D, 32, 55, 188, 112
     AUTOCHECKBOX "總是執行指定的動作。", 1004, 32, 171, 190, 10
     DEFPUSHBUTTON "確定", IDOK, 96, 185, 60, 14
@@ -577,7 +577,7 @@ FONT 9, "新細明體"
 BEGIN
     ICON "", 1000, 5, 7, 21, 20
     LTEXT "ReactOS 可以執行您選擇的相同動作。", 1001, 32, 7, 190, 22
-    LTEXT "您希望 ReactOS 做什麼(&W)？", 1002, 32, 31, 190, 8
+    LTEXT "您希望 ReactOS 做甚麼(&W)？", 1002, 32, 31, 190, 8
     CONTROL "", 1003, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000C04D, 32, 43, 187, 96
     AUTOCHECKBOX "總是執行相同的動作(&A)", 1004, 32, 143, 190, 8
     DEFPUSHBUTTON "確定", IDOK, 94, 160, 60, 14
@@ -590,7 +590,7 @@ CAPTION "關閉 ReactOS"
 FONT 9, "新細明體"
 BEGIN
     ICON 8240, -1, 6, 6, 21, 20, SS_REALSIZECONTROL | WS_GROUP
-    LTEXT "您希望電腦做什麼？", -1, 39, 7, 167, 10
+    LTEXT "您希望電腦做甚麼？", -1, 39, 7, 167, 10
     COMBOBOX 8224, 39, 20, 165, 200, CBS_DROPDOWNLIST | WS_VSCROLL
     LTEXT "維持工作階段，電腦數據仍然保持在記憶體中。當您按下一個鍵或移動鼠標將喚醒這台電腦。", 8225, 39, 40, 167, 37
     DEFPUSHBUTTON "確定", 1, 7, 82, 60, 14, WS_GROUP
@@ -628,7 +628,7 @@ BEGIN
     GROUPBOX "檢查磁碟選項", -1, 7, 6, 179, 40
     PUSHBUTTON "取消", IDCANCEL, 128, 95, 60, 14
     AUTOCHECKBOX "自動修復檔案系統錯誤", 14000, 12, 15, 155, 10
-    AUTOCHECKBOX "嘗試掃描同修復壞磁區(&S)", 14001, 16, 30, 165, 10
+    AUTOCHECKBOX "嘗試掃描並修復壞磁區(&S)", 14001, 16, 30, 165, 10
     CONTROL "", 14002, "MSCTLS_PROGRESS32", 16, 7, 50, 179, 8
     LTEXT "", 14003, 60, 80, 170, 10
 END
@@ -653,7 +653,7 @@ CAPTION "警告"
 FONT 9, "新細明體"
 BEGIN
     ICON IDI_SHELL_SYSTEM_FILE, IDI_SHELL_SYSTEM_FILE, 5, 5, 21, 20
-    LTEXT "這個檔案可由操作系統或其他應用程式所使用。\n修改這個檔案可能會導致您的系統損毀，\n或者使其功能變弱。\n\n\
+    LTEXT "這個檔案可由操作系統或其他應用程式所使用。\n修改這個檔案可能會導致您的系統損毀，\n或者使其功能失效。\n\n\
 您是否仍要開啟這個檔案？", IDC_STATIC, 35, 5, 230, 60
     DEFPUSHBUTTON "是", IDYES, 125, 55, 50, 14
     PUSHBUTTON "否", IDNO, 180, 55, 50, 14
@@ -714,7 +714,7 @@ CAPTION "自訂"
 STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
 FONT 9, "新細明體"
 BEGIN
-    GROUPBOX "您想要什麼種類的資料夾？", IDC_STATIC, 5, 5, 230, 65, WS_TABSTOP
+    GROUPBOX "您想要甚麼種類的資料夾？", IDC_STATIC, 5, 5, 230, 65, WS_TABSTOP
     LTEXT "將這個資料夾類型設定成範本(&F)：", IDC_STATIC, 15, 20, 210, 12
     COMBOBOX IDC_FOLDERCUST_COMBOBOX, 15, 35, 210, 300, CBS_HASSTRINGS | CBS_AUTOHSCROLL | CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     AUTOCHECKBOX "將這個範本套用到所有子資料夾(&S)", IDC_FOLDERCUST_CHECKBOX, 15, 50, 210, 15
@@ -813,6 +813,8 @@ BEGIN
     IDS_COPYERRORSAME "無法複製「%s」：來源及目的地的檔案名稱相同。"
     IDS_MOVEERRORSUBFOLDER "無法移動「%s」：目的資料夾是來源資料夾的子資料夾。"
     IDS_COPYERRORSUBFOLDER "無法複製「%s」：目的資料夾是來源資料夾的子資料夾。"
+    IDS_MOVEERROR "無法移動「%s」：%s"
+    IDS_COPYERROR "無法複製「%s」：%s"
 
     IDS_CREATEFOLDER_DENIED "無法建立資料夾「%1」"
     IDS_CREATEFOLDER_CAPTION "無法建立資料夾"
@@ -1026,11 +1028,11 @@ BEGIN
     IDS_FILE_NOT_FOUND "找不到檔案「%s」。"
     IDS_LINK_INVALID "這個捷徑所參照的項目「%s」已被刪除或移動，因此無法再正常執行。"
     IDS_COPYTOMENU "複製到資料夾(&F)..."
-    IDS_COPYTOTITLE "選取想要複製「%s」的位置，然後按［複製］按鈕。"
+    IDS_COPYTOTITLE "選取「%s」要複製的位置，然後按［複製］按鈕。"
     IDS_COPYITEMS "複製項目"
     IDS_COPYBUTTON "複製"
     IDS_MOVETOMENU "移到資料夾(&V)..."
-    IDS_MOVETOTITLE "選取想要移動「%s」 的位置，然後按［移動］按鈕。"
+    IDS_MOVETOTITLE "選取「%s」要移動的位置，然後按［移動］按鈕。"
     IDS_MOVEITEMS "移動項目"
     IDS_MOVEBUTTON "移動"
 

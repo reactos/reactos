@@ -89,11 +89,11 @@ BEGIN
     IDS_INSTALLING "安裝中..."
     IDS_INVALID_SHA "下載的檔案總和檢查碼錯誤。正在終止安裝已損毀的檔案。"
     IDS_NEW_INTERNET_SHORTCUT "新增互聯網捷徑"
-    IDS_DWL_FAILED "無法下載 Gecko 套件。請確保在有互聯網連線的情況下再進行下載。安裝程式將在不安裝 Gecko 的情況下繼續。"
+    IDS_DWL_FAILED "無法下載 Gecko 套件。請確保在連線至互聯網後再進行下載。安裝程式將在不安裝 Gecko 的情況下繼續。"
     IDS_CANTMAKEINETSHORTCUT "無法建立互聯網捷徑。"
     IDS_CANTMAKESHORTCUT "無法建立捷徑。"
     IDS_NO_MEMORY "沒有可分配的記憶體空間。"
     IDS_NO_DIRECTORY "沒有指定路徑。"
     IDS_INVALID_PATH "指定的路徑無效。"
-    IDS_INVALID_NAME "輸入的捷徑名稱包含無效的字元，或檔案名稱太長。"
+    IDS_INVALID_NAME "您輸入的捷徑名稱太長，或包含不能在檔案名稱中使用的字元。"
 END

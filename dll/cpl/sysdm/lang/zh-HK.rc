@@ -2,10 +2,10 @@
  * PROJECT:     ReactOS System Control Panel Applet
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Chinese (Hong Kong) resource file
- * TRANSLATORS: Copyright 2021 Chan Chilung (eason066@gmail.com)
+ * TRANSLATORS: Copyright 2021 Chan Chilung <eason066@gmail.com>
  * REFERENCES:  Chinese (Traditional) resource translation
- *              Copyright 2016 Henry Tang (henrytang2@hotmail.com)
- *              Copyright 2018 Luo Yufan (njlyf2011@hotmail.com)
+ *              Copyright 2016 Henry Tang <henrytang2@hotmail.com>
+ *              Copyright 2018 Luo Yufan <njlyf2011@hotmail.com>
  */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_HONGKONG
@@ -98,10 +98,10 @@ BEGIN
     PUSHBUTTON "複製(&C)", IDC_HRDPROFCOPY, 63, 106, 50, 14, WS_DISABLED
     PUSHBUTTON "重新命名(&R)", IDC_HRDPROFRENAME, 118, 106, 50, 14, WS_DISABLED
     PUSHBUTTON "刪除(&D)", IDC_HRDPROFDEL, 173, 106, 50, 14, WS_DISABLED
-    GROUPBOX "硬件設定檔選擇", IDC_STATIC, 7, 130, 240, 75
+    GROUPBOX "選擇硬件設定檔", IDC_STATIC, 7, 130, 240, 75
     LTEXT "啟動 ReactOS 時：", IDC_STATIC, 14, 142, 210, 8
-    AUTORADIOBUTTON "等待使用者選定硬件設定檔(&W)", IDC_HRDPROFWAIT, 14, 158, 133, 8, WS_GROUP
-    AUTORADIOBUTTON "秒內還沒有選定設定檔，就從列出的文件中選擇第一個(&S)", IDC_HRDPROFSELECT, 14, 173, 190, 8
+    AUTORADIOBUTTON "等待使用者選擇硬件設定檔(&W)", IDC_HRDPROFWAIT, 14, 158, 133, 8, WS_GROUP
+    AUTORADIOBUTTON "如果在指定時間內沒有選擇設定檔，就選擇第一個列出的設定檔(&S)", IDC_HRDPROFSELECT, 14, 173, 190, 8
     LTEXT "秒", IDC_STATIC, 65, 187, 35, 8
     EDITTEXT IDC_HRDPROFEDIT, 25, 185, 35, 12
     CONTROL "", IDC_HRDPROFUPDWN, "msctls_updown32", UDS_SETBUDDYINT | UDS_ALIGNRIGHT |
@@ -335,7 +335,7 @@ BEGIN
     IDS_USERPROFILE_LOCAL "本機"
     IDS_USERPROFILE_ROAMING "遠端"
     IDS_USERPROFILE_MANDATORY "強制"
-    IDS_USERPROFILE_CONFIRM_DELETE "您是否確定要刪除 %s 的設定檔？"
+    IDS_USERPROFILE_CONFIRM_DELETE "您是否確定要刪除設定檔「%s」？"
     IDS_USERPROFILE_CONFIRM_DELETE_TITLE "確認刪除"
     IDS_USERPROFILE_ACCOUNT_UNKNOWN "不明的帳户"
     IDS_USERPROFILE_ACCOUNT_DELETED "帳户已刪除"

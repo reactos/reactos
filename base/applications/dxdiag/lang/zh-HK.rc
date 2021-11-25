@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS ReactX-Diagnostic program
+ * PROJECT:     ReactX Diagnosis Tool
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Chinese (Hong Kong) resource file
  * TRANSLATORS: Copyright 2021 Chan Chilung <eason066@gmail.com>
@@ -146,7 +146,7 @@ IDD_MUSIC_DIALOG DIALOGEX 0, 0, 462, 220
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 9, "新細明體"
 BEGIN
-    RTEXT "常規 MIDI DLS 集合：", IDC_STATIC, 0, 0, 100, 10
+    RTEXT "一般 MIDI DLS 集合：", IDC_STATIC, 0, 0, 100, 10
     EDITTEXT IDC_MIDI_DLS_COLLECTION, 105, 0, 250, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     GROUPBOX "音樂埠", IDC_STATIC, 5, 10, 452, 85
     GROUPBOX "ReactX 功能", IDC_STATIC, 5, 97, 452, 70
@@ -212,7 +212,7 @@ BEGIN
     IDS_FORMAT_SWAP "已使用 %I64u MB，還有 %I64u MB 可用"
     IDS_FORMAT_UNIPROC "%s (%u CPU)"
     IDS_FORMAT_MPPROC "%s (%u CPUs)"
-    IDS_VERSION_UNKNOWN "未知版本"
+    IDS_VERSION_UNKNOWN "不明版本"
     IDS_DEVICE_STATUS_ATTACHED "已連接"
     IDS_DEVICE_STATUS_MISSING "已中斷連接"
     IDS_DEVICE_STATUS_UNKNOWN "不明"
@@ -238,13 +238,13 @@ BEGIN
     IDS_DIRECTPLAY_SERIALCONN "DirectPlay 序列連接"
     IDS_REG_SUCCESS "確認"
     IDS_REG_FAIL "錯誤"
-    IDS_DDTEST_ERROR "測試失敗！"
+    IDS_DDTEST_ERROR "DirectDraw 算繪測試失敗！請查看備註以取得更多資訊。"
     IDS_DDTEST_DESCRIPTION "即將啟動 DirectDraw 界面測試。要繼續嗎？"
-    IDS_DDPRIMARY_DESCRIPTION "這個測試將使用 DirectDraw 在主要表面上繪圖。您應會看見黑色和白色的矩形。要繼續嗎？"
+    IDS_DDPRIMARY_DESCRIPTION "這個測試將使用 DirectDraw 在主要表面上繪圖。您應會看到黑色和白色的矩形。要繼續嗎？"
     IDS_DDPRIMARY_RESULT "您看到黑色和白色的矩形嗎？"
-    IDS_DDOFFSCREEN_DESCRIPTION "這個測試將使用 DirectDraw 在幕外表面上繪圖。您應會看見正在移動的白色矩形。要繼續嗎？"
+    IDS_DDOFFSCREEN_DESCRIPTION "這個測試將使用 DirectDraw 在幕外緩衝區上繪圖。您應會看到正在移動的白色矩形。要繼續嗎？"
     IDS_DDOFFSCREEN_RESULT "您看到移動中的白色矩形嗎？"
-    IDS_DDFULLSCREEN_DESCRIPTION "這個測試將使用 DirectDraw 在全螢幕模式繪圖。您應會看見正在移動的白色矩形。要繼續嗎？"
+    IDS_DDFULLSCREEN_DESCRIPTION "這個測試將使用 DirectDraw 在全螢幕模式繪圖。您應會看到正在移動的白色矩形。要繼續嗎？"
     IDS_DDFULLSCREEN_RESULT "您在全螢幕模式中看到移動中的白色矩形嗎？"
     IDS_FORMAT_ADAPTER_MEM "%u MB"
     IDS_FORMAT_ADAPTER_MODE "%d x %d (%u bit)(%uHz)"
