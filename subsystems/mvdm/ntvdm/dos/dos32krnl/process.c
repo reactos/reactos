@@ -804,9 +804,9 @@ WORD DosCreateProcess(IN LPCSTR ProgramName,
             CHAR ExpName[MAX_PATH];
 
             ExpandEnvironmentStringsA(AppName, ExpName, ARRAYSIZE(ExpName) - 1);
-            StringCbCatA(ExpName, MAX_PATH, "\"");         // Add double-quote before ProgramName
-            StringCbCatA(ExpName, MAX_PATH, ProgramName);  // Append Program name
-            StringCbCatA(ExpName, MAX_PATH, "\"");         // Add double-quote after ProgramName
+            StringCbCatA(ExpName, sizeof(ExpName), "\"");         // Add double-quote before ProgramName
+            StringCbCatA(ExpName, sizeof(ExpName), ProgramName);  // Append Program name
+            StringCbCatA(ExpName, sizeof(ExpName), "\"");         // Add double-quote after ProgramName
 
             ZeroMemory(&pi, sizeof(pi));
             ZeroMemory(&si, sizeof(si));
