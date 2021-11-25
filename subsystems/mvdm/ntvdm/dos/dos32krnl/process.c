@@ -13,6 +13,7 @@
 
 #define NDEBUG
 #include <debug.h>
+#include <strsafe.h>
 
 #include "emulator.h"
 #include "cpu/cpu.h"
@@ -803,9 +804,9 @@ WORD DosCreateProcess(IN LPCSTR ProgramName,
             CHAR ExpName[MAX_PATH];
 
             ExpandEnvironmentStringsA(AppName, ExpName, ARRAYSIZE(ExpName) - 1);
-            strcat(ExpName, "\"");         // Add double-quote before ProgramName
-            strcat(ExpName, ProgramName);  // Append Program name
-            strcat(ExpName, "\"");         // Add double-quote after ProgramName
+            StringCbCatA(ExpName, MAX_PATH, "\"");         // Add double-quote before ProgramName
+            StringCbCatA(ExpName, MAX_PATH, ProgramName);  // Append Program name
+            StringCbCatA(ExpName, MAX_PATH, "\"");         // Add double-quote after ProgramName
 
             ZeroMemory(&pi, sizeof(pi));
             ZeroMemory(&si, sizeof(si));
