@@ -9,6 +9,31 @@
 #ifndef _NTVDM_H_
 #define _NTVDM_H_
 
+/* BUILD CONFIGURATION ********************************************************/
+
+/*
+ * Activate this line if you want to run NTVDM in standalone mode with:
+ * ntvdm.exe <program>
+ */
+// #define STANDALONE
+
+/*
+ * Activate this line for Win2k compliancy
+ */
+// #define WIN2K_COMPLIANT
+
+/*
+ * Activate this line if you want advanced hardcoded debug facilities
+ * (called interrupts, etc...), that may break PC-AT compatibility.
+ * USE AT YOUR OWN RISK! (disabled by default)
+ */
+// #define ADVANCED_DEBUGGING
+
+#ifdef ADVANCED_DEBUGGING
+#define ADVANCED_DEBUGGING_LEVEL    1
+#endif
+
+
 /* INCLUDES *******************************************************************/
 
 #include <stdio.h>
@@ -36,38 +61,12 @@
 DWORD WINAPI SetLastConsoleEventActive(VOID);
 
 #define NTOS_MODE_USER
-#include <ndk/kefuncs.h>
-#include <ndk/mmfuncs.h>
-#include <ndk/obfuncs.h>
+#include <ndk/kefuncs.h>    // For NtQueryPerformanceCounter()
 #include <ndk/rtlfuncs.h>
-#include <ndk/rtltypes.h>
 
 /* PSEH for SEH Support */
 #include <pseh/pseh2.h>
 
-/*
- * Activate this line if you want to run NTVDM in standalone mode with:
- * ntvdm.exe <program>
- */
-// #define STANDALONE
-
-/*
- * Activate this line for Win2k compliancy
- */
-// #define WIN2K_COMPLIANT
-
-/*
- * Activate this line if you want advanced hardcoded debug facilities
- * (called interrupts, etc...), that break PC-AT compatibility.
- * USE AT YOUR OWN RISK! (disabled by default)
- */
-// #define ADVANCED_DEBUGGING
-
-#ifdef ADVANCED_DEBUGGING
-#define ADVANCED_DEBUGGING_LEVEL    1
-#endif
-
-#define NULL32 0
 
 /* VARIABLES ******************************************************************/
 
