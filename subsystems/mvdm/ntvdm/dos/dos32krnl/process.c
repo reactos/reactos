@@ -87,6 +87,7 @@ static inline VOID DosSaveState(VOID)
     PDOS_REGISTER_STATE State;
     WORD StackPointer = getSP();
 
+#ifdef ADVANCED_DEBUGGING
     DPRINT1("\n"
             "DosSaveState(before) -- SS:SP == %04X:%04X\n"
             "Original CPU State =\n"
@@ -96,6 +97,7 @@ static inline VOID DosSaveState(VOID)
             getSS(), getSP(),
             getDS(), getES(), getAX(), getCX(),
             getDX(), getBX(), getBP(), getSI(), getDI());
+#endif
 
     /*
      * Allocate stack space for the registers. Note that we
@@ -116,6 +118,7 @@ static inline VOID DosSaveState(VOID)
     State->SI = getSI();
     State->DI = getDI();
 
+#ifdef ADVANCED_DEBUGGING
     DPRINT1("\n"
             "DosSaveState(after) -- SS:SP == %04X:%04X\n"
             "Saved State =\n"
@@ -125,6 +128,7 @@ static inline VOID DosSaveState(VOID)
             getSS(), getSP(),
             State->DS, State->ES, State->AX, State->CX,
             State->DX, State->BX, State->BP, State->SI, State->DI);
+#endif
 }
 
 static inline VOID DosRestoreState(VOID)
@@ -137,6 +141,7 @@ static inline VOID DosRestoreState(VOID)
      */
     State = SEG_OFF_TO_PTR(getSS(), getSP());
 
+#ifdef ADVANCED_DEBUGGING
     DPRINT1("\n"
             "DosRestoreState(before) -- SS:SP == %04X:%04X\n"
             "Saved State =\n"
@@ -146,6 +151,7 @@ static inline VOID DosRestoreState(VOID)
             getSS(), getSP(),
             State->DS, State->ES, State->AX, State->CX,
             State->DX, State->BX, State->BP, State->SI, State->DI);
+#endif
 
     setSP(getSP() + sizeof(DOS_REGISTER_STATE) - sizeof(WORD));
 
@@ -160,6 +166,7 @@ static inline VOID DosRestoreState(VOID)
     setSI(State->SI);
     setDI(State->DI);
 
+#ifdef ADVANCED_DEBUGGING
     DPRINT1("\n"
             "DosRestoreState(after) -- SS:SP == %04X:%04X\n"
             "Restored CPU State =\n"
@@ -169,6 +176,7 @@ static inline VOID DosRestoreState(VOID)
             getSS(), getSP(),
             getDS(), getES(), getAX(), getCX(),
             getDX(), getBX(), getBP(), getSI(), getDI());
+#endif
 }
 
 static WORD DosCopyEnvironmentBlock(IN LPCSTR Environment OPTIONAL,
@@ -633,8 +641,10 @@ DWORD DosLoadExecutableInternal(IN DOS_EXEC_TYPE LoadType,
             /* Push the task state */
             DosSaveState();
 
+#ifdef ADVANCED_DEBUGGING
             DPRINT1("Sda->CurrentPsp = 0x%04x; Old LastStack = 0x%08x, New LastStack = 0x%08x\n",
                    Sda->CurrentPsp, SEGMENT_TO_PSP(Sda->CurrentPsp)->LastStack, MAKELONG(getSP(), getSS()));
+#endif
 
             /* Update the last stack in the PSP */
             SEGMENT_TO_PSP(Sda->CurrentPsp)->LastStack = MAKELONG(getSP(), getSS());
@@ -996,13 +1006,17 @@ Done:
     TerminationType = (KeepResident != 0 ? 0x03 : 0x00);
     Sda->ErrorLevel = MAKEWORD(ReturnCode, TerminationType);
 
+#ifdef ADVANCED_DEBUGGING
     DPRINT1("PspBlock->ParentPsp = 0x%04x; Sda->CurrentPsp = 0x%04x\n",
            PspBlock->ParentPsp, Sda->CurrentPsp);
+#endif
 
     if (Sda->CurrentPsp != SYSTEM_PSP)
     {
+#ifdef ADVANCED_DEBUGGING
         DPRINT1("Sda->CurrentPsp = 0x%04x; Old SS:SP = %04X:%04X going to be LastStack = 0x%08x\n",
                Sda->CurrentPsp, getSS(), getSP(), SEGMENT_TO_PSP(Sda->CurrentPsp)->LastStack);
+#endif
 
         /* Restore the parent's stack */
         setSS(HIWORD(SEGMENT_TO_PSP(Sda->CurrentPsp)->LastStack));
