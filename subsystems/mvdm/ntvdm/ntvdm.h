@@ -44,6 +44,11 @@
 #define _countof(_Array) (sizeof(_Array) / sizeof(_Array[0]))
 #endif
 
+/* String widening macro */
+#define __L(x)  L ## x
+#define _L(x)   __L(x)
+#define L(x)    _L(x)
+
 /* PSDK/NDK Headers */
 #define WIN32_NO_STATUS
 #include <windef.h>
