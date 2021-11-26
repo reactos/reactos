@@ -86,7 +86,7 @@ TestNotification(void)
         skip("Could not instantiate IUserNotification\n");
         return;
     }
-    
+
     /* Set an invalid icon for the notification icon */
     hr = pUserNotif->SetIconInfo((HICON)UlongToHandle(0xdeadbeef), L"Tooltip text");
     ok_hr(hr, S_OK);

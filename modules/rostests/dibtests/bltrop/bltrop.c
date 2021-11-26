@@ -11,7 +11,7 @@
 HINSTANCE hInst;
 TCHAR szWindowClass[] = _T("testclass");
 
-static LRESULT CALLBACK 
+static LRESULT CALLBACK
 WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     static HBITMAP hBmpTest;
@@ -65,7 +65,7 @@ WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             DeleteObject(brush);
 
             brush = CreateHatchBrush(HS_VERTICAL, RGB(255,0,0));
-            SelectObject(hdc, brush);  
+            SelectObject(hdc, brush);
             PatBlt(hdc, 0, 4*l, 30, l, PATCOPY);
             DeleteObject(brush);
 
@@ -73,7 +73,7 @@ WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             SelectObject(hdc, brush);
             PatBlt(hdc, 0, 5*l, 30, l, PATCOPY);
             DeleteObject(brush);
-  
+
             /* set up a second brush */
             brush2 = CreateHatchBrush(HS_VERTICAL, RGB(127,127,127));
 

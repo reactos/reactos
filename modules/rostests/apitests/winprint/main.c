@@ -57,6 +57,6 @@ GetWinprintFunc(const char* FunctionName)
         skip("GetProcAddress failed for %s with error %lu!\n", FunctionName, GetLastError());
         return NULL;
     }
-    
+
     return pFunc;
 }

@@ -226,7 +226,7 @@ BEGIN
     ICON "", IDC_DEVICON, 7, 7, 20, 20
     LTEXT "", IDC_DEVNAME, 37, 9, 174, 16, SS_NOPREFIX
     LTEXT "リソース設定:", -1, 7, 36, 204, 8
-    CONTROL "", IDC_DRIVERRESOURCES, "SysListView32", LVS_REPORT | 
+    CONTROL "", IDC_DRIVERRESOURCES, "SysListView32", LVS_REPORT |
             LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SHAREIMAGELISTS | LVS_SORTASCENDING |
             LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 7, 46, 238, 80
 END
@@ -288,8 +288,8 @@ STRINGTABLE DISCARDABLE
 BEGIN
   IDS_APPNAME               "ReactOS デバイス マネージャ"
   IDS_APP_AUTHORS           "Copyright 2015 Ged Murphy"
-  IDS_CONFIRM_DISABLE       "このデバイスを無効にすると、機能が止まります。\r\nこれを本当に無効にしたいですか？"
-  IDS_CONFIRM_UNINSTALL     "警告: あなたのシステムからこのデバイスをアンインストールしようとしています。\r\n続行したいですか？"
+  IDS_CONFIRM_DISABLE       "このデバイスを無効にすると、機能が止まります。\nこれを本当に無効にしたいですか？"
+  IDS_CONFIRM_UNINSTALL     "警告: あなたのシステムからこのデバイスをアンインストールしようとしています。\n続行したいですか？"
 END
 STRINGTABLE DISCARDABLE
 BEGIN
@@ -322,7 +322,7 @@ BEGIN
   IDS_HINT_DISABLE      " 選択中のデバイスを無効にします。"
   IDS_HINT_UPDATE       " 選択中のデバイスに対するデバイス更新ソフトウェア ウィザードを起動します。"
   IDS_HINT_UNINSTALL    " 選択中のデバイスに対するドライバをアンインストールします。"
-  IDS_HINT_ADD          " レガシー (非プラグ アンド プレイ) デバイスをコンピュータに追加します。" 
+  IDS_HINT_ADD          " レガシー (非プラグ アンド プレイ) デバイスをコンピュータに追加します。"
   IDS_HINT_ABOUT        " ReactOS デバイス マネージャについて."
   IDS_HINT_EXIT         " プログラムを終了します。"
 

@@ -5,7 +5,7 @@
  *****************************************************************************/
 
 /*
- * Copyright (C) 2000 - 2020, Intel Corp.
+ * Copyright (C) 2000 - 2021, Intel Corp.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -30,7 +30,7 @@
  * NO WARRANTY
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTIBILITY AND FITNESS FOR
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
  * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
  * HOLDERS OR CONTRIBUTORS BE LIABLE FOR SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
  * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
@@ -162,6 +162,8 @@ AcpiEvAddressSpaceDispatch (
     ACPI_OPERAND_OBJECT     *RegionObj2;
     void                    *RegionContext = NULL;
     ACPI_CONNECTION_INFO    *Context;
+    ACPI_MUTEX              ContextMutex;
+    BOOLEAN                 ContextLocked;
     ACPI_PHYSICAL_ADDRESS   Address;
 
 
@@ -188,6 +190,8 @@ AcpiEvAddressSpaceDispatch (
     }
 
     Context = HandlerDesc->AddressSpace.Context;
+    ContextMutex = HandlerDesc->AddressSpace.ContextMutex;
+    ContextLocked = FALSE;
 
     /*
      * It may be the case that the region has never been initialized.
@@ -254,43 +258,6 @@ AcpiEvAddressSpaceDispatch (
     Handler = HandlerDesc->AddressSpace.Handler;
     Address = (RegionObj->Region.Address + RegionOffset);
 
-    /*
-     * Special handling for GenericSerialBus and GeneralPurposeIo:
-     * There are three extra parameters that must be passed to the
-     * handler via the context:
-     *   1) Connection buffer, a resource template from Connection() op
-     *   2) Length of the above buffer
-     *   3) Actual access length from the AccessAs() op
-     *
-     * In addition, for GeneralPurposeIo, the Address and BitWidth fields
-     * are defined as follows:
-     *   1) Address is the pin number index of the field (bit offset from
-     *      the previous Connection)
-     *   2) BitWidth is the actual bit length of the field (number of pins)
-     */
-    if ((RegionObj->Region.SpaceId == ACPI_ADR_SPACE_GSBUS) &&
-        Context &&
-        FieldObj)
-    {
-        /* Get the Connection (ResourceTemplate) buffer */
-
-        Context->Connection = FieldObj->Field.ResourceBuffer;
-        Context->Length = FieldObj->Field.ResourceLength;
-        Context->AccessLength = FieldObj->Field.AccessLength;
-    }
-    if ((RegionObj->Region.SpaceId == ACPI_ADR_SPACE_GPIO) &&
-        Context &&
-        FieldObj)
-    {
-        /* Get the Connection (ResourceTemplate) buffer */
-
-        Context->Connection = FieldObj->Field.ResourceBuffer;
-        Context->Length = FieldObj->Field.ResourceLength;
-        Context->AccessLength = FieldObj->Field.AccessLength;
-        Address = FieldObj->Field.PinNumberIndex;
-        BitWidth = FieldObj->Field.BitLength;
-    }
-
     ACPI_DEBUG_PRINT ((ACPI_DB_OPREGION,
         "Handler %p (@%p) Address %8.8X%8.8X [%s]\n",
         &RegionObj->Region.Handler->AddressSpace, Handler,
@@ -308,10 +275,61 @@ AcpiEvAddressSpaceDispatch (
         AcpiExExitInterpreter();
     }
 
+    /*
+     * Special handling for GenericSerialBus and GeneralPurposeIo:
+     * There are three extra parameters that must be passed to the
+     * handler via the context:
+     *   1) Connection buffer, a resource template from Connection() op
+     *   2) Length of the above buffer
+     *   3) Actual access length from the AccessAs() op
+     *
+     * Since we pass these extra parameters via the context, which is
+     * shared between threads, we must lock the context to avoid these
+     * parameters being changed from another thread before the handler
+     * has completed running.
+     *
+     * In addition, for GeneralPurposeIo, the Address and BitWidth fields
+     * are defined as follows:
+     *   1) Address is the pin number index of the field (bit offset from
+     *      the previous Connection)
+     *   2) BitWidth is the actual bit length of the field (number of pins)
+     */
+    if ((RegionObj->Region.SpaceId == ACPI_ADR_SPACE_GSBUS ||
+         RegionObj->Region.SpaceId == ACPI_ADR_SPACE_GPIO) &&
+        Context &&
+        FieldObj)
+    {
+
+        Status = AcpiOsAcquireMutex (ContextMutex, ACPI_WAIT_FOREVER);
+        if (ACPI_FAILURE (Status))
+        {
+            goto ReEnterInterpreter;
+        }
+
+        ContextLocked = TRUE;
+
+        /* Get the Connection (ResourceTemplate) buffer */
+
+        Context->Connection = FieldObj->Field.ResourceBuffer;
+        Context->Length = FieldObj->Field.ResourceLength;
+        Context->AccessLength = FieldObj->Field.AccessLength;
+
+        if (RegionObj->Region.SpaceId == ACPI_ADR_SPACE_GPIO)
+        {
+            Address = FieldObj->Field.PinNumberIndex;
+            BitWidth = FieldObj->Field.BitLength;
+        }
+    }
+
     /* Call the handler */
 
     Status = Handler (Function, Address, BitWidth, Value, Context,
         RegionObj2->Extra.RegionContext);
+
+    if (ContextLocked)
+    {
+        AcpiOsReleaseMutex (ContextMutex);
+    }
 
     if (ACPI_FAILURE (Status))
     {
@@ -330,6 +348,7 @@ AcpiEvAddressSpaceDispatch (
         }
     }
 
+ReEnterInterpreter:
     if (!(HandlerDesc->AddressSpace.HandlerFlags &
         ACPI_ADDR_HANDLER_DEFAULT_INSTALLED))
     {

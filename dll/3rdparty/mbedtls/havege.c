@@ -1,7 +1,7 @@
 /**
  *  \brief HAVEGE: HArdware Volatile Entropy Gathering and Expansion
  *
- *  Copyright (C) 2006-2015, ARM Limited, All Rights Reserved
+ *  Copyright The Mbed TLS Contributors
  *  SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
  *
  *  This file is provided under the Apache License 2.0, or the
@@ -42,8 +42,6 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  *
  *  **********
- *
- *  This file is part of mbed TLS (https://tls.mbed.org)
  */
 /*
  *  The HAVEGE RNG was designed by Andre Seznec in 2002.
@@ -63,6 +61,7 @@
 
 #include "mbedtls/havege.h"
 #include "mbedtls/timing.h"
+#include "mbedtls/platform_util.h"
 
 #include <limits.h>
 #include <string.h>
@@ -76,11 +75,6 @@
 #if UINT_MAX != 0xffffffff
 #error "The HAVEGE module requires unsigned to be exactly 32 bits."
 #endif
-
-/* Implementation that should never be optimized out by the compiler */
-static void mbedtls_zeroize( void *v, size_t n ) {
-    volatile unsigned char *p = v; while( n-- ) *p++ = 0;
-}
 
 /* ------------------------------------------------------------------------
  * On average, one iteration accesses two 8-word blocks in the havege WALK
@@ -247,7 +241,7 @@ void mbedtls_havege_free( mbedtls_havege_state *hs )
     if( hs == NULL )
         return;
 
-    mbedtls_zeroize( hs, sizeof( mbedtls_havege_state ) );
+    mbedtls_platform_zeroize( hs, sizeof( mbedtls_havege_state ) );
 }
 
 /*

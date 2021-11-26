@@ -385,6 +385,7 @@ NtGdiMaskBlt(
     if (!GDIOBJ_bLockMultipleObjects(2, (HGDIOBJ*)ahDC, apObj, GDIObjType_DC_TYPE))
     {
         WARN("Invalid dc handle (dest=0x%p, src=0x%p) passed to NtGdiMaskBlt\n", hdcDest, hdcSrc);
+        if(psurfMask) SURFACE_ShareUnlockSurface(psurfMask);
         EngSetLastError(ERROR_INVALID_HANDLE);
         return FALSE;
     }
@@ -396,6 +397,7 @@ NtGdiMaskBlt(
     {
         if(DCSrc) DC_UnlockDc(DCSrc);
         WARN("Invalid destination dc handle (0x%p) passed to NtGdiMaskBlt\n", hdcDest);
+        if(psurfMask) SURFACE_ShareUnlockSurface(psurfMask);
         return FALSE;
     }
 
@@ -404,6 +406,7 @@ NtGdiMaskBlt(
         if(DCSrc) DC_UnlockDc(DCSrc);
         DC_UnlockDc(DCDest);
         /* Yes, Windows really returns TRUE in this case */
+        if(psurfMask) SURFACE_ShareUnlockSurface(psurfMask);
         return TRUE;
     }
 
@@ -415,6 +418,7 @@ NtGdiMaskBlt(
             DC_UnlockDc(DCDest);
             DC_UnlockDc(DCSrc);
             /* Yes, Windows really returns TRUE in this case */
+            if(psurfMask) SURFACE_ShareUnlockSurface(psurfMask);
             return TRUE;
         }
     }
@@ -1141,7 +1145,7 @@ IntGdiBitBltRgn(
 
     if (pdc->fs & (DC_ACCUM_APP|DC_ACCUM_WMGR))
     {
-        RECTL rcrgn;        
+        RECTL rcrgn;
         REGION_GetRgnBox(prgnClip, &rcrgn);
         IntUpdateBoundsRect(pdc, &rcrgn);
     }
@@ -1226,7 +1230,7 @@ IntGdiFillRgn(
 
     if (pdc->fs & (DC_ACCUM_APP|DC_ACCUM_WMGR))
     {
-        RECTL rcrgn;        
+        RECTL rcrgn;
         REGION_GetRgnBox(prgnClip, &rcrgn);
         IntUpdateBoundsRect(pdc, &rcrgn);
     }

@@ -1,4 +1,4 @@
-/* TRANSLATOR : Ardit Dani (Ard1t) (ardit.dani@gmail.com) 
+/* TRANSLATOR : Ardit Dani (Ard1t) (ardit.dani@gmail.com)
  * DATE OF TR:  29-11-2013
 */
 
@@ -28,42 +28,42 @@ STRINGTABLE
 BEGIN
 /* Please keep the spacing/formatting as per En.rc when translating */
     IDS_USAGE
-    "\nUSAGE:\n \
-        ipconfig [/? | /all | /renew [adapter] | /release [adapter] |\n \
-                  /flushdns | /displaydns | /registerdns |\n \
-                  /showclassid adapter |\n \
-                  /setclassid adapter [classid] ]\n \
-\n \
-    where\n \
-        adapter         Connection name\n \
-                       (karakteret jolly * dhe ? lejohen, shih shembujt)\n \
-\n \
-        Options:\n \
-           /?           Shfaq kete mesazhe ndihme\n \
-           /all         Shfaq informacion te plote konfigurimi.\n \
-           /release     Liro IP adresen per adapterin specifik.\n \
-           /renew       Rinovo IP adresen per adapterin specifik.\n \
-           /flushdns    Pastron kafazin perzgjedhes te DNS'se.\n \
-           /registerdns Rifreskon te gjithe DHCP te leshuara dhe regjistron perseri emrat e DNS've.\n \
-           /displaydns  Shfaq permbajtjen e DNS'se te leshuara.\n \
-           /showclassid Shfaq te gjitha klasat e ID've dhcp te lejuara per adapterat.\n \
-           /setclassid  Modifikon klasen e ID've te dhcp's.\n \
-\n \
-    Parazgjedhja shfaq vetem adresat e IP've, subnet maskat dhe\n \
-    gateway e parazgjedhur per secilin adapter i lidhut me TCP/IP.\n \
-\n \
-    Për lirim dhe rinovim, nese emri i adapterit nuk eshte specifikuart, atehere adresa e IP'se\n \
-    jepet per te gjithe adapterat te lidhur me TCP/IP qe lirohen dhe rinovohen.\n \
-\n \
-    Për Setclassid, nese nuk specifikohet ClassId, atehere ClassId hiqet.\n \
-\n \
-    Examples:\n \
-        > ipconfig                   ... Shfaq informacionet.\n \
-        > ipconfig /all              ... Shfaq informacionet\n \
-        > ipconfig /renew            ... rinovo te gjithe adapterat\n \
-        > ipconfig /renew EL*        ... rinovo qfaredo lidhje qe emri i\n \
-                                         fillon me EL\n \
-        > ipconfig /release *Con*    ... renovo te gjithe lidhjet përputhese,\n \
-                                         eg. ""Local Area Connection 1"" or\n \
+    "\nUSAGE:\n\
+        ipconfig [/? | /all | /renew [adapter] | /release [adapter] |\n\
+                  /flushdns | /displaydns | /registerdns |\n\
+                  /showclassid adapter |\n\
+                  /setclassid adapter [classid] ]\n\
+\n\
+    where\n\
+        adapter         Connection name\n\
+                       (karakteret jolly * dhe ? lejohen, shih shembujt)\n\
+\n\
+        Options:\n\
+           /?           Shfaq kete mesazhe ndihme\n\
+           /all         Shfaq informacion te plote konfigurimi.\n\
+           /release     Liro IP adresen per adapterin specifik.\n\
+           /renew       Rinovo IP adresen per adapterin specifik.\n\
+           /flushdns    Pastron kafazin perzgjedhes te DNS'se.\n\
+           /registerdns Rifreskon te gjithe DHCP te leshuara dhe regjistron perseri emrat e DNS've.\n\
+           /displaydns  Shfaq permbajtjen e DNS'se te leshuara.\n\
+           /showclassid Shfaq te gjitha klasat e ID've dhcp te lejuara per adapterat.\n\
+           /setclassid  Modifikon klasen e ID've te dhcp's.\n\
+\n\
+    Parazgjedhja shfaq vetem adresat e IP've, subnet maskat dhe\n\
+    gateway e parazgjedhur per secilin adapter i lidhut me TCP/IP.\n\
+\n\
+    Për lirim dhe rinovim, nese emri i adapterit nuk eshte specifikuart, atehere adresa e IP'se\n\
+    jepet per te gjithe adapterat te lidhur me TCP/IP qe lirohen dhe rinovohen.\n\
+\n\
+    Për Setclassid, nese nuk specifikohet ClassId, atehere ClassId hiqet.\n\
+\n\
+    Examples:\n\
+        > ipconfig                   ... Shfaq informacionet.\n\
+        > ipconfig /all              ... Shfaq informacionet\n\
+        > ipconfig /renew            ... rinovo te gjithe adapterat\n\
+        > ipconfig /renew EL*        ... rinovo qfaredo lidhje qe emri i\n\
+                                         fillon me EL\n\
+        > ipconfig /release *Con*    ... renovo te gjithe lidhjet përputhese,\n\
+                                         eg. ""Local Area Connection 1"" or\n\
                                              ""Local Area Connection 2""\n"
 END

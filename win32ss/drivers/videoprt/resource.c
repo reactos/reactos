@@ -35,7 +35,7 @@ IntVideoPortGetLegacyResources(
 {
     PCI_COMMON_CONFIG PciConfig;
     ULONG ReadLength;
-    
+
     if (!DriverExtension->InitializationData.HwGetLegacyResources &&
         !DriverExtension->InitializationData.HwLegacyResourceCount)
     {
@@ -43,7 +43,7 @@ IntVideoPortGetLegacyResources(
         *AccessRangeCount = 0;
         return STATUS_SUCCESS;
     }
-    
+
     if (DriverExtension->InitializationData.HwGetLegacyResources)
     {
         ReadLength = HalGetBusData(PCIConfiguration,
@@ -56,7 +56,7 @@ IntVideoPortGetLegacyResources(
             /* This device doesn't exist */
             return STATUS_NO_SUCH_DEVICE;
         }
-        
+
         DriverExtension->InitializationData.HwGetLegacyResources(PciConfig.VendorID,
                                                                  PciConfig.DeviceID,
                                                                  AccessRanges,
@@ -76,6 +76,7 @@ IntVideoPortGetLegacyResources(
 NTSTATUS NTAPI
 IntVideoPortFilterResourceRequirements(
     IN PDEVICE_OBJECT DeviceObject,
+    IN PIO_STACK_LOCATION IrpStack,
     IN PIRP Irp)
 {
     PDRIVER_OBJECT DriverObject;
@@ -83,7 +84,8 @@ IntVideoPortFilterResourceRequirements(
     PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension;
     PVIDEO_ACCESS_RANGE AccessRanges;
     ULONG AccessRangeCount, ListSize, i;
-    PIO_RESOURCE_REQUIREMENTS_LIST ResList, OldResList = (PVOID)Irp->IoStatus.Information;
+    PIO_RESOURCE_REQUIREMENTS_LIST ResList;
+    PIO_RESOURCE_REQUIREMENTS_LIST OldResList = IrpStack->Parameters.FilterResourceRequirements.IoResourceRequirementList;
     PIO_RESOURCE_DESCRIPTOR CurrentDescriptor;
     NTSTATUS Status;
 
@@ -109,16 +111,16 @@ IntVideoPortFilterResourceRequirements(
         ResList = ExAllocatePool(NonPagedPool,
                                  ListSize);
         if (!ResList) return STATUS_NO_MEMORY;
-        
+
         RtlCopyMemory(ResList, OldResList, OldResList->ListSize);
-        
+
         ASSERT(ResList->AlternativeLists == 1);
-        
+
         ResList->ListSize = ListSize;
         ResList->List[0].Count += AccessRangeCount;
-        
+
         CurrentDescriptor = (PIO_RESOURCE_DESCRIPTOR)((PUCHAR)ResList + OldResList->ListSize);
-        
+
         ExFreePool(OldResList);
         Irp->IoStatus.Information = 0;
     }
@@ -129,9 +131,9 @@ IntVideoPortFilterResourceRequirements(
         ResList = ExAllocatePool(NonPagedPool,
                                  ListSize);
         if (!ResList) return STATUS_NO_MEMORY;
-        
+
         RtlZeroMemory(ResList, ListSize);
-        
+
         /* We need to initialize some fields */
         ResList->ListSize = ListSize;
         ResList->InterfaceType = DeviceExtension->AdapterInterfaceType;
@@ -141,7 +143,7 @@ IntVideoPortFilterResourceRequirements(
         ResList->List[0].Version = 1;
         ResList->List[0].Revision = 1;
         ResList->List[0].Count = AccessRangeCount;
-        
+
         CurrentDescriptor = ResList->List[0].Descriptors;
     }
 
@@ -149,22 +151,22 @@ IntVideoPortFilterResourceRequirements(
     {
         /* This is a required resource */
         CurrentDescriptor->Option = 0;
-        
+
         if (AccessRanges[i].RangeInIoSpace)
             CurrentDescriptor->Type = CmResourceTypePort;
         else
             CurrentDescriptor->Type = CmResourceTypeMemory;
-        
+
         CurrentDescriptor->ShareDisposition =
         (AccessRanges[i].RangeShareable ? CmResourceShareShared : CmResourceShareDeviceExclusive);
-        
+
         CurrentDescriptor->Flags = 0;
-        
+
         if (CurrentDescriptor->Type == CmResourceTypePort)
         {
             CurrentDescriptor->u.Port.Length = AccessRanges[i].RangeLength;
-            CurrentDescriptor->u.Port.MinimumAddress =
-            CurrentDescriptor->u.Port.MaximumAddress = AccessRanges[i].RangeStart;
+            CurrentDescriptor->u.Port.MinimumAddress = AccessRanges[i].RangeStart;
+            CurrentDescriptor->u.Port.MaximumAddress.QuadPart = AccessRanges[i].RangeStart.QuadPart + AccessRanges[i].RangeLength - 1;
             CurrentDescriptor->u.Port.Alignment = 1;
             if (AccessRanges[i].RangePassive & VIDEO_RANGE_PASSIVE_DECODE)
                 CurrentDescriptor->Flags |= CM_RESOURCE_PORT_PASSIVE_DECODE;
@@ -174,12 +176,12 @@ IntVideoPortFilterResourceRequirements(
         else
         {
             CurrentDescriptor->u.Memory.Length = AccessRanges[i].RangeLength;
-            CurrentDescriptor->u.Memory.MinimumAddress =
-            CurrentDescriptor->u.Memory.MaximumAddress = AccessRanges[i].RangeStart;
+            CurrentDescriptor->u.Memory.MinimumAddress = AccessRanges[i].RangeStart;
+            CurrentDescriptor->u.Memory.MaximumAddress.QuadPart = AccessRanges[i].RangeStart.QuadPart + AccessRanges[i].RangeLength - 1;
             CurrentDescriptor->u.Memory.Alignment = 1;
             CurrentDescriptor->Flags |= CM_RESOURCE_MEMORY_READ_WRITE;
         }
-        
+
         CurrentDescriptor++;
     }
 
@@ -584,9 +586,9 @@ VideoPortGetAccessRanges(
     ULONG ListSize;
     PIO_RESOURCE_REQUIREMENTS_LIST ResReqList;
     BOOLEAN DeviceAndVendorFound = FALSE;
-    
+
     TRACE_(VIDEOPRT, "VideoPortGetAccessRanges(%d, %p, %d, %p)\n", NumRequestedResources, RequestedResources, NumAccessRanges, AccessRanges);
-    
+
     DeviceExtension = VIDEO_PORT_GET_DEVICE_EXTENSION(HwDeviceExtension);
     DriverObject = DeviceExtension->DriverObject;
     DriverExtension = IoGetDriverObjectExtension(DriverObject, DriverObject);
@@ -600,13 +602,13 @@ VideoPortGetAccessRanges(
             if (DeviceExtension->PhysicalDeviceObject != NULL)
             {
                 PciSlotNumber.u.AsULONG = DeviceExtension->SystemIoSlotNumber;
-                
+
                 ReturnedLength = HalGetBusData(PCIConfiguration,
                                                DeviceExtension->SystemIoBusNumber,
                                                PciSlotNumber.u.AsULONG,
                                                &Config,
                                                sizeof(PCI_COMMON_CONFIG));
-                
+
                 if (ReturnedLength != sizeof(PCI_COMMON_CONFIG))
                 {
                     return ERROR_NOT_ENOUGH_MEMORY;
@@ -616,16 +618,16 @@ VideoPortGetAccessRanges(
             {
                 VendorIdToFind = VendorId != NULL ? *(PUSHORT)VendorId : 0;
                 DeviceIdToFind = DeviceId != NULL ? *(PUSHORT)DeviceId : 0;
-                
+
                 if (VendorIdToFind == 0 && DeviceIdToFind == 0)
                 {
                     /* We're screwed */
                     return ERROR_DEV_NOT_EXIST;
                 }
-                
+
                 INFO_(VIDEOPRT, "Looking for VendorId 0x%04x DeviceId 0x%04x\n",
                       VendorIdToFind, DeviceIdToFind);
-                
+
                 /*
                  * Search for the device id and vendor id on this bus.
                  */
@@ -652,7 +654,7 @@ VideoPortGetAccessRanges(
                                   PciSlotNumber.u.bits.FunctionNumber,
                                   Config.VendorID,
                                   Config.DeviceID);
-                            
+
                             if ((VendorIdToFind == 0 || Config.VendorID == VendorIdToFind) &&
                                 (DeviceIdToFind == 0 || Config.DeviceID == DeviceIdToFind))
                             {
@@ -669,7 +671,7 @@ VideoPortGetAccessRanges(
                     return ERROR_DEV_NOT_EXIST;
                 }
             }
-            
+
             Status = HalAssignSlotResources(&DeviceExtension->RegistryPath,
                                             NULL,
                                             DeviceExtension->DriverObject,
@@ -678,7 +680,7 @@ VideoPortGetAccessRanges(
                                             DeviceExtension->SystemIoBusNumber,
                                             PciSlotNumber.u.AsULONG,
                                             &AllocatedResources);
-            
+
             if (!NT_SUCCESS(Status))
             {
                 WARN_(VIDEOPRT, "HalAssignSlotResources failed with status %x.\n",Status);
@@ -708,7 +710,7 @@ VideoPortGetAccessRanges(
         ListSize = sizeof(IO_RESOURCE_REQUIREMENTS_LIST) + (NumRequestedResources - 1) * sizeof(IO_RESOURCE_DESCRIPTOR);
         ResReqList = ExAllocatePool(NonPagedPool, ListSize);
         if (!ResReqList) return ERROR_NOT_ENOUGH_MEMORY;
-        
+
         ResReqList->ListSize = ListSize;
         ResReqList->InterfaceType = DeviceExtension->AdapterInterfaceType;
         ResReqList->BusNumber = DeviceExtension->SystemIoBusNumber;
@@ -717,12 +719,12 @@ VideoPortGetAccessRanges(
         ResReqList->List[0].Version = 1;
         ResReqList->List[0].Revision = 1;
         ResReqList->List[0].Count = NumRequestedResources;
-        
+
         /* Copy in the caller's resource list */
         RtlCopyMemory(ResReqList->List[0].Descriptors,
                       RequestedResources,
                       NumRequestedResources * sizeof(IO_RESOURCE_DESCRIPTOR));
-        
+
         Status = IoAssignResources(&DeviceExtension->RegistryPath,
                                    NULL,
                                    DeviceExtension->DriverObject,
@@ -734,22 +736,22 @@ VideoPortGetAccessRanges(
 
         if (!NT_SUCCESS(Status))
             return Status;
-        
+
         if (!DeviceExtension->AllocatedResources)
             DeviceExtension->AllocatedResources = AllocatedResources;
     }
-    
+
     if (AllocatedResources == NULL)
         return ERROR_NOT_ENOUGH_MEMORY;
-    
+
     /* Return the slot number if the caller wants it */
     if (Slot != NULL) *Slot = DeviceExtension->SystemIoBusNumber;
 
     FullList = AllocatedResources->List;
     ASSERT(AllocatedResources->Count == 1);
-    INFO_(VIDEOPRT, "InterfaceType %u BusNumber List %u Device BusNumber %u Version %u Revision %u\n", 
+    INFO_(VIDEOPRT, "InterfaceType %u BusNumber List %u Device BusNumber %u Version %u Revision %u\n",
           FullList->InterfaceType, FullList->BusNumber, DeviceExtension->SystemIoBusNumber, FullList->PartialResourceList.Version, FullList->PartialResourceList.Revision);
-    
+
     ASSERT(FullList->InterfaceType == PCIBus);
     ASSERT(FullList->BusNumber == DeviceExtension->SystemIoBusNumber);
     ASSERT(1 == FullList->PartialResourceList.Version);

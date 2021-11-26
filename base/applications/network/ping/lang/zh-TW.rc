@@ -1,7 +1,8 @@
 /*
- * FILE:        base/applications/network/ping/lang/zh-TW.rc
- * PURPOSE:     Chinese (Traditional) translations for ReactOS Ping Command
- * TRANSLATORS: 2021 Aobi Chan CL (eason066@gmail.com)
+ * PROJECT:     ReactOS Ping Command
+ * LICENSE:     MIT (https://spdx.org/licenses/MIT)
+ * PURPOSE:     Chinese (Traditional) resource file
+ * TRANSLATORS: Copyright 2021 Chan Chilung <eason066@gmail.com>
  */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL

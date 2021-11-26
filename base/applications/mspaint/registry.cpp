@@ -19,10 +19,7 @@ static DWORD ReadDWORD(CRegKey &key, LPCTSTR lpName, DWORD &dwValue, BOOL bCheck
 {
     DWORD dwPrev = dwValue;
 
-    if (key.QueryDWORDValue(lpName, dwValue) != ERROR_SUCCESS)
-        dwValue = dwPrev;
-
-    if (bCheckForDef && dwValue == 0)
+    if (key.QueryDWORDValue(lpName, dwValue) != ERROR_SUCCESS || (bCheckForDef && dwValue == 0))
         dwValue = dwPrev;
 
     return dwPrev;
@@ -65,7 +62,7 @@ void RegistrySettings::LoadPresets()
     ThumbYPos = 200;
     UnitSetting = 0;
     const WINDOWPLACEMENT DefaultWindowPlacement = {
-        sizeof(WINDOWPLACEMENT), 
+        sizeof(WINDOWPLACEMENT),
         0,
         SW_SHOWNORMAL,
         {0, 0},

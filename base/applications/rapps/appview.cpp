@@ -220,14 +220,14 @@ HWND CComboBox::Create(HWND hwndParent)
         NULL);
 
     SendMessageW(WM_SETFONT, (WPARAM)GetStockObject(DEFAULT_GUI_FONT), 0);
-    
+
     for (int i = 0; i < (int)_countof(m_TypeStringID); i++)
     {
         ATL::CStringW szBuf;
         szBuf.LoadStringW(m_TypeStringID[i]);
         SendMessageW(CB_ADDSTRING, 0, (LPARAM)(LPCWSTR)szBuf);
     }
-    
+
     SendMessageW(CB_SETCURSEL, m_DefaultSelectType, 0); // select the first item
 
     return m_hWnd;
@@ -397,6 +397,8 @@ BOOL CAppRichEdit::ShowInstalledAppInfo(CInstalledApplicationInfo *Info)
 
     SetText(Info->szDisplayName, CFE_BOLD);
     InsertText(L"\n", 0);
+
+    Info->EnsureDetailsLoaded();
 
     InsertTextWithString(IDS_INFO_VERSION, CFE_BOLD, Info->szDisplayVersion, 0);
     InsertTextWithString(IDS_INFO_PUBLISHER, CFE_BOLD, Info->szPublisher, 0);
@@ -1639,7 +1641,7 @@ BOOL CApplicationView::ProcessWindowMessage(HWND hwnd, UINT message, WPARAM wPar
     return FALSE;
 }
 
-BOOL CApplicationView::CreateToolbar() 
+BOOL CApplicationView::CreateToolbar()
 {
     m_Toolbar = new CMainToolbar();
     m_Toolbar->m_VerticalAlignment = UiAlign_LeftTop;
@@ -1703,6 +1705,12 @@ BOOL CApplicationView::CreateAppInfoDisplay()
     m_HSplitter->Second().Append(m_AppsInfo);
 
     return m_AppsInfo->Create(m_hWnd) != NULL;
+}
+
+void CApplicationView::SetRedraw(BOOL bRedraw)
+{
+    CWindow::SetRedraw(bRedraw);
+    m_ListView->SetRedraw(bRedraw);
 }
 
 VOID CApplicationView::OnSize(HWND hwnd, WPARAM wParam, LPARAM lParam)

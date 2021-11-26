@@ -5,7 +5,7 @@
  *****************************************************************************/
 
 /*
- * Copyright (C) 2000 - 2020, Intel Corp.
+ * Copyright (C) 2000 - 2021, Intel Corp.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -30,7 +30,7 @@
  * NO WARRANTY
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTIBILITY AND FITNESS FOR
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
  * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
  * HOLDERS OR CONTRIBUTORS BE LIABLE FOR SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
  * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
@@ -364,6 +364,17 @@ const ACPI_PREDEFINED_INFO          AcpiGbl_PredefinedMethods[] =
     {{"_BMS",   METHOD_1ARGS (ACPI_TYPE_INTEGER),
                 METHOD_RETURNS (ACPI_RTYPE_INTEGER)}},
 
+    {{"_BPC",   METHOD_0ARGS,
+                METHOD_RETURNS (ACPI_RTYPE_PACKAGE)}}, /* Fixed-length (4 Int) */
+                    PACKAGE_INFO (ACPI_PTYPE1_FIXED, ACPI_RTYPE_INTEGER, 4,0,0,0),
+
+    {{"_BPS",   METHOD_0ARGS,
+                METHOD_RETURNS (ACPI_RTYPE_PACKAGE)}}, /* Fixed-length (5 Int) */
+                    PACKAGE_INFO (ACPI_PTYPE1_FIXED, ACPI_RTYPE_INTEGER, 5,0,0,0),
+
+    {{"_BPT",   METHOD_1ARGS (ACPI_TYPE_PACKAGE),
+                METHOD_RETURNS (ACPI_RTYPE_INTEGER)}},
+
     {{"_BQC",   METHOD_0ARGS,
                 METHOD_RETURNS (ACPI_RTYPE_INTEGER)}},
 
@@ -382,6 +393,10 @@ const ACPI_PREDEFINED_INFO          AcpiGbl_PredefinedMethods[] =
 
     {{"_CBA",   METHOD_0ARGS,
                 METHOD_RETURNS (ACPI_RTYPE_INTEGER)}}, /* See PCI firmware spec 3.0 */
+
+    {{"_CBR",   METHOD_0ARGS,
+                METHOD_RETURNS (ACPI_RTYPE_PACKAGE)}}, /* Fixed-length (3 Int) */
+                    PACKAGE_INFO (ACPI_PTYPE1_FIXED, ACPI_RTYPE_INTEGER, 3,0,0,0),
 
     {{"_CCA",   METHOD_0ARGS,
                 METHOD_RETURNS (ACPI_RTYPE_INTEGER)}}, /* ACPI 5.1 */

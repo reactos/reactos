@@ -3,35 +3,34 @@ LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
 
 STRINGTABLE
 BEGIN
-    IDS_USAGE "\r\n\
-Usage: tracert [-d] [-h sauts_max] [-j liste_dhôtes] [-w délai] nom_de_la_cible \r\n\r\n\
-Options :\r\n\
-    -d                 Ne pas résoudre les adresses en noms d'hôtes.\r\n\
-    -h sauts_max       Nombre de sauts maximum pour atteindre la cible.\r\n\
-    -j liste_dhôtes    Intinéraire source imprécis dans la liste d'hôtes.\r\n\
-    -w délai           Délai d'expiration en millisecondes pour chaque réponse.\r\n\
-    -4                 Force l'utilisation d'IPv4.\r\n\
-    -6                 Force l'utilisation d'IPv6.\r\n\
-\r\n"
+    IDS_USAGE "\n\
+Usage: tracert [-d] [-h sauts_max] [-j liste_dhôtes] [-w délai] nom_de_la_cible\n\n\
+Options :\n\
+    -d                 Ne pas résoudre les adresses en noms d'hôtes.\n\
+    -h sauts_max       Nombre de sauts maximum pour atteindre la cible.\n\
+    -j liste_dhôtes    Intinéraire source imprécis dans la liste d'hôtes.\n\
+    -w délai           Délai d'expiration en millisecondes pour chaque réponse.\n\
+    -4                 Force l'utilisation d'IPv4.\n\
+    -6                 Force l'utilisation d'IPv6.\n\
+\n"
 
-    IDS_INVALID_OPTION  "%1 n'est pas une option valide pour la commande.\r\n"
-    IDS_TRACE_INFO      "\r\nTrace de la route vers %1 [%2]\r\nsur un maximum de %3!u! sauts:\r\n\r\n"
-    IDS_TRACE_COMPLETE  "\r\nTrace complète.\r\n"
-    IDS_UNABLE_RESOLVE  "Impossible de résoudre le nom système de la cible %1.\r\n"
+    IDS_INVALID_OPTION  "%1 n'est pas une option valide pour la commande.\n"
+    IDS_TRACE_INFO      "\nTrace de la route vers %1 [%2]\nsur un maximum de %3!u! sauts:\n\n"
+    IDS_TRACE_COMPLETE  "\nTrace complète.\n"
+    IDS_UNABLE_RESOLVE  "Impossible de résoudre le nom système de la cible %1.\n"
 
-    IDS_GEN_FAILURE     "Erreur générale.\r\n"
-    IDS_TRANSMIT_FAILED "Transmission échouée. (Erreur %1!u!)\r\n"
+    IDS_GEN_FAILURE     "Erreur générale.\n"
+    IDS_TRANSMIT_FAILED "Transmission échouée. (Erreur %1!u!)\n"
 
-    IDS_HOP_COUNT       "%1!3lu!  %0\r\n"
-    IDS_HOP_TIME        "%1!4lu! ms  %0\r\n"
-    IDS_HOP_ZERO,       "  <1 ms  %0\r\n"
-    IDS_TIMEOUT         "   *     %0\r\n"
+    IDS_HOP_COUNT       "%1!3lu!  %0\n"
+    IDS_HOP_TIME        "%1!4lu! ms  %0\n"
+    IDS_HOP_ZERO        "  <1 ms  %0\n"
+    IDS_TIMEOUT         "   *     %0\n"
     IDS_HOP_RES_INFO    "%1 [%2]"
     IDS_HOP_IP_INFO     "%1"
     IDS_LINEBREAK       "\r\n"
-    IDS_REQ_TIMED_OUT   "Délai d'expiration dépassé pour la requête.\r\n"
+    IDS_REQ_TIMED_OUT   "Délai d'expiration dépassé pour la requête.\n"
     IDS_HOP_RESPONSE    "  rapporte : "
-    IDS_DEST_HOST_UNREACHABLE "Hôte de destination inatteignable.\r\n"
-    IDS_DEST_NET_UNREACHABLE  "Réseau de destination inatteignable.\r\n"
-
+    IDS_DEST_HOST_UNREACHABLE "Hôte de destination inatteignable.\n"
+    IDS_DEST_NET_UNREACHABLE  "Réseau de destination inatteignable.\n"
 END

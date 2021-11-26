@@ -177,7 +177,7 @@ C_ASSERT(BL_MM_INCLUDE_ONLY_FIRMWARE_MEMORY == 0x240);
 
 #define BL_LOAD_PE_IMG_VIRTUAL_BUFFER                   BL_LOAD_IMG_VIRTUAL_BUFFER
 #define BL_LOAD_PE_IMG_CHECK_MACHINE                    0x02
-#define BL_LOAD_PE_IMG_EXISTING_BUFFER                  BL_LOAD_IMG_EXISTING_BUFFER 
+#define BL_LOAD_PE_IMG_EXISTING_BUFFER                  BL_LOAD_IMG_EXISTING_BUFFER
 #define BL_LOAD_PE_IMG_COMPUTE_HASH                     0x10
 #define BL_LOAD_PE_IMG_CHECK_SUBSYSTEM                  0x80
 #define BL_LOAD_PE_IMG_SKIP_RELOCATIONS                 0x100
@@ -2411,7 +2411,7 @@ BlDisplayInvalidateOemBitmap (
 
 PBITMAP
 BlDisplayGetOemBitmap (
-    _Out_ PCOORD Offset, 
+    _Out_ PCOORD Offset,
     _Out_opt_ PULONG Flags
     );
 
@@ -2806,7 +2806,7 @@ ConsolepClearBuffer (
     _In_ ULONG ScanlineWidth,
     _In_ ULONG PixelDepth
     );
-    
+
 NTSTATUS
 ConsolepConvertColorToPixel (
     _In_ BL_COLOR Color,

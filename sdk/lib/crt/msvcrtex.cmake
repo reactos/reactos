@@ -24,7 +24,7 @@ if(ARCH STREQUAL "i386")
         except/i386/chkstk_asm.s
         except/i386/chkstk_ms.s
         math/i386/alldiv_asm.s
-        math/i386/aulldiv_asm.s 
+        math/i386/aulldiv_asm.s
         )
     if (GCC AND CLANG)
         list(APPEND MSVCRTEX_ASM_SOURCE
@@ -48,13 +48,14 @@ elseif(ARCH STREQUAL "arm")
         math/arm/__stoi64.c
         math/arm/__stou64.c
         math/arm/__fto64.h
+        math/arm/__i64tod.c
+        math/arm/__u64tod.c
+        math/arm/__i64tos.c
+        math/arm/__u64tos.c
+        math/arm/__64tof.h
     )
     list(APPEND MSVCRTEX_ASM_SOURCE
         except/arm/chkstk_asm.s
-        math/arm/__i64tod.s
-        math/arm/__i64tos.s
-        math/arm/__u64tod.s
-        math/arm/__u64tos.s
         math/arm/__rt_sdiv64.s
         math/arm/__rt_srsh.s
         math/arm/__rt_udiv64.s

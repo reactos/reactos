@@ -54,7 +54,7 @@ BEGIN
     GROUPBOX "Kod Sayfası Dönüştürme Tablosu", -1, 5, 101, 234, 88
     CONTROL "", IDC_CONV_TABLES, "SysListView32", LVS_REPORT | LVS_SORTASCENDING | LVS_NOCOLUMNHEADER | WS_BORDER | WS_TABSTOP, 14, 114, 217, 70
     GROUPBOX "Ön Tanımlı Kullanıcı Hesabı Ayarları", -1, 5, 193, 234, 32
-    CHECKBOX "&Tüm ayarları şimdiki kullanıcı hesâbına ve ön tanımlılara uygula", IDC_APPLY_CUR_USER_DEF_PROFILE, 12, 201, 220, 22, BS_MULTILINE | BS_TOP
+    CHECKBOX "&Tüm ayarları şimdiki kullanıcı hesabına ve ön tanımlılara uygula", IDC_APPLY_CUR_USER_DEF_PROFILE, 12, 201, 220, 22, BS_MULTILINE | BS_TOP
 END
 
 IDD_NUMBERSPAGE DIALOGEX 0, 0, 246, 234
@@ -175,7 +175,7 @@ CAPTION "Sıralama"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Sıralama", -1, 7, 7, 230, 74
-    LTEXT "Sıralama yöntemleri; karakterlerin, sözcüklerin, dosyaların ve klasörlerin sıralama düzenini tanımlar.", -1, 14, 17, 220, 25
+    LTEXT "Sıralama yöntemleri; karakterlerin, sözcüklerin, dosyaların ve dizinlerin sıralama düzenini tanımlar.", -1, 14, 17, 220, 25
     LTEXT "Diliniz için bir sıralama yöntemi seçiniz:", -1, 14, 37, 220, 22
     COMBOBOX IDC_SORTLIST_COMBO, 14, 56, 217, 83, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
 END

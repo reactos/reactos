@@ -10,6 +10,8 @@ list(APPEND SOURCE
     load_notifications.c
     locale.c
     NtAcceptConnectPort.c
+    NtAdjustGroupsToken.c
+    NtAdjustPrivilegesToken.c
     NtAllocateVirtualMemory.c
     NtApphelpCacheControl.c
     NtCompareTokens.c
@@ -19,6 +21,8 @@ list(APPEND SOURCE
     NtCreateThread.c
     NtDeleteKey.c
     NtDuplicateObject.c
+    NtDuplicateToken.c
+    NtFilterToken.c
     NtFreeVirtualMemory.c
     NtImpersonateAnonymousToken.c
     NtLoadUnloadKey.c

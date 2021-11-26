@@ -31,7 +31,7 @@ START_TEST(RtlCopyMappedMemory)
         Status = pRtlCopyMappedMemory(NULL, NULL, 0);
     EndSeh(STATUS_SUCCESS);
     ok(Status == STATUS_SUCCESS, "RtlCopyMappedMemory returned %lx\n", Status);
-    
+
     RtlFillMemory(Buffer1, sizeof(Buffer1), 0x11);
     RtlFillMemory(Buffer2, sizeof(Buffer2), 0x22);
     StartSeh()

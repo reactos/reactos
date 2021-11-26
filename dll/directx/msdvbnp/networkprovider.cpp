@@ -206,7 +206,7 @@ CNetworkProvider::QueryInterface(
 }
 
 CNetworkProvider::CNetworkProvider(LPCGUID ClassID) : m_Ref(0),
-                                                      m_pGraph(0), 
+                                                      m_pGraph(0),
                                                       m_ReferenceClock(0),
                                                       m_FilterState(State_Stopped),
                                                       m_DeviceFilters(),

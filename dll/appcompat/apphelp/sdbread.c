@@ -248,7 +248,7 @@ TAGID WINAPI SdbFindNextTag(PDB pdb, TAGID parent, TAGID prev_child)
 /**
  * Searches shim database for string associated with specified tagid and copies string into a
  * buffer.
- * 
+ *
  * If size parameter is less than number of characters in string, this function shall fail and
  * no data shall be copied.
  *

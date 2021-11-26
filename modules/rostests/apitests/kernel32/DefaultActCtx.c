@@ -29,13 +29,13 @@ START_TEST(DefaultActCtx)
     HANDLE h;
     DWORD i;
     ACTCTX_SECTION_KEYED_DATA KeyedData = { 0 };
-    
-    res = QueryActCtxW(QUERY_ACTCTX_FLAG_USE_ACTIVE_ACTCTX, 
-                       NULL, 
-                       NULL, 
-                       ActivationContextDetailedInformation,  
-                       &buffer, 
-                       sizeof(buffer), 
+
+    res = QueryActCtxW(QUERY_ACTCTX_FLAG_USE_ACTIVE_ACTCTX,
+                       NULL,
+                       NULL,
+                       ActivationContextDetailedInformation,
+                       &buffer,
+                       sizeof(buffer),
                        NULL);
     ok(res == TRUE, "Expected success\n");
     if(res)
@@ -49,15 +49,15 @@ START_TEST(DefaultActCtx)
     {
         skip("ActivationContextDetailedInformation failed\n");
     }
-    
-    
+
+
     i = 0;
-    res = QueryActCtxW(QUERY_ACTCTX_FLAG_USE_ACTIVE_ACTCTX, 
-                       NULL, 
-                       &i, 
-                       AssemblyDetailedInformationInActivationContext,  
-                       &buffer, 
-                       sizeof(buffer), 
+    res = QueryActCtxW(QUERY_ACTCTX_FLAG_USE_ACTIVE_ACTCTX,
+                       NULL,
+                       &i,
+                       AssemblyDetailedInformationInActivationContext,
+                       &buffer,
+                       sizeof(buffer),
                        NULL);
     ok(res == TRUE, "Expected success\n");
     if (res)
@@ -73,12 +73,12 @@ START_TEST(DefaultActCtx)
     }
 
     i = 1;
-    res = QueryActCtxW(QUERY_ACTCTX_FLAG_USE_ACTIVE_ACTCTX, 
-                       NULL, 
-                       &i, 
-                       AssemblyDetailedInformationInActivationContext,  
-                       &buffer, 
-                       sizeof(buffer), 
+    res = QueryActCtxW(QUERY_ACTCTX_FLAG_USE_ACTIVE_ACTCTX,
+                       NULL,
+                       &i,
+                       AssemblyDetailedInformationInActivationContext,
+                       &buffer,
+                       sizeof(buffer),
                        NULL);
     ok(res == TRUE, "Expected success\n"); /* This is FALSE in win10 */
     if (res)
@@ -112,7 +112,7 @@ START_TEST(DefaultActCtx)
                                    L"System Default Context",
                                    &KeyedData);
     ok(res == FALSE, "Expected failure\n");
-    
+
     KeyedData.cbSize = sizeof(KeyedData);
     res = FindActCtxSectionStringW(FIND_ACTCTX_SECTION_KEY_RETURN_HACTCTX,
                                    NULL,
@@ -129,7 +129,7 @@ START_TEST(DefaultActCtx)
     {
         skip("ACTIVATION_CONTEXT_SECTION_ASSEMBLY_INFORMATION failed\n");
     }
-    
+
 }
 
 HANDLE _CreateActCtxFromFile(LPCWSTR FileName, int line);

@@ -62,7 +62,7 @@ extern "C" {
 #define WM_CBT              0x000003FF // ReactOS only.
 #define WM_MAXIMUM          0x0001FFFF
 
-/* Non SDK DCE types.*/
+/* Non SDK DCE types */
 #define DCX_USESTYLE     0x00010000
 #define DCX_KEEPCLIPRGN  0x00040000
 #define DCX_KEEPLAYOUT   0x40000000

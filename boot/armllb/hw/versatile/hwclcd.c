@@ -31,11 +31,11 @@ LlbHwVersaClcdInitialize(VOID)
     /* Set framebuffer address */
     WRITE_REGISTER_ULONG(PL110_LCDUPBASE, (ULONG)LlbHwGetFrameBuffer());
     WRITE_REGISTER_ULONG(PL110_LCDLPBASE, (ULONG)LlbHwGetFrameBuffer());
-    
+
     /* Initialize timings to 720x400 */
 	WRITE_REGISTER_ULONG(PL110_LCDTIMING0, LCDTIMING0_PPL(LlbHwGetScreenWidth()));
 	WRITE_REGISTER_ULONG(PL110_LCDTIMING1, LCDTIMING1_LPP(LlbHwGetScreenHeight()));
-    
+
     /* Enable the TFT/LCD Display */
 	WRITE_REGISTER_ULONG(PL110_LCDCONTROL,
                          LCDCONTROL_LCDEN |
@@ -50,7 +50,7 @@ LlbHwGetScreenWidth(VOID)
 {
     return 720;
 }
- 
+
 ULONG
 NTAPI
 LlbHwGetScreenHeight(VOID)

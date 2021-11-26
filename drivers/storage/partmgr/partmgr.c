@@ -269,6 +269,10 @@ PartMgrUpdatePartitionDevices(
             continue;
         }
 
+        // mark partition as removable if parent device is removable
+        if (FdoExtension->LowerDevice->Characteristics & FILE_REMOVABLE_MEDIA)
+            partitionDevice->Characteristics |= FILE_REMOVABLE_MEDIA;
+
         totalPartitions++;
 
         // insert the structure to the partition list

@@ -35,6 +35,7 @@
 #include <ndk/cmfuncs.h>
 #include <ndk/exfuncs.h>
 #include <ndk/iofuncs.h>
+#include <ndk/iotypes.h>
 #include <ndk/kdtypes.h>
 #include <ndk/kefuncs.h>
 #include <ndk/ldrfuncs.h>

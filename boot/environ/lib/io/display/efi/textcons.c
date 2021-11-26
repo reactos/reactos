@@ -197,7 +197,7 @@ ConsoleEfiTextGetStateFromMode (
 NTSTATUS
 ConsoleFirmwareTextSetState (
     _In_ PBL_TEXT_CONSOLE TextConsole,
-    _In_ UCHAR Mask, 
+    _In_ UCHAR Mask,
     _In_ PBL_DISPLAY_STATE State
     )
 {
@@ -554,8 +554,8 @@ ConsoleInputLocalEraseBuffer (
 }
 
 NTSTATUS
-ConsoleFirmwareTextClear ( 
-    _In_ PBL_TEXT_CONSOLE Console, 
+ConsoleFirmwareTextClear (
+    _In_ PBL_TEXT_CONSOLE Console,
     _In_ BOOLEAN LineOnly
     )
 {
@@ -573,7 +573,7 @@ ConsoleFirmwareTextClear (
         /* Get the current column and row */
         Column = Console->State.XPos / TextWidth;
         Row = Console->State.YPos / TextHeight;
-        
+
         /* Loop over every remaining character */
         for (i = 0; i < Console->DisplayMode.HRes - Column - 1; i++)
         {

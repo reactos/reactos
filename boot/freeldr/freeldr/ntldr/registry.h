@@ -32,6 +32,13 @@ LONG
 RegInitCurrentControlSet(
     _In_ BOOLEAN LastKnownGood);
 
+/*
+ * LONG
+ * RegCloseKey(
+ *     _In_ HKEY hKey);
+ */
+#define RegCloseKey(hKey)   (ERROR_SUCCESS)
+
 LONG
 RegEnumKey(
     _In_ HKEY Key,

@@ -1,6 +1,6 @@
 LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     IDS_CPLSYSTEMNAME "Телефон и модем"
     IDS_CPLSYSTEMDESCRIPTION "Настройка правил набора номера и других параметров при работе с модемом."

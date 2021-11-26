@@ -20,6 +20,6 @@ LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
 STRINGTABLE
 {
-    IDS_NAME "Cinepak Vidyo Kodeki"
-    IDS_DESCRIPTION "Cinepak Vidyo Kodeki"
+    IDS_NAME "Cinepak Video Çözücü"
+    IDS_DESCRIPTION "Cinepak Video Çözücü"
 }

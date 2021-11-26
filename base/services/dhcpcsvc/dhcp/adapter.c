@@ -172,7 +172,7 @@ BOOL PrepareAdapterForService( PDHCP_ADAPTER Adapter ) {
     {
         /* DHCP enabled by default */
         DhcpEnabled = 1;
-    }           
+    }
 
     if( !DhcpEnabled ) {
         /* Non-automatic case */
@@ -222,7 +222,7 @@ IsReconnectHackNeeded(PDHCP_ADAPTER Adapter, const MIB_IFROW* IfEntry)
     if (Adapter->DhclientInfo.client->state != S_BOUND &&
         Adapter->DhclientInfo.client->state != S_STATIC)
         return FALSE;
-    
+
     ApiUnlock();
 
     Orig = AdapterInfo = HeapAlloc(GetProcessHeap(), 0, sizeof(IP_ADAPTER_INFO));
@@ -397,7 +397,7 @@ DWORD WINAPI AdapterDiscoveryThread(LPVOID Context) {
                         socket( AF_INET, SOCK_DGRAM, IPPROTO_UDP );
 
                     if (DhcpSocket != INVALID_SOCKET) {
-						
+
 						/* Allow broadcast on this socket */
 						Broadcast = 1;
 						setsockopt(DhcpSocket,
@@ -405,7 +405,7 @@ DWORD WINAPI AdapterDiscoveryThread(LPVOID Context) {
 								   SO_BROADCAST,
 								   (const char *)&Broadcast,
 								   sizeof(Broadcast));
-						
+
                         Adapter->ListenAddr.sin_family = AF_INET;
                         Adapter->ListenAddr.sin_port = htons(LOCAL_PORT);
                         Adapter->BindStatus =

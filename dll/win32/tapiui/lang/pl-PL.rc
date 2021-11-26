@@ -3,8 +3,8 @@
  *    Use ReactOS forum PM or IRC to contact me
  *    http://www.reactos.org
  *    IRC: irc.freenode.net #reactos-pl;
- *    UTF-8 conversion by Caemyr (May, 2011) 
- *    Updated by pithwz - Piotr Hetnarowicz (piotrhwz@gmail.com) (April, 2020) 
+ *    UTF-8 conversion by Caemyr (May, 2011)
+ *    Updated by pithwz - Piotr Hetnarowicz (piotrhwz@gmail.com) (April, 2020)
  */
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT

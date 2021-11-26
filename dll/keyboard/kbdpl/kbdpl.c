@@ -187,7 +187,7 @@ ROSDATA VK_TO_WCHARS2 key_to_chars_2mod[] = {
 
   /* Specials */
   { VK_OEM_PLUS, 0,      {'+', '?'} },
-  
+
   { VK_OEM_3,    0,      {WCH_DEAD,WCH_DEAD} },
   { 0xff,        0,      {0x02db,0xb7} },
   { VK_OEM_2,      0, {'\'','*'} },

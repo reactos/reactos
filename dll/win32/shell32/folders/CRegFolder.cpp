@@ -593,7 +593,7 @@ HRESULT WINAPI CRegFolder::GetDisplayNameOf(PCUITEMID_CHILD pidl, DWORD dwFlags,
     GUID const *clsid = _ILGetGUIDPointer (pidl);
 
     /* First of all check if we need to query the name from the child item */
-    if (GET_SHGDN_FOR (dwFlags) == SHGDN_FORPARSING && 
+    if (GET_SHGDN_FOR (dwFlags) == SHGDN_FORPARSING &&
         GET_SHGDN_RELATION (dwFlags) == SHGDN_NORMAL)
     {
         int bWantsForParsing = FALSE;
@@ -750,7 +750,7 @@ HRESULT WINAPI CRegFolder::GetDetailsOf(PCUITEMID_CHILD pidl, UINT iColumn, SHEL
 
     if (iColumn >= 3)
     {
-        /* Return an empty string when we area asked for a column we don't support. 
+        /* Return an empty string when we area asked for a column we don't support.
            Only  the regfolder is supposed to do this as it supports less columns compared to other folder
            and its contents are supposed to be presented alongside items that support more columns. */
         return SHSetStrRet(&psd->str, "");

@@ -151,8 +151,8 @@ VGA.DeviceDesc = "VGA kompatibilná grafická karta"
 ReactOS = "ReactOS Takımı"
 DisplayClassName = "Görüntü Bağdaştırıcıları"
 
-StdMfg = "(Ölçünlü Görüntü Bağdaştırıcıları)"
-VGA.DeviceDesc = "VGA Uyumlu Çizge Kartı"
+StdMfg = "(Standart Görüntü Bağdaştırıcıları)"
+VGA.DeviceDesc = "VGA Uyumlu Grafik Kartı"
 
 [Strings.0422]
 ReactOS = "Команда ReactOS"

@@ -97,7 +97,7 @@ VOID* WhoamiGetTokenInfo(TOKEN_INFORMATION_CLASS TokenType)
             pTokenInfo = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, dwLength);
             if (pTokenInfo == NULL)
             {
-                wprintf(L"ERROR: not enough memory to allocate the token structure.\r\n");
+                wprintf(L"ERROR: not enough memory to allocate the token structure.\n");
                 exit(1);
             }
         }
@@ -107,7 +107,7 @@ VOID* WhoamiGetTokenInfo(TOKEN_INFORMATION_CLASS TokenType)
                                  dwLength,
                                  &dwLength))
         {
-            wprintf(L"ERROR 0x%x: could not get token information.\r\n", GetLastError());
+            wprintf(L"ERROR 0x%x: could not get token information.\n", GetLastError());
             WhoamiFree(pTokenInfo);
             exit(1);
         }
@@ -158,11 +158,11 @@ WhoamiTable *WhoamiAllocTable(UINT Rows, UINT Cols)
                                     HEAP_ZERO_MEMORY,
                                     sizeof(WhoamiTable) + sizeof(LPWSTR) * Rows * Cols);
 
-    // wprintf(L"DEBUG: Allocating %dx%d elem table for printing.\r\n\r\n", Rows, Cols);
+    // wprintf(L"DEBUG: Allocating %dx%d elem table for printing.\n\n", Rows, Cols);
 
     if (!pTable)
     {
-        wprintf(L"ERROR: Not enough memory for displaying the table.");
+        wprintf(L"ERROR: Not enough memory for displaying the table.\n");
         exit(1);
     }
 
@@ -205,7 +205,7 @@ void WhoamiPrintTable(WhoamiTable *pTable)
 
     if (!pTable)
     {
-        wprintf(L"ERROR: The table passed for display is empty.");
+        wprintf(L"ERROR: The table passed for display is empty.\n");
         exit(1);
     }
 
@@ -367,7 +367,7 @@ void WhoamiPrintTable(WhoamiTable *pTable)
             WhoamiFree(pTable->Content[i * pTable->Cols + j]);
 
     WhoamiFree(pTable);
-    
+
     if (PrintFormat != csv)
         HeapFree(GetProcessHeap(), 0, ColLength);
 }

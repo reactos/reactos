@@ -1,7 +1,7 @@
 /*
  *  FIPS-46-3 compliant Triple-DES implementation
  *
- *  Copyright (C) 2006-2015, ARM Limited, All Rights Reserved
+ *  Copyright The Mbed TLS Contributors
  *  SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
  *
  *  This file is provided under the Apache License 2.0, or the
@@ -42,8 +42,6 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  *
  *  **********
- *
- *  This file is part of mbed TLS (https://tls.mbed.org)
  */
 /*
  *  DES, on which TDES is based, was originally designed by Horst Feistel
@@ -61,6 +59,7 @@
 #if defined(MBEDTLS_DES_C)
 
 #include "mbedtls/des.h"
+#include "mbedtls/platform_util.h"
 
 #include <string.h>
 
@@ -74,11 +73,6 @@
 #endif /* MBEDTLS_SELF_TEST */
 
 #if !defined(MBEDTLS_DES_ALT)
-
-/* Implementation that should never be optimized out by the compiler */
-static void mbedtls_zeroize( void *v, size_t n ) {
-    volatile unsigned char *p = (unsigned char*)v; while( n-- ) *p++ = 0;
-}
 
 /*
  * 32-bit integer manipulation macros (big endian)
@@ -288,50 +282,57 @@ static const uint32_t RHs[16] =
 /*
  * Initial Permutation macro
  */
-#define DES_IP(X,Y)                                             \
-{                                                               \
-    T = ((X >>  4) ^ Y) & 0x0F0F0F0F; Y ^= T; X ^= (T <<  4);   \
-    T = ((X >> 16) ^ Y) & 0x0000FFFF; Y ^= T; X ^= (T << 16);   \
-    T = ((Y >>  2) ^ X) & 0x33333333; X ^= T; Y ^= (T <<  2);   \
-    T = ((Y >>  8) ^ X) & 0x00FF00FF; X ^= T; Y ^= (T <<  8);   \
-    Y = ((Y << 1) | (Y >> 31)) & 0xFFFFFFFF;                    \
-    T = (X ^ Y) & 0xAAAAAAAA; Y ^= T; X ^= T;                   \
-    X = ((X << 1) | (X >> 31)) & 0xFFFFFFFF;                    \
-}
+#define DES_IP(X,Y)                                                       \
+    do                                                                    \
+    {                                                                     \
+        T = (((X) >>  4) ^ (Y)) & 0x0F0F0F0F; (Y) ^= T; (X) ^= (T <<  4); \
+        T = (((X) >> 16) ^ (Y)) & 0x0000FFFF; (Y) ^= T; (X) ^= (T << 16); \
+        T = (((Y) >>  2) ^ (X)) & 0x33333333; (X) ^= T; (Y) ^= (T <<  2); \
+        T = (((Y) >>  8) ^ (X)) & 0x00FF00FF; (X) ^= T; (Y) ^= (T <<  8); \
+        (Y) = (((Y) << 1) | ((Y) >> 31)) & 0xFFFFFFFF;                    \
+        T = ((X) ^ (Y)) & 0xAAAAAAAA; (Y) ^= T; (X) ^= T;                 \
+        (X) = (((X) << 1) | ((X) >> 31)) & 0xFFFFFFFF;                    \
+    } while( 0 )
 
 /*
  * Final Permutation macro
  */
-#define DES_FP(X,Y)                                             \
-{                                                               \
-    X = ((X << 31) | (X >> 1)) & 0xFFFFFFFF;                    \
-    T = (X ^ Y) & 0xAAAAAAAA; X ^= T; Y ^= T;                   \
-    Y = ((Y << 31) | (Y >> 1)) & 0xFFFFFFFF;                    \
-    T = ((Y >>  8) ^ X) & 0x00FF00FF; X ^= T; Y ^= (T <<  8);   \
-    T = ((Y >>  2) ^ X) & 0x33333333; X ^= T; Y ^= (T <<  2);   \
-    T = ((X >> 16) ^ Y) & 0x0000FFFF; Y ^= T; X ^= (T << 16);   \
-    T = ((X >>  4) ^ Y) & 0x0F0F0F0F; Y ^= T; X ^= (T <<  4);   \
-}
+#define DES_FP(X,Y)                                                       \
+    do                                                                    \
+    {                                                                     \
+        (X) = (((X) << 31) | ((X) >> 1)) & 0xFFFFFFFF;                    \
+        T = ((X) ^ (Y)) & 0xAAAAAAAA; (X) ^= T; (Y) ^= T;                 \
+        (Y) = (((Y) << 31) | ((Y) >> 1)) & 0xFFFFFFFF;                    \
+        T = (((Y) >>  8) ^ (X)) & 0x00FF00FF; (X) ^= T; (Y) ^= (T <<  8); \
+        T = (((Y) >>  2) ^ (X)) & 0x33333333; (X) ^= T; (Y) ^= (T <<  2); \
+        T = (((X) >> 16) ^ (Y)) & 0x0000FFFF; (Y) ^= T; (X) ^= (T << 16); \
+        T = (((X) >>  4) ^ (Y)) & 0x0F0F0F0F; (Y) ^= T; (X) ^= (T <<  4); \
+    } while( 0 )
 
 /*
  * DES round macro
  */
-#define DES_ROUND(X,Y)                          \
-{                                               \
-    T = *SK++ ^ X;                              \
-    Y ^= SB8[ (T      ) & 0x3F ] ^              \
-         SB6[ (T >>  8) & 0x3F ] ^              \
-         SB4[ (T >> 16) & 0x3F ] ^              \
-         SB2[ (T >> 24) & 0x3F ];               \
-                                                \
-    T = *SK++ ^ ((X << 28) | (X >> 4));         \
-    Y ^= SB7[ (T      ) & 0x3F ] ^              \
-         SB5[ (T >>  8) & 0x3F ] ^              \
-         SB3[ (T >> 16) & 0x3F ] ^              \
-         SB1[ (T >> 24) & 0x3F ];               \
-}
+#define DES_ROUND(X,Y)                              \
+    do                                              \
+    {                                               \
+        T = *SK++ ^ (X);                            \
+        (Y) ^= SB8[ (T      ) & 0x3F ] ^            \
+               SB6[ (T >>  8) & 0x3F ] ^            \
+               SB4[ (T >> 16) & 0x3F ] ^            \
+               SB2[ (T >> 24) & 0x3F ];             \
+                                                    \
+        T = *SK++ ^ (((X) << 28) | ((X) >> 4));     \
+        (Y) ^= SB7[ (T      ) & 0x3F ] ^            \
+               SB5[ (T >>  8) & 0x3F ] ^            \
+               SB3[ (T >> 16) & 0x3F ] ^            \
+               SB1[ (T >> 24) & 0x3F ];             \
+    } while( 0 )
 
-#define SWAP(a,b) { uint32_t t = a; a = b; b = t; t = 0; }
+#define SWAP(a,b)                                       \
+    do                                                  \
+    {                                                   \
+        uint32_t t = (a); (a) = (b); (b) = t; t = 0;    \
+    } while( 0 )
 
 void mbedtls_des_init( mbedtls_des_context *ctx )
 {
@@ -343,7 +344,7 @@ void mbedtls_des_free( mbedtls_des_context *ctx )
     if( ctx == NULL )
         return;
 
-    mbedtls_zeroize( ctx, sizeof( mbedtls_des_context ) );
+    mbedtls_platform_zeroize( ctx, sizeof( mbedtls_des_context ) );
 }
 
 void mbedtls_des3_init( mbedtls_des3_context *ctx )
@@ -356,7 +357,7 @@ void mbedtls_des3_free( mbedtls_des3_context *ctx )
     if( ctx == NULL )
         return;
 
-    mbedtls_zeroize( ctx, sizeof( mbedtls_des3_context ) );
+    mbedtls_platform_zeroize( ctx, sizeof( mbedtls_des3_context ) );
 }
 
 static const unsigned char odd_parity_table[128] = { 1,  2,  4,  7,  8,
@@ -580,7 +581,7 @@ int mbedtls_des3_set2key_enc( mbedtls_des3_context *ctx,
     uint32_t sk[96];
 
     des3_set2key( ctx->sk, sk, key );
-    mbedtls_zeroize( sk,  sizeof( sk ) );
+    mbedtls_platform_zeroize( sk,  sizeof( sk ) );
 
     return( 0 );
 }
@@ -594,7 +595,7 @@ int mbedtls_des3_set2key_dec( mbedtls_des3_context *ctx,
     uint32_t sk[96];
 
     des3_set2key( sk, ctx->sk, key );
-    mbedtls_zeroize( sk,  sizeof( sk ) );
+    mbedtls_platform_zeroize( sk,  sizeof( sk ) );
 
     return( 0 );
 }
@@ -631,7 +632,7 @@ int mbedtls_des3_set3key_enc( mbedtls_des3_context *ctx,
     uint32_t sk[96];
 
     des3_set3key( ctx->sk, sk, key );
-    mbedtls_zeroize( sk,  sizeof( sk ) );
+    mbedtls_platform_zeroize( sk,  sizeof( sk ) );
 
     return( 0 );
 }
@@ -645,7 +646,7 @@ int mbedtls_des3_set3key_dec( mbedtls_des3_context *ctx,
     uint32_t sk[96];
 
     des3_set3key( sk, ctx->sk, key );
-    mbedtls_zeroize( sk,  sizeof( sk ) );
+    mbedtls_platform_zeroize( sk,  sizeof( sk ) );
 
     return( 0 );
 }

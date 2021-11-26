@@ -17,7 +17,7 @@ struct FolderViewColumns
     int fmt;
 };
 
-static FolderViewColumns g_ColumnDefs[] = 
+static FolderViewColumns g_ColumnDefs[] =
 {
     { IDS_COL_NAME,      SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT,   25, LVCFMT_LEFT },
     { IDS_COL_TYPE,      SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT,   20, LVCFMT_LEFT },

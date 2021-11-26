@@ -784,7 +784,7 @@ NtGdiCheckBitmapBits(
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 HBITMAP
 APIENTRY
@@ -792,7 +792,13 @@ NtGdiClearBitmapAttributes(
     IN HBITMAP hbm,
     IN DWORD dwFlags)
 {
-    UNIMPLEMENTED;
+    if ( dwFlags & SC_BB_STOCKOBJ )
+    {
+        if (GDIOBJ_ConvertFromStockObj((HGDIOBJ*)&hbm))
+        {
+            return hbm;
+        }
+    }
     return NULL;
 }
 
@@ -1406,7 +1412,7 @@ NtGdiMonoBitmap(
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 HBITMAP
 APIENTRY
@@ -1414,7 +1420,13 @@ NtGdiSetBitmapAttributes(
     IN HBITMAP hbm,
     IN DWORD dwFlags)
 {
-    UNIMPLEMENTED;
+    if ( dwFlags & SC_BB_STOCKOBJ )
+    {
+        if (GDIOBJ_ConvertToStockObj((HGDIOBJ*)&hbm))
+        {
+            return hbm;
+        }
+    }
     return NULL;
 }
 

@@ -10,57 +10,57 @@ STRINGTABLE
 BEGIN
     IDS_USAGE "\n\
 Kullanım: ping [-t] [-a] [-n sayı] [-l boyut] [-f] [-i TTL] [-v TOS]\n\
-            [-w süre aşımı] [-4] [-6] varış anabilgisayarı\n\
+            [-w zaman aşımı] [-4] [-6] varış anabilgisayarı\n\
 \n\
 Seçenekler:\n\
-    -t             Belirtilen anabilgisayar durana kadar ping yap.\n\
-                   Sayımlamaları görmek ve sürdürmek için Denetim'e ve Kes'e basınız.\n\
-                   Durdurmak için Denetim'e ve C'ye basınız.\n\
-    -a             Anabilgisayar adları için adresleri çözümle.\n\
+    -t             Belirtilen anabilgisayar durana kadar ping atar.\n\
+                   Sayım dökümünü görmek ve devam etmek için Ctrl-X'e basınız.\n\
+                   Durdurmak için Ctrl-C'ye basınız.\n\
+    -a             Anabilgisayar adları için adresleri çözümler.\n\
     -n sayı        Gönderilecek yankı istekleri sayısı.\n\
-    -l boyut       Arabellek boyutunu gönder.\n\
-    -f             Paketteki imi parçalamamaya ayarla (yalnızca IPv4 için).\n\
-    -i TTL         Yaşama süresi.\n\
+    -l boyut       Arabellek boyutunu gönderir.\n\
+    -f             Paketteki simgeyi parçalamamaya ayarlar (yalnızca IPv4 için).\n\
+    -i TTL         Çevrimiçi süre.\n\
     -v TOS         Hizmet türü (Yalnızca IPv4 için. Bu ayar, kullanımdan\n\
                    kaldırılmıştır ve IP üst bilgisinde hizmet türü alanı\n\
-                   üzerinde bir etkisi yoktur.\n\
-    -w süre aşımı  Tüm yanıtlar için beklemeye mili sâniye olarak süre aşımı.\n\
-    -4             IPv4 kullanmaya zorla.\n\
-    -6             IPv6 kullanmaya zorla.\n\
+                   üzerinde bir etkisi yoktur.)\n\
+    -w zaman aşımı  Tüm yanıtlar için milisaniye cinsinden zaman aşımı.\n\
+    -4             IPv4 kullanmaya zorlar.\n\
+    -6             IPv6 kullanmaya zorlar.\n\
 \n"
 
-    IDS_CTRL_BREAK "Denetim+Kes\n"
-    IDS_CTRL_C "Denetim+C\n"
+    IDS_CTRL_BREAK "Ctrl+X\n"
+    IDS_CTRL_C "Ctrl+C\n"
     IDS_NO_RESOURCES "Kullanılabilir yeterli boş kaynak yok.\n"
     IDS_MISSING_ADDRESS "IP adresi belirtilmelidir.\n"
-    IDS_MISSING_VALUE "Değer %s seçeneği için sağlanmalıdır.\n"
+    IDS_MISSING_VALUE "%s seçeneği için değer sağlanmalıdır.\n"
     IDS_BAD_OPTION "Geçersiz seçenek: %s.\n"
     IDS_BAD_PARAMETER "Geçersiz değişken: %s.\n"
-    IDS_BAD_VALUE "%s seçeneği için geçersiz değer, geçerli aralık %u'den %u'e dektir.\n"
+    IDS_BAD_VALUE "%s seçeneği için geçersiz değer, geçerli aralık %u'den %u'e denktir.\n"
     IDS_WRONG_FAMILY "%s seçeneği yalnızca %s için desteklenmektedir.\n"
     IDS_UNKNOWN_HOST "Ping %s anabilgisayarını bulamadı. Lütfen adı gözden geçirip yeniden deneyiniz.\n"
-    IDS_PINGING_ADDRESS "\nPing yapılıyor: %s "
-    IDS_PINGING_HOSTNAME "\nPing yapılıyor: %s [%s] "
+    IDS_PINGING_ADDRESS "\nPing atılıyor: %s "
+    IDS_PINGING_HOSTNAME "\nPing atılıyor: %s [%s] "
     IDS_SOURCE_ADDRESS "%s'den %s"
-    IDS_PING_SIZE " %lu çoklu veriyle:\n\n"
-    IDS_REPLY_FROM "%s varışından yanıt: "
-    IDS_REPLY_BYTES "çoklu=%d "
+    IDS_PING_SIZE " %lu çoklu bayt veriyle:\n\n"
+    IDS_REPLY_FROM "%s hedefinden yanıt: "
+    IDS_REPLY_BYTES "çoklu bayt=%d "
     IDS_REPLY_TIME_MS "süre=%lums "
     IDS_REPLY_TIME_0MS "süre<1ms "
     IDS_REPLY_TTL "TTL=%d\n"
-    IDS_REPLY_STATUS "Yankı yanıtı geri döndü %lu.\n"
-    IDS_DEST_HOST_UNREACHABLE "Varış anabilgisayarı erişilemez.\n"
-    IDS_DEST_NET_UNREACHABLE "Varış ağı erişilemez.\n"
-    IDS_REQUEST_TIMED_OUT "İstek süre aşımına uğradı.\n"
+    IDS_REPLY_STATUS "Yankı yanıtı %lu geri döndü.\n"
+    IDS_DEST_HOST_UNREACHABLE "Hedef anabilgisayara erişilemedi.\n"
+    IDS_DEST_NET_UNREACHABLE "Hedef ağa erişilemedi.\n"
+    IDS_REQUEST_TIMED_OUT "İstek zaman aşımına uğradı.\n"
     IDS_TTL_EXPIRED "Geçişte yaşama süresi bitti.\n"
-    IDS_TRANSMIT_FAILED "PING: Geçiş başarısız oldu. (Yanlışlık %u)\n"
+    IDS_TRANSMIT_FAILED "PING: Geçiş başarısız oldu. (Hata %u)\n"
 
     IDS_STATISTICS "\n\
-%s için ping sayımlamaları:\n\
-    Paketler: Gönderilen = %d, Alınan = %d, Yitirilen %d (%%%d yitik),\n"
+%s için ping dökümü:\n\
+    Paketler: Gönderilen = %d, Alınan = %d, Kaybedilen %d (%%%d kayıp),\n"
 
-    IDS_APPROXIMATE_RTT "Mili sâniye olarak yaklaşık gidiş geliş süreleri:\n\
+    IDS_APPROXIMATE_RTT "Milisaniye cinsinden yaklaşık gidiş geliş süreleri:\n\
     En Az = %lums, En Çok = %lums, Ortalama = %lums\n"
 
-    IDS_WINSOCK_FAIL "WinSock'u başlatma başarısız oldu: %i\n"
+    IDS_WINSOCK_FAIL "WinSock başlatılamadı: %i\n"
 END

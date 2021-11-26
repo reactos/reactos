@@ -11,7 +11,7 @@ BEGIN
     IDS_NOFUNCTION "Não foi possível encontrar a função %1 no arquivo %2."
     IDS_NODEPENDENCY "Não foi possível carregar o arquivo de dependência %1."
     IDS_SETUPERROR "Ocorreu um erro ao configurar %1. Este erro foi registado, a instalação continuará"
-    IDS_INCOMPLETE "A instalação anterior de um aplicativo não foi concluída. \n \nInicie sessão com uma conta de administrador para concluir a instalação."
+    IDS_INCOMPLETE "A instalação anterior de um aplicativo não foi concluída.\n\nInicie sessão com uma conta de administrador para concluir a instalação."
     IDS_SETUP "Configuração do ReactOS"
     IDS_SERVICEERROR "Alguns serviços não puderam ser iniciados. A instalação precisa reiniciar o sistema para iniciar os serviços."
 END

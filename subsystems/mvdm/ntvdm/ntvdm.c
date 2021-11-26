@@ -506,10 +506,14 @@ wmain(INT argc, WCHAR *argv[])
     }
 #endif
 
+    DPRINT1("\n\n\n"
+            "NTVDM - Starting...\n"
+            "Command Line: '%s'\n"
+            "\n\n",
+            GetCommandLineA());
+
     /* Load the global VDM settings */
     LoadGlobalSettings(&GlobalSettings);
-
-    DPRINT1("\n\n\nNTVDM - Starting...\n\n\n");
 
     /* Initialize the console */
     if (!ConsoleInit())

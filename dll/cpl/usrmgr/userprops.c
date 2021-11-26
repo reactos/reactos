@@ -207,7 +207,7 @@ UserProfilePageProc(HWND hwndDlg,
         case WM_INITDIALOG:
             pUserData = (PPROFILE_USER_DATA)HeapAlloc(GetProcessHeap(),
                                                       HEAP_ZERO_MEMORY,
-                                                      sizeof(PROFILE_USER_DATA) + 
+                                                      sizeof(PROFILE_USER_DATA) +
                                                       lstrlen((LPTSTR)((PROPSHEETPAGE *)lParam)->lParam) * sizeof(TCHAR));
             lstrcpy(pUserData->szUserName, (LPTSTR)((PROPSHEETPAGE *)lParam)->lParam);
 
@@ -305,7 +305,7 @@ GetUserMembershipData(HWND hwndDlg, PMEMBERSHIP_USER_DATA pUserData)
         lvi.mask = LVIF_TEXT | LVIF_STATE | LVIF_IMAGE;
         lvi.pszText = pUserData->pGroupData[i].lgrui0_name;
         lvi.state = 0;
-        lvi.iImage = 0; 
+        lvi.iImage = 0;
 
         (void)ListView_InsertItem(hwndLV, &lvi);
     }
@@ -577,7 +577,7 @@ AddGroupToUser(HWND hwndDlg,
             lvi.mask = LVIF_TEXT | LVIF_STATE | LVIF_IMAGE;
             lvi.pszText = pUserData->pGroupData[i].lgrui0_name;
             lvi.state = 0;
-            lvi.iImage = 0; 
+            lvi.iImage = 0;
 
             (void)ListView_InsertItem(hwndLV, &lvi);
         }
@@ -635,7 +635,7 @@ UserMembershipPageProc(HWND hwndDlg,
         case WM_INITDIALOG:
             pUserData = (PMEMBERSHIP_USER_DATA)HeapAlloc(GetProcessHeap(),
                                                          HEAP_ZERO_MEMORY,
-                                                         sizeof(MEMBERSHIP_USER_DATA) + 
+                                                         sizeof(MEMBERSHIP_USER_DATA) +
                                                          lstrlen((LPTSTR)((PROPSHEETPAGE *)lParam)->lParam) * sizeof(TCHAR));
             lstrcpy(pUserData->szUserName, (LPTSTR)((PROPSHEETPAGE *)lParam)->lParam);
 
@@ -818,7 +818,7 @@ UserGeneralPageProc(HWND hwndDlg,
         case WM_INITDIALOG:
             pUserData = (PGENERAL_USER_DATA)HeapAlloc(GetProcessHeap(),
                                                       HEAP_ZERO_MEMORY,
-                                                      sizeof(GENERAL_USER_DATA) + 
+                                                      sizeof(GENERAL_USER_DATA) +
                                                       lstrlen((LPTSTR)((PROPSHEETPAGE *)lParam)->lParam) * sizeof(TCHAR));
             lstrcpy(pUserData->szUserName, (LPTSTR)((PROPSHEETPAGE *)lParam)->lParam);
 

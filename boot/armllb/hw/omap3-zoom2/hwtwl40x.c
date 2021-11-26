@@ -16,7 +16,7 @@ LlbHwOmap3TwlRead1(IN UCHAR ChipAddress,
                    IN UCHAR RegisterAddress)
 {
     volatile int i = 1000;
-        
+
     /* Select the register */
     LlbHwOmap3TwlWrite(ChipAddress, RegisterAddress, 0, NULL);
 
@@ -43,7 +43,7 @@ LlbHwOmap3TwlWrite(IN UCHAR ChipAddress,
     /* Enable master transmit mode */
     WRITE_REGISTER_USHORT(0x48070024, 0x8601);
     WRITE_REGISTER_USHORT(0x4807001c, RegisterAddress);
-    
+
     /* Loop each byte */
     for (j = 0; j < Length; j++)
     {

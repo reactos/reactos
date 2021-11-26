@@ -1117,7 +1117,7 @@ TbdInitImpl(VOID)
 {
     WNDCLASSEX wc = {0};
 
-    wc.cbSize = sizeof(WNDCLASSEX);
+    wc.cbSize = sizeof(wc);
     wc.style = CS_HREDRAW | CS_VREDRAW;
     wc.lpfnWndProc = ToolDockWndProc;
     wc.cbWndExtra = TD_EXTRA_BYTES;

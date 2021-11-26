@@ -3181,7 +3181,7 @@ WSPStringToAddress(IN LPWSTR AddressString,
                 /* move over the dot to next ip part */
                 (*bp)++;
             }
-            
+
             /* check dots count */
             if (numdots != 3)
             {

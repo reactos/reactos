@@ -2,7 +2,7 @@
 * PROJECT:     ReactOS Device Manager
 * LICENSE:     GPL - See COPYING in the top level directory
 * FILE:        dll/win32/devmgr/devmgmt/ClassNode.cpp
-* PURPOSE:     Class object for 
+* PURPOSE:     Class object for
 * COPYRIGHT:   Copyright 2015 Ged Murphy <gedmurphy@reactos.org>
 *
 */

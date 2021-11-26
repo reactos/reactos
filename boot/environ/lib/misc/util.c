@@ -40,7 +40,7 @@ BlUtlGetAcpiTable (
     NTSTATUS Status;
     PRSDT Rsdt;
     PXSDT Xsdt;
-    PHYSICAL_ADDRESS PhysicalAddress; 
+    PHYSICAL_ADDRESS PhysicalAddress;
     PDESCRIPTION_HEADER Header;
 
     Header = 0;

@@ -5,41 +5,48 @@
 
 class CInstalledApplicationInfo
 {
+private:
+    BOOL m_IsUserKey;
+    REGSAM m_WowKey;
+    HKEY m_hSubKey;
+
+    CStringW m_szKeyName;
+
 public:
-    BOOL IsUserKey;
-    REGSAM WowKey;
-    HKEY hSubKey;
-    BOOL bIsUpdate = FALSE;
+    CInstalledApplicationInfo(BOOL bIsUserKey, REGSAM RegWowKey, HKEY hKey, const CStringW& szKeyName);
+    ~CInstalledApplicationInfo();
 
-    ATL::CStringW szKeyName;
+    VOID EnsureDetailsLoaded();
 
-    CInstalledApplicationInfo(BOOL bIsUserKey, REGSAM RegWowKey, HKEY hKey);
     BOOL GetApplicationRegString(LPCWSTR lpKeyName, ATL::CStringW& String);
     BOOL GetApplicationRegDword(LPCWSTR lpKeyName, DWORD *lpValue);
     BOOL RetrieveIcon(ATL::CStringW& IconLocation);
     BOOL UninstallApplication(BOOL bModify);
     LSTATUS RemoveFromRegistry();
 
-    ATL::CStringW szDisplayIcon;
-    ATL::CStringW szDisplayName;
-    ATL::CStringW szDisplayVersion;
-    ATL::CStringW szPublisher;
-    ATL::CStringW szRegOwner;
-    ATL::CStringW szProductID;
-    ATL::CStringW szHelpLink;
-    ATL::CStringW szHelpTelephone;
-    ATL::CStringW szReadme;
-    ATL::CStringW szContact;
-    ATL::CStringW szURLUpdateInfo;
-    ATL::CStringW szURLInfoAbout;
-    ATL::CStringW szComments;
-    ATL::CStringW szInstallDate;
-    ATL::CStringW szInstallLocation;
-    ATL::CStringW szInstallSource;
-    ATL::CStringW szUninstallString;
-    ATL::CStringW szModifyPath;
+    // These fields are always loaded
+    BOOL bIsUpdate;
+    CStringW szDisplayIcon;
+    CStringW szDisplayName;
+    CStringW szDisplayVersion;
+    CStringW szComments;
 
-    ~CInstalledApplicationInfo();
+    // These details are loaded on demand
+    CStringW szPublisher;
+    CStringW szRegOwner;
+    CStringW szProductID;
+    CStringW szHelpLink;
+    CStringW szHelpTelephone;
+    CStringW szReadme;
+    CStringW szContact;
+    CStringW szURLUpdateInfo;
+    CStringW szURLInfoAbout;
+    CStringW szInstallDate;
+    CStringW szInstallLocation;
+    CStringW szInstallSource;
+    CStringW szUninstallString;
+    CStringW szModifyPath;
+
 };
 
 typedef BOOL(CALLBACK *APPENUMPROC)(CInstalledApplicationInfo * Info, PVOID param);

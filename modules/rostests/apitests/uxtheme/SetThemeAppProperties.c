@@ -4,7 +4,7 @@
  * PURPOSE:         Test for SetThemeAppProperties
  * PROGRAMMERS:     Giannis Adamopoulos
  */
- 
+
 #include <apitest.h>
 #include <stdio.h>
 #include <windows.h>
@@ -25,16 +25,16 @@ START_TEST(SetThemeAppProperties)
     }
 
     SetLastError(0xdeadbeef);
-    
+
     bThemeActive = IsAppThemed();
     ok (bThemeActive == FALSE, "\n");
     ok( GetLastError() == 0, "Expected 0 last error, got 0x%lx\n", GetLastError());
 
-    SetLastError(0xdeadbeef);            
+    SetLastError(0xdeadbeef);
     hTheme = OpenThemeData(NULL, L"BUTTON");
     ok (hTheme == NULL, "\n");
     ok( GetLastError() == E_PROP_ID_UNSUPPORTED, "Expected E_PROP_ID_UNSUPPORTED last error, got 0x%lx\n", GetLastError());
-    
+
     hWnd = CreateWindowExA(0, "static", "", WS_POPUP, 0,0,100,100,0, 0, 0, NULL);
     ok (hWnd != NULL, "\n");
 
@@ -57,7 +57,7 @@ START_TEST(SetThemeAppProperties)
 
     bThemeActive = IsAppThemed();
     ok (bThemeActive == TRUE, "\n");
-    
+
     SetLastError(0xdeadbeef);
     hTheme = OpenThemeData(NULL, L"BUTTON");
     ok (hTheme == NULL, "\n");
@@ -71,7 +71,7 @@ START_TEST(SetThemeAppProperties)
     hTheme = OpenThemeDataEx (NULL, L"BUTTON", 0);
     ok (hTheme == NULL, "\n");
     ok( GetLastError() == E_PROP_ID_UNSUPPORTED, "Expected E_PROP_ID_UNSUPPORTED last error, got 0x%lx\n", GetLastError());
-    
+
     SetThemeAppProperties(STAP_ALLOW_CONTROLS);
 
     SetLastError(0xdeadbeef);

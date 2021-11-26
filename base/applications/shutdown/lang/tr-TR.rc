@@ -20,8 +20,8 @@ BEGIN
     CHECKBOX "Kullanıcıları Uyar", IDC_WARN_USERS, 175, 79, 55, 14, BS_AUTOCHECKBOX | WS_TABSTOP
     LTEXT "Uyarı Görüntüle:", IDC_SHOW_WARN_ONE, 11, 99, 65, 14
     EDITTEXT IDC_SHOW_WARN, 78, 97, 41, 14
-    LTEXT "sâniye", IDC_SHOW_WARN_TWO, 124, 99, 32, 10
-    GROUPBOX "Bilgisayarı Kapat Olay İzleyicisi", IDC_STATIC, 5, 114, 224, 114
+    LTEXT "saniye", IDC_SHOW_WARN_TWO, 124, 99, 32, 10
+    GROUPBOX "Bilgisayarı Kapatma İzleyicisi", IDC_STATIC, 5, 114, 224, 114
     LTEXT "Neden:", IDC_STATIC, 16, 130, 27, 8
     CHECKBOX "Planlanmış", IDC_PLANNED, 175, 130, 40, 12, BS_AUTOCHECKBOX | WS_TABSTOP
     COMBOBOX IDC_REASON_CODE, 17, 142, 198, 13, WS_TABSTOP | CBS_DROPDOWN
@@ -34,72 +34,72 @@ STRINGTABLE
 BEGIN
     IDS_USAGE "ReactOS Kapatma Aracı\n\
 \n\
-Usage: shutdown [/?] [/i | /l | /s | /r | /g | /a | /p | /h | /e] [/f]\n\
+Kullanım: shutdown [/?] [/i | /l | /s | /r | /g | /a | /p | /h | /e] [/f]\n\
        [/m \\\\bilgisayar][/t xxx][/d [p|u:]xx:yy [/c ""açıklama""]]\n\
 \n\
-    Değiştirgen yok ya da /?    Bu yardımı göster.\n\
-    /i      Çizgelik kullanıcı arayüzünü (GUI) göster. Bu seçenek birinci\n\
+    Değişken yok ya da /? girildi. Bu sebeple bu yardım gösterildi.\n\
+    /i      Grafik kullanıcı arayüzünü (GUI) göster. Bu seçenek birinci\n\
             seçenek olmalıdır.\n\
-    /l      Yalnızca yerli dizgede oturumu kapat. /m veyâ /d ile kullanılamaz.\n\
+    /l      Yalnızca yerel kullanıcı oturumunu kapat. /m veya /d ile kullanılamaz.\n\
     /s      Bilgisayarı kapat.\n\
     /r      Bilgisayarı yeniden başlat.\n\
     /g      Tüm kayıtlı uygulamaları ve bilgisayarı yeniden başlat.\n\
-    /a      Gecikmiş bir kapatmayı iptal et. Yalnızca gecikme süresi esnâsında\n\
+    /a      Gecikmiş bir kapatmayı iptal et. Yalnızca gecikme süresi esnasında\n\
             kullanılabilir.\n\
-    /p      Bir süre aşımı veyâ uyarı olmadan yerli bilgisayarı kapat. /d veyâ\n\
+    /p      Bir zaman aşımı veya uyarı olmadan yerel bilgisayarı kapat. /d veya\n\
             /f ile kullanılabilir.\n\
-    /h      Yerli bilgisayarı anıkta beklet. /f ile kullanılabilir.\n\
+    /h      Yerel bilgisayarı hazırda beklet. /f ile kullanılabilir.\n\
     /e      Beklenmeyen bilgisayarı kapatma için nedeni belgele.\n\
     /m \\\\bilgisayar  Varış bilgisayarını (UNC/IP adresi) belirt.\n\
-    /t xxx  Bilgisayarı kapatmadan önce xxx sâniye denli süre aşımı zamânını ayarla.\n\
-            Geçerli aralık 0'dan başlar, 315360000'a (10 yıl) dektir,\n\
-            30 ön tanımlı değer olarak.\n\
+    /t xxx  Bilgisayarı kapatmadan önce xxx saniye kadar zaman aşımı zamanını ayarla.\n\
+            Geçerli aralık 0'dan başlar, 315360000'a (10 yıla) denktir,\n\
+            30 varsayılan değer olarak verilmiştir.\n\
     /c ""açıklama""  Kapatma ya da yeniden başlatma için nedeni açıkla.\n\
-            en çok 512 damgaya izin verilmiştir.\n\
+            en çok 512 karaktere izin verilmiştir.\n\
     /f      Kullanıcıları uyarmadan çalışan uygulamaları kapatmaya zorla. Başka\n\
             bir parametre belirtmezseniz, bu seçenek ayrıca oturumu kapatacak.\n\
     /d [p|u:]xx:yy  Kapatma ya da yeniden başlatma için neden kodu ver.\n\
             p kapatmanın ya da yeniden başlatmanın planlanmış olduğunu belirtir.\n\
             u nedenin kullanıcı eliyle tanımlanmış olduğunu belirtir.\n\
-            p veyâ u belirtilmezse bilgisayarı kapatma ya da yeniden başlatma\n\
+            p veya u belirtilmezse bilgisayarı kapatma ya da yeniden başlatma\n\
             planlanmış değildir.\n\
             xx büyük neden kodudur (256'dan küçük artı tamsayı).\n\
             yy küçük neden kodudur (65536'dan küçük artı tamsayı).\n"
 
-    IDS_ERROR_SHUTDOWN_REBOOT "YANLIŞLIK: Kapatma ve yeniden başlatma aynı zamanda olamaz.\n"
-    IDS_ERROR_TIMEOUT "YANLIŞLIK: %u süre aşımı değeri hudutların (0-315360000) dışında.\n"
-    IDS_ERROR_ABORT "YANLIŞLIK: Dizgenin kapatılması durdurulamaz.\n"
-    IDS_ERROR_LOGOFF "YANLIŞLIK: Dizge oturumundan çıkılamaz.\n"
-    IDS_ERROR_SHUTDOWN "YANLIŞLIK: Dizge kapatılamaz.\n"
-    IDS_ERROR_RESTART "YANLIŞLIK: Dizge yenien başlatılamaz.\n"
-    IDS_ERROR_MAX_COMMENT_LENGTH "YANLIŞLIK: Yorum uzunluğu, dizge eliyle ayarlanmış en çok damga hudûdunu aşıyor.\n"
-    IDS_ERROR_HIBERNATE "YANLIŞLIK: Dizge anıkta bekletme kipine gönderilemez.\n"
-    IDS_ERROR_HIBERNATE_LOCAL "YANLIŞLIK: Anıkta bekletme kipi uzaktan başlatılamıyor.\n"
-    IDS_ERROR_HIBERNATE_ENABLED "YANLIŞLIK: Anıkta bekletme kipi etkin değil.\n"
+    IDS_ERROR_SHUTDOWN_REBOOT "HATA: Kapatma ve yeniden başlatma aynı zamanda olamaz.\n"
+    IDS_ERROR_TIMEOUT "HATA: %u zaman aşımı değeri sınırların (0-315360000) dışında.\n"
+    IDS_ERROR_ABORT "HATA: Sistemin kapatılması durdurulamıyor.\n"
+    IDS_ERROR_LOGOFF "HATA: Oturum kapatılamıyor.\n"
+    IDS_ERROR_SHUTDOWN "HATA: Sistem kapatılamıyor.\n"
+    IDS_ERROR_RESTART "HATA: Sistem yeniden başlatılamıyor.\n"
+    IDS_ERROR_MAX_COMMENT_LENGTH "HATA: Yorum uzunluğu, sistem eliyle ayarlanmış karakter sınırını aşıyor.\n"
+    IDS_ERROR_HIBERNATE "HATA: Sistem hazırda bekletme kipine gönderilemyor.\n"
+    IDS_ERROR_HIBERNATE_LOCAL "HATA: Hazırda bekletme kipi uzaktan başlatılamıyor.\n"
+    IDS_ERROR_HIBERNATE_ENABLED "HATA: Hazırda bekletme kipi etkin değil.\n"
     IDS_ERROR_DIALOG_CAPTION "Uzaktan Bilgisayarı Kapat"
-    IDS_ERROR_DIALOG_INIT "Çizgelik kullanıcı arayüzü görüntülenemez."
+    IDS_ERROR_DIALOG_INIT "Grafik kullanıcı arayüzü görüntülenemiyor."
 END
 
 /* Remote shutdown action strings */
 STRINGTABLE
 BEGIN
-    IDS_ACTION_SHUTDOWN "Dizgeyi Kapat"
-    IDS_ACTION_RESTART "Dizgeyi Yeniden Başlat"
-    IDS_ACTION_UNEXPECTED_SHUTDOWN "Beklenmeyen Kapatmayı Açımla"
+    IDS_ACTION_SHUTDOWN "Sistemi Kapat"
+    IDS_ACTION_RESTART "Sistemi Yeniden Başlat"
+    IDS_ACTION_UNEXPECTED_SHUTDOWN "Beklenmeyen kapanmaya-yeniden başlatmaya açıklama ekleyin"
 END
 
 /* Remote shutdown reason strings */
 STRINGTABLE
 BEGIN
-    IDS_REASON_OTHER "Başka"
+    IDS_REASON_OTHER "Diğer"
     IDS_REASON_HARDWARE_MAINTENANCE "Donanım: Bakım"
     IDS_REASON_HARDWARE_INSTALL "Donanım: Kurulum"
-    IDS_REASON_OS_RECOVER "İşletim Dizgesi: Kurtarma"
-    IDS_REASON_OS_RECONFIGURE "İşletim Dizgesi: Yeniden Yapılandırma"
+    IDS_REASON_OS_RECOVER "İşletim Sistemi: Kurtarma"
+    IDS_REASON_OS_RECONFIGURE "İşletim Sistemi: Yeniden Yapılandırma"
     IDS_REASON_APP_MAINTENANCE "Uygulama: Bakım"
     IDS_REASON_APP_INSTALL "Uygulama: Kurulum"
     IDS_REASON_APP_UNRESPONSIVE "Uygulama: Yanıt Vermeme"
     IDS_REASON_APP_UNSTABLE "Uygulama: Kararsızlık"
     IDS_REASON_SECURITY "Güvenlik Sorunu"
-    IDS_REASON_NETWORK "Ağ Bağlantısının Yitirilmesi"
+    IDS_REASON_NETWORK "Ağ Bağlantısının Kaybı"
 END

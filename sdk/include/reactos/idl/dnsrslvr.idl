@@ -23,7 +23,7 @@ typedef [handle, string] LPWSTR DNSRSLVR_HANDLE;
 #ifndef __midl
     ,explicit_handle
 #endif
-] 
+]
 
 interface DnsResolver
 {

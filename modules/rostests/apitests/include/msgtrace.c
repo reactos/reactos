@@ -91,7 +91,7 @@ void sprintf_msg_entry(char* buffer, MSG_ENTRY* msg)
     {
         sprintf(buffer, "nothing");
     }
-    else 
+    else
     {
         char* msgName;
         char* msgType;
@@ -121,9 +121,9 @@ void sprintf_msg_entry(char* buffer, MSG_ENTRY* msg)
         }
 
         if(msgName)
-            sprintf(buffer, "hwnd%d %s %s %d %d", msg->iwnd, msgType, msgName, msg->param1, msg->param2); 
+            sprintf(buffer, "hwnd%d %s %s %d %d", msg->iwnd, msgType, msgName, msg->param1, msg->param2);
         else
-            sprintf(buffer, "hwnd%d %s %d %d %d", msg->iwnd, msgType, msg->msg, msg->param1, msg->param2); 
+            sprintf(buffer, "hwnd%d %s %d %d %d", msg->iwnd, msgType, msg->msg, msg->param1, msg->param2);
     }
 }
 
@@ -185,9 +185,9 @@ void record_message(MSG_CACHE* cache, int iwnd, UINT message, MSG_TYPE type, int
 
     /* do not report a post message a second time */
     if(type == SENT &&
-       cache->last_post_message.iwnd == iwnd && 
-       cache->last_post_message.msg == message && 
-       cache->last_post_message.param1 == param1 && 
+       cache->last_post_message.iwnd == iwnd &&
+       cache->last_post_message.msg == message &&
+       cache->last_post_message.param1 == param1 &&
        cache->last_post_message.param2 == param2)
     {
         memset(&cache->last_post_message, 0, sizeof(MSG_ENTRY));

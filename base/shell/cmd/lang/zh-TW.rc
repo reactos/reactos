@@ -1,5 +1,11 @@
-/* Traditional Chinese translation by Henry Tang Ih 2016 (henrytang2@hotmail.com) */
-/* Improved by Luo Yufan 2019 <njlyf2011@hotmail.com> */
+/*
+ * PROJECT:     ReactOS Command shell
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Chinese (Traditional) resource file
+ * TRANSLATORS: Copyright 2016 Henry Tang Ih <henrytang2@hotmail.com>
+ *              Copyright 2019 Luo Yufan <njlyf2011@hotmail.com>
+ *              Copyright 2021 Chan Chilung <eason066@gmail.com>
+ */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
 
@@ -11,37 +17,37 @@ assoc [.ext[=[檔案類型]]]\n\
 assoc (輸出所有檔案關聯)\n\
 assoc .ext (輸出指定的檔案關聯)\n\
 assoc .ext= (刪除指定的檔案關聯)\n\
-assoc .ext=檔案類型 (添加新的檔案關聯)\n"
+assoc .ext=檔案類型 (新增新的檔案關聯)\n"
     STRING_ALIAS_HELP "設定、刪除或顯示別名。\n\n\
 ALIAS [別名=[命令]]\n\n\
   別名    別名的名稱。\n\
   命令    取代別名的文字。\n\n\
 顯示所有別名：\n\
   ALIAS\n\n\
-設定一個新的或者替換一個已存在的別名：\n\
+設定一個新的或者取代一個已存在的別名：\n\
   ALIAS da=dir a:\n\n\
 刪除一個別名：\n\
   ALIAS da="
-    STRING_BEEP_HELP "使揚聲器發出BEEP聲。\n\nBEEP\n"
-    STRING_CALL_HELP "從一個批處理程式呼叫另一個。\n\n\
-CALL [驅動器:][路徑]檔名 [批處理參數]\n\n\
-  批處理參數  指定被呼叫的批處理程式所需的命令列資訊。\n"
-    STRING_CD_HELP "改變當前目錄或者顯示當前目錄名。\n\n\
-CHDIR [/D][驅動器:][路徑]\n\
+    STRING_BEEP_HELP "使揚聲器發出嗶嗶聲。\n\nBEEP\n"
+    STRING_CALL_HELP "從一個批次程式呼叫另一個。\n\n\
+CALL [磁碟機:][路徑]檔案名稱 [批次參數]\n\n\
+  批次參數  指定被呼叫的批次程式所需的命令列資訊。\n"
+    STRING_CD_HELP "改變目前的目錄或顯示目前的目錄名。\n\n\
+CHDIR [/D][磁碟機:][路徑]\n\
 CHDIR[..|.]\n\
-CD [/D][驅動器:][路徑]\n\
+CD [/D][磁碟機:][路徑]\n\
 CD[..|.]\n\n\
   ..   上一級目錄\n\
-  .    當前目錄\n\
-  /D   將會改變當前驅動器和當前目錄。\n\n\
-執行 CD 驅動器: 顯示指定驅動器上的當前目錄。\n\
-不帶參數執行 CD 顯示當前驅動器和目錄。\n"
+  .    目前的目錄\n\
+  /D   將會改變目前的磁碟機和目前的目錄。\n\n\
+執行 CD 磁碟機: 顯示指定磁碟機上的目前的目錄。\n\
+不帶參數執行 CD 顯示目前的磁碟機和目錄。\n"
     STRING_CHOICE_HELP "等待使用者在一組選項中做出一個選擇。\n\n\
 CHOICE  [/C[:]選項][/N][/S][/T[:]c,nn][文字]\n\n\
-  /C[:]選項     指定允許的選項。默認為 YN。\n\
+  /C[:]選項     指定允許的選項。預設為 YN。\n\
   /N            不要在提示字元串最後顯示選項和問號。\n\
   /S            選項輸入區分大小寫。\n\
-  /T[:]c,nn     在 nn 秒後默認選擇 c 。\n\
+  /T[:]c,nn     在 nn 秒後預設選擇 c 。\n\
   文字          要顯示的提示字元串。\n\n\
 ERRORLEVEL 將被設定為使用者輸入在選項中的偏移。\n"
     STRING_CLS_HELP "清除螢幕。\n\nCLS\n"
@@ -49,27 +55,27 @@ ERRORLEVEL 將被設定為使用者輸入在選項中的偏移。\n"
     STRING_CMD_HELP2 "\n可用功能："
     STRING_CMD_HELP3 "  [別名]"
     STRING_CMD_HELP4 "  [歷史]"
-    STRING_CMD_HELP5 "  [Bash 檔名自動完成]"
+    STRING_CMD_HELP5 "  [Bash 檔案名稱自動完成]"
     STRING_CMD_HELP6 "  [目錄棧]"
     STRING_CMD_HELP7 "  [重定向和管道]"
-    STRING_CMD_HELP8 "啟動一個新的 ReactOS 命令列直譯器的新例項。\n\n\
+    STRING_CMD_HELP8 "啟動新的 ReactOS 命令列直譯器實例。\n\n\
 CMD [/[C|K] 命令][/P][/Q][/T:bf]\n\n\
   /C 命令      運行指定的命令後退出。\n\
   /K 命令      運行指定的命令後不退出。\n\
   /P           永久保留 CMD 並運行 autoexec.bat (無法終止)。\n\
   /T:bf        設定前景/背景顏色 (參見 COLOR 命令)。\n"
-    STRING_COLOR_HELP1 "設定默認前景和背景顏色。\n\n\
+    STRING_COLOR_HELP1 "設定預設前景和背景顏色。\n\n\
 COLOR [屬性 [/-F]]\n\n\
   屬性          指定主控台輸出的顏色屬性。\n\
   /-F           不要使用顏色填充主控台的空白區域。\n\n\
 有3種方法指定顏色：\n\
-1) [bright] 名稱 on [bright] 名稱 (僅需要開頭的3個字母)\n\
+1) [bright] 名稱 on [bright] 名稱 (僅需要開頭的 3 個字母)\n\
 2) 十進位制 on 十進位制\n\
 3) 兩位十六進位制數\n\n\
 顏色列表：\n\
-dec  hex  名稱         dec  hex  名稱\n\
-0    0    Black       8   8    Gray(Bright black)\n\
-1    1    Blue        9   9    Bright Blue\n\
+dec  hex  名稱       dec  hex    名稱\n\
+0    0    Black      8    8    Gray(Bright black)\n\
+1    1    Blue       9    9    Bright Blue\n\
 2    2    Green      10   A    Bright Green\n\
 3    3    Cyan       11   B    Bright Cyan\n\
 4    4    Red        12   C    Bright Red\n\
@@ -83,7 +89,7 @@ COPY [/V][/Y|/-Y][/A|/B] 源 [/A|/B]\n\
   源             指定要複製的一個或多個檔案。\n\
   /A             表明一個 ASCII 文字檔案。\n\
   /B             表明一個二進位制檔案。\n\
-  目的           指定要複製到的目錄和/或新的檔名。\n\
+  目的           指定要複製到的目錄和/或新的檔案名稱。\n\
   /V             檢驗新檔案是否正確地被寫入。\n\
   /Y             覆蓋一個已存在的檔案時不提示。\n\
   /-Y            覆蓋一個已存在的檔案時請求確認。\n\n\
@@ -103,14 +109,14 @@ device."
     STRING_DATE_HELP4 "顯示或者設定日期。\n\n\
 DATE [/T][日期]\n\n\
   /T    僅顯示\n\n\
-不帶參數執行 DATE 將會顯示當前的日期設定和一個請求輸入新日期的提示。按 ENTER 鍵以保持原有設定。\n"
+不帶參數執行 DATE 將會顯示目前的的日期設定和一個請求輸入新日期的提示。按 ENTER 鍵以保持原有設定。\n"
     STRING_DEL_HELP1 "刪除一個或多個檔案。\n\n\
 DEL [/N /P /T /Q /S /W /Y /Z /A[[:]屬性]] 檔案 ...\n\
 DELETE [/N /P /T /Q /S /W /Y /Z /A[[:]屬性]] 檔案 ...\n\
 ERASE [/N /P /T /Q /S /W /Y /Z /A[[:]屬性]] 檔案 ...\n\n\
       檔案  指定要刪除的一個或多個檔案。\n\n\
   /N    Nothing.\n\
-  /P    在刪除每個檔案前詢問。\n\
+  /P    在刪除每個檔案前先詢問。\n\
   /T    顯示刪除檔案的總數和釋放的磁碟空間。n\
   /Q    安靜模式。\n\
   /W    在刪除檔案前使用隨機數覆蓋。\n\
@@ -130,135 +136,135 @@ ERASE [/N /P /T /Q /S /W /Y /Z /A[[:]屬性]] 檔案 ...\n\n\
     STRING_DELAY_HELP "暫停 n 秒或毫秒。\n\
 DELAY [/m]n\n\n\
   /m          指定 n 的單位使用毫秒，否則為秒。\n"
-    STRING_DIR_HELP1 "DIR [驅動器:][路徑][檔名] [/A[[:]屬性]] [/B] [/C] [/D] [/L] [/N]\n\
+    STRING_DIR_HELP1 "DIR [磁碟機:][路徑][檔案名稱] [/A[[:]屬性]] [/B] [/C] [/D] [/L] [/N]\n\
   [/O[[:]排序順序]] [/P] [/Q] [/R] [/S] [/T[[:]時間欄位]] [/W] [/X] [/4]\n\n\
-  [驅動器:][路徑][檔名]\n\
-              指定要列表顯示的驅動器、目錄和/或檔案。\n\n\
+  [磁碟機:][路徑][檔案名稱]\n\
+              指定要列表顯示的磁碟機、目錄和/ 或檔案。\n\n\
   /A          顯示具有指定屬性的檔案。\n\
   屬性         D  目錄                           R  只讀檔案\n\
                H  隱藏檔案                       A  歸檔檔案\n\
                S  系統檔案                       -  意為“否”的字首\n\
   /B          使用原始格式 (沒有開頭資訊或總覽)。\n\
-  /C          在檔案大小中顯示千分符。這是默認行為。使用 /-C 來禁用分隔符的顯示。\n\
+  /C          在檔案大小中顯示千分符。這是預設行為。使用 /-C 來停用分隔符的顯示。\n\
   /D          和寬模式相同但檔案是按列排序的。\n\
   /L          使用小寫字母。\n\
-  /N          新的檔名在右邊的長列表格式。\n\
+  /N          新的檔案名稱在右邊的長列表格式。\n\
   /O          排序顯示的檔案列表。\n\
   排序順序     N  按名稱 (字母順序)               S  按大小 (小檔案在前)\n\
                E  按副檔名 (字母順序)             D  按日期/時間 (最老的檔案在前)\n\
                G  分組目錄在前                    -  反轉順序的字首\n\
   /P          在每螢幕資訊輸出後停頓。\n\
   /Q          顯示檔案的所有者。\n\
-  /R          Displays alternate data streams of the files.\n\
+  /R          顯示檔案的替代資料流。\n\
   /S          顯示指定目錄和所有子目錄中的檔案。\n\
   /T          控制要顯示或者用於排序的時間欄位。\n\
-  時間欄位    C  創建時間\n\
+  時間欄位    C  建立時間\n\
               A  上次訪問時間\n\
               W  上次修改時間\n\
   /W          使用寬列表格式。\n\
-  /X          為非8.3格式檔名顯示生成的短名稱。使用 /N 將會使短名稱在長名稱之前顯示。\n\
+  /X          為非 8.3 格式檔案名稱顯示生成的短名稱。使用 /N 將會使短名稱在長名稱之前顯示。\n\
               如果沒有短名稱，空白將會被顯示。\n\
   /4          顯示四位數年份。\n\n\
-開關可能在 DIRCMD 環境變數中設定。可以使用 - 來覆蓋已有的開關——示例： /-W。\n"
-    STRING_DIR_HELP2 " 驅動器 %c 中的卷是 %s\n"
-    STRING_DIR_HELP3 " 驅動器 %c 中的卷沒有卷標。\n"
-    STRING_DIR_HELP4 " 卷的序列號是 %04X-%04X\n"
+開關可在 DIRCMD 環境變數中設定。可以使用 - 來覆蓋已有的開關 —— 示例： /-W。\n"
+    STRING_DIR_HELP2 " 磁碟機 %c 中的磁碟區標籤是 %s\n"
+    STRING_DIR_HELP3 " 磁碟機 %c 中的磁碟區沒有標籤。\n"
+    STRING_DIR_HELP4 " 磁碟區的序列號是 %04X-%04X\n"
     STRING_DIR_HELP5 "\n     總計：\n%16i 個檔案共佔據 % 14s 位元組\n"
-    STRING_DIR_HELP6 "%16i 個目錄 % 15s 位元組空閒\n"
+    STRING_DIR_HELP6 "%16i 個目錄 % 15s 位元組的可用空間\n"
     STRING_DIR_HELP7 "\n %s 的目錄\n\n"
     STRING_DIR_HELP8 "%16i 個檔案 % 14s 位元組\n"
-    STRING_DIRSTACK_HELP1 "將當前目錄存儲以便 POPD 命令使用，然後切換到指定的目錄。\n\n\
+    STRING_DIRSTACK_HELP1 "將目前的目錄存儲以便 POPD 命令使用，然後切換到指定的目錄。\n\n\
 PUSHD [路徑 | ..]\n\n\
   路徑          指定要切換到的目錄。\n"
     STRING_DIRSTACK_HELP2 "切換到被 PUSHD 命令存儲的目錄。\n\nPOPD"
     STRING_DIRSTACK_HELP3 "輸出目錄棧的內容。\n\nDIRS"
     STRING_DIRSTACK_HELP4 "目錄棧為空"
-    STRING_ECHO_HELP1 "顯示一個沒有回車和換行符的訊息。\n\n\
+    STRING_ECHO_HELP1 "顯示一個沒有回車和換行字元的訊息。\n\n\
   ECHOS 訊息"
     STRING_ECHO_HELP2 "向標準錯誤輸出一個訊息。\n\n\
   ECHOERR 訊息\n\
   ECHOERR.           輸出空行"
-    STRING_ECHO_HELP3 "向標準錯誤輸出一個沒有回車和換行符的訊息。\n\n\
+    STRING_ECHO_HELP3 "向標準錯誤輸出一個沒有回車和換行字元的訊息。\n\n\
   ECHOSERR 訊息"
     STRING_ECHO_HELP4 "顯示一個訊息或者將命令回顯設定為開或關。\n\n\
   ECHO [ON | OFF]\n\
   ECHO [訊息]\n\
   ECHO.             輸出空行\n\n\
-執行不帶參數的 ECHO 將會顯示當前的 ECHO 設定。"
+執行不帶參數的 ECHO 將會顯示目前的的 ECHO 設定。"
     STRING_ECHO_HELP5 "ECHO 為 %s。\n"
     STRING_EXIT_HELP "退出命令列直譯器。\n\nEXIT [/b] [ExitCode]\n\n\
-  /B            僅退出一個批處理檔案。\n\
-                如果在一個批處理檔案之外運行，將會使 cmd.exe 退出。\n\
-  退出程式碼      這個值將會在退出時賦給 ERRORLEVEL。\n"
+  /B            僅退出一個批次檔案。\n\
+                如果在一個批次檔案之外運行，將會使 cmd.exe 退出。\n\
+  ExitCode      這個值將會在退出時指派給 ERRORLEVEL。\n"
     STRING_FOR_HELP1 "在一組檔案中為每個檔案運行指定的命令。\n\n\
 FOR %變數 IN (集合) DO 命令 [參數]\n\
 FOR /L %變數 IN (start,step,end) DO 命令 [參數]\n\
 FOR /D %變數 IN (集合) DO 命令 [參數]\n\
-FOR /R [[drive:]path] IN (集合) DO 命令 [參數]\n\
-FOR /F [""options""] IN (集合) DO 命令 [參數]\n\n\
+FOR /R [[磁碟機:]路徑] IN (集合) DO 命令 [參數]\n\
+FOR /F [""選項""] IN (集合) DO 命令 [參數]\n\n\
   /L    Generates a number sequence from start to end incrementing by step.\n\
   /D    Modifies the set to refer to directories instead of files.\n\
   /R    Executes command for files in the set in the specified path (or current\n\
         working directory if not specified) and every directory below.\n\
   /F    Modifies the set to refer to the contents of the files in the set.\n\n\
-  %變數       指定一個可被替換的參數。\n\
+  %變數       指定一個可被取代的參數。\n\
   (集合)      指定一個含有一個或多個檔案的集合。可以使用通配符。\n\
   命令        指定要為每個檔案執行的命令。\n\
   參數        為指定的命令指定參數或開關。\n\
-  options    Supported options are: eol, skip, delims, tokens, and usebackq.\n\n\
+  選項        支援的選項: eol, skip, delims, tokens, usebackq.\n\n\
 Replacable parameters can be modified by adding a ~ and an optional qualifier\n\
 after the % and before the name (e.g. %~X). Supported qualifiers are:\n\
 f,d,p,n,x,s,a,t,z.\n\n\
-在批處理檔案中使用 FOR 命令時，使用 %%變數 而不是 %變數。\n"
-    STRING_FREE_HELP1 "\n驅動器 %s 中的卷是 %-11s\n\
+在批次檔案中使用 FOR 命令時，使用 %%變數 而不是 %變數。\n"
+    STRING_FREE_HELP1 "\n磁碟機 %s 中的磁碟區標籤是 %-11s\n\
  序列號為 %s\n\
   %16s 位元組 總磁碟空間\n\
   %16s 位元組 已使用\n\
-  %16s 位元組 空閒\n"
-    STRING_FREE_HELP2 "顯示驅動器資訊。\n\nFREE [驅動器: ...]\n"
-    STRING_GOTO_HELP1 "在批處理指令碼中將 CMD 定向到被標記的行執行。\n\n\
+  %16s 位元組 可用\n"
+    STRING_FREE_HELP2 "顯示磁碟機資訊。\n\nFREE [磁碟機: ...]\n"
+    STRING_GOTO_HELP1 "在批次指令碼中將 CMD 定向到被標記的行執行。\n\n\
 GOTO 標籤\n\n\
-  標籤    在批處理指令碼中被用作標籤的文字字元串。\n\n\
+  標籤    在批次指令碼中被用作標籤的文字字元串。\n\n\
 使用冒號開頭的一行就作為一個標籤。\n"
-    STRING_IF_HELP1 "在批處理檔案中執行條件控制處理。\n\n\
+    STRING_IF_HELP1 "在批次檔案中執行條件控制處理。\n\n\
   IF [NOT] ERRORLEVEL 數字 命令\n\
   IF [NOT] 字元串1==字元串2 命令\n\
-  IF [NOT] EXIST 檔名 命令\n\
+  IF [NOT] EXIST 檔案名稱 命令\n\
   IF [NOT] DEFINED 變數 命令\n\n\
 NOT               說明 CMD 應當在條件為假時執行命令。\n\
-ERRORLEVEL 數字    當上一個程式返回一個大於或等於指定數字的退出碼時為真。\n\
+ERRORLEVEL 數字    當上一個程式返回一個大於或等於指定數字的退出碼時為 TRUE。\n\
 命令               當條件成立時所指定的命令。\n\
-字元串1==字元串2   當所指定的字元串相匹配時為真。\n\
-EXIST 檔名       當指定的檔名存在時為真。\n\
-DEFINED 變數       當指定的變數已被定義時為真。\n"
-    STRING_LOCALE_HELP1 "當前時間是"
-    STRING_MKDIR_HELP "創建一個目錄。\n\n\
-MKDIR [驅動器:]路徑\nMD [驅動器:]路徑"
-    STRING_MKLINK_HELP "創建一個檔案系統連結物件。\n\n\
+字元串1==字元串2   當所指定的字元串相匹配時為 TRUE。\n\
+EXIST 檔案名稱     當指定的檔案名稱存在時為 TRUE。\n\
+DEFINED 變數       當指定的變數已被定義時為 TRUE。\n"
+    STRING_LOCALE_HELP1 "目前的時間是"
+    STRING_MKDIR_HELP "建立一個目錄。\n\n\
+MKDIR [磁碟機:]路徑\nMD [磁碟機:]路徑"
+    STRING_MKLINK_HELP "建立一個檔案系統連結物件。\n\n\
 MKLINK [/D | /H | /J] 連結名 目標\n\n\
   /D  指示符號連結目標是一個目錄。\n\
-  /H  創建一個硬連結。\n\
-  /J  創建一個目錄連線點。\n\n\
-如果 /H 或 /J 均未被指定，一個符號連結將被創建。"
-    STRING_MEMORY_HELP1 "顯示系統內存容量。\n\nMEMORY"
-    STRING_MEMORY_HELP2 "\n  %12s%% 內存已安裝。\n\n\
-  %13s 位元組 總物理內存。\n\
-  %13s 位元組 可用物理內存。\n\n\
+  /H  建立一個硬連結。\n\
+  /J  建立一個目錄連線點。\n\n\
+如果 /H 或 /J 均未被指定，一個符號連結將被建立。"
+    STRING_MEMORY_HELP1 "顯示系統記憶體容量。\n\nMEMORY"
+    STRING_MEMORY_HELP2 "\n  %12s%% 記憶體已安裝。\n\n\
+  %13s 位元組 總物理記憶體。\n\
+  %13s 位元組 可用物理記憶體。\n\n\
   %13s 位元組 總頁面檔案大小。\n\
   %13s 位元組 可用頁面檔案。\n\n\
-  %13s 位元組 總虛擬內存。\n\
-  %13s 位元組 可用虛擬內存。\n"
+  %13s 位元組 總虛擬記憶體。\n\
+  %13s 位元組 可用虛擬記憶體。\n"
     STRING_MISC_HELP1 "按任意鍵繼續..."
-    STRING_MOVE_HELP1 "覆蓋 %s 嗎 (Yes/No/All)？"
+    STRING_MOVE_HELP1 "要覆蓋 %s 嗎 (Yes/No/All)？"
     STRING_MOVE_HELP2 "移動檔案並重新命名檔案和目錄。\n\n\
 移動一個或多個檔案：\n\
-MOVE [/N][/Y|/-Y][驅動器:][路徑]檔名1[,...] 目標\n\n\
+MOVE [/N][/Y|/-Y][磁碟機:][路徑]檔案名稱1[,...] 目標\n\n\
 重新命名一個目錄：\n\
-MOVE [/N][/Y|/-Y][驅動器:][路徑]目錄名1 目錄名2\n\n\
-  [驅動器:][路徑]檔名1     指定你想要移動的一個或多個檔案的位置和名稱。\n\
+MOVE [/N][/Y|/-Y][磁碟機:][路徑]目錄名稱1 目錄名稱\n\n\
+  [磁碟機:][路徑]檔案名稱1     指定你想要移動的一個或多個檔案的位置和名稱。\n\
   /N                    執行除移動檔案或目錄之外的所有事情。\n\n\
-當前限制：\n\
-  - 你不能把檔案或目錄從一個驅動器移動到另一個。\n"
+目前的限制：\n\
+  - 你不能把檔案或目錄從一個磁碟機移動到另一個。\n"
     STRING_MSGBOX_HELP "顯示一個訊息框並返回使用者反應。\n\n\
 MSGBOX 類型 ['標題'] 提示語\n\n\
 類型            顯示的按鈕\n\
@@ -269,11 +275,11 @@ MSGBOX 類型 ['標題'] 提示語\n\n\
 ERRORLEVEL 將會根據被按下的按鈕而被設定為以下某值：\n\n\
 YES  :  10    |  NO      :  11\n\
 OK   :  10    |  CANCEL  :  12\n"
-    STRING_PATH_HELP1 "顯示或設定可執行檔案的搜索路徑。\n\n\
-PATH [[驅動器:]路徑[;...]]\nPATH ;\n\n\
-執行 PATH ; 以清除所有的搜索路徑設定並指示命令列外殼僅在當前目錄搜索。\n\
-不帶參數執行 PATH 將會顯示當前路徑。\n"
-    STRING_PAUSE_HELP1 "停止一個批處理檔案的執行並顯示以下資訊：\n\
+    STRING_PATH_HELP1 "顯示或設定可執行檔案的搜尋路徑。\n\n\
+PATH [[磁碟機:]路徑[;...]]\nPATH ;\n\n\
+執行 PATH ; 以清除所有的搜尋路徑設定並指示命令列外殼僅在目前的目錄搜尋。\n\
+不帶參數執行 PATH 將會顯示目前的路徑。\n"
+    STRING_PAUSE_HELP1 "停止一個批次檔案的執行並顯示以下資訊：\n\
 '按任意鍵繼續...' 或者一條使用者定義的訊息。\n\n\
 PAUSE [訊息]"
     STRING_PROMPT_HELP1 "改變命令提示符。\n\n\
@@ -283,121 +289,121 @@ PROMPT [文字]\n\n\
   $A   & (AND 符號)\n\
   $B   | (管道)\n\
   $C   ( (左括號)\n\
-  $D   當前日期\n\
+  $D   目前的日期\n\
   $E   ESC 碼 (ASCII 碼 27)\n\
   $F   ) (右括號)\n\
   $G   > (大於號)\n\
   $H   退格 (擦除前一個字元)\n\
   $I   Information line\n\
   $L   < (小於號)\n\
-  $N   當前驅動器\n\
-  $P   當前驅動器和路徑\n\
+  $N   目前的磁碟機\n\
+  $P   目前的磁碟機和路徑\n\
   $Q   = (等於號)\n\
   $S   (space)\n\
-  $T   當前時間\n\
+  $T   目前的時間\n\
   $V   作業系統版本號\n\
   $_    回車和換行符\n\
   $$   $ (美元符號)\n"
-    STRING_PROMPT_HELP2 "  $+   顯示當前目錄棧的深度"
-    STRING_PROMPT_HELP3 "\n執行不帶參數的 PROMPT 將會把提示符重置為默認設定。"
-    STRING_REM_HELP "在批處理檔案中開始一行註釋。\n\nREM [註釋]"
+    STRING_PROMPT_HELP2 "  $+   顯示目前的目錄棧的深度"
+    STRING_PROMPT_HELP3 "\n執行不帶參數的 PROMPT 將會把提示符重置為預設設定。"
+    STRING_REM_HELP "在批次檔案中開始一行註釋。\n\nREM [註釋]"
     STRING_RMDIR_HELP "刪除一個目錄。\n\n\
-RMDIR [/S] [/Q] [驅動器:]路徑\nRD [/S] [/Q] [驅動器:]路徑\n\
+RMDIR [/S] [/Q] [磁碟機:]路徑\nRD [/S] [/Q] [磁碟機:]路徑\n\
   /S    刪除目標中的所有檔案和資料夾。\n\
   /Q    刪除時不要提示。\n"
-    STRING_RMDIR_HELP2 "目錄非空！\n"
+    STRING_RMDIR_HELP2 "目錄不是空的!\n"
     STRING_REN_HELP1 "重新命名一個或者多個檔案或資料夾。\n\n\
 RENAME [/E /N /P /Q /S /T] 舊名稱 ... 新名稱\n\
 REN [/E /N /P /Q /S /T] 舊名稱 ... 新名稱\n\n\
   /E    不顯示錯誤訊息。\n\
   /N    不做任何處理。\n\
   /P    在重新命名每個檔案前請求確認。\n\
-          (尚未實現！)\n\
+          (尚未實現!)\n\
   /Q    安靜模式。\n\
   /S    重新命名子目錄。\n\
   /T    顯示被重新命名檔案的總數。\n\n\
-記住您不能在目的地裡指定新的驅動器或路徑。使用 MOVE 命令來達成這個目的。\n"
-    STRING_REN_HELP2 "    %lu 檔案已重新命名\n"
-    STRING_REN_HELP3 "    %lu 個檔案已重新命名\n"
-    STRING_REPLACE_HELP1 "替換檔案。\n\n\
-REPLACE [驅動器1:][路徑1]檔名 [驅動器2:][路徑2] [/A] [/P] [/R] [/W]\n\
-REPLACE [驅動器1:][路徑1]檔名 [驅動器2:][路徑2] [/P] [/R] [/S] [/W] [/U]\n\n\
-  [驅動器1:][路徑1]檔名   指定一個或多個原始檔。\n\
-  [驅動器2:][路徑2]         指定要被替換檔案所在的目錄。\n\
-  /A                        將新檔案添加到目標目錄。不能和 /S 或 /U 同時使用。\n\
-  /P                        在替換一個檔案或添加一個原始檔之前請求確認。\n\
-  /R                        將只讀檔案視為未保護檔案並替換。\n\
-  /S                        替換目標目錄中所有子目錄中的檔案。不能與 /A 同時使用。\n\
-  /W                        在開始前等待您插入一張磁碟。\n\
-  /U                        僅替換(更新)比原檔案老的檔案。不能和 /A 同時使用。\n"
-    STRING_REPLACE_HELP2 "需要源路徑\n"
-    STRING_REPLACE_HELP3 "沒有檔案被替換\n"
-    STRING_REPLACE_HELP4 "%lu 個檔案已被替換\n"
-    STRING_REPLACE_HELP5 "正在替換 %s\n"
-    STRING_REPLACE_HELP6 "替換 %s\n"
-    STRING_REPLACE_HELP7 "沒有檔案被添加\n"
-    STRING_REPLACE_HELP8 "%lu 個檔案已被添加\n"
-    STRING_REPLACE_HELP9 "添加 %s 嗎 (Y/N)？"
-    STRING_REPLACE_HELP10 "替換 %s 嗎 (Y/N)？"
-    STRING_REPLACE_HELP11 "正在添加 %s\n"
-    STRING_SHIFT_HELP "在批處理檔案中改變可替換參數的位置。\n\n\
+記住您不能在目的地裡指定新的磁碟機或路徑。使用 MOVE 命令來達成這個目的。\n"
+    STRING_REN_HELP2 "    已重新命名 %lu 個檔案\n"
+    STRING_REN_HELP3 "    已重新命名 %lu 個檔案\n"
+    STRING_REPLACE_HELP1 "取代檔案。\n\n\
+REPLACE [磁碟機1:][路徑1]檔案名稱 [磁碟機2:][路徑2] [/A] [/P] [/R] [/W]\n\
+REPLACE [磁碟機1:][路徑1]檔案名稱 [磁碟機2:][路徑2] [/P] [/R] [/S] [/W] [/U]\n\n\
+  [磁碟機1:][路徑1]檔案名稱    指定一個或多個原始檔。\n\
+  [磁碟機2:][路徑2]            指定要被取代檔案所在的目錄。\n\
+  /A                           將新檔案新增到目標目錄。不能和 /S 或 /U 同時使用。\n\
+  /P                           在取代一個檔案或新增一個原始檔之前請求確認。\n\
+  /R                           將只讀檔案視為未保護檔案並取代。\n\
+  /S                           取代目標目錄中所有子目錄中的檔案。不能與 /A 同時使用。\n\
+  /W                           在開始前等待您插入一張磁碟。\n\
+  /U                           僅取代(更新)比原檔案舊的檔案。不能和 /A 同時使用。\n"
+    STRING_REPLACE_HELP2 "需要來源路徑\n"
+    STRING_REPLACE_HELP3 "沒有檔案被取代\n"
+    STRING_REPLACE_HELP4 "%lu 個檔案已被取代\n"
+    STRING_REPLACE_HELP5 "正在取代 %s\n"
+    STRING_REPLACE_HELP6 "取代 %s\n"
+    STRING_REPLACE_HELP7 "沒有檔案被新增\n"
+    STRING_REPLACE_HELP8 "%lu 個檔案已被新增\n"
+    STRING_REPLACE_HELP9 "新增 %s 嗎 (Y/N)？"
+    STRING_REPLACE_HELP10 "取代 %s 嗎 (Y/N)？"
+    STRING_REPLACE_HELP11 "正在新增 %s\n"
+    STRING_SHIFT_HELP "在批次檔案中改變可取代參數的位置。\n\n\
 SHIFT [DOWN]"
-    STRING_SCREEN_HELP "移動遊標並可選地輸出文字\n\n\
+    STRING_SCREEN_HELP "移動游標並且可選擇輸出文字\n\n\
 SCREEN 行 列 [文字]\n\n\
-  行          要將遊標移動到的行\n\
-  列          要將遊標移動到的列"
+  行          要將游標移動到的行\n\
+  列          要將游標移動到的列"
     STRING_SET_HELP "顯示、設定或刪除環境變數。\n\n\
 SET [變數[=][字元串]]\n\n\
   變數        指定環境變數名。\n\
   字元串      指定要賦給該環境變數的一系列字元。\n\n\
-執行不帶參數的 SET 將會顯示當前所有環境變數。\n"
+執行不帶參數的 SET 將會顯示目前的所有環境變數。\n"
     STRING_START_HELP1 "啟動一個命令。\n\n\
-START [""title""] [/D path] [/I] [/B] [/MIN] [/MAX] [/WAIT]\n\
-      [command/program] [parameters]\n\n\
-  ""title""     Title of the window.\n\
-  path        Specifies the startup directory.\n\
-  I           Uses the original environment given to cmd.exe,\n\
-              instead of the current environment.\n\
-  B           Starts the command or program without creating any window.\n\
-  MIN         Starts with a minimized window.\n\
-  MAX         Starts with a maximized window.\n\
-  WAIT        Starts the command or program and waits for its termination.\n\
-  命令         要啟動的命令。\n\
-  parameters  Specifies the parameters to be given to the command or program.\n"
+START [""標題""] [/D 路徑] [/I] [/B] [/MIN] [/MAX] [/WAIT]\n\
+      [命令/ 程式] [參數]\n\n\
+  ""標題""      視窗的標題。\n\
+  路徑          指定啟動路徑。\n\
+  I             Uses the original environment given to cmd.exe,\n\
+                instead of the current environment.\n\
+  B             Starts the command or program without creating any window.\n\
+  MIN           以最小化視窗啟動。\n\
+  MAX           以最大化視窗啟動。\n\
+  WAIT          啟動命令或程序，並等待其終止。\n\
+  命令          要啟動的命令。\n\
+  參數          Specifies the parameters to be given to the command or program.\n"
     STRING_TITLE_HELP "設定命令提示符視窗的標題。\n\n\
-TITLE [字元串]\n\n\
-字元串         指定命令提示符視窗的標題。\n"
+TITLE [字串]\n\n\
+字串         指定命令提示字符視窗的標題。\n"
     STRING_TIME_HELP1 "顯示或設定系統時間。\n\n\
 TIME [/T][時間]\n\n\
   /T    僅顯示\n\n\
-執行不帶參數的 TIME 將會顯示當前時間設定並且提示設定新的時間。按下 ENTER 鍵來保持原有設定。\n"
+執行不帶參數的 TIME 將會顯示目前的時間設定並且提示設定新的時間。按下 ENTER 鍵來保持原有設定。\n"
     STRING_TIME_HELP2 "輸入新的時間："
     STRING_TIMER_HELP1 "已過去 %d 毫秒\n"
     STRING_TIMER_HELP2 "已過去 %02d%c%02d%c%02d%c%02d\n"
-    STRING_TIMER_HELP3 "允許使用最多十個停表。\n\n\
+    STRING_TIMER_HELP3 "允許使用最多十個計時器。\n\n\
 TIMER  [ON|OFF] [/S] [/n] [/Fn]\n\n\
-  ON          啟動停表\n\
-  OFF         停止停表\n\
-  /S          分割時間。返回停表分割時間而不改變它的值。\n\
-  /n          指定停表編號。停表編號可以從 0 至 9。如果未指定則默認為 1。\n\
+  ON          啟動計時器\n\
+  OFF         停止計時器\n\
+  /S          分割時間。返回計時器分割時間而不改變它的值。\n\
+  /n          指定計時器編號。計時器編號可以從 0 至 9。如果未指定則預設為 1。\n\
   /Fn         輸出格式\n\
               n 可以為:\n\
                     0    毫秒\n\
                     1    hh%cmm%css%cdd\n\n\
-如果沒有 ON，OFF 或者 /S 在呼叫該命令時被指定，將會切換停表狀態。\n\n"
-    STRING_TYPE_HELP1 "顯示文字檔案的內容。\n\nTYPE [驅動器:][路徑]檔名\n\
+如果沒有 ON，OFF 或者 /S 在呼叫該命令時被指定，將會切換計時器狀態。\n\n"
+    STRING_TYPE_HELP1 "顯示文字檔案的內容。\n\nTYPE [磁碟機:][路徑]檔案名稱\n\
   /P          每次只顯示一屏內容。\n"
     STRING_VERIFY_HELP1 "這條命令只是個擺設！！\n\
 設定是否檢查您的檔案已被正確地寫入磁碟。\n\n\
 VERIFY [ON | OFF]\n\n\
-執行不帶參數的 VERIFY 將會顯示當前 VERIFY 的設定。\n"
+執行不帶參數的 VERIFY 將會顯示目前的 VERIFY 的設定。\n"
     STRING_VERIFY_HELP2 "VERIFY 的狀態是 %s。\n"
     STRING_VERIFY_HELP3 "必須設定為 ON 或 OFF。"
     STRING_VERSION_HELP1 "顯示外殼版本資訊\n\n\
 VER [/C][/R][/W]\n\n\
   /C  顯示作者。\n\
-  /R  顯示再釋出資訊。\n\
-  /W  顯示保證資訊。"
+  /R  顯示再發布資訊。\n\
+  /W  顯示保用資訊。"
     STRING_VERSION_HELP2 " comes with ABSOLUTELY NO WARRANTY; for details\n\
 type: `ver /w'. This is free software, and you are welcome to redistribute\n\
 it under certain conditions; type `ver /r' for details. Type `ver /c' for a\n\
@@ -414,10 +420,10 @@ listing of credits."
 更新可在 http://www.reactos.org 檢視。"
     STRING_VERSION_HELP6 "\nFreeDOS 版本作者：\n"
     STRING_VERSION_HELP7 "\nReactOS 版本作者：\n"
-    STRING_VOL_HELP1 " 驅動器 %c 中的卷是 %s\n"
-    STRING_VOL_HELP2 " 驅動器 %c 中的卷沒有卷標。\n"
-    STRING_VOL_HELP3 " 卷序列號是 %04X-%04X\n"
-    STRING_VOL_HELP4 "顯示磁碟卷標和序列號，如果存在。\n\nVOL [驅動器:]"
+    STRING_VOL_HELP1 " 磁碟機 %c 中的磁碟區標籤是 %s\n"
+    STRING_VOL_HELP2 " 磁碟機 %c 中的磁碟區沒有標籤。\n"
+    STRING_VOL_HELP3 " 磁碟區的序列號是 %04X-%04X\n"
+    STRING_VOL_HELP4 "如果存在的話，顯示磁碟區的標籤和序列號。\n\nVOL [磁碟機:]"
     STRING_WINDOW_HELP1 "改變主控台視窗投影\n\n\
 WINDOW [/POS[=]左,上,寬度,高度]\n\
               [MIN|MAX|RESTORE] ['標題']\n\n\
@@ -437,24 +443,24 @@ RESTORE       恢復視窗\n\
     STRING_CHOICE_OPTION "YN"
     STRING_COPY_OPTION "YNA"
     STRING_ALIAS_ERROR "別名展開後的命令列太長！\n"
-    STRING_ASSOC_ERROR "副檔名 %s 的檔案關聯未找到！\n"
-    STRING_BATCH_ERROR "開啟批處理檔案時出錯\n"
-    STRING_CHOICE_ERROR "無效選項。期望的格式：/C[:]選項\n"
-    STRING_CHOICE_ERROR_TXT "無效選項。期望的格式：/T[:]c,nn\n"
-    STRING_CHOICE_ERROR_OPTION "非法選項：%s\n"
+    STRING_ASSOC_ERROR "找不到副檔名 %s 的檔案關聯！\n"
+    STRING_BATCH_ERROR "開啟批次檔案時出錯\n"
+    STRING_CHOICE_ERROR "無效的選項。預期的格式：/C[:]選項\n"
+    STRING_CHOICE_ERROR_TXT "無效的選項。預期的格式：/T[:]c,nn\n"
+    STRING_CHOICE_ERROR_OPTION "無效的選項：%s\n"
     STRING_CMD_ERROR1 "無法從檔案 %s 重定向輸入\n"
-    STRING_CMD_ERROR2 "為管道資料創建臨時檔案時出錯\n"
+    STRING_CMD_ERROR2 "為管道資料建立臨時檔案時出錯\n"
     STRING_CMD_ERROR3 "無法重定向到檔案 %s\n"
     STRING_CMD_ERROR4 "正在運行 %s...\n"
     STRING_CMD_ERROR5 "正在運行 cmdexit.bat...\n"
     STRING_COLOR_ERROR1 "同樣顏色錯誤！ (背景和前景不能同色)"
     STRING_COLOR_ERROR2 "顏色指定錯誤"
     STRING_CONSOLE_ERROR "未知錯誤：%d\n"
-    STRING_COPY_ERROR1 "錯誤：無法開啟源 -  %s！\n"
+    STRING_COPY_ERROR1 "錯誤：無法開啟來源 - %s！\n"
     STRING_COPY_ERROR2 "錯誤：無法複製到自身！\n"
     STRING_COPY_ERROR3 "寫入目的時出錯！\n"
     STRING_COPY_ERROR4 "錯誤：尚未實現！\n"
-    STRING_DATE_ERROR "無效日期。"
+    STRING_DATE_ERROR "無效的日期。"
     STRING_DEL_ERROR5 "檔案 %s 將會被刪除！"
     STRING_DEL_ERROR6 "您確定嗎 (Y/N)？ "
     STRING_DEL_ERROR7 "正在刪除：%s\n"
@@ -464,40 +470,40 @@ RESTORE       恢復視窗\n\
     STRING_FOR_ERROR2 "沒有發現括號。"
     STRING_FOR_ERROR3 "缺少 'do'。"
     STRING_FOR_ERROR4 "'do' 後沒有命令。"
-    STRING_FREE_ERROR1 "無效驅動器"
+    STRING_FREE_ERROR1 "無效的磁碟機"
     STRING_FREE_ERROR2 "未標記"
     STRING_GOTO_ERROR1 "沒有為 GOTO 指定標籤\n"
     STRING_GOTO_ERROR2 "標籤 '%s' 未找到\n"
     STRING_MD_ERROR "%s 一個子目錄或檔案已存在。\n"
-    STRING_MD_ERROR2 "到新資料夾的路徑不存在。\n"
+    STRING_MD_ERROR2 "新資料夾的路徑不存在。\n"
     STRING_MOVE_ERROR1 "[成功]\n"
     STRING_MOVE_ERROR2 "[錯誤]\n"
     STRING_REN_ERROR1 "MoveFile() 失敗。錯誤碼：%lu\n"
-    STRING_TIME_ERROR1 "無效時間。"
-    STRING_TYPE_ERROR1 "無效選項 '/%s'\n"
-    STRING_WINDOW_ERROR1 "未找到視窗"
+    STRING_TIME_ERROR1 "無效的時間。"
+    STRING_TYPE_ERROR1 "無效的選項 '/%s'\n"
+    STRING_WINDOW_ERROR1 "找不到視窗"
     STRING_ERROR_PARAMETERF_ERROR "參數格式不正確 - %c\n"
-    STRING_ERROR_INVALID_SWITCH "無效開關 - /%c\n"
+    STRING_ERROR_INVALID_SWITCH "無效的開關 - /%c\n"
     STRING_ERROR_TOO_MANY_PARAMETERS "太多參數 - %s\n"
     STRING_ERROR_PATH_NOT_FOUND "路徑未找到\n"
     STRING_ERROR_FILE_NOT_FOUND "檔案未找到\n"
     STRING_ERROR_REQ_PARAM_MISSING "所需參數缺失\n"
-    STRING_ERROR_INVALID_DRIVE "無效驅動器指定\n"
+    STRING_ERROR_INVALID_DRIVE "無效磁碟機指定\n"
     STRING_ERROR_INVALID_PARAM_FORMAT "無效的參數格式 - %s\n"
-    STRING_ERROR_BADCOMMAND "非法的命令或檔名 - %s\n"
-    STRING_ERROR_OUT_OF_MEMORY "內存不足。\n"
-    STRING_ERROR_CANNOTPIPE "錯誤！無法創建管道！不能開啟臨時檔案！\n"
+    STRING_ERROR_BADCOMMAND "無效的命令或檔案名稱 - %s\n"
+    STRING_ERROR_OUT_OF_MEMORY "記憶體不足。\n"
+    STRING_ERROR_CANNOTPIPE "錯誤！無法建立管道！不能開啟臨時檔案！\n"
     STRING_ERROR_D_PAUSEMSG "按任意鍵繼續... "
-    STRING_ERROR_DRIVER_NOT_READY "驅動器未就緒"
-    STRING_SET_ENV_ERROR "Environment variable '%s' is not defined\n"
+    STRING_ERROR_DRIVER_NOT_READY "磁碟機未就緒"
+    STRING_SET_ENV_ERROR "環境變數 '%s' 尚未定義\n"
     STRING_REPLACE_ERROR1 "無效開關 - %s\n"
-    STRING_REPLACE_ERROR2 "路徑未找到 - %s\n"
-    STRING_REPLACE_ERROR3 "檔名、目錄名或卷標語法不正確。\n"
-    STRING_REPLACE_ERROR4 "無效的參陣列合\n"
-    STRING_REPLACE_ERROR5 "禁止訪問 - %s\n"
-    STRING_REPLACE_ERROR6 "沒有檔案被發現 - %s\n"
+    STRING_REPLACE_ERROR2 "找不到路徑 - %s\n"
+    STRING_REPLACE_ERROR3 "檔案名稱、目錄名稱或磁碟區標籤語法不正確。\n"
+    STRING_REPLACE_ERROR4 "無效的參陣組合\n"
+    STRING_REPLACE_ERROR5 "存取被拒 - %s\n"
+    STRING_REPLACE_ERROR6 "找不到檔案 - %s\n"
     STRING_REPLACE_ERROR7 "擴展錯誤 32\n"
-    STRING_CMD_INFOLINE "  ReactOS 命令列直譯器                                       輸入 HELP = 幫助  "
+    STRING_CMD_INFOLINE "  ReactOS 命令列直譯器                                       輸入 HELP = 說明  "
     STRING_REACTOS_VERSION "ReactOS [版本 %s %s]\n"
     STRING_CMD_SHELLINFO "\nReactOS 命令列直譯器\n版本 %s %s"
     STRING_VERSION_RUNNING_ON "在 上運行"
@@ -505,16 +511,16 @@ RESTORE       恢復視窗\n\
     STRING_COPY_FILE "        %d 個檔案已複製\n"
     STRING_DELETE_WIPE "已擦除"
     STRING_FOR_ERROR "無效的變數指定。"
-    STRING_SCREEN_COL "無效的列值"
-    STRING_SCREEN_ROW "無效的行值"
+    STRING_SCREEN_COL "無效的行值"
+    STRING_SCREEN_ROW "無效的列值"
     STRING_TIMER_TIME "計時器 %d 是 %s："
-    STRING_MKLINK_CREATED_SYMBOLIC "已為 %s <<===>> %s 創建符號連結\n"
-    STRING_MKLINK_CREATED_HARD "已為 %s <<===>> %s 創建硬連結\n"
-    STRING_MKLINK_CREATED_JUNCTION "已為 %s <<===>> %s 創建接合點\n"
+    STRING_MKLINK_CREATED_SYMBOLIC "已為 %s <<===>> %s 建立符號連結\n"
+    STRING_MKLINK_CREATED_HARD "已為 %s <<===>> %s 建立硬連結\n"
+    STRING_MKLINK_CREATED_JUNCTION "已為 %s <<===>> %s 建立接合點\n"
     STRING_MORE "更多？"
-    STRING_CANCEL_BATCH_FILE "\r\nCtrl-Break 已被按下。停止批處理檔案嗎？ (Yes/No/All) "
-    STRING_INVALID_OPERAND "無效操作數。\n"
-    STRING_EXPECTED_CLOSE_PAREN "期望 ')'。\n"
-    STRING_EXPECTED_NUMBER_OR_VARIABLE "期望數值或變數名。\n"
+    STRING_CANCEL_BATCH_FILE "\r\nCtrl-Break 已被按下。要停止處理批次檔案嗎？ (Yes/No/All) "
+    STRING_INVALID_OPERAND "無效的操作數。\n"
+    STRING_EXPECTED_CLOSE_PAREN "預期 ')'。\n"
+    STRING_EXPECTED_NUMBER_OR_VARIABLE "預期為數值或變數名。\n"
     STRING_SYNTAX_COMMAND_INCORRECT "命令語法不正確。\n"
-END 
+END

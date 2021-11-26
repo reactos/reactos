@@ -19,51 +19,20 @@ HWND hMainWnd;
 HINSTANCE hInst;
 SETTINGS_INFO SettingsInfo;
 
-class CRAppsModule : public CComModule
-{
-public:
-};
-
 BEGIN_OBJECT_MAP(ObjectMap)
 END_OBJECT_MAP()
 
-CRAppsModule gModule;
+CComModule gModule;
 CAtlWinModule gWinModule;
 
-Gdiplus::GdiplusStartupInput gdiplusStartupInput;
-ULONG_PTR           gdiplusToken;
-
-
-static VOID InitializeAtlModule(HINSTANCE hInstance, BOOL bInitialize)
-{
-    if (bInitialize)
-    {
-        gModule.Init(ObjectMap, hInstance, NULL);
-    }
-    else
-    {
-        gModule.Term();
-    }
-}
-
-VOID InitializeGDIPlus(BOOL bInitialize)
-{
-    if (bInitialize)
-    {
-        Gdiplus::GdiplusStartup(&gdiplusToken, &gdiplusStartupInput, NULL);
-    }
-    else
-    {
-        Gdiplus::GdiplusShutdown(gdiplusToken);
-    }
-}
 
 INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, INT nShowCmd)
 {
-    BOOL bIsFirstLaunch;
-    
-    InitializeAtlModule(hInstance, TRUE);
-    InitializeGDIPlus(TRUE);
+    Gdiplus::GdiplusStartupInput gdiplusStartupInput;
+    ULONG_PTR gdiplusToken;
+
+    gModule.Init(ObjectMap, hInstance, NULL);
+    Gdiplus::GdiplusStartup(&gdiplusToken, &gdiplusStartupInput, NULL);
 
     if (GetUserDefaultUILanguage() == MAKELANGID(LANG_HEBREW, SUBLANG_DEFAULT))
     {
@@ -72,7 +41,7 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 
     hInst = hInstance;
 
-    bIsFirstLaunch = !LoadSettings(&SettingsInfo);
+    BOOL bIsFirstLaunch = !LoadSettings(&SettingsInfo);
     if (bIsFirstLaunch)
     {
         FillDefaultSettings(&SettingsInfo);
@@ -83,9 +52,9 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 
     // parse cmd-line and perform the corresponding operation
     BOOL bSuccess = ParseCmdAndExecute(GetCommandLineW(), bIsFirstLaunch, SW_SHOWNORMAL);
-    
-    InitializeGDIPlus(FALSE);
-    InitializeAtlModule(GetModuleHandle(NULL), FALSE);
+
+    Gdiplus::GdiplusShutdown(gdiplusToken);
+    gModule.Term();
 
     return bSuccess ? 0 : 1;
 }

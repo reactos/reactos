@@ -3,35 +3,34 @@ LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
 STRINGTABLE
 BEGIN
-    IDS_USAGE "\r\n\
-用法: tracert [-d] [-h maximum_hops] [-j host-list] [-w timeout] target_name \r\n\r\n\
-选项:\r\n\
-    -d                 不解析主机名对应的地址。\r\n\
-    -h maximum_hops    查找目标的最大跳数。\r\n\
-    -j host-list       沿主机列表释放源路由。\r\n\
-    -w timeout         等待每次回复的超时时长（毫秒）。\r\n\
-    -4                 强制使用 IPv4。\r\n\
-    -6                 强制使用 IPv6。\r\n\
-\r\n"
+    IDS_USAGE "\n\
+用法: tracert [-d] [-h maximum_hops] [-j host-list] [-w timeout] target_name\n\n\
+选项:\n\
+    -d                 不解析主机名对应的地址。\n\
+    -h maximum_hops    查找目标的最大跳数。\n\
+    -j host-list       沿主机列表释放源路由。\n\
+    -w timeout         等待每次回复的超时时长（毫秒）。\n\
+    -4                 强制使用 IPv4。\n\
+    -6                 强制使用 IPv6。\n\
+\n"
 
-    IDS_INVALID_OPTION  "%1 不是一个有效的命令选项。\r\n"
-    IDS_TRACE_INFO      "\r\n记录到 %1 的路由 [%2]\r\n途经最大主机数 %3!u! 跳数:\r\n\r\n"
-    IDS_TRACE_COMPLETE  "\r\n记录完成。\r\n"
-    IDS_UNABLE_RESOLVE  "无法解析目标系统名 %1。\r\n"
+    IDS_INVALID_OPTION  "%1 不是一个有效的命令选项。\n"
+    IDS_TRACE_INFO      "\n记录到 %1 的路由 [%2]\n途经最大主机数 %3!u! 跳数:\n\n"
+    IDS_TRACE_COMPLETE  "\n记录完成。\n"
+    IDS_UNABLE_RESOLVE  "无法解析目标系统名 %1。\n"
 
-    IDS_GEN_FAILURE     "常规失败。\r\n"
-    IDS_TRANSMIT_FAILED "传输失败。 (错误 %1!u!)\r\n"
+    IDS_GEN_FAILURE     "常规失败。\n"
+    IDS_TRANSMIT_FAILED "传输失败。 (错误 %1!u!)\n"
 
-    IDS_HOP_COUNT       "%1!3lu!  %0\r\n"
-    IDS_HOP_TIME        "%1!4lu! ms  %0\r\n"
-    IDS_HOP_ZERO,       "  <1 ms  %0\r\n"
-    IDS_TIMEOUT         "   *     %0\r\n"
+    IDS_HOP_COUNT       "%1!3lu!  %0\n"
+    IDS_HOP_TIME        "%1!4lu! ms  %0\n"
+    IDS_HOP_ZERO        "  <1 ms  %0\n"
+    IDS_TIMEOUT         "   *     %0\n"
     IDS_HOP_RES_INFO    "%1 [%2]"
     IDS_HOP_IP_INFO     "%1"
     IDS_LINEBREAK       "\r\n"
-    IDS_REQ_TIMED_OUT   "请求超时。\r\n"
+    IDS_REQ_TIMED_OUT   "请求超时。\n"
     IDS_HOP_RESPONSE    "  报告: "
-    IDS_DEST_HOST_UNREACHABLE "目标主机不可达。\r\n"
-    IDS_DEST_NET_UNREACHABLE  "目标网络不可达。\r\n"
-
+    IDS_DEST_HOST_UNREACHABLE "目标主机不可达。\n"
+    IDS_DEST_NET_UNREACHABLE  "目标网络不可达。\n"
 END

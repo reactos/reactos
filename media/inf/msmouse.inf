@@ -480,29 +480,29 @@ HID_MOUSE.DeviceDesc = "HID myš"
 
 [Strings.041f]
 ReactOS = "ReactOS Takımı"
-MouseClassName = "Fâre ve Başka İmleme Aygıtları"
-LocationOverride = "PS/2 fâre girişine takılı"
+MouseClassName = "Fare ve Diğer İşaretçi Aygıtları"
+LocationOverride = "PS/2 fare girişine takılı"
 
-StdMfg = "(Ölçünlü Fâre)"
-SERIAL_MOUSE.DeviceDesc = "Ölçünlü Dizilik Fâre"
-PS2_MOUSE.DeviceDesc = "Ölçünlü PS/2 Fâre"
-HID_MOUSE.DeviceDesc = "HID Fâre"
-*PNP0F0D.DeviceDesc = "Standard InPort Mouse"
-*PNP0F11.DeviceDesc = "Standard Bus Mouse"
-*PNP0F13.DeviceDesc = "PS/2 Türünde Fâre İçin PS/2 Girişi"
+StdMfg = "(Standart Fare)"
+SERIAL_MOUSE.DeviceDesc = "Standart Seri Fare"
+PS2_MOUSE.DeviceDesc = "Standart PS/2 Fare"
+HID_MOUSE.DeviceDesc = "HID Fare"
+*PNP0F0D.DeviceDesc = "Standart InPort Fare"
+*PNP0F11.DeviceDesc = "Standart Veriyolu Faresi"
+*PNP0F13.DeviceDesc = "PS/2 Fare İçin PS/2 Girişi"
 
-*IBM3780.DeviceDesc = "IBM PS/2 Trackpoint"
+*IBM3780.DeviceDesc = "IBM PS/2 Nokta Fare"
 
-*PNP0F08.DeviceDesc = "Logitech Dizilik Fâre"
-*PNP0F12.DeviceDesc = "Logitech PS/2 Türünde Fâre"
-*PNP0F15.DeviceDesc = "Logitech Bus Mouse"
+*PNP0F08.DeviceDesc = "Logitech Seri Fare"
+*PNP0F12.DeviceDesc = "Logitech PS/2 Fare"
+*PNP0F15.DeviceDesc = "Logitech Veriyolu Faresi"
 
-*PNP0F00.DeviceDesc = "Microsoft Bus Mouse"
-*PNP0F01.DeviceDesc = "Microsoft Dizilik Fâre"
-*PNP0F02.DeviceDesc = "Microsoft InPort Mouse"
-*PNP0F03.DeviceDesc = "Microsoft PS/2 Türünde Fâre"
+*PNP0F00.DeviceDesc = "Microsoft Veriyolu Faresi"
+*PNP0F01.DeviceDesc = "Microsoft Seri Fare"
+*PNP0F02.DeviceDesc = "Microsoft InPort Fare"
+*PNP0F03.DeviceDesc = "Microsoft PS/2 Fare"
 
-*nEC1F00.DeviceDesc = "NEC PC-98 Bus Mouse"
+*nEC1F00.DeviceDesc = "NEC PC-98 Veriyolu Faresi"
 
 [Strings.0422]
 ReactOS = "Команда ReactOS"

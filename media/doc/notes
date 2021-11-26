@@ -14,16 +14,16 @@ issue (http://www.winntmag.com/) there is a detailed description, by
 Mark Russinovich, of the rôle the MBR, NTLDR, boot.ini, ntdetect.com...
 play in the boot process ("Inside the Boot Process, Part 1").
 -----
-Yes with DPCs, KeDrainDpcQueue should go to HIGH_LEVEL because 
-it needs to synchronize with KeInsertDpcQueue. Also the idle thread 
-should run at DISPATCH_LEVEL and regularly drain the dpc queue, that 
-way if an irq happens and the dpc can't be executed immediately it 
-will be executed as soon as the processor is idle rather than 
+Yes with DPCs, KeDrainDpcQueue should go to HIGH_LEVEL because
+it needs to synchronize with KeInsertDpcQueue. Also the idle thread
+should run at DISPATCH_LEVEL and regularly drain the dpc queue, that
+way if an irq happens and the dpc can't be executed immediately it
+will be executed as soon as the processor is idle rather than
 waiting for the next timer tick
 -----
-About the console driver, I think it might be quite useful to have a simple 
-way for apps to print to the screen for debugging. But when the kernel is more 
-stable, console handling should be moved to user level because console printing 
+About the console driver, I think it might be quite useful to have a simple
+way for apps to print to the screen for debugging. But when the kernel is more
+stable, console handling should be moved to user level because console printing
 needs to know about windows and so on which can only be done at user level.
 -----
 Subject: Re: IMSAMP-how to avoid rebooting?
@@ -388,11 +388,11 @@ Radu Woinaroski wrote in message <364F8F6E.2434B010@scitec.com.au>...
 >The function is implemented like that
 >
 >BOOL
-Something( 
-> HANDLE hDevice , 
-> int param1, 
-> int param2, 
-> DWORD * pReturn, 
+Something(
+> HANDLE hDevice ,
+> int param1,
+> int param2,
+> DWORD * pReturn,
 > LPOVERLAPPED pOverlapped)
 >{
 > // here a data buffer on the stack sent to asynchronous DeviceIoControl
@@ -401,9 +401,9 @@ Something(
 > aDataIn[0] = param1;
 > aDataIn[1] = param2;
 >
-> return DeviceIoControl( 
+> return DeviceIoControl(
 > hDevice,
-> DO_SOMETHING_IO, 
+> DO_SOMETHING_IO,
 > aDataIn,
 > sizeof(int)*2,
 > pReturn,
@@ -464,13 +464,13 @@ CM_RESOURCE_LIST to find the vector, level, port addresses, etc., for
 your device.  (Then pass the returned CM_RESOURCE_LIST to ExFreePool.)
 
 
-See Knowledge Base article Q152044. 
+See Knowledge Base article Q152044.
 
         --- Jamie Hanrahan, Kernel Mode Systems, San Diego CA (jeh@cmkrnl.com)
 Drivers, internals, networks, applications, and training for VMS and Windows NT
 NT kernel driver FAQ, links, and other information:  http://www.cmkrnl.com/
 
-Please post replies, followups, questions, etc., in news, not via e-mail. 
+Please post replies, followups, questions, etc., in news, not via e-mail.
 -----
 Subject: Re: IRP canceling
 Date: Mon, 23 Nov 1998 09:05:47 -0500
@@ -485,8 +485,8 @@ Seol,Keun Seok wrote:
 > In the DDK help, the Start I/O routine MUST check the current IRP's
 > Cancel bit.
 > If set, Start I/O routine must just return.
-> 
-> But I think that the IRP already completed should not be accessed. 
+>
+> But I think that the IRP already completed should not be accessed.
 
 You're absolutely right. I recommend the following code in a standard
 StartIo routine to avoid the problem you point out:

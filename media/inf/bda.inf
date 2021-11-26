@@ -193,6 +193,15 @@ Pin.Name.NABTS="NABTS"
 
 [Strings.0a]
 ReactOS = "Equipo de ReactOS"
+Category_BdaTuner="Filtro de BDA-Source"
+Category_BdaComponent="Componente de Receptor de BDA"
+Category_BdaRenderer="Filtro de playback BDA"
+PlugIn_BdaDevice="Plug-in de control del Dispositivo BDA"
+PlugIn_BdaCA="BDA-Plug-in para acceso condicional"
+Pin.Name.AtscTS="Transporte MPEG2"
+Pin.Name.IPV4="IPv4"
+Pin.Name.MPE="MPE"
+Pin.Name.NABTS="NABTS"
 
 [Strings.0415]
 ReactOS = "Zespół ReactOS"

@@ -53,6 +53,7 @@ list(APPEND SOURCE
     droptargets/CexeDropHandler.cpp
     droptargets/CFSDropTarget.cpp
     droptargets/CRecyclerDropTarget.cpp
+    shldataobject.cpp
     shlexec.cpp
     shlfileop.cpp
     shlfolder.cpp

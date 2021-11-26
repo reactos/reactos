@@ -72,7 +72,7 @@ CAPTION "Definições de sistema"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
     GROUPBOX "Informações de versão", IDC_STATIC, 6, 3, 210, 73
-    LTEXT "O ReactOS é construído como servidor de sistemas operativos e responde como tal. Marque esta opção para aplicar isso apenas a aplicativos.", IDC_STATIC, 15, 15, 183, 41
+    LTEXT "O ReactOS é construído como servidor de sistemas operativos e responde como tal. Marque esta opção para aplicar isso apenas a aplicações.", IDC_STATIC, 15, 15, 183, 41
     CONTROL "&Comportamento de estação de trabalho", IDC_REPORTASWORKSTATION, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 16, 57, 190, 10
     PUSHBUTTON "&OK", IDOK, 166, 83, 50, 14
 END
@@ -88,14 +88,14 @@ BEGIN
     LISTBOX IDC_HRDPROFLSTBOX, 8, 52, 215, 54, LBS_NOTIFY
     PUSHBUTTON "", IDC_HRDPROFUP, 232, 59, 15, 14, BS_ICON | WS_DISABLED
     PUSHBUTTON "", IDC_HRDPROFDWN, 232, 79, 15, 14, BS_ICON | WS_DISABLED
-    PUSHBUTTON "&Propriedadess", IDC_HRDPROFPROP, 8, 106, 50, 14, WS_DISABLED
+    PUSHBUTTON "&Propriedades", IDC_HRDPROFPROP, 8, 106, 50, 14, WS_DISABLED
     PUSHBUTTON "&Copiar", IDC_HRDPROFCOPY, 63, 106, 50, 14, WS_DISABLED
     PUSHBUTTON "&Renomear", IDC_HRDPROFRENAME, 118, 106, 50, 14, WS_DISABLED
     PUSHBUTTON "&Apagar", IDC_HRDPROFDEL, 173, 106, 50, 14, WS_DISABLED
     GROUPBOX "Selecção de perfis de hardware", IDC_STATIC, 7, 130, 240, 75
     LTEXT "Quando o ReactOS inicia:", IDC_STATIC, 14, 142, 210, 8
-    AUTORADIOBUTTON "&Aguarde que eu seleccione um perfil de hardware", IDC_HRDPROFWAIT, 14, 158, 200, 8, WS_GROUP
-    AUTORADIOBUTTON "&Seleccione o primeiro perfil listado se eu não seleccionar um perfil em:", IDC_HRDPROFSELECT, 14, 173, 230, 8
+    AUTORADIOBUTTON "&Aguardar que eu seleccione um perfil de hardware", IDC_HRDPROFWAIT, 14, 158, 200, 8, WS_GROUP
+    AUTORADIOBUTTON "&Seleccionar o primeiro perfil listado se eu não eleger um perfil em:", IDC_HRDPROFSELECT, 14, 173, 230, 8
     LTEXT "segundos", IDC_STATIC, 65, 187, 35, 8
     EDITTEXT IDC_HRDPROFEDIT, 25, 185, 35, 12
     CONTROL "", IDC_HRDPROFUPDWN, "msctls_updown32", UDS_SETBUDDYINT | UDS_ALIGNRIGHT |
@@ -113,10 +113,10 @@ BEGIN
     LTEXT "", IDC_HWPPROP_PROFILE, 48, 16, 150, 8
     LTEXT "ID da estação de ancoragem:", IDC_STATIC, 10, 35, 130, 8
     LTEXT "", IDC_HWPPROP_DOCKID, 120, 35, 135, 8
-    LTEXT "Numero de série:", IDC_STATIC, 10, 45, 60, 8
+    LTEXT "Número de série:", IDC_STATIC, 10, 45, 60, 8
     LTEXT "", IDC_HWPPROP_SERIAL, 64, 45, 135, 8
     GROUPBOX "", IDC_STATIC, 10, 55, 192, 75
-    AUTOCHECKBOX "Este computador é &portatil", IDC_HWPPROP_PORTABLE, 17, 68, 115, 10, WS_GROUP | WS_TABSTOP
+    AUTOCHECKBOX "Este computador é &portátil", IDC_HWPPROP_PORTABLE, 17, 68, 115, 10, WS_GROUP | WS_TABSTOP
     AUTORADIOBUTTON "O estado de ancoragem é desconhecido", IDC_HWPPROP_UNKNOWN, 22, 85, 160, 10, WS_GROUP | WS_TABSTOP
     AUTORADIOBUTTON "O computador está ancorado", IDC_HWPPROP_DOCKED, 22, 97, 160, 10
     AUTORADIOBUTTON "O computador está desancorado", IDC_HWPPROP_UNDOCKED, 22, 109, 160, 10
@@ -171,7 +171,7 @@ END
 
 IDD_USERPROFILE_TYPE DIALOGEX 6, 18, 225, 103
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Change Profile Type"
+CAPTION "Alterar tipo de perfil "
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "", IDC_USERPROFILE_TYPE_TEXT, 7, 11, 206, 28
@@ -217,7 +217,7 @@ BEGIN
     LTEXT "Para editar o arquivo de opções de inicialização manualmente, clique em ""Editar"".", IDC_STATIC, 14, 89, 187, 8
     PUSHBUTTON "&Editar...", IDC_STRRECEDIT, 188, 87, 50, 14
     GROUPBOX "Falha do sistema", IDC_STATIC, 7, 111, 238, 140
-    AUTOCHECKBOX "&Escrever um evento no ficheiro de registo do sistema", IDC_STRRECWRITEEVENT, 14, 124, 170, 10
+    AUTOCHECKBOX "&Escrever um evento no ficheiro de registo do sistema", IDC_STRRECWRITEEVENT, 14, 124, 190, 10
     AUTOCHECKBOX "Enviar um &alerta administrativo", IDC_STRRECSENDALERT, 14, 138, 148, 10
     AUTOCHECKBOX "&Reiniciar automaticamente", IDC_STRRECRESTART, 14, 152, 145, 10
     GROUPBOX "Escrever informações de depuração", IDC_STATIC, 12, 167, 227, 76
@@ -318,13 +318,13 @@ BEGIN
     IDS_VARIABLE "Variável"
     IDS_VALUE "Valor"
     IDS_NO_DUMP "(Nenhum)"
-    IDS_MINI_DUMP "Minidump (64KB)"
-    IDS_KERNEL_DUMP "Kernel dump"
-    IDS_FULL_DUMP "Complete dump"
+    IDS_MINI_DUMP "Mini despejo (64KB)"
+    IDS_KERNEL_DUMP "Despejo do kernel "
+    IDS_FULL_DUMP "Despejo completo "
     IDS_USERPROFILE_NAME "Nome"
     IDS_USERPROFILE_SIZE "Tamanho"
     IDS_USERPROFILE_TYPE "Tipo"
-    IDS_USERPROFILE_STATUS "Status"
+    IDS_USERPROFILE_STATUS "Estado"
     IDS_USERPROFILE_MODIFIED "Modificado"
     IDS_USERPROFILE_LOCAL "Local"
     IDS_USERPROFILE_ROAMING "Roaming"
@@ -333,7 +333,7 @@ BEGIN
     IDS_USERPROFILE_CONFIRM_DELETE_TITLE "Confirmar a exclusão"
     IDS_USERPROFILE_ACCOUNT_UNKNOWN "Conta desconhecida"
     IDS_USERPROFILE_ACCOUNT_DELETED "Conta excluida"
-    IDS_USERPROFILE_TYPE_TEXT "Quando %s iniciar sessão neste computador, o sistema operacional deve usar o perfil móvel ou apenas a cópia em cache local do perfil móvel."
+    IDS_USERPROFILE_TYPE_TEXT "Quando %s iniciar sessão neste computador, o sistema operativo deve usar o perfil móvel ou apenas a cópia em cache local do perfil móvel."
     IDS_MESSAGEBOXTITLE "Aplicação do painel de controle do sistema"
     IDS_WARNINITIALSIZE "Digite um valor numérico para o tamanho inicial do arquivo de paginação."
     IDS_WARNMAXIMUMSIZE "Digite um valor numérico para o tamanho máximo do arquivo de paginação."
@@ -341,7 +341,7 @@ BEGIN
     IDS_WARNMAXIMUMRANGE "O tamanho máximo do arquivo de paginação não deve ser menor que o tamanho inicial, não deve ser maior que 4095 MB e não deve exceder o espaço disponível na unidade seleccionada."
     IDS_PAGEFILE_MB "%u MB"
     IDS_PAGEFILE_NONE "Nenhum"
-    IDS_PAGEFILE_SYSTEM "Sistema gerenciado"
+    IDS_PAGEFILE_SYSTEM "Gerenciado pelo sistema"
     IDS_INFOREBOOT "Precisa reiniciar o computador para aplicar as alterações."
     IDS_HWPROFILE_CONFIRM_DELETE_TITLE "Confirmar exclusão do perfil"
     IDS_HWPROFILE_CONFIRM_DELETE "Tem certeza de que deseja excluir o perfil de hardware ""%s""?"

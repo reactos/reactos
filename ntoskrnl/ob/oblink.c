@@ -904,11 +904,13 @@ NtQuerySymbolicLinkObject(IN HANDLE LinkHandle,
                           OUT PUNICODE_STRING LinkTarget,
                           OUT PULONG ResultLength OPTIONAL)
 {
+    NTSTATUS Status;
     UNICODE_STRING SafeLinkTarget = { 0, 0, NULL };
     POBJECT_SYMBOLIC_LINK SymlinkObject;
-    KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
-    NTSTATUS Status;
+    POBJECT_HEADER ObjectHeader;
     ULONG LengthUsed;
+    KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
+
     PAGED_CODE();
 
     if (PreviousMode != KernelMode)
@@ -945,12 +947,15 @@ NtQuerySymbolicLinkObject(IN HANDLE LinkHandle,
                                        SYMBOLIC_LINK_QUERY,
                                        ObpSymbolicLinkObjectType,
                                        PreviousMode,
-                                       (PVOID *)&SymlinkObject,
+                                       (PVOID*)&SymlinkObject,
                                        NULL);
     if (NT_SUCCESS(Status))
     {
+        /* Get the object header */
+        ObjectHeader = OBJECT_TO_OBJECT_HEADER(SymlinkObject);
+
         /* Lock the object */
-        ObpAcquireObjectLock(OBJECT_TO_OBJECT_HEADER(SymlinkObject));
+        ObpAcquireObjectLock(ObjectHeader);
 
         /*
          * So here's the thing: If you specify a return length, then the
@@ -995,7 +1000,7 @@ NtQuerySymbolicLinkObject(IN HANDLE LinkHandle,
         _SEH2_END;
 
         /* Unlock and dereference the object */
-        ObpReleaseObjectLock(OBJECT_TO_OBJECT_HEADER(SymlinkObject));
+        ObpReleaseObjectLock(ObjectHeader);
         ObDereferenceObject(SymlinkObject);
     }
 

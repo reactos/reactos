@@ -1193,41 +1193,55 @@ NTAPI
 RawFsDriverEntry(IN PDRIVER_OBJECT DriverObject,
                  IN PUNICODE_STRING RegistryPath)
 {
-    UNICODE_STRING DeviceName;
     NTSTATUS Status;
+    UNICODE_STRING DeviceName;
+
+    UNREFERENCED_PARAMETER(RegistryPath);
 
     /* Create the raw disk device */
     RtlInitUnicodeString(&DeviceName, L"\\Device\\RawDisk");
     Status = IoCreateDevice(DriverObject,
                             0,
-                            NULL,
+                            &DeviceName,
                             FILE_DEVICE_DISK_FILE_SYSTEM,
                             0,
                             FALSE,
                             &RawDiskDeviceObject);
-    if (!NT_SUCCESS(Status)) return Status;
+    if (!NT_SUCCESS(Status))
+    {
+        return Status;
+    }
 
     /* Create the raw CDROM device */
     RtlInitUnicodeString(&DeviceName, L"\\Device\\RawCdRom");
     Status = IoCreateDevice(DriverObject,
                             0,
-                            NULL,
+                            &DeviceName,
                             FILE_DEVICE_CD_ROM_FILE_SYSTEM,
                             0,
                             FALSE,
                             &RawCdromDeviceObject);
-    if (!NT_SUCCESS(Status)) return Status;
+    if (!NT_SUCCESS(Status))
+    {
+        IoDeleteDevice(RawDiskDeviceObject);
+        return Status;
+    }
 
     /* Create the raw tape device */
     RtlInitUnicodeString(&DeviceName, L"\\Device\\RawTape");
     Status = IoCreateDevice(DriverObject,
                             0,
-                            NULL,
+                            &DeviceName,
                             FILE_DEVICE_TAPE_FILE_SYSTEM,
                             0,
                             FALSE,
                             &RawTapeDeviceObject);
-    if (!NT_SUCCESS(Status)) return Status;
+    if (!NT_SUCCESS(Status))
+    {
+        IoDeleteDevice(RawDiskDeviceObject);
+        IoDeleteDevice(RawCdromDeviceObject);
+        return Status;
+    }
 
     /* Set Direct I/O for all devices */
     RawDiskDeviceObject->Flags |= DO_DIRECT_IO;

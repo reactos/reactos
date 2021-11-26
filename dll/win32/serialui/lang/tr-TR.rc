@@ -5,17 +5,17 @@ LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 STRINGTABLE
 BEGIN
     IDS_EVENPARITY "Çift"
-    IDS_MARKPARITY "İm"
+    IDS_MARKPARITY "İşaret"
     IDS_NOPARITY "Eşlik yok."
     IDS_ODDPARITY "Tek"
     IDS_SPACEPARITY "Boşluk"
-    IDS_ONESTOPBIT "1 dur biti"
-    IDS_ONE5STOPBITS "1,5 dur biti"
-    IDS_TWOSTOPBITS "2 dur biti"
+    IDS_ONESTOPBIT "1 duraklama biti"
+    IDS_ONE5STOPBITS "1,5 duraklama biti"
+    IDS_TWOSTOPBITS "2 duraklama biti"
     IDS_FC_NO "Yok"
     IDS_FC_CTSRTS "CTS/RTS"
     IDS_FC_XONXOFF "Açık/Kapalı"
-    IDS_TITLE """%s"" Husûsiyetleri"
+    IDS_TITLE """%s""'nın Özellikleri"
 END
 
 IDD_COMMDLG DIALOGEX 6, 5, 222, 175
@@ -27,9 +27,9 @@ BEGIN
     CONTROL "Tamam", IDC_OKBTN, "Button", 0x50010000, 98, 156, 56, 13, 0x00000000
     CONTROL "İptal", IDC_CANCELBTN, "Button", 0x50010000, 158, 156, 56, 13, 0x00000000
     CONTROL "Baud Hızı:", IDC_STC1, "Static", 0x50000000, 24, 31, 42, 9, 0x00000000
-    CONTROL "Çoklu Büyüklüğü:", IDC_STC2, "Static", 0x50000000, 24, 53, 42, 9, 0x00000000
+    CONTROL "Bayt Büyüklüğü:", IDC_STC2, "Static", 0x50000000, 24, 53, 42, 9, 0x00000000
     CONTROL "Eşlik:", IDC_STC3, "Static", 0x50000000, 24, 73, 42, 9, 0x00000000
-    CONTROL "Dur Bitleri:", IDC_STC4, "Static", 0x50000000, 24, 96, 42, 9, 0x00000000
+    CONTROL "Duraklama Bitleri:", IDC_STC4, "Static", 0x50000000, 24, 96, 42, 9, 0x00000000
     CONTROL "Akış Denetimi:", IDC_STC5, "Static", 0x50000000, 24, 120, 42, 9, 0x00000000
     CONTROL "", IDC_BAUDRATE, "ComboBox", 0x50210003, 98, 29, 100, 50, 0x00000000
     CONTROL "", IDC_BYTESIZE, "ComboBox", 0x50210003, 98, 49, 100, 50, 0x00000000

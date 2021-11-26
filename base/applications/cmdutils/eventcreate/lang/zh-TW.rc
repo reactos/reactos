@@ -1,0 +1,70 @@
+/*
+ * PROJECT:     ReactOS EventCreate Command
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Chinese (Traditional) resource file
+ * TRANSLATORS: Copyright 2021 Chan Chilung <eason066@gmail.com>
+ * REFERENCES:  Chinese (Simplified) resource translation
+ *              Copyright 2017 Li Keqing <auroracloud4096@gmail.com>
+ */
+ 
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
+
+STRINGTABLE
+BEGIN
+    IDS_USAGE "輸入 “EVENTCREATE /?” 以了解用法。\n"
+    IDS_HELP "\n\
+EVENTCREATE [/S 電腦 [/U [domain\\]使用者 [/P 密碼]]] /ID 事件 ID\n\
+            {[/L logname] | [/SO 來源]} /T 類型 /C 種類 /D 描述\n\
+\n\
+描述：\n\
+    該工具能讓管理員在指定的事件紀錄檔內建立一個自訂事件。\n\
+\n\
+参数列表：\n\
+    /S  電腦               指定要連接的遠端電腦。\n\
+\n\
+    /U  [domain\\]使用者   指定要執行命令的使用者。\n\
+\n\
+    /P  [密碼]             指定使用者密碼。\n\
+	                       如果省略，則會出現輸入提示。\n\
+\n\
+    /L  logname            指定建立事件的事件紀錄檔。\n\
+                           有效的類型是: Application、System、Security\n\
+                           (最後一項只保留予 SYSTEM 帳戶使用) 。\n\
+\n\
+    /SO 來源               指定事件要使用的來源 (如果沒有指定，\n\
+                           預設來源則為 'eventcreate') 。有效的來源可以是\n\
+                           任意字串，且應該代表產生事件的應用程式或組件。\n\
+\n\
+    /T  類型               指定要建立的事件類型。有效的類型是:\n\
+                           SUCCESS，ERROR，WARNING，INFORMATION。\n\
+\n\
+    /C  分類               指定事件的分類 (整數) 。\n\
+\n\
+    /ID 事件 ID            指定事件的識別碼。\n\
+                           識別碼必須為介乎於 0 - 65535 以內的整數。\n\
+\n\
+    /D  描述               為新事件指定描述文字。\n\
+\n\
+    /?                     顯示此說明訊息。\n\
+"
+    IDS_INVALIDSWITCH "無效的選項 - '%s'.\n"
+    IDS_BADSYNTAX_0 "錯誤的命令行語法。\n"
+    IDS_BADSYNTAX_1 "錯誤的命令行語法。選項 '%s' 需要一個值。\n"
+    IDS_BADSYNTAX_2 "錯誤的命令行語法。選項 '%s' 的值不能為空。\n"
+    IDS_BADSYNTAX_3 "錯誤的命令行語法。值 '%s' 不被選項 '%s' 接受。\n"
+    IDS_BADSYNTAX_4 "錯誤的命令行語法。值不能被選項 '%s' 所指定。\n"
+    IDS_BADSYNTAX_5 "錯誤的命令行語法。選項 '%s' 不允許使用超過 %lu 次。\n"
+    IDS_BADSYNTAX_6 "錯誤的命令行語法。缺少強制選項 '%s'。\n"
+    // IDS_BADSYNTAX_7 "錯誤的命令行語法。選項 '%s' 的值超過允許的範圍。\n"
+    IDS_BADSYNTAX_7 "錯誤的命令行語法。選項 '%s' 的值必須介乎於 %d - %d 以內。\n"
+
+    IDS_LOG_NOT_FOUND "紀錄檔 '%s' 不存在。無法建立事件。\n"
+    IDS_SOURCE_NOCREATE "由於沒有指定的紀錄檔，因此無法建立新的來源。\n請使用 /L 選項來指定紀錄檔。\n"
+    IDS_SOURCE_EXISTS "來源已經存在於紀錄檔 '%s' 中，而且不能重複操作。\n"
+    IDS_SOURCE_NOT_CUSTOM "來源參數用於識别自訂腳本/ 程序 (不是已安裝的程序) 。\n"
+
+    IDS_SUCCESS_1   "操作成功: 一個 '%s' 類型的事件已被建立在紀錄檔 '%s' 中。\n"
+    IDS_SUCCESS_2   "操作成功: 一個 '%s' 類型的事件已被建立在來源 '%s' 中。\n"
+    IDS_SUCCESS_3   "操作成功: 一個 '%s' 類型的事件已被建立在紀錄檔 '%s' 和來源 '%s' 中。\n"
+    IDS_SWITCH_UNIMPLEMENTED "選項 '%s' 目前尚未支援，不便之處，敬請原諒!\n"
+END

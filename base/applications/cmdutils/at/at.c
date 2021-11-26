@@ -398,7 +398,7 @@ GetTimeAsJobTime(VOID)
 
     GetLocalTime(&Time);
 
-    JobTime = (DWORD_PTR)Time.wHour * 3600000 + 
+    JobTime = (DWORD_PTR)Time.wHour * 3600000 +
               (DWORD_PTR)Time.wMinute * 60000;
 
     return JobTime;
@@ -698,7 +698,7 @@ AddJob(
     ULONG ulJobId = 0;
     NET_API_STATUS Status;
 
-    InfoBuffer.JobTime = (DWORD_PTR)ulJobHour * 3600000 + 
+    InfoBuffer.JobTime = (DWORD_PTR)ulJobHour * 3600000 +
                          (DWORD_PTR)ulJobMinute * 60000;
     InfoBuffer.DaysOfMonth = ulDaysOfMonth;
     InfoBuffer.DaysOfWeek = ucDaysOfWeek;

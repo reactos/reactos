@@ -2192,7 +2192,7 @@ ExEnterCriticalRegionAndAcquireResourceExclusive(IN PERESOURCE Resource)
     KeEnterCriticalRegion();
 
     /* Acquire the resource */
-    ExAcquireResourceExclusiveLite(Resource, TRUE);
+    NT_VERIFY(ExAcquireResourceExclusiveLite(Resource, TRUE));
 
     /* Return the Win32 Thread */
     return KeGetCurrentThread()->Win32Thread;
@@ -2221,7 +2221,7 @@ ExEnterCriticalRegionAndAcquireResourceShared(IN PERESOURCE Resource)
     KeEnterCriticalRegion();
 
     /* Acquire the resource */
-    ExAcquireResourceSharedLite(Resource, TRUE);
+    NT_VERIFY(ExAcquireResourceSharedLite(Resource, TRUE));
 
     /* Return the Win32 Thread */
     return KeGetCurrentThread()->Win32Thread;
@@ -2252,7 +2252,7 @@ ExEnterCriticalRegionAndAcquireSharedWaitForExclusive(IN PERESOURCE Resource)
     KeEnterCriticalRegion();
 
     /* Acquire the resource */
-    ExAcquireSharedWaitForExclusive(Resource, TRUE);
+    NT_VERIFY(ExAcquireSharedWaitForExclusive(Resource, TRUE));
 
     /* Return the Win32 Thread */
     return KeGetCurrentThread()->Win32Thread;

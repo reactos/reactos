@@ -62,7 +62,7 @@ GetTempFileNameA(IN LPCSTR lpPathName,
         RtlInitUnicodeString(&TempFileNameStringW, lpTempFileNameW);
         TempFileNameStringA.Buffer = lpTempFileName;
         TempFileNameStringA.MaximumLength = MAX_PATH;
- 
+
         Status = BasepUnicodeStringTo8BitString(&TempFileNameStringA, &TempFileNameStringW, FALSE);
         if (!NT_SUCCESS(Status))
         {
@@ -76,7 +76,7 @@ GetTempFileNameA(IN LPCSTR lpPathName,
     RtlFreeHeap(RtlGetProcessHeap(), 0, lpTempFileNameW);
     return ID;
  }
- 
+
  /***********************************************************************
   *           GetTempFileNameW   (KERNEL32.@)
   */
@@ -111,7 +111,7 @@ GetTempFileNameW(IN LPCWSTR lpPathName,
         SetLastError(ERROR_BUFFER_OVERFLOW);
         return 0;
     }
- 
+
     /* If PathName and TempFileName aren't the same buffer, move PathName to TempFileName */
     if (lpPathName != lpTempFileName)
     {
@@ -138,7 +138,7 @@ GetTempFileNameW(IN LPCWSTR lpPathName,
         SetLastError(ERROR_DIRECTORY);
         return 0;
     }
- 
+
     /* Make sure not to mix path & prefix */
     lpTempFileName[(PathNameString.Length / sizeof(WCHAR)) - 1] = L'\\';
     RtlInitUnicodeString(&PrefixString, lpPrefixString);
@@ -146,12 +146,12 @@ GetTempFileNameW(IN LPCWSTR lpPathName,
     {
         PrefixString.Length = 3 * sizeof(WCHAR);
     }
- 
+
     /* Append prefix to path */
     TempFileName = lpTempFileName + PathNameString.Length / sizeof(WCHAR);
     memmove(TempFileName, PrefixString.Buffer, PrefixString.Length);
     TempFileName += PrefixString.Length / sizeof(WCHAR);
- 
+
     /* Then, generate filename */
     do
     {
@@ -167,14 +167,14 @@ GetTempFileNameW(IN LPCWSTR lpPathName,
                 Num++;
                 continue;
             }
- 
+
             ID = GetTempFile->UniqueID;
         }
         else
         {
             ID = uUnique;
         }
- 
+
         /* Convert that ID to wchar */
         RtlIntegerToChar(ID, 0x10, sizeof(IDString), (PCHAR)IDString);
         Let = IDString;
@@ -182,7 +182,7 @@ GetTempFileNameW(IN LPCWSTR lpPathName,
         {
             *(TempFileName++) = RtlAnsiCharToUnicodeChar(&Let);
         } while (*Let != 0);
- 
+
         /* Append extension & UNICODE_NULL */
         memmove(TempFileName, Ext, sizeof(Ext));
 
@@ -223,7 +223,7 @@ GetTempFileNameW(IN LPCWSTR lpPathName,
         }
         Num++;
     } while (Num & 0xFFFF);
- 
+
     return 0;
 }
 

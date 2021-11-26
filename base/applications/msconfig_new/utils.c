@@ -268,7 +268,7 @@ BOOL IsWindowsOS(VOID)
     {
         bIsWindowsOS = TRUE;
     }
-    
+
     return bIsWindowsOS;
 }
 

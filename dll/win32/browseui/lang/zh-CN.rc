@@ -125,7 +125,7 @@ BEGIN
         END
         MENUITEM "打开文件夹(&O)", IDM_OPEN_FOLDER
         MENUITEM "显示文本(&S)", IDM_SHOW_TEXT
-    END    
+    END
 END
 
 /* Dialogs */

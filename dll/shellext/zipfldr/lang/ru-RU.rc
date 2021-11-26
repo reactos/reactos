@@ -76,6 +76,9 @@ BEGIN
     IDS_CANTCREATEZIP "Не удалось создать сжатую папку '%s' (код ошибки: %d)."
     IDS_CANTREADFILE "Не удалось прочитать файл '%s'."
     IDS_EXTRACTING "Извлечение..."
+    IDS_CANTEXTRACTFILE "Не удалось извлечь файл '%1'."
+    IDS_DECOMPRESSERROR "Неизвестный метод компрессии %d. Продолжить?"
+    IDS_UNKNOWNERROR "Неизвестная ошибка 0x%08x."
 
     IDS_WIZ_TITLE "Мастер извлечения архивов"
     IDS_WIZ_DEST_TITLE "Укажите путь"

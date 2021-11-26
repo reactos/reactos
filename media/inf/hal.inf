@@ -143,14 +143,14 @@ ReactOS = "ReactOS Takımı"
 
 ComputerClassName = "Bilgisayar"
 
-GenericMfg = "(Umûmî Bilgisayarlar)"
+GenericMfg = "(Genel Bilgisayarlar)"
 acpipic_up.DeviceDesc = "ACPI Tek İşlemcili PC"
-e_isa_up.DeviceDesc = "Ölçünlü Tek İşlemcili PC"
+e_isa_up.DeviceDesc = "Standart Tek İşlemcili PC"
 
 MsftMfg = "Microsoft Corporation"
-xbox.DeviceDesc = "Original Xbox (x86 based)"
+xbox.DeviceDesc = "Özgün Xbox (x86 tabanlı)"
 
-pc98_up.DeviceDesc = "Uniprocessor NEC PC-98"
+pc98_up.DeviceDesc = "Tek İşlemcili NEC PC-98"
 
 [Strings.0422]
 ReactOS = "Команда ReactOS"

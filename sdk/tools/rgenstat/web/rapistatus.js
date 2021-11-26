@@ -10,7 +10,7 @@ function toggle (elt)
 		if (ich < 0)
 		{
 			eltLink.src = 'tp.gif';
-			elt.className += '_';  
+			elt.className += '_';
 		}
 		else
 		{
@@ -139,7 +139,7 @@ function clickHandler (evt)
 	}
 	else if (evt && evt.stopPropagation)
 		elt = evt.target;
-	
+
 	if (!elt.className && elt.parentNode)
 		elt = elt.parentNode;
 
@@ -287,5 +287,5 @@ else if (document.addEventListener)
 {
 	document.addEventListener('click', clickHandler, false);
 }
-else 
+else
 	document.onclick = clickHandler;

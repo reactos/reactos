@@ -66,9 +66,9 @@ BEGIN
     EDITTEXT IDC_DOWNLOAD_DIR_EDIT, 15, 86, 166, 12, WS_CHILD | WS_VISIBLE | WS_GROUP | ES_AUTOHSCROLL
     PUSHBUTTON "&Wählen", IDC_CHOOSE, 187, 85, 50, 14
     AUTOCHECKBOX "&Installer nach Programminstallation löschen", IDC_DEL_AFTER_INSTALL, 16, 100, 218, 12
-    GROUPBOX "Software source", -1, 4, 118, 240, 46
-    CONTROL "Use default", IDC_SOURCE_DEFAULT, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 15, 132, 74, 10
-    CONTROL "Specified source", IDC_USE_SOURCE, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 15, 147, 74, 10
+    GROUPBOX "Softwarequelle", -1, 4, 118, 240, 46
+    CONTROL "Vorgabe benutzen", IDC_SOURCE_DEFAULT, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 15, 132, 74, 10
+    CONTROL "Spezifische Quelle", IDC_USE_SOURCE, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 15, 147, 74, 10
     EDITTEXT IDC_SOURCE_URL, 97, 147, 140, 12, ES_AUTOHSCROLL | WS_DISABLED
     GROUPBOX "Proxy", -1, 4, 166, 240, 76
     CONTROL "Proxy Einstellungen des Systems verwenden", IDC_PROXY_DEFAULT, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 15, 180, 210, 10
@@ -194,14 +194,14 @@ BEGIN
     IDS_APPLICATIONS "Anwendungen"
     IDS_CHOOSE_FOLDER_TEXT "Wählen Sie ein Verzeichnis aus, das zum Herunterladen verwendet werden soll:"
     IDS_CHOOSE_FOLDER_ERROR "Sie haben ein nicht existierendes Verzeichnis angegeben! Neu anlegen?"
-    IDS_URL_INVALID "The URL you have specified is invalid or not supported. Please correct it!"
+    IDS_URL_INVALID "Die von Ihnen angegebene URL ist ungültig oder wird nicht unterstützt. Bitte korrigieren Sie sie!"
     IDS_APP_REG_REMOVE "Sind Sie sich sicher, dass Sie die Daten dieses Programms aus der Registry entfernen möchten?"
     IDS_INFORMATION "Informationen"
-    IDS_UNABLE_TO_DOWNLOAD "Paket konnte nicht geladen werden! Addresse wurde nicht gefunden!"
+    IDS_UNABLE_TO_DOWNLOAD "Paket konnte nicht geladen werden! Adresse wurde nicht gefunden!"
     IDS_UNABLE_TO_DOWNLOAD2 "Paket konnte nicht geladen werden! Prüfen Sie Ihre Internetverbindung!"
     IDS_UNABLE_TO_REMOVE "Konnte die Daten nicht aus der Registry löschen!"
     IDS_UNABLE_TO_INSTALL "Paket konnte nicht installiert werden!"
-    IDS_UNABLE_TO_QUERY_CERT "Unable to retrieve certificate info.\n\nDo you want to continue anyway?"
+    IDS_UNABLE_TO_QUERY_CERT "Zertifikatsinformationen können nicht abgerufen werden.\n\nMöchten Sie trotzdem fortfahren?"
     IDS_INTEG_CHECK_TITLE "Integritätsprüfung…"
     IDS_INTEG_CHECK_FAIL "Das Paket hat die Integritätsprüfung nicht bestanden. Mögliche Ursachen sind Übertragungsfehler, Datenbankfehler oder Manipulation durch einen Angreifer. Sie sollten die Software nicht ausführen."
     IDS_INTERRUPTED_DOWNLOAD "Übertragung unterbrochen. Prüfen Sie Ihre Internetverbindung!"
@@ -209,11 +209,11 @@ BEGIN
     IDS_SELECT_ALL "Alle/Keine"
     IDS_INSTALL_SELECTED "Ausgewählte Installieren"
     IDS_SELECTEDFORINST "Zur Installation ausgewählt"
-    IDS_MISMATCH_CERT_INFO "The certificate used is unknown:\nSubject: %s\nIssuer: %s\nDo you want to continue anyway?"
-    IDS_UNABLE_PATH "Incorrect path format."
-    IDS_APP_DISPLAY_DETAILS "details"
-    IDS_APP_DISPLAY_LIST "list"
-    IDS_APP_DISPLAY_TILE "tile"
+    IDS_MISMATCH_CERT_INFO "Das verwendete Zertifikat ist unbekannt:\nTitel: %s\nAussteller: %s\nMöchten Sie trotzdem fortfahren?"
+    IDS_UNABLE_PATH "Falsches Pfadformat"
+    IDS_APP_DISPLAY_DETAILS "Details"
+    IDS_APP_DISPLAY_LIST "Liste"
+    IDS_APP_DISPLAY_TILE "Kacheln"
 END
 
 STRINGTABLE
@@ -230,9 +230,9 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_LICENSE_OPENSOURCE "Open Source"
+    IDS_LICENSE_OPENSOURCE "quelloffen"
     IDS_LICENSE_FREEWARE "Freeware"
-    IDS_LICENSE_TRIAL "Trial/Demo"
+    IDS_LICENSE_TRIAL "Test-/Demoversion"
 END
 
 STRINGTABLE
@@ -249,17 +249,17 @@ STRINGTABLE
 BEGIN
     IDS_DL_DIALOG_DB_DISP "Anwendungsdatenbank"
     IDS_DL_DIALOG_DB_DOWNLOAD_DISP "Datenbank-Aktualisierung…"
-    IDS_DL_DIALOG_DB_UNOFFICIAL_DOWNLOAD_DISP "Updating Database… (Unofficial source)"
+    IDS_DL_DIALOG_DB_UNOFFICIAL_DOWNLOAD_DISP "Datenbank-Aktualisierung… (Unoffizielle Quelle)"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_CMD_USAGE "Usage: "
-    IDS_CMD_NEED_PACKAGE_NAME "Error: option %1 expects one or more package name.\n"
-    IDS_CMD_NEED_FILE_NAME "Error: option %1 expects a file name.\n"
-    IDS_CMD_NEED_PARAMS "Error: option %1 expects one or more parameters.\n"
-    IDS_CMD_INVALID_OPTION "Error: Unknown or invalid command line option specified.\n"
-    IDS_CMD_FIND_RESULT_FOR "Find result for %1:\n"
-    IDS_CMD_PACKAGE_NOT_FOUND "Failed to find package %1.\n"
-    IDS_CMD_PACKAGE_INFO "Information about package %1:\n"
+    IDS_CMD_USAGE "Benutzung: "
+    IDS_CMD_NEED_PACKAGE_NAME "Fehler: Option %1 erwartet einen oder mehrere Paketnamen.\n"
+    IDS_CMD_NEED_FILE_NAME "Fehler: Option %1 erwartet einen Dateinamen.\n"
+    IDS_CMD_NEED_PARAMS "Fehler: Option %1 erwartet einen oder mehrere Parameter.\n"
+    IDS_CMD_INVALID_OPTION "Fehler: Unbekannte oder ungültige Kommandozeilenargumente angegeben.\n"
+    IDS_CMD_FIND_RESULT_FOR "Suchergebnis für %1:\n"
+    IDS_CMD_PACKAGE_NOT_FOUND "Paket %1 konnte nicht gefunden werden.\n"
+    IDS_CMD_PACKAGE_INFO "Informationen über das Paket %1:\n"
 END

@@ -122,7 +122,7 @@ AddUninstallKey(
             goto end;
         }
     }
-    
+
     // Full path to sdbinst.exe
     hres = StringCchCatW(sdbinstPath, MAX_PATH, L"System32\\sdbinst.exe");
     if (FAILED(hres))
@@ -172,7 +172,7 @@ AddUninstallKey(
         goto end;
     }
 
-    // Uninstall full string 
+    // Uninstall full string
     hres = StringCchPrintfW(uninstString, MAX_PATH, L"%ls -u \"%ls\"", sdbinstPath, sdbInstalledPath);
     if (FAILED(hres))
     {
@@ -244,7 +244,7 @@ ProcessLayers(
     TAGID prevTagLayer = 0;
 
     TAGID tagLayer = SdbFindFirstTag(pdb, tagDb, TAG_LAYER);
-    
+
     // Add all layers to registry (AppCompatFlags)
     while (tagLayer && (tagLayer != prevTagLayer))
     {
@@ -430,7 +430,7 @@ SdbInstall(
     }
 
     // Get database GUID
-    if (!GetSdbGuid(pdb, tagDb, &dbGuid))    
+    if (!GetSdbGuid(pdb, tagDb, &dbGuid))
     {
         wprintf(L"GetSdbGuid error\n");
         goto end;
@@ -452,7 +452,7 @@ SdbInstall(
         wprintf(L"Can't get tag name\n");
         goto end;
     }
-    
+
     LPWSTR dbName = SdbGetStringTagPtr(pdb, tagDbName);
     wprintf(L"Database name %ls\n", dbName);
 
@@ -709,7 +709,7 @@ SdbUninstallByGuid(
     }
 
     res = SdbUninstall(dbPath);
-    
+
 end:
     if (hKey)
     {
@@ -732,7 +732,7 @@ SdbUninstallByName(
     LSTATUS status;
     HKEY hKey = NULL;
     HKEY subKey = NULL;
-    DWORD index = 0;    
+    DWORD index = 0;
     WCHAR keyName[MAX_PATH];
     DWORD keyNameLen = ARRAYSIZE(keyName);
     DWORD keyValSize;
@@ -790,7 +790,7 @@ SdbUninstallByName(
 
         ++index;
         keyNameLen = ARRAYSIZE(keyName);
-        status = RegEnumKeyExW(hKey, index, keyName, &keyNameLen, NULL, NULL, NULL, NULL);        
+        status = RegEnumKeyExW(hKey, index, keyName, &keyNameLen, NULL, NULL, NULL, NULL);
     }
 
     RegCloseKey(hKey);
@@ -831,7 +831,7 @@ int _tmain(int argc, LPWSTR argv[])
         ShowHelp();
     }
 
-    for (int i = 1; i < argc; ++i) 
+    for (int i = 1; i < argc; ++i)
     {
         if (argv[i][0] != L'-')
         {

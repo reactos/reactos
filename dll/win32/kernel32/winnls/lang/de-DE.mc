@@ -869,7 +869,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_NOT_SUBSTED
 Language=German
-ERROR_NOT_SUBSTED - Das System versuchte ein SUBST von einem Laufwerk zu löschen, das nicht gesubst ist. 
+ERROR_NOT_SUBSTED - Das System versuchte ein SUBST von einem Laufwerk zu löschen, das nicht gesubst ist.
 .
 
 MessageId=138
@@ -1653,7 +1653,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_TIMER_NOT_CANCELED
 Language=German
-ERROR_TIMER_NOT_CANCELED - Es wurde der Versuch unternommen, einen Timer zu setzen oder zu löschen, der nicht dem Aufrufer gehört. 
+ERROR_TIMER_NOT_CANCELED - Es wurde der Versuch unternommen, einen Timer zu setzen oder zu löschen, der nicht dem Aufrufer gehört.
 .
 
 MessageId=542
@@ -1805,7 +1805,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_NO_GUID_TRANSLATION
 Language=German
-ERROR_NO_GUID_TRANSLATION - Die Konvertierung von einer SID zu einer im Dateisystem speicherbaren GUID schlug fehl, was bedeutet das ein Schutzversuch fehlschlug, was bedeuten könnte das die Dtaei nicht erzeugt werden konnte. 
+ERROR_NO_GUID_TRANSLATION - Die Konvertierung von einer SID zu einer im Dateisystem speicherbaren GUID schlug fehl, was bedeutet das ein Schutzversuch fehlschlug, was bedeuten könnte das die Dtaei nicht erzeugt werden konnte.
 .
 
 MessageId=561

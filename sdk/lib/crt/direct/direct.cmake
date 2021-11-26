@@ -12,5 +12,5 @@ list(APPEND CRT_DIRECT_SOURCE
     direct/wgetcwd.c
     direct/wgetdcwd.c
     direct/wmkdir.c
-    direct/wrmdir.c 
+    direct/wrmdir.c
 )

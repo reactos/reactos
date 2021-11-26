@@ -51,7 +51,7 @@ UnknownClassName = "Другие устройства"
 
 [Strings.041f]
 ReactOS = "ReactOS Takımı"
-UnknownClassName = "Başka Aygıtlar"
+UnknownClassName = "Diğer Aygıtlar"
 
 [Strings.0422]
 ReactOS = "Команда ReactOS"

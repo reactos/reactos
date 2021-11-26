@@ -276,7 +276,7 @@ static const struct pixel_format* get_format(INT pf_index, INT* pf_count)
     HDC hdc;
     INT bpp, nb_format;
     const struct pixel_format* ret;
-    
+
     hdc = GetDC(NULL);
     bpp = GetDeviceCaps(hdc, BITSPIXEL);
     ReleaseDC(NULL, hdc);
@@ -316,7 +316,7 @@ INT sw_DescribePixelFormat(HDC hdc, INT format, UINT size, PIXELFORMATDESCRIPTOR
 {
     INT ret;
     const struct pixel_format *pixel_format;
-    
+
     TRACE("Describing format %i.\n", format);
 
     pixel_format = get_format(format, &ret);
@@ -363,7 +363,7 @@ BOOL sw_SetPixelFormat(HDC hdc, struct wgl_dc_data* dc_data, INT format)
 
     /* So, someone is crazy enough to ask for sw implementation. Announce it. */
     TRACE("OpenGL software implementation START for hdc %p, format %i!\n", hdc, format);
-    
+
     pixel_format = get_format(format, NULL);
     if (!pixel_format)
         return FALSE;
@@ -394,14 +394,14 @@ BOOL sw_SetPixelFormat(HDC hdc, struct wgl_dc_data* dc_data, INT format)
             pixel_format->cGreenBits,
             pixel_format->cBlueBits,
             pixel_format->cAlphaBits);
-    
+
     if(!fb->gl_visual)
     {
         ERR("Failed to allocate a GL visual.\n");
         HeapFree(GetProcessHeap(), 0, fb);
         return FALSE;
     }
-    
+
     /* Allocate the framebuffer structure */
     fb->gl_buffer = gl_create_framebuffer(fb->gl_visual);
     if (!fb->gl_buffer) {
@@ -427,7 +427,7 @@ DHGLRC sw_CreateContext(struct wgl_dc_data* dc_data)
     sw_ctx = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*sw_ctx));
     if(!sw_ctx)
         return NULL;
-    
+
     /* Initialize the context */
     sw_ctx->gl_ctx = gl_create_context(fb->gl_visual, NULL, sw_ctx);
     if(!sw_ctx->gl_ctx)
@@ -436,7 +436,7 @@ DHGLRC sw_CreateContext(struct wgl_dc_data* dc_data)
         HeapFree(GetProcessHeap(), 0, sw_ctx);
         return NULL;
     }
-    
+
     sw_ctx->fb = fb;
 
     /* Choose relevant default */
@@ -451,12 +451,12 @@ BOOL sw_DeleteContext(DHGLRC dhglrc)
     /* Those get clobbered by _mesa_free_context_data via _glapi_set{context,dispath_table} */
     void* icd_save = IntGetCurrentICDPrivate();
     const GLDISPATCHTABLE* table_save = IntGetCurrentDispatchTable();
-    
+
     /* Destroy everything */
     gl_destroy_context(sw_ctx->gl_ctx);
 
     HeapFree(GetProcessHeap(), 0, sw_ctx);
-    
+
     /* Restore this */
     IntSetCurrentDispatchTable(table_save);
     IntSetCurrentICDPrivate(icd_save);
@@ -506,7 +506,7 @@ BOOL sw_ShareLists(DHGLRC dhglrcSrc, DHGLRC dhglrcDst)
 #if 0
     struct sw_context* sw_ctx_src = (struct sw_context*)dhglrcSrc;
     struct sw_context* sw_ctx_dst = (struct sw_context*)dhglrcDst;
-    
+
     /* See if it was already shared */
     if(sw_ctx_dst->gl_ctx->Shared->RefCount > 1)
         return FALSE;
@@ -533,25 +533,25 @@ sw_call_window_proc(
 
     if((!dc_data) || (!ctx))
         return 0;
-    
+
     if(!(dc_data->flags & WGL_DC_OBJ_DC))
         return 0;
-    
+
     if((nCode < 0) || (dc_data->owner.hwnd != pParams->hwnd) || (dc_data->sw_data == NULL))
         return CallNextHookEx(ctx->hook, nCode, wParam, lParam);
 
     if (pParams->message == WM_WINDOWPOSCHANGED)
     {
         /* We handle WM_WINDOWPOSCHANGED instead of WM_SIZE because according to
-         * http://blogs.msdn.com/oldnewthing/archive/2008/01/15/7113860.aspx 
-         * WM_SIZE is generated from WM_WINDOWPOSCHANGED by DefWindowProc so it 
+         * http://blogs.msdn.com/oldnewthing/archive/2008/01/15/7113860.aspx
+         * WM_SIZE is generated from WM_WINDOWPOSCHANGED by DefWindowProc so it
          * can be masked out by the application. */
         LPWINDOWPOS lpWindowPos = (LPWINDOWPOS)pParams->lParam;
-        if((lpWindowPos->flags & SWP_SHOWWINDOW) || 
+        if((lpWindowPos->flags & SWP_SHOWWINDOW) ||
             !(lpWindowPos->flags & SWP_NOMOVE) ||
             !(lpWindowPos->flags & SWP_NOSIZE))
         {
-            /* Size in WINDOWPOS includes the window frame, so get the size 
+            /* Size in WINDOWPOS includes the window frame, so get the size
              * of the client area via GetClientRect.  */
             RECT client_rect;
             UINT width, height;
@@ -1392,7 +1392,7 @@ BOOL sw_SetContext(struct wgl_dc_data* dc_data, DHGLRC dhglrc)
     struct sw_context* sw_ctx = (struct sw_context*)dhglrc;
     struct sw_framebuffer* fb = dc_data->sw_data;
     UINT width, height;
-    
+
     /* Get framebuffer size */
     if(dc_data->flags & WGL_DC_OBJ_DC)
     {
@@ -1424,13 +1424,13 @@ BOOL sw_SetContext(struct wgl_dc_data* dc_data, DHGLRC dhglrc)
         BITMAP bm;
         HBITMAP hbmp;
         HDC hdc = dc_data->owner.hdc;
-        
+
         if(fb->gl_visual->DBflag)
         {
             ERR("Memory DC called with a double buffered format.\n");
             return FALSE;
         }
-        
+
         hbmp = GetCurrentObject( hdc, OBJ_BITMAP );
         if(!hbmp)
         {
@@ -1445,10 +1445,10 @@ BOOL sw_SetContext(struct wgl_dc_data* dc_data, DHGLRC dhglrc)
         width = bm.bmWidth;
         height = bm.bmHeight;
     }
-    
+
     if(!width) width = 1;
     if(!height) height = 1;
-    
+
     /* Also make the mesa context current to mesa */
     gl_make_current(sw_ctx->gl_ctx, fb->gl_buffer);
 
@@ -1477,10 +1477,10 @@ BOOL sw_SetContext(struct wgl_dc_data* dc_data, DHGLRC dhglrc)
 void sw_ReleaseContext(DHGLRC dhglrc)
 {
     struct sw_context* sw_ctx = (struct sw_context*)dhglrc;
-    
+
     /* Forward to mesa */
     gl_make_current(NULL, NULL);
-    
+
     /* Unhook */
     if(sw_ctx->hook)
     {
@@ -1498,7 +1498,7 @@ BOOL sw_SwapBuffers(HDC hdc, struct wgl_dc_data* dc_data)
 
     if (!fb->gl_visual->DBflag)
         return TRUE;
-    
+
     if (!fb->BackBuffer)
         return FALSE;
 

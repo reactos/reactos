@@ -452,7 +452,7 @@ LdrpUpdateLoadCount3(IN PLDR_DATA_TABLE_ENTRY LdrEntry,
 
 done:
     /* Release the context */
-    RtlDeactivateActivationContextUnsafeFast(&ActCtx);    
+    RtlDeactivateActivationContextUnsafeFast(&ActCtx);
 }
 
 VOID

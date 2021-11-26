@@ -11,18 +11,18 @@ station/desktop will be "SAWinSta\Desktop" in both cases
 Is there any way to let schedule service associated with interactive desktop
 in these 2 cases?
 
-thanks 
+thanks
 -------------------------------------------
 
 Service-0x0-3e7$
 ----------------
-By default Win32 services associated with non-visible windows station (for 
-services which run in the local system account it is Service-0x0-3e7$) and they 
-can't (without using special flag MB_SERVICE_NOTIFICATION or 
-MB_DEFAULT_DESKTOP_ONLY in the MessageBox function) interact with user.  
-However, you may configure a service to have GUI capabilities. Just set Type 
-field of the registry service entry equal SERVICE_INTERACTIVE_PROCESS. When 
-this key is specified SCM will connect the service with WinSta0 instead 
+By default Win32 services associated with non-visible windows station (for
+services which run in the local system account it is Service-0x0-3e7$) and they
+can't (without using special flag MB_SERVICE_NOTIFICATION or
+MB_DEFAULT_DESKTOP_ONLY in the MessageBox function) interact with user.
+However, you may configure a service to have GUI capabilities. Just set Type
+field of the registry service entry equal SERVICE_INTERACTIVE_PROCESS. When
+this key is specified SCM will connect the service with WinSta0 instead
 Service-0x0-3e7$ and it will alow to display windows and dialog boxes.
 
 -------------------------------------------------
@@ -30,15 +30,15 @@ Service-0x0-3e7$ and it will alow to display windows and dialog boxes.
 WinSta0
 -------
 
--The one-and-only interactive WinSta. 
+-The one-and-only interactive WinSta.
 -No other winsta can be visible/active.
--Only WinSta0 can receive input. 
+-Only WinSta0 can receive input.
 -All other WinSta's are invisible/non-interactive WinStas.
 
 What good is a invisible WinSta? Its used for running services in thus services cant
-interact with the user. 
+interact with the user.
 
-There are limits to what u can do in a invisible WinSta. 
+There are limits to what u can do in a invisible WinSta.
 -Bitblt wont work for instance, since nothing is really displayed in a invisible WinSta (to save resources).
  No point in using GDI resources for stuff noone can see.
 -SendInput wont work
@@ -52,7 +52,7 @@ A Window station can either be interactive or noninteractive. (At the moment on 
 
 When the interactively logged-on user launches any processes, these processes are associated with the "default" Desktop in the "Winsta0" Window station. The "default" Desktop is considered the active Desktop. A process on the active Desktop could switch Desktops such that another Desktop becomes the active Desktop such as the "Winlogon" Desktop. Only one Desktop can be the active Desktop at any one time.
 
-Desktops associated with a noninteractive Window station can create user objects. These objects will never be visible to the interactively logged-on user and will never receive any user input. If you have a noninteractive Service running in the LocalSystem account, any user objects created by the service will not be visible to the interactively logged-on user. In addition, any processes launched by the service will also not be visible. 
+Desktops associated with a noninteractive Window station can create user objects. These objects will never be visible to the interactively logged-on user and will never receive any user input. If you have a noninteractive Service running in the LocalSystem account, any user objects created by the service will not be visible to the interactively logged-on user. In addition, any processes launched by the service will also not be visible.
 If our desktop has the same name as the active one, we are running on the
 active (input) desktop. This is true because desktops have exactly one
 name each, and within a window station, desktop names must be unique
@@ -90,7 +90,7 @@ THREADS:
 
 DESKTOP:
 -owns windows
--Only one desktop at a time can interact with the user, and that desktop must necessarily 
+-Only one desktop at a time can interact with the user, and that desktop must necessarily
 be associated with Winsta0
 -Only one desktop is visible to the user and only one can receives input at any time
 -contain a logical display surface
@@ -110,7 +110,7 @@ SESSION:
 WINDOW STATION:
 -only Winsta0 has access to the display
 -Only one window station, called Winsta0, can interact with the user display, keyboard, mouse
--is a secure object 
+-is a secure object
 -Only the interactive window station WinSta0, can display
   output or receive input. Other window stations are used by "services"
  (but cant u switch winsta?? so a noninteractive winsta becomes active?)
@@ -119,13 +119,13 @@ WINDOW STATION:
 -contains a set of desktop objects
 -contains handle table(s) (handles are valid throughout the whole windowstation, not only the creating process)
 -contain heaps (pointer(s) to the section heap(s) shared between user32/gdi32/win32k)
--A Windows 2000 session will have several windows stations, one assigned to the logon session 
+-A Windows 2000 session will have several windows stations, one assigned to the logon session
  of the interactive user, and others assigned to the Winlogon process, the secure screen saver
  process, and any service that runs in a security context other than that of the interactive user.
 
  The interactive window station assigned to the logon session of the interactive user also contains
  the keyboard, mouse, and display device. The interactive window station is visible to the user and
- can receive input from the user. All other window stations are noninteractive, which means that 
+ can receive input from the user. All other window stations are noninteractive, which means that
  they cannot be made visible to the user, and cannot receive user input.
 
 WINDOWS
@@ -138,7 +138,7 @@ The desktop associated with a thread must be on the window station associated wi
 A thread can use the SetThreadDesktop function to change its desktop.
 The GetThreadDesktop function retrieves a handle to the desktop associated with a specified thread.
 
-The calling process must have an associated window station, either assigned by the system at process creation time or set by SetProcessWindowStation. A desktop is a secure object contained within a window station object. 
+The calling process must have an associated window station, either assigned by the system at process creation time or set by SetProcessWindowStation. A desktop is a secure object contained within a window station object.
 
 
 There can be several window stations in the system but only one of them can

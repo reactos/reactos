@@ -49,7 +49,7 @@ DnsIntCacheFree(VOID)
     DeleteCriticalSection(&DnsCache.Lock);
     DnsCacheInitialized = FALSE;
 }
- 
+
 VOID
 DnsIntCacheRemoveEntryItem(PRESOLVER_CACHE_ENTRY CacheEntry)
 {
@@ -57,7 +57,7 @@ DnsIntCacheRemoveEntryItem(PRESOLVER_CACHE_ENTRY CacheEntry)
 
     /* Remove the entry from the list */
     RemoveEntryList(&CacheEntry->CacheLink);
- 
+
     /* Free record */
     DnsRecordListFree(CacheEntry->Record, DnsFreeRecordList);
 

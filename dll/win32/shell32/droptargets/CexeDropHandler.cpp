@@ -58,7 +58,7 @@ HRESULT WINAPI CExeDropHandler::DragLeave()
 
 HRESULT WINAPI CExeDropHandler::Drop(IDataObject *pDataObject, DWORD dwKeyState, POINTL pt, DWORD *pdwEffect)
 {
-    TRACE ("(%p)\n", this);    
+    TRACE ("(%p)\n", this);
     FORMATETC fmt;
     STGMEDIUM medium;
     LPWSTR pszSrcList;
@@ -81,7 +81,7 @@ HRESULT WINAPI CExeDropHandler::Drop(IDataObject *pDataObject, DWORD dwKeyState,
                 StringCchPrintfExW(pszEnd, cchRemaining, &pszEnd, &cchRemaining, 0, L"\"%ls\" ", pszSrcList);
             else
                 StringCchPrintfExW(pszEnd, cchRemaining, &pszEnd, &cchRemaining, 0, L"%ls ", pszSrcList);
-            
+
             pszSrcList += wcslen(pszSrcList) + 1;
         }
     }

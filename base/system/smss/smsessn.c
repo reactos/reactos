@@ -55,7 +55,7 @@ SmpCheckDuplicateMuSessionId(IN ULONG MuSessionId)
             FoundDuplicate = TRUE;
             break;
         }
-        
+
         /* Keep going */
         NextEntry = NextEntry->Flink;
     }

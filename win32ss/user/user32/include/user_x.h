@@ -4,8 +4,8 @@ static __inline PVOID
 SharedPtrToUser(PVOID Ptr)
 {
     ASSERT(Ptr != NULL);
-    ASSERT(g_ulSharedDelta != 0);
-    return (PVOID)((ULONG_PTR)Ptr - g_ulSharedDelta);
+    ASSERT(gSharedInfo.ulSharedDelta != 0);
+    return (PVOID)((ULONG_PTR)Ptr - gSharedInfo.ulSharedDelta);
 }
 
 static __inline PVOID
@@ -84,13 +84,13 @@ static __inline BOOL STATIC_update_uistate(HWND hwnd, BOOL unicode)
 
 static __inline void LoadUserApiHook()
 {
-   if (!gfServerProcess &&                                
-       !IsInsideUserApiHook() &&                          
-       (gpsi->dwSRVIFlags & SRVINFO_APIHOOK) &&           
-       !RtlIsThreadWithinLoaderCallout())                 
-   {                                                      
-      NtUserCallNoParam(NOPARAM_ROUTINE_LOADUSERAPIHOOK); 
-   }                                                      
+   if (!gfServerProcess &&
+       !IsInsideUserApiHook() &&
+       (gpsi->dwSRVIFlags & SRVINFO_APIHOOK) &&
+       !RtlIsThreadWithinLoaderCallout())
+   {
+      NtUserCallNoParam(NOPARAM_ROUTINE_LOADUSERAPIHOOK);
+   }
 }
 
 #define UserHasDlgFrameStyle(Style, ExStyle)                                   \

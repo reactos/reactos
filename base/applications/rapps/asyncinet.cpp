@@ -140,7 +140,7 @@ BOOL AsyncInetCancel(pASYNCINET AsyncInet) // mark as cancelled (this will send 
             return TRUE;
         }
     }
-    
+
     return FALSE;
 }
 
@@ -172,7 +172,7 @@ BOOL AsyncInetAcquire(pASYNCINET AsyncInet) // try to increase refcnt by 1. if r
             bResult = TRUE;
         }
         // otherwise (AsyncInet->bCleanUp == TRUE)
-        // AsyncInetAcquire will return FALSE. 
+        // AsyncInetAcquire will return FALSE.
         // In this case, any thread should no longer use this AsyncInet
 
         LeaveCriticalSection(&(AsyncInet->CriticalSection));
@@ -194,7 +194,7 @@ VOID AsyncInetRelease(pASYNCINET AsyncInet) // try to decrease refcnt by 1
         {
             bCleanUp = TRUE;
         }
-        
+
         LeaveCriticalSection(&(AsyncInet->CriticalSection));
 
         if (bCleanUp)

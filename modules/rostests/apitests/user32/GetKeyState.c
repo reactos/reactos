@@ -13,7 +13,7 @@ LRESULT CALLBACK KeyboardProc(int code, WPARAM wParam,  LPARAM lParam)
 {
     BOOL pressed = !(lParam & (1<<31));
 	BOOL altPressed = lParam & (1<<29);
-	
+
     if(pressed)
 	{
 	    ok(altPressed,"\n");
@@ -25,15 +25,15 @@ LRESULT CALLBACK KeyboardProc(int code, WPARAM wParam,  LPARAM lParam)
 	    ok(!altPressed,"\n");
 	    ok(!(GetKeyState(VK_MENU) & 0x8000), "Alt should be pressed\n");
 	    ok(!(GetKeyState(VK_LMENU) & 0x8000), "Left alt should be pressed\n");
-	}	
-	
+	}
+
     return CallNextHookEx(hKbdHook, code, wParam, lParam);
 }
 
 LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam)
 {
     PKBDLLHOOKSTRUCT pLLHook = (PKBDLLHOOKSTRUCT)lParam;
-	
+
     if(wParam == WM_SYSKEYDOWN)
 	{
 	    ok(pLLHook->flags & LLKHF_ALTDOWN,"Didn't get LLKHF_ALTDOWN flag\n");
@@ -49,8 +49,8 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam)
 	    ok((GetKeyState(VK_MENU) & 0x8000), "Alt should be pressed in queue state\n");
 		ok(!(GetAsyncKeyState (VK_LMENU) & 0x8000), "Left alt should not be pressed in global kbd status\n");
 	    ok((GetKeyState(VK_LMENU) & 0x8000), "Left alt should be pressed in queue state\n");
-	}	
-	
+	}
+
 	return CallNextHookEx(hKbdLLHook, nCode, wParam, lParam);
 }
 
@@ -69,7 +69,7 @@ static HWND CreateTestWindow()
     WNDCLASSA  wclass;
     HANDLE hInstance = GetModuleHandleA( NULL );
     HWND hWndTest;
-	
+
     wclass.lpszClassName = "InputSysKeyTestClass";
     wclass.style         = CS_HREDRAW | CS_VREDRAW;
     wclass.lpfnWndProc   = WndProc;
@@ -101,30 +101,30 @@ void Test_GetKeyState()
 {
 	HWND hwnd;
     MSG msg;
-	
+
 	hwnd = CreateTestWindow();
-	
+
 	hKbdHook = SetWindowsHookEx(WH_KEYBOARD, KeyboardProc, GetModuleHandleA( NULL ), 0);
 	hKbdLLHook = SetWindowsHookEx(WH_KEYBOARD_LL, LowLevelKeyboardProc, GetModuleHandleA( NULL ), 0);
-	
-	ok(hKbdHook!=NULL," \n");
-	ok(hKbdLLHook!=NULL," \n");
-	
+
+	ok(hKbdHook != NULL, "\n");
+	ok(hKbdLLHook != NULL, "\n");
+
 	keybd_event(VK_LMENU, 0, 0,0);
-	
+
 	while (PeekMessage( &msg, 0, 0, 0, PM_REMOVE )) DispatchMessageA( &msg );
-	
+
 	keybd_event(VK_LMENU, 0, KEYEVENTF_KEYUP,0);
-	
+
 	//fixme this hangs the test
     //while (PeekMessage( &msg, 0, 0, 0, PM_REMOVE|PM_NOYIELD )) DispatchMessageA( &msg );
-	
+
 	DestroyWindow(hwnd);
-	
+
     while (PeekMessage( &msg, 0, 0, 0, PM_REMOVE )) DispatchMessageA( &msg );
-	
+
 	UnhookWindowsHookEx (hKbdHook);
-	UnhookWindowsHookEx (hKbdLLHook);	
+	UnhookWindowsHookEx (hKbdLLHook);
 }
 
 START_TEST(GetKeyState)

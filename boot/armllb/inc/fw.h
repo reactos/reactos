@@ -69,7 +69,7 @@ VOID
 LlbFwVideoClearScreen(
     IN UCHAR Attr
 );
-    
+
 VOID
 LlbFwVideoPutChar(
     IN INT c,

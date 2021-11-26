@@ -322,7 +322,7 @@ RtlpDphAllocateVm(PVOID *Base, SIZE_T Size, ULONG Type, ULONG Protection)
                                      &Size,
                                      Type,
                                      Protection);
-    DPRINT("Page heap: AllocVm (%p, %Ix, %lx) status %lx \n", Base, Size, Type, Status);
+    DPRINT("Page heap: AllocVm (%p, %Ix, %lx) status %lx\n", Base, Size, Type, Status);
     /* Check for failures */
     if (!NT_SUCCESS(Status))
     {
@@ -331,7 +331,7 @@ RtlpDphAllocateVm(PVOID *Base, SIZE_T Size, ULONG Type, ULONG Protection)
             _InterlockedIncrement(&RtlpDphCounter);
             if (RtlpDphBreakOptions & DPH_BREAK_ON_RESERVE_FAIL)
             {
-                DPRINT1("Page heap: AllocVm (%p, %Ix, %x) failed with %x \n", Base, Size, Type, Status);
+                DPRINT1("Page heap: AllocVm (%p, %Ix, %lx) failed with %lx\n", Base, Size, Type, Status);
                 DbgBreakPoint();
                 return Status;
             }
@@ -341,7 +341,7 @@ RtlpDphAllocateVm(PVOID *Base, SIZE_T Size, ULONG Type, ULONG Protection)
             _InterlockedIncrement(&RtlpDphAllocFails);
             if (RtlpDphBreakOptions & DPH_BREAK_ON_COMMIT_FAIL)
             {
-                DPRINT1("Page heap: AllocVm (%p, %Ix, %x) failed with %x \n", Base, Size, Type, Status);
+                DPRINT1("Page heap: AllocVm (%p, %Ix, %lx) failed with %lx\n", Base, Size, Type, Status);
                 DbgBreakPoint();
                 return Status;
             }
@@ -358,7 +358,7 @@ RtlpDphFreeVm(PVOID Base, SIZE_T Size, ULONG Type)
 
     /* Free the memory */
     Status = RtlpSecMemFreeVirtualMemory(NtCurrentProcess(), &Base, &Size, Type);
-    DPRINT("Page heap: FreeVm (%p, %Ix, %x) status %x \n", Base, Size, Type, Status);
+    DPRINT("Page heap: FreeVm (%p, %Ix, %lx) status %lx\n", Base, Size, Type, Status);
     /* Log/report failures */
     if (!NT_SUCCESS(Status))
     {
@@ -367,7 +367,7 @@ RtlpDphFreeVm(PVOID Base, SIZE_T Size, ULONG Type)
             _InterlockedIncrement(&RtlpDphReleaseFails);
             if (RtlpDphBreakOptions & DPH_BREAK_ON_RELEASE_FAIL)
             {
-                DPRINT1("Page heap: FreeVm (%p, %Ix, %x) failed with %x \n", Base, Size, Type, Status);
+                DPRINT1("Page heap: FreeVm (%p, %Ix, %lx) failed with %lx\n", Base, Size, Type, Status);
                 DbgBreakPoint();
                 return Status;
             }
@@ -377,7 +377,7 @@ RtlpDphFreeVm(PVOID Base, SIZE_T Size, ULONG Type)
             _InterlockedIncrement(&RtlpDphFreeFails);
             if (RtlpDphBreakOptions & DPH_BREAK_ON_FREE_FAIL)
             {
-                DPRINT1("Page heap: FreeVm (%p, %Ix, %x) failed with %x \n", Base, Size, Type, Status);
+                DPRINT1("Page heap: FreeVm (%p, %Ix, %lx) failed with %lx\n", Base, Size, Type, Status);
                 DbgBreakPoint();
                 return Status;
             }
@@ -402,7 +402,7 @@ RtlpDphProtectVm(PVOID Base, SIZE_T Size, ULONG Protection)
         _InterlockedIncrement(&RtlpDphProtectFails);
         if (RtlpDphBreakOptions & DPH_BREAK_ON_PROTECT_FAIL)
         {
-            DPRINT1("Page heap: ProtectVm (%p, %Ix, %x) failed with %x \n", Base, Size, Protection, Status);
+            DPRINT1("Page heap: ProtectVm (%p, %Ix, %lx) failed with %lx\n", Base, Size, Protection, Status);
             DbgBreakPoint();
             return Status;
         }
@@ -1873,7 +1873,7 @@ RtlpPageHeapFree(HANDLE HeapPtr,
     {
         if (RtlpDphBreakOptions & DPH_BREAK_ON_NULL_FREE)
         {
-            DPRINT1("Page heap: freeing a null pointer \n");
+            DPRINT1("Page heap: freeing a null pointer\n");
             DbgBreakPoint();
         }
         return TRUE;

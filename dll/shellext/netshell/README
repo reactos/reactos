@@ -12,11 +12,11 @@ The user interface is exposed by implementing the IShellFolder interface as requ
 namespace extension. The code is currently placed in shfldr_netconnect.c
 
 The enumeration of the available network connections is performed by the IShellFolder::EnumObjects
-(ISF_NetConnect_fnEnumObjects). It uses the INetConnectionManager interface implemented by netshell 
+(ISF_NetConnect_fnEnumObjects). It uses the INetConnectionManager interface implemented by netshell
 in connectmanager.c to enumerate all available network connections.
 
-The context menu of network connection items is populated by the IContextMenu::QueryContextMenu 
-(ISF_NetConnect_IContextMenu3_QueryContextMenu) which is obtained by IShellFolder::GetUIObjectOf. The actions are performed by the 
+The context menu of network connection items is populated by the IContextMenu::QueryContextMenu
+(ISF_NetConnect_IContextMenu3_QueryContextMenu) which is obtained by IShellFolder::GetUIObjectOf. The actions are performed by the
 IContextMenu::InvokeCommand function (ISF_NetConnect_IContextMenu3_InvokeCommand). At the moment
 the actions "Status" / "Properties" are implemented.
 
@@ -24,7 +24,7 @@ the actions "Status" / "Properties" are implemented.
 
 The status dialog is implemented by IOleCommandTarget interface(CLSID_ConnectionTray). This interface manages all status dialogs
 for all available dialogs. The interface is implemented as a singleton to avoid multiple notification icons
-appearing in the Notification area of the explorer. Every time the IShellFolder object is created (ISF_NetConnect_Constructor), 
+appearing in the Notification area of the explorer. Every time the IShellFolder object is created (ISF_NetConnect_Constructor),
 it creates a reference to IOleCommandTarget interface and calls its IOleCommandTarget::Exec function with CGID_ShellServiceObject.
 This causes IOleCommandTarget interface to enumerate all available network connections, check if they should be shown (NCCF_SHOW_ICON flag set
 in the NETCON_PROPERTIES dwCharacter), and add them to notification area with Shell_NotifyIcon. For that purpose a hidden window is created (dialog
@@ -38,9 +38,9 @@ the WM_SHOWSTATUSDLG msg to specific window.
 
 The network connections property dialog is implemented by the INetConnectionPropertyUi2 interface. The class id is obtained by calling
 INetConnection::GetUiObjectClassId of the current selected network connection. After obtaining the interface by calling CoCreateInstance, the
-selected network connection is stored as reference by calling INetConnectionPropertyUi::SetConnection. The next step is to call 
+selected network connection is stored as reference by calling INetConnectionPropertyUi::SetConnection. The next step is to call
 INetConnectionPropertyUi::AddPages to add custom property pages to the property sheet set. If the function succeeds, the caller can then invoke
-PropertySheetW function to display the properties. 
+PropertySheetW function to display the properties.
 	Note: If the context doesn't match, i.e. the INetConnectionPropertyUi2 cannot work together
 		with current INetConnection, then it should fail INetConnectionPropertyUi::AddPages
 	Note: The function ShowNetConnectionProperties in shlfdr_netconnect.c shows how to invoke the Network Connections Property Dialog
@@ -54,15 +54,15 @@ function. When a user accepts changes, it calls INetCfg::Apply or when it aborts
 
 === Testing in windows ===
 
-Unfortunately in windows the CLSID_ConnectionManager class is implemented in the netman 
+Unfortunately in windows the CLSID_ConnectionManager class is implemented in the netman
 service and netshell contains the rpc proxy stubs for it. This means that until we are able to
 reimplement these stubs alongside all its unimplemented interfaces and objects, we can't replace
 the system netshell with ours (INetConnectionManager and IEnumNetConnection are only the tip
-of the iceberg). 
-However it is perfectly fine if one copies our netshell in a different folder and change the 
+of the iceberg).
+However it is perfectly fine if one copies our netshell in a different folder and change the
 registry settings to make it handle CLSID_ConnectionFolder, CLSID_LanConnectionUi and CLSID_ConnectionTray.
 When doing so there are actually two options about how to test. One is leaving #define USE_CUSTOM_CONMGR 1
-as is and the other is setting is to 0. What this does is that when 0, the connections will be enumerated 
+as is and the other is setting is to 0. What this does is that when 0, the connections will be enumerated
 in the shell folder and the tray using the system's INetConnectionManager (which resides in the system's
 netman service and is accessible through the system's netshell.dll). This allows us to implement and
 test our three components against the correct implementation of INetConnectionManager.

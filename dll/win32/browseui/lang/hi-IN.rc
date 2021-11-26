@@ -104,7 +104,7 @@ BEGIN
         END
         MENUITEM "फोल्डर &खोलो", IDM_OPEN_FOLDER
         MENUITEM "&टेक्स्ट दिखाओ", IDM_SHOW_TEXT
-    END    
+    END
 END
 
 /* Dialogs */
@@ -197,7 +197,7 @@ END
 STRINGTABLE
 BEGIN
     928 "व्यू में हेरफेर करने के लिए कमांड शामिल हैं।"
-END	
+END
 
 STRINGTABLE
 BEGIN

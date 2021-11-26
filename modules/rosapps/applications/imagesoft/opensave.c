@@ -8,7 +8,7 @@ static OPENFILENAME ofn;
 VOID FileInitialize(HWND hwnd)
 {
     ZeroMemory(&ofn, sizeof(ofn));
-    ofn.lStructSize   = sizeof(OPENFILENAME);
+    ofn.lStructSize   = sizeof(ofn);
     ofn.hwndOwner     = hwnd;
     ofn.nMaxFile      = MAX_PATH;
     ofn.nMaxFileTitle = MAX_PATH;

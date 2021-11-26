@@ -64,13 +64,13 @@ NTAPI
 LlbHwVersaKmiSendAndWait(IN ULONG Value)
 {
     volatile int i = 1000;
-    
+
     /* Send the value */
     LlbHwKbdSend(Value);
-    
+
     /* Wait a bit */
     while (--i);
-    
+
     /* Now make sure we received an ACK */
     if (LlbHwKbdRead() != PS2_I_ACK) DbgPrint("PS/2 FAILURE!\n");
 }
@@ -80,7 +80,7 @@ NTAPI
 LlbHwVersaKmiInitialize(VOID)
 {
     UCHAR Divisor;
-    
+
     /* Setup divisor and enable KMI */
     Divisor = (LlbHwGetPClk() / 8000000) - 1;
     WRITE_REGISTER_UCHAR(PL050_KMICLKDIV, Divisor);
@@ -104,13 +104,13 @@ LlbHwKbdSend(IN ULONG Value)
 {
     ULONG Status;
 
-    /* Wait for ready signal */    
+    /* Wait for ready signal */
     do
     {
         /* Read TX buffer state */
         Status = READ_REGISTER_UCHAR(PL050_KMISTAT);
     } while (!(Status & KMISTAT_TXEMPTY));
-    
+
     /* Send value */
     WRITE_REGISTER_UCHAR(PL050_KMIDATA, Value);
 }

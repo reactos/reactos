@@ -1,7 +1,7 @@
 /*
  *  Buffer-based memory allocator
  *
- *  Copyright (C) 2006-2015, ARM Limited, All Rights Reserved
+ *  Copyright The Mbed TLS Contributors
  *  SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
  *
  *  This file is provided under the Apache License 2.0, or the
@@ -42,8 +42,6 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  *
  *  **********
- *
- *  This file is part of mbed TLS (https://tls.mbed.org)
  */
 
 #if !defined(MBEDTLS_CONFIG_FILE)
@@ -58,6 +56,7 @@
 /* No need for the header guard as MBEDTLS_MEMORY_BUFFER_ALLOC_C
    is dependent upon MBEDTLS_PLATFORM_C */
 #include "mbedtls/platform.h"
+#include "mbedtls/platform_util.h"
 
 #include <string.h>
 
@@ -68,11 +67,6 @@
 #if defined(MBEDTLS_THREADING_C)
 #include "mbedtls/threading.h"
 #endif
-
-/* Implementation that should never be optimized out by the compiler */
-static void mbedtls_zeroize( void *v, size_t n ) {
-    volatile unsigned char *p = v; while( n-- ) *p++ = 0;
-}
 
 #define MAGIC1       0xFF00AA55
 #define MAGIC2       0xEE119966
@@ -140,7 +134,7 @@ static void debug_header( memory_header *hdr )
 #endif
 }
 
-static void debug_chain()
+static void debug_chain( void )
 {
     memory_header *cur = heap.first;
 
@@ -207,7 +201,7 @@ static int verify_header( memory_header *hdr )
     return( 0 );
 }
 
-static int verify_chain()
+static int verify_chain( void )
 {
     memory_header *prv = heap.first, *cur;
 
@@ -531,13 +525,13 @@ void mbedtls_memory_buffer_set_verify( int verify )
     heap.verify = verify;
 }
 
-int mbedtls_memory_buffer_alloc_verify()
+int mbedtls_memory_buffer_alloc_verify( void )
 {
     return verify_chain();
 }
 
 #if defined(MBEDTLS_MEMORY_DEBUG)
-void mbedtls_memory_buffer_alloc_status()
+void mbedtls_memory_buffer_alloc_status( void )
 {
     mbedtls_fprintf( stderr,
                       "Current use: %zu blocks / %zu bytes, max: %zu blocks / "
@@ -636,12 +630,12 @@ void mbedtls_memory_buffer_alloc_init( unsigned char *buf, size_t len )
     heap.first_free = heap.first;
 }
 
-void mbedtls_memory_buffer_alloc_free()
+void mbedtls_memory_buffer_alloc_free( void )
 {
 #if defined(MBEDTLS_THREADING_C)
     mbedtls_mutex_free( &heap.mutex );
 #endif
-    mbedtls_zeroize( &heap, sizeof(buffer_alloc_ctx) );
+    mbedtls_platform_zeroize( &heap, sizeof(buffer_alloc_ctx) );
 }
 
 #if defined(MBEDTLS_SELF_TEST)
@@ -656,7 +650,7 @@ static int check_pointer( void *p )
     return( 0 );
 }
 
-static int check_all_free( )
+static int check_all_free( void )
 {
     if(
 #if defined(MBEDTLS_MEMORY_DEBUG)

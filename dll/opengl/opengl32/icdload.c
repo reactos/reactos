@@ -153,10 +153,10 @@ custom_end:
 
         pDrvInfo = &DrvInfo;
     }
-    
+
     /* Protect the list while we are loading*/
     EnterCriticalSection(&icdload_cs);
-    
+
     /* Search for it in the list of already loaded modules */
     data = ICD_Data_List;
     while(data)
@@ -170,7 +170,7 @@ custom_end:
         }
         data = data->next;
     }
-    
+
     /* It was still not loaded, look for it in the registry */
     ret = RegOpenKeyExW(HKEY_LOCAL_MACHINE, OpenGLDrivers_Key, 0, KEY_READ, &OglKey);
     if(ret != ERROR_SUCCESS)
@@ -207,7 +207,7 @@ custom_end:
             RegCloseKey(OglKey);
             goto end;
         }
-        
+
         dwInput = sizeof(Version);
         ret = RegQueryValueExW(DrvKey, L"Version", 0, &dwValueType, (LPBYTE)&Version, &dwInput);
         if((ret != ERROR_SUCCESS) || (dwValueType != REG_DWORD))
@@ -221,7 +221,7 @@ custom_end:
             RegCloseKey(OglKey);
             goto end;
         }
-        
+
         dwInput = sizeof(DriverVersion);
         ret = RegQueryValueExW(DrvKey, L"DriverVersion", 0, &dwValueType, (LPBYTE)&DriverVersion, &dwInput);
         if((ret != ERROR_SUCCESS) || (dwValueType != REG_DWORD))
@@ -235,7 +235,7 @@ custom_end:
             RegCloseKey(OglKey);
             goto end;
         }
-        
+
         dwInput = sizeof(Flags);
         ret = RegQueryValueExW(DrvKey, L"Flags", 0, &dwValueType, (LPBYTE)&Flags, &dwInput);
         if((ret != ERROR_SUCCESS) || (dwValueType != REG_DWORD))
@@ -243,14 +243,14 @@ custom_end:
             WARN("No driver version in driver subkey\n");
             Flags = 0;
         }
-        
+
         /* We're done */
         RegCloseKey(DrvKey);
         TRACE("DLL name is %S, Version %lx, DriverVersion %lx, Flags %lx.\n", DllName, Version, DriverVersion, Flags);
     }
     /* No need for this anymore */
     RegCloseKey(OglKey);
-    
+
     /* So far so good, allocate data */
     data = HeapAlloc(GetProcessHeap(), 0, sizeof(*data));
     if(!data)
@@ -258,7 +258,7 @@ custom_end:
         ERR("Unable to allocate ICD data!\n");
         goto end;
     }
-    
+
     /* Load the library */
     data->hModule = LoadLibraryW(DllName);
     if(!data->hModule)
@@ -268,8 +268,8 @@ custom_end:
         data = NULL;
         goto end;
     }
-    
-    /* 
+
+    /*
      * Validate version, if needed.
      * Some drivers (at least VBOX), initialize stuff upon this call.
      */
@@ -282,7 +282,7 @@ custom_end:
             goto fail;
         }
     }
-    
+
     /* Pass the callbacks */
     DrvSetCallbackProcs = (void*)GetProcAddress(data->hModule, "DrvSetCallbackProcs");
     if(DrvSetCallbackProcs)
@@ -293,7 +293,7 @@ custom_end:
             (PROC)wglGetDHGLRC};
         DrvSetCallbackProcs(ARRAYSIZE(callbacks), callbacks);
     }
-    
+
     /* Get the DLL exports */
 #define DRV_LOAD(x) do                                  \
 {                                                       \
@@ -320,7 +320,7 @@ custom_end:
     DRV_LOAD(DrvSwapBuffers);
     DRV_LOAD(DrvSwapLayerBuffers);
 #undef DRV_LOAD
-    
+
     /* Let's see if GDI should handle this instead of the ICD DLL */
     // FIXME: maybe there is a better way
     if (GdiDescribePixelFormat(hdc, 0, 0, NULL) != 0)
@@ -334,14 +334,14 @@ custom_end:
 
     /* Copy the DriverName */
     wcscpy(data->DriverName, pDrvInfo->DriverName);
-    
+
     /* Push the list */
     data->next = ICD_Data_List;
     ICD_Data_List = data;
-    
+
     TRACE("Returning %p.\n", data);
     TRACE("ICD driver %S (%S) successfully loaded.\n", pDrvInfo->DriverName, DllName);
-    
+
 end:
     /* Unlock and return */
     LeaveCriticalSection(&icdload_cs);

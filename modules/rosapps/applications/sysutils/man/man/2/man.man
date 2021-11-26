@@ -3,7 +3,7 @@
  Author:  Semyon Novikov <tappak>
  Purpose: ReactOS manual browser and manual pages
  License: GPL
- 
+
  1. Built in cmd.exe commands
  2. Console utils
  3. GUI utils
@@ -16,6 +16,6 @@
  Usage: man [command] [section] [/e] [/create]
  Example: o man man
           o man man /e
-          o man man 2 
-          o man quake3 5 /e /create 
-          
+          o man man 2
+          o man quake3 5 /e /create
+

@@ -481,7 +481,7 @@ CreateSemaphoreExA(IN LPSECURITY_ATTRIBUTES lpSemaphoreAttributes OPTIONAL,
                    IN DWORD dwDesiredAccess OPTIONAL)
 {
     ConvertAnsiToUnicodePrologue
-    
+
     if (!lpName)
     {
         return CreateSemaphoreExW(lpSemaphoreAttributes,
@@ -834,7 +834,7 @@ SleepEx(IN DWORD dwMilliseconds,
         errCode = NtDelayExecution((BOOLEAN)bAlertable, TimePtr);
     }
     while ((bAlertable) && (errCode == STATUS_ALERTED));
-    
+
     /* Cleanup the activation context */
     if (bAlertable) RtlDeactivateActivationContextUnsafeFast(&ActCtx);
 

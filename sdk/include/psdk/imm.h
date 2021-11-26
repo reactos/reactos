@@ -237,6 +237,10 @@ typedef struct tagCANDIDATEINFO {
 #define NI_SETCANDIDATE_PAGESIZE        0x0017
 #define NI_IMEMENUSELECTED              0x0018
 
+/* dwSystemInfoFlags bits */
+#define IME_SYSINFO_WINLOGON            0x0001
+#define IME_SYSINFO_WOW16               0x0002
+
 BOOL  WINAPI ImmUnlockIMC(HIMC);
 DWORD WINAPI ImmGetIMCLockCount(HIMC);
 HIMCC  WINAPI ImmCreateIMCC(DWORD);
@@ -627,9 +631,12 @@ BOOL WINAPI ImmConfigureIMEW(_In_ HKL, _In_ HWND, _In_ DWORD, _In_ LPVOID);
 #define ImmConfigureIME WINELIB_NAME_AW(ImmConfigureIME)
 
 HIMC WINAPI ImmCreateContext(void);
+BOOL WINAPI ImmSetActiveContext(HWND hwnd, HIMC hIMC, BOOL fFlag);
 BOOL WINAPI ImmDestroyContext(_In_ HIMC hIMC);
 BOOL WINAPI ImmDisableIME(_In_ DWORD idThread);
 BOOL WINAPI ImmEnumInputContext(_In_ DWORD, _In_ IMCENUMPROC, _In_ LPARAM);
+BOOL WINAPI ImmLoadIME(HKL hKL);
+BOOL WINAPI CtfImmIsTextFrameServiceDisabled(VOID);
 
 UINT
 WINAPI
@@ -856,7 +863,7 @@ BOOL WINAPI ImmIsUIMessageW(_In_ HWND, _In_ UINT, _In_ WPARAM, _In_ LPARAM);
 
 BOOL WINAPI ImmNotifyIME(_In_ HIMC, _In_ DWORD, _In_ DWORD, _In_ DWORD);
 
-BOOL   WINAPI ImmProcessKey(HWND, HKL, UINT, LPARAM, DWORD);
+DWORD WINAPI ImmProcessKey(HWND, HKL, UINT, LPARAM, DWORD);
 
 BOOL
 WINAPI
@@ -884,9 +891,9 @@ WINAPI
 ImmSetCompositionStringA(
   _In_ HIMC,
   _In_ DWORD dwIndex,
-  _In_reads_bytes_opt_(dwCompLen) LPCVOID lpComp,
+  _Inout_updates_bytes_opt_(dwCompLen) LPVOID lpComp,
   _In_ DWORD dwCompLen,
-  _In_reads_bytes_opt_(dwReadLen) LPCVOID lpRead,
+  _Inout_updates_bytes_opt_(dwReadLen) LPVOID lpRead,
   _In_ DWORD dwReadLen);
 
 BOOL
@@ -894,9 +901,9 @@ WINAPI
 ImmSetCompositionStringW(
   _In_ HIMC,
   _In_ DWORD dwIndex,
-  _In_reads_bytes_opt_(dwCompLen) LPCVOID lpComp,
+  _Inout_updates_bytes_opt_(dwCompLen) LPVOID lpComp,
   _In_ DWORD dwCompLen,
-  _In_reads_bytes_opt_(dwReadLen) LPCVOID lpRead,
+  _Inout_updates_bytes_opt_(dwReadLen) LPVOID lpRead,
   _In_ DWORD dwReadLen);
 
 #define ImmSetCompositionString WINELIB_NAME_AW(ImmSetCompositionString)

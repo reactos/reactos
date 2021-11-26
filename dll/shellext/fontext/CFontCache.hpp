@@ -45,9 +45,10 @@ protected:
     CFontCache();
 
     void Insert(CAtlList<CFontInfo>& fonts, const CStringW& KeyName);
-    void Read();
 
 public:
+    void Read();
+
     void SetFontDir(const LPCWSTR Path);
     const CStringW& FontPath() const { return m_FontFolderPath; }
 

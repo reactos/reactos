@@ -25,7 +25,7 @@ static int get_iwnd(HWND hWnd)
 static LRESULT CALLBACK TestProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     int iwnd = get_iwnd(hwnd);
-    
+
     if(message > WM_USER || !iwnd || message == WM_GETICON)
         return DefWindowProc(hwnd, message, wParam, lParam);
 
@@ -99,9 +99,9 @@ void Test_Messages()
     DrawThemeParentBackground(hWnd1, hdc, NULL);
     FlushMessages();
     COMPARE_CACHE(empty_chain);
-    
+
     memset(&rc, 0, sizeof(rc));
-    
+
     DrawThemeParentBackground(hWnd2, hdc, &rc);
     FlushMessages();
     COMPARE_CACHE(draw_parent_chain);

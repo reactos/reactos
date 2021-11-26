@@ -104,8 +104,8 @@ void CMainWindow::saveImage(BOOL overwrite)
 
 void CMainWindow::InsertSelectionFromHBITMAP(HBITMAP bitmap, HWND window)
 {
-    int width = GetDIBWidth(bitmap); 
-    int height = GetDIBHeight(bitmap); 
+    int width = GetDIBWidth(bitmap);
+    int height = GetDIBHeight(bitmap);
     int curWidth = imageModel.GetWidth();
     int curHeight = imageModel.GetHeight();
 
@@ -129,7 +129,7 @@ void CMainWindow::InsertSelectionFromHBITMAP(HBITMAP bitmap, HWND window)
                     shouldEnlarge = FALSE;
                     break;
                 case IDCANCEL:
-                    return; 
+                    return;
             }
         }
 

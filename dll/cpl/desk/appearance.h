@@ -10,18 +10,18 @@
 #define SIZE_SM_CAPTION_HEIGHT  6
 #define SIZE_MENU_WIDTH         7
 #define SIZE_MENU_HEIGHT        8
- 
+
 #define SIZE_ICON_SPACE_X       9
 #define SIZE_ICON_SPACE_Y       10
 #define SIZE_ICON               11
- 
+
 #define FONT_CAPTION            0
 #define FONT_SMCAPTION          1
 #define FONT_MENU               2
 #define FONT_STATUS             3
 #define FONT_MESSAGE            4
 #define FONT_ICON               5
- 
+
 #define NUM_ELEMENTS            18
 #define NUM_FONTS               6
 #define NUM_SIZES               9
@@ -64,12 +64,12 @@ typedef struct
     EFFECTS Effects;
 } COLOR_SCHEME, *PCOLOR_SCHEME;
 
-/* 
- * The classic theme has several different 'colours' and every colour has 
+/*
+ * The classic theme has several different 'colours' and every colour has
  * several sizes. On visual styles however a theme has different colours
  * and different sizes. In other words the user can select a combination
- * of colour and size. 
- * That means that for the classic theme THEME.SizesList is unused and 
+ * of colour and size.
+ * That means that for the classic theme THEME.SizesList is unused and
  * every color has some child styles that correspond its sizes.
  * The themes for visual styles however will use both ColoursList and SizesList
  * and ChildStyle will not be used.
@@ -101,16 +101,16 @@ typedef struct _THEME_SELECTION
     PTHEME_STYLE Size;
 } THEME_SELECTION, *PTHEME_SELECTION;
 
-/* 
+/*
  * This is the global structure used to store the current values.
  * A pointer of this get's passed to the functions either directly
- * or by passing hwnd and getting the pointer by GetWindowLongPtr. 
+ * or by passing hwnd and getting the pointer by GetWindowLongPtr.
  */
 typedef struct tagGLOBALS
 {
     PTHEME pThemes;
 
-    /* 
+    /*
      * Keep a copy of the selected classic theme in order to select this
      * when user selects the classic theme (and not a horrible random theme )
      */

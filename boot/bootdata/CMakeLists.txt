@@ -9,7 +9,7 @@ add_custom_target(converted_caroots_inf DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/caro
 add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/caroots.inf
                    COMMAND native-utf16le "${CMAKE_CURRENT_SOURCE_DIR}/caroots.inf" "${CMAKE_CURRENT_BINARY_DIR}/caroots.inf"
                    DEPENDS native-utf16le ${CMAKE_CURRENT_SOURCE_DIR}/caroots.inf)
-add_cd_file(TARGET converted_caroots_inf FILE ${CMAKE_CURRENT_BINARY_DIR}/caroots.inf DESTINATION reactos NO_CAB FOR all)
+add_cd_file(TARGET converted_caroots_inf FILE ${CMAKE_CURRENT_BINARY_DIR}/caroots.inf DESTINATION reactos NO_CAB FOR bootcd regtest)
 
 add_registry_inf(
     hivecls.inf

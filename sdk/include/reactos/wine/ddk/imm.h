@@ -87,22 +87,28 @@ C_ASSERT(offsetof(INPUTCONTEXT, dwReserve) == 0x134);
 C_ASSERT(sizeof(INPUTCONTEXT) == 0x140);
 #endif
 
+struct IME_STATE;
+
 typedef struct INPUTCONTEXTDX /* unconfirmed */
 {
     INPUTCONTEXT;
     UINT nVKey;
     BOOL bNeedsTrans;
-    DWORD dwUnknownCat;
+    DWORD dwUnknown1;
     DWORD dwUIFlags;
-    DWORD dwUnknownDog;
-    void *pUnknownFox;
-    /* ... */
+    DWORD dwUnknown2;
+    struct IME_STATE *pState;
+    DWORD dwChange;
+    DWORD dwUnknown5;
 } INPUTCONTEXTDX, *LPINPUTCONTEXTDX;
 
 #ifndef _WIN64
 C_ASSERT(offsetof(INPUTCONTEXTDX, nVKey) == 0x140);
 C_ASSERT(offsetof(INPUTCONTEXTDX, bNeedsTrans) == 0x144);
 C_ASSERT(offsetof(INPUTCONTEXTDX, dwUIFlags) == 0x14c);
+C_ASSERT(offsetof(INPUTCONTEXTDX, pState) == 0x154);
+C_ASSERT(offsetof(INPUTCONTEXTDX, dwChange) == 0x158);
+C_ASSERT(sizeof(INPUTCONTEXTDX) == 0x160);
 #endif
 
 // bits of fdwInit of INPUTCONTEXT
@@ -112,6 +118,12 @@ C_ASSERT(offsetof(INPUTCONTEXTDX, dwUIFlags) == 0x14c);
 #define INIT_LOGFONT                    0x00000008
 #define INIT_COMPFORM                   0x00000010
 #define INIT_SOFTKBDPOS                 0x00000020
+
+// bits for INPUTCONTEXTDX.dwChange
+#define INPUTCONTEXTDX_CHANGE_OPEN          0x1
+#define INPUTCONTEXTDX_CHANGE_CONVERSION    0x2
+#define INPUTCONTEXTDX_CHANGE_SENTENCE      0x4
+#define INPUTCONTEXTDX_CHANGE_FORCE_OPEN    0x100
 
 #ifndef WM_IME_REPORT
     #define WM_IME_REPORT 0x280
@@ -151,5 +163,31 @@ typedef struct tagUNDETERMINESTRUCT
 } UNDETERMINESTRUCT, *PUNDETERMINESTRUCT, *LPUNDETERMINESTRUCT;
 
 LPINPUTCONTEXT WINAPI ImmLockIMC(HIMC);
+
+typedef struct IME_SUBSTATE
+{
+    struct IME_SUBSTATE *pNext;
+    HKL hKL;
+    DWORD dwValue;
+} IME_SUBSTATE, *PIME_SUBSTATE;
+
+#ifndef _WIN64
+C_ASSERT(sizeof(IME_SUBSTATE) == 0xc);
+#endif
+
+typedef struct IME_STATE
+{
+    struct IME_STATE *pNext;
+    WORD wLang;
+    WORD fOpen;
+    DWORD dwConversion;
+    DWORD dwSentence;
+    DWORD dwInit;
+    PIME_SUBSTATE pSubState;
+} IME_STATE, *PIME_STATE;
+
+#ifndef _WIN64
+C_ASSERT(sizeof(IME_STATE) == 0x18);
+#endif
 
 #endif /* _WINE_IMM_H_ */

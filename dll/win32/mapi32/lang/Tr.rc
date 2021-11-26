@@ -23,6 +23,6 @@ LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
 STRINGTABLE
 {
-   IDS_NO_MAPI_CLIENT, "Kurulu bir MAPI mektup istemcisine iye olmadığınızdan dolayı mektup gönderme başarısız."
-   IDS_SEND_MAIL, "Mektup Gönder"
+   IDS_NO_MAPI_CLIENT, "Kurulu bir MAPI e-posta istemcisine bağlı olmadığınızdan dolayı e-posta gönderme başarısız."
+   IDS_SEND_MAIL, "E-posta Gönder"
 }

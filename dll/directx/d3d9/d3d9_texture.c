@@ -71,7 +71,7 @@ D3DTEXTUREFILTERTYPE WINAPI D3D9Texture_GetAutoGenFilterType(LPDIRECT3DBASETEXTU
 * @name IDirect3DBaseTexture9::GetLOD
 * @implemented
 *
-* The function D3D9Texture_GetLOD returns the number 
+* The function D3D9Texture_GetLOD returns the number
 * max LODs for the specified texture, if it's managed.
 *
 * @param LPDIRECT3DBASETEXTURE9 iface

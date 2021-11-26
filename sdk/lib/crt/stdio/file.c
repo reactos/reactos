@@ -434,7 +434,7 @@ unsigned create_io_inherit_block(WORD *size, BYTE **block)
   for (fd = 0; fd < last_fd; fd++)
   {
     /* to be inherited, we need it to be open, and that DONTINHERIT isn't set */
-    fdinfo = get_ioinfo(fd);
+    fdinfo = get_ioinfo_nolock(fd);
     if ((fdinfo->wxflag & (WX_OPEN | WX_DONTINHERIT)) == WX_OPEN)
     {
       *wxflag_ptr = fdinfo->wxflag;
@@ -445,7 +445,6 @@ unsigned create_io_inherit_block(WORD *size, BYTE **block)
       *wxflag_ptr = 0;
       *handle_ptr = INVALID_HANDLE_VALUE;
     }
-    release_ioinfo(fdinfo);
     wxflag_ptr++; handle_ptr++;
   }
   return TRUE;
@@ -475,7 +474,7 @@ void msvcrt_init_io(void)
     count = min(count, MSVCRT_MAX_FILES);
     for (i = 0; i < count; i++)
     {
-      if ((*wxflag_ptr & WX_OPEN) && *handle_ptr != INVALID_HANDLE_VALUE)
+      if ((*wxflag_ptr & WX_OPEN) && GetFileType(*handle_ptr) != FILE_TYPE_UNKNOWN)
       {
         fdinfo = get_ioinfo_alloc_fd(i);
         if(fdinfo != &__badioinfo)
@@ -832,16 +831,17 @@ int CDECL _commit(int fd)
     int ret;
 
     TRACE(":fd (%d) handle (%p)\n", fd, info->handle);
+
     if (info->handle == INVALID_HANDLE_VALUE)
         ret = -1;
     else if (!FlushFileBuffers(info->handle))
     {
         if (GetLastError() == ERROR_INVALID_HANDLE)
         {
-          /* FlushFileBuffers fails for console handles
-           * so we ignore this error.
-           */
-          ret = 0;
+            /* FlushFileBuffers fails for console handles
+             * so we ignore this error.
+             */
+            ret = 0;
         }
         else
         {
@@ -993,7 +993,7 @@ int CDECL _dup2(int od, int nd)
     if (DuplicateHandle(GetCurrentProcess(), info_od->handle,
      GetCurrentProcess(), &handle, 0, TRUE, DUPLICATE_SAME_ACCESS))
     {
-      int wxflag = info_od->wxflag & ~_O_NOINHERIT;
+      int wxflag = info_od->wxflag & ~WX_DONTINHERIT;
 
       if (info_nd->wxflag & WX_OPEN)
         _close(nd);
@@ -1670,7 +1670,7 @@ wchar_t * CDECL _wmktemp(wchar_t *pattern)
 
 /*static*/ unsigned split_oflags(unsigned oflags)
 {
-    int         wxflags = 0;
+    int wxflags = 0;
     unsigned unsupp; /* until we support everything */
 
     if (oflags & _O_APPEND)              wxflags |= WX_APPEND;
@@ -1872,7 +1872,7 @@ int CDECL _wsopen_s( int *fd, const wchar_t* path, int oflags, int shflags, int 
     return *_errno();
   }
 
-  if (oflags & (_O_WTEXT|_O_U16TEXT|_O_U8TEXT))
+  if (oflags & (_O_WTEXT | _O_U16TEXT | _O_U8TEXT))
   {
       if ((access & GENERIC_WRITE) && (creation==CREATE_NEW
                   || creation==CREATE_ALWAYS || creation==TRUNCATE_EXISTING
@@ -3420,7 +3420,7 @@ FILE* CDECL _wfreopen(const wchar_t *path, const wchar_t *mode, FILE* file)
 {
   int open_flags, stream_flags, fd;
 
-  TRACE(":path (%p) mode (%s) file (%p) fd (%d)\n", debugstr_w(path), debugstr_w(mode), file, file ? file->_file : -1);
+  TRACE(":path (%s) mode (%s) file (%p) fd (%d)\n", debugstr_w(path), debugstr_w(mode), file, file ? file->_file : -1);
 
   LOCK_FILES();
   if (!file || ((fd = file->_file) < 0))

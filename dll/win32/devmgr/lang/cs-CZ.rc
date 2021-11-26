@@ -231,7 +231,7 @@ BEGIN
     ICON "", IDC_DEVICON, 7, 7, 20, 20
     LTEXT "", IDC_DEVNAME, 37, 9, 174, 16, SS_NOPREFIX
     LTEXT "Nastavení prostředků:", -1, 7, 36, 204, 8
-    CONTROL "", IDC_DRIVERRESOURCES, "SysListView32", LVS_REPORT | 
+    CONTROL "", IDC_DRIVERRESOURCES, "SysListView32", LVS_REPORT |
             LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SHAREIMAGELISTS | LVS_SORTASCENDING |
             LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 7, 46, 238, 80
 END
@@ -293,8 +293,8 @@ STRINGTABLE DISCARDABLE
 BEGIN
   IDS_APPNAME               "Správce zařízení ReactOS"
   IDS_APP_AUTHORS           "Copyright 2015 Ged Murphy"
-  IDS_CONFIRM_DISABLE       "Zakázáním tohoto zařízení dojde k ukončení jeho činnosti.\r\nOpravdu si jej přejete zakázat?"
-  IDS_CONFIRM_UNINSTALL     "Varování: Chystáte se odebrat toto zařízení ze systému.\r\nPřejete si pokračovat?"
+  IDS_CONFIRM_DISABLE       "Zakázáním tohoto zařízení dojde k ukončení jeho činnosti.\nOpravdu si jej přejete zakázat?"
+  IDS_CONFIRM_UNINSTALL     "Varování: Chystáte se odebrat toto zařízení ze systému.\nPřejete si pokračovat?"
 END
 STRINGTABLE DISCARDABLE
 BEGIN

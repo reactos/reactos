@@ -187,6 +187,14 @@ typedef struct _THRDESKHEAD
     PVOID pSelf;
 } THRDESKHEAD, *PTHRDESKHEAD;
 
+typedef struct tagIMC
+{
+    THRDESKHEAD    head;
+    struct tagIMC *pImcNext;
+    ULONG_PTR      dwClientImcData;
+    HWND           hImeWnd;
+} IMC, *PIMC;
+
 typedef struct _PROCDESKHEAD
 {
     HEAD;
@@ -567,7 +575,7 @@ typedef struct _SBINFOEX
     SCROLLINFO ScrollInfo;
 } SBINFOEX, *PSBINFOEX;
 
-/* State Flags !Not Implemented! */
+/* State Flags !Not ALL Implemented! */
 #define WNDS_HASMENU                 0X00000001
 #define WNDS_HASVERTICALSCROOLLBAR   0X00000002
 #define WNDS_HASHORIZONTALSCROLLBAR  0X00000004
@@ -603,7 +611,7 @@ typedef struct _SBINFOEX
 
 #define WNDSACTIVEFRAME              0x00000006
 
-/* State2 Flags !Not Implemented! */
+/* State2 Flags !Not ALL Implemented! */
 #define WNDS2_WMPAINTSENT               0X00000001
 #define WNDS2_ENDPAINTINVALIDATE        0X00000002
 #define WNDS2_STARTPAINT                0X00000004
@@ -850,10 +858,11 @@ typedef LONG_PTR
 #define FNID_TOOLTIPS               0x02B6
 #define FNID_SENDNOTIFYMESSAGE      0x02B7
 #define FNID_SENDMESSAGECALLBACK    0x02B8
-#define FNID_LAST                   0x02B9
 
-#define FNID_NUM FNID_LAST - FNID_FIRST + 1
-#define FNID_NUMSERVERPROC FNID_SWITCH - FNID_FIRST + 1
+#define FNID_LAST                   FNID_SENDMESSAGECALLBACK
+
+#define FNID_NUM                    (FNID_LAST - FNID_FIRST + 1)
+#define FNID_NUMSERVERPROC          (FNID_SWITCH - FNID_FIRST + 1)
 
 #define FNID_DDEML   0x2000 /* Registers DDEML */
 #define FNID_DESTROY 0x4000 /* This is sent when WM_NCDESTROY or in the support routine. */
@@ -1076,11 +1085,11 @@ typedef struct _WNDMSG
 
 typedef struct _SHAREDINFO
 {
-    PSERVERINFO psi; /* global Server Info */
-    PVOID aheList; /* Handle Entry List */
-    PVOID pDispInfo; /* global PDISPLAYINFO pointer */
-    ULONG_PTR ulSharedDelta; /* Heap delta */
-    WNDMSG awmControl[FNID_LAST - FNID_FIRST];
+    PSERVERINFO psi;         /* Global Server Info */
+    PVOID aheList;           /* Handle Entry List */
+    PVOID pDispInfo;         /* Global PDISPLAYINFO pointer */
+    ULONG_PTR ulSharedDelta; /* Shared USER mapped section delta */
+    WNDMSG awmControl[FNID_NUM];
     WNDMSG DefWindowMsgs;
     WNDMSG DefWindowSpecMsgs;
 } SHAREDINFO, *PSHAREDINFO;
@@ -1174,7 +1183,7 @@ typedef struct tagIMEINFOEX
     };
 } IMEINFOEX, *PIMEINFOEX;
 
-typedef enum IMEINFOEXCLASS
+typedef enum IMEINFOEXCLASS /* unconfirmed: buggy */
 {
     ImeInfoExKeyboardLayout,
     ImeInfoExImeWindow,
@@ -1259,8 +1268,8 @@ C_ASSERT(offsetof(IMEDPI, ImeEnumRegisterWord) == 0x68);
 C_ASSERT(offsetof(IMEDPI, ImeConfigure) == 0x6c);
 C_ASSERT(offsetof(IMEDPI, ImeDestroy) == 0x70);
 C_ASSERT(offsetof(IMEDPI, ImeEscape) == 0x74);
-C_ASSERT(offsetof(IMEDPI, ImeSelect) == 0x78);
-C_ASSERT(offsetof(IMEDPI, ImeProcessKey) == 0x7c);
+C_ASSERT(offsetof(IMEDPI, ImeProcessKey) == 0x78);
+C_ASSERT(offsetof(IMEDPI, ImeSelect) == 0x7c);
 C_ASSERT(offsetof(IMEDPI, ImeSetActiveContext) == 0x80);
 C_ASSERT(offsetof(IMEDPI, ImeToAsciiEx) == 0x84);
 C_ASSERT(offsetof(IMEDPI, NotifyIME) == 0x88);
@@ -1281,36 +1290,37 @@ C_ASSERT(sizeof(IMEDPI) == 0xa8);
 /* unconfirmed */
 typedef struct tagCLIENTIMC
 {
-    HIMC hImc;
+    HANDLE hInputContext;   /* LocalAlloc'ed LHND */
     LONG cLockObj;
     DWORD dwFlags;
     DWORD unknown;
     RTL_CRITICAL_SECTION cs;
-    DWORD unknown2;
+    UINT uCodePage;
     HKL hKL;
     BOOL bUnknown4;
 } CLIENTIMC, *PCLIENTIMC;
 
 #ifndef _WIN64
-C_ASSERT(offsetof(CLIENTIMC, hImc) == 0x0);
+C_ASSERT(offsetof(CLIENTIMC, hInputContext) == 0x0);
 C_ASSERT(offsetof(CLIENTIMC, cLockObj) == 0x4);
 C_ASSERT(offsetof(CLIENTIMC, dwFlags) == 0x8);
 C_ASSERT(offsetof(CLIENTIMC, cs) == 0x10);
+C_ASSERT(offsetof(CLIENTIMC, uCodePage) == 0x28);
 C_ASSERT(offsetof(CLIENTIMC, hKL) == 0x2c);
 C_ASSERT(sizeof(CLIENTIMC) == 0x34);
 #endif
 
 /* flags for CLIENTIMC */
 #define CLIENTIMC_WIDE 0x1
+#define CLIENTIMC_UNKNOWN5 0x2
+#define CLIENTIMC_UNKNOWN4 0x20
 #define CLIENTIMC_UNKNOWN1 0x40
+#define CLIENTIMC_UNKNOWN3 0x80
 #define CLIENTIMC_UNKNOWN2 0x100
 
 DWORD
 NTAPI
-NtUserAssociateInputContext(
-    DWORD dwUnknown1,
-    DWORD dwUnknown2,
-    DWORD dwUnknown3);
+NtUserAssociateInputContext(HWND hWnd, HIMC hIMC, DWORD dwFlags);
 
 NTSTATUS
 NTAPI
@@ -1338,7 +1348,7 @@ NtUserCtxDisplayIOCtl(
     DWORD dwUnknown1,
     DWORD dwUnknown2,
     DWORD dwUnknown3);
-    
+
 DWORD
 APIENTRY
 NtUserDbgWin32HeapFail(
@@ -2761,10 +2771,7 @@ NtUserMoveWindow(
 
 DWORD
 NTAPI
-NtUserNotifyIMEStatus(
-    HWND hwnd,
-    HIMC hIMC,
-    DWORD dwConversion);
+NtUserNotifyIMEStatus(HWND hwnd, BOOL fOpen, DWORD dwConversion);
 
 BOOL
 NTAPI
@@ -2820,7 +2827,7 @@ NtUserPaintMenuBar(
     HDC hDC,
     ULONG left,    // x,
     ULONG right,   // width, // Scale the edge thickness, offset?
-    ULONG top,     // y, 
+    ULONG top,     // y,
     BOOL bActive); // DWORD Flags); DC_ACTIVE or WS_ACTIVECAPTION, by checking WNDS_ACTIVEFRAME and foreground.
 
 BOOL
@@ -3156,7 +3163,7 @@ NTAPI
 NtUserSetDbgTag(
     DWORD Unknown0,
     DWORD Unknown1);
-    
+
 DWORD
 APIENTRY
 NtUserSetDbgTagCount(
@@ -3307,9 +3314,7 @@ NtUserSetSystemTimer(
 
 DWORD
 NTAPI
-NtUserSetThreadLayoutHandles(
-    DWORD dwUnknown1,
-    DWORD dwUnknown2);
+NtUserSetThreadLayoutHandles(HKL hNewKL, HKL hOldKL);
 
 UINT_PTR
 NTAPI

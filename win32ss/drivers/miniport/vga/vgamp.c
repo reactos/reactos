@@ -10,6 +10,13 @@
 #include <dderror.h>
 #include <devioctl.h>
 
+VIDEO_ACCESS_RANGE VGAAccessRange[] =
+{
+    { {{0x3b0}}, 0x3bb - 0x3b0 + 1, 1, 0, 0 },
+    { {{0x3c0}}, 0x3df - 0x3c0 + 1, 1, 0, 0 },
+    { {{0xa0000}}, 0x20000, 0, 0, 0 },
+};
+
 //  -------------------------------------------------------  Public Interface
 
 //    DriverEntry
@@ -45,6 +52,8 @@ DriverEntry(IN PVOID Context1,
   /* InitData.HwInterrupt = VGAInterrupt;  */
   InitData.HwResetHw = VGAResetHw;
   /* InitData.HwTimer = VGATimer;  */
+  InitData.HwLegacyResourceList = VGAAccessRange;
+  InitData.HwLegacyResourceCount = ARRAYSIZE(VGAAccessRange);
 
   return  VideoPortInitialize(Context1, Context2, &InitData, NULL);
 }
@@ -82,12 +91,21 @@ VGAFindAdapter(PVOID DeviceExtension,
                PVIDEO_PORT_CONFIG_INFO ConfigInfo,
                PUCHAR Again)
 {
-  /* FIXME: Determine if the adapter is present  */
-  *Again = FALSE;
+    VP_STATUS Status;
 
-  ConfigInfo->VdmPhysicalVideoMemoryAddress.QuadPart = 0xa000;
-  ConfigInfo->VdmPhysicalVideoMemoryLength = 0x2000;
-  return  NO_ERROR;
+    /* FIXME: Determine if the adapter is present  */
+    *Again = FALSE;
+
+    if (ConfigInfo->Length < sizeof(VIDEO_PORT_CONFIG_INFO))
+        return ERROR_INVALID_PARAMETER;
+
+    Status = VideoPortVerifyAccessRanges(DeviceExtension, ARRAYSIZE(VGAAccessRange), VGAAccessRange);
+    if (Status != NO_ERROR)
+        return Status;
+
+    ConfigInfo->VdmPhysicalVideoMemoryAddress = VGAAccessRange[2].RangeStart;
+    ConfigInfo->VdmPhysicalVideoMemoryLength = VGAAccessRange[2].RangeLength;
+    return NO_ERROR;
 
   /* FIXME: Claim any necessary memory/IO resources for the adapter  */
   /* FIXME: Map resources into system memory for the adapter  */

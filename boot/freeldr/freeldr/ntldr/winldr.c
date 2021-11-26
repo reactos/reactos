@@ -170,6 +170,12 @@ WinLdrInitializePhase1(PLOADER_PARAMETER_BLOCK LoaderBlock,
 
         /* Allocate the ARC structure */
         ArcDiskSig = FrLdrHeapAlloc(sizeof(ARC_DISK_SIGNATURE_EX), 'giSD');
+        if (!ArcDiskSig)
+        {
+            ERR("Failed to allocate ARC structure! Ignoring remaining ARC disks. (i = %lu, DiskCount = %lu)\n",
+                i, reactos_disk_count);
+            break;
+        }
 
         /* Copy the data over */
         RtlCopyMemory(ArcDiskSig, &reactos_arc_disk_info[i], sizeof(ARC_DISK_SIGNATURE_EX));
@@ -439,6 +445,7 @@ WinLdrDetectVersion(VOID)
         /* Key doesn't exist; assume NT 4.0 */
         return _WIN32_WINNT_NT4;
     }
+    RegCloseKey(hKey);
 
     /* We may here want to read the value of ProductVersion */
     return _WIN32_WINNT_WS03;
@@ -733,10 +740,13 @@ WinLdrInitErrataInf(
     if (rc != ERROR_SUCCESS)
     {
         WARN("Could not retrieve the InfName value (Error %u)\n", (int)rc);
+        RegCloseKey(hKey);
         return FALSE;
     }
 
     // TODO: "SystemBiosDate"
+
+    RegCloseKey(hKey);
 
     RtlStringCbPrintfA(ErrataFilePath, sizeof(ErrataFilePath), "%s%s%S",
                        SystemRoot, "inf\\", szFileName);

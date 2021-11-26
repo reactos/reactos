@@ -351,7 +351,7 @@ SetupDiGetClassImageListExA(
     return ret;
 }
 
-static BOOL WINAPI 
+static BOOL WINAPI
 SETUP_GetClassIconInfo(IN CONST GUID *ClassGuid, OUT PINT OutIndex, OUT LPWSTR *OutDllName)
 {
     LPWSTR Buffer = NULL;
@@ -1387,7 +1387,7 @@ SetupDiGetClassDevPropertySheetsW(
             {
                 if (PropPageData.PropertySheetHeader->nPages < PropertySheetHeaderPageListSize)
                 {
-                    PropPageData.PropertySheetHeader->phpage[PropPageData.PropertySheetHeader->nPages] = 
+                    PropPageData.PropertySheetHeader->phpage[PropPageData.PropertySheetHeader->nPages] =
                         InstallerPropPageData.DynamicPages[i];
                     PropPageData.PropertySheetHeader->nPages++;
                 }

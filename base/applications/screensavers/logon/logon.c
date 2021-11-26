@@ -84,8 +84,8 @@ ScreenSaverProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         }
         case WM_PAINT:
         {
-             BITMAP bm; /* Bitmap structure as seen in bmWidth & bmHeight */ 
-             PAINTSTRUCT ps; 
+             BITMAP bm; /* Bitmap structure as seen in bmWidth & bmHeight */
+             PAINTSTRUCT ps;
              HDC hdc;
              HDC hdcMem;
              HBITMAP hbmOld;
@@ -93,9 +93,9 @@ ScreenSaverProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
              // Obtain window coordinates.
              GetClientRect (hWnd, &rect);
 
-             hdc = BeginPaint(hWnd, &ps); 
-             hdcMem = CreateCompatibleDC(hdc); 
-             hbmOld = SelectObject(hdcMem, bitmap); 
+             hdc = BeginPaint(hWnd, &ps);
+             hdcMem = CreateCompatibleDC(hdc);
+             hbmOld = SelectObject(hdcMem, bitmap);
 
              GetObject(bitmap, sizeof(bm), &bm);
 
@@ -118,19 +118,19 @@ ScreenSaverProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
              else
              {
                  BitBlt(
-                     hdc, 
+                     hdc,
                      RANDOM (0, rect.right - bm.bmWidth),
                      RANDOM (0, rect.bottom - bm.bmHeight),
-                     bm.bmWidth, 
-                     bm.bmHeight, 
-                     hdcMem, 
-                     0, 
-                     0, 
-                     SRCCOPY); 
+                     bm.bmWidth,
+                     bm.bmHeight,
+                     hdcMem,
+                     0,
+                     0,
+                     SRCCOPY);
              }
 
-             SelectObject(hdcMem, hbmOld); 
-             DeleteDC(hdcMem); 
+             SelectObject(hdcMem, hbmOld);
+             DeleteDC(hdcMem);
 
              EndPaint(hWnd, &ps);
              break;

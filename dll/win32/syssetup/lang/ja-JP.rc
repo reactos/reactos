@@ -74,11 +74,12 @@ FONT 9, "MS UI Gothic"
 BEGIN
     ICON IDI_ICON4, IDC_STATIC, 21, 7, 20, 20
     LTEXT "システムのロケールを、アプリケーションで使用したい言語に設定して下さい。ユーザー ロケールは、数値、通貨、日付の表示方法を制御します。", IDC_STATIC, 53, 7, 253, 20
-    LTEXT "", IDC_LOCALETEXT, 53, 29, 250, 16
+    LTEXT "%s", IDC_LOCALETEXT, 53, 29, 250, 16
     LTEXT "システム、ユーザー ロケール設定変更には [カスタマイズ] をクリックします。", IDC_STATIC, 53, 50, 166, 25
     PUSHBUTTON "カスタマイズ(&C)...", IDC_CUSTOMLOCALE, 220, 52, 80, 14
+    LTEXT "", IDC_STATIC, 53, 74, 246, 1, SS_ETCHEDHORZ
     LTEXT "キーボード レイアウトは、キーを押したときにどの文字が入力されるかを制御します。", IDC_STATIC, 53, 81, 253, 20
-    LTEXT "", IDC_LAYOUTTEXT, 53, 106, 250, 14
+    LTEXT "%s", IDC_LAYOUTTEXT, 53, 100, 250, 16
     LTEXT "キーボード レイアウト変更には [カスタマイズ] をクリックします。", IDC_STATIC, 53, 120, 166, 25
     PUSHBUTTON "カスタマイズ(&U)...", IDC_CUSTOMLAYOUT, 220, 122, 80, 14
 END
@@ -174,6 +175,8 @@ BEGIN
     IDS_COMPUTERSUBTITLE "コンピュータ名と Administrator パスワードを入力する必要があります。"
     IDS_LOCALETITLE "地域の設定"
     IDS_LOCALESUBTITLE "ReactOS を様々な地域と言語にあわせてカスタマイズすることができます。"
+    IDS_LOCALETEXT "The Standards and formats are set to %s, and the location is set to %s."
+    IDS_LAYOUTTEXT "Your default text input language and method is: %s keyboard layout"
     IDS_DATETIMETITLE "日付と時刻"
     IDS_DATETIMESUBTITLE "コンピュータの日付と時刻を正しく設定して下さい。"
     IDS_PROCESSTITLE "コンポーネントの登録中"

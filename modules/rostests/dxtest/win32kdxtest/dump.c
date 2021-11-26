@@ -197,7 +197,7 @@ dump_halinfo(DD_HALINFO *pHalInfo, char *text)
         int t;
         UINT flag;
         INT count=0;
-        
+
         printf("DD_HALINFO Version NT 2000/XP/2003 found \n");
         printf(" pHalInfo->dwSize                                  : 0x%08lx\n",(long)pHalInfo->dwSize);
 
@@ -350,7 +350,7 @@ dump_halinfo(DD_HALINFO *pHalInfo, char *text)
         printf(" pHalInfo->ddCaps.dwFXAlphaCaps                    : 0x%08lx\n",pHalInfo->ddCaps.dwFXAlphaCaps);
         printf(" pHalInfo->ddCaps.dwPalCaps                        : 0x%08lx\n",pHalInfo->ddCaps.dwPalCaps);
 
-        printf(" pHalInfo->ddCaps.dwSVCaps                         : ");        
+        printf(" pHalInfo->ddCaps.dwSVCaps                         : ");
         flag = pHalInfo->ddCaps.dwSVCaps;
         count = 0;
         checkflag(flag,DDSVCAPS_ENIGMA,"DDSVCAPS_ENIGMA");
@@ -423,10 +423,10 @@ dump_halinfo(DD_HALINFO *pHalInfo, char *text)
         printf(" pHalInfo->ddCaps.dwReserved1                      : 0x%08lx\n",pHalInfo->ddCaps.dwReserved1);
         printf(" pHalInfo->ddCaps.dwReserved2                      : 0x%08lx\n",pHalInfo->ddCaps.dwReserved2);
         printf(" pHalInfo->ddCaps.dwReserved3                      : 0x%08lx\n",pHalInfo->ddCaps.dwReserved3);
-        
+
         printf(" pHalInfo->ddCaps.dwSVBCaps                        : ");
         flag = pHalInfo->ddCaps.dwSVBCaps;
-        count = 0;   
+        count = 0;
         checkflag(flag,DDCAPS_3D,"DDCAPS_3D");
         checkflag(flag,DDCAPS_ALIGNBOUNDARYDEST,"DDCAPS_ALIGNBOUNDARYDEST");
         checkflag(flag,DDCAPS_ALIGNBOUNDARYSRC,"DDCAPS_ALIGNBOUNDARYSRC");
@@ -470,7 +470,7 @@ dump_halinfo(DD_HALINFO *pHalInfo, char *text)
 
         printf(" pHalInfo->ddCaps.dwVSBCaps                        : ");
         flag = pHalInfo->ddCaps.dwVSBCaps;
-        count = 0;   
+        count = 0;
         checkflag(flag,DDCAPS_3D,"DDCAPS_3D");
         checkflag(flag,DDCAPS_ALIGNBOUNDARYDEST,"DDCAPS_ALIGNBOUNDARYDEST");
         checkflag(flag,DDCAPS_ALIGNBOUNDARYSRC,"DDCAPS_ALIGNBOUNDARYSRC");
@@ -625,7 +625,7 @@ dump_D3dDriverData(D3DNTHAL_GLOBALDRIVERDATA *puD3dDriverData, char *text)
             checkflag(flag,D3DDD_TRANSFORMCAPS,"D3DDD_TRANSFORMCAPS");
             checkflag(flag,D3DDD_TRICAPS,"D3DDD_TRICAPS");
             endcheckflag(flag,"puD3dDriverData->hwCaps.dwFlags ");
-             
+
             printf(" puD3dDriverData->hwCaps.dcmColorModel                          : 0x%08lx\n",(long)puD3dDriverData->hwCaps.dcmColorModel);
             printf(" puD3dDriverData->hwCaps.dwDevCaps                              : ");
 
@@ -651,7 +651,7 @@ dump_D3dDriverData(D3DNTHAL_GLOBALDRIVERDATA *puD3dDriverData, char *text)
             checkflag(flag,D3DDEVCAPS_TEXTURESYSTEMMEMORY,"D3DDEVCAPS_TEXTURESYSTEMMEMORY");
             checkflag(flag,D3DDEVCAPS_TEXTUREVIDEOMEMORY,"D3DDEVCAPS_TEXTUREVIDEOMEMORY");
             endcheckflag(flag,"puD3dDriverData->hwCaps.dwDevCaps");
-            
+
             if (puD3dDriverData->hwCaps.dtcTransformCaps.dwSize == sizeof(D3DTRANSFORMCAPS))
             {
                 printf(" puD3dDriverData->hwCaps.dtcTransformCaps.dwSize                : 0x%08lx\n",(long) puD3dDriverData->hwCaps.dtcTransformCaps.dwSize);
@@ -660,7 +660,7 @@ dump_D3dDriverData(D3DNTHAL_GLOBALDRIVERDATA *puD3dDriverData, char *text)
                 count = 0;
                 flag = puD3dDriverData->hwCaps.dtcTransformCaps.dwCaps;
                 checkflag(flag,D3DTRANSFORMCAPS_CLIP,"D3DTRANSFORMCAPS_CLIP");
-                endcheckflag(flag,"puD3dDriverData->hwCaps.dtcTransformCaps.dwCaps");                 
+                endcheckflag(flag,"puD3dDriverData->hwCaps.dtcTransformCaps.dwCaps");
             }
             else
             {
@@ -680,8 +680,8 @@ dump_D3dDriverData(D3DNTHAL_GLOBALDRIVERDATA *puD3dDriverData, char *text)
                 checkflag(flag,D3DLIGHTCAPS_PARALLELPOINT,"D3DLIGHTCAPS_PARALLELPOINT");
                 checkflag(flag,D3DLIGHTCAPS_POINT,"D3DLIGHTCAPS_POINT");
                 checkflag(flag,D3DLIGHTCAPS_SPOT,"D3DLIGHTCAPS_SPOT");
-                endcheckflag(flag,"puD3dDriverData->hwCaps.dlcLightingCaps.dwCaps");         
-                
+                endcheckflag(flag,"puD3dDriverData->hwCaps.dlcLightingCaps.dwCaps");
+
                 printf(" puD3dDriverData->hwCaps.dlcLightingCaps.dwLightingModel        : ");
 
                 count = 0;
@@ -689,8 +689,8 @@ dump_D3dDriverData(D3DNTHAL_GLOBALDRIVERDATA *puD3dDriverData, char *text)
 
                 checkflag(flag,D3DLIGHTINGMODEL_MONO,"D3DLIGHTINGMODEL_MONO");
                 checkflag(flag,D3DLIGHTINGMODEL_RGB,"D3DLIGHTINGMODEL_RGB");
-                endcheckflag(flag,"puD3dDriverData->hwCaps.dlcLightingCaps.dwLightingModel"); 
-               
+                endcheckflag(flag,"puD3dDriverData->hwCaps.dlcLightingCaps.dwLightingModel");
+
                 printf(" puD3dDriverData->hwCaps.dlcLightingCaps.dwNumLights            : 0x%08lx\n",(long)puD3dDriverData->hwCaps.dlcLightingCaps.dwNumLights);
             }
             else
@@ -713,7 +713,7 @@ dump_D3dDriverData(D3DNTHAL_GLOBALDRIVERDATA *puD3dDriverData, char *text)
                 checkflag(flag,D3DPMISCCAPS_LINEPATTERNREP,"D3DPMISCCAPS_LINEPATTERNREP");
                 checkflag(flag,D3DPMISCCAPS_MASKPLANES,"D3DPMISCCAPS_MASKPLANES");
                 checkflag(flag,D3DPMISCCAPS_MASKZ,"D3DPMISCCAPS_MASKZ");
-                endcheckflag(flag,"puD3dDriverData->hwCaps.dpcLineCaps.dwMiscCaps"); 
+                endcheckflag(flag,"puD3dDriverData->hwCaps.dpcLineCaps.dwMiscCaps");
 
                 printf(" puD3dDriverData->hwCaps.dpcLineCaps.dwRasterCaps               : ");
                 count = 0;
@@ -738,8 +738,8 @@ dump_D3dDriverData(D3DNTHAL_GLOBALDRIVERDATA *puD3dDriverData, char *text)
                 checkflag(flag,D3DPRASTERCAPS_ZBIAS,"D3DPRASTERCAPS_ZBIAS");
                 checkflag(flag,D3DPRASTERCAPS_ZBUFFERLESSHSR,"D3DPRASTERCAPS_ZBUFFERLESSHSR");
                 checkflag(flag,D3DPRASTERCAPS_ZFOG,"D3DPRASTERCAPS_ZFOG");
-                checkflag(flag,D3DPRASTERCAPS_ZTEST,"D3DPRASTERCAPS_ZTEST");               
-                endcheckflag(flag,"puD3dDriverData->hwCaps.dpcLineCaps.dwRasterCaps"); 
+                checkflag(flag,D3DPRASTERCAPS_ZTEST,"D3DPRASTERCAPS_ZTEST");
+                endcheckflag(flag,"puD3dDriverData->hwCaps.dpcLineCaps.dwRasterCaps");
 
                 printf(" puD3dDriverData->hwCaps.dpcLineCaps.dwZCmpCaps                 : ");
                 count = 0;
@@ -751,9 +751,9 @@ dump_D3dDriverData(D3DNTHAL_GLOBALDRIVERDATA *puD3dDriverData, char *text)
                 checkflag(flag,D3DPCMPCAPS_LESS,"D3DPCMPCAPS_LESS");
                 checkflag(flag,D3DPCMPCAPS_LESSEQUAL,"D3DPCMPCAPS_LESSEQUAL");
                 checkflag(flag,D3DPCMPCAPS_NEVER,"D3DPCMPCAPS_NEVER");
-                checkflag(flag,D3DPCMPCAPS_NOTEQUAL,"D3DPCMPCAPS_NOTEQUAL");               
-                endcheckflag(flag,"puD3dDriverData->hwCaps.dpcLineCaps.dwZCmpCaps "); 
-                               
+                checkflag(flag,D3DPCMPCAPS_NOTEQUAL,"D3DPCMPCAPS_NOTEQUAL");
+                endcheckflag(flag,"puD3dDriverData->hwCaps.dpcLineCaps.dwZCmpCaps ");
+
                 printf(" puD3dDriverData->hwCaps.dpcLineCaps.dwSrcBlendCaps             : ");
                 count = 0;
                 flag = puD3dDriverData->hwCaps.dpcLineCaps.dwSrcBlendCaps;
@@ -764,13 +764,13 @@ dump_D3dDriverData(D3DNTHAL_GLOBALDRIVERDATA *puD3dDriverData, char *text)
                 checkflag(flag,D3DPBLENDCAPS_INVDESTALPHA,"D3DPBLENDCAPS_INVDESTALPHA");
                 checkflag(flag,D3DPBLENDCAPS_INVDESTCOLOR,"D3DPBLENDCAPS_INVDESTCOLOR");
                 checkflag(flag,D3DPBLENDCAPS_INVSRCALPHA,"D3DPBLENDCAPS_INVSRCALPHA");
-                checkflag(flag,D3DPBLENDCAPS_INVSRCCOLOR,"D3DPBLENDCAPS_INVSRCCOLOR");   
+                checkflag(flag,D3DPBLENDCAPS_INVSRCCOLOR,"D3DPBLENDCAPS_INVSRCCOLOR");
                 checkflag(flag,D3DPBLENDCAPS_ONE,"D3DPBLENDCAPS_ONE");
                 checkflag(flag,D3DPBLENDCAPS_SRCALPHA,"D3DPBLENDCAPS_SRCALPHA");
                 checkflag(flag,D3DPBLENDCAPS_SRCALPHASAT,"D3DPBLENDCAPS_SRCALPHASAT");
                 checkflag(flag,D3DPBLENDCAPS_SRCCOLOR,"D3DPBLENDCAPS_SRCCOLOR");
-                checkflag(flag,D3DPBLENDCAPS_ZERO,"D3DPBLENDCAPS_ZERO");            
-                endcheckflag(flag,"puD3dDriverData->hwCaps.dpcLineCaps.dwSrcBlendCaps "); 
+                checkflag(flag,D3DPBLENDCAPS_ZERO,"D3DPBLENDCAPS_ZERO");
+                endcheckflag(flag,"puD3dDriverData->hwCaps.dpcLineCaps.dwSrcBlendCaps ");
 
                 printf(" puD3dDriverData->hwCaps.dpcLineCaps.dwDestBlendCaps            : ");
                 count = 0;
@@ -782,13 +782,13 @@ dump_D3dDriverData(D3DNTHAL_GLOBALDRIVERDATA *puD3dDriverData, char *text)
                 checkflag(flag,D3DPBLENDCAPS_INVDESTALPHA,"D3DPBLENDCAPS_INVDESTALPHA");
                 checkflag(flag,D3DPBLENDCAPS_INVDESTCOLOR,"D3DPBLENDCAPS_INVDESTCOLOR");
                 checkflag(flag,D3DPBLENDCAPS_INVSRCALPHA,"D3DPBLENDCAPS_INVSRCALPHA");
-                checkflag(flag,D3DPBLENDCAPS_INVSRCCOLOR,"D3DPBLENDCAPS_INVSRCCOLOR");   
+                checkflag(flag,D3DPBLENDCAPS_INVSRCCOLOR,"D3DPBLENDCAPS_INVSRCCOLOR");
                 checkflag(flag,D3DPBLENDCAPS_ONE,"D3DPBLENDCAPS_ONE");
                 checkflag(flag,D3DPBLENDCAPS_SRCALPHA,"D3DPBLENDCAPS_SRCALPHA");
                 checkflag(flag,D3DPBLENDCAPS_SRCALPHASAT,"D3DPBLENDCAPS_SRCALPHASAT");
                 checkflag(flag,D3DPBLENDCAPS_SRCCOLOR,"D3DPBLENDCAPS_SRCCOLOR");
-                checkflag(flag,D3DPBLENDCAPS_ZERO,"D3DPBLENDCAPS_ZERO");            
-                endcheckflag(flag,"puD3dDriverData->hwCaps.dpcLineCaps.dwDestBlendCaps "); 
+                checkflag(flag,D3DPBLENDCAPS_ZERO,"D3DPBLENDCAPS_ZERO");
+                endcheckflag(flag,"puD3dDriverData->hwCaps.dpcLineCaps.dwDestBlendCaps ");
 
                 printf(" puD3dDriverData->hwCaps.dpcLineCaps.dwAlphaCmpCaps             : ");
                 count = 0;
@@ -800,8 +800,8 @@ dump_D3dDriverData(D3DNTHAL_GLOBALDRIVERDATA *puD3dDriverData, char *text)
                 checkflag(flag,D3DPCMPCAPS_LESS,"D3DPCMPCAPS_LESS");
                 checkflag(flag,D3DPCMPCAPS_LESSEQUAL,"D3DPCMPCAPS_LESSEQUAL");
                 checkflag(flag,D3DPCMPCAPS_NEVER,"D3DPCMPCAPS_NEVER");
-                checkflag(flag,D3DPCMPCAPS_NOTEQUAL,"D3DPCMPCAPS_NOTEQUAL");               
-                endcheckflag(flag,"puD3dDriverData->hwCaps.dpcLineCaps.dwAlphaCmpCaps "); 
+                checkflag(flag,D3DPCMPCAPS_NOTEQUAL,"D3DPCMPCAPS_NOTEQUAL");
+                endcheckflag(flag,"puD3dDriverData->hwCaps.dpcLineCaps.dwAlphaCmpCaps ");
 
                 printf(" puD3dDriverData->hwCaps.dpcLineCaps.dwShadeCaps                : ");
                 count = 0;
@@ -813,7 +813,7 @@ dump_D3dDriverData(D3DNTHAL_GLOBALDRIVERDATA *puD3dDriverData, char *text)
                 checkflag(flag,D3DPSHADECAPS_ALPHAPHONGBLEND,"D3DPSHADECAPS_ALPHAPHONGBLEND");
                 checkflag(flag,D3DPSHADECAPS_ALPHAPHONGSTIPPLED,"D3DPSHADECAPS_ALPHAPHONGSTIPPLED");
                 checkflag(flag,D3DPSHADECAPS_COLORFLATMONO,"D3DPSHADECAPS_COLORFLATMONO");
-                checkflag(flag,D3DPSHADECAPS_COLORFLATRGB,"D3DPSHADECAPS_COLORFLATRGB");       
+                checkflag(flag,D3DPSHADECAPS_COLORFLATRGB,"D3DPSHADECAPS_COLORFLATRGB");
                 checkflag(flag,D3DPSHADECAPS_COLORGOURAUDMONO,"D3DPSHADECAPS_COLORGOURAUDMONO");
                 checkflag(flag,D3DPSHADECAPS_COLORGOURAUDRGB,"D3DPSHADECAPS_COLORGOURAUDRGB");
                 checkflag(flag,D3DPSHADECAPS_COLORPHONGMONO,"D3DPSHADECAPS_COLORPHONGMONO");
@@ -821,13 +821,13 @@ dump_D3dDriverData(D3DNTHAL_GLOBALDRIVERDATA *puD3dDriverData, char *text)
                 checkflag(flag,D3DPSHADECAPS_FOGFLAT,"D3DPSHADECAPS_FOGFLAT");
                 checkflag(flag,D3DPSHADECAPS_FOGGOURAUD,"D3DPSHADECAPS_FOGGOURAUD");
                 checkflag(flag,D3DPSHADECAPS_FOGPHONG,"D3DPSHADECAPS_FOGPHONG");
-                checkflag(flag,D3DPSHADECAPS_SPECULARFLATMONO,"D3DPSHADECAPS_SPECULARFLATMONO"); 
-                checkflag(flag,D3DPSHADECAPS_SPECULARFLATRGB,"D3DPSHADECAPS_SPECULARFLATRGB"); 
+                checkflag(flag,D3DPSHADECAPS_SPECULARFLATMONO,"D3DPSHADECAPS_SPECULARFLATMONO");
+                checkflag(flag,D3DPSHADECAPS_SPECULARFLATRGB,"D3DPSHADECAPS_SPECULARFLATRGB");
                 checkflag(flag,D3DPSHADECAPS_SPECULARGOURAUDMONO,"D3DPSHADECAPS_SPECULARGOURAUDMONO");
                 checkflag(flag,D3DPSHADECAPS_SPECULARGOURAUDRGB,"D3DPSHADECAPS_SPECULARGOURAUDRGB");
-                checkflag(flag,D3DPSHADECAPS_SPECULARPHONGMONO,"D3DPSHADECAPS_SPECULARPHONGMONO"); 
-                checkflag(flag,D3DPSHADECAPS_SPECULARPHONGRGB,"D3DPSHADECAPS_SPECULARPHONGRGB"); 
-                endcheckflag(flag,"puD3dDriverData->hwCaps.dpcLineCaps.dwShadeCaps "); 
+                checkflag(flag,D3DPSHADECAPS_SPECULARPHONGMONO,"D3DPSHADECAPS_SPECULARPHONGMONO");
+                checkflag(flag,D3DPSHADECAPS_SPECULARPHONGRGB,"D3DPSHADECAPS_SPECULARPHONGRGB");
+                endcheckflag(flag,"puD3dDriverData->hwCaps.dpcLineCaps.dwShadeCaps ");
 
                 printf(" puD3dDriverData->hwCaps.dpcLineCaps.dwTextureCaps              : ");
                 count = 0;
@@ -839,13 +839,13 @@ dump_D3dDriverData(D3DNTHAL_GLOBALDRIVERDATA *puD3dDriverData, char *text)
                 checkflag(flag,D3DPTEXTURECAPS_CUBEMAP,"D3DPTEXTURECAPS_CUBEMAP");
                 checkflag(flag,D3DPTEXTURECAPS_PERSPECTIVE,"D3DPTEXTURECAPS_PERSPECTIVE");
                 checkflag(flag,D3DPTEXTURECAPS_POW2,"D3DPTEXTURECAPS_POW2");
-                checkflag(flag,D3DPTEXTURECAPS_PROJECTED,"D3DPTEXTURECAPS_PROJECTED");       
+                checkflag(flag,D3DPTEXTURECAPS_PROJECTED,"D3DPTEXTURECAPS_PROJECTED");
                 checkflag(flag,D3DPTEXTURECAPS_NONPOW2CONDITIONAL,"D3DPTEXTURECAPS_NONPOW2CONDITIONAL");
                 checkflag(flag,D3DPTEXTURECAPS_SQUAREONLY,"D3DPTEXTURECAPS_SQUAREONLY");
                 // not in ddk or dxsdk but it is in msdn checkflag(flag,D3DPTEXTURECAPS_TEXREPEATNOTSCALESBYSIZE,"D3DPTEXTURECAPS_TEXREPEATNOTSCALESBYSIZE");
                 // not in ddk or dxsdk but it is in msdn checkflag(flag,D3DPTEXTURECAPS_TEXTURETRANSFORM,"D3DPTEXTURECAPS_TEXTURETRANSFORM");
                 checkflag(flag,D3DPTEXTURECAPS_TRANSPARENCY,"D3DPTEXTURECAPS_TRANSPARENCY");
-                endcheckflag(flag,"puD3dDriverData->hwCaps.dpcLineCaps.dwTextureCaps "); 
+                endcheckflag(flag,"puD3dDriverData->hwCaps.dpcLineCaps.dwTextureCaps ");
 
                 printf(" puD3dDriverData->hwCaps.dpcLineCaps.dwTextureFilterCaps        : ");
                 count = 0;
@@ -857,7 +857,7 @@ dump_D3dDriverData(D3DNTHAL_GLOBALDRIVERDATA *puD3dDriverData, char *text)
                 checkflag(flag,D3DPTFILTERCAPS_MAGFANISOTROPIC,"D3DPTFILTERCAPS_MAGFANISOTROPIC");
                 checkflag(flag,D3DPTFILTERCAPS_MAGFGAUSSIANCUBIC,"D3DPTFILTERCAPS_MAGFGAUSSIANCUBIC");
                 checkflag(flag,D3DPTFILTERCAPS_MAGFLINEAR,"D3DPTFILTERCAPS_MAGFLINEAR");
-                checkflag(flag,D3DPTFILTERCAPS_MAGFPOINT,"D3DPTFILTERCAPS_MAGFPOINT");       
+                checkflag(flag,D3DPTFILTERCAPS_MAGFPOINT,"D3DPTFILTERCAPS_MAGFPOINT");
                 checkflag(flag,D3DPTFILTERCAPS_MINFANISOTROPIC,"D3DPTFILTERCAPS_MINFANISOTROPIC");
                 checkflag(flag,D3DPTFILTERCAPS_MINFLINEAR,"D3DPTFILTERCAPS_MINFLINEAR");
                 checkflag(flag,D3DPTFILTERCAPS_MINFPOINT,"D3DPTFILTERCAPS_MINFPOINT");
@@ -866,7 +866,7 @@ dump_D3dDriverData(D3DNTHAL_GLOBALDRIVERDATA *puD3dDriverData, char *text)
                 checkflag(flag,D3DPTFILTERCAPS_MIPLINEAR,"D3DPTFILTERCAPS_MIPLINEAR");
                 checkflag(flag,D3DPTFILTERCAPS_MIPNEAREST,"D3DPTFILTERCAPS_MIPNEAREST");
                 checkflag(flag,D3DPTFILTERCAPS_NEAREST,"D3DPTFILTERCAPS_NEAREST");
-                endcheckflag(flag,"puD3dDriverData->hwCaps.dpcLineCaps.dwTextureFilterCaps "); 
+                endcheckflag(flag,"puD3dDriverData->hwCaps.dpcLineCaps.dwTextureFilterCaps ");
 
                 printf(" puD3dDriverData->hwCaps.dpcLineCaps.dwTextureBlendCaps         : ");
                 count = 0;
@@ -878,8 +878,8 @@ dump_D3dDriverData(D3DNTHAL_GLOBALDRIVERDATA *puD3dDriverData, char *text)
                 checkflag(flag,D3DPTBLENDCAPS_DECALMASK,"D3DPTBLENDCAPS_DECALMASK");
                 checkflag(flag,D3DPTBLENDCAPS_MODULATE,"D3DPTBLENDCAPS_MODULATE");
                 checkflag(flag,D3DPTBLENDCAPS_MODULATEALPHA,"D3DPTBLENDCAPS_MODULATEALPHA");
-                checkflag(flag,D3DPTBLENDCAPS_MODULATEMASK,"D3DPTBLENDCAPS_MODULATEMASK");       
-                endcheckflag(flag,"puD3dDriverData->hwCaps.dpcLineCaps.dwTextureBlendCaps "); 
+                checkflag(flag,D3DPTBLENDCAPS_MODULATEMASK,"D3DPTBLENDCAPS_MODULATEMASK");
+                endcheckflag(flag,"puD3dDriverData->hwCaps.dpcLineCaps.dwTextureBlendCaps ");
 
                 printf(" puD3dDriverData->hwCaps.dpcLineCaps.dwTextureAddressCaps       : ");
                 count = 0;
@@ -888,8 +888,8 @@ dump_D3dDriverData(D3DNTHAL_GLOBALDRIVERDATA *puD3dDriverData, char *text)
                 checkflag(flag,D3DPTADDRESSCAPS_CLAMP,"D3DPTADDRESSCAPS_CLAMP");
                 checkflag(flag,D3DPTADDRESSCAPS_INDEPENDENTUV,"D3DPTADDRESSCAPS_INDEPENDENTUV");
                 checkflag(flag,D3DPTADDRESSCAPS_MIRROR,"D3DPTADDRESSCAPS_MIRROR");
-                checkflag(flag,D3DPTADDRESSCAPS_WRAP,"D3DPTADDRESSCAPS_WRAP");                                
-                endcheckflag(flag,"puD3dDriverData->hwCaps.dpcLineCaps.dwTextureAddressCaps "); 
+                checkflag(flag,D3DPTADDRESSCAPS_WRAP,"D3DPTADDRESSCAPS_WRAP");
+                endcheckflag(flag,"puD3dDriverData->hwCaps.dpcLineCaps.dwTextureAddressCaps ");
 
                 printf(" puD3dDriverData->hwCaps.dpcLineCaps.dwStippleWidth             : 0x%08lx\n",(long)puD3dDriverData->hwCaps.dpcLineCaps.dwStippleWidth);
                 printf(" puD3dDriverData->hwCaps.dpcLineCaps.dwStippleHeight            : 0x%08lx\n",(long)puD3dDriverData->hwCaps.dpcLineCaps.dwStippleHeight);
@@ -913,7 +913,7 @@ dump_D3dDriverData(D3DNTHAL_GLOBALDRIVERDATA *puD3dDriverData, char *text)
                 checkflag(flag,D3DPMISCCAPS_LINEPATTERNREP,"D3DPMISCCAPS_LINEPATTERNREP");
                 checkflag(flag,D3DPMISCCAPS_MASKPLANES,"D3DPMISCCAPS_MASKPLANES");
                 checkflag(flag,D3DPMISCCAPS_MASKZ,"D3DPMISCCAPS_MASKZ");
-                endcheckflag(flag,"puD3dDriverData->hwCaps.dpcTriCaps.dwMiscCaps"); 
+                endcheckflag(flag,"puD3dDriverData->hwCaps.dpcTriCaps.dwMiscCaps");
 
                 printf(" puD3dDriverData->hwCaps.dpcTriCaps.dwRasterCaps                : ");
                 count = 0;
@@ -938,8 +938,8 @@ dump_D3dDriverData(D3DNTHAL_GLOBALDRIVERDATA *puD3dDriverData, char *text)
                 checkflag(flag,D3DPRASTERCAPS_ZBIAS,"D3DPRASTERCAPS_ZBIAS");
                 checkflag(flag,D3DPRASTERCAPS_ZBUFFERLESSHSR,"D3DPRASTERCAPS_ZBUFFERLESSHSR");
                 checkflag(flag,D3DPRASTERCAPS_ZFOG,"D3DPRASTERCAPS_ZFOG");
-                checkflag(flag,D3DPRASTERCAPS_ZTEST,"D3DPRASTERCAPS_ZTEST");               
-                endcheckflag(flag,"puD3dDriverData->hwCaps.dpcTriCaps.dwRasterCaps"); 
+                checkflag(flag,D3DPRASTERCAPS_ZTEST,"D3DPRASTERCAPS_ZTEST");
+                endcheckflag(flag,"puD3dDriverData->hwCaps.dpcTriCaps.dwRasterCaps");
 
                 printf(" puD3dDriverData->hwCaps.dpcTriCaps.dwZCmpCaps                  : ");
                 count = 0;
@@ -951,9 +951,9 @@ dump_D3dDriverData(D3DNTHAL_GLOBALDRIVERDATA *puD3dDriverData, char *text)
                 checkflag(flag,D3DPCMPCAPS_LESS,"D3DPCMPCAPS_LESS");
                 checkflag(flag,D3DPCMPCAPS_LESSEQUAL,"D3DPCMPCAPS_LESSEQUAL");
                 checkflag(flag,D3DPCMPCAPS_NEVER,"D3DPCMPCAPS_NEVER");
-                checkflag(flag,D3DPCMPCAPS_NOTEQUAL,"D3DPCMPCAPS_NOTEQUAL");               
-                endcheckflag(flag,"puD3dDriverData->hwCaps.dpcTriCaps.dwZCmpCaps "); 
-                               
+                checkflag(flag,D3DPCMPCAPS_NOTEQUAL,"D3DPCMPCAPS_NOTEQUAL");
+                endcheckflag(flag,"puD3dDriverData->hwCaps.dpcTriCaps.dwZCmpCaps ");
+
                 printf(" puD3dDriverData->hwCaps.dpcTriCaps.dwSrcBlendCaps              : ");
                 count = 0;
                 flag = puD3dDriverData->hwCaps.dpcTriCaps.dwSrcBlendCaps;
@@ -964,13 +964,13 @@ dump_D3dDriverData(D3DNTHAL_GLOBALDRIVERDATA *puD3dDriverData, char *text)
                 checkflag(flag,D3DPBLENDCAPS_INVDESTALPHA,"D3DPBLENDCAPS_INVDESTALPHA");
                 checkflag(flag,D3DPBLENDCAPS_INVDESTCOLOR,"D3DPBLENDCAPS_INVDESTCOLOR");
                 checkflag(flag,D3DPBLENDCAPS_INVSRCALPHA,"D3DPBLENDCAPS_INVSRCALPHA");
-                checkflag(flag,D3DPBLENDCAPS_INVSRCCOLOR,"D3DPBLENDCAPS_INVSRCCOLOR");   
+                checkflag(flag,D3DPBLENDCAPS_INVSRCCOLOR,"D3DPBLENDCAPS_INVSRCCOLOR");
                 checkflag(flag,D3DPBLENDCAPS_ONE,"D3DPBLENDCAPS_ONE");
                 checkflag(flag,D3DPBLENDCAPS_SRCALPHA,"D3DPBLENDCAPS_SRCALPHA");
                 checkflag(flag,D3DPBLENDCAPS_SRCALPHASAT,"D3DPBLENDCAPS_SRCALPHASAT");
                 checkflag(flag,D3DPBLENDCAPS_SRCCOLOR,"D3DPBLENDCAPS_SRCCOLOR");
-                checkflag(flag,D3DPBLENDCAPS_ZERO,"D3DPBLENDCAPS_ZERO");            
-                endcheckflag(flag,"puD3dDriverData->hwCaps.dpcTriCaps.dwSrcBlendCaps "); 
+                checkflag(flag,D3DPBLENDCAPS_ZERO,"D3DPBLENDCAPS_ZERO");
+                endcheckflag(flag,"puD3dDriverData->hwCaps.dpcTriCaps.dwSrcBlendCaps ");
 
                 printf(" puD3dDriverData->hwCaps.dpcTriCaps.dwDestBlendCaps             : ");
                 count = 0;
@@ -982,13 +982,13 @@ dump_D3dDriverData(D3DNTHAL_GLOBALDRIVERDATA *puD3dDriverData, char *text)
                 checkflag(flag,D3DPBLENDCAPS_INVDESTALPHA,"D3DPBLENDCAPS_INVDESTALPHA");
                 checkflag(flag,D3DPBLENDCAPS_INVDESTCOLOR,"D3DPBLENDCAPS_INVDESTCOLOR");
                 checkflag(flag,D3DPBLENDCAPS_INVSRCALPHA,"D3DPBLENDCAPS_INVSRCALPHA");
-                checkflag(flag,D3DPBLENDCAPS_INVSRCCOLOR,"D3DPBLENDCAPS_INVSRCCOLOR");   
+                checkflag(flag,D3DPBLENDCAPS_INVSRCCOLOR,"D3DPBLENDCAPS_INVSRCCOLOR");
                 checkflag(flag,D3DPBLENDCAPS_ONE,"D3DPBLENDCAPS_ONE");
                 checkflag(flag,D3DPBLENDCAPS_SRCALPHA,"D3DPBLENDCAPS_SRCALPHA");
                 checkflag(flag,D3DPBLENDCAPS_SRCALPHASAT,"D3DPBLENDCAPS_SRCALPHASAT");
                 checkflag(flag,D3DPBLENDCAPS_SRCCOLOR,"D3DPBLENDCAPS_SRCCOLOR");
-                checkflag(flag,D3DPBLENDCAPS_ZERO,"D3DPBLENDCAPS_ZERO");            
-                endcheckflag(flag,"puD3dDriverData->hwCaps.dpcTriCaps.dwDestBlendCaps "); 
+                checkflag(flag,D3DPBLENDCAPS_ZERO,"D3DPBLENDCAPS_ZERO");
+                endcheckflag(flag,"puD3dDriverData->hwCaps.dpcTriCaps.dwDestBlendCaps ");
 
                 printf(" puD3dDriverData->hwCaps.dpcTriCaps.dwAlphaCmpCaps              : ");
                 count = 0;
@@ -1000,8 +1000,8 @@ dump_D3dDriverData(D3DNTHAL_GLOBALDRIVERDATA *puD3dDriverData, char *text)
                 checkflag(flag,D3DPCMPCAPS_LESS,"D3DPCMPCAPS_LESS");
                 checkflag(flag,D3DPCMPCAPS_LESSEQUAL,"D3DPCMPCAPS_LESSEQUAL");
                 checkflag(flag,D3DPCMPCAPS_NEVER,"D3DPCMPCAPS_NEVER");
-                checkflag(flag,D3DPCMPCAPS_NOTEQUAL,"D3DPCMPCAPS_NOTEQUAL");               
-                endcheckflag(flag,"puD3dDriverData->hwCaps.dpcTriCaps.dwAlphaCmpCaps "); 
+                checkflag(flag,D3DPCMPCAPS_NOTEQUAL,"D3DPCMPCAPS_NOTEQUAL");
+                endcheckflag(flag,"puD3dDriverData->hwCaps.dpcTriCaps.dwAlphaCmpCaps ");
 
                 printf(" puD3dDriverData->hwCaps.dpcTriCaps.dwShadeCaps                 : ");
                 count = 0;
@@ -1013,7 +1013,7 @@ dump_D3dDriverData(D3DNTHAL_GLOBALDRIVERDATA *puD3dDriverData, char *text)
                 checkflag(flag,D3DPSHADECAPS_ALPHAPHONGBLEND,"D3DPSHADECAPS_ALPHAPHONGBLEND");
                 checkflag(flag,D3DPSHADECAPS_ALPHAPHONGSTIPPLED,"D3DPSHADECAPS_ALPHAPHONGSTIPPLED");
                 checkflag(flag,D3DPSHADECAPS_COLORFLATMONO,"D3DPSHADECAPS_COLORFLATMONO");
-                checkflag(flag,D3DPSHADECAPS_COLORFLATRGB,"D3DPSHADECAPS_COLORFLATRGB");       
+                checkflag(flag,D3DPSHADECAPS_COLORFLATRGB,"D3DPSHADECAPS_COLORFLATRGB");
                 checkflag(flag,D3DPSHADECAPS_COLORGOURAUDMONO,"D3DPSHADECAPS_COLORGOURAUDMONO");
                 checkflag(flag,D3DPSHADECAPS_COLORGOURAUDRGB,"D3DPSHADECAPS_COLORGOURAUDRGB");
                 checkflag(flag,D3DPSHADECAPS_COLORPHONGMONO,"D3DPSHADECAPS_COLORPHONGMONO");
@@ -1021,13 +1021,13 @@ dump_D3dDriverData(D3DNTHAL_GLOBALDRIVERDATA *puD3dDriverData, char *text)
                 checkflag(flag,D3DPSHADECAPS_FOGFLAT,"D3DPSHADECAPS_FOGFLAT");
                 checkflag(flag,D3DPSHADECAPS_FOGGOURAUD,"D3DPSHADECAPS_FOGGOURAUD");
                 checkflag(flag,D3DPSHADECAPS_FOGPHONG,"D3DPSHADECAPS_FOGPHONG");
-                checkflag(flag,D3DPSHADECAPS_SPECULARFLATMONO,"D3DPSHADECAPS_SPECULARFLATMONO"); 
-                checkflag(flag,D3DPSHADECAPS_SPECULARFLATRGB,"D3DPSHADECAPS_SPECULARFLATRGB"); 
+                checkflag(flag,D3DPSHADECAPS_SPECULARFLATMONO,"D3DPSHADECAPS_SPECULARFLATMONO");
+                checkflag(flag,D3DPSHADECAPS_SPECULARFLATRGB,"D3DPSHADECAPS_SPECULARFLATRGB");
                 checkflag(flag,D3DPSHADECAPS_SPECULARGOURAUDMONO,"D3DPSHADECAPS_SPECULARGOURAUDMONO");
                 checkflag(flag,D3DPSHADECAPS_SPECULARGOURAUDRGB,"D3DPSHADECAPS_SPECULARGOURAUDRGB");
-                checkflag(flag,D3DPSHADECAPS_SPECULARPHONGMONO,"D3DPSHADECAPS_SPECULARPHONGMONO"); 
-                checkflag(flag,D3DPSHADECAPS_SPECULARPHONGRGB,"D3DPSHADECAPS_SPECULARPHONGRGB"); 
-                endcheckflag(flag,"puD3dDriverData->hwCaps.dpcTriCaps.dwShadeCaps "); 
+                checkflag(flag,D3DPSHADECAPS_SPECULARPHONGMONO,"D3DPSHADECAPS_SPECULARPHONGMONO");
+                checkflag(flag,D3DPSHADECAPS_SPECULARPHONGRGB,"D3DPSHADECAPS_SPECULARPHONGRGB");
+                endcheckflag(flag,"puD3dDriverData->hwCaps.dpcTriCaps.dwShadeCaps ");
 
                 printf(" puD3dDriverData->hwCaps.dpcTriCaps.dwTextureCaps              : ");
                 count = 0;
@@ -1039,13 +1039,13 @@ dump_D3dDriverData(D3DNTHAL_GLOBALDRIVERDATA *puD3dDriverData, char *text)
                 checkflag(flag,D3DPTEXTURECAPS_CUBEMAP,"D3DPTEXTURECAPS_CUBEMAP");
                 checkflag(flag,D3DPTEXTURECAPS_PERSPECTIVE,"D3DPTEXTURECAPS_PERSPECTIVE");
                 checkflag(flag,D3DPTEXTURECAPS_POW2,"D3DPTEXTURECAPS_POW2");
-                checkflag(flag,D3DPTEXTURECAPS_PROJECTED,"D3DPTEXTURECAPS_PROJECTED");       
+                checkflag(flag,D3DPTEXTURECAPS_PROJECTED,"D3DPTEXTURECAPS_PROJECTED");
                 checkflag(flag,D3DPTEXTURECAPS_NONPOW2CONDITIONAL,"D3DPTEXTURECAPS_NONPOW2CONDITIONAL");
                 checkflag(flag,D3DPTEXTURECAPS_SQUAREONLY,"D3DPTEXTURECAPS_SQUAREONLY");
                 //not in ddk or dxsdk but it is in msdn  checkflag(flag,D3DPTEXTURECAPS_TEXREPEATNOTSCALESBYSIZE,"D3DPTEXTURECAPS_TEXREPEATNOTSCALESBYSIZE");
                 //not in ddk or dxsdk but it is in msdn  checkflag(flag,D3DPTEXTURECAPS_TEXTURETRANSFORM,"D3DPTEXTURECAPS_TEXTURETRANSFORM");
                 checkflag(flag,D3DPTEXTURECAPS_TRANSPARENCY,"D3DPTEXTURECAPS_TRANSPARENCY");
-                endcheckflag(flag,"puD3dDriverData->hwCaps.dpcTriCaps.dwTextureCaps "); 
+                endcheckflag(flag,"puD3dDriverData->hwCaps.dpcTriCaps.dwTextureCaps ");
 
                 printf(" puD3dDriverData->hwCaps.dpcTriCaps.dwTextureFilterCaps         : ");
                 count = 0;
@@ -1057,7 +1057,7 @@ dump_D3dDriverData(D3DNTHAL_GLOBALDRIVERDATA *puD3dDriverData, char *text)
                 checkflag(flag,D3DPTFILTERCAPS_MAGFANISOTROPIC,"D3DPTFILTERCAPS_MAGFANISOTROPIC");
                 checkflag(flag,D3DPTFILTERCAPS_MAGFGAUSSIANCUBIC,"D3DPTFILTERCAPS_MAGFGAUSSIANCUBIC");
                 checkflag(flag,D3DPTFILTERCAPS_MAGFLINEAR,"D3DPTFILTERCAPS_MAGFLINEAR");
-                checkflag(flag,D3DPTFILTERCAPS_MAGFPOINT,"D3DPTFILTERCAPS_MAGFPOINT");       
+                checkflag(flag,D3DPTFILTERCAPS_MAGFPOINT,"D3DPTFILTERCAPS_MAGFPOINT");
                 checkflag(flag,D3DPTFILTERCAPS_MINFANISOTROPIC,"D3DPTFILTERCAPS_MINFANISOTROPIC");
                 checkflag(flag,D3DPTFILTERCAPS_MINFLINEAR,"D3DPTFILTERCAPS_MINFLINEAR");
                 checkflag(flag,D3DPTFILTERCAPS_MINFPOINT,"D3DPTFILTERCAPS_MINFPOINT");
@@ -1066,7 +1066,7 @@ dump_D3dDriverData(D3DNTHAL_GLOBALDRIVERDATA *puD3dDriverData, char *text)
                 checkflag(flag,D3DPTFILTERCAPS_MIPLINEAR,"D3DPTFILTERCAPS_MIPLINEAR");
                 checkflag(flag,D3DPTFILTERCAPS_MIPNEAREST,"D3DPTFILTERCAPS_MIPNEAREST");
                 checkflag(flag,D3DPTFILTERCAPS_NEAREST,"D3DPTFILTERCAPS_NEAREST");
-                endcheckflag(flag,"puD3dDriverData->hwCaps.dpcTriCaps.dwTextureFilterCaps "); 
+                endcheckflag(flag,"puD3dDriverData->hwCaps.dpcTriCaps.dwTextureFilterCaps ");
 
                 printf(" puD3dDriverData->hwCaps.dpcTriCaps.dwTextureBlendCaps          : ");
                 count = 0;
@@ -1078,8 +1078,8 @@ dump_D3dDriverData(D3DNTHAL_GLOBALDRIVERDATA *puD3dDriverData, char *text)
                 checkflag(flag,D3DPTBLENDCAPS_DECALMASK,"D3DPTBLENDCAPS_DECALMASK");
                 checkflag(flag,D3DPTBLENDCAPS_MODULATE,"D3DPTBLENDCAPS_MODULATE");
                 checkflag(flag,D3DPTBLENDCAPS_MODULATEALPHA,"D3DPTBLENDCAPS_MODULATEALPHA");
-                checkflag(flag,D3DPTBLENDCAPS_MODULATEMASK,"D3DPTBLENDCAPS_MODULATEMASK");       
-                endcheckflag(flag,"puD3dDriverData->hwCaps.dpcTriCaps.dwTextureBlendCaps "); 
+                checkflag(flag,D3DPTBLENDCAPS_MODULATEMASK,"D3DPTBLENDCAPS_MODULATEMASK");
+                endcheckflag(flag,"puD3dDriverData->hwCaps.dpcTriCaps.dwTextureBlendCaps ");
 
                 printf(" puD3dDriverData->hwCaps.dpcTriCaps.dwTextureAddressCaps        : ");
                 count = 0;
@@ -1088,8 +1088,8 @@ dump_D3dDriverData(D3DNTHAL_GLOBALDRIVERDATA *puD3dDriverData, char *text)
                 checkflag(flag,D3DPTADDRESSCAPS_CLAMP,"D3DPTADDRESSCAPS_CLAMP");
                 checkflag(flag,D3DPTADDRESSCAPS_INDEPENDENTUV,"D3DPTADDRESSCAPS_INDEPENDENTUV");
                 checkflag(flag,D3DPTADDRESSCAPS_MIRROR,"D3DPTADDRESSCAPS_MIRROR");
-                checkflag(flag,D3DPTADDRESSCAPS_WRAP,"D3DPTADDRESSCAPS_WRAP");                                
-                endcheckflag(flag,"puD3dDriverData->hwCaps.dpcTriCaps.dwTextureAddressCaps "); 
+                checkflag(flag,D3DPTADDRESSCAPS_WRAP,"D3DPTADDRESSCAPS_WRAP");
+                endcheckflag(flag,"puD3dDriverData->hwCaps.dpcTriCaps.dwTextureAddressCaps ");
 
                 printf(" puD3dDriverData->hwCaps.dpcTriCaps.dwStippleWidth              : 0x%08lx\n",(long)puD3dDriverData->hwCaps.dpcTriCaps.dwStippleWidth);
                 printf(" puD3dDriverData->hwCaps.dpcTriCaps.dwStippleHeight             : 0x%08lx\n",(long)puD3dDriverData->hwCaps.dpcTriCaps.dwStippleHeight);
@@ -1144,14 +1144,14 @@ dump_D3dBufferCallbacks(DD_D3DBUFCALLBACKS *puD3dBufferCallbacks, char *text)
         checkflag(flag,DDHAL_D3DBUFCB32_DESTROYD3DBUF,"DDHAL_D3DBUFCB32_DESTROYD3DBUF");
 
         checkflag(flag,DDHAL_D3DBUFCB32_LOCKD3DBUF,"DDHAL_D3DBUFCB32_LOCKD3DBUF");
-        checkflag(flag,DDHAL_D3DBUFCB32_UNLOCKD3DBUF,"DDHAL_D3DBUFCB32_UNLOCKD3DBUF");                                
-        endcheckflag(flag,"puD3dBufferCallbacks->dwFlags"); 
+        checkflag(flag,DDHAL_D3DBUFCB32_UNLOCKD3DBUF,"DDHAL_D3DBUFCB32_UNLOCKD3DBUF");
+        endcheckflag(flag,"puD3dBufferCallbacks->dwFlags");
 
         printf(" puD3dBufferCallbacks->CanCreateD3DBuffer                       : 0x%08lx\n",(long)puD3dBufferCallbacks->CanCreateD3DBuffer);
         printf(" puD3dBufferCallbacks->CreateD3DBuffer                          : 0x%08lx\n",(long)puD3dBufferCallbacks->CreateD3DBuffer);
         printf(" puD3dBufferCallbacks->DestroyD3DBuffer                         : 0x%08lx\n",(long)puD3dBufferCallbacks->DestroyD3DBuffer);
         printf(" puD3dBufferCallbacks->LockD3DBuffer                            : 0x%08lx\n",(long)puD3dBufferCallbacks->LockD3DBuffer);
-        printf(" puD3dBufferCallbacks->UnlockD3DBuffer                          : 0x%08lx\n",(long)puD3dBufferCallbacks->UnlockD3DBuffer);        
+        printf(" puD3dBufferCallbacks->UnlockD3DBuffer                          : 0x%08lx\n",(long)puD3dBufferCallbacks->UnlockD3DBuffer);
     }
     else
     {
@@ -1167,15 +1167,15 @@ dump_D3dTextureFormats(DDSURFACEDESC *puD3dTextureFormats, int dwNum, char *text
     int count = 0;
     DWORD flag = 0;
     DDSURFACEDESC * myTextureFormats = puD3dTextureFormats;
-    
+
     printf("dumping the DDSURFACEDESC/DDSURFACEDESC2 from %s\n",text);
 
     for (t=0;t<dwNum;t++)
     {
         printf("Show %d of %d DDSURFACEDESC\n",t+1,dwNum);
         if (myTextureFormats->dwSize == sizeof(DDSURFACEDESC))
-        {         
-            printf(" puD3dTextureFormats->dwSize                                    : 0x%08lx\n",(long)myTextureFormats->dwSize);        
+        {
+            printf(" puD3dTextureFormats->dwSize                                    : 0x%08lx\n",(long)myTextureFormats->dwSize);
 
             printf(" puD3dTextureFormats->dwFlags                                   : ");
             count = 0;
@@ -1184,19 +1184,19 @@ dump_D3dTextureFormats(DDSURFACEDESC *puD3dTextureFormats, int dwNum, char *text
             checkflag(flag,DDSD_BACKBUFFERCOUNT ,"DDSD_BACKBUFFERCOUNT");
             checkflag(flag,DDSD_CAPS,"DDSD_CAPS ");
             checkflag(flag,DDSD_CKDESTBLT,"DDSD_CKDESTBLT");
-            checkflag(flag,DDSD_CKDESTOVERLAY,"DDSD_CKDESTOVERLAY");                                
-            checkflag(flag,DDSD_CKSRCBLT,"DDSD_CKSRCBLT"); 
-            checkflag(flag,DDSD_CKSRCOVERLAY,"DDSD_CKSRCOVERLAY"); 
-            checkflag(flag,DDSD_HEIGHT,"DDSD_HEIGHT"); 
-            checkflag(flag,DDSD_LINEARSIZE,"DDSD_LINEARSIZE"); 
-            checkflag(flag,DDSD_LPSURFACE,"DDSD_LPSURFACE"); 
-            checkflag(flag,DDSD_MIPMAPCOUNT,"DDSD_MIPMAPCOUNT"); 
-            checkflag(flag,DDSD_PITCH,"DDSD_PITCH"); 
-            checkflag(flag,DDSD_PIXELFORMAT,"DDSD_PIXELFORMAT"); 
+            checkflag(flag,DDSD_CKDESTOVERLAY,"DDSD_CKDESTOVERLAY");
+            checkflag(flag,DDSD_CKSRCBLT,"DDSD_CKSRCBLT");
+            checkflag(flag,DDSD_CKSRCOVERLAY,"DDSD_CKSRCOVERLAY");
+            checkflag(flag,DDSD_HEIGHT,"DDSD_HEIGHT");
+            checkflag(flag,DDSD_LINEARSIZE,"DDSD_LINEARSIZE");
+            checkflag(flag,DDSD_LPSURFACE,"DDSD_LPSURFACE");
+            checkflag(flag,DDSD_MIPMAPCOUNT,"DDSD_MIPMAPCOUNT");
+            checkflag(flag,DDSD_PITCH,"DDSD_PITCH");
+            checkflag(flag,DDSD_PIXELFORMAT,"DDSD_PIXELFORMAT");
             checkflag(flag,DDSD_REFRESHRATE,"DDSD_REFRESHRATE");
             checkflag(flag,DDSD_WIDTH,"DDSD_WIDTH");
             checkflag(flag,DDSD_ZBUFFERBITDEPTH,"DDSD_ZBUFFERBITDEPTH");
-            endcheckflag(flag,"puD3dTextureFormats->dwFlags"); 
+            endcheckflag(flag,"puD3dTextureFormats->dwFlags");
 
             printf(" puD3dTextureFormats->dwHeight                                  : 0x%08lx\n",(long)myTextureFormats->dwHeight);
             printf(" puD3dTextureFormats->dwWidth                                   : 0x%08lx\n",(long)myTextureFormats->dwWidth);
@@ -1210,16 +1210,16 @@ dump_D3dTextureFormats(DDSURFACEDESC *puD3dTextureFormats, int dwNum, char *text
             printf(" puD3dTextureFormats->ddckCKDestOverlay.dwColorSpaceHighValue   : 0x%08lx\n",(long)myTextureFormats->ddckCKDestOverlay.dwColorSpaceHighValue);
             printf(" puD3dTextureFormats->ddckCKDestBlt.dwColorSpaceLowValue        : 0x%08lx\n",(long)myTextureFormats->ddckCKDestBlt.dwColorSpaceLowValue);
             printf(" puD3dTextureFormats->ddckCKDestBlt                             : 0x%08lx\n",(long)myTextureFormats->ddckCKDestBlt.dwColorSpaceHighValue);
-            printf(" puD3dTextureFormats->ddckCKSrcOverlay.dwColorSpaceLowValue     : 0x%08lx\n",(long)myTextureFormats->ddckCKSrcOverlay.dwColorSpaceLowValue);        
-            printf(" puD3dTextureFormats->ddckCKSrcOverlay.dwColorSpaceHighValue    : 0x%08lx\n",(long)myTextureFormats->ddckCKSrcOverlay.dwColorSpaceHighValue);        
+            printf(" puD3dTextureFormats->ddckCKSrcOverlay.dwColorSpaceLowValue     : 0x%08lx\n",(long)myTextureFormats->ddckCKSrcOverlay.dwColorSpaceLowValue);
+            printf(" puD3dTextureFormats->ddckCKSrcOverlay.dwColorSpaceHighValue    : 0x%08lx\n",(long)myTextureFormats->ddckCKSrcOverlay.dwColorSpaceHighValue);
             printf(" puD3dTextureFormats->ddckCKSrcBlt.dwColorSpaceLowValue         : 0x%08lx\n",(long)myTextureFormats->ddckCKSrcBlt.dwColorSpaceLowValue);
             printf(" puD3dTextureFormats->ddckCKSrcBlt.dwColorSpaceHighValue        : 0x%08lx\n",(long)myTextureFormats->ddckCKSrcBlt.dwColorSpaceHighValue);
 
-         // DDPIXELFORMAT            
+         // DDPIXELFORMAT
             printf(" puD3dTextureFormats->ddpfPixelFormat.dwSize                    : 0x%08lx\n",(long)myTextureFormats->ddpfPixelFormat.dwSize);
             if (puD3dTextureFormats->ddpfPixelFormat.dwSize == sizeof(DDPIXELFORMAT))
             {
-                printf(" puD3dTextureFormats->ddpfPixelFormat.dwFlags                   : ");                
+                printf(" puD3dTextureFormats->ddpfPixelFormat.dwFlags                   : ");
                 count = 0;
                 flag = myTextureFormats->ddpfPixelFormat.dwFlags;
                 checkflag(flag,DDPF_ALPHA,"DDPF_ALPHA");
@@ -1241,14 +1241,14 @@ dump_D3dTextureFormats(DDSURFACEDESC *puD3dTextureFormats, int dwNum, char *text
                 checkflag(flag,DDPF_YUV,"DDPF_YUV");
                 checkflag(flag,DDPF_ZBUFFER,"DDPF_ZBUFFER");
                 checkflag(flag,DDPF_ZPIXELS,"DDPF_ZPIXELS");
-                endcheckflag(flag,"puD3dTextureFormats->ddpfPixelFormat.dwFlags"); 
+                endcheckflag(flag,"puD3dTextureFormats->ddpfPixelFormat.dwFlags");
 
 
                 if (myTextureFormats->ddpfPixelFormat.dwFlags & DDPF_FOURCC)
                 {
                     printf(" puD3dTextureFormats->ddpfPixelFormat.dwFourCC                  : ");
                     switch(myTextureFormats->ddpfPixelFormat.dwFourCC)
-                    {       
+                    {
                         case MAKEFOURCC('A','U','R','2'):
                             printf("AUR2\n");
                             break;
@@ -1340,11 +1340,11 @@ dump_D3dTextureFormats(DDSURFACEDESC *puD3dTextureFormats, int dwNum, char *text
                         case MAKEFOURCC('V','I','D','S'):
                             printf("VIDS\n");
                             break;
-                        
+
                         case MAKEFOURCC('Y','U','9','2'):
                             printf("YU92\n");
                             break;
-                         
+
                         case MAKEFOURCC('Y','U','V','8'):
                             printf("YUV8\n");
                             break;
@@ -1356,7 +1356,7 @@ dump_D3dTextureFormats(DDSURFACEDESC *puD3dTextureFormats, int dwNum, char *text
                         case MAKEFOURCC('Y','U','Y','V'):
                             printf("YUYV\n");
                             break;
-                                                    
+
                         case MAKEFOURCC('Z','P','E','G'):
                             printf("ZPEG\n");
                             break;
@@ -1380,7 +1380,7 @@ dump_D3dTextureFormats(DDSURFACEDESC *puD3dTextureFormats, int dwNum, char *text
             {
                 printf("none uD3dTextureFormats->ddpfPixelFormat from the driver 0x%08lx\n",myTextureFormats->ddpfPixelFormat.dwSize);
             }
-         
+
             printf(" puD3dTextureFormats->ddsCaps.dwCaps                            : ");
             count = 0;
             flag = myTextureFormats->ddsCaps.dwCaps;
@@ -1390,13 +1390,13 @@ dump_D3dTextureFormats(DDSURFACEDESC *puD3dTextureFormats, int dwNum, char *text
             checkflag(flag,DDSCAPS_ALPHA,"DDSCAPS_ALPHA");
             checkflag(flag,DDSCAPS_BACKBUFFER,"DDSCAPS_BACKBUFFER");
             checkflag(flag,DDSCAPS_FLIP,"DDSCAPS_FLIP");
-            checkflag(flag,DDSCAPS_FRONTBUFFER,"DDSCAPS_FRONTBUFFER"); 
-            checkflag(flag,DDSCAPS_HWCODEC,"DDSCAPS_HWCODEC"); 
-            checkflag(flag,DDSCAPS_LIVEVIDEO ,"DDSCAPS_LIVEVIDEO"); 
-            checkflag(flag,DDSCAPS_LOCALVIDMEM,"DDSCAPS_LOCALVIDMEM"); 
-            checkflag(flag,DDSCAPS_MIPMAP,"DDSCAPS_MIPMAP"); 
-            checkflag(flag,DDSCAPS_MODEX,"DDSCAPS_MODEX"); 
-            checkflag(flag,DDSCAPS_NONLOCALVIDMEM,"DDSCAPS_NONLOCALVIDMEM"); 
+            checkflag(flag,DDSCAPS_FRONTBUFFER,"DDSCAPS_FRONTBUFFER");
+            checkflag(flag,DDSCAPS_HWCODEC,"DDSCAPS_HWCODEC");
+            checkflag(flag,DDSCAPS_LIVEVIDEO ,"DDSCAPS_LIVEVIDEO");
+            checkflag(flag,DDSCAPS_LOCALVIDMEM,"DDSCAPS_LOCALVIDMEM");
+            checkflag(flag,DDSCAPS_MIPMAP,"DDSCAPS_MIPMAP");
+            checkflag(flag,DDSCAPS_MODEX,"DDSCAPS_MODEX");
+            checkflag(flag,DDSCAPS_NONLOCALVIDMEM,"DDSCAPS_NONLOCALVIDMEM");
             checkflag(flag,DDSCAPS_OFFSCREENPLAIN,"DDSCAPS_OFFSCREENPLAIN");
             checkflag(flag,DDSCAPS_OPTIMIZED,"DDSCAPS_OPTIMIZED");
             checkflag(flag,DDSCAPS_OVERLAY,"DDSCAPS_OVERLAY");
@@ -1411,7 +1411,7 @@ dump_D3dTextureFormats(DDSURFACEDESC *puD3dTextureFormats, int dwNum, char *text
             checkflag(flag,DDSCAPS_VISIBLE,"DDSCAPS_VISIBLE");
             checkflag(flag,DDSCAPS_WRITEONLY ,"DDSCAPS_WRITEONLY");
             checkflag(flag,DDSCAPS_ZBUFFER,"DDSCAPS_ZBUFFER");
-            endcheckflag(flag,"puD3dTextureFormats->ddsCaps.dwCaps"); 
+            endcheckflag(flag,"puD3dTextureFormats->ddsCaps.dwCaps");
 
 
            myTextureFormats = (DDSURFACEDESC *) (((DWORD) myTextureFormats) + sizeof(DDSURFACEDESC));
@@ -1424,11 +1424,11 @@ dump_D3dTextureFormats(DDSURFACEDESC *puD3dTextureFormats, int dwNum, char *text
     }
 
 
-   
 
-    
-    
-    
+
+
+
+
 
 
 

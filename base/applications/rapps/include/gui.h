@@ -71,13 +71,9 @@ private:
     VOID InitCategoriesList();
 
     BOOL CreateStatusBar();
-
     BOOL CreateTreeView();
-
     BOOL CreateApplicationView();
-
     BOOL CreateVSplitter();
-
     BOOL CreateLayout();
 
     VOID LayoutCleanup();
@@ -99,11 +95,8 @@ private:
     VOID OnCommand(WPARAM wParam, LPARAM lParam);
 
     BOOL CALLBACK EnumInstalledAppProc(CInstalledApplicationInfo *Info);
-
     BOOL CALLBACK EnumAvailableAppProc(CAvailableApplicationInfo *Info, BOOL bInitialCheckState);
-
     static BOOL CALLBACK s_EnumInstalledAppProc(CInstalledApplicationInfo *Info, PVOID param);
-
     static BOOL CALLBACK s_EnumAvailableAppProc(CAvailableApplicationInfo *Info, BOOL bInitialCheckState, PVOID param);
 
     static BOOL CALLBACK s_EnumSelectedAppForDownloadProc(CAvailableApplicationInfo *Info, BOOL bInitialCheckState, PVOID param);

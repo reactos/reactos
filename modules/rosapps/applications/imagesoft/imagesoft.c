@@ -20,7 +20,7 @@ _tWinMain(HINSTANCE hThisInstance,
     hInstance = hThisInstance;
     ProcessHeap = GetProcessHeap();
 
-    icex.dwSize = sizeof(INITCOMMONCONTROLSEX);
+    icex.dwSize = sizeof(icex);
     icex.dwICC = ICC_BAR_CLASSES | ICC_COOL_CLASSES;
     InitCommonControlsEx(&icex);
 

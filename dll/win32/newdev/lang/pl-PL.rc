@@ -3,7 +3,7 @@
  *    testament@users.sourceforge.net
  *    https://sourceforge.net/projects/reactospl
  *    Corrected by Caemyr - Olaf Siejka (May, 2007; Jan, 2008)
- *    UTF-8 conversion by Caemyr (May, 2011) 
+ *    UTF-8 conversion by Caemyr (May, 2011)
  */
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT

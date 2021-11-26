@@ -302,15 +302,15 @@ BOOL CALLBACK ScreenSaverConfigureDialog(HWND hDlg, UINT uMsg, WPARAM wParam, LP
         return TRUE;
 
     case WM_COMMAND:
-        switch (LOWORD( wParam )) { 
+        switch (LOWORD( wParam )) {
 
         case IDOK:
             // Write configuration
             SaveSettings();
 
             // Fall down...
-        case IDCANCEL: 
-            EndDialog( hDlg, LOWORD( wParam )); 
+        case IDCANCEL:
+            EndDialog( hDlg, LOWORD( wParam ));
             return TRUE;
 
         case IDC_BUTTON_ABOUT:

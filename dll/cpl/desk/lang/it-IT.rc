@@ -160,7 +160,7 @@ BEGIN
     COMBOBOX IDC_FONTSIZE_COMBO, 14, 30, 223, 80, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     LTEXT "", IDC_FONTSIZE_CUSTOM, 14, 46, 223, 12
     GROUPBOX "Compatibilità", -1, 7, 67, 237, 97
-    LTEXT "Alcuni programmi potrebbero funzionare in modo irregolare se non riavviate il computer dopo una modifica delle impostazioni dei colori.\r\n\nDopo la modifica delle impostazioni dei colori", -1, 12, 78, 228, 34
+    LTEXT "Alcuni programmi potrebbero funzionare in modo irregolare se non riavviate il computer dopo una modifica delle impostazioni dei colori.\n\nDopo la modifica delle impostazioni dei colori", -1, 12, 78, 228, 34
     AUTORADIOBUTTON "&Riavviare il computer prima di applicare le nuove impostazioni.", IDC_RESTART_RB, 14, 116, 228, 10
     AUTORADIOBUTTON "Applicare le nuove impostazioni dei colori senza riavviare.", IDC_WITHOUTREBOOT_RB, 14, 131, 228, 10
     AUTORADIOBUTTON "Chiedere prima di applicare le nuove impostazioni dei colori.", IDC_ASKME_RB, 14, 146, 228, 10

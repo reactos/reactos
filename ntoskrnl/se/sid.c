@@ -1,10 +1,8 @@
 /*
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS kernel
- * FILE:            ntoskrnl/se/sid.c
- * PURPOSE:         Security manager
- *
- * PROGRAMMERS:     David Welch <welch@cwcom.net>
+ * PROJECT:         ReactOS Kernel
+ * LICENSE:         GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:         Security Identifier (SID) implementation support and handling
+ * COPYRIGHT:       Copyright David Welch <welch@cwcom.net>
  */
 
 /* INCLUDES *******************************************************************/
@@ -14,6 +12,8 @@
 #include <debug.h>
 
 /* GLOBALS ********************************************************************/
+
+#define SE_MAXIMUM_GROUP_LIMIT 0x1000
 
 SID_IDENTIFIER_AUTHORITY SeNullSidAuthority = {SECURITY_NULL_SID_AUTHORITY};
 SID_IDENTIFIER_AUTHORITY SeWorldSidAuthority = {SECURITY_WORLD_SID_AUTHORITY};
@@ -52,8 +52,21 @@ PSID SeAnonymousLogonSid = NULL;
 PSID SeLocalServiceSid = NULL;
 PSID SeNetworkServiceSid = NULL;
 
+typedef struct _SID_VALIDATE
+{
+    UCHAR SubAuthorityCount;
+    PISID ProbeSid;
+} SID_VALIDATE, *PSID_VALIDATE;
+
 /* FUNCTIONS ******************************************************************/
 
+/**
+ * @brief
+ * Frees all the known initialized SIDs in the system from the memory.
+ *
+ * @return
+ * Nothing.
+ */
 VOID
 NTAPI
 FreeInitializedSids(VOID)
@@ -88,6 +101,14 @@ FreeInitializedSids(VOID)
     if (SeAnonymousLogonSid) ExFreePoolWithTag(SeAnonymousLogonSid, TAG_SID);
 }
 
+/**
+ * @brief
+ * Initializes all the SIDs known in the system.
+ *
+ * @return
+ * Returns TRUE if all the SIDs have been initialized,
+ * FALSE otherwise.
+ */
 CODE_SEG("INIT")
 BOOLEAN
 NTAPI
@@ -263,13 +284,39 @@ SepInitSecurityIDs(VOID)
     return TRUE;
 }
 
+/**
+ * @brief
+ * Captures a SID.
+ *
+ * @param[in] InputSid
+ * A valid security identifier to be captured.
+ *
+ * @param[in] AccessMode
+ * Processor level access mode.
+ *
+ * @param[in] PoolType
+ * Pool memory type for the captured SID to assign upon
+ * allocation.
+ *
+ * @param[in] CaptureIfKernel
+ * If set to TRUE, the capturing is done within the kernel.
+ * Otherwise the capturing is done in a kernel mode driver.
+ *
+ * @param[out] CapturedSid
+ * The captured security identifier, returned to the caller.
+ *
+ * @return
+ * Returns STATUS_SUCCESS if the SID was captured. STATUS_INSUFFICIENT_RESOURCES
+ * is returned if memory pool allocation for the captured SID has failed.
+ */
 NTSTATUS
 NTAPI
-SepCaptureSid(IN PSID InputSid,
-              IN KPROCESSOR_MODE AccessMode,
-              IN POOL_TYPE PoolType,
-              IN BOOLEAN CaptureIfKernel,
-              OUT PSID *CapturedSid)
+SepCaptureSid(
+    _In_ PSID InputSid,
+    _In_ KPROCESSOR_MODE AccessMode,
+    _In_ POOL_TYPE PoolType,
+    _In_ BOOLEAN CaptureIfKernel,
+    _Out_ PSID *CapturedSid)
 {
     ULONG SidSize = 0;
     PISID NewSid, Sid = (PISID)InputSid;
@@ -331,11 +378,29 @@ SepCaptureSid(IN PSID InputSid,
     return STATUS_SUCCESS;
 }
 
+/**
+ * @brief
+ * Releases a captured SID.
+ *
+ * @param[in] CapturedSid
+ * The captured SID to be released.
+ *
+ * @param[in] AccessMode
+ * Processor level access mode.
+ *
+ * @param[in] CaptureIfKernel
+ * If set to TRUE, the releasing is done within the kernel.
+ * Otherwise the releasing is done in a kernel mode driver.
+ *
+ * @return
+ * Nothing.
+ */
 VOID
 NTAPI
-SepReleaseSid(IN PSID CapturedSid,
-              IN KPROCESSOR_MODE AccessMode,
-              IN BOOLEAN CaptureIfKernel)
+SepReleaseSid(
+    _In_ PSID CapturedSid,
+    _In_ KPROCESSOR_MODE AccessMode,
+    _In_ BOOLEAN CaptureIfKernel)
 {
     PAGED_CODE();
 
@@ -347,6 +412,74 @@ SepReleaseSid(IN PSID CapturedSid,
     }
 }
 
+/**
+ * @brief
+ * Captures a SID with attributes.
+ *
+ * @param[in] SrcSidAndAttributes
+ * Source of the SID with attributes to be captured.
+ *
+ * @param[in] AttributeCount
+ * The number count of attributes, in total.
+ *
+ * @param[in] PreviousMode
+ * Processor access level mode.
+ *
+ * @param[in] AllocatedMem
+ * The allocated memory buffer for the captured SID. If the caller
+ * supplies no allocated block of memory then the function will
+ * allocate some buffer block of memory for the captured SID
+ * automatically.
+ *
+ * @param[in] AllocatedLength
+ * The length of the buffer that points to the allocated memory,
+ * in bytes.
+ *
+ * @param[in] PoolType
+ * The pool type for the captured SID and attributes to assign.
+ *
+ * @param[in] CaptureIfKernel
+ * If set to TRUE, the capturing is done within the kernel.
+ * Otherwise the capturing is done in a kernel mode driver.
+ *
+ * @param[out] CapturedSidAndAttributes
+ * The captured SID and attributes.
+ *
+ * @param[out] ResultLength
+ * The length of the captured SID and attributes, in bytes.
+ *
+ * @return
+ * Returns STATUS_SUCCESS if SID and attributes capturing
+ * has been completed successfully. STATUS_INVALID_PARAMETER
+ * is returned if the count of attributes exceeds the maximum
+ * threshold that the kernel can permit, with the purpose of
+ * avoiding integer overflows. STATUS_INSUFFICIENT_RESOURCES
+ * is returned if memory pool allocation for the captured SID has failed.
+ * STATUS_BUFFER_TOO_SMALL is returned if the length of the allocated
+ * buffer is less than the required size. STATUS_INVALID_SID is returned
+ * if a SID doesn't meet certain requirements to be considered a valid
+ * SID by the security manager. A failure NTSTATUS code is returned
+ * otherwise.
+ *
+ * @remarks
+ * A security identifier (SID) is a variable-length data structure that
+ * can change in size over time, depending on the factors that influence
+ * this effect in question. An attacker can take advantage of this fact
+ * and can potentially modify certain properties of a SID making it
+ * different in size than it was originally before. This is what we'd
+ * call, a TOCTOU vulnerability.
+ *
+ * For this reason, the logic of copying the SIDs and their attributes
+ * into a new buffer goes like this: first, allocate a buffer array
+ * that just holds the lengths and subauthority count of each SID.
+ * Such information is copied in the first loop. Then in a second loop,
+ * iterate over the array with SID provided and copy them into the final
+ * array. The moment we're doing this, validate the lengths of each SID
+ * basing upon the captured lengths we've got before. In this way we
+ * ensure that the SIDs have remained intact. The validation checks are
+ * done in user mode as a general rule that we just cannot trust UM and
+ * whatever data is coming from it.
+ */
 NTSTATUS
 NTAPI
 SeCaptureSidAndAttributesArray(
@@ -361,12 +494,16 @@ SeCaptureSidAndAttributesArray(
     _Out_ PULONG ResultLength)
 {
     ULONG ArraySize, RequiredLength, SidLength, i;
+    ULONG TempArrayValidate, TempLengthValidate;
     PSID_AND_ATTRIBUTES SidAndAttributes;
+    _SEH2_VOLATILE PSID_VALIDATE ValidateArray;
     PUCHAR CurrentDest;
     PISID Sid;
     NTSTATUS Status;
     PAGED_CODE();
 
+    ValidateArray = NULL;
+    SidAndAttributes = NULL;
     *CapturedSidAndAttributes = NULL;
     *ResultLength = 0;
 
@@ -375,8 +512,9 @@ SeCaptureSidAndAttributesArray(
         return STATUS_SUCCESS;
     }
 
-    if (AttributeCount > 0x1000)
+    if (AttributeCount > SE_MAXIMUM_GROUP_LIMIT)
     {
+        DPRINT1("SeCaptureSidAndAttributesArray(): Maximum group limit exceeded!\n");
         return STATUS_INVALID_PARAMETER;
     }
 
@@ -389,13 +527,27 @@ SeCaptureSidAndAttributesArray(
     ArraySize = AttributeCount * sizeof(SID_AND_ATTRIBUTES);
     RequiredLength = ALIGN_UP_BY(ArraySize, sizeof(ULONG));
 
-    /* Check for user mode data */
     if (PreviousMode != KernelMode)
     {
+        /* Check for user mode data */
         _SEH2_TRY
         {
             /* First probe the whole array */
             ProbeForRead(SrcSidAndAttributes, ArraySize, sizeof(ULONG));
+
+            /* We're in user mode, set up the size for the temporary array */
+            TempArrayValidate = AttributeCount * sizeof(SID_VALIDATE);
+            TempLengthValidate = ALIGN_UP_BY(TempArrayValidate, sizeof(ULONG));
+
+            /*
+             * Allocate a buffer for the array that we're going to
+             * temporarily hold the subauthority count and the SID
+             * elements. We'll be going to use this array to perform
+             * validation checks later.
+             */
+            ValidateArray = ExAllocatePoolWithTag(PoolType | POOL_RAISE_IF_ALLOCATION_FAILURE,
+                                                  TempLengthValidate,
+                                                  TAG_SID_VALIDATE);
 
             /* Loop the array elements */
             for (i = 0; i < AttributeCount; i++)
@@ -404,16 +556,20 @@ SeCaptureSidAndAttributesArray(
                 Sid = SrcSidAndAttributes[i].Sid;
                 ProbeForRead(Sid, sizeof(*Sid), sizeof(ULONG));
 
-                /* Verify that the SID is valid */
-                if (((Sid->Revision & 0xF) != SID_REVISION) ||
-                    (Sid->SubAuthorityCount > SID_MAX_SUB_AUTHORITIES))
-                {
-                    _SEH2_YIELD(return STATUS_INVALID_SID);
-                }
+                /*
+                 * Capture the subauthority count and hold it
+                 * into the temporary array for later validation.
+                 * This way we ensure that the said count of each
+                 * SID has remained the same.
+                 */
+                ValidateArray[i].SubAuthorityCount = Sid->SubAuthorityCount;
+
+                /* Capture the SID */
+                ValidateArray[i].ProbeSid = Sid;
 
                 /* Calculate the SID length and probe the full SID */
-                SidLength = RtlLengthRequiredSid(Sid->SubAuthorityCount);
-                ProbeForRead(Sid, SidLength, sizeof(ULONG));
+                SidLength = RtlLengthRequiredSid(ValidateArray[i].SubAuthorityCount);
+                ProbeForRead(ValidateArray[i].ProbeSid, SidLength, sizeof(ULONG));
 
                 /* Add the aligned length to the required length */
                 RequiredLength += ALIGN_UP_BY(SidLength, sizeof(ULONG));
@@ -421,7 +577,8 @@ SeCaptureSidAndAttributesArray(
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-            _SEH2_YIELD(return _SEH2_GetExceptionCode());
+            Status = _SEH2_GetExceptionCode();
+            _SEH2_YIELD(goto Cleanup);
         }
         _SEH2_END;
     }
@@ -452,7 +609,9 @@ SeCaptureSidAndAttributesArray(
                                                  TAG_SID_AND_ATTRIBUTES);
         if (SidAndAttributes == NULL)
         {
-            return STATUS_INSUFFICIENT_RESOURCES;
+            DPRINT1("SeCaptureSidAndAttributesArray(): Failed to allocate memory for SID and attributes array (requested size -> %lu)!\n", RequiredLength);
+            Status = STATUS_INSUFFICIENT_RESOURCES;
+            goto Cleanup;
         }
     }
     /* Otherwise check if the buffer is large enough */
@@ -464,7 +623,9 @@ SeCaptureSidAndAttributesArray(
     else
     {
         /* Buffer is too small, fail */
-        return STATUS_BUFFER_TOO_SMALL;
+        DPRINT1("SeCaptureSidAndAttributesArray(): The provided buffer is small (expected size -> %lu || current size -> %lu)!\n", RequiredLength, AllocatedLength);
+        Status = STATUS_BUFFER_TOO_SMALL;
+        goto Cleanup;
     }
 
     *CapturedSidAndAttributes = SidAndAttributes;
@@ -481,20 +642,50 @@ SeCaptureSidAndAttributesArray(
             /* Loop the array elements */
             for (i = 0; i < AttributeCount; i++)
             {
-                /* Get the SID and it's length */
-                Sid = SrcSidAndAttributes[i].Sid;
-                SidLength = RtlLengthRequiredSid(Sid->SubAuthorityCount);
+                /*
+                 * Get the SID length from the subauthority
+                 * count we've captured before.
+                 */
+                SidLength = RtlLengthRequiredSid(ValidateArray[i].SubAuthorityCount);
 
                 /* Copy attributes */
                 SidAndAttributes[i].Attributes = SrcSidAndAttributes[i].Attributes;
 
                 /* Copy the SID to the current destination address */
                 SidAndAttributes[i].Sid = (PSID)CurrentDest;
-                RtlCopyMemory(CurrentDest, SrcSidAndAttributes[i].Sid, SidLength);
+                RtlCopyMemory(CurrentDest, ValidateArray[i].ProbeSid, SidLength);
 
-                /* Sanity checks */
-                ASSERT(RtlLengthSid(SidAndAttributes[i].Sid) == SidLength);
-                ASSERT(RtlValidSid(SidAndAttributes[i].Sid));
+                /* Obtain the SID we've captured before for validation */
+                Sid = SidAndAttributes[i].Sid;
+
+                /* Validate that the subauthority count hasn't changed */
+                if (ValidateArray[i].SubAuthorityCount !=
+                    Sid->SubAuthorityCount)
+                {
+                    /* It's changed, bail out */
+                    DPRINT1("SeCaptureSidAndAttributesArray(): The subauthority counts have changed (captured count -> %u || current count -> %u)\n",
+                            ValidateArray[i].SubAuthorityCount, Sid->SubAuthorityCount);
+                    Status = STATUS_INVALID_SID;
+                    goto Cleanup;
+                }
+
+                /* Validate that the SID length is the same */
+                if (SidLength != RtlLengthSid(Sid))
+                {
+                    /* They're no longer the same, bail out */
+                    DPRINT1("SeCaptureSidAndAttributesArray(): The SID lengths have changed (captured length -> %lu || current length -> %lu)\n",
+                            SidLength, RtlLengthSid(Sid));
+                    Status = STATUS_INVALID_SID;
+                    goto Cleanup;
+                }
+
+                /* Check that the SID is valid */
+                if (!RtlValidSid(Sid))
+                {
+                    DPRINT1("SeCaptureSidAndAttributesArray(): The SID is not valid!\n");
+                    Status = STATUS_INVALID_SID;
+                    goto Cleanup;
+                }
 
                 /* Update the current destination address */
                 CurrentDest += ALIGN_UP_BY(SidLength, sizeof(ULONG));
@@ -531,23 +722,47 @@ SeCaptureSidAndAttributesArray(
         }
     }
 
+Cleanup:
     /* Check for failure */
     if (!NT_SUCCESS(Status))
     {
         /* Check if we allocated a new array */
-        if (SidAndAttributes != AllocatedMem)
+        if ((SidAndAttributes != AllocatedMem) && (SidAndAttributes != NULL))
         {
             /* Free the array */
             ExFreePoolWithTag(SidAndAttributes, TAG_SID_AND_ATTRIBUTES);
         }
 
         /* Set returned address to NULL */
-        *CapturedSidAndAttributes = NULL ;
+        *CapturedSidAndAttributes = NULL;
+    }
+
+    /* Free the temporary validation array */
+    if ((PreviousMode != KernelMode) && (ValidateArray != NULL))
+    {
+        ExFreePoolWithTag(ValidateArray, TAG_SID_VALIDATE);
     }
 
     return Status;
 }
 
+/**
+ * @brief
+ * Releases a captured SID with attributes.
+ *
+ * @param[in] CapturedSidAndAttributes
+ * The captured SID with attributes to be released.
+ *
+ * @param[in] AccessMode
+ * Processor access level mode.
+ *
+ * @param[in] CaptureIfKernel
+ * If set to TRUE, the releasing is done within the kernel.
+ * Otherwise the releasing is done in a kernel mode driver.
+ *
+ * @return
+ * Nothing.
+ */
 VOID
 NTAPI
 SeReleaseSidAndAttributesArray(
@@ -563,6 +778,5 @@ SeReleaseSidAndAttributesArray(
         ExFreePoolWithTag(CapturedSidAndAttributes, TAG_SID_AND_ATTRIBUTES);
     }
 }
-
 
 /* EOF */

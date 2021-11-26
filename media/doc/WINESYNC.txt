@@ -36,7 +36,7 @@ dll/directx/wine/dmusic         # Synced to WineStaging-4.18
 dll/directx/wine/dplay          # Synced to WineStaging-3.3
 dll/directx/wine/dplayx         # Synced to WineStaging-4.18
 dll/directx/wine/dpnhpast       # Synced to WineStaging-4.18
-dll/directx/wine/dsound         # Synced to Wine-1.3.29
+dll/directx/wine/dsound         # Forked at Wine-1.3.29. Newer versions are depending on NT6+ mmdevapi, so the further syncing makes no sense until we're retargeted to Vista or newer.
 dll/directx/wine/dxdiagn        # Synced to WineStaging-4.18
 dll/directx/wine/msdmo          # Synced to WineStaging-4.18
 dll/directx/wine/qcap           # Synced to WineStaging-3.3

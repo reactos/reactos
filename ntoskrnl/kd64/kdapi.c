@@ -1890,7 +1890,7 @@ KdEnterDebugger(IN PKTRAP_FRAME TrapFrame,
     /* Save the current IRQL */
     KeGetCurrentPrcb()->DebuggerSavedIRQL = KeGetCurrentIrql();
 
-    /* Freeze all CPUs */
+    /* Freeze all CPUs, raising also the IRQL to HIGH_LEVEL */
     Enable = KeFreezeExecution(TrapFrame, ExceptionFrame);
 
     /* Lock the port, save the state and set debugger entered */
@@ -1929,7 +1929,7 @@ KdExitDebugger(IN BOOLEAN Enable)
     KdRestore(FALSE);
     if (KdpPortLocked) KdpPortUnlock();
 
-    /* Unfreeze the CPUs */
+    /* Unfreeze the CPUs, restoring also the IRQL */
     KeThawExecution(Enable);
 
     /* Compare time with the one from KdEnterDebugger */
@@ -1987,8 +1987,8 @@ KdEnableDebuggerWithLock(IN BOOLEAN NeedLock)
         if (NeedLock)
         {
             /* Do the unlock */
-            KeLowerIrql(OldIrql);
             KdpPortUnlock();
+            KeLowerIrql(OldIrql);
 
             /* Fail: We're already enabled */
             return STATUS_INVALID_PARAMETER;
@@ -2022,8 +2022,8 @@ KdEnableDebuggerWithLock(IN BOOLEAN NeedLock)
     if (NeedLock)
     {
         /* Yes, now unlock it */
-        KeLowerIrql(OldIrql);
         KdpPortUnlock();
+        KeLowerIrql(OldIrql);
     }
 
     /* We're done */
@@ -2083,8 +2083,8 @@ KdDisableDebuggerWithLock(IN BOOLEAN NeedLock)
             if (!NT_SUCCESS(Status))
             {
                 /* Release the lock and fail */
-                KeLowerIrql(OldIrql);
                 KdpPortUnlock();
+                KeLowerIrql(OldIrql);
                 return Status;
             }
         }
@@ -2112,8 +2112,8 @@ KdDisableDebuggerWithLock(IN BOOLEAN NeedLock)
     if (NeedLock)
     {
         /* Yes, now unlock it */
-        KeLowerIrql(OldIrql);
         KdpPortUnlock();
+        KeLowerIrql(OldIrql);
     }
 
     /* We're done */

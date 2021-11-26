@@ -122,7 +122,7 @@ static void Test_DWP_Error(HWND hWnd, HWND hWnd2)
     ret = EndDeferWindowPos((HDWP)-1);
     ok(ret == 0, "EndDeferWindowPos succeeded with invalid handle\n");
     ok_lasterr(ERROR_INVALID_DWP_HANDLE, "EndDeferWindowPos");
-    
+
     /* negative window count */
     SetLastError(DNS_ERROR_RCODE_NXRRSET);
     hDwp = BeginDeferWindowPos(-1);
@@ -458,10 +458,10 @@ static void Test_DWP_OwnerZOrder()
     EXPECT_CHAIN(4,3,1,2);
 
     /* now do the same thing one more time with SWP_NOOWNERZORDER */
-    /* SWP_NOACTIVATE is needed because without it SetActiveWindow 
+    /* SWP_NOACTIVATE is needed because without it SetActiveWindow
        will be calledit and it will call SetWindowPos again
        WITHOUT SWP_NOOWNERZORDER. that means that
-       in order for SWP_NOOWNERZORDER to have effect we have to use 
+       in order for SWP_NOOWNERZORDER to have effect we have to use
        SWP_NOACTIVATE as well */
     set_default_pos();
     EXPECT_CHAIN(4,3,2,1);
@@ -497,7 +497,7 @@ START_TEST(DeferWindowPos)
 {
     SetCursorPos(0,0);
 
-    RegisterSimpleClass(DWPTestProc, L"ownertest"); 
+    RegisterSimpleClass(DWPTestProc, L"ownertest");
     hWnd1 = CreateWindowExW(0, L"ownertest", L"abc", 0, 10, 20,
         200, 210, NULL, NULL, 0, NULL);
     hWnd2 = CreateWindowExW(0, L"ownertest", L"def", 0, 30, 40,
@@ -517,7 +517,7 @@ START_TEST(DeferWindowPos)
 
     set_default_pos();
     Test_DWP_SimpleMsg(hWnd1, hWnd2);
-    
+
     set_default_pos();
     Test_DWP_OwnerZOrder();
 

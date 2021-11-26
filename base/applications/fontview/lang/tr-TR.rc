@@ -9,15 +9,15 @@ BEGIN
     IDS_OPEN "Yazı Tipi Aç..."
     IDS_ERROR "Yanlışlık"
     IDS_ERROR_NOMEM "Bu işlemi bitirmek için yeterli bellek yok."
-    IDS_ERROR_NOFONT "%1 kütüğü, geçerli bir yazı tipi kütüğü değil."
+    IDS_ERROR_NOFONT "%1 dosyası, geçerli bir yazı tipi dosyası değil."
     IDS_ERROR_NOCLASS "Pencere sınıfı başlatılamadı."
     IDS_FILTER_LIST "Tüm Desteklenen Yazı Tipleri (*.fon;*.fnt;*.ttf;*.ttc;*.otf;*.otc)\0*.fon;*.fnt;*.ttf;*.ttc;*.otf;*.otc\0\
-Yazı Tipi Kütüğü (*.fon;*.fnt)\0*.fon;*.fnt\0\
+Yazı Tipi Dosyası (*.fon;*.fnt)\0*.fon;*.fnt\0\
 TrueType Yazı Tipi (*.ttf)\0*.ttf\0\
 TrueType Yazı Tipi Derlemi (*.ttc)\0*.ttc\0\
 OpenType Yazı Tipi (*.otf)\0*.otf\0\
 OpenType Yazı Tipi Derlemi (*.otc)\0*.otc\0\
-Tüm Kütükler (*.*)\0*.*\0"
+Tüm Dosyalar (*.*)\0*.*\0"
     IDS_PREVIOUS "< &Geri"
     IDS_NEXT "&İleri >"
 END

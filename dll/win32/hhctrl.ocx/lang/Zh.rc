@@ -99,7 +99,7 @@ BEGIN
     IDS_INDEX        "目錄(&N)"
     IDS_SEARCH       "搜尋(&S)"
     IDS_FAVORITES    "我的最愛(&I)"
-	
+
     IDS_HIDETABS     "隱藏分頁(&T)"
     IDS_SHOWTABS     "顯示分頁(&T)"
 END

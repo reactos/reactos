@@ -124,7 +124,7 @@ PcGetHarddiskConfigurationData(UCHAR DriveNumber, ULONG* pSize)
         return NULL;
     }
 
-    memset(PartialResourceList, 0, Size);
+    RtlZeroMemory(PartialResourceList, Size);
     PartialResourceList->Version = 1;
     PartialResourceList->Revision = 1;
     PartialResourceList->Count = 1;
@@ -236,9 +236,9 @@ DetectPnpBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
         ERR("Failed to allocate resource descriptor\n");
         return;
     }
-    memset(PartialResourceList, 0, Size);
 
     /* Initialize resource descriptor */
+    RtlZeroMemory(PartialResourceList, Size);
     PartialResourceList->Version = 1;
     PartialResourceList->Revision = 1;
     PartialResourceList->Count = 1;
@@ -617,7 +617,8 @@ DetectSerialPointerPeripheral(PCONFIGURATION_COMPONENT_DATA ControllerKey,
             ERR("Failed to allocate resource descriptor\n");
             return;
         }
-        memset(PartialResourceList, 0, Size);
+
+        RtlZeroMemory(PartialResourceList, Size);
         PartialResourceList->Version = 1;
         PartialResourceList->Revision = 1;
         PartialResourceList->Count = 0;
@@ -689,12 +690,13 @@ DetectSerialPorts(PCONFIGURATION_COMPONENT_DATA BusKey, GET_SERIAL_PORT MachGetS
         PartialResourceList = FrLdrHeapAlloc(Size, TAG_HW_RESOURCE_LIST);
         if (PartialResourceList == NULL)
         {
-            ERR("Failed to allocate resource descriptor\n");
-            continue;
+            ERR("Failed to allocate resource descriptor! Ignoring remaining serial ports. (i = %lu, Count = %lu)\n",
+                i, Count);
+            break;
         }
-        memset(PartialResourceList, 0, Size);
 
         /* Initialize resource descriptor */
+        RtlZeroMemory(PartialResourceList, Size);
         PartialResourceList->Version = 1;
         PartialResourceList->Revision = 1;
         PartialResourceList->Count = 3;
@@ -792,12 +794,12 @@ DetectParallelPorts(PCONFIGURATION_COMPONENT_DATA BusKey)
         PartialResourceList = FrLdrHeapAlloc(Size, TAG_HW_RESOURCE_LIST);
         if (PartialResourceList == NULL)
         {
-            ERR("Failed to allocate resource descriptor\n");
-            continue;
+            ERR("Failed to allocate resource descriptor! Ignoring remaining parallel ports. (i = %lu)\n", i);
+            break;
         }
-        memset(PartialResourceList, 0, Size);
 
         /* Initialize resource descriptor */
+        RtlZeroMemory(PartialResourceList, Size);
         PartialResourceList->Version = 1;
         PartialResourceList->Revision = 1;
         PartialResourceList->Count = (Irq[i] != (ULONG) - 1) ? 2 : 1;
@@ -935,7 +937,7 @@ DetectKeyboardPeripheral(PCONFIGURATION_COMPONENT_DATA ControllerKey)
         }
 
         /* Initialize resource descriptor */
-        memset(PartialResourceList, 0, Size);
+        RtlZeroMemory(PartialResourceList, Size);
         PartialResourceList->Version = 1;
         PartialResourceList->Revision = 1;
         PartialResourceList->Count = 1;
@@ -996,7 +998,7 @@ DetectKeyboardController(PCONFIGURATION_COMPONENT_DATA BusKey)
     }
 
     /* Initialize resource descriptor */
-    memset(PartialResourceList, 0, Size);
+    RtlZeroMemory(PartialResourceList, Size);
     PartialResourceList->Version = 1;
     PartialResourceList->Revision = 1;
     PartialResourceList->Count = 3;
@@ -1173,9 +1175,9 @@ DetectPS2Mouse(PCONFIGURATION_COMPONENT_DATA BusKey)
             ERR("Failed to allocate resource descriptor\n");
             return;
         }
-        memset(PartialResourceList, 0, sizeof(CM_PARTIAL_RESOURCE_LIST));
 
         /* Initialize resource descriptor */
+        RtlZeroMemory(PartialResourceList, sizeof(CM_PARTIAL_RESOURCE_LIST));
         PartialResourceList->Version = 1;
         PartialResourceList->Revision = 1;
         PartialResourceList->Count = 1;
@@ -1214,7 +1216,8 @@ DetectPS2Mouse(PCONFIGURATION_COMPONENT_DATA BusKey)
                 ERR("Failed to allocate resource descriptor\n");
                 return;
             }
-            memset(PartialResourceList, 0, Size);
+
+            RtlZeroMemory(PartialResourceList, Size);
             PartialResourceList->Version = 1;
             PartialResourceList->Revision = 1;
             PartialResourceList->Count = 0;
@@ -1317,7 +1320,7 @@ DetectIsaBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
     }
 
     /* Initialize resource descriptor */
-    memset(PartialResourceList, 0, Size);
+    RtlZeroMemory(PartialResourceList, Size);
     PartialResourceList->Version = 1;
     PartialResourceList->Revision = 1;
     PartialResourceList->Count = 0;
@@ -1451,9 +1454,8 @@ VOID __cdecl ChainLoadBiosBootSectorCode(
 VOID
 MachInit(const char *CmdLine)
 {
-    memset(&MachVtbl, 0, sizeof(MACHVTBL));
-
     /* Setup vtbl */
+    RtlZeroMemory(&MachVtbl, sizeof(MachVtbl));
     MachVtbl.ConsPutChar = PcConsPutChar;
     MachVtbl.ConsKbHit = PcConsKbHit;
     MachVtbl.ConsGetCh = PcConsGetCh;

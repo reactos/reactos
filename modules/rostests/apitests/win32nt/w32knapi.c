@@ -25,7 +25,7 @@ IsHandleValid(HGDIOBJ hobj)
     {
         return FALSE;
     }
-    
+
     return TRUE;
 }
 

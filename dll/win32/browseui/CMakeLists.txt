@@ -60,7 +60,7 @@ endif()
 if(NOT MSVC)
     # Binutils linker bug
     if(LTCG)
-        add_target_link_flags(browseui "-Wl,--allow-multiple-definition")
+        target_link_options(browseui PRIVATE "-Wl,--allow-multiple-definition")
     endif()
 endif()
 

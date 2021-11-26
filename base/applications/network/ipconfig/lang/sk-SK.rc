@@ -28,42 +28,42 @@ STRINGTABLE
 BEGIN
 /* Please keep the spacing/formatting as per En.rc when translating */
     IDS_USAGE
-    "\nPOUŽITIE:\n \
-        ipconfig [/? | /all | /renew [adapter] | /release [adapter] |\n \
-                  /flushdns | /displaydns | /registerdns |\n \
-                  /showclassid adapter |\n \
-                  /setclassid adapter [classid] ]\n \
-\n \
-    where\n \
-        adapter         Connection name\n \
-                       (wildcard characters * and ? allowed, see examples)\n \
-\n \
-        Options:\n \
-           /?           Display this help message\n \
-           /all         Display full configuration information.\n \
-           /release     Release the IP address for the specified adapter.\n \
-           /renew       Renew the IP address for the specified adapter.\n \
-           /flushdns    Purges the DNS Resolver cache.\n \
-           /registerdns Refreshes all DHCP leases and re-registers DNS names.\n \
-           /displaydns  Display the contents of the DNS Resolver Cache.\n \
-           /showclassid Displays all the dhcp class IDs allowed for adapter.\n \
-           /setclassid  Modifies the dhcp class id.\n \
-\n \
-    The default is to display only the IP address, subnet mask and\n \
-    default gateway for each adapter bound to TCP/IP.\n \
-\n \
-    For Release and Renew, if no adapter name is specified, then the IP address\n \
-    leases for all adapters bound to TCP/IP will be released or renewed.\n \
-\n \
-    For Setclassid, if no ClassId is specified, then the ClassId is removed.\n \
-\n \
-    Príklady:\n \
-        > ipconfig                   ... Show information.\n \
-        > ipconfig /all              ... Show detailed information\n \
-        > ipconfig /renew            ... renew all adapters\n \
-        > ipconfig /renew EL*        ... renew any connection that has its\n \
-                                         name starting with EL\n \
-        > ipconfig /release *Con*    ... release all matching connections,\n \
-                                         napr. ""Lokálne pripojenie 1"" alebo\n \
+    "\nPOUŽITIE:\n\
+        ipconfig [/? | /all | /renew [adapter] | /release [adapter] |\n\
+                  /flushdns | /displaydns | /registerdns |\n\
+                  /showclassid adapter |\n\
+                  /setclassid adapter [classid] ]\n\
+\n\
+    where\n\
+        adapter         Connection name\n\
+                       (wildcard characters * and ? allowed, see examples)\n\
+\n\
+        Options:\n\
+           /?           Display this help message\n\
+           /all         Display full configuration information.\n\
+           /release     Release the IP address for the specified adapter.\n\
+           /renew       Renew the IP address for the specified adapter.\n\
+           /flushdns    Purges the DNS Resolver cache.\n\
+           /registerdns Refreshes all DHCP leases and re-registers DNS names.\n\
+           /displaydns  Display the contents of the DNS Resolver Cache.\n\
+           /showclassid Displays all the dhcp class IDs allowed for adapter.\n\
+           /setclassid  Modifies the dhcp class id.\n\
+\n\
+    The default is to display only the IP address, subnet mask and\n\
+    default gateway for each adapter bound to TCP/IP.\n\
+\n\
+    For Release and Renew, if no adapter name is specified, then the IP address\n\
+    leases for all adapters bound to TCP/IP will be released or renewed.\n\
+\n\
+    For Setclassid, if no ClassId is specified, then the ClassId is removed.\n\
+\n\
+    Príklady:\n\
+        > ipconfig                   ... Show information.\n\
+        > ipconfig /all              ... Show detailed information\n\
+        > ipconfig /renew            ... renew all adapters\n\
+        > ipconfig /renew EL*        ... renew any connection that has its\n\
+                                         name starting with EL\n\
+        > ipconfig /release *Con*    ... release all matching connections,\n\
+                                         napr. ""Lokálne pripojenie 1"" alebo\n\
                                                ""Lokálne pripojenie 2""\n"
 END

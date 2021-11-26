@@ -554,10 +554,10 @@ CDeviceView::ListDevicesByType()
 bool
 CDeviceView::ListDevicesByConnection()
 {
-    // Walk the device tree and add all the devices 
+    // Walk the device tree and add all the devices
     (void)RecurseChildDevices(m_RootNode->GetDeviceInst(), m_hTreeRoot);
 
-    // Expand the root item 
+    // Expand the root item
     (void)TreeView_Expand(m_hTreeView,
                           m_hTreeRoot,
                           TVE_EXPAND);
@@ -576,7 +576,7 @@ CDeviceView::RecurseChildDevices(
     bool HasProblem = false;
     bool bSuccess;
 
-    // Check if the parent has any child devices 
+    // Check if the parent has any child devices
     if (GetChildDevice(ParentDevice, &Device) == FALSE)
         return true;
 
@@ -591,12 +591,12 @@ CDeviceView::RecurseChildDevices(
     // Don't show hidden devices if not requested
     if ((m_ShowHidden == TRUE) || (!(DeviceNode->IsHidden())))
     {
-        // Add this device to the tree under its parent 
+        // Add this device to the tree under its parent
         hDevItem = InsertIntoTreeView(hParentTreeItem,
                                       DeviceNode);
         if (hDevItem)
         {
-            // Check if this child has any children itself 
+            // Check if this child has any children itself
             if (!RecurseChildDevices(Device, hDevItem))
                 HasProblem = true;
         }
@@ -611,7 +611,7 @@ CDeviceView::RecurseChildDevices(
     // Check for siblings
     for (;;)
     {
-        // Check if the parent device has anything at the same level 
+        // Check if the parent device has anything at the same level
         bSuccess = GetSiblingDevice(Device, &Device);
         if (bSuccess == FALSE)
             break;
@@ -630,12 +630,12 @@ CDeviceView::RecurseChildDevices(
                 HasProblem = true;
             }
 
-            // Add this device to the tree under its parent 
+            // Add this device to the tree under its parent
             hDevItem = InsertIntoTreeView(hParentTreeItem,
                                           DeviceNode);
             if (hDevItem)
             {
-                // Check if this child has any children itself 
+                // Check if this child has any children itself
                 if (!RecurseChildDevices(Device, hDevItem))
                     HasProblem = true;
             }
@@ -824,12 +824,12 @@ CDeviceView::BuildActionMenuForNode(
     _In_ bool MainMenu
     )
 {
-    // Create a separator structure 
+    // Create a separator structure
     MENUITEMINFOW MenuSeparator = { 0 };
     MenuSeparator.cbSize = sizeof(MENUITEMINFOW);
     MenuSeparator.fType = MFT_SEPARATOR;
 
-    // Setup the 
+    // Setup the
     MENUITEMINFOW MenuItemInfo = { 0 };
     MenuItemInfo.cbSize = sizeof(MENUITEMINFOW);
     MenuItemInfo.fMask = MIIM_ID | MIIM_STRING | MIIM_DATA | MIIM_SUBMENU;
@@ -982,7 +982,7 @@ CDeviceView::RecurseFindDevice(
             }
         }
 
-        // This node may have its own children 
+        // This node may have its own children
         FoundItem = RecurseFindDevice(hItem, Node);
         if (FoundItem)
             return FoundItem;

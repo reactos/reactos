@@ -76,6 +76,9 @@ BEGIN
     IDS_CANTCREATEZIP "Falha ao criar a pasta compactada '%s' (Erro: %d)."
     IDS_CANTREADFILE "Não é possível ler o arquivo '%s'."
     IDS_EXTRACTING "A extrair..."
+    IDS_CANTEXTRACTFILE "Cannot extract file '%1'."
+    IDS_DECOMPRESSERROR "Unsupported compression method %d. Do you want to continue?"
+    IDS_UNKNOWNERROR "Unknown error 0x%08x."
 
     IDS_WIZ_TITLE "Assistente de extração"
     IDS_WIZ_DEST_TITLE "Seleccione um destino"
@@ -84,7 +87,7 @@ BEGIN
     IDS_WIZ_COMPL_SUBTITLE "Os ficheiros no arquivo zip foram extraídos."
     IDS_WIZ_BROWSE_TITLE "Seleccione o local para onde deseja extrair os itens seleccionados."
 
-    IDS_OVERWRITEFILE_TEXT "Esta pasta já contém um arquivo chamado '%1'. \n Deseja substituí-lo?"
+    IDS_OVERWRITEFILE_TEXT "Esta pasta já contém um arquivo chamado '%1'.\nDeseja substituí-lo?"
     IDS_PASSWORD_FILE_TEXT "O arquivo '%1' está protegido. Por favor, digite a palavra-passe."
     IDS_PASSWORD_ZIP_TEXT "Especifique a palavra-passe a ser usada ao extrair este arquivo zip."
 

@@ -39,7 +39,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 CAPTION "關於 FreeLoader 偵錯程式"
 FONT 9, "新細明體"
 BEGIN
-    CONTROL "FreeLoader 偵錯程式 v1.0\nCopyright (C) 2003\n由 Brian Palmer (brianp@reactos.org)", IDC_STATIC, "Static", SS_LEFTNOWORDWRAP | WS_GROUP, 53, 28, 122, 26
+    CONTROL "FreeLoader 偵錯程式 v1.0\nCopyright (C) 2003\n由 Brian Palmer (brianp@reactos.org) 開發", IDC_STATIC, "Static", SS_LEFTNOWORDWRAP | WS_GROUP, 53, 28, 122, 26
     DEFPUSHBUTTON "確定", IDOK, 183, 189, 44, 14, WS_GROUP
     ICON IDI_FDEBUG, IDC_STATIC, 19, 30, 20, 20
     EDITTEXT IDC_LICENSE_EDIT, 53, 63, 174, 107, ES_MULTILINE | ES_READONLY | WS_VSCROLL
@@ -52,7 +52,7 @@ FONT 9, "新細明體"
 BEGIN
     LTEXT "輸入的 COM 埠 (例如 COM1):", IDC_STATIC, 7, 7, 108, 8
     EDITTEXT IDC_COMPORT, 7, 17, 182, 14, ES_AUTOHSCROLL
-    LTEXT "輸入波特率 (例如 115200):", IDC_STATIC, 7, 38, 114, 8
+    LTEXT "輸入調變速率 (例如 115200):", IDC_STATIC, 7, 38, 114, 8
     EDITTEXT IDC_BAUTRATE, 7, 48, 182, 14, ES_AUTOHSCROLL
     DEFPUSHBUTTON "確定", IDOK, 45, 79, 50, 14
     PUSHBUTTON "取消", IDCANCEL, 100, 79, 50, 14
@@ -60,12 +60,12 @@ END
 
 IDD_CAPTURE DIALOGEX 0, 0, 251, 95
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "捕獲檔案"
+CAPTION "擷取檔案"
 FONT 9, "新細明體"
 BEGIN
-    LTEXT "捕獲檔案的名稱:", IDC_STATIC, 7, 17, 62, 8
+    LTEXT "擷取檔案名稱:", IDC_STATIC, 7, 17, 62, 8
     EDITTEXT IDC_CAPTUREFILENAME, 7, 26, 181, 14, ES_AUTOHSCROLL
-    PUSHBUTTON "瀏覽器(&B)", IDC_BROWSE, 194, 26, 50, 14
+    PUSHBUTTON "瀏覽(&B)", IDC_BROWSE, 194, 26, 50, 14
     DEFPUSHBUTTON "確定", IDOK, 139, 74, 50, 14
     PUSHBUTTON "取消", IDCANCEL, 194, 74, 50, 14
 END
@@ -81,5 +81,5 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_LICENSE "本程式為自由軟體; 您可以根據自由軟體基金會發佈的 GNU 通用公共授權條款的第 2 版，或（根據您的選擇）任何更高版本的條款進行重新分發和修改它。\r\n\r\n本程式的發佈是希望它有用，但沒有任何擔保; 甚至沒有適銷性或特定用途適用性的暗示保證。 有關詳細信息，請參閱 GNU 通用公共許可證。\r\n\r\n您應該已收到GNU通用公共授權條款的副本以及本程式; 如果沒有，請寫信給 the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA。"
+    IDS_LICENSE "本程式為自由軟體；您可以根據自由軟體基金會發佈的 GNU 通用公共授權條款的第 2 版，或（根據您的選擇）任何更高版本的條款進行重新分發和修改它。\r\n\r\n本程式的發佈是希望它有用，但沒有任何擔保；甚至沒有適銷性或特定用途適用性的暗示保證。有關詳細信息，請參閱 GNU 通用公共許可證。\r\n\r\n您應該已收到 GNU 通用公共授權條款的副本以及本程式；如果沒有，請寫信給 the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA。"
 END

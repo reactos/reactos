@@ -21,13 +21,13 @@ LlbStartup(IN ULONG Reserved,
 
     /* Either QEMU or U-Boot itself should send this information */
     LlbEnvParseArguments(Arguments);
-    
+
     /* Clean up the screen */
     LlbVideoClearScreen(FALSE);
 
     /* Print header */
     printf("\nReactOS ARM Low-Level Boot Loader [" __DATE__ " "__TIME__ "]\n");
-    
+
     /* Boot the OS Loader */
     LlbBoot();
     while (TRUE);

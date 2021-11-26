@@ -58,7 +58,7 @@ IDM_WINEFILE MENU
         MENUITEM "Disk K&opyala...",             201
         MENUITEM "Disk &Etiketi...",             202
         MENUITEM SEPARATOR
-        MENUITEM "Disk Bi&çimlendir...",         ID_FORMAT_DISK
+        MENUITEM "Diski Bi&çimlendir...",         ID_FORMAT_DISK
 #ifdef _WIN95
         MENUITEM "&Sistem Diski Oluştur...", -1 /*TODO*/
 #endif
@@ -203,7 +203,7 @@ BEGIN
     CONTROL         "&Gizli",IDC_CHECK_HIDDEN,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,92,91,68,9
     CONTROL         "&Arşiv",IDC_CHECK_ARCHIVE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,17,101,68,9
     CONTROL         "&Sistem",IDC_CHECK_SYSTEM,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,92,101,68,9
-    CONTROL         "S&ıkışık",IDC_CHECK_COMPRESSED,"Button", BS_AUTOCHECKBOX | WS_TABSTOP,17,111,68,9
+    CONTROL         "S&ıkıştırılmış",IDC_CHECK_COMPRESSED,"Button", BS_AUTOCHECKBOX | WS_TABSTOP,17,111,68,9
     GROUPBOX        "S&ürüm Bilgisi",-1,7,129,234,79
     LISTBOX         IDC_LIST_PROP_VERSION_TYPES,13,139,107,63,LBS_SORT | LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
     EDITTEXT        IDC_LIST_PROP_VERSION_VALUES,123,139,111,63,ES_MULTILINE | ES_READONLY | WS_VSCROLL
@@ -220,7 +220,7 @@ STRINGTABLE
 {
     IDS_WINEFILE            "Winefile"
     IDS_ERROR               "Hata"
-    IDS_ROOT_FS             "kök ds"
+    IDS_ROOT_FS             "kök dosya sistemi"
     IDS_UNIXFS              "unixfs"
     IDS_DESKTOP             "Masaüstü"
     IDS_SHELL               "Kabuk"

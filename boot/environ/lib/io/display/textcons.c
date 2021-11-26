@@ -184,7 +184,7 @@ ConsolepFindResolution (
     return FALSE;
 }
 
-BL_INPUT_CONSOLE_VTABLE ConsoleInputLocalVtbl = 
+BL_INPUT_CONSOLE_VTABLE ConsoleInputLocalVtbl =
 {
     (PCONSOLE_DESTRUCT)ConsoleInputLocalDestruct,
     (PCONSOLE_REINITIALIZE)ConsoleInputBaseReinitialize,

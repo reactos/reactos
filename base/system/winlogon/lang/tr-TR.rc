@@ -14,7 +14,7 @@ END
 
 IDD_GINALOADFAILED DIALOGEX 58, 83, 231, 119
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Kullanıcı Arayüzü Yanlışlığı"
+CAPTION "Kullanıcı Arayüzü Hata"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Oturum Açma Kullanıcı Arayüzü %s DLL'si yüklemede başarısız oldu.", IDC_GINALOADFAILED, 39, 16, 156, 24

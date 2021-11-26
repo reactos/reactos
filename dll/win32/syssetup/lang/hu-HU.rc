@@ -74,10 +74,12 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON4, IDC_STATIC, 21, 7, 20, 20
     LTEXT "A rendszer területi beállításait érdemes a használni kívánt nyelvhez igazítani.\nA felhasználói területi beállítások határozzák meg hogy a számok, pénznemek és dátumok hogyan jelennek meg.", IDC_STATIC, 53, 7, 253, 24
-    LTEXT "", IDC_LOCALETEXT, 53, 35, 250, 16
+    LTEXT "%s", IDC_LOCALETEXT, 53, 35, 250, 16
     LTEXT "A rendszer vagy felhasználói területi beállítások megváltoztatásához kattintson a Testreszabás gombra.", IDC_STATIC, 53, 56, 184, 16
     PUSHBUTTON "Te&streszabás...", IDC_CUSTOMLOCALE, 245, 57, 60, 14
+    LTEXT "", IDC_STATIC, 53, 79, 250, 1, SS_ETCHEDHORZ
     LTEXT "A billentyűzetkiosztás határozza meg a karaktereket,\namelyek megjelennek gépeléskor.", IDC_STATIC, 53, 86, 253, 16
+    LTEXT "%s", IDC_LAYOUTTEXT, 53, 102, 250, 16
     LTEXT "A billentyűzetkiosztás megváltoztatásához kattintson\na Testreszabás gombra.", IDC_STATIC, 53, 116, 230, 16
     PUSHBUTTON "Test&reszabás...", IDC_CUSTOMLAYOUT, 245, 122, 60, 14
 END
@@ -173,6 +175,8 @@ BEGIN
     IDS_COMPUTERSUBTITLE "Meg kell adnia egy számítógép nevet és a rendszergazda jelszavát."
     IDS_LOCALETITLE "Területi beállítások"
     IDS_LOCALESUBTITLE "Beállíthatja, hogy a ReactOS milyen területi és nyelvi beállításokkal működjön."
+    IDS_LOCALETEXT "The Standards and formats are set to %s, and the location is set to %s."
+    IDS_LAYOUTTEXT "Your default text input language and method is: %s keyboard layout"
     IDS_DATETIMETITLE "Dátum és idő"
     IDS_DATETIMESUBTITLE "Beállíthatja a számítógép dátumát és óráját."
     IDS_PROCESSTITLE "Összetevők regisztrálása"

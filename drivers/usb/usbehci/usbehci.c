@@ -603,6 +603,7 @@ EHCI_ReopenEndpoint(IN PVOID ehciExtension,
 
             QH->sqh.HwQH.EndpointCaps.HubAddr = EndpointProperties->HubAddr;
 
+            MPStatus = MP_STATUS_SUCCESS;
             break;
 
         default:

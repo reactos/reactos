@@ -40,5 +40,5 @@ BOOL ToolbarInsertSpaceForControl(HWND hWndToolbar,
                                   INT iCmd,
                                   BOOL HideVertical);
 
-HIMAGELIST InitImageList(UINT NumButtons,
-                         UINT StartResource);
+HIMAGELIST InitImageList(UINT StartResource,
+                         UINT NumImages);

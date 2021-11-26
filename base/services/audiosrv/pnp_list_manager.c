@@ -73,9 +73,9 @@ AppendAudioDeviceToList(PnP_AudioDevice* device)
     if (audio_device_list->size + device_info_size > audio_device_list->max_size)
     {
         /*printf("max_size would be exceeded! Failing...\n");*/
-        
+
         UnlockAudioDeviceList();
-        
+
         return FALSE;
     }
 

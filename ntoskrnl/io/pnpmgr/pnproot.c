@@ -240,7 +240,7 @@ PnpRootCreateDevice(
                                    OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE,
                                    EnumHandle,
                                    NULL);
-        Status = ZwCreateKey(&DeviceKeyHandle, KEY_SET_VALUE, &ObjectAttributes, 0, NULL, REG_OPTION_VOLATILE, NULL);
+        Status = ZwCreateKey(&DeviceKeyHandle, KEY_SET_VALUE, &ObjectAttributes, 0, NULL, REG_OPTION_NON_VOLATILE, NULL);
         ObCloseHandle(EnumHandle, KernelMode);
     }
 
@@ -315,7 +315,7 @@ tryagain:
                                OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE,
                                DeviceKeyHandle,
                                NULL);
-    Status = ZwCreateKey(&InstanceKeyHandle, KEY_QUERY_VALUE, &ObjectAttributes, 0, NULL, REG_OPTION_VOLATILE, NULL);
+    Status = ZwCreateKey(&InstanceKeyHandle, KEY_QUERY_VALUE, &ObjectAttributes, 0, NULL, REG_OPTION_NON_VOLATILE, NULL);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Failed to create instance path (0x%x)\n", Status);

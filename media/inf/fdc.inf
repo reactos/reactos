@@ -140,10 +140,10 @@ GenericMfg = "(Generické radiče disketových mechaník)"
 
 [Strings.041f]
 ReactOS = "ReactOS Takımı"
-FDCClassName = "Yumuşak Disk Denetleyicileri"
+FDCClassName = "Disket Denetleyicileri"
 
-GenericMfg = "(Umûmî Yumuşak Disk Denetleyicileri)"
-*PNP0700.DeviceDesc = "Umûmî Yumuşak Disk Denetleyicisi"
+GenericMfg = "(Genel Disket Denetleyicileri)"
+*PNP0700.DeviceDesc = "Genel Disket Denetleyicisi"
 
 [Strings.0422]
 ReactOS = "Команда ReactOS"

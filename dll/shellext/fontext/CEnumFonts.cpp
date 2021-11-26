@@ -77,7 +77,7 @@ public:
 public:
     DECLARE_NOT_AGGREGATABLE(CEnumFonts)
     DECLARE_PROTECT_FINAL_CONSTRUCT()
-    
+
     BEGIN_COM_MAP(CEnumFonts)
         COM_INTERFACE_ENTRY_IID(IID_IEnumIDList, IEnumIDList)
     END_COM_MAP()

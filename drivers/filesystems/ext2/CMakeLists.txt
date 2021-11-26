@@ -88,10 +88,6 @@ list(APPEND SOURCE
 
 add_library(ext2fs MODULE ${SOURCE} ext2fs.rc)
 
-if(USE_CLANG_CL)
-    set_property(SOURCE src/create.c src/fileinfo.c src/memory.c src/read.c APPEND_STRING PROPERTY COMPILE_FLAGS " /fallback")
-endif()
-
 if(MSVC)
     if (NOT CLANG)
         # Disable warning C4101: 'i': unreferenced local variable
@@ -120,12 +116,7 @@ target_link_libraries(ext2fs memcmp ${PSEH_LIB})
 add_definitions(-D__KERNEL__ -D_CRT_NO_POSIX_ERROR_CODES)
 set_module_type(ext2fs kernelmodedriver)
 add_importlibs(ext2fs ntoskrnl hal)
-
 set_property(TARGET ext2fs PROPERTY C_STANDARD 90)
-
-if(NOT USE_CLANG_CL)
-    # The fallback we have above prevents cl and clang-cl from using the same PCH
-    add_pch(ext2fs inc/ext2fs.h SOURCE)
-endif()
+add_pch(ext2fs inc/ext2fs.h SOURCE)
 
 add_cd_file(TARGET ext2fs DESTINATION reactos/system32/drivers FOR all)

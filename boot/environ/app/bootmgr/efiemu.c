@@ -29,7 +29,7 @@ BOOT_APPLICATION_PARAMETER_BLOCK_SCRATCH EfiInitScratch;
 /*++
  * @name AhCreateLoadOptionsList
  *
- *     The AhCreateLoadOptionsList routine 
+ *     The AhCreateLoadOptionsList routine
  *
  * @param  CommandLine
  *         UEFI Image Handle for the current loaded application.
@@ -68,7 +68,7 @@ AhCreateLoadOptionsList (
 /*++
  * @name EfiInitpAppendPathString
  *
- *     The EfiInitpAppendPathString routine 
+ *     The EfiInitpAppendPathString routine
  *
  * @param  DestinationPath
  *         UEFI Image Handle for the current loaded application.
@@ -177,7 +177,7 @@ EfiInitpAppendPathString (
 /*++
  * @name EfiInitpConvertEfiDevicePath
  *
- *     The EfiInitpConvertEfiDevicePath routine 
+ *     The EfiInitpConvertEfiDevicePath routine
  *
  * @param  DevicePath
  *         UEFI Image Handle for the current loaded application.
@@ -294,7 +294,7 @@ Quickie:
 /*++
  * @name EfiInitpGetDeviceNode
  *
- *     The EfiInitpGetDeviceNode routine 
+ *     The EfiInitpGetDeviceNode routine
  *
  * @param  DevicePath
  *         UEFI Image Handle for the current loaded application.
@@ -332,7 +332,7 @@ EfiInitpGetDeviceNode (
 /*++
  * @name EfiInitTranslateDevicePath
  *
- *     The EfiInitTranslateDevicePath routine 
+ *     The EfiInitTranslateDevicePath routine
  *
  * @param  DevicePath
  *         UEFI Image Handle for the current loaded application.
@@ -455,7 +455,7 @@ EfiInitTranslateDevicePath (
 
                     /* Copy the signature GUID */
                     RtlCopyMemory(&DeviceEntry->Partition.Gpt.PartitionGuid,
-                                  DiskPath->Signature, 
+                                  DiskPath->Signature,
                                   sizeof(GUID));
 
                     DeviceEntry->Flags |= 4u;
@@ -491,7 +491,7 @@ EfiInitTranslateDevicePath (
 /*++
  * @name EfiInitpConvertEfiDevicePath
  *
- *     The EfiInitpConvertEfiDevicePath routine 
+ *     The EfiInitpConvertEfiDevicePath routine
  *
  * @param  DevicePath
  *         UEFI Image Handle for the current loaded application.
@@ -560,7 +560,7 @@ Quickie:
 /*++
  * @name EfiInitpCreateApplicationEntry
  *
- *     The EfiInitpCreateApplicationEntry routine 
+ *     The EfiInitpCreateApplicationEntry routine
  *
  * @param  SystemTable
  *         UEFI Image Handle for the current loaded application.

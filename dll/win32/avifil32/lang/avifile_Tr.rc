@@ -24,11 +24,11 @@ STRINGTABLE
 {
   IDS_WAVESTREAMFORMAT	"Dalga Biçimi: %s"
   IDS_WAVEFILETYPE	"Dalga Biçimi"
-  IDS_ALLMULTIMEDIA	"Tüm Çoklu Ortam Kütükleri"
-  IDS_ALLFILES		"Tüm Kütükler (*.*)"
-  IDS_VIDEO		"Vidyo"
+  IDS_ALLMULTIMEDIA	"Tüm Çoklu Ortam Dosyaları"
+  IDS_ALLFILES		"Tüm Dosyalar (*.*)"
+  IDS_VIDEO		"Video"
   IDS_AUDIO		"Ses"
-  IDS_AVIFILETYPE	"Wine AVI Ön Tanımlı Kütük İşleyicisi"
+  IDS_AVIFILETYPE	"Wine AVI Varsayılan Dosya İşleyicisi"
   IDS_UNCOMPRESSED      "Sıkıştırılmamış"
 }
 
@@ -41,9 +41,9 @@ BEGIN
     COMBOBOX        IDC_STREAM,5,18,154,61,CBS_DROPDOWNLIST | WS_VSCROLL |
                     WS_TABSTOP
     PUSHBUTTON      "&Seçenekler...",IDC_OPTIONS,170,17,50,14
-    AUTOCHECKBOX    "&Tüm Aralıklar",IDC_INTERLEAVE,5,42,85,11,WS_TABSTOP
+    AUTOCHECKBOX    "&Aralık bırak",IDC_INTERLEAVE,5,42,85,11,WS_TABSTOP
     EDITTEXT        IDC_INTERLEAVEEVERY,91,41,32,12,ES_AUTOHSCROLL
-    LTEXT           "kare",-1,129,43,36,9
+    LTEXT           "Her karede",-1,129,43,36,9
     LTEXT           "Şimdiki Biçim:",-1,5,56,73,9
     LTEXT           "",IDC_FORMATTEXT,80,56,88,26
     DEFPUSHBUTTON   "Tamam",IDOK,170,42,50,14

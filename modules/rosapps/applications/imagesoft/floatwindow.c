@@ -56,10 +56,9 @@ FloatToolbarCreateToolsGui(PMAIN_WND_INFO Info)
 {
     HWND hTb;
     HIMAGELIST hImageList;
-    INT NumButtons;
+    UINT NumButtons;
 
-    NumButtons = sizeof(ToolsButtons) / sizeof(ToolsButtons[0]);
-
+    NumButtons = ARRAYSIZE(ToolsButtons);
     hTb = CreateWindowEx(0,
                          TOOLBARCLASSNAME,
                          NULL,
@@ -86,8 +85,7 @@ FloatToolbarCreateToolsGui(PMAIN_WND_INFO Info)
                     0,
                     (LPARAM)MAKELONG(16, 16));
 
-        hImageList = InitImageList(NumButtons,
-                                   IDB_TOOLSRECTSEL);
+        hImageList = InitImageList(IDB_TOOLSRECTSEL, NumButtons - 1); // -1 because of the last separator.
 
         ImageList_Destroy((HIMAGELIST)SendMessage(hTb,
                                                   TB_SETIMAGELIST,
@@ -280,7 +278,7 @@ FloatToolbarCreateHistoryGui(PMAIN_WND_INFO Info)
     HWND hList;
     HWND hButtons;
     HIMAGELIST hImageList;
-    INT NumButtons;
+    UINT NumButtons;
 
     hList = CreateWindowEx(0,
                            WC_LISTBOX,
@@ -294,7 +292,7 @@ FloatToolbarCreateHistoryGui(PMAIN_WND_INFO Info)
     if (hList == NULL)
         return FALSE;
 
-    NumButtons = sizeof(HistoryButtons) / sizeof(HistoryButtons[0]);
+    NumButtons = ARRAYSIZE(HistoryButtons);
     hButtons = CreateWindowEx(0,
                               TOOLBARCLASSNAME,
                               NULL,
@@ -316,8 +314,7 @@ FloatToolbarCreateHistoryGui(PMAIN_WND_INFO Info)
                     0,
                     (LPARAM)MAKELONG(10, 10));
 
-        hImageList = InitImageList(NumButtons,
-                                   IDB_HISTBACK);
+        hImageList = InitImageList(IDB_HISTBACK, NumButtons);
 
         ImageList_Destroy((HIMAGELIST)SendMessage(hButtons,
                                                   TB_SETIMAGELIST,
@@ -605,7 +602,7 @@ InitFloatWndClass(VOID)
 {
     WNDCLASSEX wc = {0};
 
-    wc.cbSize = sizeof(WNDCLASSEX);
+    wc.cbSize = sizeof(wc);
     wc.style = CS_HREDRAW | CS_VREDRAW;
     wc.lpfnWndProc = FloatToolbarWndProc;
     wc.hInstance = hInstance;

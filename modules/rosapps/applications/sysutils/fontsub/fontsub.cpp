@@ -1,9 +1,9 @@
 // FontSub by Katayama Hirofumi MZ
-// 
+//
 // To the extent possible under law, the person who associated CC0 with
 // FontSub has waived all copyright and related or neighboring rights
 // to FontSub.
-// 
+//
 // You should have received a copy of the CC0 legalcode along with this
 // work.  If not, see <http://creativecommons.org/publicdomain/zero/1.0/>.
 
@@ -1479,7 +1479,7 @@ void MainWnd_OnClose(HWND hwnd)
     {
         WCHAR szUpdateNow[MAX_STRING];
         LoadStringW(g_hInstance, IDS_QUERYUPDATE, szUpdateNow, _countof(szUpdateNow));
-        INT id = MessageBoxW(hwnd, szUpdateNow, g_szTitle, 
+        INT id = MessageBoxW(hwnd, szUpdateNow, g_szTitle,
                              MB_ICONINFORMATION | MB_YESNOCANCEL);
         switch (id)
         {

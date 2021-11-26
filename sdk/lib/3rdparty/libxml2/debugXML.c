@@ -1342,7 +1342,7 @@ xmlCtxtDumpDTD(xmlDebugCtxtPtr ctxt, xmlDtdPtr dtd)
  * @output:  the FILE * for the output
  * @str:  the string
  *
- * Dumps informations about the string, shorten it if necessary
+ * Dumps information about the string, shorten it if necessary
  */
 void
 xmlDebugDumpString(FILE * output, const xmlChar * str)
@@ -2190,7 +2190,7 @@ xmlShellRegisterRootNamespaces(xmlShellCtxtPtr ctxt, char *arg ATTRIBUTE_UNUSED,
  * @node2:  unused
  *
  * Implements the XML shell function "grep"
- * dumps informations about the node (namespace, attributes, content).
+ * dumps information about the node (namespace, attributes, content).
  *
  * Returns 0
  */
@@ -2268,7 +2268,7 @@ xmlShellGrep(xmlShellCtxtPtr ctxt ATTRIBUTE_UNUSED,
  * @node2:  unused
  *
  * Implements the XML shell function "dir"
- * dumps informations about the node (namespace, attributes, content).
+ * dumps information about the node (namespace, attributes, content).
  *
  * Returns 0
  */
@@ -2302,7 +2302,7 @@ xmlShellDir(xmlShellCtxtPtr ctxt ATTRIBUTE_UNUSED,
  * @node2:  unused
  *
  * Implements the XML shell function "dir"
- * dumps informations about the node (namespace, attributes, content).
+ * dumps information about the node (namespace, attributes, content).
  *
  * Returns 0
  */
@@ -2900,7 +2900,7 @@ xmlShell(xmlDocPtr doc, char *filename, xmlShellReadlineFunc input,
 		  fprintf(ctxt->output, "\tbye          leave shell\n");
 		  fprintf(ctxt->output, "\tcat [node]   display node or current node\n");
 		  fprintf(ctxt->output, "\tcd [path]    change directory to path or to root\n");
-		  fprintf(ctxt->output, "\tdir [path]   dumps informations about the node (namespace, attributes, content)\n");
+		  fprintf(ctxt->output, "\tdir [path]   dumps information about the node (namespace, attributes, content)\n");
 		  fprintf(ctxt->output, "\tdu [path]    show the structure of the subtree under path or the current node\n");
 		  fprintf(ctxt->output, "\texit         leave shell\n");
 		  fprintf(ctxt->output, "\thelp         display this help\n");

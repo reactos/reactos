@@ -50,7 +50,7 @@ DbgPrint(const char *fmt, ...)
     va_start(args, fmt);
     i = vsprintf(Buffer, fmt, args);
     va_end(args);
-    
+
     for (j = 0; j < i; j++) LlbSerialPutChar(Buffer[j]);
     return 0;
 }

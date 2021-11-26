@@ -4,18 +4,18 @@ LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-    STRING_HELP "Kullanım: %s sürücü: [-FS:kütük dizgesi] [-V:etiket] [-Q] [-A:boyut] [-C]\n\n\
+    STRING_HELP "Kullanım: %s sürücü: [-FS:dosya sistemi] [-V:etiket] [-Q] [-A:boyut] [-C]\n\n\
   [sürücü:]         Biçimlendirilecek sürücüyü belirtir.\n\
-  -FS:kütük sistemi (%s) dosya sisteminin türünü belirtir.\n\
+  -FS:dosya sistemi (%s) dosya sisteminin türünü belirtir.\n\
   -V:etiket         Birim etiketini belirtir.\n\
   -Q                Bir hızlı biçimlendirme gerçekleştirir.\n\
-  -A:boyut          Ön tanımlı ayırma birimi boyutunu geçersiz kılar. Ön tanımlı\n\
+  -A:boyut          Varsayılan ayırma birimi boyutunu geçersiz kılar. Varsayılan\n\
                     ayarlar genel kullanım için şiddetle önerilendir.\n\
                     NTFS destekler: 512, 1024, 2048, 4096, 8192, 16K, 32K, 64K.\n\
                     FAT destekler: 8192, 16K, 32K, 64K, 128K, 256K.\n\
                     4096'dan yukarısındaki ayırma birimi boyutları\n\
                     için NTFS sıkıştırma desteklenmiyor.\n\
-  -C                Yeni birimde oluşturulan kütükler ön tanımlı olarak\n\
+  -C                Yeni birimde oluşturulan dosyalar varsayılan olarak\n\
                     sıkıştırılmış olacaktır.\n\n"
     STRING_COMPLETE "Yüzde %lu bitti.\r"
     STRING_FORMAT_FAIL "FormatEx başarılı olarak bitiremedi.\n\n"

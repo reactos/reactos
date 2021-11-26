@@ -372,7 +372,8 @@ ToolbarInsertSpaceForControl(HWND hWndToolbar,
 
 
 HIMAGELIST
-InitImageList(UINT NumImages, UINT StartResource)
+InitImageList(UINT StartResource,
+              UINT NumImages)
 {
     UINT EndResource = StartResource + NumImages - 1;
     HBITMAP hBitmap;
@@ -390,7 +391,7 @@ InitImageList(UINT NumImages, UINT StartResource)
         return NULL;
 
     /* Add all icons to the image list */
-    for (i = StartResource; i <= EndResource; i++)
+    for (i = StartResource; i <= EndResource && Ret != -1; i++)
     {
         hBitmap = LoadImage(hInstance,
                             MAKEINTRESOURCE(i),
@@ -409,9 +410,6 @@ InitImageList(UINT NumImages, UINT StartResource)
                                   RGB(255, 255, 254));
 
         DeleteObject(hBitmap);
-
-        if (Ret == -1)
-            break;
     }
 
     if (Ret == -1)

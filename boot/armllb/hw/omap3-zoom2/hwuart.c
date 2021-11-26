@@ -55,7 +55,7 @@ LlbHwGetUartBase(IN ULONG Port)
     {
         return 0x10000000;
     }
-    
+
     return 0;
 }
 

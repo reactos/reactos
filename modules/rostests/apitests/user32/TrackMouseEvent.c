@@ -104,7 +104,7 @@ static void create_test_windows()
     hMouseHook = SetWindowsHookExW(WH_MOUSE, MouseHookProc, GetModuleHandleW( NULL ), GetCurrentThreadId());
     ok(hMouseHook!=NULL,"failed to set hook\n");
     ok(hMouseHookLL!=NULL,"failed to set hook\n");
-    
+
     RegisterSimpleClass(TmeTestProc, L"testClass");
 
     hWnd1 = CreateWindowW(L"testClass", L"test", WS_OVERLAPPEDWINDOW,
@@ -190,7 +190,7 @@ MSG_ENTRY mouseleave2to1_chain[]={{0, WH_MOUSE_LL, HOOK, WM_MOUSEMOVE},
                                   {1, WM_SETCURSOR},
                                   {1, WM_MOUSEMOVE, POST},
                                   {2, WM_MOUSELEAVE, POST},
-                                   {0,0}};    
+                                   {0,0}};
 
 /* the mouse leaves hwnd2 and moves to hwnd3 */
 MSG_ENTRY mouseleave2to3_chain[]={{0, WH_MOUSE_LL, HOOK, WM_MOUSEMOVE},
@@ -371,15 +371,15 @@ void Test_TrackMouseEvent()
     FLUSH_MESSAGES(QS_TIMER|QS_MOUSEMOVE, 0);     /* the loop drops WM_SYSTIMER */
     EXPECT_TME_FLAGS(hWnd3, TME_HOVER|TME_LEAVE); /* TME_HOVER is still active  */
     COMPARE_CACHE(mousehover3_droptimer_chain);   /* we get no WM_MOUSEHOVER    */
-    ignore_timer = FALSE; 
-    
+    ignore_timer = FALSE;
+
     /* the mouse hovers hwnd3 and mouse message is dropped by WH_MOUSE_LL */
     ignore_mousell = TRUE;
     MOVE_CURSOR(402,402);
     Sleep(100);
     EXPECT_TME_FLAGS(hWnd3, TME_HOVER|TME_LEAVE);
     FLUSH_MESSAGES(QS_TIMER, QS_MOUSEMOVE);         /* WH_MOUSE_LL drops WM_MOUSEMOVE */
-    EXPECT_TME_FLAGS(hWnd3, TME_LEAVE);           
+    EXPECT_TME_FLAGS(hWnd3, TME_LEAVE);
     COMPARE_CACHE(mousehover3_dropmousell_chain);   /* we get WM_MOUSEHOVER normaly */
     ignore_mousell = FALSE;
 
@@ -393,7 +393,7 @@ void Test_TrackMouseEvent()
     Sleep(100);
     EXPECT_TME_FLAGS(hWnd3, TME_HOVER|TME_LEAVE);
     FLUSH_MESSAGES(QS_TIMER|QS_MOUSEMOVE, 0);     /* WH_MOUSE drops WM_MOUSEMOVE */
-    EXPECT_TME_FLAGS(hWnd3, TME_LEAVE);           
+    EXPECT_TME_FLAGS(hWnd3, TME_LEAVE);
     COMPARE_CACHE(mousehover3_dropmouse_chain);   /* we get WM_MOUSEHOVER normaly */
     ignore_mouse = FALSE;
 

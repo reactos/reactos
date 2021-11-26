@@ -2212,7 +2212,7 @@ IoOpenDeviceRegistryKey(IN PDEVICE_OBJECT DeviceObject,
 
     if ((DevInstKeyType & (PLUGPLAY_REGKEY_DEVICE | PLUGPLAY_REGKEY_DRIVER)) == 0)
     {
-        DPRINT1("IoOpenDeviceRegistryKey(): got wrong params, exiting... \n");
+        DPRINT1("IoOpenDeviceRegistryKey(): got wrong params, exiting...\n");
         return STATUS_INVALID_PARAMETER;
     }
 

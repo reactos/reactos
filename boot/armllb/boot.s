@@ -12,7 +12,7 @@
 
     NESTED_ENTRY _start
     PROLOG_END _start
-    
+
 #ifdef _BEAGLE_ // This is only used for TI BootROM on Beagle/Emulator for now
     /*
      * On Beagle, the boot is directly from TI BootROM that reads NAND flash.
@@ -53,7 +53,7 @@
 	.byte 2 		 // ARM
 	.byte 2 		 // Kernel
 	.byte 0 		 // No compression
-	.ascii "ReactOS ARM Low-Level Bootloader" 
+	.ascii "ReactOS ARM Low-Level Bootloader"
 #endif
 
     /* Load C entrypoint and setup LLB stack */

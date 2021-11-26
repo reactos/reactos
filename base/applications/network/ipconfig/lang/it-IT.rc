@@ -26,42 +26,42 @@ STRINGTABLE
 BEGIN
 /* Please keep the spacing/formatting as per En.rc when translating */
     IDS_USAGE
-    "\nUSO:\n \
-        ipconfig [/? | /all | /renew [adattatore] | /release [adattatore] |\n \
-                  /flushdns | /displaydns | /registerdns |\n \
-                  /showclassid adapter |\n \
-                  /setclassid adapter [idclasse] ]\n \
-\n \
-    where\n \
-        adattatore     Nome Connessione\n \
-                       (i caratteri jolly * e ? sono ammessi, vedi esempi)\n \
-\n \
-        Opzioni:\n \
-           /?           Visualizza questo messaggio\n \
-           /all         Visualizza la configurazione completa.\n \
-           /release     Libera l'indirizzo IP per l'adattatore indicato.\n \
-           /renew       Rinnova l'indirizzo IP per l'adattatore indicato.\n \
-           /flushdns    Svuota la cache del DNS Resolver.\n \
-           /registerdns Aggiorna gli indirizzi da DHCP e riacquisisce i nomi DNS.\n \
-           /displaydns  Visualizza il contenuto della cache del DNS Resolver.\n \
-           /showclassid Visualizza tutte le ID di classe del dhcp per l'adattatore.\n \
-           /setclassid  Modifica l'ID classe del dhcp.\n \
-\n \
-    E' predefinita la visualizzazione dei soli indirizzo IP, subnet mask e\n \
-    gateway predefinito di ogni adattatore con TCP/IP.\n \
-\n \
-    Per Release e Renew, se non è indicato un adattatore, tutti gli indirizzi IP\n \
-    di tutti gli adattatori con TCP/IP saranno liberati o rinnovati.\n \
-\n \
-    Per Setclassid se non è indicato un ID di classe verrà rimosso l'ID classe.\n \
-\n \
-    Esempi:\n \
-        > ipconfig                   ... Mostra le informazioni.\n \
-        > ipconfig /all              ... Mostra le informazioni in dettaglio\n \
-        > ipconfig /renew            ... Rinnova tutti gli adattatori\n \
-        > ipconfig /renew EL*        ... Rinnova tutte le connessioni con il\n \
-                                         nome che inizia per EL\n \
-        > ipconfig /release *Con*    ... libera tutte le connessioni corrispondenti,\n \
-                                         es: ""Connessione area locale 1"" or\n \
+    "\nUSO:\n\
+        ipconfig [/? | /all | /renew [adattatore] | /release [adattatore] |\n\
+                  /flushdns | /displaydns | /registerdns |\n\
+                  /showclassid adapter |\n\
+                  /setclassid adapter [idclasse] ]\n\
+\n\
+    where\n\
+        adattatore     Nome Connessione\n\
+                       (i caratteri jolly * e ? sono ammessi, vedi esempi)\n\
+\n\
+        Opzioni:\n\
+           /?           Visualizza questo messaggio\n\
+           /all         Visualizza la configurazione completa.\n\
+           /release     Libera l'indirizzo IP per l'adattatore indicato.\n\
+           /renew       Rinnova l'indirizzo IP per l'adattatore indicato.\n\
+           /flushdns    Svuota la cache del DNS Resolver.\n\
+           /registerdns Aggiorna gli indirizzi da DHCP e riacquisisce i nomi DNS.\n\
+           /displaydns  Visualizza il contenuto della cache del DNS Resolver.\n\
+           /showclassid Visualizza tutte le ID di classe del dhcp per l'adattatore.\n\
+           /setclassid  Modifica l'ID classe del dhcp.\n\
+\n\
+    E' predefinita la visualizzazione dei soli indirizzo IP, subnet mask e\n\
+    gateway predefinito di ogni adattatore con TCP/IP.\n\
+\n\
+    Per Release e Renew, se non è indicato un adattatore, tutti gli indirizzi IP\n\
+    di tutti gli adattatori con TCP/IP saranno liberati o rinnovati.\n\
+\n\
+    Per Setclassid se non è indicato un ID di classe verrà rimosso l'ID classe.\n\
+\n\
+    Esempi:\n\
+        > ipconfig                   ... Mostra le informazioni.\n\
+        > ipconfig /all              ... Mostra le informazioni in dettaglio\n\
+        > ipconfig /renew            ... Rinnova tutti gli adattatori\n\
+        > ipconfig /renew EL*        ... Rinnova tutte le connessioni con il\n\
+                                         nome che inizia per EL\n\
+        > ipconfig /release *Con*    ... libera tutte le connessioni corrispondenti,\n\
+                                         es: ""Connessione area locale 1"" or\n\
                                              ""Connessione area locale 2""\n"
 END

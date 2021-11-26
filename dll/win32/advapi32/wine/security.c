@@ -481,56 +481,179 @@ SetThreadToken(IN PHANDLE ThreadHandle  OPTIONAL,
     return TRUE;
 }
 
-/*************************************************************************
- * CreateRestrictedToken [ADVAPI32.@]
+/**
+ * @brief
+ * Creates a filtered token that is a restricted one
+ * of the regular access token. A restricted token
+ * can have disabled SIDs, deleted privileges and/or
+ * restricted SIDs added.
  *
- * Create a new more restricted token from an existing token.
+ * @param[in] ExistingTokenHandle
+ * An existing handle to a token where it's to be
+ * filtered.
  *
- * PARAMS
- *   baseToken       [I] Token to base the new restricted token on
- *   flags           [I] Options
- *   nDisableSids    [I] Length of disableSids array
- *   disableSids     [I] Array of SIDs to disable in the new token
- *   nDeletePrivs    [I] Length of deletePrivs array
- *   deletePrivs     [I] Array of privileges to delete in the new token
- *   nRestrictSids   [I] Length of restrictSids array
- *   restrictSids    [I] Array of SIDs to restrict in the new token
- *   newToken        [O] Address where the new token is stored
+ * @param[in] Flags
+ * Privilege flag options. This parameter argument influences how the token
+ * is filtered. Such parameter can be 0.
  *
- * RETURNS
- *  Success: TRUE
- *  Failure: FALSE
+ * @param[in] DisableSidCount
+ * The count number of SIDs to disable.
+ *
+ * @param[in] SidsToDisable
+ * An array list with SIDs that have to be disabled in
+ * a token.
+ *
+ * @param[in] DeletePrivilegeCount
+ * The count number of privileges to be deleted.
+ *
+ * @param[in] PrivilegesToDelete
+ * An array list with privileges that have to be deleted
+ * in a token.
+ *
+ * @param[in] RestrictedSidCount
+ * The count number of restricted SIDs.
+ *
+ * @param[in] SidsToRestrict
+ * An array list with restricted SIDs to be added into
+ * the token. If the token already has restricted SIDs
+ * then the array provided by the caller is redundant
+ * information alongside with the existing restricted
+ * SIDs in the token.
+ *
+ * @param[out] NewTokenHandle
+ * The newly received handle to a restricted (filtered)
+ * token. The caller can use such handle to duplicate
+ * a new token.
+ *
+ * @return
+ * Returns TRUE if the function has successfully completed
+ * the operations, otherwise FALSE is returned to indicate
+ * failure. For further details the caller has to invoke
+ * GetLastError() API call for extended information
+ * about the failure.
  */
 BOOL WINAPI CreateRestrictedToken(
-    HANDLE baseToken,
-    DWORD flags,
-    DWORD nDisableSids,
-    PSID_AND_ATTRIBUTES disableSids,
-    DWORD nDeletePrivs,
-    PLUID_AND_ATTRIBUTES deletePrivs,
-    DWORD nRestrictSids,
-    PSID_AND_ATTRIBUTES restrictSids,
-    PHANDLE newToken)
+    _In_ HANDLE ExistingTokenHandle,
+    _In_ DWORD Flags,
+    _In_ DWORD DisableSidCount,
+    _In_reads_opt_(DisableSidCount) PSID_AND_ATTRIBUTES SidsToDisable,
+    _In_ DWORD DeletePrivilegeCount,
+    _In_reads_opt_(DeletePrivilegeCount) PLUID_AND_ATTRIBUTES PrivilegesToDelete,
+    _In_ DWORD RestrictedSidCount,
+    _In_reads_opt_(RestrictedSidCount) PSID_AND_ATTRIBUTES SidsToRestrict,
+    _Outptr_ PHANDLE NewTokenHandle)
 {
-    TOKEN_TYPE type;
-    SECURITY_IMPERSONATION_LEVEL level = SecurityAnonymous;
-    DWORD size;
+    NTSTATUS Status;
+    BOOL Success;
+    ULONG Index;
+    PTOKEN_GROUPS DisableSids = NULL;
+    PTOKEN_GROUPS RestrictedSids = NULL;
+    PTOKEN_PRIVILEGES DeletePrivileges = NULL;
 
-    FIXME("(%p, 0x%x, %u, %p, %u, %p, %u, %p, %p): stub\n",
-          baseToken, flags, nDisableSids, disableSids,
-          nDeletePrivs, deletePrivs,
-          nRestrictSids, restrictSids,
-          newToken);
-
-    size = sizeof(type);
-    if (!GetTokenInformation( baseToken, TokenType, &type, size, &size )) return FALSE;
-    if (type == TokenImpersonation)
+    /*
+     * Capture the elements we're being given from
+     * the caller and allocate the groups and/or
+     * privileges that have to be filtered in
+     * the token.
+     */
+    if (SidsToDisable != NULL)
     {
-        size = sizeof(level);
-        if (!GetTokenInformation( baseToken, TokenImpersonationLevel, &level, size, &size ))
+        DisableSids = (PTOKEN_GROUPS)LocalAlloc(LMEM_FIXED, DisableSidCount * sizeof(TOKEN_GROUPS));
+        if (DisableSids == NULL)
+        {
+            /* We failed, bail out */
+            SetLastError(RtlNtStatusToDosError(STATUS_INSUFFICIENT_RESOURCES));
             return FALSE;
+        }
+
+        /* Copy the counter and loop the elements to copy the rest */
+        DisableSids->GroupCount = DisableSidCount;
+        for (Index = 0; Index < DisableSidCount; Index++)
+        {
+            DisableSids->Groups[Index].Sid = SidsToDisable[Index].Sid;
+            DisableSids->Groups[Index].Attributes = SidsToDisable[Index].Attributes;
+        }
     }
-    return DuplicateTokenEx( baseToken, MAXIMUM_ALLOWED, NULL, level, type, newToken );
+
+    if (PrivilegesToDelete != NULL)
+    {
+        DeletePrivileges = (PTOKEN_PRIVILEGES)LocalAlloc(LMEM_FIXED, DeletePrivilegeCount * sizeof(TOKEN_PRIVILEGES));
+        if (DeletePrivileges == NULL)
+        {
+            /* We failed, bail out */
+            SetLastError(RtlNtStatusToDosError(STATUS_INSUFFICIENT_RESOURCES));
+            Success = FALSE;
+            goto Cleanup;
+        }
+
+        /* Copy the counter and loop the elements to copy the rest */
+        DeletePrivileges->PrivilegeCount = DeletePrivilegeCount;
+        for (Index = 0; Index < DeletePrivilegeCount; Index++)
+        {
+            DeletePrivileges->Privileges[Index].Luid = PrivilegesToDelete[Index].Luid;
+            DeletePrivileges->Privileges[Index].Attributes = PrivilegesToDelete[Index].Attributes;
+        }
+    }
+
+    if (SidsToRestrict != NULL)
+    {
+        RestrictedSids = (PTOKEN_GROUPS)LocalAlloc(LMEM_FIXED, RestrictedSidCount * sizeof(TOKEN_GROUPS));
+        if (RestrictedSids == NULL)
+        {
+            /* We failed, bail out */
+            SetLastError(RtlNtStatusToDosError(STATUS_INSUFFICIENT_RESOURCES));
+            Success = FALSE;
+            goto Cleanup;
+        }
+
+        /* Copy the counter and loop the elements to copy the rest */
+        RestrictedSids->GroupCount = RestrictedSidCount;
+        for (Index = 0; Index < RestrictedSidCount; Index++)
+        {
+            RestrictedSids->Groups[Index].Sid = SidsToRestrict[Index].Sid;
+            RestrictedSids->Groups[Index].Attributes = SidsToRestrict[Index].Attributes;
+        }
+    }
+
+    /*
+     * Call the NT API to request a token filtering
+     * operation for us.
+     */
+    Status = NtFilterToken(ExistingTokenHandle,
+                           Flags,
+                           DisableSids,
+                           DeletePrivileges,
+                           RestrictedSids,
+                           NewTokenHandle);
+    if (!NT_SUCCESS(Status))
+    {
+        /* We failed to do the job, bail out */
+        SetLastError(RtlNtStatusToDosError(Status));
+        Success = FALSE;
+        goto Cleanup;
+    }
+
+    /* If we reach here then we've successfully filtered the token */
+    Success = TRUE;
+
+Cleanup:
+    /* Free whatever we allocated before */
+    if (DisableSids != NULL)
+    {
+        LocalFree(DisableSids);
+    }
+
+    if (DeletePrivileges != NULL)
+    {
+        LocalFree(DeletePrivileges);
+    }
+
+    if (RestrictedSids != NULL)
+    {
+        LocalFree(RestrictedSids);
+    }
+
+    return Success;
 }
 
 /******************************************************************************

@@ -95,7 +95,7 @@ GRAPHICS_BUFFER_Initialize(OUT PCONSOLE_SCREEN_BUFFER* Buffer,
         NewBuffer->ScreenBufferSize.X =  (SHORT)GraphicsInfo->Info.lpBitMapInfo->bmiHeader.biWidth ;
         NewBuffer->ScreenBufferSize.Y = (SHORT)-GraphicsInfo->Info.lpBitMapInfo->bmiHeader.biHeight;
 
-        NewBuffer->OldViewSize = NewBuffer->ViewSize = 
+        NewBuffer->OldViewSize = NewBuffer->ViewSize =
             NewBuffer->OldScreenBufferSize = NewBuffer->ScreenBufferSize;
     }
     else

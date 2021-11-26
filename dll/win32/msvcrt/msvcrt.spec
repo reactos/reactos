@@ -164,7 +164,7 @@
 ;@ cdecl -arch=arm __ExceptionPtrRethrow()
 ;@ cdecl -arch=arm __ExceptionPtrSwap()
 ;@ cdecl -arch=arm __ExceptionPtrToBool()
-@ cdecl -arch=arm __uncaught_exception()
+@ cdecl -arch=arm __uncaught_exception(ptr) MSVCRT___uncaught_exception
 @ cdecl -arch=arm ?_query_new_handler@@YAP6AHI@ZXZ() MSVCRT__query_new_handler # int (__cdecl*__cdecl _query_new_handler(void))(unsigned int)
 @ cdecl -arch=arm ?_set_new_handler@@YAP6AHI@ZP6AHI@Z@Z() MSVCRT__set_new_handler # int (__cdecl*__cdecl _set_new_handler(int (__cdecl*)(unsigned int)))(unsigned int)
 @ cdecl -arch=arm ?_set_new_mode@@YAHH@Z() MSVCRT__set_new_mode # int __cdecl _set_new_mode(int)
@@ -255,8 +255,8 @@
 @ cdecl ___lc_collate_cp_func()
 @ cdecl ___lc_handle_func()
 @ cdecl ___mb_cur_max_func()
-@ cdecl ___setlc_active_func()
-@ cdecl ___unguarded_readlc_active_add_func()
+@ cdecl -arch=i386,x86_64 ___setlc_active_func()
+@ cdecl -arch=i386,x86_64 ___unguarded_readlc_active_add_func()
 @ extern __argc
 @ extern __argv
 @ extern __badioinfo __badioinfo
@@ -272,13 +272,13 @@
 @ stub -version=0x600+ __dstbias
 @ cdecl __fpecode()
 @ cdecl __getmainargs(ptr ptr ptr long ptr)
-@ extern __initenv
+@ extern -arch=i386,x86_64 __initenv
 @ cdecl __iob_func()
 @ cdecl __isascii(long)
 @ cdecl __iscsym(long)
 @ cdecl __iscsymf(long)
-@ extern __lc_codepage
-@ extern __lc_collate_cp MSVCRT___lc_collate_cp
+@ extern -arch=i386,x86_64 __lc_codepage
+@ extern -arch=i386,x86_64 __lc_collate_cp MSVCRT___lc_collate_cp
 @ extern __lc_handle MSVCRT___lc_handle
 @ cdecl __lconv_init()
 @ stub -version=0x600+ -arch=i386 __libm_sse2_acos
@@ -337,7 +337,7 @@
 @ cdecl __pwctype_func()
 @ cdecl __pxcptinfoptrs()
 @ cdecl __set_app_type(long)
-@ extern __setlc_active
+@ extern -arch=i386,x86_64 __setlc_active
 @ cdecl __setusermatherr(ptr)
 @ stub -version=0x600+ __strncnt
 @ cdecl __threadhandle() kernel32.GetCurrentThread
@@ -345,13 +345,13 @@
 @ cdecl __toascii(long)
 @ cdecl __unDName(ptr str long ptr ptr long)
 @ cdecl __unDNameEx(ptr str long ptr ptr ptr long)
-@ extern __unguarded_readlc_active
+@ extern -arch=i386,x86_64 __unguarded_readlc_active
 @ extern __wargv __wargv
 @ cdecl __wcserror(wstr)
 @ cdecl -version=0x600+ __wcserror_s(ptr long wstr)
 @ stub -version=0x600+ __wcsncnt
 @ cdecl __wgetmainargs(ptr ptr ptr long ptr)
-@ extern __winitenv
+@ extern -arch=i386,x86_64 __winitenv
 @ cdecl -arch=i386 _abnormal_termination()
 # stub _abs64
 @ cdecl _access(str long)
@@ -460,14 +460,14 @@
 @ extern _daylight
 @ stub -version=0x600+ _difftime32
 @ stub -version=0x600+ _difftime64
-@ extern _dstbias
+@ extern -arch=i386,x86_64 _dstbias
 @ cdecl _dup(long)
 @ cdecl _dup2(long long)
 @ cdecl _ecvt(double long ptr ptr)
 @ stub -version=0x600+ _ecvt_s
 @ cdecl _endthread()
 @ cdecl _endthreadex(long)
-@ extern _environ
+@ extern -arch=i386,x86_64 _environ
 @ cdecl _eof(long)
 @ cdecl _errno()
 @ cdecl -arch=i386 _except_handler2(ptr ptr ptr ptr)
@@ -491,7 +491,7 @@
 @ cdecl _fgetchar()
 @ cdecl _fgetwchar()
 @ cdecl _filbuf(ptr)
-@ extern _fileinfo
+@ extern -arch=i386,x86_64 _fileinfo
 @ cdecl _filelength(long)
 @ cdecl -ret64 _filelengthi64(long)
 @ cdecl _fileno(ptr)
@@ -886,7 +886,7 @@
 @ extern _onexit # Declaring it as extern let us use the symbol from msvcrtex while having the __imp_ symbol defined in the import lib
 @ varargs _open(str long)
 @ cdecl _open_osfhandle(long long)
-@ extern _osplatform
+@ extern -arch=i386,x86_64 _osplatform
 @ extern _osver
 @ cdecl -arch=i386 _outp(long long) MSVCRT__outp
 @ cdecl -arch=i386 _outpd(long long) MSVCRT__outpd
@@ -947,7 +947,7 @@
 @ cdecl _seterrormode(long)
 @ cdecl -norelay _setjmp(ptr)
 @ cdecl -arch=i386 -norelay _setjmp3(ptr long)
-@ cdecl -arch=x86_64 -norelay _setjmpex(ptr ptr)
+@ cdecl -arch=x86_64,arm -norelay _setjmpex(ptr ptr)
 @ cdecl _setmaxstdio(long)
 @ cdecl _setmbcp(long)
 @ cdecl _setmode(long long)
@@ -1186,7 +1186,7 @@
 @ stub -version=0x600+ _wctomb_l
 @ stub -version=0x600+ _wctomb_s_l
 @ extern _wctype
-@ extern _wenviron
+@ extern -arch=i386,x86_64 _wenviron
 @ varargs _wexecl(wstr wstr)
 @ varargs _wexecle(wstr wstr)
 @ varargs _wexeclp(wstr wstr)
@@ -1216,7 +1216,7 @@
 @ extern _winmajor
 @ extern _winminor
 @ stub -version=0x600+ _winput_s
-@ extern _winver
+@ extern -arch=i386,x86_64 _winver
 @ cdecl _wmakepath(ptr wstr wstr wstr wstr)
 @ stub -version=0x600+ _wmakepath_s
 @ cdecl _wmkdir(wstr)

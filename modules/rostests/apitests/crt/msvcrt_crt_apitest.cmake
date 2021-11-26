@@ -1376,6 +1376,7 @@ elseif(ARCH STREQUAL "arm")
     list(APPEND SOURCE_MSVCRT
         __rt_div.c
         __fto64.c
+        __64tof.c
     )
 endif()
 

@@ -119,6 +119,7 @@ MainWndCreateToolbarClient(struct _TOOLBAR_DOCKS *TbDocks,
     const TBBUTTON *Buttons = NULL;
     UINT NumButtons = 0;
     UINT StartImageRes = 0;
+    UINT NumImages = 0;
     HWND hWndClient = NULL;
 
     UNREFERENCED_PARAMETER(Context);
@@ -128,16 +129,18 @@ MainWndCreateToolbarClient(struct _TOOLBAR_DOCKS *TbDocks,
         case ID_TOOLBAR_STANDARD:
         {
             Buttons = StdButtons;
-            NumButtons = sizeof(StdButtons) / sizeof(StdButtons[0]);
-            StartImageRes = IDB_MAINNEWICON;
+            NumButtons = ARRAYSIZE(StdButtons);
+            StartImageRes = IDB_MAINNEW;
+            NumImages = 10;
             break;
         }
 
         case ID_TOOLBAR_TEXT:
         {
             Buttons = TextButtons;
-            NumButtons = sizeof(TextButtons) / sizeof(TextButtons[0]);
+            NumButtons = ARRAYSIZE(TextButtons);
             StartImageRes = IDB_TEXTBOLD;
+            NumImages = 6;
             break;
         }
 
@@ -194,8 +197,7 @@ MainWndCreateToolbarClient(struct _TOOLBAR_DOCKS *TbDocks,
                         0,
                         (LPARAM)MAKELONG(TB_BMP_WIDTH, TB_BMP_HEIGHT));
 
-            hImageList = InitImageList(NumButtons,
-                                       StartImageRes);
+            hImageList = InitImageList(StartImageRes, NumImages);
 
             ImageList_Destroy((HIMAGELIST)SendMessage(hWndClient,
                                                       TB_SETIMAGELIST,
@@ -491,7 +493,7 @@ MainWndMoveFloatingWindows(PMAIN_WND_INFO Info,
 
         CopyMemory(wndOldPos,
                    &wndNewPos,
-                   sizeof(RECT));
+                   sizeof(wndNewPos));
     }
 }
 
@@ -663,7 +665,7 @@ CreateToolbars(PMAIN_WND_INFO Info)
 {
     UINT i;
 
-    for (i = 0; i < sizeof(MainDockBars) / sizeof(MainDockBars[0]); i++)
+    for (i = 0; i < ARRAYSIZE(MainDockBars); i++)
     {
         /* FIXME - lookup whether to display the toolbar */
         TbdAddToolbar(&Info->ToolDocks,
@@ -772,7 +774,7 @@ InitMainWnd(PMAIN_WND_INFO Info)
     if (Info->hStatus != NULL)
         SendMessage(Info->hStatus,
                     SB_SETPARTS,
-                    sizeof(statwidths)/sizeof(int),
+                    ARRAYSIZE(statwidths),
                     (LPARAM)statwidths);
 
     /* create the MDI client window */
@@ -1168,13 +1170,13 @@ MainWndProc(HWND hwnd,
                 if (!MainWndMenuHint(Info,
                                      LOWORD(wParam),
                                      MainMenuHintTable,
-                                     sizeof(MainMenuHintTable) / sizeof(MainMenuHintTable[0]),
+                                     ARRAYSIZE(MainMenuHintTable),
                                      IDS_HINT_BLANK))
                 {
                     MainWndMenuHint(Info,
                                     LOWORD(wParam),
                                     SystemMenuHintTable,
-                                    sizeof(SystemMenuHintTable) / sizeof(SystemMenuHintTable[0]),
+                                    ARRAYSIZE(SystemMenuHintTable),
                                     IDS_HINT_BLANK);
                 }
             }
@@ -1426,7 +1428,7 @@ InitMainWindowImpl(VOID)
 {
     WNDCLASSEX wc = {0};
 
-    wc.cbSize = sizeof(WNDCLASSEX);
+    wc.cbSize = sizeof(wc);
     wc.lpfnWndProc = MainWndProc;
     wc.hInstance = hInstance;
     wc.hIcon = LoadIcon(hInstance,

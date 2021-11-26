@@ -22,7 +22,7 @@ void Test_CloseDuplicatedSocket()
         skip("socket failed %d. Aborting test.\n", WSAGetLastError());
         return;
     }
-    
+
     err = sendto(sck, szBuf, _countof(szBuf), 0, (struct sockaddr *)&to, sizeof(to));
     ok(err == _countof(szBuf), "sendto err = %d %d\n", err, WSAGetLastError());
 

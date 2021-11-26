@@ -122,7 +122,7 @@ BEGIN
         END
         MENUITEM "フォルダを開く(&O)", IDM_OPEN_FOLDER
         MENUITEM "テキストを表示(&S)", IDM_SHOW_TEXT
-    END    
+    END
 END
 
 /* Dialogs */

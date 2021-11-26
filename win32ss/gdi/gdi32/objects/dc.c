@@ -281,47 +281,34 @@ BOOL
 WINAPI
 DeleteDC(HDC hdc)
 {
-    BOOL bResult = TRUE;
-    PLDC pLDC = NULL;
-    HANDLE hPrinter = NULL;
     ULONG hType = GDI_HANDLE_GET_TYPE(hdc);
-
-    pLDC = GdiGetLDC(hdc);
 
     if (hType != GDILoObjType_LO_DC_TYPE)
     {
-        return METADC_DeleteDC(hdc);
+        return METADC_RosGlueDeleteDC(hdc);
     }
 
-    bResult = NtGdiDeleteObjectApp(hdc);
+    //if ( ghICM || pdcattr->pvLIcm )
+    //    IcmDeleteLocalDC( hdc, pdcattr, NULL );
 
-    if (bResult && pLDC)
-    {
-        DPRINT1("Delete the Local DC structure\n");
-        LocalFree( pLDC );
-    }
-
-    if (hPrinter)
-        fpClosePrinter(hPrinter);
-
-    return bResult;
+    return NtGdiDeleteObjectApp(hdc);
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 INT
 WINAPI
 SaveDC(IN HDC hdc)
 {
-    HANDLE_METADC0P(INT, SaveDC, 0, hdc);
+    HANDLE_METADC1P(INT, SaveDC, 0, hdc);
     return NtGdiSaveDC(hdc);
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 WINAPI
@@ -381,7 +368,7 @@ SetArcDirection(
     _In_ HDC hdc,
     _In_ INT nDirection)
 {
-    return GetAndSetDCDWord(hdc, GdiGetSetArcDirection, nDirection, 0, 0, 0);
+    return GetAndSetDCDWord(hdc, GdiGetSetArcDirection, nDirection, EMR_SETARCDIRECTION, 0, 0);
 }
 
 /*
@@ -565,21 +552,43 @@ GetDeviceCaps(
     _In_ int nIndex)
 {
     PDC_ATTR pdcattr;
+    PLDC pldc;
+    ULONG hType = GDI_HANDLE_GET_TYPE(hdc);
     PDEVCAPS pDevCaps = GdiDevCaps; // Primary display device capabilities.
     DPRINT("Device CAPS1\n");
 
-    HANDLE_METADC(INT, GetDeviceCaps, 0, hdc, nIndex);
+    HANDLE_METADC16(INT, GetDeviceCaps, 0, hdc, nIndex);
 
-    /* Get the DC attribute */
-    pdcattr = GdiGetDcAttr(hdc);
-    if (pdcattr == NULL)
+    if ( hType != GDILoObjType_LO_DC_TYPE && hType != GDILoObjType_LO_METADC16_TYPE )
     {
-        SetLastError(ERROR_INVALID_PARAMETER);
-        return 0;
-    }
+        pldc = GdiGetLDC(hdc);
+        if ( !pldc )
+        {
+            SetLastError(ERROR_INVALID_HANDLE);
+            return 0;
+        }
+        if (!(pldc->Flags & LDC_DEVCAPS) )
+        {
+            if (!NtGdiGetDeviceCapsAll(hdc, &pldc->DevCaps) )
+                SetLastError(ERROR_INVALID_PARAMETER);
 
-    if (!(pdcattr->ulDirty_ & DC_PRIMARY_DISPLAY))
-        return NtGdiGetDeviceCaps(hdc, nIndex);
+            pldc->Flags |= LDC_DEVCAPS;
+        }
+        pDevCaps = &pldc->DevCaps;
+    }
+    else
+    {
+        /* Get the DC attribute */
+        pdcattr = GdiGetDcAttr(hdc);
+        if ( pdcattr == NULL )
+        {
+            SetLastError(ERROR_INVALID_PARAMETER);
+            return 0;
+        }
+
+        if (!(pdcattr->ulDirty_ & DC_PRIMARY_DISPLAY))
+            return NtGdiGetDeviceCaps(hdc, nIndex);
+    }
 
     switch (nIndex)
     {
@@ -725,7 +734,7 @@ SetRelAbs(
     HDC hdc,
     INT Mode)
 {
-    return GetAndSetDCDWord(hdc, GdiGetSetRelAbs, Mode, 0, 0, 0);
+    return GetAndSetDCDWord(hdc, GdiGetSetRelAbs, Mode, 0, META_SETRELABS, 0);
 }
 
 
@@ -743,9 +752,22 @@ GetAndSetDCDWord(
     _In_ DWORD dwError)
 {
     DWORD dwResult;
+    PLDC pldc;
 
-    /* This is a special API, handle it appropriately */
-    HANDLE_METADC2(DWORD, GetAndSetDCDWord, hdc, u, dwIn, ulMFId, usMF16Id, dwError);
+    if ( GDI_HANDLE_GET_TYPE(hdc) != GDILoObjType_LO_DC_TYPE &&
+         ulMFId != EMR_MAX + 1 )
+    {
+        if (GDI_HANDLE_GET_TYPE(hdc) == GDILoObjType_LO_METADC16_TYPE)
+        {
+            return METADC_SetD( hdc, dwIn, usMF16Id );
+        }
+        pldc = GdiGetLDC(hdc);
+        if ( pldc->iType == LDC_EMFLDC)
+        {
+            if (!EMFDC_SetD( pldc, dwIn, ulMFId ))
+                return 0;
+        }
+    }
 
     /* Call win32k to do the real work */
     if (!NtGdiGetAndSetDCDword(hdc, u, dwIn, &dwResult))
@@ -896,7 +918,7 @@ SetDCBrushColor(
     }
 
     /* We handle only enhanced meta DCs here */
-    HANDLE_METADC(COLORREF, SetDCBrushColor, CLR_INVALID, hdc, crColor);
+    HANDLE_EMETAFDC(COLORREF, SetDCBrushColor, CLR_INVALID, hdc, crColor);
 
     /* Get old color and store the new */
     crOldColor = pdcattr->ulBrushClr;
@@ -932,7 +954,7 @@ SetDCPenColor(
     }
 
     /* We handle only enhanced meta DCs here */
-    HANDLE_METADC(COLORREF, SetDCPenColor, CLR_INVALID, hdc, crColor);
+    HANDLE_EMETAFDC(COLORREF, SetDCPenColor, CLR_INVALID, hdc, crColor);
 
     /* Get old color and store the new */
     crOldColor = pdcattr->ulPenClr;
@@ -1292,8 +1314,26 @@ SelectPalette(
     HPALETTE hpal,
     BOOL bForceBackground)
 {
-    HANDLE_METADC(HPALETTE, SelectPalette, NULL, hdc, hpal, bForceBackground);
-
+    if (GDI_HANDLE_GET_TYPE(hdc) != GDILoObjType_LO_DC_TYPE)
+    {
+        if (GDI_HANDLE_GET_TYPE(hdc) == GDILoObjType_LO_METADC16_TYPE)
+        {
+           return (HPALETTE)((ULONG_PTR)METADC_SelectPalette(hdc, hpal));
+        }
+        else
+        {
+           PLDC pLDC = GdiGetLDC(hdc);
+           if ( !pLDC )
+           {
+              SetLastError(ERROR_INVALID_HANDLE);
+              return NULL;
+           }
+           if ( pLDC->iType == LDC_EMFLDC && !(EMFDC_SelectPalette(pLDC, hpal)) )
+           {
+              return NULL;
+           }
+        }
+    }
     return NtUserSelectPalette(hdc, hpal, bForceBackground);
 }
 
@@ -1392,7 +1432,7 @@ GdiSelectBrush(
     PDC_ATTR pdcattr;
     HBRUSH hbrOld;
 
-    HANDLE_METADC(HBRUSH, SelectBrush, NULL, hdc, hbr);
+    HANDLE_METADC(HBRUSH, SelectObject, NULL, hdc, hbr);
 
     /* Get the DC attribute */
     pdcattr = GdiGetDcAttr(hdc);
@@ -1422,7 +1462,7 @@ GdiSelectPen(
     PDC_ATTR pdcattr;
     HPEN hpenOld;
 
-    HANDLE_METADC(HPEN, SelectPen, NULL, hdc, hpen);
+    HANDLE_METADC(HPEN, SelectObject, NULL, hdc, hpen);
 
     /* Get the DC attribute */
     pdcattr = GdiGetDcAttr(hdc);
@@ -1452,7 +1492,7 @@ GdiSelectFont(
     PDC_ATTR pdcattr;
     HFONT hfontOld;
 
-    HANDLE_METADC(HFONT, SelectFont, NULL, hdc, hfont);
+    HANDLE_METADC(HFONT, SelectObject, NULL, hdc, hfont);
 
     /* Get the DC attribute */
     pdcattr = GdiGetDcAttr(hdc);

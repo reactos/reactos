@@ -56,7 +56,7 @@
 #define IDC_HIBERNATE_STATIC     3002
 #define IDC_SLEEP_STATIC         3003
 #define IDC_SHUTDOWN_STATIC      3004
-#define IDC_RESTART_STATIC       3005 
+#define IDC_RESTART_STATIC       3005
 
 #define IDC_BUTTON_HIBERNATE     1901
 #define IDC_BUTTON_SLEEP         1902

@@ -127,7 +127,7 @@ BEGIN
         END
         MENUITEM "開啟資料夾(&O)", IDM_OPEN_FOLDER
         MENUITEM "顯示文字(&S)", IDM_SHOW_TEXT
-    END    
+    END
 END
 
 /* Dialogs */

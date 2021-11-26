@@ -1,7 +1,7 @@
 /*
  *  Threading abstraction layer
  *
- *  Copyright (C) 2006-2015, ARM Limited, All Rights Reserved
+ *  Copyright The Mbed TLS Contributors
  *  SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
  *
  *  This file is provided under the Apache License 2.0, or the
@@ -42,9 +42,15 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  *
  *  **********
- *
- *  This file is part of mbed TLS (https://tls.mbed.org)
  */
+
+/*
+ * Ensure gmtime_r is available even with -std=c99; must be defined before
+ * config.h, which pulls in glibc's features.h. Harmless on other platforms.
+ */
+#if !defined(_POSIX_C_SOURCE)
+#define _POSIX_C_SOURCE 200112L
+#endif
 
 #if !defined(MBEDTLS_CONFIG_FILE)
 #include "mbedtls/config.h"
@@ -56,12 +62,48 @@
 
 #include "mbedtls/threading.h"
 
+#if defined(MBEDTLS_HAVE_TIME_DATE) && !defined(MBEDTLS_PLATFORM_GMTIME_R_ALT)
+
+#if !defined(_WIN32) && (defined(unix) || \
+    defined(__unix) || defined(__unix__) || (defined(__APPLE__) && \
+    defined(__MACH__)))
+#include <unistd.h>
+#endif /* !_WIN32 && (unix || __unix || __unix__ ||
+        * (__APPLE__ && __MACH__)) */
+
+#if !( ( defined(_POSIX_VERSION) && _POSIX_VERSION >= 200809L ) ||     \
+       ( defined(_POSIX_THREAD_SAFE_FUNCTIONS ) &&                     \
+         _POSIX_THREAD_SAFE_FUNCTIONS >= 200112L ) )
+/*
+ * This is a convenience shorthand macro to avoid checking the long
+ * preprocessor conditions above. Ideally, we could expose this macro in
+ * platform_util.h and simply use it in platform_util.c, threading.c and
+ * threading.h. However, this macro is not part of the Mbed TLS public API, so
+ * we keep it private by only defining it in this file
+ */
+
+#if ! ( defined(_WIN32) && !defined(EFIX64) && !defined(EFI32) )
+#define THREADING_USE_GMTIME
+#endif /* ! ( defined(_WIN32) && !defined(EFIX64) && !defined(EFI32) ) */
+
+#endif /* !( ( defined(_POSIX_VERSION) && _POSIX_VERSION >= 200809L ) ||     \
+             ( defined(_POSIX_THREAD_SAFE_FUNCTIONS ) &&                     \
+                _POSIX_THREAD_SAFE_FUNCTIONS >= 200112L ) ) */
+
+#endif /* MBEDTLS_HAVE_TIME_DATE && !MBEDTLS_PLATFORM_GMTIME_R_ALT */
+
 #if defined(MBEDTLS_THREADING_PTHREAD)
 static void threading_mutex_init_pthread( mbedtls_threading_mutex_t *mutex )
 {
     if( mutex == NULL )
         return;
 
+    /* A nonzero value of is_valid indicates a successfully initialized
+     * mutex. This is a workaround for not being able to return an error
+     * code for this function. The lock/unlock functions return an error
+     * if is_valid is nonzero. The Mbed TLS unit test code uses this field
+     * to distinguish more states of the mutex; see helpers.function for
+     * details. */
     mutex->is_valid = pthread_mutex_init( &mutex->mutex, NULL ) == 0;
 }
 
@@ -141,7 +183,7 @@ void mbedtls_threading_set_alt( void (*mutex_init)( mbedtls_threading_mutex_t * 
 #if defined(MBEDTLS_FS_IO)
     mbedtls_mutex_init( &mbedtls_threading_readdir_mutex );
 #endif
-#if defined(MBEDTLS_HAVE_TIME_DATE)
+#if defined(THREADING_USE_GMTIME)
     mbedtls_mutex_init( &mbedtls_threading_gmtime_mutex );
 #endif
 }
@@ -154,7 +196,7 @@ void mbedtls_threading_free_alt( void )
 #if defined(MBEDTLS_FS_IO)
     mbedtls_mutex_free( &mbedtls_threading_readdir_mutex );
 #endif
-#if defined(MBEDTLS_HAVE_TIME_DATE)
+#if defined(THREADING_USE_GMTIME)
     mbedtls_mutex_free( &mbedtls_threading_gmtime_mutex );
 #endif
 }
@@ -169,7 +211,7 @@ void mbedtls_threading_free_alt( void )
 #if defined(MBEDTLS_FS_IO)
 mbedtls_threading_mutex_t mbedtls_threading_readdir_mutex MUTEX_INIT;
 #endif
-#if defined(MBEDTLS_HAVE_TIME_DATE)
+#if defined(THREADING_USE_GMTIME)
 mbedtls_threading_mutex_t mbedtls_threading_gmtime_mutex MUTEX_INIT;
 #endif
 

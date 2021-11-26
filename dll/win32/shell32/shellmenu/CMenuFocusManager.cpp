@@ -18,7 +18,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-/* 
+/*
 This file implements the CMenuFocusManager class.
 
 This class manages the shell menus, by overriding the hot-tracking behaviour.
@@ -169,7 +169,7 @@ HRESULT CMenuFocusManager::PopFromArray(StackEntryType * pType, CMenuBand ** pMb
     {
         if (pMb) *pMb = m_bandStack[m_bandCount].mb;
     }
-    
+
     return S_OK;
 }
 
@@ -559,7 +559,7 @@ LRESULT CMenuFocusManager::GetMsgHook(INT nCode, WPARAM hookWParam, LPARAM hookL
     BOOL isLButton = FALSE;
     if (nCode < 0)
         return CallNextHookEx(m_hGetMsgHook, nCode, hookWParam, hookLParam);
-    
+
     if (nCode == HC_ACTION)
     {
         BOOL callNext = TRUE;

@@ -115,8 +115,8 @@ KdPollBreakIn(VOID)
             KeLowerIrql(OldIrql);
         }
 
-        /* Re-enable interrupts if they were enabled previously */
-        if (Enable) _enable();
+        /* Re-enable interrupts */
+        KeRestoreInterrupts(Enable);
     }
 
     /* Tell the caller to do a break */

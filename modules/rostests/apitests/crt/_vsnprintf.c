@@ -49,7 +49,7 @@ START_TEST(_vsnprintf)
 #if defined(TEST_USER32) /* NTDLL doesn't use/set errno */
     ok(errno == EINVAL, "Expected EINVAL, got %u\n", errno);
 #else
-    ok(errno == 0, "Expected 0, got %u \n", errno);
+    ok(errno == 0, "Expected 0, got %u\n", errno);
 #endif
 
     /* This one is no better */
@@ -62,14 +62,14 @@ START_TEST(_vsnprintf)
 
 #if defined(TEST_USER32)
     EndSeh(STATUS_ACCESS_VIOLATION);
-#else 
+#else
     EndSeh(STATUS_SUCCESS);
 #endif
 
 #if defined(TEST_USER32) /* NTDLL doesn't use/set errno */
     ok(errno == EINVAL, "Expected EINVAL, got %u\n", errno);
 #else
-    ok(errno == 0, "Expected 0, got %u \n", errno);
+    ok(errno == 0, "Expected 0, got %u\n", errno);
 #endif
 
     /* One more NULL checks */
@@ -80,6 +80,6 @@ START_TEST(_vsnprintf)
 #if defined(TEST_USER32) /* NTDLL doesn't use/set errno */
     ok(errno == EINVAL, "Expected EINVAL, got %u\n", errno);
 #else
-    ok(errno == 0, "Expected 0, got %u \n", errno);
+    ok(errno == 0, "Expected 0, got %u\n", errno);
 #endif
 }

@@ -126,23 +126,23 @@ DllGetClassObject(
 {
     UINT i;
     HRESULT hres = E_OUTOFMEMORY;
-    IClassFactory * pcf = NULL;	
+    IClassFactory * pcf = NULL;
 
     if (!ppv)
         return E_INVALIDARG;
 
     *ppv = NULL;
 
-    for (i = 0; InterfaceTable[i].riid; i++) 
+    for (i = 0; InterfaceTable[i].riid; i++)
     {
-        if (IsEqualIID(*InterfaceTable[i].riid, rclsid)) 
+        if (IsEqualIID(*InterfaceTable[i].riid, rclsid))
         {
             pcf = CClassFactory_fnConstructor(InterfaceTable[i].lpfnCI, NULL, NULL);
             break;
         }
     }
 
-    if (!pcf) 
+    if (!pcf)
     {
         return CLASS_E_CLASSNOTAVAILABLE;
     }

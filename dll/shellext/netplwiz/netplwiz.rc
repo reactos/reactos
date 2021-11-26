@@ -39,3 +39,9 @@ IDI_DISCONNECT_NET_DRIVES ICON "res/4400.ico"
 #ifdef LANGUAGE_PT_PT
     #include "lang/pt-PT.rc"
 #endif
+#ifdef LANGUAGE_TR_TR
+    #include "lang/tr-TR.rc"
+#endif
+#ifdef LANGUAGE_ZH_TW
+    #include "lang/zh-TW.rc"
+#endif

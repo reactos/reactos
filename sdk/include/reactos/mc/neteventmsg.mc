@@ -856,8 +856,8 @@ Le serveur de configuration de sécurité (scesrv.dll) n'a pas réussi à s'init
 avec l'erreur %1. Le système redémarre...
 .
 Language=Polish
-Menedżer sterowania usługami nie został zainicjowany pomyślnie.\r\nNie udało się zainicjować serwera
-konfiguracji zabezpieczeń (scesrv.dll)\r\nz powodu błędu %1. Trwa ponowne uruchamianie systemu...
+Menedżer sterowania usługami nie został zainicjowany pomyślnie. Nie udało się zainicjować serwera
+konfiguracji zabezpieczeń (scesrv.dll) z powodu błędu %1. Trwa ponowne uruchamianie systemu...
 .
 
 MessageId=7034
@@ -946,7 +946,7 @@ Menedżer sterowania usługami napotkał błąd podczas cofania zmiany konfigura
 usługi %1. Element usługi: %2 jest obecnie w stanie nieprzewidywalnym.
 
 Jeśli ta konfiguracja nie zostanie naprawiona, ponowne uruchomienie usługi
-%1 może okazać się niemożliwe lub mogą wystąpić inne błędy. Aby upewnić się, 
+%1 może okazać się niemożliwe lub mogą wystąpić inne błędy. Aby upewnić się,
 że usługa jest skonfigurowana właściwie, użyj przystawki Usługi w programie
 ReactOS Management Console (MMC).
 .
@@ -974,8 +974,8 @@ que le service est correctement, utilisez la console de gestion des services
 dans la console de gestion Microsoft (MMC).
 .
 Language=Polish
-Usługa %1 nie mogła zalogować się jako %2 z aktualnie skonfigurowanym 
-hasłem z powodu następującego błędu: %n%3%n%nAby upewnić się, że usługa 
+Usługa %1 nie mogła zalogować się jako %2 z aktualnie skonfigurowanym
+hasłem z powodu następującego błędu: %n%3%n%nAby upewnić się, że usługa
 jest skonfigurowana właściwie, użyj przystawki Usługi w programie
 ReactOS Management Console (MMC).
 .

@@ -65,7 +65,7 @@ ULONG WINAPI IDirect3DDevice9Base_Release(LPDIRECT3DDEVICE9 iface)
         DWORD iAdapter;
 
         EnterCriticalSection(&This->CriticalSection);
-        
+
         /* TODO: Free resources here */
         for (iAdapter = 0; iAdapter < This->NumAdaptersInDevice; iAdapter++)
         {
@@ -524,7 +524,7 @@ HRESULT WINAPI IDirect3DDevice9Base_Present(LPDIRECT3DDEVICE9 iface, CONST RECT*
     {
         HRESULT hResult;
         IDirect3DSwapChain9* pSwapChain;
-        
+
         IDirect3DDevice9Base_GetSwapChain(iface, i, &pSwapChain);
         hResult = IDirect3DSwapChain9_Present(pSwapChain, pSourceRect, pDestRect, hDestWindowOverride, pDirtyRegion, 0);
 

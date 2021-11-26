@@ -27,15 +27,33 @@ KeFreezeExecution(IN PKTRAP_FRAME TrapFrame,
                   IN PKEXCEPTION_FRAME ExceptionFrame)
 {
     BOOLEAN Enable;
+    KIRQL OldIrql;
 
-    /* Disable interrupts and get previous state */
+#ifndef CONFIG_SMP
+    UNREFERENCED_PARAMETER(TrapFrame);
+    UNREFERENCED_PARAMETER(ExceptionFrame);
+#endif
+
+    /* Disable interrupts, get previous state and set the freeze flag */
     Enable = KeDisableInterrupts();
-
-    /* Save freeze flag */
     KiFreezeFlag = 4;
 
-    /* Save the old IRQL */
-    KiOldIrql = KeGetCurrentIrql();
+#ifndef CONFIG_SMP
+    /* Raise IRQL if we have to */
+    OldIrql = KeGetCurrentIrql();
+    if (OldIrql < DISPATCH_LEVEL)
+        OldIrql = KeRaiseIrqlToDpcLevel();
+#else
+    /* Raise IRQL to HIGH_LEVEL */
+    KeRaiseIrql(HIGH_LEVEL, &OldIrql);
+#endif
+
+#ifdef CONFIG_SMP
+    // TODO: Add SMP support.
+#endif
+
+    /* Save the old IRQL to be restored on unfreeze */
+    KiOldIrql = OldIrql;
 
     /* Return whether interrupts were enabled */
     return Enable;
@@ -45,9 +63,22 @@ VOID
 NTAPI
 KeThawExecution(IN BOOLEAN Enable)
 {
+#ifdef CONFIG_SMP
+    // TODO: Add SMP support.
+#endif
+
+    /* Clear the freeze flag */
+    KiFreezeFlag = 0;
+
     /* Cleanup CPU caches */
     KeFlushCurrentTb();
 
+    /* Restore the old IRQL */
+#ifndef CONFIG_SMP
+    if (KiOldIrql < DISPATCH_LEVEL)
+#endif
+    KeLowerIrql(KiOldIrql);
+
     /* Re-enable interrupts */
-    if (Enable) _enable();
+    KeRestoreInterrupts(Enable);
 }

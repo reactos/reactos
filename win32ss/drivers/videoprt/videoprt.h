@@ -234,6 +234,7 @@ IntVideoPortSetupInterrupt(
 NTSTATUS NTAPI
 IntVideoPortFilterResourceRequirements(
    IN PDEVICE_OBJECT DeviceObject,
+   IN PIO_STACK_LOCATION IrpStack,
    IN PIRP Irp);
 
 NTSTATUS NTAPI

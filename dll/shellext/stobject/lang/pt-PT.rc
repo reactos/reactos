@@ -6,10 +6,10 @@ EXSTYLE WS_EX_CONTEXTHELP
 CAPTION "Medidor de energia"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "Estado da energia", 1001, "Button", BS_GROUPBOX | WS_CHILD | WS_VISIBLE, 9, 20, 234, 189 
-    CONTROL "Mostrar sempre o &ícone na barra de tarefas.", 1002, "Button", BS_AUTOCHECKBOX | WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP, 6, 6, 120, 10 
-    CONTROL "Mostrar &detalhes de cada bateria.", 1003, "Button", BS_AUTOCHECKBOX | WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP, 135, 6, 120, 8 
-    CONTROL "", 1000, "Static", SS_LEFT | WS_CHILD | WS_GROUP, 11, 29, 229, 178 
+    CONTROL "Estado da energia", 1001, "Button", BS_GROUPBOX | WS_CHILD | WS_VISIBLE, 9, 20, 234, 189
+    CONTROL "Mostrar sempre o &ícone na barra de tarefas.", 1002, "Button", BS_AUTOCHECKBOX | WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP, 6, 6, 120, 10
+    CONTROL "Mostrar &detalhes de cada bateria.", 1003, "Button", BS_AUTOCHECKBOX | WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP, 135, 6, 120, 8
+    CONTROL "", 1000, "Static", SS_LEFT | WS_CHILD | WS_GROUP, 11, 29, 229, 178
 END
 
 STRINGTABLE

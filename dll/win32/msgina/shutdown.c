@@ -227,12 +227,12 @@ IsShowHibernateButtonActive(VOID)
 
     lRet = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
                          L"SOFTWARE\\Policies\\Microsoft\\Windows\\System\\Shutdown",
-                         0, KEY_QUERY_VALUE, &hKey); 
+                         0, KEY_QUERY_VALUE, &hKey);
     if (lRet == ERROR_SUCCESS)
     {
         dwValue = 0;
         dwSize = sizeof(dwValue);
- 
+
         lRet = RegQueryValueExW(hKey,
                                 L"ShowHibernateButton",
                                 NULL, NULL,
@@ -327,7 +327,7 @@ DrawIconOnOwnerDrawnButtons(
                 case ODA_DRAWENTIRE:
                 case ODA_FOCUS:
                 case ODA_SELECT:
-                {    
+                {
                     y = BUTTON_SHUTDOWN;
                     if (pdis->itemState & ODS_SELECTED)
                     {
@@ -350,7 +350,7 @@ DrawIconOnOwnerDrawnButtons(
                 case ODA_DRAWENTIRE:
                 case ODA_FOCUS:
                 case ODA_SELECT:
-                {    
+                {
                     y = BUTTON_REBOOT;
                     if (pdis->itemState & ODS_SELECTED)
                     {
@@ -365,7 +365,7 @@ DrawIconOnOwnerDrawnButtons(
             }
             break;
         }
-        
+
         case IDC_BUTTON_HIBERNATE:
         case IDC_BUTTON_SLEEP:
         {
@@ -374,7 +374,7 @@ DrawIconOnOwnerDrawnButtons(
                 case ODA_DRAWENTIRE:
                 case ODA_FOCUS:
                 case ODA_SELECT:
-                {    
+                {
                     y = BUTTON_SLEEP;
                     if (pdis->itemState & ODS_DISABLED)
                     {
@@ -400,7 +400,7 @@ DrawIconOnOwnerDrawnButtons(
     /* Draw it on the required button */
     bRet = BitBlt(pdis->hDC,
                   (rect.right - rect.left - CX_BITMAP) / 2,
-                  (rect.bottom - rect.top - CY_BITMAP) / 2, 
+                  (rect.bottom - rect.top - CY_BITMAP) / 2,
                   CX_BITMAP, CY_BITMAP, hdcMem, 0, y, SRCCOPY);
 
     SelectObject(hdcMem, hbmOld);
@@ -655,14 +655,14 @@ ReplaceRequiredButton(
         destID = IDC_BUTTON_HIBERNATE;
         targetedID = IDC_BUTTON_SLEEP;
     }
-    
+
     hwndDest = GetDlgItem(hDlg, destID);
     hwndTarget = GetDlgItem(hDlg, targetedID);
-    
+
     /* Get the position of the destination button */
     GetWindowRect(hwndDest, &rect);
 
-    /* Get the corrected translated coordinates which is relative to the client window */  
+    /* Get the corrected translated coordinates which is relative to the client window */
     MapWindowPoints(HWND_DESKTOP, hDlg, (LPPOINT)&rect, sizeof(RECT)/sizeof(POINT));
 
     /* Set the position of targeted button and hide the destination button */
@@ -677,7 +677,7 @@ ReplaceRequiredButton(
     EnableWindow(hwndTarget, TRUE);
     ShowWindow(hwndTarget, SW_SHOW);
     SetFocus(hwndTarget);
-    
+
     if (bIsAltKeyPressed)
     {
         if (!bIsSleepButtonReplaced)
@@ -854,7 +854,7 @@ ShutdownOnInit(
     ReleaseDC(hDlg, hdc);
     pContext->hfFont = CreateFontW(lfHeight, 0, 0, 0, FW_MEDIUM, FALSE, 0, 0, 0, 0, 0, 0, 0, L"MS Shell Dlg");
     SendDlgItemMessageW(hDlg, IDC_TURN_OFF_STATIC, WM_SETFONT, (WPARAM)pContext->hfFont, TRUE);
- 
+
     /* Create a brush for static controls for fancy shut down dialog */
     pContext->hBrush = CreateSolidBrush(DARK_GREY_COLOR);
 
@@ -972,14 +972,14 @@ ShutdownOnInit(
 
     /* Gather old button func */
     pContext->OldButtonProc = (WNDPROC)GetWindowLongPtrW(GetDlgItem(hDlg, IDC_BUTTON_HIBERNATE), GWLP_WNDPROC);
-    
+
     /* Make buttons to remember pContext and subclass the buttons */
     for (int i = 0; i < NUMBER_OF_BUTTONS; i++)
     {
         SetWindowLongPtrW(GetDlgItem(hDlg, IDC_BUTTON_HIBERNATE + i), GWLP_USERDATA, (LONG_PTR)pContext);
         SetWindowLongPtrW(GetDlgItem(hDlg, IDC_BUTTON_HIBERNATE + i), GWLP_WNDPROC, (LONG_PTR)OwnerDrawButtonSubclass);
     }
-    
+
     /* Update the choice description based on the current selection */
     UpdateShutdownDesc(hDlg, pContext);
 }
@@ -1143,7 +1143,7 @@ ShutdownDialogProc(
         case WM_CTLCOLORSTATIC:
         {
             /* Either make background transparent or fill it with color for required static controls */
-            HDC hdcStatic = (HDC)wParam;            
+            HDC hdcStatic = (HDC)wParam;
             UINT StaticID = (UINT)GetWindowLongPtrW((HWND)lParam, GWL_ID);
 
             switch (StaticID)
@@ -1269,7 +1269,7 @@ ShutdownDialog(
 
                 case WM_KEYDOWN:
                 {
-                    /* 
+                    /*
                      * If the Shift key has been pressed once, and both hibernate button and sleep button are enabled
                      * replace the sleep button with hibernate button
                      */
@@ -1280,8 +1280,8 @@ ShutdownDialog(
                             if (IsPwrHibernateAllowed() && IsPwrSuspendAllowed())
                             {
                                 ReplaceRequiredButton(hDlg,
-                                                      pgContext->hDllInstance, 
-                                                      bIsAltKeyPressed, 
+                                                      pgContext->hDllInstance,
+                                                      bIsAltKeyPressed,
                                                       Context.bIsSleepButtonReplaced);
                                 Context.bIsSleepButtonReplaced = TRUE;
                             }

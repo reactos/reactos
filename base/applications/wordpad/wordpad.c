@@ -2662,7 +2662,7 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hOldInstance, LPSTR szCmdPar
                                           'T','A','B','L','E','\0'};
 
     InitCommonControlsEx(&classes);
-    
+
     switch (GetUserDefaultUILanguage())
     {
         case MAKELANGID(LANG_HEBREW, SUBLANG_DEFAULT):

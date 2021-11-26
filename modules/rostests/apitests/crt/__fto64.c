@@ -79,13 +79,13 @@ START_TEST(__fto64)
     DTOU64_TEST_DATA dtou64[] =
     {
         { 1383034209.0, 1383034209ULL }, /* test 32bit number */
-        { -1383034209.0, 18446744073709551615ULL }, /* test negative 32bit number */
+        { -1383034209.0, 18446744072326517407ULL }, /* test negative 32bit number */
         { 1383034209.1383034209, 1383034209ULL }, /* test rounding 32bit */
-        { -1383034209.1383034209, 18446744073709551615ULL }, /* test negative rounding 32bit */
+        { -1383034209.1383034209, 18446744072326517407ULL }, /* test negative rounding 32bit */
         { 1383034209.83034209, 1383034209ULL }, /* test rounding up 32bit */
-        { -1383034209.83034209, 18446744073709551615ULL }, /* test negative rounding up 32bit */
+        { -1383034209.83034209, 18446744072326517407ULL }, /* test negative rounding up 32bit */
         { 354056757614.0, 354056757614ULL }, /* test 64bit int */
-        { -354056757614.0, 18446744073709551615ULL }, /* test negative 64bit int */
+        { -354056757614.0, 18446743719652794002ULL }, /* test negative 64bit int */
         { 354056757614.83034209, 354056757614ULL }, /* test 64bit rounding */
         { 18445937028656326656.0, 18445937028656326656ULL }, /* test unsigned 64bit */
         { 1.0000001, 1ULL },
@@ -96,12 +96,12 @@ START_TEST(__fto64)
 
         { -0.0, 0ULL }, /* test -0 */
         { +0.0, 0ULL }, /* test +0 */
-        { .given.raw = 0x7FF0000000000000ULL, 18446744073709551615ULL }, /* test +INFINITY */
-        { .given.raw = 0xFFF0000000000000ULL, 18446744073709551615ULL }, /* test -INFINITY */
-        { .given.raw = 0x7FF0000000000001ULL, 18446744073709551615ULL }, /* test NaN1 */
-        { .given.raw = 0x7FF8000000000001ULL, 18446744073709551615ULL }, /* test NaN2 */
-        { .given.raw = 0x7FFFFFFFFFFFFFFFULL, 18446744073709551615ULL }, /* test NaN3 */
-        { .given.raw = 0x7FF80000000000F1ULL, 18446744073709551615ULL }, /* test NaN4 */
+        { .given.raw = 0x7FF0000000000000ULL, 0x8000000000000000LL }, /* test +INFINITY */
+        { .given.raw = 0xFFF0000000000000ULL, 0x8000000000000000LL }, /* test -INFINITY */
+        { .given.raw = 0x7FF0000000000001ULL, 0x8000000000000000LL }, /* test NaN1 */
+        { .given.raw = 0x7FF8000000000001ULL, 0x8000000000000000LL }, /* test NaN2 */
+        { .given.raw = 0x7FFFFFFFFFFFFFFFULL, 0x8000000000000000LL }, /* test NaN3 */
+        { .given.raw = 0x7FF80000000000F1ULL, 0x8000000000000000LL }, /* test NaN4 */
     };
     STOI64_TEST_DATA stoi64[] =
     {
@@ -133,13 +133,13 @@ START_TEST(__fto64)
     STOU64_TEST_DATA stou64[] =
     {
         { 1383034.0f, 1383034ULL }, /* test 32bit number */
-        { -1383034.0f, 18446744073709551615ULL }, /* test negative 32bit number */
+        { -1383034.0f, 18446744073708168582ULL }, /* test negative 32bit number */
         { 1383034.1383034209f, 1383034ULL }, /* test rounding 32bit */
-        { -1383034.1383034209f, 18446744073709551615ULL }, /* test negative rounding 32bit */
+        { -1383034.1383034209f, 18446744073708168582ULL }, /* test negative rounding 32bit */
         { 1383034.83034209f, 1383034ULL }, /* test rounding up 32bit */
-        { -1383034.83034209f, 18446744073709551615ULL }, /* test negative rounding up 32bit */
+        { -1383034.83034209f, 18446744073708168582ULL }, /* test negative rounding up 32bit */
         { 354056765440.0f, 354056765440ULL }, /* test 64bit int */
-        { -354056765440.0f, 18446744073709551615ULL }, /* test negative 64bit int */
+        { -354056765440.0f, 18446743719652786176ULL }, /* test negative 64bit int */
         { 3000000.75f, 3000000ULL }, /* test 64bit rounding */
         { 18445937032174764032.0f, 18445937032174764032ULL }, /* test unsigned 64bit */
         { 1.0000001f, 1ULL },
@@ -150,12 +150,12 @@ START_TEST(__fto64)
 
         { -0.0f, 0LL }, /* test -0 */
         { +0.0f, 0LL }, /* test +0 */
-        {.given.raw = 0x7F800000U, 18446744073709551615ULL }, /* test +INFINITY */
-        {.given.raw = 0xFF800000U, 18446744073709551615ULL }, /* test -INFINITY */
-        {.given.raw = 0x7F800001U, 18446744073709551615ULL }, /* test NaN1 */
-        {.given.raw = 0x7FC00001U, 18446744073709551615ULL }, /* test NaN2 */
-        {.given.raw = 0x7F8FFFFFU, 18446744073709551615ULL }, /* test NaN3 */
-        {.given.raw = 0x7F8000F1U, 18446744073709551615ULL }, /* test NaN4 */
+        {.given.raw = 0x7F800000U, 0x8000000000000000LL }, /* test +INFINITY */
+        {.given.raw = 0xFF800000U, 0x8000000000000000LL }, /* test -INFINITY */
+        {.given.raw = 0x7F800001U, 0x8000000000000000LL }, /* test NaN1 */
+        {.given.raw = 0x7FC00001U, 0x8000000000000000LL }, /* test NaN2 */
+        {.given.raw = 0x7F8FFFFFU, 0x8000000000000000LL }, /* test NaN3 */
+        {.given.raw = 0x7F8000F1U, 0x8000000000000000LL }, /* test NaN4 */
     };
 
     unsigned int i;

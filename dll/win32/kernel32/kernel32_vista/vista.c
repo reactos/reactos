@@ -591,12 +591,12 @@ OpenFileById(IN HANDLE hFile,
   Vista+ MUI support functions
 
   References:
-   Evolution of MUI Support across Windows Versions: http://msdn.microsoft.com/en-US/library/ee264317.aspx 
+   Evolution of MUI Support across Windows Versions: http://msdn.microsoft.com/en-US/library/ee264317.aspx
    Comparing Windows XP Professional Multilingual Options: http://technet.microsoft.com/en-us/library/bb457045.aspx
 
   More info:
-   http://msdn.microsoft.com/en-us/goglobal/bb978454.aspx 
-   http://msdn.microsoft.com/en-us/library/dd319074.aspx 
+   http://msdn.microsoft.com/en-us/goglobal/bb978454.aspx
+   http://msdn.microsoft.com/en-us/library/dd319074.aspx
 */
 
 /* FUNCTIONS *****************************************************************/

@@ -106,12 +106,12 @@ SetColorSpace(
 {
     HCOLORSPACE rhCS = GetColorSpace(hDC);
 
-    if (GDI_HANDLE_GET_TYPE(hDC) == GDI_OBJECT_TYPE_DC)
+    if (GDI_HANDLE_GET_TYPE(hDC) == GDILoObjType_LO_DC_TYPE)
     {
         if (NtGdiSetColorSpace(hDC, hCS)) return rhCS;
     }
 #if 0
-    if (GDI_HANDLE_GET_TYPE(hDC) != GDI_OBJECT_TYPE_METADC)
+    if (GDI_HANDLE_GET_TYPE(hDC) != GDILoObjType_LO_METADC16_TYPE)
     {
         PLDC pLDC = GdiGetLDC(hDC);
         if ( !pLDC )
@@ -119,7 +119,7 @@ SetColorSpace(
             SetLastError(ERROR_INVALID_HANDLE);
             return NULL;
         }
-        if (pLDC->iType == LDC_EMFLDC)
+        if (pLDC->iType == LDC_EMFLDC && !EMFDC_SetColorSpace( pLDC, hCS ))
         {
             return NULL;
         }
@@ -326,4 +326,27 @@ SetICMMode(
     UNIMPLEMENTED;
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     return 0;
+}
+
+/*
+ * @unimplemented
+ *
+ */
+HBITMAP
+WINAPI
+GdiConvertBitmapV5(
+    HBITMAP in_format_BitMap,
+    HBITMAP src_BitMap,
+    INT bpp,
+    INT unuse)
+{
+    /* FIXME guessing the prototypes */
+
+    /*
+     * it have create a new bitmap with desired in format,
+     * then convert it src_bitmap to new format
+     * and return it as HBITMAP
+     */
+
+    return FALSE;
 }

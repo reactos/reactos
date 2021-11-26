@@ -59,7 +59,7 @@ RetrieveQuote(SOCKET sock)
     {
         DWORD dwSize = GetFileSize(hFile, NULL);
         lpQuotes = (LPSTR)HeapAlloc(GetProcessHeap(), 0, dwSize + 1);
-        if (!lpQuotes) 
+        if (!lpQuotes)
         {
             CloseHandle(hFile);
             return FALSE;

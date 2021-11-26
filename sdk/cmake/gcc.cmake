@@ -45,8 +45,6 @@ add_compile_options(-pipe -fms-extensions -fno-strict-aliasing)
 # The case for C++ is handled through the reactos_c++ INTERFACE library
 add_compile_options("$<$<NOT:$<COMPILE_LANGUAGE:CXX>>:-nostdinc>")
 
-add_compile_options(-mstackrealign)
-
 if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
     add_compile_options(-fno-aggressive-loop-optimizations)
     if (DBG)
@@ -145,7 +143,7 @@ if(LTCG)
 endif()
 
 if(ARCH STREQUAL "i386")
-    add_compile_options(-fno-optimize-sibling-calls -fno-omit-frame-pointer)
+    add_compile_options(-fno-optimize-sibling-calls -fno-omit-frame-pointer -mstackrealign)
     if(NOT CMAKE_C_COMPILER_ID STREQUAL "Clang")
         add_compile_options(-mpreferred-stack-boundary=3 -fno-set-stack-executable)
     endif()
@@ -167,8 +165,6 @@ elseif(ARCH STREQUAL "arm")
     add_definitions(-U_UNICODE -UUNICODE)
     add_definitions(-D__MSVCRT__) # DUBIOUS
 endif()
-
-add_definitions(-D_inline=__inline)
 
 # Fix build with GLIBCXX + our c++ headers
 add_definitions(-D_GLIBCXX_HAVE_BROKEN_VSWPRINTF)
@@ -277,24 +273,24 @@ set(CMAKE_DEPFILE_FLAGS_RC "--preprocessor=\"${CMAKE_C_COMPILER}\" ${RC_PREPROCE
 # Optional 3rd parameter: stdcall stack bytes
 function(set_entrypoint MODULE ENTRYPOINT)
     if(${ENTRYPOINT} STREQUAL "0")
-        add_target_link_flags(${MODULE} "-Wl,-entry,0")
+        target_link_options(${MODULE} PRIVATE "-Wl,-entry,0")
     elseif(ARCH STREQUAL "i386")
         set(_entrysymbol _${ENTRYPOINT})
         if(${ARGC} GREATER 2)
             set(_entrysymbol ${_entrysymbol}@${ARGV2})
         endif()
-        add_target_link_flags(${MODULE} "-Wl,-entry,${_entrysymbol}")
+        target_link_options(${MODULE} PRIVATE "-Wl,-entry,${_entrysymbol}")
     else()
-        add_target_link_flags(${MODULE} "-Wl,-entry,${ENTRYPOINT}")
+        target_link_options(${MODULE} PRIVATE "-Wl,-entry,${ENTRYPOINT}")
     endif()
 endfunction()
 
 function(set_subsystem MODULE SUBSYSTEM)
-    add_target_link_flags(${MODULE} "-Wl,--subsystem,${SUBSYSTEM}:5.01")
+    target_link_options(${MODULE} PRIVATE "-Wl,--subsystem,${SUBSYSTEM}:5.01")
 endfunction()
 
 function(set_image_base MODULE IMAGE_BASE)
-    add_target_link_flags(${MODULE} "-Wl,--image-base,${IMAGE_BASE}")
+    target_link_options(${MODULE} PRIVATE "-Wl,--image-base,${IMAGE_BASE}")
 endfunction()
 
 function(set_module_type_toolchain MODULE TYPE)
@@ -476,8 +472,8 @@ endmacro()
 
 function(add_linker_script _target _linker_script_file)
     get_filename_component(_file_full_path ${_linker_script_file} ABSOLUTE)
-    add_target_link_flags(${_target} "-Wl,-T,${_file_full_path}")
-    add_target_property(${_target} LINK_DEPENDS ${_file_full_path})
+    target_link_options(${_target} PRIVATE "-Wl,-T,${_file_full_path}")
+    set_property(TARGET ${_target} APPEND PROPERTY LINK_DEPENDS ${_file_full_path})
 endfunction()
 
 # Manage our C++ options

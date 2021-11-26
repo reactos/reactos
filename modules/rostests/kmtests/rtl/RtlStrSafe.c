@@ -44,7 +44,7 @@ Test_RtlUnicodeStringPrintf()
     ok_eq_hex(Status, STATUS_SUCCESS);
     ok_eq_size(EqualBytes, sizeof(FormatStringIntsResult));
     ok_eq_uint(UsString.Length, sizeof(FormatStringIntsResult) - sizeof(WCHAR));
-    ok_eq_uint(UsString.MaximumLength, BufferSize);    
+    ok_eq_uint(UsString.MaximumLength, BufferSize);
 
     KmtFreeGuarded(pBuffer);
     pBuffer = NULL;

@@ -261,32 +261,32 @@ HRESULT CFSExtractIcon_CreateInstance(IShellFolder * psf, LPCITEMIDLIST pidl, RE
 
     if (_ILIsFolder (pidl))
     {
-        if (SUCCEEDED(getIconLocationForFolder(psf, 
+        if (SUCCEEDED(getIconLocationForFolder(psf,
                           pidl, 0, wTemp, _countof(wTemp),
                           &icon_idx,
                           &flags)))
         {
             initIcon->SetNormalIcon(wTemp, icon_idx);
-            // FIXME: if/when getIconLocationForFolder does something for 
+            // FIXME: if/when getIconLocationForFolder does something for
             //        GIL_FORSHORTCUT, code below should be uncommented. and
             //        the following line removed.
             initIcon->SetShortcutIcon(wTemp, icon_idx);
         }
-        if (SUCCEEDED(getIconLocationForFolder(psf, 
+        if (SUCCEEDED(getIconLocationForFolder(psf,
                           pidl, GIL_DEFAULTICON, wTemp, _countof(wTemp),
                           &icon_idx,
                           &flags)))
         {
             initIcon->SetDefaultIcon(wTemp, icon_idx);
         }
-        // if (SUCCEEDED(getIconLocationForFolder(psf, 
+        // if (SUCCEEDED(getIconLocationForFolder(psf,
         //                   pidl, GIL_FORSHORTCUT, wTemp, _countof(wTemp),
         //                   &icon_idx,
         //                   &flags)))
         // {
         //     initIcon->SetShortcutIcon(wTemp, icon_idx);
         // }
-        if (SUCCEEDED(getIconLocationForFolder(psf, 
+        if (SUCCEEDED(getIconLocationForFolder(psf,
                           pidl, GIL_OPENICON, wTemp, _countof(wTemp),
                           &icon_idx,
                           &flags)))
@@ -773,7 +773,7 @@ HRESULT WINAPI CFSFolder::ParseDisplayName(HWND hwndOwner,
         if (pidlTemp != NULL)
         {
             /* We are creating an id list without ensuring that the items exist.
-               If we have a remaining path, this must be a folder. 
+               If we have a remaining path, this must be a folder.
                We have to do it now because it is set as a file by default */
             if (szNext)
             {
@@ -883,10 +883,26 @@ HRESULT WINAPI CFSFolder::BindToObject(
     CLSID clsidFolder;
     if (_ILIsFolder(pidl))
     {
-        clsidFolder = CLSID_ShellFSFolder;
-
         if ((pData->uFileAttribs & (FILE_ATTRIBUTE_SYSTEM | FILE_ATTRIBUTE_READONLY)) != 0)
-            SHELL32_GetCLSIDForDirectory(pfti.szTargetParsingName, L"CLSID", &clsidFolder);
+        {
+            hr = SHELL32_GetCLSIDForDirectory(pfti.szTargetParsingName, L"CLSID", &clsidFolder);
+
+            if (SUCCEEDED(hr))
+            {
+                /* We got a GUID from a desktop.ini, let's try it */
+                hr = SHELL32_BindToSF(m_pidlRoot, &pfti, pidl, &clsidFolder, riid, ppvOut);
+                if (SUCCEEDED(hr))
+                {
+                    TRACE("-- returning (%p) %08x, (%s)\n", *ppvOut, hr, wine_dbgstr_guid(&clsidFolder));
+                    return hr;
+                }
+
+                /* Something went wrong, re-try it with a normal ShellFSFolder */
+                ERR("CFSFolder::BindToObject: %s failed to bind, using fallback (0x%08x)\n", wine_dbgstr_guid(&clsidFolder), hr);
+            }
+        }
+        /* No system folder or the custom class failed */
+        clsidFolder = CLSID_ShellFSFolder;
     }
     else
     {
@@ -965,7 +981,7 @@ HRESULT WINAPI CFSFolder::CompareIDs(LPARAM lParam,
         case 2: /* Type */
             pExtension1 = PathFindExtensionW(pDataW1->wszName);
             pExtension2 = PathFindExtensionW(pDataW2->wszName);
-            result = wcsicmp(pExtension1, pExtension2); 
+            result = wcsicmp(pExtension1, pExtension2);
             break;
         case 3: /* Size */
             if (pData1->u.file.dwFileSize > pData2->u.file.dwFileSize)
@@ -1210,7 +1226,7 @@ HRESULT WINAPI CFSFolder::GetUIObjectOf(HWND hwndOwner,
         }
         else if (IsEqualIID (riid, IID_IDataObject))
         {
-            if (cidl >= 1) 
+            if (cidl >= 1)
             {
                 hr = IDataObject_Constructor (hwndOwner, m_pidlRoot, apidl, cidl, TRUE, (IDataObject **)&pObj);
             }
@@ -1263,34 +1279,46 @@ static const WCHAR NeverShowExtW[] = L"NeverShowExt";
  *  TRUE, if the filename's extension should be hidden
  *  FALSE, otherwise.
  */
-BOOL SHELL_FS_HideExtension(LPWSTR szPath)
+BOOL SHELL_FS_HideExtension(LPCWSTR szPath)
 {
     HKEY hKey;
-    DWORD dwData;
-    DWORD dwDataSize = sizeof (DWORD);
+    DWORD dwData, dwDataSize = sizeof(DWORD);
     BOOL doHide = FALSE; /* The default value is FALSE (win98 at least) */
+    LONG lError;
 
-    if (!RegCreateKeyExW(HKEY_CURRENT_USER, AdvancedW, 0, 0, 0, KEY_ALL_ACCESS, 0, &hKey, 0)) {
-        if (!RegQueryValueExW(hKey, HideFileExtW, 0, 0, (LPBYTE) &dwData, &dwDataSize))
+    lError = RegCreateKeyExW(HKEY_CURRENT_USER, AdvancedW, 0, NULL, 0, KEY_ALL_ACCESS, NULL,
+                             &hKey, NULL);
+    if (lError == ERROR_SUCCESS)
+    {
+        lError = RegQueryValueExW(hKey, HideFileExtW, NULL, NULL, (LPBYTE)&dwData, &dwDataSize);
+        if (lError == ERROR_SUCCESS)
             doHide = dwData;
-        RegCloseKey (hKey);
+        RegCloseKey(hKey);
     }
 
-    if (!doHide) {
-        LPWSTR ext = PathFindExtensionW(szPath);
-
-        if (*ext != '\0') {
+    if (!doHide)
+    {
+        LPCWSTR DotExt = PathFindExtensionW(szPath);
+        if (*DotExt != 0)
+        {
             WCHAR classname[MAX_PATH];
             LONG classlen = sizeof(classname);
-
-            if (!RegQueryValueW(HKEY_CLASSES_ROOT, ext, classname, &classlen))
-                if (!RegOpenKeyW(HKEY_CLASSES_ROOT, classname, &hKey)) {
-                    if (!RegQueryValueExW(hKey, NeverShowExtW, 0, NULL, NULL, NULL))
+            lError = RegQueryValueW(HKEY_CLASSES_ROOT, DotExt, classname, &classlen);
+            if (lError == ERROR_SUCCESS)
+            {
+                lError = RegOpenKeyW(HKEY_CLASSES_ROOT, classname, &hKey);
+                if (lError == ERROR_SUCCESS)
+                {
+                    lError = RegQueryValueExW(hKey, NeverShowExtW, NULL, NULL, NULL, NULL);
+                    if (lError == ERROR_SUCCESS)
                         doHide = TRUE;
+
                     RegCloseKey(hKey);
                 }
+            }
         }
     }
+
     return doHide;
 }
 
@@ -1331,7 +1359,7 @@ HRESULT WINAPI CFSFolder::GetDisplayNameOf(PCUITEMID_CHILD pidl,
     else if (pidl && !pidl->mkid.cb) /* empty pidl */
     {
         /* If it is an empty pidl return only the path of the folder */
-        if ((GET_SHGDN_FOR(dwFlags) & SHGDN_FORPARSING) && 
+        if ((GET_SHGDN_FOR(dwFlags) & SHGDN_FORPARSING) &&
             (GET_SHGDN_RELATION(dwFlags) != SHGDN_INFOLDER) &&
             m_sPathTarget)
         {
@@ -1339,7 +1367,7 @@ HRESULT WINAPI CFSFolder::GetDisplayNameOf(PCUITEMID_CHILD pidl,
         }
         return E_INVALIDARG;
     }
-    
+
     int len = 0;
     LPWSTR pszPath = (LPWSTR)CoTaskMemAlloc((MAX_PATH + 1) * sizeof(WCHAR));
     if (!pszPath)
@@ -1709,7 +1737,7 @@ HRESULT CFSFolder::_CreateExtensionUIObject(PCUIDLIST_RELATIVE pidl, REFIID riid
     return S_OK;
 }
 
-HRESULT CFSFolder::_GetDropTarget(LPCITEMIDLIST pidl, LPVOID *ppvOut) 
+HRESULT CFSFolder::_GetDropTarget(LPCITEMIDLIST pidl, LPVOID *ppvOut)
 {
     HRESULT hr;
 
@@ -1737,7 +1765,7 @@ HRESULT CFSFolder::_GetDropTarget(LPCITEMIDLIST pidl, LPVOID *ppvOut)
     return S_OK;
 }
 
-HRESULT CFSFolder::_GetIconHandler(LPCITEMIDLIST pidl, REFIID riid, LPVOID *ppvOut) 
+HRESULT CFSFolder::_GetIconHandler(LPCITEMIDLIST pidl, REFIID riid, LPVOID *ppvOut)
 {
     CLSID clsid;
     HRESULT hr;

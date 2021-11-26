@@ -6,7 +6,7 @@
  * \author Adriaan de Jong <dejong@fox-it.com>
  */
 /*
- *  Copyright (C) 2006-2015, ARM Limited, All Rights Reserved
+ *  Copyright The Mbed TLS Contributors
  *  SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
  *
  *  This file is provided under the Apache License 2.0, or the
@@ -47,8 +47,6 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  *
  *  **********
- *
- *  This file is part of mbed TLS (https://tls.mbed.org)
  */
 #ifndef MBEDTLS_PKCS11_H
 #define MBEDTLS_PKCS11_H
@@ -77,7 +75,8 @@ extern "C" {
 /**
  * Context for PKCS #11 private keys.
  */
-typedef struct {
+typedef struct mbedtls_pkcs11_context
+{
         pkcs11h_certificate_t pkcs11h_cert;
         int len;
 } mbedtls_pkcs11_context;

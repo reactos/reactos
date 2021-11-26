@@ -276,7 +276,7 @@ SetFont(PMAP infoPtr,
                    NULL,
                    TRUE);
 
-    if (infoPtr->pActiveCell) 
+    if (infoPtr->pActiveCell)
         infoPtr->pActiveCell->bActive = FALSE;
     infoPtr->pActiveCell = &infoPtr->Cells[0][0];
     infoPtr->pActiveCell->bActive = TRUE;
@@ -357,7 +357,7 @@ OnClick(PMAP infoPtr,
      * Find the cell the mouse pointer is over.
      * Since each cell is the same size, this can be done quickly using CellSize.
      * Clamp to XCELLS - 1 and YCELLS - 1 because the map can sometimes be slightly
-     * larger than infoPtr.CellSize * XCELLS , due to the map size being a non integer 
+     * larger than infoPtr.CellSize * XCELLS , due to the map size being a non integer
      * multiple of infoPtr.CellSize .
      */
     x = min(XCELLS - 1, ptx / max(1, infoPtr->CellSize.cx));
@@ -367,7 +367,7 @@ OnClick(PMAP infoPtr,
     i = XCELLS * infoPtr->iYStart + y * XCELLS + x;
     if (i >= infoPtr->NumValidGlyphs)
     {
-        if (infoPtr->pActiveCell) 
+        if (infoPtr->pActiveCell)
             infoPtr->pActiveCell->bActive = FALSE;
         infoPtr->pActiveCell = NULL;
         return;
@@ -507,11 +507,11 @@ OnVScroll(PMAP infoPtr,
             /* Invalidate the rect around the active cell since a new cell will become active */
             if (infoPtr->pActiveCell && infoPtr->pActiveCell->bActive)
             {
-                InvalidateRect(infoPtr->hMapWnd, 
-                               &infoPtr->pActiveCell->CellExt, 
+                InvalidateRect(infoPtr->hMapWnd,
+                               &infoPtr->pActiveCell->CellExt,
                                TRUE);
             }
-            
+
             GetClientRect(infoPtr->hMapWnd, &rect);
             rect.top += 2;
             rect.bottom -= 2;
@@ -630,7 +630,7 @@ MapWndProc(HWND hwnd,
 
         case WM_LBUTTONDBLCLK:
         {
-            if (!infoPtr->pActiveCell) 
+            if (!infoPtr->pActiveCell)
                 break;
 
             NotifyParentOfSelection(infoPtr,

@@ -10,7 +10,7 @@
 
 //
 // @name CountArg
-// 
+//
 // This macro counts the number of arguments in the ArgList and returns
 // the value in cCount.
 //
@@ -32,7 +32,7 @@
 
 //
 // @name RevPush
-// 
+//
 // This macro pushes the arguments in ArgList in the reverse order
 // and returns the number of arguments in cCount
 //
@@ -63,7 +63,7 @@
 
 //
 // @name stdCallCall
-// 
+//
 // This macro performs a function call using the STDCALL convention and applies
 // the correct name decoration required based on the stack bytes
 //
@@ -82,7 +82,7 @@
 
 //
 // @name stdCall
-// 
+//
 // This macro pushes the arguments required for a function call using the
 // STDCALL convention and then issues the call
 //

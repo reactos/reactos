@@ -95,9 +95,9 @@ InitLogo(PIMGINFO pImgInfo, HWND hwndDlg)
 
 Cleanup:
     if (hMask != NULL) DeleteObject(hMask);
-    if (hLogo != NULL) DeleteObject(hLogo);  
+    if (hLogo != NULL) DeleteObject(hLogo);
     if (hDCMask != NULL) DeleteDC(hDCMask);
-    if (hDCLogo != NULL) DeleteDC(hDCLogo);    
+    if (hDCLogo != NULL) DeleteDC(hDCLogo);
     if (hDC != NULL) ReleaseDC(hwndDlg, hDC);
 }
 

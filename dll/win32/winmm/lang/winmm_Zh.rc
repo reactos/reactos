@@ -237,5 +237,5 @@ MCIERR_SEQ_PORT_MAPNODEVICE, 	"目前的 MIDI 對映表設定，參照了未被�
 MCIERR_SEQ_PORT_MISCERROR, 	"指定的通訊埠發生了錯誤。"
 MCIERR_SEQ_PORT_NONEXISTENT, 	"指定的 MIDI 裝置未被安裝在系統上。使用「控制面板」中的「驅動程式」選項以安裝 MIDI 裝置。"
 MCIERR_SEQ_PORTUNSPECIFIED, 	"系統尚未指定當前的 MIDI 通訊埠。"
-MCIERR_SEQ_TIMER, 		"所有多媒體計時器正被其他應用程式使用中。離開其中某一個應用程式; 然後再試一次。" 
+MCIERR_SEQ_TIMER, 		"所有多媒體計時器正被其他應用程式使用中。離開其中某一個應用程式; 然後再試一次。"
 END

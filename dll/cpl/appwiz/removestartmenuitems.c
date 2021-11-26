@@ -4,7 +4,7 @@
  * PURPOSE:                 ReactOS Software Control Panel
  * PROGRAMMERS:             Jared Smudde (computerwhiz02@hotmail.com)
  */
- 
+
 #include "appwiz.h"
 
 INT_PTR CALLBACK RemoveStartMenuItemsProc(HWND hwndCPl, UINT Message, WPARAM wParam, LPARAM lParam)
@@ -13,7 +13,7 @@ INT_PTR CALLBACK RemoveStartMenuItemsProc(HWND hwndCPl, UINT Message, WPARAM wPa
     {
         case WM_INITDIALOG:
         return TRUE;
-        
+
         case WM_COMMAND:
             switch(LOWORD(wParam))
             {

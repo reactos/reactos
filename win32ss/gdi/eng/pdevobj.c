@@ -365,6 +365,7 @@ EngpCreatePDEV(
     }
     else
     {
+        ASSERT(gpPrimaryGraphicsDevice);
         pGraphicsDevice = gpPrimaryGraphicsDevice;
     }
 

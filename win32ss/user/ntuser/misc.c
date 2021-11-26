@@ -426,7 +426,7 @@ NtUserGetGUIThreadInfo(
         MsgQueue = W32Thread->MessageQueue;
       else
       {
-        if ( Desktop ) MsgQueue = Desktop->ActiveMessageQueue;
+        MsgQueue = Desktop->ActiveMessageQueue;
       }
    }
    else

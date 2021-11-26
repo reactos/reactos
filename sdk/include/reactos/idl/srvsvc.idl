@@ -366,7 +366,7 @@ typedef struct _SERVER_INFO_102
 } SERVER_INFO_102, *PSERVER_INFO_102, *LPSERVER_INFO_102;
 cpp_quote("#endif")
 
-typedef struct _SERVER_INFO_103 
+typedef struct _SERVER_INFO_103
 {
     DWORD sv103_platform_id;
     [string] wchar_t *sv103_name;

@@ -4,12 +4,12 @@ LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-    IDS_USAGE "FINDSTR: Bir dizgi içeren bir kütüğün tüm yataçlarını yazdırır.\n\n\
-  FIND [ /C ] [ /I ] [ /N ] [ /V ] ""dizgi"" [ kütük... ]\n\
-    /C  Dizgi içeren yataç sayısını say\n\
-    /I  Büyük-küçük harfliği yok say\n\
-    /N  1'den başlayan, görüntülenen yataç sayısı\n\
-    /V  Dizgi içermeyen yataçları yazdır"
-    IDS_NO_SUCH_FILE "FINDSTR: %s: Böyle dosya yok\n"
-    IDS_CANNOT_OPEN "FINDSTR: %s: Kütük açılamıyor\n"
+    IDS_USAGE "FINDSTR: Bir karakter dizisi içeren bir dosyanın tüm satırlarını yazdırır.\n\n\
+  FIND [ /C ] [ /I ] [ /N ] [ /V ] ""karakter dizisi"" [ dosya... ]\n\
+    /C  Diziyi içeren satır sayısını sayar\n\
+    /I  Büyük-küçük uyumunu yok sayar\n\
+    /N  1'den başlayan, görüntülenen satır sayısı\n\
+    /V  Diziyi içermeyen satırları yazdırır"
+    IDS_NO_SUCH_FILE "FINDSTR: %s: Böyle bir dosya yok\n"
+    IDS_CANNOT_OPEN "FINDSTR: %s: Dosya açılamıyor\n"
 END

@@ -1,7 +1,7 @@
 /*
  * PROJECT:     ReactOS services
  * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        
+ * FILE:
  * PURPOSE:     skeleton service
  * COPYRIGHT:   Copyright 2008 Ged Murphy <gedmurphy@reactos.org>
  *
@@ -49,7 +49,7 @@ OpenLogFile()
                           OPEN_ALWAYS,
                           FILE_ATTRIBUTE_NORMAL,
                           NULL);
-    if (hLogFile  == INVALID_HANDLE_VALUE) 
+    if (hLogFile  == INVALID_HANDLE_VALUE)
         return FALSE;
 
     return TRUE;

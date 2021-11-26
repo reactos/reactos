@@ -97,10 +97,10 @@ Severity=Informational
 Facility=System
 SymbolicName=MSG_COMPUTE_CONVERSION
 Language=English
-%1 %%4096 = %2 %%4097. 
+%1 %%4096 = %2 %%4097.
 .
 Language=Polish
-%1 %%4096 = %2 %%4097. 
+%1 %%4096 = %2 %%4097.
 .
 
 

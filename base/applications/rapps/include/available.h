@@ -6,6 +6,7 @@
 #include <atlcoll.h>
 
 #include "misc.h"
+#include "configparser.h"
 
 
 #define MAX_SCRNSHOT_NUM 16
@@ -54,7 +55,7 @@ public:
     ATL::CSimpleArray<LCID> m_LanguageLCIDs;
     ATL::CSimpleArray<ATL::CStringW> m_szScrnshotLocation;
     ATL::CStringW m_szIconLocation;
-    ATL::CStringW m_szPkgName; // software's package name. 
+    ATL::CStringW m_szPkgName; // software's package name.
 
     ULONG m_SizeBytes;
 

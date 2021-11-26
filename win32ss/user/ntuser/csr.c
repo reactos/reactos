@@ -1,4 +1,4 @@
-/* 
+/*
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS Win32k subsystem
  * PURPOSE:          Interface between Win32k and USERSRV
@@ -89,7 +89,7 @@ CsrClientCallServer(IN OUT PCSR_API_MESSAGE ApiMessage,
     /* Fill out the Port Message Header */
     ApiMessage->Header.u2.ZeroInit = 0;
     ApiMessage->Header.u1.s1.TotalLength = FIELD_OFFSET(CSR_API_MESSAGE, Data) + DataLength;
-    ApiMessage->Header.u1.s1.DataLength = ApiMessage->Header.u1.s1.TotalLength - 
+    ApiMessage->Header.u1.s1.DataLength = ApiMessage->Header.u1.s1.TotalLength -
         sizeof(ApiMessage->Header);
 
     /* Fill out the CSR Header */
@@ -219,7 +219,7 @@ DWORD UserSystemThreadProc(BOOL bRemoteProcess)
         Type = ST_RIT;
     else if (gdwPendingSystemThreads & ST_DESKTOP_THREAD)
         Type = ST_DESKTOP_THREAD;
-    else 
+    else
         Type = ST_GHOST_THREAD;
 
     ASSERT(Type);

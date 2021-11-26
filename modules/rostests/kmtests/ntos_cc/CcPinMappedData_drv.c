@@ -526,7 +526,7 @@ TestMessageHandler(
             ok_eq_ulong((ULONG)InLength, sizeof(ULONG));
             PerformTest(*(PULONG)Buffer, DeviceObject);
             break;
-            
+
         case IOCTL_FINISH_TEST:
             ok_eq_ulong((ULONG)InLength, sizeof(ULONG));
             CleanupTest(*(PULONG)Buffer, DeviceObject);

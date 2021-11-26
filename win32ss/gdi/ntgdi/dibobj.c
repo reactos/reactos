@@ -149,7 +149,6 @@ CreateDIBPalette(
 
                 /* Set the RGB value in the palette */
                 PALETTE_vSetRGBColorForIndex(ppal, i, crColor);
-
             }
         }
         else
@@ -798,7 +797,7 @@ GreGetDIBitsInternal(
         Info->bmiHeader.biSizeImage = DIB_GetDIBImageBytes( Info->bmiHeader.biWidth,
                                       Info->bmiHeader.biHeight,
                                       Info->bmiHeader.biBitCount);
-        Info->bmiHeader.biCompression = (Info->bmiHeader.biBitCount == 16 || Info->bmiHeader.biBitCount == 32) ? 
+        Info->bmiHeader.biCompression = (Info->bmiHeader.biBitCount == 16 || Info->bmiHeader.biBitCount == 32) ?
                                         BI_BITFIELDS : BI_RGB;
         Info->bmiHeader.biXPelsPerMeter = 0;
         Info->bmiHeader.biYPelsPerMeter = 0;
@@ -1490,7 +1489,6 @@ NtGdiStretchDIBitsInternal(
         if (pdc) DC_UnlockDc(pdc);
     }
 
-    if (pbmiSafe) ExFreePoolWithTag(pbmiSafe, 'imBG');
     if (pvBits) ExFreePoolWithTag(pvBits, TAG_DIB);
 
     /* This is not what MSDN says is returned from this function, but it
@@ -1504,6 +1502,8 @@ NtGdiStretchDIBitsInternal(
     {
         LinesCopied = pbmiSafe->bmiHeader.biHeight;
     }
+
+    ExFreePoolWithTag(pbmiSafe, 'imBG');
 
     return LinesCopied;
 }

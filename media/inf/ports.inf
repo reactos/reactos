@@ -195,13 +195,13 @@ StdMfg = "(Štandardné porty)"
 
 [Strings.041f]
 ReactOS = "ReactOS Takımı"
-PortsClassName = "Dizilik ve Koşut Girişler"
+PortsClassName = "Seri ve Paralel Bağlantı Noktaları"
 
 StdMfg = "(Ölçünlü Girişler)"
-*PNP0500.DeviceDesc = "Dizilik Bağlantı Girişi"
-*PNP0501.DeviceDesc = "Dizilik Bağlantı Girişi"
-*PNP0400.DeviceDesc = "Ölçünlü LPT Yazıcı Girişi"
-*PNP0401.DeviceDesc = "ECP Yazıcı Girişi"
+*PNP0500.DeviceDesc = "Seri Bağlantı Noktası"
+*PNP0501.DeviceDesc = "Seri Bağlantı Noktası"
+*PNP0400.DeviceDesc = "Standart LPT Yazıcı Bağlantı Noktası"
+*PNP0401.DeviceDesc = "ECP Yazıcı Bağlantı Noktası"
 
 [Strings.0422]
 ReactOS = "Команди ReactOS"

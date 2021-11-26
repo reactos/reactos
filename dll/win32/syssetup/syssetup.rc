@@ -62,6 +62,9 @@ IDR_GPL RT_TEXT "COPYING"
 #ifdef LANGUAGE_EL_GR
     #include "lang/el-GR.rc"
 #endif
+#ifdef LANGUAGE_EN_GB
+    #include "lang/en-GB.rc"
+#endif
 #ifdef LANGUAGE_EN_US
     #include "lang/en-US.rc"
 #endif

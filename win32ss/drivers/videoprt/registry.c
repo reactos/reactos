@@ -302,6 +302,9 @@ IntSetupDeviceSettingsKey(
     OBJECT_ATTRIBUTES ObjectAttributes;
     NTSTATUS Status;
 
+    if (!DeviceExtension->PhysicalDeviceObject)
+        return STATUS_SUCCESS;
+
     /* Open the software key: HKLM\System\CurrentControlSet\Control\Class\<ClassGUID>\<n> */
     Status = IoOpenDeviceRegistryKey(DeviceExtension->PhysicalDeviceObject,
                                      PLUGPLAY_REGKEY_DRIVER,
@@ -354,6 +357,52 @@ IntSetupDeviceSettingsKey(
 }
 
 NTSTATUS
+IntDuplicateUnicodeString(
+    IN ULONG Flags,
+    IN PCUNICODE_STRING SourceString,
+    OUT PUNICODE_STRING DestinationString)
+{
+    if (SourceString == NULL ||
+        DestinationString == NULL ||
+        SourceString->Length > SourceString->MaximumLength ||
+        (SourceString->Length == 0 && SourceString->MaximumLength > 0 && SourceString->Buffer == NULL) ||
+        Flags == RTL_DUPLICATE_UNICODE_STRING_ALLOCATE_NULL_STRING ||
+        Flags >= 4)
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    if ((SourceString->Length == 0) &&
+        (Flags != (RTL_DUPLICATE_UNICODE_STRING_NULL_TERMINATE |
+                   RTL_DUPLICATE_UNICODE_STRING_ALLOCATE_NULL_STRING)))
+    {
+        DestinationString->Length = 0;
+        DestinationString->MaximumLength = 0;
+        DestinationString->Buffer = NULL;
+    }
+    else
+    {
+        USHORT DestMaxLength = SourceString->Length;
+
+        if (Flags & RTL_DUPLICATE_UNICODE_STRING_NULL_TERMINATE)
+            DestMaxLength += sizeof(UNICODE_NULL);
+
+        DestinationString->Buffer = ExAllocatePoolWithTag(PagedPool, DestMaxLength, TAG_VIDEO_PORT);
+        if (DestinationString->Buffer == NULL)
+            return STATUS_NO_MEMORY;
+
+        RtlCopyMemory(DestinationString->Buffer, SourceString->Buffer, SourceString->Length);
+        DestinationString->Length = SourceString->Length;
+        DestinationString->MaximumLength = DestMaxLength;
+
+        if (Flags & RTL_DUPLICATE_UNICODE_STRING_NULL_TERMINATE)
+            DestinationString->Buffer[DestinationString->Length / sizeof(WCHAR)] = 0;
+    }
+
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
 NTAPI
 IntCreateNewRegistryPath(
     PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension)
@@ -371,6 +420,16 @@ IntCreateNewRegistryPath(
     USHORT KeyMaxLength;
     OBJECT_ATTRIBUTES ObjectAttributes;
     PWCHAR InstanceIdBuffer;
+
+    if (!DeviceExtension->PhysicalDeviceObject)
+    {
+        Status = IntDuplicateUnicodeString(RTL_DUPLICATE_UNICODE_STRING_NULL_TERMINATE,
+                                           &DeviceExtension->RegistryPath,
+                                           &DeviceExtension->NewRegistryPath);
+        if (!NT_SUCCESS(Status))
+            ERR_(VIDEOPRT, "IntDuplicateUnicodeString() failed with status 0x%lx\n", Status);
+        return Status;
+    }
 
     /* Open the hardware key: HKLM\System\CurrentControlSet\Enum\... */
     Status = IoOpenDeviceRegistryKey(DeviceExtension->PhysicalDeviceObject,

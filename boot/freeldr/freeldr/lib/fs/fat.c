@@ -930,7 +930,7 @@ PUCHAR FatGetFatSector(PFAT_VOLUME_INFO Volume, UINT32 FatSectorNumber)
 
         for (i = 0; i < SectorsToRead; i++)
         {
-            Volume->FatCacheIndex[CacheIndex + i] = SectorNumAbsolute + i; 
+            Volume->FatCacheIndex[CacheIndex + i] = SectorNumAbsolute + i;
         }
 
         TRACE("FAT cache miss: read sector 0x%x from disk\n", SectorNumAbsolute);
@@ -1128,7 +1128,7 @@ BOOLEAN FatReadClusterChain(PFAT_VOLUME_INFO Volume, UINT32 StartClusterNumber, 
 
     TRACE("FatReadClusterChain() StartClusterNumber = %d NumberOfClusters = %d Buffer = 0x%x\n", StartClusterNumber, NumberOfClusters, Buffer);
 
-    ASSERT(NumberOfClusters > 0);        
+    ASSERT(NumberOfClusters > 0);
 
     while (FatReadAdjacentClusters(Volume, StartClusterNumber, ClustersLeft, Buffer, &ClustersRead, &NextClusterNumber))
     {

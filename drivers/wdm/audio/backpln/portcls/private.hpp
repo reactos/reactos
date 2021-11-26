@@ -112,7 +112,7 @@ NTSTATUS
 NewPortPinWaveCyclic(
     OUT IPortPinWaveCyclic ** OutPin);
 
-NTSTATUS 
+NTSTATUS
 NewPortFilterWavePci(
     OUT IPortFilterWavePci ** OutFilter);
 
@@ -133,7 +133,7 @@ GetWavePciMiniport(
     PPORTWAVEPCI Port);
 
 
-NTSTATUS 
+NTSTATUS
 NewPortFilterDMus(
     OUT PPORTFILTERDMUS * OutFilter);
 
@@ -144,13 +144,13 @@ NewPortPinDMus(
 
 VOID
 GetDMusMiniport(
-    IN IPortDMus * iface, 
+    IN IPortDMus * iface,
     IN PMINIPORTDMUS * Miniport,
     IN PMINIPORTMIDI * MidiMiniport);
 
 #if (NTDDI_VERSION >= NTDDI_VISTA)
 
-NTSTATUS 
+NTSTATUS
 NewPortFilterWaveRT(
     OUT IPortFilterWaveRT ** OutFilter);
 
@@ -178,7 +178,7 @@ NewPortWaveRT(
 
 #endif
 
-NTSTATUS 
+NTSTATUS
 NewPortFilterTopology(
     OUT IPortFilterTopology ** OutFilter);
 

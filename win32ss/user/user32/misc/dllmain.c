@@ -1,6 +1,6 @@
 #include <user32.h>
-
 #include <ndk/cmfuncs.h>
+#include <strsafe.h>
 
 #define MAX_USER_MODE_DRV_BUFFER 526
 
@@ -27,11 +27,10 @@ static ULONG User32TlsIndex;
 HINSTANCE User32Instance;
 
 PPROCESSINFO g_ppi = NULL;
+SHAREDINFO gSharedInfo = {0};
+PSERVERINFO gpsi = NULL;
 PUSER_HANDLE_TABLE gHandleTable = NULL;
 PUSER_HANDLE_ENTRY gHandleEntries = NULL;
-PSERVERINFO gpsi = NULL;
-SHAREDINFO gSharedInfo = {0};
-ULONG_PTR g_ulSharedDelta;
 BOOLEAN gfLogonProcess  = FALSE;
 BOOLEAN gfServerProcess = FALSE;
 BOOLEAN gfFirstThread   = TRUE;
@@ -271,6 +270,7 @@ ClientThreadSetupHelper(BOOL IsCallback)
 
         /* Minimal setup of the connect info structure */
         UserCon.ulVersion = USER_VERSION;
+        // UserCon.dwDispatchCount;
 
         /* Connect to win32k */
         Status = NtUserProcessConnect(NtCurrentProcess(),
@@ -280,13 +280,13 @@ ClientThreadSetupHelper(BOOL IsCallback)
 
         /* Retrieve data */
         g_ppi = ClientInfo->ppi; // Snapshot PI, used as pointer only!
-        g_ulSharedDelta = UserCon.siClient.ulSharedDelta;
-        gpsi = SharedPtrToUser(UserCon.siClient.psi);
-        gHandleTable = SharedPtrToUser(UserCon.siClient.aheList);
-        gHandleEntries = SharedPtrToUser(gHandleTable->handles);
         gSharedInfo = UserCon.siClient;
+        gpsi = gSharedInfo.psi;
+        gHandleTable = gSharedInfo.aheList;
+        /* ReactOS-Specific! */ gHandleEntries = SharedPtrToUser(gHandleTable->handles);
 
-        // ERR("1 SI 0x%x : HT 0x%x : D 0x%x\n", UserCon.siClient.psi, UserCon.siClient.aheList,  g_ulSharedDelta);
+        // ERR("1 SI 0x%x : HT 0x%x : D 0x%x\n",
+        //     gSharedInfo.psi, gSharedInfo.aheList, gSharedInfo.ulSharedDelta);
     }
 
     TRACE("Checkpoint (register PFN)\n");
@@ -418,6 +418,7 @@ Init(PUSERCONNECT UserCon /*PUSERSRV_API_CONNECTINFO*/)
 
             /* Minimal setup of the connect info structure */
             UserCon->ulVersion = USER_VERSION;
+            // UserCon->dwDispatchCount;
 
             TRACE("HACK: Hackish NtUserProcessConnect call!!\n");
             /* Connect to win32k */
@@ -433,11 +434,10 @@ Init(PUSERCONNECT UserCon /*PUSERSRV_API_CONNECTINFO*/)
 
         /* Retrieve data */
         g_ppi = GetWin32ClientInfo()->ppi; // Snapshot PI, used as pointer only!
-        g_ulSharedDelta = UserCon->siClient.ulSharedDelta;
-        gpsi = SharedPtrToUser(UserCon->siClient.psi);
-        gHandleTable = SharedPtrToUser(UserCon->siClient.aheList);
-        gHandleEntries = SharedPtrToUser(gHandleTable->handles);
         gSharedInfo = UserCon->siClient;
+        gpsi = gSharedInfo.psi;
+        gHandleTable = gSharedInfo.aheList;
+        /* ReactOS-Specific! */ gHandleEntries = SharedPtrToUser(gHandleTable->handles);
     }
 
     // FIXME: Yet another hack... This call should normally not be done here, but
@@ -544,18 +544,19 @@ DllMain(
 
             if (!gfServerProcess)
             {
-#if WIN32K_ISNT_BROKEN
-               InitializeImmEntryTable();
-#else
-               /* imm32 takes a refcount and prevents us from unloading */
-               LoadLibraryW(L"user32");
-#endif
-               //
-               // Wine is stub and throws an exception so save this for real Imm32.dll testing!!!!
-               //
-               //gImmApiEntries.pImmRegisterClient(&gSharedInfo, ghImm32);
+                HINSTANCE hImm32 = NULL;
+
+                if (gpsi && (gpsi->dwSRVIFlags & SRVINFO_IMM32))
+                {
+                    WCHAR szImmFile[MAX_PATH];
+                    InitializeImmEntryTable();
+                    GetImmFileName(szImmFile, _countof(szImmFile));
+                    hImm32 = GetModuleHandleW(szImmFile);
+                }
+
+                if (!IMM_FN(ImmRegisterClient)(&gSharedInfo, hImm32))
+                    return FALSE;
             }
-            
             break;
         }
 

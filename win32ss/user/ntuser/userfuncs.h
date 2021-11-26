@@ -163,4 +163,10 @@ BOOL UserPaintCaption(PWND pWnd, INT Flags);
 BOOL FASTCALL SetLayeredStatus(PWND pWnd, BYTE set);
 BOOL FASTCALL GetLayeredStatus(PWND pWnd);
 
+/************** INPUT CONTEXT **************/
+
+VOID UserFreeInputContext(PVOID Object);
+BOOLEAN UserDestroyInputContext(PVOID Object);
+PVOID AllocInputContextObject(PDESKTOP pDesk, PTHREADINFO pti, SIZE_T Size, PVOID* HandleOwner);
+
 /* EOF */

@@ -26,17 +26,17 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     COMBOBOX IDC_TIMEZONELIST, 5, 4, 241, 136, CBS_DROPDOWNLIST | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
     CONTROL "", IDC_WORLD_BACKGROUND, "Static", SS_OWNERDRAW, 5, 20, 240, 110, WS_EX_STATICEDGE
-    AUTOCHECKBOX "&Gün ışığı tasarruf değişiklikleri için saati otomatik ayarla.",
+    AUTOCHECKBOX "&Gün dönümü değişiklikleri için saati otomatik ayarla.",
                  IDC_AUTODAYLIGHT, 6, 132, 242, 11, WS_VISIBLE | WS_GROUP | WS_TABSTOP
 END
 
 IDD_INETTIMEPAGE DIALOGEX 0, 0, 252, 146
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "İnternet Zamânı"
+CAPTION "İnternet Zamanı"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     COMBOBOX IDC_SERVERLIST, 65, 22, 117, 136, CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
-    AUTOCHECKBOX "&Bir İnternet zamanı sunucusuyla otomatik eş zamanla",
+    AUTOCHECKBOX "&Bir İnternet zamanı sunucusuyla otomatik senkronize et",
                  IDC_AUTOSYNC, 11, 7, 241, 10, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
     LTEXT "Sunucu:", IDC_SERVERTEXT, 34, 22, 28, 13
     PUSHBUTTON "Şi&mdi Güncelleştir", IDC_UPDATEBUTTON, 187, 22, 49, 14
@@ -52,10 +52,10 @@ BEGIN
     IDS_TIMEZONETEXT "Şimdiki saat dilimi: %s"
     IDS_TIMEZONEINVALID "Geçersiz"
     IDS_TIMEZONEUNKNOWN "Bilinmiyor"
-    IDS_INETTIMESUCSYNC "Saat, %s ile başarıyla eş zamanlandı: %s.%s"
-    IDS_INETTIMENEXTSYNC "Bir sonraki eş zamanlama: %s.%s"
+    IDS_INETTIMESUCSYNC "Saat, %s ile başarıyla senkronize edildi: %s.%s"
+    IDS_INETTIMENEXTSYNC "Bir sonraki senkronize edildi: %s.%s"
     IDS_INETTIMESYNCING "ReactOS, saati %s ile eş zamanlarken lütfen bekleyiniz."
-    IDS_INETTIMEERROR "ReactOS, %s ile eş zamanlarken bir hata oldu."
-    IDS_INETTIMESUCFILL "Saati eş zamanlamak için lütfen bir NTP sunucusu adı yazınız."
-    IDS_INETTIMEWELCOME "Bilgisayarın saatiyle eş zamanlamak için listeden bir NTP sunucusu seçiniz ya da bir NTP sunucusu adı yazınız."
+    IDS_INETTIMEERROR "ReactOS, %s ile senkronize edilirken bir hata oldu."
+    IDS_INETTIMESUCFILL "Saati senkronize etmek için lütfen bir NTP sunucusu adı yazınız."
+    IDS_INETTIMEWELCOME "Bilgisayarın saatiyle senkronize etmek için listeden bir NTP sunucusu seçiniz ya da bir NTP sunucusu adı yazınız."
 END

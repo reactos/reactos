@@ -440,9 +440,9 @@ MiSetupPfnForPageTable(
     Pfn->u2.ShareCount++;
 }
 
+CODE_SEG("INIT")
 static
 VOID
-CODE_SEG("INIT")
 MiBuildPfnDatabaseFromPageTables(VOID)
 {
     PVOID Address = NULL;

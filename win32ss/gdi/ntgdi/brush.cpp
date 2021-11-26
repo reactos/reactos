@@ -77,6 +77,17 @@ BRUSH::~BRUSH(
 }
 
 VOID
+BRUSH::vReleaseAttribute(VOID)
+{
+    if (this->pBrushAttr != &this->BrushAttr)
+    {
+        this->BrushAttr = *this->pBrushAttr;
+        GdiPoolFree(GetBrushAttrPool(), this->pBrushAttr);
+        this->pBrushAttr = &this->BrushAttr;
+    }
+}
+
+VOID
 BRUSH::vDeleteObject(
     _In_ PVOID pvObject)
 {
@@ -543,7 +554,22 @@ NtGdiSetBrushAttributes(
     _In_ HBRUSH hbr,
     _In_ DWORD dwFlags)
 {
-    FIXME("NtGdiSetBrushAttributes is unimplemented\n");
+    PBRUSH pbr;
+    if ( dwFlags & SC_BB_STOCKOBJ )
+    {
+        if (GDIOBJ_ConvertToStockObj((HGDIOBJ*)&hbr))
+        {
+            pbr = BRUSH::LockAny(hbr);
+            if (pbr == NULL)
+            {
+                ERR("Failed to lock brush %p\n", hbr);
+                return NULL;
+            }
+            pbr->vReleaseAttribute();
+            pbr->vUnlock();
+            return hbr;
+        }
+    }
     return NULL;
 }
 
@@ -554,7 +580,25 @@ NtGdiClearBrushAttributes(
     _In_ HBRUSH hbr,
     _In_ DWORD dwFlags)
 {
-    FIXME("NtGdiClearBrushAttributes is unimplemented\n");
+    PBRUSH pbr;
+    if ( dwFlags & SC_BB_STOCKOBJ )
+    {
+        if (GDIOBJ_ConvertFromStockObj((HGDIOBJ*)&hbr))
+        {
+            pbr = BRUSH::LockAny(hbr);
+            if (pbr == NULL)
+            {
+                ERR("Failed to lock brush %p\n", hbr);
+                return NULL;
+            }
+            if (!pbr->bAllocateBrushAttr())
+            {
+                ERR("Failed to allocate brush attribute\n");
+            }
+            pbr->vUnlock();
+            return hbr;
+        }
+    }
     return NULL;
 }
 

@@ -50,7 +50,7 @@ BEGIN
         MENUITEM "增加速度 (100%)(&I)", ID_EFFECTS_INCSPD
         MENUITEM "降低速度(&D)", ID_EFFECTS_DECSPD
         MENUITEM SEPARATOR
-        MENUITEM "添加回音(&A)", ID_EFFECTS_ECHO
+        MENUITEM "新增回音(&A)", ID_EFFECTS_ECHO
         MENUITEM "反轉(&R)", ID_EFFECTS_REVERSE
     END
     POPUP "說明(&?)"

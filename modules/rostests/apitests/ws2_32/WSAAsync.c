@@ -2,7 +2,7 @@
 * PROJECT:         ReactOS api tests
 * LICENSE:         GPL - See COPYING in the top level directory
 * PURPOSE:         Test for WSAAsync
-* PROGRAMMERS:     Miroslav Mastny 
+* PROGRAMMERS:     Miroslav Mastny
 */
 
 #include "ws2_32.h"
@@ -146,7 +146,7 @@ START_TEST(WSAAsync)
                 dwFlags |= FD_ACCEPT;
             }
         }
- 
+
         if ((WsaNetworkEvents.lNetworkEvents & FD_CONNECT) != 0)
         {// client connected
             trace("Event FD_CONNECT...\n");

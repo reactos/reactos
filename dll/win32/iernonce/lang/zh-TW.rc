@@ -1,29 +1,35 @@
-/* Traditional Chinese translation by Henry Tang Ih 2016 (henrytang2@hotmail.com) */
+/*
+ * PROJECT:     ReactOS Extended RunOnce
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Chinese (Traditional) resource file
+ * TRANSLATORS: Copyright 2016 Henry Tang Ih <henrytang2@hotmail.com>
+ *              Copyright 2021 Chan Chilung <eason066@gmail.com>
+ */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
 
 STRINGTABLE
 BEGIN
-    IDS_INVALIDFORMAT "%1 RunEx 的格式或 RunOnceEx 條目是無效的。 豎線 ('|') 在函數名後需要和支援 WinMain() 參數所需要的功能。"
-    IDS_LOADERROR "出現了一個錯誤載入 %1。 該檔案可能未安裝或已被損壞。"
-    IDS_CALLERROR "出現了一個錯誤或異常呼叫函數 %1 %2 中。"
-    IDS_INCORRECTFORMAT "以下的 RunEx 或 命令的格式不正確: %1 。Shell 執行的命令必須以 || 開頭。"
-    IDS_NOEXPORT "無法呼叫該函數 %1 檔案 %2 中因為該函數不存在或不被匯出。"
+    IDS_INVALIDFORMAT "%1 的 RunEx 或 RunOnceEx 登錄的格式無效。函數的名稱後方需要有垂直線 ('|')，並且必須支援 WinMain() 參數。"
+    IDS_LOADERROR "載入 %1 時出現了一個錯誤。該檔案可能未安裝或已損壞。"
+    IDS_CALLERROR "在 %2 中的函數 %1 出現了一個錯誤或異常呼叫。"
+    IDS_INCORRECTFORMAT "以下的 RunEx 或 命令的格式不正確: %1。Shell 執行的命令必須以 || 開頭。"
+    IDS_NOEXPORT "無法從檔案 %2 中呼叫函數 %1，因為該函數不存在或未被匯出。"
     IDS_EXECUTEERROR "執行 %1 時出現錯誤或異常。"
-    IDS_NOFUNCTION "無法找到函數 %1 檔案 %2 中。"
+    IDS_NOFUNCTION "無法從檔案 %2 中找到函數 %1。"
     IDS_NODEPENDENCY "無法載入依賴項檔案 %1。."
     IDS_SETUPERROR "設定 %1 時出錯。此錯誤已記錄，安裝將繼續"
-    IDS_INCOMPLETE "以前安裝的應用程式尚未完成。\n\n登入使用管理員帳戶來完成安裝。"
-    IDS_SETUP "ReactOS 安裝"
-    IDS_SERVICEERROR "一些服務無法啟動。安裝程式需要重新啟動系統以便啟動這些服務。"
+    IDS_INCOMPLETE "早前的應用程式安裝尚未完成。\n\n使用管理員帳戶登入來完成安裝。"
+    IDS_SETUP "ReactOS 安裝程式"
+    IDS_SERVICEERROR "有些服務無法啟動。安裝程式需要重新啟動系統以啟動這些服務。"
 END
 
 IDD_DIALOG DIALOGEX 0, 0, 206, 166
 STYLE DS_MODALFRAME | DS_NOIDLEMSG | WS_POPUP | WS_VISIBLE | WS_CAPTION
-CAPTION "ReactOS 安裝"
+CAPTION "ReactOS 安裝程式"
 FONT 9, "新細明體"
 BEGIN
-    LTEXT "ReactOS 現在設定以下各項: ", -1, 36, 13, 163, 11
+    LTEXT "ReactOS 現在設定以下項目︰", -1, 36, 13, 163, 11
     LISTBOX IDC_LB_ITEMS, 36, 32, 163, 127, LBS_NOTIFY | LBS_OWNERDRAWVARIABLE | LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | WS_CHILD | WS_VISIBLE | WS_DISABLED | WS_VSCROLL | WS_TABSTOP
     ICON IDI_ICON, -1, 7, 7, 20, 20
 END

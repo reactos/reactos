@@ -212,7 +212,7 @@ public:
         return S_OK;
     }
 
-    virtual HRESULT STDMETHODCALLTYPE 
+    virtual HRESULT STDMETHODCALLTYPE
         GetCommandString(UINT_PTR idCmd,
                          UINT uType,
                          UINT *pwReserved,

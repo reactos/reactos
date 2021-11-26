@@ -227,7 +227,7 @@ START_TEST(IsValidDevmodeW)
     SetLastError(0xDEADBEEF);
     ok(IsValidDevmodeW(&DevMode, sizeof(DEVMODEW) + 1), "IsValidDevmodeW returns FALSE!\n");
     ok(GetLastError() == 0xDEADBEEF, "IsValidDevmodeW returns error %lu!\n", GetLastError());
-    
+
     // The DevmodeSize parameter may be larger than dmSize, but not the other way round!
     ZeroMemory(&DevMode, sizeof(DEVMODEW));
     DevMode.dmSize = sizeof(DEVMODEW);

@@ -1,7 +1,7 @@
 /*
  *  HMAC_DRBG implementation (NIST SP 800-90)
  *
- *  Copyright (C) 2006-2015, ARM Limited, All Rights Reserved
+ *  Copyright The Mbed TLS Contributors
  *  SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
  *
  *  This file is provided under the Apache License 2.0, or the
@@ -42,8 +42,6 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  *
  *  **********
- *
- *  This file is part of mbed TLS (https://tls.mbed.org)
  */
 
 /*
@@ -61,6 +59,7 @@
 #if defined(MBEDTLS_HMAC_DRBG_C)
 
 #include "mbedtls/hmac_drbg.h"
+#include "mbedtls/platform_util.h"
 
 #include <string.h>
 
@@ -77,11 +76,6 @@
 #endif /* MBEDTLS_SELF_TEST */
 #endif /* MBEDTLS_PLATFORM_C */
 
-/* Implementation that should never be optimized out by the compiler */
-static void mbedtls_zeroize( void *v, size_t n ) {
-    volatile unsigned char *p = v; while( n-- ) *p++ = 0;
-}
-
 /*
  * HMAC_DRBG context initialization
  */
@@ -89,9 +83,7 @@ void mbedtls_hmac_drbg_init( mbedtls_hmac_drbg_context *ctx )
 {
     memset( ctx, 0, sizeof( mbedtls_hmac_drbg_context ) );
 
-#if defined(MBEDTLS_THREADING_C)
-    mbedtls_mutex_init( &ctx->mutex );
-#endif
+    ctx->reseed_interval = MBEDTLS_HMAC_DRBG_RESEED_INTERVAL;
 }
 
 /*
@@ -138,16 +130,18 @@ int mbedtls_hmac_drbg_update_ret( mbedtls_hmac_drbg_context *ctx,
     }
 
 exit:
-    mbedtls_zeroize( K, sizeof( K ) );
+    mbedtls_platform_zeroize( K, sizeof( K ) );
     return( ret );
 }
 
+#if !defined(MBEDTLS_DEPRECATED_REMOVED)
 void mbedtls_hmac_drbg_update( mbedtls_hmac_drbg_context *ctx,
                                const unsigned char *additional,
                                size_t add_len )
 {
     (void) mbedtls_hmac_drbg_update_ret( ctx, additional, add_len );
 }
+#endif /* MBEDTLS_DEPRECATED_REMOVED */
 
 /*
  * Simplified HMAC_DRBG initialisation (for use with deterministic ECDSA)
@@ -160,6 +154,10 @@ int mbedtls_hmac_drbg_seed_buf( mbedtls_hmac_drbg_context *ctx,
 
     if( ( ret = mbedtls_md_setup( &ctx->md_ctx, md_info, 1 ) ) != 0 )
         return( ret );
+
+#if defined(MBEDTLS_THREADING_C)
+    mbedtls_mutex_init( &ctx->mutex );
+#endif
 
     /*
      * Set initial working state.
@@ -254,7 +252,7 @@ static int hmac_drbg_reseed_core( mbedtls_hmac_drbg_context *ctx,
 
 exit:
     /* 4. Done */
-    mbedtls_zeroize( seed, seedlen );
+    mbedtls_platform_zeroize( seed, seedlen );
     return( ret );
 }
 
@@ -286,6 +284,11 @@ int mbedtls_hmac_drbg_seed( mbedtls_hmac_drbg_context *ctx,
     if( ( ret = mbedtls_md_setup( &ctx->md_ctx, md_info, 1 ) ) != 0 )
         return( ret );
 
+    /* The mutex is initialized iff the md context is set up. */
+#if defined(MBEDTLS_THREADING_C)
+    mbedtls_mutex_init( &ctx->mutex );
+#endif
+
     md_size = mbedtls_md_get_size( md_info );
 
     /*
@@ -299,8 +302,6 @@ int mbedtls_hmac_drbg_seed( mbedtls_hmac_drbg_context *ctx,
 
     ctx->f_entropy = f_entropy;
     ctx->p_entropy = p_entropy;
-
-    ctx->reseed_interval = MBEDTLS_HMAC_DRBG_RESEED_INTERVAL;
 
     if( ctx->entropy_len == 0 )
     {
@@ -446,7 +447,8 @@ int mbedtls_hmac_drbg_random( void *p_rng, unsigned char *output, size_t out_len
 }
 
 /*
- * Free an HMAC_DRBG context
+ *  This function resets HMAC_DRBG context to the state immediately
+ *  after initial call of mbedtls_hmac_drbg_init().
  */
 void mbedtls_hmac_drbg_free( mbedtls_hmac_drbg_context *ctx )
 {
@@ -454,10 +456,13 @@ void mbedtls_hmac_drbg_free( mbedtls_hmac_drbg_context *ctx )
         return;
 
 #if defined(MBEDTLS_THREADING_C)
-    mbedtls_mutex_free( &ctx->mutex );
+    /* The mutex is initialized iff the md context is set up. */
+    if( ctx->md_ctx.md_info != NULL )
+        mbedtls_mutex_free( &ctx->mutex );
 #endif
     mbedtls_md_free( &ctx->md_ctx );
-    mbedtls_zeroize( ctx, sizeof( mbedtls_hmac_drbg_context ) );
+    mbedtls_platform_zeroize( ctx, sizeof( mbedtls_hmac_drbg_context ) );
+    ctx->reseed_interval = MBEDTLS_HMAC_DRBG_RESEED_INTERVAL;
 }
 
 #if defined(MBEDTLS_FS_IO)
@@ -483,7 +488,7 @@ int mbedtls_hmac_drbg_write_seed_file( mbedtls_hmac_drbg_context *ctx, const cha
 
 exit:
     fclose( f );
-    mbedtls_zeroize( buf, sizeof( buf ) );
+    mbedtls_platform_zeroize( buf, sizeof( buf ) );
 
     return( ret );
 }
@@ -491,35 +496,36 @@ exit:
 int mbedtls_hmac_drbg_update_seed_file( mbedtls_hmac_drbg_context *ctx, const char *path )
 {
     int ret = 0;
-    FILE *f;
+    FILE *f = NULL;
     size_t n;
     unsigned char buf[ MBEDTLS_HMAC_DRBG_MAX_INPUT ];
+    unsigned char c;
 
     if( ( f = fopen( path, "rb" ) ) == NULL )
         return( MBEDTLS_ERR_HMAC_DRBG_FILE_IO_ERROR );
 
-    fseek( f, 0, SEEK_END );
-    n = (size_t) ftell( f );
-    fseek( f, 0, SEEK_SET );
-
-    if( n > MBEDTLS_HMAC_DRBG_MAX_INPUT )
+    n = fread( buf, 1, sizeof( buf ), f );
+    if( fread( &c, 1, 1, f ) != 0 )
     {
-        fclose( f );
-        return( MBEDTLS_ERR_HMAC_DRBG_INPUT_TOO_BIG );
+        ret = MBEDTLS_ERR_HMAC_DRBG_INPUT_TOO_BIG;
+        goto exit;
     }
-
-    if( fread( buf, 1, n, f ) != n )
+    if( n == 0 || ferror( f ) )
+    {
         ret = MBEDTLS_ERR_HMAC_DRBG_FILE_IO_ERROR;
-    else
-        ret = mbedtls_hmac_drbg_update_ret( ctx, buf, n );
-
+        goto exit;
+    }
     fclose( f );
+    f = NULL;
 
-    mbedtls_zeroize( buf, sizeof( buf ) );
+    ret = mbedtls_hmac_drbg_update_ret( ctx, buf, n );
 
+exit:
+    mbedtls_platform_zeroize( buf, sizeof( buf ) );
+    if( f != NULL )
+        fclose( f );
     if( ret != 0 )
         return( ret );
-
     return( mbedtls_hmac_drbg_write_seed_file( ctx, path ) );
 }
 #endif /* MBEDTLS_FS_IO */

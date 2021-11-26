@@ -68,7 +68,7 @@ static void FlushMessages()
 
 static void create_test_windows()
 {
-    RegisterSimpleClass(OwnerTestProc, L"ownertest"); 
+    RegisterSimpleClass(OwnerTestProc, L"ownertest");
     hWnd1 = CreateWindowW(L"ownertest", L"ownertest", WS_OVERLAPPEDWINDOW,
                         20, 20, 300, 300, NULL, NULL, 0, NULL);
 

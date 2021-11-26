@@ -30,6 +30,7 @@ elseif(ARCH STREQUAL "arm")
     list(APPEND SOURCE_STATIC
         __rt_div.c
         __fto64.c
+        __64tof.c
     )
 endif()
 

@@ -553,7 +553,7 @@ NdisReadConfiguration(
         (*ParameterValue)->ParameterData.IntegerData = NDIS_VERSION;
         *Status = NDIS_STATUS_SUCCESS;
 
-        NDIS_DbgPrint(MAX_TRACE,("ParameterType = %0x%x, ParameterValue = 0x%x\n",
+        NDIS_DbgPrint(MAX_TRACE,("ParameterType = 0x%x, ParameterValue = 0x%x\n",
             (*ParameterValue)->ParameterType, (*ParameterValue)->ParameterData.IntegerData));
         return;
     }

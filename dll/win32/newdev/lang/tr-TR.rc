@@ -11,7 +11,7 @@ BEGIN
     LTEXT "Bu yardımcı, şunun için yeni bir aygıt sürücüsü kurar:", IDC_STATIC, 120, 21, 195, 16
     LTEXT "Sürdürmek için İleri'ye tıklayınız.", IDC_STATIC, 120, 169, 195, 16
     LTEXT "BİLİNMEYEN AYGIT", IDC_DEVICE, 148, 36, 147, 17
-    LTEXT "UYARI! HUSÛSİ BİR AYGIT KURMA BİLGİSAYARINIZI, DONDURABİLİR VEYÂ AÇILAMAZ YAPABİLİR!", IDC_STATIC, 120, 59, 195, 16
+    LTEXT "UYARI! ÖZEL BİR AYGIT KURMA BİLGİSAYARINIZI, DONDURABİLİR VEYA AÇILAMAZ YAPABİLİR!", IDC_STATIC, 120, 59, 195, 16
     CONTROL "Sürücüyü Kendiliğinden Kur", IDC_RADIO_AUTO, "Button", BS_AUTORADIOBUTTON, 120, 112, 195, 12
     CONTROL "Sürücüyü Belirli Konumdan Kur", IDC_RADIO_MANUAL, "Button", BS_AUTORADIOBUTTON, 120, 133, 195, 12
 END
@@ -33,7 +33,7 @@ CAPTION "Aygıt Kurulumu"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Kurulum Başarısız Oldu", IDC_FINISHTITLE, 120, 8, 195, 16
-    LTEXT "Beklenmeyen bir yanlışlık olduğundan dolayı aygıt kurulamadı.", IDC_STATIC, 120, 32, 195, 16
+    LTEXT "Beklenmeyen bir hata sebebiyle aygıt kurulamadı.", IDC_STATIC, 120, 32, 195, 16
     LTEXT "BİLİNMEYEN AYGIT", IDC_DEVICE, 148, 53, 147, 17
 END
 
@@ -45,7 +45,7 @@ BEGIN
     CONTROL "Şu Konumlarda Ara:", IDC_RADIO_SEARCHHERE, "Button", BS_AUTORADIOBUTTON, 27, 11, 239, 12
     CONTROL "Sürücüyü Elle Seç", IDC_RADIO_CHOOSE, "Button", BS_AUTORADIOBUTTON, 27, 98, 171, 12
     CONTROL "Çıkarılabilir Ortamı Ara", IDC_CHECK_MEDIA, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 47, 33, 163, 12
-    CONTROL "Şu Yolu Kapsa:", IDC_CHECK_PATH, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 47, 54, 162, 12
+    CONTROL "Şu Yolu Kontrol Et:", IDC_CHECK_PATH, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 47, 54, 162, 12
     PUSHBUTTON "Göz At", IDC_BROWSE, 248, 70, 50, 14
     COMBOBOX IDC_COMBO_PATH, 61, 71, 176, 12, CBS_DROPDOWN | CBS_SORT | WS_VSCROLL | WS_TABSTOP | CBS_AUTOHSCROLL
 END
@@ -72,7 +72,7 @@ CAPTION "Aygıt Kurulumu"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Kurulum Bitti", IDC_FINISHTITLE, 120, 8, 195, 12
-    LTEXT "Şunun kurulumunu bitirmek için yeniden başlatmaya gereksiniminiz var:", IDC_STATIC, 120, 32, 195, 16
+    LTEXT "Şunun kurulumunu bitirmek için yeniden başlatmaya ihtiyacımız var:", IDC_STATIC, 120, 32, 195, 16
     LTEXT "Bu yardımcıyı kapatmak için Bitir'e tıklayınız.", IDC_STATIC, 120, 174, 195, 12
     LTEXT "BİLİNMEYEN AYGIT", IDC_DEVICE, 148, 53, 147, 17
 END
@@ -90,9 +90,9 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_INSTALLWIZARDTITLE "Yeni Donanım Yardımcısı"
-    IDS_UPDATEWIZARDTITLE "Sürücü Şimdikileştirme Yardımcısı"
-    IDS_CHSOURCE_TITLE "Arama ve Kurma Seçeneklerini Seç"
+    IDS_INSTALLWIZARDTITLE "Yeni Sürücü Kurma Yardımcısı"
+    IDS_UPDATEWIZARDTITLE "Sürücü Güncelleme Yardımcısı"
+    IDS_CHSOURCE_TITLE "Sürücü Arama ve Kurma Seçeneklerini Seç"
     IDS_SEARCHDRV_TITLE "Arıyor..."
     IDS_INSTALLDRV_TITLE "Kuruyor..."
 END

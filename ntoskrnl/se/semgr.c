@@ -1,10 +1,11 @@
 /*
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS kernel
- * FILE:            ntoskrnl/se/semgr.c
- * PURPOSE:         Security manager
- *
- * PROGRAMMERS:     No programmer listed.
+ * PROJECT:         ReactOS Kernel
+ * LICENSE:         GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:         Security manager infrastructure
+ * COPYRIGHT:       Copyright Timo Kreuzer <timo.kreuzer@reactos.org>
+ *                  Copyright Eric Kohl
+ *                  Copyright Aleksey Bragin
+ *                  Copyright Alex Ionescu <alex@relsoft.net>
  */
 
 /* INCLUDES *******************************************************************/
@@ -26,6 +27,14 @@ extern ERESOURCE SepSubjectContextLock;
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
+/**
+ * @brief
+ * Initializes all the security exports upon initialization phase of
+ * the module.
+ *
+ * @return
+ * Returns TRUE.
+ */
 static
 CODE_SEG("INIT")
 BOOLEAN
@@ -91,7 +100,15 @@ SepInitExports(VOID)
     return TRUE;
 }
 
-
+/**
+ * @brief
+ * Handles the phase 0 procedure of the SRM initialization.
+ *
+ * @return
+ * Returns TRUE if the phase 0 initialization has succeeded and that
+ * we can proceed further with next initialization phase, FALSE
+ * otherwise.
+ */
 CODE_SEG("INIT")
 BOOLEAN
 NTAPI
@@ -137,6 +154,14 @@ SepInitializationPhase0(VOID)
     return TRUE;
 }
 
+/**
+ * @brief
+ * Handles the phase 1 procedure of the SRM initialization.
+ *
+ * @return
+ * Returns TRUE if the phase 1 initialization has succeeded, FALSE
+ * otherwise.
+ */
 CODE_SEG("INIT")
 BOOLEAN
 NTAPI
@@ -245,6 +270,15 @@ SepInitializationPhase1(VOID)
     return TRUE;
 }
 
+/**
+ * @brief
+ * Main security manager initialization function.
+ *
+ * @return
+ * Returns a boolean value according to the phase initialization
+ * routine that handles it. If TRUE, the routine deems the initialization
+ * phase as complete, FALSE otherwise.
+ */
 CODE_SEG("INIT")
 BOOLEAN
 NTAPI
@@ -275,16 +309,54 @@ SeInitSystem(VOID)
     }
 }
 
+/**
+ * @brief
+ * Internal function that is responsible for querying, deleting, assigning and
+ * setting a security descriptor for an object in the NT kernel. It is the default
+ * security method for objects regarding the security context of objects.
+ *
+ * @param[in] Object
+ * The object that has the default security method, which the function has been
+ * called upon.
+ *
+ * @param[in] OperationType
+ * Operation type to perform to that object.
+ *
+ * @param[in] SecurityInformation
+ * Auxiliary security information of the object.
+ *
+ * @param[in,out] SecurityDescriptor
+ * A security descriptor. This SD is used accordingly to the operation type
+ * requested by the caller.
+ *
+ * @param[in,out] ReturnLength
+ * The length size of the queried security descriptor, in bytes.
+ *
+ * @param[in,out] OldSecurityDescriptor
+ * The old SD that belonged to the object, in case we're either deleting
+ * or replacing it.
+ *
+ * @param[in] PoolType
+ * Pool type allocation for the security descriptor.
+ *
+ * @param[in] GenericMapping
+ * The generic mapping of access rights masks for the object.
+ *
+ * @return
+ * Returns STATUS_SUCCESS if the specific operation tasked has been
+ * completed. Otherwise a failure NTSTATUS code is returned.
+ */
 NTSTATUS
 NTAPI
-SeDefaultObjectMethod(IN PVOID Object,
-                      IN SECURITY_OPERATION_CODE OperationType,
-                      IN PSECURITY_INFORMATION SecurityInformation,
-                      IN OUT PSECURITY_DESCRIPTOR SecurityDescriptor,
-                      IN OUT PULONG ReturnLength OPTIONAL,
-                      IN OUT PSECURITY_DESCRIPTOR *OldSecurityDescriptor,
-                      IN POOL_TYPE PoolType,
-                      IN PGENERIC_MAPPING GenericMapping)
+SeDefaultObjectMethod(
+    _In_ PVOID Object,
+    _In_ SECURITY_OPERATION_CODE OperationType,
+    _In_ PSECURITY_INFORMATION SecurityInformation,
+    _Inout_ PSECURITY_DESCRIPTOR SecurityDescriptor,
+    _Inout_opt_ PULONG ReturnLength,
+    _Inout_ PSECURITY_DESCRIPTOR *OldSecurityDescriptor,
+    _In_ POOL_TYPE PoolType,
+    _In_ PGENERIC_MAPPING GenericMapping)
 {
     PAGED_CODE();
 
@@ -336,10 +408,25 @@ SeDefaultObjectMethod(IN PVOID Object,
     return STATUS_SUCCESS;
 }
 
+/**
+ * @brief
+ * Queries the access mask from a security information context.
+ *
+ * @param[in] SecurityInformation
+ * The security information context where the access mask is to be
+ * gathered.
+ *
+ * @param[out] DesiredAccess
+ * The queried access mask right.
+ *
+ * @return
+ * Nothing.
+ */
 VOID
 NTAPI
-SeQuerySecurityAccessMask(IN SECURITY_INFORMATION SecurityInformation,
-                          OUT PACCESS_MASK DesiredAccess)
+SeQuerySecurityAccessMask(
+    _In_ SECURITY_INFORMATION SecurityInformation,
+    _Out_ PACCESS_MASK DesiredAccess)
 {
     *DesiredAccess = 0;
 
@@ -355,10 +442,24 @@ SeQuerySecurityAccessMask(IN SECURITY_INFORMATION SecurityInformation,
     }
 }
 
+/**
+ * @brief
+ * Sets the access mask for a security information context.
+ *
+ * @param[in] SecurityInformation
+ * The security information context to apply a new access right.
+ *
+ * @param[out] DesiredAccess
+ * The returned access mask right.
+ *
+ * @return
+ * Nothing.
+ */
 VOID
 NTAPI
-SeSetSecurityAccessMask(IN SECURITY_INFORMATION SecurityInformation,
-                        OUT PACCESS_MASK DesiredAccess)
+SeSetSecurityAccessMask(
+    _In_ SECURITY_INFORMATION SecurityInformation,
+    _Out_ PACCESS_MASK DesiredAccess)
 {
     *DesiredAccess = 0;
 
@@ -378,6 +479,30 @@ SeSetSecurityAccessMask(IN SECURITY_INFORMATION SecurityInformation,
     }
 }
 
+/**
+ * @unimplemented
+ * @brief
+ * Report a security event to the security manager.
+ *
+ * @param[in] Flags
+ * Flags that influence how the event should be reported.
+ *
+ * @param[in] SourceName
+ * A Unicode string that represents the source name of the event.
+ *
+ * @param[in] UserSid
+ * The SID that represents a user that initiated the reporting.
+ *
+ * @param[in] AuditParameters
+ * An array of parameters for auditing purposes. This is used
+ * for reporting the event which the security manager will take
+ * care subsequently of doing eventual security auditing.
+ *
+ * @return
+ * Returns STATUS_SUCCESS if the security event has been reported.
+ * STATUS_INVALID_PARAMETER is returned if one of the parameters
+ * do not satisfy the requirements expected by the function.
+ */
 NTSTATUS
 NTAPI
 SeReportSecurityEvent(
@@ -447,6 +572,28 @@ SeReportSecurityEvent(
     return STATUS_SUCCESS;
 }
 
+/**
+ * @unimplemented
+ * @brief
+ * Sets an array of audit parameters for later security auditing use.
+ *
+ * @param[in,out] AuditParameters
+ * An array of audit parameters to be set.
+ *
+ * @param[in] Type
+ * The type of audit parameters to be set.
+ *
+ * @param[in] Index
+ * Index number that represents an instance of an audit parameters.
+ * Such index must be within the maximum range of audit parameters.
+ *
+ * @param[in] Data
+ * An arbitrary buffer data that is bounds to what kind of audit parameter
+ * type must be set.
+ *
+ * @return
+ * To be added...
+ */
 _Const_
 NTSTATUS
 NTAPI

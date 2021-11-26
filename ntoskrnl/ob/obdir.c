@@ -174,6 +174,7 @@ ObpLookupEntryDirectory(IN POBJECT_DIRECTORY Directory,
     PVOID FoundObject = NULL;
     PWSTR Buffer;
     POBJECT_DIRECTORY ShadowDirectory;
+
     PAGED_CODE();
 
     /* Check if we should search the shadow directory */
@@ -317,20 +318,11 @@ Quickie:
         }
     }
 
-    /* Check if we found an object already */
-    if (Context->Object)
-    {
-        /* We already did a lookup, so remove this object's query reference */
-        ObjectHeader = OBJECT_TO_OBJECT_HEADER(Context->Object);
-        HeaderNameInfo = OBJECT_HEADER_TO_NAME_INFO(ObjectHeader);
-        ObpDereferenceNameInfo(HeaderNameInfo);
-
-        /* Also dereference the object itself */
-        ObDereferenceObject(Context->Object);
-    }
+    /* Release any object previously looked up and replace it with the new one */
+    ObpReleaseLookupContextObject(Context);
+    Context->Object = FoundObject;
 
     /* Return the object we found */
-    Context->Object = FoundObject;
     return FoundObject;
 }
 
@@ -573,7 +565,7 @@ NtQueryDirectoryObject(IN HANDLE DirectoryHandle,
         return Status;
     }
 
-    /* Lock directory in shared mode */
+    /* Lock the directory in shared mode */
     ObpAcquireDirectoryLockShared(Directory, &LookupContext);
 
     /* Start at position 0 */

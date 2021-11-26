@@ -16,7 +16,7 @@ FONT 9, "新細明體"
 BEGIN
     LTEXT "歡迎使用 ReactOS 安裝程式精靈", IDC_STARTTITLE, 115, 8, 195, 24
     LTEXT "您不能直接從此 CD 安裝 ReactOS！ 請重新開機並從 CD 啟動您的電腦以便安裝 ReactOS。", IDC_STATIC, 115, 40, 195, 100
-    LTEXT "按 [完成] 退出安裝程式。", IDC_STATIC, 115, 169, 195, 17
+    LTEXT "按［完成］退出安裝程式。", IDC_STATIC, 115, 169, 195, 17
 END
 
 IDD_TYPEPAGE DIALOGEX 0, 0, 317, 143
@@ -25,10 +25,10 @@ CAPTION "ReactOS 安裝程式"
 FONT 9, "新細明體"
 BEGIN
     AUTORADIOBUTTON "安裝 ReactOS", IDC_INSTALL, 7, 7, 277, 10, WS_GROUP | WS_TABSTOP
-    LTEXT "安裝 ReactOS 的新副本。此選項不會儲存您的檔案、 設定和程式。您可以對磁碟和磁碟區進行更改。", IDC_INSTALLTEXT, 18, 18, 269, 25, NOT WS_GROUP
+    LTEXT "安裝 ReactOS 的新副本。此選項不會儲存您的檔案、設定和程式。您可以對磁碟和磁碟區進行更改。", IDC_INSTALLTEXT, 18, 18, 269, 25, NOT WS_GROUP
     AUTORADIOBUTTON "修復或更新已安裝的 ReactOS", IDC_UPDATE, 7, 50, 277, 10
-    LTEXT "更新或修復已安裝的 ReactOS 副本。此選項會儲存您的檔案、 設定和程式。只有在 ReactOS 已經安裝在此電腦時才能使用此選項。", IDC_UPDATETEXT, 18, 61, 269, 30, NOT WS_GROUP
-    LTEXT "按 [下一步] 繼續安裝。", IDC_STATIC, 7, 128, 297, 8
+    LTEXT "更新或修復已安裝的 ReactOS 副本。此選項會儲存您的檔案、設定和程式。只有在 ReactOS 已經安裝在此電腦時才能使用此選項。", IDC_UPDATETEXT, 18, 61, 269, 30, NOT WS_GROUP
+    LTEXT "按［下一步］繼續安裝。", IDC_STATIC, 7, 128, 297, 8
 END
 
 IDD_UPDATEREPAIRPAGE DIALOGEX 0, 0, 317, 143
@@ -39,7 +39,7 @@ BEGIN
     LTEXT       "ReactOS 安裝程式可以升級下列的其中一個可用的 ReactOS 安裝。如果某個 ReactOS 安裝損毀，安裝程式可以嘗試修復它。", IDC_STATIC, 6, 6, 300, 18
     CONTROL     "", IDC_NTOSLIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_ALIGNLEFT | WS_BORDER | WS_TABSTOP, 6, 30, 303, 90
     PUSHBUTTON  "不要升級(&D)", IDC_SKIPUPGRADE, 230, 128, 80, 14
-    LTEXT       "按 [下一步] 升級已選擇的 ReactOS 安裝，或按 [不要升級] 進行全新的 ReactOS 安裝。", IDC_STATIC, 7, 124, 222, 16
+    LTEXT       "按［下一步］升級已選擇的 ReactOS 安裝，或按［不要升級］進行全新的 ReactOS 安裝。", IDC_STATIC, 7, 124, 222, 16
 END
 
 IDD_DEVICEPAGE DIALOGEX 0, 0, 317, 143
@@ -47,13 +47,13 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "ReactOS 安裝程式"
 FONT 9, "新細明體"
 BEGIN
-    LTEXT "電腦:", IDC_STATIC, 20, 15, 80, 10
+    LTEXT "電腦：", IDC_STATIC, 20, 15, 80, 10
     CONTROL "", IDC_COMPUTER, "ComboBox", WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST, 100, 15, 180, 80
-    LTEXT "顯示:", IDC_STATIC, 20, 35, 80, 10
+    LTEXT "顯示：", IDC_STATIC, 20, 35, 80, 10
     CONTROL "", IDC_DISPLAY, "ComboBox", WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST, 100, 35, 180, 80
-    LTEXT "鍵盤:", IDC_STATIC, 20, 55, 80, 10
+    LTEXT "鍵盤：", IDC_STATIC, 20, 55, 80, 10
     CONTROL "", IDC_KEYBOARD, "ComboBox", WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST, 100, 55, 180, 80
-    LTEXT "按 [下一步] 設定安裝的磁碟機。", IDC_STATIC, 7, 128, 297, 8
+    LTEXT "按［下一步］設定安裝的磁碟機。", IDC_STATIC, 7, 128, 297, 8
 END
 
 IDD_DRIVEPAGE DIALOGEX 0, 0, 317, 143
@@ -76,10 +76,10 @@ FONT 9, "新細明體"
 BEGIN
     CONTROL "", IDC_UPDOWN1, "msctls_updown32", WS_VISIBLE, 104, 22, 9, 13
     CONTROL "建立並格式化磁碟區", IDC_STATIC, "Button", BS_GROUPBOX, 7, 5, 129, 57
-    LTEXT "大小:", IDC_STATIC, 13, 24, 27, 9
+    LTEXT "大小：", IDC_STATIC, 13, 24, 27, 9
     EDITTEXT IDC_PARTSIZE, 58, 22, 47, 13, WS_VISIBLE | WS_TABSTOP
     LTEXT "GB", IDC_UNIT, 117, 24, 14, 9
-    LTEXT "檔案系統:", IDC_STATIC, 13, 46, 42, 9
+    LTEXT "檔案系統：", IDC_STATIC, 13, 46, 42, 9
     CONTROL "", IDC_FSTYPE, "ComboBox", WS_VISIBLE | WS_TABSTOP | CBS_DROPDOWNLIST, 58, 42, 73, 50
     PUSHBUTTON "確定(&O)", IDOK, 35, 68, 47, 15, WS_VISIBLE | WS_TABSTOP
     PUSHBUTTON "取消(&C)", IDCANCEL, 87, 68, 47, 15, WS_VISIBLE | WS_TABSTOP
@@ -93,8 +93,8 @@ BEGIN
     CONTROL "安裝資料夾", IDC_STATIC, "Button", BS_GROUPBOX, 4, 1, 298, 30
     EDITTEXT IDC_PATH, 10, 11, 278, 13, WS_VISIBLE
     CONTROL "安裝啟動程式", IDC_STATIC, "Button", BS_GROUPBOX, 4, 36, 298, 52
-    CONTROL "安裝啟動程式到硬碟 (MBR 和 VBR)", IDC_INSTFREELDR, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 10, 46, 278, 11
-    CONTROL "安裝啟動程式到硬碟 (僅 VBR)", IDC_INSTVBRONLY, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 10, 57, 278, 11
+    CONTROL "安裝啟動程式到硬碟（MBR 和 VBR）", IDC_INSTFREELDR, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 10, 46, 278, 11
+    CONTROL "安裝啟動程式到硬碟（僅 VBR）", IDC_INSTVBRONLY, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 10, 57, 278, 11
     CONTROL "不安裝啟動程式", IDC_NOINSTFREELDR, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP | WS_DISABLED, 10, 68, 278, 11
     PUSHBUTTON "確定(&O)", IDOK, 180, 94, 50, 15, WS_TABSTOP | WS_VISIBLE
     PUSHBUTTON "取消(&C)", IDCANCEL, 240, 94, 50, 15, WS_TABSTOP | WS_VISIBLE
@@ -105,25 +105,25 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "ReactOS 安裝程式"
 FONT 9, "新細明體"
 BEGIN
-    LTEXT "安裝類型:", IDC_STATIC, 18, 5, 74, 11
+    LTEXT "安裝類型：", IDC_STATIC, 18, 5, 74, 11
     EDITTEXT IDC_INSTALLTYPE, 95, 4, 210, 13, ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT "安裝來源:", IDC_STATIC, 18, 17, 74, 11
+    LTEXT "安裝來源：", IDC_STATIC, 18, 17, 74, 11
     EDITTEXT IDC_INSTALLSOURCE, 95, 16, 210, 13, ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT "架構:", IDC_STATIC, 18, 29, 74, 11
+    LTEXT "架構：", IDC_STATIC, 18, 29, 74, 11
     EDITTEXT IDC_ARCHITECTURE, 95, 28, 210, 13, ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT "電腦:", IDC_STATIC, 18, 41, 74, 11
+    LTEXT "電腦：", IDC_STATIC, 18, 41, 74, 11
     EDITTEXT IDC_COMPUTER, 95, 40, 210, 13, ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT "顯示:", IDC_STATIC, 18, 53, 74, 11
+    LTEXT "顯示：", IDC_STATIC, 18, 53, 74, 11
     EDITTEXT IDC_DISPLAY, 95, 52, 210, 13, ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT "鍵盤:", IDC_STATIC, 18, 65, 74, 11
+    LTEXT "鍵盤：", IDC_STATIC, 18, 65, 74, 11
     EDITTEXT IDC_KEYBOARD, 95, 64, 210, 13, ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT "目的磁碟區:", IDC_STATIC, 18, 77, 74, 11
+    LTEXT "目的磁碟區：", IDC_STATIC, 18, 77, 74, 11
     EDITTEXT IDC_DESTDRIVE, 95, 76, 210, 13, ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT "目的地路徑:", IDC_STATIC, 18, 89, 74, 11
+    LTEXT "目的地路徑：", IDC_STATIC, 18, 89, 74, 11
     EDITTEXT IDC_PATH, 95, 88, 210, 13, ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE | NOT WS_BORDER | NOT WS_TABSTOP
     AUTOCHECKBOX "我確定所有的安裝設定是正確的。\n我亦明白 ReactOS 目前處於 Alpha 測試階段，有可能損壞電腦或導致我的資料損毀。",
         IDC_CONFIRM_INSTALL, 7, 104, 303, 18, BS_MULTILINE
-    LTEXT "請確定所有的安裝設定是正確的，\n然後按 [安裝]，開始安裝程序。", IDC_STATIC, 7, 124, 303, 18
+    LTEXT "請確定所有的安裝設定是正確的，\n然後按［安裝］，開始安裝程序。", IDC_STATIC, 7, 124, 303, 18
 END
 
 IDD_PROCESSPAGE DIALOGEX 0, 0, 317, 143
@@ -143,9 +143,9 @@ FONT 9, "新細明體"
 BEGIN
     LTEXT "正在完成 ReactOS 安裝程式", IDC_FINISHTITLE, 115, 8, 195, 24
     LTEXT "ReactOS 的第一階段安裝已順利完成。", IDC_STATIC, 20, 50, 277, 10
-    LTEXT "按下 [完成] 後，您的電腦將會重新啟動。", IDC_STATIC, 20, 80, 277, 10
+    LTEXT "按下［完成］後，您的電腦將會重新啟動。", IDC_STATIC, 20, 80, 277, 10
     CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 20, 120, 277, 8
-    LTEXT "如果光碟機裡有光碟，請將其取出。然後按 [完成]，重新啟動您的電腦。", IDC_STATIC, 10, 180, 297, 20
+    LTEXT "如果光碟機裡還有光碟，請將其取出。然後按［完成］，重新啟動您的電腦。", IDC_STATIC, 10, 180, 297, 20
 END
 
 STRINGTABLE
@@ -162,9 +162,9 @@ BEGIN
     IDS_RESTARTSUBTITLE "第一階段安裝已經完成，重新啟動進行第二階段安裝"
     IDS_SUMMARYTITLE "安裝概要"
     IDS_SUMMARYSUBTITLE "正是安裝前列出安裝屬性以供檢查"
-    IDS_ABORTSETUP "ReactOS 尚未完全安裝在您的電腦上。如果您現在退出安裝程式，您需要重新執行安裝程式來安裝 ReactOS。您確定退出嗎?"
-    IDS_ABORTSETUP2 "終止安裝?"
-    IDS_NO_TXTSETUP_SIF "無法找到 'txtsetup.sif'。\n安裝程式無法繼續。"
+    IDS_ABORTSETUP "ReactOS 尚未完全安裝在您的電腦上。如果您現在退出安裝程式，您需要重新執行安裝程式來安裝 ReactOS。您確定退出嗎？"
+    IDS_ABORTSETUP2 "終止安裝？"
+    IDS_NO_TXTSETUP_SIF "無法找到「txtsetup.sif」。\n安裝程式無法繼續。"
     IDS_CAPTION "ReactOS 安裝程式"
 END
 

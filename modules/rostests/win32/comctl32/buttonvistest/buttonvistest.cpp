@@ -70,7 +70,7 @@ static HWND CreateBtn(HWND hWnd, LPCWSTR Text, LONG style, int i, int j)
 {
     WCHAR buffer[100];
     SIZE s;
-    
+
 	HWND ret = CreateWnd(hWnd, L"Button", Text, style, i, j);
     if (GetWindowLongW(ret, GWL_STYLE) != (style | WS_CHILD | WS_VISIBLE))
     {
@@ -134,7 +134,7 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance,
     hbrCtlColorBtn = hbrCyan;
     hbrPrintClientClear = hbrYellow;
     hbrErase = hbrGreen;
-    
+
     bSkipErase = FALSE;
     bSkipPaint = FALSE;
 
@@ -142,13 +142,13 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance,
 
 	HWND hWnd = CreateWindowExW(WS_EX_CLIENTEDGE, L"ButtonTests", L"Button tests", WS_OVERLAPPEDWINDOW| WS_HSCROLL| WS_VSCROLL,
 		CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, NULL, NULL, hInstance, NULL);
-	
+
 	CreateWnd(hWnd, L"Static", L"no images", 0, -1, 0);
 	CreateWnd(hWnd, L"Static", L"with BM_SETIMAGE", 0, -1, 1);
 	CreateWnd(hWnd, L"Static", L"with BM_SETIMAGE", 0, -1, 2);
 	CreateWnd(hWnd, L"Static", L"with BM_SETIMAGE and BS_BITMAP", 0, -1, 3);
 	CreateWnd(hWnd, L"Static", L"with BM_SETIMAGE and BS_ICON", 0, -1, 4);
-	
+
 	CreateWnd(hWnd, L"Static", L"Button V5", 0, 0, -1);
 	CreateButtonSet(hWnd, &hwnd[0],  0, 0,  BS_PUSHBUTTON);
 	CreateButtonSet(hWnd, &hwnd[5],  1, 0,  BS_DEFPUSHBUTTON);
@@ -205,7 +205,7 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance,
 		SendMessageW(hwnd[i], BCM_SETIMAGELIST, 0, (LPARAM)&btniml);
 
 	if (bActivated) DeactivateActCtx(0, cookie);
-    
+
     SCROLLINFO vsi = {sizeof(SCROLLINFO), SIF_ALL, 0, 2 * TOP_MARGIN + 10 * (Y_GAP + Y_HEIGHT), Y_HEIGHT, 0, 0};
     SCROLLINFO hsi = {sizeof(SCROLLINFO), SIF_ALL, 0, 2 * LEFT_MARGIN + 13 * (X_GAP + X_WIDTH), X_WIDTH, 0, 0};
 
@@ -214,7 +214,7 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance,
 
     ShowScrollBar(hWnd, SB_HORZ, TRUE);
     ShowScrollBar(hWnd, SB_VERT, TRUE);
-    
+
 	ShowWindow(hWnd, nCmdShow);
 	UpdateWindow(hWnd);
 
@@ -402,7 +402,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             case IDM_BLUE_PRINTCLNT:    hbrPrintClientClear = hbrBlue;  break;
             case IDM_YELLOW_PRINTCLNT:  hbrPrintClientClear = hbrYellow;  break;
             case IDM_CYAN_PRINTCLNT:    hbrPrintClientClear = hbrCyan;  break;
-            
+
             case IDM_SKIP_ERASE:    bSkipErase = !bSkipErase; break;
             case IDM_SKIP_PAINT:    bSkipPaint = !bSkipPaint; break;
             default:

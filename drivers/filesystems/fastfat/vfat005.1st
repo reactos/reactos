@@ -1,7 +1,7 @@
 This is VFAT driver release 0.0.5
 
 To install :
-	extract files 
+	extract files
 	delete all object files (*.o) in all subdirectories
          (because include file include/ddk/iotypes.h is modified and is used by many files)
 	recompile reactos

@@ -41,7 +41,7 @@ START_TEST(GetDriveType)
             Type2 = GetDriveTypeW(Path);
             ok(Type2 == DRIVE_NO_ROOT_DIR, "Expected DRIVE_NO_ROOT_DIR, got %u\n", Type2);
             ok(GetLastError() == 0xdeadbeaf, "Expected no errors, got %lu\n", GetLastError());
-    
+
             StringCchCopyW(Path + i, MAX_PATH - i, L"\\");
         }
         Type2 = GetDriveTypeW(Path);

@@ -96,7 +96,7 @@ ULONG
 iXlateFromRGB(ULONG iFormat, COLORREF crColor)
 {
     ULONG ulRed, ulGreen, ulBlue;
-    
+
     ulRed = GetRValue(crColor);
     ulGreen = GetGValue(crColor);
     ulBlue = GetBValue(crColor);
@@ -136,7 +136,7 @@ COLORREF
 iXlateToRGB(ULONG iFormat, ULONG ulColor)
 {
     ULONG ulRed, ulGreen, ulBlue;
-    
+
     switch (iFormat)
     {
         case BMF_1BPP:
@@ -191,7 +191,7 @@ GetDIBPixel(ULONG iFormat, PVOID pvBits, ULONG x)
     switch (iFormat)
     {
         case BMF_1BPP:
-            // 
+            //
         case BMF_16BPP_555:
         case BMF_16BPP_565:
             return *(WORD*)((PCHAR)pvBits + x * sizeof(WORD));
@@ -499,7 +499,7 @@ Test_SrcMono()
     ok(c == expected, "expected %lx, got %lx\n", expected, c);
 
     Test_SrcMono1(BMF_16BPP_555, hbmp, pvBits);
- 
+
     DeleteObject(hbmp);
 
     /* Create a 565 DIB section */
@@ -537,7 +537,7 @@ START_TEST(xlate)
 {
     Initialize();
 
- 	Test_SrcMono(); 
+ 	Test_SrcMono();
 }
 
 // trunk: 41 failures

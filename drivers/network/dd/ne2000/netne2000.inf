@@ -125,7 +125,7 @@ GenericMfg = "(Generické sieťové karty)"
 [Strings.041f]
 ReactOS = "ReactOS Takımı"
 
-GenericMfg = "(Umûmî Ağ Kartları)"
+GenericMfg = "(Genel Ağ Kartları)"
 *PNP80D6.DeviceDesc = "NE2000 Uyumlu"
 
 [Strings.0422]

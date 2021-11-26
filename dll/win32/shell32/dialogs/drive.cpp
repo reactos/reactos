@@ -191,7 +191,7 @@ SH_ShowDriveProperties(WCHAR *pwszDrive, LPCITEMIDLIST pidlFolder, PCUITEMID_CHI
         psh.pszCaption = wszName;
         psh.dwFlags |= PSH_PROPTITLE;
     }
-    
+
     ILFree(completePidl);
 
     CComPtr<IDataObject> pDataObj;

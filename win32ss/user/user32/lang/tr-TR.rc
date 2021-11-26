@@ -1,5 +1,5 @@
 /* TRANSLATORS: 2012 Arda Tanrıkulu (ardatan) (ardatanrikulu [at] gmail [dot] com), 2016 Erdem Ersoy (eersoy93) (erdemersoy [at] erdemersoy [dot] net), 2018 Ercan Ersoy (ercanersoy) (ercanersoy [at] ercanersoy [dot] net) */
- 
+
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
 /* Dialogs */
@@ -60,9 +60,9 @@ END
 STRINGTABLE
 BEGIN
     IDS_ERROR "Yanlışlık"
-    IDS_NOT_RESPONDING " (Not Responding)"
-    IDS_ASK_TERMINATE "This application is not responding. Do you want to terminate it?"
-    IDS_HUNG_UP_TITLE "Hung up!"
+    IDS_NOT_RESPONDING " (Yanıt vermiyor)"
+    IDS_ASK_TERMINATE "Bu uygulama yanıt vermiyor. Onu bitirmek ister misin?"
+    IDS_HUNG_UP_TITLE "Kapatıldı!"
     IDS_OK "Tamam"
     IDS_CANCEL "İptal"
     IDS_ABORT "&Durdur"

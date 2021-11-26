@@ -1,10 +1,8 @@
 /*
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS kernel
- * FILE:            ntoskrnl/se/sd.c
- * PURPOSE:         Security manager
- *
- * PROGRAMMERS:     David Welch <welch@cwcom.net>
+ * PROJECT:         ReactOS Kernel
+ * LICENSE:         GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:         Security descriptors (SDs) implementation support
+ * COPYRIGHT:       Copyright David Welch <welch@cwcom.net>
  */
 
 /* INCLUDES *******************************************************************/
@@ -25,6 +23,14 @@ PSECURITY_DESCRIPTOR SeSystemAnonymousLogonSd = NULL;
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
+/**
+ * @brief
+ * Initializes the known security descriptors in the system.
+ *
+ * @return
+ * Returns TRUE if all the security descriptors have been initialized,
+ * FALSE otherwise.
+ */
 CODE_SEG("INIT")
 BOOLEAN
 NTAPI
@@ -124,11 +130,32 @@ SepInitSDs(VOID)
     return TRUE;
 }
 
+/**
+ * @brief
+ * Sets a "World" security descriptor.
+ *
+ * @param[in] SecurityInformation
+ * Security information details, alongside with the security
+ * descriptor to set the World SD.
+ *
+ * @param[in] SecurityDescriptor
+ * A security descriptor buffer.
+ *
+ * @param[in] BufferLength
+ * Length size of the buffer.
+ *
+ * @return
+ * Returns STATUS_SUCCESS if the World security descriptor has been
+ * set. STATUS_ACCESS_DENIED is returned if the caller hasn't
+ * provided security information details thus the SD cannot
+ * be set.
+ */
 NTSTATUS
 NTAPI
-SeSetWorldSecurityDescriptor(SECURITY_INFORMATION SecurityInformation,
-                             PISECURITY_DESCRIPTOR SecurityDescriptor,
-                             PULONG BufferLength)
+SeSetWorldSecurityDescriptor(
+    _In_ SECURITY_INFORMATION SecurityInformation,
+    _In_ PISECURITY_DESCRIPTOR SecurityDescriptor,
+    _In_ PULONG BufferLength)
 {
     ULONG Current;
     ULONG SidSize;
@@ -151,6 +178,10 @@ SeSetWorldSecurityDescriptor(SECURITY_INFORMATION SecurityInformation,
     if (SecurityInformation & GROUP_SECURITY_INFORMATION)
         SdSize += SidSize;
     if (SecurityInformation & DACL_SECURITY_INFORMATION)
+    {
+        SdSize += sizeof(ACL) + sizeof(ACE) + SidSize;
+    }
+    if (SecurityInformation & SACL_SECURITY_INFORMATION)
     {
         SdSize += sizeof(ACL) + sizeof(ACE) + SidSize;
     }
@@ -189,7 +220,6 @@ SeSetWorldSecurityDescriptor(SECURITY_INFORMATION SecurityInformation,
     if (SecurityInformation & DACL_SECURITY_INFORMATION)
     {
         PACL Dacl = (PACL)((PUCHAR)SdRel + Current);
-        SdRel->Control |= SE_DACL_PRESENT;
 
         Status = RtlCreateAcl(Dacl,
                               sizeof(ACL) + sizeof(ACE) + SidSize,
@@ -204,12 +234,33 @@ SeSetWorldSecurityDescriptor(SECURITY_INFORMATION SecurityInformation,
         if (!NT_SUCCESS(Status))
             return Status;
 
+        SdRel->Control |= SE_DACL_PRESENT;
         SdRel->Dacl = Current;
+        Current += SidSize;
     }
 
     if (SecurityInformation & SACL_SECURITY_INFORMATION)
     {
-        /* FIXME - SdRel->Control |= SE_SACL_PRESENT; */
+        PACL Sacl = (PACL)((PUCHAR)SdRel + Current);
+
+        Status = RtlCreateAcl(Sacl,
+                              sizeof(ACL) + sizeof(ACE) + SidSize,
+                              ACL_REVISION);
+        if (!NT_SUCCESS(Status))
+            return Status;
+
+        Status = RtlAddAuditAccessAce(Sacl,
+                                      ACL_REVISION,
+                                      ACCESS_SYSTEM_SECURITY | STANDARD_RIGHTS_ALL,
+                                      SeWorldSid,
+                                      TRUE,
+                                      TRUE);
+        if (!NT_SUCCESS(Status))
+            return Status;
+
+        SdRel->Control |= SE_SACL_PRESENT;
+        SdRel->Sacl = Current;
+        Current += SidSize;
     }
 
     return STATUS_SUCCESS;
@@ -217,12 +268,29 @@ SeSetWorldSecurityDescriptor(SECURITY_INFORMATION SecurityInformation,
 
 /* PUBLIC FUNCTIONS ***********************************************************/
 
+/**
+ * @brief
+ * Determines the size of a SID.
+ *
+ * @param[in] Sid
+ * A security identifier where its size is to be determined.
+ *
+ * @param[in,out] OutSAC
+ * The returned sub authority count of the security
+ * identifier.
+ *
+ * @param[in] ProcessorMode
+ * Processor level access mode.
+ *
+ * @return
+ * Returns the size length of a security identifier (SID).
+ */
 static
 ULONG
 DetermineSIDSize(
-    PISID Sid,
-    PULONG OutSAC,
-    KPROCESSOR_MODE ProcessorMode)
+    _In_ PISID Sid,
+    _Inout_ PULONG OutSAC,
+    _In_ KPROCESSOR_MODE ProcessorMode)
 {
     ULONG Size;
 
@@ -248,11 +316,26 @@ DetermineSIDSize(
     return Size;
 }
 
+/**
+ * @brief
+ * Determines the size of an ACL.
+ *
+ * @param[in] Acl
+ * An access control list where its size is to be
+ * determined.
+ *
+ * @param[in] ProcessorMode
+ * Processor level access mode.
+ *
+ * @return
+ * Returns the size length of a an access control
+ * list (ACL).
+ */
 static
 ULONG
 DetermineACLSize(
-    PACL Acl,
-    KPROCESSOR_MODE ProcessorMode)
+    _In_ PACL Acl,
+    _In_ KPROCESSOR_MODE ProcessorMode)
 {
     ULONG Size;
 
@@ -267,14 +350,45 @@ DetermineACLSize(
     return Size;
 }
 
+/**
+ * @brief
+ * Captures a security descriptor.
+ *
+ * @param[in] _OriginalSecurityDescriptor
+ * An already existing and valid security descriptor
+ * to be captured.
+ *
+ * @param[in] CurrentMode
+ * Processor level access mode.
+ *
+ * @param[in] PoolType
+ * Pool type to be used when allocating the captured
+ * buffer.
+ *
+ * @param[in] CaptureIfKernel
+ * Set this to TRUE if capturing is done within the
+ * kernel.
+ *
+ * @param[out] CapturedSecurityDescriptor
+ * The captured security descriptor.
+ *
+ * @return
+ * Returns STATUS_SUCCESS if the operations have been
+ * completed successfully and that the security descriptor
+ * has been captured. STATUS_UNKNOWN_REVISION is returned
+ * if the security descriptor has an unknown revision.
+ * STATUS_INSUFFICIENT_RESOURCES is returned if memory
+ * pool allocation for the captured buffer has failed.
+ * A failure NTSTATUS code is returned otherwise.
+ */
 NTSTATUS
 NTAPI
 SeCaptureSecurityDescriptor(
-    IN PSECURITY_DESCRIPTOR _OriginalSecurityDescriptor,
-    IN KPROCESSOR_MODE CurrentMode,
-    IN POOL_TYPE PoolType,
-    IN BOOLEAN CaptureIfKernel,
-    OUT PSECURITY_DESCRIPTOR *CapturedSecurityDescriptor)
+    _In_ PSECURITY_DESCRIPTOR _OriginalSecurityDescriptor,
+    _In_ KPROCESSOR_MODE CurrentMode,
+    _In_ POOL_TYPE PoolType,
+    _In_ BOOLEAN CaptureIfKernel,
+    _Out_ PSECURITY_DESCRIPTOR *CapturedSecurityDescriptor)
 {
     PISECURITY_DESCRIPTOR OriginalDescriptor = _OriginalSecurityDescriptor;
     SECURITY_DESCRIPTOR DescriptorCopy;
@@ -452,8 +566,32 @@ SeCaptureSecurityDescriptor(
     return STATUS_SUCCESS;
 }
 
-/*
- * @implemented
+/**
+ * @brief
+ * Queries information details about a security
+ * descriptor.
+ *
+ * @param[in] SecurityInformation
+ * Security information details to be queried
+ * from a security descriptor.
+ *
+ * @param[out] SecurityDescriptor
+ * The returned security descriptor with security information
+ * data.
+ *
+ * @param[in,out] Length
+ * The returned length of a security descriptor.
+ *
+ * @param[in,out] ObjectsSecurityDescriptor
+ * The returned object security descriptor.
+ *
+ * @return
+ * Returns STATUS_SUCCESS if the operations have been
+ * completed successfully and that the specific information
+ * about the security descriptor has been queried.
+ * STATUS_BUFFER_TOO_SMALL is returned if the buffer size
+ * is too small to contain the queried info about the
+ * security descriptor.
  */
 _IRQL_requires_max_(PASSIVE_LEVEL)
 NTSTATUS
@@ -600,14 +738,29 @@ SeQuerySecurityDescriptorInfo(
     return STATUS_SUCCESS;
 }
 
-/*
- * @implemented
+/**
+ * @brief
+ * Releases a captured security descriptor buffer.
+ *
+ * @param[in] CapturedSecurityDescriptor
+ * The captured security descriptor to be freed.
+ *
+ * @param[in] CurrentMode
+ * Processor level access mode.
+ *
+ * @param[in] CaptureIfKernelMode
+ * Set this to TRUE if the releasing is to be done within
+ * the kernel.
+ *
+ * @return
+ * Returns STATUS_SUCCESS.
  */
 NTSTATUS
 NTAPI
-SeReleaseSecurityDescriptor(IN PSECURITY_DESCRIPTOR CapturedSecurityDescriptor,
-                            IN KPROCESSOR_MODE CurrentMode,
-                            IN BOOLEAN CaptureIfKernelMode)
+SeReleaseSecurityDescriptor(
+    _In_ PSECURITY_DESCRIPTOR CapturedSecurityDescriptor,
+    _In_ KPROCESSOR_MODE CurrentMode,
+    _In_ BOOLEAN CaptureIfKernelMode)
 {
     PAGED_CODE();
 
@@ -627,8 +780,32 @@ SeReleaseSecurityDescriptor(IN PSECURITY_DESCRIPTOR CapturedSecurityDescriptor,
     return STATUS_SUCCESS;
 }
 
-/*
- * @implemented
+/**
+ * @brief
+ * Modifies some information data about a security
+ * descriptor.
+ *
+ * @param[in] Object
+ * If specified, the function will use this arbitrary
+ * object that points to an object security descriptor.
+ *
+ * @param[in] SecurityInformation
+ * Security information details to be set.
+ *
+ * @param[in] SecurityDescriptor
+ * A security descriptor where its info is to be changed.
+ *
+ * @param[in,out] ObjectsSecurityDescriptor
+ * The returned pointer to security descriptor objects.
+ *
+ * @param[in] PoolType
+ * Pool type for the new security descriptor to allocate.
+ *
+ * @param[in] GenericMapping
+ * The generic mapping of access rights masks.
+ *
+ * @return
+ * See SeSetSecurityDescriptorInfoEx.
  */
 _IRQL_requires_max_(PASSIVE_LEVEL)
 NTSTATUS
@@ -652,8 +829,42 @@ SeSetSecurityDescriptorInfo(
                                          GenericMapping);
 }
 
-/*
- * @implemented
+/**
+ * @brief
+ * An extended function that sets new information data to
+ * a security descriptor.
+ *
+ * @param[in] Object
+ * If specified, the function will use this arbitrary
+ * object that points to an object security descriptor.
+ *
+ * @param[in] SecurityInformation
+ * Security information details to be set.
+ *
+ * @param[in] SecurityDescriptor
+ * A security descriptor where its info is to be changed.
+ *
+ * @param[in,out] ObjectsSecurityDescriptor
+ * The returned pointer to security descriptor objects.
+ *
+ * @param[in] AutoInheritFlags
+ * Flags bitmask inheritation, influencing how the security
+ * descriptor can be inherited and if it can be in the first
+ * place.
+ *
+ * @param[in] PoolType
+ * Pool type for the new security descriptor to allocate.
+ *
+ * @param[in] GenericMapping
+ * The generic mapping of access rights masks.
+ *
+ * @return
+ * Returns STATUS_SUCCESS if the operations have been
+ * completed without problems and that new info has been
+ * set to the security descriptor. STATUS_NO_SECURITY_ON_OBJECT
+ * is returned if the object does not have a security descriptor.
+ * STATUS_INSUFFICIENT_RESOURCES is returned if memory pool allocation
+ * for the new security descriptor with new info set has failed.
  */
 _IRQL_requires_max_(PASSIVE_LEVEL)
 NTSTATUS
@@ -795,13 +1006,27 @@ SeSetSecurityDescriptorInfoEx(
     return STATUS_SUCCESS;
 }
 
-
-/*
- * @implemented
+/**
+ * @brief
+ * Determines if a security descriptor is valid according
+ * to the general security requirements and conditions
+ * set by the kernel.
+ *
+ * @param[in] Length
+ * The length of a security descriptor.
+ *
+ * @param[in] _SecurityDescriptor
+ * A security descriptor where its properties are to be
+ * checked for validity.
+ *
+ * @return
+ * Returns TRUE if the given security descriptor is valid,
+ * FALSE otherwise.
  */
 BOOLEAN NTAPI
-SeValidSecurityDescriptor(IN ULONG Length,
-                          IN PSECURITY_DESCRIPTOR _SecurityDescriptor)
+SeValidSecurityDescriptor(
+    _In_ ULONG Length,
+    _In_ PSECURITY_DESCRIPTOR _SecurityDescriptor)
 {
     ULONG SdLength;
     PISID Sid;
@@ -932,8 +1157,15 @@ SeValidSecurityDescriptor(IN ULONG Length,
     return TRUE;
 }
 
-/*
- * @implemented
+/**
+ * @brief
+ * Frees a security descriptor.
+ *
+ * @param[in] SecurityDescriptor
+ * A security descriptor to be freed from memory.
+ *
+ * @return
+ * Returns STATUS_SUCCESS.
  */
 _IRQL_requires_max_(PASSIVE_LEVEL)
 NTSTATUS
@@ -952,8 +1184,58 @@ SeDeassignSecurity(
     return STATUS_SUCCESS;
 }
 
-/*
- * @implemented
+/**
+ * @brief
+ * An extended function that assigns a security descriptor for a new
+ * object.
+ *
+ * @param[in] _ParentDescriptor
+ * A security descriptor of the parent object that is being
+ * created.
+ *
+ * @param[in] _ExplicitDescriptor
+ * An explicit security descriptor that is applied to a new
+ * object.
+ *
+ * @param[out] NewDescriptor
+ * The new allocated security descriptor.
+ *
+ * @param[in] ObjectType
+ * The type of the new object.
+ *
+ * @param[in] IsDirectoryObject
+ * Set this to TRUE if the newly created object is a directory
+ * object, otherwise set this to FALSE.
+ *
+ * @param[in] AutoInheritFlags
+ * Automatic inheritance flags that influence how access control
+ * entries within ACLs from security descriptors are inherited.
+ *
+ * @param[in] SubjectContext
+ * Security subject context of the new object.
+ *
+ * @param[in] GenericMapping
+ * Generic mapping of access mask rights.
+ *
+ * @param[in] PoolType
+ * This parameter is unused.
+ *
+ * @return
+ * Returns STATUS_SUCCESS if the operations have been completed
+ * successfully and that the security descriptor has been
+ * assigned to the new object. STATUS_NO_TOKEN is returned
+ * if the caller hasn't supplied a valid argument to a security
+ * subject context. STATUS_INVALID_OWNER is returned if the caller
+ * hasn't supplied a parent descriptor that belongs to the main
+ * user (owner). STATUS_INVALID_PRIMARY_GROUP is returned
+ * by the same reason as with the previous NTSTATUS code.
+ * The two NTSTATUS codes are returned if the calling thread
+ * stated that the owner and/or group is defaulted to the
+ * parent descriptor (SEF_DEFAULT_OWNER_FROM_PARENT and/or
+ * SEF_DEFAULT_GROUP_FROM_PARENT respectively).
+ * STATUS_INSUFFICIENT_RESOURCES is returned if memory pool allocation
+ * for the descriptor buffer has failed. A failure NTSTATUS is returned
+ * otherwise.
  */
 _IRQL_requires_max_(PASSIVE_LEVEL)
 NTSTATUS
@@ -1027,7 +1309,7 @@ SeAssignSecurityEx(
     }
     if (!Owner)
     {
-        if (AutoInheritFlags & 0x20 /* FIXME: SEF_DEFAULT_OWNER_FROM_PARENT */)
+        if (AutoInheritFlags & SEF_DEFAULT_OWNER_FROM_PARENT)
         {
             DPRINT("Use parent owner sid!\n");
             if (!ARGUMENT_PRESENT(ParentDescriptor))
@@ -1059,7 +1341,7 @@ SeAssignSecurityEx(
     }
     if (!Group)
     {
-        if (AutoInheritFlags & 0x40 /* FIXME: SEF_DEFAULT_GROUP_FROM_PARENT */)
+        if (AutoInheritFlags & SEF_DEFAULT_GROUP_FROM_PARENT)
         {
             DPRINT("Use parent group sid!\n");
             if (!ARGUMENT_PRESENT(ParentDescriptor))
@@ -1244,8 +1526,36 @@ SeAssignSecurityEx(
     return STATUS_SUCCESS;
 }
 
-/*
- * @implemented
+/**
+ * @brief
+ * Assigns a security descriptor for a new object.
+ *
+ * @param[in] ParentDescriptor
+ * A security descriptor of the parent object that is being
+ * created.
+ *
+ * @param[in] ExplicitDescriptor
+ * An explicit security descriptor that is applied to a new
+ * object.
+ *
+ * @param[out] NewDescriptor
+ * The new allocated security descriptor.
+ *
+ * @param[in] IsDirectoryObject
+ * Set this to TRUE if the newly created object is a directory
+ * object, otherwise set this to FALSE.
+ *
+ * @param[in] SubjectContext
+ * Security subject context of the new object.
+ *
+ * @param[in] GenericMapping
+ * Generic mapping of access mask rights.
+ *
+ * @param[in] PoolType
+ * This parameter is unused.
+ *
+ * @return
+ * See SeAssignSecurityEx.
  */
 _IRQL_requires_max_(PASSIVE_LEVEL)
 NTSTATUS
@@ -1272,8 +1582,23 @@ SeAssignSecurity(
                               PoolType);
 }
 
-/*
- * @implemented
+/**
+ * @brief
+ * Computes the quota size of a security descriptor.
+ *
+ * @param[in] SecurityDescriptor
+ * A security descriptor.
+ *
+ * @param[out] QuotaInfoSize
+ * The returned quota size of the given security descriptor to
+ * the caller. The function may return 0 to this parameter if
+ * the descriptor doesn't have a group or a discretionary
+ * access control list (DACL) even.
+ *
+ * @return
+ * Returns STATUS_SUCCESS if the quota size of a security
+ * descriptor has been computed successfully. STATUS_UNKNOWN_REVISION
+ * is returned if the security descriptor has an invalid revision.
  */
 _IRQL_requires_max_(PASSIVE_LEVEL)
 NTSTATUS

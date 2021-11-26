@@ -44,9 +44,9 @@ BEGIN
     "A", FCIDM_SHVIEW_SELECTALL, VIRTKEY, CONTROL
     VK_F1, FCIDM_SHVIEW_HELP, VIRTKEY
 
-    /* FIXME: the following accelerator doesn't belong here. This accelerator 
+    /* FIXME: the following accelerator doesn't belong here. This accelerator
      * table is used by the shell view control. F5 should be handled by the
-     * a different accelerator table thats translated in IShellBrowser::TranslateAcceleratorSB 
+     * a different accelerator table thats translated in IShellBrowser::TranslateAcceleratorSB
      * but will put it here until the shell work fine */
     VK_F5, FCIDM_SHVIEW_REFRESH, VIRTKEY
 END

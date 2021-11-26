@@ -440,7 +440,7 @@ EnumAudioDeviceInterfaces(
 
 BOOL
 FindDeviceByMappedId(
-    IN ULONG DeviceID, 
+    IN ULONG DeviceID,
     LPFILTERINFO *Filter,
     BOOL bPlayback)
 {
@@ -468,7 +468,7 @@ FindDeviceByMappedId(
 
 BOOL
 FindDeviceByGuid(
-    LPCGUID pGuidSrc, 
+    LPCGUID pGuidSrc,
     LPFILTERINFO *Filter)
 {
     LPFILTERINFO CurInfo;

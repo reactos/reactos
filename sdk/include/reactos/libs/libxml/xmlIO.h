@@ -217,6 +217,8 @@ xmlParserInputBufferPtr
  */
 XMLPUBFUN void XMLCALL
 	xmlCleanupOutputCallbacks		(void);
+XMLPUBFUN int XMLCALL
+	xmlPopOutputCallbacks			(void);
 XMLPUBFUN void XMLCALL
 	xmlRegisterDefaultOutputCallbacks(void);
 XMLPUBFUN xmlOutputBufferPtr XMLCALL

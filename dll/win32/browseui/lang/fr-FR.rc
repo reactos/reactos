@@ -122,7 +122,7 @@ BEGIN
         END
         MENUITEM "&Ouvrir le dossier", IDM_OPEN_FOLDER
         MENUITEM "&Afficher le texte", IDM_SHOW_TEXT
-    END    
+    END
 END
 
 /* Dialogs */

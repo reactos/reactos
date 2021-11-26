@@ -231,7 +231,7 @@ BEGIN
     ICON "", IDC_DEVICON, 7, 7, 20, 20
     LTEXT "", IDC_DEVNAME, 37, 9, 174, 16, SS_NOPREFIX
     LTEXT "Configurație de resurse:", -1, 7, 36, 204, 8
-    CONTROL "", IDC_DRIVERRESOURCES, "SysListView32", LVS_REPORT | 
+    CONTROL "", IDC_DRIVERRESOURCES, "SysListView32", LVS_REPORT |
             LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SHAREIMAGELISTS | LVS_SORTASCENDING |
             LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 7, 46, 238, 80
 END
@@ -293,8 +293,8 @@ STRINGTABLE DISCARDABLE
 BEGIN
   IDS_APPNAME               "Gestionar de dispozitive"
   IDS_APP_AUTHORS           "Copyright 2015 Ged Murphy"
-  IDS_CONFIRM_DISABLE       "Dezactivarea acestui dispozitiv va cauza oprirea funcționării sale.\r\nSigur doriți dezactivarea sa?"
-  IDS_CONFIRM_UNINSTALL     "Avertisment: Urmează să dezinstalați acest dispozitiv din sistem.\r\nContinuați?"
+  IDS_CONFIRM_DISABLE       "Dezactivarea acestui dispozitiv va cauza oprirea funcționării sale.\nSigur doriți dezactivarea sa?"
+  IDS_CONFIRM_UNINSTALL     "Avertisment: Urmează să dezinstalați acest dispozitiv din sistem.\nContinuați?"
 END
 STRINGTABLE DISCARDABLE
 BEGIN
@@ -327,7 +327,7 @@ BEGIN
   IDS_HINT_DISABLE      " Dezactivare dispozitiv selectat."
   IDS_HINT_UPDATE       " Lansare asistent de actualizare a modulului-pilot pentru dispozitivul selestat."
   IDS_HINT_UNINSTALL    " Dezinstalare modúl-pilot pentru dispozitivul selectat."
-  IDS_HINT_ADD          " Adăugare dispozitiv non-PNP în calculator." 
+  IDS_HINT_ADD          " Adăugare dispozitiv non-PNP în calculator."
   IDS_HINT_ABOUT        " Despre Gestionarul de dispozitive."
   IDS_HINT_EXIT         " Ieșire din program."
 

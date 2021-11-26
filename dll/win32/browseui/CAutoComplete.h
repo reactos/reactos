@@ -219,7 +219,8 @@ protected:
     WNDPROC m_fnOldEditProc; // old textbox procedure
     EDITWORDBREAKPROCW m_fnOldWordBreakProc;
     HANDLE m_hThread;
-    AC_THREAD *m_pThread;
+    PAC_THREAD m_pThread;
+
     // The following variables are non-POD:
     CStringW m_strText; // internal text (used in selecting item and reverting text)
     CStringW m_strStemText; // dirname + '\\'
@@ -231,6 +232,7 @@ protected:
     CComPtr<IACList> m_pACList; // for IACList::Expand to update the list
     CSimpleArray<CStringW> m_innerList; // inner list
     CSimpleArray<CStringW> m_outerList; // outer list
+
     // protected methods
     VOID UpdateDropDownState();
     VOID CalcRects(BOOL bDowner, RECT& rcListView, RECT& rcScrollBar, RECT& rcSizeBox) const;
@@ -241,6 +243,7 @@ protected:
     VOID ExtractInnerList(CSimpleArray<CStringW>& outerList,
                           const CSimpleArray<CStringW>& innerList,
                           const CString& strText);
+
     // message map
     BEGIN_MSG_MAP(CAutoComplete)
         MESSAGE_HANDLER(AUTOCOMP_START, OnAutoCompStart)
@@ -261,6 +264,7 @@ protected:
         MESSAGE_HANDLER(WM_TIMER, OnTimer)
         MESSAGE_HANDLER(WM_VSCROLL, OnVScroll)
     END_MSG_MAP()
+
     // message handlers
     LRESULT OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT OnNCDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);

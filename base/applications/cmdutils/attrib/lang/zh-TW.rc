@@ -1,23 +1,29 @@
-/* Traditional Chinese translation by Henry Tang Ih 2016 (henrytang2@hotmail.com) */
-/* Improved by Luo Yufan 2019 <njlyf2011@hotmail.com> */
+/*
+ * PROJECT:     ReactOS Attribute Command
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Chinese (Traditional) resource file
+ * TRANSLATORS: Copyright 2016 Henry Tang Ih <henrytang2@hotmail.com>
+ *              Copyright 2019 Luo Yufan <njlyf2011@hotmail.com>
+ *              Copyright 2021 Chan Chilung <eason066@gmail.com>
+ */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
 
 STRINGTABLE
 BEGIN
-    STRING_FILE_NOT_FOUND "File not found - '%s'\n"
+    STRING_FILE_NOT_FOUND "找不到檔案 - '%s'\n"
     STRING_ATTRIB_HELP "顯示或更改檔案屬性。\n\n\
 ATTRIB [+R | -R] [+A | -A] [+S | -S] [+H | -H] 檔案 ...\n\
        [/S [/D]]\n\n\
   +   設定一個屬性\n\
   -   清除一個屬性\n\
-  R   只讀屬性\n\
+  R   唯讀屬性\n\
   A   歸檔屬性\n\
   S   系統屬性\n\
   H   隱藏屬性\n\
-  /S  處理當前目錄和所有子目錄下的所有匹配檔案\n\
+  /S  處理目前的目錄和所有子目錄下的所有相符檔案\n\
   /D  同時處理目錄\n\n\
 執行不帶參數的 ATTRIB 將會顯示所有檔案的屬性。\n"
-    STRING_CONSOLE_ERROR "未知錯誤：%d\n"
+    STRING_CONSOLE_ERROR "未知的錯誤：%d\n"
     STRING_ERROR_INVALID_PARAM_FORMAT "無效的參數格式 - %s\n"
-END 
+END

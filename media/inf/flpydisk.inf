@@ -106,9 +106,9 @@ Floppy.DeviceDesc = "Универсальный дисковод гибких д
 [Strings.041f]
 ReactOS = "ReactOS Takımı"
 
-FloppyClassName = "Yumuşak Disk Sürücüleri"
-GenericMfg = "(Umûmî Yumuşak Disk Sürücüleri)"
-Floppy.DeviceDesc = "Umûmî Yumuşak Disk Sürücüsü"
+FloppyClassName = "Disket Sürücüleri"
+GenericMfg = "(Genel Disket Sürücüleri)"
+Floppy.DeviceDesc = "Genel Disket Sürücüsü"
 
 [Strings.0804]
 GenericMfg = "(通用软盘驱动器)"

@@ -111,7 +111,7 @@ BEGIN
         END
         MENUITEM "&Ava kaust", IDM_OPEN_FOLDER
         MENUITEM "&Näita teksti", IDM_SHOW_TEXT
-    END    
+    END
 END
 
 /* Dialogs */

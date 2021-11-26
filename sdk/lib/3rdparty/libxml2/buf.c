@@ -83,7 +83,7 @@ struct _xmlBuf {
 
 /**
  * xmlBufMemoryError:
- * @extra:  extra informations
+ * @extra:  extra information
  *
  * Handle an out of memory condition
  * To be improved...
@@ -98,7 +98,7 @@ xmlBufMemoryError(xmlBufPtr buf, const char *extra)
 
 /**
  * xmlBufOverflowError:
- * @extra:  extra informations
+ * @extra:  extra information
  *
  * Handle a buffer overflow error
  * To be improved...
@@ -1233,10 +1233,12 @@ xmlBufBackToBuffer(xmlBufPtr buf) {
          * Keep the buffer but provide a truncated size value.
          */
         xmlBufOverflowError(buf, "Allocated size too big for xmlBuffer");
+        ret->use = (int) buf->use;
         ret->size = INT_MAX;
+    } else {
+        ret->use = (int) buf->use;
+        ret->size = (int) buf->size;
     }
-    ret->use = (int) buf->use;
-    ret->size = (int) buf->size;
     ret->alloc = buf->alloc;
     ret->content = buf->content;
     ret->contentIO = buf->contentIO;
@@ -1332,8 +1334,12 @@ xmlBufGetInputBase(xmlBufPtr buf, xmlParserInputPtr input) {
 int
 xmlBufSetInputBaseCur(xmlBufPtr buf, xmlParserInputPtr input,
                       size_t base, size_t cur) {
-    if ((input == NULL) || (buf == NULL) || (buf->error))
+    if (input == NULL)
         return(-1);
+    if ((buf == NULL) || (buf->error)) {
+        input->base = input->cur = input->end = BAD_CAST "";
+        return(-1);
+    }
     CHECK_COMPAT(buf)
     input->base = &buf->content[base];
     input->cur = input->base + cur;

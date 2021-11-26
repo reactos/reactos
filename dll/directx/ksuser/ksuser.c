@@ -94,7 +94,7 @@ KsiCreateObjectType( HANDLE hHandle,
 * @param PHANDLE AllocatorHandle
 * Our new handle that we have alloc
 *
-* @return 
+* @return
 * Return NTSTATUS error code or sussess code.
 *
 * @remarks.
@@ -124,7 +124,7 @@ KsCreateAllocator(HANDLE ConnectionHandle,
 * The function KsCreateClock  creates handle to clock instance
 *
 * @param HANDLE ConnectionHandle
-* Handle to use to create the clock 
+* Handle to use to create the clock
 *
 * @param PKSCLOCK_CREATE ClockCreate
 * parameter to use to create the clock
@@ -132,7 +132,7 @@ KsCreateAllocator(HANDLE ConnectionHandle,
 * @param PHANDLE  ClockHandle
 * The new handle
 *
-* @return 
+* @return
 * Return NTSTATUS error code or sussess code.
 *
 * @remarks.
@@ -164,9 +164,9 @@ KsCreateClock(HANDLE ConnectionHandle,
 * handle of the filter initiating the create request
 *
 * @param PKSPIN_CONNECT Connect
-* Pointer to a KSPIN_CONNECT structure that contains parameters for the requested connection. 
+* Pointer to a KSPIN_CONNECT structure that contains parameters for the requested connection.
 * This should be followed in memory by a KSDATAFORMAT data structure, describing the data format
-* requested for the connection. 
+* requested for the connection.
 
 * @param ACCESS_MASK  DesiredAccess
 * Desired access
@@ -174,13 +174,13 @@ KsCreateClock(HANDLE ConnectionHandle,
 * @param PHANDLE ConnectionHandle
 * connection handle passed
 *
-* @return 
+* @return
 * Return NTSTATUS error code or sussess code.
 *
 * @remarks.
-* The flag in PKSDATAFORMAT is not really document, 
+* The flag in PKSDATAFORMAT is not really document,
 * to find it u need api monitor allot api and figout
-* how it works, only flag I have found is the 
+* how it works, only flag I have found is the
 * KSDATAFORMAT_ATTRIBUTES flag, it doing a Align
 * of LONLONG size, it also round up it.
 *
@@ -212,11 +212,11 @@ KsCreatePin(HANDLE FilterHandle,
 * @name KsCreateTopologyNode
 * @implemented
 *
-* The function KsCreateTopologyNode  creates a handle to a topology node instance 
+* The function KsCreateTopologyNode  creates a handle to a topology node instance
 *
 * @param HANDLE ParentHandle
 * Handle to parent when want to use when we created the node on
-* 
+*
 *
 * @param PKSNODE_CREATE  NodeCreate
 * topology node parameters to use when it is create
@@ -227,7 +227,7 @@ KsCreatePin(HANDLE FilterHandle,
 * @param PHANDLE  NodeHandle
 * Location for the topology node handle
 *
-* @return 
+* @return
 * Return NTSTATUS error code or sussess code.
 *
 * @remarks.
@@ -251,8 +251,8 @@ KsCreateTopologyNode(HANDLE ParentHandle,
 }
 
 
-BOOL 
-APIENTRY 
+BOOL
+APIENTRY
 DllMain(HANDLE hModule, DWORD ulreason, LPVOID lpReserved)
 {
     switch (ulreason)

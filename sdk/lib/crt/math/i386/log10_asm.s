@@ -2,10 +2,10 @@
  /*
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
- * PURPOSE:           
+ * PURPOSE:
  * FILE:              lib/sdk/crt/math/i386/log10_asm.s
  * PROGRAMER:         Magnus Olsen (magnus@greatlord.com)
- *                    
+ *
  */
 
 #include <asm.inc>

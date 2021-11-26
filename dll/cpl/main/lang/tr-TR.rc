@@ -20,7 +20,7 @@ BEGIN
     CONTROL "", IDC_SLIDER_REPEAT_RATE, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 65, 85, 130, 17
     LTEXT "Yi&nelenme hızını sınamak için şuraya tıklayınız ve bir tuşu basılı tutunuz:", -1, 15, 105, 216, 10
     EDITTEXT IDC_EDIT_REPEAT_RATE, 15, 116, 216, 14, WS_CHILD | WS_VISIBLE | WS_GROUP
-    GROUPBOX "İ&mleç Yanıp Sönme Hızı", -1, 5, 145, 236, 50
+    GROUPBOX "İ&şaretçi Yanıp Sönme Hızı", -1, 5, 145, 236, 50
     LTEXT "", IDC_TEXT_CURSOR_BLINK, 20, 165, 1, 8
     LTEXT "Yok", -1, 40, 165, 25, 10
     LTEXT "Hızlı", -1, 200, 165, 30, 10
@@ -44,7 +44,7 @@ BEGIN
     CONTROL "", IDC_SLIDER_CLICK_LOCK, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 78, 35, 70, 17
     PUSHBUTTON "Tamam", IDOK, 110, 59, 60, 14
     PUSHBUTTON "İptal", IDCANCEL, 174, 59, 60, 14
-    LTEXT "&Tıklamanız kilitlenmeden önce bir fare ya da iztopu düğmesinin ne kadar basılı tutmanız gerektiğini ayarlayınız:", -1, 37, 5, 200, 27
+    LTEXT "&Tıklamanız kilitlenmeden önce bir fare ya da iztopu düğmesine ne kadar basılı tutmanız gerektiğini ayarlayınız:", -1, 37, 5, 200, 27
     ICON IDI_LOOK_KEY, IDC_ICON_CLICK_LOCK, 5, 5, 15, 15
 END
 
@@ -54,11 +54,11 @@ CAPTION "Düğme"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Düğme Yapılandırması", -1, 5, 5, 236, 70
-    CHECKBOX "&Birinci ve ikinci düğmeleri değiştir", IDC_SWAP_MOUSE_BUTTONS, 10, 18, 156, 10
+    CHECKBOX "&Birinci ve ikinci tuşları değiştir", IDC_SWAP_MOUSE_BUTTONS, 10, 18, 156, 10
     CONTROL "", IDC_IMAGE_SWAP_MOUSE, "Static", SS_ICON | SS_CENTERIMAGE | WS_VISIBLE, 171, 14, 65, 57, WS_EX_STATICEDGE
-    LTEXT "Seçme ve sürükleme gibi birinci işlevler için kullanılan bir sağ fâre düğmesi yapmak için bu kutucuğu seçiniz.", -1, 10, 36, 156, 30
+    LTEXT "Seçme ve sürükleme gibi birinci işlevler için kullanılan bir sağ fare tuşu yapmak için bu kutucuğu seçiniz.", -1, 10, 36, 156, 30
     GROUPBOX "Çift Tıklama Hızı", -1, 5, 78, 236, 70
-    LTEXT "Ayarlarınızı sınamak için klasöre çift tıklayınız. Eğer klasör açılmıyor ya da kapanmıyorsa daha yavaş bir ayar deneyiniz.", -1, 10, 90, 156, 28
+    LTEXT "Ayarlarınızı sınamak için dizine çift tıklayınız. Eğer dizin açılmıyor ya da kapanmıyorsa daha yavaş bir ayar deneyiniz.", -1, 10, 90, 156, 28
     LTEXT "&Hız:   Yavaş", -1, 10, 123, 50, 10
     LTEXT "Hızlı", -1, 136, 123, 24, 10
     CONTROL "", IDC_SLIDER_DOUBLE_CLICK_SPEED, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 60, 123, 70, 17
@@ -66,22 +66,22 @@ BEGIN
     GROUPBOX "Tıklama Kilidi", -1, 5, 150, 236, 70
     CHECKBOX "&Tıklama Kilidi'ni aç", IDC_CHECK_CLICK_LOCK, 10, 160, 70, 20
     PUSHBUTTON "&Ayarlar...", IDC_BUTTON_CLICK_LOCK, 172, 161, 60, 14
-    LTEXT "Size, fare düğmesine basılı tutmadan sürüklemeye ve vurgulamaya olanak verir. Kilitlemek için fare düğmesine kısaca basınız. Bırakmak için yine fare düğmesine basınız.", -1, 10, 180, 224, 30
+    LTEXT "Size, fare düğmesine basılı tutmadan sürüklemeye ve vurgulamaya olanak verir. Kilitlemek için fare tuşuna kısaca basınız. Bırakmak için yine fare tuşuna basınız.", -1, 10, 180, 224, 30
 END
 
 IDD_PAGE_POINTER DIALOGEX 0, 0, 246, 228
 STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
-CAPTION "İmleç"
+CAPTION "İşaretçi"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Düzen", -1, 5, 5, 181, 45
     COMBOBOX IDC_COMBO_CURSOR_SCHEME, 12, 15, 167, 200, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON "&Ayrı Kaydet...", IDC_BUTTON_SAVEAS_SCHEME, 65, 31, 60, 14
+    PUSHBUTTON "&Farklı Kaydet...", IDC_BUTTON_SAVEAS_SCHEME, 65, 31, 60, 14
     PUSHBUTTON "&Sil", IDC_BUTTON_DELETE_SCHEME, 128, 31, 50, 14
     CONTROL "", IDC_IMAGE_CURRENT_CURSOR, "Static", SS_ICON | SS_CENTERIMAGE | WS_VISIBLE, 196, 9, 45, 41, WS_EX_STATICEDGE
     LTEXT "Ö&zelleştir", -1, 5, 57, 60, 10
     LISTBOX IDC_LISTBOX_CURSOR, 5, 68, 236, 124, WS_VISIBLE | WS_BORDER | WS_TABSTOP | WS_VSCROLL | LBS_OWNERDRAWFIXED | LBS_NOTIFY
-    CHECKBOX "İ&mleç gölgesini etkinleştir", IDC_CHECK_CURSOR_SHADOW, 5, 198, 105, 10
+    CHECKBOX "İ&şaretçi gölgesini etkinleştir", IDC_CHECK_CURSOR_SHADOW, 5, 198, 105, 10
     PUSHBUTTON "Ö&n Tanımlıyı Kullan", IDC_BUTTON_USE_DEFAULT_CURSOR, 117, 196, 65, 14
     PUSHBUTTON "&Göz At...", IDC_BUTTON_BROWSE_CURSOR, 186, 196, 55, 14
 END
@@ -91,7 +91,7 @@ STYLE DS_SHELLFONT | WS_CAPTION | WS_SYSMENU
 CAPTION "Düzeni Kaydet"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Bu imleç düzenini ayrı kaydet:", -1, 5, 5, 181, 10
+    LTEXT "Bu işaretçi düzenini farklı kaydet:", -1, 5, 5, 181, 10
     EDITTEXT IDC_EDIT_SCHEME_NAME, 5, 15, 180, 15, WS_CHILD | WS_VISIBLE | WS_GROUP
     PUSHBUTTON "Tamam", IDOK, 63, 35, 60, 14
     PUSHBUTTON "İptal", IDCANCEL, 126, 35, 60, 14
@@ -99,16 +99,16 @@ END
 
 IDD_PAGE_OPTION DIALOGEX 0, 0, 246, 228
 STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
-CAPTION "İmleç Seçenekleri"
+CAPTION "İşaretçi Seçenekleri"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Hareket", -1, 5, 5, 236, 60
-    LTEXT "&Bir İmleç Hızı Seçiniz:", -1, 52, 15, 110, 10
+    LTEXT "&Bir İşaretçi Hızı Seçiniz:", -1, 52, 15, 110, 10
     LTEXT "Yavaş", -1, 60, 30, 20, 10
     CONTROL "", IDC_SLIDER_MOUSE_SPEED, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 90, 30, 70, 17
     LTEXT "Hızlı", -1, 170, 30, 20, 10
     ICON IDI_MOUSE_SPEED, IDC_ICON_MOUSE_SPEED, 18, 20, 32, 32
-    CHECKBOX "İ&mleç duyarlılığını arttır", IDC_CHECK_POINTER_PRECISION, 52, 50, 140, 10
+    CHECKBOX "İ&şaretçi duyarlılığını arttır", IDC_CHECK_POINTER_PRECISION, 52, 50, 140, 10
     GROUPBOX "Düğmeye Git", -1, 5, 70, 236, 40
     CHECKBOX "İm&leci, iletişim penceresinde ön tanımlı düğmeye kendiliğinden götür",
              IDC_CHECK_SNAP_TO, 52, 84, 183, 20, BS_MULTILINE | BS_TOP
@@ -163,11 +163,11 @@ BEGIN
     IDS_HAND "Bağlantı Seçimi"
     IDS_NONE "(Yok)"
     IDS_SYSTEM_SCHEME "(Sistem Düzeni)"
-    IDS_BROWSE_FILTER "İmleçler (*.ani, *.cur)\0*.ani;*.cur\0Hareketli İmleçler (*.ani)\0*.ani\0Durgun İmleçler (*.cur)\0*.cur\0Tüm Dosyalar\0*.*\0\0"
+    IDS_BROWSE_FILTER "İşaretçiler (*.ani, *.cur)\0*.ani;*.cur\0Hareketli İşaretçiler (*.ani)\0*.ani\0Durgun İşaretçiler (*.cur)\0*.cur\0Tüm Dosyalar\0*.*\0\0"
     IDS_BROWSE_TITLE "Göz At"
-    IDS_REMOVE_TITLE "İmleç Düzeni Silmeyi Doğrula"
-    IDS_REMOVE_TEXT """%s"" imleç düzenini silmek istediğinizden emin misiniz?"
-    IDS_OVERWRITE_TITLE "İmleç Düzeninin Üzerine Yazmayı Doğrula"
-    IDS_OVERWRITE_TEXT "Seçtiğiniz imleç düzeni adı önceden kullanımda. Var olan imleç düzeninin üzerine yazmayı istiyor musunuz?"
-    IDS_ANIMATE_CURSOR "Hareketli İmleç"
+    IDS_REMOVE_TITLE "İşaretçi Düzeni Silmeyi Doğrula"
+    IDS_REMOVE_TEXT """%s"" işaretçi düzenini silmek istediğinizden emin misiniz?"
+    IDS_OVERWRITE_TITLE "İşaretçi Düzeninin Üzerine Yazmayı Doğrula"
+    IDS_OVERWRITE_TEXT "Seçtiğiniz işaretçi düzeni adı önceden kullanımda. Var olan işaretçi düzeninin üzerine yazmayı istiyor musunuz?"
+    IDS_ANIMATE_CURSOR "Hareketli İşaretçi"
 END

@@ -15,7 +15,7 @@ DisplayBlackAndWhite(HWND hwnd,
     RECT rc;
 
     GetObject(hBitmap,
-              sizeof(BITMAP),
+              sizeof(bitmap),
               &bitmap);
 
     /* Bitmap header */
@@ -112,7 +112,7 @@ DisplayInvertedColors(HWND hwnd,
     RECT rc;
 
     GetObject(hBitmap,
-              sizeof(BITMAP),
+              sizeof(bitmap),
               &bitmap);
 
     /* Bitmap header */
@@ -206,7 +206,7 @@ DisplayBlur(HWND hwnd,
     RECT rc;
 
     GetObject(hBitmap,
-              sizeof(BITMAP),
+              sizeof(bitmap),
               &bitmap);
 
     /* Bitmap header */
@@ -367,7 +367,7 @@ DisplaySharpness(HWND hwnd,
     RECT rc;
 
     GetObject(hBitmap,
-              sizeof(BITMAP),
+              sizeof(bitmap),
               &bitmap);
 
     /* Bitmap header */

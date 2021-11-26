@@ -37,7 +37,7 @@ BOOL GetPhysicalFileSize(LPCWSTR PathBuffer, PULARGE_INTEGER Size)
     HANDLE FileHandle;
     FILE_STANDARD_INFORMATION FileInfo;
     NTSTATUS Status;
-    
+
     if (!RtlDosPathNameToNtPathName_U(PathBuffer, &FileName, NULL, NULL))
     {
         ERR("RtlDosPathNameToNtPathName_U failed\n");
@@ -74,7 +74,7 @@ BOOL GetPhysicalFileSize(LPCWSTR PathBuffer, PULARGE_INTEGER Size)
         ERR("NtQueryInformationFile failed for %S (Status: %08lX)\n", PathBuffer, Status);
         return FALSE;
     }
-    
+
     Size->QuadPart = FileInfo.AllocationSize.QuadPart;
     return TRUE;
 }
@@ -608,7 +608,7 @@ CFileDefExt::InitFileAttr(HWND hwndDlg)
             if (SH_FormatFileSizeWithBytes(&FileSize, wszBuf, _countof(wszBuf)))
             {
                 SetDlgItemTextW(hwndDlg, 14011, wszBuf);
-                
+
                 // Compute file on disk. If fails, use logical size
                 if (GetPhysicalFileSize(m_wszPath, &FileSize))
                     SH_FormatFileSizeWithBytes(&FileSize, wszBuf, _countof(wszBuf));

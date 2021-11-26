@@ -3,6 +3,7 @@ add_definitions(-DWINE_NO_UNICODE_MACROS)
 
 list(APPEND SOURCE
     browseui.c
+    certmgr.c
     com_apitest.c
     ieframe.c
     netcfgx.c

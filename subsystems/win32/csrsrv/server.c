@@ -27,19 +27,29 @@ HANDLE CsrSrvSharedSection = NULL;
 PCSR_API_ROUTINE CsrServerApiDispatchTable[CsrpMaxApiNumber] =
 {
     CsrSrvClientConnect,
-    CsrSrvUnusedFunction,
-    CsrSrvUnusedFunction,
-    CsrSrvIdentifyAlertableThread,
+    CsrSrvUnusedFunction, // <= WinNT4: CsrSrvThreadConnect
+    CsrSrvUnusedFunction, // <= WinNT4: CsrSrvProfileControl
+#if (NTDDI_VERSION < NTDDI_WS03)
+    CsrSrvIdentifyAlertableThread
     CsrSrvSetPriorityClass
+#else
+    CsrSrvUnusedFunction, // <= WinXP : CsrSrvIdentifyAlertableThread
+    CsrSrvUnusedFunction  // <= WinXP : CsrSrvSetPriorityClass
+#endif
 };
 
 BOOLEAN CsrServerApiServerValidTable[CsrpMaxApiNumber] =
 {
     TRUE,
     FALSE,
-    TRUE,
+    FALSE,
+#if (NTDDI_VERSION < NTDDI_WS03)
     TRUE,
     TRUE
+#else
+    FALSE,
+    FALSE
+#endif
 };
 
 /*
@@ -501,9 +511,11 @@ CsrSrvAttachSharedSection(IN PCSR_PROCESS CsrProcess OPTIONAL,
     return STATUS_SUCCESS;
 }
 
+#if (NTDDI_VERSION < NTDDI_WS03)
+
 /*++
  * @name CsrSrvIdentifyAlertableThread
- * @implemented NT4
+ * @implemented NT4, up to WinXP
  *
  * The CsrSrvIdentifyAlertableThread CSR API marks a CSR Thread as alertable.
  *
@@ -515,12 +527,15 @@ CsrSrvAttachSharedSection(IN PCSR_PROCESS CsrProcess OPTIONAL,
  *
  * @return STATUS_SUCCESS.
  *
- * @remarks None.
+ * @remarks Deprecated.
  *
  *--*/
 CSR_API(CsrSrvIdentifyAlertableThread)
 {
     PCSR_THREAD CsrThread = CsrGetClientThread();
+
+    UNREFERENCED_PARAMETER(ApiMessage);
+    UNREFERENCED_PARAMETER(ReplyCode);
 
     /* Set the alertable flag */
     CsrThread->Flags |= CsrThreadAlertable;
@@ -531,7 +546,7 @@ CSR_API(CsrSrvIdentifyAlertableThread)
 
 /*++
  * @name CsrSrvSetPriorityClass
- * @implemented NT4
+ * @implemented NT4, up to WinXP
  *
  * The CsrSrvSetPriorityClass CSR API is deprecated.
  *
@@ -543,22 +558,25 @@ CSR_API(CsrSrvIdentifyAlertableThread)
  *
  * @return STATUS_SUCCESS.
  *
- * @remarks None.
+ * @remarks Deprecated.
  *
  *--*/
 CSR_API(CsrSrvSetPriorityClass)
 {
+    UNREFERENCED_PARAMETER(ApiMessage);
+    UNREFERENCED_PARAMETER(ReplyCode);
+
     /* Deprecated */
     return STATUS_SUCCESS;
 }
+
+#endif // (NTDDI_VERSION < NTDDI_WS03)
 
 /*++
  * @name CsrSrvUnusedFunction
  * @implemented NT4
  *
  * The CsrSrvUnusedFunction CSR API is a stub for deprecated APIs.
- *
- * The CsrSrvSetPriorityClass CSR API is deprecated.
  *
  * @param ApiMessage
  *        Pointer to the CSR API Message for this request.
@@ -574,6 +592,9 @@ CSR_API(CsrSrvSetPriorityClass)
  *--*/
 CSR_API(CsrSrvUnusedFunction)
 {
+    UNREFERENCED_PARAMETER(ApiMessage);
+    UNREFERENCED_PARAMETER(ReplyCode);
+
     /* Deprecated */
     return STATUS_INVALID_PARAMETER;
 }

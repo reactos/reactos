@@ -76,6 +76,9 @@ BEGIN
     IDS_CANTCREATEZIP "Failed to create a compressed folder '%s' (Error Code: %d)."
     IDS_CANTREADFILE "Cannot read file '%s'."
     IDS_EXTRACTING "Estrazione..."
+    IDS_CANTEXTRACTFILE "Cannot extract file '%1'."
+    IDS_DECOMPRESSERROR "Unsupported compression method %d. Do you want to continue?"
+    IDS_UNKNOWNERROR "Unknown error 0x%08x."
 
     IDS_WIZ_TITLE "Estrazione Guidata"
     IDS_WIZ_DEST_TITLE "Seleziona una Destinazione"

@@ -543,7 +543,7 @@ HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Print\Printers\Dummy Printer 
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Print\Printers\Dummy Printer On LPT1","Printer Driver",,"Dummy Printer Driver"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Print\Printers\Dummy Printer On LPT1","Status",0x00010001,0
 
-; Image File Execution Options (NtGlobalFlag with FLG_SHOW_LDR_SNAPS set for loadlib.exe) 
+; Image File Execution Options (NtGlobalFlag with FLG_SHOW_LDR_SNAPS set for loadlib.exe)
 HKLM,"Software\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\loadlib.exe","GlobalFlag",0x00000000,"0x02000000"
 ;HKLM,"Software\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\loaddll.exe","GlobalFlag",0x00010001,0x00000002
 ;HKLM,"Software\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\soffice.exe","GlobalFlag",0x00010001,0x00000002
@@ -1130,6 +1130,15 @@ HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\Arabic Standard Ti
 0x00,0x00,0x0a,0x00,0x00,0x00,0x01,0x00,0x04,0x00,0x00,0x00,0x00,0x00,0x00,0x00,\
 0x00,0x00,0x04,0x00,0x00,0x00,0x01,0x00,0x03,0x00,0x00,0x00,0x00,0x00,0x00,0x00
 
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\Turkey Standard Time","Display",0x00000000,%GMT_PLUS_03_F_DESC%
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\Turkey Standard Time","Dlt",0x00000000,%GMT_PLUS_03_F_DAYLIGHT%
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\Turkey Standard Time","Std",0x00000000,%GMT_PLUS_03_F_STANDARD%
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\Turkey Standard Time","Index",0x00010001,157
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\Turkey Standard Time","TZI",0x00000001,\
+0x4c,0xff,0xff,0xff,0x00,0x00,0x00,0x00,0xc4,0xff,0xff,0xff,\
+0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,\
+0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00
+
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\Iran Standard Time","Display",0x00000000,%GMT_PLUS_0330_A_DESC%
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\Iran Standard Time","Dlt",0x00000000,%GMT_PLUS_0330_A_DAYLIGHT%
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\Iran Standard Time","Std",0x00000000,%GMT_PLUS_0330_A_STANDARD%
@@ -1509,18 +1518,18 @@ HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon","DefaultUserName",0
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon","DefaultPassword",0x00000000,""
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\Notify",,0x00000012
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\Notify\ScCertProp",,0x00000012
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\Notify\ScCertProp","DlLName",0x00020000,"wlnotify.dll"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\Notify\ScCertProp","DllName",0x00020000,"wlnotify.dll"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\Notify\ScCertProp","Lock",0x00000000,"SCardSuspendCertProp"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\Notify\ScCertProp","Logoff",0x00000000,"SCardStopCertProp"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\Notify\ScCertProp","Logon",0x00000000,"SCardStartCertProp"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\Notify\ScCertProp","Unlock",0x00000000,"SCardResumeCertProp"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\Notify\Schedule",,0x00000012
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\Notify\Schedule","DlLName",0x00020000,"wlnotify.dll"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\Notify\Schedule","DllName",0x00020000,"wlnotify.dll"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\Notify\Schedule","Logoff",0x00000000,"SchedEventLogoff"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\Notify\Schedule","StartShell",0x00000000,"SchedStartShell"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\Notify\SensLogn",,0x00000012
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\Notify\SensLogn","Disconnect",0x00000000,"SensDisconnectEvent"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\Notify\SensLogn","DlLName",0x00020000,"wlnotify.dll"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\Notify\SensLogn","DllName",0x00020000,"wlnotify.dll"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\Notify\SensLogn","Lock",0x00000000,"SensLockEvent"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\Notify\SensLogn","Logoff",0x00000000,"SensLogoffEvent"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\Notify\SensLogn","Logon",0x00000000,"SensLogonEvent"
@@ -1534,7 +1543,7 @@ HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\Notify\SensLogn","St
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\Notify\SensLogn","Unlock",0x00000000,"SensUnlockEvent"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\Notify\termsrv",,0x00000012
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\Notify\termsrv","Disconnect",0x00000000,"TSEventDisconnect"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\Notify\termsrv","DlLName",0x00020000,"wlnotify.dll"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\Notify\termsrv","DllName",0x00020000,"wlnotify.dll"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\Notify\termsrv","Logoff",0x00000000,"TSEventLogoff"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\Notify\termsrv","Logon",0x00000000,"TSEventLogon"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\Notify\termsrv","PostShell",0x00000000,"TSEventPostShell"
@@ -1543,7 +1552,7 @@ HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\Notify\termsrv","Shu
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\Notify\termsrv","StartShell",0x00000000,"TSEventStartShell"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\Notify\termsrv","Startup",0x00000000,"TSEventStartup"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\Notify\wlballoon",,0x00000012
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\Notify\wlballoon","DlLName",0x00020000,"wlnotify.dll"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\Notify\wlballoon","DllName",0x00020000,"wlnotify.dll"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\Notify\wlballoon","Logoff",0x00000000,"UnregisterTicketExpiredNotificationEvent"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\Notify\wlballoon","Logon",0x00000000,"RegisterTicketExpiredNotificationEvent"
 
@@ -2203,7 +2212,7 @@ GMT_PLUS_01_D_DESC    ="(GMT+01:00) Amsterdam, Berlin, Bern, Rome, Stockholm, Vi
 GMT_PLUS_01_D_DAYLIGHT="W. Europe Daylight Time"
 GMT_PLUS_01_D_STANDARD="W. Europe Standard Time"
 
-GMT_PLUS_02_A_DESC    ="(GMT+02:00) Minsk"
+GMT_PLUS_02_A_DESC    ="(GMT+02:00) Chisinau"
 GMT_PLUS_02_A_DAYLIGHT="E. Europe Daylight Time"
 GMT_PLUS_02_A_STANDARD="E. Europe Standard Time"
 
@@ -2215,7 +2224,7 @@ GMT_PLUS_02_C_DESC    ="(GMT+02:00) Helsinki, Kyiv, Riga, Sofia, Tallinn, Vilniu
 GMT_PLUS_02_C_DAYLIGHT="FLE Daylight Time"
 GMT_PLUS_02_C_STANDARD="FLE Standard Time"
 
-GMT_PLUS_02_D_DESC    ="(GMT+02:00) Athens, Bucharest, Istanbul"
+GMT_PLUS_02_D_DESC    ="(GMT+02:00) Athens, Bucharest"
 GMT_PLUS_02_D_DAYLIGHT="GTB Daylight Time"
 GMT_PLUS_02_D_STANDARD="GTB Standard Time"
 
@@ -2250,6 +2259,10 @@ GMT_PLUS_03_D_STANDARD="E. Africa Standard Time"
 GMT_PLUS_03_E_DESC    ="(GMT+03:00) Baghdad"
 GMT_PLUS_03_E_DAYLIGHT="Arabic Daylight Time"
 GMT_PLUS_03_E_STANDARD="Arabic Standard Time"
+
+GMT_PLUS_03_F_DESC    ="(GMT+03:00) Istanbul"
+GMT_PLUS_03_F_DAYLIGHT="Turkey Daylight Time"
+GMT_PLUS_03_F_STANDARD="Turkey Standard Time"
 
 GMT_PLUS_0330_A_DESC    ="(GMT+03:30) Tehran"
 GMT_PLUS_0330_A_DAYLIGHT="Iran Daylight Time"
@@ -3195,7 +3208,7 @@ GMT_PLUS_01_D_DESC    ="(GMT+01:00) Amsterdam, Berlin, Berno, Rzym, Sztokholm, W
 GMT_PLUS_01_D_DAYLIGHT="Europa Zachodnia (czas letni)"
 GMT_PLUS_01_D_STANDARD="Europa Zachodnia (czas standardowy)"
 
-GMT_PLUS_02_A_DESC    ="(GMT+02:00) Mińsk"
+GMT_PLUS_02_A_DESC    ="(GMT+02:00) Kiszyniów"
 GMT_PLUS_02_A_DAYLIGHT="Europa Wschodnia (czas letni)"
 GMT_PLUS_02_A_STANDARD="Europa Wschodnia (czas standardowy)"
 
@@ -3207,7 +3220,7 @@ GMT_PLUS_02_C_DESC    ="(GMT+02:00) Helsinki, Kijów, Ryga, Sofia, Talin, Wilno"
 GMT_PLUS_02_C_DAYLIGHT="FLE (czas letni)"
 GMT_PLUS_02_C_STANDARD="FLE (czas standardowy)"
 
-GMT_PLUS_02_D_DESC    ="(GMT+02:00) Ateny, Bukareszt, Stambuł"
+GMT_PLUS_02_D_DESC    ="(GMT+02:00) Ateny, Bukareszt"
 GMT_PLUS_02_D_DAYLIGHT="GTB (czas letni)"
 GMT_PLUS_02_D_STANDARD="GTB (czas standardowy)"
 
@@ -3242,6 +3255,10 @@ GMT_PLUS_03_D_STANDARD="Afryka Wschodnia (czas standardowy)"
 GMT_PLUS_03_E_DESC    ="(GMT+03:00) Bagdad"
 GMT_PLUS_03_E_DAYLIGHT="Arabski czas letni"
 GMT_PLUS_03_E_STANDARD="Arabski czas standardowy"
+
+GMT_PLUS_03_F_DESC    ="(GMT+03:00) Stambuł"
+GMT_PLUS_03_F_DAYLIGHT="Turcja (czas letni)"
+GMT_PLUS_03_F_STANDARD="Turcja (czas standardowy)"
 
 GMT_PLUS_0330_A_DESC    ="(GMT+03:30) Teheran"
 GMT_PLUS_0330_A_DAYLIGHT="Iran (czas letni)"
@@ -3779,7 +3796,7 @@ GMT_PLUS_01_D_DESC    ="(UTC+01:00) Amsterdam, Berlin, Berna, Roma, Stockholm, V
 GMT_PLUS_01_D_DAYLIGHT="Ora Europei de Vest diurnă"
 GMT_PLUS_01_D_STANDARD="Ora Europei de Vest standard"
 
-GMT_PLUS_02_A_DESC    ="(UTC+02:00) Minsk"
+GMT_PLUS_02_A_DESC    ="(UTC+02:00) Chisinau"
 GMT_PLUS_02_A_DAYLIGHT="Ora Europei de Est diurnă"
 GMT_PLUS_02_A_STANDARD="Ora Europei de Est standard"
 
@@ -3791,7 +3808,7 @@ GMT_PLUS_02_C_DESC    ="(UTC+02:00) Helsinki, Kiev, Riga, Sofia, Tallinn, Vilniu
 GMT_PLUS_02_C_DAYLIGHT="Ora FLE diurnă"
 GMT_PLUS_02_C_STANDARD="Ora FLE standard"
 
-GMT_PLUS_02_D_DESC    ="(UTC+02:00) Atena, București, Istanbul"
+GMT_PLUS_02_D_DESC    ="(UTC+02:00) Atena, București"
 GMT_PLUS_02_D_DAYLIGHT="Ora GTB diurnă"
 GMT_PLUS_02_D_STANDARD="Ora GTB standard"
 
@@ -3826,6 +3843,10 @@ GMT_PLUS_03_D_STANDARD="Ora Africii de Est standard"
 GMT_PLUS_03_E_DESC    ="(UTC+03:00) Bagdad"
 GMT_PLUS_03_E_DAYLIGHT="Oră arabă diurnă"
 GMT_PLUS_03_E_STANDARD="Oră arabă standard"
+
+GMT_PLUS_03_F_DESC    ="(GMT+03:00) Istanbul"
+GMT_PLUS_03_F_DAYLIGHT="Oră de Turcia diurnă"
+GMT_PLUS_03_F_STANDARD="Oră de Turcia standard"
 
 GMT_PLUS_0330_A_DESC    ="(UTC+03:30) Teheran"
 GMT_PLUS_0330_A_DAYLIGHT="Ora Iranului diurnă"
@@ -4270,10 +4291,10 @@ GMT_PLUS_01_A_DESC      ="(GMT+01:00) Белград, Братислава, Бу
 GMT_PLUS_01_B_DESC      ="(GMT+01:00) Варшава, Загреб, Сараево, Скопье"
 GMT_PLUS_01_C_DESC      ="(GMT+01:00) Брюссель, Копенгаген, Мадрид, Париж"
 GMT_PLUS_01_D_DESC      ="(GMT+01:00) Амстердам, Берлин, Брен, Вена, Рим, Стокгольм"
-GMT_PLUS_02_A_DESC      ="(GMT+02:00) Минск"
+GMT_PLUS_02_A_DESC      ="(GMT+02:00) Кишинэу"
 GMT_PLUS_02_B_DESC      ="(GMT+02:00) Каир"
 GMT_PLUS_02_C_DESC      ="(GMT+02:00) Вильнюс, Киев, Рига, София, Таллин, Хельсинки"
-GMT_PLUS_02_D_DESC      ="(GMT+02:00) Афины, Бухарест, Стамбул"
+GMT_PLUS_02_D_DESC      ="(GMT+02:00) Афины, Бухарест"
 GMT_PLUS_02_E_DESC      ="(GMT+02:00) Иерусалим"
 GMT_PLUS_02_F_DESC      ="(GMT+02:00) Хараре, Претория"
 GMT_PLUS_02_G_DESC      ="(GMT+02:00) Калининград"
@@ -4282,6 +4303,7 @@ GMT_PLUS_03_B_DESC      ="(GMT+03:00) Москва, Санкт-Петербур�
 GMT_PLUS_03_C_DESC      ="(GMT+03:00) Кувейт, Эр-Рияд"
 GMT_PLUS_03_D_DESC      ="(GMT+03:00) Найроби"
 GMT_PLUS_03_E_DESC      ="(GMT+03:00) Багдад"
+GMT_PLUS_03_F_DESC      ="(GMT+03:00) Стамбул"
 GMT_PLUS_0330_A_DESC    ="(GMT+03:30) Тегеран"
 GMT_PLUS_04_A_DESC      ="(GMT+04:00) Абу-Даби, Мускат"
 GMT_PLUS_04_B_DESC      ="(GMT+04:00) Ереван"
@@ -4826,10 +4848,10 @@ COUNTRY_ZA="南非"
 COUNTRY_ZM="尚比亞"
 COUNTRY_ZW="辛巴威"
 
-; Turkish
+; LANG_TURKISH SUBLANG_NEUTRAL
 [Strings.041f]
 COUNTRY_AD="Andorra"
-COUNTRY_AE="Birleşik Arap Beylikleri"
+COUNTRY_AE="Birleşik Arap Emirlikleri"
 COUNTRY_AF="Afganistan"
 COUNTRY_AG="Antigua ve Barbuda"
 COUNTRY_AI="Anguilla"
@@ -4838,9 +4860,9 @@ COUNTRY_AM="Ermenistan"
 COUNTRY_AO="Angola"
 COUNTRY_AQ="Antarktika"
 COUNTRY_AR="Arjantin"
-COUNTRY_AS="Amerika Samoası"
-COUNTRY_AT="Austrya"
-COUNTRY_AU="Australya"
+COUNTRY_AS="Amerikan Samoası"
+COUNTRY_AT="Avusturya"
+COUNTRY_AU="Avustralya"
 COUNTRY_AW="Aruba"
 COUNTRY_AX="Åland Adaları"
 COUNTRY_AZ="Azerbaycan"
@@ -4863,15 +4885,15 @@ COUNTRY_BS="Bahamalar"
 COUNTRY_BT="Bhutan"
 COUNTRY_BV="Bouvet Adası"
 COUNTRY_BW="Botsvana"
-COUNTRY_BY="Ak Rusya"
+COUNTRY_BY="Beyaz Rusya"
 COUNTRY_BZ="Belize"
 COUNTRY_CA="Kanada"
 COUNTRY_CC="Cocos (Keyling) Adaları"
-COUNTRY_CD="Kongo El Erklik Cumhûriyeti"
-COUNTRY_CF="Orta Afrika Cumhûriyeti"
+COUNTRY_CD="Kongo Demokratik Cumhuriyeti"
+COUNTRY_CF="Orta Afrika Cumhuriyeti"
 COUNTRY_CG="Kongo"
 COUNTRY_CH="İsviçre"
-COUNTRY_CI="Fildişi Kıyısı"
+COUNTRY_CI="Fildişi Sahili"
 COUNTRY_CK="Cook Adaları"
 COUNTRY_CL="Şili"
 COUNTRY_CM="Kamerun"
@@ -4883,20 +4905,20 @@ COUNTRY_CV="Yeşil Burun Adaları"
 COUNTRY_CW="Curaçao"
 COUNTRY_CX="Christmas Adası"
 COUNTRY_CY="Kıbrıs"
-COUNTRY_CZ="Çek Cumhûriyeti"
+COUNTRY_CZ="Çek Cumhuriyeti"
 COUNTRY_DE="Almanya"
 COUNTRY_DJ="Cibuti"
 COUNTRY_DK="Danimarka"
 COUNTRY_DM="Dominik"
-COUNTRY_DO="Dominik Cumhûriyeti"
-COUNTRY_DZ="Cezâyir"
+COUNTRY_DO="Dominik Cumhuriyeti"
+COUNTRY_DZ="Cezayir"
 COUNTRY_EC="Ekvador"
 COUNTRY_EE="Estonya"
 COUNTRY_EG="Mısır"
 COUNTRY_EH="Batı Sahra"
 COUNTRY_ER="Eritre"
 COUNTRY_ES="İspanya"
-COUNTRY_ET="Habeşistan"
+COUNTRY_ET="Etiyopya"
 COUNTRY_FI="Finlandiya"
 COUNTRY_FJ="Fiji"
 COUNTRY_FK="Falkland Adaları (Malvinalar)"
@@ -4909,7 +4931,7 @@ COUNTRY_GE="Gürcistan"
 COUNTRY_GF="Fransız Guyanası"
 COUNTRY_GG="Guernsey"
 COUNTRY_GH="Gana"
-COUNTRY_GI="Cebelitârık"
+COUNTRY_GI="Cebelitarık"
 COUNTRY_GL="Grönland"
 COUNTRY_GM="Gambiya"
 COUNTRY_GN="Gine"
@@ -4929,12 +4951,12 @@ COUNTRY_HT="Haiti"
 COUNTRY_HU="Macaristan"
 COUNTRY_ID="Endonezya"
 COUNTRY_IE="İrlanda"
-COUNTRY_IL="İsrâil"
+COUNTRY_IL="İsrail"
 COUNTRY_IM="Man Adası"
 COUNTRY_IN="Hindistan"
-COUNTRY_IO="Britanya Hint Ummanı Toprakları"
-COUNTRY_IQ="Îrak"
-COUNTRY_IR="Îran İslam Cumhûriyeti"
+COUNTRY_IO="Britanya Hint Okyanusu Toprakları"
+COUNTRY_IQ="Irak"
+COUNTRY_IR="İran İslam Cumhuriyeti"
 COUNTRY_IS="İzlanda"
 COUNTRY_IT="İtalya"
 COUNTRY_JE="Jersey"
@@ -4947,12 +4969,12 @@ COUNTRY_KH="Kamboçya"
 COUNTRY_KI="Kiribati"
 COUNTRY_KM="Komorlar"
 COUNTRY_KN="Saint Kitts ve Nevis"
-COUNTRY_KP="Kore El Erklik Halk Cumhûriyeti"
-COUNTRY_KR="Kore Cumhûriyeti"
+COUNTRY_KP="Kore Demokratik Halk Cumhuriyeti"
+COUNTRY_KR="Kore Cumhuriyeti"
 COUNTRY_KW="Kuveyt"
 COUNTRY_KY="Cayman Adaları"
 COUNTRY_KZ="Kazakistan"
-COUNTRY_LA="Laos El Erklik Halk Cumhûriyeti"
+COUNTRY_LA="Laos Demokratik Halk Cumhuriyeti"
 COUNTRY_LB="Lübnan"
 COUNTRY_LC="Saint Lucia"
 COUNTRY_LI="Lihtenştayn"
@@ -4962,15 +4984,15 @@ COUNTRY_LS="Lesotho"
 COUNTRY_LT="Litvanya"
 COUNTRY_LU="Lüksemburg"
 COUNTRY_LV="Letonya"
-COUNTRY_LY="Libya Arap Cemâhiriyesi"
+COUNTRY_LY="Libya Arap Cemahiriyesi"
 COUNTRY_MA="Fas"
 COUNTRY_MC="Monako"
-COUNTRY_MD="Moldova Cumhûriyeti"
+COUNTRY_MD="Moldova Cumhuriyeti"
 COUNTRY_ME="Karadağ"
 COUNTRY_MF="Saint Martin (Fransız bölümü)"
 COUNTRY_MG="Madagaskar"
 COUNTRY_MH="Marshall Adaları"
-COUNTRY_MK="Makedonya Eski Yugoslav Cumhûriyeti"
+COUNTRY_MK="Makedonya Eski Yugoslav Cumhuriyeti"
 COUNTRY_ML="Mali"
 COUNTRY_MM="Myanmar"
 COUNTRY_MN="Mongolistan"
@@ -5009,7 +5031,7 @@ COUNTRY_PL="Polonya"
 COUNTRY_PM="Saint Pierre ve Miquelon"
 COUNTRY_PN="Pitcairn"
 COUNTRY_PR="Porto Riko"
-COUNTRY_PS="Filistin Toprakları, Ele Geçirilmiş"
+COUNTRY_PS="Filistin Toprakları, İşgal Edilmiş"
 COUNTRY_PT="Portekiz"
 COUNTRY_PW="Palau"
 COUNTRY_PY="Paraguay"
@@ -5017,9 +5039,9 @@ COUNTRY_QA="Katar"
 COUNTRY_RE="Réunion"
 COUNTRY_RO="Romanya"
 COUNTRY_RS="Sırbistan"
-COUNTRY_RU="Rusya Birliği"
+COUNTRY_RU="Rusya Federasyonu"
 COUNTRY_RW="Ruanda"
-COUNTRY_SA="Suûdi Arabistan"
+COUNTRY_SA="Suudi Arabistan"
 COUNTRY_SB="Solomon Adaları"
 COUNTRY_SC="Seyşeller"
 COUNTRY_SD="Sudan"
@@ -5037,14 +5059,14 @@ COUNTRY_SR="Surinam"
 COUNTRY_ST="Sao Tome ve Principe"
 COUNTRY_SV="El Salvador"
 COUNTRY_SX="Sint Maarten (Hollanda bölümü)"
-COUNTRY_SY="Sûriye Arap Cumhûriyeti"
+COUNTRY_SY="Suriye Arap Cumhuriyeti"
 COUNTRY_SZ="Svaziland"
 COUNTRY_TC="Turks ve Caicos Adaları"
 COUNTRY_TD="Çad"
 COUNTRY_TF="Fransız Güney Toprakları"
 COUNTRY_TG="Togo"
 COUNTRY_TH="Tayland"
-COUNTRY_TJ="Tâcikistan"
+COUNTRY_TJ="Tacikistan"
 COUNTRY_TK="Tokelau"
 COUNTRY_TL="Doğu Timor"
 COUNTRY_TM="Türkmenistan"
@@ -5054,7 +5076,7 @@ COUNTRY_TR="Türkiye"
 COUNTRY_TT="Trinidad ve Tobago"
 COUNTRY_TV="Tuvalu"
 COUNTRY_TW="Tayvan Çin İli"
-COUNTRY_TZ="Tanzanya Birleşik Cumhûriyeti"
+COUNTRY_TZ="Tanzanya Birleşik Cumhuriyeti"
 COUNTRY_UA="Ukrayna"
 COUNTRY_UG="Uganda"
 COUNTRY_UK="Birleşik Krallık"
@@ -5064,7 +5086,7 @@ COUNTRY_UY="Uruguay"
 COUNTRY_UZ="Özbekistan"
 COUNTRY_VA="Papalık (Vatikan Şehir Devleti)"
 COUNTRY_VC="Saint Vincent ve Grenadinler"
-COUNTRY_VE="Venezuela Bolivar Cumhûriyeti"
+COUNTRY_VE="Venezuela Bolivar Cumhuriyeti"
 COUNTRY_VG="Virgin Adaları, İngiliz"
 COUNTRY_VI="Virgin Adaları, ABD"
 COUNTRY_VN="Vietnam"
@@ -5076,5 +5098,341 @@ COUNTRY_YT="Mayotte"
 COUNTRY_ZA="Güney Afrika"
 COUNTRY_ZM="Zambiya"
 COUNTRY_ZW="Zimbabve"
+
+GMT_MINUS_12_A_DESC    ="(GMT-12:00) Uluslararası Batı Tarih Çizgisi"
+GMT_MINUS_12_A_DAYLIGHT="Tarih Çizgisi Yaz Saati"
+GMT_MINUS_12_A_STANDARD="Tarih Çizgisi Standart Saati"
+
+GMT_MINUS_11_A_DESC    ="(GMT-11:00) Midway Adası, Samoa"
+GMT_MINUS_11_A_DAYLIGHT="Samoa Yaz Saati"
+GMT_MINUS_11_A_STANDARD="Samoa Standart Saati"
+
+GMT_MINUS_10_A_DESC    ="(GMT-10:00) Hawaii"
+GMT_MINUS_10_A_DAYLIGHT="Hawaii Yaz Saati"
+GMT_MINUS_10_A_STANDARD="Hawaii Standart Saati"
+
+GMT_MINUS_09_A_DESC    ="(GMT-09:00) Alaska"
+GMT_MINUS_09_A_DAYLIGHT="Alaska Yaz Saati"
+GMT_MINUS_09_A_STANDARD="Alaska Standart Saati"
+
+GMT_MINUS_08_A_DESC    ="(GMT-08:00) Pasifik Saati (ABD & Kanada)"
+GMT_MINUS_08_A_DAYLIGHT="Pasifik Yaz Saati"
+GMT_MINUS_08_A_STANDARD="Pasifik Standart Saati"
+
+GMT_MINUS_07_A_DESC    ="(GMT-07:00) Dağ Saati (ABD & Kanada)"
+GMT_MINUS_07_A_DAYLIGHT="ABD Dağ Yaz Saati"
+GMT_MINUS_07_A_STANDARD="ABD Dağ Standart Saati"
+
+GMT_MINUS_07_B_DESC    ="(GMT-07:00) Chihuahua, La Paz, Mazatlan"
+GMT_MINUS_07_B_DAYLIGHT="Dağ Yaz Saati (Meksika)"
+GMT_MINUS_07_B_STANDARD="Dağ Standart Saati (Meksika)"
+
+GMT_MINUS_07_C_DESC    ="(GMT-07:00) Arizona"
+GMT_MINUS_07_C_DAYLIGHT="ABD Dağ Yaz Saati"
+GMT_MINUS_07_C_STANDARD="ABD Dağ Standart Saati"
+
+GMT_MINUS_06_A_DESC    ="(GMT-06:00) Orta Amerika Saati (ABD & Kanada)"
+GMT_MINUS_06_A_DAYLIGHT="Orta Amerika Yaz Saati"
+GMT_MINUS_06_A_STANDARD="Orta Amerika Standart Saati"
+
+GMT_MINUS_06_B_DESC    ="(GMT-06:00) Saskatchewan"
+GMT_MINUS_06_B_DAYLIGHT="Orta Kanada Yaz Saati"
+GMT_MINUS_06_B_STANDARD="Orta Kanada Standart Saati"
+
+GMT_MINUS_06_C_DESC    ="(GMT-06:00) Guadalajara, Mexico City, Monterrey"
+GMT_MINUS_06_C_DAYLIGHT="Orta Amerika Yaz Saati (Mexico)"
+GMT_MINUS_06_C_STANDARD="Orta Amerika Standart Saati (Mexico)"
+
+GMT_MINUS_06_D_DESC    ="(GMT-06:00) Orta Amerika"
+GMT_MINUS_06_D_DAYLIGHT="Orta Amerika Yaz Saati"
+GMT_MINUS_06_D_STANDARD="Orta Amerika Standart Saati"
+
+GMT_MINUS_05_A_DESC    ="(GMT-05:00) Doğu Saati (ABD & Kanada)"
+GMT_MINUS_05_A_DAYLIGHT="Doğu Amerika Yaz Saati"
+GMT_MINUS_05_A_STANDARD="Doğu Amerika Standart Saati"
+
+GMT_MINUS_05_B_DESC    ="(GMT-05:00) Indiana (Doğu)"
+GMT_MINUS_05_B_DAYLIGHT="Doğu Amerika Yaz Saati"
+GMT_MINUS_05_B_STANDARD="Doğu Amerika Standart Saati"
+
+GMT_MINUS_05_C_DESC    ="(GMT-05:00) Bogota, Lima, Quito, Rio Branco"
+GMT_MINUS_05_C_DAYLIGHT="Güney Amerika Pasifik Yaz Saati"
+GMT_MINUS_05_C_STANDARD="Güney Amerika Pasifik Standart Saati"
+
+GMT_MINUS_04_A_DESC    ="(GMT-04:00) Atlantik Saati (Kanada)"
+GMT_MINUS_04_A_DAYLIGHT="Atlantik Yaz Saati"
+GMT_MINUS_04_A_STANDARD="Atlantik Standart Saati"
+
+GMT_MINUS_04_B_DESC    ="(GMT-04:00) La Paz"
+GMT_MINUS_04_B_DAYLIGHT="Güney Amerika Batı Yaz Saati"
+GMT_MINUS_04_B_STANDARD="Güney Amerika Batı Standart Saati"
+
+GMT_MINUS_0330_A_DESC    ="(GMT-03:30) Newfoundland"
+GMT_MINUS_0330_A_DAYLIGHT="Newfoundland Yaz Saati"
+GMT_MINUS_0330_A_STANDARD="Newfoundland Standart Saati"
+
+GMT_MINUS_03_A_DESC    ="(GMT-03:00) Santiago"
+GMT_MINUS_03_A_DAYLIGHT="Güney Amerika Pasifik Yaz Saati"
+GMT_MINUS_03_A_STANDARD="Güney Amerika Pasifik Standart Saati"
+
+GMT_MINUS_03_B_DESC    ="(GMT-03:00) Brasilia"
+GMT_MINUS_03_B_DAYLIGHT="Güney Amerika Doğu Yaz Saati"
+GMT_MINUS_03_B_STANDARD="Güney Amerika Doğu Standart Saati"
+
+GMT_MINUS_03_C_DESC    ="(GMT-03:00) Buenos Aires, Georgetown"
+GMT_MINUS_03_C_DAYLIGHT="Güney Amerika Doğu Yaz Saati"
+GMT_MINUS_03_C_STANDARD="Güney Amerika Doğu Standart Saati"
+
+GMT_MINUS_03_D_DESC    ="(GMT-03:00) Grönland"
+GMT_MINUS_03_D_DAYLIGHT="Grönland Yaz Saati"
+GMT_MINUS_03_D_STANDARD="Grönland Standart Saati"
+
+GMT_MINUS_02_A_DESC    ="(GMT-02:00) Orta Atlantik"
+GMT_MINUS_02_A_DAYLIGHT="Orta Atlantik Yaz Saati"
+GMT_MINUS_02_A_STANDARD="Orta Atlantik Standart Saati"
+
+GMT_MINUS_01_A_DESC    ="(GMT-01:00) Azor Adaları"
+GMT_MINUS_01_A_DAYLIGHT="Azor Adaları Yaz Saati"
+GMT_MINUS_01_A_STANDARD="Azor Adaları Standart Saati"
+
+GMT_MINUS_01_B_DESC    ="(GMT-01:00) Yeşil Burun Adaları"
+GMT_MINUS_01_B_DAYLIGHT="Yeşil Burun Adaları Yaz Saati"
+GMT_MINUS_01_B_STANDARD="Yeşil Burun Adaları Standart Saati"
+
+GMT_PLUS_00_A_DESC    ="(GMT+00:00) Greenwich Orta Saati: Dublin, Edinburgh, Lizbon, Londra"
+GMT_PLUS_00_A_DAYLIGHT="GMT Yaz Saati"
+GMT_PLUS_00_A_STANDARD="GMT Standart Saati"
+
+GMT_PLUS_00_B_DESC    ="(GMT+00:00) Kazablanka, Monrovia, Reykjavik"
+GMT_PLUS_00_B_DAYLIGHT="Greenwich Yaz Saati"
+GMT_PLUS_00_B_STANDARD="Greenwich Standart Saati"
+
+GMT_PLUS_01_A_DESC    ="(GMT+01:00) Belgrad, Bratislava, Budapeşte, Lübliyana, Prag"
+GMT_PLUS_01_A_DAYLIGHT="Orta Avrupa Yaz Saati"
+GMT_PLUS_01_A_STANDARD="Orta Avrupa Standart Saati"
+
+GMT_PLUS_01_B_DESC    ="(GMT+01:00) Saraybosna, Üsküp, Varşova, Zagreb"
+GMT_PLUS_01_B_DAYLIGHT="Orta Avrupa Yaz Saati"
+GMT_PLUS_01_B_STANDARD="Orta Avrupa Standart Saati"
+
+GMT_PLUS_01_C_DESC    ="(GMT+01:00) Brüksel, Kopenhag, Madrid, Paris"
+GMT_PLUS_01_C_DAYLIGHT="Latin Avrupa Yaz Saati"
+GMT_PLUS_01_C_STANDARD="Latin Avrupa Standart Saati"
+
+GMT_PLUS_01_D_DESC    ="(GMT+01:00) Amsterdam, Berlin, Bern, Roma, Stockholm, Viyana"
+GMT_PLUS_01_D_DAYLIGHT="Batı Avrupa Yaz Saati"
+GMT_PLUS_01_D_STANDARD="Batı Avrupa Standart Saati"
+
+GMT_PLUS_02_A_DESC    ="(GMT+02:00) Kişinev"
+GMT_PLUS_02_A_DAYLIGHT="Doğu Avrupa Yaz Saati"
+GMT_PLUS_02_A_STANDARD="Doğu Avrupa Standart Saati"
+
+GMT_PLUS_02_B_DESC    ="(GMT+02:00) Kahire"
+GMT_PLUS_02_B_DAYLIGHT="Mısır Yaz Saati"
+GMT_PLUS_02_B_STANDARD="Mısır Standart Saati"
+
+GMT_PLUS_02_C_DESC    ="(GMT+02:00) Helsinki, Kiev, Riga, Sofya, Tallinn, Vilnius"
+GMT_PLUS_02_C_DAYLIGHT="FLE Yaz Saati"
+GMT_PLUS_02_C_STANDARD="FLE Standart Saati"
+
+GMT_PLUS_02_D_DESC    ="(GMT+02:00) Atina, Bükreş"
+GMT_PLUS_02_D_DAYLIGHT="GTB Yaz Saati"
+GMT_PLUS_02_D_STANDARD="GTB Standart Saati"
+
+GMT_PLUS_02_E_DESC    ="(GMT+02:00) Kudüs"
+GMT_PLUS_02_E_DAYLIGHT="İsrail Yaz Saati"
+GMT_PLUS_02_E_STANDARD="İsrail Standart Saati"
+
+GMT_PLUS_02_F_DESC    ="(GMT+02:00) Harare, Pretoria"
+GMT_PLUS_02_F_DAYLIGHT="Güney Afrika Yaz Saati"
+GMT_PLUS_02_F_STANDARD="Güney Afrika Standart Saati"
+
+GMT_PLUS_02_G_DESC    ="(GMT+02:00) Kaliningrad"
+GMT_PLUS_02_G_DAYLIGHT="RTZ 1 Yaz Saati"
+GMT_PLUS_02_G_STANDARD="RTZ 1 Standart Saati"
+
+GMT_PLUS_03_A_DESC    ="(GMT+03:00) Minsk"
+GMT_PLUS_03_A_DAYLIGHT="Belarus Yaz Saati"
+GMT_PLUS_03_A_STANDARD="Belarus Standart Saati"
+
+GMT_PLUS_03_B_DESC    ="(GMT+03:00) Moskova, St. Petersburg"
+GMT_PLUS_03_B_DAYLIGHT="RTZ 2 Yaz Saati"
+GMT_PLUS_03_B_STANDARD="RTZ 2 Standart Saati"
+
+GMT_PLUS_03_C_DESC    ="(GMT+03:00) Kuveyt, Riyad"
+GMT_PLUS_03_C_DAYLIGHT="Arap Yaz Saati"
+GMT_PLUS_03_C_STANDARD="Arap Standart Saati"
+
+GMT_PLUS_03_D_DESC    ="(GMT+03:00) Nairobi"
+GMT_PLUS_03_D_DAYLIGHT="Doğu Afrika Yaz Saati"
+GMT_PLUS_03_D_STANDARD="Doğu Afrika Standart Saati"
+
+GMT_PLUS_03_E_DESC    ="(GMT+03:00) Bağdat"
+GMT_PLUS_03_E_DAYLIGHT="Arap Yaz Saati"
+GMT_PLUS_03_E_STANDARD="Arap Standart Saati"
+
+GMT_PLUS_03_F_DESC    ="(GMT+03:00) İstanbul"
+GMT_PLUS_03_F_DAYLIGHT="Türkiye Yaz Saati"
+GMT_PLUS_03_F_STANDARD="Türkiye Standart Saati"
+
+GMT_PLUS_0330_A_DESC    ="(GMT+03:30) Tahran"
+GMT_PLUS_0330_A_DAYLIGHT="İran Yaz Saati"
+GMT_PLUS_0330_A_STANDARD="İran Standart Saati"
+
+GMT_PLUS_04_A_DESC    ="(GMT+04:00) Abu Dabi, Muskat"
+GMT_PLUS_04_A_DAYLIGHT="Arap Yaz Saati"
+GMT_PLUS_04_A_STANDARD="Arap Standart Saati"
+
+GMT_PLUS_04_B_DESC    ="(GMT+04:00) Erivan"
+GMT_PLUS_04_B_DAYLIGHT="Kafkas Yaz Saati"
+GMT_PLUS_04_B_STANDARD="Kafkas Standart Saati"
+
+GMT_PLUS_04_C_DESC    ="(GMT+04:00) Izhevsk, Samara, Volgograd"
+GMT_PLUS_04_C_DAYLIGHT="RTZ 3 Yaz Saati"
+GMT_PLUS_04_C_STANDARD="RTZ 3 Standart Saati"
+
+GMT_PLUS_0430_A_DESC    ="(GMT+04:30) Kabil"
+GMT_PLUS_0430_A_DAYLIGHT="Afganistan Yaz Saati"
+GMT_PLUS_0430_A_STANDARD="Afganistan Standart Saati"
+
+GMT_PLUS_05_A_DESC    ="(GMT+05:00) Ekaterinburg"
+GMT_PLUS_05_A_DAYLIGHT="RTZ 4 Yaz Saati"
+GMT_PLUS_05_A_STANDARD="RTZ 4 Standart Saati"
+
+GMT_PLUS_05_B_DESC    ="(GMT+05:00) İslamabad, Karaçi, Taşkent"
+GMT_PLUS_05_B_DAYLIGHT="Batı Asya Yaz Saati"
+GMT_PLUS_05_B_STANDARD="Batı Asya Standart Saati"
+
+GMT_PLUS_0530_A_DESC    ="(GMT+05:30) Chennai, Kalküta, Mumbay, Yeni Delhi"
+GMT_PLUS_0530_A_DAYLIGHT="Hindistan Yaz Saati"
+GMT_PLUS_0530_A_STANDARD="Hindistan Standart Saati"
+
+GMT_PLUS_0530_B_DESC    ="(GMT+05:30) Sri Jayawardenepura"
+GMT_PLUS_0530_B_DAYLIGHT="Sri Lanka Yaz Saati"
+GMT_PLUS_0530_B_STANDARD="Sri Lanka Standart Saati"
+
+GMT_PLUS_0545_A_DESC    ="(GMT+05:45) Kathmandu"
+GMT_PLUS_0545_A_DAYLIGHT="Nepal Yaz Saati"
+GMT_PLUS_0545_A_STANDARD="Nepal Standart Saati"
+
+GMT_PLUS_06_A_DESC    ="(GMT+06:00) Astana, Dhaka"
+GMT_PLUS_06_A_DAYLIGHT="Orta Asya Yaz Saati"
+GMT_PLUS_06_A_STANDARD="Orta Asya Standart Saati"
+
+GMT_PLUS_06_B_DESC    ="(GMT+06:00) Omsk"
+GMT_PLUS_06_B_DAYLIGHT="Omsk Yaz Saati"
+GMT_PLUS_06_B_STANDARD="Omsk Standart Saati"
+
+GMT_PLUS_0630_A_DESC    ="(GMT+06:30) Yangon (Rangoon)"
+GMT_PLUS_0630_A_DAYLIGHT="Myanmar Yaz Saati"
+GMT_PLUS_0630_A_STANDARD="Myanmar Standart Saati"
+
+GMT_PLUS_07_A_DESC    ="(GMT+07:00) Novosibirsk"
+GMT_PLUS_07_A_DAYLIGHT="Novosibirsk Yaz Saati"
+GMT_PLUS_07_A_STANDARD="Novosibirsk Standart Saati"
+
+GMT_PLUS_07_B_DESC    ="(GMT+07:00) Bangkok, Hanoi, Jakarta"
+GMT_PLUS_07_B_DAYLIGHT="Güneydoğu Asya Yaz Saati"
+GMT_PLUS_07_B_STANDARD="Güneydoğu Asya Standart Saati"
+
+GMT_PLUS_07_C_DESC    ="(GMT+07:00) Krasnoyarsk"
+GMT_PLUS_07_C_DAYLIGHT="RTZ 6 Yaz Saati"
+GMT_PLUS_07_C_STANDARD="RTZ 6 Standart Saati"
+
+GMT_PLUS_07_D_DESC    ="(GMT+07:00) Tomsk"
+GMT_PLUS_07_D_DAYLIGHT="Tomsk Yaz Saati"
+GMT_PLUS_07_D_STANDARD="Tomsk Standart Saati"
+
+GMT_PLUS_08_A_DESC    ="(GMT+08:00) Pekin, Çongçing, Hong Kong, Urumçi"
+GMT_PLUS_08_A_DAYLIGHT="Çin Yaz Saati"
+GMT_PLUS_08_A_STANDARD="Çin Standart Saati"
+
+GMT_PLUS_08_B_DESC    ="(GMT+08:00) Kuala Lumpur, Singapur"
+GMT_PLUS_08_B_DAYLIGHT="Singapur Yaz Saati"
+GMT_PLUS_08_B_STANDARD="Singapur Standart Saati"
+
+GMT_PLUS_08_C_DESC    ="(GMT+08:00) Taipei"
+GMT_PLUS_08_C_DAYLIGHT="Taipei Yaz Saati"
+GMT_PLUS_08_C_STANDARD="Taipei Standart Saati"
+
+GMT_PLUS_08_D_DESC    ="(GMT+08:00) Perth"
+GMT_PLUS_08_D_DAYLIGHT="Batı Avustralya Yaz Saati"
+GMT_PLUS_08_D_STANDARD="Batı Avustralya Standart Saati"
+
+GMT_PLUS_08_E_DESC    ="(GMT+08:00) Ulan Bator"
+GMT_PLUS_08_E_DAYLIGHT="Ulan Bator Yaz Saati"
+GMT_PLUS_08_E_STANDARD="Ulan Bator Standart Saati"
+
+GMT_PLUS_08_F_DESC    ="(GMT+08:00) Irkutsk"
+GMT_PLUS_08_F_DAYLIGHT="RTZ 7 Yaz Saati"
+GMT_PLUS_08_F_STANDARD="RTZ 7 Standart Saati"
+
+GMT_PLUS_09_A_DESC    ="(GMT+09:00) Seul"
+GMT_PLUS_09_A_DAYLIGHT="Kore Yaz Saati"
+GMT_PLUS_09_A_STANDARD="Kore Standart Saati"
+
+GMT_PLUS_09_B_DESC    ="(GMT+09:00) Osaka, Sapporo, Tokyo"
+GMT_PLUS_09_B_DAYLIGHT="Tokyo Yaz Saati"
+GMT_PLUS_09_B_STANDARD="Tokyo Standart Saati"
+
+GMT_PLUS_09_C_DESC    ="(GMT+09:00) Yakutsk"
+GMT_PLUS_09_C_DAYLIGHT="RTZ 8 Yaz Saati"
+GMT_PLUS_09_C_STANDARD="RTZ 8 Standart Saati"
+
+GMT_PLUS_0930_A_DESC    ="(GMT+09:30) Darwin"
+GMT_PLUS_0903_A_DAYLIGHT="Orta Avustralya Yaz Saati"
+GMT_PLUS_0930_A_STANDARD="Orta Avustralya Standart Saati"
+
+GMT_PLUS_0930_B_DESC    ="(GMT+09:30) Adelaide"
+GMT_PLUS_0930_B_DAYLIGHT="Orta Avustralya Yaz Saati"
+GMT_PLUS_0930_B_STANDARD="Orta Avustralya Standart Saati"
+
+GMT_PLUS_10_A_DESC    ="(GMT+10:00) Canberra, Melbourne, Sydney"
+GMT_PLUS_10_A_DAYLIGHT="Doğu Avustralya Yaz Saati"
+GMT_PLUS_10_A_STANDARD="Doğu Avustralya Standart Saati"
+
+GMT_PLUS_10_B_DESC    ="(GMT+10:00) Brisbane"
+GMT_PLUS_10_B_DAYLIGHT="Doğu Avustralya Yaz Saati"
+GMT_PLUS_10_B_STANDARD="Doğu Avustralya Standart Saati"
+
+GMT_PLUS_10_C_DESC    ="(GMT+10:00) Hobart"
+GMT_PLUS_10_C_DAYLIGHT="Tazmanya Yaz Saati"
+GMT_PLUS_10_C_STANDARD="Tazmanya Standart Saati"
+
+GMT_PLUS_10_D_DESC    ="(GMT+10:00) Vladivostok"
+GMT_PLUS_10_D_DAYLIGHT="RTZ 9 Yaz Saati"
+GMT_PLUS_10_D_STANDARD="RTZ 9 Standart Saati"
+
+GMT_PLUS_10_E_DESC    ="(GMT+10:00) Guam, Port Moresby"
+GMT_PLUS_10_E_DAYLIGHT="Batı Pasifik Yaz Saati"
+GMT_PLUS_10_E_STANDARD="Batı Pasifik Standart Saati"
+
+GMT_PLUS_11_A_DESC    ="(GMT+11:00) Solomon Adaları, Yeni Kaledonya"
+GMT_PLUS_11_A_DAYLIGHT="Orta Pasifik Yaz Saati"
+GMT_PLUS_11_A_STANDARD="Orta Pasifik Standart Saati"
+
+GMT_PLUS_11_B_DESC    ="(GMT+11:00) Chokurdakh"
+GMT_PLUS_11_B_DAYLIGHT="RTZ 10 Yaz Saati"
+GMT_PLUS_11_B_STANDARD="RTZ 10 Standart Saati"
+
+GMT_PLUS_11_C_DESC    ="(GMT+11:00) Magadan"
+GMT_PLUS_11_C_DAYLIGHT="Magadan Yaz Saati"
+GMT_PLUS_11_C_STANDARD="Magadan Standart Saati"
+
+GMT_PLUS_12_A_DESC    ="(GMT+12:00) Fiji, Kamchatka, Marshall Adaları"
+GMT_PLUS_12_A_DAYLIGHT="Fiji Yaz Saati"
+GMT_PLUS_12_A_STANDARD="Fiji Standart Saati"
+
+GMT_PLUS_12_B_DESC    ="(GMT+12:00) Anadyr, Petropavlovsk-Kamchatsky"
+GMT_PLUS_12_B_DAYLIGHT="RTZ 11 Yaz Saati"
+GMT_PLUS_12_B_STANDARD="RTZ 11 Standart Saati"
+
+GMT_PLUS_12_C_DESC    ="(GMT+12:00) Auckland, Wellington"
+GMT_PLUS_12_C_DAYLIGHT="Yeni Zelanda Yaz Saati"
+GMT_PLUS_12_C_STANDARD="Yeni Zelanda Standart Saati"
+
+GMT_PLUS_13_A_DESC    ="(GMT+13:00) Nuku'alofa"
+GMT_PLUS_13_A_DAYLIGHT="Tonga Yaz Saati"
+GMT_PLUS_13_A_STANDARD="Tonga Standart Saati"
 
 ; EOF

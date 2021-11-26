@@ -58,7 +58,7 @@ BEGIN
         BEGIN
             MENUITEM "&Seçim Bilgisi",              ID_EDIT_SELECTIONINFO
             MENUITEM "&Karakter Biçimi",            ID_EDIT_CHARFORMAT
-            MENUITEM "&Ön Tanımlı Karakter Biçimi", ID_EDIT_DEFCHARFORMAT
+            MENUITEM "&Varsayılan Karakter Biçimi", ID_EDIT_DEFCHARFORMAT
             MENUITEM "&Paragraf Biçimi",            ID_EDIT_PARAFORMAT
             MENUITEM "&Metni Al",                   ID_EDIT_GETTEXT
         END
@@ -90,7 +90,7 @@ BEGIN
     END
     POPUP "&Yardım"
     BEGIN
-        MENUITEM "&Wine Wordpad Üzerine...",  ID_ABOUT
+        MENUITEM "&Wine Wordpad Hakkında...",  ID_ABOUT
     END
 END
 
@@ -115,7 +115,7 @@ BEGIN
         MENUITEM "Vişne Çürüğü", ID_COLOR_MAROON
         MENUITEM "Yeşil",        ID_COLOR_GREEN
         MENUITEM "Zeytinyağı",   ID_COLOR_OLIVE
-        MENUITEM "Deniz Mâvisi", ID_COLOR_NAVY
+        MENUITEM "Deniz Mavisi", ID_COLOR_NAVY
         MENUITEM "Mor",          ID_COLOR_PURPLE
         MENUITEM "Camgöbeği",    ID_COLOR_TEAL
         MENUITEM "Gri",          ID_COLOR_GRAY
@@ -181,7 +181,7 @@ BEGIN
     STRING_PROMPT_SAVE_CHANGES,  "%s için değişiklikler kaydedilsin mi?"
     STRING_SEARCH_FINISHED,      "Belge araması bitti."
     STRING_LOAD_RICHED_FAILED,   "RichEdit kitaplığının yüklenmesi başarısız oldu."
-    STRING_SAVE_LOSEFORMATTING,  "Tüm biçimlendirmelerin kaybolmasına neden olacağı düz metin biçimiyle kaydetmeyi seçtiniz. Bunu yapmak istediğinizden emin misiniz?"
+    STRING_SAVE_LOSEFORMATTING,  "Düz metin biçimiyle kaydetmeyi seçtiniz. Bu seçim tüm biçimlendirmelerin kaybolmasına neden olacak. Bunu yapmak istediğinizden emin misiniz?"
     STRING_INVALID_NUMBER,       "Geçersiz sayı biçimi."
     STRING_OLE_STORAGE_NOT_SUPPORTED, "OLE içeren belgeler desteklenmiyor."
     STRING_WRITE_FAILED,              "Dosya kaydedilemedi."

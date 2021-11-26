@@ -3,5 +3,5 @@ directx.c
 -----------
 gdi32.dll to opengl32.dll
 comment out line 186 as well in function
-WineD3D_ReleaseFakeGLContext 
+WineD3D_ReleaseFakeGLContext
 row pwglDeleteContext(glCtx);

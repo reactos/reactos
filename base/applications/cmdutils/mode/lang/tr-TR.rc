@@ -4,9 +4,9 @@ LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-    IDS_USAGE "Dizge aygıtlarını yapılandırır.\n\n\
+    IDS_USAGE "Sistem aygıtlarını yapılandırır.\n\n\
 Aygıt durumu:         MODE [aygıt] [/STATUS]\n\
-Dizilik giriş:        MODE COMm[:] [BAUD=b] [PARITY=p] [DATA=d] [STOP=s]\n\
+Serial giriş:        MODE COMm[:] [BAUD=b] [PARITY=p] [DATA=d] [STOP=s]\n\
                                    [to=on|off] [xon=on|off] [odsr=on|off]\n\
                                    [octs=on|off] [dtr=on|off|hs]\n\
                                    [rts=on|off|hs|tg] [idsr=on|off]\n\
@@ -16,9 +16,9 @@ Kod sayfası durumu:   MODE CON[:] CP [/STATUS]\n\
 Görüntü kipi:         MODE CON[:] [COLS=c] [LINES=n]\n\
 Yineleme hızı:        MODE CON[:] [RATE=r DELAY=d]\n"
 
-    IDS_QUERY_SERIAL_FOUND "Dizilik aygıt bulundu - %s\n"
+    IDS_QUERY_SERIAL_FOUND "Serial aygıtı bulundu - %s\n"
     IDS_QUERY_PRINTER_FOUND "Yazıcı aygıtı bulundu - %s\n"
-    IDS_QUERY_PARALLEL_FOUND "Koşut aygıt bulundu - %s\n"
+    IDS_QUERY_PARALLEL_FOUND "Paralel aygıt bulundu - %s\n"
     IDS_QUERY_DOSDEV_FOUND "DOS aygıtı bulundu - %s\n"
     // IDS_QUERY_MISC_FOUND "Başka aygıt bulundu - %s\n"
 
@@ -34,9 +34,9 @@ BEGIN
 
     IDS_COM_STATUS_BAUD             "    Baud:            %ld\n"
     IDS_COM_STATUS_PARITY           "    Eşlik:           %s\n"
-    IDS_COM_STATUS_DATA_BITS        "    Veri İkilleri:   %d\n"
-    IDS_COM_STATUS_STOP_BITS        "    Durma İkilleri:  %s\n"
-    IDS_COM_STATUS_TIMEOUT          "    Süre aşımı:      %s\n"
+    IDS_COM_STATUS_DATA_BITS        "    Veri Baytları:   %d\n"
+    IDS_COM_STATUS_STOP_BITS        "    Durma Baytları:  %s\n"
+    IDS_COM_STATUS_TIMEOUT          "    Zaman aşımı:      %s\n"
     IDS_COM_STATUS_XON_XOFF         "    XON/XOFF:        %s\n"
     IDS_COM_STATUS_CTS_HANDSHAKING  "    CTS uyuşması:    %s\n"
     IDS_COM_STATUS_DSR_HANDSHAKING  "    DSR uyuşması:    %s\n"
@@ -44,31 +44,31 @@ BEGIN
     IDS_COM_STATUS_DTR_CIRCUIT      "    DTR çevrimi:     %s\n"
     IDS_COM_STATUS_RTS_CIRCUIT      "    RTS çevrimi:     %s\n"
 
-    IDS_CONSOLE_STATUS_LINES    "    Yataç:             %d\n"
-    IDS_CONSOLE_STATUS_COLS     "    Dikeç:             %d\n"
-    IDS_CONSOLE_KBD_RATE        "    Düğme takımı hızı: %ld\n"
-    IDS_CONSOLE_KBD_DELAY       "    Düğme takımı gecikmesi: %ld\n"
+    IDS_CONSOLE_STATUS_LINES    "    Satır:             %d\n"
+    IDS_CONSOLE_STATUS_COLS     "    Sütun:             %d\n"
+    IDS_CONSOLE_KBD_RATE        "    Klavye hızı:       %ld\n"
+    IDS_CONSOLE_KBD_DELAY       "    Klavye gecikmesi: %ld\n"
     IDS_CONSOLE_CODEPAGE        "    Kod sayfası:      %d\n"
 
     IDS_PRINTER_OUTPUT_NOT_REROUTED     "    Yazıcı çıktısı yeniden yönlendirilmiyor.\n"
-    IDS_PRINTER_OUTPUT_REROUTED_SERIAL  "    Yazıcı çıktısı %s dizilik girişine yönlendiriliyor.\n"
+    IDS_PRINTER_OUTPUT_REROUTED_SERIAL  "    Yazıcı çıktısı %s serial girişine yönlendiriliyor.\n"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_ERROR_QUERY_DEVICES "YANLIŞLIK: (0x%lx) DOS aygıtı sorgulanamaz.\n"
+    IDS_ERROR_QUERY_DEVICES "HATA: (0x%lx) DOS aygıtı sorgulanamaz.\n"
     IDS_ERROR_QUERY_DEVICES_FORM "    QueryDosDeviceW(%s), %s tanınmamış biçim döndürdü.\n"
-    IDS_ERROR_SET_PARALLEL_STATE "YANLIŞLIK: SetParallelState(%d) - DefineDosDevice(%s) (0x%lx)\n"
+    IDS_ERROR_SET_PARALLEL_STATE "HATA: SetParallelState(%d) - DefineDosDevice(%s) (0x%lx)\n"
     IDS_ERROR_INVALID_PARAMETER "Geçersiz değişken - %s\n"
     IDS_ERROR_ILLEGAL_DEVICE_NAME "Geçersiz aygıt adı - %s (0x%lx)\n"
-    IDS_ERROR_DEVICE_NOT_AVAILABLE "The device %s is not currently available.\n"
+    IDS_ERROR_DEVICE_NOT_AVAILABLE "%s cihazı şu anda kullanılamıyor.\n"
     IDS_ERROR_STATUS_GET_DEVICE "%s: aygıtının durumu alınamıyor\n"
     IDS_ERROR_STATUS_SET_DEVICE "%s: aygıtının durumu ayarlanamıyor\n"
-    IDS_ERROR_TIMEOUT_GET_DEVICE "Failed to get the timeout for device %s:\n"
-    IDS_ERROR_TIMEOUT_SET_DEVICE "Failed to set the timeout for device %s:\n"
-    IDS_ERROR_INVALID_PARITY_BITS "YANLIŞLIK: %d Eşlik İkilleri için geçersiz değer:\n"
-    IDS_ERROR_INVALID_STOP_BITS "YANLIŞLIK: %d Durma İkilleri için geçersiz değer:\n"
-    IDS_ERROR_NO_MEMORY "YANLIŞLIK: Yeterli bellek yok.\n"
-    IDS_ERROR_SCREEN_LINES_COL "Görüntülük, belirtilen yataç ve dikeç sayısına ayarlanamıyor.\n"
-    IDS_ERROR_INVALID_CODEPAGE "The code page specified is not valid.\n"
+    IDS_ERROR_TIMEOUT_GET_DEVICE "Dosya için bir zaman aşımı alınamadı %s:\n"
+    IDS_ERROR_TIMEOUT_SET_DEVICE "Dosya için bir zaman aşımı ayarlanamadı %s:\n"
+    IDS_ERROR_INVALID_PARITY_BITS "HATA: %d Eşlik Baytları için geçersiz değer:\n"
+    IDS_ERROR_INVALID_STOP_BITS "HATA: %d Durma İkilleri için geçersiz değer:\n"
+    IDS_ERROR_NO_MEMORY "HATA: Yeterli bellek yok.\n"
+    IDS_ERROR_SCREEN_LINES_COL "Ekran, belirtilen satır ve sütun sayısına ayarlanamıyor.\n"
+    IDS_ERROR_INVALID_CODEPAGE "Belirtilen kod sayfası geçerli değil.\n"
 END

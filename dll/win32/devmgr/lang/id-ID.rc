@@ -228,7 +228,7 @@ BEGIN
     ICON "", IDC_DEVICON, 7, 7, 20, 20
     LTEXT "", IDC_DEVNAME, 37, 9, 174, 16, SS_NOPREFIX
     LTEXT "Pengaturan sumber daya:", -1, 7, 36, 204, 8
-    CONTROL "", IDC_DRIVERRESOURCES, "SysListView32", LVS_REPORT | 
+    CONTROL "", IDC_DRIVERRESOURCES, "SysListView32", LVS_REPORT |
             LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SHAREIMAGELISTS | LVS_SORTASCENDING |
             LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 7, 46, 238, 80
 END
@@ -290,8 +290,8 @@ STRINGTABLE DISCARDABLE
 BEGIN
   IDS_APPNAME               "Manajer Perangkat ReactOS"
   IDS_APP_AUTHORS           "Copyright 2015 Ged Murphy"
-  IDS_CONFIRM_DISABLE       "Mematikan perangkat ini akan menyebabkan fungsionalitasnya berhenti.\r\nYakin ingin mematikannya?"
-  IDS_CONFIRM_UNINSTALL     "Peringatan: Anda akan mencopot perangkat ini dari sistem anda.\r\nIngin melanjutkan?"
+  IDS_CONFIRM_DISABLE       "Mematikan perangkat ini akan menyebabkan fungsionalitasnya berhenti.\nYakin ingin mematikannya?"
+  IDS_CONFIRM_UNINSTALL     "Peringatan: Anda akan mencopot perangkat ini dari sistem anda.\nIngin melanjutkan?"
 END
 STRINGTABLE DISCARDABLE
 BEGIN
@@ -324,7 +324,7 @@ BEGIN
   IDS_HINT_DISABLE      " Mematikan perangkat terpilih."
   IDS_HINT_UPDATE       " Meluncurkan penuntun Pembaruan Perangkat Lunak Driver untuk perangkat terpilih."
   IDS_HINT_UNINSTALL    " Membongkar driver untuk perangkat terpilih."
-  IDS_HINT_ADD          " Tambahkan perangkat lawas (non-PnP) ke komputer." 
+  IDS_HINT_ADD          " Tambahkan perangkat lawas (non-PnP) ke komputer."
   IDS_HINT_ABOUT        " Tentang Manajer Perangkat ReactOS."
   IDS_HINT_EXIT         " Keluar program."
 

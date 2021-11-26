@@ -45,7 +45,7 @@ typedef DWORD
     HDC hdc,
     LPCWSTR lpString,
     INT uCount,
-    INT nMaxExtent, 
+    INT nMaxExtent,
     LPGCP_RESULTSW lpResults,
     DWORD dwFlags,
     DWORD dwUnused
@@ -563,21 +563,14 @@ extern ULONG gcClientObj;
 
 VOID
 WINAPI
-METADC_DeleteObject(HGDIOBJ hobj);
+METADC_RosGlueDeleteObject(HGDIOBJ hobj);
 
 BOOL
 WINAPI
-METADC_DeleteDC(
+METADC_RosGlueDeleteDC(
     _In_ HDC hdc);
 
-INT
-WINAPI
-METADC16_Escape(
-    _In_ HDC hdc,
-    _In_ INT nEscape,
-    _In_ INT cbInput,
-    _In_ LPCSTR lpvInData,
-    _Out_ LPVOID lpvOutData);
+BOOL METADC_DeleteDC( HDC hdc );
 
 BOOL
 WINAPI
@@ -591,155 +584,323 @@ METADC_ExtTextOutW(
     UINT cchString,
     const INT *lpDx);
 
-BOOL
-WINAPI
-METADC_PatBlt(
-    _In_ HDC hdc,
-    _In_ INT xLeft,
-    _In_ INT yTop,
-    _In_ INT nWidth,
-    _In_ INT nHeight,
-    _In_ DWORD dwRop);
-
 
 /* The following METADC_* functions follow this pattern: */
-#define HANDLE_METADC0P(_RetType, _Func, dwError, hdc, ...) \
-    if (GDI_HANDLE_GET_TYPE(hdc) != GDILoObjType_LO_DC_TYPE) \
-    { \
-        DWORD_PTR dwResult; \
-        if (METADC_Dispatch(DCFUNC_##_Func, &dwResult, (DWORD_PTR)dwError, hdc)) \
-        { \
-            return (_RetType)dwResult; \
-        } \
-    }
-
 #define HANDLE_METADC(_RetType, _Func, dwError, hdc, ...) \
     if (GDI_HANDLE_GET_TYPE(hdc) != GDILoObjType_LO_DC_TYPE) \
     { \
-        DWORD_PTR dwResult = 1; \
-        if (METADC_Dispatch(DCFUNC_##_Func, &dwResult, (DWORD_PTR)dwError, hdc, __VA_ARGS__)) \
+        if (GDI_HANDLE_GET_TYPE(hdc) == GDILoObjType_LO_METADC16_TYPE) \
         { \
-            return (_RetType)dwResult; \
+           return (_RetType)METADC_##_Func(hdc, __VA_ARGS__); \
+        } \
+        else \
+        { \
+           PLDC pLDC = GdiGetLDC(hdc); \
+           _RetType _Ret = dwError; \
+           if ( !pLDC ) \
+           { \
+              SetLastError(ERROR_INVALID_HANDLE); \
+              return (_RetType)_Ret; \
+           } \
+           if ( pLDC->iType == LDC_EMFLDC && !(EMFDC_##_Func(pLDC, __VA_ARGS__)) ) \
+           { \
+              return (_RetType)_Ret; \
+           } \
+           /*  Fall through to support information DC's.*/ \
         } \
     }
 
-
-typedef enum _DCFUNC
-{
-    //DCFUNC_AbortDoc,
-    DCFUNC_AbortPath,
-    DCFUNC_AlphaBlend, // UNIMPLEMENTED
-    DCFUNC_AngleArc, // UNIMPLEMENTED
-    DCFUNC_Arc,
-    DCFUNC_ArcTo, // UNIMPLEMENTED
-    DCFUNC_BeginPath,
-    //DCFUNC_BitBlt,
-    DCFUNC_Chord,
-    DCFUNC_CloseFigure,
-    DCFUNC_Ellipse,
-    DCFUNC_EndPath,
-    DCFUNC_ExcludeClipRect,
-    DCFUNC_ExtEscape,
-    DCFUNC_ExtFloodFill,
-    DCFUNC_ExtSelectClipRgn,
-    DCFUNC_ExtTextOut,
-    DCFUNC_FillPath,
-    DCFUNC_FillRgn,
-    DCFUNC_FlattenPath,
-    DCFUNC_FrameRgn,
-    DCFUNC_GetDeviceCaps,
-    DCFUNC_GdiComment,
-    DCFUNC_GradientFill, // UNIMPLEMENTED
-    DCFUNC_IntersectClipRect,
-    DCFUNC_InvertRgn,
-    DCFUNC_LineTo,
-    DCFUNC_MaskBlt, // UNIMPLEMENTED
-    DCFUNC_ModifyWorldTransform,
-    DCFUNC_MoveTo,
-    DCFUNC_OffsetClipRgn,
-    DCFUNC_OffsetViewportOrgEx,
-    DCFUNC_OffsetWindowOrgEx,
-    DCFUNC_PathToRegion, // UNIMPLEMENTED
-    DCFUNC_PatBlt,
-    DCFUNC_Pie,
-    DCFUNC_PlgBlt, // UNIMPLEMENTED
-    DCFUNC_PolyBezier,
-    DCFUNC_PolyBezierTo,
-    DCFUNC_PolyDraw,
-    DCFUNC_Polygon,
-    DCFUNC_Polyline,
-    DCFUNC_PolylineTo,
-    DCFUNC_PolyPolygon,
-    DCFUNC_PolyPolyline,
-    DCFUNC_RealizePalette,
-    DCFUNC_Rectangle,
-    DCFUNC_RestoreDC,
-    DCFUNC_RoundRect,
-    DCFUNC_SaveDC,
-    DCFUNC_ScaleViewportExtEx,
-    DCFUNC_ScaleWindowExtEx,
-    DCFUNC_SelectBrush,
-    DCFUNC_SelectClipPath,
-    DCFUNC_SelectFont,
-    DCFUNC_SelectPalette,
-    DCFUNC_SelectPen,
-    DCFUNC_SetDCBrushColor,
-    DCFUNC_SetDCPenColor,
-    DCFUNC_SetDIBitsToDevice,
-    DCFUNC_SetBkColor,
-    DCFUNC_SetBkMode,
-    DCFUNC_SetLayout,
-    //DCFUNC_SetMapMode,
-    DCFUNC_SetPixel,
-    DCFUNC_SetPolyFillMode,
-    DCFUNC_SetROP2,
-    DCFUNC_SetStretchBltMode,
-    DCFUNC_SetTextAlign,
-    DCFUNC_SetTextCharacterExtra,
-    DCFUNC_SetTextColor,
-    DCFUNC_SetTextJustification,
-    DCFUNC_SetViewportExtEx,
-    DCFUNC_SetViewportOrgEx,
-    DCFUNC_SetWindowExtEx,
-    DCFUNC_SetWindowOrgEx,
-    DCFUNC_SetWorldTransform,
-    DCFUNC_StretchBlt,
-    DCFUNC_StrokeAndFillPath,
-    DCFUNC_StrokePath,
-    DCFUNC_TransparentBlt, // UNIMPLEMENTED
-    DCFUNC_WidenPath,
-
-} DCFUNC;
-
-BOOL
-METADC_Dispatch(
-    _In_ DCFUNC eFunction,
-    _Out_ PDWORD_PTR pdwResult,
-    _In_ DWORD_PTR dwError,
-    _In_ HDC hdc,
-    ...);
-
-#define HANDLE_METADC2(_RetType, _Func, hdc, ...) \
+#define HANDLE_METADC16(_RetType, _Func, dwError, hdc, ...) \
     if (GDI_HANDLE_GET_TYPE(hdc) != GDILoObjType_LO_DC_TYPE) \
     { \
-        _RetType result; \
-        if (METADC_##_Func(&result, hdc, __VA_ARGS__)) \
+        if (GDI_HANDLE_GET_TYPE(hdc) == GDILoObjType_LO_METADC16_TYPE) \
         { \
-            return result; \
+           return METADC_##_Func(hdc, __VA_ARGS__); \
         } \
     }
 
-BOOL
-WINAPI
-METADC_GetAndSetDCDWord(
-    _Out_ PDWORD pdwResult,
-    _In_ HDC hdc,
-    _In_ UINT u,
-    _In_ DWORD dwIn,
-    _In_ ULONG ulMFId,
-    _In_ USHORT usMF16Id,
-    _In_ DWORD dwError);
+#define HANDLE_METADC0P(_RetType, _Func, dwError, hdc, ...) \
+    if (GDI_HANDLE_GET_TYPE(hdc) != GDILoObjType_LO_DC_TYPE) \
+    { \
+       PLDC pLDC = NULL; \
+       _RetType _Ret = dwError; \
+       if (GDI_HANDLE_GET_TYPE(hdc) == GDILoObjType_LO_METADC16_TYPE) \
+       { \
+          return (_RetType)_Ret; \
+       } \
+       pLDC = GdiGetLDC(hdc); \
+       if ( !pLDC ) \
+       { \
+          SetLastError(ERROR_INVALID_HANDLE); \
+          return (_RetType)_Ret; \
+       } \
+       if ( pLDC->iType == LDC_EMFLDC && !(EMFDC_##_Func(pLDC)) ) \
+       { \
+          return (_RetType)_Ret; \
+       } \
+       /*  Fall through to support information DC's.*/ \
+    }
+
+#define HANDLE_EMETAFDC(_RetType, _Func, dwError, hdc, ...) \
+    if (GDI_HANDLE_GET_TYPE(hdc) != GDILoObjType_LO_DC_TYPE) \
+    { \
+       PLDC pLDC = NULL; \
+       _RetType _Ret = dwError; \
+       if (GDI_HANDLE_GET_TYPE(hdc) == GDILoObjType_LO_METADC16_TYPE) \
+       { \
+          return (_RetType)_Ret; \
+       } \
+       pLDC = GdiGetLDC(hdc); \
+       if ( !pLDC ) \
+       { \
+          SetLastError(ERROR_INVALID_HANDLE); \
+          return (_RetType)_Ret; \
+       } \
+       if ( pLDC->iType == LDC_EMFLDC && !(EMFDC_##_Func(pLDC, __VA_ARGS__)) ) \
+       { \
+          return (_RetType)_Ret; \
+       } \
+       /*  Fall through to support information DC's.*/ \
+    }
+
+#define HANDLE_METADC1P(_RetType, _Func, dwError, hdc, ...) \
+    if (GDI_HANDLE_GET_TYPE(hdc) != GDILoObjType_LO_DC_TYPE) \
+    { \
+        if (GDI_HANDLE_GET_TYPE(hdc) == GDILoObjType_LO_METADC16_TYPE) \
+        { \
+           return (_RetType)METADC_##_Func(hdc); \
+        } \
+        else \
+        { \
+           PLDC pLDC = GdiGetLDC(hdc); \
+           _RetType _Ret = dwError; \
+           if ( !pLDC ) \
+           { \
+              SetLastError(ERROR_INVALID_HANDLE); \
+              return (_RetType)_Ret; \
+           } \
+           if ( pLDC->iType == LDC_EMFLDC && !(EMFDC_##_Func(pLDC)) ) \
+           { \
+              return (_RetType)_Ret; \
+           } \
+           /*  Fall through to support information DC's.*/ \
+        } \
+    }
+
+
+BOOL WINAPI METADC_SetD(_In_ HDC hdc,_In_ DWORD dwIn,_In_ USHORT usMF16Id);
+BOOL WINAPI EMFDC_SetD(_In_ PLDC pldc,_In_ DWORD dwIn,_In_ ULONG ulMFId);
 
 HDC WINAPI GdiConvertAndCheckDC(HDC hdc);
+
+HENHMETAFILE WINAPI SetEnhMetaFileBitsAlt( PDWORD pdw, LPWSTR FilePart, HANDLE hFile, LARGE_INTEGER li);
+
+/* meta dc files */
+extern BOOL METADC_Arc( HDC hdc, INT left, INT top, INT right, INT bottom,
+                        INT xstart, INT ystart, INT xend, INT yend ) DECLSPEC_HIDDEN;
+extern BOOL METADC_BitBlt( HDC hdc_dst, INT x_dst, INT y_dst, INT width, INT height,
+                           HDC hdc_src, INT x_src, INT y_src, DWORD rop );
+extern BOOL METADC_Chord( HDC hdc, INT left, INT top, INT right, INT bottom, INT xstart,
+                          INT ystart, INT xend, INT yend ) DECLSPEC_HIDDEN;
+extern BOOL METADC_Ellipse( HDC hdc, INT left, INT top, INT right, INT bottom ) DECLSPEC_HIDDEN;
+extern BOOL METADC_ExcludeClipRect( HDC hdc, INT left, INT top, INT right,
+                                    INT bottom ) DECLSPEC_HIDDEN;
+extern BOOL METADC_ExtEscape( HDC hdc, INT escape, INT input_size, LPCSTR input, INT output_size, LPVOID output ) DECLSPEC_HIDDEN;
+extern BOOL METADC_ExtFloodFill( HDC hdc, INT x, INT y, COLORREF color,
+                                 UINT fill_type ) DECLSPEC_HIDDEN;
+extern BOOL METADC_ExtSelectClipRgn( HDC hdc, HRGN hrgn, INT mode ) DECLSPEC_HIDDEN;
+extern BOOL METADC_ExtTextOut( HDC hdc, INT x, INT y, UINT flags, const RECT *rect,
+                               const WCHAR *str, UINT count, const INT *dx ) DECLSPEC_HIDDEN;
+extern BOOL METADC_FillRgn( HDC hdc, HRGN hrgn, HBRUSH hbrush ) DECLSPEC_HIDDEN;
+extern BOOL METADC_FrameRgn( HDC hdc, HRGN hrgn, HBRUSH hbrush, INT x, INT y ) DECLSPEC_HIDDEN;
+extern INT  METADC_GetDeviceCaps( HDC hdc, INT cap );
+extern BOOL METADC_IntersectClipRect( HDC hdc, INT left, INT top, INT right,
+                                      INT bottom ) DECLSPEC_HIDDEN;
+extern BOOL METADC_InvertRgn( HDC hdc, HRGN hrgn ) DECLSPEC_HIDDEN;
+extern BOOL METADC_LineTo( HDC hdc, INT x, INT y ) DECLSPEC_HIDDEN;
+extern BOOL METADC_MoveTo( HDC hdc, INT x, INT y ) DECLSPEC_HIDDEN;
+extern BOOL METADC_OffsetClipRgn( HDC hdc, INT x, INT y ) DECLSPEC_HIDDEN;
+extern BOOL METADC_OffsetViewportOrgEx( HDC hdc, INT x, INT y ) DECLSPEC_HIDDEN;
+extern BOOL METADC_OffsetWindowOrgEx( HDC hdc, INT x, INT y ) DECLSPEC_HIDDEN;
+extern BOOL METADC_PaintRgn( HDC hdc, HRGN hrgn ) DECLSPEC_HIDDEN;
+extern BOOL METADC_PatBlt( HDC hdc, INT left, INT top, INT width, INT height, DWORD rop );
+extern BOOL METADC_Pie( HDC hdc, INT left, INT top, INT right, INT bottom,
+                        INT xstart, INT ystart, INT xend, INT yend ) DECLSPEC_HIDDEN;
+extern BOOL METADC_PolyPolygon( HDC hdc, const POINT *points, const INT *counts,
+                                UINT polygons ) DECLSPEC_HIDDEN;
+extern BOOL METADC_Polygon( HDC hdc, const POINT *points, INT count ) DECLSPEC_HIDDEN;
+extern BOOL METADC_Polyline( HDC hdc, const POINT *points,INT count) DECLSPEC_HIDDEN;
+extern BOOL METADC_RealizePalette( HDC hdc ) DECLSPEC_HIDDEN;
+extern BOOL METADC_Rectangle( HDC hdc, INT left, INT top, INT right, INT bottom) DECLSPEC_HIDDEN;
+extern BOOL METADC_RestoreDC( HDC hdc, INT level ) DECLSPEC_HIDDEN;
+extern BOOL METADC_RoundRect( HDC hdc, INT left, INT top, INT right, INT bottom,
+                              INT ell_width, INT ell_height ) DECLSPEC_HIDDEN;
+extern BOOL METADC_SaveDC( HDC hdc ) DECLSPEC_HIDDEN;
+extern BOOL METADC_ScaleViewportExtEx( HDC hdc, INT x_num, INT x_denom, INT y_num,
+                                       INT y_denom ) DECLSPEC_HIDDEN;
+extern BOOL METADC_ScaleWindowExtEx( HDC hdc, INT x_num, INT x_denom, INT y_num,
+                                     INT y_denom ) DECLSPEC_HIDDEN;
+extern HGDIOBJ METADC_SelectObject( HDC hdc, HGDIOBJ obj ) DECLSPEC_HIDDEN;
+extern BOOL METADC_SelectPalette( HDC hdc, HPALETTE palette ) DECLSPEC_HIDDEN;
+extern BOOL METADC_SetBkColor( HDC hdc, COLORREF color ) DECLSPEC_HIDDEN;
+extern BOOL METADC_SetBkMode( HDC hdc, INT mode ) DECLSPEC_HIDDEN;
+extern INT  METADC_SetDIBitsToDevice( HDC hdc, INT x_dest, INT y_dest, DWORD width, DWORD height,
+                                      INT x_src, INT y_src, UINT startscan, UINT lines,
+                                      const void *bits, const BITMAPINFO *info,
+                                      UINT coloruse ) DECLSPEC_HIDDEN;
+extern BOOL METADC_SetLayout( HDC hdc, DWORD layout ) DECLSPEC_HIDDEN;
+extern BOOL METADC_SetTextCharacterExtra( HDC hdc, INT extra ) DECLSPEC_HIDDEN;
+extern BOOL METADC_SetMapMode( HDC hdc, INT mode ) DECLSPEC_HIDDEN;
+extern BOOL METADC_SetMapperFlags( HDC hdc, DWORD flags ) DECLSPEC_HIDDEN;
+extern BOOL METADC_SetPixel( HDC hdc, INT x, INT y, COLORREF color ) DECLSPEC_HIDDEN;
+extern BOOL METADC_SetPolyFillMode( HDC hdc, INT mode ) DECLSPEC_HIDDEN;
+extern BOOL METADC_SetRelAbs( HDC hdc, INT mode ) DECLSPEC_HIDDEN;
+extern BOOL METADC_SetROP2( HDC hdc, INT rop ) DECLSPEC_HIDDEN;
+extern BOOL METADC_SetStretchBltMode( HDC hdc, INT mode ) DECLSPEC_HIDDEN;
+extern BOOL METADC_SetTextAlign( HDC hdc, UINT align ) DECLSPEC_HIDDEN;
+extern BOOL METADC_SetTextColor( HDC hdc, COLORREF color ) DECLSPEC_HIDDEN;
+extern BOOL METADC_SetTextJustification( HDC hdc, INT extra, INT breaks ) DECLSPEC_HIDDEN;
+extern BOOL METADC_SetViewportExtEx( HDC hdc, INT x, INT y ) DECLSPEC_HIDDEN;
+extern BOOL METADC_SetViewportOrgEx( HDC hdc, INT x, INT y ) DECLSPEC_HIDDEN;
+extern BOOL METADC_SetWindowExtEx( HDC hdc, INT x, INT y ) DECLSPEC_HIDDEN;
+extern BOOL METADC_SetWindowOrgEx( HDC, INT x, INT y ) DECLSPEC_HIDDEN;
+extern BOOL METADC_StretchBlt( HDC hdc_dst, INT x_dst, INT y_dst, INT width_dst, INT height_dst,
+                               HDC hdc_src, INT x_src, INT y_src, INT width_src, INT height_src,
+                               DWORD rop );
+extern BOOL METADC_StretchDIBits( HDC hdc, INT x_dst, INT y_dst, INT width_dst, INT height_dst,
+                                  INT x_src, INT y_src, INT width_src, INT height_src,
+                                  const void *bits, const BITMAPINFO *info, UINT coloruse,
+                                  DWORD rop ) DECLSPEC_HIDDEN;
+/* enhanced metafiles */
+extern BOOL EMFDC_AbortPath( LDC *dc_attr ) DECLSPEC_HIDDEN;
+extern BOOL EMFDC_AlphaBlend( LDC *dc_attr, INT x_dst, INT y_dst, INT width_dst, INT height_dst,
+                              HDC hdc_src, INT x_src, INT y_src, INT width_src, INT height_src,
+                              BLENDFUNCTION blend_function );
+extern BOOL EMFDC_AngleArc( LDC *dc_attr, INT x, INT y, DWORD radius, FLOAT start,
+                            FLOAT sweep ) DECLSPEC_HIDDEN;
+extern BOOL EMFDC_ArcChordPie( LDC *dc_attr, INT left, INT top, INT right,
+                               INT bottom, INT xstart, INT ystart, INT xend,
+                               INT yend, DWORD type ) DECLSPEC_HIDDEN;
+extern BOOL EMFDC_BeginPath( LDC *dc_attr ) DECLSPEC_HIDDEN;
+extern BOOL EMFDC_BitBlt( LDC *dc_attr, INT x_dst, INT y_dst, INT width, INT height,
+                          HDC hdc_src, INT x_src, INT y_src, DWORD rop );
+extern BOOL EMFDC_CloseFigure( LDC *dc_attr ) DECLSPEC_HIDDEN;
+extern BOOL EMFDC_DeleteDC( LDC *dc_attr ) DECLSPEC_HIDDEN;
+extern BOOL EMFDC_Ellipse( LDC *dc_attr, INT left, INT top, INT right,
+                           INT bottom ) DECLSPEC_HIDDEN;
+extern BOOL EMFDC_EndPath( LDC *dc_attr ) DECLSPEC_HIDDEN;
+extern BOOL EMFDC_ExcludeClipRect( LDC *dc_attr, INT left, INT top, INT right,
+                                   INT bottom ) DECLSPEC_HIDDEN;
+extern BOOL EMFDC_ExtFloodFill( LDC *dc_attr, INT x, INT y, COLORREF color,
+                                UINT fill_type ) DECLSPEC_HIDDEN;
+extern BOOL EMFDC_ExtSelectClipRgn( LDC *dc_attr, HRGN hrgn, INT mode ) DECLSPEC_HIDDEN;
+extern BOOL EMFDC_ExtTextOut( LDC *dc_attr, INT x, INT y, UINT flags, const RECT *rect,
+                              const WCHAR *str, UINT count, const INT *dx ) DECLSPEC_HIDDEN;
+extern BOOL EMFDC_FillPath( LDC *dc_attr ) DECLSPEC_HIDDEN;
+extern BOOL EMFDC_FillRgn( LDC *dc_attr, HRGN hrgn, HBRUSH hbrush ) DECLSPEC_HIDDEN;
+extern BOOL EMFDC_FlattenPath( LDC *dc_attr ) DECLSPEC_HIDDEN;
+extern BOOL EMFDC_FrameRgn( LDC *dc_attr, HRGN hrgn, HBRUSH hbrush, INT width,
+                            INT height ) DECLSPEC_HIDDEN;
+extern BOOL EMFDC_GradientFill( LDC *dc_attr, TRIVERTEX *vert_array, ULONG nvert,
+                                void *grad_array, ULONG ngrad, ULONG mode ) DECLSPEC_HIDDEN;
+extern BOOL EMFDC_IntersectClipRect( LDC *dc_attr, INT left, INT top, INT right,
+                                     INT bottom ) DECLSPEC_HIDDEN;
+extern BOOL EMFDC_InvertRgn( LDC *dc_attr, HRGN hrgn ) DECLSPEC_HIDDEN;
+extern BOOL EMFDC_LineTo( LDC *dc_attr, INT x, INT y ) DECLSPEC_HIDDEN;
+extern BOOL EMFDC_ModifyWorldTransform( LDC *dc_attr, const XFORM *xform,
+                                        DWORD mode ) DECLSPEC_HIDDEN;
+extern BOOL EMFDC_MoveTo( LDC *dc_attr, INT x, INT y ) DECLSPEC_HIDDEN;
+extern BOOL EMFDC_OffsetClipRgn( LDC *dc_attr, INT x, INT y ) DECLSPEC_HIDDEN;
+extern BOOL EMFDC_PaintRgn( LDC *dc_attr, HRGN hrgn ) DECLSPEC_HIDDEN;
+extern BOOL EMFDC_PatBlt( LDC *dc_attr, INT left, INT top, INT width, INT height, DWORD rop );
+extern BOOL EMFDC_PolyBezier( LDC *dc_attr, const POINT *points, DWORD count ) DECLSPEC_HIDDEN;
+extern BOOL EMFDC_PolyBezierTo( LDC *dc_attr, const POINT *points, DWORD count ) DECLSPEC_HIDDEN;
+extern BOOL EMFDC_PolyDraw( LDC *dc_attr, const POINT *points, const BYTE *types,
+                            DWORD count ) DECLSPEC_HIDDEN;
+extern BOOL EMFDC_PolyPolyline( LDC *dc_attr, const POINT *points, const DWORD *counts,
+                                DWORD polys ) DECLSPEC_HIDDEN;
+extern BOOL EMFDC_PolyPolygon( LDC *dc_attr, const POINT *points, const INT *counts,
+                               UINT polys ) DECLSPEC_HIDDEN;
+extern BOOL EMFDC_Polygon( LDC *dc_attr, const POINT *points, INT count ) DECLSPEC_HIDDEN;
+extern BOOL EMFDC_Polyline( LDC *dc_attr, const POINT *points, INT count) DECLSPEC_HIDDEN;
+extern BOOL EMFDC_PolylineTo( LDC *dc_attr, const POINT *points, INT count ) DECLSPEC_HIDDEN;
+extern BOOL EMFDC_Rectangle( LDC *dc_attr, INT left, INT top, INT right,
+                             INT bottom) DECLSPEC_HIDDEN;
+extern BOOL EMFDC_RestoreDC( LDC *dc_attr, INT level ) DECLSPEC_HIDDEN;
+extern BOOL EMFDC_RoundRect( LDC *dc_attr, INT left, INT top, INT right, INT bottom,
+                             INT ell_width, INT ell_height ) DECLSPEC_HIDDEN;
+extern BOOL EMFDC_SaveDC( LDC *dc_attr ) DECLSPEC_HIDDEN;
+extern BOOL EMFDC_ScaleViewportExtEx( LDC *dc_attr, INT x_num, INT x_denom, INT y_num,
+                                      INT y_denom ) DECLSPEC_HIDDEN;
+extern BOOL EMFDC_ScaleWindowExtEx( LDC *dc_attr, INT x_num, INT x_denom, INT y_num,
+                                    INT y_denom ) DECLSPEC_HIDDEN;
+extern BOOL EMFDC_SelectClipPath( LDC *dc_attr, INT mode ) DECLSPEC_HIDDEN;
+extern BOOL EMFDC_SelectObject( LDC *dc_attr, HGDIOBJ obj ) DECLSPEC_HIDDEN;
+extern BOOL EMFDC_SelectPalette( LDC *dc_attr, HPALETTE palette ) DECLSPEC_HIDDEN;
+extern BOOL EMFDC_SetArcDirection( LDC *dc_attr, INT dir ) DECLSPEC_HIDDEN;
+extern BOOL EMFDC_SetBkColor( LDC *dc_attr, COLORREF color ) DECLSPEC_HIDDEN;
+extern BOOL EMFDC_SetBkMode( LDC *dc_attr, INT mode ) DECLSPEC_HIDDEN;
+extern BOOL EMFDC_SetDCBrushColor( LDC *dc_attr, COLORREF color ) DECLSPEC_HIDDEN;
+extern BOOL EMFDC_SetDCPenColor( LDC *dc_attr, COLORREF color ) DECLSPEC_HIDDEN;
+extern BOOL EMFDC_SetDIBitsToDevice( LDC *dc_attr, INT x_dest, INT y_dest, DWORD width,
+                                     DWORD height, INT x_src, INT y_src, UINT startscan,
+                                     UINT lines, const void *bits, const BITMAPINFO *info,
+                                     UINT coloruse ) DECLSPEC_HIDDEN;
+extern BOOL EMFDC_SetLayout( LDC *dc_attr, DWORD layout ) DECLSPEC_HIDDEN;
+extern BOOL EMFDC_SetMapMode( LDC *dc_attr, INT mode ) DECLSPEC_HIDDEN;
+extern BOOL EMFDC_SetMapperFlags( LDC *dc_attr, DWORD flags ) DECLSPEC_HIDDEN;
+extern BOOL EMFDC_SetPixel( LDC *dc_attr, INT x, INT y, COLORREF color ) DECLSPEC_HIDDEN;
+extern BOOL EMFDC_SetPolyFillMode( LDC *dc_attr, INT mode ) DECLSPEC_HIDDEN;
+extern BOOL EMFDC_SetROP2( LDC *dc_attr, INT rop ) DECLSPEC_HIDDEN;
+extern BOOL EMFDC_SetStretchBltMode( LDC *dc_attr, INT mode ) DECLSPEC_HIDDEN;
+extern BOOL EMFDC_SetTextAlign( LDC *dc_attr, UINT align ) DECLSPEC_HIDDEN;
+extern BOOL EMFDC_SetTextColor( LDC *dc_attr, COLORREF color ) DECLSPEC_HIDDEN;
+extern BOOL EMFDC_SetTextJustification( LDC *dc_attr, INT extra, INT breaks ) DECLSPEC_HIDDEN;
+extern BOOL EMFDC_SetViewportExtEx( LDC *dc_attr, INT x, INT y ) DECLSPEC_HIDDEN;
+extern BOOL EMFDC_SetViewportOrgEx( LDC *dc_attr, INT x, INT y ) DECLSPEC_HIDDEN;
+extern BOOL EMFDC_SetWindowExtEx( LDC *dc_attr, INT x, INT y ) DECLSPEC_HIDDEN;
+extern BOOL EMFDC_SetWindowOrgEx( LDC *dc_attr, INT x, INT y ) DECLSPEC_HIDDEN;
+extern BOOL EMFDC_SetWorldTransform( LDC *dc_attr, const XFORM *xform ) DECLSPEC_HIDDEN;
+extern BOOL EMFDC_StretchBlt( LDC *dc_attr, INT x_dst, INT y_dst, INT width_dst, INT height_dst,
+                              HDC hdc_src, INT x_src, INT y_src, INT width_src, INT height_src,
+                              DWORD rop );
+extern BOOL EMFDC_StretchDIBits( LDC *dc_attr, INT x_dst, INT y_dst, INT width_dst,
+                                 INT height_dst, INT x_src, INT y_src, INT width_src,
+                                 INT height_src, const void *bits, const BITMAPINFO *info,
+                                 UINT coloruse, DWORD rop ) DECLSPEC_HIDDEN;
+extern BOOL EMFDC_StrokeAndFillPath( LDC *dc_attr ) DECLSPEC_HIDDEN;
+extern BOOL EMFDC_StrokePath( LDC *dc_attr ) DECLSPEC_HIDDEN;
+extern BOOL EMFDC_WidenPath( LDC *dc_attr ) DECLSPEC_HIDDEN;
+
+
+BOOL EMFDC_MaskBlt( LDC *dc_attr, INT xDest, INT yDest, INT cx, INT cy, HDC hdcSrc, INT xSrc, INT ySrc, HBITMAP hbmMask, INT xMask, INT yMask, DWORD dwRop);
+BOOL EMFDC_PlgBlt( LDC *dc_attr, const POINT * ppt, HDC hdcSrc, INT xSrc, INT ySrc, INT cx, INT cy, HBITMAP hbmMask, INT xMask, INT yMask);
+BOOL EMFDC_TransparentBlt( LDC *dc_attr, INT xDst, INT yDst, INT cxDst, INT cyDst, HDC hdcSrc, INT xSrc, INT ySrc, INT cxSrc, INT cySrc, UINT crTransparent);
+BOOL EMFDC_SetBrushOrg( LDC *dc_attr, INT x, INT y);
+BOOL EMFDC_SetMetaRgn( LDC *dc_attr );
+BOOL EMFDC_WriteNamedEscape( LDC *dc_attr, PWCHAR pDriver, INT nEscape, INT cbInput, LPCSTR lpszInData);
+BOOL EMFDC_WriteEscape( LDC *dc_attr, INT nEscape, INT cbInput, LPSTR lpszInData, DWORD emrType);
+
+
+FORCEINLINE BOOL EMFDC_Arc( PLDC dc_attr, INT left, INT top, INT right, INT bottom, INT xstart, INT ystart, INT xend, INT yend )
+{
+    return EMFDC_ArcChordPie( dc_attr, left, top, right, bottom, xstart, ystart, xend, yend, EMR_ARC );
+}
+
+FORCEINLINE BOOL EMFDC_ArcTo( PLDC dc_attr, INT left, INT top, INT right, INT bottom, INT xstart, INT ystart, INT xend, INT yend )
+{
+return EMFDC_ArcChordPie( dc_attr, left, top, right, bottom, xstart, ystart, xend, yend, EMR_ARCTO );
+}
+FORCEINLINE BOOL EMFDC_Chord( PLDC dc_attr, INT left, INT top, INT right, INT bottom, INT xstart, INT ystart, INT xend, INT yend )
+{
+return EMFDC_ArcChordPie( dc_attr, left, top, right, bottom, xstart, ystart, xend, yend, EMR_CHORD );
+}
+
+FORCEINLINE BOOL EMFDC_Pie( PLDC dc_attr, INT left, INT top, INT right, INT bottom, INT xstart, INT ystart, INT xend, INT yend )
+{
+return EMFDC_ArcChordPie( dc_attr, left, top, right, bottom, xstart, ystart, xend, yend, EMR_PIE );
+}
+
+BOOL WINAPI EMFDC_GdiComment( HDC hdc, UINT bytes, const BYTE *buffer );
 
 /* EOF */

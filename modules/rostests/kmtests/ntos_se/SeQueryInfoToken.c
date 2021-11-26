@@ -19,7 +19,7 @@
 
 // Testing function for SQIT
 
-void TestsSeQueryInformationToken(PACCESS_TOKEN Token) 
+void TestsSeQueryInformationToken(PACCESS_TOKEN Token)
 {
     NTSTATUS Status;
     PVOID Buffer = NULL;
@@ -59,7 +59,7 @@ void TestsSeQueryInformationToken(PACCESS_TOKEN Token)
     }
 
     //----------------------------------------------------------------//
-    
+
     Buffer = NULL;
     Status = SeQueryInformationToken(Token, TokenDefaultDacl, &Buffer);
     ok(Status == STATUS_SUCCESS, "SQIT with TokenDefaultDacl fails with status 0x%08X\n", Status);
@@ -151,8 +151,8 @@ void TestsSeQueryInformationToken(PACCESS_TOKEN Token)
         {
             TStats = (PTOKEN_STATISTICS)Buffer;
             // just put 0 into 1st arg or use trace to print TokenStatistics
-            ok(1, "print statistics:\n\tTokenID = %u_%d\n\tSecurityImperLevel = %d\n\tPrivCount = %d\n\tGroupCount = %d\n\n", TStats->TokenId.LowPart, 
-                TStats->TokenId.HighPart, 
+            ok(1, "print statistics:\n\tTokenID = %u_%d\n\tSecurityImperLevel = %d\n\tPrivCount = %d\n\tGroupCount = %d\n\n", TStats->TokenId.LowPart,
+                TStats->TokenId.HighPart,
                 TStats->ImpersonationLevel,
                 TStats->PrivilegeCount,
                 TStats->GroupCount

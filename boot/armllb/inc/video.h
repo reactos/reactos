@@ -26,5 +26,5 @@ LlbVideoDrawChar(
     IN USHORT Color,
     IN USHORT BackColor
 );
-                 
+
 /* EOF */

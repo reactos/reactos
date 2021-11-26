@@ -51,7 +51,7 @@ URL: http://xmlsoft.org
 
 Title: mbed TLS
 Path: dll/3rdparty/mbedtls
-Used Version: 2.7.16
+Used Version: 2.16.11
 License: Apache-2.0 (https://spdx.org/licenses/Apache-2.0.html)
 URL: https://tls.mbed.org/
 
@@ -69,7 +69,7 @@ URL: https://gitlab.freedesktop.org/mesa/glu, ftp://ftp.freedesktop.org/pub/mesa
 
 Title: ACPICA
 Path: drivers/bus/acpi/acpica
-Used Version: 20201217
+Used Version: 20210730
 License: GPL-2.0 (https://spdx.org/licenses/GPL-2.0.html)
 URL: https://acpica.org/
 
@@ -233,7 +233,7 @@ URL: https://github.com/win-iconv/win-iconv
 
 Title: LibXML
 Path: sdk/lib/libxml2
-Used Version: 2.9.10
+Used Version: 2.9.12
 License: MIT (https://spdx.org/licenses/MIT.htmlf)
 URL: http://xmlsoft.org, ftp://xmlsoft.org/libxml2/
 

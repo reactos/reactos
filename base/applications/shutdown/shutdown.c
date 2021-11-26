@@ -122,7 +122,7 @@ ParseArguments(struct CommandLineOptions* pOpts, int argc, WCHAR *argv[])
                     if (index+1 >= argc)
                         return ERROR_INVALID_DATA;
                     pOpts->shutdown_delay = _wtoi(argv[index+1]);
-                    if (pOpts->shutdown_delay > 0) 
+                    if (pOpts->shutdown_delay > 0)
                         pOpts->force = TRUE;
                     index++;
                     break;
@@ -232,7 +232,7 @@ int wmain(int argc, WCHAR *argv[])
 
     /*
      * If the user wants to hibernate the computer. Assume
-     * that the user wants to wake the computer up from 
+     * that the user wants to wake the computer up from
      * hibernation and it should not force it on the system.
      */
     if (opts.hibernate)
@@ -240,13 +240,13 @@ int wmain(int argc, WCHAR *argv[])
         if (IsPwrHibernateAllowed())
         {
             EnablePrivilege(SE_SHUTDOWN_NAME, TRUE);
-            
+
             /* The shutdown utility cannot hibernate remote systems */
             if (opts.remote_system != NULL)
             {
                 return EXIT_FAILURE;
             }
-        
+
             if (!SetSuspendState(TRUE, FALSE, FALSE))
             {
                 ConResPuts(StdErr, IDS_ERROR_HIBERNATE);
@@ -350,7 +350,7 @@ int wmain(int argc, WCHAR *argv[])
                 ConResPuts(StdErr, IDS_ERROR_RESTART);
             else
                 ConResPuts(StdErr, IDS_ERROR_SHUTDOWN);
-            
+
             DisplayError(GetLastError());
             return EXIT_FAILURE;
         }

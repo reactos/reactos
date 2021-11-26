@@ -8,7 +8,7 @@ BEGIN
     IDS_TYPE "Tipo"
     IDS_MANUFACTURER "Fabricante: %1"
     IDS_LOCATION "Local: %1"
-    IDS_STATUS "Estado do Dispositivo: %1"
+    IDS_STATUS "Estado do dispositivo: %1"
     IDS_UNKNOWN "Desconhecido"
     IDS_LOCATIONSTR "Local %1!u! (%2)"
     IDS_DEVCODE " (Código %1!u!)"
@@ -19,11 +19,11 @@ BEGIN
     IDS_NODRIVERLOADED "Nenhum controlador instalado para este dispositivo."
     IDS_DEVONPARENT "em %1"
     IDS_TROUBLESHOOTDEV "&Resolução de problemas..."
-    IDS_ENABLEDEV "&Activar Dispositivo"
+    IDS_ENABLEDEV "&Activar dispositivo"
     IDS_REINSTALLDRV "Re&instalar controlador"
     IDS_PROPERTIES "P&ropriedades"
     IDS_UPDATEDRV "Ac&tualizar controlador..."
-    IDS_REBOOT "Reiniciar o &Computador..."
+    IDS_REBOOT "Reiniciar o &computador..."
     IDS_NOTAVAILABLE "Não disponível"
     IDS_NOTDIGITALLYSIGNED "Sem assinatura digital"
     IDS_NODRIVERS "Nenhum controlador é necessário ou foi carregado para este dispositivo."
@@ -76,7 +76,7 @@ BEGIN
     IDS_DEV_HARDWARE_DISABLED "Este dispositivo está desactivado porque a BIOS para o dispositivo não lhe deu nenhum recurso."
     IDS_DEV_CANT_SHARE_IRQ "Este dispositivo utiliza um recurso de Requisição de Interrupção (IRQ) que está em uso por outro dispositivo e não pode ser compartilhado.\nDeve alterar a configuração conflitante ou remover o controlador de modo real que está a causar o conflito."
     IDS_DEV_FAILED_ADD "Este dispositivo não está a funcionar correctamente porque %1 não está a funcionar correctamente."
-    IDS_DEV_DISABLED_SERVICE "O ReactOS não pode instalar os controladores para este dispositivo porque não consegue acessar o controlador ou local de rede que possui os arquivos de configuração."
+    IDS_DEV_DISABLED_SERVICE "O ReactOS não pode instalar os controladores para este dispositivo porque não consegue acessar o controlador ou local de rede que possui os ficheiros de configuração."
     IDS_DEV_TRANSLATION_FAILED "Este dispositivo não está a responder ao seu controlador."
     IDS_DEV_NO_SOFTCONFIG "O ReactOS não pode determinar as configurações para este dispositivo. Consulte a documentação que veio com este dispositivo e utilize a guia Recursos para definir a configuração."
     IDS_DEV_BIOS_TABLE "O firmware de seu sistema não possui informação suficiente para configurar e utilizar este dispositivo correctamente.\nPara utilizar este dispositivo, contacte o fabricante de seu computador para obter uma actualização de firmware ou BIOS."
@@ -90,7 +90,7 @@ BEGIN
     IDS_DEV_FAILED_POST_START "O ReactOS parou este dispositivo porque ele reportou problemas."
     IDS_DEV_HALTED "Uma aplicação ou serviço desligou este dispositivo de hardware."
     IDS_DEV_PHANTOM "No momento, este dispositivo de hardware não está ligado ao computador."
-    IDS_DEV_SYSTEM_SHUTDOWN "O ReactOS Não pode obter acesso a este dispositivo de hardware porque o sistema operacional está em processo de desligamento."
+    IDS_DEV_SYSTEM_SHUTDOWN "O ReactOS não pode obter acesso a este dispositivo de hardware porque o sistema operativo está em processo de desligamento."
     IDS_DEV_HELD_FOR_EJECT "O ReactOS não pode utilizar este dispositivo de hardware porque este foi preparado para remoção segura mas não foi removido do computador."
     IDS_DEV_DRIVER_BLOCKED "O software para este dispositivo teve sua inicialização bloqueada pois é conhecido por possuir problemas com o ReactOS. Contacte o revendedor do hardware para um novo controlador."
     IDS_DEV_REGISTRY_TOO_LARGE "O ReactOS não pode iniciar os novos dispositivos de hardware porque a secção do sistema é muito grande (excede o limite de tamanho do Registo)."
@@ -176,18 +176,18 @@ BEGIN
     LTEXT "Signatário Digital:", -1, 37, 81, 60, 8, SS_NOPREFIX
     EDITTEXT IDC_DIGITALSIGNER, 115, 81, 145, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
     PUSHBUTTON "&Detalhes do controlador...", IDC_DRIVERDETAILS, 7, 106, 90, 15
-    LTEXT "Exibir detalhes sobre os arquivos de controlador.", -1, 105, 110, 154, 17, SS_NOPREFIX
+    LTEXT "Mostrar detalhes sobre os ficheiros do controlador.", -1, 105, 110, 154, 17, SS_NOPREFIX
     PUSHBUTTON "&Actualizar controlador...", IDC_UPDATEDRIVER, 7, 134, 90, 15
     LTEXT "Actualiza o controlador deste dispositivo.", -1, 105, 138, 154, 17, SS_NOPREFIX
-    PUSHBUTTON "&Repor Driver", IDC_ROLLBACKDRIVER, 7, 162, 90, 15
-    LTEXT "Se o dispositivo falhar após actualização, reverta para o controlador instalado anteriormente.", -1, 105, 162, 154, 25, SS_NOPREFIX
+    PUSHBUTTON "&Repor controlador", IDC_ROLLBACKDRIVER, 7, 162, 90, 15
+    LTEXT "Se o dispositivo falhar após actualização, reverter para o controlador instalado anteriormente.", -1, 105, 162, 154, 25, SS_NOPREFIX
     PUSHBUTTON "&Desinstalar", IDC_UNINSTALLDRIVER, 7, 190, 90, 15
     LTEXT "Para desinstalar o controlador (Avançado).", -1, 105, 194, 154, 17, SS_NOPREFIX
 END
 
 IDD_DRIVERDETAILS DIALOGEX 0, 0, 224, 230
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_DLGFRAME
-CAPTION "Detalhes sobre os arquivos de controlador"
+CAPTION "Detalhes sobre os ficheiros de controlador"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", IDC_DEVICON, 7, 7, 20, 20
@@ -288,8 +288,8 @@ STRINGTABLE DISCARDABLE
 BEGIN
   IDS_APPNAME               "ReactOS Gestor de dispositivos"
   IDS_APP_AUTHORS           "Copyright 2015 Ged Murphy"
-  IDS_CONFIRM_DISABLE       "Desactivar este dispositivo fará com que pare de funcionar. \r\nDeseja realmente desactiva-lo?"
-  IDS_CONFIRM_UNINSTALL     "Aviso: Está prestes a desinstalar este dispositivo do sistema.\r\nDeseja continuar?"
+  IDS_CONFIRM_DISABLE       "Desactivar este dispositivo fará com que pare de funcionar.\nDeseja realmente desactiva-lo?"
+  IDS_CONFIRM_UNINSTALL     "Aviso: Está prestes a desinstalar este dispositivo do sistema.\nDeseja continuar?"
 END
 
 STRINGTABLE DISCARDABLE
@@ -309,7 +309,7 @@ BEGIN
   IDS_TOOLTIP_SCAN          "Verificar alterações de hardware"
   IDS_TOOLTIP_ENABLE        "Habilitar"
   IDS_TOOLTIP_DISABLE       "Desabilitar"
-  IDS_TOOLTIP_UPDATE        "Actualizar software do Driver "
+  IDS_TOOLTIP_UPDATE        "Actualizar software do controlador"
   IDS_TOOLTIP_UNINSTALL     "Desinstalar"
 END
 
@@ -321,22 +321,22 @@ BEGIN
   IDS_HINT_SCAN         " Verificar se há novos dispositivos plug and play."
   IDS_HINT_ENABLE       " Habilita o dispositivo seleccionado."
   IDS_HINT_DISABLE      " Desabilita o dispositivo seleccionado."
-  IDS_HINT_UPDATE       " Inicia o assistente Actualizar software de controlador para o dispositivo seleccionado."
+  IDS_HINT_UPDATE       " Inicia o assistente 'Actualizar software de controlador' para o dispositivo seleccionado."
   IDS_HINT_UNINSTALL    " Desinstala o controlador para o dispositivo seleccionado."
   IDS_HINT_ADD          " Adiciona um dispositivo legado (não Plug and Play) ao computador."
   IDS_HINT_ABOUT        " Acerca de ReactOS Gestor de dispositivos."
   IDS_HINT_EXIT         " Termina o programa."
 
-  IDS_HINT_DEV_BY_TYPE  " Exibe dispositivos por tipo."
-  IDS_HINT_DEV_BY_CONN  " Exibe dispositivos por ligação."
-  IDS_HINT_RES_BY_TYPE  " Exibe recursos por tipo."
-  IDS_HINT_RES_BY_CONN  " Exibe recursos por ligação."
-  IDS_HINT_SHOW_HIDDEN  " Exibe dispositivos herdados que não estão instalados."
+  IDS_HINT_DEV_BY_TYPE  " Mostra dispositivos por tipo."
+  IDS_HINT_DEV_BY_CONN  " Mostra dispositivos por ligação."
+  IDS_HINT_RES_BY_TYPE  " Mostra recursos por tipo."
+  IDS_HINT_RES_BY_CONN  " Mostra recursos por ligação."
+  IDS_HINT_SHOW_HIDDEN  " Mostra dispositivos herdados que não estão instalados."
 
   IDS_HINT_SYS_RESTORE  " Restaura esta janela para o tamanho normal."
   IDS_HINT_SYS_MOVE     " Move esta janela."
   IDS_HINT_SYS_SIZE     " Redimensiona esta janela."
   IDS_HINT_SYS_MINIMIZE " Minimiza esta janela para um ícone."
-  IDS_HINT_SYS_MAXIMIZE " Expande esta janela para preencher a tela."
+  IDS_HINT_SYS_MAXIMIZE " Expande esta janela para preencher o ecrã."
   IDS_HINT_SYS_CLOSE    " Fecha esta janela."
 END

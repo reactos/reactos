@@ -59,7 +59,7 @@ BEGIN
     LTEXT "Nome do &Computador:", IDC_STATIC, 54, 38, 75, 8
     EDITTEXT IDC_COMPUTERNAME, 165, 35, 148, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL | ES_UPPERCASE
     ICON IDI_ICON5, IDC_STATIC, 21, 57, 20, 20
-    LTEXT "A instalação vai criar uma conta chamada Administrator. Pode usar esta conta se precisar de acesso total ao seu computador.", IDC_STATIC, 54, 57, 250, 25
+    LTEXT "A instalação vai criar uma conta chamada Administrador. Pode usar esta conta se precisar de acesso total ao seu computador.", IDC_STATIC, 54, 57, 250, 25
     LTEXT "Digite uma palavra-passe para o administrador com 127 caracteres ou menos.", IDC_STATIC, 54, 87, 250, 8
     LTEXT "Palavra-passe do &Administrador:", IDC_STATIC, 54, 104, 105, 8
     EDITTEXT IDC_ADMINPASSWORD1, 165, 101, 148, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
@@ -73,12 +73,13 @@ CAPTION "Instalação do ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON4, IDC_STATIC, 21, 7, 20, 20
-    LTEXT "A localização do sistema deve coincidir com o idioma das aplicações que quer utilizar. As informações regionais controlam o formato dos números, unidade monetária, data e hora.", IDC_STATIC, 50, 7, 253, 35
-    LTEXT "", IDC_LOCALETEXT, 50, 29, 250, 16
+    LTEXT "A localização do sistema deve coincidir com o idioma das aplicações que quer utilizar. As informações regionais controlam o formato dos números, unidade monetária, data e hora.", IDC_STATIC, 50, 7, 253, 25
+    LTEXT "%s", IDC_LOCALETEXT, 50, 36, 250, 16
     LTEXT "Para alterar a localização do sistema, clique em Personalizar.", IDC_STATIC, 50, 60, 196, 8
     PUSHBUTTON "&Personalizar...", IDC_CUSTOMLOCALE, 245, 57, 55, 14
+    LTEXT "", IDC_STATIC, 50, 79, 249, 1, SS_ETCHEDHORZ
     LTEXT "O tipo de teclado controla os caracteres que aparecem quando digita.", IDC_STATIC, 50, 86, 253, 8
-    LTEXT "", IDC_LAYOUTTEXT, 50, 100, 250, 16
+    LTEXT "%s", IDC_LAYOUTTEXT, 50, 100, 250, 16
     LTEXT "Para alterar o tipo do teclado, clique em Personalizar.", IDC_STATIC, 50, 126, 184, 8
     PUSHBUTTON "P&ersonalizar...", IDC_CUSTOMLAYOUT, 245, 122, 55, 14
 END
@@ -151,7 +152,7 @@ CAPTION "Definições avançadas"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "", IDC_PS2STATIC, 5, 20, 242, 110
-    RTEXT "&Frequencia de amostragem:", -1, 27, 35, 90, 8
+    RTEXT "&Frequência de amostragem:", -1, 27, 35, 90, 8
     LTEXT "Relatórios por segundo", -1, 169, 35, 76, 8
     COMBOBOX IDC_PS2MOUSESAMPLERATE, 124, 33, 42, 41, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
     RTEXT "&Detecção da roda:", -1, 27, 55, 90, 8
@@ -174,6 +175,8 @@ BEGIN
     IDS_COMPUTERSUBTITLE "Deve fornecer um nome e palavra-passe de administrador para o seu computador."
     IDS_LOCALETITLE "Configurações Regionais"
     IDS_LOCALESUBTITLE "Pode personalizar o ReactOS para diferentes regiões e línguas."
+    IDS_LOCALETEXT "Os padrões e formatos são definidos como %s, e o local é definido como %s."
+    IDS_LAYOUTTEXT "O método e idioma de entrada de texto padrão é: Estilo de teclado %s"
     IDS_DATETIMETITLE "Data e Hora"
     IDS_DATETIMESUBTITLE "Definir a data e a hora correctas para o seu computador."
     IDS_PROCESSTITLE "A registar componentes"
@@ -199,7 +202,7 @@ BEGIN
      *   samsrv.dll:IDS_USER_ADMINISTRATOR_NAME synchronized.
      *   Also check the IDD_COMPUTERPAGE dialog.
      */
-    IDS_ADMINISTRATOR_NAME "Administrator"
+    IDS_ADMINISTRATOR_NAME "Administrador"
     IDS_MACHINE_OWNER_NAME "Proprietário"
 END
 
@@ -249,5 +252,5 @@ BEGIN
     IDS_PRODUCTWORKSTATIONNAME "Estação de trabalho ReactOS"
     IDS_PRODUCTSERVERINFO "O sistema será reconhecido como um servidor. As pastas privadas ""Minhas imagens"", ""Meus vídeos"" e ""Minhas músicas"" são independentes de ""Meus documentos""."
     IDS_PRODUCTWORKSTATIONINFO "O sistema será reconhecido como uma estação de trabalho. As pastas privadas ""Minhas imagens"", ""Meus vídeos"" e ""Minhas músicas"" estão em ""Meus documentos""."
-    IDS_DEFAULT "(Default)"
+    IDS_DEFAULT "(Padrão)"
 END

@@ -13,7 +13,7 @@
 #include <debug.h>
 
 /*
-Tested with the system kmtest 
+Tested with the system kmtest
 the following functions:
 FsRtlInitializeTunnelCache
 FsRtlDeleteTunnelCache
@@ -61,7 +61,7 @@ void TestFsRtlInitializeTunnelCache()
 
     eq = RtlCompareMemory((const VOID*)T, (const VOID*)Tb,  sizeof(TUNNEL));
 
-    ok ( eq != sizeof(TUNNEL), "FsRtlInitializeTunnelCache function did not change anything in the memory at the address PTUNEL.\n"); 
+    ok ( eq != sizeof(TUNNEL), "FsRtlInitializeTunnelCache function did not change anything in the memory at the address PTUNEL.\n");
 }
 
 void TestFsRtlAddToTunnelCache(ULONGLONG DirectoryKey, PUNICODE_STRING s_name, PUNICODE_STRING l_name, BOOLEAN KeyByShortName)
@@ -91,7 +91,7 @@ void TestFsRtlAddToTunnelCache(ULONGLONG DirectoryKey, PUNICODE_STRING s_name, P
 
     eq = RtlCompareMemory((const VOID*)Buf, (const VOID*)Bufb,  BufSize);
 
-    ok( eq !=  sizeof(TUNNEL),"FsRtlAddToTunnelCache function did not change anything in the memory at the address Buf.\n"); 
+    ok( eq !=  sizeof(TUNNEL),"FsRtlAddToTunnelCache function did not change anything in the memory at the address Buf.\n");
 
     b = RtlCompareUnicodeString(l_name, bl_name, TRUE);
     ok (b == 0, "long name after call FsRtlAddToTunnelCache != long name befo call FsRtlAddToTunnelCache\n\n");
@@ -113,7 +113,7 @@ BOOLEAN TestFsRtlFindInTunnelCache(ULONG DirectoryKey, PUNICODE_STRING name, PUN
     PVOID Buf = ExAllocatePool(PagedPool, BufSize*2);
     ok(Buf != NULL, "Buff in FsRtlFindInTunnelCache is NULL after allocated memory\n");
 
-    return FsRtlFindInTunnelCache(T, DirectoryKey, name, s_name, l_name, &BufsizeTemp, Buf); 
+    return FsRtlFindInTunnelCache(T, DirectoryKey, name, s_name, l_name, &BufsizeTemp, Buf);
 }
 
 void TestFsRtlDeleteKeyFromTunnelCache(ULONGLONG a)

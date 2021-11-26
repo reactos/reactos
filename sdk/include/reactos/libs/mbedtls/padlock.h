@@ -3,9 +3,12 @@
  *
  * \brief VIA PadLock ACE for HW encryption/decryption supported by some
  *        processors
+ *
+ * \warning These functions are only for internal use by other library
+ *          functions; you must not call them directly.
  */
 /*
- *  Copyright (C) 2006-2015, ARM Limited, All Rights Reserved
+ *  Copyright The Mbed TLS Contributors
  *  SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
  *
  *  This file is provided under the Apache License 2.0, or the
@@ -46,8 +49,6 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  *
  *  **********
- *
- *  This file is part of mbed TLS (https://tls.mbed.org)
  */
 #ifndef MBEDTLS_PADLOCK_H
 #define MBEDTLS_PADLOCK_H
@@ -83,23 +84,29 @@
 #define MBEDTLS_PADLOCK_PHE 0x0C00
 #define MBEDTLS_PADLOCK_PMM 0x3000
 
-#define MBEDTLS_PADLOCK_ALIGN16(x) (uint32_t *) (16 + ((int32_t) x & ~15))
+#define MBEDTLS_PADLOCK_ALIGN16(x) (uint32_t *) (16 + ((int32_t) (x) & ~15))
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 /**
- * \brief          PadLock detection routine
+ * \brief          Internal PadLock detection routine
+ *
+ * \note           This function is only for internal use by other library
+ *                 functions; you must not call it directly.
  *
  * \param feature  The feature to detect
  *
- * \return         1 if CPU has support for the feature, 0 otherwise
+ * \return         non-zero if CPU has support for the feature, 0 otherwise
  */
 int mbedtls_padlock_has_support( int feature );
 
 /**
- * \brief          PadLock AES-ECB block en(de)cryption
+ * \brief          Internal PadLock AES-ECB block en(de)cryption
+ *
+ * \note           This function is only for internal use by other library
+ *                 functions; you must not call it directly.
  *
  * \param ctx      AES context
  * \param mode     MBEDTLS_AES_ENCRYPT or MBEDTLS_AES_DECRYPT
@@ -109,12 +116,15 @@ int mbedtls_padlock_has_support( int feature );
  * \return         0 if success, 1 if operation failed
  */
 int mbedtls_padlock_xcryptecb( mbedtls_aes_context *ctx,
-                       int mode,
-                       const unsigned char input[16],
-                       unsigned char output[16] );
+                               int mode,
+                               const unsigned char input[16],
+                               unsigned char output[16] );
 
 /**
- * \brief          PadLock AES-CBC buffer en(de)cryption
+ * \brief          Internal PadLock AES-CBC buffer en(de)cryption
+ *
+ * \note           This function is only for internal use by other library
+ *                 functions; you must not call it directly.
  *
  * \param ctx      AES context
  * \param mode     MBEDTLS_AES_ENCRYPT or MBEDTLS_AES_DECRYPT
@@ -126,11 +136,11 @@ int mbedtls_padlock_xcryptecb( mbedtls_aes_context *ctx,
  * \return         0 if success, 1 if operation failed
  */
 int mbedtls_padlock_xcryptcbc( mbedtls_aes_context *ctx,
-                       int mode,
-                       size_t length,
-                       unsigned char iv[16],
-                       const unsigned char *input,
-                       unsigned char *output );
+                               int mode,
+                               size_t length,
+                               unsigned char iv[16],
+                               const unsigned char *input,
+                               unsigned char *output );
 
 #ifdef __cplusplus
 }

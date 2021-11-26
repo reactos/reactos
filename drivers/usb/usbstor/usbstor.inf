@@ -95,7 +95,7 @@ GenericBulkOnlyTransport.DeviceDesc = "USB úložné zariadenie"
 [Strings.041f]
 ReactOS = "ReactOS Takımı"
 
-GenericMfg = "(Umûmî USB Aygıtları)"
+GenericMfg = "(Genel USB Aygıtları)"
 GenericBulkOnlyTransport.DeviceDesc = "USB Depolama Aygıtı"
 
 [Strings.0422]

@@ -154,7 +154,7 @@ BOOL GetAdapterInfo(LPCSTR lpszDeviceName, D3DADAPTER_IDENTIFIER9* pIdentifier)
     BOOL FoundDisplayDevice;
 
     memset(&DisplayDevice, 0, sizeof(DISPLAY_DEVICEA));
-    DisplayDevice.cb = sizeof(DISPLAY_DEVICEA);   
+    DisplayDevice.cb = sizeof(DISPLAY_DEVICEA);
 
     AdapterIndex = 0;
     FoundDisplayDevice = FALSE;
@@ -333,7 +333,7 @@ static D3DFORMAT Get16BitD3DFormat(LPCSTR lpszDeviceName)
 BOOL GetAdapterMode(LPCSTR lpszDeviceName, D3DDISPLAYMODE* pMode)
 {
     DEVMODEA DevMode;
-    
+
     memset(&DevMode, 0, sizeof(DEVMODEA));
     DevMode.dmSize = sizeof(DEVMODEA);
     if (FALSE == EnumDisplaySettingsA(lpszDeviceName, ENUM_CURRENT_SETTINGS, &DevMode))
@@ -342,7 +342,7 @@ BOOL GetAdapterMode(LPCSTR lpszDeviceName, D3DDISPLAYMODE* pMode)
     pMode->Width = DevMode.dmPelsWidth;
     pMode->Height = DevMode.dmPelsHeight;
     pMode->RefreshRate = DevMode.dmDisplayFrequency;
-    
+
     switch (DevMode.dmBitsPerPel)
     {
     case 8:

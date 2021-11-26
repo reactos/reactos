@@ -5,7 +5,7 @@ LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 IDD_MSCONFIG_DIALOG DIALOGEX 0, 0, 378, 220
 STYLE DS_SHELLFONT | DS_CENTER | WS_MINIMIZEBOX | WS_POPUP |
       WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_CAPTION | WS_SYSMENU
-CAPTION "Dizge Yapılandırma İzlencesi"
+CAPTION "Sistem Yapılandırma Programı"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "Tab1", IDC_TAB, "SysTabControl32", WS_TABSTOP, 2, 2, 374, 195
@@ -22,7 +22,7 @@ BEGIN
     CONTROL "List3", IDC_STARTUP_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL |
             LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 2, 1, 360, 148
     PUSHBUTTON "&Tümünü Etkinleştir", IDC_BTN_STARTUP_ACTIVATE, 223, 155, 66, 14
-    PUSHBUTTON "T&ümünü Edilginleştir", IDC_BTN_STARTUP_DEACTIVATE, 295, 155, 66, 14
+    PUSHBUTTON "T&ümünü Devre Dışı Bırak", IDC_BTN_STARTUP_DEACTIVATE, 295, 155, 66, 14
 END
 
 IDD_SYSTEM_PAGE DIALOGEX 0, 0, 362, 175
@@ -35,12 +35,12 @@ BEGIN
     PUSHBUTTON "&Yukarı Taşı", IDC_BTN_SYSTEM_UP, 290, 5, 66, 14
     PUSHBUTTON "&Aşağı Taşı", IDC_BTN_SYSTEM_DOWN, 290, 25, 66, 14
     PUSHBUTTON "&Etkinleştir", IDC_BTN_SYSTEM_ENABLE, 290, 50, 66, 14
-    PUSHBUTTON "E&dilginleştir", IDC_BTN_SYSTEM_DISABLE, 290, 70, 66, 14
+    PUSHBUTTON "D&evre Dışı Bırak", IDC_BTN_SYSTEM_DISABLE, 290, 70, 66, 14
     PUSHBUTTON "A&ra", IDC_BTN_SYSTEM_FIND, 290, 95, 66, 14
     PUSHBUTTON "Ye&ni", IDC_BTN_SYSTEM_NEW, 290, 115, 66, 14
     PUSHBUTTON "De&ğiştir", IDC_BTN_SYSTEM_EDIT, 290, 135, 66, 14
     PUSHBUTTON "&Tümünü Etkinleştir", IDC_BTN_SYSTEM_ACTIVATE, 123, 155, 66, 14
-    PUSHBUTTON "T&ümünü Edilginleştir", IDC_BTN_SYSTEM_DEACTIVATE, 195, 155, 66, 14
+    PUSHBUTTON "T&ümünü Devre Dışı Bırak", IDC_BTN_SYSTEM_DEACTIVATE, 195, 155, 66, 14
 END
 
 IDD_TOOLS_PAGE DIALOGEX 0, 0, 362, 175
@@ -60,7 +60,7 @@ BEGIN
     CONTROL "List1", IDC_SERVICES_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL |
             LVS_SHOWSELALWAYS | LVS_SORTASCENDING | WS_BORDER | WS_TABSTOP, 2, 1, 360, 148
     PUSHBUTTON "&Tümünü Etkinleştir", IDC_BTN_SERVICES_ACTIVATE, 223, 155, 66, 14
-    PUSHBUTTON "T&ümünü Edilginleştir", IDC_BTN_SERVICES_DEACTIVATE, 295, 155, 66, 14
+    PUSHBUTTON "T&ümünü Devre Dışı Bırak", IDC_BTN_SERVICES_DEACTIVATE, 295, 155, 66, 14
 END
 
 IDD_GENERAL_PAGE DIALOGEX 0, 0, 362, 175
@@ -68,11 +68,11 @@ STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Başlangıç Seçimi", -1, 10, 10, 340, 150,0, WS_EX_TRANSPARENT
-    CONTROL "&Düzgülü Başlangıç - Tüm aygıt sürücülerini ve hizmetleri yükle.", IDC_CBX_NORMAL_START, "Button", 0x50010009, 20, 30, 260, 10
+    CONTROL "&Standart Başlangıç - Tüm aygıt sürücülerini ve hizmetleri yükle.", IDC_CBX_NORMAL_START, "Button", 0x50010009, 20, 30, 260, 10
     CONTROL "&Tanılama Başlangıcı - Yalnızca ana aygıtları ve ana hizmetleri yükle.", IDC_CBX_DIAGNOSTIC_START, "Button", 0x50010009, 20, 45, 260, 10
     CONTROL "&Seçmeli Başlangıç", IDC_CBX_SELECTIVE_STARTUP, "Button", 0x50010009, 20, 60, 260, 10
-    AUTOCHECKBOX "S&YSTEM.INI Kütüğünü İşle", IDC_CBX_SYSTEM_INI, 30, 80, 260, 10
-    AUTOCHECKBOX "D&izge Hizmetlerini Yükle", IDC_CBX_SYSTEM_SERVICE, 30, 95, 260, 10
+    AUTOCHECKBOX "S&YSTEM.INI Dosyasını İşle", IDC_CBX_SYSTEM_INI, 30, 80, 260, 10
+    AUTOCHECKBOX "S&istem Hizmetlerini Yükle", IDC_CBX_SYSTEM_SERVICE, 30, 95, 260, 10
     AUTOCHECKBOX "&Başlangıç Ögelerini Yükle", IDC_CBX_STARTUP_ITEM, 30, 110, 260, 10
 END
 
@@ -83,7 +83,7 @@ BEGIN
     LISTBOX IDC_LIST_BOX, 10, 10, 340, 50, WS_CHILD | WS_VISIBLE | WS_TABSTOP |
             LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_HSCROLL
     PUSHBUTTON "&Tüm Ön Yükleme Yollarını Denetle", IDC_BTN_CHECK_BOOT_PATH, 10, 65, 70, 12
-    PUSHBUTTON "&Ön Tanımlı Olarak Ayarla", IDC_BTN_SET_DEFAULT_BOOT, 100, 65, 70, 12
+    PUSHBUTTON "&Varsayılan Olarak Ayarla", IDC_BTN_SET_DEFAULT_BOOT, 100, 65, 70, 12
     PUSHBUTTON "&Yukarı Taşı", IDC_BTN_MOVE_UP_BOOT_OPTION, 190, 65, 70, 12
     PUSHBUTTON "&Aşağı Taşı", IDC_BTN_MOVE_DOWN_BOOT_OPTION, 280, 65, 70, 12
     GROUPBOX "Ön Yükleme Seçenekleri", -1, 10, 80, 250, 90, 0, WS_EX_TRANSPARENT
@@ -93,7 +93,7 @@ BEGIN
     CHECKBOX "/BAS&EVIDEO", IDC_CBX_BASE_VIDEO, 15, 135, 55, 10
     CHECKBOX "/S&OS", IDC_CBX_SOS, 15, 150, 50, 10
     PUSHBUTTON "&Gelişmiş Seçenekler...", IDC_BTN_ADVANCED_OPTIONS, 100, 150, 70, 12
-    LTEXT "&Süre Aşımı:", -1, 280, 91, 30, 10
+    LTEXT "&Zaman Aşımı:", -1, 280, 91, 30, 10
     EDITTEXT IDC_TXT_BOOT_TIMEOUT, 310, 90, 25, 12, ES_LEFT
     LTEXT "s", -1, 340, 91, 15, 10
 END
@@ -125,8 +125,8 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_MSCONFIG "Dizge Yapılandırma İzlencesi"
-    IDS_TAB_GENERAL "Umûmî"
+    IDS_MSCONFIG "Sistem Yapılandırma Programı"
+    IDS_TAB_GENERAL "Genel"
     IDS_TAB_SYSTEM "SYSTEM.INI"
     IDS_TAB_FREELDR "FREELDR.INI"
     IDS_TAB_SERVICES "Hizmetler"
@@ -152,10 +152,10 @@ BEGIN
     IDS_TOOLS_INFO_NAME "Sürüm"
     IDS_TOOLS_INFO_DESCR "Sürüm bilgisini görüntüler."
     IDS_TOOLS_INFO_CMD "winver.exe"
-    IDS_TOOLS_REGEDIT_NAME "Değer Defteri Düzenleyicisi"
-    IDS_TOOLS_REGEDIT_DESCR "Değer Defteri Düzenleyicisi'ni açar."
+    IDS_TOOLS_REGEDIT_NAME "Kayıt Defteri Düzenleyicisi"
+    IDS_TOOLS_REGEDIT_DESCR "Kayıt Defteri Düzenleyicisi'ni açar."
     IDS_TOOLS_REGEDIT_CMD "regedit.exe"
-    IDS_TOOLS_SYSDM_NAME "Dizge Husûsiyetleri"
+    IDS_TOOLS_SYSDM_NAME "Sistem özellikleri"
     IDS_TOOLS_SYSDM_DESCR "Bu bilgisayarla ilgili bilgi verir."
     IDS_TOOLS_SYSDM_CMD "control.exe"
     IDS_TOOLS_SYSDM_PARAM "sysdm.cpl"

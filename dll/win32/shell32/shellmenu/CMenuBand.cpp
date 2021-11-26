@@ -632,7 +632,7 @@ HRESULT STDMETHODCALLTYPE CMenuBand::SetClient(IUnknown *punkClient)
     CComPtr<IMenuPopup> child = m_subMenuChild;
 
     m_subMenuChild = NULL;
-        
+
     if (child)
     {
         IUnknown_SetSite(child, NULL);
@@ -822,7 +822,7 @@ HRESULT CMenuBand::_TrackContextMenu(IContextMenu * contextMenu, INT x, INT y)
 {
     HRESULT hr;
     UINT uCommand;
-    
+
     // Ensure that the menu doesn't disappear on us
     CComPtr<IContextMenu> ctxMenu = contextMenu;
 
@@ -1075,7 +1075,7 @@ HRESULT CMenuBand::_OnPopupSubMenu(IShellMenu * childShellMenu, POINTL * pAt, RE
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
-    // 
+    //
     CComPtr<IMenuPopup> popup;
     hr = pDeskBar->QueryInterface(IID_PPV_ARG(IMenuPopup, &popup));
     if (FAILED_UNEXPECTEDLY(hr))

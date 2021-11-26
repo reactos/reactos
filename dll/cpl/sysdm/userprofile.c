@@ -781,7 +781,7 @@ OnNotify(
     _In_ NMHDR *nmhdr)
 {
     LPNMLISTVIEW pNMLV;
-    
+
     if (nmhdr->idFrom == IDC_USERACCOUNT_LINK && nmhdr->code == NM_CLICK)
     {
         ShellExecuteW(hwndDlg, NULL, L"usrmgr.cpl", NULL, NULL, 0);
@@ -791,19 +791,19 @@ OnNotify(
         switch(nmhdr->code)
         {
             case LVN_ITEMCHANGED:
-                UpdateButtonState(hwndDlg, nmhdr->hwndFrom);            
+                UpdateButtonState(hwndDlg, nmhdr->hwndFrom);
                 break;
-            
+
             case NM_DBLCLK:
                 ChangeUserProfileType(hwndDlg);
                 break;
-                
+
             case LVN_DELETEITEM:
-                pNMLV = (LPNMLISTVIEW)nmhdr;            
+                pNMLV = (LPNMLISTVIEW)nmhdr;
                 if (pNMLV->lParam != 0)
-                    HeapFree(GetProcessHeap(), 0, (LPVOID)pNMLV->lParam);                
+                    HeapFree(GetProcessHeap(), 0, (LPVOID)pNMLV->lParam);
                 break;
-        }        
+        }
     }
 }
 
@@ -820,7 +820,7 @@ UserProfileDlgProc(HWND hwndDlg,
         case WM_INITDIALOG:
             OnInitUserProfileDialog(hwndDlg);
             return TRUE;
-    
+
         case WM_COMMAND:
             switch (LOWORD(wParam))
             {

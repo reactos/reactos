@@ -375,7 +375,7 @@ InstallSysSetupInfComponents(VOID)
                                       ARRAYSIZE(szNameBuffer),
                                       NULL))
             {
-                FatalError("Error while trying to get component name \n");
+                FatalError("Error while trying to get component name\n");
                 return FALSE;
             }
 
@@ -385,11 +385,11 @@ InstallSysSetupInfComponents(VOID)
                                       ARRAYSIZE(szSectionBuffer),
                                       NULL))
             {
-                FatalError("Error while trying to get component install section \n");
+                FatalError("Error while trying to get component install section\n");
                 return FALSE;
             }
 
-            DPRINT("Trying to execute install section '%S' from '%S' \n", szSectionBuffer, szNameBuffer);
+            DPRINT("Trying to execute install section '%S' from '%S'\n", szSectionBuffer, szNameBuffer);
 
             hComponentInf = SetupOpenInfFileW(szNameBuffer,
                                               NULL,

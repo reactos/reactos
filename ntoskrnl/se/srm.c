@@ -13,9 +13,6 @@
 #define NDEBUG
 #include <debug.h>
 
-extern LUID SeSystemAuthenticationId;
-extern LUID SeAnonymousAuthenticationId;
-
 /* PRIVATE DEFINITIONS ********************************************************/
 
 typedef struct _SEP_LOGON_SESSION_TERMINATED_NOTIFICATION
@@ -27,7 +24,7 @@ typedef struct _SEP_LOGON_SESSION_TERMINATED_NOTIFICATION
 VOID
 NTAPI
 SepRmCommandServerThread(
-    PVOID StartContext);
+    _In_ PVOID StartContext);
 
 static
 NTSTATUS
@@ -37,10 +34,13 @@ SepCleanupLUIDDeviceMapDirectory(
 static
 NTSTATUS
 SepRmCreateLogonSession(
-    PLUID LogonLuid);
+    _In_ PLUID LogonLuid);
 
 
 /* GLOBALS ********************************************************************/
+
+extern LUID SeSystemAuthenticationId;
+extern LUID SeAnonymousAuthenticationId;
 
 HANDLE SeRmCommandPort;
 HANDLE SeLsaInitEvent;
@@ -61,7 +61,6 @@ UCHAR SeAuditingState[POLICY_AUDIT_EVENT_TYPE_COUNT];
 KGUARDED_MUTEX SepRmDbLock;
 PSEP_LOGON_SESSION_REFERENCES SepLogonSessions = NULL;
 PSEP_LOGON_SESSION_TERMINATED_NOTIFICATION SepLogonNotifications = NULL;
-
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
@@ -163,7 +162,15 @@ Cleanup:
     return Status;
 }
 
-
+/**
+ * @brief
+ * Manages the phase 0 initialization of the security reference
+ * monitoring module of the kernel.
+ *
+ * @return
+ * Returns TRUE when phase 0 initialization has completed without
+ * problems, FALSE otherwise.
+ */
 BOOLEAN
 NTAPI
 SeRmInitPhase0(VOID)
@@ -190,7 +197,15 @@ SeRmInitPhase0(VOID)
     return TRUE;
 }
 
-
+/**
+ * @brief
+ * Manages the phase 1 initialization of the security reference
+ * monitoring module of the kernel.
+ *
+ * @return
+ * Returns TRUE when phase 1 initialization has completed without
+ * problems, FALSE otherwise.
+ */
 BOOLEAN
 NTAPI
 SeRmInitPhase1(VOID)
@@ -247,6 +262,13 @@ SeRmInitPhase1(VOID)
     return TRUE;
 }
 
+/**
+ * @brief
+ * Initializes the local security authority audit bounds.
+ *
+ * @return
+ * Nothing.
+ */
 static
 VOID
 SepAdtInitializeBounds(VOID)
@@ -285,11 +307,22 @@ SepAdtInitializeBounds(VOID)
     SepAdtMaxListLength = ListBounds.MaxLength;
 }
 
-
+/**
+ * @brief
+ * Sets an audit event for future security auditing monitoring.
+ *
+ * @param[in,out] Message
+ * The reference monitoring API message. It is used to determine
+ * if the right API message number is provided, RmAuditSetCommand
+ * in this case.
+ *
+ * @return
+ * Returns STATUS_SUCCESS.
+ */
 static
 NTSTATUS
 SepRmSetAuditEvent(
-    PSEP_RM_API_MESSAGE Message)
+    _Inout_ PSEP_RM_API_MESSAGE Message)
 {
     ULONG i;
     PAGED_CODE();
@@ -317,7 +350,7 @@ SepRmSetAuditEvent(
 /**
  * @brief
  * Inserts a logon session into an access token specified by the
- * caller. 
+ * caller.
  *
  * @param[in,out] Token
  * An access token where the logon session is about to be inserted
@@ -456,10 +489,28 @@ SepRmRemoveLogonSessionFromToken(
     return STATUS_SUCCESS;
 }
 
+/**
+ * @brief
+ * Creates a logon session. The security reference monitoring (SRM)
+ * module of Executive uses this as an internal kernel data for
+ * respective logon sessions management within the kernel,
+ * as in form of a SEP_LOGON_SESSION_REFERENCES data structure.
+ *
+ * @param[in] LogonLuid
+ * A logon ID represented as a LUID. This LUID is used to create
+ * our logon session and add it to the sessions database.
+ *
+ * @return
+ * Returns STATUS_SUCCESS if the logon has been created successfully.
+ * STATUS_LOGON_SESSION_EXISTS is returned if a logon session with
+ * the pointed logon ID in the call already exists.
+ * STATUS_INSUFFICIENT_RESOURCES is returned if logon session allocation
+ * has failed because of lack of memory pool resources.
+ */
 static
 NTSTATUS
 SepRmCreateLogonSession(
-    PLUID LogonLuid)
+    _In_ PLUID LogonLuid)
 {
     PSEP_LOGON_SESSION_REFERENCES CurrentSession, NewSession;
     NTSTATUS Status;
@@ -627,10 +678,22 @@ Leave:
     return Status;
 }
 
-
+/**
+ * @brief
+ * References a logon session.
+ *
+ * @param[in] LogonLuid
+ * A valid LUID that points to the logon session in the database that
+ * we're going to reference it.
+ *
+ * @return
+ * Returns STATUS_SUCCESS if the logon has been referenced.
+ * STATUS_NO_SUCH_LOGON_SESSION is returned if the session couldn't be
+ * found otherwise.
+ */
 NTSTATUS
 SepRmReferenceLogonSession(
-    PLUID LogonLuid)
+    _In_ PLUID LogonLuid)
 {
     PSEP_LOGON_SESSION_REFERENCES CurrentSession;
 
@@ -667,6 +730,22 @@ SepRmReferenceLogonSession(
     return STATUS_NO_SUCH_LOGON_SESSION;
 }
 
+/**
+ * @brief
+ * Cleans the DOS device map directory of a logon
+ * session.
+ *
+ * @param[in] LogonLuid
+ * A logon session ID where its DOS device map directory
+ * is to be cleaned.
+ *
+ * @return
+ * Returns STATUS_SUCCESS if the device map directory has been
+ * successfully cleaned from the logon session. STATUS_INVALID_PARAMETER
+ * is returned if the caller hasn't submitted any logon ID. STATUS_NO_MEMORY
+ * is returned if buffer allocation for links has failed. A failure
+ * NTSTATUS code is returned otherwise.
+ */
 static
 NTSTATUS
 SepCleanupLUIDDeviceMapDirectory(
@@ -910,10 +989,24 @@ AllocateLinksAgain:
     return Status;
 }
 
-
+/**
+ * @brief
+ * De-references a logon session. If the session has a reference
+ * count of 0 by the time the function has de-referenced the logon,
+ * that means the session is no longer used and can be safely deleted
+ * from the logon sessions database.
+ *
+ * @param[in] LogonLuid
+ * A logon session ID to de-reference.
+ *
+ * @return
+ * Returns STATUS_SUCCESS if the logon session has been de-referenced
+ * without issues. STATUS_NO_SUCH_LOGON_SESSION is returned if no
+ * such logon exists otherwise.
+ */
 NTSTATUS
 SepRmDereferenceLogonSession(
-    PLUID LogonLuid)
+    _In_ PLUID LogonLuid)
 {
     ULONG RefCount;
     PDEVICE_MAP DeviceMap;
@@ -965,7 +1058,18 @@ SepRmDereferenceLogonSession(
     return STATUS_NO_SUCH_LOGON_SESSION;
 }
 
-
+/**
+ * @brief
+ * Main SRM server thread initialization function. It deals
+ * with security manager and LSASS port connection, thus
+ * thereby allowing communication between the kernel side
+ * (the SRM) and user mode side (the LSASS) of the security
+ * world of the operating system.
+ *
+ * @return
+ * Returns TRUE if command server connection between SRM
+ * and LSASS has succeeded, FALSE otherwise.
+ */
 BOOLEAN
 NTAPI
 SepRmCommandServerThreadInit(VOID)
@@ -1108,10 +1212,19 @@ Cleanup:
     return Result;
 }
 
+/**
+ * @brief
+ * Manages the SRM server API commands, that is, receiving such API
+ * command messages from the user mode side of the security standpoint,
+ * the LSASS.
+ *
+ * @return
+ * Nothing.
+ */
 VOID
 NTAPI
 SepRmCommandServerThread(
-    PVOID StartContext)
+    _In_ PVOID StartContext)
 {
     SEP_RM_API_MESSAGE Message;
     PPORT_MESSAGE ReplyMessage;
@@ -1211,15 +1324,29 @@ SepRmCommandServerThread(
 
 /* PUBLIC FUNCTIONS ***********************************************************/
 
-/*
- * @unimplemented
+/**
+ * @brief
+ * Retrieves the DOS device map from a logon session.
+ *
+ * @param[in] LogonId
+ * A valid logon session ID.
+ *
+ * @param[out] DeviceMap
+ * The returned device map buffer from the logon session.
+ *
+ * @return
+ * Returns STATUS_SUCCESS if the device map could be gathered
+ * from the logon session. STATUS_INVALID_PARAMETER is returned if
+ * one of the parameters aren't initialized (that is, the caller has
+ * submitted a NULL pointer variable). STATUS_NO_SUCH_LOGON_SESSION is
+ * returned if no such session could be found. A failure NTSTATUS code
+ * is returned otherwise.
  */
 NTSTATUS
 NTAPI
 SeGetLogonIdDeviceMap(
-    IN PLUID LogonId,
-    OUT PDEVICE_MAP * DeviceMap
-    )
+    _In_ PLUID LogonId,
+    _Out_ PDEVICE_MAP *DeviceMap)
 {
     NTSTATUS Status;
     WCHAR Buffer[63];
@@ -1425,14 +1552,25 @@ SeMarkLogonSessionForTerminationNotification(
     return STATUS_SUCCESS;
 }
 
-
-/*
- * @implemented
+/**
+ * @brief
+ * Registers a callback that will be called once a logon session
+ * terminates.
+ *
+ * @param[in] CallbackRoutine
+ * Callback routine address.
+ *
+ * @return
+ * Returns STATUS_SUCCESS if the callback routine was registered
+ * successfully. STATUS_INVALID_PARAMETER is returned if the caller
+ * did not provide a callback routine. STATUS_INSUFFICIENT_RESOURCES
+ * is returned if the callback notification data couldn't be allocated
+ * because of lack of memory pool resources.
  */
 NTSTATUS
 NTAPI
 SeRegisterLogonSessionTerminatedRoutine(
-    IN PSE_LOGON_SESSION_TERMINATED_ROUTINE CallbackRoutine)
+    _In_ PSE_LOGON_SESSION_TERMINATED_ROUTINE CallbackRoutine)
 {
     PSEP_LOGON_SESSION_TERMINATED_NOTIFICATION Notification;
     PAGED_CODE();
@@ -1464,14 +1602,24 @@ SeRegisterLogonSessionTerminatedRoutine(
     return STATUS_SUCCESS;
 }
 
-
-/*
- * @implemented
+/**
+ * @brief
+ * Un-registers a callback routine, previously registered by
+ * SeRegisterLogonSessionTerminatedRoutine function.
+ *
+ * @param[in] CallbackRoutine
+ * Callback routine address to un-register.
+ *
+ * @return
+ * Returns STATUS_SUCCESS if the callback routine was un-registered
+ * successfully. STATUS_INVALID_PARAMETER is returned if the caller
+ * did not provide a callback routine. STATUS_NOT_FOUND is returned
+ * if the callback notification item couldn't be found.
  */
 NTSTATUS
 NTAPI
 SeUnregisterLogonSessionTerminatedRoutine(
-    IN PSE_LOGON_SESSION_TERMINATED_ROUTINE CallbackRoutine)
+    _In_ PSE_LOGON_SESSION_TERMINATED_ROUTINE CallbackRoutine)
 {
     PSEP_LOGON_SESSION_TERMINATED_NOTIFICATION Current, Previous = NULL;
     NTSTATUS Status;
@@ -1520,3 +1668,5 @@ SeUnregisterLogonSessionTerminatedRoutine(
 
     return Status;
 }
+
+/* EOF */

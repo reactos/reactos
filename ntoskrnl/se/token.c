@@ -467,6 +467,22 @@ SepImpersonateAnonymousToken(
     return Status;
 }
 
+/**
+ * @brief
+ * Updates the token's flags based upon the privilege that the token
+ * has been granted. The flag can either be taken out or given to the token
+ * if the attributes of the specified privilege is enabled or not.
+ *
+ * @param[in,out] Token
+ * The token where the flags are to be changed.
+ *
+ * @param[in] Index
+ * The index count which represents the total sum of privileges. The count in question
+ * MUST NOT exceed the expected privileges count of the token.
+ *
+ * @return
+ * Nothing.
+ */
 static
 VOID
 SepUpdateSinglePrivilegeFlagToken(
@@ -518,6 +534,18 @@ SepUpdateSinglePrivilegeFlagToken(
     }
 }
 
+/**
+ * @brief
+ * Updates the token's flags based upon the privilege that the token
+ * has been granted. The function uses the private helper, SepUpdateSinglePrivilegeFlagToken,
+ * in order to update the flags of a token.
+ *
+ * @param[in,out] Token
+ * The token where the flags are to be changed.
+ *
+ * @return
+ * Nothing.
+ */
 static
 VOID
 SepUpdatePrivilegeFlagsToken(
@@ -528,11 +556,25 @@ SepUpdatePrivilegeFlagsToken(
     /* Loop all privileges */
     for (i = 0; i < Token->PrivilegeCount; i++)
     {
-        /* Updates the flags dor this privilege */
+        /* Updates the flags for this privilege */
         SepUpdateSinglePrivilegeFlagToken(Token, i);
     }
 }
 
+/**
+ * @brief
+ * Removes a privilege from the token.
+ *
+ * @param[in,out] Token
+ * The token where the privilege is to be removed.
+ *
+ * @param[in] Index
+ * The index count which represents the number position of the privilege
+ * we want to remove.
+ *
+ * @return
+ * Nothing.
+ */
 static
 VOID
 SepRemovePrivilegeToken(
@@ -556,22 +598,107 @@ SepRemovePrivilegeToken(
     Token->PrivilegeCount--;
 }
 
+/**
+ * @brief
+ * Removes a group from the token.
+ *
+ * @param[in,out] Token
+ * The token where the group is to be removed.
+ *
+ * @param[in] Index
+ * The index count which represents the number position of the group
+ * we want to remove.
+ *
+ * @return
+ * Nothing.
+ */
+static
+VOID
+SepRemoveUserGroupToken(
+    _Inout_ PTOKEN Token,
+    _In_ ULONG Index)
+{
+    ULONG MoveCount;
+    ASSERT(Index < Token->UserAndGroupCount);
+
+    /* Calculate the number of trailing groups */
+    MoveCount = Token->UserAndGroupCount - Index - 1;
+    if (MoveCount != 0)
+    {
+        /* Time to remove the group by moving one location ahead */
+        RtlMoveMemory(&Token->UserAndGroups[Index],
+                      &Token->UserAndGroups[Index + 1],
+                      MoveCount * sizeof(SID_AND_ATTRIBUTES));
+    }
+
+    /* Remove one group count */
+    Token->UserAndGroupCount--;
+}
+
+/**
+ * @unimplemented
+ * @brief
+ * Frees (de-allocates) the proxy data memory block of a token.
+ *
+ * @param[in,out] ProxyData
+ * The proxy data to be freed.
+ *
+ * @return
+ * Nothing.
+ */
 VOID
 NTAPI
-SepFreeProxyData(PVOID ProxyData)
+SepFreeProxyData(
+    _Inout_ PVOID ProxyData)
 {
     UNIMPLEMENTED;
 }
 
+/**
+ * @unimplemented
+ * @brief
+ * Copies the proxy data from the source into the destination of a token.
+ *
+ * @param[out] Dest
+ * The destination path where the proxy data is to be copied to.
+ *
+ * @param[in] Src
+ * The source path where the proxy data is be copied from.
+ *
+ * @return
+ * To be added...
+ */
 NTSTATUS
 NTAPI
-SepCopyProxyData(PVOID* Dest,
-                 PVOID Src)
+SepCopyProxyData(
+    _Out_ PVOID* Dest,
+    _In_ PVOID Src)
 {
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
 
+/**
+ * @brief
+ * Replaces the old access token of a process (pointed by the EPROCESS kernel structure) with a
+ * new access token. The new access token must be a primary token for use.
+ *
+ * @param[in] Process
+ * The process instance where its access token is about to be replaced.
+ *
+ * @param[in] NewAccessToken
+ * The new token that it's going to replace the old one.
+ *
+ * @param[out] OldAccessToken
+ * The returned old token that's been replaced, which the caller can do anything.
+ *
+ * @return
+ * Returns STATUS_SUCCESS if the exchange operation between tokens has completed successfully.
+ * STATUS_BAD_TOKEN_TYPE is returned if the new token is not a primary one so that we cannot
+ * exchange it with the old one from the process. STATUS_TOKEN_ALREADY_IN_USE is returned if
+ * both tokens aren't equal which means one of them has different properties (groups, privileges, etc.)
+ * and as such one of them is currently in use. A failure NTSTATUS code is returned otherwise.
+ */
 NTSTATUS
 NTAPI
 SeExchangePrimaryToken(
@@ -652,9 +779,20 @@ SeExchangePrimaryToken(
     return STATUS_SUCCESS;
 }
 
+/**
+ * @brief
+ * Removes the primary token of a process.
+ *
+ * @param[in,out] Process
+ * The process instance with the access token to be removed.
+ *
+ * @return
+ * Nothing.
+ */
 VOID
 NTAPI
-SeDeassignPrimaryToken(PEPROCESS Process)
+SeDeassignPrimaryToken(
+    _Inout_ PEPROCESS Process)
 {
     PTOKEN OldToken;
 
@@ -668,9 +806,23 @@ SeDeassignPrimaryToken(PEPROCESS Process)
     ObDereferenceObject(OldToken);
 }
 
+/**
+ * @brief
+ * Computes the length size of a SID.
+ *
+ * @param[in] Count
+ * Total count of entries that have SIDs in them (that being PSID_AND_ATTRIBUTES in this context).
+ *
+ * @param[in] Src
+ * Source that points to the attributes and SID entry structure.
+ *
+ * @return
+ * Returns the total length of a SID size.
+ */
 static ULONG
-RtlLengthSidAndAttributes(ULONG Count,
-                          PSID_AND_ATTRIBUTES Src)
+RtlLengthSidAndAttributes(
+    _In_ ULONG Count,
+    _In_ PSID_AND_ATTRIBUTES Src)
 {
     ULONG i;
     ULONG uLength;
@@ -684,7 +836,35 @@ RtlLengthSidAndAttributes(ULONG Count,
     return uLength;
 }
 
-
+/**
+ * @brief
+ * Finds the primary group and default owner entity based on the submitted primary group instance
+ * and an access token.
+ *
+ * @param[in] Token
+ * Access token to begin the search query of primary group and default owner.
+ *
+ * @param[in] PrimaryGroup
+ * A primary group SID to be used for search query, determining if user & groups of a token
+ * and the submitted primary group do match.
+ *
+ * @param[in] DefaultOwner
+ * The default owner. If specified, it's used to determine if the token belongs to the actual user,
+ * that is, being the owner himself.
+ *
+ * @param[out] PrimaryGroupIndex
+ * Returns the primary group index.
+ *
+ * @param[out] DefaultOwnerIndex
+ * Returns the default owner index.
+ *
+ * @return
+ * Returns STATUS_SUCCESS if the find query operation has completed successfully and that at least one
+ * search result is requested by the caller. STATUS_INVALID_PARAMETER is returned if the caller hasn't requested
+ * any search result. STATUS_INVALID_OWNER is returned if the specified default user owner does not match with the other
+ * user from the token. STATUS_INVALID_PRIMARY_GROUP is returned if the specified default primary group does not match with the
+ * other group from the token.
+ */
 static NTSTATUS
 SepFindPrimaryGroupAndDefaultOwner(
     _In_ PTOKEN Token,
@@ -779,7 +959,37 @@ SepFindPrimaryGroupAndDefaultOwner(
     return STATUS_SUCCESS;
 }
 
-
+/**
+ * @brief
+ * Duplicates an access token, from an existing valid token.
+ *
+ * @param[in] Token
+ * Access token to duplicate.
+ *
+ * @param[in] ObjectAttributes
+ * Object attributes for the new token.
+ *
+ * @param[in] EffectiveOnly
+ * If set to TRUE, the function removes all the disabled privileges and groups of the token
+ * to duplicate.
+ *
+ * @param[in] TokenType
+ * Type of token.
+ *
+ * @param[in] Level
+ * Security impersonation level of a token.
+ *
+ * @param[in] PreviousMode
+ * The processor request level mode.
+ *
+ * @param[out] NewAccessToken
+ * The duplicated token.
+ *
+ * @return
+ * Returns STATUS_SUCCESS if the token has been duplicated. STATUS_INSUFFICIENT_RESOURCES is returned
+ * if memory pool allocation of the dynamic part of the token for duplication has failed due to the lack
+ * of memory resources. A failure NTSTATUS code is returned otherwise.
+ */
 NTSTATUS
 NTAPI
 SepDuplicateToken(
@@ -794,8 +1004,10 @@ SepDuplicateToken(
     NTSTATUS Status;
     PTOKEN AccessToken;
     PVOID EndMem;
+    ULONG PrimaryGroupIndex;
     ULONG VariableLength;
     ULONG TotalSize;
+    ULONG PrivilegesIndex, GroupsIndex;
 
     PAGED_CODE();
 
@@ -922,10 +1134,6 @@ SepDuplicateToken(
         }
     }
 
-#if 1
-    {
-    ULONG PrimaryGroupIndex;
-
     /* Find the token primary group */
     Status = SepFindPrimaryGroupAndDefaultOwner(AccessToken,
                                                 Token->PrimaryGroup,
@@ -937,11 +1145,8 @@ SepDuplicateToken(
         DPRINT1("SepFindPrimaryGroupAndDefaultOwner failed (Status 0x%lx)\n", Status);
         goto Quit;
     }
+
     AccessToken->PrimaryGroup = AccessToken->UserAndGroups[PrimaryGroupIndex].Sid;
-    }
-#else
-    AccessToken->PrimaryGroup = (PVOID)((ULONG_PTR)AccessToken + (ULONG_PTR)Token->PrimaryGroup - (ULONG_PTR)Token->UserAndGroups);
-#endif
     AccessToken->DefaultOwnerIndex = Token->DefaultOwnerIndex;
 
     /* Copy the restricted SIDs */
@@ -968,12 +1173,78 @@ SepDuplicateToken(
         }
     }
 
+    /*
+     * Filter the token by removing the disabled privileges
+     * and groups if the caller wants to duplicate an access
+     * token as effective only.
+     */
+    if (EffectiveOnly)
+    {
+        /* Begin querying the groups and search for disabled ones */
+        for (GroupsIndex = 0; GroupsIndex < AccessToken->UserAndGroupCount; GroupsIndex++)
+        {
+            /*
+             * A group or user is considered disabled if its attributes is either
+             * 0 or SE_GROUP_ENABLED is not included in the attributes flags list.
+             * That is because a certain user and/or group can have several attributes
+             * that bear no influence on whether a user/group is enabled or not
+             * (SE_GROUP_ENABLED_BY_DEFAULT for example which is a mere indicator
+             * that the group has just been enabled by default). A mandatory
+             * group (that is, the group has SE_GROUP_MANDATORY attribute)
+             * by standards it's always enabled and no one can disable it.
+             */
+            if (AccessToken->UserAndGroups[GroupsIndex].Attributes == 0 ||
+                (AccessToken->UserAndGroups[GroupsIndex].Attributes & SE_GROUP_ENABLED) == 0)
+            {
+                /*
+                 * If this group is an administrators group
+                 * and the token belongs to such group,
+                 * we've to take away TOKEN_HAS_ADMIN_GROUP
+                 * for the fact that's not enabled and as
+                 * such the token no longer belongs to
+                 * this group.
+                 */
+                if (RtlEqualSid(SeAliasAdminsSid,
+                                &AccessToken->UserAndGroups[GroupsIndex].Sid))
+                {
+                    AccessToken->TokenFlags &= ~TOKEN_HAS_ADMIN_GROUP;
+                }
 
-    //
-    // FIXME: Implement the "EffectiveOnly" option, that removes all
-    // the disabled parts (privileges and groups) of the token.
-    //
+                /*
+                 * A group is not enabled, it's time to remove
+                 * from the token and update the groups index
+                 * accordingly and continue with the next group.
+                 */
+                SepRemoveUserGroupToken(AccessToken, GroupsIndex);
+                GroupsIndex--;
+            }
+        }
 
+        /* Begin querying the privileges and search for disabled ones */
+        for (PrivilegesIndex = 0; PrivilegesIndex < AccessToken->PrivilegeCount; PrivilegesIndex++)
+        {
+            /*
+             * A privilege is considered disabled if its attributes is either
+             * 0 or SE_PRIVILEGE_ENABLED is not included in the attributes flags list.
+             * That is because a certain privilege can have several attributes
+             * that bear no influence on whether a privilege is enabled or not
+             * (SE_PRIVILEGE_ENABLED_BY_DEFAULT for example which is a mere indicator
+             * that the privilege has just been enabled by default).
+             */
+            if (AccessToken->Privileges[PrivilegesIndex].Attributes == 0 ||
+                (AccessToken->Privileges[PrivilegesIndex].Attributes & SE_PRIVILEGE_ENABLED) == 0)
+            {
+                /*
+                 * A privilege is not enabled, therefor it's time
+                 * to strip it from the token and continue with the next
+                 * privilege. Of course we must also want to update the
+                 * privileges index accordingly.
+                 */
+                SepRemovePrivilegeToken(AccessToken, PrivilegesIndex);
+                PrivilegesIndex--;
+            }
+        }
+    }
 
     //
     // NOTE: So far our dynamic area only contains
@@ -1024,12 +1295,34 @@ Quit:
     return Status;
 }
 
+/**
+ * @brief
+ * Subtracts a token in exchange of duplicating a new one.
+ *
+ * @param[in] ParentToken
+ * The parent access token for duplication.
+ *
+ * @param[out] Token
+ * The new duplicated token.
+ *
+ * @param[in] InUse
+ * Set this to TRUE if the token is about to be used immediately after the call execution
+ * of this function, FALSE otherwise.
+ *
+ * @param[in] SessionId
+ * Session ID for the token to be assigned.
+ *
+ * @return
+ * Returns STATUS_SUCCESS if token subtracting and duplication have completed successfully.
+ * A failure NTSTATUS code is returned otherwise.
+ */
 NTSTATUS
 NTAPI
-SeSubProcessToken(IN PTOKEN ParentToken,
-                  OUT PTOKEN *Token,
-                  IN BOOLEAN InUse,
-                  IN ULONG SessionId)
+SeSubProcessToken(
+    _In_ PTOKEN ParentToken,
+    _Out_ PTOKEN *Token,
+    _In_ BOOLEAN InUse,
+    _In_ ULONG SessionId)
 {
     PTOKEN NewToken;
     OBJECT_ATTRIBUTES ObjectAttributes;
@@ -1068,10 +1361,26 @@ SeSubProcessToken(IN PTOKEN ParentToken,
     return Status;
 }
 
+/**
+ * @brief
+ * Checks if the token is a child of the other token
+ * of the current process that the calling thread is invoking this function.
+ *
+ * @param[in] Token
+ * An access token to determine if it's a child or not.
+ *
+ * @param[out] IsChild
+ * The returned boolean result.
+ *
+ * @return
+ * Returns STATUS_SUCCESS when the function finishes its operation. STATUS_UNSUCCESSFUL is
+ * returned if primary token of the current calling process couldn't be referenced otherwise.
+ */
 NTSTATUS
 NTAPI
-SeIsTokenChild(IN PTOKEN Token,
-               OUT PBOOLEAN IsChild)
+SeIsTokenChild(
+    _In_ PTOKEN Token,
+    _Out_ PBOOLEAN IsChild)
 {
     PTOKEN ProcessToken;
     LUID ProcessTokenId, CallerParentId;
@@ -1101,10 +1410,26 @@ SeIsTokenChild(IN PTOKEN Token,
     return STATUS_SUCCESS;
 }
 
+/**
+ * @brief
+ * Checks if the token is a sibling of the other token of
+ * the current process that the calling thread is invoking this function.
+ *
+ * @param[in] Token
+ * An access token to determine if it's a sibling or not.
+ *
+ * @param[out] IsSibling
+ * The returned boolean result.
+ *
+ * @return
+ * Returns STATUS_SUCCESS when the function finishes its operation. STATUS_UNSUCCESSFUL is
+ * returned if primary token of the current calling process couldn't be referenced otherwise.
+ */
 NTSTATUS
 NTAPI
-SeIsTokenSibling(IN PTOKEN Token,
-                 OUT PBOOLEAN IsSibling)
+SeIsTokenSibling(
+    _In_ PTOKEN Token,
+    _Out_ PBOOLEAN IsSibling)
 {
     PTOKEN ProcessToken;
     LUID ProcessParentId, ProcessAuthId;
@@ -1140,12 +1465,33 @@ SeIsTokenSibling(IN PTOKEN Token,
     return STATUS_SUCCESS;
 }
 
+/**
+ * @brief
+ * Copies an existing access token (technically duplicating a new one).
+ *
+ * @param[in] Token
+ * Token to copy.
+ *
+ * @param[in] Level
+ * Impersonation security level to assign to the newly copied token.
+ *
+ * @param[in] PreviousMode
+ * Processor request level mode.
+ *
+ * @param[out] NewToken
+ * The newly copied token.
+ *
+ * @return
+ * Returns STATUS_SUCCESS when token copying has finished successfully. A failure
+ * NTSTATUS code is returned otherwise.
+ */
 NTSTATUS
 NTAPI
-SeCopyClientToken(IN PACCESS_TOKEN Token,
-                  IN SECURITY_IMPERSONATION_LEVEL Level,
-                  IN KPROCESSOR_MODE PreviousMode,
-                  OUT PACCESS_TOKEN* NewToken)
+SeCopyClientToken(
+    _In_ PACCESS_TOKEN Token,
+    _In_ SECURITY_IMPERSONATION_LEVEL Level,
+    _In_ KPROCESSOR_MODE PreviousMode,
+    _Out_ PACCESS_TOKEN* NewToken)
 {
     NTSTATUS Status;
     OBJECT_ATTRIBUTES ObjectAttributes;
@@ -1169,9 +1515,22 @@ SeCopyClientToken(IN PACCESS_TOKEN Token,
     return Status;
 }
 
+/**
+ * @brief
+ * Internal function that deals with access token object destruction and deletion.
+ * The function is used solely by the object manager mechanism that handles the life
+ * management of a token object.
+ *
+ * @param[in] ObjectBody
+ * The object body that represents an access token object.
+ *
+ * @return
+ * Nothing.
+ */
 VOID
 NTAPI
-SepDeleteToken(PVOID ObjectBody)
+SepDeleteToken(
+    _In_ PVOID ObjectBody)
 {
     NTSTATUS Status;
     PTOKEN AccessToken = (PTOKEN)ObjectBody;
@@ -1203,7 +1562,14 @@ SepDeleteToken(PVOID ObjectBody)
         ExFreePoolWithTag(AccessToken->DynamicPart, TAG_TOKEN_DYNAMIC);
 }
 
-
+/**
+ * @brief
+ * Internal function that initializes critical kernel data for access
+ * token implementation in SRM.
+ *
+ * @return
+ * Nothing.
+ */
 CODE_SEG("INIT")
 VOID
 NTAPI
@@ -1229,10 +1595,24 @@ SepInitializeTokenImplementation(VOID)
     ObCreateObjectType(&Name, &ObjectTypeInitializer, NULL, &SeTokenObjectType);
 }
 
+/**
+ * @brief
+ * Assigns a primary access token to a given process.
+ *
+ * @param[in] Process
+ * Process where the token is about to be assigned.
+ *
+ * @param[in] Token
+ * The token to be assigned.
+ *
+ * @return
+ * Nothing.
+ */
 VOID
 NTAPI
-SeAssignPrimaryToken(IN PEPROCESS Process,
-                     IN PTOKEN Token)
+SeAssignPrimaryToken(
+    _In_ PEPROCESS Process,
+    _In_ PTOKEN Token)
 {
     PAGED_CODE();
 
@@ -1249,6 +1629,80 @@ SeAssignPrimaryToken(IN PEPROCESS Process,
     ObInitializeFastReference(&Process->Token, Token);
 }
 
+/**
+ * @brief
+ * Internal function responsible for access token object creation in the kernel.
+ * A fully created token objected is inserted into the token handle, thus the handle
+ * becoming a valid handle to an access token object and ready for use.
+ *
+ * @param[out] TokenHandle
+ * Valid token handle that's ready for use after token creation and object insertion.
+ *
+ * @param[in] PreviousMode
+ * Processor request level mode.
+ *
+ * @param[in] DesiredAccess
+ * Desired access right for the token object to be granted. This kind of access right
+ * impacts how the token can be used and who.
+ *
+ * @param[in] ObjectAttributes
+ * Object attributes for the token to be created.
+ *
+ * @param[in] TokenType
+ * Type of token to assign upon creation.
+ *
+ * @param[in] ImpersonationLevel
+ * Security impersonation level of token to assign upon creation.
+ *
+ * @param[in] AuthenticationId
+ * Authentication ID that represents the authentication information of the token.
+ *
+ * @param[in] ExpirationTime
+ * Expiration time of the token to assign. A value of -1 means that the token never
+ * expires and its life depends upon the amount of references this token object has.
+ *
+ * @param[in] User
+ * User entry to assign to the token.
+ *
+ * @param[in] GroupCount
+ * The total number of groups count for the token.
+ *
+ * @param[in] Groups
+ * The group entries for the token.
+ *
+ * @param[in] GroupsLength
+ * The length size of the groups array, pointed by the Groups parameter.
+ *
+ * @param[in] PrivilegeCount
+ * The total number of priivleges that the newly created token has.
+ *
+ * @param[in] Privileges
+ * The privileges for the token.
+ *
+ * @param[in] Owner
+ * The main user (or also owner) that represents the token that we create.
+ *
+ * @param[in] PrimaryGroup
+ * The main group that represents the token that we create.
+ *
+ * @param[in] DefaultDacl
+ * A discretionary access control list for the token.
+ *
+ * @param[in] TokenSource
+ * Source (or the origin) of the access token that creates it.
+ *
+ * @param[in] SystemToken
+ * If set to TRUE, the newly created token is a system token and only in charge
+ * by the internal system. The function directly returns a pointer to the
+ * created token object for system kernel use. Otherwise if set to FALSE, the
+ * function inserts the object to a handle making it a regular access token.
+ *
+ * @return
+ * Returns STATUS_SUCCESS if token creation has completed successfully.
+ * STATUS_INSUFFICIENT_RESOURCES is returned if the dynamic area of memory of the
+ * token hasn't been allocated because of lack of memory resources. A failure
+ * NTSTATUS code is returned otherwise.
+ */
 NTSTATUS
 NTAPI
 SepCreateToken(
@@ -1518,6 +1972,651 @@ Quit:
     if (!NT_SUCCESS(Status))
     {
         /* Dereference the token, the delete procedure will clean it up */
+        ObDereferenceObject(AccessToken);
+    }
+
+    return Status;
+}
+
+/**
+ * @brief
+ * Private helper function responsible for creating a restricted access
+ * token, that is, a filtered token from privileges and groups and with
+ * restricted SIDs added into the token on demand by the caller.
+ *
+ * @param[in] Token
+ * An existing and valid access token.
+ *
+ * @param[in] PrivilegesToBeDeleted
+ * A list of privileges to be deleted within the token that's going
+ * to be filtered. This parameter is ignored if the caller wants to disable
+ * all the privileges by specifying DISABLE_MAX_PRIVILEGE in the flags
+ * parameter.
+ *
+ * @param[in] SidsToBeDisabled
+ * A list of group SIDs to be disabled within the token. This parameter
+ * can be NULL.
+ *
+ * @param[in] RestrictedSidsIntoToken
+ * A list of restricted SIDs to be added into the token. This parameter
+ * can be NULL.
+ *
+ * @param[in] PrivilegesCount
+ * The privilege count of the privileges list.
+ *
+ * @param[in] RegularGroupsSidCount
+ * The SIDs count of the group SIDs list.
+ *
+ * @param[in] RestrictedSidsCount
+ * The restricted SIDs count of restricted SIDs list.
+ *
+ * @param[in] PrivilegeFlags
+ * Influences how the privileges should be filtered in an access
+ * token. See NtFilterToken syscall for more information.
+ *
+ * @param[in] PreviousMode
+ * Processor level access mode.
+ *
+ * @param[out] FilteredToken
+ * The filtered token, returned to the caller.
+ *
+ * @return
+ * Returns STATUS_SUCCESS if token token filtering has completed successfully.
+ * STATUS_INVALID_PARAMETER is returned if one or more of the parameters
+ * do not meet the conditions imposed by the function. A failure NTSTATUS
+ * code is returned otherwise.
+ *
+ * @remarks
+ * The final outcome of privileges and/or SIDs filtering is not always
+ * deterministic. That is, any privileges or SIDs that aren't present
+ * in the access token are ignored and the function continues with the
+ * next privilege or SID to find for filtering. For a fully deterministic
+ * outcome the caller is responsible for querying the information details
+ * of privileges and SIDs present in the token and then afterwards use
+ * such obtained information to do any kind of filtering to the token.
+ */
+static
+NTSTATUS
+SepPerformTokenFiltering(
+    _In_ PTOKEN Token,
+    _In_opt_ PLUID_AND_ATTRIBUTES PrivilegesToBeDeleted,
+    _In_opt_ PSID_AND_ATTRIBUTES SidsToBeDisabled,
+    _In_opt_ PSID_AND_ATTRIBUTES RestrictedSidsIntoToken,
+    _When_(PrivilegesToBeDeleted != NULL, _In_) ULONG PrivilegesCount,
+    _When_(SidsToBeDisabled != NULL, _In_) ULONG RegularGroupsSidCount,
+    _When_(RestrictedSidsIntoToken != NULL, _In_) ULONG RestrictedSidsCount,
+    _In_ ULONG PrivilegeFlags,
+    _In_ KPROCESSOR_MODE PreviousMode,
+    _Out_ PTOKEN *FilteredToken)
+{
+    PTOKEN AccessToken;
+    NTSTATUS Status;
+    PVOID EndMem;
+    ULONG RestrictedSidsLength;
+    ULONG PrivilegesLength;
+    ULONG PrimaryGroupIndex;
+    ULONG RestrictedSidsInList;
+    ULONG RestrictedSidsInToken;
+    ULONG VariableLength, TotalSize;
+    ULONG PrivsInToken, PrivsInList;
+    ULONG GroupsInToken, GroupsInList;
+    BOOLEAN WantPrivilegesDisabled;
+    BOOLEAN FoundPrivilege;
+    BOOLEAN FoundGroup;
+    PAGED_CODE();
+
+    /* Ensure that the token we get is not garbage */
+    ASSERT(Token);
+
+    /* Assume the caller doesn't want privileges disabled */
+    WantPrivilegesDisabled = FALSE;
+
+    /* Assume we haven't found anything */
+    FoundPrivilege = FALSE;
+    FoundGroup = FALSE;
+
+    /*
+     * Take the size that we need for filtered token
+     * allocation based upon the existing access token
+     * we've been given.
+     */
+    VariableLength = Token->VariableLength;
+
+    if (RestrictedSidsIntoToken != NULL)
+    {
+        /*
+         * If the caller provided a list of restricted SIDs
+         * to be added onto the filtered access token then
+         * we must compute the size which is the total space
+         * of the current token and the length of the restricted
+         * SIDs for the filtered token.
+         */
+        RestrictedSidsLength = RestrictedSidsCount * sizeof(SID_AND_ATTRIBUTES);
+        RestrictedSidsLength += RtlLengthSidAndAttributes(RestrictedSidsCount, RestrictedSidsIntoToken);
+        RestrictedSidsLength = ALIGN_UP_BY(RestrictedSidsLength, sizeof(PVOID));
+
+        /*
+         * The variable length of the token is not just
+         * the actual space length of the existing token
+         * but also the sum of the restricted SIDs length.
+         */
+        VariableLength += RestrictedSidsLength;
+        TotalSize = FIELD_OFFSET(TOKEN, VariablePart) + VariableLength + RestrictedSidsLength;
+    }
+    else
+    {
+        /* Otherwise the size is of the actual current token */
+        TotalSize = FIELD_OFFSET(TOKEN, VariablePart) + VariableLength;
+    }
+
+    /* Set up a filtered token object */
+    Status = ObCreateObject(PreviousMode,
+                            SeTokenObjectType,
+                            NULL,
+                            PreviousMode,
+                            NULL,
+                            TotalSize,
+                            0,
+                            0,
+                            (PVOID*)&AccessToken);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("SepPerformTokenFiltering(): Failed to create the filtered token object (Status 0x%lx)\n", Status);
+        return Status;
+    }
+
+    /* Initialize the token and begin filling stuff to it */
+    RtlZeroMemory(AccessToken, TotalSize);
+
+    /* Set up a lock for the new token */
+    Status = SepCreateTokenLock(AccessToken);
+    if (!NT_SUCCESS(Status))
+    {
+        ObDereferenceObject(AccessToken);
+        return Status;
+    }
+
+    /* Allocate new IDs for the token */
+    ExAllocateLocallyUniqueId(&AccessToken->TokenId);
+    ExAllocateLocallyUniqueId(&AccessToken->ModifiedId);
+
+    /* Copy the type and impersonation level from the token */
+    AccessToken->TokenType = Token->TokenType;
+    AccessToken->ImpersonationLevel = Token->ImpersonationLevel;
+
+    /* Copy the immutable fields */
+    RtlCopyLuid(&AccessToken->TokenSource.SourceIdentifier,
+                &Token->TokenSource.SourceIdentifier);
+    RtlCopyMemory(AccessToken->TokenSource.SourceName,
+                  Token->TokenSource.SourceName,
+                  sizeof(Token->TokenSource.SourceName));
+
+    RtlCopyLuid(&AccessToken->AuthenticationId, &Token->AuthenticationId);
+    RtlCopyLuid(&AccessToken->ParentTokenId, &Token->TokenId);
+    RtlCopyLuid(&AccessToken->OriginatingLogonSession,
+                &Token->OriginatingLogonSession);
+
+    AccessToken->ExpirationTime = Token->ExpirationTime;
+
+    /* Copy the mutable fields */
+    AccessToken->SessionId = Token->SessionId;
+    AccessToken->TokenFlags = Token->TokenFlags & ~TOKEN_SESSION_NOT_REFERENCED;
+
+    /* Reference the logon session */
+    Status = SepRmReferenceLogonSession(&AccessToken->AuthenticationId);
+    if (!NT_SUCCESS(Status))
+    {
+        /* We failed, bail out*/
+        DPRINT1("SepPerformTokenFiltering(): Failed to reference the logon session (Status 0x%lx)\n", Status);
+        AccessToken->TokenFlags |= TOKEN_SESSION_NOT_REFERENCED;
+        goto Quit;
+    }
+
+    /* Insert the referenced logon session into the token */
+    Status = SepRmInsertLogonSessionIntoToken(AccessToken);
+    if (!NT_SUCCESS(Status))
+    {
+        /* Failed to insert the logon session into the token, bail out */
+        DPRINT1("SepPerformTokenFiltering(): Failed to insert the logon session into token (Status 0x%lx)\n", Status);
+        goto Quit;
+    }
+
+    /* Assign the data that reside in the token's variable information area */
+    AccessToken->VariableLength = VariableLength;
+    EndMem = (PVOID)&AccessToken->VariablePart;
+
+    /* Copy the privileges from the existing token */
+    AccessToken->PrivilegeCount = 0;
+    AccessToken->Privileges = NULL;
+    if (Token->Privileges && (Token->PrivilegeCount > 0))
+    {
+        PrivilegesLength = Token->PrivilegeCount * sizeof(LUID_AND_ATTRIBUTES);
+        PrivilegesLength = ALIGN_UP_BY(PrivilegesLength, sizeof(PVOID));
+
+        /*
+         * Ensure that the token can actually hold all
+         * the privileges from the existing token.
+         * Otherwise something's seriously wrong and
+         * we've to guard ourselves.
+         */
+        ASSERT(VariableLength >= PrivilegesLength);
+
+        AccessToken->PrivilegeCount = Token->PrivilegeCount;
+        AccessToken->Privileges = EndMem;
+        EndMem = (PVOID)((ULONG_PTR)EndMem + PrivilegesLength);
+        VariableLength -= PrivilegesLength;
+
+        if (PreviousMode != KernelMode)
+        {
+            _SEH2_TRY
+            {
+                RtlCopyMemory(AccessToken->Privileges,
+                              Token->Privileges,
+                              AccessToken->PrivilegeCount * sizeof(LUID_AND_ATTRIBUTES));
+            }
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+            {
+                Status = _SEH2_GetExceptionCode();
+                _SEH2_YIELD(goto Quit);
+            }
+            _SEH2_END;
+        }
+        else
+        {
+            RtlCopyMemory(AccessToken->Privileges,
+                          Token->Privileges,
+                          AccessToken->PrivilegeCount * sizeof(LUID_AND_ATTRIBUTES));
+        }
+    }
+
+    /* Copy the user and groups */
+    AccessToken->UserAndGroupCount = 0;
+    AccessToken->UserAndGroups = NULL;
+    if (Token->UserAndGroups && (Token->UserAndGroupCount > 0))
+    {
+        AccessToken->UserAndGroupCount = Token->UserAndGroupCount;
+        AccessToken->UserAndGroups = EndMem;
+        EndMem = &AccessToken->UserAndGroups[AccessToken->UserAndGroupCount];
+        VariableLength -= ((ULONG_PTR)EndMem - (ULONG_PTR)AccessToken->UserAndGroups);
+
+        if (PreviousMode != KernelMode)
+        {
+            _SEH2_TRY
+            {
+                Status = RtlCopySidAndAttributesArray(AccessToken->UserAndGroupCount,
+                                                      Token->UserAndGroups,
+                                                      VariableLength,
+                                                      AccessToken->UserAndGroups,
+                                                      EndMem,
+                                                      &EndMem,
+                                                      &VariableLength);
+            }
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+            {
+                Status = _SEH2_GetExceptionCode();
+                _SEH2_YIELD(goto Quit);
+            }
+            _SEH2_END;
+        }
+        else
+        {
+            Status = RtlCopySidAndAttributesArray(AccessToken->UserAndGroupCount,
+                                                  Token->UserAndGroups,
+                                                  VariableLength,
+                                                  AccessToken->UserAndGroups,
+                                                  EndMem,
+                                                  &EndMem,
+                                                  &VariableLength);
+            if (!NT_SUCCESS(Status))
+            {
+                DPRINT1("SepPerformTokenFiltering(): Failed to copy the groups into token (Status 0x%lx)\n", Status);
+                goto Quit;
+            }
+        }
+    }
+
+    /* Copy the restricted SIDs */
+    AccessToken->RestrictedSidCount = 0;
+    AccessToken->RestrictedSids = NULL;
+    if (Token->RestrictedSids && (Token->RestrictedSidCount > 0))
+    {
+        AccessToken->RestrictedSidCount = Token->RestrictedSidCount;
+        AccessToken->RestrictedSids = EndMem;
+        EndMem = &AccessToken->RestrictedSids[AccessToken->RestrictedSidCount];
+        VariableLength -= ((ULONG_PTR)EndMem - (ULONG_PTR)AccessToken->RestrictedSids);
+
+        if (PreviousMode != KernelMode)
+        {
+            _SEH2_TRY
+            {
+                Status = RtlCopySidAndAttributesArray(AccessToken->RestrictedSidCount,
+                                                      Token->RestrictedSids,
+                                                      VariableLength,
+                                                      AccessToken->RestrictedSids,
+                                                      EndMem,
+                                                      &EndMem,
+                                                      &VariableLength);
+            }
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+            {
+                Status = _SEH2_GetExceptionCode();
+                _SEH2_YIELD(goto Quit);
+            }
+            _SEH2_END;
+        }
+        else
+        {
+            Status = RtlCopySidAndAttributesArray(AccessToken->RestrictedSidCount,
+                                                  Token->RestrictedSids,
+                                                  VariableLength,
+                                                  AccessToken->RestrictedSids,
+                                                  EndMem,
+                                                  &EndMem,
+                                                  &VariableLength);
+            if (!NT_SUCCESS(Status))
+            {
+                DPRINT1("SepPerformTokenFiltering(): Failed to copy the restricted SIDs into token (Status 0x%lx)\n", Status);
+                goto Quit;
+            }
+        }
+    }
+
+    /* Search for the primary group */
+    Status = SepFindPrimaryGroupAndDefaultOwner(AccessToken,
+                                                Token->PrimaryGroup,
+                                                NULL,
+                                                &PrimaryGroupIndex,
+                                                NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("SepPerformTokenFiltering(): Failed searching for the primary group (Status 0x%lx)\n", Status);
+        goto Quit;
+    }
+
+    /* Assign the primary group and default owner index now */
+    AccessToken->PrimaryGroup = AccessToken->UserAndGroups[PrimaryGroupIndex].Sid;
+    AccessToken->DefaultOwnerIndex = Token->DefaultOwnerIndex;
+
+    /* Now allocate the token's dynamic information area and set the data */
+    AccessToken->DynamicAvailable = 0;
+    AccessToken->DynamicPart = NULL;
+    if (Token->DynamicPart && Token->DefaultDacl)
+    {
+        AccessToken->DynamicPart = ExAllocatePoolWithTag(PagedPool,
+                                                         Token->DefaultDacl->AclSize,
+                                                         TAG_TOKEN_DYNAMIC);
+        if (AccessToken->DynamicPart == NULL)
+        {
+            Status = STATUS_INSUFFICIENT_RESOURCES;
+            goto Quit;
+        }
+
+        EndMem = (PVOID)AccessToken->DynamicPart;
+        AccessToken->DefaultDacl = EndMem;
+
+        RtlCopyMemory(AccessToken->DefaultDacl,
+                      Token->DefaultDacl,
+                      Token->DefaultDacl->AclSize);
+    }
+
+    /*
+     * Now figure out what does the caller
+     * want with the privileges.
+     */
+    if (PrivilegeFlags & DISABLE_MAX_PRIVILEGE)
+    {
+        /*
+         * The caller wants them disabled, cache this request
+         * for later operations.
+         */
+        WantPrivilegesDisabled = TRUE;
+    }
+
+    if (PrivilegeFlags & SANDBOX_INERT)
+    {
+        /* The caller wants an inert token, store the TOKEN_SANDBOX_INERT flag now */
+        AccessToken->TokenFlags |= TOKEN_SANDBOX_INERT;
+    }
+
+    /*
+     * Now it's time to filter the token's privileges.
+     * Loop all the privileges in the token.
+     */
+    for (PrivsInToken = 0; PrivsInToken < AccessToken->PrivilegeCount; PrivsInToken++)
+    {
+        if (WantPrivilegesDisabled)
+        {
+            /*
+             * We got the acknowledgement that the caller wants
+             * to disable all the privileges so let's just do it.
+             * However, as per the general documentation is stated
+             * that only SE_CHANGE_NOTIFY_PRIVILEGE must be kept
+             * therefore in that case we must skip this privilege.
+             */
+            if (AccessToken->Privileges[PrivsInToken].Luid.LowPart == SE_CHANGE_NOTIFY_PRIVILEGE)
+            {
+                continue;
+            }
+            else
+            {
+                /*
+                 * The act of disabling privileges actually means
+                 * "deleting" them from the access token entirely.
+                 * First we must disable them so that we can update
+                 * token flags accordingly.
+                 */
+                AccessToken->Privileges[PrivsInToken].Attributes &= ~SE_PRIVILEGE_ENABLED;
+                SepUpdateSinglePrivilegeFlagToken(AccessToken, PrivsInToken);
+
+                /* Remove the privileges now */
+                SepRemovePrivilegeToken(AccessToken, PrivsInToken);
+                PrivsInToken--;
+            }
+        }
+        else
+        {
+            if (PrivilegesToBeDeleted != NULL)
+            {
+                /* Loop the privileges we've got to delete */
+                for (PrivsInList = 0; PrivsInList < PrivilegesCount; PrivsInList++)
+                {
+                    /* Does this privilege exist in the token? */
+                    if (RtlEqualLuid(&AccessToken->Privileges[PrivsInToken].Luid,
+                                     &PrivilegesToBeDeleted[PrivsInList].Luid))
+                    {
+                        /* Mark that we found it */
+                        FoundPrivilege = TRUE;
+                        break;
+                    }
+                }
+
+                /* Did we find the privilege? */
+                if (PrivsInList == PrivilegesCount)
+                {
+                    /* We didn't, continue with next one */
+                    continue;
+                }
+            }
+        }
+
+        /*
+         * If we have found the target privilege in the token
+         * based on the privileges list given by the caller
+         * then begin deleting it.
+         */
+        if (FoundPrivilege)
+        {
+            /* Disable the privilege and update the flags */
+            AccessToken->Privileges[PrivsInToken].Attributes &= ~SE_PRIVILEGE_ENABLED;
+            SepUpdateSinglePrivilegeFlagToken(AccessToken, PrivsInToken);
+
+            /* Delete the privilege */
+            SepRemovePrivilegeToken(AccessToken, PrivsInToken);
+
+            /*
+             * Adjust the index and reset the FoundPrivilege indicator
+             * so that we can continue with the next privilege to delete.
+             */
+            PrivsInToken--;
+            FoundPrivilege = FALSE;
+            continue;
+        }
+    }
+
+    /*
+     * Loop the group SIDs that we want to disable as
+     * per on the request by the caller.
+     */
+    if (SidsToBeDisabled != NULL)
+    {
+        for (GroupsInToken = 0; GroupsInToken < AccessToken->UserAndGroupCount; GroupsInToken++)
+        {
+            for (GroupsInList = 0; GroupsInList < RegularGroupsSidCount; GroupsInList++)
+            {
+                /* Does this group SID exist in the token? */
+                if (RtlEqualSid(&AccessToken->UserAndGroups[GroupsInToken].Sid,
+                                &SidsToBeDisabled[GroupsInList].Sid))
+                {
+                    /* Mark that we found it */
+                    FoundGroup = TRUE;
+                    break;
+                }
+            }
+
+            /* Did we find the group? */
+            if (GroupsInList == RegularGroupsSidCount)
+            {
+                /* We didn't, continue with next one */
+                continue;
+            }
+
+            /* If we have found the group, disable it */
+            if (FoundGroup)
+            {
+                /*
+                 * If the acess token belongs to the administrators
+                 * group and this is the target group, we must take
+                 * away TOKEN_HAS_ADMIN_GROUP flag from the token.
+                 */
+                if (RtlEqualSid(SeAliasAdminsSid,
+                                &AccessToken->UserAndGroups[GroupsInToken].Sid))
+                {
+                    AccessToken->TokenFlags &= ~TOKEN_HAS_ADMIN_GROUP;
+                }
+
+                /*
+                 * If the target group that we have found it is the
+                 * owner then from now on it no longer is but the user.
+                 * Therefore assign the default owner index as the user.
+                 */
+                if (AccessToken->DefaultOwnerIndex == GroupsInToken)
+                {
+                    AccessToken->DefaultOwnerIndex = 0;
+                }
+
+                /*
+                 * The principle of disabling a group SID is by
+                 * taking away SE_GROUP_ENABLED_BY_DEFAULT and
+                 * SE_GROUP_ENABLED attributes and assign
+                 * SE_GROUP_USE_FOR_DENY_ONLY. This renders
+                 * SID a "Deny only" SID.
+                 */
+                AccessToken->UserAndGroups[GroupsInToken].Attributes &= ~(SE_GROUP_ENABLED | SE_GROUP_ENABLED_BY_DEFAULT);
+                AccessToken->UserAndGroups[GroupsInToken].Attributes |= SE_GROUP_USE_FOR_DENY_ONLY;
+
+                /* Adjust the index and continue with the next group */
+                GroupsInToken--;
+                FoundGroup = FALSE;
+                continue;
+            }
+        }
+    }
+
+    /*
+     * Insert the restricted SIDs into the token on
+     * the request by the caller.
+     */
+    if (RestrictedSidsIntoToken != NULL)
+    {
+        for (RestrictedSidsInList = 0; RestrictedSidsInList < RestrictedSidsCount; RestrictedSidsInList++)
+        {
+            /* Did the caller assign attributes to the restricted SIDs? */
+            if (RestrictedSidsIntoToken[RestrictedSidsInList].Attributes != 0)
+            {
+                /* There mustn't be any attributes, bail out */
+                DPRINT1("SepPerformTokenFiltering(): There mustn't be any attributes to restricted SIDs!\n");
+                Status = STATUS_INVALID_PARAMETER;
+                goto Quit;
+            }
+        }
+
+        /*
+         * Ensure that the token can hold the restricted SIDs
+         * (the variable length is calculated at the beginning
+         * of the routine call).
+         */
+        ASSERT(VariableLength >= RestrictedSidsLength);
+
+        /*
+         * Now let's begin inserting the restricted SIDs into the filtered
+         * access token from the list the caller gave us.
+         */
+        AccessToken->RestrictedSidCount = RestrictedSidsCount;
+        AccessToken->RestrictedSids = EndMem;
+        EndMem = (PVOID)((ULONG_PTR)EndMem + RestrictedSidsLength);
+        VariableLength -= RestrictedSidsLength;
+
+        if (PreviousMode != KernelMode)
+        {
+            _SEH2_TRY
+            {
+                RtlCopyMemory(AccessToken->RestrictedSids,
+                              RestrictedSidsIntoToken,
+                              AccessToken->RestrictedSidCount * sizeof(SID_AND_ATTRIBUTES));
+            }
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+            {
+                Status = _SEH2_GetExceptionCode();
+                _SEH2_YIELD(goto Quit);
+            }
+            _SEH2_END;
+        }
+        else
+        {
+            RtlCopyMemory(AccessToken->RestrictedSids,
+                          RestrictedSidsIntoToken,
+                          AccessToken->RestrictedSidCount * sizeof(SID_AND_ATTRIBUTES));
+        }
+
+        /*
+         * As we've copied the restricted SIDs into
+         * the token, we must assign them the following
+         * combination of attributes SE_GROUP_ENABLED,
+         * SE_GROUP_ENABLED_BY_DEFAULT and SE_GROUP_MANDATORY.
+         * With such attributes we estabilish that restricting
+         * SIDs into the token are enabled for access checks.
+         */
+        for (RestrictedSidsInToken = 0; RestrictedSidsInToken < AccessToken->RestrictedSidCount; RestrictedSidsInToken++)
+        {
+            AccessToken->RestrictedSids[RestrictedSidsInToken].Attributes |= (SE_GROUP_ENABLED | SE_GROUP_ENABLED_BY_DEFAULT | SE_GROUP_MANDATORY);
+        }
+
+        /*
+         * As we added restricted SIDs into the token, mark
+         * it as restricted.
+         */
+        AccessToken->TokenFlags |= TOKEN_IS_RESTRICTED;
+    }
+
+    /* We've finally filtered the token, give it to the caller */
+    *FilteredToken = AccessToken;
+    Status = STATUS_SUCCESS;
+    DPRINT("SepPerformTokenFiltering(): The token has been filtered!\n");
+
+Quit:
+    if (!NT_SUCCESS(Status))
+    {
+        /* Dereference the token */
         ObDereferenceObject(AccessToken);
     }
 
@@ -1804,20 +2903,111 @@ SepCreateSystemAnonymousLogonTokenNoEveryone(VOID)
 
 /* PUBLIC FUNCTIONS ***********************************************************/
 
-/*
- * @unimplemented
+/**
+ * @brief
+ * Filters an access token from an existing token, making it more restricted
+ * than the previous one.
+ *
+ * @param[in] ExistingToken
+ * An existing token for filtering.
+ *
+ * @param[in] Flags
+ * Privilege flag options. This parameter argument influences how the token
+ * is filtered. Such parameter can be 0. See NtFilterToken syscall for
+ * more information.
+ *
+ * @param[in] SidsToDisable
+ * Array of SIDs to disable. Such parameter can be NULL.
+ *
+ * @param[in] PrivilegesToDelete
+ * Array of privileges to delete. If DISABLE_MAX_PRIVILEGE flag is specified
+ * in the Flags parameter, PrivilegesToDelete is ignored.
+ *
+ * @param[in] RestrictedSids
+ * An array of restricted SIDs for the new filtered token. Such parameter
+ * can be NULL.
+ *
+ * @param[out] FilteredToken
+ * The newly filtered token, returned to the caller.
+ *
+ * @return
+ * Returns STATUS_SUCCESS if the function has successfully completed its
+ * operations and that the access token has been filtered. STATUS_INVALID_PARAMETER
+ * is returned if one or more of the parameter are not valid. A failure NTSTATUS code
+ * is returned otherwise.
+ *
+ * @remarks
+ * WARNING -- The caller IS RESPONSIBLE for locking the existing access token
+ *            before attempting to do any kind of filtering operation into
+ *            the token. The lock MUST BE RELEASED after this kernel routine
+ *            has finished doing its work.
  */
 NTSTATUS
 NTAPI
-SeFilterToken(IN PACCESS_TOKEN ExistingToken,
-              IN ULONG Flags,
-              IN PTOKEN_GROUPS SidsToDisable OPTIONAL,
-              IN PTOKEN_PRIVILEGES PrivilegesToDelete OPTIONAL,
-              IN PTOKEN_GROUPS RestrictedSids OPTIONAL,
-              OUT PACCESS_TOKEN * FilteredToken)
+SeFilterToken(
+    _In_ PACCESS_TOKEN ExistingToken,
+    _In_ ULONG Flags,
+    _In_opt_ PTOKEN_GROUPS SidsToDisable,
+    _In_opt_ PTOKEN_PRIVILEGES PrivilegesToDelete,
+    _In_opt_ PTOKEN_GROUPS RestrictedSids,
+    _Out_ PACCESS_TOKEN *FilteredToken)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    NTSTATUS Status;
+    PTOKEN AccessToken;
+    ULONG PrivilegesCount = 0;
+    ULONG SidsCount = 0;
+    ULONG RestrictedSidsCount = 0;
+    PAGED_CODE();
+
+    /* Begin copying the counters */
+    if (SidsToDisable != NULL)
+    {
+        SidsCount = SidsToDisable->GroupCount;
+    }
+
+    if (PrivilegesToDelete != NULL)
+    {
+        PrivilegesCount = PrivilegesToDelete->PrivilegeCount;
+    }
+
+    if (RestrictedSids != NULL)
+    {
+        RestrictedSidsCount = RestrictedSids->GroupCount;
+    }
+
+    /* Call the internal API */
+    Status = SepPerformTokenFiltering(ExistingToken,
+                                      PrivilegesToDelete->Privileges,
+                                      SidsToDisable->Groups,
+                                      RestrictedSids->Groups,
+                                      PrivilegesCount,
+                                      SidsCount,
+                                      RestrictedSidsCount,
+                                      Flags,
+                                      KernelMode,
+                                      &AccessToken);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("SeFilterToken(): Failed to filter the token (Status 0x%lx)\n", Status);
+        return Status;
+    }
+
+    /* Insert the filtered token */
+    Status = ObInsertObject(AccessToken,
+                            NULL,
+                            0,
+                            0,
+                            NULL,
+                            NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("SeFilterToken(): Failed to insert the token (Status 0x%lx)\n", Status);
+        return Status;
+    }
+
+    /* Give it to the caller */
+    *FilteredToken = AccessToken;
+    return Status;
 }
 
 /**
@@ -2189,13 +3379,24 @@ SeQueryInformationToken(
     return Status;
 }
 
-/*
- * @implemented
+/**
+ * @brief
+ * Queries the session ID of an access token.
+ *
+ * @param[in] Token
+ * A valid access token where the session ID has to be gathered.
+ *
+ * @param[out] pSessionId
+ * The returned pointer to a session ID to the caller.
+ *
+ * @return
+ * Returns STATUS_SUCCESS.
  */
 NTSTATUS
 NTAPI
-SeQuerySessionIdToken(IN PACCESS_TOKEN Token,
-                      IN PULONG pSessionId)
+SeQuerySessionIdToken(
+    _In_ PACCESS_TOKEN Token,
+    _Out_ PULONG pSessionId)
 {
     PAGED_CODE();
 
@@ -2210,13 +3411,24 @@ SeQuerySessionIdToken(IN PACCESS_TOKEN Token,
     return STATUS_SUCCESS;
 }
 
-/*
- * @implemented
+/**
+ * @brief
+ * Queries the authentication ID of an access token.
+ *
+ * @param[in] Token
+ * A valid access token where the authentication ID has to be gathered.
+ *
+ * @param[out] pSessionId
+ * The returned pointer to an authentication ID to the caller.
+ *
+ * @return
+ * Returns STATUS_SUCCESS.
  */
 NTSTATUS
 NTAPI
-SeQueryAuthenticationIdToken(IN PACCESS_TOKEN Token,
-                             OUT PLUID LogonId)
+SeQueryAuthenticationIdToken(
+    _In_ PACCESS_TOKEN Token,
+    _Out_ PLUID LogonId)
 {
     PAGED_CODE();
 
@@ -2225,38 +3437,64 @@ SeQueryAuthenticationIdToken(IN PACCESS_TOKEN Token,
     return STATUS_SUCCESS;
 }
 
-
-/*
- * @implemented
+/**
+ * @brief
+ * Gathers the security impersonation level of an access token.
+ *
+ * @param[in] Token
+ * A valid access token where the impersonation level has to be gathered.
+ *
+ * @return
+ * Returns the security impersonation level from a valid token.
  */
 SECURITY_IMPERSONATION_LEVEL
 NTAPI
-SeTokenImpersonationLevel(IN PACCESS_TOKEN Token)
+SeTokenImpersonationLevel(
+    _In_ PACCESS_TOKEN Token)
 {
     PAGED_CODE();
 
     return ((PTOKEN)Token)->ImpersonationLevel;
 }
 
-
-/*
- * @implemented
+/**
+ * @brief
+ * Gathers the token type of an access token. A token ca be either
+ * a primary token or impersonation token.
+ *
+ * @param[in] Token
+ * A valid access token where the token type has to be gathered.
+ *
+ * @return
+ * Returns the token type from a valid token.
  */
-TOKEN_TYPE NTAPI
-SeTokenType(IN PACCESS_TOKEN Token)
+TOKEN_TYPE
+NTAPI
+SeTokenType(
+    _In_ PACCESS_TOKEN Token)
 {
     PAGED_CODE();
 
     return ((PTOKEN)Token)->TokenType;
 }
 
-
-/*
- * @implemented
+/**
+ * @brief
+ * Determines if a token is either an admin token or not. Such
+ * condition is checked based upon TOKEN_HAS_ADMIN_GROUP flag,
+ * which means if the respective access token belongs to an
+ * administrator group or not.
+ *
+ * @param[in] Token
+ * A valid access token to determine if such token is admin or not.
+ *
+ * @return
+ * Returns TRUE if the token is an admin one, FALSE otherwise.
  */
 BOOLEAN
 NTAPI
-SeTokenIsAdmin(IN PACCESS_TOKEN Token)
+SeTokenIsAdmin(
+    _In_ PACCESS_TOKEN Token)
 {
     PAGED_CODE();
 
@@ -2265,26 +3503,46 @@ SeTokenIsAdmin(IN PACCESS_TOKEN Token)
     return (((PTOKEN)Token)->TokenFlags & TOKEN_HAS_ADMIN_GROUP) != 0;
 }
 
-/*
- * @implemented
+/**
+ * @brief
+ * Determines if a token is restricted or not, based upon the token
+ * flags.
+ *
+ * @param[in] Token
+ * A valid access token to determine if such token is restricted.
+ *
+ * @return
+ * Returns TRUE if the token is restricted, FALSE otherwise.
  */
 BOOLEAN
 NTAPI
-SeTokenIsRestricted(IN PACCESS_TOKEN Token)
+SeTokenIsRestricted(
+    _In_ PACCESS_TOKEN Token)
 {
     PAGED_CODE();
 
     return (((PTOKEN)Token)->TokenFlags & TOKEN_IS_RESTRICTED) != 0;
 }
 
-/*
- * @implemented
- * @note First introduced in NT 5.1 SP2 x86 (5.1.2600.2622), absent in NT 5.2,
- *       then finally re-introduced in Vista+.
+/**
+ * @brief
+ * Determines if a token is write restricted, that is, nobody can write anything
+ * to it.
+ *
+ * @param[in] Token
+ * A valid access token to determine if such token is write restricted.
+ *
+ * @return
+ * Returns TRUE if the token is write restricted, FALSE otherwise.
+ *
+ * @remarks
+ * First introduced in NT 5.1 SP2 x86 (5.1.2600.2622), absent in NT 5.2,
+ * then finally re-introduced in Vista+.
  */
 BOOLEAN
 NTAPI
-SeTokenIsWriteRestricted(IN PACCESS_TOKEN Token)
+SeTokenIsWriteRestricted(
+    _In_ PACCESS_TOKEN Token)
 {
     PAGED_CODE();
 
@@ -2324,11 +3582,13 @@ SeTokenCanImpersonate(
 
     /*
      * SecurityAnonymous and SecurityIdentification levels do not
-     * allow impersonation. If we get such levels from the call
-     * then something's seriously wrong.
+     * allow impersonation.
      */
-    ASSERT(ImpersonationLevel != SecurityAnonymous ||
-           ImpersonationLevel != SecurityIdentification);
+    if (ImpersonationLevel == SecurityAnonymous ||
+        ImpersonationLevel == SecurityIdentification)
+    {
+        return FALSE;
+    }
 
     /* Time to lock our tokens */
     SepAcquireTokenLockShared(ProcessToken);
@@ -2393,8 +3653,37 @@ Quit:
 
 /* SYSTEM CALLS ***************************************************************/
 
-/*
- * @implemented
+/**
+ * @brief
+ * Queries a specific type of information in regard of an access token based upon
+ * the information class. The calling thread must have specific access rights in order
+ * to obtain specific information about the token.
+ *
+ * @param[in] TokenHandle
+ * A handle of a token where information is to be gathered.
+ *
+ * @param[in] TokenInformationClass
+ * Token information class.
+ *
+ * @param[out] TokenInformation
+ * A returned output buffer with token information, which information is arbitrarily upon
+ * the information class chosen.
+ *
+ * @param[in] TokenInformationLength
+ * Length of the token information buffer, in bytes.
+ *
+ * @param[out] ReturnLength
+ * If specified in the call, the function returns the total length size of the token
+ * information buffer..
+ *
+ * @return
+ * Returns STATUS_SUCCESS if information querying has completed successfully.
+ * STATUS_BUFFER_TOO_SMALL is returned if the information length that represents
+ * the token information buffer is not greater than the required length.
+ * STATUS_INVALID_HANDLE is returned if the token handle is not a valid one.
+ * STATUS_INVALID_INFO_CLASS is returned if the information class is not a valid
+ * one (that is, the class doesn't belong to TOKEN_INFORMATION_CLASS). A failure
+ * NTSTATUS code is returned otherwise.
  */
 _Must_inspect_result_
 __kernel_entry
@@ -2966,11 +4255,37 @@ NtQueryInformationToken(
     return Status;
 }
 
-
-/*
- * NtSetTokenInformation: Partly implemented.
- * Unimplemented:
- *  TokenOrigin, TokenDefaultDacl
+/**
+ * @unimplemented
+ * @brief
+ * Sets (modifies) some specific information in regard of an access token. The
+ * calling thread must have specific access rights in order to modify token's
+ * information data.
+ *
+ * @param[in] TokenHandle
+ * A handle of a token where information is to be modified.
+ *
+ * @param[in] TokenInformationClass
+ * Token information class.
+ *
+ * @param[in] TokenInformation
+ * An arbitrary pointer to a buffer with token information to set. Such
+ * arbitrary buffer depends on the information class chosen that the caller
+ * wants to modify such information data of a token.
+ *
+ * @param[in] TokenInformationLength
+ * Length of the token information buffer, in bytes.
+ *
+ * @return
+ * Returns STATUS_SUCCESS if information setting has completed successfully.
+ * STATUS_INFO_LENGTH_MISMATCH is returned if the information length of the
+ * buffer is less than the required length. STATUS_INSUFFICIENT_RESOURCES is
+ * returned if memory pool allocation has failed. STATUS_PRIVILEGE_NOT_HELD
+ * is returned if the calling thread hasn't the required privileges to perform
+ * the operation in question. A failure NTSTATUS code is returned otherwise.
+ *
+ * @remarks
+ * The function is partly implemented, mainly TokenOrigin and TokenDefaultDacl.
  */
 _Must_inspect_result_
 __kernel_entry
@@ -3333,7 +4648,7 @@ NtSetInformationToken(
                     /*
                      * Otherwise if the flag was never set but just for this first time then
                      * remove the referenced logon session data from the token and dereference
-                     * the logon session when needed. 
+                     * the logon session when needed.
                      */
                     if (SessionReference == 0)
                     {
@@ -3494,11 +4809,37 @@ Cleanup:
     return Status;
 }
 
-
-/*
- * @implemented
+/**
+ * @brief
+ * Duplicates a token.
  *
- * NOTE: Some sources claim 4th param is ImpersonationLevel, but on W2K
+ * @param[in] ExistingTokenHandle
+ * An existing token to duplicate.
+ *
+ * @param[in] DesiredAccess
+ * The desired access rights for the new duplicated token.
+ *
+ * @param[in] ObjectAttributes
+ * Object attributes for the new duplicated token.
+ *
+ * @param[in] EffectiveOnly
+ * If set to TRUE, the function removes all the disabled privileges and groups
+ * of the token to duplicate.
+ *
+ * @param[in] TokenType
+ * Type of token to assign to the duplicated token.
+ *
+ * @param[out] NewTokenHandle
+ * The returned duplicated token handle.
+ *
+ * @return
+ * STATUS_SUCCESS is returned if token duplication has completed successfully.
+ * STATUS_BAD_IMPERSONATION_LEVEL is returned if the caller erroneously wants
+ * to raise the impersonation level even though the conditions do not permit
+ * it. A failure NTSTATUS code is returned otherwise.
+ *
+ * @remarks
+ * Some sources claim 4th param is ImpersonationLevel, but on W2K
  * this is certainly NOT true, although I can't say for sure that EffectiveOnly
  * is correct either. -Gunnar
  * This is true. EffectiveOnly overrides SQOS.EffectiveOnly. - IAI
@@ -3650,19 +4991,548 @@ NtDuplicateToken(
     return Status;
 }
 
-NTSTATUS NTAPI
-NtAdjustGroupsToken(IN HANDLE TokenHandle,
-                    IN BOOLEAN ResetToDefault,
-                    IN PTOKEN_GROUPS NewState,
-                    IN ULONG BufferLength,
-                    OUT PTOKEN_GROUPS PreviousState OPTIONAL,
-                    OUT PULONG ReturnLength)
+/**
+ * @brief
+ * Private routine that iterates over the groups of an
+ * access token to be adjusted as per on request by the
+ * caller, where a group can be enabled or disabled.
+ *
+ * @param[in] Token
+ * Access token where its groups are to be enabled or disabled.
+ *
+ * @param[in] NewState
+ * A list of groups with new state attributes to be assigned to
+ * the token.
+ *
+ * @param[in] NewStateCount
+ * The captured count number of groups in the list.
+ *
+ * @param[in] ApplyChanges
+ * If set to FALSE, the function will only iterate over the token's
+ * groups without performing any kind of modification. If set to TRUE,
+ * the changes will be applied immediately when the function has done
+ * looping the groups.
+ *
+ * @param[in] ResetToDefaultStates
+ * The function will reset the groups in an access token to default
+ * states if set to TRUE. In such scenario the function ignores
+ * NewState outright. Otherwise if set to FALSE, the function will
+ * use NewState to assign the newly attributes to adjust the token's
+ * groups. SE_GROUP_ENABLED_BY_DEFAULT is a flag indicator that is used
+ * for such purpose.
+ *
+ * @param[out] ChangesMade
+ * Returns TRUE if changes to token's groups have been made, otherwise
+ * FALSE is returned. Bear in mind such changes aren't always deterministic.
+ * See remarks for further details.
+ *
+ * @param[out] PreviousGroupsState
+ * If requested by the caller, the function will return the previous state
+ * of groups in an access token prior taking action on adjusting the token.
+ * This is a UM (user mode) pointer and it's prone to raise exceptions
+ * if such pointer address is not valid.
+ *
+ * @param[out] ChangedGroups
+ * Returns the total number of changed groups in an access token. This
+ * argument could also indicate the number of groups to be changed if
+ * the calling thread hasn't chosen to apply the changes yet. A number
+ * of 0 indicates no groups have been or to be changed because the groups'
+ * attributes in a token are the same as the ones from NewState given by
+ * the caller.
+ *
+ * @return
+ * STATUS_SUCCESS is returned if the function has successfully completed
+ * the operation of adjusting groups in a token. STATUS_CANT_DISABLE_MANDATORY
+ * is returned if there was an attempt to disable a mandatory group which is
+ * not possible. STATUS_CANT_ENABLE_DENY_ONLY is returned if there was an attempt
+ * to enable a "use for Deny only" group which is not allowed, that is, a restricted
+ * group. STATUS_NOT_ALL_ASSIGNED is returned if not all the groups are actually
+ * assigned to the token.
+ *
+ * @remarks
+ * Token groups adjusting can be judged to be deterministic or not based on the
+ * NT status code value. That is, STATUS_SUCCESS indicates the function not only
+ * has iterated over the whole groups in a token, it also has applied the changes
+ * thoroughly without impediment and the results perfectly match with the request
+ * desired by the caller. In this situation the condition is deemed deterministic.
+ * In a different situation however, if the status code was STATUS_NOT_ALL_ASSIGNED,
+ * the function would still continue looping the groups in a token and apply the
+ * changes whenever possible where the respective groups actually exist in the
+ * token. This kind of situation is deemed as indeterministic.
+ * For STATUS_CANT_DISABLE_MANDATORY and STATUS_CANT_ENABLE_DENY_ONLY the scenario
+ * is even more indeterministic as the iteration of groups comes to a halt thus
+ * leaving all other possible groups to be adjusted.
+ */
+static
+NTSTATUS
+SepAdjustGroups(
+    _In_ PTOKEN Token,
+    _In_opt_ PSID_AND_ATTRIBUTES NewState,
+    _In_ ULONG NewStateCount,
+    _In_ BOOLEAN ApplyChanges,
+    _In_ BOOLEAN ResetToDefaultStates,
+    _Out_ PBOOLEAN ChangesMade,
+    _Out_opt_ PTOKEN_GROUPS PreviousGroupsState,
+    _Out_ PULONG ChangedGroups)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    ULONG GroupsInToken, GroupsInList;
+    ULONG ChangeCount, GroupsCount, NewAttributes;
+
+    PAGED_CODE();
+
+    /* Ensure that the token we get is not plain garbage */
+    ASSERT(Token);
+
+    /* Initialize the counters and begin the work */
+    *ChangesMade = FALSE;
+    GroupsCount = 0;
+    ChangeCount = 0;
+
+    /* Begin looping all the groups in the token */
+    for (GroupsInToken = 0; GroupsInToken < Token->UserAndGroupCount; GroupsInToken++)
+    {
+        /* Does the caller want to reset groups to default states? */
+        if (ResetToDefaultStates)
+        {
+            /*
+             * SE_GROUP_ENABLED_BY_DEFAULT is a special indicator that informs us
+             * if a certain group has been enabled by default or not. In case
+             * a group is enabled by default but it is not currently enabled then
+             * at that point we must enable it back by default. For now just
+             * assign the respective SE_GROUP_ENABLED attribute as we'll do the
+             * eventual work later.
+             */
+            if ((Token->UserAndGroups[GroupsInToken].Attributes & SE_GROUP_ENABLED_BY_DEFAULT) &&
+                (Token->UserAndGroups[GroupsInToken].Attributes & SE_GROUP_ENABLED) == 0)
+            {
+                NewAttributes = Token->UserAndGroups[GroupsInToken].Attributes |= SE_GROUP_ENABLED;
+            }
+
+            /*
+             * Unlike the case above, a group that hasn't been enabled by
+             * default but it's currently enabled then we must disable
+             * it back.
+             */
+            if ((Token->UserAndGroups[GroupsInToken].Attributes & SE_GROUP_ENABLED_BY_DEFAULT) == 0 &&
+                (Token->UserAndGroups[GroupsInToken].Attributes & SE_GROUP_ENABLED))
+            {
+                NewAttributes = Token->UserAndGroups[GroupsInToken].Attributes & ~SE_GROUP_ENABLED;
+            }
+        }
+        else
+        {
+            /* Loop the provided groups in the list then */
+            for (GroupsInList = 0; GroupsInList < NewStateCount; GroupsInList++)
+            {
+                /* Does this group exist in the token? */
+                if (RtlEqualSid(&Token->UserAndGroups[GroupsInToken].Sid,
+                                &NewState[GroupsInList].Sid))
+                {
+                    /*
+                     * This is the group that we're looking for.
+                     * However, it could be that the group is a
+                     * mandatory group which we are not allowed
+                     * and cannot disable it.
+                     */
+                    if ((Token->UserAndGroups[GroupsInToken].Attributes & SE_GROUP_MANDATORY) &&
+                        (NewState[GroupsInList].Attributes & SE_GROUP_ENABLED) == 0)
+                    {
+                        /* It is mandatory, forget about this group */
+                        DPRINT1("SepAdjustGroups(): The SID group is mandatory!\n");
+                        return STATUS_CANT_DISABLE_MANDATORY;
+                    }
+
+                    /*
+                     * We've to ensure that apart the group mustn't be
+                     * mandatory, it mustn't be a restricted group as
+                     * well. That is, the group is marked with
+                     * SE_GROUP_USE_FOR_DENY_ONLY flag and no one
+                     * can enable it because it's for "deny" use only.
+                     */
+                    if ((Token->UserAndGroups[GroupsInToken].Attributes & SE_GROUP_USE_FOR_DENY_ONLY) &&
+                        (NewState[GroupsInList].Attributes & SE_GROUP_ENABLED))
+                    {
+                        /* This group is restricted, forget about it */
+                        DPRINT1("SepAdjustGroups(): The SID group is for use deny only!\n");
+                        return STATUS_CANT_ENABLE_DENY_ONLY;
+                    }
+
+                    /* Copy the attributes and stop searching */
+                    NewAttributes = NewState[GroupsInList].Attributes;
+                    NewAttributes &= SE_GROUP_ENABLED;
+                    NewAttributes = Token->UserAndGroups[GroupsInToken].Attributes & ~SE_GROUP_ENABLED;
+                    break;
+                }
+
+                /* Did we find the specific group we wanted? */
+                if (GroupsInList == NewStateCount)
+                {
+                    /* We didn't, continue with the next token's group */
+                    continue;
+                }
+            }
+
+            /* Count the group that we found it */
+            GroupsCount++;
+
+            /* Does the token have the same attributes as the caller requested them? */
+            if (Token->UserAndGroups[GroupsInToken].Attributes != NewAttributes)
+            {
+                /*
+                 * No, then it's time to make some adjustment to the
+                 * token's groups. Does the caller want the previous states
+                 * of groups?
+                 */
+                if (PreviousGroupsState != NULL)
+                {
+                    PreviousGroupsState->Groups[ChangeCount] = Token->UserAndGroups[GroupsInToken];
+                }
+
+                /* Time to apply the changes now? */
+                if (ApplyChanges)
+                {
+                    /* The caller gave us consent, apply and report that we made changes! */
+                    Token->UserAndGroups[GroupsInToken].Attributes = NewAttributes;
+                    *ChangesMade = TRUE;
+                }
+
+                /* Increment the count change */
+                ChangeCount++;
+            }
+        }
+    }
+
+    /* Report the number of previous saved groups */
+    if (PreviousGroupsState != NULL)
+    {
+        PreviousGroupsState->GroupCount = ChangeCount;
+    }
+
+    /* Report the number of changed groups */
+    *ChangedGroups = ChangeCount;
+
+    /* Did we miss some groups? */
+    if (!ResetToDefaultStates && (GroupsCount < NewStateCount))
+    {
+        /*
+         * If we're at this stage then we are in a situation
+         * where the adjust changes done to token's groups is
+         * not deterministic as the caller might have wanted
+         * as per NewState parameter.
+         */
+        DPRINT1("SepAdjustGroups(): The token hasn't all the groups assigned!\n");
+        return STATUS_NOT_ALL_ASSIGNED;
+    }
+
+    return STATUS_SUCCESS;
 }
 
+/**
+ * @brief
+ * Changes the list of groups by enabling or disabling them
+ * in an access token. Unlike NtAdjustPrivilegesToken,
+ * this API routine does not remove groups.
+ *
+ * @param[in] TokenHandle
+ * Token handle where the list of groups SID are to be adjusted.
+ * The access token must have TOKEN_ADJUST_GROUPS access right
+ * in order to change the groups in a token. The token must also
+ * have TOKEN_QUERY access right if the caller requests the previous
+ * states of groups list, that is, PreviousState is not NULL.
+ *
+ * @param[in] ResetToDefault
+ * If set to TRUE, the function resets the list of groups to default
+ * enabled and disabled states. NewState is ignored in this case.
+ * Otherwise if the parameter is set to FALSE, the function expects
+ * a new list of groups from NewState to be adjusted within the token.
+ *
+ * @param[in] NewState
+ * A new list of groups SID that the function will use it accordingly to
+ * modify the current list of groups SID of a token.
+ *
+ * @param[in] BufferLength
+ * The length size of the buffer that is pointed by the NewState parameter
+ * argument, in bytes.
+ *
+ * @param[out] PreviousState
+ * If specified, the function will return to the caller the old list of groups
+ * SID. If this parameter is NULL, ReturnLength must also be NULL.
+ *
+ * @param[out] ReturnLength
+ * If specified, the function will return the total size length of the old list
+ * of groups SIDs, in bytes.
+ *
+ * @return
+ * STATUS_SUCCESS is returned if the function has successfully adjusted the
+ * token's groups. STATUS_INVALID_PARAMETER is returned if the caller has
+ * submitted one or more invalid parameters, that is, the caller didn't want
+ * to reset the groups to default state but no NewState argument list has been
+ * provided. STATUS_BUFFER_TOO_SMALL is returned if the buffer length given
+ * by the caller is smaller than the required length size. A failure NTSTATUS
+ * code is returned otherwise.
+ */
+NTSTATUS
+NTAPI
+NtAdjustGroupsToken(
+    _In_ HANDLE TokenHandle,
+    _In_ BOOLEAN ResetToDefault,
+    _In_ PTOKEN_GROUPS NewState,
+    _In_ ULONG BufferLength,
+    _Out_writes_bytes_to_opt_(BufferLength, *ReturnLength)
+    PTOKEN_GROUPS PreviousState,
+    _When_(PreviousState != NULL, _Out_) PULONG ReturnLength)
+{
+    PTOKEN Token;
+    NTSTATUS Status;
+    KPROCESSOR_MODE PreviousMode;
+    ULONG ChangeCount, RequiredLength;
+    ULONG CapturedCount = 0;
+    ULONG CapturedLength = 0;
+    ULONG NewStateSize = 0;
+    PSID_AND_ATTRIBUTES CapturedGroups = NULL;
+    BOOLEAN ChangesMade = FALSE;
+    BOOLEAN LockAndReferenceAcquired = FALSE;
 
+    PAGED_CODE();
+
+    /*
+     * If the caller doesn't want to reset the groups of an
+     * access token to default states then at least we must
+     * expect a list of groups to be adjusted based on NewState
+     * parameter. Otherwise bail out because the caller has
+     * no idea what they're doing.
+     */
+    if (!ResetToDefault && !NewState)
+    {
+        DPRINT1("NtAdjustGroupsToken(): The caller hasn't provided any list of groups to adjust!\n");
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    PreviousMode = ExGetPreviousMode();
+
+    if (PreviousMode != KernelMode)
+    {
+        _SEH2_TRY
+        {
+            /* Probe NewState */
+            if (!ResetToDefault)
+            {
+                /* Probe the header */
+                ProbeForRead(NewState, sizeof(*NewState), sizeof(ULONG));
+
+                CapturedCount = NewState->GroupCount;
+                NewStateSize = FIELD_OFFSET(TOKEN_GROUPS, Groups[CapturedCount]);
+
+                ProbeForRead(NewState, NewStateSize, sizeof(ULONG));
+            }
+
+            if (PreviousState != NULL)
+            {
+                ProbeForWrite(PreviousState, BufferLength, sizeof(ULONG));
+                ProbeForWrite(ReturnLength, sizeof(*ReturnLength), sizeof(ULONG));
+            }
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            /* Return the exception code */
+            _SEH2_YIELD(return _SEH2_GetExceptionCode());
+        }
+        _SEH2_END;
+    }
+    else
+    {
+        /*
+         * We're calling directly from the kernel, just retrieve
+         * the number count of captured groups outright.
+         */
+        if (!ResetToDefault)
+        {
+            CapturedCount = NewState->GroupCount;
+        }
+    }
+
+    /* Time to capture the NewState list */
+    if (!ResetToDefault)
+    {
+        _SEH2_TRY
+        {
+            Status = SeCaptureSidAndAttributesArray(NewState->Groups,
+                                                    CapturedCount,
+                                                    PreviousMode,
+                                                    NULL,
+                                                    0,
+                                                    PagedPool,
+                                                    TRUE,
+                                                    &CapturedGroups,
+                                                    &CapturedLength);
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            Status = _SEH2_GetExceptionCode();
+        }
+        _SEH2_END;
+
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("NtAdjustGroupsToken(): Failed to capture the NewState list of groups (Status 0x%lx)\n", Status);
+            return Status;
+        }
+    }
+
+    /* Time to reference the token */
+    Status = ObReferenceObjectByHandle(TokenHandle,
+                                       TOKEN_ADJUST_GROUPS | (PreviousState != NULL ? TOKEN_QUERY : 0),
+                                       SeTokenObjectType,
+                                       PreviousMode,
+                                       (PVOID*)&Token,
+                                       NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        /* We couldn't reference the access token, bail out */
+        DPRINT1("NtAdjustGroupsToken(): Failed to reference the token (Status 0x%lx)\n", Status);
+
+        if (CapturedGroups != NULL)
+        {
+            SeReleaseSidAndAttributesArray(CapturedGroups,
+                                           PreviousMode,
+                                           TRUE);
+        }
+
+        goto Quit;
+    }
+
+    /* Lock the token */
+    SepAcquireTokenLockExclusive(Token);
+    LockAndReferenceAcquired = TRUE;
+
+    /* Count the number of groups to be changed */
+    Status = SepAdjustGroups(Token,
+                             CapturedGroups,
+                             CapturedCount,
+                             FALSE,
+                             ResetToDefault,
+                             &ChangesMade,
+                             NULL,
+                             &ChangeCount);
+
+    /* Does the caller want the previous state of groups? */
+    if (PreviousState != NULL)
+    {
+        /* Calculate the required length */
+        RequiredLength = FIELD_OFFSET(TOKEN_GROUPS, Groups[ChangeCount]);
+
+        /* Return the required length to the caller */
+        _SEH2_TRY
+        {
+            *ReturnLength = RequiredLength;
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            /* Bail out and return the exception code */
+            Status = _SEH2_GetExceptionCode();
+            _SEH2_YIELD(goto Quit);
+        }
+        _SEH2_END;
+
+        /* The buffer length provided is smaller than the required length, bail out */
+        if (BufferLength < RequiredLength)
+        {
+            Status = STATUS_BUFFER_TOO_SMALL;
+            goto Quit;
+        }
+    }
+
+    /*
+     * Now it's time to apply changes. Wrap the code
+     * in SEH as we are returning the old groups state
+     * list to the caller since PreviousState is a
+     * UM pointer.
+     */
+    _SEH2_TRY
+    {
+        Status = SepAdjustGroups(Token,
+                                 CapturedGroups,
+                                 CapturedCount,
+                                 TRUE,
+                                 ResetToDefault,
+                                 &ChangesMade,
+                                 PreviousState,
+                                 &ChangeCount);
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        /* Bail out and return the exception code */
+        Status = _SEH2_GetExceptionCode();
+
+        /* Force the write as we touched the token still */
+        ChangesMade = TRUE;
+        _SEH2_YIELD(goto Quit);
+    }
+    _SEH2_END;
+
+Quit:
+    /* Allocate a new ID for the token as we made changes */
+    if (ChangesMade)
+    {
+        ExAllocateLocallyUniqueId(&Token->ModifiedId);
+    }
+
+    /* Have we successfully acquired the lock and referenced the token before? */
+    if (LockAndReferenceAcquired)
+    {
+        /* Unlock and dereference the token */
+        SepReleaseTokenLock(Token);
+        ObDereferenceObject(Token);
+    }
+
+    /* Release the captured groups */
+    if (CapturedGroups != NULL)
+    {
+        SeReleaseSidAndAttributesArray(CapturedGroups,
+                                       PreviousMode,
+                                       TRUE);
+    }
+
+    return Status;
+}
+
+/**
+ * @brief
+ * Removes a certain amount of privileges of a token based upon the request
+ * by the caller.
+ *
+ * @param[in,out] Token
+ * Token handle where the privileges are about to be modified.
+ *
+ * @param[in] DisableAllPrivileges
+ * If set to TRUE, the function disables all the privileges.
+ *
+ * @param[in] NewState
+ * A new list of privileges that the function will use it accordingly to
+ * either disable or enable the said privileges and change them.
+ *
+ * @param[in] NewStateCount
+ * The new total number count of privileges.
+ *
+ * @param[out] PreviousState
+ * If specified, the function will return the previous state list of privileges.
+ *
+ * @param[in] ApplyChanges
+ * If set to TRUE, the function will immediatelly apply the changes onto the
+ * token's privileges.
+ *
+ * @param[out] ChangedPrivileges
+ * The returned count number of changed privileges.
+ *
+ * @param[out] ChangesMade
+ * If TRUE, the function has made changes to the token's privileges. FALSE
+ * otherwise.
+ *
+ * @return
+ * Returns STATUS_SUCCESS if the function has successfully changed the list
+ * of privileges. STATUS_NOT_ALL_ASSIGNED is returned if not every privilege
+ * has been changed.
+ */
 static
 NTSTATUS
 SepAdjustPrivileges(
@@ -3676,6 +5546,8 @@ SepAdjustPrivileges(
     _Out_ PBOOLEAN ChangesMade)
 {
     ULONG i, j, PrivilegeCount, ChangeCount, NewAttributes;
+
+    PAGED_CODE();
 
     /* Count the found privileges and those that need to be changed */
     PrivilegeCount = 0;
@@ -3779,9 +5651,42 @@ SepAdjustPrivileges(
     return STATUS_SUCCESS;
 }
 
-
-/*
- * @implemented
+/**
+ * @brief
+ * Removes a certain amount of privileges of a token based upon the request
+ * by the caller.
+ *
+ * @param[in,out] Token
+ * Token handle where the privileges are about to be modified.
+ *
+ * @param[in] DisableAllPrivileges
+ * If set to TRUE, the function disables all the privileges.
+ *
+ * @param[in] NewState
+ * A new list of privileges that the function will use it accordingly to
+ * either disable or enable the said privileges and change them.
+ *
+ * @param[in] NewStateCount
+ * The new total number count of privileges.
+ *
+ * @param[out] PreviousState
+ * If specified, the function will return the previous state list of privileges.
+ *
+ * @param[in] ApplyChanges
+ * If set to TRUE, the function will immediatelly apply the changes onto the
+ * token's privileges.
+ *
+ * @param[out] ChangedPrivileges
+ * The returned count number of changed privileges.
+ *
+ * @param[out] ChangesMade
+ * If TRUE, the function has made changes to the token's privileges. FALSE
+ * otherwise.
+ *
+ * @return
+ * Returns STATUS_SUCCESS if the function has successfully changed the list
+ * of privileges. STATUS_NOT_ALL_ASSIGNED is returned if not every privilege
+ * has been changed.
  */
 _Must_inspect_result_
 __kernel_entry
@@ -3985,6 +5890,54 @@ Cleanup:
     return Status;
 }
 
+/**
+ * @brief
+ * Creates an access token.
+ *
+ * @param[out] TokenHandle
+ * The returned created token handle to the caller.
+ *
+ * @param[in] DesiredAccess
+ * The desired access rights for the token that we're creating.
+ *
+ * @param[in] ObjectAttributes
+ * The object attributes for the token object that we're creating.
+ *
+ * @param[in] TokenType
+ * The type of token to assign for the newly created token.
+ *
+ * @param[in] AuthenticationId
+ * Authentication ID that represents the token's identity.
+ *
+ * @param[in] ExpirationTime
+ * Expiration time for the token. If set to -1, the token never expires.
+ *
+ * @param[in] TokenUser
+ * The main user entity for the token to assign.
+ *
+ * @param[in] TokenGroups
+ * Group list of SIDs for the token to assign.
+ *
+ * @param[in] TokenPrivileges
+ * Privileges for the token.
+ *
+ * @param[in] TokenOwner
+ * The main user that owns the newly created token.
+ *
+ * @param[in] TokenPrimaryGroup
+ * The primary group that represents as the main group of the token.
+ *
+ * @param[in] TokenDefaultDacl
+ * Discretionary access control list for the token. This limits on how
+ * the token can be used, accessed and used by whom.
+ *
+ * @param[in] TokenSource
+ * The source origin of the token who creates it.
+ *
+ * @return
+ * Returns STATUS_SUCCESS if the function has successfully created the token.
+ * A failure NTSTATUS code is returned otherwise.
+ */
 __kernel_entry
 NTSTATUS
 NTAPI
@@ -4258,16 +6211,41 @@ Cleanup:
     return Status;
 }
 
-/*
- * @implemented
+/**
+ * @brief
+ * Opens a token that is tied to a thread handle.
+ *
+ * @param[out] ThreadHandle
+ * Thread handle where the token is about to be opened.
+ *
+ * @param[in] DesiredAccess
+ * The request access right for the token.
+ *
+ * @param[in] OpenAsSelf
+ * If set to TRUE, the access check will be made with the security context
+ * of the process of the calling thread (opening as self). Otherwise the access
+ * check will be made with the security context of the calling thread instead.
+ *
+ * @param[in] HandleAttributes
+ * Handle attributes for the opened thread token handle.
+ *
+ * @param[out] TokenHandle
+ * The opened token handle returned to the caller for use.
+ *
+ * @return
+ * Returns STATUS_SUCCESS if the function has successfully opened the thread
+ * token. STATUS_CANT_OPEN_ANONYMOUS is returned if a token has SecurityAnonymous
+ * as impersonation level and we cannot open it. A failure NTSTATUS code is returned
+ * otherwise.
  */
 NTSTATUS
 NTAPI
-NtOpenThreadTokenEx(IN HANDLE ThreadHandle,
-                    IN ACCESS_MASK DesiredAccess,
-                    IN BOOLEAN OpenAsSelf,
-                    IN ULONG HandleAttributes,
-                    OUT PHANDLE TokenHandle)
+NtOpenThreadTokenEx(
+    _In_ HANDLE ThreadHandle,
+    _In_ ACCESS_MASK DesiredAccess,
+    _In_ BOOLEAN OpenAsSelf,
+    _In_ ULONG HandleAttributes,
+    _Out_ PHANDLE TokenHandle)
 {
     PETHREAD Thread;
     HANDLE hToken;
@@ -4376,7 +6354,7 @@ NtOpenThreadTokenEx(IN HANDLE ThreadHandle,
                                        KernelMode, &NewToken);
             if (!NT_SUCCESS(Status))
             {
-                DPRINT1("NtOpenThreadTokenEx(): Failed to duplicate the token (Status 0x%lx)\n");
+                DPRINT1("NtOpenThreadTokenEx(): Failed to duplicate the token (Status 0x%lx)\n", Status);
             }
 
             ObReferenceObject(NewToken);
@@ -4417,7 +6395,7 @@ NtOpenThreadTokenEx(IN HANDLE ThreadHandle,
         Status = PsImpersonateClient(Thread, NewToken, FALSE, EffectiveOnly, ImpersonationLevel);
         if (!NT_SUCCESS(Status))
         {
-            DPRINT1("NtOpenThreadTokenEx(): Failed to impersonate the client (Status 0x%lx)\n");
+            DPRINT1("NtOpenThreadTokenEx(): Failed to impersonate the client (Status 0x%lx)\n", Status);
         }
     }
 
@@ -4441,14 +6419,34 @@ NtOpenThreadTokenEx(IN HANDLE ThreadHandle,
     return Status;
 }
 
-/*
- * @implemented
+/**
+ * @brief
+ * Opens a token that is tied to a thread handle.
+ *
+ * @param[out] ThreadHandle
+ * Thread handle where the token is about to be opened.
+ *
+ * @param[in] DesiredAccess
+ * The request access right for the token.
+ *
+ * @param[in] OpenAsSelf
+ * If set to TRUE, the access check will be made with the security context
+ * of the process of the calling thread (opening as self). Otherwise the access
+ * check will be made with the security context of the calling thread instead.
+ *
+ * @param[out] TokenHandle
+ * The opened token handle returned to the caller for use.
+ *
+ * @return
+ * See NtOpenThreadTokenEx.
  */
-NTSTATUS NTAPI
-NtOpenThreadToken(IN HANDLE ThreadHandle,
-                  IN ACCESS_MASK DesiredAccess,
-                  IN BOOLEAN OpenAsSelf,
-                  OUT PHANDLE TokenHandle)
+NTSTATUS
+NTAPI
+NtOpenThreadToken(
+    _In_ HANDLE ThreadHandle,
+    _In_ ACCESS_MASK DesiredAccess,
+    _In_ BOOLEAN OpenAsSelf,
+    _Out_ PHANDLE TokenHandle)
 {
     return NtOpenThreadTokenEx(ThreadHandle, DesiredAccess, OpenAsSelf, 0,
                                TokenHandle);
@@ -4556,17 +6554,294 @@ NtCompareTokens(
     return Status;
 }
 
+/**
+ * @brief
+ * Creates an access token in a restricted form
+ * from the original existing token, that is, such
+ * action is called filtering.
+ *
+ * @param[in] ExistingTokenHandle
+ * A handle to an access token which is to be filtered.
+ *
+ * @param[in] Flags
+ * Privilege flag options. This parameter argument influences how the
+ * token's privileges are filtered. For further details see remarks.
+ *
+ * @param[in] SidsToDisable
+ * Array of SIDs to disable. The action of doing so assigns the
+ * SE_GROUP_USE_FOR_DENY_ONLY attribute to the respective group
+ * SID and takes away SE_GROUP_ENABLED and SE_GROUP_ENABLED_BY_DEFAULT.
+ * This parameter can be NULL. This can be a UM pointer.
+ *
+ * @param[in] PrivilegesToDelete
+ * Array of privileges to delete. The function will walk within this
+ * array to determine if the specified privileges do exist in the
+ * access token. Any missing privileges gets ignored. This parameter
+ * can be NULL. This can be a UM pointer.
+ *
+ * @param[in] RestrictedSids
+ * An array list of restricted groups SID to be added in the access
+ * token. A token that is already restricted the newly added restricted
+ * SIDs are redundant information in addition to the existing restricted
+ * SIDs in the token. This parameter can be NULL. This can be a UM pointer.
+ *
+ * @param[out] NewTokenHandle
+ * A new handle to the restricted (filtered) access token. This can be a
+ * UM pointer.
+ *
+ * @return
+ * Returns STATUS_SUCCESS if the routine has successfully filtered the
+ * access token. STATUS_INVALID_PARAMETER is returned if one or more
+ * parameters are not valid (see SepPerformTokenFiltering routine call
+ * for more information). A failure NTSTATUS code is returned otherwise.
+ *
+ * @remarks
+ * The Flags parameter determines the final outcome of how the privileges
+ * in an access token are filtered. This parameter can take these supported
+ * values (these can be combined):
+ *
+ * 0 -- Filter the token's privileges in the usual way. The function expects
+ *      that the caller MUST PROVIDE a valid array list of privileges to be
+ *      deleted (that is, PrivilegesToDelete MUSTN'T BE NULL).
+ *
+ * DISABLE_MAX_PRIVILEGE -- Disables (deletes) all the privileges except SeChangeNotifyPrivilege
+ *                          in the new access token. Bear in mind if this flag is specified
+ *                          the routine ignores PrivilegesToDelete.
+ *
+ * SANDBOX_INERT -- Stores the TOKEN_SANDBOX_INERT token flag within the access token.
+ *
+ * LUA_TOKEN -- The newly filtered access token is a LUA token. This flag is not
+ *              supported in Windows Server 2003.
+ *
+ * WRITE_RESTRICTED -- The newly filtered token has the restricted SIDs that are
+ *                     considered only when evaluating write access onto the token.
+ *                     This value is not supported in Windows Server 2003.
+ */
 NTSTATUS
 NTAPI
-NtFilterToken(IN HANDLE ExistingTokenHandle,
-              IN ULONG Flags,
-              IN PTOKEN_GROUPS SidsToDisable OPTIONAL,
-              IN PTOKEN_PRIVILEGES PrivilegesToDelete OPTIONAL,
-              IN PTOKEN_GROUPS RestrictedSids OPTIONAL,
-              OUT PHANDLE NewTokenHandle)
+NtFilterToken(
+    _In_ HANDLE ExistingTokenHandle,
+    _In_ ULONG Flags,
+    _In_opt_ PTOKEN_GROUPS SidsToDisable,
+    _In_opt_ PTOKEN_PRIVILEGES PrivilegesToDelete,
+    _In_opt_ PTOKEN_GROUPS RestrictedSids,
+    _Out_ PHANDLE NewTokenHandle)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    PTOKEN Token, FilteredToken;
+    HANDLE FilteredTokenHandle;
+    NTSTATUS Status;
+    KPROCESSOR_MODE PreviousMode;
+    OBJECT_HANDLE_INFORMATION HandleInfo;
+    ULONG ResultLength;
+    ULONG CapturedSidsCount = 0;
+    ULONG CapturedPrivilegesCount = 0;
+    ULONG CapturedRestrictedSidsCount = 0;
+    ULONG ProbeSize = 0;
+    PSID_AND_ATTRIBUTES CapturedSids = NULL;
+    PSID_AND_ATTRIBUTES CapturedRestrictedSids = NULL;
+    PLUID_AND_ATTRIBUTES CapturedPrivileges = NULL;
+
+    PAGED_CODE();
+
+    PreviousMode = ExGetPreviousMode();
+
+    _SEH2_TRY
+    {
+        /* Probe SidsToDisable */
+        if (SidsToDisable != NULL)
+        {
+            /* Probe the header */
+            ProbeForRead(SidsToDisable, sizeof(*SidsToDisable), sizeof(ULONG));
+
+            CapturedSidsCount = SidsToDisable->GroupCount;
+            ProbeSize = FIELD_OFFSET(TOKEN_GROUPS, Groups[CapturedSidsCount]);
+
+            ProbeForRead(SidsToDisable, ProbeSize, sizeof(ULONG));
+        }
+
+        /* Probe PrivilegesToDelete */
+        if (PrivilegesToDelete != NULL)
+        {
+            /* Probe the header */
+            ProbeForRead(PrivilegesToDelete, sizeof(*PrivilegesToDelete), sizeof(ULONG));
+
+            CapturedPrivilegesCount = PrivilegesToDelete->PrivilegeCount;
+            ProbeSize = FIELD_OFFSET(TOKEN_PRIVILEGES, Privileges[CapturedPrivilegesCount]);
+
+            ProbeForRead(PrivilegesToDelete, ProbeSize, sizeof(ULONG));
+        }
+
+        /* Probe RestrictedSids */
+        if (RestrictedSids != NULL)
+        {
+            /* Probe the header */
+            ProbeForRead(RestrictedSids, sizeof(*RestrictedSids), sizeof(ULONG));
+
+            CapturedRestrictedSidsCount = RestrictedSids->GroupCount;
+            ProbeSize = FIELD_OFFSET(TOKEN_GROUPS, Groups[CapturedRestrictedSidsCount]);
+
+            ProbeForRead(RestrictedSids, ProbeSize, sizeof(ULONG));
+        }
+
+        /* Probe the handle */
+        ProbeForWriteHandle(NewTokenHandle);
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        /* Return the exception code */
+        _SEH2_YIELD(return _SEH2_GetExceptionCode());
+    }
+    _SEH2_END;
+
+    /* Reference the token and do the job */
+    Status = ObReferenceObjectByHandle(ExistingTokenHandle,
+                                       TOKEN_DUPLICATE,
+                                       SeTokenObjectType,
+                                       PreviousMode,
+                                       (PVOID*)&Token,
+                                       &HandleInfo);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("NtFilterToken(): Failed to reference the token (Status 0x%lx)\n", Status);
+        return Status;
+    }
+
+    /* Lock the token */
+    SepAcquireTokenLockExclusive(Token);
+
+    /* Capture the group SIDs */
+    if (SidsToDisable != NULL)
+    {
+        Status = SeCaptureSidAndAttributesArray(SidsToDisable->Groups,
+                                                CapturedSidsCount,
+                                                PreviousMode,
+                                                NULL,
+                                                0,
+                                                PagedPool,
+                                                TRUE,
+                                                &CapturedSids,
+                                                &ResultLength);
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("NtFilterToken(): Failed to capture the SIDs (Status 0x%lx)\n", Status);
+            goto Quit;
+        }
+    }
+
+    /* Capture the privileges */
+    if (PrivilegesToDelete != NULL)
+    {
+        Status = SeCaptureLuidAndAttributesArray(PrivilegesToDelete->Privileges,
+                                                 CapturedPrivilegesCount,
+                                                 PreviousMode,
+                                                 NULL,
+                                                 0,
+                                                 PagedPool,
+                                                 TRUE,
+                                                 &CapturedPrivileges,
+                                                 &ResultLength);
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("NtFilterToken(): Failed to capture the privileges (Status 0x%lx)\n", Status);
+            goto Quit;
+        }
+    }
+
+    /* Capture the restricted SIDs */
+    if (RestrictedSids != NULL)
+    {
+        Status = SeCaptureSidAndAttributesArray(RestrictedSids->Groups,
+                                                CapturedRestrictedSidsCount,
+                                                PreviousMode,
+                                                NULL,
+                                                0,
+                                                PagedPool,
+                                                TRUE,
+                                                &CapturedRestrictedSids,
+                                                &ResultLength);
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("NtFilterToken(): Failed to capture the restricted SIDs (Status 0x%lx)\n", Status);
+            goto Quit;
+        }
+    }
+
+    /* Call the internal API so that it can filter the token for us */
+    Status = SepPerformTokenFiltering(Token,
+                                      CapturedPrivileges,
+                                      CapturedSids,
+                                      CapturedRestrictedSids,
+                                      CapturedPrivilegesCount,
+                                      CapturedSidsCount,
+                                      CapturedRestrictedSidsCount,
+                                      Flags,
+                                      PreviousMode,
+                                      &FilteredToken);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("NtFilterToken(): Failed to filter the token (Status 0x%lx)\n", Status);
+        goto Quit;
+    }
+
+    /* We got our filtered token, insert it to the handle */
+    Status = ObInsertObject(FilteredToken,
+                            NULL,
+                            HandleInfo.GrantedAccess,
+                            0,
+                            NULL,
+                            &FilteredTokenHandle);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("NtFilterToken(): Failed to insert the filtered token object into the handle (Status 0x%lx)\n", Status);
+        goto Quit;
+    }
+
+    /* And give it to the caller once we're done */
+    _SEH2_TRY
+    {
+        *NewTokenHandle = FilteredTokenHandle;
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = _SEH2_GetExceptionCode();
+        _SEH2_YIELD(goto Quit);
+    }
+    _SEH2_END;
+
+Quit:
+    /* Unlock and dereference the token */
+    SepReleaseTokenLock(Token);
+    ObDereferenceObject(Token);
+
+    /* Release all the stuff we've captured */
+    if (CapturedSids != NULL)
+    {
+        SeReleaseSidAndAttributesArray(CapturedSids,
+                                       PreviousMode,
+                                       TRUE);
+
+        CapturedSids = NULL;
+    }
+
+    if (CapturedPrivileges != NULL)
+    {
+        SeReleaseLuidAndAttributesArray(CapturedPrivileges,
+                                        PreviousMode,
+                                        TRUE);
+
+        CapturedPrivileges = NULL;
+    }
+
+    if (CapturedRestrictedSids != NULL)
+    {
+        SeReleaseSidAndAttributesArray(CapturedRestrictedSids,
+                                       PreviousMode,
+                                       TRUE);
+
+        CapturedRestrictedSids = NULL;
+    }
+
+    return Status;
 }
 
 /**
