@@ -370,7 +370,7 @@ ScreenSaverProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             DrawGLScene();
             SwapBuffers(hDC);
             // Don't update here. Wait for timer.
-            ValidateRect(hWnd, NULL);   // Don't update here. Wait for timer.
+            ValidateRect(hWnd, NULL);
             break;
 
         case WM_SIZE: // Resizing The Screen
