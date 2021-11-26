@@ -41,8 +41,9 @@ GLfloat extentY = 0.0f;
 
 HINSTANCE hInstance;
 BOOL fullscreen = FALSE;
+UINT uTimerID;                                          // SetTimer Actual ID
 #define APP_TIMER             1                         // Graphics Update Timer ID
-#define APP_TIMER_INTERVAL    USER_TIMER_MINIMUM * 5    // Graphics Update Interval
+#define APP_TIMER_INTERVAL    (USER_TIMER_MINIMUM * 5)  // Graphics Update Interval
 
 // Build Our Bitmap Font
 GLvoid BuildFont(GLvoid)
@@ -340,12 +341,17 @@ ScreenSaverProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
             // Initialize The GL Screen Using Screen Info
             InitGL(Screen.right, Screen.bottom);
-            SetTimer(hWnd, APP_TIMER, APP_TIMER_INTERVAL, NULL);    // Graphics update timer
+
+            // Create Graphics update timer
+            uTimerID = SetTimer(hWnd, APP_TIMER, APP_TIMER_INTERVAL, NULL);
             break;
 
         case WM_DESTROY:
             // Disable Fullscreen Mode
             ChangeDisplaySettings(NULL, 0);
+
+            // Delete the Update Timer
+            KillTimer(hWnd, uTimerID);
 
             // Deletes The Font Display List
             KillFont();
@@ -363,6 +369,7 @@ ScreenSaverProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         case WM_PAINT:
             DrawGLScene();
             SwapBuffers(hDC);
+            // Don't update here. Wait for timer.
             ValidateRect(hWnd, NULL);   // Don't update here. Wait for timer.
             break;
 
@@ -371,7 +378,8 @@ ScreenSaverProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             ReSizeGLScene(LOWORD(lParam), HIWORD(lParam));
             break;
 
-        case WM_TIMER:  // Used to update graphic based on timer udpate interval
+        case WM_TIMER:
+            // Used to update graphic based on timer udpate interval
             InvalidateRect(hWnd, NULL, TRUE);
             break;
 
