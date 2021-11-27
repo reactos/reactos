@@ -2190,8 +2190,6 @@ co_UserCreateWindowEx(CREATESTRUCTW* Cs,
 
    Window->rcClient = Window->rcWindow;
 
-
-
    if (!(Window->state2 & WNDS2_WIN31COMPAT))
    {
       if (Class->style & CS_PARENTDC && !(ParentWindow->style & WS_CLIPCHILDREN))
