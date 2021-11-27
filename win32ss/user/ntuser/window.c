@@ -2190,15 +2190,7 @@ co_UserCreateWindowEx(CREATESTRUCTW* Cs,
 
    Window->rcClient = Window->rcWindow;
 
-   /* Link the window */
-   if (NULL != ParentWindow)
-   {
-      /* Link the window into the siblings list */
-      if ((Cs->style & (WS_CHILD|WS_MAXIMIZE)) == WS_CHILD)
-          IntLinkHwnd(Window, HWND_BOTTOM);
-      else
-          IntLinkHwnd(Window, hwndInsertAfter);
-   }
+
 
    if (!(Window->state2 & WNDS2_WIN31COMPAT))
    {
@@ -2224,6 +2216,16 @@ co_UserCreateWindowEx(CREATESTRUCTW* Cs,
    {
       ERR("co_UserCreateWindowEx(): NCCREATE message failed\n");
       goto cleanup;
+   }
+
+   /* Link the window */
+   if (NULL != ParentWindow)
+   {
+      /* Link the window into the siblings list */
+      if ((Cs->style & (WS_CHILD|WS_MAXIMIZE)) == WS_CHILD)
+          IntLinkHwnd(Window, HWND_BOTTOM);
+      else
+          IntLinkHwnd(Window, hwndInsertAfter);
    }
 
    /* Send the WM_NCCALCSIZE message */
