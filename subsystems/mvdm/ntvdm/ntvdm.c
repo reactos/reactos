@@ -20,6 +20,9 @@
 
 #include "dos/dem.h"
 
+/* Extra PSDK/NDK Headers */
+#include <ndk/psfuncs.h>
+
 /* VARIABLES ******************************************************************/
 
 NTVDM_SETTINGS GlobalSettings;
@@ -473,9 +476,6 @@ PrintMessageAnsi(IN CHAR_PRINT CharPrint,
 INT
 wmain(INT argc, WCHAR *argv[])
 {
-    NtVdmArgc = argc;
-    NtVdmArgv = argv;
-
 #ifdef STANDALONE
 
     if (argc < 2)
@@ -485,7 +485,26 @@ wmain(INT argc, WCHAR *argv[])
         return 0;
     }
 
+#else
+
+    /* For non-STANDALONE builds, we must be started as a VDM */
+    NTSTATUS Status;
+    ULONG VdmPower = 0;
+    Status = NtQueryInformationProcess(NtCurrentProcess(),
+                                       ProcessWx86Information,
+                                       &VdmPower,
+                                       sizeof(VdmPower),
+                                       NULL);
+    if (!NT_SUCCESS(Status) || (VdmPower == 0))
+    {
+        /* Not a VDM, bail out */
+        return 0;
+    }
+
 #endif
+
+    NtVdmArgc = argc;
+    NtVdmArgv = argv;
 
 #ifdef ADVANCED_DEBUGGING
     {
