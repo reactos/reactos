@@ -2217,7 +2217,7 @@ co_UserCreateWindowEx(CREATESTRUCTW* Cs,
    }
 
    /* Link the window */
-   if (NULL != ParentWindow)
+   if (ParentWindow != NULL)
    {
       /* Link the window into the siblings list */
       if ((Cs->style & (WS_CHILD|WS_MAXIMIZE)) == WS_CHILD)
