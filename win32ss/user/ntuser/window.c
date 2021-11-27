@@ -2220,7 +2220,7 @@ co_UserCreateWindowEx(CREATESTRUCTW* Cs,
    if (ParentWindow != NULL)
    {
       /* Link the window into the siblings list */
-      if ((Cs->style & (WS_CHILD|WS_MAXIMIZE)) == WS_CHILD)
+      if ((Cs->style & (WS_CHILD | WS_MAXIMIZE)) == WS_CHILD)
           IntLinkHwnd(Window, HWND_BOTTOM);
       else
           IntLinkHwnd(Window, hwndInsertAfter);
