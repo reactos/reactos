@@ -40,6 +40,10 @@
 #include <stdarg.h>
 #include <wchar.h>
 
+#ifndef _countof
+#define _countof(_Array) (sizeof(_Array) / sizeof(_Array[0]))
+#endif
+
 /* PSDK/NDK Headers */
 #define WIN32_NO_STATUS
 #include <windef.h>
@@ -67,6 +71,8 @@ DWORD WINAPI SetLastConsoleEventActive(VOID);
 /* PSEH for SEH Support */
 #include <pseh/pseh2.h>
 
+#include <ntstrsafe.h>
+
 
 /* VARIABLES ******************************************************************/
 
@@ -83,6 +89,10 @@ extern NTVDM_SETTINGS GlobalSettings;
 // Command line of NTVDM
 extern INT     NtVdmArgc;
 extern WCHAR** NtVdmArgv;
+
+/* Full directory where NTVDM resides, or the SystemRoot\System32 path */
+extern WCHAR NtVdmPath[MAX_PATH];
+extern ULONG NtVdmPathSize; // Length without NULL terminator.
 
 extern HWND hConsoleWnd;
 

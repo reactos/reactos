@@ -31,6 +31,10 @@ NTVDM_SETTINGS GlobalSettings;
 INT     NtVdmArgc;
 WCHAR** NtVdmArgv;
 
+/* Full directory where NTVDM resides, or the SystemRoot\System32 path */
+WCHAR NtVdmPath[MAX_PATH];
+ULONG NtVdmPathSize; // Length without NULL terminator.
+
 /* PRIVATE FUNCTIONS **********************************************************/
 
 static NTSTATUS
@@ -476,6 +480,8 @@ PrintMessageAnsi(IN CHAR_PRINT CharPrint,
 INT
 wmain(INT argc, WCHAR *argv[])
 {
+    BOOL Success;
+
 #ifdef STANDALONE
 
     if (argc < 2)
@@ -531,20 +537,62 @@ wmain(INT argc, WCHAR *argv[])
             "\n\n",
             GetCommandLineA());
 
+    /*
+     * Retrieve the full directory of the current running NTVDM instance.
+     * In case of failure, use the default SystemRoot\System32 path.
+     */
+    NtVdmPathSize = GetModuleFileNameW(NULL, NtVdmPath, _countof(NtVdmPath));
+    NtVdmPath[_countof(NtVdmPath) - 1] = UNICODE_NULL; // Ensure NULL-termination (see WinXP bug)
+
+    Success = ((NtVdmPathSize != 0) && (NtVdmPathSize < _countof(NtVdmPath)) &&
+               (GetLastError() != ERROR_INSUFFICIENT_BUFFER));
+    if (Success)
+    {
+        /* Find the last path separator, remove it as well as the file name */
+        PWCHAR pch = wcsrchr(NtVdmPath, L'\\');
+        if (pch)
+            *pch = UNICODE_NULL;
+    }
+    else
+    {
+        /* We failed, use the default SystemRoot\System32 path */
+        NtVdmPathSize = GetSystemDirectoryW(NtVdmPath, _countof(NtVdmPath));
+        Success = ((NtVdmPathSize != 0) && (NtVdmPathSize < _countof(NtVdmPath)));
+        if (!Success)
+        {
+            /* We failed again, try to do it ourselves */
+            NtVdmPathSize = (ULONG)wcslen(SharedUserData->NtSystemRoot) + _countof("\\System32") - 1;
+            Success = (NtVdmPathSize < _countof(NtVdmPath));
+            if (Success)
+            {
+                Success = NT_SUCCESS(RtlStringCchPrintfW(NtVdmPath,
+                                                         _countof(NtVdmPath),
+                                                         L"%s\\System32",
+                                                         SharedUserData->NtSystemRoot));
+            }
+            if (!Success)
+            {
+                wprintf(L"FATAL: Could not retrieve NTVDM path.\n");
+                goto Cleanup;
+            }
+        }
+    }
+    NtVdmPathSize = (ULONG)wcslen(NtVdmPath);
+
     /* Load the global VDM settings */
     LoadGlobalSettings(&GlobalSettings);
 
     /* Initialize the console */
     if (!ConsoleInit())
     {
-        wprintf(L"FATAL: A problem occurred when trying to initialize the console\n");
+        wprintf(L"FATAL: A problem occurred when trying to initialize the console.\n");
         goto Cleanup;
     }
 
     /* Initialize the emulator */
     if (!EmulatorInitialize(ConsoleInput, ConsoleOutput))
     {
-        wprintf(L"FATAL: Failed to initialize the emulator\n");
+        wprintf(L"FATAL: Failed to initialize the emulator.\n");
         goto Cleanup;
     }
 
