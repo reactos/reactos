@@ -13,7 +13,6 @@
 
 #define NDEBUG
 #include <debug.h>
-#include <strsafe.h>
 
 #include "emulator.h"
 #include "cpu/cpu.h"
@@ -811,12 +810,25 @@ WORD DosCreateProcess(IN LPCSTR ProgramName,
 
             STARTUPINFOA si;
             PROCESS_INFORMATION pi;
+            union { DWORD Size; NTSTATUS Status; } Ret;
             CHAR ExpName[MAX_PATH];
 
-            ExpandEnvironmentStringsA(AppName, ExpName, ARRAYSIZE(ExpName) - 1);
-            StringCbCatA(ExpName, sizeof(ExpName), "\"");         // Add double-quote before ProgramName
-            StringCbCatA(ExpName, sizeof(ExpName), ProgramName);  // Append Program name
-            StringCbCatA(ExpName, sizeof(ExpName), "\"");         // Add double-quote after ProgramName
+            Ret.Size = ExpandEnvironmentStringsA(AppName, ExpName, _countof(ExpName));
+            if ((Ret.Size == 0) || (Ret.Size > _countof(ExpName)))
+            {
+                /* We failed or buffer too small, fall back to DOS execution */
+                goto RunAsDOS;
+            }
+            Ret.Size--; // Remove NULL-terminator from count
+
+            /* Add double-quotes before and after ProgramName */
+            Ret.Status = RtlStringCchPrintfA(ExpName + Ret.Size, _countof(ExpName) - Ret.Size,
+                                             "\"%s\"", ProgramName);
+            if (!NT_SUCCESS(Ret.Status))
+            {
+                /* We failed or buffer too small, fall back to DOS execution */
+                goto RunAsDOS;
+            }
 
             ZeroMemory(&pi, sizeof(pi));
             ZeroMemory(&si, sizeof(si));
@@ -842,7 +854,7 @@ WORD DosCreateProcess(IN LPCSTR ProgramName,
             else
             {
                 /* Retrieve the actual path to the "Program Files" directory for displaying the error */
-                ExpandEnvironmentStringsA("%ProgramFiles%", ExpName, ARRAYSIZE(ExpName) - 1);
+                ExpandEnvironmentStringsA("%ProgramFiles%", ExpName, _countof(ExpName));
 
                 DisplayMessage(L"Trying to load '%S'.\n"
                                L"WOW16 applications are not supported internally by NTVDM at the moment.\n"
@@ -852,6 +864,7 @@ WORD DosCreateProcess(IN LPCSTR ProgramName,
             }
             // Fall through
         }
+        RunAsDOS:
         case SCS_DOS_BINARY:
         {
             /* Load the executable */
