@@ -186,7 +186,7 @@ static DISK_GEO DiskGeometryList[] =
     {2880, 36, 2, 80, 6},
 };
 
-BOOLEAN
+static BOOLEAN
 MountFDI(IN PDISK_IMAGE DiskImage,
          IN HANDLE hFile)
 {
@@ -242,7 +242,7 @@ MountFDI(IN PDISK_IMAGE DiskImage,
 // Secondary Master Drive, Secondary Slave Drive.
 static DISK_IMAGE XDCHardDrive[4];
 
-BOOLEAN
+static BOOLEAN
 MountHDD(IN PDISK_IMAGE DiskImage,
          IN HANDLE hFile)
 {
@@ -525,26 +525,13 @@ MountDisk(IN DISK_TYPE DiskType,
 
     /* Try to open the file */
     SetLastError(0); // For debugging purposes
-    if (ReadOnly)
-    {
-        hFile = CreateFileW(FileName,
-                            GENERIC_READ,
-                            FILE_SHARE_READ,
-                            NULL,
-                            OPEN_EXISTING,
-                            FILE_ATTRIBUTE_NORMAL,
-                            NULL);
-    }
-    else
-    {
-        hFile = CreateFileW(FileName,
-                            GENERIC_READ | GENERIC_WRITE,
-                            0, // No sharing access
-                            NULL,
-                            OPEN_EXISTING,
-                            FILE_ATTRIBUTE_NORMAL,
-                            NULL);
-    }
+    hFile = CreateFileW(FileName,
+                        GENERIC_READ | (ReadOnly ? 0 : GENERIC_WRITE),
+                        (ReadOnly ? FILE_SHARE_READ : 0),
+                        NULL,
+                        OPEN_EXISTING,
+                        FILE_ATTRIBUTE_NORMAL,
+                        NULL);
     DPRINT1("File '%S' opening %s ; GetLastError() = %u\n",
             FileName, hFile != INVALID_HANDLE_VALUE ? "succeeded" : "failed", GetLastError());
 
@@ -638,13 +625,19 @@ VOID DiskCtrlCleanup(VOID)
 {
     ULONG DiskNumber;
 
-    /* Unmount all the floppy disk drives */
+    /* Unmount all the present floppy disk drives */
     for (DiskNumber = 0; DiskNumber < DiskMountInfo[FLOPPY_DISK].NumDisks; ++DiskNumber)
-        UnmountDisk(FLOPPY_DISK, DiskNumber);
+    {
+        if (IsDiskPresent(&DiskMountInfo[FLOPPY_DISK].DiskArray[DiskNumber]))
+            UnmountDisk(FLOPPY_DISK, DiskNumber);
+    }
 
-    /* Unmount all the hard disk drives */
+    /* Unmount all the present hard disk drives */
     for (DiskNumber = 0; DiskNumber < DiskMountInfo[HARD_DISK].NumDisks; ++DiskNumber)
-        UnmountDisk(HARD_DISK, DiskNumber);
+    {
+        if (IsDiskPresent(&DiskMountInfo[HARD_DISK].DiskArray[DiskNumber]))
+            UnmountDisk(HARD_DISK, DiskNumber);
+    }
 }
 
 /* EOF */
