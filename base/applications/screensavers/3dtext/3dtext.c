@@ -369,7 +369,7 @@ ScreenSaverProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         case WM_PAINT:
             DrawGLScene();
             SwapBuffers(hDC);
-            // Don't update here. Wait for timer.
+            // Mark this window as updated, so the OS won't ask us to update it again.
             ValidateRect(hWnd, NULL);
             break;
 
