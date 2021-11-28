@@ -1279,8 +1279,13 @@ void ME_EnsureVisible(ME_TextEditor *editor, ME_Cursor *pCursor)
   ME_DisplayItem *pPara = pCursor->pPara;
   int x, y, yheight;
 
+#ifdef __REACTOS__
+  if (!pRow || !pPara)
+    return;
+#else
   assert(pRow);
   assert(pPara);
+#endif
 
   if (editor->styleFlags & ES_AUTOHSCROLL)
   {
