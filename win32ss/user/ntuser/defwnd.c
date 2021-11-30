@@ -816,9 +816,16 @@ IntDefWindowProc(
                if (wParam == VK_DOWN)
                {
                    if (topWnd->style & WS_MAXIMIZE)
+                   {
                        co_IntSendMessage(hwndTop, WM_SYSCOMMAND, SC_RESTORE, lParam);
+
+                       /* "Normal size" must be erased after restoring, otherwise it will block next side snap actions */
+                       RECTL_vSetEmptyRect(&topWnd->InternalPos.NormalRect);
+                   }
                    else
+                   {
                        co_IntSendMessage(hwndTop, WM_SYSCOMMAND, SC_MINIMIZE, lParam);
+                   }
                }
                else if (wParam == VK_UP)
                {
