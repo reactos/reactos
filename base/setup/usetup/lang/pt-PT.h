@@ -1753,7 +1753,7 @@ static MUI_ENTRY ptPTSelectFSEntries[] =
     {
         6,
         18,
-        "sistema de arquivos de arquivos desejado e pressione ENTER.",
+        "sistema de arquivos desejado e pressione ENTER.",
         0
     },
     {
