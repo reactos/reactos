@@ -949,7 +949,7 @@ static MUI_ENTRY ptPTBootPageEntries[] =
     {
         6,
         8,
-        "O instalador n\306o pode instalar o ger\210nciador de inicializa\207\306o no disco",
+        "O instalador n\306o pode instalar o gestor de inicializa\207\306o no disco",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1009,7 +1009,7 @@ static MUI_ENTRY ptPTSelectPartitionEntries[] =
     {
         6,
         8,
-        "n\306o-particionados neste computador.",
+        "n\306o particionados neste computador.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1493,35 +1493,35 @@ static MUI_ENTRY ptPTBootLoaderEntries[] =
     {
         6,
         8,
-        "O instalador ir\240 configurar o ger\210nciador de inicializa\207\306o",
+        "O instalador ir\240 configurar o gestor de inicializa\207\306o",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         8,
         12,
-        "Instalar o ger\210nciador de inicializa\207\306o no disco r\241gido (MBR e VBR)",
+        "Instalar o gestor de inicializa\207\306o no disco r\241gido (MBR e VBR)",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         8,
         13,
-        "Instalar o ger\210nciador de inicializa\207\306o no disco r\241gido (apenas VBR)",
+        "Instalar o gestor de inicializa\207\306o no disco r\241gido (apenas VBR)",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         8,
         14,
-        "Instalar o ger\210nciador de inicializa\207\306o numa disquete",
+        "Instalar o gestor de inicializa\207\306o numa disquete",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         8,
         15,
-        "Saltar a instala\207\306o do ger\210nciador de inicializa\207\306o",
+        "Saltar a instala\207\306o do gestor de inicializa\207\306o",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
