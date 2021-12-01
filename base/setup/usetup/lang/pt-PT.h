@@ -734,7 +734,7 @@ static MUI_ENTRY ptPTFlushPageEntries[] =
     {
         10,
         6,
-        "O sistema est\240 a certificar que todos os dados est\306 a ser",
+        "O sistema est\240 a certificar que todos os dados est\306o a ser",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -2306,7 +2306,7 @@ MUI_STRING ptPTStrings[] =
     {STRING_REBOOTPROGRESSBAR,
     " O computador ir\240 reiniciar em %li segundo(s)... "},
     {STRING_CONSOLEFAIL1,
-    "N\306o foi poss\241vel abrir o console\r\n\r\n"},
+    "N\306o foi poss\241vel abrir a consola\r\n\r\n"},
     {STRING_CONSOLEFAIL2,
     "A causa mais com\243m \202 a utiliza\207\306o de um teclado USB\r\n"},
     {STRING_CONSOLEFAIL3,
