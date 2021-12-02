@@ -243,7 +243,7 @@
     // #include "lang/hi-IN.h"
 // #endif
  #ifdef LANGUAGE_HR_HR
-     #include "lang/hr-HR.h"
+    #include "lang/hr-HR.h"
  #endif
 #ifdef LANGUAGE_HU_HU
     #include "lang/hu-HU.h"
