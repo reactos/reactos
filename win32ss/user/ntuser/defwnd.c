@@ -414,7 +414,7 @@ UserPaintCaption(PWND pWnd, INT Flags)
          * RealUserDrawCaption in order to draw the classic caption when themes
          * are disabled but the themes service is enabled
          */
-         TRACE("UDCB Flags %08x\n", Flags);
+         TRACE("UDCB Flags %08x\n");
          co_IntSendMessage(UserHMGetHandle(pWnd), WM_NCUAHDRAWCAPTION, Flags, 0);
       }
       else
@@ -826,6 +826,7 @@ IntDefWindowProc(
                        co_IntSendMessage(hwndTop, WM_SYSCOMMAND, SC_MINIMIZE, lParam);
                    }
                }
+			   
                else if (wParam == VK_UP)
                {
                   RECT currentRect;
@@ -843,7 +844,7 @@ IntDefWindowProc(
                   // save normal rect if maximazing snapped window
                   topWnd->InternalPos.NormalRect = currentRect;
                }
-               else if (wParam == VK_LEFT || wParam == VK_RIGHT)
+               else if (wParam == VK_LEFT || wParam == VK_RIGHT || wParam == VK_F2)
                {
                   RECT snapRect, normalRect, windowRect;
                   BOOL snapped;
@@ -863,9 +864,14 @@ IntDefWindowProc(
                   {
                      snapRect.right = (snapRect.left + snapRect.right) / 2;
                   }
-                  else // VK_RIGHT
+                  if (wParam == VK_RIGHT) // VK_RIGHT
                   {
                      snapRect.left = (snapRect.left + snapRect.right) / 2;
+                  }
+				  if (wParam == VK_F2)
+                  {
+                     snapRect.right = (snapRect.left + snapRect.right) / 2;
+					 snapRect.bottom = (snapRect.top + snapRect.bottom) / 2;
                   }
 
                   if (snapped)

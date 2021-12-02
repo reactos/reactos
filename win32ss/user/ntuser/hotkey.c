@@ -254,7 +254,8 @@ co_UserProcessHotKeys(WORD wVk, BOOL bIsDown)
         if (pHotKey->id == IDHK_SNAP_LEFT ||
             pHotKey->id == IDHK_SNAP_RIGHT ||
             pHotKey->id == IDHK_SNAP_UP ||
-            pHotKey->id == IDHK_SNAP_DOWN)
+            pHotKey->id == IDHK_SNAP_DOWN ||
+            pHotKey->id == IDHK_SNAP_LEFTUP)
         {
             HWND topWnd = UserGetForegroundWindow();
             if (topWnd)

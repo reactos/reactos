@@ -203,6 +203,7 @@ RawInputThreadMain(VOID)
                 UserRegisterHotKey(PWND_BOTTOM, IDHK_SNAP_RIGHT, MOD_WIN, VK_RIGHT);
                 UserRegisterHotKey(PWND_BOTTOM, IDHK_SNAP_UP, MOD_WIN, VK_UP);
                 UserRegisterHotKey(PWND_BOTTOM, IDHK_SNAP_DOWN, MOD_WIN, VK_DOWN);
+				UserRegisterHotKey(PWND_BOTTOM, IDHK_SNAP_LEFTUP, MOD_WIN, VK_F2);
                 // Register the debug hotkeys.
                 StartDebugHotKeys();
                 UserLeave();

@@ -21,6 +21,7 @@ typedef struct _HOT_KEY
 #define IDHK_SNAP_RIGHT  -11
 #define IDHK_SNAP_UP     -12
 #define IDHK_SNAP_DOWN   -13
+#define IDHK_SNAP_LEFTUP -14
 
 VOID FASTCALL UnregisterWindowHotKeys(PWND Window);
 VOID FASTCALL UnregisterThreadHotKeys(PTHREADINFO pti);
