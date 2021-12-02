@@ -825,8 +825,7 @@ IntDefWindowProc(
                    {
                        co_IntSendMessage(hwndTop, WM_SYSCOMMAND, SC_MINIMIZE, lParam);
                    }
-               }
-			   
+               }			   
                else if (wParam == VK_UP)
                {
                   RECT currentRect;
