@@ -19,52 +19,52 @@ IDM_MAINMENU MENU
 BEGIN
     POPUP "&Datoteka"
     BEGIN
-        MENUITEM "&Novo...\tCtrl+N",       ID_FILE_NEW
+        MENUITEM "&Novo...\tCtrl+N",        ID_FILE_NEW
         MENUITEM "&Otvori...\tCtrl+O",      ID_FILE_OPEN
         MENUITEM "&Spremi\tCtrl+S",         ID_FILE_SAVE
-        MENUITEM "Spremi &kao...",           ID_FILE_SAVEAS
+        MENUITEM "Spremi &kao...",          ID_FILE_SAVEAS
         MENUITEM SEPARATOR
-        MENUITEM "&Ispiši...\tCtrl+P",     ID_PRINT
-        MENUITEM "Ispiši &pregled",        ID_PREVIEW
-        MENUITEM "Postavljanje stranic&e",        ID_PRINTSETUP
+        MENUITEM "&Ispiši...\tCtrl+P",      ID_PRINT
+        MENUITEM "Ispiši &pregled",         ID_PREVIEW
+        MENUITEM "Postavljanje stranic&e",  ID_PRINTSETUP
         MENUITEM SEPARATOR
-        MENUITEM "Iz&ađi",                 ID_FILE_EXIT
+        MENUITEM "Iz&ađi",                  ID_FILE_EXIT
     END
     POPUP "&Uredi"
     BEGIN
-        MENUITEM "&Poništi\tCtrl+Z",               ID_EDIT_UNDO
-        MENUITEM "&Vrati\tCtrl+Y",               ID_EDIT_REDO
+        MENUITEM "&Poništi\tCtrl+Z",        ID_EDIT_UNDO
+        MENUITEM "&Vrati\tCtrl+Y",          ID_EDIT_REDO
         MENUITEM SEPARATOR
-        MENUITEM "&Izreži\tCtrl+X",                ID_EDIT_CUT
-        MENUITEM "&Kopiraj\tCtrl+C",               ID_EDIT_COPY
-        MENUITEM "&Zalijepi\tCtrl+V",              ID_EDIT_PASTE
-        MENUITEM "Iz&briši\tDel",                 ID_EDIT_CLEAR
-        MENUITEM "&Označi sve\tCtrl+A",         ID_EDIT_SELECTALL
+        MENUITEM "&Izreži\tCtrl+X",         ID_EDIT_CUT
+        MENUITEM "&Kopiraj\tCtrl+C",        ID_EDIT_COPY
+        MENUITEM "&Zalijepi\tCtrl+V",       ID_EDIT_PASTE
+        MENUITEM "Iz&briši\tDel",           ID_EDIT_CLEAR
+        MENUITEM "&Označi sve\tCtrl+A",     ID_EDIT_SELECTALL
         MENUITEM SEPARATOR
-        MENUITEM "P&ronađi...\tCtrl+F",            ID_FIND
-        MENUITEM "Pronađi &slijedeće\tF3",              ID_FIND_NEXT
-        MENUITEM "Z&amijeni...\tCtrl+H",         ID_REPLACE
+        MENUITEM "P&ronađi...\tCtrl+F",     ID_FIND
+        MENUITEM "Pronađi &slijedeće\tF3",  ID_FIND_NEXT
+        MENUITEM "Z&amijeni...\tCtrl+H",    ID_REPLACE
         MENUITEM SEPARATOR
-        MENUITEM "Pročitaj-samo &način",                  ID_EDIT_READONLY
-        MENUITEM "&Modificirano",                   ID_EDIT_MODIFIED
+        MENUITEM "Pročitaj-samo &način",    ID_EDIT_READONLY
+        MENUITEM "&Modificirano",           ID_EDIT_MODIFIED
         MENUITEM SEPARATOR
         POPUP "&Dodatno"
         BEGIN
-            MENUITEM "&Informacije označenoga",             ID_EDIT_SELECTIONINFO
-            MENUITEM "&Format znaka",           ID_EDIT_CHARFORMAT
-            MENUITEM "&Definicija znakovnog formata",           ID_EDIT_DEFCHARFORMAT
-            MENUITEM "&Paragraf formata",           ID_EDIT_PARAFORMAT
-            MENUITEM "Dobij &tekst",                   ID_EDIT_GETTEXT
+            MENUITEM "&Informacije označenoga",         ID_EDIT_SELECTIONINFO
+            MENUITEM "&Format znaka",                   ID_EDIT_CHARFORMAT
+            MENUITEM "&Definicija znakovnog formata",   ID_EDIT_DEFCHARFORMAT
+            MENUITEM "&Paragraf formata",               ID_EDIT_PARAFORMAT
+            MENUITEM "Dobij &tekst",                    ID_EDIT_GETTEXT
         END
     END
     POPUP "&Pogled"
     BEGIN
         MENUITEM "&Alatna traka",        ID_TOGGLE_TOOLBAR
-        MENUITEM "Traka &formatiranja",     ID_TOGGLE_FORMATBAR
-        MENUITEM "&Ravnalo",          ID_TOGGLE_RULER
-        MENUITEM "&Statusna traka",     ID_TOGGLE_STATUSBAR
+        MENUITEM "Traka &formatiranja",  ID_TOGGLE_FORMATBAR
+        MENUITEM "&Ravnalo",             ID_TOGGLE_RULER
+        MENUITEM "&Statusna traka",      ID_TOGGLE_STATUSBAR
         MENUITEM SEPARATOR
-        MENUITEM "&Opcije...",     ID_VIEWPROPERTIES
+        MENUITEM "&Opcije...",           ID_VIEWPROPERTIES
     END
     POPUP "&Ubaci"
     BEGIN
@@ -72,10 +72,10 @@ BEGIN
     END
     POPUP "&Format"
     BEGIN
-        MENUITEM "&Font...",                     ID_FONTSETTINGS
-        MENUITEM "&Grafičke oznake",               ID_BULLET
+        MENUITEM "&Font...",                    ID_FONTSETTINGS
+        MENUITEM "&Grafičke oznake",            ID_BULLET
         MENUITEM "&Paragraf...",                ID_PARAFORMAT
-        MENUITEM "&Kartice...",                     ID_TABSTOPS
+        MENUITEM "&Kartice...",                 ID_TABSTOPS
         POPUP "&Pozadina"
         BEGIN
             MENUITEM "&Sustav\tCtrl+1",         ID_BACK_1
@@ -92,12 +92,12 @@ IDM_POPUP MENU
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "Izreži",                ID_EDIT_CUT
-        MENUITEM "&Kopiraj",               ID_EDIT_COPY
-        MENUITEM "&Zalijepi",              ID_EDIT_PASTE
+        MENUITEM "Izreži",            ID_EDIT_CUT
+        MENUITEM "&Kopiraj",          ID_EDIT_COPY
+        MENUITEM "&Zalijepi",         ID_EDIT_PASTE
         MENUITEM SEPARATOR
-        MENUITEM "&Grafičke oznake",      ID_BULLET
-        MENUITEM "&Paragraf...",       ID_PARAFORMAT
+        MENUITEM "&Grafičke oznake",  ID_BULLET
+        MENUITEM "&Paragraf...",      ID_PARAFORMAT
     END
 END
 
@@ -105,23 +105,23 @@ IDM_COLOR_POPUP MENU
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "Crna",      ID_COLOR_BLACK
-        MENUITEM "Boja kestena",     ID_COLOR_MAROON
-        MENUITEM "Zelena",      ID_COLOR_GREEN
+        MENUITEM "Crna",              ID_COLOR_BLACK
+        MENUITEM "Boja kestena",      ID_COLOR_MAROON
+        MENUITEM "Zelena",            ID_COLOR_GREEN
         MENUITEM "Boja masline",      ID_COLOR_OLIVE
-        MENUITEM "Mornarska boja",       ID_COLOR_NAVY
-        MENUITEM "Ljubičasta",     ID_COLOR_PURPLE
-        MENUITEM "Teal",       ID_COLOR_TEAL
-        MENUITEM "Siva",       ID_COLOR_GRAY
-        MENUITEM "Srebrna",     ID_COLOR_SILVER
-        MENUITEM "Crvena",        ID_COLOR_RED
-        MENUITEM "Lime",       ID_COLOR_LIME
-        MENUITEM "Žuta",     ID_COLOR_YELLOW
-        MENUITEM "Plava",       ID_COLOR_BLUE
-        MENUITEM "Fuchsia",    ID_COLOR_FUCHSIA
-        MENUITEM "Aqua",       ID_COLOR_AQUA
-        MENUITEM "Bijela",      ID_COLOR_WHITE
-        MENUITEM "Automatski",  ID_COLOR_AUTOMATIC
+        MENUITEM "Mornarska boja",    ID_COLOR_NAVY
+        MENUITEM "Ljubičasta",        ID_COLOR_PURPLE
+        MENUITEM "Teal",              ID_COLOR_TEAL
+        MENUITEM "Siva",              ID_COLOR_GRAY
+        MENUITEM "Srebrna",           ID_COLOR_SILVER
+        MENUITEM "Crvena",            ID_COLOR_RED
+        MENUITEM "Lime",              ID_COLOR_LIME
+        MENUITEM "Žuta",              ID_COLOR_YELLOW
+        MENUITEM "Plava",             ID_COLOR_BLUE
+        MENUITEM "Fuchsia",           ID_COLOR_FUCHSIA
+        MENUITEM "Aqua",              ID_COLOR_AQUA
+        MENUITEM "Bijela",            ID_COLOR_WHITE
+        MENUITEM "Automatski",        ID_COLOR_AUTOMATIC
     END
 END
 
