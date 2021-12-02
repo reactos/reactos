@@ -2198,6 +2198,10 @@ co_UserCreateWindowEx(CREATESTRUCTW* Cs,
 
    if ((Window->style & (WS_CHILD | WS_POPUP)) == WS_CHILD)
    {
+      if (Window->spwndNext || Window->spwndPrev)
+      {
+          ERR("Window 0x%p has been linked too early!\n", Window);
+      }
       if ( !IntIsTopLevelWindow(Window) )
       {
          if (pti != Window->spwndParent->head.pti)
