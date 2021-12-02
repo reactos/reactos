@@ -871,7 +871,7 @@ IntDefWindowProc(
 				  if (wParam == VK_F2)
                   {
                      snapRect.right = (snapRect.left + snapRect.right) / 2;
-					 snapRect.bottom = (snapRect.top + snapRect.bottom) / 2;
+                     snapRect.bottom = (snapRect.top + snapRect.bottom) / 2;
                   }
 
                   if (snapped)
