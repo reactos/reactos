@@ -2204,10 +2204,10 @@ co_UserCreateWindowEx(CREATESTRUCTW* Cs,
       }
       if ( !IntIsTopLevelWindow(Window) )
       {
-         if (pti != Window->spwndParent->head.pti)
+         if (pti != ParentWindow->head.pti)
          {
             //ERR("CreateWindow Parent in.\n");
-            UserAttachThreadInput(pti, Window->spwndParent->head.pti, TRUE);
+            UserAttachThreadInput(pti, ParentWindow->head.pti, TRUE);
          }
       }
    }
