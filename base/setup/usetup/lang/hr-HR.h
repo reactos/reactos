@@ -133,7 +133,7 @@ static MUI_ENTRY hrHRWelcomePageEntries[] =
     {
         8,
         17,
-     // "\x07  Pritisnite R za popravak ReactOS instalacije koristeći Recovery Console.",
+     // "\x07  Pritisnite R za popravak ReactOS instalacije koriste\304\207i Recovery Console.",
         "\x07  Pritisnite R za popravak ReactOS instalacije.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
