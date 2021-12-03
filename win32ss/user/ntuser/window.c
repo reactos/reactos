@@ -2190,6 +2190,11 @@ co_UserCreateWindowEx(CREATESTRUCTW* Cs,
 
    Window->rcClient = Window->rcWindow;
 
+   if (Window->spwndNext || Window->spwndPrev)
+   {
+       ERR("Window 0x%p has been linked too early!\n", Window);
+   }
+
    if (!(Window->state2 & WNDS2_WIN31COMPAT))
    {
       if (Class->style & CS_PARENTDC && !(ParentWindow->style & WS_CLIPCHILDREN))
@@ -2198,10 +2203,6 @@ co_UserCreateWindowEx(CREATESTRUCTW* Cs,
 
    if ((Window->style & (WS_CHILD | WS_POPUP)) == WS_CHILD)
    {
-      if (Window->spwndNext || Window->spwndPrev)
-      {
-          ERR("Window 0x%p has been linked too early!\n", Window);
-      }
       if ( !IntIsTopLevelWindow(Window) )
       {
          if (pti != ParentWindow->head.pti)
