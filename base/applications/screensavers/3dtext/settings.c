@@ -47,4 +47,10 @@ VOID SaveSettings(VOID)
         RegSetValueEx(hkey, _T("DisplayString"), 0, REG_SZ, (LPBYTE)m_Text, (_tcslen(m_Text) + 1) * sizeof(TCHAR));
         RegCloseKey(hkey);
     }
+    if (RegCreateKeyEx(HKEY_USERS, _T(".DEFAULT\\Software\\Microsoft\\ScreenSavers\\Text3D"), 0,
+        _T(""), 0, KEY_WRITE, NULL, &hkey, NULL) == ERROR_SUCCESS)
+    {
+        RegSetValueEx(hkey, _T("DisplayString"), 0, REG_SZ, (LPBYTE)m_Text, (_tcslen(m_Text) + 1) * sizeof(TCHAR));
+        RegCloseKey(hkey);
+    }
 }
