@@ -8,7 +8,7 @@
 
 #include <win32k.h>
 
-#define NDEBUG
+//#define NDEBUG
 #include <debug.h>
 
 // Some code from the WINE project source (www.winehq.com)
@@ -153,6 +153,7 @@ IntGdiLineTo(DC  *dc,
     RECTL     Bounds;
     POINT     Points[2];
     PDC_ATTR pdcattr = dc->pdcattr;
+    PPATH     pPath;
     ASSERT_DC_PREPARED(dc);
 
     if (PATH_IsPathOpen(dc->dclevel))
@@ -199,16 +200,40 @@ IntGdiLineTo(DC  *dc,
 
         if (!(pbrLine->flAttrs & BR_IS_NULL))
         {
+            DPRINT1("pbrLine is not null\n");
+            DPRINT1("pbrLine->lWidth: %ld\n", pbrLine->lWidth);
+            DPRINT1("pbrLine->ulPenStyle: 0x%lX\n", pbrLine->ulPenStyle);
             if ((pbrLine->lWidth > 1) && (pbrLine->ulPenStyle & PS_TYPE_MASK) == PS_GEOMETRIC)
             {
-                // TODO:
-                INT iSavedDC = SaveDC(hDC);
-                BeginPath(hDC);
-                MoveToEx(hDC, Points[0].x, Points[0].y, NULL);
-                LineTo(hDC, Points[1].x, Points[1].y);
-                EndPath(hDC);
-                Ret = StrokePath(hDC);
-                RestoreDC(hDC, iSavedDC);
+                PPATH FASTCALL PATH_CreatePath(int count);
+                BOOL FASTCALL PATH_MoveTo(PDC dc, PPATH pPath);
+
+                DPRINT1("pbrLine is a geometric wide pen\n");
+
+                /* Clear the path */
+                PATH_Delete(dc->dclevel.hPath);
+                dc->dclevel.hPath = NULL;
+
+                /* Begin a path */
+                pPath = PATH_CreatePath(2);
+                dc->dclevel.flPath |= DCPATH_ACTIVE; // Set active ASAP!
+                dc->dclevel.hPath = pPath->BaseObject.hHmgr;
+                IntGetCurrentPositionEx(dc, &pPath->pos);
+                IntLPtoDP(dc, &pPath->pos, 1);
+
+                PATH_MoveTo(dc, pPath);
+                PATH_LineTo(dc, XEnd, YEnd);
+
+                /* Close the path */
+                pPath->state = PATH_Closed;
+                dc->dclevel.flPath &= ~DCPATH_ACTIVE;
+
+                /* Actually stroke a path */
+                Ret = PATH_StrokePath(dc, pPath);
+
+                /* Clear the path */
+                PATH_Delete(dc->dclevel.hPath);
+                dc->dclevel.hPath = NULL;
             }
             else
             {
