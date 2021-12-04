@@ -44,7 +44,7 @@ function(add_message_headers _type)
             OUTPUT "${_converted_file}"
             COMMAND native-utf16le "${_source_file}" "${_converted_file}" nobom
             DEPENDS native-utf16le "${_source_file}")
-        macro_mc(${_flag} ${_converted_file})
+        set(COMMAND_MC ${CMAKE_MC_COMPILER} -u ${_flag} -b -h ${CMAKE_CURRENT_BINARY_DIR}/ -r ${CMAKE_CURRENT_BINARY_DIR}/ ${_converted_file})
         add_custom_command(
             OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${_file_name}.h ${CMAKE_CURRENT_BINARY_DIR}/${_file_name}.rc
             COMMAND ${COMMAND_MC}
