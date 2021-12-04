@@ -211,7 +211,7 @@ IntGdiLineTo(DC  *dc,
 
                 /* Begin a path */
                 pPath = PATH_CreatePath(2);
-                dc->dclevel.flPath |= DCPATH_ACTIVE; // Set active ASAP!
+                dc->dclevel.flPath |= DCPATH_ACTIVE;
                 dc->dclevel.hPath = pPath->BaseObject.hHmgr;
                 IntGetCurrentPositionEx(dc, &pPath->pos);
                 IntLPtoDP(dc, &pPath->pos, 1);
