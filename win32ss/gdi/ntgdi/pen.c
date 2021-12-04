@@ -331,7 +331,7 @@ NtGdiCreatePen(
         return NULL;
     }
 
-    return IntGdiExtCreatePen(PenStyle,
+    return IntGdiExtCreatePen(PenStyle | PS_GEOMETRIC,
                               Width,
                               BS_SOLID,
                               Color,

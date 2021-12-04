@@ -1624,7 +1624,6 @@ PATH_StrokePath(
         if (pNewPath)
         {
             PATH_FillPathEx(dc, pNewPath, pbrLine);
-            PATH_UnlockPath(pNewPath);
             PATH_Delete(pNewPath->BaseObject.hHmgr);
             return TRUE;
         }
