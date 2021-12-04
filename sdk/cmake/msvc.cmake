@@ -40,6 +40,9 @@ endif()
 # Disable buffer security checks by default.
 add_compile_options(/GS-)
 
+# PSEH workaround
+set(PSEH_LIB "pseh")
+
 if(USE_CLANG_CL)
     set(CMAKE_CL_SHOWINCLUDES_PREFIX "Note: including file: ")
 endif()
@@ -236,6 +239,7 @@ set(CMAKE_RC_CREATE_SHARED_MODULE ${CMAKE_C_CREATE_SHARED_MODULE})
 set(CMAKE_ASM_MASM_CREATE_SHARED_MODULE ${CMAKE_C_CREATE_SHARED_MODULE})
 set(CMAKE_ASM_CREATE_STATIC_LIBRARY ${CMAKE_C_CREATE_STATIC_LIBRARY})
 
+
 function(set_entrypoint _module _entrypoint)
     if(${_entrypoint} STREQUAL "0")
         target_link_options(${_module} PRIVATE "/NOENTRY")
@@ -314,6 +318,13 @@ function(fixup_load_config _target)
     # msvc knows how to generate a load_config so no hacks here
 endfunction()
 
+# Alternative arch name
+if(ARCH STREQUAL "amd64")
+    set(SPEC2DEF_ARCH x86_64)
+else()
+    set(SPEC2DEF_ARCH ${ARCH})
+endif()
+
 function(generate_import_lib _libname _dllname _spec_file)
 
     set(_def_file ${CMAKE_CURRENT_BINARY_DIR}/${_libname}_implib.def)
@@ -338,7 +349,6 @@ function(generate_import_lib _libname _dllname _spec_file)
 
     # generate the intermediate import lib
     set(_libfile_tmp ${CMAKE_CURRENT_BINARY_DIR}/${_libname}_tmp.lib)
-    set(_static_lib_options )
 
     set(_implib_command ${CMAKE_LINKER} /LIB /NOLOGO /MACHINE:${WINARCH}
         $<TARGET_PROPERTY:${_libname},STATIC_LIBRARY_FLAGS> $<TARGET_PROPERTY:${_libname},STATIC_LIBRARY_OPTIONS>
@@ -357,20 +367,6 @@ function(generate_import_lib _libname _dllname _spec_file)
     set_target_properties(${_libname} PROPERTIES LINKER_LANGUAGE "C")
 endfunction()
 
-if(ARCH STREQUAL "amd64")
-    # This is NOT a typo.
-    # See https://software.intel.com/en-us/forums/topic/404643
-    add_definitions(/D__x86_64)
-    set(SPEC2DEF_ARCH x86_64)
-elseif(ARCH STREQUAL "arm")
-    add_definitions(/D__arm__)
-    set(SPEC2DEF_ARCH arm)
-elseif(ARCH STREQUAL "arm64")
-    add_definitions(/D__arm64__) 
-    set(SPEC2DEF_ARCH arm64)
-else()
-    set(SPEC2DEF_ARCH i386)
-endif()
 function(spec2def _dllname _spec_file)
 
     cmake_parse_arguments(__spec2def "ADD_IMPORTLIB;NO_PRIVATE_WARNINGS;WITH_RELAY" "VERSION" "" ${ARGN})
@@ -404,9 +400,6 @@ function(spec2def _dllname _spec_file)
         endif()
     endif()
 endfunction()
-
-# PSEH workaround
-set(PSEH_LIB "pseh")
 
 # Use a full path for the x86 version of ml when using x64 VS.
 # It's not a problem when using the DDK/WDK because, in x64 mode,

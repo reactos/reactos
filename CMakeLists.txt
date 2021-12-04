@@ -135,7 +135,9 @@ if(NOT CMAKE_CROSSCOMPILING)
         if(ARCH STREQUAL "i386")
             add_definitions(/D_X86_ /D__i386__ /DWIN32 /D_WINDOWS)
         elseif(ARCH STREQUAL "amd64")
-            add_definitions(-D_AMD64_ -D__x86_64__ /DWIN32 -D_WINDOWS)
+            # '__x86_64': This is NOT a typo.
+            # See https://software.intel.com/en-us/forums/topic/404643
+            add_definitions(-D_AMD64_ -D__x86_64__ -D__x86_64 /DWIN32 -D_WINDOWS)
         endif()
         if(MSVC_VERSION GREATER 1699)
             add_definitions(/D_ALLOW_KEYWORD_MACROS)
@@ -256,7 +258,9 @@ Enable this if the module uses typeid or dynamic_cast. You will probably need to
         if (NOT (MSVC AND CMAKE_C_COMPILER_ID STREQUAL "Clang"))
             add_compile_definitions(_M_AMD64)
         endif()
-        add_definitions(-D_AMD64_ -D__x86_64__ -D_WIN64)
+        # '__x86_64': This is NOT a typo.
+        # See https://software.intel.com/en-us/forums/topic/404643
+        add_definitions(-D_AMD64_ -D__x86_64__ -D__x86_64 -D_WIN64)
     elseif(ARCH STREQUAL "arm")
         # _M_ARM is already defined by toolchain
         add_definitions(-D_ARM_ -D__arm__ -DWIN32)
@@ -325,7 +329,7 @@ Enable this if the module uses typeid or dynamic_cast. You will probably need to
         sdk/include/reactos/libs)
 
     if(ARCH STREQUAL "arm")
-        include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/arm)
+        include_directories(sdk/include/reactos/arm)
     endif()
 
     add_dependency_header()
