@@ -30,11 +30,6 @@ add_executable(spoolsv
     spoolsv.rc
     ${CMAKE_CURRENT_BINARY_DIR}/spoolsv.def)
 
-set_target_properties(spoolsv
-    PROPERTIES
-    ENABLE_EXPORTS TRUE
-    DEFINE_SYMBOL "")
-
 if(USE_CLANG_CL)
     target_compile_options(spoolsv PRIVATE "-Wno-cast-calling-convention")
 endif()

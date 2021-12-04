@@ -110,11 +110,6 @@ add_executable(ntdll_apitest
     testdata.rc
     ${CMAKE_CURRENT_BINARY_DIR}/ntdll_apitest.def)
 
-set_target_properties(ntdll_apitest
-    PROPERTIES
-    ENABLE_EXPORTS TRUE
-    DEFINE_SYMBOL "")
-
 target_link_libraries(ntdll_apitest wine uuid ${PSEH_LIB})
 set_module_type(ntdll_apitest win32cui)
 add_importlibs(ntdll_apitest msvcrt advapi32 kernel32 ntdll)

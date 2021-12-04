@@ -259,11 +259,6 @@ endif()
 
 add_executable(freeldr_pe ${FREELDR_BASE_SOURCE})
 
-set_target_properties(freeldr_pe
-    PROPERTIES
-    ENABLE_EXPORTS TRUE
-    DEFINE_SYMBOL "")
-
 if(MSVC)
     if(ARCH STREQUAL "arm")
         target_link_options(freeldr_pe PRIVATE /ignore:4078 /ignore:4254 /DRIVER)
