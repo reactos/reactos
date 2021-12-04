@@ -101,7 +101,7 @@ VOID SaveSettings(VOID)
     size_t CbDestLength = 0;
 
     if (RegCreateKeyExW(HKEY_CURRENT_USER, L"Software\\Microsoft\\ScreenSavers\\Text3D", 0,
-    L"", 0, KEY_WRITE, NULL, &hkey, NULL) == ERROR_SUCCESS)
+        L"", 0, KEY_WRITE, NULL, &hkey, NULL) == ERROR_SUCCESS)
     {
         StringCbLengthW(m_Text, sizeof(m_Text), &CbDestLength);
         RegSetValueExW(hkey, L"DisplayString", 0, REG_SZ, (LPBYTE)m_Text, CbDestLength + sizeof(WCHAR));
