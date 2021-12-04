@@ -202,11 +202,13 @@ IntGdiLineTo(DC  *dc,
             if ((pbrLine->lWidth > 1) && (pbrLine->ulPenStyle & PS_TYPE_MASK) == PS_GEOMETRIC)
             {
                 // TODO:
+                INT iSavedDC = SaveDC(hDC);
                 BeginPath(hDC);
                 MoveToEx(hDC, Points[0].x, Points[0].y, NULL);
                 LineTo(hDC, Points[1].x, Points[1].y);
                 EndPath(hDC);
                 Ret = StrokePath(hDC);
+                RestoreDC(hDC, iSavedDC);
             }
             else
             {
