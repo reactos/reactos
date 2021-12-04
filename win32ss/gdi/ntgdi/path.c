@@ -27,6 +27,10 @@ DBG_DEFAULT_CHANNEL(GdiPath);
 static int PathCount = 0;
 #endif
 
+PPATH
+FASTCALL
+PATH_WidenPathEx(DC *dc, PPATH pPath);
+
 /***********************************************************************
  * Internal functions
  */
@@ -1608,8 +1612,23 @@ PATH_StrokePath(
     DWORD mapMode, graphicsMode;
     XFORM xform;
     PDC_ATTR pdcattr = dc->pdcattr;
+    PBRUSH pbrLine;
+    PPATH pNewPath;
 
     TRACE("Enter %s\n", __FUNCTION__);
+
+    pbrLine = dc->dclevel.pbrLine;
+    if ((pbrLine->lWidth > 1) && (pbrLine->ulPenStyle & PS_TYPE_MASK) == PS_GEOMETRIC)
+    {
+        pNewPath = PATH_WidenPathEx(dc, pPath);
+        if (pNewPath)
+        {
+            PATH_FillPathEx(dc, pNewPath, pbrLine);
+            PATH_UnlockPath(pNewPath);
+            PATH_Delete(pNewPath->BaseObject.hHmgr);
+            return TRUE;
+        }
+    }
 
     /* Save the mapping mode info */
     mapMode = pdcattr->iMapMode;
@@ -2100,12 +2119,7 @@ PPATH
 FASTCALL
 PATH_WidenPath(DC *dc)
 {
-    INT size;
-    UINT penWidth, penStyle;
-    DWORD obj_type;
     PPATH pPath, pNewPath;
-    LPEXTLOGPEN elp;
-    PDC_ATTR pdcattr = dc->pdcattr;
 
     pPath = PATH_LockPath(dc->dclevel.hPath);
     if (!pPath)
@@ -2113,6 +2127,21 @@ PATH_WidenPath(DC *dc)
         EngSetLastError( ERROR_CAN_NOT_COMPLETE );
         return NULL;
     }
+
+    pNewPath = PATH_WidenPathEx(dc, pPath);
+    PATH_UnlockPath(pPath);
+    return pNewPath;
+}
+
+PPATH
+FASTCALL
+PATH_WidenPathEx(DC *dc, PPATH pPath)
+{
+    INT size;
+    UINT penWidth, penStyle;
+    DWORD obj_type;
+    LPEXTLOGPEN elp;
+    PDC_ATTR pdcattr = dc->pdcattr;
 
     if (pPath->state != PATH_Closed)
     {
@@ -2173,9 +2202,7 @@ PATH_WidenPath(DC *dc)
         return FALSE;
     }
 
-    pNewPath = IntGdiWidenPath(pPath, penWidth, penStyle, dc->dclevel.laPath.eMiterLimit);
-    PATH_UnlockPath(pPath);
-    return pNewPath;
+    return IntGdiWidenPath(pPath, penWidth, penStyle, dc->dclevel.laPath.eMiterLimit);
 }
 
 static inline INT int_from_fixed(FIXED f)
