@@ -2190,14 +2190,9 @@ co_UserCreateWindowEx(CREATESTRUCTW* Cs,
 
    Window->rcClient = Window->rcWindow;
 
-   /* Link the window */
-   if (NULL != ParentWindow)
+   if (Window->spwndNext || Window->spwndPrev)
    {
-      /* Link the window into the siblings list */
-      if ((Cs->style & (WS_CHILD|WS_MAXIMIZE)) == WS_CHILD)
-          IntLinkHwnd(Window, HWND_BOTTOM);
-      else
-          IntLinkHwnd(Window, hwndInsertAfter);
+      ERR("Window 0x%p has been linked too early!\n", Window);
    }
 
    if (!(Window->state2 & WNDS2_WIN31COMPAT))
@@ -2210,10 +2205,10 @@ co_UserCreateWindowEx(CREATESTRUCTW* Cs,
    {
       if ( !IntIsTopLevelWindow(Window) )
       {
-         if (pti != Window->spwndParent->head.pti)
+         if (pti != ParentWindow->head.pti)
          {
             //ERR("CreateWindow Parent in.\n");
-            UserAttachThreadInput(pti, Window->spwndParent->head.pti, TRUE);
+            UserAttachThreadInput(pti, ParentWindow->head.pti, TRUE);
          }
       }
    }
@@ -2224,6 +2219,16 @@ co_UserCreateWindowEx(CREATESTRUCTW* Cs,
    {
       ERR("co_UserCreateWindowEx(): NCCREATE message failed\n");
       goto cleanup;
+   }
+
+   /* Link the window */
+   if (ParentWindow != NULL)
+   {
+      /* Link the window into the siblings list */
+      if ((Cs->style & (WS_CHILD | WS_MAXIMIZE)) == WS_CHILD)
+          IntLinkHwnd(Window, HWND_BOTTOM);
+      else
+          IntLinkHwnd(Window, hwndInsertAfter);
    }
 
    /* Send the WM_NCCALCSIZE message */
