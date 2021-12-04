@@ -28,7 +28,7 @@
  * HKEY_CURRENT_USER, we will get a Windows Error #2 - File not Found.
  * In this case, we will have to use the values in HKEY_USER\.Default to
  * find the Display String to use.
-*/
+ */
 
 #include "3dtext.h"
 
