@@ -8,7 +8,7 @@
 
 #include <win32k.h>
 
-//#define NDEBUG
+#define NDEBUG
 #include <debug.h>
 
 // Some code from the WINE project source (www.winehq.com)
@@ -154,6 +154,7 @@ IntGdiLineTo(DC  *dc,
     POINT     Points[2];
     PDC_ATTR pdcattr = dc->pdcattr;
     PPATH     pPath;
+
     ASSERT_DC_PREPARED(dc);
 
     if (PATH_IsPathOpen(dc->dclevel))
@@ -200,16 +201,8 @@ IntGdiLineTo(DC  *dc,
 
         if (!(pbrLine->flAttrs & BR_IS_NULL))
         {
-            DPRINT1("pbrLine is not null\n");
-            DPRINT1("pbrLine->lWidth: %ld\n", pbrLine->lWidth);
-            DPRINT1("pbrLine->ulPenStyle: 0x%lX\n", pbrLine->ulPenStyle);
             if ((pbrLine->lWidth > 1) && (pbrLine->ulPenStyle & PS_TYPE_MASK) == PS_GEOMETRIC)
             {
-                PPATH FASTCALL PATH_CreatePath(int count);
-                BOOL FASTCALL PATH_MoveTo(PDC dc, PPATH pPath);
-
-                DPRINT1("pbrLine is a geometric wide pen\n");
-
                 /* Clear the path */
                 PATH_Delete(dc->dclevel.hPath);
                 dc->dclevel.hPath = NULL;
