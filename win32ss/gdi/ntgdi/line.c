@@ -152,10 +152,12 @@ IntGdiLineTo(DC  *dc,
     PBRUSH pbrLine;
     RECTL     Bounds;
     POINT     Points[2];
-    PDC_ATTR pdcattr = dc->pdcattr;
+    PDC_ATTR  pdcattr;
     PPATH     pPath;
 
     ASSERT_DC_PREPARED(dc);
+
+    pdcattr = dc->pdcattr;
 
     if (PATH_IsPathOpen(dc->dclevel))
     {
