@@ -331,6 +331,8 @@ IntGdiPolyline(DC      *dc,
     BOOL Ret = TRUE;
     LONG i;
     PDC_ATTR pdcattr = dc->pdcattr;
+    BOOL bWideGeometricPen;
+    PPATH pPath;
 
     if (!dc->dclevel.pSurface)
     {
@@ -343,6 +345,8 @@ IntGdiPolyline(DC      *dc,
     /* Get BRUSHOBJ from current pen. */
     pbrLine = dc->dclevel.pbrLine;
     ASSERT(pbrLine);
+    bWideGeometricPen =
+        (pbrLine->lWidth > 1 && (pbrLine->ulPenStyle & PS_TYPE_MASK) == PS_GEOMETRIC);
 
     if (!(pbrLine->flAttrs & BR_IS_NULL))
     {
@@ -364,13 +368,43 @@ IntGdiPolyline(DC      *dc,
                AddPenLinesBounds(dc, Count, Points);
             }
 
-            Ret = IntEngPolyline(&psurf->SurfObj,
-                                 (CLIPOBJ *)&dc->co,
-                                 &dc->eboLine.BrushObject,
-                                 Points,
-                                 Count,
-                                 ROP2_TO_MIX(pdcattr->jROP2));
+            if (bWideGeometricPen)
+            {
+                /* Clear the path */
+                PATH_Delete(dc->dclevel.hPath);
+                dc->dclevel.hPath = NULL;
 
+                /* Begin a path */
+                pPath = PATH_CreatePath(Count);
+                dc->dclevel.flPath |= DCPATH_ACTIVE;
+                dc->dclevel.hPath = pPath->BaseObject.hHmgr;
+                pPath->pos = pt[0];
+                IntLPtoDP(dc, &pPath->pos, 1);
+
+                PATH_MoveTo(dc, pPath);
+                for (i = 1; i < Count; ++i)
+                    PATH_LineTo(dc, pt[i].x, pt[i].y);
+
+                /* Close the path */
+                pPath->state = PATH_Closed;
+                dc->dclevel.flPath &= ~DCPATH_ACTIVE;
+
+                /* Actually stroke a path */
+                Ret = PATH_StrokePath(dc, pPath);
+
+                /* Clear the path */
+                PATH_Delete(dc->dclevel.hPath);
+                dc->dclevel.hPath = NULL;
+            }
+            else
+            {
+                Ret = IntEngPolyline(&psurf->SurfObj,
+                                     (CLIPOBJ *)&dc->co,
+                                     &dc->eboLine.BrushObject,
+                                     Points,
+                                     Count,
+                                     ROP2_TO_MIX(pdcattr->jROP2));
+            }
             EngFreeMem(Points);
         }
         else
