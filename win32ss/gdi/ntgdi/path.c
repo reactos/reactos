@@ -27,10 +27,6 @@ DBG_DEFAULT_CHANNEL(GdiPath);
 static int PathCount = 0;
 #endif
 
-PPATH
-FASTCALL
-PATH_WidenPathEx(DC *dc, PPATH pPath);
-
 /***********************************************************************
  * Internal functions
  */
