@@ -199,15 +199,26 @@ IntGdiLineTo(DC  *dc,
 
         if (!(pbrLine->flAttrs & BR_IS_NULL))
         {
-            Ret = IntEngLineTo(&psurf->SurfObj,
-                               (CLIPOBJ *)&dc->co,
-                               &dc->eboLine.BrushObject,
-                               Points[0].x, Points[0].y,
-                               Points[1].x, Points[1].y,
-                               &Bounds,
-                               ROP2_TO_MIX(pdcattr->jROP2));
+            if ((pbrLine->lWidth > 1) && (pbrLine->ulPenStyle & PS_TYPE_MASK) == PS_GEOMETRIC)
+            {
+                // TODO:
+                BeginPath(hDC);
+                MoveToEx(hDC, Points[0].x, Points[0].y, NULL);
+                LineTo(hDC, Points[1].x, Points[1].y);
+                EndPath(hDC);
+                Ret = StrokePath(hDC);
+            }
+            else
+            {
+                Ret = IntEngLineTo(&psurf->SurfObj,
+                                   (CLIPOBJ *)&dc->co,
+                                   &dc->eboLine.BrushObject,
+                                   Points[0].x, Points[0].y,
+                                   Points[1].x, Points[1].y,
+                                   &Bounds,
+                                   ROP2_TO_MIX(pdcattr->jROP2));
+            }
         }
-
     }
 
     if (Ret)
