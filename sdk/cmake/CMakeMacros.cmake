@@ -496,6 +496,8 @@ if(NOT MSVC_IDE)
 
     function(add_executable name)
         _add_executable(${name} ${ARGN})
+        # cmake adds a module_EXPORTS define when compiling a module with exports. We don't use that.
+        set_target_properties(${name} PROPERTIES DEFINE_SYMBOL "")
         add_clean_target(${name})
     endfunction()
 elseif(USE_FOLDER_STRUCTURE)
@@ -528,6 +530,8 @@ elseif(USE_FOLDER_STRUCTURE)
 
     function(add_executable name)
         _add_executable(${name} ${ARGN})
+        # cmake adds a module_EXPORTS define when compiling a module with exports. We don't use that.
+        set_target_properties(${name} PROPERTIES DEFINE_SYMBOL "")
         string(SUBSTRING ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_SOURCE_DIR_LENGTH} -1 CMAKE_CURRENT_SOURCE_DIR_RELATIVE)
         set_property(TARGET "${name}" PROPERTY FOLDER "${CMAKE_CURRENT_SOURCE_DIR_RELATIVE}")
     endfunction()
@@ -539,6 +543,12 @@ else()
         if(_type MATCHES SHARED_LIBRARY|MODULE_LIBRARY)
             set_target_properties(${name} PROPERTIES DEFINE_SYMBOL "")
         endif()
+    endfunction()
+
+    function(add_executable name)
+        _add_executable(${name} ${ARGN})
+        # cmake adds a module_EXPORTS define when compiling a module with exports. We don't use that.
+        set_target_properties(${name} PROPERTIES DEFINE_SYMBOL "")
     endfunction()
 endif()
 
@@ -665,14 +675,6 @@ function(set_module_type MODULE TYPE)
         if((${TYPE} STREQUAL kernelmodedriver) OR (${TYPE} STREQUAL wdmdriver))
             set_target_properties(${MODULE} PROPERTIES SUFFIX ".sys")
         endif()
-    endif()
-
-    if(TYPE STREQUAL kernel)
-        # Kernels are executables with exports
-        set_target_properties(${MODULE}
-            PROPERTIES
-            ENABLE_EXPORTS TRUE
-            DEFINE_SYMBOL "")
     endif()
 
     if(${TYPE} STREQUAL win32ocx)

@@ -163,6 +163,9 @@ else()
     # We don't need CMake importlib handling.
     unset(CMAKE_IMPORT_LIBRARY_SUFFIX)
 
+    # Enable executables (not only libraries) to be able to export symbols.
+    set(CMAKE_ENABLE_EXPORTS TRUE)
+
     # Print build type(s)
     if(CMAKE_CONFIGURATION_TYPES)
         # Multi-config generators, like Visual Studio (MSBuild).
