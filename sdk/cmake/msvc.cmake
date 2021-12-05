@@ -326,7 +326,6 @@ else()
 endif()
 
 function(generate_import_lib _libname _dllname _spec_file)
-
     set(_def_file ${CMAKE_CURRENT_BINARY_DIR}/${_libname}_implib.def)
     set(_asm_stubs_file ${CMAKE_CURRENT_BINARY_DIR}/${_libname}_stubs.asm)
 
@@ -351,7 +350,7 @@ function(generate_import_lib _libname _dllname _spec_file)
     set(_libfile_tmp ${CMAKE_CURRENT_BINARY_DIR}/${_libname}_tmp.lib)
 
     set(_implib_command ${CMAKE_LINKER} /LIB /NOLOGO /MACHINE:${WINARCH}
-        $<TARGET_PROPERTY:${_libname},STATIC_LIBRARY_FLAGS> $<TARGET_PROPERTY:${_libname},STATIC_LIBRARY_OPTIONS>
+        $<TARGET_PROPERTY:${_libname},STATIC_LIBRARY_OPTIONS>
         /DEF:${_def_file} /OUT:${_libfile_tmp} ${_asm_stubs_file}.obj)
 
     add_custom_command(
