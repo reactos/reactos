@@ -26,6 +26,7 @@ IntGdiPolygon(PDC    dc,
     int CurrentPoint;
     PDC_ATTR pdcattr;
     POINTL BrushOrigin;
+    PPATH pPath;
 //    int Left;
 //    int Top;
 
@@ -107,36 +108,69 @@ IntGdiPolygon(PDC    dc,
         {
             int i;
 
-            for (i = 0; i < Count-1; i++)
+            if (IntIsWideGeometricPen(pbrLine))
             {
+                /* Clear the path */
+                PATH_Delete(dc->dclevel.hPath);
+                dc->dclevel.hPath = NULL;
 
+                /* Begin a path */
+                pPath = PATH_CreatePath(Count + 1);
+                dc->dclevel.flPath |= DCPATH_ACTIVE;
+                dc->dclevel.hPath = pPath->BaseObject.hHmgr;
+                pPath->pos = Points[0];
+                IntLPtoDP(dc, &pPath->pos, 1);
+
+                PATH_MoveTo(dc, pPath);
+                for (i = 1; i < Count; ++i)
+                {
+                    PATH_LineTo(dc, Points[i].x, Points[i].y);
+                }
+                PATH_LineTo(dc, Points[0].x, Points[0].y);
+
+                /* Close the path */
+                pPath->state = PATH_Closed;
+                dc->dclevel.flPath &= ~DCPATH_ACTIVE;
+
+                /* Actually stroke a path */
+                ret = PATH_StrokePath(dc, pPath);
+
+                /* Clear the path */
+                PATH_Delete(dc->dclevel.hPath);
+                dc->dclevel.hPath = NULL;
+            }
+            else
+            {
+                for (i = 0; i < Count-1; i++)
+                {
 // DPRINT1("Polygon Making line from (%d,%d) to (%d,%d)\n",
 //                                 Points[0].x, Points[0].y,
 //                                 Points[1].x, Points[1].y );
 
-                ret = IntEngLineTo(&psurf->SurfObj,
-                                   (CLIPOBJ *)&dc->co,
-                                   &dc->eboLine.BrushObject,
-                                   Points[i].x,          /* From */
-                                   Points[i].y,
-                                   Points[i+1].x,        /* To */
-                                   Points[i+1].y,
-                                   &DestRect,
-                                   ROP2_TO_MIX(pdcattr->jROP2)); /* MIX */
-                if (!ret) break;
-            }
-            /* Close the polygon */
-            if (ret)
-            {
-                ret = IntEngLineTo(&psurf->SurfObj,
-                                   (CLIPOBJ *)&dc->co,
-                                   &dc->eboLine.BrushObject,
-                                   Points[Count-1].x, /* From */
-                                   Points[Count-1].y,
-                                   Points[0].x,       /* To */
-                                   Points[0].y,
-                                   &DestRect,
-                                   ROP2_TO_MIX(pdcattr->jROP2)); /* MIX */
+                    ret = IntEngLineTo(&psurf->SurfObj,
+                                       (CLIPOBJ *)&dc->co,
+                                       &dc->eboLine.BrushObject,
+                                       Points[i].x,          /* From */
+                                       Points[i].y,
+                                       Points[i+1].x,        /* To */
+                                       Points[i+1].y,
+                                       &DestRect,
+                                       ROP2_TO_MIX(pdcattr->jROP2)); /* MIX */
+                    if (!ret) break;
+                }
+                /* Close the polygon */
+                if (ret)
+                {
+                    ret = IntEngLineTo(&psurf->SurfObj,
+                                       (CLIPOBJ *)&dc->co,
+                                       &dc->eboLine.BrushObject,
+                                       Points[Count-1].x, /* From */
+                                       Points[Count-1].y,
+                                       Points[0].x,       /* To */
+                                       Points[0].y,
+                                       &DestRect,
+                                       ROP2_TO_MIX(pdcattr->jROP2)); /* MIX */
+                }
             }
         }
     }
@@ -542,6 +576,7 @@ IntRectangle(PDC dc,
     MIX        Mix;
     PDC_ATTR pdcattr;
     POINTL BrushOrigin;
+    PPATH pPath;
 
     ASSERT ( dc ); // Caller's responsibility to set this up
 
@@ -653,7 +688,7 @@ IntRectangle(PDC dc,
             dc->dclevel.flPath &= ~DCPATH_ACTIVE;
 
             /* Actually stroke a path */
-            Ret = PATH_StrokePath(dc, pPath);
+            ret = PATH_StrokePath(dc, pPath);
 
             /* Clear the path */
             PATH_Delete(dc->dclevel.hPath);
