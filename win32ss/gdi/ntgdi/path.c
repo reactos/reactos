@@ -1600,8 +1600,7 @@ PATH_StrokePath(
     PPATH pPath)
 {
     BOOL ret = FALSE;
-    INT i = 0;
-    INT nLinePts, nAlloc;
+    INT nLinePts, nAlloc, jOldFillMode, i = 0;
     POINT *pLinePts = NULL;
     POINT ptViewportOrg, ptWindowOrg;
     SIZE szViewportExt, szWindowExt;
@@ -1619,7 +1618,12 @@ PATH_StrokePath(
         pNewPath = PATH_WidenPathEx(dc, pPath);
         if (pNewPath)
         {
+            /* Fill the path with the WINDING fill mode */
+            jOldFillMode = pdcattr->jFillMode;
+            pdcattr->jFillMode = WINDING;
             PATH_FillPathEx(dc, pNewPath, pbrLine);
+            pdcattr->jFillMode = jOldFillMode;
+
             PATH_Delete(pNewPath->BaseObject.hHmgr);
             return TRUE;
         }
