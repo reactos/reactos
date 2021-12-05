@@ -70,7 +70,7 @@ typedef struct _EPATHOBJ
 #define  PATH_LockPath(hPath) ((PPATH)GDIOBJ_ShareLockObj((HGDIOBJ)hPath, GDI_OBJECT_TYPE_PATH))
 #define  PATH_UnlockPath(pPath) GDIOBJ_vDereferenceObject((POBJ)pPath)
 #define PATH_IsPathOpen(dclevel) ( ((dclevel).hPath) && ((dclevel).flPath & DCPATH_ACTIVE) )
-#define IntIsWideGeometricPen(pbrLine) \
+#define IntIsGeometricWidePen(pbrLine) \
     ((pbrLine)->lWidth > 1 && ((pbrLine)->ulPenStyle & PS_TYPE_MASK) == PS_GEOMETRIC)
 
 BOOL FASTCALL PATH_Arc (PDC dc, INT x1, INT y1, INT x2, INT y2, INT xStart, INT yStart, INT xEnd, INT yEnd, INT direction, INT lines);

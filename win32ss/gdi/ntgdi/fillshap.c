@@ -106,7 +106,7 @@ IntGdiPolygon(PDC    dc,
         // Draw the Polygon Edges with the current pen ( if not a NULL pen )
         if (!(pbrLine->flAttrs & BR_IS_NULL))
         {
-            if (IntIsWideGeometricPen(pbrLine))
+            if (IntIsGeometricWidePen(pbrLine))
             {
                 /* Clear the path */
                 PATH_Delete(dc->dclevel.hPath);
@@ -661,7 +661,7 @@ IntRectangle(PDC dc,
 
     if (!(pbrLine->flAttrs & BR_IS_NULL))
     {
-        if (IntIsWideGeometricPen(pbrLine))
+        if (IntIsGeometricWidePen(pbrLine))
         {
             /* Clear the path */
             PATH_Delete(dc->dclevel.hPath);
