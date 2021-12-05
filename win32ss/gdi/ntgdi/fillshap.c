@@ -628,34 +628,68 @@ IntRectangle(PDC dc,
 
     if (!(pbrLine->flAttrs & BR_IS_NULL))
     {
-        Mix = ROP2_TO_MIX(pdcattr->jROP2);
-        ret = ret && IntEngLineTo(&psurf->SurfObj,
-                                  (CLIPOBJ *)&dc->co,
-                                  &dc->eboLine.BrushObject,
-                                  DestRect.left, DestRect.top, DestRect.right, DestRect.top,
-                                  &DestRect, // Bounding rectangle
-                                  Mix);
+        if (IntIsWideGeometricPen(pbrLine))
+        {
+            /* Clear the path */
+            PATH_Delete(dc->dclevel.hPath);
+            dc->dclevel.hPath = NULL;
 
-        ret = ret && IntEngLineTo(&psurf->SurfObj,
-                                  (CLIPOBJ *)&dc->co,
-                                  &dc->eboLine.BrushObject,
-                                  DestRect.right, DestRect.top, DestRect.right, DestRect.bottom,
-                                  &DestRect, // Bounding rectangle
-                                  Mix);
+            /* Begin a path */
+            pPath = PATH_CreatePath(5);
+            dc->dclevel.flPath |= DCPATH_ACTIVE;
+            dc->dclevel.hPath = pPath->BaseObject.hHmgr;
+            pPath->pos.x = LeftRect;
+            pPath->pos.y = TopRect;
+            IntLPtoDP(dc, &pPath->pos, 1);
 
-        ret = ret && IntEngLineTo(&psurf->SurfObj,
-                                  (CLIPOBJ *)&dc->co,
-                                  &dc->eboLine.BrushObject,
-                                  DestRect.right, DestRect.bottom, DestRect.left, DestRect.bottom,
-                                  &DestRect, // Bounding rectangle
-                                  Mix);
+            PATH_MoveTo(dc, pPath);
+            PATH_LineTo(dc, RightRect, TopRect);
+            PATH_LineTo(dc, RightRect, BottomRect);
+            PATH_LineTo(dc, LeftRect, BottomRect);
+            PATH_LineTo(dc, LeftRect, TopRect);
 
-        ret = ret && IntEngLineTo(&psurf->SurfObj,
-                                  (CLIPOBJ *)&dc->co,
-                                  &dc->eboLine.BrushObject,
-                                  DestRect.left, DestRect.bottom, DestRect.left, DestRect.top,
-                                  &DestRect, // Bounding rectangle
-                                  Mix);
+            /* Close the path */
+            pPath->state = PATH_Closed;
+            dc->dclevel.flPath &= ~DCPATH_ACTIVE;
+
+            /* Actually stroke a path */
+            Ret = PATH_StrokePath(dc, pPath);
+
+            /* Clear the path */
+            PATH_Delete(dc->dclevel.hPath);
+            dc->dclevel.hPath = NULL;
+        }
+        else
+        {
+            Mix = ROP2_TO_MIX(pdcattr->jROP2);
+            ret = ret && IntEngLineTo(&psurf->SurfObj,
+                                      (CLIPOBJ *)&dc->co,
+                                      &dc->eboLine.BrushObject,
+                                      DestRect.left, DestRect.top, DestRect.right, DestRect.top,
+                                      &DestRect, // Bounding rectangle
+                                      Mix);
+
+            ret = ret && IntEngLineTo(&psurf->SurfObj,
+                                      (CLIPOBJ *)&dc->co,
+                                      &dc->eboLine.BrushObject,
+                                      DestRect.right, DestRect.top, DestRect.right, DestRect.bottom,
+                                      &DestRect, // Bounding rectangle
+                                      Mix);
+
+            ret = ret && IntEngLineTo(&psurf->SurfObj,
+                                      (CLIPOBJ *)&dc->co,
+                                      &dc->eboLine.BrushObject,
+                                      DestRect.right, DestRect.bottom, DestRect.left, DestRect.bottom,
+                                      &DestRect, // Bounding rectangle
+                                      Mix);
+
+            ret = ret && IntEngLineTo(&psurf->SurfObj,
+                                      (CLIPOBJ *)&dc->co,
+                                      &dc->eboLine.BrushObject,
+                                      DestRect.left, DestRect.bottom, DestRect.left, DestRect.top,
+                                      &DestRect, // Bounding rectangle
+                                      Mix);
+        }
     }
 
 cleanup:
