@@ -380,7 +380,9 @@ IntGdiPolyline(DC      *dc,
 
                 PATH_MoveTo(dc, pPath);
                 for (i = 1; i < Count; ++i)
+                {
                     PATH_LineTo(dc, pt[i].x, pt[i].y);
+                }
 
                 /* Close the path */
                 pPath->state = PATH_Closed;
