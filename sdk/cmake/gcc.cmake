@@ -356,8 +356,8 @@ function(generate_import_lib _libname _dllname _spec_file)
     # Generate the def for the import lib
     add_custom_command(
         OUTPUT ${_def_file}
-        COMMAND ${COMMAND_SPEC2DEF} --implib ${ARGN} -n=${_dllname} -d=${_def_file} ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file}
-        DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file} native-spec2def)
+        COMMAND ${COMMAND_SPEC2DEF} --implib ${ARGN} -n=${_dllname} -d=${_def_file} ${_spec_file}
+        DEPENDS native-spec2def ${_spec_file})
 
     # With this, we let DLLTOOL create an import library
     set(LIBRARY_PRIVATE_DIR ${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/${_libname}.dir)

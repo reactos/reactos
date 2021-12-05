@@ -466,15 +466,42 @@ function(create_iso_lists)
          INPUT ${REACTOS_BINARY_DIR}/boot/bootcdregtest.cmake.lst)
 endfunction()
 
-function(spec2def _dllname _spec_file)
+function(spec2def _dllname _spec_files)
     cmake_parse_arguments(__spec2def "ADD_IMPORTLIB;NO_PRIVATE_WARNINGS;WITH_RELAY" "VERSION" "" ${ARGN})
 
     # Get library basename
     get_filename_component(_file ${_dllname} NAME_WE)
 
-    # Error out on anything else than spec
-    if(NOT ${_spec_file} MATCHES ".*\\.spec")
-        message(FATAL_ERROR "spec2def only takes spec files as input.")
+    # Build a list of all the spec files.
+    list(LENGTH _spec_files _len)
+    if(_len GREATER 1)
+        foreach(_spec_file ${_spec_files})
+            # Error out on anything else than spec
+            if(NOT ${_spec_file} MATCHES ".*\\.spec")
+                message(FATAL_ERROR "spec2def only takes spec files as input.")
+            endif()
+            # Retrieve the full file path
+            get_filename_component(_spec_file ${_spec_file} ABSOLUTE)
+            # Append to list
+            list(APPEND _source_file_list ${_spec_file})
+        endforeach()
+
+        # Generate the resulting spec file by concatenating all of them
+        set(_spec_file ${CMAKE_CURRENT_BINARY_DIR}/${_file}_spec.spec)
+        concatenate_files(${_spec_file} ${_source_file_list})
+        set_source_files_properties(${_spec_file} PROPERTIES GENERATED TRUE)
+
+    else()
+
+        set(_spec_file ${_spec_files})
+
+        # Error out on anything else than spec
+        if(NOT ${_spec_file} MATCHES ".*\\.spec")
+            message(FATAL_ERROR "spec2def only takes spec files as input.")
+        endif()
+
+        # Retrieve the full file path
+        get_filename_component(_spec_file ${_spec_file} ABSOLUTE)
     endif()
 
     if(__spec2def_WITH_RELAY)
@@ -488,8 +515,8 @@ function(spec2def _dllname _spec_file)
     # Generate exports def and C stubs file for the DLL
     add_custom_command(
         OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${_file}.def ${CMAKE_CURRENT_BINARY_DIR}/${_file}_stubs.c
-        COMMAND ${COMMAND_SPEC2DEF} -n=${_dllname} -d=${CMAKE_CURRENT_BINARY_DIR}/${_file}.def -s=${CMAKE_CURRENT_BINARY_DIR}/${_file}_stubs.c ${__with_relay_arg} ${__version_arg} ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file}
-        DEPENDS native-spec2def ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file})
+        COMMAND ${COMMAND_SPEC2DEF} -n=${_dllname} -d=${CMAKE_CURRENT_BINARY_DIR}/${_file}.def -s=${CMAKE_CURRENT_BINARY_DIR}/${_file}_stubs.c ${__with_relay_arg} ${__version_arg} ${_spec_file}
+        DEPENDS native-spec2def ${_spec_file})
 
     if(__spec2def_ADD_IMPORTLIB)
         if(MSVC)

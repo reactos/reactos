@@ -334,8 +334,8 @@ function(generate_import_lib _libname _dllname _spec_file)
     # Generate the def and asm stub files
     add_custom_command(
         OUTPUT ${_asm_stubs_file} ${_def_file}
-        COMMAND ${COMMAND_SPEC2DEF} --implib -n=${_dllname} -d=${_def_file} -l=${_asm_stubs_file} ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file}
-        DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file} native-spec2def)
+        COMMAND ${COMMAND_SPEC2DEF} --implib -n=${_dllname} -d=${_def_file} -l=${_asm_stubs_file} ${_spec_file}
+        DEPENDS native-spec2def ${_spec_file})
 
     # Compile the generated asm stub file
     if(ARCH STREQUAL "arm" OR ARCH STREQUAL "arm64")
