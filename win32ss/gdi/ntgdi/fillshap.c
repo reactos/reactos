@@ -23,7 +23,7 @@ IntGdiPolygon(PDC    dc,
     PBRUSH pbrLine, pbrFill;
     BOOL ret = FALSE; // Default to failure
     RECTL DestRect;
-    int CurrentPoint;
+    INT i, CurrentPoint;
     PDC_ATTR pdcattr;
     POINTL BrushOrigin;
     PPATH pPath;
@@ -106,8 +106,6 @@ IntGdiPolygon(PDC    dc,
         // Draw the Polygon Edges with the current pen ( if not a NULL pen )
         if (!(pbrLine->flAttrs & BR_IS_NULL))
         {
-            int i;
-
             if (IntIsWideGeometricPen(pbrLine))
             {
                 /* Clear the path */
