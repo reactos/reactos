@@ -325,6 +325,8 @@ else()
     set(SPEC2DEF_ARCH ${ARCH})
 endif()
 
+set(COMMAND_SPEC2DEF native-spec2def --ms -a=${SPEC2DEF_ARCH})
+
 function(generate_import_lib _libname _dllname _spec_file)
     set(_def_file ${CMAKE_CURRENT_BINARY_DIR}/${_libname}_implib.def)
     set(_asm_stubs_file ${CMAKE_CURRENT_BINARY_DIR}/${_libname}_stubs.asm)
@@ -332,7 +334,7 @@ function(generate_import_lib _libname _dllname _spec_file)
     # Generate the def and asm stub files
     add_custom_command(
         OUTPUT ${_asm_stubs_file} ${_def_file}
-        COMMAND native-spec2def --ms -a=${SPEC2DEF_ARCH} --implib -n=${_dllname} -d=${_def_file} -l=${_asm_stubs_file} ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file}
+        COMMAND ${COMMAND_SPEC2DEF} --implib -n=${_dllname} -d=${_def_file} -l=${_asm_stubs_file} ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file}
         DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file} native-spec2def)
 
     # Compile the generated asm stub file
@@ -364,40 +366,6 @@ function(generate_import_lib _libname _dllname _spec_file)
     add_library(${_libname} STATIC ${_libfile_tmp})
 
     set_target_properties(${_libname} PROPERTIES LINKER_LANGUAGE "C")
-endfunction()
-
-function(spec2def _dllname _spec_file)
-
-    cmake_parse_arguments(__spec2def "ADD_IMPORTLIB;NO_PRIVATE_WARNINGS;WITH_RELAY" "VERSION" "" ${ARGN})
-
-    # Get library basename
-    get_filename_component(_file ${_dllname} NAME_WE)
-
-    # Error out on anything else than spec
-    if(NOT ${_spec_file} MATCHES ".*\\.spec")
-        message(FATAL_ERROR "spec2def only takes spec files as input.")
-    endif()
-
-    if(__spec2def_WITH_RELAY)
-        set(__with_relay_arg "--with-tracing")
-    endif()
-
-    if(__spec2def_VERSION)
-        set(__version_arg "--version=0x${__spec2def_VERSION}")
-    endif()
-
-    # Generate exports def and C stubs file for the DLL
-    add_custom_command(
-        OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${_file}.def ${CMAKE_CURRENT_BINARY_DIR}/${_file}_stubs.c
-        COMMAND native-spec2def --ms -a=${SPEC2DEF_ARCH} -n=${_dllname} -d=${CMAKE_CURRENT_BINARY_DIR}/${_file}.def -s=${CMAKE_CURRENT_BINARY_DIR}/${_file}_stubs.c ${__with_relay_arg} ${__version_arg} ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file}
-        DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file} native-spec2def)
-
-    if(__spec2def_ADD_IMPORTLIB)
-        generate_import_lib(lib${_file} ${_dllname} ${_spec_file})
-        if(__spec2def_NO_PRIVATE_WARNINGS)
-            set_property(TARGET lib${_file} APPEND PROPERTY STATIC_LIBRARY_OPTIONS /ignore:4104)
-        endif()
-    endif()
 endfunction()
 
 # Use a full path for the x86 version of ml when using x64 VS.

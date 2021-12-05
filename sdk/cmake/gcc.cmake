@@ -348,13 +348,15 @@ else()
     set(SPEC2DEF_ARCH ${ARCH})
 endif()
 
+set(COMMAND_SPEC2DEF native-spec2def -a=${SPEC2DEF_ARCH})
+
 function(generate_import_lib _libname _dllname _spec_file)
     set(_def_file ${CMAKE_CURRENT_BINARY_DIR}/${_libname}_implib.def)
 
     # Generate the def for the import lib
     add_custom_command(
         OUTPUT ${_def_file}
-        COMMAND native-spec2def -a=${SPEC2DEF_ARCH} --implib ${ARGN} -n=${_dllname} -d=${_def_file} ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file}
+        COMMAND ${COMMAND_SPEC2DEF} --implib ${ARGN} -n=${_dllname} -d=${_def_file} ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file}
         DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file} native-spec2def)
 
     # With this, we let DLLTOOL create an import library
@@ -400,42 +402,6 @@ function(generate_import_lib _libname _dllname _spec_file)
         PROPERTIES
         LINKER_LANGUAGE "C"
         PREFIX "")
-endfunction()
-
-function(spec2def _dllname _spec_file)
-
-    cmake_parse_arguments(__spec2def "ADD_IMPORTLIB;NO_PRIVATE_WARNINGS;WITH_RELAY" "VERSION" "" ${ARGN})
-
-    # Get library basename
-    get_filename_component(_file ${_dllname} NAME_WE)
-
-    # Error out on anything else than spec
-    if(NOT ${_spec_file} MATCHES ".*\\.spec")
-        message(FATAL_ERROR "spec2def only takes spec files as input.")
-    endif()
-
-    if(__spec2def_WITH_RELAY)
-        set(__with_relay_arg "--with-tracing")
-    endif()
-
-    if(__spec2def_VERSION)
-        set(__version_arg "--version=0x${__spec2def_VERSION}")
-    endif()
-
-    # Generate exports def and C stubs file for the DLL
-    add_custom_command(
-        OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${_file}.def ${CMAKE_CURRENT_BINARY_DIR}/${_file}_stubs.c
-        COMMAND native-spec2def -a=${SPEC2DEF_ARCH} -n=${_dllname} -d=${CMAKE_CURRENT_BINARY_DIR}/${_file}.def -s=${CMAKE_CURRENT_BINARY_DIR}/${_file}_stubs.c ${__with_relay_arg} ${__version_arg} ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file}
-        DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file} native-spec2def)
-
-    if(__spec2def_ADD_IMPORTLIB)
-        set(_extraflags)
-        if(__spec2def_NO_PRIVATE_WARNINGS)
-            set(_extraflags --no-private-warnings)
-        endif()
-
-        generate_import_lib(lib${_file} ${_dllname} ${_spec_file} ${_extraflags})
-    endif()
 endfunction()
 
 function(CreateBootSectorTarget _target_name _asm_file _binary_file _base_address)
