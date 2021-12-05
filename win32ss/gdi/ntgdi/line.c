@@ -31,7 +31,7 @@ AddPenLinesBounds(PDC dc, int count, POINT *points)
     bounds.left = bounds.top = INT_MAX;
     bounds.right = bounds.bottom = INT_MIN;
 
-    if (((pbrLine->ulPenStyle & PS_TYPE_MASK) & PS_GEOMETRIC) || (pbrLine->lWidth > 1))
+    if (IntIsWideGeometricPen(pbrLine))
     {
         /* Windows uses some heuristics to estimate the distance from the point that will be painted */
         lWidth = pbrLine->lWidth + 2;
@@ -203,7 +203,7 @@ IntGdiLineTo(DC  *dc,
 
         if (!(pbrLine->flAttrs & BR_IS_NULL))
         {
-            if ((pbrLine->lWidth > 1) && (pbrLine->ulPenStyle & PS_TYPE_MASK) == PS_GEOMETRIC)
+            if (IntIsWideGeometricPen(pbrLine))
             {
                 /* Clear the path */
                 PATH_Delete(dc->dclevel.hPath);
@@ -331,7 +331,6 @@ IntGdiPolyline(DC      *dc,
     BOOL Ret = TRUE;
     LONG i;
     PDC_ATTR pdcattr = dc->pdcattr;
-    BOOL bWideGeometricPen;
     PPATH pPath;
 
     if (!dc->dclevel.pSurface)
@@ -345,8 +344,6 @@ IntGdiPolyline(DC      *dc,
     /* Get BRUSHOBJ from current pen. */
     pbrLine = dc->dclevel.pbrLine;
     ASSERT(pbrLine);
-    bWideGeometricPen =
-        (pbrLine->lWidth > 1 && (pbrLine->ulPenStyle & PS_TYPE_MASK) == PS_GEOMETRIC);
 
     if (!(pbrLine->flAttrs & BR_IS_NULL))
     {
@@ -368,7 +365,7 @@ IntGdiPolyline(DC      *dc,
                AddPenLinesBounds(dc, Count, Points);
             }
 
-            if (bWideGeometricPen)
+            if (IntIsWideGeometricPen(pbrLine))
             {
                 /* Clear the path */
                 PATH_Delete(dc->dclevel.hPath);
