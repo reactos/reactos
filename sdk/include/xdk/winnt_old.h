@@ -2148,7 +2148,9 @@ typedef struct _DISPATCHER_CONTEXT
     PBYTE  NonVolatileRegisters;
     DWORD Reserved;
 } DISPATCHER_CONTEXT, *PDISPATCHER_CONTEXT;
+
 #elif defined(_ARM64_)
+
 #define CONTEXT_ARM64   0x00400000L
 #define CONTEXT_CONTROL (CONTEXT_ARM64 | 0x1L)
 #define CONTEXT_INTEGER (CONTEXT_ARM64 | 0x2L)
@@ -2182,69 +2184,69 @@ typedef struct _CONTEXT {
     // Control flags.
     //
 
-    /* +0x000 */ DWORD ContextFlags;
+    DWORD ContextFlags;
 
     //
     // Integer registers
     //
 
-    /* +0x004 */ DWORD Cpsr;       // NZVF + DAIF + CurrentEL + SPSel
-    /* +0x008 */ union {
-                    struct {
-                        DWORD64 X0;
-                        DWORD64 X1;
-                        DWORD64 X2;
-                        DWORD64 X3;
-                        DWORD64 X4;
-                        DWORD64 X5;
-                        DWORD64 X6;
-                        DWORD64 X7;
-                        DWORD64 X8;
-                        DWORD64 X9;
-                        DWORD64 X10;
-                        DWORD64 X11;
-                        DWORD64 X12;
-                        DWORD64 X13;
-                        DWORD64 X14;
-                        DWORD64 X15;
-                        DWORD64 X16;
-                        DWORD64 X17;
-                        DWORD64 X18;
-                        DWORD64 X19;
-                        DWORD64 X20;
-                        DWORD64 X21;
-                        DWORD64 X22;
-                        DWORD64 X23;
-                        DWORD64 X24;
-                        DWORD64 X25;
-                        DWORD64 X26;
-                        DWORD64 X27;
-                        DWORD64 X28;
-    /* +0x0f0 */        DWORD64 Fp;
-    /* +0x0f8 */        DWORD64 Lr;
-                    } DUMMYSTRUCTNAME;
-                    DWORD64 X[31];
-                 } DUMMYUNIONNAME;
-    /* +0x100 */ DWORD64 Sp;
-    /* +0x108 */ DWORD64 Pc;
+    DWORD Cpsr;
+    union {
+	struct {
+        	DWORD64 X0;
+                DWORD64 X1;
+                DWORD64 X2;
+                DWORD64 X3;
+                DWORD64 X4;
+                DWORD64 X5;
+                DWORD64 X6;
+                DWORD64 X7;
+        	DWORD64 X8;
+                DWORD64 X9;
+                DWORD64 X10;
+                DWORD64 X11;
+                DWORD64 X12;
+                DWORD64 X13;
+                DWORD64 X14;
+                DWORD64 X15;
+                DWORD64 X16;
+                DWORD64 X17;
+                DWORD64 X18;
+                DWORD64 X19;
+                DWORD64 X20;
+                DWORD64 X21;
+                DWORD64 X22;
+                DWORD64 X23;
+                DWORD64 X24;
+                DWORD64 X25;
+                DWORD64 X26;
+                DWORD64 X27;
+                DWORD64 X28;
+    		DWORD64 Fp;
+		DWORD64 Lr;
+	} DUMMYSTRUCTNAME;
+        DWORD64 X[31];
+    } DUMMYUNIONNAME;
+
+    DWORD64 Sp;
+    DWORD64 Pc;
 
     //
     // Floating Point/NEON Registers
     //
 
-    /* +0x110 */ NEON128 V[32];
-    /* +0x310 */ DWORD Fpcr;
-    /* +0x314 */ DWORD Fpsr;
+    NEON128 V[32];
+    DWORD Fpcr;
+    DWORD Fpsr;
 
     //
     // Debug registers
     //
 
-    /* +0x318 */ DWORD Bcr[ARM64_MAX_BREAKPOINTS];
-    /* +0x338 */ DWORD64 Bvr[ARM64_MAX_BREAKPOINTS];
-    /* +0x378 */ DWORD Wcr[ARM64_MAX_WATCHPOINTS];
-    /* +0x380 */ DWORD64 Wvr[ARM64_MAX_WATCHPOINTS];
-    /* +0x390 */
+    DWORD Bcr[ARM64_MAX_BREAKPOINTS];
+    DWORD64 Bvr[ARM64_MAX_BREAKPOINTS];
+    DWORD Wcr[ARM64_MAX_WATCHPOINTS];
+    DWORD64 Wvr[ARM64_MAX_WATCHPOINTS];
 
 } _CONTEXT, *P_CONTEXT;
 typedef _CONTEXT CONTEXT, *PCONTEXT;
