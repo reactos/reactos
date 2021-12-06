@@ -282,7 +282,7 @@ PEN_GetObject(PBRUSH pbrushPen, INT cbCount, PLOGPEN pBuffer)
                 pLogPen = (PLOGPEN)pBuffer;
                 pLogPen->lopnWidth.x = pbrushPen->lWidth;
                 pLogPen->lopnWidth.y = 0;
-                pLogPen->lopnStyle = pbrushPen->ulPenStyle;
+                pLogPen->lopnStyle = (pbrushPen->ulPenStyle & ~PS_GEOMETRIC);
                 pLogPen->lopnColor = pbrushPen->BrushAttr.lbColor;
             }
         }
