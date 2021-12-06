@@ -282,7 +282,7 @@ PEN_GetObject(PBRUSH pbrushPen, INT cbCount, PLOGPEN pBuffer)
                 pLogPen = (PLOGPEN)pBuffer;
                 pLogPen->lopnWidth.x = pbrushPen->lWidth;
                 pLogPen->lopnWidth.y = 0;
-                pLogPen->lopnStyle = (pbrushPen->ulPenStyle & ~PS_GEOMETRIC);
+                pLogPen->lopnStyle = pbrushPen->ulPenStyle;
                 pLogPen->lopnColor = pbrushPen->BrushAttr.lbColor;
             }
         }
@@ -331,7 +331,7 @@ NtGdiCreatePen(
         return NULL;
     }
 
-    return IntGdiExtCreatePen(PenStyle | PS_GEOMETRIC,
+    return IntGdiExtCreatePen(PenStyle,
                               Width,
                               BS_SOLID,
                               Color,
