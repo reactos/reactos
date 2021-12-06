@@ -1624,6 +1624,7 @@ PATH_StrokePath(
             PATH_FillPathEx(dc, pNewPath, pbrLine);
             pdcattr->jFillMode = jOldFillMode;
 
+            PATH_UnlockPath(pNewPath);
             PATH_Delete(pNewPath->BaseObject.hHmgr);
             return TRUE;
         }
@@ -2145,7 +2146,6 @@ PATH_WidenPathEx(DC *dc, PPATH pPath)
     if (pPath->state != PATH_Closed)
     {
         TRACE("PWP 1\n");
-        PATH_UnlockPath(pPath);
         EngSetLastError(ERROR_CAN_NOT_COMPLETE);
         return NULL;
     }
@@ -2154,7 +2154,6 @@ PATH_WidenPathEx(DC *dc, PPATH pPath)
     if (!size)
     {
         TRACE("PWP 2\n");
-        PATH_UnlockPath(pPath);
         EngSetLastError(ERROR_CAN_NOT_COMPLETE);
         return NULL;
     }
@@ -2163,7 +2162,6 @@ PATH_WidenPathEx(DC *dc, PPATH pPath)
     if (elp == NULL)
     {
         TRACE("PWP 3\n");
-        PATH_UnlockPath(pPath);
         EngSetLastError(ERROR_OUTOFMEMORY);
         return NULL;
     }
@@ -2184,7 +2182,6 @@ PATH_WidenPathEx(DC *dc, PPATH pPath)
         TRACE("PWP 4\n");
         EngSetLastError(ERROR_CAN_NOT_COMPLETE);
         ExFreePoolWithTag(elp, TAG_PATH);
-        PATH_UnlockPath(pPath);
         return NULL;
     }
 
@@ -2196,7 +2193,6 @@ PATH_WidenPathEx(DC *dc, PPATH pPath)
         (PS_TYPE_MASK & penStyle) == PS_COSMETIC)
     {
         TRACE("PWP 5\n");
-        PATH_UnlockPath(pPath);
         EngSetLastError(ERROR_CAN_NOT_COMPLETE);
         return FALSE;
     }
