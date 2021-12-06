@@ -1624,7 +1624,6 @@ PATH_StrokePath(
             PATH_FillPathEx(dc, pNewPath, pbrLine);
             pdcattr->jFillMode = jOldFillMode;
 
-            PATH_UnlockPath(pNewPath);
             PATH_Delete(pNewPath->BaseObject.hHmgr);
             return TRUE;
         }
