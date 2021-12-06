@@ -2148,7 +2148,150 @@ typedef struct _DISPATCHER_CONTEXT
     PBYTE  NonVolatileRegisters;
     DWORD Reserved;
 } DISPATCHER_CONTEXT, *PDISPATCHER_CONTEXT;
+#elif defined(_ARM64_)
+#define CONTEXT_ARM64   0x00400000L
+#define CONTEXT_CONTROL (CONTEXT_ARM64 | 0x1L)
+#define CONTEXT_INTEGER (CONTEXT_ARM64 | 0x2L)
+#define CONTEXT_FLOATING_POINT  (CONTEXT_ARM64 | 0x4L)
+#define CONTEXT_DEBUG_REGISTERS (CONTEXT_ARM64 | 0x8L)
+#define CONTEXT_X18 (CONTEXT_ARM64 | 0x10L)
+#define CONTEXT_FULL (CONTEXT_CONTROL | CONTEXT_INTEGER | CONTEXT_FLOATING_POINT)
 
+
+#define EXCEPTION_READ_FAULT    0
+#define EXCEPTION_WRITE_FAULT   1
+#define EXCEPTION_EXECUTE_FAULT 8
+
+typedef union NEON128 {
+    struct {
+        ULONGLONG Low;
+        LONGLONG High;
+    } DUMMYSTRUCTNAME;
+    double D[2];
+    float S[4];
+    WORD   H[8];
+    BYTE  B[16];
+} NEON128, *PNEON128;
+
+#define ARM64_MAX_BREAKPOINTS 8
+#define ARM64_MAX_WATCHPOINTS 2
+
+typedef struct _CONTEXT {
+
+    //
+    // Control flags.
+    //
+
+    /* +0x000 */ DWORD ContextFlags;
+
+    //
+    // Integer registers
+    //
+
+    /* +0x004 */ DWORD Cpsr;       // NZVF + DAIF + CurrentEL + SPSel
+    /* +0x008 */ union {
+                    struct {
+                        DWORD64 X0;
+                        DWORD64 X1;
+                        DWORD64 X2;
+                        DWORD64 X3;
+                        DWORD64 X4;
+                        DWORD64 X5;
+                        DWORD64 X6;
+                        DWORD64 X7;
+                        DWORD64 X8;
+                        DWORD64 X9;
+                        DWORD64 X10;
+                        DWORD64 X11;
+                        DWORD64 X12;
+                        DWORD64 X13;
+                        DWORD64 X14;
+                        DWORD64 X15;
+                        DWORD64 X16;
+                        DWORD64 X17;
+                        DWORD64 X18;
+                        DWORD64 X19;
+                        DWORD64 X20;
+                        DWORD64 X21;
+                        DWORD64 X22;
+                        DWORD64 X23;
+                        DWORD64 X24;
+                        DWORD64 X25;
+                        DWORD64 X26;
+                        DWORD64 X27;
+                        DWORD64 X28;
+    /* +0x0f0 */        DWORD64 Fp;
+    /* +0x0f8 */        DWORD64 Lr;
+                    } DUMMYSTRUCTNAME;
+                    DWORD64 X[31];
+                 } DUMMYUNIONNAME;
+    /* +0x100 */ DWORD64 Sp;
+    /* +0x108 */ DWORD64 Pc;
+
+    //
+    // Floating Point/NEON Registers
+    //
+
+    /* +0x110 */ NEON128 V[32];
+    /* +0x310 */ DWORD Fpcr;
+    /* +0x314 */ DWORD Fpsr;
+
+    //
+    // Debug registers
+    //
+
+    /* +0x318 */ DWORD Bcr[ARM64_MAX_BREAKPOINTS];
+    /* +0x338 */ DWORD64 Bvr[ARM64_MAX_BREAKPOINTS];
+    /* +0x378 */ DWORD Wcr[ARM64_MAX_WATCHPOINTS];
+    /* +0x380 */ DWORD64 Wvr[ARM64_MAX_WATCHPOINTS];
+    /* +0x390 */
+
+} _CONTEXT, *P_CONTEXT;
+typedef _CONTEXT CONTEXT, *PCONTEXT;
+
+typedef struct _IMAGE_ARM64_RUNTIME_FUNCTION_ENTRY {
+    DWORD BeginAddress;
+    union {
+        DWORD UnwindData;
+        struct {
+            DWORD Flag : 2;
+            DWORD FunctionLength : 11;
+            DWORD RegF : 3;
+            DWORD RegI : 4;
+            DWORD H : 1;
+            DWORD CR : 2;
+            DWORD FrameSize : 9;
+        } DUMMYSTRUCTNAME;
+    } DUMMYUNIONNAME;
+} IMAGE_ARM64_RUNTIME_FUNCTION_ENTRY, * PIMAGE_ARM64_RUNTIME_FUNCTION_ENTRY;
+typedef struct _IMAGE_ARM64_RUNTIME_FUNCTION_ENTRY RUNTIME_FUNCTION, *PRUNTIME_FUNCTION;
+
+typedef struct _SCOPE_TABLE_ARM64 {
+    DWORD Count;
+    struct
+    {
+        DWORD BeginAddress;
+        DWORD EndAddress;
+        DWORD HandlerAddress;
+        DWORD JumpTarget;
+    } ScopeRecord[1];
+} SCOPE_TABLE_ARM64, *PSCOPE_TABLE_ARM64;
+typedef SCOPE_TABLE_ARM64 SCOPE_TABLE, *PSCOPE_TABLE;
+
+typedef struct _DISPATCHER_CONTEXT {
+    ULONG_PTR ControlPc;
+    ULONG_PTR ImageBase;
+    PRUNTIME_FUNCTION FunctionEntry;
+    ULONG_PTR EstablisherFrame;
+    ULONG_PTR TargetPc;
+    PCONTEXT ContextRecord;
+    PEXCEPTION_ROUTINE LanguageHandler;
+    PVOID HandlerData;
+    struct _UNWIND_HISTORY_TABLE *HistoryTable;
+    DWORD ScopeIndex;
+    BOOLEAN ControlPcIsUnwound;
+    PBYTE  NonVolatileRegisters;
+} DISPATCHER_CONTEXT, *PDISPATCHER_CONTEXT;
 #else
 #error "undefined processor type"
 #endif
