@@ -73,6 +73,13 @@ KiDeliverApc(
 //
 // Process/Thread Functions
 //
+CODE_SEG("INIT")
+VOID
+NTAPI
+KeStartAllProcessors(
+    VOID
+);
+
 VOID
 NTAPI
 KeTerminateThread(

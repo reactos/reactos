@@ -1,15 +1,16 @@
 /*
  * PROJECT:     ReactOS HAL
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
- * FILE:        hal/halx86/apic/apicsmp.c
  * PURPOSE:     SMP specific APIC code
- * PROGRAMMERS: Copyright 2021 Timo Kreuzer (timo.kreuzer@reactos.org)
+ * COPYRIGHT:   Copyright 2021 Timo Kreuzer (timo.kreuzer@reactos.org)
+ *              Copyright 2021 Justin Miller (justinmiller100@gmail.com)
  */
 
 /* INCLUDES *******************************************************************/
 
 #include <hal.h>
 #include "apicp.h"
+#include <smp.h>
 #define NDEBUG
 #include <debug.h>
 
@@ -84,7 +85,6 @@ ApicRequestGlobalInterrupt(
 
 /* SMP SUPPORT FUNCTIONS ******************************************************/
 
-// Should be called by SMP version of HalRequestIpi
 VOID
 NTAPI
 HalpRequestIpi(KAFFINITY TargetProcessors)
@@ -93,4 +93,17 @@ HalpRequestIpi(KAFFINITY TargetProcessors)
     __debugbreak();
 }
 
-// APIC specific SMP code here
+VOID
+ApicStartApplicationProcessor(ULONG NTProcessorNumber, PHYSICAL_ADDRESS StartupLoc)
+{
+    /* Init IPI */
+    ApicRequestGlobalInterrupt(NTProcessorNumber, 0,
+        APIC_MT_INIT, APIC_TGM_Edge, APIC_DSH_Destination);
+
+    /* Stall execution for a bit to give APIC time */
+    KeStallExecutionProcessor(1000);
+
+    /* Startup IPI */
+    ApicRequestGlobalInterrupt(NTProcessorNumber, (StartupLoc.LowPart) >> 12,
+        APIC_MT_Startup, APIC_TGM_Edge, APIC_DSH_Destination);
+}

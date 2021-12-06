@@ -455,6 +455,13 @@ KiSetTrapContext(
     _In_ PCONTEXT Context,
     _In_ KPROCESSOR_MODE RequestorMode);
 
+VOID
+NTAPI
+KiInitializePcr(IN PKIPCR Pcr,
+                IN ULONG ProcessorNumber,
+                IN PKTHREAD IdleThread,
+                IN PVOID DpcStack);
+
 #endif /* __NTOSKRNL_INCLUDE_INTERNAL_AMD64_KE_H */
 
 /* EOF */
