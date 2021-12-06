@@ -851,12 +851,12 @@ HalpSetupAcpiPhase0(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
         /* Allocate it */
         HalpLowStubPhysicalAddress.QuadPart = HalpAllocPhysicalMemory(LoaderBlock,
                                                                       0x100000,
-                                                                      1,
+                                                                      HALP_LOW_STUB_SIZE_IN_PAGES,
                                                                       FALSE);
         if (HalpLowStubPhysicalAddress.QuadPart)
         {
             /* Map it */
-            HalpLowStub = HalpMapPhysicalMemory64(HalpLowStubPhysicalAddress, 1);
+            HalpLowStub = HalpMapPhysicalMemory64(HalpLowStubPhysicalAddress, HALP_LOW_STUB_SIZE_IN_PAGES);
         }
     }
 

@@ -41,3 +41,15 @@ HalpSetupProcessorsTable(
 
 VOID
 HalpPrintApicTables(VOID);
+
+/* APIC specific functions inside apic/apicsmp.c */
+
+VOID
+ApicStartApplicationProcessor(
+    _In_ ULONG NTProcessorNumber,
+    _In_ PHYSICAL_ADDRESS StartupLoc);
+
+VOID
+NTAPI
+HalpRequestIpi(
+    _In_ KAFFINITY TargetProcessors);
