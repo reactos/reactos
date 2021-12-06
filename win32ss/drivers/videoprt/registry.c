@@ -586,6 +586,10 @@ IntCreateNewRegistryPath(
         return Status;
     }
 
+    /* Copy the saved resolution to the source key */
+    IntCopyRegistryValue(NewKey, SettingsKey, L"DefaultSettings.XResolution");
+    IntCopyRegistryValue(NewKey, SettingsKey, L"DefaultSettings.YResolution");
+
     /* Copy the registry data from the legacy key */
     Status = IntCopyRegistryKey(SettingsKey, NewKey);
 
