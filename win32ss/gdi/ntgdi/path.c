@@ -1613,7 +1613,7 @@ PATH_StrokePath(
     TRACE("Enter %s\n", __FUNCTION__);
 
     pbrLine = dc->dclevel.pbrLine;
-    if (IntIsGeometricWidePen(pbrLine))
+    if (IntIsEffectiveWidePen(pbrLine))
     {
         pNewPath = PATH_WidenPathEx(dc, pPath);
         if (pNewPath)

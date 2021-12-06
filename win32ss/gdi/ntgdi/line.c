@@ -31,7 +31,7 @@ AddPenLinesBounds(PDC dc, int count, POINT *points)
     bounds.left = bounds.top = INT_MAX;
     bounds.right = bounds.bottom = INT_MIN;
 
-    if (IntIsGeometricWidePen(pbrLine))
+    if (IntIsEffectiveWidePen(pbrLine))
     {
         /* Windows uses some heuristics to estimate the distance from the point that will be painted */
         lWidth = pbrLine->lWidth + 2;
@@ -203,7 +203,7 @@ IntGdiLineTo(DC  *dc,
 
         if (!(pbrLine->flAttrs & BR_IS_NULL))
         {
-            if (IntIsGeometricWidePen(pbrLine))
+            if (IntIsEffectiveWidePen(pbrLine))
             {
                 /* Clear the path */
                 PATH_Delete(dc->dclevel.hPath);
@@ -366,7 +366,7 @@ IntGdiPolyline(DC      *dc,
                AddPenLinesBounds(dc, Count, Points);
             }
 
-            if (IntIsGeometricWidePen(pbrLine))
+            if (IntIsEffectiveWidePen(pbrLine))
             {
                 /* Clear the path */
                 PATH_Delete(dc->dclevel.hPath);

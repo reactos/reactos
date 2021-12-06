@@ -30,7 +30,7 @@ PEN_GetObject(
 
 VOID FASTCALL AddPenLinesBounds(PDC,int,POINT *);
 
-#define IntIsGeometricWidePen(pbrLine) ( \
+#define IntIsEffectiveWidePen(pbrLine) ( \
     (pbrLine)->lWidth > 1 && \
     ((pbrLine->flAttrs & BR_IS_OLDSTYLEPEN) || \
      ((pbrLine)->ulPenStyle & PS_TYPE_MASK) == PS_GEOMETRIC) \
