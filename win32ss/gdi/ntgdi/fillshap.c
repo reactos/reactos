@@ -137,8 +137,6 @@ IntGdiPolygon(PDC    dc,
                 PATH_UnlockPath(pPath);
                 PATH_Delete(dc->dclevel.hPath);
                 dc->dclevel.hPath = NULL;
-
-                /* FIXME: Boundary */
             }
             else
             {
@@ -695,8 +693,6 @@ IntRectangle(PDC dc,
             PATH_UnlockPath(pPath);
             PATH_Delete(dc->dclevel.hPath);
             dc->dclevel.hPath = NULL;
-
-            /* FIXME: Boundary */
         }
         else
         {
