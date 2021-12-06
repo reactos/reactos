@@ -134,6 +134,7 @@ IntGdiPolygon(PDC    dc,
                 ret = PATH_StrokePath(dc, pPath);
 
                 /* Clear the path */
+                PATH_UnlockPath(pPath);
                 PATH_Delete(dc->dclevel.hPath);
                 dc->dclevel.hPath = NULL;
             }
@@ -689,6 +690,7 @@ IntRectangle(PDC dc,
             ret = PATH_StrokePath(dc, pPath);
 
             /* Clear the path */
+            PATH_UnlockPath(pPath);
             PATH_Delete(dc->dclevel.hPath);
             dc->dclevel.hPath = NULL;
         }

@@ -227,6 +227,7 @@ IntGdiLineTo(DC  *dc,
                 Ret = PATH_StrokePath(dc, pPath);
 
                 /* Clear the path */
+                PATH_UnlockPath(pPath);
                 PATH_Delete(dc->dclevel.hPath);
                 dc->dclevel.hPath = NULL;
             }
@@ -392,6 +393,7 @@ IntGdiPolyline(DC      *dc,
                 Ret = PATH_StrokePath(dc, pPath);
 
                 /* Clear the path */
+                PATH_UnlockPath(pPath);
                 PATH_Delete(dc->dclevel.hPath);
                 dc->dclevel.hPath = NULL;
             }
