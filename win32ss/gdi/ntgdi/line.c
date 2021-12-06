@@ -230,6 +230,8 @@ IntGdiLineTo(DC  *dc,
                 PATH_UnlockPath(pPath);
                 PATH_Delete(dc->dclevel.hPath);
                 dc->dclevel.hPath = NULL;
+
+                /* FIXME: Boundary */
             }
             else
             {
@@ -396,6 +398,8 @@ IntGdiPolyline(DC      *dc,
                 PATH_UnlockPath(pPath);
                 PATH_Delete(dc->dclevel.hPath);
                 dc->dclevel.hPath = NULL;
+
+                /* FIXME: Boundary */
             }
             else
             {
