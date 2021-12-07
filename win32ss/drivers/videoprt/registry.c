@@ -565,10 +565,10 @@ IntCreateNewRegistryPath(
                                 OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE,
                                 NULL,
                                 NULL);
-    Status = ZwOpenKey(&NewKey, KEY_READ, &ObjectAttributes);
+    Status = ZwOpenKey(&NewKey, KEY_READ | KEY_WRITE, &ObjectAttributes);
     if (!NT_SUCCESS(Status))
     {
-        ERR_(VIDEOPRT, "Failed to open settings key. Status 0x%lx\n", Status);
+        ERR_(VIDEOPRT, "Failed to open NewKey. Status 0x%lx\n", Status);
         return Status;
     }
 
@@ -578,10 +578,10 @@ IntCreateNewRegistryPath(
                                 OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE,
                                 NULL,
                                 NULL);
-    Status = ZwOpenKey(&SettingsKey, KEY_READ, &ObjectAttributes);
+    Status = ZwOpenKey(&SettingsKey, KEY_READ | KEY_WRITE, &ObjectAttributes);
     if (!NT_SUCCESS(Status))
     {
-        ERR_(VIDEOPRT, "Failed to open settings key. Status 0x%lx\n", Status);
+        ERR_(VIDEOPRT, "Failed to open SettingsKey. Status 0x%lx\n", Status);
         ObCloseHandle(NewKey, KernelMode);
         return Status;
     }
