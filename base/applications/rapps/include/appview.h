@@ -367,6 +367,7 @@ public:
 
     HWND Create(HWND hwndParent);
     void SetRedraw(BOOL bRedraw);
+    void SetFocusOnSearchBar();
     BOOL SetDisplayAppType(APPLICATION_VIEW_TYPE AppType);
 
     BOOL AddInstalledApplication(CInstalledApplicationInfo *InstAppInfo, LPVOID param);

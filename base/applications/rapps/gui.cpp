@@ -545,6 +545,10 @@ VOID CMainWindow::OnCommand(WPARAM wParam, LPARAM lParam)
             PostMessageW(WM_CLOSE, 0, 0);
             break;
 
+        case ID_SEARCH:
+            m_ApplicationView->SetFocusOnSearchBar();
+            break;
+
         case ID_INSTALL:
             if (IsAvailableEnum(SelectedEnumType))
             {
