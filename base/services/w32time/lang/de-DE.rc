@@ -1,0 +1,7 @@
+LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
+
+STRINGTABLE
+BEGIN
+    IDS_DISPLAYNAME "Zeitgeberdienst"
+    IDS_DESCRIPTION "Verwaltet die Datum- und Uhrzeitsynchronisation auf allen Clients und Servern im Netzwerk."
+END

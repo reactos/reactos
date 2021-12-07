@@ -1,0 +1,7 @@
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+
+STRINGTABLE
+BEGIN
+    IDS_DISPLAYNAME "Time Service"
+    IDS_DESCRIPTION "Maintains date and time synchronization on all clients and servers on the network."
+END
