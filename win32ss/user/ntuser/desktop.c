@@ -202,12 +202,16 @@ NTAPI
 IntDesktopObjectOpen(
     _In_ PVOID Parameters)
 {
+    NTSTATUS Ret;
     PWIN32_OPENMETHOD_PARAMETERS OpenParameters = Parameters;
     PPROCESSINFO ppi = PsGetProcessWin32Process(OpenParameters->Process);
     if (ppi == NULL)
         return STATUS_SUCCESS;
 
-    return IntMapDesktopView((PDESKTOP)OpenParameters->Object);
+    UserEnterExclusive();
+    Ret = IntMapDesktopView((PDESKTOP)OpenParameters->Object);
+    UserLeave();
+    return Ret;
 }
 
 NTSTATUS
