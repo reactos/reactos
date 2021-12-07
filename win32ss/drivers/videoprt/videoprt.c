@@ -617,7 +617,7 @@ IntLoadRegistryParameters(VOID)
                                    NULL);
 
         Status = ZwCreateKey(&KeyHandle,
-                             KEY_WRITE,
+                             READ_CONTROL, // Non-0 placeholder: no use for this handle.
                              &ObjectAttributes,
                              0,
                              NULL,
