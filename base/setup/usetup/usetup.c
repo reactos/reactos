@@ -3930,7 +3930,7 @@ BootLoaderPage(PINPUT_RECORD Ir)
         if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
             (Ir->Event.KeyEvent.wVirtualKeyCode == VK_DOWN))  /* DOWN */
         {
-   //         CONSOLE_NormalTextXY(8, Line, 68, 1);
+            CONSOLE_NormalTextXY(8, Line, 60, 1);
 
             Line++;
             if (Line < 12)
@@ -3939,12 +3939,12 @@ BootLoaderPage(PINPUT_RECORD Ir)
             if (Line > 15)
                 Line = 12;
 
-            CONSOLE_InvertTextXY(8, Line, 68, 1);
+            CONSOLE_InvertTextXY(8, Line, 60, 1);
         }
         else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
                  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_UP))  /* UP */
         {
-            CONSOLE_NormalTextXY(8, Line, 68, 1);
+            CONSOLE_NormalTextXY(8, Line, 60, 1);
 
             Line--;
             if (Line < 12)
@@ -3953,25 +3953,25 @@ BootLoaderPage(PINPUT_RECORD Ir)
             if (Line > 15)
                 Line = 12;
 
-            CONSOLE_InvertTextXY(8, Line, 68, 1);
+            CONSOLE_InvertTextXY(8, Line, 60, 1);
         }
         else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
                  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_HOME))  /* HOME */
         {
-            CONSOLE_NormalTextXY(8, Line, 68, 1);
+            CONSOLE_NormalTextXY(8, Line, 60, 1);
 
             Line = 12;
 
-            CONSOLE_InvertTextXY(8, Line, 68, 1);
+            CONSOLE_InvertTextXY(8, Line, 60, 1);
         }
         else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
                  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_END))  /* END */
         {
-            CONSOLE_NormalTextXY(8, Line, 68, 1);
+            CONSOLE_NormalTextXY(8, Line, 60, 1);
 
             Line = 15;
 
-            CONSOLE_InvertTextXY(8, Line, 68, 1);
+            CONSOLE_InvertTextXY(8, Line, 60, 1);
         }
         else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
                  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3))  /* F3 */
