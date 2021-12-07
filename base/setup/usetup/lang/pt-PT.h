@@ -1494,7 +1494,6 @@ static MUI_ENTRY ptPTBootLoaderEntries[] =
         6,
         8,
         "O instalador ir\240 configurar o gestor de arranque.",
-
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },

@@ -3921,7 +3921,7 @@ BootLoaderPage(PINPUT_RECORD Ir)
     }
 
     MUIDisplayPage(BOOT_LOADER_PAGE);
-    CONSOLE_InvertTextXY(8, Line, 68, 1);
+    CONSOLE_InvertTextXY(8, Line, 60, 1);
 
     while (TRUE)
     {
