@@ -124,11 +124,11 @@ void ResizeAndCenter(HWND hwnd, int width, int height)
 
 void MakeWindowActive(HWND hwnd)
 {
-   if (IsIconic(hwnd))
-      PostMessageW(hwnd, WM_SYSCOMMAND, SC_RESTORE, 0);
+    if (IsIconic(hwnd))
+        PostMessageW(hwnd, WM_SYSCOMMAND, SC_RESTORE, 0);
 
-   BringWindowToTop(hwnd);  // same as: SetWindowPos(hwnd,HWND_TOP,0,0,0,0,SWP_NOMOVE|SWP_NOSIZE); ?
-   SetForegroundWindow(hwnd);
+    // See also: https://microsoft.public.win32.programmer.ui.narkive.com/RqOdKqZ8/bringwindowtotop-hangs-if-the-thread-is-busy
+    SwitchToThisWindow(hwnd, TRUE);
 }
 
 void CompleteSwitch(BOOL doSwitch)
@@ -164,13 +164,18 @@ void CompleteSwitch(BOOL doSwitch)
 
 BOOL CALLBACK EnumerateCallback(HWND window, LPARAM lParam)
 {
+#define GET_ICON_TIMEOUT 100 // in milliseconds
+#define GET_ICON_RETRY_COUNT 10
    HICON hIcon;
+   LRESULT ret;
+   UINT uFlags = SMTO_ABORTIFHUNG | SMTO_NORMAL, cRetry = GET_ICON_RETRY_COUNT;
 
    UNREFERENCED_PARAMETER(lParam);
 
    // First try to get the big icon assigned to the window
-   hIcon = (HICON)SendMessageW(window, WM_GETICON, ICON_BIG, 0);
-   if (!hIcon)
+   ret = SendMessageTimeoutW(window, WM_GETICON, ICON_BIG, 0, uFlags, GET_ICON_TIMEOUT,
+                             (DWORD_PTR *)&hIcon);
+   if (!ret)
    {
       // If no icon is assigned, try to get the icon assigned to the windows' class
       hIcon = (HICON)GetClassLongPtrW(window, GCL_HICON);
@@ -178,8 +183,9 @@ BOOL CALLBACK EnumerateCallback(HWND window, LPARAM lParam)
       {
          // If we still don't have an icon, see if we can do with the small icon,
          // or a default application icon
-         hIcon = (HICON)SendMessageW(window, WM_GETICON, ICON_SMALL2, 0);
-         if (!hIcon)
+         ret = SendMessageTimeoutW(window, WM_GETICON, ICON_SMALL2, 0, uFlags,
+                                   GET_ICON_TIMEOUT, (DWORD_PTR *)&hIcon);
+         if (!ret)
          {
             // using windows logo icon as default
             hIcon = gpsi->hIconWindows;
@@ -193,6 +199,8 @@ BOOL CALLBACK EnumerateCallback(HWND window, LPARAM lParam)
    }
 
    windowList[windowCount] = window;
+   while (!hIcon && --cRetry > 0)
+      Sleep(GET_ICON_TIMEOUT / GET_ICON_RETRY_COUNT);
    iconList[windowCount] = CopyIcon(hIcon);
 
    windowCount++;
@@ -203,6 +211,8 @@ BOOL CALLBACK EnumerateCallback(HWND window, LPARAM lParam)
       return FALSE;
 
    return TRUE;
+#undef GET_ICON_TIMEOUT
+#undef GET_ICON_RETRY_COUNT
 }
 
 static HWND GetNiceRootOwner(HWND hwnd)
