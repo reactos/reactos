@@ -526,7 +526,7 @@ void RotateTasks(BOOL bShift)
     {
         SetWindowPos(hwndLast, HWND_TOP, 0, 0, 0, 0,
                      SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE |
-                     SWP_NOOWNERZORDER | SWP_NOREPOSITION);
+                     SWP_NOOWNERZORDER | SWP_NOREPOSITION | SWP_ASYNCWINDOWPOS);
 
         MakeWindowActive(hwndLast);
 
@@ -538,7 +538,7 @@ void RotateTasks(BOOL bShift)
     {
         SetWindowPos(hwndFirst, hwndLast, 0, 0, 0, 0,
                      SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE |
-                     SWP_NOOWNERZORDER | SWP_NOREPOSITION);
+                     SWP_NOOWNERZORDER | SWP_NOREPOSITION | SWP_ASYNCWINDOWPOS);
 
         MakeWindowActive(windowList[1]);
 
