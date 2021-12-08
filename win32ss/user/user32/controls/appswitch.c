@@ -165,15 +165,14 @@ void CompleteSwitch(BOOL doSwitch)
 BOOL CALLBACK EnumerateCallback(HWND window, LPARAM lParam)
 {
    HICON hIcon;
-   LRESULT ret;
 
    UNREFERENCED_PARAMETER(lParam);
 
    // First try to get the big icon assigned to the window
 #define ICON_TIMEOUT 100 // in milliseconds
-   ret = SendMessageTimeoutW(window, WM_GETICON, ICON_BIG, 0, SMTO_ABORTIFHUNG | SMTO_BLOCK,
-                             ICON_TIMEOUT, (PDWORD_PTR)&hIcon);
-   if (!ret)
+   SendMessageTimeoutW(window, WM_GETICON, ICON_BIG, 0, SMTO_ABORTIFHUNG | SMTO_BLOCK,
+                       ICON_TIMEOUT, (PDWORD_PTR)&hIcon);
+   if (!hIcon)
    {
       // If no icon is assigned, try to get the icon assigned to the windows' class
       hIcon = (HICON)GetClassLongPtrW(window, GCL_HICON);
@@ -181,11 +180,10 @@ BOOL CALLBACK EnumerateCallback(HWND window, LPARAM lParam)
       {
          // If we still don't have an icon, see if we can do with the small icon,
          // or a default application icon
-         ret = SendMessageTimeoutW(window, WM_GETICON, ICON_SMALL2, 0,
-                                   SMTO_ABORTIFHUNG | SMTO_BLOCK, ICON_TIMEOUT,
-                                   (PDWORD_PTR)&hIcon);
+         SendMessageTimeoutW(window, WM_GETICON, ICON_SMALL2, 0,
+                             SMTO_ABORTIFHUNG | SMTO_BLOCK, ICON_TIMEOUT, (PDWORD_PTR)&hIcon);
 #undef ICON_TIMEOUT
-         if (!ret)
+         if (!hIcon)
          {
             // using windows logo icon as default
             hIcon = gpsi->hIconWindows;
