@@ -166,7 +166,7 @@ BOOL CALLBACK EnumerateCallback(HWND window, LPARAM lParam)
 {
 #define ICON_TIMEOUT 100 // in milliseconds
 #define ICON_RETRY_COUNT 10
-   HICON hIcon;
+   HICON hIcon = NULL;
    LRESULT ret;
    UINT uFlags = SMTO_ABORTIFHUNG | SMTO_NORMAL, cRetry = ICON_RETRY_COUNT;
 
