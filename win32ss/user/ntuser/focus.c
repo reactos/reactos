@@ -53,11 +53,7 @@ BOOL FASTCALL IntIsWindowFullscreen(PWND Window)
     RECTL rcl;
     PMONITOR pMonitor;
 
-    if (!Window)
-        return FALSE;
-    if (Window->style & WS_CHILD)
-        return FALSE;
-    if (!(Window->style & WS_VISIBLE))
+    if (!Window || !(Window->style & WS_VISIBLE) || (Window->style & WS_CHILD))
         return FALSE;
     if (Window->ExStyle & WS_EX_TOOLWINDOW)
         return FALSE;
@@ -75,17 +71,12 @@ BOOL FASTCALL IntIsWindowFullscreen(PWND Window)
     return RtlEqualMemory(&rcl, &pMonitor->rcMonitor, sizeof(rcl));
 }
 
-inline BOOL FASTCALL IntIsWindowFullscreenHandle(HWND hwnd)
-{
-    return IntIsWindowFullscreen(ValidateHwndNoErr(hwnd));
-}
-
 BOOL FASTCALL IntCheckFullscreen(PWND Window)
 {
     static HWND s_hwndOldFullscreen = NULL;
     BOOL ret = FALSE;
 
-    if (s_hwndOldFullscreen && !IntIsWindowFullscreenHandle(s_hwndOldFullscreen))
+    if (s_hwndOldFullscreen && !IntIsWindowFullscreen(ValidateHwndNoErr(s_hwndOldFullscreen)))
         s_hwndOldFullscreen = NULL;
 
     if (IntIsWindowFullscreen(Window))
@@ -95,9 +86,9 @@ BOOL FASTCALL IntCheckFullscreen(PWND Window)
             co_IntShellHookNotify(HSHELL_RUDEAPPACTIVATED, (WPARAM)UserHMGetHandle(Window), TRUE);
             s_hwndOldFullscreen = Window->head.h;
         }
-
         ret = TRUE;
     }
+
     return ret;
 }
 
