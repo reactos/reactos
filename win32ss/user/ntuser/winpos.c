@@ -1926,6 +1926,10 @@ co_WinPosSetWindowPos(
       Window->head.pti->cVisWindows++;
       IntNotifyWinEvent(EVENT_OBJECT_SHOW, Window, OBJID_WINDOW, CHILDID_SELF, WEF_SETBYWNDPTI);
    }
+   else
+   {
+      IntCheckFullscreen(Window);
+   }
 
    if (Window->hrgnUpdate != NULL && Window->hrgnUpdate != HRGN_WINDOW)
    {

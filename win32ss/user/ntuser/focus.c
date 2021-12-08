@@ -48,9 +48,58 @@ IntGetThreadFocusWindow(VOID)
    return ThreadQueue->spwndFocus ? UserHMGetHandle(ThreadQueue->spwndFocus) : 0;
 }
 
+BOOL FASTCALL IntIsWindowFullscreen(PWND Window)
+{
+    RECTL rcl;
+
+    if (!Window)
+        return FALSE;
+    if (Window->style & WS_CHILD)
+        return FALSE;
+    if (!(Window->style & WS_VISIBLE))
+        return FALSE;
+    if (Window->ExStyle & WS_EX_TOOLWINDOW)
+        return FALSE;
+
+    // FIXME: multi monitor
+    IntGetWindowRect(Window, &rcl);
+    return rcl.left == 0 && rcl.top == 0 &&
+           rcl.right == UserGetSystemMetrics(SM_CXSCREEN) &&
+           rcl.bottom == UserGetSystemMetrics(SM_CYSCREEN);
+}
+
+BOOL FASTCALL IntIsWindowFullscreenHandle(HWND hwnd)
+{
+    return IntIsWindowFullscreen(ValidateHwndNoErr(hwnd));
+}
+
+BOOL FASTCALL IntCheckFullscreen(PWND Window)
+{
+    static HWND s_hwndOldFullscreen = NULL;
+    BOOL ret = FALSE;
+
+    if (s_hwndOldFullscreen && !IntIsWindowFullscreenHandle(s_hwndOldFullscreen))
+        s_hwndOldFullscreen = NULL;
+
+    if (IntIsWindowFullscreen(Window))
+    {
+        if (s_hwndOldFullscreen != Window->head.h)
+        {
+            co_IntShellHookNotify(HSHELL_RUDEAPPACTIVATED, (WPARAM)UserHMGetHandle(Window), TRUE);
+            s_hwndOldFullscreen = Window->head.h;
+        }
+
+        ret = TRUE;
+    }
+    return ret;
+}
+
 VOID FASTCALL
 UpdateShellHook(PWND Window)
 {
+   if (IntCheckFullscreen(Window))
+       return;
+
    if ( Window->spwndParent == UserGetDesktopWindow() &&
        (!(Window->ExStyle & WS_EX_TOOLWINDOW) ||
          (Window->ExStyle & WS_EX_APPWINDOW)))
