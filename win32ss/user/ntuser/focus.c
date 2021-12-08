@@ -15,6 +15,7 @@ PTHREADINFO gptiForeground = NULL;
 PPROCESSINFO gppiLockSFW = NULL;
 ULONG guSFWLockCount = 0; // Rule #8, No menus are active. So should be zero.
 PTHREADINFO ptiLastInput = NULL;
+HWND ghwndOldFullscreen = NULL;
 
 /*
   Check locking of a process or one or more menus are active.
@@ -76,20 +77,19 @@ BOOL FASTCALL IntIsWindowFullscreen(PWND Window)
 
 BOOL FASTCALL IntCheckFullscreen(PWND Window)
 {
-    static HWND s_hwndOldFullscreen = NULL;
     HWND hWnd;
 
-    if (s_hwndOldFullscreen && !IntIsWindowFullscreen(ValidateHwndNoErr(s_hwndOldFullscreen)))
-        s_hwndOldFullscreen = NULL;
+    if (ghwndOldFullscreen && !IntIsWindowFullscreen(ValidateHwndNoErr(ghwndOldFullscreen)))
+        ghwndOldFullscreen = NULL;
 
     if (!IntIsWindowFullscreen(Window))
         return FALSE;
 
     hWnd = UserHMGetHandle(Window);
-    if (s_hwndOldFullscreen != hWnd)
+    if (ghwndOldFullscreen != hWnd)
     {
         co_IntShellHookNotify(HSHELL_RUDEAPPACTIVATED, (WPARAM)hWnd, TRUE);
-        s_hwndOldFullscreen = hWnd;
+        ghwndOldFullscreen = hWnd;
     }
     return TRUE;
 }
