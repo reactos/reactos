@@ -50,7 +50,6 @@ IntGetThreadFocusWindow(VOID)
 
 BOOL FASTCALL IntIsWindowFullscreen(PWND Window)
 {
-    POINT pt;
     RECTL rcl;
     PMONITOR pMonitor;
 
@@ -62,11 +61,10 @@ BOOL FASTCALL IntIsWindowFullscreen(PWND Window)
         return FALSE;
     if (Window->ExStyle & WS_EX_TOOLWINDOW)
         return FALSE;
+    if (!IntGetWindowRect(Window, &rcl))
+        return FALSE;
 
-    IntGetWindowRect(Window, &rcl);
-    pt.x = (rcl.left + rcl.right) / 2;
-    pt.y = (rcl.top + rcl.bottom) / 2;
-    pMonitor = UserMonitorFromPoint(pt, MONITOR_DEFAULTTONEAREST);
+    pMonitor = UserGetPrimaryMonitor();
     if (!pMonitor)
     {
         return rcl.left == 0 && rcl.top == 0 &&
@@ -74,10 +72,8 @@ BOOL FASTCALL IntIsWindowFullscreen(PWND Window)
                rcl.bottom == UserGetSystemMetrics(SM_CYSCREEN);
     }
 
-    return pMonitor->rcMonitor.left == rcl.left &&
-           pMonitor->rcMonitor.top == rcl.top &&
-           pMonitor->rcMonitor.right == rcl.right &&
-           pMonitor->rcMonitor.bottom == rcl.bottom;
+    return pMonitor->rcMonitor.left == rcl.left && pMonitor->rcMonitor.top == rcl.top &&
+           pMonitor->rcMonitor.right == rcl.right && pMonitor->rcMonitor.bottom == rcl.bottom;
 }
 
 BOOL FASTCALL IntIsWindowFullscreenHandle(HWND hwnd)
