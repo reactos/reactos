@@ -1875,7 +1875,7 @@ InternalGetWindowText(HWND hWnd, LPWSTR lpString, int nMaxCount)
 BOOL WINAPI
 IsHungAppWindow(HWND hwnd)
 {
-    return (NtUserQueryWindow(hwnd, QUERY_WINDOW_ISHUNG) != 0);
+    return !!NtUserQueryWindow(hwnd, QUERY_WINDOW_ISHUNG);
 }
 
 /*
