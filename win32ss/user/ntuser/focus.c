@@ -52,6 +52,7 @@ BOOL FASTCALL IntIsWindowFullscreen(PWND Window)
 {
     RECTL rcl;
     PMONITOR pMonitor;
+    LPRECT prcMonitor;
 
     if (!Window)
         return FALSE;
@@ -72,11 +73,12 @@ BOOL FASTCALL IntIsWindowFullscreen(PWND Window)
                rcl.bottom == UserGetSystemMetrics(SM_CYSCREEN);
     }
 
-    return pMonitor->rcMonitor.left == rcl.left && pMonitor->rcMonitor.top == rcl.top &&
-           pMonitor->rcMonitor.right == rcl.right && pMonitor->rcMonitor.bottom == rcl.bottom;
+    prcMonitor = &pMonitor->rcMonitor;
+    return prcMonitor->left == rcl.left && prcMonitor->top == rcl.top &&
+           prcMonitor->right == rcl.right && prcMonitor->bottom == rcl.bottom;
 }
 
-BOOL FASTCALL IntIsWindowFullscreenHandle(HWND hwnd)
+inline BOOL FASTCALL IntIsWindowFullscreenHandle(HWND hwnd)
 {
     return IntIsWindowFullscreen(ValidateHwndNoErr(hwnd));
 }
