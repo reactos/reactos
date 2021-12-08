@@ -53,12 +53,11 @@ BOOL FASTCALL IntIsWindowFullscreen(PWND Window)
     RECTL rcl;
     PMONITOR pMonitor;
 
-    if (!Window || !(Window->style & WS_VISIBLE) || (Window->style & WS_CHILD))
+    if (!Window || !(Window->style & WS_VISIBLE) || (Window->style & WS_CHILD) ||
+        (Window->ExStyle & WS_EX_TOOLWINDOW) || !IntGetWindowRect(Window, &rcl))
+    {
         return FALSE;
-    if (Window->ExStyle & WS_EX_TOOLWINDOW)
-        return FALSE;
-    if (!IntGetWindowRect(Window, &rcl))
-        return FALSE;
+    }
 
     pMonitor = UserGetPrimaryMonitor();
     if (!pMonitor)
