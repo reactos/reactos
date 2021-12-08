@@ -139,7 +139,7 @@ void CompleteSwitch(BOOL doSwitch)
    isOpen = FALSE;
 
    TRACE("[ATbot] CompleteSwitch Hiding Window.\n");
-   ShowWindow(switchdialog, SW_HIDE);
+   ShowWindowAsync(switchdialog, SW_HIDE);
 
    if(doSwitch)
    {
@@ -498,7 +498,7 @@ BOOL ProcessHotKey(VOID)
       selectedWindow = 1;
 
       TRACE("[ATbot] HotKey Received. Opening window.\n");
-      ShowWindow(switchdialog, SW_SHOWNORMAL);
+      ShowWindowAsync(switchdialog, SW_SHOWNORMAL);
       MakeWindowActive(switchdialog);
       isOpen = TRUE;
    }
