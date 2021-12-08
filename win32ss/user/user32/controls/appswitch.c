@@ -164,7 +164,7 @@ void CompleteSwitch(BOOL doSwitch)
 
 BOOL CALLBACK EnumerateCallback(HWND window, LPARAM lParam)
 {
-#define ICON_TIMEOUT 100 // in milliseconds
+#define ICON_TIMEOUT 80 // in milliseconds
 #define ICON_RETRY_COUNT 10
    HICON hIcon = NULL;
    LRESULT ret;
@@ -202,15 +202,11 @@ BOOL CALLBACK EnumerateCallback(HWND window, LPARAM lParam)
    while (!hIcon && --cRetry > 0)
       Sleep(ICON_TIMEOUT / ICON_RETRY_COUNT);
    iconList[windowCount] = CopyIcon(hIcon);
-
-   windowCount++;
+   ++windowCount;
 
    // If we got to the max number of windows,
    // we won't be able to add any more
-   if(windowCount >= MAX_WINDOWS)
-      return FALSE;
-
-   return TRUE;
+   return (windowCount < MAX_WINDOWS);
 #undef ICON_TIMEOUT
 #undef ICON_RETRY_COUNT
 }
