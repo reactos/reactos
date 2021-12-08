@@ -164,44 +164,52 @@ void CompleteSwitch(BOOL doSwitch)
 
 BOOL CALLBACK EnumerateCallback(HWND window, LPARAM lParam)
 {
-   HICON hIcon;
+    HICON hIcon = NULL;
+    BOOL bHung = IsHungAppWindow(window);
 
-   UNREFERENCED_PARAMETER(lParam);
+    UNREFERENCED_PARAMETER(lParam);
 
-   // First try to get the big icon assigned to the window
+    // First try to get the big icon assigned to the window
 #define ICON_TIMEOUT 100 // in milliseconds
-   SendMessageTimeoutW(window, WM_GETICON, ICON_BIG, 0, SMTO_ABORTIFHUNG | SMTO_BLOCK,
-                       ICON_TIMEOUT, (PDWORD_PTR)&hIcon);
-   if (!hIcon)
-   {
-      // If no icon is assigned, try to get the icon assigned to the windows' class
-      hIcon = (HICON)GetClassLongPtrW(window, GCL_HICON);
-      if (!hIcon)
-      {
-         // If we still don't have an icon, see if we can do with the small icon,
-         // or a default application icon
-         SendMessageTimeoutW(window, WM_GETICON, ICON_SMALL2, 0,
-                             SMTO_ABORTIFHUNG | SMTO_BLOCK, ICON_TIMEOUT, (PDWORD_PTR)&hIcon);
+    if (!bHung)
+    {
+        SendMessageTimeoutW(window, WM_GETICON, ICON_BIG, 0, SMTO_ABORTIFHUNG | SMTO_BLOCK,
+                            ICON_TIMEOUT, (PDWORD_PTR)&hIcon);
+    }
+    if (!hIcon)
+    {
+        // If no icon is assigned, try to get the icon assigned to the windows' class
+        hIcon = (HICON)GetClassLongPtrW(window, GCL_HICON);
+        if (!hIcon)
+        {
+            // If we still don't have an icon, see if we can do with the small icon,
+            // or a default application icon
+            if (!bHung)
+            {
+                SendMessageTimeoutW(window, WM_GETICON, ICON_SMALL2, 0,
+                                    SMTO_ABORTIFHUNG | SMTO_BLOCK, ICON_TIMEOUT,
+                                    (PDWORD_PTR)&hIcon);
+            }
 #undef ICON_TIMEOUT
-         if (!hIcon)
-         {
-            // using windows logo icon as default
-            hIcon = gpsi->hIconWindows;
             if (!hIcon)
             {
-               //if all attempts to get icon fails go to the next window
-               return TRUE;
+                // using windows logo icon as default
+                hIcon = gpsi->hIconWindows;
+                if (!hIcon)
+                {
+                    //if all attempts to get icon fails go to the next window
+                    return TRUE;
+                }
             }
-         }
-      }
-   }
+        }
+    }
 
-   windowList[windowCount] = window;
-   iconList[windowCount] = CopyIcon(hIcon);
-   windowCount++;
+    windowList[windowCount] = window;
+    iconList[windowCount] = CopyIcon(hIcon);
+    windowCount++;
 
-   // If we got to the max number of windows, we won't be able to add any more
-   return (windowCount < MAX_WINDOWS);
+    // If we got to the max number of windows, we won't be able to add any more
+    return (windowCount < MAX_WINDOWS);
 }
 
 static HWND GetNiceRootOwner(HWND hwnd)
