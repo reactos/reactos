@@ -164,17 +164,15 @@ void CompleteSwitch(BOOL doSwitch)
 
 BOOL CALLBACK EnumerateCallback(HWND window, LPARAM lParam)
 {
-#define ICON_TIMEOUT 80 // in milliseconds
-#define ICON_RETRY_COUNT 10
-   HICON hIcon = NULL;
+   HICON hIcon;
    LRESULT ret;
-   UINT uFlags = SMTO_ABORTIFHUNG | SMTO_NORMAL, cRetry;
 
    UNREFERENCED_PARAMETER(lParam);
 
    // First try to get the big icon assigned to the window
-   ret = SendMessageTimeoutW(window, WM_GETICON, ICON_BIG, 0, uFlags, ICON_TIMEOUT,
-                             (DWORD_PTR *)&hIcon);
+#define ICON_TIMEOUT 100 // in milliseconds
+   ret = SendMessageTimeoutW(window, WM_GETICON, ICON_BIG, 0, SMTO_ABORTIFHUNG | SMTO_BLOCK,
+                             ICON_TIMEOUT, (PDWORD_PTR)&hIcon);
    if (!ret)
    {
       // If no icon is assigned, try to get the icon assigned to the windows' class
@@ -183,8 +181,10 @@ BOOL CALLBACK EnumerateCallback(HWND window, LPARAM lParam)
       {
          // If we still don't have an icon, see if we can do with the small icon,
          // or a default application icon
-         ret = SendMessageTimeoutW(window, WM_GETICON, ICON_SMALL2, 0, uFlags,
-                                   ICON_TIMEOUT, (DWORD_PTR *)&hIcon);
+         ret = SendMessageTimeoutW(window, WM_GETICON, ICON_SMALL2, 0,
+                                   SMTO_ABORTIFHUNG | SMTO_BLOCK, ICON_TIMEOUT,
+                                   (PDWORD_PTR)&hIcon);
+#undef ICON_TIMEOUT
          if (!ret)
          {
             // using windows logo icon as default
@@ -199,17 +199,11 @@ BOOL CALLBACK EnumerateCallback(HWND window, LPARAM lParam)
    }
 
    windowList[windowCount] = window;
-
-   for (cRetry = ICON_RETRY_COUNT; !hIcon && cRetry > 0; --cRetry)
-      Sleep(ICON_TIMEOUT / ICON_RETRY_COUNT);
-
    iconList[windowCount] = CopyIcon(hIcon);
    windowCount++;
 
    // If we got to the max number of windows, we won't be able to add any more
    return (windowCount < MAX_WINDOWS);
-#undef ICON_TIMEOUT
-#undef ICON_RETRY_COUNT
 }
 
 static HWND GetNiceRootOwner(HWND hwnd)
