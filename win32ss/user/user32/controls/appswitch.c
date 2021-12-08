@@ -164,16 +164,16 @@ void CompleteSwitch(BOOL doSwitch)
 
 BOOL CALLBACK EnumerateCallback(HWND window, LPARAM lParam)
 {
-#define GET_ICON_TIMEOUT 100 // in milliseconds
-#define GET_ICON_RETRY_COUNT 10
+#define ICON_TIMEOUT 100 // in milliseconds
+#define ICON_RETRY_COUNT 10
    HICON hIcon;
    LRESULT ret;
-   UINT uFlags = SMTO_ABORTIFHUNG | SMTO_NORMAL, cRetry = GET_ICON_RETRY_COUNT;
+   UINT uFlags = SMTO_ABORTIFHUNG | SMTO_NORMAL, cRetry = ICON_RETRY_COUNT;
 
    UNREFERENCED_PARAMETER(lParam);
 
    // First try to get the big icon assigned to the window
-   ret = SendMessageTimeoutW(window, WM_GETICON, ICON_BIG, 0, uFlags, GET_ICON_TIMEOUT,
+   ret = SendMessageTimeoutW(window, WM_GETICON, ICON_BIG, 0, uFlags, ICON_TIMEOUT,
                              (DWORD_PTR *)&hIcon);
    if (!ret)
    {
@@ -184,7 +184,7 @@ BOOL CALLBACK EnumerateCallback(HWND window, LPARAM lParam)
          // If we still don't have an icon, see if we can do with the small icon,
          // or a default application icon
          ret = SendMessageTimeoutW(window, WM_GETICON, ICON_SMALL2, 0, uFlags,
-                                   GET_ICON_TIMEOUT, (DWORD_PTR *)&hIcon);
+                                   ICON_TIMEOUT, (DWORD_PTR *)&hIcon);
          if (!ret)
          {
             // using windows logo icon as default
@@ -200,7 +200,7 @@ BOOL CALLBACK EnumerateCallback(HWND window, LPARAM lParam)
 
    windowList[windowCount] = window;
    while (!hIcon && --cRetry > 0)
-      Sleep(GET_ICON_TIMEOUT / GET_ICON_RETRY_COUNT);
+      Sleep(ICON_TIMEOUT / ICON_RETRY_COUNT);
    iconList[windowCount] = CopyIcon(hIcon);
 
    windowCount++;
@@ -211,8 +211,8 @@ BOOL CALLBACK EnumerateCallback(HWND window, LPARAM lParam)
       return FALSE;
 
    return TRUE;
-#undef GET_ICON_TIMEOUT
-#undef GET_ICON_RETRY_COUNT
+#undef ICON_TIMEOUT
+#undef ICON_RETRY_COUNT
 }
 
 static HWND GetNiceRootOwner(HWND hwnd)
