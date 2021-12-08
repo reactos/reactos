@@ -50,11 +50,11 @@ IntGetThreadFocusWindow(VOID)
 
 BOOL FASTCALL IntIsWindowFullscreen(PWND Window)
 {
-    RECTL rcl;
+    RECTL rclAnd, rclMonitor, rclWindow;
     PMONITOR pMonitor;
 
     if (!Window || !(Window->style & WS_VISIBLE) || (Window->style & WS_CHILD) ||
-        (Window->ExStyle & WS_EX_TOOLWINDOW) || !IntGetWindowRect(Window, &rcl))
+        (Window->ExStyle & WS_EX_TOOLWINDOW) || !IntGetWindowRect(Window, &rclWindow))
     {
         return FALSE;
     }
@@ -62,12 +62,16 @@ BOOL FASTCALL IntIsWindowFullscreen(PWND Window)
     pMonitor = UserGetPrimaryMonitor();
     if (!pMonitor)
     {
-        return rcl.left == 0 && rcl.top == 0 &&
-               rcl.right == UserGetSystemMetrics(SM_CXSCREEN) &&
-               rcl.bottom == UserGetSystemMetrics(SM_CYSCREEN);
+        RECTL_vSetRect(&rclMonitor, 0, 0,
+                       UserGetSystemMetrics(SM_CXSCREEN), UserGetSystemMetrics(SM_CYSCREEN));
+    }
+    else
+    {
+        rclMonitor = *(LPRECTL)&pMonitor->rcMonitor;
     }
 
-    return RtlEqualMemory(&rcl, &pMonitor->rcMonitor, sizeof(rcl));
+    RECTL_bIntersectRect(&rclAnd, &rclMonitor, &rclWindow);
+    return RtlEqualMemory(&rclAnd, &rclMonitor, sizeof(RECTL));
 }
 
 BOOL FASTCALL IntCheckFullscreen(PWND Window)
