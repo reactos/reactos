@@ -74,22 +74,21 @@ BOOL FASTCALL IntIsWindowFullscreen(PWND Window)
 BOOL FASTCALL IntCheckFullscreen(PWND Window)
 {
     static HWND s_hwndOldFullscreen = NULL;
-    BOOL ret = FALSE;
+    HWND hWnd;
 
     if (s_hwndOldFullscreen && !IntIsWindowFullscreen(ValidateHwndNoErr(s_hwndOldFullscreen)))
         s_hwndOldFullscreen = NULL;
 
-    if (IntIsWindowFullscreen(Window))
-    {
-        if (s_hwndOldFullscreen != Window->head.h)
-        {
-            co_IntShellHookNotify(HSHELL_RUDEAPPACTIVATED, (WPARAM)UserHMGetHandle(Window), TRUE);
-            s_hwndOldFullscreen = Window->head.h;
-        }
-        ret = TRUE;
-    }
+    if (!IntIsWindowFullscreen(Window))
+        return FALSE;
 
-    return ret;
+    hWnd = UserHMGetHandle(Window);
+    if (s_hwndOldFullscreen != hWnd)
+    {
+        co_IntShellHookNotify(HSHELL_RUDEAPPACTIVATED, (WPARAM)hWnd, TRUE);
+        s_hwndOldFullscreen = hWnd;
+    }
+    return TRUE;
 }
 
 VOID FASTCALL
