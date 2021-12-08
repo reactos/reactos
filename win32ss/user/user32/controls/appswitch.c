@@ -168,7 +168,7 @@ BOOL CALLBACK EnumerateCallback(HWND window, LPARAM lParam)
 #define ICON_RETRY_COUNT 10
    HICON hIcon = NULL;
    LRESULT ret;
-   UINT uFlags = SMTO_ABORTIFHUNG | SMTO_NORMAL, cRetry = ICON_RETRY_COUNT;
+   UINT uFlags = SMTO_ABORTIFHUNG | SMTO_NORMAL, cRetry;
 
    UNREFERENCED_PARAMETER(lParam);
 
@@ -199,13 +199,14 @@ BOOL CALLBACK EnumerateCallback(HWND window, LPARAM lParam)
    }
 
    windowList[windowCount] = window;
-   while (!hIcon && --cRetry > 0)
+
+   for (cRetry = ICON_RETRY_COUNT; !hIcon && cRetry > 0; --cRetry)
       Sleep(ICON_TIMEOUT / ICON_RETRY_COUNT);
+
    iconList[windowCount] = CopyIcon(hIcon);
    windowCount++;
 
-   // If we got to the max number of windows,
-   // we won't be able to add any more
+   // If we got to the max number of windows, we won't be able to add any more
    return (windowCount < MAX_WINDOWS);
 #undef ICON_TIMEOUT
 #undef ICON_RETRY_COUNT
