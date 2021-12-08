@@ -50,7 +50,9 @@ IntGetThreadFocusWindow(VOID)
 
 BOOL FASTCALL IntIsWindowFullscreen(PWND Window)
 {
+    POINT pt;
     RECTL rcl;
+    PMONITOR pMonitor;
 
     if (!Window)
         return FALSE;
@@ -61,11 +63,21 @@ BOOL FASTCALL IntIsWindowFullscreen(PWND Window)
     if (Window->ExStyle & WS_EX_TOOLWINDOW)
         return FALSE;
 
-    // FIXME: multi monitor
     IntGetWindowRect(Window, &rcl);
-    return rcl.left == 0 && rcl.top == 0 &&
-           rcl.right == UserGetSystemMetrics(SM_CXSCREEN) &&
-           rcl.bottom == UserGetSystemMetrics(SM_CYSCREEN);
+    pt.x = (rcl.left + rcl.right) / 2;
+    pt.y = (rcl.top + rcl.bottom) / 2;
+    pMonitor = UserMonitorFromPoint(pt, MONITOR_DEFAULTTONEAREST);
+    if (!pMonitor)
+    {
+        return rcl.left == 0 && rcl.top == 0 &&
+               rcl.right == UserGetSystemMetrics(SM_CXSCREEN) &&
+               rcl.bottom == UserGetSystemMetrics(SM_CYSCREEN);
+    }
+
+    return pMonitor->rcMonitor.left == rcl.left &&
+           pMonitor->rcMonitor.top == rcl.top &&
+           pMonitor->rcMonitor.right == rcl.right &&
+           pMonitor->rcMonitor.bottom == rcl.bottom;
 }
 
 BOOL FASTCALL IntIsWindowFullscreenHandle(HWND hwnd)
