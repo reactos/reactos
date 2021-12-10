@@ -1493,35 +1493,35 @@ static MUI_ENTRY ptPTBootLoaderEntries[] =
     {
         6,
         8,
-        "O instalador ir\240 configurar o gestor de inicializa\207\306o",
+        "O instalador ir\240 configurar o gestor de arranque.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         8,
         12,
-        "Instalar o gestor de inicializa\207\306o no disco r\241gido (MBR e VBR)",
+        "Instalar o gestor de arranque no disco r\241gido (MBR e VBR)",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         8,
         13,
-        "Instalar o gestor de inicializa\207\306o no disco r\241gido (apenas VBR)",
+        "Instalar o gestor de arranque no disco r\241gido (apenas VBR)",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         8,
         14,
-        "Instalar o gestor de inicializa\207\306o numa disquete",
+        "Instalar o gestor de arranque numa disquete",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         8,
         15,
-        "Saltar a instala\207\306o do gestor de inicializa\207\306o",
+        "Saltar a instala\207\306o do gestor de arranque",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
