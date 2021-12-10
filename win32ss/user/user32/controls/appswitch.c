@@ -127,8 +127,8 @@ void MakeWindowActive(HWND hwnd)
    if (IsIconic(hwnd))
       PostMessageW(hwnd, WM_SYSCOMMAND, SC_RESTORE, 0);
 
-   BringWindowToTop(hwnd);  // same as: SetWindowPos(hwnd,HWND_TOP,0,0,0,0,SWP_NOMOVE|SWP_NOSIZE); ?
-   SetForegroundWindow(hwnd);
+   // See also: https://microsoft.public.win32.programmer.ui.narkive.com/RqOdKqZ8/bringwindowtotop-hangs-if-the-thread-is-busy
+   SwitchToThisWindow(hwnd, TRUE);
 }
 
 void CompleteSwitch(BOOL doSwitch)
@@ -139,7 +139,7 @@ void CompleteSwitch(BOOL doSwitch)
    isOpen = FALSE;
 
    TRACE("[ATbot] CompleteSwitch Hiding Window.\n");
-   ShowWindow(switchdialog, SW_HIDE);
+   ShowWindowAsync(switchdialog, SW_HIDE);
 
    if(doSwitch)
    {
@@ -164,45 +164,49 @@ void CompleteSwitch(BOOL doSwitch)
 
 BOOL CALLBACK EnumerateCallback(HWND window, LPARAM lParam)
 {
-   HICON hIcon;
+    HICON hIcon = NULL;
+    LRESULT bAlive;
 
-   UNREFERENCED_PARAMETER(lParam);
+    UNREFERENCED_PARAMETER(lParam);
 
-   // First try to get the big icon assigned to the window
-   hIcon = (HICON)SendMessageW(window, WM_GETICON, ICON_BIG, 0);
-   if (!hIcon)
-   {
-      // If no icon is assigned, try to get the icon assigned to the windows' class
-      hIcon = (HICON)GetClassLongPtrW(window, GCL_HICON);
-      if (!hIcon)
-      {
-         // If we still don't have an icon, see if we can do with the small icon,
-         // or a default application icon
-         hIcon = (HICON)SendMessageW(window, WM_GETICON, ICON_SMALL2, 0);
-         if (!hIcon)
-         {
-            // using windows logo icon as default
-            hIcon = gpsi->hIconWindows;
+    // First try to get the big icon assigned to the window
+#define ICON_TIMEOUT 100 // in milliseconds
+    bAlive = SendMessageTimeoutW(window, WM_GETICON, ICON_BIG, 0, SMTO_ABORTIFHUNG | SMTO_BLOCK,
+                                 ICON_TIMEOUT, (PDWORD_PTR)&hIcon);
+    if (!hIcon)
+    {
+        // If no icon is assigned, try to get the icon assigned to the windows' class
+        hIcon = (HICON)GetClassLongPtrW(window, GCL_HICON);
+        if (!hIcon)
+        {
+            // If we still don't have an icon, see if we can do with the small icon,
+            // or a default application icon
+            if (bAlive)
+            {
+                SendMessageTimeoutW(window, WM_GETICON, ICON_SMALL2, 0,
+                                    SMTO_ABORTIFHUNG | SMTO_BLOCK, ICON_TIMEOUT,
+                                    (PDWORD_PTR)&hIcon);
+            }
+#undef ICON_TIMEOUT
             if (!hIcon)
             {
-               //if all attempts to get icon fails go to the next window
-               return TRUE;
+                // using windows logo icon as default
+                hIcon = gpsi->hIconWindows;
+                if (!hIcon)
+                {
+                    //if all attempts to get icon fails go to the next window
+                    return TRUE;
+                }
             }
-         }
-      }
-   }
+        }
+    }
 
-   windowList[windowCount] = window;
-   iconList[windowCount] = CopyIcon(hIcon);
+    windowList[windowCount] = window;
+    iconList[windowCount] = CopyIcon(hIcon);
+    windowCount++;
 
-   windowCount++;
-
-   // If we got to the max number of windows,
-   // we won't be able to add any more
-   if(windowCount >= MAX_WINDOWS)
-      return FALSE;
-
-   return TRUE;
+    // If we got to the max number of windows, we won't be able to add any more
+    return (windowCount < MAX_WINDOWS);
 }
 
 static HWND GetNiceRootOwner(HWND hwnd)
@@ -491,7 +495,7 @@ BOOL ProcessHotKey(VOID)
       selectedWindow = 1;
 
       TRACE("[ATbot] HotKey Received. Opening window.\n");
-      ShowWindow(switchdialog, SW_SHOWNORMAL);
+      ShowWindowAsync(switchdialog, SW_SHOWNORMAL);
       MakeWindowActive(switchdialog);
       isOpen = TRUE;
    }
@@ -519,7 +523,7 @@ void RotateTasks(BOOL bShift)
     {
         SetWindowPos(hwndLast, HWND_TOP, 0, 0, 0, 0,
                      SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE |
-                     SWP_NOOWNERZORDER | SWP_NOREPOSITION);
+                     SWP_NOOWNERZORDER | SWP_NOREPOSITION | SWP_ASYNCWINDOWPOS);
 
         MakeWindowActive(hwndLast);
 
@@ -531,7 +535,7 @@ void RotateTasks(BOOL bShift)
     {
         SetWindowPos(hwndFirst, hwndLast, 0, 0, 0, 0,
                      SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE |
-                     SWP_NOOWNERZORDER | SWP_NOREPOSITION);
+                     SWP_NOOWNERZORDER | SWP_NOREPOSITION | SWP_ASYNCWINDOWPOS);
 
         MakeWindowActive(windowList[1]);
 
