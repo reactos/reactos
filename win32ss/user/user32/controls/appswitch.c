@@ -124,11 +124,8 @@ void ResizeAndCenter(HWND hwnd, int width, int height)
 
 void MakeWindowActive(HWND hwnd)
 {
-   if (IsIconic(hwnd))
-      PostMessageW(hwnd, WM_SYSCOMMAND, SC_RESTORE, 0);
-
-   // See also: https://microsoft.public.win32.programmer.ui.narkive.com/RqOdKqZ8/bringwindowtotop-hangs-if-the-thread-is-busy
-   SwitchToThisWindow(hwnd, TRUE);
+    // See also: https://microsoft.public.win32.programmer.ui.narkive.com/RqOdKqZ8/bringwindowtotop-hangs-if-the-thread-is-busy
+    SwitchToThisWindow(hwnd, TRUE);
 }
 
 void CompleteSwitch(BOOL doSwitch)
