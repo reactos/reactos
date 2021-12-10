@@ -1565,6 +1565,7 @@ public:
         case HSHELL_RUDEAPPACTIVATED:
         case HSHELL_WINDOWACTIVATED:
             ActivateTask((HWND) lParam);
+            CheckFullscreen((HWND)lParam);
             break;
 
         case HSHELL_FLASH:
