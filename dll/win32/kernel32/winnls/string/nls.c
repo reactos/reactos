@@ -356,9 +356,10 @@ IntGetCodePageEntry(UINT CodePage)
  *
  * Internal version of MultiByteToWideChar for UTF8.
  *
+ * @note We use Win10's behaviour due to security reason.
+ *
  * @see MultiByteToWideChar
  */
-
 static
 INT
 WINAPI
@@ -1633,7 +1634,6 @@ static INT Utf7ToWideChar(const char *src, int srclen, WCHAR *dst, int dstlen)
  *
  * @implemented
  */
-
 INT
 WINAPI
 MultiByteToWideChar(UINT CodePage,
