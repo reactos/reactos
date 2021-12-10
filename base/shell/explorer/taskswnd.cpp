@@ -1488,6 +1488,50 @@ public:
         return Ret;
     }
 
+    HMONITOR GetPrimaryMonitor() const
+    {
+        POINT pt = { 0, 0 };
+        return MonitorFromPoint(pt, MONITOR_DEFAULTTOPRIMARY);
+    }
+
+    BOOL IsFullscreen(HWND hWnd) const
+    {
+        RECT rcCommon, rcMonitor, rcWindow;
+        DWORD style = (LONG)::GetWindowLongPtrW(hWnd, GWL_STYLE);
+        DWORD exstyle = (LONG)::GetWindowLongPtrW(hWnd, GWL_EXSTYLE);
+        if (!hWnd || !::IsWindowVisible(hWnd) || (style & WS_CHILD) ||
+            (exstyle & WS_EX_TOOLWINDOW) || !::GetWindowRect(hWnd, &rcWindow))
+        {
+            return FALSE;
+        }
+
+        MONITORINFO info = { sizeof(info) };
+        if (::GetMonitorInfo(GetPrimaryMonitor(), &info))
+            rcMonitor = info.rcMonitor;
+        else
+            SetRect(&rcMonitor, 0, 0, GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN));
+
+        IntersectRect(&rcCommon, &rcMonitor, &rcWindow);
+        return EqualRect(&rcCommon, &rcMonitor);
+    }
+
+    VOID CheckFullscreen(HWND hWnd)
+    {
+        if (hWnd == NULL)
+            hWnd = ::GetActiveWindow();
+
+        HWND hTrayWnd = ::FindWindowW(L"Shell_TrayWnd", NULL);
+        if (hWnd == NULL || hTrayWnd == hWnd || m_Tray->IsSpecialHWND(hWnd))
+            return;
+
+        const UINT uFlags = SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOSIZE | SWP_NOREPOSITION |
+                            SWP_ASYNCWINDOWPOS;
+        if (IsFullscreen(hWnd))
+            ::SetWindowPos(hTrayWnd, HWND_BOTTOM, 0, 0, 0, 0, uFlags);
+        else
+            ::SetWindowPos(hTrayWnd, HWND_TOP, 0, 0, 0, 0, uFlags);
+    }
+
     LRESULT OnShellHook(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     {
         BOOL Ret = FALSE;
@@ -1509,11 +1553,13 @@ public:
 
         case HSHELL_WINDOWCREATED:
             AddTask((HWND) lParam);
+            CheckFullscreen((HWND)lParam);
             break;
 
         case HSHELL_WINDOWDESTROYED:
             /* The window still exists! Delay destroying it a bit */
             DeleteTask((HWND) lParam);
+            CheckFullscreen(NULL);
             break;
 
         case HSHELL_RUDEAPPACTIVATED:
