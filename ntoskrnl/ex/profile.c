@@ -106,6 +106,7 @@ NtCreateProfile(OUT PHANDLE ProfileHandle,
     NTSTATUS Status;
     ULONG Log2 = 0;
     ULONG_PTR Segment = 0;
+    ULONG BucketsRequired;
     PAGED_CODE();
 
     /* Easy way out */
@@ -138,7 +139,12 @@ NtCreateProfile(OUT PHANDLE ProfileHandle,
     }
 
     /* Make sure that the buckets can map the range */
-    if ((RangeSize >> (BucketSize - 2)) > BufferSize)
+    BucketsRequired = RangeSize >> BucketSize;
+    if (RangeSize & ((1 << BucketSize) - 1))
+    {
+        BucketsRequired++;
+    }
+    if (BucketsRequired > BufferSize / sizeof(ULONG))
     {
         DPRINT1("Bucket size too small\n");
         return STATUS_BUFFER_TOO_SMALL;
