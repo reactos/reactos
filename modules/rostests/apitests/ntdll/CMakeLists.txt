@@ -18,6 +18,7 @@ list(APPEND SOURCE
     NtContinue.c
     NtCreateFile.c
     NtCreateKey.c
+    NtCreateProfile.c
     NtCreateThread.c
     NtDeleteKey.c
     NtDuplicateObject.c
@@ -47,6 +48,7 @@ list(APPEND SOURCE
     NtSetInformationThread.c
     NtSetValueKey.c
     NtSetVolumeInformationFile.c
+    NtStartProfile.c
     NtUnloadDriver.c
     NtWriteFile.c
     probelib.c
