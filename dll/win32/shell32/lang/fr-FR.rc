@@ -805,6 +805,8 @@ BEGIN
     IDS_COPYERRORSAME "Impossible de copier '%s' : Les noms des fichiers source et destination sont identiques."
     IDS_MOVEERRORSUBFOLDER "Impossible de déplacer '%s' : Le dossier de destination est un sous-dossier du dossier source."
     IDS_COPYERRORSUBFOLDER "Impossible de copier '%s' : Le dossier de destination est un sous-dossier du dossier source."
+    IDS_MOVEERROR "Cannot move '%s': %s"
+    IDS_COPYERROR "Cannot copy '%s': %s"
 
     IDS_CREATEFOLDER_DENIED "Impossible de créer le dossier '%1'"
     IDS_CREATEFOLDER_CAPTION "Impossible de créer un dossier"

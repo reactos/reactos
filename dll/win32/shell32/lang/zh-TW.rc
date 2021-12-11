@@ -813,6 +813,8 @@ BEGIN
     IDS_COPYERRORSAME "無法複製「%s」：來源及目的地的檔案名稱相同。"
     IDS_MOVEERRORSUBFOLDER "無法移動「%s」：目的資料夾是來源資料夾的子資料夾。"
     IDS_COPYERRORSUBFOLDER "無法複製「%s」：目的資料夾是來源資料夾的子資料夾。"
+    IDS_MOVEERROR "Cannot move '%s': %s"
+    IDS_COPYERROR "Cannot copy '%s': %s"
 
     IDS_CREATEFOLDER_DENIED "無法建立資料夾「%1」"
     IDS_CREATEFOLDER_CAPTION "無法建立資料夾"

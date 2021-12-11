@@ -805,13 +805,15 @@ BEGIN
     IDS_OPENFILELOCATION "Открыть &расположение объекта"
     IDS_SENDTO_MENU "Отправит&ь"
 
-    IDS_MOVEERRORTITLE "Error Moving File or Folder"
-    IDS_COPYERRORTITLE "Error Copying File or Folder"
+    IDS_MOVEERRORTITLE "Ошибка при перемещении папки или файла"
+    IDS_COPYERRORTITLE "Ошибка при копировании папки или файла"
     IDS_MOVEERRORSAMEFOLDER "Cannot move '%s': The destination folder is the same as the source folder."
     IDS_MOVEERRORSAME "Cannot move '%s': The source and destination file names are the same."
     IDS_COPYERRORSAME "Cannot copy '%s': The source and destination file names are the same."
     IDS_MOVEERRORSUBFOLDER "Cannot move '%s': The destination folder is a subfolder of the source folder."
     IDS_COPYERRORSUBFOLDER "Cannot copy '%s': The destination folder is a subfolder of the source folder."
+    IDS_MOVEERROR "Не удаётся переместить '%s': %s"
+    IDS_COPYERROR "Не удаётся скопировать '%s': %s"
 
     IDS_CREATEFOLDER_DENIED "Невозможно создать папку '%1'"
     IDS_CREATEFOLDER_CAPTION "Невозможно создать папку"

@@ -814,6 +814,8 @@ BEGIN
     IDS_COPYERRORSAME "Imposible copiar '%s': El archivo de origen y el de destino son el mismo."
     IDS_MOVEERRORSUBFOLDER "Imposible mover '%s': La carpeta de destino es un subdirectorio de la de origen."
     IDS_COPYERRORSUBFOLDER "Imposible copiar '%s': La carpeta de destino es un subdirectorio de la de origen."
+    IDS_MOVEERROR "Cannot move '%s': %s"
+    IDS_COPYERROR "Cannot copy '%s': %s"
 
     IDS_CREATEFOLDER_DENIED "No se pudo crear la carpeta '%1'"
     IDS_CREATEFOLDER_CAPTION "No se pudo crear la carpeta"

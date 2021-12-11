@@ -804,6 +804,8 @@ BEGIN
     IDS_COPYERRORSAME "'%s' nem másolható: a forrás- és célfájl ugyanaz."
     IDS_MOVEERRORSUBFOLDER "'%s' nem mozgatható: a célmappa a forrásmappa egyik almappája."
     IDS_COPYERRORSUBFOLDER "'%s' nem másolható: a célmappa a forrásmappa egyik almappája."
+    IDS_MOVEERROR "Cannot move '%s': %s"
+    IDS_COPYERROR "Cannot copy '%s': %s"
 
     IDS_CREATEFOLDER_DENIED "Nem sikerült a(z) '%1' mappa létrehozása."
     IDS_CREATEFOLDER_CAPTION "Nem sikerült létrehozni a mappát"
