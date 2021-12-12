@@ -71,18 +71,6 @@ int CoolSwitchColumns = 7;
 const DWORD Style = WS_POPUP | WS_BORDER | WS_DISABLED;
 const DWORD ExStyle = WS_EX_TOPMOST | WS_EX_DLGMODALFRAME | WS_EX_TOOLWINDOW;
 
-DWORD wtodw(const WCHAR *psz)
-{
-   const WCHAR *pch = psz;
-   DWORD Value = 0;
-   while ('0' <= *pch && *pch <= '9')
-   {
-      Value *= 10;
-      Value += *pch - L'0';
-   }
-   return Value;
-}
-
 BOOL LoadCoolSwitchSettings(void)
 {
    CoolSwitch = TRUE;
@@ -122,15 +110,6 @@ void ResizeAndCenter(HWND hwnd, int width, int height)
    ptStart.y = y;
 }
 
-void MakeWindowActive(HWND hwnd)
-{
-   if (IsIconic(hwnd))
-      PostMessageW(hwnd, WM_SYSCOMMAND, SC_RESTORE, 0);
-
-   // See also: https://microsoft.public.win32.programmer.ui.narkive.com/RqOdKqZ8/bringwindowtotop-hangs-if-the-thread-is-busy
-   SwitchToThisWindow(hwnd, TRUE);
-}
-
 void CompleteSwitch(BOOL doSwitch)
 {
    if (!isOpen)
@@ -155,7 +134,7 @@ void CompleteSwitch(BOOL doSwitch)
 
          TRACE("[ATbot] CompleteSwitch Switching to 0x%08x (%ls)\n", hwnd, windowText);
 
-         MakeWindowActive(hwnd);
+         SwitchToThisWindow(hwnd, TRUE);
       }
    }
 
@@ -485,7 +464,7 @@ BOOL ProcessHotKey(VOID)
 
       if (windowCount == 1)
       {
-         MakeWindowActive(windowList[0]);
+         SwitchToThisWindow(windowList[0], TRUE);
          return FALSE;
       }
 
@@ -496,7 +475,7 @@ BOOL ProcessHotKey(VOID)
 
       TRACE("[ATbot] HotKey Received. Opening window.\n");
       ShowWindowAsync(switchdialog, SW_SHOWNORMAL);
-      MakeWindowActive(switchdialog);
+      SwitchToThisWindow(switchdialog, TRUE);
       isOpen = TRUE;
    }
    else
@@ -525,7 +504,7 @@ void RotateTasks(BOOL bShift)
                      SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE |
                      SWP_NOOWNERZORDER | SWP_NOREPOSITION | SWP_ASYNCWINDOWPOS);
 
-        MakeWindowActive(hwndLast);
+        SwitchToThisWindow(hwndLast, TRUE);
 
         Size = (windowCount - 1) * sizeof(HWND);
         MoveMemory(&windowList[1], &windowList[0], Size);
@@ -537,7 +516,7 @@ void RotateTasks(BOOL bShift)
                      SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE |
                      SWP_NOOWNERZORDER | SWP_NOREPOSITION | SWP_ASYNCWINDOWPOS);
 
-        MakeWindowActive(windowList[1]);
+        SwitchToThisWindow(windowList[1], TRUE);
 
         Size = (windowCount - 1) * sizeof(HWND);
         MoveMemory(&windowList[0], &windowList[1], Size);
