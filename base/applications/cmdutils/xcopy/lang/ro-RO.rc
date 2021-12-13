@@ -26,7 +26,7 @@ STRINGTABLE
 \n\
 Sintaxă:\n\
 XCOPY sursă [destinație] [/I] [/S] [/Q] [/F] [/L] [/W] [/T] [/N] [/U]\n\
-\t     [/R] [/H] [/C] [/P] [/A] [/M] [/E] [/D] [/Y] [/-Y]\n\
+\t     [/R] [/H] [/C] [/P] [/A] [/M] [/E] [/D] [/Y] [/-Y] [/K]\n\
 \nCu:\n\
 \n\
 [/I]  Creează director dacă destinația nu există și copiază două sau\n\

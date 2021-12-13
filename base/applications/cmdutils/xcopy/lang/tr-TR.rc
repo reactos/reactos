@@ -28,7 +28,7 @@ STRINGTABLE
 \n\
 Yazım:\n\
 XCOPY kaynak [hedef] [/I] [/S] [/Q] [/F] [/L] [/W] [/T] [/N] [/U]\n\
-\t     [/R] [/H] [/C] [/P] [/A] [/M] [/E] [/D] [/Y] [/-Y]\n\
+\t     [/R] [/H] [/C] [/P] [/A] [/M] [/E] [/D] [/Y] [/-Y] [/K]\n\
 \n\
 Nereye:\n\
 \n\
