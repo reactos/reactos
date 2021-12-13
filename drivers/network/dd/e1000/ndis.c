@@ -23,44 +23,6 @@ MiniportReset(
     return NDIS_STATUS_FAILURE;
 }
 
-NDIS_STATUS
-NTAPI
-MiniportSend(
-    IN NDIS_HANDLE MiniportAdapterContext,
-    IN PNDIS_PACKET Packet,
-    IN UINT Flags)
-{
-    PE1000_ADAPTER Adapter = (PE1000_ADAPTER)MiniportAdapterContext;
-    PSCATTER_GATHER_LIST sgList = NDIS_PER_PACKET_INFO_FROM_PACKET(Packet, ScatterGatherListPacketInfo);
-    ULONG TransmitLength;
-    PHYSICAL_ADDRESS TransmitBuffer;
-    NDIS_STATUS Status;
-
-    ASSERT(sgList != NULL);
-    ASSERT(sgList->NumberOfElements == 1);
-    ASSERT((sgList->Elements[0].Address.LowPart & 3) == 0);
-    ASSERT(sgList->Elements[0].Length <= MAXIMUM_FRAME_SIZE);
-
-    if (Adapter->TxFull)
-    {
-        NDIS_DbgPrint(MIN_TRACE, ("All TX descriptors are full\n"));
-        return NDIS_STATUS_RESOURCES;
-    }
-
-    TransmitLength = sgList->Elements[0].Length;
-    TransmitBuffer = sgList->Elements[0].Address;
-    Adapter->TransmitPackets[Adapter->CurrentTxDesc] = Packet;
-
-    Status = NICTransmitPacket(Adapter, TransmitBuffer, TransmitLength);
-    if (Status != NDIS_STATUS_SUCCESS)
-    {
-        NDIS_DbgPrint(MIN_TRACE, ("Transmit packet failed\n"));
-        return Status;
-    }
-
-    return NDIS_STATUS_PENDING;
-}
-
 VOID
 NTAPI
 MiniportHalt(
@@ -264,12 +226,7 @@ MiniportInitialize(
 
     /* Enable interrupts on the NIC */
     Adapter->InterruptMask = DEFAULT_INTERRUPT_MASK;
-    Status = NICApplyInterruptMask(Adapter);
-    if (Status != NDIS_STATUS_SUCCESS)
-    {
-        NDIS_DbgPrint(MIN_TRACE, ("Unable to apply interrupt mask (0x%x)\n", Status));
-        goto Cleanup;
-    }
+    NICApplyInterruptMask(Adapter);
 
     /* Turn on TX and RX now */
     Status = NICEnableTxRx(Adapter);

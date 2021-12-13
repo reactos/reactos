@@ -10,7 +10,7 @@
 
 #include <debug.h>
 
-static ULONG SupportedOidList[] =
+static NDIS_OID SupportedOidList[] =
 {
     OID_GEN_SUPPORTED_LIST,
     OID_GEN_CURRENT_PACKET_FILTER,
@@ -37,14 +37,36 @@ static ULONG SupportedOidList[] =
     OID_802_3_PERMANENT_ADDRESS,
     OID_802_3_CURRENT_ADDRESS,
     OID_802_3_MAXIMUM_LIST_SIZE,
+
     /* Statistics */
     OID_GEN_XMIT_OK,
     OID_GEN_RCV_OK,
     OID_GEN_XMIT_ERROR,
     OID_GEN_RCV_ERROR,
     OID_GEN_RCV_NO_BUFFER,
+
+    OID_PNP_CAPABILITIES,
 };
 
+static
+ULONG64
+NICQueryStatisticCounter(
+    _In_ PE1000_ADAPTER Adapter,
+    _In_ NDIS_OID Oid)
+{
+    /* TODO */
+    return 0;
+}
+
+static
+NDIS_STATUS
+NICFillPowerManagementCapabilities(
+    _In_ PE1000_ADAPTER Adapter,
+    _Out_ PNDIS_PNP_CAPABILITIES Capabilities)
+{
+    /* TODO */
+    return NDIS_STATUS_NOT_SUPPORTED;
+}
 
 NDIS_STATUS
 NTAPI
@@ -57,13 +79,20 @@ MiniportQueryInformation(
     OUT PULONG BytesNeeded)
 {
     PE1000_ADAPTER Adapter = (PE1000_ADAPTER)MiniportAdapterContext;
-    ULONG genericUlong;
     ULONG copyLength;
     PVOID copySource;
     NDIS_STATUS status;
+    union _GENERIC_INFORMATION
+    {
+        USHORT Ushort;
+        ULONG Ulong;
+        ULONG64 Ulong64;
+        NDIS_MEDIUM Medium;
+        NDIS_PNP_CAPABILITIES PmCapabilities;
+    } GenericInfo;
 
     status = NDIS_STATUS_SUCCESS;
-    copySource = &genericUlong;
+    copySource = &GenericInfo;
     copyLength = sizeof(ULONG);
 
     switch (Oid)
@@ -74,20 +103,19 @@ MiniportQueryInformation(
         break;
 
     case OID_GEN_CURRENT_PACKET_FILTER:
-        genericUlong = Adapter->PacketFilter;
+        GenericInfo.Ulong = Adapter->PacketFilter;
         break;
 
     case OID_GEN_HARDWARE_STATUS:
         UNIMPLEMENTED_DBGBREAK();
-        genericUlong = (ULONG)NdisHardwareStatusReady; //FIXME
+        GenericInfo.Ulong = (ULONG)NdisHardwareStatusReady; //FIXME
         break;
 
     case OID_GEN_MEDIA_SUPPORTED:
     case OID_GEN_MEDIA_IN_USE:
     {
-        static const NDIS_MEDIUM medium = NdisMedium802_3;
-        copySource = (PVOID)&medium;
-        copyLength = sizeof(medium);
+        GenericInfo.Medium = NdisMedium802_3;
+        copyLength = sizeof(NDIS_MEDIUM);
         break;
     }
 
@@ -96,31 +124,36 @@ MiniportQueryInformation(
     case OID_GEN_CURRENT_LOOKAHEAD:
     case OID_GEN_MAXIMUM_LOOKAHEAD:
     case OID_GEN_MAXIMUM_FRAME_SIZE:
-        genericUlong = MAXIMUM_FRAME_SIZE - sizeof(ETH_HEADER);
+        GenericInfo.Ulong = MAXIMUM_FRAME_SIZE - sizeof(ETH_HEADER);
+        break;
+
+    case OID_802_3_MULTICAST_LIST:
+        copySource = Adapter->MulticastList;
+        copyLength = Adapter->MulticastListSize * IEEE_802_ADDR_LENGTH;
         break;
 
     case OID_802_3_MAXIMUM_LIST_SIZE:
-        genericUlong = MAXIMUM_MULTICAST_ADDRESSES;
+        GenericInfo.Ulong = MAXIMUM_MULTICAST_ADDRESSES;
         break;
 
     case OID_GEN_LINK_SPEED:
-        genericUlong = Adapter->LinkSpeedMbps * 10000;
+        GenericInfo.Ulong = Adapter->LinkSpeedMbps * 10000;
         break;
 
     case OID_GEN_TRANSMIT_BUFFER_SPACE:
-        genericUlong = MAXIMUM_FRAME_SIZE;
+        GenericInfo.Ulong = MAXIMUM_FRAME_SIZE;
         break;
 
     case OID_GEN_RECEIVE_BUFFER_SPACE:
-        genericUlong = RECEIVE_BUFFER_SIZE;
+        GenericInfo.Ulong = RECEIVE_BUFFER_SIZE;
         break;
 
     case OID_GEN_VENDOR_ID:
         /* The 3 bytes of the MAC address is the vendor ID */
-        genericUlong = 0;
-        genericUlong |= (Adapter->PermanentMacAddress[0] << 16);
-        genericUlong |= (Adapter->PermanentMacAddress[1] << 8);
-        genericUlong |= (Adapter->PermanentMacAddress[2] & 0xFF);
+        GenericInfo.Ulong = 0;
+        GenericInfo.Ulong |= (Adapter->PermanentMacAddress[0] << 16);
+        GenericInfo.Ulong |= (Adapter->PermanentMacAddress[1] << 8);
+        GenericInfo.Ulong |= (Adapter->PermanentMacAddress[2] & 0xFF);
         break;
 
     case OID_GEN_VENDOR_DESCRIPTION:
@@ -132,37 +165,34 @@ MiniportQueryInformation(
     }
 
     case OID_GEN_VENDOR_DRIVER_VERSION:
-        genericUlong = DRIVER_VERSION;
+        GenericInfo.Ulong = DRIVER_VERSION;
         break;
 
     case OID_GEN_DRIVER_VERSION:
     {
-        static const USHORT driverVersion =
-            (NDIS_MINIPORT_MAJOR_VERSION << 8) + NDIS_MINIPORT_MINOR_VERSION;
-        copySource = (PVOID)&driverVersion;
-        copyLength = sizeof(driverVersion);
+        copyLength = sizeof(USHORT);
+        GenericInfo.Ushort = (NDIS_MINIPORT_MAJOR_VERSION << 8) + NDIS_MINIPORT_MINOR_VERSION;
         break;
     }
 
     case OID_GEN_MAXIMUM_TOTAL_SIZE:
-        genericUlong = MAXIMUM_FRAME_SIZE;
+        GenericInfo.Ulong = MAXIMUM_FRAME_SIZE;
         break;
 
     case OID_GEN_MAXIMUM_SEND_PACKETS:
-        genericUlong = 1;
+        GenericInfo.Ulong = 1;
         break;
 
     case OID_GEN_MAC_OPTIONS:
-        genericUlong = NDIS_MAC_OPTION_RECEIVE_SERIALIZED |
+        GenericInfo.Ulong = NDIS_MAC_OPTION_RECEIVE_SERIALIZED |
             NDIS_MAC_OPTION_COPY_LOOKAHEAD_DATA |
             NDIS_MAC_OPTION_TRANSFERS_NOT_PEND |
             NDIS_MAC_OPTION_NO_LOOPBACK;
         break;
 
     case OID_GEN_MEDIA_CONNECT_STATUS:
-        genericUlong = Adapter->MediaState;
+        GenericInfo.Ulong = Adapter->MediaState;
         break;
-
 
     case OID_802_3_CURRENT_ADDRESS:
         copySource = Adapter->MulticastList[0].MacAddress;
@@ -175,20 +205,39 @@ MiniportQueryInformation(
         break;
 
     case OID_GEN_XMIT_OK:
-        genericUlong = 0;
-        break;
     case OID_GEN_RCV_OK:
-        genericUlong = 0;
-        break;
     case OID_GEN_XMIT_ERROR:
-        genericUlong = 0;
-        break;
     case OID_GEN_RCV_ERROR:
-        genericUlong = 0;
-        break;
     case OID_GEN_RCV_NO_BUFFER:
-        genericUlong = 0;
+    {
+        GenericInfo.Ulong64 = NICQueryStatisticCounter(Adapter, Oid);
+
+        *BytesNeeded = sizeof(ULONG64);
+        if (InformationBufferLength >= sizeof(ULONG64))
+        {
+            *BytesWritten = sizeof(ULONG64);
+            NdisMoveMemory(InformationBuffer, copySource, sizeof(ULONG64));
+        }
+        else if (InformationBufferLength >= sizeof(ULONG))
+        {
+            *BytesWritten = sizeof(ULONG);
+            NdisMoveMemory(InformationBuffer, copySource, sizeof(ULONG));
+        }
+        else
+        {
+            *BytesWritten = 0;
+            return NDIS_STATUS_BUFFER_TOO_SHORT;
+        }
+        return NDIS_STATUS_SUCCESS;
+    }
+
+    case OID_PNP_CAPABILITIES:
+    {
+        copyLength = sizeof(NDIS_PNP_CAPABILITIES);
+
+        status = NICFillPowerManagementCapabilities(Adapter, &GenericInfo.PmCapabilities);
         break;
+    }
 
     default:
         NDIS_DbgPrint(MIN_TRACE, ("Unknown OID 0x%x(%s)\n", Oid, Oid2Str(Oid)));
@@ -202,7 +251,7 @@ MiniportQueryInformation(
         {
             *BytesNeeded = copyLength;
             *BytesWritten = 0;
-            status = NDIS_STATUS_INVALID_LENGTH;
+            status = NDIS_STATUS_BUFFER_TOO_SHORT;
         }
         else
         {
@@ -217,13 +266,8 @@ MiniportQueryInformation(
         *BytesNeeded = 0;
     }
 
-    /* XMIT_ERROR and RCV_ERROR are really noisy, so do not log those. */
-    if (Oid != OID_GEN_XMIT_ERROR && Oid != OID_GEN_RCV_ERROR)
-    {
-        NDIS_DbgPrint(MAX_TRACE, ("Query OID 0x%x(%s): Completed with status 0x%x (%d, %d)\n",
-                                  Oid, Oid2Str(Oid), status, *BytesWritten, *BytesNeeded));
-    }
-
+    NDIS_DbgPrint(MAX_TRACE, ("Query OID 0x%x(%s): Completed with status 0x%x (%d, %d)\n",
+                              Oid, Oid2Str(Oid), status, *BytesWritten, *BytesNeeded));
     return status;
 }
 
@@ -257,16 +301,21 @@ MiniportSetInformation(
         NdisMoveMemory(&genericUlong, InformationBuffer, sizeof(ULONG));
 
         if (genericUlong &
-            (NDIS_PACKET_TYPE_SOURCE_ROUTING |
-             NDIS_PACKET_TYPE_SMT |
-             NDIS_PACKET_TYPE_ALL_LOCAL |
-             NDIS_PACKET_TYPE_GROUP |
-             NDIS_PACKET_TYPE_ALL_FUNCTIONAL |
-             NDIS_PACKET_TYPE_FUNCTIONAL))
+            ~(NDIS_PACKET_TYPE_DIRECTED |
+              NDIS_PACKET_TYPE_MULTICAST |
+              NDIS_PACKET_TYPE_ALL_MULTICAST |
+              NDIS_PACKET_TYPE_BROADCAST |
+              NDIS_PACKET_TYPE_PROMISCUOUS |
+              NDIS_PACKET_TYPE_MAC_FRAME))
         {
             *BytesRead = sizeof(ULONG);
             *BytesNeeded = sizeof(ULONG);
             status = NDIS_STATUS_NOT_SUPPORTED;
+            break;
+        }
+
+        if (Adapter->PacketFilter == genericUlong)
+        {
             break;
         }
 
@@ -312,15 +361,18 @@ MiniportSetInformation(
             break;
         }
 
-        if (InformationBufferLength / 6 > MAXIMUM_MULTICAST_ADDRESSES)
+        if (InformationBufferLength > sizeof(Adapter->MulticastList))
         {
-            *BytesNeeded = MAXIMUM_MULTICAST_ADDRESSES * IEEE_802_ADDR_LENGTH;
+            *BytesNeeded = sizeof(Adapter->MulticastList);
             *BytesRead = 0;
-            status = NDIS_STATUS_INVALID_LENGTH;
+            status = NDIS_STATUS_MULTICAST_FULL;
             break;
         }
 
         NdisMoveMemory(Adapter->MulticastList, InformationBuffer, InformationBufferLength);
+
+        Adapter->MulticastListSize = InformationBufferLength / IEEE_802_ADDR_LENGTH;
+
         NICUpdateMulticastList(Adapter);
         break;
 

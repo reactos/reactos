@@ -26,6 +26,11 @@
 
 typedef struct _E1000_ADAPTER
 {
+    /* NIC Memory */
+    volatile PUCHAR IoBase;
+    NDIS_PHYSICAL_ADDRESS IoAddress;
+    ULONG IoLength;
+
     // NDIS_SPIN_LOCK AdapterLock;
 
     NDIS_HANDLE AdapterHandle;
@@ -35,9 +40,11 @@ typedef struct _E1000_ADAPTER
     USHORT SubsystemVendorID;
 
     UCHAR PermanentMacAddress[IEEE_802_ADDR_LENGTH];
+
     struct {
         UCHAR MacAddress[IEEE_802_ADDR_LENGTH];
     } MulticastList[MAXIMUM_MULTICAST_ADDRESSES];
+    ULONG MulticastListSize;
 
     ULONG LinkSpeedMbps;
     ULONG MediaState;
@@ -47,11 +54,6 @@ typedef struct _E1000_ADAPTER
     ULONG IoPortAddress;
     ULONG IoPortLength;
     volatile PUCHAR IoPort;
-
-    /* NIC Memory */
-    NDIS_PHYSICAL_ADDRESS IoAddress;
-    ULONG IoLength;
-    volatile PUCHAR IoBase;
 
     /* Interrupt */
     ULONG InterruptVector;
@@ -63,7 +65,9 @@ typedef struct _E1000_ADAPTER
     BOOLEAN InterruptRegistered;
 
     LONG InterruptMask;
-    LONG InterruptPending;
+
+    _Interlocked_
+    volatile LONG InterruptPending;
 
 
     /* Transmit */
@@ -156,22 +160,6 @@ NTAPI
 NICApplyPacketFilter(
     IN PE1000_ADAPTER Adapter);
 
-NDIS_STATUS
-NTAPI
-NICApplyInterruptMask(
-    IN PE1000_ADAPTER Adapter);
-
-NDIS_STATUS
-NTAPI
-NICDisableInterrupts(
-    IN PE1000_ADAPTER Adapter);
-
-ULONG
-NTAPI
-NICInterruptRecognized(
-    IN PE1000_ADAPTER Adapter,
-    OUT PBOOLEAN InterruptRecognized);
-
 VOID
 NTAPI
 NICUpdateLinkStatus(
@@ -179,10 +167,10 @@ NICUpdateLinkStatus(
 
 NDIS_STATUS
 NTAPI
-NICTransmitPacket(
-    IN PE1000_ADAPTER Adapter,
-    IN PHYSICAL_ADDRESS PhysicalAddress,
-    IN ULONG Length);
+MiniportSend(
+    _In_ NDIS_HANDLE MiniportAdapterContext,
+    _In_ PNDIS_PACKET Packet,
+    _In_ UINT Flags);
 
 NDIS_STATUS
 NTAPI
@@ -216,19 +204,54 @@ NTAPI
 MiniportHandleInterrupt(
     IN NDIS_HANDLE MiniportAdapterContext);
 
-
+FORCEINLINE
 VOID
-NTAPI
 E1000ReadUlong(
-    IN PE1000_ADAPTER Adapter,
-    IN ULONG Address,
-    OUT PULONG Value);
+    _In_ PE1000_ADAPTER Adapter,
+    _In_ ULONG Address,
+    _Out_ PULONG Value)
+{
+    NdisReadRegisterUlong((PULONG)(Adapter->IoBase + Address), Value);
+}
 
+FORCEINLINE
 VOID
-NTAPI
 E1000WriteUlong(
-    IN PE1000_ADAPTER Adapter,
-    IN ULONG Address,
-    IN ULONG Value);
+    _In_ PE1000_ADAPTER Adapter,
+    _In_ ULONG Address,
+    _In_ ULONG Value)
+{
+    NdisWriteRegisterUlong((PULONG)(Adapter->IoBase + Address), Value);
+}
+
+FORCEINLINE
+VOID
+E1000WriteIoUlong(
+    _In_ PE1000_ADAPTER Adapter,
+    _In_ ULONG Address,
+    _In_ ULONG Value)
+{
+    volatile ULONG Dummy;
+
+    NdisRawWritePortUlong((PULONG)(Adapter->IoPort), Address);
+    NdisReadRegisterUlong(Adapter->IoBase + E1000_REG_STATUS, &Dummy);
+    NdisRawWritePortUlong((PULONG)(Adapter->IoPort + 4), Value);
+}
+
+FORCEINLINE
+VOID
+NICApplyInterruptMask(
+    _In_ PE1000_ADAPTER Adapter)
+{
+    E1000WriteUlong(Adapter, E1000_REG_IMS, Adapter->InterruptMask /*| 0x1F6DC*/);
+}
+
+FORCEINLINE
+VOID
+NICDisableInterrupts(
+    _In_ PE1000_ADAPTER Adapter)
+{
+    E1000WriteUlong(Adapter, E1000_REG_IMC, ~0);
+}
 
 #endif /* _E1000_PCH_ */
