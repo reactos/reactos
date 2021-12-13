@@ -557,41 +557,41 @@ IntCreateNewRegistryPath(
             ERR_(VIDEOPRT, "Failed create key '%wZ'\n", &DeviceExtension->NewRegistryPath);
             return Status;
         }
-
-        /* Open the new key */
-        InitializeObjectAttributes(&ObjectAttributes,
-                                   &DeviceExtension->NewRegistryPath,
-                                   OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE,
-                                   NULL,
-                                   NULL);
-        Status = ZwOpenKey(&NewKey, KEY_READ, &ObjectAttributes);
-        if (!NT_SUCCESS(Status))
-        {
-            ERR_(VIDEOPRT, "Failed to open settings key. Status 0x%lx\n", Status);
-            return Status;
-        }
-
-        /* Open the device profile key */
-        InitializeObjectAttributes(&ObjectAttributes,
-                                   &DeviceExtension->RegistryPath,
-                                   OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE,
-                                   NULL,
-                                   NULL);
-        Status = ZwOpenKey(&SettingsKey, KEY_READ, &ObjectAttributes);
-        if (!NT_SUCCESS(Status))
-        {
-            ERR_(VIDEOPRT, "Failed to open settings key. Status 0x%lx\n", Status);
-            ObCloseHandle(NewKey, KernelMode);
-            return Status;
-        }
-
-        /* Copy the registry data from the legacy key */
-        Status = IntCopyRegistryKey(SettingsKey, NewKey);
-
-        /* Close the key handles */
-        ObCloseHandle(SettingsKey, KernelMode);
-        ObCloseHandle(NewKey, KernelMode);
     }
+
+    /* Open the new key */
+    InitializeObjectAttributes(&ObjectAttributes,
+                                &DeviceExtension->NewRegistryPath,
+                                OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE,
+                                NULL,
+                                NULL);
+    Status = ZwOpenKey(&NewKey, KEY_READ, &ObjectAttributes);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR_(VIDEOPRT, "Failed to open settings key. Status 0x%lx\n", Status);
+        return Status;
+    }
+
+    /* Open the device profile key */
+    InitializeObjectAttributes(&ObjectAttributes,
+                                &DeviceExtension->RegistryPath,
+                                OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE,
+                                NULL,
+                                NULL);
+    Status = ZwOpenKey(&SettingsKey, KEY_READ, &ObjectAttributes);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR_(VIDEOPRT, "Failed to open settings key. Status 0x%lx\n", Status);
+        ObCloseHandle(NewKey, KernelMode);
+        return Status;
+    }
+
+    /* Copy the registry data from the legacy key */
+    Status = IntCopyRegistryKey(SettingsKey, NewKey);
+
+    /* Close the key handles */
+    ObCloseHandle(SettingsKey, KernelMode);
+    ObCloseHandle(NewKey, KernelMode);
 
     return Status;
 }
