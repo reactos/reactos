@@ -642,6 +642,119 @@ static HRESULT BrsFolder_Rename(browse_info *info, HTREEITEM rename)
 }
 
 #ifdef __REACTOS__
+static HRESULT BrsFolder_ExecuteCommand(HWND hwnd, IContextMenu *pContextMenu, UINT nCmd)
+{
+    CMINVOKECOMMANDINFO info = { sizeof(info) };
+    info.lpVerb = MAKEINTRESOURCEA(nCmd);
+    info.hwnd = hwnd;
+    info.fMask = CMIC_MASK_UNICODE;
+    info.nShow = SW_SHOWNORMAL;
+    if (GetKeyState(VK_SHIFT) & 0x8000)
+        info.fMask |= CMIC_MASK_SHIFT_DOWN;
+    if (GetKeyState(VK_CONTROL) & 0x8000)
+        info.fMask |= CMIC_MASK_CONTROL_DOWN;
+
+    return pContextMenu->lpVtbl->InvokeCommand(pContextMenu, &info);
+}
+
+static VOID BrsFolder_ShowContextMenu(browse_info *info, LPARAM lParam)
+{
+    HRESULT hr;
+    TVITEMW item;
+    LPTV_ITEMDATA item_data;
+    LPITEMIDLIST pidl;
+    const ITEMID_CHILD *pidlChild;
+    LPSHELLFOLDER pFolder = NULL;
+    IContextMenu *pContextMenu = NULL;
+    HMENU hMenu = NULL;
+    POINT pt;
+    UINT nID;
+    RECT rc;
+    TV_HITTESTINFO HitTest;
+    SFGAOF rfg;
+
+    pt.x = (SHORT)LOWORD(lParam);
+    pt.y = (SHORT)HIWORD(lParam);
+    if (pt.x == -1 && pt.y == -1) /* It's from keyboard */
+    {
+        item.hItem = TreeView_GetSelection(info->hwndTreeView);
+        if (item.hItem == NULL)
+            return;
+
+        TreeView_GetItemRect(info->hwndTreeView, item.hItem, &rc, TRUE);
+        MapWindowPoints(info->hwndTreeView, NULL, (LPPOINT)&rc, sizeof(RECT) / sizeof(POINT));
+        pt.x = (rc.left + rc.right) / 2;
+        pt.y = (rc.top + rc.bottom) / 2;
+    }
+    else
+    {
+        HitTest.pt = pt;
+        MapWindowPoints(NULL, info->hwndTreeView, &HitTest.pt, 1);
+        TreeView_HitTest(info->hwndTreeView, &HitTest);
+        item.hItem = HitTest.hItem;
+        if (item.hItem == NULL)
+            return;
+
+        TreeView_SelectItem(info->hwndTreeView, item.hItem);
+    }
+
+    /* Get the PIDL */
+    item.mask = TVIF_HANDLE | TVIF_PARAM;
+    TreeView_GetItem(info->hwndTreeView, &item);
+    item_data = (LPTV_ITEMDATA)item.lParam;
+    pidl = item_data->lpifq;
+
+    hr = SHBindToParent(pidl, &IID_IShellFolder, (void **)&pFolder, &pidlChild);
+    if (FAILED(hr))
+        return;
+
+    rfg = SFGAO_BROWSABLE | SFGAO_CANCOPY | SFGAO_CANLINK | SFGAO_CANMOVE | SFGAO_CANDELETE |
+          SFGAO_CANRENAME | SFGAO_HASPROPSHEET | SFGAO_FILESYSTEM | SFGAO_FOLDER;
+    hr = pFolder->lpVtbl->GetAttributesOf(pFolder, 1, &pidlChild, &rfg);
+    if (FAILED(hr))
+        goto Quit;
+
+    hr = pFolder->lpVtbl->GetUIObjectOf(pFolder, info->hwndTreeView, 1, &pidlChild,
+                                        &IID_IContextMenu, NULL, (void **)&pContextMenu);
+    if (FAILED(hr))
+        goto Quit;
+
+    hMenu = CreatePopupMenu();
+    hr = pContextMenu->lpVtbl->QueryContextMenu(pContextMenu, hMenu, 0,
+                                                FCIDM_SHVIEWFIRST, FCIDM_SHVIEWLAST,
+                                                CMF_NORMAL | CMF_NODEFAULT);
+    if (FAILED(hr))
+        goto Quit;
+
+    EnableMenuItem(hMenu, FCIDM_SHVIEW_MOVETO, MF_GRAYED);
+    EnableMenuItem(hMenu, FCIDM_SHVIEW_COPYTO, MF_GRAYED);
+    EnableMenuItem(hMenu, FCIDM_SHVIEW_CREATELINK, MF_GRAYED);
+    if (!(rfg & SFGAO_CANCOPY))
+        EnableMenuItem(hMenu, FCIDM_SHVIEW_COPY, MF_GRAYED);
+    if (!(rfg & SFGAO_CANDELETE))
+        EnableMenuItem(hMenu, FCIDM_SHVIEW_DELETE, MF_GRAYED);
+    if (!(rfg & SFGAO_CANRENAME))
+        EnableMenuItem(hMenu, FCIDM_SHVIEW_RENAME, MF_GRAYED);
+    if (!(rfg & SFGAO_HASPROPSHEET))
+        EnableMenuItem(hMenu, FCIDM_SHVIEW_PROPERTIES, MF_GRAYED);
+
+    SetForegroundWindow(info->hWnd);
+    nID = TrackPopupMenu(hMenu, TPM_LEFTALIGN | TPM_RETURNCMD | TPM_RIGHTBUTTON,
+                         pt.x, pt.y, 0, info->hWnd, NULL);
+    if (nID == FCIDM_SHVIEW_RENAME)
+        TreeView_EditLabel(info->hwndTreeView, item.hItem);
+    else
+        BrsFolder_ExecuteCommand(info->hwndTreeView, pContextMenu, nID);
+
+Quit:
+    if (hMenu)
+        DestroyMenu(hMenu);
+    if (pFolder)
+        IUnknown_Release(pFolder);
+    if (pContextMenu)
+        IUnknown_Release(pContextMenu);
+}
+
 static void
 BrsFolder_Delete(browse_info *info, HTREEITEM selected_item)
 {
@@ -1296,6 +1409,12 @@ static INT_PTR CALLBACK BrsFolderDlgProc( HWND hWnd, UINT msg, WPARAM wParam,
         return BrsFolder_OnCommand( info, wParam );
 
 #ifdef __REACTOS__
+    case WM_CONTEXTMENU:
+        if ((HWND)wParam == info->hwndTreeView)
+        {
+            BrsFolder_ShowContextMenu(info, lParam);
+        }
+        break;
     case WM_GETMINMAXINFO:
         ((LPMINMAXINFO)lParam)->ptMinTrackSize.x = info->szMin.cx;
         ((LPMINMAXINFO)lParam)->ptMinTrackSize.y = info->szMin.cy;
