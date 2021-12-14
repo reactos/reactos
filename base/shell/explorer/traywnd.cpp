@@ -2905,7 +2905,7 @@ HandleTrayContextMenu:
             HWND hwnd = g_MinimizedAll[i];
             if (::IsWindowVisible(hwnd) && ::IsIconic(hwnd))
             {
-                ::ShowWindow(hwnd, SW_RESTORE);
+                ::ShowWindowAsync(hwnd, SW_RESTORE);
             }
         }
         g_MinimizedAll.RemoveAll();
