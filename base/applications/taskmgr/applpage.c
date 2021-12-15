@@ -778,8 +778,7 @@ void ApplicationPage_OnWindowsMinimize(void)
         (void)ListView_GetItem(hApplicationPageListCtrl, &item);
         if (item.state & LVIS_SELECTED) {
             pAPLI = (LPAPPLICATION_PAGE_LIST_ITEM)item.lParam;
-            if (pAPLI)
-            {
+            if (pAPLI) {
                 ShowWindowAsync(pAPLI->hWnd, SW_MINIMIZE);
             }
         }
@@ -800,8 +799,7 @@ void ApplicationPage_OnWindowsMaximize(void)
         (void)ListView_GetItem(hApplicationPageListCtrl, &item);
         if (item.state & LVIS_SELECTED) {
             pAPLI = (LPAPPLICATION_PAGE_LIST_ITEM)item.lParam;
-            if (pAPLI)
-            {
+            if (pAPLI) {
                 ShowWindowAsync(pAPLI->hWnd, SW_MAXIMIZE);
             }
         }
