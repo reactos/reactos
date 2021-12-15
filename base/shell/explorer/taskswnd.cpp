@@ -488,26 +488,39 @@ public:
 
     HICON GetWndIcon(HWND hwnd)
     {
-        HICON hIcon = 0;
+        HICON hIcon = NULL;
+        const DWORD dwTimeout = 100; // in milliseconds
+        LRESULT bAlive = TRUE;
 
-        SendMessageTimeout(hwnd, WM_GETICON, ICON_SMALL2, 0, SMTO_ABORTIFHUNG, 1000, (PDWORD_PTR) &hIcon);
-        if (hIcon)
-            return hIcon;
+        if (bAlive)
+        {
+            bAlive = SendMessageTimeout(hwnd, WM_GETICON, ICON_SMALL2, 0, SMTO_ABORTIFHUNG,
+                                        dwTimeout, (PDWORD_PTR)&hIcon);
+            if (hIcon)
+                return hIcon;
+        }
 
-        SendMessageTimeout(hwnd, WM_GETICON, ICON_SMALL, 0, SMTO_ABORTIFHUNG, 1000, (PDWORD_PTR) &hIcon);
-        if (hIcon)
-            return hIcon;
+        if (bAlive)
+        {
+            bAlive = SendMessageTimeout(hwnd, WM_GETICON, ICON_SMALL, 0, SMTO_ABORTIFHUNG,
+                                        dwTimeout, (PDWORD_PTR)&hIcon);
+            if (hIcon)
+                return hIcon;
+        }
 
-        SendMessageTimeout(hwnd, WM_GETICON, ICON_BIG, 0, SMTO_ABORTIFHUNG, 1000, (PDWORD_PTR) &hIcon);
-        if (hIcon)
-            return hIcon;
+        if (bAlive)
+        {
+            SendMessageTimeout(hwnd, WM_GETICON, ICON_BIG, 0, SMTO_ABORTIFHUNG,
+                               dwTimeout, (PDWORD_PTR)&hIcon);
+            if (hIcon)
+                return hIcon;
+        }
 
         hIcon = (HICON) GetClassLongPtr(hwnd, GCL_HICONSM);
         if (hIcon)
             return hIcon;
 
         hIcon = (HICON) GetClassLongPtr(hwnd, GCL_HICON);
-
         return hIcon;
     }
 
