@@ -511,12 +511,11 @@ public:
                 return hIcon;
         }
 
-        hIcon = (HICON) GetClassLongPtr(hwnd, GCL_HICONSM);
+        hIcon = (HICON)GetClassLongPtr(hwnd, GCL_HICONSM);
         if (hIcon)
             return hIcon;
 
-        hIcon = (HICON) GetClassLongPtr(hwnd, GCL_HICON);
-        return hIcon;
+        return (HICON)GetClassLongPtr(hwnd, GCL_HICON);
     }
 
     INT UpdateTaskItemButton(IN PTASK_ITEM TaskItem)
