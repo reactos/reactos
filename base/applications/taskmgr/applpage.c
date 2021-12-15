@@ -58,23 +58,6 @@ static HANDLE   hApplicationThread = NULL;
 static DWORD    dwApplicationThread;
 #endif
 
-typedef void (WINAPI *FN_SwitchToThisWindow)(HWND, BOOL);
-
-static HMODULE s_hUser32 = NULL;
-static FN_SwitchToThisWindow s_fnSwitchToThisWindow = NULL;
-
-static FN_SwitchToThisWindow GetSwitchToThisWindowProc(VOID)
-{
-    if (s_fnSwitchToThisWindow)
-        return s_fnSwitchToThisWindow;
-
-    if (!s_hUser32)
-        s_hUser32 = GetModuleHandleW(L"USER32");
-    s_fnSwitchToThisWindow =
-        (FN_SwitchToThisWindow)GetProcAddress(s_hUser32, "SwitchToThisWindow");
-    return s_fnSwitchToThisWindow;
-}
-
 static INT
 GetSystemColorDepth(VOID)
 {
@@ -872,16 +855,7 @@ void ApplicationPage_OnWindowsBringToFront(void)
         }
     }
     if (pAPLI) {
-        if (GetSwitchToThisWindowProc())
-        {
-            s_fnSwitchToThisWindow(pAPLI->hWnd, TRUE);
-        }
-        else
-        {
-            SetForegroundWindow(pAPLI->hWnd);
-            if (IsIconic(pAPLI->hWnd))
-                ShowWindowAsync(pAPLI->hWnd, SW_RESTORE);
-        }
+        SwitchToThisWindow(pAPLI->hWnd, TRUE);
     }
 }
 
@@ -904,18 +878,7 @@ void ApplicationPage_OnSwitchTo(void)
         }
     }
     if (pAPLI) {
-        if (GetSwitchToThisWindowProc())
-        {
-            s_fnSwitchToThisWindow(pAPLI->hWnd, TRUE);
-        }
-        else
-        {
-            SetForegroundWindow(pAPLI->hWnd);
-            if (IsIconic(pAPLI->hWnd))
-                ShowWindowAsync(pAPLI->hWnd, SW_RESTORE);
-        }
-        if (TaskManagerSettings.MinimizeOnUse)
-            ShowWindow(hMainWnd, SW_MINIMIZE);
+        SwitchToThisWindow(pAPLI->hWnd, TRUE);
     }
 }
 
