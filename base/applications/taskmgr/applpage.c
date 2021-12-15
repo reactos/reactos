@@ -878,8 +878,7 @@ void ApplicationPage_OnWindowsBringToFront(void)
         }
         else
         {
-            SetWindowPos(pAPLI->hWnd, HWND_TOP, 0, 0, 0, 0,
-                         SWP_NOMOVE | SWP_NOSIZE | SWP_NOREPOSITION | SWP_ASYNCWINDOWPOS);
+            SetForegroundWindow(pAPLI->hWnd);
             if (IsIconic(pAPLI->hWnd))
                 ShowWindowAsync(pAPLI->hWnd, SW_RESTORE);
         }
