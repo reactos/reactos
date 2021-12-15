@@ -128,7 +128,9 @@ IntGdiExtCreatePen(
     {
         switch (dwPenStyle & PS_ENDCAP_MASK)
         {
-            case PS_ENDCAP_ROUND: case PS_ENDCAP_SQUARE: case PS_ENDCAP_FLAT:
+            case PS_ENDCAP_ROUND:
+            case PS_ENDCAP_SQUARE:
+            case PS_ENDCAP_FLAT:
                 break;
 
             default:
@@ -137,7 +139,9 @@ IntGdiExtCreatePen(
 
         switch (dwPenStyle & PS_JOIN_MASK)
         {
-            case PS_JOIN_ROUND: case PS_JOIN_BEVEL: case PS_JOIN_MITER:
+            case PS_JOIN_ROUND:
+            case PS_JOIN_BEVEL:
+            case PS_JOIN_MITER:
                 break;
 
             default:
