@@ -5,6 +5,7 @@
  *
  *  Copyright (C) 1999 - 2001  Brian Palmer  <brianp@reactos.org>
  *                2005         Klemens Friedl <frik85@reactos.at>
+ *                2021 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -57,12 +58,18 @@ static HANDLE   hApplicationThread = NULL;
 static DWORD    dwApplicationThread;
 #endif
 
-#if 0
-void SwitchToThisWindow (
-HWND hWnd,   /* Handle to the window that should be activated */
-BOOL bRestore /* Restore the window if it is minimized */
-);
-#endif
+typedef void (WINAPI *FN_SwitchToThisWindow)(HWND, BOOL);
+static FN_SwitchToThisWindow s_fnSwitchToThisWindow = NULL;
+
+static FN_SwitchToThisWindow GetSwitchToThisWindowProc(VOID)
+{
+    static HMODULE s_hUser32 = GetModuleHandleW(L"USER32");
+    if (s_fnSwitchToThisWindow)
+        return s_fnSwitchToThisWindow;
+
+    s_fnSwitchToThisWindow = (FN_SwitchToThisWindow)GetProcAddress(s_hUser32, "SwitchToThisWindow");
+    return s_fnSwitchToThisWindow;
+}
 
 static INT
 GetSystemColorDepth(VOID)
@@ -784,8 +791,9 @@ void ApplicationPage_OnWindowsMinimize(void)
         (void)ListView_GetItem(hApplicationPageListCtrl, &item);
         if (item.state & LVIS_SELECTED) {
             pAPLI = (LPAPPLICATION_PAGE_LIST_ITEM)item.lParam;
-            if (pAPLI) {
-                ShowWindow(pAPLI->hWnd, SW_MINIMIZE);
+            if (pAPLI)
+            {
+                ShowWindowAsync(pAPLI->hWnd, SW_MINIMIZE);
             }
         }
     }
@@ -805,8 +813,9 @@ void ApplicationPage_OnWindowsMaximize(void)
         (void)ListView_GetItem(hApplicationPageListCtrl, &item);
         if (item.state & LVIS_SELECTED) {
             pAPLI = (LPAPPLICATION_PAGE_LIST_ITEM)item.lParam;
-            if (pAPLI) {
-                ShowWindow(pAPLI->hWnd, SW_MAXIMIZE);
+            if (pAPLI)
+            {
+                ShowWindowAsync(pAPLI->hWnd, SW_MAXIMIZE);
             }
         }
     }
@@ -859,9 +868,17 @@ void ApplicationPage_OnWindowsBringToFront(void)
         }
     }
     if (pAPLI) {
-        if (IsIconic(pAPLI->hWnd))
-            ShowWindow(pAPLI->hWnd, SW_RESTORE);
-        BringWindowToTop(pAPLI->hWnd);
+        if (GetSwitchToThisWindowProc())
+        {
+            s_fnSwitchToThisWindow(pAPLI->hWnd, TRUE);
+        }
+        else
+        {
+            SetWindowPos(pAPLI->hWnd, HWND_TOP, 0, 0, 0, 0,
+                         SWP_NOMOVE | SWP_NOSIZE | SWP_NOREPOSITION | SWP_ASYNCWINDOWPOS);
+            if (IsIconic(pAPLI->hWnd))
+                ShowWindowAsync(pAPLI->hWnd, SW_RESTORE);
+        }
     }
 }
 
@@ -884,18 +901,15 @@ void ApplicationPage_OnSwitchTo(void)
         }
     }
     if (pAPLI) {
-        typedef void (WINAPI *PROCSWITCHTOTHISWINDOW) (HWND, BOOL);
-        PROCSWITCHTOTHISWINDOW SwitchToThisWindow;
-
-        HMODULE hUser32 = GetModuleHandleW(L"USER32");
-        SwitchToThisWindow = (PROCSWITCHTOTHISWINDOW)GetProcAddress(hUser32, "SwitchToThisWindow");
-        if (SwitchToThisWindow) {
-            SwitchToThisWindow(pAPLI->hWnd, TRUE);
-        } else {
-            if (IsIconic(pAPLI->hWnd))
-                ShowWindow(pAPLI->hWnd, SW_RESTORE);
-            BringWindowToTop(pAPLI->hWnd);
+        if (GetSwitchToThisWindowProc())
+        {
+            s_fnSwitchToThisWindow(pAPLI->hWnd, TRUE);
+        }
+        else
+        {
             SetForegroundWindow(pAPLI->hWnd);
+            if (IsIconic(pAPLI->hWnd))
+                ShowWindowAsync(pAPLI->hWnd, SW_RESTORE);
         }
         if (TaskManagerSettings.MinimizeOnUse)
             ShowWindow(hMainWnd, SW_MINIMIZE);
