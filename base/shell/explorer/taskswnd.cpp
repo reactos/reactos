@@ -488,28 +488,27 @@ public:
 
     HICON GetWndIcon(HWND hwnd)
     {
-        const DWORD dwTimeout = 100; // in milliseconds
         HICON hIcon = NULL;
-        LRESULT bAlive = SendMessageTimeout(hwnd, WM_GETICON, ICON_SMALL2, 0, SMTO_ABORTIFHUNG,
-                                            dwTimeout, (PDWORD_PTR)&hIcon);
+#define GET_ICON(type) \
+    SendMessageTimeout(hwnd, WM_GETICON, (type), 0, SMTO_ABORTIFHUNG, 100, (PDWORD_PTR)&hIcon)
+        LRESULT bAlive = GET_ICON(ICON_SMALL2);
         if (hIcon)
             return hIcon;
 
         if (bAlive)
         {
-            bAlive = SendMessageTimeout(hwnd, WM_GETICON, ICON_SMALL, 0, SMTO_ABORTIFHUNG,
-                                        dwTimeout, (PDWORD_PTR)&hIcon);
+            bAlive = GET_ICON(ICON_SMALL);
             if (hIcon)
                 return hIcon;
         }
 
         if (bAlive)
         {
-            SendMessageTimeout(hwnd, WM_GETICON, ICON_BIG, 0, SMTO_ABORTIFHUNG,
-                               dwTimeout, (PDWORD_PTR)&hIcon);
+            GET_ICON(ICON_BIG);
             if (hIcon)
                 return hIcon;
         }
+#undef GET_ICON
 
         hIcon = (HICON)GetClassLongPtr(hwnd, GCL_HICONSM);
         if (hIcon)
