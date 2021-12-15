@@ -65,12 +65,13 @@ static FN_SwitchToThisWindow s_fnSwitchToThisWindow = NULL;
 
 static FN_SwitchToThisWindow GetSwitchToThisWindowProc(VOID)
 {
-    if (!s_fnSwitchToThisWindow)
-    {
-        if (!s_hUser32)
-            s_hUser32 = GetModuleHandleW(L"USER32");
-        s_fnSwitchToThisWindow = (FN_SwitchToThisWindow)GetProcAddress(s_hUser32, "SwitchToThisWindow");
-    }
+    if (s_fnSwitchToThisWindow)
+        return s_fnSwitchToThisWindow;
+
+    if (!s_hUser32)
+        s_hUser32 = GetModuleHandleW(L"USER32");
+    s_fnSwitchToThisWindow =
+        (FN_SwitchToThisWindow)GetProcAddress(s_hUser32, "SwitchToThisWindow");
     return s_fnSwitchToThisWindow;
 }
 
