@@ -802,6 +802,8 @@ BEGIN
     IDS_COPYERRORSAME "Tidak bisa menyalin '%s': Nama berkas asal dan tujuan sama."
     IDS_MOVEERRORSUBFOLDER "Tidak bisa memindahkan '%s': Folder tujuan merupakan subfolder dari folder asal."
     IDS_COPYERRORSUBFOLDER "Tidak bisa menyalin '%s': Folder tujuan merupakan subfolder dari folder asal."
+    IDS_MOVEERROR "Cannot move '%s': %s"
+    IDS_COPYERROR "Cannot copy '%s': %s"
 
     IDS_CREATEFOLDER_DENIED "Tidak bisa membuat folder folder '%1'"
     IDS_CREATEFOLDER_CAPTION "Tidak bisa membuat folder"

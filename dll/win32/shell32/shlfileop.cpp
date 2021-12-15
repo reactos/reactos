@@ -663,6 +663,48 @@ EXTERN_C DWORD WINAPI Win32DeleteFileW(LPCWSTR path)
     return (SHNotifyDeleteFileW(NULL, path) == ERROR_SUCCESS);
 }
 
+#ifdef __REACTOS__
+/************************************************************************
+ * CheckForError          [internal]
+ *
+ * Show message box if operation failed
+ *
+ * PARAMS
+ *  op         [I]   File Operation context
+ *  error      [I]   Error code
+ *  src        [I]   Source file full name
+ *
+ */
+static DWORD CheckForError(FILE_OPERATION *op, DWORD error, LPCWSTR src)
+{
+    CStringW strTitle, strMask, strText;
+    LPWSTR lpMsgBuffer;
+
+    if (error == ERROR_SUCCESS || (op->req->fFlags & (FOF_NOERRORUI | FOF_SILENT)))
+        goto exit;
+
+    strTitle.LoadStringW(op->req->wFunc == FO_COPY ? IDS_COPYERRORTITLE : IDS_MOVEERRORTITLE);
+
+    FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
+                   NULL,
+                   error,
+                   MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+                   (LPWSTR)&lpMsgBuffer,
+                   0,
+                   NULL);
+
+    strText.Format(op->req->wFunc == FO_COPY ? IDS_COPYERROR : IDS_MOVEERROR,
+                   PathFindFileNameW(src),
+                   lpMsgBuffer);
+
+    MessageBoxW(op->req->hwnd, strText, strTitle, MB_ICONERROR);
+    LocalFree(lpMsgBuffer);
+
+exit:
+    return error;
+}
+#endif
+
 /************************************************************************
  * SHNotifyMoveFile          [internal]
  *
@@ -710,7 +752,12 @@ static DWORD SHNotifyMoveFileW(FILE_OPERATION *op, LPCWSTR src, LPCWSTR dest, BO
         SHChangeNotify(isdir ? SHCNE_RMDIR : SHCNE_DELETE, SHCNF_PATHW, src, NULL);
         return ERROR_SUCCESS;
     }
+
+#ifdef __REACTOS__
+    return CheckForError(op, GetLastError(), src);
+#else
     return GetLastError();
+#endif
 }
 
 /************************************************************************
@@ -757,7 +804,11 @@ static DWORD SHNotifyCopyFileW(FILE_OPERATION *op, LPCWSTR src, LPCWSTR dest, BO
         return ERROR_SUCCESS;
     }
 
+#ifdef __REACTOS__
+    return CheckForError(op, GetLastError(), src);
+#else
     return GetLastError();
+#endif
 }
 
 /*************************************************************************
