@@ -645,7 +645,7 @@ DeferWindowPos(HDWP hWinPosInfo,
 BOOL WINAPI
 EndDeferWindowPos(HDWP hWinPosInfo)
 {
-    return NtUserEndDeferWindowPosEx(hWinPosInfo, 0);
+    return NtUserEndDeferWindowPosEx(hWinPosInfo, FALSE);
 }
 
 
