@@ -491,6 +491,7 @@ public:
         HICON hIcon = NULL;
 #define GET_ICON(type) \
     SendMessageTimeout(hwnd, WM_GETICON, (type), 0, SMTO_ABORTIFHUNG, 100, (PDWORD_PTR)&hIcon)
+
         LRESULT bAlive = GET_ICON(ICON_SMALL2);
         if (hIcon)
             return hIcon;
