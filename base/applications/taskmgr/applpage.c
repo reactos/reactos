@@ -877,6 +877,8 @@ void ApplicationPage_OnSwitchTo(void)
     }
     if (pAPLI) {
         SwitchToThisWindow(pAPLI->hWnd, TRUE);
+        if (TaskManagerSettings.MinimizeOnUse)
+            ShowWindowAsync(hMainWnd, SW_MINIMIZE);
     }
 }
 
