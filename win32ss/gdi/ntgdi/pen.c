@@ -165,13 +165,11 @@ IntGdiExtCreatePen(
     pbrushPen->ulPenStyle = dwPenStyle;
     pbrushPen->BrushAttr.lbColor = ulColor;
     pbrushPen->iBrushStyle = ulBrushStyle;
+    // FIXME: Copy the bitmap first ?
+    pbrushPen->hbmClient = (HANDLE)ulClientHatch;
     pbrushPen->dwStyleCount = 0;
     pbrushPen->pStyle = NULL;
     pbrushPen->ulStyleSize = 0;
-
-    // FIXME: Copy the bitmap first ?
-    pbrushPen->hbmClient = (HANDLE)ulClientHatch;
-
     pbrushPen->flAttrs = bOldStylePen ? BR_IS_OLDSTYLEPEN : BR_IS_PEN;
 
     switch (dwPenStyle & PS_STYLE_MASK)
