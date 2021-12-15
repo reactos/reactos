@@ -3163,7 +3163,8 @@ NtUserChildWindowFromPointEx(HWND hwndParent,
  * @implemented
  */
 BOOL APIENTRY
-NtUserEndDeferWindowPosEx(HDWP WinPosInfo, BOOL bAsync)
+NtUserEndDeferWindowPosEx(HDWP WinPosInfo,
+                          BOOL bAsync)
 {
    BOOL Ret;
    TRACE("Enter NtUserEndDeferWindowPosEx\n");
