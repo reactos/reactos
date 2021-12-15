@@ -650,9 +650,11 @@ static BOOL BrsFolder_Treeview_CanRename(browse_info *info, TV_DISPINFO *pDispIn
     const ITEMID_CHILD *pidlChild;
     LPSHELLFOLDER pFolder = NULL;
     BOOL ret = FALSE;
+    HRESULT hr;
+    SFGAOF rfg;
 
     item.hItem = TreeView_GetSelection(info->hwndTreeView);
-    if (hItem == NULL)
+    if (item.hItem == NULL)
         return FALSE;
 
     /* Get the PIDL */
