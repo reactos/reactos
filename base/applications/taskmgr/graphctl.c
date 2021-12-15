@@ -591,87 +591,91 @@ GraphCtrl_WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
     switch (message)
     {
-    case WM_ERASEBKGND:
-        return TRUE;
-    /*
-     *  Filter out mouse  & keyboard messages
-     */
-    /* case WM_APPCOMMAND: */
-    case WM_CAPTURECHANGED:
-    case WM_LBUTTONDBLCLK:
-    case WM_LBUTTONDOWN:
-    case WM_LBUTTONUP:
-    case WM_MBUTTONDBLCLK:
-    case WM_MBUTTONDOWN:
-    case WM_MBUTTONUP:
-    case WM_MOUSEACTIVATE:
-    case WM_MOUSEHOVER:
-    case WM_MOUSELEAVE:
-    case WM_MOUSEMOVE:
-    /* case WM_MOUSEWHEEL: */
-    case WM_NCHITTEST:
-    case WM_NCLBUTTONDBLCLK:
-    case WM_NCLBUTTONDOWN:
-    case WM_NCLBUTTONUP:
-    case WM_NCMBUTTONDBLCLK:
-    case WM_NCMBUTTONDOWN:
-    case WM_NCMBUTTONUP:
-    /* case WM_NCMOUSEHOVER: */
-    /* case WM_NCMOUSELEAVE: */
-    case WM_NCMOUSEMOVE:
-    case WM_NCRBUTTONDBLCLK:
-    case WM_NCRBUTTONDOWN:
-    case WM_NCRBUTTONUP:
-    /* case WM_NCXBUTTONDBLCLK: */
-    /* case WM_NCXBUTTONDOWN: */
-    /* case WM_NCXBUTTONUP: */
-    case WM_RBUTTONDBLCLK:
-    case WM_RBUTTONDOWN:
-    case WM_RBUTTONUP:
-    /* case WM_XBUTTONDBLCLK: */
-    /* case WM_XBUTTONDOWN: */
-    /* case WM_XBUTTONUP: */
-    case WM_ACTIVATE:
-    case WM_CHAR:
-    case WM_DEADCHAR:
-    case WM_GETHOTKEY:
-    case WM_HOTKEY:
-    case WM_KEYDOWN:
-    case WM_KEYUP:
-    case WM_KILLFOCUS:
-    case WM_SETFOCUS:
-    case WM_SETHOTKEY:
-    case WM_SYSCHAR:
-    case WM_SYSDEADCHAR:
-    case WM_SYSKEYDOWN:
-    case WM_SYSKEYUP:
-        return 0;
+        case WM_ERASEBKGND:
+            return TRUE;
+        /*
+         *  Filter out mouse  & keyboard messages
+         */
+        // case WM_APPCOMMAND:
+        case WM_CAPTURECHANGED:
+        case WM_LBUTTONDBLCLK:
+        case WM_LBUTTONDOWN:
+        case WM_LBUTTONUP:
+        case WM_MBUTTONDBLCLK:
+        case WM_MBUTTONDOWN:
+        case WM_MBUTTONUP:
+        case WM_MOUSEACTIVATE:
+        case WM_MOUSEHOVER:
+        case WM_MOUSELEAVE:
+        case WM_MOUSEMOVE:
+        // case WM_MOUSEWHEEL:
+        case WM_NCHITTEST:
+        case WM_NCLBUTTONDBLCLK:
+        case WM_NCLBUTTONDOWN:
+        case WM_NCLBUTTONUP:
+        case WM_NCMBUTTONDBLCLK:
+        case WM_NCMBUTTONDOWN:
+        case WM_NCMBUTTONUP:
+        // case WM_NCMOUSEHOVER:
+        // case WM_NCMOUSELEAVE:
+        case WM_NCMOUSEMOVE:
+        case WM_NCRBUTTONDBLCLK:
+        case WM_NCRBUTTONDOWN:
+        case WM_NCRBUTTONUP:
+        // case WM_NCXBUTTONDBLCLK:
+        // case WM_NCXBUTTONDOWN:
+        // case WM_NCXBUTTONUP:
+        case WM_RBUTTONDBLCLK:
+        case WM_RBUTTONDOWN:
+        case WM_RBUTTONUP:
+        // case WM_XBUTTONDBLCLK:
+        // case WM_XBUTTONDOWN:
+        // case WM_XBUTTONUP:
+        case WM_ACTIVATE:
+        case WM_CHAR:
+        case WM_DEADCHAR:
+        case WM_GETHOTKEY:
+        case WM_HOTKEY:
+        case WM_KEYDOWN:
+        case WM_KEYUP:
+        case WM_KILLFOCUS:
+        case WM_SETFOCUS:
+        case WM_SETHOTKEY:
+        case WM_SYSCHAR:
+        case WM_SYSDEADCHAR:
+        case WM_SYSKEYDOWN:
+        case WM_SYSKEYUP:
+            return 0;
 
-    case WM_NCCALCSIZE:
-        return 0;
+        case WM_NCCALCSIZE:
+            return 0;
 
-    case WM_SIZE:
-        if (hWnd == hPerformancePageMemUsageHistoryGraph)
+        case WM_SIZE:
         {
-            GraphCtrl_Resize(&PerformancePageMemUsageHistoryGraph);
-            GraphCtrl_InvalidateCtrl(&PerformancePageMemUsageHistoryGraph, TRUE);
+            if (hWnd == hPerformancePageMemUsageHistoryGraph)
+            {
+                GraphCtrl_Resize(&PerformancePageMemUsageHistoryGraph);
+                GraphCtrl_InvalidateCtrl(&PerformancePageMemUsageHistoryGraph, TRUE);
+            }
+            if (hWnd == hPerformancePageCpuUsageHistoryGraph)
+            {
+                GraphCtrl_Resize(&PerformancePageCpuUsageHistoryGraph);
+                GraphCtrl_InvalidateCtrl(&PerformancePageCpuUsageHistoryGraph, TRUE);
+            }
+            return 0;
         }
-        if (hWnd == hPerformancePageCpuUsageHistoryGraph)
-        {
-            GraphCtrl_Resize(&PerformancePageCpuUsageHistoryGraph);
-            GraphCtrl_InvalidateCtrl(&PerformancePageCpuUsageHistoryGraph, TRUE);
-        }
-        return 0;
 
-    case WM_PAINT:
-        hdc = BeginPaint(hWnd, &ps);
-        GetClientRect(hWnd, &rcClient);
-        if (hWnd == hPerformancePageMemUsageHistoryGraph)
-            GraphCtrl_Paint(&PerformancePageMemUsageHistoryGraph, hWnd, hdc);
-        if (hWnd == hPerformancePageCpuUsageHistoryGraph)
-            GraphCtrl_Paint(&PerformancePageCpuUsageHistoryGraph, hWnd, hdc);
-        EndPaint(hWnd, &ps);
-        return 0;
+        case WM_PAINT:
+        {
+            hdc = BeginPaint(hWnd, &ps);
+            GetClientRect(hWnd, &rcClient);
+            if (hWnd == hPerformancePageMemUsageHistoryGraph)
+                GraphCtrl_Paint(&PerformancePageMemUsageHistoryGraph, hWnd, hdc);
+            if (hWnd == hPerformancePageCpuUsageHistoryGraph)
+                GraphCtrl_Paint(&PerformancePageCpuUsageHistoryGraph, hWnd, hdc);
+            EndPaint(hWnd, &ps);
+            return 0;
+        }
     }
 
     /*
