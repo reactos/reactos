@@ -488,17 +488,12 @@ public:
 
     HICON GetWndIcon(HWND hwnd)
     {
-        HICON hIcon = NULL;
         const DWORD dwTimeout = 100; // in milliseconds
-        LRESULT bAlive = TRUE;
-
-        if (bAlive)
-        {
-            bAlive = SendMessageTimeout(hwnd, WM_GETICON, ICON_SMALL2, 0, SMTO_ABORTIFHUNG,
-                                        dwTimeout, (PDWORD_PTR)&hIcon);
-            if (hIcon)
-                return hIcon;
-        }
+        HICON hIcon = NULL;
+        LRESULT bAlive = SendMessageTimeout(hwnd, WM_GETICON, ICON_SMALL2, 0, SMTO_ABORTIFHUNG,
+                                            dwTimeout, (PDWORD_PTR)&hIcon);
+        if (hIcon)
+            return hIcon;
 
         if (bAlive)
         {
