@@ -642,6 +642,42 @@ static HRESULT BrsFolder_Rename(browse_info *info, HTREEITEM rename)
 }
 
 #ifdef __REACTOS__
+static BOOL BrsFolder_Treeview_CanRename(browse_info *info, TV_DISPINFO *pDispInfo)
+{
+    TV_ITEM item;
+    LPTV_ITEMDATA item_data;
+    LPITEMIDLIST pidl;
+    const ITEMID_CHILD *pidlChild;
+    LPSHELLFOLDER pFolder = NULL;
+    BOOL ret = FALSE;
+
+    item.hItem = TreeView_GetSelection(info->hwndTreeView);
+    if (hItem == NULL)
+        return FALSE;
+
+    /* Get the PIDL */
+    item.mask = TVIF_HANDLE | TVIF_PARAM;
+    TreeView_GetItem(info->hwndTreeView, &item);
+    item_data = (LPTV_ITEMDATA)item.lParam;
+    pidl = item_data->lpifq;
+
+    hr = SHBindToParent(pidl, &IID_IShellFolder, (void **)&pFolder, &pidlChild);
+    if (FAILED(hr))
+        return FALSE;
+
+    rfg = SFGAO_CANRENAME | SFGAO_FILESYSTEM | SFGAO_FOLDER;
+    hr = pFolder->lpVtbl->GetAttributesOf(pFolder, 1, &pidlChild, &rfg);
+    if (FAILED(hr) || !(rfg & SFGAO_CANRENAME))
+        goto Quit;
+
+    ret = TRUE;
+
+Quit:
+    if (pFolder)
+        IUnknown_Release(pFolder);
+    return ret;
+}
+
 static HRESULT BrsFolder_ExecuteCommand(HWND hwnd, IContextMenu *pContextMenu, UINT nCmd)
 {
     CMINVOKECOMMANDINFO info = { sizeof(info) };
@@ -722,7 +758,7 @@ static VOID BrsFolder_ShowContextMenu(browse_info *info, LPARAM lParam)
     hMenu = CreatePopupMenu();
     hr = pContextMenu->lpVtbl->QueryContextMenu(pContextMenu, hMenu, 0,
                                                 FCIDM_SHVIEWFIRST, FCIDM_SHVIEWLAST,
-                                                CMF_NORMAL | CMF_NODEFAULT);
+                                                CMF_EXPLORE | CMF_NODEFAULT);
     if (FAILED(hr))
         goto Quit;
 
@@ -740,7 +776,7 @@ static VOID BrsFolder_ShowContextMenu(browse_info *info, LPARAM lParam)
         EnableMenuItem(hMenu, FCIDM_SHVIEW_PROPERTIES, MF_GRAYED);
 
     SetForegroundWindow(info->hWnd);
-    nID = TrackPopupMenu(hMenu, TPM_LEFTALIGN | TPM_RETURNCMD | TPM_RIGHTBUTTON,
+    nID = TrackPopupMenu(hMenu, TPM_LEFTALIGN | TPM_RIGHTBUTTON | TPM_RETURNCMD,
                          pt.x, pt.y, 0, info->hWnd, NULL);
 
     // TODO: How to handle command ids?
@@ -865,6 +901,14 @@ static LRESULT BrsFolder_OnNotify( browse_info *info, UINT CtlID, LPNMHDR lpnmh 
     case TVN_SELCHANGEDW:
         return BrsFolder_Treeview_Changed( info, pnmtv );
 
+#ifdef __REACTOS__
+    case TVN_BEGINLABELEDIT:
+    {
+        if (!BrsFolder_Treeview_CanRename(info, (TV_DISPINFO *)lpnmh))
+            return 1;
+        break;
+    }
+#endif
     case TVN_ENDLABELEDITA:
     case TVN_ENDLABELEDITW:
         return BrsFolder_Treeview_Rename( info, (LPNMTVDISPINFOW)pnmtv );
@@ -1384,6 +1428,14 @@ static LRESULT BrsFolder_OnChange(browse_info *info, const LPCITEMIDLIST *pidls,
 
             break;
         }
+#ifdef __REACTOS__
+
+        case SHCNE_RENAMEFOLDER:
+        {
+            // TODO:
+            break;
+        }
+#endif
     }
     return ret;
 }
