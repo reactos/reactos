@@ -726,6 +726,7 @@ static VOID BrsFolder_ShowContextMenu(browse_info *info, LPARAM lParam)
     if (FAILED(hr))
         goto Quit;
 
+    // TODO: How to handle command ids?
     EnableMenuItem(hMenu, FCIDM_SHVIEW_MOVETO, MF_GRAYED);
     EnableMenuItem(hMenu, FCIDM_SHVIEW_COPYTO, MF_GRAYED);
     EnableMenuItem(hMenu, FCIDM_SHVIEW_CREATELINK, MF_GRAYED);
@@ -741,6 +742,8 @@ static VOID BrsFolder_ShowContextMenu(browse_info *info, LPARAM lParam)
     SetForegroundWindow(info->hWnd);
     nID = TrackPopupMenu(hMenu, TPM_LEFTALIGN | TPM_RETURNCMD | TPM_RIGHTBUTTON,
                          pt.x, pt.y, 0, info->hWnd, NULL);
+
+    // TODO: How to handle command ids?
     if (nID == FCIDM_SHVIEW_RENAME)
         TreeView_EditLabel(info->hwndTreeView, item.hItem);
     else
