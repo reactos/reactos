@@ -488,27 +488,34 @@ public:
 
     HICON GetWndIcon(HWND hwnd)
     {
-        HICON hIcon = 0;
+        HICON hIcon = NULL;
+#define GET_ICON(type) \
+    SendMessageTimeout(hwnd, WM_GETICON, (type), 0, SMTO_ABORTIFHUNG, 100, (PDWORD_PTR)&hIcon)
 
-        SendMessageTimeout(hwnd, WM_GETICON, ICON_SMALL2, 0, SMTO_ABORTIFHUNG, 1000, (PDWORD_PTR) &hIcon);
+        LRESULT bAlive = GET_ICON(ICON_SMALL2);
         if (hIcon)
             return hIcon;
 
-        SendMessageTimeout(hwnd, WM_GETICON, ICON_SMALL, 0, SMTO_ABORTIFHUNG, 1000, (PDWORD_PTR) &hIcon);
+        if (bAlive)
+        {
+            bAlive = GET_ICON(ICON_SMALL);
+            if (hIcon)
+                return hIcon;
+        }
+
+        if (bAlive)
+        {
+            GET_ICON(ICON_BIG);
+            if (hIcon)
+                return hIcon;
+        }
+#undef GET_ICON
+
+        hIcon = (HICON)GetClassLongPtr(hwnd, GCL_HICONSM);
         if (hIcon)
             return hIcon;
 
-        SendMessageTimeout(hwnd, WM_GETICON, ICON_BIG, 0, SMTO_ABORTIFHUNG, 1000, (PDWORD_PTR) &hIcon);
-        if (hIcon)
-            return hIcon;
-
-        hIcon = (HICON) GetClassLongPtr(hwnd, GCL_HICONSM);
-        if (hIcon)
-            return hIcon;
-
-        hIcon = (HICON) GetClassLongPtr(hwnd, GCL_HICON);
-
-        return hIcon;
+        return (HICON)GetClassLongPtr(hwnd, GCL_HICON);
     }
 
     INT UpdateTaskItemButton(IN PTASK_ITEM TaskItem)
