@@ -2129,7 +2129,7 @@ BOOL
 NTAPI
 NtUserEndDeferWindowPosEx(
     HDWP WinPosInfo,
-    DWORD Unknown1);
+    BOOL bAsync);
 
 BOOL
 NTAPI

@@ -3164,12 +3164,12 @@ NtUserChildWindowFromPointEx(HWND hwndParent,
  */
 BOOL APIENTRY
 NtUserEndDeferWindowPosEx(HDWP WinPosInfo,
-                          DWORD Unknown1)
+                          BOOL bAsync)
 {
    BOOL Ret;
    TRACE("Enter NtUserEndDeferWindowPosEx\n");
    UserEnterExclusive();
-   Ret = IntEndDeferWindowPosEx(WinPosInfo, (BOOL)Unknown1);
+   Ret = IntEndDeferWindowPosEx(WinPosInfo, bAsync);
    TRACE("Leave NtUserEndDeferWindowPosEx, ret=%i\n", Ret);
    UserLeave();
    return Ret;
