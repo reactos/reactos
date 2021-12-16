@@ -1,9 +1,10 @@
 /*
  * PROJECT:     ReactOS Task Manager
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
- * PURPOSE:     Graph plotting controls
+ * PURPOSE:     Graph Plotting controls.
  * COPYRIGHT:   Copyright 2002 Robert Dickenson <robd@reactos.org>
  *              Copyright 2021 Wu Haotian <rigoligo03@gmail.com>
+ *              Copyright 2021 Valerij Zaporogeci <vlrzprgts@gmail.com>
  */
 
 #include "precomp.h"
