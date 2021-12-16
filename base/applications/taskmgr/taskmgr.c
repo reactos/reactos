@@ -865,7 +865,7 @@ void LoadSettings(void)
     /* Options menu settings */
     TaskManagerSettings.AlwaysOnTop = FALSE;
     TaskManagerSettings.MinimizeOnUse = TRUE;
-    TaskManagerSettings.HideWhenMinimized = TRUE;
+    TaskManagerSettings.HideWhenMinimized = FALSE;
     TaskManagerSettings.Show16BitTasks = TRUE;
 
     /* Update speed settings */
