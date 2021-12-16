@@ -8,29 +8,34 @@
 #include "precomp.h"
 #include <shlwapi.h>
 
-extern BOOL bInMenuLoop;        /* Tells us if we are in the menu loop - from taskmgr.c */
+extern BOOL bInMenuLoop;    /* Tells us if we are in the menu loop - from taskmgr.c */
 
-TM_GRAPH_CONTROL PerformancePageCpuUsageHistoryGraph;
-TM_GRAPH_CONTROL PerformancePageMemUsageHistoryGraph;
+static TM_GRAPH_CONTROL CpuUsageHistoryGraph;
+static TM_GRAPH_CONTROL MemUsageHistoryGraph;
 
-HWND hPerformancePage;                /* Performance Property Page */
-static HWND hCpuUsageGraph;                  /* CPU Usage Graph */
-static HWND hMemUsageGraph;                  /* MEM Usage Graph */
-HWND hPerformancePageCpuUsageHistoryGraph;           /* CPU Usage History Graph */
-HWND hPerformancePageMemUsageHistoryGraph;           /* Memory Usage History Graph */
+HWND hPerformancePage;              /* Performance Property Page */
+static HWND hCpuUsageGraph;         /* CPU Usage Graph */
+static HWND hMemUsageGraph;         /* MEM Usage Graph */
+static HWND hCpuUsageHistoryGraph;  /* CPU Usage History Graph */
+static HWND hMemUsageHistoryGraph;  /* Memory Usage History Graph */
 
 static int nPerformancePageWidth;
 static int nPerformancePageHeight;
 static int lastX, lastY;
 
 static void
-AdjustFrameSize(HWND hCntrl, HWND hDlg, int nXDifference, int nYDifference, int posFlag)
+AdjustFrameSize(HDWP* phdwp, HWND hCntrl, HWND hDlg, int nXDifference, int nYDifference, int posFlag)
 {
     RECT rc;
     int  cx, cy, sx, sy;
 
-    GetClientRect(hCntrl, &rc);
-    MapWindowPoints(hCntrl, hDlg, (LPPOINT)&rc, sizeof(RECT)/sizeof(POINT));
+    if (!phdwp || !*phdwp)
+        return;
+
+    // GetClientRect(hCntrl, &rc);
+    GetWindowRect(hCntrl, &rc);
+    // MapWindowPoints(hCntrl, hDlg, (LPPOINT)&rc, sizeof(RECT)/sizeof(POINT));
+    MapWindowPoints(NULL, hDlg, (LPPOINT)&rc, sizeof(RECT) / sizeof(POINT));
     if (posFlag)
     {
         cx = rc.left;
@@ -52,38 +57,43 @@ AdjustFrameSize(HWND hCntrl, HWND hDlg, int nXDifference, int nYDifference, int 
             break;
         }
         sy = rc.bottom - rc.top + nYDifference / 2;
-        SetWindowPos(hCntrl, NULL, cx, cy, sx, sy, SWP_NOACTIVATE|SWP_NOOWNERZORDER|SWP_NOZORDER);
+        *phdwp = DeferWindowPos(*phdwp,
+                                hCntrl, NULL,
+                                cx, cy, sx, sy,
+                                SWP_NOACTIVATE|SWP_NOOWNERZORDER|SWP_NOZORDER);
     }
     else
     {
         cx = rc.left + nXDifference;
         cy = rc.top + nYDifference;
-        SetWindowPos(hCntrl, NULL, cx, cy, 0, 0, SWP_NOACTIVATE|SWP_NOOWNERZORDER|SWP_NOSIZE|SWP_NOZORDER);
+        *phdwp = DeferWindowPos(*phdwp,
+                                hCntrl, NULL,
+                                cx, cy, 0, 0,
+                                SWP_NOACTIVATE|SWP_NOOWNERZORDER|SWP_NOSIZE|SWP_NOZORDER);
     }
     InvalidateRect(hCntrl, NULL, TRUE);
 }
 
 // AdjustControlPosition
 static inline
-void AdjustCntrlPos(int ctrl_id, HWND hDlg, int nXDifference, int nYDifference)
+void AdjustCntrlPos(HDWP* phdwp, int ctrl_id, HWND hDlg, int nXDifference, int nYDifference)
 {
-    AdjustFrameSize(GetDlgItem(hDlg, ctrl_id), hDlg, nXDifference, nYDifference, 0);
+    AdjustFrameSize(phdwp, GetDlgItem(hDlg, ctrl_id), hDlg, nXDifference, nYDifference, 0);
 }
 
 INT_PTR CALLBACK
 PerformancePageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
-    RECT rc;
-
     switch (message)
     {
         case WM_DESTROY:
-            GraphCtrl_Dispose(&PerformancePageCpuUsageHistoryGraph);
-            GraphCtrl_Dispose(&PerformancePageMemUsageHistoryGraph);
+            GraphCtrl_Dispose(&CpuUsageHistoryGraph);
+            GraphCtrl_Dispose(&MemUsageHistoryGraph);
             break;
 
         case WM_INITDIALOG:
         {
+            RECT rc;
             BOOL bGraph;
             TM_FORMAT fmt;
 
@@ -98,8 +108,8 @@ PerformancePageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
             /* Get handles to the graph controls */
             hCpuUsageGraph = GetDlgItem(hDlg, IDC_CPU_USAGE_GRAPH);
             hMemUsageGraph = GetDlgItem(hDlg, IDC_MEM_USAGE_GRAPH);
-            hPerformancePageMemUsageHistoryGraph = GetDlgItem(hDlg, IDC_MEM_USAGE_HISTORY_GRAPH);
-            hPerformancePageCpuUsageHistoryGraph = GetDlgItem(hDlg, IDC_CPU_USAGE_HISTORY_GRAPH);
+            hCpuUsageHistoryGraph = GetDlgItem(hDlg, IDC_CPU_USAGE_HISTORY_GRAPH);
+            hMemUsageHistoryGraph = GetDlgItem(hDlg, IDC_MEM_USAGE_HISTORY_GRAPH);
 
             /* Create the graph controls */
             fmt.clrBack = RGB(0, 0, 0);
@@ -108,7 +118,7 @@ PerformancePageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
             fmt.clrPlot1 = RGB(255, 0, 0);
             fmt.GridCellWidth = fmt.GridCellHeight = 12;
             fmt.DrawSecondaryPlot = TaskManagerSettings.ShowKernelTimes;
-            bGraph = GraphCtrl_Create(&PerformancePageCpuUsageHistoryGraph, hPerformancePageCpuUsageHistoryGraph, hDlg, &fmt);
+            bGraph = GraphCtrl_Create(&CpuUsageHistoryGraph, hCpuUsageHistoryGraph, hDlg, &fmt);
             if (!bGraph)
             {
                 EndDialog(hDlg, 0);
@@ -118,31 +128,53 @@ PerformancePageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
             fmt.clrPlot0 = RGB(255, 255, 0);
             fmt.clrPlot1 = RGB(100, 255, 255);
             fmt.DrawSecondaryPlot = TRUE;
-            bGraph = GraphCtrl_Create(&PerformancePageMemUsageHistoryGraph, hPerformancePageMemUsageHistoryGraph, hDlg, &fmt);
+            bGraph = GraphCtrl_Create(&MemUsageHistoryGraph, hMemUsageHistoryGraph, hDlg, &fmt);
             if (!bGraph)
             {
                 EndDialog(hDlg, 0);
                 return FALSE;
             }
 
-            /*
-             * Subclass graph buttons
-             */
-            OldGraphWndProc = (WNDPROC)SetWindowLongPtrW(hCpuUsageGraph, GWLP_WNDPROC, (LONG_PTR)Graph_WndProc);
-            SetWindowLongPtrW(hMemUsageGraph, GWLP_WNDPROC, (LONG_PTR)Graph_WndProc);
-            OldGraphCtrlWndProc = (WNDPROC)SetWindowLongPtrW(hPerformancePageMemUsageHistoryGraph, GWLP_WNDPROC, (LONG_PTR)GraphCtrl_WndProc);
-            SetWindowLongPtrW(hPerformancePageCpuUsageHistoryGraph, GWLP_WNDPROC, (LONG_PTR)GraphCtrl_WndProc);
             return TRUE;
         }
 
-        case WM_COMMAND:
+        case WM_DRAWITEM:
+        {
+            LPDRAWITEMSTRUCT drawItem = (LPDRAWITEMSTRUCT)lParam;
+
+            // TODO: Support multiple CPU graphs.
+            if ((drawItem->CtlID == IDC_CPU_USAGE_HISTORY_GRAPH) ||
+                (drawItem->CtlID == IDC_MEM_USAGE_HISTORY_GRAPH))
+            {
+                PTM_GRAPH_CONTROL graph;
+
+                if (drawItem->CtlID == IDC_CPU_USAGE_HISTORY_GRAPH)
+                    graph = &CpuUsageHistoryGraph;
+                else if (drawItem->CtlID == IDC_MEM_USAGE_HISTORY_GRAPH)
+                    graph = &MemUsageHistoryGraph;
+
+                GraphCtrl_OnDraw(drawItem->hwndItem,
+                                 graph,
+                                 (WPARAM)drawItem->hDC, 0);
+            }
+            else
+            if ((drawItem->CtlID == IDC_CPU_USAGE_GRAPH) ||
+                (drawItem->CtlID == IDC_MEM_USAGE_GRAPH))
+            {
+                Graph_Draw(drawItem->hwndItem, (WPARAM)drawItem->hDC, 0);
+            }
+
             break;
+            // return TRUE;
+        }
 
         case WM_SIZE:
         {
-            int  cx, cy;
-            int  nXDifference;
-            int  nYDifference;
+            int cx, cy;
+            int nXDifference;
+            int nYDifference;
+            HDWP hdwp;
+            RECT rcClient;
 
             if (wParam == SIZE_MINIMIZED)
                 return 0;
@@ -154,36 +186,38 @@ PerformancePageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
             nPerformancePageWidth = cx;
             nPerformancePageHeight = cy;
 
-            /* Reposition the performance page's controls */
-            AdjustCntrlPos(IDC_TOTALS_FRAME, hDlg, 0, nYDifference);
-            AdjustCntrlPos(IDC_COMMIT_CHARGE_FRAME, hDlg, 0, nYDifference);
-            AdjustCntrlPos(IDC_KERNEL_MEMORY_FRAME, hDlg, 0, nYDifference);
-            AdjustCntrlPos(IDC_PHYSICAL_MEMORY_FRAME, hDlg, 0, nYDifference);
-            AdjustCntrlPos(IDS_COMMIT_CHARGE_TOTAL, hDlg, 0, nYDifference);
-            AdjustCntrlPos(IDS_COMMIT_CHARGE_LIMIT, hDlg, 0, nYDifference);
-            AdjustCntrlPos(IDS_COMMIT_CHARGE_PEAK, hDlg, 0, nYDifference);
-            AdjustCntrlPos(IDS_KERNEL_MEMORY_TOTAL, hDlg, 0, nYDifference);
-            AdjustCntrlPos(IDS_KERNEL_MEMORY_PAGED, hDlg, 0, nYDifference);
-            AdjustCntrlPos(IDS_KERNEL_MEMORY_NONPAGED, hDlg, 0, nYDifference);
-            AdjustCntrlPos(IDS_PHYSICAL_MEMORY_TOTAL, hDlg, 0, nYDifference);
-            AdjustCntrlPos(IDS_PHYSICAL_MEMORY_AVAILABLE, hDlg, 0, nYDifference);
-            AdjustCntrlPos(IDS_PHYSICAL_MEMORY_SYSTEM_CACHE, hDlg, 0, nYDifference);
-            AdjustCntrlPos(IDS_TOTALS_HANDLE_COUNT, hDlg, 0, nYDifference);
-            AdjustCntrlPos(IDS_TOTALS_PROCESS_COUNT, hDlg, 0, nYDifference);
-            AdjustCntrlPos(IDS_TOTALS_THREAD_COUNT, hDlg, 0, nYDifference);
+            hdwp = BeginDeferWindowPos(16 + 12 + 8);
 
-            AdjustCntrlPos(IDC_COMMIT_CHARGE_TOTAL, hDlg, 0, nYDifference);
-            AdjustCntrlPos(IDC_COMMIT_CHARGE_LIMIT, hDlg, 0, nYDifference);
-            AdjustCntrlPos(IDC_COMMIT_CHARGE_PEAK, hDlg, 0, nYDifference);
-            AdjustCntrlPos(IDC_KERNEL_MEMORY_TOTAL, hDlg, 0, nYDifference);
-            AdjustCntrlPos(IDC_KERNEL_MEMORY_PAGED, hDlg, 0, nYDifference);
-            AdjustCntrlPos(IDC_KERNEL_MEMORY_NONPAGED, hDlg, 0, nYDifference);
-            AdjustCntrlPos(IDC_PHYSICAL_MEMORY_TOTAL, hDlg, 0, nYDifference);
-            AdjustCntrlPos(IDC_PHYSICAL_MEMORY_AVAILABLE, hDlg, 0, nYDifference);
-            AdjustCntrlPos(IDC_PHYSICAL_MEMORY_SYSTEM_CACHE, hDlg, 0, nYDifference);
-            AdjustCntrlPos(IDC_TOTALS_HANDLE_COUNT, hDlg, 0, nYDifference);
-            AdjustCntrlPos(IDC_TOTALS_THREAD_COUNT, hDlg, 0, nYDifference);
-            AdjustCntrlPos(IDC_TOTALS_PROCESS_COUNT, hDlg, 0, nYDifference);
+            /* Reposition the performance page's controls */
+            AdjustCntrlPos(&hdwp, IDC_TOTALS_FRAME, hDlg, 0, nYDifference);
+            AdjustCntrlPos(&hdwp, IDC_COMMIT_CHARGE_FRAME, hDlg, 0, nYDifference);
+            AdjustCntrlPos(&hdwp, IDC_KERNEL_MEMORY_FRAME, hDlg, 0, nYDifference);
+            AdjustCntrlPos(&hdwp, IDC_PHYSICAL_MEMORY_FRAME, hDlg, 0, nYDifference);
+            AdjustCntrlPos(&hdwp, IDS_COMMIT_CHARGE_TOTAL, hDlg, 0, nYDifference);
+            AdjustCntrlPos(&hdwp, IDS_COMMIT_CHARGE_LIMIT, hDlg, 0, nYDifference);
+            AdjustCntrlPos(&hdwp, IDS_COMMIT_CHARGE_PEAK, hDlg, 0, nYDifference);
+            AdjustCntrlPos(&hdwp, IDS_KERNEL_MEMORY_TOTAL, hDlg, 0, nYDifference);
+            AdjustCntrlPos(&hdwp, IDS_KERNEL_MEMORY_PAGED, hDlg, 0, nYDifference);
+            AdjustCntrlPos(&hdwp, IDS_KERNEL_MEMORY_NONPAGED, hDlg, 0, nYDifference);
+            AdjustCntrlPos(&hdwp, IDS_PHYSICAL_MEMORY_TOTAL, hDlg, 0, nYDifference);
+            AdjustCntrlPos(&hdwp, IDS_PHYSICAL_MEMORY_AVAILABLE, hDlg, 0, nYDifference);
+            AdjustCntrlPos(&hdwp, IDS_PHYSICAL_MEMORY_SYSTEM_CACHE, hDlg, 0, nYDifference);
+            AdjustCntrlPos(&hdwp, IDS_TOTALS_HANDLE_COUNT, hDlg, 0, nYDifference);
+            AdjustCntrlPos(&hdwp, IDS_TOTALS_PROCESS_COUNT, hDlg, 0, nYDifference);
+            AdjustCntrlPos(&hdwp, IDS_TOTALS_THREAD_COUNT, hDlg, 0, nYDifference);
+
+            AdjustCntrlPos(&hdwp, IDC_COMMIT_CHARGE_TOTAL, hDlg, 0, nYDifference);
+            AdjustCntrlPos(&hdwp, IDC_COMMIT_CHARGE_LIMIT, hDlg, 0, nYDifference);
+            AdjustCntrlPos(&hdwp, IDC_COMMIT_CHARGE_PEAK, hDlg, 0, nYDifference);
+            AdjustCntrlPos(&hdwp, IDC_KERNEL_MEMORY_TOTAL, hDlg, 0, nYDifference);
+            AdjustCntrlPos(&hdwp, IDC_KERNEL_MEMORY_PAGED, hDlg, 0, nYDifference);
+            AdjustCntrlPos(&hdwp, IDC_KERNEL_MEMORY_NONPAGED, hDlg, 0, nYDifference);
+            AdjustCntrlPos(&hdwp, IDC_PHYSICAL_MEMORY_TOTAL, hDlg, 0, nYDifference);
+            AdjustCntrlPos(&hdwp, IDC_PHYSICAL_MEMORY_AVAILABLE, hDlg, 0, nYDifference);
+            AdjustCntrlPos(&hdwp, IDC_PHYSICAL_MEMORY_SYSTEM_CACHE, hDlg, 0, nYDifference);
+            AdjustCntrlPos(&hdwp, IDC_TOTALS_HANDLE_COUNT, hDlg, 0, nYDifference);
+            AdjustCntrlPos(&hdwp, IDC_TOTALS_THREAD_COUNT, hDlg, 0, nYDifference);
+            AdjustCntrlPos(&hdwp, IDC_TOTALS_PROCESS_COUNT, hDlg, 0, nYDifference);
 
             nXDifference += lastX;
             nYDifference += lastY;
@@ -215,14 +249,32 @@ PerformancePageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
                 }
             }
 
-            AdjustFrameSize(GetDlgItem(hDlg, IDC_CPU_USAGE_FRAME), hDlg, nXDifference, nYDifference, 1);
-            AdjustFrameSize(GetDlgItem(hDlg, IDC_MEM_USAGE_FRAME), hDlg, nXDifference, nYDifference, 2);
-            AdjustFrameSize(GetDlgItem(hDlg, IDC_CPU_USAGE_HISTORY_FRAME), hDlg, nXDifference, nYDifference, 3);
-            AdjustFrameSize(GetDlgItem(hDlg, IDC_MEMORY_USAGE_HISTORY_FRAME), hDlg, nXDifference, nYDifference, 4);
-            AdjustFrameSize(hCpuUsageGraph, hDlg, nXDifference, nYDifference, 1);
-            AdjustFrameSize(hMemUsageGraph, hDlg, nXDifference, nYDifference, 2);
-            AdjustFrameSize(hPerformancePageCpuUsageHistoryGraph, hDlg, nXDifference, nYDifference, 3);
-            AdjustFrameSize(hPerformancePageMemUsageHistoryGraph, hDlg, nXDifference, nYDifference, 4);
+            AdjustFrameSize(&hdwp, GetDlgItem(hDlg, IDC_CPU_USAGE_FRAME), hDlg, nXDifference, nYDifference, 1);
+            AdjustFrameSize(&hdwp, GetDlgItem(hDlg, IDC_MEM_USAGE_FRAME), hDlg, nXDifference, nYDifference, 2);
+            AdjustFrameSize(&hdwp, GetDlgItem(hDlg, IDC_CPU_USAGE_HISTORY_FRAME), hDlg, nXDifference, nYDifference, 3);
+            AdjustFrameSize(&hdwp, GetDlgItem(hDlg, IDC_MEMORY_USAGE_HISTORY_FRAME), hDlg, nXDifference, nYDifference, 4);
+            AdjustFrameSize(&hdwp, hCpuUsageGraph, hDlg, nXDifference, nYDifference, 1);
+            AdjustFrameSize(&hdwp, hMemUsageGraph, hDlg, nXDifference, nYDifference, 2);
+            AdjustFrameSize(&hdwp, hCpuUsageHistoryGraph, hDlg, nXDifference, nYDifference, 3);
+            AdjustFrameSize(&hdwp, hMemUsageHistoryGraph, hDlg, nXDifference, nYDifference, 4);
+
+            if (hdwp)
+                EndDeferWindowPos(hdwp);
+
+            /* Resize the graphs */
+            GetClientRect(hCpuUsageHistoryGraph, &rcClient);
+            GraphCtrl_OnSize(hCpuUsageHistoryGraph,
+                             &CpuUsageHistoryGraph,
+                             wParam,
+                             MAKELPARAM(rcClient.right - rcClient.left,
+                                        rcClient.bottom - rcClient.top));
+
+            GetClientRect(hMemUsageHistoryGraph, &rcClient);
+            GraphCtrl_OnSize(hMemUsageHistoryGraph,
+                             &MemUsageHistoryGraph,
+                             wParam,
+                             MAKELPARAM(rcClient.right - rcClient.left,
+                                        rcClient.bottom - rcClient.top));
 
             break;
         }
@@ -368,8 +420,8 @@ void RefreshPerformancePage(void)
      */
     nBarsUsed1 = CommitChargeLimit ? ((CommitChargeTotal * 100) / CommitChargeLimit) : 0;
     nBarsUsed2 = PhysicalMemoryTotal ? ((PhysicalMemoryAvailable * 100) / PhysicalMemoryTotal) : 0;
-    GraphCtrl_AddPoint(&PerformancePageCpuUsageHistoryGraph, CpuUsage, CpuKernelUsage);
-    GraphCtrl_AddPoint(&PerformancePageMemUsageHistoryGraph, nBarsUsed1, nBarsUsed2);
+    GraphCtrl_AddPoint(&CpuUsageHistoryGraph, CpuUsage, CpuKernelUsage);
+    GraphCtrl_AddPoint(&MemUsageHistoryGraph, nBarsUsed1, nBarsUsed2);
 
     /* Update the status bar */
     UpdatePerfStatusBar(TotalProcesses, CpuUsage, CommitChargeTotal, CommitChargeLimit);
@@ -382,8 +434,8 @@ void RefreshPerformancePage(void)
     InvalidateRect(hCpuUsageGraph, NULL, FALSE);
     InvalidateRect(hMemUsageGraph, NULL, FALSE);
 
-    InvalidateRect(hPerformancePageCpuUsageHistoryGraph, NULL, FALSE);
-    InvalidateRect(hPerformancePageMemUsageHistoryGraph, NULL, FALSE);
+    InvalidateRect(hCpuUsageHistoryGraph, NULL, FALSE);
+    InvalidateRect(hMemUsageHistoryGraph, NULL, FALSE);
 }
 
 void PerformancePage_OnViewShowKernelTimes(void)
@@ -399,16 +451,16 @@ void PerformancePage_OnViewShowKernelTimes(void)
     {
         CheckMenuItem(hViewMenu, ID_VIEW_SHOWKERNELTIMES, MF_BYCOMMAND|MF_UNCHECKED);
         TaskManagerSettings.ShowKernelTimes = FALSE;
-        PerformancePageCpuUsageHistoryGraph.DrawSecondaryPlot = FALSE;
+        CpuUsageHistoryGraph.DrawSecondaryPlot = FALSE;
     }
     else
     {
         CheckMenuItem(hViewMenu, ID_VIEW_SHOWKERNELTIMES, MF_BYCOMMAND|MF_CHECKED);
         TaskManagerSettings.ShowKernelTimes = TRUE;
-        PerformancePageCpuUsageHistoryGraph.DrawSecondaryPlot = TRUE;
+        CpuUsageHistoryGraph.DrawSecondaryPlot = TRUE;
     }
 
-    GraphCtrl_RedrawBitmap(&PerformancePageCpuUsageHistoryGraph, PerformancePageCpuUsageHistoryGraph.BitmapHeight);
+    GraphCtrl_RedrawBitmap(&CpuUsageHistoryGraph, CpuUsageHistoryGraph.BitmapHeight);
     RefreshPerformancePage();
 }
 

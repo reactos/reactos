@@ -9,10 +9,6 @@
 
 #include "precomp.h"
 
-#include <math.h>
-
-WNDPROC OldGraphCtrlWndProc;
-
 BOOL
 GraphCtrl_Create(PTM_GRAPH_CONTROL inst, HWND hWnd, HWND hParentWnd, PTM_FORMAT fmt)
 {
@@ -292,124 +288,38 @@ GraphCtrl_RedrawOnHeightChange(PTM_GRAPH_CONTROL inst, INT nh)
     GraphCtrl_RedrawBitmap(inst, nh);
 }
 
-extern TM_GRAPH_CONTROL PerformancePageCpuUsageHistoryGraph;
-extern TM_GRAPH_CONTROL PerformancePageMemUsageHistoryGraph;
-extern HWND hPerformancePageCpuUsageHistoryGraph;
-extern HWND hPerformancePageMemUsageHistoryGraph;
+INT_PTR CALLBACK
+GraphCtrl_OnSize(HWND hWnd, PTM_GRAPH_CONTROL graph, WPARAM wParam, LPARAM lParam)
+{
+#if 0
+    RECT rcClient;
+    GetClientRect(hWnd, &rcClient);
+    // rcClient.bottom - rcClient.top is the sought new height.
+#endif
+
+    if (HIWORD(lParam) != graph->BitmapHeight)
+    {
+        GraphCtrl_RedrawOnHeightChange(graph, HIWORD(lParam));
+    }
+    InvalidateRect(hWnd, NULL, FALSE);
+
+    return 0;
+}
 
 INT_PTR CALLBACK
-GraphCtrl_WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
+GraphCtrl_OnDraw(HWND hWnd, PTM_GRAPH_CONTROL graph, WPARAM wParam, LPARAM lParam)
 {
-    PTM_GRAPH_CONTROL graph;
+    RECT rcClient;
+    HDC  hdc = (HDC)wParam;
 
-    switch (message)
-    {
-        case WM_ERASEBKGND:
-            return TRUE;
-        /*
-         *  Filter out mouse  & keyboard messages
-         */
-        // case WM_APPCOMMAND:
-        case WM_CAPTURECHANGED:
-        case WM_LBUTTONDBLCLK:
-        case WM_LBUTTONDOWN:
-        case WM_LBUTTONUP:
-        case WM_MBUTTONDBLCLK:
-        case WM_MBUTTONDOWN:
-        case WM_MBUTTONUP:
-        case WM_MOUSEACTIVATE:
-        case WM_MOUSEHOVER:
-        case WM_MOUSELEAVE:
-        case WM_MOUSEMOVE:
-        // case WM_MOUSEWHEEL:
-        case WM_NCHITTEST:
-        case WM_NCLBUTTONDBLCLK:
-        case WM_NCLBUTTONDOWN:
-        case WM_NCLBUTTONUP:
-        case WM_NCMBUTTONDBLCLK:
-        case WM_NCMBUTTONDOWN:
-        case WM_NCMBUTTONUP:
-        // case WM_NCMOUSEHOVER:
-        // case WM_NCMOUSELEAVE:
-        case WM_NCMOUSEMOVE:
-        case WM_NCRBUTTONDBLCLK:
-        case WM_NCRBUTTONDOWN:
-        case WM_NCRBUTTONUP:
-        // case WM_NCXBUTTONDBLCLK:
-        // case WM_NCXBUTTONDOWN:
-        // case WM_NCXBUTTONUP:
-        case WM_RBUTTONDBLCLK:
-        case WM_RBUTTONDOWN:
-        case WM_RBUTTONUP:
-        // case WM_XBUTTONDBLCLK:
-        // case WM_XBUTTONDOWN:
-        // case WM_XBUTTONUP:
-        case WM_ACTIVATE:
-        case WM_CHAR:
-        case WM_DEADCHAR:
-        case WM_GETHOTKEY:
-        case WM_HOTKEY:
-        case WM_KEYDOWN:
-        case WM_KEYUP:
-        case WM_KILLFOCUS:
-        case WM_SETFOCUS:
-        case WM_SETHOTKEY:
-        case WM_SYSCHAR:
-        case WM_SYSDEADCHAR:
-        case WM_SYSKEYDOWN:
-        case WM_SYSKEYUP:
-            return 0;
+    GetClientRect(hWnd, &rcClient);
+    BitBlt(hdc, 0, 0,
+           rcClient.right,
+           rcClient.bottom,
+           graph->hdcGraph,
+           graph->BitmapWidth - rcClient.right,
+           0,
+           SRCCOPY);
 
-        case WM_NCCALCSIZE:
-            return 0;
-
-        case WM_SIZE:
-        {
-            if (hWnd == hPerformancePageCpuUsageHistoryGraph)
-                graph = &PerformancePageCpuUsageHistoryGraph;
-            else if (hWnd == hPerformancePageMemUsageHistoryGraph)
-                graph = &PerformancePageMemUsageHistoryGraph;
-            else
-                return 0;
-
-            if (HIWORD(lParam) != graph->BitmapHeight)
-            {
-                GraphCtrl_RedrawOnHeightChange(graph, HIWORD(lParam));
-            }
-            InvalidateRect(hWnd, NULL, FALSE);
-
-            return 0;
-        }
-
-        case WM_PAINT:
-        {
-            RECT        rcClient;
-            HDC         hdc;
-            PAINTSTRUCT ps;
-
-            if (hWnd == hPerformancePageCpuUsageHistoryGraph)
-                graph = &PerformancePageCpuUsageHistoryGraph;
-            else if (hWnd == hPerformancePageMemUsageHistoryGraph)
-                graph = &PerformancePageMemUsageHistoryGraph;
-            else
-                return 0;
-
-            hdc = BeginPaint(hWnd, &ps);
-            GetClientRect(hWnd, &rcClient);
-            BitBlt(hdc, 0, 0,
-                   rcClient.right,
-                   rcClient.bottom,
-                   graph->hdcGraph,
-                   graph->BitmapWidth - rcClient.right,
-                   0,
-                   SRCCOPY);
-            EndPaint(hWnd, &ps);
-            return 0;
-        }
-    }
-
-    /*
-     *  We pass on all non-handled messages
-     */
-    return CallWindowProcW(OldGraphCtrlWndProc, hWnd, message, wParam, lParam);
+    return 0;
 }
