@@ -710,6 +710,7 @@ static VOID BrsFolder_ShowContextMenu(browse_info *info, LPARAM lParam)
     RECT rc;
     TV_HITTESTINFO HitTest;
     SFGAOF rfg;
+    UINT code;
 
     pt.x = (SHORT)LOWORD(lParam);
     pt.y = (SHORT)HIWORD(lParam);
@@ -764,28 +765,32 @@ static VOID BrsFolder_ShowContextMenu(browse_info *info, LPARAM lParam)
     if (FAILED(hr))
         goto Quit;
 
-    // TODO: How to handle command ids?
-    EnableMenuItem(hMenu, FCIDM_SHVIEW_MOVETO, MF_GRAYED);
-    EnableMenuItem(hMenu, FCIDM_SHVIEW_COPYTO, MF_GRAYED);
-    EnableMenuItem(hMenu, FCIDM_SHVIEW_CREATELINK, MF_GRAYED);
+    code = HRESULT_CODE(hr);
+
+    // FIXME:
+    EnableMenuItem(hMenu, IDM_MOVETO, MF_GRAYED);
+    EnableMenuItem(hMenu, IDM_COPYTO, MF_GRAYED);
+    EnableMenuItem(hMenu, IDM_CREATELINK, MF_GRAYED);
     if (!(rfg & SFGAO_CANCOPY))
-        EnableMenuItem(hMenu, FCIDM_SHVIEW_COPY, MF_GRAYED);
+        EnableMenuItem(hMenu, IDM_COPY, MF_GRAYED);
     if (!(rfg & SFGAO_CANDELETE))
-        EnableMenuItem(hMenu, FCIDM_SHVIEW_DELETE, MF_GRAYED);
+        EnableMenuItem(hMenu, IDM_DELETE, MF_GRAYED);
     if (!(rfg & SFGAO_CANRENAME))
-        EnableMenuItem(hMenu, FCIDM_SHVIEW_RENAME, MF_GRAYED);
+        EnableMenuItem(hMenu, IDM_RENAME, MF_GRAYED);
     if (!(rfg & SFGAO_HASPROPSHEET))
-        EnableMenuItem(hMenu, FCIDM_SHVIEW_PROPERTIES, MF_GRAYED);
+        EnableMenuItem(hMenu, IDM_PROPERTIES, MF_GRAYED);
 
     SetForegroundWindow(info->hWnd);
     nID = TrackPopupMenu(hMenu, TPM_LEFTALIGN | TPM_RIGHTBUTTON | TPM_RETURNCMD,
                          pt.x, pt.y, 0, info->hWnd, NULL);
-
-    // TODO: How to handle command ids?
-    if (nID == FCIDM_SHVIEW_RENAME)
-        TreeView_EditLabel(info->hwndTreeView, item.hItem);
-    else
-        BrsFolder_ExecuteCommand(info->hwndTreeView, pContextMenu, nID);
+    if (nID)
+    {
+        ERR("nID: %u, %u, %u\n", nID, FCIDM_SHVIEW_RENAME, code);
+        if (nID == IDM_RENAME) // FIXME:
+            TreeView_EditLabel(info->hwndTreeView, item.hItem);
+        else
+            BrsFolder_ExecuteCommand(info->hwndTreeView, pContextMenu, nID);
+    }
 
 Quit:
     if (hMenu)
