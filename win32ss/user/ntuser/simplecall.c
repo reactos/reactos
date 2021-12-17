@@ -521,11 +521,14 @@ NtUserCallTwoParam(
                 {
                     co_WinPosSetWindowPos(pwndActive, HWND_BOTTOM, 0, 0, 0, 0,
                                           SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE |
-                                          SWP_NOSENDCHANGING | SWP_ASYNCWINDOWPOS);
+                                          SWP_ASYNCWINDOWPOS);
                 }
+
+                UserSetActiveWindow(Window);
+                break;
             }
 
-            UserSetActiveWindow(Window);
+            co_IntSetForegroundWindowMouse(Window);
 
             if (fAltTab && (Window->style & WS_MINIMIZE))
             {
