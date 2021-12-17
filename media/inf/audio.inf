@@ -36,7 +36,7 @@ ReactOS = "ReactOS Team"
 AUDIOClassName = "Audio & Videocontroller"
 
 [Strings.0404]
-AUDIOClassName = "音頻及視頻控制器"
+AUDIOClassName = "音訊及視訊控制器"
 
 [Strings.0405]
 AUDIOClassName = "Řadiče zvuku a obrazu"
@@ -76,3 +76,7 @@ AUDIOClassName = "Garso, vaizdo ir žaidimu irenginiai"
 
 [Strings.0804]
 AUDIOClassName = "音视频控制器"
+
+[Strings.0816]
+ReactOS = "Equipa ReactOS"
+AUDIOClassName = "Controladores de som, vídeo e jogos"

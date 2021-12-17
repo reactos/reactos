@@ -118,3 +118,11 @@ PnPMonitor.DeviceDesc = "Tak ve Çalıştır Monitör"
 StdMfg = "(标准监视器类型)"
 DefaultMonitor.DeviceDesc = "默认监视器"
 PnPMonitor.DeviceDesc = "即插即用监视器"
+
+[Strings.0816]
+ReactOS = "Equipa ReactOS"
+MonitorClassName = "Monitores"
+
+StdMfg = "(Monitores genéricos)"
+DefaultMonitor.DeviceDesc = "Monitor predefinido"
+PnPMonitor.DeviceDesc = "Monitor Plug and Play"

@@ -44,8 +44,8 @@ IF       Toplu iş dosyalarında şartlı eşleşmeyi gerçekleştirir.\n\
 LABEL    Bir diskin birim etiketini oluşturur, değiştirir ya da siler.\n\
 MD       Bir dizin oluşturur.\n\
 MKDIR    Bir dizin oluşturur.\n\
-MKLINK   Bir dosya dizisi bağlantı nesnesi oluşturur.\n\
-MOVE     Bir dizinden bir ya da daha çok dosyayı başka bir dizine taşır.\n\
+MKLINK   Bir dosya dizisi bağlantı nesnesi oluşturur.\n"
+	IDS_HELP2 "MOVE     Bir dizinden bir ya da daha çok dosyayı başka bir dizine taşır.\n\
 PATH     Çalıştırılabilir dosyalar için varsayılan arama yolunu görüntüler ya da\n\
          yeni bir arama yolu oluşturur.\n\
 PAUSE    Bir toplu iş dosyasında işlemeyi askıya alır ve bir ileti görüntüler.\n\
@@ -62,8 +62,8 @@ RMDIR    Bir dizin siler.\n\
 SCREEN   İmleci taşır ve isteğe bağlı olarak olarak metin yazdır.\n\
 SET      ReactOS çevresel değişkenlerini görüntüler, ayarlar ya da kaldırır.\n\
 SHIFT    Toplu iş dosyalarındaki yerine konulabilir değişkenlerin konumunu\n\
-         değiştirir.\n"
-    IDS_HELP2 "START    Belirtilen bir programı ya da komutu çalıştırmak için ayrı bir\n\
+         değiştirir.\n\
+START    Belirtilen bir programı ya da komutu çalıştırmak için ayrı bir\n\
          pencere başlatır.\n\
          Komut çalıştırır.\n\
 TIME     Sistem saatini görüntüler ya da ayarlar.\n\

@@ -36,7 +36,7 @@ NTSTATUS
 EngpUpdateGraphicsDeviceList(VOID)
 {
     ULONG iDevNum, iVGACompatible = -1, ulMaxObjectNumber = 0;
-    WCHAR awcDeviceName[20];
+    WCHAR awcDeviceName[20], awcWinDeviceName[20];
     UNICODE_STRING ustrDeviceName;
     WCHAR awcBuffer[256];
     NTSTATUS Status;
@@ -74,7 +74,10 @@ EngpUpdateGraphicsDeviceList(VOID)
     {
         /* Create the adapter's key name */
         swprintf(awcDeviceName, L"\\Device\\Video%lu", iDevNum);
-        RtlInitUnicodeString(&ustrDeviceName, awcDeviceName);
+
+        /* Create the display device name */
+        swprintf(awcWinDeviceName, L"\\\\.\\DISPLAY%lu", iDevNum + 1);
+        RtlInitUnicodeString(&ustrDeviceName, awcWinDeviceName);
 
         /* Check if the device exists already */
         pGraphicsDevice = EngpFindGraphicsDevice(&ustrDeviceName, iDevNum, 0);

@@ -31,7 +31,7 @@ AddPenLinesBounds(PDC dc, int count, POINT *points)
     bounds.left = bounds.top = INT_MAX;
     bounds.right = bounds.bottom = INT_MIN;
 
-    if (((pbrLine->ulPenStyle & PS_TYPE_MASK) & PS_GEOMETRIC) || (pbrLine->lWidth > 1))
+    if (((pbrLine->ulPenStyle & PS_TYPE_MASK) & PS_GEOMETRIC) || pbrLine->lWidth > 1)
     {
         /* Windows uses some heuristics to estimate the distance from the point that will be painted */
         lWidth = pbrLine->lWidth + 2;
@@ -152,8 +152,12 @@ IntGdiLineTo(DC  *dc,
     PBRUSH pbrLine;
     RECTL     Bounds;
     POINT     Points[2];
-    PDC_ATTR pdcattr = dc->pdcattr;
+    PDC_ATTR  pdcattr;
+    PPATH     pPath;
+
     ASSERT_DC_PREPARED(dc);
+
+    pdcattr = dc->pdcattr;
 
     if (PATH_IsPathOpen(dc->dclevel))
     {
@@ -199,15 +203,45 @@ IntGdiLineTo(DC  *dc,
 
         if (!(pbrLine->flAttrs & BR_IS_NULL))
         {
-            Ret = IntEngLineTo(&psurf->SurfObj,
-                               (CLIPOBJ *)&dc->co,
-                               &dc->eboLine.BrushObject,
-                               Points[0].x, Points[0].y,
-                               Points[1].x, Points[1].y,
-                               &Bounds,
-                               ROP2_TO_MIX(pdcattr->jROP2));
-        }
+            if (IntIsEffectiveWidePen(pbrLine))
+            {
+                /* Clear the path */
+                PATH_Delete(dc->dclevel.hPath);
+                dc->dclevel.hPath = NULL;
 
+                /* Begin a path */
+                pPath = PATH_CreatePath(2);
+                dc->dclevel.flPath |= DCPATH_ACTIVE;
+                dc->dclevel.hPath = pPath->BaseObject.hHmgr;
+                IntGetCurrentPositionEx(dc, &pPath->pos);
+                IntLPtoDP(dc, &pPath->pos, 1);
+
+                PATH_MoveTo(dc, pPath);
+                PATH_LineTo(dc, XEnd, YEnd);
+
+                /* Close the path */
+                pPath->state = PATH_Closed;
+                dc->dclevel.flPath &= ~DCPATH_ACTIVE;
+
+                /* Actually stroke a path */
+                Ret = PATH_StrokePath(dc, pPath);
+
+                /* Clear the path */
+                PATH_UnlockPath(pPath);
+                PATH_Delete(dc->dclevel.hPath);
+                dc->dclevel.hPath = NULL;
+            }
+            else
+            {
+                Ret = IntEngLineTo(&psurf->SurfObj,
+                                   (CLIPOBJ *)&dc->co,
+                                   &dc->eboLine.BrushObject,
+                                   Points[0].x, Points[0].y,
+                                   Points[1].x, Points[1].y,
+                                   &Bounds,
+                                   ROP2_TO_MIX(pdcattr->jROP2));
+            }
+        }
     }
 
     if (Ret)
@@ -298,6 +332,7 @@ IntGdiPolyline(DC      *dc,
     BOOL Ret = TRUE;
     LONG i;
     PDC_ATTR pdcattr = dc->pdcattr;
+    PPATH pPath;
 
     if (!dc->dclevel.pSurface)
     {
@@ -331,13 +366,46 @@ IntGdiPolyline(DC      *dc,
                AddPenLinesBounds(dc, Count, Points);
             }
 
-            Ret = IntEngPolyline(&psurf->SurfObj,
-                                 (CLIPOBJ *)&dc->co,
-                                 &dc->eboLine.BrushObject,
-                                 Points,
-                                 Count,
-                                 ROP2_TO_MIX(pdcattr->jROP2));
+            if (IntIsEffectiveWidePen(pbrLine))
+            {
+                /* Clear the path */
+                PATH_Delete(dc->dclevel.hPath);
+                dc->dclevel.hPath = NULL;
 
+                /* Begin a path */
+                pPath = PATH_CreatePath(Count);
+                dc->dclevel.flPath |= DCPATH_ACTIVE;
+                dc->dclevel.hPath = pPath->BaseObject.hHmgr;
+                pPath->pos = pt[0];
+                IntLPtoDP(dc, &pPath->pos, 1);
+
+                PATH_MoveTo(dc, pPath);
+                for (i = 1; i < Count; ++i)
+                {
+                    PATH_LineTo(dc, pt[i].x, pt[i].y);
+                }
+
+                /* Close the path */
+                pPath->state = PATH_Closed;
+                dc->dclevel.flPath &= ~DCPATH_ACTIVE;
+
+                /* Actually stroke a path */
+                Ret = PATH_StrokePath(dc, pPath);
+
+                /* Clear the path */
+                PATH_UnlockPath(pPath);
+                PATH_Delete(dc->dclevel.hPath);
+                dc->dclevel.hPath = NULL;
+            }
+            else
+            {
+                Ret = IntEngPolyline(&psurf->SurfObj,
+                                     (CLIPOBJ *)&dc->co,
+                                     &dc->eboLine.BrushObject,
+                                     Points,
+                                     Count,
+                                     ROP2_TO_MIX(pdcattr->jROP2));
+            }
             EngFreeMem(Points);
         }
         else

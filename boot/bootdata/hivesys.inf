@@ -50,6 +50,9 @@ HKLM,"SYSTEM\CurrentControlSet\Control\CriticalDeviceDatabase\USB#Class_08&SubCl
 HKLM,"SYSTEM\CurrentControlSet\Control\CriticalDeviceDatabase\USB#Class_08&SubClass_02&Prot_50","Service",0x00000000,"usbstor"
 HKLM,"SYSTEM\CurrentControlSet\Control\CriticalDeviceDatabase\USB#Class_08&SubClass_02&Prot_50","ClassGUID",0x00000000,"{36FC9E60-C465-11CF-8056-444553540000}"
 
+HKLM,"SYSTEM\CurrentControlSet\Control\CriticalDeviceDatabase\USB#Class_08&SubClass_05&Prot_50","Service",0x00000000,"usbstor"
+HKLM,"SYSTEM\CurrentControlSet\Control\CriticalDeviceDatabase\USB#Class_08&SubClass_05&Prot_50","ClassGUID",0x00000000,"{36FC9E60-C465-11CF-8056-444553540000}"
+
 HKLM,"SYSTEM\CurrentControlSet\Control\CriticalDeviceDatabase\USB#COMPOSITE","Service",0x00000000,"usbccgp"
 HKLM,"SYSTEM\CurrentControlSet\Control\CriticalDeviceDatabase\USB#COMPOSITE","ClassGUID",0x00000000,"{36FC9E60-C465-11CF-8056-444553540000}"
 
@@ -2072,20 +2075,6 @@ HKLM,"SYSTEM\CurrentControlSet\Services\WlanSvc","ObjectName",0x00000000,"LocalS
 HKLM,"SYSTEM\CurrentControlSet\Services\WlanSvc","Start",0x00010001,0x00000002
 HKLM,"SYSTEM\CurrentControlSet\Services\WlanSvc","Type",0x00010001,0x00000110
 
-; W32TIME service
-HKLM,"SYSTEM\CurrentControlSet\Services\W32Time","DisplayName",0x00000000,%W32TIME_SERVICE%
-HKLM,"SYSTEM\CurrentControlSet\Services\W32Time","Description",0x00000000,%W32TIME_SERVICE_DESCRIPTION%
-HKLM,"SYSTEM\CurrentControlSet\Services\W32Time","ErrorControl",0x00010001,0x00000001
-HKLM,"SYSTEM\CurrentControlSet\Services\W32Time","Group",0x00000000,"Time"
-HKLM,"SYSTEM\CurrentControlSet\Services\W32Time","ImagePath",0x00020000,"%SystemRoot%\system32\svchost.exe -k netsvcs"
-HKLM,"SYSTEM\CurrentControlSet\Services\W32Time","ObjectName",0x00000000,"LocalSystem"
-HKLM,"SYSTEM\CurrentControlSet\Services\W32Time","Start",0x00010001,0x00000002
-HKLM,"SYSTEM\CurrentControlSet\Services\W32Time","Type",0x00010001,0x00000020
-HKLM,"SYSTEM\CurrentControlSet\Services\W32Time\Parameters","ServiceDll",0x00020000,"%SystemRoot%\system32\w32time.dll"
-HKLM,"SYSTEM\CurrentControlSet\Services\W32Time\Parameters","ServiceMain",0x00000000,"SvchostEntry_W32Time"
-HKLM,"SYSTEM\CurrentControlSet\Services\W32Time\Parameters","Type",0x00010000,"NTP"
-HKLM,"SYSTEM\CurrentControlSet\Services\W32Time\TimeProviders\NtpClient","SpecialPollInterval",0x00010001,0x00093a80
-
 ; Simple TCP services
 HKLM,"SYSTEM\CurrentControlSet\Services\tcpsvcs","Description",0x00000000,%TCPSVCS_SERVICE_DECRIPTION%
 HKLM,"SYSTEM\CurrentControlSet\Services\tcpsvcs","DisplayName",0x00000000,%TCPSVCS_SERVICE%
@@ -2317,9 +2306,6 @@ WINMGMT_SERVICE_DESCRIPTION="Provides interface to system management information
 WLANSVC_SERVICE="WLAN Service"
 WLANSVC_SERVICE_DESCRIPTION="WLAN Service"
 
-W32TIME_SERVICE="Time Service"
-W32TIME_SERVICE_DESCRIPTION="ReactOS Time Service"
-
 WORKSTATION_SERVICE="Workstation"
 WORKSTATION_SERVICE_DESCRIPTION="Responsible for creating and maintaining network connections to servers."
 
@@ -2473,9 +2459,6 @@ WINMGMT_SERVICE_DESCRIPTION="Dostarcza interfejs w celu uzyskiwania dostępu do 
 
 WLANSVC_SERVICE="Usługa WLAN"
 WLANSVC_SERVICE_DESCRIPTION="Usługa WLAN"
-
-W32TIME_SERVICE="Usługa Czas"
-W32TIME_SERVICE_DESCRIPTION="Usługa Czas systemu ReactOS"
 
 WORKSTATION_SERVICE="Stacja robocza"
 WORKSTATION_SERVICE_DESCRIPTION="Tworzy i zachowuje połączenia sieciowe klientów z serwerami."
@@ -2936,9 +2919,6 @@ WINMGMT_SERVICE_DESCRIPTION="Proporciona una interfaz para la gestión de la inf
 WLANSVC_SERVICE="Servicio de WLAN"
 WLANSVC_SERVICE_DESCRIPTION="Servicio de redes inalámbricas WLAN."
 
-W32TIME_SERVICE="Servicio de hora"
-W32TIME_SERVICE_DESCRIPTION="Servicio de hora para ReactOS"
-
 WORKSTATION_SERVICE="Estación de trabajo"
 WORKSTATION_SERVICE_DESCRIPTION="Es el responsable de crear y mantener las conexiones de redes LAN a los servidores."
 
@@ -3091,9 +3071,6 @@ WINMGMT_SERVICE_DESCRIPTION="Sistem yönetim bilgisine arayüz sağlar."
 
 WLANSVC_SERVICE="WLAN Hizmeti"
 WLANSVC_SERVICE_DESCRIPTION="WLAN Hizmeti"
-
-W32TIME_SERVICE="Zaman Hizmeti"
-W32TIME_SERVICE_DESCRIPTION="ReactOS Zaman Hizmeti"
 
 WORKSTATION_SERVICE="İş İstasyonu"
 WORKSTATION_SERVICE_DESCRIPTION="Sunuculara ağ bağlantılarını oluşturmaktan ve yönetmekten sorumludur."

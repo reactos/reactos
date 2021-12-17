@@ -15,15 +15,13 @@ typedef struct _DynamicShellEntry_
     UINT iIdCmdFirst;
     UINT NumIds;
     CLSID ClassID;
-    IContextMenu *pCM;
-    struct _DynamicShellEntry_ *pNext;
+    CComPtr<IContextMenu> pCM;
 } DynamicShellEntry, *PDynamicShellEntry;
 
 typedef struct _StaticShellEntry_
 {
-    LPWSTR szVerb;
+    CStringW Verb;
     HKEY hkClass;
-    struct _StaticShellEntry_ *pNext;
 } StaticShellEntry, *PStaticShellEntry;
 
 
@@ -69,10 +67,10 @@ class CDefaultContextMenu :
         UINT m_cKeys;
         PIDLIST_ABSOLUTE m_pidlFolder;
         DWORD m_bGroupPolicyActive;
-        PDynamicShellEntry m_pDynamicEntries; /* first dynamic shell extension entry */
+        CAtlList<DynamicShellEntry> m_DynamicEntries;
         UINT m_iIdSHEFirst; /* first used id */
         UINT m_iIdSHELast; /* last used id */
-        PStaticShellEntry m_pStaticEntries; /* first static shell extension entry */
+        CAtlList<StaticShellEntry> m_StaticEntries;
         UINT m_iIdSCMFirst; /* first static used id */
         UINT m_iIdSCMLast; /* last static used id */
         UINT m_iIdCBFirst; /* first callback used id */
@@ -83,8 +81,8 @@ class CDefaultContextMenu :
         HRESULT _DoCallback(UINT uMsg, WPARAM wParam, LPVOID lParam);
         void AddStaticEntry(const HKEY hkeyClass, const WCHAR *szVerb);
         void AddStaticEntriesForKey(HKEY hKey);
-        BOOL IsShellExtensionAlreadyLoaded(const CLSID *pclsid);
-        HRESULT LoadDynamicContextMenuHandler(HKEY hKey, const CLSID *pclsid);
+        BOOL IsShellExtensionAlreadyLoaded(REFCLSID clsid);
+        HRESULT LoadDynamicContextMenuHandler(HKEY hKey, REFCLSID clsid);
         BOOL EnumerateDynamicContextHandlerForKey(HKEY hRootKey);
         UINT AddShellExtensionsToMenu(HMENU hMenu, UINT* pIndexMenu, UINT idCmdFirst, UINT idCmdLast);
         UINT AddStaticContextMenusToMenu(HMENU hMenu, UINT* IndexMenu, UINT iIdCmdFirst, UINT iIdCmdLast);
@@ -145,41 +143,21 @@ CDefaultContextMenu::CDefaultContextMenu() :
     m_cKeys(NULL),
     m_pidlFolder(NULL),
     m_bGroupPolicyActive(0),
-    m_pDynamicEntries(NULL),
     m_iIdSHEFirst(0),
     m_iIdSHELast(0),
-    m_pStaticEntries(NULL),
     m_iIdSCMFirst(0),
     m_iIdSCMLast(0),
     m_iIdCBFirst(0),
     m_iIdCBLast(0),
     m_iIdDfltFirst(0),
     m_iIdDfltLast(0)
-
 {
 }
 
 CDefaultContextMenu::~CDefaultContextMenu()
 {
-    /* Free dynamic shell extension entries */
-    PDynamicShellEntry pDynamicEntry = m_pDynamicEntries, pNextDynamic;
-    while (pDynamicEntry)
-    {
-        pNextDynamic = pDynamicEntry->pNext;
-        pDynamicEntry->pCM->Release();
-        HeapFree(GetProcessHeap(), 0, pDynamicEntry);
-        pDynamicEntry = pNextDynamic;
-    }
-
-    /* Free static shell extension entries */
-    PStaticShellEntry pStaticEntry = m_pStaticEntries, pNextStatic;
-    while (pStaticEntry)
-    {
-        pNextStatic = pStaticEntry->pNext;
-        HeapFree(GetProcessHeap(), 0, pStaticEntry->szVerb);
-        HeapFree(GetProcessHeap(), 0, pStaticEntry);
-        pStaticEntry = pNextStatic;
-    }
+    m_DynamicEntries.RemoveAll();
+    m_StaticEntries.RemoveAll();
 
     for (UINT i = 0; i < m_cKeys; i++)
         RegCloseKey(m_aKeys[i]);
@@ -253,40 +231,28 @@ HRESULT CDefaultContextMenu::_DoCallback(UINT uMsg, WPARAM wParam, LPVOID lParam
 
 void CDefaultContextMenu::AddStaticEntry(const HKEY hkeyClass, const WCHAR *szVerb)
 {
-    PStaticShellEntry pEntry = m_pStaticEntries, pLastEntry = NULL;
-    while(pEntry)
+    POSITION it = m_StaticEntries.GetHeadPosition();
+    while (it != NULL)
     {
-        if (!wcsicmp(pEntry->szVerb, szVerb))
+        const StaticShellEntry& info = m_StaticEntries.GetNext(it);
+        if (info.Verb.CompareNoCase(szVerb) == 0)
         {
             /* entry already exists */
             return;
         }
-        pLastEntry = pEntry;
-        pEntry = pEntry->pNext;
     }
 
     TRACE("adding verb %s\n", debugstr_w(szVerb));
 
-    pEntry = (StaticShellEntry *)HeapAlloc(GetProcessHeap(), 0, sizeof(StaticShellEntry));
-    if (pEntry)
-    {
-        pEntry->pNext = NULL;
-        pEntry->szVerb = (LPWSTR)HeapAlloc(GetProcessHeap(), 0, (wcslen(szVerb) + 1) * sizeof(WCHAR));
-        if (pEntry->szVerb)
-            wcscpy(pEntry->szVerb, szVerb);
-        pEntry->hkClass = hkeyClass;
-    }
-
     if (!wcsicmp(szVerb, L"open"))
     {
         /* open verb is always inserted in front */
-        pEntry->pNext = m_pStaticEntries;
-        m_pStaticEntries = pEntry;
+        m_StaticEntries.AddHead({ szVerb, hkeyClass });
     }
-    else if (pLastEntry)
-        pLastEntry->pNext = pEntry;
     else
-        m_pStaticEntries = pEntry;
+    {
+        m_StaticEntries.AddTail({ szVerb, hkeyClass });
+    }
 }
 
 void CDefaultContextMenu::AddStaticEntriesForKey(HKEY hKey)
@@ -333,35 +299,33 @@ HasClipboardData()
 }
 
 BOOL
-CDefaultContextMenu::IsShellExtensionAlreadyLoaded(const CLSID *pclsid)
+CDefaultContextMenu::IsShellExtensionAlreadyLoaded(REFCLSID clsid)
 {
-    PDynamicShellEntry pEntry = m_pDynamicEntries;
-
-    while (pEntry)
+    POSITION it = m_DynamicEntries.GetHeadPosition();
+    while (it != NULL)
     {
-        if (!memcmp(&pEntry->ClassID, pclsid, sizeof(CLSID)))
+        const DynamicShellEntry& info = m_DynamicEntries.GetNext(it);
+        if (info.ClassID == clsid)
             return TRUE;
-        pEntry = pEntry->pNext;
     }
 
     return FALSE;
 }
 
 HRESULT
-CDefaultContextMenu::LoadDynamicContextMenuHandler(HKEY hKey, const CLSID *pclsid)
+CDefaultContextMenu::LoadDynamicContextMenuHandler(HKEY hKey, REFCLSID clsid)
 {
     HRESULT hr;
+    TRACE("LoadDynamicContextMenuHandler entered with This %p hKey %p pclsid %s\n", this, hKey, wine_dbgstr_guid(&clsid));
 
-    TRACE("LoadDynamicContextMenuHandler entered with This %p hKey %p pclsid %s\n", this, hKey, wine_dbgstr_guid(pclsid));
-
-    if (IsShellExtensionAlreadyLoaded(pclsid))
+    if (IsShellExtensionAlreadyLoaded(clsid))
         return S_OK;
 
     CComPtr<IContextMenu> pcm;
-    hr = SHCoCreateInstance(NULL, pclsid, NULL, IID_PPV_ARG(IContextMenu, &pcm));
+    hr = SHCoCreateInstance(NULL, &clsid, NULL, IID_PPV_ARG(IContextMenu, &pcm));
     if (FAILED(hr))
     {
-        ERR("SHCoCreateInstance(IContextMenu) failed.clsid %s hr 0x%x\n", wine_dbgstr_guid(pclsid), hr);
+        ERR("SHCoCreateInstance(IContextMenu) failed.clsid %s hr 0x%x\n", wine_dbgstr_guid(&clsid), hr);
         return hr;
     }
 
@@ -369,41 +333,21 @@ CDefaultContextMenu::LoadDynamicContextMenuHandler(HKEY hKey, const CLSID *pclsi
     hr = pcm->QueryInterface(IID_PPV_ARG(IShellExtInit, &pExtInit));
     if (FAILED(hr))
     {
-        ERR("IContextMenu->QueryInterface(IShellExtInit) failed.clsid %s hr 0x%x\n", wine_dbgstr_guid(pclsid), hr);
+        ERR("IContextMenu->QueryInterface(IShellExtInit) failed.clsid %s hr 0x%x\n", wine_dbgstr_guid(&clsid), hr);
         return hr;
     }
 
     hr = pExtInit->Initialize(m_pidlFolder, m_pDataObj, hKey);
     if (FAILED(hr))
     {
-        WARN("IShellExtInit::Initialize failed.clsid %s hr 0x%x\n", wine_dbgstr_guid(pclsid), hr);
+        WARN("IShellExtInit::Initialize failed.clsid %s hr 0x%x\n", wine_dbgstr_guid(&clsid), hr);
         return hr;
     }
 
     if (m_site)
         IUnknown_SetSite(pcm, m_site);
 
-    PDynamicShellEntry pEntry = (DynamicShellEntry *)HeapAlloc(GetProcessHeap(), 0, sizeof(DynamicShellEntry));
-    if (!pEntry)
-        return E_OUTOFMEMORY;
-
-    pEntry->iIdCmdFirst = 0;
-    pEntry->pNext = NULL;
-    pEntry->NumIds = 0;
-    pEntry->pCM = pcm.Detach();
-    memcpy(&pEntry->ClassID, pclsid, sizeof(CLSID));
-
-    if (m_pDynamicEntries)
-    {
-        PDynamicShellEntry pLastEntry = m_pDynamicEntries;
-
-        while (pLastEntry->pNext)
-            pLastEntry = pLastEntry->pNext;
-
-        pLastEntry->pNext = pEntry;
-    }
-    else
-        m_pDynamicEntries = pEntry;
+    m_DynamicEntries.AddTail({ 0, 0, clsid, pcm });
 
     return S_OK;
 }
@@ -463,7 +407,7 @@ CDefaultContextMenu::EnumerateDynamicContextHandlerForKey(HKEY hRootKey)
             }
         }
 
-        hr = LoadDynamicContextMenuHandler(hKey, &clsid);
+        hr = LoadDynamicContextMenuHandler(hKey, clsid);
         if (FAILED(hr))
             WARN("Failed to get context menu entires from shell extension! clsid: %S\n", pwszClsid);
     }
@@ -477,27 +421,27 @@ CDefaultContextMenu::AddShellExtensionsToMenu(HMENU hMenu, UINT* pIndexMenu, UIN
 {
     UINT cIds = 0;
 
-    if (!m_pDynamicEntries)
+    if (m_DynamicEntries.IsEmpty())
         return cIds;
 
-    PDynamicShellEntry pEntry = m_pDynamicEntries;
-    do
+    POSITION it = m_DynamicEntries.GetHeadPosition();
+    while (it != NULL)
     {
-        HRESULT hr = pEntry->pCM->QueryContextMenu(hMenu, *pIndexMenu, idCmdFirst + cIds, idCmdLast, CMF_NORMAL);
+        DynamicShellEntry& info = m_DynamicEntries.GetNext(it);
+
+        HRESULT hr = info.pCM->QueryContextMenu(hMenu, *pIndexMenu, idCmdFirst + cIds, idCmdLast, CMF_NORMAL);
         if (SUCCEEDED(hr))
         {
-            pEntry->iIdCmdFirst = cIds;
-            pEntry->NumIds = LOWORD(hr);
-            (*pIndexMenu) += pEntry->NumIds;
+            info.iIdCmdFirst = cIds;
+            info.NumIds = LOWORD(hr);
+            (*pIndexMenu) += info.NumIds;
 
-            cIds += pEntry->NumIds;
-            if(idCmdFirst + cIds >= idCmdLast)
+            cIds += info.NumIds;
+            if (idCmdFirst + cIds >= idCmdLast)
                 break;
         }
-        TRACE("pEntry %p hr %x contextmenu %p cmdfirst %x num ids %x\n", pEntry, hr, pEntry->pCM, pEntry->iIdCmdFirst, pEntry->NumIds);
-        pEntry = pEntry->pNext;
-    } while (pEntry);
-
+        TRACE("pEntry hr %x contextmenu %p cmdfirst %x num ids %x\n", hr, info.pCM.p, info.iIdCmdFirst, info.NumIds);
+    }
     return cIds;
 }
 
@@ -519,50 +463,53 @@ CDefaultContextMenu::AddStaticContextMenusToMenu(
     mii.fType = MFT_STRING;
     mii.dwTypeData = NULL;
 
-    PStaticShellEntry pEntry = m_pStaticEntries;
-
-    while (pEntry)
+    POSITION it = m_StaticEntries.GetHeadPosition();
+    bool first = true;
+    while (it != NULL)
     {
+        StaticShellEntry& info = m_StaticEntries.GetNext(it);
+
         fState = MFS_ENABLED;
         mii.dwTypeData = NULL;
 
         /* set first entry as default */
-        if (pEntry == m_pStaticEntries)
+        if (first)
+        {
             fState |= MFS_DEFAULT;
+            first = false;
+        }
 
-        if (!wcsicmp(pEntry->szVerb, L"open"))
+        if (info.Verb.CompareNoCase(L"open") == 0)
         {
             /* override default when open verb is found */
             fState |= MFS_DEFAULT;
             idResource = IDS_OPEN_VERB;
         }
-        else if (!wcsicmp(pEntry->szVerb, L"explore"))
+        else if (info.Verb.CompareNoCase(L"explore") == 0)
             idResource = IDS_EXPLORE_VERB;
-        else if (!wcsicmp(pEntry->szVerb, L"runas"))
+        else if (info.Verb.CompareNoCase(L"runas") == 0)
             idResource = IDS_RUNAS_VERB;
-        else if (!wcsicmp(pEntry->szVerb, L"edit"))
+        else if (info.Verb.CompareNoCase(L"edit") == 0)
             idResource = IDS_EDIT_VERB;
-        else if (!wcsicmp(pEntry->szVerb, L"find"))
+        else if (info.Verb.CompareNoCase(L"find") == 0)
             idResource = IDS_FIND_VERB;
-        else if (!wcsicmp(pEntry->szVerb, L"print"))
+        else if (info.Verb.CompareNoCase(L"print") == 0)
             idResource = IDS_PRINT_VERB;
-        else if (!wcsicmp(pEntry->szVerb, L"printto"))
+        else if (info.Verb.CompareNoCase(L"printto") == 0)
         {
-            pEntry = pEntry->pNext;
             continue;
         }
         else
             idResource = 0;
 
         /* By default use verb for menu item name */
-        mii.dwTypeData = pEntry->szVerb;
+        mii.dwTypeData = (LPWSTR)info.Verb.GetString();
 
         WCHAR wszKey[256];
         HRESULT hr;
-        hr = StringCbPrintfW(wszKey, sizeof(wszKey), L"shell\\%s", pEntry->szVerb);
+        hr = StringCbPrintfW(wszKey, sizeof(wszKey), L"shell\\%s", info.Verb.GetString());
         if (FAILED_UNEXPECTEDLY(hr))
         {
-            pEntry = pEntry->pNext;
             continue;
         }
 
@@ -575,7 +522,7 @@ CDefaultContextMenu::AddStaticContextMenusToMenu(
             else
                 ERR("Failed to load string\n");
 
-            LONG res = RegOpenKeyW(pEntry->hkClass, wszKey, &hkVerb);
+            LONG res = RegOpenKeyW(info.hkClass, wszKey, &hkVerb);
             if (res == ERROR_SUCCESS)
             {
                 res = RegQueryValueExW(hkVerb, L"Extended", NULL, NULL, NULL, NULL);
@@ -586,7 +533,7 @@ CDefaultContextMenu::AddStaticContextMenusToMenu(
         }
         else
         {
-            LONG res = RegOpenKeyW(pEntry->hkClass, wszKey, &hkVerb);
+            LONG res = RegOpenKeyW(info.hkClass, wszKey, &hkVerb);
             if (res == ERROR_SUCCESS)
             {
                 DWORD cbVerb = sizeof(wszVerb);
@@ -613,8 +560,6 @@ CDefaultContextMenu::AddStaticContextMenusToMenu(
             (*pIndexMenu)++;
             cIds++;
         }
-
-        pEntry = pEntry->pNext;
 
         if (mii.wID >= iIdCmdLast)
             break;
@@ -1001,18 +946,21 @@ CDefaultContextMenu::DoCreateNewFolder(
 
 PDynamicShellEntry CDefaultContextMenu::GetDynamicEntry(UINT idCmd)
 {
-    PDynamicShellEntry pEntry = m_pDynamicEntries;
+    POSITION it = m_DynamicEntries.GetHeadPosition();
+    while (it != NULL)
+    {
+        DynamicShellEntry& info = m_DynamicEntries.GetNext(it);
 
-    while(pEntry && idCmd >= pEntry->iIdCmdFirst + pEntry->NumIds)
-        pEntry = pEntry->pNext;
+        if (idCmd >= info.iIdCmdFirst + info.NumIds)
+            continue;
 
-    if (!pEntry)
-        return NULL;
+        if (idCmd < info.iIdCmdFirst || idCmd > info.iIdCmdFirst + info.NumIds)
+            return NULL;
 
-    if (idCmd < pEntry->iIdCmdFirst || idCmd > pEntry->iIdCmdFirst + pEntry->NumIds)
-        return NULL;
+        return &info;
+    }
 
-    return pEntry;
+    return NULL;
 }
 
 // FIXME: 260 is correct, but should this be part of the SDK or just MAX_PATH?
@@ -1093,7 +1041,7 @@ CDefaultContextMenu::BrowserFlagsFromVerb(LPCMINVOKECOMMANDINFO lpcmi, PStaticSh
         FlagsName = L"BrowserFlags";
 
     /* Try to get the flag from the verb */
-    hr = StringCbPrintfW(wszKey, sizeof(wszKey), L"shell\\%s", pEntry->szVerb);
+    hr = StringCbPrintfW(wszKey, sizeof(wszKey), L"shell\\%s", pEntry->Verb.GetString());
     if (FAILED_UNEXPECTEDLY(hr))
         return 0;
 
@@ -1152,7 +1100,7 @@ CDefaultContextMenu::InvokePidl(LPCMINVOKECOMMANDINFO lpcmi, LPCITEMIDLIST pidl,
     sei.cbSize = sizeof(sei);
     sei.hwnd = lpcmi->hwnd;
     sei.nShow = SW_SHOWNORMAL;
-    sei.lpVerb = pEntry->szVerb;
+    sei.lpVerb = pEntry->Verb;
     sei.lpDirectory = wszDir;
     sei.lpIDList = pidlFull;
     sei.hkeyClass = pEntry->hkClass;
@@ -1173,16 +1121,16 @@ HRESULT
 CDefaultContextMenu::InvokeRegVerb(
     LPCMINVOKECOMMANDINFO lpcmi)
 {
-    PStaticShellEntry pEntry = m_pStaticEntries;
-    INT iCmd = LOWORD(lpcmi->lpVerb) - m_iIdSCMFirst;
+    INT iCmd = LOWORD(lpcmi->lpVerb);
     HRESULT hr;
     UINT i;
 
-    while (pEntry && (iCmd--) > 0)
-        pEntry = pEntry->pNext;
+    POSITION it = m_StaticEntries.FindIndex(iCmd);
 
-    if (iCmd > 0)
-        return E_FAIL;
+    if (it == NULL)
+        return E_INVALIDARG;
+
+    PStaticShellEntry pEntry = &m_StaticEntries.GetAt(it);
 
     /* Get the browse flags to see if we need to browse */
     DWORD wFlags = BrowserFlagsFromVerb(lpcmi, pEntry);
@@ -1236,14 +1184,14 @@ CDefaultContextMenu::InvokeCommand(
 
     CmdId = LOWORD(LocalInvokeInfo.lpVerb);
 
-    if (m_pDynamicEntries && CmdId >= m_iIdSHEFirst && CmdId < m_iIdSHELast)
+    if (!m_DynamicEntries.IsEmpty() && CmdId >= m_iIdSHEFirst && CmdId < m_iIdSHELast)
     {
         LocalInvokeInfo.lpVerb -= m_iIdSHEFirst;
         Result = InvokeShellExt(&LocalInvokeInfo);
         return Result;
     }
 
-    if (m_pStaticEntries && CmdId >= m_iIdSCMFirst && CmdId < m_iIdSCMLast)
+    if (!m_StaticEntries.IsEmpty() && CmdId >= m_iIdSCMFirst && CmdId < m_iIdSCMLast)
     {
         LocalInvokeInfo.lpVerb -= m_iIdSCMFirst;
         Result = InvokeRegVerb(&LocalInvokeInfo);
@@ -1332,7 +1280,7 @@ CDefaultContextMenu::GetCommandString(
 
     UINT CmdId = LOWORD(idCommand);
 
-    if (m_pDynamicEntries && CmdId >= m_iIdSHEFirst && CmdId < m_iIdSHELast)
+    if (!m_DynamicEntries.IsEmpty() && CmdId >= m_iIdSHEFirst && CmdId < m_iIdSHELast)
     {
         idCommand -= m_iIdSHEFirst;
         PDynamicShellEntry pEntry = GetDynamicEntry(idCommand);
@@ -1347,7 +1295,7 @@ CDefaultContextMenu::GetCommandString(
                                              uMaxNameLen);
     }
 
-    if (m_pStaticEntries && CmdId >= m_iIdSCMFirst && CmdId < m_iIdSCMLast)
+    if (!m_StaticEntries.IsEmpty() && CmdId >= m_iIdSCMFirst && CmdId < m_iIdSCMLast)
     {
         /* Validation just returns S_OK on a match. The id exists. */
         if (uFlags == GCS_VALIDATEA || uFlags == GCS_VALIDATEW)
@@ -1355,19 +1303,19 @@ CDefaultContextMenu::GetCommandString(
 
         CmdId -= m_iIdSCMFirst;
 
-        PStaticShellEntry pEntry = m_pStaticEntries;
-        while (pEntry && (CmdId--) > 0)
-            pEntry = pEntry->pNext;
+        POSITION it = m_StaticEntries.FindIndex(CmdId);
 
-        if (!pEntry)
+        if (it == NULL)
             return E_INVALIDARG;
 
+        PStaticShellEntry pEntry = &m_StaticEntries.GetAt(it);
+
         if (uFlags == GCS_VERBW)
-            return StringCchCopyW((LPWSTR)lpszName, uMaxNameLen, pEntry->szVerb);
+            return StringCchCopyW((LPWSTR)lpszName, uMaxNameLen, pEntry->Verb);
 
         if (uFlags == GCS_VERBA)
         {
-            if (SHUnicodeToAnsi(pEntry->szVerb, lpszName, uMaxNameLen))
+            if (SHUnicodeToAnsi(pEntry->Verb, lpszName, uMaxNameLen))
                 return S_OK;
         }
 
@@ -1464,11 +1412,11 @@ CDefaultContextMenu::HandleMenuMsg2(
 {
     if (uMsg == WM_INITMENUPOPUP)
     {
-        PDynamicShellEntry pEntry = m_pDynamicEntries;
-        while (pEntry)
+        POSITION it = m_DynamicEntries.GetHeadPosition();
+        while (it != NULL)
         {
-            SHForwardContextMenuMsg(pEntry->pCM, uMsg, wParam, lParam, plResult, TRUE);
-            pEntry = pEntry->pNext;
+            DynamicShellEntry& info = m_DynamicEntries.GetNext(it);
+            SHForwardContextMenuMsg(info.pCM, uMsg, wParam, lParam, plResult, TRUE);
         }
         return S_OK;
     }

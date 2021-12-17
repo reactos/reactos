@@ -1926,6 +1926,10 @@ co_WinPosSetWindowPos(
       Window->head.pti->cVisWindows++;
       IntNotifyWinEvent(EVENT_OBJECT_SHOW, Window, OBJID_WINDOW, CHILDID_SELF, WEF_SETBYWNDPTI);
    }
+   else
+   {
+      IntCheckFullscreen(Window);
+   }
 
    if (Window->hrgnUpdate != NULL && Window->hrgnUpdate != HRGN_WINDOW)
    {
@@ -3160,12 +3164,12 @@ NtUserChildWindowFromPointEx(HWND hwndParent,
  */
 BOOL APIENTRY
 NtUserEndDeferWindowPosEx(HDWP WinPosInfo,
-                          DWORD Unknown1)
+                          BOOL bAsync)
 {
    BOOL Ret;
    TRACE("Enter NtUserEndDeferWindowPosEx\n");
    UserEnterExclusive();
-   Ret = IntEndDeferWindowPosEx(WinPosInfo, (BOOL)Unknown1);
+   Ret = IntEndDeferWindowPosEx(WinPosInfo, bAsync);
    TRACE("Leave NtUserEndDeferWindowPosEx, ret=%i\n", Ret);
    UserLeave();
    return Ret;

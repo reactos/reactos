@@ -169,3 +169,10 @@ PCI\VEN_104B&CC_0100.DeviceDesc = "BusLogic SCSI valdiklis"
 [Strings.0804]
 GenericMfg = "(标准 SCSI / RAID 控制器)"
 PCI\VEN_104B&CC_0100.DeviceDesc = "BusLogic SCSI 控制器"
+
+[Strings.0816]
+ReactOS = "Equipa ReactOS"
+SCSIClassName = "Controladores SCSI e RAID"
+
+GenericMfg = "(Controladores SCSI e RAID padrão)"
+PCI\VEN_104B&CC_0100.DeviceDesc = "Controlador SCSI BusLogic"

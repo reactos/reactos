@@ -12,6 +12,7 @@
 #include <winnls.h>
 #include <winreg.h>
 #include <winsvc.h>
+#include <winuser.h>
 
 #define MAX_VALUE_NAME 16383
 #define NTPPORT 123

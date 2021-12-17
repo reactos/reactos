@@ -208,3 +208,9 @@ StdMfg = "(Standartinė klaviatūra)"
 HID.KeyboardDevice    = "HID 键盘"
 StdMfg = "(标准键盘)"
 *PNP0303.DeviceDesc = "IBM PC/AT 键盘"
+
+[Strings.0816]
+ReactOS = "Equipa ReactOS"
+KeyboardClassName = "Teclados"
+StdMfg = "(Teclado padrão)"
+*PNP0303.DeviceDesc = "Teclado IBM PC/AT"

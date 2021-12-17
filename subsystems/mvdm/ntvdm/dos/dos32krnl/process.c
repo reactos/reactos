@@ -13,7 +13,6 @@
 
 #define NDEBUG
 #include <debug.h>
-#include <strsafe.h>
 
 #include "emulator.h"
 #include "cpu/cpu.h"
@@ -87,6 +86,7 @@ static inline VOID DosSaveState(VOID)
     PDOS_REGISTER_STATE State;
     WORD StackPointer = getSP();
 
+#ifdef ADVANCED_DEBUGGING
     DPRINT1("\n"
             "DosSaveState(before) -- SS:SP == %04X:%04X\n"
             "Original CPU State =\n"
@@ -96,6 +96,7 @@ static inline VOID DosSaveState(VOID)
             getSS(), getSP(),
             getDS(), getES(), getAX(), getCX(),
             getDX(), getBX(), getBP(), getSI(), getDI());
+#endif
 
     /*
      * Allocate stack space for the registers. Note that we
@@ -116,6 +117,7 @@ static inline VOID DosSaveState(VOID)
     State->SI = getSI();
     State->DI = getDI();
 
+#ifdef ADVANCED_DEBUGGING
     DPRINT1("\n"
             "DosSaveState(after) -- SS:SP == %04X:%04X\n"
             "Saved State =\n"
@@ -125,6 +127,7 @@ static inline VOID DosSaveState(VOID)
             getSS(), getSP(),
             State->DS, State->ES, State->AX, State->CX,
             State->DX, State->BX, State->BP, State->SI, State->DI);
+#endif
 }
 
 static inline VOID DosRestoreState(VOID)
@@ -137,6 +140,7 @@ static inline VOID DosRestoreState(VOID)
      */
     State = SEG_OFF_TO_PTR(getSS(), getSP());
 
+#ifdef ADVANCED_DEBUGGING
     DPRINT1("\n"
             "DosRestoreState(before) -- SS:SP == %04X:%04X\n"
             "Saved State =\n"
@@ -146,6 +150,7 @@ static inline VOID DosRestoreState(VOID)
             getSS(), getSP(),
             State->DS, State->ES, State->AX, State->CX,
             State->DX, State->BX, State->BP, State->SI, State->DI);
+#endif
 
     setSP(getSP() + sizeof(DOS_REGISTER_STATE) - sizeof(WORD));
 
@@ -160,6 +165,7 @@ static inline VOID DosRestoreState(VOID)
     setSI(State->SI);
     setDI(State->DI);
 
+#ifdef ADVANCED_DEBUGGING
     DPRINT1("\n"
             "DosRestoreState(after) -- SS:SP == %04X:%04X\n"
             "Restored CPU State =\n"
@@ -169,6 +175,7 @@ static inline VOID DosRestoreState(VOID)
             getSS(), getSP(),
             getDS(), getES(), getAX(), getCX(),
             getDX(), getBX(), getBP(), getSI(), getDI());
+#endif
 }
 
 static WORD DosCopyEnvironmentBlock(IN LPCSTR Environment OPTIONAL,
@@ -633,8 +640,10 @@ DWORD DosLoadExecutableInternal(IN DOS_EXEC_TYPE LoadType,
             /* Push the task state */
             DosSaveState();
 
+#ifdef ADVANCED_DEBUGGING
             DPRINT1("Sda->CurrentPsp = 0x%04x; Old LastStack = 0x%08x, New LastStack = 0x%08x\n",
                    Sda->CurrentPsp, SEGMENT_TO_PSP(Sda->CurrentPsp)->LastStack, MAKELONG(getSP(), getSS()));
+#endif
 
             /* Update the last stack in the PSP */
             SEGMENT_TO_PSP(Sda->CurrentPsp)->LastStack = MAKELONG(getSP(), getSS());
@@ -664,7 +673,7 @@ DWORD DosLoadExecutableInternal(IN DOS_EXEC_TYPE LoadType,
 
         /*
          * Keep critical flags, clear test flags (OF, SF, ZF, AF, PF, CF)
-         * and explicitely set the interrupt flag.
+         * and explicitly set the interrupt flag.
          */
         setEFLAGS((getEFLAGS() & ~0x08D5) | 0x0200);
 
@@ -801,12 +810,25 @@ WORD DosCreateProcess(IN LPCSTR ProgramName,
 
             STARTUPINFOA si;
             PROCESS_INFORMATION pi;
+            union { DWORD Size; NTSTATUS Status; } Ret;
             CHAR ExpName[MAX_PATH];
 
-            ExpandEnvironmentStringsA(AppName, ExpName, ARRAYSIZE(ExpName) - 1);
-            StringCbCatA(ExpName, sizeof(ExpName), "\"");         // Add double-quote before ProgramName
-            StringCbCatA(ExpName, sizeof(ExpName), ProgramName);  // Append Program name
-            StringCbCatA(ExpName, sizeof(ExpName), "\"");         // Add double-quote after ProgramName
+            Ret.Size = ExpandEnvironmentStringsA(AppName, ExpName, _countof(ExpName));
+            if ((Ret.Size == 0) || (Ret.Size > _countof(ExpName)))
+            {
+                /* We failed or buffer too small, fall back to DOS execution */
+                goto RunAsDOS;
+            }
+            Ret.Size--; // Remove NULL-terminator from count
+
+            /* Add double-quotes before and after ProgramName */
+            Ret.Status = RtlStringCchPrintfA(ExpName + Ret.Size, _countof(ExpName) - Ret.Size,
+                                             "\"%s\"", ProgramName);
+            if (!NT_SUCCESS(Ret.Status))
+            {
+                /* We failed or buffer too small, fall back to DOS execution */
+                goto RunAsDOS;
+            }
 
             ZeroMemory(&pi, sizeof(pi));
             ZeroMemory(&si, sizeof(si));
@@ -832,7 +854,7 @@ WORD DosCreateProcess(IN LPCSTR ProgramName,
             else
             {
                 /* Retrieve the actual path to the "Program Files" directory for displaying the error */
-                ExpandEnvironmentStringsA("%ProgramFiles%", ExpName, ARRAYSIZE(ExpName) - 1);
+                ExpandEnvironmentStringsA("%ProgramFiles%", ExpName, _countof(ExpName));
 
                 DisplayMessage(L"Trying to load '%S'.\n"
                                L"WOW16 applications are not supported internally by NTVDM at the moment.\n"
@@ -842,6 +864,7 @@ WORD DosCreateProcess(IN LPCSTR ProgramName,
             }
             // Fall through
         }
+        RunAsDOS:
         case SCS_DOS_BINARY:
         {
             /* Load the executable */
@@ -996,13 +1019,17 @@ Done:
     TerminationType = (KeepResident != 0 ? 0x03 : 0x00);
     Sda->ErrorLevel = MAKEWORD(ReturnCode, TerminationType);
 
+#ifdef ADVANCED_DEBUGGING
     DPRINT1("PspBlock->ParentPsp = 0x%04x; Sda->CurrentPsp = 0x%04x\n",
            PspBlock->ParentPsp, Sda->CurrentPsp);
+#endif
 
     if (Sda->CurrentPsp != SYSTEM_PSP)
     {
+#ifdef ADVANCED_DEBUGGING
         DPRINT1("Sda->CurrentPsp = 0x%04x; Old SS:SP = %04X:%04X going to be LastStack = 0x%08x\n",
                Sda->CurrentPsp, getSS(), getSP(), SEGMENT_TO_PSP(Sda->CurrentPsp)->LastStack);
+#endif
 
         /* Restore the parent's stack */
         setSS(HIWORD(SEGMENT_TO_PSP(Sda->CurrentPsp)->LastStack));

@@ -5,6 +5,7 @@
  *
  *  Copyright (C) 1999 - 2001  Brian Palmer  <brianp@reactos.org>
  *                2005         Klemens Friedl <frik85@reactos.at>
+ *                2021 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -55,13 +56,6 @@ int             ProcGetIndexByProcessId(DWORD dwProcessId);
 #ifdef RUN_APPS_PAGE
 static HANDLE   hApplicationThread = NULL;
 static DWORD    dwApplicationThread;
-#endif
-
-#if 0
-void SwitchToThisWindow (
-HWND hWnd,   /* Handle to the window that should be activated */
-BOOL bRestore /* Restore the window if it is minimized */
-);
 #endif
 
 static INT
@@ -785,7 +779,7 @@ void ApplicationPage_OnWindowsMinimize(void)
         if (item.state & LVIS_SELECTED) {
             pAPLI = (LPAPPLICATION_PAGE_LIST_ITEM)item.lParam;
             if (pAPLI) {
-                ShowWindow(pAPLI->hWnd, SW_MINIMIZE);
+                ShowWindowAsync(pAPLI->hWnd, SW_MINIMIZE);
             }
         }
     }
@@ -806,7 +800,7 @@ void ApplicationPage_OnWindowsMaximize(void)
         if (item.state & LVIS_SELECTED) {
             pAPLI = (LPAPPLICATION_PAGE_LIST_ITEM)item.lParam;
             if (pAPLI) {
-                ShowWindow(pAPLI->hWnd, SW_MAXIMIZE);
+                ShowWindowAsync(pAPLI->hWnd, SW_MAXIMIZE);
             }
         }
     }
@@ -859,9 +853,7 @@ void ApplicationPage_OnWindowsBringToFront(void)
         }
     }
     if (pAPLI) {
-        if (IsIconic(pAPLI->hWnd))
-            ShowWindow(pAPLI->hWnd, SW_RESTORE);
-        BringWindowToTop(pAPLI->hWnd);
+        SwitchToThisWindow(pAPLI->hWnd, TRUE);
     }
 }
 
@@ -884,21 +876,9 @@ void ApplicationPage_OnSwitchTo(void)
         }
     }
     if (pAPLI) {
-        typedef void (WINAPI *PROCSWITCHTOTHISWINDOW) (HWND, BOOL);
-        PROCSWITCHTOTHISWINDOW SwitchToThisWindow;
-
-        HMODULE hUser32 = GetModuleHandleW(L"USER32");
-        SwitchToThisWindow = (PROCSWITCHTOTHISWINDOW)GetProcAddress(hUser32, "SwitchToThisWindow");
-        if (SwitchToThisWindow) {
-            SwitchToThisWindow(pAPLI->hWnd, TRUE);
-        } else {
-            if (IsIconic(pAPLI->hWnd))
-                ShowWindow(pAPLI->hWnd, SW_RESTORE);
-            BringWindowToTop(pAPLI->hWnd);
-            SetForegroundWindow(pAPLI->hWnd);
-        }
+        SwitchToThisWindow(pAPLI->hWnd, TRUE);
         if (TaskManagerSettings.MinimizeOnUse)
-            ShowWindow(hMainWnd, SW_MINIMIZE);
+            ShowWindowAsync(hMainWnd, SW_MINIMIZE);
     }
 }
 

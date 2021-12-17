@@ -21,18 +21,24 @@ MiniportISR(
     ULONG Value;
     PE1000_ADAPTER Adapter = (PE1000_ADAPTER)MiniportAdapterContext;
 
-    Value = NICInterruptRecognized(Adapter, InterruptRecognized);
-    InterlockedOr(&Adapter->InterruptPending, Value);
+    /* Reading the interrupt acknowledges them */
+    E1000ReadUlong(Adapter, E1000_REG_ICR, &Value);
 
-    if (!(*InterruptRecognized))
+    Value &= Adapter->InterruptMask;
+    _InterlockedOr(&Adapter->InterruptPending, Value);
+
+    if (Value)
+    {
+        *InterruptRecognized = TRUE;
+        /* Mark the events pending service */
+        *QueueMiniportHandleInterrupt = TRUE;
+    }
+    else
     {
         /* This is not ours. */
+        *InterruptRecognized = FALSE;
         *QueueMiniportHandleInterrupt = FALSE;
-        return;
     }
-
-    /* Mark the events pending service */
-    *QueueMiniportHandleInterrupt = TRUE;
 }
 
 VOID
@@ -46,7 +52,7 @@ MiniportHandleInterrupt(
 
     NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
 
-    InterruptPending = InterlockedExchange(&Adapter->InterruptPending, 0);
+    InterruptPending = _InterlockedExchange(&Adapter->InterruptPending, 0);
 
 
     /* Link State Changed */
@@ -101,6 +107,12 @@ MiniportHandleInterrupt(
                 NDIS_DbgPrint(MIN_TRACE, ("Unrecognized ReceiveDescriptor status flag: %u\n", ReceiveDescriptor->Status));
             }
 
+            /* Make sure the receive indications are enabled */
+            if (!Adapter->PacketFilter)
+            {
+                goto NextReceiveDescriptor;
+            }
+
             if (ReceiveDescriptor->Length != 0 && ReceiveDescriptor->Address != 0)
             {
                 EthHeader = (PETH_HEADER)(Adapter->ReceiveBuffer + BufferOffset);
@@ -120,6 +132,7 @@ MiniportHandleInterrupt(
                 NDIS_DbgPrint(MIN_TRACE, ("Got a NULL descriptor"));
             }
 
+NextReceiveDescriptor:
             /* Give the descriptor back */
             ReceiveDescriptor->Status = 0;
 

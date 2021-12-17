@@ -624,7 +624,9 @@ Retry:
             setBX(0x7C00);
             BiosDiskService(Stack);
             if (!(Stack[STACK_FLAGS] & EMULATOR_FLAG_CF)) goto Quit;
+#ifdef ADVANCED_DEBUGGING
             DPRINT1("An error happened while loading the bootsector from floppy 0, error = %d\n", getAH());
+#endif
 
             break;
         }
@@ -642,7 +644,9 @@ Retry:
             setBX(0x7C00);
             BiosDiskService(Stack);
             if (!(Stack[STACK_FLAGS] & EMULATOR_FLAG_CF)) goto Quit;
+#ifdef ADVANCED_DEBUGGING
             DPRINT1("An error happened while loading the bootsector from HDD 0, error = %d\n", getAH());
+#endif
 
             break;
         }

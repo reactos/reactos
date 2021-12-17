@@ -1,9 +1,9 @@
 /*
- * PROJECT:    ReactOS Task Manager
- * LICENSE:    GPL - See COPYING in the top level directory
- * FILE:       base/applications/taskmgr/lang/zh-TW.rc
- * PURPOSE:    Chinese (Traditional) Language File for taskmgr
- * TRANSLATOR: Elton Chung aka MfldElton <elton328@gmail.com>
+ * PROJECT:     ReactOS Task Manager
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * PURPOSE:     Chinese (Traditional) resource file
+ * TRANSLATORS: Copyright 2011 Elton Chung <elton328@gmail.com>
+ *              Copyright 2021 Chan Chilung <eason066@gmail.com>
  */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
@@ -12,9 +12,9 @@ IDR_TASKMANAGER MENU
 BEGIN
     POPUP "檔案(&F)"
     BEGIN
-        MENUITEM "新工作(執行...)(&N)", ID_FILE_NEW
+        MENUITEM "執行新工作(&N)...", ID_FILE_NEW
         MENUITEM SEPARATOR
-        MENUITEM "退出工作管理員(&X)", ID_FILE_EXIT
+        MENUITEM "結束工作管理員(&X)", ID_FILE_EXIT
     END
     POPUP "選項(&O)"
     BEGIN
@@ -40,12 +40,12 @@ BEGIN
         MENUITEM "選擇欄位(&S)...", ID_VIEW_SELECTCOLUMNS
         POPUP "CPU 記錄(&C)"
         BEGIN
-            MENUITEM "所有 CPU 一個圖形(&O)", ID_VIEW_CPUHISTORY_ONEGRAPHALL
-            MENUITEM "每個 CPU 一個圖形(&P)", ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU, CHECKED
+            MENUITEM "所有 CPU 處理成一個圖形(&O)", ID_VIEW_CPUHISTORY_ONEGRAPHALL
+            MENUITEM "每個 CPU 處理成一個圖形(&P)", ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU, CHECKED
         END
         MENUITEM "顯示核心程式時間(&S)", ID_VIEW_SHOWKERNELTIMES
     END
-    POPUP "窗口(&W)"
+    POPUP "視窗(&W)"
     BEGIN
         MENUITEM "橫向平鋪(&H)", ID_WINDOWS_TILEHORIZONTALLY
         MENUITEM "縱向平鋪(&V)", ID_WINDOWS_TILEVERTICALLY
@@ -59,7 +59,7 @@ BEGIN
         MENUITEM "待機(&B)",                  ID_SHUTDOWN_STANDBY
         MENUITEM "休眠(&H)",                 ID_SHUTDOWN_HIBERNATE
         MENUITEM "關閉電源(&U)",                  ID_SHUTDOWN_POWEROFF
-        MENUITEM "重新開機(&R)",                   ID_SHUTDOWN_REBOOT
+        MENUITEM "重新啟動(&R)",                   ID_SHUTDOWN_REBOOT
         MENUITEM "登出 %s (&L)",                ID_SHUTDOWN_LOGOFF
         MENUITEM "切換使用者(&S)\tWinKey+L",     ID_SHUTDOWN_SWITCHUSER, GRAYED
         MENUITEM "鎖定電腦(&K)\tWinKey+L",   ID_SHUTDOWN_LOCKCOMPUTER
@@ -88,11 +88,11 @@ IDR_APPLICATION_PAGE_CONTEXT1 MENU
 BEGIN
     POPUP "DUMMY"
     BEGIN
-        MENUITEM "新工作(執行...)(&N)", ID_FILE_NEW
+        MENUITEM "執行新工作(&N)...", ID_FILE_NEW
         MENUITEM SEPARATOR
         MENUITEM "大圖示(&G)", ID_VIEW_LARGE
         MENUITEM "小圖示(&M)", ID_VIEW_SMALL
-        MENUITEM "詳細訊息(&D)", ID_VIEW_DETAILS, CHECKED
+        MENUITEM "詳細資訊(&D)", ID_VIEW_DETAILS, CHECKED
     END
 END
 
@@ -131,15 +131,15 @@ BEGIN
     BEGIN
         MENUITEM "結束處理程序(&E)", ID_PROCESS_PAGE_ENDPROCESS
         MENUITEM "結束處理程序樹狀目錄(&T)", ID_PROCESS_PAGE_ENDPROCESSTREE
-        MENUITEM "偵錯(&D)", ID_PROCESS_PAGE_DEBUG
+        MENUITEM "除錯(&D)", ID_PROCESS_PAGE_DEBUG
         MENUITEM SEPARATOR
         POPUP "設置優先順序(&P)"
         BEGIN
             MENUITEM "即時(&R)", ID_PROCESS_PAGE_SETPRIORITY_REALTIME
             MENUITEM "高(&H)", ID_PROCESS_PAGE_SETPRIORITY_HIGH
-            MENUITEM "高於標準(&A)", ID_PROCESS_PAGE_SETPRIORITY_ABOVENORMAL
-            MENUITEM "標準(&N)", ID_PROCESS_PAGE_SETPRIORITY_NORMAL
-            MENUITEM "低於標準(&B)", ID_PROCESS_PAGE_SETPRIORITY_BELOWNORMAL
+            MENUITEM "中等以上(&A)", ID_PROCESS_PAGE_SETPRIORITY_ABOVENORMAL
+            MENUITEM "中等(&N)", ID_PROCESS_PAGE_SETPRIORITY_NORMAL
+            MENUITEM "中等以下(&B)", ID_PROCESS_PAGE_SETPRIORITY_BELOWNORMAL
             MENUITEM "低(&L)", ID_PROCESS_PAGE_SETPRIORITY_LOW
         END
         MENUITEM "親和性設定(&A)...", ID_PROCESS_PAGE_SETAFFINITY
@@ -190,11 +190,11 @@ BEGIN
     GROUPBOX "CPU 使用情況顯示", IDC_CPU_USAGE_FRAME, 5, 5, 60, 54, 0, WS_EX_TRANSPARENT
     GROUPBOX "PF 使用率", IDC_MEM_USAGE_FRAME, 5, 63, 60, 54, BS_LEFTTEXT, WS_EX_TRANSPARENT
     GROUPBOX "總數", IDC_TOTALS_FRAME, 5, 122, 111, 39, 0, WS_EX_TRANSPARENT
-    GROUPBOX "認可用量(K)", IDC_COMMIT_CHARGE_FRAME, 5, 166, 111, 39, 0, WS_EX_TRANSPARENT
-    GROUPBOX "實體記憶體(K)", IDC_PHYSICAL_MEMORY_FRAME, 131, 122, 111, 39, 0, WS_EX_TRANSPARENT
-    GROUPBOX "核心記憶體(K)", IDC_KERNEL_MEMORY_FRAME, 131, 166, 111, 39, 0, WS_EX_TRANSPARENT
-    LTEXT "句柄數", IDS_TOTALS_HANDLE_COUNT, 12, 131, 27, 8
-    LTEXT "線程數", IDS_TOTALS_THREAD_COUNT, 12, 140, 27, 8
+    GROUPBOX "認可負載（K）", IDC_COMMIT_CHARGE_FRAME, 5, 166, 111, 39, 0, WS_EX_TRANSPARENT
+    GROUPBOX "實體記憶體（K）", IDC_PHYSICAL_MEMORY_FRAME, 131, 122, 111, 39, 0, WS_EX_TRANSPARENT
+    GROUPBOX "核心記憶體（K）", IDC_KERNEL_MEMORY_FRAME, 131, 166, 111, 39, 0, WS_EX_TRANSPARENT
+    LTEXT "控制代碼數", IDS_TOTALS_HANDLE_COUNT, 12, 131, 27, 8
+    LTEXT "執行緒數", IDS_TOTALS_THREAD_COUNT, 12, 140, 27, 8
     LTEXT "處理程序數", IDS_TOTALS_PROCESS_COUNT, 12, 149, 34, 8
     EDITTEXT IDC_TOTALS_HANDLE_COUNT, 65, 131, 45, 8, ES_RIGHT | ES_READONLY |
              ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
@@ -239,7 +239,7 @@ END
 
 IDD_DEBUG_CHANNELS_DIALOG DIALOGEX 0, 0, 247, 210
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "調試頻道"
+CAPTION "除錯頻道"
 FONT 9, "新細明體"
 BEGIN
     CONTROL "List2", IDC_DEBUG_CHANNELS_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL |
@@ -254,7 +254,7 @@ FONT 9, "新細明體"
 BEGIN
     DEFPUSHBUTTON "確定", IDOK, 120, 133, 50, 14
     PUSHBUTTON "取消", IDCANCEL, 174, 133, 50, 14
-    LTEXT "處理器親和性設定控制程序允許在哪個處理器上執行。", IDC_STATIC, 5, 5, 220, 16
+    LTEXT "處理器親和性設定控制各處理程序使用 CPU 的分配情況。", IDC_STATIC, 5, 5, 220, 16
     CONTROL "CPU 0", IDC_CPU0, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 11, 28, 37, 10
     CONTROL "CPU 1", IDC_CPU1, "Button", BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP, 11, 41, 37, 10
     CONTROL "CPU 2", IDC_CPU2, "Button", BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP, 11, 54, 37, 10
@@ -301,16 +301,16 @@ BEGIN
     CONTROL "PID (處理程序識別碼)(&P)", IDC_PID, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 39, 88, 10
     CONTROL "CPU 使用(&C)", IDC_CPUUSAGE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 50, 53, 10
     CONTROL "CPU 時間(&E)", IDC_CPUTIME, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 61, 48, 10
-    CONTROL "記憶體使用(&M)", IDC_MEMORYUSAGE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 72, 63, 10
-    CONTROL "記憶體使用增量(&D)", IDC_MEMORYUSAGEDELTA, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 83, 82, 10
-    CONTROL "記憶體使用高峰值(&K)", IDC_PEAKMEMORYUSAGE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 94, 82, 10
+    CONTROL "記憶體使用量(&M)", IDC_MEMORYUSAGE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 72, 63, 10
+    CONTROL "記憶體使用量差異(&D)", IDC_MEMORYUSAGEDELTA, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 83, 82, 10
+    CONTROL "記憶體使用量高峰(&K)", IDC_PEAKMEMORYUSAGE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 94, 82, 10
     CONTROL "頁面錯誤(&F)", IDC_PAGEFAULTS, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 105, 53, 10
     CONTROL "USER 對象(&U)", IDC_USEROBJECTS, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 116, 62, 10
     CONTROL "I/O 讀取", IDC_IOREADS, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 127, 49, 10
     CONTROL "I/O 讀取位元組", IDC_IOREADBYTES, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 138, 65, 10
     CONTROL "工作階段 ID(&S)", IDC_SESSIONID, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 149, 50, 10
     CONTROL "使用者名稱(&N)", IDC_USERNAME, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 160, 51, 10
-    CONTROL "分頁錯誤差異(&A)", IDC_PAGEFAULTSDELTA, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 28, 72, 10
+    CONTROL "分頁失敗差異(&A)", IDC_PAGEFAULTSDELTA, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 28, 72, 10
     CONTROL "虛擬記憶體大小(&V)", IDC_VIRTUALMEMORYSIZE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 39, 77, 10
     CONTROL "分頁集區(&G)", IDC_PAGEDPOOL, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 50, 53, 10
     CONTROL "非分頁集區(&O)", IDC_NONPAGEDPOOL, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 61, 67, 10
@@ -336,10 +336,10 @@ END
 
 STRINGTABLE
 BEGIN
-    ID_FILE_NEW "新程序"
-    ID_OPTIONS_ALWAYSONTOP "工作管理員仍然是所有其他視窗的前面，除非最小化"
-    ID_OPTIONS_MINIMIZEONUSE "工作管理員最小化執行 SwitchTo 操作時"
-    ID_OPTIONS_HIDEWHENMINIMIZED "隱藏工作管理員當它最小化時"
+    ID_FILE_NEW "執行一個新程式"
+    ID_OPTIONS_ALWAYSONTOP "除非工作管理員最小化，否則留在其他視窗的最前面"
+    ID_OPTIONS_MINIMIZEONUSE "在執行 SwitchTo 操作時將工作管理員最小化"
+    ID_OPTIONS_HIDEWHENMINIMIZED "當最小化時隱藏工作管理員"
     ID_VIEW_REFRESH "強制工作管理員立即更新，忽略更新速度設置"
     ID_VIEW_LARGE "用大圖示顯示任務"
     ID_VIEW_SMALL "用小圖示顯示任務"
@@ -357,33 +357,33 @@ BEGIN
     ID_WINDOWS_MINIMIZE "最小化視窗"
     ID_WINDOWS_MAXIMIZE "最大化視窗"
     ID_WINDOWS_CASCADE "層疊對角桌面上的視窗"
-    ID_WINDOWS_BRINGTOFRONT "將視窗前置，但不能切換到它"
+    ID_WINDOWS_BRINGTOFRONT "將視窗設為前景，但不切換到該視窗"
     ID_HELP_TOPICS "顯示工作管理員說明主題"
-    ID_HELP_ABOUT "顯示程式資訊、 版本號和版權資訊"
-    ID_FILE_EXIT "退出工作管理員應用程式"
-    ID_OPTIONS_SHOW16BITTASKS "顯示關聯 ntvdm.exe 下的 16 位任務"
-    ID_VIEW_SELECTCOLUMNS "選擇哪一列將可見的處理序頁"
-    ID_VIEW_SHOWKERNELTIMES "在績效圖中顯示核心程式的時間"
-    ID_VIEW_CPUHISTORY_ONEGRAPHALL "單一歷史記錄圖表顯示出總的 CPU 使用率"
-    ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU "每個 CPU 都有其自身的歷史圖"
-    ID_APPLICATION_PAGE_SWITCHTO "帶來的前景，將焦點切換到該任務的任務"
+    ID_HELP_ABOUT "顯示程式資訊、版本號和著作權資訊"
+    ID_FILE_EXIT "結束工作管理員應用程式"
+    ID_OPTIONS_SHOW16BITTASKS "顯示與 ntvdm.exe 關聯的 16 位元工作"
+    ID_VIEW_SELECTCOLUMNS "在處理程序頁選擇要顯示的欄位"
+    ID_VIEW_SHOWKERNELTIMES "在效能圖中顯示核心程式的時間"
+    ID_VIEW_CPUHISTORY_ONEGRAPHALL "一個歷程記錄圖顯示 CPU 的總使用率"
+    ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU "每個 CPU 都有它自己的歷程記錄圖"
+    ID_APPLICATION_PAGE_SWITCHTO "將工作設為前景，並將焦點放在該工作上"
 END
 
 STRINGTABLE
 BEGIN
-    ID_ENDTASK "告訴要關閉所選的任務"
-    ID_GOTOPROCESS "將焦點切換到所選任務的過程"
-    ID_RESTORE "從其隱藏狀態恢復工作管理員"
-    ID_PROCESS_PAGE_ENDPROCESS "從系統中刪除的過程"
-    ID_PROCESS_PAGE_ENDPROCESSTREE "從系統中刪除此處理序及其所有子體"
-    ID_PROCESS_PAGE_DEBUG "將調試器附加到該處理序"
-    ID_PROCESS_PAGE_SETAFFINITY "控制程序允許在哪個處理器運行"
-    ID_PROCESS_PAGE_SETPRIORITY_REALTIME "設定程序優先順序為即時"
-    ID_PROCESS_PAGE_SETPRIORITY_HIGH "設定程序優先順序為高"
-    ID_PROCESS_PAGE_SETPRIORITY_ABOVENORMAL "設定程序優先順序為在標準以上"
-    ID_PROCESS_PAGE_SETPRIORITY_NORMAL "設定程序優先順序為標準"
-    ID_PROCESS_PAGE_SETPRIORITY_BELOWNORMAL "設定程序優先順序為在標準以下"
-    ID_PROCESS_PAGE_SETPRIORITY_LOW "設定程序優先順序為低"
+    ID_ENDTASK "通知關閉已選取的工作"
+    ID_GOTOPROCESS "將焦點轉到所選工作的處理程序"
+    ID_RESTORE "將工作管理員從隱藏狀態恢復"
+    ID_PROCESS_PAGE_ENDPROCESS "將處理程序從系統中移除"
+    ID_PROCESS_PAGE_ENDPROCESSTREE "將處理程序及其附屬處理程序從系統中移除"
+    ID_PROCESS_PAGE_DEBUG "將除錯器附加到該處理程序"
+    ID_PROCESS_PAGE_SETAFFINITY "控制處理程序可使用的處理器"
+    ID_PROCESS_PAGE_SETPRIORITY_REALTIME "設定處理程序優先順序為即時"
+    ID_PROCESS_PAGE_SETPRIORITY_HIGH "設定處理程序優先順序為高"
+    ID_PROCESS_PAGE_SETPRIORITY_ABOVENORMAL "設定處理程序優先順序為中等以上"
+    ID_PROCESS_PAGE_SETPRIORITY_NORMAL "設定處理程序優先順序為中等"
+    ID_PROCESS_PAGE_SETPRIORITY_BELOWNORMAL "設定處理程序優先順序為中等以下"
+    ID_PROCESS_PAGE_SETPRIORITY_LOW "設定處理程序優先順序為低"
 END
 
 STRINGTABLE
@@ -399,11 +399,11 @@ BEGIN
     IDS_TAB_SESSIONID "工作階段 ID"
     IDS_TAB_CPU "CPU"
     IDS_TAB_CPUTIME "CPU 時間"
-    IDS_TAB_MEMUSAGE "記憶體使用"
-    IDS_TAB_PEAKMEMUSAGE "高峰記憶體使用"
-    IDS_TAB_MEMDELTA "記憶體差異"
-    IDS_TAB_PAGEFAULT "分頁錯誤"
-    IDS_TAB_PFDELTA "頁面錯誤增量"
+    IDS_TAB_MEMUSAGE "記憶體使用量"
+    IDS_TAB_PEAKMEMUSAGE "記憶體使用量高峰"
+    IDS_TAB_MEMDELTA "記憶體使用量差異"
+    IDS_TAB_PAGEFAULT "分頁失敗"
+    IDS_TAB_PFDELTA "分頁失敗差異"
     IDS_TAB_VMSIZE "虛擬記憶體大小"
     IDS_TAB_PAGEDPOOL "分頁集區"
     IDS_TAB_NPPOOL "非分頁集區"
@@ -421,12 +421,12 @@ BEGIN
     IDS_TAB_COMMANDLINE "命令列"
     IDS_MENU_SELECTCOLUMNS "選擇列(&S)..."
     IDS_MENU_16BITTASK "顯示 16 位工作(&S)"
-    IDS_MENU_WINDOWS "窗口(&W)"
+    IDS_MENU_WINDOWS "視窗(&W)"
     IDS_MENU_LARGEICONS "大圖示(&G)"
     IDS_MENU_SMALLICONS "小圖示(&M)"
-    IDS_MENU_DETAILS "詳細(&D)"
-    IDS_MENU_ONEGRAPHALLCPUS "所有 CPU 一個圖形(&O)"
-    IDS_MENU_ONEGRAPHPERCPU "每個 CPU 一個圖形(&P)"
+    IDS_MENU_DETAILS "詳細資料(&D)"
+    IDS_MENU_ONEGRAPHALLCPUS "所有 CPU 處理成一個圖形(&O)"
+    IDS_MENU_ONEGRAPHPERCPU "每個 CPU 處理成一個圖形(&P)"
     IDS_MENU_CPUHISTORY "CPU 使用記錄(&C)"
     IDS_MENU_SHOWKERNELTIMES "顯示核心時間(&S)"
     IDS_CREATENEWTASK "新工作"
@@ -435,17 +435,17 @@ BEGIN
     IDS_MSG_PROCESSONEPRO "程序必須連繫至少一個處理器。"
     IDS_MSG_INVALIDOPTION "選項無效"
     IDS_MSG_UNABLEDEBUGPROCESS "無法傾印程式"
-    IDS_MSG_WARNINGDEBUG "警告: 傾印此程式可能導致資料遺失。\n你是否確定要繼續？"
+    IDS_MSG_WARNINGDEBUG "警告: 傾印此程式可能導致資料遺失。\n您確定要繼續嗎？"
     IDS_MSG_TASKMGRWARNING "工作管理員警告"
-    IDS_MSG_WARNINGTERMINATING "警告: 結束程序可能導政資料遺失或系統不穩定。\n程序在結束時將不能儲存任何資料。\n你是否確定要繼續？"
+    IDS_MSG_WARNINGTERMINATING "警告：結束處理程序可能導致資料遺失或系統不穩定。\n處理程序在結束時將不能儲存任何資料。\n您確定要繼續嗎？"
     IDS_MSG_UNABLETERMINATEPRO "無法結束處理程序"
-    IDS_MSG_CLOSESYSTEMPROCESS "這是一個關鍵的系統過程。工作管理員不會結束這一處理序。"
+    IDS_MSG_CLOSESYSTEMPROCESS "這是一個關鍵的系統處理程序。工作管理員不會結束這個處理程序。"
     IDS_MSG_UNABLECHANGEPRIORITY "無法更改優先順序"
-    IDS_MSG_WARNINGCHANGEPRIORITY "警告: 更改此程序的優先順序可能導致系統不穩定。\n你是否確定要更改優先順序？"
-    IDS_MSG_TRAYICONCPUUSAGE "CPU 使用情況: %d%%"
-    IDS_STATUS_MEMUSAGE "記憶體使用情況: %s / %s (%d%%)"
-    IDS_STATUS_CPUUSAGE "CPU 使用情況: %3d%%"
-    IDS_STATUS_PROCESSES "處理程序: %d"
+    IDS_MSG_WARNINGCHANGEPRIORITY "警告：更改此處理程序的優先順序可能導致系統不穩定。\n您確定要更改優先順序嗎？"
+    IDS_MSG_TRAYICONCPUUSAGE "CPU 使用情況： %d%%"
+    IDS_STATUS_MEMUSAGE "記憶體使用情況： %s ／ %s (%d%%)"
+    IDS_STATUS_CPUUSAGE "CPU 使用情況： %3d%%"
+    IDS_STATUS_PROCESSES "處理程序： %d"
     IDS_NOT_RESPONDING "沒有回應"
-    IDS_RUNNING "正在運行"
+    IDS_RUNNING "正在執行"
 END

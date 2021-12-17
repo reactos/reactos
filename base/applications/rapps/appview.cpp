@@ -1713,6 +1713,11 @@ void CApplicationView::SetRedraw(BOOL bRedraw)
     m_ListView->SetRedraw(bRedraw);
 }
 
+void CApplicationView::SetFocusOnSearchBar()
+{
+    m_SearchBar->SetFocus();
+}
+
 VOID CApplicationView::OnSize(HWND hwnd, WPARAM wParam, LPARAM lParam)
 {
     if (wParam == SIZE_MINIMIZED)
