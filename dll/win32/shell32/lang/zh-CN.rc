@@ -5,7 +5,7 @@
  * PURPOSE:     Chinese (Simplified) Language Resources
  * TRANSLATORS: 2008        zhangbing <e_zb@21cn.com, ezb@mail.gywb.cn>
                 2011        Elton Chung aka MfldElton <elton328@gmail.com>
-                2018, 2019  Luo Yufan <njlyf2011@hotmail.com>
+                2018-2021   Luo Yufan <njlyf2011@hotmail.com>
  */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
@@ -472,7 +472,7 @@ END
 
 IDD_CONFIRM_FILE_REPLACE DIALOGEX 0, 0, 282, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_SETFOREGROUND | DS_CENTER | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
-CAPTION "文件替换确认"
+CAPTION "确认文件替换"
 FONT 9, "宋体"
 BEGIN
     DEFPUSHBUTTON "是(&Y)", IDYES, 20, 122, 60, 14
@@ -508,11 +508,11 @@ FONT 9, "宋体"
 BEGIN
     CONTROL IDB_DLG_BG, IDC_STATIC, "STATIC", SS_BITMAP | SS_REALSIZECONTROL, 0, 0, 208, 122
     CONTROL IDB_REACTOS_FLAG, IDC_STATIC, "STATIC", SS_BITMAP, 180, 2, 32, 26
-    PUSHBUTTON "&Switch User", IDC_SWITCH_USER_BUTTON, 57, 46, 19, 19, BS_OWNERDRAW | WS_DISABLED | WS_GROUP
+    PUSHBUTTON "切换用户(&S)", IDC_SWITCH_USER_BUTTON, 57, 46, 19, 19, BS_OWNERDRAW | WS_DISABLED | WS_GROUP
     PUSHBUTTON "注销(&L)", IDC_LOG_OFF_BUTTON, 134, 46, 19, 19, BS_OWNERDRAW
     PUSHBUTTON "取消", IDCANCEL, 162, 103, 40, 12, WS_GROUP | BS_FLAT
     LTEXT "注销 ReactOS", IDC_LOG_OFF_TEXT_STATIC, 4, 9, 130, 20
-    CTEXT "Switch User", IDC_SWITCH_USER_STATIC, 41, 70, 51, 11
+    CTEXT "切换用户", IDC_SWITCH_USER_STATIC, 41, 70, 51, 11
     CTEXT "注销", IDC_LOG_OFF_STATIC, 118, 70, 51, 11
 END
 
@@ -803,8 +803,8 @@ BEGIN
     IDS_PASTE "贴上"
     IDS_EJECT "弹出"
     IDS_DISCONNECT "断开"
-    IDS_OPENFILELOCATION "Open f&ile location"
-    IDS_SENDTO_MENU "Se&nd To"
+    IDS_OPENFILELOCATION "打开文件位置(&I)"
+    IDS_SENDTO_MENU "发送到(&N)"
 
     IDS_MOVEERRORTITLE "Error Moving File or Folder"
     IDS_COPYERRORTITLE "Error Copying File or Folder"
@@ -850,8 +850,8 @@ BEGIN
     IDS_FORMAT_COMPLETE "格式化完成"
 
     /* Warning format system drive dialog strings */
-    IDS_NO_FORMAT_TITLE "Cannot format this volume"
-    IDS_NO_FORMAT "This volume cannot be formatted! It contains important system files in order for ReactOS to run."
+    IDS_NO_FORMAT_TITLE "无法格式化该卷"
+    IDS_NO_FORMAT "无法格式化该卷。因为它包含使 ReactOS 正常工作的文件."
 
     /* Run File dialog */
     IDS_RUNDLG_ERROR "无法显示运行文件对话框 (内部错误)"
@@ -961,7 +961,7 @@ BEGIN
     IDS_EDIT_VERB "编辑"
     IDS_FIND_VERB "查找"
     IDS_PRINT_VERB "打印"
-    IDS_CMD_VERB "Command Prompt here"
+    IDS_CMD_VERB "在此打开命令提示符"
 
     IDS_FILE_FOLDER "%u 个文件，%u 个文件夹"
     IDS_PRINTERS "打印机"
@@ -988,7 +988,7 @@ BEGIN
 
     IDS_MENU_EMPTY "(空)"
     IDS_OBJECTS "%d 个对象"
-    IDS_OBJECTS_SELECTED "%d 个选定的对象"
+    IDS_OBJECTS_SELECTED "已选中 %d 个对象"
 
     IDS_ADVANCED_FOLDER "文件和文件夹"
     IDS_ADVANCED_NET_CRAWLER "自动搜索网络文件夹和打印机"
@@ -1027,20 +1027,20 @@ BEGIN
     IDS_NO_ICONS "文件 '%s' 不包含图标\n\n从列表中选择一个图标或指定其他文件。"
     IDS_FILE_NOT_FOUND "无法找到文件 '%s'。"
     IDS_LINK_INVALID "The item '%s' that this shortcut refers to has been changed or moved, so this shortcut will no longer work properly."
-    IDS_COPYTOMENU "Copy to &folder..."
+    IDS_COPYTOMENU "复制到文件夹(&F)..."
     IDS_COPYTOTITLE "Select the place where you want to copy '%s'. Then click the Copy button."
-    IDS_COPYITEMS "Copy Items"
-    IDS_COPYBUTTON "Copy"
-    IDS_MOVETOMENU "Mo&ve to folder..."
+    IDS_COPYITEMS "复制项目"
+    IDS_COPYBUTTON "复制"
+    IDS_MOVETOMENU "移动到文件夹(&V)..."
     IDS_MOVETOTITLE "Select the place where you want to move '%s' to. Then click the Move button."
-    IDS_MOVEITEMS "Move Items"
-    IDS_MOVEBUTTON "Move"
+    IDS_MOVEITEMS "移动项目"
+    IDS_MOVEBUTTON "移动"
 
-    IDS_SYSTEMFOLDER "System Folder"
+    IDS_SYSTEMFOLDER "系统文件夹"
 
     /* For IDD_LOG_OFF_FANCY */
-    IDS_LOG_OFF_DESC "Closes your programs and ends your ReactOS session."
-    IDS_SWITCH_USER_DESC "Lets another user log on while your programs and files remain open.\r\n\r\n(You can also switch users by pressing the Windows logo key + L.)"
+    IDS_LOG_OFF_DESC "关闭您的程序并结束现在的 ReactOS 会话。"
+    IDS_SWITCH_USER_DESC "允许其他用户登录并保持您的程序和文件开启。\r\n\r\n(您亦可使用 Windows 键 + L 来切换用户。)"
     IDS_LOG_OFF_TITLE "注销"
-    IDS_SWITCH_USER_TITLE "Switch User"
+    IDS_SWITCH_USER_TITLE "切换用户"
 END
