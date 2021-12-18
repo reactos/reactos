@@ -851,7 +851,7 @@ BEGIN
 
     /* Warning format system drive dialog strings */
     IDS_NO_FORMAT_TITLE "无法格式化该卷"
-    IDS_NO_FORMAT "无法格式化该卷。因为它包含使 ReactOS 正常工作的文件."
+    IDS_NO_FORMAT "无法格式化该卷！因为它包含使 ReactOS 正常工作的文件。"
 
     /* Run File dialog */
     IDS_RUNDLG_ERROR "无法显示运行文件对话框 (内部错误)"
