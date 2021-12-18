@@ -422,20 +422,13 @@ DWORD WINAPI PerformancePageRefreshThread(PVOID Parameter)
              * Get the CPU usage
              */
             CpuUsage = PerfDataGetProcessorUsage();
-            if (CpuUsage <= 0 ) CpuUsage = 0;
-            if (CpuUsage > 100) CpuUsage = 100;
+            CpuKernelUsage = PerfDataGetProcessorSystemUsage();
 
             if (!bInMenuLoop)
             {
                 wsprintfW(Text, szCpuUsage, CpuUsage);
                 SendMessageW(hStatusWnd, SB_SETTEXT, 1, (LPARAM)Text);
             }
-
-            CpuKernelUsage = PerfDataGetProcessorSystemUsage();
-            if (CpuKernelUsage <= 0)
-                CpuKernelUsage = 0;
-            else if (CpuKernelUsage > 100)
-                CpuKernelUsage = 100;
 
             /*
              * Get the memory usage

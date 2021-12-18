@@ -458,7 +458,7 @@ ULONG PerfDataGetProcessorUsage(void)
 {
     ULONG Result;
     EnterCriticalSection(&PerfDataCriticalSection);
-    Result = (ULONG)dbIdleTime;
+    Result = (ULONG)min(max(dbIdleTime, 0.), 100.);
     LeaveCriticalSection(&PerfDataCriticalSection);
     return Result;
 }
@@ -467,7 +467,7 @@ ULONG PerfDataGetProcessorSystemUsage(void)
 {
     ULONG Result;
     EnterCriticalSection(&PerfDataCriticalSection);
-    Result = (ULONG)dbKernelTime;
+    Result = (ULONG)min(max(dbKernelTime, 0.), 100.);
     LeaveCriticalSection(&PerfDataCriticalSection);
     return Result;
 }
