@@ -573,3 +573,29 @@ HID_MOUSE.DeviceDesc = "HID 鼠标"
 *PNP0F03.DeviceDesc = "Microsoft PS/2 风格鼠标"
 
 *nEC1F00.DeviceDesc = "NEC PC-98 Bus Mouse"
+
+[Strings.0816]
+ReactOS = "Equipa ReactOS"
+MouseClassName = "Ratos e outros dispositivos apontadores"
+LocationOverride = "Ligado à porta PS/2 do rato"
+
+StdMfg = "(Rato padrão)"
+SERIAL_MOUSE.DeviceDesc = "Rato série padrão"
+PS2_MOUSE.DeviceDesc = "Rato PS/2 padrão"
+HID_MOUSE.DeviceDesc = "Rato oculto"
+*PNP0F0D.DeviceDesc = "Standard InPort Mouse"
+*PNP0F11.DeviceDesc = "Standard Bus Mouse"
+*PNP0F13.DeviceDesc = "Porta PS/2 para rato PS/2"
+
+*IBM3780.DeviceDesc = "Trackpoint PS/2 da IBM"
+
+*PNP0F08.DeviceDesc = "Rato série da Logitech"
+*PNP0F12.DeviceDesc = "Rato PS/2 da Logitech"
+*PNP0F15.DeviceDesc = "Logitech Bus Mouse"
+
+*PNP0F00.DeviceDesc = "Microsoft Bus Mouse"
+*PNP0F01.DeviceDesc = "Rato série de Microsoft"
+*PNP0F02.DeviceDesc = "Microsoft InPort Mouse"
+*PNP0F03.DeviceDesc = "Rato PS/2 da Microsoft"
+
+*nEC1F00.DeviceDesc = "NEC PC-98 Bus Mouse"

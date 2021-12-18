@@ -1881,13 +1881,13 @@ ChangePos:
                 m_AutoHideOffset.cy = 0;
                 m_AutoHideOffset.cx -= AUTOHIDE_SPEED_HIDE;
                 if (m_AutoHideOffset.cx < -w)
-                    m_AutoHideOffset.cx = -w;
+                    m_AutoHideOffset.cx = w;
                 break;
             case ABE_TOP:
                 m_AutoHideOffset.cx = 0;
                 m_AutoHideOffset.cy -= AUTOHIDE_SPEED_HIDE;
                 if (m_AutoHideOffset.cy < -h)
-                    m_AutoHideOffset.cy = -h;
+                    m_AutoHideOffset.cy = h;
                 break;
             case ABE_RIGHT:
                 m_AutoHideOffset.cy = 0;
@@ -2905,7 +2905,7 @@ HandleTrayContextMenu:
             HWND hwnd = g_MinimizedAll[i];
             if (::IsWindowVisible(hwnd) && ::IsIconic(hwnd))
             {
-                ::ShowWindow(hwnd, SW_RESTORE);
+                ::ShowWindowAsync(hwnd, SW_RESTORE);
             }
         }
         g_MinimizedAll.RemoveAll();

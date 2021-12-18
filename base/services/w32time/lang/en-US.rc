@@ -1,0 +1,15 @@
+/*
+ * PROJECT:     ReactOS W32Time Service
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     English resource file
+ * TRANSLATORS: Copyright 2019 Doug Lyons <douglyons@douglyons.com>
+ *              Copyright 2021 Eric Kohl <ekohl@reactos.org>
+ */
+
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+
+STRINGTABLE
+BEGIN
+    IDS_DISPLAYNAME "Time Service"
+    IDS_DESCRIPTION "Maintains date and time synchronization on all clients and servers on the network."
+END

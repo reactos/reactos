@@ -251,11 +251,17 @@ FdoScanAdapter(
             /* Scan all logical units */
             for (UINT8 lun = 0; lun < PortExtension->MaxLunCount; lun++)
             {
+                PSCSI_PORT_LUN_EXTENSION lunExt;
+
+                /* Skip invalid lun values */
+                if (lun >= PortExtension->PortConfig->MaximumNumberOfLogicalUnits)
+                    continue;
+
                 // try to find an existing device
-                PSCSI_PORT_LUN_EXTENSION lunExt = GetLunByPath(PortExtension,
-                                                               pathId,
-                                                               targetId,
-                                                               lun);
+                lunExt = GetLunByPath(PortExtension,
+                                      pathId,
+                                      targetId,
+                                      lun);
 
                 if (lunExt)
                 {

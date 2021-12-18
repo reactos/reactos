@@ -1600,16 +1600,34 @@ PATH_StrokePath(
     PPATH pPath)
 {
     BOOL ret = FALSE;
-    INT i = 0;
-    INT nLinePts, nAlloc;
+    INT nLinePts, nAlloc, jOldFillMode, i = 0;
     POINT *pLinePts = NULL;
     POINT ptViewportOrg, ptWindowOrg;
     SIZE szViewportExt, szWindowExt;
     DWORD mapMode, graphicsMode;
     XFORM xform;
     PDC_ATTR pdcattr = dc->pdcattr;
+    PBRUSH pbrLine;
+    PPATH pNewPath;
 
     TRACE("Enter %s\n", __FUNCTION__);
+
+    pbrLine = dc->dclevel.pbrLine;
+    if (IntIsEffectiveWidePen(pbrLine))
+    {
+        pNewPath = PATH_WidenPathEx(dc, pPath);
+        if (pNewPath)
+        {
+            /* Fill the path with the WINDING fill mode */
+            jOldFillMode = pdcattr->jFillMode;
+            pdcattr->jFillMode = WINDING;
+            PATH_FillPathEx(dc, pNewPath, pbrLine);
+            pdcattr->jFillMode = jOldFillMode;
+
+            PATH_Delete(pNewPath->BaseObject.hHmgr);
+            return TRUE;
+        }
+    }
 
     /* Save the mapping mode info */
     mapMode = pdcattr->iMapMode;
@@ -2100,12 +2118,7 @@ PPATH
 FASTCALL
 PATH_WidenPath(DC *dc)
 {
-    INT size;
-    UINT penWidth, penStyle;
-    DWORD obj_type;
     PPATH pPath, pNewPath;
-    LPEXTLOGPEN elp;
-    PDC_ATTR pdcattr = dc->pdcattr;
 
     pPath = PATH_LockPath(dc->dclevel.hPath);
     if (!pPath)
@@ -2114,10 +2127,24 @@ PATH_WidenPath(DC *dc)
         return NULL;
     }
 
+    pNewPath = PATH_WidenPathEx(dc, pPath);
+    PATH_UnlockPath(pPath);
+    return pNewPath;
+}
+
+PPATH
+FASTCALL
+PATH_WidenPathEx(DC *dc, PPATH pPath)
+{
+    INT size;
+    UINT penWidth, penStyle;
+    DWORD obj_type;
+    LPEXTLOGPEN elp;
+    PDC_ATTR pdcattr = dc->pdcattr;
+
     if (pPath->state != PATH_Closed)
     {
         TRACE("PWP 1\n");
-        PATH_UnlockPath(pPath);
         EngSetLastError(ERROR_CAN_NOT_COMPLETE);
         return NULL;
     }
@@ -2126,7 +2153,6 @@ PATH_WidenPath(DC *dc)
     if (!size)
     {
         TRACE("PWP 2\n");
-        PATH_UnlockPath(pPath);
         EngSetLastError(ERROR_CAN_NOT_COMPLETE);
         return NULL;
     }
@@ -2135,7 +2161,6 @@ PATH_WidenPath(DC *dc)
     if (elp == NULL)
     {
         TRACE("PWP 3\n");
-        PATH_UnlockPath(pPath);
         EngSetLastError(ERROR_OUTOFMEMORY);
         return NULL;
     }
@@ -2156,7 +2181,6 @@ PATH_WidenPath(DC *dc)
         TRACE("PWP 4\n");
         EngSetLastError(ERROR_CAN_NOT_COMPLETE);
         ExFreePoolWithTag(elp, TAG_PATH);
-        PATH_UnlockPath(pPath);
         return NULL;
     }
 
@@ -2168,14 +2192,11 @@ PATH_WidenPath(DC *dc)
         (PS_TYPE_MASK & penStyle) == PS_COSMETIC)
     {
         TRACE("PWP 5\n");
-        PATH_UnlockPath(pPath);
         EngSetLastError(ERROR_CAN_NOT_COMPLETE);
         return FALSE;
     }
 
-    pNewPath = IntGdiWidenPath(pPath, penWidth, penStyle, dc->dclevel.laPath.eMiterLimit);
-    PATH_UnlockPath(pPath);
-    return pNewPath;
+    return IntGdiWidenPath(pPath, penWidth, penStyle, dc->dclevel.laPath.eMiterLimit);
 }
 
 static inline INT int_from_fixed(FIXED f)

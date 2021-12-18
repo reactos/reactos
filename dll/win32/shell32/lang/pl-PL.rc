@@ -811,6 +811,8 @@ BEGIN
     IDS_COPYERRORSAME "Nie można skopiować  '%s': Nazwy plików źródłowego i docelowego są takie same."
     IDS_MOVEERRORSUBFOLDER "Nie można przenieść  '%s': Folder docelowy jest podfolderem folderu źródłowego."
     IDS_COPYERRORSUBFOLDER "Nie można skopiować  '%s': Folder docelowy jest podfolderem folderu źródłowego."
+    IDS_MOVEERROR "Cannot move '%s': %s"
+    IDS_COPYERROR "Cannot copy '%s': %s"
 
     IDS_CREATEFOLDER_DENIED "Nie można utworzyć folderu '%1'"
     IDS_CREATEFOLDER_CAPTION "Nie można utworzyć folderu"

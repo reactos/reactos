@@ -673,7 +673,7 @@ DWORD DosLoadExecutableInternal(IN DOS_EXEC_TYPE LoadType,
 
         /*
          * Keep critical flags, clear test flags (OF, SF, ZF, AF, PF, CF)
-         * and explicitely set the interrupt flag.
+         * and explicitly set the interrupt flag.
          */
         setEFLAGS((getEFLAGS() & ~0x08D5) | 0x0200);
 

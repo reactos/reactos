@@ -353,7 +353,7 @@ FONT 8, "MS Shell Dlg"
     LTEXT "", stc13, 65, 72, 212, 10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
     GROUPBOX "Cópias", grp2, 160, 92, 120, 64, WS_GROUP
     LTEXT "Número de &cópias:", stc5, 168, 105, 68, 8
-    ICON "", ico3, 170, 131, 76, 24, WS_GROUP | SS_CENTERIMAGE
+    ICON "", ico3, 210, 131, 76, 24, WS_GROUP
     CONTROL "&Agrupar", chx2, "Button", BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP, 168, 118, 100, 12
     EDITTEXT edt3, 240, 103, 32, 12, WS_GROUP | ES_NUMBER
     GROUPBOX "Faixa de impressão", grp1, 8, 92, 144, 64, WS_GROUP

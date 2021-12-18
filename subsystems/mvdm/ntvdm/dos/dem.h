@@ -15,6 +15,7 @@
 
 /* INCLUDES *******************************************************************/
 
+#include <crt/dos.h> // For _A_NORMAL etc.
 #include "dos32krnl/dos.h"
 
 /* DEFINES ********************************************************************/
@@ -62,21 +63,36 @@ demFileDelete
     IN LPCSTR FileName
 );
 
-DWORD
-WINAPI
-demFileFindFirst
-(
-    OUT PVOID  lpFindFileData,
-    IN  LPCSTR FileName,
-    IN  WORD   AttribMask
-);
+/**
+ * @brief   File attributes for demFileFindFirst().
+ **/
+#define FA_NORMAL       _A_NORMAL // 0x0000
+#define FA_READONLY     _A_RDONLY // 0x0001 // FILE_ATTRIBUTE_READONLY
+#define FA_HIDDEN       _A_HIDDEN // 0x0002 // FILE_ATTRIBUTE_HIDDEN
+#define FA_SYSTEM       _A_SYSTEM // 0x0004 // FILE_ATTRIBUTE_SYSTEM
+#define FA_VOLID        _A_VOLID  // 0x0008
+#define FA_LABEL        FA_VOLID
+#define FA_DIRECTORY    _A_SUBDIR // 0x0010 // FILE_ATTRIBUTE_DIRECTORY
+#define FA_ARCHIVE      _A_ARCH   // 0x0020 // FILE_ATTRIBUTE_ARCHIVE
+#define FA_DEVICE       0x0040              // FILE_ATTRIBUTE_DEVICE
+
+#define FA_VALID    (FA_ARCHIVE | FA_DIRECTORY | FA_SYSTEM | FA_HIDDEN | FA_READONLY | FA_NORMAL)
+
+/** @brief  Convert Win32/NT file attributes to DOS format. */
+#define NT_TO_DOS_FA(Attrs) \
+    ( ((Attrs) == FILE_ATTRIBUTE_NORMAL) ? FA_NORMAL : (LOBYTE(Attrs) & FA_VALID) )
 
 DWORD
 WINAPI
-demFileFindNext
-(
-    OUT PVOID lpFindFileData
-);
+demFileFindFirst(
+    _Out_ PVOID pFindFileData,
+    _In_  PCSTR FileName,
+    _In_  WORD  AttribMask);
+
+DWORD
+WINAPI
+demFileFindNext(
+    _Inout_ PVOID pFindFileData);
 
 UCHAR
 WINAPI

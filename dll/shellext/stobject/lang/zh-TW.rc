@@ -50,7 +50,7 @@ BEGIN
     IDS_VOL_ADJUST "調整音訊內容(&A)"
     IDS_VOL_OPEN "開啟音量控制(&O)"
     IDS_VOL_RUN "SNDVOL32.EXE"
-    IDS_VOL_MUTED "(靜音)"
+    IDS_VOL_MUTED "（靜音）"
 
     //Keyboard-Mouse related strings
     IDS_KEYS_STICKY "相黏鍵"

@@ -1,10 +1,9 @@
 /*
- * PROJECT:    ReactOS ReactX-Diagnostic program
- * LICENSE:    GPL - See COPYING in the top level directory
- * FILE:       base/applications/dxdiag/lang/zh-TW.rc
- * PURPOSE:    Chinese (Traditional) Language File for ReactX-Diagnostic program
- * TRANSLATOR: Elton Chung <elton328@gmail.com>
- *             Chan Chilung <eason066@gmail.com>
+ * PROJECT:     ReactX Diagnosis Application
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * PURPOSE:     Chinese (Traditional) resource file
+ * TRANSLATORS: Copyright 2011 Elton Chung aka MfldElton <elton328@gmail.com>
+ *              Copyright 2021 Chan Chilung <eason066@gmail.com>
  */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
@@ -27,9 +26,9 @@ STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 9, "新細明體"
 BEGIN
     LTEXT "此工具會報告安裝在您系統的 ReactX 元件和驅動程式的詳細資料。", IDC_STATIC, 5, 0, 443, 17
-    LTEXT "如果您知道造成問題的區域，請點擊上面相應的標籤。否則，您可以使用 [下一頁] 按鈕來順序查看每一頁。", IDC_STATIC, 5, 15, 443, 25
+    LTEXT "如果您知道造成問題的區域，請點擊上面相應的標籤。否則，您可以使用［下一頁］按鈕來順序查看每一頁。", IDC_STATIC, 5, 15, 443, 25
     GROUPBOX "系統資訊", IDC_STATIC, 5, 35, 452, 150, SS_RIGHT
-    LTEXT "目前日期/時間：", IDC_STATIC, 70, 50, 80, 10, SS_RIGHT
+    LTEXT "目前日期／時間：", IDC_STATIC, 70, 50, 80, 10, SS_RIGHT
     LTEXT "電腦名稱：", IDC_STATIC, 70, 60, 80, 10, SS_RIGHT
     LTEXT "操作系統：", IDC_STATIC, 70, 70, 80, 10, SS_RIGHT
     LTEXT "語言：", IDC_STATIC, 70, 80, 80, 10, SS_RIGHT
@@ -63,7 +62,7 @@ BEGIN
     RTEXT "製造商：", IDC_STATIC, 20, 20, 70, 10
     RTEXT "晶片類型：", IDC_STATIC, 20, 30, 70, 10
     RTEXT "DAC 類型：", IDC_STATIC, 20, 40, 70, 10
-    RTEXT "記憶體總計約：", IDC_STATIC, 20, 50, 70, 10
+    RTEXT "預計記憶體總量：", IDC_STATIC, 20, 50, 70, 10
     RTEXT "目前顯示模式：", IDC_STATIC, 20, 60, 70, 10
     RTEXT "顯示器：", IDC_STATIC, 20, 70, 70, 10
     EDITTEXT IDC_STATIC_ADAPTER_ID, 95, 10, 150, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
@@ -114,7 +113,7 @@ BEGIN
     RTEXT "製造商識別碼：", IDC_STATIC, 20, 30, 70, 10
     RTEXT "產品識別碼：", IDC_STATIC, 20, 40, 70, 10
     RTEXT "類型：", IDC_STATIC, 20, 50, 70, 10
-    RTEXT "預設裝置:", IDC_STATIC, 20, 60, 70, 10
+    RTEXT "預設裝置：", IDC_STATIC, 20, 60, 70, 10
     EDITTEXT IDC_STATIC_DSOUND_NAME, 95, 10, 150, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     EDITTEXT IDC_STATIC_DSOUND_DEVICEID, 95, 20, 150, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     EDITTEXT IDC_STATIC_DSOUND_VENDORID, 95, 30, 150, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
@@ -150,10 +149,10 @@ BEGIN
     EDITTEXT IDC_MIDI_DLS_COLLECTION, 105, 0, 250, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     GROUPBOX "音樂埠", IDC_STATIC, 5, 10, 452, 85
     GROUPBOX "ReactX 功能", IDC_STATIC, 5, 97, 452, 70
-    LTEXT "預設埠加速:", IDC_STATIC, 15, 120, 95, 17
+    LTEXT "預設埠加速：", IDC_STATIC, 15, 120, 95, 17
     LTEXT "", IDC_STATIC_DEFAULT_PORT_ACCELERATION, 115, 120, 50, 10
     PUSHBUTTON "停用", IDC_BUTTON_DISABLEDMUSIC, 75, 135, 80, 14, WS_DISABLED
-    LTEXT "測試使用此埠:", IDC_STATIC, 180, 105, 100, 10
+    LTEXT "測試時使用此埠：", IDC_STATIC, 180, 105, 100, 10
     LISTBOX IDC_DMUSIC_TEST_LIST, 180, 115, 180, 45, LBS_NOINTEGRALHEIGHT | LBS_EXTENDEDSEL | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON "測試 DirectMusic", IDC_BUTTON_TESTDMUSIC, 370, 145, 80, 14, WS_DISABLED
     GROUPBOX "備註", IDC_STATIC, 5, 170, 452, 50
@@ -191,11 +190,11 @@ IDD_HELP_DIALOG DIALOGEX 0, 0, 462, 220
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 9, "新細明體"
 BEGIN
-    LTEXT "仍然找不到您要找的資訊嗎? 以下是您可以進行的其他操作：", IDC_STATIC, 5, 0, 300, 10
+    LTEXT "仍然找不到您要找的資訊嗎？以下是您可以進行的其他操作：", IDC_STATIC, 5, 0, 300, 10
     PUSHBUTTON "系統資訊", IDC_BUTTON_SYSINFO, 5, 20, 80, 14, WS_DISABLED
     LTEXT "顯示附加的系統資訊", IDC_STATIC, 90, 23, 300, 10
-    PUSHBUTTON "刷新率重寫", IDC_BUTTON_DDRAW_REFRESH, 5, 40, 80, 14, WS_DISABLED
-    LTEXT "重寫 DirectDraw 的刷新率", IDC_STATIC, 90, 43, 300, 10
+    PUSHBUTTON "重新整理率覆寫", IDC_BUTTON_DDRAW_REFRESH, 5, 40, 80, 14, WS_DISABLED
+    LTEXT "覆寫 DirectDraw 的重新整理率", IDC_STATIC, 90, 43, 300, 10
 END
 
 STRINGTABLE
@@ -206,7 +205,7 @@ BEGIN
     IDS_SOUND_DIALOG "音效"
     IDS_MUSIC_DIALOG "音樂"
     IDS_INPUT_DIALOG "輸入"
-    IDS_NETWORK_DIALOG "網絡"
+    IDS_NETWORK_DIALOG "網路"
     IDS_HELP_DIALOG "說明"
     IDS_FORMAT_MB "%I64uMB RAM"
     IDS_FORMAT_SWAP "已使用 %I64u MB，還有 %I64u MB 可用"
@@ -232,32 +231,32 @@ BEGIN
     IDS_DIRECTPLAY8_SERIALSP "DirectPlay8 序列服務提供者"
     IDS_DIRECTPLAY8_IPXSP "DirectPlay8 IPX 服務提供者"
     IDS_DIRECTPLAY8_TCPSP "DirectPlay8 TCP/IP 服務提供者"
-    IDS_DIRECTPLAY_TCPCONN "DirectPlay 網際網絡 TCP/IP 連接"
+    IDS_DIRECTPLAY_TCPCONN "DirectPlay 網際網路 TCP/IP 連接"
     IDS_DIRECTPLAY_IPXCONN "DirectPlay IPX 連接"
     IDS_DIRECTPLAY_MODEMCONN "DirectPlay 數據機連接"
     IDS_DIRECTPLAY_SERIALCONN "DirectPlay 序列連接"
     IDS_REG_SUCCESS "確認"
     IDS_REG_FAIL "錯誤"
     IDS_DDTEST_ERROR "測試失敗！"
-    IDS_DDTEST_DESCRIPTION "這將啟動 DirectDraw 界面測試。要繼續？"
-    IDS_DDPRIMARY_DESCRIPTION "此測試將使用 DirectDraw 在主要表面上繪圖。您應會看見黑色和白色的矩形。要繼續？"
+    IDS_DDTEST_DESCRIPTION "這將啟動 DirectDraw 界面測試。要繼續嗎？"
+    IDS_DDPRIMARY_DESCRIPTION "此測試將使用 DirectDraw 在主要表面上繪圖。您應會看見黑色和白色的矩形。要繼續嗎？"
     IDS_DDPRIMARY_RESULT "您看見黑色和白色的矩形嗎？"
-    IDS_DDOFFSCREEN_DESCRIPTION "此測試將使用 DirectDraw 在幕外表面上繪圖。您應會看見在移動的白色矩形。要繼續？"
+    IDS_DDOFFSCREEN_DESCRIPTION "此測試將使用 DirectDraw 在幕外表面上繪圖。您應會看見在移動的白色矩形。要繼續嗎？"
     IDS_DDOFFSCREEN_RESULT "您看見在移動的白色矩形嗎？"
-    IDS_DDFULLSCREEN_DESCRIPTION "此測試將使用 DirectDraw 在全螢幕模式繪圖。您應會看見在移動的白色矩形。要繼續？"
+    IDS_DDFULLSCREEN_DESCRIPTION "此測試將使用 DirectDraw 在全螢幕模式繪圖。您應會看見在移動的白色矩形。要繼續嗎？"
     IDS_DDFULLSCREEN_RESULT "您在全螢幕模式中看見在移動的白色矩形嗎？"
     IDS_FORMAT_ADAPTER_MEM "%u MB"
     IDS_FORMAT_ADAPTER_MODE "%d x %d (%u bit)(%uHz)"
     IDS_OPTION_NO "否"
-    IDS_D3DTEST_DESCRIPTION "這將啟動 Direct3D 界面測試。要繼續？"
+    IDS_D3DTEST_DESCRIPTION "這將啟動 Direct3D 界面測試。要繼續嗎？"
     IDS_D3DTEST_D3Dx "此測試將使用硬體加速的 Direct3D %u 界面。"
     IDS_OS_VERSION "%s %s (%d.%d, Build %d)"
     IDS_DMUSIC_DESC "描述"
     IDS_DMUSIC_TYPE "類型"
     IDS_DMUSIC_KERNEL "核心模式"
-    IDS_DMUSIC_IO "輸入/輸出"
+    IDS_DMUSIC_IO "輸入／輸出"
     IDS_DMUSIC_DLS "支援 DLS"
     IDS_DMUSIC_EXT "外部"
     IDS_DMUSIC_PORT "預設埠"
-    IDS_DDDISABLE_MSG "這將停用 DirectDraw 所有的顯示裝置上的所有硬體加速。\n您要繼續嗎?\n"
+    IDS_DDDISABLE_MSG "這將停用 DirectDraw 所有的顯示裝置上的所有硬體加速。\n您要繼續嗎？\n"
 END

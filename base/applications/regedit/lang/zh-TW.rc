@@ -264,7 +264,7 @@ BEGIN
     RTEXT "修訂本︰", IDC_STATIC, 151, 250, 51, 8
     LTEXT "", IDC_REVISION, 205, 250, 66, 8
     DEFPUSHBUTTON "確定", IDOK, 92, 263, 40, 14
-    PUSHBUTTON "資料...(&D)", IDC_SHOW_RESOURCE_DATA, 148, 263, 40, 14, WS_DISABLED
+    PUSHBUTTON "資料(&D)...", IDC_SHOW_RESOURCE_DATA, 148, 263, 40, 14, WS_DISABLED
 END
 
 /* String Tables */
@@ -353,16 +353,16 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_BINARY_EMPTY "(長度為零的二進位值)"
-    IDS_DEFAULT_VALUE_NAME "(預設)"
-    IDS_VALUE_NOT_SET "(數值未設定)"
+    IDS_BINARY_EMPTY "（長度為零的二進位值）"
+    IDS_DEFAULT_VALUE_NAME "（預設）"
+    IDS_VALUE_NOT_SET "（數值未設定）"
     IDS_UNKNOWN_TYPE "未知類型︰（0x%lx）"
     IDS_MY_COMPUTER "我的電腦"
     IDS_IMPORT_REG_FILE "載入 Hive 控制檔"
     IDS_EXPORT_REG_FILE "解除載入 Hive 控制檔"
     IDS_LOAD_HIVE "載入配置單元"
     IDS_UNLOAD_HIVE "解除安裝配置單元"
-    IDS_INVALID_DWORD "(不正確的 DWORD 值)"
+    IDS_INVALID_DWORD "（不正確的 DWORD 值）"
 END
 
 STRINGTABLE
@@ -468,7 +468,7 @@ BEGIN
     IDS_BUS_INTERNALPOWERBUS "Internal Power Bus"
     IDS_BUS_PNPISABUS "PnP-ISA Bus"
     IDS_BUS_PNPBUS "PnP Bus"
-    IDS_BUS_UNKNOWNTYPE "未知的介面類型"
+    IDS_BUS_UNKNOWNTYPE "不明介面類型"
 END
 
 /*****************************************************************/

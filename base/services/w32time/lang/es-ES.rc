@@ -1,0 +1,15 @@
+/*
+ * PROJECT:     ReactOS W32Time Service
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     Spanish resource file
+ * TRANSLATORS: Copyright 2021 Julen Urizar Compains <julenuri@hotmail.com>
+ *              Copyright 2021 Javier Fernandez <elhoir@gmail.com>
+ */
+
+LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
+
+STRINGTABLE
+BEGIN
+    IDS_DISPLAYNAME "Servicio de hora"
+    IDS_DESCRIPTION "Mantiene la sincronización de fecha y hora en todos los servidores y clientes de la red."
+END

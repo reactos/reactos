@@ -155,3 +155,11 @@ HID_DEVICE            =  "HID-сумісний пристрій"
 HID.DeviceDesc        = "USB 人类接口设备"
 HID_DEVICE            =  "HID 兼容设备"
 StdMfg                = "(标准人类接口设备)"
+
+[Strings.0816]
+ReactOS               = "Equipa ReactOS"
+HID.ClassName         = "Dispositivos de interface humana"
+HID.DeviceDesc        = "Dispositivos de interface humana USB"
+
+HID_DEVICE            = "Dispositivo compatível com outros dispositivos de interface humana"
+StdMfg                = "(Dispositivos de interface humana padrão)"

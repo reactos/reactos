@@ -10,6 +10,6 @@ LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
 
 STRINGTABLE
 BEGIN
-    IDS_FAIL_INIT "無法初始化 Utility Manager library！錯誤碼︰%lu。"
+    IDS_FAIL_INIT "無法初始化協助工具管理員程式庫！錯誤碼︰%lu。"
     IDS_FAIL_INIT_TITLE "初始化失敗"
 END

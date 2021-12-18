@@ -1406,95 +1406,225 @@ demFileDelete(IN LPCSTR FileName)
     return GetLastError();
 }
 
+/**
+ * @brief   Helper for demFileFindFirst() and demFileFindNext().
+ * Returns TRUE if a file matches the DOS attributes and has a 8.3 file name.
+ **/
+static BOOLEAN
+dempIsFileMatch(
+    _Inout_ PWIN32_FIND_DATAA FindData,
+    _In_  WORD   AttribMask,
+    _Out_ PCSTR* ShortName)
+{
+    /* Convert in place the attributes to DOS format */
+    FindData->dwFileAttributes = NT_TO_DOS_FA(FindData->dwFileAttributes);
+
+    /* Check the attributes */
+    if ((FindData->dwFileAttributes & (FA_HIDDEN | FA_SYSTEM | FA_DIRECTORY))
+        & ~AttribMask)
+    {
+        return FALSE;
+    }
+
+    /* Check whether the file has a 8.3 file name */
+    if (*FindData->cAlternateFileName)
+    {
+        /* Use the available one */
+        *ShortName = FindData->cAlternateFileName;
+        return TRUE;
+    }
+    else
+    {
+        /*
+         * Verify whether the original long name is actually a valid
+         * 8.3 file name. Note that we cannot use GetShortPathName()
+         * since the latter works on full paths, that we do not always have.
+         */
+        BOOLEAN IsNameLegal, SpacesInName;
+        WCHAR FileNameBufferU[_countof(FindData->cFileName) + 1];
+        UNICODE_STRING FileNameU;
+        ANSI_STRING FileNameA;
+
+        RtlInitAnsiString(&FileNameA, FindData->cFileName);
+        RtlInitEmptyUnicodeString(&FileNameU, FileNameBufferU, sizeof(FileNameBufferU));
+        RtlAnsiStringToUnicodeString(&FileNameU, &FileNameA, FALSE);
+
+        IsNameLegal = RtlIsNameLegalDOS8Dot3(&FileNameU,
+                                             NULL, // (lpOemName ? &AnsiName : NULL),
+                                             &SpacesInName);
+
+        if (!IsNameLegal || SpacesInName)
+        {
+            /* This is an error situation */
+            DPRINT1("'%.*s' is %s 8.3 filename %s spaces\n",
+                    _countof(FindData->cFileName), FindData->cFileName,
+                    (IsNameLegal ? "a valid" : "an invalid"), (SpacesInName ? "with" : "without"));
+        }
+
+        if (IsNameLegal && !SpacesInName)
+        {
+            /* We can use the original name */
+            *ShortName = FindData->cFileName;
+            return TRUE;
+        }
+    }
+
+    DPRINT1("No short 8.3 filename available for '%.*s'\n",
+            _countof(FindData->cFileName), FindData->cFileName);
+
+    return FALSE;
+}
+
+/**
+ * @name demFileFindFirst
+ * Implementation of the DOS INT 21h, AH=4Eh "Find First File" function.
+ *
+ * Starts enumerating files that match the given file search specification
+ * and whose attributes are _at most_ those specified by the mask. This means
+ * in particular that "normal files", i.e. files with no attributes set, are
+ * always enumerated along those matching the requested attributes.
+ *
+ * @param[out] pFindFileData
+ * Pointer to the DTA (Disk Transfer Area) filled with FindFirst data block.
+ *
+ * @param[in]  FileName
+ * File search specification (may include path and wildcards).
+ *
+ * @param[in]  AttribMask
+ * Mask of file attributes. Includes files with a given attribute bit set
+ * if the corresponding bit is set to 1 in the mask. Excludes files with a
+ * given attribute bit set if the corresponding bit is set to 0 in the mask.
+ * Supported file attributes:
+ *     FA_NORMAL       0x0000
+ *     FA_READONLY     0x0001 (ignored)
+ *     FA_HIDDEN       0x0002
+ *     FA_SYSTEM       0x0004
+ *     FA_VOLID        0x0008 (not currently supported)
+ *     FA_LABEL
+ *     FA_DIRECTORY    0x0010
+ *     FA_ARCHIVE      0x0020 (ignored)
+ *     FA_DEVICE       0x0040 (ignored)
+ *
+ * @return
+ * ERROR_SUCCESS on success (found match), or a last error (match not found).
+ *
+ * @see demFileFindNext()
+ **/
 DWORD
 WINAPI
-demFileFindFirst(OUT PVOID  lpFindFileData,
-                 IN  LPCSTR FileName,
-                 IN  WORD   AttribMask)
+demFileFindFirst(
+    _Out_ PVOID pFindFileData,
+    _In_  PCSTR FileName,
+    _In_  WORD  AttribMask)
 {
-    BOOLEAN Success = TRUE;
-    WIN32_FIND_DATAA FindData;
+    PDOS_FIND_FILE_BLOCK FindFileBlock = (PDOS_FIND_FILE_BLOCK)pFindFileData;
     HANDLE SearchHandle;
-    PDOS_FIND_FILE_BLOCK FindFileBlock = (PDOS_FIND_FILE_BLOCK)lpFindFileData;
+    WIN32_FIND_DATAA FindData;
+    PCSTR ShortName = NULL;
+
+    /* Reset the private block fields */
+    RtlZeroMemory(FindFileBlock, RTL_SIZEOF_THROUGH_FIELD(DOS_FIND_FILE_BLOCK, SearchHandle));
+
+    // TODO: Handle FA_VOLID for volume label.
+    if (AttribMask & FA_VOLID)
+    {
+        DPRINT1("demFileFindFirst: Volume label attribute is UNIMPLEMENTED!\n");
+        AttribMask &= ~FA_VOLID; // Remove it for the time being...
+    }
+
+    /* Filter out the ignored attributes */
+    AttribMask &= ~(FA_DEVICE | FA_ARCHIVE | FA_READONLY);
 
     /* Start a search */
     SearchHandle = FindFirstFileA(FileName, &FindData);
-    if (SearchHandle == INVALID_HANDLE_VALUE) return GetLastError();
-
-    do
-    {
-        /* Check the attributes and retry as long as we haven't found a matching file */
-        if (!((FindData.dwFileAttributes & (FILE_ATTRIBUTE_HIDDEN |
-                                            FILE_ATTRIBUTE_SYSTEM |
-                                            FILE_ATTRIBUTE_DIRECTORY))
-             & ~AttribMask))
-        {
-            break;
-        }
-    }
-    while ((Success = FindNextFileA(SearchHandle, &FindData)));
-
-    /* If we failed at some point, close the search and return an error */
-    if (!Success)
-    {
-        FindClose(SearchHandle);
+    if (SearchHandle == INVALID_HANDLE_VALUE)
         return GetLastError();
+
+    /* Check the attributes and retry as long as we haven't found a matching file */
+    while (!dempIsFileMatch(&FindData, AttribMask, &ShortName))
+    {
+        /* Continue searching. If we fail at some point,
+         * stop the search and return an error. */
+        if (!FindNextFileA(SearchHandle, &FindData))
+        {
+            FindClose(SearchHandle);
+            return GetLastError();
+        }
     }
 
     /* Fill the block */
     FindFileBlock->DriveLetter  = DosData->Sda.CurrentDrive + 'A';
+    strncpy(FindFileBlock->Pattern, FileName, _countof(FindFileBlock->Pattern));
     FindFileBlock->AttribMask   = AttribMask;
     FindFileBlock->SearchHandle = SearchHandle;
     FindFileBlock->Attributes   = LOBYTE(FindData.dwFileAttributes);
     FileTimeToDosDateTime(&FindData.ftLastWriteTime,
                           &FindFileBlock->FileDate,
                           &FindFileBlock->FileTime);
-    FindFileBlock->FileSize = FindData.nFileSizeHigh ? 0xFFFFFFFF
+    FindFileBlock->FileSize = FindData.nFileSizeHigh ? MAXDWORD
                                                      : FindData.nFileSizeLow;
-    /* Build a short path name */
-    if (*FindData.cAlternateFileName)
-        strncpy(FindFileBlock->FileName, FindData.cAlternateFileName, sizeof(FindFileBlock->FileName));
-    else
-        GetShortPathNameA(FindData.cFileName, FindFileBlock->FileName, sizeof(FindFileBlock->FileName));
+
+    /* Copy the NULL-terminated short file name */
+    RtlStringCchCopyA(FindFileBlock->FileName,
+                      _countof(FindFileBlock->FileName),
+                      ShortName);
 
     return ERROR_SUCCESS;
 }
 
+/**
+ * @name demFileFindNext
+ * Implementation of the DOS INT 21h, AH=4Fh "Find Next File" function.
+ *
+ * Continues enumerating files, with the same file search specification
+ * and attributes as those given to the first demFileFindFirst() call.
+ *
+ * @param[in,out] pFindFileData
+ * Pointer to the DTA (Disk Transfer Area) filled with FindFirst data block.
+ *
+ * @return
+ * ERROR_SUCCESS on success (found match), or a last error (match not found).
+ *
+ * @see demFileFindFirst()
+ **/
 DWORD
 WINAPI
-demFileFindNext(OUT PVOID lpFindFileData)
+demFileFindNext(
+    _Inout_ PVOID pFindFileData)
 {
+    PDOS_FIND_FILE_BLOCK FindFileBlock = (PDOS_FIND_FILE_BLOCK)pFindFileData;
+    HANDLE SearchHandle = FindFileBlock->SearchHandle;
     WIN32_FIND_DATAA FindData;
-    PDOS_FIND_FILE_BLOCK FindFileBlock = (PDOS_FIND_FILE_BLOCK)lpFindFileData;
+    PCSTR ShortName = NULL;
 
     do
     {
-        /* Continue searching as long as we haven't found a matching file */
-
-        /* If we failed at some point, close the search and return an error */
-        if (!FindNextFileA(FindFileBlock->SearchHandle, &FindData))
+        /* Continue searching. If we fail at some point,
+         * stop the search and return an error. */
+        if (!FindNextFileA(SearchHandle, &FindData))
         {
-            FindClose(FindFileBlock->SearchHandle);
+            FindClose(SearchHandle);
+
+            /* Reset the private block fields */
+            RtlZeroMemory(FindFileBlock, RTL_SIZEOF_THROUGH_FIELD(DOS_FIND_FILE_BLOCK, SearchHandle));
             return GetLastError();
         }
     }
-    while ((FindData.dwFileAttributes & (FILE_ATTRIBUTE_HIDDEN |
-                                         FILE_ATTRIBUTE_SYSTEM |
-                                         FILE_ATTRIBUTE_DIRECTORY))
-           & ~FindFileBlock->AttribMask);
+    /* Check the attributes and retry as long as we haven't found a matching file */
+    while (!dempIsFileMatch(&FindData, FindFileBlock->AttribMask, &ShortName));
 
     /* Update the block */
     FindFileBlock->Attributes = LOBYTE(FindData.dwFileAttributes);
     FileTimeToDosDateTime(&FindData.ftLastWriteTime,
                           &FindFileBlock->FileDate,
                           &FindFileBlock->FileTime);
-    FindFileBlock->FileSize = FindData.nFileSizeHigh ? 0xFFFFFFFF
+    FindFileBlock->FileSize = FindData.nFileSizeHigh ? MAXDWORD
                                                      : FindData.nFileSizeLow;
-    /* Build a short path name */
-    if (*FindData.cAlternateFileName)
-        strncpy(FindFileBlock->FileName, FindData.cAlternateFileName, sizeof(FindFileBlock->FileName));
-    else
-        GetShortPathNameA(FindData.cFileName, FindFileBlock->FileName, sizeof(FindFileBlock->FileName));
+
+    /* Copy the NULL-terminated short file name */
+    RtlStringCchCopyA(FindFileBlock->FileName,
+                      _countof(FindFileBlock->FileName),
+                      ShortName);
 
     return ERROR_SUCCESS;
 }

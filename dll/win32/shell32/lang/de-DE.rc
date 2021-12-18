@@ -806,6 +806,8 @@ BEGIN
     IDS_COPYERRORSAME "'%s' kann nicht kopiert werden: Quell- und Zieldatei sind identisch."
     IDS_MOVEERRORSUBFOLDER "'%s' kann nicht verschoben werden: Der Zielorder ist ein Unterordner des Quellordners."
     IDS_COPYERRORSUBFOLDER "'%s' kann nicht kopiert werden: Der Zielorder ist ein Unterordner des Quellordners."
+    IDS_MOVEERROR "Cannot move '%s': %s"
+    IDS_COPYERROR "Cannot copy '%s': %s"
 
     IDS_CREATEFOLDER_DENIED " Der Ordner kann nicht erstellt werden '%1'"
     IDS_CREATEFOLDER_CAPTION " Der Ordner kann nicht erstellt werden."

@@ -53,32 +53,6 @@ static USHORT SupportedDevices[] =
     0x10B5,     // Intel 82546GB Quad Copper KSP3
 };
 
-
-static ULONG E1000WriteFlush(IN PE1000_ADAPTER Adapter)
-{
-    volatile ULONG Value;
-
-    NdisReadRegisterUlong(Adapter->IoBase + E1000_REG_STATUS, &Value);
-    return Value;
-}
-
-VOID NTAPI E1000WriteUlong(IN PE1000_ADAPTER Adapter, IN ULONG Address, IN ULONG Value)
-{
-    NdisWriteRegisterUlong((PULONG)(Adapter->IoBase + Address), Value);
-}
-
-VOID NTAPI E1000ReadUlong(IN PE1000_ADAPTER Adapter, IN ULONG Address, OUT PULONG Value)
-{
-    NdisReadRegisterUlong((PULONG)(Adapter->IoBase + Address), Value);
-}
-
-static VOID E1000WriteIoUlong(IN PE1000_ADAPTER Adapter, IN ULONG Address, IN ULONG Value)
-{
-    NdisRawWritePortUlong((PULONG)(Adapter->IoPort), Address);
-    E1000WriteFlush(Adapter);
-    NdisRawWritePortUlong((PULONG)(Adapter->IoPort + 4), Value);
-}
-
 static ULONG PacketFilterToMask(ULONG PacketFilter)
 {
     ULONG FilterMask = 0;
@@ -145,16 +119,11 @@ static BOOLEAN E1000ReadMdic(IN PE1000_ADAPTER Adapter, IN ULONG Address, USHORT
     ULONG Mdic;
     UINT n;
 
-    if (Address > MAX_PHY_REG_ADDRESS)
-    {
-        NDIS_DbgPrint(MIN_TRACE, ("PHY Address %d is invalid\n", Address));
-        return 1;
-    }
+    ASSERT(Address <= MAX_PHY_REG_ADDRESS)
 
     Mdic = (Address << E1000_MDIC_REGADD_SHIFT);
     Mdic |= (E1000_MDIC_PHYADD_GIGABIT << E1000_MDIC_PHYADD_SHIFT);
     Mdic |= E1000_MDIC_OP_READ;
-
     E1000WriteUlong(Adapter, E1000_REG_MDIC, Mdic);
 
     for (n = 0; n < MAX_PHY_READ_ATTEMPTS; n++)
@@ -725,6 +694,7 @@ NICUpdateMulticastList(
     UINT n;
     NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
 
+    // FIXME: Use 'Adapter->MulticastListSize'? Check the datasheet
     for (n = 0; n < MAXIMUM_MULTICAST_ADDRESSES; ++n)
     {
         ULONG Ral = *(ULONG *)Adapter->MulticastList[n].MacAddress;
@@ -763,46 +733,6 @@ NICApplyPacketFilter(
     return NDIS_STATUS_SUCCESS;
 }
 
-NDIS_STATUS
-NTAPI
-NICApplyInterruptMask(
-    IN PE1000_ADAPTER Adapter)
-{
-    NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
-
-    E1000WriteUlong(Adapter, E1000_REG_IMS, Adapter->InterruptMask /*| 0x1F6DC*/);
-    return NDIS_STATUS_SUCCESS;
-}
-
-NDIS_STATUS
-NTAPI
-NICDisableInterrupts(
-    IN PE1000_ADAPTER Adapter)
-{
-    NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
-
-    E1000WriteUlong(Adapter, E1000_REG_IMC, ~0);
-    return NDIS_STATUS_SUCCESS;
-}
-
-ULONG
-NTAPI
-NICInterruptRecognized(
-    IN PE1000_ADAPTER Adapter,
-    OUT PBOOLEAN InterruptRecognized)
-{
-    ULONG Value;
-
-    /* Reading the interrupt acknowledges them */
-    E1000ReadUlong(Adapter, E1000_REG_ICR, &Value);
-
-    *InterruptRecognized = (Value & Adapter->InterruptMask) != 0;
-
-    NDIS_DbgPrint(MAX_TRACE, ("NICInterruptRecognized(0x%x, 0x%x).\n", Value, *InterruptRecognized));
-
-    return (Value & Adapter->InterruptMask);
-}
-
 VOID
 NTAPI
 NICUpdateLinkStatus(
@@ -818,37 +748,4 @@ NICUpdateLinkStatus(
     Adapter->MediaState = (DeviceStatus & E1000_STATUS_LU) ? NdisMediaStateConnected : NdisMediaStateDisconnected;
     SpeedIndex = (DeviceStatus & E1000_STATUS_SPEEDMASK) >> E1000_STATUS_SPEEDSHIFT;
     Adapter->LinkSpeedMbps = SpeedValues[SpeedIndex];
-}
-
-NDIS_STATUS
-NTAPI
-NICTransmitPacket(
-    IN PE1000_ADAPTER Adapter,
-    IN PHYSICAL_ADDRESS PhysicalAddress,
-    IN ULONG Length)
-{
-    volatile PE1000_TRANSMIT_DESCRIPTOR TransmitDescriptor;
-
-    NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
-
-    TransmitDescriptor = Adapter->TransmitDescriptors + Adapter->CurrentTxDesc;
-    TransmitDescriptor->Address = PhysicalAddress.QuadPart;
-    TransmitDescriptor->Length = Length;
-    TransmitDescriptor->ChecksumOffset = 0;
-    TransmitDescriptor->Command = E1000_TDESC_CMD_RS | E1000_TDESC_CMD_IFCS | E1000_TDESC_CMD_EOP | E1000_TDESC_CMD_IDE;
-    TransmitDescriptor->Status = 0;
-    TransmitDescriptor->ChecksumStartField = 0;
-    TransmitDescriptor->Special = 0;
-
-    Adapter->CurrentTxDesc = (Adapter->CurrentTxDesc + 1) % NUM_TRANSMIT_DESCRIPTORS;
-
-    E1000WriteUlong(Adapter, E1000_REG_TDT, Adapter->CurrentTxDesc);
-
-    if (Adapter->CurrentTxDesc == Adapter->LastTxDesc)
-    {
-        NDIS_DbgPrint(MID_TRACE, ("All TX descriptors are full now\n"));
-        Adapter->TxFull = TRUE;
-    }
-
-    return NDIS_STATUS_SUCCESS;
 }

@@ -250,6 +250,8 @@
 #define IDS_COPYERRORSAME        348
 #define IDS_MOVEERRORSUBFOLDER   349
 #define IDS_COPYERRORSUBFOLDER   350
+#define IDS_MOVEERROR            351
+#define IDS_COPYERROR            352
 
 #define IDS_MENU_EMPTY           34561
 
