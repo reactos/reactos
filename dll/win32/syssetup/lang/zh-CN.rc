@@ -36,10 +36,10 @@ FONT 9, "宋体"
 BEGIN
     ICON "", IDC_PRODUCT_ICON, 5, 5, 20, 20
     LTEXT "请选择您要安装的软件版本：", IDC_STATIC, 35, 7, 230, 12
-    LTEXT "产品选项(&O):", IDC_STATIC, 5, 32, 85, 10
+    LTEXT "产品选项(&O)：", IDC_STATIC, 5, 32, 85, 10
     COMBOBOX IDC_PRODUCT_OPTIONS, 95, 30, 170, 300, CBS_HASSTRINGS | CBS_AUTOHSCROLL | CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     GROUPBOX "产品信息", IDC_STATIC, 5, 50, 305, 85
-    LTEXT "描述:", IDC_STATIC, 20, 65, 70, 10
+    LTEXT "描述：", IDC_STATIC, 20, 65, 70, 10
     EDITTEXT IDC_PRODUCT_DESCRIPTION, 95, 65, 205, 60, ES_READONLY | ES_AUTOVSCROLL | ES_MULTILINE | WS_VSCROLL
 END
 
@@ -50,9 +50,9 @@ FONT 9, "宋体"
 BEGIN
     ICON IDI_ICON2, IDC_STATIC, 21, 7, 20, 20
     LTEXT "输入您的姓名以及公司或组织的名称。", IDC_STATIC, 54, 7, 242, 21
-    LTEXT "姓名(&M):", IDC_STATIC, 54, 37, 44, 8
+    LTEXT "姓名(&M)：", IDC_STATIC, 54, 37, 44, 8
     EDITTEXT IDC_OWNERNAME, 132, 35, 163, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "组织(&O):", IDC_STATIC, 54, 57, 60, 20
+    LTEXT "组织(&O)：", IDC_STATIC, 54, 57, 60, 20
     EDITTEXT IDC_OWNERORGANIZATION, 132, 55, 163, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL
 END
 
@@ -62,15 +62,15 @@ CAPTION "ReactOS 安装程序"
 FONT 9, "宋体"
 BEGIN
     ICON IDI_ICON1, IDC_STATIC, 21, 7, 20, 20
-    LTEXT "请输入不超过 63 个字符的计算机名。每一个在您网络上的计算机都必须有一个唯一的名称。", IDC_STATIC, 54, 7, 250, 24
-    LTEXT "计算机名(&C):", IDC_STATIC, 54, 38, 75, 8
+    LTEXT "请输入不超过 63 个字符的计算机名。每个在您网络上的计算机都必须有一个唯一的名称。", IDC_STATIC, 54, 7, 250, 24
+    LTEXT "计算机名(&C)：", IDC_STATIC, 54, 38, 75, 8
     EDITTEXT IDC_COMPUTERNAME, 132, 35, 163, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL | ES_UPPERCASE
     ICON IDI_ICON5, IDC_STATIC, 21, 57, 20, 20
-    LTEXT "安装程序会创建一个称为 Administrator (系统管理员)的用户帐户。需要完全控制计算机时，可以使用这个帐户。", IDC_STATIC, 54, 57, 250, 25
+    LTEXT "安装程序会创建一个称为 Administrator （系统管理员）的用户帐户。需要完全控制计算机时，可以使用这个帐户。", IDC_STATIC, 54, 57, 250, 25
     LTEXT "请键入不超过 127 个字符的系统管理员密码。", IDC_STATIC, 54, 87, 250, 8
-    LTEXT "系统管理员密码(&A):", IDC_STATIC, 54, 104, 75, 8
+    LTEXT "系统管理员密码(&A)：", IDC_STATIC, 54, 104, 75, 8
     EDITTEXT IDC_ADMINPASSWORD1, 132, 101, 172, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
-    LTEXT "确认密码(&O):", IDC_STATIC, 54, 123, 75, 8
+    LTEXT "确认密码(&O)：", IDC_STATIC, 54, 123, 75, 8
     EDITTEXT IDC_ADMINPASSWORD2, 132, 120, 172, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
 END
 
@@ -82,7 +82,7 @@ BEGIN
     ICON IDI_ICON4, IDC_STATIC, 21, 7, 20, 20
     LTEXT "系统区域设置应与您要使用的应用程序的语言相匹配。用户区域设置控制数字，货币和日期的显示方式。", IDC_STATIC, 53, 7, 253, 20
     LTEXT "%s", IDC_LOCALETEXT, 53, 29, 250, 16
-    LTEXT "想要更改系统和用户的区域设置，请单击 “自定义” 。", IDC_STATIC, 53, 60, 184, 8
+    LTEXT "想要更改系统和用户的区域设置，请单击“自定义”。", IDC_STATIC, 53, 60, 184, 8
     PUSHBUTTON "自定义(&C)...", IDC_CUSTOMLOCALE, 245, 57, 50, 14
     LTEXT "", IDC_STATIC, 53, 79, 246, 1, SS_ETCHEDHORZ
     LTEXT "“文字输入语言”让您使用多种输入方法和设备用\n许多不同的语言输入文字。", IDC_STATIC, 53, 86, 253, 20
@@ -125,7 +125,7 @@ END
 
 IDD_FINISHPAGE DIALOGEX 0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "正在完成 ReactOS 安装"
+CAPTION "正在完成 ReactOS 安装程序"
 FONT 9, "宋体"
 BEGIN
     LTEXT "正在完成 ReactOS 安装程序", IDC_FINISHTITLE,115, 8, 195, 24
@@ -256,11 +256,11 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_PRODUCTTITLE "Product Options"
-    IDS_PRODUCTSUBTITLE "You can choose a product option that affects the behavior of the system."
+    IDS_PRODUCTTITLE "产品选项"
+    IDS_PRODUCTSUBTITLE "请选择需要安装的版本，这可能会影响系统的一些特性。"
     IDS_PRODUCTSERVERNAME "ReactOS Server"
     IDS_PRODUCTWORKSTATIONNAME "ReactOS Workstation"
-    IDS_PRODUCTSERVERINFO "The system will be recognized as a server. Private folders ""My Pictures"", ""My Videos"" and ""My Music"" are independent from ""My Documents""."
-    IDS_PRODUCTWORKSTATIONINFO "The system will be recognized as a workstation. Private folders ""My Pictures"", ""My Videos"" and ""My Music"" are in ""My Documents""."
-    IDS_DEFAULT "(Default)"
+    IDS_PRODUCTSERVERINFO "系统将会被识别为服务器。私人文件夹“我的图片”、“我的视频”和“我的音乐”会独立于“我的文档”文件夹。"
+    IDS_PRODUCTWORKSTATIONINFO "系统将会被识别为工作站。私人文件夹“我的图片”、“我的视频”和“我的音乐”会包含在“我的文档”文件夹中。"
+    IDS_DEFAULT "（默认）"
 END
