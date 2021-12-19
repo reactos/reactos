@@ -11,72 +11,27 @@
 #include "SHChangeNotify.h"
 
 static HWND s_hwnd = NULL;
-static const WCHAR s_szName[] = L"SHChangeNotify testcase";
-static INT s_nMode;
-
-static BYTE s_counters[TYPE_RENAMEFOLDER + 1];
 static UINT s_uRegID = 0;
-
-static WCHAR s_path1[MAX_PATH], s_path2[MAX_PATH];
-
+static BOOL s_fRecursive = FALSE;
+static WATCHDIR s_iWatchDir = WATCHDIR_NULL;
+static INT s_nSources = 0;
 static LPITEMIDLIST s_pidl = NULL;
-static SHChangeNotifyEntry s_entry;
+static WCHAR s_path1[MAX_PATH], s_path2[MAX_PATH];
+static BYTE s_counters[TYPE_RENAMEFOLDER + 1];
 
-static BOOL
-OnCreate(HWND hwnd)
+static BOOL OnCreate(HWND hwnd)
 {
     s_hwnd = hwnd;
+    s_pidl = GetWatchPidl(s_iWatchDir);
 
-    DoInitPaths();
-
-    s_pidl = ILCreateFromPathW(s_dir1);
-    s_entry.pidl = s_pidl;
-
-    INT nSources;
-    switch (s_nMode)
-    {
-        case 0:
-            s_entry.fRecursive = TRUE;
-            nSources = SHCNRF_ShellLevel;
-            break;
-
-        case 1:
-            s_entry.fRecursive = TRUE;
-            nSources = SHCNRF_ShellLevel | SHCNRF_InterruptLevel;
-            break;
-
-        case 2:
-            s_entry.fRecursive = FALSE;
-            nSources = SHCNRF_ShellLevel | SHCNRF_NewDelivery;
-            break;
-
-        case 3:
-            s_entry.fRecursive = TRUE;
-            nSources = SHCNRF_InterruptLevel | SHCNRF_RecursiveInterrupt | SHCNRF_NewDelivery;
-            break;
-
-        case 4:
-            s_entry.fRecursive = FALSE;
-            nSources = SHCNRF_InterruptLevel | SHCNRF_NewDelivery;
-            break;
-
-        case 5:
-            s_entry.fRecursive = TRUE;
-            nSources = SHCNRF_InterruptLevel | SHCNRF_RecursiveInterrupt | SHCNRF_NewDelivery;
-            s_entry.pidl = NULL;
-            break;
-
-        default:
-            return FALSE;
-    }
-    LONG fEvents = SHCNE_ALLEVENTS;
-    s_uRegID = SHChangeNotifyRegister(hwnd, nSources, fEvents, WM_SHELL_NOTIFY,
-                                      1, &s_entry);
+    SHChangeNotifyEntry entry;
+    entry.pidl = s_pidl;
+    entry.fRecursive = s_fRecursive;
+    s_uRegID = SHChangeNotifyRegister(hwnd, s_nSources, SHCNE_ALLEVENTS, WM_SHELL_NOTIFY, 1, &entry);
     return s_uRegID != 0;
 }
 
-static void
-OnCommand(HWND hwnd, UINT id)
+static void OnCommand(HWND hwnd, UINT id)
 {
     switch (id)
     {
@@ -87,8 +42,7 @@ OnCommand(HWND hwnd, UINT id)
     }
 }
 
-static void
-OnDestroy(HWND hwnd)
+static void OnDestroy(HWND hwnd)
 {
     SHChangeNotifyDeregister(s_uRegID);
     s_uRegID = 0;
@@ -100,35 +54,54 @@ OnDestroy(HWND hwnd)
     s_hwnd = NULL;
 }
 
-static void
-DoShellNotify(HWND hwnd, PIDLIST_ABSOLUTE pidl1, PIDLIST_ABSOLUTE pidl2, LONG lEvent)
+static BOOL DoPathes(PIDLIST_ABSOLUTE pidl1, PIDLIST_ABSOLUTE pidl2)
 {
+    WCHAR szPath[MAX_PATH];
+
     if (pidl1)
-        SHGetPathFromIDListW(pidl1, s_path1);
+    {
+        SHGetPathFromIDListW(pidl1, szPath);
+        if (wcsstr(szPath, L"Recent") != NULL)
+            return FALSE;
+    }
     else
-        s_path1[0] = 0;
+    {
+        szPath[0] = 0;
+    }
+    lstrcpynW(s_path1, szPath, _countof(s_path1));
 
     if (pidl2)
         SHGetPathFromIDListW(pidl2, s_path2);
     else
         s_path2[0] = 0;
 
+    return TRUE;
+}
+
+static void
+DoShellNotify(HWND hwnd, PIDLIST_ABSOLUTE pidl1, PIDLIST_ABSOLUTE pidl2, LONG lEvent)
+{
     switch (lEvent)
     {
         case SHCNE_RENAMEITEM:
-            s_counters[TYPE_RENAMEITEM] = 1;
+            if (DoPathes(pidl1, pidl2))
+                s_counters[TYPE_RENAMEITEM] = 1;
             break;
         case SHCNE_CREATE:
-            s_counters[TYPE_CREATE] = 1;
+            if (DoPathes(pidl1, pidl2))
+                s_counters[TYPE_CREATE] = 1;
             break;
         case SHCNE_DELETE:
-            s_counters[TYPE_DELETE] = 1;
+            if (DoPathes(pidl1, pidl2))
+                s_counters[TYPE_DELETE] = 1;
             break;
         case SHCNE_MKDIR:
-            s_counters[TYPE_MKDIR] = 1;
+            if (DoPathes(pidl1, pidl2))
+                s_counters[TYPE_MKDIR] = 1;
             break;
         case SHCNE_RMDIR:
-            s_counters[TYPE_RMDIR] = 1;
+            if (DoPathes(pidl1, pidl2))
+                s_counters[TYPE_RMDIR] = 1;
             break;
         case SHCNE_MEDIAINSERTED:
             break;
@@ -145,10 +118,8 @@ DoShellNotify(HWND hwnd, PIDLIST_ABSOLUTE pidl1, PIDLIST_ABSOLUTE pidl2, LONG lE
         case SHCNE_ATTRIBUTES:
             break;
         case SHCNE_UPDATEDIR:
-            s_counters[TYPE_UPDATEDIR] = 1;
             break;
         case SHCNE_UPDATEITEM:
-            s_counters[TYPE_UPDATEITEM] = 1;
             break;
         case SHCNE_SERVERDISCONNECT:
             break;
@@ -157,7 +128,8 @@ DoShellNotify(HWND hwnd, PIDLIST_ABSOLUTE pidl1, PIDLIST_ABSOLUTE pidl2, LONG lE
         case SHCNE_DRIVEADDGUI:
             break;
         case SHCNE_RENAMEFOLDER:
-            s_counters[TYPE_RENAMEFOLDER] = 1;
+            if (DoPathes(pidl1, pidl2))
+                s_counters[TYPE_RENAMEFOLDER] = 1;
             break;
         case SHCNE_FREESPACE:
             break;
@@ -244,6 +216,8 @@ WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
         case WM_CLEAR_FLAGS:
             ZeroMemory(&s_counters, sizeof(s_counters));
+            s_path1[0] = 0;
+            s_path2[0] = 0;
             break;
 
         case WM_SET_PATHS:
@@ -265,7 +239,20 @@ wWinMain(HINSTANCE hInstance,
     if (lstrcmpiW(lpCmdLine, L"") == 0 || lstrcmpiW(lpCmdLine, L"TEST") == 0)
         return 0;
 
-    s_nMode = _wtoi(lpCmdLine);
+    LPWSTR pch = lpCmdLine; // fRecursive,iWatchDir,nSources
+    s_fRecursive = !!wcstoul(pch, NULL, 0);
+    pch = wcschr(pch, L',');
+    if (!pch)
+        return -1;
+    ++pch;
+
+    s_iWatchDir = (WATCHDIR)wcstoul(pch, NULL, 0);
+    pch = wcschr(pch, L',');
+    if (!pch)
+        return -2;
+    ++pch;
+
+    s_nSources = wcstoul(pch, NULL, 0);
 
     WNDCLASSW wc;
     ZeroMemory(&wc, sizeof(wc));
@@ -274,11 +261,11 @@ wWinMain(HINSTANCE hInstance,
     wc.hIcon = LoadIcon(NULL, IDI_APPLICATION);
     wc.hCursor = LoadCursor(NULL, IDC_ARROW);
     wc.hbrBackground = (HBRUSH)(COLOR_3DFACE + 1);
-    wc.lpszClassName = s_szName;
+    wc.lpszClassName = CLASSNAME;
     if (!RegisterClassW(&wc))
         return -1;
 
-    HWND hwnd = CreateWindowW(s_szName, s_szName, WS_OVERLAPPEDWINDOW,
+    HWND hwnd = CreateWindowW(CLASSNAME, CLASSNAME, WS_OVERLAPPEDWINDOW,
                               CW_USEDEFAULT, CW_USEDEFAULT, 100, 100,
                               NULL, NULL, GetModuleHandleW(NULL), NULL);
     if (!hwnd)

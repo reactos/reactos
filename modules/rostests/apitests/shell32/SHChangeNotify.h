@@ -1,6 +1,7 @@
 #pragma once
 
 #define TEMP_FILE "shell-notify-temporary.txt"
+#define CLASSNAME L"SHChangeNotify testcase"
 
 typedef enum TYPE
 {
@@ -9,8 +10,6 @@ typedef enum TYPE
     TYPE_DELETE,
     TYPE_MKDIR,
     TYPE_RMDIR,
-    TYPE_UPDATEDIR,
-    TYPE_UPDATEITEM,
     TYPE_RENAMEFOLDER
 } TYPE;
 
@@ -19,30 +18,57 @@ typedef enum TYPE
 #define WM_CLEAR_FLAGS (WM_USER + 102)
 #define WM_SET_PATHS (WM_USER + 103)
 
-static WCHAR s_dir1[MAX_PATH];  // "%TEMP%\\WatchDir1"
-static WCHAR s_dir2[MAX_PATH];  // "%TEMP%\\WatchDir1\\Dir2"
-static WCHAR s_dir3[MAX_PATH];  // "%TEMP%\\WatchDir1\\Dir3"
-static WCHAR s_file1[MAX_PATH]; // "%TEMP%\\WatchDir1\\File1.txt"
-static WCHAR s_file2[MAX_PATH]; // "%TEMP%\\WatchDir1\\File2.txt"
-
-inline void DoInitPaths(void)
+typedef enum WATCHDIR
 {
-    WCHAR szTemp[MAX_PATH], szPath[MAX_PATH];
-    GetTempPathW(_countof(szTemp), szTemp);
-    GetLongPathNameW(szTemp, szPath, _countof(szPath));
+    WATCHDIR_NULL = 0,
+    WATCHDIR_DESKTOP,
+    WATCHDIR_MYCOMPUTER,
+    WATCHDIR_MYDOCUMENTS,
+    WATCHDIR_TEMPDIR
+} WATCHDIR;
 
-    lstrcpyW(s_dir1, szPath);
-    PathAppendW(s_dir1, L"WatchDir1");
+inline LPITEMIDLIST GetWatchPidl(WATCHDIR iWatchDir)
+{
+    LPITEMIDLIST ret;
+    WCHAR szPath[MAX_PATH];
 
-    lstrcpyW(s_dir2, s_dir1);
-    PathAppendW(s_dir2, L"Dir2");
+    switch (iWatchDir)
+    {
+        case WATCHDIR_NULL:
+            return NULL;
 
-    lstrcpyW(s_dir3, s_dir1);
-    PathAppendW(s_dir3, L"Dir3");
+        case WATCHDIR_DESKTOP:
+            SHGetSpecialFolderLocation(NULL, CSIDL_DESKTOP, &ret);
+            break;
 
-    lstrcpyW(s_file1, s_dir1);
-    PathAppendW(s_file1, L"File1.txt");
+        case WATCHDIR_MYCOMPUTER:
+            SHGetSpecialFolderLocation(NULL, CSIDL_DRIVES, &ret);
+            break;
 
-    lstrcpyW(s_file2, s_dir1);
-    PathAppendW(s_file2, L"File2.txt");
+        case WATCHDIR_MYDOCUMENTS:
+            SHGetSpecialFolderLocation(NULL, CSIDL_PERSONAL, &ret);
+            break;
+
+        case WATCHDIR_TEMPDIR:
+            GetTempPathW(_countof(szPath), szPath);
+            PathRemoveBackslashW(szPath);
+            ret = ILCreateFromPathW(szPath);
+            break;
+    }
+
+    return ret;
+}
+
+inline LPWSTR GetWatchDir(WATCHDIR iWatchDir)
+{
+    static size_t s_index = 0;
+    static WCHAR s_pathes[4][MAX_PATH];
+    LPWSTR psz = s_pathes[s_index];
+    psz[0] = 0;
+    LPITEMIDLIST pidl = GetWatchPidl(iWatchDir);
+    SHGetPathFromIDListW(pidl, psz);
+    CoTaskMemFree(pidl);
+    ++s_index;
+    s_index %= _countof(s_pathes);
+    return psz;
 }
