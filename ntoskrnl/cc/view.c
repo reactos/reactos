@@ -449,6 +449,132 @@ CcRosFlushDirtyPages (
     return STATUS_SUCCESS;
 }
 
+VOID
+CcRosTrimCache(
+    _In_ ULONG Target,
+    _Out_ PULONG NrFreed)
+/*
+ * FUNCTION: Try to free some memory from the file cache.
+ * ARGUMENTS:
+ *       Target - The number of pages to be freed.
+ *       NrFreed - Points to a variable where the number of pages
+ *                 actually freed is returned.
+ */
+{
+    PLIST_ENTRY current_entry;
+    PROS_VACB current;
+    ULONG PagesFreed;
+    KIRQL oldIrql;
+    LIST_ENTRY FreeList;
+    PFN_NUMBER Page;
+    ULONG i;
+    BOOLEAN FlushedPages = FALSE;
+
+    DPRINT("CcRosTrimCache(Target %lu)\n", Target);
+
+    InitializeListHead(&FreeList);
+
+    *NrFreed = 0;
+
+retry:
+    oldIrql = KeAcquireQueuedSpinLock(LockQueueMasterLock);
+
+    current_entry = VacbLruListHead.Flink;
+    while (current_entry != &VacbLruListHead)
+    {
+        ULONG Refs;
+
+        current = CONTAINING_RECORD(current_entry,
+                                    ROS_VACB,
+                                    VacbLruListEntry);
+        current_entry = current_entry->Flink;
+
+        KeAcquireSpinLockAtDpcLevel(&current->SharedCacheMap->CacheMapLock);
+
+        /* Reference the VACB */
+        CcRosVacbIncRefCount(current);
+
+        /* Check if it's mapped and not dirty */
+        if (InterlockedCompareExchange((PLONG)&current->MappedCount, 0, 0) > 0 && !current->Dirty)
+        {
+            /* We have to break these locks because Cc sucks */
+            KeReleaseSpinLockFromDpcLevel(&current->SharedCacheMap->CacheMapLock);
+            KeReleaseQueuedSpinLock(LockQueueMasterLock, oldIrql);
+
+            /* Page out the VACB */
+            for (i = 0; i < VACB_MAPPING_GRANULARITY / PAGE_SIZE; i++)
+            {
+                Page = (PFN_NUMBER)(MmGetPhysicalAddress((PUCHAR)current->BaseAddress + (i * PAGE_SIZE)).QuadPart >> PAGE_SHIFT);
+
+                MmPageOutPhysicalAddress(Page);
+            }
+
+            /* Reacquire the locks */
+            oldIrql = KeAcquireQueuedSpinLock(LockQueueMasterLock);
+            KeAcquireSpinLockAtDpcLevel(&current->SharedCacheMap->CacheMapLock);
+        }
+
+        /* Dereference the VACB */
+        Refs = CcRosVacbDecRefCount(current);
+
+        /* Check if we can free this entry now */
+        if (Refs < 2)
+        {
+            ASSERT(!current->Dirty);
+            ASSERT(!current->MappedCount);
+            ASSERT(Refs == 1);
+
+            RemoveEntryList(&current->CacheMapVacbListEntry);
+            RemoveEntryList(&current->VacbLruListEntry);
+            InitializeListHead(&current->VacbLruListEntry);
+            InsertHeadList(&FreeList, &current->CacheMapVacbListEntry);
+
+            /* Calculate how many pages we freed for Mm */
+            PagesFreed = min(VACB_MAPPING_GRANULARITY / PAGE_SIZE, Target);
+            Target -= PagesFreed;
+            (*NrFreed) += PagesFreed;
+        }
+
+        KeReleaseSpinLockFromDpcLevel(&current->SharedCacheMap->CacheMapLock);
+    }
+
+    KeReleaseQueuedSpinLock(LockQueueMasterLock, oldIrql);
+
+    /* Try flushing pages if we haven't met our target */
+    if ((Target > 0) && !FlushedPages)
+    {
+        /* Flush dirty pages to disk */
+        CcRosFlushDirtyPages(Target, &PagesFreed, FALSE, FALSE);
+        FlushedPages = TRUE;
+
+        /* We can only swap as many pages as we flushed */
+        if (PagesFreed < Target) Target = PagesFreed;
+
+        /* Check if we flushed anything */
+        if (PagesFreed != 0)
+        {
+            /* Try again after flushing dirty pages */
+            DPRINT("Flushed %lu dirty cache pages to disk\n", PagesFreed);
+            goto retry;
+        }
+    }
+
+    while (!IsListEmpty(&FreeList))
+    {
+        ULONG Refs;
+
+        current_entry = RemoveHeadList(&FreeList);
+        current = CONTAINING_RECORD(current_entry,
+                                    ROS_VACB,
+                                    CacheMapVacbListEntry);
+        InitializeListHead(&current->CacheMapVacbListEntry);
+        Refs = CcRosVacbDecRefCount(current);
+        ASSERT(Refs == 0);
+    }
+
+    DPRINT("Evicted %lu cache pages\n", (*NrFreed));
+}
+
 NTSTATUS
 CcRosReleaseVacb (
     PROS_SHARED_CACHE_MAP SharedCacheMap,
