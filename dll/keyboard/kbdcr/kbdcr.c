@@ -41,7 +41,7 @@ ROSDATA USHORT scancode_to_vk[] = {
   /* - 0f - */
   /* First Letters Row */
   VK_TAB,       'Q',          'W',          'E',
-  'R',          'Z',          'Y',          'U',
+  'R',          'T',          'Z',          'U',
   'I',          'O',          'P',
   VK_OEM_4,     VK_OEM_6,     VK_RETURN,
   /* - 1d - */
