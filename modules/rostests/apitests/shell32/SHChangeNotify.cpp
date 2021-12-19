@@ -679,10 +679,10 @@ GetSubProgramPath(void)
 }
 
 static void
-JustDoIt(INT line, UINT cEntries, const TEST_ENTRY *pEntries, INT nSources,
-         BOOL fRecursive, WATCHDIR iWatchDir)
+DoGroup(INT line, UINT cEntries, const TEST_ENTRY *pEntries, INT nSources,
+        BOOL fRecursive, WATCHDIR iWatchDir)
 {
-    trace("JustDoIt: Line %d, fRecursive:%u, iWatchDir:%u, nSources:0x%08X\n",
+    trace("DoGroup: Line %d, fRecursive:%u, iWatchDir:%u, nSources:0x%08X\n",
           line, fRecursive, iWatchDir, nSources);
 
     WCHAR szParams[128];
@@ -755,44 +755,44 @@ START_TEST(SHChangeNotify)
     trace("Please don't operate your PC while testing...\n");
 
     // fRecursive == TRUE.
-    JustDoIt(__LINE__, _countof(s_entries_0), s_entries_0, SOURCES_00, TRUE, WATCHDIR_0);
-    JustDoIt(__LINE__, _countof(s_entries_1), s_entries_1, SOURCES_01, TRUE, WATCHDIR_0);
-    JustDoIt(__LINE__, _countof(s_entries_0), s_entries_0, SOURCES_02, TRUE, WATCHDIR_0);
-    JustDoIt(__LINE__, _countof(s_entries_2), s_entries_2, SOURCES_03, TRUE, WATCHDIR_0);
+    DoGroup(__LINE__, _countof(s_entries_0), s_entries_0, SOURCES_00, TRUE, WATCHDIR_0);
+    DoGroup(__LINE__, _countof(s_entries_1), s_entries_1, SOURCES_01, TRUE, WATCHDIR_0);
+    DoGroup(__LINE__, _countof(s_entries_0), s_entries_0, SOURCES_02, TRUE, WATCHDIR_0);
+    DoGroup(__LINE__, _countof(s_entries_2), s_entries_2, SOURCES_03, TRUE, WATCHDIR_0);
 
-    JustDoIt(__LINE__, _countof(s_entries_0), s_entries_0, SOURCES_00, TRUE, WATCHDIR_1);
-    JustDoIt(__LINE__, _countof(s_entries_1), s_entries_1, SOURCES_01, TRUE, WATCHDIR_1);
-    JustDoIt(__LINE__, _countof(s_entries_0), s_entries_0, SOURCES_02, TRUE, WATCHDIR_1);
-    JustDoIt(__LINE__, _countof(s_entries_2), s_entries_2, SOURCES_03, TRUE, WATCHDIR_1);
+    DoGroup(__LINE__, _countof(s_entries_0), s_entries_0, SOURCES_00, TRUE, WATCHDIR_1);
+    DoGroup(__LINE__, _countof(s_entries_1), s_entries_1, SOURCES_01, TRUE, WATCHDIR_1);
+    DoGroup(__LINE__, _countof(s_entries_0), s_entries_0, SOURCES_02, TRUE, WATCHDIR_1);
+    DoGroup(__LINE__, _countof(s_entries_2), s_entries_2, SOURCES_03, TRUE, WATCHDIR_1);
 
-    JustDoIt(__LINE__, _countof(s_entries_0), s_entries_0, SOURCES_00, TRUE, WATCHDIR_2);
-    JustDoIt(__LINE__, _countof(s_entries_1), s_entries_1, SOURCES_01, TRUE, WATCHDIR_2);
-    JustDoIt(__LINE__, _countof(s_entries_0), s_entries_0, SOURCES_02, TRUE, WATCHDIR_2);
-    JustDoIt(__LINE__, _countof(s_entries_2), s_entries_2, SOURCES_03, TRUE, WATCHDIR_2);
+    DoGroup(__LINE__, _countof(s_entries_0), s_entries_0, SOURCES_00, TRUE, WATCHDIR_2);
+    DoGroup(__LINE__, _countof(s_entries_1), s_entries_1, SOURCES_01, TRUE, WATCHDIR_2);
+    DoGroup(__LINE__, _countof(s_entries_0), s_entries_0, SOURCES_02, TRUE, WATCHDIR_2);
+    DoGroup(__LINE__, _countof(s_entries_2), s_entries_2, SOURCES_03, TRUE, WATCHDIR_2);
 
-    JustDoIt(__LINE__, _countof(s_entries_0), s_entries_0, SOURCES_00, TRUE, WATCHDIR_3);
-    JustDoIt(__LINE__, _countof(s_entries_3), s_entries_3, SOURCES_01, TRUE, WATCHDIR_3);
-    JustDoIt(__LINE__, _countof(s_entries_0), s_entries_0, SOURCES_02, TRUE, WATCHDIR_3);
-    JustDoIt(__LINE__, _countof(s_entries_4), s_entries_4, SOURCES_03, TRUE, WATCHDIR_3);
+    DoGroup(__LINE__, _countof(s_entries_0), s_entries_0, SOURCES_00, TRUE, WATCHDIR_3);
+    DoGroup(__LINE__, _countof(s_entries_3), s_entries_3, SOURCES_01, TRUE, WATCHDIR_3);
+    DoGroup(__LINE__, _countof(s_entries_0), s_entries_0, SOURCES_02, TRUE, WATCHDIR_3);
+    DoGroup(__LINE__, _countof(s_entries_4), s_entries_4, SOURCES_03, TRUE, WATCHDIR_3);
 
     // fRecursive == FALSE.
-    JustDoIt(__LINE__, _countof(s_entries_0), s_entries_0, SOURCES_00, FALSE, WATCHDIR_0);
-    JustDoIt(__LINE__, _countof(s_entries_5), s_entries_5, SOURCES_01, FALSE, WATCHDIR_0);
-    JustDoIt(__LINE__, _countof(s_entries_0), s_entries_0, SOURCES_02, FALSE, WATCHDIR_0);
-    JustDoIt(__LINE__, _countof(s_entries_6), s_entries_6, SOURCES_03, FALSE, WATCHDIR_0);
+    DoGroup(__LINE__, _countof(s_entries_0), s_entries_0, SOURCES_00, FALSE, WATCHDIR_0);
+    DoGroup(__LINE__, _countof(s_entries_5), s_entries_5, SOURCES_01, FALSE, WATCHDIR_0);
+    DoGroup(__LINE__, _countof(s_entries_0), s_entries_0, SOURCES_02, FALSE, WATCHDIR_0);
+    DoGroup(__LINE__, _countof(s_entries_6), s_entries_6, SOURCES_03, FALSE, WATCHDIR_0);
 
-    JustDoIt(__LINE__, _countof(s_entries_0), s_entries_0, SOURCES_00, FALSE, WATCHDIR_1);
-    JustDoIt(__LINE__, _countof(s_entries_7), s_entries_7, SOURCES_01, FALSE, WATCHDIR_1);
-    JustDoIt(__LINE__, _countof(s_entries_0), s_entries_0, SOURCES_02, FALSE, WATCHDIR_1);
-    JustDoIt(__LINE__, _countof(s_entries_8), s_entries_8, SOURCES_03, FALSE, WATCHDIR_1);
+    DoGroup(__LINE__, _countof(s_entries_0), s_entries_0, SOURCES_00, FALSE, WATCHDIR_1);
+    DoGroup(__LINE__, _countof(s_entries_7), s_entries_7, SOURCES_01, FALSE, WATCHDIR_1);
+    DoGroup(__LINE__, _countof(s_entries_0), s_entries_0, SOURCES_02, FALSE, WATCHDIR_1);
+    DoGroup(__LINE__, _countof(s_entries_8), s_entries_8, SOURCES_03, FALSE, WATCHDIR_1);
 
-    JustDoIt(__LINE__, _countof(s_entries_0), s_entries_0, SOURCES_00, FALSE, WATCHDIR_2);
-    JustDoIt(__LINE__, _countof(s_entries_0), s_entries_0, SOURCES_01, FALSE, WATCHDIR_2);
-    JustDoIt(__LINE__, _countof(s_entries_0), s_entries_0, SOURCES_02, FALSE, WATCHDIR_2);
-    JustDoIt(__LINE__, _countof(s_entries_0), s_entries_0, SOURCES_03, FALSE, WATCHDIR_2);
+    DoGroup(__LINE__, _countof(s_entries_0), s_entries_0, SOURCES_00, FALSE, WATCHDIR_2);
+    DoGroup(__LINE__, _countof(s_entries_0), s_entries_0, SOURCES_01, FALSE, WATCHDIR_2);
+    DoGroup(__LINE__, _countof(s_entries_0), s_entries_0, SOURCES_02, FALSE, WATCHDIR_2);
+    DoGroup(__LINE__, _countof(s_entries_0), s_entries_0, SOURCES_03, FALSE, WATCHDIR_2);
 
-    JustDoIt(__LINE__, _countof(s_entries_0), s_entries_0, SOURCES_00, FALSE, WATCHDIR_3);
-    JustDoIt(__LINE__, _countof(s_entries_9), s_entries_9, SOURCES_01, FALSE, WATCHDIR_3);
-    JustDoIt(__LINE__, _countof(s_entries_0), s_entries_0, SOURCES_02, FALSE, WATCHDIR_3);
-    JustDoIt(__LINE__, _countof(s_entries_10), s_entries_10, SOURCES_03, FALSE, WATCHDIR_3);
+    DoGroup(__LINE__, _countof(s_entries_0), s_entries_0, SOURCES_00, FALSE, WATCHDIR_3);
+    DoGroup(__LINE__, _countof(s_entries_9), s_entries_9, SOURCES_01, FALSE, WATCHDIR_3);
+    DoGroup(__LINE__, _countof(s_entries_0), s_entries_0, SOURCES_02, FALSE, WATCHDIR_3);
+    DoGroup(__LINE__, _countof(s_entries_10), s_entries_10, SOURCES_03, FALSE, WATCHDIR_3);
 }
