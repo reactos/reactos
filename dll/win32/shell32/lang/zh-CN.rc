@@ -278,7 +278,7 @@ BEGIN
     EDITTEXT 14015, 58, 131, 170, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT "修改日期：", 14016, 8, 147, 45, 10
     EDITTEXT 14017, 58, 147, 170, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT "访问：", 14018, 8, 163, 45, 10
+    LTEXT "访问日期：", 14018, 8, 163, 45, 10
     EDITTEXT 14019, 58, 163, 170, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT "", -1, 8, 179, 221, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
     LTEXT "属性：", 14020, 8, 189, 45, 10
@@ -736,7 +736,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 FONT 9, "宋体"
 BEGIN
     ICON 0, IDC_LINK_PROBLEM_ICON, 5, 5, 0, 0
-    LTEXT "The item '%s' that this shortcut refers to has been changed or moved, so this shortcut will no longer work properly.", IDC_LINK_PROBLEM_LABEL1, 35, 5, 210, 35
+    LTEXT "这个快捷方式指向的项目“%s”已被更改或移动，因此这个快捷方式将不再正常工作。", IDC_LINK_PROBLEM_LABEL1, 35, 5, 210, 35
     LTEXT "基于名称、类型、大小和日期的最近匹配：", IDC_LINK_PROBLEM_LABEL2, 35, 45, 210, 35
     LTEXT "您是要修复此快捷方式以指向此目标还是只是想删除它？", -1, 35, 85, 210, 30
     DEFPUSHBUTTON "修复(&F)", IDOK, 55, 120, 60, 15, WS_DISABLED

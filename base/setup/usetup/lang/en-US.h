@@ -1,32 +1,32 @@
 #pragma once
 
-static MUI_ENTRY enUSSetupInitPageEntries[] =
+static MUI_ENTRY zhCNSetupInitPageEntries[] =
 {
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        " ReactOS " KERNEL_VERSION_STR " 安装程序 ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
     {
         0,
         20,
-        "Please wait while the ReactOS Setup initializes itself",
+        "请等待安装程序初始化",
         TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER,
         TEXT_ID_STATIC
     },
     {
         0,
         21,
-        "and discovers your devices...",
+        "并检测硬件...",
         TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER,
         TEXT_ID_STATIC
     },
     {
         0,
         0,
-        "Please wait...",
+        "请稍候...",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
         TEXT_ID_STATIC
     },
@@ -38,47 +38,47 @@ static MUI_ENTRY enUSSetupInitPageEntries[] =
     }
 };
 
-static MUI_ENTRY enUSLanguagePageEntries[] =
+static MUI_ENTRY zhCNLanguagePageEntries[] =
 {
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        " ReactOS " KERNEL_VERSION_STR " 安装程序 ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
     {
         6,
         8,
-        "Language Selection",
+        "语言选择",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         8,
         10,
-        "\x07  Please choose the language used for the installation process.",
+        "\x07  请选择安装过程中所使用的语言，",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         8,
         11,
-        "   Then press ENTER.",
+        "   并按 ENTER 键。",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         8,
         13,
-        "\x07  This Language will be the default language for the final system.",
+        "\x07  所选语言将会成为安装后系统的默认语言。",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         0,
         0,
-        "ENTER = Continue  F3 = Quit",
+        "ENTER = 继续  F3 = 退出",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
         TEXT_ID_STATIC
     },
@@ -90,19 +90,19 @@ static MUI_ENTRY enUSLanguagePageEntries[] =
     }
 };
 
-static MUI_ENTRY enUSWelcomePageEntries[] =
+static MUI_ENTRY zhCNWelcomePageEntries[] =
 {
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        " ReactOS " KERNEL_VERSION_STR " 安装程序 ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
     {
         6,
         8,
-        "Welcome to ReactOS Setup",
+        "欢迎使用 ReactOS 安装程序",
         TEXT_STYLE_HIGHLIGHT,
         TEXT_ID_STATIC
     },
@@ -123,7 +123,7 @@ static MUI_ENTRY enUSWelcomePageEntries[] =
     {
         8,
         15,
-        "\x07  Press ENTER to install or upgrade ReactOS.",
+        "\x07  请按 ENTER 安装或升级 ReactOS。.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -178,7 +178,7 @@ static MUI_ENTRY enUSWelcomePageEntries[] =
     }
 };
 
-static MUI_ENTRY enUSIntroPageEntries[] =
+static MUI_ENTRY zhCNIntroPageEntries[] =
 {
     {
         4,
@@ -258,7 +258,7 @@ static MUI_ENTRY enUSIntroPageEntries[] =
     }
 };
 
-static MUI_ENTRY enUSLicensePageEntries[] =
+static MUI_ENTRY zhCNLicensePageEntries[] =
 {
     {
         4,
@@ -401,7 +401,7 @@ static MUI_ENTRY enUSLicensePageEntries[] =
     }
 };
 
-static MUI_ENTRY enUSDevicePageEntries[] =
+static MUI_ENTRY zhCNDevicePageEntries[] =
 {
     {
         4,
@@ -508,7 +508,7 @@ static MUI_ENTRY enUSDevicePageEntries[] =
     }
 };
 
-static MUI_ENTRY enUSRepairPageEntries[] =
+static MUI_ENTRY zhCNRepairPageEntries[] =
 {
     {
         4,
@@ -581,7 +581,7 @@ static MUI_ENTRY enUSRepairPageEntries[] =
     }
 };
 
-static MUI_ENTRY enUSUpgradePageEntries[] =
+static MUI_ENTRY zhCNUpgradePageEntries[] =
 {
     {
         4,
@@ -661,7 +661,7 @@ static MUI_ENTRY enUSUpgradePageEntries[] =
     }
 };
 
-static MUI_ENTRY enUSComputerPageEntries[] =
+static MUI_ENTRY zhCNComputerPageEntries[] =
 {
     {
         4,
@@ -720,7 +720,7 @@ static MUI_ENTRY enUSComputerPageEntries[] =
     }
 };
 
-static MUI_ENTRY enUSFlushPageEntries[] =
+static MUI_ENTRY zhCNFlushPageEntries[] =
 {
     {
         4,
@@ -765,7 +765,7 @@ static MUI_ENTRY enUSFlushPageEntries[] =
     }
 };
 
-static MUI_ENTRY enUSQuitPageEntries[] =
+static MUI_ENTRY zhCNQuitPageEntries[] =
 {
     {
         4,
@@ -817,7 +817,7 @@ static MUI_ENTRY enUSQuitPageEntries[] =
     }
 };
 
-static MUI_ENTRY enUSDisplayPageEntries[] =
+static MUI_ENTRY zhCNDisplayPageEntries[] =
 {
     {
         4,
@@ -876,7 +876,7 @@ static MUI_ENTRY enUSDisplayPageEntries[] =
     }
 };
 
-static MUI_ENTRY enUSSuccessPageEntries[] =
+static MUI_ENTRY zhCNSuccessPageEntries[] =
 {
     {
         4,
@@ -928,7 +928,7 @@ static MUI_ENTRY enUSSuccessPageEntries[] =
     }
 };
 
-static MUI_ENTRY enUSBootPageEntries[] =
+static MUI_ENTRY zhCNBootPageEntries[] =
 {
     {
         4,
@@ -981,7 +981,7 @@ static MUI_ENTRY enUSBootPageEntries[] =
 
 };
 
-static MUI_ENTRY enUSSelectPartitionEntries[] =
+static MUI_ENTRY zhCNSelectPartitionEntries[] =
 {
     {
         4,
@@ -1061,7 +1061,7 @@ static MUI_ENTRY enUSSelectPartitionEntries[] =
     }
 };
 
-static MUI_ENTRY enUSChangeSystemPartition[] =
+static MUI_ENTRY zhCNChangeSystemPartition[] =
 {
     {
         4,
@@ -1183,7 +1183,7 @@ static MUI_ENTRY enUSChangeSystemPartition[] =
     }
 };
 
-static MUI_ENTRY enUSConfirmDeleteSystemPartitionEntries[] =
+static MUI_ENTRY zhCNConfirmDeleteSystemPartitionEntries[] =
 {
     {
         4,
@@ -1291,7 +1291,7 @@ static MUI_ENTRY enUSConfirmDeleteSystemPartitionEntries[] =
     }
 };
 
-static MUI_ENTRY enUSFormatPartitionEntries[] =
+static MUI_ENTRY zhCNFormatPartitionEntries[] =
 {
     {
         4,
@@ -1329,7 +1329,7 @@ static MUI_ENTRY enUSFormatPartitionEntries[] =
     }
 };
 
-static MUI_ENTRY enUSCheckFSEntries[] =
+static MUI_ENTRY zhCNCheckFSEntries[] =
 {
     {
         4,
@@ -1360,7 +1360,7 @@ static MUI_ENTRY enUSCheckFSEntries[] =
     }
 };
 
-static MUI_ENTRY enUSInstallDirectoryEntries[] =
+static MUI_ENTRY zhCNInstallDirectoryEntries[] =
 {
     {
         4,
@@ -1419,7 +1419,7 @@ static MUI_ENTRY enUSInstallDirectoryEntries[] =
     }
 };
 
-static MUI_ENTRY enUSFileCopyEntries[] =
+static MUI_ENTRY zhCNFileCopyEntries[] =
 {
     {
         4,
@@ -1464,7 +1464,7 @@ static MUI_ENTRY enUSFileCopyEntries[] =
     }
 };
 
-static MUI_ENTRY enUSBootLoaderEntries[] =
+static MUI_ENTRY zhCNBootLoaderEntries[] =
 {
     {
         4,
@@ -1523,7 +1523,7 @@ static MUI_ENTRY enUSBootLoaderEntries[] =
     }
 };
 
-static MUI_ENTRY enUSBootLoaderInstallPageEntries[] =
+static MUI_ENTRY zhCNBootLoaderInstallPageEntries[] =
 {
     {
         4,
@@ -1547,7 +1547,7 @@ static MUI_ENTRY enUSBootLoaderInstallPageEntries[] =
     }
 };
 
-static MUI_ENTRY enUSKeyboardSettingsEntries[] =
+static MUI_ENTRY zhCNKeyboardSettingsEntries[] =
 {
     {
         4,
@@ -1606,7 +1606,7 @@ static MUI_ENTRY enUSKeyboardSettingsEntries[] =
     }
 };
 
-static MUI_ENTRY enUSLayoutSettingsEntries[] =
+static MUI_ENTRY zhCNLayoutSettingsEntries[] =
 {
     {
         4,
@@ -1666,7 +1666,7 @@ static MUI_ENTRY enUSLayoutSettingsEntries[] =
 
 };
 
-static MUI_ENTRY enUSPrepareCopyEntries[] =
+static MUI_ENTRY zhCNPrepareCopyEntries[] =
 {
     {
         4,
@@ -1698,7 +1698,7 @@ static MUI_ENTRY enUSPrepareCopyEntries[] =
 
 };
 
-static MUI_ENTRY enUSSelectFSEntries[] =
+static MUI_ENTRY zhCNSelectFSEntries[] =
 {
     {
         4,
@@ -1746,7 +1746,7 @@ static MUI_ENTRY enUSSelectFSEntries[] =
     }
 };
 
-static MUI_ENTRY enUSDeletePartitionEntries[] =
+static MUI_ENTRY zhCNDeletePartitionEntries[] =
 {
     {
         4,
@@ -1798,7 +1798,7 @@ static MUI_ENTRY enUSDeletePartitionEntries[] =
     }
 };
 
-static MUI_ENTRY enUSRegistryEntries[] =
+static MUI_ENTRY zhCNRegistryEntries[] =
 {
     {
         4,
@@ -1830,7 +1830,7 @@ static MUI_ENTRY enUSRegistryEntries[] =
 
 };
 
-MUI_ERROR enUSErrorEntries[] =
+MUI_ERROR zhCNErrorEntries[] =
 {
     {
         // NOT_AN_ERROR
@@ -2089,123 +2089,123 @@ MUI_ERROR enUSErrorEntries[] =
     }
 };
 
-MUI_PAGE enUSPages[] =
+MUI_PAGE zhCNPages[] =
 {
     {
         SETUP_INIT_PAGE,
-        enUSSetupInitPageEntries
+        zhCNSetupInitPageEntries
     },
     {
         LANGUAGE_PAGE,
-        enUSLanguagePageEntries
+        zhCNLanguagePageEntries
     },
     {
         WELCOME_PAGE,
-        enUSWelcomePageEntries
+        zhCNWelcomePageEntries
     },
     {
         INSTALL_INTRO_PAGE,
-        enUSIntroPageEntries
+        zhCNIntroPageEntries
     },
     {
         LICENSE_PAGE,
-        enUSLicensePageEntries
+        zhCNLicensePageEntries
     },
     {
         DEVICE_SETTINGS_PAGE,
-        enUSDevicePageEntries
+        zhCNDevicePageEntries
     },
     {
         REPAIR_INTRO_PAGE,
-        enUSRepairPageEntries
+        zhCNRepairPageEntries
     },
     {
         UPGRADE_REPAIR_PAGE,
-        enUSUpgradePageEntries
+        zhCNUpgradePageEntries
     },
     {
         COMPUTER_SETTINGS_PAGE,
-        enUSComputerPageEntries
+        zhCNComputerPageEntries
     },
     {
         DISPLAY_SETTINGS_PAGE,
-        enUSDisplayPageEntries
+        zhCNDisplayPageEntries
     },
     {
         FLUSH_PAGE,
-        enUSFlushPageEntries
+        zhCNFlushPageEntries
     },
     {
         SELECT_PARTITION_PAGE,
-        enUSSelectPartitionEntries
+        zhCNSelectPartitionEntries
     },
     {
         CHANGE_SYSTEM_PARTITION,
-        enUSChangeSystemPartition
+        zhCNChangeSystemPartition
     },
     {
         CONFIRM_DELETE_SYSTEM_PARTITION_PAGE,
-        enUSConfirmDeleteSystemPartitionEntries
+        zhCNConfirmDeleteSystemPartitionEntries
     },
     {
         SELECT_FILE_SYSTEM_PAGE,
-        enUSSelectFSEntries
+        zhCNSelectFSEntries
     },
     {
         FORMAT_PARTITION_PAGE,
-        enUSFormatPartitionEntries
+        zhCNFormatPartitionEntries
     },
     {
         CHECK_FILE_SYSTEM_PAGE,
-        enUSCheckFSEntries
+        zhCNCheckFSEntries
     },
     {
         DELETE_PARTITION_PAGE,
-        enUSDeletePartitionEntries
+        zhCNDeletePartitionEntries
     },
     {
         INSTALL_DIRECTORY_PAGE,
-        enUSInstallDirectoryEntries
+        zhCNInstallDirectoryEntries
     },
     {
         PREPARE_COPY_PAGE,
-        enUSPrepareCopyEntries
+        zhCNPrepareCopyEntries
     },
     {
         FILE_COPY_PAGE,
-        enUSFileCopyEntries
+        zhCNFileCopyEntries
     },
     {
         KEYBOARD_SETTINGS_PAGE,
-        enUSKeyboardSettingsEntries
+        zhCNKeyboardSettingsEntries
     },
     {
         BOOT_LOADER_PAGE,
-        enUSBootLoaderEntries
+        zhCNBootLoaderEntries
     },
     {
         LAYOUT_SETTINGS_PAGE,
-        enUSLayoutSettingsEntries
+        zhCNLayoutSettingsEntries
     },
     {
         QUIT_PAGE,
-        enUSQuitPageEntries
+        zhCNQuitPageEntries
     },
     {
         SUCCESS_PAGE,
-        enUSSuccessPageEntries
+        zhCNSuccessPageEntries
     },
     {
         BOOT_LOADER_INSTALLATION_PAGE,
-        enUSBootLoaderInstallPageEntries
+        zhCNBootLoaderInstallPageEntries
     },
     {
         BOOT_LOADER_FLOPPY_PAGE,
-        enUSBootPageEntries
+        zhCNBootPageEntries
     },
     {
         REGISTRY_PAGE,
-        enUSRegistryEntries
+        zhCNRegistryEntries
     },
     {
         -1,
@@ -2213,7 +2213,7 @@ MUI_PAGE enUSPages[] =
     }
 };
 
-MUI_STRING enUSStrings[] =
+MUI_STRING zhCNStrings[] =
 {
     {STRING_PLEASEWAIT,
      "   Please wait..."},
