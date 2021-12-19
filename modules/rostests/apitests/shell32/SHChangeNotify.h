@@ -23,8 +23,7 @@ typedef enum WATCHDIR
     WATCHDIR_NULL = 0,
     WATCHDIR_DESKTOP,
     WATCHDIR_MYCOMPUTER,
-    WATCHDIR_MYDOCUMENTS,
-    WATCHDIR_TEMPDIR
+    WATCHDIR_MYDOCUMENTS
 } WATCHDIR;
 
 inline LPITEMIDLIST GetWatchPidl(WATCHDIR iWatchDir)
@@ -47,12 +46,6 @@ inline LPITEMIDLIST GetWatchPidl(WATCHDIR iWatchDir)
 
         case WATCHDIR_MYDOCUMENTS:
             SHGetSpecialFolderLocation(NULL, CSIDL_PERSONAL, &ret);
-            break;
-
-        case WATCHDIR_TEMPDIR:
-            GetTempPathW(_countof(szPath), szPath);
-            PathRemoveBackslashW(szPath);
-            ret = ILCreateFromPathW(szPath);
             break;
     }
 

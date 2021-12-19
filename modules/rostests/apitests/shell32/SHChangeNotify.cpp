@@ -576,7 +576,8 @@ LPCSTR PatternFromFlags(DWORD flags)
     return s_buf;
 }
 
-static BOOL DoGetPaths(LPWSTR pszPath1, LPWSTR pszPath2)
+static BOOL
+DoGetPaths(LPWSTR pszPath1, LPWSTR pszPath2)
 {
     pszPath1[0] = pszPath2[0] = 0;
 
@@ -640,7 +641,8 @@ DoTestEntry(const TEST_ENTRY *entry)
     SendMessageW(s_hwnd, WM_CLEAR_FLAGS, 0, 0);
 }
 
-static BOOL DoInit(void)
+static BOOL
+DoInit(void)
 {
     LPWSTR psz;
 
@@ -714,10 +716,32 @@ static BOOL DoInit(void)
     return TRUE;
 }
 
-static void DoEnd(HWND hwnd)
+static void
+DoEnd(HWND hwnd)
 {
     DeleteFileA(TEMP_FILE);
     SendMessageW(s_hwnd, WM_COMMAND, IDOK, 0);
+}
+
+static BOOL
+GetSubProgramPath(void)
+{
+    GetModuleFileNameW(NULL, s_szSubProgram, _countof(s_szSubProgram));
+    PathRemoveFileSpecW(s_szSubProgram);
+    PathAppendW(s_szSubProgram, L"shell32_apitest_sub.exe");
+
+    if (!PathFileExistsW(s_szSubProgram))
+    {
+        PathRemoveFileSpecW(s_szSubProgram);
+        PathAppendW(s_szSubProgram, L"testdata\\shell32_apitest_sub.exe");
+
+        if (!PathFileExistsW(s_szSubProgram))
+        {
+            return FALSE;
+        }
+    }
+
+    return TRUE;
 }
 
 static void
@@ -775,26 +799,6 @@ JustDoIt(INT line, UINT cEntries, const TEST_ENTRY *pEntries, INT nSources,
 #define SOURCES_05   (SHCNRF_NewDelivery | SHCNRF_ShellLevel)
 #define SOURCES_06   (SHCNRF_NewDelivery | SHCNRF_InterruptLevel | SHCNRF_ShellLevel)
 // TODO: SHCNRF_RecursiveInterrupt
-
-static BOOL GetSubProgramPath(void)
-{
-    GetModuleFileNameW(NULL, s_szSubProgram, _countof(s_szSubProgram));
-    PathRemoveFileSpecW(s_szSubProgram);
-    PathAppendW(s_szSubProgram, L"shell32_apitest_sub.exe");
-
-    if (!PathFileExistsW(s_szSubProgram))
-    {
-        PathRemoveFileSpecW(s_szSubProgram);
-        PathAppendW(s_szSubProgram, L"testdata\\shell32_apitest_sub.exe");
-
-        if (!PathFileExistsW(s_szSubProgram))
-        {
-            return FALSE;
-        }
-    }
-
-    return TRUE;
-}
 
 #define WATCHDIR_0 WATCHDIR_NULL
 #define WATCHDIR_1 WATCHDIR_DESKTOP
