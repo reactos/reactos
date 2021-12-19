@@ -678,10 +678,9 @@ DoInit(void)
     PathAppendW(psz, L"_TESTDIR_RENAMED_");
     lstrcpynW(s_szDocumentTestDirRenamed, psz, _countof(s_szDocumentTestDirRenamed));
 
-    if (FILE *fp = fopen(TEMP_FILE, "wb"))
-    {
+    FILE *fp = fopen(TEMP_FILE, "wb");
+    if (fp)
         fclose(fp);
-    }
 
     // close Explorer windows
     INT i, nCount = 50;
@@ -710,10 +709,7 @@ DoInit(void)
         Sleep(50);
     }
 
-    if (i >= nCount)
-        return FALSE;
-
-    return TRUE;
+    return (i < nCount);
 }
 
 static void
@@ -826,66 +822,42 @@ START_TEST(SHChangeNotify)
     // fRecursive == TRUE.
     JustDoIt(__LINE__, _countof(s_entries_0), s_entries_0, SOURCES_00, TRUE, WATCHDIR_0);
     JustDoIt(__LINE__, _countof(s_entries_1), s_entries_1, SOURCES_01, TRUE, WATCHDIR_0);
-    //JustDoIt(__LINE__, _countof(s_entries_2), s_entries_2, SOURCES_02, TRUE, WATCHDIR_0);
-    //JustDoIt(__LINE__, _countof(s_entries_3), s_entries_3, SOURCES_03, TRUE, WATCHDIR_0);
     JustDoIt(__LINE__, _countof(s_entries_0), s_entries_0, SOURCES_04, TRUE, WATCHDIR_0);
     JustDoIt(__LINE__, _countof(s_entries_5), s_entries_5, SOURCES_05, TRUE, WATCHDIR_0);
-    //JustDoIt(__LINE__, _countof(s_entries_6), s_entries_6, SOURCES_06, TRUE, WATCHDIR_0);
 
     JustDoIt(__LINE__, _countof(s_entries_0), s_entries_0, SOURCES_00, TRUE, WATCHDIR_1);
     JustDoIt(__LINE__, _countof(s_entries_1), s_entries_1, SOURCES_01, TRUE, WATCHDIR_1);
-    //JustDoIt(__LINE__, _countof(s_entries_2), s_entries_2, SOURCES_02, TRUE, WATCHDIR_1);
-    //JustDoIt(__LINE__, _countof(s_entries_3), s_entries_3, SOURCES_03, TRUE, WATCHDIR_1);
     JustDoIt(__LINE__, _countof(s_entries_0), s_entries_0, SOURCES_04, TRUE, WATCHDIR_1);
     JustDoIt(__LINE__, _countof(s_entries_5), s_entries_5, SOURCES_05, TRUE, WATCHDIR_1);
-    //JustDoIt(__LINE__, _countof(s_entries_6), s_entries_6, SOURCES_06, TRUE, WATCHDIR_1);
 
     JustDoIt(__LINE__, _countof(s_entries_0), s_entries_0, SOURCES_00, TRUE, WATCHDIR_2);
     JustDoIt(__LINE__, _countof(s_entries_1), s_entries_1, SOURCES_01, TRUE, WATCHDIR_2);
-    //JustDoIt(__LINE__, _countof(s_entries_2), s_entries_2, SOURCES_02, TRUE, WATCHDIR_2);
-    //JustDoIt(__LINE__, _countof(s_entries_3), s_entries_3, SOURCES_03, TRUE, WATCHDIR_2);
     JustDoIt(__LINE__, _countof(s_entries_0), s_entries_0, SOURCES_04, TRUE, WATCHDIR_2);
     JustDoIt(__LINE__, _countof(s_entries_5), s_entries_5, SOURCES_05, TRUE, WATCHDIR_2);
-    //JustDoIt(__LINE__, _countof(s_entries_6), s_entries_6, SOURCES_06, TRUE, WATCHDIR_2);
 
     JustDoIt(__LINE__, _countof(s_entries_0), s_entries_0, SOURCES_00, TRUE, WATCHDIR_3);
     JustDoIt(__LINE__, _countof(s_entries_7), s_entries_7, SOURCES_01, TRUE, WATCHDIR_3);
-    //JustDoIt(__LINE__, _countof(s_entries_8), s_entries_8, SOURCES_02, TRUE, WATCHDIR_3);
-    //JustDoIt(__LINE__, _countof(s_entries_10), s_entries_10, SOURCES_03, TRUE, WATCHDIR_3);
     JustDoIt(__LINE__, _countof(s_entries_0), s_entries_0, SOURCES_04, TRUE, WATCHDIR_3);
     JustDoIt(__LINE__, _countof(s_entries_9), s_entries_9, SOURCES_05, TRUE, WATCHDIR_3);
-    //JustDoIt(__LINE__, _countof(s_entries_10), s_entries_10, SOURCES_06, TRUE, WATCHDIR_3);
 
     // fRecursive == FALSE.
     JustDoIt(__LINE__, _countof(s_entries_0), s_entries_0, SOURCES_00, FALSE, WATCHDIR_0);
     JustDoIt(__LINE__, _countof(s_entries_11), s_entries_11, SOURCES_01, FALSE, WATCHDIR_0);
-    //JustDoIt(__LINE__, _countof(s_entries_12), s_entries_12, SOURCES_02, FALSE, WATCHDIR_0);
-    //JustDoIt(__LINE__, _countof(s_entries_13), s_entries_13, SOURCES_03, FALSE, WATCHDIR_0);
     JustDoIt(__LINE__, _countof(s_entries_0), s_entries_0, SOURCES_04, FALSE, WATCHDIR_0);
     JustDoIt(__LINE__, _countof(s_entries_15), s_entries_15, SOURCES_05, FALSE, WATCHDIR_0);
-    //JustDoIt(__LINE__, _countof(s_entries_16), s_entries_16, SOURCES_06, FALSE, WATCHDIR_0);
 
     JustDoIt(__LINE__, _countof(s_entries_0), s_entries_0, SOURCES_00, FALSE, WATCHDIR_1);
     JustDoIt(__LINE__, _countof(s_entries_21), s_entries_21, SOURCES_01, FALSE, WATCHDIR_1);
-    //JustDoIt(__LINE__, _countof(s_entries_22), s_entries_22, SOURCES_02, FALSE, WATCHDIR_1);
-    //JustDoIt(__LINE__, _countof(s_entries_23), s_entries_23, SOURCES_03, FALSE, WATCHDIR_1);
     JustDoIt(__LINE__, _countof(s_entries_0), s_entries_0, SOURCES_04, FALSE, WATCHDIR_1);
     JustDoIt(__LINE__, _countof(s_entries_25), s_entries_25, SOURCES_05, FALSE, WATCHDIR_1);
-    //JustDoIt(__LINE__, _countof(s_entries_26), s_entries_26, SOURCES_06, FALSE, WATCHDIR_1);
 
     JustDoIt(__LINE__, _countof(s_entries_0), s_entries_0, SOURCES_00, FALSE, WATCHDIR_2);
     JustDoIt(__LINE__, _countof(s_entries_0), s_entries_0, SOURCES_01, FALSE, WATCHDIR_2);
-    //JustDoIt(__LINE__, _countof(s_entries_0), s_entries_0, SOURCES_02, FALSE, WATCHDIR_2);
-    //JustDoIt(__LINE__, _countof(s_entries_0), s_entries_0, SOURCES_03, FALSE, WATCHDIR_2);
     JustDoIt(__LINE__, _countof(s_entries_0), s_entries_0, SOURCES_04, FALSE, WATCHDIR_2);
     JustDoIt(__LINE__, _countof(s_entries_0), s_entries_0, SOURCES_05, FALSE, WATCHDIR_2);
-    //JustDoIt(__LINE__, _countof(s_entries_0), s_entries_0, SOURCES_06, FALSE, WATCHDIR_2);
 
     JustDoIt(__LINE__, _countof(s_entries_0), s_entries_0, SOURCES_00, FALSE, WATCHDIR_3);
     JustDoIt(__LINE__, _countof(s_entries_31), s_entries_31, SOURCES_01, FALSE, WATCHDIR_3);
-    //JustDoIt(__LINE__, _countof(s_entries_32), s_entries_32, SOURCES_02, FALSE, WATCHDIR_3);
-    //JustDoIt(__LINE__, _countof(s_entries_33), s_entries_33, SOURCES_03, FALSE, WATCHDIR_3);
     JustDoIt(__LINE__, _countof(s_entries_0), s_entries_0, SOURCES_04, FALSE, WATCHDIR_3);
     JustDoIt(__LINE__, _countof(s_entries_35), s_entries_35, SOURCES_05, FALSE, WATCHDIR_3);
-    //JustDoIt(__LINE__, _countof(s_entries_36), s_entries_36, SOURCES_06, FALSE, WATCHDIR_3);
 }
