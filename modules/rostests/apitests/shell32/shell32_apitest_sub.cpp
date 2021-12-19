@@ -19,7 +19,8 @@ static LPITEMIDLIST s_pidl = NULL;
 static WCHAR s_path1[MAX_PATH], s_path2[MAX_PATH];
 static BYTE s_counters[TYPE_RENAMEFOLDER + 1];
 
-static BOOL OnCreate(HWND hwnd)
+static BOOL
+OnCreate(HWND hwnd)
 {
     s_hwnd = hwnd;
     s_pidl = GetWatchPidl(s_iWatchDir);
@@ -31,7 +32,8 @@ static BOOL OnCreate(HWND hwnd)
     return s_uRegID != 0;
 }
 
-static void OnCommand(HWND hwnd, UINT id)
+static void
+OnCommand(HWND hwnd, UINT id)
 {
     switch (id)
     {
@@ -42,7 +44,8 @@ static void OnCommand(HWND hwnd, UINT id)
     }
 }
 
-static void OnDestroy(HWND hwnd)
+static void
+OnDestroy(HWND hwnd)
 {
     SHChangeNotifyDeregister(s_uRegID);
     s_uRegID = 0;
@@ -216,8 +219,7 @@ WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
         case WM_CLEAR_FLAGS:
             ZeroMemory(&s_counters, sizeof(s_counters));
-            s_path1[0] = 0;
-            s_path2[0] = 0;
+            s_path1[0] = s_path2[0] = 0;
             break;
 
         case WM_SET_PATHS:
