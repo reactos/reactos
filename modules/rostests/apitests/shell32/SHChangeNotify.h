@@ -29,7 +29,6 @@ typedef enum WATCHDIR
 inline LPITEMIDLIST GetWatchPidl(WATCHDIR iWatchDir)
 {
     LPITEMIDLIST ret;
-    WCHAR szPath[MAX_PATH];
 
     switch (iWatchDir)
     {
