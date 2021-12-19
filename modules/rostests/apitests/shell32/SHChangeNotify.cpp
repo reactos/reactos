@@ -33,15 +33,21 @@ static BOOL
 DoCreateEmptyFile(LPCWSTR pszFileName)
 {
     FILE *fp = _wfopen(pszFileName, L"wb");
-    fclose(fp);
+    if (fp)
+        fclose(fp);
     return fp != NULL;
 }
+
+#define TEST_FILE           L"_TEST_.txt"
+#define TEST_FILE_RENAMED   L"_TEST_RENAMED_.txt"
+#define TEST_DIR            L"_TESTDIR_"
+#define TEST_DIR_RENAMED    L"_TESTDIR_RENAMED_"
 
 static void
 DoAction1(const TEST_ENTRY *pEntry)
 {
     LPWSTR pszPath = GetWatchDir(pEntry->iWriteDir);
-    PathAppendW(pszPath, L"_TEST_.txt");
+    PathAppendW(pszPath, TEST_FILE);
     DoCreateEmptyFile(pszPath);
     SHChangeNotify(0, SHCNF_FLUSH, NULL, NULL);
 }
@@ -51,8 +57,8 @@ DoAction2(const TEST_ENTRY *pEntry)
 {
     LPWSTR pszPath1 = GetWatchDir(pEntry->iWriteDir);
     LPWSTR pszPath2 = GetWatchDir(pEntry->iWriteDir);
-    PathAppendW(pszPath1, L"_TEST_.txt");
-    PathAppendW(pszPath2, L"_TEST_RENAMED_.txt");
+    PathAppendW(pszPath1, TEST_FILE);
+    PathAppendW(pszPath2, TEST_FILE_RENAMED);
     MoveFileW(pszPath1, pszPath2);
     SHChangeNotify(0, SHCNF_FLUSH, NULL, NULL);
 }
@@ -62,8 +68,8 @@ DoAction3(const TEST_ENTRY *pEntry)
 {
     LPWSTR pszPath1 = GetWatchDir(pEntry->iWriteDir);
     LPWSTR pszPath2 = GetWatchDir(pEntry->iWriteDir);
-    PathAppendW(pszPath1, L"_TEST_RENAMED_.txt");
-    PathAppendW(pszPath2, L"_TEST_.txt");
+    PathAppendW(pszPath1, TEST_FILE_RENAMED);
+    PathAppendW(pszPath2, TEST_FILE);
     MoveFileW(pszPath1, pszPath2);
     SHChangeNotify(0, SHCNF_FLUSH, NULL, NULL);
 }
@@ -72,7 +78,7 @@ static void
 DoAction4(const TEST_ENTRY *pEntry)
 {
     LPWSTR pszPath = GetWatchDir(pEntry->iWriteDir);
-    PathAppendW(pszPath, L"_TEST_.txt");
+    PathAppendW(pszPath, TEST_FILE);
     DeleteFileW(pszPath);
     SHChangeNotify(0, SHCNF_FLUSH, NULL, NULL);
 }
@@ -81,7 +87,7 @@ static void
 DoAction5(const TEST_ENTRY *pEntry)
 {
     LPWSTR pszPath = GetWatchDir(pEntry->iWriteDir);
-    PathAppendW(pszPath, L"_TESTDIR_");
+    PathAppendW(pszPath, TEST_DIR);
     CreateDirectoryW(pszPath, NULL);
     SHChangeNotify(0, SHCNF_FLUSH, NULL, NULL);
 }
@@ -91,8 +97,8 @@ DoAction6(const TEST_ENTRY *pEntry)
 {
     LPWSTR pszPath1 = GetWatchDir(pEntry->iWriteDir);
     LPWSTR pszPath2 = GetWatchDir(pEntry->iWriteDir);
-    PathAppendW(pszPath1, L"_TESTDIR_");
-    PathAppendW(pszPath2, L"_TESTDIR_RENAMED_");
+    PathAppendW(pszPath1, TEST_DIR);
+    PathAppendW(pszPath2, TEST_DIR_RENAMED);
     MoveFileW(pszPath1, pszPath2);
     SHChangeNotify(0, SHCNF_FLUSH, NULL, NULL);
 }
@@ -102,8 +108,8 @@ DoAction7(const TEST_ENTRY *pEntry)
 {
     LPWSTR pszPath1 = GetWatchDir(pEntry->iWriteDir);
     LPWSTR pszPath2 = GetWatchDir(pEntry->iWriteDir);
-    PathAppendW(pszPath1, L"_TESTDIR_RENAMED_");
-    PathAppendW(pszPath2, L"_TESTDIR_");
+    PathAppendW(pszPath1, TEST_DIR_RENAMED);
+    PathAppendW(pszPath2, TEST_DIR);
     MoveFileW(pszPath1, pszPath2);
     SHChangeNotify(0, SHCNF_FLUSH, NULL, NULL);
 }
@@ -112,7 +118,7 @@ static void
 DoAction8(const TEST_ENTRY *pEntry)
 {
     LPWSTR pszPath = GetWatchDir(pEntry->iWriteDir);
-    PathAppendW(pszPath, L"_TESTDIR_");
+    PathAppendW(pszPath, TEST_DIR);
     RemoveDirectoryW(pszPath);
     SHChangeNotify(0, SHCNF_FLUSH, NULL, NULL);
 }
@@ -121,7 +127,7 @@ static void
 DoAction9(const TEST_ENTRY *pEntry)
 {
     LPWSTR pszPath = GetWatchDir(pEntry->iWriteDir);
-    PathAppendW(pszPath, L"_TEST_.txt");
+    PathAppendW(pszPath, TEST_FILE);
     SHChangeNotify(SHCNE_CREATE, SHCNF_PATHW | SHCNF_FLUSH, pszPath, NULL);
 }
 
@@ -129,7 +135,7 @@ static void
 DoAction10(const TEST_ENTRY *pEntry)
 {
     LPWSTR pszPath = GetWatchDir(pEntry->iWriteDir);
-    PathAppendW(pszPath, L"_TEST_.txt");
+    PathAppendW(pszPath, TEST_FILE);
     SHChangeNotify(SHCNE_DELETE, SHCNF_PATHW | SHCNF_FLUSH, pszPath, NULL);
 }
 
@@ -137,7 +143,7 @@ static void
 DoAction11(const TEST_ENTRY *pEntry)
 {
     LPWSTR pszPath = GetWatchDir(pEntry->iWriteDir);
-    PathAppendW(pszPath, L"_TESTDIR_");
+    PathAppendW(pszPath, TEST_DIR);
     SHChangeNotify(SHCNE_MKDIR, SHCNF_PATHW | SHCNF_FLUSH, pszPath, NULL);
 }
 
@@ -145,7 +151,7 @@ static void
 DoAction12(const TEST_ENTRY *pEntry)
 {
     LPWSTR pszPath = GetWatchDir(pEntry->iWriteDir);
-    PathAppendW(pszPath, L"_TESTDIR_");
+    PathAppendW(pszPath, TEST_DIR);
     SHChangeNotify(SHCNE_RMDIR, SHCNF_PATHW | SHCNF_FLUSH, pszPath, NULL);
 }
 
@@ -585,35 +591,35 @@ DoInit(void)
     LPWSTR psz;
 
     psz = GetWatchDir(WATCHDIR_DESKTOP);
-    PathAppendW(psz, L"_TEST_.txt");
+    PathAppendW(psz, TEST_FILE);
     lstrcpynW(s_szDesktopTestFile, psz, _countof(s_szDesktopTestFile));
 
     psz = GetWatchDir(WATCHDIR_DESKTOP);
-    PathAppendW(psz, L"_TEST_RENAMED_.txt");
+    PathAppendW(psz, TEST_FILE_RENAMED);
     lstrcpynW(s_szDesktopTestFileRenamed, psz, _countof(s_szDesktopTestFileRenamed));
 
     psz = GetWatchDir(WATCHDIR_DESKTOP);
-    PathAppendW(psz, L"_TESTDIR_");
+    PathAppendW(psz, TEST_DIR);
     lstrcpynW(s_szDesktopTestDir, psz, _countof(s_szDesktopTestDir));
 
     psz = GetWatchDir(WATCHDIR_DESKTOP);
-    PathAppendW(psz, L"_TESTDIR_RENAMED_");
+    PathAppendW(psz, TEST_DIR_RENAMED);
     lstrcpynW(s_szDesktopTestDirRenamed, psz, _countof(s_szDesktopTestDirRenamed));
 
     psz = GetWatchDir(WATCHDIR_MYDOCUMENTS);
-    PathAppendW(psz, L"_TEST_.txt");
+    PathAppendW(psz, TEST_FILE);
     lstrcpynW(s_szDocumentTestFile, psz, _countof(s_szDocumentTestFile));
 
     psz = GetWatchDir(WATCHDIR_MYDOCUMENTS);
-    PathAppendW(psz, L"_TEST_RENAMED_.txt");
+    PathAppendW(psz, TEST_FILE_RENAMED);
     lstrcpynW(s_szDocumentTestFileRenamed, psz, _countof(s_szDocumentTestFileRenamed));
 
     psz = GetWatchDir(WATCHDIR_MYDOCUMENTS);
-    PathAppendW(psz, L"_TESTDIR_");
+    PathAppendW(psz, TEST_DIR);
     lstrcpynW(s_szDocumentTestDir, psz, _countof(s_szDocumentTestDir));
 
     psz = GetWatchDir(WATCHDIR_MYDOCUMENTS);
-    PathAppendW(psz, L"_TESTDIR_RENAMED_");
+    PathAppendW(psz, TEST_DIR_RENAMED);
     lstrcpynW(s_szDocumentTestDirRenamed, psz, _countof(s_szDocumentTestDirRenamed));
 
     FILE *fp = fopen(TEMP_FILE, "wb");
@@ -685,7 +691,7 @@ DoGroup(INT line, UINT cEntries, const TEST_ENTRY *pEntries, INT nSources,
     trace("DoGroup: Line %d, fRecursive:%u, iWatchDir:%u, nSources:0x%08X\n",
           line, fRecursive, iWatchDir, nSources);
 
-    WCHAR szParams[128];
+    WCHAR szParams[64];
     wsprintfW(szParams, L"%u,%u,%u", fRecursive, iWatchDir, nSources);
 
     HINSTANCE hinst = ShellExecuteW(NULL, NULL, s_szSubProgram, szParams, NULL, SW_SHOWNORMAL);
