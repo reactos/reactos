@@ -15,13 +15,6 @@
 static HWND s_hwnd = NULL;
 static WCHAR s_szSubProgram[MAX_PATH];
 
-static BOOL DoCreateEmptyFile(LPCWSTR pszFileName)
-{
-    FILE *fp = _wfopen(pszFileName, L"wb");
-    fclose(fp);
-    return fp != NULL;
-}
-
 struct TEST_ENTRY;
 
 typedef void (*ACTION)(const struct TEST_ENTRY *pEntry);
@@ -36,7 +29,16 @@ typedef struct TEST_ENTRY
     ACTION action;
 } TEST_ENTRY, *LPTEST_ENTRY;
 
-void DoAction1(const TEST_ENTRY *pEntry)
+static BOOL
+DoCreateEmptyFile(LPCWSTR pszFileName)
+{
+    FILE *fp = _wfopen(pszFileName, L"wb");
+    fclose(fp);
+    return fp != NULL;
+}
+
+static void
+DoAction1(const TEST_ENTRY *pEntry)
 {
     LPWSTR pszPath = GetWatchDir(pEntry->iWriteDir);
     PathAppendW(pszPath, L"_TEST_.txt");
@@ -44,7 +46,8 @@ void DoAction1(const TEST_ENTRY *pEntry)
     SHChangeNotify(0, SHCNF_FLUSH, NULL, NULL);
 }
 
-void DoAction2(const TEST_ENTRY *pEntry)
+static void
+DoAction2(const TEST_ENTRY *pEntry)
 {
     LPWSTR pszPath1 = GetWatchDir(pEntry->iWriteDir);
     LPWSTR pszPath2 = GetWatchDir(pEntry->iWriteDir);
@@ -54,7 +57,8 @@ void DoAction2(const TEST_ENTRY *pEntry)
     SHChangeNotify(0, SHCNF_FLUSH, NULL, NULL);
 }
 
-void DoAction3(const TEST_ENTRY *pEntry)
+static void
+DoAction3(const TEST_ENTRY *pEntry)
 {
     LPWSTR pszPath1 = GetWatchDir(pEntry->iWriteDir);
     LPWSTR pszPath2 = GetWatchDir(pEntry->iWriteDir);
@@ -64,7 +68,8 @@ void DoAction3(const TEST_ENTRY *pEntry)
     SHChangeNotify(0, SHCNF_FLUSH, NULL, NULL);
 }
 
-void DoAction4(const TEST_ENTRY *pEntry)
+static void
+DoAction4(const TEST_ENTRY *pEntry)
 {
     LPWSTR pszPath = GetWatchDir(pEntry->iWriteDir);
     PathAppendW(pszPath, L"_TEST_.txt");
@@ -72,7 +77,8 @@ void DoAction4(const TEST_ENTRY *pEntry)
     SHChangeNotify(0, SHCNF_FLUSH, NULL, NULL);
 }
 
-void DoAction5(const TEST_ENTRY *pEntry)
+static void
+DoAction5(const TEST_ENTRY *pEntry)
 {
     LPWSTR pszPath = GetWatchDir(pEntry->iWriteDir);
     PathAppendW(pszPath, L"_TESTDIR_");
@@ -80,7 +86,8 @@ void DoAction5(const TEST_ENTRY *pEntry)
     SHChangeNotify(0, SHCNF_FLUSH, NULL, NULL);
 }
 
-void DoAction6(const TEST_ENTRY *pEntry)
+static void
+DoAction6(const TEST_ENTRY *pEntry)
 {
     LPWSTR pszPath1 = GetWatchDir(pEntry->iWriteDir);
     LPWSTR pszPath2 = GetWatchDir(pEntry->iWriteDir);
@@ -90,7 +97,8 @@ void DoAction6(const TEST_ENTRY *pEntry)
     SHChangeNotify(0, SHCNF_FLUSH, NULL, NULL);
 }
 
-void DoAction7(const TEST_ENTRY *pEntry)
+static void
+DoAction7(const TEST_ENTRY *pEntry)
 {
     LPWSTR pszPath1 = GetWatchDir(pEntry->iWriteDir);
     LPWSTR pszPath2 = GetWatchDir(pEntry->iWriteDir);
@@ -100,7 +108,8 @@ void DoAction7(const TEST_ENTRY *pEntry)
     SHChangeNotify(0, SHCNF_FLUSH, NULL, NULL);
 }
 
-void DoAction8(const TEST_ENTRY *pEntry)
+static void
+DoAction8(const TEST_ENTRY *pEntry)
 {
     LPWSTR pszPath = GetWatchDir(pEntry->iWriteDir);
     PathAppendW(pszPath, L"_TESTDIR_");
@@ -108,28 +117,32 @@ void DoAction8(const TEST_ENTRY *pEntry)
     SHChangeNotify(0, SHCNF_FLUSH, NULL, NULL);
 }
 
-void DoAction9(const TEST_ENTRY *pEntry)
+static void
+DoAction9(const TEST_ENTRY *pEntry)
 {
     LPWSTR pszPath = GetWatchDir(pEntry->iWriteDir);
     PathAppendW(pszPath, L"_TEST_.txt");
     SHChangeNotify(SHCNE_CREATE, SHCNF_PATHW | SHCNF_FLUSH, pszPath, NULL);
 }
 
-void DoAction10(const TEST_ENTRY *pEntry)
+static void
+DoAction10(const TEST_ENTRY *pEntry)
 {
     LPWSTR pszPath = GetWatchDir(pEntry->iWriteDir);
     PathAppendW(pszPath, L"_TEST_.txt");
     SHChangeNotify(SHCNE_DELETE, SHCNF_PATHW | SHCNF_FLUSH, pszPath, NULL);
 }
 
-void DoAction11(const TEST_ENTRY *pEntry)
+static void
+DoAction11(const TEST_ENTRY *pEntry)
 {
     LPWSTR pszPath = GetWatchDir(pEntry->iWriteDir);
     PathAppendW(pszPath, L"_TESTDIR_");
     SHChangeNotify(SHCNE_MKDIR, SHCNF_PATHW | SHCNF_FLUSH, pszPath, NULL);
 }
 
-void DoAction12(const TEST_ENTRY *pEntry)
+static void
+DoAction12(const TEST_ENTRY *pEntry)
 {
     LPWSTR pszPath = GetWatchDir(pEntry->iWriteDir);
     PathAppendW(pszPath, L"_TESTDIR_");
@@ -137,12 +150,12 @@ void DoAction12(const TEST_ENTRY *pEntry)
 }
 
 #define WRITEDIR_0 WATCHDIR_DESKTOP
-#define WRITEDIR_1 WATCHDIR_MYDOCUMENTS
-
 static WCHAR s_szDesktopTestFile[MAX_PATH];
 static WCHAR s_szDesktopTestFileRenamed[MAX_PATH];
 static WCHAR s_szDesktopTestDir[MAX_PATH];
 static WCHAR s_szDesktopTestDirRenamed[MAX_PATH];
+
+#define WRITEDIR_1 WATCHDIR_MYDOCUMENTS
 static WCHAR s_szDocumentTestFile[MAX_PATH];
 static WCHAR s_szDocumentTestFileRenamed[MAX_PATH];
 static WCHAR s_szDocumentTestDir[MAX_PATH];
@@ -585,8 +598,8 @@ static BOOL DoGetPaths(LPWSTR pszPath1, LPWSTR pszPath2)
     return TRUE;
 }
 
-
-static void DoTestEntry(const TEST_ENTRY *entry)
+static void
+DoTestEntry(const TEST_ENTRY *entry)
 {
     if (entry->action)
     {
