@@ -230,6 +230,25 @@ WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     return 0;
 }
 
+static BOOL ParseCommandLine(LPWSTR lpCmdLine)
+{
+    LPWSTR pch = lpCmdLine; // fRecursive,iWatchDir,nSources
+    s_fRecursive = !!wcstoul(pch, NULL, 0);
+    pch = wcschr(pch, L',');
+    if (!pch)
+        return FALSE;
+    ++pch;
+
+    s_iWatchDir = (WATCHDIR)wcstoul(pch, NULL, 0);
+    pch = wcschr(pch, L',');
+    if (!pch)
+        return FALSE;
+    ++pch;
+
+    s_nSources = wcstoul(pch, NULL, 0);
+    return TRUE;
+}
+
 INT APIENTRY
 wWinMain(HINSTANCE hInstance,
          HINSTANCE hPrevInstance,
@@ -239,20 +258,8 @@ wWinMain(HINSTANCE hInstance,
     if (lstrcmpiW(lpCmdLine, L"") == 0 || lstrcmpiW(lpCmdLine, L"TEST") == 0)
         return 0;
 
-    LPWSTR pch = lpCmdLine; // fRecursive,iWatchDir,nSources
-    s_fRecursive = !!wcstoul(pch, NULL, 0);
-    pch = wcschr(pch, L',');
-    if (!pch)
+    if (!ParseCommandLine(lpCmdLine))
         return -1;
-    ++pch;
-
-    s_iWatchDir = (WATCHDIR)wcstoul(pch, NULL, 0);
-    pch = wcschr(pch, L',');
-    if (!pch)
-        return -2;
-    ++pch;
-
-    s_nSources = wcstoul(pch, NULL, 0);
 
     WNDCLASSW wc;
     ZeroMemory(&wc, sizeof(wc));
