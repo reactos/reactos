@@ -23,12 +23,12 @@
 //#define SHELL_LEVEL_ONLY
 //#define INTERRUPT_LEVEL_ONLY
 #define NEW_DELIVERY_ONLY
-//#define RANDOM_HAlF
+//#define RANDOM_HALF
 #define RANDOM_QUARTER
 
 // --- Show the elapsed time by GetTickCount() ---
 //#define ENTRY_TICK
-//#define GROUP_TICK
+#define GROUP_TICK
 #define TOTAL_TICK
 
 static HWND s_hwnd = NULL;
@@ -63,7 +63,8 @@ DoCreateEmptyFile(LPCWSTR pszFileName)
 #define TEST_FILE_RENAMED   L"_TEST_RENAMED_.txt"
 #define TEST_DIR            L"_TESTDIR_"
 #define TEST_DIR_RENAMED    L"_TESTDIR_RENAMED_"
-#define MOVE_FLAGS          (MOVEFILE_COPY_ALLOWED | MOVEFILE_WRITE_THROUGH)
+#define MOVE_FILE(from, to) MoveFileW((from), (to))
+
 static void
 DoAction1(const TEST_ENTRY *pEntry)
 {
@@ -79,7 +80,7 @@ DoAction2(const TEST_ENTRY *pEntry)
     LPWSTR pszPath2 = GetWatchDir(pEntry->iWriteDir);
     PathAppendW(pszPath1, TEST_FILE);
     PathAppendW(pszPath2, TEST_FILE_RENAMED);
-    ok(MoveFileExW(pszPath1, pszPath2, MOVE_FLAGS), "Line %d: MoveFileExW(%ls, %ls) failed (%ld)\n",
+    ok(MOVE_FILE(pszPath1, pszPath2), "Line %d: MOVE_FILE(%ls, %ls) failed (%ld)\n",
        pEntry->line, pszPath1, pszPath2, GetLastError());
 }
 
@@ -90,7 +91,7 @@ DoAction3(const TEST_ENTRY *pEntry)
     LPWSTR pszPath2 = GetWatchDir(pEntry->iWriteDir);
     PathAppendW(pszPath1, TEST_FILE_RENAMED);
     PathAppendW(pszPath2, TEST_FILE);
-    ok(MoveFileExW(pszPath1, pszPath2, MOVE_FLAGS), "Line %d: MoveFileExW(%ls, %ls) failed (%ld)\n",
+    ok(MOVE_FILE(pszPath1, pszPath2), "Line %d: MOVE_FILE(%ls, %ls) failed (%ld)\n",
        pEntry->line, pszPath1, pszPath2, GetLastError());
 }
 
@@ -119,7 +120,7 @@ DoAction6(const TEST_ENTRY *pEntry)
     LPWSTR pszPath2 = GetWatchDir(pEntry->iWriteDir);
     PathAppendW(pszPath1, TEST_DIR);
     PathAppendW(pszPath2, TEST_DIR_RENAMED);
-    ok(MoveFileExW(pszPath1, pszPath2, MOVE_FLAGS), "Line %d: MoveFileExW(%ls, %ls) failed (%ld)\n",
+    ok(MOVE_FILE(pszPath1, pszPath2), "Line %d: MOVE_FILE(%ls, %ls) failed (%ld)\n",
        pEntry->line, pszPath1, pszPath2, GetLastError());
 }
 
@@ -130,7 +131,7 @@ DoAction7(const TEST_ENTRY *pEntry)
     LPWSTR pszPath2 = GetWatchDir(pEntry->iWriteDir);
     PathAppendW(pszPath1, TEST_DIR_RENAMED);
     PathAppendW(pszPath2, TEST_DIR);
-    ok(MoveFileExW(pszPath1, pszPath2, MOVE_FLAGS), "Line %d: MoveFileExW(%ls, %ls) failed (%ld)\n",
+    ok(MOVE_FILE(pszPath1, pszPath2), "Line %d: MOVE_FILE(%ls, %ls) failed (%ld)\n",
        pEntry->line, pszPath1, pszPath2, GetLastError());
 }
 
@@ -691,14 +692,6 @@ DoGetPaths(LPWSTR pszPath1, LPWSTR pszPath2)
 static void
 DoTestEntry(INT iEntry, const TEST_ENTRY *entry, INT nSources)
 {
-#ifdef RANDOM_QUARTER
-    if ((rand() & 3) == 0)
-        return;
-#elif defined(RANDOM_HAlF)
-    if (rand() & 1)
-        return;
-#endif
-
     DWORD flags;
     LPCSTR pattern;
 #ifdef ENTRY_TICK
@@ -988,6 +981,14 @@ DoTestGroup(INT line, UINT cEntries, const TEST_ENTRY *pEntries, BOOL fRecursive
 #ifdef GROUP_TICK
     DWORD dwOldTick = GetTickCount();
 #endif
+#ifdef RANDOM_QUARTER
+    if ((rand() & 3) == 0)
+        return;
+#elif defined(RANDOM_HALF)
+    if (rand() & 1)
+        return;
+#endif
+
     trace("DoTestGroup: Line %d: fRecursive:%u, iWatchDir:%u, nSources:0x%X\n",
           line, fRecursive, iWatchDir, nSources);
 
@@ -1059,9 +1060,9 @@ static unsigned __stdcall TestThreadProc(void *)
 #ifdef RANDOM_QUARTER
     srand(time(NULL));
     skip("RANDOM_QUARTER\n");
-#elif defined(RANDOM_HAlF)
+#elif defined(RANDOM_HALF)
     srand(time(NULL));
-    skip("RANDOM_HAlF\n");
+    skip("RANDOM_HALF\n");
 #endif
 
     // fRecursive == FALSE.
