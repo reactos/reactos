@@ -829,7 +829,7 @@ BEGIN
     IDS_CANTTRASH_TEXT "项目“%1”不能发送到回收站。您想要彻底删除它吗？"
     IDS_OVERWRITEFILE_TEXT "此文件夹已包含名为“%1”的文件。\n\n您想要替换它吗？"
     IDS_OVERWRITEFILE_CAPTION "确认文件覆盖"
-    IDS_OVERWRITEFOLDER_TEXT "此文件夹已包含一个名为“%1”文件夹。\n\n如果目标文件夹中的文件具有相同的名称作为\n所选文件夹中的文件，他们将被替换。 你仍然想要移动或\n复制该文件夹吗？"
+    IDS_OVERWRITEFOLDER_TEXT "此文件夹已包含一个名为“%1”文件夹。\n\n如果目标文件夹中的文件具有相同的名称作为\n所选文件夹中的文件，他们将被替换。你仍然想要移动或\n复制该文件夹吗？"
 
     IDS_FILEOOP_COPYING "正在复制..."
     IDS_FILEOOP_MOVING "正在移动..."
