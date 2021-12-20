@@ -10,6 +10,7 @@
 #include "shelltest.h"
 #include <shlwapi.h>
 #include <stdio.h>
+#include <process.h> // for _beginthreadex
 #include "SHChangeNotify.h"
 
 static HWND s_hwnd = NULL;
@@ -742,24 +743,8 @@ DoTestGroup(INT line, UINT cEntries, const TEST_ENTRY *pEntries, INT nSources,
 #define WATCHDIR_2 WATCHDIR_MYCOMPUTER
 #define WATCHDIR_3 WATCHDIR_MYDOCUMENTS
 
-START_TEST(SHChangeNotify)
+static unsigned __stdcall TestThreadProc(void *)
 {
-    if (!GetSubProgramPath())
-    {
-        skip("shell32_apitest_sub.exe not found\n");
-    }
-
-    if (!DoInit())
-    {
-        skip("Unable to initialize.\n");
-        return;
-    }
-
-    SHChangeNotify(0, SHCNF_FLUSH, NULL, NULL);
-    SendMessageW(s_hwnd, WM_CLEAR_FLAGS, 0, 0);
-
-    trace("Please don't operate your PC while testing...\n");
-
     // fRecursive == TRUE.
     DoTestGroup(__LINE__, _countof(s_group_0), s_group_0, SOURCES_00, TRUE, WATCHDIR_0);
     DoTestGroup(__LINE__, _countof(s_group_1), s_group_1, SOURCES_01, TRUE, WATCHDIR_0);
@@ -801,4 +786,29 @@ START_TEST(SHChangeNotify)
     DoTestGroup(__LINE__, _countof(s_group_9), s_group_9, SOURCES_01, FALSE, WATCHDIR_3);
     DoTestGroup(__LINE__, _countof(s_group_0), s_group_0, SOURCES_02, FALSE, WATCHDIR_3);
     DoTestGroup(__LINE__, _countof(s_group_10), s_group_10, SOURCES_03, FALSE, WATCHDIR_3);
+
+    return 0;
+}
+
+START_TEST(SHChangeNotify)
+{
+    if (!GetSubProgramPath())
+    {
+        skip("shell32_apitest_sub.exe not found\n");
+    }
+
+    if (!DoInit())
+    {
+        skip("Unable to initialize.\n");
+        return;
+    }
+
+    SHChangeNotify(0, SHCNF_FLUSH, NULL, NULL);
+    SendMessageW(s_hwnd, WM_CLEAR_FLAGS, 0, 0);
+
+    trace("Please don't operate your PC while testing...\n");
+
+    HANDLE hThread = (HANDLE)_beginthreadex(NULL, 0, TestThreadProc, NULL, 0, NULL);
+    WaitForSingleObject(hThread, INFINITE);
+    CloseHandle(hThread);
 }
