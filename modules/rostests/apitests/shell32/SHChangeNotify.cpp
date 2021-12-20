@@ -587,10 +587,20 @@ DoTestEntry(const TEST_ENTRY *entry)
     SendMessageW(s_hwnd, WM_CLEAR_FLAGS, 0, 0);
 }
 
-static void DoEnd()
+static void DoEnd(void)
 {
     DeleteFileA(TEMP_FILE);
     SendMessageW(s_hwnd, WM_COMMAND, IDOK, 0);
+}
+
+static void DoAbortThread(void)
+{
+    skip("Aborting the thread...\n");
+    if (s_hThread)
+    {
+        TerminateThread(s_hThread, -1);
+        s_hThread = NULL;
+    }
 }
 
 static BOOL CALLBACK HandlerRoutine(DWORD dwCtrlType)
@@ -600,11 +610,7 @@ static BOOL CALLBACK HandlerRoutine(DWORD dwCtrlType)
         case CTRL_C_EVENT:
         case CTRL_BREAK_EVENT:
         {
-            if (s_hThread)
-            {
-                TerminateThread(s_hThread, -1);
-                s_hThread = NULL;
-            }
+            DoAbortThread();
             DoEnd();
             return TRUE;
         }
@@ -802,7 +808,14 @@ static void DoTestGroup(const TEST_GROUP *pGroup)
     }
 
     for (UINT i = 0; i < cEntries; ++i)
+    {
+        if (!IsWindow(s_hwnd))
+        {
+            DoAbortThread();
+            break;
+        }
         DoTestEntry(&pEntries[i]);
+    }
 
     DoEnd();
 
