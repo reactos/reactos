@@ -771,14 +771,36 @@ static const TEST_GROUP s_groups[] =
     { __LINE__, _countof(s_group_04), s_group_04, TRUE, SOURCES_03, WATCHDIR_3 },
 };
 
+
+static void DoWaitForWindow(BOOL bClosing)
+{
+    for (INT i = 0; i < 15; ++i)
+    {
+        s_hwnd = FindWindowW(CLASSNAME, CLASSNAME);
+        if (bClosing)
+        {
+            if (!s_hwnd)
+                break;
+        }
+        else
+        {
+            if (s_hwnd)
+                break;
+        }
+
+        Sleep(50);
+    }
+}
+
 static void DoTestGroup(const TEST_GROUP *pGroup)
 {
-    INT line = pGroup->line;
-    UINT cEntries = pGroup->cEntries;
-    const TEST_ENTRY *pEntries = pGroup->pEntries;
-    BOOL fRecursive = pGroup->fRecursive;
-    INT nSources = pGroup->nSources;
-    WATCHDIR iWatchDir = pGroup->iWatchDir;
+    INT               line          = pGroup->line;
+    UINT              cEntries      = pGroup->cEntries;
+    const TEST_ENTRY *pEntries      = pGroup->pEntries;
+    BOOL              fRecursive    = pGroup->fRecursive;
+    INT               nSources      = pGroup->nSources;
+    WATCHDIR          iWatchDir     = pGroup->iWatchDir;
+
     trace("DoTestGroup: Line %d, fRecursive:%u, iWatchDir:%u, nSources:0x%08X\n",
           line, fRecursive, iWatchDir, nSources);
 
@@ -792,14 +814,7 @@ static void DoTestGroup(const TEST_GROUP *pGroup)
         return;
     }
 
-    for (int i = 0; i < 15; ++i)
-    {
-        s_hwnd = FindWindowW(CLASSNAME, CLASSNAME);
-        if (s_hwnd)
-            break;
-
-        Sleep(50);
-    }
+    DoWaitForWindow(FALSE);
 
     if (!s_hwnd)
     {
@@ -820,14 +835,7 @@ static void DoTestGroup(const TEST_GROUP *pGroup)
 
     DoEnd();
 
-    for (int i = 0; i < 15; ++i)
-    {
-        s_hwnd = FindWindowW(CLASSNAME, CLASSNAME);
-        if (!s_hwnd)
-            break;
-
-        Sleep(50);
-    }
+    DoWaitForWindow(TRUE);
 }
 
 static unsigned __stdcall TestThreadProc(void *)
@@ -840,6 +848,7 @@ static unsigned __stdcall TestThreadProc(void *)
             const TEST_GROUP *pGroup1 = &s_groups[iGroup1];
             if (pGroup0->cEntries != pGroup1->cEntries)
                 continue;
+
             if (memcmp(pGroup0, pGroup1, pGroup0->cEntries * sizeof(TEST_ENTRY)) == 0)
             {
                 trace("Group %u and Group %u are same.\n", iGroup0, iGroup1);
