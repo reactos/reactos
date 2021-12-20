@@ -563,8 +563,8 @@ static const TEST_ENTRY s_group_12[] =
     { __LINE__, WRITEDIR_1, "000000", L"", L"", DoAction3 },
     { __LINE__, WRITEDIR_1, "001000", s_szDocumentTestFile, L"", DoAction4 },
     { __LINE__, WRITEDIR_1, "000100", s_szDocumentTestDir, L"", DoAction5 },
-    { __LINE__, WRITEDIR_1, "000001", s_szDocumentTestDir, s_szDocumentTestDirRenamed, DoAction6 },
-    { __LINE__, WRITEDIR_1, "000001", s_szDocumentTestDirRenamed, s_szDocumentTestDir, DoAction7 },
+    { __LINE__, WRITEDIR_1, "000000", L"", L"", DoAction6 },
+    { __LINE__, WRITEDIR_1, "000000", L"", L"", DoAction7 },
     { __LINE__, WRITEDIR_1, "000010", s_szDocumentTestDir, L"", DoAction8 },
     { __LINE__, WRITEDIR_1, "000000", L"", L"", DoAction9 },
     { __LINE__, WRITEDIR_1, "000000", L"", L"", DoAction10 },
@@ -639,20 +639,25 @@ DoGetPaths(LPWSTR pszPath1, LPWSTR pszPath2)
 }
 
 static void
-DoTestEntry(const TEST_ENTRY *entry)
+DoTestEntry(const TEST_ENTRY *entry, INT nSources)
 {
     if (entry->action)
     {
         (*entry->action)(entry);
     }
 
-    Sleep(30);
+    if (nSources & SHCNRF_InterruptLevel)
+        Sleep(60);
 
     DWORD flags = SendMessageW(s_hwnd, WM_GET_NOTIFY_FLAGS, 0, 0);
     LPCSTR pattern = PatternFromFlags(flags);
 
     SendMessageW(s_hwnd, WM_SET_PATHS, 0, 0);
-    Sleep(100);
+
+    if (nSources & SHCNRF_InterruptLevel)
+        Sleep(100);
+    else
+        Sleep(50);
 
     WCHAR szPath1[MAX_PATH], szPath2[MAX_PATH];
     szPath1[0] = szPath2[0] = 0;
@@ -932,7 +937,8 @@ static void DoTestGroup(const TEST_GROUP *pGroup)
             DoEnd();
             break;
         }
-        DoTestEntry(&pEntries[i]);
+
+        DoTestEntry(&pEntries[i], nSources);
     }
 
     DoEnd();
