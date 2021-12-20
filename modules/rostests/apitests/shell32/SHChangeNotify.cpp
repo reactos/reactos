@@ -16,7 +16,7 @@
 #include <versionhelpers.h>
 #include "SHChangeNotify.h"
 
-// The selection of tests
+// --- The selection of tests ---
 //#define DO_TRIVIAL
 //#define NO_INTERRUPT_LEVEL
 //#define NO_SHELL_LEVEL
@@ -26,6 +26,7 @@
 //#define RANDOM_HAlF
 #define RANDOM_QUARTER
 
+// --- Show the elapsed time by GetTickCount() ---
 //#define ENTRY_TICK
 //#define GROUP_TICK
 #define TOTAL_TICK
