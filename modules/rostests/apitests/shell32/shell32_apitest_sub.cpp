@@ -17,7 +17,7 @@ static WATCHDIR s_iWatchDir = WATCHDIR_NULL;
 static INT s_nSources = 0;
 static LPITEMIDLIST s_pidl = NULL;
 static WCHAR s_path1[MAX_PATH], s_path2[MAX_PATH];
-static BYTE s_counters[TYPE_RENAMEFOLDER + 1];
+static BYTE s_counters[TYPE_MAX + 1];
 
 static BOOL
 OnCreate(HWND hwnd)
@@ -121,6 +121,8 @@ DoShellNotify(HWND hwnd, PIDLIST_ABSOLUTE pidl1, PIDLIST_ABSOLUTE pidl2, LONG lE
         case SHCNE_ATTRIBUTES:
             break;
         case SHCNE_UPDATEDIR:
+            if (DoPathes(pidl1, pidl2))
+                s_counters[TYPE_UPDATEDIR] = 1;
             break;
         case SHCNE_UPDATEITEM:
             break;
