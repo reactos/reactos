@@ -15,10 +15,14 @@
 #include "SHChangeNotify.h"
 
 //#define DO_TRIVIAL
-//#define NO_INTERRUPT
-#define INTERRUPT_ONLY
+//#define NO_INTERRUPT_LEVEL
+//#define NO_SHELL_LEVEL
+//#define SHELL_LEVEL_ONLY
+//#define INTERRUPT_LEVEL_ONLY
 #define NEW_DELIVERY_ONLY
 //#define ENTRY_TICK
+//#define GROUP_TICK
+#define TOTAL_TICK
 
 static HWND s_hwnd = NULL;
 static WCHAR s_szSubProgram[MAX_PATH];
@@ -688,11 +692,12 @@ DoTestEntry(INT iEntry, const TEST_ENTRY *entry, INT nSources)
 
     if (entry->action)
     {
-        (*entry->action)(entry);
+        entry->action(entry);
     }
 
     if (nSources & SHCNRF_InterruptLevel)
     {
+        // The event won't work at here. Manually waiting...
         UINT cTry = ((iEntry == 0) ? 100 : 50);
         for (UINT iTry = 0; iTry < cTry; ++iTry)
         {
@@ -939,19 +944,29 @@ static void
 DoTestGroup(INT line, UINT cEntries, const TEST_ENTRY *pEntries, BOOL fRecursive,
             INT nSources, WATCHDIR iWatchDir)
 {
-#ifdef NO_INTERRUPT
+#ifdef NO_INTERRUPT_LEVEL
     if (nSources & SHCNRF_InterruptLevel)
         return;
 #endif
-#ifdef INTERRUPT_ONLY
+#ifdef NO_SHELL_LEVEL
+    if (nSources & SHCNRF_ShellLevel)
+        return;
+#endif
+#ifdef INTERRUPT_LEVEL_ONLY
     if (!(nSources & SHCNRF_InterruptLevel))
+        return;
+#endif
+#ifdef SHELL_LEVEL_ONLY
+    if (!(nSources & SHCNRF_ShellLevel))
         return;
 #endif
 #ifdef NEW_DELIVERY_ONLY
     if (!(nSources & SHCNRF_NewDelivery))
         return;
 #endif
+#ifdef GROUP_TICK
     DWORD dwOldTick = GetTickCount();
+#endif
     trace("DoTestGroup: Line %d: fRecursive:%u, iWatchDir:%u, nSources:0x%X\n",
           line, fRecursive, iWatchDir, nSources);
 
@@ -1011,9 +1026,11 @@ DoTestGroup(INT line, UINT cEntries, const TEST_ENTRY *pEntries, BOOL fRecursive
     RemoveDirectoryW(s_szDocumentTestDir);
     RemoveDirectoryW(s_szDocumentTestDirRenamed);
 
+#ifdef GROUP_TICK
     DWORD dwNewTick = GetTickCount();
     DWORD dwTick = dwNewTick - dwOldTick;
     trace("DoTestGroup: Line %d: %lu.%lu sec\n", line, (dwTick / 1000), (dwTick / 100 % 10));
+#endif
 }
 
 static unsigned __stdcall TestThreadProc(void *)
@@ -1134,6 +1151,10 @@ static unsigned __stdcall TestThreadProc(void *)
 
 START_TEST(SHChangeNotify)
 {
+#ifdef TOTAL_TICK
+    DWORD dwOldTick = GetTickCount();
+#endif
+
     if (!GetSubProgramPath())
     {
         skip("shell32_apitest_sub.exe not found\n");
@@ -1150,4 +1171,10 @@ START_TEST(SHChangeNotify)
     s_hThread = (HANDLE)_beginthreadex(NULL, 0, TestThreadProc, NULL, 0, NULL);
     WaitForSingleObject(s_hThread, INFINITE);
     CloseHandle(s_hThread);
+
+#ifdef TOTAL_TICK
+    DWORD dwNewTick = GetTickCount();
+    DWORD dwTick = dwNewTick - dwOldTick;
+    trace("SHChangeNotify: Total %lu.%lu sec\n", (dwTick / 1000), (dwTick / 100 % 10));
+#endif
 }

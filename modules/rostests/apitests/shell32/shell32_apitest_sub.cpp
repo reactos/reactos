@@ -301,7 +301,7 @@ wWinMain(HINSTANCE hInstance,
         return -1;
 
     HWND hwnd = CreateWindowW(CLASSNAME, CLASSNAME, WS_OVERLAPPEDWINDOW,
-                              CW_USEDEFAULT, CW_USEDEFAULT, 100, 100,
+                              CW_USEDEFAULT, CW_USEDEFAULT, 400, 100,
                               NULL, NULL, GetModuleHandleW(NULL), NULL);
     if (!hwnd)
         return -1;
